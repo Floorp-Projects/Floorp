@@ -99,7 +99,8 @@ struct PK11RSAGenParamsStr {
 typedef enum {
      PK11CertListUnique = 0,
      PK11CertListUser = 1,
-     PK11CertListRootUnique = 2
+     PK11CertListRootUnique = 2,
+     PK11CertListCA = 3
 } PK11CertListType;
 
 /*

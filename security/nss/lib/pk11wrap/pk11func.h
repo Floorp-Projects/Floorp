@@ -301,6 +301,10 @@ SECStatus PK11_ImportPrivateKeyInfo(PK11SlotInfo *slot,
 		SECKEYPrivateKeyInfo *pki, SECItem *nickname,
 		SECItem *publicValue, PRBool isPerm, PRBool isPrivate,
 		unsigned int usage, void *wincx);
+SECStatus PK11_ImportDERPrivateKeyInfo(PK11SlotInfo *slot, 
+		SECItem *derPKI, SECItem *nickname,
+		SECItem *publicValue, PRBool isPerm, PRBool isPrivate,
+		unsigned int usage, void *wincx);
 SECStatus PK11_ImportEncryptedPrivateKeyInfo(PK11SlotInfo *slot, 
 		SECKEYEncryptedPrivateKeyInfo *epki, SECItem *pwitem, 
 		SECItem *nickname, SECItem *publicValue, PRBool isPerm,
@@ -329,6 +333,9 @@ PK11SymKey * pk11_CopyToSlot(PK11SlotInfo *slot,CK_MECHANISM_TYPE type,
 		 	CK_ATTRIBUTE_TYPE operation, PK11SymKey *symKey);
 SECItem *PK11_GetKeyIDFromCert(CERTCertificate *cert, void *wincx);
 SECItem * PK11_GetKeyIDFromPrivateKey(SECKEYPrivateKey *key, void *wincx);
+SECItem* PK11_DEREncodePublicKey(SECKEYPublicKey *pubk);
+PK11SymKey* PK11_CopySymKeyForSigning(PK11SymKey *originalKey,
+	CK_MECHANISM_TYPE mech);
 
 /**********************************************************************
  *                   Certs
@@ -338,6 +345,8 @@ CERTCertificate *PK11_GetCertFromPrivateKey(SECKEYPrivateKey *privKey);
 SECStatus PK11_TraverseSlotCerts(
      SECStatus(* callback)(CERTCertificate*,SECItem *,void *),
                                                 void *arg, void *wincx);
+SECStatus PK11_TraversePrivateKeysInSlot( PK11SlotInfo *slot,
+    SECStatus(* callback)(SECKEYPrivateKey*, void*), void *arg);
 CERTCertificate * PK11_FindCertFromNickname(char *nickname, void *wincx);
 CERTCertList * PK11_FindCertsFromNickname(char *nickname, void *wincx);
 SECKEYPrivateKey * PK11_FindPrivateKeyFromNickname(char *nickname, void *wincx);

@@ -842,7 +842,7 @@ typedef struct pk11TraverseSlotStr {
     void *callbackArg;
     CK_ATTRIBUTE *findTemplate;
     int templateCount;
-} pk11TraverseSlotCert;
+} pk11TraverseSlot;
 
 /*
  * Extract all the certs on a card from a slot.
@@ -854,7 +854,7 @@ PK11_TraverseSlot(PK11SlotInfo *slot, void *arg)
     CK_OBJECT_HANDLE *objID = NULL;
     int object_count = 0;
     CK_ULONG returned_count = 0;
-    pk11TraverseSlotCert *slotcb = (pk11TraverseSlotCert *) arg;
+    pk11TraverseSlot *slotcb = (pk11TraverseSlot*) arg;
 
     objID = pk11_FindObjectsByTemplate(slot,slotcb->findTemplate,
 		slotcb->templateCount,&object_count);
@@ -982,7 +982,7 @@ pk11_UpdateSlotPQG(PK11SlotInfo *slot)
 static SECStatus
 pk11_ExtractCertsFromSlot(PK11SlotInfo *slot, void *arg)
 {
-    pk11TraverseSlotCert *slotcb = (pk11TraverseSlotCert *) arg;
+    pk11TraverseSlot *slotcb = (pk11TraverseSlot*) arg;
     int object_count;
     SECStatus rv;
 
@@ -1023,7 +1023,7 @@ PK11_ReadSlotCerts(PK11SlotInfo *slot)
     /* build slot list */
     pk11CertCallback caller;
     pk11DoCertCallback saver;
-    pk11TraverseSlotCert creater;
+    pk11TraverseSlot creater;
     CK_ATTRIBUTE theTemplate;
     CK_OBJECT_CLASS certClass = CKO_CERTIFICATE;
 
@@ -1083,7 +1083,7 @@ PK11_TraverseSlotCerts(SECStatus(* callback)(CERTCertificate*,SECItem *,void *),
 						void *arg, void *wincx) {
     pk11CertCallback caller;
     pk11DoCertCallback saver;
-    pk11TraverseSlotCert creater;
+    pk11TraverseSlot creater;
     CK_ATTRIBUTE theTemplate;
     CK_OBJECT_CLASS certClass = CKO_CERTIFICATE;
 
@@ -1101,6 +1101,48 @@ PK11_TraverseSlotCerts(SECStatus(* callback)(CERTCertificate*,SECItem *,void *),
 
     return pk11_TraverseAllSlots(PR_FALSE, pk11_ExtractCertsFromSlot, 
 							&creater, wincx);
+}
+
+/***********************************************************************
+ * PK11_TraversePrivateKeysInSlot
+ *
+ * Traverses all the private keys on a slot.
+ *
+ * INPUTS
+ *      slot
+ *          The PKCS #11 slot whose private keys you want to traverse.
+ *      callback
+ *          A callback function that will be called for each key.
+ *      arg
+ *          An argument that will be passed to the callback function.
+ */
+SECStatus
+PK11_TraversePrivateKeysInSlot( PK11SlotInfo *slot,
+    SECStatus(* callback)(SECKEYPrivateKey*, void*), void *arg)
+{
+    pk11KeyCallback perKeyCB;
+    pk11TraverseSlot perObjectCB;
+    CK_OBJECT_CLASS privkClass = CKO_PRIVATE_KEY;
+    CK_ATTRIBUTE theTemplate[1];
+    int templateSize = 1;
+
+    theTemplate[0].type = CKA_CLASS;
+    theTemplate[0].pValue = &privkClass;
+    theTemplate[0].ulValueLen = sizeof(privkClass);
+
+    if(slot==NULL) {
+        return SECSuccess;
+    }
+
+    perObjectCB.callback = pk11_DoKeys;
+    perObjectCB.callbackArg = &perKeyCB;
+    perObjectCB.findTemplate = theTemplate;
+    perObjectCB.templateCount = templateSize;
+    perKeyCB.callback = callback;
+    perKeyCB.callbackArg = arg;
+    perKeyCB.wincx = NULL;
+
+    return PK11_TraverseSlot(slot, &perObjectCB);
 }
 
 CK_OBJECT_HANDLE *
@@ -2117,7 +2159,7 @@ PK11_TraverseCertsForSubjectInSlot(CERTCertificate *cert, PK11SlotInfo *slot,
 	SECStatus(* callback)(CERTCertificate*, void *), void *arg)
 {
     pk11DoCertCallback caller;
-    pk11TraverseSlotCert callarg;
+    pk11TraverseSlot callarg;
     CK_OBJECT_CLASS certClass = CKO_CERTIFICATE;
     CK_ATTRIBUTE theTemplate[] = {
 	{ CKA_CLASS, NULL, 0 },
@@ -2148,7 +2190,7 @@ PK11_TraverseCertsForNicknameInSlot(SECItem *nickname, PK11SlotInfo *slot,
 	SECStatus(* callback)(CERTCertificate*, void *), void *arg)
 {
     pk11DoCertCallback caller;
-    pk11TraverseSlotCert callarg;
+    pk11TraverseSlot callarg;
     CK_OBJECT_CLASS certClass = CKO_CERTIFICATE;
     CK_ATTRIBUTE theTemplate[] = {
 	{ CKA_CLASS, NULL, 0 },
@@ -2184,7 +2226,7 @@ PK11_TraverseCertsInSlot(PK11SlotInfo *slot,
 	SECStatus(* callback)(CERTCertificate*, void *), void *arg)
 {
     pk11DoCertCallback caller;
-    pk11TraverseSlotCert callarg;
+    pk11TraverseSlot callarg;
     CK_OBJECT_CLASS certClass = CKO_CERTIFICATE;
     CK_ATTRIBUTE theTemplate[] = {
 	{ CKA_CLASS, NULL, 0 },
@@ -2649,6 +2691,11 @@ pk11ListCertCallback(CERTCertificate *cert, SECItem *derCert, void *arg)
 	return SECSuccess;
     }
 
+    /* if we want CA certs and it ain't one, skip it */
+    if( type == PK11CertListCA  && (!isCACert(newCert)) ) {
+	CERT_DestroyCertificate(newCert);
+	return SECSuccess;
+    }
 
     /* put slot certs at the end */
     if (newCert->slot && !PK11_IsInternal(newCert->slot)) {

@@ -34,7 +34,7 @@
 /*
  * Permanent Certificate database handling code 
  *
- * $Id: pcertdb.c,v 1.13 2001/04/11 22:28:11 nelsonb%netscape.com Exp $
+ * $Id: pcertdb.c,v 1.14 2001/06/12 20:57:09 nicolson%netscape.com Exp $
  */
 #include "prtime.h"
 
@@ -7194,10 +7194,6 @@ CERT_SaveImportedCert(CERTCertificate *cert, SECCertUsage usage,
 	break;
       default:	/* XXX added to quiet warnings; no other cases needed? */
 	break;
-    }
-
-    if ( (trust.sslFlags | trust.emailFlags | trust.objectSigningFlags) == 0 ){
-	saveit = PR_FALSE;
     }
 
     if ( saveit ) {

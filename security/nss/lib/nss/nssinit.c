@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- # $Id: nssinit.c,v 1.18 2001/03/14 18:58:14 javi%netscape.com Exp $
+ # $Id: nssinit.c,v 1.19 2001/06/12 20:57:14 nicolson%netscape.com Exp $
  */
 
 #include <ctype.h>
@@ -180,6 +180,8 @@ nss_OpenSecModDB(const char * configdir,const char *dbname)
 
 static CERTCertDBHandle certhandle = { 0 };
 
+static PRBool isInitialized = PR_FALSE;
+
 static SECStatus
 nss_OpenVolatileCertDB() {
       SECStatus rv = SECSuccess;
@@ -280,7 +282,7 @@ nss_Init(const char *configdir, const char *certPrefix, const char *keyPrefix,
 	}
     }
     rv = SECSuccess;
-
+    isInitialized = PR_TRUE;
 
 loser:
     if (rv != SECSuccess) 
@@ -300,6 +302,12 @@ NSS_InitReadWrite(const char *configdir)
 {
     return nss_Init(configdir, "", "", SECMOD_DB, PR_FALSE, 
 		PR_FALSE, PR_FALSE, PR_FALSE);
+}
+
+PRBool
+NSS_IsInitialized()
+{
+    return isInitialized;
 }
 
 /*
