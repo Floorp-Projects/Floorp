@@ -244,10 +244,6 @@ moz_debugger=""
 while [ $# -gt 0 ]
 do
   case $1 in
-    -h | --help)
-      moz_usage
-      exit 0
-      ;;
     -g | --debug)
       moz_debug=1
       shift
