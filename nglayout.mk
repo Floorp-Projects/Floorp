@@ -20,7 +20,11 @@ DEPTH=.
 # Command macro defines
 #
 
+ifdef MOZ_DATE
+CVSCO = cvs -q co -P -D $(MOZ_DATE)
+else
 CVSCO = cvs -q co -P
+endif
 
 THIS_MAKEFILE = nglayout.mk
 
@@ -30,12 +34,18 @@ LIBPREF_BRANCH = XPCOM_BRANCH
 PLUGIN_BRANCH =
 
 # CVS commands to pull the appropriate branch versions
-CVSCO_LIBPREF = $(CVSCO) -r $(LIBPREF_BRANCH)
 CVSCO_IMGLIB = $(CVSCO)
 CVSCO_NETLIB = $(CVSCO)
 CVSCO_NGLAYOUT = $(CVSCO)
 CVSCO_LIZARD = $(CVSCO)
+
+ifdef MOZ_DATE
+CVSCO_LIBPREF = $(CVSCO)
+CVSCO_PLUGIN = $(CVSCO)
+else
+CVSCO_LIBPREF = $(CVSCO) -r $(LIBPREF_BRANCH)
 CVSCO_PLUGIN = $(CVSCO) -A
+endif
 
 # The list of directories that need to be built to build the standalone
 # nglayout test program. The order is important.
