@@ -1114,10 +1114,34 @@ nsAppShellService::LaunchTask(const char *aParam, PRInt32 height, PRInt32 width,
   PRBool handlesArgs = PR_FALSE;
   rv = handler->GetHandlesArgs(&handlesArgs);
   if (handlesArgs) {
+#ifndef MOZ_THUNDERBIRD
     nsXPIDLString defaultArgs;
     rv = handler->GetDefaultArgs(getter_Copies(defaultArgs));
     if (NS_FAILED(rv)) return rv;
     rv = OpenWindow(chromeUrlForTask, defaultArgs, SIZE_TO_CONTENT, SIZE_TO_CONTENT);
+#else
+    // XXX horibble thunderbird hack. Don't pass in the default args if the cmd line service
+    // says we have real arguments! Use those instead.
+    nsXPIDLCString args;
+    nsXPIDLCString cmdLineArgument; // -mail, -compose, etc. 
+    rv = handler->GetCommandLineArgument(getter_Copies(cmdLineArgument));
+    if (NS_SUCCEEDED(rv)) {
+      rv = cmdLine->GetCmdLineValue(cmdLineArgument, getter_Copies(args));
+      if (NS_SUCCEEDED(rv) && args.get()) {
+        nsAutoString cmdArgs; cmdArgs.AssignWithConversion(args);
+        rv = OpenWindow(chromeUrlForTask, cmdArgs, height, width);
+      }
+    }
+    
+    // any failure case, do what we used to do:
+    if (NS_FAILED(rv)) {
+      nsXPIDLString defaultArgs;
+      rv = handler->GetDefaultArgs(getter_Copies(defaultArgs));
+      if (NS_FAILED(rv)) return rv;
+      rv = OpenWindow(chromeUrlForTask, defaultArgs, SIZE_TO_CONTENT, SIZE_TO_CONTENT);
+    }
+#endif
+
   }
   else {
     rv = OpenWindow(chromeUrlForTask, nsString(), width, height);
@@ -1233,10 +1257,11 @@ nsAppShellService::Ensure1Window(nsICmdLineService *aCmdLineService)
 
 #ifdef MOZ_THUNDERBIRD
       PRBool windowOpened = PR_FALSE;
+      
       rv = LaunchTask(NULL, height, width, &windowOpened); 
+      
       if (NS_FAILED(rv) || !windowOpened)
         rv = LaunchTask("mail", height, width, &windowOpened);
-
 #else
       rv = OpenBrowserWindow(height, width);
 #endif
