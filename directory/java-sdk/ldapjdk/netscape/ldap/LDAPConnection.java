@@ -208,11 +208,11 @@ public class LDAPConnection implements LDAPv3, Cloneable {
     /**
      * Properties
      */
-    private final static Float SdkVersion = new Float(3.03f);
+    private final static Float SdkVersion = new Float(3.04f);
     private final static Float ProtocolVersion = new Float(3.0f);
     private final static String SecurityVersion = new String("none,simple,sasl");
     private final static Float MajorVersion = new Float(3.0f);
-    private final static Float MinorVersion = new Float(0.03f);
+    private final static Float MinorVersion = new Float(0.04f);
     private final static String DELIM = "#";
     private final static String PersistSearchPackageName =
       "netscape.ldap.controls.LDAPPersistSearchControl";
@@ -460,7 +460,13 @@ public class LDAPConnection implements LDAPv3, Cloneable {
      * returns <CODE>false</CODE>.
      */
     public boolean isConnected() {
-        return ((th != null) && th.isAlive());
+        // This is the hack: If the user program calls isConnected() when
+        // the thread is about to shut down, the isConnected might get called
+        // before the deregisterConnection(). We add the yield() so that 
+        // the deregisterConnection() will get called first. 
+        // This problem only exists on Solaris.
+        Thread.yield();
+        return (th != null);
     }
 
     /**
@@ -774,7 +780,7 @@ public class LDAPConnection implements LDAPv3, Cloneable {
      */
     public void abandon( LDAPSearchResults searchResults )
                              throws LDAPException {
-        if ( (th == null) || (!th.isAlive()) || (searchResults == null) )
+        if ( (th == null) || (searchResults == null) )
             return;
 
         searchResults.abandon();
@@ -793,7 +799,7 @@ public class LDAPConnection implements LDAPv3, Cloneable {
                 // do nothing
             }
         }
-        if ((th == null) || (!th.isAlive()))
+        if (th == null)
             throw new LDAPException("Failed to send abandon request to the server.",
               LDAPException.OTHER);
     }
@@ -957,7 +963,7 @@ public class LDAPConnection implements LDAPv3, Cloneable {
         saslBind = true;
         protocolVersion = 3;
 
-        if ((th == null) || (!th.isAlive())) {
+        if (th == null) {
             bound = false;
             th = null;
             connect ();
@@ -1144,7 +1150,7 @@ public class LDAPConnection implements LDAPv3, Cloneable {
     private void bind (int version, boolean rebind) throws LDAPException {
         saslBind = false;
 
-        if ((th == null) || (!th.isAlive())) {
+        if (th == null) {
             bound = false;
             th = null;
             connect ();
@@ -1236,7 +1242,7 @@ public class LDAPConnection implements LDAPv3, Cloneable {
                 // do nothing
             }
         }
-        if ((th == null) || (!th.isAlive()))
+        if (th == null)
             throw new LDAPException("The connection is not available",
                 LDAPException.OTHER);
     }
@@ -1261,7 +1267,7 @@ public class LDAPConnection implements LDAPv3, Cloneable {
      * @see netscape.ldap.LDAPConnection#connect(java.lang.String, int, java.lang.String, java.lang.String)
      */
     public synchronized void disconnect() throws LDAPException {
-        if ((th == null) || (!th.isAlive()))
+        if (th == null)
             throw new LDAPException ( "unable to disconnect() without connecting",
                                   LDAPException.OTHER );
         if (m_cache != null) {
@@ -3596,8 +3602,7 @@ class LDAPConnThread extends Thread {
             msg.write (m_serverOutput);
             m_serverOutput.flush ();
         } catch (IOException e) {
-            throw new LDAPException ( "error writing request",
-                                    LDAPException.OTHER );
+            networkError(e);
         }
     }
 
@@ -3665,6 +3670,25 @@ class LDAPConnThread extends Thread {
             }
         
             m_disconnected = true;
+
+            /**
+             * Notify all the registered about this bad moment.
+             * IMPORTANT: This needs to be done at last. Otherwise, the socket
+             * input stream and output stream might never get closed and the whole
+             * task will get stuck in the stop method when we tried to stop the
+             * LDAPConnThread.
+             */
+
+            if (m_registered != null) {
+                Vector registerCopy = (Vector)m_registered.clone();
+
+                Enumeration cancelled = registerCopy.elements();
+
+                while (cancelled.hasMoreElements ()) {
+                    LDAPConnection c = (LDAPConnection)cancelled.nextElement();
+                    c.deregisterConnection();
+                }
+            }
             m_registered = null;
             m_messages = null;
             m_requests.clear();
