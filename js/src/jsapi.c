@@ -2877,13 +2877,19 @@ JS_CompileUCScriptForPrincipals(JSContext *cx, JSObject *obj,
 {
     void *mark;
     JSTokenStream *ts;
+    JSScript *script;
 
     CHECK_REQUEST(cx);
     mark = JS_ARENA_MARK(&cx->tempPool);
     ts = js_NewTokenStream(cx, chars, length, filename, lineno, principals);
     if (!ts)
         return NULL;
-    return CompileTokenStream(cx, obj, ts, mark, NULL);
+    script = CompileTokenStream(cx, obj, ts, mark, NULL);
+#if JS_HAS_EXCEPTIONS
+    if (!script)
+        js_ReportUncaughtException(cx);
+#endif
+    return script;
 }
 
 extern JS_PUBLIC_API(JSBool)
@@ -2938,13 +2944,19 @@ JS_CompileFile(JSContext *cx, JSObject *obj, const char *filename)
 {
     void *mark;
     JSTokenStream *ts;
+    JSScript *script;
 
     CHECK_REQUEST(cx);
     mark = JS_ARENA_MARK(&cx->tempPool);
     ts = js_NewFileTokenStream(cx, filename, stdin);
     if (!ts)
         return NULL;
-    return CompileTokenStream(cx, obj, ts, mark, NULL);
+    script = CompileTokenStream(cx, obj, ts, mark, NULL);
+#if JS_HAS_EXCEPTIONS
+    if (!script)
+        js_ReportUncaughtException(cx);
+#endif
+    return script;
 }
 
 JS_PUBLIC_API(JSScript *)
@@ -2961,6 +2973,7 @@ JS_CompileFileHandleForPrincipals(JSContext *cx, JSObject *obj,
 {
     void *mark;
     JSTokenStream *ts;
+    JSScript *script;
 
     CHECK_REQUEST(cx);
     mark = JS_ARENA_MARK(&cx->tempPool);
@@ -2973,7 +2986,12 @@ JS_CompileFileHandleForPrincipals(JSContext *cx, JSObject *obj,
         ts->principals = principals;
         JSPRINCIPALS_HOLD(cx, ts->principals);
     }
-    return CompileTokenStream(cx, obj, ts, mark, NULL);
+    script = CompileTokenStream(cx, obj, ts, mark, NULL);
+#if JS_HAS_EXCEPTIONS
+    if (!script)
+        js_ReportUncaughtException(cx);
+#endif
+    return script;
 }
 
 JS_PUBLIC_API(JSObject *)
