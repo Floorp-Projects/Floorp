@@ -47,13 +47,10 @@ public:
 
     virtual void ConvertToDeviceCoordinates(nscoord &aX, nscoord &aY);
 
-    NS_IMETHOD           PreCreateWidget(nsWidgetInitData *aWidgetInitData) { return NS_OK; }
+    NS_IMETHOD           PreCreateWidget(nsWidgetInitData *aWidgetInitData);
 
     virtual void*        GetNativeData(PRUint32 aDataType);
 
-    NS_IMETHOD           Invalidate(PRBool aIsSynchronous);
-    NS_IMETHOD           Invalidate(const nsRect &aRect, PRBool aIsSynchronous);
-    NS_IMETHOD           Update();
     NS_IMETHOD           SetColorMap(nsColorMap *aColorMap);
     NS_IMETHOD           Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect);
 
@@ -88,6 +85,8 @@ protected:
   nsIFontMetrics *mFontMetrics;
   PRBool      mVisible;
   PRBool      mDisplayed;
+
+  GtkWindowType mBorderStyle;
 
   // XXX Temporary, should not be caching the font
   nsFont *    mFont;

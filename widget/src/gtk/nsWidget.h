@@ -117,7 +117,7 @@ class nsWidget : public nsBaseWidget
 
     NS_IMETHOD CreateNative(GtkWidget *parentWindow) { return NS_OK; }
 
-    nsresult StandardWindowCreate(nsIWidget *aParent,
+    nsresult CreateWidget(nsIWidget *aParent,
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
                       nsIDeviceContext *aContext,
