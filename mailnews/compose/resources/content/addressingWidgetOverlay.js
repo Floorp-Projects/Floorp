@@ -270,18 +270,6 @@ function awCleanupRows()
   }
 }
 
-function awNotAnEmptyArea(event)
-{
-	//This is temporary until i figure out how to ensure to always having an empty space after the last row
-	dump("awNotAnEmptyArea\n");
-
-	var lastInput = awGetInputElement(top.MAX_RECIPIENTS);
-	if ( lastInput && lastInput.value )
-		awAppendNewRow(false);
-
-	event.preventBubble();
-}
-
 function awClickEmptySpace(targ, setFocus)
 {
   if (targ.localName != 'treechildren')

@@ -65,7 +65,6 @@ Rights Reserved.
                        class="plain textfield-addressingWidget"
                        style="width:0px;" allowevents="true"
                        onkeypress="awRecipientKeyPress(event, this)"
-                       onclick="awNotAnEmptyArea(event);"
                        autocomplete="true" timeout="300"
                        searchSessionType="addrbook" displayMenu="true"/>
     			</treecell>
