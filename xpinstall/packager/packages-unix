@@ -84,6 +84,7 @@ bin/components/libchrome.so
 bin/components/libcookie.so
 bin/components/libdocshell.so
 bin/components/libeditor.so
+bin/components/libembedcomponents.so
 bin/components/libgfx_gtk.so
 bin/components/libgfxps.so
 bin/components/libjsurl.so
@@ -189,6 +190,7 @@ bin/components/xml-rpc.xpt
 bin/components/nsDictionary.js
 bin/components/nsXmlRpcClient.js
 bin/components/libxremote_client.so
+bin/components/windowwatcher.xpt
 
 bin/chrome/toolkit.jar
 bin/chrome/comm.jar
