@@ -27,7 +27,8 @@
 //***    nsDocShellLoadInfo: Object Management
 //*****************************************************************************
 
-nsDocShellLoadInfo::nsDocShellLoadInfo() : mReplaceSessionHistorySlot(PR_FALSE)
+nsDocShellLoadInfo::nsDocShellLoadInfo() : mReplaceSessionHistorySlot(PR_FALSE),
+    mRefresh(PR_FALSE)
 {
 	NS_INIT_REFCNT();
 }
@@ -78,6 +79,20 @@ NS_IMETHODIMP nsDocShellLoadInfo::GetReplaceSessionHistorySlot(PRBool* aReplace)
 NS_IMETHODIMP nsDocShellLoadInfo::SetReplaceSessionHistorySlot(PRBool aReplace)
 {
    mReplaceSessionHistorySlot = aReplace;
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShellLoadInfo::GetRefresh(PRBool* aRefresh)
+{
+   NS_ENSURE_ARG_POINTER(aRefresh);
+
+   *aRefresh = mRefresh;
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShellLoadInfo::SetRefresh(PRBool aRefresh)
+{
+   mRefresh = aRefresh;
    return NS_OK;
 }
 

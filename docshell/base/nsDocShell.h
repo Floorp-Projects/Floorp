@@ -180,7 +180,8 @@ protected:
       loadReloadBypassCache,
       loadReloadBypassProxy,
       loadReloadBypassProxyAndCache,
-      loadLink
+      loadLink,
+      loadRefresh
    } loadType;
 
    NS_IMETHOD InternalLoad(nsIURI* aURI, nsIURI* aReferrerURI,
