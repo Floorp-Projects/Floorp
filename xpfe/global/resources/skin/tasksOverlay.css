@@ -27,14 +27,19 @@ toolbar#taskbar {
 }
 
 titledbutton.taskbutton {
-	margin-right: 1em;
-	padding-left: 3px;
+	margin-right: 1em !important;
+	padding-left: 3px !important;
 }
 
 titledbutton.taskbutton:hover {
-	padding-left: 3px;
+	padding-left: 3px !important;
 }
 
 titledbutton.taskbutton:active {
-  padding: 2px 0px 0px 4px;
+  padding: 2px 0px 0px 4px !important;
+}
+
+spring.taskbarspacer {
+   min-width: 0.3em;
+   width: 1em;
 }
