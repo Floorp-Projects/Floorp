@@ -57,6 +57,27 @@ sub UpdateBuildNumberFiles()
 }
 
 #//--------------------------------------------------------------------------------------------------
+#// UpdateGeneratedChromeFiles
+#//--------------------------------------------------------------------------------------------------
+sub UpdateGeneratedChromeFiles()
+{
+    UpdateBuildNumberFiles();
+    my ($file) = (":mozilla:xpfe:global:buildconfig.html");
+    my $tmp;
+    open (IN, "${file}.in") || die("${file}.in: $!\n");
+    open (OUT, ">$file") || die ("$file: $!\n");
+    while ($tmp=<IN>) {
+	$tmp =~ s/@target@/Mac CFM/;
+	$tmp =~ s/@CC@/CodeWarrior/;
+	$tmp =~ s/@CXX@/CodeWarrior/;
+	$tmp =~ s/@\S+@//;
+	print OUT "$tmp";
+    }
+    close(OUT);
+    close(IN);
+}
+
+#//--------------------------------------------------------------------------------------------------
 #// Select a default skin
 #//--------------------------------------------------------------------------------------------------
 
@@ -1290,7 +1311,7 @@ sub BuildDist()
     mkpath([ ":mozilla:dist:viewer:Plug-ins", ":mozilla:dist:viewer_debug:Plug-ins"]);
     #mkpath([ ":mozilla:dist:client:Plugins", ":mozilla:dist:client_debug:Plugins"]);
     
-    UpdateBuildNumberFiles();
+    UpdateGeneratedChromeFile();
 
     BuildRuntimeDist();
     
