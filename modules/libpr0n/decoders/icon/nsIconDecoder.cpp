@@ -115,7 +115,7 @@ NS_IMETHODIMP nsIconDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
   mObserver->OnStartDecode(nsnull, nsnull);
   PRUint32 i = 0;
   // Read size
-  int w, h, mcv;
+  PRInt32 w, h;
   w = data[0];
   h = data[1];
 
@@ -138,23 +138,21 @@ NS_IMETHODIMP nsIconDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
   mFrame->GetAlphaBytesPerRow(&abpr);
   mFrame->GetWidth(&width);
   mFrame->GetHeight(&height);
-
-  PRUint32 real_bpr = width * 3;
   
   i = 0;
-  PRUint32 rownum = 0;  // XXX this better not have a decimal
+  PRInt32 rownum = 0;  // XXX this better not have a decimal
   
-  PRUint32 wroteLen = 0;
+  PRInt32 wroteLen = 0;
 
   do 
   {
-    PRUint8 *line = (PRUint8*)data + i*real_bpr;
-    mFrame->SetImageData(line, real_bpr, (rownum++)*bpr);
+    PRUint8 *line = (PRUint8*)data + i*bpr;
+    mFrame->SetImageData(line, bpr, (rownum++)*bpr);
 
     nsRect r(0, rownum, width, 1);
     mObserver->OnDataAvailable(nsnull, nsnull, mFrame, &r);
 
-    wroteLen += real_bpr ;
+    wroteLen += bpr ;
     i++;
   } while(rownum < height);
 
@@ -162,7 +160,7 @@ NS_IMETHODIMP nsIconDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
  // now we want to send in the alpha data...
  for (rownum = 0; rownum < height; rownum ++)
  {
-  PRUint8 * line = (PRUint8*) data + abpr * rownum + height*real_bpr;
+  PRUint8 * line = (PRUint8*) data + abpr * rownum + height*bpr;
   mFrame->SetAlphaData(line, abpr, (rownum)*abpr);   
  } 
 
