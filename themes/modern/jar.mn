@@ -265,6 +265,7 @@ modern.jar:
   skin/modern/messenger/filterDialog.css                           (messenger/filterDialog.css)
   skin/modern/messenger/folderMenus.css                            (messenger/folderMenus.css)
   skin/modern/messenger/folderPane.css                             (messenger/folderPane.css)
+  skin/modern/messenger/fakeAccount.css                            (messenger/fakeAccount.css)
   skin/modern/messenger/mailWindow2.css                            (messenger/mailWindow2.css)
   skin/modern/messenger/messageBody.css                            (messenger/messageBody.css)
   skin/modern/messenger/messageHeader.css                          (messenger/messageHeader.css)
