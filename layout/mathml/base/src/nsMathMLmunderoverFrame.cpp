@@ -431,18 +431,6 @@ nsMathMLmunderoverFrame::Place(nsIPresContext*      aPresContext,
   nscoord dxOver = (mBoundingMetrics.width - (bmOver.width - correction/2)) / 2;
   nscoord dxUnder = (mBoundingMetrics.width - (bmUnder.width + italicCorrection/2)) / 2;
 
-  aDesiredSize.ascent = 
-    PR_MAX(mBoundingMetrics.ascent + overDelta2,
-           overSize.ascent + bmOver.descent + overDelta1 + bmBase.ascent);
-  aDesiredSize.descent = 
-    PR_MAX(mBoundingMetrics.descent + underDelta2,
-           bmBase.descent + underDelta1 + bmUnder.ascent + underSize.descent);
-  aDesiredSize.height = aDesiredSize.ascent + aDesiredSize.descent;
-  aDesiredSize.width = mBoundingMetrics.width;
-
-  mReference.x = 0;
-  mReference.y = aDesiredSize.ascent;
-
   mBoundingMetrics.leftBearing = 
     PR_MIN(dxBase + bmBase.leftBearing, dxUnder + bmUnder.leftBearing);
   mBoundingMetrics.rightBearing = 
@@ -452,7 +440,18 @@ nsMathMLmunderoverFrame::Place(nsIPresContext*      aPresContext,
   mBoundingMetrics.rightBearing = 
     PR_MAX(mBoundingMetrics.rightBearing, dxOver + bmOver.rightBearing);
 
+  aDesiredSize.ascent = 
+    PR_MAX(mBoundingMetrics.ascent + overDelta2,
+           overSize.ascent + bmOver.descent + overDelta1 + bmBase.ascent);
+  aDesiredSize.descent = 
+    PR_MAX(mBoundingMetrics.descent + underDelta2,
+           bmBase.descent + underDelta1 + bmUnder.ascent + underSize.descent);
+  aDesiredSize.height = aDesiredSize.ascent + aDesiredSize.descent;
+  aDesiredSize.width = mBoundingMetrics.width;
   aDesiredSize.mBoundingMetrics = mBoundingMetrics;
+
+  mReference.x = 0;
+  mReference.y = aDesiredSize.ascent;
 
   if (aPlaceOrigin) {
     nscoord dy;
