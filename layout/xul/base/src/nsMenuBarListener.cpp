@@ -70,7 +70,7 @@ nsMenuBarListener::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   }
 
   if (aIID.Equals(nsCOMTypeInfo<nsIDOMEventReceiver>::GetIID())) {
-    *aInstancePtr = (void*)(nsIDOMEventListener*)(nsIDOMMouseMotionListener*)this;
+    *aInstancePtr = (void*)(nsIDOMEventListener*)(nsIDOMKeyListener*)this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
@@ -80,7 +80,7 @@ nsMenuBarListener::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     return NS_OK;
   }
   if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {                                      
-    *aInstancePtr = (void*)(nsISupports*)(nsIDOMMouseMotionListener*)this;                        
+    *aInstancePtr = (void*)(nsISupports*)(nsIDOMKeyListener*)this;                        
     NS_ADDREF_THIS();                                                    
     return NS_OK;                                                        
   }
