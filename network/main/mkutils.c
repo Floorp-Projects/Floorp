@@ -2348,7 +2348,7 @@ PUBLIC int
 NET_AddLOSubmitDataToURLStruct(LO_FormSubmitData * sub_data, 
                                URL_Struct * url_struct)
 {
-
+#if 0
     int32 i;
     int32 total_size;
     char *end, *tmp_ptr;
@@ -2962,6 +2962,8 @@ NET_AddLOSubmitDataToURLStruct(LO_FormSubmitData * sub_data,
     PA_UNLOCK(sub_data->encoding);
 
     return(1); /* success */
+#endif
+    return 0;
 }
 
 PUBLIC int
