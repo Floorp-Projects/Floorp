@@ -70,7 +70,7 @@ calTodo.prototype = {
     },
 
     clone: function () {
-        var m = new calEvent();
+        var m = new calTodo();
         this.cloneItemBaseInto(m);
         m.mEntryDate = this.mEntryDate.clone();
         m.mDueDate = this.mDueDate.clone();
