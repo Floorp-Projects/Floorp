@@ -727,6 +727,11 @@ nsresult nsNNTPProtocol::ReadFromMemCache(nsICacheEntryDescriptor *entry)
      
   if (NS_SUCCEEDED(rv))
   {
+    nsXPIDLCString group;
+    nsXPIDLCString commandSpecificData;
+    // do this to get m_key set, so that marking the message read will work.
+    rv = ParseURL(m_url, getter_Copies(group), &m_messageID, getter_Copies(commandSpecificData));
+
     nsNntpCacheStreamListener * cacheListener = new nsNntpCacheStreamListener();
     NS_ADDREF(cacheListener);
 
