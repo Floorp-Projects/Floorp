@@ -67,8 +67,9 @@ NS_INTERFACE_MAP_BEGIN(nsWebBrowserChrome)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWebBrowserChrome)
   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
   NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChrome)
-  NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
+  NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChromeFocus)
   NS_INTERFACE_MAP_ENTRY(nsIEmbeddingSiteWindow)
+  NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END
 
@@ -208,6 +209,22 @@ NS_IMETHODIMP nsWebBrowserChrome::ExitModalEventLoop(nsresult aStatus)
 {
    NS_ERROR("Haven't Implemented this yet");
    return NS_ERROR_FAILURE;
+}
+
+//*****************************************************************************
+// nsIWebBrowserChromeFocus
+//*****************************************************************************
+
+NS_IMETHODIMP
+nsWebBrowserChrome::FocusNextElement()
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsWebBrowserChrome::FocusPrevElement()
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 //*****************************************************************************
