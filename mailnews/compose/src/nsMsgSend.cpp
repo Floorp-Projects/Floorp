@@ -1569,14 +1569,13 @@ nsMsgComposeAndSend::ProcessMultipartRelated(PRInt32 *aMailboxCount, PRInt32 *aN
     // to process this element.
     //
     nsCOMPtr<nsIDOMNode>    node;
-    nsISupports             *isupp = aNodeList->ElementAt(locCount);
+    nsCOMPtr <nsISupports> isupp = getter_AddRefs(aNodeList->ElementAt(locCount));
     
     if (!isupp) {
       return NS_ERROR_MIME_MPART_ATTACHMENT_ERROR;
     }
     
     node = do_QueryInterface(isupp);
-    NS_IF_RELEASE(isupp);             // make sure we cleanup
     if (!node) {
       return NS_ERROR_MIME_MPART_ATTACHMENT_ERROR;
     }

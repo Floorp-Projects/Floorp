@@ -123,11 +123,10 @@ nsresult nsImapOfflineSync::AdvanceToNextServer()
 
   while (serverIndex < numServers)
   {
-    nsISupports* serverSupports = m_allServers->ElementAt(serverIndex);
+    nsCOMPtr <nsISupports> serverSupports = getter_AddRefs(m_allServers->ElementAt(serverIndex));
     serverIndex++;
 
     nsCOMPtr<nsIMsgIncomingServer> server = do_QueryInterface(serverSupports);
-    NS_RELEASE(serverSupports);
     nsCOMPtr <nsINntpIncomingServer> newsServer = do_QueryInterface(server);
     if (newsServer) // news servers aren't involved in offline imap
       continue;

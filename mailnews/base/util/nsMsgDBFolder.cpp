@@ -1364,7 +1364,7 @@ nsMsgDBFolder::AutoCompact(nsIMsgWindow *aWindow)
        PRInt32 offlineSupportLevel;
        if ( numServers > 0 )
        {
-         nsCOMPtr <nsISupports> serverSupports = allServers->ElementAt(serverIndex);
+         nsCOMPtr <nsISupports> serverSupports = getter_AddRefs(allServers->ElementAt(serverIndex));
          nsCOMPtr<nsIMsgIncomingServer> server = do_QueryInterface(serverSupports);
          NS_ENSURE_SUCCESS(rv,rv);
          nsCOMPtr<nsISupportsArray> folderArray;
@@ -1423,7 +1423,7 @@ nsMsgDBFolder::AutoCompact(nsIMsgWindow *aWindow)
                }
              }
            }
-           serverSupports = allServers->ElementAt(++serverIndex);
+           serverSupports = getter_AddRefs(allServers->ElementAt(++serverIndex));
            server = do_QueryInterface(serverSupports, &rv);
          }
          while (serverIndex < numServers);
@@ -1555,7 +1555,7 @@ nsMsgDBFolder::ChangeFilterDestination(nsIMsgFolder *newFolder, PRBool caseInsen
       rv = allServers->Count(&numServers);
       for (PRUint32 serverIndex=0; serverIndex < numServers; serverIndex++)
       {
-        nsCOMPtr <nsISupports> serverSupports = allServers->ElementAt(serverIndex);
+        nsCOMPtr <nsISupports> serverSupports = getter_AddRefs(allServers->ElementAt(serverIndex));
         nsCOMPtr <nsIMsgIncomingServer> server = do_QueryInterface(serverSupports, &rv);
         if (server && NS_SUCCEEDED(rv))
         {
