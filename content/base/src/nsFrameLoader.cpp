@@ -85,7 +85,7 @@
 
 NS_IMPL_ISUPPORTS1(nsFrameLoader, nsIFrameLoader)
 
-nsresult
+NS_IMETHODIMP
 nsFrameLoader::LoadFrame()
 {
   NS_ENSURE_TRUE(mOwnerContent, NS_ERROR_NOT_INITIALIZED);
@@ -260,7 +260,7 @@ nsFrameLoader::LoadFrame()
   return rv;
 }
 
-nsresult
+NS_IMETHODIMP
 nsFrameLoader::GetDocShell(nsIDocShell **aDocShell)
 {
   *aDocShell = nsnull;

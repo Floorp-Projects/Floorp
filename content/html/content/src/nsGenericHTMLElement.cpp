@@ -3475,11 +3475,14 @@ nsGenericHTMLFrameElement::SetDocument(nsIDocument *aDocument, PRBool aDeep,
   nsGenericHTMLElement::SetDocument(aDocument, aDeep,
                                     aCompileEventHandlers);
 
-  if (!aDocument) {
+  if (!aDocument && mFrameLoader) {
     // This iframe is being taken out of the document, destroy the
     // iframe's frame loader (doing that will tear down the window in
     // this iframe).
-
+    // XXXbz we really want to only partially destroy the frame
+    // loader... we don't want to tear down the docshell.  Food for
+    // later bug.
+    mFrameLoader->Destroy();
     mFrameLoader = nsnull;
   }
 

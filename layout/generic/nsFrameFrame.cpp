@@ -609,6 +609,9 @@ nsSubDocumentFrame::GetDocShell(nsIDocShell **aDocShell)
       if (!mFrameLoader)
         return NS_ERROR_OUT_OF_MEMORY;
 
+      // ... remember that we own this frame loader...
+      mOwnsFrameLoader = PR_TRUE;
+
       // ... and tell it to start loading.
       nsresult rv = mFrameLoader->LoadFrame();
       NS_ENSURE_SUCCESS(rv, rv);
