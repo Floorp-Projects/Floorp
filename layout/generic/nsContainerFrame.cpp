@@ -487,16 +487,16 @@ nsContainerFrame::SyncFrameViewAfterReflow(nsIPresContext* aPresContext,
       } else {
         nscoord width, height;
         aView->GetDimensions(&width, &height);
-        // If the height and width are unchanged then repaint only the newly exposed or
-        // contracted area, otherwise repaint the union of the old and new areas
+        // If the width is unchanged and the height is not decreased then repaint only the 
+        // newly exposed or contracted area, otherwise repaint the union of the old and new areas
 
         // XXX:  We currently invalidate the newly exposed areas only when the 
-        // container frame dimensions are unchanged changes because some frames do not 
-        // invalidate themselves properly. see bug 73825.
+        // container frame's width is unchanged and the height is either unchanged or increased
+        // This is because some frames do not invalidate themselves properly. see bug 73825.
         // Once bug 73825 is fixed, we should always pass PR_TRUE instead of 
-        // frameSize.width == width && frameSize.height == height.
+        // frameSize.width == width && frameSize.height >= height.
         vm->ResizeView(aView, frameSize.width, frameSize.height, 
-                       (frameSize.width == width && frameSize.height == height));
+                       (frameSize.width == width && frameSize.height >= height));
       }
     }
   
