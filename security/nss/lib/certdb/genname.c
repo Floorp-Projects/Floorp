@@ -1012,6 +1012,8 @@ compareRFC822N2C(const SECItem *name, const SECItem *constraint)
         return SECSuccess;
     if (name->len < constraint->len)
         return SECFailure;
+    if (constraint->len == 1 && constraint->data[0] == '.')
+        return SECSuccess;
     for (offset = constraint->len - 1; offset >= 0; --offset) {
     	if (constraint->data[offset] == '@') {
 	    return (name->len == constraint->len && 
@@ -1039,8 +1041,6 @@ static SECStatus
 compareIPaddrN2C(const SECItem *name, const SECItem *constraint)
 {
     int i;
-    if (!constraint->len)
-        return SECSuccess;
     if (name->len == 4 && constraint->len == 8) { /* ipv4 addr */
         for (i = 0; i < 4; i++) {
 	    if ((name->data[i] ^ constraint->data[i]) & constraint->data[i+4])
@@ -1124,6 +1124,7 @@ cert_CompareNameWithConstraints(CERTGeneralName     *name,
     SECStatus           rv     = SECSuccess;
     SECStatus           matched = SECFailure;
     CERTNameConstraint  *current;
+    int                 applicable = 0; /* constraints applicable in phase 2 */
 
     PORT_Assert(constraints);  /* caller should not call with NULL */
     if (!constraints) {
@@ -1148,13 +1149,13 @@ cert_CompareNameWithConstraints(CERTGeneralName     *name,
 		int tag;
 		CERTAVA *nAVA = *nAVAs++;
 		tag = CERT_GetAVATag(nAVA);
-		matched = SECFailure;
 		if ( tag == SEC_OID_PKCS9_EMAIL_ADDRESS ||
 		     tag == SEC_OID_RFC1274_MAIL) { /* email AVA */
 		    SECItem *avaValue = CERT_DecodeAVAValue(&nAVA->value);
 		    if (!avaValue)
 		        goto loser;
 
+		    matched = SECFailure;
 		    current = constraints;
 		    do { /* loop over constraints */
 			if (current->name.type == certRFC822Name) {
@@ -1186,6 +1187,7 @@ cert_CompareNameWithConstraints(CERTGeneralName     *name,
     do {
 	rv = SECSuccess;
 	matched = SECFailure;
+	++applicable;
 	switch (name->type) {
 
 	case certDNSName:
@@ -1217,14 +1219,19 @@ cert_CompareNameWithConstraints(CERTGeneralName     *name,
 	case certDirectoryName:
 	    PORT_Assert(current->name.type == certDirectoryName || \
 	                current->name.type == certRFC822Name);
-	    if (current->name.type == certRFC822Name) 
+	    if (current->name.type == certRFC822Name) {
+		--applicable; /* this type not applicable in phase 2 */
 		break; /* already handled in phase 1. */
+	    }
 
 	    /* here, current->name.type == certDirectoryName */
 	    /* Determine if the constraint directory name is a "prefix"
 	    ** for the directory name being tested. 
 	    */
 	  {
+	    /* status defaults to SECEqual, so that a constraint with 
+	    ** no AVAs will be a wildcard, matching all directory names.
+	    */
 	    SECComparison   status = SECEqual;
 	    const CERTRDN **cRDNs = current->name.name.directoryName.rdns;  
 	    const CERTRDN **nRDNs = name->name.directoryName.rdns;
@@ -1292,20 +1299,21 @@ cert_CompareNameWithConstraints(CERTGeneralName     *name,
 	    matched = excluded ? SECFailure : SECSuccess;
 	    break;
 
-	default:
-	    /* non-standard types are not supported */
+	default: /* non-standard types are not supported */
 	    rv = SECFailure;
-	}
-	if (rv != SECSuccess)
-	    break;
-	if (matched == SECSuccess) {
-	    rv = excluded ? SECFailure : SECSuccess;
 	    break;
 	}
-	rv = excluded ? SECSuccess : SECFailure;
+	if (matched == SECSuccess || rv != SECSuccess)
+	    break;
 	current = cert_get_next_name_constraint(current);
     } while (current != constraints);
-    return rv;
+    if (rv == SECSuccess) {
+        if (matched == SECSuccess || !applicable) 
+	    rv = excluded ? SECFailure : SECSuccess;
+	else
+	    rv = excluded ? SECSuccess : SECFailure;
+	return rv;
+    }
 
 loser:
     return SECFailure;
@@ -1335,8 +1343,11 @@ CERT_CompareNameSpace(CERTCertificate  *cert,
     
     rv = CERT_FindCertExtension(cert, SEC_OID_X509_NAME_CONSTRAINTS, 
                                 &constraintsExtension);
-    if (rv != SECSuccess) 
-	return NULL;
+    if (rv != SECSuccess) {
+	return (PORT_GetError() == SEC_ERROR_EXTENSION_NOT_FOUND)
+	       ? NULL  /* success, space is unconstrained. */
+	       : CERT_DupCertificate(cert); /* failure, some other error */
+    }
     constraints = cert_DecodeNameConstraints(arena, &constraintsExtension);
     currentName = namesList;
     if (constraints == NULL)  /* decode failed */
@@ -1368,8 +1379,6 @@ CERT_CompareNameSpace(CERTCertificate  *cert,
  						     PR_FALSE);
  		if (rv != SECSuccess) 
  		    goto loser;
- 	    } else {
- 		goto loser; /* name type not among permitted types */
  	    }
  	}
  	currentName = cert_get_next_general_name(currentName);
