@@ -53,7 +53,7 @@
 <!ENTITY cellChangeSelectionMsg.label     "When moving the selection:">
 <!ENTITY cellApplyBeforeMove.label        "Apply changes before moving">
 <!ENTITY cellKeepCurrentData.label        "Keep current settings">
-<!ENTITY cellSpans.label                  "Cell spans:">
+<!ENTITY cellSpan.label                   "Span:">
 <!ENTITY cellContentAlignment.label       "Content Alignment">
 <!ENTITY cellHorizontal.label             "Horizontal:">
 <!ENTITY cellVertical.label               "Vertical:">

@@ -227,13 +227,13 @@
             <columns><column/><column/><column/></columns>
             <rows>
               <row valign="middle" autostretch="never">
-                <checkbox id="SpanCheckbox" value="&cellSpans.label;"/>
-                <textfield class="narrow" id="RowSpanInput" onkeyup="ChangeIntTextfield(this.id,'SpanCheckbox');"/>
+                <checkbox id="RowSpanCheckbox" value="&cellSpan.label;"/>
+                <textfield class="narrow" id="RowSpanInput" onkeyup="ChangeIntTextfield(this.id,'RowSpanCheckbox');"/>
                 <text align="left" value="&cellSpanRows.label;"/>
               </row>
               <row valign="middle" autostretch="never">
-                <spring/>
-                <textfield class="narrow" id="ColSpanInput" onkeyup="ChangeIntTextfield(this.id,'SpanCheckbox');"/>
+                <checkbox id="ColSpanCheckbox" value="&cellSpan.label;"/>
+                <textfield class="narrow" id="ColSpanInput" onkeyup="ChangeIntTextfield(this.id,'ColSpanCheckbox');"/>
                 <text align="left" value="&cellSpanCols.label;"/>
               </row>
             </rows>
