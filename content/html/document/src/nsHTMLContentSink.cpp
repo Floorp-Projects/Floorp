@@ -87,13 +87,11 @@ static PRLogModuleInfo* gSinkLogModuleInfo;
 
 //----------------------------------------------------------------------
 
-static NS_DEFINE_IID(kIHTMLContentSinkIID, NS_IHTMLCONTENTSINK_IID);
+static NS_DEFINE_IID(kIHTMLContentSinkIID, NS_IHTML_CONTENT_SINK_IID);
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
 
 class HTMLContentSink : public nsIHTMLContentSink {
 public:
-
-  NS_DECL_ISUPPORTS
 
   HTMLContentSink();
   ~HTMLContentSink();
@@ -108,42 +106,33 @@ public:
   nsIHTMLContent* GetCurrentContainer(eHTMLTags* aType);
   nsIHTMLContent* GetTableParent();
 
-  virtual PRBool SetTitle(const nsString& aValue);
+  // nsISupports
+  NS_DECL_ISUPPORTS
 
-  // Called when Opening or closing the main HTML container
-  virtual PRBool OpenHTML(const nsIParserNode& aNode);
-  virtual PRBool CloseHTML(const nsIParserNode& aNode);
+  // nsIContentSink
+  NS_IMETHOD WillBuildModel(void);
+  NS_IMETHOD DidBuildModel(PRInt32 aQualityLevel);
+  NS_IMETHOD WillInterrupt(void);
+  NS_IMETHOD WillResume(void);
 
-  // Called when Opening or closing the main HEAD container
-  virtual PRBool OpenHead(const nsIParserNode& aNode);
-  virtual PRBool CloseHead(const nsIParserNode& aNode);
-
-  // Called when Opening or closing the main BODY container
-  virtual PRBool OpenBody(const nsIParserNode& aNode);
-  virtual PRBool CloseBody(const nsIParserNode& aNode);
-
-  // Called when Opening or closing FORM containers
-  virtual PRBool OpenForm(const nsIParserNode& aNode);
-  virtual PRBool CloseForm(const nsIParserNode& aNode);
-
-  // Called when Opening or closing the main FRAMESET container
-  virtual PRBool OpenFrameset(const nsIParserNode& aNode);
-  virtual PRBool CloseFrameset(const nsIParserNode& aNode);
-
-  // Called when Opening or closing a general container
-  // This includes: OL,UL,DIR,SPAN,TABLE,H[1..6],etc.
-  // Until proven otherwise, I also plan to toss STYLE,
-  // FORMS, FRAME, SCRIPT, etc. here too!
-  virtual PRBool OpenContainer(const nsIParserNode& aNode);
-  virtual PRBool CloseContainer(const nsIParserNode& aNode);
-
-  // Called for text, comments and so on...
-  virtual PRBool AddLeaf(const nsIParserNode& aNode);
-
-  virtual void WillBuildModel(void);
-  virtual void DidBuildModel(PRInt32 aQualityLevel);
-  virtual void WillInterrupt(void);
-  virtual void WillResume(void);
+  // nsIHTMLContentSink
+  NS_IMETHOD PushMark();
+  NS_IMETHOD SetTitle(const nsString& aValue);
+  NS_IMETHOD OpenHTML(const nsIParserNode& aNode);
+  NS_IMETHOD CloseHTML(const nsIParserNode& aNode);
+  NS_IMETHOD OpenHead(const nsIParserNode& aNode);
+  NS_IMETHOD CloseHead(const nsIParserNode& aNode);
+  NS_IMETHOD OpenBody(const nsIParserNode& aNode);
+  NS_IMETHOD CloseBody(const nsIParserNode& aNode);
+  NS_IMETHOD OpenForm(const nsIParserNode& aNode);
+  NS_IMETHOD CloseForm(const nsIParserNode& aNode);
+  NS_IMETHOD OpenMap(const nsIParserNode& aNode);
+  NS_IMETHOD CloseMap(const nsIParserNode& aNode);
+  NS_IMETHOD OpenFrameset(const nsIParserNode& aNode);
+  NS_IMETHOD CloseFrameset(const nsIParserNode& aNode);
+  NS_IMETHOD OpenContainer(const nsIParserNode& aNode);
+  NS_IMETHOD CloseContainer(const nsIParserNode& aNode);
+  NS_IMETHOD AddLeaf(const nsIParserNode& aNode);
 
 protected:
 
@@ -332,7 +321,7 @@ HTMLContentSink::Init(nsIDocument* aDoc,
 
 NS_IMPL_ISUPPORTS(HTMLContentSink,kIHTMLContentSinkIID)
 
-PRInt32
+NS_IMETHODIMP
 HTMLContentSink::OpenHTML(const nsIParserNode& aNode)
 {
   FlushText();
@@ -345,10 +334,10 @@ HTMLContentSink::OpenHTML(const nsIParserNode& aNode)
   mContainerStack[0] = mRoot;
   mStackPos = 1;
 
-  return 0;
+  return NS_OK;
 }
 
-PRInt32
+NS_IMETHODIMP
 HTMLContentSink::CloseHTML(const nsIParserNode& aNode)
 {
   FlushText();
@@ -361,10 +350,10 @@ HTMLContentSink::CloseHTML(const nsIParserNode& aNode)
 
   NS_IF_RELEASE(mCurrentForm);
 
-  return 0; 
+  return NS_OK; 
 }
 
-PRInt32
+NS_IMETHODIMP
 HTMLContentSink::OpenHead(const nsIParserNode& aNode)
 {
   FlushText();
@@ -375,10 +364,10 @@ HTMLContentSink::OpenHead(const nsIParserNode& aNode)
   mNodeStack[mStackPos] = (eHTMLTags)aNode.GetNodeType();
   mContainerStack[mStackPos] = mHead;
   mStackPos++;
-  return 0;
+  return NS_OK;
 }
 
-PRInt32
+NS_IMETHODIMP
 HTMLContentSink::CloseHead(const nsIParserNode& aNode)
 {
   FlushText();
@@ -388,10 +377,16 @@ HTMLContentSink::CloseHead(const nsIParserNode& aNode)
 
   NS_ASSERTION(mStackPos > 0, "bad bad");
   mNodeStack[--mStackPos] = eHTMLTag_unknown;
-  return 0;
+  return NS_OK;
 }
 
-PRInt32
+NS_IMETHODIMP
+HTMLContentSink::PushMark()
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 HTMLContentSink::SetTitle(const nsString& aValue)
 {
   FlushText();
@@ -412,10 +407,10 @@ HTMLContentSink::SetTitle(const nsString& aValue)
     mHead->AppendChild(it, PR_FALSE);
   }
   NS_RELEASE(atom);
-  return 0;
+  return NS_OK;
 }
 
-PRInt32
+NS_IMETHODIMP
 HTMLContentSink::OpenBody(const nsIParserNode& aNode)
 {
   FlushText();
@@ -448,10 +443,10 @@ HTMLContentSink::OpenBody(const nsIParserNode& aNode)
     StartLayout();
   }
 
-  return 0;
+  return NS_OK;
 }
 
-PRInt32
+NS_IMETHODIMP
 HTMLContentSink::CloseBody(const nsIParserNode& aNode)
 {
   FlushText();
@@ -464,12 +459,12 @@ HTMLContentSink::CloseBody(const nsIParserNode& aNode)
 
   // Reflow any lingering content
 
-  return 0;
+  return NS_OK;
 }
 
 static NS_DEFINE_IID(kIFormManagerIID, NS_IFORMMANAGER_IID);
 
-PRInt32
+NS_IMETHODIMP
 HTMLContentSink::OpenForm(const nsIParserNode& aNode)
 {
   FlushText();
@@ -542,10 +537,10 @@ HTMLContentSink::OpenForm(const nsIParserNode& aNode)
     }
   }
 
-  return 0;
+  return NS_OK;
 }
 
-PRInt32
+NS_IMETHODIMP
 HTMLContentSink::CloseForm(const nsIParserNode& aNode)
 {
   FlushText();
@@ -557,10 +552,57 @@ HTMLContentSink::CloseForm(const nsIParserNode& aNode)
 	  NS_RELEASE(mCurrentForm);
     mCurrentForm = nsnull;
   }
-  return 0;
+  return NS_OK;
 }
 
-PRInt32
+NS_IMETHODIMP
+HTMLContentSink::OpenMap(const nsIParserNode& aNode)
+{
+  FlushText();
+
+  SINK_TRACE_NODE(SINK_TRACE_CALLS,
+                  "HTMLContentSink::OpenMap", aNode);
+
+  // Close out previous form if it's there
+  if (nsnull != mCurrentMap) {
+	  NS_RELEASE(mCurrentMap);
+    mCurrentMap = nsnull;
+  }
+
+  nsAutoString tmp("MAP");
+  nsIAtom* atom = NS_NewAtom(tmp);
+  nsresult rv = NS_NewImageMap(&mCurrentMap, atom);
+  NS_RELEASE(atom);
+  if (NS_OK == rv) {
+    // Look for name attribute and set the map name
+    nsAutoString name;
+    if (FindAttribute(aNode, "name", name)) {
+      // XXX leading, trailing, interior non=-space ws is removed
+      name.StripWhitespace();
+      mCurrentMap->SetName(name);
+    }
+    // Add the map to the document
+    ((nsHTMLDocument*)mDocument)->AddImageMap(mCurrentMap);
+  }
+  return rv;
+}
+
+NS_IMETHODIMP
+HTMLContentSink::CloseMap(const nsIParserNode& aNode)
+{
+  FlushText();
+
+  SINK_TRACE_NODE(SINK_TRACE_CALLS,
+                  "HTMLContentSink::CloseMap", aNode);
+
+  if (nsnull != mCurrentMap) {
+	  NS_RELEASE(mCurrentMap);
+    mCurrentMap = nsnull;
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 HTMLContentSink::OpenFrameset(const nsIParserNode& aNode)
 {
   FlushText();
@@ -569,10 +611,10 @@ HTMLContentSink::OpenFrameset(const nsIParserNode& aNode)
                   "HTMLContentSink::OpenFrameset", aNode);
 
   mNodeStack[mStackPos++] = (eHTMLTags)aNode.GetNodeType();
-  return 0;
+  return NS_OK;
 }
 
-PRInt32
+NS_IMETHODIMP
 HTMLContentSink::CloseFrameset(const nsIParserNode& aNode)
 {
   FlushText();
@@ -581,10 +623,10 @@ HTMLContentSink::CloseFrameset(const nsIParserNode& aNode)
                   "HTMLContentSink::CloseFrameset", aNode);
 
   mNodeStack[--mStackPos] = eHTMLTag_unknown;
-  return 0;
+  return NS_OK;
 }
 
-PRInt32
+NS_IMETHODIMP
 HTMLContentSink::OpenContainer(const nsIParserNode& aNode)
 {
   FlushText();
@@ -616,19 +658,8 @@ HTMLContentSink::OpenContainer(const nsIParserNode& aNode)
   nsIHTMLContent* container = nsnull;
   switch (nodeType) {
   case eHTMLTag_map:
-    NS_IF_RELEASE(mCurrentMap);
-    rv = NS_NewImageMap(&mCurrentMap, atom);
-    if (NS_OK == rv) {
-      // Look for name attribute and set the map name
-      nsAutoString name;
-      if (FindAttribute(aNode, "name", name)) {
-        name.StripWhitespace();     // XXX leading, trailing, interior non=-space ws is removed
-        mCurrentMap->SetName(name);
-      }
-      // Add the map to the document
-      ((nsHTMLDocument*)mDocument)->AddImageMap(mCurrentMap);
-    }
-    return 0;
+    NS_NOTREACHED("bad parser: map != container");
+    break;
 
   case eHTMLTag_applet:
     rv = NS_NewHTMLApplet(&container, atom);
@@ -698,10 +729,10 @@ HTMLContentSink::OpenContainer(const nsIParserNode& aNode)
   }
 
   NS_RELEASE(atom);
-  return 0;
+  return rv;
 }
 
-PRInt32
+NS_IMETHODIMP
 HTMLContentSink::CloseContainer(const nsIParserNode& aNode)
 {
   FlushText();
@@ -711,14 +742,15 @@ HTMLContentSink::CloseContainer(const nsIParserNode& aNode)
 
   switch (aNode.GetNodeType()) {
   case eHTMLTag_map:
+    NS_NOTREACHED("bad parser: map's in CloseContainer");
     NS_IF_RELEASE(mCurrentMap);
-    return 0;
+    return NS_OK;
   }
 
   // XXX we could assert things about the top tag name
   if (0 == mStackPos) {
     // Can't pop empty stack
-    return 0;
+    return NS_OK;
   }
 
   --mStackPos;
@@ -803,7 +835,7 @@ HTMLContentSink::CloseContainer(const nsIParserNode& aNode)
     NS_RELEASE(container);
   }
 
-  return 0;
+  return NS_OK;
 }
 
 /**
@@ -812,7 +844,7 @@ HTMLContentSink::CloseContainer(const nsIParserNode& aNode)
  *
  * @update 5/7/98 gess
  */     
-void
+NS_IMETHODIMP
 HTMLContentSink::WillBuildModel(void)
 {
   mDocument->BeginLoad();
@@ -831,6 +863,7 @@ HTMLContentSink::WillBuildModel(void)
              ("HTMLContentSink::WillBuildModel: start layout"));
   StartLayout();
 #endif
+  return NS_OK;
 }
 
 
@@ -842,10 +875,9 @@ HTMLContentSink::WillBuildModel(void)
  *         0=GOOD; 1=FAIR; 2=POOR;
  * @update 6/21/98 gess
  */     
-void
+NS_IMETHODIMP
 HTMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
 {
-
   PRInt32 i, ns = mDocument->GetNumberOfShells();
   for (i = 0; i < ns; i++) {
     nsIPresShell* shell = mDocument->GetShellAt(i);
@@ -863,6 +895,8 @@ HTMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
              ("HTMLContentSink::DidBuildModel: layout new content"));
   ReflowNewContent();
   mDocument->EndLoad();
+
+  return NS_OK;
 }
 
 /**
@@ -872,9 +906,10 @@ HTMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
  *
  * @update 5/7/98 gess
  */     
-void
+NS_IMETHODIMP
 HTMLContentSink::WillInterrupt(void)
 {
+  return NS_OK;
 }
 
 /**
@@ -883,9 +918,10 @@ HTMLContentSink::WillInterrupt(void)
  *
  * @update 5/7/98 gess
  */     
-void
+NS_IMETHODIMP
 HTMLContentSink::WillResume(void)
 {
+  return NS_OK;
 }
 
 //----------------------------------------------------------------------
@@ -959,7 +995,7 @@ nsIHTMLContent* HTMLContentSink::GetCurrentContainer(eHTMLTags* aType)
 
 // Leaf tag handling code
 
-PRInt32 HTMLContentSink::AddLeaf(const nsIParserNode& aNode)
+NS_IMETHODIMP HTMLContentSink::AddLeaf(const nsIParserNode& aNode)
 {
   SINK_TRACE_NODE(SINK_TRACE_CALLS,
                   "HTMLContentSink::AddLeaf", aNode);
@@ -969,7 +1005,7 @@ PRInt32 HTMLContentSink::AddLeaf(const nsIParserNode& aNode)
   case eHTMLTag_style:
     FlushText();
     ProcessSTYLETag(aNode);
-    return 0;
+    return NS_OK;
 
   case eHTMLTag_script:
     // XXX SCRIPT tag evaluation is currently turned off till we
@@ -978,18 +1014,18 @@ PRInt32 HTMLContentSink::AddLeaf(const nsIParserNode& aNode)
 #if 0
     ProcessSCRIPTTag(aNode);
 #endif
-    return 0;
+    return NS_OK;
 
   case eHTMLTag_area:
     FlushText();
     ProcessAREATag(aNode);
-    return 0;
+    return NS_OK;
 
   case eHTMLTag_meta:
     // Add meta objects to the head object
     FlushText();
     ProcessMETATag(aNode);
-    return 0;
+    return NS_OK;
   }
 
   eHTMLTags parentType;
@@ -1008,12 +1044,12 @@ PRInt32 HTMLContentSink::AddLeaf(const nsIParserNode& aNode)
   case eHTMLTag_option:
     FlushText();
     ProcessOPTIONTagContent(aNode);
-    return 0;
+    return NS_OK;
 
   case eHTMLTag_select:
     // Discard content in a select that's not an option
     if (eHTMLTag_option != aNode.GetNodeType()) {
-      return 0;
+      return NS_OK;
     }
     break;
   }
@@ -1090,7 +1126,7 @@ PRInt32 HTMLContentSink::AddLeaf(const nsIParserNode& aNode)
   }
   NS_IF_RELEASE(leaf);
 
-  return 0;
+  return rv;
 }
 
 // Special handling code to push unexpected table content out of the
