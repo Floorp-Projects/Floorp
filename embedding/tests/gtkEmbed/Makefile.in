@@ -26,10 +26,12 @@ include $(DEPTH)/config/autoconf.mk
 
 REQUIRES	= xpcom string webbrwsr widget necko docshell layout webshell dom locale uriloader embed_base windowwatcher gfx2 js
 
-CPPSRCS		= WebBrowserChrome.cpp  \
-	          WindowCreator.cpp \
-	          main.cpp        \
-              $(NULL)
+CPPSRCS	 = \
+	WebBrowserChrome.cpp  \
+	WindowCreator.cpp \
+	PromptService.cpp \
+	main.cpp \
+	$(NULL)
 
 PROGRAM = gtkEmbed
 
@@ -39,7 +41,8 @@ LIBS= \
 		$(XPCOM_LIBS) \
 		-lgtksuperwin \
 		$(PROFILE_LIBS) \
-                $(NULL)
+		$(DIST)/lib/libmpfilelocprovider_s.$(LIB_SUFFIX) \
+		$(NULL)
 
 LIBS += $(TK_LIBS)
 
