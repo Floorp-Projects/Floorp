@@ -524,7 +524,7 @@ public class CompositionPanel extends GeneralPanel {
       } catch (MessagingException e) {
         author = "???";         // I18N? ###
       }
-      String tmp = "\n" + author + " wrote:"; // I18N ###
+      String tmp = author + " wrote:\n"; // I18N ###
       try {
         doc.insertString(position, tmp, null);
         position += tmp.length();
@@ -557,10 +557,12 @@ public class CompositionPanel extends GeneralPanel {
         }
         while (linebuffer.pullLine(line)) {
           try {
-            doc.insertString(position, "\n> ", null);
-            position += 3;
+            doc.insertString(position, "> ", null);
+            position += 2;
             doc.insertString(position, line.toString(), null);
             position += line.length();
+            doc.insertString(position, "\n", null);
+            position += 1;
           } catch (BadLocationException e) {
           }
         }
@@ -588,15 +590,14 @@ public class CompositionPanel extends GeneralPanel {
       String sigFileName = prefs.getString("mail.identity-" + ident + ".signature", "");
 
       Document doc = mEditor.getDocument();
-      //int position = mEditor.getCaretPosition();
+      int oldPosition = mEditor.getCaretPosition();
       int position = doc.getEndPosition().getOffset() - 1;
       
       try {
         BufferedReader sigReader = new BufferedReader(new FileReader(sigFileName));
 
-        String s = "-- ";
+        String s = "\n-- ";
         while (s != null) {
-          System.out.println(s);
           s = s + "\n";
           doc.insertString(position, s, null);
           position += s.length();
@@ -609,7 +610,9 @@ public class CompositionPanel extends GeneralPanel {
       } catch (BadLocationException ble) {
         ble.printStackTrace();
       }
-
+      
+      mEditor.setCaretPosition(oldPosition);
+      
     }
   }
 
