@@ -45,6 +45,7 @@ function newFolderNameOnLoad(pickerDOMID)
 		if (newFolderTypeBox)
 		{
 			newFolderTypeBox.setAttribute("hidden", "false");
+                        window.resizeTo(0,0);
 			window.sizeToContent();
 		}
 	}

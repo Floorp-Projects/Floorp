@@ -98,4 +98,9 @@ function SetFolderPicker(uri,pickerID)
 
 	picker.setAttribute("value",selectedValue);
 	picker.setAttribute("uri",uri);
+
+        if (pickerID == "msgNewFolderPicker") {
+        window.resizeTo(0,0);
+        window.sizeToContent();
+        }
 }
