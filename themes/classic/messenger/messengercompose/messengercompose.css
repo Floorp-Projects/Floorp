@@ -278,6 +278,13 @@ outlinerbody:-moz-outliner-image(remote-abook)
     list-style-image: url("chrome://messenger/skin/addressbook/remote-abook.gif");
   }
 
+outlinerbody:-moz-outliner-image(remote-err) 
+  {
+    margin: 2px -3px 2px 2px;
+    border: none;
+    list-style-image: url("chrome://messenger/skin/addressbook/remote-abook-down.gif");
+  }
+
 #msgheaderstoolbar-box
   {
     margin-top            : 2px;

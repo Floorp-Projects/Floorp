@@ -480,6 +480,7 @@ classic.jar:
     skin/classic/messenger/addressbook/person.gif                        (messenger/addressbook/person.gif)
     skin/classic/messenger/addressbook/property.gif                      (messenger/addressbook/property.gif)
     skin/classic/messenger/addressbook/remote-abook.gif                  (messenger/addressbook/remote-abook.gif)
+    skin/classic/messenger/addressbook/remote-abook-down.gif             (messenger/addressbook/remote-abook-down.gif)
     skin/classic/messenger/addressbook/searchold-disabled.gif            (messenger/addressbook/searchold-disabled.gif)
     skin/classic/messenger/addressbook/searchold-hover-active.gif        (messenger/addressbook/searchold-hover-active.gif)
     skin/classic/messenger/addressbook/searchold-hover.gif               (messenger/addressbook/searchold-hover.gif)

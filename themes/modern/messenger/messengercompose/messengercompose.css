@@ -240,6 +240,12 @@ outlinerbody:-moz-outliner-image(remote-abook) {
   list-style-image: url("chrome://messenger/skin/addressbook/icons/directory.gif");
 }
 
+outlinerbody:-moz-outliner-image(remote-err) {
+  margin: 2px -4px 2px 3px;
+  border: none;
+  list-style-image: url("chrome://messenger/skin/addressbook/icons/directory-down.gif");
+}
+
 /* ::::: status bar border tweaks ::::: */
 
 statusbarpanel,
