@@ -2991,7 +2991,8 @@ nsDocShell::Destroy()
     delete mEditorData;
     mEditorData = 0;
 
-    NS_IF_RELEASE(NS_STATIC_CAST(nsIClipboardDragDropHookList *, mTransferableHookData));
+    nsIClipboardDragDropHookList *list = NS_STATIC_CAST(nsIClipboardDragDropHookList *, mTransferableHookData);
+    NS_IF_RELEASE(list);
     delete mTransferableHookData;
     mTransferableHookData = nsnull;
 
