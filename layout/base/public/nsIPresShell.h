@@ -85,7 +85,6 @@ typedef enum SelectionRegion{SELECTION_ANCHOR_REGION = 0,
 #define VERIFY_REFLOW_INCLUDE_SPACE_MANAGER 0x40
 #define VERIFY_REFLOW_DURING_RESIZE_REFLOW  0x80
 
-
 /**
  * Presentation shell interface. Presentation shells are the
  * controlling point for managing the presentation of a document. The
@@ -435,6 +434,12 @@ public:
    * Get the flags associated with the VerifyReflow debug tool
    */
   static NS_LAYOUT PRInt32 GetVerifyReflowFlags();
+
+
+#ifdef MOZ_REFLOW_PERF
+  NS_IMETHOD CountReflows(const char * aName, PRUint32 aType) = 0;
+#endif
+
 };
 
 /**

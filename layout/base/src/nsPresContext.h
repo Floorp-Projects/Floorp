@@ -133,7 +133,9 @@ public:
   NS_IMETHOD GetEventStateManager(nsIEventStateManager** aManager);
   NS_IMETHOD GetDefaultDirection(PRUint8* aDirection);
   NS_IMETHOD SetDefaultDirection(PRUint8 aDirection);
-
+#ifdef MOZ_REFLOW_PERF
+  NS_IMETHOD CountReflows(const char * aName, PRUint32 aType);
+#endif
 protected:
   nsPresContext();
   virtual ~nsPresContext();

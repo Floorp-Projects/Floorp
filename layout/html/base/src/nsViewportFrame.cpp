@@ -482,6 +482,7 @@ ViewportFrame::Reflow(nsIPresContext*          aPresContext,
                       const nsHTMLReflowState& aReflowState,
                       nsReflowStatus&          aStatus)
 {
+  DO_GLOBAL_REFLOW_COUNT("ViewportFrame", aReflowState.reason);
   NS_FRAME_TRACE_REFLOW_IN("ViewportFrame::Reflow");
   NS_PRECONDITION(nsnull == aDesiredSize.maxElementSize, "unexpected request");
 

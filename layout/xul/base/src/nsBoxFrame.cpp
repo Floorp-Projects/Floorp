@@ -610,6 +610,7 @@ nsBoxFrame::Reflow(nsIPresContext*   aPresContext,
                      const nsHTMLReflowState& aReflowState,
                      nsReflowStatus&          aStatus)
 {
+  DO_GLOBAL_REFLOW_COUNT("nsBoxFrame", aReflowState.reason);
   #ifdef DEBUG_REFLOW
       gIndent++;
   #endif

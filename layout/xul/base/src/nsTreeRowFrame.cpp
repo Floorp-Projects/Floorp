@@ -180,6 +180,7 @@ nsTreeRowFrame::Reflow(nsIPresContext*          aPresContext,
 							         const nsHTMLReflowState& aReflowState,
 							         nsReflowStatus&          aStatus)
 {
+  DO_GLOBAL_REFLOW_COUNT("nsTreeRowFrame", aReflowState.reason);
 /*
   if (aReflowState.reason != eReflowReason_Incremental) {
     // Determine the row's generation.

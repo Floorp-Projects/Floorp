@@ -1412,6 +1412,7 @@ nsFrame::Reflow(nsIPresContext*          aPresContext,
                 const nsHTMLReflowState& aReflowState,
                 nsReflowStatus&          aStatus)
 {
+  DO_GLOBAL_REFLOW_COUNT("nsFrame", aReflowState.reason);
   aDesiredSize.width = 0;
   aDesiredSize.height = 0;
   aDesiredSize.ascent = 0;

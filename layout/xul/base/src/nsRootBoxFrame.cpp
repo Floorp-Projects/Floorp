@@ -202,6 +202,7 @@ nsRootBoxFrame::Reflow(nsIPresContext*          aPresContext,
                   const nsHTMLReflowState& aReflowState,
                   nsReflowStatus&          aStatus)
 {
+  DO_GLOBAL_REFLOW_COUNT("nsRootBoxFrame", aReflowState.reason);
   return nsBoxFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
 }
 

@@ -214,6 +214,7 @@ nsFirstLetterFrame::Reflow(nsIPresContext*          aPresContext,
                            const nsHTMLReflowState& aReflowState,
                            nsReflowStatus&          aReflowStatus)
 {
+  DO_GLOBAL_REFLOW_COUNT("nsFirstLetterFrame", aReflowState.reason);
   nsresult rv = NS_OK;
 
   // Grab overflow list

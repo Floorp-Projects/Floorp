@@ -176,6 +176,7 @@ HRuleFrame::Reflow(nsIPresContext*          aPresContext,
                    const nsHTMLReflowState& aReflowState,
                    nsReflowStatus&          aStatus)
 {
+  DO_GLOBAL_REFLOW_COUNT("HRuleFrame", aReflowState.reason);
   NS_PRECONDITION(mState & NS_FRAME_IN_REFLOW, "frame is not in reflow");
 
   // Compute the width

@@ -391,6 +391,7 @@ nsTreeFrame::Reflow(nsIPresContext*          aPresContext,
 							      const nsHTMLReflowState& aReflowState,
 							      nsReflowStatus&          aStatus)
 {
+  DO_GLOBAL_REFLOW_COUNT("nsTreeFrame", aReflowState.reason);
   NS_ASSERTION(aReflowState.mComputedWidth != NS_UNCONSTRAINEDSIZE, 
                "Reflowing tree with unconstrained width!!!!");
   

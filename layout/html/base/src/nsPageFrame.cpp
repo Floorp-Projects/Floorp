@@ -56,6 +56,7 @@ NS_METHOD nsPageFrame::Reflow(nsIPresContext*          aPresContext,
                               const nsHTMLReflowState& aReflowState,
                               nsReflowStatus&          aStatus)
 {
+  DO_GLOBAL_REFLOW_COUNT("nsPageFrame", aReflowState.reason);
   aStatus = NS_FRAME_COMPLETE;  // initialize out parameter
 
   if (eReflowReason_Incremental == aReflowState.reason) {
