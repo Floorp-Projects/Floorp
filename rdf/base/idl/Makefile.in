@@ -22,16 +22,17 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 IDLSRCS = \
-	nsIRDFCursor.idl		\
-	nsIRDFArcsInCursor.idl		\
-	nsIRDFArcsOutCursor.idl		\
-	nsIRDFAssertionCursor.idl	\
-	nsIRDFDataSource.idl		\
-	nsIRDFLiteral.idl		\
-	nsIRDFNode.idl			\
-	nsIRDFObserver.idl		\
-	nsIRDFResource.idl		\
-	nsIRDFResourceCursor.idl	\
+	rdf.idl				\
+#	nsIRDFArcsInCursor.idl		\
+#	nsIRDFArcsOutCursor.idl		\
+#	nsIRDFAssertionCursor.idl	\
+#	nsIRDFCursor.idl		\
+#	nsIRDFDataSource.idl		\
+#	nsIRDFLiteral.idl		\
+#	nsIRDFNode.idl			\
+#	nsIRDFObserver.idl		\
+#	nsIRDFResoruce.idl		\
+#	nsIRDFResourceCursor.idl	\
 	$(NULL)
 
 # for testing purposes

@@ -2,14 +2,11 @@
 interface nsIRDFNode;
 interface nsIRDFResource;
 
-[
- object, uuid(1ED57100-9904-11d2-8EBA-00805F29F370)
-]
-
+[uuid(1ED57100-9904-11d2-8EBA-00805F29F370)]
 interface nsIRDFAssertionCursor : nsIRDFCursor {
-    readonly attribute nsIRDFResource Subject;
-    readonly attribute nsIRDFResource Predicate;
-    //readonly attribute nsIRDFNode Object;
-    readonly attribute boolean TruthValue;
+    readonly attribute nsIRDFResource Source;
+    readonly attribute nsIRDFResource Label;
+    readonly attribute nsIRDFNode     Target;
+    readonly attribute boolean        TruthValue;
 };
 

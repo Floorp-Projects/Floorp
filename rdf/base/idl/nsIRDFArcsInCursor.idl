@@ -2,9 +2,10 @@
 #include "nsIRDFResource.idl"
 #include "nsIRDFNode.idl"
 
-[uuid(1ED57102-9904-11d2-8EBA-00805F29F370)]
+interface nsIRDFCursor;
 
+[uuid(1ED57102-9904-11d2-8EBA-00805F29F370)]
 interface nsIRDFArcsInCursor : nsIRDFCursor {
-    readonly attribute nsIRDFNode Object;
-    readonly attribute nsIRDFResource Predicate;
+    readonly attribute nsIRDFResource Label;
+    readonly attribute nsIRDFNode     Target;
 };
