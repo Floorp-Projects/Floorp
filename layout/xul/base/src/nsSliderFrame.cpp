@@ -960,6 +960,34 @@ nsSliderFrame::Destroy(nsIPresContext* aPresContext)
   // Ensure our repeat service isn't going... it's possible that a scrollbar can disappear out
   // from under you while you're in the process of scrolling.
   nsRepeatService::GetInstance()->Stop();
+
+  // XXX: HACK!  WORKAROUND FOR BUG 21571
+  /*
+    the root cause of the crash is that nsSliderFrame implements nsIDOMEventListener and passes 
+    itself to nsEventListenerManager::AddEventListener().  
+    nsEventListenerManager::AddEventListener() assumes it is passed an 
+    object that is governed by ref-counting.  But nsSliderFrame is **not** a 
+    ref-counted object, and it's lifetime is implicitly controlled by the lifetime 
+    of the frame model.  By passing itself to 
+    nsEventListenerManager::AddEventListener(), the slider is passing in a pointer 
+    that can be yanked out from underneath the event listener manager.  When the 
+    event listener manager is destroyed, it correctly tries to clean up any objects 
+    still under it's control, including the already-deleted slider.
+
+    This bug is only evident when a slider is the last focused object before deletion.  
+    Calling RemoveListener() removes *this* from nsEventListenerManager,
+    removing the worst symptom of the bug.
+
+    The real solution is to create a ref-counted listener object for the 
+    slider to hand off to nsEventListenerManager::AddEventListener().
+    Part of that fix should be removing nsSliderFrame::AddRef and
+    nsSliderFrame::Release, which were masking this problem.  Without those
+    methods, we would have gotten assertions as soon as the first slider was passed
+    to any interface that tried to refcount it.
+  */
+  RemoveListener();   // remove this line when 21571 is fixed properly
+
+  // call base class Destroy()
   return nsHTMLContainerFrame::Destroy(aPresContext);
 }
 
