@@ -18,7 +18,7 @@ const dlObserver = {
         elt.removeAttribute("progress");
     }
     else {
-      elt.setAttribute("progress", percentComplete);
+      elt.setAttribute("progress", percentComplete+"%");
       if (elt.hasAttribute("progressmode"))
         elt.removeAttribute("progressmode");
     }
