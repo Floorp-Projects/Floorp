@@ -79,6 +79,7 @@ LINCS=  \
 
 LLIBS=                         \
  $(DIST)\lib\raptorgfxwin.lib   \
+ $(DIST)\lib\timer_s.lib \
  $(DIST)\lib\raptorhtml.lib     \
  $(DIST)\lib\raptorweb.lib      \
  $(DIST)\lib\raptorwidget.lib     \

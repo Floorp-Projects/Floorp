@@ -38,6 +38,7 @@ LLIBS=\
  $(DIST)\lib\rdfdatasource_s.lib \
  $(DIST)\lib\xpcom.lib         \
  $(DIST)\lib\raptorgfxwin.lib    \
+ $(DIST)\lib\timer_s.lib \
 !ifdef NECKO
  $(DIST)\lib\neckoutil_s.lib     \
 !else

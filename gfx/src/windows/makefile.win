@@ -41,7 +41,6 @@ OBJS =                                  \
 	.\$(OBJDIR)\nsDeviceContextSpecWin.obj          \
 	.\$(OBJDIR)\nsDeviceContextSpecFactoryW.obj          \
 	.\$(OBJDIR)\nsGfxFactoryWin.obj          \
-	.\$(OBJDIR)\nsTimer.obj        \
 	$(NULL)
 
 EXPORTS= nsIRenderingContextWin.h \
@@ -78,6 +77,7 @@ LLIBS=				\
  $(DIST)\lib\netlib.lib       \
 !endif
  $(DIST)\lib\raptorgfx_s.lib \
+ $(DIST)\lib\timer_s.lib \
 !if defined(NGLAYOUT_DDRAW)
  $(NGLAYOUT_DDRAW)\lib\ddraw.lib \
 !endif
@@ -107,4 +107,3 @@ install:: $(DLL)
 clobber::
 	rm -f $(DIST)\bin\$(DLLNAME).dll
 	rm -f $(DIST)\lib\$(DLLNAME).lib
-	

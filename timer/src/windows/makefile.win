@@ -18,7 +18,7 @@
 DEPTH=..\..\..
 LIBRARY_NAME=timer_s
 
-DEFINES=-D_IMPL_NS_TIMER -DWIN32_LEAN_AND_MEAN -DSTRICT
+DEFINES=-DWIN32_LEAN_AND_MEAN -DSTRICT
 
 CPPSRCS =			\
 	nsTimer.cpp		\
@@ -39,7 +39,7 @@ LINCS= \
 
 LCFLAGS = \
         $(LCFLAGS) \
-		$(DEFINES) \
+	$(DEFINES) \
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

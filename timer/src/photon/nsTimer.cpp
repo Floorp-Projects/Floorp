@@ -246,7 +246,7 @@ int TimerImpl::TimerEventHandler( void *aData, pid_t aRcvId, void *aMsg, size_t 
 }
 
 
-NS_TIMER nsresult NS_NewTimer(nsITimer** aInstancePtrResult)
+nsresult NS_NewTimer(nsITimer** aInstancePtrResult)
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "NS_NewTimer - null ptr");
   if (nsnull == aInstancePtrResult)

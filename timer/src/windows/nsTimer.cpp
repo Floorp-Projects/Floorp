@@ -346,7 +346,7 @@ TimerImpl::Cancel()
     SyncTimeoutPeriod(0);
 }
 
-NS_TIMER nsresult NS_NewTimer(nsITimer** aInstancePtrResult)
+nsresult NS_NewTimer(nsITimer** aInstancePtrResult)
 {
     NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
     if (nsnull == aInstancePtrResult) {

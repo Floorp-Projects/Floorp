@@ -71,6 +71,7 @@ LLIBS=							\
 	$(DIST)\lib\plc3.lib			\
 	$(DIST)\lib\caps.lib				\
 	$(DIST)\lib\oji.lib				\
+	$(DIST)\lib\timer_s.lib				\
 	$(LIBNSPR)
 
 include <$(DEPTH)\config\rules.mak>
