@@ -20,32 +20,52 @@
   #%]
 
 <script type="text/javascript">
-  // Enables or disables a requestee field depending on whether
-  // the user is requesting that flag type.
-  function toggleRequesteeField(selectField)
+  // Enables or disables a requestee field depending on whether or not
+  // the user is requesting the corresponding flag.
+  function toggleRequesteeField(flagField)
   {
-    var flagID = selectField.name.replace(/flag_type-(\d+)/, "$1");
-    var requesteeField = document.getElementById("requestee-" + flagID);
+    // Convert the ID of the flag field into the ID of its corresponding
+    // requestee field and then use the ID to get the field.
+    var id = flagField.name.replace(/flag(_type)?-(\d+)/, "requestee$1-$2");
+    var requesteeField = document.getElementById(id);
     if (!requesteeField) return;
-    if   (selectField.value == "?") requesteeField.disabled = false;
-    else                            requesteeField.disabled = true;
+    
+    // Enable or disable the requestee field based on the value
+    // of the flag field.
+    if (flagField.value == "?") requesteeField.disabled = false;
+    else                        requesteeField.disabled = true;
   }
   
-  // Disables requestee fields when the window is loaded since they
-  // shouldn't be enabled until the user requests that flag type.
+  // Disables requestee fields when the window is loaded since they shouldn't
+  // be enabled until the user requests that flag type.
   function disableRequesteeFields()
   {
     var inputElements = document.getElementsByTagName("input");
-    var inputElement;
+    var inputElement, id, flagField;
     for ( var i=0 ; i<inputElements.length ; i++ )
     {
       inputElement = inputElements.item(i);
-      if (inputElement.name.search(/^requestee-(\d+)$/) != -1)
-        inputElement.disabled = true;
+      if (inputElement.name.search(/^requestee(_type)?-(\d+)$/) != -1)
+      {
+        // Convert the ID of the requestee field into the ID of its corresponding
+        // flag field and then use the ID to get the field.
+        id = inputElement.name.replace(/requestee(_type)?-(\d+)/, "flag$1-$2");
+        flagField = document.getElementById(id);
+        if (flagField && flagField.value != "?")
+            inputElement.disabled = true;
+      }
     }
   }
   window.onload = disableRequesteeFields;
 </script>
+
+[%# We list flags by looping twice over the flag types relevant for the bug.
+  # In the first loop, we display existing flags and then, for active types,
+  # we display UI for adding new flags.  In the second loop, we display UI 
+  # for adding additional new flags for those types for which a flag already
+  # exists but which are multiplicable (can have multiple flags of the type
+  # on a single bug/attachment).
+  #%]
 
 <table id="flags">
 
@@ -59,7 +79,8 @@
           [% type.name FILTER html %]
         </td>
         <td>
-          <select name="flag-[% flag.id %]" onchange="toggleRequesteeField(this);">
+          <select id="flag-[% flag.id %]" name="flag-[% flag.id %]" 
+                  onchange="toggleRequesteeField(this);">
             <option value="X"></option>
             [% IF type.is_active %]
               <option value="+" [% "selected" IF flag.status == "+" %]>+</option>
@@ -73,12 +94,15 @@
           </select>
         </td>
         <td>
-          [% IF flag.status == "?" %]
-            [% IF flag.requestee %]([% flag.requestee.nick FILTER html %])[% END %]
-          [% ELSIF type.is_requestable && type.is_active %]
+          [% IF type.is_active && type.is_requestable %]
             <span style="white-space: nowrap;">
-              (<input type="text" id="requestee-[% type.id %]" 
-                      name="requestee-[% type.id %]" size="8" maxlength="255">)
+              (<input type="text" size="8" maxlength="255"
+                      id="requestee-[% flag.id %]" 
+                      name="requestee-[% flag.id %]"
+                      [% IF flag.status == "?" && flag.requestee %]
+                        value="[% flag.requestee.email FILTER html %]"
+                      [% END %]
+               >)
             </span>
           [% END %]
         </td>
@@ -89,7 +113,8 @@
         <td>&nbsp;</td>
         <td>[% type.name %]</td>
         <td>
-          <select name="flag_type-[% type.id %]" onchange="toggleRequesteeField(this);">
+          <select id="flag_type-[% type.id %]" name="flag_type-[% type.id %]" 
+                  onchange="toggleRequesteeField(this);">
             <option value="X"></option>
             <option value="+">+</option>
             <option value="-">-</option>
@@ -100,8 +125,9 @@
         </td>
         <td>
             <span style="white-space: nowrap;">
-              (<input type="text" id="requestee-[% type.id %]" 
-                      name="requestee-[% type.id %]" size="8" maxlength="255">)
+              (<input type="text" size="8" maxlength="255"
+                      id="requestee_type-[% type.id %]" 
+                      name="requestee_type-[% type.id %]">)
             </span>
         </td>
       </tr>
@@ -117,7 +143,8 @@
     <tr>
       <td colspan="2">addl. [% type.name %]</td>
       <td>
-        <select name="flag_type-[% type.id %]" onchange="toggleRequesteeField(this);">
+        <select id="flag_type-[% type.id %]" name="flag_type-[% type.id %]" 
+                onchange="toggleRequesteeField(this);">
           <option value="X"></option>
           <option value="+">+</option>
           <option value="-">-</option>
@@ -129,8 +156,9 @@
       <td>
         [% IF type.is_requestable && type.is_requesteeble %]
             <span style="white-space: nowrap;">
-              (<input type="text" id="requestee-[% type.id %]" 
-                      name="requestee-[% type.id %]" size="8" maxlength="255">)
+              (<input type="text" size="8" maxlength="255"
+                      id="requestee_type-[% type.id %]" 
+                      name="requestee_type-[% type.id %]">)
             </span>
         [% END %]
       </td>

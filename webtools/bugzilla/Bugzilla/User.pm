@@ -234,10 +234,15 @@ sub match_field {
                 $expanded_fields->{$field_name} = 
                   { type => $fields->{$field_pattern}->{'type'} };
                 
-                # The field is a requestee field; in order for its name to show
-                # up correctly on the confirmation page, we need to find out
-                # the name of its flag type.
+                # The field is a requestee field; in order for its name 
+                # to show up correctly on the confirmation page, we need 
+                # to find out the name of its flag type.
                 if ($field_name =~ /^requestee-(\d+)$/) {
+                    my $flag = Bugzilla::Flag::get($1);
+                    $expanded_fields->{$field_name}->{'flag_type'} = 
+                      $flag->{'type'};
+                }
+                elsif ($field_name =~ /^requestee_type-(\d+)$/) {
                     $expanded_fields->{$field_name}->{'flag_type'} = 
                       Bugzilla::FlagType::get($1);
                 }

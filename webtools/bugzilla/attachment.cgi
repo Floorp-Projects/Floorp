@@ -110,7 +110,8 @@ elsif ($action eq "update")
   validateContentType() unless $::FORM{'ispatch'};
   validateIsObsolete();
   validatePrivate();
-  Bugzilla::User::match_field({ '^requestee-(\d+)$' => { 'type' => 'single' } });
+  Bugzilla::User::match_field({ '^requestee(_type)?-(\d+)$' => 
+                                    { 'type' => 'single' } });
   Bugzilla::Flag::validate(\%::FORM);
   Bugzilla::FlagType::validate(\%::FORM);
   update();

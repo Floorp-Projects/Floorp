@@ -183,6 +183,7 @@ sub process {
     my @old_summaries;
     foreach my $flag (@$flags) {
         my $summary = $flag->{'type'}->{'name'} . $flag->{'status'};
+        $summary .= "($flag->{'requestee'}->{'nick'})" if $flag->{'requestee'};
         push(@old_summaries, $summary);
     }
     
@@ -221,6 +222,7 @@ sub process {
     my @new_summaries;
     foreach my $flag (@$flags) {
         my $summary = $flag->{'type'}->{'name'} . $flag->{'status'};
+        $summary .= "($flag->{'requestee'}->{'nick'})" if $flag->{'requestee'};
         push(@new_summaries, $summary);
     }
 
@@ -268,8 +270,10 @@ sub create {
                         $timestamp)");
     
     # Send an email notifying the relevant parties about the flag creation.
-    if ($flag->{'requestee'} && $flag->{'requestee'}->email_prefs->{'FlagRequestee'} 
-        || $flag->{'type'}->{'cc_list'}) {
+    if ($flag->{'requestee'} 
+        && ($flag->{'requestee'}->email_prefs->{'FlagRequestee'} 
+            || $flag->{'type'}->{'cc_list'}))
+    {
         notify($flag, "request/created-email.txt.tmpl");
     }
 }
@@ -299,15 +303,21 @@ sub modify {
     # Extract a list of flags from the form data.
     my @ids = map(/^flag-(\d+)$/ ? $1 : (), keys %$data);
     
-    # Loop over flags and update their record in the database.
+    # Loop over flags and update their record in the database if necessary.
+    # Two kinds of changes can happen to a flag: it can be set to a different
+    # state, and someone else can be asked to set it.  We take care of both
+    # those changes.
     my @flags;
     foreach my $id (@ids) {
         my $flag = get($id);
+
         my $status = $data->{"flag-$id"};
-        
+        my $requestee_email = $data->{"requestee-$id"};
+
         # Ignore flags the user didn't change.
-        next if $status eq $flag->{'status'};
-        
+        next if ($status eq $flag->{'status'} && $flag->{'requestee'}
+                 && $requestee_email eq $flag->{'requestee'}->{'email'});
+
         # Since the status is validated, we know it's safe, but it's still
         # tainted, so we have to detaint it before using it in a query.
         &::trick_taint($status);
@@ -315,6 +325,7 @@ sub modify {
         if ($status eq '+' || $status eq '-') {
             &::SendSQL("UPDATE flags 
                         SET    setter_id = $::userid , 
+                               requestee_id = NULL , 
                                status = '$status' , 
                                modification_date = $timestamp
                         WHERE  id = $flag->{'id'}");
@@ -328,10 +339,28 @@ sub modify {
             }
         }
         elsif ($status eq '?') {
+            # Get the requestee, if any.
+            my $requestee_id = "NULL";
+            if ($requestee_email) {
+                $requestee_id = &::DBname_to_id($requestee_email);
+                $flag->{'requestee'} = new Bugzilla::User($requestee_id);
+            }
+
+            # Update the database with the changes.
             &::SendSQL("UPDATE flags 
-                        SET    status = '$status' , 
+                        SET    setter_id = $::userid , 
+                               requestee_id = $requestee_id , 
+                               status = '$status' , 
                                modification_date = $timestamp
                         WHERE  id = $flag->{'id'}");
+            
+            # Send an email notifying the relevant parties about the request.
+            if ($flag->{'requestee'} 
+                && ($flag->{'requestee'}->email_prefs->{'FlagRequestee'} 
+                    || $flag->{'type'}->{'cc_list'}))
+            {
+                notify($flag, "request/created-email.txt.tmpl");
+            }
         }
         # The user unset the flag, so delete it from the database.
         elsif ($status eq 'X') {
@@ -390,12 +419,12 @@ sub FormToNewFlags {
             status => $status 
         };
 
-        my $requestee_str = $data->{"requestee-$type_id"} || $data->{'requestee'};
-        if ($requestee_str) {
-            my $requestee_id = &::DBname_to_id($requestee_str);
-            $requestee_id 
-              || &::ThrowUserError("invalid_username", {name => $requestee_str});
-            $flag->{'requestee'} = new Bugzilla::User($requestee_id);
+        if ($status eq "?") {
+            my $requestee = $data->{"requestee_type-$type_id"};
+            if ($requestee) {
+                my $requestee_id = &::DBname_to_id($requestee);
+                $flag->{'requestee'} = new Bugzilla::User($requestee_id);
+            }
         }
         
         # Add the flag to the array of flags.
