@@ -3053,7 +3053,9 @@ nsDocument::GetNodeValue(nsAString& aNodeValue)
 NS_IMETHODIMP
 nsDocument::SetNodeValue(const nsAString& aNodeValue)
 {
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
+  // The DOM spec says that when nodeValue is defined to be null "setting it
+  // has no effect", so we don't throw an exception.
+  return NS_OK;
 }
 
 NS_IMETHODIMP
