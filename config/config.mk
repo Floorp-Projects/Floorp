@@ -67,11 +67,7 @@ ifeq ($(OS_ARCH),SCO_SV)
 OS_ARCH		:= SCOOS
 OS_RELEASE	:= 5.0
 endif
-ifeq ($(OS_ARCH),SINIX-N)
-OS_ARCH		:= SINIX
-endif
-# SINIX changes name to ReliantUNIX with 5.43
-ifeq ($(OS_ARCH),ReliantUNIX-N)
+ifneq (,$(filter SINIX-N SINIX-Y ReliantUNIX-M,$(OS_ARCH)))
 OS_ARCH		:= SINIX
 endif
 ifeq ($(OS_ARCH),UnixWare)
