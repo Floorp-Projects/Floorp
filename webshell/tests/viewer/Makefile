@@ -151,17 +151,41 @@ TARGETS = $(PROGS)
 
 include $(DEPTH)/config/rules.mk
 
+# Reasonable? defaults
+TOOLKIT_LIB_PATH = -L/usr/X11R6/lib
+TOOLKIT_LDFLAGS = -lXm -lXt -lXext -lX11
+
+ifeq ($(OS_ARCH),Linux)
+	TOOLKIT_LIB_PATH    = -L/usr/X11R6/lib
+	TOOLKIT_LDFLAGS     = -lXm -lXp -lXt -lXext -lX11 -lSM -lICE
+	EXTRA_PRE_LDFLAGS   = -rdynamic
+	EXTRA_POST_LDFLAGS  =
+endif
+
+ifeq ($(OS_ARCH),IRIX)
+	TOOLKIT_LIB_PATH    = -L/usr/openwin/lib -L/usr/dt/lib
+	TOOLKIT_LDFLAGS     = -lXm -lXt -lX11
+	EXTRA_PRE_LDFLAGS   = -woff 84,85
+	EXTRA_POST_LDFLAGS  =
+endif
+
+ifeq ($(OS_ARCH),SunOS)
+	TOOLKIT_LIB_PATH    = -L/usr/openwin/lib -L/usr/dt/lib
+	TOOLKIT_LDFLAGS     = -lXm -lXt -lXext -lX11
+	EXTRA_PRE_LDFLAGS   =
+	EXTRA_POST_LDFLAGS  =
+endif
+
+ifeq ($(OS_ARCH),HP-UX)
+	TOOLKIT_LIB_PATH    = -L/usr/lib/X11R5 -L/usr/lib/Motif1.2
+	TOOLKIT_LDFLAGS     = -lXm -lXt -lX11
+	EXTRA_PRE_LDFLAGS   =
+	EXTRA_POST_LDFLAGS  = -lpthread
+endif
+
 $(PROGS): $(OBJS) #$(EX_LIBS)
 	@$(MAKE_OBJDIR)
-ifeq ($(OS_ARCH),Linux)
-	$(CCC) -rdynamic -o $@ $(OBJS) $(LDFLAGS) $(EX_LIBS) $(OS_LIBS) -L/usr/X11R6/lib -lXm -lXt -lX11 -lXp -lXext
-else
-ifeq ($(OS_ARCH),IRIX)
-	$(CCC) -o $@ -woff 84,85 $(LDFLAGS) $(OBJS) $(EX_LIBS) $(OS_LIBS) -lXm -lXt -lX11 
-else
-	$(CCC) -o $@ $(LDFLAGS) $(OBJS) $(EX_LIBS) $(OS_LIBS) -lXm -lXt -lX11 
-endif
-endif
+	$(CCC) $(EXTRA_PRE_LDFLAGS) -o $@ $(OBJS) $(LDFLAGS) $(EX_LIBS) $(OS_LIBS) $(TOOLKIT_LIB_PATH) $(TOOLKIT_LDFLAGS) $(EXTRA_POST_LDFLAGS)
 
 export::
 
