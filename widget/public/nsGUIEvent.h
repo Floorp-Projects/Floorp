@@ -242,6 +242,12 @@ struct nsMenuEvent : public nsGUIEvent {
 #define NS_FORM_SUBMIT                  (NS_FORM_EVENT_START)
 #define NS_FORM_RESET                   (NS_FORM_EVENT_START + 1)
 #define NS_FORM_CHANGE                  (NS_FORM_EVENT_START + 2)
+
+//Need separate focus/blur notifications for non-native widgets
+#define NS_FOCUS_EVENT_START            1300
+#define NS_FOCUS_CONTENT                (NS_FOCUS_EVENT_START)
+#define NS_BLUR_CONTENT                 (NS_FOCUS_EVENT_START + 1)
+
 //@}
 
 

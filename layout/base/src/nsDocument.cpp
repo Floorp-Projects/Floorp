@@ -726,6 +726,8 @@ nsDocument::Reset(nsIURL *aURL)
   }
 
   if (nsnull != mRootContent) {
+    // Ensure that document is nsnull to allow validity checks on content
+    mRootContent->SetDocument(nsnull, PR_TRUE);
     ContentRemoved(nsnull, mRootContent, 0);
     NS_IF_RELEASE(mRootContent);
   }

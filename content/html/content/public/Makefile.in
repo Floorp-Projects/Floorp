@@ -25,6 +25,7 @@ include $(DEPTH)/config/autoconf.mk
 EXPORTS =			\
 	nsIFormControl.h	\
 	nsIForm.h	\
+	nsIFocusableContent.h	\
         $(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))

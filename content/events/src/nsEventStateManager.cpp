@@ -31,6 +31,12 @@
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMHTMLSelectElement.h"
 #include "nsIDOMHTMLTextAreaElement.h"
+#include "nsIDOMHTMLAreaElement.h"
+#include "nsIDOMHTMLButtonElement.h"
+#include "nsIDOMHTMLObjectElement.h"
+#include "nsINameSpaceManager.h"  // for kNameSpaceID_HTML
+#include "nsIWebShell.h"
+#include "nsIFocusableContent.h"
 
 static NS_DEFINE_IID(kIEventStateManagerIID, NS_IEVENTSTATEMANAGER_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
@@ -38,6 +44,11 @@ static NS_DEFINE_IID(kIDOMHTMLAnchorElementIID, NS_IDOMHTMLANCHORELEMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLInputElementIID, NS_IDOMHTMLINPUTELEMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLSelectElementIID, NS_IDOMHTMLSELECTELEMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLTextAreaElementIID, NS_IDOMHTMLTEXTAREAELEMENT_IID);
+static NS_DEFINE_IID(kIDOMHTMLAreaElementIID, NS_IDOMHTMLAREAELEMENT_IID);
+static NS_DEFINE_IID(kIDOMHTMLObjectElementIID, NS_IDOMHTMLOBJECTELEMENT_IID);
+static NS_DEFINE_IID(kIDOMHTMLButtonElementIID, NS_IDOMHTMLBUTTONELEMENT_IID);
+static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
+static NS_DEFINE_IID(kIFocusableContentIID, NS_IFOCUSABLECONTENT_IID);
 
 nsEventStateManager::nsEventStateManager() {
   mLastMouseOverFrame = nsnull;
@@ -51,6 +62,7 @@ nsEventStateManager::nsEventStateManager() {
   mCurrentFocus = nsnull;
   mDocument = nsnull;
   mPresContext = nsnull;
+  mCurrentTabIndex = 0;
   NS_INIT_REFCNT();
 }
 
@@ -89,10 +101,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext& aPresContext,
     //GenerateMouseEnterExit(aPresContext, aEvent, aTargetFrame);
     break;
   case NS_GOTFOCUS:
-    NS_IF_RELEASE(mCurrentFocus);
-    if (nsnull != mCurrentTarget) {
-      mCurrentTarget->GetContent(&mCurrentFocus);
-    }
+    //XXX Do we need window related focus change stuff here?
     break;
   }
   return NS_OK;
@@ -117,8 +126,14 @@ nsEventStateManager::PostHandleEvent(nsIPresContext& aPresContext,
   case NS_MOUSE_MIDDLE_BUTTON_DOWN:
   case NS_MOUSE_RIGHT_BUTTON_DOWN: 
     {
-      if (nsnull != aEvent->widget) {
-        aEvent->widget->SetFocus();
+      nsIContent* newFocus;
+      mCurrentTarget->GetContent(&newFocus);
+      if (newFocus) {
+        if (!ChangeFocus(newFocus, PR_TRUE)) {
+          if (nsnull != aEvent->widget) {
+            aEvent->widget->SetFocus();
+          }
+        }
       }
     }
     //Break left out on purpose
@@ -132,7 +147,8 @@ nsEventStateManager::PostHandleEvent(nsIPresContext& aPresContext,
     if (nsEventStatus_eConsumeNoDefault != aStatus) {
       switch(((nsKeyEvent*)aEvent)->keyCode) {
         case NS_VK_TAB:
-          ShiftFocus();
+          //Shift focus forward or back depending on shift key
+          ShiftFocus(!((nsInputEvent*)aEvent)->isShift);
           aStatus = nsEventStatus_eConsumeNoDefault;
           break;
         case NS_VK_PAGE_DOWN: 
@@ -417,8 +433,28 @@ nsEventStateManager::DispatchKeyPressEvent(nsIPresContext& aPresContext,
   return ret;
 }
 
+PRBool
+nsEventStateManager::ChangeFocus(nsIContent* aFocus, PRBool aSetFocus)
+{
+  nsIFocusableContent *focusChange;
+
+  if (NS_OK == aFocus->QueryInterface(kIFocusableContentIID,(void **)&focusChange)) {
+    if (aSetFocus) {
+      focusChange->SetFocus(mPresContext);
+    }
+    else {
+      focusChange->RemoveFocus(mPresContext);
+    }
+    NS_RELEASE(focusChange);
+    return PR_TRUE;
+  }
+  //XXX Need to deal with Object tag
+
+  return PR_FALSE;
+} 
+
 void
-nsEventStateManager::ShiftFocus()
+nsEventStateManager::ShiftFocus(PRBool forward)
 {
   if (nsnull == mPresContext) {
     return;
@@ -439,36 +475,34 @@ nsEventStateManager::ShiftFocus()
     if (nsnull == mCurrentFocus) {  
       return;
     }
+    mCurrentTabIndex = forward ? 1 : 0;
   }
 
-  nsIContent* next = GetNextTabbableContent(mCurrentFocus, nsnull, mCurrentFocus);
+  nsIContent* next = GetNextTabbableContent(mCurrentFocus, nsnull, mCurrentFocus, forward);
 
   if (nsnull == next) {
     NS_IF_RELEASE(mCurrentFocus);
-    //XXX pass focus up to webshellcontainer FocusAvailable
+
+    //Pass focus up to nsIWebShellContainer FocusAvailable
+    nsISupports* container;
+    mPresContext->GetContainer(&container);
+    if (nsnull != container) {
+      nsIWebShell* webShell;
+      if (NS_OK == container->QueryInterface(kIWebShellIID, (void**)&webShell)) {
+        nsIWebShellContainer* webShellContainer;
+        webShell->GetContainer(webShellContainer);
+        if (nsnull != webShellContainer) {
+          webShellContainer->FocusAvailable(webShell);
+          NS_RELEASE(webShellContainer);
+        }
+        NS_RELEASE(webShell);
+      }
+      NS_RELEASE(container);
+    }
     return;
   }
 
-  nsIDOMHTMLAnchorElement *nextAnchor;
-  nsIDOMHTMLInputElement *nextInput;
-  nsIDOMHTMLSelectElement *nextSelect;
-  nsIDOMHTMLTextAreaElement *nextTextArea;
-  if (NS_OK == next->QueryInterface(kIDOMHTMLAnchorElementIID,(void **)&nextAnchor)) {
-    nextAnchor->Focus();
-    NS_RELEASE(nextAnchor);
-  }
-  else if (NS_OK == next->QueryInterface(kIDOMHTMLInputElementIID,(void **)&nextInput)) {
-    nextInput->Focus();
-    NS_RELEASE(nextInput);
-  }
-  else if (NS_OK == next->QueryInterface(kIDOMHTMLSelectElementIID,(void **)&nextSelect)) {
-    nextSelect->Focus();
-    NS_RELEASE(nextSelect);
-  }
-  else if (NS_OK == next->QueryInterface(kIDOMHTMLTextAreaElementIID,(void **)&nextTextArea)) {
-    nextTextArea->Focus();
-    NS_RELEASE(nextTextArea);
-  }
+  ChangeFocus(next, PR_TRUE);
 
   NS_IF_RELEASE(mCurrentFocus);
   mCurrentFocus = next;
@@ -478,29 +512,31 @@ nsEventStateManager::ShiftFocus()
  * At some point this will need to be linked into HTML 4.0 tabindex
  */
 nsIContent*
-nsEventStateManager::GetNextTabbableContent(nsIContent* aParent, nsIContent* aChild, nsIContent* aTop)
+nsEventStateManager::GetNextTabbableContent(nsIContent* aParent, nsIContent* aChild, nsIContent* aTop, PRBool forward)
 {
   PRInt32 count, index;
   aParent->ChildCount(count);
 
   if (nsnull != aChild) {
     aParent->IndexOf(aChild, index);
-    index += 1;
+    index += forward ? 1 : -1;
   }
   else {
-    index = 0;
+    index = forward ? 0 : count;
   }
 
-  for (;index < count;index++) {
+  for (;index < count && index >= 0;index += forward ? 1 : -1) {
     nsIContent* child;
+
     aParent->ChildAt(index, child);
-    nsIContent* content = GetNextTabbableContent(child, nsnull, aTop);
+    nsIContent* content = GetNextTabbableContent(child, nsnull, aTop, forward);
     if (content != nsnull) {
       NS_IF_RELEASE(child);
       return content;
     }
     if (nsnull != child) {
       nsIAtom* tag;
+      PRInt32 tabIndex = -1;
       PRBool disabled = PR_TRUE;
       PRBool hidden = PR_FALSE;
 
@@ -509,6 +545,7 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aParent, nsIContent* aCh
         nsIDOMHTMLInputElement *nextInput;
         if (NS_OK == child->QueryInterface(kIDOMHTMLInputElementIID,(void **)&nextInput)) {
           nextInput->GetDisabled(&disabled);
+          nextInput->GetTabIndex(&tabIndex);
 
           nsAutoString type;
           nextInput->GetType(type);
@@ -522,6 +559,7 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aParent, nsIContent* aCh
         nsIDOMHTMLSelectElement *nextSelect;
         if (NS_OK == child->QueryInterface(kIDOMHTMLSelectElementIID,(void **)&nextSelect)) {
           nextSelect->GetDisabled(&disabled);
+          nextSelect->GetTabIndex(&tabIndex);
           NS_RELEASE(nextSelect);
         }
       }
@@ -529,20 +567,48 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aParent, nsIContent* aCh
         nsIDOMHTMLTextAreaElement *nextTextArea;
         if (NS_OK == child->QueryInterface(kIDOMHTMLTextAreaElementIID,(void **)&nextTextArea)) {
           nextTextArea->GetDisabled(&disabled);
+          nextTextArea->GetTabIndex(&tabIndex);
           NS_RELEASE(nextTextArea);
         }
 
       }
-      //XXX Not all of these are focusable yet.
-      else if(nsHTMLAtoms::a==tag
-              //nsHTMLAtoms::area==tag ||
-              //nsHTMLAtoms::button==tag ||
-              //nsHTMLAtoms::object==tag
-              ) {
+      else if(nsHTMLAtoms::a==tag) {
+        nsIDOMHTMLAnchorElement *nextAnchor;
+        if (NS_OK == child->QueryInterface(kIDOMHTMLAnchorElementIID,(void **)&nextAnchor)) {
+          nextAnchor->GetTabIndex(&tabIndex);
+          NS_RELEASE(nextAnchor);
+        }
+        disabled = PR_FALSE;
+      }
+      else if(nsHTMLAtoms::button==tag) {
+        nsIDOMHTMLButtonElement *nextButton;
+        if (NS_OK == child->QueryInterface(kIDOMHTMLButtonElementIID,(void **)&nextButton)) {
+          nextButton->GetTabIndex(&tabIndex);
+          nextButton->GetDisabled(&disabled);
+          NS_RELEASE(nextButton);
+        }
+      }
+      else if(nsHTMLAtoms::area==tag) {
+        nsIDOMHTMLAreaElement *nextArea;
+        if (NS_OK == child->QueryInterface(kIDOMHTMLAreaElementIID,(void **)&nextArea)) {
+          nextArea->GetTabIndex(&tabIndex);
+          NS_RELEASE(nextArea);
+        }
+        disabled = PR_FALSE;
+      }
+      else if(nsHTMLAtoms::object==tag) {
+        nsIDOMHTMLObjectElement *nextObject;
+        if (NS_OK == child->QueryInterface(kIDOMHTMLObjectElementIID,(void **)&nextObject)) {
+          nextObject->GetTabIndex(&tabIndex);
+          NS_RELEASE(nextObject);
+        }
         disabled = PR_FALSE;
       }
 
-      if (!disabled && !hidden) {
+      //TabIndex not set (-1) treated at same level as set to 0
+      tabIndex = tabIndex < 0 ? 0 : tabIndex;
+
+      if (!disabled && !hidden && mCurrentTabIndex == tabIndex) {
         return child;
       }
       NS_RELEASE(child);
@@ -553,14 +619,55 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aParent, nsIContent* aCh
     nsIContent* nextParent;
     aParent->GetParent(nextParent);
     if (nsnull != nextParent) {
-      nsIContent* content = GetNextTabbableContent(nextParent, aParent, nextParent);
+      nsIContent* content = GetNextTabbableContent(nextParent, aParent, nextParent, forward);
       NS_RELEASE(nextParent);
+      return content;
+    }
+    //Reached end of document
+    else {
+      //If already at lowest priority tab (0), end
+      if (0 == mCurrentTabIndex) {
+        return nsnull;
+      }
+      //else continue looking for next highest priority tab
+      mCurrentTabIndex = GetNextTabIndex(aParent, forward);
+      nsIContent* content = GetNextTabbableContent(aParent, nsnull, aParent, forward);
       return content;
     }
   }
 
   return nsnull;
 }
+
+PRInt32
+nsEventStateManager::GetNextTabIndex(nsIContent* aParent, PRBool forward)
+{
+
+  PRInt32 count, tabIndex = 0;
+  aParent->ChildCount(count);
+
+  for (PRInt32 index = 0; index < count; index++) {
+    nsIContent* child;
+    PRInt32 childTabIndex;
+
+    aParent->ChildAt(index, child);
+    childTabIndex = GetNextTabIndex(child, forward);
+    if (childTabIndex > mCurrentTabIndex && childTabIndex != tabIndex) {
+      tabIndex = (tabIndex == 0 || childTabIndex < tabIndex) ? childTabIndex : tabIndex; 
+    }
+
+    nsAutoString tabIndexStr;
+    child->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::tabindex, tabIndexStr);
+    PRInt32 ec, val = tabIndexStr.ToInteger(&ec);
+    if (NS_OK == ec && val > mCurrentTabIndex && val != tabIndex) {
+      tabIndex = (tabIndex == 0 || val < tabIndex) ? val : tabIndex; 
+    }
+    NS_RELEASE(child);
+  }
+
+  return tabIndex;
+}
+
 
 NS_IMETHODIMP
 nsEventStateManager::GetEventTarget(nsIFrame **aFrame)
@@ -632,6 +739,51 @@ nsEventStateManager::SetHoverLink(nsIContent *aLink)
       NS_RELEASE(mDocument);
     }
   }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsEventStateManager::SetFocusedContent(nsIContent *aContent)
+{
+  if (mCurrentFocus == aContent) {
+    return NS_OK;
+  }
+
+  if (mCurrentFocus) {
+    ChangeFocus(mCurrentFocus, PR_FALSE);
+
+    //fire blur
+    nsEventStatus status = nsEventStatus_eIgnore;
+    nsEvent event;
+    event.eventStructType = NS_EVENT;
+    event.message = NS_BLUR_CONTENT;
+
+    if (nsnull != mPresContext) {
+      mCurrentFocus->HandleDOMEvent(*mPresContext, &event, nsnull, DOM_EVENT_INIT, status); 
+    }
+    NS_RELEASE(mCurrentFocus);
+  }
+
+  //fire focus
+  nsEventStatus status = nsEventStatus_eIgnore;
+  nsEvent event;
+  event.eventStructType = NS_EVENT;
+  event.message = NS_FOCUS_CONTENT;
+
+  if (nsnull != mPresContext) {
+    aContent->HandleDOMEvent(*mPresContext, &event, nsnull, DOM_EVENT_INIT, status);
+  }
+
+  nsAutoString tabIndex;
+  aContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::tabindex, tabIndex);
+  PRInt32 ec, val = tabIndex.ToInteger(&ec);
+  if (NS_OK == ec) {
+    mCurrentTabIndex = val;
+  }
+
+  mCurrentFocus = aContent;
+  NS_IF_ADDREF(mCurrentFocus);
 
   return NS_OK;
 }

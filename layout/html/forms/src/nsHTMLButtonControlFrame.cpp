@@ -444,7 +444,7 @@ nsHTMLButtonControlFrame::ShiftContents(nsIPresContext& aPresContext, PRBool aDo
   mStyleContext->RecalcAutomaticData(&aPresContext);
 
   nsRect rect(0, 0, mRect.width, mRect.height);
-  ReflowTemp(aPresContext, this, rect);
+  //ReflowTemp(aPresContext, this, rect);
 }
 
 void

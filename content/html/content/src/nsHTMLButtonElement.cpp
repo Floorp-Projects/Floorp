@@ -31,17 +31,20 @@
 #include "nsIFormControl.h"
 #include "nsIForm.h"
 #include "nsIURL.h"
+#include "nsIFocusableContent.h"
 
 #include "nsIEventStateManager.h"
 #include "nsDOMEvent.h"
 
 static NS_DEFINE_IID(kIDOMHTMLButtonElementIID, NS_IDOMHTMLBUTTONELEMENT_IID);
+static NS_DEFINE_IID(kIFocusableContentIID, NS_IFOCUSABLECONTENT_IID);
 
 class nsHTMLButtonElement : public nsIDOMHTMLButtonElement,
                             public nsIScriptObjectOwner,
                             public nsIDOMEventReceiver,
                             public nsIHTMLContent,
-                            public nsIFormControl
+                            public nsIFormControl,
+                            public nsIFocusableContent
 {
 public:
   nsHTMLButtonElement(nsIAtom* aTag);
@@ -94,6 +97,10 @@ public:
   NS_IMETHOD GetType(PRInt32* aType);
   NS_IMETHOD SetWidget(nsIWidget* aWidget) { return NS_OK; };
   NS_IMETHOD Init() { return NS_OK; }
+
+  // nsIFocusableContent
+  NS_IMETHOD SetFocus(nsIPresContext* aPresContext);
+  NS_IMETHOD RemoveFocus(nsIPresContext* aPresContext);
 
 protected:
   nsGenericHTMLContainerElement mInner;
@@ -157,6 +164,11 @@ nsHTMLButtonElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   }
   else if (aIID.Equals(kIFormControlIID)) {
     *aInstancePtr = (void*)(nsIFormControl*) this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  else if (aIID.Equals(kIFocusableContentIID)) {
+    *aInstancePtr = (void*)(nsIFocusableContent*) this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
@@ -254,6 +266,26 @@ nsHTMLButtonElement::Blur()
 
 NS_IMETHODIMP
 nsHTMLButtonElement::Focus()
+{
+  // XXX write me
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLButtonElement::SetFocus(nsIPresContext* aPresContext)
+{
+  nsIEventStateManager* esm;
+  if (NS_OK == aPresContext->GetEventStateManager(&esm)) {
+    esm->SetFocusedContent(this);
+    NS_RELEASE(esm);
+  }
+
+  // XXX write me
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLButtonElement::RemoveFocus(nsIPresContext* aPresContext)
 {
   // XXX write me
   return NS_OK;
