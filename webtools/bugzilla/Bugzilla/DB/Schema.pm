@@ -1059,7 +1059,7 @@ sub get_type_ddl {
     my $finfo = (@_ == 1 && ref($_[0]) eq 'HASH') ? $_[0] : { @_ };
 
     my $type = $finfo->{TYPE};
-    ThrowCodeError("A data type must be specified.") unless ($type);
+    die "A valid TYPE was not specified for this column." unless ($type);
     my $default = $finfo->{DEFAULT};
     my $fkref = $self->{enable_references} ? $finfo->{REFERENCES} : undef;
     my $type_ddl = $self->{db_specific}{$type} || $type;
