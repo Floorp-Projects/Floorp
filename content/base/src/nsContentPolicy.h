@@ -35,9 +35,8 @@ class nsContentPolicy : public nsIContentPolicy
  private:
     nsCOMPtr<nsISupportsArray> mPolicies;
     NS_IMETHOD CheckPolicy(PRInt32 policyType, PRInt32 contentType,
-			   nsIDOMElement *element,
-                           const PRUnichar *contentLocation,
-                           PRBool *shouldProceed);
+                           nsIURI *aURI, nsISupports *context,
+                           nsIDOMWindow *window, PRBool *shouldProceed);
 };
 
 nsresult

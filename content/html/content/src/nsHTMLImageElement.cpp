@@ -50,6 +50,8 @@
 #include "nsIImageFrame.h"
 #include "nsLayoutAtoms.h"
 #include "nsNodeInfoManager.h"
+#include "nsContentPolicyUtils.h"
+#include "nsIDOMWindow.h"
 
 #ifdef USE_IMG2
 #include "imgIContainer.h"
@@ -979,6 +981,29 @@ nsHTMLImageElement::SetSrcInner(nsIURI* aBaseURL,
         if ((size.width > 0) || (size.height > 0)) {
           specifiedSize = &size;
         }
+        
+        nsCOMPtr<nsIURI> uri;
+        result = NS_NewURI(getter_AddRefs(uri), aSrc, aBaseURL);
+        if (NS_FAILED(result)) return result;
+
+        nsCOMPtr<nsIDocument> document;
+        result = shell->GetDocument(getter_AddRefs(document));
+        if (NS_FAILED(result)) return result;
+
+        nsCOMPtr<nsIScriptGlobalObject> globalObject;
+        result = document->GetScriptGlobalObject(getter_AddRefs(globalObject));
+        if (NS_FAILED(result)) return result;
+
+        nsCOMPtr<nsIDOMWindow> domWin(do_QueryInterface(globalObject));
+
+        PRBool shouldLoad = PR_TRUE;
+        result = NS_CheckContentLoadPolicy(nsIContentPolicy::IMAGE,
+                                       uri,
+                                       NS_STATIC_CAST(nsISupports *, 
+                                                      (nsIDOMHTMLImageElement*)this),
+                                       domWin, &shouldLoad);
+        if (NS_SUCCEEDED(result) && !shouldLoad)
+            return NS_OK;
 
         // If we have a loader we're in the middle of loading a image,
         // we'll cancel that load and start a new one.
@@ -991,9 +1016,6 @@ nsHTMLImageElement::SetSrcInner(nsIURI* aBaseURL,
         if (!il) {
           return NS_ERROR_FAILURE;
         }
-        nsCOMPtr<nsIURI> uri;
-        result = NS_NewURI(getter_AddRefs(uri), aSrc, aBaseURL);
-        if (NS_FAILED(result)) return result;
 
         nsCOMPtr<nsISupports> sup(do_QueryInterface(context));
 

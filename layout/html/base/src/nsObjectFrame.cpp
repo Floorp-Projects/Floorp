@@ -57,6 +57,7 @@
 #include "nsIWebBrowserChrome.h"
 #include "nsIDOMElement.h"
 #include "nsContentPolicyUtils.h"
+#include "nsIDOMWindow.h"
 #include "nsIDOMMouseListener.h"
 #include "nsIDOMFocusListener.h"
 #include "nsIDOMEventReceiver.h"
@@ -966,7 +967,7 @@ nsObjectFrame::InstantiatePlugin(nsIPresContext* aPresContext,
                                  const nsHTMLReflowState& aReflowState,
                                  nsIPluginHost* aPluginHost, 
                                  const char* aMimetype,
-                                 nsIURI* aURL)
+                                 nsIURI* aURI)
 {
   nsIView *parentWithView;
   nsPoint origin;
@@ -975,7 +976,7 @@ nsObjectFrame::InstantiatePlugin(nsIPresContext* aPresContext,
   
   aPresContext->GetTwipsToPixels(&t2p);
 
-  SetFullURL(aURL);
+  SetFullURL(aURI);
 
   // we need to recalculate this now that we have access to the nsPluginInstanceOwner
   // and its size info (as set in the tag)
@@ -1013,27 +1014,36 @@ nsObjectFrame::InstantiatePlugin(nsIPresContext* aPresContext,
 #endif
 
   // Check to see if content-policy wants to veto this
-  if(aURL != nsnull)
+  if(aURI != nsnull)
   {
     PRBool shouldLoad = PR_TRUE; // default permit
     nsresult rv;
     nsCOMPtr<nsIDOMElement> element = do_QueryInterface(mContent, &rv);
+    if (NS_FAILED(rv)) return rv;
 
-    // For pinkerton: a symphony for string conversion, in 3 parts.
-    nsXPIDLCString urlCString;
-    aURL->GetSpec(getter_Copies(urlCString));
-    nsAutoString url;
-    url.AssignWithConversion((const char *)urlCString);
+    nsCOMPtr<nsIPresShell> shell;
+    rv = aPresContext->GetShell(getter_AddRefs(shell));
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIDocument> document;
+    rv = shell->GetDocument(getter_AddRefs(document));
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIScriptGlobalObject> globalScript;
+    rv = document->GetScriptGlobalObject(getter_AddRefs(globalScript));
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIDOMWindow> domWin(do_QueryInterface(globalScript));
 
     if (NS_SUCCEEDED(rv) &&
-        NS_SUCCEEDED(NS_CheckContentLoadPolicy(nsIContentPolicy::CONTENT_OBJECT,
-                                               url, element, &shouldLoad)) &&
+        NS_SUCCEEDED(NS_CheckContentLoadPolicy(nsIContentPolicy::OBJECT,
+                                               aURI, element, domWin, &shouldLoad)) &&
         !shouldLoad) {
       return NS_OK;
     }
   }
 
-  return aPluginHost->InstantiateEmbededPlugin(aMimetype, aURL, mInstanceOwner);
+  return aPluginHost->InstantiateEmbededPlugin(aMimetype, aURI, mInstanceOwner);
 }
 
 // This is called when the page containing plugin is resized, and plugin has its dimensions

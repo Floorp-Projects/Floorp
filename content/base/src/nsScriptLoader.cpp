@@ -37,6 +37,7 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsIPrincipal.h"
 #include "nsContentPolicyUtils.h"
+#include "nsIDOMWindow.h"
 #include "nsIHttpChannel.h"
 #include "nsIScriptElement.h"
 #include "nsIDocShell.h"
@@ -357,20 +358,15 @@ nsScriptLoader::ProcessScriptElement(nsIDOMHTMLScriptElement *aElement,
     }
     
     // After the security manager, the content-policy stuff gets a veto
-    // For pinkerton: a symphony for string conversion, in 3 parts.
-    nsXPIDLCString urlCString;
-    scriptURI->GetSpec(getter_Copies(urlCString));
-    nsAutoString url;
-    url.AssignWithConversion(urlCString.get());
-    
-    PRBool shouldLoad = PR_TRUE;
-    if (NS_SUCCEEDED(rv) &&
-        (rv = NS_CheckContentLoadPolicy(nsIContentPolicy::CONTENT_SCRIPT,
-                                        url, aElement, &shouldLoad),
-         NS_SUCCEEDED(rv)) &&
-        !shouldLoad) {
-      
-      return FireErrorNotification(NS_ERROR_NOT_AVAILABLE, aElement, aObserver);
+    if (globalObject) {
+      nsCOMPtr<nsIDOMWindow> domWin(do_QueryInterface(globalObject));
+
+      PRBool shouldLoad = PR_TRUE;
+      rv = NS_CheckContentLoadPolicy(nsIContentPolicy::SCRIPT,
+                                     scriptURI, aElement, domWin, &shouldLoad);
+      if (NS_SUCCEEDED(rv) && !shouldLoad) {
+        return FireErrorNotification(NS_ERROR_NOT_AVAILABLE, aElement, aObserver);
+      }
     }
 
     request->mURI = scriptURI;

@@ -71,6 +71,8 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 
 #include "nsContentPolicyUtils.h"
+#include "nsIScriptGlobalObject.h"
+#include "nsIDOMWindow.h"
 
 
 #ifdef DEBUG
@@ -1479,29 +1481,35 @@ nsImageFrame::CanLoadImage(nsIURI *aURI)
       return PR_FALSE;
   }
 #endif
-  // XXX leave this if 0'd until there is a good way to test it.
-#if 0
 
   // Check with the content-policy things to make sure this load is permitted.
   nsresult rv;
   nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mContent));
 
   if (!element) // this would seem bad(tm)
-    return PR_FALSE;
+    return shouldLoad;
 
-  nsXPIDLCString uric;
-  aURI->GetSpec(getter_Copies(uric));
+  nsCOMPtr<nsIDocument> document;
+  if (mContent) {
+    rv = mContent->GetDocument(*getter_AddRefs(document));
+    if (NS_FAILED(rv)) {
+      NS_ASSERTION(0, "expecting a document");
+      return shouldLoad;
+    }
 
-  nsString uri = NS_ConvertUTF8toUCS2(uric);
+    nsCOMPtr<nsIScriptGlobalObject> globalScript;
+    rv = document->GetScriptGlobalObject(getter_AddRefs(globalScript));
+    if (NS_FAILED(rv)) return shouldLoad;
 
-  rv = NS_CheckContentLoadPolicy(nsIContentPolicy::CONTENT_IMAGE,
-                                 uri, element, &shouldLoad);
-  if (NS_SUCCEEDED(rv) && !shouldLoad)
-    return PR_FALSE;
+    nsCOMPtr<nsIDOMWindow> domWin(do_QueryInterface(globalScript));
 
-
+    rv = NS_CheckContentLoadPolicy(nsIContentPolicy::IMAGE,
+                                 aURI, element, domWin, &shouldLoad);
+    if (NS_SUCCEEDED(rv) && !shouldLoad)
+        return shouldLoad;
+  }
+   
   /* ... additional checks ? */
-#endif
 
   return shouldLoad;
 }
