@@ -3,3 +3,4 @@
 #
 
 nsIFileSpecWithUI.idl
+nsISound.idl

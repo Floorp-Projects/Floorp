@@ -50,6 +50,8 @@
 
 #include "nsIComponentManager.h"
 
+#include "nsISound.h"
+
 // NOTE the following does not match MAC_STATIC actually used below in this file!
 #define MACSTATIC
 
@@ -86,6 +88,9 @@ static NS_DEFINE_IID(kCClipboard,     NS_CLIPBOARD_CID);
 static NS_DEFINE_IID(kCTransferable,  NS_TRANSFERABLE_CID);
 static NS_DEFINE_IID(kCXIFFormatConverter,  NS_XIFFORMATCONVERTER_CID);
 static NS_DEFINE_IID(kCDragService,   NS_DRAGSERVICE_CID);
+
+// Sound services (just Beep for now)
+static NS_DEFINE_CID(kCSound,   NS_SOUND_CID);
 
 
 //-------------------------------------------------------------------------
@@ -248,6 +253,11 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     else if (mClassID.Equals(kCPopUpMenu)) {
  //       inst = (nsISupports*)new nsPopUpMenu();
 					NS_NOTYETIMPLEMENTED("nsPopUpMenu");
+    }
+    else if (mClassID.Equals(kCSound)) {
+    	nsISound* aSound = nsnull;
+    	NS_NewSound(&aSound);
+        inst = (nsISupports*) aSound;
     }
     else if (mClassID.Equals(kCTransferable)) {
         inst = (nsISupports*)new nsTransferable();

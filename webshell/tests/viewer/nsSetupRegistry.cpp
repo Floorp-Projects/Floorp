@@ -47,6 +47,8 @@
 #include "nsIGenericFactory.h"
 #include "nsGfxCIID.h"
 
+#include "nsISound.h"
+
 #include "prprf.h"
 #include "prmem.h"
 
@@ -131,6 +133,7 @@ static NS_DEFINE_IID(kCMenuCID,                   NS_MENU_CID);
 static NS_DEFINE_IID(kCMenuItemCID,               NS_MENUITEM_CID);
 static NS_DEFINE_IID(kCContextMenuCID,            NS_CONTEXTMENU_CID);
 //static NS_DEFINE_IID(kCXULCommandCID,             NS_XULCOMMAND_CID);
+static NS_DEFINE_IID(kSoundCID,            NS_SOUND_CID);
 
 // GFXWIN
 static NS_DEFINE_IID(kCRenderingContextIID, NS_RENDERING_CONTEXT_CID);
@@ -209,6 +212,7 @@ NS_SetupRegistry()
   nsComponentManager::RegisterComponent(kCMenuCID,          NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kCMenuItemCID,      NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kCContextMenuCID,   NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kSoundCID,   "Sound Services", "component://netscape/sound", WIDGET_DLL, PR_FALSE, PR_FALSE);
 
   // GFXWIN
   nsComponentManager::RegisterComponent(kCRenderingContextIID, NULL, NULL, GFXWIN_DLL, PR_FALSE, PR_FALSE);

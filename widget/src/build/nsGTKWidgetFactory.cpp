@@ -49,6 +49,8 @@
 #include "nsXIFFormatConverter.h"
 #include "nsDragService.h"
 
+#include "nsISound.h"
+
 static NS_DEFINE_IID(kCWindow,        NS_WINDOW_CID);
 static NS_DEFINE_IID(kCChild,         NS_CHILD_CID);
 static NS_DEFINE_IID(kCButton,        NS_BUTTON_CID);
@@ -83,6 +85,9 @@ static NS_DEFINE_IID(kCDragService,   NS_DRAGSERVICE_CID);
 
 static NS_DEFINE_IID(kISupportsIID,   NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID,    NS_IFACTORY_IID);
+
+// Sound services (just Beep for now)
+static NS_DEFINE_CID(kCSound,   NS_SOUND_CID);
 
 
 class nsWidgetFactory : public nsIFactory
@@ -224,6 +229,11 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     }
     else if (mClassID.Equals(kCPopUpMenu)) {
         inst = (nsISupports*)new nsPopUpMenu();
+    }
+    else if (mClassID.Equals(kCSound)) {
+    	nsISound* aSound = nsnull;
+    	NS_NewSound(&aSound);
+        inst = (nsISupports*) aSound;
     }
     else if (mClassID.Equals(kCTransferable)) {
         inst = (nsISupports*)new nsTransferable();

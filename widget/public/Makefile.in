@@ -83,6 +83,9 @@ EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 MODULE = raptor
 XPILD_MODULE = widget
 
+XPIDLSRCS = nsISound.idl \
+						$(NULL)
+
 include $(topsrcdir)/config/config.mk
 
 include $(topsrcdir)/config/rules.mk
