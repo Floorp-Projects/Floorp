@@ -1217,6 +1217,7 @@ case "$target" in
     AR_FLAGS='c $@'
     DSO_LDOPTS='-shared -auto_symvec'
     DSO_PIC_CFLAGS=
+    MOZ_DEBUG_LDFLAGS='-g'
     COMPAQ_CXX=1
     ;;
 
