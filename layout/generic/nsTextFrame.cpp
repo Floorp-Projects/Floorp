@@ -3400,9 +3400,17 @@ nsTextFrame::GetPosition(nsIPresContext* aCX,
       GetStyleContext(&styleContext);
       const nsStyleFont *font = (const nsStyleFont*)
         styleContext->GetStyleData(eStyleStruct_Font);
+      const nsStyleVisibility* visibility = (const nsStyleVisibility*) 
+        styleContext->GetStyleData(eStyleStruct_Visibility);
       NS_RELEASE(styleContext);
+      nsCOMPtr<nsIAtom> langGroup;
+      if (visibility && visibility->mLanguage) {
+        visibility->mLanguage->GetLanguageGroup(getter_AddRefs(langGroup));
+      }
       nsCOMPtr<nsIFontMetrics> fm;
-      aCX->GetMetricsFor(font->mFont, getter_AddRefs(fm));
+      nsCOMPtr<nsIDeviceContext> dx;
+      aCX->GetDeviceContext(getter_AddRefs(dx));
+      dx->GetMetricsFor(font->mFont, langGroup, *getter_AddRefs(fm));
       acx->SetFont(fm);
 
       // Get the renderable form of the text
