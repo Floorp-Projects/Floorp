@@ -63,6 +63,11 @@ use FileHandle;
 # $who_count{$who} = $count
 #
 # @ignore - Array of regexp's of warnings to ignore
+# @ignore_dir - Array of hashes of warnings matched with directories
+# @ignore_dir = (
+#  { warning=>'<warning pattern>', dir=>'<source patter>' },
+#  {...}, ...
+# )
 # @ignore_match - Array of hashes of warnings matched with source to ignore
 # @ignore_match = (
 #  { warning=>'<warning pattern>', source=>'<source patter>' },
@@ -91,13 +96,19 @@ $source_root_pat = '^.*/mozilla/';
 @ignore = ( 
   'location of the previous definition',
   '\' was hidden',
-  'aggregate has a partly bracketed initializer', # mailnews is stuck with this
   #'declaration of \`index\' shadows global',
   'declaration of \`ws\' shadows global', # From istream
   'declaration of \`free\' shadows global', # From strstream.h
   'declaration of \`(?:y0|y1|j1|remainder)\' shadows global', #From mathcalls.h
   'is not \(any longer\) pertinent', # cvs warning we can safely ignore
   'ANSI C forbids long long integer constants', # js uses long long constants
+);
+
+# Patterns that need to match warning text and source directory
+#
+@ignore_dir = (
+  # mailnews is stuck with this
+  { warning=>'aggregate has a partly bracketed initializer', dir=>'mime/' }
 );
 
 # Patterns that need to match warning text and source code text
@@ -334,6 +345,15 @@ sub gcc_parser {
     }
 
     my $ignore_it = /$ignore_pat/o;
+    unless ($ignore_it) {
+      # Now check if the warning should be ignored based on directory
+      for $ignore_rec (@ignore_dir) {
+        next unless $dir =~ /^$ignore_rec->{dir}/;
+        next unless /$ignore_rec->{warning}/;
+        $ignore_it = 1;
+        last;
+      }
+    }
     if ($ignore_it) {
       $warnings{$file}{$line}->{ignorecount}++;
       $total_ignored_count++;
@@ -423,8 +443,9 @@ sub print_summary_table
       my $index = $ii + $jj * $num_rows;
       next if $index > $num_whos;
       my $name = $who_list_ref->[$index];
+      next unless defined $name;
       my $count = $who_count_hash_ref->{$name};
-      next if $count == 0;
+      next unless $count;
       #warn "$ii\t$jj\t$index\t$name\t$count\n";
       $name =~ s/%.*//;
       print "  " x $jj;
@@ -720,7 +741,7 @@ sub trim_common_leading_whitespace {
   } else {
     $white = /^(\s+)/;
   }
-  s/^(?:$white)?//gm;
+  s/^(?:$white)?//gm unless $white eq '';
   s/^\s+$//gm;
   return $_;
 }
