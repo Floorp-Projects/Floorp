@@ -373,61 +373,6 @@ sub lsearch {
     return -1;
 }
 
-sub Product_element {
-    my ($prod,$onchange) = (@_);
-    return make_popup("product", keys %::versions, $prod, 1, $onchange);
-}
-
-sub Component_element {
-    my ($comp,$prod,$onchange) = (@_);
-    my $componentlist;
-    if (! defined $::components{$prod}) {
-        $componentlist = [];
-    } else {
-        $componentlist = $::components{$prod};
-    }
-    my $defcomponent;
-    if ($comp ne "" && lsearch($componentlist, $comp) >= 0) {
-        $defcomponent = $comp;
-    } else {
-        $defcomponent = $componentlist->[0];
-    }
-    return make_popup("component", $componentlist, $defcomponent, 1, "");
-}
-
-sub Version_element {
-    my ($vers, $prod, $onchange) = (@_);
-    my $versionlist;
-    if (!defined $::versions{$prod}) {
-        $versionlist = [];
-    } else {
-        $versionlist = $::versions{$prod};
-    }
-    my $defversion = $versionlist->[0];
-    if (lsearch($versionlist,$vers) >= 0) {
-        $defversion = $vers;
-    }
-    return make_popup("version", $versionlist, $defversion, 1, $onchange);
-}
-        
-sub Milestone_element {
-    my ($tm, $prod, $onchange) = (@_);
-    my $tmlist;
-    if (!defined $::target_milestone{$prod}) {
-        $tmlist = [];
-    } else {
-        $tmlist = $::target_milestone{$prod};
-    }
-
-    my $deftm = $tmlist->[0];
-
-    if (lsearch($tmlist, $tm) >= 0) {
-        $deftm = $tm;
-    }
-
-    return make_popup("target_milestone", $tmlist, $deftm, 1, $onchange);
-}
-
 # Generate a string which, when later interpreted by the Perl compiler, will
 # be the same as the given string.
 
