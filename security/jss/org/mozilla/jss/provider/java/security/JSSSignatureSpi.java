@@ -42,14 +42,14 @@ import java.security.spec.AlgorithmParameterSpec;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidParameterException;
 
-public class GenericSignatureSpi extends java.security.SignatureSpi {
+class JSSSignatureSpi extends java.security.SignatureSpi {
 
     org.mozilla.jss.crypto.Signature sig;
     SignatureAlgorithm alg;
 
-    private GenericSignatureSpi() { }
+    private JSSSignatureSpi() { }
 
-    protected GenericSignatureSpi(SignatureAlgorithm alg) {
+    protected JSSSignatureSpi(SignatureAlgorithm alg) {
         this.alg = alg;
     }
 
@@ -180,6 +180,27 @@ public class GenericSignatureSpi extends java.security.SignatureSpi {
     {
         throw new InvalidParameterException(
             "name/value parameters not supported");
+    }
+
+    public static class DSA extends JSSSignatureSpi {
+        public DSA() {
+            super(SignatureAlgorithm.DSASignatureWithSHA1Digest);
+        }
+    }
+    public static class MD2RSA extends JSSSignatureSpi {
+        public MD2RSA() {
+            super(SignatureAlgorithm.RSASignatureWithMD2Digest);
+        }
+    }
+    public static class MD5RSA extends JSSSignatureSpi {
+        public MD5RSA() {
+            super(SignatureAlgorithm.RSASignatureWithMD5Digest);
+        }
+    }
+    public static class SHA1RSA extends JSSSignatureSpi {
+        public SHA1RSA() {
+            super(SignatureAlgorithm.RSASignatureWithSHA1Digest);
+        }
     }
 
 }

@@ -41,13 +41,13 @@ import org.mozilla.jss.crypto.*;
 import org.mozilla.jss.CryptoManager;
 import java.security.MessageDigestSpi;
 
-abstract class GenericMessageDigestSpi extends MessageDigestSpi {
+abstract class JSSMessageDigestSpi extends MessageDigestSpi {
 
     private JSSMessageDigest digest;
 
-    private GenericMessageDigestSpi() { }
+    private JSSMessageDigestSpi() { }
 
-    protected GenericMessageDigestSpi(DigestAlgorithm alg) {
+    protected JSSMessageDigestSpi(DigestAlgorithm alg) {
         super();
         CryptoToken token =
             TokenSupplierManager.getTokenSupplier().getThreadToken();
@@ -118,5 +118,21 @@ abstract class GenericMessageDigestSpi extends MessageDigestSpi {
       } catch(java.security.DigestException de) {
         throw new TokenRuntimeException(de.getMessage());
       }
+    }
+
+    public static class SHA1 extends JSSMessageDigestSpi {
+        public SHA1() {
+            super( DigestAlgorithm.SHA1 );
+        }
+    }
+    public static class MD5 extends JSSMessageDigestSpi {
+        public MD5() {
+            super( DigestAlgorithm.MD5 );
+        }
+    }
+    public static class MD2 extends JSSMessageDigestSpi {
+        public MD2() {
+            super( DigestAlgorithm.MD2 );
+        }
     }
 }

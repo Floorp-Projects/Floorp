@@ -43,15 +43,15 @@ import java.security.spec.AlgorithmParameterSpec;
 import java.security.InvalidAlgorithmParameterException;
 
 
-abstract class GenericKeyPairGeneratorSpi
+class JSSKeyPairGeneratorSpi
     extends java.security.KeyPairGeneratorSpi
 {
 
     private KeyPairGenerator kpg;
 
-    private GenericKeyPairGeneratorSpi() { super(); }
+    private JSSKeyPairGeneratorSpi() { super(); }
 
-    public GenericKeyPairGeneratorSpi(KeyPairAlgorithm alg) {
+    protected JSSKeyPairGeneratorSpi(KeyPairAlgorithm alg) {
         super();
         CryptoToken token =
             TokenSupplierManager.getTokenSupplier().getThreadToken();
@@ -87,4 +87,14 @@ abstract class GenericKeyPairGeneratorSpi
       }
     }
 
+    public static class RSA extends JSSKeyPairGeneratorSpi {
+        public RSA() {
+            super(KeyPairAlgorithm.RSA);
+        }
+    }
+    public static class DSA extends JSSKeyPairGeneratorSpi {
+        public DSA() {
+            super(KeyPairAlgorithm.DSA);
+        }
+    }
 }

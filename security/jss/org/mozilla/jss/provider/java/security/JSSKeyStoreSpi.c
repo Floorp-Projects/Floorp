@@ -830,6 +830,12 @@ Java_org_mozilla_jss_provider_java_security_JSSKeyStoreSpi_engineSetKeyEntryNati
         goto finish;
     }
 
+#if 1
+    JSS_throwMsg(env, KEYSTORE_EXCEPTION,
+        "Operation is not supported. " 
+        "http://bugzilla.mozilla.org/show_bug.cgi?id=128172");
+    goto finish;
+#else
     if( (*env)->IsInstanceOf(env, keyObj, privkClass) ) {
         SECKEYPrivateKey *privk;
 
@@ -876,6 +882,7 @@ Java_org_mozilla_jss_provider_java_security_JSSKeyStoreSpi_engineSetKeyEntryNati
             " JSS symmetric key (PK11SymKey)");
         goto finish;
     }
+#endif
 
 finish:
     if( nickname != NULL ) {
