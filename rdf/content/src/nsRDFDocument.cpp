@@ -147,6 +147,8 @@ public:
     // nsIDocument interface
     virtual nsIArena* GetArena();
 
+    NS_IMETHOD GetContentType(nsString& aContentType) const;
+
     NS_IMETHOD StartDocumentLoad(nsIURL *aUrl, 
                                  nsIContentViewerContainer* aContainer,
                                  nsIStreamListener **aDocListener,
@@ -585,6 +587,14 @@ RDFDocumentImpl::GetArena()
 {
     NS_IF_ADDREF(mArena);
     return mArena;
+}
+
+NS_IMETHODIMP 
+RDFDocumentImpl::GetContentType(nsString& aContentType) const
+{
+    // XXX Is this right, Chris?
+    aContentType.SetString("text/rdf");
+    return NS_OK;
 }
 
 NS_IMETHODIMP 
