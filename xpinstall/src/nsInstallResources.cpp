@@ -34,8 +34,11 @@ static nsXPIResourceTableItem XPIResTable[] =
      *   Install Actions 
      *---------------------------------------------------------------------*/
     { "InstallFile",        "Installing: %s" },
+    { "InstallSharedFile",  "Installing Shared File: %s" },
     { "ReplaceFile",        "Replacing: %s" },
+    { "ReplaceSharedFile",  "Replacing Shared File: %s" },
     { "SkipFile",           "Skipping: %s" },
+    { "SkipSharedFile",     "Skipping Shared File: %s" },
     { "DeleteFile",         "Deleting file: %s" },
     { "DeleteComponent",    "Deleting component: %s" },
     { "Execute",            "Executing: %s" },
@@ -48,17 +51,18 @@ static nsXPIResourceTableItem XPIResTable[] =
     { "RegPackage",         "Register Package: %s" },
 
 
-    { "CopyFile",             "Copy File: %s to %s" },
-    { "ExecuteFile",          "Execute File: %s" },
-    { "ExecuteFileWithArgs",  "Execute File: %s with argument: %s" },
-    { "MoveFile",             "Move File: %s to %s" },
-    { "RenameFile",           "Rename File: %s to %s" },
-    { "CreateFolder",         "Create Folder: %s" },
-    { "RemoveFolder",         "Remove Folder: %s" },
-    { "RenameFolder",         "Rename Folder: %s to %s" },
-    { "WindowsShortcut",      "Windows Shortcut: %s" },
-    { "MacAlias",             "Mac Alias: %s" },
-    { "UnknownFileOpCommand", "Unkown file operation command!" },
+    { "CopyFile",              "Copy File: %s to %s" },
+    { "ExecuteFile",           "Execute File: %s" },
+    { "ExecuteFileWithArgs",   "Execute File: %s with argument: %s" },
+    { "MoveFile",              "Move File: %s to %s" },
+    { "RenameFile",            "Rename File: %s to %s" },
+    { "CreateFolder",          "Create Folder: %s" },
+    { "RemoveFolder",          "Remove Folder: %s" },
+    { "RenameFolder",          "Rename Folder: %s to %s" },
+    { "WindowsShortcut",       "Windows Shortcut: %s" },
+    { "MacAlias",              "Mac Alias: %s" },
+    { "WindowsRegisterServer", "Windows Register Server: %s" },
+    { "UnknownFileOpCommand",  "Unkown file operation command!" },
 
     // XXX FileOp*() action strings
     // XXX WinReg and WinProfile action strings

@@ -150,6 +150,9 @@ class nsInstallFileOpItem : public nsInstallObject
     PRInt32       NativeFileOpMacAliasComplete();
     PRInt32       NativeFileOpMacAliasAbort();
     PRInt32       NativeFileOpUnixLink();
+    PRInt32       NativeFileOpWindowsRegisterServerPrepare();
+    PRInt32       NativeFileOpWindowsRegisterServerComplete();
+    PRInt32       NativeFileOpWindowsRegisterServerAbort();
 
 };
 

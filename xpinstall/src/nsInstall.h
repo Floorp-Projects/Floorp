@@ -154,6 +154,9 @@ class nsInstall
             SOURCE_IS_FILE              = -234,
             INSUFFICIENT_DISK_SPACE     = -235,
             FILENAME_TOO_LONG           = -236,
+
+            UNABLE_TO_LOCATE_LIB_FUNCTION = -237,
+            UNABLE_TO_LOAD_LIBRARY        = -238,
             
             OUT_OF_MEMORY               = -299,
 
@@ -170,7 +173,10 @@ class nsInstall
 
             INSTALL_FILE_UNEXPECTED_MSG_ID = 0,
             DETAILS_REPLACE_FILE_MSG_ID = 1,
-            DETAILS_INSTALL_FILE_MSG_ID = 2
+            DETAILS_INSTALL_FILE_MSG_ID = 2,
+
+            DO_NOT_UNINSTALL            = 2,
+            WIN_SHARED_FILE             = 4
         };
 
 
@@ -247,6 +253,7 @@ class nsInstall
         PRInt32    FileOpFileWindowsShortcut(nsIFile* aTarget, nsIFile* aShortcutPath, nsString& aDescription, nsIFile* aWorkingPath, nsString& aParams, nsIFile* aIcon, PRInt32 aIconId, PRInt32* aReturn);
         PRInt32    FileOpFileMacAlias(nsIFile *aSourceFile, nsIFile *aAliasFile, PRInt32* aReturn);
         PRInt32    FileOpFileUnixLink(nsInstallFolder& aTarget, PRInt32 aFlags, PRInt32* aReturn);
+        PRInt32    FileOpWinRegisterServer(nsInstallFolder& aTarget, PRInt32* aReturn);
 
         void       LogComment(nsString& aComment);
 

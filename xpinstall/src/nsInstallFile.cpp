@@ -32,6 +32,7 @@
 #include "nsIDOMInstallVersion.h"
 #include "nsInstallResources.h"
 #include "nsInstallLogComment.h"
+#include "nsInstallBitwise.h"
 
 /* Public Methods */
 
@@ -395,12 +396,12 @@ void nsInstallFile::Abort()
         mExtractedFile->Delete(PR_FALSE);
 }
 
-#define RESBUFSIZE 1024
+#define RESBUFSIZE 4096
 char* nsInstallFile::toString()
 {
-    char* buffer = new char[RESBUFSIZE];
+    char* buffer  = new char[RESBUFSIZE];
     char* rsrcVal = nsnull;
-    char* fname = nsnull;
+    char* fname   = nsnull;
 
     if (buffer == nsnull || !mInstall)
         return nsnull;
@@ -409,23 +410,55 @@ char* nsInstallFile::toString()
     
     if (mReplaceFile)
     {
-        rsrcVal = mInstall->GetResourcedString(NS_ConvertASCIItoUCS2("ReplaceFile"));
+        if(mMode & nsInstall::WIN_SHARED_FILE)
+        {
+            rsrcVal = mInstall->GetResourcedString(NS_ConvertASCIItoUCS2("ReplaceSharedFile"));
+        }
+        else
+        {
+            rsrcVal = mInstall->GetResourcedString(NS_ConvertASCIItoUCS2("ReplaceFile"));
+        }
     }
     else if (mSkipInstall)
     {
-        rsrcVal = mInstall->GetResourcedString(NS_ConvertASCIItoUCS2("SkipFile"));
+        if(mMode & nsInstall::WIN_SHARED_FILE)
+        {
+            rsrcVal = mInstall->GetResourcedString(NS_ConvertASCIItoUCS2("SkipSharedFile"));
+        }
+        else
+        {
+            rsrcVal = mInstall->GetResourcedString(NS_ConvertASCIItoUCS2("SkipFile"));
+        }
     }
     else
     {
-        rsrcVal = mInstall->GetResourcedString(NS_ConvertASCIItoUCS2("InstallFile"));
+        if(mMode & nsInstall::WIN_SHARED_FILE)
+        {
+            rsrcVal = mInstall->GetResourcedString(NS_ConvertASCIItoUCS2("InstallSharedFile"));
+        }
+        else
+        {
+            rsrcVal = mInstall->GetResourcedString(NS_ConvertASCIItoUCS2("InstallFile"));
+        }
     }
 
     if (rsrcVal)
     {
+        char*    interimCStr = nsnull;
+        nsString interimStr;
+
+        if(mMode & nsInstall::DO_NOT_UNINSTALL)
+          interimStr.AssignWithConversion("(*dnu*) ");
+
+        interimStr.AppendWithConversion(rsrcVal);
+        interimCStr = interimStr.ToNewCString();
+        if(interimCStr == nsnull)
+          return interimCStr;
+
         if (mFinalFile)
             mFinalFile->GetPath(&fname);
 
-        PR_snprintf( buffer, RESBUFSIZE, rsrcVal, fname );
+        PR_snprintf( buffer, RESBUFSIZE, interimCStr, fname );
 
         Recycle(rsrcVal);
     }
@@ -436,7 +469,9 @@ char* nsInstallFile::toString()
 
 PRInt32 nsInstallFile::CompleteFileMove()
 {
-    int result = 0;
+    int    result         = 0;
+    char   *temp;
+    PRBool bAlreadyExists = PR_FALSE;
     
     if (mExtractedFile == nsnull) 
     {
@@ -453,7 +488,16 @@ PRInt32 nsInstallFile::CompleteFileMove()
         result = ReplaceFileNowOrSchedule(mExtractedFile, mFinalFile );
     }
 
-  return result;  
+    if(mMode & nsInstall::WIN_SHARED_FILE)
+    {
+      if(mReplaceFile || mSkipInstall)
+          bAlreadyExists = PR_TRUE;
+
+      mFinalFile->GetPath(&temp);
+      RegisterSharedFile(temp, bAlreadyExists);
+    }
+
+    return result;  
 }
 
 PRInt32
