@@ -23,7 +23,7 @@
   # ***** END LICENSE BLOCK ***** %]
   
 [% script = BLOCK %]
-var ids = ["name", "subject", "comments", "product"];
+var ids = ["name", "subject", "comments"];
 
 function checkSubmitEnable() {
   /* To enable the button, all fields must have a value */
@@ -47,8 +47,7 @@ function checkSubmitEnable() {
 function onLoad() {
   /* Add the event listeners, and disable the button initially */
   for (var i = 0; i < ids.length; i++) {
-    document.getElementById(ids[i]).setAttribute("onkeyup",  
-                                                 "checkSubmitEnable()");
+    document.getElementById(ids[i]).onkeyup = checkSubmitEnable;
   }
   
   checkSubmitEnable();
