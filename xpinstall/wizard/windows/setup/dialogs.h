@@ -30,13 +30,16 @@ LRESULT CALLBACK  DlgProcWelcome(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam
 LRESULT CALLBACK  DlgProcLicense(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam);
 LRESULT CALLBACK  DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam);
 LRESULT CALLBACK  DlgProcSelectComponents(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam);
+LRESULT CALLBACK  DlgProcSelectAdditionalComponents(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam);
 LRESULT CALLBACK  DlgProcWindowsIntegration(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam);
 LRESULT CALLBACK  DlgProcProgramFolder(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam);
+LRESULT CALLBACK  DlgProcSiteSelector(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam);
 LRESULT CALLBACK  DlgProcStartInstall(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam);
 LRESULT CALLBACK  DlgProcReboot(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam);
 LRESULT CALLBACK  DlgProcMessage(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam);
 LRESULT CALLBACK  NewListBoxWndProc( HWND, UINT, WPARAM, LPARAM);
 
+void              ToggleCheck(HWND hwndListBox, DWORD dwIndex, DWORD dwACFlag);
 void              AskCancelDlg(HWND hDlg);
 void              lbAddItem(HWND hList, siC *siCComponent);
 void              InstantiateDialog(DWORD dwDlgID, LPSTR szTitle, WNDPROC wpDlgProc);
@@ -46,11 +49,10 @@ void              PaintGradientShade(HWND hWnd, HDC hdc);
 BOOL              BrowseForDirectory(HWND hDlg, char *szCurrDir);
 LRESULT CALLBACK  BrowseHookProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 void              ShowMessage(LPSTR szMessage, BOOL bShow);
-void              DrawCheck(LPDRAWITEMSTRUCT lpdis);
+void              DrawCheck(LPDRAWITEMSTRUCT lpdis, DWORD dwACFlag);
 void              InvalidateLBCheckbox(HWND hwndListBox);
 void              ProcessWindowsMessages(void);
 void              CheckWizardStateCustom(DWORD dwDefault);
-void              SunJavaDependencyHack(DWORD dwIndex, BOOL bSelected);
-
+void              SunJavaDependencyHack(DWORD dwIndex, BOOL bSelected, DWORD dwACFlag);
 
 #endif

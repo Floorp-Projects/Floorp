@@ -34,6 +34,7 @@ extern HINSTANCE        hSDInst;
 extern HINSTANCE        hXPIStubInst;
 
 extern HBITMAP          hbmpBoxChecked;
+extern HBITMAP          hbmpBoxCheckedDisabled;
 extern HBITMAP          hbmpBoxUnChecked;
 
 extern HANDLE           hAccelTable;
@@ -55,6 +56,8 @@ extern LPSTR            szSetupDir;
 extern LPSTR            szTempDir;
 extern LPSTR            szFileIniConfig;
 
+extern LPSTR            szSiteSelectorDescription;
+
 extern DWORD            dwWizardState;
 extern DWORD            dwSetupType;
 extern DWORD            dwOSType;
@@ -74,12 +77,15 @@ extern diW              diWelcome;
 extern diL              diLicense;
 extern diST             diSetupType;
 extern diSC             diSelectComponents;
+extern diSC             diSelectAdditionalComponents;
 extern diWI             diWindowsIntegration;
 extern diPF             diProgramFolder;
+extern diSS             diSiteSelector;
 extern diSI             diStartInstall;
 extern diR              diReboot;
 extern siSD             siSDObject;
 extern siCF             siCFCoreFile;
 extern siC              *siComponents;
+extern ssi              *ssiSiteSelector;
 
 #endif

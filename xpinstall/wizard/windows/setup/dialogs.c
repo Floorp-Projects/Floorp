@@ -32,6 +32,7 @@
 
 static WNDPROC OldListBoxWndProc;
 static BOOL    gbProcessingXpnstallFiles;
+static DWORD   gdwACFlag;
 
 void AskCancelDlg(HWND hDlg)
 {
@@ -608,28 +609,24 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
             dwSetupType     = ST_RADIO0;
             dwTempSetupType = dwSetupType;
             SiCNodeSetItemsSelected(diSetupType.stSetupType0.dwCItems, diSetupType.stSetupType0.dwCItemsSelected);
-            SiCNodeSetItemsSelected(diSetupType.stSetupType0.dwAItems, diSetupType.stSetupType0.dwAItemsSelected);
           }
           else if(IsDlgButtonChecked(hDlg, IDC_RADIO_ST1) == BST_CHECKED)
           {
             dwSetupType     = ST_RADIO1;
             dwTempSetupType = dwSetupType;
             SiCNodeSetItemsSelected(diSetupType.stSetupType1.dwCItems, diSetupType.stSetupType1.dwCItemsSelected);
-            SiCNodeSetItemsSelected(diSetupType.stSetupType1.dwAItems, diSetupType.stSetupType1.dwAItemsSelected);
           }
           else if(IsDlgButtonChecked(hDlg, IDC_RADIO_ST2) == BST_CHECKED)
           {
             dwSetupType     = ST_RADIO2;
             dwTempSetupType = dwSetupType;
             SiCNodeSetItemsSelected(diSetupType.stSetupType2.dwCItems, diSetupType.stSetupType2.dwCItemsSelected);
-            SiCNodeSetItemsSelected(diSetupType.stSetupType2.dwAItems, diSetupType.stSetupType2.dwAItemsSelected);
           }
           else if(IsDlgButtonChecked(hDlg, IDC_RADIO_ST3) == BST_CHECKED)
           {
             dwSetupType     = ST_RADIO3;
             dwTempSetupType = dwSetupType;
             SiCNodeSetItemsSelected(diSetupType.stSetupType3.dwCItems, diSetupType.stSetupType3.dwCItemsSelected);
-            SiCNodeSetItemsSelected(diSetupType.stSetupType3.dwAItems, diSetupType.stSetupType3.dwAItemsSelected);
           }
 
           /* set the next dialog to be shown depending on the 
@@ -660,16 +657,18 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
   return(0);
 }
 
-void DrawCheck(LPDRAWITEMSTRUCT lpdis)
+void DrawCheck(LPDRAWITEMSTRUCT lpdis, DWORD dwACFlag)
 {
   siC     *siCTemp  = NULL;
   HDC     hdcMem;
   HBITMAP hbmpCheckBox;
 
-  siCTemp = SiCNodeGetObject(lpdis->itemID, FALSE);
+  siCTemp = SiCNodeGetObject(lpdis->itemID, FALSE, dwACFlag);
   if(siCTemp != NULL)
   {
-    if(siCTemp->dwAttributes & SIC_SELECTED)
+    if(siCTemp->dwAttributes & SIC_DISABLED)
+      hbmpCheckBox = hbmpBoxCheckedDisabled;
+    else if(siCTemp->dwAttributes & SIC_SELECTED)
       hbmpCheckBox = hbmpBoxChecked;
     else
       hbmpCheckBox = hbmpBoxUnChecked;
@@ -701,7 +700,9 @@ void lbAddItem(HWND hList, siC *siCComponent)
   DWORD dwItem;
 
   dwItem = SendMessage(hList, LB_ADDSTRING, 0, (LPARAM)siCComponent->szDescriptionShort);
-  if(siCComponent->dwAttributes & SIC_SELECTED)
+  if(siCComponent->dwAttributes & SIC_DISABLED)
+    SendMessage(hList, LB_SETITEMDATA, dwItem, (LPARAM)hbmpBoxCheckedDisabled);
+  else if(siCComponent->dwAttributes & SIC_SELECTED)
     SendMessage(hList, LB_SETITEMDATA, dwItem, (LPARAM)hbmpBoxChecked);
   else
     SendMessage(hList, LB_SETITEMDATA, dwItem, (LPARAM)hbmpBoxUnChecked);
@@ -726,47 +727,52 @@ void InvalidateLBCheckbox(HWND hwndListBox)
   InvalidateRect(hwndListBox, &rcCheckArea, TRUE);
 }
   
-void SunJavaDependencyHack(DWORD dwIndex, BOOL bSelected)
+void SunJavaDependencyHack(DWORD dwIndex, BOOL bSelected, DWORD dwACFlag)
 {
   DWORD dwPatchIndex;
   siC   *siCTemp = NULL;
 
-  siCTemp = SiCNodeGetObject(dwIndex, FALSE);
+  siCTemp = SiCNodeGetObject(dwIndex, FALSE, dwACFlag);
   if(lstrcmpi("Sun Java 2", siCTemp->szDescriptionShort) == 0)
   {
     if((dwPatchIndex = SiCNodeGetIndexDS("Sun Java 2 Patch")) != -1)
-      SiCNodeSetAttributes(dwPatchIndex, SIC_SELECTED, bSelected, TRUE);
+      SiCNodeSetAttributes(dwPatchIndex, SIC_SELECTED, bSelected, TRUE, AC_ALL);
   }
 }
 
-void ToggleCheck(HWND hwndListBox, DWORD dwIndex)
+void ToggleCheck(HWND hwndListBox, DWORD dwIndex, DWORD dwACFlag)
 {
   BOOL  bMoreToResolve;
   LPSTR szToggledDescriptionShort = NULL;
+  DWORD dwAttributes;
 
   // Checks to see if the checkbox is checked or not checked, and
   // toggles the node attributes appropriately.
-    if(SiCNodeGetAttributes(dwIndex, FALSE) & SIC_SELECTED)
+  dwAttributes = SiCNodeGetAttributes(dwIndex, FALSE, dwACFlag);
+  if(!(dwAttributes & SIC_DISABLED))
+  {
+    if(dwAttributes & SIC_SELECTED)
     {
-      SiCNodeSetAttributes(dwIndex, SIC_SELECTED, FALSE, FALSE);
-      szToggledDescriptionShort = SiCNodeGetDescriptionShort(dwIndex, FALSE);
+      SiCNodeSetAttributes(dwIndex, SIC_SELECTED, FALSE, FALSE, dwACFlag);
+      szToggledDescriptionShort = SiCNodeGetDescriptionShort(dwIndex, FALSE, dwACFlag);
       ResolveDependees(szToggledDescriptionShort);
-      SunJavaDependencyHack(dwIndex, FALSE);
+      SunJavaDependencyHack(dwIndex, FALSE, dwACFlag);
     }
     else
     {
-      SiCNodeSetAttributes(dwIndex, SIC_SELECTED, TRUE, FALSE);
+      SiCNodeSetAttributes(dwIndex, SIC_SELECTED, TRUE, FALSE, dwACFlag);
       bMoreToResolve = ResolveDependencies(dwIndex);
 
       while(bMoreToResolve)
         bMoreToResolve = ResolveDependencies(-1);
 
-      szToggledDescriptionShort = SiCNodeGetDescriptionShort(dwIndex, FALSE);
+      szToggledDescriptionShort = SiCNodeGetDescriptionShort(dwIndex, FALSE, dwACFlag);
       ResolveDependees(szToggledDescriptionShort);
-      SunJavaDependencyHack(dwIndex, TRUE);
+      SunJavaDependencyHack(dwIndex, TRUE, dwACFlag);
     }
 
-  InvalidateLBCheckbox(hwndListBox);
+    InvalidateLBCheckbox(hwndListBox);
+  }
 }
 
 // ************************************************************************
@@ -792,12 +798,35 @@ WNDPROC SubclassWindow( HWND hWnd, WNDPROC NewWndProc)
 // ************************************************************************
 LRESULT CALLBACK NewListBoxWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-  DWORD       dwPosX;
-  DWORD       dwPosY;
-  DWORD       dwIndex;
+  DWORD               dwPosX;
+  DWORD               dwPosY;
+  DWORD               dwIndex;
+#ifdef XXX_SSU_DISABLED_FOR_NOW
+  LPDRAWITEMSTRUCT    lpdis;
+  PAINTSTRUCT         ps;
+  HDC                 hdc;
+#endif
 
   switch(uMsg)
   {
+#ifdef XXX_SSU_DISABLED_FOR_NOW
+    case WM_DRAWITEM:
+      lpdis = (LPDRAWITEMSTRUCT)lParam;
+
+      break;
+
+    case WM_PAINT:
+      hdc = BeginPaint(hWnd, &ps);
+      // Add any drawing code here...
+
+//      PaintGradientShade(hWnd, hdc);
+//      OutputSetupTitle(hdc);
+
+      EndPaint(hWnd, &ps);
+//      bReturn = FALSE;
+      break;
+#endif
+
     case WM_CHAR:
       /* check for the space key */
       if((TCHAR)wParam == 32)
@@ -806,7 +835,7 @@ LRESULT CALLBACK NewListBoxWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM l
                               LB_GETCURSEL,
                               0,
                               0);
-        ToggleCheck(hWnd, dwIndex);
+        ToggleCheck(hWnd, dwIndex, gdwACFlag);
       }
       break;
 
@@ -822,7 +851,7 @@ LRESULT CALLBACK NewListBoxWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM l
                                        LB_ITEMFROMPOINT,
                                        0,
                                        (LPARAM)MAKELPARAM(dwPosX, dwPosY)));
-          ToggleCheck(hWnd, dwIndex);
+          ToggleCheck(hWnd, dwIndex, gdwACFlag);
         }
       }
       break;
@@ -835,23 +864,23 @@ LRESULT CALLBACK DlgProcSelectComponents(HWND hDlg, UINT msg, WPARAM wParam, LON
 {
   BOOL                bReturn = FALSE;
   siC                 *siCTemp;
-  DWORD               dwCurrentItem;
-  DWORD               dwArrayIndex;
   DWORD               dwIndex;
   DWORD               dwItems = MAX_BUF;
-  DWORD               dwItemsSelected[MAX_BUF];
   HWND                hwndLBComponents;
   RECT                rDlg;
-//  RECT                rLBComponentSize;
-//  RECT                rListBox;
   TCHAR               tchBuffer[MAX_BUF];
   TEXTMETRIC          tm;
   DWORD               y;
-//  HDC                 hdcComponentSize;
   LPDRAWITEMSTRUCT    lpdis;
-//  RECT                rTemp;
   ULONGLONG           ullDSBuf;
   char                szBuf[MAX_BUF];
+
+#ifdef XXX_SSU_COMPONENT_SIZE
+  RECT                rTemp;
+  HDC                 hdcComponentSize;
+  RECT                rLBComponentSize;
+  RECT                rListBox;
+#endif
 
   hwndLBComponents  = GetDlgItem(hDlg, IDC_LIST_COMPONENTS);
 
@@ -864,20 +893,20 @@ LRESULT CALLBACK DlgProcSelectComponents(HWND hDlg, UINT msg, WPARAM wParam, LON
       siCTemp = siComponents;
       if(siCTemp != NULL)
       {
-        if(!(siCTemp->dwAttributes & SIC_INVISIBLE))
+        if((!(siCTemp->dwAttributes & SIC_INVISIBLE)) && (!(siCTemp->dwAttributes & SIC_ADDITIONAL)))
           lbAddItem(hwndLBComponents, siCTemp);
 
         siCTemp = siCTemp->Next;
         while((siCTemp != siComponents) && (siCTemp != NULL))
         {
-          if(!(siCTemp->dwAttributes & SIC_INVISIBLE))
+          if((!(siCTemp->dwAttributes & SIC_INVISIBLE)) && (!(siCTemp->dwAttributes & SIC_ADDITIONAL)))
             lbAddItem(hwndLBComponents, siCTemp);
 
           siCTemp = siCTemp->Next;
         }
         SetFocus(hwndLBComponents);
         SendMessage(hwndLBComponents, LB_SETCURSEL, 0, 0);
-        SetDlgItemText(hDlg, IDC_STATIC_DESCRIPTION, SiCNodeGetDescriptionLong(0, FALSE));
+        SetDlgItemText(hDlg, IDC_STATIC_DESCRIPTION, SiCNodeGetDescriptionLong(0, FALSE, AC_COMPONENTS));
       }
 
       if(GetClientRect(hDlg, &rDlg))
@@ -894,6 +923,7 @@ LRESULT CALLBACK DlgProcSelectComponents(HWND hDlg, UINT msg, WPARAM wParam, LON
       lstrcat(szBuf, " K");
       SetDlgItemText(hDlg, IDC_SPACE_AVAILABLE, szBuf);
 
+      gdwACFlag = AC_COMPONENTS;
       OldListBoxWndProc = SubclassWindow(hwndLBComponents, (WNDPROC)NewListBoxWndProc);
       break;
 
@@ -905,9 +935,11 @@ LRESULT CALLBACK DlgProcSelectComponents(HWND hDlg, UINT msg, WPARAM wParam, LON
         break;
 
       SendMessage(lpdis->hwndItem, LB_GETTEXT, lpdis->itemID, (LPARAM)tchBuffer);
-//      GetClientRect(lpdis->hwndItem, &rTemp);
-//      hdcComponentSize = GetDC(lpdis->hwndItem);
-//      SelectObject(hdcComponentSize, GetCurrentObject(lpdis->hDC, OBJ_FONT));
+#ifdef XXX_SSU_COMPONENT_SIZE
+      GetClientRect(lpdis->hwndItem, &rTemp);
+      hdcComponentSize = GetDC(lpdis->hwndItem);
+      SelectObject(hdcComponentSize, GetCurrentObject(lpdis->hDC, OBJ_FONT));
+#endif
 
       if((lpdis->itemAction & ODA_FOCUS) && (lpdis->itemState & ODS_SELECTED))
       {
@@ -917,20 +949,38 @@ LRESULT CALLBACK DlgProcSelectComponents(HWND hDlg, UINT msg, WPARAM wParam, LON
 
       if(lpdis->itemAction & ODA_FOCUS)
       {
+        siCTemp = SiCNodeGetObject(lpdis->itemID, FALSE, AC_COMPONENTS);
+
         if((lpdis->itemState & ODS_SELECTED) &&
           !(lpdis->itemState & ODS_FOCUS))
         {
-          SetTextColor(lpdis->hDC,        GetSysColor(COLOR_WINDOWTEXT));
-          SetBkColor(lpdis->hDC,          GetSysColor(COLOR_WINDOW));
-//          SetTextColor(hdcComponentSize,  GetSysColor(COLOR_WINDOWTEXT));
-//          SetBkColor(hdcComponentSize,    GetSysColor(COLOR_WINDOW));
+          if(siCTemp->dwAttributes & SIC_DISABLED)
+            SetTextColor(lpdis->hDC,        GetSysColor(COLOR_GRAYTEXT));
+          else
+          {
+            SetTextColor(lpdis->hDC,        GetSysColor(COLOR_WINDOWTEXT));
+            SetBkColor(lpdis->hDC,          GetSysColor(COLOR_WINDOW));
+
+#ifdef XXX_SSU_COMPONENT_SIZE
+            SetTextColor(hdcComponentSize,  GetSysColor(COLOR_WINDOWTEXT));
+            SetBkColor(hdcComponentSize,    GetSysColor(COLOR_WINDOW));
+#endif
+          }
         }
         else
         {
-          SetTextColor(lpdis->hDC,        GetSysColor(COLOR_HIGHLIGHTTEXT));
-          SetBkColor(lpdis->hDC,          GetSysColor(COLOR_HIGHLIGHT));
-//          SetTextColor(hdcComponentSize,  GetSysColor(COLOR_HIGHLIGHTTEXT));
-//          SetBkColor(hdcComponentSize,    GetSysColor(COLOR_HIGHLIGHT));
+          if(siCTemp->dwAttributes & SIC_DISABLED)
+            SetTextColor(lpdis->hDC,        GetSysColor(COLOR_GRAYTEXT));
+          else
+          {
+            SetTextColor(lpdis->hDC,        GetSysColor(COLOR_HIGHLIGHTTEXT));
+            SetBkColor(lpdis->hDC,          GetSysColor(COLOR_HIGHLIGHT));
+
+#ifdef XXX_SSU_COMPONENT_SIZE
+            SetTextColor(hdcComponentSize,  GetSysColor(COLOR_HIGHLIGHTTEXT));
+            SetBkColor(hdcComponentSize,    GetSysColor(COLOR_HIGHLIGHT));
+#endif
+          }
         }
       }
 
@@ -949,8 +999,8 @@ LRESULT CALLBACK DlgProcSelectComponents(HWND hDlg, UINT msg, WPARAM wParam, LON
                    strlen(tchBuffer),
                    NULL);
 
-#ifdef XXX_SSU
-        siCTemp = SiCNodeGetObject(lpdis->itemID, FALSE);
+#ifdef XXX_SSU_COMPONENT_SIZE
+        siCTemp = SiCNodeGetObject(lpdis->itemID, FALSE, AC_COMPONENTS);
         _ui64toa(siCTemp->ullInstallSizeArchive, tchBuffer, 10);
         lstrcat(tchBuffer, " K");
 
@@ -982,7 +1032,7 @@ LRESULT CALLBACK DlgProcSelectComponents(HWND hDlg, UINT msg, WPARAM wParam, LON
 #endif
       }
       
-      DrawCheck(lpdis);
+      DrawCheck(lpdis, AC_COMPONENTS);
 
       // draw the focus rect on the selected item
       if((lpdis->itemAction & ODA_FOCUS) &&
@@ -991,7 +1041,10 @@ LRESULT CALLBACK DlgProcSelectComponents(HWND hDlg, UINT msg, WPARAM wParam, LON
         DrawFocusRect(lpdis->hDC, &(lpdis->rcItem));
       }
 
-//      ReleaseDC(lpdis->hwndItem, hdcComponentSize);
+#ifdef XXX_SSU_COMPONENT_SIZE
+      ReleaseDC(lpdis->hwndItem, hdcComponentSize);
+#endif
+
       bReturn = TRUE;
 
       /* update the disk space required info in the dialog.  It is already
@@ -1013,23 +1066,10 @@ LRESULT CALLBACK DlgProcSelectComponents(HWND hDlg, UINT msg, WPARAM wParam, LON
         case IDC_LIST_COMPONENTS:
           /* to update the long description for each component the user selected */
           if((dwIndex = SendMessage(hwndLBComponents, LB_GETCURSEL, 0, 0)) != LB_ERR)
-            SetDlgItemText(hDlg, IDC_STATIC_DESCRIPTION, SiCNodeGetDescriptionLong(dwIndex, FALSE));
+            SetDlgItemText(hDlg, IDC_STATIC_DESCRIPTION, SiCNodeGetDescriptionLong(dwIndex, FALSE, AC_COMPONENTS));
           break;
 
         case IDWIZNEXT:
-          dwItems       = ListView_GetItemCount(hwndLBComponents);
-          dwArrayIndex  = 0;
-          for(dwCurrentItem = 0; dwCurrentItem < dwItems; dwCurrentItem++)
-          {
-            if(ListView_GetCheckState(hwndLBComponents, dwCurrentItem))
-            {
-              dwItemsSelected[dwArrayIndex] = dwCurrentItem;
-              ++dwArrayIndex;
-            }
-          }
-
-          SiCNodeSetItemsSelected(dwItems, dwItemsSelected);
-
           DestroyWindow(hDlg);
           PostMessage(hWndMain, WM_COMMAND, IDWIZNEXT, 0);
           break;
@@ -1052,25 +1092,18 @@ LRESULT CALLBACK DlgProcSelectComponents(HWND hDlg, UINT msg, WPARAM wParam, LON
   return(bReturn);
 }
 
-LRESULT CALLBACK DlgProcSelectAdditions(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
+LRESULT CALLBACK DlgProcSelectAdditionalComponents(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
 {
   BOOL                bReturn = FALSE;
   siC                 *siCTemp;
-  DWORD               dwCurrentItem;
-  DWORD               dwArrayIndex;
   DWORD               dwIndex;
   DWORD               dwItems = MAX_BUF;
-  DWORD               dwItemsSelected[MAX_BUF];
   HWND                hwndLBComponents;
   RECT                rDlg;
-  RECT                rLBComponentSize;
-  RECT                rListBox;
   TCHAR               tchBuffer[MAX_BUF];
   TEXTMETRIC          tm;
   DWORD               y;
-  HDC                 hdcComponentSize;
   LPDRAWITEMSTRUCT    lpdis;
-  RECT                rTemp;
   ULONGLONG           ullDSBuf;
   char                szBuf[MAX_BUF];
 
@@ -1079,32 +1112,31 @@ LRESULT CALLBACK DlgProcSelectAdditions(HWND hDlg, UINT msg, WPARAM wParam, LONG
   switch(msg)
   {
     case WM_INITDIALOG:
-      SetWindowText(hDlg, diSelectComponents.szTitle);
-      SetDlgItemText(hDlg, IDC_MESSAGE0, diSelectComponents.szMessage0);
+      SetWindowText(hDlg, diSelectAdditionalComponents.szTitle);
+      SetDlgItemText(hDlg, IDC_MESSAGE0, diSelectAdditionalComponents.szMessage0);
 
       siCTemp = siComponents;
       if(siCTemp != NULL)
       {
-        if(!(siCTemp->dwAttributes & SIC_INVISIBLE))
+        if((!(siCTemp->dwAttributes & SIC_INVISIBLE)) && (siCTemp->dwAttributes & SIC_ADDITIONAL))
           lbAddItem(hwndLBComponents, siCTemp);
 
         siCTemp = siCTemp->Next;
         while((siCTemp != siComponents) && (siCTemp != NULL))
         {
-          if(!(siCTemp->dwAttributes & SIC_INVISIBLE))
+          if((!(siCTemp->dwAttributes & SIC_INVISIBLE)) && (siCTemp->dwAttributes & SIC_ADDITIONAL))
             lbAddItem(hwndLBComponents, siCTemp);
 
           siCTemp = siCTemp->Next;
         }
         SetFocus(hwndLBComponents);
         SendMessage(hwndLBComponents, LB_SETCURSEL, 0, 0);
-        SetDlgItemText(hDlg, IDC_STATIC_DESCRIPTION, SiCNodeGetDescriptionLong(0, FALSE));
+        SetDlgItemText(hDlg, IDC_STATIC_DESCRIPTION, SiCNodeGetDescriptionLong(0, FALSE, AC_ADDITIONAL_COMPONENTS));
       }
 
       if(GetClientRect(hDlg, &rDlg))
         SetWindowPos(hDlg, HWND_TOP, (dwScreenX/2)-(rDlg.right/2), (dwScreenY/2)-(rDlg.bottom/2), 0, 0, SWP_NOSIZE);
 
-#ifdef XXX_SSU
       /* update the disk space available info in the dialog.  GetDiskSpaceAvailable()
          returns value in kbytes */
       ullDSBuf = GetDiskSpaceAvailable(sgProduct.szPath);
@@ -1114,9 +1146,9 @@ LRESULT CALLBACK DlgProcSelectAdditions(HWND hDlg, UINT msg, WPARAM wParam, LONG
       lstrcat(szBuf, " - ");
       lstrcat(szBuf, tchBuffer);
       lstrcat(szBuf, " K");
-      SetDlgItemText(hDlg, IDC_STATIC_DRIVE_SPACE_AVAILABLE, szBuf);
-#endif
+      SetDlgItemText(hDlg, IDC_SPACE_AVAILABLE, szBuf);
 
+      gdwACFlag = AC_ADDITIONAL_COMPONENTS;
       OldListBoxWndProc = SubclassWindow(hwndLBComponents, (WNDPROC)NewListBoxWndProc);
       break;
 
@@ -1128,10 +1160,6 @@ LRESULT CALLBACK DlgProcSelectAdditions(HWND hDlg, UINT msg, WPARAM wParam, LONG
         break;
 
       SendMessage(lpdis->hwndItem, LB_GETTEXT, lpdis->itemID, (LPARAM)tchBuffer);
-      GetClientRect(lpdis->hwndItem, &rTemp);
-      hdcComponentSize = GetDC(lpdis->hwndItem);
-      SelectObject(hdcComponentSize, GetCurrentObject(lpdis->hDC, OBJ_FONT));
-
       if((lpdis->itemAction & ODA_FOCUS) && (lpdis->itemState & ODS_SELECTED))
       {
         // remove the focus rect on the previous selected item
@@ -1140,20 +1168,28 @@ LRESULT CALLBACK DlgProcSelectAdditions(HWND hDlg, UINT msg, WPARAM wParam, LONG
 
       if(lpdis->itemAction & ODA_FOCUS)
       {
+        siCTemp = SiCNodeGetObject(lpdis->itemID, FALSE, AC_ADDITIONAL_COMPONENTS);
+
         if((lpdis->itemState & ODS_SELECTED) &&
           !(lpdis->itemState & ODS_FOCUS))
         {
-          SetTextColor(lpdis->hDC,        GetSysColor(COLOR_WINDOWTEXT));
-          SetBkColor(lpdis->hDC,          GetSysColor(COLOR_WINDOW));
-          SetTextColor(hdcComponentSize,  GetSysColor(COLOR_WINDOWTEXT));
-          SetBkColor(hdcComponentSize,    GetSysColor(COLOR_WINDOW));
+          if(siCTemp->dwAttributes & SIC_DISABLED)
+            SetTextColor(lpdis->hDC,        GetSysColor(COLOR_GRAYTEXT));
+          else
+          {
+            SetTextColor(lpdis->hDC,        GetSysColor(COLOR_WINDOWTEXT));
+            SetBkColor(lpdis->hDC,          GetSysColor(COLOR_WINDOW));
+          }
         }
         else
         {
-          SetTextColor(lpdis->hDC,        GetSysColor(COLOR_HIGHLIGHTTEXT));
-          SetBkColor(lpdis->hDC,          GetSysColor(COLOR_HIGHLIGHT));
-          SetTextColor(hdcComponentSize,  GetSysColor(COLOR_HIGHLIGHTTEXT));
-          SetBkColor(hdcComponentSize,    GetSysColor(COLOR_HIGHLIGHT));
+          if(siCTemp->dwAttributes & SIC_DISABLED)
+            SetTextColor(lpdis->hDC,        GetSysColor(COLOR_GRAYTEXT));
+          else
+          {
+            SetTextColor(lpdis->hDC,        GetSysColor(COLOR_HIGHLIGHTTEXT));
+            SetBkColor(lpdis->hDC,          GetSysColor(COLOR_HIGHLIGHT));
+          }
         }
       }
 
@@ -1171,39 +1207,9 @@ LRESULT CALLBACK DlgProcSelectAdditions(HWND hDlg, UINT msg, WPARAM wParam, LONG
                    tchBuffer,
                    strlen(tchBuffer),
                    NULL);
-
-        siCTemp = SiCNodeGetObject(lpdis->itemID, FALSE);
-        _ui64toa(siCTemp->ullInstallSizeArchive, tchBuffer, 10);
-        lstrcat(tchBuffer, " K");
-
-        /* calculate clipping region.  The region being the entire listbox window */
-        GetClientRect(hwndLBComponents, &rListBox);
-        if(lpdis->rcItem.bottom > rListBox.bottom)
-          rLBComponentSize.bottom = rListBox.bottom - 1;
-        else
-          rLBComponentSize.bottom = lpdis->rcItem.bottom - 1;
-
-        rLBComponentSize.left  = lpdis->rcItem.right - 50;
-        rLBComponentSize.right = lpdis->rcItem.right;
-        if(lpdis->rcItem.top < rListBox.top)
-          rLBComponentSize.top = rListBox.top + 1;
-        else
-          rLBComponentSize.top = lpdis->rcItem.top + 1;
-
-        /* set text alignment */
-        SetTextAlign(hdcComponentSize, TA_RIGHT);
-        /* output string */
-        ExtTextOut(hdcComponentSize,
-                   lpdis->rcItem.right - 3,
-                   y,
-                   ETO_OPAQUE | ETO_CLIPPED,
-                   &(rLBComponentSize),
-                   tchBuffer,
-                   strlen(tchBuffer),
-                   NULL);
       }
       
-      DrawCheck(lpdis);
+      DrawCheck(lpdis, AC_ADDITIONAL_COMPONENTS);
 
       // draw the focus rect on the selected item
       if((lpdis->itemAction & ODA_FOCUS) &&
@@ -1212,20 +1218,16 @@ LRESULT CALLBACK DlgProcSelectAdditions(HWND hDlg, UINT msg, WPARAM wParam, LONG
         DrawFocusRect(lpdis->hDC, &(lpdis->rcItem));
       }
 
-      ReleaseDC(lpdis->hwndItem, hdcComponentSize);
       bReturn = TRUE;
 
       /* update the disk space required info in the dialog.  It is already
          in Kilobytes */
       ullDSBuf = GetDiskSpaceRequired(DSR_DOWNLOAD_SIZE);
       _ui64toa(ullDSBuf, tchBuffer, 10);
-//      ParsePath(sgProduct.szPath, szBuf, sizeof(szBuf), PP_ROOT_ONLY);
-//      RemoveBackSlash(szBuf);
-//      lstrcat(szBuf, " - ");
       lstrcpy(szBuf, tchBuffer);
       lstrcat(szBuf, " K");
       
-      SetDlgItemText(hDlg, IDC_STATIC_DRIVE_SPACE_REQUIRED, szBuf);
+      SetDlgItemText(hDlg, IDC_DOWNLOAD_SIZE, szBuf);
       break;
 
     case WM_COMMAND:
@@ -1234,23 +1236,10 @@ LRESULT CALLBACK DlgProcSelectAdditions(HWND hDlg, UINT msg, WPARAM wParam, LONG
         case IDC_LIST_COMPONENTS:
           /* to update the long description for each component the user selected */
           if((dwIndex = SendMessage(hwndLBComponents, LB_GETCURSEL, 0, 0)) != LB_ERR)
-            SetDlgItemText(hDlg, IDC_STATIC_DESCRIPTION, SiCNodeGetDescriptionLong(dwIndex, FALSE));
+            SetDlgItemText(hDlg, IDC_STATIC_DESCRIPTION, SiCNodeGetDescriptionLong(dwIndex, FALSE, AC_ADDITIONAL_COMPONENTS));
           break;
 
         case IDWIZNEXT:
-          dwItems       = ListView_GetItemCount(hwndLBComponents);
-          dwArrayIndex  = 0;
-          for(dwCurrentItem = 0; dwCurrentItem < dwItems; dwCurrentItem++)
-          {
-            if(ListView_GetCheckState(hwndLBComponents, dwCurrentItem))
-            {
-              dwItemsSelected[dwArrayIndex] = dwCurrentItem;
-              ++dwArrayIndex;
-            }
-          }
-
-          SiCNodeSetItemsSelected(dwItems, dwItemsSelected);
-
           DestroyWindow(hDlg);
           PostMessage(hWndMain, WM_COMMAND, IDWIZNEXT, 0);
           break;
@@ -1465,6 +1454,82 @@ LRESULT CALLBACK DlgProcProgramFolder(HWND hDlg, UINT msg, WPARAM wParam, LONG l
             SendDlgItemMessage(hDlg, IDC_LIST, LB_GETTEXT, dwIndex, (LPARAM)szBuf);
             SetDlgItemText(hDlg, IDC_EDIT_PROGRAM_FOLDER, szBuf);
           }
+          break;
+
+        case IDCANCEL:
+          AskCancelDlg(hDlg);
+          break;
+
+        default:
+          break;
+      }
+      break;
+  }
+  return(0);
+}
+
+LRESULT CALLBACK DlgProcSiteSelector(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
+{
+  RECT  rDlg;
+  HWND  hwndCBSiteSelector;
+  int   iIndex;
+  ssi   *ssiTemp;
+  char  szCBDefault[MAX_BUF];
+
+  hwndCBSiteSelector = GetDlgItem(hDlg, IDC_SITE_SELECTOR);
+
+  switch(msg)
+  {
+    case WM_INITDIALOG:
+      SetWindowText(hDlg, diSiteSelector.szTitle);
+      SetDlgItemText(hDlg, IDC_MESSAGE0, diSiteSelector.szMessage0);
+
+      if(GetClientRect(hDlg, &rDlg))
+        SetWindowPos(hDlg, HWND_TOP, (dwScreenX/2)-(rDlg.right/2), (dwScreenY/2)-(rDlg.bottom/2), 0, 0, SWP_NOSIZE);
+
+      ssiTemp = ssiSiteSelector;
+      do
+      {
+        if(ssiTemp == NULL)
+          break;
+
+        SendMessage(hwndCBSiteSelector, CB_ADDSTRING, 0, (LPARAM)(ssiTemp->szDescription));
+        ssiTemp = ssiTemp->Next;
+      } while(ssiTemp != ssiSiteSelector);
+
+      if((szSiteSelectorDescription == NULL) || (*szSiteSelectorDescription == '\0'))
+      {
+        if((NS_LoadString(hSetupRscInst, IDS_CB_DEFAULT, szCBDefault, MAX_BUF) == WIZ_OK) &&
+          ((iIndex = SendMessage(hwndCBSiteSelector, CB_SELECTSTRING, -1, (LPARAM)szCBDefault)) != CB_ERR))
+          SendMessage(hwndCBSiteSelector, CB_SETCURSEL, (WPARAM)iIndex, 0);
+        else
+          SendMessage(hwndCBSiteSelector, CB_SETCURSEL, 0, 0);
+      }
+      else if((iIndex = SendMessage(hwndCBSiteSelector, CB_SELECTSTRING, -1, (LPARAM)szSiteSelectorDescription) != CB_ERR))
+        SendMessage(hwndCBSiteSelector, CB_SETCURSEL, (WPARAM)iIndex, 0);
+      else
+        SendMessage(hwndCBSiteSelector, CB_SETCURSEL, 0, 0);
+
+      break;
+
+    case WM_COMMAND:
+      switch(LOWORD(wParam))
+      {
+        LPSTR szSsiDomain = NULL;
+
+        case IDWIZNEXT:
+          iIndex = SendMessage(hwndCBSiteSelector, CB_GETCURSEL, 0, 0);
+          SendMessage(hwndCBSiteSelector, CB_GETLBTEXT, (WPARAM)iIndex, (LPARAM)szSiteSelectorDescription);
+
+          DestroyWindow(hDlg);
+          PostMessage(hWndMain, WM_COMMAND, IDWIZNEXT, 0);
+          break;
+
+        case IDWIZBACK:
+          iIndex = SendMessage(hwndCBSiteSelector, CB_GETCURSEL, 0, 0);
+          SendMessage(hwndCBSiteSelector, CB_GETLBTEXT, (WPARAM)iIndex, (LPARAM)szSiteSelectorDescription);
+          DestroyWindow(hDlg);
+          PostMessage(hWndMain, WM_COMMAND, IDWIZBACK, 0);
           break;
 
         case IDCANCEL:
@@ -1726,8 +1791,6 @@ void DlgSequenceNext()
       break;
 
     case DLG_SETUP_TYPE:
-      /* depending on what the users chooses, the Select Components dialog  */
-      /* might not be the next dialog in the sequence.                      */
       dwWizardState = DLG_SELECT_COMPONENTS;
       gbProcessingXpnstallFiles = FALSE;
       if(diSelectComponents.bShowDialog)
@@ -1737,6 +1800,15 @@ void DlgSequenceNext()
       break;
 
     case DLG_SELECT_COMPONENTS:
+      dwWizardState = DLG_SELECT_ADDITIONAL_COMPONENTS;
+      gbProcessingXpnstallFiles = FALSE;
+      if((diSelectAdditionalComponents.bShowDialog) && (GetAdditionalComponentsCount() > 0))
+        InstantiateDialog(dwWizardState, diSelectAdditionalComponents.szTitle, DlgProcSelectAdditionalComponents);
+      else
+        PostMessage(hWndMain, WM_COMMAND, IDWIZNEXT, 0);
+      break;
+
+    case DLG_SELECT_ADDITIONAL_COMPONENTS:
       dwWizardState = DLG_WINDOWS_INTEGRATION;
       gbProcessingXpnstallFiles = FALSE;
       if(diWindowsIntegration.bShowDialog)
@@ -1777,6 +1849,15 @@ void DlgSequenceNext()
       break;
 
     case DLG_PROGRAM_FOLDER:
+      dwWizardState = DLG_SITE_SELECTOR;
+      gbProcessingXpnstallFiles = FALSE;
+      if(diSiteSelector.bShowDialog)
+        InstantiateDialog(dwWizardState, diSiteSelector.szTitle, DlgProcSiteSelector);
+      else
+        PostMessage(hWndMain, WM_COMMAND, IDWIZNEXT, 0);
+      break;
+
+    case DLG_SITE_SELECTOR:
       dwWizardState = DLG_START_INSTALL;
       gbProcessingXpnstallFiles = FALSE;
       if(diStartInstall.bShowDialog)
@@ -1856,9 +1937,18 @@ void DlgSequencePrev()
   switch(dwWizardState)
   {
     case DLG_START_INSTALL:
+      dwWizardState = DLG_SITE_SELECTOR;
+      gbProcessingXpnstallFiles = FALSE;
+      if(diSiteSelector.bShowDialog)
+        InstantiateDialog(dwWizardState, diSiteSelector.szTitle, DlgProcSiteSelector);
+      else
+        PostMessage(hWndMain, WM_COMMAND, IDWIZBACK, 0);
+      break;
+
+    case DLG_SITE_SELECTOR:
       dwWizardState = DLG_PROGRAM_FOLDER;
       gbProcessingXpnstallFiles = FALSE;
-      if(diStartInstall.bShowDialog)
+      if(diProgramFolder.bShowDialog)
         InstantiateDialog(dwWizardState, diProgramFolder.szTitle, DlgProcProgramFolder);
       else
         PostMessage(hWndMain, WM_COMMAND, IDWIZBACK, 0);
@@ -1877,8 +1967,15 @@ void DlgSequencePrev()
       break;
 
     case DLG_WINDOWS_INTEGRATION:
-      /* depending on what the users chooses, the Select Components dialog  */
-      /* might not be the next dialog in the sequence.                      */
+      dwWizardState = DLG_SELECT_ADDITIONAL_COMPONENTS;
+      gbProcessingXpnstallFiles = FALSE;
+      if((diSelectAdditionalComponents.bShowDialog) && (GetAdditionalComponentsCount() > 0))
+        InstantiateDialog(dwWizardState, diSelectAdditionalComponents.szTitle, DlgProcSelectAdditionalComponents);
+      else
+        PostMessage(hWndMain, WM_COMMAND, IDWIZBACK, 0);
+      break;
+
+    case DLG_SELECT_ADDITIONAL_COMPONENTS:
       dwWizardState = DLG_SELECT_COMPONENTS;
       gbProcessingXpnstallFiles = FALSE;
       if(diSelectComponents.bShowDialog)

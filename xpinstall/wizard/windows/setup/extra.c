@@ -278,11 +278,13 @@ HRESULT Initialize(HINSTANCE hInstance)
     }
   }
 
-  hbmpBoxChecked   = LoadBitmap(hSetupRscInst, MAKEINTRESOURCE(IDB_BOX_CHECKED));
-  hbmpBoxUnChecked = LoadBitmap(hSetupRscInst, MAKEINTRESOURCE(IDB_BOX_UNCHECKED));
+  hbmpBoxChecked         = LoadBitmap(hSetupRscInst, MAKEINTRESOURCE(IDB_BOX_CHECKED));
+  hbmpBoxCheckedDisabled = LoadBitmap(hSetupRscInst, MAKEINTRESOURCE(IDB_BOX_CHECKED_DISABLED));
+  hbmpBoxUnChecked       = LoadBitmap(hSetupRscInst, MAKEINTRESOURCE(IDB_BOX_UNCHECKED));
 
   DeleteIdiGetConfigIni();
   bIdiArchivesExists = DeleteIdiGetArchives();
+  DeleteIdiGetRedirect();
   return(0);
 }
 
@@ -447,7 +449,10 @@ HRESULT SdArchives(LPSTR szFileIdi, LPSTR szDownloadDir)
   {
     ZeroMemory(&sdistruct, sizeof(SDISTRUCT));
 
+    RemoveBackSlash(szDownloadDir);
     sdistruct.dwStructSize  = sizeof(SDISTRUCT);
+    sdistruct.dwTimeOut     = SDI_DEFAULT_TIMEOUT;
+    sdistruct.dwRetries     = SDI_DEFAULT_RETRIES;
     sdistruct.lpFileName    = szFileIdi;
     sdistruct.lpDownloadDir = szDownloadDir;
     sdistruct.hwndOwner     = hWndMain;
@@ -642,12 +647,24 @@ BOOL LocateJar(siC *siCObject)
 HRESULT AddArchiveToIdiFile(siC *siCObject, char *szSComponent, char *szSFile, char *szFileIdiGetArchives)
 {
   DWORD     dwIndex1;
+  DWORD     dwCounter;
   char      szIndex1[MAX_BUF];
+  char      szCounter[MAX_BUF];
   char      szBuf[MAX_BUF];
-  char      szBufUrl[MAX_BUF];
   char      szBufTemp[MAX_BUF];
-  char      szKUrl[MAX_BUF];
+  char      szBufUrl[MAX_BUF];
+  char      szKDomain[MAX_BUF];
+  char      szBufDomain[MAX_BUF];
+  char      szKServerPath[MAX_BUF];
+  char      szBufServerPath[MAX_BUF];
   char      szArchiveName[MAX_BUF];
+  char      szDomain[MAX_BUF];
+  ssi       *ssiSiteSelectorTemp;
+
+  ssiSiteSelectorTemp = SsiGetNode(szSiteSelectorDescription);
+  if(ssiSiteSelectorTemp != NULL)
+    if(ssiSiteSelectorTemp->szDomain != NULL)
+      lstrcpy(szDomain, ssiSiteSelectorTemp->szDomain);
 
   lstrcpy(szArchiveName, szTempDir);
   AppendBackSlash(szArchiveName, sizeof(szArchiveName));
@@ -655,19 +672,57 @@ HRESULT AddArchiveToIdiFile(siC *siCObject, char *szSComponent, char *szSFile, c
 
   WritePrivateProfileString(szSFile, "desc", siCObject->szDescriptionShort, szFileIdiGetArchives);
 
-  dwIndex1 = 0;
-  itoa(dwIndex1, szIndex1, 10);
-  lstrcpy(szKUrl, "url");
-  lstrcat(szKUrl, szIndex1);
-  GetPrivateProfileString(szSComponent, szKUrl, "", szBufUrl, MAX_BUF, szFileIniConfig);
-  while(*szBufUrl != '\0')
-  {
-    if(szBufUrl[strlen(szBufUrl) - 1] != '/')
-      lstrcat(szBufUrl, "/");
+  dwIndex1  = 0;
+  dwCounter = 0;
+  itoa(dwIndex1,  szIndex1,  10);
+  itoa(dwCounter, szCounter, 10);
+  lstrcpy(szKDomain,     "Domain");
+  lstrcat(szKDomain,     szIndex1);
+  lstrcpy(szKServerPath, "Server Path");
+  lstrcat(szKServerPath, szIndex1);
+  GetPrivateProfileString(szSComponent, szKDomain,     "", szBufDomain,     MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString(szSComponent, szKServerPath, "", szBufServerPath, MAX_BUF, szFileIniConfig);
 
+  /* if the site selctor has any info, add what the user selected as the first domain to try*/
+  if((*szBufDomain != '\0') && (*szDomain != '\0'))
+  {
+    ZeroMemory(szBufUrl, sizeof(szBufUrl));
+    lstrcpy(szBufUrl, szDomain);
+
+    RemoveSlash(szBufUrl);
+    lstrcat(szBufUrl, szBufServerPath);
+    AppendSlash(szBufUrl, sizeof(szBufUrl));
     lstrcat(szBufUrl, siCObject->szArchiveName);
 
-    if(WritePrivateProfileString(szSFile, szIndex1, szBufUrl, szFileIdiGetArchives) == 0)
+    if(WritePrivateProfileString(szSFile, szCounter, szBufUrl, szFileIdiGetArchives) == 0)
+    {
+      char szEWPPS[MAX_BUF];
+
+      if(NS_LoadString(hSetupRscInst, IDS_ERROR_WRITEPRIVATEPROFILESTRING, szEWPPS, MAX_BUF) == WIZ_OK)
+      {
+        wsprintf(szBufTemp, "%s\n    [%s]\n    %s=%s", szFileIdiGetArchives, szSFile, szIndex1, szBufUrl);
+        wsprintf(szBuf, szEWPPS, szBufTemp);
+        PrintError(szBuf, ERROR_CODE_SHOW);
+      }
+      return(1);
+    }
+
+    ++dwCounter;
+    itoa(dwCounter, szCounter, 10);
+  }
+
+  /* regardless is the site selector has any info or not, add the rest of the urls pertaining for this
+   * component here.  These will be the fail over urls. */
+  while(*szBufDomain != '\0')
+  {
+    ZeroMemory(szBufUrl, sizeof(szBufUrl));
+    lstrcpy(szBufUrl, szBufDomain);
+    RemoveSlash(szBufUrl);
+    lstrcat(szBufUrl, szBufServerPath);
+    AppendSlash(szBufUrl, sizeof(szBufUrl));
+    lstrcat(szBufUrl, siCObject->szArchiveName);
+
+    if(WritePrivateProfileString(szSFile, szCounter, szBufUrl, szFileIdiGetArchives) == 0)
     {
       char szEWPPS[MAX_BUF];
 
@@ -681,32 +736,148 @@ HRESULT AddArchiveToIdiFile(siC *siCObject, char *szSComponent, char *szSFile, c
     }
 
     ++dwIndex1;
-    itoa(dwIndex1, szIndex1, 10);
-    lstrcpy(szKUrl, "url");
-    lstrcat(szKUrl, szIndex1);
-    GetPrivateProfileString(szSComponent, szKUrl, "", szBufUrl, MAX_BUF, szFileIniConfig);
+    ++dwCounter;
+    itoa(dwIndex1,  szIndex1,  10);
+    itoa(dwCounter, szCounter, 10);
+    lstrcpy(szKDomain,     "Domain");
+    lstrcat(szKDomain,     szIndex1);
+    lstrcpy(szKServerPath, "Server Path");
+    lstrcat(szKServerPath, szIndex1);
+    GetPrivateProfileString(szSComponent, szKDomain,     "", szBufDomain,     MAX_BUF, szFileIniConfig);
+    GetPrivateProfileString(szSComponent, szKServerPath, "", szBufServerPath, MAX_BUF, szFileIniConfig);
   }
   return(0);
 }
 
-HRESULT RetrieveArchives()
+DWORD NumberOfArchivesToDownload()
 {
   DWORD     dwIndex0;
+  DWORD     dwCounter;
   siC       *siCObject = NULL;
-  HRESULT   hResult;
+
+  dwIndex0  = 0;
+  dwCounter = 0;
+  siCObject = SiCNodeGetObject(dwIndex0, TRUE, AC_ALL);
+  while(siCObject)
+  {
+    if(siCObject->dwAttributes & SIC_SELECTED)
+    {
+      /* if LocateJar returns FALSE, it means that the component could not be found locally,
+       * and therefore needs to be downloaded from the net. */
+      if(LocateJar(siCObject) == FALSE)
+        ++dwCounter;
+    }
+
+    ++dwIndex0;
+    siCObject = SiCNodeGetObject(dwIndex0, TRUE, AC_ALL);
+  }
+
+  return(dwCounter);
+}
+
+
+long RetrieveRedirectFile()
+{
+  DWORD     dwIndex0;
+  long      lResult;
+  char      szBuf[MAX_BUF];
+  char      szBufUrl[MAX_BUF];
+  char      szBufTemp[MAX_BUF];
+  char      szIndex0[MAX_BUF];
+  char      szFileIdiGetRedirect[MAX_BUF];
+  char      szKUrl[MAX_BUF];
+
+  GetPrivateProfileString("Redirect", "Status", "", szBuf, MAX_BUF, szFileIniConfig);
+  if(lstrcmpi(szBuf, "ENABLED") != 0)
+    return(0);
+
+  if(NumberOfArchivesToDownload() == 0)
+    return(0);
+
+  lstrcpy(szFileIdiGetRedirect, szTempDir);
+  AppendBackSlash(szFileIdiGetRedirect, sizeof(szFileIdiGetRedirect));
+  lstrcat(szFileIdiGetRedirect, FILE_IDI_GETREDIRECT);
+
+  GetPrivateProfileString("Redirect", "Description", "", szBuf, MAX_BUF, szFileIniConfig);
+  WritePrivateProfileString("File0", "desc", szBuf, szFileIdiGetRedirect);
+
+  dwIndex0  = 0;
+  itoa(dwIndex0,  szIndex0,  10);
+  lstrcpy(szKUrl, "url");
+  lstrcat(szKUrl, szIndex0);
+  GetPrivateProfileString("Redirect", szKUrl, "", szBufUrl, MAX_BUF, szFileIniConfig);
+  while(*szBufUrl != '\0')
+  {
+    if(WritePrivateProfileString("File0", szIndex0, szBufUrl, szFileIdiGetRedirect) == 0)
+    {
+      char szEWPPS[MAX_BUF];
+
+      if(NS_LoadString(hSetupRscInst, IDS_ERROR_WRITEPRIVATEPROFILESTRING, szEWPPS, MAX_BUF) == WIZ_OK)
+      {
+        wsprintf(szBufTemp, "%s\n    [%s]\n    %s=%s", szFileIdiGetRedirect, "File0", szIndex0, szBufUrl);
+        wsprintf(szBuf, szEWPPS, szBufTemp);
+        PrintError(szBuf, ERROR_CODE_SHOW);
+      }
+      return(1);
+    }
+
+    ++dwIndex0;
+    itoa(dwIndex0, szIndex0, 10);
+    lstrcpy(szKUrl, "url");
+    lstrcat(szKUrl, szIndex0);
+    GetPrivateProfileString("Redirect", szKUrl, "", szBufUrl, MAX_BUF, szFileIniConfig);
+  }
+
+  /* the existance of the getarchives.idi file determines if there are
+     any jar files needed to be downloaded */
+  if(FileExists(szFileIdiGetRedirect))
+  {
+    DecryptString(szBuf, siSDObject.szCoreDir);
+    lstrcpy(siSDObject.szCoreDir, szBuf);
+
+    WritePrivateProfileString("Netscape Install", "core_file",        siSDObject.szCoreFile,        szFileIdiGetRedirect);
+    WritePrivateProfileString("Netscape Install", "core_dir",         siSDObject.szCoreDir,         szFileIdiGetRedirect);
+    WritePrivateProfileString("Netscape Install", "no_ads",           siSDObject.szNoAds,           szFileIdiGetRedirect);
+    WritePrivateProfileString("Netscape Install", "silent",           siSDObject.szSilent,          szFileIdiGetRedirect);
+    WritePrivateProfileString("Netscape Install", "execution",        siSDObject.szExecution,       szFileIdiGetRedirect);
+    WritePrivateProfileString("Netscape Install", "confirm_install",  siSDObject.szConfirmInstall,  szFileIdiGetRedirect);
+    WritePrivateProfileString("Netscape Install", "extract_msg",      siSDObject.szExtractMsg,      szFileIdiGetRedirect);
+    WritePrivateProfileString("Execution",        "exe",              siSDObject.szExe,             szFileIdiGetRedirect);
+    WritePrivateProfileString("Execution",        "exe_param",        siSDObject.szExeParam,        szFileIdiGetRedirect);
+
+    if((lResult = SdArchives(szFileIdiGetRedirect, szTempDir)) != 0)
+      return(lResult);
+
+    UpdateSiteSelector();
+  }
+
+  return(0);
+}
+
+long RetrieveArchives()
+{
+  DWORD     dwIndex0;
+  DWORD     dwCounter;
+  siC       *siCObject = NULL;
+  long      lResult;
   char      szBuf[MAX_BUF];
   char      szIndex0[MAX_BUF];
+  char      szCounter[MAX_BUF];
   char      szFileIdiGetArchives[MAX_BUF];
   char      szSComponent[MAX_BUF];
   char      szSFile[MAX_BUF];
+
+  RetrieveRedirectFile();
 
   lstrcpy(szFileIdiGetArchives, szTempDir);
   AppendBackSlash(szFileIdiGetArchives, sizeof(szFileIdiGetArchives));
   lstrcat(szFileIdiGetArchives, FILE_IDI_GETARCHIVES);
 
-  dwIndex0 = 0;
-  itoa(dwIndex0, szIndex0, 10);
-  siCObject = SiCNodeGetObject(dwIndex0, TRUE);
+  dwIndex0  = 0;
+  dwCounter = 0;
+  itoa(dwIndex0,  szIndex0,  10);
+  itoa(dwCounter, szCounter, 10);
+  siCObject = SiCNodeGetObject(dwIndex0, TRUE, AC_ALL);
   while(siCObject)
   {
     if(siCObject->dwAttributes & SIC_SELECTED)
@@ -718,16 +889,19 @@ HRESULT RetrieveArchives()
         lstrcat(szSComponent, szIndex0);
 
         lstrcpy(szSFile, "File");
-        lstrcat(szSFile, szIndex0);
+        lstrcat(szSFile, szCounter);
 
-        if((hResult = AddArchiveToIdiFile(siCObject, szSComponent, szSFile, szFileIdiGetArchives)) != 0)
-          return(hResult);
+        if((lResult = AddArchiveToIdiFile(siCObject, szSComponent, szSFile, szFileIdiGetArchives)) != 0)
+          return(lResult);
+
+        ++dwCounter;
+        itoa(dwCounter, szCounter, 10);
       }
     }
 
     ++dwIndex0;
     itoa(dwIndex0, szIndex0, 10);
-    siCObject = SiCNodeGetObject(dwIndex0, TRUE);
+    siCObject = SiCNodeGetObject(dwIndex0, TRUE, AC_ALL);
   }
 
   /* the existance of the getarchives.idi file determines if there are
@@ -747,8 +921,8 @@ HRESULT RetrieveArchives()
     WritePrivateProfileString("Execution",        "exe",              siSDObject.szExe,             szFileIdiGetArchives);
     WritePrivateProfileString("Execution",        "exe_param",        siSDObject.szExeParam,        szFileIdiGetArchives);
 
-    if((hResult = SdArchives(szFileIdiGetArchives, szTempDir)) != 0)
-      return(hResult);
+    if((lResult = SdArchives(szFileIdiGetArchives, szTempDir)) != 0)
+      return(lResult);
   }
 
   return(0);
@@ -789,6 +963,46 @@ void AppendBackSlash(LPSTR szInput, DWORD dwInputSize)
       if(((DWORD)lstrlen(szInput) + 1) < dwInputSize)
       {
         lstrcat(szInput, "\\");
+      }
+    }
+  }
+}
+
+void RemoveSlash(LPSTR szInput)
+{
+  int   iCounter;
+  DWORD dwInputLen;
+
+  if(szInput != NULL)
+  {
+    dwInputLen = lstrlen(szInput);
+
+    for(iCounter = dwInputLen -1; iCounter >= 0 ; iCounter--)
+    {
+      if(szInput[iCounter] == '/')
+        szInput[iCounter] = '\0';
+      else
+        break;
+    }
+  }
+}
+
+void AppendSlash(LPSTR szInput, DWORD dwInputSize)
+{
+  if(szInput != NULL)
+  {
+    if(*szInput == '\0')
+    {
+      if(((DWORD)lstrlen(szInput) + 1) < dwInputSize)
+      {
+        lstrcat(szInput, "/");
+      }
+    }
+    else if(szInput[strlen(szInput) - 1] != '/')
+    {
+      if(((DWORD)lstrlen(szInput) + 1) < dwInputSize)
+      {
+        lstrcat(szInput, "/");
       }
     }
   }
@@ -886,7 +1100,7 @@ HRESULT LaunchApps()
     return(1);
 
   dwIndex0 = 0;
-  siCObject = SiCNodeGetObject(dwIndex0, TRUE);
+  siCObject = SiCNodeGetObject(dwIndex0, TRUE, AC_ALL);
   while(siCObject)
   {
     /* launch 3rd party executable */
@@ -922,7 +1136,7 @@ HRESULT LaunchApps()
       }
     }
     ++dwIndex0;
-    siCObject = SiCNodeGetObject(dwIndex0, TRUE);
+    siCObject = SiCNodeGetObject(dwIndex0, TRUE, AC_ALL);
   }
   return(0);
 }
@@ -1211,6 +1425,23 @@ void DeInitDlgProgramFolder(diPF *diDialog)
   FreeMemory(&(diDialog->szMessage0));
 }
 
+HRESULT InitDlgSiteSelector(diSS *diDialog)
+{
+  diDialog->bShowDialog = FALSE;
+  if((diDialog->szTitle = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
+  if((diDialog->szMessage0 = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
+
+  return(0);
+}
+
+void DeInitDlgSiteSelector(diSS *diDialog)
+{
+  FreeMemory(&(diDialog->szTitle));
+  FreeMemory(&(diDialog->szMessage0));
+}
+
 HRESULT InitDlgStartInstall(diSI *diDialog)
 {
   diDialog->bShowDialog = FALSE;
@@ -1266,6 +1497,9 @@ HRESULT InitSetupGeneral()
   if((sgProduct.szSetupTitle2                 = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
 
+  if((szSiteSelectorDescription               = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
+
   return(0);
 }
 
@@ -1280,6 +1514,8 @@ void DeInitSetupGeneral()
   FreeMemory(&(sgProduct.szSetupTitle0));
   FreeMemory(&(sgProduct.szSetupTitle1));
   FreeMemory(&(sgProduct.szSetupTitle2));
+
+  FreeMemory(&(szSiteSelectorDescription));
 }
 
 HRESULT InitSDObject()
@@ -1462,14 +1698,68 @@ void SiCDepNodeDelete(siCD *siCDepTemp)
   }
 }
 
-HRESULT SiCNodeGetAttributes(DWORD dwIndex, BOOL bIncludeInvisible)
+ssi *CreateSsiSiteSelectorNode()
+{
+  ssi *ssiNode;
+
+  if((ssiNode = NS_GlobalAlloc(sizeof(struct ssInfo))) == NULL)
+    exit(1);
+
+  if((ssiNode->szDescription = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    exit(1);
+
+  if((ssiNode->szDomain = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    exit(1);
+
+  ssiNode->Next = NULL;
+  ssiNode->Prev = NULL;
+
+  return(ssiNode);
+}
+
+void SsiSiteSelectorNodeInsert(ssi **ssiHead, ssi *ssiTemp)
+{
+  if(*ssiHead == NULL)
+  {
+    *ssiHead          = ssiTemp;
+    (*ssiHead)->Next  = *ssiHead;
+    (*ssiHead)->Prev  = *ssiHead;
+  }
+  else
+  {
+    ssiTemp->Next           = *ssiHead;
+    ssiTemp->Prev           = (*ssiHead)->Prev;
+    (*ssiHead)->Prev->Next  = ssiTemp;
+    (*ssiHead)->Prev        = ssiTemp;
+  }
+}
+
+void SsiSiteSelectorNodeDelete(ssi *ssiTemp)
+{
+  if(ssiTemp != NULL)
+  {
+    ssiTemp->Next->Prev = ssiTemp->Prev;
+    ssiTemp->Prev->Next = ssiTemp->Next;
+    ssiTemp->Next       = NULL;
+    ssiTemp->Prev       = NULL;
+
+    FreeMemory(&(ssiTemp->szDescription));
+    FreeMemory(&(ssiTemp->szDomain));
+    FreeMemory(&ssiTemp);
+  }
+}
+
+HRESULT SiCNodeGetAttributes(DWORD dwIndex, BOOL bIncludeInvisible, DWORD dwACFlag)
 {
   DWORD dwCount = 0;
   siC   *siCTemp = siComponents;
 
   if(siCTemp != NULL)
   {
-    if((bIncludeInvisible == TRUE) || ((bIncludeInvisible == FALSE) && (!(siCTemp->dwAttributes & SIC_INVISIBLE))))
+    if(((bIncludeInvisible == TRUE) || ((bIncludeInvisible == FALSE) && (!(siCTemp->dwAttributes & SIC_INVISIBLE)))) &&
+       ((dwACFlag == AC_ALL) ||
+       ((dwACFlag == AC_COMPONENTS)            && (!(siCTemp->dwAttributes & SIC_ADDITIONAL))) ||
+       ((dwACFlag == AC_ADDITIONAL_COMPONENTS) &&   (siCTemp->dwAttributes & SIC_ADDITIONAL))))
     {
       if(dwIndex == 0)
         return(siCTemp->dwAttributes);
@@ -1480,7 +1770,10 @@ HRESULT SiCNodeGetAttributes(DWORD dwIndex, BOOL bIncludeInvisible)
     siCTemp = siCTemp->Next;
     while((siCTemp != NULL) && (siCTemp != siComponents))
     {
-      if((bIncludeInvisible == TRUE) || ((bIncludeInvisible == FALSE) && (!(siCTemp->dwAttributes & SIC_INVISIBLE))))
+      if(((bIncludeInvisible == TRUE) || ((bIncludeInvisible == FALSE) && (!(siCTemp->dwAttributes & SIC_INVISIBLE)))) &&
+         ((dwACFlag == AC_ALL) ||
+         ((dwACFlag == AC_COMPONENTS)            && (!(siCTemp->dwAttributes & SIC_ADDITIONAL))) ||
+         ((dwACFlag == AC_ADDITIONAL_COMPONENTS) &&   (siCTemp->dwAttributes & SIC_ADDITIONAL))))
       {
         if(dwIndex == dwCount)
           return(siCTemp->dwAttributes);
@@ -1494,14 +1787,17 @@ HRESULT SiCNodeGetAttributes(DWORD dwIndex, BOOL bIncludeInvisible)
   return(-1);
 }
 
-void SiCNodeSetAttributes(DWORD dwIndex, DWORD dwAttributes, BOOL bSet, BOOL bIncludeInvisible)
+void SiCNodeSetAttributes(DWORD dwIndex, DWORD dwAttributes, BOOL bSet, BOOL bIncludeInvisible, DWORD dwACFlag)
 {
   DWORD dwCount  = 0;
   siC   *siCTemp = siComponents;
 
   if(siCTemp != NULL)
   {
-    if((bIncludeInvisible == TRUE) || ((bIncludeInvisible == FALSE) && (!(siCTemp->dwAttributes & SIC_INVISIBLE))))
+    if(((bIncludeInvisible == TRUE) || ((bIncludeInvisible == FALSE) && (!(siCTemp->dwAttributes & SIC_INVISIBLE)))) &&
+       ((dwACFlag == AC_ALL) ||
+       ((dwACFlag == AC_COMPONENTS)            && (!(siCTemp->dwAttributes & SIC_ADDITIONAL))) ||
+       ((dwACFlag == AC_ADDITIONAL_COMPONENTS) &&   (siCTemp->dwAttributes & SIC_ADDITIONAL))))
     {
       if(dwIndex == 0)
       {
@@ -1517,7 +1813,10 @@ void SiCNodeSetAttributes(DWORD dwIndex, DWORD dwAttributes, BOOL bSet, BOOL bIn
     siCTemp = siCTemp->Next;
     while((siCTemp != NULL) && (siCTemp != siComponents))
     {
-      if((bIncludeInvisible == TRUE) || ((bIncludeInvisible == FALSE) && (!(siCTemp->dwAttributes & SIC_INVISIBLE))))
+      if(((bIncludeInvisible == TRUE) || ((bIncludeInvisible == FALSE) && (!(siCTemp->dwAttributes & SIC_INVISIBLE)))) &&
+         ((dwACFlag == AC_ALL) ||
+         ((dwACFlag == AC_COMPONENTS)            && (!(siCTemp->dwAttributes & SIC_ADDITIONAL))) ||
+         ((dwACFlag == AC_ADDITIONAL_COMPONENTS) &&   (siCTemp->dwAttributes & SIC_ADDITIONAL))))
       {
         if(dwIndex == dwCount)
         {
@@ -1593,14 +1892,17 @@ void SiCNodeSetItemsSelected(DWORD dwItems, DWORD *dwItemsSelected)
   }
 }
 
-char *SiCNodeGetDescriptionShort(DWORD dwIndex, BOOL bIncludeInvisible)
+char *SiCNodeGetDescriptionShort(DWORD dwIndex, BOOL bIncludeInvisible, DWORD dwACFlag)
 {
   DWORD dwCount = 0;
   siC   *siCTemp = siComponents;
 
   if(siCTemp != NULL)
   {
-    if((bIncludeInvisible == TRUE) || ((bIncludeInvisible == FALSE) && (!(siCTemp->dwAttributes & SIC_INVISIBLE))))
+    if(((bIncludeInvisible == TRUE) || ((bIncludeInvisible == FALSE) && (!(siCTemp->dwAttributes & SIC_INVISIBLE)))) &&
+       ((dwACFlag == AC_ALL) ||
+       ((dwACFlag == AC_COMPONENTS)            && (!(siCTemp->dwAttributes & SIC_ADDITIONAL))) ||
+       ((dwACFlag == AC_ADDITIONAL_COMPONENTS) &&   (siCTemp->dwAttributes & SIC_ADDITIONAL))))
     {
       if(dwIndex == 0)
         return(siCTemp->szDescriptionShort);
@@ -1611,7 +1913,10 @@ char *SiCNodeGetDescriptionShort(DWORD dwIndex, BOOL bIncludeInvisible)
     siCTemp = siCTemp->Next;
     while((siCTemp != NULL) && (siCTemp != siComponents))
     {
-      if((bIncludeInvisible == TRUE) || ((bIncludeInvisible == FALSE) && (!(siCTemp->dwAttributes & SIC_INVISIBLE))))
+      if(((bIncludeInvisible == TRUE) || ((bIncludeInvisible == FALSE) && (!(siCTemp->dwAttributes & SIC_INVISIBLE)))) &&
+         ((dwACFlag == AC_ALL) ||
+         ((dwACFlag == AC_COMPONENTS)            && (!(siCTemp->dwAttributes & SIC_ADDITIONAL))) ||
+         ((dwACFlag == AC_ADDITIONAL_COMPONENTS) &&   (siCTemp->dwAttributes & SIC_ADDITIONAL))))
       {
         if(dwIndex == dwCount)
           return(siCTemp->szDescriptionShort);
@@ -1625,14 +1930,17 @@ char *SiCNodeGetDescriptionShort(DWORD dwIndex, BOOL bIncludeInvisible)
   return(NULL);
 }
 
-char *SiCNodeGetDescriptionLong(DWORD dwIndex, BOOL bIncludeInvisible)
+char *SiCNodeGetDescriptionLong(DWORD dwIndex, BOOL bIncludeInvisible, DWORD dwACFlag)
 {
   DWORD dwCount = 0;
   siC   *siCTemp = siComponents;
 
   if(siCTemp != NULL)
   {
-    if((bIncludeInvisible == TRUE) || ((bIncludeInvisible == FALSE) && (!(siCTemp->dwAttributes & SIC_INVISIBLE))))
+    if(((bIncludeInvisible == TRUE) || ((bIncludeInvisible == FALSE) && (!(siCTemp->dwAttributes & SIC_INVISIBLE)))) &&
+       ((dwACFlag == AC_ALL) ||
+       ((dwACFlag == AC_COMPONENTS)            && (!(siCTemp->dwAttributes & SIC_ADDITIONAL))) ||
+       ((dwACFlag == AC_ADDITIONAL_COMPONENTS) &&   (siCTemp->dwAttributes & SIC_ADDITIONAL))))
     {
       if(dwIndex == 0)
         return(siCTemp->szDescriptionLong);
@@ -1643,7 +1951,10 @@ char *SiCNodeGetDescriptionLong(DWORD dwIndex, BOOL bIncludeInvisible)
     siCTemp = siCTemp->Next;
     while((siCTemp != NULL) && (siCTemp != siComponents))
     {
-      if((bIncludeInvisible == TRUE) || ((bIncludeInvisible == FALSE) && (!(siCTemp->dwAttributes & SIC_INVISIBLE))))
+      if(((bIncludeInvisible == TRUE) || ((bIncludeInvisible == FALSE) && (!(siCTemp->dwAttributes & SIC_INVISIBLE)))) &&
+         ((dwACFlag == AC_ALL) ||
+         ((dwACFlag == AC_COMPONENTS)            && (!(siCTemp->dwAttributes & SIC_ADDITIONAL))) ||
+         ((dwACFlag == AC_ADDITIONAL_COMPONENTS) &&   (siCTemp->dwAttributes & SIC_ADDITIONAL))))
       {
         if(dwIndex == dwCount)
           return(siCTemp->szDescriptionLong);
@@ -1657,14 +1968,17 @@ char *SiCNodeGetDescriptionLong(DWORD dwIndex, BOOL bIncludeInvisible)
   return(NULL);
 }
 
-ULONGLONG SiCNodeGetInstallSize(DWORD dwIndex, BOOL bIncludeInvisible)
+ULONGLONG SiCNodeGetInstallSize(DWORD dwIndex, BOOL bIncludeInvisible, DWORD dwACFlag)
 {
   DWORD dwCount   = 0;
   siC   *siCTemp  = siComponents;
 
   if(siCTemp != NULL)
   {
-    if((bIncludeInvisible == TRUE) || ((bIncludeInvisible == FALSE) && (!(siCTemp->dwAttributes & SIC_INVISIBLE))))
+    if(((bIncludeInvisible == TRUE) || ((bIncludeInvisible == FALSE) && (!(siCTemp->dwAttributes & SIC_INVISIBLE)))) &&
+       ((dwACFlag == AC_ALL) ||
+       ((dwACFlag == AC_COMPONENTS)            && (!(siCTemp->dwAttributes & SIC_ADDITIONAL))) ||
+       ((dwACFlag == AC_ADDITIONAL_COMPONENTS) &&   (siCTemp->dwAttributes & SIC_ADDITIONAL))))
     {
       if(dwIndex == 0)
         return(siCTemp->ullInstallSize);
@@ -1675,7 +1989,10 @@ ULONGLONG SiCNodeGetInstallSize(DWORD dwIndex, BOOL bIncludeInvisible)
     siCTemp = siCTemp->Next;
     while((siCTemp != NULL) && (siCTemp != siComponents))
     {
-      if((bIncludeInvisible == TRUE) || ((bIncludeInvisible == FALSE) && (!(siCTemp->dwAttributes & SIC_INVISIBLE))))
+      if(((bIncludeInvisible == TRUE) || ((bIncludeInvisible == FALSE) && (!(siCTemp->dwAttributes & SIC_INVISIBLE)))) &&
+         ((dwACFlag == AC_ALL) ||
+         ((dwACFlag == AC_COMPONENTS)            && (!(siCTemp->dwAttributes & SIC_ADDITIONAL))) ||
+         ((dwACFlag == AC_ADDITIONAL_COMPONENTS) &&   (siCTemp->dwAttributes & SIC_ADDITIONAL))))
       {
         if(dwIndex == dwCount)
           return(siCTemp->ullInstallSize);
@@ -1689,14 +2006,17 @@ ULONGLONG SiCNodeGetInstallSize(DWORD dwIndex, BOOL bIncludeInvisible)
   return(0L);
 }
 
-ULONGLONG SiCNodeGetInstallSizeSystem(DWORD dwIndex, BOOL bIncludeInvisible)
+ULONGLONG SiCNodeGetInstallSizeSystem(DWORD dwIndex, BOOL bIncludeInvisible, DWORD dwACFlag)
 {
   DWORD dwCount   = 0;
   siC   *siCTemp  = siComponents;
 
   if(siCTemp != NULL)
   {
-    if((bIncludeInvisible == TRUE) || ((bIncludeInvisible == FALSE) && (!(siCTemp->dwAttributes & SIC_INVISIBLE))))
+    if(((bIncludeInvisible == TRUE) || ((bIncludeInvisible == FALSE) && (!(siCTemp->dwAttributes & SIC_INVISIBLE)))) &&
+       ((dwACFlag == AC_ALL) ||
+       ((dwACFlag == AC_COMPONENTS)            && (!(siCTemp->dwAttributes & SIC_ADDITIONAL))) ||
+       ((dwACFlag == AC_ADDITIONAL_COMPONENTS) &&   (siCTemp->dwAttributes & SIC_ADDITIONAL))))
     {
       if(dwIndex == 0)
         return(siCTemp->ullInstallSizeSystem);
@@ -1707,7 +2027,10 @@ ULONGLONG SiCNodeGetInstallSizeSystem(DWORD dwIndex, BOOL bIncludeInvisible)
     siCTemp = siCTemp->Next;
     while((siCTemp != NULL) && (siCTemp != siComponents))
     {
-      if((bIncludeInvisible == TRUE) || ((bIncludeInvisible == FALSE) && (!(siCTemp->dwAttributes & SIC_INVISIBLE))))
+      if(((bIncludeInvisible == TRUE) || ((bIncludeInvisible == FALSE) && (!(siCTemp->dwAttributes & SIC_INVISIBLE)))) &&
+         ((dwACFlag == AC_ALL) ||
+         ((dwACFlag == AC_COMPONENTS)            && (!(siCTemp->dwAttributes & SIC_ADDITIONAL))) ||
+         ((dwACFlag == AC_ADDITIONAL_COMPONENTS) &&   (siCTemp->dwAttributes & SIC_ADDITIONAL))))
       {
         if(dwIndex == dwCount)
           return(siCTemp->ullInstallSizeSystem);
@@ -1721,14 +2044,17 @@ ULONGLONG SiCNodeGetInstallSizeSystem(DWORD dwIndex, BOOL bIncludeInvisible)
   return(0L);
 }
 
-ULONGLONG SiCNodeGetInstallSizeArchive(DWORD dwIndex, BOOL bIncludeInvisible)
+ULONGLONG SiCNodeGetInstallSizeArchive(DWORD dwIndex, BOOL bIncludeInvisible, DWORD dwACFlag)
 {
   DWORD dwCount   = 0;
   siC   *siCTemp  = siComponents;
 
   if(siCTemp != NULL)
   {
-    if((bIncludeInvisible == TRUE) || ((bIncludeInvisible == FALSE) && (!(siCTemp->dwAttributes & SIC_INVISIBLE))))
+    if(((bIncludeInvisible == TRUE) || ((bIncludeInvisible == FALSE) && (!(siCTemp->dwAttributes & SIC_INVISIBLE)))) &&
+       ((dwACFlag == AC_ALL) ||
+       ((dwACFlag == AC_COMPONENTS)            && (!(siCTemp->dwAttributes & SIC_ADDITIONAL))) ||
+       ((dwACFlag == AC_ADDITIONAL_COMPONENTS) &&   (siCTemp->dwAttributes & SIC_ADDITIONAL))))
     {
       if(dwIndex == 0)
         return(siCTemp->ullInstallSizeArchive);
@@ -1739,7 +2065,10 @@ ULONGLONG SiCNodeGetInstallSizeArchive(DWORD dwIndex, BOOL bIncludeInvisible)
     siCTemp = siCTemp->Next;
     while((siCTemp != NULL) && (siCTemp != siComponents))
     {
-      if((bIncludeInvisible == TRUE) || ((bIncludeInvisible == FALSE) && (!(siCTemp->dwAttributes & SIC_INVISIBLE))))
+      if(((bIncludeInvisible == TRUE) || ((bIncludeInvisible == FALSE) && (!(siCTemp->dwAttributes & SIC_INVISIBLE)))) &&
+         ((dwACFlag == AC_ALL) ||
+         ((dwACFlag == AC_COMPONENTS)            && (!(siCTemp->dwAttributes & SIC_ADDITIONAL))) ||
+         ((dwACFlag == AC_ADDITIONAL_COMPONENTS) &&   (siCTemp->dwAttributes & SIC_ADDITIONAL))))
       {
         if(dwIndex == dwCount)
           return(siCTemp->ullInstallSizeArchive);
@@ -1778,18 +2107,24 @@ int SiCNodeGetIndexDS(char *szInDescriptionShort)
   return(-1);
 }
 
-siC *SiCNodeGetObject(DWORD dwIndex, BOOL bIncludeInvisibleObjs)
+siC *SiCNodeGetObject(DWORD dwIndex, BOOL bIncludeInvisibleObjs, DWORD dwACFlag)
 {
   DWORD dwCount = -1;
   siC   *siCTemp = siComponents;
 
   if(siCTemp != NULL)
   {
-    if(bIncludeInvisibleObjs)
+    if((bIncludeInvisibleObjs) &&
+      ((dwACFlag == AC_ALL) ||
+      ((dwACFlag == AC_COMPONENTS)            && (!(siCTemp->dwAttributes & SIC_ADDITIONAL))) ||
+      ((dwACFlag == AC_ADDITIONAL_COMPONENTS) &&   (siCTemp->dwAttributes & SIC_ADDITIONAL))))
     {
       ++dwCount;
     }
-    else if(!(siCTemp->dwAttributes & SIC_INVISIBLE))
+    else if((!(siCTemp->dwAttributes & SIC_INVISIBLE)) &&
+           ((dwACFlag == AC_ALL) ||
+           ((dwACFlag == AC_COMPONENTS)            && (!(siCTemp->dwAttributes & SIC_ADDITIONAL))) ||
+           ((dwACFlag == AC_ADDITIONAL_COMPONENTS) &&   (siCTemp->dwAttributes & SIC_ADDITIONAL))))
     {
       ++dwCount;
     }
@@ -1804,7 +2139,10 @@ siC *SiCNodeGetObject(DWORD dwIndex, BOOL bIncludeInvisibleObjs)
       {
         ++dwCount;
       }
-      else if(!(siCTemp->dwAttributes & SIC_INVISIBLE))
+      else if((!(siCTemp->dwAttributes & SIC_INVISIBLE)) &&
+             ((dwACFlag == AC_ALL) ||
+             ((dwACFlag == AC_COMPONENTS)            && (!(siCTemp->dwAttributes & SIC_ADDITIONAL))) ||
+             ((dwACFlag == AC_ADDITIONAL_COMPONENTS) &&   (siCTemp->dwAttributes & SIC_ADDITIONAL))))
       {
         ++dwCount;
       }
@@ -1816,6 +2154,32 @@ siC *SiCNodeGetObject(DWORD dwIndex, BOOL bIncludeInvisibleObjs)
     }
   }
   return(NULL);
+}
+
+DWORD GetAdditionalComponentsCount()
+{
+  DWORD dwCount  = 0;
+  siC   *siCTemp = siComponents;
+
+  if(siCTemp != NULL)
+  {
+    if(siCTemp->dwAttributes & SIC_ADDITIONAL)
+    {
+      ++dwCount;
+    }
+
+    siCTemp = siCTemp->Next;
+    while((siCTemp != siComponents) && (siCTemp != NULL))
+    {
+      if(siCTemp->dwAttributes & SIC_ADDITIONAL)
+      {
+        ++dwCount;
+      }
+      
+      siCTemp = siCTemp->Next;
+    }
+  }
+  return(dwCount);
 }
 
 dsN *CreateDSNode()
@@ -2113,7 +2477,7 @@ HRESULT InitComponentDiskSpaceInfo(dsN **dsnComponentDSRequirement)
 
   dwIndex0 = 0;
   itoa(dwIndex0, szIndex0, 10);
-  siCObject = SiCNodeGetObject(dwIndex0, TRUE);
+  siCObject = SiCNodeGetObject(dwIndex0, TRUE, AC_ALL);
   while(siCObject)
   {
     if(siCObject->dwAttributes & SIC_SELECTED)
@@ -2135,7 +2499,7 @@ HRESULT InitComponentDiskSpaceInfo(dsN **dsnComponentDSRequirement)
 
     ++dwIndex0;
     itoa(dwIndex0, szIndex0, 10);
-    siCObject = SiCNodeGetObject(dwIndex0, TRUE);
+    siCObject = SiCNodeGetObject(dwIndex0, TRUE, AC_ALL);
   }
 
   /* take the uncompressed size of core into account */
@@ -2315,6 +2679,10 @@ HRESULT ParseComponentAttributes(char *szAttribute)
     dwAttributes |= SIC_LAUNCHAPP;
   if(strstr(szBuf, "DOWNLOAD_ONLY") != NULL)
     dwAttributes |= SIC_DOWNLOAD_ONLY;
+  if(strstr(szBuf, "ADDITIONAL") != NULL)
+    dwAttributes |= SIC_ADDITIONAL;
+  if(strstr(szBuf, "DISABLED") != NULL)
+    dwAttributes |= SIC_DISABLED;
 
   return(dwAttributes);
 }
@@ -2468,6 +2836,119 @@ void InitSiComponents(char *szFileIni)
   }
 }
 
+void UpdateSiteSelector()
+{
+  DWORD dwIndex;
+  char  szIndex[MAX_BUF];
+  char  szKDescription[MAX_BUF];
+  char  szDescription[MAX_BUF];
+  char  szKDomain[MAX_BUF];
+  char  szDomain[MAX_BUF];
+  char  szFileIniRedirect[MAX_BUF];
+  ssi   *ssiSiteSelectorTemp;
+
+  lstrcpy(szFileIniRedirect, szTempDir);
+  AppendBackSlash(szFileIniRedirect, sizeof(szFileIniRedirect));
+  lstrcat(szFileIniRedirect, FILE_INI_REDIRECT);
+
+  if(FileExists(szFileIniRedirect) == FALSE)
+    return;
+
+  /* get all dependees for this component */
+  dwIndex = 0;
+  itoa(dwIndex, szIndex, 10);
+  lstrcpy(szKDescription, "Description");
+  lstrcpy(szKDomain,      "Domain");
+  lstrcat(szKDescription, szIndex);
+  lstrcat(szKDomain,      szIndex);
+  GetPrivateProfileString("Site Selector", szKDescription, "", szDescription, MAX_BUF, szFileIniRedirect);
+  while(*szDescription != '\0')
+  {
+    if(lstrcmpi(szDescription, szSiteSelectorDescription) == 0)
+    {
+      GetPrivateProfileString("Site Selector", szKDomain, "", szDomain, MAX_BUF, szFileIniRedirect);
+      if(*szDomain != '\0')
+      {
+        ssiSiteSelectorTemp = SsiGetNode(szDescription);
+        if(ssiSiteSelectorTemp != NULL)
+        {
+          lstrcpy(ssiSiteSelectorTemp->szDomain, szDomain);
+        }
+        else
+        {
+          /* no match found for the given domain description, so assume there's nothing
+           * to change. just return. */
+          return;
+        }
+      }
+      else
+      {
+        /* found matched description, but domain was not set, so assume there's no
+         * redirect required, just return. */
+        return;
+      }
+    }
+
+    ++dwIndex;
+    itoa(dwIndex, szIndex, 10);
+    lstrcpy(szKDescription, "Description");
+    lstrcpy(szKDomain,      "Domain");
+    lstrcat(szKDescription, szIndex);
+    lstrcat(szKDomain,      szIndex);
+    ZeroMemory(szDescription, sizeof(szDescription));
+    ZeroMemory(szDomain,      sizeof(szDomain));
+    GetPrivateProfileString("Site Selector", szKDescription, "", szDescription, MAX_BUF, szFileIniRedirect);
+  }
+}
+
+void InitSiteSelector(char *szFileIni)
+{
+  DWORD dwIndex;
+  char  szIndex[MAX_BUF];
+  char  szKDescription[MAX_BUF];
+  char  szDescription[MAX_BUF];
+  char  szKDomain[MAX_BUF];
+  char  szDomain[MAX_BUF];
+  ssi   *ssiSiteSelectorNewNode;
+
+  ssiSiteSelector = NULL;
+
+  /* get all dependees for this component */
+  dwIndex = 0;
+  itoa(dwIndex, szIndex, 10);
+  lstrcpy(szKDescription, "Description");
+  lstrcpy(szKDomain,      "Domain");
+  lstrcat(szKDescription, szIndex);
+  lstrcat(szKDomain,      szIndex);
+  GetPrivateProfileString("Site Selector", szKDescription, "", szDescription, MAX_BUF, szFileIni);
+  while(*szDescription != '\0')
+  {
+    /* if the Domain is not set, then skip */
+    GetPrivateProfileString("Site Selector", szKDomain, "", szDomain, MAX_BUF, szFileIni);
+    if(*szDomain != '\0')
+    {
+      /* create and initialize empty node */
+      ssiSiteSelectorNewNode = CreateSsiSiteSelectorNode();
+
+      lstrcpy(ssiSiteSelectorNewNode->szDescription, szDescription);
+      lstrcpy(ssiSiteSelectorNewNode->szDomain,      szDomain);
+
+      /* inserts the newly created node into the global node list */
+      SsiSiteSelectorNodeInsert(&(ssiSiteSelector), ssiSiteSelectorNewNode);
+    }
+
+    ++dwIndex;
+    itoa(dwIndex, szIndex, 10);
+    lstrcpy(szKDescription, "Description");
+    lstrcpy(szKDomain,      "Domain");
+    lstrcat(szKDescription, szIndex);
+    lstrcat(szKDomain,      szIndex);
+    ZeroMemory(szDescription, sizeof(szDescription));
+    ZeroMemory(szDomain,      sizeof(szDomain));
+    GetPrivateProfileString("Site Selector", szKDescription, "", szDescription, MAX_BUF, szFileIni);
+  }
+}
+
 void ViewSiComponents()
 {
   char  szBuf[MAX_BUF];
@@ -2615,10 +3096,10 @@ BOOL ResolveComponentDependency(siCD *siCDInDependency)
   {
     if((dwIndex = SiCNodeGetIndexDS(siCDepTemp->szDescriptionShort)) != -1)
     {
-      if((SiCNodeGetAttributes(dwIndex, TRUE) & SIC_SELECTED) == FALSE)
+      if((SiCNodeGetAttributes(dwIndex, TRUE, AC_ALL) & SIC_SELECTED) == FALSE)
       {
         bMoreToResolve = TRUE;
-        SiCNodeSetAttributes(dwIndex, SIC_SELECTED, TRUE, TRUE);
+        SiCNodeSetAttributes(dwIndex, SIC_SELECTED, TRUE, TRUE, AC_ALL);
       }
     }
 
@@ -2627,10 +3108,10 @@ BOOL ResolveComponentDependency(siCD *siCDInDependency)
     {
       if((dwIndex = SiCNodeGetIndexDS(siCDepTemp->szDescriptionShort)) != -1)
       {
-        if((SiCNodeGetAttributes(dwIndex, TRUE) & SIC_SELECTED) == FALSE)
+        if((SiCNodeGetAttributes(dwIndex, TRUE, AC_ALL) & SIC_SELECTED) == FALSE)
         {
           bMoreToResolve = TRUE;
-          SiCNodeSetAttributes(dwIndex, SIC_SELECTED, TRUE, TRUE);
+          SiCNodeSetAttributes(dwIndex, SIC_SELECTED, TRUE, TRUE, AC_ALL);
         }
       }
 
@@ -2651,7 +3132,7 @@ BOOL ResolveDependencies(DWORD dwIndex)
     /* can resolve specific component or all components (-1) */
     if((dwIndex == dwCount) || (dwIndex == -1))
     {
-      if(SiCNodeGetAttributes(dwCount, TRUE) & SIC_SELECTED)
+      if(SiCNodeGetAttributes(dwCount, TRUE, AC_ALL) & SIC_SELECTED)
       {
          bMoreToResolve = ResolveComponentDependency(siCTemp->siCDDependencies);
          if(dwIndex == dwCount)
@@ -2668,7 +3149,7 @@ BOOL ResolveDependencies(DWORD dwIndex)
       /* can resolve specific component or all components (-1) */
       if((dwIndex == dwCount) || (dwIndex == -1))
       {
-        if(SiCNodeGetAttributes(dwCount, TRUE) & SIC_SELECTED)
+        if(SiCNodeGetAttributes(dwCount, TRUE, AC_ALL) & SIC_SELECTED)
         {
            bMoreToResolve = ResolveComponentDependency(siCTemp->siCDDependencies);
            if(dwIndex == dwCount)
@@ -2695,7 +3176,7 @@ BOOL ResolveComponentDependee(siCD *siCDInDependee)
   {
     if((dwIndex = SiCNodeGetIndexDS(siCDDependeeTemp->szDescriptionShort)) != -1)
     {
-      if((SiCNodeGetAttributes(dwIndex, TRUE) & SIC_SELECTED) == TRUE)
+      if((SiCNodeGetAttributes(dwIndex, TRUE, AC_ALL) & SIC_SELECTED) == TRUE)
       {
         bAtLeastOneSelected = TRUE;
       }
@@ -2706,7 +3187,7 @@ BOOL ResolveComponentDependee(siCD *siCDInDependee)
     {
       if((dwIndex = SiCNodeGetIndexDS(siCDDependeeTemp->szDescriptionShort)) != -1)
       {
-        if((SiCNodeGetAttributes(dwIndex, TRUE) & SIC_SELECTED) == TRUE)
+        if((SiCNodeGetAttributes(dwIndex, TRUE, AC_ALL) & SIC_SELECTED) == TRUE)
         {
           bAtLeastOneSelected = TRUE;
         }
@@ -2716,6 +3197,24 @@ BOOL ResolveComponentDependee(siCD *siCDInDependee)
     }
   }
   return(bAtLeastOneSelected);
+}
+
+ssi* SsiGetNode(LPSTR szDescription)
+{
+  ssi *ssiSiteSelectorTemp = ssiSiteSelector;
+
+  do
+  {
+    if(ssiSiteSelectorTemp == NULL)
+      break;
+
+    if(lstrcmpi(ssiSiteSelectorTemp->szDescription, szDescription) == 0)
+      return(ssiSiteSelectorTemp);
+
+    ssiSiteSelectorTemp = ssiSiteSelectorTemp->Next;
+  } while((ssiSiteSelectorTemp != NULL) && (ssiSiteSelectorTemp != ssiSiteSelector));
+
+  return(NULL);
 }
 
 void ResolveDependees(LPSTR szToggledDescriptionShort)
@@ -2738,9 +3237,9 @@ void ResolveDependees(LPSTR szToggledDescriptionShort)
       {
         if((dwIndex = SiCNodeGetIndexDS(siCTemp->szDescriptionShort)) != -1)
         {
-          if((SiCNodeGetAttributes(dwIndex, TRUE) & SIC_SELECTED) == TRUE)
+          if((SiCNodeGetAttributes(dwIndex, TRUE, AC_ALL) & SIC_SELECTED) == TRUE)
           {
-            SiCNodeSetAttributes(dwIndex, SIC_SELECTED, FALSE, TRUE);
+            SiCNodeSetAttributes(dwIndex, SIC_SELECTED, FALSE, TRUE, AC_ALL);
             bMoreToResolve = TRUE;
           }
         }
@@ -2749,9 +3248,9 @@ void ResolveDependees(LPSTR szToggledDescriptionShort)
       {
         if((dwIndex = SiCNodeGetIndexDS(siCTemp->szDescriptionShort)) != -1)
         {
-          if((SiCNodeGetAttributes(dwIndex, TRUE) & SIC_SELECTED) == FALSE)
+          if((SiCNodeGetAttributes(dwIndex, TRUE, AC_ALL) & SIC_SELECTED) == FALSE)
           {
-            SiCNodeSetAttributes(dwIndex, SIC_SELECTED, TRUE, TRUE);
+            SiCNodeSetAttributes(dwIndex, SIC_SELECTED, TRUE, TRUE, AC_ALL);
             bMoreToResolve = TRUE;
           }
         }
@@ -3134,9 +3633,13 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
     return(1);
   if(InitDlgSelectComponents(&diSelectComponents, SM_SINGLE))
     return(1);
+  if(InitDlgSelectComponents(&diSelectAdditionalComponents, SM_SINGLE))
+    return(1);
   if(InitDlgWindowsIntegration(&diWindowsIntegration))
     return(1);
   if(InitDlgProgramFolder(&diProgramFolder))
+    return(1);
+  if(InitDlgSiteSelector(&diSiteSelector))
     return(1);
   if(InitDlgStartInstall(&diStartInstall))
     return(1);
@@ -3279,6 +3782,13 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
   if(lstrcmpi(szShowDialog, "TRUE") == 0)
     diSelectComponents.bShowDialog = TRUE;
 
+  /* Select Additional Components dialog */
+  GetPrivateProfileString("Dialog Select Additional Components",   "Show Dialog",  "", szShowDialog,                              MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog Select Additional Components",   "Title",        "", diSelectAdditionalComponents.szTitle,      MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog Select Additional Components",   "Message0",     "", diSelectAdditionalComponents.szMessage0,   MAX_BUF, szFileIniConfig);
+  if(lstrcmpi(szShowDialog, "TRUE") == 0)
+    diSelectAdditionalComponents.bShowDialog = TRUE;
+
   /* Windows Integration dialog */
   GetPrivateProfileString("Dialog Windows Integration", "Show Dialog",  "", szShowDialog,                    MAX_BUF, szFileIniConfig);
   GetPrivateProfileString("Dialog Windows Integration", "Title",        "", diWindowsIntegration.szTitle,    MAX_BUF, szFileIniConfig);
@@ -3293,6 +3803,13 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
   GetPrivateProfileString("Dialog Program Folder",      "Message0",     "", diProgramFolder.szMessage0,      MAX_BUF, szFileIniConfig);
   if(lstrcmpi(szShowDialog, "TRUE") == 0)
     diProgramFolder.bShowDialog = TRUE;
+
+  /* Site Selector dialog */
+  GetPrivateProfileString("Dialog Site Selector",       "Show Dialog",  "", szShowDialog,                    MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog Site Selector",       "Title",        "", diSiteSelector.szTitle,          MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog Site Selector",       "Message0",     "", diSiteSelector.szMessage0,       MAX_BUF, szFileIniConfig);
+  if(lstrcmpi(szShowDialog, "TRUE") == 0)
+    diSiteSelector.bShowDialog = TRUE;
 
   /* Start Install dialog */
   GetPrivateProfileString("Dialog Start Install",       "Show Dialog",  "", szShowDialog,                    MAX_BUF, szFileIniConfig);
@@ -3358,11 +3875,13 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
       diSelectComponents.bShowDialog    = FALSE;
       diWindowsIntegration.bShowDialog  = FALSE;
       diProgramFolder.bShowDialog       = FALSE;
+      diSiteSelector.bShowDialog        = FALSE;
       diStartInstall.bShowDialog        = FALSE;
       break;
   }
 
   InitSiComponents(szFileIniConfig);
+  InitSiteSelector(szFileIniConfig);
 
   /* get Default Setup Type */
   GetPrivateProfileString("General", "Default Setup Type", "", szBuf, MAX_BUF, szFileIniConfig);
@@ -3371,28 +3890,24 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
     dwSetupType     = ST_RADIO0;
     dwTempSetupType = dwSetupType;
     SiCNodeSetItemsSelected(diSetupType.stSetupType0.dwCItems, diSetupType.stSetupType0.dwCItemsSelected);
-    SiCNodeSetItemsSelected(diSetupType.stSetupType0.dwAItems, diSetupType.stSetupType0.dwAItemsSelected);
   }
   else if((lstrcmpi(szBuf, "Setup Type 1") == 0) && diSetupType.stSetupType1.bVisible)
   {
     dwSetupType     = ST_RADIO1;
     dwTempSetupType = dwSetupType;
     SiCNodeSetItemsSelected(diSetupType.stSetupType1.dwCItems, diSetupType.stSetupType1.dwCItemsSelected);
-    SiCNodeSetItemsSelected(diSetupType.stSetupType1.dwAItems, diSetupType.stSetupType1.dwAItemsSelected);
   }
   else if((lstrcmpi(szBuf, "Setup Type 2") == 0) && diSetupType.stSetupType2.bVisible)
   {
     dwSetupType     = ST_RADIO2;
     dwTempSetupType = dwSetupType;
     SiCNodeSetItemsSelected(diSetupType.stSetupType2.dwCItems, diSetupType.stSetupType2.dwCItemsSelected);
-    SiCNodeSetItemsSelected(diSetupType.stSetupType2.dwAItems, diSetupType.stSetupType2.dwAItemsSelected);
   }
   else if((lstrcmpi(szBuf, "Setup Type 3") == 0) && diSetupType.stSetupType3.bVisible)
   {
     dwSetupType     = ST_RADIO3;
     dwTempSetupType = dwSetupType;
     SiCNodeSetItemsSelected(diSetupType.stSetupType3.dwCItems, diSetupType.stSetupType3.dwCItemsSelected);
-    SiCNodeSetItemsSelected(diSetupType.stSetupType3.dwAItems, diSetupType.stSetupType3.dwAItemsSelected);
   }
   else
   {
@@ -3401,28 +3916,24 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
       dwSetupType     = ST_RADIO0;
       dwTempSetupType = dwSetupType;
       SiCNodeSetItemsSelected(diSetupType.stSetupType0.dwCItems, diSetupType.stSetupType0.dwCItemsSelected);
-      SiCNodeSetItemsSelected(diSetupType.stSetupType0.dwAItems, diSetupType.stSetupType0.dwAItemsSelected);
     }
     else if(diSetupType.stSetupType1.bVisible)
     {
       dwSetupType     = ST_RADIO1;
       dwTempSetupType = dwSetupType;
       SiCNodeSetItemsSelected(diSetupType.stSetupType1.dwCItems, diSetupType.stSetupType1.dwCItemsSelected);
-      SiCNodeSetItemsSelected(diSetupType.stSetupType1.dwAItems, diSetupType.stSetupType1.dwAItemsSelected);
     }
     else if(diSetupType.stSetupType2.bVisible)
     {
       dwSetupType     = ST_RADIO2;
       dwTempSetupType = dwSetupType;
       SiCNodeSetItemsSelected(diSetupType.stSetupType2.dwCItems, diSetupType.stSetupType2.dwCItemsSelected);
-      SiCNodeSetItemsSelected(diSetupType.stSetupType2.dwAItems, diSetupType.stSetupType2.dwAItemsSelected);
     }
     else if(diSetupType.stSetupType3.bVisible)
     {
       dwSetupType     = ST_RADIO3;
       dwTempSetupType = dwSetupType;
       SiCNodeSetItemsSelected(diSetupType.stSetupType3.dwCItems, diSetupType.stSetupType3.dwCItemsSelected);
-      SiCNodeSetItemsSelected(diSetupType.stSetupType3.dwAItems, diSetupType.stSetupType3.dwAItemsSelected);
     }
   }
 
@@ -3692,28 +4203,6 @@ void STGetComponents(LPSTR szSection, st *stSetupType, LPSTR szFileIniConfig)
     ++dwIndex;
     itoa(dwIndex, szIndex, 10);
     lstrcpy(szKey, "C");
-    lstrcat(szKey, szIndex);
-    GetPrivateProfileString(szSection, szKey, "", szBuf, MAX_BUF, szFileIniConfig);
-  }
-
-  dwIndex = 0;
-  stSetupType->dwAItems = 0;
-  itoa(dwIndex, szIndex, 10);
-  lstrcpy(szKey, "A");
-  lstrcat(szKey, szIndex);
-  GetPrivateProfileString(szSection, szKey, "", szBuf, MAX_BUF, szFileIniConfig);
-  while(*szBuf != '\0')
-  {
-    /* hack used to determine the numerical value of the component */
-    if(lstrlen(szBuf) > 8)
-    {
-      ++stSetupType->dwAItems;
-      stSetupType->dwAItemsSelected[dwIndex] = atoi(&szBuf[9]);
-    }
-
-    ++dwIndex;
-    itoa(dwIndex, szIndex, 10);
-    lstrcpy(szKey, "A");
     lstrcat(szKey, szIndex);
     GetPrivateProfileString(szSection, szKey, "", szBuf, MAX_BUF, szFileIniConfig);
   }
@@ -4347,6 +4836,42 @@ BOOL DeleteIdiGetConfigIni()
   return(bFileExists);
 }
 
+BOOL DeleteIniRedirect()
+{
+  char  szFileIniRedirect[MAX_BUF];
+  BOOL  bFileExists = FALSE;
+
+  ZeroMemory(szFileIniRedirect, sizeof(szFileIniRedirect));
+
+  lstrcpy(szFileIniRedirect, szTempDir);
+  AppendBackSlash(szFileIniRedirect, sizeof(szFileIniRedirect));
+  lstrcat(szFileIniRedirect, FILE_INI_REDIRECT);
+  if(FileExists(szFileIniRedirect))
+  {
+    bFileExists = TRUE;
+  }
+  DeleteFile(szFileIniRedirect);
+  return(bFileExists);
+}
+
+BOOL DeleteIdiGetRedirect()
+{
+  char  szFileIdiGetRedirect[MAX_BUF];
+  BOOL  bFileExists = FALSE;
+
+  ZeroMemory(szFileIdiGetRedirect, sizeof(szFileIdiGetRedirect));
+
+  lstrcpy(szFileIdiGetRedirect, szTempDir);
+  AppendBackSlash(szFileIdiGetRedirect, sizeof(szFileIdiGetRedirect));
+  lstrcat(szFileIdiGetRedirect, FILE_IDI_GETREDIRECT);
+  if(FileExists(szFileIdiGetRedirect))
+  {
+    bFileExists = TRUE;
+  }
+  DeleteFile(szFileIdiGetRedirect);
+  return(bFileExists);
+}
+
 BOOL DeleteIdiGetArchives()
 {
   char  szFileIdiGetArchives[MAX_BUF];
@@ -4394,7 +4919,7 @@ void DeleteArchives()
   if(!bSDUserCanceled)
   {
     dwIndex0 = 0;
-    siCObject = SiCNodeGetObject(dwIndex0, TRUE);
+    siCObject = SiCNodeGetObject(dwIndex0, TRUE, AC_ALL);
     while(siCObject)
     {
       lstrcpy(szArchiveName, szTempDir);
@@ -4404,7 +4929,7 @@ void DeleteArchives()
       DeleteFile(szArchiveName);
 
       ++dwIndex0;
-      siCObject = SiCNodeGetObject(dwIndex0, TRUE);
+      siCObject = SiCNodeGetObject(dwIndex0, TRUE, AC_ALL);
     }
   }
 }
@@ -4413,6 +4938,8 @@ void CleanTempFiles()
 {
   DeleteIdiGetConfigIni();
   DeleteIdiGetArchives();
+  DeleteIdiGetRedirect();
+  DeleteIniRedirect();
 
   /* do not delete config.ini file.
      if it was uncompressed from the self-extracting .exe file,
@@ -4430,6 +4957,8 @@ void DeInitialize()
     DirectoryRemove(sgProduct.szPath, FALSE);
   if(hbmpBoxChecked)
     DeleteObject(hbmpBoxChecked);
+  if(hbmpBoxCheckedDisabled)
+    DeleteObject(hbmpBoxCheckedDisabled);
   if(hbmpBoxUnChecked)
     DeleteObject(hbmpBoxUnChecked);
 
@@ -4440,8 +4969,10 @@ void DeInitialize()
   DeInitSDObject();
   DeInitDlgReboot(&diReboot);
   DeInitDlgStartInstall(&diStartInstall);
+  DeInitDlgSiteSelector(&diSiteSelector);
   DeInitDlgProgramFolder(&diProgramFolder);
   DeInitDlgWindowsIntegration(&diWindowsIntegration);
+  DeInitDlgSelectComponents(&diSelectAdditionalComponents);
   DeInitDlgSelectComponents(&diSelectComponents);
   DeInitDlgSetupType(&diSetupType);
   DeInitDlgLicense(&diLicense);
