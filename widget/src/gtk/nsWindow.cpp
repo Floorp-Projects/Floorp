@@ -2192,6 +2192,14 @@ NS_IMETHODIMP nsWindow::SetTitle(const nsString& aTitle)
   char *platformText;
   PRInt32 platformLen;
 
+  // Set UTF8_STRING title for NET_WM-supporting window managers
+  NS_ConvertUCS2toUTF8 utf8_title(aTitle);
+  XChangeProperty(GDK_DISPLAY(), GDK_WINDOW_XWINDOW(mShell->window),
+                XInternAtom(GDK_DISPLAY(), "_NET_WM_NAME", False),
+                XInternAtom(GDK_DISPLAY(), "UTF8_STRING", False),
+                8, PropModeReplace, (unsigned char *) utf8_title.get(),
+                utf8_title.Length());
+
   nsCOMPtr<nsIUnicodeEncoder> encoder;
   // get the charset
   nsAutoString platformCharset;
@@ -2226,14 +2234,12 @@ NS_IMETHODIMP nsWindow::SetTitle(const nsString& aTitle)
     g_print("platformText is %s\n", platformText);
     g_print("platformLen is %d\n", platformLen);
 #endif
-    
 
     // Use XStdICCTextStyle for 41786(a.k.a TWM sucks) and 43108(JA text title)
     prop.value = 0;
     status = XmbTextListToTextProperty(GDK_DISPLAY(), &platformText, 1, XStdICCTextStyle,
                                        &prop);
     if (status == Success) {
-      const char * utf8_title = NS_ConvertUCS2toUTF8(aTitle).get();
 
 #ifdef DEBUG_TITLE
       g_print("\nXmbTextListToTextProperty succeeded\n  text is %s\n  length is %d\n", prop.value,
@@ -2243,13 +2249,6 @@ NS_IMETHODIMP nsWindow::SetTitle(const nsString& aTitle)
                        &prop, &prop, NULL, 0, NULL, NULL, NULL);
       if (prop.value)
         XFree(prop.value);
-
-      // Set UTF8_STRING title for NET_WM-supporting window managers
-      XChangeProperty(GDK_DISPLAY(), GDK_WINDOW_XWINDOW(mShell->window),
-                    XInternAtom(GDK_DISPLAY(), "_NET_WM_NAME", False),
-                    XInternAtom(GDK_DISPLAY(), "UTF8_STRING", False),
-                    8, PropModeReplace, (const unsigned char *)utf8_title,
-                    strlen(utf8_title)+1);
 
       nsMemory::Free(platformText);
       // free properties list?
