@@ -783,8 +783,6 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
 {
   GtkWidget *parentWidget = nsnull;
 
-  //  g_return_val_if_fail ((aRect.width > 0) && (aRect.height > 0), NS_ERROR_FAILURE);
-
 #ifdef NOISY_DESTROY
   if (aParent)
     g_print("nsWidget::CreateWidget (%p) nsIWidget parent\n",
@@ -998,6 +996,7 @@ NS_IMETHODIMP nsWidget::DispatchEvent(nsGUIEvent *event,
   return NS_OK;
 }
 
+
 //-------------------------------------------------------------------------
 //
 // Deal with all sort of mouse event
@@ -1009,7 +1008,6 @@ PRBool nsWidget::DispatchMouseEvent(nsMouseEvent& aEvent)
   if (nsnull == mEventCallback && nsnull == mMouseListener) {
     return result;
   }
-
 
   // call the event callback
   if (nsnull != mEventCallback) {
@@ -1047,6 +1045,14 @@ PRBool nsWidget::DispatchMouseEvent(nsMouseEvent& aEvent)
         result = ConvertStatus(mMouseListener->MouseReleased(aEvent));
         result = ConvertStatus(mMouseListener->MouseClicked(aEvent));
         break;
+
+    case NS_DRAGDROP_DROP:
+      printf("nsWidget::DispatchMouseEvent, NS_DRAGDROP_DROP\n");
+      break;
+
+    default:
+      break;
+
     } // switch
   }
   return result;
@@ -1078,6 +1084,41 @@ nsWidget::InstallMotionNotifySignal(GtkWidget * aWidget)
 				"motion_notify_event",
 				GTK_SIGNAL_FUNC(nsWidget::MotionNotifySignal));
 }
+
+void 
+nsWidget::InstallDragMotionSignal(GtkWidget * aWidget)
+{
+  NS_ASSERTION( nsnull != aWidget, "widget is null");
+
+  InstallSignal(aWidget,
+                "drag_motion",
+                GTK_SIGNAL_FUNC(nsWidget::DragMotionSignal));
+}
+
+void 
+nsWidget::InstallDragBeginSignal(GtkWidget * aWidget)
+{
+  printf("nsWidget::InstallDragBeginSignal\n");
+
+  NS_ASSERTION( nsnull != aWidget, "widget is null");
+
+  InstallSignal(aWidget,
+                "drag_begin",
+                GTK_SIGNAL_FUNC(nsWidget::DragBeginSignal));
+}
+
+void 
+nsWidget::InstallDragDropSignal(GtkWidget * aWidget)
+{
+  printf("nsWidget::InstallDragDropSignal\n");
+
+  NS_ASSERTION( nsnull != aWidget, "widget is null");
+
+  InstallSignal(aWidget,
+                "drag_drop",
+                GTK_SIGNAL_FUNC(nsWidget::DragDropSignal));
+}
+
 //////////////////////////////////////////////////////////////////
 void 
 nsWidget::InstallEnterNotifySignal(GtkWidget * aWidget)
@@ -1138,18 +1179,18 @@ nsWidget::InstallRealizeSignal(GtkWidget * aWidget)
 
 //////////////////////////////////////////////////////////////////
 //
-// Turning TRACE_MOUSE_EVENTS on will cause printfs for all
+// Turning TRACE_EVENTS on will cause printfs for all
 // mouse events that are dispatched.
 //
 //////////////////////////////////////////////////////////////////
 
-#undef TRACE_MOUSE_EVENTS
+#define TRACE_EVENTS
 
 #ifdef DEBUG
 void
-nsWidget::DebugPrintMouseEvent(nsMouseEvent & aEvent,
-                               char *         sMessage,
-                               GtkWidget *    aGtkWidget)
+nsWidget::DebugPrintEvent(nsGUIEvent & aEvent,
+                          char *         sMessage,
+                          GtkWidget *    aGtkWidget)
 {
   char * eventName = nsnull;
 
@@ -1307,8 +1348,8 @@ nsWidget::OnMotionNotifySignal(GdkEventMotion * aGdkMotionEvent)
     event.time = aGdkMotionEvent->time;
   }
   
-#ifdef TRACE_MOUSE_EVENTS
-  DebugPrintMouseEvent(event,"Motion",mWidget);
+#ifdef TRACE_EVENTS
+  DebugPrintEvent(event,"Motion",mWidget);
 #endif
   
   AddRef();
@@ -1317,6 +1358,83 @@ nsWidget::OnMotionNotifySignal(GdkEventMotion * aGdkMotionEvent)
 
   Release();
 }
+
+
+/* virtual */ void 
+nsWidget::OnDragMotionSignal(GdkDragContext *aGdkDragContext)
+{
+  nsMouseEvent event;
+
+  event.message = NS_DRAGDROP_OVER;
+  event.eventStructType = NS_DRAGDROP_EVENT;
+
+  event.widget = this;
+  
+
+  /* I think we need coordinate stuff here */
+  /* Faking it for now. */
+  event.point.x = 17;
+  event.point.y = 19;
+
+#ifdef TRACE_EVENTS
+  DebugPrintEvent(event,"Motion",mWidget);
+#endif
+  
+  AddRef();
+
+  DispatchMouseEvent(event);
+
+  Release();
+
+}
+
+
+/* virtual */ void 
+nsWidget::OnDragBeginSignal(GdkDragContext * aGdkDragContext)
+{
+  nsMouseEvent event;
+
+  event.message = NS_MOUSE_MOVE;
+  event.eventStructType = NS_MOUSE_EVENT;
+  
+#ifdef TRACE_EVENTS
+  DebugPrintEvent(event,"Drag",mWidget);
+#endif
+  
+  AddRef();
+
+  DispatchMouseEvent(event);
+
+  Release();
+}
+
+
+/* virtual */ void 
+nsWidget::OnDragDropSignal(GdkDragContext *aDragContext)
+{
+  nsMouseEvent    event;
+  nsEventStatus status;
+
+  event.message = NS_DRAGDROP_DROP;
+  event.eventStructType = NS_DRAGDROP_EVENT;
+  event.widget = this;
+  
+  // Test coordinates.
+  event.point.x = 17;
+  event.point.y = 19;
+
+#ifdef TRACE_EVENTS
+  DebugPrintEvent(event,"Drop",mWidget);
+#endif
+  
+  AddRef();
+
+  DispatchWindowEvent(&event);
+
+  Release();
+}
+
+
 //////////////////////////////////////////////////////////////////
 /* virtual */ void
 nsWidget::OnEnterNotifySignal(GdkEventCrossing * aGdkCrossingEvent)
@@ -1346,8 +1464,8 @@ nsWidget::OnEnterNotifySignal(GdkEventCrossing * aGdkCrossingEvent)
     event.time = aGdkCrossingEvent->time;
   }
 
-#ifdef TRACE_MOUSE_EVENTS
-  DebugPrintMouseEvent(event,"Enter",mWidget);
+#ifdef TRACE_EVENTS
+  DebugPrintEvent(event,"Enter",mWidget);
 #endif
 
   AddRef();
@@ -1385,8 +1503,8 @@ nsWidget::OnLeaveNotifySignal(GdkEventCrossing * aGdkCrossingEvent)
     event.time = aGdkCrossingEvent->time;
   }
 
-#ifdef TRACE_MOUSE_EVENTS
-  DebugPrintMouseEvent(event,"Leave",mWidget);
+#ifdef TRACE_EVENTS
+  DebugPrintEvent(event,"Leave",mWidget);
 #endif
 
   AddRef();
@@ -1464,8 +1582,8 @@ nsWidget::OnButtonPressSignal(GdkEventButton * aGdkButtonEvent)
 
   InitMouseEvent(aGdkButtonEvent, event, eventType);
 
-#ifdef TRACE_MOUSE_EVENTS
-  DebugPrintMouseEvent(event,"ButtonPress",mWidget);
+#ifdef TRACE_EVENTS
+  DebugPrintEvent(event,"ButtonPress",mWidget);
 #endif
 
   // Set the button motion target and remeber the widget and root coords
@@ -1512,8 +1630,8 @@ nsWidget::OnButtonReleaseSignal(GdkEventButton * aGdkButtonEvent)
 
   InitMouseEvent(aGdkButtonEvent, event, eventType);
 
-#ifdef TRACE_MOUSE_EVENTS
-  DebugPrintMouseEvent(event,"ButtonRelease",mWidget);
+#ifdef TRACE_EVENTS
+  DebugPrintEvent(event,"ButtonRelease",mWidget);
 #endif
 
   if (nsnull != sButtonMotionTarget)
@@ -1546,17 +1664,17 @@ nsWidget::OnRealize()
 //////////////////////////////////////////////////////////////////
 void 
 nsWidget::InstallSignal(GtkWidget *   aWidget,
-						gchar *       aSignalName,
-						GtkSignalFunc aSignalFunction)
+                        gchar *       aSignalName,
+                        GtkSignalFunc aSignalFunction)
 {
   NS_ASSERTION( nsnull != aWidget, "widget is null");
   NS_ASSERTION( aSignalName, "signal name is null");
   NS_ASSERTION( aSignalFunction, "signal function is null");
 
   gtk_signal_connect(GTK_OBJECT(aWidget),
-					 aSignalName,
-					 GTK_SIGNAL_FUNC(aSignalFunction),
-					 (gpointer) this);
+                     aSignalName,
+                     GTK_SIGNAL_FUNC(aSignalFunction),
+                     (gpointer) this);
 }
 //////////////////////////////////////////////////////////////////
 void 
@@ -1668,13 +1786,72 @@ nsWidget::MotionNotifySignal(GtkWidget *      aWidget,
 
   if (widget->DropEvent(aWidget, aGdkMotionEvent->window))
   {
-	return PR_TRUE;
+    return PR_TRUE;
   }
 
   widget->OnMotionNotifySignal(aGdkMotionEvent);
 
   return PR_TRUE;
 }
+
+/* static */ gint
+nsWidget::DragMotionSignal(GtkWidget *      aWidget,
+                           GdkDragContext   *aDragContext,
+                           gint             x,
+                           gint             y,
+                           guint            time,
+                           void             *aData)
+{
+  nsWidget * widget = (nsWidget *) aData;
+  NS_ASSERTION( nsnull != widget, "instance pointer is null");
+
+  widget->OnDragMotionSignal(aDragContext);
+
+  return PR_TRUE;
+}
+
+/* static */ gint
+nsWidget::DragBeginSignal(GtkWidget *      aWidget,
+                          GdkDragContext   *aDragContext,
+                          gint             x,
+                          gint             y,
+                          guint            time,
+                          void             *aData)
+{
+  printf("nsWidget::DragBeginSignal\n");
+  fflush(stdout);
+
+  return PR_TRUE;
+}
+
+/* static */ gint
+nsWidget::DragDropSignal(GtkWidget *      aWidget,
+                         GdkDragContext   *aDragContext,
+                         gint             x,
+                         gint             y,
+                         guint            time,
+                         void             *aData)
+{
+  NS_ASSERTION( nsnull != aWidget, "widget is null");
+  NS_ASSERTION( nsnull != aDragContext, "dragcontext is null");
+
+  nsWidget * widget = (nsWidget *) aData;
+  NS_ASSERTION( nsnull != widget, "instance pointer is null");
+
+#if 0
+  if (widget->DropEvent(aWidget, aDragContext->source_window)) {
+    return PR_TRUE;
+  }
+#endif
+
+  widget->OnDragDropSignal(aDragContext);
+
+  return PR_TRUE;
+}
+
+
+
+
 //////////////////////////////////////////////////////////////////
 /* static */ gint 
 nsWidget::EnterNotifySignal(GtkWidget *        aWidget, 

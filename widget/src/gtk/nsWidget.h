@@ -168,6 +168,10 @@ class nsWidget : public nsBaseWidget
   //////////////////////////////////////////////////////////////////
   void InstallMotionNotifySignal(GtkWidget * aWidget);
 
+  void InstallDragMotionSignal(GtkWidget * aWidget);
+  void InstallDragBeginSignal(GtkWidget * aWidget);
+  void InstallDragDropSignal(GtkWidget * aWidget);
+
   void InstallEnterNotifySignal(GtkWidget * aWidget);
 
   void InstallLeaveNotifySignal(GtkWidget * aWidget);
@@ -187,6 +191,9 @@ class nsWidget : public nsBaseWidget
   //
   //////////////////////////////////////////////////////////////////
   virtual void OnMotionNotifySignal(GdkEventMotion * aGdkMotionEvent);
+  virtual void OnDragMotionSignal(GdkDragContext *aGdkDragContext);
+  virtual void OnDragBeginSignal(GdkDragContext *aGdkDragContext);
+  virtual void OnDragDropSignal(GdkDragContext      *aGdkDragContext);
   virtual void OnEnterNotifySignal(GdkEventCrossing * aGdkCrossingEvent);
   virtual void OnLeaveNotifySignal(GdkEventCrossing * aGdkCrossingEvent);
   virtual void OnButtonPressSignal(GdkEventButton * aGdkButtonEvent);
@@ -210,6 +217,29 @@ private:
   static gint MotionNotifySignal(GtkWidget *       aWidget,
                                  GdkEventMotion *  aGdkMotionEvent,
                                  gpointer          aData);
+
+  static gint DragMotionSignal(GtkWidget *       aWidget,
+                               GdkDragContext   *context,
+                               gint             x,
+                               gint             y,
+                               guint            time,
+                               void             *data);
+
+  static gint DragBeginSignal(GtkWidget *       aWidget,
+                              GdkDragContext   *context,
+                              gint             x,
+                              gint             y,
+                              guint            time,
+                              void             *data);
+
+  static gint DragDropSignal(GtkWidget *      aWidget,
+                             GdkDragContext   *context,
+                             gint             x,
+                             gint             y,
+                             guint            time,
+                             void             *data);
+
+
 
   static gint EnterNotifySignal(GtkWidget *        aWidget, 
                                 GdkEventCrossing * aGdkCrossingEvent, 
@@ -250,9 +280,9 @@ protected:
                       PRUint32         aEventType);
 
 #ifdef DEBUG
-  void DebugPrintMouseEvent(nsMouseEvent & aEvent,
-                            char *         sMessage,
-                            GtkWidget *    aGtkWidget);
+  void DebugPrintEvent(nsGUIEvent & aEvent,
+                       char *         sMessage,
+                       GtkWidget *    aGtkWidget);
 #endif
 
     GtkWidget *mWidget;
