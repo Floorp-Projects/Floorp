@@ -54,7 +54,8 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSISUPPORTSWEAKREFERENCE
 
-  nsJavaXPTCStub(JNIEnv* aJavaEnv, jobject aJavaObject, nsIInterfaceInfo *aIInfo);
+  nsJavaXPTCStub(JNIEnv* aJavaEnv, jobject aJavaObject,
+                 nsIInterfaceInfo *aIInfo, nsJavaXPTCStub* aMaster = nsnull);
 
   virtual ~nsJavaXPTCStub();
 
@@ -66,6 +67,9 @@ public:
   NS_IMETHOD CallMethod(PRUint16 aMethodIndex,
                         const nsXPTMethodInfo *aInfo,
                         nsXPTCMiniVariant *aParams);
+
+  // getter for mJavaObject
+  jobject GetJavaObject();
 
 private:
 //  NS_HIDDEN ~JavaStub();
@@ -94,11 +98,11 @@ private:
                               jvalue &aJValue);
   nsresult SetXPCOMRetval();
 
-  JNIEnv* mJavaEnv;
-  jobject mJavaObject;
-  nsCOMPtr<nsIInterfaceInfo> mIInfo;
+  JNIEnv*                     mJavaEnv;
+  jobject                     mJavaObject;
+  nsCOMPtr<nsIInterfaceInfo>  mIInfo;
 
-  nsVoidArray   mChildren; // weak references (cleared by the children)
+  nsVoidArray     mChildren; // weak references (cleared by the children)
   nsJavaXPTCStub *mMaster;   // strong reference
 };
 
