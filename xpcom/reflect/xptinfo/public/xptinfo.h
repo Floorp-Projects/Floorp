@@ -80,7 +80,7 @@ public:
     nsXPTType& operator=(uint8 val)
         {flags = val; return *this;}
 
-    nsXPTType& operator=(nsXPTType& other)
+    nsXPTType& operator=(const nsXPTType& other)
         {flags = other.flags; return *this;}
 
     operator uint8() const
