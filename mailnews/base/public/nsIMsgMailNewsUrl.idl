@@ -63,6 +63,7 @@ interface nsIMsgMailNewsUrl : nsIURL {
 	void RegisterListener (in nsIUrlListener aUrlListener);
 	void UnRegisterListener (in nsIUrlListener aUrlListener);
 
+        readonly attribute nsIURI baseURI;
 	// Eventually this will be removed and replaced with calls to nsIMsgStatusFeedback
 	attribute string errorMessage;
 

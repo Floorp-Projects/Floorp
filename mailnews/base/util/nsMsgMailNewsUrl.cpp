@@ -554,9 +554,25 @@ NS_IMETHODIMP nsMsgMailNewsUrl::GetOriginCharset(nsACString &aOriginCharset)
     return m_baseURL->GetOriginCharset(aOriginCharset);
 }
 
+NS_IMETHODIMP nsMsgMailNewsUrl::GetBaseURI(nsIURI **aBaseURI)
+{
+  NS_ENSURE_ARG_POINTER(aBaseURI);
+  return m_baseURL->QueryInterface(NS_GET_IID(nsIURI), (void**) aBaseURI);
+}
+
 NS_IMETHODIMP nsMsgMailNewsUrl::Equals(nsIURI *other, PRBool *_retval)
 {
-	return m_baseURL->Equals(other, _retval);
+  nsCOMPtr <nsIMsgMailNewsUrl> mailUrl = do_QueryInterface(other);
+  // we really want to compare the base uris to each other, not our base URI
+  // with the other's real URI.
+  if (mailUrl)
+  {
+    nsCOMPtr <nsIURI> baseURI;
+    mailUrl->GetBaseURI(getter_AddRefs(baseURI));
+    if (baseURI)
+      return m_baseURL->Equals(baseURI, _retval);
+  }
+  return m_baseURL->Equals(other, _retval);
 }
 
 NS_IMETHODIMP nsMsgMailNewsUrl::SchemeIs(const char *aScheme, PRBool *_retval)
