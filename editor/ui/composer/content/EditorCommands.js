@@ -6,7 +6,7 @@ var editorName = "EditorAppCore" + ( new Date() ).getTime().toString();
 var appCore = null;  
 var toolbar;
 
-function EditorStartup()
+function EditorStartup(editorType)
 {
   dump("Doing Startup...\n");
 
@@ -24,7 +24,7 @@ function EditorStartup()
       appCore.setWebShellWindow(window);
       appCore.setToolbarWindow(window)
 
-      appCore.setEditorType("html");
+      appCore.setEditorType(editorType);
       appCore.setContentWindow( window.frames[0] );
 
       // Get url for editor content
@@ -87,6 +87,42 @@ function EditorOpen()
   if (appCore)
   {
     appCore.open();
+  }
+}
+
+function EditorNewPlaintext()
+{
+  dump("In EditorNewPlaintext..\n");
+ 
+  core = XPAppCoresManager.Find("toolkitCore");
+  if ( !core ) {
+    core = new ToolkitCore();
+    if ( core ) {
+      core.Init("toolkitCore");
+    }
+  }
+  if ( core ) {
+    core.ShowWindowWithArgs( "chrome://editor/content/TextEditorAppShell.xul", window, "chrome://editor/content/EditorInitPagePlain.html" );
+  } else {
+    dump("Error; can't create toolkitCore\n");
+  }
+}
+
+function EditorNewBrowser()
+{
+  dump("In EditorNewPlaintext..\n");
+ 
+  core = XPAppCoresManager.Find("toolkitCore");
+  if ( !core ) {
+    core = new ToolkitCore();
+    if ( core ) {
+      core.Init("toolkitCore");
+    }
+  }
+  if ( core ) {
+    core.ShowWindowWithArgs( "chrome://navigator/", window, "" );
+  } else {
+    dump("Error; can't create toolkitCore\n");
   }
 }
 

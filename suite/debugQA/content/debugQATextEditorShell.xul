@@ -20,12 +20,12 @@
 
 <window id="main-window" xmlns:html="http://www.w3.org/TR/REC-html40"
 			  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-			  onload="EditorStartup('html')" onunload="EditorShutdown()" title="Editor">
+			  onload="EditorStartup('text')" onunload="EditorShutdown()" title="TextEditor">
 
   <html:script language="JavaScript" src="chrome://editor/content/EditorCommands.js">
   </html:script>
 
-  <broadcaster id="args" value="chrome://editor/content/EditorInitPage.html"/>
+  <broadcaster id="args" value="chrome://editor/content/EditorInitPagePlain.html"/>
   <broadcaster id="canPrint"/>
   
   <menubar>
