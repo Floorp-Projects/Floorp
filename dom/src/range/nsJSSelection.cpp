@@ -25,6 +25,7 @@
 #include "nsIJSScriptObject.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
+#include "nsCOMPtr.h"
 #include "nsIPtr.h"
 #include "nsString.h"
 #include "nsIDOMSelection.h"
@@ -74,14 +75,14 @@ GetSelectionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   if (JSVAL_IS_INT(id)) {
     nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-    nsIScriptSecurityManager *secMan;
-    PRBool ok = PR_FALSE;
-    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    nsCOMPtr<nsIScriptSecurityManager> secMan;
+    if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
       return JS_FALSE;
     }
     switch(JSVAL_TO_INT(id)) {
       case SELECTION_ANCHORNODE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "selection.anchornode", &ok);
         if (!ok) {
           //Need to throw error here
@@ -99,6 +100,7 @@ GetSelectionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case SELECTION_ANCHOROFFSET:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "selection.anchoroffset", &ok);
         if (!ok) {
           //Need to throw error here
@@ -115,6 +117,7 @@ GetSelectionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case SELECTION_FOCUSNODE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "selection.focusnode", &ok);
         if (!ok) {
           //Need to throw error here
@@ -132,6 +135,7 @@ GetSelectionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case SELECTION_FOCUSOFFSET:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "selection.focusoffset", &ok);
         if (!ok) {
           //Need to throw error here
@@ -148,6 +152,7 @@ GetSelectionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case SELECTION_ISCOLLAPSED:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "selection.iscollapsed", &ok);
         if (!ok) {
           //Need to throw error here
@@ -164,6 +169,7 @@ GetSelectionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case SELECTION_RANGECOUNT:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "selection.rangecount", &ok);
         if (!ok) {
           //Need to throw error here
@@ -181,7 +187,6 @@ GetSelectionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       default:
         return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
     }
-    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
@@ -206,9 +211,8 @@ SetSelectionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   if (JSVAL_IS_INT(id)) {
     nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-    nsIScriptSecurityManager *secMan;
-    PRBool ok = PR_FALSE;
-    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    nsCOMPtr<nsIScriptSecurityManager> secMan;
+    if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
       return JS_FALSE;
     }
     switch(JSVAL_TO_INT(id)) {
@@ -216,7 +220,6 @@ SetSelectionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       default:
         return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
     }
-    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
@@ -269,8 +272,8 @@ SelectionGetRangeAt(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
   *rval = JSVAL_NULL;
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-  nsIScriptSecurityManager *secMan;
-  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+  nsCOMPtr<nsIScriptSecurityManager> secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
     return JS_FALSE;
   }
   {
@@ -280,7 +283,6 @@ SelectionGetRangeAt(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
       //Need to throw error here
       return JS_FALSE;
     }
-    NS_RELEASE(secMan);
   }
 
   // If there's no private data, this must be the prototype, so ignore
@@ -321,8 +323,8 @@ SelectionClearSelection(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
   *rval = JSVAL_NULL;
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-  nsIScriptSecurityManager *secMan;
-  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+  nsCOMPtr<nsIScriptSecurityManager> secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
     return JS_FALSE;
   }
   {
@@ -332,7 +334,6 @@ SelectionClearSelection(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
       //Need to throw error here
       return JS_FALSE;
     }
-    NS_RELEASE(secMan);
   }
 
   // If there's no private data, this must be the prototype, so ignore
@@ -366,8 +367,8 @@ SelectionCollapse(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
   *rval = JSVAL_NULL;
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-  nsIScriptSecurityManager *secMan;
-  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+  nsCOMPtr<nsIScriptSecurityManager> secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
     return JS_FALSE;
   }
   {
@@ -377,7 +378,6 @@ SelectionCollapse(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
       //Need to throw error here
       return JS_FALSE;
     }
-    NS_RELEASE(secMan);
   }
 
   // If there's no private data, this must be the prototype, so ignore
@@ -427,8 +427,8 @@ SelectionExtend(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
   *rval = JSVAL_NULL;
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-  nsIScriptSecurityManager *secMan;
-  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+  nsCOMPtr<nsIScriptSecurityManager> secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
     return JS_FALSE;
   }
   {
@@ -438,7 +438,6 @@ SelectionExtend(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
       //Need to throw error here
       return JS_FALSE;
     }
-    NS_RELEASE(secMan);
   }
 
   // If there's no private data, this must be the prototype, so ignore
@@ -489,8 +488,8 @@ SelectionContainsNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
   *rval = JSVAL_NULL;
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-  nsIScriptSecurityManager *secMan;
-  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+  nsCOMPtr<nsIScriptSecurityManager> secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
     return JS_FALSE;
   }
   {
@@ -500,7 +499,6 @@ SelectionContainsNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
       //Need to throw error here
       return JS_FALSE;
     }
-    NS_RELEASE(secMan);
   }
 
   // If there's no private data, this must be the prototype, so ignore
@@ -547,8 +545,8 @@ SelectionDeleteFromDocument(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
   *rval = JSVAL_NULL;
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-  nsIScriptSecurityManager *secMan;
-  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+  nsCOMPtr<nsIScriptSecurityManager> secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
     return JS_FALSE;
   }
   {
@@ -558,7 +556,6 @@ SelectionDeleteFromDocument(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
       //Need to throw error here
       return JS_FALSE;
     }
-    NS_RELEASE(secMan);
   }
 
   // If there's no private data, this must be the prototype, so ignore
@@ -591,8 +588,8 @@ SelectionAddRange(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
   *rval = JSVAL_NULL;
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-  nsIScriptSecurityManager *secMan;
-  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+  nsCOMPtr<nsIScriptSecurityManager> secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
     return JS_FALSE;
   }
   {
@@ -602,7 +599,6 @@ SelectionAddRange(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
       //Need to throw error here
       return JS_FALSE;
     }
-    NS_RELEASE(secMan);
   }
 
   // If there's no private data, this must be the prototype, so ignore
@@ -646,8 +642,8 @@ SelectionStartBatchChanges(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
   *rval = JSVAL_NULL;
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-  nsIScriptSecurityManager *secMan;
-  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+  nsCOMPtr<nsIScriptSecurityManager> secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
     return JS_FALSE;
   }
   {
@@ -657,7 +653,6 @@ SelectionStartBatchChanges(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
       //Need to throw error here
       return JS_FALSE;
     }
-    NS_RELEASE(secMan);
   }
 
   // If there's no private data, this must be the prototype, so ignore
@@ -689,8 +684,8 @@ SelectionEndBatchChanges(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
   *rval = JSVAL_NULL;
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-  nsIScriptSecurityManager *secMan;
-  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+  nsCOMPtr<nsIScriptSecurityManager> secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
     return JS_FALSE;
   }
   {
@@ -700,7 +695,6 @@ SelectionEndBatchChanges(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
       //Need to throw error here
       return JS_FALSE;
     }
-    NS_RELEASE(secMan);
   }
 
   // If there's no private data, this must be the prototype, so ignore
@@ -733,8 +727,8 @@ SelectionAddSelectionListener(JSContext *cx, JSObject *obj, uintN argc, jsval *a
   *rval = JSVAL_NULL;
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-  nsIScriptSecurityManager *secMan;
-  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+  nsCOMPtr<nsIScriptSecurityManager> secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
     return JS_FALSE;
   }
   {
@@ -744,7 +738,6 @@ SelectionAddSelectionListener(JSContext *cx, JSObject *obj, uintN argc, jsval *a
       //Need to throw error here
       return JS_FALSE;
     }
-    NS_RELEASE(secMan);
   }
 
   // If there's no private data, this must be the prototype, so ignore
@@ -789,8 +782,8 @@ SelectionRemoveSelectionListener(JSContext *cx, JSObject *obj, uintN argc, jsval
   *rval = JSVAL_NULL;
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-  nsIScriptSecurityManager *secMan;
-  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+  nsCOMPtr<nsIScriptSecurityManager> secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
     return JS_FALSE;
   }
   {
@@ -800,7 +793,6 @@ SelectionRemoveSelectionListener(JSContext *cx, JSObject *obj, uintN argc, jsval
       //Need to throw error here
       return JS_FALSE;
     }
-    NS_RELEASE(secMan);
   }
 
   // If there's no private data, this must be the prototype, so ignore

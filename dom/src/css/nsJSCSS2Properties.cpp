@@ -25,6 +25,7 @@
 #include "nsIJSScriptObject.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
+#include "nsCOMPtr.h"
 #include "nsIPtr.h"
 #include "nsString.h"
 #include "nsIDOMCSS2Properties.h"
@@ -182,14 +183,14 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   if (JSVAL_IS_INT(id)) {
     nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-    nsIScriptSecurityManager *secMan;
-    PRBool ok = PR_FALSE;
-    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    nsCOMPtr<nsIScriptSecurityManager> secMan;
+    if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
       return JS_FALSE;
     }
     switch(JSVAL_TO_INT(id)) {
       case CSS2PROPERTIES_AZIMUTH:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.azimuth", &ok);
         if (!ok) {
           //Need to throw error here
@@ -206,6 +207,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_BACKGROUND:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.background", &ok);
         if (!ok) {
           //Need to throw error here
@@ -222,6 +224,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_BACKGROUNDATTACHMENT:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.backgroundattachment", &ok);
         if (!ok) {
           //Need to throw error here
@@ -238,6 +241,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_BACKGROUNDCOLOR:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.backgroundcolor", &ok);
         if (!ok) {
           //Need to throw error here
@@ -254,6 +258,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_BACKGROUNDIMAGE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.backgroundimage", &ok);
         if (!ok) {
           //Need to throw error here
@@ -270,6 +275,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_BACKGROUNDPOSITION:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.backgroundposition", &ok);
         if (!ok) {
           //Need to throw error here
@@ -286,6 +292,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_BACKGROUNDREPEAT:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.backgroundrepeat", &ok);
         if (!ok) {
           //Need to throw error here
@@ -302,6 +309,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_BORDER:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.border", &ok);
         if (!ok) {
           //Need to throw error here
@@ -318,6 +326,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_BORDERCOLLAPSE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.bordercollapse", &ok);
         if (!ok) {
           //Need to throw error here
@@ -334,6 +343,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_BORDERCOLOR:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.bordercolor", &ok);
         if (!ok) {
           //Need to throw error here
@@ -350,6 +360,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_BORDERSPACING:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.borderspacing", &ok);
         if (!ok) {
           //Need to throw error here
@@ -366,6 +377,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_BORDERSTYLE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.borderstyle", &ok);
         if (!ok) {
           //Need to throw error here
@@ -382,6 +394,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_BORDERTOP:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.bordertop", &ok);
         if (!ok) {
           //Need to throw error here
@@ -398,6 +411,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_BORDERRIGHT:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.borderright", &ok);
         if (!ok) {
           //Need to throw error here
@@ -414,6 +428,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_BORDERBOTTOM:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.borderbottom", &ok);
         if (!ok) {
           //Need to throw error here
@@ -430,6 +445,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_BORDERLEFT:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.borderleft", &ok);
         if (!ok) {
           //Need to throw error here
@@ -446,6 +462,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_BORDERTOPCOLOR:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.bordertopcolor", &ok);
         if (!ok) {
           //Need to throw error here
@@ -462,6 +479,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_BORDERRIGHTCOLOR:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.borderrightcolor", &ok);
         if (!ok) {
           //Need to throw error here
@@ -478,6 +496,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_BORDERBOTTOMCOLOR:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.borderbottomcolor", &ok);
         if (!ok) {
           //Need to throw error here
@@ -494,6 +513,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_BORDERLEFTCOLOR:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.borderleftcolor", &ok);
         if (!ok) {
           //Need to throw error here
@@ -510,6 +530,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_BORDERTOPSTYLE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.bordertopstyle", &ok);
         if (!ok) {
           //Need to throw error here
@@ -526,6 +547,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_BORDERRIGHTSTYLE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.borderrightstyle", &ok);
         if (!ok) {
           //Need to throw error here
@@ -542,6 +564,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_BORDERBOTTOMSTYLE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.borderbottomstyle", &ok);
         if (!ok) {
           //Need to throw error here
@@ -558,6 +581,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_BORDERLEFTSTYLE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.borderleftstyle", &ok);
         if (!ok) {
           //Need to throw error here
@@ -574,6 +598,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_BORDERTOPWIDTH:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.bordertopwidth", &ok);
         if (!ok) {
           //Need to throw error here
@@ -590,6 +615,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_BORDERRIGHTWIDTH:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.borderrightwidth", &ok);
         if (!ok) {
           //Need to throw error here
@@ -606,6 +632,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_BORDERBOTTOMWIDTH:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.borderbottomwidth", &ok);
         if (!ok) {
           //Need to throw error here
@@ -622,6 +649,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_BORDERLEFTWIDTH:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.borderleftwidth", &ok);
         if (!ok) {
           //Need to throw error here
@@ -638,6 +666,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_BORDERWIDTH:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.borderwidth", &ok);
         if (!ok) {
           //Need to throw error here
@@ -654,6 +683,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_BOTTOM:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.bottom", &ok);
         if (!ok) {
           //Need to throw error here
@@ -670,6 +700,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_CAPTIONSIDE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.captionside", &ok);
         if (!ok) {
           //Need to throw error here
@@ -686,6 +717,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_CLEAR:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.clear", &ok);
         if (!ok) {
           //Need to throw error here
@@ -702,6 +734,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_CLIP:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.clip", &ok);
         if (!ok) {
           //Need to throw error here
@@ -718,6 +751,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_COLOR:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.color", &ok);
         if (!ok) {
           //Need to throw error here
@@ -734,6 +768,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_CONTENT:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.content", &ok);
         if (!ok) {
           //Need to throw error here
@@ -750,6 +785,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_COUNTERINCREMENT:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.counterincrement", &ok);
         if (!ok) {
           //Need to throw error here
@@ -766,6 +802,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_COUNTERRESET:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.counterreset", &ok);
         if (!ok) {
           //Need to throw error here
@@ -782,6 +819,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_CUE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.cue", &ok);
         if (!ok) {
           //Need to throw error here
@@ -798,6 +836,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_CUEAFTER:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.cueafter", &ok);
         if (!ok) {
           //Need to throw error here
@@ -814,6 +853,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_CUEBEFORE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.cuebefore", &ok);
         if (!ok) {
           //Need to throw error here
@@ -830,6 +870,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_CURSOR:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.cursor", &ok);
         if (!ok) {
           //Need to throw error here
@@ -846,6 +887,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_DIRECTION:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.direction", &ok);
         if (!ok) {
           //Need to throw error here
@@ -862,6 +904,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_DISPLAY:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.display", &ok);
         if (!ok) {
           //Need to throw error here
@@ -878,6 +921,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_ELEVATION:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.elevation", &ok);
         if (!ok) {
           //Need to throw error here
@@ -894,6 +938,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_EMPTYCELLS:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.emptycells", &ok);
         if (!ok) {
           //Need to throw error here
@@ -910,6 +955,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_CSSFLOAT:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.cssfloat", &ok);
         if (!ok) {
           //Need to throw error here
@@ -926,6 +972,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_FONT:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.font", &ok);
         if (!ok) {
           //Need to throw error here
@@ -942,6 +989,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_FONTFAMILY:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.fontfamily", &ok);
         if (!ok) {
           //Need to throw error here
@@ -958,6 +1006,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_FONTSIZE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.fontsize", &ok);
         if (!ok) {
           //Need to throw error here
@@ -974,6 +1023,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_FONTSIZEADJUST:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.fontsizeadjust", &ok);
         if (!ok) {
           //Need to throw error here
@@ -990,6 +1040,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_FONTSTRETCH:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.fontstretch", &ok);
         if (!ok) {
           //Need to throw error here
@@ -1006,6 +1057,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_FONTSTYLE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.fontstyle", &ok);
         if (!ok) {
           //Need to throw error here
@@ -1022,6 +1074,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_FONTVARIANT:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.fontvariant", &ok);
         if (!ok) {
           //Need to throw error here
@@ -1038,6 +1091,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_FONTWEIGHT:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.fontweight", &ok);
         if (!ok) {
           //Need to throw error here
@@ -1054,6 +1108,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_HEIGHT:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.height", &ok);
         if (!ok) {
           //Need to throw error here
@@ -1070,6 +1125,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_LEFT:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.left", &ok);
         if (!ok) {
           //Need to throw error here
@@ -1086,6 +1142,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_LETTERSPACING:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.letterspacing", &ok);
         if (!ok) {
           //Need to throw error here
@@ -1102,6 +1159,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_LINEHEIGHT:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.lineheight", &ok);
         if (!ok) {
           //Need to throw error here
@@ -1118,6 +1176,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_LISTSTYLE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.liststyle", &ok);
         if (!ok) {
           //Need to throw error here
@@ -1134,6 +1193,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_LISTSTYLEIMAGE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.liststyleimage", &ok);
         if (!ok) {
           //Need to throw error here
@@ -1150,6 +1210,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_LISTSTYLEPOSITION:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.liststyleposition", &ok);
         if (!ok) {
           //Need to throw error here
@@ -1166,6 +1227,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_LISTSTYLETYPE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.liststyletype", &ok);
         if (!ok) {
           //Need to throw error here
@@ -1182,6 +1244,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_MARGIN:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.margin", &ok);
         if (!ok) {
           //Need to throw error here
@@ -1198,6 +1261,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_MARGINTOP:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.margintop", &ok);
         if (!ok) {
           //Need to throw error here
@@ -1214,6 +1278,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_MARGINRIGHT:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.marginright", &ok);
         if (!ok) {
           //Need to throw error here
@@ -1230,6 +1295,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_MARGINBOTTOM:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.marginbottom", &ok);
         if (!ok) {
           //Need to throw error here
@@ -1246,6 +1312,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_MARGINLEFT:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.marginleft", &ok);
         if (!ok) {
           //Need to throw error here
@@ -1262,6 +1329,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_MARKEROFFSET:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.markeroffset", &ok);
         if (!ok) {
           //Need to throw error here
@@ -1278,6 +1346,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_MARKS:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.marks", &ok);
         if (!ok) {
           //Need to throw error here
@@ -1294,6 +1363,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_MAXHEIGHT:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.maxheight", &ok);
         if (!ok) {
           //Need to throw error here
@@ -1310,6 +1380,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_MAXWIDTH:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.maxwidth", &ok);
         if (!ok) {
           //Need to throw error here
@@ -1326,6 +1397,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_MINHEIGHT:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.minheight", &ok);
         if (!ok) {
           //Need to throw error here
@@ -1342,6 +1414,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_MINWIDTH:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.minwidth", &ok);
         if (!ok) {
           //Need to throw error here
@@ -1358,6 +1431,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_ORPHANS:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.orphans", &ok);
         if (!ok) {
           //Need to throw error here
@@ -1374,6 +1448,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_OUTLINE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.outline", &ok);
         if (!ok) {
           //Need to throw error here
@@ -1390,6 +1465,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_OUTLINECOLOR:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.outlinecolor", &ok);
         if (!ok) {
           //Need to throw error here
@@ -1406,6 +1482,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_OUTLINESTYLE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.outlinestyle", &ok);
         if (!ok) {
           //Need to throw error here
@@ -1422,6 +1499,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_OUTLINEWIDTH:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.outlinewidth", &ok);
         if (!ok) {
           //Need to throw error here
@@ -1438,6 +1516,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_OVERFLOW:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.overflow", &ok);
         if (!ok) {
           //Need to throw error here
@@ -1454,6 +1533,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_PADDING:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.padding", &ok);
         if (!ok) {
           //Need to throw error here
@@ -1470,6 +1550,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_PADDINGTOP:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.paddingtop", &ok);
         if (!ok) {
           //Need to throw error here
@@ -1486,6 +1567,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_PADDINGRIGHT:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.paddingright", &ok);
         if (!ok) {
           //Need to throw error here
@@ -1502,6 +1584,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_PADDINGBOTTOM:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.paddingbottom", &ok);
         if (!ok) {
           //Need to throw error here
@@ -1518,6 +1601,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_PADDINGLEFT:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.paddingleft", &ok);
         if (!ok) {
           //Need to throw error here
@@ -1534,6 +1618,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_PAGE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.page", &ok);
         if (!ok) {
           //Need to throw error here
@@ -1550,6 +1635,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_PAGEBREAKAFTER:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.pagebreakafter", &ok);
         if (!ok) {
           //Need to throw error here
@@ -1566,6 +1652,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_PAGEBREAKBEFORE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.pagebreakbefore", &ok);
         if (!ok) {
           //Need to throw error here
@@ -1582,6 +1669,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_PAGEBREAKINSIDE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.pagebreakinside", &ok);
         if (!ok) {
           //Need to throw error here
@@ -1598,6 +1686,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_PAUSE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.pause", &ok);
         if (!ok) {
           //Need to throw error here
@@ -1614,6 +1703,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_PAUSEAFTER:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.pauseafter", &ok);
         if (!ok) {
           //Need to throw error here
@@ -1630,6 +1720,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_PAUSEBEFORE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.pausebefore", &ok);
         if (!ok) {
           //Need to throw error here
@@ -1646,6 +1737,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_PITCH:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.pitch", &ok);
         if (!ok) {
           //Need to throw error here
@@ -1662,6 +1754,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_PITCHRANGE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.pitchrange", &ok);
         if (!ok) {
           //Need to throw error here
@@ -1678,6 +1771,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_PLAYDURING:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.playduring", &ok);
         if (!ok) {
           //Need to throw error here
@@ -1694,6 +1788,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_POSITION:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.position", &ok);
         if (!ok) {
           //Need to throw error here
@@ -1710,6 +1805,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_QUOTES:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.quotes", &ok);
         if (!ok) {
           //Need to throw error here
@@ -1726,6 +1822,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_RICHNESS:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.richness", &ok);
         if (!ok) {
           //Need to throw error here
@@ -1742,6 +1839,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_RIGHT:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.right", &ok);
         if (!ok) {
           //Need to throw error here
@@ -1758,6 +1856,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_SIZE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.size", &ok);
         if (!ok) {
           //Need to throw error here
@@ -1774,6 +1873,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_SPEAK:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.speak", &ok);
         if (!ok) {
           //Need to throw error here
@@ -1790,6 +1890,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_SPEAKHEADER:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.speakheader", &ok);
         if (!ok) {
           //Need to throw error here
@@ -1806,6 +1907,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_SPEAKNUMERAL:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.speaknumeral", &ok);
         if (!ok) {
           //Need to throw error here
@@ -1822,6 +1924,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_SPEAKPUNCTUATION:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.speakpunctuation", &ok);
         if (!ok) {
           //Need to throw error here
@@ -1838,6 +1941,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_SPEECHRATE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.speechrate", &ok);
         if (!ok) {
           //Need to throw error here
@@ -1854,6 +1958,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_STRESS:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.stress", &ok);
         if (!ok) {
           //Need to throw error here
@@ -1870,6 +1975,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_TABLELAYOUT:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.tablelayout", &ok);
         if (!ok) {
           //Need to throw error here
@@ -1886,6 +1992,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_TEXTALIGN:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.textalign", &ok);
         if (!ok) {
           //Need to throw error here
@@ -1902,6 +2009,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_TEXTDECORATION:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.textdecoration", &ok);
         if (!ok) {
           //Need to throw error here
@@ -1918,6 +2026,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_TEXTINDENT:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.textindent", &ok);
         if (!ok) {
           //Need to throw error here
@@ -1934,6 +2043,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_TEXTSHADOW:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.textshadow", &ok);
         if (!ok) {
           //Need to throw error here
@@ -1950,6 +2060,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_TEXTTRANSFORM:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.texttransform", &ok);
         if (!ok) {
           //Need to throw error here
@@ -1966,6 +2077,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_TOP:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.top", &ok);
         if (!ok) {
           //Need to throw error here
@@ -1982,6 +2094,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_UNICODEBIDI:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.unicodebidi", &ok);
         if (!ok) {
           //Need to throw error here
@@ -1998,6 +2111,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_VERTICALALIGN:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.verticalalign", &ok);
         if (!ok) {
           //Need to throw error here
@@ -2014,6 +2128,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_VISIBILITY:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.visibility", &ok);
         if (!ok) {
           //Need to throw error here
@@ -2030,6 +2145,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_VOICEFAMILY:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.voicefamily", &ok);
         if (!ok) {
           //Need to throw error here
@@ -2046,6 +2162,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_VOLUME:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.volume", &ok);
         if (!ok) {
           //Need to throw error here
@@ -2062,6 +2179,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_WHITESPACE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.whitespace", &ok);
         if (!ok) {
           //Need to throw error here
@@ -2078,6 +2196,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_WIDOWS:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.widows", &ok);
         if (!ok) {
           //Need to throw error here
@@ -2094,6 +2213,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_WIDTH:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.width", &ok);
         if (!ok) {
           //Need to throw error here
@@ -2110,6 +2230,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_WORDSPACING:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.wordspacing", &ok);
         if (!ok) {
           //Need to throw error here
@@ -2126,6 +2247,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_ZINDEX:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.zindex", &ok);
         if (!ok) {
           //Need to throw error here
@@ -2142,6 +2264,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_OPACITY:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.opacity", &ok);
         if (!ok) {
           //Need to throw error here
@@ -2159,7 +2282,6 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       default:
         return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
     }
-    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
@@ -2184,14 +2306,14 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   if (JSVAL_IS_INT(id)) {
     nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-    nsIScriptSecurityManager *secMan;
-    PRBool ok = PR_FALSE;
-    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    nsCOMPtr<nsIScriptSecurityManager> secMan;
+    if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
       return JS_FALSE;
     }
     switch(JSVAL_TO_INT(id)) {
       case CSS2PROPERTIES_AZIMUTH:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.azimuth", &ok);
         if (!ok) {
           //Need to throw error here
@@ -2206,6 +2328,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_BACKGROUND:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.background", &ok);
         if (!ok) {
           //Need to throw error here
@@ -2220,6 +2343,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_BACKGROUNDATTACHMENT:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.backgroundattachment", &ok);
         if (!ok) {
           //Need to throw error here
@@ -2234,6 +2358,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_BACKGROUNDCOLOR:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.backgroundcolor", &ok);
         if (!ok) {
           //Need to throw error here
@@ -2248,6 +2373,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_BACKGROUNDIMAGE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.backgroundimage", &ok);
         if (!ok) {
           //Need to throw error here
@@ -2262,6 +2388,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_BACKGROUNDPOSITION:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.backgroundposition", &ok);
         if (!ok) {
           //Need to throw error here
@@ -2276,6 +2403,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_BACKGROUNDREPEAT:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.backgroundrepeat", &ok);
         if (!ok) {
           //Need to throw error here
@@ -2290,6 +2418,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_BORDER:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.border", &ok);
         if (!ok) {
           //Need to throw error here
@@ -2304,6 +2433,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_BORDERCOLLAPSE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.bordercollapse", &ok);
         if (!ok) {
           //Need to throw error here
@@ -2318,6 +2448,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_BORDERCOLOR:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.bordercolor", &ok);
         if (!ok) {
           //Need to throw error here
@@ -2332,6 +2463,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_BORDERSPACING:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.borderspacing", &ok);
         if (!ok) {
           //Need to throw error here
@@ -2346,6 +2478,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_BORDERSTYLE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.borderstyle", &ok);
         if (!ok) {
           //Need to throw error here
@@ -2360,6 +2493,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_BORDERTOP:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.bordertop", &ok);
         if (!ok) {
           //Need to throw error here
@@ -2374,6 +2508,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_BORDERRIGHT:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.borderright", &ok);
         if (!ok) {
           //Need to throw error here
@@ -2388,6 +2523,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_BORDERBOTTOM:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.borderbottom", &ok);
         if (!ok) {
           //Need to throw error here
@@ -2402,6 +2538,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_BORDERLEFT:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.borderleft", &ok);
         if (!ok) {
           //Need to throw error here
@@ -2416,6 +2553,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_BORDERTOPCOLOR:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.bordertopcolor", &ok);
         if (!ok) {
           //Need to throw error here
@@ -2430,6 +2568,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_BORDERRIGHTCOLOR:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.borderrightcolor", &ok);
         if (!ok) {
           //Need to throw error here
@@ -2444,6 +2583,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_BORDERBOTTOMCOLOR:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.borderbottomcolor", &ok);
         if (!ok) {
           //Need to throw error here
@@ -2458,6 +2598,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_BORDERLEFTCOLOR:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.borderleftcolor", &ok);
         if (!ok) {
           //Need to throw error here
@@ -2472,6 +2613,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_BORDERTOPSTYLE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.bordertopstyle", &ok);
         if (!ok) {
           //Need to throw error here
@@ -2486,6 +2628,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_BORDERRIGHTSTYLE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.borderrightstyle", &ok);
         if (!ok) {
           //Need to throw error here
@@ -2500,6 +2643,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_BORDERBOTTOMSTYLE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.borderbottomstyle", &ok);
         if (!ok) {
           //Need to throw error here
@@ -2514,6 +2658,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_BORDERLEFTSTYLE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.borderleftstyle", &ok);
         if (!ok) {
           //Need to throw error here
@@ -2528,6 +2673,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_BORDERTOPWIDTH:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.bordertopwidth", &ok);
         if (!ok) {
           //Need to throw error here
@@ -2542,6 +2688,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_BORDERRIGHTWIDTH:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.borderrightwidth", &ok);
         if (!ok) {
           //Need to throw error here
@@ -2556,6 +2703,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_BORDERBOTTOMWIDTH:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.borderbottomwidth", &ok);
         if (!ok) {
           //Need to throw error here
@@ -2570,6 +2718,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_BORDERLEFTWIDTH:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.borderleftwidth", &ok);
         if (!ok) {
           //Need to throw error here
@@ -2584,6 +2733,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_BORDERWIDTH:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.borderwidth", &ok);
         if (!ok) {
           //Need to throw error here
@@ -2598,6 +2748,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_BOTTOM:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.bottom", &ok);
         if (!ok) {
           //Need to throw error here
@@ -2612,6 +2763,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_CAPTIONSIDE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.captionside", &ok);
         if (!ok) {
           //Need to throw error here
@@ -2626,6 +2778,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_CLEAR:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.clear", &ok);
         if (!ok) {
           //Need to throw error here
@@ -2640,6 +2793,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_CLIP:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.clip", &ok);
         if (!ok) {
           //Need to throw error here
@@ -2654,6 +2808,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_COLOR:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.color", &ok);
         if (!ok) {
           //Need to throw error here
@@ -2668,6 +2823,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_CONTENT:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.content", &ok);
         if (!ok) {
           //Need to throw error here
@@ -2682,6 +2838,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_COUNTERINCREMENT:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.counterincrement", &ok);
         if (!ok) {
           //Need to throw error here
@@ -2696,6 +2853,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_COUNTERRESET:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.counterreset", &ok);
         if (!ok) {
           //Need to throw error here
@@ -2710,6 +2868,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_CUE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.cue", &ok);
         if (!ok) {
           //Need to throw error here
@@ -2724,6 +2883,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_CUEAFTER:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.cueafter", &ok);
         if (!ok) {
           //Need to throw error here
@@ -2738,6 +2898,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_CUEBEFORE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.cuebefore", &ok);
         if (!ok) {
           //Need to throw error here
@@ -2752,6 +2913,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_CURSOR:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.cursor", &ok);
         if (!ok) {
           //Need to throw error here
@@ -2766,6 +2928,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_DIRECTION:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.direction", &ok);
         if (!ok) {
           //Need to throw error here
@@ -2780,6 +2943,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_DISPLAY:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.display", &ok);
         if (!ok) {
           //Need to throw error here
@@ -2794,6 +2958,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_ELEVATION:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.elevation", &ok);
         if (!ok) {
           //Need to throw error here
@@ -2808,6 +2973,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_EMPTYCELLS:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.emptycells", &ok);
         if (!ok) {
           //Need to throw error here
@@ -2822,6 +2988,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_CSSFLOAT:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.cssfloat", &ok);
         if (!ok) {
           //Need to throw error here
@@ -2836,6 +3003,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_FONT:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.font", &ok);
         if (!ok) {
           //Need to throw error here
@@ -2850,6 +3018,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_FONTFAMILY:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.fontfamily", &ok);
         if (!ok) {
           //Need to throw error here
@@ -2864,6 +3033,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_FONTSIZE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.fontsize", &ok);
         if (!ok) {
           //Need to throw error here
@@ -2878,6 +3048,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_FONTSIZEADJUST:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.fontsizeadjust", &ok);
         if (!ok) {
           //Need to throw error here
@@ -2892,6 +3063,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_FONTSTRETCH:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.fontstretch", &ok);
         if (!ok) {
           //Need to throw error here
@@ -2906,6 +3078,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_FONTSTYLE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.fontstyle", &ok);
         if (!ok) {
           //Need to throw error here
@@ -2920,6 +3093,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_FONTVARIANT:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.fontvariant", &ok);
         if (!ok) {
           //Need to throw error here
@@ -2934,6 +3108,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_FONTWEIGHT:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.fontweight", &ok);
         if (!ok) {
           //Need to throw error here
@@ -2948,6 +3123,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_HEIGHT:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.height", &ok);
         if (!ok) {
           //Need to throw error here
@@ -2962,6 +3138,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_LEFT:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.left", &ok);
         if (!ok) {
           //Need to throw error here
@@ -2976,6 +3153,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_LETTERSPACING:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.letterspacing", &ok);
         if (!ok) {
           //Need to throw error here
@@ -2990,6 +3168,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_LINEHEIGHT:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.lineheight", &ok);
         if (!ok) {
           //Need to throw error here
@@ -3004,6 +3183,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_LISTSTYLE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.liststyle", &ok);
         if (!ok) {
           //Need to throw error here
@@ -3018,6 +3198,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_LISTSTYLEIMAGE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.liststyleimage", &ok);
         if (!ok) {
           //Need to throw error here
@@ -3032,6 +3213,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_LISTSTYLEPOSITION:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.liststyleposition", &ok);
         if (!ok) {
           //Need to throw error here
@@ -3046,6 +3228,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_LISTSTYLETYPE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.liststyletype", &ok);
         if (!ok) {
           //Need to throw error here
@@ -3060,6 +3243,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_MARGIN:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.margin", &ok);
         if (!ok) {
           //Need to throw error here
@@ -3074,6 +3258,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_MARGINTOP:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.margintop", &ok);
         if (!ok) {
           //Need to throw error here
@@ -3088,6 +3273,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_MARGINRIGHT:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.marginright", &ok);
         if (!ok) {
           //Need to throw error here
@@ -3102,6 +3288,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_MARGINBOTTOM:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.marginbottom", &ok);
         if (!ok) {
           //Need to throw error here
@@ -3116,6 +3303,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_MARGINLEFT:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.marginleft", &ok);
         if (!ok) {
           //Need to throw error here
@@ -3130,6 +3318,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_MARKEROFFSET:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.markeroffset", &ok);
         if (!ok) {
           //Need to throw error here
@@ -3144,6 +3333,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_MARKS:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.marks", &ok);
         if (!ok) {
           //Need to throw error here
@@ -3158,6 +3348,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_MAXHEIGHT:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.maxheight", &ok);
         if (!ok) {
           //Need to throw error here
@@ -3172,6 +3363,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_MAXWIDTH:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.maxwidth", &ok);
         if (!ok) {
           //Need to throw error here
@@ -3186,6 +3378,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_MINHEIGHT:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.minheight", &ok);
         if (!ok) {
           //Need to throw error here
@@ -3200,6 +3393,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_MINWIDTH:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.minwidth", &ok);
         if (!ok) {
           //Need to throw error here
@@ -3214,6 +3408,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_ORPHANS:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.orphans", &ok);
         if (!ok) {
           //Need to throw error here
@@ -3228,6 +3423,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_OUTLINE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.outline", &ok);
         if (!ok) {
           //Need to throw error here
@@ -3242,6 +3438,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_OUTLINECOLOR:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.outlinecolor", &ok);
         if (!ok) {
           //Need to throw error here
@@ -3256,6 +3453,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_OUTLINESTYLE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.outlinestyle", &ok);
         if (!ok) {
           //Need to throw error here
@@ -3270,6 +3468,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_OUTLINEWIDTH:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.outlinewidth", &ok);
         if (!ok) {
           //Need to throw error here
@@ -3284,6 +3483,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_OVERFLOW:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.overflow", &ok);
         if (!ok) {
           //Need to throw error here
@@ -3298,6 +3498,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_PADDING:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.padding", &ok);
         if (!ok) {
           //Need to throw error here
@@ -3312,6 +3513,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_PADDINGTOP:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.paddingtop", &ok);
         if (!ok) {
           //Need to throw error here
@@ -3326,6 +3528,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_PADDINGRIGHT:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.paddingright", &ok);
         if (!ok) {
           //Need to throw error here
@@ -3340,6 +3543,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_PADDINGBOTTOM:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.paddingbottom", &ok);
         if (!ok) {
           //Need to throw error here
@@ -3354,6 +3558,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_PADDINGLEFT:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.paddingleft", &ok);
         if (!ok) {
           //Need to throw error here
@@ -3368,6 +3573,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_PAGE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.page", &ok);
         if (!ok) {
           //Need to throw error here
@@ -3382,6 +3588,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_PAGEBREAKAFTER:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.pagebreakafter", &ok);
         if (!ok) {
           //Need to throw error here
@@ -3396,6 +3603,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_PAGEBREAKBEFORE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.pagebreakbefore", &ok);
         if (!ok) {
           //Need to throw error here
@@ -3410,6 +3618,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_PAGEBREAKINSIDE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.pagebreakinside", &ok);
         if (!ok) {
           //Need to throw error here
@@ -3424,6 +3633,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_PAUSE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.pause", &ok);
         if (!ok) {
           //Need to throw error here
@@ -3438,6 +3648,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_PAUSEAFTER:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.pauseafter", &ok);
         if (!ok) {
           //Need to throw error here
@@ -3452,6 +3663,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_PAUSEBEFORE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.pausebefore", &ok);
         if (!ok) {
           //Need to throw error here
@@ -3466,6 +3678,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_PITCH:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.pitch", &ok);
         if (!ok) {
           //Need to throw error here
@@ -3480,6 +3693,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_PITCHRANGE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.pitchrange", &ok);
         if (!ok) {
           //Need to throw error here
@@ -3494,6 +3708,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_PLAYDURING:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.playduring", &ok);
         if (!ok) {
           //Need to throw error here
@@ -3508,6 +3723,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_POSITION:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.position", &ok);
         if (!ok) {
           //Need to throw error here
@@ -3522,6 +3738,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_QUOTES:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.quotes", &ok);
         if (!ok) {
           //Need to throw error here
@@ -3536,6 +3753,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_RICHNESS:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.richness", &ok);
         if (!ok) {
           //Need to throw error here
@@ -3550,6 +3768,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_RIGHT:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.right", &ok);
         if (!ok) {
           //Need to throw error here
@@ -3564,6 +3783,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_SIZE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.size", &ok);
         if (!ok) {
           //Need to throw error here
@@ -3578,6 +3798,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_SPEAK:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.speak", &ok);
         if (!ok) {
           //Need to throw error here
@@ -3592,6 +3813,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_SPEAKHEADER:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.speakheader", &ok);
         if (!ok) {
           //Need to throw error here
@@ -3606,6 +3828,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_SPEAKNUMERAL:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.speaknumeral", &ok);
         if (!ok) {
           //Need to throw error here
@@ -3620,6 +3843,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_SPEAKPUNCTUATION:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.speakpunctuation", &ok);
         if (!ok) {
           //Need to throw error here
@@ -3634,6 +3858,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_SPEECHRATE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.speechrate", &ok);
         if (!ok) {
           //Need to throw error here
@@ -3648,6 +3873,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_STRESS:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.stress", &ok);
         if (!ok) {
           //Need to throw error here
@@ -3662,6 +3888,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_TABLELAYOUT:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.tablelayout", &ok);
         if (!ok) {
           //Need to throw error here
@@ -3676,6 +3903,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_TEXTALIGN:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.textalign", &ok);
         if (!ok) {
           //Need to throw error here
@@ -3690,6 +3918,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_TEXTDECORATION:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.textdecoration", &ok);
         if (!ok) {
           //Need to throw error here
@@ -3704,6 +3933,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_TEXTINDENT:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.textindent", &ok);
         if (!ok) {
           //Need to throw error here
@@ -3718,6 +3948,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_TEXTSHADOW:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.textshadow", &ok);
         if (!ok) {
           //Need to throw error here
@@ -3732,6 +3963,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_TEXTTRANSFORM:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.texttransform", &ok);
         if (!ok) {
           //Need to throw error here
@@ -3746,6 +3978,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_TOP:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.top", &ok);
         if (!ok) {
           //Need to throw error here
@@ -3760,6 +3993,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_UNICODEBIDI:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.unicodebidi", &ok);
         if (!ok) {
           //Need to throw error here
@@ -3774,6 +4008,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_VERTICALALIGN:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.verticalalign", &ok);
         if (!ok) {
           //Need to throw error here
@@ -3788,6 +4023,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_VISIBILITY:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.visibility", &ok);
         if (!ok) {
           //Need to throw error here
@@ -3802,6 +4038,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_VOICEFAMILY:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.voicefamily", &ok);
         if (!ok) {
           //Need to throw error here
@@ -3816,6 +4053,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_VOLUME:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.volume", &ok);
         if (!ok) {
           //Need to throw error here
@@ -3830,6 +4068,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_WHITESPACE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.whitespace", &ok);
         if (!ok) {
           //Need to throw error here
@@ -3844,6 +4083,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_WIDOWS:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.widows", &ok);
         if (!ok) {
           //Need to throw error here
@@ -3858,6 +4098,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_WIDTH:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.width", &ok);
         if (!ok) {
           //Need to throw error here
@@ -3872,6 +4113,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_WORDSPACING:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.wordspacing", &ok);
         if (!ok) {
           //Need to throw error here
@@ -3886,6 +4128,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_ZINDEX:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.zindex", &ok);
         if (!ok) {
           //Need to throw error here
@@ -3900,6 +4143,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSS2PROPERTIES_OPACITY:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "css2properties.opacity", &ok);
         if (!ok) {
           //Need to throw error here
@@ -3915,7 +4159,6 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       default:
         return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
     }
-    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);

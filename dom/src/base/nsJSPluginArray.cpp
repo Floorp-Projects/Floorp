@@ -25,6 +25,7 @@
 #include "nsIJSScriptObject.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
+#include "nsCOMPtr.h"
 #include "nsIPtr.h"
 #include "nsString.h"
 #include "nsIDOMPlugin.h"
@@ -64,15 +65,15 @@ GetPluginArrayProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   PRBool checkNamedItem = PR_TRUE;
   if (JSVAL_IS_INT(id)) {
     nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-    nsIScriptSecurityManager *secMan;
-    PRBool ok = PR_FALSE;
-    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    nsCOMPtr<nsIScriptSecurityManager> secMan;
+    if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
       return JS_FALSE;
     }
     checkNamedItem = PR_FALSE;
     switch(JSVAL_TO_INT(id)) {
       case PLUGINARRAY_LENGTH:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "pluginarray.length", &ok);
         if (!ok) {
           //Need to throw error here
@@ -150,9 +151,8 @@ SetPluginArrayProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   PRBool checkNamedItem = PR_TRUE;
   if (JSVAL_IS_INT(id)) {
     nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-    nsIScriptSecurityManager *secMan;
-    PRBool ok = PR_FALSE;
-    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    nsCOMPtr<nsIScriptSecurityManager> secMan;
+    if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
       return JS_FALSE;
     }
     checkNamedItem = PR_FALSE;
@@ -161,7 +161,6 @@ SetPluginArrayProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       default:
         return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
     }
-    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
@@ -214,8 +213,8 @@ PluginArrayItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
   *rval = JSVAL_NULL;
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-  nsIScriptSecurityManager *secMan;
-  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+  nsCOMPtr<nsIScriptSecurityManager> secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
     return JS_FALSE;
   }
   {
@@ -225,7 +224,6 @@ PluginArrayItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
       //Need to throw error here
       return JS_FALSE;
     }
-    NS_RELEASE(secMan);
   }
 
   // If there's no private data, this must be the prototype, so ignore
@@ -268,8 +266,8 @@ PluginArrayNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
   *rval = JSVAL_NULL;
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-  nsIScriptSecurityManager *secMan;
-  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+  nsCOMPtr<nsIScriptSecurityManager> secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
     return JS_FALSE;
   }
   {
@@ -279,7 +277,6 @@ PluginArrayNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
       //Need to throw error here
       return JS_FALSE;
     }
-    NS_RELEASE(secMan);
   }
 
   // If there's no private data, this must be the prototype, so ignore
@@ -318,8 +315,8 @@ PluginArrayRefresh(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
   *rval = JSVAL_NULL;
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-  nsIScriptSecurityManager *secMan;
-  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+  nsCOMPtr<nsIScriptSecurityManager> secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
     return JS_FALSE;
   }
   {
@@ -329,7 +326,6 @@ PluginArrayRefresh(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
       //Need to throw error here
       return JS_FALSE;
     }
-    NS_RELEASE(secMan);
   }
 
   // If there's no private data, this must be the prototype, so ignore

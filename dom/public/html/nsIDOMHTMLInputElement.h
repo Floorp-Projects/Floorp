@@ -179,8 +179,8 @@ public:
   NS_IMETHOD    SetUseMap(const nsString& aUseMap) { return _to SetUseMap(aUseMap); } \
   NS_IMETHOD    GetValue(nsString& aValue) { return _to GetValue(aValue); } \
   NS_IMETHOD    SetValue(const nsString& aValue) { return _to SetValue(aValue); } \
-  NS_IMETHOD    GetAutocomplete(PRInt32* aAutocomplete) { return _to GetAutocomplete(aAutocomplete); } \
-  NS_IMETHOD    SetAutocomplete(PRInt32 aAutocomplete) { return _to SetAutocomplete(aAutocomplete); } \
+  NS_IMETHOD    GetAutocomplete(nsString& aAutocomplete) { return _to GetAutocomplete(aAutocomplete); } \
+  NS_IMETHOD    SetAutocomplete(const nsString& aAutocomplete) { return _to SetAutocomplete(aAutocomplete); } \
   NS_IMETHOD    Blur() { return _to Blur(); }  \
   NS_IMETHOD    Focus() { return _to Focus(); }  \
   NS_IMETHOD    Select() { return _to Select(); }  \

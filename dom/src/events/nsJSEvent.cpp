@@ -25,6 +25,7 @@
 #include "nsIJSScriptObject.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
+#include "nsCOMPtr.h"
 #include "nsIPtr.h"
 #include "nsString.h"
 #include "nsIDOMNode.h"
@@ -66,14 +67,14 @@ GetEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   if (JSVAL_IS_INT(id)) {
     nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-    nsIScriptSecurityManager *secMan;
-    PRBool ok = PR_FALSE;
-    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    nsCOMPtr<nsIScriptSecurityManager> secMan;
+    if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
       return JS_FALSE;
     }
     switch(JSVAL_TO_INT(id)) {
       case EVENT_TYPE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "event.type", &ok);
         if (!ok) {
           //Need to throw error here
@@ -90,6 +91,7 @@ GetEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case EVENT_TARGET:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "event.target", &ok);
         if (!ok) {
           //Need to throw error here
@@ -107,6 +109,7 @@ GetEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case EVENT_CURRENTNODE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "event.currentnode", &ok);
         if (!ok) {
           //Need to throw error here
@@ -124,6 +127,7 @@ GetEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case EVENT_EVENTPHASE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "event.eventphase", &ok);
         if (!ok) {
           //Need to throw error here
@@ -141,7 +145,6 @@ GetEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       default:
         return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
     }
-    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
@@ -166,9 +169,8 @@ SetEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   if (JSVAL_IS_INT(id)) {
     nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-    nsIScriptSecurityManager *secMan;
-    PRBool ok = PR_FALSE;
-    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    nsCOMPtr<nsIScriptSecurityManager> secMan;
+    if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
       return JS_FALSE;
     }
     switch(JSVAL_TO_INT(id)) {
@@ -176,7 +178,6 @@ SetEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       default:
         return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
     }
-    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
@@ -227,8 +228,8 @@ EventPreventBubble(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
   *rval = JSVAL_NULL;
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-  nsIScriptSecurityManager *secMan;
-  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+  nsCOMPtr<nsIScriptSecurityManager> secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
     return JS_FALSE;
   }
   {
@@ -238,7 +239,6 @@ EventPreventBubble(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
       //Need to throw error here
       return JS_FALSE;
     }
-    NS_RELEASE(secMan);
   }
 
   // If there's no private data, this must be the prototype, so ignore
@@ -270,8 +270,8 @@ EventPreventCapture(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
   *rval = JSVAL_NULL;
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-  nsIScriptSecurityManager *secMan;
-  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+  nsCOMPtr<nsIScriptSecurityManager> secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
     return JS_FALSE;
   }
   {
@@ -281,7 +281,6 @@ EventPreventCapture(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
       //Need to throw error here
       return JS_FALSE;
     }
-    NS_RELEASE(secMan);
   }
 
   // If there's no private data, this must be the prototype, so ignore
@@ -313,8 +312,8 @@ EventPreventDefault(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
   *rval = JSVAL_NULL;
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-  nsIScriptSecurityManager *secMan;
-  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+  nsCOMPtr<nsIScriptSecurityManager> secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
     return JS_FALSE;
   }
   {
@@ -324,7 +323,6 @@ EventPreventDefault(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
       //Need to throw error here
       return JS_FALSE;
     }
-    NS_RELEASE(secMan);
   }
 
   // If there's no private data, this must be the prototype, so ignore

@@ -32,7 +32,6 @@ CPPSRCS =			\
 	nsJSHTMLBRElement.cpp \
 	nsJSHTMLBaseElement.cpp \
 	nsJSHTMLBaseFontElement.cpp \
-	nsJSHTMLBlockquoteElement.cpp \
 	nsJSHTMLBodyElement.cpp \
 	nsJSHTMLButtonElement.cpp \
 	nsJSHTMLCollection.cpp \

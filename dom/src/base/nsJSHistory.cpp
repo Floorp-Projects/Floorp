@@ -25,6 +25,7 @@
 #include "nsIJSScriptObject.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
+#include "nsCOMPtr.h"
 #include "nsIPtr.h"
 #include "nsString.h"
 #include "nsIDOMHistory.h"
@@ -63,14 +64,14 @@ GetHistoryProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   if (JSVAL_IS_INT(id)) {
     nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-    nsIScriptSecurityManager *secMan;
-    PRBool ok = PR_FALSE;
-    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    nsCOMPtr<nsIScriptSecurityManager> secMan;
+    if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
       return JS_FALSE;
     }
     switch(JSVAL_TO_INT(id)) {
       case HISTORY_LENGTH:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "history.length", &ok);
         if (!ok) {
           //Need to throw error here
@@ -87,6 +88,7 @@ GetHistoryProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HISTORY_CURRENT:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "history.current", &ok);
         if (!ok) {
           //Need to throw error here
@@ -103,6 +105,7 @@ GetHistoryProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HISTORY_PREVIOUS:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "history.previous", &ok);
         if (!ok) {
           //Need to throw error here
@@ -119,6 +122,7 @@ GetHistoryProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HISTORY_NEXT:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "history.next", &ok);
         if (!ok) {
           //Need to throw error here
@@ -136,7 +140,6 @@ GetHistoryProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       default:
         return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
     }
-    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
@@ -161,9 +164,8 @@ SetHistoryProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   if (JSVAL_IS_INT(id)) {
     nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-    nsIScriptSecurityManager *secMan;
-    PRBool ok = PR_FALSE;
-    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    nsCOMPtr<nsIScriptSecurityManager> secMan;
+    if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
       return JS_FALSE;
     }
     switch(JSVAL_TO_INT(id)) {
@@ -171,7 +173,6 @@ SetHistoryProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       default:
         return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
     }
-    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
@@ -222,8 +223,8 @@ HistoryBack(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   *rval = JSVAL_NULL;
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-  nsIScriptSecurityManager *secMan;
-  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+  nsCOMPtr<nsIScriptSecurityManager> secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
     return JS_FALSE;
   }
   {
@@ -233,7 +234,6 @@ HistoryBack(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
       //Need to throw error here
       return JS_FALSE;
     }
-    NS_RELEASE(secMan);
   }
 
   // If there's no private data, this must be the prototype, so ignore
@@ -265,8 +265,8 @@ HistoryForward(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
   *rval = JSVAL_NULL;
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-  nsIScriptSecurityManager *secMan;
-  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+  nsCOMPtr<nsIScriptSecurityManager> secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
     return JS_FALSE;
   }
   {
@@ -276,7 +276,6 @@ HistoryForward(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
       //Need to throw error here
       return JS_FALSE;
     }
-    NS_RELEASE(secMan);
   }
 
   // If there's no private data, this must be the prototype, so ignore
@@ -309,8 +308,8 @@ HistoryGo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   *rval = JSVAL_NULL;
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-  nsIScriptSecurityManager *secMan;
-  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+  nsCOMPtr<nsIScriptSecurityManager> secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
     return JS_FALSE;
   }
   {
@@ -320,7 +319,6 @@ HistoryGo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
       //Need to throw error here
       return JS_FALSE;
     }
-    NS_RELEASE(secMan);
   }
 
   // If there's no private data, this must be the prototype, so ignore

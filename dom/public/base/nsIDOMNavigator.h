@@ -23,6 +23,7 @@
 #include "nsISupports.h"
 #include "nsString.h"
 #include "nsIScriptContext.h"
+#include "jsapi.h"
 
 class nsIDOMPluginArray;
 class nsIDOMMimeTypeArray;
@@ -54,6 +55,10 @@ public:
   NS_IMETHOD    GetUserAgent(nsString& aUserAgent)=0;
 
   NS_IMETHOD    JavaEnabled(PRBool* aReturn)=0;
+
+  NS_IMETHOD    TaintEnabled(PRBool* aReturn)=0;
+
+  NS_IMETHOD    Preference(JSContext* cx, jsval* argv, PRUint32 argc, jsval* aReturn)=0;
 };
 
 
@@ -68,6 +73,8 @@ public:
   NS_IMETHOD    GetSecurityPolicy(nsString& aSecurityPolicy);  \
   NS_IMETHOD    GetUserAgent(nsString& aUserAgent);  \
   NS_IMETHOD    JavaEnabled(PRBool* aReturn);  \
+  NS_IMETHOD    TaintEnabled(PRBool* aReturn);  \
+  NS_IMETHOD    Preference(JSContext* cx, jsval* argv, PRUint32 argc, jsval* aReturn);  \
 
 
 
@@ -82,6 +89,8 @@ public:
   NS_IMETHOD    GetSecurityPolicy(nsString& aSecurityPolicy) { return _to GetSecurityPolicy(aSecurityPolicy); } \
   NS_IMETHOD    GetUserAgent(nsString& aUserAgent) { return _to GetUserAgent(aUserAgent); } \
   NS_IMETHOD    JavaEnabled(PRBool* aReturn) { return _to JavaEnabled(aReturn); }  \
+  NS_IMETHOD    TaintEnabled(PRBool* aReturn) { return _to TaintEnabled(aReturn); }  \
+  NS_IMETHOD    Preference(JSContext* cx, jsval* argv, PRUint32 argc, jsval* aReturn) { return _to Preference(cx, argv, argc, aReturn); }  \
 
 
 extern "C" NS_DOM nsresult NS_InitNavigatorClass(nsIScriptContext *aContext, void **aPrototype);

@@ -25,6 +25,7 @@
 #include "nsIJSScriptObject.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
+#include "nsCOMPtr.h"
 #include "nsIPtr.h"
 #include "nsString.h"
 #include "nsIDOMHTMLFormElement.h"
@@ -80,14 +81,14 @@ GetHTMLObjectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   if (JSVAL_IS_INT(id)) {
     nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-    nsIScriptSecurityManager *secMan;
-    PRBool ok = PR_FALSE;
-    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    nsCOMPtr<nsIScriptSecurityManager> secMan;
+    if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
       return JS_FALSE;
     }
     switch(JSVAL_TO_INT(id)) {
       case HTMLOBJECTELEMENT_FORM:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmlobjectelement.form", &ok);
         if (!ok) {
           //Need to throw error here
@@ -105,6 +106,7 @@ GetHTMLObjectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOBJECTELEMENT_CODE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmlobjectelement.code", &ok);
         if (!ok) {
           //Need to throw error here
@@ -121,6 +123,7 @@ GetHTMLObjectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOBJECTELEMENT_ALIGN:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmlobjectelement.align", &ok);
         if (!ok) {
           //Need to throw error here
@@ -137,6 +140,7 @@ GetHTMLObjectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOBJECTELEMENT_ARCHIVE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmlobjectelement.archive", &ok);
         if (!ok) {
           //Need to throw error here
@@ -153,6 +157,7 @@ GetHTMLObjectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOBJECTELEMENT_BORDER:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmlobjectelement.border", &ok);
         if (!ok) {
           //Need to throw error here
@@ -169,6 +174,7 @@ GetHTMLObjectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOBJECTELEMENT_CODEBASE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmlobjectelement.codebase", &ok);
         if (!ok) {
           //Need to throw error here
@@ -185,6 +191,7 @@ GetHTMLObjectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOBJECTELEMENT_CODETYPE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmlobjectelement.codetype", &ok);
         if (!ok) {
           //Need to throw error here
@@ -201,6 +208,7 @@ GetHTMLObjectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOBJECTELEMENT_DATA:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmlobjectelement.data", &ok);
         if (!ok) {
           //Need to throw error here
@@ -217,6 +225,7 @@ GetHTMLObjectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOBJECTELEMENT_DECLARE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmlobjectelement.declare", &ok);
         if (!ok) {
           //Need to throw error here
@@ -233,6 +242,7 @@ GetHTMLObjectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOBJECTELEMENT_HEIGHT:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmlobjectelement.height", &ok);
         if (!ok) {
           //Need to throw error here
@@ -249,6 +259,7 @@ GetHTMLObjectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOBJECTELEMENT_HSPACE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmlobjectelement.hspace", &ok);
         if (!ok) {
           //Need to throw error here
@@ -265,6 +276,7 @@ GetHTMLObjectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOBJECTELEMENT_NAME:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmlobjectelement.name", &ok);
         if (!ok) {
           //Need to throw error here
@@ -281,6 +293,7 @@ GetHTMLObjectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOBJECTELEMENT_STANDBY:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmlobjectelement.standby", &ok);
         if (!ok) {
           //Need to throw error here
@@ -297,6 +310,7 @@ GetHTMLObjectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOBJECTELEMENT_TABINDEX:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmlobjectelement.tabindex", &ok);
         if (!ok) {
           //Need to throw error here
@@ -313,6 +327,7 @@ GetHTMLObjectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOBJECTELEMENT_TYPE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmlobjectelement.type", &ok);
         if (!ok) {
           //Need to throw error here
@@ -329,6 +344,7 @@ GetHTMLObjectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOBJECTELEMENT_USEMAP:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmlobjectelement.usemap", &ok);
         if (!ok) {
           //Need to throw error here
@@ -345,6 +361,7 @@ GetHTMLObjectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOBJECTELEMENT_VSPACE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmlobjectelement.vspace", &ok);
         if (!ok) {
           //Need to throw error here
@@ -361,6 +378,7 @@ GetHTMLObjectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOBJECTELEMENT_WIDTH:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmlobjectelement.width", &ok);
         if (!ok) {
           //Need to throw error here
@@ -378,7 +396,6 @@ GetHTMLObjectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       default:
         return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
     }
-    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
@@ -403,14 +420,14 @@ SetHTMLObjectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   if (JSVAL_IS_INT(id)) {
     nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-    nsIScriptSecurityManager *secMan;
-    PRBool ok = PR_FALSE;
-    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    nsCOMPtr<nsIScriptSecurityManager> secMan;
+    if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
       return JS_FALSE;
     }
     switch(JSVAL_TO_INT(id)) {
       case HTMLOBJECTELEMENT_CODE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmlobjectelement.code", &ok);
         if (!ok) {
           //Need to throw error here
@@ -425,6 +442,7 @@ SetHTMLObjectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOBJECTELEMENT_ALIGN:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmlobjectelement.align", &ok);
         if (!ok) {
           //Need to throw error here
@@ -439,6 +457,7 @@ SetHTMLObjectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOBJECTELEMENT_ARCHIVE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmlobjectelement.archive", &ok);
         if (!ok) {
           //Need to throw error here
@@ -453,6 +472,7 @@ SetHTMLObjectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOBJECTELEMENT_BORDER:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmlobjectelement.border", &ok);
         if (!ok) {
           //Need to throw error here
@@ -467,6 +487,7 @@ SetHTMLObjectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOBJECTELEMENT_CODEBASE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmlobjectelement.codebase", &ok);
         if (!ok) {
           //Need to throw error here
@@ -481,6 +502,7 @@ SetHTMLObjectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOBJECTELEMENT_CODETYPE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmlobjectelement.codetype", &ok);
         if (!ok) {
           //Need to throw error here
@@ -495,6 +517,7 @@ SetHTMLObjectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOBJECTELEMENT_DATA:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmlobjectelement.data", &ok);
         if (!ok) {
           //Need to throw error here
@@ -509,6 +532,7 @@ SetHTMLObjectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOBJECTELEMENT_DECLARE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmlobjectelement.declare", &ok);
         if (!ok) {
           //Need to throw error here
@@ -525,6 +549,7 @@ SetHTMLObjectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOBJECTELEMENT_HEIGHT:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmlobjectelement.height", &ok);
         if (!ok) {
           //Need to throw error here
@@ -539,6 +564,7 @@ SetHTMLObjectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOBJECTELEMENT_HSPACE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmlobjectelement.hspace", &ok);
         if (!ok) {
           //Need to throw error here
@@ -553,6 +579,7 @@ SetHTMLObjectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOBJECTELEMENT_NAME:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmlobjectelement.name", &ok);
         if (!ok) {
           //Need to throw error here
@@ -567,6 +594,7 @@ SetHTMLObjectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOBJECTELEMENT_STANDBY:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmlobjectelement.standby", &ok);
         if (!ok) {
           //Need to throw error here
@@ -581,6 +609,7 @@ SetHTMLObjectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOBJECTELEMENT_TABINDEX:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmlobjectelement.tabindex", &ok);
         if (!ok) {
           //Need to throw error here
@@ -602,6 +631,7 @@ SetHTMLObjectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOBJECTELEMENT_TYPE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmlobjectelement.type", &ok);
         if (!ok) {
           //Need to throw error here
@@ -616,6 +646,7 @@ SetHTMLObjectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOBJECTELEMENT_USEMAP:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmlobjectelement.usemap", &ok);
         if (!ok) {
           //Need to throw error here
@@ -630,6 +661,7 @@ SetHTMLObjectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOBJECTELEMENT_VSPACE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmlobjectelement.vspace", &ok);
         if (!ok) {
           //Need to throw error here
@@ -644,6 +676,7 @@ SetHTMLObjectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOBJECTELEMENT_WIDTH:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmlobjectelement.width", &ok);
         if (!ok) {
           //Need to throw error here
@@ -659,7 +692,6 @@ SetHTMLObjectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       default:
         return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
     }
-    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);

@@ -25,6 +25,7 @@
 #include "nsIJSScriptObject.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
+#include "nsCOMPtr.h"
 #include "nsIPtr.h"
 #include "nsString.h"
 #include "nsIDOMNSHTMLFormElement.h"
@@ -78,15 +79,15 @@ GetHTMLFormElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   PRBool checkNamedItem = PR_TRUE;
   if (JSVAL_IS_INT(id)) {
     nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-    nsIScriptSecurityManager *secMan;
-    PRBool ok = PR_FALSE;
-    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    nsCOMPtr<nsIScriptSecurityManager> secMan;
+    if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
       return JS_FALSE;
     }
     checkNamedItem = PR_FALSE;
     switch(JSVAL_TO_INT(id)) {
       case HTMLFORMELEMENT_ELEMENTS:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmlformelement.elements", &ok);
         if (!ok) {
           //Need to throw error here
@@ -104,6 +105,7 @@ GetHTMLFormElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLFORMELEMENT_LENGTH:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmlformelement.length", &ok);
         if (!ok) {
           //Need to throw error here
@@ -120,6 +122,7 @@ GetHTMLFormElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLFORMELEMENT_NAME:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmlformelement.name", &ok);
         if (!ok) {
           //Need to throw error here
@@ -136,6 +139,7 @@ GetHTMLFormElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLFORMELEMENT_ACCEPTCHARSET:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmlformelement.acceptcharset", &ok);
         if (!ok) {
           //Need to throw error here
@@ -152,6 +156,7 @@ GetHTMLFormElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLFORMELEMENT_ACTION:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmlformelement.action", &ok);
         if (!ok) {
           //Need to throw error here
@@ -168,6 +173,7 @@ GetHTMLFormElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLFORMELEMENT_ENCTYPE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmlformelement.enctype", &ok);
         if (!ok) {
           //Need to throw error here
@@ -184,6 +190,7 @@ GetHTMLFormElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLFORMELEMENT_METHOD:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmlformelement.method", &ok);
         if (!ok) {
           //Need to throw error here
@@ -200,6 +207,7 @@ GetHTMLFormElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLFORMELEMENT_TARGET:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmlformelement.target", &ok);
         if (!ok) {
           //Need to throw error here
@@ -216,6 +224,7 @@ GetHTMLFormElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case NSHTMLFORMELEMENT_ENCODING:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "nshtmlformelement.encoding", &ok);
         if (!ok) {
           //Need to throw error here
@@ -320,15 +329,15 @@ SetHTMLFormElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   PRBool checkNamedItem = PR_TRUE;
   if (JSVAL_IS_INT(id)) {
     nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-    nsIScriptSecurityManager *secMan;
-    PRBool ok = PR_FALSE;
-    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    nsCOMPtr<nsIScriptSecurityManager> secMan;
+    if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
       return JS_FALSE;
     }
     checkNamedItem = PR_FALSE;
     switch(JSVAL_TO_INT(id)) {
       case HTMLFORMELEMENT_NAME:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmlformelement.name", &ok);
         if (!ok) {
           //Need to throw error here
@@ -343,6 +352,7 @@ SetHTMLFormElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLFORMELEMENT_ACCEPTCHARSET:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmlformelement.acceptcharset", &ok);
         if (!ok) {
           //Need to throw error here
@@ -357,6 +367,7 @@ SetHTMLFormElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLFORMELEMENT_ACTION:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmlformelement.action", &ok);
         if (!ok) {
           //Need to throw error here
@@ -371,6 +382,7 @@ SetHTMLFormElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLFORMELEMENT_ENCTYPE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmlformelement.enctype", &ok);
         if (!ok) {
           //Need to throw error here
@@ -385,6 +397,7 @@ SetHTMLFormElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLFORMELEMENT_METHOD:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmlformelement.method", &ok);
         if (!ok) {
           //Need to throw error here
@@ -399,6 +412,7 @@ SetHTMLFormElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLFORMELEMENT_TARGET:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmlformelement.target", &ok);
         if (!ok) {
           //Need to throw error here
@@ -414,7 +428,6 @@ SetHTMLFormElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       default:
         return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
     }
-    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
@@ -465,8 +478,8 @@ HTMLFormElementSubmit(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
   *rval = JSVAL_NULL;
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-  nsIScriptSecurityManager *secMan;
-  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+  nsCOMPtr<nsIScriptSecurityManager> secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
     return JS_FALSE;
   }
   {
@@ -476,7 +489,6 @@ HTMLFormElementSubmit(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
       //Need to throw error here
       return JS_FALSE;
     }
-    NS_RELEASE(secMan);
   }
 
   // If there's no private data, this must be the prototype, so ignore
@@ -508,8 +520,8 @@ HTMLFormElementReset(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
   *rval = JSVAL_NULL;
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-  nsIScriptSecurityManager *secMan;
-  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+  nsCOMPtr<nsIScriptSecurityManager> secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
     return JS_FALSE;
   }
   {
@@ -519,7 +531,6 @@ HTMLFormElementReset(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
       //Need to throw error here
       return JS_FALSE;
     }
-    NS_RELEASE(secMan);
   }
 
   // If there's no private data, this must be the prototype, so ignore
@@ -559,8 +570,8 @@ NSHTMLFormElementNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
   *rval = JSVAL_NULL;
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-  nsIScriptSecurityManager *secMan;
-  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+  nsCOMPtr<nsIScriptSecurityManager> secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
     return JS_FALSE;
   }
   {
@@ -570,7 +581,6 @@ NSHTMLFormElementNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
       //Need to throw error here
       return JS_FALSE;
     }
-    NS_RELEASE(secMan);
   }
 
   // If there's no private data, this must be the prototype, so ignore
@@ -616,8 +626,8 @@ NSHTMLFormElementItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
   *rval = JSVAL_NULL;
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-  nsIScriptSecurityManager *secMan;
-  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+  nsCOMPtr<nsIScriptSecurityManager> secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
     return JS_FALSE;
   }
   {
@@ -627,7 +637,6 @@ NSHTMLFormElementItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
       //Need to throw error here
       return JS_FALSE;
     }
-    NS_RELEASE(secMan);
   }
 
   // If there's no private data, this must be the prototype, so ignore

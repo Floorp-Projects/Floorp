@@ -8,7 +8,6 @@ nsIDOMHTMLAreaElement.h
 nsIDOMHTMLBRElement.h
 nsIDOMHTMLBaseElement.h
 nsIDOMHTMLBaseFontElement.h
-nsIDOMHTMLBlockquoteElement.h
 nsIDOMHTMLBodyElement.h
 nsIDOMHTMLButtonElement.h
 nsIDOMHTMLCollection.h

@@ -25,6 +25,7 @@
 #include "nsIJSScriptObject.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
+#include "nsCOMPtr.h"
 #include "nsIPtr.h"
 #include "nsString.h"
 #include "nsIDOMMimeType.h"
@@ -67,15 +68,15 @@ GetPluginProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   PRBool checkNamedItem = PR_TRUE;
   if (JSVAL_IS_INT(id)) {
     nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-    nsIScriptSecurityManager *secMan;
-    PRBool ok = PR_FALSE;
-    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    nsCOMPtr<nsIScriptSecurityManager> secMan;
+    if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
       return JS_FALSE;
     }
     checkNamedItem = PR_FALSE;
     switch(JSVAL_TO_INT(id)) {
       case PLUGIN_DESCRIPTION:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "plugin.description", &ok);
         if (!ok) {
           //Need to throw error here
@@ -92,6 +93,7 @@ GetPluginProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case PLUGIN_FILENAME:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "plugin.filename", &ok);
         if (!ok) {
           //Need to throw error here
@@ -108,6 +110,7 @@ GetPluginProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case PLUGIN_NAME:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "plugin.name", &ok);
         if (!ok) {
           //Need to throw error here
@@ -124,6 +127,7 @@ GetPluginProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case PLUGIN_LENGTH:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "plugin.length", &ok);
         if (!ok) {
           //Need to throw error here
@@ -201,9 +205,8 @@ SetPluginProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   PRBool checkNamedItem = PR_TRUE;
   if (JSVAL_IS_INT(id)) {
     nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-    nsIScriptSecurityManager *secMan;
-    PRBool ok = PR_FALSE;
-    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    nsCOMPtr<nsIScriptSecurityManager> secMan;
+    if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
       return JS_FALSE;
     }
     checkNamedItem = PR_FALSE;
@@ -212,7 +215,6 @@ SetPluginProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       default:
         return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
     }
-    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
@@ -265,8 +267,8 @@ PluginItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   *rval = JSVAL_NULL;
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-  nsIScriptSecurityManager *secMan;
-  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+  nsCOMPtr<nsIScriptSecurityManager> secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
     return JS_FALSE;
   }
   {
@@ -276,7 +278,6 @@ PluginItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
       //Need to throw error here
       return JS_FALSE;
     }
-    NS_RELEASE(secMan);
   }
 
   // If there's no private data, this must be the prototype, so ignore
@@ -319,8 +320,8 @@ PluginNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
   *rval = JSVAL_NULL;
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-  nsIScriptSecurityManager *secMan;
-  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+  nsCOMPtr<nsIScriptSecurityManager> secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
     return JS_FALSE;
   }
   {
@@ -330,7 +331,6 @@ PluginNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
       //Need to throw error here
       return JS_FALSE;
     }
-    NS_RELEASE(secMan);
   }
 
   // If there's no private data, this must be the prototype, so ignore

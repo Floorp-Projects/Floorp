@@ -25,6 +25,7 @@
 #include "nsIJSScriptObject.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
+#include "nsCOMPtr.h"
 #include "nsIPtr.h"
 #include "nsString.h"
 #include "nsIDOMHTMLHRElement.h"
@@ -63,14 +64,14 @@ GetHTMLHRElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   if (JSVAL_IS_INT(id)) {
     nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-    nsIScriptSecurityManager *secMan;
-    PRBool ok = PR_FALSE;
-    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    nsCOMPtr<nsIScriptSecurityManager> secMan;
+    if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
       return JS_FALSE;
     }
     switch(JSVAL_TO_INT(id)) {
       case HTMLHRELEMENT_ALIGN:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmlhrelement.align", &ok);
         if (!ok) {
           //Need to throw error here
@@ -87,6 +88,7 @@ GetHTMLHRElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLHRELEMENT_NOSHADE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmlhrelement.noshade", &ok);
         if (!ok) {
           //Need to throw error here
@@ -103,6 +105,7 @@ GetHTMLHRElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLHRELEMENT_SIZE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmlhrelement.size", &ok);
         if (!ok) {
           //Need to throw error here
@@ -119,6 +122,7 @@ GetHTMLHRElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLHRELEMENT_WIDTH:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmlhrelement.width", &ok);
         if (!ok) {
           //Need to throw error here
@@ -136,7 +140,6 @@ GetHTMLHRElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       default:
         return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
     }
-    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
@@ -161,14 +164,14 @@ SetHTMLHRElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   if (JSVAL_IS_INT(id)) {
     nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-    nsIScriptSecurityManager *secMan;
-    PRBool ok = PR_FALSE;
-    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    nsCOMPtr<nsIScriptSecurityManager> secMan;
+    if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
       return JS_FALSE;
     }
     switch(JSVAL_TO_INT(id)) {
       case HTMLHRELEMENT_ALIGN:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmlhrelement.align", &ok);
         if (!ok) {
           //Need to throw error here
@@ -183,6 +186,7 @@ SetHTMLHRElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLHRELEMENT_NOSHADE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmlhrelement.noshade", &ok);
         if (!ok) {
           //Need to throw error here
@@ -199,6 +203,7 @@ SetHTMLHRElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLHRELEMENT_SIZE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmlhrelement.size", &ok);
         if (!ok) {
           //Need to throw error here
@@ -213,6 +218,7 @@ SetHTMLHRElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLHRELEMENT_WIDTH:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmlhrelement.width", &ok);
         if (!ok) {
           //Need to throw error here
@@ -228,7 +234,6 @@ SetHTMLHRElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       default:
         return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
     }
-    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);

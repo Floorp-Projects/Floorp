@@ -25,6 +25,7 @@
 #include "nsIJSScriptObject.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
+#include "nsCOMPtr.h"
 #include "nsIPtr.h"
 #include "nsString.h"
 #include "nsIDOMHTMLTableColElement.h"
@@ -65,14 +66,14 @@ GetHTMLTableColElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
 
   if (JSVAL_IS_INT(id)) {
     nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-    nsIScriptSecurityManager *secMan;
-    PRBool ok = PR_FALSE;
-    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    nsCOMPtr<nsIScriptSecurityManager> secMan;
+    if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
       return JS_FALSE;
     }
     switch(JSVAL_TO_INT(id)) {
       case HTMLTABLECOLELEMENT_ALIGN:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmltablecolelement.align", &ok);
         if (!ok) {
           //Need to throw error here
@@ -89,6 +90,7 @@ GetHTMLTableColElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       }
       case HTMLTABLECOLELEMENT_CH:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmltablecolelement.ch", &ok);
         if (!ok) {
           //Need to throw error here
@@ -105,6 +107,7 @@ GetHTMLTableColElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       }
       case HTMLTABLECOLELEMENT_CHOFF:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmltablecolelement.choff", &ok);
         if (!ok) {
           //Need to throw error here
@@ -121,6 +124,7 @@ GetHTMLTableColElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       }
       case HTMLTABLECOLELEMENT_SPAN:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmltablecolelement.span", &ok);
         if (!ok) {
           //Need to throw error here
@@ -137,6 +141,7 @@ GetHTMLTableColElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       }
       case HTMLTABLECOLELEMENT_VALIGN:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmltablecolelement.valign", &ok);
         if (!ok) {
           //Need to throw error here
@@ -153,6 +158,7 @@ GetHTMLTableColElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       }
       case HTMLTABLECOLELEMENT_WIDTH:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmltablecolelement.width", &ok);
         if (!ok) {
           //Need to throw error here
@@ -170,7 +176,6 @@ GetHTMLTableColElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       default:
         return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
     }
-    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
@@ -195,14 +200,14 @@ SetHTMLTableColElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
 
   if (JSVAL_IS_INT(id)) {
     nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-    nsIScriptSecurityManager *secMan;
-    PRBool ok = PR_FALSE;
-    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    nsCOMPtr<nsIScriptSecurityManager> secMan;
+    if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
       return JS_FALSE;
     }
     switch(JSVAL_TO_INT(id)) {
       case HTMLTABLECOLELEMENT_ALIGN:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmltablecolelement.align", &ok);
         if (!ok) {
           //Need to throw error here
@@ -217,6 +222,7 @@ SetHTMLTableColElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       }
       case HTMLTABLECOLELEMENT_CH:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmltablecolelement.ch", &ok);
         if (!ok) {
           //Need to throw error here
@@ -231,6 +237,7 @@ SetHTMLTableColElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       }
       case HTMLTABLECOLELEMENT_CHOFF:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmltablecolelement.choff", &ok);
         if (!ok) {
           //Need to throw error here
@@ -245,6 +252,7 @@ SetHTMLTableColElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       }
       case HTMLTABLECOLELEMENT_SPAN:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmltablecolelement.span", &ok);
         if (!ok) {
           //Need to throw error here
@@ -266,6 +274,7 @@ SetHTMLTableColElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       }
       case HTMLTABLECOLELEMENT_VALIGN:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmltablecolelement.valign", &ok);
         if (!ok) {
           //Need to throw error here
@@ -280,6 +289,7 @@ SetHTMLTableColElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       }
       case HTMLTABLECOLELEMENT_WIDTH:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmltablecolelement.width", &ok);
         if (!ok) {
           //Need to throw error here
@@ -295,7 +305,6 @@ SetHTMLTableColElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       default:
         return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
     }
-    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
