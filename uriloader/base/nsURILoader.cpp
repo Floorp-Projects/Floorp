@@ -607,6 +607,19 @@ NS_IMETHODIMP nsURILoader::OpenURIVia(nsIChannel * aChannel,
   nsCOMPtr<nsISupports> loadCookie;
   SetupLoadCookie(retargetedWindowContext, getter_AddRefs(loadCookie));
 
+    // every time we do a load, we should reset the progress listener on it...
+  if (loadCookie)
+  {
+    // bind the web progress listener (if there is one) to the web progress
+    // instance of the doc loader..
+    nsCOMPtr<nsIDocumentLoader> docLoader (do_GetInterface(loadCookie));
+    nsCOMPtr<nsIWebProgress> webProgress (do_QueryInterface(docLoader));
+    nsCOMPtr<nsIWebProgressListener> webProgressListener (do_GetInterface(retargetedWindowContext));
+    if (webProgress && webProgressListener)
+      webProgress->AddProgressListener(webProgressListener);
+  }
+
+
   loader->Init(retargetedWindowContext, aOriginalWindowContext);    // Extra Info
 
   // now instruct the loader to go ahead and open the url
@@ -684,18 +697,6 @@ nsresult nsURILoader::SetupLoadCookie(nsISupports * aWindowContext, nsISupports 
     } // if we don't have  a load cookie already
   } // if we have a cntListener
 
-  // every time we do a load, we should reset the progress listener on it...
-  if (loadCookie)
-  {
-    // bind the web progress listener (if there is one) to the web progress
-    // instance of the doc loader..
-    nsCOMPtr<nsIDocumentLoader> docLoader (do_GetInterface(loadCookie));
-    nsCOMPtr<nsIWebProgress> webProgress (do_QueryInterface(docLoader));
-    nsCOMPtr<nsIWebProgressListener> webProgressListener (do_GetInterface(aWindowContext));
-    if (webProgress && webProgressListener)
-      webProgress->AddProgressListener(webProgressListener);
-  }
-  
   *aLoadCookie = loadCookie;
   NS_IF_ADDREF(*aLoadCookie);
 

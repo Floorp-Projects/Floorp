@@ -106,10 +106,10 @@ interface nsIURILoader : nsISupports
 
 
     /* these are nsURILoadCommand */
-	const long viewNormal = 0;
+   const long viewNormal = 0;
    const long viewUserClick = 1;
-	const long viewNewWindow = 2;
-	const long viewNormalBackground = 3;
+   const long viewNewWindow = 2;
+   const long viewNormalBackground = 3;
 
   /* mscott -> I'm going to move this out into a separate private interface
    */
