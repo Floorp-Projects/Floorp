@@ -35,20 +35,22 @@ nsMailDatabase::~nsMailDatabase()
 
 
 
-/* static */ nsresult	nsMailDatabase::Open(nsFilePath &dbName, PRBool create, nsMailDatabase** pMessageDB,
+/* static */ nsresult	nsMailDatabase::Open(nsFilePath &folderName, PRBool create, nsMailDatabase** pMessageDB,
                                              PRBool upgrading /*=PR_FALSE*/)
 {
 	nsMailDatabase	*mailDB;
-	int				statResult;
-	struct stat st;
+	PRBool			summaryFileExists;
+	struct stat		st;
 	PRBool			newFile = PR_FALSE;
-	nsLocalFolderSummarySpec	summarySpec(dbName);
+	nsLocalFolderSummarySpec	summarySpec(folderName);
 
 	nsDBFolderInfo	*folderInfo = NULL;
 
 	*pMessageDB = NULL;
 
-	mailDB = (nsMailDatabase *) FindInCache(dbName);
+	nsFilePath dbPath(summarySpec);
+
+	mailDB = (nsMailDatabase *) FindInCache(dbPath);
 	if (mailDB)
 	{
 		*pMessageDB = mailDB;
@@ -57,12 +59,10 @@ nsMailDatabase::~nsMailDatabase()
 	}
 
 	// if the old summary doesn't exist, we're creating a new one.
-	if (stat ((const char *) summarySpec, &st) && create)
+	if (!summarySpec.Exists() && create)
 		newFile = PR_TRUE;
 
-	nsFilePath dbPath(summarySpec);
-
-	mailDB = new nsMailDatabase(dbPath);
+	mailDB = new nsMailDatabase(folderName);
 
 	if (!mailDB)
 		return NS_ERROR_OUT_OF_MEMORY;
@@ -70,7 +70,15 @@ nsMailDatabase::~nsMailDatabase()
 	// stat file before we open the db, because if we've latered
 	// any messages, handling latered will change time stamp on
 	// folder file.
-	statResult = stat ((const char *) summarySpec, &st);
+	summaryFileExists = summarySpec.Exists();
+
+	char	*nativeDBFileName = nsCRT::strdup((const char *) summarySpec);
+
+#ifdef XP_PC
+	UnixToNative(nativeDBFileName);
+#endif
+	stat (nativeDBFileName, &st);
+	PR_FREEIF(nativeDBFileName);
 
 	nsresult err = mailDB->OpenMDB((const char *) summarySpec, create);
 
@@ -86,7 +94,7 @@ nsMailDatabase::~nsMailDatabase()
 			// if opening existing file, make sure summary file is up to date.
 			// if caller is upgrading, don't return NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE so the caller
 			// can pull out the transfer info for the new db.
-			if (!newFile && !statResult && !upgrading)
+			if (!newFile && summaryFileExists && !upgrading)
 			{
 				PRInt32 numNewMessages;
 
@@ -118,12 +126,14 @@ nsMailDatabase::~nsMailDatabase()
 		{
 			*pMessageDB = NULL;
 			delete mailDB;
+			mailDB = NULL;
 		}
 	}
 	if (err == NS_OK || err == NS_MSG_ERROR_FOLDER_SUMMARY_MISSING)
 	{
 		*pMessageDB = mailDB;
-		GetDBCache()->AppendElement(mailDB);
+		if (mailDB)
+			GetDBCache()->AppendElement(mailDB);
 //		if (err == NS_OK)
 //			mailDB->HandleLatered();
 
@@ -317,7 +327,7 @@ void nsMailDatabase::UpdateFolderFlag(nsMsgHdr *mailHdr, PRBool bSet,
 	nsresult ret = NS_OK;
 	struct stat st;
 
-	if (stat(m_dbName, &st)) 
+	if (stat(m_folderName, &st)) 
 		return NS_MSG_ERROR_FOLDER_MISSING;
 
 	if (valid)

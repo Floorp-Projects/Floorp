@@ -39,7 +39,7 @@ class nsMailDatabase : public nsMsgDatabase
 public:
 			nsMailDatabase(nsFilePath& folder);
 	virtual ~nsMailDatabase();
-	static nsresult			Open(nsFilePath &dbName, PRBool create, nsMailDatabase** pMessageDB,
+	static nsresult			Open(nsFilePath &folderName, PRBool create, nsMailDatabase** pMessageDB,
 									PRBool upgrading = PR_FALSE);
 
 	static  nsresult		CloneInvalidDBInfoIntoNewDB(nsFilePath &pathName, nsMailDatabase** pMailDB);

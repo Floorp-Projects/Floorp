@@ -139,10 +139,10 @@ nsresult nsDBFolderInfo::AddToNewMDB()
 		folderInfoTableOID.mOid_Id = 1;
 		folderInfoTableOID.mOid_Scope = m_rowScopeToken;
 
-		m_mdbTable->BecomeContent(m_mdb->GetEnv(), &folderInfoTableOID);
+//		m_mdbTable->BecomeContent(m_mdb->GetEnv(), &folderInfoTableOID);
 
 		// create the singleton row for the dbFolderInfo.
-		err  = store->NewRowWithOid(m_mdb->GetEnv(), m_rowScopeToken,
+		err  = store->NewRowWithOid(m_mdb->GetEnv(),
 			&gDBFolderInfoOID, &m_mdbRow);
 
 		// add the row to the singleton table.
@@ -217,6 +217,7 @@ nsresult nsDBFolderInfo::InitMDBInfo()
 		store->StringToToken(env,  kUnreadPendingMessagesColumnName, &m_unreadPendingMessagesColumnToken);
 		store->StringToToken(env,  kExpiredMarkColumnName, &m_expiredMarkColumnToken);
 		store->StringToToken(env,  kVersionColumnName, &m_versionColumnToken);
+		store->StringToToken(env,  kNumVisibleMessagesColumnName, &m_numVisibleMessagesColumnToken);
 		m_mdbTokensInitialized  = PR_TRUE;
 	}
 	return ret;

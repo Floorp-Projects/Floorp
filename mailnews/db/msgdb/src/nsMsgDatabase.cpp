@@ -290,12 +290,55 @@ extern nsIMdbFactory *NS_NewIMdbFactory();
 	static nsIMdbFactory *gMDBFactory = NULL;
 	if (!gMDBFactory)
 	{
+//		gMDBFactory = new nsIMdbFactory;
 		// ### hook up class factory code when it's working
-		gMDBFactory = NS_NewIMdbFactory(); //new nsIMdbFactory;
+		gMDBFactory = MakeMdbFactory(); //new nsIMdbFactory;
 	}
 	return gMDBFactory;
 }
 
+#ifdef XP_PC
+// this code is stolen from nsFileSpecWin. Since MDB requires a native path, for 
+// the time being, we'll just take the Unix/Canonical form and munge it
+void nsMsgDatabase::UnixToNative(char*& ioPath)
+// This just does string manipulation.  It doesn't check reality, or canonify, or
+// anything
+//----------------------------------------------------------------------------------------
+{
+	// Allow for relative or absolute.  We can do this in place, because the
+	// native path is never longer.
+	
+	if (!ioPath || !*ioPath)
+		return;
+		
+	char* src = ioPath;
+	if (*ioPath == '/')
+    {
+      // Strip initial slash for an absolute path
+      src++;
+    }
+		
+	// Convert the vertical slash to a colon
+	char* cp = src + 1;
+	
+	// If it was an absolute path, check for the drive letter
+	if (*ioPath == '/' && strstr(cp, "|/") == cp)
+    *cp = ':';
+	
+	// Convert '/' to '\'.
+	while (*++cp)
+    {
+      if (*cp == '/')
+        *cp = '\\';
+    }
+
+	if (*ioPath == '/') {
+    for (cp = ioPath; *cp; ++cp)
+      *cp = *(cp + 1);
+  }
+}
+
+#endif /* XP_PC */
 // Open the MDB database synchronously. If successful, this routine
 // will set up the m_mdbStore and m_mdbEnv of the database object 
 // so other database calls can work.
@@ -310,12 +353,16 @@ nsresult nsMsgDatabase::OpenMDB(const char *dbName, PRBool create)
 		{
 			nsIMdbThumb *thumb;
 			struct stat st;
+			char	*nativeFileName = nsCRT::strdup(dbName);
 
 			m_dbName = dbName;
-			if (stat(dbName, &st)) 
+#ifdef XP_PC
+			UnixToNative(nativeFileName);
+#endif
+			if (stat(nativeFileName, &st)) 
 				ret = NS_MSG_ERROR_FOLDER_SUMMARY_MISSING;
 			else
-				ret = myMDBFactory->OpenFileStore(m_mdbEnv, NULL, dbName, NULL, /* const mdbOpenPolicy* inOpenPolicy */
+				ret = myMDBFactory->OpenFileStore(m_mdbEnv, NULL, nativeFileName, NULL, /* const mdbOpenPolicy* inOpenPolicy */
 				&thumb); 
 			if (NS_SUCCEEDED(ret))
 			{
@@ -340,10 +387,17 @@ nsresult nsMsgDatabase::OpenMDB(const char *dbName, PRBool create)
 			}
 			else if (create)	// ### need error code saying why open file store failed
 			{
-				ret = myMDBFactory->CreateNewFileStore(m_mdbEnv, NULL, dbName, NULL, &m_mdbStore);
+				mdbOpenPolicy inOpenPolicy;
+
+				inOpenPolicy.mOpenPolicy_ScopePlan.mScopeStringSet_Count = 0;
+				inOpenPolicy.mOpenPolicy_MinMemory = 0;
+				inOpenPolicy.mOpenPolicy_MaxLazy = 0;
+
+				ret = myMDBFactory->CreateNewFileStore(m_mdbEnv, NULL, dbName, &inOpenPolicy, &m_mdbStore);
 				if (ret == NS_OK)
 					ret = InitNewDB();
 			}
+			PR_FREEIF(nativeFileName);
 		}
 	}
 	return ret;
@@ -469,7 +523,7 @@ nsresult nsMsgDatabase::InitNewDB()
 			// create the unique table for the dbFolderInfo.
 			mdb_err err = store->NewTable(GetEnv(), m_hdrRowScopeToken, 
 				m_hdrTableKindToken, PR_FALSE, &m_mdbAllMsgHeadersTable);
-			m_mdbAllMsgHeadersTable->BecomeContent(GetEnv(), &gAllMsgHdrsTableOID);
+//			m_mdbAllMsgHeadersTable->BecomeContent(GetEnv(), &gAllMsgHdrsTableOID);
 			m_dbFolderInfo = dbFolderInfo;
 
 		}
@@ -1252,7 +1306,7 @@ nsresult nsMsgDatabase::CreateNewHdr(nsMsgKey key, nsMsgHdr **pnewHdr)
 	allMsgHdrsTableOID.mOid_Scope = m_hdrRowScopeToken;
 	allMsgHdrsTableOID.mOid_Id = key;
 
-	err  = GetStore()->NewRowWithOid(GetEnv(), m_hdrRowScopeToken,
+	err  = GetStore()->NewRowWithOid(GetEnv(),
 		&allMsgHdrsTableOID, &hdrRow);
 	if (err == NS_OK)
 	{
@@ -1298,7 +1352,7 @@ nsresult nsMsgDatabase::CreateNewHdrAndAddToDB(PRBool *newThread, MessageHdrStru
 	allMsgHdrsTableOID.mOid_Scope = m_hdrRowScopeToken;
 	allMsgHdrsTableOID.mOid_Id = hdrStruct->m_messageKey;
 
-	err  = GetStore()->NewRowWithOid(GetEnv(), m_hdrRowScopeToken,
+	err  = GetStore()->NewRowWithOid(GetEnv(), 
 		&allMsgHdrsTableOID, &hdrRow);
 
 	// add the row to the singleton table.

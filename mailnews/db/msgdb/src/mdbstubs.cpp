@@ -8,6 +8,11 @@ nsIMdbFactory *NS_NewIMdbFactory()
 	return new nsIMdbFactory;
 }
 
+nsIMdbFactory *MakeMdbFactory()
+{
+	return NS_NewIMdbFactory();
+}
+
 mdb_err	   nsIMdbFactory::ThumbToOpenStore( // redeem completed thumb from OpenFileStore()
     nsIMdbEnv* ev, // context
     nsIMdbThumb* ioThumb, // thumb from OpenFileStore() with done status
@@ -205,6 +210,8 @@ mdb_err nsIMdbStore::NewTable( // make one new table of specific type
 
 {
   *acqTable = new nsIMdbTable(this, inTableKind);
+  (*acqTable)->m_Oid.mOid_Id  = 1;
+  (*acqTable)->m_Oid.mOid_Scope = inRowScope;
   m_tables.AppendElement(*acqTable);
   return 0;
 }
@@ -436,7 +443,6 @@ mdb_err nsIMdbTable::CutRow  ( // make sure the row with inOid is not a member
 }
 
 mdb_err nsIMdbStore::NewRowWithOid (nsIMdbEnv* ev, // new row w/ caller assigned oid
-    mdb_scope inRowScope,   // row scope for row ids
     const mdbOid* inOid,   // caller assigned oid
     nsIMdbRow** acqRow) 
 {

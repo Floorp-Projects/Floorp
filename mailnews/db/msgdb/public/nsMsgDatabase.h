@@ -248,6 +248,9 @@ protected:
 	static int		FindInCache(nsMsgDatabase* pMessageDB);
 			PRBool	MatchDbName(nsFilePath &dbName);	// returns TRUE if they match
 
+#ifdef XP_PC	// this should go away when we can provide our own file stream to MDB/Mork
+	static void		UnixToNative(char*& ioPath);
+#endif
 	virtual nsresult SetKeyFlag(nsMsgKey key, PRBool set, PRInt32 flag,
 							  nsIDBChangeListener *instigator = NULL);
 	virtual PRBool	SetHdrFlag(nsMsgHdr *, PRBool bSet, MsgFlags flag);
