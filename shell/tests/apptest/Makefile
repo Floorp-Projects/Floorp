@@ -29,14 +29,14 @@ DIRS	=
 
 OBJS	= $(CPPSRCS:.cpp=.o)
 
-EX_LIBS = \
+EX_LIBS = $(DIST)/lib/libshell_s.a \
 	$(DIST)/lib/libxpcom.a	\
 	$(DIST)/lib/libreg.a	\
 	$(DIST)/lib/libraptorbase.a	\
 	$(DIST)/lib/libplc21.a	\
 	$(DIST)/lib/libplds21.a	\
 	$(DIST)/lib/libnspr21.a	\
-	$(DIST)/lib/libshell_s.a	\
+	$(DIST)/lib/libshell.a	\
 	$(NULL)
 
 PROGS	= $(addprefix $(OBJDIR)/, $(CPPSRCS:.cpp=))

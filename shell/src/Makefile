@@ -21,7 +21,8 @@ DIRS = unix
 
 MODULE=shell
 
-LIBRARY_NAME = shell_s
+#LIBRARY_NAME = shell_s
+LIBRARY_NAME = shell
 
 DEFINES = -D_IMPL_NS_SHELL
 
@@ -36,13 +37,11 @@ EXPORTS =				\
 CPPSRCS=				\
  nsApplicationManager.cpp			\
  nsShellInstance.cpp			\
- unix/main.cpp \
  $(NULL)
 
 CPP_OBJS=				\
  ./$(OBJDIR)/nsApplicationManager.o		\
  ./$(OBJDIR)/nsShellInstance.o		\
- ./$(OBJDIR)/main.o		\
  $(NULL)
 
 include $(DEPTH)/config/config.mk

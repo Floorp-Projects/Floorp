@@ -17,9 +17,9 @@
 
 DEPTH = ../../..
 
-MODULE=shel
+MODULE=shell
 
-LIBRARY_NAME = shellentry_s
+LIBRARY_NAME = shell_s
 
 DEFINES = -D_IMPL_NS_SHELL
 
