@@ -18,7 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
- *  David Baron <dbaron@fas.harvard.edu> (ported to
+ *  David Baron <dbaron@dbaron.org> (ported to
  *     gcc 3/sparc-sun-solaris from gcc 2.x/sparc-sun-solaris)
  */
 

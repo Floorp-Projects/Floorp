@@ -25,7 +25,7 @@
  *   Quy Tonthat <quy@igelaus.com.au>
  *   B.J. Rossiter <bj@igelaus.com.au>
  *   Tony Tsui <tony@igelaus.com.au>
- *   L. David Baron <dbaron@fas.harvard.edu>
+ *   L. David Baron <dbaron@dbaron.org>
  *   Tim Copperfield <timecop@network.email.ne.jp>
  *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
  *
