@@ -3789,34 +3789,9 @@ PRBool IsValidLink(nsIContent *aContent,nsString &aHREF)
   nsCOMPtr<nsIDOMHTMLAreaElement> area;
   nsCOMPtr<nsIDOMHTMLLinkElement> link;
 
-    // is it an XLink?
-  if ((bIsXLink = IsSimpleXlink(aContent,aHREF))) {
-    // It's an XLink. Resolve it relative to its document.
-    nsCOMPtr<nsIURI> baseURI = nsnull;
-    nsCOMPtr<nsIHTMLContent> htmlContent = do_QueryInterface(aContent);
-    if (htmlContent) {
-      // XXX why do this? will nsIHTMLContent's
-      // GetBaseURL() may return something different
-      // than the URL of the document it lives in?
-      htmlContent->GetBaseURL(*getter_AddRefs(baseURI));
-    }
-    else {
-      nsCOMPtr<nsIDocument> doc;
-      aContent->GetDocument(*getter_AddRefs(doc));
-      if (doc) {
-        doc->GetBaseURL(*getter_AddRefs(baseURI));
-      }
-    }
-
-    nsAutoString linkURI;
-    (void) NS_MakeAbsoluteURI(linkURI, aHREF, baseURI, CSSStyleSheetInner::gIOService);
-    aHREF = linkURI;
-    result = PR_TRUE;
-  } // if xlink
-
-  else if ((anchor = do_QueryInterface(aContent)) ||
-           (area = do_QueryInterface(aContent)) ||
-           (link = do_QueryInterface(aContent))) {
+  if ((anchor = do_QueryInterface(aContent)) ||
+      (area = do_QueryInterface(aContent)) ||
+      (link = do_QueryInterface(aContent))) {
     // if it is an anchor, area or link then check the href attribute
     nsresult attrState = 0;
     // make sure this anchor has a link even if we are not testing state
@@ -3841,6 +3816,30 @@ PRBool IsValidLink(nsIContent *aContent,nsString &aHREF)
       }
     }
   } // if anchor, area, link 
+
+  else if ((bIsXLink = IsSimpleXlink(aContent,aHREF))) {
+    // It's an XLink. Resolve it relative to its document.
+    nsCOMPtr<nsIURI> baseURI = nsnull;
+    nsCOMPtr<nsIHTMLContent> htmlContent = do_QueryInterface(aContent);
+    if (htmlContent) {
+      // XXX why do this? will nsIHTMLContent's
+      // GetBaseURL() may return something different
+      // than the URL of the document it lives in?
+      htmlContent->GetBaseURL(*getter_AddRefs(baseURI));
+    }
+    else {
+      nsCOMPtr<nsIDocument> doc;
+      aContent->GetDocument(*getter_AddRefs(doc));
+      if (doc) {
+        doc->GetBaseURL(*getter_AddRefs(baseURI));
+      }
+    }
+
+    nsAutoString linkURI;
+    (void) NS_MakeAbsoluteURI(linkURI, aHREF, baseURI, CSSStyleSheetInner::gIOService);
+    aHREF = linkURI;
+    result = PR_TRUE;
+  } // if xlink
 
   return result;
 }
