@@ -76,9 +76,10 @@ Contributor(s):
         <menupopup>
           <menuitem value="1" actionvalueindex="0" label="&moveToFolder.label;"/>
           <menuitem value="2" actionvalueindex="1" label="&changePriority.label;"/>
-          <menuitem value="3" actionvalueindex="2" label="&delete.label;"/>
-          <menuitem value="4" actionvalueindex="2" label="&markRead.label;"/>
-          <menuitem value="7" actionvalueindex="2" label="&markFlagged.label;"/>
+          <menuitem value="3" actionvalueindex="3" label="&delete.label;"/>
+          <menuitem value="4" actionvalueindex="3" label="&markRead.label;"/>
+          <menuitem value="7" actionvalueindex="3" label="&markFlagged.label;"/>
+          <menuitem value="8" actionvalueindex="2" label="&label.label;"/>
         </menupopup>
       </menulist>
       <!-- JS stuff depends on this deck being present, don't remove! -->
@@ -92,6 +93,16 @@ Contributor(s):
             <menuitem value="4" label="&normalPriorityCmd.label;"/>
             <menuitem value="3" label="&lowPriorityCmd.label;"/>
             <menuitem value="2" label="&lowestPriorityCmd.label;"/>
+          </menupopup>
+        </menulist>
+        <menulist id="actionValueLabel">
+          <menupopup>
+            <!-- see MailNewsTypes2.idl -->
+            <menuitem value="1" label="&firstLabelCmd.label;"/>
+            <menuitem value="2" label="&secondLabelCmd.label;"/>
+            <menuitem value="3" label="&thirdLabelCmd.label;"/>
+            <menuitem value="4" label="&fourthLabelCmd.label;"/>
+            <menuitem value="5" label="&fifthLabelCmd.label;"/>
           </menupopup>
         </menulist>
         <text id="actionValueNone"/>

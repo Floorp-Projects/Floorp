@@ -47,6 +47,7 @@ var gActionElement;
 var gActionTargetElement;
 var gActionValueDeck;
 var gActionPriority;
+var gActionLabel;
 var gFilterBundle;
 
 var nsMsgSearchScope = Components.interfaces.nsMsgSearchScope;
@@ -163,6 +164,7 @@ function initializeFilterWidgets()
     gActionTargetElement = document.getElementById("actionTargetFolder");
     gActionValueDeck = document.getElementById("actionValueDeck");
     gActionPriority = document.getElementById("actionValuePriority");
+    gActionLabel = document.getElementById("actionValueLabel");
 }
 
 function initializeDialog(filter)
@@ -189,6 +191,16 @@ function initializeDialog(filter)
             gActionPriority.selectedItem = selectedPriority;
         }
     }
+    else if (filter.action == nsMsgFilterAction.Label) {
+      var selectedLabel;
+      // initialize label
+      selectedLabel = gActionLabel.getElementsByAttribute("value", filter.actionLabel);
+        if (selectedLabel && selectedLabel.length > 0) {
+            selectedLabel = selectedLabel[0];
+            gActionLabel.selectedItem = selectedLabel;
+        }
+    }
+
 
 
     var scope = getScope(filter);
@@ -235,6 +247,13 @@ function saveFilter() {
         }
     }
 
+    else if (action == nsMsgFilterAction.Label) {
+        if (!gActionLabel.selectedItem) {
+            str = gFilterBundle.getString("mustSelectLabel");
+            window.alert(str);
+            return false;
+        }
+    }
     // this must happen after everything has
     if (!gFilter) {
         gFilter = gFilterList.createFilter(gFilterNameElement.value);
@@ -250,6 +269,8 @@ function saveFilter() {
         gFilter.actionTargetFolderUri = targetUri;
     else if (action == nsMsgFilterAction.ChangePriority)
         gFilter.actionPriority = gActionPriority.selectedItem.getAttribute("value");
+    else if (action == nsMsgFilterAction.Label)
+        gFilter.actionLabel = gActionLabel.selectedItem.getAttribute("value");
 
     saveSearchTerms(gFilter.searchTerms, gFilter);
 

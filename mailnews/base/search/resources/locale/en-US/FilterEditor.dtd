@@ -20,6 +20,7 @@
 <!ENTITY delete.label "Delete the message">
 <!ENTITY markRead.label "Mark the message as read">
 <!ENTITY markFlagged.label "Flag the message">
+<!ENTITY label.label "Label the message header">
 <!ENTITY ignoreThread.label "Ignore thread">
 <!ENTITY watchThread.label "Watch thread">
 <!ENTITY filterName.label "Filter name:">
@@ -29,6 +30,12 @@
 <!ENTITY normalPriorityCmd.label "normal">
 <!ENTITY highPriorityCmd.label "high">
 <!ENTITY highestPriorityCmd.label "highest">
+
+<!ENTITY firstLabelCmd.label "Important">
+<!ENTITY secondLabelCmd.label "Work">
+<!ENTITY thirdLabelCmd.label "To Do">
+<!ENTITY fourthLabelCmd.label "Personal">
+<!ENTITY fifthLabelCmd.label "Later">
 
 <!ENTITY conditionDesc.label "For incoming messages that match:">
 <!ENTITY filterActionDesc.label "Perform this action:">
