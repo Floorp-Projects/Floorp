@@ -76,12 +76,10 @@
 
 // Needed for "Find" GUI
 #include "nsICheckButton.h"
-#include "nsIRadioButton.h"
 #include "nsILabel.h"
 #include "nsWidgetSupport.h"
 
 #include "nsXPBaseWindow.h"
-#include "nsFindDialog.h"
 
 #include "resources.h"
 
@@ -174,7 +172,6 @@ static NS_DEFINE_IID(kITextWidgetIID, NS_ITEXTWIDGET_IID);
 static NS_DEFINE_IID(kIWebShellContainerIID, NS_IWEB_SHELL_CONTAINER_IID);
 static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
 static NS_DEFINE_IID(kICheckButtonIID, NS_ICHECKBUTTON_IID);
-static NS_DEFINE_IID(kIRadioButtonIID, NS_IRADIOBUTTON_IID);
 static NS_DEFINE_IID(kILabelIID, NS_ILABEL_IID);
 static NS_DEFINE_IID(kIPromptIID,         NS_IPROMPT_IID);
 static NS_DEFINE_IID(kIDocumentViewerIID, NS_IDOCUMENT_VIEWER_IID);
@@ -933,76 +930,12 @@ nsEventStatus nsBrowserWindow::ProcessDialogEvent(nsGUIEvent *aEvent)
   switch(aEvent->message) {
 
     case NS_KEY_DOWN: {
-      nsKeyEvent* keyEvent = (nsKeyEvent*)aEvent;
-      if (NS_VK_RETURN == keyEvent->keyCode) {
-        PRBool matchCase   = PR_FALSE;
-        mMatchCheckBtn->GetState(matchCase);
-        PRBool findDwn     = PR_FALSE;
-        mDwnRadioBtn->GetState(findDwn);
-        nsString searchStr;
-        PRUint32 actualSize;
-        mTextField->GetText(searchStr, 255,actualSize);
-        PRBool foundIt;
-        FindNext(searchStr, matchCase, findDwn, foundIt);
-      }
     } break;
 
     case NS_MOUSE_LEFT_BUTTON_UP: {
-      nsIWidget* dialogWidget = nsnull;               
-      if (NS_OK !=  mDialog->QueryInterface(kIWidgetIID,(void**)&dialogWidget))
-        break;
-
-      if (aEvent->widget->GetNativeData(NS_NATIVE_WIDGET) == GetItemsNativeData(mCancelBtn)) {
-        dialogWidget->Show(PR_FALSE);
-      } else if (aEvent->widget->GetNativeData(NS_NATIVE_WIDGET) == GetItemsNativeData(mFindBtn)) {
-
-        PRBool matchCase   = PR_FALSE;
-        mMatchCheckBtn->GetState(matchCase);
-        PRBool findDwn     = PR_FALSE;
-        mDwnRadioBtn->GetState(findDwn);
-        PRUint32 actualSize;
-        nsString searchStr;
-        mTextField->GetText(searchStr, 255,actualSize);
-
-        nsIPresShell* shell = GetPresShell();
-        if (nsnull != shell) {
-          nsCOMPtr<nsIDocument> doc;
-          shell->GetDocument(getter_AddRefs(doc));
-          if (doc) {
-            PRBool foundIt = PR_FALSE;
-            doc->FindNext(searchStr, matchCase, findDwn, foundIt);
-            if (!foundIt) {
-              // Display Dialog here
-            }
-            ForceRefresh();
-          }
-          NS_RELEASE(shell);
-        }
-
-      } else if (aEvent->widget->GetNativeData(NS_NATIVE_WIDGET) == GetItemsNativeData(mUpRadioBtn)) {
-        mUpRadioBtn->SetState(PR_TRUE);
-        mDwnRadioBtn->SetState(PR_FALSE);
-      } else if (aEvent->widget->GetNativeData(NS_NATIVE_WIDGET) == GetItemsNativeData(mDwnRadioBtn)) {
-        mDwnRadioBtn->SetState(PR_TRUE);
-        mUpRadioBtn->SetState(PR_FALSE);
-      } else if (aEvent->widget->GetNativeData(NS_NATIVE_WIDGET) == GetItemsNativeData(mMatchCheckBtn)) {
-        PRBool state = PR_FALSE;
-        mMatchCheckBtn->GetState(state);
-        mMatchCheckBtn->SetState(!state);
-      }
     } break;
 
     case NS_PAINT: 
-#ifndef XP_UNIX
-      // paint the background
-      if (aEvent->widget->GetNativeData(NS_NATIVE_WIDGET) == GetItemsNativeData(mDialog)) {
-        nsIRenderingContext *drawCtx = ((nsPaintEvent*)aEvent)->renderingContext;
-        drawCtx->SetColor(aEvent->widget->GetBackgroundColor());
-        drawCtx->FillRect(*(((nsPaintEvent*)aEvent)->rect));
-
-        return nsEventStatus_eIgnore;
-      }
-#endif
       break;
     default:
       result = nsEventStatus_eIgnore;
@@ -1015,35 +948,6 @@ nsEventStatus nsBrowserWindow::ProcessDialogEvent(nsGUIEvent *aEvent)
 void
 nsBrowserWindow::DoFind()
 {
-  if (mXPDialog) {
-    NS_RELEASE(mXPDialog);
-    //mXPDialog->SetVisible(PR_TRUE);
-    //return;
-  }
-
-  nsString findHTML("resource:/res/samples/find.html");
-  //nsString findHTML("resource:/res/samples/find-table.html");
-  nsRect rect(0, 0, 510, 170);
-  //nsRect rect(0, 0, 470, 126);
-  nsString title("Find");
-
-  nsXPBaseWindow * dialog = nsnull;
-  nsresult rv = nsComponentManager::CreateInstance(kXPBaseWindowCID, nsnull,
-                                             kIXPBaseWindowIID,
-                                             (void**) &dialog);
-  if (rv == NS_OK) {
-    dialog->Init(eXPBaseWindowType_dialog, mAppShell, nsnull, findHTML, title, rect, PRUint32(~0), PR_FALSE);
-    dialog->SetVisible(PR_TRUE);
-    if (NS_OK == dialog->QueryInterface(kIXPBaseWindowIID, (void**) &mXPDialog)) {
-    }
-  }
-
-  nsFindDialog * findDialog = new nsFindDialog(this);
-  if (nsnull != findDialog) {
-    dialog->AddWindowListener(findDialog);
-  }
-  //NS_IF_RELEASE(dialog);
-
 }
 
 

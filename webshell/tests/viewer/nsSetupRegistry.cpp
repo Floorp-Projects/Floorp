@@ -109,17 +109,7 @@ static NS_DEFINE_IID(kCWindowCID, NS_WINDOW_CID);
 static NS_DEFINE_IID(kCVScrollbarCID, NS_VERTSCROLLBAR_CID);
 static NS_DEFINE_IID(kCHScrollbarCID, NS_HORZSCROLLBAR_CID);
 static NS_DEFINE_IID(kCDialogCID, NS_DIALOG_CID);
-static NS_DEFINE_IID(kCLabelCID, NS_LABEL_CID);
-static NS_DEFINE_IID(kCButtonCID, NS_BUTTON_CID);
-static NS_DEFINE_IID(kCComboBoxCID, NS_COMBOBOX_CID);
-static NS_DEFINE_IID(kCFileWidgetCID, NS_FILEWIDGET_CID);
-static NS_DEFINE_IID(kCListBoxCID, NS_LISTBOX_CID);
-static NS_DEFINE_IID(kCRadioButtonCID, NS_RADIOBUTTON_CID);
-static NS_DEFINE_IID(kCTextAreaCID, NS_TEXTAREA_CID);
-static NS_DEFINE_IID(kCTextFieldCID, NS_TEXTFIELD_CID);
-static NS_DEFINE_IID(kCCheckButtonCID, NS_CHECKBUTTON_CID);
 static NS_DEFINE_IID(kCChildCID, NS_CHILD_CID);
-static NS_DEFINE_IID(kCPopUpCID,NS_POPUP_CID);
 static NS_DEFINE_IID(kCAppShellCID, NS_APPSHELL_CID);
 static NS_DEFINE_IID(kCToolkitCID, NS_TOOLKIT_CID);
 static NS_DEFINE_IID(kClipboardCID,            NS_CLIPBOARD_CID);
@@ -127,17 +117,27 @@ static NS_DEFINE_CID(kCTransferableCID,        NS_TRANSFERABLE_CID);
 static NS_DEFINE_IID(kDataFlavorCID,           NS_DATAFLAVOR_CID);
 static NS_DEFINE_IID(kCXIFFormatConverterCID,  NS_XIFFORMATCONVERTER_CID);
 static NS_DEFINE_IID(kCDragServiceCID,         NS_DRAGSERVICE_CID);
-//static NS_DEFINE_IID(kCFileListTransferableCID,  NS_FILELISTTRANSFERABLE_CID);
 static NS_DEFINE_IID(kCFontRetrieverServiceCID,  NS_FONTRETRIEVERSERVICE_CID);
-static NS_DEFINE_IID(kCMenuBarCID,                NS_MENUBAR_CID);
-static NS_DEFINE_IID(kCMenuCID,                   NS_MENU_CID);
-static NS_DEFINE_IID(kCMenuItemCID,               NS_MENUITEM_CID);
-static NS_DEFINE_IID(kCContextMenuCID,            NS_CONTEXTMENU_CID);
 static NS_DEFINE_IID(kCTimerCID,            NS_TIMER_CID);
 static NS_DEFINE_IID(kCTimerManagerCID,            NS_TIMERMANAGER_CID);
-//static NS_DEFINE_IID(kCXULCommandCID,             NS_XULCOMMAND_CID);
 static NS_DEFINE_IID(kSoundCID,            NS_SOUND_CID);
 static NS_DEFINE_CID(kFileSpecWithUICID, NS_FILESPECWITHUI_CID);
+static NS_DEFINE_IID(kCFileWidgetCID, NS_FILEWIDGET_CID);
+static NS_DEFINE_IID(kCPopUpCID,NS_POPUP_CID);
+
+// widgets
+static NS_DEFINE_IID(kCLabelCID, NS_LABEL_CID);
+static NS_DEFINE_IID(kCButtonCID, NS_BUTTON_CID);
+static NS_DEFINE_IID(kCTextFieldCID, NS_TEXTFIELD_CID);
+static NS_DEFINE_IID(kCCheckButtonCID, NS_CHECKBUTTON_CID);
+
+// unneeded widgets
+#if 0
+static NS_DEFINE_IID(kCListBoxCID, NS_LISTBOX_CID);
+static NS_DEFINE_IID(kCRadioButtonCID, NS_RADIOBUTTON_CID);
+static NS_DEFINE_IID(kCComboBoxCID, NS_COMBOBOX_CID);
+static NS_DEFINE_IID(kCTextAreaCID, NS_TEXTAREA_CID);
+#endif
 
 // GFXWIN
 static NS_DEFINE_CID(kCRenderingContextCID, NS_RENDERING_CONTEXT_CID);
@@ -305,15 +305,7 @@ NS_SetupRegistry()
   nsComponentManager::RegisterComponentLib(kCVScrollbarCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCHScrollbarCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCDialogCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponentLib(kCLabelCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponentLib(kCButtonCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponentLib(kCComboBoxCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCFileWidgetCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponentLib(kCListBoxCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponentLib(kCRadioButtonCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponentLib(kCTextAreaCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponentLib(kCTextFieldCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponentLib(kCCheckButtonCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCChildCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCPopUpCID,NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCAppShellCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
@@ -328,12 +320,35 @@ NS_SetupRegistry()
   nsComponentManager::RegisterComponentLib(kCTimerCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCTimerManagerCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
 #endif
+  nsComponentManager::RegisterComponentLib(kSoundCID,   "Sound Services", "component://netscape/sound", WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponentLib(kFileSpecWithUICID,   NS_FILESPECWITHUI_CLASSNAME, NS_FILESPECWITHUI_PROGID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+
+  // WIDGETS
+  nsComponentManager::RegisterComponentLib(kCLabelCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponentLib(kCButtonCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponentLib(kCTextFieldCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponentLib(kCCheckButtonCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+
+  // MAC ONLY WIDGETS
+#ifdef XP_MAC
+  static NS_DEFINE_IID(kCMenuBarCID,                NS_MENUBAR_CID);
+  static NS_DEFINE_IID(kCMenuCID,                   NS_MENU_CID);
+  static NS_DEFINE_IID(kCMenuItemCID,               NS_MENUITEM_CID);
+  static NS_DEFINE_IID(kCContextMenuCID,            NS_CONTEXTMENU_CID);
+
   nsComponentManager::RegisterComponentLib(kCMenuBarCID,       NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCMenuCID,          NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCMenuItemCID,      NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+#endif
+
+  // UNNEEDED WIDGETS
+#if 0
+  nsComponentManager::RegisterComponentLib(kCComboBoxCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCContextMenuCID,   NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponentLib(kSoundCID,   "Sound Services", "component://netscape/sound", WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponentLib(kFileSpecWithUICID,   NS_FILESPECWITHUI_CLASSNAME, NS_FILESPECWITHUI_PROGID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponentLib(kCListBoxCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponentLib(kCRadioButtonCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponentLib(kCTextAreaCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+#endif
 
   // GFXWIN
   nsComponentManager::RegisterComponentLib(kCRenderingContextCID, "Rendering Context", "component://netscape/gfx/renderingcontext", GFXWIN_DLL, PR_FALSE, PR_FALSE);

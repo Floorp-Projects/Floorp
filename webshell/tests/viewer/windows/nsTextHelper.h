@@ -24,7 +24,6 @@
 
 #include "nsdefs.h"
 #include "nsITextWidget.h"
-#include "nsITextAreaWidget.h"
 #include "nsWindow.h"
 
 /**
@@ -32,7 +31,6 @@
  */
 
 class nsTextHelper :  public nsWindow, 
-                      public nsITextAreaWidget,
                       public nsITextWidget
 {
 
