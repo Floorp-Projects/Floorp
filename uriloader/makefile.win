@@ -26,6 +26,7 @@ MODULE = uriloader
 DIRS=            \
 	base     \
 	build    \
+	extprotocol     \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
