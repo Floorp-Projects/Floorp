@@ -280,7 +280,7 @@ public class NativeMath extends ScriptableObject
         for (int i = 0; i < args.length; i++) {
             double d = ScriptRuntime.toNumber(args[i]);
             if (d != d) return d;
-            if (result > d) result = d;
+            result = Math.min(result, d);
         }
         return result;
     }
