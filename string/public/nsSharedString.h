@@ -37,11 +37,23 @@ class basic_nsSharedString
       ...
     */
   {
-    private:
-      ~basic_nsSharedString() { }
-        // You can't sub-class me, or make an instance of me on the stack
+    public:
+      basic_nsSharedString( const CharT* data, size_t length )
+          : mRefCount(0), mData(data), mLength(length)
+        {
+          // nothing else to do here
+        }
 
-      // operator delete
+    private:
+      ~basic_nsSharedString() { } // You can't sub-class me, or make an instance of me on the stack
+
+        // NOT TO BE IMPLEMENTED
+        // we're reference counted, remember.  copying and passing by value are wrong
+      // basic_nsSharedString(); // we define at least one constructor, so the default constructor will not be auto-generated.  It's wrong to create me with no data anyway
+      basic_nsSharedString( const basic_nsSharedString<CharT>& ); // copy-constructor, the auto generated one would reference somebody elses data
+      void operator=( const basic_nsSharedString<CharT>& );       // copy-assignment operator
+      
+      // operator delete?
 
     public:
 
@@ -52,12 +64,6 @@ class basic_nsSharedString
       Length() const
         {
           return mLength;
-        }
-
-      basic_nsSharedString( const CharT* data, size_t length )
-          : mRefCount(0), mData(data), mLength(length)
-        {
-          // nothing else to do here
         }
 
       nsrefcnt
@@ -72,8 +78,8 @@ class basic_nsSharedString
           nsrefcnt result = --mRefCount;
           if ( !mRefCount )
             {
-              delete this;
-              // BULLSHIT ALERT: need to make |delete| match |new|
+              // would have to call my destructor by hand here, if there was anything to destruct
+              operator delete(this); // form of |delete| should always match the |new|
             }
           return result;
         }
@@ -111,8 +117,10 @@ template <class CharT>
 class basic_nsSharedStringPtr
   {
     public:
+        // default constructor
       basic_nsSharedStringPtr() : mRawPtr(0) { }
 
+        // copy-constructor
       basic_nsSharedStringPtr( const basic_nsSharedStringPtr<CharT>& rhs )
           : mRawPtr(rhs.mRawPtr)
         {
@@ -125,6 +133,7 @@ class basic_nsSharedStringPtr
             mRawPtr->Release();
         }
 
+        // copy-assignment operator
       basic_nsSharedStringPtr<CharT>&
       operator=( const basic_nsSharedStringPtr<CharT>& );
 
