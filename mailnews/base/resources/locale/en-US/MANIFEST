@@ -1,4 +1,5 @@
 messenger.dtd
+messenger.properties
 threadpane.dtd
 folderpane.dtd
 newFolderNameDialog.dtd

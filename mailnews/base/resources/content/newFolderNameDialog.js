@@ -22,20 +22,25 @@ function newFolderNameOnLoad()
 	var selectedParentFolder = document.getElementById('selectedparentfolder');
 	// dump("selectedParentFolder = " + selectedParentFolder + "\n");
 
-	try {
-        	options = selectedParentFolder.options;
-		for (i=1;i<options.length;i++) {
-			var uri = options[i].getAttribute('uri');
-			// dump(uri + " vs " + window.arguments[0].preselectedURI + "\n");
-			if (uri == window.arguments[0].preselectedURI) {
-				// dump("preselect: " + uri + " index = " + i + "\n");
-				selectedParentFolder.selectedIndex = i;
-				break;
+	if (window.arguments[0].preselectedURI) {
+		try {
+			options = selectedParentFolder.options;
+			for (i=1;i<options.length;i++) {
+				var uri = options[i].getAttribute('uri');
+				// dump(uri + " vs " + window.arguments[0].preselectedURI + "\n");
+				if (uri == window.arguments[0].preselectedURI) {
+					// dump("preselect: " + uri + " index = " + i + "\n");
+					selectedParentFolder.selectedIndex = i;
+					break;
+				}
 			}
 		}
-        }
-	catch (ex) {
-		// dump("failed to preflight the select thing.\n");
+		catch (ex) {
+			// dump("failed to preflight the select thing.\n");
+		}
+	}
+	else {
+		dump("passed null for preselectedURI, do nothing\n");
 	}
 }
 

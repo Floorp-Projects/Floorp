@@ -26,6 +26,7 @@
  
 var msgComposeType = Components.interfaces.nsIMsgCompType;
 var msgComposFormat = Components.interfaces.nsIMsgCompFormat;
+var Bundle = srGetStrBundle("chrome://messenger/locale/messenger.properties");
 
 // Controller object for folder pane
 var FolderPaneController =
@@ -316,7 +317,7 @@ function MsgForwardMessage(event)
   var forwardType = 0;
   try {
   	var forwardType = prefs.GetIntPref("mail.forward_message_mode");
-  } catch (e) {dump ("faild to retrive pref mail.forward_message_mode");}
+  } catch (e) {dump ("failed to retrieve pref mail.forward_message_mode");}
   
   if (forwardType == 0)
   	MsgForwardAsAttachment(null);
@@ -434,45 +435,59 @@ function MsgSortBySubject()
 
 function MsgNewFolder()
 {
-	MsgNewSubfolder("chrome://messenger/content/newFolderNameDialog.xul","New Folder");
+	var windowTitle = Bundle.GetStringFromName("newFolderDialogTitle");
+	dump(Bundle + windowTitle + "\n");
+	MsgNewSubfolder("chrome://messenger/content/newFolderNameDialog.xul",windowTitle);
 }
 
 function MsgSubscribe()
 {
-	MsgNewSubfolder("chrome://messenger/content/subscribeDialog.xul","Subscribe");
+        var windowTitle = Bundle.GetStringFromName("subscribeDialogTitle");
+	dump(Bundle + windowTitle + "\n");
+	MsgNewSubfolder("chrome://messenger/content/subscribeDialog.xul", windowTitle);
 }
 
 function MsgNewSubfolder(chromeWindowURL,windowTitle)
 {
+	var selectedFolder = null;
 	try {
 		var folderTree = GetFolderTree(); 
 		var selectedFolderList = folderTree.selectedItems;
 	
-		if (selectedFolderList.length != 1) {
-			// dump("ERROR:  you can only select one folder / server to add new folder / subscribe to.\n");
-			return;
+		//  you can only select one folder / server to add new folder / subscribe to
+		if (selectedFolderList.length == 1) {
+			selectedFolder = selectedFolderList[0];
 		}
-		var selectedFolder = selectedFolderList[0];
-		if (selectedFolder)
-		{
+		else {
+			dump("number of selected folder was " + selectedFolderList.length + "\n");
+		}
+	}
+	catch (ex) {
+		//dump("failed to get the selected folder\n");
+	}
+
+	try {
+		var preselectedURI = null;
+
+       		if (selectedFolder) {
 			preselectedURI = selectedFolder.getAttribute('id');
 			// dump("folder to preselect: " + preselectedURI + "\n");
-			var dialog = window.openDialog(
+		}
+		var dialog = window.openDialog(
 				chromeWindowURL,
 				"",
 				"chrome",
 				{preselectedURI:preselectedURI, title:windowTitle,
 				okCallback:NewFolder});
-		}
 	}
 	catch (ex) {
-		// dump("ERROR:  perhaps nothing in the folder pane is selected?\n")
+		dump("failed to open the new folder dialog\n");
 	}
 }
 
 function NewFolder(name)
 {
-    var folderTree = GetFolderTree(); 
+	var folderTree = GetFolderTree(); 
 	var selectedFolderList = folderTree.selectedItems;
 	var selectedFolder = selectedFolderList[0];
 

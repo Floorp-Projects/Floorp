@@ -43,12 +43,13 @@ Rights Reserved.
 		windowtype="mail:3pane">
 
 
+<html:script src="chrome://global/content/strres.js"/>
 <html:script src="chrome://messenger/content/widgetglue.js"/>
 <html:script src="chrome://messenger/content/commandglue.js"/>
 <html:script src="chrome://messenger/content/shareglue.js"/>
 <html:script src="chrome://messenger/content/msgViewNavigation.js"/>
 <html:script src="chrome://messenger/content/msgMail3PaneWindow.js"/>
-<html:script src="chrome://navigator/content/contentframe.js" />
+<html:script src="chrome://navigator/content/contentframe.js"/>
 
 <commands id="commands">
 	<commandset id="CommandUpdate_Mail"
