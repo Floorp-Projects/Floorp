@@ -415,3 +415,4 @@ pref("mailnews.send_plaintext_flowed", true); // RFC 2646=======
 // these two news.cancel.* prefs are for use by QA for automated testing.  see bug #31057
 pref("news.cancel.confirm",true);
 pref("news.cancel.alert_on_success",true);
+pref("mail.SpellCheckBeforeSend",false);
