@@ -25,11 +25,13 @@
 #include "nsAgg.h"
 #include "nsCOMPtr.h"
 #include "nsWeakPtr.h"
+#include "nsWeakReference.h"
 
 class nsISupportsArray;
 class nsLoadGroupEntry;
 
-class nsLoadGroup : public nsILoadGroup
+class nsLoadGroup : public nsILoadGroup,
+                    public nsSupportsWeakReference
 {
 public:
     NS_DECL_AGGREGATED

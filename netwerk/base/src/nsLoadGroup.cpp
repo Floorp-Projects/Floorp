@@ -140,8 +140,12 @@ nsLoadGroup::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
     else if (aIID.Equals(kLoadGroupCID) ||   // for internal use only (to set parent)
         aIID.Equals(NS_GET_IID(nsILoadGroup)) ||
         aIID.Equals(NS_GET_IID(nsIRequest)) ||
-        aIID.Equals(NS_GET_IID(nsISupports))) 
+        aIID.Equals(NS_GET_IID(nsISupports))) {
         *aInstancePtr = NS_STATIC_CAST(nsILoadGroup*, this);
+    }
+    else if (aIID.Equals(NS_GET_IID(nsISupportsWeakReference))) {
+        *aInstancePtr = NS_STATIC_CAST(nsISupportsWeakReference*,this);
+    }
     else {
         *aInstancePtr = nsnull;
         return NS_NOINTERFACE;
