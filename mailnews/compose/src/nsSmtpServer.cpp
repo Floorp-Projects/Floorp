@@ -229,6 +229,61 @@ nsSmtpServer::GetPasswordWithUI(const PRUnichar * aPromptMessage, const
 }
 
 NS_IMETHODIMP
+nsSmtpServer::GetUsernamePasswordWithUI(const PRUnichar * aPromptMessage, const
+                                PRUnichar *aPromptTitle, 
+                                nsIPrompt* aDialog,
+                                char **aUsername,
+                                char **aPassword) 
+{
+    nsresult rv = NS_OK;
+
+    NS_ENSURE_ARG_POINTER(aUsername);
+    NS_ENSURE_ARG_POINTER(aPassword);
+
+    if (m_password.IsEmpty()) {
+        NS_ENSURE_ARG_POINTER(aDialog);
+        
+        // prompt the user for the password
+        if (NS_SUCCEEDED(rv))
+        {
+            nsXPIDLString uniUsername;
+            nsXPIDLString uniPassword;
+            PRBool okayValue = PR_TRUE;
+            nsXPIDLCString serverUri;
+            rv = GetServerURI(getter_Copies(serverUri));
+            if (NS_FAILED(rv)) return rv;
+            rv = aDialog->PromptUsernameAndPassword(aPromptTitle, aPromptMessage, 
+                                         NS_ConvertToString(serverUri).GetUnicode(), nsIPrompt::SAVE_PASSWORD_PERMANENTLY,
+                                         getter_Copies(uniUsername), getter_Copies(uniPassword), &okayValue);
+            if (NS_FAILED(rv)) return rv;
+				
+            if (!okayValue) // if the user pressed cancel, just return NULL;
+            {
+                *aUsername = nsnull;
+                *aPassword = nsnull;
+                return rv;
+            }
+
+            // we got a userid and password back...so remember it
+            nsCString aCStr; 
+
+            aCStr.AssignWithConversion(uniUsername); 
+            rv = SetUsername((const char *) aCStr);
+            if (NS_FAILED(rv)) return rv;
+
+            aCStr.AssignWithConversion(uniPassword); 
+            rv = SetPassword((const char *) aCStr);
+            if (NS_FAILED(rv)) return rv;
+        } // if we got a prompt dialog
+    } // if the password is empty
+
+    rv = GetUsername(aUsername);
+    if (NS_FAILED(rv)) return rv;
+    rv = GetPassword(aPassword);
+    return rv;
+}
+
+NS_IMETHODIMP
 nsSmtpServer::ForgetPassword()
 {
     nsresult rv;

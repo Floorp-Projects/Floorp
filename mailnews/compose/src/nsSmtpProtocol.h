@@ -157,6 +157,7 @@ private:
   // *** the following should move to the smtp server when we support
   // multiple smtp servers
   PRInt32 m_prefAuthMethod;
+  PRBool m_usernamePrompted;
     PRInt32 m_prefTrySSL;
   PRBool m_tlsEnabled;
   
@@ -222,6 +223,7 @@ private:
 	// extract domain name from userName field in the url...
 	const char * GetUserDomainName();
   nsresult GetPassword(char **aPassword);
+  nsresult GetUsernamePassword(char **aUsername, char **aPassword);
 };
 
 #endif  // nsSmtpProtocol_h___

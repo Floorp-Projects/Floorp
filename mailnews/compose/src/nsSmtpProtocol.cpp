@@ -296,6 +296,7 @@ void nsSmtpProtocol::Initialize(nsIURI * aURL)
 
     m_flags = 0;
     m_prefAuthMethod = PREF_AUTH_NONE;
+    m_usernamePrompted = PR_FALSE;
     m_prefTrySSL = PREF_SSL_TRY;
     m_port = SMTP_PORT;
     m_tlsInitiated = PR_FALSE;
@@ -890,10 +891,13 @@ PRInt32 nsSmtpProtocol::AuthLoginResponse(nsIInputStream * stream, PRUint32 leng
   default:
       if (smtpServer)
       {
-        // only forget the password if we didn't get here from the redirection.
-        if (mLogonCookie.IsEmpty())
-          smtpServer->ForgetPassword();
-        m_nextState = SMTP_SEND_AUTH_LOGIN_USERNAME;
+          // only forget the password if we didn't get here from the redirection.
+          if (mLogonCookie.IsEmpty()) {
+              smtpServer->ForgetPassword();
+              if (m_usernamePrompted)
+                  smtpServer->SetUsername("");
+          }
+          m_nextState = SMTP_SEND_AUTH_LOGIN_USERNAME;
       }
       else
       {
@@ -921,10 +925,14 @@ PRInt32 nsSmtpProtocol::AuthLoginUsername()
   
   rv = smtpServer->GetUsername(getter_Copies(username));
 
-  if (!(const char*) username || nsCRT::strlen((const char*)username) == 0)
-	  return NS_ERROR_SMTP_USERNAME_UNDEFINED;
-
-  if (!TestFlag(SMTP_USE_LOGIN_REDIRECTION))
+  if (!(const char*) username || nsCRT::strlen((const char*)username) == 0) {
+      rv = GetUsernamePassword(getter_Copies(username), getter_Copies(origPassword));
+      m_usernamePrompted = PR_TRUE;
+      password.Assign(origPassword);
+      if (password.IsEmpty())
+          return NS_ERROR_SMTP_PASSWORD_UNDEFINED;
+  }
+  else if (!TestFlag(SMTP_USE_LOGIN_REDIRECTION))
   {
     rv = GetPassword(getter_Copies(origPassword));
     password.Assign(origPassword);
@@ -993,7 +1001,7 @@ PRInt32 nsSmtpProtocol::AuthLoginPassword()
     rv = GetPassword(getter_Copies(origPassword));
     PRInt32 passwordLength = nsCRT::strlen((const char *) origPassword);
     if (!(const char*) origPassword || passwordLength == 0)
-	    return NS_ERROR_SMTP_USERNAME_UNDEFINED;
+	    return NS_ERROR_SMTP_PASSWORD_UNDEFINED;
 	password.Assign((const char*) origPassword);
   }
   else
@@ -1643,6 +1651,81 @@ done:
     return rv;
 }
 
+nsresult
+nsSmtpProtocol::GetUsernamePassword(char **aUsername, char **aPassword)
+{
+    nsresult rv = NS_ERROR_NULL_POINTER;
+    NS_ENSURE_ARG_POINTER(aUsername);
+    NS_ENSURE_ARG_POINTER(aPassword);
+
+    nsCOMPtr<nsISmtpUrl> smtpUrl = do_QueryInterface(m_runningURL, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsISmtpServer> smtpServer;
+    rv = smtpUrl->GetSmtpServer(getter_AddRefs(smtpServer));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = smtpServer->GetPassword(aPassword);
+    if (NS_FAILED(rv)) return rv;
+
+    if (PL_strlen(*aPassword) > 0) {
+        rv = smtpServer->GetUsername(aUsername);
+        if (NS_FAILED(rv)) return rv;
+
+        if (PL_strlen(*aUsername) > 0)
+            return rv;
+        
+        // empty username
+        nsCRT::free(*aUsername);
+        *aUsername = 0;
+    }
+    // empty password
+
+    nsCRT::free(*aPassword);
+    *aPassword = 0;
+
+    nsCOMPtr<nsIPrompt> netPrompt;
+    rv = smtpUrl->GetPrompt(getter_AddRefs(netPrompt));
+    if (NS_FAILED(rv)) return rv;
+
+    nsXPIDLCString hostname;
+    PRUnichar *passwordPromptString = nsnull;
+
+    nsXPIDLString passwordTemplate;
+    mSmtpBundle->GetStringByID(NS_SMTP_USERNAME_PASSWORD_PROMPT, getter_Copies(passwordTemplate));
+
+    if (!passwordTemplate) return NS_ERROR_NULL_POINTER;
+    
+    nsXPIDLString passwordTitle;
+    mSmtpBundle->GetStringByID(NS_SMTP_PASSWORD_PROMPT_TITLE, getter_Copies(passwordTitle));
+
+    if (!passwordTitle) 
+    {
+        rv = NS_ERROR_NULL_POINTER;
+        goto done;
+    }
+
+    rv = smtpServer->GetHostname(getter_Copies(hostname));
+    if (NS_FAILED(rv)) goto done;
+
+    passwordPromptString = nsTextFormatter::smprintf(passwordTemplate,
+                                                     (const char *) hostname);
+    if (!passwordPromptString)
+    {
+        rv = NS_ERROR_NULL_POINTER;
+        goto done;
+    }
+    
+    rv = smtpServer->GetUsernamePasswordWithUI(passwordPromptString, passwordTitle,
+                                       netPrompt, aUsername, aPassword);
+
+done:
+    if (passwordPromptString)
+        nsCRT::free(passwordPromptString);
+
+    return rv;
+}
+
 
 nsresult nsSmtpProtocol::RequestOverrideInfo(nsISmtpServer * aSmtpServer)
 {
@@ -1724,7 +1807,7 @@ NS_IMETHODIMP nsSmtpProtocol::OnLogonRedirectionError(const PRUnichar *pErrMsg, 
   }
 
   // step (3) if they entered a bad password, forget about it!
-	if (aBadPassword && smtpServer)
+  if (aBadPassword && smtpServer)
     smtpServer->ForgetPassword();
 
   // step (4) we need to let the originator of the send url request know that an
