@@ -220,7 +220,7 @@ sub validate {
         next if ($status eq $flag->{status});
 
         # - User can clear flags set by itself
-        next if (($status eq "X") && ($user->id eq $flag->{setter}));
+        next if (($status eq "X") && ($user->id eq $flag->{setter}->id));
 
         # - User in the $grant_gid group can set/clear flags,
         #   including "+" and "-"
