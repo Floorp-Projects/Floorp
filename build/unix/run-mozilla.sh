@@ -88,13 +88,13 @@ Usage:  ${cmdname} [options] [program]
 
     ${cmdname} apprunner
 
-  Debug the viewer in a debbuger
+  Debug the viewer in a debugger
 
     ${cmdname} -g viewer
 
   Debug the apprunner in gdb
 
-    ${cmdname} -g viewer -d gdb
+    ${cmdname} -g apprunner -d gdb
 
 EOF
 	return 0
