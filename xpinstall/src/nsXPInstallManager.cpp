@@ -66,7 +66,6 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID );
 static NS_DEFINE_IID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
-static NS_DEFINE_CID(kDialogParamBlockCID, NS_DialogParamBlock_CID);
 
 #include "nsIEventQueueService.h"
 
@@ -185,7 +184,7 @@ nsXPInstallManager::InitManager(nsIScriptGlobalObject* aGlobalObject, nsXPITrigg
     // Create the nsIDialogParamBlock to pass the trigger
     // list to the dialog
     //-----------------------------------------------------
-    rv = nsComponentManager::CreateInstance(kDialogParamBlockCID,
+    rv = nsComponentManager::CreateInstance("@mozilla.org/embedcomp/dialogparam;1",
                                             nsnull,
                                             NS_GET_IID(nsIDialogParamBlock),
                                             getter_AddRefs(ioParamBlock));

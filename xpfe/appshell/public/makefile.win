@@ -29,8 +29,6 @@ XPIDLSRCS =                        \
 		.\nsIAppShellService.idl   \
 		.\nsICmdLineService.idl	\
 		.\nsICmdLineHandler.idl	\
-		.\nsICommonDialogs.idl  \
-		.\nsIDialogParamBlock.idl \
 		.\nsIFileLocator.idl       \
 		.\nsIWindowMediator.idl	   \
 		.\nsIXULWindow.idl       \
@@ -42,7 +40,6 @@ EXPORTS =                         \
         nsAppShellCIDs.h          \
         nsIDOMXPConnectFactory.h  \
         nsFileLocations.h         \
-        nsINetSupportDialogService.h \
         nsISplashScreen.h         \
         nsINativeAppSupport.h     \
         $(NULL)
