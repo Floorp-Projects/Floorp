@@ -1183,7 +1183,7 @@ void pluginInstanceOwner::GUItoMacEvent(const nsGUIEvent& anEvent, EventRecord& 
 nsEventStatus pluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
 {
   nsEventStatus rv = nsEventStatus_eIgnore;
-  if (!mInstance)   // if mInstance is null, we shouldn't be here
+  if (!mInstance || !mWindow)   // if the instance or the window is null, we shouldn't be here
     return rv;
 
 #ifdef XP_MAC
