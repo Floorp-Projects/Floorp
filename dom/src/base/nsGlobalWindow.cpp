@@ -3104,6 +3104,20 @@ GlobalWindowImpl::Close()
     return NS_OK;
   }
 
+  // Don't allow scripts from content to close windows
+  // that were not opened by script
+  nsresult rv;
+  if (!mOpener) {
+      nsCOMPtr<nsIScriptSecurityManager> secMan(
+        do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv));
+      if (NS_SUCCEEDED(rv)) {
+          PRBool inChrome = PR_TRUE;
+          rv = secMan->SubjectPrincipalIsSystem(&inChrome);
+          if (NS_SUCCEEDED(rv) && !inChrome)
+              return NS_OK;
+      }
+  }
+
   // Fire a DOM event notifying listeners that this window is about to
   // be closed. The tab UI code may choose to cancel the default
   // action for this event, if so, we won't actually close the window
@@ -3131,12 +3145,6 @@ GlobalWindowImpl::Close()
       return NS_OK;
     }
   }
-
-  // Note: the basic security check, rejecting windows not opened through JS,
-  // has been removed. This was approved long ago by ...you're going to call me
-  // on this, aren't you... well it was. And anyway, a better means is coming.
-  // In the new world of application-level interfaces being written in JS, this
-  // security check was causing problems.
 
   nsCOMPtr<nsIJSContextStack> stack =
     do_GetService(sJSStackContractID);
