@@ -407,6 +407,7 @@ CNavDTD::~CNavDTD(){
   while((theNode=(nsCParserNode*)mSharedNodes.Pop())){
     delete theNode;
   }
+  NS_IF_RELEASE(mSink);
   NS_IF_RELEASE(mDTDDebug);
 }
  
@@ -502,6 +503,14 @@ nsresult CNavDTD::WillBuildModel(nsString& aFilename,PRBool aNotifySink,nsString
   mHasOpenScript=PR_FALSE;
   if((aNotifySink) && (aSink)) {
 
+    if(aSink && (!mSink)) {
+      result=aSink->QueryInterface(kIHTMLContentSinkIID, (void **)&mSink);
+      if(result==NS_OK) {
+        NS_ADDREF(mSink);
+      }
+    }
+
+
 #ifdef RGESS_DEBUG
     gStartTime = PR_Now();
     printf("Begin parsing...\n");
@@ -530,17 +539,13 @@ nsresult CNavDTD::WillBuildModel(nsString& aFilename,PRBool aNotifySink,nsString
   */
 nsresult CNavDTD::BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer,nsITokenObserver* anObserver,nsIContentSink* aSink) {
   nsresult result=NS_OK;
-
+   
   if(aTokenizer) {
     nsITokenizer*  oldTokenizer=mTokenizer;
     mTokenizer=aTokenizer;
     mParser=(nsParser*)aParser;
 
-    mSink=nsnull;
-    result=aSink->QueryInterface(kIHTMLContentSinkIID, (void **)&mSink);
-
     if(mSink) {
-      NS_ADDREF(mSink);
       gRecycler=(CTokenRecycler*)mTokenizer->GetTokenRecycler();
       while(NS_SUCCEEDED(result)){
         if(mDTDState!=NS_ERROR_HTMLPARSER_STOPPARSING) {
@@ -556,8 +561,6 @@ nsresult CNavDTD::BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer,nsIToke
         }
       }//while
       mTokenizer=oldTokenizer;
-      NS_IF_RELEASE(mSink);
-      mSink=nsnull;
     }
   }
   else result=NS_ERROR_HTMLPARSER_BADTOKENIZER;
@@ -573,9 +576,6 @@ nsresult CNavDTD::BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer,nsIToke
 nsresult CNavDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParser* aParser,nsIContentSink* aSink){
   nsresult result=NS_OK;
   if(aSink) { 
-    mSink=nsnull; 
-    result=aSink->QueryInterface(kIHTMLContentSinkIID, (void **)&mSink); 
-    NS_ADDREF(mSink); 
 
     if((NS_OK==anErrorCode) && (!mHadBody) && (!mHadFrameset)) { 
       CStartToken theToken(eHTMLTag_body);  //open the body container... 
@@ -585,7 +585,7 @@ nsresult CNavDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParse
     } 
 
     if(aParser){ 
-      if(aNotifySink && aSink){ 
+      if(aNotifySink){ 
         if((NS_OK==anErrorCode) && (mBodyContext->GetCount()>0)) { 
           eHTMLTags theTarget; 
           while(mBodyContext->GetCount() > 0) { 
@@ -637,9 +637,6 @@ nsresult CNavDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParse
         } 
       } 
     } 
-
-    NS_IF_RELEASE(mSink); 
-    mSink=nsnull; 
   }
   return result;
 }
@@ -1609,6 +1606,8 @@ nsresult CNavDTD::HandleEntityToken(CToken* aToken) {
  */
 nsresult CNavDTD::HandleCommentToken(CToken* aToken) {
   NS_PRECONDITION(0!=aToken,kNullToken);
+  
+  //mLineNumber += (aToken->GetStringValueXXX()).CountChar(kNewLine);
   nsCParserNode aNode((CHTMLToken*)aToken,mLineNumber);
 
   #ifdef  RICKG_DEBUG
