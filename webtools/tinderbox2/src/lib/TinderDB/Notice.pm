@@ -30,8 +30,8 @@
 #	 kestes@walrus.com Home.
 # Contributor(s): 
 
-# $Revision: 1.26 $ 
-# $Date: 2003/05/26 13:47:36 $ 
+# $Revision: 1.27 $ 
+# $Date: 2003/06/18 15:54:06 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/Notice.pm,v $ 
 # $Name:  $ 
@@ -85,7 +85,7 @@ use VCDisplay;
 use HTMLPopUp;
 use TinderDB::BasicTxtDB;
 
-$VERSION = ( qw $Revision: 1.26 $ )[1];
+$VERSION = ( qw $Revision: 1.27 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -233,6 +233,9 @@ sub status_table_start {
 
   my ($first_cell_seconds) = 2*($row_times->[0] - $row_times->[1]);
   my ($earliest_data) = $row_times->[0] + $first_cell_seconds;
+
+  (defined($association)) ||
+      ($association = '');
 
   $NEXT_DB{$tree}{$association} = 0;
   while ( ($DB_TIMES[$NEXT_DB{$tree}{$association}] > $earliest_data) &&    
@@ -496,9 +499,13 @@ sub render_empty_cell {
 sub Notice_Link {
     my ($self, $last_time, $tree, $association) = @_;
 
+    my $start_time = $NEXT_DB{$tree}{$association};
+    (defined($start_time)) || 
+        ($start_time = 0);
+
     my ($db_index, $first_notice_time, $authors) =
         cell_data($tree, 
-                  $NEXT_DB{$tree}{$association},
+                  $start_time,
                   $last_time, 
                   $association);
 
@@ -519,7 +526,11 @@ sub status_table_row {
     # skip this column because it is part of a multi-row missing data
     # cell?
 
-    if ( $NEXT_ROW{$tree}{$association} != $row_index ) {
+    $association = '';
+    if ( 
+         (defined($NEXT_ROW{$tree}{$association})) &&
+         ( $NEXT_ROW{$tree}{$association} != $row_index )
+         ) {
         
         push @html, ("\t<!-- Notice: skipping. ".
                      "tree: $tree, ".
@@ -529,11 +540,13 @@ sub status_table_row {
         return @html;
     }
 
+    my $last_time = $row_times->[$row_index];
+
     my ($db_index, $first_notice_time, $authors) =
         cell_data($tree, 
                   $NEXT_DB{$tree}{$association},
-                  $row_times->[$row_index], 
-                  undef);
+                  $last_time,
+                  '');
     
     # If there is data for this cell render it and return.
 
@@ -562,19 +575,20 @@ sub status_table_row {
     $next_db_index = $db_index;
     
     while (
-           ($row_index+$rowspan <=  $#{ $row_times }) &&
+           ($row_index+$rowspan <  $#{ $row_times }) &&
 
            (!(scalar(%{$authors}))) 
            ) {
         
         $db_index = $next_db_index;
         $rowspan++ ;
+        my $last_time = $row_times->[$row_index+$rowspan];
 
         ($next_db_index, $first_notice_time, $authors) =
             cell_data($tree, 
                       $db_index, 
-                      $row_times->[$row_index+$rowspan], 
-                      undef);
+                      $last_time, 
+                      '');
     }
     
     $NEXT_ROW{$tree}{$association} = $row_index + $rowspan;
