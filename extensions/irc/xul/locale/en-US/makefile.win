@@ -21,12 +21,17 @@
 
 DEPTH		= ..\..\..\..\..
 
+CHROME_DIR=chatzilla
+CHROME_L10N_DIR=locale
+CHROME_TYPE=locale
+
 EXPORT_PREF_CONTENT = \
 	.\pref-irc.dtd \
 	$(NULL)
 
 EXPORT_RESOURCE_CONTENT = \
 	.\chatzillaOverlay.dtd \
+	.\manifest.rdf \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>

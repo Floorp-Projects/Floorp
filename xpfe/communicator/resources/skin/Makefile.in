@@ -26,20 +26,22 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-EXPORT_RESOURCE = \
-		$(srcdir)/brand.css \
-		$(srcdir)/box.css \
-		$(srcdir)/button.css \
-		$(srcdir)/communicator.css \
-		$(srcdir)/menu.css \
-		$(srcdir)/menubutton.css \
-		$(srcdir)/splitter.css \
-		$(srcdir)/toolbar.css \
-		$(srcdir)/navbar-endbox.gif \
+CHROME_DIR=communicator
+CHROME_SKIN_DIR=skin
+CHROME_TYPE=skin
+
+CHROME_SKIN = \
+		brand.css \
+		box.css \
+		button.css \
+		communicator.css \
+		menu.css \
+		menubutton.css \
+		splitter.css \
+		toolbar.css \
+		navbar-endbox.gif \
+		manifest.rdf \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
-
-install::
-	$(INSTALL) $(EXPORT_RESOURCE) $(DIST)/bin/chrome/communicator/skin
 

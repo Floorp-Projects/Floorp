@@ -38,6 +38,7 @@ CHROME_SKIN_DIR=skin
 CHROME_TYPE=skin
 
 CHROME_SKIN = \
+		manifest.rdf \
 		box.css \
 		button.css \
 		checkbox.css \

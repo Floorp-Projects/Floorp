@@ -28,6 +28,7 @@ CHROME_CONTENT_DIR=content
 CHROME_TYPE=content
 
 CHROME_CONTENT = \
+	.\manifest.rdf \
 	.\messenger.xul \
 	.\mail3PaneWindowVertLayout.xul \
 	.\mailWindowOverlay.xul \

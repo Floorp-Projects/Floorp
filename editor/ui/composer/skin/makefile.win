@@ -21,9 +21,13 @@
 
 DEPTH=..\..\..\..
 
+CHROME_DIR = editor
+CHROME_TYPE = skin
+
 include <$(DEPTH)\config\rules.mak>
 
 install:: $(DLL)
+  $(MAKE_INSTALL) manifest.rdf $(DIST)\bin\chrome\editor\skin
   $(MAKE_INSTALL) editor.css            $(DIST)\bin\chrome\editor\skin
   $(MAKE_INSTALL) EditorToolbars.css    $(DIST)\bin\chrome\editor\skin
   $(MAKE_INSTALL) images\align.gif	    $(DIST)\bin\chrome\editor\skin\images
@@ -77,6 +81,7 @@ install:: $(DLL)
   $(MAKE_INSTALL) images\editmode-toggle.gif  $(DIST)\bin\chrome\editor\skin\images
 
 clobber::
+  rm -f $(DIST)\bin\chrome\editor\skin\manifest.rdf
   rm -f $(DIST)\bin\chrome\editor\skin\editor.css
   rm -f $(DIST)\bin\chrome\editor\skin\EditorToolbars.css
   rm -f $(DIST)\bin\chrome\editor\skin\images\align.gif			

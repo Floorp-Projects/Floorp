@@ -21,9 +21,13 @@
 
 DEPTH=..\..\..\..
 
+CHROME_DIR=editor
+CHROME_TYPE=content
+
 include <$(DEPTH)\config\rules.mak>
 
 install::
+	$(MAKE_INSTALL) manifest.rdf $(DIST)\bin\chrome\editor\content
 	$(MAKE_INSTALL) editor.xul         $(DIST)\bin\chrome\editor\content
 	$(MAKE_INSTALL) TextEditorAppShell.xul     $(DIST)\bin\chrome\editor\content
 	$(MAKE_INSTALL) EditorCommands.js          $(DIST)\bin\chrome\editor\content

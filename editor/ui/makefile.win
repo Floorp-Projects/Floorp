@@ -23,7 +23,4 @@ DEPTH=..\..
 
 DIRS= composer dialogs
 
-CHROME_DIR=editor
-CHROME_TYPE=content locale skin
-
 include <$(DEPTH)\config\rules.mak>

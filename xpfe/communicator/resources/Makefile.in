@@ -26,10 +26,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-CHROME_DIR=communicator
-CHROME_TYPE=content locale
-
-DIRS		= skin
+DIRS=content locale skin
 
 include $(topsrcdir)/config/rules.mk
 

@@ -21,20 +21,19 @@
 
 DEPTH=..\..\..\..\..
 
+CHROME_DIR = editor
+CHROME_L10N_DIR = locale
+CHROME_TYPE = locale
+
+CHROME_L10N = \
+	.\editor.dtd \
+	.\sidebar-editor-rdf.dtd \
+	.\sidebar-editor.dtd \
+	.\viewSource.dtd \
+	.\editorOverlay.dtd \
+	.\editor.properties \
+	.\manifest.rdf \
+	$(NULL)
+
 include <$(DEPTH)\config\rules.mak>
 
-install::
-	$(MAKE_INSTALL) editor.dtd                $(DIST)\bin\chrome\editor\locale
-	$(MAKE_INSTALL) sidebar-editor-rdf.dtd    $(DIST)\bin\chrome\editor\locale
-	$(MAKE_INSTALL) sidebar-editor.dtd        $(DIST)\bin\chrome\editor\locale
-	$(MAKE_INSTALL) viewSource.dtd            $(DIST)\bin\chrome\editor\locale
-	$(MAKE_INSTALL) editorOverlay.dtd         $(DIST)\bin\chrome\editor\locale
-	$(MAKE_INSTALL) editor.properties         $(DIST)\bin\chrome\editor\locale
-
-clobber::
-  rm -f $(DIST)\bin\chrome\editor\locale\editor.dtd 
-  rm -f $(DIST)\bin\chrome\editor\locale\sidebar-editor-rdf.dtd 
-  rm -f $(DIST)\bin\chrome\editor\locale\sidebar-editor.dtd 
-  rm -f $(DIST)\bin\chrome\editor\locale\viewSource.dtd 
-  rm -f $(DIST)\bin\chrome\editor\locale\editorOverlay.dtd 
-  rm -f $(DIST)\bin\chrome\editor\locale\editor.properties 
