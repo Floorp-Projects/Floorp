@@ -241,6 +241,8 @@ extern char *msg_MagicFolderName(MSG_Prefs* prefs, uint32 flag, int *pStatus);
 #define IMAPNS_GetDelimiterForNamespace(a)	'/'
 #define CreateImapMailboxCreateUrl(a, b,c)	NULL
 
+#define MSG_CommandType		PRUint32
+
 #undef FE_Progress
 #define FE_Progress(cx,msg) printf("Progress: %s\n", msg)
 
