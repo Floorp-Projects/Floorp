@@ -156,6 +156,8 @@ nsPopupSetFrame::Destroy(nsIPresContext* aPresContext)
     nsPopupFrameList* curFrame = mPopupList;
     while (curFrame) {
       nsPopupFrameList* temp = curFrame;
+      if (curFrame->mPopupFrame)
+        curFrame->mPopupFrame->Destroy(aPresContext);
       curFrame = curFrame->mNextPopup;
       temp->mNextPopup = nsnull;
       delete temp; 
