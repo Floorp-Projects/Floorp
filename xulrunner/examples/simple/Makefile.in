@@ -14,13 +14,12 @@
 #
 # The Original Code is the Mozilla Browser code.
 #
-# The Initial Developer of the Original Code is
-# Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 2002
+# The Initial Developer of the Original Code is Google Inc.
+# Portions created by the Initial Developer are Copyright (C) 2005
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#  Brian Ryner <bryner@brianryner.com>
+#  Darin Fisher <darin@meer.net>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -43,52 +42,35 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-NSDISTMODE = copy
-
-include $(topsrcdir)/config/config.mk
-include $(topsrcdir)/config/rules.mk
-
-APPNAME	= simple
-
-CONTENT	= \
-	content/simple.xul \
-	content/contents.rdf \
-	$(NULL)
+MODULE		= simple
+export XPI_NAME	= simple
 
 ifneq (,$(filter os2 windows,$(MOZ_WIDGET_TOOLKIT)))
-ICONS	= icons/simple.ico
+ICONS		= icons/simple.ico
 endif
 ifneq (,$(filter gtk gtk2,$(MOZ_WIDGET_TOOLKIT)))
-ICONS	= \
-	icons/simple.xpm \
-	icons/simple16.xpm \
-	$(NULL)
+ICONS		= icons/simple.xpm icons/simple16.xpm
 endif
 
-PREFS	= \
-	defaults/pref/simple.js \
-	$(NULL)
+PREFS		= simple-prefs.js
+
+include $(topsrcdir)/config/rules.mk
 
 # generate various fields for simple.xulapp
-BUILD_ID=`date +%""Y%""m%d%H`
-GECKO_VERSION=`echo $(MOZILLA_VERSION) | sed 's|\(^[0-9]*\.[0-9]*\).*|\1|'`
+BUILD_ID	:= `date +%Y%m%d%H`
+GECKO_VERSION	:= `echo $(MOZILLA_VERSION) | sed 's|\(^[0-9]*\.[0-9]*\).*|\1|'`
 
-#
-# install stuff
-#
-
-libs:: $(CONTENT)
-	$(INSTALL) $^ $(DIST)/bin/apps/$(APPNAME)/chrome/content/$(APPNAME)
-	echo 'content simple content/simple/' > $(DIST)/bin/apps/$(APPNAME)/chrome/simple.manifest
+libs:: simple.manifest
+	$(INSTALL) $^ $(FINAL_TARGET)/chrome
 
 libs:: $(ICONS)
-	$(INSTALL) $^ $(DIST)/bin/apps/$(APPNAME)/chrome/icons/default
+	$(INSTALL) $^ $(FINAL_TARGET)/chrome/icons/default
 
 libs:: $(PREFS)
-	$(INSTALL) $^ $(DIST)/bin/apps/$(APPNAME)/defaults/preferences
+	$(INSTALL) $^ $(FINAL_TARGET)/defaults/preferences
 
-libs:: $(APPNAME).xulapp
+libs:: simple.xulapp
 	$(EXIT_ON_ERROR) \
-	cat $< | sed 's|BUILD_ID|'`date +%Y%m%d%H`'|' \
+	cat $< | sed 's|BUILD_ID|'$(BUILD_ID)'|' \
 	       | sed 's|GECKO_VERSION|'$(GECKO_VERSION)'|' \
-	       > $(DIST)/bin/apps/$(APPNAME)/$(APPNAME).xulapp
+	       > $(FINAL_TARGET)/simple.xulapp

@@ -8,7 +8,7 @@ Vendor=MozillaTest
 Name=Simple
 ;
 ; This field specifies your application's version.  This field is optional.
-Version=0.1.0
+Version=0.1
 ;
 ; This field specifies your application's build ID (timestamp).  This field is
 ; required.
