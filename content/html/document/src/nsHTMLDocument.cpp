@@ -381,8 +381,6 @@ nsHTMLDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup)
 
   nsDocument::ResetToURI(aURI, aLoadGroup);
 
-  nsresult rv = NS_OK;
-
   InvalidateHashTables();
   PrePopulateHashTables();
 
