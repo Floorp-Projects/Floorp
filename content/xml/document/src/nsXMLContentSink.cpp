@@ -730,9 +730,7 @@ nsXMLContentSink::OpenContainer(const nsIParserNode& aNode)
     result = NS_CreateHTMLElement(getter_AddRefs(htmlContent), nodeInfo, PR_TRUE);
     content = do_QueryInterface(htmlContent);
 
-    if (tagAtom.get() == nsHTMLAtoms::textarea) {
-      mTextAreaElement = do_QueryInterface(htmlContent);
-    } else if (tagAtom.get() == nsHTMLAtoms::style) {
+    if (tagAtom.get() == nsHTMLAtoms::style) {
       mStyleElement = htmlContent;
     } else if (tagAtom.get() == nsHTMLAtoms::base) {
       if (!mBaseElement) {
@@ -860,12 +858,6 @@ nsXMLContentSink::CloseContainer(const nsIParserNode& aNode)
           dom_doc->SetTitle(mTitleText);
         }
         mInTitle = PR_FALSE;
-      }
-    } else if (tagAtom.get() == nsHTMLAtoms::textarea) {
-      if (mTextAreaElement) {
-        mTextAreaElement->SetDefaultValue(mTextareaText);
-        mTextAreaElement = nsnull;
-        mTextareaText.Truncate();
       }
     } else if (tagAtom.get() == nsHTMLAtoms::style) {
       if (mStyleElement) {
@@ -1019,8 +1011,6 @@ nsXMLContentSink::AddCDATASection(const nsIParserNode& aNode)
   const nsAReadableString& text = aNode.GetText();
   if (mInTitle) {
     mTitleText.Append(text);
-  } else if (mTextAreaElement) {
-    mTextareaText.Append(text);
   } else if (mStyleElement) {
     mStyleText.Append(text);
   }
@@ -1505,8 +1495,6 @@ nsXMLContentSink::AddText(const nsAReadableString& aString)
 
   if (mInTitle) {
     mTitleText.Append(aString);
-  } else if (mTextAreaElement) {
-    mTextareaText.Append(aString);
   } else if (mStyleElement) {
     mStyleText.Append(aString);
   }
