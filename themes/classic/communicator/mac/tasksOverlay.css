@@ -52,11 +52,6 @@
          list-style-image      : url("chrome://global/skin/taskbar-composer-hover.gif");
   }
 
-#taskbar
-  {
-      background-image	  : url("chrome://communicator/skin/toolbar-bg-mac.gif")
-  }
-
 .taskbutton 
   {
 	  margin-right          : 3px !important;

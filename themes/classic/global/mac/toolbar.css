@@ -12,7 +12,6 @@ toolbox
 toolbar
   {
     background-color      : #DDDDDD;
-    background-image	  : url("chrome://communicator/skin/toolbar-bg-mac.gif");
   }
   
 .toolbar-holder
@@ -32,7 +31,6 @@ toolbargrippy
     border-right          : 1px solid #9D9D9D;
     border-bottom         : 1px solid #9D9D9D;
     width                 : 12px;
-    background-image	  : url("chrome://communicator/skin/toolbar-bg-mac.gif");
   }
 
 .toolbargrippy-twisty

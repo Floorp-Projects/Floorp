@@ -6,7 +6,6 @@ splitter
     background-color      : #DDDDDD;
     vertical-align		  : middle;
     border-right		  : 2px ridge #000000;
-    background-image      : url("chrome://communicator/skin/toolbar-bg-mac.gif");
   }
 
 grippy, grippy[collapse="before"]

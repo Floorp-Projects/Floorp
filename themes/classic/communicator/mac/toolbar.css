@@ -1,12 +1,2 @@
  
 /******* ToolBox & ToolBar *******/
-
-.toolbar-primary
-  {
-    background-image      : url("chrome://communicator/skin/toolbar-bg-mac.gif");
-  }
-  
-.toolbar-primary > toolbargrippy 
-  {
-    background-image      : url("chrome://communicator/skin/toolbar-bg-mac.gif");
-  }
