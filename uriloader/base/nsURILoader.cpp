@@ -158,7 +158,7 @@ protected:
   /**
    * The type of the data we will be trying to dispatch.
    */
-  nsCString mTargetType;
+  nsCString mContentType;
 
   /**
    * Reference to the URILoader service so we can access its list of
@@ -298,7 +298,7 @@ NS_IMETHODIMP nsDocumentOpenInfo::OnStopRequest(nsIRequest *request, nsISupports
     // If this is a multipart stream, we could get another
     // OnStartRequest after this... reset state.
     m_targetStreamListener = 0;
-    mTargetType.Truncate();
+    mContentType.Truncate();
     listener->OnStopRequest(request, aCtxt, aStatus);
   }
 
@@ -320,8 +320,8 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest *request, nsISupports * 
       return NS_ERROR_FAILURE;
   }
 
-  if (mTargetType.IsEmpty()) {
-    rv = aChannel->GetContentType(mTargetType);
+  if (mContentType.IsEmpty()) {
+    rv = aChannel->GetContentType(mContentType);
     if (NS_FAILED(rv)) return rv;
   }
 
@@ -413,7 +413,7 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest *request, nsISupports * 
     if (catman) {
       nsXPIDLCString contractidString;
       rv = catman->GetCategoryEntry(NS_CONTENT_LISTENER_CATEGORYMANAGER_ENTRY,
-                                    mTargetType.get(),
+                                    mContentType.get(),
                                     getter_Copies(contractidString));
       if (NS_SUCCEEDED(rv) && !contractidString.IsEmpty()) {
         listener = do_CreateInstance(contractidString);
@@ -427,12 +427,12 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest *request, nsISupports * 
     // Fourth step: try to find an nsIContentHandler for our type.
     //
     nsCAutoString handlerContractID (NS_CONTENT_HANDLER_CONTRACTID_PREFIX);
-    handlerContractID += mTargetType;
+    handlerContractID += mContentType;
 
-    nsCOMPtr<nsIContentHandler> contentHandler;
-    contentHandler = do_CreateInstance(handlerContractID.get());
+    nsCOMPtr<nsIContentHandler> contentHandler =
+      do_CreateInstance(handlerContractID.get());
     if (contentHandler) {
-      rv = contentHandler->HandleContent(mTargetType.get(), "view",
+      rv = contentHandler->HandleContent(mContentType.get(), "view",
                                          m_originalContext, request);
       // XXXbz returning an error code to represent handling the
       // content is just bizarre!
@@ -453,7 +453,7 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest *request, nsISupports * 
   
   //
   // Fifth step:  If no listener prefers this type, see if any stream
-  //              decoders exist to transform this content type into
+  //              converters exist to transform this content type into
   //              some other.
   //
 
@@ -465,8 +465,8 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest *request, nsISupports * 
   // XXXbz have to be careful here; may end up in some sort of bizarre infinite
   // decoding loop.
   NS_NAMED_LITERAL_CSTRING(anyType, "*/*");
-  if (mTargetType != anyType) {
-    rv = ConvertData(request, m_contentListener, mTargetType, anyType);
+  if (mContentType != anyType) {
+    rv = ConvertData(request, m_contentListener, mContentType, anyType);
     if (NS_FAILED(rv)) {
       m_targetStreamListener = nsnull;
     } else if (m_targetStreamListener) {
@@ -484,7 +484,7 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest *request, nsISupports * 
   nsCOMPtr<nsIExternalHelperAppService> helperAppService =
     do_GetService(NS_EXTERNALHELPERAPPSERVICE_CONTRACTID, &rv);
   if (helperAppService) {
-    rv = helperAppService->DoContent(mTargetType.get(),
+    rv = helperAppService->DoContent(mContentType.get(),
                                      request,
                                      m_originalContext,
                                      getter_AddRefs(m_targetStreamListener));
@@ -537,7 +537,7 @@ nsDocumentOpenInfo::ConvertData(nsIRequest *request,
     // dispatching; that way even if the stream converters don't
     // change the type on the channel we will still do the right
     // thing.
-    nextLink->mTargetType = aOutContentType;
+    nextLink->mContentType = aOutContentType;
   }
 
   // The following call sets m_targetStreamListener to the input end of the
@@ -562,11 +562,11 @@ nsDocumentOpenInfo::TryContentListener(nsIURIContentListener* aListener,
   nsXPIDLCString typeToUse;
   
   if (mIsContentPreferred) {
-    aListener->IsPreferred(mTargetType.get(),
+    aListener->IsPreferred(mContentType.get(),
                            getter_Copies(typeToUse),
                            &listenerWantsContent);
   } else {
-    aListener->CanHandleContent(mTargetType.get(), PR_FALSE,
+    aListener->CanHandleContent(mContentType.get(), PR_FALSE,
                                 getter_Copies(typeToUse),
                                 &listenerWantsContent);
   }
@@ -574,42 +574,44 @@ nsDocumentOpenInfo::TryContentListener(nsIURIContentListener* aListener,
     return PR_FALSE;
   }
 
-  if (!typeToUse.IsEmpty() && typeToUse != mTargetType) {
+  if (!typeToUse.IsEmpty() && typeToUse != mContentType) {
     // Need to do a conversion here.
 
-    nsresult rv = ConvertData(aChannel, aListener, mTargetType, typeToUse);
+    nsresult rv = ConvertData(aChannel, aListener, mContentType, typeToUse);
 
     if (NS_FAILED(rv)) {
       // No conversion path -- we don't want this listener, if we got one
       m_targetStreamListener = nsnull;
     }
 
-    // m_targetStreamListener is now the input end of the converter,
-    // and we can just pump the data in there, if it exists.  If it
-    // does not, we need to try other nsIURIContentListeners.
+    // m_targetStreamListener is now the input end of the converter, and we can
+    // just pump the data in there, if it exists.  If it does not, we need to
+    // try other nsIURIContentListeners.
     return m_targetStreamListener != nsnull;
   }
 
-  // At this point, aListener wants data of type aContentType.  Let'em
-  // have it.  But first, if we are retargeting, so set an appropriate
-  // flag on the channel
+  // At this point, aListener wants data of type mContentType.  Let 'em have
+  // it.  But first, if we are retargeting, set an appropriate flag on the
+  // channel
+  nsLoadFlags loadFlags = 0;
+  aChannel->GetLoadFlags(&loadFlags);
+
   nsCOMPtr<nsIURIContentListener> originalListener =
     do_GetInterface(m_originalContext);
   if (originalListener != aListener) {
-    nsLoadFlags loadFlags = 0;
-    aChannel->GetLoadFlags(&loadFlags);
-    loadFlags |= nsIChannel::LOAD_RETARGETED_DOCUMENT_URI;
-    aChannel->SetLoadFlags(loadFlags);
+    aChannel->SetLoadFlags(loadFlags | nsIChannel::LOAD_RETARGETED_DOCUMENT_URI);
   }
   
   PRBool abort = PR_FALSE;
-  nsresult rv = aListener->DoContent(mTargetType.get(),
-                                       mIsContentPreferred,
-                                       aChannel,
-                                       getter_AddRefs(m_targetStreamListener),
-                                       &abort);
+  nsresult rv = aListener->DoContent(mContentType.get(),
+                                     mIsContentPreferred,
+                                     aChannel,
+                                     getter_AddRefs(m_targetStreamListener),
+                                     &abort);
     
   if (NS_FAILED(rv)) {
+    // Unset the RETARGETED_DOCUMENT_URI flag if we set it...
+    aChannel->SetLoadFlags(loadFlags);
     m_targetStreamListener = nsnull;
     return PR_FALSE;
   }
