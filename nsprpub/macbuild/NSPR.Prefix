@@ -1,1 +1,10 @@
-////	NSPR.Prefix//// Global prefix file for the non-debug NSPR project.////#include "NSPRConfig.h"
+//
+//	NSPR.Prefix
+//
+// Global prefix file for the non-debug NSPR project.
+//
+//
+
+
+#include "MacPrefix.h"
+#include "NSPRConfig.h"

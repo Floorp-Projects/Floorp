@@ -1,12 +1,12 @@
 //
-//	NSPR.Prefix
+//	NSPRCarbonDebug.Prefix
 //
-// Global prefix file for the debug NSPR project.
+// Global prefix file for the Carbon debug NSPR project.
 //
 //
 
 
-#define DEBUG 1
-#define DEVELOPER_DEBUG 1
+#include "MacPrefix_debug.h"
 #include "NSPRConfig.h"
-#define TARGET_CARBON 1
+
+#define DEVELOPER_DEBUG 1
