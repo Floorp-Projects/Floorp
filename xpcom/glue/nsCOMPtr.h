@@ -440,8 +440,7 @@ class nsCOMPtr_base
       nsISupports* mRawPtr;
   };
 
-
-template <class T> class nsGetterAddRefs;
+// template <class T> class nsGetterAddRefs;
 
 template <class T>
 class nsCOMPtr
@@ -619,8 +618,10 @@ class nsCOMPtr
           return get();
         }
 
+#if 0
     private:
       friend class nsGetterAddRefs<T>;
+#endif
 
       T**
       StartAssignment()
