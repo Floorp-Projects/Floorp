@@ -117,27 +117,7 @@ struct nsWindowInfo
 	
 };
 
-class nsWindowEnumerator : public nsISimpleEnumerator
-{
-
-public:
-	nsWindowEnumerator ( nsString* inTypeString,  nsWindowMediator& inMediator  );
-	virtual ~nsWindowEnumerator();
-	NS_IMETHOD HasMoreElements(PRBool *retval);
-  NS_IMETHOD GetNext(nsISupports **retval);
-
-  NS_DECL_ISUPPORTS
-private:
-	friend nsWindowMediator;
-	
-	PRInt32 FindNext();
-	void WindowRemoved( PRInt32 inIndex);
-	
-	nsCOMPtr<nsWindowMediator> mWindowMediator;
-	nsString mType;
-	PRInt32 mCurrentPosition;
-};
-
+class nsWindowEnumerator;
 
 class nsWindowMediator : public nsIWindowMediator
 {
@@ -272,6 +252,30 @@ private:
   static PRInt32 gRefCnt;
   static nsIRDFDataSource* mInner;
 };
+
+
+class nsWindowEnumerator : public nsISimpleEnumerator
+{
+
+public:
+	nsWindowEnumerator ( nsString* inTypeString,  nsWindowMediator& inMediator  );
+	virtual ~nsWindowEnumerator();
+	NS_IMETHOD HasMoreElements(PRBool *retval);
+  NS_IMETHOD GetNext(nsISupports **retval);
+
+  NS_DECL_ISUPPORTS
+private:
+	friend nsWindowMediator;
+	
+	PRInt32 FindNext();
+	void WindowRemoved( PRInt32 inIndex);
+	
+	nsCOMPtr<nsWindowMediator> mWindowMediator;
+	nsString mType;
+	PRInt32 mCurrentPosition;
+};
+
+
 
 nsIRDFResource	*nsWindowMediator::kNC_WindowMediatorRoot = NULL;
 nsIRDFResource	*nsWindowMediator::kNC_Name = NULL;
