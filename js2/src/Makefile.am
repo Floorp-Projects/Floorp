@@ -11,9 +11,12 @@ epimetheus_SOURCES =  \
 	formatter.cpp \
 	hash.cpp \
 	js2array.cpp \
+	js2boolean.cpp \
 	js2date.cpp \
 	js2engine.cpp \
+	js2error.cpp \
 	js2eval.cpp \
+	js2function.cpp \
 	js2math.cpp \
 	js2metadata.cpp \
 	js2number.cpp \
