@@ -148,11 +148,17 @@
       <!-- Date was changed by gui: update value. -->
       <method name="onDatePick">
 	<body><![CDATA[
-	  var dateTime = new Date(this.mValue);
-	  var newDate = this.kDatePicker.value;
-	  dateTime.setFullYear(newDate.getFullYear());
-	  dateTime.setMonth(newDate.getMonth());
-	  dateTime.setDate(newDate.getDate());
+           var oldTime = new Date(this.mValue);
+           var newDate = new Date(this.kDatePicker.value);
+           // Note: create new date because setting month and date of month in
+           // either order can lead to unexpected results (month may be advanced
+           // automatically if day of month is temporarily out of range).
+           var dateTime = new Date(newDate.getFullYear(),
+                                   newDate.getMonth(),
+                                   newDate.getDate(),
+                                   oldTime.getHours(),
+                                   oldTime.getMinutes(),
+                                   oldTime.getSeconds());
 	  this.update(dateTime, true);
 	]]></body>
       </method>
