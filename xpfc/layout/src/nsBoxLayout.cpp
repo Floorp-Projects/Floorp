@@ -49,7 +49,6 @@ nsBoxLayout :: nsBoxLayout() : nsLayout()
 
 nsBoxLayout :: ~nsBoxLayout()
 {
-  NS_IF_RELEASE(mContainer);
 }
 
 
@@ -83,9 +82,7 @@ nsresult nsBoxLayout :: Init()
 
 nsresult nsBoxLayout :: Init(nsIXPFCCanvas * aContainer)
 {
-  NS_IF_RELEASE(mContainer);
   mContainer = aContainer;
-  NS_ADDREF(mContainer);
   return NS_OK ;
 }
 
