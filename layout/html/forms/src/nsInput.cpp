@@ -289,6 +289,7 @@ nsContentAttr nsInput::GetCacheAttribute(PRInt32 aLoc, nsHTMLValue& aValue) cons
   }
 }
 
+#if 0
 nsContentAttr nsInput::GetCacheAttribute(PRBool aLoc, nsHTMLValue& aValue) const
 {
   aValue.Reset();
@@ -300,6 +301,7 @@ nsContentAttr nsInput::GetCacheAttribute(PRBool aLoc, nsHTMLValue& aValue) const
     return eContentAttr_NotThere;
   }
 }
+#endif 
 
 nsContentAttr nsInput::GetAttribute(nsIAtom* aAttribute, nsString& aValue) const
 {
@@ -329,6 +331,7 @@ nsContentAttr nsInput::GetAttribute(nsIAtom* aAttribute, PRInt32& aValue) const
   }
 }
 
+#if 0
 nsContentAttr nsInput::GetAttribute(nsIAtom* aAttribute, PRBool& aValue) const
 {
   PRInt32 intVal;
@@ -342,6 +345,7 @@ nsContentAttr nsInput::GetAttribute(nsIAtom* aAttribute, PRBool& aValue) const
     return eContentAttr_NoValue;
   }
 }
+#endif
 
 nsContentAttr nsInput::GetAttribute(nsIAtom* aAttribute,
                                     nsHTMLValue& aValue) const
