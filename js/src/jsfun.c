@@ -45,10 +45,9 @@ enum {
     CALL_ARGUMENTS  = -1,       /* predefined arguments local variable */
     ARGS_LENGTH     = -2,       /* number of actual args, arity if inactive */
     ARGS_CALLEE     = -3,       /* reference to active function's object */
-    ARGS_CALLER     = -4,       /* arguments or call object that invoked us */
-    FUN_ARITY       = -5,       /* number of formal parameters; desired argc */
-    FUN_NAME        = -6,       /* function name, "" if anonymous */
-    FUN_CALL        = -7        /* __call__ var, function's top Call object */
+    FUN_ARITY       = -4,       /* number of formal parameters; desired argc */
+    FUN_NAME        = -5,       /* function name, "" if anonymous */
+    FUN_CALL        = -6        /* __call__ var, function's top Call object */
 };
 
 #undef TEST_BIT
@@ -106,8 +105,6 @@ js_PutArgsObject(JSContext *cx, JSStackFrame *fp)
     rt = cx->runtime;
     ok &= js_GetProperty(cx, argsobj, (jsid)rt->atomState.calleeAtom, &rval);
     ok &= js_SetProperty(cx, argsobj, (jsid)rt->atomState.calleeAtom, &rval);
-    ok &= js_GetProperty(cx, argsobj, (jsid)rt->atomState.callerAtom, &rval);
-    ok &= js_SetProperty(cx, argsobj, (jsid)rt->atomState.callerAtom, &rval);
     ok &= js_GetProperty(cx, argsobj, (jsid)rt->atomState.lengthAtom, &rval);
     ok &= js_SetProperty(cx, argsobj, (jsid)rt->atomState.lengthAtom, &rval);
 
@@ -136,7 +133,6 @@ Arguments(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 static JSPropertySpec args_props[] = {
     {js_length_str,     ARGS_LENGTH,    0},
     {js_callee_str,     ARGS_CALLEE,    0},
-    {js_caller_str,     ARGS_CALLER,    0},
     {0}
 };
 
@@ -155,19 +151,6 @@ args_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case ARGS_CALLEE:
 	if (fp && !TEST_BIT(slot, fp->overrides))
 	    *vp = OBJECT_TO_JSVAL(fp->fun->object);
-	break;
-
-      case ARGS_CALLER:
-	if (fp && !TEST_BIT(slot, fp->overrides)) {
-	    if (fp->down && fp->down->fun) {
-		JSObject *argsobj = js_GetArgsObject(cx, fp->down);
-		if (!argsobj)
-		    return JS_FALSE;
-		*vp = OBJECT_TO_JSVAL(argsobj);
-	    } else {
-		*vp = JSVAL_NULL;
-	    }
-	}
 	break;
 
       case ARGS_LENGTH:
@@ -197,7 +180,6 @@ args_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
     switch (slot) {
       case ARGS_CALLEE:
-      case ARGS_CALLER:
 	if (fp)
 	    SET_BIT(slot, fp->overrides);
 	break;
@@ -352,7 +334,6 @@ Call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 static JSPropertySpec call_props[] = {
     {js_arguments_str,  CALL_ARGUMENTS, JSPROP_PERMANENT},
     {"__callee__",      ARGS_CALLEE,    0},
-    {"__caller__",      ARGS_CALLER,    0},
     {"__call__",        FUN_CALL,       0},
     {0}
 };
@@ -383,19 +364,6 @@ call_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 	    *vp = OBJECT_TO_JSVAL(fp->fun->object);
 	break;
 
-      case ARGS_CALLER:
-	if (fp && !TEST_BIT(slot, fp->overrides)) {
-	    if (fp->down && fp->down->fun) {
-		JSObject *callobj = js_GetCallObject(cx, fp->down, NULL, NULL);
-		if (!callobj)
-		    return JS_FALSE;
-		*vp = OBJECT_TO_JSVAL(callobj);
-	    } else {
-		*vp = JSVAL_NULL;
-	    }
-	}
-	break;
-
       case FUN_CALL:
 	*vp = OBJECT_TO_JSVAL(obj);
 	break;
@@ -422,7 +390,6 @@ call_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     switch (slot) {
       case CALL_ARGUMENTS:
       case ARGS_CALLEE:
-      case ARGS_CALLER:
       case FUN_CALL:
 	if (fp)
 	    SET_BIT(slot, fp->overrides);
@@ -693,7 +660,6 @@ static JSPropertySpec function_props[] = {
     {js_arguments_str,  CALL_ARGUMENTS, JSPROP_PERMANENT},
     {"__arity__",       FUN_ARITY,      JSPROP_READONLY | JSPROP_PERMANENT},
     {"__length__",      ARGS_LENGTH,    JSPROP_READONLY | JSPROP_PERMANENT},
-    {"__caller__",      ARGS_CALLER,    JSPROP_READONLY | JSPROP_PERMANENT},
     {"__name__",        FUN_NAME,       JSPROP_READONLY | JSPROP_PERMANENT},
     {"__call__",        FUN_CALL,       JSPROP_READONLY | JSPROP_PERMANENT},
     {0}
@@ -706,7 +672,6 @@ fun_delProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     if (!JSVAL_IS_INT(id)) {
 	if (id == ATOM_KEY(cx->runtime->atomState.arityAtom) ||
 	    id == ATOM_KEY(cx->runtime->atomState.lengthAtom) ||
-	    id == ATOM_KEY(cx->runtime->atomState.callerAtom) ||
 	    id == ATOM_KEY(cx->runtime->atomState.nameAtom)) {
 	    *vp = JSVAL_FALSE;
 	}
@@ -731,8 +696,6 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 	    id = INT_TO_JSVAL(FUN_ARITY);
 	} else if (id == ATOM_KEY(cx->runtime->atomState.lengthAtom)) {
 	    id = INT_TO_JSVAL(ARGS_LENGTH);
-	} else if (id == ATOM_KEY(cx->runtime->atomState.callerAtom)) {
-	    id = INT_TO_JSVAL(ARGS_CALLER);
 	} else if (id == ATOM_KEY(cx->runtime->atomState.nameAtom)) {
 	    id = INT_TO_JSVAL(FUN_NAME);
 	} else {
@@ -774,13 +737,6 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 	else
       case FUN_ARITY:
 	    *vp = INT_TO_JSVAL((jsint)fun->nargs);
-	break;
-
-      case ARGS_CALLER:
-	if (fp && fp->down && fp->down->fun)
-	    *vp = OBJECT_TO_JSVAL(fp->down->fun->object);
-	else
-	    *vp = JSVAL_NULL;
 	break;
 
       case FUN_NAME:
@@ -837,7 +793,6 @@ fun_enumProperty(JSContext *cx, JSObject *obj)
 	if (!JSVAL_IS_INT(id)) {
 	    if (id == ATOM_KEY(cx->runtime->atomState.arityAtom) ||
 		id == ATOM_KEY(cx->runtime->atomState.lengthAtom) ||
-		id == ATOM_KEY(cx->runtime->atomState.callerAtom) ||
 		id == ATOM_KEY(cx->runtime->atomState.nameAtom))
 	    {
 		sprop->attrs &= ~JSPROP_ENUMERATE;
