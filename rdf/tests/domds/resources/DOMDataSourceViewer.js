@@ -25,7 +25,7 @@ function loadUrl() {
     var urlwidget = document.getElementById("url");
     
     if (!urlwidget)
-        url = "http://www.mozillazine.org/";
+        url = "resource:/res/samples/rdf/domviewer.html";
     else
         url = urlwidget.value;
     

@@ -26,9 +26,12 @@ install::
 	$(MAKE_INSTALL) DOMDataSourceViewer.js $(SAMPLES_DIR)
 	$(MAKE_INSTALL) DOMDataSourceViewer.xul $(SAMPLES_DIR)
 	$(MAKE_INSTALL) DOMTree.xul $(SAMPLES_DIR)
+	$(MAKE_INSTALL) domviewer.html $(SAMPLES_DIR)
 
 clobber::
 	rm -f $(SAMPLES_DIR)\DOMDataSourceViewer.css
 	rm -f $(SAMPLES_DIR)\DOMDataSourceViewer.js
 	rm -f $(SAMPLES_DIR)\DOMDataSourceViewer.xul
 	rm -f $(SAMPLES_DIR)\DOMTree.xul
+	rm -f $(SAMPLES_DIR)\domviewer.html
+

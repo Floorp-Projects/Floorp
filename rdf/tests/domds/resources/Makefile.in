@@ -31,6 +31,7 @@ RESOURCE_SAMPLES = \
 		DOMDataSourceViewer.css \
 		DOMDataSourceViewer.js \
 		DOMTree.xul \
+		domviewer.html	\
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
