@@ -279,9 +279,10 @@ access.conf.
 There are two critical directories and a file that should not be a served by
 the HTTP server. These are the 'data' and 'shadow' directories and the
 'localconfig' file. You should configure your HTTP server to not serve
-content from these files.  Failure to do so will expose critical passwords
+content from these files. Failure to do so will expose critical passwords
 and other data. Please see your HTTP server configuration manual on how
-to do this. 
+to do this. If you use quips (at the top of the buglist pages) you will want
+the 'data/comments' file to still be served. This file contains those quips.
 
 2. Installing the Bugzilla Files
 
