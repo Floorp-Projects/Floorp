@@ -35,7 +35,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the GPL.
  *
- *  $Id: mpi.c,v 1.2 2000/07/17 22:31:17 nelsonb%netscape.com Exp $
+ *  $Id: mpi.c,v 1.3 2000/07/19 23:22:43 nelsonb%netscape.com Exp $
  */
 
 #include "mpi.h"
@@ -3584,6 +3584,189 @@ int      s_mp_outlen(int bits, int r)
 /* }}} */
 
 /* }}} */
+
+/* {{{ mp_read_unsigned_octets(mp, str, len) */
+/* mp_read_unsigned_octets(mp, str, len)
+   Read in a raw value (base 256) into the given mp_int
+   No sign bit, number is positive.  Leading zeros ignored.
+ */
+
+mp_err  
+mp_read_unsigned_octets(mp_int *mp, const unsigned char *str, int len)
+{
+  int            ix;
+  int            count;
+  mp_err         res;
+  mp_digit       d;
+
+  ARGCHK(mp != NULL && str != NULL && len > 0, MP_BADARG);
+
+  mp_zero(mp);
+
+  count = len % sizeof(mp_digit);
+  if (count) {
+    for (d = 0; count-- > 0; --len) {
+      d = (d << 8) | *str++;
+    }
+    MP_DIGIT(mp, 0) = d;
+  }
+
+  /* Read the rest of the digits */
+  for(; len > 0; len -= sizeof(mp_digit)) {
+    for (d = 0, count = sizeof(mp_digit); count > 0; --count) {
+      d = (d << 8) | *str++;
+    }
+    if (MP_EQ == mp_cmp_z(mp)) {
+      if (!d)
+	continue;
+    } else {
+      if((res = s_mp_lshd(mp, 1)) != MP_OKAY)
+	return res;
+    }
+    MP_DIGIT(mp, 0) = d;
+  }
+  return MP_OKAY;
+} /* end mp_read_unsigned_octets() */
+/* }}} */
+
+/* {{{ mp_unsigned_octet_size(mp) */
+int    
+mp_unsigned_octet_size(const mp_int *mp)
+{
+  int  bytes;
+  int  ix;
+  mp_digit  d;
+
+  ARGCHK(mp != NULL, MP_BADARG);
+  ARGCHK(MP_ZPOS == SIGN(mp), MP_BADARG);
+
+  bytes = (USED(mp) * sizeof(mp_digit));
+
+  /* subtract leading zeros. */
+  /* Iterate over each digit... */
+  for(ix = USED(mp) - 1; ix >= 0; ix--) {
+    d = DIGIT(mp, ix);
+    if (d) 
+	break;
+    bytes -= sizeof(d);
+  }
+  if (!bytes)
+    return 1;
+
+  /* Have MSD, check digit bytes, high order first */
+  for(ix = sizeof(mp_digit) - 1; ix >= 0; ix--) {
+    unsigned char x = (unsigned char)(d >> (ix * CHAR_BIT));
+    if (x) 
+	break;
+    --bytes;
+  }
+  return bytes;
+} /* end mp_unsigned_octet_size() */
+/* }}} */
+
+/* {{{ mp_to_unsigned_octets(mp, str) */
+/* output a buffer of big endian octets no longer than specified. */
+mp_err 
+mp_to_unsigned_octets(const mp_int *mp, unsigned char *str, int maxlen)
+{
+  int  ix, pos = 0;
+  int  bytes;
+
+  ARGCHK(mp != NULL && str != NULL && !SIGN(mp), MP_BADARG);
+
+  bytes = mp_unsigned_octet_size(mp);
+  ARGCHK(bytes <= maxlen, MP_BADARG);
+
+  /* Iterate over each digit... */
+  for(ix = USED(mp) - 1; ix >= 0; ix--) {
+    mp_digit  d = DIGIT(mp, ix);
+    int       jx;
+
+    /* Unpack digit bytes, high order first */
+    for(jx = sizeof(mp_digit) - 1; jx >= 0; jx--) {
+      unsigned char x = (unsigned char)(d >> (jx * CHAR_BIT));
+      if (!pos && !x)	/* suppress leading zeros */
+	continue;
+      str[pos++] = x;
+    }
+  }
+  return pos;
+} /* end mp_to_unsigned_octets() */
+/* }}} */
+
+/* {{{ mp_to_signed_octets(mp, str) */
+/* output a buffer of big endian octets no longer than specified. */
+mp_err 
+mp_to_signed_octets(const mp_int *mp, unsigned char *str, int maxlen)
+{
+  int  ix, pos = 0;
+  int  bytes;
+
+  ARGCHK(mp != NULL && str != NULL && !SIGN(mp), MP_BADARG);
+
+  bytes = mp_unsigned_octet_size(mp);
+  ARGCHK(bytes <= maxlen, MP_BADARG);
+
+  /* Iterate over each digit... */
+  for(ix = USED(mp) - 1; ix >= 0; ix--) {
+    mp_digit  d = DIGIT(mp, ix);
+    int       jx;
+
+    /* Unpack digit bytes, high order first */
+    for(jx = sizeof(mp_digit) - 1; jx >= 0; jx--) {
+      unsigned char x = (unsigned char)(d >> (jx * CHAR_BIT));
+      if (!pos) {
+	if (!x)		/* suppress leading zeros */
+	  continue;
+	if (x & 0x80) { /* add one leading zero to make output positive.  */
+	  ARGCHK(bytes + 1 <= maxlen, MP_BADARG);
+	  if (bytes + 1 > maxlen)
+	    return MP_BADARG;
+	  str[pos++] = 0;
+	}
+      }
+      str[pos++] = x;
+    }
+  }
+  return pos;
+} /* end mp_to_signed_octets() */
+/* }}} */
+
+/* {{{ mp_to_fixlen_octets(mp, str) */
+/* output a buffer of big endian octets exactly as long as requested. */
+mp_err 
+mp_to_fixlen_octets(const mp_int *mp, unsigned char *str, int length)
+{
+  int  ix, pos = 0;
+  int  bytes;
+
+  ARGCHK(mp != NULL && str != NULL && !SIGN(mp), MP_BADARG);
+
+  bytes = mp_unsigned_octet_size(mp);
+  ARGCHK(bytes <= length, MP_BADARG);
+
+  /* place any needed leading zeros */
+  for (;length > bytes; --length) {
+	*str++ = 0;
+  }
+
+  /* Iterate over each digit... */
+  for(ix = USED(mp) - 1; ix >= 0; ix--) {
+    mp_digit  d = DIGIT(mp, ix);
+    int       jx;
+
+    /* Unpack digit bytes, high order first */
+    for(jx = sizeof(mp_digit) - 1; jx >= 0; jx--) {
+      unsigned char x = (unsigned char)(d >> (jx * CHAR_BIT));
+      if (!pos && !x)	/* suppress leading zeros */
+	continue;
+      str[pos++] = x;
+    }
+  }
+  return MP_OKAY;
+} /* end mp_to_fixlen_octets() */
+/* }}} */
+
 
 /*------------------------------------------------------------------------*/
 /* HERE THERE BE DRAGONS                                                  */
