@@ -249,6 +249,7 @@ function searchOnLoad()
   HideSearchColumn("sizeCol");
   HideSearchColumn("flaggedCol");
   HideSearchColumn("idCol");
+  HideSearchColumn("junkStatusCol");
   
   // we want to show the location column for search
   ShowSearchColumn("locationCol");
