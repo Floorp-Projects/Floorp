@@ -192,6 +192,17 @@ BEGIN
                     316,208,84,9
 END
 
+IDD_BROWSER_NC DIALOG DISCARDABLE  0, 0, 400, 217
+STYLE WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | 
+    WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+CAPTION "winEmbed chromeless sample"
+MENU IDC_WINEMBED
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "Embedded Browser",IDC_BROWSER,"WINEMBED",WS_TABSTOP,0,0,
+                    400,217
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
