@@ -632,9 +632,10 @@ nsImageFrame::TranslateEventCoords(nsIPresContext& aPresContext,
   aResult.y = NSTwipsToIntPixels(y, t2p);
 }
 
-void
+PRBool
 nsImageFrame::GetAnchorHREF(nsString& aResult)
 {
+  PRBool status = PR_FALSE;
   aResult.Truncate();
 
   // Walk up the content tree, looking for an nsIDOMAnchorElement
@@ -644,12 +645,16 @@ nsImageFrame::GetAnchorHREF(nsString& aResult)
     nsCOMPtr<nsIDOMHTMLAnchorElement> anchor(do_QueryInterface(content));
     if (anchor) {
       anchor->GetHref(aResult);
+      if (aResult.Length() > 0) {
+        status = PR_TRUE;
+      }
       break;
     }
     nsCOMPtr<nsIContent> parent;
     content->GetParent(*getter_AddRefs(parent));
     content = parent;
   }
+  return status;
 }
 
 // XXX what should clicks on transparent pixels do?
@@ -715,47 +720,48 @@ nsImageFrame::HandleEvent(nsIPresContext& aPresContext,
         // Server side image maps use the href in a containing anchor
         // element to provide the basis for the destination url.
         nsAutoString src;
-        GetAnchorHREF(src);
+        if (GetAnchorHREF(src)) {
 #ifndef NECKO
-        nsString empty;
-        NS_MakeAbsoluteURL(baseURL, empty, src, absURL);
+          nsString empty;
+          NS_MakeAbsoluteURL(baseURL, empty, src, absURL);
 #else
-        // XXX Should be a component local subroutine....
-        nsresult rv;
-        NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
-        if (NS_FAILED(rv)) return rv;
+          // XXX Should be a component local subroutine....
+          nsresult rv;
+          NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
+          if (NS_FAILED(rv)) return rv;
 
-        nsIURI *baseUri = nsnull;
-        rv = baseURL->QueryInterface(nsIURI::GetIID(), (void**)&baseUri);
-        if (NS_FAILED(rv)) return rv;
+          nsIURI *baseUri = nsnull;
+          rv = baseURL->QueryInterface(nsIURI::GetIID(), (void**)&baseUri);
+          if (NS_FAILED(rv)) return rv;
 
-        char *absUrlStr = nsnull;
-        char *baseSpec = src.ToNewCString();
-        if (!baseSpec) return NS_ERROR_OUT_OF_MEMORY;
-        rv = service->MakeAbsolute(baseSpec, baseUri, &absUrlStr);
-        NS_RELEASE(baseUri);
-        absURL = absUrlStr;
-        nsCRT::free(baseSpec);
-        delete [] absUrlStr;
+          char *absUrlStr = nsnull;
+          char *baseSpec = src.ToNewCString();
+          if (!baseSpec) return NS_ERROR_OUT_OF_MEMORY;
+          rv = service->MakeAbsolute(baseSpec, baseUri, &absUrlStr);
+          NS_RELEASE(baseUri);
+          absURL = absUrlStr;
+          nsCRT::free(baseSpec);
+          delete [] absUrlStr;
 #endif // NECKO
-        NS_IF_RELEASE(baseURL);
+          NS_IF_RELEASE(baseURL);
 
-        // XXX if the mouse is over/clicked in the border/padding area
-        // we should probably just pretend nothing happened. Nav4
-        // keeps the x,y coordinates positive as we do; IE doesn't
-        // bother. Both of them send the click through even when the
-        // mouse is over the border.
-        if (p.x < 0) p.x = 0;
-        if (p.y < 0) p.y = 0;
-        char cbuf[50];
-        PR_snprintf(cbuf, sizeof(cbuf), "?%d,%d", p.x, p.y);
-        absURL.Append(cbuf);
-        PRBool clicked = PR_FALSE;
-        if (aEvent->message == NS_MOUSE_LEFT_BUTTON_UP) {
-          aEventStatus = nsEventStatus_eConsumeDoDefault; 
-          clicked = PR_TRUE;
+          // XXX if the mouse is over/clicked in the border/padding area
+          // we should probably just pretend nothing happened. Nav4
+          // keeps the x,y coordinates positive as we do; IE doesn't
+          // bother. Both of them send the click through even when the
+          // mouse is over the border.
+          if (p.x < 0) p.x = 0;
+          if (p.y < 0) p.y = 0;
+          char cbuf[50];
+          PR_snprintf(cbuf, sizeof(cbuf), "?%d,%d", p.x, p.y);
+          absURL.Append(cbuf);
+          PRBool clicked = PR_FALSE;
+          if (aEvent->message == NS_MOUSE_LEFT_BUTTON_UP) {
+            aEventStatus = nsEventStatus_eConsumeDoDefault; 
+            clicked = PR_TRUE;
+          }
+          TriggerLink(aPresContext, absURL, target, clicked);
         }
-        TriggerLink(aPresContext, absURL, target, clicked);
       }
       break;
     }
