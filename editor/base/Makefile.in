@@ -91,6 +91,7 @@ CPPSRCS += nsAOLCiter.cpp                 \
            nsInternetCiter.cpp            \
            nsTableEditor.cpp              \
            nsWrapUtils.cpp                \
+		   nsWSRunObject.cpp              \
            TextEditorTest.cpp             \
            TypeInState.cpp                \
            SetDocTitleTxn.cpp             \

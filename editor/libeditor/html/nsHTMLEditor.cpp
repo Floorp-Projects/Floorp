@@ -64,6 +64,7 @@
 #include "nsIContentIterator.h"
 #include "nsEditorCID.h"
 #include "nsLayoutCID.h"
+#include "nsContentCID.h"
 #include "nsIDOMRange.h"
 #include "nsIDOMNSRange.h"
 #include "nsISupportsArray.h"
@@ -114,6 +115,7 @@ static NS_DEFINE_CID(kHTMLEditorCID,  NS_HTMLEDITOR_CID);
 static NS_DEFINE_CID(kCContentIteratorCID, NS_CONTENTITERATOR_CID);
 static NS_DEFINE_IID(kSubtreeIteratorCID, NS_SUBTREEITERATOR_CID);
 static NS_DEFINE_CID(kCRangeCID,      NS_RANGE_CID);
+static NS_DEFINE_IID(kRangeUtilsCID, NS_RANGEUTILS_CID);
 static NS_DEFINE_CID(kCDOMSelectionCID,      NS_DOMSELECTION_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kParserServiceCID, NS_PARSERSERVICE_CID);
@@ -232,6 +234,10 @@ NS_IMETHODIMP nsHTMLEditor::Init(nsIDOMDocument *aDoc,
 
   nsresult result = NS_OK, rulesRes = NS_OK;
 
+  // make a range util object for comparing dom points
+  mRangeHelper = do_CreateInstance(kRangeUtilsCID);
+  if (!mRangeHelper) return NS_ERROR_NULL_POINTER;
+   
   // Init mEditProperty
   result = NS_NewEditProperty(getter_AddRefs(mEditProperty));
   if (NS_FAILED(result)) { return result; }
@@ -1267,7 +1273,10 @@ NS_IMETHODIMP nsHTMLEditor::TabInTable(PRBool inIsShift, PRBool *outHandled)
   return res;
 }
 
-NS_IMETHODIMP nsHTMLEditor::CreateBRImpl(nsCOMPtr<nsIDOMNode> *aInOutParent, PRInt32 *aInOutOffset, nsCOMPtr<nsIDOMNode> *outBRNode, EDirection aSelect)
+NS_IMETHODIMP nsHTMLEditor::CreateBRImpl(nsCOMPtr<nsIDOMNode> *aInOutParent, 
+                                         PRInt32 *aInOutOffset, 
+                                         nsCOMPtr<nsIDOMNode> *outBRNode, 
+                                         EDirection aSelect)
 {
   if (!aInOutParent || !*aInOutParent || !aInOutOffset || !outBRNode) return NS_ERROR_NULL_POINTER;
   *outBRNode = nsnull;

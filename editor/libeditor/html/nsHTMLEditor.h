@@ -38,6 +38,7 @@
 #include "nsICSSLoader.h"
 #include "nsICSSLoaderObserver.h"
 #include "nsITableLayout.h"
+#include "nsIRangeUtils.h"
 
 #include "nsEditRules.h"
 
@@ -679,11 +680,14 @@ protected:
   // Used by GetFirstSelectedCell and GetNextSelectedCell
   PRInt32  mSelectedCellIndex;
 
+  nsCOMPtr<nsIRangeUtils> mRangeHelper;
+
 public:
 
 // friends
 friend class nsHTMLEditRules;
 friend class nsTextEditRules;
+friend class nsWSRunObject;
 
 };
 

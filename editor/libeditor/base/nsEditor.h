@@ -244,6 +244,8 @@ protected:
                         PRUint32             aOffset,
                         PRUint32             aLength);
 
+//  NS_IMETHOD DeleteRange(nsIDOMRange *aRange);
+
   NS_IMETHOD CreateTxnForDeleteText(nsIDOMCharacterData *aElement,
                                     PRUint32             aOffset,
                                     PRUint32             aLength,

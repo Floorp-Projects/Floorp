@@ -77,6 +77,8 @@ public:
   NS_IMETHOD DidInsertText(nsIDOMCharacterData *aTextNode, PRInt32 aOffset, const nsAReadableString &aString, nsresult aResult);
   NS_IMETHOD WillDeleteText(nsIDOMCharacterData *aTextNode, PRInt32 aOffset, PRInt32 aLength);
   NS_IMETHOD DidDeleteText(nsIDOMCharacterData *aTextNode, PRInt32 aOffset, PRInt32 aLength, nsresult aResult);
+  NS_IMETHOD WillDeleteRange(nsIDOMRange *aRange);
+  NS_IMETHOD DidDeleteRange(nsIDOMRange *aRange);
   NS_IMETHOD WillDeleteSelection(nsISelection *aSelection);
   NS_IMETHOD DidDeleteSelection(nsISelection *aSelection);
 
@@ -179,13 +181,13 @@ protected:
 
 // data members
 protected:
-  nsHTMLEditor         *mHTMLEditor;
-  nsCOMPtr<nsIDOMRange> mDocChangeRange;
-  PRBool                mListenerEnabled;
-  PRBool                mReturnInEmptyLIKillsList;
-  nsCOMPtr<nsIDOMRange> mUtilRange;
-  PRUint32              mJoinOffset;  // need to remember an int across willJoin/didJoin...
-  
+  nsHTMLEditor           *mHTMLEditor;
+  nsCOMPtr<nsIDOMRange>   mDocChangeRange;
+  PRBool                  mListenerEnabled;
+  PRBool                  mReturnInEmptyLIKillsList;
+  nsCOMPtr<nsIDOMRange>   mUtilRange;
+  PRUint32                mJoinOffset;  // need to remember an int across willJoin/didJoin...
+
 };
 
 nsresult NS_NewHTMLEditRules(nsIEditRules** aInstancePtrResult);

@@ -119,6 +119,41 @@ class nsRangeUpdater
 
 
 /***************************************************************************
+ * helper class for using nsSelectionState.  stack based class for doing
+ * preservation of dom points across editor actions
+ */
+
+class nsAutoTrackDOMPoint
+{
+  private:
+    nsRangeUpdater &mRU;
+    nsCOMPtr<nsIDOMNode> *mNode;
+    PRInt32 *mOffset;
+    nsRangeStore mRangeItem;
+  public:
+    nsAutoTrackDOMPoint(nsRangeUpdater &aRangeUpdater, nsCOMPtr<nsIDOMNode> *aNode, PRInt32 *aOffset) :
+    mRU(aRangeUpdater)
+    ,mNode(aNode)
+    ,mOffset(aOffset)
+    {
+      mRangeItem.startNode = *mNode;
+      mRangeItem.endNode = *mNode;
+      mRangeItem.startOffset = *mOffset;
+      mRangeItem.endOffset = *mOffset;
+      mRU.RegisterRangeItem(&mRangeItem);
+    }
+    
+    ~nsAutoTrackDOMPoint()
+    {
+      mRU.DropRangeItem(&mRangeItem);
+      *mNode  = mRangeItem.startNode;
+      *mOffset = mRangeItem.startOffset;
+    }
+};
+
+
+
+/***************************************************************************
  * another helper class for nsSelectionState.  stack based class for doing
  * Will/DidReplaceContainer()
  */
