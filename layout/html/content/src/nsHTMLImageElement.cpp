@@ -725,6 +725,27 @@ nsHTMLImageElement::EnumerateProperty(JSContext *aContext, JSObject *aObj)
 PRBool    
 nsHTMLImageElement::Resolve(JSContext *aContext, JSObject *aObj, jsval aID)
 {
+  if (JSVAL_IS_STRING(aID) && mInner.mDOMSlots) {
+    JSString *str;
+
+    str = JSVAL_TO_STRING(aID);
+
+    const jschar *chars = ::JS_GetStringChars(str);
+    const PRUnichar *unichars = NS_REINTERPRET_CAST(const PRUnichar*, chars);
+
+    if (!nsCRT::strcmp(unichars, NS_LITERAL_STRING("src").get())) {
+      // Someone is trying to resolve "src" so we deifine it on the
+      // object with a JSVAL_VOID value, the real value will be returned
+      // when the caller calls GetProperty().
+      ::JS_DefineUCProperty(aContext,
+                            (JSObject *)mInner.mDOMSlots->mScriptObject,
+                            chars, ::JS_GetStringLength(str),
+                            JSVAL_VOID, nsnull, nsnull, 0);
+
+      return PR_TRUE;
+    }
+  }
+
   return mInner.Resolve(aContext, aObj, aID);
 }
 
