@@ -135,20 +135,20 @@ private:
 
     /** Sets the pixel data in aDecoded to the given values.
      * The variable passed in as aDecoded will be moved on 3 bytes! */
-     nsresult SetPixel(PRUint8*& aDecoded, PRUint8 aIdx);
-     nsresult SetPixel(PRUint8*& aDecoded, PRUint8 aRed, PRUint8 aGreen, PRUint8 aBlue);
+    inline nsresult SetPixel(PRUint8*& aDecoded, PRUint8 aIdx);
+    inline nsresult SetPixel(PRUint8*& aDecoded, PRUint8 aRed, PRUint8 aGreen, PRUint8 aBlue);
 
     /** Sets one or two pixels; it is ensured that aPos is <= mBIH.width
      * @param aDecoded where the data is stored. Will be moved 3 or 6 bytes,
      * depending on whether one or two pixels are written.
      * @param aData The values for the two pixels
      * @param aPos Current position. Is incremented by one or two. */
-     nsresult Set4BitPixel(PRUint8*& aDecoded, PRUint8 aData, PRUint32& aPos);
+    inline nsresult Set4BitPixel(PRUint8*& aDecoded, PRUint8 aData, PRUint32& aPos);
 
     /** Sets the image data at specified position. mCurLine is used
      * to get the row
      * @param aData The data */
-     nsresult SetData(PRUint8* aData);
+    inline nsresult SetData(PRUint8* aData);
 
     nsCOMPtr<imgIDecoderObserver> mObserver;
 
