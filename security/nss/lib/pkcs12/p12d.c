@@ -1098,6 +1098,7 @@ p12u_DigestRead(void *arg, unsigned char *buf, unsigned long len)
     SEC_PKCS12DecoderContext* p12cxt = arg;
 
     if(!buf || len == 0 || !p12cxt->buffer) {
+	PORT_SetError(SEC_ERROR_INVALID_ARGS);
 	return -1;
     }
 
@@ -1105,7 +1106,7 @@ p12u_DigestRead(void *arg, unsigned char *buf, unsigned long len)
         /* trying to read past the end of the buffer */
         toread = p12cxt->filesize - p12cxt->currentpos;
     }
-    memcpy(buf, (void*)((char*)p12cxt->buffer + p12cxt->currentpos), toread);
+    memcpy(buf, (char*)p12cxt->buffer + p12cxt->currentpos, toread);
     p12cxt->currentpos += toread;
     return toread;
 }
@@ -1136,7 +1137,7 @@ p12u_DigestWrite(void *arg, unsigned char *buf, unsigned long len)
         p12cxt->allocated = newsize;
     }
     PR_ASSERT(p12cxt->buffer);
-    memcpy((void*)((char*)p12cxt->buffer + p12cxt->currentpos), buf, len);
+    memcpy((char*)p12cxt->buffer + p12cxt->currentpos, buf, len);
     p12cxt->currentpos += len;
     return len;
 }
@@ -1291,10 +1292,8 @@ loser:
 #define IN_BUF_LEN	1024
 #ifdef DEBUG
 static const char bufferEnd[] = { "BufferEnd" } ;
-#define FUDGE sizeof bufferEnd
-#else
-#define FUDGE 128 /* extra protection when assertions disabled. */
 #endif
+#define FUDGE 128 /* must be as large as bufferEnd or more. */
 
 /* verify the hmac by reading the data from the temporary file
  * using the routines specified when the decodingContext was 
@@ -1318,6 +1317,7 @@ sec_pkcs12_decoder_verify_mac(SEC_PKCS12DecoderContext *p12dcx)
     CK_MECHANISM_TYPE integrityMech;
     
     if(!p12dcx || p12dcx->error) {
+	PORT_SetError(SEC_ERROR_INVALID_ARGS);
 	return SECFailure;
     }
     buf = (unsigned char *)PORT_Alloc(IN_BUF_LEN + FUDGE);
@@ -1388,7 +1388,7 @@ sec_pkcs12_decoder_verify_mac(SEC_PKCS12DecoderContext *p12dcx)
 
 	if (bytesRead > IN_BUF_LEN) {
 	    /* dRead callback overflowed buffer. */
-	    PORT_SetError(SEC_ERROR_PKCS12_UNABLE_TO_READ);
+	    PORT_SetError(SEC_ERROR_INPUT_LEN);
 	    goto loser;
 	}
 
