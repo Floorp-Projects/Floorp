@@ -1143,6 +1143,7 @@
 }
 
 
+#unifinder-search-results-tree > treechildren treeitem[selected="true"] > treerow,
 #unifinder-categories-tree > treechildren treeitem[selected="true"] > treerow
 {
    background-color        : #D5E3F2;
