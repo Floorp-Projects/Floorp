@@ -433,7 +433,7 @@ void CGenericFrame::OnNcPaint()
 	CString strTitle;
 	GetWindowText( strTitle );
 
-	dc.FillRect(&rectCaption, &brCaption);
+	//dc.FillRect(&rectCaption, &brCaption);
 	dc.SetTextColor(::GetSysColor(m_bActive ? COLOR_CAPTIONTEXT : COLOR_INACTIVECAPTIONTEXT));
 	dc.SetBkMode(TRANSPARENT);
 
