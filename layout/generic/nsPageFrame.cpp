@@ -54,10 +54,6 @@ void nsPageFrame::CreateFirstChild(nsIPresContext* aPresContext)
             mChildCount = 1;
             mFirstContentOffset = i;
             mLastContentOffset = i;
-
-            // We are always a pseudo-frame; make sure our content offset is
-            // properly pushed upwards
-            PropagateContentOffsets();
           }
           NS_RELEASE(cd);
         }
@@ -168,6 +164,12 @@ NS_METHOD nsPageFrame::Reflow(nsIPresContext*      aPresContext,
     aDesiredSize.width = aReflowState.maxSize.width;
     aDesiredSize.height = aReflowState.maxSize.height;
   }
+
+  // We are always a pseudo-frame; make sure our content offset is
+  // properly pushed upwards
+  nsContainerFrame* parent = (nsContainerFrame*) mGeometricParent;
+  parent->PropagateContentOffsets(this, mFirstContentOffset,
+                                  mLastContentOffset, mLastContentIsComplete);
 
 #ifdef NS_DEBUG
   PostReflowCheck(aStatus);
