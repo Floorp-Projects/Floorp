@@ -244,7 +244,7 @@ nsNewsDatabase::ThreadBySubjectWithoutRe()
   return PR_TRUE;
 }
 
-/*
+#if 0
 nsresult
 nsNewsDatabase::CreateMsgHdr(nsIMdbRow* hdrRow, nsMsgKey key, nsIMsgDBHdr* *result)
 {
@@ -253,10 +253,7 @@ nsNewsDatabase::CreateMsgHdr(nsIMdbRow* hdrRow, nsMsgKey key, nsIMsgDBHdr* *resu
   printf("nsNewsDatabase::CreateMsgHdr()\n");
 #endif
 
-  nsIRDFService *rdf;
-  rv = nsServiceManager::GetService(kRDFServiceCID, 
-                                    nsIRDFService::GetIID(), 
-                                    (nsISupports**)&rdf);
+  NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
   
   if (NS_FAILED(rv)) return rv;
   
@@ -289,8 +286,6 @@ nsNewsDatabase::CreateMsgHdr(nsIMdbRow* hdrRow, nsMsgKey key, nsIMsgDBHdr* *resu
   msgHdr->SetMessageKey(key);
   *result = msgHdr;
   
-//  nsServiceManager::ReleaseService(kRDFServiceCID, rdf);
-  
   return NS_OK;
 }
-*/
+#endif /* 0 */
