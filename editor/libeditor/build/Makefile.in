@@ -47,6 +47,7 @@ REQUIRES        = xpcom \
                   content \
                   txmgr \
                   htmlparser \
+                  necko \
                   appshell \
                   xuldoc \
                   $(NULL)
