@@ -119,8 +119,8 @@
 		  <menuitem value="&closeCmd.label;" 
           accesskey="&fileclose.accesskey;" key="closekb" 
 		      oncommand="EditorClose()"/>
-		  <menuitem value="&quitCmd.label;" 
-          accesskey="&filequit.accesskey;" key="quitkb" 
+		  <menuitem value="&exitCmd.label;" 
+          accesskey="&fileexit.accesskey;" key="exitkb" 
 		      oncommand="EditorExit()"/>
 	  </menupopup>
     </menu>
