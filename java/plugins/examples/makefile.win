@@ -27,6 +27,7 @@ IGNORE_MANIFEST=1
 #//------------------------------------------------------------------------
 DEPTH = ..\..\..
 
-DIRS  =  MediaPlayer pdf rtf zip dom
+#DIRS  =  MediaPlayer pdf rtf zip dom
+DIRS  =  MediaPlayer SVG
 
 include <$(DEPTH)\config\rules.mak>
