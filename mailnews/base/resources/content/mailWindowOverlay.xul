@@ -129,7 +129,7 @@ Rights Reserved.
 	 ondestroy="contextMenu.onDestroy(); contextMenu = null;">
 		<menuitem id="messagePaneContext-openNewWindow"
 			  value="&contextOpenNewWindow.label;"
-			  accesskey=""
+			  accesskey="&contextOpenNewWindow.accesskey;"
 			  oncommand="MsgOpenNewWindowForMessage();"/>
         <menuitem id="context-selectall"
                   value="&selectAllCmd.label;"
@@ -142,27 +142,28 @@ Rights Reserved.
 		<menuseparator id="messagePaneContext-sep-open"/>
 		<menuitem id="messagePaneContext-replySender"
 			  value="&contextReplySender.label;"
-			  accesskey=""
+			  accesskey="&contextReplySender.accesskey;"
 			  oncommand="MsgReplyMessage(event);"/>
 		<menuitem id="messagePaneContext-replyNewsgroup"
 			  value="&contextReplyNewsgroup.label;"
-			  accesskey=""
+			  accesskey="&contextReplyNewsgroup.accesskey;"
 			  oncommand="MsgReplyMessage(event);"/>
 		<menuitem id="messagePaneContext-replyAll"
-			  value="&contextReplyAll.label;"
-			  accesskey=""
+			  value="?&contextReplyAll.label;"
+			  accesskey="&contextReplyAll.accesskey;"
 			  oncommand="MsgReplyToAllMessage(event);"/>
 		<menuitem id="messagePaneContext-forward"
 			  value="&contextForward.label;"
-			  accesskey=""
+			  accesskey="&contextForward.accesskey;"
 			  oncommand="MsgForwardMessage(event);"/>
 		<menuitem id="messagePaneContext-editAsNew"
 			  value="&contextEditAsNew.label;"
-			  accesskey=""
+			  accesskey="&contextEditAsNew.accesskey;"
 			  oncommand="MsgEditMessageAsNew();"/>
 		<menuseparator id="messagePaneContext-sep-reply"/>
 		<menu id="messagePaneContext-moveMenu"
 			  value="&contextMoveMsgMenu.label;"
+			  accesskey="&contextMoveMsgMenu.accesskey;"
 			  datasources="rdf:null"
 			  rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild">
 			<menupopup/>
@@ -214,6 +215,7 @@ Rights Reserved.
 		</menu>
 		<menu id="messagePaneContext-copyMenu"
 			value="&contextCopyMsgMenu.label;"
+			accesskey="&contextCopyMsgMenu.accesskey;"
 			datasources="rdf:null" 
 			rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild">
 			<menupopup/>
@@ -266,38 +268,38 @@ Rights Reserved.
 		</menu>
 		<menuitem id="messagePaneContext-saveAs"
 			  value="&contextSaveAs.label;"
-			  accesskey=""
+			  accesskey="&contextSaveAs.accesskey;"
 			  oncommand="MsgSaveAsFile();"/>
 		<menuitem id="messagePaneContext-print"
 			  value="&contextPrint.label;"
-			  accesskey=""
+			  accesskey="&contextPrint.accesskey;"
 			  oncommand="PrintEnginePrint();"/>
 		<menuitem id="messagePaneContext-delete"
 			  value="&contextDelete.label;"
-			  accesskey=""
+			  accesskey="&contextDelete.accesskey;"
 			  oncommand="MsgDeleteMessage(false, false);"/>
 		<menuseparator id="messagePaneContext-sep-edit"/>
 		<menuitem id="messagePaneContext-addSenderToAddressBook"
 			  value="&contextAddSenderToAddressBook.label;"
-			  accesskey=""
+			  accesskey="&contextAddSenderToAddressBook.accesskey;"
 			  oncommand="MsgAddSenderToAddressBook();"/>
 		<menuitem id="messagePaneContext-addAllToAddressBook"
 			  value="&contextAddAllToAddressBook.label;"
-			  accesskey=""
+			  accesskey="&contextAddAllToAddressBook.accesskey;"
 			  oncommand="MsgAddAllToAddressBook();"/>
         <menuseparator id="messagePaneContext-sep-addressBook"/>
         <menuitem id="context-openlink"
                   value="&openLinkCmd.label;"
-                  accesskey=""
+                  accesskey="&openLinkCmd.accesskey;"
                   oncommand="contextMenu.openLink();"/>
         <menuitem id="context-editlink"
                   value="&editLinkCmd.label;"
-                  accesskey=""
+                  accesskey="&editLinkCmd.accesskey;"
                   oncommand="contextMenu.editLink();"/>
         <menuseparator id="messagePaneContext-sep-link"/>
         <menuitem id="context-viewimage"
                   value="&viewImageCmd.label;"
-                  accesskey=""
+                  accesskey="&viewImageCmd.accesskey;"
                   oncommand="contextMenu.viewImage();"/>
         <menuseparator id="messagePaneContext-sep-image"/>
         <menuitem id="context-copylink"
@@ -374,7 +376,7 @@ Rights Reserved.
 			<menuitem value="&importCmd.label;" accesskey="&importCmd.accesskey;" oncommand="toImport();"/>
 			<menuseparator/>
 			<menuitem observes="cmd_pageSetup"/>
-			<menuitem value="&printPreviewCmd.label;" disabled="true" oncommand="PrintPreview();"/>
+			<menuitem value="&printPreviewCmd.label;" accesskey="&printPreviewCmd.accesskey;" disabled="true" oncommand="PrintPreview();"/>
 			<menuitem value="&printCmd.label;" accesskey="&printCmd.accesskey;" oncommand="PrintEnginePrint();"/>
 			<menuseparator/>
 		</menupopup>
@@ -382,8 +384,8 @@ Rights Reserved.
 
 	<menu id="menu_Edit" onclick="CommandUpdate_UndoRedo();">
 		<menupopup>
-			<menuitem id="menu_undo" value="&undoDefaultCmd.label;" key="key_undo" oncommand="Undo()"/>
-			<menuitem id="menu_redo" value="&redoDefaultCmd.label;" key="key_redo" oncommand="Redo()"/>
+			<menuitem id="menu_undo" value="&undoDefaultCmd.label;" accesskey="&undoDefaultCmd.accesskey;" key="key_undo" oncommand="Undo()"/>
+			<menuitem id="menu_redo" value="&redoDefaultCmd.label;" accesskey="&redoDefaultCmd.accesskey;" key="key_redo" oncommand="Redo()"/>
 			<menuseparator/>
 			<menuitem id="menu_cut"/>
 			<menuitem id="menu_copy"/>
@@ -392,13 +394,21 @@ Rights Reserved.
 			<menuitem id="menu_delete"/>
 			<menuseparator/>
 			<menuitem id="menu_selectAll"/>
-			<menuitem value="&selectThreadCmd.label;" disabled="true" oncommand="MsgSelectThread();"/>
-			<menuitem value="&selectFlaggedCmd.label;" disabled="true" oncommand="MsgSelectFlaggedMsg();"/>
+			<menu value="&selectMenu.label;" accesskey="&selectMenu.accesskey;" id="menu_selectMenu">
+				<menupopup>
+					<menuitem value="&selectThreadCmd.label;" accesskey="&selectThreadCmd.accesskey;" disabled="true" oncommand="MsgSelectThread();"/>
+					<menuitem value="&selectFlaggedCmd.label;" accesskey="&selectFlaggedCmd.accesskey;" disabled="true" oncommand="MsgSelectFlaggedMsg();"/>
+<!--
+					<menuseparator/>
+					<menuitem value="&selectInvertCmd.label;" accesskey="&selectInvertCmd.accesskey;" disabled="true" oncommand="MsgSelectInvertMsg();"/>
+-->
+				</menupopup>
+			</menu>
 			<menuseparator/>
 			<menuitem value="&filtersCmd.label;"
                       accesskey="&filtersCmd.accesskey;"
                       oncommand="MsgFilters();"/>
-			<menuitem value="&folderPropsCmd.label;" disabled="true" oncommand="MsgFolderProperties();"/>
+			<menuitem value="&folderPropsCmd.label;" accesskey="&folderPropsCmd.accesskey;" disabled="true" oncommand="MsgFolderProperties();"/>
 			<menuseparator/>
 			<menuitem value="&accountManagerCmd.label;" accesskey="&accountManagerCmd.accesskey;" oncommand="MsgAccountManager();"/>
 			<menuitem id="menu_preferences" oncommand="goPreferences('messenger.xul', 'chrome://messenger/content/pref-mailnews.xul','mailnews')"/>
@@ -406,182 +416,121 @@ Rights Reserved.
 	</menu>
 
 	<menu id="menu_View">
-		<menupopup id="menu_View_Popup">
+		<menupopup id="menu_View_Popup" oncreate="view_init()">
 			<menu id="menu_Toolbars">
 				<menupopup>
 					<menuitem id="menu_showMessengerToolbar"
+					 type="checkbox"
 					 value="&showMessengerToolbarCmd.label;"
 					 accesskey="&showMessengerToolbarCmd.accesskey;"
 					 oncommand="goToggleToolbar('msgToolbar', 'menu_showMessengerToolbar')"
 					 checked="true"/>
-					<menuitem id="menu_showLocationToolbar"
-					 value="&showLocationToolbarCmd.label;"
-					 accesskey="&showLocationToolbarCmd.accesskey;"
-					 disabled="true"/>
-					<menuitem id="menu_showTaskbar"/>
+					<menuitem type="checkbox" id="menu_showTaskbar"/>
 				</menupopup>
 			</menu>
-			<menuitem value="&showMessageCmd.label;" oncommand="MsgToggleMessagePane();"/>
+			<menuitem id="menu_showMessage"
+			 type="checkbox"
+			 value="&showMessageCmd.label;"
+			 accesskey="&showMessageCmd.accesskey;"
+			 oncommand="MsgToggleMessagePane();"/>
 			<menuseparator/>
 			<menu value="&sortMenu.label;">
 				<menupopup>
-					<menuitem value="&sortByDateCmd.label;" observes="cmd_sortByDate"/>
-					<menuitem value="&sortByFlagCmd.label;" observes="cmd_sortByFlag"/>
-					<menuitem value="&sortByPriorityCmd.label;" observes="cmd_sortByPriority"/>
-					<menuitem value="&sortBySenderCmd.label;" observes="cmd_sortBySender"/>
-					<menuitem value="&sortBySizeCmd.label;" observes="cmd_sortBySize"/>
-					<menuitem value="&sortByStatusCmd.label;" observes="cmd_sortByStatus"/>
-					<menuitem value="&sortBySubjectCmd.label;" observes="cmd_sortBySubject"/>
-					<menuitem value="&sortByUnreadCmd.label;"  observes="cmd_sortByRead"/>
-					<menuitem value="&sortByOrderReceivedCmd.label;"  observes="cmd_sortByOrderReceived"/>
+					<menuitem value="&sortByDateCmd.label;" accesskey="&sortByDateCmd.accesskey;" observes="cmd_sortByDate"/>
+					<menuitem value="&sortByFlagCmd.label;" accesskey="&sortByFlagCmd.accesskey;" observes="cmd_sortByFlag"/>
+					<menuitem value="&sortByPriorityCmd.label;" accesskey="&sortByPriorityCmd.accesskey;" observes="cmd_sortByPriority"/>
+					<menuitem value="&sortBySenderCmd.label;" accesskey="&sortBySenderCmd.accesskey;" observes="cmd_sortBySender"/>
+					<menuitem value="&sortBySizeCmd.label;" accesskey="&sortBySizeCmd.accesskey;" observes="cmd_sortBySize"/>
+					<menuitem value="&sortByStatusCmd.label;" accesskey="&sortByStatusCmd.accesskey;" observes="cmd_sortByStatus"/>
+					<menuitem value="&sortBySubjectCmd.label;" accesskey="&sortBySubjectCmd.accesskey;" observes="cmd_sortBySubject"/>
+					<menuitem value="&sortByUnreadCmd.label;"  accesskey="&sortByUnreadCmd.accesskey;" observes="cmd_sortByRead"/>
+					<menuitem value="&sortByOrderReceivedCmd.label;"  accesskey="&sortByOrderReceivedCmd.accesskey;" observes="cmd_sortByOrderReceived"/>
 					<menuseparator/>
-					<menuitem value="&sortAscendCmd.label;" disabled="true" observes="cmd_sortAscending"/>
-					<menuitem value="&sortDescendCmd.label;" disabled="true" observes="cmd_sortDescending"/>
+					<menuitem value="&sortAscendCmd.label;" accesskey="&sortAscendCmd.accesskey;" disabled="true" observes="cmd_sortAscending"/>
+					<menuitem value="&sortDescendCmd.label;" accesskey="&sortDescendCmd.accesskey;" disabled="true" observes="cmd_sortDescending"/>
 				</menupopup>
 			</menu>
-			<menu value="&msgsMenu.label;">
+			<menu value="&msgsMenu.label;" accesskey="&msgsMenu.accesskey;">
 				<menupopup>
-					<menuitem value="&allMsgsCmd.label;" disabled="true" observes="cmd_viewAllMsgs"/>
-					<menuitem value="&unreadMsgsCmd.label;" disabled="true" observes="cmd_viewUnreadMsgs"/>
-					<menuitem value="&threadsWithUnreadMsgsCmd.label;" disabled="true" oncommand="MsgViewThreadsUnread();"/>
-					<menuitem value="&watchedThreadsMsgsCmd.label;" disabled="true" oncommand="MsgViewWatchedThreadsUnread();"/>
+					<menuitem value="&allMsgsCmd.label;" accesskey="&allMsgsCmd.accesskey;" disabled="true" observes="cmd_viewAllMsgs"/>
+					<menuitem value="&unreadMsgsCmd.label;" accesskey="&unreadMsgsCmd.accesskey;" disabled="true" observes="cmd_viewUnreadMsgs"/>
+					<menuitem value="&threadsWithUnreadMsgsCmd.label;" accesskey="&threadsWithUnreadMsgsCmd.accesskey;" disabled="true" oncommand="MsgViewThreadsUnread();"/>
+					<menuitem value="&watchedThreadsMsgsCmd.label;" accesskey="&watchedThreadsMsgsCmd.accesskey;" disabled="true" oncommand="MsgViewWatchedThreadsUnread();"/>
 					<menuseparator/>
-					<menuitem value="&ignoreThreadMsgsCmd.label;" disabled="true" oncommand="MsgViewIgnoreThread();"/>
+					<menuitem value="&ignoreThreadMsgsCmd.label;" accesskey="&ignoreThreadMsgsCmd.accesskey;" disabled="true" oncommand="MsgViewIgnoreThread();"/>
 				</menupopup>
 			</menu>
-			<menu id="viewheadersmenu" value="&headersMenu.label;">
+			<menu id="viewheadersmenu" value="&headersMenu.label;" accesskey="&headersMenu.accesskey;">
 				<menupopup>
-					<menuitem id="viewallheaders" type="radio" name="viewheadergroup" value="&headersAllCmd.label;"  oncommand="MsgViewAllHeaders();"/>
-					<menuitem id="viewnormalheaders" type="radio" name="viewheadergroup" value="&headersNormalCmd.label;" oncommand="MsgViewNormalHeaders();"/>
-					<menuitem id="viewbriefheaders" type="radio" name="viewheadergroup" value="&headersBriefCmd.label;" disabled="true" oncommand="MsgViewBriefHeaders();"/>
+					<menuitem id="viewallheaders"
+					 type="radio"
+					 name="viewheadergroup"
+					 value="&headersAllCmd.label;"
+					 accesskey="&headersAllCmd.accesskey;"
+					 oncommand="MsgViewAllHeaders();"/>
+					<menuitem id="viewnormalheaders"
+					 checked="true"
+					 type="radio"
+					 name="viewheadergroup"
+					 value="&headersNormalCmd.label;"
+					 accesskey="&headersNormalCmd.accesskey;"
+					 oncommand="MsgViewNormalHeaders();"/>
+					<menuitem id="viewbriefheaders"
+					 type="radio"
+					 name="viewheadergroup"
+					 value="&headersBriefCmd.label;"
+					 accesskey="&headersBriefCmd.accesskey;"
+					 disabled="true"
+					 oncommand="MsgViewBriefHeaders();"/>
 				</menupopup>
 			</menu>
-			<menuitem value="&threadsMsgsCmd.label;" observes="cmd_sortByThread"/>
+			<menuitem id="menu_showThreads"
+			 type="checkbox"
+			 value="&threadsMsgsCmd.label;"
+			 accesskey="&threadsMsgsCmd.accesskey;"
+			 observes="cmd_sortByThread"/>
 			<menuseparator/>
-			<menuitem value="&viewAttachmentsInlineCmd.label;" disabled="true" oncommand="MsgViewAttachInline();"/>
-			<menuitem value="&wrapLongLinesCmd.label;" disabled="true" oncommand="MsgWrapLongLines();"/>
+			<menuitem value="&viewAttachmentsInlineCmd.label;" accesskey="&viewAttachmentsInlineCmd.accesskey;" disabled="true" oncommand="MsgViewAttachInline();"/>
+			<menuitem value="&wrapLongLinesCmd.label;" accesskey="&wrapLongLinesCmd.accesskey;" disabled="true" oncommand="MsgWrapLongLines();"/>
 			<menuseparator/>
-			<menuitem value="&increaseFontCmd.label;" disabled="true" oncommand="MsgIncreaseFont();"/>
-			<menuitem value="&decreaseFontCmd.label;" disabled="true" oncommand="MsgDecreaseFont();"/>
+			<menuitem value="&increaseFontCmd.label;" accesskey="&increaseFontCmd.accesskey;" disabled="true" oncommand="MsgIncreaseFont();"/>
+			<menuitem value="&decreaseFontCmd.label;" accesskey="&decreaseFontCmd.accesskey;" disabled="true" oncommand="MsgDecreaseFont();"/>
 			<menuseparator/>
-			<menuitem value="&reloadCmd.label;" oncommand="MsgReload();"/>
-			<menuitem value="&showImagesCmd.label;" disabled="true" oncommand="MsgShowImages();"/>
-			<menuitem value="&stopCmd.label;" disabled="true" oncommand="MsgStop();"/>
+			<menuitem value="&reloadCmd.label;" accesskey="&reloadCmd.accesskey;" oncommand="MsgReload();"/>
+			<menuitem value="&showImagesCmd.label;" accesskey="&showImagesCmd.accesskey;" disabled="true" oncommand="MsgShowImages();"/>
+			<menuitem value="&stopCmd.label;" accesskey="&stopCmd.accesskey;" disabled="true" oncommand="MsgStop();"/>
 			<menuseparator/>
-			<menuitem value="&pageSourceCmd.label;" oncommand="MsgViewPageSource();"/>
-			<menuitem value="&pageInfoCmd.label;" disabled="true" oncommand="MsgViewPageInfo();"/>
+			<menuitem value="&pageSourceCmd.label;" accesskey="&pageSourceCmd.accesskey;" oncommand="MsgViewPageSource();"/>
+			<menuitem value="&pageInfoCmd.label;" accesskey="&pageInfoCmd.accesskey;" disabled="true" oncommand="MsgViewPageInfo();"/>
 			<menuseparator/>
-<!-- Deprecated BEGIN
-			<menu value="&dcharMenu.label;">
-				<menupopup>
-					<menuitem value="&dcharIso1Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('ISO-8859-1');"/>
-					<menuitem value="&dcharIso15Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('ISO-8859-15');"/>
-					<menuitem value="&dcharIso2Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('ISO-8859-2');"/>
-					<menuitem value="&dcharIso3Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('ISO-8859-3');"/>
-					<menuitem value="&dcharIso4Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('ISO-8859-4');"/>
-					<menuitem value="&dcharIsoGreekCmd.label;" oncommand="MessengerSetDefaultCharacterSet('ISO-8859-7');"/>
-					<menuitem value="&dcharIso9Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('ISO-8859-9');"/>
-					<menuitem value="&dcharIso10Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('ISO-8859-10');"/>
-					<menuitem value="&dcharIso13Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('ISO-8859-13');"/>
-					<menuitem value="&dcharIso14Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('ISO-8859-14');"/>
-				</menupopup>
-			</menu>
-			<menu value="&dcharMenu1.label;">
-				<menupopup>
-					<menuitem value="&dcharJapanCmd.label;" oncommand="MessengerSetDefaultCharacterSet('ISO-2022-JP');"/>
-					<menuitem value="&dcharJapanShiftjsCmd.label;" oncommand="MessengerSetDefaultCharacterSet('Shift_JIS');"/>
-					<menuitem value="&dcharJapanEucCmd.label;" oncommand="MessengerSetDefaultCharacterSet('EUC-JP');"/>
-					<menuseparator />
-					<menuitem value="&dcharTradChiBigCmd.label;" oncommand="MessengerSetDefaultCharacterSet('Big5');"/>
-					<menuitem value="&dcharTriChiEucCmd.label;" oncommand="MessengerSetDefaultCharacterSet('x-euc-tw');"/>
-					<menuitem value="&dcharSimpChiGbCmd.label;" oncommand="MessengerSetDefaultCharacterSet('GB2312');"/>
-					<menuseparator />
-					<menuitem value="&dcharKoreanCmd.label;" oncommand="MessengerSetDefaultCharacterSet('EUC-KR');"/>
-					<menuseparator />
-					<menuitem value="&dcharUtf7Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('UTF-7');"/>
-					<menuitem value="&dcharUtf8Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('UTF-8');"/>
-				</menupopup>
-			</menu>
-			<menu value="&dcharMenu2.label;">
-				<menupopup>
-					<menuitem value="&dcharRusCmd.label; " oncommand="MessengerSetDefaultCharacterSet('KOI8-R');"/>
-					<menuitem value="&dcharIsoCyrCmd.label;" oncommand="MessengerSetDefaultCharacterSet('ISO-8859-5');"/>
-					<menuitem value="&dcharWinCyrCmd.label;" oncommand="MessengerSetDefaultCharacterSet('windows-1251');"/>
-					<menuitem value="&dcharEcmaCyrCmd.label;" oncommand="MessengerSetDefaultCharacterSet('ISO-IR-111');"/>
-					<menuitem value="&dcharDosCyrCmd.label;" oncommand="MessengerSetDefaultCharacterSet('IBM866');"/>
-					<menuitem value="&dcharMacCyrCmd.label;" oncommand="MessengerSetDefaultCharacterSet('x-mac-cyrillic');"/>
-					<menuitem value="&dcharUkrCmd.label;" oncommand="MessengerSetDefaultCharacterSet('KOI8-U');"/>
-					<menuitem value="&dcharMacUkrCmd.label;" oncommand="MessengerSetDefaultCharacterSet('x-mac-ukrainian');"/>
-				</menupopup>
-			</menu>
-			<menu value="&dcharMenu3.label;">
-				<menupopup>
-					<menuitem value="&dcharWinVietCmd.label;" oncommand="MessengerSetDefaultCharacterSet('windows-1258');"/>
-					<menuitem value="&dcharVietTcnCmd.label;" oncommand="MessengerSetDefaultCharacterSet('x-viet-tcvn5712');"/>
-					<menuitem value="&dcharVietViCmd.label;" oncommand="MessengerSetDefaultCharacterSet('VISCII');"/>
-					<menuitem value="&dcharVieVpCmd.label;" oncommand="MessengerSetDefaultCharacterSet('x-viet-vps');"/>
-					<menuseparator />
-					<menuitem value="&dcharThaiCmd.label;" oncommand="MessengerSetDefaultCharacterSet('TIS-620');"/>
-					<menuseparator />
-					<menuitem value="&dcharArmCmd.label;" oncommand="MessengerSetDefaultCharacterSet('ARMSCII-8');"/>
-					<menuseparator />
-					<menuitem value="&dcharIso6Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('ISO-8859-6');"/>
-					<menuitem value="&dcharCp1256Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('windows-1256');"/>
-					<menuseparator />
-					<menuitem value="&dcharIso8Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('ISO-8859-8');"/>
-					<menuitem value="&dcharCp1255Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('windows-1255');"/>
-				</menupopup>
-			</menu>
-			<menu value="&dcharMenu4.label;">
-				<menupopup>
-					<menuitem value="&dcharMacRomCmd.label;" oncommand="MessengerSetDefaultCharacterSet('x-mac-roman');"/>
-					<menuitem value="&dcharMacCenEuroCmd.label;" oncommand="MessengerSetDefaultCharacterSet('x-mac-ce');"/>
-					<menuitem value="&dcharMacTurCmd.label;" oncommand="MessengerSetDefaultCharacterSet('x-mac-turkish');"/>
-					<menuitem value="&dcharMacCroaCmd.label;" oncommand="MessengerSetDefaultCharacterSet('x-mac-croatian');"/>
-					<menuitem value="&dcharMacRomanianCmd.label;" oncommand="MessengerSetDefaultCharacterSet('x-mac-romanian');"/>
-					<menuitem value="&dcharMacIceCmd.label;" oncommand="MessengerSetDefaultCharacterSet('x-mac-icelandic');"/>
-					<menuitem value="&dcharMacGreekCmd.label;" oncommand="MessengerSetDefaultCharacterSet('x-mac-greek');"/>
-				</menupopup>
-			</menu>
-			<menu value="&dcharMenu5.label;">
-				<menupopup>
-					<menuitem value="&dcharWinLat1Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('windows-1252');"/>
-					<menuitem value="&dcharWinLat2Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('windows-1250');"/>
-					<menuitem value="&dcharWinLat5Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('windows-1254');"/>
-					<menuitem value="&dcharWinBalRimCmd.label;" oncommand="MessengerSetDefaultCharacterSet('windows-1257');"/>
-					<menuitem value="&dcharWinGreekCmd.label;" oncommand="MessengerSetDefaultCharacterSet('windows-1253');"/>
-				</menupopup>
-			</menu>
-END of Deprecated -->
-            <menu id = "mailviewCharsetMenu" />
+			<menu id = "mailviewCharsetMenu" />
 		</menupopup>
 	</menu>
 	<menu value="&searchMenu.label;" accesskey="&searchMenu.accesskey;">
 		<menupopup>
-			<menuitem value="&findCmd.label;" oncommand="MsgFind();"/>
-			<menuitem value="&findAgainCmd.label;" oncommand="MsgFindAgain();"/>
+			<menuitem value="&findCmd.label;" accesskey="&findCmd.accesskey;" oncommand="MsgFind();"/>
+			<menuitem value="&findAgainCmd.label;" accesskey="&findAgainCmd.accesskey;" oncommand="MsgFindAgain();"/>
 			<menuseparator/>
 			<!--
-			<menuitem value="&searchCurrentCmd.label;" disabled="true" oncommand="MsgSearchCurrent();"/>
-			<menuitem value="&searchParentCmd.label;" disabled="true" oncommand="MsgSearchParent();"/>
-			<menuitem value="&searchParentParentCmd.label;" disabled="true" oncommand="MsgSearchParentParent();"/>
-
+			<menuitem value="&searchCurrentCmd.label;" accesskey="&searchCurrentCmd.accesskey;" disabled="true" oncommand="MsgSearchCurrent();"/>
+			<menuitem value="&searchParentCmd.label;" accesskey="&searchCurrentCmd.accesskey;" disabled="true" oncommand="MsgSearchParent();"/>
+			<menuitem value="&searchParentParentCmd.label;" accesskey="&searchParentParentCmd.accesskey;" disabled="true" oncommand="MsgSearchParentParent();"/>
 			<menuseparator/>
 			-->
-			<menuitem value="&searchInternetCmd.label;" disabled="true" oncommand="MsgSearchInternet();"/>
-			<menuitem value="&searchMailCmd.label;" oncommand="MsgSearchMessages();" accesskey="&searchMailCmd.accesskey;"/>
-			<menuitem value="&searchBookmarksCmd.label;" disabled="true" oncommand="MsgSearchBookmarks();"/>
-			<menuitem value="&searchPeopleCmd.label;" disabled="true" oncommand="MsgSearchPeople();"/>
+			<menuitem value="&searchInternetCmd.label;" accesskey="&searchInternetCmd.accesskey;" disabled="true" oncommand="MsgSearchInternet();"/>
+			<menuitem value="&searchMailCmd.label;" accesskey="&searchMailCmd.accesskey;" oncommand="MsgSearchMessages();"/>
+			<menuitem value="&searchBookmarksCmd.label;" accesskey="&searchBookmarksCmd.accesskey;" disabled="true" oncommand="MsgSearchBookmarks();"/>
+			<menuitem value="&searchPeopleCmd.label;" accesskey="&searchPeopleCmd.accesskey;" disabled="true" oncommand="MsgSearchPeople();"/>
 			<menuseparator/>
-			<menuitem value="&searchLocalCmd.label;" disabled="true" oncommand="MsgSearchLocal();"/>
+			<menuitem value="&searchLocalCmd.label;" accesskey="&searchLocalCmd.accesskey;" disabled="true" oncommand="MsgSearchLocal();"/>
 		</menupopup>
 	</menu>
 	<menu value="&goMenu.label;" accesskey="&goMenu.accesskey;">
 		<menupopup>
-			<menuitem value="&firstUnreadMsgCmd.label;" disabled="true" oncommand="MsgFirstUnreadMessage();"/>
-			<menuitem value="&firstFlaggedMsgCmd.label;" disabled="true" oncommand="MsgFirstFlaggedMessage();"/>
+			<menuitem value="&firstUnreadMsgCmd.label;" accesskey="&firstUnreadMsgCmd.accesskey;" disabled="true" oncommand="MsgFirstUnreadMessage();"/>
+			<menuitem value="&firstFlaggedMsgCmd.label;" accesskey="&firstFlaggedMsgCmd.accesskey;" disabled="true" oncommand="MsgFirstFlaggedMessage();"/>
 			<menuseparator/>
-			<menu value="&nextMenu.label;">
+			<menu value="&nextMenu.label;" accesskey="&nextMenu.accesskey;">
 				<menupopup>
 					<menuitem value="&nextMsgCmd.label;" key="key_nextMsg" accesskey="&nextMsgCmd.accesskey;" observes="cmd_nextMsg"/>
 					<menuitem value="&nextUnreadMsgCmd.label;" key="key_nextUnreadMsg" accesskey="&nextUnreadMsgCmd.accesskey;" observes="cmd_nextUnreadMsg"/>
@@ -590,7 +539,7 @@ END of Deprecated -->
 					<menuitem value="&nextUnreadThread.label;" accesskey="&nextUnreadThreadCmd.accesskey;" observes="cmd_nextUnreadThread"/>
 				</menupopup>
 			</menu>
-			<menu value="&prevMenu.label;">
+			<menu value="&prevMenu.label;" accesskey="&prevMenu.accesskey;">
 				<menupopup>
 					<menuitem value="&prevMsgCmd.label;" key="key_previousMsg" accesskey="&previousMsgCmd.accesskey;" observes="cmd_previousMsg"/>
 					<menuitem value="&prevUnreadMsgCmd.label;" key="key_previousUnreadMsg" accesskey="&previousUnreadMsgCmd.accesskey;" observes="cmd_previousUnreadMsg"/>
@@ -598,8 +547,10 @@ END of Deprecated -->
 				</menupopup>
 			</menu>
 			<menuseparator/>
-			<menuitem value="&backCmd.label;" disabled="true" oncommand="MsgGoBack();"/>
-			<menuitem value="&forwardCmd.label;" disabled="true" oncommand="MsgGoForward();"/>
+			<menuitem value="&backCmd.label;" accesskey="&backCmd.accesskey;" disabled="true" oncommand="MsgGoBack();"/>
+			<menuitem value="&forwardCmd.label;" accesskey="&forwardCmd.accesskey;" disabled="true" oncommand="MsgGoForward();"/>
+			<menuseparator/>
+			<menuitem value="&startPageCmd.label;" accesskey="&startPageCmd.accesskey;" oncommand="HideMessageHeaderPane();loadStartPage();"/>
 		</menupopup>
 	</menu>
 <menu value="&msgMenu.label;" accesskey="&msgMenu.accesskey;">
@@ -620,15 +571,15 @@ END of Deprecated -->
 			accesskey="&forwardMsgCmd.accesskey;"
 			key="key_forward"
 			oncommand="MsgForwardMessage(event);"/>
- 		<menu value="&forwardAsMenu.label;">
+ 		<menu value="&forwardAsMenu.label;" accesskey="&forwardAsMenu.accesskey;">
 			<menupopup>
-				<menuitem value="&forwardAsInline.label;" oncommand="MsgForwardAsInline(event);"/>
-				<menuitem value="&forwardAsAttachmentCmd.label;" oncommand="MsgForwardAsAttachment(event);"/>
+				<menuitem value="&forwardAsInline.label;" accesskey="&forwardAsInline.accesskey;" oncommand="MsgForwardAsInline(event);"/>
+				<menuitem value="&forwardAsAttachmentCmd.label;" accesskey="&forwardAsAttachmentCmd.accesskey;" oncommand="MsgForwardAsAttachment(event);"/>
 			</menupopup>
 		</menu>
-		<menuitem value="&editMsgAsNewCmd.label;" oncommand="MsgEditMessageAsNew();"/>
+		<menuitem value="&editMsgAsNewCmd.label;" accesskey="&editMsgAsNewCmd.accesskey;" oncommand="MsgEditMessageAsNew();"/>
 		<menuseparator/>
-		<menu value="&moveMsgMenu.label;" id="moveMenu" datasources="rdf:null"
+		<menu value="&moveMsgMenu.label;" accesskey="&moveMsgMenu.accesskey;" id="moveMenu" datasources="rdf:null"
 		 rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild">
 			<menupopup/>
 			<template> 
@@ -677,7 +628,7 @@ END of Deprecated -->
 				</rule>
 			</template>
 		</menu>
-		<menu value="&copyMsgMenu.label;" id="copyMenu" datasources="rdf:null"
+		<menu value="&copyMsgMenu.label;" accesskey="&copyMsgMenu.accesskey;" id="copyMenu" datasources="rdf:null"
 		 rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild">
 			<menupopup/>
 			<template>
@@ -728,24 +679,24 @@ END of Deprecated -->
 			</template>
 		</menu>
 		<menuseparator/>
-		<menuitem value="&addSenderToAddressBookCmd.label;" disabled="true" oncommand="MsgAddSenderToAddressBook();"/>
-		<menuitem value="&addAllToAddressBookCmd.label;" disabled="true" oncommand="MsgAddAllToAddressBook();"/>
+		<menuitem value="&addSenderToAddressBookCmd.label;" accesskey="&addSenderToAddressBookCmd.accesskey;" disabled="true" oncommand="MsgAddSenderToAddressBook();"/>
+		<menuitem value="&addAllToAddressBookCmd.label;" accesskey="&addAllToAddressBookCmd.accesskey;" disabled="true" oncommand="MsgAddAllToAddressBook();"/>
 		<menuseparator/>
-		<menu value="&markMenu.label;">
+		<menu value="&markMenu.label;" accesskey="&markMenu.accesskey;">
 			<menupopup>
-				<menuitem value="&markAsReadCmd.label;" oncommand="MsgMarkMsgAsRead(true);"/>
-				<menuitem value="&markAsUnreadCmd.label;" oncommand="MsgMarkMsgAsRead(false);"/>
-				<menuitem value="&markThreadAsReadCmd.label;" oncommand="MsgMarkThreadAsRead();"/>
-				<menuitem value="&markByDateCmd.label;" disabled="true" oncommand="MsgMarkByDate();"/>
-				<menuitem value="&markAllReadCmd.label;" oncommand="MsgMarkAllRead();"/>
+				<menuitem value="&markAsReadCmd.label;" accesskey="&markAsReadCmd.accesskey;" oncommand="MsgMarkMsgAsRead(true);"/>
+				<menuitem value="&markAsUnreadCmd.label;" accesskey="&markAsUnreadCmd.accesskey;" oncommand="MsgMarkMsgAsRead(false);"/>
+				<menuitem value="&markThreadAsReadCmd.label;" accesskey="&markThreadAsReadCmd.accesskey;" oncommand="MsgMarkThreadAsRead();"/>
+				<menuitem value="&markByDateCmd.label;" accesskey="&markByDateCmd.accesskey;" disabled="true" oncommand="MsgMarkByDate();"/>
+				<menuitem value="&markAllReadCmd.label;" accesskey="&markAllReadCmd.accesskey;" oncommand="MsgMarkAllRead();"/>
 				<menuseparator/>
-				<menuitem value="&markFlaggedCmd.label;" oncommand="MsgMarkAsFlagged(true);"/>
-				<menuitem value="&markUnflaggedCmd.label;" oncommand="MsgMarkAsFlagged(false);"/>
+				<menuitem value="&markFlaggedCmd.label;" accesskey="&markFlaggedCmd.accesskey;" oncommand="MsgMarkAsFlagged(true);"/>
+				<menuitem value="&markUnflaggedCmd.label;" accesskey="&markUnflaggedCmd.accesskey;" oncommand="MsgMarkAsFlagged(false);"/>
 			</menupopup>
 		</menu>
 		<menuseparator/>
-		<menuitem value="&ignoreThreadCmd.label;" disabled="true" oncommand="MsgIgnoreThread();"/>
-		<menuitem value="&watchThreadCmd.label;" disabled="true" oncommand="MsgWatchThread();"/>
+		<menuitem value="&ignoreThreadCmd.label;" accesskey="&ignoreThreadCmd.accesskey;" disabled="true" oncommand="MsgIgnoreThread();"/>
+		<menuitem value="&watchThreadCmd.label;" accesskey="&watchThreadCmd.accesskey;" disabled="true" oncommand="MsgWatchThread();"/>
 	</menupopup>
 </menu>
 
@@ -818,9 +769,9 @@ END of Deprecated -->
       <menubutton class="menubutton-dual toolbar" id="button-print" value="&printButton.label;" 
                   crop="right" buttonaction="PrintEnginePrint();" tooltip="aTooltip" buttontooltiptext="&printButton.tooltip;">  
      	  <menupopup id="printMenu">
-    			<menuitem value="&printCmd.label;" oncommand="PrintEnginePrint();" default="true"/>
+    			<menuitem value="&printCmd.label;" accesskey="&printCmd.accesskey;" oncommand="PrintEnginePrint();" default="true"/>
     			<menuitem observes="cmd_pageSetup" />
-		    	<menuitem value="&printPreviewCmd.label;" disabled="true" oncommand="PrintPreview();"/>
+		    	<menuitem value="&printPreviewCmd.label;" accesskey="&printPreviewCmd.accesskey;" disabled="true" oncommand="PrintPreview();"/>
         </menupopup>
   	  </menubutton>
 			<button class="button-toolbar-2 top" id="button-stop" value="&stopButton.label;"  tooltip="aTooltip" tooltiptext="&stopButton.tooltip;" onclick="MsgStop();"/>
@@ -839,4 +790,5 @@ END of Deprecated -->
 	<statusbarpanel id="security-button"/>
 </statusbar> 
 <toolbox id="taskbar" class="chromeclass-extrachrome toolbox-bottom"/>
+
 </overlay>

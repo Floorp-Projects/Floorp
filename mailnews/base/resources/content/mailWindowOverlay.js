@@ -18,6 +18,19 @@
  * Rights Reserved.
  */
 
+function view_init()
+{
+	var message_menuitem=document.getElementById('menu_showMessage');
+	if (message_menuitem){
+		message_menuitem.setAttribute('checked',!IsThreadAndMessagePaneSplitterCollapsed());
+	}
+	var threadColumn = document.getElementById('ThreadColumnHeader');
+	var thread_menuitem=document.getElementById('menu_showThreads');
+	if (threadColumn && thread_menuitem){
+		thread_menuitem.setAttribute('checked',threadColumn.getAttribute('currentView')=='threaded');
+	}
+}
+
 function GetFirstSelectedMsgFolder()
 {
 	var result = null;
