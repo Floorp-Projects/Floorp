@@ -39,7 +39,7 @@ REQUIRES	= xpcom \
 		  $(NULL)
 
 CPPSRCS		= nsWebBrowserPersist.cpp \
-                  nsDOMWalker.cpp
+                  nsDOMWalker.cpp \
                   $(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a
