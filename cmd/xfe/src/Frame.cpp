@@ -3673,12 +3673,19 @@ XFE_Frame::commandToString(CommandType cmd,
 		{
 			char *res = NULL;
 
-			if (m_toolbar->isShown())
-				res = "hideNavToolbarCmdString";
+            if (!m_toolbar)
+            {
+				return "There Ain't No Toolbar, Dude";
+            }
 			else
-				res = "showNavToolbarCmdString";
-
-			return stringFromResource(res);
+			{
+				if (m_toolbar->isShown())
+					res = "hideNavToolbarCmdString";
+				else
+					res = "showNavToolbarCmdString";
+				
+				return stringFromResource(res);
+			}
 		}
 #ifdef MOZ_TASKBAR
 	else if (cmd == xfeCmdToggleTaskbarShowing)
