@@ -20,7 +20,7 @@ IGNORE_MANIFEST=1
 LCFLAGS= $(LCFLAGS) -D__STDC__
 
 DEFINES= -DWIN32_LEAN_AND_MEAN
-LIBRARY_NAME= unicharutil
+LIBRARY_NAME= ucharuti
 
 OBJS= \
 	$(NULL)
@@ -49,7 +49,7 @@ REQUIRES=xpcom
 INCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\unicharutil -I$(PUBLIC)\raptor
 
 MAKE_OBJ_TYPE=DLL
-DLLNAME=unicharutil
+DLLNAME=ucharuti
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
 
