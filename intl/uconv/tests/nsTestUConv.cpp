@@ -24,6 +24,7 @@
 #include "nsIServiceManager.h"
 #include "nsISupports.h"
 #include "nsICharsetConverterManager.h"
+#include "nsIPlatformCharset.h"
 
 // include the CIDs
 #include "nsUCvLatinCID.h"
@@ -95,6 +96,9 @@ nsresult setupRegistry()
   if (NS_FAILED(res) && (NS_ERROR_FACTORY_EXISTS != res)) return res;
 
   res = nsRepository::RegisterFactory(kISO2022JPToUnicodeCID, UCVJA2_DLL, PR_FALSE, PR_FALSE);
+  if (NS_FAILED(res) && (NS_ERROR_FACTORY_EXISTS != res)) return res;
+
+  res = nsRepository::RegisterFactory(kPlatformCharsetCID, UCONV_DLL, PR_FALSE, PR_FALSE);
   if (NS_FAILED(res) && (NS_ERROR_FACTORY_EXISTS != res)) return res;
 
   return NS_OK;
@@ -878,6 +882,30 @@ nsresult testLatin1Encoder()
   }
 }
 
+nsresult  testPlatformCharset()
+{
+  nsIPlatformCharset * cinfo;
+  nsresult res = nsServiceManager::GetService(kPlatformCharsetCID,
+      kIPlatformCharsetIID, (nsISupports **)&cinfo);
+  if (NS_FAILED(res)) {
+    printf("ERROR at GetService() code=0x%x.\n",res);
+    return res;
+  }
+
+  nsString value;
+  res = cinfo->GetCharset(kPlatformCharsetSel_PlainTextInClipboard , value);
+  printf("Clipboard plain text encoding = %s\n\n",value.ToNewCString());
+  
+  res = cinfo->GetCharset(kPlatformCharsetSel_FileName , value);
+  printf("File Name encoding = %s\n\n",value.ToNewCString());
+
+  res = cinfo->GetCharset(kPlatformCharsetSel_Menu , value);
+  printf("Menu encoding = %s\n\n",value.ToNewCString());
+
+  cinfo->Release();
+  return res;
+  
+}
 //----------------------------------------------------------------------
 // Testing functions
 
@@ -888,6 +916,9 @@ nsresult testAll()
   // test the manager(s)
   res = testCharsetConverterManager();
   if (NS_FAILED(res)) return res;
+
+
+  testPlatformCharset();
 
   // test decoders
   testLatin1Decoder();

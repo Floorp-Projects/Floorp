@@ -24,9 +24,35 @@
 #include "nsPlatformCharsetFactory.h"
 #include "pratom.h"
 
+#include <windows.h>
 #include "nsUConvDll.h"
 
 
+
+// We should put the data into a wincharset.properties file
+// so we can easily extend it.
+static const char* ACPToCharset(UINT aACP)
+{
+  switch(aACP)
+  {
+        case 874:  return "tis-620"; break;
+        case 932:  return "Shift_JIS"; break;
+        case 936:  return "GB2312"; break;
+        case 949:  return "EUC-KR"; break;
+        case 950:  return "Big5"; break;
+        case 1250:  return "windows-1250"; break;
+        case 1251:  return "windows-1251"; break;
+        case 1252:  return "ISO-8859-1"; break;
+        case 1253:  return "windows-1253"; break;
+        case 1254:  return "ISO-8859-4"; break;
+        case 1255:  return "windows-1255"; break;
+        case 1256:  return "windows-1256"; break;
+        case 1257:  return "windows-1257"; break;
+        case 1258:  return "windows-1258"; break;
+        default:
+           return "ISO-8859-1";
+  };
+}
 
 class nsWinCharset : public nsIPlatformCharset
 {
@@ -56,7 +82,7 @@ nsWinCharset::~nsWinCharset()
 NS_IMETHODIMP 
 nsWinCharset::GetCharset(nsPlatformCharsetSel selector, nsString& oResult)
 {
-   oResult = "ISO-8859-1"; // XXX- hack to be implement
+   oResult = ACPToCharset(GetACP());
    return NS_OK;
 }
 
@@ -65,8 +91,11 @@ class nsWinCharsetFactory : public nsIFactory {
 
 public:
    nsWinCharsetFactory() {
+     NS_INIT_REFCNT();
+     PR_AtomicIncrement(&g_InstanceCount);
    }
    ~nsWinCharsetFactory() {
+     PR_AtomicDecrement(&g_InstanceCount);
    }
 
    NS_IMETHOD CreateInstance(nsISupports* aDelegate, const nsIID& aIID, void** aResult);
