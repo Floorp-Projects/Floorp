@@ -40,6 +40,7 @@
 #include "nsWidgetsCID.h"
 #include "nsIFontMetrics.h"
 #include "nsFormControlFrame.h"
+#include "nsIFormControl.h"
 #include "nsISupportsArray.h"
 #include "nsINameSpaceManager.h"
 #ifdef ACCESSIBILITY
