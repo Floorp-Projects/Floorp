@@ -49,7 +49,7 @@ extern "C" {
  * Method:    createTopLevelWindow
  * Signature: ()I
  */
-JNIEXPORT jint JNICALL Java_org_mozilla_webclient_motif_MotifBrowserControlCanvas_createTopLevelWindow
+JNIEXPORT jint JNICALL Java_org_mozilla_webclient_wrapper_1native_motif_MotifBrowserControlCanvas_createTopLevelWindow
 (JNIEnv * env, jobject obj) {
     static GtkWidget *mShell = NULL;
 
@@ -74,7 +74,7 @@ JNIEXPORT jint JNICALL Java_org_mozilla_webclient_motif_MotifBrowserControlCanva
  * Method:    createContainerWindow
  * Signature: (III)I
  */
-JNIEXPORT jint JNICALL Java_org_mozilla_webclient_motif_MotifBrowserControlCanvas_createContainerWindow
+JNIEXPORT jint JNICALL Java_org_mozilla_webclient_wrapper_1native_motif_MotifBrowserControlCanvas_createContainerWindow
     (JNIEnv * env, jobject obj, jint parent, jint screenWidth, jint screenHeight) {
     GtkWidget * window = (GtkWidget *) parent;
     GtkWidget *mMozArea = NULL;
@@ -90,7 +90,7 @@ JNIEXPORT jint JNICALL Java_org_mozilla_webclient_motif_MotifBrowserControlCanva
     gtk_widget_show(window);
     
     //gtk_main();
-
+    printf ("In MotifBrowserControlCanvas.cpp -- mozArea stored\n\n");
     return (jint) mMozArea;
 }
 
@@ -107,7 +107,7 @@ int getWinID(GtkWidget * gtkWidgetPtr) {
  * Method:    getGTKWinID
  * Signature: (I)I
  */
-JNIEXPORT jint JNICALL Java_org_mozilla_webclient_motif_MotifBrowserControlCanvas_getGTKWinID
+JNIEXPORT jint JNICALL Java_org_mozilla_webclient_wrapper_1native_motif_MotifBrowserControlCanvas_getGTKWinID
 (JNIEnv * env, jobject obj, jint gtkWinPtr) {
     GtkWidget * gtkWidgetPtr = (GtkWidget *) gtkWinPtr;
 
@@ -120,7 +120,7 @@ JNIEXPORT jint JNICALL Java_org_mozilla_webclient_motif_MotifBrowserControlCanva
  * Method:    reparentWindow
  * Signature: (II)V
  */
-JNIEXPORT void JNICALL Java_org_mozilla_webclient_motif_MotifBrowserControlCanvas_reparentWindow (JNIEnv * env, jobject obj, jint childID, jint parentID) {
+JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_motif_MotifBrowserControlCanvas_reparentWindow (JNIEnv * env, jobject obj, jint childID, jint parentID) {
     XReparentWindow(GDK_DISPLAY(), childID, parentID, 0, 0);
 }
 
@@ -129,7 +129,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_motif_MotifBrowserControlCanva
  * Method:    processEvents
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_org_mozilla_webclient_motif_MotifBrowserControlCanvas_processEvents
+JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_motif_MotifBrowserControlCanvas_processEvents
     (JNIEnv * env, jobject obj) {
     //printf("process events....\n");
     //processEventLoopIntelligently();
@@ -140,7 +140,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_motif_MotifBrowserControlCanva
  * Method:    setGTKWindowSize
  * Signature: (III)V
  */
-JNIEXPORT void JNICALL Java_org_mozilla_webclient_motif_MotifBrowserControlCanvas_setGTKWindowSize
+JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_motif_MotifBrowserControlCanvas_setGTKWindowSize
     (JNIEnv * env, jobject obj, jint gtkWinPtr, jint width, jint height) {
     if (gtkWinPtr != 0) {
         GtkWidget * gtkWidgetPtr = (GtkWidget *) gtkWinPtr;
@@ -156,7 +156,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_motif_MotifBrowserControlCanva
  * Method:    loadMainDll
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_org_mozilla_webclient_motif_MotifBrowserControlCanvas_loadMainDll
+JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_motif_MotifBrowserControlCanvas_loadMainDll
   (JNIEnv *, jclass)
 {
     printf("incorrect loadMainDll called\n\n");

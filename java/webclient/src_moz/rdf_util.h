@@ -41,6 +41,7 @@ static const char *NS_ICONTAINERUTILS_PROGID = "component://netscape/rdf/contain
 static const char *NS_IBOOKMARKSSERVICE_PROGID = "component://netscape/browser/bookmarks-service";
 static const char *NS_IRDFCONTAINER_PROGID = "component://netscape/rdf/container";
 static const char *BOOKMARKS_URI = "NC:BookmarksRoot";
+
 extern nsCOMPtr<nsIRDFContainerUtils> gRDFCU;
 extern nsCOMPtr<nsIRDFService> gRDF;
 extern nsCOMPtr<nsIBookmarksService> gBookmarks;

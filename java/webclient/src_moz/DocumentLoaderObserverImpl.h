@@ -62,7 +62,13 @@ typedef enum {
   NUMBER_OF_MASK_NAMES
 } EVENT_MASK_NAMES;
 
+
+#ifdef XP_UNIX
+static jlong maskValues [NUMBER_OF_MASK_NAMES];
+#else
 static jlong maskValues [DocumentLoaderObserverImpl::EVENT_MASK_NAMES::NUMBER_OF_MASK_NAMES];
+#endif
+
 static char *maskNames [];
 
     DocumentLoaderObserverImpl(JNIEnv *yourJNIEnv, 

@@ -32,9 +32,9 @@
 // JNI...yada, yada, yada
 #include <jni.h>
 // JNI Header
-#include "../BrowserControlNativeShim.h"
+#include "../.h"
 // JNI Header
-#include "NativeEventThread.h"
+#include "../NativeEventThread.h"
 
 // allow code in webclientstub.so to load us
 #include "BrowserControlNativeShimStub.h"

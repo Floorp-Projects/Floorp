@@ -31,7 +31,7 @@
 #include <jni.h>
 #include "MotifBrowserControlCanvas.h"
 
-#include "BrowserControlMozillaShimStub.h"
+#include "NativeLoaderStub.h"
 
 #include <dlfcn.h>
 
@@ -45,32 +45,32 @@ void (* processEvents) (JNIEnv *, jobject);
 void (* setGTKWindowSize) (JNIEnv *, jobject, jint, jint, jint);
 
 void locateMotifBrowserControlStubFunctions(void * dll) {
-  createTopLevelWindow = (jint (*) (JNIEnv *, jobject)) dlsym(dll, "Java_org_mozilla_webclient_motif_MotifBrowserControlCanvas_createTopLevelWindow");
+  createTopLevelWindow = (jint (*) (JNIEnv *, jobject)) dlsym(dll, "Java_org_mozilla_webclient_wrapper_1native_motif_MotifBrowserControlCanvas_createTopLevelWindow");
  if (!createTopLevelWindow) {
     printf("got dlsym error %s\n", dlerror());
   }
 
-  createContainerWindow = (jint (*) (JNIEnv *, jobject, jint, jint, jint)) dlsym(dll, "Java_org_mozilla_webclient_motif_MotifBrowserControlCanvas_createContainerWindow");
+  createContainerWindow = (jint (*) (JNIEnv *, jobject, jint, jint, jint)) dlsym(dll, "Java_org_mozilla_webclient_wrapper_1native_motif_MotifBrowserControlCanvas_createContainerWindow");
  if (!createContainerWindow) {
     printf("got dlsym error %s\n", dlerror());
   }
 
-  reparentWindow = (void (*) (JNIEnv *, jobject, jint, jint)) dlsym(dll, "Java_org_mozilla_webclient_motif_MotifBrowserControlCanvas_reparentWindow");
+  reparentWindow = (void (*) (JNIEnv *, jobject, jint, jint)) dlsym(dll, "Java_org_mozilla_webclient_wrapper_1native_motif_MotifBrowserControlCanvas_reparentWindow");
  if (!reparentWindow) {
     printf("got dlsym error %s\n", dlerror());
   }
 
-  processEvents = (void (*) (JNIEnv *, jobject)) dlsym(dll, "Java_org_mozilla_webclient_motif_MotifBrowserControlCanvas_processEvents");
+  processEvents = (void (*) (JNIEnv *, jobject)) dlsym(dll, "Java_org_mozilla_webclient_wrapper_1native_motif_MotifBrowserControlCanvas_processEvents");
  if (!processEvents) {
     printf("got dlsym error %s\n", dlerror());
   }
 
-  setGTKWindowSize = (void (*) (JNIEnv *, jobject, jint, jint, jint)) dlsym(dll, "Java_org_mozilla_webclient_motif_MotifBrowserControlCanvas_setGTKWindowSize");
+  setGTKWindowSize = (void (*) (JNIEnv *, jobject, jint, jint, jint)) dlsym(dll, "Java_org_mozilla_webclient_wrapper_1native_motif_MotifBrowserControlCanvas_setGTKWindowSize");
  if (!setGTKWindowSize) {
     printf("got dlsym error %s\n", dlerror());
   }
 
-  getGTKWinID = (jint (*) (JNIEnv *, jobject, jint)) dlsym(dll, "Java_org_mozilla_webclient_motif_MotifBrowserControlCanvas_getGTKWinID");
+  getGTKWinID = (jint (*) (JNIEnv *, jobject, jint)) dlsym(dll, "Java_org_mozilla_webclient_wrapper_1native_motif_MotifBrowserControlCanvas_getGTKWinID");
  if (!getGTKWinID) {
     printf("got dlsym error %s\n", dlerror());
   }
@@ -81,7 +81,7 @@ void locateMotifBrowserControlStubFunctions(void * dll) {
  * Method:    createTopLevelWindow
  * Signature: ()I
  */
-JNIEXPORT jint JNICALL Java_org_mozilla_webclient_motif_MotifBrowserControlCanvas_createTopLevelWindow (JNIEnv * env, jobject obj) {
+JNIEXPORT jint JNICALL Java_org_mozilla_webclient_wrapper_1native_motif_MotifBrowserControlCanvas_createTopLevelWindow (JNIEnv * env, jobject obj) {
   return (* createTopLevelWindow) (env, obj);
 }
 
@@ -90,7 +90,7 @@ JNIEXPORT jint JNICALL Java_org_mozilla_webclient_motif_MotifBrowserControlCanva
  * Method:    createContainerWindow
  * Signature: ()I
  */
-JNIEXPORT jint JNICALL Java_org_mozilla_webclient_motif_MotifBrowserControlCanvas_createContainerWindow (JNIEnv * env, jobject obj, jint parent, jint width, jint height) {
+JNIEXPORT jint JNICALL Java_org_mozilla_webclient_wrapper_1native_motif_MotifBrowserControlCanvas_createContainerWindow (JNIEnv * env, jobject obj, jint parent, jint width, jint height) {
   return (* createContainerWindow) (env, obj, parent, width, height);
 }
 
@@ -99,7 +99,7 @@ JNIEXPORT jint JNICALL Java_org_mozilla_webclient_motif_MotifBrowserControlCanva
  * Method:    getGTKWinID
  * Signature: (I)I
  */
-JNIEXPORT jint JNICALL Java_org_mozilla_webclient_motif_MotifBrowserControlCanvas_getGTKWinID
+JNIEXPORT jint JNICALL Java_org_mozilla_webclient_wrapper_1native_motif_MotifBrowserControlCanvas_getGTKWinID
 (JNIEnv * env, jobject obj, jint gtkWinPtr) {
   return (* getGTKWinID) (env, obj, gtkWinPtr);
 }
@@ -109,7 +109,7 @@ JNIEXPORT jint JNICALL Java_org_mozilla_webclient_motif_MotifBrowserControlCanva
  * Method:    reparentWindow
  * Signature: (II)V
  */
-JNIEXPORT void JNICALL Java_org_mozilla_webclient_motif_MotifBrowserControlCanvas_reparentWindow
+JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_motif_MotifBrowserControlCanvas_reparentWindow
 (JNIEnv * env, jobject obj, jint childID, jint parentID) {
   (* reparentWindow) (env, obj, childID, parentID);
 }
@@ -119,7 +119,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_motif_MotifBrowserControlCanva
  * Method:    processEvents
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_org_mozilla_webclient_motif_MotifBrowserControlCanvas_processEvents
+JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_motif_MotifBrowserControlCanvas_processEvents
     (JNIEnv * env, jobject obj) {
     (* processEvents) (env, obj);
 }
@@ -130,17 +130,19 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_motif_MotifBrowserControlCanva
  * Method:    setGTKWindowSize
  * Signature: (III)V
  */
-JNIEXPORT void JNICALL Java_org_mozilla_webclient_motif_MotifBrowserControlCanvas_setGTKWindowSize
+JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_motif_MotifBrowserControlCanvas_setGTKWindowSize
     (JNIEnv * env, jobject obj, jint xwinID, jint width, jint height) {
     (* setGTKWindowSize) (env, obj, xwinID, width, height);
 }
+
+
 
 /*
  * Class:     org_mozilla_webclient_motif_MotifBrowserControlCanvas
  * Method:    loadMainDll
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_org_mozilla_webclient_motif_MotifBrowserControlCanvas_loadMainDll
+JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_motif_MotifBrowserControlCanvas_loadMainDll
   (JNIEnv *, jclass)
 {
     loadMainDll();

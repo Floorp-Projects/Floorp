@@ -76,7 +76,7 @@ extern "C" void NS_SetupRegistry();
 extern nsresult NS_AutoregisterComponents();
 
 JNIEXPORT void JNICALL 
-Java_org_mozilla_webclient_wrapper_1native_WrapperFactoryImpl_nativeInitialize(
+Java_org_mozilla_webclient_wrapper_1native_WrapperFactoryImpl_nativeAppInitialize(
 										JNIEnv *env, jobject obj, jstring verifiedBinDirAbsolutePath)
 {
   JNIEnv		*	pEnv = env;

@@ -44,6 +44,13 @@
 #include "nsIWebShell.h" // for nsIWebShell
 #include "nsIEventQueueService.h" // for PLEventQueue
 
+// Ashu
+#ifdef XP_UNIX
+#include "nsIWidget.h" // for GTKWidget
+#include <gtk/gtk.h>
+#endif
+//
+
 //
 // local classes
 //
@@ -72,6 +79,7 @@ struct WebShellInitContext {
 	int					y;
 	int					w;
 	int					h;
+        int                                     gtkWinPtr;
 };
 
 enum {

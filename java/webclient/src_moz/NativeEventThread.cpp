@@ -30,6 +30,8 @@
 #include "jni_util.h"
 #include "EventRegistration.h" // event callbacks
 
+
+
 #ifdef XP_PC
 #include <windows.h>
 #endif
@@ -45,6 +47,13 @@
 #include "nsISessionHistory.h" // for history
 #include "nsIThread.h" // for PRThread
 //nsIWebShell is included in jni_util.h
+
+#ifdef XP_UNIX
+#include <unistd.h>
+#include "gdksuperwin.h"
+#include "gtkmozarea.h"
+#endif
+
 
 
 static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
@@ -292,6 +301,23 @@ int processEventLoop(WebShellInitContext * initContext)
     return 1;
 }
 
+// Ashu
+#ifdef XP_UNIX
+static void event_processor_callback(gpointer data,
+                                     gint source,
+                                     GdkInputCondition condition) {
+#if DEBUG_RAPTOR_CANVAS
+    printf("EventHandler: event_processor_callback()\n");
+#endif
+    nsIEventQueue *eventQueue = (nsIEventQueue*)data;
+    eventQueue->ProcessPendingEvents();
+#if DEBUG_RAPTOR_CANVAS
+    printf("EventHandler: Done processing pending events\n");
+#endif
+}
+#endif
+//
+
 nsresult InitMozillaStuff (WebShellInitContext * initContext) 
 {
     nsIEventQueueService * aEventQService = nsnull;
@@ -370,9 +396,18 @@ nsresult InitMozillaStuff (WebShellInitContext * initContext)
 #if DEBUG_RAPTOR_CANVAS
 	printf("InitMozillaStuff(%lx): Init the WebShell...\n", initContext);
 #endif
-    
+   
+#ifdef XP_UNIX
+    GdkSuperWin * superwin;
+    GtkMozArea * mozarea;
+    mozarea = (GtkMozArea *) initContext->gtkWinPtr;
+    superwin = mozarea->superwin;
+    rv = initContext->webShell->Init((nsNativeWidget *)superwin, initContext->x, initContext->y, initContext->w, initContext->h);
+#else    
     rv = initContext->webShell->Init((nsNativeWidget *)initContext->parentHWnd,
                                      initContext->x, initContext->y, initContext->w, initContext->h);
+#endif
+
     if (NS_FAILED(rv)) {
         initContext->initFailCode = kInitWebShellError;
         return rv;

@@ -37,6 +37,7 @@ nsCOMPtr<nsIRDFResource> kNC_URL = NULL;
 nsCOMPtr<nsIRDFResource> kNC_Folder = NULL;
 nsCOMPtr<nsIRDFResource> kRDF_type = NULL;
 
+
 nsresult rdf_InitRDFUtils()
 {
     nsresult rv = NS_ERROR_FAILURE;
@@ -111,22 +112,21 @@ nsresult rdf_InitRDFUtils()
             return rv;
         }
     }
-
     if (NULL == kNC_Folder) {
-        rv = gRDF->GetResource("http://home.netscape.com/NC-rdf#Folder", 
-                               getter_AddRefs(kNC_Folder));
-        if (NS_FAILED(rv)) {
-            return rv;
-        }
+      rv = gRDF->GetResource("http://home.netscape.com/NC-rdf#Folder", 
+                            getter_AddRefs(kNC_Folder));
+      if (NS_FAILED(rv)) {
+	return rv;
+      }
     }
-
+  
     if (NULL == kRDF_type) {
-        rv = gRDF->GetResource("http://home.netscape.com/NC-rdf#type", 
-                               getter_AddRefs(kRDF_type));
-        if (NS_FAILED(rv)) {
-            return rv;
-        }
-    }
+      rv = gRDF->GetResource("http://home.netscape.com/NC-rdf#type", 
+			     getter_AddRefs(kRDF_type));
+      if (NS_FAILED(rv)) {
+	return rv;
+      }
+    }     
 
     rdf_inited = PR_TRUE;
     return rv;
@@ -156,8 +156,10 @@ void rdf_recursiveResourceTraversal(nsCOMPtr<nsIRDFResource> currentResource)
         rdf_printArcLabels(currentResource);
 
         // see if it has a name target
+	// Ashu
+	// used 1 instead of true
         rv = gBookmarksDataSource->GetTarget(currentResource,
-                                                    kNC_Name, true, 
+                                                    kNC_Name, PR_TRUE, 
                                                     getter_AddRefs(node));
         
         if (NS_SUCCEEDED(rv)) {
@@ -237,8 +239,10 @@ void rdf_recursiveResourceTraversal(nsCOMPtr<nsIRDFResource> currentResource)
         rdf_printArcLabels(currentResource);
 
         // see if it has a URL target
+	// Ashu
+	// used 1 instead of true
         rv = gBookmarksDataSource->GetTarget(currentResource,
-                                                    kNC_URL, true, 
+                                                    kNC_URL, PR_TRUE, 
                                                     getter_AddRefs(node));
         if (NS_FAILED(rv)) {
             printf("recursiveResourceTraversal: can't get url from currentResource\n");
