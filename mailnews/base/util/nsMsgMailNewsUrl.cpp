@@ -714,6 +714,16 @@ NS_IMETHODIMP nsMsgMailNewsUrl::SetFilePath(const nsACString &i_DirFile)
 	return m_baseURL->SetFilePath(i_DirFile);
 }
 
+NS_IMETHODIMP nsMsgMailNewsUrl::GetCommonBaseSpec(nsIURI *uri2, nsACString &result)
+{
+  return m_baseURL->GetCommonBaseSpec(uri2, result);
+}
+
+NS_IMETHODIMP nsMsgMailNewsUrl::GetRelativeSpec(nsIURI *uri2, nsACString &result)
+{
+  return m_baseURL->GetRelativeSpec(uri2, result);
+}
+
 NS_IMETHODIMP nsMsgMailNewsUrl::SetMemCacheEntry(nsICacheEntryDescriptor *memCacheEntry)
 {
   m_memCacheEntry = memCacheEntry;

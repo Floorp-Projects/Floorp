@@ -1104,7 +1104,7 @@ nsStandardURL::SetUserPass(const nsACString &input)
         NS_ERROR("uninitialized");
         return NS_ERROR_NOT_INITIALIZED;
     }
-    NS_ASSERTION(mHost.mLen >= 0, "unitialized");
+    NS_ASSERTION(mHost.mLen >= 0, "uninitialized");
 
     InvalidateCache();
 
@@ -1594,6 +1594,114 @@ nsStandardURL::Resolve(const nsACString &in, nsACString &out)
     out = *result;
     free(*result);
     return NS_OK;
+}
+
+// result may contain unescaped UTF-8 characters
+NS_IMETHODIMP
+nsStandardURL::GetCommonBaseSpec(nsIURI *uri2, nsACString &aResult)
+{
+    NS_ENSURE_ARG_POINTER(uri2);
+
+    // if uri's are equal, then return uri as is
+    PRBool isEquals = PR_FALSE;
+    if (NS_SUCCEEDED(Equals(uri2, &isEquals)) && isEquals)
+        return GetSpec(aResult);
+
+    // check pre-path; if they don't match, then return empty string
+    nsStandardURL *stdurl2;
+    nsresult rv = uri2->QueryInterface(kThisImplCID, (void **) &stdurl2);
+    isEquals = NS_SUCCEEDED(rv)
+            && SegmentIs(mScheme, stdurl2->mSpec.get(), stdurl2->mScheme)    
+            && HostsAreEquivalent(stdurl2)
+            && SegmentIs(mUsername, stdurl2->mSpec.get(), stdurl2->mUsername)
+            && SegmentIs(mPassword, stdurl2->mSpec.get(), stdurl2->mPassword)
+            && (Port() == stdurl2->Port());
+    if (!isEquals)
+    {
+        aResult = "";
+        if (NS_SUCCEEDED(rv))
+            NS_RELEASE(stdurl2);
+        return NS_OK;
+    }
+
+    // scan for first mismatched character
+    const char *thisIndex, *thatIndex, *startCharPos;
+    startCharPos = mSpec.get() + mDirectory.mPos;
+    thisIndex = startCharPos;
+    thatIndex = stdurl2->mSpec.get() + mDirectory.mPos;
+    while ((*thisIndex == *thatIndex) && *thisIndex)
+    {
+        thisIndex++;
+        thatIndex++;
+    }
+
+    // backup to just after previous slash so we grab an appropriate path
+    // segment such as a directory (not partial segments)
+    // todo:  also check for file matches which include '?', '#', and ';'
+    while ((*(thisIndex-1) != '/') && (thisIndex != startCharPos))
+        thisIndex--;
+
+    // grab spec from beginning to thisIndex
+    aResult = Substring(mSpec, mScheme.mPos, thisIndex - mSpec.get());
+
+    NS_RELEASE(stdurl2);
+    return rv;
+}
+
+NS_IMETHODIMP
+nsStandardURL::GetRelativeSpec(nsIURI *uri2, nsACString &aResult)
+{
+    NS_ENSURE_ARG_POINTER(uri2);
+
+    // if uri's are equal, then return empty string
+    PRBool isEquals = PR_FALSE;
+    if (NS_SUCCEEDED(Equals(uri2, &isEquals)) && isEquals)
+    {
+        aResult.Truncate();
+        return NS_OK;
+    }
+
+    nsStandardURL *stdurl2;
+    nsresult rv = uri2->QueryInterface(kThisImplCID, (void **) &stdurl2);
+    isEquals = NS_SUCCEEDED(rv)
+            && SegmentIs(mScheme, stdurl2->mSpec.get(), stdurl2->mScheme)    
+            && SegmentIs(mHost, stdurl2->mSpec.get(), stdurl2->mHost)
+            && SegmentIs(mUsername, stdurl2->mSpec.get(), stdurl2->mUsername)
+            && SegmentIs(mPassword, stdurl2->mSpec.get(), stdurl2->mPassword)
+            && (Port() == stdurl2->Port());
+    if (!isEquals)
+    {
+        if (NS_SUCCEEDED(rv))
+            NS_RELEASE(stdurl2);
+
+        return GetSpec(aResult);
+    }
+
+    // scan for first mismatched character
+    const char *thisIndex, *thatIndex, *startCharPos;
+    startCharPos = mSpec.get() + mDirectory.mPos;
+    thisIndex = startCharPos;
+    thatIndex = stdurl2->mSpec.get() + mDirectory.mPos;
+    while ((*thisIndex == *thatIndex) && *thisIndex)
+    {
+        thisIndex++;
+        thatIndex++;
+    }
+
+    // backup to just after previous slash so we grab an appropriate path
+    // segment such as a directory (not partial segments)
+    // todo:  also check for file matches with '#', '?' and ';'
+    while ((*(thisIndex-1) != '/') && (thisIndex != startCharPos))
+        thisIndex--;
+
+    // need to count slashes here and possibly do some "../" stuff
+
+    // grab spec from thisIndex to end
+    PRUint32 startPos = mScheme.mPos + thisIndex - mSpec.get();
+    aResult = Substring(mSpec, startPos, mSpec.Length() - startPos);
+
+    NS_RELEASE(stdurl2);
+    return rv;
 }
 
 //----------------------------------------------------------------------------
