@@ -112,7 +112,7 @@ LINCS= $(LINCS) -I_jri       \
 		-I../include \
 		-I$(DEPTH)/lib/libnet	\
 		-I$(DEPTH)/lib/layout	\
-		-I$(DEPTH)/lib/libjar	\
+		-I$(PUBLIC)/jar \
 		-I$(DEPTH)/lib/libstyle	\
 		-I$(DEPTH)/cmd/winfe	\
 		$(NULL)
