@@ -68,10 +68,23 @@ nsAbView::nsAbView()
 {
   NS_INIT_ISUPPORTS();
   mMailListAtom = getter_AddRefs(NS_NewAtom("MailList"));
+  mSuppressSelectionChange = PR_FALSE;
 }
 
 nsAbView::~nsAbView()
 {
+  if (mDirectory) {
+    nsresult rv = Close();
+    NS_ASSERTION(NS_SUCCEEDED(rv), "failed to close view");
+  }
+}
+
+NS_IMETHODIMP nsAbView::Close()
+{
+  mURI = "";
+  mDirectory = nsnull;
+  mAbViewListener = nsnull;
+
   nsresult rv = NS_OK;
   nsCOMPtr<nsIAddrBookSession> abSession = do_GetService(NS_ADDRBOOKSESSION_CONTRACTID, &rv); 
   if(NS_SUCCEEDED(rv))
@@ -82,6 +95,7 @@ nsAbView::~nsAbView()
   {
     RemoveCardAt(i);
   }
+  return NS_OK;
 }
 
 void nsAbView::RemoveCardAt(PRInt32 row)
@@ -94,11 +108,18 @@ void nsAbView::RemoveCardAt(PRInt32 row)
   PR_FREEIF(abcard);
 }
 
-NS_IMETHODIMP nsAbView::Init(const char *aURI)
+NS_IMETHODIMP nsAbView::GetURI(char **aURI)
+{
+  *aURI = nsCRT::strdup(mURI.get());
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsAbView::Init(const char *aURI, nsIAbViewListener *abViewListener)
 {
   nsresult rv;
 
   mURI = aURI;
+  mAbViewListener = abViewListener;
 
   /* todo:
   register as a listener of "mail.addr_book.lastnamefirst"
@@ -150,6 +171,9 @@ nsresult nsAbView::EnumerateCards()
         nsCOMPtr <nsIAbCard> card = do_QueryInterface(item);
         // malloc these from an arena
         AbCard *abcard = (AbCard *) PR_Calloc(1, sizeof(struct AbCard));
+        if (!abcard) 
+          return NS_ERROR_OUT_OF_MEMORY;
+
         abcard->card = card;
         NS_IF_ADDREF(abcard->card);
         rv = mCards.AppendElement((void *)abcard);
@@ -189,6 +213,9 @@ NS_IMETHODIMP nsAbView::GetRowProperties(PRInt32 index, nsISupportsArray *proper
 
 NS_IMETHODIMP nsAbView::GetCellProperties(PRInt32 row, const PRUnichar *colID, nsISupportsArray *properties)
 {
+  if (mCards.Count() <= row)
+    return NS_OK;
+
   // "Di" to distinguish "DisplayName" from "Department"
   if (colID[0] != 'D' || colID[1] != 'i')
     return NS_OK;
@@ -313,7 +340,11 @@ nsresult nsAbView::InvalidateOutliner(PRInt32 row)
 
 NS_IMETHODIMP nsAbView::SelectionChanged()
 {
-    return NS_OK;
+  if (mAbViewListener && !mSuppressSelectionChange) {
+    nsresult rv = mAbViewListener->OnSelectionChanged();
+    NS_ENSURE_SUCCESS(rv,rv);
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsAbView::CycleCell(PRInt32 row, const PRUnichar *colID)
@@ -348,6 +379,11 @@ NS_IMETHODIMP nsAbView::PerformActionOnCell(const PRUnichar *action, PRInt32 row
 
 NS_IMETHODIMP nsAbView::GetCardFromRow(PRInt32 row, nsIAbCard **aCard)
 {
+  if (mCards.Count() <= row) {
+    *aCard = nsnull;
+    return NS_OK;
+  }
+
   *aCard = ((AbCard *)(mCards.ElementAt(row)))->card;
   NS_IF_ADDREF(*aCard);
   return NS_OK;
@@ -497,26 +533,40 @@ NS_IMETHODIMP nsAbView::OnItemAdded(nsISupports *parentDir, nsISupports *item)
     if (addedCard) {
       // malloc these from an arena
       AbCard *abcard = (AbCard *) PR_Calloc(1, sizeof(struct AbCard));
+      if (!abcard) 
+        return NS_ERROR_OUT_OF_MEMORY;
+
       abcard->card = addedCard;
       NS_IF_ADDREF(abcard->card);
-      
+    
       rv = GenerateCollationKeysForCard(mSortedColumn.get(), abcard);
       NS_ENSURE_SUCCESS(rv,rv);
-      
-      PRInt32 index = FindIndexForInsert(mSortedColumn.get(), abcard);
-      rv = mCards.InsertElementAt((void *)abcard, index);
+
+      PRInt32 index;
+      rv = AddCard(abcard, PR_FALSE /* select card */, &index);
       NS_ENSURE_SUCCESS(rv,rv);
-      
-      if (mOutliner)
-        rv = mOutliner->RowCountChanged(index, 1);
-      NS_ENSURE_SUCCESS(rv,rv);
-    }
-    else {
-      // if a mailing list gets created, we'll get notified
-      // but the item will be a nsIAbDirectory.
-      // ignore it, as we've already been notified from CreateMailListAndAddToDB()
     }
   }
+  return rv;
+}
+
+nsresult nsAbView::AddCard(AbCard *abcard, PRBool selectCardAfterAdding, PRInt32 *index)
+{
+  nsresult rv = NS_OK;
+  NS_ENSURE_ARG_POINTER(abcard);
+  
+  *index = FindIndexForInsert(mSortedColumn.get(), abcard);
+  rv = mCards.InsertElementAt((void *)abcard, *index);
+  NS_ENSURE_SUCCESS(rv,rv);
+    
+  if (mOutliner)
+    rv = mOutliner->RowCountChanged(*index, 1);
+
+  if (selectCardAfterAdding && mOutlinerSelection) {
+    mOutlinerSelection->SetCurrentIndex(*index);
+    mOutlinerSelection->RangedSelect(*index, *index, PR_FALSE /* augment */);
+  }
+
   return rv;
 }
 
@@ -543,34 +593,47 @@ NS_IMETHODIMP nsAbView::OnItemRemoved(nsISupports *parentDir, nsISupports *item)
   nsresult rv;
   nsCOMPtr <nsIAbDirectory> directory = do_QueryInterface(parentDir,&rv);
   NS_ENSURE_SUCCESS(rv,rv);
-
+  
   if (directory.get() == mDirectory.get()) {
-    nsCOMPtr <nsIAbCard> card = do_QueryInterface(item);
-    if (item) {
-      PRInt32 index = FindIndexForCard(mSortedColumn.get(), card);
-      NS_ASSERTION(index != CARD_NOT_FOUND,"card not found");
-      if (index != CARD_NOT_FOUND) {
-        RemoveCardAt(index);
-        if (mOutliner)
-          rv = mOutliner->RowCountChanged(index, -1);
-        NS_ENSURE_SUCCESS(rv,rv);
+    rv = RemoveCardAndSelectNextCard(item);
+  }
+  return rv;
+}
+
+nsresult nsAbView::RemoveCardAndSelectNextCard(nsISupports *item)
+{
+  nsresult rv = NS_OK;
+  nsCOMPtr <nsIAbCard> card = do_QueryInterface(item);
+  if (card) {
+    PRInt32 index = FindIndexForCard(card);
+    if (index != CARD_NOT_FOUND) {
+      RemoveCardAt(index);
+      if (mOutliner)
+        rv = mOutliner->RowCountChanged(index, -1);
+      NS_ENSURE_SUCCESS(rv,rv);
+
+      PRInt32 count = mCards.Count();
+      if (count && mOutlinerSelection) {
+        // if we deleted the last card, adjust so we select the new "last" card
+        if (index >= (count - 1)) {
+          index = count -1;
+        }
+        mOutlinerSelection->SetCurrentIndex(index);
+        mOutlinerSelection->RangedSelect(index, index, PR_FALSE /* augment */);
       }
-    }
-    else {
-      // if a mailing list gets delete, we'll get notified
-      // but the item will be a nsIAbDirectory.
-      // ignore it, as we've already been notified from NotifyDirectoryItemDeleted()
     }
   }
   return rv;
 }
 
-PRInt32 nsAbView::FindIndexForCard(const PRUnichar *colID, nsIAbCard *card)
+PRInt32 nsAbView::FindIndexForCard(nsIAbCard *card)
 {
   PRInt32 count = mCards.Count();
   PRInt32 i;
-  
-  // XXX todo, binary search
+ 
+  // you can't implement the binary search here, as all you have is the nsIAbCard
+  // you might be here because one of the card properties has changed, and that property
+  // could be the collation key.
   for (i=0; i < count; i++) {
     AbCard *abcard = (AbCard*) (mCards.ElementAt(i));
     if (abcard->card == card) {
@@ -584,15 +647,66 @@ NS_IMETHODIMP nsAbView::OnItemPropertyChanged(nsISupports *item, const char *pro
 {
   nsresult rv;
 
-  nsCOMPtr <nsIAbCard> card = do_QueryInterface(item,&rv);
+  nsCOMPtr <nsIAbCard> card = do_QueryInterface(item);
+  if (!card)
+    return NS_OK;
+
+  PRInt32 index = FindIndexForCard(card);
+  if (index == -1)
+    return NS_OK;
+
+  AbCard *oldCard = (AbCard*) (mCards.ElementAt(index));
+
+  // malloc these from an arena
+  AbCard *newCard = (AbCard *) PR_Calloc(1, sizeof(struct AbCard));
+  if (!newCard)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  newCard->card = card;
+  NS_IF_ADDREF(newCard->card);
+    
+  rv = GenerateCollationKeysForCard(mSortedColumn.get(), newCard);
   NS_ENSURE_SUCCESS(rv,rv);
-  
-  PRInt32 index = FindIndexForCard(mSortedColumn.get(), card);
-  if (index != CARD_NOT_FOUND) {
+
+  if (!nsCRT::strcmp(newCard->primaryCollationKey, oldCard->primaryCollationKey) &&
+    !nsCRT::strcmp(newCard->secondaryCollationKey, oldCard->secondaryCollationKey)) {
+    // no need to remove and add, since the collation keys haven't change.
+    // since they haven't chagned, the card will sort to the same place.
+    // we just need to clean up what we allocated.
+    NS_IF_RELEASE(newCard->card);
+    PR_FREEIF(newCard->primaryCollationKey);
+    PR_FREEIF(newCard->secondaryCollationKey);
+    PR_FREEIF(newCard);
+
+    // still need to invalidate, as the other columns may have changed
     rv = InvalidateOutliner(index);
     NS_ENSURE_SUCCESS(rv,rv);
   }
-  return rv;
+  else {
+    PRBool cardWasSelected = PR_FALSE;
+
+    if (mOutlinerSelection) {
+      rv = mOutlinerSelection->IsSelected(index, &cardWasSelected);
+      NS_ENSURE_SUCCESS(rv,rv);
+    }
+    
+    mSuppressSelectionChange = PR_TRUE;
+    
+    // remove the old card
+    RemoveCardAt(index);
+    
+    // add the card we created, and select it (to restore selection) if it was selected
+    rv = AddCard(newCard, cardWasSelected /* select card */, &index);
+    mSuppressSelectionChange = PR_FALSE;
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    // ensure restored selection is visible
+    if (cardWasSelected) {
+      if (mOutliner) 
+        mOutliner->EnsureRowIsVisible(index);
+    }
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsAbView::SelectAll()

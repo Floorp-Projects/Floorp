@@ -40,10 +40,20 @@
 
 interface nsIAbCard;
 
+[scriptable, uuid(79ad5d6e-1dd2-11b2-addd-f547dab50d75)]
+interface nsIAbViewListener : nsISupports
+{
+  void onSelectionChanged();
+};
+
 [scriptable, uuid(e35c015c-1dd1-11b2-9494-f88326252aae)]
 interface nsIAbView : nsISupports
 {
-    void init(in string aURI);
+    void init(in string URI, in nsIAbViewListener abViewListener);
+    void close();
+
+	readonly attribute string URI;
+
     nsIAbCard getCardFromRow(in long row);
     void selectAll();
 	void deleteSelectedCards();

@@ -74,13 +74,16 @@ private:
   nsCOMPtr<nsIOutlinerBoxObject> mOutliner;
   nsCOMPtr<nsIOutlinerSelection> mOutlinerSelection;
   nsresult SortBy(const PRUnichar *colID);
-  nsresult CreateCollationKey(const PRUnichar *source,  PRUnichar **result);
+  nsresult CreateCollationKey(const PRUnichar *source, PRUnichar **result);
   PRInt32 FindIndexForInsert(const PRUnichar *colID, AbCard *abcard);
-  PRInt32 FindIndexForCard(const PRUnichar *colID, nsIAbCard *card);
+  PRInt32 FindIndexForCard(nsIAbCard *card);
   nsresult GenerateCollationKeysForCard(const PRUnichar *colID, AbCard *abcard);
   nsresult InvalidateOutliner(PRInt32 row);
   void RemoveCardAt(PRInt32 row);
+  nsresult AddCard(AbCard *abcard, PRBool selectCardAfterAdding, PRInt32 *index);
+  nsresult RemoveCardAndSelectNextCard(nsISupports *item);
   nsresult EnumerateCards();
+  PRBool mSuppressSelectionChange;
 
   nsCString mURI;
   nsCOMPtr <nsIAbDirectory> mDirectory;
@@ -88,6 +91,7 @@ private:
   nsCOMPtr<nsIAtom> mMailListAtom;
   nsString mSortedColumn;
   nsCOMPtr<nsICollation> mCollationKeyGenerator;
+  nsCOMPtr<nsIAbViewListener> mAbViewListener;
 };
 
 #endif /* _nsAbView_H_ */
