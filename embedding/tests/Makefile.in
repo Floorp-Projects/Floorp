@@ -24,11 +24,17 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+ifeq ($(OS_ARCH),OS2)
+DIRS = os2Embed
+endif
+
+ifeq ($(OS_ARCH),WINNT)
 DIRS = winEmbed
 
 ifndef GNU_CC
 ifndef NO_MFC
 DIRS += mfcembed/components mfcembed
+endif
 endif
 endif
 

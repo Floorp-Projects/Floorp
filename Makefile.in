@@ -280,6 +280,13 @@ tier_99_dirs += embedding/tests
 endif
 endif
 
+# os2embed
+ifeq ($(OS_ARCH),OS2)
+ifneq (,$(ENABLE_TESTS)$(MOZILLA_OFFICIAL))
+tier_99_dirs += embedding/tests
+endif
+endif
+
 else
 
 # Standalone build
