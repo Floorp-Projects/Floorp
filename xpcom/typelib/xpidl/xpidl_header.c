@@ -40,47 +40,6 @@ ident(TreeState *state)
     return TRUE;
 }
 
-static gboolean
-add_interface_ref_maybe(IDL_tree p, gpointer user_data)
-{
-    GHashTable *hash = (GHashTable *)user_data;
-    if (IDL_NODE_TYPE(p) == IDLN_IDENT &&
-        !g_hash_table_lookup(hash, IDL_IDENT(p).str))
-        g_hash_table_insert(hash, IDL_IDENT(p).str, "FOUND");
-}
-
-static gboolean
-find_interface_refs(IDL_tree p, gpointer user_data)
-{
-    IDL_tree node;
-    switch(IDL_NODE_TYPE(p)) {
-      case IDLN_ATTR_DCL:
-        node = IDL_ATTR_DCL(p).param_type_spec;
-        break;
-      case IDLN_OP_DCL:
-        /*
-          IDL_tree_walk_in_order(IDL_OP_DCL(p).parameter_dcls, generate_includes,
-          user_data);
-        */
-        node = IDL_OP_DCL(p).op_type_spec;
-        break;
-      case IDLN_PARAM_DCL:
-        node = IDL_PARAM_DCL(p).param_type_spec;
-        break;
-      case IDLN_INTERFACE:
-        node = IDL_INTERFACE(p).inheritance_spec;
-        if (node)
-            xpidl_list_foreach(node, add_interface_ref_maybe, user_data);
-        node = NULL;
-        break;
-      default:
-        node = NULL;
-    }
-    if (node && IDL_NODE_TYPE(node) == IDLN_IDENT)
-        add_interface_ref_maybe(node, user_data);
-    return TRUE;
-}
-
 static void
 write_header(gpointer key, gpointer value, gpointer user_data)
 {
@@ -172,7 +131,7 @@ interface(TreeState *state)
     if (!process_node(state))
         return FALSE;
 
-    fprintf(state->file, "\n};\n");
+    fprintf(state->file, "};\n");
 
     return TRUE;
 }
