@@ -293,8 +293,6 @@ public:
     NS_IMETHOD GetElementsForID(const nsAReadableString& aID, nsISupportsArray* aElements);
     NS_IMETHOD CreateContents(nsIContent* aElement);
     NS_IMETHOD AddContentModelBuilder(nsIRDFContentModelBuilder* aBuilder);
-    NS_IMETHOD GetForm(nsIDOMHTMLFormElement** aForm);
-    NS_IMETHOD SetForm(nsIDOMHTMLFormElement* aForm);
     NS_IMETHOD AddForwardReference(nsForwardReference* aRef);
     NS_IMETHOD ResolveForwardReferences();
     NS_IMETHOD SetMasterPrototype(nsIXULPrototypeDocument* aDocument);
@@ -458,6 +456,7 @@ protected:
     static nsIAtom*  kPositionAtom;
     static nsIAtom*  kInsertAfterAtom;
     static nsIAtom*  kInsertBeforeAtom;
+    static nsIAtom*  kRemoveElementAtom;
     static nsIAtom*  kRefAtom;
     static nsIAtom*  kRuleAtom;
     static nsIAtom*  kStyleAtom;
@@ -723,6 +722,10 @@ protected:
     static
     nsresult
     InsertElement(nsIContent* aParent, nsIContent* aChild);
+
+    static 
+    nsresult
+    RemoveElement(nsIContent* aParent, nsIContent* aChild);
 
     static
     PRBool

@@ -1039,7 +1039,6 @@
     "xulcommanddispatcher.suppressfocusscroll", \
     "xulcommanddispatcher.updatecommands", \
     "xuldocument.commanddispatcher", \
-    "xuldocument.controls", \
     "xuldocument.getelementbyid", \
     "xuldocument.getelementsbyattribute", \
     "xuldocument.height", \
