@@ -322,6 +322,13 @@ NS_METHOD nsMenu::AddMenuItem(nsIMenuItem * aMenuItem)
         macModifiers |= kMenuNoCommandModifier;
 	  
 	  ::SetMenuItemModifiers(mMacMenuHandle, mMenuItemVoidArray.Count(), macModifiers);
+	  
+	  PRBool isEnabled;
+	  aMenuItem->GetEnabled(&isEnabled);
+	  if(isEnabled)
+	    ::EnableMenuItem(mMacMenuHandle, mMenuItemVoidArray.Count());
+	  else
+	    ::DisableMenuItem(mMacMenuHandle, mMenuItemVoidArray.Count());
 	}
   }
   return NS_OK;
@@ -983,9 +990,10 @@ void nsMenu::LoadMenuItem(
         pnsMenuItem->SetModifiers(modifiers);
     }
 
-
-	//if(disabled == NS_STRING_TRUE )
-		//::EnableMenuItem(mMenu, menuitemIndex, MF_BYPOSITION | MF_GRAYED);
+	if(disabled == NS_STRING_TRUE)
+      pnsMenuItem->SetEnabled(PR_FALSE);
+    else
+      pnsMenuItem->SetEnabled(PR_TRUE);
 
 	nsISupports * supports = nsnull;
     pnsMenuItem->QueryInterface(kISupportsIID, (void**) &supports);
