@@ -2052,6 +2052,7 @@ js_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
     JSResolvingKey key;
     JSDHashTable *table;
     JSDHashEntryHdr *entry;
+    uint32 generation;
     JSNewResolveOp newresolve;
     uintN flags;
     uint32 format;
@@ -2110,6 +2111,7 @@ js_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
                     return JS_FALSE;
                 }
                 ((JSResolvingEntry *)entry)->key = key;
+                generation = table->generation;
 
                 /* Null *propp here so we can test it at cleanup: safely. */
                 *propp = NULL;
@@ -2189,7 +2191,10 @@ js_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
                 }
 
             cleanup:
-                JS_DHashTableRawRemove(table, entry);
+                if (table->generation == generation)
+                    JS_DHashTableRawRemove(table, entry);
+                else
+                    JS_DHashTableOperate(table, &key, JS_DHASH_REMOVE);
                 if (table->entryCount == 0) {
                     cx->resolving = NULL;
                     JS_DHashTableDestroy(table);

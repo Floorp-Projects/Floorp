@@ -154,7 +154,9 @@ struct PLDHashEntryHdr {
  * Note a qualitative difference between chaining and double hashing: under
  * chaining, entry addresses are stable across table shrinks and grows.  With
  * double hashing, you can't safely hold an entry pointer and use it after an
- * ADD or REMOVE operation.
+ * ADD or REMOVE operation, unless you sample table->generation before adding
+ * or removing, and compare the sample after, dereferencing the entry pointer
+ * only if table->generation has not changed.
  *
  * The moral of this story: there is no one-size-fits-all hash table scheme,
  * but for small table entry size, and assuming entry address stability is not
@@ -165,10 +167,10 @@ struct PLDHashTable {
     void                *data;          /* ops- and instance-specific data */
     PRInt16             hashShift;      /* multiplicative hash shift */
     PRInt16             sizeLog2;       /* log2(table size) */
-    PRUint32            sizeMask;       /* PR_BITMASK(log2(table size)) */
     PRUint32            entrySize;      /* number of bytes in an entry */
     PRUint32            entryCount;     /* number of entries in table */
     PRUint32            removedCount;   /* removed entry sentinels in table */
+    PRUint32            generation;     /* entry storage generation number */
     char                *entryStore;    /* entry storage */
 #ifdef PL_DHASHMETER
     struct PLDHashStats {
