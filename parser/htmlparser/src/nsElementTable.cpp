@@ -772,7 +772,7 @@ void InitializeElementTable(void) {
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	    /*rootnodes,endrootnodes*/          &gLIRootTags,&gLIRootTags,	
       /*autoclose starttags and endtags*/ &gLIAutoClose,0,0,0,
-      /*parent,incl,exclgroups*/          kBlock, kFlowEntity, kSelf,	        //changed this from blockentity to block during RS cleanup
+      /*parent,incl,exclgroups*/          kFlowEntity, kFlowEntity, kSelf, // For compat. sake LI's parent model should be flow - Ref. bug 96031
       /*special props, prop-range*/       kNoPropagate|kVerifyHierarchy, kDefaultPropRange,
       /*special parents,kids,skip*/       0,&gLIKids,eHTMLTag_unknown);
 

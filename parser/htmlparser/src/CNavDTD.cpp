@@ -53,7 +53,7 @@
 #include "nsReadableUtils.h"
 #include "prmem.h"
 
-#if !defined(MOZ_DISABLE_DTD_DEBUG)
+#ifdef NS_DEBUG
 #include "nsLoggingSink.h"
 #endif
 
@@ -198,7 +198,7 @@ const nsIID& CNavDTD::GetMostDerivedIID(void)const {
 }
 
 
-#if !defined(MOZ_DISABLE_DTD_DEBUG)
+#ifdef NS_DEBUG
 
 nsLoggingSink* GetLoggingSink() {
 
@@ -260,7 +260,7 @@ CNavDTD::~CNavDTD(){
   }
 
   
-#if !defined(MOZ_DISABLE_DTD_DEBUG)
+#ifdef NS_DEBUG
   if(mSink) {
     nsLoggingSink *theLogSink=GetLoggingSink();
     if(mSink==theLogSink) {
@@ -394,7 +394,7 @@ nsresult CNavDTD::WillBuildModel(  const CParserContext& aParserContext,nsIConte
         //a logging sink. If so, then we'll create one, and make it the
         //proxy for the real sink we're given from the parser.
 
-#if !defined(MOZ_DISABLE_DTD_DEBUG)
+#ifdef NS_DEBUG
       nsLoggingSink *theLogSink=GetLoggingSink();
       if(theLogSink) {   
         theLogSink->SetProxySink(mSink);
