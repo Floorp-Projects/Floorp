@@ -651,6 +651,7 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext& aPresContext,
   nsCompatibility mode;
   aPresContext.GetCompatibilityMode(mode);
   mWebShell->SetScrolling(GetScrolling(content, mode));
+  mWebShell->SetIsFrame(PR_TRUE);
 
   nsString frameName;
   if (GetName(content, frameName)) {

@@ -1928,13 +1928,17 @@ HTMLContentSink::StartLayout()
     NS_IF_RELEASE(rootWebShell);
   }
 
-  // If it's a top level frameset document then disable scrolling; otherwise, let the
-  // style dictate. We need to do this before the initial reflow...
+  // If it's a top level frameset document then disable scrolling. If it is a non frame 
+  // document, then let the style dictate. We need to do this before the initial reflow...
   if (mWebShell) {
     if (topLevelFrameset) {
       mWebShell->SetScrolling(NS_STYLE_OVERFLOW_HIDDEN);
     } else if (mBody) {
- //     mWebShell->SetScrolling(-1);
+      PRBool isFrameDoc = PR_FALSE;
+      mWebShell->GetIsFrame(isFrameDoc);
+      if (!isFrameDoc) {
+        mWebShell->SetScrolling(-1);
+      }
     }
   }
 
