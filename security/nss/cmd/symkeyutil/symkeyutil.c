@@ -54,7 +54,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#if defined(WIN32)
+#if defined(WIN32) || defined(OS2)
 #include "io.h"
 #endif
 
@@ -119,35 +119,67 @@ static KeyTypes keyArray[] = {
 static int keyArraySize = sizeof(keyArray)/sizeof(keyArray[0]);
 
 int
-GetLen(int fd)
+GetLen(PRFileDesc* fd)
 {
-    struct stat buf;
-    int ret;
+    PRFileInfo info;
 
-    ret = fstat(fd,&buf);
-    if (ret < 0) return ret;
+    if (PR_SUCCESS != PR_GetOpenFileInfo(fd, &info))
+    {
+        return -1;
+    }
 
-    return buf.st_size;
+    return info.size;
 }
 
 #ifndef O_BINARY
 #define O_BINARY 0
 #endif
 
+void PrintError(void)
+{
+    char* errortext = NULL;
+    PRInt32 errorlen = 0;
+
+    errorlen = PR_GetErrorTextLength();
+    if (errorlen)
+    {
+        errortext = PORT_ZAlloc(errorlen);
+        errorlen = PR_GetErrorText(errortext);
+    }
+    if (errorlen)
+    {
+        PR_fprintf(PR_STDERR, "%s\n", errortext);
+    }
+    else
+    {
+        PRErrorCode prError = 0;
+        PRInt32 osError = 0;
+
+        prError = PR_GetError();
+        osError = PR_GetOSError();
+        PR_fprintf(PR_STDERR, "NSPR error %d , OS error = %d.\n", prError,
+            osError);
+    }
+    if (errortext)
+    {
+        PORT_Free(errortext);
+    }
+}
+
 int
 ReadBuf(char *inFile, SECItem *item)
 {
     int len;
     int ret;
-    int fd = open(inFile, O_RDONLY|O_BINARY);
-    if (fd < 0) {
-	perror(inFile);
+    PRFileDesc* fd = PR_Open(inFile, PR_RDONLY, 0);
+    if (NULL == fd) {
+	PrintError();
 	return -1;
     }
 
     len = GetLen(fd);
     if (len < 0) {
-	perror(inFile);
+	PrintError();
 	return -1;
     }
     item->data = (unsigned char *)PORT_Alloc(len);
@@ -156,14 +188,14 @@ ReadBuf(char *inFile, SECItem *item)
 	return -1;
     }
 
-    ret = read(fd,item->data,item->len);
+    ret = PR_Read(fd,item->data,item->len);
     if (ret < 0) {
 	PORT_Free(item->data);
 	item->data = NULL;
-	perror(inFile);
+	PrintError();
 	return -1;
     }
-    close(fd);
+    PR_Close(fd);
     item->len = len;
     return 0;
 }
@@ -172,18 +204,18 @@ int
 WriteBuf(char *inFile, SECItem *item)
 {
     int ret;
-    int fd = open(inFile, O_WRONLY|O_CREAT|O_BINARY);
-    if (fd < 0) {
-	perror(inFile);
+    PRFileDesc* fd = PR_Open(inFile, PR_WRONLY|PR_CREATE_FILE, 0x200);
+    if (NULL == fd) {
+	PrintError();
 	return -1;
     }
 
-    ret = write(fd,item->data,item->len);
+    ret = PR_Write(fd,item->data,item->len);
     if (ret < 0) {
-	perror(inFile);
+	PrintError();
 	return -1;
     }
-    close(fd);
+    PR_Close(fd);
     return 0;
 }
 
@@ -1012,7 +1044,7 @@ main(int argc, char **argv)
 	    goto shutdown;
 	}
 
-	/* WriteBuf outputs it's own error using Perror */
+	/* WriteBuf outputs it's own error using PrintError */
 	ret = WriteBuf(symKeyUtil.options[opt_KeyFile].arg, &data);
 	if (ret < 0) {
 	    goto shutdown;
