@@ -1099,10 +1099,9 @@ nsresult nsMsgDatabase::IsRead(nsMsgKey key, PRBool *pRead)
     return rv;
 }
 
-PRUint32	nsMsgDatabase::GetStatusFlags(nsIMsgDBHdr *msgHdr)
+PRUint32	nsMsgDatabase::GetStatusFlags(nsIMsgDBHdr *msgHdr, PRUint32 origFlags)
 {
-	PRUint32	statusFlags;
-    (void)msgHdr->GetFlags(&statusFlags);
+	PRUint32	statusFlags = origFlags;
 	PRBool	isRead;
 
     nsMsgKey key;
@@ -1114,13 +1113,15 @@ PRUint32	nsMsgDatabase::GetStatusFlags(nsIMsgDBHdr *msgHdr)
 	return statusFlags;
 }
 
-NS_IMETHODIMP nsMsgDatabase::IsHeaderRead(nsIMsgDBHdr *hdr, PRBool *pRead)
+NS_IMETHODIMP nsMsgDatabase::IsHeaderRead(nsIMsgDBHdr *msgHdr, PRBool *pRead)
 {
-	if (!hdr)
+	if (!msgHdr)
 		return NS_MSG_MESSAGE_NOT_FOUND;
 
+    nsMsgHdr* hdr = NS_STATIC_CAST(nsMsgHdr*, msgHdr);          // closed system, cast ok
+	// can't call GetFlags, because it will be recursive.
     PRUint32 flags;
-    (void)hdr->GetFlags(&flags);
+	hdr->GetRawFlags(&flags);
 	*pRead = (flags & MSG_FLAG_READ) != 0;
 	return NS_OK;
 }
@@ -1353,7 +1354,9 @@ nsresult	nsMsgDatabase::SetKeyFlag(nsMsgKey key, PRBool set, PRUint32 flag,
 PRBool nsMsgDatabase::SetHdrFlag(nsIMsgDBHdr *msgHdr, PRBool bSet, MsgFlags flag)
 {
 //	PR_ASSERT(! (flag & kDirty));	// this won't do the right thing so don't.
-	PRUint32 currentStatusFlags = GetStatusFlags(msgHdr);
+	PRUint32 statusFlags;
+    (void)msgHdr->GetFlags(&statusFlags);
+	PRUint32 currentStatusFlags = GetStatusFlags(msgHdr, statusFlags);
 	PRBool flagAlreadySet = (currentStatusFlags & flag) != 0;
 
 	if ((flagAlreadySet && !bSet) || (!flagAlreadySet && bSet))

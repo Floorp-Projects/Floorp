@@ -166,11 +166,22 @@ NS_IMETHODIMP nsMsgHdr::SetMessageKey(nsMsgKey value)
 	return NS_OK;
 }
 
+nsresult nsMsgHdr::GetRawFlags(PRUint32 *result)
+{
+	if (!(m_initedValues & FLAGS_INITED))
+		InitFlags();
+	*result = m_flags;
+    return NS_OK;
+}
+
 NS_IMETHODIMP nsMsgHdr::GetFlags(PRUint32 *result)
 {
 	if (!(m_initedValues & FLAGS_INITED))
 		InitFlags();
-    *result = m_flags;
+	if (m_mdb)
+		*result = m_mdb->GetStatusFlags(this, m_flags);
+	else
+		*result = m_flags;
     return NS_OK;
 }
 

@@ -279,7 +279,7 @@ protected:
 	virtual nsresult SetKeyFlag(nsMsgKey key, PRBool set, PRUint32 flag,
 							  nsIDBChangeListener *instigator = NULL);
 	virtual PRBool	SetHdrFlag(nsIMsgDBHdr *, PRBool bSet, MsgFlags flag);
-	virtual PRUint32 GetStatusFlags(nsIMsgDBHdr *msgHdr);
+	virtual PRUint32 GetStatusFlags(nsIMsgDBHdr *msgHdr, PRUint32 origFlags);
 	// helper function which doesn't involve thread object
     NS_IMETHOD MarkHdrReadInDB(nsIMsgDBHdr *msgHdr, PRBool bRead,
                                nsIDBChangeListener *instigator);

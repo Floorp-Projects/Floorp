@@ -101,6 +101,7 @@ public:
     nsMsgHdr(nsMsgDatabase *db, nsIMdbRow *dbRow);
     virtual				~nsMsgHdr();
 
+	virtual nsresult	GetRawFlags(PRUint32 *result);
     void				Init();
 	virtual nsresult	InitCachedValues();
 	virtual nsresult	InitFlags();
