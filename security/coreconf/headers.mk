@@ -52,11 +52,3 @@ endif
 #
 
 INCLUDES += -I$(SOURCE_XPPRIVATE_DIR)
-
-#
-#  Mozilla WIN32 build exports headers to mozilla/dist/include
-#
-
-ifeq ($(MOZ_BITS),32)
-INCLUDES += -I$(SOURCE_XP_DIR)/include
-endif
