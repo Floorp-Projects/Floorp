@@ -388,8 +388,6 @@ void nsGtkWidget_Scrollbar_Callback(GtkWidget *w, gpointer p)
   nsScrollbar *widget = (nsScrollbar*) p;
   nsScrollbarEvent sevent;
 
-  g_print("in Scrollbar callback\n");
-
 #if 0
   nsWindow * widgetWindow = (nsWindow *) p ;
   XmScrollBarCallbackStruct * cbs = (XmScrollBarCallbackStruct*) call_data;

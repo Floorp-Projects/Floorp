@@ -36,11 +36,8 @@
 
 #include "stdio.h"
 
-#define DBG 1
-#if 0
-#define DEBUG_shaver 1
-#define DEBUG_pavlov 1
-#endif
+//#define DBG 0
+
 static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
 
 extern GtkWidget *gAppContext;
@@ -487,13 +484,7 @@ nsIAppShell* nsWindow::GetAppShell()
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 {
-#ifdef DBG
-  g_print("nsWindow::Scroll\n");
-#endif
   if (GTK_IS_LAYOUT(mWidget)) {
-#ifdef DBG
-    g_print ("is layout dX = %d, dY = %d\n", aDx, aDy);
-#endif
     GtkAdjustment* horiz = gtk_layout_get_hadjustment(GTK_LAYOUT(mWidget));
     GtkAdjustment* vert = gtk_layout_get_vadjustment(GTK_LAYOUT(mWidget));
     horiz->value -= aDx;
@@ -641,10 +632,6 @@ void nsWindow::OnDestroy()
 
 PRBool nsWindow::OnResize(nsSizeEvent &aEvent)
 {
-#ifdef DBG
-  g_print("nsWindow::OnResize\n");
-#endif
-
   nsRect* size = aEvent.windowSize;
 
   if (mEventCallback && !mIgnoreResize) {
@@ -673,9 +660,6 @@ PRBool nsWindow::DispatchFocus(nsGUIEvent &aEvent)
 
 PRBool nsWindow::OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos)
 {
-#ifdef DBG
-  g_print("nsWindow::OnScroll\n");
-#endif
   return FALSE;
 }
 
@@ -818,7 +802,7 @@ gint DoRefresh(gpointer call_data)
 
 void DoResize(GtkWidget *w, GtkAllocation *allocation, gpointer data)
 {
-  g_print("DoResized called\n");
+//  g_print("DoResized called\n");
   nsWindow *win = (nsWindow*)data;
 
   gtk_layout_freeze(GTK_LAYOUT(w));

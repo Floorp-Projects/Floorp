@@ -277,7 +277,6 @@ PRBool nsScrollbar::OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos)
     PRBool result = PR_TRUE;
     float newPosition;
 
-    g_print("nsScrollbar::OnScroll\n");
 #if 0
     switch (aEvent.message) {
 
