@@ -124,7 +124,7 @@ typedef enum
 
 
 struct PLEventQueue {
-    char*        name;
+    const char*  name;
     PRCList      queue;
     PRMonitor*   monitor;
     PRThread*    handlerThread;
@@ -210,7 +210,7 @@ static pascal Boolean _md_CarbonEventComparator(EventRef inEvent, void *inCompar
 **
 **
 */
-static PLEventQueue * _pl_CreateEventQueue(char *name,
+static PLEventQueue * _pl_CreateEventQueue(const char *name,
                                            PRThread *handlerThread,
                                            EventQueueType  qtype)
 {
@@ -260,19 +260,19 @@ static PLEventQueue * _pl_CreateEventQueue(char *name,
 } 
 
 PR_IMPLEMENT(PLEventQueue*)
-PL_CreateEventQueue(char* name, PRThread* handlerThread)
+PL_CreateEventQueue(const char* name, PRThread* handlerThread)
 {
     return( _pl_CreateEventQueue( name, handlerThread, EventQueueIsNative ));
 }
 
 PR_EXTERN(PLEventQueue *) 
-PL_CreateNativeEventQueue(char *name, PRThread *handlerThread)
+PL_CreateNativeEventQueue(const char *name, PRThread *handlerThread)
 {
     return( _pl_CreateEventQueue( name, handlerThread, EventQueueIsNative ));
 } 
 
 PR_EXTERN(PLEventQueue *) 
-PL_CreateMonitoredEventQueue(char *name, PRThread *handlerThread)
+PL_CreateMonitoredEventQueue(const char *name, PRThread *handlerThread)
 {
     return( _pl_CreateEventQueue( name, handlerThread, EventQueueIsMonitored ));
 } 
