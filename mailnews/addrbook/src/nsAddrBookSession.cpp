@@ -102,7 +102,8 @@ NS_IMETHODIMP nsAddrBookSession::NotifyItemPropertyChanged(nsISupports *item, co
   for(i = 0; i < count; i++)
   {
     if (mListenerNotifyFlags[i] & nsIAbListener::changed) {
-      nsCOMPtr<nsIAbListener> listener = getter_AddRefs((nsIAbListener*)mListeners->ElementAt(i));
+      nsCOMPtr<nsIAbListener> listener;
+      mListeners->QueryElementAt(i, NS_GET_IID(nsIAbListener), (void **) getter_AddRefs(listener));
       NS_ASSERTION(listener, "listener is null");
       if (listener)
         listener->OnItemPropertyChanged(item, property, oldValue, newValue);
@@ -122,7 +123,8 @@ NS_IMETHODIMP nsAddrBookSession::NotifyDirectoryItemAdded(nsIAbDirectory *direct
     for(i = 0; i < count; i++)
     {
       if (mListenerNotifyFlags[i] & nsIAbListener::added) {
-        nsCOMPtr<nsIAbListener> listener = getter_AddRefs((nsIAbListener*)mListeners->ElementAt(i));
+        nsCOMPtr<nsIAbListener> listener;
+        mListeners->QueryElementAt(i, NS_GET_IID(nsIAbListener), (void **) getter_AddRefs(listener));
         NS_ASSERTION(listener, "listener is null");
         if (listener)
           listener->OnItemAdded(directory, item);
@@ -144,7 +146,8 @@ NS_IMETHODIMP nsAddrBookSession::NotifyDirectoryItemDeleted(nsIAbDirectory *dire
     for(i = 0; i < count; i++)
     {
       if (mListenerNotifyFlags[i] & nsIAbListener::directoryItemRemoved) {
-        nsCOMPtr<nsIAbListener> listener = getter_AddRefs((nsIAbListener*)mListeners->ElementAt(i));
+        nsCOMPtr<nsIAbListener> listener;
+        mListeners->QueryElementAt(i, NS_GET_IID(nsIAbListener), (void **) getter_AddRefs(listener));
         NS_ASSERTION(listener, "listener is null");
         if (listener)
           listener->OnItemRemoved(directory, item);
@@ -165,7 +168,8 @@ NS_IMETHODIMP nsAddrBookSession::NotifyDirectoryDeleted(nsIAbDirectory *director
     for(i = 0; i < count; i++)
     {
       if (mListenerNotifyFlags[i] & nsIAbListener::directoryRemoved) {
-        nsCOMPtr<nsIAbListener> listener = getter_AddRefs(NS_STATIC_CAST(nsIAbListener *,mListeners->ElementAt(i)));
+        nsCOMPtr<nsIAbListener> listener;
+        mListeners->QueryElementAt(i, NS_GET_IID(nsIAbListener), (void **) getter_AddRefs(listener));
         NS_ASSERTION(listener, "listener is null");
         if (listener)
           listener->OnItemRemoved(directory, item);

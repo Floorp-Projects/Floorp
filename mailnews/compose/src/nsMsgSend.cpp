@@ -3248,19 +3248,19 @@ nsMsgComposeAndSend::DeliverFileAsMail()
   {
     PL_strcat (buf2, mCompFields->GetTo());
     if (collectAddresses)
-      addressCollecter->CollectAddress(mCompFields->GetTo());
+      addressCollecter->CollectAddress(mCompFields->GetTo(), PR_TRUE);
   }
   if (mCompFields->GetCc() && *mCompFields->GetCc()) {
     if (*buf2) PL_strcat (buf2, ",");
       PL_strcat (buf2, mCompFields->GetCc());
     if (collectAddresses)
-      addressCollecter->CollectAddress(mCompFields->GetCc());
+      addressCollecter->CollectAddress(mCompFields->GetCc(), PR_TRUE);
   }
-  if (mCompFields->GetBcc() && *mCompFields->GetBcc()) {
+  if (mCompFields->GetBcc() && *mCompFields->GetBcc(), PR_TRUE) {
     if (*buf2) PL_strcat (buf2, ",");
       PL_strcat (buf2, mCompFields->GetBcc());
     if (collectAddresses)
-      addressCollecter->CollectAddress(mCompFields->GetBcc());
+      addressCollecter->CollectAddress(mCompFields->GetBcc(), PR_TRUE);
   }
 
   // Ok, now MIME II encode this to prevent 8bit problems...

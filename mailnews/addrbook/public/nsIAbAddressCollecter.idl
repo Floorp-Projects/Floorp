@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *  Seth Spitzer <sspitzer@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -37,17 +38,16 @@
 
 #include "nsISupports.idl"
 
-
 [scriptable, uuid(fe04c8e6-501e-11d3-a527-0060b0fc04b7)]
 
 interface nsIAbAddressCollecter : nsISupports {
+  [noscript] void collectAddress(in string address, in boolean aCreateCard);
 
-  void collectAddress(in string address);
   /* CollectUnicodeAddress is the most I18N friendly
      of the two methods to call. If you just take a char * address
-	 as used by CollectAddress then you don't know what char set
-	 the address is in (UTF-8??).
+     as used by CollectAddress then you don't know what char set
+     the address is in (UTF-8??).
   */
-  void collectUnicodeAddress(in wstring address);
+  void collectUnicodeAddress(in wstring address, in boolean aCreateCard);
 };
 

@@ -72,30 +72,18 @@ nsAbAddressCollecter::~nsAbAddressCollecter()
   }
 }
 
-NS_IMETHODIMP nsAbAddressCollecter::CollectUnicodeAddress(const PRUnichar * aAddress)
+NS_IMETHODIMP nsAbAddressCollecter::CollectUnicodeAddress(const PRUnichar * aAddress, PRBool aCreateCard)
 {
   NS_ENSURE_ARG_POINTER(aAddress);
-  nsresult rv = NS_OK;
-
   // convert the unicode string to UTF-8...
-  nsAutoString unicodeString (aAddress);
-  char * utf8Version = ToNewUTF8String(unicodeString);
-  if (utf8Version) {
-    rv = CollectAddress(utf8Version);
-    Recycle(utf8Version);
-  }
-
+  nsresult rv = CollectAddress(NS_ConvertUCS2toUTF8(aAddress).get(), aCreateCard);
+  NS_ENSURE_SUCCESS(rv,rv);
   return rv;
 }
 
-NS_IMETHODIMP nsAbAddressCollecter::CollectAddress(const char *address)
+NS_IMETHODIMP nsAbAddressCollecter::CollectAddress(const char *address, PRBool aCreateCard)
 {
-  nsresult rv;
-
-  nsCOMPtr<nsIPref> pPref(do_GetService(NS_PREF_CONTRACTID, &rv)); 
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = OpenDatabase();
+  nsresult rv = OpenDatabase();
   NS_ENSURE_SUCCESS(rv, rv);
 
   // note that we're now setting the whole recipient list,
@@ -125,34 +113,39 @@ NS_IMETHODIMP nsAbAddressCollecter::CollectAddress(const char *address)
     // PR_TRUE (ie, case insensitive) without reading bugs #128535 and #121478.
     rv = m_database->GetCardFromAttribute(m_directory, kPriEmailColumn, curAddress, PR_FALSE /* retain case */, getter_AddRefs(existingCard));
 
-    if (!existingCard)
+    if (!existingCard && aCreateCard)
     {
       nsCOMPtr<nsIAbCard> senderCard = do_CreateInstance(NS_ABCARDPROPERTY_CONTRACTID, &rv);
       if (NS_SUCCEEDED(rv) && senderCard)
       {
-        if (curName && strlen(curName) > 0)
-          SetNamesForCard(senderCard, curName);
-        else
-        {
-          nsAutoString senderFromEmail(NS_ConvertASCIItoUCS2(curAddress).get());
-          PRInt32 atSignIndex = senderFromEmail.FindChar('@');
-          if (atSignIndex > 0)
-          {
-            senderFromEmail.Truncate(atSignIndex);
-            senderCard->SetDisplayName(senderFromEmail.get());
-          }
+        PRBool modifiedCard;
+        if (curName && strlen(curName) > 0) {
+          rv = SetNamesForCard(senderCard, curName, &modifiedCard);
+          NS_ASSERTION(NS_SUCCEEDED(rv), "failed to set names");
         }
 
-        senderCard->SetPrimaryEmail(NS_ConvertASCIItoUCS2(curAddress).get());
+        rv = AutoCollectScreenName(senderCard, curAddress, &modifiedCard);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "failed to set screenname");
+
+        rv = senderCard->SetPrimaryEmail(NS_ConvertASCIItoUCS2(curAddress).get());
+        NS_ASSERTION(NS_SUCCEEDED(rv), "failed to set email");
 
         rv = AddCardToAddressBook(senderCard);
-        NS_ENSURE_SUCCESS(rv,rv);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "failed to add card");
       }
     }
-    else // address is already in the AB
-    {
-      SetNamesForCard(existingCard, curName);
-      existingCard->EditCardToDatabase(m_abURI.get());
+    else if (existingCard) { 
+      // address is already in the AB, so update the names
+      PRBool setNames;
+      rv = SetNamesForCard(existingCard, curName, &setNames);
+      NS_ASSERTION(NS_SUCCEEDED(rv), "failed to set names");
+
+      PRBool setScreenName;
+      rv = AutoCollectScreenName(existingCard, curAddress, &setScreenName);
+      NS_ASSERTION(NS_SUCCEEDED(rv), "failed to set screen name");
+
+      if (setScreenName || setNames)
+        existingCard->EditCardToDatabase(m_abURI.get());
     }
 
     curName += strlen(curName) + 1;
@@ -163,6 +156,47 @@ NS_IMETHODIMP nsAbAddressCollecter::CollectAddress(const char *address)
   PR_FREEIF(names);
   PR_FREEIF(excludeDomainList);
   return NS_OK;
+}
+
+nsresult nsAbAddressCollecter::AutoCollectScreenName(nsIAbCard *aCard, const char *aEmail, PRBool *aModifiedCard)
+{
+  NS_ENSURE_ARG_POINTER(aCard);
+  NS_ENSURE_ARG_POINTER(aEmail);
+  NS_ENSURE_ARG_POINTER(aModifiedCard);
+
+  *aModifiedCard = PR_FALSE;
+
+  nsXPIDLString screenName;
+  nsresult rv = aCard->GetAimScreenName(getter_Copies(screenName));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  // don't override existing screennames
+  if (!screenName.IsEmpty())
+    return NS_OK;
+
+  const char *atPos = strchr(aEmail, '@');
+  
+  if (!atPos)
+    return NS_OK;
+  
+  const char *domain = atPos + 1;
+ 
+  if (!domain)
+    return NS_OK;
+ 
+  // username in username@aol.com and username@netscape.net are also
+  // AIM screennames.  
+  if (strcmp(domain,"aol.com") && strcmp(domain,"netscape.net"))
+    return NS_OK;
+
+  nsAutoString userName(NS_ConvertASCIItoUCS2(aEmail).get());
+  userName.SetLength(atPos - aEmail);
+
+  rv = aCard->SetAimScreenName(userName.get());
+  NS_ENSURE_SUCCESS(rv,rv);
+  
+  *aModifiedCard = PR_TRUE;
+  return rv;
 }
 
 nsresult nsAbAddressCollecter::OpenDatabase()
@@ -195,14 +229,24 @@ nsresult nsAbAddressCollecter::OpenDatabase()
 }
 
 nsresult 
-nsAbAddressCollecter::SetNamesForCard(nsIAbCard *senderCard, const char *fullName)
+nsAbAddressCollecter::SetNamesForCard(nsIAbCard *senderCard, const char *fullName, PRBool *aModifiedCard)
 {
   char *firstName = nsnull;
   char *lastName = nsnull;
+  *aModifiedCard = PR_FALSE;
+
+  nsXPIDLString displayName;
+  nsresult rv = senderCard->GetDisplayName(getter_Copies(displayName));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  // we already have a display name, so don't do anything
+  if (!displayName.IsEmpty())
+    return NS_OK;
 
   senderCard->SetDisplayName(NS_ConvertUTF8toUCS2(fullName).get());
+  *aModifiedCard = PR_TRUE;
 
-  nsresult rv = SplitFullName(fullName, &firstName, &lastName);
+  rv = SplitFullName(fullName, &firstName, &lastName);
   if (NS_SUCCEEDED(rv))
   {
     senderCard->SetFirstName(NS_ConvertUTF8toUCS2(firstName).get());
@@ -253,7 +297,7 @@ nsAbAddressCollecter::collectAddressBookPrefChanged(const char *aNewpref, void *
 {
   nsresult rv;
   nsAbAddressCollecter *adCol = (nsAbAddressCollecter *) aData;
-  nsCOMPtr<nsIPref> pPref(do_GetService(NS_PREF_CONTRACTID, &rv)); 
+  nsCOMPtr<nsIPref> pPref = do_GetService(NS_PREF_CONTRACTID, &rv); 
   NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get prefs");
 
   nsXPIDLCString prefVal;
@@ -266,7 +310,7 @@ nsAbAddressCollecter::collectAddressBookPrefChanged(const char *aNewpref, void *
 nsresult nsAbAddressCollecter::Init(void)
 {
   nsresult rv;
-  nsCOMPtr<nsIPref> pPref(do_GetService(NS_PREF_CONTRACTID, &rv)); 
+  nsCOMPtr<nsIPref> pPref = do_GetService(NS_PREF_CONTRACTID, &rv); 
   NS_ENSURE_SUCCESS(rv,rv);
   
   rv = pPref->RegisterCallback(PREF_MAIL_COLLECT_ADDRESSBOOK, collectAddressBookPrefChanged, this);

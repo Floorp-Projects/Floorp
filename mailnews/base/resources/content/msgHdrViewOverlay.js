@@ -42,10 +42,11 @@ var gViewAllHeaders = false;
 var gNumAddressesToShow = 3;
 var gShowUserAgent = false;
 var gCollectIncoming = false;
+var gCollectOutgoing = false;
 var gCollectNewsgroup = false;
 var gCollapsedHeaderViewMode = false;
 var gCollectAddressTimer = null;
-var gCollectAddess = null;
+var gCollectAddress = null;
 var gBuildAttachmentsForCurrentMsg = false;
 var gBuildAttachmentPopupForCurrentMsg = true;
 var gBuiltExpandedView = false;
@@ -203,6 +204,7 @@ function OnLoadMsgHeaderPane()
   gNumAddressesToShow = pref.getIntPref("mailnews.max_header_display_length");
   gCollectIncoming = pref.getBoolPref("mail.collect_email_address_incoming");
   gCollectNewsgroup = pref.getBoolPref("mail.collect_email_address_newsgroup");
+  gCollectOutgoing = pref.getBoolPref("mail.collect_email_address_outgoing");
   gShowUserAgent = pref.getBoolPref("mailnews.headers.showUserAgent");
   initializeHeaderViewTables();
 
@@ -237,7 +239,7 @@ var messageHeaderSink = {
       // clear out any pending collected address timers...
       if (gCollectAddressTimer)
       {
-        gCollectAddess = "";        
+        gCollectAddress = "";        
         clearTimeout(gCollectAddressTimer);
         gCollectAddressTimer = null;
       }
@@ -316,11 +318,21 @@ var messageHeaderSink = {
 
         if (lowerCaseHeaderName == "from")
         {
-          if (foo.headerValue && abAddressCollector && ((gCollectIncoming && !dontCollectAddress) || (gCollectNewsgroup && dontCollectAddress)))
-          {
-            gCollectAddess = foo.headerValue;
-            gCollectAddressTimer = setTimeout('abAddressCollector.collectUnicodeAddress(gCollectAddess);', 2000);
-          }
+          if (foo.headerValue && abAddressCollector) {
+            if ((gCollectIncoming && !dontCollectAddress) || 
+                (gCollectNewsgroup && dontCollectAddress))
+            {
+              gCollectAddress = foo.headerValue;
+              // collect, and add card if doesn't exist
+              gCollectAddressTimer = setTimeout('abAddressCollector.collectUnicodeAddress(gCollectAddress, true);', 2000);
+            }
+            else if (gCollectOutgoing) 
+            {
+              // collect, but only update existing cards
+              gCollectAddress = foo.headerValue;
+              gCollectAddressTimer = setTimeout('abAddressCollector.collectUnicodeAddress(gCollectAddress, false);', 2000);
+            }
+          } 
         }
        
         index++;

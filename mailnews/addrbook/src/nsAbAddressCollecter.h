@@ -41,12 +41,9 @@
 
 #include "nsIAbAddressCollecter.h"
 #include "nsCOMPtr.h"
-#include "nsIAbAddressCollecter.h"
 #include "nsIAddrDatabase.h"
-#include "nsAddrDatabase.h"
+#include "nsIAbDirectory.h"
 #include "nsIAbCard.h"
-
-class nsIPref;
 
 class nsAbAddressCollecter : public nsIAbAddressCollecter
 {
@@ -59,15 +56,14 @@ public:
 
   nsresult SetAbURI(const char *aURI);
   nsresult OpenDatabase();
-  nsresult SetNamesForCard(nsIAbCard *senderCard, const char *fullName);
-  nsresult SplitFullName (const char *fullName, char **firstName, char **lastName);
   nsresult Init();
 
 private:
   static int PR_CALLBACK collectAddressBookPrefChanged(const char *newpref, void *data);
   nsresult AddCardToAddressBook(nsIAbCard *card);
-
-protected:
+  nsresult AutoCollectScreenName(nsIAbCard *aCard, const char *aEmail, PRBool *aModifiedCard);
+  nsresult SetNamesForCard(nsIAbCard *senderCard, const char *fullName, PRBool *aModifiedCard);
+  nsresult SplitFullName (const char *fullName, char **firstName, char **lastName);
   nsCOMPtr <nsIAddrDatabase> m_database;
   nsCOMPtr <nsIAbDirectory> m_directory;
   nsCString m_abURI;
