@@ -98,6 +98,8 @@ static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
 #include "nsITimerCallback.h"
 #include "nsIServiceManager.h"
 #include "nsIAutoCopy.h"
+#include "nsIEventQueue.h"
+#include "nsIEventQueueService.h"
 
 //nodtifications
 #include "nsIDOMDocument.h"
@@ -138,6 +140,7 @@ static NS_DEFINE_IID(kCSubtreeIteratorCID, NS_SUBTREEITERATOR_CID);
 class nsSelectionIterator;
 class nsSelection;
 class nsAutoScrollTimer;
+struct nsScrollSelectionIntoViewEvent;
 
 PRBool  IsValidSelectionPoint(nsSelection *aFrameSel, nsIContent *aContent);
 PRBool  IsValidSelectionPoint(nsSelection *aFrameSel, nsIDOMNode *aDomNode);
@@ -223,7 +226,8 @@ public:
   nsresult      GetSelectionRegionRectAndScrollableView(SelectionRegion aRegion, nsRect *aRect, nsIScrollableView **aScrollableView);
   nsresult      ScrollRectIntoView(nsIScrollableView *aScrollableView, nsRect& aRect, PRIntn  aVPercent, PRIntn  aHPercent, PRBool aScrollParentViews);
 
-  NS_IMETHOD    ScrollIntoView(SelectionRegion aRegion=nsISelectionController::SELECTION_FOCUS_REGION);
+  nsresult      PostScrollSelectionIntoViewEvent(SelectionRegion aRegion);
+  NS_IMETHOD    ScrollIntoView(SelectionRegion aRegion=nsISelectionController::SELECTION_FOCUS_REGION, PRBool aIsSynchronous=PR_TRUE);
   nsresult      AddItem(nsIDOMRange *aRange);
   nsresult      RemoveItem(nsIDOMRange *aRange);
 
@@ -277,6 +281,7 @@ public:
 
 private:
   friend class nsSelectionIterator;
+  friend struct nsScrollSelectionIntoViewEvent;
 
 
   void         setAnchorFocusRange(PRInt32 aIndex); //pass in index into FrameSelection
@@ -304,6 +309,8 @@ private:
 #ifdef IBMBIDI
   PRBool mTrueDirection;
 #endif
+  nsCOMPtr<nsIEventQueue> mEventQueue;
+  PRBool mScrollEventPosted;
 };
 
 // Stack-class to turn on/off selection batching for table selection
@@ -354,7 +361,7 @@ public:
   NS_IMETHOD ClearTableCellSelection(){mSelectingTableCellMode = 0; return NS_OK;}
   
   NS_IMETHOD GetSelection(SelectionType aType, nsISelection **aDomSelection);
-  NS_IMETHOD ScrollSelectionIntoView(SelectionType aType, SelectionRegion aRegion);
+  NS_IMETHOD ScrollSelectionIntoView(SelectionType aType, SelectionRegion aRegion, PRBool aIsSynchronous);
   NS_IMETHOD RepaintSelection(nsIPresContext* aPresContext, SelectionType aType);
   NS_IMETHOD GetFrameForNodeOffset(nsIContent *aNode, PRInt32 aOffset, HINT aHint, nsIFrame **aReturnFrame, PRInt32 *aReturnOffset);
 
@@ -2931,7 +2938,7 @@ nsSelection::GetSelection(SelectionType aType, nsISelection **aDomSelection)
 }
 
 NS_IMETHODIMP
-nsSelection::ScrollSelectionIntoView(SelectionType aType, SelectionRegion aRegion)
+nsSelection::ScrollSelectionIntoView(SelectionType aType, SelectionRegion aRegion, PRBool aIsSynchronous)
 {
   PRInt8 index = GetIndexFromSelectionType(aType);
   if (index < 0)
@@ -2940,7 +2947,7 @@ nsSelection::ScrollSelectionIntoView(SelectionType aType, SelectionRegion aRegio
   if (!mDomSelections[index])
     return NS_ERROR_NULL_POINTER;
 
-  return mDomSelections[index]->ScrollIntoView(aRegion);
+  return mDomSelections[index]->ScrollIntoView(aRegion, aIsSynchronous);
 }
 
 NS_IMETHODIMP
@@ -4488,6 +4495,7 @@ nsTypedSelection::nsTypedSelection(nsSelection *aList)
   mAutoScrollTimer = nsnull;
   NS_NewISupportsArray(getter_AddRefs(mSelectionListeners));
   NS_INIT_REFCNT();
+  mScrollEventPosted = PR_FALSE;
 }
 
 
@@ -4500,6 +4508,7 @@ nsTypedSelection::nsTypedSelection()
   mAutoScrollTimer = nsnull;
   NS_NewISupportsArray(getter_AddRefs(mSelectionListeners));
   NS_INIT_REFCNT();
+  mScrollEventPosted = PR_FALSE;
 }
 
 
@@ -4511,6 +4520,11 @@ nsTypedSelection::~nsTypedSelection()
   if (mAutoScrollTimer) {
     mAutoScrollTimer->Stop();
     NS_RELEASE(mAutoScrollTimer);
+  }
+
+  if (mEventQueue && mScrollEventPosted) {
+    mEventQueue->RevokeEvents(this);
+    mScrollEventPosted = PR_FALSE;
   }
 }
 
@@ -7548,8 +7562,89 @@ nsTypedSelection::ScrollRectIntoView(nsIScrollableView *aScrollableView,
   return rv;
 }
 
+static void PR_CALLBACK HandlePLEvent(nsScrollSelectionIntoViewEvent* aEvent);
+static void PR_CALLBACK DestroyPLEvent(nsScrollSelectionIntoViewEvent* aEvent);
+
+struct nsScrollSelectionIntoViewEvent : public PLEvent {
+  nsScrollSelectionIntoViewEvent(nsTypedSelection *aTypedSelection, SelectionRegion aRegion) {
+    if (!aTypedSelection)
+      return;
+
+    mTypedSelection = aTypedSelection;
+    mRegion = aRegion;
+
+    PL_InitEvent(this, aTypedSelection,
+                 (PLHandleEventProc) ::HandlePLEvent,
+                 (PLDestroyEventProc) ::DestroyPLEvent);
+  }
+
+  ~nsScrollSelectionIntoViewEvent() {}
+
+  void HandleEvent() {
+    mTypedSelection->mScrollEventPosted = PR_FALSE;
+
+    if (!mTypedSelection)
+      return;
+
+    mTypedSelection->ScrollIntoView(mRegion, PR_TRUE);
+  }
+
+  nsTypedSelection *mTypedSelection;
+  SelectionRegion   mRegion;
+};
+
+static void PR_CALLBACK HandlePLEvent(nsScrollSelectionIntoViewEvent* aEvent)
+{
+  NS_ASSERTION(nsnull != aEvent,"Event is null");
+  aEvent->HandleEvent();
+}
+
+static void PR_CALLBACK DestroyPLEvent(nsScrollSelectionIntoViewEvent* aEvent)
+{
+  NS_ASSERTION(nsnull != aEvent,"Event is null");
+  delete aEvent;
+}
+
+nsresult
+nsTypedSelection::PostScrollSelectionIntoViewEvent(SelectionRegion aRegion)
+{
+  static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+
+  if (!mEventQueue) {
+    nsresult rv;
+
+    // Cache the event queue of the current UI thread
+    nsCOMPtr<nsIEventQueueService> eventService = do_GetService(kEventQueueServiceCID, &rv);
+    if (NS_SUCCEEDED(rv) && (nsnull != eventService)) {  // XXX this implies that the UI is the current thread.
+      rv = eventService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(mEventQueue));
+    }
+  }
+
+  if (mEventQueue) {
+    if (mScrollEventPosted) {
+      // We've already posted an event, revoke it and
+      // place a new one at the end of the queue to make
+      // sure that any new pending reflow events are processed
+      // before we scroll. This will insure that we scroll
+      // to the correct place on screen.
+
+      mEventQueue->RevokeEvents(this);
+      mScrollEventPosted = PR_FALSE;
+    }
+
+    nsScrollSelectionIntoViewEvent *ev = new nsScrollSelectionIntoViewEvent(this, aRegion);
+    if (ev) {
+      mEventQueue->PostEvent(ev);
+      mScrollEventPosted = PR_TRUE;
+      return NS_OK;
+    }
+  }
+
+  return NS_ERROR_FAILURE;
+}
+
 NS_IMETHODIMP
-nsTypedSelection::ScrollIntoView(SelectionRegion aRegion)
+nsTypedSelection::ScrollIntoView(SelectionRegion aRegion, PRBool aIsSynchronous)
 {
   nsresult result;
   if (!mFrameSelection)
@@ -7557,6 +7652,9 @@ nsTypedSelection::ScrollIntoView(SelectionRegion aRegion)
 
   if (mFrameSelection->GetBatching())
     return NS_OK;
+
+  if (!aIsSynchronous)
+    return PostScrollSelectionIntoViewEvent(aRegion);
 
   //
   // Shut the caret off before scrolling to avoid

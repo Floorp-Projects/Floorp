@@ -83,8 +83,11 @@ interface nsISelectionController : nsISelectionDisplay
    *
    * @param aType the selection to scroll into view. //SelectionType
    * @param aRegion the region inside the selection to scroll into view. //SelectionRegion
+   * @param aIsSynchronous when true, scrolls the selection into view
+   * before returning. If false, posts a request which is processed
+   * at some point after the method returns.
    */
-    void scrollSelectionIntoView(in short type, in short region);
+    void scrollSelectionIntoView(in short type, in short region, in boolean isSynchronous);
    /**
    * RepaintSelection repaints the selection specified by aType.
    *
