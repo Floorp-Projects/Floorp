@@ -78,7 +78,7 @@ static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
 nsLocalMailCopyState::nsLocalMailCopyState() :
   m_fileStream(nsnull), m_curDstKey(0xffffffff), m_curCopyIndex(0),
   m_messageService(nsnull), m_totalMsgCount(0), m_isMove(PR_FALSE),
-  m_dummyEnvelopeNeeded(PR_FALSE), m_leftOver(0)
+  m_dummyEnvelopeNeeded(PR_FALSE), m_leftOver(0), m_fromLineSeen(PR_FALSE)
 {
 }
 
@@ -1538,6 +1538,11 @@ nsresult nsMsgLocalMailFolder::WriteStartOfNewMessage()
     if (mCopyState->m_parseMsgState)
         mCopyState->m_parseMsgState->ParseAFolderLine(
           result.GetBuffer(), result.Length());
+    mCopyState->m_fromLineSeen = PR_TRUE;
+  }
+  else 
+  {
+    mCopyState->m_fromLineSeen = PR_FALSE;
   }
 	return NS_OK;
 }
@@ -1602,15 +1607,43 @@ NS_IMETHODIMP nsMsgLocalMailFolder::CopyData(nsIInputStream *aIStream, PRInt32 a
     if (!end && aLength > (PRInt32) maxReadCount)
     // this must be a gigantic line with no linefeed; sorry pal cannot handle
         return NS_ERROR_FAILURE;
-    
+
+    nsCString line;
+    char tmpChar = 0;
+
     while (start && end)
     {
-        mCopyState->m_fileStream->write(start, end-start); 
+        if (mCopyState->m_fromLineSeen)
+        {
+          if (nsCRT::strncmp(start, "From ", 5) == 0)
+          {
+            line = ">";
+        
+            tmpChar = *end;
+            *end = 0;
+            line += start;
+            *end = tmpChar;
+            line += MSG_LINEBREAK;
+        
+            mCopyState->m_fileStream->write(line.GetBuffer(), line.Length()); 
+            if (mCopyState->m_parseMsgState)
+              mCopyState->m_parseMsgState->ParseAFolderLine(line.GetBuffer(),
+                                                            line.Length());
+            goto keepGoing;
+          }
+        }
+        else
+        {
+          mCopyState->m_fromLineSeen = PR_TRUE;
+          NS_ASSERTION(nsCRT::strncmp(start, "From ", 5) == 0, 
+                       "Fatal ... bad message format\n");
+        }
+        
+        mCopyState->m_fileStream->write(start, end-start+linebreak_len); 
         if (mCopyState->m_parseMsgState)
             mCopyState->m_parseMsgState->ParseAFolderLine(start,
-                                                          end-start +
-                                                          linebreak_len);
-        *(mCopyState->m_fileStream) << MSG_LINEBREAK;
+                                                  end-start+linebreak_len);
+    keepGoing:
         start = end+linebreak_len;
         if (start >=
             &mCopyState->m_dataBuffer[mCopyState->m_leftOver])

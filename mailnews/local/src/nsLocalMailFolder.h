@@ -65,6 +65,7 @@ struct nsLocalMailCopyState
   char m_dataBuffer[FOUR_K+1];
   PRUint32 m_leftOver;
   PRBool m_copyingMultipleMessages;
+  PRBool m_fromLineSeen;
 };
 
 class nsMsgLocalMailFolder : public nsMsgDBFolder,
