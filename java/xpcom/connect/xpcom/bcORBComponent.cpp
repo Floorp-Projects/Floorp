@@ -40,7 +40,7 @@ NS_IMPL_NSGETMODULE("BlackConnectORB component",components);
 
 
 
-NS_IMPL_ISUPPORTS(bcORBComponent,NS_GET_IID(bcORBComponent));
+NS_IMPL_THREADSAFE_ISUPPORTS(bcORBComponent,NS_GET_IID(bcORBComponent));
 
 bcORBComponent::bcORBComponent() :
     orb(0)
@@ -50,17 +50,17 @@ bcORBComponent::bcORBComponent() :
 
 bcORBComponent::~bcORBComponent() {
     if (orb) {
-	delete orb; //nb should we destroy it?
+        delete orb; //nb should we destroy it?
     }
 }
 
 NS_IMETHODIMP bcORBComponent::GetORB(bcIORB **_orb) {
     if (!_orb) {
-	printf("--bcORBComponent::GetORB\n");
-	return NS_ERROR_NULL_POINTER;
+        printf("--bcORBComponent::GetORB\n");
+        return NS_ERROR_NULL_POINTER;
     }
     if (!orb) {
-	orb = new ORB();
+        orb = new ORB();
     }
     *_orb = orb;
     return NS_OK;
