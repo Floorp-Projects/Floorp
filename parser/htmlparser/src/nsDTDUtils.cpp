@@ -1322,11 +1322,8 @@ CToken* nsTokenAllocator::CreateTokenOfType(eHTMLTokenTypes aType,eHTMLTags aTag
     case eToken_newline:          result=new(mArenaPool) CNewlineToken(); break;
     case eToken_text:             result=new(mArenaPool) CTextToken(aString); break;
     case eToken_attribute:        result=new(mArenaPool) CAttributeToken(aString); break;
-    case eToken_script:           result=new(mArenaPool) CScriptToken(aString); break;
-    case eToken_style:            result=new(mArenaPool) CStyleToken(aString); break;
     case eToken_instruction:      result=new(mArenaPool) CInstructionToken(aString); break;
     case eToken_cdatasection:     result=new(mArenaPool) CCDATASectionToken(aString); break;
-    case eToken_error:            result=new(mArenaPool) CErrorToken(); break;
     case eToken_doctypeDecl:      result=new(mArenaPool) CDoctypeDeclToken(aString); break;
     case eToken_markupDecl:       result=new(mArenaPool) CMarkupDeclToken(aString); break;
       default:
@@ -1362,11 +1359,8 @@ CToken* nsTokenAllocator::CreateTokenOfType(eHTMLTokenTypes aType,eHTMLTags aTag
     case eToken_whitespace:       result=new(mArenaPool) CWhitespaceToken(); break;
     case eToken_newline:          result=new(mArenaPool) CNewlineToken(); break;
     case eToken_text:             result=new(mArenaPool) CTextToken(); break;
-    case eToken_script:           result=new(mArenaPool) CScriptToken(); break;
-    case eToken_style:            result=new(mArenaPool) CStyleToken(); break;
     case eToken_instruction:      result=new(mArenaPool) CInstructionToken(); break;
     case eToken_cdatasection:     result=new(mArenaPool) CCDATASectionToken(aTag); break;
-    case eToken_error:            result=new(mArenaPool) CErrorToken(); break;
     case eToken_doctypeDecl:      result=new(mArenaPool) CDoctypeDeclToken(aTag); break;
     case eToken_markupDecl:       result=new(mArenaPool) CMarkupDeclToken(); break;
     default:
