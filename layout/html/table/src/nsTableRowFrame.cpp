@@ -285,7 +285,7 @@ nsTableRowFrame::InsertFrames(nsIPresContext* aPresContext,
   nsTableCellFrame* prevCellFrame = (nsTableCellFrame *)nsTableFrame::GetFrameAtOrBefore(aPresContext, this, aPrevFrame, cellFrameType);
   nsVoidArray cellChildren;
   for (nsIFrame* childFrame = aFrameList; childFrame;
-       childFrame->GetNextSibling()) {
+       childFrame = childFrame->GetNextSibling()) {
     nsCOMPtr<nsIAtom> frameType;
     childFrame->GetFrameType(getter_AddRefs(frameType));
     if (IS_TABLE_CELL(frameType.get())) {
