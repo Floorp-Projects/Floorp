@@ -308,9 +308,9 @@ nsUnknownDecoder::nsSnifferEntry nsUnknownDecoder::sSnifferEntries[] = {
   // some sort...  "Scripts" can include arbitrary data to be passed
   // to an interpreter, so we need to decide whether we can call this
   // text or whether it's data.
-  SNIFFER_ENTRY_WITH_FUNC("#!", &LastDitchSniff),
+  SNIFFER_ENTRY_WITH_FUNC("#!", &nsUnknownDecoder::LastDitchSniff),
 
-  SNIFFER_ENTRY_WITH_FUNC("<?xml", &SniffForXML)
+  SNIFFER_ENTRY_WITH_FUNC("<?xml", &nsUnknownDecoder::SniffForXML)
 };
 
 PRUint32 nsUnknownDecoder::sSnifferEntryNum =
