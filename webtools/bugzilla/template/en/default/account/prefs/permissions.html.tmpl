@@ -49,7 +49,11 @@
         There are no permission bits set on your account.
       [% END %]
 
-      [% IF set_bits.size %]
+      [% IF user.groups.editusers %]
+        <br>
+        You have editusers privileges.  You can turn on and off 
+        all permissions for all users.
+      [% ELSIF set_bits.size %]
         <br>
         And you can turn on or off the following bits for
         <a href="editusers.cgi">other users</a>:
