@@ -537,9 +537,10 @@ BookmarksService::ReadBookmarks()
   
   if (!validPrefsFile) {
     // uh oh, parser error. Throw some UI
-    NSString *alert = NSLocalizedString(@"CorruptedBookmarksAlert",@"");
-    NSString *message = NSLocalizedString(@"CorruptedBookmarksMsg",@"");
-    NSRunAlertPanel(alert, message, @"OK", nil, nil);
+    NSString *alert     = NSLocalizedString(@"CorruptedBookmarksAlert",@"");
+    NSString *message   = NSLocalizedString(@"CorruptedBookmarksMsg",@"");
+    NSString *okButton  = NSLocalizedString(@"OKButtonText",@"");
+    NSRunAlertPanel(alert, message, okButton, nil, nil);
 
     // maybe we should read the default bookmarks here?
     gBookmarksFileReadOK = PR_FALSE;
@@ -967,9 +968,10 @@ BookmarksService::ImportBookmarks(nsIDOMHTMLDocument* aHTMLDoc)
     // uh oh, parser error. Remove the new node, and then throw some UI
     bookmarksRoot->RemoveChild(importedRootElement, getter_AddRefs(dummy));
         
-    NSString *alert = NSLocalizedString(@"ErrorImportingBookmarksAlert",@"");
-    NSString *message = NSLocalizedString(@"ErrorImportingBookmarksMsg",@"");
-    NSRunAlertPanel(alert, message, @"OK", nil, nil);
+    NSString *alert     = NSLocalizedString(@"ErrorImportingBookmarksAlert",@"");
+    NSString *message   = NSLocalizedString(@"ErrorImportingBookmarksMsg",@"");
+    NSString *okButton  = NSLocalizedString(@"OKButtonText",@"");
+    NSRunAlertPanel(alert, message, okButton, nil, nil);
     return;
   }
 
