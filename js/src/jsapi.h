@@ -995,6 +995,7 @@ JS_SetErrorReporter(JSContext *cx, JSErrorReporter er);
  */
 #define JSREG_FOLD      0x01    /* fold uppercase to lowercase */
 #define JSREG_GLOB      0x02    /* global exec, creates array of matches */
+#define JSREG_MULTILINE 0x04    /* ^ and $ match position of \n */
 
 extern JS_PUBLIC_API(JSObject *)
 JS_NewRegExpObject(JSContext *cx, char *bytes, size_t length, uintN flags);
