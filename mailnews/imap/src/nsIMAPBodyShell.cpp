@@ -1127,7 +1127,6 @@ nsIMAPBodypartType nsIMAPBodypartMultipart::GetType()
 
 nsIMAPBodypartMultipart::~nsIMAPBodypartMultipart()
 {
-	nsIMAPBodypart *bp = NULL;
 	for (int i = m_partList->Count() - 1; i >= 0; i--)
 	{
 		delete (nsIMAPBodypart *)(m_partList->ElementAt(i));
@@ -1468,13 +1467,13 @@ PRBool	nsIMAPMessageHeaders::ShouldFetchInline()
 
 ///////////// nsIMAPBodyShellCache ////////////////////////////////////
 
-
+#if 0  // mscott - commenting out because it does not appear to be used
 static int
 imap_shell_cache_strcmp (const void *a, const void *b)
 {
   return PL_strcmp ((const char *) a, (const char *) b);
 }
-
+#endif
 
 nsIMAPBodyShellCache::nsIMAPBodyShellCache()
 {

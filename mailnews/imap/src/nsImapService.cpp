@@ -111,7 +111,7 @@ nsImapService::CreateImapConnection(nsIEventQueue *aEventQueue, nsIImapUrl * aIm
 	PRBool canRunUrl = PR_FALSE;
 	nsCOMPtr<nsIImapProtocol> connection;
 	// iterate through the connection cache for a connection that can handle this url.
-	for (PRInt32 i = 0; i < m_connectionCache->Count() && !canRunUrl; i++) 
+	for (PRUint32 i = 0; i < m_connectionCache->Count() && !canRunUrl; i++) 
 	{
         connection = do_QueryInterface(m_connectionCache->ElementAt(i));
 		if (connection)
@@ -276,8 +276,6 @@ static const char *uidString = "UID";
 NS_IMETHODIMP nsImapService::DisplayMessage(const char* aMessageURI, nsISupports * aDisplayConsumer, 
 										  nsIUrlListener * aUrlListener, nsIURL ** aURL)
 {
-	nsImapUrl * imapUrl = nsnull;
-	nsIImapUrl * url = nsnull;
 	nsresult rv = NS_OK;
   nsCOMPtr<nsIEventQueue> queue;
  	// get the Event Queue for this thread...
@@ -602,7 +600,7 @@ nsImapService::Biff(nsIEventQueue * aClientEventQueue,
                     nsIURL ** aURL,
                     PRUint32 uidHighWater)
 {
-	static const char *formatString = "biff>%c%s>%ld";
+  // static const char *formatString = "biff>%c%s>%ld";
 	
     NS_ASSERTION (aImapMailFolder && aClientEventQueue,
                   "Oops ... null pointer");
@@ -1005,7 +1003,6 @@ nsImapService::DiscoverChildren(nsIEventQueue* aClientEventQueue,
 
         if (NS_SUCCEEDED(rv))
         {
-            PRBool gotFolder = PR_FALSE;
             nsString2 folderName("", eOneByte);
             GetFolderName(aImapUrl, aImapMailFolder, folderName);
             if (folderName.Length() > 0)
@@ -1060,7 +1057,6 @@ nsImapService::DiscoverLevelChildren(nsIEventQueue* aClientEventQueue,
 
         if (NS_SUCCEEDED(rv))
         {
-            PRBool gotFolder = PR_FALSE;
             nsString2 folderName("", eOneByte);
             GetFolderName(aImapUrl, aImapMailFolder, folderName);
             if (folderName.Length() > 0)
