@@ -110,13 +110,13 @@
                 <treecell url="chrome://browser/content/pref/pref-tabs.xul" label="&tabs.label;"/> 
               </treerow>
             </treeitem>
-    #ifdef XP_WIN
+#ifdef XP_WIN
             <treeitem id="winhooks">
               <treerow>
                 <treecell url="chrome://browser/content/pref/pref-winhooks.xul" label="&winhooks.label;"/>
               </treerow>
             </treeitem> 
-    #endif
+#endif
           </treechildren>
         </treeitem>
       </treechildren>
