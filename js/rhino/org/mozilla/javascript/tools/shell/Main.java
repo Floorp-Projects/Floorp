@@ -44,8 +44,6 @@ import java.lang.reflect.*;
 import org.mozilla.javascript.*;
 import org.mozilla.javascript.tools.ToolErrorReporter;
 
-import org.mozilla.javascript.tools.debugger.*;
-
 /**
  * The shell program.
  *
