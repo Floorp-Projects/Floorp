@@ -1136,7 +1136,7 @@ END_COM_MAP()
         /* [out][retval] */ BSTR *p)
     {
         *p = mURL.Copy();
-        return E_FAIL;
+        return S_OK;
     }
     
     virtual /* [id][propput] */ HRESULT STDMETHODCALLTYPE put_domain( 
