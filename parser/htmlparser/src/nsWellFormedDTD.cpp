@@ -264,7 +264,7 @@ NS_IMETHODIMP CWellFormedDTD::BuildModel(nsIParser* aParser) {
         if(NS_SUCCEEDED(result)) {
           theRecycler->RecycleToken(theToken);
         }
-        else {
+        else if(NS_ERROR_HTMLPARSER_BLOCK!=result){
           theTokenizer->PushTokenFront(theToken);
         }
         // theRootDTD->Verify(kEmptyString,aParser);
