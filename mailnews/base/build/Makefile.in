@@ -35,25 +35,25 @@ EXPORTS = \
 
 SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/libmailnewsbase_s.a	\
-		$(DIST)/lib/libnntp_s.a	\
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \
 		$(MKSHLIB_FORCE_ALL)	\
 		$(SHARED_LIBRARY_LIBS)	\
 		$(MKSHLIB_UNFORCE_ALL)	\
-		-lmailnewsmsgdb			\
-		-ljs					\
-		-ljsdom					\
-		-lxp					\
-		-lraptorbase			\
-		-lrdfutil_s				\
-		-lxpcom					\
-		-lreg					\
-		-lappcores				\
-		$(NSPR_LIBS)			\
-		-L$(DIST)/bin			\
-		-L$(DIST)/lib			\
+		-lmailnewsmsgdb		\
+		-lmozjs			\
+		-ljsdom			\
+		-lxp			\
+		-lraptorbase		\
+		-lrdfutil_s		\
+		-lxpcom			\
+		-lreg			\
+		-lappcores		\
+		-lnntp			\
+		$(NSPR_LIBS)		\
+		-L$(DIST)/bin		\
+		-L$(DIST)/lib		\
 		$(NULL)
 
 $(SHARED_LIBRARY): $(SHARED_LIBRARY_LIBS) Makefile
