@@ -25,6 +25,7 @@
  */
 
 #include "jsd.h"
+#include "jsstr.h"
 
 #ifdef DEBUG
 void JSD_ASSERT_VALID_THREAD_STATE(JSDThreadState* jsdthreadstate)
@@ -291,13 +292,12 @@ jsd_GetThisForStackFrame(JSDContext* jsdc,
     return jsdval;
 }
 
-
 JSBool
-jsd_EvaluateScriptInStackFrame(JSDContext* jsdc, 
-                               JSDThreadState* jsdthreadstate,
-                               JSDStackFrameInfo* jsdframe,
-                               const char *bytes, uintN length,
-                               const char *filename, uintN lineno, jsval *rval)
+jsd_EvaluateUCScriptInStackFrame(JSDContext* jsdc, 
+                                 JSDThreadState* jsdthreadstate,
+                                 JSDStackFrameInfo* jsdframe,
+                                 const jschar *bytes, uintN length,
+                                 const char *filename, uintN lineno, jsval *rval)
 {
     JSBool retval;
     JSBool valid;
@@ -318,12 +318,45 @@ jsd_EvaluateScriptInStackFrame(JSDContext* jsdc,
 
     exceptionState = JS_SaveExceptionState(cx);
     jsd_StartingEvalUsingFilename(jsdc, filename);
-    retval = JS_EvaluateInStackFrame(cx, jsdframe->fp, bytes, length, 
-                                     filename, lineno, rval);
+    retval = JS_EvaluateUCInStackFrame(cx, jsdframe->fp, bytes, length, 
+                                       filename, lineno, rval);
     jsd_FinishedEvalUsingFilename(jsdc, filename);
     JS_RestoreExceptionState(cx, exceptionState);
 
     return retval;
+}
+
+JSBool
+jsd_EvaluateScriptInStackFrame(JSDContext* jsdc, 
+                               JSDThreadState* jsdthreadstate,
+                               JSDStackFrameInfo* jsdframe,
+                               const char *bytes, uintN length,
+                               const char *filename, uintN lineno, jsval *rval)
+{
+    jschar *chars;
+    JSBool valid;
+    JSBool ok;
+    JSContext *cx;
+
+    JS_ASSERT(JSD_CURRENT_THREAD() == jsdthreadstate->thread);
+
+    JSD_LOCK_THREADSTATES(jsdc);
+    valid = jsd_IsValidFrameInThreadState(jsdc, jsdthreadstate, jsdframe);
+    JSD_UNLOCK_THREADSTATES(jsdc);
+
+    if (!valid)
+        return JS_FALSE;
+
+    cx = jsdthreadstate->context;
+    JS_ASSERT(cx);
+    
+    chars = js_InflateString(cx, bytes, length);
+    if (!chars)
+        return JS_FALSE;
+    ok = jsd_EvaluateUCScriptInStackFrame(jsdc, jsdthreadstate, jsdframe, chars,
+                                          length, filename, lineno, rval);
+    JS_free(cx, chars);
+    return ok;
 }
 
 JSString*
@@ -431,3 +464,4 @@ jsd_SetException(JSDContext* jsdc, JSDThreadState* jsdthreadstate,
         JS_ClearPendingException(cx);
     return JS_TRUE;
 }
+
