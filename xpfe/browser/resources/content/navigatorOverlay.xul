@@ -538,6 +538,8 @@ Contributor(s): ______________________________________. -->
 
   <menu accesskey="q" value="&QA.label;">
     <menupopup>
+      <menuitem value="&PrecheckinTests.label;"  oncommand="window.content.location.href='http://www.mozilla.org/quality/precheckin-tests.html'"/>
+      <menuseparator />
       <menuitem value="&QABugCmd.label;"        oncommand="window.content.location.href='http://www.mozilla.org/quality/bug-writing-guidelines.html'"/>
       <menuitem value="&QATempCmd.label;"       oncommand="window.content.location.href='http://www.mozilla.org/quality/bug-template.html'"/>
       <menuitem value="&QASmokeCmd.label;"      oncommand="window.content.location.href='http://www.mozilla.org/quality/smoketests/'"/>
