@@ -899,15 +899,6 @@ function OnLoadFolderPane()
 {
     UpgradeFolderPaneUI();
 
-    var folderUnreadCol = document.getElementById("folderUnreadCol");
-    var hidden = folderUnreadCol.getAttribute("hidden");
-    if (hidden != "true")
-    {
-        var folderNameCell = document.getElementById("folderNameCell");
-        folderNameCell.setAttribute("label", "?folderTreeSimpleName");
-    }
-    folderUnreadCol.addEventListener("DOMAttrModified", OnFolderUnreadColAttrModified, false);
-
     //Add folderDataSource and accountManagerDataSource to folderPane
     accountManagerDataSource = accountManagerDataSource.QueryInterface(Components.interfaces.nsIRDFDataSource);
     folderDataSource = folderDataSource.QueryInterface(Components.interfaces.nsIRDFDataSource);

@@ -389,9 +389,7 @@ Rights Reserved.
 <!ENTITY openMessageWindowCmd.key "o">
 
 <!-- Folder Pane -->
-<!ENTITY nameColumn.label "Name">
-<!ENTITY unreadColumn.label "Unread">
-<!ENTITY totalColumn.label "Total">
+<!ENTITY folderPaneHeader.label "Folders">
 
 <!-- Toolbar items -->
 <!ENTITY getMsgButton.label "Get Mail">
