@@ -270,6 +270,58 @@ sub ConfigureBuildSystem()
     }
 
     printf("UNIVERSAL_INTERFACES_VERSION = 0x%04X\n", $UNIVERSAL_INTERFACES_VERSION);
+
+    my($line, $config, $oldconfig, $define, $definevalue, $defines);
+    my($k, $l,);
+
+    foreach $k (keys(%main::options))
+    {
+        if ($main::options{$k})
+        {
+            foreach $l (keys(%{$main::optiondefines{$k}}))
+            {
+                $my::defines{$l} = $main::optiondefines{$k}{$l};
+            }
+        }
+    }
+
+    my $config_headerfile = current_directory() . ":mozilla:config:mac:DefinesOptions.h";
+    if (-e $config_headerfile)
+    {
+        open(CONFIG_HEADER, "< $config_headerfile") || die "Can't open configuration header, check the file path.\n";
+        while ($line = <CONFIG_HEADER>)
+        {
+            $oldconfig .= $line;
+            if ($line =~ m/#define (.*) (.*)\n/)
+            {
+                $define = $1;
+                $definevalue = $2;
+                if (exists ($my::defines{$define}) and ($my::defines{$define} == $definevalue))
+                {
+                    delete $my::defines{$define};
+                    $config .= $line;
+                }
+            }
+        }
+        close(CONFIG_HEADER);
+    }
+
+    if (%my::defines)
+    {
+        foreach $k (keys(%my::defines))
+        {
+            $config .= "#define " . $k . " " . $my::defines{$k} . "\n";
+        }
+    }
+
+    if (($config ne $oldconfig) || (!-e $config_headerfile))
+    {
+        printf("Writing new DefinesOptions.h\n");
+        open(CONFIG_HEADER, "> $config_headerfile") || die "Can't open configuration header, check the file path.\n";
+        MacPerl::SetFileInfo("CWIE", "TEXT", $config_headerfile);
+        print CONFIG_HEADER ($config);
+        close(CONFIG_HEADER);
+    }
 }
 
 #//--------------------------------------------------------------------------------------------------
@@ -1165,6 +1217,14 @@ sub BuildClientDist()
     _InstallFromManifest(":mozilla:layout:events:src:MANIFEST",                     "$distdirectory:layout:");
     _InstallFromManifest(":mozilla:layout:xml:document:public:MANIFEST",            "$distdirectory:layout:");
     _InstallFromManifest(":mozilla:layout:xml:content:public:MANIFEST",             "$distdirectory:layout:");
+    if ($main::options{transformiix})
+    {
+        _InstallFromManifest(":mozilla:layout:xsl:document:src:MANIFEST_IDL",                   "$distdirectory:idl:");
+    }
+    if ($main::options{svg})
+    {
+        _InstallFromManifest(":mozilla:layout:svg:base:public:MANIFEST",                        "$distdirectory:layout:");
+    }
     _InstallFromManifest(":mozilla:layout:xul:base:public:Manifest",                "$distdirectory:layout:");
     _InstallFromManifest(":mozilla:layout:xbl:public:Manifest",                     "$distdirectory:layout:");
 
@@ -1858,6 +1918,30 @@ sub BuildLayoutProjects()
     BuildOneProject(":mozilla:gfx:macbuild:gfx.mcp",                            "gfx$D.shlb", 1, $main::ALIAS_SYM_FILES, 0);
     BuildOneProject(":mozilla:dom:macbuild:dom.mcp",                            "dom$D.shlb", 1, $main::ALIAS_SYM_FILES, 0);
     BuildOneProject(":mozilla:modules:plugin:macbuild:plugin.mcp",              "plugin$D.shlb", 1, $main::ALIAS_SYM_FILES, 0);
+    if ($main::options{transformiix})
+    {
+        BuildOneProject(":mozilla:layout:macbuild:layoutxsl.mcp",                   "layoutxsl$D.o", 0, 0, 0);
+    }
+    else
+    {
+        BuildOneProject(":mozilla:layout:macbuild:layoutxsl.mcp",                   "layoutxsl$D.o stub", 0, 0, 0);
+    }
+    if ($main::options{mathml})
+    {
+        BuildOneProject(":mozilla:layout:macbuild:layoutmathml.mcp",                "layoutmathml$D.o", 0, 0, 0);
+    }
+    else
+    {
+        BuildOneProject(":mozilla:layout:macbuild:layoutmathml.mcp",                "layoutmathml$D.o stub", 0, 0, 0);
+    }
+    if ($main::options{svg})
+    {
+        BuildOneProject(":mozilla:layout:macbuild:layoutsvg.mcp",                   "layoutsvg$D.o", 0, 0, 0);
+    }
+    else
+    {
+        BuildOneProject(":mozilla:layout:macbuild:layoutsvg.mcp",                   "layoutsvg$D.o stub", 0, 0, 0);
+    }
     BuildOneProject(":mozilla:layout:macbuild:layout.mcp",                      "layout$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:view:macbuild:view.mcp",                          "view$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:widget:macbuild:widget.mcp",                      "widget$D.shlb", 1, $main::ALIAS_SYM_FILES, 0);
@@ -1974,7 +2058,8 @@ sub BuildExtensionsProjects()
 
     print("--- Starting Extensions projects ----\n");
 
-    my($chrome_dir) = "$dist_dir"."Chrome:";
+    my($chrome_subdir) = "Chrome:";
+    my($chrome_dir) = "$dist_dir"."$chrome_subdir";
 
     # Chatzilla
     my($packages_chrome_dir) = "$chrome_dir" . "packages:";
@@ -2002,6 +2087,39 @@ sub BuildExtensionsProjects()
 
     # XML-RPC (whatever that is)
     _InstallFromManifest(":mozilla:extensions:xml-rpc:src:MANIFEST_COMPONENTS", "${dist_dir}Components");
+    
+    # Component viewer
+    my($cview_cview_packages_chrome_dir) = "$packages_chrome_dir"."cview:cview:";
+
+    my($cviewContent) = "$cview_cview_packages_chrome_dir"."content:";
+    my($cviewLocale) = "$cview_cview_packages_chrome_dir"."locale:";
+    my($cviewSkin) = "$cview_cview_packages_chrome_dir"."skin:";
+
+    _InstallResources(":mozilla:extensions:cview:resources:content:MANIFEST", "$cviewContent");
+    _InstallResources(":mozilla:extensions:cview:resources:skin:MANIFEST", "$cviewSkin");
+
+    _InstallManifestRDF(":mozilla:extensions:cview:resources:manifest.rdf", $dist_dir, $chrome_subdir, "packages:cview:", "content");
+    _InstallManifestRDF(":mozilla:extensions:cview:resources:manifest.rdf", $dist_dir, $chrome_subdir, "packages:cview:", "locale");
+    _InstallManifestRDF(":mozilla:extensions:cview:resources:manifest.rdf", $dist_dir, $chrome_subdir, "packages:cview:", "skin");
+    
+    # Transformiix
+    if ($main::options{transformiix})
+    {
+        BuildOneProject(":mozilla:extensions:transformiix:macbuild:transformiix.mcp", "transformiix$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+
+        my($transformiix_transformiix_packages_chrome_dir) = "$packages_chrome_dir"."transformiix:transformiix:";
+
+        my($transformiixContent) = "$transformiix_transformiix_packages_chrome_dir"."content:";
+        my($transformiixLocale) = "$transformiix_transformiix_packages_chrome_dir"."locale:";
+        my($transformiixSkin) = "$transformiix_transformiix_packages_chrome_dir"."skin:";
+
+        _InstallResources(":mozilla:extensions:transformiix:source:examples:mozilla:transformiix:content:MANIFEST", "$transformiixContent");
+        _InstallResources(":mozilla:extensions:transformiix:source:examples:mozilla:transformiix:skin:MANIFEST", "$transformiixSkin");
+
+        _InstallManifestRDF(":mozilla:extensions:transformiix:source:examples:mozilla:transformiix:manifest.rdf", $dist_dir, $chrome_subdir, "packages:transformiix:", "content");
+        _InstallManifestRDF(":mozilla:extensions:transformiix:source:examples:mozilla:transformiix:manifest.rdf", $dist_dir, $chrome_subdir, "packages:transformiix:", "locale");
+        _InstallManifestRDF(":mozilla:extensions:transformiix:source:examples:mozilla:transformiix:manifest.rdf", $dist_dir, $chrome_subdir, "packages:transformiix:", "skin");
+    }
     
     print("--- Extensions projects complete ----\n");
 }
