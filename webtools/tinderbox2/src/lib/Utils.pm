@@ -3,8 +3,8 @@
 # Utils.pm - General purpose utility functions.  Every project needs a
 # kludge bucket for common access.
 
-# $Revision: 1.13 $ 
-# $Date: 2001/02/15 20:44:48 $ 
+# $Revision: 1.14 $ 
+# $Date: 2001/02/27 15:09:14 $ 
 # $Author: kestes%tradinglinx.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Utils.pm,v $ 
 # $Name:  $ 
@@ -126,15 +126,13 @@ sub set_static_vars {
 
   @ORIG_ARGV = @ARGV;
 
-  $ENV{'PATH'}= (
-                 '/bin'.
-                 ':/usr/bin'.
-                 ':/usr/local/bin'.
-                 
-                 ':/opt/gnu/bin'.
-                 ':/usr/ucb'.
-                 ':/usr/ccs/bin'.
-                 '');
+  # set a minimal path.  All the commands we run should have explicit
+  # paths for security reasons.
+
+  $ENV{'PATH'}=  (
+                  '/bin'.
+                  ':/usr/bin'.
+                   '');
   
   # taint perl requires we clean up these bad environmental variables.
   
