@@ -1483,6 +1483,7 @@ static JSFunctionSpec FileOpMethods[] =
   {"exists",                    InstallFileOpFileExists,               1},
   {"execute",                   InstallFileOpFileExecute,              2},
   {"nativeVersion",             InstallFileOpFileGetNativeVersion,     1},
+  {"windowsVersion",            InstallFileOpFileGetNativeVersion,     1},
   {"diskSpaceAvailable",        InstallFileOpFileGetDiskSpaceAvailable,1},
   {"modDate",                   InstallFileOpFileGetModDate,           1},
   {"size",                      InstallFileOpFileGetSize,              1},

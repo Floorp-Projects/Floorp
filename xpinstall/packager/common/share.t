@@ -27,26 +27,29 @@ function deleteThisFile(dirKey, file)
   var fFileToDelete;
 
   fFileToDelete = getFolder(dirKey, file);
-  logComment(file + " file: " + fFileToDelete);
-  if(File.exists(fFileToDelete))
+  logComment("File to delete: " + fFileToDelete);
+  if(File.isFile(fFileToDelete))
   {
-    fileDelete(fFileToDelete);
+    File.remove(fFileToDelete);
     return(true);
   }
   else
     return(false);
 }
 
-// this function deletes a folder (recursively) if it exists
-function deleteThisFolder(dirKey, folder)
+// this function deletes a folder if it exists
+function deleteThisFolder(dirKey, folder, recursiveDelete)
 {
   var fToDelete;
 
+  if(typeof recursiveDelete == "undefined")
+    recursiveDelete = true;
+
   fToDelete = getFolder(dirKey, folder);
-  logComment(folder + " folder: " + fToDelete);
-  if(File.exists(fToDelete))
+  logComment("folder to delete: " + fToDelete);
+  if(File.isDirectory(fToDelete))
   {
-    File.dirRemove(fToDelete, true);
+    File.dirRemove(fToDelete, recursiveDelete);
     return(true);
   }
   else
