@@ -133,16 +133,25 @@ private:
     nsAutoString mValue;
 };
 
+MOZ_DECL_CTOR_COUNTER(RDF_LiteralImpl);
 
 LiteralImpl::LiteralImpl(const PRUnichar* s)
     : mValue(s)
 {
+    MOZ_COUNT_CTOR(RDF_LiteralImpl);
+
     NS_INIT_REFCNT();
     gRDFService->RegisterLiteral(this);
 }
 
 LiteralImpl::~LiteralImpl()
 {
+    MOZ_COUNT_DTOR(RDF_LiteralImpl);
+#ifdef DEBUG_REFS
+    --gInstanceCount;
+    fprintf(stdout, "%d - RDF: LiteralImpl\n", gInstanceCount);
+#endif
+
     gRDFService->UnregisterLiteral(this);
 }
 
@@ -228,15 +237,23 @@ private:
     PRTime mValue;
 };
 
+MOZ_DECL_CTOR_COUNTER(RDF_DateImpl);
 
 DateImpl::DateImpl(const PRTime s)
     : mValue(s)
 {
+    MOZ_COUNT_CTOR(RDF_DateImpl);
+
     NS_INIT_REFCNT();
 }
 
 DateImpl::~DateImpl()
 {
+    MOZ_COUNT_DTOR(RDF_DateImpl);
+#ifdef DEBUG_REFS
+    --gInstanceCount;
+    fprintf(stdout, "%d - RDF: DateImpl\n", gInstanceCount);
+#endif
 }
 
 NS_IMPL_ADDREF(DateImpl);
@@ -326,15 +343,23 @@ private:
     PRInt32 mValue;
 };
 
+MOZ_DECL_CTOR_COUNTER(RDF_IntImpl);
 
 IntImpl::IntImpl(PRInt32 s)
     : mValue(s)
 {
+    MOZ_COUNT_CTOR(RDF_IntImpl);
+
     NS_INIT_REFCNT();
 }
 
 IntImpl::~IntImpl()
 {
+    MOZ_COUNT_DTOR(RDF_IntImpl);
+#ifdef DEBUG_REFS
+    --gInstanceCount;
+    fprintf(stdout, "%d - RDF: IntImpl\n", gInstanceCount);
+#endif
 }
 
 NS_IMPL_ADDREF(IntImpl);
@@ -419,10 +444,13 @@ rdf_CompareWideStrings(const void* v1, const void* v2)
     return 0 == nsCRT::strcmp(NS_STATIC_CAST(const PRUnichar*, v1), NS_STATIC_CAST(const PRUnichar*, v2));
 }
 
+MOZ_DECL_CTOR_COUNTER(RDF_RDFServiceImpl);
 
 RDFServiceImpl::RDFServiceImpl()
     :  mNamedDataSources(nsnull), mResources(nsnull), mLiterals(nsnull)
 {
+    MOZ_COUNT_CTOR(RDF_RDFServiceImpl);
+
     NS_INIT_REFCNT();
 }
 
@@ -472,6 +500,12 @@ RDFServiceImpl::Init()
 
 RDFServiceImpl::~RDFServiceImpl()
 {
+    MOZ_COUNT_DTOR(RDF_RDFServiceImpl);
+#ifdef DEBUG_REFS
+    --gInstanceCount;
+    fprintf(stdout, "%d - RDF: RDFServiceImpl\n", gInstanceCount);
+#endif
+
     if (mNamedDataSources) {
         PL_HashTableDestroy(mNamedDataSources);
         mNamedDataSources = nsnull;

@@ -191,14 +191,22 @@ public:
 
 ////////////////////////////////////////////////////////////////////////
 
+MOZ_DECL_CTOR_COUNTER(RDF_LocalStoreImpl);
 
 LocalStoreImpl::LocalStoreImpl(void)
 {
+    MOZ_COUNT_CTOR(RDF_LocalStoreImpl);
+
     NS_INIT_ISUPPORTS();
 }
 
 LocalStoreImpl::~LocalStoreImpl(void)
 {
+    MOZ_COUNT_DTOR(RDF_LocalStoreImpl);
+#ifdef DEBUG_REFS
+    --gInstanceCount;
+    fprintf(stdout, "%d - RDF: LocalStoreImpl\n", gInstanceCount);
+#endif
 }
 
 

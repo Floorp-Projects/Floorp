@@ -231,10 +231,12 @@ FileSystemDataSource::isFileURI(nsIRDFResource *r)
 	return(isFileURIFlag);
 }
 
-
+MOZ_DECL_CTOR_COUNTER(RDF_FileSystemDataSource);
 
 FileSystemDataSource::FileSystemDataSource(void)
 {
+	MOZ_COUNT_CTOR(RDF_FileSystemDataSource);
+
 	NS_INIT_REFCNT();
 
 	if (gRefCnt++ == 0)
@@ -274,6 +276,12 @@ FileSystemDataSource::FileSystemDataSource(void)
 
 FileSystemDataSource::~FileSystemDataSource (void)
 {
+    MOZ_COUNT_DTOR(RDF_FileSystemDataSource);
+#ifdef DEBUG_REFS
+    --gInstanceCount;
+    fprintf(stdout, "%d - RDF: FileSystemDataSource\n", gInstanceCount);
+#endif
+
     if (--gRefCnt == 0) {
         NS_RELEASE(kNC_FileSystemRoot);
         NS_RELEASE(kNC_Child);

@@ -606,6 +606,8 @@ RDFElementImpl::ObserverForwardReference::Resolve()
 ////////////////////////////////////////////////////////////////////////
 // RDFElementImpl
 
+MOZ_DECL_CTOR_COUNTER(RDF_RDFElementImpl);
+
 RDFElementImpl::RDFElementImpl(PRInt32 aNameSpaceID, nsIAtom* aTag)
     : mDocument(nsnull),
       mScriptObject(nsnull),
@@ -620,6 +622,8 @@ RDFElementImpl::RDFElementImpl(PRInt32 aNameSpaceID, nsIAtom* aTag)
       mInnerXULElement(nsnull),
       mLazyState(0)
 {
+    MOZ_COUNT_CTOR(RDF_RDFElementImpl);
+
     NS_INIT_REFCNT();
     NS_ADDREF(aTag);
 
@@ -676,6 +680,12 @@ RDFElementImpl::RDFElementImpl(PRInt32 aNameSpaceID, nsIAtom* aTag)
 
 RDFElementImpl::~RDFElementImpl()
 {
+  MOZ_COUNT_DTOR(RDF_RDFElementImpl);
+#ifdef DEBUG_REFS
+  --gInstanceCount;
+  fprintf(stdout, "%d - RDF: RDFElementImpl\n", gInstanceCount);
+#endif
+
     NS_IF_RELEASE(mAttributes);
 
     //NS_IF_RELEASE(mDocument); // not refcounted

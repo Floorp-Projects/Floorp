@@ -34,8 +34,12 @@
 static PRLogModuleInfo* gMapLog;
 #endif
 
+MOZ_DECL_CTOR_COUNTER(RDF_nsElementMap);
+
 nsElementMap::nsElementMap()
 {
+    MOZ_COUNT_CTOR(RDF_nsElementMap);
+
     // Create a table for mapping IDs to elements in the content tree.
     static PRInt32 kInitialResourceTableSize = 1023;
     mMap = PL_NewHashTable(kInitialResourceTableSize,
@@ -59,6 +63,12 @@ nsElementMap::nsElementMap()
 
 nsElementMap::~nsElementMap()
 {
+    MOZ_COUNT_DTOR(RDF_nsElementMap);
+#ifdef DEBUG_REFS
+    --gInstanceCount;
+    fprintf(stdout, "%d - RDF: nsElementMap\n", gInstanceCount);
+#endif
+
     if (mMap) {
         PL_HashTableEnumerateEntries(mMap, ReleaseContentList, nsnull);
         PL_HashTableDestroy(mMap);

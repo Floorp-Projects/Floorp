@@ -425,9 +425,13 @@ RDFContainerImpl::IndexOf(nsIRDFNode *aElement, PRInt32 *aIndex)
 
 ////////////////////////////////////////////////////////////////////////
 
+MOZ_DECL_CTOR_COUNTER(RDF_RDFContainerImpl);
+
 RDFContainerImpl::RDFContainerImpl()
     : mDataSource(nsnull), mContainer(nsnull)
 {
+    MOZ_COUNT_CTOR(RDF_RDFContainerImpl);
+
     NS_INIT_REFCNT();
 
     if (gRefCnt++ == 0) {
@@ -453,6 +457,12 @@ RDFContainerImpl::RDFContainerImpl()
 
 RDFContainerImpl::~RDFContainerImpl()
 {
+    MOZ_COUNT_DTOR(RDF_RDFContainerImpl);
+#ifdef DEBUG_REFS
+    --gInstanceCount;
+    fprintf(stdout, "%d - RDF: RDFContainerImpl\n", gInstanceCount);
+#endif
+
     NS_IF_RELEASE(mContainer);
     NS_IF_RELEASE(mDataSource);
 

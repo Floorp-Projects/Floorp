@@ -17,7 +17,7 @@
  */
 
 /*
-  This file provides the implementation for the sort service manager.
+  This file provides the implementation for the XUL Command Dispatcher.
  */
 
 #include "nsCOMPtr.h"

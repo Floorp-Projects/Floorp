@@ -55,6 +55,8 @@ static NS_DEFINE_CID(kICSSParserIID, NS_ICSS_PARSER_IID);
 ////////////////////////////////////////////////////////////////////////
 // nsXULAttribute
 
+MOZ_DECL_CTOR_COUNTER(RDF_nsXULAttribute);
+
 nsXULAttribute::nsXULAttribute(nsIContent* aContent,
                                PRInt32 aNameSpaceID,
                                nsIAtom* aName,
@@ -65,12 +67,20 @@ nsXULAttribute::nsXULAttribute(nsIContent* aContent,
       mContent(aContent),
       mScriptObject(nsnull)
 {
+    MOZ_COUNT_CTOR(RDF_nsXULAttribute);
+
     NS_INIT_REFCNT();
     NS_IF_ADDREF(aName);
 }
 
 nsXULAttribute::~nsXULAttribute()
 {
+    MOZ_COUNT_DTOR(RDF_nsXULAttribute);
+#ifdef DEBUG_REFS
+    --gInstanceCount;
+    fprintf(stdout, "%d - RDF: nsXULAttribute\n", gInstanceCount);
+#endif
+
     NS_IF_RELEASE(mName);
 }
 

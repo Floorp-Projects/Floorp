@@ -288,6 +288,8 @@ nsIAtom* RDFContentSinkImpl::kLiAtom;
 
 ////////////////////////////////////////////////////////////////////////
 
+MOZ_DECL_CTOR_COUNTER(RDF_RDFContentSinkImpl);
+
 RDFContentSinkImpl::RDFContentSinkImpl()
     : mText(nsnull),
       mTextLength(0),
@@ -300,6 +302,8 @@ RDFContentSinkImpl::RDFContentSinkImpl()
       mDocumentURL(nsnull),
       mGenSym(0)
 {
+    MOZ_COUNT_CTOR(RDF_RDFContentSinkImpl);
+
     NS_INIT_REFCNT();
 
     if (gRefCnt++ == 0) {
@@ -344,6 +348,12 @@ RDFContentSinkImpl::RDFContentSinkImpl()
 
 RDFContentSinkImpl::~RDFContentSinkImpl()
 {
+    MOZ_COUNT_DTOR(RDF_RDFContentSinkImpl);
+#ifdef DEBUG_REFS
+    --gInstanceCount;
+    fprintf(stdout, "%d - RDF: RDFContentSinkImpl\n", gInstanceCount);
+#endif
+
     NS_IF_RELEASE(mDocumentURL);
 
     if (mNameSpaceStack) {

@@ -99,6 +99,7 @@ private:
     PRInt16         mRefCnt; // XXX not used yet: to be used for threadsafety
 };
 
+MOZ_DECL_CTOR_COUNTER(RDF_Assertion);
 
 Assertion::Assertion(nsIRDFResource* aSource,
                      nsIRDFResource* aProperty,
@@ -113,6 +114,8 @@ Assertion::Assertion(nsIRDFResource* aSource,
       mMarked(PR_FALSE),
       mRefCnt(0)
 {
+    MOZ_COUNT_CTOR(RDF_Assertion);
+
     NS_ADDREF(mSource);
     NS_ADDREF(mProperty);
     NS_ADDREF(mTarget);
@@ -120,6 +123,12 @@ Assertion::Assertion(nsIRDFResource* aSource,
 
 Assertion::~Assertion()
 {
+    MOZ_COUNT_DTOR(RDF_Assertion);
+#ifdef DEBUG_REFS
+    --gInstanceCount;
+    fprintf(stdout, "%d - RDF: Assertion\n", gInstanceCount);
+#endif
+
     NS_RELEASE(mSource);
     NS_RELEASE(mProperty);
     NS_RELEASE(mTarget);
@@ -283,6 +292,8 @@ public:
 
 ////////////////////////////////////////////////////////////////////////
 
+MOZ_DECL_CTOR_COUNTER(RDF_InMemoryAssertionEnumeratorImpl);
+
 InMemoryAssertionEnumeratorImpl::InMemoryAssertionEnumeratorImpl(
                  InMemoryDataSource* aDataSource,
                  nsIRDFResource* aSource,
@@ -298,6 +309,8 @@ InMemoryAssertionEnumeratorImpl::InMemoryAssertionEnumeratorImpl(
       mTruthValue(aTruthValue),
       mNextAssertion(nsnull)
 {
+    MOZ_COUNT_CTOR(RDF_InMemoryAssertionEnumeratorImpl);
+
     NS_INIT_REFCNT();
 
     NS_ADDREF(mDataSource);
@@ -315,6 +328,12 @@ InMemoryAssertionEnumeratorImpl::InMemoryAssertionEnumeratorImpl(
 
 InMemoryAssertionEnumeratorImpl::~InMemoryAssertionEnumeratorImpl()
 {
+    MOZ_COUNT_DTOR(RDF_InMemoryAssertionEnumeratorImpl);
+#ifdef DEBUG_REFS
+    --gInstanceCount;
+    fprintf(stdout, "%d - RDF: InMemoryAssertionEnumeratorImpl\n", gInstanceCount);
+#endif
+
     NS_IF_RELEASE(mDataSource);
     NS_IF_RELEASE(mSource);
     NS_IF_RELEASE(mProperty);
@@ -415,6 +434,8 @@ public:
     NS_DECL_NSISIMPLEENUMERATOR
 };
 
+MOZ_DECL_CTOR_COUNTER(RDF_InMemoryArcsEnumeratorImpl);
+
 InMemoryArcsEnumeratorImpl::InMemoryArcsEnumeratorImpl(InMemoryDataSource* aDataSource,
                                                        nsIRDFResource* aSource,
                                                        nsIRDFNode* aTarget)
@@ -423,6 +444,8 @@ InMemoryArcsEnumeratorImpl::InMemoryArcsEnumeratorImpl(InMemoryDataSource* aData
       mTarget(aTarget),
       mCurrent(nsnull)
 {
+    MOZ_COUNT_CTOR(RDF_InMemoryArcsEnumeratorImpl);
+
     NS_INIT_REFCNT();
     NS_ADDREF(mDataSource);
     NS_IF_ADDREF(mSource);
@@ -439,6 +462,12 @@ InMemoryArcsEnumeratorImpl::InMemoryArcsEnumeratorImpl(InMemoryDataSource* aData
 
 InMemoryArcsEnumeratorImpl::~InMemoryArcsEnumeratorImpl()
 {
+    MOZ_COUNT_DTOR(RDF_InMemoryArcsEnumeratorImpl);
+#ifdef DEBUG_REFS
+    --gInstanceCount;
+    fprintf(stdout, "%d - RDF: InMemoryArcsEnumeratorImpl\n", gInstanceCount);
+#endif
+
     NS_RELEASE(mDataSource);
     NS_IF_RELEASE(mSource);
     NS_IF_RELEASE(mTarget);
@@ -552,13 +581,15 @@ NS_NewRDFInMemoryDataSource(nsISupports* aOuter, const nsIID& aIID, void** aResu
     return rv;
 }
 
-
+MOZ_DECL_CTOR_COUNTER(RDF_InMemoryDataSource);
 
 InMemoryDataSource::InMemoryDataSource(nsISupports* aOuter)
     : mForwardArcs(nsnull),
       mReverseArcs(nsnull),
       mLock(nsnull)
 {
+    MOZ_COUNT_CTOR(RDF_InMemoryDataSource);
+
     NS_INIT_AGGREGATED(aOuter);
 }
 
@@ -601,6 +632,12 @@ InMemoryDataSource::Init()
 
 InMemoryDataSource::~InMemoryDataSource()
 {
+    MOZ_COUNT_DTOR(RDF_InMemoryDataSource);
+#ifdef DEBUG_REFS
+    --gInstanceCount;
+    fprintf(stdout, "%d - RDF: InMemoryDataSource\n", gInstanceCount);
+#endif
+
     if (mForwardArcs) {
         // This'll release all of the Assertion objects that are
         // associated with this data source. We only need to do this
