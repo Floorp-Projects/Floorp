@@ -24,25 +24,16 @@ include $(DEPTH)/config/autoconf.mk
 
 DEFINES += -D_IMPL_NS_UI
 
-EXPORTS =               \
-  nsIFormatConverter.h \
-  nsIClipboardOwner.h \
-  nsIClipboard.h \
-  nsIDragTarget.h \
-  nsIDragSource.h \
-  nsIDataFlavor.h \
-  nsITransferable.h \
-  nsIDragService.h \
-  nsIDraggedObject.h \
-	nsIMenuBar.h		\
+EXPORTS = \
+	nsIMenuBar.h	\
 	nsIMenu.h		\
-	nsIMenuItem.h		\
-	nsIImageButton.h		\
+	nsIMenuItem.h	\
+	nsIImageButton.h	\
 	nsIPopUpMenu.h		\
 	nsIMenuButton.h		\
-	nsIImageButtonListener.h		\
-	nsStringUtil.h		\
-	nsui.h		\
+	nsIImageButtonListener.h \
+	nsStringUtil.h	\
+	nsui.h			\
 	nsITabWidget.h  \
 	nsIWidget.h     \
 	nsIButton.h     \
@@ -84,6 +75,8 @@ EXPORTS =               \
 	nsITransferable.h \
 	nsIDragService.h \
 	nsIDraggedObject.h \
+	nsIClipboardOwner.h \
+	nsIFormatConverter.h \
 	$(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
