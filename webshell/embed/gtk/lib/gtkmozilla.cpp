@@ -1,8 +1,8 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
- * The contents of this file are subject to the Netscape Public License
- * Version 1.0 (the "NPL"); you may not use this file except in
- * compliance with the NPL.  You may obtain a copy of the NPL at
+ * The contents of this file are subject to the Mozilla Public License
+ * Version 1.1 (the "MPL"); you may not use this file except in
+ * compliance with the MPL.  You may obtain a copy of the NPL at
  * http://www.mozilla.org/NPL/
  *
  * Software distributed under the NPL is distributed on an "AS IS" basis,
@@ -10,7 +10,9 @@
  * for the specific language governing rights and limitations under the
  * NPL.
  *
- * Copyright (C) 1999 Alexander Larsson.  All Rights Reserved.
+ * The Initial Developer of the Original Code is Alexander. Portions
+ * created by Alexander Larsson are Copyright (C) 1999
+ * Alexander Larsson. All Rights Reserved. 
  */
 #include <gtk/gtk.h>
 #include "gtkmozilla.h"
