@@ -2,8 +2,12 @@
   background-color: ThreeDFace;
 }
 
-#extensionsView {
-  background-image: url("chrome://mozapps/skin/extensions/viewWatermark.png");
+#extensionsView[state="extensions"] {
+  background-image: url("chrome://mozapps/skin/extensions/viewWatermarkExtensions.png");
+}
+
+#extensionsView[state="themes"] {
+  background-image: url("chrome://mozapps/skin/extensions/viewWatermarkThemes.png");
 }
 
 /* Extension Manager Command Bar */

@@ -48,13 +48,12 @@ interface nsIExtensionManager : nsISupports
   const unsigned long FLAG_INSTALL_PROFILE = 0x01;
   const unsigned long FLAG_INSTALL_GLOBAL  = 0x02;
 
-  void installExtensionFromXPI(in nsIFile aXPIFile, in unsigned long aFlags);
-
+  void installExtension(in nsIFile aXPIFile, in unsigned long aFlags);
   void uninstallExtension(in string aExtensionID);
   void enableExtension(in string aExtensionID);
   void disableExtension(in string aExtensionID);
 
-  void installTheme(in string aThemeID);
+  void installTheme(in nsIFile aJARFile, in unsigned long aFlags);
   void uninstallTheme(in string aThemeID);
 
   /** 
