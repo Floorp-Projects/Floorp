@@ -28,6 +28,9 @@
  *                                  calls cannot be intermixed with DosXXX
  *                                  calls since EMX remaps file/socket
  *                                  handles.
+ * 04/27/2000       IBM Corp.       Changed open file to be more like NT and
+ *                                  better handle PR_TRUNCATE | PR_CREATE_FILE
+ *                                  and also fixed _PR_MD_SET_FD_INHERITABLE
  */
 
 /* OS2 IO module
@@ -121,25 +124,40 @@ _PR_MD_OPEN(const char *name, PRIntn osflags, int mode)
 {
     HFILE file;
     PRInt32 access = OPEN_SHARE_DENYNONE;
-    PRInt32 flags = OPEN_ACTION_OPEN_IF_EXISTS;
+    PRInt32 flags = 0L;
     PRInt32 rc;
     PRUword actionTaken;
 
     ULONG CurMaxFH = 0;
     LONG ReqCount = 1;
     ULONG fattr;
- 
+
+    if (osflags & PR_SYNC) access |= OPEN_FLAGS_WRITE_THROUGH;
+
     if (osflags & PR_RDONLY)
         access |= OPEN_ACCESS_READONLY;
     else if (osflags & PR_WRONLY)
         access |= OPEN_ACCESS_WRITEONLY;
     else if(osflags & PR_RDWR)
         access |= OPEN_ACCESS_READWRITE;
-    if (osflags & PR_CREATE_FILE)
-        flags |= OPEN_ACTION_CREATE_IF_NEW;
-    else if (osflags & PR_TRUNCATE){
-        flags &= ~OPEN_ACTION_OPEN_IF_EXISTS;
-        flags |= OPEN_ACTION_REPLACE_IF_EXISTS;
+
+    if ( osflags & PR_CREATE_FILE && osflags & PR_EXCL )
+    {
+        flags = OPEN_ACTION_CREATE_IF_NEW | OPEN_ACTION_FAIL_IF_EXISTS;
+    }
+    else if (osflags & PR_CREATE_FILE)
+    {
+        if (osflags & PR_TRUNCATE)
+            flags = OPEN_ACTION_CREATE_IF_NEW | OPEN_ACTION_REPLACE_IF_EXISTS;
+        else
+            flags = OPEN_ACTION_CREATE_IF_NEW | OPEN_ACTION_OPEN_IF_EXISTS;
+    } 
+    else
+    {
+        if (osflags & PR_TRUNCATE)
+            flags = OPEN_ACTION_FAIL_IF_NEW | OPEN_ACTION_REPLACE_IF_EXISTS;
+        else
+            flags = OPEN_ACTION_FAIL_IF_NEW | OPEN_ACTION_OPEN_IF_EXISTS;
     }
 
     if (isxdigit(mode) == 0) /* file attribs are hex, UNIX modes octal */
@@ -725,7 +743,7 @@ _PR_MD_SET_FD_INHERITABLE(PRFileDesc *fd, PRBool inheritable)
     }
 
     if (inheritable)
-      flags &= OPEN_FLAGS_NOINHERIT;
+      flags &= ~OPEN_FLAGS_NOINHERIT;
     else
       flags |= OPEN_FLAGS_NOINHERIT;
 
