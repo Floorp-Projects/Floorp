@@ -2,8 +2,8 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 
-# $Revision: 1.27 $ 
-# $Date: 2002/05/01 02:06:23 $ 
+# $Revision: 1.28 $ 
+# $Date: 2002/05/01 02:49:26 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/tinder.cgi,v $ 
 # $Name:  $ 
@@ -335,7 +335,9 @@ sub HTML_status_page {
   "<br><p>\n\n".
   HTMLPopUp::Link(
                   "linktxt"=>"Regnerate HTML Pages",
-                  "href"=>"$FileStructure::URLS{'regenerate'}",
+                  "href"=>("$FileStructure::URLS{'regenerate'}".
+                           "\?".
+                           "tree=$tree"),
                   ).
   "<br>\n".
   HTMLPopUp::Link(
