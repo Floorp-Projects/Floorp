@@ -515,12 +515,20 @@ xfeCmdFrameReload                                                  frameReload
 xfeCmdViewFrameSource                                              framePageSource
 xfeCmdViewFrameInfo                                                framePageInfo
 xfeCmdPageServices                                                 pageServices
-xfeCmdPrivacyPolicy                                                privacyPolicy
 xfeCmdAddLinkBookmark                                              addLinkBookmark
 xfeCmdAddFrameBookmark                                             addFrameBookmark
 xfeCmdShowImage                                                    showImage
 
 xfeCmdWindowListRaiseItem                                          windowListRaiseItem
+
+# privacy tools submenu items
+xfeCmdPrivacyPolicy                                                privacyPolicy
+xfeCmdAnonymousMode                                                anonymousMode
+xfeCmdToggleReceipt                                                toggleReceipt
+xfeCmdViewCookies                                                  viewCookies
+xfeCmdViewSignons                                                  viewSignons
+xfeCmdViewReceipts                                                 viewReceipts
+xfeCmdPrivacyTutorial                                              privacyTutorial
 
 # special command to show the parent window in mail and news 
 xfeCmdMommy                                                        mommy

@@ -92,6 +92,12 @@
 #include "gmon.h"
 #endif /*MOZILLA_GPROF*/
 
+#include "privacy.h"
+
+#ifdef TRANSACTION_RECEIPTS
+#include "receipt.h"
+#endif /* TRANSACTION_RECEIPTS */
+
 #define MM_PER_INCH      (25.4)
 #define POINTS_PER_INCH  (72.0)
 
@@ -175,6 +181,23 @@ MenuSpec XFE_Frame::tools_submenu_spec[] = {
 	{ NULL }
 };
 
+MenuSpec XFE_Frame::privacytools_submenu_spec[] = {
+	{ xfeCmdAnonymousMode, TOGGLEBUTTON, NULL, NULL },
+#ifdef TRANSACTION_RECEIPTS
+	{ xfeCmdToggleReceipt,		PUSHBUTTON },
+#endif
+	MENU_SEPARATOR,
+	{ xfeCmdPrivacyPolicy,		PUSHBUTTON },
+	{ xfeCmdViewCookies,		PUSHBUTTON },
+	{ xfeCmdViewSignons,		PUSHBUTTON },
+#ifdef TRANSACTION_RECEIPTS
+	{ xfeCmdViewReceipts,		PUSHBUTTON },
+#endif
+	MENU_SEPARATOR,
+	{ xfeCmdPrivacyTutorial,	PUSHBUTTON },
+	{ NULL }
+};
+
 MenuSpec XFE_Frame::servertools_submenu_spec[] = {
 	{ xfeCmdPageServices,		PUSHBUTTON },
 #ifndef MOZ_LITE
@@ -220,6 +243,7 @@ MenuSpec XFE_Frame::window_menu_spec[] = {
 	HG87782
 	MENU_SEPARATOR,
 	{ "toolsSubmenu",	CASCADEBUTTON, tools_submenu_spec },
+	{ "privacyToolsSubmenu",	CASCADEBUTTON, privacytools_submenu_spec },
 	{ "serverToolsSubmenu",	CASCADEBUTTON, servertools_submenu_spec },
 	MENU_SEPARATOR,
  	{ "frameListPlaceHolder",	DYNA_MENUITEMS, NULL, NULL, False, NULL, XFE_FrameListMenu::generate },
@@ -3170,6 +3194,10 @@ XFE_Frame::isCommandSelected(CommandType cmd,
 	{
 		return fe_globalPrefs.task_bar_ontop;
 	}
+	else if (cmd == xfeCmdAnonymousMode)
+	{
+		return PRVCY_IsAnonymous();
+	}
 
 	return (m_view && m_view->isCommandSelected(cmd, calldata, info));
 }
@@ -3271,6 +3299,33 @@ XFE_Frame::isCommandEnabled(CommandType cmd,
     else if (cmd == xfeCmdOpenHistory)
         {
             return !fe_globalData.all_databases_locked;
+        }
+    else if (cmd == xfeCmdPrivacyPolicy)
+        {
+            return PRVCY_CurrentHasPrivacyPolicy(m_context);
+        }
+    else if (cmd == xfeCmdToggleReceipt)
+        {
+#ifdef TRANSACTION_RECEIPTS
+            return RT_GetMakeReceiptEnabled(m_context);
+#else
+            return FALSE;
+#endif
+        }
+    else if ((cmd == xfeCmdAnonymousMode) ||
+             (cmd == xfeCmdViewCookies) ||
+             (cmd == xfeCmdViewSignons) ||
+             (cmd == xfeCmdPrivacyTutorial))
+        {
+            return TRUE;
+        }
+    else if (cmd == xfeCmdViewReceipts)
+        {
+#ifdef TRANSACTION_RECEIPTS
+            return TRUE;
+#else
+            return FALSE;
+#endif
         }
 	else
 		{
@@ -3583,7 +3638,7 @@ XFE_Frame::doCommand(CommandType cmd, void *calldata, XFE_CommandInfo* info)
 		{
 			fe_about_cb(NULL, m_context, NULL);
 		}
-		else if (cmd == xfeCmdOpenCustomUrl)
+        else if (cmd == xfeCmdOpenCustomUrl)
 		{
 			MWContext * context = m_context;
 
@@ -3612,6 +3667,55 @@ XFE_Frame::doCommand(CommandType cmd, void *calldata, XFE_CommandInfo* info)
 		{
 			fe_openTargetUrl(m_context,(LO_AnchorData *) calldata);
 		}
+    else if (cmd == xfeCmdPrivacyPolicy)
+        {
+            char *url = PRVCY_GetCurrentPrivacyPolicyURL(m_context);
+          
+            if (url != NULL)
+              {
+                History_entry *he = SHIST_GetCurrent(&m_context->hist);
+                URL_Struct *url_s = NET_CreateURLStruct (url, NET_DONT_RELOAD);
+                if (he->address != NULL) 
+                  url_s->referer = XP_STRDUP(he->address);
+                url_s->window_target = XP_STRDUP("");
+                fe_MakeWindow (XtParent (CONTEXT_WIDGET (m_context)),
+                               m_context, url_s, NULL,
+                               MWContextBrowser, FALSE);
+              }               
+        }
+    else if (cmd == xfeCmdPrivacyTutorial)
+        {
+            char *url;
+            url = PRVCY_TutorialURL();
+            if (url != NULL)
+              {
+                URL_Struct *tutorial_url = NET_CreateURLStruct (url, NET_DONT_RELOAD);
+                tutorial_url->window_target = XP_STRDUP("");
+                fe_MakeWindow (XtParent(CONTEXT_WIDGET (m_context)),
+                               m_context, tutorial_url, NULL,
+                               MWContextBrowser, FALSE);
+              }
+        }
+    else if (cmd == xfeCmdViewCookies)
+        {
+            NET_DisplayCookieInfoAsHTML(m_context);
+        }   
+    else if (cmd == xfeCmdViewSignons)
+        {
+#ifdef SingleSignon
+            SI_DisplaySignonInfoAsHTML(m_context);
+#endif
+        }
+    else if (cmd == xfeCmdAnonymousMode)
+        {
+            PRVCY_ToggleAnonymous();
+        }
+    else if (cmd == xfeCmdViewReceipts)
+        {
+#ifdef TRANSACTION_RECEIPTS 
+          //RT_DisplayReceipts(m_context);
+#endif
+        }
 		/* if we don't recognize the command, send it along to the view. */
 		else if (m_view 
 				 && m_view->handlesCommand(cmd, calldata, info))
@@ -3656,6 +3760,13 @@ XFE_Frame::handlesCommand(CommandType cmd,
 		|| cmd == xfeCmdToggleMenubar
 		|| cmd == xfeCmdToggleNavigationToolbar
 		|| cmd == xfeCmdWindowListRaiseItem
+		|| cmd == xfeCmdPrivacyPolicy
+		|| cmd == xfeCmdAnonymousMode
+		|| cmd == xfeCmdToggleReceipt
+		|| cmd == xfeCmdViewCookies
+		|| cmd == xfeCmdViewSignons
+		|| cmd == xfeCmdViewReceipts
+		|| cmd == xfeCmdPrivacyTutorial
 #ifdef MOZ_TASKBAR
 		|| cmd == xfeCmdToggleTaskbarShowing
 		|| cmd == xfeCmdFloatingTaskBarHorizontal

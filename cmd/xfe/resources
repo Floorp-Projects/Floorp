@@ -3145,6 +3145,9 @@ Open the address book
 *menuBar*toolsSubmenu.labelString:			Tools
 *menuBar*toolsSubmenu.mnemonic:				T
 
+*menuBar*privacyToolsSubmenu.labelString:		Privacy Tools
+*menuBar*privacyToolsSubmenu.mnemonic:			P
+
 *menuBar*serverToolsSubmenu.labelString:		Server Tools
 *menuBar*serverToolsSubmenu.mnemonic:			S
 
@@ -3202,6 +3205,31 @@ File the current page in a Bookmarks folder
 *menuBar*viewSecurity.acceleratorText:			Alt+Shift+I
 *viewSecurity.documentationString:	\
 Show security information for this page
+
+! Privacy Tools Submenu
+*menuBar*privacyPolicy.labelString:		Display Privacy Disclosure 
+*menuBar*privacyPolicy.mnemonic:		P
+
+*menuBar*anonymousMode.labelString:		Anonymous Mode
+*menuBar*anonymousMode.mnemonic:		A
+
+*menuBar*toggleReceipt.labelString:		Make Receipt
+*menuBar*toggleReceipt.mnemonic:		M
+
+*menuBar*viewCookies.labelString:		Display Cookies
+*menuBar*viewCookies.mnemonic:			C
+
+*menuBar*viewSignons.labelString:		Display Signons
+*menuBar*viewSignons.mnemonic:			S
+
+*menuBar*viewReceipts.labelString:		Display Receipts
+*menuBar*viewReceipts.mnemonic:			R
+
+*menuBar*privacyTutorial.labelString:		Privacy Tutorial
+*menuBar*privacyTutorial.mnemonic:		T
+
+! end Privacy Tools Submenu
+
 
 ! Communicator/Server Tools Submenu
 *menuBar*manageMailingList.labelString:		Mailing Lists
@@ -4829,19 +4857,6 @@ submit is insecure and could be observed by a third party while\n\
 in transit. If you are submitting passwords, credit card numbers,\n\
 or other information you would like to keep private, it would be\n\
 safer for you to cancel the submission.
-
-*noPrivacyPolicyDialog_popup.title:        @NAME@: Privacy Warning
-*noPrivacyPolicyDialog*toggle.labelString: Show this Alert Next Time
-*noPrivacyPolicyDialog*toggle.alignment:   ALIGNMENT_BEGINNING
-*noPrivacyPolicyDialog.OkLabelString:      Continue Submission
-*noPrivacyPolicyDialog.CancelLabelString:  Cancel Submission
-*noPrivacyPolicyDialog*toggle.leftOffset:  100
-*noPrivacyPolicyDialog.selectionLabelString:\
-There is no privacy policy in effect for this form submission.\n\
-This site has not disclosed how the information you are providing\n\
-will be used. If you are concerned by this, you may want to cancel\n\
-this submission.
-
 
 *insecurePostFromInsecureDocDialog_popup.title:	      @NAME@: Security Warning
 *insecurePostFromInsecureDocDialog.OkLabelString:     Continue Submission

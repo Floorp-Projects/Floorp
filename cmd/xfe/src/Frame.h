@@ -415,6 +415,7 @@ protected:
   static MenuSpec compose_message_submenu_spec[];
   static MenuSpec compose_article_submenu_spec[];
   static MenuSpec tools_submenu_spec[];
+  static MenuSpec privacytools_submenu_spec[];
   static MenuSpec servertools_submenu_spec[];
 
 

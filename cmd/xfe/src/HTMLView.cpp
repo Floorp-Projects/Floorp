@@ -64,10 +64,6 @@
 #include <Xfe/Xfe.h>
 #include "fonts.h"
 
-#ifdef PRIVACY_POLICIES
-#include "privacy.h"
-#endif /* PRIVACY_POLICIES */
-
 #include <unistd.h>   // for getcwd()
 
 extern int XFE_ERROR_SAVING_OPTIONS;
@@ -1096,24 +1092,6 @@ XFE_HTMLView::doCommand(CommandType cmd, void *callData, XFE_CommandInfo* info)
         }
       return;
     } 
-  else if (IS_CMD(xfeCmdPrivacyPolicy))
-    {
-#ifdef PRIVACY_POLICIES
-      if (PRVCY_CurrentHasPrivacyPolicy(m_contextData))
-        {
-          char *url = PRVCY_GetCurrentPrivacyPolicyURL(m_contextData);
-
-          if (url)
-            {
-              URL_Struct *url_s = NET_CreateURLStruct (url, NET_DONT_RELOAD);
-              fe_MakeWindow (XtParent (CONTEXT_WIDGET (m_contextData)),
-                       m_contextData, url_s, NULL,
-                       MWContextBrowser, FALSE);
-            }
-        }
-#endif /* PRIVACY_POLICIES */
-      return;
-    }
   else if (IS_CMD(xfeCmdChangeDocumentEncoding))
     {
       int/*16*/ new_doc_csid = (int/*16*/)callData;
@@ -1370,14 +1348,6 @@ XFE_HTMLView::isCommandEnabled(CommandType cmd, void *calldata, XFE_CommandInfo*
     {
       return SHIST_CurrentHandlesPageServices(m_contextData);
     }
-  else if (IS_CMD(xfeCmdPrivacyPolicy))
-    {
-#ifdef PRIVACY_POLICIES
-      return PRVCY_CurrentHasPrivacyPolicy(m_contextData);
-#else
-      return FALSE;
-#endif /* PRIVACY_POLICIES */
-    }
   else
     {
       return XFE_View::isCommandEnabled(cmd, calldata);
@@ -1450,9 +1420,6 @@ XFE_HTMLView::handlesCommand(CommandType cmd, void *calldata, XFE_CommandInfo*)
       || IS_CMD(xfeCmdAddFrameBookmark)
       || IS_CMD(xfeCmdShowImage)
       || IS_CMD(xfeCmdPageServices)
-#ifdef PRIVACY_POLICIES
-      || IS_CMD(xfeCmdPrivacyPolicy)
-#endif
       )
     {
       return True;
