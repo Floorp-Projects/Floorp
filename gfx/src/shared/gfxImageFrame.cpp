@@ -428,9 +428,19 @@ NS_IMETHODIMP gfxImageFrame::GetTimeout(PRInt32 *aTimeout)
     return NS_ERROR_NOT_INITIALIZED;
 
   // Ensure a minimal time between updates so we don't throttle the UI thread.
-  // consider 0 == unspecified and make it fast but not too fast.
-  // 100 is compatible with IE and Opera among others
-  if (mTimeout >= 0 && mTimeout < 100)
+  // consider 0 == unspecified and make it fast but not too fast.  See bug
+  // 125137, bug 139677, and bug 207059.  The behavior of recent IE and Opera
+  // versions seems to be:
+  // IE 6/Win:
+  //   10 - 50ms go 100ms
+  //   >50ms go correct speed
+  // Opera 7 final/Win:
+  //   10ms goes 100ms
+  //   >10ms go correct speed
+  // It seems that there are broken tools out there that set a 0ms or 10ms
+  // timeout when they really want a "default" one.  So munge values in that
+  // range.
+  if (mTimeout >= 0 && mTimeout <= 10)
     *aTimeout = 100;
   else
     *aTimeout = mTimeout;
