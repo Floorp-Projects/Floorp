@@ -18,23 +18,3 @@
 
 #define NEEDPROTOS
 #define NEEDGETOPT
-
-#ifndef macintosh
-#define macintosh
-#endif 
-
-#define XP_MAC 1
-
-#ifndef FALSE
-#define FALSE false
-#endif
-
-#ifndef TRUE
-#define TRUE true
-#endif
-
-//#define JAVA 1
-
-#include "IDE_Options.h"
-#include "Comm_Defines.h"
-

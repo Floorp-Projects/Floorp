@@ -16,6 +16,5 @@
  * Reserved.
  */
 
-#define DEBUG 1
-
+#include "MacPrefix_debug.h"
 #include "edtplugLibConfig.h"

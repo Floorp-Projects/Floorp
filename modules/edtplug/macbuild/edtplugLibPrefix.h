@@ -16,4 +16,5 @@
  * Reserved.
  */
 
+#include "MacPrefix.h"
 #include "edtplugLibConfig.h"
