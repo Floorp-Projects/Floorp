@@ -131,7 +131,7 @@ function Startup()
   }
 
   // Now that dialog is initialized, we can start publishing
-  window.opener.StartPublishing();
+  gPersistObj = window.opener.StartPublishing();
 }
 
 // this function is to be used when we cancel persist's saving

@@ -1934,7 +1934,9 @@ function StartPublishing()
     OutputFileWithPersistAPI(editor.document, 
                              gPublishData.docURI, gPublishData.otherFilesURI, 
                              editor.contentsMIMEType);
+    return gPersistObj;
   }
+  return null;
 }
 
 function CancelPublishing()
