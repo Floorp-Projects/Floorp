@@ -109,7 +109,7 @@ endif
 
 ifeq ($(OS_ARCH), WINNT)
 $(STUBDLL): $(OBJDIR)/maci.o
-	$(LINK_DLL) -MAP $(DLLBASE) $(OBJDIR)/maci.o $(OS_LIBS)
+	$(LINK_DLL) -MAP $(DLLBASE) $(subst /,\\,$(OBJDIR)/maci.o $(OS_LIBS))
 
 $(OBJDIR)/maci.o: maci.c
 	$(CC) -Fo$@ -c $(CFLAGS) $<

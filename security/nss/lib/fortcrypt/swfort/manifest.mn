@@ -36,14 +36,18 @@ MODULE		= security
 LIBRARY_NAME	= swfci
 #LIBRARY_VERSION	= 12
 
+BUILT_CSRCS	= nslib.c    \
+		  $(NULL)
+
 CSRCS		= swfalg.c  \
 		  swfparse.c \
 		  swflib.c   \
-		  nslib.c    \
 		  swfutl.c   \
 		  $(NULL)
-
 DIRS = pkcs11
+
+VPATH = $(OBJDIR)
+vpath %.c $(OBJDIR)
 
 
 EXPORTS		= swfort.h swfortt.h
