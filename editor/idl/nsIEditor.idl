@@ -27,6 +27,10 @@
 #include "nsIAtom.idl"
 #include "nsIOutputStream.idl"
 #include "nsIDocumentStateListener.idl"
+#include "nsITransactionManager.idl"
+#include "nsIEditorObserver.idl"
+#include "nsIEditActionListener.idl"
+
 %{C++
 
 //class nsIDOMDocument;
@@ -34,27 +38,12 @@
 //class nsIDOMNode;
 class nsIPresShell;
 class nsIContent;
-class nsITransactionManager;
-class nsITransaction;
-class nsIEditorObserver;
-class nsITransaction;
-class nsIEditActionListener;
 typedef short EDirection;
 %}
 
 
-/*[ptr] native nsIDOMDocumentPtr(nsIDOMDocument);
-[ptr] native nsIDOMElementPtr(nsIDOMElement);
-[ptr] native nsIDOMNode(nsIDOMNode);*/
 [ptr] native nsIPresShellPtr(nsIPresShell);
 [ptr] native nsIContentPtr(nsIContent);
-[ptr] native nsITransactionManagerPtr(nsITransactionManager);
-[ptr] native nsITransactionPtr(nsITransaction);
-/*
-[ref] native nsReadStringRef(nsAReadableString);
-[ptr] native nsReadStringPtr(nsAReadableString);*/
-[ptr] native nsIEditorObserverPtr(nsIEditorObserver);
-[ptr] native nsIEditActionListenerPtr(nsIEditActionListener);
 
 
 [scriptable, uuid(06b979ce-1dd2-11b2-b6c7-a8bc47aa06b6)]
@@ -185,7 +174,7 @@ interface nsIEditor  : nsISupports
     *
     * @return aTxnManager the transaction manager that the editor is using
     */
-  [noscript]void GetTransactionManager(out nsITransactionManagerPtr txnManager);
+  void GetTransactionManager(out nsITransactionManager txnManager);
 
   /** Do() fires a transaction.  It is provided here so clients can create their own transactions.
     * If a transaction manager is present, it is used.  
@@ -193,7 +182,7 @@ interface nsIEditor  : nsISupports
     *
     * @param aTxn the transaction to execute
     */
-  [noscript]void Do(in nsITransactionPtr txn);
+  void Do(in nsITransaction txn);
 
 
   /** turn the undo system on or off
@@ -464,22 +453,22 @@ interface nsIEditor  : nsISupports
   /* ------------ Various listeners methods -------------- */
 
   /** add an EditorObserver to the editors list of observers. */
-  [noscript]void AddEditorObserver(in nsIEditorObserverPtr observer);
+  void AddEditorObserver(in nsIEditorObserver observer);
 
   /** Remove an EditorObserver from the editor's list of observers. */
-  [noscript]void RemoveEditorObserver(in nsIEditorObserverPtr observer);
+  void RemoveEditorObserver(in nsIEditorObserver observer);
 
   /** add an EditActionListener to the editors list of listeners. */
-  [noscript]void AddEditActionListener(in nsIEditActionListenerPtr listener);
+  void AddEditActionListener(in nsIEditActionListener listener);
 
   /** Remove an EditActionListener from the editor's list of listeners. */
-  [noscript]void RemoveEditActionListener(in nsIEditActionListenerPtr listener);
+  void RemoveEditActionListener(in nsIEditActionListener listener);
 
   /** Add a DocumentStateListener to the editors list of doc state listeners. */
-  [noscript]void AddDocumentStateListener(in nsIDocumentStateListener listener);
+  void AddDocumentStateListener(in nsIDocumentStateListener listener);
 
   /** Remove a DocumentStateListener to the editors list of doc state listeners. */
-  [noscript]void RemoveDocumentStateListener(in nsIDocumentStateListener listener);
+  void RemoveDocumentStateListener(in nsIDocumentStateListener listener);
 
 
   /* ------------ Debug methods -------------- */
