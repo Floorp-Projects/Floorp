@@ -1030,6 +1030,10 @@ sub MakeResourceAliases()
 	BuildFolderResourceAliases(":mozilla:profile:resources:",							"$profile_dir");
 	
 	# NOTE: this will change as we move the toolbar/appshell chrome files to a real place
+	 my($navigator_chrome_dir) = "$chrome_dir" . "Navigator";
+    _InstallResources(":mozilla:xpfe:browser:resources:content:MANIFEST",             "$navigator_chrome_dir:content:default");
+    _InstallResources(":mozilla:xpfe:browser:resources:skin:MANIFEST",                "$navigator_chrome_dir:content:skin");
+
 	_InstallResources(":mozilla:xpfe:browser:src:MANIFEST",								"$samples_dir");
 
 	BuildFolderResourceAliases(":mozilla:xpfe:browser:samples:", 						"$samples_dir");
