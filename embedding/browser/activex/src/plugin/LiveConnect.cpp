@@ -182,16 +182,14 @@ _VariantToJRIObject(JRIEnv *env, VARIANT *v, java_lang_Object **o)
         *o = reinterpret_cast<java_lang_Object *>(j);
         return S_OK;
     }
-/*  
-    else if (v->vt == VT_R8)
+/*    else if (v->vt == VT_R8)
     {
         jdouble value = v->dblVal;
         java_lang_Double *j = java_lang_Double_new(env,
             class_java_lang_Double(env), value);
         *o = reinterpret_cast<java_lang_Object *>(j);
         return S_OK;
-    }
-    */
+    } */
     else if (v->vt == VT_BSTR)
     {
         USES_CONVERSION;
@@ -396,8 +394,20 @@ native_MozAxPlugin_xinvoke4(JRIEnv* env, struct MozAxPlugin* self, struct java_l
 extern "C" JRI_PUBLIC_API(struct java_lang_Object *)
 native_MozAxPlugin_xinvokeX(JRIEnv* env, struct MozAxPlugin* self, struct java_lang_String *a, jobjectArray b)
 {
-    // TODO
-    return NULL;
+    // Turn the Java array of objects into a C++ array
+    jsize length = JRI_GetObjectArrayLength(env, b);
+    java_lang_Object **args = NULL;
+    if (length)
+    {
+        args = (java_lang_Object **) malloc(length * sizeof(java_lang_Object *));
+        for (long i = 0; i < length; i++)
+        {
+             args[i] = reinterpret_cast<java_lang_Object *>(JRI_GetObjectArrayElement(env, b, i));
+        }
+    }
+    java_lang_Object *o = _InvokeFromJRI(env, self, a, length, args);
+    free(args);
+    return o;
 }
 
 /*** private native xgetProperty (Ljava/lang/String;)Ljava/lang/Object; ***/

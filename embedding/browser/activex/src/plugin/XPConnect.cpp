@@ -77,7 +77,7 @@ class nsClassInfoMozAxPlugin : public nsIClassInfo
 };
 
 // Defines to be used as interface names by nsScriptablePeer
-static NS_DEFINE_IID(kIMoxAxPluginIID, NS_IMOZAXPLUGIN_IID);
+static NS_DEFINE_IID(kIMozAxPluginIID, NS_IMOZAXPLUGIN_IID);
 static NS_DEFINE_IID(kIClassInfoIID, NS_ICLASSINFO_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
@@ -85,7 +85,6 @@ class nsScriptablePeer : public nsIMozAxPlugin,
                          public nsClassInfoMozAxPlugin
 {
     long mRef;
-    PluginInstanceData* mPlugin;
 
 protected:
     virtual ~nsScriptablePeer();
@@ -93,12 +92,13 @@ protected:
 public:
     nsScriptablePeer();
 
+    PluginInstanceData* mPlugin;
+
     NS_DECL_ISUPPORTS
     NS_DECL_NSIMOZAXPLUGIN
+
+    HRESULT GetIDispatch(IDispatch **pdisp);
 };
-
-
-
 
 // Happy happy fun fun - redefine some NPPVariable values that we might
 // be asked for but not defined by every PluginSDK 
@@ -122,6 +122,7 @@ xpconnect_getvalue(NPP instance, NPPVariable variable, void *value)
             nsScriptablePeer *peer  = new nsScriptablePeer();
             peer->AddRef();
             pData->pScriptingPeer = (nsIMozAxPlugin *) peer;
+            peer->mPlugin = pData;
         }
         if (pData->pScriptingPeer)
         {
@@ -132,7 +133,6 @@ xpconnect_getvalue(NPP instance, NPPVariable variable, void *value)
     }
     else if (variable == kVarScriptableIID)
     {
-	    static nsIID kIMozAxPluginIID = NS_IMOZAXPLUGIN_IID;
         nsIID *piid = (nsIID *) NPN_MemAlloc(sizeof(nsIID));
         *piid = kIMozAxPluginIID;
         *((nsIID **) value) = piid;
@@ -153,6 +153,34 @@ nsScriptablePeer::nsScriptablePeer()
 
 nsScriptablePeer::~nsScriptablePeer()
 {
+}
+
+HRESULT
+nsScriptablePeer::GetIDispatch(IDispatch **pdisp)
+{
+    if (pdisp == NULL)
+    {
+        return E_INVALIDARG;
+    }
+    *pdisp = NULL;
+
+    IUnknownPtr unk;
+    HRESULT hr = mPlugin->pControlSite->GetControlUnknown(&unk);
+    if (unk.GetInterfacePtr() == NULL)
+    {
+		return E_FAIL; 
+	}
+
+    IDispatchPtr disp = unk;
+    if (disp.GetInterfacePtr() == NULL)
+    { 
+        return E_FAIL; 
+    }
+
+    *pdisp = disp.GetInterfacePtr();
+    (*pdisp)->AddRef();
+
+    return S_OK;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -213,44 +241,34 @@ NS_IMETHODIMP_(nsrefcnt) nsScriptablePeer::Release()
 NS_IMETHODIMP 
 nsScriptablePeer::Invoke(const char *str)
 {
-/*    HRESULT hr;
+    HRESULT hr;
     DISPID dispid;
-    IDispatch FAR* pdisp = (IDispatch FAR*)NULL;
-    // call the requested function
-    const char* funcName = str; //_T("Update");
-    PluginInstanceData *pData = mPlugin;
-    if (pData == NULL) {
-        return NPERR_INVALID_INSTANCE_ERROR;
-    }
-    IUnknown FAR* punk;
-    hr = pData->pControlSite->GetControlUnknown(&punk);
-    if (FAILED(hr)) {
-        return NPERR_GENERIC_ERROR; 
-    }
-    punk->AddRef();
-    hr = punk->QueryInterface(IID_IDispatch,(void FAR* FAR*)&pdisp);
-    if (FAILED(hr)) { 
-        punk->Release();
+
+    IDispatchPtr disp;
+    if (FAILED(GetIDispatch(&disp)))
+    {
         return NPERR_GENERIC_ERROR; 
     }
     USES_CONVERSION;
-    OLECHAR FAR* szMember = A2OLE(funcName);
-    hr = pdisp->GetIDsOfNames(IID_NULL, &szMember, 1, LOCALE_USER_DEFAULT, &dispid);
-    if (FAILED(hr)) { 
-        punk->Release();
+    OLECHAR FAR* szMember = A2OLE(str);
+    hr = disp->GetIDsOfNames(IID_NULL, &szMember, 1, LOCALE_USER_DEFAULT, &dispid);
+    if (FAILED(hr))
+    { 
         return NPERR_GENERIC_ERROR; 
     }
+
     DISPPARAMS dispparamsNoArgs = {NULL, NULL, 0, 0};
-    hr = pdisp->Invoke(
+    hr = disp->Invoke(
         dispid,
         IID_NULL,
         LOCALE_USER_DEFAULT,
         DISPATCH_METHOD,
         &dispparamsNoArgs, NULL, NULL, NULL);
-    if (FAILED(hr)) { 
+    if (FAILED(hr))
+    { 
         return NPERR_GENERIC_ERROR; 
     }
-    punk->Release(); */
+
     return NS_OK;
 }
 
@@ -384,51 +402,45 @@ NS_IMETHODIMP nsScriptablePeer::SetProperty(const char *propertyName, const char
 {
     HRESULT hr;
     DISPID dispid;
-    VARIANT VarResult;
-    IDispatch FAR* pdisp = (IDispatch FAR*)NULL;
-    const char* property = propertyName;
-    PluginInstanceData *pData = mPlugin;
-    if (pData == NULL) { 
-        return NPERR_INVALID_INSTANCE_ERROR;
-    }
-    IUnknown FAR* punk;
-    hr = pData->pControlSite->GetControlUnknown(&punk);
-    if (FAILED(hr)) { return NULL; }
-    punk->AddRef();
-    hr = punk->QueryInterface(IID_IDispatch,(void FAR* FAR*)&pdisp);
-    if (FAILED(hr)) { 
-        punk->Release();
-        return NPERR_GENERIC_ERROR;
+    IDispatchPtr disp;
+    if (FAILED(GetIDispatch(&disp)))
+    {
+        return NPERR_GENERIC_ERROR; 
     }
     USES_CONVERSION;
-    OLECHAR FAR* szMember = A2OLE(property);
-    hr = pdisp->GetIDsOfNames(IID_NULL, &szMember, 1, LOCALE_USER_DEFAULT, &dispid);
-    if (FAILED(hr)) { 
-        punk->Release();
+    OLECHAR FAR* szMember = A2OLE(propertyName);
+    hr = disp->GetIDsOfNames(IID_NULL, &szMember, 1, LOCALE_USER_DEFAULT, &dispid);
+    if (FAILED(hr))
+    { 
         return NPERR_GENERIC_ERROR;
     }
-    VARIANT *pvars = new VARIANT[1];
-    VariantInit(&pvars[0]);
+
+    _variant_t *pvars = new _variant_t[1];
     pvars->vt = VT_BSTR;
-    pvars->bstrVal = A2OLE(propertyValue);
+    pvars->bstrVal = ::SysAllocString(A2OLE(propertyValue));
+    
     DISPID dispIdPut = DISPID_PROPERTYPUT;
     DISPPARAMS functionArgs;
+    _variant_t vResult;
+    
     functionArgs.rgdispidNamedArgs = &dispIdPut;
     functionArgs.rgvarg = pvars;
     functionArgs.cArgs = 1;
     functionArgs.cNamedArgs = 1;
 
-    hr = pdisp->Invoke(
+    hr = disp->Invoke(
         dispid,
         IID_NULL,
         LOCALE_USER_DEFAULT,
         DISPATCH_PROPERTYPUT,
-        &functionArgs, &VarResult, NULL, NULL);
+        &functionArgs, &vResult, NULL, NULL);
+    
     delete []pvars;
-    if (FAILED(hr)) { 
+    
+    if (FAILED(hr))
+    { 
         return NPERR_GENERIC_ERROR;
     }
-    punk->Release();
     return NS_OK;
 }
 
@@ -437,52 +449,41 @@ NS_IMETHODIMP nsScriptablePeer::SetNProperty(const char *propertyName, PRInt16 p
 {
     HRESULT hr;
     DISPID dispid;
-    VARIANT VarResult;
-    IDispatch FAR* pdisp = (IDispatch FAR*)NULL;
-    const char* property = propertyName;
-    PluginInstanceData *pData = mPlugin;
-    if (pData == NULL) { 
-        return NPERR_INVALID_INSTANCE_ERROR;
-    }
-    IUnknown FAR* punk;
-    hr = pData->pControlSite->GetControlUnknown(&punk);
-    if (FAILED(hr)) { return NULL; }
-    punk->AddRef();
-    hr = punk->QueryInterface(IID_IDispatch,(void FAR* FAR*)&pdisp);
-    if (FAILED(hr)) { 
-        punk->Release();
-        return NPERR_GENERIC_ERROR;
+    IDispatchPtr disp;
+    if (FAILED(GetIDispatch(&disp)))
+    {
+        return NPERR_GENERIC_ERROR; 
     }
     USES_CONVERSION;
-    OLECHAR FAR* szMember = A2OLE(property);
-    hr = pdisp->GetIDsOfNames(IID_NULL, &szMember, 1, LOCALE_USER_DEFAULT, &dispid);
+    OLECHAR FAR* szMember = A2OLE(propertyName);
+    hr = disp->GetIDsOfNames(IID_NULL, &szMember, 1, LOCALE_USER_DEFAULT, &dispid);
     if (FAILED(hr)) { 
-        punk->Release();
         return NPERR_GENERIC_ERROR;
     }
    
-    VARIANT *pvars = new VARIANT[1];
-    VariantInit(&pvars[0]);
+    _variant_t *pvars = new _variant_t[1];
     pvars->vt = VT_I2;
     pvars->iVal = propertyValue;
 
     DISPID dispIdPut = DISPID_PROPERTYPUT;
     DISPPARAMS functionArgs;
+    _variant_t vResult;
+
     functionArgs.rgdispidNamedArgs = &dispIdPut;
     functionArgs.rgvarg = pvars;
     functionArgs.cArgs = 1;
     functionArgs.cNamedArgs = 1;
 
-    hr = pdisp->Invoke(
+    hr = disp->Invoke(
         dispid,
         IID_NULL,
         LOCALE_USER_DEFAULT,
         DISPATCH_PROPERTYPUT,
-        &functionArgs, &VarResult, NULL, NULL);
+        &functionArgs, &vResult, NULL, NULL);
     delete []pvars;
-    if (FAILED(hr)) { 
+    if (FAILED(hr))
+    { 
         return NPERR_GENERIC_ERROR;
     }
-    punk->Release();
     return NS_OK;
 }
