@@ -1225,13 +1225,14 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
                 /*
                  * Check for duplicates, which require a JSOP_LOOKUPSWITCH.
-                 * We bias i by 32768 if it's negative, and hope that's a rare
+                 * We bias i by 65536 if it's negative, and hope that's a rare
                  * case (because it requires a malloc'd bitmap).
                  */
                 if (i < 0)
-                    i += JS_BIT(15);
+                    i += JS_BIT(16);
                 if (i >= intmap_bitlen) {
-                    if (!intmap) {
+                    if (!intmap &&
+                        i < (INTMAP_LENGTH << JS_BITS_PER_WORD_LOG2)) {
                         intmap = intmap_space;
                         intmap_bitlen = INTMAP_LENGTH << JS_BITS_PER_WORD_LOG2;
                     } else {
