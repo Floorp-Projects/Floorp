@@ -137,7 +137,7 @@ function ConfirmDelete()
     return;
   }
 
-  var win = window.openDialog('chrome://communicator/content/profile/deleteProfile.xul', 'Deleter', 'chrome,modal=yes,titlebar=yes');
+  var win = window.openDialog('chrome://communicator/content/profile/deleteProfile.xul', 'Deleter', 'chrome,centerscreen,modal=yes,titlebar=yes');
   return win;
 }
 
