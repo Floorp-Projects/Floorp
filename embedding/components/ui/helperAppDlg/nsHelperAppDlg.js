@@ -434,18 +434,15 @@ nsHelperAppDialog.prototype = {
         
         // Enable/Disable choose application button and textfield
         this.toggleChoice();
-
-        // If we're running on the Mac, disable the application <textbox>.
-        if ( this.mIsMac ) {
-            this.dialogElement( "appPath" ).disabled = true;
-        }
     },
 
     // Enable pick app button if the user chooses that option.
     toggleChoice : function () {
         // See what option is selected.
-        this.dialogElement( "chooseApp" ).disabled = 
-            this.dialogElement( "appPath" ).disabled = !this.dialogElement( "openUsing" ).selected;
+        var openUsing = this.dialogElement( "openUsing" ).selected;
+        this.dialogElement( "chooseApp" ).disabled = !openUsing;
+        // appPath is always disabled on Mac
+        this.dialogElement( "appPath" ).disabled = !openUsing || this.mIsMac;
         this.updateOKButton();
     },
 
