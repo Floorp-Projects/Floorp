@@ -602,7 +602,8 @@ void nsXIFDTD::AddAttribute(nsIParserNode& aNode) {
   hasValue = GetAttributePair(aNode,key,value);
   CAttributeToken* attribute = new CAttributeToken(key,value);
   nsIParserNode* top = PeekNode();
-  ((nsCParserNode*)top)->AddAttribute(attribute);
+  if (top != nsnull)
+    ((nsCParserNode*)top)->AddAttribute(attribute);
 }
 
 
