@@ -31,7 +31,6 @@ EditorStyles1.css
 EditorContent.css
 editorOverlay.js
 editorOverlay.xul
-contentframe.xul
 sidebar-editor.rdf
 sidebar-editor.xul
 sb-bookmarks-panel.xul
