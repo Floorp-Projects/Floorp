@@ -619,8 +619,10 @@ handle_iid_is:
                 if (iid_is) {
                     int16 argnum = -1, count;
                     IDL_tree params = IDL_OP_DCL(IDL_NODE_UP(IDL_NODE_UP(state->tree))).parameter_dcls;
-                    for (count = 0; IDL_LIST(params).data;
-                         params = IDL_LIST(params).next, count++) {
+                    for (count = 0; 
+                         params != NULL && IDL_LIST(params).data != NULL;
+                         params = IDL_LIST(params).next, count++)
+                    {
                         char *name;
                         name = IDL_IDENT(IDL_PARAM_DCL(IDL_LIST(params).data).simple_declarator).str;
                         if (!strcmp(name, iid_is)) {
@@ -630,7 +632,7 @@ handle_iid_is:
                         }
                     }
                     if (argnum < 0) {
-                        IDL_tree_error(type, "can't find matching arg for "
+                        IDL_tree_error(type, "can't find matching argument for "
                                        "[iid_is(%s)]\n", iid_is);
                         return FALSE;
                       }
