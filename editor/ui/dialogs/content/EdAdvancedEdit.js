@@ -21,9 +21,6 @@
  *   Ben "Count XULula" Goodger
  */
 
-/**************       NAMESPACES       ***************/
-const XUL_NS    = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-
 /**************         GLOBALS         **************/
 var gElement    = null; // handle to actual element edited
 
