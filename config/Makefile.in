@@ -103,7 +103,7 @@ libs::
 	$(RM) -rf $(DIST)/sdk/dummy
 	$(RM) -f $(DIST)/sdk/bin/$(LIB_PREFIX)nspr4.$(LIB_SUFFIX) $(DIST)/sdk/bin/$(LIB_PREFIX)plc4.$(LIB_SUFFIX) $(DIST)/sdk/bin/$(LIB_PREFIX)plds4.$(LIB_SUFFIX)
 ifndef DISABLE_DIST_GRE
-	$(INSTALL) $(DIST)/sdk/bin/$(LIB_PREFIX)nspr4$(DLL_SUFFIX) $(DIST)/sdk/bin/$(LIB_PREFIX)plc4$(DLL_SUFFIX) $(DIST)/sdk/bin/$(LIB_PREFIX)plds4$(DLL_SUFFIX) $(GRE_DIST)
+	$(INSTALL) $(DIST)/sdk/bin/$(DLL_PREFIX)nspr4$(DLL_SUFFIX) $(DIST)/sdk/bin/$(DLL_PREFIX)plc4$(DLL_SUFFIX) $(DIST)/sdk/bin/$(DLL_PREFIX)plds4$(DLL_SUFFIX) $(GRE_DIST)
 endif
 endif
 
