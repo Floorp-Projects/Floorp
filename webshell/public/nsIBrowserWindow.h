@@ -52,7 +52,8 @@ public:
   NS_IMETHOD Init(nsIAppShell* aAppShell,
                   nsIPref* aPrefs,
                   const nsRect& aBounds,
-                  PRUint32 aChromeMask) = 0;
+                  PRUint32 aChromeMask,
+                  PRBool aAllowPlugins = PR_TRUE) = 0;
 
   NS_IMETHOD MoveTo(PRInt32 aX, PRInt32 aY) = 0;
 

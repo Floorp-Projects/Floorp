@@ -85,7 +85,8 @@ class nsIWebShell : public nsIContentViewerContainer {
 public:
   NS_IMETHOD Init(nsNativeWidget aNativeParent,
                   const nsRect& aBounds,
-                  nsScrollPreference aScrolling = nsScrollPreference_kAuto)=0;
+                  nsScrollPreference aScrolling = nsScrollPreference_kAuto,
+                  PRBool aAllowPlugins = PR_TRUE) = 0;
 
   NS_IMETHOD Destroy() = 0;
 

@@ -95,7 +95,8 @@ public:
   // nsIWebShell
   NS_IMETHOD Init(nsNativeWidget aNativeParent,
                   const nsRect& aBounds,
-                  nsScrollPreference aScrolling = nsScrollPreference_kAuto);
+                  nsScrollPreference aScrolling = nsScrollPreference_kAuto,
+                  PRBool aAllowPlugins = PR_TRUE);
   NS_IMETHOD Destroy(void);
   NS_IMETHOD GetBounds(nsRect& aResult);
   NS_IMETHOD SetBounds(const nsRect& aBounds);
@@ -399,12 +400,15 @@ nsWebShell::Embed(nsIContentViewer* aContentViewer,
 NS_IMETHODIMP
 nsWebShell::Init(nsNativeWidget aNativeParent,
                  const nsRect& aBounds,
-                 nsScrollPreference aScrolling)
+                 nsScrollPreference aScrolling,
+                 PRBool aAllowPlugins)
 {
   //XXX make sure plugins have started up. this really needs to
   //be associated with the nsIContentViewerContainer interfaces,
   //not the nsIWebShell interfaces. this is a hack. MMP
-  CreatePluginHost();
+
+  if (PR_TRUE == aAllowPlugins)
+    CreatePluginHost();
 
   mScrollPref = aScrolling;
 
