@@ -30,11 +30,14 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: rijndael.h,v 1.2 2001/01/05 22:37:50 mcgreer%netscape.com Exp $
+ * $Id: rijndael.h,v 1.3 2001/06/20 03:17:01 nelsonb%netscape.com Exp $
  */
 
 #ifndef _RIJNDAEL_H_
 #define _RIJNDAEL_H_ 1
+
+#define RIJNDAEL_MIN_BLOCKSIZE 16 /* bytes */
+#define RIJNDAEL_MAX_BLOCKSIZE 32 /* bytes */
 
 typedef SECStatus AESFunc(AESContext *cx, unsigned char *output,
                           unsigned int *outputLen, unsigned int maxOutputLen,
@@ -57,11 +60,11 @@ typedef SECStatus AESBlockFunc(AESContext *cx,
  */
 struct AESContextStr
 {
-    unsigned char *iv;
     unsigned int   Nb;
     unsigned int   Nr;
     PRUint32      *expandedKey;
     AESFunc       *worker;
+    unsigned char iv[RIJNDAEL_MAX_BLOCKSIZE];
 };
 
 /* RIJNDAEL_NUM_ROUNDS
