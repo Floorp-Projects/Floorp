@@ -163,6 +163,8 @@ function createShortcuts()
 
 	/* setup turbo mode */
 
+    logComment( "Windows Shortcut: " + szStartupFolder + "\\$MainExeFile$" );
+
 	subkey  = "SOFTWARE\\$CompanyName$\\$ProductName$\\$UserAgent$\\Setup";
 	valname = "browserargs";
 	regvalue = winreg.getValueString(subkey, valname);
