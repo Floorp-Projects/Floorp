@@ -65,6 +65,7 @@ var actual = '';
 var actualvalues = [];
 var expect= '';
 var expectedvalues = [];
+var arr;
 
 
 // create empty array or pseudo-array objects in various ways
@@ -79,27 +80,32 @@ arr5.__proto__ = Array.prototype;
 
 
 status = inSection(1);
-actual = arr1.sort() === arr1;
+arr = arr1.sort();
+actual = arr instanceof Array && arr.length === 0 && arr === arr1;
 expect = true;
 addThis();
 
 status = inSection(2);
-actual = arr2.sort() === arr2;
+arr = arr2.sort();
+actual = arr instanceof Array && arr.length === 0 && arr === arr2;
 expect = true;
 addThis();
 
 status = inSection(3);
-actual = arr3.sort() === arr3;
+arr = arr3.sort();
+actual = arr instanceof Array && arr.length === 0 && arr === arr3;
 expect = true;
 addThis();
 
 status = inSection(4);
-actual = arr4.sort() === arr4;
+arr = arr4.sort();
+actual = arr instanceof Array && arr.length === 0 && arr === arr4;
 expect = true;
 addThis();
 
 status = inSection(5);
-actual = arr5.sort() === arr5;
+arr = arr5.sort();
+actual = arr instanceof Array && arr.length === 0 && arr === arr5;
 expect = true;
 addThis();
 
@@ -108,27 +114,32 @@ addThis();
 function g() {return 0;}
 
 status = inSection('1a');
-actual = arr1.sort(g) === arr1;
+arr = arr1.sort(g);
+actual = arr instanceof Array && arr.length === 0 && arr === arr1;
 expect = true;
 addThis();
 
 status = inSection('2a');
-actual = arr2.sort(g) === arr2;
+arr = arr2.sort(g);
+actual = arr instanceof Array && arr.length === 0 && arr === arr2;
 expect = true;
 addThis();
 
 status = inSection('3a');
-actual = arr3.sort(g) === arr3;
+arr = arr3.sort(g);
+actual = arr instanceof Array && arr.length === 0 && arr === arr3;
 expect = true;
 addThis();
 
 status = inSection('4a');
-actual = arr4.sort(g) === arr4;
+arr = arr4.sort(g);
+actual = arr instanceof Array && arr.length === 0 && arr === arr4;
 expect = true;
 addThis();
 
 status = inSection('5a');
-actual = arr5.sort(g) === arr5;
+arr = arr5.sort(g);
+actual = arr instanceof Array && arr.length === 0 && arr === arr5;
 expect = true;
 addThis();
 
