@@ -41,12 +41,21 @@
 // File Utilities Interface
 // This interface reflects operations only available in Communicator 5.0.
 
+#define NS_IFILEUTILITIES_IID                        \
+{ /* 89a31ce0-019a-11d2-815b-006008119d7a */         \
+    0x89a31ce0,                                      \
+    0x019a,                                          \
+    0x11d2,                                          \
+    {0x81, 0x5b, 0x00, 0x60, 0x08, 0x11, 0x9d, 0x7a} \
+}
+
 /**
  * The nsIFileUtilities interface provides access to random file operations.
  * To obtain: QueryInterface on nsIPluginManager.
  */
 class nsIFileUtilities : public nsISupports {
 public:
+    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IFILEUTILITIES_IID)
     
     /**
      * Returns the name of the browser executable program.
@@ -78,14 +87,6 @@ public:
     NewTempFileName(const char* prefix, PRUint32 bufLen, char* resultBuf) = 0;
 
 };
-
-#define NS_IFILEUTILITIES_IID                        \
-{ /* 89a31ce0-019a-11d2-815b-006008119d7a */         \
-    0x89a31ce0,                                      \
-    0x019a,                                          \
-    0x11d2,                                          \
-    {0x81, 0x5b, 0x00, 0x60, 0x08, 0x11, 0x9d, 0x7a} \
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 
