@@ -170,9 +170,7 @@ struct nsHTMLReflowState {
   nsLineLayout*    mLineLayout;
 
   // The appropriate reflow state for the containing block (for
-  // percentage widths, etc.) of any *children* of this reflow state's
-  // frame.  In other words, this is the nearest containing block reflow
-  // state that is *either* this frame or an ancestor thereof.
+  // percentage widths, etc.) of this reflow state's frame.
   const nsHTMLReflowState *mCBReflowState;
 
   // The computed width specifies the frame's content area width, and it does
@@ -263,13 +261,9 @@ struct nsHTMLReflowState {
   static const char* ReasonToString(nsReflowReason aReason);
 #endif
 
-  // A simple copy constructor.  (It fixes up |mCBReflowState|, which
-  // can point to |this|, to point to the copy's |this|.)
-  nsHTMLReflowState(const nsHTMLReflowState& aOther);
-
-  // A simple assignment operator.  It does the same fixups as the
-  // copy-consturctor.
-  nsHTMLReflowState& operator=(const nsHTMLReflowState& aOther);
+  // Note: The copy constructor is written by the compiler automatically. You
+  // can use that and then override specific values if you want, or you can
+  // call Init as desired...
 
   // Initialize a <b>root</b> reflow state with a rendering context to
   // use for measuring things.
@@ -322,12 +316,10 @@ struct nsHTMLReflowState {
             nsMargin*       aBorder = nsnull,
             nsMargin*       aPadding = nsnull);
   /**
-   * First find the containing block's reflow state using
-   * GetContainingBlockReflowState, then ask the containing block for
-   * it's content width using GetContentWidth
+   * Find the content width of the containing block of aReflowState
    */
   static nscoord
-    GetContainingBlockContentWidth(const nsHTMLReflowState* aParentRS);
+    GetContainingBlockContentWidth(const nsHTMLReflowState* aReflowState);
 
   /**
    * Get the page box reflow state, starting from a frames
@@ -385,7 +377,7 @@ protected:
                                 nsIFrame*          aPlaceholderFrame,
                                 nsIFrame*          aBlockFrame,
                                 nsMargin&          aBlockContentArea,
-                                nsIFrame*          aAbsoluteContainingBlockFrame,
+                                const nsHTMLReflowState* cbrs,
                                 nsHypotheticalBox& aHypotheticalBox);
 
   void InitAbsoluteConstraints(nsIPresContext* aPresContext,
