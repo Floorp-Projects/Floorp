@@ -764,8 +764,9 @@ nsMenuFrame::CreateAnonymousContent(nsISupportsArray& aAnonymousChildren)
                         PR_FALSE);
   
   mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::crop, crop);
-  content->SetAttribute(kNameSpaceID_None, nsXULAtoms::crop,
-                        crop == "" ? "right" : crop, PR_FALSE);
+  if (crop == "")
+    crop = "right";
+  content->SetAttribute(kNameSpaceID_None, nsXULAtoms::crop, crop, PR_FALSE);
 
   // append now, after we've set all the attributes
   aAnonymousChildren.AppendElement(content);
