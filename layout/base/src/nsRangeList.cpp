@@ -569,6 +569,19 @@ nsRangeListIterator::IsDone()
 NS_IMETHODIMP
 nsRangeListIterator::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
+  if (nsnull == aInstancePtr) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  if (aIID.Equals(nsIEnumerator::GetIID())) {
+    *aInstancePtr = NS_STATIC_CAST(nsIEnumerator*, this);
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(nsIBidirectionalEnumerator::GetIID())) {
+    *aInstancePtr = NS_STATIC_CAST(nsIBidirectionalEnumerator*, this);
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
   return mDomSelection->QueryInterface(aIID, aInstancePtr);
 }
 
@@ -655,7 +668,7 @@ NS_IMPL_RELEASE(nsRangeList)
 NS_IMETHODIMP
 nsRangeList::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
-  if (NULL == aInstancePtr) {
+  if (nsnull == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
   if (aIID.Equals(nsIFrameSelection::GetIID())) {
@@ -1458,7 +1471,7 @@ NS_IMPL_RELEASE(nsDOMSelection)
 NS_IMETHODIMP
 nsDOMSelection::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
-  if (NULL == aInstancePtr) {
+  if (nsnull == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
   if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
@@ -1476,16 +1489,16 @@ nsDOMSelection::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     nsRangeListIterator *iter = new nsRangeListIterator(this);
     if (!iter)
        return NS_ERROR_OUT_OF_MEMORY;
-    *aInstancePtr = (void*) (nsIEnumerator *) iter;
-    NS_ADDREF_THIS();
+    *aInstancePtr = NS_STATIC_CAST(nsIEnumerator*, iter);
+    NS_ADDREF(iter);
     return NS_OK;
   }
   if (aIID.Equals(nsIBidirectionalEnumerator::GetIID())) {
     nsRangeListIterator *iter = new nsRangeListIterator(this);
     if (!iter)
        return NS_ERROR_OUT_OF_MEMORY;
-    *aInstancePtr = (void*) (nsIBidirectionalEnumerator *) iter;
-    NS_ADDREF_THIS();
+    *aInstancePtr = NS_STATIC_CAST(nsIBidirectionalEnumerator*, iter);
+    NS_ADDREF(iter);
     return NS_OK;
   }
   if (aIID.Equals(nsIScriptObjectOwner::GetIID())) {
