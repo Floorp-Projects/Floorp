@@ -22,7 +22,7 @@ use File::Path;     # for rmtree();
 use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 
-$::UtilsVersion = '$Revision: 1.182 $ ';
+$::UtilsVersion = '$Revision: 1.183 $ ';
 
 package TinderUtils;
 
@@ -1675,6 +1675,8 @@ sub AliveTestReturnToken {
     # Look for and return token
     if ($status) {
         $rv = extract_token_from_file($binary_log, $token, $delimiter);
+        chomp($rv);
+        chop($rv) if ($^O eq 'cygwin'); # cygwin perl doesn't chomp dos-newlinesproperly so use chop.
         if ($rv) {
             print "AliveTestReturnToken: token value = $rv\n";
         }
