@@ -93,7 +93,7 @@ ElementToString(nsIContent *aContent, nsString &aResult)
     tag->ToString(aResult);
 
     aResult.Append(PRUnichar('@'));
-    aResult.AppendInt(PRInt32(aContent), 16);
+    aResult.AppendInt(NS_PTR_TO_INT32(aContent), 16);
 }
 #endif
 
