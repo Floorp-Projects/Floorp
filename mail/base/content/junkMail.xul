@@ -69,22 +69,6 @@
   <description width="1">&mainDescription.label;</description>
   <separator class="thin"/>
 
-  <vbox id="junkMailControls">
-
-  <tabbox>
-    <tabs id="junkMailTabs">
-      <tab label="&settingsTab.label;"/>
-      <tab label="&adaptiveTab.label;"/>
-#if 0
-      <tab label="&blackListsTab.label;"/>
-#endif
-    </tabs>
-
-    <tabpanels id="junkMailTabsPanels" flex="1">
-
-      <!-- JunkMail Tab -->
-      <vbox index="name" flex="1"> 
-        <description width="1">&settingsInfo.label;</description>
         <hbox align="center">
           <label value="&account.label;" accesskey="&account.accesskey;"/>
           <menulist oncommand="onServerClick(event);" id="server">
@@ -108,6 +92,23 @@
           </menulist>
         </hbox>   
 
+  <separator class="thin"/>
+
+  <vbox id="junkMailControls">
+
+  <tabbox>
+    <tabs id="junkMailTabs">
+      <tab label="&settingsTab.label;"/>
+      <tab label="&adaptiveTab.label;"/>
+#if 0
+      <tab label="&blackListsTab.label;"/>
+#endif
+    </tabs>
+
+    <tabpanels id="junkMailTabsPanels" flex="1">
+
+      <!-- JunkMail Tab -->
+      <vbox index="name" flex="1"> 
       <groupbox flex="1">
         <caption class="tab-caption" label="&whiteListCaption.label;"/>
         <vbox>           

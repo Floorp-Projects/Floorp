@@ -8,8 +8,6 @@
 <!ENTITY blackListsTab.label "Black Lists">
 
 <!-- Settings tab -->
-<!ENTITY settingsInfo.label "For each mail account, determine what &brandShortName; should do with messages identified as junk:">
-
 <!ENTITY move.label "Move incoming messages determined to be junk mail to:">
 <!ENTITY otherFolder.label "Other:">
 <!ENTITY junkFolderOn.label "&quot;Junk&quot; folder on:">
@@ -23,8 +21,8 @@
 <!ENTITY log.label "Logging">
 <!ENTITY handling.label "Handling">
 
-<!ENTITY account.label "Account:">
-<!ENTITY account.accesskey "A">
+<!ENTITY account.label "Configure Junk Settings for:">
+<!ENTITY account.accesskey "C">
 <!ENTITY viewLog.label "Junk Mail Log">
 <!ENTITY viewLog.accesskey "j">
 
