@@ -378,4 +378,4 @@ nsBoxLayoutState::AllocateStackMemory(size_t aSize, void** aResult)
 
   return shell->AllocateStackMemory(aSize, aResult);
 }
- 
+
