@@ -15,9 +15,36 @@
 # Reserved.
 #
 
-DEPTH		= ../..
-topsrcdir	= @top_srcdir@
-VPATH		= @srcdir@
-srcdir		= @srcdir@
+DEPTH           = ../..
+topsrcdir       = @top_srcdir@
+VPATH           = @srcdir@
+srcdir          = @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE		= xpinstall
+LIBRARY_NAME	= xpinstall
+IS_COMPONENT	= 1
+REQUIRES        = dom js netlib raptor xpcom
+
+CPPSRCS = \
+    nsSoftwareUpdate.cpp        \
+    nsSoftwareUpdateQueue.cpp   \
+    nsInstall.cpp               \
+    nsInstallDelete.cpp         \
+    nsInstallExecute.cpp        \
+    nsInstallFile.cpp           \
+    nsInstallFolder.cpp         \
+    nsInstallPatch.cpp          \
+    nsInstallTrigger.cpp        \
+    nsJSInstall.cpp             \
+    nsJSInstallTriggerGlobal.cpp\
+    nsSoftwareUpdateRun.cpp     \
+    nsSoftwareUpdateStream.cpp  \
+    $(NULL)
+
+
+INCLUDES += -I$(srcdir)/../public
 
 include $(topsrcdir)/config/rules.mk
+

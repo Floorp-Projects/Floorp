@@ -24,9 +24,11 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE = xpinstall
 
-EXPORTS =					   \
-        nsSoftwareUpdateIIDs.h \
-        nsISoftwareUpdate.h    \
+EXPORTS =		             \
+        nsIDOMInstallTriggerGlobal.h \
+        nsIDOMInstallVersion.h       \
+        nsSoftwareUpdateIIDs.h       \
+        nsISoftwareUpdate.h          \
         $(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
