@@ -105,7 +105,7 @@ public:
 
 
   NS_IMETHOD GetFont(nsIPresContext* aPresContext, 
-                    nsFont&         aFont) = 0;
+                     const nsFont*&  aFont) = 0;
   /**
    * Get the content object associated with this frame. Adds a reference to
    * the content object so the caller must do a release.
