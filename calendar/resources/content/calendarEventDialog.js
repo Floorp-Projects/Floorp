@@ -162,7 +162,7 @@ function loadCalendarEventDialog()
       addException( ExceptionDate );
    }
 
-   setDateFieldValue( "exception-dates-text", today );
+   setDateFieldValue( "exception-dates-text", startDate );
 
    setFieldValue( "title-field", gEvent.title  );
    setFieldValue( "description-field", gEvent.description );
@@ -701,12 +701,18 @@ function updateInviteItemEnabled()
 
 function updateRepeatItemEnabled()
 {
+   var exceptionsDateButton = document.getElementById( "exception-dates-button" );
+   var exceptionsDateText = document.getElementById( "exception-dates-text" );
+
    var repeatCheckBox = document.getElementById( "repeat-checkbox" );
    
    var repeatDisableList = document.getElementsByAttribute( "disable-controller", "repeat" );
    
    if( repeatCheckBox.checked )
    {
+      exceptionsDateButton.setAttribute( "popup", "oe-date-picker-popup" );
+      exceptionsDateText.setAttribute( "popup", "oe-date-picker-popup" );
+
       // call remove attribute beacuse some widget code checks for the presense of a 
       // disabled attribute, not the value.
       for( var i = 0; i < repeatDisableList.length; ++i )
@@ -717,6 +723,9 @@ function updateRepeatItemEnabled()
    }
    else
    {
+      exceptionsDateButton.removeAttribute( "popup" );
+      exceptionsDateText.removeAttribute( "popup" );
+
       for( var j = 0; j < repeatDisableList.length; ++j )
       {
          repeatDisableList[j].setAttribute( "disabled", "true" );
@@ -970,13 +979,9 @@ function setAdvancedWeekRepeat()
 
    if( gEvent.recurWeekdays > 0 )
    {
-      for( var i = 0; i < 6; i++ )
+      for( var i = 0; i < 7; i++ )
       {
-         dump( gEvent.recurWeekdays | eval( "kRepeatDay_"+i ) );
-   
          checked = ( ( gEvent.recurWeekdays | eval( "kRepeatDay_"+i ) ) == eval( gEvent.recurWeekdays ) );
-         
-         dump( "checked is "+checked );
          
          setFieldValue( "advanced-repeat-week-"+i, checked, "checked" );
 
@@ -1033,12 +1038,9 @@ function updateAdvancedWeekRepeat()
       //uncheck them all
       for( var i = 0; i < 7; i++ )
       {
-         setFieldValue( "advanced-repeat-week-"+i, false, "checked" );
-
          setFieldValue( "advanced-repeat-week-"+i, false, "disabled" );
       
          setFieldValue( "advanced-repeat-week-"+i, false, "today" );
-   
       }
    }
 
@@ -1123,11 +1125,9 @@ function isAlreadyException( dateObj )
 
    for( i = 0; i < listbox.childNodes.length; i++ )
    {
-      var dateToMatch = new Date(  );
+      var dateToMatch = new Date( );
       
       dateToMatch.setTime( listbox.childNodes[i].value );
-      
-      dump( "\n\nCOMPARE-> "+dateToMatch +" "+dateObj.getTime() );
       if( dateToMatch.getMonth() == dateObj.getMonth() && dateToMatch.getFullYear() == dateObj.getFullYear() && dateToMatch.getDate() == dateObj.getDate() )
          return true;
    }
@@ -1174,6 +1174,8 @@ function getWeekNumberOfMonth()
    //get the day number for today.
    var startTime = getDateTimeFieldValue( "start-date-text" );
    
+   var oldStartTime = startTime;
+
    var dayNumber = startTime.getDay();
    
    var thisMonth = startTime.getMonth();
@@ -1193,7 +1195,7 @@ function getWeekNumberOfMonth()
    
    if( weekNumber > 3 )
    {
-      var nextWeek = new Date( getDateTimeFieldValue( "start-date-text" ).getTime() + ( 1000 * 60 * 60 * 24 * 7 ) );
+      var nextWeek = new Date( oldStartTime.getTime() + ( 1000 * 60 * 60 * 24 * 7 ) );
 
       if( nextWeek.getMonth() != thisMonth )
       {
