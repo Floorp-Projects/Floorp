@@ -89,17 +89,18 @@ namespace JSTypes {
 #endif        
         
     /**
-         * GC-scannable array of values.
-         */
+     * GC-scannable array of values.
+     */
     typedef std::vector<JSValue, gc_allocator<JSValue> > JSValues;
 
     /**
-         * Basic behavior of all JS objects, mapping a name to a value.
-         * This is provided mainly to avoid having an awkward implementation
-         * of JSObject & JSArray, which must each define its own
-         * gc_allocator. This is all in flux.
-         */
+     * Basic behavior of all JS objects, mapping a name to a value.
+     * This is provided mainly to avoid having an awkward implementation
+     * of JSObject & JSArray, which must each define its own
+     * gc_allocator. This is all in flux.
+     */
     class JSMap : public gc_base {
+    protected:
         std::map<String, JSValue, std::less<String>,
             gc_map_allocator> properties;
     public:
@@ -109,16 +110,37 @@ namespace JSTypes {
         }
     };
 
-    /**
-         * Private representation of a JavaScript object.
-         * This will change over time, so it is treated as an opaque
-         * type everywhere else but here.
-         */
-    class JSObject : public JSMap {};
+    class JSFunction : public JSMap {
+        ICodeModule* mICode;
+    public:
+        JSFunction(ICodeModule* iCode) : mICode(iCode) {}
+        ICodeModule* getICode() { return mICode; }
+    };
         
     /**
-         * Private representation of a JavaScript array.
-         */
+     * Private representation of a JavaScript object.
+     * This will change over time, so it is treated as an opaque
+     * type everywhere else but here.
+     */
+    class JSObject : public JSMap {
+    public:
+        JSValue& defineProperty(const String& name, JSValue &v)
+        {
+            return (properties[name] = v);
+        }
+                
+        // FIXME:  need to copy the ICodeModule's instruction stream.    
+        JSValue& defineFunction(const String& name, ICodeModule* iCode)
+        {
+            JSValue value;
+            value.function = new JSFunction(iCode);
+            return properties[name] = value;
+        }
+    };
+        
+    /**
+     * Private representation of a JavaScript array.
+     */
     class JSArray : public JSMap {
         JSValues elements;
     public:
@@ -164,16 +186,9 @@ namespace JSTypes {
         }
     };
         
-    class JSFunction : public JSMap {
-        ICodeModule* mICode;
-    public:
-        JSFunction(ICodeModule* iCode) : mICode(iCode) {}
-        ICodeModule* getICode() { return mICode; }
-    };
-        
     /**
-         * Represents the current function's invocation state.
-         */
+     * Represents the current function's invocation state.
+     */
     struct JSActivation : public gc_base {
         JSValues mRegisters;
             
@@ -202,10 +217,10 @@ namespace JSTypes {
         }
     };
 
-/**
- * Stores saved state from the *previous* activation, the current activation is
- * alive and well in locals of the interpreter loop.
- */
+    /**
+     * Stores saved state from the *previous* activation, the current
+     * activation is alive and well in locals of the interpreter loop.
+     */
     struct JSFrame : public gc_base {
         JSFrame(InstructionIterator returnPC, InstructionIterator basePC,
                 JSActivation* activation, Register result) 

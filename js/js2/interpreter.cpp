@@ -1,31 +1,41 @@
-// -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
-//
-// The contents of this file are subject to the Netscape Public
-// License Version 1.1 (the "License"); you may not use this file
-// except in compliance with the License. You may obtain a copy of
-// the License at http://www.mozilla.org/NPL/
-//
-// Software distributed under the License is distributed on an "AS
-// IS" basis, WITHOUT WARRANTY OF ANY KIND, either express oqr
-// implied. See the License for the specific language governing
-// rights and limitations under the License.
-//
-// The Original Code is the JavaScript 2 Prototype.
-//
-// The Initial Developer of the Original Code is Netscape
-// Communications Corporation.  Portions created by Netscape are
-// Copyright (C) 2000 Netscape Communications Corporation. All
-// Rights Reserved.
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express oqr
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is the JavaScript 2 Prototype.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+ *
+ * Alternatively, the contents of this file may be used under the
+ * terms of the GNU Public License (the "GPL"), in which case the
+ * provisions of the GPL are applicable instead of those above.
+ * If you wish to allow use of your version of this file only
+ * under the terms of the GPL and not to allow others to use your
+ * version of this file under the NPL, indicate your decision by
+ * deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL.  If you do not delete
+ * the provisions above, a recipient may use your version of this
+ * file under either the NPL or the GPL.
+ */
 
 #include "interpreter.h"
 #include "world.h"
 #include "vmtypes.h"
 
 namespace JavaScript {
-namespace Interpreter {
-
-    using namespace JSTypes;
-
     // operand access macros.
 #define op1(i) (i->o1())
 #define op2(i) (i->o2())
@@ -37,23 +47,8 @@ namespace Interpreter {
 #define src2(i) op3(i)
 #define ofs(i)  (i->getOffset())
 
-    static JSObject globals;
-
-    JSValue& defineGlobalProperty(const String& name, const JSValue& value)
-    {
-        return (globals[name] = value);
-    }
-
-    // FIXME:  need to copy the ICodeModule's instruction stream.
-    
-    JSValue& defineFunction(const String& name, ICodeModule* iCode)
-    {
-        JSValue value;
-        value.function = new JSFunction(iCode);
-        return defineGlobalProperty(name, value);
-    }
-
-    JSValue interpret(ICodeModule* iCode, const JSValues& args)
+    JSValue
+    Context::interpret(ICodeModule* iCode, const JSValues& args)
     {
         // stack of JSFrames.
         // XXX is a linked list of activation's sufficient?
@@ -81,10 +76,26 @@ namespace Interpreter {
                     begin_pc = pc = target->its_iCode->begin();
                 }
                 continue;
+
+            case RETURN_VOID:
+                {
+                    JSValue result(NotARegister);
+                    if (frames.empty())
+                        return result;
+                    JSFrame *frame = frames.top();
+                    frames.pop();
+                    activation = frame->itsActivation;
+                    registers = &activation->mRegisters;
+                    (*registers)[frame->itsResult] = result;
+                    pc = frame->itsReturnPC;
+                    begin_pc = frame->itsBasePC;
+                }
+                continue;
+
             case RETURN:
                 {
                     Return* ret = static_cast<Return*>(instruction);
-                    JSValue result;
+                    JSValue result(NotARegister);
                     if (op1(ret) != NotARegister) 
                         result = (*registers)[op1(ret)];
                     if (frames.empty())
@@ -107,13 +118,13 @@ namespace Interpreter {
             case LOAD_NAME:
                 {
                     LoadName* ln = static_cast<LoadName*>(instruction);
-                    (*registers)[dst(ln)] = globals[*src1(ln)];
+                    (*registers)[dst(ln)] = mGlobal[*src1(ln)];
                 }
                 break;
             case SAVE_NAME:
                 {
                     SaveName* sn = static_cast<SaveName*>(instruction);
-                    globals[*dst(sn)] = (*registers)[src1(sn)];
+                    mGlobal[*dst(sn)] = (*registers)[src1(sn)];
                 }
                 break;
             case NEW_OBJECT:
@@ -295,5 +306,4 @@ namespace Interpreter {
 
     } /* interpret */
 
-} /* namespace Interpreter */
 } /* namespace JavaScript */
