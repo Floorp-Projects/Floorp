@@ -1236,6 +1236,7 @@ sub MakeResourceAliases()
 	mkdir($default_profile_dir, 0);
 
 	_copy(":mozilla:profile:defaults:bookmarks.html", 									"$default_profile_dir"."bookmarks.html");
+	_copy(":mozilla:profile:defaults:panels.rdf", 									"$default_profile_dir"."panels.rdf");
 
 	# Default _pref_ directory stuff
 	my($default_pref_dir) = "$defaults_dir"."Pref:";
