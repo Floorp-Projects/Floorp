@@ -744,6 +744,7 @@
       </menu>
 
       <menu name="XPToolkit"> // XPToolkit tests.
+        <menuitem name="Tri-state checkbox" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/checkboxTest.xul'"/>
         <menuitem name="Toolbar" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/toolbarTest1.xul'"/>
         <menuitem name="Tree" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/treeTest1.xul'"/>
       </menu>
