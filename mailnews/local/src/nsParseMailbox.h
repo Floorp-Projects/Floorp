@@ -51,6 +51,7 @@
 #include "nsXPIDLString.h"
 #include "nsLocalStringBundle.h"
 #include "nsCOMPtr.h"
+#include "nsCOMArray.h"
 #include "nsTime.h"
 #include "nsFileSpec.h"
 #include "nsIDBChangeListener.h"
@@ -240,6 +241,7 @@ public:
   nsOutputFileStream *GetLogFile();
   virtual PRInt32 PublishMsgHeader(nsIMsgWindow *msgWindow);
   void            GetMsgWindow(nsIMsgWindow **aMsgWindow);
+          nsresult EndMsgDownload();
 protected:
   virtual void	ApplyFilters(PRBool *pMoved, nsIMsgWindow *msgWindow);
   virtual nsresult GetTrashFolder(nsIMsgFolder **pTrashFolder);
@@ -254,6 +256,7 @@ protected:
   nsCOMPtr <nsIMsgFolder> m_rootFolder;
   nsCOMPtr <nsIMsgWindow> m_msgWindow;
   nsCOMPtr <nsIMsgFolder> m_downloadFolder;
+  nsCOMArray <nsIMsgFolder> m_filterTargetFolders;
   nsIOFileStream  *m_inboxFileStream;
   nsFileSpec    m_inboxFileSpec;
   PRBool        m_disableFilters;

@@ -345,6 +345,7 @@ nsPop3Sink::EndMailDelivery(nsIPop3Protocol *protocol)
       m_outFileStream->flush();	// try this.
     m_newMailParser->OnStopRequest(nsnull, nsnull, NS_OK);
     m_newMailParser->SetDBFolderStream(nsnull); // stream is going away
+    m_newMailParser->EndMsgDownload();
   }
   if (m_outFileStream)
   {
