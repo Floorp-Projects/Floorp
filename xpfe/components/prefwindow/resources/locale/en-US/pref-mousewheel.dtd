@@ -1,7 +1,7 @@
 <!-- LOCALIZATION NOTE : FILE Mouse-wheel management prefs, for those lucky OSes that support mouse wheels -->
 
 <!ENTITY title.label                  "Mouse Wheel">
-<!ENTITY info.label                   "Mouse Wheel Configuration">
+<!ENTITY mouseWheelTitle.label        "Mouse wheel configuration">
 <!ENTITY mouseWheelPanel.label        "When ">
 <!ENTITY mouseWheelPanel.accesskey    "w">
 <!ENTITY usingJustTheWheel.label      "using just the mouse wheel">

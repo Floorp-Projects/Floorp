@@ -3,8 +3,8 @@
 <!--LOCALIZATION NOTE : FILE The Applications prefs dialog -->
 <!ENTITY window.title                   "Advanced">
 <!ENTITY lHeader                        "Applications">
-<!ENTITY rHeader                        "Specify helper applications for different file types">
-<!ENTITY descript                       "Description">
+<!ENTITY descript                       "Specifiy which application should handle each file type">
+<!ENTITY fileTypes.label                "File types:">
 <!ENTITY aimLaunchSelect.label          "AOL Instant Messenger Launch">
 <!ENTITY newTypeButton.label            "New Type...">
 <!ENTITY newTypeButton.accesskey        "n">
@@ -15,5 +15,5 @@
 <!ENTITY file                           "File type details">
 <!ENTITY exten                          "Extension:">
 <!--LOCALIZATION NOTE (mimeType): 'MIME' should not be translated -->
-<!ENTITY mimeType                       "MIME Type:">
-<!ENTITY handle                         "Handled By:">
+<!ENTITY mimeType                       "MIME type:">
+<!ENTITY handle                         "Handled by:">

@@ -20,7 +20,6 @@
    Contributor(s): 
   -->
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://communicator/skin/pref.css" type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-advanced.dtd" >
@@ -42,7 +41,7 @@
   
   function displayImageDialog()
   {
-    window.openDialog("chrome://pref/content/pref-imageblocking.xul", "", "chrome,resizable=no");
+    window.openDialog("chrome://communicator/content/pref/pref-imageblocking.xul", "", "chrome,resizable=no");
   }
 
   function updateImageFields( aInteger, aBoolean )
@@ -62,10 +61,10 @@
   ]]>
   </script>        
         
-  <box class="box-smallheader" title="&lHeader;" description="&rHeader;"/>
+  <box class="box-smallheader" title="&lHeader;"/>
 
   <titledbox orient="vertical" id="advancedSettings">
-	
+	  <title><text value="&advancedTitle.label;"/></title>
     <box autostretch="never">
       <checkbox id="advancedAlwaysLoadImages" value="&autoLoadImgCheck.label;" accesskey="&autoLoadImgCheck.accesskey;"
                 pref="true" preftype="bool" prefstring="advanced.always_load_images"
@@ -94,6 +93,10 @@
     <checkbox id="advancedMailFTP" value="&sendAddFtpCheck.label;" accesskey="&sendAddFtpCheck.accesskey;"
               pref="true" preftype="bool" prefstring="advanced.mailftp"
               prefattribute="checked"/>
+
+    <separator/>
+    
+    <html>&description.label;</html>
 	</titledbox>
 
   <!-- hidden elements to contain image blocking prefs -->
