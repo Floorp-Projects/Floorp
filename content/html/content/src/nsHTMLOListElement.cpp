@@ -142,6 +142,10 @@ nsGenericHTMLElement::EnumTable kListTypeTable[] = {
   { "upper-roman", NS_STYLE_LIST_STYLE_UPPER_ROMAN },
   { "lower-alpha", NS_STYLE_LIST_STYLE_LOWER_ALPHA },
   { "upper-alpha", NS_STYLE_LIST_STYLE_UPPER_ALPHA },
+  { 0 }
+};
+
+nsGenericHTMLElement::EnumTable kOtherListTypeTable[] = {
   { "A", NS_STYLE_LIST_STYLE_UPPER_ALPHA },
   { "a", NS_STYLE_LIST_STYLE_LOWER_ALPHA },
   { "I", NS_STYLE_LIST_STYLE_UPPER_ROMAN },
@@ -157,7 +161,10 @@ nsHTMLOListElement::StringToAttribute(nsIAtom* aAttribute,
   if (aAttribute == nsHTMLAtoms::type) {
     if (!nsGenericHTMLElement::ParseEnumValue(aValue, kListTypeTable,
                                               aResult)) {
-      aResult.SetIntValue(NS_STYLE_LIST_STYLE_DECIMAL, eHTMLUnit_Enumerated);
+      if (!nsGenericHTMLElement::ParseCaseSensitiveEnumValue(aValue,
+                                  kOtherListTypeTable, aResult)) {
+        aResult.SetIntValue(NS_STYLE_LIST_STYLE_DECIMAL, eHTMLUnit_Enumerated);
+      }
     }
     return NS_CONTENT_ATTR_HAS_VALUE;
   }

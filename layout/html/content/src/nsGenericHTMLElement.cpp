@@ -2016,6 +2016,21 @@ nsGenericHTMLElement::ParseEnumValue(const nsString& aValue,
 }
 
 PRBool
+nsGenericHTMLElement::ParseCaseSensitiveEnumValue(const nsString& aValue,
+                                                  EnumTable* aTable,
+                                                  nsHTMLValue& aResult)
+{
+  while (nsnull != aTable->tag) {
+    if (aValue.Equals(aTable->tag)) {
+      aResult.SetIntValue(aTable->value, eHTMLUnit_Enumerated);
+      return PR_TRUE;
+    }
+    aTable++;
+  }
+  return PR_FALSE;
+}
+
+PRBool
 nsGenericHTMLElement::EnumValueToString(const nsHTMLValue& aValue,
                                         EnumTable* aTable,
                                         nsString& aResult)
