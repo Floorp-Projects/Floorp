@@ -262,6 +262,7 @@ public:
 #endif
   NS_IMETHOD  SetSelected(nsIPresContext* aPresContext, nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread);
   NS_IMETHOD  GetSelected(PRBool *aSelected) const;
+  NS_IMETHOD  GetSelectionController(nsIPresContext *aPresContext, nsISelectionController **aSelCon);
   NS_IMETHOD  PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos) ;
   NS_IMETHOD  PeekOffsetParagraph(nsIPresContext* aPresContext,
                                   nsPeekOffsetStruct *aPos);
@@ -438,8 +439,6 @@ protected:
   // member function assumes that the caller has checked that the clip property
   // applies to its situation.
   void SetOverflowClipRect(nsIRenderingContext& aRenderingContext);
-
-  NS_IMETHOD GetSelectionController(nsIPresContext *aPresContext, nsISelectionController **aSelCon);
 
   nsRect           mRect;
   nsIContent*      mContent;

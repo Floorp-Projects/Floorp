@@ -2166,7 +2166,7 @@ nsFrame::ParentDisablesSelection() const
 
 
 
-nsresult 
+NS_IMETHODIMP
 nsFrame::GetSelectionController(nsIPresContext *aPresContext, nsISelectionController **aSelCon)
 {
   if (!aPresContext || !aSelCon)

@@ -74,6 +74,7 @@ struct nsRect;
 struct nsStyleStruct;
 class  nsIDOMRange;
 class  nsICaret;
+class  nsISelectionController;
 struct PRLogModuleInfo;
 
 // IID for the nsIFrame interface 
@@ -970,6 +971,13 @@ public:
                           nsSpread        aSpread) = 0;
 
   NS_IMETHOD  GetSelected(PRBool *aSelected) const = 0;
+
+  /** 
+   *  Called to retrieve the SelectionController associated with the frame.
+   *  @param aSelCon will contain the selection controller associated with
+   *  the frame.
+   */
+  NS_IMETHOD  GetSelectionController(nsIPresContext *aPresContext, nsISelectionController **aSelCon) = 0;
 
   /** EndSelection related calls
    */
