@@ -5,8 +5,8 @@
 # customizable settings.
 
 
-# $Revision: 1.30 $ 
-# $Date: 2002/05/02 01:55:37 $ 
+# $Revision: 1.31 $ 
+# $Date: 2002/05/02 01:58:00 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/TinderConfig.pm,v $ 
 # $Name:  $ 
@@ -323,7 +323,7 @@ $DEFAULT_HTML_PAGE = 'status.html';
 # This is used in TinderDB::Notice.pm
 
 #$NOTICE_AVAILABLE = "X";
-$NOTICE_AVAILABLE = "<img src='http://opt/apache/htdocs/tinderbox2/gif/star.gif' border=0>";
+$NOTICE_AVAILABLE = "<img src='http://lounge.mozilla.org/tinderbox2/gif/star.gif' border=0>";
 
 
 # The amount of time rmlogs keeps logs on file

@@ -1,8 +1,8 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 
 
-# $Revision: 1.17 $ 
-# $Date: 2002/05/02 01:55:37 $ 
+# $Revision: 1.18 $ 
+# $Date: 2002/05/02 01:58:00 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/BuildStatus.pm,v $ 
 # $Name:  $ 
@@ -121,7 +121,7 @@ package BuildStatus;
                         'hdml_char'=> '!',
                         # People are really attached to the flame gif
                         # for the header of broken builds
-                        'header_background'=> 'file:/opt/apache/htdocs/tinderbox2/gif/1afi003r.gif',  
+                        'header_background'=> 'http://lounge.mozilla.org/tinderbox2/gif/1afi003r.gif',  
                         'handler' => \&main::null,
                         'description' => 'Build failed',
                         'order' => 2
