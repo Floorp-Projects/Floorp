@@ -143,8 +143,8 @@ nsCJVMManagerFactory::nsCJVMManagerFactory(void)
       if ( (err == NS_OK) && (m_pNSIFactory != NULL) )
       {
          NS_DEFINE_CID(kCJVMManagerCID, NS_CCAPSMANAGER_CID);
-         nsRepository::RegisterFactory(kCJVMManagerCID, m_pNSIFactory,
-                                     PR_FALSE);
+         nsRepository::RegisterFactory(kCJVMManagerCID, NULL, NULL,
+                                     m_pNSIFactory, PR_FALSE);
       }
 #endif
 }
