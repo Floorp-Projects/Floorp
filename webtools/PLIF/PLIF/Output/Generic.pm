@@ -128,6 +128,9 @@ sub output {
     $self->fillData($data);
     $self->outputter->output($self->app, $session,
                              $self->app->getService('dataSource.strings')->getExpandedString($self->app, $session, $self->actualProtocol, $string, $data));
+                             # it's not that anyone would override dataSource.strings, it's just that
+                             # people might call it without calling output(), so the right thing here
+                             # is also to call it through getService().
 }
 
 # output.generic service instance method
@@ -158,19 +161,6 @@ sub fillData {
 }
 
 # dataSource.strings default implementation
-sub getExpandedString {
-    my $self = shift;
-    my($app, $session, $protocol, $name, $data) = @_;
-    my($type, $version, $string) = $self->getString($app, $session, $protocol, $name);
-    my $expander = $app->getService("string.expander.named.$name");
-    if (not defined($expander)) {
-        $expander = $app->getService("string.expander.$type");
-        $self->assert($expander, 1, "Could not find a string expander for string '$name' of type '$type'");
-    }
-    return $expander->expand($app, $self, $session, $protocol, $string, $data);
-}
-
-# dataSource.strings default implementation
 sub getString {
     my $self = shift;
     my($app, $session, $protocol, $name) = @_;
@@ -180,4 +170,24 @@ sub getString {
         $self->assert(scalar(@string), 1, "No suitable '$name' string available for the '$protocol' protocol");
     }
     return @string;
+}
+
+# dataSource.strings default implementation
+sub expandString {
+    my $self = shift;
+    my($app, $session, $protocol, $name, $type, $string, $data) = @_;
+    my $expander = $app->getService("string.expander.named.$name"); # XXX when would anyone override the expander based on the name??
+    if (not defined($expander)) {
+        $expander = $app->getService("string.expander.$type");
+        $self->assert($expander, 1, "Could not find a string expander for string '$name' of type '$type'");
+    }
+    return $expander->expand($app, $self, $session, $protocol, $string, $data, $type);
+}
+
+# dataSource.strings default implementation
+sub getExpandedString {
+    my $self = shift;
+    my($app, $session, $protocol, $name, $data) = @_;
+    my($type, $version, $string) = $self->getString($app, $session, $protocol, $name);
+    return $self->expandString($app, $session, $protocol, $name, $type, $string, $data);
 }
