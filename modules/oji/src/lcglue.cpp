@@ -32,6 +32,8 @@
 #include "nsCRT.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptObjectOwner.h"
+#include "nsIScriptSecurityManager.h"
+#include "nsNetUtil.h"
 
 extern "C" int XP_PROGRESS_STARTING_JAVA;
 extern "C" int XP_PROGRESS_STARTING_JAVA_DONE;
@@ -317,16 +319,36 @@ ConvertNSIPrincipalArrayToObject(JNIEnv *pJNIEnv, JSContext *pJSContext, void  *
 static JSPrincipals* PR_CALLBACK
 get_JSPrincipals_from_java_caller_impl(JNIEnv *pJNIEnv, JSContext *pJSContext, void  **ppNSIPrincipalArrayIN, int numPrincipals, void *pNSISecurityContext)
 {
-#if 0
-    // TODO: FIX lm_taint.c to receive nsIPrincipals. Get help from Tom Pixley.
-    void *pNSIPrincipalArrayObject  = ConvertNSIPrincipalArrayToObject(pJNIEnv, pJSContext, ppNSIPrincipalArrayIN, numPrincipals, pNSISecurityContext);
-    if (pNSIPrincipalArrayObject != NULL)
-    {
-        return LM_GetJSPrincipalsFromJavaCaller(pJSContext, pNSIPrincipalArrayObject, pNSISecurityContext);
+    nsISupports* credentials = (nsISupports*) pNSISecurityContext;
+    nsCOMPtr<nsISecurityContext> securityContext = do_QueryInterface(credentials);
+    if (securityContext) {
+        nsresult rv;
+        nsCOMPtr<nsIScriptSecurityManager> ssm = do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+        if (NS_SUCCEEDED(rv)) {
+            char codebase[512];
+            rv = securityContext->GetOrigin(codebase, sizeof(codebase) - 1);
+            if (NS_SUCCEEDED(rv)) {
+                nsCOMPtr<nsIURI> codebaseURI;
+                rv = NS_NewURI(getter_AddRefs(codebaseURI), codebase);
+                if (NS_SUCCEEDED(rv)) {
+                    nsCOMPtr<nsIPrincipal> principal;
+                    rv = ssm->GetCodebasePrincipal(codebaseURI, getter_AddRefs(principal));
+                    if (NS_SUCCEEDED(rv)) {
+                        JSPrincipals* jsprincipals;
+                        principal->GetJSPrincipals(&jsprincipals);
+                        return jsprincipals;
+                    }
+                }
+            }
+        }
+    } else {
+        nsCOMPtr<nsIPrincipal> principal = do_QueryInterface(credentials);
+        if (principal) {
+            JSPrincipals* jsprincipals;
+            principal->GetJSPrincipals(&jsprincipals);
+            return jsprincipals;
+        }
     }
-
-#endif
-    // PR_ASSERT(PR_FALSE);
     return NULL;
 }
 
