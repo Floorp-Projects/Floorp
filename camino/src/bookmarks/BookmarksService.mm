@@ -113,12 +113,10 @@ static bool ElementIsOrContains(nsIDOMElement* inSearchRoot, nsIDOMElement* inFi
     return true;
     
   // recurse to children
-  PRInt32 numChildren;
-  curContent->ChildCount(numChildren);
+  PRInt32 numChildren=curContent->GetChildCount();
   for (PRInt32 i = 0; i < numChildren; i ++)
   {
-    nsCOMPtr<nsIContent> curChild;
-    curContent->ChildAt(i, getter_AddRefs(curChild));
+    nsIContent *curChild=curContent->GetChildAt(i);
     
     nsCOMPtr<nsIDOMElement> curElt = do_QueryInterface(curChild);
     if (ElementIsOrContains(curElt, inFindElt))
@@ -150,12 +148,10 @@ static bool SearchChildrenForMatchingFolder(nsIDOMElement* inCurElt, const nsASt
   }
 
   // recurse to children
-  PRInt32 numChildren;
-  curContent->ChildCount(numChildren);
+  PRInt32 numChildren=curContent->GetChildCount();
   for (PRInt32 i = 0; i < numChildren; i ++)
   {
-    nsCOMPtr<nsIContent> curChild;
-    curContent->ChildAt(i, getter_AddRefs(curChild));
+    nsIContent *curChild=curContent->GetChildAt(i);
     
     nsCOMPtr<nsIDOMElement> curElt = do_QueryInterface(curChild);
     if (SearchChildrenForMatchingFolder(curElt, inAttribute, inValue, foundElt))
@@ -338,13 +334,11 @@ NotifyDescendents(nsIContent* aChangeParent, nsIContent *aChangeContent, PRBool 
   (*changeFunction)(aChangeParent, aChangeContent, aChangeRoot);
 
   // notify children
-  PRInt32 childCount;
-  aChangeContent->ChildCount(childCount);
+  PRInt32 childCount=aChangeContent->GetChildCount();
   
   for (PRInt32 i = 0; i < childCount; i++)
   {
-    nsCOMPtr<nsIContent> child;
-    aChangeContent->ChildAt(i, getter_AddRefs(child));
+    nsIContent *child=aChangeContent->GetChildAt(i);
     NotifyDescendents(aChangeContent, child, PR_FALSE, changeFunction);
   }
 }
@@ -1085,12 +1079,10 @@ AddImportedChimeraXMLBookmarks(nsIDOMDocument* inImportDoc, nsIDOMDocument* inDe
   nsCOMPtr<nsIContent> rootContent = do_QueryInterface(importRoot);
   if (!rootContent) return PR_FALSE;
 
-  PRInt32 numChildren;
-  rootContent->ChildCount(numChildren);
+  PRInt32 numChildren=rootContent->GetChildCount();
   for (PRInt32 i = 0; i < numChildren; i ++)
   {
-    nsCOMPtr<nsIContent> curChild;
-    rootContent->ChildAt(i, getter_AddRefs(curChild));
+    nsIContent *curChild=rootContent->GetChildAt(i);
   
     // clone it, and put it under the importedRoot.
     nsCOMPtr<nsIDOMElement> childElement = do_QueryInterface(curChild);
@@ -1737,16 +1729,14 @@ BookmarksService::PerformURLDrop(BookmarkItem* parentItem, BookmarkItem* beforeI
 
 - (NSArray*)getChildren
 {
-  PRInt32 numChildren;
-  mContentNode->ChildCount(numChildren);
+  PRInt32 numChildren=mContentNode->GetChildCount();
   if (numChildren == 0)
     return nil;
 
   NSMutableArray* array = [[[NSMutableArray alloc] initWithCapacity:numChildren] autorelease];
   for (PRInt32 i = 0; i < numChildren; i ++)
   {
-    nsCOMPtr<nsIContent> childContent;
-    mContentNode->ChildAt(i, getter_AddRefs(childContent));
+    nsIContent *childContent=mContentNode->GetChildAt(i);
     [array addObject:BookmarksService::GetWrapperFor(childContent)];
   }
   
@@ -1755,8 +1745,7 @@ BookmarksService::PerformURLDrop(BookmarkItem* parentItem, BookmarkItem* beforeI
 
 - (int)getNumberOfChildren
 {
-  PRInt32 numChildren;
-  mContentNode->ChildCount(numChildren);
+  PRInt32 numChildren=mContentNode->GetChildCount();
   return numChildren;
 }
 
@@ -2045,15 +2034,13 @@ static BOOL gMadeBMManager;
   if (group.IsEmpty())
     return nil;
 
-  PRInt32 numChildren;
-  content->ChildCount(numChildren);
+  PRInt32 numChildren=content->GetChildCount();
 
   NSMutableArray* uriArray = [[[NSMutableArray alloc] initWithCapacity:numChildren] autorelease];
 
   for (PRInt32 i = 0; i < numChildren; i ++)
   {
-    nsCOMPtr<nsIContent> child;
-    content->ChildAt(i, getter_AddRefs(child));
+    nsIContent *child=content->GetChildAt(i);
 
     nsAutoString href;
     child->GetAttr(kNameSpaceID_None, BookmarksService::gHrefAtom, href);
@@ -2111,15 +2098,13 @@ static BOOL gMadeBMManager;
       if ([foundItem isGroup])
       {
         // do keyword expansion on each child
-        PRInt32 numChildren;
-        foundContent->ChildCount(numChildren);
+        PRInt32 numChildren=foundContent->GetChildCount();
       
         NSMutableArray* uriArray = [[[NSMutableArray alloc] initWithCapacity:numChildren] autorelease];
       
         for (PRInt32 i = 0; i < numChildren; i ++)
         {
-          nsCOMPtr<nsIContent> child;
-          foundContent->ChildAt(i, getter_AddRefs(child));
+          nsIContent *child=foundContent->GetChildAt(i);
       
           nsAutoString href;
           child->GetAttr(kNameSpaceID_None, BookmarksService::gHrefAtom, href);
@@ -2298,13 +2283,11 @@ static BOOL gMadeBMManager;
   if (!content) return;
   
   // Now walk our children, and for folders also recur into them.
-  PRInt32 childCount;
-  content->ChildCount(childCount);
+  PRInt32 childCount=content->GetChildCount();
   
   for (PRInt32 i = 0; i < childCount; i++)
   {
-    nsCOMPtr<nsIContent> child;
-    content->ChildAt(i, getter_AddRefs(child));
+    nsIContent *child=content->GetChildAt(i);
     [self buildFoldersListProcessItem:menu curNode:child depth:depth];
   }
 }

@@ -540,8 +540,7 @@ const int kBookmarksRootItemTag = -2;
   else
     content = [item contentNode];
   
-  nsCOMPtr<nsIContent> child;
-  content->ChildAt(index, getter_AddRefs(child));
+  nsIContent *child=content->GetChildAt(index);
   if ( child )
     return BookmarksService::GetWrapperFor(child);
   
@@ -570,7 +569,7 @@ const int kBookmarksRootItemTag = -2;
   
   PRInt32 childCount = 0;
   if ( content )
-	content->ChildCount(childCount);
+	childCount=content->GetChildCount();
   
   return childCount;
 }

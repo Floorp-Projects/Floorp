@@ -87,13 +87,11 @@
   if (!content) return;
 
   // Now walk our children, and for folders also recur into them.
-  PRInt32 childCount;
-  content->ChildCount(childCount);
+  PRInt32 childCount=content->GetChildCount();
   
   for (PRInt32 i = 0; i < childCount; i++)
   {
-    nsCOMPtr<nsIContent> child;
-    content->ChildAt(i, getter_AddRefs(child));
+    nsIContent *child=content->GetChildAt(i);
     [self addBookmark:menu parent:content child:child index:-1];
   }
 }
