@@ -37,6 +37,7 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <unistd.h>
+#include <stdlib.h> // atoi
 #endif
 
 #ifdef XP_BEOS
