@@ -322,6 +322,10 @@ NS_IMETHODIMP nsAppShell::Spinup()
 
     /* Ask again nicely for the event queue now that we have created one. */
     rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(mEventQueue));
+    if (NS_FAILED(rv)) {
+      NS_WARNING("Could not get the thread event queue");
+      return rv;
+    }
   }
 
   ListenToEventQueue(mEventQueue, PR_TRUE);
@@ -398,6 +402,11 @@ PR_END_EXTERN_C
 NS_IMETHODIMP nsAppShell::ListenToEventQueue(nsIEventQueue *aQueue,
                                              PRBool aListen)
 {
+  if (!mEventQueue) {
+    NS_WARNING("nsAppShell::ListenToEventQueue(): No event queue available.");
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+  
 #ifdef DEBUG_APPSHELL
   printf("ListenToEventQueue(%p, %d) this=%p\n", aQueue, aListen, this);
 #endif
