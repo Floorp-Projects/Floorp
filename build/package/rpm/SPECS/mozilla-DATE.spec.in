@@ -2,7 +2,7 @@ Name:        mozilla
 Summary:     Web browser and mail reader
 Version:     DATE
 Release:     0_rh7
-Serial:      26
+Serial:      31
 Copyright:   MPL
 Source0:     mozilla-source-DATE.tar.gz
 Source1:     mozilla.sh
@@ -21,7 +21,6 @@ Patch1:      mozilla-editor-overlay-menu.patch
 Patch6:      mozilla-prefs-debug.patch
 Patch7:      mozilla-redhat-home-page.patch
 Patch8:      mozilla-redhat-mail-home-page.patch
-Patch9:      mozilla-alpha-compiler.patch
 Patch10:     mozilla-redhat-home-page-6.2.patch
 Patch11:     mozilla-taskbar-nomozilla.patch
 Buildroot:   /var/tmp/mozilla-root
@@ -94,8 +93,6 @@ fi
 
 %patch8 -p1
 %patch8 -p1 -R
-
-#%patch9 -p1 -b .alpha-compiler
 
 %patch11 -p1
 %patch11 -p1 -R
@@ -419,6 +416,9 @@ fi
 
 
 %changelog
+* Sun Aug 05 2001 Christopher Blizzard <blizzard@redhat.com>
+- Remove alpha compiler patch.
+
 * Sun Jul 08 2001 Christopher Blizzard <blizzard@redhat.com>
 - add --shared to the deflenus package section so that things don't
   end up in /usr/lib/defaults
