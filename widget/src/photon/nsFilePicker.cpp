@@ -307,29 +307,6 @@ NS_IMETHODIMP nsFilePicker::SetDefaultExtension(const nsAString& aExtension)
 }
 
 //-------------------------------------------------------------------------
-//
-// Set the display directory
-//
-//-------------------------------------------------------------------------
-NS_IMETHODIMP nsFilePicker::SetDisplayDirectory(nsILocalFile *aDirectory)
-{
-  mDisplayDirectory = aDirectory;
-  return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-//
-// Get the display directory
-//
-//-------------------------------------------------------------------------
-NS_IMETHODIMP nsFilePicker::GetDisplayDirectory(nsILocalFile **aDirectory)
-{
-  *aDirectory = mDisplayDirectory;
-  NS_IF_ADDREF(*aDirectory);
-  return NS_OK;
-}
-
-//-------------------------------------------------------------------------
 void nsFilePicker::InitNative(nsIWidget *aParent,
                               const nsAString& aTitle,
                               PRInt16 aMode)

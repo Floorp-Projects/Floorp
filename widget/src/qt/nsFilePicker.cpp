@@ -144,21 +144,6 @@ nsFilePicker::SetFilterIndex(PRInt32 aFilterIndex)
     return NS_OK;
 }
 
-/* attribute nsILocalFile displayDirectory; */
-NS_IMETHODIMP
-nsFilePicker::GetDisplayDirectory(nsILocalFile * *aDisplayDirectory)
-{
-    NS_IF_ADDREF(*aDisplayDirectory = mDisplayDirectory);
-
-    return NS_OK;
-}
-NS_IMETHODIMP
-nsFilePicker::SetDisplayDirectory(nsILocalFile * aDisplayDirectory)
-{
-    mDisplayDirectory = aDisplayDirectory;
-    return NS_OK;
-}
-
 /* readonly attribute nsILocalFile file; */
 NS_IMETHODIMP
 nsFilePicker::GetFile(nsILocalFile * *aFile)

@@ -67,8 +67,6 @@ public:
   NS_IMETHOD SetDefaultString(const nsAString& aDefaultString);
   NS_IMETHOD GetDefaultExtension(nsAString& aDefaultExtension);
   NS_IMETHOD SetDefaultExtension(const nsAString& aDefaultExtension);
-  NS_IMETHOD GetDisplayDirectory(nsILocalFile * *aDisplayDirectory);
-  NS_IMETHOD SetDisplayDirectory(nsILocalFile * aDisplayDirectory);
   NS_IMETHOD GetFilterIndex(PRInt32 *aFilterIndex);
   NS_IMETHOD SetFilterIndex(PRInt32 aFilterIndex);
   NS_IMETHOD GetFile(nsILocalFile * *aFile);
@@ -94,7 +92,6 @@ protected:
   nsString               mDefault;
   nsString               mDefaultExtension;
   nsString               mFilterList;
-  nsCOMPtr<nsILocalFile> mDisplayDirectory;
   PRInt16                mSelectedType;
   nsCOMPtr <nsISupportsArray> mFiles;
   static char            mLastUsedDirectory[];

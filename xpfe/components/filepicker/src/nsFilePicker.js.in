@@ -96,8 +96,15 @@ function nsFilePicker()
 nsFilePicker.prototype = {
 
   /* attribute nsILocalFile displayDirectory; */
-  set displayDirectory(a) { this.mDisplayDirectory = a; },
-  get displayDirectory()  { return this.mDisplayDirectory; },
+  set displayDirectory(a) {
+    this.mDisplayDirectory = a &&
+      a.clone().QueryInterface(nsILocalFile);
+  },
+  get displayDirectory()  {
+    return this.mDisplayDirectory &&
+           this.mDisplayDirectory.clone()
+               .QueryInterface(nsILocalFile);
+  },
 
   /* readonly attribute nsILocalFile file; */
   set file(a) { throw "readonly property"; },

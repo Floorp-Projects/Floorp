@@ -48,7 +48,6 @@
 #define DARWIN  
 
 #include "nsCOMPtr.h"
-#include "nsCRT.h"
 #include "nsReadableUtils.h"
 #include "nsNetUtil.h"
 #include "nsIComponentManager.h"
@@ -396,7 +395,7 @@ nsFilePicker::PanelDefaultDirectory()
   if (mDisplayDirectory) {
     nsAutoString pathStr;
     mDisplayDirectory->GetPath(pathStr);
-    directory = [[[NSString alloc] initWithCharacters:pathStr.get() length:nsCRT::strlen(pathStr.get())] autorelease];
+    directory = [[[NSString alloc] initWithCharacters:pathStr.get() length:pathStr.Length()] autorelease];
   }
   return directory;
 }
@@ -475,30 +474,6 @@ NS_IMETHODIMP nsFilePicker::SetDefaultExtension(const nsAString& aExtension)
 {
   return NS_OK;
 }
-
-//-------------------------------------------------------------------------
-//
-// Set the display directory
-//
-//-------------------------------------------------------------------------
-NS_IMETHODIMP nsFilePicker::SetDisplayDirectory(nsILocalFile *aDirectory)
-{
-  mDisplayDirectory = aDirectory;
-  return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-//
-// Get the display directory
-//
-//-------------------------------------------------------------------------
-NS_IMETHODIMP nsFilePicker::GetDisplayDirectory(nsILocalFile **aDirectory)
-{
-  *aDirectory = mDisplayDirectory;
-  NS_IF_ADDREF(*aDirectory);
-  return NS_OK;
-}
-
 
 //-------------------------------------------------------------------------
 //

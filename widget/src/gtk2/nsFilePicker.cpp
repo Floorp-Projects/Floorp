@@ -396,22 +396,6 @@ nsFilePicker::SetFilterIndex(PRInt32 aFilterIndex)
 }
 
 NS_IMETHODIMP
-nsFilePicker::SetDisplayDirectory(nsILocalFile *aDirectory)
-{
-  mDisplayDirectory = aDirectory;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFilePicker::GetDisplayDirectory(nsILocalFile **aDirectory)
-{
-  NS_IF_ADDREF(*aDirectory = mDisplayDirectory);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsFilePicker::GetFile(nsILocalFile **aFile)
 {
   NS_ENSURE_ARG_POINTER(aFile);
