@@ -1270,7 +1270,7 @@ public class Interpreter extends LabelTable {
                                     " " + count + " \"" + 
                                     getString(theData.itsStringTable, iCode, 
                                               pc + 1) + "\"");
-                                pc += 4;
+                                pc += 5;
                             }
                             break;
                         case TokenStream.NUMBER :

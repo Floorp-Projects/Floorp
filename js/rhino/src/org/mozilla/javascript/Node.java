@@ -303,7 +303,6 @@ public class Node implements Cloneable {
                 "vars",
                 "uses",
                 "regexp",
-                "switches",
                 "cases",
                 "default",
                 "casearray",
