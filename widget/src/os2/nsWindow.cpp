@@ -2043,7 +2043,7 @@ BOOL nsWindow::CallMethod(MethodInfo *info)
 //
 PRBool nsWindow::OnKey( MPARAM mp1, MPARAM mp2)
 {
-   nsKeyEvent event;
+   nsKeyEvent event, pressEvent;
    USHORT     fsFlags = SHORT1FROMMP(mp1);
    USHORT     usVKey = SHORT2FROMMP(mp2);
    USHORT     usChar = SHORT1FROMMP(mp2);
@@ -2095,6 +2095,8 @@ PRBool nsWindow::OnKey( MPARAM mp1, MPARAM mp2)
       }
    }
 
+   pressEvent = event;
+
    PRBool rc = DispatchWindowEvent( &event);
 
    // Break off now if this was a key-up.
@@ -2118,7 +2120,7 @@ PRBool nsWindow::OnKey( MPARAM mp1, MPARAM mp2)
 
    // Now we need to dispatch a keypress event which has the unicode char.
 
-   event.message = NS_KEY_PRESS;
+   pressEvent.message = NS_KEY_PRESS;
 
    if( usChar)
    {
@@ -2130,39 +2132,39 @@ PRBool nsWindow::OnKey( MPARAM mp1, MPARAM mp2)
 
       MultiByteToWideChar(0, (const char*)inbuf, 2, outbuf, 4);
 
-      event.charCode = outbuf[0];
+      pressEvent.charCode = outbuf[0];
 
-      if (event.isControl && !(fsFlags & (KC_VIRTUALKEY | KC_DEADKEY))) {
-        if (!event.isShift && (event.charCode >= 'A' && event.charCode <= 'Z'))
+      if (pressEvent.isControl && !(fsFlags & (KC_VIRTUALKEY | KC_DEADKEY))) {
+        if (!pressEvent.isShift && (pressEvent.charCode >= 'A' && pressEvent.charCode <= 'Z'))
         {
-          event.charCode = tolower(event.charCode);
+          pressEvent.charCode = tolower(pressEvent.charCode);
         }
-        if (event.isShift && (event.charCode >= 'a' && event.charCode <= 'z'))
+        if (pressEvent.isShift && (pressEvent.charCode >= 'a' && pressEvent.charCode <= 'z'))
         {
-          event.charCode = toupper(event.charCode);
+          pressEvent.charCode = toupper(pressEvent.charCode);
         }
-        event.keyCode = 0;
-      } else if( !event.isControl && !event.isAlt && event.charCode != 0)
+        pressEvent.keyCode = 0;
+      } else if( !pressEvent.isControl && !pressEvent.isAlt && pressEvent.charCode != 0)
       {
          if ( !(fsFlags & KC_VIRTUALKEY) || 
-              ((fsFlags & KC_CHAR) && (event.keyCode == 0)) )
+              ((fsFlags & KC_CHAR) && (pressEvent.keyCode == 0)) )
          {
-            event.isShift = PR_FALSE;
-            event.keyCode = 0;
+            pressEvent.isShift = PR_FALSE;
+            pressEvent.keyCode = 0;
          }
          else if (usVKey == VK_SPACE)
          {
-//            event.isShift = PR_FALSE;
+//            pressEvent.isShift = PR_FALSE;
          }
          else  // Real virtual key 
          {
-            event.charCode = 0;
+            pressEvent.charCode = 0;
          }
       }
    }
 
-   rc = DispatchWindowEvent( &event);
-   NS_RELEASE( event.widget);
+   rc = DispatchWindowEvent( &pressEvent);
+   NS_RELEASE( pressEvent.widget);
    return rc;
 }
 
