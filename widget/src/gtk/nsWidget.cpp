@@ -23,15 +23,19 @@
 #include "nsRepository.h"
 #include <gdk/gdkx.h>
 
+// BGR, not RGB
 #define NSCOLOR_TO_GDKCOLOR(g,n) \
-  g.red=NS_GET_R(n); \
+  g.red=NS_GET_B(n); \
   g.green=NS_GET_G(n); \
-  g.blue=NS_GET_B(n);
+  g.blue=NS_GET_R(n);
+
+// #define DBG 1
 
 nsWidget::nsWidget()
 {
   // XXX Shouldn't this be done in nsBaseWidget? 
   NS_INIT_REFCNT();
+  mBackground = NS_RGB(214,214,214);
   mGC = nsnull;
   mWidget = nsnull;
   mParent = nsnull;
@@ -241,6 +245,9 @@ NS_METHOD nsWidget::SetBackgroundColor(const nscolor &aColor)
     mBackground = aColor;
 
     NSCOLOR_TO_GDKCOLOR(color, aColor);
+#ifdef DBG
+    g_print("nsWidget::SetBackgroundColor %d %d %d\n", color.red, color.blue, color.green);
+#endif
     style = gtk_style_copy(mWidget->style);
     style->bg[GTK_STATE_NORMAL] = color;
     gtk_widget_set_style(mWidget, style);
