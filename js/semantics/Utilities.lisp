@@ -155,7 +155,7 @@
 ;;; ------------------------------------------------------------------------------------------------------
 ;;; VALUE ASSERTS
 
-(eval-when (:compile-toplevel :load-toplevel)
+(eval-when (:compile-toplevel :load-toplevel :execute)
   (defconstant *value-asserts* t))
 
 ; Assert that (test value) returns non-nil.  Return value.
