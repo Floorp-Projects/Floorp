@@ -496,6 +496,7 @@ nsSliderFrame::HandleEvent(nsIPresContext* aPresContext,
 
        nsIFrame* thumbFrame = mFrames.FirstChild();
 
+#ifdef OLD_SLIDER_FRAME_OFFSET_CALCULATION
 
        // get it into our coordintate system by subtracting our parents offsets.
        nsIFrame* parent = this;
@@ -533,6 +534,68 @@ nsSliderFrame::HandleEvent(nsIPresContext* aPresContext,
 
          parent->GetParent(&parent);
        }
+
+#else // Kin's new offset calculation code.
+
+       // start is relative to the upper left corner of the rootview's widget,
+       // unless the slider frame is in a popup, in which case it's relative
+       // to the upper left corner of the popup's widget. We need start to be
+       // in the coordinate system for the frame's contained view so that it
+       // matches aEvent->point's coordinate system.
+
+       nsIView *view = nsnull;
+
+       this->GetView(aPresContext, &view);
+
+       if (!view) {
+         // hmmmm, we don't have a contained view, let's
+         // just use our parent view.
+
+         nsIFrame *parent = nsnull;
+         GetParentWithView(aPresContext, &parent);
+
+         if (parent)
+           parent->GetView(aPresContext, &view);
+       }
+
+       nsCOMPtr<nsIWidget> rootWidget;
+
+       if (view) {
+         nsCOMPtr<nsIViewManager> vm;
+         view->GetViewManager(*getter_AddRefs(vm));
+         if (vm)
+           vm->GetWidget(getter_AddRefs(rootWidget));
+       }
+
+       if (view && rootWidget) {
+         // Now walk view's parent hierarchy, subtracting off the
+         // positions of each parent view, until we hit the view
+         // that contains the root or popup widget.
+         //
+         // When we're done, start should be in our contained
+         // view's coordinate system.
+
+         while (view) {
+           nsCOMPtr<nsIWidget> widget;
+           view->GetWidget(*getter_AddRefs(widget));
+
+           if (widget) {
+             nsWindowType windowType;
+             widget->GetWindowType(windowType);
+
+             if (widget == rootWidget || windowType == eWindowType_popup)
+               break;
+           }
+
+           nscoord vx=0, vy=0;
+           view->GetPosition(&vx, &vy);
+           isHorizontal ? start -= vx : start -= vy;
+
+           view->GetParent(view);
+         }
+       }
+
+#endif // Kin's new offset calculation code.
 
       //printf("Translated to start=%d\n",start);
 

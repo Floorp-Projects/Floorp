@@ -1151,6 +1151,13 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
 
   viewManager->MoveViewTo(view, xpos, ypos); 
 
+  // Now that we've positioned the view, sync up the frame's origin.
+  nsPoint frameOrigin, offsetToView;
+  GetOrigin(frameOrigin);
+  GetOriginToViewOffset(aPresContext, offsetToView, nsnull);
+  frameOrigin -= offsetToView;
+  nsBoxFrame::MoveTo(aPresContext, frameOrigin.x, frameOrigin.y);
+
   nsCOMPtr<nsIContent> parentContent;
   aFrame->GetContent(getter_AddRefs(parentContent));
   nsCOMPtr<nsIAtom> tag;
