@@ -686,8 +686,8 @@ nsEditor::Do(nsITransaction *aTxn)
   
   PRBool  isTransientTransaction;
   if (NS_SUCCEEDED(result) &&
-      NS_SUCCEEDED(aTxn->GetIsTransient(&isTransientTransaction) &&
-      !isTransientTransaction))		// don't count transient transactions
+      NS_SUCCEEDED(aTxn->GetIsTransient(&isTransientTransaction)) &&
+      !isTransientTransaction)		// don't count transient transactions
     result = IncDocModCount(+1);
     
   return result;
