@@ -147,11 +147,11 @@ public:
     *
     * TODO: rename this method to reflect that it is a Nav4 compatibility method
     */
-  virtual PRBool BalanceColumnsHTML4Constrained(nsIPresContext*  aPresContext,
-                                                PRInt32 aAvailWidth,
-                                                PRInt32 aMaxWidth,
-                                                PRInt32 aMinTableWidth, 
-                                                PRInt32 aMaxTableWidth)=0;
+  virtual PRBool BalanceColumnsConstrained(nsIPresContext*  aPresContext,
+                                           PRInt32 aAvailWidth,
+                                           PRInt32 aMaxWidth,
+                                           PRInt32 aMinTableWidth, 
+                                           PRInt32 aMaxTableWidth)=0;
 
 
 };
