@@ -196,7 +196,7 @@ components/libucvlatin.so
 components/unicharutil.xpt
 components/libchardet.so
 ; optional - on english only systems
-; components/libucvja.so for japanese 
+; components/libucvja.so for japanese
 ; components/libucvko.so for korean
 ; components/libucvcn.so for simplified chinese
 ; components/libucvtw.so for traditional chinese
@@ -254,3 +254,4 @@ res/forms.css
 res/arrow.gif
 res/arrowd.gif
 res/builtin/*
+res/entityTables/*
