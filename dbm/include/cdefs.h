@@ -97,7 +97,10 @@
 #define	__CONCAT(x,y)	x ## y
 #define	__STRING(x)	#x
 
+/* On HP-UX 11.00, <sys/stdsyms.h> defines __const. */
+#ifndef __const
 #define	__const		const		/* define reserved names to standard */
+#endif  /* __const */
 #define	__signed	signed
 #define	__volatile	volatile
 #ifndef _WINDOWS
