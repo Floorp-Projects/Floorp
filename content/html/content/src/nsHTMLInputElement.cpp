@@ -602,8 +602,12 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
   aAttributes->GetAttribute(nsHTMLAtoms::type, value);
   if (eHTMLUnit_Enumerated == value.GetUnit()) {  
     switch (value.GetIntValue()) {
-      case NS_FORM_INPUT_CHECKBOX:
-      case NS_FORM_INPUT_RADIO: 
+//XXX when there exists both a Standard and Quirks ua.css, remove this code 
+//XXX it may be needed again if we don't have 2 ua.css files
+//XXX this is now handled by attribute selectors in ua.css
+#if 0
+    case NS_FORM_INPUT_CHECKBOX:
+      case NS_FORM_INPUT_RADIO:
       {
         float p2t;
         aPresContext->GetScaledPixelsToTwips(&p2t);
@@ -631,6 +635,7 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
         }
         break;
       }
+#endif
       case NS_FORM_INPUT_IMAGE:
       {
         // Apply the image border as well. For form elements the color is
