@@ -84,9 +84,11 @@ class CAppearancePrefs : public CBrowserPropertyPage {
 class CFontsPrefs : public CBrowserPropertyPage {
 	public:
 		CFontsPrefs();
+		~CFontsPrefs();
 
 	protected:
 		STDMETHODIMP Activate(HWND hwndParent, LPCRECT lprc, BOOL bModal);
+		STDMETHODIMP Deactivate();
 		BOOL		 DoTransfer(BOOL bSaveAndValidate);
 		BOOL		 ApplyChanges();			
 		BOOL		 InitDialog();
@@ -107,6 +109,8 @@ class CFontsPrefs : public CBrowserPropertyPage {
 		int			m_nFixedSize;
 		DWORD		m_dwEncodings;
 		int			m_nCharset;  // charset num for currently selected encoding
+		int			m_nPrevCharset;  // previous charset num (to handle changes)
+        ENCODINGINFO* m_pNewSettings;
 		int			m_nUseDocumentFonts;
 		int			m_nMaxFontHeight;
 		BOOL		m_bDBCSEnabled;

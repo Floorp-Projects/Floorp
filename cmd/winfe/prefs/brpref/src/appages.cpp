@@ -147,6 +147,13 @@ CFontsPrefs::CFontsPrefs()
 	m_lpIntlFont = NULL;
 	m_nMaxFontHeight = 0;
 	m_bDBCSEnabled = GetSystemMetrics(SM_DBCSENABLED);
+    m_pNewSettings = 0;
+}
+
+// Clean up member data.
+CFontsPrefs::~CFontsPrefs() {
+    // Free ENCODINGINFO array.
+    delete [] m_pNewSettings;
 }
 
 
@@ -201,10 +208,38 @@ CFontsPrefs::Activate(HWND hwndParent, LPCRECT lprc, BOOL bModal)
 
 			m_lpIntlFont->GetCurrentCharset(&dwCharsetNum);
 			m_nCharset = (int)dwCharsetNum;
+
+            // Initialize change tracking stuff.
+            m_nPrevCharset         = m_nCharset;
+            if ( !m_pNewSettings ) {
+                m_pNewSettings         = new ENCODINGINFO[ m_dwEncodings ];
+                for( unsigned int i = 0; i < m_dwEncodings; i++ ) {
+                    // Flag each element as "unused."
+                    m_pNewSettings[i].nVariableWidthSize =
+                        m_pNewSettings[i].nFixedWidthSize = -1;
+                }
+            }
 		}
 	}
 
 	return CBrowserPropertyPage::Activate(hwndParent, lprc, bModal);
+}
+
+// Treat deactivating as if encoding changed.
+STDMETHODIMP
+CFontsPrefs::Deactivate() {
+    assert( m_nPrevCharset >= 0 && (DWORD)m_nPrevCharset < m_dwEncodings && m_pNewSettings );
+
+    // Get dialog contents.
+    DoTransfer( TRUE );
+
+    // Store the new settings (even if they haven't changed).
+    m_pNewSettings[m_nPrevCharset].nVariableWidthSize = m_nVariableSize;
+    lstrcpy(m_pNewSettings[m_nPrevCharset].szVariableWidthFont, (LPCSTR)m_strVariableFaceName);
+    m_pNewSettings[m_nPrevCharset].nFixedWidthSize = m_nFixedSize;
+    lstrcpy(m_pNewSettings[m_nPrevCharset].szFixedWidthFont, (LPCSTR)m_strFixedFaceName);
+
+    return CBrowserPropertyPage::Deactivate();
 }
 
 // Called whenever the value of the encoding combo box is changed.
@@ -215,15 +250,41 @@ CFontsPrefs::OnEncodingChanged()
 	// Get the font and font sizes to use for this encoding
 	assert(m_lpIntlFont);
 	if (m_lpIntlFont) {
+        assert( m_nPrevCharset >= 0 && (DWORD)m_nPrevCharset < m_dwEncodings && m_pNewSettings );
+        // If selected charset changed, save pending input.
+        if ( m_nPrevCharset != m_nCharset ) {
+            // Update data members from dialog fields.
+            DoTransfer( TRUE );
+
+            // Store the changes for the previous charset.
+            m_pNewSettings[m_nPrevCharset].nVariableWidthSize = m_nVariableSize;
+            lstrcpy(m_pNewSettings[m_nPrevCharset].szVariableWidthFont, (LPCSTR)m_strVariableFaceName);
+            m_pNewSettings[m_nPrevCharset].nFixedWidthSize = m_nFixedSize;
+            lstrcpy(m_pNewSettings[m_nPrevCharset].szFixedWidthFont, (LPCSTR)m_strFixedFaceName);
+
+            // Store newly selected charset as the "previous" one for next time.
+            m_nPrevCharset = m_nCharset;
+        }
+
 		ENCODINGINFO	info;
 
 		// Get the face name and size to use for this encoding
-		m_lpIntlFont->GetEncodingInfo(m_nCharset, &info);
-		m_strVariableFaceName = info.szVariableWidthFont;
-		m_nVariableSize = info.nVariableWidthSize;
-		m_strFixedFaceName = info.szFixedWidthFont;
-		m_nFixedSize = info.nFixedWidthSize;
-		
+        if ( m_pNewSettings[ m_nCharset ].nVariableWidthSize == -1 &&
+             m_pNewSettings[ m_nCharset ].nFixedWidthSize == -1 ) {
+            // No new settings for this encoding, get originals.
+            m_lpIntlFont->GetEncodingInfo(m_nCharset, &info);
+            m_strVariableFaceName = info.szVariableWidthFont;
+            m_nVariableSize = info.nVariableWidthSize;
+            m_strFixedFaceName = info.szFixedWidthFont;
+            m_nFixedSize = info.nFixedWidthSize;
+        } else {
+            // User has twiddled this encoding, use what they entered.
+               m_strVariableFaceName = m_pNewSettings[m_nCharset].szVariableWidthFont;
+               m_nVariableSize       = m_pNewSettings[m_nCharset].nVariableWidthSize;
+               m_strFixedFaceName    = m_pNewSettings[m_nCharset].szFixedWidthFont;
+               m_nFixedSize          = m_pNewSettings[m_nCharset].nFixedWidthSize;
+        }		
+
 		// Update the list of fonts from which to choose. The reason we do this
 		// here is that for some encodings we show both proportional and fixed
 		// fonts in both font lists. The reason for this is that multi-byte fonts
@@ -627,14 +688,25 @@ CFontsPrefs::ApplyChanges()
 		LPINTLFONT	lpIntlFont;
 		
 		if (SUCCEEDED(m_pObject->QueryInterface(IID_IIntlFont, (void **)&lpIntlFont))) {
-			ENCODINGINFO	info;
-	
-			info.nVariableWidthSize = m_nVariableSize;
-			lstrcpy(info.szVariableWidthFont, (LPCSTR)m_strVariableFaceName);
-			info.nFixedWidthSize = m_nFixedSize;
-			lstrcpy(info.szFixedWidthFont, (LPCSTR)m_strFixedFaceName);
-	
-			lpIntlFont->SetEncodingFonts(m_nCharset, &info);
+            assert( m_pNewSettings && m_nCharset >= 0 && (DWORD)m_nCharset < m_dwEncodings );
+
+            // Store current dialog contents so that pending changes will be processed.
+            m_pNewSettings[m_nCharset].nVariableWidthSize = m_nVariableSize;
+            lstrcpy(m_pNewSettings[m_nCharset].szVariableWidthFont, (LPCSTR)m_strVariableFaceName);
+            m_pNewSettings[m_nCharset].nFixedWidthSize = m_nFixedSize;
+            lstrcpy(m_pNewSettings[m_nCharset].szFixedWidthFont, (LPCSTR)m_strFixedFaceName);
+
+            // Loop through array of new settings, applying changes for each charset.
+            for ( unsigned int i = 0; i < m_dwEncodings; i++ ) {
+                // Test if font info has changed for this encoding.
+                if( m_pNewSettings[i].nVariableWidthSize != -1 ||
+                    m_pNewSettings[i].nFixedWidthSize != -1 ) {
+                    // Store (possibly) modified settings.  Note that
+                    // SetEncodingFonts will check that something has
+                    // really changed.
+                    m_lpIntlFont->SetEncodingFonts( i, m_pNewSettings + i );
+                }
+            }
 			lpIntlFont->Release();
 		}
 	}
