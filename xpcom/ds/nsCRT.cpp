@@ -548,6 +548,31 @@ PRInt32 nsCRT::atoi( const PRUnichar *string )
 /**
  *  Determine if given char in valid alpha range
  *  
+ *  @update  ftang 04.27.2000
+ *  @param   aChar is character to be tested
+ *  @return  TRUE if in ASCII range
+ */
+PRBool nsCRT::IsAscii(PRUnichar aChar) {
+  return (0x0080 > aChar);
+}
+/**
+ *  Determine if given char in valid alpha range
+ *  
+ *  @update  ftang 04.27.2000
+ *  @param   aString is null terminated to be tested
+ *  @return  TRUE if all characters aare in ASCII range
+ */
+PRBool nsCRT::IsAscii(PRUnichar *aString) {
+  while(*aString) {
+     if( 0x0080 <= *aString)
+        return PR_FALSE;
+     aString++;
+  }
+  return PR_TRUE;
+}
+/**
+ *  Determine if given char in valid alpha range
+ *  
  *  @update  rickg 03.10.2000
  *  @param   aChar is character to be tested
  *  @return  TRUE if in alpha range
