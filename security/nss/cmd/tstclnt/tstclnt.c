@@ -264,7 +264,6 @@ int main(int argc, char **argv)
     PRBool             useCommandLinePassword = PR_FALSE;
     PRBool             pingServerFirst = PR_FALSE;
     int                error=0;
-    int                iter;
     PLOptState *optstate;
     PLOptStatus optstatus;
     PRStatus prStatus;
