@@ -1323,6 +1323,13 @@ GlobalWindowImpl::Finalize(JSContext *aContext)
 {
 }
 
+PRBool
+GlobalWindowImpl::Construct(JSContext *cx, JSObject *obj,  uintN argc,
+                            jsval *argv, jsval *rval)
+{
+  return PR_FALSE;
+}
+
 nsresult 
 GlobalWindowImpl::GetListenerManager(nsIEventListenerManager **aInstancePtrResult)
 {
@@ -1518,7 +1525,7 @@ NavigatorImpl::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
   nsresult res = NS_OK;
   if (nsnull == mScriptObject) {
     nsIScriptGlobalObject *global = aContext->GetGlobalObject();
-    res = NS_NewScriptNavigator(aContext, this, global, &mScriptObject);
+    res = NS_NewScriptNavigator(aContext, (nsISupports *)(nsIDOMNavigator *)this, global, &mScriptObject);
     NS_IF_RELEASE(global);
   }
   

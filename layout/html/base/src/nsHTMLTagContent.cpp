@@ -729,7 +729,7 @@ nsresult nsHTMLTagContent::GetScriptObject(nsIScriptContext *aContext, void** aS
 {
   nsresult res = NS_OK;
   if (nsnull == mScriptObject) {
-    res = NS_NewScriptElement(aContext, this, mParent, (void**)&mScriptObject);
+    res = NS_NewScriptElement(aContext, (nsISupports *)(nsIDOMHTMLElement *)this, mParent, (void**)&mScriptObject);
   }
   *aScriptObject = mScriptObject;
   return res;
@@ -838,6 +838,13 @@ PRBool    nsHTMLTagContent::Convert(JSContext *aContext, jsval aID)
 
 void      nsHTMLTagContent::Finalize(JSContext *aContext)
 {
+}
+
+PRBool    
+nsHTMLTagContent::Construct(JSContext *cx, JSObject *obj,  uintN argc, 
+                            jsval *argv, jsval *rval)
+{
+  return PR_FALSE;
 }
 
 //

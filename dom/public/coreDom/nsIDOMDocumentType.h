@@ -58,6 +58,6 @@ public:
 
 extern nsresult NS_InitDocumentTypeClass(nsIScriptContext *aContext, void **aPrototype);
 
-extern "C" NS_DOM nsresult NS_NewScriptDocumentType(nsIScriptContext *aContext, nsIDOMDocumentType *aSupports, nsISupports *aParent, void **aReturn);
+extern "C" NS_DOM nsresult NS_NewScriptDocumentType(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 
 #endif // nsIDOMDocumentType_h__

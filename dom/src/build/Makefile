@@ -27,7 +27,7 @@ MODULE=raptor
 
 REQUIRES=xpcom raptor
 
-CPPSRCS=dlldeps.cpp 
+CPPSRCS=nsDOMFactory.cpp nsHTMLTagsEnums.cpp
 
 INCLUDES +=  -I$(PUBLIC)/xpcom -I$(PUBLIC)/raptor \
 	-I$(PUBLIC)/dom -I$(PUBLIC)/js -I../base -I$(PUBLIC)/jsurl

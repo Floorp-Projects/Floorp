@@ -86,6 +86,6 @@ public:
 
 extern nsresult NS_InitHTMLBodyElementClass(nsIScriptContext *aContext, void **aPrototype);
 
-extern "C" NS_DOM nsresult NS_NewScriptHTMLBodyElement(nsIScriptContext *aContext, nsIDOMHTMLBodyElement *aSupports, nsISupports *aParent, void **aReturn);
+extern "C" NS_DOM nsresult NS_NewScriptHTMLBodyElement(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 
 #endif // nsIDOMHTMLBodyElement_h__

@@ -58,6 +58,6 @@ public:
 
 extern nsresult NS_InitHTMLInsElementClass(nsIScriptContext *aContext, void **aPrototype);
 
-extern "C" NS_DOM nsresult NS_NewScriptHTMLInsElement(nsIScriptContext *aContext, nsIDOMHTMLInsElement *aSupports, nsISupports *aParent, void **aReturn);
+extern "C" NS_DOM nsresult NS_NewScriptHTMLInsElement(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 
 #endif // nsIDOMHTMLInsElement_h__

@@ -465,7 +465,18 @@ static JSFunctionSpec HTMLAreaElementMethods[] =
 PR_STATIC_CALLBACK(JSBool)
 HTMLAreaElement(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  return JS_TRUE;
+  nsIDOMHTMLAreaElement *a = (nsIDOMHTMLAreaElement*)JS_GetPrivate(cx, obj);
+  PRBool result = PR_TRUE;
+  
+  if (nsnull != a) {
+    // get the js object
+    nsIJSScriptObject *object;
+    if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
+      result = object->Construct(cx, obj, argc, argv, rval);
+      NS_RELEASE(object);
+    }
+  }
+  return (result == PR_TRUE) ? JS_TRUE : JS_FALSE;
 }
 
 
@@ -522,13 +533,15 @@ nsresult NS_InitHTMLAreaElementClass(nsIScriptContext *aContext, void **aPrototy
 //
 // Method for creating a new HTMLAreaElement JavaScript object
 //
-extern "C" NS_DOM nsresult NS_NewScriptHTMLAreaElement(nsIScriptContext *aContext, nsIDOMHTMLAreaElement *aSupports, nsISupports *aParent, void **aReturn)
+extern "C" NS_DOM nsresult NS_NewScriptHTMLAreaElement(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn)
 {
   NS_PRECONDITION(nsnull != aContext && nsnull != aSupports && nsnull != aReturn, "null argument to NS_NewScriptHTMLAreaElement");
   JSObject *proto;
   JSObject *parent;
   nsIScriptObjectOwner *owner;
   JSContext *jscontext = (JSContext *)aContext->GetNativeContext();
+  nsresult result = NS_OK;
+  nsIDOMHTMLAreaElement *aHTMLAreaElement;
 
   if (nsnull == aParent) {
     parent = nsnull;
@@ -548,14 +561,19 @@ extern "C" NS_DOM nsresult NS_NewScriptHTMLAreaElement(nsIScriptContext *aContex
     return NS_ERROR_FAILURE;
   }
 
+  result = aSupports->QueryInterface(kIHTMLAreaElementIID, (void **)&aHTMLAreaElement);
+  if (NS_OK != result) {
+    return result;
+  }
+
   // create a js object for this class
   *aReturn = JS_NewObject(jscontext, &HTMLAreaElementClass, proto, parent);
   if (nsnull != *aReturn) {
     // connect the native object to the js object
-    JS_SetPrivate(jscontext, (JSObject *)*aReturn, aSupports);
-    NS_ADDREF(aSupports);
+    JS_SetPrivate(jscontext, (JSObject *)*aReturn, aHTMLAreaElement);
   }
   else {
+    NS_RELEASE(aHTMLAreaElement);
     return NS_ERROR_FAILURE; 
   }
 

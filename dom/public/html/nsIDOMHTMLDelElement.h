@@ -58,6 +58,6 @@ public:
 
 extern nsresult NS_InitHTMLDelElementClass(nsIScriptContext *aContext, void **aPrototype);
 
-extern "C" NS_DOM nsresult NS_NewScriptHTMLDelElement(nsIScriptContext *aContext, nsIDOMHTMLDelElement *aSupports, nsISupports *aParent, void **aReturn);
+extern "C" NS_DOM nsresult NS_NewScriptHTMLDelElement(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 
 #endif // nsIDOMHTMLDelElement_h__

@@ -26,3 +26,5 @@ nsIDOMWindow.h
 nsIDOMLocation.h
 nsIDOMNavigator.h
 nsIDOMWindowCollection.h
+nsIDOMScriptObjectFactory
+nsDOMCID.h

@@ -43,6 +43,7 @@ class nsIHTMLContent;
 class nsIStyleContext;
 class nsIStyleRule;
 class nsISupportsArray;
+class nsIDOMScriptObjectFactory;
 
 enum nsSetAttrNotify {
   eSetAttrNotify_None = 0,
@@ -51,7 +52,8 @@ enum nsSetAttrNotify {
   eSetAttrNotify_Restart = 3
 };
 
-struct nsGenericHTMLElement {
+class nsGenericHTMLElement {
+public:
   nsGenericHTMLElement();
   ~nsGenericHTMLElement();
 
@@ -242,6 +244,10 @@ struct nsGenericHTMLElement {
   void MapBackgroundAttributesInto(nsIStyleContext* aContext,
                                    nsIPresContext* aPresContext);
 
+  static nsresult GetScriptObjectFactory(nsIDOMScriptObjectFactory **aFactory);
+
+  static nsIDOMScriptObjectFactory *gScriptObjectFactory;
+
   // Up pointer to the real content object that we are
   // supporting. Sometimes there is work that we just can't do
   // ourselves, so this is needed to ask the real object to do the
@@ -258,7 +264,8 @@ struct nsGenericHTMLElement {
 
 //----------------------------------------------------------------------
 
-struct nsGenericHTMLLeafElement : public nsGenericHTMLElement {
+class nsGenericHTMLLeafElement : public nsGenericHTMLElement {
+public:
   nsGenericHTMLLeafElement();
   ~nsGenericHTMLLeafElement();
 
@@ -338,7 +345,8 @@ struct nsGenericHTMLLeafElement : public nsGenericHTMLElement {
 
 //----------------------------------------------------------------------
 
-struct nsGenericHTMLContainerElement : public nsGenericHTMLElement {
+class nsGenericHTMLContainerElement : public nsGenericHTMLElement {
+public:
   nsGenericHTMLContainerElement();
   ~nsGenericHTMLContainerElement();
 

@@ -66,6 +66,6 @@ public:
 
 extern nsresult NS_InitHTMLLegendElementClass(nsIScriptContext *aContext, void **aPrototype);
 
-extern "C" NS_DOM nsresult NS_NewScriptHTMLLegendElement(nsIScriptContext *aContext, nsIDOMHTMLLegendElement *aSupports, nsISupports *aParent, void **aReturn);
+extern "C" NS_DOM nsresult NS_NewScriptHTMLLegendElement(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 
 #endif // nsIDOMHTMLLegendElement_h__

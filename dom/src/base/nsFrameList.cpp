@@ -148,7 +148,7 @@ nsFrameList::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
   nsIScriptGlobalObject *global = aContext->GetGlobalObject();
 
   if (nsnull == mScriptObject) {
-    res = NS_NewScriptWindowCollection(aContext, this, global, (void**)&mScriptObject);
+    res = NS_NewScriptWindowCollection(aContext, (nsISupports *)(nsIDOMWindowCollection *)this, global, (void**)&mScriptObject);
   }
   *aScriptObject = mScriptObject;
 

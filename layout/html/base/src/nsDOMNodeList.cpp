@@ -69,7 +69,7 @@ nsresult nsDOMNodeList::GetScriptObject(nsIScriptContext *aContext, void** aScri
 {
   nsresult res = NS_OK;
   if (nsnull == mScriptObject) {
-    res = NS_NewScriptNodeList(aContext, this, nsnull, (void**)&mScriptObject);
+    res = NS_NewScriptNodeList(aContext, (nsISupports *)(nsIDOMNodeList *)this, nsnull, (void**)&mScriptObject);
   }
   *aScriptObject = mScriptObject;
   return res;

@@ -317,7 +317,18 @@ static JSFunctionSpec HTMLFontElementMethods[] =
 PR_STATIC_CALLBACK(JSBool)
 HTMLFontElement(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  return JS_TRUE;
+  nsIDOMHTMLFontElement *a = (nsIDOMHTMLFontElement*)JS_GetPrivate(cx, obj);
+  PRBool result = PR_TRUE;
+  
+  if (nsnull != a) {
+    // get the js object
+    nsIJSScriptObject *object;
+    if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
+      result = object->Construct(cx, obj, argc, argv, rval);
+      NS_RELEASE(object);
+    }
+  }
+  return (result == PR_TRUE) ? JS_TRUE : JS_FALSE;
 }
 
 
@@ -374,13 +385,15 @@ nsresult NS_InitHTMLFontElementClass(nsIScriptContext *aContext, void **aPrototy
 //
 // Method for creating a new HTMLFontElement JavaScript object
 //
-extern "C" NS_DOM nsresult NS_NewScriptHTMLFontElement(nsIScriptContext *aContext, nsIDOMHTMLFontElement *aSupports, nsISupports *aParent, void **aReturn)
+extern "C" NS_DOM nsresult NS_NewScriptHTMLFontElement(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn)
 {
   NS_PRECONDITION(nsnull != aContext && nsnull != aSupports && nsnull != aReturn, "null argument to NS_NewScriptHTMLFontElement");
   JSObject *proto;
   JSObject *parent;
   nsIScriptObjectOwner *owner;
   JSContext *jscontext = (JSContext *)aContext->GetNativeContext();
+  nsresult result = NS_OK;
+  nsIDOMHTMLFontElement *aHTMLFontElement;
 
   if (nsnull == aParent) {
     parent = nsnull;
@@ -400,14 +413,19 @@ extern "C" NS_DOM nsresult NS_NewScriptHTMLFontElement(nsIScriptContext *aContex
     return NS_ERROR_FAILURE;
   }
 
+  result = aSupports->QueryInterface(kIHTMLFontElementIID, (void **)&aHTMLFontElement);
+  if (NS_OK != result) {
+    return result;
+  }
+
   // create a js object for this class
   *aReturn = JS_NewObject(jscontext, &HTMLFontElementClass, proto, parent);
   if (nsnull != *aReturn) {
     // connect the native object to the js object
-    JS_SetPrivate(jscontext, (JSObject *)*aReturn, aSupports);
-    NS_ADDREF(aSupports);
+    JS_SetPrivate(jscontext, (JSObject *)*aReturn, aHTMLFontElement);
   }
   else {
+    NS_RELEASE(aHTMLFontElement);
     return NS_ERROR_FAILURE; 
   }
 

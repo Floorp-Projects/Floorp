@@ -570,7 +570,7 @@ nsresult nsDocument::GetScriptObject(nsIScriptContext *aContext, void** aScriptO
   nsIScriptGlobalObject *global = aContext->GetGlobalObject();
 
   if (nsnull == mScriptObject) {
-    res = NS_NewScriptDocument(aContext, this, global, (void**)&mScriptObject);
+    res = NS_NewScriptDocument(aContext, (nsISupports *)(nsIDOMDocument *)this, global, (void**)&mScriptObject);
   }
   *aScriptObject = mScriptObject;
 
@@ -1100,6 +1100,13 @@ PRBool    nsDocument::Convert(JSContext *aContext, jsval aID)
 
 void      nsDocument::Finalize(JSContext *aContext)
 {
+}
+
+PRBool    
+nsDocument::Construct(JSContext *cx, JSObject *obj,  uintN argc, 
+                      jsval *argv, jsval *rval)
+{
+  return PR_FALSE;
 }
 
 /**

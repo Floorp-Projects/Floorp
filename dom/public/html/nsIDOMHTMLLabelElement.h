@@ -66,6 +66,6 @@ public:
 
 extern nsresult NS_InitHTMLLabelElementClass(nsIScriptContext *aContext, void **aPrototype);
 
-extern "C" NS_DOM nsresult NS_NewScriptHTMLLabelElement(nsIScriptContext *aContext, nsIDOMHTMLLabelElement *aSupports, nsISupports *aParent, void **aReturn);
+extern "C" NS_DOM nsresult NS_NewScriptHTMLLabelElement(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 
 #endif // nsIDOMHTMLLabelElement_h__

@@ -56,6 +56,6 @@ public:
 
 extern nsresult NS_InitHTMLCollectionClass(nsIScriptContext *aContext, void **aPrototype);
 
-extern "C" NS_DOM nsresult NS_NewScriptHTMLCollection(nsIScriptContext *aContext, nsIDOMHTMLCollection *aSupports, nsISupports *aParent, void **aReturn);
+extern "C" NS_DOM nsresult NS_NewScriptHTMLCollection(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 
 #endif // nsIDOMHTMLCollection_h__

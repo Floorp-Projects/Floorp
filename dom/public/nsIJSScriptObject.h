@@ -37,14 +37,20 @@
  */
 class nsIJSScriptObject : public nsISupports {
 public:
-  virtual PRBool    AddProperty(JSContext *aContext, jsval aID, jsval *aVp) = 0;
-  virtual PRBool    DeleteProperty(JSContext *aContext, jsval aID, jsval *aVp) = 0;
-  virtual PRBool    GetProperty(JSContext *aContext, jsval aID, jsval *aVp) = 0;
-  virtual PRBool    SetProperty(JSContext *aContext, jsval aID, jsval *aVp) = 0;
+  virtual PRBool    AddProperty(JSContext *aContext, jsval aID, 
+                                jsval *aVp) = 0;
+  virtual PRBool    DeleteProperty(JSContext *aContext, jsval aID, 
+                                   jsval *aVp) = 0;
+  virtual PRBool    GetProperty(JSContext *aContext, jsval aID, 
+                                jsval *aVp) = 0;
+  virtual PRBool    SetProperty(JSContext *aContext, jsval aID, 
+                                jsval *aVp) = 0;
   virtual PRBool    EnumerateProperty(JSContext *aContext) = 0;
   virtual PRBool    Resolve(JSContext *aContext, jsval aID) = 0;
   virtual PRBool    Convert(JSContext *aContext, jsval aID) = 0;
   virtual void      Finalize(JSContext *aContext) = 0;
+  virtual PRBool    Construct(JSContext *cx, JSObject *obj, uintN argc, 
+                              jsval *argv, jsval *rval) = 0;
 };
 
 #endif // nsIJSScriptObject_h__

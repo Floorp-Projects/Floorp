@@ -51,6 +51,6 @@ public:
 
 extern nsresult NS_InitHTMLTitleElementClass(nsIScriptContext *aContext, void **aPrototype);
 
-extern "C" NS_DOM nsresult NS_NewScriptHTMLTitleElement(nsIScriptContext *aContext, nsIDOMHTMLTitleElement *aSupports, nsISupports *aParent, void **aReturn);
+extern "C" NS_DOM nsresult NS_NewScriptHTMLTitleElement(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 
 #endif // nsIDOMHTMLTitleElement_h__

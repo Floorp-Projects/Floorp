@@ -52,6 +52,6 @@ public:
 
 extern nsresult NS_InitNodeListClass(nsIScriptContext *aContext, void **aPrototype);
 
-extern "C" NS_DOM nsresult NS_NewScriptNodeList(nsIScriptContext *aContext, nsIDOMNodeList *aSupports, nsISupports *aParent, void **aReturn);
+extern "C" NS_DOM nsresult NS_NewScriptNodeList(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 
 #endif // nsIDOMNodeList_h__

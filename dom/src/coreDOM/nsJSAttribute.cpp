@@ -286,7 +286,18 @@ static JSFunctionSpec AttributeMethods[] =
 PR_STATIC_CALLBACK(JSBool)
 Attribute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  return JS_TRUE;
+  nsIDOMAttribute *a = (nsIDOMAttribute*)JS_GetPrivate(cx, obj);
+  PRBool result = PR_TRUE;
+  
+  if (nsnull != a) {
+    // get the js object
+    nsIJSScriptObject *object;
+    if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
+      result = object->Construct(cx, obj, argc, argv, rval);
+      NS_RELEASE(object);
+    }
+  }
+  return (result == PR_TRUE) ? JS_TRUE : JS_FALSE;
 }
 
 
@@ -343,13 +354,15 @@ nsresult NS_InitAttributeClass(nsIScriptContext *aContext, void **aPrototype)
 //
 // Method for creating a new Attribute JavaScript object
 //
-extern "C" NS_DOM nsresult NS_NewScriptAttribute(nsIScriptContext *aContext, nsIDOMAttribute *aSupports, nsISupports *aParent, void **aReturn)
+extern "C" NS_DOM nsresult NS_NewScriptAttribute(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn)
 {
   NS_PRECONDITION(nsnull != aContext && nsnull != aSupports && nsnull != aReturn, "null argument to NS_NewScriptAttribute");
   JSObject *proto;
   JSObject *parent;
   nsIScriptObjectOwner *owner;
   JSContext *jscontext = (JSContext *)aContext->GetNativeContext();
+  nsresult result = NS_OK;
+  nsIDOMAttribute *aAttribute;
 
   if (nsnull == aParent) {
     parent = nsnull;
@@ -369,14 +382,19 @@ extern "C" NS_DOM nsresult NS_NewScriptAttribute(nsIScriptContext *aContext, nsI
     return NS_ERROR_FAILURE;
   }
 
+  result = aSupports->QueryInterface(kIAttributeIID, (void **)&aAttribute);
+  if (NS_OK != result) {
+    return result;
+  }
+
   // create a js object for this class
   *aReturn = JS_NewObject(jscontext, &AttributeClass, proto, parent);
   if (nsnull != *aReturn) {
     // connect the native object to the js object
-    JS_SetPrivate(jscontext, (JSObject *)*aReturn, aSupports);
-    NS_ADDREF(aSupports);
+    JS_SetPrivate(jscontext, (JSObject *)*aReturn, aAttribute);
   }
   else {
+    NS_RELEASE(aAttribute);
     return NS_ERROR_FAILURE; 
   }
 

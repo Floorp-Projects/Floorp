@@ -421,7 +421,18 @@ static JSFunctionSpec HTMLCollectionMethods[] =
 PR_STATIC_CALLBACK(JSBool)
 HTMLCollection(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  return JS_TRUE;
+  nsIDOMHTMLCollection *a = (nsIDOMHTMLCollection*)JS_GetPrivate(cx, obj);
+  PRBool result = PR_TRUE;
+  
+  if (nsnull != a) {
+    // get the js object
+    nsIJSScriptObject *object;
+    if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
+      result = object->Construct(cx, obj, argc, argv, rval);
+      NS_RELEASE(object);
+    }
+  }
+  return (result == PR_TRUE) ? JS_TRUE : JS_FALSE;
 }
 
 
@@ -475,13 +486,15 @@ nsresult NS_InitHTMLCollectionClass(nsIScriptContext *aContext, void **aPrototyp
 //
 // Method for creating a new HTMLCollection JavaScript object
 //
-extern "C" NS_DOM nsresult NS_NewScriptHTMLCollection(nsIScriptContext *aContext, nsIDOMHTMLCollection *aSupports, nsISupports *aParent, void **aReturn)
+extern "C" NS_DOM nsresult NS_NewScriptHTMLCollection(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn)
 {
   NS_PRECONDITION(nsnull != aContext && nsnull != aSupports && nsnull != aReturn, "null argument to NS_NewScriptHTMLCollection");
   JSObject *proto;
   JSObject *parent;
   nsIScriptObjectOwner *owner;
   JSContext *jscontext = (JSContext *)aContext->GetNativeContext();
+  nsresult result = NS_OK;
+  nsIDOMHTMLCollection *aHTMLCollection;
 
   if (nsnull == aParent) {
     parent = nsnull;
@@ -501,14 +514,19 @@ extern "C" NS_DOM nsresult NS_NewScriptHTMLCollection(nsIScriptContext *aContext
     return NS_ERROR_FAILURE;
   }
 
+  result = aSupports->QueryInterface(kIHTMLCollectionIID, (void **)&aHTMLCollection);
+  if (NS_OK != result) {
+    return result;
+  }
+
   // create a js object for this class
   *aReturn = JS_NewObject(jscontext, &HTMLCollectionClass, proto, parent);
   if (nsnull != *aReturn) {
     // connect the native object to the js object
-    JS_SetPrivate(jscontext, (JSObject *)*aReturn, aSupports);
-    NS_ADDREF(aSupports);
+    JS_SetPrivate(jscontext, (JSObject *)*aReturn, aHTMLCollection);
   }
   else {
+    NS_RELEASE(aHTMLCollection);
     return NS_ERROR_FAILURE; 
   }
 

@@ -672,7 +672,7 @@ RootPart::GetScriptObject(nsIScriptContext *aContext,
 {
   nsresult res = NS_OK;
   if (nsnull == mScriptObject) {
-    res = NS_NewScriptElement(aContext, this, mDocument, (void**)&mScriptObject);
+    res = NS_NewScriptElement(aContext, (nsISupports *)(nsIDOMHTMLElement *)this, mDocument, (void**)&mScriptObject);
   }
   *aScriptObject = mScriptObject;
   return res;

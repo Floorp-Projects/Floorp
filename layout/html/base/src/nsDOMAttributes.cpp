@@ -73,7 +73,7 @@ nsresult nsDOMAttribute::GetScriptObject(nsIScriptContext *aContext, void** aScr
 {
   nsresult res = NS_OK;
   if (nsnull == mScriptObject) {
-    res = NS_NewScriptAttribute(aContext, this, nsnull, (void **)&mScriptObject);
+    res = NS_NewScriptAttribute(aContext, (nsISupports *)(nsIDOMAttribute *)this, nsnull, (void **)&mScriptObject);
   }
   *aScriptObject = mScriptObject;
   return res;
@@ -287,7 +287,7 @@ nsresult nsDOMAttributeMap::GetScriptObject(nsIScriptContext *aContext, void** a
 {
   nsresult res = NS_OK;
   if (nsnull == mScriptObject) {
-    res = NS_NewScriptNamedNodeMap(aContext, this, nsnull, (void**)&mScriptObject);
+    res = NS_NewScriptNamedNodeMap(aContext, (nsISupports *)(nsIDOMNamedNodeMap *)this, nsnull, (void**)&mScriptObject);
   }
   *aScriptObject = mScriptObject;
   return res;
