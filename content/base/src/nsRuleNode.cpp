@@ -1891,15 +1891,6 @@ SetFont(nsIPresContext* aPresContext, nsIStyleContext* aContext,
 
     // XXXldb All of this platform-specific stuff should be in the
     // nsIDeviceContext implementations, not here.
-#if defined(XP_OS2)
-    switch (sysID) {
-      case eSystemFont_List:
-      case eSystemFont_Button:
-      case eSystemFont_Field:
-        aFont->mFont.name = defaultVariableFont->name;
-        break;
-    }
-#endif
 
 #ifdef XP_WIN
     //
