@@ -41,7 +41,6 @@
 **
 */
 
-#if defined (DEBUG) || defined (FORCE_NSPR_TRACE)
 #include <string.h>
 #include "prtrace.h"
 #include "prclist.h"
@@ -916,15 +915,5 @@ PR_IMPLEMENT(PRIntn)
     PR_Unlock( traceLock );
     return rc;
 } /* end PR_GetTraceEntries() */
-
-#else /* !defined(FORCE_NSPR_TRACE) */
-/*
-** The trace facility is not defined when !DEBUG and !FORCE_NSPR_TRACE
-**
-*/
-
-/* Some compilers don't like an empty compilation unit. */
-static int dummy = 0;
-#endif /* defined(FORCE_NSPR_TRACE) */
 
 /* end prtrace.c */

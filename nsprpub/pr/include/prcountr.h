@@ -116,7 +116,6 @@ typedef void *  PRCounterHandle;
 #define PRCOUNTER_DESC_MAX 255
 
 
-#if defined(DEBUG) || defined(FORCE_NSPR_COUNTERS)
 
 /* -----------------------------------------------------------------------
 ** FUNCTION: PR_DEFINE_COUNTER() -- Define a PRCounterHandle
@@ -135,8 +134,12 @@ typedef void *  PRCounterHandle;
 ** to value.
 ** 
 */
+#if defined(DEBUG) || defined(FORCE_NSPR_COUNTERS)
 #define PR_INIT_COUNTER_HANDLE(handle,value)\
     (handle) = (PRCounterHandle)(value)
+#else
+#define PR_INIT_COUNTER_HANDLE(handle,value)
+#endif
 
 /* -----------------------------------------------------------------------
 ** FUNCTION: PR_CreateCounter() -- Create a counter
@@ -167,8 +170,12 @@ typedef void *  PRCounterHandle;
 ** RESTRICTIONS:
 ** 
 */
+#if defined(DEBUG) || defined(FORCE_NSPR_COUNTERS)
 #define PR_CREATE_COUNTER(handle,qName,rName,description)\
    (handle) = PR_CreateCounter((qName),(rName),(description))
+#else
+#define PR_CREATE_COUNTER(handle,qName,rName,description)
+#endif
 
 NSPR_API(PRCounterHandle) 
 	PR_CreateCounter( 
@@ -194,7 +201,11 @@ NSPR_API(PRCounterHandle)
 ** RESTRICTIONS:
 ** 
 */
+#if defined(DEBUG) || defined(FORCE_NSPR_COUNTERS)
 #define PR_DESTROY_COUNTER(handle) PR_DestroyCounter((handle))
+#else
+#define PR_DESTROY_COUNTER(handle)
+#endif
 
 NSPR_API(void) 
 	PR_DestroyCounter( 
@@ -222,8 +233,12 @@ NSPR_API(void)
 ** RESTRICTIONS:
 ** 
 */
+#if defined(DEBUG) || defined(FORCE_NSPR_COUNTERS)
 #define PR_GET_COUNTER_HANDLE_FROM_NAME(handle,qName,rName)\
     (handle) = PR_GetCounterHandleFromName((qName),(rName))
+#else
+#define PR_GET_COUNTER_HANDLE_FROM_NAME(handle,qName,rName)
+#endif
 
 NSPR_API(PRCounterHandle) 
 	PR_GetCounterHandleFromName( 
@@ -251,8 +266,12 @@ NSPR_API(PRCounterHandle)
 ** RESTRICTIONS:
 ** 
 */
+#if defined(DEBUG) || defined(FORCE_NSPR_COUNTERS)
 #define PR_GET_COUNTER_NAME_FROM_HANDLE(handle,qName,rName,description)\
     PR_GetCounterNameFromHandle((handle),(qName),(rName),(description))
+#else
+#define PR_GET_COUNTER_NAME_FROM_HANDLE(handle,qName,rName,description )
+#endif
 
 NSPR_API(void) 
 	PR_GetCounterNameFromHandle( 
@@ -279,7 +298,11 @@ NSPR_API(void)
 ** RESTRICTIONS:
 ** 
 */
+#if defined(DEBUG) || defined(FORCE_NSPR_COUNTERS)
 #define PR_INCREMENT_COUNTER(handle) PR_IncrementCounter(handle)
+#else
+#define PR_INCREMENT_COUNTER(handle)
+#endif
 
 NSPR_API(void) 
 	PR_IncrementCounter( 
@@ -304,7 +327,11 @@ NSPR_API(void)
 ** RESTRICTIONS:
 ** 
 */
+#if defined(DEBUG) || defined(FORCE_NSPR_COUNTERS)
 #define PR_DECREMENT_COUNTER(handle) PR_DecrementCounter(handle)
+#else
+#define PR_DECREMENT_COUNTER(handle)
+#endif
 
 NSPR_API(void) 
 	PR_DecrementCounter( 
@@ -328,8 +355,12 @@ NSPR_API(void)
 ** RESTRICTIONS:
 ** 
 */
+#if defined(DEBUG) || defined(FORCE_NSPR_COUNTERS)
 #define PR_ADD_TO_COUNTER(handle,value)\
     PR_AddToCounter((handle),(value))
+#else
+#define PR_ADD_TO_COUNTER(handle,value)
+#endif
 
 NSPR_API(void) 
 	PR_AddToCounter( 
@@ -358,8 +389,12 @@ NSPR_API(void)
 ** RESTRICTIONS:
 ** 
 */
+#if defined(DEBUG) || defined(FORCE_NSPR_COUNTERS)
 #define PR_SUBTRACT_FROM_COUNTER(handle,value)\
     PR_SubtractFromCounter((handle),(value))
+#else
+#define PR_SUBTRACT_FROM_COUNTER(handle,value)
+#endif
 
 NSPR_API(void) 
 	PR_SubtractFromCounter( 
@@ -384,8 +419,12 @@ NSPR_API(void)
 ** RESTRICTIONS:
 ** 
 */
+#if defined(DEBUG) || defined(FORCE_NSPR_COUNTERS)
 #define PR_GET_COUNTER(counter,handle)\
     (counter) = PR_GetCounter((handle))
+#else
+#define PR_GET_COUNTER(counter,handle) 0
+#endif
 
 NSPR_API(PRUint32) 
 	PR_GetCounter( 
@@ -412,7 +451,11 @@ NSPR_API(PRUint32)
 ** RESTRICTIONS:
 ** 
 */
+#if defined(DEBUG) || defined(FORCE_NSPR_COUNTERS)
 #define PR_SET_COUNTER(handle,value) PR_SetCounter((handle),(value))
+#else
+#define PR_SET_COUNTER(handle,value)
+#endif
 
 NSPR_API(void) 
 	PR_SetCounter( 
@@ -450,8 +493,12 @@ NSPR_API(void)
 ** operations may cause unpredictable results.
 ** 
 */
+#if defined(DEBUG) || defined(FORCE_NSPR_COUNTERS)
 #define PR_FIND_NEXT_COUNTER_QNAME(next,handle)\
     (next) = PR_FindNextCounterQname((handle))
+#else
+#define PR_FIND_NEXT_COUNTER_QNAME(next,handle) NULL
+#endif
 
 NSPR_API(PRCounterHandle) 
 	PR_FindNextCounterQname( 
@@ -489,39 +536,18 @@ NSPR_API(PRCounterHandle)
 ** operations may cause unpredictable results.
 ** 
 */
+#if defined(DEBUG) || defined(FORCE_NSPR_COUNTERS)
 #define PR_FIND_NEXT_COUNTER_RNAME(next,rhandle,qhandle)\
     (next) = PR_FindNextCounterRname((rhandle),(qhandle))
+#else
+#define PR_FIND_NEXT_COUNTER_RNAME(next,rhandle,qhandle)
+#endif
 
 NSPR_API(PRCounterHandle) 
 	PR_FindNextCounterRname( 
         PRCounterHandle rhandle,
         PRCounterHandle qhandle
 );
-
-
-#else /* ( !(defined(DEBUG) || defined(FORCE_NSPR_COUNTERS)) */
-/*
-** When counters are not compiled in, provide macros that 
-** evaluate to No-Ops.
-**
-*/
-
-#define PR_DEFINE_COUNTER(name) PRCounterHandle name
-#define PR_INIT_COUNTER_HANDLE(handle,value)
-#define PR_CREATE_COUNTER(handle,qName,rName,description)
-#define PR_DESTROY_COUNTER(handle)
-#define PR_GET_COUNTER_HANDLE_FROM_NAME(handle,qName,rName)
-#define PR_GET_COUNTER_NAME_FROM_HANDLE(handle,qName,rName,description )
-#define PR_INCREMENT_COUNTER(handle)
-#define PR_DECREMENT_COUNTER(handle)
-#define PR_ADD_TO_COUNTER(handle,value)
-#define PR_SUBTRACT_FROM_COUNTER(handle,value)
-#define PR_GET_COUNTER(counter,handle) 0
-#define PR_SET_COUNTER(handle,value)
-#define PR_FIND_NEXT_COUNTER_QNAME(next,handle) NULL
-#define PR_FIND_NEXT_COUNTER_RNAME(next,rhandle,qhandle)
-
-#endif /* ( !(defined(DEBUG) || defined(FORCE_NSPR_COUNTERS)) */
 
 PR_END_EXTERN_C
 

@@ -38,7 +38,6 @@
 **  Implement the API defined in prolock.h
 ** 
 */
-#if defined(DEBUG) || defined(FORCE_NSPR_COUNTERS)
 #include "prolock.h"
 #include "prlog.h"
 #include "prerror.h"
@@ -96,13 +95,3 @@ PR_IMPLEMENT(PRStatus)
     PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0);
     return PR_FAILURE;
 } /*  end PR_UnlockOrderedLock() */
-
-#else /* ! defined(FORCE_NSPR_ORDERED_LOCK) */
-/*
-** NSPR Ordered Lock is not defined when !DEBUG and !FORCE_NSPR_ORDERED_LOCK
-**  
-*/
-
-/* Some compilers don't like an empty compilation unit. */
-static int dummy = 0;
-#endif /* defined(FORCE_NSPR_ORDERED_LOCK */
