@@ -21,29 +21,74 @@
 #include <stdio.h>
 #include "nslayout.h"
 #include "nsIStyleRule.h"
+#include "nsString.h"
+
 class nsIAtom;
 class nsIArena;
-class nsString;
 class nsICSSDeclaration;
 class nsICSSStyleSheet;
 
+struct nsAtomList {
+public:
+  nsAtomList(nsIAtom* aAtom);
+  nsAtomList(const nsString& aAtomValue);
+  nsAtomList(const nsAtomList& aCopy);
+  ~nsAtomList(void);
+  PRBool Equals(const nsAtomList* aOther) const;
+
+  nsIAtom*    mAtom;
+  nsAtomList* mNext;
+};
+
+#define NS_ATTR_FUNC_SET       0   // [attr]
+#define NS_ATTR_FUNC_EQUALS    1   // [attr=value]
+#define NS_ATTR_FUNC_INCLUDES  2   // [attr~=value] (space separated)
+#define NS_ATTR_FUNC_DASHMATCH 3   // [attr|=value] ('-' separated)
+
+struct nsAttrSelector {
+public:
+  nsAttrSelector(const nsString& aAttr);
+  nsAttrSelector(const nsString& aAttr, PRUint8 aFunction, const nsString& aValue);
+  nsAttrSelector(const nsAttrSelector& aCopy);
+  ~nsAttrSelector(void);
+  PRBool Equals(const nsAttrSelector* aOther) const;
+
+  nsIAtom*        mAttr;
+  PRUint8         mFunction;
+  nsString        mValue;
+  nsAttrSelector* mNext;
+};
+
 struct nsCSSSelector {
 public:
-  nsCSSSelector();
-  nsCSSSelector(nsIAtom* aTag, nsIAtom* aID, nsIAtom* aClass, nsIAtom* aPseudoClass);
+  nsCSSSelector(void);
   nsCSSSelector(const nsCSSSelector& aCopy);
-  ~nsCSSSelector();
+  ~nsCSSSelector(void);
 
   nsCSSSelector& operator=(const nsCSSSelector& aCopy);
   PRBool Equals(const nsCSSSelector* aOther) const;
 
-  void Set(const nsString& aTag, const nsString& aID, const nsString& aClass, const nsString& aPseudoClass);
+  void Reset(void);
+  void SetNameSpace(PRInt32 aNameSpace);
+  void SetTag(const nsString& aTag);
+  void SetID(const nsString& aID);
+  void AddClass(const nsString& aClass);
+  void AddPseudoClass(const nsString& aPseudoClass);
+  void AddPseudoClass(nsIAtom* aPseudoClass);
+  void AddAttribute(const nsString& aAttr);
+  void AddAttribute(const nsString& aAttr, PRUint8 aFunc, const nsString& aValue);
+  void SetOperator(PRUnichar aOperator);
 
+  PRInt32 CalcWeight(void) const;
+  
 public:
-  nsIAtom*  mTag;
-  nsIAtom*  mID;
-  nsIAtom*  mClass; // this'll have to be an array for CSS2
-  nsIAtom*  mPseudoClass;
+  PRInt32         mNameSpace;
+  nsIAtom*        mTag;
+  nsIAtom*        mID;
+  nsAtomList*     mClassList;
+  nsAtomList*     mPseudoClassList;
+  nsAttrSelector* mAttrList;
+  PRUnichar       mOperator;
 
   nsCSSSelector*  mNext;
 };
@@ -57,6 +102,8 @@ public:
   virtual nsCSSSelector* FirstSelector(void) = 0;
   virtual void AddSelector(const nsCSSSelector& aSelector) = 0;
   virtual void DeleteSelector(nsCSSSelector* aSelector) = 0;
+  virtual void SetSourceSelectorText(const nsString& aSelectorText) = 0;
+  virtual void GetSourceSelectorText(nsString& aSelectorText) const = 0;
 
   virtual nsICSSDeclaration* GetDeclaration(void) const = 0;
   virtual void SetDeclaration(nsICSSDeclaration* aDeclaration) = 0;
