@@ -272,6 +272,30 @@ RootFrame::Reflow(nsIPresContext&          aPresContext,
     aDesiredSize.ascent = aDesiredSize.height;
     aDesiredSize.descent = 0;
 
+    // Set NS_FRAME_OUTSIDE_CHILDREN flag, or reset it, as appropriate
+    nsFrameState  kidState;
+    kidFrame->GetFrameState(kidState);
+    if (NS_FRAME_OUTSIDE_CHILDREN & kidState) {
+      nscoord kidXMost = kidReflowState.computedMargin.left +
+                         kidDesiredSize.mCombinedArea.XMost();
+      nscoord kidYMost = kidReflowState.computedMargin.top +
+                         kidDesiredSize.mCombinedArea.YMost();
+
+      if ((kidXMost > aDesiredSize.width) || (kidYMost > aDesiredSize.height)) {
+        aDesiredSize.mCombinedArea.x = 0;
+        aDesiredSize.mCombinedArea.y = 0;
+        aDesiredSize.mCombinedArea.width = PR_MAX(aDesiredSize.width, kidXMost);
+        aDesiredSize.mCombinedArea.height = PR_MAX(aDesiredSize.height, kidYMost);
+        mState |= NS_FRAME_OUTSIDE_CHILDREN;
+
+      } else {
+        mState &= ~NS_FRAME_OUTSIDE_CHILDREN;
+      }
+
+    } else {
+      mState &= ~NS_FRAME_OUTSIDE_CHILDREN;
+    }
+
     // XXX Temporary hack. Remember this for later when our parent resizes us
     mNaturalHeight = aDesiredSize.height;
   }

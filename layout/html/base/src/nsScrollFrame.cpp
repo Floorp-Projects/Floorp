@@ -333,7 +333,16 @@ nsScrollFrame::Reflow(nsIPresContext&          aPresContext,
               aStatus);
   NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
 
-  // If it's an area frame then get the total size, which includes the
+  // If the frame has child frames that stick outside its bounds, then take
+  // them into account, too
+  nsFrameState  kidState;
+  kidFrame->GetFrameState(kidState);
+  if (NS_FRAME_OUTSIDE_CHILDREN & kidState) {
+    kidDesiredSize.width = kidDesiredSize.mCombinedArea.width;
+    kidDesiredSize.height = kidDesiredSize.mCombinedArea.height;
+  }
+
+  // If it's an area frame, then get the total size which includes the
   // space taken up by absolutely positioned child elements
   nsIAreaFrame* areaFrame;
   if (NS_SUCCEEDED(kidFrame->QueryInterface(kAreaFrameIID, (void**)&areaFrame))) {
@@ -383,7 +392,16 @@ nsScrollFrame::Reflow(nsIPresContext&          aPresContext,
                   aStatus);
       NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
 
-      // If it's an area frame then get the total size, which includes the
+      // If the frame has child frames that stick outside its bounds, then take
+      // them into account, too
+      nsFrameState  kidState;
+      kidFrame->GetFrameState(kidState);
+      if (NS_FRAME_OUTSIDE_CHILDREN & kidState) {
+        kidDesiredSize.width = kidDesiredSize.mCombinedArea.width;
+        kidDesiredSize.height = kidDesiredSize.mCombinedArea.height;
+      }
+
+      // If it's an area frame, then get the total size which includes the
       // space taken up by absolutely positioned child elements
       nsIAreaFrame* areaFrame;
       if (NS_SUCCEEDED(kidFrame->QueryInterface(kAreaFrameIID, (void**)&areaFrame))) {
