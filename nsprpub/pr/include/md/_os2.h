@@ -68,10 +68,8 @@ typedef struct _CRITICAL_SECTION
 } CRITICAL_SECTION, *PCRITICAL_SECTION, *LPCRITICAL_SECTION;
 #pragma pack(4)
 
-VOID    APIENTRY DeleteCriticalSection(PCRITICAL_SECTION);
-VOID    APIENTRY EnterCriticalSection(PCRITICAL_SECTION);
-VOID    APIENTRY InitializeCriticalSection(PCRITICAL_SECTION);
-VOID    APIENTRY LeaveCriticalSection(PCRITICAL_SECTION);
+APIRET _Optlink SemRequest486(PRAMSEM, ULONG);
+APIRET _Optlink SemReleasex86(PRAMSEM, ULONG);
 #endif
 
 #ifdef XP_OS2_EMX
@@ -380,11 +378,33 @@ extern PRInt32 _MD_Accept(PRFileDesc *fd, PRNetAddr *raddr, PRUint32 *rlen,
 #define _PR_LOCK                      _MD_LOCK
 #define _PR_UNLOCK					  _MD_UNLOCK
 
+#ifdef USE_RAMSEM
 #define _MD_NEW_LOCK                  (_PR_MD_NEW_LOCK)
-#define _MD_FREE_LOCK                 (_PR_MD_FREE_LOCK)
-#define _MD_LOCK                      (_PR_MD_LOCK)
-#define _MD_TEST_AND_LOCK             (_PR_MD_TEST_AND_LOCK)
-#define _MD_UNLOCK                    (_PR_MD_UNLOCK)
+#define _MD_FREE_LOCK(lock)           (DosCloseEventSem(((PRAMSEM)(&((lock)->mutex)))->hevSem))
+#define _MD_LOCK(lock)                (SemRequest486(&((lock)->mutex), -1))
+#define _MD_TEST_AND_LOCK(lock)       (SemRequest486(&((lock)->mutex), -1),0)
+#define _MD_UNLOCK(lock)              \
+    PR_BEGIN_MACRO \
+    if (0 != (lock)->notified.length) { \
+        md_UnlockAndPostNotifies((lock), NULL, NULL); \
+    } else { \
+        SemReleasex86( &(lock)->mutex, 0 ); \
+    } \
+    PR_END_MACRO
+#else
+#define _MD_NEW_LOCK                  (_PR_MD_NEW_LOCK)
+#define _MD_FREE_LOCK(lock)           (DosCloseMutexSem((lock)->mutex))
+#define _MD_LOCK(lock)                (DosRequestMutexSem((lock)->mutex, SEM_INDEFINITE_WAIT))
+#define _MD_TEST_AND_LOCK(lock)       (DosRequestMutexSem((lock)->mutex, SEM_INDEFINITE_WAIT),0)
+#define _MD_UNLOCK(lock)              \
+    PR_BEGIN_MACRO \
+    if (0 != (lock)->notified.length) { \
+        md_UnlockAndPostNotifies((lock), NULL, NULL); \
+    } else { \
+        DosReleaseMutexSem((lock)->mutex); \
+    } \
+    PR_END_MACRO
+#endif
 
 /* --- lock and cv waiting --- */
 #define _MD_WAIT                      (_PR_MD_WAIT)
