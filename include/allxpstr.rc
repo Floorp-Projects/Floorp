@@ -7903,12 +7903,12 @@ ResDef(MK_ACCESS_NO, XP_MSG_BASE + 1446,
 
 /* the following PRVCY items are all strings used in html */
 ResDef(PRVCY_HAS_A_POLICY, XP_MSG_BASE + 1450,
-"This site has declared a <a href=\042javascript:Policy();\042);>policy</a> \
-for what it does with the information you give it.\n")
+"This site has a <a href=\042javascript:Policy();\042);>privacy policy file</a> \
+in which it states what it does with the information that you submit to it.\n")
 
 ResDef(PRVCY_HAS_NO_POLICY, XP_MSG_BASE + 1451,
-"This site has not declared a policy for what it does \
-with the information you give it.\n")
+"We could not find a privacy policy file from this site stating what it does \
+with the information you submit to it.\n")
 
 ResDef(PRVCY_CANNOT_SET_COOKIES, XP_MSG_BASE + 1452,
 "This site cannot store information (cookies) on your computer.\n")
@@ -7926,6 +7926,8 @@ ResDef(PRVCY_HAS_SET_COOKIES, XP_MSG_BASE + 1456,
 "This site has stored some <a href=\042javascript:ViewCookies();\042);>information</a> \
 on your computer.\n")
 
+ResDef(PRVCY_POLICY_FILE_NAME, XP_MSG_BASE + 1457,
+"/privacy_policy.html")
 
 /* Related Links XP Strings */
 
