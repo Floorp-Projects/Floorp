@@ -4132,8 +4132,7 @@ nsresult nsDocShell::DoURILoad(nsIURI * aURI,
     // (ie. POST data, referer, ...)
     //
     if (httpChannel) {
-        nsCOMPtr<nsICachingChannel>
-            cacheChannel(do_QueryInterface(httpChannel));
+        nsCOMPtr<nsICachingChannel>  cacheChannel(do_QueryInterface(httpChannel));
         /* Get the cache Key from SH */
         nsCOMPtr<nsISupports> cacheKey;
         if (mLSHE) {
@@ -4161,16 +4160,17 @@ nsresult nsDocShell::DoURILoad(nsIURI * aURI,
             uploadChannel->SetUploadStream(aPostData,nsnull, -1);
             /* If there is a valid postdata *and* it is a History Load,
              * set up the cache key on the channel, to retrieve the
-             * data only from the cache. When there is a postdata
-             * on a history load, we do not want to go out to the net
-             * in our first attempt. 
+             * data *only* from the cache. If it is a normal reload, the 
+             * cache is free to go to the server for updated postdata. 
              */
-            PRBool cacheFlag = PR_FALSE;
-            if (mLoadType == LOAD_HISTORY || mLoadType == LOAD_RELOAD_CHARSET_CHANGE) 
-                cacheFlag = PR_TRUE;
-            if (cacheChannel && cacheKey)
-                cacheChannel->SetCacheKey(cacheKey, cacheFlag);
-            
+            if (cacheChannel && cacheKey) {
+                if (mLoadType == LOAD_HISTORY || mLoadType == LOAD_RELOAD_CHARSET_CHANGE) 
+                    cacheChannel->SetCacheKey(cacheKey, PR_TRUE);
+                else if (mLoadType == LOAD_RELOAD_NORMAL)
+                    cacheChannel->SetCacheKey(cacheKey, PR_FALSE);
+            }         
+
+         
         }
         else {
             /* If there is no postdata, set the cache key on the channel
