@@ -48,6 +48,7 @@ DIRS = \
 	filepicker \
 	printing \
 	viewsource \
+	viewconfig \
 	$(NULL)
 
 ifndef MOZ_THUNDERBIRD
@@ -59,7 +60,6 @@ DIRS +=	\
 	passwordmgr \
 	satchel \
 	typeaheadfind \
-	viewconfig \
 	downloads \
 	$(NULL)
 endif
