@@ -46,7 +46,7 @@ interface nsIMsgCopyServiceListener : nsISupports {
      * created message.
      * aKey -
      */
-    void SetMessageKey(in PRUInt32 aKey);
+    void SetMessageKey(in PRUint32 aKey);
 
     /**
      * Getting the file message message ID. This method is taylored
