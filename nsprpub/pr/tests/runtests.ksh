@@ -159,7 +159,6 @@ poll_to
 pollable
 prftest
 primblok
-priotest
 provider
 prpollml
 ranfile
