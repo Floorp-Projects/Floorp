@@ -198,7 +198,16 @@ mozStorageStatementWrapper::Step(PRBool *_retval)
     if (!mStatement)
         return NS_ERROR_FAILURE;
 
-    return mStatement->ExecuteStep(_retval);
+    PRBool hasMore = PR_FALSE;
+    nsresult rv = mStatement->ExecuteStep(&hasMore);
+    if (NS_SUCCEEDED(rv) && !hasMore) {
+        *_retval = PR_FALSE;
+        mStatement->Reset();
+        return NS_OK;
+    }
+
+    *_retval = hasMore;
+    return rv;
 }
 
 NS_IMETHODIMP
