@@ -19,8 +19,6 @@ DEPTH=..\..
 IGNORE_MANIFEST=1
 
 EXPORTS =							\
-        nsIMsgRFC822Parser.h        \
-		msgCore.h					\
         $(NULL)
 
 MODULE=mailnews
