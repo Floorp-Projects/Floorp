@@ -65,6 +65,9 @@ ifneq (,$(filter xlib,$(MOZ_WIDGET_TOOLKIT))$(MOZ_ENABLE_XLIB)$(MOZ_ENABLE_XPRIN
 DIRS        += xlibrgb
 endif
 
+ifdef MOZ_ENABLE_XPRINT
+DIRS        += xprintutil xprint 
+endif
 ifdef MOZ_ENABLE_GTK
 DIRS        += gtk
 endif
@@ -74,13 +77,8 @@ endif
 ifdef MOZ_ENABLE_XLIB
 DIRS        += xlib
 endif
-
 ifdef MOZ_ENABLE_PHOTON
 DIRS        += photon
-endif
-
-ifdef MOZ_ENABLE_XPRINT
-DIRS        += xprint 
 endif
 
 CPPSRCS = \

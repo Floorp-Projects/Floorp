@@ -38,6 +38,8 @@ EXTRA_DSO_LIBS	= gfxshared_s gkgfx
 
 REQUIRES	= xpcom \
 		  string \
+		  xlibrgb \
+		  xprintutil \
 		  widget \
 		  view \
 		  pref \
@@ -51,11 +53,6 @@ REQUIRES	= xpcom \
 ifdef SUNCTL
 REQUIRES	+= ctl
 endif
-
-CSRCS		= \
-		xprintutil.c \
-		xprintutil_printtofile.c \
-		$(NULL)
 
 # Code shared between GTK+, Xlib and Xprint gfx modules
 # (empty for now - but this will be filled soon...)
@@ -84,7 +81,6 @@ EXPORTS		= \
 		nsIDeviceContextXPrint.h \
 		nsGfxXPrintCID.h \
 		nsIDeviceContextSpecXPrint.h \
-		xprintutil.h \
 		$(NULL)
 
 CXXFLAGS	 += $(MOZ_XPRINT_CFLAGS)
@@ -100,6 +96,7 @@ CXXFLAGS	+= $(TK_CFLAGS)
 EXTRA_DSO_LDOPTS += \
 		$(LIBS_DIR) \
 		-lxlibrgb \
+		-lxprintutil \
 		$(EXTRA_DSO_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
 		$(MOZ_XPRINT_LDFLAGS) \
@@ -109,7 +106,6 @@ LOCAL_INCLUDES	= \
 		-I../.. \
 		-I$(srcdir) \
 		-I$(srcdir)/../xlib \
-		-I$(srcdir)/../xlibrgb \
 		-I$(srcdir)/../x11shared \
 		-I$(srcdir)/.. \
 		$(NULL)
