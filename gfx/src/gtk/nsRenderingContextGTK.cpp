@@ -421,6 +421,10 @@ NS_IMETHODIMP nsRenderingContextGTK::SetClipRegion(const nsIRegion& aRegion,
 {
   GdkRegion *rgn;
  
+  if(!mClipRegion) {
+    return NS_ERROR_FAILURE;
+  }
+
   switch(aCombine)
   {
     case nsClipCombine_kIntersect:
