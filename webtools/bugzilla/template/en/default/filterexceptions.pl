@@ -450,6 +450,7 @@
 
 'attachment/show-multiple.html.tmpl' => [
   'a.attachid', 
+  'flag.status'
 ],
 
 'attachment/updated.html.tmpl' => [

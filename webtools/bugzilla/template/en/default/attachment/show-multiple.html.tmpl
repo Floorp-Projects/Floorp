@@ -61,11 +61,18 @@
       <td valign="top">[% a.datasize FILTER unitconvert %]</td>
 
       <td valign="top">
-        [% IF a.statuses.size == 0 %]
-          <i>none</i>
+        [% IF a.flags.size == 0 %]
+          <i>no flags</i>
         [% ELSE %]
-          [% FOREACH s = a.statuses %]
-            [% s FILTER html FILTER replace('\s', '&nbsp;') %]<br>
+          [% FOREACH flag = a.flags %]
+            [% IF flag.setter %]
+              [% flag.setter.nick FILTER html %]:
+            [% END %]
+            [%+ flag.type.name FILTER html %][% flag.status %]
+            [% IF flag.status == "?" && flag.requestee %]
+              ([% flag.requestee.nick FILTER html %])
+            [% END %]
+            [% ", " IF !loop.last %]
           [% END %]
         [% END %]
       </td>

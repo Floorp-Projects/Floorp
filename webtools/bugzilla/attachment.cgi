@@ -768,6 +768,7 @@ sub viewall
      $a{'description'}, $a{'ispatch'}, $a{'isobsolete'}, $a{'isprivate'},
      $a{'datasize'}) = FetchSQLData();
     $a{'isviewable'} = isViewable($a{'contenttype'});
+    $a{'flags'} = Bugzilla::Flag::match({ 'attach_id' => $a{'attachid'} });
 
     # Add the hash representing the attachment to the array of attachments.
     push @attachments, \%a;
