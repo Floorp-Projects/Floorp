@@ -26,7 +26,7 @@
 #ifdef XP_PC
 #include <windows.h>
 #endif
-#ifdef XP_UNIX
+#ifdef XP_UNIX || defined(XP_BEOS)
 #include <locale.h>
 #include <stdlib.h>
 #include <ctype.h>  // for isalpha, tolower & isspace
