@@ -333,7 +333,15 @@ nsPrefMigration::ProcessPrefs(PRBool showProgressAsModalWindow)
   if (NS_FAILED(rv)) return rv;
 
   if (showProgressAsModalWindow) {
-        mPMProgressWindow->ShowModal();
+    nsCOMPtr<nsIInterfaceRequestor> progressRequestor(do_QueryInterface(mPMProgressWindow));
+    nsCOMPtr<nsIWebBrowserChrome> progressChrome;
+
+    if (progressRequestor)
+      progressRequestor->GetInterface(NS_GET_IID(nsIWebBrowserChrome), getter_AddRefs(progressChrome));
+
+    if (progressChrome)
+      progressChrome->ShowAsModal();
+    NS_ASSERTION(progressChrome, "show modal window failed: no available chrome");
   }
   else {
         // we are automatically migrating the profile, so there is no

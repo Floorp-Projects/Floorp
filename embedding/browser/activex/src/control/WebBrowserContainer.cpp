@@ -481,28 +481,6 @@ CWebBrowserContainer::SizeShellTo(nsIDocShellTreeItem* aShell,
 }
 
 
-NS_IMETHODIMP
-CWebBrowserContainer::ShowModal()
-{
-	// Ignore request to be shown modally
-	return NS_OK;
-}
-
-NS_IMETHODIMP
-CWebBrowserContainer::IsModal(PRBool *_retval)
-{
-	// we're not
-	*_retval = PR_FALSE;
-	return NS_OK;
-}
-
-NS_IMETHODIMP
-CWebBrowserContainer::ExitModalLoop(nsresult aStatus)
-{
-	// Ignore request to exit modal loop
-	return NS_OK;
-}
-
 NS_IMETHODIMP CWebBrowserContainer::GetNewWindow(PRInt32 aChromeFlags, 
    nsIDocShellTreeItem** aDocShellTreeItem)
 {

@@ -447,7 +447,7 @@ NS_IMETHODIMP PhMozEmbedChrome::IsWindowModal(PRBool *_retval)
 
 NS_IMETHODIMP PhMozEmbedChrome::ExitModalEventLoop(nsresult aStatus)
 {
-  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("PhMozEmbedChrome::ExitModalLoop\n"));
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("PhMozEmbedChrome::ExitModalEventLoop\n"));
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -605,25 +605,6 @@ NS_IMETHODIMP PhMozEmbedChrome::SizeShellTo(nsIDocShellTreeItem *shell,
   PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("PhMozEmbedChrome::SizeShellTo\n"));
   if (mChromeListener)
     mChromeListener->SizeTo(cx, cy);
-  return NS_OK;
-}
-
-NS_IMETHODIMP PhMozEmbedChrome::ShowModal(void)
-{
-  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("PhMozEmbedChrome::ShowModal\n"));
-  return NS_OK;
-}
-
-NS_IMETHODIMP PhMozEmbedChrome::IsModal(PRBool *_retval)
-{
-  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("PhMozEmbedChrome::IsModal\n"));
-  *_retval = PR_FALSE;
-  return NS_OK;
-}
-
-NS_IMETHODIMP PhMozEmbedChrome::ExitModalLoop(nsresult aStatus)
-{
-  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("PhMozEmbedChrome::ExitModalLoop\n"));
   return NS_OK;
 }
 
