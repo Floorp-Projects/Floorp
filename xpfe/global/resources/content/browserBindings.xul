@@ -18,9 +18,17 @@
             controller.doCommand('cmd_scrollPageDown');"/>
     <key id="space" key=" " shift="false" control="false"
         onkeypress="
+			var v = document.commandDispatcher.focusedElement;
+			
+			if (v &amp;&amp; (v.tagName == 'INPUT' || v.tagName == 'TEXTAREA')) {
+			  return true;
+            }
+
             var controller =
             document.commandDispatcher.getControllerForCommand('cmd_scrollPageDown');
-            controller.doCommand('cmd_scrollPageDown');"/>
+            controller.doCommand('cmd_scrollPageDown');
+    "/>
+
     <key id="key_page_up" keycode="VK_UP" shift="false" control="false"
         onkeypress="
             var controller =
