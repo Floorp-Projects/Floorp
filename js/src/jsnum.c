@@ -672,15 +672,15 @@ js_DoubleToECMAInt32(JSContext *cx, jsdouble d, int32 *ip)
     jsdouble two31 = 2147483648.0;
 
     if (!JSDOUBLE_IS_FINITE(d) || d == 0) {
-	*ip = 0;
-	return JS_TRUE;
+        *ip = 0;
+        return JS_TRUE;
     }
     d = fmod(d, two32);
-    d = d >= 0 ? d : d + two32;
+    d = (d >= 0) ? floor(d) : ceil(d) + two32;
     if (d >= two31)
-	*ip = (int32)(d - two32);
+        *ip = (int32)(d - two32);
     else
-	*ip = (int32)d;
+        *ip = (int32)d;
     return JS_TRUE;
 }
 
@@ -711,7 +711,7 @@ js_DoubleToECMAUint32(JSContext *cx, jsdouble d, uint32 *ip)
 
     d = fmod(d, two32);
 
-    d = d >= 0 ? d : d + two32;
+    d = (d >= 0) ? d : d + two32;
     *ip = (uint32)d;
     return JS_TRUE;
 }
