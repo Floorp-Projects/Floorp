@@ -2725,7 +2725,6 @@ nsFrame::MakeFrameName(const nsAString& aType, nsAString& aResult) const
   AppendASCIItoUTF16(buf, aResult);
   return NS_OK;
 }
-#endif
 
 void
 nsFrame::XMLQuote(nsString& aString)
@@ -2756,6 +2755,7 @@ nsFrame::XMLQuote(nsString& aString)
     }
   }
 }
+#endif
 
 PRBool
 nsFrame::ParentDisablesSelection() const

@@ -446,6 +446,8 @@ public:
     while (--aIndent >= 0) fputs("  ", out);
   }
   
+  static void XMLQuote(nsString& aString);
+
   /**
    * Dump out the "base classes" regression data. This should dump
    * out the interior data, not the "frame" XML container. And it
@@ -518,8 +520,6 @@ protected:
                                       nsIPresShell *aPresShell, nsMouseEvent *aMouseEvent, 
                                       nsIContent **aParentContent, PRInt32 *aContentOffset, 
                                       PRInt32 *aTarget);
-
-  static void XMLQuote(nsString& aString);
 
   virtual PRBool ParentDisablesSelection() const;
 
