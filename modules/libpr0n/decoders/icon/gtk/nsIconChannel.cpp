@@ -38,6 +38,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+// Older versions of these headers seem to be missing an extern "C"
+extern "C" {
 #include <libgnome/libgnome.h>
 #include <libgnomeui/gnome-icon-theme.h>
 #include <libgnomeui/gnome-icon-lookup.h>
@@ -45,6 +47,7 @@
 
 #include <libgnomevfs/gnome-vfs-file-info.h>
 #include <libgnomevfs/gnome-vfs-ops.h>
+}
 
 #include "nsIMIMEService.h"
 
