@@ -19,6 +19,11 @@
 #define NOT_PRODUCTION_CODE
 #define USE_EXPERIMENTAL_SMART_POINTERS
 
+	// Oops.  Still want to compile the test app under VC++ 4.2
+#if defined(_MSC_VER) && (_MSC_VER<1100)
+	#define explicit
+#endif
+
 #include <iostream.h>
 #include "COM_auto_ptr.h"
 
