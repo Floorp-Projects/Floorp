@@ -1301,30 +1301,40 @@ nsSchemaLoader::ProcessComplexType(nsIWebServiceErrorHandler* aErrorHandler,
   PRUint16 derivation = nsISchemaComplexType::DERIVATION_SELF_CONTAINED;
   nsCOMPtr<nsISchemaType> baseType;
   nsCOMPtr<nsISchemaModelGroup> modelGroup;
-  
+
   while (NS_SUCCEEDED(iterator.GetNextChild(getter_AddRefs(childElement),
                                             getter_AddRefs(tagName))) &&
          childElement) {
     if (tagName == nsSchemaAtoms::sSimpleContent_atom) {
       contentModel = nsISchemaComplexType::CONTENT_MODEL_SIMPLE;
-      
-      rv = ProcessSimpleContent(aErrorHandler, aSchema, 
-                                childElement, typeInst,
+
+      rv = ProcessSimpleContent(aErrorHandler, aSchema, childElement, typeInst,
                                 &derivation, getter_AddRefs(baseType));
       break;
     }
-    else if (tagName == nsSchemaAtoms::sComplexContent_atom) {       
-      rv = ProcessComplexContent(aErrorHandler, aSchema, 
-                                 childElement, typeInst, 
+
+    if (tagName == nsSchemaAtoms::sComplexContent_atom) {
+      rv = ProcessComplexContent(aErrorHandler, aSchema, childElement, typeInst,
                                  &contentModel, &derivation,
                                  getter_AddRefs(baseType));
-      break;                                   
+      break;
     }
-    else if (tagName != nsSchemaAtoms::sAnnotation_atom) {
-      rv = ProcessComplexTypeBody(aErrorHandler, aSchema, 
+
+    if (tagName == nsSchemaAtoms::sModelGroup_atom ||
+        tagName == nsSchemaAtoms::sAll_atom ||
+        tagName == nsSchemaAtoms::sChoice_atom ||
+        tagName == nsSchemaAtoms::sSequence_atom ||
+        tagName == nsSchemaAtoms::sAttribute_atom ||
+        tagName == nsSchemaAtoms::sAttributeGroup_atom ||
+        tagName == nsSchemaAtoms::sAnyAttribute_atom) {
+      rv = ProcessComplexTypeBody(aErrorHandler, aSchema,
                                   aElement, typeInst, nsnull,
                                   &contentModel);
       break;
+    }
+
+    if (tagName == nsSchemaAtoms::sAnnotation_atom) {
+      // XXX: skipping for now
     }
     else {
       // Unexpected schema element
