@@ -425,30 +425,73 @@ nsCopySupport::GetContents(const nsACString& aMimeType, PRUint32 aFlags, nsISele
 
 
 nsresult
-nsCopySupport::ImageCopy(nsIImageLoadingContent* imageElement, PRInt16 aClipboardID)
+nsCopySupport::ImageCopy(nsIImageLoadingContent* aImageElement,
+                         PRBool aCopyImageData)
 {
   nsresult rv;
 
-  nsCOMPtr<nsIImage> image = nsContentUtils::GetImageFromContent(imageElement);
-  if (!image) return NS_ERROR_FAILURE;
+  // create a transferable for putting data on the Clipboard
+  nsCOMPtr<nsITransferable> trans(do_CreateInstance(kCTransferableCID, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  // Get the Clipboard
+  // get the location from the element
+  nsCOMPtr<nsIURI> uri;
+  rv = aImageElement->GetCurrentURI(getter_AddRefs(uri));
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);
+
+  nsCAutoString locationUTF8;
+  rv = uri->GetSpec(locationUTF8);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // convert the string to nsISupportsString
+  NS_ConvertUTF8toUTF16 locationUTF16(locationUTF8);
+  
+  nsCOMPtr<nsISupportsString>
+    location(do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = location->SetData(locationUTF16);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // append the string to the transferable
+  rv = trans->SetTransferData(kUnicodeMime, location,
+                              (locationUTF16.Length() * 2));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (aCopyImageData) {
+    // get the image data from the element
+    nsCOMPtr<nsIImage> image =
+      nsContentUtils::GetImageFromContent(aImageElement);
+    NS_ENSURE_TRUE(image, NS_ERROR_FAILURE);
+
+    nsCOMPtr<nsISupportsInterfacePointer>
+      imgPtr(do_CreateInstance(NS_SUPPORTS_INTERFACE_POINTER_CONTRACTID, &rv));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = imgPtr->SetData(image);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // copy the image data onto the transferable
+    rv = trans->SetTransferData(kNativeImageMime, imgPtr,
+                                sizeof(nsISupports*));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // get clipboard
   nsCOMPtr<nsIClipboard> clipboard(do_GetService(kCClipboardCID, &rv));
-  if (NS_FAILED(rv)) return rv;
-  if (!clipboard) return NS_ERROR_FAILURE;
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  // Create a transferable for putting data on the Clipboard
-  nsCOMPtr<nsITransferable> trans = do_CreateInstance(kCTransferableCID, &rv);
-  if (NS_FAILED(rv)) return rv;
-  if (!trans) return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsISupportsInterfacePointer> ptrPrimitive(do_CreateInstance(NS_SUPPORTS_INTERFACE_POINTER_CONTRACTID, &rv));
-  if (NS_FAILED(rv)) return rv;
-  if (!ptrPrimitive)  return NS_ERROR_FAILURE;
-  ptrPrimitive->SetData(image);
-
-  trans->SetTransferData(kNativeImageMime, ptrPrimitive, sizeof(nsISupports*));
+  // check whether the system supports the selection clipboard or not.
+  PRBool selectionSupported;
+  rv = clipboard->SupportsSelectionClipboard(&selectionSupported);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // put the transferable on the clipboard
-  return clipboard->SetData(trans, nsnull, aClipboardID);
+  if (selectionSupported) {
+    rv = clipboard->SetData(trans, nsnull, nsIClipboard::kSelectionClipboard);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  return clipboard->SetData(trans, nsnull, nsIClipboard::kGlobalClipboard);
 }
