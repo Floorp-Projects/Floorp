@@ -730,10 +730,10 @@ HDC   ps = NULL;
       HDC    hdc = GpiQueryDevice( hps);
       long   res[ 2];
       DevQueryCaps( hdc, CAPS_HORIZONTAL_FONT_RES, 2, res);
-      pMetrics = getMetrics( lFonts, szFamily, hps);
+      pMetrics = getMetrics( lFonts, fh->fattrs.szFacename, hps);
 
       for( i = 0; i < lFonts; i++)
-         if( !stricmp( szFamily, pMetrics[ i].szFamilyname) &&
+         if( !stricmp( fh->fattrs.szFacename, pMetrics[ i].szFacename) &&
              pMetrics[ i].sNominalPointSize / 10 == points  &&
              pMetrics[ i].sXDeviceRes == res[0]             &&
              pMetrics[ i].sYDeviceRes == res[1]) break;

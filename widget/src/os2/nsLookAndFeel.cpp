@@ -140,7 +140,7 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
       idx = SYSCLR_INACTIVETITLE;
       break;
     case eColor_inactivecaptiontext:
-      idx = SYSCLR_INACTIVETITLE;
+      idx = SYSCLR_INACTIVETITLETEXT;
       break;
     case eColor_infobackground:
       aColor = NS_RGB( 255, 255, 228);
