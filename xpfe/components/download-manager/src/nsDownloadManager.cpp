@@ -57,6 +57,7 @@
 #include "nsCRT.h"
 #include "nsIWindowMediator.h"
 #include "nsIPromptService.h"
+#include "nsIObserverService.h"
 
 /* Outstanding issues/todo:
  * 1. Implement pause/resume.
@@ -119,6 +120,11 @@ nsDownloadManager::Init()
   nsresult rv;
   mRDFContainerUtils = do_GetService("@mozilla.org/rdf/container-utils;1", &rv);
   if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsIObserverService> obsService = do_GetService("@mozilla.org/observer-service;1", &rv);
+  if (NS_FAILED(rv)) return rv;
+  
+  obsService->AddObserver(this, "quit-application", PR_FALSE);
 
   rv = nsServiceManager::GetService(kRDFServiceCID, NS_GET_IID(nsIRDFService),
                                     (nsISupports**) &gRDFService);
@@ -848,13 +854,14 @@ nsDownloadManager::HandleEvent(nsIDOMEvent* aEvent)
 NS_IMETHODIMP
 nsDownloadManager::Observe(nsISupports* aSubject, const char* aTopic, const PRUnichar* aData)
 {
-  nsCOMPtr<nsIProgressDialog> dialog = do_QueryInterface(aSubject);
+  nsresult rv;
   if (nsCRT::strcmp(aTopic, "oncancel") == 0) {
+    nsCOMPtr<nsIProgressDialog> dialog = do_QueryInterface(aSubject);
     nsCOMPtr<nsILocalFile> target;
     dialog->GetTarget(getter_AddRefs(target));
     
     nsCAutoString path;
-    nsresult rv = target->GetNativePath(path);
+    rv = target->GetNativePath(path);
     if (NS_FAILED(rv)) return rv;
     
     nsCStringKey key(path);
@@ -865,6 +872,28 @@ nsDownloadManager::Observe(nsISupports* aSubject, const char* aTopic, const PRUn
       
       return CancelDownload(path.get());  
     }
+  }
+  else if (nsCRT::strcmp(aTopic, "quit-application") == 0) {
+    nsCOMPtr<nsISupports> supports;
+    nsCOMPtr<nsIRDFResource> res;
+    const char* uri;
+    nsCOMPtr<nsIRDFInt> intLiteral;
+
+    gRDFService->GetIntLiteral(DOWNLOADING, getter_AddRefs(intLiteral));
+    nsCOMPtr<nsISimpleEnumerator> downloads;
+    rv = mDataSource->GetSources(gNC_DownloadState, intLiteral, PR_TRUE, getter_AddRefs(downloads));
+    if (NS_FAILED(rv)) return rv;
+    
+    PRBool hasMoreElements;
+    downloads->HasMoreElements(&hasMoreElements);
+
+    while (hasMoreElements) {
+      downloads->GetNext(getter_AddRefs(supports));
+      res = do_QueryInterface(supports);
+      res->GetValueConst(&uri);
+      CancelDownload(uri);
+      downloads->HasMoreElements(&hasMoreElements);
+    }    
   }
   return NS_OK;
 }
