@@ -139,6 +139,23 @@ void OnEndElement(void *userData, const XML_Char *name)
 
 void OnDefault(void *userData, const XML_Char *s, int len)
 {
+	XML_Char *pString = new XML_Char[len + 1];
+	memset(pString, 0, sizeof(XML_Char) * (len + 1));
+	memcpy(pString, s, sizeof(XML_Char) * len);
+
+	USES_CONVERSION;
+	ATLTRACE(_T("OnDefault: \"%s\"\n"), X2T(pString));
+
+	// TODO test if the buffer contains <?xml version="X"?>
+	//      and store version in XML document
+
+	// TODO test if the buffer contains DTD and store it
+	//      in the XML document
+
+	// TODO test if the buffer contains a comment, i.e. <!--.*-->
+	//      and create a comment XML element
+
+	delete []pString;
 }
 
 
