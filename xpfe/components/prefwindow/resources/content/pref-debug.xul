@@ -49,6 +49,13 @@
 				</html:label>
 			</html:div>
 
+			<html:div>
+				<html:input type="checkbox" id="viewUseViewManager2"
+                    pref="true" preftype="bool" prefstring="nglayout.view.useViewManager2"/>
+				<html:label for="viewUseViewManager2" accesskey="n" tabindex="0">
+			  	&useViewManager2.label;
+				</html:label>
+			</html:div>
 
 			<html:div>
 				<html:input type="checkbox" id="nglayoutDebugWindow"
