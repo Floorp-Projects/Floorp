@@ -28,6 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= png
 LIBRARY_NAME	= mozpng
+EXPORT_LIBRARY = 1
 
 
 CSRCS		= \

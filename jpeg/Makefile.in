@@ -28,6 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= jpeg
 LIBRARY_NAME	= mozjpeg
+EXPORT_LIBRARY = 1
 
 
 CSRCS		= \

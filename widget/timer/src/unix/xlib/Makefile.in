@@ -33,6 +33,7 @@ REQUIRES	= xpcom string widget
 CPPSRCS		= nsTimerXlib.cpp
 
 ifndef MOZ_MONOLITHIC_TOOLKIT
+EXPORT_LIBRARY = 1
 TIMER_SUFFIX	= xlib
 IS_COMPONENT	= 1
 CPPSRCS		+= nsTimerXlibFactory.cpp

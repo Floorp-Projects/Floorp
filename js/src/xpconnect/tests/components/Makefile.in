@@ -41,6 +41,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xpctest
 LIBRARY_NAME	= xpctest
+EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 REQUIRES	= xpconnect xpcom string js xpconnect_tests
 

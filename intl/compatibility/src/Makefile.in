@@ -28,6 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= intlcmpt
 LIBRARY_NAME	= intlcmpt
+EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 
 

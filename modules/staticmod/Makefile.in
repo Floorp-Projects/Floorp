@@ -28,6 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= staticmod
 LIBRARY_NAME	= staticmod
+EXPORT_LIBRARY = 1
 SHORT_LIBNAME	= statcmod
 IS_COMPONENT	= 1
 

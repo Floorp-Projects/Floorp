@@ -28,6 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE = inspector
 LIBRARY_NAME = inspector
+EXPORT_LIBRARY = 1
 SHORT_LIBNAME = inspector
 IS_COMPONENT = 1
 

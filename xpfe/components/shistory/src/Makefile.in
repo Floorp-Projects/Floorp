@@ -28,6 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= shistory
 LIBRARY_NAME	= shistory
+EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 REQUIRES	= xpcom string necko dom layout docshell locale widget uriloader pref gfx2
 

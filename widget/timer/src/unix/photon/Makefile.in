@@ -28,10 +28,10 @@ include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= timer_$(TIMER_SUFFIX)
 
-
 CPPSRCS		= nsTimerPh.cpp
 
 ifndef MOZ_MONOLITHIC_TOOLKIT
+EXPORT_LIBRARY = 1
 TIMER_SUFFIX	= photon
 IS_COMPONENT	= 1
 CPPSRCS		+= nsTimerPhFactory.cpp

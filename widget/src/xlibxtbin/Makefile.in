@@ -27,6 +27,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE          = xlibxtbin
 LIBRARY_NAME	= xlibxtbin
+EXPORT_LIBRARY = 1
 
 REQUIRES	= xlibrgb
 

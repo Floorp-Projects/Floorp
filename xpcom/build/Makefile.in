@@ -28,6 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xpcom
 LIBRARY_NAME	= xpcom
+EXPORT_LIBRARY = 1
 REQUIRES	= libreg unicharutil string
 
 CPPSRCS		= nsXPComInit.cpp

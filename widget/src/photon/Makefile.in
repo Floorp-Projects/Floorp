@@ -27,6 +27,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= widget_photon
+EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 
 

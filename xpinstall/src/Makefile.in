@@ -31,6 +31,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xpinstall
 LIBRARY_NAME	= xpinstall
+EXPORT_LIBRARY = 1
 SHORT_LIBNAME	= xpinstal
 IS_COMPONENT	= 1
 REQUIRES	= xpcom string jar chrome necko intl locale libreg js pref appshell widget layout uriloader xpconnect docshell dom gfx2 mozcomps windowwatcher
