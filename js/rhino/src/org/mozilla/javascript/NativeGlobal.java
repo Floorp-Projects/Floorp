@@ -79,7 +79,8 @@ public class NativeGlobal {
         global.defineProperty("undefined", Undefined.instance,
                               ScriptableObject.DONTENUM);
 
-        String[] errorMethods = { "EvalError",  
+        String[] errorMethods = { "ConversionError",
+                                  "EvalError",  
                                   "RangeError",
                                   "ReferenceError",
                                   "SyntaxError",

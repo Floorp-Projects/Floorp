@@ -766,10 +766,12 @@ public class ScriptRuntime {
         catch (ClassCastException e) {
             start = toObject(scope, obj);
         }
-        if (start == null) {
+        if (start == null || start == Undefined.instance) {
+            String msg = start == null ? "msg.null.to.object" 
+                                       : "msg.undefined";
             throw NativeGlobal.constructError(
-                        Context.getContext(), "TypeError",
-                        ScriptRuntime.getMessage("msg.null.to.object", null),
+                        Context.getContext(), "ConversionError",
+                        ScriptRuntime.getMessage(msg, null),
                         scope);
         }
         Scriptable m = start;
