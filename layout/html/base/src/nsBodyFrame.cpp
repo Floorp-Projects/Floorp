@@ -251,14 +251,6 @@ NS_METHOD nsBodyFrame::IncrementalReflow(nsIPresContext*  aPresContext,
                                          nsReflowCommand& aReflowCommand,
                                          nsReflowStatus&  aStatus)
 {
-  // XXX Currently there's a bug that when the body background image dimension
-  // is resolved we're treating that as a content change rather than just repainting
-  // the body...
-  if (aReflowCommand.GetTarget() == this) {
-    NS_ASSERTION(aReflowCommand.GetType() == nsReflowCommand::ContentChanged, "unexpected type");
-    return ResizeReflow(aPresContext, aDesiredSize, aMaxSize, nsnull, aStatus);
-  }
-
   // Get our border/padding info
   nsStyleSpacing* mySpacing =
     (nsStyleSpacing*)mStyleContext->GetData(kStyleSpacingSID);
@@ -273,10 +265,8 @@ NS_METHOD nsBodyFrame::IncrementalReflow(nsIPresContext*  aPresContext,
 
   mSpaceManager->Translate(leftInset, topInset);
 
-#if 0
   // The reflow command should never be target for us
   NS_ASSERTION(aReflowCommand.GetTarget() != this, "bad reflow command target");
-#endif
 
   // Compute the child frame's max size
   nsSize  columnMaxSize = GetColumnAvailSpace(aPresContext, mySpacing,
