@@ -1,0 +1,66 @@
+box#sidebarbox[hidden="true"] {
+  display: none
+}
+
+splitter#sidebarsplitter[hidden="true"] {
+  display: none
+}
+
+box#sidebarbox
+{
+  border: 2px inset gray;
+  height: 200px; 
+  width: 200px;
+  overflow: auto
+}
+
+box#appcontent
+{
+  border: 2px inset gray;
+}
+
+iframe.panelframe {
+  width:  100px;
+  height: 125px;
+  border: 0px;
+}
+
+iframe.notlast
+{
+  height: 125px;
+}
+
+/*
+ *  Sidebar and Panel title buttons
+ */
+box#titlebox
+{
+  background-color: #666699;
+}
+
+box#titlebox titledbutton
+{
+  color: white;
+}
+
+splitter.panelbar
+{
+  padding: 0px;
+  border-top: 1px solid #ffffff;
+}
+
+splitter.panelbar div
+{
+  padding: 5px;
+}
+
+splitter.panelbar titledbutton
+{
+  padding: 0px;
+}
+
+titledbutton.showhide
+{
+  list-style-image:url(chrome://sidebar/skin/showhide.gif);
+}
+

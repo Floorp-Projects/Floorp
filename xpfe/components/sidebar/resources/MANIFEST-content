@@ -13,3 +13,6 @@ sidebar-browser.rdf
 sidebar-browser.xul
 sidebar-registry.rdf
 sidebar.js
+sidebar.rdf
+sidebarOverlay.js
+sidebarOverlay.xul

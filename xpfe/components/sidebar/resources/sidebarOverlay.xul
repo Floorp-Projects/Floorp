@@ -1,0 +1,27 @@
+<?xml version="1.0"?> 
+
+<!DOCTYPE window SYSTEM "chrome://sidebar/locale/sidebarOverlay.dtd">
+
+<overlay id="sidebarOverlay"
+  xmlns:html="http://www.w3.org/TR/REC-html40"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<html:script language="JavaScript"
+  src="chrome://sidebar/content/sidebarOverlay.js"/>
+
+  <box id="sidebarbox" align="vertical" persist="hidden width">
+    <!--box id="sidebarpanels" align="vertical"-->
+      <box id="titlebox">
+        <spring flex="100%"/>
+        <titledbutton class="borderless"
+          value="&sidebar.reload.label;"
+          onclick="reloadSidebar()" />
+        <titledbutton class="borderless"
+          value="&sidebar.customize.label;" 
+          onclick="customizeSidebar();" />
+        <spring flex="100%"/>
+      </box>
+    <!--/box-->
+  </box>
+
+</overlay>
