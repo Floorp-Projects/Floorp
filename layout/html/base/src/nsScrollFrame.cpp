@@ -190,14 +190,15 @@ nsScrollFrame::CreateScrollingView()
       // Initialize the view
       scrolledView->Init(viewManager, nsRect(0, 0, 0, 0), parentView);
   
-      // Set it as the scrolling view's scrolled view
-      scrollingView->SetScrolledView(scrolledView);
-  
-      // If the background is transparent then inform the view manager
+      // If the background is transparent then inform the view manager. Note:
+      // we need to do this before we set the scrolling view's scrolled view
       if (isTransparent) {
         viewManager->SetViewContentTransparency(scrolledView, PR_TRUE);
       }
   
+      // Set it as the scrolling view's scrolled view
+      scrollingView->SetScrolledView(scrolledView);
+
       // We need to allow the view's position to be different than the
       // frame's position
       nsFrameState  state;
