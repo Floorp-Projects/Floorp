@@ -24,7 +24,7 @@
 #define nsMathMLChar_h___
 
 #include "nsMathMLOperators.h"
-#include "nsIMathMLFrame.h"
+#include "nsMathMLFrame.h"
 
 typedef PRUnichar nsGlyphCode;
 class nsGlyphTable;

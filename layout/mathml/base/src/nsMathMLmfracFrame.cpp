@@ -143,18 +143,11 @@ nsMathMLmfracFrame::CalcLineThickness(nsIPresContext*  aPresContext,
         else if (eCSSUnit_Null != unit)
           lineThickness = CalcLength(aPresContext, aStyleContext, cssValue);
       }
-#if 0
-      else {
-        char str[50];
-        aThicknessAttribute.ToCString(str, 50);
-        printf("Invalid attribute linethickness=%s\n", str);
-      }
-#endif
     }
   }
 
   // use minimum if the lineThickness is a non-zero value less than minimun
-  if (0 != lineThickness && lineThickness < minimumThickness) 
+  if (lineThickness && lineThickness < minimumThickness) 
     lineThickness = minimumThickness;
 
   return lineThickness;
@@ -214,27 +207,24 @@ nsMathMLmfracFrame::Place(nsIPresContext*      aPresContext,
   nsIFrame* frameDen = nsnull;
 
   nsIFrame* childFrame = mFrames.FirstChild();
-  while (nsnull != childFrame) {
-    if (!IsOnlyWhitespace(childFrame)) {
-      if (0 == count) {
-      	// numerator
-	frameNum = childFrame;
-        GetReflowAndBoundingMetricsFor(frameNum, sizeNum, bmNum);
-      }
-      else if (1 == count) {
-      	// denominator
-	frameDen = childFrame;
-        GetReflowAndBoundingMetricsFor(frameDen, sizeDen, bmDen);
-      }
-      count++;
+  while (childFrame) {
+    if (0 == count) {
+    	// numerator
+      frameNum = childFrame;
+      GetReflowAndBoundingMetricsFor(frameNum, sizeNum, bmNum);
     }
-    rv = childFrame->GetNextSibling(&childFrame);
+    else if (1 == count) {
+    	// denominator
+      frameDen = childFrame;
+      GetReflowAndBoundingMetricsFor(frameDen, sizeDen, bmDen);
+    }
+    count++;
+    
+    childFrame->GetNextSibling(&childFrame);
   }
-#ifdef NS_DEBUG
-  if (2 != count) printf("mfrac: invalid markup\n");
-#endif
-  if ((2 != count) || !frameNum || !frameDen) {
+  if (2 != count) {
     // report an error, encourage people to get their markups in order
+    NS_WARNING("invalid markup");
     return ReflowError(aPresContext, aRenderingContext, aDesiredSize);
   }
 

@@ -288,7 +288,7 @@ nsGlyphTable::ElementAt(nsMathMLChar* aChar, PRUint32 aPosition)
       offset += 5;
       child = child->mSibling;
     }
-    length = offset + 5; // stay confined in the glyphs of this child
+    length = offset + 4; // stay confined in the glyphs of this child
   }
   PRUint32 index = offset + aPosition;
   if (index >= length) return 0;
@@ -305,7 +305,7 @@ nsGlyphTable::IsComposite(nsMathMLChar* aChar)
   // shortcut to sync the cache with this char...
   mCharCache = 0; mGlyphCache.Truncate(); ElementAt(aChar, 0);
   // the cache remained empty if the char wasn't found in this table
-  if (4 > mGlyphCache.Length()) return PR_FALSE;
+  if (4 >= mGlyphCache.Length()) return PR_FALSE;
   // the lists of glyphs of a composite char are space-separated
   return (kSpaceCh == mGlyphCache.CharAt(4));
 }
@@ -327,7 +327,7 @@ nsGlyphTable::Has(nsMathMLChar* aChar)
   // shortcut to sync the cache with this char...
   mCharCache = 0; mGlyphCache.Truncate(); ElementAt(aChar, 0);
   // the cache remained empty if the char wasn't found in this table
-  if (4 > mGlyphCache.Length()) return PR_FALSE;
+  if (4 >= mGlyphCache.Length()) return PR_FALSE;
   // see if this char is in the table as a single or as a composite char
   nsGlyphCode ch = mGlyphCache.CharAt(4);
   return ((aChar->mData[0] == ch) || (kSpaceCh == ch));
@@ -407,7 +407,7 @@ public:
     NS_INIT_ISUPPORTS();
   }
 
-  ~nsGlyphTableList()
+  virtual ~nsGlyphTableList()
   {
     MOZ_COUNT_DTOR(nsGlyphTableList);
   }
@@ -515,6 +515,7 @@ nsGlyphTableList::AddGlyphTable(nsIPresContext*  aPresContext,
   deviceContext->GetLocalFontName(fontName, localName, aliased);
   if (aliased || (NS_OK == deviceContext->CheckFontExistence(localName))) {
     // allocate a table to be deleted at shutdown
+    // (see bug 35824 for coments about the aliased localName)
     nsGlyphTable* glyphTable = new nsGlyphTable(aFontName);
     if (!glyphTable) return NS_ERROR_OUT_OF_MEMORY;
     mTableList.AppendElement(glyphTable);
@@ -938,7 +939,7 @@ ComputeSizeFromParts(nsGlyphCode* aGlyphs,
   nsGlyphCode firstGlyph  = aGlyphs[0]; nscoord firstSize  = aSizes[0];
   nsGlyphCode middleGlyph = aGlyphs[1]; nscoord middleSize = aSizes[1];
   nsGlyphCode lastGlyph   = aGlyphs[2]; nscoord lastSize   = aSizes[2];
-  nsGlyphCode glueGlyph   = aGlyphs[3]; nscoord glueSize   = aSizes[3];
+  nsGlyphCode glueGlyph   = aGlyphs[3]; //nscoord glueSize   = aSizes[3];
 
   float firstFlex = 1.0f, middleFlex = 1.0f, lastFlex = 1.0f;
   // refine the flexibility depending on whether some parts can be left out
@@ -1025,9 +1026,7 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
                                             PRUint32(mData.Length()),
                                             mBoundingMetrics);
   if (NS_FAILED(rv)) {
-#ifdef NS_DEBUG
-    printf("GetBoundingMetrics failed\n");
-#endif
+    NS_WARNING("GetBoundingMetrics failed");
     // ensure that the char later behaves like a normal char
     mDirection = NS_STRETCH_DIRECTION_UNSUPPORTED; // XXX to reset in dynamic updates
     return rv;
@@ -1044,7 +1043,7 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
   }
 
   // see if this is a particular largeop or largeopOnly request
-  PRBool largeop = (NS_STRETCH_LARGEOP & aStretchHint);
+  PRBool largeop = (PRBool)(NS_STRETCH_LARGEOP & aStretchHint);
   PRBool largeopOnly = (NS_STRETCH_LARGEOP == aStretchHint); // (==, not mask!)
 
   ////////////////////////////////////////////////////////////////////////////////////
@@ -1202,15 +1201,14 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
              glyphTable->ChildCountOf(this), str,
              NS_SUCCEEDED(rv)? "OK" : "Rejected");
 #endif
-      if (NS_SUCCEEDED(rv)) {
-        // all went well, painting will be delegated from now on to children
-        mGlyph = 0; // this will tell paint to build by parts
-        mGlyphTable = glyphTable;
-        mBoundingMetrics = compositeSize;
-        aDesiredStretchSize = compositeSize;
-        return NS_OK; // get out ...
-      }
-      continue; // to next table
+      if (NS_FAILED(rv)) continue; // to next table
+
+      // all went well, painting will be delegated from now on to children
+      mGlyph = 0; // this will tell paint to build by parts
+      mGlyphTable = glyphTable;
+      mBoundingMetrics = compositeSize;
+      aDesiredStretchSize = compositeSize;
+      return NS_OK; // get out ...
     }
 
     // See if the parts of this table fit in the desired space ///////////////////////
@@ -1237,10 +1235,8 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
       else {
         rv = glyphTable->GetBoundingMetrics(aRenderingContext, ch, bm);
         if (NS_FAILED(rv)) {
-#ifdef NS_DEBUG
-          printf("GetBoundingMetrics failed for %04X:%c\n", ch, ch&0x00FF);
-#endif
           // stop if we failed to compute the bounding metrics of a part.
+          NS_WARNING("GetBoundingMetrics failed");
           break;
         }
       }
@@ -1279,7 +1275,7 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
         if (rbearing < bm.rightBearing) rbearing = bm.rightBearing;
       }
       bestbm.width = width;
-      bestbm.ascent = bmdata[0].ascent; // XXX Yes top, so that it works with TeX sqrt!
+      bestbm.ascent = bmdata[0].ascent; // Yes top, so that it works with TeX sqrt!
       bestbm.descent = computedSize - bestbm.ascent;
       bestbm.leftBearing = lbearing;
       bestbm.rightBearing = rbearing;
@@ -1375,7 +1371,6 @@ nsMathMLChar::ComposeChildren(nsIPresContext*      aPresContext,
     child->mStyleContext = mStyleContext;
     child->mGlyphTable = aGlyphTable; // the child is associated to this table
     // there goes the Stretch() ...
-    // XXX maybe wrap some if's inside Stretch() to skip irrelevant things to child chars
     nsBoundingMetrics childSize;
     nsresult rv = child->Stretch(aPresContext, aRenderingContext, mDirection,
                                  splitSize, childSize, aStretchHint);
@@ -1415,13 +1410,14 @@ nsMathMLChar::Paint(nsIPresContext*      aPresContext,
                     nsIFrame*            aForFrame)
 {
   nsresult rv = NS_OK;
+  nsCOMPtr<nsIStyleContext> parentContext;
+  parentContext = getter_AddRefs(mStyleContext->GetParent());
   nsIStyleContext* styleContext = mStyleContext;
-  nsIStyleContext* parentContext = nsnull;
 
   if (NS_STRETCH_DIRECTION_UNSUPPORTED == mDirection) {
     // normal drawing if there is nothing special about this char
-    // Set default context to the parent context to be released at the end...
-    styleContext = parentContext = mStyleContext->GetParent();
+    // Set default context to the parent context
+    styleContext = parentContext;
   }
 
   nsStyleDisplay display;
@@ -1435,9 +1431,9 @@ nsMathMLChar::Paint(nsIPresContext*      aPresContext,
       // Paint our background and border
       PRIntn skipSides = 0; //aForFrame->GetSkipSides();
       nsStyleBorder border;
-      mStyleContext->GetStyle(eStyleStruct_Border, border);
+      styleContext->GetStyle(eStyleStruct_Border, border);
       nsStyleOutline outline;
-      mStyleContext->GetStyle(eStyleStruct_Outline, outline);
+      styleContext->GetStyle(eStyleStruct_Outline, outline);
 
       nsRect rect(mRect); //0, 0, mRect.width, mRect.height);
       nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, aForFrame,
@@ -1512,7 +1508,6 @@ nsMathMLChar::Paint(nsIPresContext*      aPresContext,
       }
     }
   }
-  NS_IF_RELEASE(parentContext);
   return rv;
 }
 
@@ -1558,9 +1553,7 @@ nsMathMLChar::PaintVertically(nsIPresContext*      aPresContext,
     else {
       rv = aGlyphTable->GetBoundingMetrics(aRenderingContext, ch, bm);
       if (NS_FAILED(rv)) {
-#ifdef NS_DEBUG
-        printf("GetBoundingMetrics failed for %04X:%c\n", ch, ch&0x00FF);
-#endif
+        NS_WARNING("GetBoundingMetrics failed");
         return rv;
       }
     }
@@ -1734,9 +1727,7 @@ nsMathMLChar::PaintHorizontally(nsIPresContext*      aPresContext,
     else {
       rv = aGlyphTable->GetBoundingMetrics(aRenderingContext, ch, bm);
       if (NS_FAILED(rv)) {
-#ifdef NS_DEBUG
-        printf("GetBoundingMetrics failed for %04X:%c\n", ch, ch&0x00FF);
-#endif
+        NS_WARNING("GetBoundingMetrics failed");
         return rv;
       }
       if (dy < aRect.y - aFontAscent + bm.ascent) {

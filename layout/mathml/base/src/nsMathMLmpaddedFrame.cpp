@@ -208,8 +208,7 @@ nsMathMLmpaddedFrame::ParseAttribute(nsString&   aString,
 
   aPseudoUnit = NS_MATHML_PSEUDO_UNIT_UNSPECIFIED;
   if (i == stringLength) { // no explicit pseudo-unit ...
-    if (eCSSUnit_Number == aCSSValue.GetUnit() && 
-        0.0f != aCSSValue.GetFloatValue()) {
+    if ((eCSSUnit_Number == aCSSValue.GetUnit()) && aCSSValue.GetFloatValue()) {
       // ... and no explicit CSS unit either
 
       // In this case, the MathML REC suggests taking ems for
@@ -375,7 +374,7 @@ nsMathMLmpaddedFrame::Reflow(nsIPresContext*          aPresContext,
   nscoord height = mBoundingMetrics.ascent;
   nscoord depth  = mBoundingMetrics.descent;
   nscoord width  = mBoundingMetrics.width;
-  nscoord lspace = 0; // it is unclear from the REC what is the default here 
+  nscoord lspace = 0; // XXX it is unclear from the REC what is the default here 
 
   PRInt32 pseudoUnit;
 
@@ -409,7 +408,7 @@ nsMathMLmpaddedFrame::Reflow(nsIPresContext*          aPresContext,
 
   // do the padding now that we have everything
 
-  if (lspace != 0) { // there was padding on the left
+  if (lspace) { // there was padding on the left
     mBoundingMetrics.leftBearing = 0;
   }
 
@@ -430,7 +429,7 @@ nsMathMLmpaddedFrame::Reflow(nsIPresContext*          aPresContext,
   aDesiredSize.height = aDesiredSize.ascent + aDesiredSize.descent;
   aDesiredSize.mBoundingMetrics = mBoundingMetrics;
 
-  if (0 != dx || 0 != dy) {
+  if (dx || dy) {
     nsRect rect;
     nsIFrame* childFrame = mFrames.FirstChild();
     while (childFrame) {

@@ -257,6 +257,10 @@ MapAlignAttributesInto(nsIPresContext* aPresContext,
 // --------
 // implementation of nsMathMLmtableOuterFrame
 
+NS_IMPL_ADDREF_INHERITED(nsMathMLmtableOuterFrame, nsMathMLFrame)
+NS_IMPL_RELEASE_INHERITED(nsMathMLmtableOuterFrame, nsMathMLFrame)
+NS_IMPL_QUERY_INTERFACE_INHERITED1(nsMathMLmtableOuterFrame, nsTableOuterFrame, nsMathMLFrame)
+
 nsresult
 NS_NewMathMLmtableOuterFrame (nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
@@ -282,22 +286,6 @@ nsMathMLmtableOuterFrame::~nsMathMLmtableOuterFrame()
 {
 }
 
-NS_INTERFACE_MAP_BEGIN(nsMathMLmtableOuterFrame)
-  NS_INTERFACE_MAP_ENTRY(nsIMathMLFrame)
-NS_INTERFACE_MAP_END_INHERITING(nsTableOuterFrame)
-
-NS_IMETHODIMP_(nsrefcnt) 
-nsMathMLmtableOuterFrame::AddRef(void)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP_(nsrefcnt) 
-nsMathMLmtableOuterFrame::Release(void)
-{
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsMathMLmtableOuterFrame::Init(nsIPresContext*  aPresContext,
                                nsIContent*      aContent,
@@ -307,8 +295,134 @@ nsMathMLmtableOuterFrame::Init(nsIPresContext*  aPresContext,
 {
   nsresult  rv = nsTableOuterFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 
+  // now, if our parent implements the nsIMathMLFrame interface, we inherit
+  // its scriptlevel and displaystyle. If the parent later wishes to increment
+  // with other values, it will do so in its SetInitialChildList() method.
+
+  // XXX the REC says that by default, displaystyle=false in <mtable>
+
+  nsIMathMLFrame* mathMLFrame = nsnull;
+  nsresult res = aParent->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
+  if (NS_SUCCEEDED(res) && mathMLFrame) {
+    nsPresentationData parentData;
+    mathMLFrame->GetPresentationData(parentData);
+
+    mPresentationData.mstyle = parentData.mstyle;
+    mPresentationData.scriptLevel = parentData.scriptLevel;
+    if (NS_MATHML_IS_DISPLAYSTYLE(parentData.flags))
+      mPresentationData.flags |= NS_MATHML_DISPLAYSTYLE;
+    else
+      mPresentationData.flags &= ~NS_MATHML_DISPLAYSTYLE;
+  }
+  else {
+    // see if our parent has 'display: block'
+    // XXX should we restrict this to the top level <math> parent ?
+    const nsStyleDisplay* display;
+    aParent->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
+    if (display->mDisplay == NS_STYLE_DISPLAY_BLOCK) {
+      mPresentationData.flags |= NS_MATHML_DISPLAYSTYLE;
+    }
+  }
+
+  // see if the displaystyle attribute is there and let it override what we inherited
+  nsAutoString value;
+  if (NS_CONTENT_ATTR_HAS_VALUE == 
+      nsMathMLContainerFrame::GetAttribute(mContent, nsnull,
+               nsMathMLAtoms::displaystyle_, value)) {
+    if (value.EqualsWithConversion("true")) {
+      mPresentationData.flags |= NS_MATHML_DISPLAYSTYLE;
+    }
+    else if (value.EqualsWithConversion("false")) {
+      mPresentationData.flags &= ~NS_MATHML_DISPLAYSTYLE;
+    }
+  }
+
   return rv;
 }
+
+// helper to let the update of presentation data pass through
+// a subtree that may contain non-math container frames
+void
+UpdatePresentationDataFor(nsIPresContext* aPresContext,
+                          nsIFrame*       aFrame,
+                          PRInt32         aScriptLevelIncrement,
+                          PRUint32        aFlagsValues,
+                          PRUint32        aFlagsToUpdate)
+{
+  nsIMathMLFrame* mathMLFrame = nsnull;
+  nsresult rv = aFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
+  if (NS_SUCCEEDED(rv) && mathMLFrame) {
+    // update
+    mathMLFrame->UpdatePresentationData(
+      aScriptLevelIncrement, aFlagsValues, aFlagsToUpdate);
+  }
+  // propagate down the subtrees
+  nsIFrame* childFrame;
+  aFrame->FirstChild(aPresContext, nsnull, &childFrame);
+  while (childFrame) {
+    UpdatePresentationDataFor(aPresContext, childFrame,
+      aScriptLevelIncrement, aFlagsValues, aFlagsToUpdate);
+    childFrame->GetNextSibling(&childFrame);
+  }
+}
+
+// helper to let the scriptstyle re-resolution pass through
+// a subtree that may contain non-math container frames
+void
+ReResolveScriptStyleFor(nsIPresContext*  aPresContext,
+                        nsIFrame*        aFrame,
+                        PRInt32          aScriptLevel)
+{
+  nsIFrame* childFrame = nsnull;
+  nsCOMPtr<nsIStyleContext> styleContext;
+  aFrame->GetStyleContext(getter_AddRefs(styleContext));
+  aFrame->FirstChild(aPresContext, nsnull, &childFrame);
+  while (childFrame) {
+    nsIMathMLFrame* mathMLFrame;
+    nsresult res = childFrame->QueryInterface(
+      NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
+    if (NS_SUCCEEDED(res) && mathMLFrame) {
+      mathMLFrame->ReResolveScriptStyle(aPresContext, styleContext, aScriptLevel);
+    }
+    else {
+      ReResolveScriptStyleFor(aPresContext, childFrame, aScriptLevel);
+    }
+    childFrame->GetNextSibling(&childFrame);
+  }
+}
+
+NS_IMETHODIMP
+nsMathMLmtableOuterFrame::UpdatePresentationDataFromChildAt(nsIPresContext* aPresContext,
+                                                            PRInt32         aFirstIndex,
+                                                            PRInt32         aLastIndex,
+                                                            PRInt32         aScriptLevelIncrement,
+                                                            PRUint32        aFlagsValues,
+                                                            PRUint32        aFlagsToUpdate)
+{
+  PRInt32 index = 0;
+  nsIFrame* childFrame = mFrames.FirstChild();
+  while (childFrame) {
+    if ((index >= aFirstIndex) &&
+        ((aLastIndex <= 0) || ((aLastIndex > 0) && (index <= aLastIndex)))) {
+      UpdatePresentationDataFor(aPresContext, childFrame,
+        aScriptLevelIncrement, aFlagsValues, aFlagsToUpdate);
+    }
+    index++;
+    childFrame->GetNextSibling(&childFrame);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMathMLmtableOuterFrame::ReResolveScriptStyle(nsIPresContext*  aPresContext,
+                                               nsIStyleContext* aParentContext,
+                                               PRInt32          aParentScriptLevel)
+{
+  // pass aParentScriptLevel -- it is as if we were not there...
+  ReResolveScriptStyleFor(aPresContext, this, aParentScriptLevel);
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP
 nsMathMLmtableOuterFrame::Reflow(nsIPresContext*          aPresContext,
@@ -316,6 +430,7 @@ nsMathMLmtableOuterFrame::Reflow(nsIPresContext*          aPresContext,
                                  const nsHTMLReflowState& aReflowState,
                                  nsReflowStatus&          aStatus)
 {
+//NS_ASSERTION(eReflowReason_Incremental != aReflowState.reason, "Break");
   // we want to return a table that is centered according to the align attribute
   nsresult rv = nsTableOuterFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
 
@@ -375,11 +490,16 @@ nsMathMLmtableOuterFrame::Reflow(nsIPresContext*          aPresContext,
     // XXX Temporary hack! We are going to reflow again because
     // the table frame code is skipping the Pass 2 reflow when,
     // at the Pass 1 reflow, the available size is unconstrained.
-    // Skipping the Pass2 messes the alignments...
+    // Skipping the Pass2 messes the MathML alignments...
+    nsFrameState state;
+    nsIFrame* innerTableFrame = mFrames.FirstChild();
+    innerTableFrame->GetFrameState(&state);
+    innerTableFrame->SetFrameState(state | NS_FRAME_IS_DIRTY);
+    mState |= NS_FRAME_HAS_DIRTY_CHILDREN;
     nsCOMPtr<nsIPresShell> presShell;
     aPresContext->GetShell(getter_AddRefs(presShell));
-//    ReflowDirtyChild(presShell, mFrames.FirstChild());
-    mParent->ReflowDirtyChild(presShell, this);
+    nsFrame::CreateAndPostReflowCommand(presShell, this, 
+      nsIReflowCommand::ReflowDirty, nsnull, nsnull, nsnull);
   }
 
   return rv;
@@ -388,6 +508,10 @@ nsMathMLmtableOuterFrame::Reflow(nsIPresContext*          aPresContext,
 
 // --------
 // implementation of nsMathMLmtdFrame
+
+NS_IMPL_ADDREF_INHERITED(nsMathMLmtdFrame, nsMathMLFrame)
+NS_IMPL_RELEASE_INHERITED(nsMathMLmtdFrame, nsMathMLFrame)
+NS_IMPL_QUERY_INTERFACE_INHERITED1(nsMathMLmtdFrame, nsBlockFrame, nsMathMLFrame)
 
 nsresult
 NS_NewMathMLmtdFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
@@ -410,6 +534,54 @@ nsMathMLmtdFrame::nsMathMLmtdFrame()
 
 nsMathMLmtdFrame::~nsMathMLmtdFrame()
 {
+}
+
+NS_IMETHODIMP
+nsMathMLmtdFrame::Init(nsIPresContext*  aPresContext,
+                       nsIContent*      aContent,
+                       nsIFrame*        aParent,
+                       nsIStyleContext* aContext,
+                       nsIFrame*        aPrevInFlow)
+{
+  nsresult rv;
+  rv = nsBlockFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
+
+  // record that children that are ignorable whitespace should be excluded 
+  mState |= NS_FRAME_EXCLUDE_IGNORABLE_WHITESPACE;
+
+  // now, get our outermost parent that implements the nsIMathMLFrame interface,
+  // we will inherit its scriptlevel and displaystyle. If that parent later wishes
+  // to increment with other values, it will do so in its SetInitialChildList() method.
+  nsIFrame* parent = aParent;
+  while (parent) {
+    nsIMathMLFrame* mathMLFrame = nsnull;
+    nsresult res = parent->QueryInterface(
+      NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
+    if (NS_SUCCEEDED(res) && mathMLFrame) {
+    	nsPresentationData parentData;
+      mathMLFrame->GetPresentationData(parentData);
+      mPresentationData.mstyle = parentData.mstyle;
+      mPresentationData.scriptLevel = parentData.scriptLevel;
+      if (NS_MATHML_IS_DISPLAYSTYLE(parentData.flags))
+        mPresentationData.flags |= NS_MATHML_DISPLAYSTYLE;
+      else
+        mPresentationData.flags &= ~NS_MATHML_DISPLAYSTYLE;
+      break;
+    }
+    parent->GetParent(&parent);
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP
+nsMathMLmtdFrame::ReResolveScriptStyle(nsIPresContext*  aPresContext,
+                                       nsIStyleContext* aParentContext,
+                                       PRInt32          aParentScriptLevel)
+{
+  // pass aParentScriptLevel -- it is as if we were not there...
+  ReResolveScriptStyleFor(aPresContext, this, aParentScriptLevel);
+  return NS_OK;
 }
 
 NS_IMETHODIMP

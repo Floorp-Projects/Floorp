@@ -77,19 +77,6 @@ nsMathMLmsubFrame::Init(nsIPresContext*  aPresContext,
   nsresult rv = nsMathMLContainerFrame::Init
     (aPresContext, aContent, aParent, aContext, aPrevInFlow);
 
-  mSubScriptShift = 0;
-  mScriptSpace = NSFloatPointsToTwips(0.5f); // 0.5pt as in plain TeX
-
-  // check if the subscriptshift attribute is there
-  nsAutoString value;
-  if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
-                   nsMathMLAtoms::subscriptshift_, value)) {
-    nsCSSValue cssValue;
-    if (ParseNumericValue(value, cssValue) && cssValue.IsLengthUnit()) {
-      mSubScriptShift = CalcLength(aPresContext, mStyleContext, cssValue);
-    }
-  }
-
 #if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
   mPresentationData.flags |= NS_MATHML_SHOW_BOUNDING_METRICS;
 #endif
@@ -102,13 +89,27 @@ nsMathMLmsubFrame::Place (nsIPresContext*      aPresContext,
                           PRBool               aPlaceOrigin,
                           nsHTMLReflowMetrics& aDesiredSize)
 {
+  // extra spacing between base and sup/subscript
+  nscoord scriptSpace = NSFloatPointsToTwips(0.5f); // 0.5pt as in plain TeX
+
+  // check if the subscriptshift attribute is there
+  nscoord subScriptShift = 0;
+  nsAutoString value;
+  if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
+                   nsMathMLAtoms::subscriptshift_, value)) {
+    nsCSSValue cssValue;
+    if (ParseNumericValue(value, cssValue) && cssValue.IsLengthUnit()) {
+      subScriptShift = CalcLength(aPresContext, mStyleContext, cssValue);
+    }
+  }
+
   return nsMathMLmsubFrame::PlaceSubScript(aPresContext, 
                                            aRenderingContext,
                                            aPlaceOrigin,
                                            aDesiredSize,
                                            this,
-                                           mSubScriptShift,
-                                           mScriptSpace);
+                                           subScriptShift,
+                                           scriptSpace);
 }
 
 // exported routine that both munder and msub share.
@@ -148,38 +149,30 @@ nsMathMLmsubFrame::PlaceSubScript (nsIPresContext*      aPresContext,
 
   nsBoundingMetrics bmBase, bmSubScript;
 
-  nsIFrame* aChildFrame = nsnull;
-  rv = aFrame->FirstChild (aPresContext, nsnull, &aChildFrame);
-  if (!NS_SUCCEEDED(rv) || (nsnull == aChildFrame)) {
-    return rv;
-  }
-  while (nsnull != aChildFrame)
-  {
-    if (!IsOnlyWhitespace(aChildFrame)) {
-      if (0 == count) {
-        // base 
-        baseFrame = aChildFrame;
-        GetReflowAndBoundingMetricsFor(baseFrame, baseSize, bmBase);
-      }
-      else if (1 == count) {
-        // subscript
-        subScriptFrame = aChildFrame;
-        GetReflowAndBoundingMetricsFor(subScriptFrame, subScriptSize, bmSubScript);
-        // get the subdrop from the subscript font
-        nscoord aSubDrop;
-        GetSubDropFromChild (aPresContext, subScriptFrame, aSubDrop);
-        // parameter v, Rule 18a, App. G, TeXbook
-        minSubScriptShift = bmBase.descent + aSubDrop;
-      }
-      count++;
+  nsIFrame* childFrame = nsnull;
+  aFrame->FirstChild(aPresContext, nsnull, &childFrame);
+  while (childFrame) {
+    if (0 == count) {
+      // base 
+      baseFrame = childFrame;
+      GetReflowAndBoundingMetricsFor(baseFrame, baseSize, bmBase);
     }
-    aChildFrame->GetNextSibling(&aChildFrame);
+    else if (1 == count) {
+      // subscript
+      subScriptFrame = childFrame;
+      GetReflowAndBoundingMetricsFor(subScriptFrame, subScriptSize, bmSubScript);
+      // get the subdrop from the subscript font
+      nscoord subDrop;
+      GetSubDropFromChild (aPresContext, subScriptFrame, subDrop);
+      // parameter v, Rule 18a, App. G, TeXbook
+      minSubScriptShift = bmBase.descent + subDrop;
+    }
+    count++;
+    childFrame->GetNextSibling(&childFrame);
   }
-#ifdef NS_DEBUG
-  if (2 != count) printf("msub: invalid markup\n");
-#endif
-  if ((2 != count) || !baseFrame || !subScriptFrame) {
+  if (2 != count) {
     // report an error, encourage people to get their markups in order
+    NS_WARNING("invalid markup");
     return NS_STATIC_CAST(nsMathMLContainerFrame*, 
                           aFrame)->ReflowError(aPresContext, 
                                                aRenderingContext, 
@@ -197,29 +190,29 @@ nsMathMLmsubFrame::PlaceSubScript (nsIPresContext*      aPresContext,
 //  const nsStyleFont* aFont =
 //    (const nsStyleFont*) mStyleContext->GetStyleData (eStyleStruct_Font);
 
-  const nsStyleFont* aFont;
-  baseFrame->GetStyleData(eStyleStruct_Font, (const nsStyleStruct *&)aFont);
+  const nsStyleFont* font;
+  baseFrame->GetStyleData(eStyleStruct_Font, (const nsStyleStruct *&)font);
 
-  aPresContext->GetMetricsFor (aFont->mFont, getter_AddRefs(fm));
+  aPresContext->GetMetricsFor (font->mFont, getter_AddRefs(fm));
   fm->GetXHeight (xHeight);
   nscoord minShiftFromXHeight = (nscoord) 
     (bmSubScript.ascent - (4.0f/5.0f) * xHeight);
 
-  // aSubScriptShift
+  // subScriptShift
   // = minimum amount to shift the subscript down set by user or from the font
   // = sub1 in TeX
   // = subscriptshift attribute * x-height
-  nscoord aSubScriptShift, dummy;
-  // get aSubScriptShift default from font
-  GetSubScriptShifts (fm, aSubScriptShift, dummy);
+  nscoord subScriptShift, dummy;
+  // get subScriptShift default from font
+  GetSubScriptShifts (fm, subScriptShift, dummy);
 
-  aSubScriptShift = 
-    PR_MAX(aSubScriptShift, aUserSubScriptShift);
+  subScriptShift = 
+    PR_MAX(subScriptShift, aUserSubScriptShift);
 
   // get actual subscriptshift to be used
   // Rule 18b, App. G, TeXbook
   nscoord actualSubScriptShift = 
-    PR_MAX(minSubScriptShift,PR_MAX(aSubScriptShift,minShiftFromXHeight));
+    PR_MAX(minSubScriptShift,PR_MAX(subScriptShift,minShiftFromXHeight));
   // get bounding box for base + subscript
   nsBoundingMetrics boundingMetrics;
   boundingMetrics.ascent = 

@@ -60,21 +60,9 @@
 #define NS_MATHML_ACTION_TYPE_TOOLTIP      3 // unsupported
 #define NS_MATHML_ACTION_TYPE_RESTYLE      4
 
-NS_INTERFACE_MAP_BEGIN(nsMathMLmactionFrame)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMMouseListener)
-NS_INTERFACE_MAP_END_INHERITING(nsMathMLContainerFrame)
-
-NS_IMETHODIMP_(nsrefcnt) 
-nsMathMLmactionFrame::AddRef(void)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP_(nsrefcnt) 
-nsMathMLmactionFrame::Release(void)
-{
-  return NS_OK;
-}
+NS_IMPL_ADDREF_INHERITED(nsMathMLmactionFrame, nsMathMLContainerFrame)
+NS_IMPL_RELEASE_INHERITED(nsMathMLmactionFrame, nsMathMLContainerFrame)
+NS_IMPL_QUERY_INTERFACE_INHERITED1(nsMathMLmactionFrame, nsMathMLContainerFrame, nsIDOMMouseListener)
 
 nsresult
 NS_NewMathMLmactionFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
@@ -219,12 +207,11 @@ nsMathMLmactionFrame::GetSelectedFrame()
   PRInt32 count = 0;
   nsIFrame* childFrame = mFrames.FirstChild();
   while (childFrame) {
-    if (!IsOnlyWhitespace(childFrame)) {   
-      if (!mSelectedFrame) 
-        mSelectedFrame = childFrame; // default is first child
-      if (++count == selection) 
-        mSelectedFrame = childFrame;
-    }
+    if (!mSelectedFrame) 
+      mSelectedFrame = childFrame; // default is first child
+    if (++count == selection) 
+      mSelectedFrame = childFrame;
+
     childFrame->GetNextSibling(&childFrame);
   }
   // cater for invalid user-supplied selection
@@ -241,11 +228,11 @@ nsMathMLmactionFrame::GetSelectedFrame()
   mEmbellishData.core = nsnull;
   mEmbellishData.direction = NS_STRETCH_DIRECTION_UNSUPPORTED;
   if (mSelectedFrame) {
-    nsIMathMLFrame* aMathMLFrame = nsnull;
-    rv = mSelectedFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&aMathMLFrame);
-    if (NS_SUCCEEDED(rv) && aMathMLFrame) {
+    nsIMathMLFrame* mathMLFrame = nsnull;
+    rv = mSelectedFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
+    if (NS_SUCCEEDED(rv) && mathMLFrame) {
       nsEmbellishData embellishData;
-      aMathMLFrame->GetEmbellishData(embellishData);
+      mathMLFrame->GetEmbellishData(embellishData);
       if (NS_MATHML_IS_EMBELLISH_OPERATOR(embellishData.flags) && embellishData.firstChild) {
         mEmbellishData.flags |= NS_MATHML_EMBELLISH_OPERATOR;
         mEmbellishData.firstChild = mSelectedFrame; // yes!

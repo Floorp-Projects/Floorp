@@ -47,11 +47,12 @@ public:
                          PRUint32 aFlagsToUpdate);
 
   NS_IMETHOD
-  UpdatePresentationDataFromChildAt(PRInt32  aFirstIndex,
-                                    PRInt32  aLastIndex,
-                                    PRInt32  aScriptLevelIncrement,
-                                    PRUint32 aFlagsValues,
-                                    PRUint32 aFlagsToUpdate);
+  UpdatePresentationDataFromChildAt(nsIPresContext* aPresContext,
+                                    PRInt32         aFirstIndex,
+                                    PRInt32         aLastIndex,
+                                    PRInt32         aScriptLevelIncrement,
+                                    PRUint32        aFlagsValues,
+                                    PRUint32        aFlagsToUpdate);
 
   NS_IMETHOD
   SetInitialChildList(nsIPresContext* aPresContext,
@@ -60,11 +61,10 @@ public:
   {
     nsresult rv;
     rv = nsMathMLContainerFrame::SetInitialChildList(aPresContext, aListName, aChildList);
-    // This call is peculiar to <mstyle> and will quickly return if nothing to update
-    UpdatePresentationDataFromChildAt(0, -1, mInnerScriptLevelIncrement,
+    // This call is peculiar to <mstyle> and will quickly return if there is nothing to update
+    UpdatePresentationDataFromChildAt(aPresContext, 0, -1, 0,
        NS_MATHML_DISPLAYSTYLE & mPresentationData.flags,
        NS_MATHML_DISPLAYSTYLE);
-    InsertScriptLevelStyleContext(aPresContext);
     return rv;
   }
 
@@ -73,8 +73,6 @@ protected:
   virtual ~nsMathMLmstyleFrame();
 
   virtual PRIntn GetSkipSides() const { return 0; }
-
-  PRInt32 mInnerScriptLevelIncrement;
 };
 
 #endif /* nsMathMLmstyleFrame_h___ */

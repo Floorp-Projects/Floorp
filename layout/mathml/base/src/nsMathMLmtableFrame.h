@@ -30,113 +30,27 @@
 //
 
 class nsMathMLmtableOuterFrame : public nsTableOuterFrame,
-                                 public nsIMathMLFrame
+                                 public nsMathMLFrame
 {
 public:
   friend nsresult NS_NewMathMLmtableOuterFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
 
-  // nsIMathMLFrame methods  -- see documentation in nsIMathMLFrame.h
-
-  NS_IMETHOD
-  GetBoundingMetrics(nsBoundingMetrics& aBoundingMetrics)
-  {
-    aBoundingMetrics = mBoundingMetrics;
-    return NS_OK;
-  }
+  // Overloaded nsIMathMLFrame methods
 
   NS_IMETHOD
-  SetBoundingMetrics(const nsBoundingMetrics& aBoundingMetrics)
-  {
-    mBoundingMetrics = aBoundingMetrics;
-    return NS_OK;
-  }
+  UpdatePresentationDataFromChildAt(nsIPresContext* aPresContext,
+                                    PRInt32         aFirstIndex,
+                                    PRInt32         aLastIndex,
+                                    PRInt32         aScriptLevelIncrement,
+                                    PRUint32        aFlagsValues,
+                                    PRUint32        aFlagsToUpdate);
 
   NS_IMETHOD
-  GetReference(nsPoint& aReference)
-  {
-    aReference = mReference;
-    return NS_OK;
-  }
-
-  NS_IMETHOD
-  SetReference(const nsPoint& aReference)
-  {
-    mReference = aReference;
-    return NS_OK;
-  }
-
-  NS_IMETHOD
-  Stretch(nsIPresContext*      aPresContext,
-          nsIRenderingContext& aRenderingContext,
-          nsStretchDirection   aStretchDirection,
-          nsBoundingMetrics&   aContainerSize,
-          nsHTMLReflowMetrics& aDesiredStretchSize)
-  {
-    return NS_OK;
-  }
-
-  NS_IMETHOD
-  Place(nsIPresContext*      aPresContext,
-        nsIRenderingContext& aRenderingContext,
-        PRBool               aPlaceOrigin,
-        nsHTMLReflowMetrics& aDesiredSize)
-  {
-    return NS_OK;
-  }
-
-  NS_IMETHOD
-  EmbellishOperator()
-  {
-    return NS_OK;
-  }
-
-  NS_IMETHOD
-  GetEmbellishData(nsEmbellishData& aEmbellishData)
-  {
-    aEmbellishData = mEmbellishData;
-    return NS_OK;
-  }
-
-  NS_IMETHOD
-  SetEmbellishData(const nsEmbellishData& aEmbellishData)
-  {
-    mEmbellishData = aEmbellishData;
-    return NS_OK;
-  }
-
-  NS_IMETHOD
-  GetPresentationData(nsPresentationData& aPresentationData)
-  {
-    aPresentationData = mPresentationData;
-    return NS_OK;
-  }
-
-  NS_IMETHOD
-  SetPresentationData(const nsPresentationData& aPresentationData)
-  {
-    mPresentationData = aPresentationData;
-    return NS_OK;
-  }
-
-  NS_IMETHOD
-  UpdatePresentationData(PRInt32  aScriptLevelIncrement,
-                         PRUint32 aFlagsValues,
-                         PRUint32 aFlagsToUpdate)
-  {
-    return NS_OK;
-  }
-
-  NS_IMETHOD
-  UpdatePresentationDataFromChildAt(PRInt32  aFirstIndex,
-                                    PRInt32  aLastIndex,
-                                    PRInt32  aScriptLevelIncrement,
-                                    PRUint32 aFlagsValues,
-                                    PRUint32 aFlagsToUpdate)
-  {
-    return NS_OK;
-  }
+  ReResolveScriptStyle(nsIPresContext*  aPresContext,
+                       nsIStyleContext* aParentContext,
+                       PRInt32          aParentScriptLevel);
 
   // overloaded nsTableOuterFrame methods
 
@@ -156,26 +70,29 @@ public:
 protected:
   nsMathMLmtableOuterFrame();
   virtual ~nsMathMLmtableOuterFrame();
-
-  // information about the presentation policy of the frame
-  nsPresentationData mPresentationData;
-
-  // information about a container that is an embellished operator
-  nsEmbellishData mEmbellishData;
-  
-  // Metrics that _exactly_ enclose the text of the frame
-  nsBoundingMetrics mBoundingMetrics;
-  
-  // Reference point of the frame: mReference.y is the baseline
-  nsPoint mReference;  
 }; // class nsMathMLmtableOuterFrame
 
 
 // --------------
 
-class nsMathMLmtdFrame : public nsBlockFrame {
+class nsMathMLmtdFrame : public nsBlockFrame,
+                         public nsMathMLFrame {
 public:
   friend nsresult NS_NewMathMLmtdFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+
+  NS_DECL_ISUPPORTS_INHERITED
+
+  NS_IMETHOD
+  ReResolveScriptStyle(nsIPresContext*  aPresContext,
+                       nsIStyleContext* aParentContext,
+                       PRInt32          aParentScriptLevel);
+
+  NS_IMETHOD
+  Init(nsIPresContext*  aPresContext,
+       nsIContent*      aContent,
+       nsIFrame*        aParent,
+       nsIStyleContext* aContext,
+       nsIFrame*        aPrevInFlow);
 
   NS_IMETHOD
   Reflow(nsIPresContext*          aPresContext,

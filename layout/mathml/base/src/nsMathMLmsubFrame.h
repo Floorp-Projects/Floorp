@@ -68,11 +68,9 @@ public:
     // The <msub> element increments scriptlevel by 1, and sets displaystyle to
     // "false", within subscript, but leaves both attributes unchanged within base.
     // 2. The TeXbook (Ch 17. p.141) says the subscript is compressed
-    UpdatePresentationDataFromChildAt(1, -1, 1,
+    UpdatePresentationDataFromChildAt(aPresContext, 1, -1, 1,
       ~NS_MATHML_DISPLAYSTYLE | NS_MATHML_COMPRESSED,
        NS_MATHML_DISPLAYSTYLE | NS_MATHML_COMPRESSED);
-    // switch the style of the subscript
-    InsertScriptLevelStyleContext(aPresContext);
     // check whether or not this is an embellished operator
     EmbellishOperator();
     return rv;
@@ -83,11 +81,6 @@ public:
   virtual ~nsMathMLmsubFrame();
   
   virtual PRIntn GetSkipSides() const { return 0; }
-
-private:
-  nscoord mScriptSpace;  // scriptspace from TeX for extra spacing after sup/subscript
-                         // = 0.5pt in plain TeX
-  nscoord mSubScriptShift;
 };
 
 #endif /* nsMathMLmsubFrame_h___ */

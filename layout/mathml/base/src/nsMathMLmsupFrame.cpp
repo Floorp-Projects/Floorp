@@ -76,19 +76,6 @@ nsMathMLmsupFrame::Init(nsIPresContext*  aPresContext,
   nsresult rv = nsMathMLContainerFrame::Init
     (aPresContext, aContent, aParent, aContext, aPrevInFlow);
 
-  mSupScriptShift = 0;
-  mScriptSpace = NSFloatPointsToTwips(0.5f); // 0.5pt as in plain TeX
-
-  // check if the superscriptshift attribute is there
-  nsAutoString value;
-  if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
-                   nsMathMLAtoms::superscriptshift_, value)) {
-    nsCSSValue cssValue;
-    if (ParseNumericValue(value, cssValue) && cssValue.IsLengthUnit()) {
-      mSupScriptShift = CalcLength(aPresContext, mStyleContext, cssValue);
-    }
-  }
-
 #if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
   mPresentationData.flags |= NS_MATHML_SHOW_BOUNDING_METRICS;
 #endif
@@ -101,13 +88,27 @@ nsMathMLmsupFrame::Place (nsIPresContext*      aPresContext,
                           PRBool               aPlaceOrigin,
                           nsHTMLReflowMetrics& aDesiredSize)
 {
+  // extra spacing between base and sup/subscript
+  nscoord scriptSpace = NSFloatPointsToTwips(0.5f); // 0.5pt as in plain TeX
+
+  // check if the superscriptshift attribute is there
+  nsAutoString value;
+  nscoord supScriptShift = 0;
+  if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
+                   nsMathMLAtoms::superscriptshift_, value)) {
+    nsCSSValue cssValue;
+    if (ParseNumericValue(value, cssValue) && cssValue.IsLengthUnit()) {
+      supScriptShift = CalcLength(aPresContext, mStyleContext, cssValue);
+    }
+  }
+
   return nsMathMLmsupFrame::PlaceSuperScript (aPresContext, 
                                               aRenderingContext,
                                               aPlaceOrigin,
                                               aDesiredSize,
                                               this,
-                                              mSupScriptShift,
-                                              mScriptSpace);
+                                              supScriptShift,
+                                              scriptSpace);
 }
 
 // exported routine that both mover and msup share.
@@ -148,34 +149,30 @@ nsMathMLmsupFrame::PlaceSuperScript(nsIPresContext*      aPresContext,
 
   nsBoundingMetrics bmBase, bmSupScript;
 
-  nsIFrame* aChildFrame = nsnull;
-  aFrame->FirstChild(aPresContext, nsnull, &aChildFrame);
-  while (nsnull != aChildFrame) {
-    if (!IsOnlyWhitespace(aChildFrame)) {
-      if (0 == count) {
-        // base 
-        baseFrame = aChildFrame;
-        GetReflowAndBoundingMetricsFor(baseFrame, baseSize, bmBase);
-      }
-      else if (1 == count) {
-        // superscript
-        supScriptFrame = aChildFrame;
-        GetReflowAndBoundingMetricsFor(supScriptFrame, supScriptSize, bmSupScript);
-        // get the supdrop from the supscript font
-        nscoord aSupDrop;
-        GetSupDropFromChild (aPresContext, supScriptFrame, aSupDrop);
-        // parameter u, Rule 18a, App. G, TeXbook
-        minSupScriptShift = bmBase.ascent - aSupDrop;
-      }
-      count++;
+  nsIFrame* childFrame = nsnull;
+  aFrame->FirstChild(aPresContext, nsnull, &childFrame);
+  while (childFrame) {
+    if (0 == count) {
+      // base 
+      baseFrame = childFrame;
+      GetReflowAndBoundingMetricsFor(baseFrame, baseSize, bmBase);
     }
-    aChildFrame->GetNextSibling(&aChildFrame);
+    else if (1 == count) {
+      // superscript
+      supScriptFrame = childFrame;
+      GetReflowAndBoundingMetricsFor(supScriptFrame, supScriptSize, bmSupScript);
+      // get the supdrop from the supscript font
+      nscoord supDrop;
+      GetSupDropFromChild (aPresContext, supScriptFrame, supDrop);
+      // parameter u, Rule 18a, App. G, TeXbook
+      minSupScriptShift = bmBase.ascent - supDrop;
+    }
+    count++;
+    childFrame->GetNextSibling(&childFrame);
   }
-#ifdef NS_DEBUG
-  if (2 != count) printf("msup: invalid markup\n");
-#endif
-  if ((2 != count) || !baseFrame || !supScriptFrame) {
+  if (2 != count) {
     // report an error, encourage people to get their markups in order
+    NS_WARNING("invalid markup");
     return NS_STATIC_CAST(nsMathMLContainerFrame*, 
                           aFrame)->ReflowError(aPresContext, 
                                                aRenderingContext, 
@@ -193,60 +190,60 @@ nsMathMLmsupFrame::PlaceSuperScript(nsIPresContext*      aPresContext,
 //  const nsStyleFont* aFont =
 //    (const nsStyleFont*) aStyleContext->GetStyleData (eStyleStruct_Font);
 
-  const nsStyleFont *aFont;
-  baseFrame->GetStyleData(eStyleStruct_Font, (const nsStyleStruct *&)aFont);
+  const nsStyleFont *font;
+  baseFrame->GetStyleData(eStyleStruct_Font, (const nsStyleStruct *&)font);
 
-  aPresContext->GetMetricsFor (aFont->mFont, getter_AddRefs(fm));
+  aPresContext->GetMetricsFor (font->mFont, getter_AddRefs(fm));
   fm->GetXHeight (xHeight);
   nscoord minShiftFromXHeight = (nscoord) 
     (bmSupScript.descent + (1.0f/4.0f) * xHeight);
   nscoord italicCorrection;
   GetItalicCorrection(bmBase, italicCorrection);
 
-  // aSupScriptShift{1,2,3}
+  // supScriptShift{1,2,3}
   // = minimum amount to shift the supscript up
   // = sup{1,2,3} in TeX
-  // aSupScriptShift1 = superscriptshift attribute * x-height
+  // supScriptShift1 = superscriptshift attribute * x-height
   // Note that there are THREE values for supscript shifts depending
   // on the current style
-  nscoord aSupScriptShift1, aSupScriptShift2, aSupScriptShift3;
-  // Set aSupScriptShift{1,2,3} default from font
-  GetSupScriptShifts (fm, aSupScriptShift1, aSupScriptShift2, aSupScriptShift3);
+  nscoord supScriptShift1, supScriptShift2, supScriptShift3;
+  // Set supScriptShift{1,2,3} default from font
+  GetSupScriptShifts (fm, supScriptShift1, supScriptShift2, supScriptShift3);
 
   if (0 < aUserSupScriptShift) {
     // the user has set the superscriptshift attribute
-    float aFactor2 = ((float) aSupScriptShift2) / aSupScriptShift1;
-    float aFactor3 = ((float) aSupScriptShift3) / aSupScriptShift1;
-    aSupScriptShift1 = 
-      PR_MAX(aSupScriptShift1, aUserSupScriptShift);
-    aSupScriptShift2 = NSToCoordRound(aFactor2 * aSupScriptShift1);
-    aSupScriptShift3 = NSToCoordRound(aFactor3 * aSupScriptShift1);
+    float scaler2 = ((float) supScriptShift2) / supScriptShift1;
+    float scaler3 = ((float) supScriptShift3) / supScriptShift1;
+    supScriptShift1 = 
+      PR_MAX(supScriptShift1, aUserSupScriptShift);
+    supScriptShift2 = NSToCoordRound(scaler2 * supScriptShift1);
+    supScriptShift3 = NSToCoordRound(scaler3 * supScriptShift1);
   }
 
   // get sup script shift depending on current script level and display style
   // Rule 18c, App. G, TeXbook
-  nscoord aSupScriptShift;
+  nscoord supScriptShift;
   nsPresentationData presentationData;
   mathMLFrame->GetPresentationData (presentationData);
   if ( presentationData.scriptLevel == 0 && 
        NS_MATHML_IS_DISPLAYSTYLE(presentationData.flags) &&
       !NS_MATHML_IS_COMPRESSED(presentationData.flags)) {
     // Style D in TeXbook
-    aSupScriptShift = aSupScriptShift1;
+    supScriptShift = supScriptShift1;
   }
   else if (NS_MATHML_IS_COMPRESSED(presentationData.flags)) {
     // Style C' in TeXbook = D',T',S',SS'
-    aSupScriptShift = aSupScriptShift3;
+    supScriptShift = supScriptShift3;
   }
   else {
     // everything else = T,S,SS
-    aSupScriptShift = aSupScriptShift2;
+    supScriptShift = supScriptShift2;
   }
 
   // get actual supscriptshift to be used
   // Rule 18c, App. G, TeXbook
   nscoord actualSupScriptShift = 
-    PR_MAX(minSupScriptShift,PR_MAX(aSupScriptShift,minShiftFromXHeight));
+    PR_MAX(minSupScriptShift,PR_MAX(supScriptShift,minShiftFromXHeight));
 
   // bounding box
   nsBoundingMetrics boundingMetrics;

@@ -33,6 +33,7 @@ struct nsEmbellishData;
 
 static NS_DEFINE_IID(kIMathMLFrameIID, NS_IMATHMLFRAME_IID);
 
+// Abstract base class that provides additional methods for MathML frames
 class nsIMathMLFrame : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IMATHMLFRAME_IID; return iid; }
@@ -61,7 +62,7 @@ public:
   SetReference(const nsPoint& aReference) = 0;
 
 
- /* SUPPORT FOR STRETCHY ELEMENTS: <mo> */
+ /* SUPPORT FOR STRETCHY ELEMENTS */
  /*====================================================================*/
 
  /* Stretch :
@@ -166,7 +167,7 @@ public:
   SetEmbellishData(const nsEmbellishData& aEmbellishData) = 0;
 
 
- /* SUPPORT FOR SCRIPTING ELEMENTS: */
+ /* SUPPORT FOR SCRIPTING ELEMENTS */
  /*====================================================================*/
 
  /* GetPresentationData/SetPresentationData :
@@ -244,18 +245,48 @@ public:
   *        for more details about this parameter.
   */
   NS_IMETHOD
-  UpdatePresentationDataFromChildAt(PRInt32  aFirstIndex,
-                                    PRInt32  aLastIndex,
-                                    PRInt32  aScriptLevelIncrement,
-                                    PRUint32 aFlagsValues,
-                                    PRUint32 aFlagsToUpdate) = 0;
+  UpdatePresentationDataFromChildAt(nsIPresContext* aPresContext,
+                                    PRInt32         aFirstIndex,
+                                    PRInt32         aLastIndex,
+                                    PRInt32         aScriptLevelIncrement,
+                                    PRUint32        aFlagsValues,
+                                    PRUint32        aFlagsToUpdate) = 0;
+
+ /* ReResolveScriptStyle :
+  * During frame construction, the Style System gives us style contexts in
+  * which the sizes of the fonts are not suitable for scripting elements.
+  * Our expected behavior is that, when given the markup <mtag>base arguments</mtag>,
+  * we want to render the 'base' in a normal size, and the 'arguments' in a smaller
+  * size. This is a common functionality to tags like msub, msup, msubsup, mover,
+  * munder, munderover, mmultiscripts. Moreover, we want the reduction of the font
+  * size to happen in a top-down manner within the hierarchies of sub-expressions;
+  * and more importantly, we don't want the sizes to keep decreasing up to a point
+  * where the scripts become unreadably small.
+  *
+  * In general, this scaling effet arises when the scriptlevel changes between a
+  * parent and a child. Whenever the scriptlevel changes, either automatically or
+  * by being explicitly incremented, decremented, or set, the current font size has
+  * to be multiplied by the predefined value of 'scriptsizemultiplier' to the power
+  * of the change in the scriptlevel, and this scaling effect (downwards or upwards)
+  * has to be propagated down the subtrees, with the caveat that the font size is
+  * never allowed to go below the predefined value of 'scriptminsize' within a 
+  * sub-expression.
+  *
+  * ReResolveScriptStyle() will walk a subtree to cause this mathml-specific behavior
+  * to happen. The method is recursive and only a top-level parent wishing to reflect
+  * the changes in its children needs to call to the method.
+  */
+  NS_IMETHOD
+  ReResolveScriptStyle(nsIPresContext*  aPresContext,
+                       nsIStyleContext* aParentContext,
+                       PRInt32          aParentScriptLevel) = 0;
 };
 
 // struct used by a frame to modulate its presentation
 struct nsPresentationData {
   PRUint32  flags; // bits for: displaystyle, compressed, etc
   nsIFrame* mstyle; // up-pointer on the mstyle frame, if any, that defines the scope
-  PRUint32  scriptLevel; // Relevant to nested frames within: msub, msup, msubsup, munder,
+  PRInt32   scriptLevel; // Relevant to nested frames within: msub, msup, msubsup, munder,
                          // mover, munderover, mmultiscripts, mfrac, mroot, mtable.
   nsPresentationData()
   {
@@ -283,7 +314,7 @@ struct nsEmbellishData {
   }
 };
 
-// -------------
+// ==========================================================================
 // Bits used for the presentation flags -- these bits are set
 // in their relevant situation as they become available
 
@@ -333,6 +364,7 @@ struct nsEmbellishData {
 #define NS_MATHML_SHOW_BOUNDING_METRICS               0x40000000
 
 // Macros that retrieve those bits
+
 #define NS_MATHML_IS_DISPLAYSTYLE(_flags) \
   (NS_MATHML_DISPLAYSTYLE == ((_flags) & NS_MATHML_DISPLAYSTYLE))
 
@@ -360,7 +392,7 @@ struct nsEmbellishData {
 #define NS_MATHML_PAINT_BOUNDING_METRICS(_flags) \
   (NS_MATHML_SHOW_BOUNDING_METRICS == ((_flags) & NS_MATHML_SHOW_BOUNDING_METRICS))
 
-// --------------
+// ==========================================================================
 // Bits used for the embellish flags -- these bits are set
 // in their relevant situation as they become available
 
@@ -389,7 +421,6 @@ struct nsEmbellishData {
 
 // a bit used for debug
 #define NS_MATHML_STRETCH_DONE                      0x80000000
-
 
 // Macros that retrieve those bits
 

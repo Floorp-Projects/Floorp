@@ -120,16 +120,14 @@ XXX The winner is the outermost in conflicting settings like these:
   nsIFrame* overscriptFrame = nsnull;
   nsIFrame* childFrame = mFrames.FirstChild();
   while (childFrame) {
-    if (!IsOnlyWhitespace(childFrame)) {
-      count++;
-      if (1 == count) baseFrame = childFrame;
-      if (2 == count) { overscriptFrame = childFrame; break; }
-    }
+    if (0 == count) baseFrame = childFrame;
+    if (1 == count) { overscriptFrame = childFrame; break; }
+    count++;
     childFrame->GetNextSibling(&childFrame);
   }
 
   nsIMathMLFrame* overscriptMathMLFrame = nsnull;
-  nsIMathMLFrame* aMathMLFrame = nsnull;
+  nsIMathMLFrame* mathMLFrame = nsnull;
   nsEmbellishData embellishData;
   nsAutoString value;
 
@@ -148,9 +146,9 @@ XXX The winner is the outermost in conflicting settings like these:
       }
     }
     else { // no attribute, get the value from the core
-      rv = mEmbellishData.core->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&aMathMLFrame);
-      if (NS_SUCCEEDED(rv) && aMathMLFrame) {
-        aMathMLFrame->GetEmbellishData(embellishData);
+      rv = mEmbellishData.core->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
+      if (NS_SUCCEEDED(rv) && mathMLFrame) {
+        mathMLFrame->GetEmbellishData(embellishData);
         if (NS_MATHML_EMBELLISH_IS_MOVABLELIMITS(embellishData.flags)) {
           mPresentationData.flags |= NS_MATHML_MOVABLELIMITS;
         }
@@ -165,9 +163,9 @@ XXX The winner is the outermost in conflicting settings like these:
       overscriptMathMLFrame->GetEmbellishData(embellishData);
       // core of the overscriptFrame
       if (NS_MATHML_IS_EMBELLISH_OPERATOR(embellishData.flags) && embellishData.core) {
-        rv = embellishData.core->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&aMathMLFrame);
-        if (NS_SUCCEEDED(rv) && aMathMLFrame) {
-          aMathMLFrame->GetEmbellishData(embellishData);
+        rv = embellishData.core->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
+        if (NS_SUCCEEDED(rv) && mathMLFrame) {
+          mathMLFrame->GetEmbellishData(embellishData);
           // if we have the accent attribute, tell the core to behave as 
           // requested (otherwise leave the core with its default behavior)
           if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None, 
@@ -175,7 +173,7 @@ XXX The winner is the outermost in conflicting settings like these:
           {
             if (value.EqualsWithConversion("true")) embellishData.flags |= NS_MATHML_EMBELLISH_ACCENT;
             else if (value.EqualsWithConversion("false")) embellishData.flags &= ~NS_MATHML_EMBELLISH_ACCENT;
-            aMathMLFrame->SetEmbellishData(embellishData);
+            mathMLFrame->SetEmbellishData(embellishData);
           }
 
           // sync the presentation data: record whether we have an accent
@@ -205,13 +203,10 @@ XXX The winner is the outermost in conflicting settings like these:
     overscriptMathMLFrame->UpdatePresentationData(increment,
       ~NS_MATHML_DISPLAYSTYLE | compress,
        NS_MATHML_DISPLAYSTYLE | compress);
-    overscriptMathMLFrame->UpdatePresentationDataFromChildAt(0, -1, increment,
+    overscriptMathMLFrame->UpdatePresentationDataFromChildAt(aPresContext, 0, -1, increment,
       ~NS_MATHML_DISPLAYSTYLE | compress,
        NS_MATHML_DISPLAYSTYLE | compress);
   }
-
-  // switch the style of the overscript
-  InsertScriptLevelStyleContext(aPresContext);
 
   return rv;
 }
@@ -264,26 +259,22 @@ nsMathMLmoverFrame::Place(nsIPresContext*      aPresContext,
 
   nsIFrame* childFrame = mFrames.FirstChild();
   while (childFrame) {
-    if (!IsOnlyWhitespace(childFrame)) {
-      if (0 == count) {
-        // base 
-        baseFrame = childFrame;
-        GetReflowAndBoundingMetricsFor(baseFrame, baseSize, bmBase);
-      }
-      else if (1 == count) {
-        // over
-        overFrame = childFrame;
-        GetReflowAndBoundingMetricsFor(overFrame, overSize, bmOver);
-      }
-      count++;
-    }    
+    if (0 == count) {
+      // base 
+      baseFrame = childFrame;
+      GetReflowAndBoundingMetricsFor(baseFrame, baseSize, bmBase);
+    }
+    else if (1 == count) {
+      // over
+      overFrame = childFrame;
+      GetReflowAndBoundingMetricsFor(overFrame, overSize, bmOver);
+    }
+    count++;
     childFrame->GetNextSibling(&childFrame);
   }
-  if ((2 != count) || !baseFrame || !overFrame) {
-#ifdef NS_DEBUG
-    printf("mover: invalid markup\n");
-#endif
+  if (2 != count) {
     // report an error, encourage people to get their markups in order
+    NS_WARNING("invalid markup");
     return ReflowError(aPresContext, aRenderingContext, aDesiredSize);
   }
 
@@ -320,7 +311,7 @@ nsMathMLmoverFrame::Place(nsIPresContext*      aPresContext,
     delta2 = bigOpSpacing5;
 
     // XXX This is not a TeX rule... 
-    // delta1 (as computed abvove) can become really big when bmOver.descent is
+    // delta1 (as computed above) can become really big when bmOver.descent is
     // negative,  e.g., if the content is &OverBar. In such case, we use the height
     if (bmOver.descent < 0)    
       delta1 = PR_MAX(bigOpSpacing1, (bigOpSpacing3 - (bmOver.ascent + bmOver.descent)));
@@ -364,19 +355,32 @@ nsMathMLmoverFrame::Place(nsIPresContext*      aPresContext,
     delta2 = ruleThickness;
   }
   // empty over?
-  if (0 == (bmOver.ascent + bmOver.descent)) delta1 = 0;
+  if (!(bmOver.ascent + bmOver.descent)) delta1 = 0;
 
   mBoundingMetrics.ascent = 
     bmOver.ascent + bmOver.descent + delta1 + bmBase.ascent;
 
   mBoundingMetrics.descent = bmBase.descent;
+
+  nscoord dxBase, dxOver = 0;
+  nscoord dyBase, dyOver;
+
+  // Ad-hoc - This is to override fonts which have ready-made _accent_
+  // glyphs with negative lbearing and rbearing. We want to position
+  // the overscript ourselves
+  nscoord overWidth = bmOver.width;
+  if (!overWidth && (bmOver.rightBearing - bmOver.leftBearing > 0)) {
+    overWidth = bmOver.rightBearing - bmOver.leftBearing;
+    dxOver = -bmOver.leftBearing;
+  }
+
   if (NS_MATHML_IS_ACCENTOVER(mPresentationData.flags)) {
-    mBoundingMetrics.width = PR_MAX(bmBase.width, bmOver.width); 
+    mBoundingMetrics.width = PR_MAX(bmBase.width, overWidth); 
   }
   else {
     mBoundingMetrics.width = 
-      PR_MAX(bmBase.width/2,(bmOver.width + correction/2)/2) +
-      PR_MAX(bmBase.width/2,(bmOver.width - correction/2)/2);
+      PR_MAX(bmBase.width/2,(overWidth + correction/2)/2) +
+      PR_MAX(bmBase.width/2,(overWidth - correction/2)/2);
   }
 
   aDesiredSize.descent = baseSize.descent;
@@ -385,18 +389,15 @@ nsMathMLmoverFrame::Place(nsIPresContext*      aPresContext,
            overSize.ascent + bmOver.descent + delta1 + bmBase.ascent);
   aDesiredSize.height = aDesiredSize.ascent + aDesiredSize.descent;
   aDesiredSize.width = mBoundingMetrics.width;
-
-  nscoord dxBase, dyBase;
-  nscoord dxOver, dyOver;
   
   dxBase = (mBoundingMetrics.width - bmBase.width) / 2;
   dyBase = aDesiredSize.ascent - baseSize.ascent;
 
   if (NS_MATHML_IS_ACCENTOVER(mPresentationData.flags)) {
-    dxOver = correction + (mBoundingMetrics.width - bmOver.width)/2;
+    dxOver += correction + (mBoundingMetrics.width - overWidth)/2;
   }
   else {
-    dxOver = correction/2 + (mBoundingMetrics.width - bmOver.width)/2;
+    dxOver += correction/2 + (mBoundingMetrics.width - overWidth)/2;
   }
 
   dyOver = aDesiredSize.ascent - 
@@ -419,34 +420,3 @@ nsMathMLmoverFrame::Place(nsIPresContext*      aPresContext,
   }
   return NS_OK;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

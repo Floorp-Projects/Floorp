@@ -116,18 +116,16 @@ nsMathMLmunderoverFrame::SetInitialChildList(nsIPresContext* aPresContext,
   nsIFrame* overscriptFrame = nsnull;
   nsIFrame* childFrame = mFrames.FirstChild();
   while (childFrame) {
-    if (!IsOnlyWhitespace(childFrame)) {
-      count++;
-      if (1 == count) baseFrame = childFrame;
-      if (2 == count) underscriptFrame = childFrame;
-      if (3 == count) { overscriptFrame = childFrame; break; }
-    }
+    if (0 == count) baseFrame = childFrame;
+    if (1 == count) underscriptFrame = childFrame;
+    if (2 == count) { overscriptFrame = childFrame; break; }
+    count++;
     childFrame->GetNextSibling(&childFrame);
   }
 
   nsIMathMLFrame* underscriptMathMLFrame = nsnull;
   nsIMathMLFrame* overscriptMathMLFrame = nsnull;
-  nsIMathMLFrame* aMathMLFrame = nsnull;
+  nsIMathMLFrame* mathMLFrame;
   nsEmbellishData embellishData;
   nsAutoString value;
 
@@ -147,9 +145,9 @@ nsMathMLmunderoverFrame::SetInitialChildList(nsIPresContext* aPresContext,
       }
     }
     else { // no attribute, get the value from the core
-      rv = mEmbellishData.core->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&aMathMLFrame);
-      if (NS_SUCCEEDED(rv) && aMathMLFrame) {
-        aMathMLFrame->GetEmbellishData(embellishData);
+      rv = mEmbellishData.core->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
+      if (NS_SUCCEEDED(rv) && mathMLFrame) {
+        mathMLFrame->GetEmbellishData(embellishData);
         if (NS_MATHML_EMBELLISH_IS_MOVABLELIMITS(embellishData.flags)) {
           mPresentationData.flags |= NS_MATHML_MOVABLELIMITS;
         }
@@ -164,9 +162,9 @@ nsMathMLmunderoverFrame::SetInitialChildList(nsIPresContext* aPresContext,
       underscriptMathMLFrame->GetEmbellishData(embellishData);
       // core of the underscriptFrame
       if (NS_MATHML_IS_EMBELLISH_OPERATOR(embellishData.flags) && embellishData.core) {
-        rv = embellishData.core->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&aMathMLFrame);
-        if (NS_SUCCEEDED(rv) && aMathMLFrame) {
-          aMathMLFrame->GetEmbellishData(embellishData);
+        rv = embellishData.core->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
+        if (NS_SUCCEEDED(rv) && mathMLFrame) {
+          mathMLFrame->GetEmbellishData(embellishData);
           // if we have the accentunder attribute, tell the core to behave as 
           // requested (otherwise leave the core with its default behavior)
           if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None, 
@@ -174,7 +172,7 @@ nsMathMLmunderoverFrame::SetInitialChildList(nsIPresContext* aPresContext,
           {
             if (value.EqualsWithConversion("true")) embellishData.flags |= NS_MATHML_EMBELLISH_ACCENT;
             else if (value.EqualsWithConversion("false")) embellishData.flags &= ~NS_MATHML_EMBELLISH_ACCENT;
-            aMathMLFrame->SetEmbellishData(embellishData);
+            mathMLFrame->SetEmbellishData(embellishData);
           }
 
           // sync the presentation data: record whether we have an accentunder
@@ -192,9 +190,9 @@ nsMathMLmunderoverFrame::SetInitialChildList(nsIPresContext* aPresContext,
       overscriptMathMLFrame->GetEmbellishData(embellishData);
       // core of the overscriptFrame
       if (NS_MATHML_IS_EMBELLISH_OPERATOR(embellishData.flags) && embellishData.core) {
-        rv = embellishData.core->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&aMathMLFrame);
-        if (NS_SUCCEEDED(rv) && aMathMLFrame) {
-          aMathMLFrame->GetEmbellishData(embellishData);
+        rv = embellishData.core->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
+        if (NS_SUCCEEDED(rv) && mathMLFrame) {
+          mathMLFrame->GetEmbellishData(embellishData);
           // if we have the accent attribute, tell the core to behave as 
           // requested (otherwise leave the core with its default behavior)
           if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None, 
@@ -202,7 +200,7 @@ nsMathMLmunderoverFrame::SetInitialChildList(nsIPresContext* aPresContext,
           {
             if (value.EqualsWithConversion("true")) embellishData.flags |= NS_MATHML_EMBELLISH_ACCENT;
             else if (value.EqualsWithConversion("false")) embellishData.flags &= ~NS_MATHML_EMBELLISH_ACCENT;
-            aMathMLFrame->SetEmbellishData(embellishData);
+            mathMLFrame->SetEmbellishData(embellishData);
           }
 
           // sync the presentation data: record whether we have an accent
@@ -237,7 +235,7 @@ nsMathMLmunderoverFrame::SetInitialChildList(nsIPresContext* aPresContext,
     overscriptMathMLFrame->UpdatePresentationData(increment,
       ~NS_MATHML_DISPLAYSTYLE | compress,
        NS_MATHML_DISPLAYSTYLE | compress);
-    overscriptMathMLFrame->UpdatePresentationDataFromChildAt(0, -1, increment,
+    overscriptMathMLFrame->UpdatePresentationDataFromChildAt(aPresContext, 0, -1, increment,
       ~NS_MATHML_DISPLAYSTYLE | compress,
        NS_MATHML_DISPLAYSTYLE | compress);
   }
@@ -251,13 +249,10 @@ nsMathMLmunderoverFrame::SetInitialChildList(nsIPresContext* aPresContext,
     underscriptMathMLFrame->UpdatePresentationData(increment,
       ~NS_MATHML_DISPLAYSTYLE | NS_MATHML_COMPRESSED,
        NS_MATHML_DISPLAYSTYLE | NS_MATHML_COMPRESSED);
-    underscriptMathMLFrame->UpdatePresentationDataFromChildAt(0, -1, increment,
+    underscriptMathMLFrame->UpdatePresentationDataFromChildAt(aPresContext, 0, -1, increment,
       ~NS_MATHML_DISPLAYSTYLE | NS_MATHML_COMPRESSED,
        NS_MATHML_DISPLAYSTYLE | NS_MATHML_COMPRESSED);
   }
-
-  // switch the style of the underscript and the overscript
-  InsertScriptLevelStyleContext(aPresContext);
 
   return rv;
 }
@@ -291,7 +286,7 @@ nsMathMLmunderoverFrame::Place(nsIPresContext*      aPresContext,
   nsresult rv = NS_OK;
 
   if ( NS_MATHML_IS_MOVABLELIMITS(mPresentationData.flags) &&
-       !NS_MATHML_IS_DISPLAYSTYLE(mPresentationData.flags)) {
+      !NS_MATHML_IS_DISPLAYSTYLE(mPresentationData.flags)) {
     // place like sub-superscript pair
     return nsMathMLmsubsupFrame::PlaceSubSupScript(aPresContext,
                                                    aRenderingContext,
@@ -314,31 +309,27 @@ nsMathMLmunderoverFrame::Place(nsIPresContext*      aPresContext,
 
   nsIFrame* childFrame = mFrames.FirstChild();
   while (childFrame) {
-    if (!IsOnlyWhitespace(childFrame)) {
-      if (0 == count) {
-        // base 
-        baseFrame = childFrame;
-        GetReflowAndBoundingMetricsFor(baseFrame, baseSize, bmBase);
-      }
-      else if (1 == count) {
-        // under
-        underFrame = childFrame;
-        GetReflowAndBoundingMetricsFor(underFrame, underSize, bmUnder);
-      }
-      else if (2 == count) {
-        // over
-        overFrame = childFrame;
-        GetReflowAndBoundingMetricsFor(overFrame, overSize, bmOver);
-      }
-      count++;
+    if (0 == count) {
+      // base 
+      baseFrame = childFrame;
+      GetReflowAndBoundingMetricsFor(baseFrame, baseSize, bmBase);
     }
+    else if (1 == count) {
+      // under
+      underFrame = childFrame;
+      GetReflowAndBoundingMetricsFor(underFrame, underSize, bmUnder);
+    }
+    else if (2 == count) {
+      // over
+      overFrame = childFrame;
+      GetReflowAndBoundingMetricsFor(overFrame, overSize, bmOver);
+    }
+    count++;
     childFrame->GetNextSibling(&childFrame);
   }
-  if ((3 != count) || !baseFrame || !underFrame || !overFrame) {
-#ifdef NS_DEBUG
-    printf("munderover: invalid markup\n");
-#endif
+  if (3 != count) {
     // report an error, encourage people to get their markups in order
+    NS_WARNING("invalid markup");
     return ReflowError(aPresContext, aRenderingContext, aDesiredSize);
   }
 
@@ -384,7 +375,7 @@ nsMathMLmunderoverFrame::Place(nsIPresContext*      aPresContext,
     underDelta2 = ruleThickness;
   }
   // empty under?
-  if (0 == (bmUnder.ascent + bmUnder.descent)) underDelta1 = 0;
+  if (!(bmUnder.ascent + bmUnder.descent)) underDelta1 = 0;
 
   nscoord correction = 0;
   nscoord overDelta1 = 0; // gap between base and overscript
@@ -417,7 +408,7 @@ nsMathMLmunderoverFrame::Place(nsIPresContext*      aPresContext,
     overDelta2 = ruleThickness;
   }
   // empty over?
-  if (0 == (bmOver.ascent + bmOver.descent)) overDelta1 = 0;
+  if (!(bmOver.ascent + bmOver.descent)) overDelta1 = 0;
 
   mBoundingMetrics.ascent = 
     bmBase.ascent + overDelta1 + bmOver.ascent + bmOver.descent;

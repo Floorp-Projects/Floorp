@@ -76,12 +76,14 @@ nsMathMLmiFrame::Init(nsIPresContext*  aPresContext,
 {
   nsresult rv = NS_OK;
   rv = nsMathMLContainerFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
+
+#if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
+  mPresentationData.flags |= NS_MATHML_SHOW_BOUNDING_METRICS;
+#endif
   return rv;
 }
 
 // if our content is not a single character, we turn the font to normal
-// XXX TrimWhitespace / CompressWhitespace?
-
 NS_IMETHODIMP
 nsMathMLmiFrame::SetInitialChildList(nsIPresContext* aPresContext,
                                      nsIAtom*        aListName,
@@ -95,10 +97,10 @@ nsMathMLmiFrame::SetInitialChildList(nsIPresContext* aPresContext,
   // Get the length of the text content that we enclose  
   // our content can include comment-nodes, attribute-nodes, text-nodes...
   // we use the DOM to make sure that we are only looking at text-nodes...
-  PRInt32 aLength = 0;
+  PRInt32 length = 0;
   PRInt32 numKids;
   mContent->ChildCount(numKids);
-  //nsAutoString aData;
+  //nsAutoString data;
   for (PRInt32 kid=0; kid<numKids; kid++) {
     nsCOMPtr<nsIContent> kidContent;
     mContent->ChildAt(kid, *getter_AddRefs(kidContent));
@@ -107,57 +109,44 @@ nsMathMLmiFrame::SetInitialChildList(nsIPresContext* aPresContext,
       if (kidText.get()) {
       	PRUint32 kidLength;
         kidText->GetLength(&kidLength);
-        aLength += kidLength;        
+        length += kidLength;        
       	//nsAutoString kidData;
         //kidText->GetData(kidData);
-        //aData += kidData;
+        //data += kidData;
       }
     }
   }
 
   nsIFrame* firstChild = mFrames.FirstChild();
-  if (firstChild && 1 < aLength) {
-
+  if (firstChild && 1 < length) {
     // we are going to switch the font to normal ...
 
     // we don't switch if we are in the scope of a mstyle frame with an 
     // explicit fontstyle="italic" ...
-    nsAutoString fontStyle;
+    nsAutoString fontstyle;
     if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
-                     nsMathMLAtoms::fontstyle_, fontStyle))
+                     nsMathMLAtoms::fontstyle_, fontstyle))
     {
-      if (fontStyle.EqualsWithConversion("italic"))
+      if (fontstyle.EqualsWithConversion("italic"))
         return rv;
     }
 
-    // Get a pseudo style context for the appropriate style font 
-    nsIAtom* fontAtom = nsMathMLAtoms::fontstyle_normal;
+    // set the -moz-math-font-style attribute without notifying that we want a reflow
+    fontstyle.AssignWithConversion("normal");
+    mContent->SetAttribute(kNameSpaceID_None, nsMathMLAtoms::fontstyle,
+                           fontstyle, PR_FALSE);
+    // then, re-resolve the style contexts in our subtree
+    nsCOMPtr<nsIStyleContext> parentStyleContext;
+    parentStyleContext = getter_AddRefs(mStyleContext->GetParent());
     nsCOMPtr<nsIStyleContext> newStyleContext;
-    aPresContext->ResolvePseudoStyleContextFor(mContent, fontAtom, mStyleContext,
-                                               PR_FALSE, getter_AddRefs(newStyleContext));          
-    
-    // Insert a new pseudo frame between our children and us, i.e., the new frame
-    // becomes our sole child, and our children become children of the new frame.
+    aPresContext->ResolveStyleContextFor(mContent, parentStyleContext,
+                                         PR_FALSE, getter_AddRefs(newStyleContext));
     if (newStyleContext && newStyleContext.get() != mStyleContext) {
-    
-      nsCOMPtr<nsIPresShell> shell;
-      aPresContext->GetShell(getter_AddRefs(shell));
-
-      nsIFrame* newFrame = nsnull;
-      NS_NewMathMLWrapperFrame(shell, &newFrame);
-      NS_ASSERTION(newFrame, "Failed to create new frame");
-      if (newFrame) {
-        newFrame->Init(aPresContext, mContent, this, newStyleContext, nsnull);
-        // our children become children of the new frame
-        nsIFrame* childFrame = firstChild;
-        while (childFrame) {
-          childFrame->SetParent(newFrame);
-          aPresContext->ReParentStyleContext(childFrame, newStyleContext);
-          childFrame->GetNextSibling(&childFrame);
-        }
-        newFrame->SetInitialChildList(aPresContext, nsnull, firstChild);
-        // the new frame becomes our sole child
-        mFrames.SetFrames(newFrame);
+      SetStyleContext(aPresContext, newStyleContext);
+      nsIFrame* childFrame = mFrames.FirstChild();
+      while (childFrame) {
+        aPresContext->ReParentStyleContext(childFrame, newStyleContext);
+        childFrame->GetNextSibling(&childFrame);
       }
     }
   }

@@ -28,6 +28,7 @@ MODULE=raptor
 DEFINES= -DWIN32_LEAN_AND_MEAN
 
 CPPSRCS=          nsMathMLChar.cpp                      \
+                  nsMathMLFrame.cpp		\
                   nsMathMLContainerFrame.cpp		\
                   nsMathMLmrowFrame.obj 		\
                   nsMathMLmphantomFrame.cpp		\
@@ -54,6 +55,7 @@ CPPSRCS=          nsMathMLChar.cpp                      \
                   $(NULL)
 
 CPP_OBJS= .\$(OBJDIR)\nsMathMLChar.obj		        \
+          .\$(OBJDIR)\nsMathMLFrame.obj        \
           .\$(OBJDIR)\nsMathMLContainerFrame.obj        \
           .\$(OBJDIR)\nsMathMLmrowFrame.obj		\
           .\$(OBJDIR)\nsMathMLmphantomFrame.obj		\

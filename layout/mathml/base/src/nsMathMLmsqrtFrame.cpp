@@ -173,10 +173,8 @@ nsMathMLmsqrtFrame::Reflow(nsIPresContext*          aPresContext,
   nsHTMLReflowMetrics baseSize(aDesiredSize);
   rv = nsMathMLContainerFrame::Reflow(aPresContext, baseSize,
                                       aReflowState, aStatus);
-  NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
+  //NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
+  if (NS_FAILED(rv)) return rv;
 
   bmBase = baseSize.mBoundingMetrics;
 
@@ -192,7 +190,8 @@ nsMathMLmsqrtFrame::Reflow(nsIPresContext*          aPresContext,
 
   nscoord ruleThickness, leading;
   GetRuleThickness(renderingContext, fm, ruleThickness);
- 
+  fm->GetLeading(leading);
+
   // Rule 11, App. G, TeXbook
   // psi = clearance between rule and content
   nscoord phi = 0, psi = 0;
@@ -229,9 +228,6 @@ nsMathMLmsqrtFrame::Reflow(nsIPresContext*          aPresContext,
   if (ruleThickness < onePixel) {
     ruleThickness = onePixel;
   }
-  // get the leading to be left at the top of the resulting frame 
-  float em = float(font.mFont.size);
-  leading = nscoord(0.2f * em);
 
   // adjust clearance psi to absorb any excess difference if any
   // in height between radical and content
@@ -273,11 +269,9 @@ nsMathMLmsqrtFrame::Reflow(nsIPresContext*          aPresContext,
   dx = radicalSize.width;
   dy = aDesiredSize.ascent - baseSize.ascent;
   nsIFrame* childFrame = mFrames.FirstChild();
-  while (nsnull != childFrame) {
-    if (!IsOnlyWhitespace(childFrame)) {
-      childFrame->GetOrigin(origin);
-      childFrame->MoveTo(aPresContext, origin.x + dx, origin.y + dy);
-    }
+  while (childFrame) {
+    childFrame->GetOrigin(origin);
+    childFrame->MoveTo(aPresContext, origin.x + dx, origin.y + dy);
     childFrame->GetNextSibling(&childFrame);
   }
 

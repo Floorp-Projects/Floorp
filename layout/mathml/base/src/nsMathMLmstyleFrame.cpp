@@ -80,8 +80,6 @@ nsMathMLmstyleFrame::Init(nsIPresContext*  aPresContext,
 
   mPresentationData.mstyle = this;
 
-  mInnerScriptLevelIncrement = 0;
-
   // see if the displaystyle attribute is there
   nsAutoString value;
   if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None, 
@@ -99,16 +97,15 @@ nsMathMLmstyleFrame::Init(nsIPresContext*  aPresContext,
   // see if the scriptlevel attribute is there
   if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None, 
                    nsMathMLAtoms::scriptlevel_, value)) {
-    PRInt32 aErrorCode, aUserValue;
-    aUserValue = value.ToInteger(&aErrorCode); 
-    if (NS_SUCCEEDED(aErrorCode)) {
+    PRInt32 errorCode, userValue;
+    userValue = value.ToInteger(&errorCode); 
+    if (!errorCode) {
       if (value[0] != '+' && value[0] != '-') { // record that it is an explicit value
         mPresentationData.flags |= NS_MATHML_MSTYLE_WITH_EXPLICIT_SCRIPTLEVEL;
-        mPresentationData.scriptLevel = aUserValue;
+        mPresentationData.scriptLevel = userValue;
       }
       else {
-//        mScriptLevel += aUserValue; // incremental value...
-        mInnerScriptLevelIncrement = aUserValue;
+        mPresentationData.scriptLevel += userValue; // incremental value...
       }
     }
   }
@@ -160,11 +157,12 @@ nsMathMLmstyleFrame::UpdatePresentationData(PRInt32  aScriptLevelIncrement,
 }
 
 NS_IMETHODIMP
-nsMathMLmstyleFrame::UpdatePresentationDataFromChildAt(PRInt32  aFirstIndex,
-                                                       PRInt32  aLastIndex,
-                                                       PRInt32  aScriptLevelIncrement,
-                                                       PRUint32 aFlagsValues,
-                                                       PRUint32 aFlagsToUpdate)
+nsMathMLmstyleFrame::UpdatePresentationDataFromChildAt(nsIPresContext* aPresContext,
+                                                       PRInt32         aFirstIndex,
+                                                       PRInt32         aLastIndex,
+                                                       PRInt32         aScriptLevelIncrement,
+                                                       PRUint32        aFlagsValues,
+                                                       PRUint32        aFlagsToUpdate)
 {
   // mstyle is special...
   // Since UpdatePresentationDataFromChildAt() can be called by a parent frame,
@@ -199,6 +197,6 @@ nsMathMLmstyleFrame::UpdatePresentationDataFromChildAt(PRInt32  aFirstIndex,
   // let the base class worry about the update
   return
     nsMathMLContainerFrame::UpdatePresentationDataFromChildAt(
-      aFirstIndex, aLastIndex, aScriptLevelIncrement,
+      aPresContext, aFirstIndex, aLastIndex, aScriptLevelIncrement,
       aFlagsValues, aFlagsToUpdate); 
 }

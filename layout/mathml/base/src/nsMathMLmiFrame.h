@@ -41,6 +41,10 @@ public:
        nsIStyleContext* aContext,
        nsIFrame*        aPrevInFlow);
 
+ /* mi implements its own SetInitialChildList() method 
+  * to switch to a normal-font (rather than italics) if its text
+  * content is not a single character (as per the MathML REC).
+  */
   NS_IMETHOD
   SetInitialChildList(nsIPresContext* aPresContext,
                       nsIAtom*        aListName,
