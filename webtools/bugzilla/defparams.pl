@@ -203,6 +203,36 @@ sub check_despotbaseurl {
 }
 
 
+# Adding in four parameters for LDAP authentication.  -JMR, 7/28/00
+DefParam("useLDAP",
+         "Turn this on to use an LDAP directory for user authentication ".
+         "instead of the Bugzilla database.  (User profiles will still be ".
+         "stored in the database, and will match against the LDAP user by ".
+         "email address.)",
+         "b",
+         0);
+
+
+DefParam("LDAPserver",
+         "The name (and optionally port) of your LDAP server. (e.g. ldap.company.com, or ldap.company.com:portnum)",
+         "t",
+         "");
+
+
+DefParam("LDAPBaseDN",
+         "The BaseDN for authenticating users against. (e.g. \"ou=People,o=Company\")",
+         "t",
+         "");
+
+
+DefParam("LDAPmailattribute",
+         "The name of the attribute of a user in your directory that ".
+         "contains the email address.",
+         "t",
+         "mail");
+#End of LDAP parameters
+
+
 DefParam("headerhtml",
          "Additional HTML to add to the HEAD area of documents, eg. links to stylesheets.",
          "l",

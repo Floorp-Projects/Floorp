@@ -19,6 +19,7 @@
 #
 # Contributor(s): Terry Weissman <terry@mozilla.org>
 #                 Dan Mosedale <dmose@mozilla.org>
+#                 Joe Robins <jmrobins@tgix.com>
 
 # Contains some global routines used throughout the CGI scripts of Bugzilla.
 
@@ -27,6 +28,9 @@ use strict;
 # use Carp;                       # for confess
 # Shut up misguided -w warnings about "used only once".  For some reason,
 # "use vars" chokes on me when I try it here.
+# We want to check for the existence of the LDAP modules here.
+eval "use Mozilla::LDAP::Conn";
+my $have_ldap = $@ ? 0 : 1;
 
 sub CGI_pl_sillyness {
     my $zz;
@@ -623,60 +627,179 @@ sub confirm_login {
 #    print "Content-type: text/plain\n\n";
 
     ConnectToDatabase();
+    # I'm going to reorganize some of this stuff a bit.  Since we're adding
+    # a second possible validation method (LDAP), we need to move some of this
+    # to a later section.  -Joe Robins, 8/3/00
+    my $enteredlogin = "";
+    my $realcryptpwd = "";
     if (defined $::FORM{"Bugzilla_login"} &&
 	defined $::FORM{"Bugzilla_password"}) {
 
-	my $enteredlogin = $::FORM{"Bugzilla_login"};
-        my $enteredpwd = $::FORM{"Bugzilla_password"};
-        CheckEmailSyntax($enteredlogin);
+       $enteredlogin = $::FORM{"Bugzilla_login"};
+       my $enteredpwd = $::FORM{"Bugzilla_password"};
+       CheckEmailSyntax($enteredlogin);
 
-        my $realcryptpwd  = PasswordForLogin($::FORM{"Bugzilla_login"});
-        
-        if (defined $::FORM{"PleaseMailAPassword"}) {
-	    my $realpwd;
-            if ($realcryptpwd eq "") {
-		$realpwd = InsertNewUser($enteredlogin, "");
-            } else {
-                SendSQL("select password from profiles where login_name = " .
-			SqlQuote($enteredlogin));
-		$realpwd = FetchOneColumn();
-            }
-	    print "Content-type: text/html\n\n";
-	    PutHeader("Password has been emailed");
-            MailPassword($enteredlogin, $realpwd);
-            PutFooter();
-            exit;
-        }
+       $realcryptpwd  = PasswordForLogin($::FORM{"Bugzilla_login"});
 
-        SendSQL("SELECT encrypt(" . SqlQuote($enteredpwd) . ", " .
-                SqlQuote(substr($realcryptpwd, 0, 2)) . ")");
-        my $enteredcryptpwd = FetchOneColumn();
+       if (defined $::FORM{"PleaseMailAPassword"}) {
+         my $realpwd;
+         if ($realcryptpwd eq "") {
+           $realpwd = InsertNewUser($enteredlogin, "");
+         } else {
+           SendSQL("select password from profiles where login_name = " .
+                   SqlQuote($enteredlogin));
+           $realpwd = FetchOneColumn();
+         }
+         print "Content-type: text/html\n\n";
+         PutHeader("Password has been emailed");
+         MailPassword($enteredlogin, $realpwd);
+         PutFooter();
+         exit;
+       }
 
-        if ($realcryptpwd eq "" || $enteredcryptpwd ne $realcryptpwd) {
-            print "Content-type: text/html\n\n";
-	    PutHeader("Login failed");
-            print "The username or password you entered is not valid.\n";
-            print "Please click <b>Back</b> and try again.\n";
-            PutFooter();
-            exit;
-        }
-        $::COOKIE{"Bugzilla_login"} = $enteredlogin;
-        if (!defined $ENV{'REMOTE_HOST'}) {
-            $ENV{'REMOTE_HOST'} = $ENV{'REMOTE_ADDR'};
-        }
-	SendSQL("insert into logincookies (userid,cryptpassword,hostname) values (@{[DBNameToIdAndCheck($enteredlogin)]}, @{[SqlQuote($realcryptpwd)]}, @{[SqlQuote($ENV{'REMOTE_HOST'})]})");
-        SendSQL("select LAST_INSERT_ID()");
-        my $logincookie = FetchOneColumn();
+       SendSQL("SELECT encrypt(" . SqlQuote($enteredpwd) . ", " .
+               SqlQuote(substr($realcryptpwd, 0, 2)) . ")");
+       my $enteredcryptpwd = FetchOneColumn();
 
-        $::COOKIE{"Bugzilla_logincookie"} = $logincookie;
-        print "Set-Cookie: Bugzilla_login=$enteredlogin ; path=/; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
-        print "Set-Cookie: Bugzilla_logincookie=$logincookie ; path=/; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
+       if ($realcryptpwd eq "" || $enteredcryptpwd ne $realcryptpwd) {
+         print "Content-type: text/html\n\n";
+         PutHeader("Login failed");
+         print "The username or password you entered is not valid.\n";
+         print "Please click <b>Back</b> and try again.\n";
+         PutFooter();
+         exit;
+       }
+     } elsif (Param("useLDAP") &&
+              defined $::FORM{"LDAP_login"} &&
+              defined $::FORM{"LDAP_password"}) {
+       # If we're using LDAP for login, we've got an entirely different
+       # set of things to check.
+       # First, if we don't have the LDAP modules available to us, we can't
+       # do this.
+       if(!$have_ldap) {
+         print "Content-type: text/html\n\n";
+         PutHeader("LDAP not enabled");
+         print "The necessary modules for LDAP login are not installed on ";
+         print "this machine.  Please send mail to ".Param("maintainer");
+         print " and notify him of this problem.\n";
+         PutFooter();
+         exit;
+       }
 
-        # This next one just cleans out any old bugzilla passwords that may
-        # be sitting around in the cookie files, from the bad old days when
-        # we actually stored the password there.
-        print "Set-Cookie: Bugzilla_password= ; path=/; expires=Sun, 30-Jun-80 00:00:00 GMT\n";
+       # Next, we need to bind anonymously to the LDAP server.  This is
+       # because we need to get the Distinguished Name of the user trying
+       # to log in.  Some servers (such as iPlanet) allow you to have unique
+       # uids spread out over a subtree of an area (such as "People"), so
+       # just appending the Base DN to the uid isn't sufficient to get the
+       # user's DN.  For servers which don't work this way, there will still
+       # be no harm done.
+       my $LDAPserver = Param("LDAPserver");
+       if ($LDAPserver eq "") {
+         print "Content-type: text/html\n\n";
+         PutHeader("LDAP server not defined");
+         print "The LDAP server for authentication has not been defined.  ";
+         print "Please contact ".Param("maintainer")." ";
+         print "and notify him of this problem.\n";
+         PutFooter();
+         exit;
+       }
 
+       my $LDAPport = "389";  #default LDAP port
+       if($LDAPserver =~ /:/) {
+         ($LDAPserver, $LDAPport) = split(":",$LDAPserver);
+       }
+       my $LDAPconn = new Mozilla::LDAP::Conn($LDAPserver,$LDAPport);
+       if(!$LDAPconn) {
+         print "Content-type: text/html\n\n";
+         PutHeader("Unable to connect to LDAP server");
+         print "I was unable to connect to the LDAP server for user ";
+         print "authentication.  Please contact ".Param("maintainer");
+         print " and notify him of this problem.\n";
+         PutFooter();
+         exit;
+       }
+
+       # We've got our anonymous bind;  let's look up this user.
+       my $dnEntry = $LDAPconn->search(Param("LDAPBaseDN"),"subtree","uid=".$::FORM{"LDAP_login"});
+       if(!$dnEntry) {
+         print "Content-type: text/html\n\n";
+         PutHeader("Login Failed");
+         print "The username or password you entered is not valid.\n";
+         print "Please click <b>Back</b> and try again.\n";
+         PutFooter();
+         exit;
+       }
+
+       # Now we get the DN from this search.  Once we've got that, we're
+       # done with the anonymous bind, so we close it.
+       my $userDN = $dnEntry->getDN;
+       $LDAPconn->close;
+
+       # Now we attempt to bind as the specified user.
+       $LDAPconn = new Mozilla::LDAP::Conn($LDAPserver,$LDAPport,$userDN,$::FORM{"LDAP_password"});
+       if(!$LDAPconn) {
+         print "Content-type: text/html\n\n";
+         PutHeader("Login Failed");
+         print "The username or password you entered is not valid.\n";
+         print "Please click <b>Back</b> and try again.\n";
+         PutFooter();
+         exit;
+       }
+
+       # And now we're going to repeat the search, so that we can get the
+       # mail attribute for this user.
+       my $userEntry = $LDAPconn->search(Param("LDAPBaseDN"),"subtree","uid=".$::FORM{"LDAP_login"});
+       if(!$userEntry->exists(Param("LDAPmailattribute"))) {
+         print "Content-type: text/html\n\n";
+         PutHeader("LDAP authentication error");
+         print "I was unable to retrieve the ".Param("LDAPmailattribute");
+         print " attribute from the LDAP server.  Please contact ";
+         print Param("maintainer")." and notify him of this error.\n";
+         PutFooter();
+         exit;
+       }
+
+       # Mozilla::LDAP::Entry->getValues returns an array for the attribute
+       # requested, even if there's only one entry.
+       $enteredlogin = ($userEntry->getValues(Param("LDAPmailattribute")))[0];
+
+       # We're going to need the cryptpwd for this user from the database
+       # so that we can set the cookie below, even though we're not going
+       # to use it for authentication.
+       $realcryptpwd = PasswordForLogin($enteredlogin);
+
+       # If we don't get a result, then we've got a user who isn't in
+       # Bugzilla's database yet, so we've got to add them.
+       if($realcryptpwd eq "") {
+         # We'll want the user's name for this.
+         my $userRealName = ($userEntry->getValues("displayName"))[0];
+         if($userRealName eq "") {
+           $userRealName = ($userEntry->getValues("cn"))[0];
+         }
+         InsertNewUser($enteredlogin, $userRealName);
+         $realcryptpwd = PasswordForLogin($enteredlogin);
+       }
+     } # end LDAP authentication
+
+     # And now, if we've logged in via either method, then we need to set
+     # the cookies.
+     if($enteredlogin ne "") {
+       $::COOKIE{"Bugzilla_login"} = $enteredlogin;
+       if (!defined $ENV{'REMOTE_HOST'}) {
+         $ENV{'REMOTE_HOST'} = $ENV{'REMOTE_ADDR'};
+       }
+       SendSQL("insert into logincookies (userid,cryptpassword,hostname) values (@{[DBNameToIdAndCheck($enteredlogin)]}, @{[SqlQuote($realcryptpwd)]}, @{[SqlQuote($ENV{'REMOTE_HOST'})]})");
+       SendSQL("select LAST_INSERT_ID()");
+       my $logincookie = FetchOneColumn();
+
+       $::COOKIE{"Bugzilla_logincookie"} = $logincookie;
+       print "Set-Cookie: Bugzilla_login=$enteredlogin ; path=/; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
+       print "Set-Cookie: Bugzilla_logincookie=$logincookie ; path=/; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
+
+       # This next one just cleans out any old bugzilla passwords that may
+       # be sitting around in the cookie files, from the bad old days when
+       # we actually stored the password there.
+       print "Set-Cookie: Bugzilla_password= ; path=/; expires=Sun, 30-Jun-80 00:00:00 GMT\n";
     }
 
 
@@ -701,7 +824,11 @@ Content-type: text/html
         }
         print "Content-type: text/html\n\n";
         PutHeader("Login", undef, undef, undef, 1);
-        print "I need a legitimate e-mail address and password to continue.\n";
+        if(Param("useLDAP")) {
+          print "I need a legitimate LDAP username and password to continue.\n";
+        } else {
+          print "I need a legitimate e-mail address and password to continue.\n";
+        }
         if (!defined $nexturl || $nexturl eq "") {
 	    # Sets nexturl to be argv0, stripping everything up to and
 	    # including the last slash.
@@ -715,13 +842,25 @@ Content-type: text/html
         print "
 <FORM action=$nexturl method=$method>
 <table>
+<tr>";
+        if(Param("useLDAP")) {
+          print "
+<td align=right><b>Username:</b></td>
+<td><input size=10 name=LDAP_login></td>
+</tr>
 <tr>
+<td align=right><b>Password:</b></td>
+<td><input type=password size=10 name=LDAP_password></td>";
+        } else {
+          print "
 <td align=right><b>E-mail address:</b></td>
 <td><input size=35 name=Bugzilla_login></td>
 </tr>
 <tr>
 <td align=right><b>Password:</b></td>
-<td><input type=password size=35 name=Bugzilla_password></td>
+<td><input type=password size=35 name=Bugzilla_password></td>";
+        }
+        print "
 </tr>
 </table>
 ";
@@ -733,11 +872,16 @@ Content-type: text/html
         }
         print "
 <input type=submit value=Login name=GoAheadAndLogIn><hr>
+";
+        # If we're using LDAP, we can't request that a password be mailed...
+        unless(Param("useLDAP")) {
+          print "
 If you don't have a password, or have forgotten it, then please fill in the
 e-mail address above and click
  here:<input type=submit value=\"E-mail me a password\"
 name=PleaseMailAPassword>
 </form>\n";
+        }
 
         # This seems like as good as time as any to get rid of old
         # crufty junk in the logincookies table.  Get rid of any entry

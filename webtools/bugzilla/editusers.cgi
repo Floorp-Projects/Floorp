@@ -20,6 +20,7 @@
 #
 # Contributor(s): Holger Schurig <holgerschurig@nikocity.de>
 #                 Dave Miller <dave@intrec.com>
+#                 Joe Robins <jmrobins@tgix.com>
 #
 # Direct any questions on this source code to
 #
@@ -109,8 +110,11 @@ sub EmitFormElements ($$$$$$$)
     if ($editall) {
         print "</TR><TR>\n";
         print "  <TH ALIGN=\"right\">Password:</TH>\n";
-        print "  <TD><INPUT TYPE=\"PASSWORD\" SIZE=16 MAXLENGTH=16 NAME=\"password\" VALUE=\"$password\"></TD>\n";
-
+        if(Param('useLDAP')) {
+          print "  <TD><FONT COLOR=RED>This site is using LDAP for authentication!</FONT></TD>\n";
+        } else {
+          print "  <TD><INPUT TYPE=\"PASSWORD\" SIZE=16 MAXLENGTH=16 NAME=\"password\" VALUE=\"$password\"></TD>\n";
+        }
         print "</TR><TR>\n";
         print "  <TH ALIGN=\"right\">Email notification:</TH>\n";
         print qq{<TD><SELECT NAME="emailnotification">};
@@ -341,7 +345,7 @@ if ($action eq 'list') {
         }
 	print "</TR>";
     }
-    if ($editall) {
+    if ($editall && !Param('useLDAP')) {
         print "<TR>\n";
         my $span = $candelete ? 3 : 2;
         print qq{
@@ -375,6 +379,13 @@ if ($action eq 'add') {
         exit;
     }
 
+    if(Param('useLDAP')) {
+      print "This site is using LDAP for authentication.  To add a new user, ";
+      print "please contact the LDAP administrators.";
+      PutTrailer();
+      exit;
+    }
+
     print "<FORM METHOD=POST ACTION=editusers.cgi>\n";
     print "<TABLE BORDER=0 CELLPADDING=4 CELLSPACING=0><TR>\n";
 
@@ -404,6 +415,13 @@ if ($action eq 'new') {
         print "Sorry, you don't have permissions to add new users.";
         PutTrailer();
         exit;
+    }
+
+    if(Param('useLDAP')) {
+      print "This site is using LDAP for authentication.  To add a new user, ";
+      print "please contact the LDAP administrators.";
+      PutTrailer();
+      exit;
     }
 
     # Cleanups and valididy checks
@@ -667,7 +685,7 @@ if ($action eq 'edit') {
     print "</TR></TABLE>\n";
 
     print "<INPUT TYPE=HIDDEN NAME=\"userold\" VALUE=\"$user\">\n";
-    if ($editall) {
+    if ($editall && !Param('useLDAP')) {
         print "<INPUT TYPE=HIDDEN NAME=\"passwordold\" VALUE=\"$password\">\n";
     }
     print "<INPUT TYPE=HIDDEN NAME=\"realnameold\" VALUE=\"$realname\">\n";
@@ -764,13 +782,14 @@ if ($action eq 'update') {
 		 WHERE login_name=" . SqlQuote($userold));
 	print "Updated email notification.<BR>\n";
     }
-
-    if ($editall && $password ne $passwordold) {
+    if(!Param('useLDAP')) {
+      if ($editall && $password ne $passwordold) {
         my $q = SqlQuote($password);
         SendSQL("UPDATE profiles
 		 SET password= $q, cryptpassword = ENCRYPT($q)
 		 WHERE login_name=" . SqlQuote($userold));
 	print "Updated password.<BR>\n";
+      }
     }
     if ($editall && $realname ne $realnameold) {
         SendSQL("UPDATE profiles

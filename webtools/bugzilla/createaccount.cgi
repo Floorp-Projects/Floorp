@@ -20,6 +20,7 @@
 #
 # Contributor(s): Terry Weissman <terry@mozilla.org>
 #                 David Gardiner <david.gardiner@unisa.edu.au>
+#                 Joe Robins <jmrobins@tgix.com>
 
 use diagnostics;
 use strict;
@@ -42,6 +43,14 @@ Content-type: text/html
 
 ";
 
+# If we're using LDAP for login, then we can't create a new account here.
+if(Param('useLDAP')) {
+  PutHeader("Can't create LDAP accounts");
+  print "This site is using LDAP for authentication.  Please contact an LDAP ";
+  print "administrator to get a new account created.\n";
+  PutFooter();
+  exit;
+}
 
 my $login = $::FORM{'login'};
 my $realname = $::FORM{'realname'};
