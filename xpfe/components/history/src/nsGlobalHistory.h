@@ -278,6 +278,8 @@ protected:
   nsIMdbStore* mStore;     // OWNER
   nsIMdbTable* mTable;     // OWNER
   
+  nsCOMPtr<nsIMdbRow> mMetaRow;
+  
   mdb_scope  kToken_HistoryRowScope;
   mdb_kind   kToken_HistoryKind;
 
@@ -290,6 +292,9 @@ protected:
   mdb_column kToken_HostnameColumn;
   mdb_column kToken_HiddenColumn;
   mdb_column kToken_TypedColumn;
+
+  // meta-data tokens
+  mdb_column kToken_LastPageVisited;
 
   //
   // AddPage-oriented stuff
