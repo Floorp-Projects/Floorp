@@ -41,7 +41,7 @@ class nsFileSpec;
 native PrefChangedFunc(PrefChangedFunc);
 [ptr] native nsFileSpec(nsFileSpec);
 
-[object, uuid(a22ad7b0-ca86-11d1-a9a4-00805f8a7ac4)]
+[scriptable, uuid(a22ad7b0-ca86-11d1-a9a4-00805f8a7ac4)]
 interface nsIPref : nsISupports {
 
   void StartUp();
