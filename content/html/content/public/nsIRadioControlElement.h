@@ -101,13 +101,11 @@ public:
   NS_IMETHOD AddedToRadioGroup() = 0;
 
   /**
-   * Let this radio button know that state has been changed such that it has
-   * been *removed* from a group (and tell it which group).
-   * @param aForm the form it was removed from
-   * @param aName the name of the group it was removed from (nsnull to detect
-   *        using GetName())
+   * Let this radio button know that it is about to be removed from the radio
+   * group it is currently in (the relevant properties should not have changed
+   * yet).
    */
-  NS_IMETHOD RemovedFromRadioGroup(nsIForm* aForm, nsAString* aName) = 0;
+  NS_IMETHOD WillRemoveFromRadioGroup() = 0;
 };
 
 #endif // nsIRadioControlElement_h___

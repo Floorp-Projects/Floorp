@@ -4308,7 +4308,7 @@ nsGenericHTMLContainerFormElement::GetForm(nsIDOMHTMLFormElement** aForm)
   *aForm = nsnull;
 
   if (mForm) {
-    mForm->QueryInterface(NS_GET_IID(nsIDOMHTMLFormElement), (void**)aForm);
+    CallQueryInterface(mForm, aForm);
   }
 
   return NS_OK;
@@ -4555,7 +4555,7 @@ nsGenericHTMLLeafFormElement::GetForm(nsIDOMHTMLFormElement** aForm)
   *aForm = nsnull;
 
   if (mForm) {
-    mForm->QueryInterface(NS_GET_IID(nsIDOMHTMLFormElement), (void**)aForm);
+    CallQueryInterface(mForm, aForm);
   }
 
   return NS_OK;

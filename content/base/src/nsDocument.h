@@ -69,6 +69,7 @@
 #include "nsScriptLoader.h"
 #include "nsICSSLoader.h"
 #include "nsIDOMXPathEvaluator.h"
+#include "nsIRadioGroupContainer.h"
 
 #include "pldhash.h"
 
@@ -78,7 +79,10 @@ class nsIOutputStream;
 class nsDocument;
 class nsIDTD;
 class nsXPathDocumentTearoff;
+class nsIRadioVisitor;
+class nsIFormControl;
 
+struct nsRadioGroupStruct;
 
 #if 0
 class nsPostData : public nsIPostData {
@@ -260,7 +264,8 @@ class nsDocument : public nsIDocument,
                    public nsIDOM3Node,
                    public nsSupportsWeakReference,
                    public nsIDOMEventReceiver,
-                   public nsIScriptObjectPrincipal
+                   public nsIScriptObjectPrincipal,
+                   public nsIRadioGroupContainer
 {
 public:
   NS_DECL_ISUPPORTS
@@ -524,6 +529,22 @@ public:
   NS_IMETHOD SetContainer(nsISupports *aContainer);
   NS_IMETHOD GetContainer(nsISupports **aContainer);
 
+  // nsIRadioGroupContainer
+  NS_IMETHOD WalkRadioGroup(const nsAString& aName,
+                            nsIRadioVisitor* aVisitor);
+  NS_IMETHOD SetCurrentRadioButton(const nsAString& aName,
+                                   nsIDOMHTMLInputElement* aRadio);
+  NS_IMETHOD GetCurrentRadioButton(const nsAString& aName,
+                                   nsIDOMHTMLInputElement** aRadio);
+  NS_IMETHOD AddToRadioGroup(const nsAString& aName,
+                             nsIFormControl* aRadio);
+  NS_IMETHOD RemoveFromRadioGroup(const nsAString& aName,
+                                  nsIFormControl* aRadio);
+                                        
+  // for radio group
+  nsresult GetRadioGroup(const nsAString& aName,
+                         nsRadioGroupStruct **aRadioGroup);
+
   // nsIDOMNode
   NS_DECL_NSIDOMNODE
 
@@ -633,6 +654,8 @@ protected:
   // A content ID counter used to give a monotonically increasing ID to the content
   // objects in the document's content model
   PRInt32 mNextContentID;
+
+  nsHashtable mRadioGroups;
 
 #ifdef IBMBIDI
   PRBool        mBidiEnabled;

@@ -143,36 +143,10 @@ public:
 
   /**
    * Get the index of the given control within this form.
+   * @param aControl the control to find the index of
+   * @param aIndex the index [OUT]
    */
   NS_IMETHOD IndexOfControl(nsIFormControl* aControl, PRInt32* aIndex) = 0;
-
-  /**
-   * Set the currently selected radio button in a group
-   *
-   * @param aName the radio group to set the button in
-   * @param aRadio the radio button to be returned
-   */
-  NS_IMETHOD SetCurrentRadioButton(const nsAString& aName,
-                                   nsIDOMHTMLInputElement* aRadio) = 0;
-
-  /**
-   * Get the currently selected radio button in a group
-   *
-   * @param aName the radio group to get the radio button in
-   * @param aRadio the radio button to be returned
-   */
-  NS_IMETHOD GetCurrentRadioButton(const nsAString& aName,
-                                   nsIDOMHTMLInputElement** aRadio) = 0;
-
-  /**
-   * Walk over the radios in a group and call Visit() on the visitor.
-   *
-   * @param aName the radio group to walk
-   * @param aVisitor the visitor to call Visit() on
-   */
-  NS_IMETHOD WalkRadioGroup(const nsAString& aName,
-                            nsIRadioVisitor* aVisitor) = 0;
-
 };
 
 #endif /* nsIForm_h___ */

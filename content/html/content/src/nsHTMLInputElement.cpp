@@ -62,7 +62,6 @@
 #include "nsIForm.h"
 #include "nsIFormSubmission.h"
 #include "nsIGfxTextControlFrame.h"
-#include "nsIRadioControlFrame.h"
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
 #include "nsIFormControlFrame.h"
@@ -92,6 +91,10 @@
 
 #include "nsRuleNode.h"
 #include "nsCSSAtoms.h"
+
+// input type=radio
+#include "nsIRadioControlFrame.h"
+#include "nsIRadioGroupContainer.h"
 
 // input type=file
 #include "nsIMIMEService.h"
@@ -179,6 +182,10 @@ public:
   NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent,
                             nsIDOMEvent** aDOMEvent, PRUint32 aFlags,
                             nsEventStatus* aEventStatus);
+                            
+  NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep,
+                         PRBool aCompileEventHandlers);
+
 #ifdef DEBUG
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 #endif
@@ -223,7 +230,7 @@ public:
   NS_IMETHOD SetCheckedChangedInternal(PRBool aCheckedChanged);
   NS_IMETHOD GetCheckedChanged(PRBool* aCheckedChanged);
   NS_IMETHOD AddedToRadioGroup();
-  NS_IMETHOD RemovedFromRadioGroup(nsIForm* aForm, nsAString* aName);
+  NS_IMETHOD WillRemoveFromRadioGroup();
 
 protected:
   // Helper method
@@ -260,8 +267,15 @@ protected:
     return tmp.EqualsIgnoreCase("image");
   }
 
+  /**
+   * Fire the onChange event
+   */
   void FireOnChange();
 
+  /**
+   * Visit a the group of radio buttons this radio belongs to
+   * @param aVisitor the visitor to visit with
+   */
   nsresult VisitGroup(nsIRadioVisitor* aVisitor);
 
   /**
@@ -270,13 +284,27 @@ protected:
    */
   nsresult SetCheckedInternal(PRBool aValue);
 
-  static nsresult GetContentType(const char* aPathName, char** aContentType);
+  /**
+   * Get the radio group container for this button (form or document)
+   * @return the radio group container (or null if no form or document)
+   */
+  already_AddRefed<nsIRadioGroupContainer> GetRadioGroupContainer();
 
   nsCOMPtr<nsIControllers> mControllers;
 
+  /**
+   * The type of this input (<input type=...>) as an integer.
+   * @see nsIFormControl.h (specifically NS_FORM_INPUT_*)
+   */
   PRInt8                   mType;
-  // See GET_BOOLBIT / SET_BOOLBIT macros and BF_* field identifiers
+  /**
+   * A bitfield containing our booleans
+   * @see GET_BOOLBIT / SET_BOOLBIT macros and BF_* field identifiers
+   */
   PRInt8                   mBitField;
+  /**
+   * The current value of the input if it has been changed from the deafault
+   */
   char*                    mValue;
 };
 
@@ -412,13 +440,15 @@ nsHTMLInputElement::BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                                   const nsAString* aValue,
                                   PRBool aNotify)
 {
-  if (aName == nsHTMLAtoms::name &&
-      mType == NS_FORM_INPUT_RADIO) {
-    // XXX Because we are not doing anything that assumes the radio button has
-    // actually had its name changed at this point, we can get away with
-    // calling this before the name has changed (and gain in performance by not
-    // grabbing the old name every time the name is changed).
-    RemovedFromRadioGroup(mForm, nsnull);
+  //
+  // When name or type changes, radio should be removed from radio group.
+  // (type changes are handled in the form itself currently)
+  // If the parser is not done creating the radio, we also should not do it.
+  //
+  if ((aName == nsHTMLAtoms::name || (aName == nsHTMLAtoms::type && !mForm)) &&
+      mType == NS_FORM_INPUT_RADIO &&
+      (mForm || !(GET_BOOLBIT(mBitField, BF_PARSER_CREATING)))) {
+    WillRemoveFromRadioGroup();
   }
 }
 
@@ -428,11 +458,13 @@ nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                                  PRBool aNotify)
 {
   //
-  // When name changes, radio moves to a different group
+  // When name or type changes, radio should be added to radio group.
   // (type changes are handled in the form itself currently)
+  // If the parser is not done creating the radio, we also should not do it.
   //
-  if (aName == nsHTMLAtoms::name &&
-      mType == NS_FORM_INPUT_RADIO) {
+  if ((aName == nsHTMLAtoms::name || (aName == nsHTMLAtoms::type && !mForm)) &&
+      mType == NS_FORM_INPUT_RADIO &&
+      (mForm || !(GET_BOOLBIT(mBitField, BF_PARSER_CREATING)))) {
     AddedToRadioGroup();
   }
 
@@ -548,9 +580,9 @@ nsHTMLInputElement::GetType(nsAString& aValue)
 NS_IMETHODIMP
 nsHTMLInputElement::SetType(const nsAString& aValue)
 {
-  return nsGenericHTMLLeafFormElement::SetAttr(kNameSpaceID_None,
-                                               nsHTMLAtoms::type, aValue,
-                                               PR_TRUE);
+  return SetAttr(kNameSpaceID_None,
+                 nsHTMLAtoms::type, aValue,
+                 PR_TRUE);
 }
 
 NS_IMETHODIMP 
@@ -793,10 +825,11 @@ nsHTMLInputElement::SetChecked(PRBool aChecked)
       rv = RadioSetChecked();
     } else {
       rv = SetCheckedInternal(PR_FALSE);
-      if (mForm) {
+      nsCOMPtr<nsIRadioGroupContainer> container = GetRadioGroupContainer();
+      if (container) {
         nsAutoString name;
         GetName(name);
-        mForm->SetCurrentRadioButton(name, nsnull);
+        container->SetCurrentRadioButton(name, nsnull);
       }
     }
   } else {
@@ -815,11 +848,12 @@ nsHTMLInputElement::RadioSetChecked()
   // Find the selected radio button so we can deselect it
   //
   nsCOMPtr<nsIDOMHTMLInputElement> currentlySelected;
+  nsCOMPtr<nsIRadioGroupContainer> container = GetRadioGroupContainer();
+  // This is ONLY INITIALIZED IF container EXISTS
   nsAutoString name;
-  if (mForm) {
-    // This is only initialized in if (mForm) for use in later if (mForm)s
+  if (container) {
     GetName(name);
-    mForm->GetCurrentRadioButton(name, getter_AddRefs(currentlySelected));
+    container->GetCurrentRadioButton(name, getter_AddRefs(currentlySelected));
   }
 
   //
@@ -839,13 +873,26 @@ nsHTMLInputElement::RadioSetChecked()
   }
 
   //
-  // Let the form know that we are now the One True Radio Button
+  // Let the group know that we are now the One True Radio Button
   //
-  if (mForm && NS_SUCCEEDED(rv)) {
-    rv = mForm->SetCurrentRadioButton(name, NS_STATIC_CAST(nsIDOMHTMLInputElement*, this));
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (container) {
+    rv = container->SetCurrentRadioButton(name, this);
   }
 
   return rv;
+}
+
+already_AddRefed<nsIRadioGroupContainer>
+nsHTMLInputElement::GetRadioGroupContainer()
+{
+  nsIRadioGroupContainer* retval = nsnull;
+  if (mForm) {
+    CallQueryInterface(mForm, &retval);
+  } else if (mDocument) {
+    CallQueryInterface(mDocument, &retval);
+  }
+  return retval;
 }
 
 NS_IMETHODIMP
@@ -1358,11 +1405,12 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
 
       case NS_FORM_INPUT_RADIO:
         {
-          if (mForm) {
+          nsCOMPtr<nsIRadioGroupContainer> container = GetRadioGroupContainer();
+          if (container) {
             nsAutoString name;
             GetName(name);
-            mForm->GetCurrentRadioButton(name,
-                                         getter_AddRefs(selectedRadioButton));
+            container->GetCurrentRadioButton(name,
+                                             getter_AddRefs(selectedRadioButton));
           }
 
           PRBool checked;
@@ -1677,6 +1725,38 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
   return rv;
 }
 
+
+NS_IMETHODIMP
+nsHTMLInputElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
+                                PRBool aCompileEventHandlers)
+{
+  // SetDocument() sets the form and that takes care of form's WillRemove
+  // so we just have to take care of the case where we're removing from the
+  // document and we don't have a form
+  if (!aDocument && !mForm && mType == NS_FORM_INPUT_RADIO) {
+    WillRemoveFromRadioGroup();
+  }
+
+  nsresult rv = nsGenericHTMLLeafFormElement::SetDocument(aDocument, aDeep,
+                                                          aCompileEventHandlers);
+
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  // If this is radio button which is in a form,
+  // and the parser is still creating the element.
+  if (mForm || mType != NS_FORM_INPUT_RADIO ||
+      GET_BOOLBIT(mBitField, BF_PARSER_CREATING)) {
+    return NS_OK;
+  }
+  
+  // Add radio to document if we don't have a form already (if we do it's
+  // already been added into that group)
+  if (aDocument && !mForm && mType == NS_FORM_INPUT_RADIO) {
+    AddedToRadioGroup();
+  }
+
+  return NS_OK;
+}
 
 // nsIHTMLContent
 
@@ -2450,6 +2530,13 @@ nsHTMLInputElement::DoneCreatingElement()
   }
 
   SET_BOOLBIT(mBitField, BF_SHOULD_INIT_CHECKED, PR_FALSE);
+  
+  //
+  // If the radio button is not in a form, we can add it to
+  // radio group in document here, otherwise we will miss it.
+  //
+  if (!mForm && mType == NS_FORM_INPUT_RADIO)
+    AddedToRadioGroup();
 
   return NS_OK;
 }
@@ -2499,9 +2586,10 @@ NS_IMETHODIMP
 nsHTMLInputElement::AddedToRadioGroup()
 {
   //
-  // Currently the only time radio groups really happen is in forms
+  //  If the input element is not in a form and
+  //  not in a document, we just need to return.
   //
-  if (!mForm) {
+  if (!mForm && !mDocument) {
     return NS_OK;
   }
 
@@ -2531,21 +2619,31 @@ nsHTMLInputElement::AddedToRadioGroup()
   nsresult rv = NS_GetRadioGetCheckedChangedVisitor(&checkedChanged, this,
                                            getter_AddRefs(visitor));
   NS_ENSURE_SUCCESS(rv, rv);
-  nsAutoString name;
-  GetName(name);
-  rv = mForm->WalkRadioGroup(name, visitor);
+  
+  VisitGroup(visitor);
   SetCheckedChangedInternal(checkedChanged);
+  
+  //
+  // Add the radio to the radio group container.
+  //
+  nsCOMPtr<nsIRadioGroupContainer> container = GetRadioGroupContainer();
+  if (container) {
+    nsAutoString name;
+    GetName(name);
+    container->AddToRadioGroup(name, NS_STATIC_CAST(nsIFormControl*, this));
+  }
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHTMLInputElement::RemovedFromRadioGroup(nsIForm* aForm, nsAString* aName)
+nsHTMLInputElement::WillRemoveFromRadioGroup()
 {
   //
-  // Currently radio groups only happen in forms
+  // If the input element is not in a form and
+  // not in a document, we just need to return.
   //
-  if (!aForm) {
+  if (!mForm && !mDocument) {
     return NS_OK;
   }
 
@@ -2556,14 +2654,31 @@ nsHTMLInputElement::RemovedFromRadioGroup(nsIForm* aForm, nsAString* aName)
   PRBool checked = PR_FALSE;
   GetChecked(&checked);
 
+  nsAutoString name;
+  PRBool gotName = PR_FALSE;
   if (checked) {
-    if (aName) {
-      aForm->SetCurrentRadioButton(*aName, (nsIDOMHTMLInputElement*)nsnull);
-    } else {
-      nsAutoString name;
+    if (!gotName) {
       GetName(name);
-      aForm->SetCurrentRadioButton(name, (nsIDOMHTMLInputElement*)nsnull);
+      gotName = PR_TRUE;
     }
+
+    nsCOMPtr<nsIRadioGroupContainer> container = GetRadioGroupContainer();
+    if (container) {
+      container->SetCurrentRadioButton(name, nsnull);
+    }
+  }
+  
+  //
+  // Remove this radio from its group in the container
+  //
+  nsCOMPtr<nsIRadioGroupContainer> container = GetRadioGroupContainer();
+  if (container) {
+    if (!gotName) {
+      GetName(name);
+      gotName = PR_TRUE;
+    }
+    container->RemoveFromRadioGroup(name,
+                                    NS_STATIC_CAST(nsIFormControl*, this));
   }
 
   return NS_OK;
@@ -2573,13 +2688,14 @@ nsresult
 nsHTMLInputElement::VisitGroup(nsIRadioVisitor* aVisitor)
 {
   nsresult rv;
-  if (mForm) {
+  nsCOMPtr<nsIRadioGroupContainer> container = GetRadioGroupContainer();
+  if (container) {
     nsAutoString name;
     GetName(name);
-    rv = mForm->WalkRadioGroup(name, aVisitor);
+    rv = container->WalkRadioGroup(name, aVisitor);
   } else {
-    PRBool stop = PR_FALSE;
-    rv = aVisitor->Visit(this, &stop);
+    PRBool stop;
+    aVisitor->Visit(this, &stop);
   }
   return rv;
 }
@@ -2628,7 +2744,6 @@ public:
     nsCOMPtr<nsIRadioControlElement> radio(do_QueryInterface(aRadio));
     NS_ASSERTION(radio, "Visit() passed a null button (or non-radio)!");
     radio->SetCheckedChangedInternal(mCheckedChanged);
-    *aStop = PR_TRUE;
     return NS_OK;
   }
 
