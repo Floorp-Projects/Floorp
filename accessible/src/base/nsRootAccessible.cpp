@@ -50,6 +50,7 @@
 #include "nsIDOMHTMLSelectElement.h"
 #include "nsIDOMNSEvent.h"
 #include "nsIDOMWindow.h"
+#include "nsIDOMXULMultSelectCntrlEl.h"
 #include "nsIDOMXULSelectCntrlEl.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
 #include "nsIDocument.h"
@@ -65,7 +66,6 @@
 #include "nsRootAccessible.h"
 #ifdef MOZ_XUL
 #include "nsXULTreeAccessible.h"
-#include "nsITreeSelection.h"
 #include "nsIXULDocument.h"
 #endif
 #include "nsAccessibilityService.h"
@@ -296,6 +296,9 @@ void nsRootAccessible::GetEventShell(nsIDOMNode *aNode, nsIPresShell **aEventShe
 
 NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
 {
+  // Turn DOM events in accessibility events
+
+  // Get info about event and target
   // optionTargetNode is set to current option for HTML selects
   nsCOMPtr<nsIDOMNode> targetNode, optionTargetNode; 
   GetTargetNode(aEvent, getter_AddRefs(targetNode));
@@ -304,9 +307,14 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
 
   nsAutoString eventType;
   aEvent->GetType(eventType);
+  nsAutoString localName;
+  targetNode->GetLocalName(localName);
 #ifdef DEBUG_aleventhal
   // Very useful for debugging, please leave this here.
   if (eventType.EqualsIgnoreCase("DOMMenuItemActive")) {
+    printf("debugging events");
+  }
+  if (localName.EqualsIgnoreCase("tree")) {
     printf("debugging events");
   }
 #endif
@@ -345,27 +353,22 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
   
 #ifdef MOZ_XUL
   // If it's a tree element, need the currently selected item
-  PRInt32 treeIndex = -1;
-  nsCOMPtr<nsITreeBoxObject> treeBox;
   nsCOMPtr<nsIAccessible> treeItemAccessible;
-  nsXULTreeAccessible::GetTreeBoxObject(targetNode, getter_AddRefs(treeBox));
-  if (treeBox) {
-    nsCOMPtr<nsITreeView> view;
-    treeBox->GetView(getter_AddRefs(view));
-    if (view) {
-      nsCOMPtr<nsITreeSelection> selection;
-      view->GetSelection(getter_AddRefs(selection));
-      if (selection) {
-        selection->GetCurrentIndex(&treeIndex);
-        if (treeIndex >= 0) {
-          // XXX todo Kyle - fix bug 201922 so that tree is responsible for keeping track
-          // of it's own accessibles. Then we'll ask the tree so we can reuse
-          // the accessibles already created.
-          nsCOMPtr<nsIWeakReference> weakEventShell(do_GetWeakReference(eventShell));
-          treeItemAccessible = new nsXULTreeitemAccessible(accessible, targetNode, 
-                                                           weakEventShell, treeIndex);
-          if (!treeItemAccessible)
-            return NS_ERROR_OUT_OF_MEMORY;
+  if (localName.EqualsLiteral("tree")) {
+    nsCOMPtr<nsIDOMXULMultiSelectControlElement> multiSelect =
+      do_QueryInterface(targetNode);
+    if (multiSelect) {
+      PRInt32 treeIndex = -1;
+      multiSelect->GetCurrentIndex(&treeIndex);
+      if (treeIndex >= 0) {
+        // XXX todo Kyle - fix bug 201922 so that tree is responsible for keeping track
+        // of it's own accessibles. Then we'll ask the tree so we can reuse
+        // the accessibles already created.
+        nsCOMPtr<nsIWeakReference> weakEventShell(do_GetWeakReference(eventShell));
+        treeItemAccessible = new nsXULTreeitemAccessible(accessible, targetNode, 
+                                                          weakEventShell, treeIndex);
+        if (!treeItemAccessible) {
+          return NS_ERROR_OUT_OF_MEMORY;
         }
       }
     }
@@ -493,7 +496,7 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
       FireAccessibleFocusEvent(accessible, targetNode);
   }
   else if (eventType.EqualsIgnoreCase("select")) {
-    if (treeBox && treeIndex >= 0) { // it's a XUL <tree>
+    if (treeItemAccessible) { // it's a XUL <tree>
       // use EVENT_FOCUS instead of EVENT_ATK_SELECTION_CHANGE
       privAcc = do_QueryInterface(treeItemAccessible);
       privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_FOCUS, 
