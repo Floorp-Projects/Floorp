@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim: set sw=4 ts=4 sts=4 et cin: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -312,7 +313,7 @@ NS_IMETHODIMP
 nsLoadGroup::Cancel(nsresult status)
 {
     NS_ASSERTION(NS_FAILED(status), "shouldn't cancel with a success code");
-    nsresult rv, firstError;
+    nsresult rv;
     PRUint32 count = mRequests.entryCount;
 
     nsAutoVoidArray requests;
@@ -336,12 +337,10 @@ nsLoadGroup::Cancel(nsresult status)
     //
     mIsCanceling = PR_TRUE;
 
-    firstError = NS_OK;
-
-    nsIRequest* request;
+    nsresult firstError = NS_OK;
 
     while (count > 0) {
-        request = NS_STATIC_CAST(nsIRequest*, requests.ElementAt(--count));
+        nsIRequest* request = NS_STATIC_CAST(nsIRequest*, requests.ElementAt(--count));
 
         NS_ASSERTION(request, "NULL request found in list.");
 
@@ -514,6 +513,7 @@ NS_IMETHODIMP
 nsLoadGroup::GetLoadGroup(nsILoadGroup **loadGroup)
 {
     *loadGroup = mLoadGroup;
+    NS_IF_ADDREF(*loadGroup);
     return NS_OK;
 }
 
@@ -633,6 +633,12 @@ nsLoadGroup::AddRequest(nsIRequest *request, nsISupports* ctxt)
                 mForegroundCount -= 1;
             }
         }
+
+        // Ensure that we're part of our loadgroup while pending
+        if (mForegroundCount == 1 && mLoadGroup) {
+            mLoadGroup->AddRequest(this, nsnull);
+        }
+
     }
 
     return rv;
@@ -700,6 +706,11 @@ nsLoadGroup::RemoveRequest(nsIRequest *request, nsISupports* ctxt,
                     this, request));
             }
 #endif
+        }
+
+        // If that was the last request -> remove ourselves from loadgroup
+        if (mForegroundCount == 0 && mLoadGroup) {
+            mLoadGroup->RemoveRequest(this, nsnull);
         }
     }
 
