@@ -29,7 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/config.mk
 
 MODULE		= apprunner
-REQUIRES	= xpcom string webbrwsr widget dom necko pref appshell wallet layout chrome rdf profile xpinstall uriloader editor view windowwatcher embed_base embedcomponents mpfilelocprovider browser mozcomps docshell
+REQUIRES	= xpcom string webbrwsr widget dom necko pref appshell wallet layout chrome rdf profile xpinstall uriloader editor view windowwatcher embed_base embedcomponents mpfilelocprovider browser mozcomps docshell xremoteservice
 # for jprof
 REQUIRES	+= jprof
 

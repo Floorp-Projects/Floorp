@@ -27,7 +27,7 @@ LIBRARY_NAME	= widget_gtk
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsWidgetGTKModule
-REQUIRES	= xpcom string layout pref dom appshell timer uconv necko img view util rdf uriloader docshell msgcompose msgbase editor windowwatcher mailnews intl
+REQUIRES	= xpcom string appshell layout pref dom timer uconv necko intl xremoteservice view util
 
 CSRCS		= \
 		keysym2ucs.c

@@ -220,6 +220,8 @@ bin/components/nsDictionary.js
 bin/components/nsProxyAutoConfig.js
 bin/components/nsXmlRpcClient.js
 bin/components/libxremote_client.so
+bin/components/libxremoteservice.so
+bin/components/xremoteservice.xpt
 bin/components/windowwatcher.xpt
 bin/components/xmlextras.xpt
 bin/components/libxmlextras.so

@@ -77,6 +77,7 @@
 #ifdef MOZ_ENABLE_XREMOTE
 #include "nsXRemoteClientCID.h"
 #include "nsIXRemoteClient.h"
+#include "nsIXRemoteService.h"
 #endif
 #define TURBO_PREF "browser.turbo.enabled"
 
@@ -1323,11 +1324,27 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
 
   // From this point on, should be true
   appShell->SetQuitOnLastWindowClosing(PR_TRUE);	
+
+#ifdef MOZ_ENABLE_XREMOTE
+  // if we have X remote support and we have our one window up and
+  // running start listening for requests on the proxy window.
+  nsCOMPtr<nsIXRemoteService> remoteService;
+  remoteService = do_GetService(NS_IXREMOTESERVICE_CONTRACTID);
+  if (remoteService)
+    remoteService->Startup();
+#endif /* MOZ_ENABLE_XREMOTE */
+
   // Start main event loop
   NS_TIMELINE_ENTER("appShell->Run");
   rv = appShell->Run();
   NS_TIMELINE_LEAVE("appShell->Run");
   NS_ASSERTION(NS_SUCCEEDED(rv), "failed to run appshell");
+
+#ifdef MOZ_ENABLE_XREMOTE
+  // shut down the x remote proxy window
+  if (remoteService)
+    remoteService->Shutdown();
+#endif /* MOZ_ENABLE_XREMOTE */
 
   /*
    * Shut down the Shell instance...  This is done even if the Run(...)

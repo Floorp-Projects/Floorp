@@ -22,8 +22,8 @@
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
 #include <gdk/gdkx.h>
-#include "nsString.h"
-#include "nsIDOMWindowInternal.h"
+#include <nsString.h>
+#include <nsIXRemoteWidgetHelper.h>
 
 #ifndef __nsGtkMozRemoteHelper_h__
 #define __nsGtkMozRemoteHelper_h__
@@ -36,38 +36,37 @@ public:
 
   // interaction from the outside world
   static        void SetupVersion         (GdkWindow *aWindow);
-  static    gboolean HandlePropertyChange (GtkWidget *aWidget, GdkEventProperty *aEvent);
+  static    gboolean HandlePropertyChange (GtkWidget *aWidget,
+                                           GdkEventProperty *aEvent,
+                                           nsIWidget *ansIWidget);
 
  private:
 
   // internal methods
   static       void  EnsureAtoms     (void);
-  static       void  ParseCommand    (const char *aCommand, char **aResponse);
-  static       void  FindLastInList  (nsCString &aString, nsCString &retString, PRUint32 *aIndexRet);
-  static       char *BuildResponse   (const char *aError, const char *aMessage);
 
-  // these are for the actions
-  static NS_METHOD   OpenURLDialog   (void);
-  static NS_METHOD   OpenURL         (const char *aURL, PRBool aNewWindow, PRBool raiseWindow);
-  static NS_METHOD   OpenFileDialog  (void);
-  static NS_METHOD   OpenFile        (const char *aURL, PRBool raiseWindow);
-  static NS_METHOD   SaveAsDialog    (void);
-  static NS_METHOD   SaveAs          (const char *aFileName, const char *aType);
-  static NS_METHOD   MailTo          (const PRUnichar *aToList);
-  static NS_METHOD   AddBookmark     (const char *aURL, const char *aTitle);
-
-  // utility functions for getting windows
-  static NS_METHOD   GetLastBrowserWindow (nsIDOMWindow **_retval);
-  static NS_METHOD   OpenXULWindow        (const char *aChromeURL, nsIDOMWindow *aParent,
-					   const char *aWindowFeatures,
-					   const char *aName, const PRUnichar *aURL);
- 
   static        Atom sMozVersionAtom;
   static        Atom sMozLockAtom;
   static        Atom sMozCommandAtom;
   static        Atom sMozResponseAtom;
 
 
+};
+
+// {84f94aac-1dd2-11b2-a05f-9b338fea662c}
+
+#define NS_GTKXREMOTEWIDGETHELPER_CID \
+  { 0x84f94aac, 0x1dd2, 0x11b2, \
+  { 0xa0, 0x5f, 0x9b, 0x33, 0x8f, 0xea, 0x66, 0x2c } }
+
+class nsGtkXRemoteWidgetHelper : public nsIXRemoteWidgetHelper {
+ public:
+  nsGtkXRemoteWidgetHelper();
+  virtual ~nsGtkXRemoteWidgetHelper();
+
+  NS_DECL_ISUPPORTS
+
+  NS_IMETHOD EnableXRemoteCommands(nsIWidget *aWidget);
 };
 
 #endif /* __nsGtkMozRemoteHelper_h__ */

@@ -181,7 +181,7 @@ XRemoteService::ParseCommand(nsIWidget *aWidget,
   */
 
   if (action.Equals("openurl") || action.Equals("openfile")) {
-    if (argument.Length() == 0)
+    if (argument.IsEmpty())
       rv = OpenURLDialog(domWindow);
     else
       rv = OpenURL(argument, domWindow, PR_TRUE);
@@ -199,7 +199,7 @@ XRemoteService::ParseCommand(nsIWidget *aWidget,
   */
 
   else if (action.Equals("saveas")) {
-    if (argument.Length() == 0) {
+    if (argument.IsEmpty()) {
       rv = NS_ERROR_NOT_IMPLEMENTED;
     }
     else {
@@ -252,7 +252,7 @@ XRemoteService::ParseCommand(nsIWidget *aWidget,
   */
 
   else if (action.Equals("addbookmark")) {
-    if (argument.Length() == 0) {
+    if (argument.IsEmpty()) {
       rv = NS_ERROR_NOT_IMPLEMENTED;
     }
     else {

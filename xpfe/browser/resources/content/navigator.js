@@ -23,6 +23,7 @@
  */
 
 const nsIWebNavigation = Components.interfaces.nsIWebNavigation;
+const XREMOTESERVICE_CONTRACTID = "@mozilla.org/browser/xremoteservice;1";
 
 var gURLBar = null;
 var gProxyButton = null;
@@ -342,6 +343,14 @@ function Startup()
 
     // Perform default browser checking.
     checkForDefaultBrowser();
+
+    // hook up remote support
+    if (XREMOTESERVICE_CONTRACTID in Components.classes) {
+      var remoteService;
+      remoteService = Components.classes[XREMOTESERVICE_CONTRACTID]
+                                .getService(Components.interfaces.nsIXRemoteService);
+      remoteService.addBrowserInstance(window);
+    }
   }
 }
 
@@ -363,6 +372,14 @@ function BrowserFlushBookmarksAndHistory() {
 
 function Shutdown()
 {
+  // remove remote support
+  if (XREMOTESERVICE_CONTRACTID in Components.classes) {
+    var remoteService;
+    remoteService = Components.classes[XREMOTESERVICE_CONTRACTID]
+                              .getService(Components.interfaces.nsIXRemoteService);
+    remoteService.removeBrowserInstance(window);
+  }
+
   var browser = getBrowser();
 
   browser.boxObject.removeProperty("listenerkungfu");

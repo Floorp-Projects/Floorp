@@ -42,6 +42,7 @@
 #include "nsDragService.h"
 #include "nsScrollbar.h"
 #include "nsSound.h"
+#include "nsGtkMozRemoteHelper.h"
 #ifdef IBMBIDI
 #include "nsBidiKeyboard.h"
 #endif
@@ -63,6 +64,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboardHelper)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsGtkXRemoteWidgetHelper)
 #ifdef IBMBIDI
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
 #endif
@@ -198,7 +200,11 @@ static nsModuleComponentInfo components[] =
     NS_DRAGSERVICE_CID,
     //    "@mozilla.org/widget/dragservice/gtk;1",
     "@mozilla.org/widget/dragservice;1",
-    nsDragServiceConstructor }
+    nsDragServiceConstructor },
+  { NS_IXREMOTEWIDGETHELPER_CLASSNAME,
+    NS_GTKXREMOTEWIDGETHELPER_CID,
+    NS_IXREMOTEWIDGETHELPER_CONTRACTID,
+    nsGtkXRemoteWidgetHelperConstructor }
 #ifdef IBMBIDI
     , { "Gtk Bidi Keyboard",
     NS_BIDIKEYBOARD_CID,

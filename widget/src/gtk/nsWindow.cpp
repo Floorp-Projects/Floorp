@@ -114,9 +114,9 @@ void handle_toplevel_configure (
     nsWindow   *      aWindow);
 
 gboolean handle_toplevel_property_change (
-    GtkWidget *widget,
+    GtkWidget *aGtkWidget,
     GdkEventProperty *event,
-    gpointer aData);
+    nsWindow *aWindow);
 
 // are we grabbing?
 PRBool      nsWindow::sIsGrabbing = PR_FALSE;
@@ -1938,8 +1938,6 @@ NS_METHOD nsWindow::CreateNative(GtkObject *parentWidget)
     gdk_window_set_events(mShell->window, 
                           mask);
 
-    // set up the version information
-    nsGtkMozRemoteHelper::SetupVersion(mShell->window);
   }
 
   if (mMozArea) {
@@ -2948,11 +2946,13 @@ void handle_toplevel_configure (
 
 
 gboolean handle_toplevel_property_change (
-    GtkWidget *widget,
+    GtkWidget *aGtkWidget,
     GdkEventProperty *event,
-    gpointer aData)
+    nsWindow *aWindow)
 {
-  return nsGtkMozRemoteHelper::HandlePropertyChange(widget, event);
+  nsIWidget *widget = NS_STATIC_CAST(nsIWidget *, aWindow);
+  return nsGtkMozRemoteHelper::HandlePropertyChange(aGtkWidget, event,
+                                                    widget);
 }
 
 void
