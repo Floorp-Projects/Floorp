@@ -184,7 +184,8 @@ public:
 
   void InitFloater(nsPlaceholderFrame* aPlaceholderFrame);
 
-  void AddFloater(nsPlaceholderFrame* aPlaceholderFrame);
+  void AddFloater(nsPlaceholderFrame* aPlaceholderFrame,
+                  PRBool aInitialReflow);
 
   void PlaceFloater(nsPlaceholderFrame* aFloater, PRBool& aIsLeftFloater);
 
@@ -253,7 +254,7 @@ nsLineLayout::InitFloater(nsPlaceholderFrame* aFrame)
 void
 nsLineLayout::AddFloater(nsPlaceholderFrame* aFrame)
 {
-  mBlockReflowState->AddFloater(aFrame);
+  mBlockReflowState->AddFloater(aFrame, PR_FALSE);
 }
 
 //----------------------------------------------------------------------
@@ -1176,13 +1177,7 @@ nsresult
 nsBaseIBFrame::PrepareStyleChangedReflow(nsBlockReflowState& aState)
 {
   // XXX temporary
-  // Mark everything dirty
-  nsLineBox* line = mLines;
-  while (nsnull != line) {
-    line->MarkDirty();
-    line = line->mNext;
-  }
-  return NS_OK;
+  return PrepareResizeReflow(aState);
 }
 
 nsresult
@@ -1610,11 +1605,6 @@ nsBaseIBFrame::ReflowLine(nsBlockReflowState& aState,
   // If the line already has floaters on it from last time, remove
   // them from the spacemanager now.
   if (nsnull != aLine->mFloaters) {
-#if 0
-    if (eReflowReason_Resize != aState.reason) {
-      aLine->UnplaceFloaters(aState.mSpaceManager);
-    }
-#endif
     aLine->mFloaters->Clear();
   }
 
@@ -3357,25 +3347,19 @@ nsBaseIBFrame::ReflowFloater(nsIPresContext& aPresContext,
     kidAvailSize.width = aFloaterReflowState.minWidth + bp.left + bp.right;
   }
   else {
-    // If we are floating something and we don't know the width then
-    // find a maximum width for it to reflow into. Walk upwards until
-    // we find something with an unconstrained width.
-    const nsHTMLReflowState* rsp = &aState;
-    kidAvailSize.width = 0;
-    while (nsnull != rsp) {
-      if (eHTMLFrameConstraint_FixedContent == rsp->widthConstraint) {
-        kidAvailSize.width = rsp->minWidth;
-        break;
+    // CSS2 section 10.3.5: Floating non-replaced elements with an
+    // auto width have the computed value of zero. Therefore, don't
+    // bother reflowing them.
+    if (NS_FRAME_IS_NOT_REPLACED(aFloaterReflowState.frameType)) {
+      // XXX Tables are weird and special, so check for them here...
+      const nsStyleDisplay* floaterDisplay;
+      aFloaterFrame->GetStyleData(eStyleStruct_Display,
+                                  (const nsStyleStruct*&)floaterDisplay);
+      if (NS_STYLE_DISPLAY_TABLE != floaterDisplay->mDisplay) {
+        return;
       }
-      else if (NS_UNCONSTRAINEDSIZE != rsp->widthConstraint) {
-        kidAvailSize.width = rsp->maxSize.width;
-        if (kidAvailSize.width > 0) {
-          break;
-        }
-      }
-      // XXX This cast is unfortunate!
-      rsp = (const nsHTMLReflowState*) rsp->parentReflowState;
     }
+    kidAvailSize.width = NS_UNCONSTRAINEDSIZE;
   }
 
   // Compute the available height for the floater
@@ -3391,7 +3375,7 @@ nsBaseIBFrame::ReflowFloater(nsIPresContext& aPresContext,
   if (NS_OK == aFloaterFrame->QueryInterface(kIHTMLReflowIID,
                                              (void**)&floaterReflow)) {
     nsHTMLReflowMetrics desiredSize(nsnull);
-    nsReflowStatus  status;
+    nsReflowStatus status;
     floaterReflow->WillReflow(aPresContext);
     floaterReflow->Reflow(aPresContext, desiredSize, aFloaterReflowState,
                           status);
@@ -3402,17 +3386,13 @@ nsBaseIBFrame::ReflowFloater(nsIPresContext& aPresContext,
 void
 nsBlockReflowState::InitFloater(nsPlaceholderFrame* aPlaceholder)
 {
+  // Set the geometric parent of the floater
   nsIFrame* floater = aPlaceholder->GetAnchoredItem();
-
   floater->SetGeometricParent(mBlock);
 
-  // XXX the choice of constructors is confusing and non-obvious
-  nsSize kidAvailSize(0, 0);
-  nsHTMLReflowState reflowState(mPresContext, floater, *this,
-                                kidAvailSize, eReflowReason_Initial);
-  mBlock->ReflowFloater(mPresContext, *this, floater, reflowState);
-
-  AddFloater(aPlaceholder);
+  // Then add the floater to the current line and place it when
+  // appropriate
+  AddFloater(aPlaceholder, PR_TRUE);
 }
 
 // This is called by the line layout's AddFloater method when a
@@ -3421,7 +3401,8 @@ nsBlockReflowState::InitFloater(nsPlaceholderFrame* aPlaceholder)
 // then the floater is place immediately, otherwise the floater
 // placement is deferred until the line has been reflowed.
 void
-nsBlockReflowState::AddFloater(nsPlaceholderFrame* aPlaceholder)
+nsBlockReflowState::AddFloater(nsPlaceholderFrame* aPlaceholder,
+                               PRBool aInitialReflow)
 {
   // Update the current line's floater array
   NS_ASSERTION(nsnull != mCurrentLine, "null ptr");
@@ -3429,6 +3410,21 @@ nsBlockReflowState::AddFloater(nsPlaceholderFrame* aPlaceholder)
     mCurrentLine->mFloaters = new nsVoidArray();
   }
   mCurrentLine->mFloaters->AppendElement(aPlaceholder);
+
+  // Reflow the floater
+  nsIFrame* floater = aPlaceholder->GetAnchoredItem();
+  nsSize kidAvailSize(0, 0);
+  nsHTMLReflowState reflowState(mPresContext, floater, *this, kidAvailSize);
+  reflowState.lineLayout = nsnull;
+  if ((nsnull == reflowCommand) || (floater != mNextRCFrame)) {
+    // Stub out reflowCommand and repair reasin in the reflowState
+    // when incremental reflow doesn't apply to the floater.
+    reflowState.reflowCommand = nsnull;
+    reflowState.reason = ((reason == eReflowReason_Initial) || aInitialReflow)
+      ? eReflowReason_Initial
+      : eReflowReason_Resize;
+  }
+  mBlock->ReflowFloater(mPresContext, *this, floater, reflowState);
 
   // Now place the floater immediately if possible. Otherwise stash it
   // away in mPendingFloaters and place it later.
@@ -3534,20 +3530,7 @@ nsBlockReflowState::PlaceFloater(nsPlaceholderFrame* aPlaceholder,
   // placement are for the floater only, not for any non-floating
   // content.
   nscoord saveY = mY;
-
   nsIFrame* floater = aPlaceholder->GetAnchoredItem();
-
-  // XXX the choice of constructors is confusing and non-obvious
-  nsSize kidAvailSize(0, 0);
-  nsHTMLReflowState reflowState(mPresContext, floater, *this, kidAvailSize);
-
-  // Reflow the floater if it's targetted for a reflow
-  if (nsnull != reflowCommand) {
-    if (floater == mNextRCFrame) {
-      reflowState.lineLayout = nsnull;
-      mBlock->ReflowFloater(mPresContext, *this, floater, reflowState);
-    }
-  }
 
   // Get the type of floater
   const nsStyleDisplay* floaterDisplay;
