@@ -106,10 +106,6 @@ static NS_DEFINE_CID(kCContentIteratorCID,  NS_CONTENTITERATOR_CID);
 // transaction manager
 static NS_DEFINE_CID(kCTransactionManagerCID, NS_TRANSACTIONMANAGER_CID);
 
-static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
-static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
-
-
 #ifdef XP_PC
 #define TRANSACTION_MANAGER_DLL "txmgr.dll"
 #else
@@ -122,8 +118,6 @@ static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 #define NS_ERROR_EDITOR_NO_SELECTION NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_EDITOR,1)
 #define NS_ERROR_EDITOR_NO_TEXTNODE  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_EDITOR,2)
-
-#define EDITOR_BUNDLE_URL "chrome://editor/content/editor.properties"
 
 const char* nsEditor::kMOZEditorBogusNodeAttr="MOZ_EDITOR_BOGUS_NODE";
 const char* nsEditor::kMOZEditorBogusNodeValue="TRUE";
@@ -331,79 +325,6 @@ nsEditor::GetSelection(nsIDOMSelection **aSelection)
   nsresult result = ps->GetSelection(SELECTION_NORMAL, aSelection);  // does an addref
   return result;
 }
-
-static NS_DEFINE_IID(kCFileWidgetCID, NS_FILEWIDGET_CID);
-
-NS_IMETHODIMP nsEditor::SaveDocument(PRBool saveAs, PRBool saveCopy)
-{
-  nsresult rv = NS_OK;
-  
-  // get the document
-  nsCOMPtr<nsIDOMDocument> doc;
-  rv = GetDocument(getter_AddRefs(doc));
-  if (NS_FAILED(rv)) return rv;
-  if (!doc) return NS_ERROR_NULL_POINTER;
-  
-  nsCOMPtr<nsIDiskDocument>  diskDoc = do_QueryInterface(doc);
-  if (!diskDoc)
-    return NS_ERROR_NO_INTERFACE;
-  
-  // this should really call out to the appcore for the display of the put file
-  // dialog.
-  
-  // find out if the doc already has a fileSpec associated with it.
-  nsFileSpec    docFileSpec;
-  PRBool mustShowFileDialog = saveAs || (diskDoc->GetFileSpec(docFileSpec) == NS_ERROR_NOT_INITIALIZED);
-  PRBool replacing = !saveAs;
-  
-  if (mustShowFileDialog)
-  {
-    nsCOMPtr<nsIFileWidget>  fileWidget;
-    rv = nsComponentManager::CreateInstance(kCFileWidgetCID, nsnull, nsIFileWidget::GetIID(), getter_AddRefs(fileWidget));
-    if (NS_SUCCEEDED(rv) && fileWidget)
-    {
-      nsAutoString  promptString("Save this document as:");      // XXX i18n, l10n
-      nsFileDlgResults dialogResult;
-      dialogResult = fileWidget->PutFile(nsnull, promptString, docFileSpec);
-      if (dialogResult == nsFileDlgResults_Cancel)
-        return NS_OK;
-        
-      replacing = (dialogResult == nsFileDlgResults_Replace);
-    }
-    else
-    {
-       NS_ASSERTION(0, "Failed to get file widget");
-      return rv;
-    }
-  }
-
-  nsAutoString useDocCharset("");
-  rv = diskDoc->SaveFile(&docFileSpec, replacing, saveCopy, nsIDiskDocument::eSaveFileHTML,useDocCharset);
-  
-  if (NS_FAILED(rv))
-  {
-    // show some error dialog?
-    NS_WARNING("Saving file failed");
-  }
-  
-  return rv;
-}
-
-NS_IMETHODIMP nsEditor::Save()
-{
-  nsresult rv = SaveDocument(PR_FALSE, PR_FALSE);
-  if (NS_FAILED(rv))
-    return rv;
-   
-  rv = DoAfterDocumentSave();
-  return rv;
-}
-
-NS_IMETHODIMP nsEditor::SaveAs(PRBool aSavingCopy)
-{
-  return SaveDocument(PR_TRUE, aSavingCopy);
-}
-
 
 NS_IMETHODIMP 
 nsEditor::Do(nsITransaction *aTxn)
@@ -747,6 +668,35 @@ nsEditor::SetDocumentCharacterSet(const PRUnichar* characterSet)
   }
 
   return rv;
+}
+
+NS_IMETHODIMP 
+nsEditor::SaveFile(nsFileSpec *aFileSpec, PRBool aReplaceExisting, PRBool aSaveCopy, ESaveFileType aSaveFileType)
+{
+  if (!aFileSpec)
+    return NS_ERROR_NULL_POINTER;
+
+  // get the document
+  nsCOMPtr<nsIDOMDocument> doc;
+  nsresult res = GetDocument(getter_AddRefs(doc));
+  if (NS_FAILED(res)) return res;
+  if (!doc) return NS_ERROR_NULL_POINTER;
+  
+  nsCOMPtr<nsIDiskDocument> diskDoc = do_QueryInterface(doc);
+  if (!diskDoc)
+    return NS_ERROR_NO_INTERFACE;
+
+  nsAutoString useDocCharset("");
+
+	typedef enum {eSaveFileText = 0, eSaveFileHTML = 1 } ESaveFileType;
+
+  res = diskDoc->SaveFile(aFileSpec, aReplaceExisting, aSaveCopy, 
+                          aSaveFileType == eSaveFileText ? nsIDiskDocument::eSaveFileText : nsIDiskDocument::eSaveFileHTML,
+                          useDocCharset);
+  if (NS_SUCCEEDED(res))
+    DoAfterDocumentSave();
+
+  return res;
 }
 
 /*
@@ -3560,7 +3510,7 @@ nsEditor::SplitNodeDeep(nsIDOMNode *aNode,
       nodeAsText->GetLength(&textLen);
     PRBool bDoSplit = PR_FALSE;
     
-    if (!nodeAsText || (offset && (offset != textLen)))
+    if (!nodeAsText || (offset && (offset != (PRInt32)textLen)))
     {
       bDoSplit = PR_TRUE;
       res = SplitNode(nodeToSplit, offset, getter_AddRefs(tempNode));
@@ -3640,25 +3590,6 @@ nsEditor::JoinNodeDeep(nsIDOMNode *aLeftNode,
   }
   
   return res;
-}
-
-// Get a string from the localized string resources
-nsresult nsEditor::GetString(const nsString& name, nsString& value)
-{
-  nsresult result = NS_ERROR_NOT_INITIALIZED;
-  value = "";
-  if (mStringBundle && (name != ""))
-  {
-#if 1
-    const PRUnichar *ptrtmp = name.GetUnicode();
-    PRUnichar *ptrv = nsnull;
-    result = mStringBundle->GetStringFromName(ptrtmp, &ptrv);
-    value = ptrv;
-#else
-    result = mStringBundle->GetStringFromName(name, value);
-#endif
-  }
-  return result;
 }
 
 nsresult nsEditor::BeginUpdateViewBatch()
@@ -3795,7 +3726,6 @@ nsEditor::DoAfterDocumentSave()
   NotifyDocumentListeners(eDocumentStateChanged);
   return NS_OK;
 }
-
 
 NS_IMETHODIMP 
 nsEditor::CreateTxnForSetAttribute(nsIDOMElement *aElement, 

@@ -101,7 +101,8 @@ static NS_DEFINE_IID(kAppShellServiceCID,       NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_CID(kHTMLEditorCID,            NS_HTMLEDITOR_CID);
 static NS_DEFINE_CID(kCTextServicesDocumentCID, NS_TEXTSERVICESDOCUMENT_CID);
 static NS_DEFINE_CID(kCSpellCheckerCID,         NS_SPELLCHECKER_CID);
-static NS_DEFINE_IID(kFileWidgetCID,            NS_FILEWIDGET_CID);
+static NS_DEFINE_IID(kCFileWidgetCID,           NS_FILEWIDGET_CID);
+static NS_DEFINE_CID(kCStringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
 
 /* Define Interface IDs */
 #ifdef NECKO
@@ -112,6 +113,7 @@ static NS_DEFINE_IID(kISupportsIID,             NS_ISUPPORTS_IID);
 
 #define APP_DEBUG 0 
 
+#define EDITOR_BUNDLE_URL "chrome://editor/content/editor.properties"
 
 nsresult
 NS_NewEditorShell(nsIEditorShell** aEditorShell)
@@ -143,6 +145,7 @@ nsEditorShell::nsEditorShell()
 ,  mWrapColumn(0)
 ,  mSuggestedWordIndex(0)
 ,  mDictionaryIndex(0)
+,  mStringBundle(0)
 {
 #ifdef APP_DEBUG
   printf("Created nsEditorShell\n");
@@ -249,6 +252,22 @@ nsEditorShell::Init()
   mEditorTypeString = editorType;
   mEditorTypeString.ToLowerCase();
 
+  nsIStringBundleService* service;
+
+  // Get pointer to our string bundle
+  nsresult res = nsServiceManager::GetService(kCStringBundleServiceCID,
+                                   nsIStringBundleService::GetIID(), 
+                                   (nsISupports**)&service);
+  if (NS_SUCCEEDED(res) && service)
+  {
+    nsILocale* locale = nsnull;
+    res = service->CreateBundle(EDITOR_BUNDLE_URL, locale, 
+                                   getter_AddRefs(mStringBundle));
+    // We don't need to keep service around once we created the bundle
+    nsServiceManager::ReleaseService(kCStringBundleServiceCID, service);
+  } else {
+    printf("ERROR: Failed to get StringBundle Service instance.\n");
+  }
   return NS_OK;
 }
 
@@ -937,8 +956,6 @@ nsEditorShell::Open()
   // and return a "file:///" string
   nsCOMPtr<nsIFileWidget>  fileWidget;
 
-static NS_DEFINE_IID(kCFileWidgetCID, NS_FILEWIDGET_CID);
-
   result = nsComponentManager::CreateInstance(kCFileWidgetCID, nsnull, nsIFileWidget::GetIID(), getter_AddRefs(fileWidget));
   if (NS_FAILED(result) || !fileWidget)
     return result;
@@ -979,55 +996,128 @@ static NS_DEFINE_IID(kCFileWidgetCID, NS_FILEWIDGET_CID);
     default:
       result = NS_ERROR_NOT_IMPLEMENTED;
   }
-
   return result;
 
 }
 
-NS_IMETHODIMP
-nsEditorShell::Save()
+NS_IMETHODIMP 
+nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy)
 {
-  nsresult  err = NS_NOINTERFACE;
+  nsresult  res = NS_NOINTERFACE;
   
   switch (mEditorType)
   {
     case ePlainTextEditorType:
     case eHTMLTextEditorType:
+    {
+      nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
+      if (editor)
       {
-        nsCOMPtr<nsIEditor>  editor = do_QueryInterface(mEditor);
-        if (editor)
-          err = editor->Save();
+        // get the document
+        nsCOMPtr<nsIDOMDocument> doc;
+        res = editor->GetDocument(getter_AddRefs(doc));
+        if (NS_FAILED(res)) return res;
+        if (!doc) return NS_ERROR_NULL_POINTER;
+  
+        nsCOMPtr<nsIDiskDocument> diskDoc = do_QueryInterface(doc);
+        if (!diskDoc)
+          return NS_ERROR_NO_INTERFACE;
+
+        // find out if the doc already has a fileSpec associated with it.
+        nsFileSpec    docFileSpec;
+        PRBool mustShowFileDialog = saveAs || (diskDoc->GetFileSpec(docFileSpec) == NS_ERROR_NOT_INITIALIZED);
+        PRBool replacing = !saveAs;
+  
+        if (mustShowFileDialog)
+        {
+          nsCOMPtr<nsIFileWidget>  fileWidget;
+          res = nsComponentManager::CreateInstance(kCFileWidgetCID, nsnull, nsIFileWidget::GetIID(), getter_AddRefs(fileWidget));
+          if (NS_SUCCEEDED(res) && fileWidget)
+          {
+            nsAutoString  promptString;
+            GetString("SaveDocumentAs", promptString);
+
+	          nsString* titles = nsnull;
+	          nsString* filters = nsnull;
+	          nsString* nextTitle;
+	          nsString* nextFilter;
+            nsString HTMLFiles;
+            nsString TextFiles;
+
+	          titles = new nsString[2];
+	          if (!titles)
+	          {
+		          res = NS_ERROR_OUT_OF_MEMORY;
+		          goto SkipFilters;
+	          }
+	          filters = new nsString[2];
+	          if (!filters)
+	          {
+		          res = NS_ERROR_OUT_OF_MEMORY;
+		          goto SkipFilters;
+	          }
+	          nextTitle = titles;
+	          nextFilter = filters;
+            // The names of the file types are localizable
+            GetString("HTMLFiles", HTMLFiles);
+            GetString("TextFiles", TextFiles);
+		        if (HTMLFiles.Length() == 0 || TextFiles.Length() == 0)
+              goto SkipFilters;
+                
+            *nextTitle++ = "HTML Files";
+		        *nextFilter++ = "*.htm; *.html; *.shtml";
+		        *nextTitle++ = "Text Files";
+		        *nextFilter++ = "*.txt";
+            fileWidget->SetFilterList(2, titles, filters);
+SkipFilters:
+            nsFileDlgResults dialogResult;
+            dialogResult = fileWidget->PutFile(nsnull, promptString, docFileSpec);
+          	delete [] titles;
+	          delete [] filters;
+
+            if (dialogResult == nsFileDlgResults_Cancel)
+              return NS_OK;
+        
+            replacing = (dialogResult == nsFileDlgResults_Replace);
+          }
+          else
+          {
+             NS_ASSERTION(0, "Failed to get file widget");
+            return res;
+          }
+        }
+
+        // TODO: Get the file type (from the extension?) the user set for the file
+        // How do we do this in an XP way??? 
+        // For now, just save as HTML type
+        res = editor->SaveFile(&docFileSpec, replacing, saveCopy, nsIEditor::eSaveFileHTML);
+        if (NS_FAILED(res))
+        {
+          // show some error dialog?
+          NS_WARNING("Saving file failed");
+        }
       }
       break;
-
+    }
     default:
-      err = NS_ERROR_NOT_IMPLEMENTED;
+      res = NS_ERROR_NOT_IMPLEMENTED;
   }
+  return res;
+}
 
-  return err;
+// These are for convenience so the params to SaveDocument aren't as opaque in the UI
+NS_IMETHODIMP
+nsEditorShell::Save()
+{
+  // Params: SaveAs, SavingCopy
+  return SaveDocument(PR_FALSE, PR_FALSE);
 }
 
 NS_IMETHODIMP    
 nsEditorShell::SaveAs()
 {
-  nsresult  err = NS_NOINTERFACE;
-  
-  switch (mEditorType)
-  {
-    case ePlainTextEditorType:
-    case eHTMLTextEditorType:
-      {
-        nsCOMPtr<nsIEditor>  editor = do_QueryInterface(mEditor);
-        if (editor)
-          err = editor->SaveAs(PR_FALSE);
-      }
-      break;
-
-    default:
-      err = NS_ERROR_NOT_IMPLEMENTED;
-  }
-
-  return err;
+  // Params: SaveAs, SavingCopy
+  return SaveDocument(PR_TRUE, PR_FALSE);
 }
 
 NS_IMETHODIMP    
@@ -1094,16 +1184,30 @@ nsEditorShell::GetLocalFileURL(nsIDOMWindow *parent, const PRUnichar *filterType
 
 
   nsCOMPtr<nsIFileWidget>  fileWidget;
-  // TODO: WHERE TO WE PUT GLOBAL STRINGS TO BE LOCALIZED?
-  nsString title(htmlFilter ? "Open HTML file" : "Select Image File");
+  nsAutoString HTMLTitle;
+  nsresult res = GetString("OpenHTMLFile", HTMLTitle);
+
+  // An empty string should just result in "Open" for the dialog
+  nsAutoString title;
+  if (NS_SUCCEEDED(res) && htmlFilter)
+  {
+    title = HTMLTitle;
+  } else {
+    nsAutoString ImageTitle;
+    res = GetString("SelectImageFile", ImageTitle);
+
+    if (NS_SUCCEEDED(res) && imgFilter)
+      title = ImageTitle;
+  }
+
   nsFileSpec fileSpec;
   // TODO: GET THE DEFAULT DIRECTORY FOR DIFFERENT TYPES FROM PREFERENCES
   nsFileSpec aDisplayDirectory;
 
-  nsresult res = nsComponentManager::CreateInstance(kFileWidgetCID,
-					     nsnull,
-					     nsIFileWidget::GetIID(),
-					     (void**)&fileWidget);
+  res = nsComponentManager::CreateInstance(kCFileWidgetCID,
+	                             				     nsnull,
+					                                 nsIFileWidget::GetIID(),
+                            					     (void**)&fileWidget);
 
   if (NS_SUCCEEDED(res))
   {
@@ -1518,6 +1622,47 @@ NS_IMETHODIMP
 nsEditorShell::FindNext()
 {
   return DoFind(PR_TRUE);
+}
+
+/* Get localized strings for UI from the Editor's string bundle */
+// Use this version from JavaScript:
+NS_IMETHODIMP
+nsEditorShell::GetString(const PRUnichar *name, PRUnichar **_retval)
+{
+  if (!name || !_retval)
+    return NS_ERROR_NULL_POINTER;
+
+  // Never fail, just return an empty string    
+  nsString empty("");
+
+  if (mStringBundle)
+  {
+    if (NS_FAILED(mStringBundle->GetStringFromName(name, _retval)))
+      *_retval = empty.ToNewUnicode();
+
+    return NS_OK;
+  } else {
+    *_retval = empty.ToNewUnicode();
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+}
+
+// Use this version within the shell:
+NS_IMETHODIMP 
+nsEditorShell::GetString(const nsString& name, nsString& value)
+{
+  value = "";
+  if (mStringBundle && (name != ""))
+  {
+    const PRUnichar *ptrtmp = name.GetUnicode();
+    PRUnichar *ptrv = nsnull;
+    nsresult res = mStringBundle->GetStringFromName(ptrtmp, &ptrv);
+    // Never fail, just return an empty string    
+    if (NS_SUCCEEDED(res))
+      value = ptrv;
+    return NS_OK;
+  }
+  return NS_ERROR_NOT_INITIALIZED;
 }
 
 NS_IMETHODIMP

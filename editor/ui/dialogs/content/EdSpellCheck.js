@@ -22,6 +22,7 @@
 
 var misspelledWord;
 var spellChecker;
+var allowSelectWord = true;
 
 // dialog initialization code
 function Startup()
@@ -99,7 +100,9 @@ function CheckWord()
       FillSuggestedList();
     } else {
       ClearList(dialog.suggestedList);
-      AppendStringToList(dialog.suggestedList, "(correct spelling)");
+      AppendStringToList(dialog.suggestedList, editorShell.GetString("CorrectSpelling"));
+      // Suppress being able to select the message text
+      allowSelectWord = false;
     }
   }
 }
@@ -107,7 +110,8 @@ function CheckWord()
 function SelectSuggestedWord()
 {
   dump("SpellCheck: SelectSuggestedWord\n");
-  dialog.wordInput.value = dialog.suggestedList.options[dialog.suggestedList.selectedIndex].value;
+  if (allowSelectWord)
+    dialog.wordInput.value = dialog.suggestedList.options[dialog.suggestedList.selectedIndex].value;
 }
 
 function Ignore()
@@ -155,7 +159,7 @@ function AddToDictionary()
 
 function EditDictionary()
 {
-  window.openDialog("chrome://editor/content/EdDictionary.xul", "Dictionary", "chrome", "", misspelledWord);
+  window.openDialog("chrome://editor/content/EdDictionary.xul", "Dictionary", "chrome,close,titlebar,modal", "", misspelledWord);
 }
 
 function SelectLanguage()
@@ -193,5 +197,12 @@ function FillSuggestedList(firstWord)
       AppendStringToList(list, word);
     }
   } while (word != "");
+  if (list.length == 0) {
+    // No suggestions - show a message but don't let user select it
+    AppendStringToList(list, editorShell.GetString("NoSuggestedWords"));
+    allowSelectWord = false;
+  } else {
+    allowSelectWord = true;
+  }
 }
 

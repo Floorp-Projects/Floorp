@@ -35,7 +35,3 @@
 
 <!ENTITY pixelsPopup.value "pixels">
 <!ENTITY percentPopup.value "percent">
-
-<!ENTITY OKButton.label "OK">
-<!ENTITY CancelButton.label "Cancel">
-<!ENTITY AdvancedEditButton.label "Advanced Edit...">

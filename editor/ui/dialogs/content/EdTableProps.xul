@@ -26,7 +26,7 @@
 <?xml-stylesheet href="chrome://editor/skin/EditorDialog.css" type="text/css"?>
 
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?> 
-
+<?xul-overlay href="chrome://editor/content/EdDialogOverlay.xul"?> 
 
 <!DOCTYPE window SYSTEM "chrome://editor/locale/EditorTableProperties.dtd">
 
@@ -53,9 +53,10 @@
 	<tabpanel flex="100%" >
 <!-- table tab -->
 		<box align="vertical">
-     <titledbutton value="TABLE PANEL"/> 
+      <titledbutton value="TABLE PANEL"/> 
       <html:div> WORK IN PROGRESS:  This is the TABLE Tab </html:div>
-      <titledbutton class="spaced" id="AdvancedEditTable" onclick="onAdvanced()" value="&AdvancedEditButton.label;"/>
+      <!-- from EdDialogOverlay -->
+      <xul:box id="advancedEditButton"/>
     </box>
 <!-- end of table tab -->
 
@@ -63,13 +64,13 @@
 		<box align="vertical">
       <titledbutton value="CELL PANEL"/> 
       <html:div> WORK IN PROGRESS:  This is the CELL Tab </html:div>
-      <titledbutton class="spaced" id="AdvancedEditCell" onclick="onAdvanced()" value="&AdvancedEditButton.label;"/>
+      <!-- from EdDialogOverlay -->
+      <xul:box id="advancedEditButton"/>
     </box>
 <!-- end of cell tab -->
 	 </tabpanel> 
 </tabcontrol>
-
-  <spring flex="100%"/>
-
+    <!-- from EdDialogOverlay -->
+    <xul:box id="advancedEditButton"/>
 	<box id="okCancelButtons"/> 
 </window>

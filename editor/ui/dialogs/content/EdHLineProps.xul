@@ -25,7 +25,7 @@
 <?xml-stylesheet href="chrome://editor/skin/EditorDialog.css" type="text/css"?>
 
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?> 
-
+<?xul-overlay href="chrome://editor/content/EdDialogOverlay.xul"?> 
 
 <!DOCTYPE window SYSTEM "chrome://editor/locale/EditorHLineProperties.dtd">
 
@@ -93,16 +93,10 @@
         <xul:titledbutton class="spaced" id="SaveDefault" onclick="onSaveDefault()" value="&saveSettings.label;"/>
       </td>
     </tr>
-    <tr>
-      <td>
-        <xul:titledbutton class="spaced" id="AdvancedEdit" onclick="onAdvancedEdit()" value="&AdvancedEditButton.label;"/>
-      </td>
-    </tr>
   </table>
-  <div><hr width="100%"/></div>
-
-  <xul:spring flex="100%"/>    
-
+  <!-- from EdDialogOverlay -->
+  <xul:box id="advancedEditButton"/>
+  <!-- from global dialogOverlay -->
 	<xul:box id="okCancelButtons"/> 
 
 <xul:popup id="PixelOrPercentMenu">

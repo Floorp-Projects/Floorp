@@ -21,11 +21,6 @@
   -->
 
 <!-- These strings are generic to all or most of the editor's dialogs. -->
-<!-- They should be moved into a "common" file -->
-<!ENTITY OKButton.label "OK">
-<!ENTITY CancelButton.label "Cancel">
-<!ENTITY AdvancedEditButton.label "Advanced Edit...">
-
 <!-- This button is for the progressive disclosure of additional editing functionality -->
 <!-- THIS TEXT WILL CHANGE DYNAMICALLY, SO VALUES SHOULD BE IN Editor.properties STRING BUNDLE FILE -->
 <!ENTITY MoreButton.label "More">

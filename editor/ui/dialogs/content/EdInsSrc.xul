@@ -26,7 +26,7 @@
 <?xml-stylesheet href="chrome://editor/skin/EditorDialog.css" type="text/css"?>
 
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?> 
-
+<?xul-overlay href="chrome://editor/content/EdDialogOverlay.xul"?> 
 
 <!DOCTYPE window SYSTEM "chrome://editor/locale/EditorInsertSource.dtd">
 
@@ -53,6 +53,6 @@
   </xul:box>
 
   <xul:spring flex="100%"/>    
-
+  <!-- from global dialogOverlay -->
 	<xul:box id="okCancelButtons"/> 
 </xul:window>

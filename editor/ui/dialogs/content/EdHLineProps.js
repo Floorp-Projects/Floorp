@@ -139,11 +139,6 @@ function onSaveDefault()
   }
 }
 
-function onAdvanced()
-{
-  //TODO: Call the generic attribute editor ("extra HTML")
-}
-
 function ValidateData(setAttributes)
 {
   // Height is always pixels

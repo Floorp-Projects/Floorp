@@ -567,6 +567,11 @@ function onOK()
 // setDimensions()
 // sets height and width attributes to inserted image
 // Brian King - XML Workshop
+// TODO: THIS NEEDS TO BE MODIFIED TO USE LOCALIZED STRING BUNDLE,
+//  e.g., this assumes "% of" 
+//  Use editorShell.GetString("name") to get a string and 
+//  define those strings in editor\ui\dialogs\content\editor.properties
+//  Note that using localized strings will break assumption about location of "% of"
 
 function setDimensions()
 {

@@ -41,6 +41,7 @@
 #include "nsISpellChecker.h"
 #include "nsInterfaceState.h"
 #include "nsIHTMLEditor.h"
+#include "nsIStringBundle.h"
 
 class nsIBrowserWindow;
 class nsIWebShell;
@@ -53,6 +54,8 @@ class nsIWebShellWindow;
 class nsIPresShell;
 class nsIOutputStream;
 class nsISupportsArray;
+class nsIStringBundleService;
+class nsIStringBundle;
 
 
 #define NS_EDITORSHELL_CID                            \
@@ -157,7 +160,9 @@ class nsEditorShell :   public nsIEditorShell,
 		NS_IMETHOD			CreateWindowWithURL(const char* urlStr);
 		NS_IMETHOD  	  PrepareDocumentForEditing(nsIURI *aUrl);
 		NS_IMETHOD      DoFind(PRBool aFindNext);
-		
+    // Get a string from the string bundle file
+    NS_IMETHOD      GetString(const nsString& name, nsString& value);
+ 		
 		// this returns an AddReffed nsIScriptContext. You must relase it.
 		nsIScriptContext*  GetScriptContext(nsIDOMWindow * aWin);
 
@@ -183,7 +188,9 @@ class nsEditorShell :   public nsIEditorShell,
 
     // this is a holding pen for doc state listeners. They will be registered with
     // the editor when that gets created.
-    nsCOMPtr<nsISupportsArray>    mDocStateListeners;		// contents are nsISupports
+    nsCOMPtr<nsISupportsArray> mDocStateListeners;		// contents are nsISupports
+    // Pointer to localized strings used for UI
+    nsCOMPtr<nsIStringBundle> mStringBundle;
 };
 
 #endif // nsEditorShell_h___
