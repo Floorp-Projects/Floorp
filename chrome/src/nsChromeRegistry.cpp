@@ -501,7 +501,7 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL, char** aResult)
   rv = GetBaseURL(package, provider, finalURL);
 #ifdef DEBUG
   if (NS_FAILED(rv)) {
-    nsCAutoString msg = "chrome: failed to get base url";
+    nsCAutoString msg("chrome: failed to get base url");
     nsXPIDLCString url;
     rv = aChromeURL->GetSpec(getter_Copies(url));
     if (NS_SUCCEEDED(rv)) {
