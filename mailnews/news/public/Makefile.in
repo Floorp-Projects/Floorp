@@ -36,6 +36,7 @@ XPIDLSRCS	= \
 		nsINNTPHost.idl \
 		nsINNTPNewsgroup.idl \
 		nsINNTPNewsgroupList.idl \
+		nsINNTPProtocol.idl \
 		nsINntpIncomingServer.idl \
 		nsINntpService.idl \
 		nsINNTPNewsgroupPost.idl \
