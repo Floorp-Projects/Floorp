@@ -48,19 +48,19 @@
   <description value="&validation.crlmanager.label;"/>
   <separator class="thin"/>
   <tree id="crltree" style="height: 10em;"
-   seltype="multiple" onclick="EnableCrlActions()" flex="1">
+   seltype="multiple" onselect="EnableCrlActions()" flex="1">
     <treecols>
-      <treecol flex="3" label="&certmgr.certdetail.o;"/>
+      <treecol id="Col1" flex="3" label="&certmgr.certdetail.o;"/>
       <splitter class="tree-splitter"/>
-      <treecol flex="5" label="&certmgr.certdetail.ou;"/>
+      <treecol id="Col2" flex="5" label="&certmgr.certdetail.ou;"/>
       <splitter class="tree-splitter"/>
-      <treecol flex="2" label="&validation.crllastupdate.label;"/>
+      <treecol id="Col3" flex="2" label="&validation.crllastupdate.label;"/>
       <splitter class="tree-splitter"/>
-      <treecol flex="2" label="&validation.crlnextupdate.label;"/>
+      <treecol id="Col4" flex="2" label="&validation.crlnextupdate.label;"/>
       <splitter class="tree-splitter"/>
-      <treecol flex="2" label="&validation.crlautoupdateenabled.label;"/>
+      <treecol id="Col5" flex="2" label="&validation.crlautoupdateenabled.label;"/>
       <splitter class="tree-splitter"/>
-      <treecol flex="3" label="&validation.crlautoupdatestatus.label;"/>
+      <treecol id="Col6" flex="3" label="&validation.crlautoupdatestatus.label;"/>
     </treecols>
 
     <treechildren id="crlList"/>
