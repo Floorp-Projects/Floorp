@@ -31,6 +31,7 @@ struct FilesTest
     
     void WriteStuff(nsOutputStream& s);
     int InputStream(const char* relativePath);
+    int FileSizeAndDate(const char* relativePath);
     int OutputStream(const char* relativePath);
     int IOStream(const char* relativePath);
     int StringStream();
@@ -163,6 +164,7 @@ int FilesTest::OutputStream(const char* relativePath)
                 << nsEndl;
             return -1;
     }
+	FileSizeAndDate(relativePath);
     return Passed();
 }
 
@@ -307,6 +309,27 @@ int FilesTest::InputStream(const char* relativePath)
         mConsole << line << nsEndl;
     }
     Inspect();
+    return 0;
+}
+
+//----------------------------------------------------------------------------------------
+int FilesTest::FileSizeAndDate(const char* relativePath)
+//----------------------------------------------------------------------------------------
+{
+    nsFilePath myTextFilePath(relativePath, PR_TRUE);
+    const char* pathAsString = (const char*)myTextFilePath;
+    mConsole << "Info for " << pathAsString << nsEndl;
+
+    nsFileSpec mySpec(myTextFilePath);
+    mConsole << "Size " << mySpec.GetFileSize() << nsEndl;
+
+    static nsFileSpec::TimeStamp oldStamp = 0;
+    nsFileSpec::TimeStamp newStamp = 0;
+    mySpec.GetModDate(newStamp);
+    mConsole << "Date " << newStamp << nsEndl;
+    if (oldStamp != newStamp && oldStamp != 0)
+        mConsole << "Date has changed by " << (newStamp - oldStamp) << " seconds" << nsEndl << nsEndl;
+    oldStamp = newStamp;
     return 0;
 }
 
@@ -807,6 +830,8 @@ int FilesTest::RunAllTests()
 	Banner("IOStream");
 	if (IOStream("mumble/iotest.txt") != 0)
 		return -1;
+	FileSizeAndDate("mumble/iotest.txt");
+
 	if (InputStream("mumble/iotest.txt") != 0)
 		return -1;
 	
