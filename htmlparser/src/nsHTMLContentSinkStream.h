@@ -148,8 +148,6 @@ protected:
     void AddEndTag(const nsIParserNode& aNode);
     void AddIndent();
 
-    void EnsureBufferSize(PRInt32 aNewSize);
-
     nsresult InitEncoder(const nsString& aCharset);
 
     void UnicodeToHTMLString(const nsString& aSrc, nsString& aDst);
@@ -178,12 +176,9 @@ protected:
     PRBool    mDoHeader;
     PRBool    mBodyOnly;
 
-    char*     mBuffer;
-    PRInt32   mBufferLength;  // The length of the data in the buffer
-    PRInt32   mBufferSize;    // The actual size of the buffer, regardless of the data
-
     nsIUnicodeEncoder*  mUnicodeEncoder;
     nsString            mCharsetOverride;
+    nsCAutoString       mBuffer;
 };
 
 
