@@ -49,16 +49,6 @@
 
 #ifdef XPCOM_GLUE
 // nsTraceRefcnt needs a cleaning...
-#undef NS_LOG_ADDREF
-#undef NS_LOG_RELEASE
-#undef NS_LOG_NEW_XPCOM
-#undef NS_LOG_DELETE_XPCOM
-#undef NS_LOG_ADDREF_CALL
-#undef NS_LOG_RELEASE_CALL
-#undef MOZ_DECL_CTOR_COUNTER
-#undef MOZ_COUNT_CTOR
-#undef MOZ_COUNT_DTOR
-
 #define NS_LOG_ADDREF(_p, _rc, _type, _size)
 #define NS_LOG_RELEASE(_p, _rc, _type)
 #define NS_LOG_NEW_XPCOM(_p,_type,_size,_file,_line)

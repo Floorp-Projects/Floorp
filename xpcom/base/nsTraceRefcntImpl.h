@@ -68,6 +68,12 @@ class nsISupports;
 #undef NS_BUILD_REFCNT_LOGGING
 #endif
 
+// Disable refcnt logging if we are in xpcom glue
+// Bug #151072
+#if defined(XPCOM_GLUE)
+#undef NS_BUILD_REFCNT_LOGGING
+#endif
+
 #ifdef NS_BUILD_REFCNT_LOGGING
 
 #define NS_LOG_ADDREF(_p, _rc, _type, _size) \
