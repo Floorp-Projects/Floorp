@@ -42,6 +42,8 @@
 #include "nsVoidArray.h"
 #include "nsISupportsArray.h"
 
+#include <iostream.h>
+
 static NS_DEFINE_IID(kICSSLoaderIID, NS_ICSS_LOADER_IID);
 //static NS_DEFINE_IID(kICSSParserIID, NS_ICSS_PARSER_IID);
 //static NS_DEFINE_IID(kICSSStyleSheetIID, NS_ICSS_STYLE_SHEET_IID);

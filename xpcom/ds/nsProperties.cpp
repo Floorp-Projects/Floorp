@@ -20,6 +20,8 @@
 
 #include "nsProperties.h"
 
+#include <iostream.h>
+
 ////////////////////////////////////////////////////////////////////////////////
 
 nsProperties::nsProperties(nsISupports* outer)
