@@ -1018,6 +1018,12 @@ nsDownload::OnStateChange(nsIWebProgress* aWebProgress,
   if (aStateFlags & STATE_START)    
     mStartTime = PR_Now();  
 
+  // When we break the ref cycle with mPersist, we don't want to lose
+  // access to out member vars!
+  nsCOMPtr<nsIDownload> kungFuDeathGrip;
+  CallQueryInterface(this, NS_STATIC_CAST(nsIDownload**,
+                                          getter_AddRefs(kungFuDeathGrip)));
+
   if (mListener)
     mListener->OnStateChange(aWebProgress, aRequest, aStateFlags, aStatus);
 
