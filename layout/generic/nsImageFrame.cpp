@@ -37,7 +37,6 @@
 #include "nsIURL.h"
 #include "nsIView.h"
 #include "nsIViewManager.h"
-#include "nsCSSLayout.h"
 #include "nsHTMLContainerFrame.h"
 #include "prprf.h"
 #include "nsISizeOfHandler.h"
@@ -271,20 +270,23 @@ nsHTMLImageLoader::GetDesiredSize(nsIPresContext* aPresContext,
                                   nsFrameImageLoaderCB aCallBack,
                                   nsHTMLReflowMetrics& aDesiredSize)
 {
-  nsSize styleSize;
-  PRIntn ss = nsCSSLayout::GetStyleSize(aPresContext, aReflowState, styleSize);
+  // Start the image loading
   PRIntn loadStatus;
-  if (0 != ss) {
-    if (NS_SIZE_HAS_BOTH == ss) {
-      StartLoadImage(aPresContext, aTargetFrame, aCallBack,
-                     PR_FALSE, loadStatus);
-      aDesiredSize.width = styleSize.width;
-      aDesiredSize.height = styleSize.height;
+  StartLoadImage(aPresContext, aTargetFrame, aCallBack,
+                 !aReflowState.HaveConstrainedWidthAndHeight(),
+                 loadStatus);
+
+  // Choose reflow size
+  if (aReflowState.HaveConstrainedWidth() ||
+      aReflowState.HaveConstrainedHeight()) {
+    if (aReflowState.HaveConstrainedWidthAndHeight()) {
+      // The image is fully constrained. Use the constraints directly.
+      aDesiredSize.width = aReflowState.minWidth;
+      aDesiredSize.height = aReflowState.minHeight;
     }
     else {
-      // Preserve aspect ratio of image with unbound dimension.
-      StartLoadImage(aPresContext, aTargetFrame, aCallBack,
-                     PR_TRUE, loadStatus);
+      // The image is partially constrained. Preserve aspect ratio of
+      // image with unbound dimension.
       if ((0 == (loadStatus & NS_IMAGE_LOAD_STATUS_SIZE_AVAILABLE)) ||
           (nsnull == mImageLoader)) {
         // Provide a dummy size for now; later on when the image size
@@ -299,19 +301,19 @@ nsHTMLImageLoader::GetDesiredSize(nsIPresContext* aPresContext,
         float imageWidth = imageSize.width * p2t;
         float imageHeight = imageSize.height * p2t;
         if (0.0f != imageHeight) {
-          if (0 != (ss & NS_SIZE_HAS_WIDTH)) {
+          if (aReflowState.HaveConstrainedWidth()) {
             // We have a width, and an auto height. Compute height
             // from width.
-            aDesiredSize.width = styleSize.width;
-            aDesiredSize.height =
-              (nscoord)NSToIntRound(styleSize.width * imageHeight / imageWidth);
+            aDesiredSize.width = aReflowState.minWidth;
+            aDesiredSize.height = (nscoord)
+              NSToIntRound(aReflowState.minWidth * imageHeight / imageWidth);
           }
           else {
             // We have a height and an auto width. Compute width from
             // height.
-            aDesiredSize.height = styleSize.height;
-            aDesiredSize.width =
-              (nscoord)NSToIntRound(styleSize.height * imageWidth / imageHeight);
+            aDesiredSize.height = aReflowState.minHeight;
+            aDesiredSize.width = (nscoord)
+              NSToIntRound(aReflowState.minHeight * imageWidth / imageHeight);
           }
         }
         else {
@@ -323,21 +325,19 @@ nsHTMLImageLoader::GetDesiredSize(nsIPresContext* aPresContext,
     }
   }
   else {
-    StartLoadImage(aPresContext, aTargetFrame, aCallBack, PR_TRUE, loadStatus);
+    // The image is unconstrained
     if ((0 == (loadStatus & NS_IMAGE_LOAD_STATUS_SIZE_AVAILABLE)) ||
         (nsnull == mImageLoader)) {
       // Provide a dummy size for now; later on when the image size
       // shows up we will reflow to the new size.
       aDesiredSize.width = 1;
       aDesiredSize.height = 1;
-//      printf ("in image loader, dummy size of 1 returned\n");
     } else {
       float p2t = aPresContext->GetPixelsToTwips();
       nsSize imageSize;
       mImageLoader->GetSize(imageSize);
       aDesiredSize.width = NSIntPixelsToTwips(imageSize.width, p2t);
       aDesiredSize.height = NSIntPixelsToTwips(imageSize.height, p2t);
-//      printf ("in image loader, real size of %d returned\n", aDesiredSize.width);
     }
   }
 }

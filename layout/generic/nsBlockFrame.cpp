@@ -20,7 +20,6 @@
 #include "nsFrameReflowState.h"
 #include "nsLineLayout.h"
 #include "nsInlineReflow.h"
-#include "nsCSSLayout.h"
 #include "nsAbsoluteFrame.h"
 #include "nsPlaceholderFrame.h"
 #include "nsStyleConsts.h"
@@ -3871,45 +3870,55 @@ nsBlockFrame::ReflowFloater(nsIPresContext& aPresContext,
                             nsBlockReflowState& aState,
                             nsIFrame* aFloaterFrame)
 {
-  // Prepare the reflow state for the floater frame. Note that initially
-  // it's maxSize will be 0,0 until we compute it (we need the reflowState
-  // for nsLayout::GetStyleSize so we have to do this first)
+  // Prepare the reflow state for the floater frame. Note that
+  // initially it's maxSize will be 0,0 until we compute it.
   nsSize kidAvailSize(0, 0);
   nsHTMLReflowState reflowState(aPresContext, aFloaterFrame, aState,
                                 kidAvailSize, eReflowReason_Initial);
 
-  // Compute the available space for the floater. Use the default
-  // 'auto' width and height values
-  nsSize styleSize;
-  PRIntn styleSizeFlags =
-    nsCSSLayout::GetStyleSize(&aPresContext, reflowState, styleSize);
+  // If either dimension is constrained then get the border and
+  // padding values in advance.
+  nsMargin bp(0, 0, 0, 0);
+  if (reflowState.HaveConstrainedWidth() ||
+      reflowState.HaveConstrainedHeight()) {
+    const nsStyleSpacing* spacing;
+    if (NS_OK == aFloaterFrame->GetStyleData(eStyleStruct_Spacing,
+                                             (const nsStyleStruct*&)spacing)) {
+      spacing->CalcBorderPaddingFor(aFloaterFrame, bp);
+    }
+  }
 
-  // XXX The width and height are for the content area only. Add in space for
-  // border and padding
-  if (styleSizeFlags & NS_SIZE_HAS_WIDTH) {
-    kidAvailSize.width = styleSize.width;
+  // Compute the available width for the floater
+  if (reflowState.HaveConstrainedWidth()) {
+    // When the floater has a contrained width, give it just enough
+    // space for its styled width plus its borders and paddings.
+    kidAvailSize.width = reflowState.minWidth + bp.left + bp.right;
   }
   else {
     // If we are floating something and we don't know the width then
-    // find a maximum width for it to reflow into.
-
-    // XXX if the child is a block (instead of a table, say) then this
-    // will do the wrong thing. A better choice would be
-    // NS_UNCONSTRAINEDSIZE, but that has special meaning to tables.
-    const nsReflowState* rsp = &aState;
+    // find a maximum width for it to reflow into. Walk upwards until
+    // we find something with an unconstrained width.
+    const nsHTMLReflowState* rsp = &aState;
     kidAvailSize.width = 0;
     while (nsnull != rsp) {
-      if ((0 != rsp->maxSize.width) &&
-          (NS_UNCONSTRAINEDSIZE != rsp->maxSize.width)) {
-        kidAvailSize.width = rsp->maxSize.width;
+      if (eHTMLFrameConstraint_Unconstrained != rsp->widthConstraint) {
+        kidAvailSize.width = rsp->minWidth;
         break;
       }
-      rsp = rsp->parentReflowState;
+      else if (NS_UNCONSTRAINEDSIZE != rsp->widthConstraint) {
+        kidAvailSize.width = rsp->maxSize.width;
+        if (kidAvailSize.width > 0) {
+          break;
+        }
+      }
+      // XXX This cast is unfortunate!
+      rsp = (const nsHTMLReflowState*) rsp->parentReflowState;
     }
-    NS_ASSERTION(0 != kidAvailSize.width, "no width for block found");
   }
-  if (styleSizeFlags & NS_SIZE_HAS_HEIGHT) {
-    kidAvailSize.height = styleSize.height;
+
+  // Compute the available height for the floater
+  if (reflowState.HaveConstrainedHeight()) {
+    kidAvailSize.height = reflowState.minHeight + bp.top + bp.bottom;
   }
   else {
     kidAvailSize.height = NS_UNCONSTRAINEDSIZE;
@@ -3917,9 +3926,9 @@ nsBlockFrame::ReflowFloater(nsIPresContext& aPresContext,
   reflowState.maxSize = kidAvailSize;
 
   // Resize reflow the anchored item into the available space
-  // XXX Check for complete?
   nsIHTMLReflow*  floaterReflow;
-  if (NS_OK == aFloaterFrame->QueryInterface(kIHTMLReflowIID, (void**)&floaterReflow)) {
+  if (NS_OK == aFloaterFrame->QueryInterface(kIHTMLReflowIID,
+                                             (void**)&floaterReflow)) {
     nsHTMLReflowMetrics desiredSize(nsnull);
     nsReflowStatus  status;
     floaterReflow->WillReflow(aPresContext);

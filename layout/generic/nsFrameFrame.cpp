@@ -35,7 +35,6 @@
 #include "nsStyleCoord.h"
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
-#include "nsCSSLayout.h"
 #include "nsIDocumentLoader.h"
 #include "nsIPref.h"
 #include "nsFrameSetFrame.h"
@@ -236,19 +235,19 @@ nsHTMLFrameOuterFrame::GetDesiredSize(nsIPresContext* aPresContext,
   // <frame> processing does not use this routine, only <iframe>
   float p2t = aPresContext->GetPixelsToTwips();
 
-  nsSize size;
-  PRIntn ss = nsCSSLayout::GetStyleSize(aPresContext, aReflowState, size);
-
   // XXX this needs to be changed from (200,200) to a better default for inline frames
-  if (0 == (ss & NS_SIZE_HAS_WIDTH)) {
-    size.width = NSIntPixelsToTwips(200, p2t);
+  if (aReflowState.HaveConstrainedWidth()) {
+    aDesiredSize.width = aReflowState.minWidth;
   }
-  if (0 == (ss & NS_SIZE_HAS_HEIGHT)) {
-    size.height = NSIntPixelsToTwips(200, p2t);
+  else {
+    aDesiredSize.width = NSIntPixelsToTwips(200, p2t);
   }
-
-  aDesiredSize.width  = size.width;
-  aDesiredSize.height = size.height;
+  if (aReflowState.HaveConstrainedHeight()) {
+    aDesiredSize.height = aReflowState.minHeight;
+  }
+  else {
+    aDesiredSize.height = NSIntPixelsToTwips(200, p2t);
+  }
   aDesiredSize.ascent = aDesiredSize.height;
   aDesiredSize.descent = 0;
 }

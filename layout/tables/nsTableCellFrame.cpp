@@ -25,7 +25,6 @@
 #include "nsIContent.h"
 #include "nsIHTMLContent.h"
 #include "nsHTMLIIDs.h"
-#include "nsCSSLayout.h"
 #include "nsHTMLParts.h"
 #include "nsHTMLValue.h"
 #include "nsHTMLAtoms.h"

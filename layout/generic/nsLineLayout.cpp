@@ -18,7 +18,6 @@
  */
 #include "nsLineLayout.h"
 #include "nsInlineReflow.h"
-#include "nsCSSLayout.h"
 #include "nsStyleConsts.h"
 #include "nsIStyleContext.h"
 #include "nsIPresContext.h"

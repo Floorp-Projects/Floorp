@@ -44,7 +44,6 @@
 #include "nsISupports.h"
 #include "nsStyleConsts.h"
 #include "nsUnitConversion.h"
-#include "nsCSSLayout.h"
 #include "nsStyleUtil.h"
 #include "nsFormFrame.h"
 #include "nsIContent.h"
@@ -556,15 +555,21 @@ NS_METHOD nsFormControlFrame::HandleEvent(nsIPresContext& aPresContext,
   return NS_OK;
 }
 
-void nsFormControlFrame::GetStyleSize(nsIPresContext& aPresContext,
-                                const nsHTMLReflowState& aReflowState,
-                                nsSize& aSize)
+void
+nsFormControlFrame::GetStyleSize(nsIPresContext& aPresContext,
+                                 const nsHTMLReflowState& aReflowState,
+                                 nsSize& aSize)
 {
-  PRIntn ss = nsCSSLayout::GetStyleSize(&aPresContext, aReflowState, aSize);
-  if (0 == (ss & NS_SIZE_HAS_WIDTH)) {
+  if (aReflowState.HaveConstrainedWidth()) {
+    aSize.width = aReflowState.minWidth;
+  }
+  else {
     aSize.width = CSS_NOTSET;
   }
-  if (0 == (ss & NS_SIZE_HAS_HEIGHT)) {
+  if (aReflowState.HaveConstrainedHeight()) {
+    aSize.height = aReflowState.minHeight;
+  }
+  else {
     aSize.height = CSS_NOTSET;
   }
 }
