@@ -919,8 +919,39 @@ NS_IMETHODIMP nsRenderingContextImpl::DrawImage(imgIContainer *aImage, const nsR
   GetDrawingSurface((void**)&surface);
   if (!surface) return NS_ERROR_FAILURE;
 
+  // For Bug 87819
+  // iframe may want image to start at different position, so adjust
+  nsRect iframeRect;
+  iframe->GetRect(iframeRect);
+
+  if (iframeRect.y > 0) {
+    sr.y -= iframeRect.y;
+    if (sr.y < 0) {
+      pt.y = pt.y - sr.y;
+      sr.height = sr.height + sr.y;
+      if (sr.height < 0)
+        return NS_OK;
+      sr.y = 0;
+    } else if (sr.y > iframeRect.height) {
+      return NS_OK;
+    }
+  }
+  
+  if (iframeRect.x > 0) {
+    sr.x -= iframeRect.x;
+    if (sr.x < 0) {
+      pt.x = pt.x - sr.x;
+      sr.width = sr.width + sr.x;
+      if (sr.width < 0)
+        return NS_OK;
+      sr.x = 0;
+    } else if (sr.x > iframeRect.width) {
+      return NS_OK;
+    }
+  }
+  
   return img->Draw(*this, surface, sr.x, sr.y, sr.width, sr.height,
-                   pt.x , pt.y, sr.width, sr.height);
+                   pt.x, pt.y, sr.width, sr.height);
 }
 
 /* [noscript] void drawScaledImage (in imgIContainer aImage, [const] in nsRect aSrcRect, [const] in nsRect aDestRect); */
@@ -934,6 +965,9 @@ NS_IMETHODIMP nsRenderingContextImpl::DrawScaledImage(imgIContainer *aImage, con
 
   sr = *aSrcRect;
   mTranMatrix->TransformCoord(&sr.x, &sr.y, &sr.width, &sr.height);
+  
+  if (sr.width <= 0 || sr.height <= 0 || dr.width <= 0 || dr.height <= 0)
+    return NS_OK;
 
   sr.x = aSrcRect->x;
   sr.y = aSrcRect->y;
@@ -950,7 +984,44 @@ NS_IMETHODIMP nsRenderingContextImpl::DrawScaledImage(imgIContainer *aImage, con
   GetDrawingSurface((void**)&surface);
   if (!surface) return NS_ERROR_FAILURE;
 
-  return img->Draw(*this, surface, sr.x, sr.y, sr.width, sr.height, dr.x, dr.y, dr.width, dr.height);
+  // For Bug 87819
+  // iframe may want image to start at different position, so adjust
+  nsRect iframeRect;
+  iframe->GetRect(iframeRect);
+  
+  if (iframeRect.x > 0) {
+    float xScaleRatio = float(dr.width) / sr.width;
+    sr.x -= iframeRect.x;
+    if (sr.x < 0) {
+      dr.x -= NSToIntRound(sr.x * xScaleRatio);
+      sr.width += sr.x;
+      dr.width += NSToIntRound(sr.x * xScaleRatio);
+      if (sr.width <= 0 || dr.width <= 0)
+        return NS_OK;
+      sr.x = 0;
+    } else if (sr.x > iframeRect.width) {
+      return NS_OK;
+    }
+  }
+
+  if (iframeRect.y > 0) {
+    float yScaleRatio = float(dr.height) / sr.height;
+
+    // adjust for offset  
+    sr.y -= iframeRect.y;
+    if (sr.y < 0) {
+      dr.y -= NSToIntRound(sr.y * yScaleRatio);
+      sr.height += sr.y;
+      dr.height += NSToIntRound(sr.y * yScaleRatio);
+      if (sr.height <= 0 || dr.height <= 0)
+        return NS_OK;
+      sr.y = 0;
+    } else if (sr.y > iframeRect.height) {
+      return NS_OK;
+    }
+  }  
+  return img->Draw(*this, surface, sr.x, sr.y, sr.width, sr.height,
+                   dr.x, dr.y, dr.width, dr.height);
 }
 
 /* [noscript] void drawTile (in imgIContainer aImage, in nscoord aXOffset, in nscoord aYOffset, [const] in nsRect aTargetRect); */
