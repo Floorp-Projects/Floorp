@@ -241,35 +241,12 @@ nsHTTPChannel::GetContentType(char * *aContentType)
     }
 
     if (NS_FAILED(rv)) {
-        char *cStrSpec= nsnull;
-        rv = m_URI->GetSpec(&cStrSpec);
-        if (!cStrSpec)
-            return NS_ERROR_OUT_OF_MEMORY;
-        // find the file extension
-        nsString2 specStr(cStrSpec);
-        nsString2 extStr;
-        PRInt32 extLoc = specStr.RFindChar('.');
-        if (-1 != extLoc) {
-            specStr.Right(extStr, specStr.Length() - extLoc - 1);
-            char *ext = extStr.ToNewCString();
+        NS_WITH_SERVICE(nsIMIMEService, MIMEService, kMIMEServiceCID, &rv);
+        if (NS_SUCCEEDED(rv)) {
 
-            NS_WITH_SERVICE(nsIMIMEService, MIMEService, kMIMEServiceCID, &rv);
-            if (NS_FAILED(rv)) return rv;
-
-            nsIMIMEInfo *MIMEInfo = nsnull;
-            rv = MIMEService->GetFromExtension(ext, &MIMEInfo);
-            nsAllocator::Free(ext);
-            if (NS_FAILED(rv)) {
-                // default to text/html
-                *aContentType = nsCRT::strdup(DUMMY_TYPE);
-                return NS_OK;
-            }
-
-            rv = MIMEInfo->GetMIMEType(aContentType);
-
-            NS_RELEASE(MIMEInfo);
-            return rv;
-            // we should probably set the content-type for this response at this stage too.
+            rv = MIMEService->GetTypeFromURI(m_URI, aContentType);
+            if (NS_SUCCEEDED(rv)) return rv;
+            // XXX we should probably set the content-type for this http response at this stage too.
         }
 	}
 
