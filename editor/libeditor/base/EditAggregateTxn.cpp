@@ -221,7 +221,7 @@ NS_IMETHODIMP EditAggregateTxn::QueryInterface(REFNSIID aIID, void** aInstancePt
 {
   if (!aInstancePtr) return NS_ERROR_NULL_POINTER;
  
-  if (aIID.Equals(EditAggregateTxn::GetIID())) {
+  if (aIID.Equals(EditAggregateTxn::GetCID())) {
     *aInstancePtr = (nsISupports*)(EditAggregateTxn*)(this);
     NS_ADDREF_THIS();
     return NS_OK;

@@ -40,6 +40,8 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
 
+  static const nsIID& GetCID() { static nsIID cid = EDIT_AGGREGATE_TXN_IID; return cid; }
+
   EditAggregateTxn();
 
   virtual ~EditAggregateTxn();
