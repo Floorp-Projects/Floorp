@@ -78,3 +78,5 @@ js1_5/Regress/regress-96128-n.js
 js1_5/Exceptions/regress-50447.js
 #This test uses the (non-ECMA) 'it' object of SpiderMonkey
 js1_2/version120/regress-99663.js
+#This test uses the gc() function of SpiderMonkey
+ecma_3\Function\regress-104584.js
