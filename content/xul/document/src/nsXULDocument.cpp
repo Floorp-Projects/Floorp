@@ -4754,7 +4754,16 @@ nsXULDocument::ResumeWalk()
             if (! listener)
                 return NS_ERROR_UNEXPECTED;
 
-            parser->Parse(uri);
+            // Add an observer to the parser; this'll get called when
+            // Necko fires its On[Start|Stop]Request() notifications,
+            // and will let us recover from a missing overlay.
+            ParserObserver* parserObserver = new ParserObserver(this);
+            if (! parserObserver)
+                return NS_ERROR_OUT_OF_MEMORY;
+
+            NS_ADDREF(parserObserver);
+            parser->Parse(uri, parserObserver);
+            NS_RELEASE(parserObserver);
 
             // If we're a keybinding document, the overlay load must
             // occur synchronously.
@@ -5870,7 +5879,69 @@ nsXULDocument::CachedChromeStreamListener::OnDataAvailable(nsIChannel* aChannel,
     return NS_ERROR_UNEXPECTED;
 }
 
+//----------------------------------------------------------------------
+//
+// ParserObserver
+//
+
+nsXULDocument::ParserObserver::ParserObserver(nsXULDocument* aDocument)
+    : mDocument(aDocument)
+{
+    NS_INIT_REFCNT();
+    NS_ADDREF(mDocument);
+}
+
+nsXULDocument::ParserObserver::~ParserObserver()
+{
+    NS_RELEASE(mDocument);
+}
+
+NS_IMPL_ISUPPORTS(nsXULDocument::ParserObserver, NS_GET_IID(nsIStreamObserver));
+
+NS_IMETHODIMP
+nsXULDocument::ParserObserver::OnStartRequest(nsIChannel* aChannel,
+                                              nsISupports* aContext)
+{
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULDocument::ParserObserver::OnStopRequest(nsIChannel* aChannel,
+                                             nsISupports* aContext,
+                                             nsresult aStatus,
+                                             const PRUnichar* aErrorMsg)
+{
+    nsresult rv = NS_OK;
+
+    if (NS_FAILED(aStatus)) {
+        // If an overlay load fails, we need to nudge the prototype
+        // walk along.
+#define YELL_IF_MISSING_OVERLAY 1
+#if defined(DEBUG) || defined(YELL_IF_MISSING_OVERLAY)
+        nsCOMPtr<nsIURI> uri;
+        aChannel->GetOriginalURI(getter_AddRefs(uri));
+
+        nsXPIDLCString spec;
+        uri->GetSpec(getter_Copies(spec));
+
+        printf("*** Failed to load overlay %s\n", (const char*) spec);
+#endif
+
+        rv = mDocument->ResumeWalk();
+    }
+
+    // Drop the reference to the document to break cycle between the
+    // document, the parser, the content sink, and the parser
+    // observer.
+    NS_RELEASE(mDocument);
+
+    return rv;
+}
+
+//----------------------------------------------------------------------
+//
 // The XUL element factory
+//
 
 class XULElementFactoryImpl : public nsIElementFactory
 {

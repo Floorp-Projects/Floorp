@@ -785,6 +785,21 @@ protected:
     };
 
     friend class CachedChromeStreamListener;
+
+
+    class ParserObserver : public nsIStreamObserver {
+    protected:
+        nsXULDocument* mDocument;
+        virtual ~ParserObserver();
+
+    public:
+        ParserObserver(nsXULDocument* aDocument);
+
+        NS_DECL_ISUPPORTS
+        NS_DECL_NSISTREAMOBSERVER
+    };
+
+    friend class ParserObserver;
 };
 
 
