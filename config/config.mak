@@ -253,6 +253,10 @@ MKDIR = mkdir
 QUIET=@
 !endif
 
+!if defined(USE_STRING2)
+CFLAGS = $(CFLAGS) -DUSE_STRING2
+!endif
+
 
 #//------------------------------------------------------------------------
 #//
