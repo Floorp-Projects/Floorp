@@ -46,7 +46,9 @@ int
 nsNativeViewerApp::Run()
 {
   OpenWindow();
+  NS_ADDREF(mAppShell);
   mAppShell->Run();
+  NS_IF_RELEASE(mAppShell);
   return 0;
 }
 
