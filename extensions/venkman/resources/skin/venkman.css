@@ -50,39 +50,101 @@
 }
 
 #cont-button {
-    list-style-image: url("chrome://venkman/skin/images/cont.gif");
+    list-style-image: url("chrome://venkman/skin/images/cont.png");
 }
 
 #cont-button[disabled="true"],
 #cont-button[disabled="true"]:hover,
 #cont-button[disabled="true"]:active {
-    list-style-image: url("chrome://venkman/skin/images/cont-dis.gif");
+    list-style-image: url("chrome://venkman/skin/images/cont-dis.png");
 }
 
 #cont-button:hover {
-    list-style-image: url("chrome://venkman/skin/images/cont-hov.gif");
+    list-style-image: url("chrome://venkman/skin/images/cont-hov.png");
 }
 
 #cont-button:active {
-    list-style-image: url("chrome://venkman/skin/images/cont-act.gif");
+    list-style-image: url("chrome://venkman/skin/images/cont-act.png");
+}
+
+#stop-button {
+    list-style-image: url("chrome://venkman/skin/images/stop.png");
+}
+
+#stop-button[checked="true"] {
+    list-style-image: url("chrome://venkman/skin/images/stop-checked.png");
+}
+
+#stop-button[checked="true"]:hover {
+    list-style-image: url("chrome://venkman/skin/images/stop-checked-hov.png");
+}
+
+#stop-button[disabled="true"],
+#stop-button[disabled="true"]:hover,
+#stop-button[disabled="true"]:active {
+    list-style-image: url("chrome://venkman/skin/images/stop-dis.png");
+}
+
+#stop-button:hover {
+    list-style-image: url("chrome://venkman/skin/images/stop-hov.png");
+}
+
+#stop-button:active {
+    list-style-image: url("chrome://venkman/skin/images/stop-act.png");
 }
 
 #step-in-button {
-    list-style-image: url("chrome://venkman/skin/images/step-into.gif");
+    list-style-image: url("chrome://venkman/skin/images/step-into.png");
 }
 
 #step-in-button[disabled="true"],
 #step-in-button[disabled="true"]:hover,
 #step-in-button[disabled="true"]:active {
-    list-style-image: url("chrome://venkman/skin/images/step-into-dis.gif");
+    list-style-image: url("chrome://venkman/skin/images/step-into-dis.png");
 }
 
 #step-in-button:hover {
-    list-style-image: url("chrome://venkman/skin/images/step-into-hov.gif");
+    list-style-image: url("chrome://venkman/skin/images/step-into-hov.png");
 }
 
 #step-in-button:active {
-    list-style-image: url("chrome://venkman/skin/images/step-into-act.gif");
+    list-style-image: url("chrome://venkman/skin/images/step-into-act.png");
+}
+
+#step-over-button {
+    list-style-image: url("chrome://venkman/skin/images/step-over.png");
+}
+
+#step-over-button[disabled="true"],
+#step-over-button[disabled="true"]:hover,
+#step-over-button[disabled="true"]:active {
+    list-style-image: url("chrome://venkman/skin/images/step-over-dis.png");
+}
+
+#step-over-button:hover {
+    list-style-image: url("chrome://venkman/skin/images/step-over-hov.png");
+}
+
+#step-over-button:active {
+    list-style-image: url("chrome://venkman/skin/images/step-over-act.png");
+}
+
+#step-out-button {
+    list-style-image: url("chrome://venkman/skin/images/step-out.png");
+}
+
+#step-out-button[disabled="true"],
+#step-out-button[disabled="true"]:hover,
+#step-out-button[disabled="true"]:active {
+    list-style-image: url("chrome://venkman/skin/images/step-out-dis.png");
+}
+
+#step-out-button:hover {
+    list-style-image: url("chrome://venkman/skin/images/step-out-hov.png");
+}
+
+#step-out-button:active {
+    list-style-image: url("chrome://venkman/skin/images/step-out-act.png");
 }
 
 outlinerbody:-moz-outliner-cell(breakpoint-col) {
@@ -151,4 +213,117 @@ outlinerbody:-moz-outliner-image(breakpoint) {
 
 outlinerbody:-moz-outliner-image(current-frame-flag){
     list-style-image: url("chrome://venkman/skin/images/current-frame.gif");
+}
+
+outlinerbody:-moz-outliner-image(proj-col-0,pj-breakpoints){
+    list-style-image: url("chrome://venkman/skin/images/proj-breakpoints.png");
+}
+
+outlinerbody:-moz-outliner-cell(script-name,fn-guessed) {
+    color: red;
+    font-style: italic;
+}
+
+outlinerbody:-moz-outliner-image(project-col-0,pj-breakpoints){
+    list-style-image: url("chrome://venkman/skin/images/proj-breakpoints.png");
+}
+
+outlinerbody:-moz-outliner-image(project-col-0,pj-breakpoint){
+    list-style-image: url("chrome://venkman/skin/images/proj-breakpoint.png");
+}
+
+outlinerbody:-moz-outliner-image(script-name){
+    list-style-image: url("chrome://venkman/skin/images/file-function.png");
+}
+
+outlinerbody:-moz-outliner-image(script-name,has-bp){
+    list-style-image: url("chrome://venkman/skin/images/file-function-bp.png");
+}
+
+outlinerbody:-moz-outliner-image(script-name,fn-guessed){
+    list-style-image: url("chrome://venkman/skin/images/file-function-guess.png");
+}
+
+outlinerbody:-moz-outliner-image(script-name,fn-guessed,has-bp){
+    list-style-image: url("chrome://venkman/skin/images/file-function-guess-bp.png");
+}
+
+outlinerbody:-moz-outliner-image(script-name,ft-unk){
+    list-style-image: url("chrome://venkman/skin/images/file-unknown.png");
+}
+
+outlinerbody:-moz-outliner-image(script-name,ft-js){
+    list-style-image: url("chrome://venkman/skin/images/file-js.png");
+}
+
+outlinerbody:-moz-outliner-image(script-name,ft-html){
+    list-style-image: url("chrome://venkman/skin/images/file-html.png");
+}
+
+outlinerbody:-moz-outliner-image(script-name,ft-xul){
+    list-style-image: url("chrome://venkman/skin/images/file-xul.png");
+}
+
+outlinerbody:-moz-outliner-image(script-name,ft-xml){
+    list-style-image: url("chrome://venkman/skin/images/file-xml.png");
+}
+
+outlinerbody:-moz-outliner-image(script-name,ft-unk,has-bp){
+    list-style-image: url("chrome://venkman/skin/images/file-unknown-bp.png");
+}
+
+outlinerbody:-moz-outliner-image(script-name,ft-js,has-bp){
+    list-style-image: url("chrome://venkman/skin/images/file-js-bp.png");
+}
+
+outlinerbody:-moz-outliner-image(script-name,ft-html,has-bp){
+    list-style-image: url("chrome://venkman/skin/images/file-html-bp.png");
+}
+
+outlinerbody:-moz-outliner-image(script-name,ft-xul,has-bp){
+    list-style-image: url("chrome://venkman/skin/images/file-xul-bp.png");
+}
+
+outlinerbody:-moz-outliner-image(script-name,ft-xml,has-bp){
+    list-style-image: url("chrome://venkman/skin/images/file-xml-bp.png");
+}
+
+outlinerbody:-moz-outliner-image(stack-col-0,w-stack){
+    list-style-image: url("chrome://venkman/skin/images/watch-stack.png");
+}
+
+outlinerbody:-moz-outliner-image(stack-col-0,w-frame){
+    list-style-image: url("chrome://venkman/skin/images/watch-frame.png");
+}
+
+outlinerbody:-moz-outliner-image(stack-col-0,w-void){
+    list-style-image: url("chrome://venkman/skin/images/watch-void.png");
+}
+
+outlinerbody:-moz-outliner-image(stack-col-0,w-null){
+    list-style-image: url("chrome://venkman/skin/images/watch-null.png");
+}
+
+outlinerbody:-moz-outliner-image(stack-col-0,w-bool){
+    list-style-image: url("chrome://venkman/skin/images/watch-bool.png");
+}
+
+outlinerbody:-moz-outliner-image(stack-col-0,w-int){
+    list-style-image: url("chrome://venkman/skin/images/watch-int.png");
+}
+
+outlinerbody:-moz-outliner-image(stack-col-0,w-double){
+    list-style-image: url("chrome://venkman/skin/images/watch-double.png");
+}
+
+outlinerbody:-moz-outliner-image(stack-col-0,w-string){
+    list-style-image: url("chrome://venkman/skin/images/watch-string.png");
+}
+
+outlinerbody:-moz-outliner-image(stack-col-0,w-function){
+    list-style-image: url("chrome://venkman/skin/images/watch-function.png");
+}
+
+outlinerbody:-moz-outliner-image(stack-col-0,w-object){
+    list-style-image: url("chrome://venkman/skin/images/watch-object.png");
 }
