@@ -444,9 +444,6 @@ PRIVATE int
 si_SaveSignonDataLocked(PRBool fullSave);
 
 PUBLIC int
-SI_SaveSignonData();
-
-PUBLIC int
 SI_LoadSignonData(PRBool fullLoad);
 
 PRIVATE void
@@ -1855,6 +1852,7 @@ SI_SaveSignonData() {
 
   /* lock and call common save routine */
   si_lock_signon_list();
+  si_signon_list_changed = PR_TRUE; /* force saving to occur */
   retval = si_SaveSignonDataLocked(PR_TRUE);
   si_unlock_signon_list();
   return retval;
