@@ -47,7 +47,6 @@
 nsLoggingProgressListener::nsLoggingProgressListener()
     : mLogStream(0)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsLoggingProgressListener::~nsLoggingProgressListener()

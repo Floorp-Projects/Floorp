@@ -28,7 +28,6 @@
 
 nsTopProgressListener::nsTopProgressListener()
 {
-    NS_INIT_ISUPPORTS();
     mListeners = new nsVoidArray();
     mActive = 0;
     mLock = PR_NewLock();

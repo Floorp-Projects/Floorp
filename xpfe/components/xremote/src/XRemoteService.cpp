@@ -60,7 +60,6 @@ static const char s509InternalError[]       = "509 internal error";
 
 XRemoteService::XRemoteService()
 {
-  NS_INIT_ISUPPORTS();
   mNumWindows = 0;
   mRunning = PR_FALSE;
 }

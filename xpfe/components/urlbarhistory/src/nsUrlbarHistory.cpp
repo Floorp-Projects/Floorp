@@ -81,7 +81,6 @@ static nsIPref * gPrefs;
 
 nsUrlbarHistory::nsUrlbarHistory():mLength(0)
 {
-   NS_INIT_ISUPPORTS();
    PRInt32 cnt = sizeof(ignoreArray)/sizeof(char *);
    for(PRInt32 i=0; i< cnt; i++) 
      mIgnoreArray.AppendElement((void *) new nsString(NS_ConvertASCIItoUCS2(ignoreArray[i])));

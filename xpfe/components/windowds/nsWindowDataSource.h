@@ -59,7 +59,7 @@ class nsWindowDataSource : public nsIRDFDataSource,
                            public nsIWindowDataSource
 {
  public:
-    nsWindowDataSource() { NS_INIT_ISUPPORTS(); }
+    nsWindowDataSource() { }
     virtual ~nsWindowDataSource();
 
     nsresult Init();

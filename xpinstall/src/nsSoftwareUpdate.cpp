@@ -109,8 +109,6 @@ nsSoftwareUpdate::nsSoftwareUpdate()
   mMasterListener(0),
   mReg(0)
 {
-    NS_INIT_ISUPPORTS();
-
     mLock = PR_NewLock();
 
     /***************************************/
@@ -469,7 +467,6 @@ nsSoftwareUpdate::StubInitialize(nsIFile *aDir, const char* logName)
 
 nsSoftwareUpdateNameSet::nsSoftwareUpdateNameSet()
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsSoftwareUpdateNameSet::~nsSoftwareUpdateNameSet()

@@ -30,7 +30,6 @@ extern PRInt32 gInstallStatus;
 nsStubListener::nsStubListener( pfnXPIProgress aProgress )
     : m_progress(aProgress)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsStubListener::~nsStubListener()

@@ -70,7 +70,6 @@ static NS_DEFINE_IID(kIInstallTrigger_CID, NS_SoftwareUpdateInstallTrigger_CID);
 nsInstallTrigger::nsInstallTrigger()
 {
     mScriptObject   = nsnull;
-    NS_INIT_ISUPPORTS();
 
     // make sure all the SoftwareUpdate initialization has happened
     nsCOMPtr<nsISoftwareUpdate> svc (do_GetService(NS_IXPINSTALLCOMPONENT_CONTRACTID));

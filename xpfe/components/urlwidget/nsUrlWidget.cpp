@@ -135,7 +135,6 @@ nsUrlWidget::SetURLToHiddenControl( char const *aURL, nsIDOMWindowInternal *pare
 NS_IMPL_ISUPPORTS1( nsUrlWidget, nsIUrlWidget );
 
 nsUrlWidget::nsUrlWidget() {
-  NS_INIT_ISUPPORTS();
 #ifdef DEBUG_URLWIDGET
 printf( "nsUrlWidget ctor called\n" );
 #endif

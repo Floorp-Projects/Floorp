@@ -35,7 +35,6 @@
 
 nsXPIProxy::nsXPIProxy()
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsXPIProxy::~nsXPIProxy()
