@@ -48,14 +48,31 @@
 interface calIEvent : calIItemBase
 {
   // these attributes are marked readonly, as the calIDates are owned
-  // by the event; however, the actual caIDate objects are not read
+  // by the event; however, the actual calIDate objects are not read
   // only and are intended to be manipulated to adjust dates.
+  
+  /**
+   * The (inclusive) start of the event.
+   */
   attribute calIDateTime startDate;
+
+  /**
+   * The (non-inclusive) end of the event.
+   * Note that for all-day events, non-inclusive means that this will be set
+   * to the day after the last day of the event.
+   * If startDate.isDate is set, endDate.isDate must also be set.
+   */
   attribute calIDateTime endDate;
 
-  // calculated as endDate - startDate
+  /**
+   * The duration of the event.
+   * equal to endDate - startDate
+   */
   readonly attribute calIDateTime duration;
 
-  // all day event?
+  /**
+   * Indicates if the event is an all-day event.
+   * All-day event have isDate in startDate and endDate set to true.
+   */
   attribute boolean isAllDay;
 };
