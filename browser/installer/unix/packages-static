@@ -54,6 +54,7 @@ bin/xpicleanup
 bin/components/accessibility.xpt
 bin/components/accessibility-atk.xpt
 bin/components/appshell.xpt
+bin/components/appstartup.xpt
 bin/components/autocomplete.xpt
 bin/components/autoconfig.xpt
 bin/components/bookmarks.xpt
@@ -164,6 +165,7 @@ bin/components/xpcom_xpti.xpt
 bin/components/xpconnect.xpt
 bin/components/xpinstall.xpt
 bin/components/xremoteservice.xpt
+bin/components/xulapp.xpt
 bin/components/xuldoc.xpt
 bin/components/xultmpl.xpt
 bin/components/shellservice.xpt

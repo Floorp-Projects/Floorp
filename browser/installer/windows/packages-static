@@ -55,6 +55,7 @@ bin\AccessibleMarshal.dll
 bin\components\accessibility.xpt
 bin\components\accessibility-msaa.xpt
 bin\components\appshell.xpt
+bin\components\appstartup.xpt
 bin\components\autocomplete.xpt
 bin\components\autoconfig.xpt
 bin\components\bookmarks.xpt
@@ -173,6 +174,7 @@ bin\components\xpcom_xpti.xpt
 bin\components\xpcom_obsolete.xpt
 bin\components\xpconnect.xpt
 bin\components\xpinstall.xpt
+bin\components\xulapp.xpt
 bin\components\xuldoc.xpt
 bin\components\xultmpl.xpt
 ; JavaScript components
