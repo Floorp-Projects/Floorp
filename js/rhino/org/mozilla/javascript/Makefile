@@ -98,6 +98,21 @@ SOURCES =						\
 	$(PATH_PREFIX)/regexp/NativeRegExpCtor.java	\
 	$(PATH_PREFIX)/regexp/RegExpImpl.java		\
 	$(PATH_PREFIX)/regexp/SubString.java		\
+  	$(PATH_PREFIX)/optimizer/Block.java		\
+  	$(PATH_PREFIX)/optimizer/Codegen.java		\
+  	$(PATH_PREFIX)/optimizer/DataFlowBitSet.java	\
+  	$(PATH_PREFIX)/optimizer/FatBlock.java		\
+  	$(PATH_PREFIX)/optimizer/JavaScriptClassLoader.java\
+  	$(PATH_PREFIX)/optimizer/OptClassNameHelper.java\
+  	$(PATH_PREFIX)/optimizer/OptFunctionNode.java	\
+  	$(PATH_PREFIX)/optimizer/OptIRFactory.java	\
+  	$(PATH_PREFIX)/optimizer/OptLocalVariable.java	\
+  	$(PATH_PREFIX)/optimizer/OptRuntime.java	\
+  	$(PATH_PREFIX)/optimizer/OptTransformer.java	\
+  	$(PATH_PREFIX)/optimizer/OptVariableTable.java	\
+  	$(PATH_PREFIX)/optimizer/Optimizer.java		\
+  	$(PATH_PREFIX)/optimizer/StmtNodeIterator.java	\
+  	$(PATH_PREFIX)/optimizer/TypeEvent.java		\
 	$(PATH_PREFIX)/../classfile/ByteCode.java	\
 	$(PATH_PREFIX)/../classfile/ClassFileWriter.java\
 	$(NULL)
@@ -111,7 +126,7 @@ RESOURCES = $(RESOURCEDIR)/*.properties
 # (use org/mozilla/classfile explicitly for now; should be replaced
 # with something parameterized, but jar doesn't understand ..)
 CLASSES = $(PATH_PREFIX)/*.class $(PATH_PREFIX)/regexp/*.class \
-	org/mozilla/classfile/*.class
+ 	$(PATH_PREFIX)/optimizer/*.class org/mozilla/classfile/*.class
 
 # A class or set of classes as visible from the top level.  For want
 # of ${subst ,,}.  This variable is only used to trigger dependency
@@ -158,7 +173,8 @@ $(FASTTARGET) : $(SOURCES)
 		jar cf ../$(JAR) $(CLASSES) $(RESOURCES)
 
 clean : 
-	- cd $(CLASSDIR) && rm $(CLASSES) $(RESOURCES)
+ 	- cd $(CLASSDIR)
+ 	- rm $(CLASSES)
 	- rm $(PATH_PREFIX)/message.ids \
 		$(PATH_PREFIX)/property.ids \
 		$(PATH_PREFIX)/MANIFEST
@@ -177,12 +193,8 @@ MESSAGE_PREFIX = msg\.
 # Find all the msg.* strings in the source, and condense them to a sorted list,
 # excluding duplicates.
 
-# We cheat here and also look at messages in the optimizer subdir.
-# (regexp subdir sources are already included in $(SOURCES)
-MORE_SOURCES = $(SOURCES) $(PATH_PREFIX)/optimizer/*.java
-
 $(PATH_PREFIX)/message.ids : $(SOURCES)
-	grep '$(MESSAGE_PREFIX)' $(MORE_SOURCES) |\
+ 	grep '$(MESSAGE_PREFIX)' $(SOURCES) |\
 	sed -e 's/.*\"\($(MESSAGE_PREFIX)\)\([^\"]*\).*/\1\2/' | \
 	sort | uniq > $(PATH_PREFIX)/message.ids
 
