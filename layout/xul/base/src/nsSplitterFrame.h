@@ -28,13 +28,15 @@
 #include "nsIAnonymousContentCreator.h"
 
 class nsISupportsArray;
+class nsSplitterFrameImpl;
 
 nsresult NS_NewSplitterFrame(nsIFrame** aResult) ;
 
 class nsSplitterFrame : public nsBoxFrame, public nsIAnonymousContentCreator
 {
 public:
-  nsSplitterFrame() {}
+  nsSplitterFrame();
+  ~nsSplitterFrame();
 
     // nsIFrame overrides
   NS_IMETHOD GetFrameName(nsString& aResult) const {
@@ -59,6 +61,33 @@ public:
   NS_IMETHOD_(nsrefcnt) AddRef(void) { return NS_OK; }
   NS_IMETHOD_(nsrefcnt) Release(void) { return NS_OK; }
 
+   NS_IMETHOD HandlePress(nsIPresContext& aPresContext,
+                         nsGUIEvent *    aEvent,
+                         nsEventStatus&  aEventStatus);
+
+  NS_IMETHOD HandleMultiplePress(nsIPresContext& aPresContext,
+                         nsGUIEvent *    aEvent,
+                         nsEventStatus&  aEventStatus);
+
+  NS_IMETHOD HandleDrag(nsIPresContext& aPresContext,
+                        nsGUIEvent *    aEvent,
+                        nsEventStatus&  aEventStatus);
+
+  NS_IMETHOD HandleRelease(nsIPresContext& aPresContext,
+                           nsGUIEvent *    aEvent,
+                           nsEventStatus&  aEventStatus);
+
+  NS_IMETHOD HandleEvent(nsIPresContext& aPresContext, 
+                         nsGUIEvent* aEvent,
+                         nsEventStatus& aEventStatus);
+
+  NS_IMETHOD GetFrameForPoint(const nsPoint& aPoint, nsIFrame** aFrame);
+
+
+private:
+
+  friend nsSplitterFrameImpl;
+  nsSplitterFrameImpl* mImpl;
 
 }; // class nsSplitterFrame
 

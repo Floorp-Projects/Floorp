@@ -71,6 +71,31 @@ NS_NewGrippyFrame ( nsIFrame** aNewFrame )
 nsGrippyFrame::nsGrippyFrame():mCollapsed(PR_FALSE)
 {
 }
+
+void
+nsGrippyFrame::MouseClicked(nsIPresContext& aPresContext) 
+{
+    nsIFrame* splitter;
+    nsScrollbarButtonFrame::GetParentWithTag(nsXULAtoms::splitter, this, splitter);
+    if (splitter == nsnull)
+       return;
+
+    // get the splitters content node
+    nsCOMPtr<nsIContent> content;
+    splitter->GetContent(getter_AddRefs(content));
+ 
+	nsString a = "collapsed";
+	nsString value;
+    if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, nsXULAtoms::state, value))
+    {
+     if (value=="collapsed")
+       a = "open";
+    }
+
+    content->SetAttribute(kNameSpaceID_None, nsXULAtoms::state, a, PR_TRUE);
+}
+
+/*
 void
 nsGrippyFrame::MouseClicked(nsIPresContext& aPresContext) 
 {
@@ -119,18 +144,8 @@ nsGrippyFrame::MouseClicked(nsIPresContext& aPresContext)
 
   mCollapsed = !mCollapsed;
 
-  /*
-  nsCOMPtr<nsIPresShell> shell;
-  aPresContext.GetShell(getter_AddRefs(shell));
-  
-  nsCOMPtr<nsIReflowCommand> reflowCmd;
-  nsresult rv = NS_NewHTMLReflowCommand(getter_AddRefs(reflowCmd), this,
-                                        nsIReflowCommand::StyleChanged);
-  if (NS_SUCCEEDED(rv)) 
-    shell->AppendReflowCommand(reflowCmd);
-    */
 }
-
+*/
 
 
 nsIFrame*

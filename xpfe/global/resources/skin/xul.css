@@ -958,6 +958,7 @@ slider {
    background-color: rgb(240,240,240);
 }
 
+
 scrollbarbutton {
   display: inline;
   vertical-align: bottom;
@@ -1056,12 +1057,15 @@ splitter {
    display: block;
 }
 
+splitter[state="dragging"] {
+   background-color: rgb(150,150,150);
+}
+
 grippy {
    border: 1px outset white;
    list-style-image: url(resource:/res/toolbar/grippy-horizontal-before.gif);
    background-color: rgb(198,198,198);
    display: block;
-   margin: 1px;
 }
 
 grippy:hover {
@@ -1072,8 +1076,16 @@ window > splitter > grippy {
    list-style-image: url(resource:/res/toolbar/grippy-horizontal-before.gif);
 }
 
+window > splitter[state="collapsed"] > grippy {
+   list-style-image: url(resource:/res/toolbar/grippy-horizontal-after.gif);
+}
+
 window > splitter[collapse="after"] > grippy {
    list-style-image: url(resource:/res/toolbar/grippy-horizontal-after.gif);
+}
+
+window > splitter[collapse="after"][state="collapsed"] > grippy {
+   list-style-image: url(resource:/res/toolbar/grippy-horizontal-before.gif);
 }
 
 window[align="vertical"] > splitter > grippy {
@@ -1084,12 +1096,29 @@ window[align="vertical"] > splitter[collapse="after"] > grippy {
    list-style-image: url(resource:/res/toolbar/grippy-vertical-after.gif);
 }
 
+window[align="vertical"] > splitter[state="collapsed"] > grippy {
+   list-style-image: url(resource:/res/toolbar/grippy-vertical-after.gif);
+}
+
+window[align="vertical"] > splitter[collapse="after"][state="collapsed"] > grippy {
+   list-style-image: url(resource:/res/toolbar/grippy-vertical-before.gif);
+}
+
 box > splitter > grippy {
    list-style-image: url(resource:/res/toolbar/grippy-horizontal-before.gif);
 }
 
+box > splitter[state="collapsed"] > grippy {
+   list-style-image: url(resource:/res/toolbar/grippy-horizontal-after.gif);
+}
+
+
 box > splitter[collapse="after"] > grippy {
    list-style-image: url(resource:/res/toolbar/grippy-horizontal-after.gif);
+}
+
+box > splitter[collapse="after"][state="collapsed"] > grippy {
+   list-style-image: url(resource:/res/toolbar/grippy-horizontal-before.gif);
 }
 
 box[align="vertical"] > splitter > grippy {
@@ -1098,6 +1127,14 @@ box[align="vertical"] > splitter > grippy {
 
 box[align="vertical"] > splitter[collapse="after"] > grippy {
    list-style-image: url(resource:/res/toolbar/grippy-vertical-after.gif);
+}
+
+box[align="vertical"] > splitter[state="collapsed"] > grippy {
+   list-style-image: url(resource:/res/toolbar/grippy-vertical-after.gif);
+}
+
+box[align="vertical"] > splitter[collapse="after"][state="collapsed"] > grippy {
+   list-style-image: url(resource:/res/toolbar/grippy-vertical-before.gif);
 }
 
 .tree-icon {

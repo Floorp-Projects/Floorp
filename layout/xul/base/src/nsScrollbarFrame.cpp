@@ -112,6 +112,7 @@ AnonymousElement::HandleDOMEvent(nsIPresContext& aPresContext,
                               PRUint32 aFlags,
                               nsEventStatus& aEventStatus)
 {
+  /*
   // if our parent is not anonymous then we don't want to bubble the event
   // so lets set our parent in nsnull to prevent it. Then we will set it
   // back.
@@ -123,13 +124,15 @@ AnonymousElement::HandleDOMEvent(nsIPresContext& aPresContext,
 
   if (!anonymousParent) 
     SetParent(nsnull);
+*/
 
   nsresult rv = mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                aFlags, aEventStatus);
 
+  /*
   if (!anonymousParent)
     SetParent(parent);
-
+*/
   return rv;
 }
 
