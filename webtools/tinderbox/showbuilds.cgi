@@ -53,8 +53,8 @@ $colormap = {
 #$form{'tree'} = DogbertTip;
 $tree = $form{'tree'};
 
-if (exists $form{'rebuildguilty'}) {
-    system ("./buildwho.pl $tree > /dev/null");
+if (exists $form{'rebuildguilty'} || exists $form{'showall'}) {
+    system ("./buildwho.pl -days 7 $tree > /dev/null");
     undef $form{'rebuildguilty'};
 }
 

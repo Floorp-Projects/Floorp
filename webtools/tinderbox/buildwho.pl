@@ -24,6 +24,13 @@ require 'globals.pl';
 $F_DEBUG=1;
 
 
+$days = 2;
+
+if ($ARGV[0] eq "-days") {
+    shift @ARGV;
+    $days = shift @ARGV;
+}
+
 $tree = $ARGV[0];
 
 open(SEMFILE, ">>$tree/buildwho.sem") || die "Couldn't open semaphore file!";
@@ -64,7 +71,7 @@ sub build_who {
     close(BUILDLOG);
 
     #($j,$query_date_min) = split(/\|/, $line);
-    $query_date_min = time - (60 * 60 * 24 * 7); # One week.
+    $query_date_min = time - (60 * 60 * 24 * $days);
 
     if( $F_DEBUG ){
         print "Minimum date: $query_date_min\n";
