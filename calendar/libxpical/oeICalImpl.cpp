@@ -749,12 +749,9 @@ NS_IMETHODIMP oeICalImpl::AddEvent(oeIICalEvent *icalevent,char **retid)
         return NS_OK;
     }
     
-    printf( "HERE1\n" );
     ((oeICalEventImpl *)icalevent)->GetId( retid );
-    printf( "HERE2: %s\n", *retid );
 
     if( *retid == nsnull ) {
-        printf( "HERE3\n" );
         char uidstr[10];
         do {
             unsigned long newid;
@@ -765,17 +762,13 @@ NS_IMETHODIMP oeICalImpl::AddEvent(oeIICalEvent *icalevent,char **retid)
         ((oeICalEventImpl *)icalevent)->SetId( uidstr );
         ((oeICalEventImpl *)icalevent)->GetId( retid );
     }
-    printf( "HERE4\n" );
 
     vcalendar = ((oeICalEventImpl *)icalevent)->AsIcalComponent();
-    printf( "HERE5\n" );
 	
     icalfileset_add_component( stream, vcalendar );
-    printf( "HERE6\n" );
 
     icalfileset_commit( stream );
     icalfileset_free( stream );
-    printf( "HERE7\n" );
 
     icalevent->AddRef();
     m_eventlist.Add( icalevent );
@@ -784,7 +777,6 @@ NS_IMETHODIMP oeICalImpl::AddEvent(oeIICalEvent *icalevent,char **retid)
         m_observerlist[i]->OnAddItem( icalevent );
     }
 
-    printf( "HERE8\n" );
     SetupAlarmManager();
     return NS_OK;
 }
