@@ -13,8 +13,8 @@
       <xul:hbox class="progressmeter-internal-box" flex="1">
         <xul:stack class="progressmeter-stack" flex="1">
           <xul:progressbar class="progressmeter-progressbar" inherits="value,statusbar">
-            <xul:spring class="progress-bar"/>
-            <xul:spring class="progress-remainder"/>
+            <xul:box class="progress-bar"/>
+            <xul:box class="progress-remainder"/>
           </xul:progressbar>
           <xul:hbox>
             <xul:spring flex="1"/>
