@@ -52,7 +52,7 @@
 #endif
 
 #define NS_PAGEMGR_MIN_PAGES            32      // XXX bogus -- this should be a runtime parameter
-#define NS_PAGEMGR_MAX_PAGES            32767   // XXX bogus -- this should be a runtime parameter
+#define NS_PAGEMGR_MAX_PAGES            2560    // 10 meg    XXX bogus -- this should be a runtime parameter
 
 /******************************************************************************/
 
