@@ -195,6 +195,10 @@ outlinerbody:-moz-outliner-image(breakpoint-col, code) {
     list-style-image: url("chrome://venkman/skin/images/code-line.gif");
 }
 
+outlinerbody:-moz-outliner-image(breakpoint-col, code, prettyprint) {
+    list-style-image: url("chrome://venkman/skin/images/code-line-dis.gif");
+}
+
 outlinerbody:-moz-outliner-image(breakpoint-col, breakpoint) {
     list-style-image: url("chrome://venkman/skin/images/breakpoint-line.gif");
 }

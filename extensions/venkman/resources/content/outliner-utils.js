@@ -389,6 +389,12 @@ function tovr_setcol (colID, propertyName)
     }
 }
 
+TreeOViewRecord.prototype.setColumnPropertyValue =
+function tovr_setcolv (colID, value)
+{
+    this._colValues[colID] = value;
+}
+
 /*
  * set the default sort column and resort.
  */
@@ -842,11 +848,17 @@ function tovr_find (targetRow, myRow)
  * we set up a getter for _share that defers to the parent object.  this lets
  * TOLabelRecords work in any tree.
  */
-function TOLabelRecord (columnName, label, property)
+function TOLabelRecord (columnName, label, blankCols)
 {
     this.setColumnPropertyName (columnName, "label");
     this.label = label;
-    this.property = property;
+    this.property = null;
+    
+    if (typeof blankCols == "object")
+    {
+        for (var i in blankCols)
+            this._colValues[blankCols[i]] = "";
+    }
 }
 
 TOLabelRecord.prototype = new TreeOViewRecord (null);
@@ -1197,7 +1209,7 @@ function tov_getcelltxt (index, colID)
 {
     var row = this.childData.locateChildByVisualRow (index);
     //ASSERT(row, "bogus row " + index);
-    if (row._colValues)
+    if (row && row._colValues)
         return row._colValues[colID];
     else
         return "";

@@ -85,6 +85,13 @@ function con_step()
     return true;
 }
 
+console.doCommandTogglePPrint =
+function con_tpprint ()
+{
+    console.sourceView.prettyPrint = !console.sourceView.prettyPrint;
+    console.sourceView.setCurrentSourceProvider (console.sourceView.provider);
+}
+
 console.doCommandCont =
 function con_step()
 {
@@ -137,10 +144,17 @@ function con_ondc ()
     console.sourceView.outliner.invalidate();
 }
 
+console.onViewMenuShowing =
+function con_showview ()
+{
+    var val = console.sourceView.prettyPrint;
+    console.ui["menu_PrettyPrint"].setAttribute("checked", val);
+}
+
 console.onDebugMenuShowing =
 function con_showdebug ()
 {
-    console.ui["menu_initAtStartup"].setAttribute ("checked",
+    console.ui["menu_InitAtStartup"].setAttribute ("checked",
                                                    console.jsds.initAtStartup);
 
     var check;
@@ -195,10 +209,10 @@ function con_fchanged (currentFrame, currentFrameIndex)
         var vr = frameRecord.calculateVisualRow();
         console.stackView.selectedIndex = vr;
         console.stackView.scrollTo (vr, 0);
-        var source = console.scripts[currentFrame.script.fileName];
-        if (source)
+        var scriptRec = console.scripts[currentFrame.script.fileName];
+        if (scriptRec)
         {
-            console.sourceView.displaySource(source);
+            console.sourceView.setCurrentSourceProvider(scriptRec);
             console.sourceView.softScrollTo(currentFrame.line);
         }
         else
@@ -214,11 +228,26 @@ function con_fchanged (currentFrame, currentFrameIndex)
     }
 }
 
-console.onInputCommand =
-function con_icommand (e)
-{
+console.onInputCompleteLine =
+function con_icline (e)
+{    
+    if (console._inputHistory.length == 0 || console._inputHistory[0] != e.line)
+        console._inputHistory.unshift (e.line);
     
-    var ary = console._commands.list (e.command);
+    if (console._inputHistory.length > console.prefs["input.history.max"])
+        console._inputHistory.pop();
+    
+    console._lastHistoryReferenced = -1;
+    console._incompleteLine = "";
+    
+    var ary = e.line.match (/(\S+) ?(.*)/);
+    var command = ary[1];
+    
+    e.command = command;
+    e.inputData =  ary[2] ? stringTrim(ary[2]) : "";
+    e.line = e.line;
+    
+    ary = console._commands.list (e.command);
     
     switch (ary.length)
     {            
@@ -340,6 +369,8 @@ function cli_icommands (e)
     }
     cont();
 }
+
+/*
     
 console.onInputCompleteLine =
 function con_icline (e)
@@ -362,6 +393,8 @@ function con_icline (e)
     console.onInputCommand (e);
 
 }
+
+*/
 
 console.onInputEval =
 function con_ieval (e)
@@ -684,7 +717,7 @@ function con_projsel (e)
         }
         
         var sourceView = console.sourceView;
-        sourceView.displaySource (scriptRec);
+        sourceView.setCurrentSourceProvider (scriptRec);
         sourceView.scrollTo (row.line - 3, -1);
         if ("childData" in sourceView && sourceView.childData.isLoaded)
         {
@@ -731,18 +764,25 @@ function con_stacksel (e)
             setCurrentFrameByIndex(index);
             displayFrame (console.frames[index], index, false);
         }
-        source = console.scripts[row.frame.script.fileName];
-        if (!source)
+        var scriptContainer = console.scripts[row.frame.script.fileName];
+        if (!scriptContainer)
         {
             dd ("frame from unknown source");
             return;
         }
-        sourceView.displaySource(source);
+        var scriptRecord =
+            scriptContainer.locateChildByScript (row.frame.script);
+        if (!scriptRecord)
+        {
+            dd ("frame with unknown script");
+            return;
+        }
+        sourceView.setCurrentSourceProvider(scriptRecord);
         sourceView.softScrollTo(row.frame.line);
         var script = row.frame.script;
         console.highlightFile = script.fileName;
         console.highlightStart = script.baseLineNumber - 1;
-        console.highlightEnd = script.baseLineNumber - 1 + script.lineExtent;
+        console.highlightEnd = script.baseLineNumber + script.lineExtent - 2;
     }
     else if (row instanceof ValueRecord && row.jsType == jsdIValue.TYPE_OBJECT)
     {
@@ -764,7 +804,7 @@ function con_stacksel (e)
             return;
         }
 
-        sourceView.displaySource(console.scripts[creatorURL]);
+        sourceView.setCurrentSourceProvider(console.scripts[creatorURL]);
         console.highlightFile = creatorURL;
         var creatorLine = objVal.creatorLine;
         sourceView.scrollTo (creatorLine);
@@ -786,8 +826,11 @@ function con_scptsel (e)
     var rowIndex = console.scriptsView.selectedIndex;
 
     if (rowIndex == -1 || rowIndex > console.scriptsView.rowCount)
+    {
+        dd ("row out of bounds");
         return;
-
+    }
+    
     var row =
         console.scriptsView.childData.locateChildByVisualRow(rowIndex);
     ASSERT (row, "bogus row");
@@ -872,7 +915,7 @@ function con_sourceclick (e)
         colID = colID.value;
         row = row.value;
         
-        if (colID == "breakpoint-col")
+        if (!console.sourceView.prettyPrint && colID == "breakpoint-col")
         {
             var line = row + 1;
             var url = console.sourceView.childData.fileName;

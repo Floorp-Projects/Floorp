@@ -51,7 +51,7 @@
       <command id="cmd_close" oncommand="window.close();"/>
       <command id="cmd_quit"/>
 
-      <!-- Edit Menu -->
+      <!-- Edit commands -->
       <commandset id="selectEditMenuItems"/>
       <commandset id="globalEditMenuItems"/>
       <commandset id="undoEditMenuItems"/>
@@ -64,16 +64,19 @@
       <command id="cmd_delete"/>
       <command id="cmd_selectAll"/>
 
+      <!-- View commands -->
+      <command id="cmd_pprint" oncommand="console.doCommandTogglePPrint();"/>
+      <command id="cmd_reload" oncommand="console.doCommandReload();"/>
+
       <!-- Debug commands -->
       <command id="cmd_reload_ui"
-        oncommand="if (DEBUG) window.location.href = window.location.href;"/>
+        oncommand="if (typeof reloadUI =='function') reloadUI(); else window.location.href = window.location.href;"/>
       <command id="cmd_focus" oncommand="console._slInputElement.focus();"/>
       <command id="cmd_tmode_cycle" oncommand="cycleThrowMode();"/>
       <command id="cmd_tmode_ignore" oncommand="setThrowMode(TMODE_IGNORE);"/>
       <command id="cmd_tmode_trace" oncommand="setThrowMode(TMODE_TRACE);"/>
       <command id="cmd_tmode_break" oncommand="setThrowMode(TMODE_BREAK);"/>
       <command id="cmd_stop" oncommand="console.doCommandToggleStop();"/>
-      <command id="cmd_reload" oncommand="console.doCommandReload();"/>
       <command id="cmd_init_at_startup" 
         oncommand="console.jsds.initAtStartup = !console.jsds.initAtStartup"/>
 
@@ -108,6 +111,8 @@
       <key id="key_selectAll"/>
 
       <!-- View keys -->
+      <key id="key_pprint" observes="cmd_pprint" 
+        modifiers="accel" key="P"/>
       <key id="key_reload" observes="cmd_reload" 
         modifiers="accel" key="R"/>
 
@@ -158,7 +163,11 @@
   
         <!-- View menu -->
         <menu id="menu_View">
-          <menupopup id="menu_ViewPopup">
+          <menupopup id="menu_ViewPopup"
+            onpopupshowing="console.onViewMenuShowing(event);">
+            <menuitem id="menu_PrettyPrint" key="key_pprint"
+              observes="cmd_pprint" type="checkbox"
+              label="&PPrint.label;" accesskey="&PPrint.aKey;"/>
             <menuitem id="menu_Reload" key="key_reload" observes="cmd_reload"
               label="&Reload.label;" accesskey="&Reload.aKey;"/>
           </menupopup>
@@ -199,7 +208,7 @@
               accesskey="&TModeBreak.aKey;"/>
             <menuseparator/>
 
-            <menuitem id="menu_initAtStartup" observes="cmd_init_at_startup"
+            <menuitem id="menu_InitAtStartup" observes="cmd_init_at_startup"
               type="checkbox"
               label="&InitAtStartup.label;" accesskey="&InitAtStartup.aKey;"/>
           </menupopup>

@@ -83,7 +83,16 @@ function step ()
 {
     setStopState(true);
     var topFrame = console.frames[0];
-    console._stepPast = topFrame.script.fileName + topFrame.line;
+    console._stepPast = topFrame.script.fileName
+    if (console.sourceView.prettyPrint)
+    {
+        console._stepPast +=
+            topFrame.script.pcToLine(topFrame.pc, PCMAP_PRETTYPRINT);
+    }
+    else
+    {
+        console._stepPast += topFrame.line;
+    }
     disableDebugCommands()
     --console._stopLevel;
     console.stackView.saveState();
@@ -368,8 +377,10 @@ function init()
     displayCommands();
 
     console.ui = new Object();
-    console.ui["menu_initAtStartup"] =
-        document.getElementById ("menu_initAtStartup");
+    console.ui["menu_PrettyPrint"] =
+        document.getElementById ("menu_PrettyPrint");
+    console.ui["menu_InitAtStartup"] =
+        document.getElementById ("menu_InitAtStartup");
     console.ui["menu_TModeIgnore"] = document.getElementById("menu_TModeIgnore");
     console.ui["menu_TModeTrace"] = document.getElementById("menu_TModeTrace");
     console.ui["menu_TModeBreak"] = document.getElementById("menu_TModeBreak");
@@ -554,6 +565,20 @@ function con_setstatus (msg)
     console.ui["status-text"].setAttribute ("label", msg);
 }
 
+console.__defineGetter__ ("pp_stopLine", con_getppline);
+function con_getppline ()
+{
+    if (!("frames" in console))
+        return (void 0);
+    
+    if (!("_pp_stopLine" in this))
+    {
+        var frame = getCurrentFrame();
+        this._pp_stopLine = frame.script.pcToLine(frame.pc, PCMAP_PRETTYPRINT);
+    }
+    return this._pp_stopLine;
+}
+
 console.pushStatus =
 function con_pushstatus (msg)
 {
@@ -572,3 +597,264 @@ function con_scrolldn ()
 {
     window.frames[0].scrollTo(0, window.frames[0].document.height);
 }
+
+function SourceText (scriptContainer)
+{
+    this.sourceText = new Array();
+    this.tabWidth = console.prefs["sourcetext.tab.width"];
+    this.fileName = scriptContainer.fileName;
+    this.scriptContainer = scriptContainer;
+    this.lineMap = new Array();
+}
+
+SourceText.prototype.invalidate =
+function st_invalidate ()
+{
+    if (console.scriptsView.childData == this)
+    {
+        if (!("lastRowCount" in this) || 
+            this.lastRowCount != this.sourceText.length)
+        {
+            this.lastRowCount = this.sourceText.length;
+            console.scriptsView.outliner.rowCountChanged(this.lastRowCount);
+        }    
+        console.scriptsView.outliner.invalidate();
+    }
+}
+
+SourceText.prototype.onMarginClick =
+function st_marginclick (e, line)
+{
+    setBreakpoint (this.fileName, line + 1);
+}
+
+SourceText.prototype.onBreakpointCreated =
+function st_newbp (line)
+{
+    dd ("breakpoint created at line " + line);
+    
+    if (!(line in this.lineMap))
+        this.lineMap[line - 1] = SourceText.LINE_BREAKPOINT;
+    else
+        this.lineMap[line - 1] |= SourceText.LINE_BREAKPOINT;
+    this.invalidate();
+}
+
+SourceText.prototype.onBreakpointCleared =
+function st_newbp (line)
+{
+    ASSERT ((line - 1) in this.lineMap,
+            "cleared breakpoint for non-existant line");
+    this.lineMap[line - 1] &= !SourceText.LINE_BREAKPOINT;
+    this.invalidate();
+}
+
+SourceText.prototype.isLoaded = false;
+
+SourceText.prototype.reloadSource =
+function st_reloadsrc (cb)
+{
+    var sourceRec = this;
+    
+    function reloadCB (status)
+    {
+        sourceRec.invalidate();
+        cb(status);
+    }
+
+    this.isLoaded = false;
+    this.sourceText = new Array();
+    this.invalidate();
+    this.loadSource(reloadCB);
+}
+
+SourceText.LINE_BREAKABLE  = 1;
+SourceText.LINE_BREAKPOINT = 2;
+
+SourceText.prototype.markBreakableLines =
+function st_initmap()
+{
+    var sourceRec = this;
+    
+    function setFlag (line, flag)
+    {
+        if (line in sourceRec.lineMap)
+            sourceRec.lineMap[line] |= flag;
+        else
+            sourceRec.lineMap[line] = flag;
+    }
+    
+    console.pushStatus (getMsg(MSN_STATUS_MARKING,
+                               this.scriptContainer.shortName));
+    
+    var scripts = this.scriptContainer.childData;
+    for (var i = 0; i < scripts.length; ++i)
+    {
+        var scriptRec = scripts[i];
+        var end = scriptRec.baseLineNumber + scriptRec.lineExtent;
+        for (var j = scriptRec.baseLineNumber; j < end; ++j)
+        {
+            var script = scriptRec.script;
+            if (script.isLineExecutable(j + 1, PCMAP_SOURCETEXT)) {
+                setFlag (j, SourceText.LINE_BREAKABLE);
+            }
+        }
+    }
+
+    console.popStatus();
+}
+
+SourceText.prototype.loadSource =
+function st_loadsrc (cb)
+{
+    if (this.isLoaded)
+    {
+        /* if we're loaded, callback right now, and return. */
+        cb (Components.results.NS_OK);
+        return;
+    }
+    if ("isLoading" in this)
+    {
+        /* if we're in the process of loading, make a note of the callback, and
+         * return. */
+        if (!("extraCallbacks" in this))
+            this.extraCallbacks = new Array();
+        this.extraCallbacks.push (cb);
+        return;
+    }
+
+    var sourceRec = this;
+    this.isLoading = true;    
+    
+    var observer = {
+        onComplete: function oncomplete (data, url, status) {
+            function callall (status)
+            {
+                cb (status);
+                if ("extraCallbacks" in sourceRec)
+                {
+                    while (sourceRec.extraCallbacks)
+                    {
+                        cb = sourceRec.extraCallbacks.pop();
+                        cb (status);
+                        if (sourceRec.extraCallbacks.length < 1)
+                            delete sourceRec.extraCallbacks;
+                    }
+                }
+            }
+            
+            delete sourceRec.isLoading;
+            
+            if (status != Components.results.NS_OK)
+            {
+                dd ("loadSource failed with status " + status + ", " + url);
+                callall (status);
+                console.popStatus();                
+                return;
+            }
+            
+            sourceRec.isLoaded = true;
+            var ary = data.split(/\r\n|\n|\r/m);
+            for (var i = 0; i < ary.length; ++i)
+            {
+                /*
+                 * The replace() strips control characters, we leave the tabs in
+                 * so we can expand them to a per-file width before actually
+                 * displaying them.
+                 */
+                ary[i] = new String(ary[i].replace(/[\x0-\x8]|[\xA-\x1A]/g, ""));
+            }
+            sourceRec.sourceText = ary;
+            ary = ary[0].match (/tab-?width*:\s*(\d+)/i);
+            if (ary)
+                sourceRec.tabWidth = ary[1];
+            
+            sourceRec.scriptContainer.guessFunctionNames(sourceRec.sourceText);
+            sourceRec.markBreakableLines();
+            sourceRec.invalidate();
+            callall(status);
+            console.popStatus();
+        }
+    };
+
+    var ex;
+    var src;
+    var url = this.scriptContainer.fileName;
+    console.pushStatus (getMsg(MSN_STATUS_LOADING, url));
+    try
+    {
+        src = loadURLNow(url);
+    }
+    catch (ex)
+    {
+        /* if we can't load it now, try to load it later */
+        loadURLAsync (url, observer);
+    }
+
+    observer.onComplete (src, url, Components.results.NS_OK);
+    this.invalidate();
+    delete this.isLoading;
+
+}
+
+function PPSourceText (scriptRecord)
+{
+    var sourceRec = this;
+    
+    function setFlag (line, flag)
+    {
+        if (line in sourceRec.lineMap)
+            sourceRec.lineMap[line] |= flag;
+        else
+            sourceRec.lineMap[line] = flag;
+    }
+
+    this.tabWidth = console.prefs["sourcetext.tab.width"];
+    this.scriptRecord = scriptRecord;
+    this.fileName = scriptRecord.script.fileName;
+    this.sourceText = String(scriptRecord.script.functionSource).split("\n");
+    this.lineMap = new Array();
+    var len = this.sourceText.length;
+    for (var i = 0; i < len; ++i)
+    {
+        if (scriptRecord.script.isLineExecutable(i + 1, PCMAP_PRETTYPRINT))
+        {
+            setFlag (i, SourceText.LINE_BREAKABLE);
+        }
+    }
+}
+
+PPSourceText.prototype.invalidate =
+function ppst_invalidate ()
+{
+    if (console.scriptsView.childData == this)
+    {
+        if (!("lastRowCount" in this) || 
+            this.lastRowCount != this.sourceText.length)
+        {
+            this.lastRowCount = this.sourceText.length;
+            console.scriptsView.outliner.rowCountChanged(this.lastRowCount);
+        }    
+        console.scriptsView.outliner.invalidate();
+    }
+}
+
+PPSourceText.prototype.onBreakpointCreated =
+function ppst_newbp (line)
+{
+    if (!(line in this.lineMap))
+        this.lineMap[line] = SourceText.LINE_BREAKPOINT;
+    else
+        this.lineMap[line] |= SourceText.LINE_BREAKPOINT;
+    this.invalidate();
+}
+
+PPSourceText.prototype.onBreakpointCleared =
+function ppst_newbp (line)
+{
+    ASSERT (line in this.lineMap, "cleared breakpoint for non-existant line");
+    this.lineMap[line] &= !SourceText.LINE_BREAKPOINT;
+    this.invalidate();
+}
+
+PPSourceText.prototype.isLoaded = true;

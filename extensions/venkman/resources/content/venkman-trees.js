@@ -81,6 +81,7 @@ function initOutliners()
     console.sourceView.atomHighlightEnd   = atomsvc.getAtom("highlight-end");
     console.sourceView.atomBreakpoint     = atomsvc.getAtom("breakpoint");
     console.sourceView.atomCode           = atomsvc.getAtom("code");
+    console.sourceView.atomPrettyPrint    = atomsvc.getAtom("prettyprint");
     console.sourceView.atomWhitespace     = atomsvc.getAtom("whitespace");
 
     var outliner = document.getElementById("source-outliner");
@@ -151,27 +152,46 @@ function destroyOutliners()
 }
 
 console.sourceView = new BasicOView();
-
+console.sourceView.prettyPrint = false;
 console.sourceView._scrollTo = BasicOView.prototype.scrollTo;
 
 console.sourceView.scrollTo =
 function sv_scrollto (line, align)
 {
-    if (!("childData" in this) || !this.childData.isLoaded)
+    if (!("childData" in this))
+        return;
+
+    if (!this.childData.isLoaded)
     {
         /* the source hasn't been loaded yet, store line/align for processing
          * when the load is done. */
-        this.pendingScroll = [line, align];
+        this.childData.pendingScroll = line;
+        this.childData.pendingScrollType = align;
         return;
     }
     this._scrollTo(line, align);
 }
 
+console.sourceView.setCurrentSourceProvider =
+function sv_setprovider (provider)
+{
+    dd ("setCurrentSourceProvider: " + provider);
+    this.provider = provider;
+    if (provider)
+    {
+        if (provider instanceof ScriptRecord && !this.prettyPrint)
+            this.sourceText = provider.parentRecord.sourceText;
+        else
+            this.sourceText = provider.sourceText;
+        console.sourceView.displaySource (this.sourceText);
+    }
+}
+
 /*
- * pass in a SourceRecord to be displayed on this outliner
+ * pass in a SourceText to be displayed on this outliner
  */
 console.sourceView.displaySource =
-function sov_dsource (source)
+function sv_dsource (source)
 {
     if ("childData" in this && source == this.childData)
         return;
@@ -188,7 +208,10 @@ function sov_dsource (source)
 
     /* save the current position before we change to another source */
     if ("childData" in this)
-        this.childData.lastTopRow = this.outliner.getFirstVisibleRow() + 1;
+    {
+        this.childData.pendingScroll = this.outliner.getFirstVisibleRow() + 1;
+        this.childData.pendingScrollType = -1;
+    }
     
     if (!source)
     {
@@ -210,12 +233,14 @@ function sov_dsource (source)
         this.outliner.rowCountChanged(0, 0);
         this.outliner.invalidate();
         /* load the source, call the tryAgain function when it's done. */
+        source.pendingScroll = 0;
+        source.pendingScrollType = -1;
         source.loadSource(tryAgain);
         return;
     }
 
     enableReloadCommand();
-    this.childData = source;    
+    this.childData = source;
     this.rowCount = source.sourceText.length;
     this.tabString = leftPadString ("", source.tabWidth, " ");
     this.outliner.rowCountChanged(0, this.rowCount);
@@ -224,16 +249,12 @@ function sov_dsource (source)
     var hdr = document.getElementById("source-line-text");
     hdr.setAttribute ("label", source.fileName);
 
-    if ("pendingScroll" in this)
+    if ("pendingScroll" in this.childData)
     {
-        this.scrollTo (this.pendingScroll[0], this.pendingScroll[1]);
-        delete this.pendingScroll;
-    }
-    
-    if ("pendingSelect" in this)
-    {
-        console.sourceView.selection.timedSelect (this.pendingSelect, 500);
-        delete this.pendingSelect;
+        this.scrollTo (this.childData.pendingScroll,
+                       this.childData.pendingScrollType);
+        delete this.childData.pendingScroll;
+        delete this.childData.pendingScrollType;
     }
 }
 
@@ -249,12 +270,19 @@ function sov_dsource (source)
 console.sourceView.softScrollTo =
 function sv_lscroll (line)
 {
-    if (!("childData" in this) || !this.childData.isLoaded)
+    if (!("childData" in this))
+        return;
+    
+    if (!this.childData.isLoaded)
     {
         /* the source hasn't been loaded yet, queue the scroll for later. */
-        this.pendingScroll = [line, 0];
+        this.childData.pendingScroll = line;
+        this.childData.pendingScrollType = 0;
         return;
     }
+
+    delete this.childData.pendingScroll;
+    delete this.childData.pendingScrollType;
 
     var first = this.outliner.getFirstVisibleRow();
     var last = this.outliner.getLastVisibleRow();
@@ -271,10 +299,14 @@ function sv_lscroll (line)
 console.sourceView.getRowProperties =
 function sv_rowprops (row, properties)
 {
-    if (row == console.stopLine - 1 && 
-        console.stopFile == this.childData.fileName)
-    {
-        properties.AppendElement(this.atomCurrent);
+    if ("frames" in console)
+     {
+        if (((!this.prettyPrint && row == console.stopLine - 1) ||
+             (this.prettyPrint && row == console.pp_stopLine - 1)) &&
+            console.stopFile == this.childData.fileName)
+        {
+            properties.AppendElement(this.atomCurrent);
+        }
     }
 }
 
@@ -292,6 +324,8 @@ function sv_cellprops (row, colID, properties)
     
     if (colID == "breakpoint-col")
     {
+        if (this.prettyPrint)
+            properties.AppendElement(this.atomPrettyPrint);
         if (this.childData.sourceText[row].bpRecord)
             properties.AppendElement(this.atomBreakpoint);
         else if (this.childData.lineMap[row])
@@ -322,10 +356,14 @@ function sv_cellprops (row, colID, properties)
         }
     }
 
-    if (row == console.stopLine - 1 && 
-        console.stopFile == this.childData.fileName)
+    if ("frames" in console)
     {
-        properties.AppendElement(this.atomCurrent);
+        if (((!this.prettyPrint && row == console.stopLine - 1) ||
+             (this.prettyPrint && row == console.pp_stopLine - 1)) &&
+            console.stopFile == this.childData.fileName)
+        {
+            properties.AppendElement(this.atomCurrent);
+        }
     }
 }
 
@@ -352,11 +390,12 @@ function sv_getcelltext (row, colID)
 
 var scriptShare = new Object();
 
-function SourceRecord(fileName)
+function ScriptContainerRecord(fileName)
 {
     this.setColumnPropertyName ("script-name", "displayName");
+    this.setColumnPropertyValue ("script-line-start", "");
+    this.setColumnPropertyValue ("script-line-extent", "");
     this.fileName = fileName;
-    this.tabWidth = console.prefs["sourcetext.tab.width"];
     var sov = console.scriptsView;
     this.fileType = sov.atomUnknown;
     this.shortName = this.fileName;
@@ -398,10 +437,10 @@ function SourceRecord(fileName)
     this.displayName = this.shortName;
 }
 
-SourceRecord.prototype = new TreeOViewRecord(scriptShare);
+ScriptContainerRecord.prototype = new TreeOViewRecord(scriptShare);
 
-SourceRecord.prototype.onDragStart =
-function sr_dragstart (e, transferData, dragAction)
+ScriptContainerRecord.prototype.onDragStart =
+function scr_dragstart (e, transferData, dragAction)
 {        
     transferData.data = new TransferData();
     transferData.data.addDataForFlavour("text/x-venkman-file", this.fileName);
@@ -413,43 +452,22 @@ function sr_dragstart (e, transferData, dragAction)
     return true;
 }    
 
-SourceRecord.prototype.appendScriptRecord =
-function sr_addscript(scriptRec)
+ScriptContainerRecord.prototype.appendScriptRecord =
+function scr_addscript(scriptRec)
 {
     this.appendChild (scriptRec);
 }
 
-SourceRecord.prototype.__defineGetter__ ("lineMap", sr_getmap);
-function sr_getmap ()
+ScriptContainerRecord.prototype.__defineGetter__ ("sourceText", scr_gettext);
+function scr_gettext ()
 {
-    if (!("_lineMap" in this))
-    {
-        console.pushStatus (getMsg(MSN_STATUS_MARKING, this.shortName));
-        this._lineMap = new Array();
-    
-        for (var i = 0; i < this.childData.length; ++i)
-        {
-            var scriptRec = this.childData[i];
-            var end = scriptRec.baseLineNumber + scriptRec.lineExtent;
-            for (var j = scriptRec.baseLineNumber; j < end; ++j)
-            {
-                if (!this._lineMap[j] &&
-                    scriptRec.script.isLineExecutable(j + 1))
-                {
-                    this._lineMap[j] = true;
-                }
-            }
-        }
-        console.popStatus();
-    }
-    
-    return this._lineMap;
+    if (!("_sourceText" in this))
+        this._sourceText = new SourceText (this);
+    return this._sourceText;
 }
 
-SourceRecord.prototype.isLoaded = false;
-
-SourceRecord.prototype.sortCompare =
-function sr_compare (a, b)
+ScriptContainerRecord.prototype.sortCompare =
+function scr_compare (a, b)
 {
     if (console.scriptsView.groupFiles)
     {
@@ -469,8 +487,8 @@ function sr_compare (a, b)
     return 0;
 }
 
-SourceRecord.prototype.locateChildByScript =
-function sr_locate (script)
+ScriptContainerRecord.prototype.locateChildByScript =
+function scr_locate (script)
 {
     for (var i = 0; i < this.childData.length; ++i)
         if (script == this.childData[i].script)
@@ -479,177 +497,29 @@ function sr_locate (script)
     return null;
 }
 
-SourceRecord.prototype.makeCurrent =
-function sr_makecur ()
+ScriptContainerRecord.prototype.guessFunctionNames =
+function scr_guessnames (sourceText)
 {
-    if (!("childData" in console.sourceView) ||
-        console.sourceView.childData != this)
+    for (var i = 0; i < this.childData.length; ++i)
     {
-        console.sourceView.displaySource(this);
-        if ("lastTopRow" in this)
-            console.sourceView.scrollTo (this.lastTopRow, -1);
-        else
-            console.sourceView.scrollTo (0, -1);
+        this.childData[i].guessFunctionName(sourceText);
     }
+}
 
-    console.sourceView.outliner.invalidate();
+ScriptContainerRecord.prototype.makeCurrent =
+function scr_makecur ()
+{
     delete console.highlightFile;
     delete console.highlightStart;
     delete console.highlightEnd;
-}
-
-SourceRecord.prototype.reloadSource =
-function sr_reloadsrc (cb)
-{
-    var sourceRec = this;
-    var needRedisplay = (console.sourceView.childData == this);
-    var topLine = (!needRedisplay) ? 0 :
-        console.sourceView.outliner.getFirstVisibleRow() + 1;
-    
-    function reloadCB (status)
-    {
-        if (status == Components.results.NS_OK && needRedisplay)
-        {
-            console.sourceView.displaySource(sourceRec);
-            console.sourceView.scrollTo(topLine);
-        }
-        if (typeof cb == "function")
-            cb(status);
-    }
-
-    if (needRedisplay)
-    {
-        console.sourceView.displaySource(null);
-    }
-    
-    if (this.isLoaded)
-    {
-        this.isLoaded = false;
-        this.loadSource(reloadCB);
-    }
-    else
-    {
-        this.loadSource(cb);
-    }
-}
-
-SourceRecord.prototype.loadSource =
-function sr_loadsrc (cb)
-{
-    if (this.isLoaded)
-    {
-        /* if we're loaded, callback right now, and return. */
-        cb (Components.results.NS_OK);
-        return;
-    }
-    if ("isLoading" in this)
-    {
-        /* if we're in the process of loading, make a note of the callback, and
-         * return. */
-        if (!("extraCallbacks" in this))
-            this.extraCallbacks = new Array();
-        this.extraCallbacks.push (cb);
-        return;
-    }
-    
-    var observer = {
-        onComplete: function oncomplete (data, url, status) {
-            function callall (status)
-            {
-                cb (status);
-                while (sourceRec.extraCallbacks)
-                {
-                    cb = sourceRec.extraCallbacks.pop();
-                    cb (status);
-                    if (sourceRec.extraCallbacks.length < 1)
-                        delete sourceRec.extraCallbacks;
-                }
-            }
-            
-            delete this.isLoading;
-            
-            if (status != Components.results.NS_OK)
-            {
-                callall (status);
-                return;
-            }
-            
-            sourceRec.isLoaded = true;
-            var ary = data.split(/\r\n|\n|\r/m);
-            for (var i = 0; i < ary.length; ++i)
-            {
-                /* We use "new String" here so we can decorate the source line
-                 * with attributes used while displaying the source, like
-                 * "breakpoint", "breakable", and "warning".
-                 * The replace() strips control characters, we leave the tabs in
-                 * so we can expand them to a per-file width before actually
-                 * displaying them.
-                 */
-                ary[i] = new String(ary[i].replace(/[\x0-\x8]|[\xA-\x1A]/g, ""));
-            }
-            sourceRec.sourceText = ary;
-            ary = ary[0].match (/tab-?width*:\s*(\d+)/i);
-            if (ary)
-                sourceRec.tabWidth = ary[1];
-
-            for (i = 0; i < sourceRec.childData.length; ++i)
-            {
-                sourceRec.childData[i].guessFunctionName();
-            }
-
-            for (i = 0; i < console.breakpoints.childData.length; ++i)
-            {
-                var bpr = console.breakpoints.childData[i];
-                if (bpr.fileName == sourceRec.fileName &&
-                    sourceRec.sourceText[bpr.line - 1])
-                {
-                    if (bpr.functionName == "anonymous" &&
-                        bpr.scriptRecords[0])
-                    {
-                        bpr.functionName = bpr.scriptRecords[0].functionName;
-                        bpr.invalidate();
-                    }    
-                    sourceRec.sourceText[bpr.line - 1].bpRecord = bpr;
-                }
-            }
-            
-            console.scriptsView.outliner.invalidate();
-            callall(status);
-            console.popStatus();
-        }
-    };
-
-    var ex;
-    var sourceRec = this;
-    this.isLoading = true;
-    try
-    {
-        var src = loadURLNow(this.fileName);
-        observer.onComplete (src, url, Components.results.NS_OK);
-    }
-    catch (ex)
-    {
-        /* if we can't load it now, try to load it later */
-        console.pushStatus (getMsg(MSN_STATUS_LOADING, this.fileName));
-        loadURLAsync (this.fileName, observer);
-    }
-
-    delete this.isLoading;
-}
-
-SourceRecord.prototype.setFullNameMode =
-function scr_setmode (flag)
-{
-    if (flag)
-        this.displayName = this.fileName;
-    else
-        this.displayName = this.shortName;
+    console.sourceView.setCurrentSourceProvider(this);
+    console.sourceView.outliner.invalidate();
 }
 
 function ScriptRecord(script) 
 {
     if (!(script instanceof jsdIScript))
-        throw new BadMojo (ERR_INVALID_PARAM, "value");
+        throw new BadMojo (ERR_INVALID_PARAM, "script");
 
     this.setColumnPropertyName ("script-name", "functionName");
     this.setColumnPropertyName ("script-line-start", "baseLineNumber");
@@ -684,12 +554,21 @@ function sr_dragstart (e, transferData, dragAction)
 ScriptRecord.prototype.makeCurrent =
 function sr_makecur ()
 {
-    console.sourceView.displaySource(this.parentRecord);
-    console.sourceView.scrollTo (this.baseLineNumber - 2, -1);
-    console.highlightFile = this.script.fileName;
-    console.highlightStart = this.baseLineNumber - 1;
-    console.highlightEnd = this.baseLineNumber - 1 + this.lineExtent;
-    console.sourceView.outliner.invalidate();
+    console.sourceView.setCurrentSourceProvider(this);
+    if (!console.sourceView.prettyPrint)
+    {
+        console.highlightFile = this.parentRecord.fileName;
+        console.highlightStart = this.baseLineNumber - 1;
+        console.highlightEnd = this.baseLineNumber + this.lineExtent - 2;
+        console.sourceView.scrollTo (this.baseLineNumber - 2, -1);
+        console.sourceView.outliner.invalidate();
+    }
+    else
+    {
+        delete console.highlightFile;
+        delete console.highlightStart;
+        delete console.highlightEnd;
+    }
 }
 
 ScriptRecord.prototype.containsLine =
@@ -700,6 +579,14 @@ function sr_containsl (line)
         return true;
     
     return false;
+}
+
+ScriptRecord.prototype.__defineGetter__ ("sourceText", sr_getsource);
+function sr_getsource ()
+{
+    if (!("_sourceText" in this))
+        this._sourceText = new PPSourceText(this);
+    return this._sourceText;
 }
 
 ScriptRecord.prototype.__defineGetter__ ("bpcount", sr_getbpcount);
@@ -733,12 +620,24 @@ function sr_setbpcount (value)
 }
 
 ScriptRecord.prototype.guessFunctionName =
-function sr_guessname ()
+function sr_guessname (sourceText)
 {
+    var targetLine = this.script.baseLineNumber;
+
+    if (this.functionName == MSG_VAL_TLSCRIPT)
+    {
+        if (sourceText[targetLine].search(/\WsetTimeout\W/) != -1)
+            this.functionName = MSD_VAL_TOSCRIPT;
+        else if (sourceText[targetLine].search(/\WsetInterval\W/) != -1)
+            this.functionName = MSD_VAL_IVSCRIPT;        
+        else if (sourceText[targetLine].search(/\Weval\W/) != -1)
+            this.functionName = MSD_VAL_EVSCRIPT;
+        return;
+    }
+    
     if (this.functionName != "anonymous")
         return;
     var scanText = "";
-    var targetLine = this.script.baseLineNumber;
     
     /* scan at most 3 lines before the function definition */
     switch (targetLine - 3)
@@ -748,22 +647,22 @@ function sr_guessname ()
 
         case -1: /* target line is the second line, one line before it */ 
             scanText = 
-                String(this.parentRecord.sourceText[targetLine - 2]);
+                String(sourceText[targetLine - 2]);
             break;
         case 0:  /* target line is the third line, two before it */
             scanText =
-                String(this.parentRecord.sourceText[targetLine - 3]) + 
-                String(this.parentRecord.sourceText[targetLine - 2]);
+                String(sourceText[targetLine - 3]) + 
+                String(sourceText[targetLine - 2]);
             break;            
         default: /* target line is the fourth or higher line, three before it */
             scanText += 
-                String(this.parentRecord.sourceText[targetLine - 4]) + 
-                String(this.parentRecord.sourceText[targetLine - 3]) +
-                String(this.parentRecord.sourceText[targetLine - 2]);
+                String(sourceText[targetLine - 4]) + 
+                String(sourceText[targetLine - 3]) +
+                String(sourceText[targetLine - 2]);
             break;
     }
 
-    scanText += String(this.parentRecord.sourceText[targetLine - 1]);
+    scanText += String(sourceText[targetLine - 1]);
     
     scanText = scanText.substring(0, scanText.lastIndexOf ("function"));
     var ary = scanText.match (/(\w+)\s*[:=]\s*$/);
@@ -849,6 +748,9 @@ function FrameRecord (frame)
     this.setColumnPropertyName ("stack-col-2", "location");
 
     var fn = frame.script.functionName;
+    if (!fn)
+        fn = MSG_VAL_TLSCRIPT;
+
     var sourceRec = console.scripts[frame.script.fileName];
     if (sourceRec)
     {
@@ -1300,7 +1202,8 @@ function sv_cellprops (index, colID, properties)
     return null;
 }
 
-console.stackView.stack = new TOLabelRecord ("stack-col-0", MSG_CALL_STACK);
+console.stackView.stack = new TOLabelRecord ("stack-col-0", MSG_CALL_STACK,
+                                             ["stack-col-1"]);
 
 var projectShare = new Object();
 
@@ -1325,7 +1228,9 @@ function pv_cellprops (index, colID, properties)
     return null;
 }
 
-console.blacklist = new TOLabelRecord ("project-col-0", MSG_BLACKLIST);
+console.blacklist = new TOLabelRecord ("project-col-0", MSG_BLACKLIST,
+                                       ["project-col-1", "project-col-2", 
+                                        "project-col-3", "project-col-4"]);
 
 console.blacklist.addItem =
 function bl_additem (fileName, functionName, startLine, endLine)
@@ -1372,7 +1277,9 @@ function BLRecord (fileName, functionName, startLine, endLine)
     this.enabled = true;
 }
 
-console.breakpoints = new TOLabelRecord ("project-col-0", MSG_BREAK_REC);
+console.breakpoints = new TOLabelRecord ("project-col-0", MSG_BREAK_REC,
+                                         ["project-col-1", "project-col-2", 
+                                          "project-col-3", "project-col-4"]);
 
 console.breakpoints.locateChildByFileLine =
 function bpt_findfl (fileName, line)
@@ -1441,7 +1348,7 @@ function bpr_setenabled (state)
     {
         this.scriptRecords[i].bpcount += delta;
         var script = this.scriptRecords[i].script;
-        var pc = script.lineToPc(this.line);
+        var pc = script.lineToPc(this.line, PCMAP_SOURCETEXT);
         if (state)
             script.setBreakpoint(pc);
         else
@@ -1455,7 +1362,7 @@ function bpr_matchrec (scriptRec)
 {
     return (scriptRec.script.fileName.indexOf(this.fileName) != -1 &&
             scriptRec.containsLine(this.line) &&
-            scriptRec.script.isLineExecutable(this.line));
+            scriptRec.script.isLineExecutable(this.line, PCMAP_SOURCETEXT));
 }
 
 BPRecord.prototype.addScriptRecord =
@@ -1467,7 +1374,7 @@ function bpr_addscript (scriptRec)
 
     if (this._enabled)
     {
-        var pc = scriptRec.script.lineToPc(this.line);
+        var pc = scriptRec.script.lineToPc(this.line, PCMAP_SOURCETEXT);
         scriptRec.script.setBreakpoint(pc);
     }
     

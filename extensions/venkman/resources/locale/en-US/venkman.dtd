@@ -37,7 +37,9 @@
 <!ENTITY MainWindow.title "JavaScript Debugger">
 
 <!-- view menu -->
-<!ENTITY Reload.label        "Reload">
+<!ENTITY PPrint.label        "Pretty Print">
+<!ENTITY PPrint.aKey         "P">
+<!ENTITY Reload.label        "Reload Source">
 <!ENTITY Reload.aKey         "R">
 
 <!-- debug menu -->

@@ -42,6 +42,9 @@ const jsdIProperty        = Components.interfaces.jsdIProperty;
 const jsdIScript          = Components.interfaces.jsdIScript;
 const jsdIStackFrame      = Components.interfaces.jsdIStackFrame;
 
+const PCMAP_SOURCETEXT    = jsdIScript.PCMAP_SOURCETEXT;
+const PCMAP_PRETTYPRINT   = jsdIScript.PCMAP_PRETTYPRINT;
+
 const FTYPE_STD     = 0;
 const FTYPE_SUMMARY = 1;
 const FTYPE_ARRAY   = 2;
@@ -185,7 +188,7 @@ function realizeScript(script)
     if (!container)
     {
         container = console.scripts[script.fileName] =
-            new SourceRecord (script.fileName);
+            new ScriptContainerRecord (script.fileName);
         container.reserveChildren();
         console.scriptsView.childData.appendChild(container);
     }
@@ -238,6 +241,9 @@ function unrealizeScript(script)
         return;
     }
     
+    if (console.sourceView.provider == scriptRec)
+        console.sourceView.setCurrentSourceProvider(scriptRec.parentRecord);
+
     var bplist = console.breakpoints.childData;
     for (var i = 0; i < bplist.length; ++i)
     {
@@ -347,7 +353,12 @@ function debugTrap (frame, type, rv)
             tn = MSG_WORD_THROW;
             break;
         case jsdIExecutionHook.TYPE_INTERRUPTED:
-            if (console._stepPast == frame.script.fileName + frame.line)
+            var line;
+            if (console.sourceView.prettyPrint)
+                line = frame.script.pcToLine (frame.pc, PCMAP_PRETTYPRINT);
+            else
+                line = frame.line;
+            if (console._stepPast == frame.script.fileName + line)
                 return jsdIExecutionHook.RETURN_CONTINUE;
             delete console._stepPast;
             setStopState(false);
@@ -434,6 +445,7 @@ function setCurrentFrameByIndex (index)
     var cf = console.frames[console._currentFrameIndex];
     console.stopLine = cf.line;
     console.stopFile = cf.script.fileName;
+    delete console._pp_stopLine;
     console.onFrameChanged (cf, console._currentFrameIndex);
 
     return cf;
@@ -445,6 +457,7 @@ function clearCurrentFrame ()
         throw new BadMojo (ERR_NO_STACK);
 
     delete console.stopLine;
+    delete console._pp_stopLine;
     delete console.stopFile;
     delete console._currentFrameIndex;
     console.onFrameChanged (null, 0);
@@ -452,7 +465,7 @@ function clearCurrentFrame ()
 
 function findNextExecutableLine (script, line)
 {
-    var pc = script.lineToPc (line + 1);
+    var pc = script.lineToPc (line + 1, PCMAP_SOURCETEXT);
     
 }
 
@@ -696,19 +709,21 @@ function displaySource (url, line, contextLines)
         return;
     }
     
-    if (rec.isLoaded)
+    var sourceText = rec.sourceText;
+    
+    if (sourceText.isLoaded)
         for (var i = line - contextLines; i <= line + contextLines; ++i)
         {
-            if (i > 0 && i < rec.sourceText.length)
+            if (i > 0 && i < sourceText.length)
             {
                 display (getMsg(MSN_SOURCE_LINE, [zeroPad (i, 3),
-                                                  rec.sourceText[i - 1]]),
+                                                  sourceText[i - 1]]),
                          i == line ? MT_STEP : MT_SOURCE);
             }
         }
     else
     {
-        rec.loadSource (onSourceLoaded);        
+        sourceText.loadSource (onSourceLoaded);
     }
 }
     
@@ -796,9 +811,10 @@ function clearBreakpointByNumber (number)
     var line = bpr.line;
     var sourceRecord = console.scripts[fileName];
 
-    if (sourceRecord.isLoaded && sourceRecord.sourceText[line - 1])
+    if (sourceRecord.sourceText.isLoaded &&
+        sourceRecord.sourceText.sourceText[line - 1])
     {
-        delete sourceRecord.sourceText[line - 1].bpRecord;
+        delete sourceRecord.sourceText.sourceText[line - 1].bpRecord;
         if (console.sourceView.childData.fileName == fileName)
             console.sourceView.outliner.invalidateRow (line - 1);
     }
@@ -809,9 +825,9 @@ function clearBreakpointByNumber (number)
     
 function setBreakpoint (fileName, line)
 {
-    var sourceRecord = console.scripts[fileName];
+    var scriptRec = console.scripts[fileName];
     
-    if (!sourceRecord)
+    if (!scriptRec)
     {
         display (getMsg(MSN_ERR_NOSCRIPT, fileName), MT_ERROR);
         return null;
@@ -826,12 +842,13 @@ function setBreakpoint (fileName, line)
     
     bpr = new BPRecord (fileName, line);
     
-    var ary = sourceRecord.childData;
+    var ary = scriptRec.childData;
     var found = false;
     
     for (var i = 0; i < ary.length; ++i)
     {
-        if (ary[i].containsLine(line) && ary[i].script.isLineExecutable(line))
+        if (ary[i].containsLine(line) &&
+            ary[i].script.isLineExecutable(line, PCMAP_SOURCETEXT))
         {
             found = true;
             bpr.addScriptRecord(ary[i]);
@@ -845,9 +862,10 @@ function setBreakpoint (fileName, line)
         return null;
     }
     
-    if (sourceRecord.isLoaded && sourceRecord.sourceText[line - 1])
+    if (scriptRec.sourceText.isLoaded &&
+        scriptRec.sourceText.sourceText[line - 1])
     {
-        sourceRecord.sourceText[line - 1].bpRecord = bpr;
+        scriptRec.sourceText.sourceText[line - 1].bpRecord = bpr;
         if (console.sourceView.childData.fileName == fileName)
             console.sourceView.outliner.invalidateRow (line - 1);
     }

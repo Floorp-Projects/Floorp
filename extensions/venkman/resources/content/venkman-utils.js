@@ -233,6 +233,15 @@ function Clone (obj)
     
 }
 
+function getFileFromPath (path)
+{
+    var ary = path.match(/\/([^\/?]+)(\?|$)/);
+    if (ary)
+        return ary[1];
+
+    return path;
+}
+
 function getCommonPfx (list)
 {
     var pfx = list[0];

@@ -54,6 +54,7 @@ venkman.jar:
   skin/modern/venkman/images/step-out-dis.png    (skin/images/step-out-dis.png)
   skin/modern/venkman/images/breakpoint-line.gif (skin/images/breakpoint-line.gif)
   skin/modern/venkman/images/code-line.gif       (skin/images/code-line.gif)
+  skin/modern/venkman/images/code-line-dis.gif   (skin/images/code-line-dis.gif)
   skin/modern/venkman/images/proj-blacklist.png  (skin/images/proj-blacklist.png)
   skin/modern/venkman/images/proj-bl-item.png    (skin/images/proj-bl-item.png)
   skin/modern/venkman/images/proj-breakpoints.png (skin/images/proj-breakpoints.png)

@@ -33,23 +33,37 @@
  *
  */
 
+function reloadUI()
+{
+    if (console._stopLevel != 0)
+        return;
+    
+    var bs = Components.classes["@mozilla.org/intl/stringbundle;1"];
+    bs = bs.createInstance(Components.interfaces.nsIStringBundleService);
+    bs.flushBundles();
+    window.location.href = window.location.href;
+}
+
+function treeTest()
+{
+    var w = openDialog("chrome://venkman/content/tests/tree.xul", "", "");
+    var testsFilter = {
+        glob: w,
+        flags: jsdIFilter.FLAG_ENABLED | jsdIFilter.FLAG_PASS,
+        urlPattern: null,
+        startLine: 0,
+        endLine: 0
+    };
+    /* make sure this filter goes at the top, so the system
+     * "chrome://venkman/ *" filter doesn't get to it first.
+     */
+    console.jsds.insertFilter (testsFilter, null);
+}
+
 function startupTests()
 {
     if (0)
-    {
-        var w = openDialog("chrome://venkman/content/tests/tree.xul", "", "");
-        var testsFilter = {
-                glob: w,
-                flags: jsdIFilter.FLAG_ENABLED | jsdIFilter.FLAG_PASS,
-                urlPattern: null,
-                startLine: 0,
-                endLine: 0
-        };
-        /* make sure this filter goes at the top, so the system
-         * "chrome://venkman/ *" filter doesn't get to it first.
-         */
-        console.jsds.insertFilter (testsFilter, null);
-    }
+        treeTest();
     
 }
 
