@@ -38,7 +38,7 @@ SDK_BINARY     =                   \
 		$(NULL)
 
 ifdef CROSS_COMPILE
-HOST_SIMPLE_PROGRAMS	= $(addprefix host_, $(SIMPLE_PROGRAMS))
+HOST_SIMPLE_PROGRAMS	= $(addprefix host_, $(SIMPLE_PROGRAMS:$(BIN_SUFFIX)=$(HOST_BIN_SUFFIX)))
 HOST_CSRCS		= $(CSRCS)
 endif
 

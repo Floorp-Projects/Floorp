@@ -48,7 +48,7 @@ SDK_BINARY     =           \
 		$(NULL)
 
 ifdef CROSS_COMPILE
-HOST_PROGRAM	= host_xpidl
+HOST_PROGRAM	= host_xpidl$(HOST_BIN_SUFFIX)
 HOST_CSRCS	= $(CSRCS)
 endif
 

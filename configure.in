@@ -139,6 +139,7 @@ MOZ_BUILD_ROOT=`pwd`
 
 dnl Default to MSVC for win32
 dnl ==============================================================
+if test -z "$CROSS_COMPILE"; then
 case "$target" in
 *-cygwin*|*-mingw*|*-msvc*|*-mks*)
     MAKE_VERSION=3.79
@@ -150,6 +151,7 @@ case "$target" in
     if test -z "$MIDL"; then MIDL=midl; fi
     ;;
 esac
+fi
 
 dnl ========================================================
 dnl Checks for compilers.
@@ -166,19 +168,15 @@ if test -n "$CROSS_COMPILE" && test "$target" != "$host"; then
     _SAVE_LDFLAGS="$LDFLAGS"
 
     AC_MSG_CHECKING([for host c compiler])
+    AC_CHECK_PROGS(HOST_CC, $HOST_CC gcc cc /usr/ucb/cc cl icc, "")
     if test -z "$HOST_CC"; then
-        AC_CHECK_PROGS(HOST_CC, gcc cc /usr/ucb/cc cl icc, "")
-        if test -z "$HOST_CC"; then
-	        AC_MSG_ERROR([no acceptable c compiler found in \$PATH])
-	    fi
+        AC_MSG_ERROR([no acceptable c compiler found in \$PATH])
     fi
     AC_MSG_RESULT([$HOST_CC])
     AC_MSG_CHECKING([for host c++ compiler])
+    AC_CHECK_PROGS(HOST_CXX, $HOST_CXX $CCC c++ g++ gcc CC cxx cc++ cl icc, "")
     if test -z "$HOST_CXX"; then
-        AC_CHECK_PROGS(HOST_CXX, $CCC c++ g++ gcc CC cxx cc++ cl icc, "")
-        if test -z "$HOST_CXX"; then
-            AC_MSG_ERROR([no acceptable c++ compiler found in \$PATH])
-        fi
+        AC_MSG_ERROR([no acceptable c++ compiler found in \$PATH])
     fi
     AC_MSG_RESULT([$HOST_CXX])
 
@@ -191,12 +189,8 @@ if test -n "$CROSS_COMPILE" && test "$target" != "$host"; then
     if test -z "$HOST_LDFLAGS"; then
         HOST_LDFLAGS="$LDFLAGS"
     fi
-    if test -z "$HOST_RANLIB"; then
-        AC_CHECK_PROG(HOST_RANLIB, ranlib, ranlib, :)
-    fi
-    if test -z "$HOST_AR"; then
-	AC_CHECK_PROG(HOST_AR, ar, ar, :)
-    fi
+    AC_CHECK_PROGS(HOST_RANLIB, $HOST_RANLIB ranlib, ranlib, :)
+    AC_CHECK_PROGS(HOST_AR, $HOST_AR ar, ar, :)
     CC="$HOST_CC"
     CFLAGS="$HOST_CFLAGS"
     LDFLAGS="$HOST_LDFLAGS"
@@ -218,34 +212,18 @@ if test -n "$CROSS_COMPILE" && test "$target" != "$host"; then
     CFLAGS=$_SAVE_CFLAGS
     LDFLAGS=$_SAVE_LDFLAGS
 
-    if test -z "$CC"; then
-        AC_CHECK_PROGS(CC, "${target_alias}-gcc" "${target}-gcc", :)
-    fi
+    AC_CHECK_PROGS(CC, $CC "${target_alias}-gcc" "${target}-gcc", :)
     unset ac_cv_prog_CC
     AC_PROG_CC
-    if test -z "$CXX"; then
-        AC_CHECK_PROGS(CXX, "${target_alias}-g++" "${target}-g++", :)
-    fi
+    AC_CHECK_PROGS(CXX, $CXX "${target_alias}-g++" "${target}-g++", :)
     unset ac_cv_prog_CXX
     AC_PROG_CXX
-    if test -z "$RANLIB"; then
-        AC_CHECK_PROGS(RANLIB, "${target_alias}-ranlib" "${target}-ranlib", :)
-    fi
-    if test -z "$AR"; then
-        AC_CHECK_PROGS(AR, "${target_alias}-ar" "${target}-ar", :)
-    fi
-    if test -z "$AS"; then
-        AC_PATH_PROGS(AS, "${target_alias}-as" "${target}-as", :)
-    fi
-    if test -z "$LD"; then
-        AC_CHECK_PROGS(LD, "${target_alias}-ld" "${target}-ld", :)
-    fi
-    if test -z "$STRIP"; then
-        AC_CHECK_PROGS(STRIP, "${target_alias}-strip" "${target}-strip", :)
-    fi
-    if test -z "$WINDRES"; then
-        AC_CHECK_PROGS(WINDRES, "${target_alias}-windres" "${target}-windres", :)
-    fi
+    AC_CHECK_PROGS(RANLIB, $RANLIB "${target_alias}-ranlib" "${target}-ranlib", :)
+    AC_CHECK_PROGS(AR, $AR "${target_alias}-ar" "${target}-ar", :)
+    AC_PATH_PROGS(AS, $AS "${target_alias}-as" "${target}-as", :)
+    AC_CHECK_PROGS(LD, $LD "${target_alias}-ld" "${target}-ld", :)
+    AC_CHECK_PROGS(STRIP, $STRIP "${target_alias}-strip" "${target}-strip", :)
+    AC_CHECK_PROGS(WINDRES, $WINDRES "${target_alias}-windres" "${target}-windres", :)
     AC_DEFINE(CROSS_COMPILE)
 else
     AC_PROG_CC
@@ -257,25 +235,25 @@ else
     AC_CHECK_PROGS(STRIP, strip, :)
     AC_CHECK_PROGS(WINDRES, windres, :)
     if test -z "$HOST_CC"; then
-	HOST_CC="$CC"
+        HOST_CC="$CC"
     fi
     if test -z "$HOST_CFLAGS"; then
-	HOST_CFLAGS="$CFLAGS"
+        HOST_CFLAGS="$CFLAGS"
     fi
     if test -z "$HOST_CXX"; then
-	HOST_CXX="$CXX"
+        HOST_CXX="$CXX"
     fi
     if test -z "$HOST_CXXFLAGS"; then
-	HOST_CXXFLAGS="$CXXFLAGS"
+        HOST_CXXFLAGS="$CXXFLAGS"
     fi
     if test -z "$HOST_LDFLAGS"; then
-	HOST_LDFLAGS="$LDFLAGS"
+        HOST_LDFLAGS="$LDFLAGS"
     fi
     if test -z "$HOST_RANLIB"; then
-	HOST_RANLIB="$RANLIB"
+        HOST_RANLIB="$RANLIB"
     fi
     if test -z "$HOST_AR"; then
-	HOST_AR="$AR"
+       HOST_AR="$AR"
     fi
 fi
 
@@ -613,6 +591,7 @@ if test -n "$CROSS_COMPILE"; then
     case "${target_os}" in
         linux*)       OS_ARCH=Linux ;;
         solaris*)     OS_ARCH=SunOS OS_RELEASE=5 ;;
+        mingw*)       OS_ARCH=WINNT ;;
     esac
 else
     OS_TARGET=`uname -s`
@@ -839,10 +818,22 @@ case "$host" in
 *cygwin*|*mingw*|*mks*|*msvc*)
     if test -n "$_WIN32_MSVC"; then
         HOST_CFLAGS="$HOST_CFLAGS -TC -nologo"
+    else
+        HOST_CFLAGS="$HOST_CFLAGS -mno-cygwin"
     fi
     HOST_CFLAGS="$HOST_CFLAGS -DXP_WIN32 -DXP_WIN -DWIN32 -D_WIN32 -DNO_X11"
     HOST_NSPR_MDCPUCFG='\"md/_winnt.cfg\"'
     HOST_OPTIMIZE_FLAGS="${HOST_OPTIMIZE_FLAGS=-O2}"
+    HOST_BIN_SUFFIX=.exe
+    CYGWIN_WRAPPER="${srcdir}/build/cygwin-wrapper"
+    if test "`echo ${srcdir} | grep -c ^/ 2>/dev/null`" = 0; then
+        _pwd=`pwd`
+        CYGWIN_WRAPPER="${_pwd}/${srcdir}/build/cygwin-wrapper"
+    fi
+    if test "`${PERL} -v | grep -c cygwin  2>/dev/null`" = 0; then
+        _AS_PERL=1
+        PERL="${CYGWIN_WRAPPER} $PERL"
+    fi
     ;;
 
 *-darwin*)
@@ -1076,15 +1067,6 @@ case "$target" in
     ;;
 
 *-mingw*|*-cygwin*|*-msvc*|*-mks*)
-    CYGWIN_WRAPPER="${srcdir}/build/cygwin-wrapper"
-    if test "`echo ${srcdir} | grep -c ^/ 2>/dev/null`" = 0; then
-        _pwd=`pwd`
-         CYGWIN_WRAPPER="${_pwd}/${srcdir}/build/cygwin-wrapper"
-    fi
-    if test `${PERL} -v | grep -c cygwin  2>/dev/null` -eq 0; then
-        _AS_PERL=1
-        PERL="${CYGWIN_WRAPPER} ${PERL}"
-    fi
     DSO_CFLAGS=
     DSO_PIC_CFLAGS=
     DLL_SUFFIX=.dll
@@ -1112,11 +1094,6 @@ case "$target" in
         DLL_PREFIX=
         IMPORT_LIB_SUFFIX=dll.a
     else
-        CYGWIN_WRAPPER="${srcdir}/build/cygwin-wrapper"
-        if test "`echo ${srcdir} | grep -c ^/ 2>/dev/null`" = 0; then
-            _pwd=`pwd`
-            CYGWIN_WRAPPER="${_pwd}/${srcdir}/build/cygwin-wrapper"
-        fi
         HOST_CC='$(CC)'
         HOST_CXX='$(CXX)'
         HOST_LD='$(LD)'
@@ -1179,6 +1156,9 @@ case "$target" in
     no_x=yes
     AC_DEFINE(NO_X11)
 
+    case "$host" in
+    *-mingw*|*-cygwin*|*-msvc*|*-mks*)
+
     dnl Remove cygwinism from MOZ_BUILD_ROOT
     MOZ_BUILD_ROOT=`cygpath -w $MOZ_BUILD_ROOT | sed -e 's|\\\\|/|g'`
 
@@ -1232,6 +1212,18 @@ case "$target" in
     fi
     LIBIDL_CFLAGS="-I${_LIBIDL_PREFIX_DIR}/include ${GLIB_CFLAGS}"
     LIBIDL_LIBS="${_LIBIDL_PREFIX_DIR}/lib/libidl-0.6.lib ${_GLIB_PREFIX_DIR}/lib/glib-1.2.lib"
+    ;;
+    *) # else cross-compiling
+        if test -n "$GLIB_PREFIX"; then
+            GLIB_CFLAGS="-I${GLIB_PREFIX}/include"
+            GLIB_LIBS="${GLIB_PREFIX}/lib/glib-1.2.lib"
+        fi
+        if test -n "$LIBIDL_PREFIX"; then
+            LIBIDL_CFLAGS="-I${LIBIDL_PREFIX}/include ${GLIB_CFLAGS}"
+            LIBIDL_LIBS="${LIBIDL_PREFIX}/lib/libIDL-0.6.lib ${GLIB_LIBS}"
+        fi
+        ;;
+    esac 
 
     case "$target" in
     i*86-*)
@@ -3485,7 +3477,7 @@ MOZ_ARG_ENABLE_BOOL(crypto,
 case $target in
 *-cygwin*|*-mingw*|*-msvc*|*-mks*)
     if test -n "$MOZ_PSM" -a ! -e "$AS_BIN"; then
-        AC_MSG_ERROR([Building crypto support requires a valid version of the standalone assembler, ml.exe.])
+        AC_MSG_ERROR([Building crypto support requires a valid version of the standalone assembler (ml.exe for MSVC).])
     fi
     ;;
 esac
@@ -5297,6 +5289,7 @@ AC_SUBST(HOST_AR)
 AC_SUBST(HOST_LD)
 AC_SUBST(HOST_RANLIB)
 AC_SUBST(HOST_NSPR_MDCPUCFG)
+AC_SUBST(HOST_BIN_SUFFIX)
 
 AC_SUBST(TARGET_CPU)
 AC_SUBST(TARGET_VENDOR)

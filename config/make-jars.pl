@@ -1,6 +1,6 @@
 #!/perl
 
-# make-jars [-f] [-v] [-l] [-x] [-d <chromeDir>] [-s <srcdir>] [-z zipprog] < <jar.mn>
+# make-jars [-f] [-v] [-l] [-x] [-d <chromeDir>] [-s <srcdir>] [-z zipprog] [-o operating-system] < <jar.mn>
 
 my $cygwin_mountprefix = "";
 if ($^O eq "cygwin") {
@@ -31,7 +31,7 @@ import mozLock;
 
 my $objdir = getcwd;
 
-getopts("d:s:f:avlD:p:xz:");
+getopts("d:s:f:avlD:o:p:xz:");
 
 my $baseFilesDir = ".";
 if (defined($::opt_s)) {
@@ -104,6 +104,11 @@ if ($zipprog eq "") {
     exit(1);
 }
 
+my $force_os;
+if (defined($::opt_o)) {
+    $force_os = $::opt_o;
+}
+
 my $defines = "";
 while (@ARGV) {
     $defines = "$defines ".shift(@ARGV);
@@ -128,6 +133,21 @@ if ($force_x11) {
     $win32 = 0;
     $macos = 0;
     $unix = 1;
+}
+
+if (defined($force_os)) {
+    $win32 = 0;
+    $macos = 0;
+    $unix = 0;
+    if ($force_os eq "WINNT") {
+	$win32 = 1;
+    } elsif ($force_os eq "OS2") {
+	$win32 = 1;
+    } elsif ($force_os eq "Darwin") {
+	$macos = 1;
+    } else {
+	$unix = 1;
+    }
 }
 
 sub foreignPlatformFile

@@ -5,7 +5,7 @@ use Getopt::Std;
 use IO::File;
 use mozLock;
 
-getopts("lx");
+getopts("lxo:");
 
 my $installedChromeFile = $ARGV[0];
 my $disableJarPackaging = $ARGV[1];
@@ -47,6 +47,26 @@ if (defined($::opt_x)) {
     $win32 = 0;
     $macos = 0;
     $unix = 1;
+}
+
+my $force_os;
+if (defined($::opt_o)) {
+    $force_os = $::opt_o;
+}
+
+if (defined($force_os)) {
+    $win32 = 0;
+    $macos = 0;
+    $unix = 0;
+    if ($force_os eq "WINNT") {
+	$win32 = 1;
+    } elsif ($force_os eq "OS2") {
+	$win32 = 1;
+    } elsif ($force_os eq "Darwin") {
+	$macos = 1;
+    } else {
+	$unix = 1;
+    }
 }
 
 if ($jarFileName =~ /(.*)\.jar/) {

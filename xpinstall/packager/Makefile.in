@@ -110,6 +110,7 @@ endif
 
 # dummy macro if we don't have PSM built
 SIGN_NSS		=
+ifndef CROSS_COMPILE
 ifdef MOZ_PSM
 SIGN_NSS		= @echo signing nss libraries;
 
@@ -132,6 +133,7 @@ SIGN_NSS	+= $(SIGN_CMD) $(SOFTOKN); \
         if test -f $(FREEBL_PURE); then $(SIGN_CMD) $(FREEBL_PURE); fi;
 
 endif # MOZ_PSM
+endif # !CROSS_COMPILE
 
 TARGETS		= $(PACKAGE) $(SDK)
 
