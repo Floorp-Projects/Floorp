@@ -324,6 +324,8 @@ protected:
 #define CCMAP_NONE_FLAG              0x0000
 
 // non-bmp unicode support extension
+#define EXTENDED_UNICODE_PLANES    16
+
 // get plane number from ccmap, bmp excluded, so plane 1's number is 0.
 #define CCMAP_PLANE(h)  (((PRUint16)(h) - (PRUint16)0xd800) >> 6)
 
