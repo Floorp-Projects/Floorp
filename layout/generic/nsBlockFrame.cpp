@@ -1069,8 +1069,8 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
   }
 #endif
 
-  // Determine if we need to repaint our border
-  CheckInvalidateBorder(aPresContext, aMetrics, aReflowState);
+  // Determine if we need to repaint our border, background or outline
+  CheckInvalidateSizeChange(aPresContext, aMetrics, aReflowState);
 
   // Let the absolutely positioned container reflow any absolutely positioned
   // child frames that need to be reflowed, e.g., elements with a percentage

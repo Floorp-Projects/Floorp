@@ -574,8 +574,8 @@ nsHTMLFrameOuterFrame::Reflow(nsIPresContext*          aPresContext,
     aDesiredSize.mMaxElementWidth = kidMetrics.mMaxElementWidth;
   }
 
-  // Determine if we need to repaint our border
-  CheckInvalidateBorder(aPresContext, aDesiredSize, aReflowState);
+  // Determine if we need to repaint our border, background or outline
+  CheckInvalidateSizeChange(aPresContext, aDesiredSize, aReflowState);
 
   {
     // Invalidate the frame
