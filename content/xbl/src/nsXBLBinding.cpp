@@ -1017,16 +1017,20 @@ nsXBLBinding::GetBaseTag(PRInt32* aNameSpaceID, nsIAtom** aResult)
 }
 
 NS_IMETHODIMP
-nsXBLBinding::AttributeChanged(nsIAtom* aAttribute, PRInt32 aNameSpaceID, PRBool aRemoveFlag)
+nsXBLBinding::AttributeChanged(nsIAtom* aAttribute, PRInt32 aNameSpaceID,
+                               PRBool aRemoveFlag, PRBool aNotify)
 {
   // XXX Change if we ever allow multiple bindings in a chain to contribute anonymous content
   if (!mContent) {
     if (mNextBinding)
-      return mNextBinding->AttributeChanged(aAttribute, aNameSpaceID, aRemoveFlag);
+      return mNextBinding->AttributeChanged(aAttribute, aNameSpaceID,
+                                            aRemoveFlag, aNotify);
     return NS_OK;
   }
 
-  return mPrototypeBinding->AttributeChanged(aAttribute, aNameSpaceID, aRemoveFlag, mBoundElement, mContent);
+  return mPrototypeBinding->AttributeChanged(aAttribute, aNameSpaceID,
+                                             aRemoveFlag, mBoundElement,
+                                             mContent, aNotify);
 }
 
 NS_IMETHODIMP

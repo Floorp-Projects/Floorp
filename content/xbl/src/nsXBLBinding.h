@@ -85,7 +85,8 @@ class nsXBLBinding: public nsIXBLBinding
 
   NS_IMETHOD GetBaseTag(PRInt32* aNameSpaceID, nsIAtom** aResult);
 
-  NS_IMETHOD AttributeChanged(nsIAtom* aAttribute, PRInt32 aNameSpaceID, PRBool aRemoveFlag);
+  NS_IMETHOD AttributeChanged(nsIAtom* aAttribute, PRInt32 aNameSpaceID,
+                              PRBool aRemoveFlag, PRBool aNotify);
 
   NS_IMETHOD ExecuteAttachedHandler();
   NS_IMETHOD ExecuteDetachedHandler();

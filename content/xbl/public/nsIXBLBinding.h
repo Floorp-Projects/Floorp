@@ -91,7 +91,8 @@ public:
   NS_IMETHOD GetBaseTag(PRInt32* aNameSpaceID, nsIAtom** aResult) = 0;
 
   // Called when an attribute changes on a binding.
-  NS_IMETHOD AttributeChanged(nsIAtom* aAttribute, PRInt32 aNameSpaceID, PRBool aRemoveFlag) = 0;
+  NS_IMETHOD AttributeChanged(nsIAtom* aAttribute, PRInt32 aNameSpaceID,
+                              PRBool aRemoveFlag, PRBool aNotify) = 0;
 
   NS_IMETHOD ExecuteAttachedHandler()=0;
   NS_IMETHOD ExecuteDetachedHandler()=0;
