@@ -110,7 +110,6 @@ public:
   virtual void ReplaceAgentStyleSheets(nsISupportsArray* aNewSheets) = 0;
   
   virtual nsresult GetRuleTree(nsRuleNode** aResult) = 0;
-  virtual nsresult ClearCachedDataInRuleTree(nsIStyleRule* aRule) = 0;
   
   // The following two methods can be used to tear down and reconstruct a rule tree.  The idea
   // is to first call BeginRuleTreeReconstruct, which will set aside the old rule
