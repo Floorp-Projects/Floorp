@@ -627,16 +627,25 @@ gint nsGtkWidget_Resize_EventHandler(GtkWidget *w, GtkAllocation *allocation, gp
       winBounds.height != allocation->height) {
     g_print("\tAllocation != current window bounds.  Resize.\n");
 
-    winBounds.width = allocation->width;
-    winBounds.height = allocation->height;
-    //    win->SetBounds(winBounds);
+    nsRect sizeBounds;
+    sizeBounds.x = 0;
+    sizeBounds.y = 0;
+    winBounds.width = sizeBounds.width = allocation->width;
+    winBounds.height = sizeBounds.height = allocation->height;
 
-    nsPaintEvent pevent;
-    pevent.message = NS_PAINT;
-    pevent.widget = win;
-    pevent.time = PR_IntervalNow();
-    pevent.rect = (nsRect *)&winBounds;
-    win->OnPaint(pevent);
+    nsSizeEvent sizeEvent;
+    sizeEvent.eventStructType = NS_SIZE_EVENT;
+    sizeEvent.message         = NS_SIZE;
+    sizeEvent.point.x         = winBounds.x;
+    sizeEvent.point.y         = winBounds.y;
+    sizeEvent.time            = PR_IntervalNow();
+    sizeEvent.widget          = win;
+    sizeEvent.nativeMsg       = nsnull;
+    sizeEvent.windowSize     = &sizeBounds;
+    sizeEvent.mWinWidth      = winBounds.width;
+    sizeEvent.mWinHeight     = winBounds.height;
+    win->OnResize(sizeEvent);
+    win->SetBounds(winBounds);
   }
   return PR_FALSE;
 }
