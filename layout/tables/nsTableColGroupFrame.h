@@ -26,7 +26,14 @@
 #include "nsHTMLContainerFrame.h"
 
 class nsTableColFrame;
+class nsTableFrame;
+enum nsTableColType;
 
+enum nsTableColGroupType {
+  eColGroupContent            = 0, // there is real col group content associated   
+  eColGroupAnonymousCol       = 1, // the result of a col
+  eColGroupAnonymousCell      = 2, // the result of a cell alone
+};
 
 /**
  * nsTableColGroupFrame
@@ -52,6 +59,16 @@ public:
                                  nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
 
+  nsTableColGroupType GetType() const;
+
+  void SetType(nsTableColGroupType aType);
+
+  static PRBool GetLastRealColGroup(nsTableFrame* aTableFrame, 
+                                    nsIFrame**    aLastColGroup);
+
+  static nsTableColGroupFrame* FindParentForAppendedCol(nsTableFrame*  aTableFrame, 
+                                                        nsTableColType aColType);
+
   NS_IMETHOD AppendFrames(nsIPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
                           nsIAtom*        aListName,
@@ -65,6 +82,13 @@ public:
                          nsIPresShell&   aPresShell,
                          nsIAtom*        aListName,
                          nsIFrame*       aOldFrame);
+
+  void RemoveChild(nsIPresContext&  aPresContext, 
+                   nsTableColFrame& aLastChild,
+                   PRBool           aResetColIndices);  
+  
+  void RemoveChildrenAtEnd(nsIPresContext& aPresContext,
+                           PRInt32         aNumChildrenToRemove);
 
   NS_IMETHOD Paint(nsIPresContext* aPresContext,
                    nsIRenderingContext& aRenderingContext,
@@ -89,6 +113,12 @@ public:
    */
   NS_IMETHOD GetFrameType(nsIAtom** aType) const;
   
+  NS_IMETHOD AddColsToTable(nsIPresContext&  aPresContext,
+                            PRInt32          aFirstColIndex,
+                            PRBool           aResetSubsequentColIndices,
+                            nsIFrame*        aFirstFrame,
+                            nsIFrame*        aLastFrame = nsnull);
+
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsString& aResult) const;
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
@@ -98,7 +128,7 @@ public:
     * if there are col children, count them (taking into account the span of each)
     * else, check my own span attribute.
     */
-  virtual PRInt32 GetColumnCount();
+  virtual PRInt32 GetColCount() const;
 
   virtual nsTableColFrame * GetFirstColumn();
 
@@ -124,22 +154,24 @@ public:
 
   void DeleteColFrame(nsIPresContext* aPresContext, nsTableColFrame* aColFrame);
 
-protected:
+  static nsTableColGroupFrame* GetColGroupFrameContaining(nsFrameList&     aColGroupList,
+                                                          nsTableColFrame& aColFrame);
+  nsFrameList& GetChildList();
 
+  static void ResetColIndices(nsIFrame* aFirstColGroup,
+                              PRInt32   aFirstColIndex,
+                              nsIFrame* aStartColFrame = nsnull);
+protected:
   nsTableColGroupFrame();
+
+  void InsertColsReflow(nsIPresContext& aPresContext,
+                        nsIPresShell&   aPresShell,
+                        PRInt32         aColIndex,
+                        nsIFrame*       aFirstFrame,
+                        nsIFrame*       aLastFrame = nsnull);
 
   /** implement abstract method on nsHTMLContainerFrame */
   virtual PRIntn GetSkipSides() const;
-
-  /** Hook for style post processing.  
-    * Since we need to know the full column structure before the COLS attribute
-    * can be interpreted, we can't just use DidSetStyleContext
-    */
-  NS_IMETHOD SetStyleContextForFirstPass(nsIPresContext* aPresContext);
-
-  NS_IMETHOD InitNewFrames(nsIPresContext* aPresContext, nsIFrame* aChildList);
-  NS_IMETHOD AppendNewFrames(nsIPresContext* aPresContext, nsIFrame* aChildList);
-
 
   NS_IMETHOD IncrementalReflow(nsIPresContext*          aPresContext,
                                nsHTMLReflowMetrics&     aDesiredSize,
@@ -174,13 +206,33 @@ protected:
   /** the starting column index this col group represents. Must be >= 0. */
   PRInt32 mStartColIndex;
 
+  struct ColGroupBits {
+    unsigned int mType:4;       
+    unsigned int mUnused:28;                         
+  } mBits;
+
 };
 
 inline nsTableColGroupFrame::nsTableColGroupFrame()
 : mColCount(0), mStartColIndex(0)
-{}
+{ 
+  mBits.mType = 0;
+}
   
-inline int nsTableColGroupFrame::GetStartColumnIndex ()
-{  return mStartColIndex;}
+inline PRInt32 nsTableColGroupFrame::GetStartColumnIndex()
+{  
+  return mStartColIndex;
+}
+
+inline PRInt32 nsTableColGroupFrame::GetColCount() const
+{  
+  return mColCount;
+}
+
+inline nsFrameList& nsTableColGroupFrame::GetChildList()
+{  
+  return mFrames;
+}
 
 #endif
+

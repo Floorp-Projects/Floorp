@@ -498,8 +498,6 @@ NS_IMETHODIMP
 nsTreeFrame::MarkForDirtyReflow(nsIPresContext* aPresContext)
 {
   mSuppressReflow = PR_FALSE;
-  InvalidateCellMap();
-  InvalidateColumnCache();
   InvalidateFirstPassCache();
   nsCOMPtr<nsIPresShell> shell;
   aPresContext->GetShell(getter_AddRefs(shell));

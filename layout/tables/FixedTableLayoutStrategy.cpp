@@ -59,7 +59,6 @@ PRBool FixedTableLayoutStrategy::BalanceColumnWidths(nsIStyleContext*         aT
 PRBool FixedTableLayoutStrategy::AssignPreliminaryColumnWidths(nscoord aComputedWidth)
 {
   // NS_ASSERTION(aComputedWidth != NS_UNCONSTRAINEDSIZE, "bad computed width");
-
   const nsStylePosition* tablePosition;
   mTableFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)tablePosition);
   PRBool tableIsFixedWidth = eStyleUnit_Coord   == tablePosition->mWidth.GetUnit() ||
@@ -70,24 +69,25 @@ PRBool FixedTableLayoutStrategy::AssignPreliminaryColumnWidths(nscoord aComputed
   nsMargin borderPadding;
   tableSpacing->CalcBorderPaddingFor(mTableFrame, borderPadding); 
 
+  PRInt32 numCols = mTableFrame->GetColCount();
   PRInt32 colX;
   // availWidth is used as the basis for percentage width columns. It is aComputedWidth
   // minus table border, padding, & cellspacing
   nscoord availWidth = aComputedWidth - borderPadding.left - borderPadding.right - 
-                       ((mNumCols + 1) * mTableFrame->GetCellSpacingX());
+                       ((numCols + 1) * mTableFrame->GetCellSpacingX());
   
   PRInt32 specifiedCols = 0;  // the number of columns whose width is given
   nscoord totalColWidth = 0;  // the sum of the widths of the columns 
 
-  nscoord* colWidths = new PRBool[mNumCols];
-  nsCRT::memset(colWidths, WIDTH_NOT_SET, mNumCols*sizeof(nscoord));
+  nscoord* colWidths = new PRBool[numCols];
+  nsCRT::memset(colWidths, WIDTH_NOT_SET, numCols*sizeof(nscoord));
 
-  nscoord* propInfo = new PRBool[mNumCols];
-  nsCRT::memset(propInfo, 0, mNumCols*sizeof(nscoord));
+  nscoord* propInfo = new PRBool[numCols];
+  nsCRT::memset(propInfo, 0, numCols*sizeof(nscoord));
   nscoord propTotal = 0;
 
   // for every column, determine its specified width
-  for (colX = 0; colX < mNumCols; colX++) { 
+  for (colX = 0; colX < numCols; colX++) { 
     // Get column information
     nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX);
     if (!colFrame) {
@@ -115,6 +115,7 @@ PRBool FixedTableLayoutStrategy::AssignPreliminaryColumnWidths(nscoord aComputed
       propTotal += propInfo[colX];
     }
     else { // get width from the cell
+
       nsTableCellFrame* cellFrame = mTableFrame->GetCellFrameAt(0, colX);
       if (nsnull != cellFrame) {
         // Get the cell's style
@@ -148,7 +149,7 @@ PRBool FixedTableLayoutStrategy::AssignPreliminaryColumnWidths(nscoord aComputed
 
   if (0 < remainingWidth) {
     if (propTotal > 0) {
-      for (colX = 0; colX < mNumCols; colX++) {
+      for (colX = 0; colX < numCols; colX++) {
         if (propInfo[colX] > 0) {
           // We're proportional
           float percent = ((float)propInfo[colX])/((float)propTotal);
@@ -159,10 +160,10 @@ PRBool FixedTableLayoutStrategy::AssignPreliminaryColumnWidths(nscoord aComputed
       }  
     }
     else if (tableIsFixedWidth) {
-      if (mNumCols > specifiedCols) {
+      if (numCols > specifiedCols) {
         // allocate the extra space to the columns which have no width specified
-        nscoord colAlloc = NSToCoordRound( ((float)remainingWidth) / (((float)mNumCols) - ((float)specifiedCols)));
-        for (colX = 0; colX < mNumCols; colX++) {
+        nscoord colAlloc = NSToCoordRound( ((float)remainingWidth) / (((float)numCols) - ((float)specifiedCols)));
+        for (colX = 0; colX < numCols; colX++) {
           if (-1 == colWidths[colX]) {
             colWidths[colX] = colAlloc;
             totalColWidth += colAlloc; 
@@ -172,7 +173,7 @@ PRBool FixedTableLayoutStrategy::AssignPreliminaryColumnWidths(nscoord aComputed
       }
       else { // allocate the extra space to the columns which have width specified
         float divisor = (float)totalColWidth;
-        for (colX = 0; colX < mNumCols; colX++) {
+        for (colX = 0; colX < numCols; colX++) {
           if (colWidths[colX] > 0) {
             nscoord colAlloc = NSToCoordRound(remainingWidth * colWidths[colX] / divisor);
             colWidths[colX] += colAlloc;
@@ -187,7 +188,7 @@ PRBool FixedTableLayoutStrategy::AssignPreliminaryColumnWidths(nscoord aComputed
   nscoord overAllocation = (availWidth >= 0) 
     ? totalColWidth - availWidth : 0;
   // set the column widths
-  for (colX = 0; colX < mNumCols; colX++) {
+  for (colX = 0; colX < numCols; colX++) {
     if (colWidths[colX] < 0) 
       colWidths[colX] = 0;
     // if there was too much allocated due to rounding, remove it from the last col

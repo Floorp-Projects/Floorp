@@ -19,6 +19,7 @@
  *
  * Contributor(s): 
  */
+#include "nsCOMPtr.h"
 #include "nsTableColFrame.h"
 #include "nsContainerFrame.h"
 #include "nsIReflowCommand.h"
@@ -30,6 +31,11 @@
 #include "nsCSSRendering.h"
 #include "nsLayoutAtoms.h"
 
+#define COL_TYPE_CONTENT              0x0
+#define COL_TYPE_ANONYMOUS_COL        0x1
+#define COL_TYPE_ANONYMOUS_COLGROUP   0x2
+#define COL_TYPE_ANONYMOUS_CELL       0x3
+
 nsTableColFrame::nsTableColFrame()
   : nsFrame(), 
     mProportion(WIDTH_NOT_SET),
@@ -38,10 +44,53 @@ nsTableColFrame::nsTableColFrame()
 {
   // note that all fields are initialized to 0 by nsFrame::operator new
   ResetSizingInfo();
+  SetType(eColContent);
 }
 
 nsTableColFrame::~nsTableColFrame()
 {
+}
+
+nsTableColType nsTableColFrame::GetType() const {
+  switch(mBits.mType) {
+  case COL_TYPE_ANONYMOUS_COL:
+    return eColAnonymousCol;
+  case COL_TYPE_ANONYMOUS_COLGROUP:
+    return eColAnonymousColGroup;
+  case COL_TYPE_ANONYMOUS_CELL:
+    return eColAnonymousCell;
+  default:
+    return eColContent;
+  }
+}
+
+void nsTableColFrame::SetType(nsTableColType aType) {
+  mBits.mType = aType - eColContent;
+}
+
+// XXX what about other style besides width
+nsStyleCoord nsTableColFrame::GetStyleWidth() const
+{
+  nsStylePosition* position = nsnull;
+  position = (nsStylePosition*)mStyleContext->GetStyleData(eStyleStruct_Position);
+  nsStyleCoord styleWidth = position->mWidth;
+  // the following should not be necessary since html.css defines table-col and
+  // :table-col to inherit. However, :table-col is not inheriting properly
+  if (eStyleUnit_Auto == styleWidth.GetUnit()) {
+    nsIFrame* parent;
+    GetParent(&parent);
+    nsCOMPtr<nsIStyleContext> styleContext;
+    parent->GetStyleContext(getter_AddRefs(styleContext)); 
+    if (styleContext) {
+      position = (nsStylePosition*)styleContext->GetStyleData(eStyleStruct_Position);
+      styleWidth = position->mWidth;
+    }
+  }
+
+  nsStyleCoord returnWidth;
+  returnWidth.mUnit  = styleWidth.mUnit;
+  returnWidth.mValue = styleWidth.mValue;
+  return returnWidth;
 }
 
 void nsTableColFrame::ResetSizingInfo()

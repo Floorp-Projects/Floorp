@@ -23,6 +23,7 @@
 #include "nsTableColFrame.h"
 #include "nsTableFrame.h"
 #include "nsIHTMLTableColElement.h"
+#include "nsIDOMHTMLTableColElement.h"
 #include "nsIReflowCommand.h"
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
@@ -40,101 +41,230 @@
 NS_DEF_PTR(nsIContent);
 
 static NS_DEFINE_IID(kIHTMLTableColElementIID, NS_IHTMLTABLECOLELEMENT_IID);
+static NS_DEFINE_IID(kIDOMHTMLTableColElementIID, NS_IDOMHTMLTABLECOLELEMENT_IID);
+
+#define COLGROUP_TYPE_CONTENT              0x0
+#define COLGROUP_TYPE_ANONYMOUS_COL        0x1
+#define COLGROUP_TYPE_ANONYMOUS_CELL       0x2
+
+nsTableColGroupType nsTableColGroupFrame::GetType() const {
+  switch(mBits.mType) {
+  case COLGROUP_TYPE_ANONYMOUS_COL:
+    return eColGroupAnonymousCol;
+  case COLGROUP_TYPE_ANONYMOUS_CELL:
+    return eColGroupAnonymousCell;
+  default:
+    return eColGroupContent;
+  }
+}
+
+void nsTableColGroupFrame::SetType(nsTableColGroupType aType) {
+  mBits.mType = aType - eColGroupContent;
+}
+
+void nsTableColGroupFrame::ResetColIndices(nsIFrame* aFirstColGroup,
+                                           PRInt32   aFirstColIndex,
+                                           nsIFrame* aStartColFrame)
+{
+  nsTableColGroupFrame* colGroupFrame = (nsTableColGroupFrame*)aFirstColGroup;
+  PRInt32 colIndex = aFirstColIndex;
+  while (colGroupFrame) {
+    nsIAtom* cgType;
+    colGroupFrame->GetFrameType(&cgType);
+    if (nsLayoutAtoms::tableColGroupFrame == cgType) {
+      colGroupFrame->SetStartColumnIndex(colIndex);
+      nsIFrame* colFrame = aStartColFrame; 
+      if (!colFrame || (colIndex != aFirstColIndex)) {
+        colGroupFrame->FirstChild(nsnull, &colFrame);
+      }
+      while (colFrame) {
+        nsIAtom* colType;
+        colFrame->GetFrameType(&colType);
+        if (nsLayoutAtoms::tableColFrame == colType) {
+          ((nsTableColFrame*)colFrame)->SetColIndex(colIndex);
+          colIndex++;
+        }
+        NS_IF_RELEASE(colType);
+        colFrame->GetNextSibling(&colFrame);
+      }
+    }
+    NS_IF_RELEASE(cgType);
+    colGroupFrame->GetNextSibling((nsIFrame**)&colGroupFrame);
+  }
+}
+
 
 NS_IMETHODIMP
-nsTableColGroupFrame::InitNewFrames(nsIPresContext* aPresContext, nsIFrame* aChildList)
+nsTableColGroupFrame::AddColsToTable(nsIPresContext&  aPresContext,
+                                     PRInt32          aFirstColIndex,
+                                     PRBool           aResetSubsequentColIndices,
+                                     nsIFrame*        aFirstFrame,
+                                     nsIFrame*        aLastFrame)
 {
-  nsCOMPtr<nsIPresShell> shell;
-  aPresContext->GetShell(getter_AddRefs(shell));
-  nsresult rv=NS_OK;
-  nsTableFrame* tableFrame=nsnull;
+  nsresult rv = NS_OK;
+  nsTableFrame* tableFrame = nsnull;
   rv = nsTableFrame::GetTableFrame(this, tableFrame);
-  if ((NS_SUCCEEDED(rv)) && (nsnull!=tableFrame)) {
-    // Process the newly added column frames
-    for (nsIFrame* kidFrame = aChildList; nsnull != kidFrame; kidFrame->GetNextSibling(&kidFrame)) {
-      const nsStyleDisplay* display;
-      kidFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)display);
-      if (NS_STYLE_DISPLAY_TABLE_COLUMN == display->mDisplay) {
-        // Set the preliminary values for the column frame
-        PRInt32 colIndex = mStartColIndex + mColCount;
-        ((nsTableColFrame *)(kidFrame))->InitColFrame (colIndex);
-        PRInt32 repeat = ((nsTableColFrame *)(kidFrame))->GetSpan();
-        mColCount += repeat;
-        for (PRInt32 i=0; i<repeat; i++) {
-          tableFrame->AddColumnFrame((nsTableColFrame *)kidFrame);
-        }
-      }
-    }
-    // colgroup's span attribute is how many columns the group represents
-    // in the absence of any COL children
-    // Note that this is the correct, though perhaps unexpected, behavior for the span attribute.  
-    // The spec says that if there are any COL children, the colgroup's span is ignored.
-    if (0==mColCount)
-    {
-      nsIFrame *firstImplicitColFrame=nsnull;
-      nsIFrame *prevColFrame=nsnull;
-      nsAutoString colTag;
-      nsHTMLAtoms::col->ToString(colTag);
-      mColCount = GetSpan();
-      for (PRInt32 colIndex=0; colIndex<mColCount; colIndex++)
-      {
-        nsIHTMLContent *col=nsnull;
-        // create an implicit col
-        rv = NS_CreateHTMLElement(&col, colTag);  // ADDREF: col++
-        //XXX mark the col implicit
-        mContent->AppendChildTo((nsIContent*)col, PR_FALSE);
-
-        // Create a new col frame
-        nsIFrame* colFrame;
-        NS_NewTableColFrame(shell, &colFrame);
-
-        // Set its style context
-        nsCOMPtr<nsIStyleContext> colStyleContext;
-        aPresContext->ResolveStyleContextFor(col, mStyleContext,
-                                            PR_TRUE,
-                                            getter_AddRefs(colStyleContext));
-        colFrame->Init(aPresContext, col, this, colStyleContext, nsnull);
-        colFrame->SetInitialChildList(aPresContext, nsnull, nsnull);
-
-        // Set nsColFrame-specific information
-        PRInt32 absColIndex = mStartColIndex + colIndex;
-        ((nsTableColFrame *)(colFrame))->InitColFrame (absColIndex);
-        ((nsTableColFrame *)colFrame)->SetColumnIndex(absColIndex);
-        tableFrame->AddColumnFrame((nsTableColFrame *)colFrame);
-
-        //hook into list of children
-        if (nsnull==firstImplicitColFrame)
-          firstImplicitColFrame = colFrame;
-        else
-          prevColFrame->SetNextSibling(colFrame);
-        prevColFrame = colFrame;
-      }
-
-      // hook new columns into col group child list
-      mFrames.AppendFrames(nsnull, firstImplicitColFrame);
-    }
-    SetStyleContextForFirstPass(aPresContext);
+  if (!(NS_SUCCEEDED(rv)  && tableFrame && aFirstFrame)) {
+    return rv;
   }
+
+  // set the col indices of the col frames and and add col info to the table
+  PRInt32 colIndex = aFirstColIndex;
+  nsIFrame* kidFrame = aFirstFrame;
+  PRBool foundLastFrame = PR_FALSE;
+  while (kidFrame) {
+    nsIAtom* kidType;
+    kidFrame->GetFrameType(&kidType);
+    if (nsLayoutAtoms::tableColFrame == kidType) {
+      ((nsTableColFrame*)kidFrame)->SetColIndex(colIndex);
+      if (!foundLastFrame) {
+        tableFrame->InsertCol(aPresContext, (nsTableColFrame &)*kidFrame, colIndex);
+        mColCount++;
+      }
+      colIndex++;
+    }
+    NS_IF_RELEASE(kidType);
+    if (kidFrame == aLastFrame) {
+      foundLastFrame = PR_TRUE;
+    }
+    kidFrame->GetNextSibling(&kidFrame); 
+  }
+
+  if (aResetSubsequentColIndices) {
+    nsIFrame* nextSibling;
+    GetNextSibling(&nextSibling);
+    if (nextSibling) {
+      ResetColIndices(nextSibling, colIndex);
+    }
+  }
+
   return rv;
 }
 
-NS_IMETHODIMP
-nsTableColGroupFrame::AppendNewFrames(nsIPresContext* aPresContext, nsIFrame* aChildList)
+// this is called when a col frame doesn't have an explicit col group parent.
+nsTableColGroupFrame* 
+nsTableColGroupFrame::FindParentForAppendedCol(nsTableFrame*  aTableFrame, 
+                                               nsTableColType aColType)
 {
-  if (nsnull!=aChildList)
-    mFrames.AppendFrames(nsnull, aChildList);
-  return NS_OK;
+  nsVoidArray& cols = aTableFrame->GetColCache();
+  PRInt32 numCols = cols.Count();
+  nsIFrame* lastColGroup;
+  nsIFrame* lastCol = (nsIFrame*)cols.ElementAt(numCols - 1);
+  if (!lastCol) return nsnull; // no columns so no colgroups
+  lastCol->GetParent(&lastColGroup);
+  if (!lastColGroup) return nsnull; // shouldn't happen
+ 
+  nsTableColGroupFrame* relevantColGroup = (nsTableColGroupFrame *)lastColGroup;
+  nsTableColGroupType relevantColGroupType = relevantColGroup->GetType();
+  if (eColGroupAnonymousCell == relevantColGroupType) {
+    if (eColAnonymousCell == aColType) {
+      return relevantColGroup;
+    }
+    else {
+      // find the next to last col group
+      for (PRInt32 colX = numCols - 2; colX >= 0; colX--) {
+        nsTableColFrame* colFrame = (nsTableColFrame*)cols.ElementAt(colX);
+        nsTableColGroupFrame* colGroupFrame;
+        colFrame->GetParent((nsIFrame**)&colGroupFrame);
+        nsTableColGroupType cgType = colGroupFrame->GetType();
+        if (cgType != relevantColGroupType) {
+          relevantColGroup = colGroupFrame;
+          relevantColGroupType = cgType;
+          break;
+        }
+        else if (0 == colX) {
+          return nsnull;
+        }
+      }
+    }
+  }
+
+  if (eColGroupAnonymousCol == relevantColGroupType) {
+    if ((eColContent == aColType) || (eColAnonymousCol == aColType)) {
+      return relevantColGroup;
+    }
+  }
+
+  return nsnull;
 }
 
+PRBool
+nsTableColGroupFrame::GetLastRealColGroup(nsTableFrame* aTableFrame, 
+                                          nsIFrame**    aLastColGroup)
+{
+  *aLastColGroup = nsnull;
+  nsFrameList colGroups = aTableFrame->GetColGroups();
+
+  nsIFrame* nextToLastColGroup = nsnull;
+  nsIFrame* lastColGroup       = colGroups.FirstChild();
+  while(lastColGroup) {
+    nsIFrame* next;
+    lastColGroup->GetNextSibling(&next);
+    if (next) {
+      nextToLastColGroup = lastColGroup;
+      lastColGroup = next;
+    }
+    else {
+      break;
+    }
+  }
+
+  if (!lastColGroup) return PR_TRUE; // there are no col group frames
+ 
+  nsTableColGroupType lastColGroupType = ((nsTableColGroupFrame *)lastColGroup)->GetType();
+  if (eColGroupAnonymousCell == lastColGroupType) {
+    *aLastColGroup = nextToLastColGroup;
+    return PR_FALSE;
+  }
+  else {
+    *aLastColGroup = lastColGroup;
+    return PR_TRUE;
+  }
+}
+
+// don't set mColCount here, it is done in AddColsToTable
 NS_IMETHODIMP
 nsTableColGroupFrame::SetInitialChildList(nsIPresContext* aPresContext,
                                           nsIAtom*        aListName,
                                           nsIFrame*       aChildList)
 {
-  nsresult result = AppendNewFrames(aPresContext, aChildList);
-  if (NS_OK==result)
-    result = InitNewFrames(aPresContext, aChildList);
-  return result;
+  nsTableFrame* tableFrame;
+  nsTableFrame::GetTableFrame(this, tableFrame);
+  if (!aChildList) {
+    nsIFrame* firstChild;
+    tableFrame->CreateAnonymousColFrames(*aPresContext, *this, GetSpan(), eColAnonymousColGroup, 
+                                         PR_FALSE, nsnull, &firstChild);
+    if (firstChild) {
+      SetInitialChildList(aPresContext, aListName, firstChild);
+    }
+    return NS_OK; 
+  }
+
+  nsIFrame* kidFrame = aChildList;
+  while (kidFrame) {
+    nsIAtom* kidType;
+    kidFrame->GetFrameType(&kidType);
+    if (nsLayoutAtoms::tableColFrame == kidType) {
+      // Set the preliminary values for the column frame
+      PRInt32 span = ((nsTableColFrame*)kidFrame)->GetSpan();
+      if (span > 1) {
+        nsTableColFrame* firstSpannedCol;
+        tableFrame->CreateAnonymousColFrames(*aPresContext, *this, span - 1, eColAnonymousCol,
+                                             PR_FALSE, (nsTableColFrame*)kidFrame, (nsIFrame **)&firstSpannedCol);
+        nsIFrame* spanner = kidFrame;
+        kidFrame->GetNextSibling(&kidFrame); // need to do this before we insert the new frames
+        nsFrameList newChildren(aChildList); // used as a convience to hook up siblings
+        newChildren.InsertFrames(this, (nsTableColFrame*)spanner, (nsIFrame *)firstSpannedCol);
+        NS_RELEASE(kidType);
+        continue;
+      }
+    }
+    NS_IF_RELEASE(kidType);
+    kidFrame->GetNextSibling(&kidFrame); 
+  }
+
+  mFrames.AppendFrames(this, aChildList);
+  return NS_OK;
 }
 
 // Helper function. It marks the table frame as dirty and generates
@@ -173,35 +303,8 @@ nsTableColGroupFrame::AppendFrames(nsIPresContext* aPresContext,
                                    nsIAtom*        aListName,
                                    nsIFrame*       aFrameList)
 {
-  // Append the new frames to our child list
-  mFrames.AppendFrames(nsnull, aFrameList);
-  
-  // Reset the starting column index of the col groups that follow
-  PRInt32 startingColIndex = mStartColIndex;
-  startingColIndex += GetColumnCount(); // has the side effect of resetting all column indexes
-
-  nsIFrame *nextColGroupFrame=nsnull;
-  GetNextSibling(&nextColGroupFrame);
-  while (nextColGroupFrame)
-  {
-    const nsStyleDisplay *display;
-    nextColGroupFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)display);
-    if (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == display->mDisplay)
-    {
-      startingColIndex += ((nsTableColGroupFrame *)nextColGroupFrame)->SetStartColumnIndex(startingColIndex);
-    }
-    nextColGroupFrame->GetNextSibling(&nextColGroupFrame);
-  }
-
-  // Today we need to rebuild the whole column cache.
-  // If the table frame is ever recoded to build the column cache incrementally,
-  // we could take advantage of that here
-  nsTableFrame* tableFrame;
-  nsTableFrame::GetTableFrame(this, tableFrame);
-  tableFrame->InvalidateColumnCache();
-  
-  // Generate a reflow command so we reflow the table
-  AddTableDirtyReflowCommand(aPresContext, aPresShell, tableFrame);
+  mFrames.AppendFrames(this, aFrameList);
+  InsertColsReflow(*aPresContext, aPresShell, mColCount, aFrameList);
   return NS_OK;
 }
 
@@ -209,40 +312,90 @@ NS_IMETHODIMP
 nsTableColGroupFrame::InsertFrames(nsIPresContext* aPresContext,
                                    nsIPresShell&   aPresShell,
                                    nsIAtom*        aListName,
-                                   nsIFrame*       aPrevFrame,
+                                   nsIFrame*       aPrevFrameIn,
                                    nsIFrame*       aFrameList)
 {
-  // Insert the new frames into our child list
-  mFrames.InsertFrames(nsnull, aPrevFrame, aFrameList);
+  nsFrameList frames(aFrameList); // convience for getting last frame
+  nsIFrame* lastFrame = frames.LastChild();
 
-  // Reset the starting column index of the col groups that follow
-  PRInt32 startingColIndex=mStartColIndex;
-  startingColIndex += GetColumnCount(); // has the side effect of resetting all column indexes
+  mFrames.InsertFrames(this, aPrevFrameIn, aFrameList);
+  nsIFrame* prevFrame = nsTableFrame::GetFrameAtOrBefore(this, aPrevFrameIn, 
+                                                         nsLayoutAtoms::tableColFrame);
 
-  nsIFrame *nextColGroupFrame=nsnull;
-  GetNextSibling(&nextColGroupFrame);
-  while (nextColGroupFrame)
-  {
-    const nsStyleDisplay *display;
-    nextColGroupFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)display);
-    if (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == display->mDisplay)
-    {
-      startingColIndex += ((nsTableColGroupFrame *)nextColGroupFrame)->SetStartColumnIndex(startingColIndex);
-    }
-    nextColGroupFrame->GetNextSibling(&nextColGroupFrame);
-  }
+  PRInt32 colIndex = (prevFrame) ? ((nsTableColFrame*)prevFrame)->GetColIndex() + 1 : 0;
+  InsertColsReflow(*aPresContext, aPresShell, colIndex, aFrameList, lastFrame);
 
-  // Today we need to rebuild the whole column cache.
-  // If the table frame is ever recoded to build the column cache incrementally,
-  // we could take advantage of that here.
-  nsTableFrame* tableFrame;
-  nsTableFrame::GetTableFrame(this, tableFrame);
-  tableFrame->InvalidateColumnCache();
-
-  // Generate a reflow command so we reflow the table
-  AddTableDirtyReflowCommand(aPresContext, aPresShell, tableFrame);
   return NS_OK;
 }
+
+void
+nsTableColGroupFrame::InsertColsReflow(nsIPresContext& aPresContext,
+                                       nsIPresShell&   aPresShell,
+                                       PRInt32         aColIndex,
+                                       nsIFrame*       aFirstFrame,
+                                       nsIFrame*       aLastFrame)
+{
+  AddColsToTable(aPresContext, aColIndex, PR_TRUE, aFirstFrame, aLastFrame);
+
+  nsTableFrame* tableFrame;
+  nsTableFrame::GetTableFrame(this, tableFrame);
+  tableFrame->InvalidateColumnWidths();
+
+  // Generate a reflow command so we reflow the table
+  AddTableDirtyReflowCommand(&aPresContext, aPresShell, tableFrame);
+}
+
+void
+nsTableColGroupFrame::RemoveChild(nsIPresContext&  aPresContext,
+                                  nsTableColFrame& aChild,
+                                  PRBool           aResetColIndices)
+{
+  PRInt32 colIndex = 0;
+  nsIFrame* nextChild = nsnull;
+  if (aResetColIndices) {
+    colIndex = aChild.GetColIndex();
+    aChild.GetNextSibling(&nextChild);
+  }
+  if (mFrames.DestroyFrame(&aPresContext, (nsIFrame*)&aChild)) {
+    mColCount--;
+    if (aResetColIndices) {
+      ResetColIndices(this, colIndex, nextChild);
+    }
+  }
+}
+
+// this removes children form the last col group (eColGroupAnonymousCell) in the 
+// table only,so there is no need to reset col indices for subsequent col groups.
+void
+nsTableColGroupFrame::RemoveChildrenAtEnd(nsIPresContext& aPresContext,
+                                          PRInt32         aNumChildrenToRemove)
+{
+  PRInt32 numToRemove = aNumChildrenToRemove;
+  if (numToRemove > mColCount) {
+    NS_ASSERTION(PR_FALSE, "invalid arg to RemoveChildrenAtEnd");
+    numToRemove = mColCount;
+  }
+  PRInt32 offsetOfFirstRemoval = mColCount - numToRemove;
+  PRInt32 offsetX = 0;
+  nsIFrame* kidFrame = mFrames.FirstChild();
+  while(kidFrame) {
+    nsIAtom* kidType;
+    kidFrame->GetFrameType(&kidType);
+    if (nsLayoutAtoms::tableColFrame == kidType) {
+      offsetX++;
+      if (offsetX > offsetOfFirstRemoval) {
+        nsIFrame* byebye = kidFrame;
+        kidFrame->GetNextSibling(&kidFrame);
+        mFrames.DestroyFrame(&aPresContext, byebye);
+        NS_RELEASE(kidType);
+        continue;
+      }
+    }
+    NS_IF_RELEASE(kidType);
+    kidFrame->GetNextSibling(&kidFrame);
+  }
+}
+
 
 NS_IMETHODIMP
 nsTableColGroupFrame::RemoveFrame(nsIPresContext* aPresContext,
@@ -250,35 +403,30 @@ nsTableColGroupFrame::RemoveFrame(nsIPresContext* aPresContext,
                                   nsIAtom*        aListName,
                                   nsIFrame*       aOldFrame)
 {
-  // Remove the frame from our child list
-  mFrames.DestroyFrame(aPresContext, aOldFrame);
+  if (!aOldFrame) return NS_OK;
 
-  // Reset the starting column index of the col groups that follow
-  PRInt32 startingColIndex=mStartColIndex;
-  startingColIndex += GetColumnCount(); // has the side effect of resetting all column indexes
-
-  nsIFrame *nextColGroupFrame=nsnull;
-  GetNextSibling(&nextColGroupFrame);
-  while (nextColGroupFrame)
-  {
-    const nsStyleDisplay *display;
-    nextColGroupFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)display);
-    if (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == display->mDisplay)
-    {
-      startingColIndex += ((nsTableColGroupFrame *)nextColGroupFrame)->SetStartColumnIndex(startingColIndex);
+  nsIAtom* frameType = nsnull;
+  aOldFrame->GetFrameType(&frameType);
+  if (nsLayoutAtoms::tableColFrame == frameType) {
+    nsTableColFrame* colFrame = (nsTableColFrame*)aOldFrame;
+    PRInt32 colIndex = colFrame->GetColIndex();
+    RemoveChild(*aPresContext, *colFrame, PR_TRUE);
+    
+    nsTableFrame* tableFrame;
+    nsTableFrame::GetTableFrame(this, tableFrame);
+    if (tableFrame) {
+      tableFrame->RemoveCol(*aPresContext, this, colIndex, PR_TRUE, PR_TRUE);
     }
-    nextColGroupFrame->GetNextSibling(&nextColGroupFrame);
+
+    tableFrame->InvalidateColumnWidths();
+    // Generate a reflow command so we reflow the table
+    AddTableDirtyReflowCommand(aPresContext, aPresShell, tableFrame);
   }
+  else {
+    mFrames.DestroyFrame(aPresContext, aOldFrame);
+  }
+  NS_IF_RELEASE(frameType);
 
-  // Today we need to rebuild the whole column cache.
-  // If the table frame is ever recoded to build the column cache incrementally,
-  // we could take advantage of that here
-  nsTableFrame* tableFrame;
-  nsTableFrame::GetTableFrame(this, tableFrame);
-  tableFrame->InvalidateColumnCache();
-
-  // Generate a reflow command so we reflow the table
-  AddTableDirtyReflowCommand(aPresContext, aPresShell, tableFrame);
   return NS_OK;
 }
 
@@ -429,11 +577,10 @@ NS_METHOD nsTableColGroupFrame::IR_StyleChanged(nsIPresContext*          aPresCo
   nsresult rv = NS_OK;
   // we presume that all the easy optimizations were done in the nsHTMLStyleSheet before we were called here
   // XXX: we can optimize this when we know which style attribute changed
-  nsTableFrame* tableFrame=nsnull;
+  nsTableFrame* tableFrame = nsnull;
   rv = nsTableFrame::GetTableFrame(this, tableFrame);
-  if ((NS_SUCCEEDED(rv)) && (nsnull!=tableFrame))
-  {
-    tableFrame->InvalidateColumnCache();
+  if ((NS_SUCCEEDED(rv)) && tableFrame)  {
+    tableFrame->InvalidateColumnWidths();
     tableFrame->InvalidateFirstPassCache();
   }
   return rv;
@@ -448,7 +595,7 @@ NS_METHOD nsTableColGroupFrame::IR_TargetIsChild(nsIPresContext*          aPresC
   nsresult rv;
  
   // Remember the old col count
-  const PRInt32 oldColCount = GetColumnCount();
+  const PRInt32 oldColCount = GetColCount();
 
   // Pass along the reflow command
   nsHTMLReflowMetrics desiredSize(nsnull);
@@ -462,134 +609,14 @@ NS_METHOD nsTableColGroupFrame::IR_TargetIsChild(nsIPresContext*          aPresC
 
   nsTableFrame *tableFrame=nsnull;
   rv = nsTableFrame::GetTableFrame(this, tableFrame);
-  if ((NS_SUCCEEDED(rv)) && (nsnull!=tableFrame))
-  {
+  if ((NS_SUCCEEDED(rv)) && (nsnull!=tableFrame)) {
     // compare the new col count to the old col count.  
     // If they are the same, we just need to rebalance column widths
     // If they differ, we need to fix up other column groups and the column cache
-    const PRInt32 newColCount = GetColumnCount(); // this will set the new column indexes if necessary
-    if (oldColCount==newColCount)
-      tableFrame->InvalidateColumnWidths();
-    else
-      tableFrame->InvalidateColumnCache();
+    const PRInt32 newColCount = GetColCount(); 
+    tableFrame->InvalidateColumnWidths();
   }
   return rv;
-}
-
-// Subclass hook for style post processing
-NS_METHOD nsTableColGroupFrame::SetStyleContextForFirstPass(nsIPresContext* aPresContext)
-{
-  // get the table frame
-  nsTableFrame* tableFrame=nsnull;
-  nsresult rv = nsTableFrame::GetTableFrame(this, tableFrame);
-  if ((NS_SUCCEEDED(rv)) && (nsnull!=tableFrame))
-  {  
-    // get the style for the table frame
-    const nsStyleTable *tableStyle;
-    tableFrame->GetStyleData(eStyleStruct_Table, (const nsStyleStruct *&)tableStyle);
-
-    // if COLS is set, then map it into the COL frames
-    if (NS_STYLE_TABLE_COLS_NONE != tableStyle->mCols)
-    {
-      // set numCols to the number of columns effected by the COLS attribute
-      PRInt32 numCols=0;
-      if (NS_STYLE_TABLE_COLS_ALL == tableStyle->mCols)
-        numCols = mFrames.GetLength();
-      else 
-        numCols = tableStyle->mCols;
-
-      // for every column effected, set its width style
-      PRInt32 colIndex=0;
-      nsIFrame *colFrame=mFrames.FirstChild();
-      while (nsnull!=colFrame)
-      {
-        const nsStyleDisplay * colDisplay=nsnull;
-        colFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)colDisplay));
-        if (NS_STYLE_DISPLAY_TABLE_COLUMN == colDisplay->mDisplay)
-        {
-          nsCOMPtr<nsIStyleContext> colStyleContext;
-          nsStylePosition * colPosition=nsnull;
-          colFrame->GetStyleContext(getter_AddRefs(colStyleContext));
-          colPosition = (nsStylePosition*)colStyleContext->GetMutableStyleData(eStyleStruct_Position);
-          if (colIndex<numCols)
-          {
-            nsStyleCoord width (1, eStyleUnit_Proportional);
-            colPosition->mWidth = width;
-          }
-          else
-          {
-            colPosition->mWidth.SetCoordValue(0);
-          }
-          colStyleContext->RecalcAutomaticData(aPresContext);
-          colIndex++;
-        }
-        colFrame->GetNextSibling(&colFrame);
-      }
-    }
-    else
-    {
-      // propagate the colgroup width attribute down to the columns if they have no width of their own
-      nsStylePosition* position = (nsStylePosition*)mStyleContext->GetStyleData(eStyleStruct_Position);
-      if (eStyleUnit_Null!=position->mWidth.GetUnit())
-      {
-        // now for every column that doesn't have it's own width, set the width style
-        nsIFrame *colFrame=mFrames.FirstChild();
-        while (nsnull!=colFrame)
-        {
-          const nsStyleDisplay * colDisplay=nsnull;
-          colFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)colDisplay));
-          if (NS_STYLE_DISPLAY_TABLE_COLUMN == colDisplay->mDisplay)
-          {
-            nsCOMPtr<nsIStyleContext> colStyleContext;
-            const nsStylePosition * colPosition=nsnull;
-            colFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct *&)colPosition); // get a read-only version of the style context
-            //XXX: how do I know this is auto because it's defaulted, vs. set explicitly to "auto"?
-            if (eStyleUnit_Auto==colPosition->mWidth.GetUnit())
-            {
-              // notice how we defer getting a mutable style context until we're sure we really need one
-              colFrame->GetStyleContext(getter_AddRefs(colStyleContext));
-              nsStylePosition * mutableColPosition = (nsStylePosition*)colStyleContext->GetMutableStyleData(eStyleStruct_Position);
-              mutableColPosition->mWidth = position->mWidth;
-              colStyleContext->RecalcAutomaticData(aPresContext);
-            }
-          }
-          colFrame->GetNextSibling(&colFrame);
-        }
-      }
-    }
-    //mStyleContext->RecalcAutomaticData(aPresContext);
-  }
-  return rv;
-}
-
-
-/** returns the number of columns represented by this group.
-  * if there are col children, count them (taking into account the span of each)
-  * else, check my own span attribute.
-  */
-int nsTableColGroupFrame::GetColumnCount ()
-{
-  mColCount=0;
-  nsIFrame *childFrame = mFrames.FirstChild();
-  while (nsnull!=childFrame)
-  {
-    const nsStyleDisplay *childDisplay;
-    childFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
-    if (NS_STYLE_DISPLAY_TABLE_COLUMN == childDisplay->mDisplay)
-    {
-      nsTableColFrame *col = (nsTableColFrame *)childFrame;
-      col->SetColumnIndex (mStartColIndex + mColCount);
-      mColCount += col->GetSpan();
-    }
-    childFrame->GetNextSibling(&childFrame);
-  }
-  if (0==mColCount)
-  { // there were no children of this colgroup that were columns.  So use my span attribute
-    const nsStyleTable *tableStyle;
-    GetStyleData(eStyleStruct_Table, (const nsStyleStruct *&)tableStyle);
-    mColCount = tableStyle->mSpan;
-  }
-  return mColCount;
 }
 
 nsTableColFrame * nsTableColGroupFrame::GetFirstColumn()
@@ -642,27 +669,25 @@ nsTableColFrame * nsTableColGroupFrame::GetColumnAt (PRInt32 aColIndex)
 
 PRInt32 nsTableColGroupFrame::GetSpan()
 {
-  PRInt32 span=1;
-  const nsStyleTable* tableStyle=nsnull;
-  GetStyleData(eStyleStruct_Table, (const nsStyleStruct *&)tableStyle);    
-  if (nsnull!=tableStyle)
-  {
-    span = tableStyle->mSpan;
+  PRInt32 span = 1;
+  nsCOMPtr<nsIContent> iContent;
+  nsresult rv = GetContent(getter_AddRefs(iContent));
+  if (NS_FAILED(rv) || !iContent) return rv;
+
+  // col group element derives from col element
+  nsIDOMHTMLTableColElement* cgContent = nsnull;
+  rv = iContent->QueryInterface(kIDOMHTMLTableColElementIID, 
+                               (void **)&cgContent);  
+  if (cgContent && NS_SUCCEEDED(rv)) { 
+    cgContent->GetSpan(&span);
+    // XXX why does this work!!
+    if (span == -1) {
+      span = 1;
+    }
+    NS_RELEASE(cgContent);
   }
   return span;
 }
-
-/* this may be needed when IsSynthetic is properly implemented 
-PRBool nsTableColGroupFrame::IsManufactured()
-{
-  PRBool result = PR_FALSE;
-  nsIFrame *firstCol =  GetFirstColumn();
-  if (nsTableFrame::IsSynthetic(this) && 
-      ((nsnull==firstCol) || nsTableFrame::IsSynthetic(firstCol)))
-    result = PR_TRUE;
-  return result;
-}
-*/
 
 /** returns colcount because it is frequently used in the context of 
   * shuffling relative colgroup order, and it's convenient to not have to
@@ -671,13 +696,39 @@ PRBool nsTableColGroupFrame::IsManufactured()
 PRInt32 nsTableColGroupFrame::SetStartColumnIndex (int aIndex)
 {
   PRInt32 result = mColCount;
-  if (aIndex != mStartColIndex)
-  {  
+  if (aIndex != mStartColIndex) {  
     mStartColIndex = aIndex;
-    mColCount=0;
-    result = GetColumnCount(); // has the side effect of setting each column index based on new start index
+    result = GetColCount(); 
   }
   return result;
+}
+
+
+// this could be optimized by using col group frame starting indicies, 
+// but typically there aren't enough very large col groups for the added complexity.
+nsTableColGroupFrame* 
+nsTableColGroupFrame::GetColGroupFrameContaining(nsFrameList&     aColGroupList,
+                                                 nsTableColFrame& aColFrame)
+{
+  nsIFrame* childFrame = aColGroupList.FirstChild();
+  while (childFrame) { 
+    nsIAtom* frameType = nsnull;
+    childFrame->GetFrameType(&frameType);
+    if (nsLayoutAtoms::tableColGroupFrame == frameType) {
+      nsTableColFrame* colFrame = nsnull;
+      childFrame->FirstChild(nsnull, (nsIFrame **)&colFrame);
+      while (colFrame) {
+        if (colFrame = &aColFrame) {
+          NS_RELEASE(frameType);
+          return (nsTableColGroupFrame *)childFrame;
+        }
+        colFrame->GetNextSibling((nsIFrame **)&colFrame);
+      }
+    }
+    NS_IF_RELEASE(frameType);
+    childFrame->GetNextSibling(&childFrame);
+  }
+  return nsnull;
 }
 
 void nsTableColGroupFrame::DeleteColFrame(nsIPresContext* aPresContext, nsTableColFrame* aColFrame)

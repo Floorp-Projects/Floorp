@@ -565,6 +565,7 @@ NS_METHOD nsTableRowGroupFrame::PullUpAllRowFrames(nsIPresContext* aPresContext)
 
 void nsTableRowGroupFrame::GetNextRowSibling(nsIFrame** aRowFrame)
 {
+  if (!*aRowFrame) return;
   GetNextFrame(*aRowFrame, aRowFrame);
   while(*aRowFrame) {
     const nsStyleDisplay *display;
@@ -596,7 +597,9 @@ void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext* aPresContext,
   PRBool  hasRowSpanningCell = PR_FALSE;
   PRInt32 numRows;
   GetRowCount(numRows, PR_FALSE);
+  if (numRows <= 0) return;
   nscoord *rowHeights = new nscoord[numRows];
+  if (!rowHeights) return;
   nsCRT::memset (rowHeights, 0, numRows*sizeof(nscoord));
 
   /* Step 1:  get the height of the tallest cell in the row and save it for
@@ -747,10 +750,11 @@ void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext* aPresContext,
           // If this is pass 2 then resize the row to its final size and move the
           // row's position if the previous rows have caused a shift
           if (1 == counter) {
-            nsRect  rowBounds;
-            rowFrame->GetRect(rowBounds);
+            PRBool movedFrame = (deltaY != 0);
+            nsRect rowBounds;
   
             // Move the row to the correct position
+            rowFrame->GetRect(rowBounds); // added
             rowBounds.y += deltaY;
   
             // Adjust our running delta
@@ -759,6 +763,17 @@ void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext* aPresContext,
             // Resize the row to its final size and position
             rowBounds.height = rowHeights[rowIndex];
             rowFrame->SetRect(aPresContext, rowBounds);
+
+            if (movedFrame) {
+              // Make sure any views are positioned properly
+              nsIView*  view;
+              rowFrame->GetView(aPresContext, &view);
+              if (view) {
+                nsContainerFrame::PositionFrameView(aPresContext, rowFrame, view);
+              } else {
+                nsContainerFrame::PositionChildViews(aPresContext, rowFrame);
+              }
+            }
           }
           
           rowIndex++;
@@ -1155,45 +1170,47 @@ nsTableRowGroupFrame::AddTableDirtyReflowCommand(nsIPresContext* aPresContext,
   return rv;
 }
 
+#if 0
+      // Reflow the new frames. They're already marked dirty, so generate a reflow
+      // command that tells us to reflow our dirty child frames
+      nsIReflowCommand* reflowCmd;
+
+      if (NS_SUCCEEDED(NS_NewHTMLReflowCommand(&reflowCmd, this,
+                                               nsIReflowCommand::ReflowDirty))) {
+        aPresShell.AppendReflowCommand(reflowCmd);
+        NS_RELEASE(reflowCmd);
+      }
+#endif
+
+// this does not get called for trees
 NS_IMETHODIMP
 nsTableRowGroupFrame::AppendFrames(nsIPresContext* aPresContext,
                                    nsIPresShell&   aPresShell,
                                    nsIAtom*        aListName,
                                    nsIFrame*       aFrameList)
 {
-  // Get the table frame
-  nsTableFrame* tableFrame;
-  nsTableFrame::GetTableFrame(this, tableFrame);
+  // collect the new row frames in an array
+  nsVoidArray rows;
+  for (nsIFrame* rowFrame = aFrameList; rowFrame; rowFrame->GetNextSibling(&rowFrame)) {
+    nsIAtom* frameType;
+    rowFrame->GetFrameType(&frameType);
+    if (nsLayoutAtoms::tableRowFrame == frameType) {
+      rows.AppendElement(rowFrame);
+    }
+    NS_IF_RELEASE(frameType);
+  }
 
-  // Append the frames
+  // Append the frames to the sibling chain
   mFrames.AppendFrames(nsnull, aFrameList);
 
-  const nsStyleDisplay *display;
-  aFrameList->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)display));
-  // See if the newly appended rows are the last rows in the table. 
-  // XXX is this the correct code path for nested row groups, considering that whitespace frames may exist currently
-  if ((NS_STYLE_DISPLAY_TABLE_ROW_GROUP != display->mDisplay) && NoRowsFollow()) {
-    // The rows we appended are the last rows in the table so incrementally
-    // add them to the cell map
-    PRBool haveRows = PR_FALSE;
-    for (nsIFrame* rowFrame = aFrameList; rowFrame; rowFrame->GetNextSibling(&rowFrame)) {
-      rowFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)display));
-      if (NS_STYLE_DISPLAY_TABLE_ROW == display->mDisplay) {
-        DidAppendRow((nsTableRowFrame*)rowFrame);
-        haveRows = PR_TRUE;
-      }
-    }
+  if (rows.Count() > 0) {
+    nsTableFrame* tableFrame = nsnull;
+    nsTableFrame::GetTableFrame(this, tableFrame);
+    if (tableFrame) {
+      tableFrame->AppendRows(*aPresContext, rows);
 
-    if (haveRows) {
-      // See if any implicit column frames need to be created as a result of
-      // adding the new rows
-      PRBool  createdColFrames;
-      tableFrame->EnsureColumns(aPresContext, createdColFrames);
-      if (createdColFrames) {
-        // We need to rebuild the column cache
-        // XXX It would be nice if this could be done incrementally
-        tableFrame->InvalidateColumnCache();
-      }
+      // Because the number of columns may have changed invalidate the column widths
+      tableFrame->InvalidateColumnWidths();
 
       // Reflow the new frames. They're already marked dirty, so generate a reflow
       // command that tells us to reflow our dirty child frames
@@ -1205,29 +1222,12 @@ nsTableRowGroupFrame::AppendFrames(nsIPresContext* aPresContext,
         NS_RELEASE(reflowCmd);
       }
     }
-  } else {
-    // We need to rebuild the cell map, because currently we can't insert
-    // new frames except at the end (append)
-    tableFrame->InvalidateCellMap();
-    
-    // We should try and avoid doing a pass1 reflow on all the cells and just
-    // do it for the newly added frames, but we need to add these frames to the
-    // cell map before we reflow them
-    tableFrame->InvalidateFirstPassCache();
-
-    // Because the number of columns may have changed invalidate the column
-    // cache. Note that this has the side effect of recomputing the column
-    // widths, so we don't need to call InvalidateColumnWidths()
-    tableFrame->InvalidateColumnCache();
-
-    // Generate a reflow command so we reflow the table itself. This will
-    // do a pass-1 reflow of all the rows including any rows we just added
-    AddTableDirtyReflowCommand(aPresContext, aPresShell, tableFrame);
   }
 
   return NS_OK;
 }
 
+// this does not get called for trees
 NS_IMETHODIMP
 nsTableRowGroupFrame::InsertFrames(nsIPresContext* aPresContext,
                                    nsIPresShell&   aPresShell,
@@ -1235,65 +1235,76 @@ nsTableRowGroupFrame::InsertFrames(nsIPresContext* aPresContext,
                                    nsIFrame*       aPrevFrame,
                                    nsIFrame*       aFrameList)
 {
-  // Get the table frame
-  nsTableFrame* tableFrame = nsnull;
-  nsTableFrame::GetTableFrame(this, tableFrame);
+  // collect the new row frames in an array
+  nsVoidArray rows;
+  for (nsIFrame* rowFrame = aFrameList; rowFrame; rowFrame->GetNextSibling(&rowFrame)) {
+    nsIAtom* frameType;
+    rowFrame->GetFrameType(&frameType);
+    if (nsLayoutAtoms::tableRowFrame == frameType) {
+      rows.AppendElement(rowFrame);
+    }
+    NS_IF_RELEASE(frameType);
+  }
 
-  // Insert the frames
+  // Insert the frames in the sibling chain
   mFrames.InsertFrames(nsnull, aPrevFrame, aFrameList);
 
-  // We need to rebuild the cell map, because currently we can't insert
-  // new frames except at the end (append)
-  tableFrame->InvalidateCellMap();
+  if (rows.Count() > 0) {
+    nsTableFrame* tableFrame = nsnull;
+    nsTableFrame::GetTableFrame(this, tableFrame);
+    if (tableFrame) {
+      nsTableRowFrame* prevRow = (nsTableRowFrame *)nsTableFrame::GetFrameAtOrBefore(this, aPrevFrame, nsLayoutAtoms::tableRowFrame);
+      PRInt32 rowIndex = (prevRow) ? prevRow->GetRowIndex() : 0;
+      tableFrame->InsertRows(*aPresContext, rows, rowIndex, PR_TRUE);
 
-  // We should try and avoid doing a pass1 reflow on all the cells and just
-  // do it for the newly added frames, but we need to add these frames to the
-  // cell map before we reflow them
-  tableFrame->InvalidateFirstPassCache();
+      // Reflow the new frames. They're already marked dirty, so generate a reflow
+      // command that tells us to reflow our dirty child frames
+      nsIReflowCommand* reflowCmd;
 
-  // Because the number of columns may have changed invalidate the column
-  // cache. Note that this has the side effect of recomputing the column
-  // widths, so we don't need to call InvalidateColumnWidths()
-  tableFrame->InvalidateColumnCache();
+      if (NS_SUCCEEDED(NS_NewHTMLReflowCommand(&reflowCmd, this,
+                                               nsIReflowCommand::ReflowDirty))) {
+        aPresShell.AppendReflowCommand(reflowCmd);
+        NS_RELEASE(reflowCmd);
+      }
 
-  // Generate a reflow command so we reflow the table itself. This will
-  // do a pass-1 reflow of all the rows including any rows we just added
-  AddTableDirtyReflowCommand(aPresContext, aPresShell, tableFrame);
+      // Because the number of columns may have changed invalidate the column widths
+      tableFrame->InvalidateColumnWidths();
+
+      // Generate a reflow command so we reflow the table itself. This will
+      // do a pass-1 reflow of all the rows including any rows we just added
+      AddTableDirtyReflowCommand(aPresContext, aPresShell, tableFrame);
+    }
+  }
+
   return NS_OK;
 }
 
+// this does not get called for trees
 NS_IMETHODIMP
 nsTableRowGroupFrame::RemoveFrame(nsIPresContext* aPresContext,
                                   nsIPresShell&   aPresShell,
                                   nsIAtom*        aListName,
                                   nsIFrame*       aOldFrame)
 {
-  const nsStyleDisplay *display;
-  aOldFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)display));
-  PRBool validChild = (NS_STYLE_DISPLAY_TABLE_ROW       == display->mDisplay) ||
-                      (NS_STYLE_DISPLAY_TABLE_ROW_GROUP == display->mDisplay); 
+  nsTableFrame* tableFrame = nsnull;
+  nsTableFrame::GetTableFrame(this, tableFrame);
+  if (tableFrame) {
+    nsIAtom* frameType;
+    aOldFrame->GetFrameType(&frameType);
+    if (nsLayoutAtoms::tableRowFrame == frameType) {
+      PRInt32 firstRowIndex = ((nsTableRowFrame *)aOldFrame)->GetRowIndex();
 
-  // Remove the frame and destroy it
-  if (mFrames.DestroyFrame(aPresContext, aOldFrame)) {
-    if (validChild) {
-      // Get the table frame
-      nsTableFrame* tableFrame = nsnull;
-      nsTableFrame::GetTableFrame(this, tableFrame);
-
-      // We need to rebuild the cell map, because currently we can't incrementally
-      // remove rows
-      tableFrame->InvalidateCellMap();
-      
-      // Because the number of columns may have changed invalidate the column
-      // cache. Note that this has the side effect of recomputing the column
-      // widths, so we don't need to call InvalidateColumnWidths()
-      tableFrame->InvalidateColumnCache();
+      tableFrame->RemoveRows(*aPresContext, firstRowIndex, 1, PR_TRUE);
+      // Because the number of columns may have changed invalidate the column widths
+      tableFrame->InvalidateColumnWidths();
 
       // Because we haven't added any new frames we don't need to do a pass1
       // reflow. Just generate a reflow command so we reflow the table itself
       AddTableDirtyReflowCommand(aPresContext, aPresShell, tableFrame);
     }
+    NS_IF_RELEASE(frameType);
   }
+  mFrames.DestroyFrame(aPresContext, aOldFrame);
 
   return NS_OK;
 }
@@ -1348,54 +1359,6 @@ NS_METHOD nsTableRowGroupFrame::IR_TargetIsMe(nsIPresContext*      aPresContext,
     aStatus = NS_FRAME_NOT_COMPLETE;
   }
   return rv;
-}
-
-NS_METHOD nsTableRowGroupFrame::DidAppendRow(nsTableRowFrame *aRowFrame)
-{
-  nsresult rv=NS_OK;
-  /* need to make space in the cell map.  Remeber that row spans can't cross row groups
-     once the space is made, tell the row to initizalize its children.  
-     it will automatically find the row to initialize into.
-     but this is tough because a cell in aInsertedFrame could have a rowspan
-     which must be respected if a subsequent row is appended.
-  */
-  rv = aRowFrame->InitChildren();
-  return rv;
-}
-
-// support method that tells us if there are any rows in the table after our rows
-// returns PR_TRUE if there are no rows after ours
-PRBool nsTableRowGroupFrame::NoRowsFollow()
-{
-  // XXX This method doesn't play well with the tree widget.
-  PRBool result = PR_TRUE;
-  nsIFrame *nextSib=nsnull;
-  GetNextSibling(&nextSib);
-  while (nsnull!=nextSib)
-  {
-    const nsStyleDisplay *sibDisplay;
-    nextSib->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)sibDisplay));
-    if ((NS_STYLE_DISPLAY_TABLE_HEADER_GROUP == sibDisplay->mDisplay) ||
-        (NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP == sibDisplay->mDisplay) ||
-        (NS_STYLE_DISPLAY_TABLE_ROW_GROUP    == sibDisplay->mDisplay))
-    {
-      nsIFrame *childFrame=nsnull;
-      nextSib->FirstChild(nsnull, &childFrame);
-      while (nsnull!=childFrame)
-      {
-        const nsStyleDisplay *childDisplay;
-        childFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
-        if (NS_STYLE_DISPLAY_TABLE_ROW == childDisplay->mDisplay)
-        { // found a row 
-          result = PR_FALSE;
-          break;
-        }
-        childFrame->GetNextSibling(&childFrame);
-      }
-    }
-    nextSib->GetNextSibling(&nextSib);
-  }
-  return result;
 }
 
 NS_METHOD nsTableRowGroupFrame::GetHeightOfRows(nscoord& aResult)

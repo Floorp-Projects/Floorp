@@ -27,6 +27,22 @@
 #include "nsVoidArray.h"
 class nsTableColFrame;
 class nsTableCellFrame;
+class nsIPresContext;
+
+// XXX the collapsing row and col data structures need to be moved 
+// into nsTableFrame. Collapsing cols are broken due to the recent
+// incremental cell map methods which don't attempt to update 
+// collapsing col info here.
+
+struct nsColInfo
+{
+  PRInt32 mNumCellsOrig; // number of cells originating in the col
+  PRInt32 mNumCellsSpan; // number of cells spanning into the col via colspans (not rowspans)
+
+  nsColInfo(); 
+  nsColInfo(PRInt32 aNumCellsOrig,
+            PRInt32 aNumCellsSpan);
+};
 
 /** nsCellMap is a support class for nsTablePart.  
   * It maintains an Rows x Columns grid onto which the cells of the table are mapped.
@@ -60,22 +76,28 @@ public:
   CellData* GetCellAt(PRInt32 aRowIndex, 
                       PRInt32 aColIndex) const;
 
-  /** insert a new row into the map
-      makes a blank row and adjusts spans
-    */
-  void InsertRowIntoMap(PRInt32 aRowIndex);
-  
-  /** removes a row from the map and adjusts spans
-    */
-  void RemoveRowFromMap(PRInt32 aRowIndex);
+  void AppendCol();
 
   /** append the cellFrame at the end of the row at aRowIndex and return the col index
     */
   PRInt32 AppendCell(nsTableCellFrame* aCellFrame, 
-                     PRInt32           aRowIndex);
+                     PRInt32           aRowIndex,
+                     PRBool            aRebuildIfNecessary);
+
+  void InsertCells(nsVoidArray& aCellFrames, 
+                   PRInt32     aRowIndex,
+                   PRInt32      aColIndexBefore);
 
   void RemoveCell(nsTableCellFrame* aCellFrame,
                   PRInt32           aRowIndex);
+
+  void InsertRows(nsVoidArray& aRows,
+                  PRInt32      aFirstRowIndex,
+                  PRBool       aConsiderSpans);
+
+  void RemoveRows(PRInt32 aFirstRowIndex,
+                  PRInt32 aNumRowsToRemove,
+                  PRBool  aConsiderSpans);
 
   PRInt32 GetNextAvailRowIndex();
 
@@ -102,17 +124,6 @@ public:
   /** return the actual number of rows in the table represented by this CellMap */
   PRInt32 GetRowCount() const;
 
-  /** return the column frame associated with aColIndex */
-  nsTableColFrame* GetColumnFrame(PRInt32 aColIndex) const;
-
-  /** add a column frame to the list of column frames
-    * column frames must be added in order
-		*/
-  void AppendColumnFrame(nsTableColFrame *aColFrame);
-
-  /** empty the column frame cache */
-  void ClearColumnCache();
-
   // temporary until nsTableFrame::GetCellData uses GetCellFrameAt
   nsTableCellFrame* GetCellFrameOriginatingAt(PRInt32 aRowX, 
                                               PRInt32 aColX) const;
@@ -123,6 +134,7 @@ public:
                                   PRInt32* aColSpan = nsnull) const;
 
   void AddColsAtEnd(PRUint32 aNumCols);
+  PRInt32 RemoveUnusedCols(PRInt32 aMaxNumToRemove);
 
   PRBool RowIsSpannedInto(PRInt32 aRowIndex) const;
   PRBool RowHasSpanningCells(PRInt32 aRowIndex) const;
@@ -156,23 +168,48 @@ protected:
   CellData* GetMapCellAt(PRInt32 aMapRowIndex, 
                          PRInt32 aColIndex) const;
 
-  PRInt32 GetNumCellsIn(PRInt32 aColIndex, 
-                        PRBool aOriginating) const;
+  PRInt32 GetNumCellsIn(PRInt32 aColIndex) const;
 
+  void ExpandWithRows(nsVoidArray& aRowFrames,
+                      PRInt32      aStartRowIndex);
+
+  void ExpandWithCells(nsVoidArray& aCellFrames,
+                       PRInt32      aRowIndex,
+                       PRInt32      aColIndex,
+                       PRInt32      aRowSpan);
+
+  void ShrinkWithoutRows(PRInt32 aFirstRowIndex,
+                         PRInt32 aNumRowsToRemove);
+
+  void ShrinkWithoutCell(nsTableCellFrame& aCellFrame,
+                         PRInt32           aRowIndex,
+                         PRInt32           aColIndex);
+
+  void RebuildConsideringRows(PRInt32      aStartRowIndex,
+                              nsVoidArray* aRowsToInsert,
+                              PRInt32      aNumRowsToRemove = 0);
+
+  void RebuildConsideringCells(nsVoidArray* aCellFrames,
+                               PRInt32      aRowIndex,
+                               PRInt32      aColIndex,
+                               PRBool       aInsert);
+
+  PRBool CellsSpanOut(nsVoidArray& aNewRows);
+
+  PRBool CellsSpanInOrOut(PRInt32 aStartRowIndex, 
+                          PRInt32 aEndRowIndex,
+                          PRInt32 aStartColIndex, 
+                          PRInt32 aEndColIndex);
+
+  PRBool CreateEmptyRow(PRInt32 aRowIndex,
+                        PRInt32 aNumCols);
   /** an array containing col array. It can be larger than mRowCount due to
     * row spans extending beyond the table */
   nsVoidArray mRows; 
 
-  /** an array of col frames. It is as large as mRowCount */
-  nsVoidArray mColFrames;
-
-  /** an array of PRInt32 indexed by row and giving the number of cells originating
-    * in each row. */
-  nsVoidArray mNumCellsOrigInRow;
-
-  /** an array of PRInt32 indexed by col and giving the number of cells originating
-    * in each col. */
-  nsVoidArray mNumCellsOrigInCol;
+  /** an array of nsColInfo indexed by col and giving the number of 
+    * cells originating and spanning each col. */
+  nsVoidArray mCols;
 
   // an array of booleans where the ith element indicates if the ith row is collapsed
   PRPackedBool* mIsCollapsedRows;
@@ -196,7 +233,7 @@ inline CellData* nsCellMap::GetCellAt(PRInt32 aRowIndex,
                                       PRInt32 aColIndex) const
 {
   if ((0 > aRowIndex) || (aRowIndex >= mRowCount) || 
-      (0 > aColIndex) || (aColIndex >= mNumCellsOrigInCol.Count())) {
+      (0 > aColIndex) || (aColIndex >= mCols.Count())) {
     //bug 9024 tickled this
     //printf("%s \n", "nsCellMap::GetCellAt called with invalid row or col index"); // XXX look at this when bug 10911 get fixed
     return nsnull;
@@ -213,7 +250,7 @@ inline CellData* nsCellMap::GetMapCellAt(PRInt32 aMapRowIndex,
                                          PRInt32 aColIndex) const
 {
   if ((0 > aMapRowIndex) || (aMapRowIndex >= mRows.Count()) || 
-      (0 > aColIndex) || (aColIndex >= mNumCellsOrigInCol.Count())) {
+      (0 > aColIndex) || (aColIndex >= mCols.Count())) {
     //see bug 9024 comments above 
     //printf("%s \n", "nsCellMap::GetMapCellAt called with invalid row or col index"); // XXX look at this when bug 10911 get fixed
     return nsnull;
@@ -228,7 +265,7 @@ inline CellData* nsCellMap::GetMapCellAt(PRInt32 aMapRowIndex,
 
 inline PRInt32 nsCellMap::GetColCount() const
 { 
-  return mNumCellsOrigInCol.Count();
+  return mCols.Count();
 }
 
 inline PRInt32 nsCellMap::GetRowCount() const
@@ -236,15 +273,16 @@ inline PRInt32 nsCellMap::GetRowCount() const
   return mRowCount; 
 }
 
-inline void nsCellMap::AppendColumnFrame(nsTableColFrame *aColFrame)
-{
-  mColFrames.AppendElement(aColFrame);
-}
+// nsColInfo
 
-inline void nsCellMap::ClearColumnCache()
-{
-  mColFrames.Clear();
-}
+inline nsColInfo::nsColInfo()
+ :mNumCellsOrig(0), mNumCellsSpan(0) 
+{}
+
+inline nsColInfo::nsColInfo(PRInt32 aNumCellsOrig,
+                            PRInt32 aNumCellsSpan)
+ :mNumCellsOrig(aNumCellsOrig), mNumCellsSpan(aNumCellsSpan) 
+{}
 
 
 #endif

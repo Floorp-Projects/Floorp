@@ -45,6 +45,28 @@
 #include "nsIDOMEventReceiver.h"
 #include "nsIDOMDragListener.h"
 #include "nsTreeItemDragCapturer.h"
+#include "nsLayoutAtoms.h"
+
+// I added the following function to improve keeping the frame 
+// chains in synch with the table. repackage as appropriate - karnaze
+void GetRowStartAndCount(nsIFrame* aFrame,
+                         PRInt32&  aStartRowIndex,
+                         PRInt32&  aNumRows)
+{
+  aStartRowIndex = -1; 
+  aNumRows = 0;
+  nsIAtom* fType;
+  aFrame->GetFrameType(&fType);
+  if (nsLayoutAtoms::tableRowFrame == fType) {
+    aStartRowIndex = ((nsTableRowFrame*)aFrame)->GetRowIndex();
+    aNumRows = 0;
+  }
+  else if (nsLayoutAtoms::tableRowGroupFrame == fType) { 
+    aStartRowIndex = ((nsTableRowGroupFrame*)aFrame)->GetStartRowIndex();
+    ((nsTableRowGroupFrame*)aFrame)->GetRowCount(aNumRows);
+  }
+  NS_IF_RELEASE(fType);
+}
 
 static nsILayoutHistoryState*
 GetStateStorageObject(nsTreeRowGroupFrame* aTreeRowGroupFrame, 
@@ -179,6 +201,7 @@ void nsTreeRowGroupFrame::DestroyRows(nsTableFrame* aTableFrame, nsIPresContext*
   // reduced.  A reflow will then pick up and create the new frames.
   nsIFrame* childFrame = GetFirstFrame();
   while (childFrame && rowsToLose > 0) {
+    PRBool rowIndex = -1; 
     if (IsTableRowGroupFrame(childFrame))
     {
       PRInt32 rowGroupCount;
@@ -196,16 +219,18 @@ void nsTreeRowGroupFrame::DestroyRows(nsTableFrame* aTableFrame, nsIPresContext*
     {
       // Lost a row.
       rowsToLose--;
-
-      // Remove this row from our cell map.
-      nsTableRowFrame* rowFrame = (nsTableRowFrame*)childFrame;
-      aTableFrame->RemoveRowFromMap(rowFrame, rowFrame->GetRowIndex());
+      rowIndex = ((nsTableRowFrame*)childFrame)->GetRowIndex();
     }
     
     nsIFrame* nextFrame;
     GetNextFrame(childFrame, &nextFrame);
     mFrameConstructor->RemoveMappingsForFrameSubtree(aPresContext, childFrame, GetStateStorageObject(this, aTableFrame));
     mFrames.DestroyFrame(aPresContext, childFrame);
+    // remove the row from the table after it is removed from the sibling chain
+    if (rowIndex >= 0) {
+      aTableFrame->RemoveRows(*aPresContext, rowIndex, 1, PR_FALSE);
+      aTableFrame->InvalidateColumnWidths();
+    }
     mTopFrame = childFrame = nextFrame;
   }
 }
@@ -216,6 +241,7 @@ void nsTreeRowGroupFrame::ReverseDestroyRows(nsTableFrame* aTableFrame, nsIPresC
   // reduced.  A reflow will then pick up and create the new frames.
   nsIFrame* childFrame = GetLastFrame();
   while (childFrame && rowsToLose > 0) {
+    PRInt32 rowIndex = -1;
     if (IsTableRowGroupFrame(childFrame))
     {
       PRInt32 rowGroupCount;
@@ -233,15 +259,18 @@ void nsTreeRowGroupFrame::ReverseDestroyRows(nsTableFrame* aTableFrame, nsIPresC
     {
       // Lost a row.
       rowsToLose--;
-      // Remove this row from our cell map.
-      nsTableRowFrame* rowFrame = (nsTableRowFrame*)childFrame;
-      aTableFrame->RemoveRowFromMap(rowFrame, rowFrame->GetRowIndex());
+      rowIndex = ((nsTableRowFrame*)childFrame)->GetRowIndex();
     }
     
     nsIFrame* prevFrame;
     prevFrame = mFrames.GetPrevSiblingFor(childFrame);
     mFrameConstructor->RemoveMappingsForFrameSubtree(aPresContext, childFrame, GetStateStorageObject(this, aTableFrame));
     mFrames.DestroyFrame(aPresContext, childFrame);
+    // remove the row from the table after it is removed from the sibling chain
+    if (rowIndex >= 0) {
+      aTableFrame->RemoveRows(*aPresContext, rowIndex, 1, PR_FALSE);
+      aTableFrame->InvalidateColumnWidths();
+    }
     mBottomFrame = childFrame = prevFrame;
   }
 }
@@ -714,9 +743,19 @@ nsTreeRowGroupFrame::PositionChanged(nsIPresContext* aPresContext, PRInt32 aOldI
     // Just blow away all our frames, but keep a content chain
     // as a hint to figure out how to build the frames.
     // Remove the scrollbar first.
+    // get the starting row index and row count
+    PRInt32 startRowIndex, numRows;
+    GetRowStartAndCount(this, startRowIndex, numRows);
+
     mFrameConstructor->RemoveMappingsForFrameSubtree(aPresContext, this, GetStateStorageObject(this, tableFrame));
     mFrames.DestroyFrames(aPresContext);
-    tableFrame->InvalidateCellMap();
+
+    // remove the rows from the table after removing from the sibling chain
+    if ((startRowIndex >= 0) && (numRows > 0)) {
+      tableFrame->RemoveRows(*aPresContext, startRowIndex, rowCount, PR_FALSE);
+      tableFrame->InvalidateColumnWidths();
+    }
+
     nsCOMPtr<nsIContent> topRowContent;
     FindRowContentAtIndex(aNewIndex, mContent, getter_AddRefs(topRowContent));
 
@@ -1189,9 +1228,11 @@ nsTreeRowGroupFrame::GetFirstFrameForReflow(nsIPresContext* aPresContext)
       
       FindPreviousRowContent(delta, rowContent, nsnull, getter_AddRefs(topRowContent));
 
-      AddRowToMap(tableFrame, aPresContext, topRowContent, mTopFrame);
-      
-      PostAppendRow(mTopFrame, aPresContext);
+      PRInt32 numColsAdded = AddRowToMap(tableFrame, *aPresContext, topRowContent, mTopFrame);
+      if (numColsAdded > 0) {
+        MarkTreeAsDirty(aPresContext, (nsTreeFrame*) tableFrame);
+      }
+      //PostAppendRow(mTopFrame, aPresContext, aTableFrame->GetColCount());
     }
     else if (IsTableRowGroupFrame(mTopFrame) && mContentChain) {
       // We have just instantiated a row group, and we have a content chain. This
@@ -1268,8 +1309,11 @@ nsTreeRowGroupFrame::GetNextFrameForReflow(nsIPresContext* aPresContext, nsIFram
           nsCOMPtr<nsIContent> topRowContent;
           PRInt32 delta = 1;
           FindPreviousRowContent(delta, nextContent, nsnull, getter_AddRefs(topRowContent));
-          AddRowToMap(tableFrame, aPresContext, topRowContent, (*aResult));
-          PostAppendRow(*aResult, aPresContext);
+          PRInt32 numColsAdded = AddRowToMap(tableFrame, *aPresContext, topRowContent, (*aResult));
+          if (numColsAdded > 0) {
+            MarkTreeAsDirty(aPresContext, (nsTreeFrame*) tableFrame);
+          }
+          //PostAppendRow(*aResult, aPresContext, tableFrame->GetColCount());
         }
       }
     }
@@ -1296,7 +1340,6 @@ nsTreeRowGroupFrame::TreeAppendFrames(nsIFrame* aFrameList)
   return NS_OK;
 }
 
-
 PRBool nsTreeRowGroupFrame::ContinueReflow(nsIPresContext* aPresContext, nscoord y, nscoord height) 
 { 
   //printf("Y is: %d\n", y);
@@ -1316,10 +1359,23 @@ PRBool nsTreeRowGroupFrame::ContinueReflow(nsIPresContext* aPresContext, nscoord
       nsIFrame* currFrame;
       startingPoint->GetNextSibling(&currFrame);
       while (currFrame) {
+        // get the starting row index and row count
+        PRInt32 startRowIndex, numRows;
+        GetRowStartAndCount(currFrame, startRowIndex, numRows);
+
         nsIFrame* nextFrame;
         currFrame->GetNextSibling(&nextFrame);
         mFrameConstructor->RemoveMappingsForFrameSubtree(aPresContext, currFrame, nsnull);
         mFrames.DestroyFrame(aPresContext, currFrame);
+
+        // remove the rows from the table after removing from the sibling chain
+        if ((startRowIndex >= 0) && (numRows > 0)) {
+          nsTableFrame* tableFrame;
+          nsTableFrame::GetTableFrame(this, tableFrame);
+          tableFrame->RemoveRows(*aPresContext, startRowIndex, numRows, PR_FALSE);
+          tableFrame->InvalidateColumnWidths();
+        }
+
         currFrame = nextFrame;
         //printf("Nuked one off the end.\n");
       }
@@ -1368,9 +1424,21 @@ void nsTreeRowGroupFrame::OnContentInserted(nsIPresContext* aPresContext, nsIFra
     currFrame->GetNextSibling(&nextFrame);
     mFrameConstructor->RemoveMappingsForFrameSubtree(aPresContext, currFrame, 
       GetStateStorageObject(this, NULL));
+    // get the starting row index and row count
+    PRInt32 startRowIndex, numRows;
+    GetRowStartAndCount(currFrame, startRowIndex, numRows);
+
     mFrames.DestroyFrame(aPresContext, currFrame);
     currFrame = nextFrame;
     //printf("Nuked one off the end.\n");
+
+    // remove the rows from the table after removing from the sibling chain
+    if ((startRowIndex >= 0) && (numRows > 0)) {
+      nsTableFrame* tableFrame;
+      nsTableFrame::GetTableFrame(this, tableFrame);
+      tableFrame->RemoveRows(*aPresContext, startRowIndex, numRows, PR_FALSE);
+      tableFrame->InvalidateColumnWidths();
+    }
   }
   OnContentAdded(aPresContext);
 	
@@ -1439,10 +1507,18 @@ void nsTreeRowGroupFrame::OnContentRemoved(nsIPresContext* aPresContext,
 
   // Go ahead and delete the frame.
   if (aChildFrame) {
+    // get the starting row index and row count
+    PRInt32 startRowIndex, numRows;
+    GetRowStartAndCount(aChildFrame, startRowIndex, numRows);
+
     mFrameConstructor->RemoveMappingsForFrameSubtree(aPresContext, aChildFrame, nsnull);
     mFrames.DestroyFrame(aPresContext, aChildFrame);
-    treeFrame->InvalidateCellMap();
-    treeFrame->InvalidateColumnCache();
+
+    // remove the rows from the table after removing from the sibling chain
+    if ((startRowIndex >= 0) && (numRows > 0)) {
+      treeFrame->RemoveRows(*aPresContext, startRowIndex, numRows, PR_FALSE);
+      treeFrame->InvalidateColumnWidths();
+    }
   }
 
   MarkTreeAsDirty(aPresContext, treeFrame);
@@ -1647,28 +1723,6 @@ nsTreeRowGroupFrame::GetCellFrameAtIndex(PRInt32 aRowIndex, PRInt32 aColIndex,
 #endif
 }
 
-void nsTreeRowGroupFrame::PostAppendRow(nsIFrame* aRowFrame, nsIPresContext* aPresContext)
-{
-  // shouldn't need this anymore
-  // DidAppendRow((nsTableRowFrame*)aRowFrame);
-
-  // Get the table frame.
-  nsTableFrame* tableFrame;
-  nsTableFrame::GetTableFrame(this, tableFrame);
-
-  // See if any implicit column frames need to be created as a result of
-  // adding the new rows
-  PRBool  createdColFrames;
-  tableFrame->EnsureColumns(aPresContext, createdColFrames);
-  if (createdColFrames) {
-    // We need to rebuild the column cache
-    // XXX It would be nice if this could be done incrementally
-    tableFrame->InvalidateColumnCache();
-
-    MarkTreeAsDirty(aPresContext, (nsTreeFrame*) tableFrame);
-  }
-}
-
 void nsTreeRowGroupFrame::ScrollByLines(nsIPresContext* aPresContext,
                                                  PRInt32 lines)
 {
@@ -1726,18 +1780,23 @@ nsTreeRowGroupFrame::MarkTreeAsDirty(nsIPresContext* aPresContext, nsTreeFrame* 
 
 
 // given a content node, insert a row into the cellmap
-// for wherever it belows in the map
-void
-nsTreeRowGroupFrame::AddRowToMap(nsTableFrame *aTableFrame,
-                                        nsIPresContext* aPresContext,
-                                        nsIContent *aContent,
-                                        nsIFrame* aCurrentFrame)
+// for wherever it belows in the map. Return the number of new colums that were added
+PRInt32
+nsTreeRowGroupFrame::AddRowToMap(nsTableFrame*   aTableFrame,
+                                 nsIPresContext& aPresContext,
+                                 nsIContent*     aContent,
+                                 nsIFrame*       aCurrentFrame)
 {
   PRInt32 insertionIndex =
-    GetInsertionIndexForContent(aTableFrame, aPresContext, aContent);
-  
-  aTableFrame->InsertRowIntoMap((nsTableRowFrame*)aCurrentFrame,
-                               insertionIndex);
+    GetInsertionIndexForContent(aTableFrame, &aPresContext, aContent);
+
+  PRInt32 numNewCols = 0;
+  if (aCurrentFrame) {
+    numNewCols = aTableFrame->InsertRow(aPresContext, *aCurrentFrame, 
+                                        insertionIndex, PR_FALSE);
+  }
+
+  return numNewCols;
 }
 
 

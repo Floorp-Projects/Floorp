@@ -675,7 +675,10 @@ nsGfxScrollFrame::GetSkipSides() const
 NS_IMETHODIMP
 nsGfxScrollFrame::GetFrameType(nsIAtom** aType) const
 {
-  return nsHTMLContainerFrame::GetFrameType(aType);
+  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
+  *aType = nsLayoutAtoms::scrollFrame; 
+  NS_ADDREF(*aType);
+  return NS_OK;
 }
 
 #ifdef NS_DEBUG

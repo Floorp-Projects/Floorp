@@ -146,8 +146,6 @@ void nsTableBorderCollapser::ComputeVerticalBorders(nsIPresContext* aPresContext
   //if (nsnull == cellMap)
   //  return; // no info yet, so nothing useful to do
   
-  mTableFrame.CacheColFrames(aPresContext); // XXX why here?
-
   // compute all the collapsing border values for the entire table
   // XXX: we have to make this more incremental!
   
@@ -305,7 +303,7 @@ void nsTableBorderCollapser::ComputeRightBorderForEdgeAt(nsIPresContext* aPresCo
     styles.AppendElement((void*)spacing);
   }
   //    2. colgroup //XXX: need to test if we're really on a colgroup border
-  nsTableColFrame* colFrame = cellMap->GetColumnFrame(aColIndex);
+  nsTableColFrame* colFrame = mTableFrame.GetColFrame(aColIndex);
   nsIFrame* colGroupFrame;
   colFrame->GetParent(&colGroupFrame);
   colGroupFrame->GetStyleData(eStyleStruct_Spacing, ((const nsStyleStruct *&)spacing));
@@ -402,7 +400,7 @@ void nsTableBorderCollapser::ComputeTopBorderForEdgeAt(nsIPresContext* aPresCont
   mTableFrame.GetStyleData(eStyleStruct_Spacing, ((const nsStyleStruct *&)spacing));
   styles.AppendElement((void*)spacing);
   //    2. colgroup
-  nsTableColFrame* colFrame = cellMap->GetColumnFrame(aColIndex);
+  nsTableColFrame* colFrame = mTableFrame.GetColFrame(aColIndex);
   nsIFrame* colGroupFrame;
   colFrame->GetParent(&colGroupFrame);
   colGroupFrame->GetStyleData(eStyleStruct_Spacing, ((const nsStyleStruct *&)spacing));
@@ -521,7 +519,7 @@ void nsTableBorderCollapser::ComputeBottomBorderForEdgeAt(nsIPresContext* aPresC
     styles.AppendElement((void*)spacing);
 
     //    2. colgroup   // XXX: need to deterine if we're on a colgroup boundary
-    nsTableColFrame* colFrame = cellMap->GetColumnFrame(aColIndex);
+    nsTableColFrame* colFrame = mTableFrame.GetColFrame(aColIndex);
     nsIFrame* colGroupFrame;
     colFrame->GetParent(&colGroupFrame);
     colGroupFrame->GetStyleData(eStyleStruct_Spacing, ((const nsStyleStruct *&)spacing));
