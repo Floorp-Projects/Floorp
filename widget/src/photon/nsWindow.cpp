@@ -698,6 +698,8 @@ NS_METHOD nsWindow::CreateNative(PtWidget_t *parentWidget)
      }
 	else
 	{
+      PtSetParentWidget( nsnull );
+      
       /* Dialog and TopLevel Windows */
       PtSetArg( &arg[arg_count++], Pt_ARG_FLAGS, Pt_DELAY_REALIZE, Pt_DELAY_REALIZE);
       PtSetArg( &arg[arg_count++], Pt_ARG_WINDOW_RENDER_FLAGS, render_flags, 0xFFFFFFFF );
@@ -705,7 +707,8 @@ NS_METHOD nsWindow::CreateNative(PtWidget_t *parentWidget)
       //PtSetArg( &arg[arg_count++], Pt_ARG_FILL_COLOR, Pg_BLUE, 0 );
       PtSetArg( &arg[arg_count++], Pt_ARG_FILL_COLOR,      Pg_TRANSPARENT, 0 );
 
-      mWidget = PtCreateWidget( PtWindow, parentWidget, arg_count, arg );
+      //mWidget = PtCreateWidget( PtWindow, parentWidget, arg_count, arg );
+      mWidget = PtCreateWidget( PtWindow, NULL, arg_count, arg );
       PtAddCallback(mWidget, Pt_CB_RESIZE, ResizeHandler, nsnull ); 
 	}
 	
@@ -1360,7 +1363,7 @@ int nsWindow::WindowCloseHandler( PtWidget_t *widget, void *data, PtCallbackInfo
 {
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::WindowCloseHandler this=(%p)\n", data));
 
-  PhWindowEvent_t *we = cbinfo->cbdata;
+  PhWindowEvent_t *we = (PhWindowEvent_t *) cbinfo->cbdata;
   nsWindow * win = (nsWindow*) data;
 
   if (we->event_f == Ph_WM_CLOSE)
