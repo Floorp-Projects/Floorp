@@ -200,7 +200,7 @@ sub pickos {
             /Mozilla.*\(.*;.*; 32bit.*\)/   && do {return "Windows 95";};
             /Mozilla.*\(.*;.*; 16bit.*\)/   && do {return "Windows 3.1";};
             /Mozilla.*\(.*;.*; 68K.*\)/     && do {return "Mac System 8.5";};
-            /Mozilla.*\(.*;.*; PPC.*\)/     && do {return "Mac System 8.5 or later";};
+            /Mozilla.*\(.*;.*; PPC.*\)/     && do {return "Mac System 8.5";};
             /Mozilla.*\(.*;.*; OSF.*\)/     && do {return "OSF/1";};
             /Mozilla.*\(.*;.*; Linux.*\)/   && do {return "Linux";};
             /Mozilla.*\(.*;.*; SunOS 5.*\)/ && do {return "Solaris";};
