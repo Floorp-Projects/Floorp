@@ -47,6 +47,78 @@
 #include "txVariableMap.h"
 #include "XSLTProcessor.h"
 
+
+DHASH_WRAPPER(txLoadedDocumentsBase, txLoadedDocumentEntry, nsAString&)
+
+txLoadedDocumentsHash::txLoadedDocumentsHash(Document* aSourceDocument,
+                                             Document* aStyleDocument)
+     : mSourceDocument(aSourceDocument),
+       mStyleDocument(aStyleDocument)
+{
+    if (NS_FAILED(Init(8))) {
+        return;
+    }
+
+    if (mSourceDocument) {
+        Add(mSourceDocument);
+    }
+    if (mStyleDocument) {
+        Add(mStyleDocument);
+    }
+}
+
+txLoadedDocumentsHash::~txLoadedDocumentsHash()
+{
+    if (!mHashTable.ops) {
+        return;
+    }
+
+    nsAutoString baseURI;
+    if (mSourceDocument) {
+        mSourceDocument->getBaseURI(baseURI);
+        txLoadedDocumentEntry* entry = GetEntry(baseURI);
+        if (entry) {
+            entry->mDocument = nsnull;
+        }
+    }
+    if (mStyleDocument) {
+        mStyleDocument->getBaseURI(baseURI);
+        txLoadedDocumentEntry* entry = GetEntry(baseURI);
+        if (entry) {
+            entry->mDocument = nsnull;
+        }
+    }
+}
+
+void txLoadedDocumentsHash::Add(Document* aDocument)
+{
+    if (!mHashTable.ops) {
+        return;
+    }
+
+    nsAutoString baseURI;
+    mSourceDocument->getBaseURI(baseURI);
+    txLoadedDocumentEntry* entry = AddEntry(baseURI);
+    if (entry) {
+        entry->mDocument = aDocument;
+    }
+}
+
+Document* txLoadedDocumentsHash::Get(const nsAString& aURI)
+{
+    if (!mHashTable.ops) {
+        return nsnull;
+    }
+
+    txLoadedDocumentEntry* entry = GetEntry(aURI);
+    if (entry) {
+        return entry->mDocument;
+    }
+
+    return nsnull;
+}
+
+
 /**
  * Creates a new ProcessorState for the given XSL document
 **/
@@ -55,13 +127,12 @@ ProcessorState::ProcessorState(Document* aSourceDocument,
     : mOutputHandler(0),
       mResultHandler(0),
       mOutputHandlerFactory(0),
+      mLoadedDocuments(aSourceDocument, aXslDocument),
       mXslKeys(MB_TRUE),
       mDecimalFormats(MB_TRUE),
       mEvalContext(0),
       mLocalVariables(0),
       mGlobalVariableValues(MB_TRUE),
-      mSourceDocument(aSourceDocument),
-      xslDocument(aXslDocument),
       mRTFDocument(0)
 {
     NS_ASSERTION(aSourceDocument, "missing source document");
@@ -73,21 +144,6 @@ ProcessorState::ProcessorState(Document* aSourceDocument,
     mExprHashes[ValueAttr].setOwnership(Map::eOwnsItems);
     mPatternHashes[CountAttr].setOwnership(Map::eOwnsItems);
     mPatternHashes[FromAttr].setOwnership(Map::eOwnsItems);
-
-    // determine xslt properties
-    if (mSourceDocument) {
-        nsAutoString baseURI;
-        mSourceDocument->getBaseURI(baseURI);
-        loadedDocuments.put(baseURI, mSourceDocument);
-    }
-    if (xslDocument) {
-        nsAutoString baseURI;
-        xslDocument->getBaseURI(baseURI);
-        loadedDocuments.put(baseURI, xslDocument);
-    }
-
-    // Make sure all loaded documents get deleted
-    loadedDocuments.setObjectDeletion(MB_TRUE);
 }
 
 /**
@@ -99,19 +155,6 @@ ProcessorState::~ProcessorState()
   txListIterator iter(&mImportFrames);
   while (iter.hasNext())
       delete (ImportFrame*)iter.next();
-
-  // Make sure that xslDocument and mSourceDocument aren't deleted along with
-  // the rest of the documents in the loadedDocuments hash
-  if (xslDocument) {
-      nsAutoString baseURI;
-      xslDocument->getBaseURI(baseURI);
-      loadedDocuments.remove(baseURI);
-  }
-  if (mSourceDocument) {
-      nsAutoString baseURI;
-      mSourceDocument->getBaseURI(baseURI);
-      loadedDocuments.remove(baseURI);
-  }
 
   // in module the outputhandler is refcounted
 #ifdef TX_EXE
@@ -385,14 +428,16 @@ Node* ProcessorState::retrieveDocument(const nsAString& uri,
             NS_LossyConvertUCS2toASCII(frag).get()));
 
     // try to get already loaded document
-    Document* xmlDoc = (Document*)loadedDocuments.get(docUrl);
+    Document* xmlDoc = mLoadedDocuments.Get(docUrl);
 
     if (!xmlDoc) {
         // open URI
         nsAutoString errMsg;
         XMLParser xmlParser;
 
-        xmlDoc = xmlParser.getDocumentFromURI(docUrl, xslDocument, errMsg);
+        xmlDoc = xmlParser.getDocumentFromURI(docUrl,
+                                              mLoadedDocuments.mStyleDocument,
+                                              errMsg);
 
         if (!xmlDoc) {
             receiveError(NS_LITERAL_STRING("Couldn't load document '") +
@@ -401,7 +446,7 @@ Node* ProcessorState::retrieveDocument(const nsAString& uri,
             return NULL;
         }
         // add to list of documents
-        loadedDocuments.put(docUrl, xmlDoc);
+        mLoadedDocuments.Add(xmlDoc);
     }
 
     // return element with supplied id if supplied
@@ -667,8 +712,9 @@ void ProcessorState::setRTFDocument(Document* aDoc)
 
 Document* ProcessorState::getStylesheetDocument()
 {
-    NS_ASSERTION(xslDocument, "missing stylesheet document");
-    return xslDocument;
+    NS_ASSERTION(mLoadedDocuments.mStyleDocument,
+                 "missing stylesheet document");
+    return mLoadedDocuments.mStyleDocument;
 }
 
 /*
@@ -1022,7 +1068,7 @@ nsresult ProcessorState::getVariable(PRInt32 aNamespace, nsIAtom* aLName,
     // Set up the state we have at the beginning of the transformation
     txVariableMap *oldVars = mLocalVariables;
     mLocalVariables = 0;
-    txSingleNodeContext evalContext(mSourceDocument, this);
+    txSingleNodeContext evalContext(mLoadedDocuments.mSourceDocument, this);
     txIEvalContext* priorEC = setEvalContext(&evalContext);
     // Compute the variable value
     globVar->mFlags = GlobalVariableValue::evaluating;

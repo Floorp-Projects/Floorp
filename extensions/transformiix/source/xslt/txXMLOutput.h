@@ -42,7 +42,7 @@
 #include "txXMLEventHandler.h"
 #include "dom.h"
 #include "List.h"
-#include "Stack.h"
+#include "txStack.h"
 #include "txOutputFormat.h"
 #include "XMLUtils.h"
 
@@ -197,7 +197,7 @@ protected:
     MBool mInCDATASection;
     PRUint32 mIndentLevel;
     txList mAttributes;
-    Stack mCDATASections;
+    txStack mCDATASections;
 
 private:
     PRUnichar mBuffer[4];

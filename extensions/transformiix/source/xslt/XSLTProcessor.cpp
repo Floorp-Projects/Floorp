@@ -47,6 +47,7 @@
 #include "txNodeSetContext.h"
 #include "txNodeSorter.h"
 #include "txRtfHandler.h"
+#include "txStack.h"
 #include "txStringUtils.h"
 #include "txTextHandler.h"
 #include "txTokenizer.h"
@@ -866,7 +867,7 @@ txXSLTProcessor::processAction(Node* aAction,
 void
 txXSLTProcessor::processAttributeSets(Element* aElement,
                                       ProcessorState* aPs,
-                                      Stack* aRecursionStack)
+                                      txStack* aRecursionStack)
 {
     nsresult rv = NS_OK;
     nsAutoString names;
@@ -913,7 +914,7 @@ txXSLTProcessor::processAttributeSets(Element* aElement,
                     aRecursionStack->pop();
                 }
                 else {
-                    Stack recursionStack;
+                    txStack recursionStack;
                     recursionStack.push(&name);
                     processAttributeSets(parent, aPs, &recursionStack);
                     recursionStack.pop();
