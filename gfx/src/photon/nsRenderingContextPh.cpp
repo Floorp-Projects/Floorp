@@ -431,24 +431,20 @@ NS_IMETHODIMP nsRenderingContextPh :: SetFont( nsIFontMetrics *aFontMetrics )
 
 NS_IMETHODIMP nsRenderingContextPh :: CreateDrawingSurface( const nsRect &aBounds, PRUint32 aSurfFlags, nsIDrawingSurface* &aSurface ) 
 {
-	if( nsnull == mSurface ) {
-		aSurface = nsnull;
-		return NS_ERROR_FAILURE;
-	}
-	
-	nsDrawingSurfacePh *surf = new nsDrawingSurfacePh();
-	if( surf ) {
-		NS_ADDREF(surf);
-		surf->Init( aBounds.width, aBounds.height, aSurfFlags ); /* we pass NULL as aGC here / it means use the default photon gc */
-	}
-	else 
-		return NS_ERROR_FAILURE;
-	
-	aSurface = surf;
-	
-	return NS_OK;
+	if( mSurface ) {
+		nsDrawingSurfacePh *surf = new nsDrawingSurfacePh();
+		if( surf ) {
+			NS_ADDREF(surf);
+			/* we pass NULL as aGC here / it means use the default photon gc */
+			if( surf->Init( aBounds.width, aBounds.height, aSurfFlags ) == NS_OK ) {
+				aSurface = surf;
+				return NS_OK;
+				}
+			}
+		}
+	aSurface = nsnull;
+	return NS_ERROR_FAILURE;
 }
-
 
 NS_IMETHODIMP nsRenderingContextPh :: DrawLine( nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1 ) 
 {
