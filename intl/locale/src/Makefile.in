@@ -21,7 +21,7 @@ srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-include $(DEPTH)/config/config.mk
+include $(topsrcdir)/config/config.mk
 
 DIRS = unix
 
