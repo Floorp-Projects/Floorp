@@ -1147,7 +1147,7 @@ NS_IMETHODIMP nsRenderingContextWin :: DrawPolyline(const nsPoint aPoints[], PRI
 
   // Release temporary storage if necessary
   if (pp0 != pts)
-    delete pp0;
+    delete [] pp0;
 
   return NS_OK;
 }
@@ -1270,7 +1270,7 @@ NS_IMETHODIMP nsRenderingContextWin :: DrawPolygon(const nsPoint aPoints[], PRIn
 
   // Release temporary storage if necessary
   if (pp0 != pts)
-    delete pp0;
+    delete [] pp0;
 
   return NS_OK;
 }
@@ -1308,7 +1308,7 @@ NS_IMETHODIMP nsRenderingContextWin :: FillPolygon(const nsPoint aPoints[], PRIn
 
   // Release temporary storage if necessary
   if (pp0 != pts)
-    delete pp0;
+    delete [] pp0;
 
   return NS_OK;
 }
@@ -1343,7 +1343,7 @@ NS_IMETHODIMP nsRenderingContextWin :: FillStdPolygon(const nsPoint aPoints[], P
 
   // Release temporary storage if necessary
   if (pp0 != pts)
-    delete pp0;
+    delete [] pp0;
 
   return NS_OK;
 }
