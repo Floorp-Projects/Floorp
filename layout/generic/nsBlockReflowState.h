@@ -2442,6 +2442,27 @@ nsBlockFrame::PropogateReflowDamage(nsBlockReflowState& aState,
   }
 }
 
+static PRBool
+WrappedLinesAreDirty(nsLineBox* aLine)
+{
+  if (aLine->IsInline()) {
+    while (aLine->IsLineWrapped()) {
+      aLine = aLine->mNext;
+      if (!aLine) {
+        break;
+      }
+
+      NS_ASSERTION(!aLine->IsBlock(), "didn't expect a block line");
+      if (aLine->IsDirty()) {
+        // we found a continuing line that is dirty
+        return PR_TRUE;
+      }
+    }
+  }
+
+  return PR_FALSE;
+}
+
 /**
  * Reflow the dirty lines
  */
@@ -2495,7 +2516,10 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
     }
 #endif
 
-    if (line->IsDirty()) {
+    // If we're supposed to update our maximum width, then we'll also need to
+    // reflow this line if it's line wrapped and any of the continuing lines
+    // are dirty
+    if (line->IsDirty() || (aState.mComputeMaximumWidth && ::WrappedLinesAreDirty(line))) {
       // Compute the dirty lines "before" YMost, after factoring in
       // the running deltaY value - the running value is implicit in
       // aState.mY.
@@ -2746,7 +2770,40 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
   }
   else {
     aLine->SetLineWrapped(PR_FALSE);
-    rv = ReflowInlineFrames(aState, aLine, aKeepReflowGoing);
+
+    // If we're supposed to update the maximum width, then we'll need to reflow
+    // the line with an unconstrained width (which will give us the new maximum
+    // width), then we'll reflow it again with the constrained width.
+    // We only do this if this is a beginning line, i.e., don't do this for
+    // lines associated with content that line wrapped (see ReflowDirtyLines()
+    // for details).
+    // XXX This approach doesn't work when floaters are involved in which case
+    // we'll either need to recover the floater state that applies to the
+    // unconstrained reflow or keep it around in a separate space manager...
+    if (aState.mComputeMaximumWidth && aState.mPrevLine && !aState.mPrevLine->IsLineWrapped()) {
+      nscoord oldY = aState.mY;
+      nscoord oldPrevBottomMargin = aState.mPrevBottomMargin;
+
+      // First reflow the line with an unconstrained width
+      ReflowInlineFrames(aState, aLine, aKeepReflowGoing, PR_TRUE);
+
+      // Update the line's maximum width
+      aLine->mMaximumWidth = aLine->mBounds.XMost();
+      aState.UpdateMaximumWidth(aLine->mMaximumWidth);
+
+      // Remove any floaters associated with the line from the space
+      // manager
+      aLine->RemoveFloatersFromSpaceManager(aState.mSpaceManager);
+
+      // Now reflow the line again this time without having it compute
+      // the maximum width
+      aState.mY = oldY;
+      aState.mPrevBottomMargin = oldPrevBottomMargin;
+      rv = ReflowInlineFrames(aState, aLine, aKeepReflowGoing);
+
+    } else {
+      rv = ReflowInlineFrames(aState, aLine, aKeepReflowGoing);
+    }
 
     // We don't really know what changed in the line, so use the union
     // of the old and new combined areas
@@ -3545,7 +3602,8 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
 nsresult
 nsBlockFrame::ReflowInlineFrames(nsBlockReflowState& aState,
                                  nsLineBox* aLine,
-                                 PRBool* aKeepReflowGoing)
+                                 PRBool* aKeepReflowGoing,
+                                 PRBool aUpdateMaximumWidth)
 {
   nsresult rv = NS_OK;
   *aKeepReflowGoing = PR_TRUE;
@@ -3560,11 +3618,13 @@ nsBlockFrame::ReflowInlineFrames(nsBlockReflowState& aState,
     // large.
     if (aState.mReflowState.mReflowDepth > 30) {//XXX layout-tune.h?
       rv = DoReflowInlineFramesMalloc(aState, aLine, aKeepReflowGoing,
-                                      &lineReflowStatus);
+                                      &lineReflowStatus,
+                                      aUpdateMaximumWidth);
     }
     else {
       rv = DoReflowInlineFramesAuto(aState, aLine, aKeepReflowGoing,
-                                    &lineReflowStatus);
+                                    &lineReflowStatus,
+                                    aUpdateMaximumWidth);
     }
     if (NS_FAILED(rv)) {
       break;
@@ -3585,7 +3645,8 @@ nsresult
 nsBlockFrame::DoReflowInlineFramesMalloc(nsBlockReflowState& aState,
                                          nsLineBox* aLine,
                                          PRBool* aKeepReflowGoing,
-                                         PRUint8* aLineReflowStatus)
+                                         PRUint8* aLineReflowStatus,
+                                         PRBool aUpdateMaximumWidth)
 {
   nsLineLayout* ll = new nsLineLayout(aState.mPresContext,
                                       aState.mReflowState.mSpaceManager,
@@ -3597,7 +3658,7 @@ nsBlockFrame::DoReflowInlineFramesMalloc(nsBlockReflowState& aState,
   ll->Init(&aState, aState.mMinLineHeight, aState.mLineNumber);
   ll->SetReflowTextRuns(mTextRuns);
   nsresult rv = DoReflowInlineFrames(aState, *ll, aLine, aKeepReflowGoing,
-                                     aLineReflowStatus);
+                                     aLineReflowStatus, aUpdateMaximumWidth);
   ll->EndLineReflow();
   delete ll;
   return rv;
@@ -3607,7 +3668,8 @@ nsresult
 nsBlockFrame::DoReflowInlineFramesAuto(nsBlockReflowState& aState,
                                        nsLineBox* aLine,
                                        PRBool* aKeepReflowGoing,
-                                       PRUint8* aLineReflowStatus)
+                                       PRUint8* aLineReflowStatus,
+                                       PRBool aUpdateMaximumWidth)
 {
   nsLineLayout lineLayout(aState.mPresContext,
                           aState.mReflowState.mSpaceManager,
@@ -3616,17 +3678,19 @@ nsBlockFrame::DoReflowInlineFramesAuto(nsBlockReflowState& aState,
   lineLayout.Init(&aState, aState.mMinLineHeight, aState.mLineNumber);
   lineLayout.SetReflowTextRuns(mTextRuns);
   nsresult rv = DoReflowInlineFrames(aState, lineLayout, aLine,
-                                     aKeepReflowGoing, aLineReflowStatus);
+                                     aKeepReflowGoing, aLineReflowStatus,
+                                     aUpdateMaximumWidth);
   lineLayout.EndLineReflow();
   return rv;
 }
-                            
+
 nsresult
 nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
                                    nsLineLayout& aLineLayout,
                                    nsLineBox* aLine,
                                    PRBool* aKeepReflowGoing,
-                                   PRUint8* aLineReflowStatus)
+                                   PRUint8* aLineReflowStatus,
+                                   PRBool aUpdateMaximumWidth)
 {
   // Forget all of the floaters on the line
   aLine->FreeFloaters(aState.mFloaterCacheFreeList);
@@ -3650,6 +3714,9 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
   else {
     /* XXX get the height right! */
     availHeight = aState.mAvailSpaceRect.height;
+  }
+  if (aUpdateMaximumWidth) {
+    availWidth = NS_UNCONSTRAINEDSIZE;
   }
   aLineLayout.BeginLineReflow(x, aState.mY,
                               availWidth, availHeight,
@@ -3742,7 +3809,7 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
     // If we are propogating out a break-before status then there is
     // no point in placing the line.
     if (!NS_INLINE_IS_BREAK_BEFORE(aState.mReflowStatus)) {
-      rv = PlaceLine(aState, aLineLayout, aLine, aKeepReflowGoing);
+      rv = PlaceLine(aState, aLineLayout, aLine, aKeepReflowGoing, aUpdateMaximumWidth);
     }
   }
   *aLineReflowStatus = lineReflowStatus;
@@ -4044,7 +4111,8 @@ nsresult
 nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
                         nsLineLayout& aLineLayout,
                         nsLineBox* aLine,
-                        PRBool* aKeepReflowGoing)
+                        PRBool* aKeepReflowGoing,
+                        PRBool aUpdateMaximumWidth)
 {
   nsresult rv = NS_OK;
 
@@ -4190,7 +4258,14 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
       ComputeLineMaxElementSize(aState, aLine, &maxElementSize);
     }
   }
-  PostPlaceLine(aState, aLine, maxElementSize);
+  
+  // If we're reflowing the line just to get incrementally update the
+  // maximum width, then don't post-place the line. It's doing work we
+  // don't need, and it will update things like aState.mKidXMost that
+  // we don't want updated...
+  if (!aUpdateMaximumWidth) {
+    PostPlaceLine(aState, aLine, maxElementSize);
+  }
 
   // Add the already placed current-line floaters to the line
   aLine->AppendFloaters(aState.mCurrentLineFloaters);

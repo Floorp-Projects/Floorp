@@ -243,6 +243,7 @@ public:
   void FreeFloaters(nsFloaterCacheFreeList& aFreeList);
   void AppendFloaters(nsFloaterCacheFreeList& aFreeList);
   PRBool RemoveFloater(nsIFrame* aFrame);
+  void RemoveFloatersFromSpaceManager(nsISpaceManager* aSpaceManager);
 
   // Combined area
   void SetCombinedArea(const nsRect& aCombinedArea);

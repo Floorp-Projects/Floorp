@@ -205,7 +205,8 @@ protected:
   nsresult PlaceLine(nsBlockReflowState& aState,
                      nsLineLayout& aLineLayout,
                      nsLineBox* aLine,
-                     PRBool* aKeepReflowGoing);
+                     PRBool* aKeepReflowGoing,
+                     PRBool aUpdateMaximumWidth);
 
   // XXX blech
   void PostPlaceLine(nsBlockReflowState& aState,
@@ -233,23 +234,27 @@ protected:
 
   nsresult ReflowInlineFrames(nsBlockReflowState& aState,
                               nsLineBox* aLine,
-                              PRBool* aKeepLineGoing);
+                              PRBool* aKeepLineGoing,
+                              PRBool aUpdateMaximumWidth = PR_FALSE);
 
   nsresult DoReflowInlineFrames(nsBlockReflowState& aState,
                                 nsLineLayout& aLineLayout,
                                 nsLineBox* aLine,
                                 PRBool* aKeepReflowGoing,
-                                PRUint8* aLineReflowStatus);
+                                PRUint8* aLineReflowStatus,
+                                PRBool aUpdateMaximumWidth);
 
   nsresult DoReflowInlineFramesAuto(nsBlockReflowState& aState,
                                     nsLineBox* aLine,
                                     PRBool* aKeepReflowGoing,
-                                    PRUint8* aLineReflowStatus);
+                                    PRUint8* aLineReflowStatus,
+                                    PRBool aUpdateMaximumWidth);
 
   nsresult DoReflowInlineFramesMalloc(nsBlockReflowState& aState,
                                       nsLineBox* aLine,
                                       PRBool* aKeepReflowGoing,
-                                      PRUint8* aLineReflowStatus);
+                                      PRUint8* aLineReflowStatus,
+                                      PRBool aUpdateMaximumWidth);
 
   nsresult ReflowInlineFrame(nsBlockReflowState& aState,
                              nsLineLayout& aLineLayout,

@@ -334,6 +334,23 @@ nsLineBox::FreeFloaters(nsFloaterCacheFreeList& aFreeList)
 }
 
 void
+nsLineBox::RemoveFloatersFromSpaceManager(nsISpaceManager* aSpaceManager)
+{
+  if (IsInline()) {
+    if (mInlineData) {
+      nsFloaterCache* floaterCache = mInlineData->mFloaters.Head();
+
+      while (floaterCache) {
+        nsIFrame* floater = floaterCache->mPlaceholder->GetOutOfFlowFrame();
+
+        aSpaceManager->RemoveRegion(floater);
+        floaterCache = floaterCache->Next();
+      }
+    }
+  }
+}
+
+void
 nsLineBox::AppendFloaters(nsFloaterCacheFreeList& aFreeList)
 {
   NS_ABORT_IF_FALSE(IsInline(), "block line can't have floaters");
