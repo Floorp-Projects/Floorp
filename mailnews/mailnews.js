@@ -172,7 +172,6 @@ pref("news.sort_by",                        1);     // by date
 localDefPref("news.window_rect",                    "-1,-1,-1,-1");
 pref("news.fcc_folder",                     "");
 pref("news.notify.on",                      true);
-pref("news.notify.size",                    1000);
 pref("news.max_articles",                   500);
 pref("news.abbreviate_pretty_names",        0);
 pref("news.mark_old_read",                  false);
