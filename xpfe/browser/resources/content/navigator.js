@@ -481,6 +481,11 @@
     RefreshUrlbar();
   }
 
+function OpenSearch(tabName)
+{
+	window.openDialog("resource:/res/samples/search.xul", "SearchWindow", "chrome", tabName);
+}
+
   function BrowserNewWindow()
   {
     if (appCore != null) {

@@ -159,10 +159,10 @@ Contributor(s): ______________________________________. -->
 <!ENTITY searchParentCmd.label "Search Parent Item...">
 <!ENTITY searchParenet2Cmd.label "Search Parent2 Item">
 <!ENTITY appSpecificCmd.label "App Specific">
-<!ENTITY searchInternetCmd.label "Search the Internet...">
-<!ENTITY searchAllMailCmd.label "Search All Mail....">
-<!ENTITY searchBookmarksCmd.label "Search Bookmarks...">
-<!ENTITY searchPeopleCmd.label "Search People...">
+<!ENTITY searchBookmarksHistoryCmd.label "Search Bookmarks/History">
+<!ENTITY searchInternetCmd.label "Search the Internet">
+<!ENTITY searchAllMailCmd.label "Search Mail/News">
+<!ENTITY searchAddressbookCmd.label "Search Addressbook">
 <!ENTITY searchComputerCmd.label "Search on this Computer...">
 <!ENTITY goMenu.label "Go">
 <!ENTITY goBackCmd.label "Back">
@@ -599,10 +599,10 @@ Contributor(s): ______________________________________. -->
 		  <menuitem value="&appSpecificCmd.label;" onaction="BrowserReload();"/>
 		  <menuitem value="&appSpecificCmd.label;" onaction="BrowserReload();"/>
 		  <menuseparator />
-		  <menuitem value="&searchInternetCmd.label;" onaction="BrowserReload();"/>
-		  <menuitem value="&searchAllMailCmd.label;" onaction="BrowserReload();"/>
-		  <menuitem value="&searchBookmarksCmd.label;" onaction="BrowserReload();"/>
-		  <menuitem value="&searchPeopleCmd.label;" onaction="BrowserReload();"/>
+		  <menuitem value="&searchBookmarksHistoryCmd.label;" onaction="OpenSearch('find');"/>
+		  <menuitem value="&searchInternetCmd.label;" onaction="OpenSearch('internet');"/>
+		  <menuitem value="&searchAllMailCmd.label;" onaction="OpenSearch('mail');"/>
+		  <menuitem value="&searchAddressbookCmd.label;" onaction="OpenSearch('addressbook');"/>
 		  <menuseparator />
 		  <menuitem value="&searchComputerCmd.label;" onaction="BrowserReload();"/>
 	  </menupopup>
