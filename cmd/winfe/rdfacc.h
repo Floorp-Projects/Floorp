@@ -29,26 +29,11 @@ enum IconType { BUILTIN_BITMAP, LOCAL_FILE, ARBITRARY_URL }; // TODO: Use this i
 class CHTFEData
 {
 private:
-	CHTFEData(); // Disallow the instantiation of objects of this class.
+	CHTFEData() {}; // Disallow the instantiation of objects of this class.
 
 public:
 	
-	static void FlushIconInfo() 
-	{ 
-		// Just remove the HICONs from the local file cache.
-		m_LocalFileCache.RemoveAll();  
-		
-		// Need to iterate over all the elements in the custom URL cache and destroy the images.
-		POSITION pos = m_CustomURLCache.GetStartPosition();
-		void* pData;
-		CString key;
-		while (pos != NULL)
-		{
-			m_CustomURLCache.GetNextAssoc(pos, key, pData);
-			CRDFImage* pImage = (CRDFImage*)pData;
-			delete pImage;
-		}
-	}
+	static void FlushIconInfo();
 
 	static CMapStringToPtr m_LocalFileCache; 
 	  // Hashed on file extension e.g., .html would hold the icon for HTML files.

@@ -3748,6 +3748,27 @@ CWnd* CRDFCX::GetDialogOwner() const
 	return m_pCurrentRDFWindow->GetTopLevelFrame();
 }
 
+// ==================================================================
+// HTFEDATA Functions (found in rdfacc.h)
+// ==================================================================
+
+void CHTFEData::FlushIconInfo()
+{ 
+	// Just remove the HICONs from the local file cache.
+	m_LocalFileCache.RemoveAll();  
+	
+	// Need to iterate over all the elements in the custom URL cache and destroy the images.
+	POSITION pos = m_CustomURLCache.GetStartPosition();
+	void* pData;
+	CString key;
+	while (pos != NULL)
+	{
+		m_CustomURLCache.GetNextAssoc(pos, key, pData);
+		CRDFImage* pImage = (CRDFImage*)pData;
+		delete pImage;
+	}
+}
+
 
 /////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////
