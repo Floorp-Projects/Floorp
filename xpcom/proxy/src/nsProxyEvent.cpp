@@ -105,10 +105,7 @@ nsProxyObject::nsProxyObject(nsIEventQueue *destQueue, PRInt32  proxyType, const
 }
 
 nsProxyObject::~nsProxyObject()
-{
-    if (mDestQueue)
-        NS_RELEASE(mDestQueue);
-    
+{   
     if(mRealObject)
         NS_RELEASE(mRealObject);
 }
