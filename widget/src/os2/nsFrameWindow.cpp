@@ -29,13 +29,19 @@
  * 03/23/2000       IBM Corp.      Fix missing title bars on profile wizard windows.
  * 04/11/2000       IBM Corp.      Remove assertion.
  * 05/10/2000       IBM Corp.      Correct initial position of frame w/titlebar
+ * 06/21/2000       IBM Corp.      Use rollup listener from nsWindow
  */
 
 // Frame window - produced when NS_WINDOW_CID is required.
 
 #include "nsFrameWindow.h"
+#include "nsIRollupListener.h"
 
 static PRBool haveHiddenWindow = PR_FALSE;
+
+extern nsIRollupListener * gRollupListener;
+extern nsIWidget         * gRollupWidget;
+extern PRBool              gRollupConsumeRollupEvent;
 
 nsFrameWindow::nsFrameWindow() : nsCanvas()
 {
@@ -60,7 +66,7 @@ void nsFrameWindow::RealDoCreate( HWND hwndP, nsWindow *aParent,
 /*   NS_ASSERTION( hwndP == HWND_DESKTOP && aParent == nsnull,
                  "Attempt to create non-top-level frame");   */
 
-#if DEBUG_sobotka
+#if DEBUG
    printf("\nIn nsFrameWindow::RealDoCreate:\n");
    printf("   hwndP = %lu\n", hwndP);
    printf("   aParent = 0x%lx\n", &aParent);
@@ -199,6 +205,23 @@ nsresult nsFrameWindow::Show( PRBool bState)
 // Subclass for frame window
 MRESULT EXPENTRY fnwpFrame( HWND hwnd, ULONG msg, MPARAM mp1, MPARAM mp2)
 {
+   // check to see if we have a rollup listener registered
+   if (nsnull != gRollupListener && nsnull != gRollupWidget) {
+      if (msg == WM_ACTIVATE || msg == WM_BUTTON1DOWN || 
+          msg == WM_BUTTON2DOWN || msg == WM_BUTTON3DOWN) {
+         // Rollup if the event is outside the popup
+         if (PR_FALSE == nsWindow::EventIsInsideWindow((nsWindow*)gRollupWidget)) {
+            gRollupListener->Rollup();
+
+            // if we are supposed to be consuming events and it is
+            // a Mouse Button down, let it go through
+            if (gRollupConsumeRollupEvent && msg != WM_BUTTON1DOWN) {
+               return FALSE;
+            }
+         } 
+      }
+   }
+
    nsFrameWindow *pFrame = (nsFrameWindow*) WinQueryWindowPtr( hwnd, QWL_USER);
    return pFrame->FrameMessage( msg, mp1, mp2);
 }

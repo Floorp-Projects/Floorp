@@ -34,6 +34,7 @@
  * 06/09/2000       IBM Corp.      Added cases for more cursors in SetCursor.
  * 06/14/2000       IBM Corp.      Removed dead menu code to fix build break.
  * 06/15/2000       IBM Corp.      Created NS2PM for rectangles.
+ * 06/21/2000       IBM Corp.      Corrected menu parentage; added CaptureMouse.
  *
  */
 
@@ -102,9 +103,9 @@ BOOL g_bHandlingMouseClick = FALSE;
 
 nsWindow* nsWindow::gCurrentWindow = nsnull;
 
-static nsIRollupListener * gRollupListener           = nsnull;
-static nsIWidget         * gRollupWidget             = nsnull;
-static PRBool              gRollupConsumeRollupEvent = PR_FALSE;
+nsIRollupListener * gRollupListener           = nsnull;
+nsIWidget         * gRollupWidget             = nsnull;
+PRBool              gRollupConsumeRollupEvent = PR_FALSE;
 
 // --------------------------------------------------------------------------
 // HWND -> (nsWindow *) conversion ------------------------------------------
@@ -198,6 +199,13 @@ void nsWindow::DoCreate( HWND hwndP, nsWindow *aParent, const nsRect &aRect,
                          nsWidgetInitData *aInitData)
 {
    mWindowState = nsWindowState_eInCreate;
+
+   if( hwndP != HWND_DESKTOP && aInitData &&
+       ( aInitData->mWindowType == eWindowType_dialog ||
+         aInitData->mWindowType == eWindowType_popup  ||
+         aInitData->mWindowType == eWindowType_toplevel) ) {
+      hwndP = HWND_DESKTOP;
+   }
 
    // Must ensure toolkit before attempting to thread-switch!
    if( !mToolkit)
@@ -462,6 +470,18 @@ nsWindow::EventIsInsideWindow(nsWindow* aWindow)
    return PR_TRUE;
 }
 
+NS_METHOD nsWindow::CaptureMouse(PRBool aCapture)
+{
+  if (PR_TRUE == aCapture) { 
+    WinSetCapture( HWND_DESKTOP, mWnd);
+  } else {
+    WinSetCapture( HWND_DESKTOP, NULLHANDLE);
+  }
+//  mIsInMouseCapture = aCapture;
+  return NS_OK;
+}
+
+
 // --------------------------------------------------------------------------
 // PM messaging layer - wndproc, subclasser, default handler ----------------
 
@@ -482,13 +502,12 @@ MRESULT EXPENTRY fnwpNSWindow( HWND hwnd, ULONG msg, MPARAM mp1, MPARAM mp2)
           msg == WM_BUTTON2DOWN || msg == WM_BUTTON3DOWN) {
          // Rollup if the event is outside the popup
          if (PR_FALSE == nsWindow::EventIsInsideWindow((nsWindow*)gRollupWidget)) {
-/* OS2TODO - This is causing the menu bar dropdowns to disappear too quickly */
             gRollupListener->Rollup();
 
             // if we are supposed to be consuming events and it is
             // a Mouse Button down, let it go through
             if (gRollupConsumeRollupEvent && msg != WM_BUTTON1DOWN) {
-//               return FALSE;
+               return FALSE;
             }
          } 
       }
@@ -1201,6 +1220,7 @@ PRBool nsWindow::OnReposition( PSWP pSwp)
    {
       // need screen coords.
       POINTL ptl = { pSwp->x, pSwp->y + pSwp->cy - 1 };
+      WinMapWindowPoints( WinQueryWindow( mWnd, QW_PARENT), GetParentHWND(), &ptl, 1);
       PM2NS_PARENT( ptl);
       mBounds.x = ptl.x;
       mBounds.y = ptl.y;
@@ -1544,6 +1564,10 @@ nsresult nsWindow::Resize( PRInt32 aX, PRInt32 aY, PRInt32 w, PRInt32 h,
       NS2PM_PARENT( ptl);
       // work out real coords of bottom left
       ptl.y -= GetHeight( h) - 1;
+      if( mParent)
+      {
+         WinMapWindowPoints( mParent->mWnd, WinQueryWindow(mWnd, QW_PARENT), &ptl, 1);
+      }
 
       if( !SetWindowPos( 0, ptl.x, ptl.y, w, GetHeight(h), SWP_MOVE | SWP_SIZE))
          if( aRepaint)
