@@ -50,7 +50,7 @@ static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 
 /********************
  * Global Variables *
-/********************/
+ ********************/
 
 /* locks for signon cache */
 
