@@ -57,7 +57,7 @@
 <broadcasterset id="broadcasterset"/>
 
 <popupset>
-    <popup id="userlistPopup" onclick="onUserListPopupClick(event)">
+    <popup id="userlistPopup" oncommand="onUserListPopupClick(event)">
         <menuitem value="&op.value;" accesskey="&op.accesskey;" code="/op" />
         <menuitem value="&deop.value;" accesskey="&deop.accesskey;"
           code="/deop" />
