@@ -93,8 +93,13 @@ function convertToUnicode(aCharset, aSrc )
 }
 
 /**** loadEventsFromFile
- * shows a file dialog, read the selected file(s) and tries to parse events from it.
+ * shows a file dialog, reads the selected file(s) and tries to parse events from it.
  */
+
+// FIX ME: duplicate management is only used for outlookCSV import
+
+// FIX ME: importDuplicatesDialog should be shown when we know there are dups,
+// possibly instead of the "duplicateImport"-alert near the end.
 
 function loadEventsFromFile()
 {
@@ -151,11 +156,11 @@ function loadEventsFromFile()
               calendarEventArray[calendarEventArray.length]  = tempEventArray[i];    
             break;
           case 2: // csv
-            var ret = parseOutlookCSVData( aDataStream, dupResult.discard, dupResult.prompt );
+            var ret = parseOutlookCSVData( aDataStream );
             for (i=0; i < ret.calendarEventArray.length; i++)
                calendarEventArray[calendarEventArray.length]  = ret.calendarEventArray[i];
             for (i=0; i < ret.calendarDuplicateArray.length; i++)
-	            duplicateEventArray[duplicateEventArray.length] = ret.calendarDuplicateArray[i];
+              duplicateEventArray[duplicateEventArray.length] = ret.calendarDuplicateArray[i];
             break;
           }
       }
@@ -185,12 +190,10 @@ function loadEventsFromFile()
         if(buttonPressed == 0) // YES
         { 
             addEventsToCalendar( calendarEventArray );
-            return true;
         }
         else if(buttonPressed == 1) // NO
         { 
             addEventsToCalendar( calendarEventArray, true );
-            return true;
         } 
         else if(buttonPressed == 2) // CANCEL
         { 
@@ -213,10 +216,8 @@ function loadEventsFromFile()
         }
 
       }
-    }
-  
-  
-  return false;
+  }
+  return true;
 }
 
 
@@ -246,7 +247,7 @@ function addEventsToCalendar( calendarEventArray, silent, ServerName )
    for(var i = 0; i < calendarEventArray.length; i++)
    {
       calendarEvent = calendarEventArray[i];
-	       
+         
       // Check if event with same ID already in Calendar. If so, import event with new ID.
       if( gICalLib.fetchEvent( calendarEvent.id ) != null ) {
          calendarEvent.id = createUniqueID( );
@@ -254,7 +255,7 @@ function addEventsToCalendar( calendarEventArray, silent, ServerName )
 
       // the start time is in zulu time, need to convert to current time
       if(calendarEvent.allDay != true)
-      convertZuluToLocal( calendarEvent );
+        convertZuluToLocal( calendarEvent );
 
       // open the event dialog with the event to add
       if( silent )
@@ -423,46 +424,101 @@ function promptToKeepEntry(title, startTime, endTime)
 
 /**** parseOutlookCSVData
  *
- * Takes a text block of iCalendar events and tries to split that into individual events.
- * Parses those events and returns an array of calendarEvents.
- */
-function parseOutlookCSVData( icalStr, discardDuplicates, promptEach )
+ * Takes a text block of Outlook-exported Comma Separated Values and tries to 
+ * parse that into individual events (with a mother-of-all-regexps).
+ * Returns: an array of new calendarEvents and
+ *          an array of events that are duplicates with existing ones.
+ */ 
+function parseOutlookCSVData( outlookCsvStr )
 {
-  var lines = icalStr.split("\n");
+  var lines = outlookCsvStr.split("\n");
+  var totalLines = lines.length-1;
+  
+  var oneLineEventRegExp =        /^"(.*)","(.*)","(.*)","(.*)","(.*)","(True|False)","(True|False)","([^"]*)","([^"]*)",("([^"]*)"|),("([^"]*)"|),("([^"]*)"|),("([^"]*)"|),("([^"]*)"|),("([^"]*)"|),("(.*)"|),("(.*)"|),("(.*)"|),"(Normal|Low|High)","(True|False)",("(.*)"|),"(\d)"/;
+  var multiLineEventStartRegExp = /^"(.*)","(.*)","(.*)","(.*)","(.*)","(True|False)","(True|False)","([^"]*)","([^"]*)",("([^"]*)"|),("([^"]*)"|),("([^"]*)"|),("([^"]*)"|),("([^"]*)"|),("([^"]*)"|),("(.*))/;
+  var multiLineEventEndRegExp =   /^([^"]*)",("(.*)"|),("(.*)"|),"(Normal|Low|High)","(True|False)",("(.*)"|),"(\d)"/;
+  
+  //arrays for storing values from regexps
+  var eventFields;
+  var tmpEventFields;
+
+  var formater = new DateFormater(); 
+  var sDate;
+  var eDate;
+  var alarmDate;
+  
   var calendarEvent;
   var eventArray = new Array();
   var dupArray = new Array();
-  var lineIndex = 1;
-  var totalLines = lines.length-1;
-  var exists = false;
-  var formater = new DateFormater(); 
+
+  for (var lineIndex = 1; lineIndex < totalLines; lineIndex++) { 
+    eventFields = oneLineEventRegExp(lines[lineIndex]);
+
+    if (eventFields == null) {    
+      // this is not singleline event
+      eventFields = multiLineEventStartRegExp(lines[lineIndex]);
+
+      if (eventFields != null) {
+        // this is a multiline event
+        tmpEventFields = null;
+        var i = lineIndex+1;
+
+        // read lines until end-of-event is found:
+        while ((i < totalLines) && (tmpEventFields == null)) {
+          tmpEventFields = multiLineEventEndRegExp(lines[i]);
+          if (tmpEventFields == null)
+            eventFields[23] = eventFields[23] + "\n" + lines[i]; //add line to Description-field
+          i++;
+        }
+
+        if (tmpEventFields != null) {
+          //found the end of this multiline event
+          eventFields[23] = eventFields[23] + "\n" + tmpEventFields[1];
+          eventFields = eventFields.concat(tmpEventFields.slice(2));          
+        } else  {
+          //end-of-data before end-of-event (event is invalid)
+          eventFields = null; 
+        }
+      } 
+    }
+
+    // At this point eventFields is either null or contains following fields
+    //  1:subject, 2:start date, 3:start time, 4:end date, 5:end time, 
+    //  6: all day?, 7:alarm?, 8:alarm date, 9:alarm time, 11:organizer, 
+    //  13: req. attendees, 15:optional attendees, 17:Resources, 
+    //  19:Billing info, 21:Categories, 23:Notes, 25:location, 27:Mileage, 
+    //  28:Priority, 29:Private? 31:Privacy, 32:Show time as
   
-  while (lineIndex < totalLines) {
-    var fields = lines[lineIndex].split('","');
-    ++lineIndex;
-    if (fields.length < 5)
-      continue;
-      
-    fields[0] = fields[0].substring(1); // strip off the leading quote...
-    var title = fields[0];
-    //parseShortDate magically decides the format (locale) of dates/times
-    var sdate = formater.parseShortDate(fields[1]+" "+fields[2]);
-    var edate = formater.parseShortDate(fields[3]+" "+fields[4]);
-    if ((sdate != null) && (edate != null)) {
-      exists = entryExists(sdate, title);
-      calendarEvent = createEvent();
-      calendarEvent.id = createUniqueID();
-      calendarEvent.title = title;
-      calendarEvent.start.setTime(sdate);
-      calendarEvent.end.setTime(edate);
-      if ( !exists )
-        eventArray[ eventArray.length ] = calendarEvent;
-      else
-        dupArray[ dupArray.length ] = calendarEvent;
+    if(eventFields != null) {
+      //parseShortDate magically decides the format (locale) of dates/times
+      sDate = formater.parseShortDate(eventFields[2] + " " + eventFields[3]);
+      eDate = formater.parseShortDate(eventFields[4] + " " + eventFields[5]);
+
+      if ((sDate != null) && (eDate != null)) {
+        alarmDate = formater.parseShortDate(eventFields[8] + " " + eventFields[9]);
+
+        calendarEvent = createEvent();
+        calendarEvent.id = createUniqueID();
+        calendarEvent.title = eventFields[1];
+        calendarEvent.description = eventFields[23];
+        calendarEvent.location = eventFields[25];
+        calendarEvent.start.setTime(sDate);
+        calendarEvent.end.setTime(eDate);
+        calendarEvent.allDay = (eventFields[6] == "True");
+        calendarEvent.privateEvent = (eventFields[29] == "True");
+        calendarEvent.categories = eventFields[21];
+        calendarEvent.alarm = (eventFields[7] == "True");
+        calendarEvent.alarmLength = Math.round((sDate - alarmDate)/kDate_MillisecondsInMinute);
+        calendarEvent.alarmUnits = "minutes";
+        calendarEvent.setParameter("ICAL_RELATED_PARAMETER", "ICAL_RELATED_START");
+
+        if (entryExists(sDate, calendarEvent.title))
+          dupArray[ dupArray.length ] = calendarEvent;
+        else
+          eventArray[ eventArray.length ] = calendarEvent;
+      }
     }
   }
-//   dump("*** calendar entries : " + eventArray.length + "\n");
-//   dump("*** duplicate entries: " + dupArray.length + "\n");
   return { calendarEventArray: eventArray, calendarDuplicateArray: dupArray };
 }
 
