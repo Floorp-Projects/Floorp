@@ -32,6 +32,7 @@
 #include <Processes.h>
 #elif defined(XP_PC)
 #include <windows.h>
+#include <shlobj.h>
 #include <stdlib.h>
 #include <stdio.h>
 #elif defined(XP_UNIX)
@@ -56,8 +57,48 @@ static char* MakeUpperCase(char* aPath)
     
   return aPath;
 }
-#endif
 
+//----------------------------------------------------------------------------------------
+static void GetWindowsFolder(int folder, nsFileSpec& outDirectory)
+//----------------------------------------------------------------------------------------
+{
+    LPMALLOC pMalloc = NULL;
+    LPSTR pBuffer = NULL;
+    LPITEMIDLIST pItemIDList = NULL;
+    int len;
+ 
+    // Get the shell's allocator. 
+    if (!SUCCEEDED(SHGetMalloc(&pMalloc))) 
+        return;
+
+    // Allocate a buffer
+    if ((pBuffer = (LPSTR) pMalloc->Alloc(MAX_PATH + 2)) == NULL) 
+        return; 
+ 
+    // Get the PIDL for the folder. 
+    if (!SUCCEEDED(SHGetSpecialFolderLocation( 
+            NULL, folder, &pItemIDList)))
+        goto Clean;
+ 
+    if (!SUCCEEDED(SHGetPathFromIDList(pItemIDList, pBuffer)))
+        goto Clean;
+
+    // Append the trailing slash
+    len = PL_strlen(pBuffer);
+    pBuffer[len]   = '\\';
+    pBuffer[len + 1] = '\0';
+
+    // Assign the directory
+    outDirectory = MakeUpperCase(pBuffer);
+
+Clean:
+    // Clean up. 
+    if (pItemIDList)
+        pMalloc->Free(pItemIDList); 
+    if (pBuffer)
+        pMalloc->Free(pBuffer); 
+} // GetWindowsFolder
+#endif // XP_PC
 
 //----------------------------------------------------------------------------------------
 static void GetCurrentWorkingDirectory(nsFileSpec& aFileSpec)
@@ -65,7 +106,7 @@ static void GetCurrentWorkingDirectory(nsFileSpec& aFileSpec)
 {
     aFileSpec = ".";
     return;
-}
+} // GetCurrentWorkingDirectory
 
 //----------------------------------------------------------------------------------------
 static void GetCurrentProcessDirectory(nsFileSpec& aFileSpec)
@@ -156,7 +197,7 @@ static void GetCurrentProcessDirectory(nsFileSpec& aFileSpec)
 #endif
 
     NS_ERROR("unable to get current process directory");
-}
+} // GetCurrentProcessDirectory()
 
 //nsSpecialSystemDirectory::nsSpecialSystemDirectory()
 //:    nsFileSpec(nsnull)
@@ -209,20 +250,11 @@ void nsSpecialSystemDirectory::operator = (SystemDirectories aSystemSystemDirect
             
         case OS_TemporaryDirectory:
 #ifdef XP_PC
+        {
             char path[_MAX_PATH];
-            if ( GetEnvironmentVariable(TEXT("TMP"), path, _MAX_PATH) == 0 ) 
-                if (GetEnvironmentVariable(TEXT("TEMP"), path, _MAX_PATH))
-                {
-                    // still not set!
-                    PRInt32 len = GetWindowsDirectory( path, _MAX_PATH );
-                    if (len)
-                    {
-                        strcat( path, "temp" );
-                    }
-                }
-
-            strcat( path, "\\" );
+            DWORD len = GetTempPath(_MAX_PATH, path);
             *this = MakeUpperCase(path);
+        }
 #elif defined(XP_MAC)
             *this = kTemporaryFolderType;
         
@@ -318,7 +350,144 @@ void nsSpecialSystemDirectory::operator = (SystemDirectories aSystemSystemDirect
             break;
         }
 
-#endif        
+        case Win_HomeDirectory:
+        {    
+            char path[_MAX_PATH];
+            if (GetEnvironmentVariable(TEXT("HOMEDRIVE"), path, _MAX_PATH) >= 0)
+            {
+                char temp[_MAX_PATH];
+                if (GetEnvironmentVariable(TEXT("HOMEPATH"), temp, _MAX_PATH) > 0)
+                    PL_strcatn(path, _MAX_PATH, temp);
+
+                PRInt32 len = PL_strlen(path);
+
+                // Need enough space to add the trailing backslash
+                if (len > _MAX_PATH - 2)
+                    break;
+            
+                path[len]   = '\\';
+                path[len+1] = '\0';
+            }
+            
+            *this = MakeUpperCase(path);
+            break;
+        }
+        case Win_Desktop:
+        {
+            GetWindowsFolder(CSIDL_DESKTOP, *this);
+            break;
+        }
+        case Win_Programs:
+        {
+            GetWindowsFolder(CSIDL_PROGRAMS, *this);
+            break;
+        }
+        case Win_Controls:
+        {
+            GetWindowsFolder(CSIDL_CONTROLS, *this);
+            break;
+        }
+        case Win_Printers:
+        {
+            GetWindowsFolder(CSIDL_PRINTERS, *this);
+            break;
+        }
+        case Win_Personal:
+        {
+            GetWindowsFolder(CSIDL_PERSONAL, *this);
+            break;
+        }
+        case Win_Favorites:
+        {
+            GetWindowsFolder(CSIDL_FAVORITES, *this);
+            break;
+        }
+        case Win_Startup:
+        {
+            GetWindowsFolder(CSIDL_STARTUP, *this);
+            break;
+        }
+        case Win_Recent:
+        {
+            GetWindowsFolder(CSIDL_RECENT, *this);
+            break;
+        }
+        case Win_Sendto:
+        {
+            GetWindowsFolder(CSIDL_SENDTO, *this);
+            break;
+        }
+        case Win_Bitbucket:
+        {
+            GetWindowsFolder(CSIDL_BITBUCKET, *this);
+            break;
+        }
+        case Win_Startmenu:
+        {
+            GetWindowsFolder(CSIDL_STARTMENU, *this);
+            break;
+        }
+        case Win_Desktopdirectory:
+        {
+            GetWindowsFolder(CSIDL_DESKTOPDIRECTORY, *this);
+            break;
+        }
+        case Win_Drives:
+        {
+            GetWindowsFolder(CSIDL_DRIVES, *this);
+            break;
+        }
+        case Win_Network:
+        {
+            GetWindowsFolder(CSIDL_NETWORK, *this);
+            break;
+        }
+        case Win_Nethood:
+        {
+            GetWindowsFolder(CSIDL_NETHOOD, *this);
+            break;
+        }
+        case Win_Fonts:
+        {
+            GetWindowsFolder(CSIDL_FONTS, *this);
+            break;
+        }
+        case Win_Templates:
+        {
+            GetWindowsFolder(CSIDL_TEMPLATES, *this);
+            break;
+        }
+        case Win_Common_Startmenu:
+        {
+            GetWindowsFolder(CSIDL_COMMON_STARTMENU, *this);
+            break;
+        }
+        case Win_Common_Programs:
+        {
+            GetWindowsFolder(CSIDL_COMMON_PROGRAMS, *this);
+            break;
+        }
+        case Win_Common_Startup:
+        {
+            GetWindowsFolder(CSIDL_COMMON_STARTUP, *this);
+            break;
+        }
+        case Win_Common_Desktopdirectory:
+        {
+            GetWindowsFolder(CSIDL_COMMON_DESKTOPDIRECTORY, *this);
+            break;
+        }
+        case Win_Appdata:
+        {
+            GetWindowsFolder(CSIDL_APPDATA, *this);
+            break;
+        }
+        case Win_Printhood:
+        {
+            GetWindowsFolder(CSIDL_PRINTHOOD, *this);
+            break;
+        }
+#endif  // XP_PC     
 
 #ifdef XP_UNIX
         case Unix_LocalDirectory:
