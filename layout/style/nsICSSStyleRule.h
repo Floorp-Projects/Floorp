@@ -99,7 +99,7 @@ public:
   PRInt32 CalcWeight(void) const;
 
   void SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize);
-  nsresult ToString( nsAWritableString& aString, nsICSSStyleSheet* aSheet ) const;
+  nsresult ToString( nsAWritableString& aString, nsICSSStyleSheet* aSheet, PRBool aIsPseudoElem ) const;
 
 public:
   PRInt32         mNameSpace;
