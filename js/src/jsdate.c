@@ -1511,31 +1511,33 @@ date_format(JSContext *cx, jsdouble date, formatspec format, jsval *rval)
 	/* get a timezone string from the OS to include as a
 	   comment. */
 	new_explode(date, &split, JS_TRUE);
-	PRMJ_FormatTime(tzbuf, sizeof tzbuf, "(%Z)", &split);
+        if (PRMJ_FormatTime(tzbuf, sizeof tzbuf, "(%Z)", &split) != 0) {
 
-        /* Decide whether to use the resulting timezone string.
-         *
-         * Reject it if it contains any non-ASCII, non-alphanumeric characters.
-         * It's then likely in some other character encoding, and we probably
-         * won't display it correctly.
-         */
-        usetz = JS_TRUE;
-        tzlen = strlen(tzbuf);
-        if (tzlen > 100) {
-            usetz = JS_FALSE;
-        } else {
-            for (i = 0; i < tzlen; i++) {
-                jschar c = tzbuf[i];
-                if (c > 127 ||
-                    !(isalpha(c) || isdigit(c) ||
-                      c == ' ' || c == '(' || c == ')')) {
-                    usetz = JS_FALSE;
+            /* Decide whether to use the resulting timezone string.
+             *
+             * Reject it if it contains any non-ASCII, non-alphanumeric
+             * characters.  It's then likely in some other character
+             * encoding, and we probably won't display it correctly.
+             */
+            usetz = JS_TRUE;
+            tzlen = strlen(tzbuf);
+            if (tzlen > 100) {
+                usetz = JS_FALSE;
+            } else {
+                for (i = 0; i < tzlen; i++) {
+                    jschar c = tzbuf[i];
+                    if (c > 127 ||
+                        !(isalpha(c) || isdigit(c) ||
+                          c == ' ' || c == '(' || c == ')')) {
+                        usetz = JS_FALSE;
+                    }
                 }
             }
-        }
 
-        /* Also reject it if it's not parenthesized or if it's '()'. */
-        if (tzbuf[0] != '(' || tzbuf[1] == ')')
+            /* Also reject it if it's not parenthesized or if it's '()'. */
+            if (tzbuf[0] != '(' || tzbuf[1] == ')')
+                usetz = JS_FALSE;
+        } else
             usetz = JS_FALSE;
 
         switch (format) {
