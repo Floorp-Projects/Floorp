@@ -596,54 +596,41 @@ NS_IMETHODIMP nsAccessible::GetFocusedChild(nsIAccessible **aFocusedChild)
 }
 
   /* nsIAccessible getChildAtPoint (in long x, in long y); */
-NS_IMETHODIMP nsAccessible::GetChildAtPoint(PRInt32 tx, PRInt32 ty, nsIAccessible **_retval)
-{  
+NS_IMETHODIMP nsAccessible::GetChildAtPoint(PRInt32 tx, PRInt32 ty, nsIAccessible **aAccessible)
+{
+  *aAccessible = nsnull;
+  PRInt32 numChildren; // Make sure all children cached first
+  GetChildCount(&numChildren);
+
+  nsCOMPtr<nsIAccessible> child;
+  GetFirstChild(getter_AddRefs(child));
+
   PRInt32 x, y, w, h;
-  GetBounds(&x,&y,&w,&h);
+  PRUint32 state;
 
-  if (tx >= x && tx < x + w && ty >= y && ty < y + h)
-  {
-    nsCOMPtr<nsIAccessible> child;
-    nsCOMPtr<nsIAccessible> next;
-
-    PRInt32 numChildren; // Make sure all children cached first
-    GetChildCount(&numChildren);
-
-    GetFirstChild(getter_AddRefs(child));
-
-    PRInt32 cx,cy,cw,ch;
-
-    while (child) {
-      // First test if offscreen bit is set for menus
-      // We don't want to walk into offscreen menus or menu items
-      PRUint32 role = ROLE_NOTHING, state = 0;
-      child->GetRole(&role);
-
-      if (role == ROLE_MENUPOPUP || role == ROLE_MENUITEM || role == ROLE_SEPARATOR) {
-        child->GetState(&state);
-        if (role == ROLE_MENUPOPUP && (state&STATE_OFFSCREEN) == 0) {
-          // Skip menupopup layer and go straight to menuitem's
-          return child->GetChildAtPoint(tx, ty, _retval);
-        }
+  while (child) {
+    child->GetBounds(&x, &y, &w, &h);
+    if (tx >= x && tx < x + w && ty >= y && ty < y + h) {
+      child->GetState(&state);
+      if ((state & (STATE_OFFSCREEN|STATE_INVISIBLE)) == 0) {   // Don't walk into offscreen items
+        NS_ADDREF(*aAccessible = child);
+        return NS_OK;
       }
-
-      if ((state & STATE_OFFSCREEN) == 0) {   // Don't walk into offscreen menu items
-        child->GetBounds(&cx,&cy,&cw,&ch);
-        if (tx >= cx && tx < cx + cw && ty >= cy && ty < cy + ch) 
-        {
-          *_retval = child;
-          NS_ADDREF(*_retval);
-          return NS_OK;
-        }
-      }
-      child->GetNextSibling(getter_AddRefs(next));
-      child = next;
     }
+    nsCOMPtr<nsIAccessible> next;
+    child->GetNextSibling(getter_AddRefs(next));
+    child = next;
   }
 
-  *_retval = this;
-  NS_ADDREF(this);
-  return NS_OK;
+  GetState(&state);
+  GetBounds(&x, &y, &w, &h);
+  if ((state & (STATE_OFFSCREEN|STATE_INVISIBLE)) == 0 &&
+      tx >= x && tx < x + w && ty >= y && ty < y + h) {
+    *aAccessible = this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP nsAccessible::GetDOMNode(nsIDOMNode **_retval)
