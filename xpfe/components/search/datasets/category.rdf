@@ -73,7 +73,7 @@
 
 
 <RDF:Description about="NC:SearchCategory?engine=urn:search:engine:1">
-	<NC:Name>AOL Netfind</NC:Name>
+	<NC:Name>AOLSearch</NC:Name>
 </RDF:Description>
 
 <RDF:Description about="NC:SearchCategory?engine=urn:search:engine:2">

@@ -1,0 +1,21 @@
+# Copyright ©1998-1999 America Online, Inc.
+
+<SEARCH
+	name = "AOLSearch"
+	action = "http://search.aol.com/dirsearch.adp"
+	method = get
+	update = "http://www.aim.aol.com/sherlock/us/AOLSearch.src.hqx"
+	updateCheckDays = 10
+	routeType = internet>
+<INPUT name = "query" user>
+<INTERPRET
+	bannerStart = "<!--- END NAV BAR --->"
+	bannerEnd = "'<P><P ALIGN=Left>"
+	resultListStart = 'The following results are from the World Wide Web and may contain objectionable material that AOL does not endorse.'
+	resultListEnd = "<P ALIGN=CENTER>"
+	resultItemStart = '<P>'
+	resultItemEnd = "</I>"
+	relevanceStart = '<FONT COLOR=#990000 STYLE="font-weight:bold; font-size:12px">'
+	relevanceEnd = "</FONT>"
+>
+</SEARCH>
