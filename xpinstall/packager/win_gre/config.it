@@ -666,7 +666,8 @@ Message Cancel Setup AUTO mode=Canceling Setup, please wait...
 ;*** LOCALIZE ME BABY ***
 Error File Uncompress=Error uncompressing file %s: %d
 ;*** LOCALIZE ME BABY ***
-UsageMsg Usage=Usage: %s [options]%s	[options] can be any of the following combination:%s		-h:		This help.%s		-a [path]:		Alternate archive search path.%s		-n [filename]:	Setup's parent's process filename.%s		-ma:		Run setup in Auto mode.%s		-ms:		Run setup in Silent mode.%s		-ira:		Ignore the [RunAppX] sections%s		-ispf:		Ignore the [Program FolderX] sections that show%s				the Start Menu shortcut folder at the end of installation.
+;UsageMsg Usage must not have more than 20 lines. (Each %s becomes a line)
+UsageMsg Usage=Usage: %s [options]%s	[options] can be any of the following combination:%s		-h:		This help.%s		-a [path]:		Alternate archive search path.%s		-app [id]:		ID of app which is launching the installer%s		-app_path [path]:	Points to representative file of the app%s		-dd [path]:	Suggested install destination direcotory%s		-f:		Force install%s		-n [filename]:	Setup's parent's process filename.%s		-ma:		Run setup in Auto mode.%s		-mmi:		Allow multiple installer instances%s		-ms:		Run setup in Silent mode.%s		-ira:		Ignore the [RunAppX] sections%s		-ispf:		Ignore the [Program FolderX] sections that show%s				the Start Menu shortcut folder at the end of installation.%s		-reg_path [path]:	Where to make entries in the Windows registry.
 ;*** LOCALIZE ME BABY ***
 IDC Use FTP=Use &FTP for downloading files
 ;*** LOCALIZE ME BABY ***
