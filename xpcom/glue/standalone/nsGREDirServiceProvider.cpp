@@ -245,7 +245,7 @@ GRE_GetCurrentProcessDirectory(char* buffer)
       int32 cookie = 0;
       image_info info;
       char *p;
-      *buf = 0;
+      *buffer = 0;
       if(get_next_image_info(0, &cookie, &info) == B_OK)
       {
         strcpy(buffer, info.name);
