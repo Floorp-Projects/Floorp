@@ -427,6 +427,12 @@ nsSimplePageSequenceFrame::Print(nsIPresContext&         aPresContext,
       page->GetView(&view);
       NS_ASSERTION(nsnull != view, "no page view");
       vm->Display(view);
+
+      // this view was printed and since display set the origin 
+      // 0,0 there is a danger that this view can be printed again
+      // If it is a sibling to another page/view.  Setting the visibility
+      // to hide will keep this page from printing again - dwc
+      view->SetVisibility(nsViewVisibility_kHide);
   
       // Finish printing of the page
       if (!SendStatusNotification(aStatusCallback, pageNum, totalPages,
