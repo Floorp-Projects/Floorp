@@ -37,6 +37,11 @@
 #include "nsCURILoader.h"
 
 
+#include "nsIDOMWindow.h"
+#include "nsIDOMHTMLDocument.h"
+#include "nsIDocument.h"
+#include "nsIURI.h"
+
 static NS_DEFINE_IID(kDocLoaderServiceCID, NS_DOCUMENTLOADER_SERVICE_CID);
 
 nsHistoryLoadListener::nsHistoryLoadListener(nsIBrowserHistory *aHistory)
@@ -80,16 +85,36 @@ nsHistoryLoadListener::OnStateChange(nsIWebProgress *aWebProgress,
     if (! (aStateFlags & nsIWebProgressListener::STATE_STOP))
         return NS_OK;
 
-    {
-        if (aStatus == NS_BINDING_REDIRECTED) {
-            // now the question is, is this already in history, or do
-            // we have to prevent it from existing there in the first place?
-        }
+    nsresult rv;
+    
+    nsCOMPtr<nsIDOMWindow> window;
+    rv = aWebProgress->GetDOMWindow(getter_AddRefs(window));
+    if (NS_FAILED(rv)) return rv;
 
-        else {
-            // somehow get the title, and store it in history
+    nsCOMPtr<nsIDOMDocument> domDoc;
 
-        }
+    rv = window->GetDocument(getter_AddRefs(domDoc));
+    nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
+    if (!doc) return NS_OK;
+
+    nsCOMPtr<nsIURI> uri;
+    rv = doc->GetDocumentURL(getter_AddRefs(uri));
+    if (NS_FAILED(rv)) return rv;
+        
+    nsXPIDLCString urlString;
+    uri->GetSpec(getter_Copies(urlString));
+    
+    if (aStatus == NS_BINDING_REDIRECTED) {
+        
+        mHistory->HidePage(urlString);
+        
+    } else {
+        nsCOMPtr<nsIDOMHTMLDocument> htmlDoc = do_QueryInterface(doc);
+        // somehow get the title, and store it in history
+        nsAutoString title;
+        htmlDoc->GetTitle(title);
+
+        mHistory->SetPageTitle(urlString, title.get());
     }
     printf("nsHistoryLoadListener::OnStateChange(w,r, %8.8X, %d)\n", aStateFlags, aStatus);
     return NS_ERROR_NOT_IMPLEMENTED;
