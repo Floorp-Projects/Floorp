@@ -37,7 +37,7 @@
 
 static NS_DEFINE_IID(kProxyObject_Identity_Class_IID, NS_PROXYEVENT_IDENTITY_CLASS_IID);
 
-#ifdef DEBUG_dougt
+#ifdef DEBUG_xpcom_proxy
 static PRMonitor* mon = nsnull;
 static PRUint32 totalProxyObjects = 0;
 static PRUint32 outstandingProxyObjects = 0;
@@ -290,14 +290,14 @@ nsProxyEventObject::nsProxyEventObject(nsIEventQueue *destQueue,
 
     mProxyObject = new nsProxyObject(destQueue, proxyType, aObj);
                 
-#ifdef DEBUG_dougt
+#ifdef DEBUG_xpcom_proxy
 DebugDump("Create", 0);
 #endif
 }
 
 nsProxyEventObject::~nsProxyEventObject()
 {
-#ifdef DEBUG_dougt
+#ifdef DEBUG_xpcom_proxy
 DebugDump("Delete", 0);
 #endif
     if (mRoot != nsnull)

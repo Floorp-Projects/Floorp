@@ -125,7 +125,7 @@ public:
     
     nsProxyEventObject*   Find(REFNSIID aIID);
 
-#ifdef DEBUG_dougt
+#ifdef DEBUG_xpcom_proxy
     void DebugDump(const char * message, PRUint32 hashKey);
 #endif
 
