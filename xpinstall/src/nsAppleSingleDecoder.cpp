@@ -28,6 +28,7 @@
 #include "MoreFilesExtras.h"
 #include "MoreDesktopMgr.h"
 #include "IterateDirectory.h"
+#include "nsISupportsUtils.h"
 
 /*----------------------------------------------------------------------*
  *   Constructors/Destructor
