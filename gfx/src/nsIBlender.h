@@ -41,7 +41,7 @@ public:
    * @param  aDeviceContext is where the blender can get info about the device its blending on
    * @result The result of the initialization, NS_OK if no errors
    */
-  virtual nsresult Init(nsIDeviceContext *aDeviceContext) = 0;
+  NS_IMETHOD Init(nsIDeviceContext *aDeviceContext) = 0;
 
   /**
    * NOTE: if we can make this static, that would be great. I don't think we can.
@@ -58,13 +58,13 @@ public:
    * @param aSrcOpacity 0.0f -> 1.0f opacity value of source area. 1.0f indicates
    *        complete opacity.
    */
-  virtual nsresult Blend(PRInt32 aSX, PRInt32 aSY, PRInt32 aWidth, PRInt32 aHeight,nsDrawingSurface aSrc,
-                     nsDrawingSurface aDest, PRInt32 aDX, PRInt32 aDY, float aSrcOpacity,PRBool aSaveBlendArea) = 0;
+  NS_IMETHOD Blend(PRInt32 aSX, PRInt32 aSY, PRInt32 aWidth, PRInt32 aHeight,nsDrawingSurface aSrc,
+                   nsDrawingSurface aDest, PRInt32 aDX, PRInt32 aDY, float aSrcOpacity,PRBool aSaveBlendArea) = 0;
 
   /**
    * Restore the the blended area of the image if one was save on a previous blend.
    */
-  virtual PRBool  RestoreImage(nsDrawingSurface aDst)=0;
+  NS_IMETHOD RestoreImage(nsDrawingSurface aDst) = 0;
 };
 
 #endif

@@ -59,39 +59,32 @@ public:
   */
   virtual ~nsBlender();
 
-
- /** --------------------------------------------------------------------------
-   * Initialize a nsBlender object, or re-initialize if it is re-used
-   * @update dc 11/4/98
-   * @param  aDeviceContext is where the blender can get info about the device its blending on
-   * @result The result of the initialization, NS_OK if no errors
-   */
-  virtual nsresult Init(nsIDeviceContext *aDeviceContext);
+  NS_IMETHOD Init(nsIDeviceContext *aDeviceContext);
 
  protected:
 
- /** --------------------------------------------------------------------------
-  * Calculate how many bytes per span for a given depth
-  * @update dc - 10/29/98
-  * @param aWidth -- width of the line
-  * @param aBitsPixel -- how many bytes per pixel in the bitmap
-  * @result The number of bytes per line
-  */
+  /** --------------------------------------------------------------------------
+   * Calculate how many bytes per span for a given depth
+   * @update dc - 10/29/98
+   * @param aWidth -- width of the line
+   * @param aBitsPixel -- how many bytes per pixel in the bitmap
+   * @result The number of bytes per line
+   */
   PRInt32  CalcBytesSpan(PRUint32  aWidth,PRUint32  aBitsPixel);
 
- /** --------------------------------------------------------------------------
-   * Blend two 32 bit image arrays
-   * @param aNumlines  Number of lines to blend
-   * @param aNumberBytes Number of bytes per line to blend
-   * @param aSImage Pointer to beginning of the source bytes
-   * @param aDImage Pointer to beginning of the destination bytes
-   * @param aMImage Pointer to beginning of the mask bytes
-   * @param aSLSpan number of bytes per line for the source bytes
-   * @param aDLSpan number of bytes per line for the destination bytes
-   * @param aMLSpan number of bytes per line for the Mask bytes
-   * @param aBlendQuality The quality of this blend, this is for tweening if neccesary
-   * @param aSaveBlendArea informs routine if the area affected area will be save first
-   */
+  /** --------------------------------------------------------------------------
+    * Blend two 32 bit image arrays
+    * @param aNumlines  Number of lines to blend
+    * @param aNumberBytes Number of bytes per line to blend
+    * @param aSImage Pointer to beginning of the source bytes
+    * @param aDImage Pointer to beginning of the destination bytes
+    * @param aMImage Pointer to beginning of the mask bytes
+    * @param aSLSpan number of bytes per line for the source bytes
+    * @param aDLSpan number of bytes per line for the destination bytes
+    * @param aMLSpan number of bytes per line for the Mask bytes
+    * @param aBlendQuality The quality of this blend, this is for tweening if neccesary
+    * @param aSaveBlendArea informs routine if the area affected area will be save first
+    */
   void Do32Blend(PRUint8 aBlendVal,PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,
                 PRInt32 aSLSpan,PRInt32 aDLSpan,nsBlendQuality aBlendQuality,PRBool aSaveBlendArea);
 

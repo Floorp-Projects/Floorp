@@ -30,13 +30,10 @@ nsBlender :: nsBlender()
 
   mSaveBytes = nsnull;
   mSaveLS = 0;
-
 }
 
 nsBlender::~nsBlender() 
 {
-
-
 }
 
 
@@ -44,7 +41,7 @@ NS_IMPL_ISUPPORTS(nsBlender, kIBlenderIID);
 
 //------------------------------------------------------------
 
-nsresult
+NS_IMETHODIMP
 nsBlender::Init(nsIDeviceContext *aTheDevCon)
 {
   return NS_OK;
