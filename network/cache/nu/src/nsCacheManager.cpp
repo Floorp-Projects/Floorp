@@ -24,6 +24,7 @@
 #include "prtypes.h"
 #include "prinrval.h"
 #include "plstr.h"
+#include "prprf.h" //PR_smprintf and PR_smprintf_free
 
 #include "nsCacheManager.h"
 #include "nsCacheTrace.h"
@@ -196,17 +197,20 @@ nsCacheManager::GetModule(PRInt16 i_index) const
 void
 nsCacheManager::InfoAsHTML(char* o_Buffer) const
 {
-    MonitorLocker ml((nsMonitorable*)this);
-    char tmpbuffer[256];
+	MonitorLocker ml((nsMonitorable*)this);
 
-    /* TODO - make this cool */
-    sprintf(tmpbuffer, "<HTML><h2>Your cache has %d modules</h2> \
-        It has a total of %d cache objects. Hang in there for the details. </HTML>\0", 
-        Entries(),
-        NumberOfObjects());
-    
-    PL_strncpyz(o_Buffer, tmpbuffer, PL_strlen(tmpbuffer)+1);
-}
+	char* tmpBuffer =/* TODO - make this cool */
+		PR_smprintf("<HTML><h2>Your cache has %d modules</h2> \
+			It has a total of %d cache objects. Hang in there for the details. </HTML>\0", 
+			Entries(),
+			NumberOfObjects());
+	
+	if (tmpBuffer)
+	{
+		PL_strncpyz(o_Buffer, tmpBuffer, PL_strlen(tmpBuffer)+1);
+		PR_smprintf_free(tmpBuffer);
+																					}
+																				}
 
 void 
 nsCacheManager::Init() 
@@ -290,3 +294,4 @@ NumberOfObjects(void)
     }
     return objs;
 }
+

@@ -29,6 +29,7 @@
 //#include "nsISupports.h"
 
 #include "prmon.h"
+#include "prlog.h"
 
 class nsMonitorable//: public nsISupports
 {
@@ -51,15 +52,8 @@ protected:
     class MonitorLocker
     {
     public:
-        MonitorLocker(nsMonitorable* i_pThis): 
-            m_pMonitorable(i_pThis) 
-        { 
-            if (m_pMonitorable) m_pMonitorable->Lock();
-        }
-        ~MonitorLocker() 
-        { 
-            if (m_pMonitorable) m_pMonitorable->Unlock();
-        }
+        MonitorLocker(nsMonitorable* i_pThis);
+        ~MonitorLocker();
     private:
         nsMonitorable* m_pMonitorable;
     };
