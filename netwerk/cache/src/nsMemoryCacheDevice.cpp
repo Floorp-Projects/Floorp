@@ -26,8 +26,9 @@
 
 
 nsMemoryCacheDevice::nsMemoryCacheDevice()
+    : mCurrentTotal(0)
 {
-
+    PR_INIT_CLIST(&mEvictionList);
 }
 
 nsMemoryCacheDevice::~nsMemoryCacheDevice()
@@ -49,22 +50,6 @@ nsMemoryCacheDevice::Init()
 }
 
 
-nsresult
-nsMemoryCacheDevice::Create(nsCacheDevice **result)
-{
-    nsMemoryCacheDevice * device = new nsMemoryCacheDevice();
-    if (!device)  return NS_ERROR_OUT_OF_MEMORY;
-
-    nsresult rv = device->Init();
-    if (NS_FAILED(rv)) {
-        delete device;
-        device = nsnull;
-    }
-    *result = device;
-    return rv;
-}
-
-
 const char *
 nsMemoryCacheDevice::GetDeviceID()
 {
@@ -72,30 +57,24 @@ nsMemoryCacheDevice::GetDeviceID()
 }
 
 
-nsresult
-nsMemoryCacheDevice::ActivateEntryIfFound(nsCacheEntry * entry)
+nsCacheEntry *
+nsMemoryCacheDevice::FindEntry(nsCString * key)
 {
-    //** get the key from the entry
-    nsCString * key = nsnull; //** = key from entry
-
-    nsCacheEntry * ourEntry = mInactiveEntries.GetEntry(key);
-    if (!ourEntry) {
-         return NS_ERROR_CACHE_KEY_NOT_FOUND;
-    }
+    nsCacheEntry * entry = mInactiveEntries.GetEntry(key);
+    if (!entry)  return nsnull;
 
     //** need entry->UpdateFrom(ourEntry);
     entry->MarkActive(); // so we don't evict it
     //** find eviction element and move it to the tail of the queue
     
-    return NS_OK;
+    return entry;;
 }
 
 
 nsresult
 nsMemoryCacheDevice::DeactivateEntry(nsCacheEntry * entry)
 {
-    nsCString * key;
-    entry->GetKey(&key);
+    nsCString * key = entry->GetKey();
 
     nsCacheEntry * ourEntry = mInactiveEntries.GetEntry(key);
     NS_ASSERTION(ourEntry, "DeactivateEntry called for an entry we don't have!");
@@ -103,8 +82,10 @@ nsMemoryCacheDevice::DeactivateEntry(nsCacheEntry * entry)
         return NS_ERROR_INVALID_POINTER;
 
     //** need ourEntry->UpdateFrom(entry);
+    //** MarkInactive(); // to make it evictable again
     return NS_ERROR_NOT_IMPLEMENTED;
 }
+
 
 nsresult
 nsMemoryCacheDevice::BindEntry(nsCacheEntry * entry)
@@ -116,6 +97,7 @@ nsMemoryCacheDevice::BindEntry(nsCacheEntry * entry)
     //** add size of entry to memory totals
     return NS_ERROR_NOT_IMPLEMENTED;
 }
+
 
 nsresult
 nsMemoryCacheDevice::GetTransportForEntry( nsCacheEntry * entry,

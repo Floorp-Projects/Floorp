@@ -67,10 +67,10 @@ nsDiskCacheDevice::GetDeviceID()
 }
 
 
-nsresult
-nsDiskCacheDevice::ActivateEntryIfFound(nsCacheEntry * entry)
+nsCacheEntry *
+nsDiskCacheDevice::FindEntry(nsCString * key)
 {
-    return  NS_ERROR_CACHE_KEY_NOT_FOUND;
+    return  nsnull;
 }
 
 

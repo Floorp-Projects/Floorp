@@ -47,7 +47,7 @@ public:
     nsCacheEntry(nsCString * key, nsCacheStoragePolicy storagePolicy);
     ~nsCacheEntry();
 
-    void GetKey( nsCString ** key)            { if (key) *key = mKey; }
+    nsCString *  GetKey(void)            { return mKey; }
 
     void GetFetchCount( PRInt32 * result)    { if (result) *result = mFetchCount; }
     void SetFetchCount( PRInt32   count)     { mFetchCount = count; }
@@ -113,6 +113,8 @@ public:
     PRBool IsActive()          { return (mFlags & eActiveMask) != 0; }
     PRBool IsInitialized()     { return (mFlags & eInitializedMask) != 0; }
     PRBool IsValid()           { return (mFlags & eValidMask) != 0; }
+    PRBool IsAllowedInMemory() { return (mFlags & eAllowedInMemoryMask) != 0; }
+    PRBool IsAllowedOnDisk()   { return (mFlags & eAllowedOnDiskMask) !=0; } 
 
     // methods for nsCacheService
     nsresult Open(nsCacheRequest *request, nsICacheEntryDescriptor ** result);

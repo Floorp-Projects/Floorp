@@ -36,7 +36,9 @@ nsCacheService *   nsCacheService::gService = nsnull;
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsCacheService, nsICacheService)
 
 nsCacheService::nsCacheService()
-    : mCacheServiceLock(nsnull)
+    : mCacheServiceLock(nsnull),
+      mMemoryDevice(nsnull),
+      mDiskDevice(nsnull)
 {
   NS_INIT_REFCNT();
 
@@ -44,7 +46,7 @@ nsCacheService::nsCacheService()
   gService = this;
 
   // create list of cache devices
-  PR_INIT_CLIST(&mDeviceList);
+  PR_INIT_CLIST(&mDoomedEntries);
 }
 
 nsCacheService::~nsCacheService()
@@ -69,39 +71,25 @@ nsCacheService::Init()
     if (mCacheServiceLock == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
 
-#if 0
-    // initialize hashtable for client ids
-    rv = mClientIDs.Init();
-    NS_ASSERTION(NS_SUCCEEDED(rv), "mClientIDs.Init() failed");
-#endif
-
     // initialize hashtable for active cache entries
     rv = mActiveEntries.Init();
+    if (NS_FAILED(rv)) goto error;
 
-    if (NS_SUCCEEDED(rv)) {
-        // create memory cache
-#if 0
-        nsMemoryCacheDevice *device = new nsMemoryCacheDevice;
-        // (void) mDeviceList.AppendElement(device);
-      
-        PRUint32  deviceID = device->GetDeviceID();
-#endif
-
-        if (NS_SUCCEEDED(rv)) {
-            // create disk cache
-        }
+    // create memory cache
+    mMemoryDevice = new nsMemoryCacheDevice;
+    if (!mMemoryDevice) {
+        rv = NS_ERROR_OUT_OF_MEMORY;
+        goto error;
     }
+    rv = mMemoryDevice->Init();
+    if (NS_FAILED(rv)) goto error;
+    
+    //** create disk cache
+    
+    return NS_OK;
 
-
-    if (NS_FAILED(rv)) {
-        // if mem cache - destroy it
-        // if disk cache - destroy it
-
-        PR_DestroyLock(mCacheServiceLock);
-        mCacheServiceLock = nsnull;
-        
-        // finish mActiveEntries hashtable
-    }
+ error:
+    (void)Shutdown();
 
     return rv;
 }
@@ -118,7 +106,12 @@ nsCacheService::Shutdown()
 
         //** finalize active entries
 
-        //** deallocate memory and disk caches
+        // deallocate memory and disk caches
+        delete mMemoryDevice;
+        mMemoryDevice = nsnull;
+
+        delete mDiskDevice;
+        mDiskDevice = nsnull;
 
         PR_DestroyLock(mCacheServiceLock);
         mCacheServiceLock = nsnull;
@@ -160,11 +153,9 @@ nsCacheService::CreateSession(const char *          clientID,
     nsCacheSession * session = new nsCacheSession(clientID, storagePolicy, streamBased);
     if (!session)  return NS_ERROR_OUT_OF_MEMORY;
 
-    NS_ADDREF(session);
-    nsresult  rv = session->QueryInterface(NS_GET_IID(nsICacheSession),(void**) result);
-    NS_RELEASE(session);
+    NS_ADDREF(*result = session);
 
-    return rv;
+    return NS_OK;
 }
 
 
@@ -176,28 +167,31 @@ NS_IMETHODIMP nsCacheService::VisitEntries(nsICacheVisitor *visitor)
 
 
 nsresult
-nsCacheService::CommonOpenCacheEntry(nsCacheSession *   session,
-                                     const char *       clientKey,
-                                     nsCacheAccessMode  accessRequested,
-                                     nsICacheListener * listener,
-                                     nsCacheRequest **  request,
-                                     nsCacheEntry **    entry)
+nsCacheService::CreateRequest(nsCacheSession *   session,
+                              const char *       clientKey,
+                              nsCacheAccessMode  accessRequested,
+                              nsICacheListener * listener,
+                              nsCacheRequest **  request)
 {
-    NS_ASSERTION(request && entry, "CommonOpenCacheEntry: request or entry is null");
+    NS_ASSERTION(request, "CommonOpenCacheEntry: request or entry is null");
      
-    nsCString * key = new nsCString(*session->ClientID() + 
+    nsCString * key = new nsCString(*session->ClientID() +
+                                    nsLiteralCString(":") +
                                     nsLiteralCString(clientKey));
-    if (!key) {
+    if (!key)
         return NS_ERROR_OUT_OF_MEMORY;
-    }
     
     // create request
     *request = new  nsCacheRequest(key, listener, accessRequested, 
                                    session->StreamBased(),
                                    session->StoragePolicy());
     
-    // procure active entry
-    return ActivateEntry(*request, entry);
+    if (!*request) {
+        delete key;
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    return NS_OK;
 }                                     
 
 
@@ -213,16 +207,18 @@ nsCacheService::OpenCacheEntry(nsCacheSession *           session,
     nsCacheRequest * request = nsnull;
     nsCacheEntry *   entry   = nsnull;
 
-    nsresult rv = CommonOpenCacheEntry(session, key, accessRequested, nsnull,
-                                       &request, &entry);
+    nsresult rv = CreateRequest(session, key, accessRequested, nsnull, &request);
     if (NS_FAILED(rv))  return rv;
 
     while (1) {
-        rv = entry->Open(request, result);
-        if (rv != NS_ERROR_CACHE_ENTRY_DOOMED) break;
-
+        //** acquire lock
         rv = ActivateEntry(request, &entry);
         if (NS_FAILED(rv)) break;
+        //** check for NS_ERROR_CACHE_KEY_NOT_FOUND & READ-ONLY request
+
+        rv = entry->Open(request, result); //** release lock before waiting on request
+        if (rv != NS_ERROR_CACHE_ENTRY_DOOMED) break;
+
     }
     return rv;
 }
@@ -240,30 +236,29 @@ nsCacheService::AsyncOpenCacheEntry(nsCacheSession *   session,
     nsCacheRequest * request = nsnull;
     nsCacheEntry *   entry   = nsnull;
 
-    nsresult rv = CommonOpenCacheEntry(session, key, accessRequested, listener,
-                                       &request, &entry);
+    nsresult rv = CreateRequest(session, key, accessRequested, listener, &request);
 
+    //** acquire lock
+    rv = ActivateEntry(request, &entry);
     if (NS_SUCCEEDED(rv)) {
-        entry->AsyncOpen(request);
+        entry->AsyncOpen(request); //** release lock after request queued, etc.
     }
 
    return rv;
 }
+
 
 nsresult
 nsCacheService::ActivateEntry(nsCacheRequest * request, 
                               nsCacheEntry ** result)
 {
     nsresult        rv = NS_OK;
-    PRBool          entryIsNew = PR_FALSE;
-    nsCacheDevice * device = nsnull;
 
     NS_ASSERTION(request != nsnull, "ActivateEntry called with no request");
-    if (request == nsnull)  return NS_ERROR_NULL_POINTER;
     if (result) *result = nsnull;
+    if ((!request) || (!result))  return NS_ERROR_NULL_POINTER;
 
-    nsAutoLock lock(mCacheServiceLock);  // hold monitor to keep mActiveEntries coherent
- 
+
     // search active entries (including those not bound to device)
     nsCacheEntry *entry = mActiveEntries.GetEntry(request->mKey);
 
@@ -274,56 +269,46 @@ nsCacheService::ActivateEntry(nsCacheRequest * request,
     }
 
     if (!entry) {
-        entry = new nsCacheEntry(request->mKey, request->mStoragePolicy);
-        if (!entry)
-            return NS_ERROR_OUT_OF_MEMORY;
+        entry = SearchCacheDevices(request->mKey, request->mStoragePolicy);
 
-        entryIsNew = PR_TRUE;
-        rv = mActiveEntries.AddEntry(entry);
-        if (NS_FAILED(rv)) return rv;
+        if (!entry) {
 
-        //** queue request
+            if (!(request->mAccessRequested & nsICache::ACCESS_WRITE)) {
+                // this was a READ-ONLY request
+                rv = NS_ERROR_CACHE_KEY_NOT_FOUND;
+                goto end;
+            }
 
-        rv = SearchCacheDevices(entry, &device);
-
-        if ((rv == NS_ERROR_CACHE_KEY_NOT_FOUND) &&
-            !(request->mAccessRequested & nsICache::ACCESS_WRITE)) {
-            // this was a READ-ONLY request, deallocate entry
-            //** dealloc entry, call listener with error, etc.
-            *result = nsnull;
-            return NS_ERROR_CACHE_KEY_NOT_FOUND;
+            entry = new nsCacheEntry(request->mKey, request->mStoragePolicy);
+            if (!entry)
+                return NS_ERROR_OUT_OF_MEMORY;
         }
-    } else {
-        //** queue request
+
+        rv = mActiveEntries.AddEntry(entry);
+        if (NS_FAILED(rv)) goto end;
     }
 
+ end:
+    *result = entry;
     return rv;
 }
 
 
-nsresult
-nsCacheService::SearchCacheDevices(nsCacheEntry * entry, nsCacheDevice ** result)
+nsCacheEntry *
+nsCacheService::SearchCacheDevices(nsCString * key, nsCacheStoragePolicy policy)
 {
-    nsresult        rv = NS_OK;
-    nsCacheDevice * device;
+    nsCacheEntry * entry = nsnull;
 
-    *result = nsnull;
-    // if we don't alter the device list after initialization,
-    // we don't have to protect it with the monitor
-
-    //** first device
-    while (device) {
-        rv = device->ActivateEntryIfFound(entry);
-        if (NS_SUCCEEDED(rv)) {
-            *result = device;
-            break;
-        } else if (rv != NS_ERROR_CACHE_KEY_NOT_FOUND) {
-            //** handle errors (no memory, disk full, mismatched streamBased, whatever)
-        }
-        //** next device
+    if ((policy == nsICache::STORE_ANYWHERE) || (policy == nsICache::STORE_IN_MEMORY)) {
+        entry = mMemoryDevice->FindEntry(key);
     }
 
-    return rv;
+    if (!entry && 
+        ((policy == nsICache::STORE_ANYWHERE) || (policy == nsICache::STORE_ON_DISK))) {
+        //** entry = mDiskDevice->FindEntry(key);
+    }
+
+    return entry;
 }
 
 
@@ -358,7 +343,9 @@ nsCacheService::DeactivateEntry(nsCacheEntry * entry)
     nsCacheDevice * device = entry->CacheDevice();
     if (device) {
         nsresult rv = device->DeactivateEntry(entry);
+        if (NS_FAILED(rv)) {
         //** what do we do on errors?
+        }
     } else {
         //** increment deactivating unbound entry statistic
     }

@@ -38,8 +38,7 @@ nsCacheEntryDescriptor::nsCacheEntryDescriptor(nsCacheEntry * entry,
 
 nsCacheEntryDescriptor::~nsCacheEntryDescriptor()
 {
-    // tell nsCacheService we're going away
-    nsCacheService::GlobalInstance()->CloseDescriptor(this);
+    Close();
 }
 
 
@@ -71,7 +70,7 @@ nsCacheEntryDescriptor::GetKey(char ** result)
     nsresult    rv = NS_OK;
 
     *result = nsnull;
-    mCacheEntry->GetKey(&key);
+    key = mCacheEntry->GetKey();
 
     nsReadingIterator<char> start;
     key->BeginReading(start);
@@ -216,6 +215,18 @@ nsCacheEntryDescriptor::MarkValid()
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
+
+NS_IMETHODIMP
+nsCacheEntryDescriptor::Close()
+{
+    if (mCacheEntry) {
+        // tell nsCacheService we're going away
+        nsCacheService::GlobalInstance()->CloseDescriptor(this);
+        mCacheEntry = nsnull;
+    }
+    return NS_OK;
+}
+
 
 /* string getMetaDataElement (in string key); */
 NS_IMETHODIMP
