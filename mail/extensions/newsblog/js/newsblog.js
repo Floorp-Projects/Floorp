@@ -278,7 +278,7 @@ var progressNotifier = {
     for (index in this.mFeeds)
     {
       currentProgress += this.mFeeds[index].currentProgress;
-      maxProgress += this.mFeeds[index].maxProg;
+      maxProgress += this.mFeeds[index].maxProgress;
     }
 
     // if we start seeing weird "jumping" behavior where the progress bar goes below a threshold then above it again,
