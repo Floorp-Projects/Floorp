@@ -29,25 +29,36 @@
 //Interfaces Needed
 #include "nsISHistory.h"
 #include "nsISHTransaction.h"
+#include "nsIWebNavigation.h"
 
-class nsSHistory: public nsISHistory
+class nsIDocShell;
+
+class nsSHistory: public nsISHistory,
+                  public nsIWebNavigation
 {
 public:
 	nsSHistory();
 
 	NS_DECL_ISUPPORTS
 	NS_DECL_NSISHISTORY
+	NS_DECL_NSIWEBNAVIGATION
 
 protected:
    virtual ~nsSHistory();
 
+   // Could become part of nsIWebNavigation
+   NS_IMETHOD GotoIndex(PRInt32 aIndex);
    NS_IMETHOD PrintHistory();
    NS_IMETHOD GetTransactionAtIndex(PRInt32 aIndex, nsISHTransaction ** aResult);
+   PRBool CompareSHEntry(nsISHEntry * prevEntry, nsISHEntry * nextEntry, nsIDocShell * rootDocShell,
+	                     nsIDocShell ** aResultDocShell, nsISHEntry ** aResultSHEntry);
 	
 protected:
    nsCOMPtr<nsISHTransaction> mListRoot;
 	PRInt32 mIndex;
 	PRInt32 mLength;
+	// Weak reference. Do not refcount this.
+	nsIDocShell *  mRootDocShell;
 };
 
 
