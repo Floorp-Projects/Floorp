@@ -473,7 +473,7 @@ txXSLTProcessor::processAction(Node* aAction,
         else {
             nsCOMPtr<nsIAtom> prefix;
             XMLUtils::getPrefix(name, getter_AddRefs(prefix));
-            if (prefix != txXMLAtoms::_empty) {
+            if (prefix) {
                 if (prefix != txXMLAtoms::xmlns)
                     resultNsID = actionElement->lookupNamespaceID(prefix);
                 else
