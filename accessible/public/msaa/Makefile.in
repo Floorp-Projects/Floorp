@@ -94,9 +94,9 @@ OS_LIBS = \
 $(MIDL_GENERATED_FILES): done_gen
 
 done_gen: ISimpleDOMNode.idl ISimpleDOMDocument.idl ISimpleDOMText.idl
-	"$(MIDL)" $(srcdir)/ISimpleDOMNode.idl
-	"$(MIDL)" $(srcdir)/ISimpleDOMDocument.idl
-	"$(MIDL)" $(srcdir)/ISimpleDOMText.idl
+	$(MIDL) $(srcdir)/ISimpleDOMNode.idl
+	$(MIDL) $(srcdir)/ISimpleDOMDocument.idl
+	$(MIDL) $(srcdir)/ISimpleDOMText.idl
 	touch $@
 
 EXPORTS = \

@@ -60,7 +60,7 @@ $(MIDL_GENERATED_FILES): done_gen
 
 done_gen: IPalmSync.idl
 	$(RM) $(SRCDIR_CSRCS)
-	"$(MIDL)" $(UNICODE_FLAGS) $(srcdir)/IPalmSync.idl
+	$(MIDL) $(UNICODE_FLAGS) $(srcdir)/IPalmSync.idl
 	touch $@
 
 export:: done_gen
