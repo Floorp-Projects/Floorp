@@ -40,6 +40,7 @@
 #define TX_XSLT_PATTERNS_H
 
 #include "Expr.h"
+#include "XMLUtils.h"
 class ProcessorState;
 
 class txPattern : public TxObject
@@ -175,9 +176,10 @@ private:
 class txKeyPattern : public txPattern
 {
 public:
-    txKeyPattern(ProcessorState* aPs, const String& aName,
-                 const String& aValue)
-        : mProcessorState(aPs), mName(aName), mValue(aValue)
+    txKeyPattern(ProcessorState* aPs, txAtom* aPrefix, txAtom* aLocalName,
+                 PRInt32 aNSID, const String& aValue)
+        : mProcessorState(aPs), mName(aNSID, aLocalName), mPrefix(aPrefix),
+          mValue(aValue)
     {
     }
 
@@ -187,7 +189,9 @@ public:
 
 private:
     ProcessorState* mProcessorState;
-    String mName, mValue;
+    txExpandedName mName;
+    txAtom* mPrefix;
+    String mValue;
 };
 
 class txStepPattern : public PredicateList, public txPattern

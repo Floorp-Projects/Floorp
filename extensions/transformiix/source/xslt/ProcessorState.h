@@ -39,9 +39,10 @@
 #include "txOutputFormat.h"
 #include "Map.h"
 #include "txIXPathContext.h"
+#include "txExpandedNameMap.h"
+#include "XSLTFunctions.h"
 
 class txXSLKey;
-class txDecimalFormat;
 
 /**
  * Class used for keeping the current state of the XSL Processor
@@ -71,17 +72,17 @@ public:
         ~ImportFrame();
     
         // Map of named templates
-        NamedMap mNamedTemplates;
+        txExpandedNameMap mNamedTemplates;
 
         // Map of template modes, each item in the map is a list
         // of templates
-        NamedMap mMatchableTemplates;
+        txExpandedNameMap mMatchableTemplates;
 
         // List of whitespace preserving and stripping nametests
         txList mWhiteNameTests;
 
         // Map of named attribute sets
-        NamedMap mNamedAttributeSets;
+        txExpandedNameMap mNamedAttributeSets;
 
         // Output format, as specified by the xsl:output elements
         txOutputFormat mOutputFormat;
@@ -128,7 +129,7 @@ public:
      * Returns the AttributeSet associated with the given name
      * or null if no AttributeSet is found
     **/
-    NodeSet* getAttributeSet(const String& aName);
+    NodeSet* getAttributeSet(const txExpandedName& aName);
 
     /**
      * Returns the source node currently being processed
@@ -139,7 +140,7 @@ public:
      * Returns the template associated with the given name, or
      * null if not template is found
      */
-    Element* getNamedTemplate(String& aName);
+    Element* getNamedTemplate(const txExpandedName& aName);
 
     /**
      * Returns the OutputFormat which contains information on how
@@ -203,8 +204,11 @@ public:
      * @return             root-node of found template, null if none is found
      */
     Node* findTemplate(Node* aNode,
-                       const String& aMode,
-                       ImportFrame** aImportFrame);
+                       const txExpandedName& aMode,
+                       ImportFrame** aImportFrame)
+    {
+        return findTemplate(aNode, aMode, 0, aImportFrame);
+    }
 
     /*
      * Find template in specified mode matching the supplied node. Only search
@@ -218,7 +222,7 @@ public:
      * @return             root-node of found template, null if none is found
      */
     Node* findTemplate(Node* aNode,
-                       const String& aMode,
+                       const txExpandedName& aMode,
                        ImportFrame* aImportedBy,
                        ImportFrame** aImportFrame);
 
@@ -227,7 +231,7 @@ public:
      */
     struct TemplateRule {
         ImportFrame* mFrame;
-        const String* mMode;
+        const txExpandedName* mMode;
         NamedMap* mParams;
     };
 
@@ -274,7 +278,7 @@ public:
      * Returns the key with the supplied name
      * returns NULL if no such key exists
     **/
-    txXSLKey* getKey(String& keyName);
+    txXSLKey* getKey(txExpandedName& keyName);
 
     /*
      * Adds a decimal format. Returns false if the format already exists
@@ -285,7 +289,7 @@ public:
     /**
      * Returns a decimal format or NULL if no such format exists.
     **/
-    txDecimalFormat* getDecimalFormat(String& name);
+    txDecimalFormat* getDecimalFormat(const txExpandedName& name);
 
     /*
      * Virtual methods from txIEvalContext
@@ -372,18 +376,17 @@ private:
     /**
      * The set of all available keys
     **/
-    NamedMap xslKeys;
+    txExpandedNameMap mXslKeys;
 
     /*
-     * A list of all avalible decimalformats
+     * The set of all avalible decimalformats
      */
-    NamedMap decimalFormats;
+    txExpandedNameMap mDecimalFormats;
     
     /*
-     * bool indicating if the default decimal format has been explicitly set
-     * by the stylesheet
+     * Default decimal-format
      */
-    MBool          defaultDecimalFormatSet;
+    txDecimalFormat mDefaultDecimalFormat;
 
     /*
      * List of hashes with parsed expression. Every listitem holds the

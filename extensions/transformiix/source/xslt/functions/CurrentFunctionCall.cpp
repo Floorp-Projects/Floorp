@@ -1,4 +1,5 @@
 #include "XSLTFunctions.h"
+#include "ProcessorState.h"
 #include "Names.h"
 
 /*

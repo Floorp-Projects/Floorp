@@ -53,7 +53,9 @@
 ProcessorState::ProcessorState(Document* aSourceDocument,
                                Document* aXslDocument,
                                Document* aResultDocument)
-    : mEvalContext(0),
+    : mXslKeys(MB_TRUE),
+      mDecimalFormats(MB_TRUE),
+      mEvalContext(0),
       mSourceDocument(aSourceDocument),
       xslDocument(aXslDocument),
       resultDocument(aResultDocument)
@@ -82,16 +84,8 @@ ProcessorState::ProcessorState(Document* aSourceDocument,
         loadedDocuments.put(xslDocument->getBaseURI(), xslDocument);
     }
 
-    // make sure all keys are deleted
-    xslKeys.setObjectDeletion(MB_TRUE);
-
     // Make sure all loaded documents get deleted
     loadedDocuments.setObjectDeletion(MB_TRUE);
-
-    // add predefined default decimal format
-    defaultDecimalFormatSet = MB_FALSE;
-    decimalFormats.put(String(), new txDecimalFormat);
-    decimalFormats.setObjectDeletion(MB_TRUE);
 }
 
 /**
@@ -130,10 +124,12 @@ void ProcessorState::addAttributeSet(Element* aAttributeSet,
     if (!aAttributeSet)
         return;
 
-    String name;
-    if (!aAttributeSet->getAttr(txXSLTAtoms::name,
-                                kNameSpaceID_None, name)) {
-        String err("missing required name attribute for xsl:attribute-set");
+    String nameStr;
+    txExpandedName name;
+    aAttributeSet->getAttr(txXSLTAtoms::name, kNameSpaceID_None, nameStr);
+    nsresult rv = name.init(nameStr, aAttributeSet, MB_FALSE);
+    if (NS_FAILED(rv)) {
+        String err("missing or malformed name for xsl:attribute-set");
         receiveError(err);
         return;
     }
@@ -141,7 +137,7 @@ void ProcessorState::addAttributeSet(Element* aAttributeSet,
     NodeSet* attSet = (NodeSet*)aImportFrame->mNamedAttributeSets.get(name);
     if (!attSet) {
         attSet = new NodeSet();
-        aImportFrame->mNamedAttributeSets.put(name, attSet);
+        aImportFrame->mNamedAttributeSets.add(name, attSet);
     }
 
     // Add xsl:attribute elements to attSet
@@ -178,19 +174,29 @@ void ProcessorState::addTemplate(Element* aXslTemplate,
                                  ImportFrame* aImportFrame)
 {
     NS_ASSERTION(aXslTemplate, "missing template");
-    
-    String name;
+
+    nsresult rv = NS_OK;
+    String nameStr;
     if (aXslTemplate->getAttr(txXSLTAtoms::name,
-                              kNameSpaceID_None, name)) {
-        // check for duplicates
-        Element* tmp = (Element*)aImportFrame->mNamedTemplates.get(name);
-        if (tmp) {
-            String err("Duplicate template name: ");
-            err.append(name);
-            receiveError(err);
+                              kNameSpaceID_None, nameStr)) {
+        txExpandedName name;
+        rv = name.init(nameStr, aXslTemplate, MB_FALSE);
+        if (NS_FAILED(rv)) {
+            String err("missing or malformed template name: '");
+            err.append(nameStr);
+            err.append('\'');
+            receiveError(err, NS_ERROR_FAILURE);
             return;
         }
-        aImportFrame->mNamedTemplates.put(name, aXslTemplate);
+
+        rv = aImportFrame->mNamedTemplates.add(name, aXslTemplate);
+        if (NS_FAILED(rv)) {
+            String err("Unable to add template named '");
+            err.append(nameStr);
+            err.append("'. Does that name already exist?");
+            receiveError(err, NS_ERROR_FAILURE);
+            return;
+        }
     }
 
     String match;
@@ -198,9 +204,20 @@ void ProcessorState::addTemplate(Element* aXslTemplate,
         // This is no error, see section 6 Named Templates
         return;
     }
+
     // get the txList for the right mode
-    String mode;
-    aXslTemplate->getAttr(txXSLTAtoms::mode, kNameSpaceID_None, mode);
+    String modeStr;
+    txExpandedName mode;
+    if (aXslTemplate->getAttr(txXSLTAtoms::mode, kNameSpaceID_None, modeStr)) {
+        rv = mode.init(modeStr, aXslTemplate, MB_FALSE);
+        if (NS_FAILED(rv)) {
+            String err("malformed template-mode name: '");
+            err.append(modeStr);
+            err.append('\'');
+            receiveError(err, NS_ERROR_FAILURE);
+            return;
+        }
+    }
     txList* templates =
         (txList*)aImportFrame->mMatchableTemplates.get(mode);
 
@@ -210,7 +227,11 @@ void ProcessorState::addTemplate(Element* aXslTemplate,
             NS_ASSERTION(0, "out of memory");
             return;
         }
-        aImportFrame->mMatchableTemplates.put(mode, templates);
+        rv = aImportFrame->mMatchableTemplates.add(mode, templates);
+        if (NS_FAILED(rv)) {
+            delete templates;
+            return;
+        }
     }
 
     // Check for explicit default priority
@@ -284,8 +305,9 @@ void ProcessorState::addLREStylesheet(Document* aStylesheet,
     NS_ASSERTION(aStylesheet, "missing stylesheet");
     
     // get the txList for null mode
+    txExpandedName nullMode;
     txList* templates =
-        (txList*)aImportFrame->mMatchableTemplates.get(NULL_STRING);
+        (txList*)aImportFrame->mMatchableTemplates.get(nullMode);
 
     if (!templates) {
         templates = new txList;
@@ -293,14 +315,14 @@ void ProcessorState::addLREStylesheet(Document* aStylesheet,
             // XXX ErrorReport: out of memory
             return;
         }
-        aImportFrame->mMatchableTemplates.put(NULL_STRING, templates);
+        aImportFrame->mMatchableTemplates.add(nullMode, templates);
     }
 
     // Add the template to the list of templates
     txPattern* root = new txRootPattern(MB_TRUE);
     MatchableTemplate* nt = 0;
     if (root) 
-        nt = new MatchableTemplate(aStylesheet, root, Double::NaN);
+        nt = new MatchableTemplate(aStylesheet, root, 0.5);
     if (!nt) {
         delete root;
         // XXX ErrorReport: out of memory
@@ -384,21 +406,6 @@ List* ProcessorState::getImportFrames()
 }
 
 /*
- * Find template in specified mode matching the supplied node
- * @param aNode        node to find matching template for
- * @param aMode        mode of the template
- * @param aImportFrame out-param, is set to the ImportFrame containing
- *                     the found template
- * @return             root-node of found template, null if none is found
- */
-Node* ProcessorState::findTemplate(Node* aNode,
-                                   const String& aMode,
-                                   ImportFrame** aImportFrame)
-{
-    return findTemplate(aNode, aMode, 0, aImportFrame);
-}
-
-/*
  * Find template in specified mode matching the supplied node. Only search
  * templates imported by a specific ImportFrame
  * @param aNode        node to find matching template for
@@ -410,7 +417,7 @@ Node* ProcessorState::findTemplate(Node* aNode,
  * @return             root-node of found template, null if none is found
  */
 Node* ProcessorState::findTemplate(Node* aNode,
-                                   const String& aMode,
+                                   const txExpandedName& aMode,
                                    ImportFrame* aImportedBy,
                                    ImportFrame** aImportFrame)
 {
@@ -463,13 +470,17 @@ Node* ProcessorState::findTemplate(Node* aNode,
 
 #ifdef PR_LOGGING
     char *nodeBuf = 0, *modeBuf = 0;
+    String mode;
+    if (aMode.mLocalName) {
+        TX_GET_ATOM_STRING(aMode.mLocalName, mode);
+    }
     if (matchTemplate) {
         char *matchBuf = 0, *uriBuf = 0;
         PR_LOG(txLog::xslt, PR_LOG_DEBUG,
                ("MatchTemplate, Pattern %s, Mode %s, Stylesheet %s, " \
                 "Node %s\n",
                 (matchBuf = ((Element*)matchTemplate)->getAttribute(String("match")).toCharArray()),
-                (modeBuf = aMode.toCharArray()),
+                (modeBuf = mode.toCharArray()),
                 (uriBuf = matchTemplate->getBaseURI().toCharArray()),
                 (nodeBuf = aNode->getNodeName().toCharArray())));
 #ifdef TX_EXE
@@ -484,7 +495,7 @@ Node* ProcessorState::findTemplate(Node* aNode,
         PR_LOG(txLog::xslt, PR_LOG_DEBUG,
                ("No match, Node %s, Mode %s\n", 
                 (nodeBuf  = aNode->getNodeName().toCharArray()),
-                (modeBuf = aMode.toCharArray())));
+                (modeBuf = mode.toCharArray())));
     }
 #ifdef TX_EXE
         delete [] nodeBuf;
@@ -517,7 +528,7 @@ void ProcessorState::setCurrentTemplateRule(TemplateRule* aTemplateRule)
  * Returns the AttributeSet associated with the given name
  * or null if no AttributeSet is found
  */
-NodeSet* ProcessorState::getAttributeSet(const String& aName)
+NodeSet* ProcessorState::getAttributeSet(const txExpandedName& aName)
 {
     NodeSet* attset = new NodeSet;
     if (!attset)
@@ -586,7 +597,7 @@ txPattern* ProcessorState::getPattern(Element* aElem, PatternAttr aAttr)
         return pattern;
     }
     String attr;
-    MBool hasAttr;
+    MBool hasAttr = MB_FALSE;
     switch (aAttr) {
         case CountAttr:
             hasAttr = aElem->getAttr(txXSLTAtoms::count, kNameSpaceID_None,
@@ -620,7 +631,7 @@ txPattern* ProcessorState::getPattern(Element* aElem, PatternAttr aAttr)
  * Returns the template associated with the given name, or
  * null if not template is found
  */
-Element* ProcessorState::getNamedTemplate(String& aName)
+Element* ProcessorState::getNamedTemplate(const txExpandedName& aName)
 {
     ImportFrame* frame;
     txListIterator frameIter(&mImportFrames);
@@ -735,16 +746,22 @@ void ProcessorState::shouldStripSpace(String& aNames, Element* aElement,
 **/
 MBool ProcessorState::addKey(Element* aKeyElem)
 {
-    String keyName;
-    aKeyElem->getAttr(txXSLTAtoms::name, kNameSpaceID_None, keyName);
-    if (!XMLUtils::isValidQName(keyName))
+    nsresult rv = NS_OK;
+    String keyQName;
+    aKeyElem->getAttr(txXSLTAtoms::name, kNameSpaceID_None, keyQName);
+    txExpandedName keyName;
+    rv = keyName.init(keyQName, aKeyElem, MB_FALSE);
+    if (NS_FAILED(rv))
         return MB_FALSE;
-    txXSLKey* xslKey = (txXSLKey*)xslKeys.get(keyName);
+
+    txXSLKey* xslKey = (txXSLKey*)mXslKeys.get(keyName);
     if (!xslKey) {
         xslKey = new txXSLKey(this);
         if (!xslKey)
             return MB_FALSE;
-        xslKeys.put(keyName, xslKey);
+        rv = mXslKeys.add(keyName, xslKey);
+        if (NS_FAILED(rv))
+            return MB_FALSE;
     }
     txPattern* match = 0;
     txPSParseContext pContext(this, aKeyElem);
@@ -769,8 +786,9 @@ MBool ProcessorState::addKey(Element* aKeyElem)
  * Adds the supplied xsl:key to the set of keys
  * returns NULL if no such key exists
 **/
-txXSLKey* ProcessorState::getKey(String& keyName) {
-    return (txXSLKey*)xslKeys.get(keyName);
+txXSLKey* ProcessorState::getKey(txExpandedName& keyName)
+{
+    return (txXSLKey*)mXslKeys.get(keyName);
 }
 
 /*
@@ -780,13 +798,20 @@ txXSLKey* ProcessorState::getKey(String& keyName) {
 MBool ProcessorState::addDecimalFormat(Element* element)
 {
     // build new DecimalFormat structure
+    nsresult rv = NS_OK;
     MBool success = MB_TRUE;
     txDecimalFormat* format = new txDecimalFormat;
     if (!format)
         return MB_FALSE;
 
-    String formatName, attValue;
-    element->getAttr(txXSLTAtoms::name, kNameSpaceID_None, formatName);
+    String formatNameStr, attValue;
+    txExpandedName formatName;
+    if (element->getAttr(txXSLTAtoms::name, kNameSpaceID_None,
+                         formatNameStr)) {
+        rv = formatName.init(formatNameStr, element, MB_FALSE);
+        if (NS_FAILED(rv))
+            return MB_FALSE;
+    }
 
     if (element->getAttr(txXSLTAtoms::decimalSeparator,
                          kNameSpaceID_None, attValue)) {
@@ -866,26 +891,18 @@ MBool ProcessorState::addDecimalFormat(Element* element)
     }
 
     // Does an existing format with that name exist?
-    // (name="" means default format)
-    
-    txDecimalFormat* existing = NULL;
-
-    if (defaultDecimalFormatSet || !formatName.isEmpty()) {
-        existing = (txDecimalFormat*)decimalFormats.get(formatName);
-    }
-    else {
-        // We are overriding the predefined default format which is always
-        // allowed
-        delete decimalFormats.remove(formatName);
-        defaultDecimalFormatSet = MB_TRUE;
-    }
-
+    txDecimalFormat* existing =
+        (txDecimalFormat*)mDecimalFormats.get(formatName);
     if (existing) {
         success = existing->isEqual(format);
         delete format;
     }
     else {
-        decimalFormats.put(formatName, format);
+        rv = mDecimalFormats.add(formatName, format);
+        if (NS_FAILED(rv)) {
+            delete format;
+            success = MB_FALSE;
+        }
     }
     
     return success;
@@ -894,9 +911,13 @@ MBool ProcessorState::addDecimalFormat(Element* element)
 /*
  * Returns a decimal format or NULL if no such format exists.
  */
-txDecimalFormat* ProcessorState::getDecimalFormat(String& name)
+txDecimalFormat* ProcessorState::getDecimalFormat(const txExpandedName& aName)
 {
-    return (txDecimalFormat*)decimalFormats.get(name);
+    txDecimalFormat* format = (txDecimalFormat*)mDecimalFormats.get(aName);
+    if (!format && !aName.mLocalName &&
+        aName.mNamespaceID == kNameSpaceID_None)
+        return &mDefaultDecimalFormat;
+    return format;
 }
 
 /**
@@ -1006,11 +1027,11 @@ nsresult ProcessorState::resolveFunctionCall(txAtom* aName, PRInt32 aID,
        return NS_OK;
    }
    if (CHECK_FN(key)) {
-       aFunction = new txKeyFunctionCall(this);
+       aFunction = new txKeyFunctionCall(this, aElem);
        return NS_OK;
    }
    if (CHECK_FN(formatNumber)) {
-       aFunction = new txFormatNumberFunctionCall(this);
+       aFunction = new txFormatNumberFunctionCall(this, aElem);
        return NS_OK;
    }
    if (CHECK_FN(current)) {
@@ -1081,9 +1102,11 @@ ProcessorState::XMLSpaceMode ProcessorState::getXMLSpaceMode(Node* aNode)
 }
 
 ProcessorState::ImportFrame::ImportFrame(ImportFrame* aFirstNotImported)
+    : mNamedTemplates(MB_FALSE),
+      mMatchableTemplates(MB_TRUE),
+      mNamedAttributeSets(MB_TRUE),
+      mFirstNotImported(aFirstNotImported)
 {
-    mNamedAttributeSets.setObjectDeletion(MB_TRUE);
-    mFirstNotImported = aFirstNotImported;
 }
 
 ProcessorState::ImportFrame::~ImportFrame()
@@ -1094,22 +1117,15 @@ ProcessorState::ImportFrame::~ImportFrame()
         delete (txNameTestItem*)whiteIter.next();
 
     // Delete templates in mMatchableTemplates
-    StringList* templKeys = mMatchableTemplates.keys();
-    if (templKeys) {
-        StringListIterator keysIter(templKeys);
-        String* key;
-        while ((key = keysIter.next())) {
-            txList* templList = (txList*)mMatchableTemplates.get(*key);
-            txListIterator templIter(templList);
-            MatchableTemplate* templ;
-            while ((templ = (MatchableTemplate*)templIter.next())) {
-                delete templ->mMatch;
-                delete templ;
-            }
-            delete templList;
+    txExpandedNameMap::iterator iter(mMatchableTemplates);
+    while (iter.next()) {
+        txListIterator templIter((txList*)iter.value());
+        MatchableTemplate* templ;
+        while ((templ = (MatchableTemplate*)templIter.next())) {
+            delete templ->mMatch;
+            delete templ;
         }
     }
-    delete templKeys;
 }
 
 /*

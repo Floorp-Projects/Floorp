@@ -1018,14 +1018,16 @@ void XSLTProcessor::process(Node* node,
         return;
 
     ProcessorState::ImportFrame *frame;
-    Node* xslTemplate = ps->findTemplate(node, mode, &frame);
-    processMatchedTemplate(xslTemplate, node, 0, NULL_STRING, frame, ps);
+    txExpandedName nullMode;
+    Node* xslTemplate = ps->findTemplate(node, nullMode, &frame);
+    processMatchedTemplate(xslTemplate, node, 0, nullMode, frame, ps);
 } //-- process
 
 void XSLTProcessor::processAction(Node* aNode,
                                   Node* aXSLTAction,
                                   ProcessorState* aPs)
 {
+    nsresult rv = NS_OK;
     NS_ASSERTION(aXSLTAction, "We need an action to process.");
     if (!aXSLTAction)
         return;
@@ -1152,9 +1154,20 @@ void XSLTProcessor::processAction(Node* aNode,
             // Process xsl:with-param elements
             NamedMap* actualParams = processParameters(actionElement, aNode, aPs);
 
-            String mode;
-            actionElement->getAttr(txXSLTAtoms::mode,
-                                   kNameSpaceID_None, mode);
+            // Get mode
+            String modeStr;
+            txExpandedName mode;
+            if (actionElement->getAttr(txXSLTAtoms::mode,
+                                       kNameSpaceID_None, modeStr)) {
+                rv = mode.init(modeStr, actionElement, MB_FALSE);
+                if (NS_FAILED(rv)) {
+                    String err("malformed mode-name in xsl:apply-templates");
+                    aPs->receiveError(err);
+                    TX_IF_RELEASE_ATOM(localName);
+                    delete actualParams;
+                    return;
+                }
+            }
 
             txNodeSetContext evalContext(nodeSet, aPs);
             txIEvalContext* priorEC =
@@ -1255,16 +1268,20 @@ void XSLTProcessor::processAction(Node* aNode,
     }
     // xsl:call-template
     else if (localName == txXSLTAtoms::callTemplate) {
-        String templateName;
-        if (actionElement->getAttr(txXSLTAtoms::name,
-                                   kNameSpaceID_None, templateName)) {
+        String nameStr;
+        txExpandedName templateName;
+        actionElement->getAttr(txXSLTAtoms::name,
+                               kNameSpaceID_None, nameStr);
+
+        rv = templateName.init(nameStr, actionElement, MB_FALSE);
+        if (NS_SUCCEEDED(rv)) {
             Element* xslTemplate = aPs->getNamedTemplate(templateName);
             if (xslTemplate) {
 #ifdef PR_LOGGING
                 char *nameBuf = 0, *uriBuf = 0;
                 PR_LOG(txLog::xslt, PR_LOG_DEBUG,
                        ("CallTemplate, Name %s, Stylesheet %s\n",
-                        (nameBuf = templateName.toCharArray()),
+                        (nameBuf = nameStr.toCharArray()),
                         (uriBuf = xslTemplate->getBaseURI().toCharArray())));
                 delete nameBuf;
                 delete uriBuf;
@@ -1275,7 +1292,7 @@ void XSLTProcessor::processAction(Node* aNode,
             }
         }
         else {
-            String err("missing required name attribute for xsl:call-template");
+            String err("missing or malformed name in xsl:call-template");
             aPs->receiveError(err, NS_ERROR_FAILURE);
         }
     }
@@ -1507,7 +1524,6 @@ void XSLTProcessor::processAction(Node* aNode,
 #ifdef TX_EXE
         cout << "xsl:message - "<< message << endl;
 #else
-        nsresult rv;
         nsCOMPtr<nsIConsoleService> consoleSvc = 
           do_GetService("@mozilla.org/consoleservice;1", &rv);
         NS_ASSERTION(NS_SUCCEEDED(rv), "xsl:message couldn't get console service");
@@ -1640,6 +1656,7 @@ void XSLTProcessor::processAction(Node* aNode,
 **/
 void XSLTProcessor::processAttributeSets(Element* aElement, Node* aNode, ProcessorState* aPs)
 {
+    nsresult rv = NS_OK;
     String names;
     PRInt32 namespaceID;
     if (aElement->getNamespaceID() == kNameSpaceID_XSLT)
@@ -1651,14 +1668,24 @@ void XSLTProcessor::processAttributeSets(Element* aElement, Node* aNode, Process
 
     // Split names
     txTokenizer tokenizer(names);
-    String name;
+    String nameStr;
     while (tokenizer.hasMoreTokens()) {
-        tokenizer.nextToken(name);
+        tokenizer.nextToken(nameStr);
+        txExpandedName name;
+        rv = name.init(nameStr, aElement, MB_FALSE);
+        if (NS_FAILED(rv)) {
+            String err("missing or malformed name in use-attribute-sets");
+            aPs->receiveError(err);
+            return;
+        }
+
         txStackIterator attributeSets(&mAttributeSetStack);
         while (attributeSets.hasNext()) {
-            String* test = (String*)attributeSets.next();
-            if (test->isEqual(name))
+            if (name == *(txExpandedName*)attributeSets.next()) {
+                String err("circular inclusion detected in use-attribute-sets");
+                aPs->receiveError(err);
                 return;
+            }
         }
 
         NodeSet* attSet = aPs->getAttributeSet(name);
@@ -1835,7 +1862,7 @@ void XSLTProcessor::processTemplate(Node* node, Node* xslTemplate, ProcessorStat
 void XSLTProcessor::processMatchedTemplate(Node* aXslTemplate,
                                            Node* aNode,
                                            NamedMap* aParams,
-                                           const String& aMode,
+                                           const txExpandedName& aMode,
                                            ProcessorState::ImportFrame* aFrame,
                                            ProcessorState* aPs)
 {
@@ -1864,7 +1891,7 @@ void XSLTProcessor::processMatchedTemplate(Node* aXslTemplate,
 **/
 void XSLTProcessor::processDefaultTemplate(Node* node,
                                            ProcessorState* ps,
-                                           const String& mode)
+                                           const txExpandedName& mode)
 {
     NS_ASSERTION(node, "context node is NULL in call to XSLTProcessor::processTemplate!");
 

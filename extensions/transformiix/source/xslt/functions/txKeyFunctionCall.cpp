@@ -19,6 +19,7 @@
  */
 
 #include "XSLTFunctions.h"
+#include "ProcessorState.h"
 #include "Names.h"
 #include "XMLDOMUtils.h"
 #include "txSingleNodeContext.h"
@@ -31,10 +32,12 @@
 /*
  * Creates a new key function call
  */
-txKeyFunctionCall::txKeyFunctionCall(ProcessorState* aPs) :
-        FunctionCall(KEY_FN)
+txKeyFunctionCall::txKeyFunctionCall(ProcessorState* aPs,
+                                     Node* aQNameResolveNode) :
+        FunctionCall(KEY_FN),
+        mProcessorState(aPs),
+        mQNameResolveNode(aQNameResolveNode)
 {
-    mProcessorState = aPs;
 }
 
 /*
@@ -57,11 +60,17 @@ ExprResult* txKeyFunctionCall::evaluate(txIEvalContext* aContext)
     }
 
     txListIterator iter(&params);
-    String keyName;
-    evaluateToString((Expr*)iter.next(), aContext, keyName);
+    String keyQName;
+    evaluateToString((Expr*)iter.next(), aContext, keyQName);
     Expr* param = (Expr*) iter.next();
 
-    txXSLKey* key = mProcessorState->getKey(keyName);
+    txExpandedName keyName;
+    txXSLKey* key = 0;
+    nsresult rv = keyName.init(keyQName, mQNameResolveNode, MB_FALSE);
+    if (NS_SUCCEEDED(rv)) {
+        key = mProcessorState->getKey(keyName);
+    }
+
     if (!key) {
         String err("No key with that name in: ");
         toString(err);

@@ -64,7 +64,7 @@ txExpandedNameMap::~txExpandedNameMap()
  * @param  aValue value of item to add
  * @return errorcode
  */
-nsresult txExpandedNameMap::add(txExpandedName& aKey, TxObject* aValue)
+nsresult txExpandedNameMap::add(const txExpandedName& aKey, TxObject* aValue)
 {
     int i;
     // Check if there already is an item with this key
@@ -88,6 +88,7 @@ nsresult txExpandedNameMap::add(txExpandedName& aKey, TxObject* aValue)
     
     mItems[mItemCount].mNamespaceID = aKey.mNamespaceID;
     mItems[mItemCount].mLocalName = aKey.mLocalName;
+    TX_IF_ADDREF_ATOM(mItems[mItemCount].mLocalName);
     mItems[mItemCount].mValue = aValue;
     ++mItemCount;
     
@@ -101,7 +102,7 @@ nsresult txExpandedNameMap::add(txExpandedName& aKey, TxObject* aValue)
  * @param  aValue value of item to set
  * @return errorcode
  */
-nsresult txExpandedNameMap::set(txExpandedName& aKey, TxObject* aValue)
+nsresult txExpandedNameMap::set(const txExpandedName& aKey, TxObject* aValue)
 {
     int i;
     // Check if there already is an item with this key
@@ -129,6 +130,7 @@ nsresult txExpandedNameMap::set(txExpandedName& aKey, TxObject* aValue)
     
     mItems[mItemCount].mNamespaceID = aKey.mNamespaceID;
     mItems[mItemCount].mLocalName = aKey.mLocalName;
+    TX_IF_ADDREF_ATOM(mItems[mItemCount].mLocalName);
     mItems[mItemCount].mValue = aValue;
     ++mItemCount;
     
@@ -140,7 +142,7 @@ nsresult txExpandedNameMap::set(txExpandedName& aKey, TxObject* aValue)
  * @param  aKey  key for item to get
  * @return item with specified key, or null if no such item exists
  */
-TxObject* txExpandedNameMap::get(txExpandedName& aKey)
+TxObject* txExpandedNameMap::get(const txExpandedName& aKey)
 {
     int i;
     for (i = 0; i < mItemCount; ++i) {
