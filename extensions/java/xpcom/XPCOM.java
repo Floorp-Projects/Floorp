@@ -41,19 +41,121 @@ import java.lang.reflect.*;
 import java.io.*;
 
 
+/**
+ *  Provides access to methods for initializing XPCOM, as well as helper methods
+ *  for working with XPCOM classes.
+ */
 public final class XPCOM {
 
-  public static native nsIServiceManager initXPCOM(File aMozBinDirectory, AppFileLocProvider aAppFileLocProvider);
-  public static native void shutdownXPCOM(nsIServiceManager aServMgr);
-  public static native nsIServiceManager getServiceManager();
-  public static native nsIComponentManager getComponentManager();
-  public static native nsIComponentRegistrar getComponentRegistrar();
-  public static native nsILocalFile newLocalFile(String aPath, boolean followLinks);
+  /**
+   * Initializes XPCOM. You must call this method before proceeding
+   * to use XPCOM.
+   *
+   * @param aMozBinDirectory The directory containing the component
+   *                         registry and runtime libraries;
+   *                         or use <code>null</code> to use the working
+   *                         directory.
+   *
+   * @param aAppFileLocProvider The object to be used by Gecko that specifies
+   *                         to Gecko where to find profiles, the component
+   *                         registry preferences and so on; or use
+   *                         <code>null</code> for the default behaviour.
+   *
+   * @return the service manager
+   *
+   * @exception XPCOMException <ul>
+   *      <li> NS_ERROR_NOT_INITIALIZED - if static globals were not initialied,
+   *            which can happen if XPCOM is reloaded, but did not completly
+   *            shutdown. </li>
+   *      <li> Other error codes indicate a failure during initialisation. </li>
+   * </ul>
+   */
+  public static native
+  nsIServiceManager initXPCOM(File aMozBinDirectory, AppFileLocProvider aAppFileLocProvider);
+
+  /**
+   * Shutdown XPCOM. You must call this method after you are finished
+   * using xpcom.
+   *
+   * @param aServMgr    The service manager which was returned by initXPCOM.
+   *                    This will release servMgr.
+   *
+   * @exception XPCOMException  if a failure occurred during termination
+   */
+  public static native
+  void shutdownXPCOM(nsIServiceManager aServMgr);
+
+  /**
+   * Public Method to access to the service manager.
+   *
+   * @return the service manager
+   *
+   * @exception XPCOMException
+   */
+  public static native
+  nsIServiceManager getServiceManager();
+
+  /**
+   * Public Method to access to the component manager.
+   *
+   * @return the component manager
+   *
+   * @exception XPCOMException
+   */
+  public static native
+  nsIComponentManager getComponentManager();
+
+  /**
+   * Public Method to access to the component registration manager.
+   * 
+   * @return the component registration manager
+   *
+   * @exception XPCOMException
+   */
+  public static native
+  nsIComponentRegistrar getComponentRegistrar();
+
+  /**
+   * Public Method to create an instance of a nsILocalFile.
+   *
+   * @param aPath         A string which specifies a full file path to a 
+   *                      location.  Relative paths will be treated as an
+   *                      error (NS_ERROR_FILE_UNRECOGNIZED_PATH).
+   * @param aFollowLinks  This attribute will determine if the nsLocalFile will
+   *                      auto resolve symbolic links.  By default, this value
+   *                      will be false on all non unix systems.  On unix, this
+   *                      attribute is effectively a noop.
+   *
+   * @return an instance of an nsILocalFile that points to given path
+   *
+   * @exception XPCOMException <ul>
+   *      <li> NS_ERROR_FILE_UNRECOGNIZED_PATH - raised for unrecognized paths
+   *           or relative paths (must supply full file path) </li>
+   * </ul>
+   */
+  public static native
+  nsILocalFile newLocalFile(String aPath, boolean aFollowLinks);
 
 
-  /*  Utility functions */
-
-  // Generic QueryInterface implementation
+  /**
+   * If you create a class that implements nsISupports, you will need to provide
+   * an implementation of the <code>queryInterface</code> method.  This helper
+   * function provides a simple implementation.  Therefore, if your class does
+   * not need to do anything special with <code>queryInterface</code>, your
+   * implementation would look like:
+   * <pre>
+   *      public nsISupports queryInterface(String aIID) {
+   *        return XPCOM.queryInterface(this, aIID);
+   *      }
+   * </pre>
+   *
+   * @param aObject object to query
+   * @param aIID    requested interface IID
+   *
+   * @return        <code>aObject</code> if the given object supports that
+   *                interface;
+   *                <code>null</code> otherwise.
+   */
   public static nsISupports queryInterface(nsISupports aObject, String aIID)
   {
     Class[] interfaces = aObject.getClass().getInterfaces();
@@ -64,8 +166,14 @@ public final class XPCOM {
     return null;
   }
 
-  // Given an interface, this will construct the name of the IID field (such as
-  // NS_ISUPPORTS_IID) and return its value.
+  /**
+   * Gets the interface IID for a particular Java interface.  This is similar
+   * to NS_GET_IID in the C++ Mozilla files.
+   *
+   * @param aInterface  interface which has defined an IID
+   *
+   * @return            IID for given interface
+   */
   public static String getInterfaceIID(Class aInterface)
   {
     // Get short class name (i.e. "bar", not "org.blah.foo.bar")
@@ -90,7 +198,7 @@ public final class XPCOM {
       iid = (String) iidField.get(null);
     } catch (NoSuchFieldException e) {
       // Class may implement non-Mozilla interfaces, which would not have an
-      // IID method.  In that case, just return an emptry string.
+      // IID method.  In that case, just return an empty string.
       iid = "";
     } catch (IllegalAccessException e) {
       // XXX Should be using a logging service, such as java.util.logging
