@@ -66,6 +66,8 @@ public:
   virtual void GetWindowOffsets(nscoord *xoffset, nscoord *yoffset);
   virtual void SetWindowOffsets(nscoord xoffset, nscoord yoffset);
 
+  virtual void ResetScrolling(void);
+
   // Called to refresh an area of the root window. The coordinates of
   // the region or rectangle passed in should be in the window's
   // coordinate space. Often called in response to a paint/redraw event

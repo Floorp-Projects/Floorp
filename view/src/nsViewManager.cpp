@@ -254,6 +254,22 @@ void nsViewManager :: SetWindowOffsets(nscoord xoffset, nscoord yoffset)
   }
 }
 
+void nsViewManager :: ResetScrolling(void)
+{
+  if (nsnull != mRootView)
+  {
+    nsIScrollableView *scroller;
+
+    static NS_DEFINE_IID(kscroller, NS_ISCROLLABLEVIEW_IID);
+
+    if (NS_OK == mRootView->QueryInterface(kscroller, (void **)&scroller))
+    {
+      scroller->ComputeContainerSize();
+      NS_RELEASE(scroller);
+    }
+  }
+}
+
 void nsViewManager :: Refresh(nsIRenderingContext *aContext, nsRegion *region, PRUint32 aUpdateFlags)
 {
 }

@@ -340,26 +340,26 @@ double    a1,a2;
         m2 = m1;
         for(x=0;x<numbytes;x++)
           {
-          a1 = (*m2)/256.0;
+          a1 = (*m2) * (1.0 / 256.0);
           a2 = 1.0-a1;
-          temp = ((*d2)*a1 + (*s2)*a2);
+          temp = (PRUint16)((*d2)*a1 + (*s2)*a2);
           if(temp>255)
             temp = 255;
-          *d2 = temp;
+          *d2 = (PRUint8)temp;
           d2++;
           s2++;
           
-          temp = ((*d2)*a1 + (*s2)*a2);
+          temp = (PRUint16)((*d2)*a1 + (*s2)*a2);
           if(temp>255)
             temp = 255;
-          *d2 = temp;
+          *d2 = (PRUint8)temp;
           d2++;
           s2++;
 
-          temp = ((*d2)*a1 + (*s2)*a2);
+          temp = (PRUint16)((*d2)*a1 + (*s2)*a2);
           if(temp>255)
             temp = 255;
-          *d2 = temp;
+          *d2 = (PRUint8)temp;
           d2++;
           s2++;
           m2++;
@@ -627,8 +627,6 @@ void nsImageWin :: CleanUp(PRBool aCleanUpAll)
 	// this only happens when we need to clean up everything
   if (aCleanUpAll == PR_TRUE)
   {
-  char *temp;
-
     if (mAlphaBits != nsnull)
       delete [] mAlphaBits;
 
