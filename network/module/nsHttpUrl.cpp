@@ -99,10 +99,7 @@ nsresult nsHttpUrlImpl::QueryInterface(const nsIID &aIID, void** aInstancePtr)
  
     static NS_DEFINE_IID(kINetlibURLIID, NS_INETLIBURL_IID);
     static NS_DEFINE_IID(kIPostToServerIID, NS_IPOSTTOSERVER_IID);
-    static NS_DEFINE_IID(kIsThreadsafeIID, NS_ISTHREADSAFE_IID);
-    if (aIID.Equals(kIHttpURLIID) ||
-        aIID.Equals(kIsThreadsafeIID) ||
-        aIID.Equals(kISupportsIID)) {
+    if (aIID.Equals(kIHttpURLIID) || aIID.Equals(kISupportsIID)) {
         *aInstancePtr = (void*) ((nsIHttpURL*)this);
         AddRef();
         return NS_OK;
@@ -122,6 +119,16 @@ nsresult nsHttpUrlImpl::QueryInterface(const nsIID &aIID, void** aInstancePtr)
         AddRef();
         return NS_OK;
     }
+
+#if defined(NS_DEBUG)
+    /*
+     * Check for the debug-only interface indicating thread-safety
+     */
+    static NS_DEFINE_IID(kIsThreadsafeIID, NS_ISTHREADSAFE_IID);
+    if (aIID.Equals(kIsThreadsafeIID)) {
+        return NS_OK;
+    }
+#endif
  
     return NS_NOINTERFACE;
 }
@@ -657,7 +664,7 @@ PRBool nsHttpUrlImpl::Equals(const nsIURL* aURL) const
     PRBool bIsEqual;
     nsHttpUrlImpl* other;
     NS_LOCK_INSTANCE();
-    if (((nsIURL*)aURL)->QueryInterface(kIHttpURLIID, (void**)other) == NS_OK) {
+    if (((nsIURL*)aURL)->QueryInterface(kIHttpURLIID, (void**)&other) == NS_OK) {
         bIsEqual = PRBool((0 == PL_strcmp(mProtocol, other->mProtocol)) && 
                           (0 == PL_strcasecmp(mHost, other->mHost)) &&
                           (0 == PL_strcmp(mFile, other->mFile)));
