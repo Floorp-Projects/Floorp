@@ -69,7 +69,6 @@ protected:
    NS_IMETHOD LoadTitleFromXUL();
    NS_IMETHOD PersistPositionAndSize(PRBool aPosition, PRBool aSize);
 
-
    NS_IMETHOD GetDOMElementFromDocShell(nsIDocShell* aDocShell, 
       nsIDOMElement** aDOMElement);
    NS_IMETHOD ContentShellAdded(nsIDocShellTreeItem* aContentShell,
@@ -84,6 +83,7 @@ protected:
       nsIDocShellTreeItem** aDocShellTreeItem);
    NS_IMETHOD CreateNewContentWindow(PRInt32 aChromeFlags,
       nsIDocShellTreeItem** aDocShellTreeItem);
+   NS_IMETHOD NotifyObservers(const PRUnichar* aTopic, const PRUnichar* aData);
 
 protected:
    nsChromeTreeOwner*      mChromeTreeOwner;
