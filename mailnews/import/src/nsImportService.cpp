@@ -26,7 +26,6 @@
 #include "nsCRT.h"
 #include "nsString.h"
 #include "nsIComponentManager.h"
-#include "nsIRegistry.h"
 #include "nsIServiceManager.h"
 #include "nsIAllocator.h"
 #include "nsIEnumerator.h"
@@ -36,13 +35,15 @@
 #include "nsImportABDescriptor.h"
 #include "nsIImportGeneric.h"
 #include "nsImportFieldMap.h"
+#include "nsICategoryManager.h"
+#include "nsXPIDLString.h"
+#include "nsISupportsPrimitives.h"
 #include "plstr.h"
 #include "prmem.h"
 #include "ImportDebug.h"
 
 
 static NS_DEFINE_CID(kComponentManagerCID, 	NS_COMPONENTMANAGER_CID);
-static NS_DEFINE_CID(kRegistryCID,			NS_REGISTRY_CID);
 static NS_DEFINE_CID(kImportServiceCID,		NS_IMPORTSERVICE_CID);
 static NS_DEFINE_IID(kImportModuleIID,		NS_IIMPORTMODULE_IID);
 
@@ -101,10 +102,8 @@ public:
 
 
 private:
-	nsresult	LoadModuleInfo( char *pClsId, const char *pSupports);
+	nsresult	LoadModuleInfo( const char *pClsId, const char *pSupports);
 	nsresult	DoDiscover( void);
-	nsresult	GetImportRegKey( nsIRegistry *reg, nsRegistryKey *pKey);
-	nsresult	GetImportModulesRegKey( nsIRegistry *reg, nsRegistryKey *pKey);
 
 private:
 	nsImportModuleList *	m_pModules;
@@ -463,43 +462,6 @@ NS_IMETHODIMP nsImportService::GetModule( const char *filter, PRInt32 index, nsI
 }
 
 
-
-
-nsresult nsImportService::GetImportRegKey( nsIRegistry *reg, nsRegistryKey *pKey)
-{
-	nsRegistryKey	nScapeKey;
-
-	nsresult rv = reg->GetSubtree( nsIRegistry::Common, "Netscape", &nScapeKey);
-	if (NS_FAILED(rv)) {
-		rv = reg->AddSubtree( nsIRegistry::Common, "Netscape", &nScapeKey);
-	}
-	if (NS_FAILED( rv))
-		return( rv);
-
-	rv = reg->GetSubtree( nScapeKey, "Import", pKey);
-	if (NS_FAILED( rv)) {
-		rv = reg->AddSubtree( nScapeKey, "Import", pKey);
-	}
-		
-	return( rv);
-}
-
-nsresult nsImportService::GetImportModulesRegKey( nsIRegistry *reg, nsRegistryKey *pKey)
-{
-	nsRegistryKey	iKey;
-	nsresult rv = GetImportRegKey( reg, &iKey);
-	if (NS_FAILED( rv))
-		return( rv);
-
-	rv = reg->GetSubtree( iKey, "Modules", pKey);
-	if (NS_FAILED( rv)) {
-		rv = reg->AddSubtree( iKey, "Modules", pKey);
-	}
-
-	return( rv);
-}
-
-
 nsresult nsImportService::DoDiscover( void)
 {	
 	if (m_didDiscovery)
@@ -509,74 +471,36 @@ nsresult nsImportService::DoDiscover( void)
 		m_pModules->ClearList();
 		    
     nsresult rv;
-	    
-    
-   	NS_WITH_SERVICE( nsIRegistry, reg, kRegistryCID, &rv);
-   	if (NS_FAILED(rv)) return rv;
-   	
-    rv = reg->OpenWellKnownRegistry(nsIRegistry::ApplicationComponentRegistry);
-   	if (NS_FAILED(rv)) return( rv);
-   		    	
-	nsRegistryKey	modulesKey;
-	rv = GetImportModulesRegKey( reg, &modulesKey);
-   	if (NS_FAILED(rv)) return( rv);
-    
-    // enumerate the modules key
-    
-    nsIEnumerator *	enumerator;
-    rv = reg->EnumerateSubtrees( modulesKey, &enumerator);	
-	if (NS_FAILED( rv)) return( rv);
-
-
-	// Go to beginning...
-	char *pNodeName;
-	nsIID nodeIID = NS_IREGISTRYNODE_IID;
-	rv = enumerator->First();
-	while ( NS_SUCCEEDED(rv) && (NS_OK != enumerator->IsDone())) { 
-		nsISupports *base;
-		rv = enumerator->CurrentItem( &base );		
-		if (NS_SUCCEEDED( rv)) {
-			// Get specific interface.
-			nsIRegistryNode *node;
-			rv = base->QueryInterface( nodeIID, (void**)&node);
-		    if (NS_SUCCEEDED(rv)) {
-				// Get node name.
-				pNodeName = nsnull;
-				rv = node->GetName( &pNodeName);	
-				if (NS_SUCCEEDED( rv) && (pNodeName != nsnull)) {
-					nsRegistryKey 	key;
-					rv = reg->GetSubtree( modulesKey, pNodeName, &key);
-					PR_Free( pNodeName);
-					if (NS_SUCCEEDED( rv)) {
-						// get the info we need for this module
-						char *pClsId = nsnull;
-						rv = reg->GetString( key, "CLSID", &pClsId);
-						if (NS_SUCCEEDED( rv) && (pClsId != nsnull)) {
-							char *pSupports = nsnull;
-							rv = reg->GetString( key, "Supports", &pSupports);
-							if (NS_SUCCEEDED( rv) && (pSupports != nsnull)) {
-								LoadModuleInfo( pClsId, pSupports);
-								nsAllocator::Free(pSupports);
-							}
-							nsAllocator::Free(pClsId);
-						}	
-					}
-				}
-				node->Release();
-			}
-			base->Release();
-		}
-		if (NS_SUCCEEDED( rv))
-			rv = enumerator->Next();
-	}
 	
+	nsCOMPtr<nsICategoryManager> catMan = do_GetService( NS_CATEGORYMANAGER_PROGID, &rv);
+	if (NS_FAILED( rv)) return( rv);
+    
+	nsCOMPtr<nsISimpleEnumerator> e;
+	rv = catMan->EnumerateCategory( "mailnewsimport", getter_AddRefs( e));
+	if (NS_FAILED( rv)) return( rv);
+	nsCOMPtr<nsISupportsString> progid;
+	rv = e->GetNext( getter_AddRefs( progid));
+	while (NS_SUCCEEDED( rv) && progid) {
+		nsXPIDLCString	progIdStr;
+		progid->ToString( getter_Copies( progIdStr));
+		nsXPIDLCString	supportsStr;
+		rv = catMan->GetCategoryEntry( "mailnewsimport", progIdStr, getter_Copies( supportsStr));
+		if (NS_SUCCEEDED( rv)) {
+			LoadModuleInfo( progIdStr, supportsStr);
+		}
+		rv = e->GetNext( getter_AddRefs( progid));
+	}
+
 	m_didDiscovery = PR_TRUE;
 	
     return NS_OK;
 }
 
-nsresult nsImportService::LoadModuleInfo( char *pClsId, const char *pSupports)
+nsresult nsImportService::LoadModuleInfo( const char *pClsId, const char *pSupports)
 {
+	if (!pClsId || !pSupports)
+		return( NS_OK);
+
 	if (m_pModules == nsnull)
 		m_pModules = new nsImportModuleList();
 		

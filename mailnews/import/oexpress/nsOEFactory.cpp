@@ -28,45 +28,16 @@
 #include "nsIModule.h"
 #include "nsIGenericFactory.h"
 #include "nsIServiceManager.h"
-#include "nsIRegistry.h"
 #include "nsIImportService.h"
 #include "nsOEImport.h"
 #include "nsCRT.h"
+#include "nsICategoryManager.h"
+#include "nsXPIDLString.h"
 #include "OEDebugLog.h"
 
 static NS_DEFINE_CID(kOEImportCID,       	NS_OEIMPORT_CID);
-static NS_DEFINE_CID(kImportServiceCID,		NS_IMPORTSERVICE_CID);
-static NS_DEFINE_CID(kRegistryCID,			NS_REGISTRY_CID);
 
 ////////////////////////////////////////////////////////////////////
-
-nsresult GetImportModulesRegKey( nsIRegistry *reg, nsRegistryKey *pKey)
-{
-	nsRegistryKey	nScapeKey;
-
-	nsresult rv = reg->GetSubtree( nsIRegistry::Common, "Netscape", &nScapeKey);
-	if (NS_FAILED(rv)) {
-		rv = reg->AddSubtree( nsIRegistry::Common, "Netscape", &nScapeKey);
-	}
-	if (NS_FAILED( rv))
-		return( rv);
-
-	nsRegistryKey	iKey;
-	rv = reg->GetSubtree( nScapeKey, "Import", &iKey);
-	if (NS_FAILED( rv)) {
-		rv = reg->AddSubtree( nScapeKey, "Import", &iKey);
-	}
-	
-	if (NS_FAILED( rv))
-		return( rv);
-
-	rv = reg->GetSubtree( iKey, "Modules", pKey);
-	if (NS_FAILED( rv)) {
-		rv = reg->AddSubtree( iKey, "Modules", pKey);
-	}
-
-	return( rv);
-}
 
 NS_METHOD OERegister(nsIComponentManager *aCompMgr,
                      nsIFile *aPath,
@@ -74,40 +45,22 @@ NS_METHOD OERegister(nsIComponentManager *aCompMgr,
                      const char *componentType)
 {
 	nsresult rv;
-
-	NS_WITH_SERVICE( nsIRegistry, reg, kRegistryCID, &rv);
-	if (NS_FAILED(rv)) {
-		IMPORT_LOG0( "*** Import OExpress, ERROR GETTING THE Registry\n");
-		return rv;
+	
+	nsCOMPtr<nsICategoryManager> catMan = do_GetService( NS_CATEGORYMANAGER_PROGID, &rv);
+	if (NS_SUCCEEDED( rv)) {
+		nsXPIDLCString	replace;
+		char *theCID = kOEImportCID.ToString();
+		rv = catMan->AddCategoryEntry( "mailnewsimport", theCID, kOESupportsString, PR_TRUE, PR_TRUE, getter_Copies( replace));
+		nsCRT::free( theCID);
 	}
 
-    rv = reg->OpenWellKnownRegistry(nsIRegistry::ApplicationComponentRegistry);
-	if (NS_FAILED(rv)) {
-		IMPORT_LOG0( "*** Import OExpress, ERROR OPENING THE REGISTRY\n");
-		return( rv);
-	}
-
-	nsRegistryKey	importKey;
-
-	rv = GetImportModulesRegKey( reg, &importKey);
 	if (NS_FAILED( rv)) {
-		IMPORT_LOG0( "*** Import OExpress, ERROR getting Netscape/Import registry key\n");
-		return( rv);
-	}		
-			
-	nsRegistryKey	key;
-	rv = reg->AddSubtree( importKey, "Outlook Express", &key);
-	if (NS_FAILED(rv)) return( rv);
-
-	rv = reg->SetString( key, "Supports", kOESupportsString);
-	if (NS_FAILED(rv)) return( rv);
-	char *myCID = kOEImportCID.ToString();
-	rv = reg->SetString( key, "CLSID", myCID);
-	delete [] myCID;
-	if (NS_FAILED(rv)) return( rv);  	
+		IMPORT_LOG0( "*** ERROR: Problem registering Outlook Express component in the category manager\n");
+	}
 
 	return( rv);
 }
+
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsOEImport)
 

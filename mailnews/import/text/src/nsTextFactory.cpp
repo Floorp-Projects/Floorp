@@ -24,51 +24,17 @@
 #include "nsIModule.h"
 #include "nsIGenericFactory.h"
 #include "nsIServiceManager.h"
-#include "nsIRegistry.h"
 #include "nsIImportService.h"
 #include "nsTextImport.h"
+#include "nsCRT.h"
+#include "nsICategoryManager.h"
+#include "nsXPIDLString.h"
 
 #include "TextDebugLog.h"
 
 static NS_DEFINE_CID(kTextImportCID,    	NS_TEXTIMPORT_CID);
-static NS_DEFINE_CID(kImportServiceCID,		NS_IMPORTSERVICE_CID);
-static NS_DEFINE_CID(kRegistryCID,			NS_REGISTRY_CID);
-
-/*
-	This doesn't work for me because I need to do some
-	additional work in RegisterSelf.
-	However, I should be able to delegate to the generic implementation
-	and just do the extra work I need?
-*/
 
 
-nsresult GetImportModulesRegKey( nsIRegistry *reg, nsRegistryKey *pKey)
-{
-	nsRegistryKey	nScapeKey;
-
-	nsresult rv = reg->GetSubtree( nsIRegistry::Common, "Netscape", &nScapeKey);
-	if (NS_FAILED(rv)) {
-		rv = reg->AddSubtree( nsIRegistry::Common, "Netscape", &nScapeKey);
-	}
-	if (NS_FAILED( rv))
-		return( rv);
-
-	nsRegistryKey	iKey;
-	rv = reg->GetSubtree( nScapeKey, "Import", &iKey);
-	if (NS_FAILED( rv)) {
-		rv = reg->AddSubtree( nScapeKey, "Import", &iKey);
-	}
-	
-	if (NS_FAILED( rv))
-		return( rv);
-
-	rv = reg->GetSubtree( iKey, "Modules", pKey);
-	if (NS_FAILED( rv)) {
-		rv = reg->AddSubtree( iKey, "Modules", pKey);
-	}
-
-	return( rv);
-}
 
 NS_METHOD TextRegister(nsIComponentManager *aCompMgr,
                                             nsIFile *aPath,
@@ -77,36 +43,17 @@ NS_METHOD TextRegister(nsIComponentManager *aCompMgr,
 {	
 	nsresult rv;
 
-    NS_WITH_SERVICE( nsIRegistry, reg, kRegistryCID, &rv);
-    if (NS_FAILED(rv)) {
-	    IMPORT_LOG0( "*** Import Text, ERROR GETTING THE Registry\n");
-    	return rv;
-    }
-    
-    rv = reg->OpenWellKnownRegistry(nsIRegistry::ApplicationComponentRegistry);
-    if (NS_FAILED(rv)) {
-	    IMPORT_LOG0( "*** Import Text, ERROR OPENING THE REGISTRY\n");
-    	return( rv);
-    }
-    
-	nsRegistryKey	importKey;
-	
-	rv = GetImportModulesRegKey( reg, &importKey);
+	nsCOMPtr<nsICategoryManager> catMan = do_GetService( NS_CATEGORYMANAGER_PROGID, &rv);
+	if (NS_SUCCEEDED( rv)) {
+		nsXPIDLCString	replace;
+		char *theCID = kTextImportCID.ToString();
+		rv = catMan->AddCategoryEntry( "mailnewsimport", theCID, kTextSupportsString, PR_TRUE, PR_TRUE, getter_Copies( replace));
+		nsCRT::free( theCID);
+	}
+
 	if (NS_FAILED( rv)) {
-		IMPORT_LOG0( "*** Import Text, ERROR getting Netscape/Import registry key\n");
-		return( rv);
-	}		
-		    
-	nsRegistryKey	key;
-    rv = reg->AddSubtree( importKey, "Text", &key);
-    if (NS_FAILED(rv)) return( rv);
-    
-    rv = reg->SetString( key, "Supports", kTextSupportsString);
-    if (NS_FAILED(rv)) return( rv);
-    char *myCID = kTextImportCID.ToString();
-    rv = reg->SetString( key, "CLSID", myCID);
-    delete [] myCID;
-    if (NS_FAILED(rv)) return( rv);  	
+		IMPORT_LOG0( "*** ERROR: Problem registering Text Import component in the category manager\n");
+	}
 
 	return( rv);
 }
