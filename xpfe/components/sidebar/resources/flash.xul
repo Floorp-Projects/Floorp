@@ -19,7 +19,6 @@
 -->
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://sidebar/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://sidebar/skin/flash.css" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://sidebar/locale/flash.dtd" >
@@ -29,9 +28,9 @@
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   align="vertical">
 
-  <html:script src="flash.js" />
+  <html:script src="chrome://sidebar/content/flash.js" />
 
-  <tree id="tree"
+  <tree id="flashtree"
         ref="NC:FlashRoot"
         flex="100%"
         style="height: 100%"

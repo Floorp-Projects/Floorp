@@ -27,12 +27,12 @@ var profiledir = 'chrome://sidebar/content/';
 // the location of the flash registry.
 var flashdb = profiledir + 'flash-registry.rdf';
 
-function Init()
+function FlashInit()
 {
     // Initialize the Flash panel.
     dump('Init!\n');
 
-    var tree = document.getElementById('tree');
+    var tree = document.getElementById('flashtree');
 
     // Install all the datasources named in the Flash Registry into
     // the tree control. Datasources are listed as members of the
@@ -144,12 +144,12 @@ function OpenURL(node)
 // To get around "window.onload" not working in viewer.
 function Boot()
 {
-    var tree = document.getElementById('tree');
+    var tree = document.getElementById('flashtree');
     if (tree == null) {
         setTimeout(Boot, 0);
     }
     else {
-        Init();
+        FlashInit();
     }
 }
 
