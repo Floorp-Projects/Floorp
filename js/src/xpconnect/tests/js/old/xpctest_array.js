@@ -131,6 +131,13 @@ var jsobj =  {
         result.value = [this, this];
         count.value = 2;
     },
+    CallEchoMethodOnEachInArray2 : function(count, result) {
+        for(var i = 0; i < count.value; i++)
+            result.value[i].SendOneString("print this from JS");
+
+        result.value = [this, this];
+        count.value = 2;
+    },
     PrintStringWithSize : function(len, a) {
         print("\""+a+"\""+" ; "+len);
     },
@@ -214,6 +221,31 @@ for(i = 0; i < count.value; i++)
 
 print("-------------------------------------------");
 print("-------------------------------------------");
+
+
+count =  {
+    value : 3
+};
+
+ifaces =  {
+    value : [ech, ech, ech]
+};
+
+print("calling from JS to native to JS 2...");
+
+obj.SetReceiver(null);
+obj.CallEchoMethodOnEachInArray2(count, ifaces);
+count =  {
+    value : 3
+};
+
+ifaces =  {
+    value : [ech, ech, ech]
+};
+obj.SetReceiver(jsobj);
+obj.CallEchoMethodOnEachInArray2(count, ifaces);
+
+
 print("-------------------------------------------");
 
 obj.SetReceiver(null);

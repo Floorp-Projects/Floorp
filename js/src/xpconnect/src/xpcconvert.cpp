@@ -114,19 +114,6 @@ XPCConvert::IsMethodReflectable(const nsXPTMethodInfo& info)
 /***************************************************************************/
 
 static JSBool
-ObjectHasPrivate(JSContext* cx, JSObject* obj)
-{
-    JSClass* jsclass =
-#ifdef JS_THREADSAFE
-            JS_GetClass(cx, obj);
-#else
-            JS_GetClass(obj);
-#endif
-    NS_ASSERTION(jsclass, "obj has no class");
-    return jsclass && (jsclass->flags & JSCLASS_HAS_PRIVATE);
-}
-
-static JSBool
 GetISupportsFromJSObject(JSContext* cx, JSObject* obj, nsISupports** iface)
 {
     JSClass* jsclass =
@@ -146,6 +133,62 @@ GetISupportsFromJSObject(JSContext* cx, JSObject* obj, nsISupports** iface)
     return JS_FALSE;
 }
 
+/***************************************************************************/
+// This copied from nsJSUtils.cpp in DOMLand
+ 
+static nsresult 
+GetStaticScriptGlobal(JSContext* aContext,
+                      JSObject* aObj,
+                      nsIScriptGlobalObject** aNativeGlobal)
+{
+  nsISupports* supports;
+  JSObject* parent;
+  JSObject* glob = aObj; // starting point for search
+
+  if (!glob)
+    return NS_ERROR_FAILURE;
+
+  while (nsnull != (parent = JS_GetParent(aContext, glob)))
+    glob = parent;
+
+  if (!GetISupportsFromJSObject(aContext, glob, &supports) || !supports)
+    return NS_ERROR_FAILURE;
+
+  return supports->QueryInterface(NS_GET_IID(nsIScriptGlobalObject),
+                                  (void**) aNativeGlobal);
+}
+
+static nsresult 
+GetStaticScriptContext(JSContext* aContext,
+                       JSObject* aObj,
+                       nsIScriptContext** aScriptContext)
+{
+  nsCOMPtr<nsIScriptGlobalObject> nativeGlobal;
+  GetStaticScriptGlobal(aContext, aObj, getter_AddRefs(nativeGlobal));
+  if (!nativeGlobal)    
+    return NS_ERROR_FAILURE;
+  nsIScriptContext* scriptContext = nsnull;
+  nativeGlobal->GetContext(&scriptContext);
+  *aScriptContext = scriptContext;
+  return scriptContext ? NS_OK : NS_ERROR_FAILURE;
+}  
+/***************************************************************************/
+/***************************************************************************/
+
+static JSBool
+ObjectHasPrivate(JSContext* cx, JSObject* obj)
+{
+    JSClass* jsclass =
+#ifdef JS_THREADSAFE
+            JS_GetClass(cx, obj);
+#else
+            JS_GetClass(obj);
+#endif
+    NS_ASSERTION(jsclass, "obj has no class");
+    return jsclass && (jsclass->flags & JSCLASS_HAS_PRIVATE);
+}
+
+/***************************************************************************/
 /***************************************************************************/
 
 /*
@@ -297,80 +340,60 @@ XPCConvert::NativeData2JS(JSContext* cx, jsval* d, const void* s,
                 nsISupports* iface = *((nsISupports**)s);
                 if(!iface)
                     break;
-                nsIScriptObjectOwner* owner;
                 JSObject* aJSObj = nsnull;
+                JSBool success = JS_FALSE;
                 // is this a wrapped JS object?
                 if(nsXPCWrappedJSClass::IsWrappedJS(iface))
                 {
-                    nsIXPConnectWrappedJSMethods* methods;
-                    if(NS_SUCCEEDED(iface->QueryInterface(
-                                NS_GET_IID(nsIXPConnectWrappedJSMethods),
-                                (void**)&methods)) &&
-                       NS_SUCCEEDED(methods->GetJSObject(&aJSObj)))
-                    {
-                        NS_RELEASE(methods);
-                        *d = OBJECT_TO_JSVAL(aJSObj);
-                    }
-                }
-                // is this a DOM wrapped native object?
-                else if(NS_SUCCEEDED(iface->QueryInterface(
-                            NS_GET_IID(nsIScriptObjectOwner), (void**)&owner)))
-                {
-
-                    nsresult rv;
-                    JSBool success = JS_FALSE;
-                    JSObject* globalObject;
-                    nsISupports* domObject;
-                    NS_ASSERTION(owner,"QI succeeded but yielded NULL!");
-                    if(nsnull != (globalObject =
-                                    JS_GetGlobalObject(cx)) &&
-                       ObjectHasPrivate(cx, globalObject) &&
-                       nsnull != (domObject = (nsISupports*)
-                                    JS_GetPrivate(cx, globalObject)))
-                    {
-                        nsIScriptGlobalObject* scriptObject;
-                        if(NS_SUCCEEDED(domObject->QueryInterface(
-                                            NS_GET_IID(nsIScriptGlobalObject),
-                                            (void**)&scriptObject)))
-                        {
-                            NS_ASSERTION(scriptObject,"QI succeeded but yielded NULL!");
-                            nsIScriptContext* scriptContext = nsnull;
-                            scriptObject->GetContext(&scriptContext);
-                            if(scriptContext)
-                            {
-                                rv = owner->GetScriptObject(scriptContext,
-                                                    (void **)&aJSObj);
-                                NS_RELEASE(scriptContext);
-                                if (NS_SUCCEEDED(rv))
-                                    success = JS_TRUE;
-                            }
-                            NS_RELEASE(scriptObject);
-                        }
-                    }
-                    NS_RELEASE(owner);
-                    if(!success)
-                        return JS_FALSE;
+                    nsCOMPtr<nsIXPConnectWrappedJSMethods> methods = 
+                        do_QueryInterface(iface);
+                    if(methods && NS_SUCCEEDED(methods->GetJSObject(&aJSObj)))
+                        success = JS_TRUE;
                 }
                 else
                 {
-                    // we need to build a wrapper
-                    nsXPCWrappedNative* wrapper = nsnull;
-                    nsXPCWrappedNativeScope* scope;
-                    XPCContext* xpcc;
-                    if(!iid ||
-                       !(xpcc = nsXPConnect::GetContext(cx)) ||
-                       !(scope = 
-                         nsXPCWrappedNativeScope::FindInJSObjectScope(xpcc, jsscope)) ||
-                       !(wrapper =
-                            nsXPCWrappedNative::GetNewOrUsedWrapper(xpcc,
-                                                        scope, jsscope,
-                                                        iface, *iid, pErr)))
+                    // is this a DOM wrapped native object?
+                    nsCOMPtr<nsIScriptObjectOwner> owner = 
+                        do_QueryInterface(iface);
+                    if(owner)
                     {
-                        return JS_FALSE;
+                        // is a DOM object
+                        nsCOMPtr<nsIScriptContext> scriptCX;
+                        GetStaticScriptContext(cx, jsscope,
+                                               getter_AddRefs(scriptCX));
+                        if(scriptCX &&
+                           NS_SUCCEEDED(owner->GetScriptObject(scriptCX,
+                                                          (void **)&aJSObj)))
+                            success = JS_TRUE;
+                        else if(pErr)
+                            *pErr = NS_ERROR_XPC_CANT_GET_JSOBJECT_OF_DOM_OBJECT;
                     }
-                    aJSObj = wrapper->GetJSObject();
-                    NS_RELEASE(wrapper);
+                    else
+                    {
+                        // not a DOM object. Just try to build a wrapper                            
+                        nsXPCWrappedNativeScope* scope;
+                        XPCContext* xpcc;
+                        if(iid &&
+                           nsnull != (xpcc = nsXPConnect::GetContext(cx)) &&
+                           nsnull != (scope = 
+                            nsXPCWrappedNativeScope::FindInJSObjectScope(xpcc, 
+                                                                    jsscope)))
+                        {
+                            nsXPCWrappedNative* wrapper = 
+                                nsXPCWrappedNative::GetNewOrUsedWrapper(xpcc,
+                                                            scope, jsscope,
+                                                            iface, *iid, pErr);
+                            if(wrapper)
+                            {
+                                aJSObj = wrapper->GetJSObject();
+                                NS_RELEASE(wrapper);
+                                success = JS_TRUE;
+                            }
+                        }
+                    }
                 }
+                if(!success)
+                    return JS_FALSE;
                 if(aJSObj)
                     *d = OBJECT_TO_JSVAL(aJSObj);
                 break;
