@@ -7,7 +7,7 @@ point it to the file "Main".
 You will also then want to create a .htaccess file containing
 something like the following:
 
-
+--------------------------------------8<--------------------------------------
 # set up the CGI scripts without .cgi extensions
 <files nph-Main>
    SetHandler cgi-script
@@ -25,3 +25,12 @@ AddDescription "The main part of the PLIF test app" nph-Main
 RewriteEngine on
 RewriteBase /libraries/perl/PLIF/tests/
 ReWriteRule .? - [E=HTTP_AUTHORIZATION:%{HTTP:AUTHORIZATION},PT]
+--------------------------------------8<--------------------------------------
+
+You will also want to make sure that Options +ExecCGI is enabled in
+the directory containing nph-Main and that the directory is not
+writable by others (drwxr-xr-x).
+
+Finally, if you are using suexec then it won't be able to stat a
+symlink to Main, so delete the symlink, rename Main to nph-Main, and
+then create a symlink Main that points to nph-Main.
