@@ -70,7 +70,9 @@ public:
   enum PixelFormat {
     PIXEL_FORMAT_24_RGB  = 1, // linux
     PIXEL_FORMAT_24_BGR  = 2, // windows
-    PIXEL_FORMAT_32_ABGR = 3  // mac
+    PIXEL_FORMAT_32_ABGR = 3, // mac
+    PIXEL_FORMAT_32_RGBA = 4, // mac/linux + compositing
+    PIXEL_FORMAT_32_BGRA = 5  // windows + compositing
   };
   
   NS_IMETHOD_(PRUint8 *) GetBits()=0;
