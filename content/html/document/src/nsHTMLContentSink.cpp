@@ -4570,6 +4570,7 @@ HTMLContentSink::ProcessHTTPHeaders(nsIChannel* aChannel) {
       char*  headers[]={"link","default-style","content-base",0}; // add more http headers if you need
       char** name=headers;
       nsXPIDLCString tmp;
+
       while(*name) {
         httpchannel->GetResponseHeader(*name, getter_Copies(tmp));
         if(tmp.get()) {
@@ -4595,6 +4596,8 @@ HTMLContentSink::ProcessHeaderData(nsIAtom* aHeader,const nsAReadableString& aVa
   nsresult rv=NS_OK;
   // XXX necko isn't going to process headers coming in from the parser          
   //NS_WARNING("need to fix how necko adds mime headers (in HTMLContentSink::ProcessMETATag)");
+
+  mDocument->SetHeaderData(aHeader, aValue);
   
   // see if we have a refresh "header".
   if (aHeader == nsHTMLAtoms::refresh) {
@@ -4637,10 +4640,7 @@ HTMLContentSink::ProcessHeaderData(nsIAtom* aHeader,const nsAReadableString& aVa
     nsCRT::free(cookie);
     if (NS_FAILED(rv)) return rv;
   } // END set-cookie
-  
-  mDocument->SetHeaderData(aHeader, aValue);
-  
-  if (aHeader == nsHTMLAtoms::link) {
+  else if (aHeader == nsHTMLAtoms::link) {
     rv = ProcessLink(aContent, aValue);
   }
   else if (aHeader == nsHTMLAtoms::headerContentBase) {
@@ -4648,6 +4648,24 @@ HTMLContentSink::ProcessHeaderData(nsIAtom* aHeader,const nsAReadableString& aVa
   }
   else if (aHeader == nsHTMLAtoms::headerWindowTarget) {
     ProcessBaseTarget(aValue);
+  }
+  else {
+    // we also need to report back HTTP-EQUIV headers to the channel
+    // so that it can process things like pragma: no-cache or other
+    // cache-control headers. Ideally this should also be the way for
+    // cookies to be set! But we'll worry about that in the next
+    // iteration
+    nsCOMPtr<nsIChannel> channel;
+    if (NS_SUCCEEDED(mParser->GetChannel(getter_AddRefs(channel)))) {
+      nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
+      if (httpChannel) {
+        const PRUnichar *header = 0;
+        (void)aHeader->GetUnicode(&header);
+        (void)httpChannel->SetResponseHeader(
+                       NS_ConvertUCS2toUTF8(header).get(),
+                       NS_ConvertUCS2toUTF8(aValue).get());
+      }
+    }
   }
   
   return rv;

@@ -2882,6 +2882,21 @@ nsresult nsParser::CreateTagStack(nsITagStack** aTagStack){
 }
 
 /** 
+ * Get the channel associated with this parser
+ * @update harishd,gagan 07/17/01
+ * @param aChannel out param that will contain the result
+ * @return NS_OK if successful
+ */
+NS_IMETHODIMP 
+nsParser::GetChannel(nsIChannel** aChannel)
+{
+  nsresult result = NS_ERROR_NOT_AVAILABLE;
+  if (mParserContext && mParserContext->mRequest)
+    result = CallQueryInterface(mParserContext->mRequest, aChannel);
+  return result;
+}
+
+/** 
  * Get the DTD associated with this parser
  * @update vidur 9/29/99
  * @param aDTD out param that will contain the result
