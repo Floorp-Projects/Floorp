@@ -22,8 +22,8 @@ function SetUpRDF()
 
 function Stop()
 {
-	dump("Stop()\n");
-	dump("we need to stop the url that is running.\n");
+	//dump("Stop()\n");
+	dump("xxx todo: we need to stop the url that is running.\n");
 }
 
 var Bundle = srGetStrBundle("chrome://messenger/locale/subscribe.properties");
@@ -31,7 +31,7 @@ var Bundle = srGetStrBundle("chrome://messenger/locale/subscribe.properties");
 function SetServerTypeSpecificTextValues()
 {
 	var serverType = GetMsgFolderFromUri(gServerURI).server.type;
-	dump("serverType="+serverType+"\n");
+	//dump("serverType="+serverType+"\n");
 	
 	/* set the server specific ui elements */
     var element = document.getElementById("foldertextlabel");
@@ -59,6 +59,7 @@ function onServerClick(event)
 {
 	var item = event.target;
 	gServerURI = item.id;
+	//dump("gServerURI="+gServerURI+"\n");
 
 	SetServerTypeSpecificTextValues();
 	SetUpTree();
@@ -66,15 +67,16 @@ function onServerClick(event)
 
 function SetUpServerMenu()
 {
-	dump("SetUpServerMenu()\n");
+	//dump("SetUpServerMenu()\n");
 
     var serverMenu = document.getElementById("serverMenu");
     var menuitems = serverMenu.getElementsByAttribute("id", gServerURI);
 
 	try {
-		dump("menuitems="+menuitems+"\n");
-		dump("menuitems[0]="+menuitems[0]+"\n");
-		dump("serverMenu="+serverMenu+"\n");
+		//dump("gServerURI="+gServerURI+"\n");
+		//dump("menuitems="+menuitems+"\n");
+		//dump("menuitems[0]="+menuitems[0]+"\n");
+		//dump("serverMenu="+serverMenu+"\n");
     	serverMenu.selectedItem = menuitems[0];
 	}
 	catch (ex) {
@@ -86,7 +88,7 @@ function SetUpServerMenu()
 
 var MySubscribeListener = {
 	OnStopPopulating: function() {
-		dump("root subscribe tree at: "+ gServerURI +"\n");
+		//dump("root subscribe tree at: "+ gServerURI +"\n");
 		gSubscribeTree.setAttribute('ref',gServerURI);
 		// Turn progress meter off.
       	gStatusBar.setAttribute("mode","normal");	
@@ -95,7 +97,7 @@ var MySubscribeListener = {
 
 function SetUpTree()
 {
-	dump("SetUpTree()\n");
+	//dump("SetUpTree()\n");
 	SetUpRDF();
 	
 	gSubscribeTree.setAttribute('ref',null);
@@ -120,7 +122,7 @@ function SetUpTree()
 
 function SubscribeOnLoad()
 {
-	dump("SubscribeOnLoad()\n");
+	//dump("SubscribeOnLoad()\n");
 	
   gSubscribeTree = document.getElementById('subscribetree');
 	gStatusBar = document.getElementById('statusbar-icon');
@@ -141,10 +143,13 @@ function SubscribeOnLoad()
 	
 	if (window.arguments[0].preselectedURI) {
 		var uri = window.arguments[0].preselectedURI;
-		dump("subscribe: got a uri," + uri + "\n");
+		//dump("subscribe: got a uri," + uri + "\n");
 		folder = GetMsgFolderFromUri(uri);
 		dump("xxx todo:  make sure this is a subscribable server\n");
-		gServerURI = folder.server.serverURI;
+		//dump("folder="+folder+"\n");
+		//dump("folder.server="+folder.server+"\n");
+		gServerURI = folder.server.serverPasswordRealm;
+		//dump("gServerURI="+gServerURI+"\n");
 	}
 	else {
 		dump("subscribe: no uri\n");
@@ -163,7 +168,7 @@ function SubscribeOnLoad()
 
 function subscribeOK()
 {
-	dump("in subscribeOK()\n")
+	//dump("in subscribeOK()\n")
 	if (top.okCallback) {
 		top.okCallback(top.gServerURI,top.gChangeTable);
 	}
@@ -172,24 +177,24 @@ function subscribeOK()
 
 function subscribeCancel()
 {
-	dump("in subscribeCancel()\n");
+	//dump("in subscribeCancel()\n");
 	Stop();
 	return true;
 }
 
 function SetState(uri,name,state,stateStr)
 {
-	dump("SetState(" + uri +"," + name + "," + state + "," + stateStr + ")\n");
+	//dump("SetState(" + uri +"," + name + "," + state + "," + stateStr + ")\n");
 	if (!uri || !stateStr) return;
 
 	try {
 		var src = RDF.GetResource(uri, true);
 		var prop = RDF.GetResource("http://home.netscape.com/NC-rdf#Subscribed", true);
 		var oldLiteral = gSubscribeDS.GetTarget(src, prop, true);
-		dump("oldLiteral="+oldLiteral+"\n");
+		//dump("oldLiteral="+oldLiteral+"\n");
 
 		oldValue = oldLiteral.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
-		dump("oldLiteral.Value="+oldValue+"\n");
+		//dump("oldLiteral.Value="+oldValue+"\n");
 		if (oldValue != stateStr) {
 			var newLiteral = RDF.GetLiteral(stateStr);
 			gSubscribeDS.Change(src, prop, oldLiteral, newLiteral);
@@ -203,27 +208,27 @@ function SetState(uri,name,state,stateStr)
 
 function StateChanged(name,state)
 {
-	dump("StateChanged(" + name + "," + state + ")\n");
-	dump("start val=" +gChangeTable[name] + "\n");
+	//dump("StateChanged(" + name + "," + state + ")\n");
+	//dump("start val=" +gChangeTable[name] + "\n");
 
 	if (gChangeTable[name] == undefined) {
-		dump(name+" not in table yet\n");
+		//dump(name+" not in table yet\n");
 		gChangeTable[name] = state;
 	}
 	else {
 		var oldValue = gChangeTable[name];
-		dump(name+" already in table\n");
+		//dump(name+" already in table\n");
 		if (oldValue != state) {
 			gChangeTable[name] = undefined;
 		}
 	}
 
-	dump("end val=" +gChangeTable[name] + "\n");
+	//dump("end val=" +gChangeTable[name] + "\n");
 }
 
 function SetSubscribeState(state)
 {
-  dump("SetSubscribedState()\n");
+  //dump("SetSubscribedState()\n");
  
   var stateStr;
   if (state) {
@@ -234,15 +239,15 @@ function SetSubscribeState(state)
   }
 
   try {
-	dump("subscribe button clicked\n");
+	//dump("subscribe button clicked\n");
 	
 	var groupList = gSubscribeTree.selectedItems;
 	for (i=0;i<groupList.length;i++) {
 		group = groupList[i];
 		uri = group.getAttribute('id');
-		dump(uri + "\n");
+		//dump(uri + "\n");
 		name = group.getAttribute('name');
-		dump(name + "\n");
+		//dump(name + "\n");
 		SetState(uri,name,state,stateStr);
 	}
   }
@@ -272,7 +277,7 @@ function ReverseStateFromNode(node)
 
 function ReverseState(uri)
 {
-	dump("ReverseState("+uri+")\n");
+	//dump("ReverseState("+uri+")\n");
 }
 
 function SubscribeOnClick(event)
@@ -291,7 +296,7 @@ function SubscribeOnClick(event)
 
 function RefreshList()
 {
-	dump("refresh list\n");
+	dump("xxx todo refresh list\n");
 }
 
 function trackGroupInTree()
