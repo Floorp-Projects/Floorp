@@ -35,9 +35,7 @@ CPPSRCS=                     \
 	nsMsgKeyArray.cpp        \
 	nsMsgFolder.cpp          \
 	nsMsgImapMailFolder.cpp  \
-	nsMsgGroupRecord.cpp     \
 	nsLocalFolderSummarySpec.cpp	\
-	nsMsgLineBuffer.cpp		 \
 	nsNewsSet.cpp            \
 	nsUrlListenerManager.cpp \
 	nsMsgMailSession.cpp	 \
@@ -58,9 +56,7 @@ CPP_OBJS=                               \
 	.\$(OBJDIR)\nsMsgFolder.obj         \
 	.\$(OBJDIR)\nsLocalFolderSummarySpec.obj	\
 	.\$(OBJDIR)\nsMsgImapMailFolder.obj \
-	.\$(OBJDIR)\nsMsgGroupRecord.obj    \
 	.\$(OBJDIR)\nsNewsSet.obj           \
-	.\$(OBJDIR)\nsMsgLineBuffer.obj     \
 	.\$(OBJDIR)\nsUrlListenerManager.obj \
 	.\$(OBJDIR)\nsMsgMailSession.obj	\
 	.\$(OBJDIR)\nsMsgIdentity.obj		\
@@ -75,8 +71,6 @@ EXPORTS=                \
 	nsUInt32Array.h     \
 	nsMsgKeyArray.h     \
 	nsNewsSet.h         \
-	nsMsgLineBuffer.h	\
-	nsMsgGroupRecord.h  \
 	nsLocalFolderSummarySpec.h \
 	nsMsgFolder.h		\
 	nsUrlListenerManager.h \
