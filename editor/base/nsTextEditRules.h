@@ -59,6 +59,7 @@ public:
   // nsTextEditRules action id's
   enum 
   {
+    kDefault         = 0,
     // any editor that has a txn mgr
     kUndo            = 1000,
     kRedo            = 1001,
