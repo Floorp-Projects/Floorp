@@ -11790,9 +11790,20 @@ nsCSSFrameConstructor::FindFrameWithContent(nsIPresContext*  aPresContext,
 #ifdef NOISY_FINDFRAME
         printf("  hint frame is %p\n", aHint->mPrimaryFrameForPrevSibling);
 #endif
-        kidFrame = aHint->mPrimaryFrameForPrevSibling; // start with the primary frame for aContent's previous sibling
-        if (kidFrame) {                               // if we have this
-          kidFrame->GetNextSibling(&kidFrame);        //   then use the next sibling frame as our starting point
+        // start with the primary frame for aContent's previous sibling
+        kidFrame = aHint->mPrimaryFrameForPrevSibling;
+        // But if it's out of flow, start from its placeholder.
+        if (kidFrame) {
+          nsFrameState kidState;
+          kidFrame->GetFrameState(&kidState);
+          if (kidState & NS_FRAME_OUT_OF_FLOW) {
+            aFrameManager->GetPlaceholderFrameFor(kidFrame, &kidFrame);
+          }
+        }
+
+        if (kidFrame) {
+          // then use the next sibling frame as our starting point
+          kidFrame->GetNextSibling(&kidFrame);
           if (!kidFrame)
           { // the hint frame had no next frame.  try the next-in-flow fo the parent of the hint frame
             // if there is one
