@@ -43,6 +43,7 @@
 #include "nsCOMPtr.h"
 #include "nsIMemory.h"
 #include "nsString.h"
+#include "nsCRT.h"
 #include "nsIFileStream.h"
 #include "nsIStreamListener.h"
 #include "nsIEventQueueService.h"
