@@ -39,17 +39,6 @@
 <!ENTITY printCmd.accesskey "p">
 <!ENTITY printCmd.commandkey "p">
 
-<!-- LOCALIZATION NOTE (walletMenu.label): DONT_TRANSLATE -->
-<!ENTITY walletMenu.label "Wallet">
-<!ENTITY walletSafeFillCmd.label "Safe Form Fill">
-<!ENTITY walletQuickFillCmd.label "Quick Form Fill">
-<!ENTITY walletRequestToCaptureCmd.label "Capture Form">
-<!-- LOCALIZATION NOTE (walletContentsCmd.label): Do NOT translate "Wallet"-->
-<!ENTITY walletContentsCmd.label "Wallet Contents...">
-<!ENTITY walletDisplaySignonsCmd.label "Display Signons...">
-<!ENTITY walletDisplayCookiesCmd.label "Display Cookies...">
-<!ENTITY walletSamplesCmd.label "Samples">
-<!ENTITY walletChangePasswordCmd.label "Change Password...">
 <!ENTITY viewMenu.label "View">
 <!ENTITY toolbarsCmd.label "Toolbars">
 <!ENTITY navbarCmd.label "Navigation ToolBar">
