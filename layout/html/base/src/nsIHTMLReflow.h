@@ -34,18 +34,28 @@ class nsLineLayout;
  * HTML/CSS specific reflow metrics
  */
 struct nsHTMLReflowMetrics : nsReflowMetrics {
-  // XXX Explain this better somehow!
-
+  // Carried out top/bottom margin values. This is the top and bottom
+  // margin values from a frames first/last child.
   nscoord mCarriedOutTopMargin;
   nscoord mCarriedOutBottomMargin;
+
+  // Carried out margin values. If the top/bottom margin values were
+  // computed auto values then the corresponding bits are set in this
+  // value.
+  PRUintn mCarriedOutMarginFlags;
 
   nsHTMLReflowMetrics(nsSize* aMaxElementSize)
     : nsReflowMetrics(aMaxElementSize)
   {
     mCarriedOutTopMargin = 0;
     mCarriedOutBottomMargin = 0;
+    mCarriedOutMarginFlags = 0;
   }
 };
+
+// Carried out margin flags
+#define NS_CARRIED_TOP_MARGIN_IS_AUTO    0x1
+#define NS_CARRIED_BOTTOM_MARGIN_IS_AUTO 0x2
 
 //----------------------------------------------------------------------
 
@@ -128,9 +138,10 @@ struct nsHTMLReflowState : nsReflowState {
                     const nsSize&            aMaxSize,
                     nsReflowFrameType        aFrameType = eReflowType_Block);
 
-  // Construct a reflow state for the given inline frame, parent reflow state,
-  // and max size. Uses the reflow reason, space manager, and reflow command from
-  // the parent's reflow state. Sets the reflow frame type to eReflowType_Inline
+  // Construct a reflow state for the given inline frame, parent
+  // reflow state, and max size. Uses the reflow reason, space
+  // manager, and reflow command from the parent's reflow state. Sets
+  // the reflow frame type to eReflowType_Inline
   nsHTMLReflowState(nsIFrame*                aFrame,
                     const nsHTMLReflowState& aParentReflowState,
                     const nsSize&            aMaxSize,
