@@ -57,6 +57,7 @@ REQUIRES	= xpcom \
 		  appshell \
 		  msgnews \
 		  msgimap \
+		  gfx \
 		  $(NULL)
 
 ifeq ($(USE_SHORT_LIBNAME),1)
