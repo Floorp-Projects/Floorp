@@ -268,9 +268,15 @@ nsHttpTransaction::OnStopTransaction(nsresult status)
 
     // if the connection was reset before we read any part of the response,
     // then we must try to restart the transaction.
-    if ((status == NS_ERROR_NET_RESET) && (mContentRead == 0)) {
+    if (status == NS_ERROR_NET_RESET) {
+        // if some data was read, then mask the reset error, so our listener
+        // will treat this as a normal failure.  XXX we might want to map
+        // this error to a special error code to indicate that the transfer
+        // was abnormally interrupted.
+        if (mContentRead > 0)
+            status = NS_ERROR_ABORT;
         // if restarting fails, then we must notify our listener.
-        if (NS_SUCCEEDED(Restart()))
+        else if (NS_SUCCEEDED(Restart()))
             return NS_OK;
     }
 
