@@ -53,8 +53,8 @@ public:
 
     NS_IMETHOD_(PRInt32) GetEventQueueSelectFD();
 
-    NS_IMETHOD Init();
-    NS_IMETHOD InitFromPRThread(PRThread* thread);
+    NS_IMETHOD Init(PRBool aNative);
+    NS_IMETHOD InitFromPRThread(PRThread* thread, PRBool aNative);
     NS_IMETHOD InitFromPLQueue(PLEventQueue* aQueue);
 
     NS_IMETHOD EnterMonitor();
@@ -65,6 +65,7 @@ public:
     NS_IMETHOD GetPLEventQueue(PLEventQueue** aEventQueue);
     
     NS_IMETHOD IsQueueOnCurrentThread(PRBool *aResult);
+    NS_IMETHOD IsQueueNative(PRBool *aResult);
 
     NS_IMETHOD StopAcceptingEvents();
 

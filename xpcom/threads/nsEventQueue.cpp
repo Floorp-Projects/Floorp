@@ -86,15 +86,19 @@ nsEventQueueImpl::~nsEventQueueImpl()
 }
 
 NS_IMETHODIMP 
-nsEventQueueImpl::Init()
+nsEventQueueImpl::Init(PRBool aNative)
 {
-  mEventQueue = PL_CreateNativeEventQueue("Thread event queue...", PR_GetCurrentThread());
+  PRThread *thread = PR_GetCurrentThread();
+  if (aNative)
+    mEventQueue = PL_CreateNativeEventQueue("Thread event queue...", thread);
+  else
+    mEventQueue = PL_CreateMonitoredEventQueue("Thread event queue...", thread);
   NotifyObservers(gActivatedNotification);
   return NS_OK;
 }
 
 NS_IMETHODIMP 
-nsEventQueueImpl::InitFromPRThread(PRThread* thread)
+nsEventQueueImpl::InitFromPRThread(PRThread* thread, PRBool aNative)
 {
   if (thread == NS_CURRENT_THREAD) 
   {
@@ -112,8 +116,11 @@ nsEventQueueImpl::InitFromPRThread(PRThread* thread)
     rv = mainIThread->GetPRThread(&thread);
     if (NS_FAILED(rv)) return rv;
   }  
-  
-  mEventQueue = PL_CreateNativeEventQueue("Thread event queue...", thread);
+
+  if (aNative)
+    mEventQueue = PL_CreateNativeEventQueue("Thread event queue...", thread);
+  else
+    mEventQueue = PL_CreateMonitoredEventQueue("Thread event queue...", thread);
   NotifyObservers(gActivatedNotification);
   return NS_OK;
 }
@@ -273,6 +280,13 @@ nsEventQueueImpl::IsQueueOnCurrentThread(PRBool *aResult)
     return NS_OK;
 }
 
+
+NS_IMETHODIMP
+nsEventQueueImpl::IsQueueNative(PRBool *aResult)
+{
+    *aResult = PL_IsQueueNative(mEventQueue);
+    return NS_OK;
+}
 
 NS_IMETHODIMP
 nsEventQueueImpl::ProcessPendingEvents()

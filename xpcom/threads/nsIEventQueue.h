@@ -60,8 +60,8 @@ public:
 
     NS_IMETHOD_(PRInt32) GetEventQueueSelectFD() = 0;
 
-    NS_IMETHOD Init() = 0;
-    NS_IMETHOD InitFromPRThread(PRThread* thread) = 0;
+    NS_IMETHOD Init(PRBool aNative) = 0;
+    NS_IMETHOD InitFromPRThread(PRThread* thread, PRBool aNative) = 0;
     NS_IMETHOD InitFromPLQueue(PLEventQueue* aQueue) = 0;
 
     NS_IMETHOD EnterMonitor() = 0;
@@ -71,6 +71,7 @@ public:
     NS_IMETHOD GetPLEventQueue(PLEventQueue** aEventQueue) = 0;
 
     NS_IMETHOD IsQueueOnCurrentThread(PRBool *aResult) = 0;
+    NS_IMETHOD IsQueueNative(PRBool *aResult) = 0;
 
     // effectively kill the queue. warning: the queue is allowed to delete
     // itself any time after this.

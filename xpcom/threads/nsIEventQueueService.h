@@ -55,10 +55,33 @@ class nsIEventQueueService : public nsISupports
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IEVENTQUEUESERVICE_IID; return iid; }
 
-  NS_IMETHOD CreateThreadEventQueue(void) = 0;
+  /**
+   * Creates and holds a native event queue for the current thread.
+   * "Native" queues have an associated callback mechanism which is
+   * automatically triggered when an event is posted. See plevent.c for details.
+   * @return NS_OK on success, or a host of failure indications
+   */
+  NS_IMETHOD CreateThreadEventQueue() = 0;
+
+  /**
+   * Creates and hold a monitored event queue for the current thread.
+   * "Monitored" queues have no callback processing mechanism.
+   * @return NS_OK on success, or a host of failure indications
+   */
+  NS_IMETHOD CreateMonitoredThreadEventQueue() = 0;
+
+  /**
+   * Somewhat misnamed, this method releases the service's hold on the event
+   * queue(s) for this thread. Subsequent attempts to access this thread's
+   * queue (GetThreadEventQueue, for example) may fail, though the queue itself
+   * will be destroyed only after all references to it are released and the
+   * queue itself is no longer actively processing events.
+   * @return nonsense.
+   */
   NS_IMETHOD DestroyThreadEventQueue(void) = 0;
 
-  NS_IMETHOD CreateFromIThread(nsIThread *aThread, nsIEventQueue **aResult) = 0;
+  NS_IMETHOD CreateFromIThread(nsIThread *aThread, PRBool aNative,
+                               nsIEventQueue **aResult) = 0;
   NS_IMETHOD CreateFromPLEventQueue(PLEventQueue* aPLEventQueue, nsIEventQueue** aResult) = 0;
 
   // Add a new event queue for the current thread, making it the "current"
