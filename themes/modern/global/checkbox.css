@@ -21,49 +21,44 @@
   checkbox[disabled="true"]:hover > .internal-box > .checkmark-box 
     {
       border: 1px solid #999999;
+      margin-right: 4px;
     }
     
 /* checkmark inner frame */
-  checkbox > .internal-box > .checkmark-box > image 
+  checkbox > .internal-box > .checkmark-box > .checkbox-check 
     {
       border: 1px outset #CCCCCC;
       width: 10px;
       height: 10px;
     }
   
-  checkbox[checked="true"] > .internal-box > .checkmark-box > image 
+  checkbox[checked="true"] > .internal-box > .checkmark-box > .checkbox-check 
     {
       list-style-image: url(chrome://global/skin/check-check.gif);
     }
     
-  checkbox[checked="true"][disabled="true"] > .internal-box > .checkmark-box > image
+  checkbox[checked="true"][disabled="true"] > .internal-box > .checkmark-box > .checkbox-check
     {
       list-style-image: url(chrome://global/skin/check-check-disabled.gif);
     }  
 
-  checkbox:hover:active > .internal-box > .checkmark-box > image 
+  checkbox:hover:active > .internal-box > .checkmark-box > .checkbox-check 
     {
       border: 1px inset #CCCCCC;
     }
   
-  checkbox[disabled="true"] > .internal-box > .checkmark-box > image,
-  checkbox[disabled="true"]:active > .internal-box > .checkmark-box > image 
+  checkbox[disabled="true"] > .internal-box > .checkmark-box > .checkbox-check,
+  checkbox[disabled="true"]:active > .internal-box > .checkmark-box > .checkbox-check 
     {
       border: 1px outset #CCCCCC;
       -moz-border-radius: 0px;
     }
 
 /* checkmark label/icon frame */
-  checkbox[value] > .internal-box > html,
-  checkbox.iconic > .internal-box > .icon 
+  checkbox[value] > .internal-box > html
     {
       margin: 0px 0px 0px 4px;
       padding: 1px;
-    }
-
-  checkbox.iconic > .internal-box > html 
-    {
-      margin-left: 4px;
     }
 
   checkbox[disabled="true"][value] > .internal-box > html 
