@@ -67,6 +67,8 @@ function ComposeStartup()
 		editorAppCore.setContentWindow(window.frames[0]);
 		editorAppCore.setWebShellWindow(window);
 		editorAppCore.setToolbarWindow(window);
+
+		editorAppCore.loadUrl("resource:/res/mailnews/compose/msgcomposeBody.html");
 	}
 
 	if (args.name)
@@ -102,7 +104,7 @@ function ComposeExit()
 	if (editorAppCore)
 	{
 		dump("\nClosing editor app core\n");
-		editorAppCore.exit();
+		//editorAppCore.exit();
 	}
 	if (composeAppCore)
 	{
