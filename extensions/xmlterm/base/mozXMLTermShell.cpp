@@ -58,7 +58,6 @@
 #include "nsIServiceManager.h"
 
 #include "nsIAppShellService.h"
-#include "nsAppShellCIDs.h"
 
 #include "nsIDOMDocument.h"
 #include "nsISelection.h"
@@ -68,10 +67,6 @@
 #include "mozLineTerm.h"
 #include "mozXMLTermUtils.h"
 #include "mozXMLTermShell.h"
-
-// Define Class IDs
-static NS_DEFINE_IID(kAppShellServiceCID,    NS_APPSHELL_SERVICE_CID);
-
 
 /////////////////////////////////////////////////////////////////////////
 // mozXMLTermShell implementation
@@ -390,11 +385,12 @@ mozXMLTermShell::Exit()
   XMLT_LOG(mozXMLTermShell::Exit,10,("\n"));
 
   // Create the Application Shell instance...
-  nsresult result = nsServiceManager::GetService(kAppShellServiceCID,
+  // XXXbsmedberg what the hell is this?
+  nsresult result = nsServiceManager::GetService(NS_APPSHELLSERVICE_CONTRACTID,
                                                  NS_GET_IID(nsIAppShellService),
                                                  (nsISupports**)&appShell);
   if (NS_SUCCEEDED(result)) {
-    nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
+    nsServiceManager::ReleaseService(NS_APPSHELLSERVICE_CONTRACTID, appShell);
   } 
   return NS_OK;
 }
