@@ -796,9 +796,9 @@ GetFolderList(nsIRDFResource *source, nsVoidArray **array /* out */)
 
 	nsFileURL 		parentDir(uri);
 	nsNativeFileSpec 	nativeDir(parentDir);
-	for (nsDirectoryIterator i(nativeDir); i; i++)
+	for (nsDirectoryIterator i(nativeDir); i.Exists(); i++)
 	{
-		nsNativeFileSpec	nativeSpec = (const nsNativeFileSpec &)i;
+		const nsNativeFileSpec	nativeSpec = (const nsNativeFileSpec &)i;
 		if (!isVisible(nativeSpec))	continue;
 		nsFilePath		filePath(nativeSpec);
 		char			*childURL = filePath;

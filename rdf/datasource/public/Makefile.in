@@ -26,6 +26,7 @@ MODULE = rdf
 
 EXPORTS =				\
 	nsIXULContentSink.h		\
+	nsIRDFFileSystem.h		\
         $(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))

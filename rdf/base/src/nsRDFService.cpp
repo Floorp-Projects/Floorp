@@ -682,9 +682,6 @@ ServiceImpl::RegisterBuiltInResourceFactories(void)
         "",                NS_NewRDFDefaultResourceFactory,
 //        "mailaccount:",    NS_NewRDFMailAccountResourceFactory,
 //        "mailbox:",        NS_NewRDFMailResourceFactory,
-#if 0
-        "file:",           NS_NewRDFFileResourceFactory,
-#endif
         nsnull,     nsnull
     };
 
@@ -725,15 +722,15 @@ ServiceImpl::RegisterBuiltInNamedDataSources(void)
 {
     extern nsresult NS_NewRDFBookmarkDataSource(nsIRDFDataSource** result);
     extern nsresult NS_NewRDFHistoryDataSource(nsIRDFDataSource** result);
-    extern nsresult NS_NewRDFLocalFileSystemDataSource(nsIRDFDataSource** result);
+    extern nsresult NS_NewRDFFileSystemDataSource(nsIRDFDataSource** result);
 //    extern nsresult NS_NewRDFMailDataSource(nsIRDFDataSource** result);
 
     static DataSourceTable gTable[] = {
         "rdf:bookmarks",      NS_NewRDFBookmarkDataSource,
+        "rdf:files",          NS_NewRDFFileSystemDataSource,
 //        "rdf:mail",           NS_NewRDFMailDataSource, 
 #if 0
         "rdf:history",        NS_NewRDFHistoryDataSource,
-        "rdf:lfs",            NS_NewRDFLocalFileSystemDataSource,
 #endif
         nsnull,               nsnull
     };
