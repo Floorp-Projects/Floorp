@@ -82,3 +82,24 @@
 
 // 97/05/05 jrm -- use phil's new search scope api
 #define B3_SEARCH_API
+
+#define macintosh			// macintosh is defined for GUSI
+#define XP_MAC 1
+
+// we have to do this here because ConditionalMacros.h will be included from
+// within OpenTptInternet.h and will stupidly define these to 1 if they
+// have not been previously defined. The new PowerPlant (CWPro1) requires that
+// this be set to 0. (pinkerton)
+#define OLDROUTINENAMES 0
+#ifndef OLDROUTINELOCATIONS
+	#define OLDROUTINELOCATIONS	0
+#endif
+
+// OpenTransport.h has changed to not include the error messages we need from
+// it unless this is defined. Why? dunnno...(pinkerton)
+#define OTUNIXERRORS 1
+
+#ifndef DEBUG
+	#define NDEBUG
+#endif
+

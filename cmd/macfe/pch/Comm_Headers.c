@@ -20,26 +20,6 @@
 //	Comm_Headers.c
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
 
-#define macintosh			// macintosh is defined for GUSI
-#define XP_MAC 1
-
-// we have to do this here because ConditionalMacros.h will be included from
-// within OpenTptInternet.h and will stupidly define these to 1 if they
-// have not been previously defined. The new PowerPlant (CWPro1) requires that
-// this be set to 0. (pinkerton)
-#define OLDROUTINENAMES 0
-#ifndef OLDROUTINELOCATIONS
-	#define OLDROUTINELOCATIONS	0
-#endif
-
-// OpenTransport.h has changed to not include the error messages we need from
-// it unless this is defined. Why? dunnno...(pinkerton)
-#define OTUNIXERRORS 1
-
-#ifndef DEBUG
-	#define NDEBUG
-#endif
-
 // #include <osl.h> for some reason, including this messes up PP compiles, we get 
 // "already defined" errors
 
