@@ -318,7 +318,7 @@ MaiTopLevel::HandleEvent(PRUint32 aEvent, nsIAccessible *aAccessible,
                               // The number of the deleted
                               pAtkTableChange->count);
         break;
-        
+
     case nsIAccessibleEventListener::EVENT_ATK_TABLE_COLUMN_REORDER:
         MAI_LOG_DEBUG(("\n\nReceived: EVENT_ATK_TABLE_COLUMN_REORDER\n"));
         g_signal_emit_by_name(ATK_OBJECT(pMaiObject->GetAtkObject()),

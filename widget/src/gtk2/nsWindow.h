@@ -49,10 +49,6 @@
 
 #include <gtk/gtk.h>
 
-#ifdef ACCESSIBILITY
-#include "nsMaiHook.h"
-#endif
-
 #include <gdk/gdkx.h>
 #include <gtk/gtkwindow.h>
 

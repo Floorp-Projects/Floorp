@@ -64,6 +64,8 @@ CPPSRCS		= \
 		nsClipboard.cpp \
 		nsDragService.cpp \
 		nsSound.cpp \
+		nsAccessibilityInterface.cpp \
+		nsGConfInterface.cpp \
 		$(NULL)
 
 SHARED_LIBRARY_LIBS = $(DIST)/lib/libxpwidgets_s.a

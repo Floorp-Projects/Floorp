@@ -39,19 +39,58 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __MAI_HOOK_H__
-#define __MAI_HOOK_H__
+#ifndef __ACCESSIBILITY_INTERFACE_H__
+#define __ACCESSIBILITY_INTERFACE_H__
 
 #include "nsIAccessible.h"
+#include "prlink.h"
 
 struct MaiHook
 {
     PRBool (*MaiShutdown)(void);
-    PRBool (*MaiStartup)(void);
+    PRBool (*MaiStartup)(MaiHook **);
     PRBool (*AddTopLevelAccessible)(nsIAccessible *toplevel);
     PRBool (*RemoveTopLevelAccessible)(nsIAccessible *toplevel);
 };
 
-extern MaiHook *gMaiHook;
+G_BEGIN_DECLS
+typedef PRBool (*MaiInit) (MaiHook **aMaiHook);
+typedef void (*GnomeAccessibilityInit) (void);
+typedef void (*GnomeAccessibilityShutdown) (void);
+G_END_DECLS
 
-#endif   /* __MAI_HOOK_H__ */
+struct GnomeAccessibilityModule
+{
+    const char *libName;
+    PRLibrary *lib;
+    const char *initName;
+    GnomeAccessibilityInit init;
+    const char *shutdownName;
+    GnomeAccessibilityShutdown shutdown;
+};
+
+class nsAccessibilityInterface
+{
+public:
+    nsAccessibilityInterface() {}
+    ~nsAccessibilityInterface() {}
+
+public:
+    static PRBool Init(void);
+    static PRBool ShutDown(void);
+    static inline PRBool IsInitialized() {return mInitialized; }
+
+    static PRBool AddTopLevel(nsIAccessible *toplevel);
+    static PRBool RemoveTopLevel(nsIAccessible *toplevel);
+
+private:
+    static PRBool LoadGtkModule(GnomeAccessibilityModule& aModule);
+private:
+    static PRBool mInitialized;
+    static PRLibrary *mMaiLib;
+    static MaiHook *mMaiHook;
+
+    static GnomeAccessibilityModule mAtkBridge;
+};
+
+#endif /* __ACCESSIBILITY_INTERFACE_H__ */
