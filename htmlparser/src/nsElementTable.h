@@ -147,6 +147,28 @@ struct nsHTMLElement {
                     return PR_FALSE;
                   }
 
+  inline  PRBool  IsTableElement(void) {  //return yes if it's a table or child of a table...
+                    PRBool result=PR_FALSE;
+
+                    switch(mTagID) {
+                      case eHTMLTag_table:
+                      case eHTMLTag_thead:
+                      case eHTMLTag_tbody:
+                      case eHTMLTag_tfoot:
+                      case eHTMLTag_caption:
+                      case eHTMLTag_tr:
+                      case eHTMLTag_td:
+                      case eHTMLTag_th:
+                      case eHTMLTag_col:
+                      case eHTMLTag_colgroup:
+                        result=PR_TRUE;
+                        break;
+                      default:
+                        result=PR_FALSE;
+                    }
+                    return result;
+                  }
+
   static  int     GetSynonymousGroups(eHTMLTags aTag);
 
 

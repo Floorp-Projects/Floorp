@@ -1245,11 +1245,17 @@ nsresult CNavDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsCParserNode
      *
      * Now a little code to deal with bug #49687 (crash when layout stack gets too deep)
      * I've also opened this up to any container (not just inlines): re bug 55095
+     * Improved to handle bug 55980 (infinite loop caused when DEPTH is exceeded and
+     * </P> is encountered by itself (<P>) is continuously produced.
      *
      **************************************************************************************/
-
+ 
   if(MAX_REFLOW_DEPTH<mBodyContext->GetCount()) {
-    return kHierarchyTooDeep;  
+    if(nsHTMLElement::IsContainer(aTag)) {
+      if(!gHTMLElements[aTag].HasSpecialProperty(kHandleStrayTag)) {
+        return kHierarchyTooDeep; //drop the container on the floor.
+      }        
+    }
   }
 
   STOP_TIMER()
@@ -2369,6 +2375,7 @@ nsresult CNavDTD::CollectSkippedContent(nsCParserNode& aNode,PRInt32 &aCount) {
  *  @return  PR_TRUE if parent can contain child
  */
 PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
+    
   PRBool result=gHTMLElements[aParent].CanContain((eHTMLTags)aChild);
 
 #ifdef ALLOW_TR_AS_CHILD_OF_TABLE
@@ -2386,6 +2393,14 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
     if(gHTMLElements[aParent].HasSpecialProperty(kBadContentWatch)) {
       if(nsHTMLElement::IsWhitespaceTag((eHTMLTags)aChild)) { 
         result=PR_TRUE; 
+      }
+    }
+  }
+
+  if(eHTMLTag_nobr==aChild) {
+    if(IsInlineElement(aParent,aParent)){
+      if(HasOpenContainer((eHTMLTags)aChild)) {
+        return PR_FALSE;
       }
     }
   }
