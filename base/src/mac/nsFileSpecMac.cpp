@@ -24,7 +24,6 @@
 #include "nsEscape.h"
 
 #include <Aliases.h>
-#include <PLStringFuncs.h>
 #include <Folders.h>
 #include <Errors.h>
 #include <TextUtils.h>
@@ -35,6 +34,11 @@ const unsigned char* kAliasHavenFolderName = "\pnsAliasHaven";
 namespace MacFileHelpers
 //========================================================================================
 {
+	inline void						PLstrcpy(Str255 dst, ConstStr255Param src)
+									{
+										memcpy(dst, src, 1 + src[0]);
+									}
+
 	void							SwapSlashColon(char * s);
 	OSErr							FSSpecFromFullUnixPath(
 										const char * unixPath,
@@ -181,7 +185,7 @@ void nsNativeFileSpec::MakeUnique(ConstStr255Param inSuggestedLeafName)
 //----------------------------------------------------------------------------------------
 {
 	if (inSuggestedLeafName[0] > 0)
-		PLstrcpy(mSpec.name, inSuggestedLeafName);
+		MacFileHelpers::PLstrcpy(mSpec.name, inSuggestedLeafName);
 
 	MakeUnique();
 }
@@ -367,7 +371,7 @@ char* MacFileHelpers::PathNameFromFSSpec( const FSSpec& inSpec, Boolean wantLeaf
 		
 		CInfoPBRec	pb = { 0 };
 		Str63 dummyFileName;
-		PLstrcpy(dummyFileName, "\pG'day!");
+		MacFileHelpers::PLstrcpy(dummyFileName, "\pG'day!");
 
 		/* Is the object a file or a directory? */
 		pb.dirInfo.ioNamePtr = (! tempSpec.name[0]) ? (StringPtr)dummyFileName : tempSpec.name;
