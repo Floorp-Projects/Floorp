@@ -256,7 +256,7 @@ function createAccount(hash) {
 	try {
 		// look for anything that is of type "none".
 		// "none" is the type for "Local Mail"
-		localMailServer = am.findServer("","","none");
+		localMailServer = am.FindServer("","","none");
 	}
 	catch (ex) {
         dump("exception in findserver: " + ex + "\n");
