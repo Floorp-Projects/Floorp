@@ -30,6 +30,7 @@
 #include "nsIOutputStream.h"
 #include "nsILocalFile.h"
 #include "nsITransport.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsCOMPtr.h"
 
 class nsIDOMWindowInternal;
@@ -86,6 +87,7 @@ private:
     nsCOMPtr<nsITransport>      mOutputTransport;
     nsCOMPtr<nsIOutputStream> mOutputStream;
     nsCOMPtr<nsILocalFile>    mOutputFile;
+    nsCOMPtr<nsIDOMWindowInternal> mParentWindow;
     nsIObserver              *mObserver; // Not owned; owner should call SetObserver(0) prior
                                          // to this object getting destroyed.
     int                       mContentLength;

@@ -57,16 +57,18 @@ interface nsIStreamTransfer : nsISupports {
     | the argument URL as source, to that file, while showing a progress      |
     | dialog.  The "don't validate" flag indicates whether or not to use the  |
     | VALIDATE_NEVER load flag to force loading from the cache. That would be |
-    | appropriate when saving a page being viewed, for example.  An post data |
+    | appropriate when saving a page being viewed, for example.  A post data  |
     | input stream can be passed in and it will be attached to the http       |
-    | channel as the "upload stream."                                         |
+    | channel as the "upload stream." An optional cacheKey can also be        |
+    | passed in to force the stream out of the cache.                         |
     -------------------------------------------------------------------------*/
     void SelectFileAndTransferLocationSpec( in string       aURL,
                                             in nsIDOMWindowInternal parent,
                                             in string       contentType,
                                             in string       suggestedName,
                                             in boolean      doNotValidate,
-                                            in nsIInputStream postData );
+                                            in nsIInputStream postData,
+                                            in nsISupports  cacheKey );
 };
 
 

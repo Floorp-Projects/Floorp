@@ -33,6 +33,7 @@
 // For opening dialog.
 #include "nsIDOMWindowInternal.h"
 #include "nsIScriptGlobalObject.h"
+#include "nsIPrompt.h"
 #include "jsapi.h"
 
 // For opening input/output streams.
@@ -40,6 +41,7 @@
 #include "nsIOutputStream.h"
 #include "nsNetUtil.h"
 #include "nsILocalFile.h"
+#include "nsICachingChannel.h"
 
 #include "prprf.h"
 
@@ -88,6 +90,8 @@ nsStreamXferOp::OpenDialog( nsIDOMWindowInternal *parent ) {
 
     ifptr->SetData(NS_STATIC_CAST(nsIStreamTransferOperation *, this));
     ifptr->SetDataIID(&NS_GET_IID(nsIStreamTransferOperation));
+
+    mParentWindow = parent;
 
     // Open the dialog.
     nsCOMPtr<nsIDOMWindow> newWindow;
@@ -425,12 +429,63 @@ nsStreamXferOp::OnStatus( nsIRequest      *request,
     return rv;
 }
 
+#define DIALOG_STRING_URI "chrome://global/locale/appstrings.properties"
+
 // This is called when the end of input is reached on the input channel.
 NS_IMETHODIMP
 nsStreamXferOp::OnStopRequest( nsIRequest      *request,
                                nsISupports     *aContext,
                                nsresult         aStatus) {
     nsresult rv = NS_OK;
+    
+#ifdef USE_ASYNC_READ
+    // A document that was requested to be fetched *only* from
+    // the cache is not in cache. The cache only restriction probably
+    // existed because we have post data. Confirm with the user
+    // that we want to do a repost.
+    if (aStatus == NS_ERROR_DOCUMENT_NOT_CACHED) {
+        PRBool repost;
+        nsCOMPtr<nsIStringBundle> stringBundle;
+        
+        nsCOMPtr<nsIStringBundleService> sbs(do_GetService(kStringBundleServiceCID, &rv));
+        if (sbs) {
+            sbs->CreateBundle(DIALOG_STRING_URI,
+                              getter_AddRefs(stringBundle));
+        }
+        
+        if (stringBundle) {
+            nsXPIDLString messageStr;
+            nsresult rv = stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("repost").get(), 
+                                                          getter_Copies(messageStr));
+            
+            if (NS_SUCCEEDED(rv) && messageStr && mParentWindow) {
+                mParentWindow->Confirm(messageStr, &repost);
+                // If the user pressed cancel in the dialog, don't try 
+                // to load the page with out the post data and bail out
+                // with a success code.
+                if (!repost) {
+                    aStatus = NS_OK;
+                }
+                // Otherwise just start over again with the same
+                // channel.
+                else {
+                    nsCOMPtr<nsICachingChannel> cachingChannel = do_QueryInterface(mInputChannel);
+                    // null out the cache key and don't require a 
+                    // cached load
+                    if (cachingChannel) {
+                        cachingChannel->SetCacheKey(nsnull, PR_FALSE);
+                    }
+                    
+                    // Reopen the channel and hope it works.
+                    rv = mInputChannel->AsyncOpen(this, nsnull);
+                    if (NS_SUCCEEDED(rv)) {
+                        return NS_OK;
+                    }
+                }
+            }
+        }
+    }
+#endif // USE_ASYNC_READ
 
     // If an error occurred, shut down.
     if ( NS_FAILED( aStatus ) ) {

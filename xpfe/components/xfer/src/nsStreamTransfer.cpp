@@ -31,6 +31,7 @@
 #include "nsIURL.h"
 #include "nsEscape.h"
 #include "nsIHttpChannel.h"
+#include "nsICachingChannel.h"
 #include "nsIStringBundle.h"
 #include "nsIAllocator.h"
 #include "nsIFileStream.h"
@@ -159,7 +160,8 @@ nsStreamTransfer::SelectFileAndTransferLocationSpec( char const *aURL,
                                                      char const *contentType,
                                                      char const *suggestedName,
                                                      PRBool      doNotValidate,
-                                                     nsIInputStream *postData ) {
+                                                     nsIInputStream *postData,
+                                                     nsISupports *cacheKey ) {
     nsresult rv = NS_OK;
 
     // Construct URI from spec.
@@ -175,6 +177,16 @@ nsStreamTransfer::SelectFileAndTransferLocationSpec( char const *aURL,
             // See if LOAD_FROM_CACHE is called for.
             if ( doNotValidate ) {
                 channel->SetLoadFlags( nsIRequest::LOAD_FROM_CACHE );
+                if ( cacheKey ) {
+                  nsCOMPtr<nsICachingChannel> cachingChannel(do_QueryInterface(channel));
+                  if (cachingChannel) {
+                    // Say we want it out of the cache only if we have
+                    // post data. If the stream has already been evicted,
+                    // we'll put up a dialog before reposting.
+                    cachingChannel->SetCacheKey(cacheKey, 
+                                                (postData != nsnull));
+                  }
+                }
             }
             // Post data provided?
             if ( postData ) {
