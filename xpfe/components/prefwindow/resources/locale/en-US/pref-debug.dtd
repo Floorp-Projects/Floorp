@@ -7,9 +7,10 @@
 <!ENTITY rHeader "Layout and Rendering debugging preferences">
 
 <!-- Debug: Turn on gfx-rendered widgets -->
-<!ENTITY widgetRendering.label "Debug: Widget rendering">
+<!ENTITY widgetRendering.label "Debug: Rendering">
 <!ENTITY gfxScrollbars.label "gfx scrollbars">
 <!ENTITY debugWindow.label "debug window">
+<!ENTITY useViewManager2.label "use ViewManager2">
 
 <!-- Event Debugging -->
 <!ENTITY debugEventDebugging.label "Event Debugging">
