@@ -34,7 +34,7 @@
  * cdbhdl.h - certificate database handle
  *   private to the certdb module
  *
- * $Id: cdbhdl.h,v 1.7 2002/11/04 19:31:57 relyea%netscape.com Exp $
+ * $Id: cdbhdl.h,v 1.8 2002/11/11 22:00:01 relyea%netscape.com Exp $
  */
 #ifndef _CDBHDL_H_
 #define _CDBHDL_H_
@@ -64,15 +64,19 @@ struct NSSLOWCERTCertDBHandleStr {
 
 typedef DB * (*rdbfunc)(const char *appName, const char *prefix, 
 				const char *type, int flags);
+typedef int (*rdbstatusfunc)(void);
+
+#define RDB_FAIL 1
+#define RDB_RETRY 2
 
 DB * rdbopen(const char *appName, const char *prefix, 
-				const char *type, int flags);
+				const char *type, int flags, int *status);
 
 DB *dbsopen (const char *dbname , int flags, int mode, DBTYPE type, 
 						const void * appData);
 SECStatus db_Copy(DB *dest,DB *src);
 int db_BeginTransaction(DB *db);
 int db_FinishTransaction(DB *db, PRBool abort);
-
+int db_InitComplete(DB *db);
 
 #endif

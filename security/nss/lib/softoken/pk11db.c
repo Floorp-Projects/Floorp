@@ -652,18 +652,24 @@ secmod_OpenDB(const char *appName, const char *filename, const char *dbName,
     if (appName) {
 	char *secname = PORT_Strdup(filename);
 	int len = strlen(secname);
+	int status = RDB_FAIL;
 
 	if (len >= 3 && PORT_Strcmp(&secname[len-3],".db") == 0) {
 	   secname[len-3] = 0;
 	}
-    	pkcs11db=rdbopen(appName, "", secname, readOnly ? NO_RDONLY:NO_CREATE);
+    	pkcs11db=
+	   rdbopen(appName, "", secname, readOnly ? NO_RDONLY:NO_RDWR, NULL);
 	if (update && !pkcs11db) {
 	    DB *updatedb;
 
-    	    pkcs11db = rdbopen(appName, "", secname, NO_CREATE);
+    	    pkcs11db = rdbopen(appName, "", secname, NO_CREATE, &status);
 	    if (!pkcs11db) {
+		if (status == RDB_RETRY) {
+ 		    pkcs11db= rdbopen(appName, "", secname, 
+					readOnly ? NO_RDONLY:NO_RDWR, NULL);
+		}
 		PORT_Free(secname);
-		return NULL;
+		return pkcs11db;
 	    }
 	    updatedb = dbopen(dbName, NO_RDONLY, 0600, DB_HASH, 0);
 	    if (updatedb) {
