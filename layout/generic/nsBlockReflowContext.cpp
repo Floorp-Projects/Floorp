@@ -731,19 +731,7 @@ nsBlockReflowContext::PlaceBlock(const nsHTMLReflowState& aReflowState,
                             mMetrics.width,
                             mMetrics.height);
 
-
-      // Compute combined-rect in callers coordinate system. The value
-      // returned in the reflow metrics is relative to the child
-      // frame.
-      aCombinedRect.x = mMetrics.mOverflowArea.x + x;
-      aCombinedRect.y = mMetrics.mOverflowArea.y + y;
-      aCombinedRect.width = mMetrics.mOverflowArea.width;
-      aCombinedRect.height = mMetrics.mOverflowArea.height;
-
       // Apply CSS relative positioning to update x,y coordinates
-      // Note that this must be done after changing aCombinedRect
-      // since relatively positioned elements should act as if they
-      // were at their original position.
       const nsStyleDisplay* styleDisp;
       mFrame->GetStyleData(eStyleStruct_Display,
                            (const nsStyleStruct*&)styleDisp);
@@ -751,6 +739,15 @@ nsBlockReflowContext::PlaceBlock(const nsHTMLReflowState& aReflowState,
         x += aComputedOffsets.left;
         y += aComputedOffsets.top;
       }
+
+      // Compute combined-rect in callers coordinate system. The value
+      // returned in the reflow metrics is relative to the child
+      // frame.  This includes relative positioning and the result should
+      // be used only for painting and for 'overflow' handling.
+      aCombinedRect.x = mMetrics.mOverflowArea.x + x;
+      aCombinedRect.y = mMetrics.mOverflowArea.y + y;
+      aCombinedRect.width = mMetrics.mOverflowArea.width;
+      aCombinedRect.height = mMetrics.mOverflowArea.height;
 
       // Now place the frame and complete the reflow process
       nsContainerFrame::FinishReflowChild(mFrame, mPresContext, &aReflowState, mMetrics, x, y, 0);
