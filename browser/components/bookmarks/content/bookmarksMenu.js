@@ -347,7 +347,7 @@ var BookmarksMenu = {
     // unlike for command events, we have to close the menus manually
     BookmarksMenuDNDObserver.mCurrentDragOverTarget = null;
     BookmarksMenuDNDObserver.onDragCloseTarget();
-    this.loadBookmark(aEvent, aDS);
+    this.loadBookmark(aEvent, aEvent.target, aDS);
   }
 }
 
