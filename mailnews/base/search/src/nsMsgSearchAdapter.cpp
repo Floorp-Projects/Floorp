@@ -78,6 +78,8 @@ const char *nsMsgSearchAdapter::m_kImapAnswered = " ANSWERED ";
 const char *nsMsgSearchAdapter::m_kImapNotSeen = " UNSEEN ";
 const char *nsMsgSearchAdapter::m_kImapNotAnswered = " UNANSWERED ";
 const char *nsMsgSearchAdapter::m_kImapCharset = " CHARSET ";
+const char *nsMsgSearchAdapter::m_kImapSizeSmaller = " SMALLER ";
+const char *nsMsgSearchAdapter::m_kImapSizeLarger = " LARGER ";
 const char *nsMsgSearchAdapter::m_kImapNew = " NEW "; 
 const char *nsMsgSearchAdapter::m_kImapNotNew = " OLD SEEN "; 
 
@@ -452,6 +454,21 @@ nsresult nsMsgSearchAdapter::EncodeImapTerm (nsIMsgSearchTerm *term, PRBool real
     }
     excludeHeader = PR_TRUE;
     break;
+  case nsMsgSearchAttrib::Size:
+    switch (op)
+    {
+    case nsMsgSearchOp::IsGreaterThan:
+      whichMnemonic = m_kImapSizeLarger;
+      break;
+    case nsMsgSearchOp::IsLessThan:
+      whichMnemonic = m_kImapSizeSmaller;
+      break;
+    default:
+      NS_ASSERTION(PR_FALSE, "invalid search operator");
+      return NS_ERROR_INVALID_ARG;
+    }
+    excludeHeader = PR_TRUE;
+    break;
     case nsMsgSearchAttrib::Date:
       switch (op)
       {
@@ -588,6 +605,25 @@ nsresult nsMsgSearchAdapter::EncodeImapTerm (nsIMsgSearchTerm *term, PRBool real
             PR_FormatTimeUSEnglish(dateBuf, sizeof(dateBuf), "%d-%b-%Y", &exploded);
             //			strftime (dateBuf, sizeof(dateBuf), "%d-%b-%Y", localtime (&matchDay));
             value = dateBuf;
+          }
+          else if (attrib == nsMsgSearchAttrib::Size)
+          {
+            PRUint32 sizeValue;
+            nsCAutoString searchTermValue;
+            searchValue->GetSize(&sizeValue);
+
+            // Multiply by 1024 to get into kb resolution
+            sizeValue *= 1024;
+
+            // Ensure that greater than is really greater than
+            // in kb resolution.
+            if (op == nsMsgSearchOp::IsGreaterThan)
+              sizeValue += 1024;
+
+            searchTermValue.AppendInt(sizeValue);
+
+            value = nsCRT::strdup(searchTermValue.get());
+            valueWasAllocated = PR_TRUE;
           }
           else
             

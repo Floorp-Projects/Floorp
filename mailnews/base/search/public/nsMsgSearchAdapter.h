@@ -117,6 +117,8 @@ public:
   static const char *m_kImapNotAnswered;
   static const char *m_kImapCharset;
   static const char *m_kImapUnDeleted;
+  static const char *m_kImapSizeSmaller;
+  static const char *m_kImapSizeLarger;
   static const char *m_kImapNew;
   static const char *m_kImapNotNew;
 

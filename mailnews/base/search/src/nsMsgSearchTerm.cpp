@@ -94,6 +94,7 @@ nsMsgSearchAttribEntry SearchAttribEntryTable[] =
     {nsMsgSearchAttrib::ToOrCC,     "to or cc"},
     {nsMsgSearchAttrib::AgeInDays,  "age in days"},
     {nsMsgSearchAttrib::Label,      "label"},
+    {nsMsgSearchAttrib::Size,       "size"},
     // this used to be nsMsgSearchAttrib::SenderInAddressBook
     // we used to have two Sender menuitems
     // for backward compatability, we can still parse
@@ -461,6 +462,11 @@ nsresult nsMsgSearchTerm::OutputValue(nsCString &outputStr)
         outputStr.Append("true");  // don't need anything here, really
         break;
       }
+    case nsMsgSearchAttrib::Size:
+      {
+        outputStr.AppendInt(m_value.u.size);
+        break;
+      }
     default:
       NS_ASSERTION(PR_FALSE, "trying to output invalid attribute");
       break;
@@ -549,6 +555,9 @@ nsresult nsMsgSearchTerm::ParseValue(char *inStream)
     case nsMsgSearchAttrib::HasAttachmentStatus:
       m_value.u.msgStatus = MSG_FLAG_ATTACHMENT;
       break; // this should always be true.
+    case nsMsgSearchAttrib::Size:
+      m_value.u.size = atoi(inStream);
+      break;
     default:
       NS_ASSERTION(PR_FALSE, "invalid attribute parsing search term value");
       break;
@@ -1198,18 +1207,28 @@ nsresult nsMsgSearchTerm::MatchSize (PRUint32 sizeToMatch, PRBool *pResult)
 	NS_ENSURE_ARG_POINTER(pResult);
 
 	PRBool result = PR_FALSE;
+	// We reduce the sizeToMatch rather than supplied size
+	// as then we can do an exact match on the displayed value
+	// which will be less confusing to the user.
+	PRUint32 sizeToMatchKB = sizeToMatch;
+
+	if (sizeToMatchKB < 1024)
+		sizeToMatchKB = 1024;
+
+	sizeToMatchKB /= 1024;
+
 	switch (m_operator)
 	{
 	case nsMsgSearchOp::IsGreaterThan:
-		if (sizeToMatch > m_value.u.size)
+		if (sizeToMatchKB > m_value.u.size)
 			result = PR_TRUE;
 		break;
 	case nsMsgSearchOp::IsLessThan:
-		if (sizeToMatch < m_value.u.size)
+		if (sizeToMatchKB < m_value.u.size)
 			result = PR_TRUE;
 		break;
 	case nsMsgSearchOp::Is:
-		if (sizeToMatch == m_value.u.size)
+		if (sizeToMatchKB == m_value.u.size)
 			result = PR_TRUE;
 		break;
 	default:
@@ -1621,6 +1640,9 @@ nsresult nsMsgResultElement::AssignValues (nsIMsgSearchValue *src, nsMsgSearchVa
   case nsMsgSearchAttrib::JunkStatus:
     err = src->GetJunkStatus(&dst->u.junkStatus);
     break;
+  case nsMsgSearchAttrib::Size:
+    err = src->GetSize(&dst->u.size);
+    break;
   default:
     if (dst->attribute < nsMsgSearchAttrib::kNumMsgSearchAttributes)
     {
@@ -1808,6 +1830,9 @@ int nsMsgResultElement::Compare (const void *e1, const void *e2)
     break;
   case nsMsgSearchAttrib::Priority:
     ret = v1->u.priority - v2->u.priority;
+    break;
+  case nsMsgSearchAttrib::Size:
+    ret = v1->u.size - v2->u.size;
     break;
   case nsMsgSearchAttrib::MsgStatus:
     {
