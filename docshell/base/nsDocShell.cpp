@@ -21,7 +21,6 @@
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
-#include "nsDocShell.h"
 #include "nsIComponentManager.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
@@ -42,6 +41,10 @@
 #include "nsPoint.h"
 #include "nsGfxCIID.h"
 #include "nsIPrompt.h" // as long as ReportScriptError raises an alert box.
+
+// Local Includes
+#include "nsDocShell.h"
+#include "nsDocShellLoadInfo.h"
 
 // Interfaces Needed
 #include "nsIGlobalHistory.h"
@@ -192,6 +195,17 @@ NS_IMETHODIMP nsDocShell::LoadURI(nsIURI* aURI, nsIURI* aReferrer)
 
    NS_ENSURE_SUCCESS(InternalLoad(aURI, aReferrer), NS_ERROR_FAILURE);
 
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShell::CreateLoadInfo(nsIDocShellLoadInfo** aLoadInfo)
+{
+   nsDocShellLoadInfo* loadInfo = new nsDocShellLoadInfo();
+   NS_ENSURE_TRUE(loadInfo, NS_ERROR_OUT_OF_MEMORY);
+   nsCOMPtr<nsIDocShellLoadInfo> localRef(loadInfo);
+
+   *aLoadInfo = localRef;
+   NS_ADDREF(*aLoadInfo);
    return NS_OK;
 }
 

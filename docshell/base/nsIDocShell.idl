@@ -42,6 +42,7 @@
 
 interface nsIChromeEventHandler;
 interface nsIDocumentLoaderObserver;
+interface nsIDocShellLoadInfo;
 
 [scriptable, uuid(69E5DE00-7B8B-11d3-AF61-00A024FFC08C)]
 interface nsIDocShell : nsISupports
@@ -58,6 +59,12 @@ interface nsIDocShell : nsISupports
 		may be null.
 	*/
 	[noscript]void loadURI(in nsIURI uri, in nsIURI referrer);
+
+	/*
+	Creates a DocShellLoadInfo object that you can manipulate and then pass to 
+	loadURI.
+	*/
+	void createLoadInfo(out nsIDocShellLoadInfo loadInfo);
 
 	/*
 	Stops a current load.  This simply stops the network portion of the load.
