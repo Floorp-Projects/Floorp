@@ -62,7 +62,6 @@ EXPORTS = \
 	blapit.h \
 	shsign.h \
 	ecl-exp.h \
-	ecl-curve.h \
 	$(NULL)
 
 PRIVATE_EXPORTS = \
@@ -71,6 +70,7 @@ PRIVATE_EXPORTS = \
 	secrng.h \
 	ec.h \
 	ecl.h \
+	ecl-curve.h \
 	$(NULL)
 
 MPI_HDRS = mpi-config.h mpi.h mpi-priv.h mplogic.h mpprime.h logtab.h mp_gf2m.h
