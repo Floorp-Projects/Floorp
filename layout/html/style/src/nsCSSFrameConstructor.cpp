@@ -8444,12 +8444,12 @@ nsCSSFrameConstructor::RecreateFramesForContent(nsIPresContext* aPresContext,
   if (container) {
     PRInt32 indexInContainer;
     rv = container->IndexOf(aContent, indexInContainer);
-    if (NS_OK == rv) {
+    if (NS_SUCCEEDED(rv)) {
       // First, remove the frames associated with the content object on which the
       // attribute change occurred.
       rv = ContentRemoved(aPresContext, container, aContent, indexInContainer);
   
-      if (NS_OK == rv) {
+      if (NS_SUCCEEDED(rv)) {
         // Now, recreate the frames associated with this content object.
         rv = ContentInserted(aPresContext, container, aContent, indexInContainer);
       }
