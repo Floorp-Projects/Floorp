@@ -66,6 +66,9 @@
 #include <UTCUtils.h>
 #include <Power.h>
 #include <CodeFragments.h>
+#ifndef TARGET_CARBON
+#include <Traps.h>
+#endif
 #endif
 
 #if defined(XP_UNIX) || defined(XP_BEOS)
@@ -154,7 +157,11 @@ static void MyReadLocation(MachineLocation * loc)
         MacintoshInitializeTime();
         ReadLocation(&storedLoc);
         /* install a sleep queue routine, so that when the machine wakes up, time can be recomputed. */
-        if (&SleepQInstall != (void*)kUnresolvedCFragSymbolAddress) {
+        if (&SleepQInstall != (void*)kUnresolvedCFragSymbolAddress
+#ifndef TARGET_CARBON
+            && NGetTrapAddress(0xA28A, OSTrap) != NGetTrapAddress(_Unimplemented, ToolTrap)
+#endif
+           ) {
             if ((gSleepQEntry.sleepQProc = NewSleepQUPP(MySleepQProc)) != NULL) {
                 SleepQInstall(&gSleepQEntry);
                 gSleepQEntryInstalled = JS_TRUE;
