@@ -114,8 +114,8 @@ PRBool nsMacEventHandler::HandleOSEvent(
 //
 //-------------------------------------------------------------------------
 PRBool nsMacEventHandler::HandleMenuCommand(
-															EventRecord&		aOSEvent,
-															long						aMenuResult)
+  EventRecord& aOSEvent,
+  long         aMenuResult)
 {
 	// get the focused widget
 	nsWindow* focusedWidget;
@@ -146,6 +146,22 @@ PRBool nsMacEventHandler::HandleMenuCommand(
 	// dispatch the menu event: if it is not processed by the focused widget,
 	// propagate the event through the different parents all the way up to the window
 	PRBool eventHandled = focusedWidget->DispatchWindowEvent(menuEvent);
+	
+	// saari - The event was falling through to a view which was handling it before
+	// the mTopLevelWidget with the nsMenuListener registered on it had a chance to
+	// dispatch the event to the nsMenuBar. So now we dispatch first to mTopLevelWidget, 
+	// and thus the menu listener, and then everyone else.
+	// I think it is a bug that a view should handle a menu event at all, the menu event
+	// isn't logically contained in a view's visible region, yet the code still executes
+	// that way. The way we should have sub-widgets or views having overriding menubars
+	// is via a global menu manager (not written yet) that manages the current menubar
+	// state as various widgets go in and out of focus and change the menubar contents.
+	if(! eventHandled )
+	{
+	  menuEvent.widget = mTopLevelWidget;
+	  eventHandled = mTopLevelWidget->DispatchWindowEvent(menuEvent);
+	}
+	
 	if (! eventHandled)
 	{
 		nsCOMPtr<nsWindow> grandParent;
@@ -165,6 +181,7 @@ PRBool nsMacEventHandler::HandleMenuCommand(
 			}
 		}
 	}
+
 	return eventHandled;
 }
 
