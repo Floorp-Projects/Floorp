@@ -87,7 +87,7 @@ input {
   background-color: -moz-Field;
   color: -moz-FieldText;
   font: -moz-field;
-  line-height: normal !important;
+  line-height: 1 !important;
   text-align: start;
   text-transform: none;
   word-spacing: normal;
