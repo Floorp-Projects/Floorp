@@ -2972,7 +2972,7 @@ nsSchemaLoader::ProcessFacet(nsIWebServiceErrorHandler* aErrorHandler,
   else if (aTagName == nsSchemaAtoms::sMaxExclusive_atom) {
     facetType = nsISchemaFacet::FACET_TYPE_MAXEXCLUSIVE;
   }
-  else if (aTagName == nsSchemaAtoms::sMaxInclusive_atom) {
+  else if (aTagName == nsSchemaAtoms::sMinExclusive_atom) {
     facetType = nsISchemaFacet::FACET_TYPE_MINEXCLUSIVE;
   }
   else if (aTagName == nsSchemaAtoms::sTotalDigits_atom) {
