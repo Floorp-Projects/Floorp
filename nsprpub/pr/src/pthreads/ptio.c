@@ -642,7 +642,7 @@ static void pt_ContinuationThreadInternal(pt_Continuation *my_op)
         ** (perhaps) resetting it are safe 'cause it's the only modifiable
         ** bit in that word.
         */
-        if (tqp->thread->state & PT_THREAD_ABORTED)
+        if (_PT_THREAD_INTERRUPTED(tqp->thread))
         {
             my_op->status = pt_continuation_abort;
             tqp->thread->state &= ~PT_THREAD_ABORTED;
@@ -1383,7 +1383,7 @@ PR_IMPLEMENT(PRFileDesc*) PR_GetSpecialFD(PRSpecialFD osfd)
 static PRBool pt_TestAbort(void)
 {
     PRThread *me = PR_CurrentThread();
-    if(me->state & PT_THREAD_ABORTED)
+    if(_PT_THREAD_INTERRUPTED(me))
     {
         PR_SetError(PR_PENDING_INTERRUPT_ERROR, 0);
         me->state &= ~PT_THREAD_ABORTED;

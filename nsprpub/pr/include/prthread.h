@@ -227,6 +227,16 @@ PR_EXTERN(PRStatus) PR_Interrupt(PRThread *thread);
 PR_EXTERN(void) PR_ClearInterrupt(void);
 
 /*
+** Block the interrupt for the calling thread.
+*/
+PR_EXTERN(void) PR_BlockInterrupt(void);
+
+/*
+** Unblock the interrupt for the calling thread.
+*/
+PR_EXTERN(void) PR_UnblockInterrupt(void);
+
+/*
 ** Make the current thread sleep until "ticks" time amount of time
 ** has expired. If "ticks" is PR_INTERVAL_NO_WAIT then the call is
 ** equivalent to calling PR_Yield. Calling PR_Sleep with an argument

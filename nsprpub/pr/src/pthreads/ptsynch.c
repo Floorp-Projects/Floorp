@@ -333,7 +333,7 @@ PR_IMPLEMENT(PRStatus) PR_WaitCondVar(PRCondVar *cvar, PRIntervalTime timeout)
     /* and it better be by us */
     PR_ASSERT(pthread_equal(cvar->lock->owner, pthread_self()));
 
-    if (thred->state & PT_THREAD_ABORTED) goto aborted;
+    if (_PT_THREAD_INTERRUPTED(thred)) goto aborted;
 
     /*
      * The thread waiting is used for PR_Interrupt
@@ -367,7 +367,7 @@ PR_IMPLEMENT(PRStatus) PR_WaitCondVar(PRCondVar *cvar, PRIntervalTime timeout)
 
     PR_ASSERT(0 == cvar->lock->notified.length);
     thred->waiting = NULL;  /* and now we're not */
-    if (thred->state & PT_THREAD_ABORTED) goto aborted;
+    if (_PT_THREAD_INTERRUPTED(thred)) goto aborted;
     return (rv == 0) ? PR_SUCCESS : PR_FAILURE;
 
 aborted:

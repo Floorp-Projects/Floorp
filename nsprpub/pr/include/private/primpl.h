@@ -166,6 +166,12 @@ struct _PT_Notified
 #define PT_THREAD_FOREIGN   0x80    /* thread is not one of ours */
 #define PT_THREAD_BOUND     0x100    /* a bound-global thread */
 
+#define _PT_THREAD_INTERRUPTED(thr)					\
+		(!(thr->interrupt_blocked) && (thr->state & PT_THREAD_ABORTED))
+#define _PT_THREAD_BLOCK_INTERRUPT(thr)				\
+		(thr->interrupt_blocked = 1)
+#define _PT_THREAD_UNBLOCK_INTERRUPT(thr)			\
+		(thr->interrupt_blocked = 0)
 /* 
 ** Possible values for thread's suspend field
 ** Note that the first two can be the same as they are really mutually exclusive,
@@ -575,6 +581,7 @@ typedef struct _PRPerThreadExit {
 #define _PR_IDLE_THREAD     0x200       /* this is an idle thread        */
 #define _PR_GCABLE_THREAD   0x400       /* this is a collectable thread */
 #define _PR_BOUND_THREAD    0x800       /* a bound thread */
+#define _PR_INTERRUPT_BLOCKED	0x1000	/* interrupts blocked */
 
 /* PRThread.state */
 #define _PR_UNBORN       0
@@ -617,7 +624,12 @@ typedef struct _PRPerThreadExit {
 #define        _PR_ADJUST_STACKSIZE(stackSize)
 #endif
 
-#define _PR_PENDING_INTERRUPT(_thread) ((_thread)->flags & _PR_INTERRUPT)
+#define _PR_PENDING_INTERRUPT(thr)					\
+		(!((thr)->flags & _PR_INTERRUPT_BLOCKED) && ((thr)->flags & _PR_INTERRUPT))
+#define _PR_THREAD_BLOCK_INTERRUPT(thr)			\
+		(thr->flags |= _PR_INTERRUPT_BLOCKED)
+#define _PR_THREAD_UNBLOCK_INTERRUPT(thr)			\
+		(thr->flags &= ~_PR_INTERRUPT_BLOCKED)
 
 #define _PR_THREAD_PTR(_qp) \
     ((PRThread*) ((char*) (_qp) - offsetof(PRThread,links)))
@@ -1424,6 +1436,7 @@ struct PRThread {
     pthread_mutex_t suspendResumeMutex;
     pthread_cond_t suspendResumeCV;
 #endif
+    PRUint32 interrupt_blocked;     /* interrupt blocked */
 #elif defined(_PR_BTHREADS)
     PRUint32 flags;
     _MDThread md;

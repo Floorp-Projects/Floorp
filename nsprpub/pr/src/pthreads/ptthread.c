@@ -719,6 +719,18 @@ PR_IMPLEMENT(void) PR_ClearInterrupt()
     me->state &= ~PT_THREAD_ABORTED;
 }  /* PR_ClearInterrupt */
 
+PR_IMPLEMENT(void) PR_BlockInterrupt()
+{
+    PRThread *me = PR_CurrentThread();
+    _PT_THREAD_BLOCK_INTERRUPT(me);
+}  /* PR_BlockInterrupt */
+
+PR_IMPLEMENT(void) PR_UnblockInterrupt()
+{
+    PRThread *me = PR_CurrentThread();
+    _PT_THREAD_UNBLOCK_INTERRUPT(me);
+}  /* PR_UnblockInterrupt */
+
 PR_IMPLEMENT(PRStatus) PR_Yield()
 {
     static PRBool warning = PR_TRUE;
