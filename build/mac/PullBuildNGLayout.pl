@@ -47,6 +47,7 @@ $pull{mac} = 0;
 
 $build{all} = 1;				# turn off to do individual builds
 $build{dist} = 0;
+$build{runtime} = 0;
 $build{stubs} = 0;
 $build{common} = 0;
 $build{intl} = 0;
