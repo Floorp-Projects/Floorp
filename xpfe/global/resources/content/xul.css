@@ -440,9 +440,9 @@ progressmeter {
 
 /********** label **********/
 
-/* XXXdwh <text> and <html> are deprecated. */
+/* XXXdwh <text>, <html> and <spring> are deprecated. */
 
-text, spring {
+text, spring, spacer {
   display: inline;
 }
 
