@@ -986,6 +986,9 @@ nsHTMLDocument::SetTitle(const nsAReadableString& aTitle)
 NS_IMETHODIMP
 nsHTMLDocument::AddImageMap(nsIDOMHTMLMapElement* aMap)
 {
+  // XXX We should order the maps based on their order in the document.
+  // XXX Otherwise scripts that add/remove maps with duplicate names 
+  // XXX will cause problems
   NS_PRECONDITION(nsnull != aMap, "null ptr");
   if (nsnull == aMap) {
     return NS_ERROR_NULL_POINTER;

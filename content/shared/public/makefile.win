@@ -31,6 +31,7 @@ EXPORTS =				\
   nsHTMLAtomList.h \
   nsHTMLAtoms.h \
   nsHTMLValue.h \
+  nsImageMapUtils.h \
   nsLayoutAtomList.h \
   nsLayoutAtoms.h \
   nsStyleCoord.h \
