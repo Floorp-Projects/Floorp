@@ -44,9 +44,9 @@ public:
 
 
 
-#define NS_FORWARD_IDOMHTMLDIVELEMENT(superClass)  \
-  NS_IMETHOD    GetAlign(nsString& aAlign) { return superClass::GetAlign(aAlign); } \
-  NS_IMETHOD    SetAlign(const nsString& aAlign) { return superClass::SetAlign(aAlign); } \
+#define NS_FORWARD_IDOMHTMLDIVELEMENT(_to)  \
+  NS_IMETHOD    GetAlign(nsString& aAlign) { return _to##GetAlign(aAlign); } \
+  NS_IMETHOD    SetAlign(const nsString& aAlign) { return _to##SetAlign(aAlign); } \
 
 
 extern nsresult NS_InitHTMLDivElementClass(nsIScriptContext *aContext, void **aPrototype);

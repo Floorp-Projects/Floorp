@@ -49,11 +49,11 @@ public:
 
 
 
-#define NS_FORWARD_IDOMHTMLLIELEMENT(superClass)  \
-  NS_IMETHOD    GetType(nsString& aType) { return superClass::GetType(aType); } \
-  NS_IMETHOD    SetType(const nsString& aType) { return superClass::SetType(aType); } \
-  NS_IMETHOD    GetValue(PRInt32* aValue) { return superClass::GetValue(aValue); } \
-  NS_IMETHOD    SetValue(PRInt32 aValue) { return superClass::SetValue(aValue); } \
+#define NS_FORWARD_IDOMHTMLLIELEMENT(_to)  \
+  NS_IMETHOD    GetType(nsString& aType) { return _to##GetType(aType); } \
+  NS_IMETHOD    SetType(const nsString& aType) { return _to##SetType(aType); } \
+  NS_IMETHOD    GetValue(PRInt32* aValue) { return _to##GetValue(aValue); } \
+  NS_IMETHOD    SetValue(PRInt32 aValue) { return _to##SetValue(aValue); } \
 
 
 extern nsresult NS_InitHTMLLIElementClass(nsIScriptContext *aContext, void **aPrototype);

@@ -39,7 +39,7 @@ public:
 
 
 
-#define NS_FORWARD_IDOMCDATASECTION(superClass)  \
+#define NS_FORWARD_IDOMCDATASECTION(_to)  \
 
 
 extern nsresult NS_InitCDATASectionClass(nsIScriptContext *aContext, void **aPrototype);

@@ -104,33 +104,33 @@ public:
 
 
 
-#define NS_FORWARD_IDOMHTMLIMAGEELEMENT(superClass)  \
-  NS_IMETHOD    GetLowSrc(nsString& aLowSrc) { return superClass::GetLowSrc(aLowSrc); } \
-  NS_IMETHOD    SetLowSrc(const nsString& aLowSrc) { return superClass::SetLowSrc(aLowSrc); } \
-  NS_IMETHOD    GetName(nsString& aName) { return superClass::GetName(aName); } \
-  NS_IMETHOD    SetName(const nsString& aName) { return superClass::SetName(aName); } \
-  NS_IMETHOD    GetAlign(nsString& aAlign) { return superClass::GetAlign(aAlign); } \
-  NS_IMETHOD    SetAlign(const nsString& aAlign) { return superClass::SetAlign(aAlign); } \
-  NS_IMETHOD    GetAlt(nsString& aAlt) { return superClass::GetAlt(aAlt); } \
-  NS_IMETHOD    SetAlt(const nsString& aAlt) { return superClass::SetAlt(aAlt); } \
-  NS_IMETHOD    GetBorder(nsString& aBorder) { return superClass::GetBorder(aBorder); } \
-  NS_IMETHOD    SetBorder(const nsString& aBorder) { return superClass::SetBorder(aBorder); } \
-  NS_IMETHOD    GetHeight(nsString& aHeight) { return superClass::GetHeight(aHeight); } \
-  NS_IMETHOD    SetHeight(const nsString& aHeight) { return superClass::SetHeight(aHeight); } \
-  NS_IMETHOD    GetHspace(nsString& aHspace) { return superClass::GetHspace(aHspace); } \
-  NS_IMETHOD    SetHspace(const nsString& aHspace) { return superClass::SetHspace(aHspace); } \
-  NS_IMETHOD    GetIsMap(PRBool* aIsMap) { return superClass::GetIsMap(aIsMap); } \
-  NS_IMETHOD    SetIsMap(PRBool aIsMap) { return superClass::SetIsMap(aIsMap); } \
-  NS_IMETHOD    GetLongDesc(nsString& aLongDesc) { return superClass::GetLongDesc(aLongDesc); } \
-  NS_IMETHOD    SetLongDesc(const nsString& aLongDesc) { return superClass::SetLongDesc(aLongDesc); } \
-  NS_IMETHOD    GetSrc(nsString& aSrc) { return superClass::GetSrc(aSrc); } \
-  NS_IMETHOD    SetSrc(const nsString& aSrc) { return superClass::SetSrc(aSrc); } \
-  NS_IMETHOD    GetUseMap(nsString& aUseMap) { return superClass::GetUseMap(aUseMap); } \
-  NS_IMETHOD    SetUseMap(const nsString& aUseMap) { return superClass::SetUseMap(aUseMap); } \
-  NS_IMETHOD    GetVspace(nsString& aVspace) { return superClass::GetVspace(aVspace); } \
-  NS_IMETHOD    SetVspace(const nsString& aVspace) { return superClass::SetVspace(aVspace); } \
-  NS_IMETHOD    GetWidth(nsString& aWidth) { return superClass::GetWidth(aWidth); } \
-  NS_IMETHOD    SetWidth(const nsString& aWidth) { return superClass::SetWidth(aWidth); } \
+#define NS_FORWARD_IDOMHTMLIMAGEELEMENT(_to)  \
+  NS_IMETHOD    GetLowSrc(nsString& aLowSrc) { return _to##GetLowSrc(aLowSrc); } \
+  NS_IMETHOD    SetLowSrc(const nsString& aLowSrc) { return _to##SetLowSrc(aLowSrc); } \
+  NS_IMETHOD    GetName(nsString& aName) { return _to##GetName(aName); } \
+  NS_IMETHOD    SetName(const nsString& aName) { return _to##SetName(aName); } \
+  NS_IMETHOD    GetAlign(nsString& aAlign) { return _to##GetAlign(aAlign); } \
+  NS_IMETHOD    SetAlign(const nsString& aAlign) { return _to##SetAlign(aAlign); } \
+  NS_IMETHOD    GetAlt(nsString& aAlt) { return _to##GetAlt(aAlt); } \
+  NS_IMETHOD    SetAlt(const nsString& aAlt) { return _to##SetAlt(aAlt); } \
+  NS_IMETHOD    GetBorder(nsString& aBorder) { return _to##GetBorder(aBorder); } \
+  NS_IMETHOD    SetBorder(const nsString& aBorder) { return _to##SetBorder(aBorder); } \
+  NS_IMETHOD    GetHeight(nsString& aHeight) { return _to##GetHeight(aHeight); } \
+  NS_IMETHOD    SetHeight(const nsString& aHeight) { return _to##SetHeight(aHeight); } \
+  NS_IMETHOD    GetHspace(nsString& aHspace) { return _to##GetHspace(aHspace); } \
+  NS_IMETHOD    SetHspace(const nsString& aHspace) { return _to##SetHspace(aHspace); } \
+  NS_IMETHOD    GetIsMap(PRBool* aIsMap) { return _to##GetIsMap(aIsMap); } \
+  NS_IMETHOD    SetIsMap(PRBool aIsMap) { return _to##SetIsMap(aIsMap); } \
+  NS_IMETHOD    GetLongDesc(nsString& aLongDesc) { return _to##GetLongDesc(aLongDesc); } \
+  NS_IMETHOD    SetLongDesc(const nsString& aLongDesc) { return _to##SetLongDesc(aLongDesc); } \
+  NS_IMETHOD    GetSrc(nsString& aSrc) { return _to##GetSrc(aSrc); } \
+  NS_IMETHOD    SetSrc(const nsString& aSrc) { return _to##SetSrc(aSrc); } \
+  NS_IMETHOD    GetUseMap(nsString& aUseMap) { return _to##GetUseMap(aUseMap); } \
+  NS_IMETHOD    SetUseMap(const nsString& aUseMap) { return _to##SetUseMap(aUseMap); } \
+  NS_IMETHOD    GetVspace(nsString& aVspace) { return _to##GetVspace(aVspace); } \
+  NS_IMETHOD    SetVspace(const nsString& aVspace) { return _to##SetVspace(aVspace); } \
+  NS_IMETHOD    GetWidth(nsString& aWidth) { return _to##GetWidth(aWidth); } \
+  NS_IMETHOD    SetWidth(const nsString& aWidth) { return _to##SetWidth(aWidth); } \
 
 
 extern nsresult NS_InitHTMLImageElementClass(nsIScriptContext *aContext, void **aPrototype);

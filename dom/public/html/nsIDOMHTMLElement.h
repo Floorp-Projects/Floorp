@@ -64,17 +64,17 @@ public:
 
 
 
-#define NS_FORWARD_IDOMHTMLELEMENT(superClass)  \
-  NS_IMETHOD    GetId(nsString& aId) { return superClass::GetId(aId); } \
-  NS_IMETHOD    SetId(const nsString& aId) { return superClass::SetId(aId); } \
-  NS_IMETHOD    GetTitle(nsString& aTitle) { return superClass::GetTitle(aTitle); } \
-  NS_IMETHOD    SetTitle(const nsString& aTitle) { return superClass::SetTitle(aTitle); } \
-  NS_IMETHOD    GetLang(nsString& aLang) { return superClass::GetLang(aLang); } \
-  NS_IMETHOD    SetLang(const nsString& aLang) { return superClass::SetLang(aLang); } \
-  NS_IMETHOD    GetDir(nsString& aDir) { return superClass::GetDir(aDir); } \
-  NS_IMETHOD    SetDir(const nsString& aDir) { return superClass::SetDir(aDir); } \
-  NS_IMETHOD    GetClassName(nsString& aClassName) { return superClass::GetClassName(aClassName); } \
-  NS_IMETHOD    SetClassName(const nsString& aClassName) { return superClass::SetClassName(aClassName); } \
+#define NS_FORWARD_IDOMHTMLELEMENT(_to)  \
+  NS_IMETHOD    GetId(nsString& aId) { return _to##GetId(aId); } \
+  NS_IMETHOD    SetId(const nsString& aId) { return _to##SetId(aId); } \
+  NS_IMETHOD    GetTitle(nsString& aTitle) { return _to##GetTitle(aTitle); } \
+  NS_IMETHOD    SetTitle(const nsString& aTitle) { return _to##SetTitle(aTitle); } \
+  NS_IMETHOD    GetLang(nsString& aLang) { return _to##GetLang(aLang); } \
+  NS_IMETHOD    SetLang(const nsString& aLang) { return _to##SetLang(aLang); } \
+  NS_IMETHOD    GetDir(nsString& aDir) { return _to##GetDir(aDir); } \
+  NS_IMETHOD    SetDir(const nsString& aDir) { return _to##SetDir(aDir); } \
+  NS_IMETHOD    GetClassName(nsString& aClassName) { return _to##GetClassName(aClassName); } \
+  NS_IMETHOD    SetClassName(const nsString& aClassName) { return _to##SetClassName(aClassName); } \
 
 
 extern nsresult NS_InitHTMLElementClass(nsIScriptContext *aContext, void **aPrototype);

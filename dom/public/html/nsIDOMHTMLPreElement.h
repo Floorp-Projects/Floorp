@@ -44,9 +44,9 @@ public:
 
 
 
-#define NS_FORWARD_IDOMHTMLPREELEMENT(superClass)  \
-  NS_IMETHOD    GetWidth(PRInt32* aWidth) { return superClass::GetWidth(aWidth); } \
-  NS_IMETHOD    SetWidth(PRInt32 aWidth) { return superClass::SetWidth(aWidth); } \
+#define NS_FORWARD_IDOMHTMLPREELEMENT(_to)  \
+  NS_IMETHOD    GetWidth(PRInt32* aWidth) { return _to##GetWidth(aWidth); } \
+  NS_IMETHOD    SetWidth(PRInt32 aWidth) { return _to##SetWidth(aWidth); } \
 
 
 extern nsresult NS_InitHTMLPreElementClass(nsIScriptContext *aContext, void **aPrototype);

@@ -44,9 +44,9 @@ public:
 
 
 
-#define NS_FORWARD_IDOMHTMLHEADELEMENT(superClass)  \
-  NS_IMETHOD    GetProfile(nsString& aProfile) { return superClass::GetProfile(aProfile); } \
-  NS_IMETHOD    SetProfile(const nsString& aProfile) { return superClass::SetProfile(aProfile); } \
+#define NS_FORWARD_IDOMHTMLHEADELEMENT(_to)  \
+  NS_IMETHOD    GetProfile(nsString& aProfile) { return _to##GetProfile(aProfile); } \
+  NS_IMETHOD    SetProfile(const nsString& aProfile) { return _to##SetProfile(aProfile); } \
 
 
 extern nsresult NS_InitHTMLHeadElementClass(nsIScriptContext *aContext, void **aPrototype);

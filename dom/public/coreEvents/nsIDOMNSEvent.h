@@ -84,11 +84,11 @@ public:
 
 
 
-#define NS_FORWARD_IDOMNSEVENT(superClass)  \
-  NS_IMETHOD    GetLayerX(PRInt32* aLayerX) { return superClass::GetLayerX(aLayerX); } \
-  NS_IMETHOD    SetLayerX(PRInt32 aLayerX) { return superClass::SetLayerX(aLayerX); } \
-  NS_IMETHOD    GetLayerY(PRInt32* aLayerY) { return superClass::GetLayerY(aLayerY); } \
-  NS_IMETHOD    SetLayerY(PRInt32 aLayerY) { return superClass::SetLayerY(aLayerY); } \
+#define NS_FORWARD_IDOMNSEVENT(_to)  \
+  NS_IMETHOD    GetLayerX(PRInt32* aLayerX) { return _to##GetLayerX(aLayerX); } \
+  NS_IMETHOD    SetLayerX(PRInt32 aLayerX) { return _to##SetLayerX(aLayerX); } \
+  NS_IMETHOD    GetLayerY(PRInt32* aLayerY) { return _to##GetLayerY(aLayerY); } \
+  NS_IMETHOD    SetLayerY(PRInt32 aLayerY) { return _to##SetLayerY(aLayerY); } \
 
 
 #endif // nsIDOMNSEvent_h__

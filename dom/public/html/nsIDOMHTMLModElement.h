@@ -49,11 +49,11 @@ public:
 
 
 
-#define NS_FORWARD_IDOMHTMLMODELEMENT(superClass)  \
-  NS_IMETHOD    GetCite(nsString& aCite) { return superClass::GetCite(aCite); } \
-  NS_IMETHOD    SetCite(const nsString& aCite) { return superClass::SetCite(aCite); } \
-  NS_IMETHOD    GetDateTime(nsString& aDateTime) { return superClass::GetDateTime(aDateTime); } \
-  NS_IMETHOD    SetDateTime(const nsString& aDateTime) { return superClass::SetDateTime(aDateTime); } \
+#define NS_FORWARD_IDOMHTMLMODELEMENT(_to)  \
+  NS_IMETHOD    GetCite(nsString& aCite) { return _to##GetCite(aCite); } \
+  NS_IMETHOD    SetCite(const nsString& aCite) { return _to##SetCite(aCite); } \
+  NS_IMETHOD    GetDateTime(nsString& aDateTime) { return _to##GetDateTime(aDateTime); } \
+  NS_IMETHOD    SetDateTime(const nsString& aDateTime) { return _to##SetDateTime(aDateTime); } \
 
 
 extern nsresult NS_InitHTMLModElementClass(nsIScriptContext *aContext, void **aPrototype);

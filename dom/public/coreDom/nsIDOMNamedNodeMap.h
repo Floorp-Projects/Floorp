@@ -54,12 +54,12 @@ public:
 
 
 
-#define NS_FORWARD_IDOMNAMEDNODEMAP(superClass)  \
-  NS_IMETHOD    GetLength(PRUint32* aLength) { return superClass::GetLength(aLength); } \
-  NS_IMETHOD    GetNamedItem(const nsString& aName, nsIDOMNode** aReturn) { return superClass::GetNamedItem(aName, aReturn); }  \
-  NS_IMETHOD    SetNamedItem(nsIDOMNode* aNode) { return superClass::SetNamedItem(aNode); }  \
-  NS_IMETHOD    RemoveNamedItem(const nsString& aName, nsIDOMNode** aReturn) { return superClass::RemoveNamedItem(aName, aReturn); }  \
-  NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMNode** aReturn) { return superClass::Item(aIndex, aReturn); }  \
+#define NS_FORWARD_IDOMNAMEDNODEMAP(_to)  \
+  NS_IMETHOD    GetLength(PRUint32* aLength) { return _to##GetLength(aLength); } \
+  NS_IMETHOD    GetNamedItem(const nsString& aName, nsIDOMNode** aReturn) { return _to##GetNamedItem(aName, aReturn); }  \
+  NS_IMETHOD    SetNamedItem(nsIDOMNode* aNode) { return _to##SetNamedItem(aNode); }  \
+  NS_IMETHOD    RemoveNamedItem(const nsString& aName, nsIDOMNode** aReturn) { return _to##RemoveNamedItem(aName, aReturn); }  \
+  NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMNode** aReturn) { return _to##Item(aIndex, aReturn); }  \
 
 
 extern nsresult NS_InitNamedNodeMapClass(nsIScriptContext *aContext, void **aPrototype);

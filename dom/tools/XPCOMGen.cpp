@@ -55,13 +55,13 @@ static const char *kEnumEntryStr = "    %s = %d%s\n";
 static const char *kEnumDeclEndStr = "  };\n";
 static const char *kGetterMethodDeclStr = "\n  NS_IMETHOD    Get%s(%s%s a%s)=0;\n";
 static const char *kGetterMethodDeclNonVirtualStr = "  NS_IMETHOD    Get%s(%s%s a%s);  \\\n";
-static const char *kGetterMethodForwardStr = "  NS_IMETHOD    Get%s(%s%s a%s) { return superClass::Get%s(a%s); } \\\n";
+static const char *kGetterMethodForwardStr = "  NS_IMETHOD    Get%s(%s%s a%s) { return _to##Get%s(a%s); } \\\n";
 static const char *kSetterMethodDeclStr = "  NS_IMETHOD    Set%s(%s%s a%s)=0;\n";
 static const char *kSetterMethodDeclNonVirtualStr = "  NS_IMETHOD    Set%s(%s%s a%s);  \\\n";
-static const char *kSetterMethodForwardStr = "  NS_IMETHOD    Set%s(%s%s a%s) { return superClass::Set%s(a%s); } \\\n";
+static const char *kSetterMethodForwardStr = "  NS_IMETHOD    Set%s(%s%s a%s) { return _to##Set%s(a%s); } \\\n";
 static const char *kMethodDeclStr = "\n  NS_IMETHOD    %s(%s)=0;\n";
 static const char *kMethodDeclNonVirtualStr = "  NS_IMETHOD    %s(%s);  \\\n";
-static const char *kMethodForwardStr = "  NS_IMETHOD    %s(%s) { return superClass::%s(%s); }  \\\n";
+static const char *kMethodForwardStr = "  NS_IMETHOD    %s(%s) { return _to##%s(%s); }  \\\n";
 static const char *kParamStr = "%s a%s";
 static const char *kCallParamStr = "a%s";
 static const char *kDelimiterStr = ", ";
@@ -74,7 +74,7 @@ static const char *kGlobalInitClassStr = "extern nsresult NS_Init%sClass(nsIScri
 static const char *kInitClassStr = "extern nsresult NS_Init%sClass(nsIScriptContext *aContext, void **aPrototype);\n\n";
 static const char *kNewObjStr = "extern \"C\" NS_DOM nsresult NS_NewScript%s(nsIScriptContext *aContext, nsIDOM%s *aSupports, nsISupports *aParent, void **aReturn);\n\n";
 static const char *kMethodDeclMacroStr = "\n#define NS_DECL_IDOM%s   \\\n";
-static const char *kMethodForwardMacroStr = "\n#define NS_FORWARD_IDOM%s(superClass)  \\\n";
+static const char *kMethodForwardMacroStr = "\n#define NS_FORWARD_IDOM%s(_to)  \\\n";
 static const char *kEndifStr = "#endif // nsIDOM%s_h__\n";
 
 

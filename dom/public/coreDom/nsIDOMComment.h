@@ -39,7 +39,7 @@ public:
 
 
 
-#define NS_FORWARD_IDOMCOMMENT(superClass)  \
+#define NS_FORWARD_IDOMCOMMENT(_to)  \
 
 
 extern nsresult NS_InitCommentClass(nsIScriptContext *aContext, void **aPrototype);

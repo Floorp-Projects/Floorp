@@ -69,19 +69,19 @@ public:
 
 
 
-#define NS_FORWARD_IDOMHTMLTABLECOLELEMENT(superClass)  \
-  NS_IMETHOD    GetAlign(nsString& aAlign) { return superClass::GetAlign(aAlign); } \
-  NS_IMETHOD    SetAlign(const nsString& aAlign) { return superClass::SetAlign(aAlign); } \
-  NS_IMETHOD    GetCh(nsString& aCh) { return superClass::GetCh(aCh); } \
-  NS_IMETHOD    SetCh(const nsString& aCh) { return superClass::SetCh(aCh); } \
-  NS_IMETHOD    GetChOff(nsString& aChOff) { return superClass::GetChOff(aChOff); } \
-  NS_IMETHOD    SetChOff(const nsString& aChOff) { return superClass::SetChOff(aChOff); } \
-  NS_IMETHOD    GetSpan(PRInt32* aSpan) { return superClass::GetSpan(aSpan); } \
-  NS_IMETHOD    SetSpan(PRInt32 aSpan) { return superClass::SetSpan(aSpan); } \
-  NS_IMETHOD    GetVAlign(nsString& aVAlign) { return superClass::GetVAlign(aVAlign); } \
-  NS_IMETHOD    SetVAlign(const nsString& aVAlign) { return superClass::SetVAlign(aVAlign); } \
-  NS_IMETHOD    GetWidth(nsString& aWidth) { return superClass::GetWidth(aWidth); } \
-  NS_IMETHOD    SetWidth(const nsString& aWidth) { return superClass::SetWidth(aWidth); } \
+#define NS_FORWARD_IDOMHTMLTABLECOLELEMENT(_to)  \
+  NS_IMETHOD    GetAlign(nsString& aAlign) { return _to##GetAlign(aAlign); } \
+  NS_IMETHOD    SetAlign(const nsString& aAlign) { return _to##SetAlign(aAlign); } \
+  NS_IMETHOD    GetCh(nsString& aCh) { return _to##GetCh(aCh); } \
+  NS_IMETHOD    SetCh(const nsString& aCh) { return _to##SetCh(aCh); } \
+  NS_IMETHOD    GetChOff(nsString& aChOff) { return _to##GetChOff(aChOff); } \
+  NS_IMETHOD    SetChOff(const nsString& aChOff) { return _to##SetChOff(aChOff); } \
+  NS_IMETHOD    GetSpan(PRInt32* aSpan) { return _to##GetSpan(aSpan); } \
+  NS_IMETHOD    SetSpan(PRInt32 aSpan) { return _to##SetSpan(aSpan); } \
+  NS_IMETHOD    GetVAlign(nsString& aVAlign) { return _to##GetVAlign(aVAlign); } \
+  NS_IMETHOD    SetVAlign(const nsString& aVAlign) { return _to##SetVAlign(aVAlign); } \
+  NS_IMETHOD    GetWidth(nsString& aWidth) { return _to##GetWidth(aWidth); } \
+  NS_IMETHOD    SetWidth(const nsString& aWidth) { return _to##SetWidth(aWidth); } \
 
 
 extern nsresult NS_InitHTMLTableColElementClass(nsIScriptContext *aContext, void **aPrototype);

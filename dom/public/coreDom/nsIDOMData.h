@@ -62,15 +62,15 @@ public:
 
 
 
-#define NS_FORWARD_IDOMDATA(superClass)  \
-  NS_IMETHOD    GetData(nsString& aData) { return superClass::GetData(aData); } \
-  NS_IMETHOD    SetData(const nsString& aData) { return superClass::SetData(aData); } \
-  NS_IMETHOD    GetSize(PRUint32* aSize) { return superClass::GetSize(aSize); } \
-  NS_IMETHOD    Substring(PRUint32 aStart, PRUint32 aEnd, nsString& aReturn) { return superClass::Substring(aStart, aEnd, aReturn); }  \
-  NS_IMETHOD    Append(const nsString& aData) { return superClass::Append(aData); }  \
-  NS_IMETHOD    Insert(PRUint32 aOffset, const nsString& aData) { return superClass::Insert(aOffset, aData); }  \
-  NS_IMETHOD    Remove(PRUint32 aOffset, PRUint32 aCount) { return superClass::Remove(aOffset, aCount); }  \
-  NS_IMETHOD    Replace(PRUint32 aOffset, PRUint32 aCount, const nsString& aData) { return superClass::Replace(aOffset, aCount, aData); }  \
+#define NS_FORWARD_IDOMDATA(_to)  \
+  NS_IMETHOD    GetData(nsString& aData) { return _to##GetData(aData); } \
+  NS_IMETHOD    SetData(const nsString& aData) { return _to##SetData(aData); } \
+  NS_IMETHOD    GetSize(PRUint32* aSize) { return _to##GetSize(aSize); } \
+  NS_IMETHOD    Substring(PRUint32 aStart, PRUint32 aEnd, nsString& aReturn) { return _to##Substring(aStart, aEnd, aReturn); }  \
+  NS_IMETHOD    Append(const nsString& aData) { return _to##Append(aData); }  \
+  NS_IMETHOD    Insert(PRUint32 aOffset, const nsString& aData) { return _to##Insert(aOffset, aData); }  \
+  NS_IMETHOD    Remove(PRUint32 aOffset, PRUint32 aCount) { return _to##Remove(aOffset, aCount); }  \
+  NS_IMETHOD    Replace(PRUint32 aOffset, PRUint32 aCount, const nsString& aData) { return _to##Replace(aOffset, aCount, aData); }  \
 
 
 extern nsresult NS_InitDataClass(nsIScriptContext *aContext, void **aPrototype);
