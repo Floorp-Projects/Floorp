@@ -149,6 +149,16 @@ public:
                                      nsIUrlListener* aUrlListener,
                                      nsIURI** aURL,
                                      nsISupports* copyState);
+    NS_IMETHOD MoveFolder(nsIEventQueue* eventQueue,
+                          nsIMsgFolder* srcFolder,
+                          nsIMsgFolder* dstFolder,
+                          nsIUrlListener* urlListener,
+                          nsIURI** url);
+    NS_IMETHOD RenameLeaf(nsIEventQueue* eventQueue,
+                          nsIMsgFolder* srcFolder,
+                          const char* leafName,
+                          nsIUrlListener* urlListener,
+                          nsIURI** url);
 	////////////////////////////////////////////////////////////////////////////////////////
 	// End support of nsIImapService interface 
 	////////////////////////////////////////////////////////////////////////////////////////

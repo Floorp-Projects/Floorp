@@ -550,6 +550,17 @@ NS_IMETHODIMP nsImapMailFolder::RemoveSubFolder (nsIMsgFolder *which)
     return rv;
 }
 
+NS_IMETHODIMP nsImapMailFolder::Compact()
+{
+    nsresult rv;
+    NS_WITH_SERVICE(nsIImapService, imapService, kCImapService, &rv);
+    if (NS_SUCCEEDED(rv) && imapService)
+    {
+        rv = imapService->Expunge(m_eventQueue, this, nsnull, nsnull);
+    }
+    return rv;
+}
+
 NS_IMETHODIMP nsImapMailFolder::Delete ()
 {
     nsresult rv = NS_ERROR_FAILURE;

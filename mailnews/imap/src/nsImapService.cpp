@@ -144,6 +144,8 @@ nsImapService::SelectFolder(nsIEventQueue * aClientEventQueue,
 
 	if (NS_SUCCEEDED(rv) && imapUrl)
 	{
+        // nsImapUrl::SetSpec() will set the imap action properly
+		// rv = imapUrl->SetImapAction(nsIImapUrl::nsImapSelectFolder);
 		rv = imapUrl->SetImapAction(nsIImapUrl::nsImapSelectFolder);
 
 		nsCOMPtr <nsIMsgMailNewsUrl> mailNewsUrl = do_QueryInterface(imapUrl);
@@ -1318,6 +1320,101 @@ nsImapService::GetImapConnectionAndLoadUrl(nsIEventQueue* aClientEventQueue,
                                                           aConsumer,
                                                           aURL);
     }
+    return rv;
+}
+
+NS_IMETHODIMP
+nsImapService::MoveFolder(nsIEventQueue* eventQueue, nsIMsgFolder* srcFolder,
+                          nsIMsgFolder* dstFolder, 
+                          nsIUrlListener* urlListener, nsIURI** url)
+{
+    NS_ASSERTION(eventQueue && srcFolder && dstFolder, 
+                 "Oops ... null pointer");
+    if (!eventQueue || !srcFolder || !dstFolder)
+        return NS_ERROR_NULL_POINTER;
+
+    nsIImapUrl* imapUrl;
+    nsString2 urlSpec(eOneByte);
+    nsresult rv;
+
+    rv = CreateStartOfImapUrl(imapUrl, dstFolder, urlSpec);
+    if (NS_SUCCEEDED(rv) && imapUrl)
+    {
+        rv = SetImapUrlSink(dstFolder, imapUrl);
+        if (NS_SUCCEEDED(rv))
+        {
+            char hierarchySeparator = kOnlineHierarchySeparatorUnknown;
+            nsString2 folderName(eOneByte);
+            GetFolderName(srcFolder, folderName);
+            urlSpec.Append("/movefolderhierarchy>");
+            urlSpec.Append(hierarchySeparator);
+            urlSpec.Append(folderName.GetBuffer());
+            urlSpec.Append('>');
+            folderName.SetLength(0);
+            GetFolderName(dstFolder, folderName);
+            urlSpec.Append(hierarchySeparator);
+            urlSpec.Append(folderName.GetBuffer());
+            nsCOMPtr<nsIURI> uri = do_QueryInterface(imapUrl, &rv);
+            if (NS_SUCCEEDED(rv) && uri)
+            {
+                rv = uri->SetSpec((char*) urlSpec.GetBuffer());
+                if (NS_SUCCEEDED(rv))
+                    rv = GetImapConnectionAndLoadUrl(eventQueue, imapUrl,
+                                                     urlListener, nsnull,
+                                                     url);
+            }
+        }
+        NS_RELEASE(imapUrl);
+    }
+    return rv;
+}
+
+NS_IMETHODIMP
+nsImapService::RenameLeaf(nsIEventQueue* eventQueue, nsIMsgFolder* srcFolder,
+                          const char* newLeafName, nsIUrlListener* urlListener,
+                          nsIURI** url)
+{
+    NS_ASSERTION(eventQueue && srcFolder && newLeafName && *newLeafName,
+                 "Oops ... [RenameLeaf] null pointers");
+    if (!eventQueue || !srcFolder || !newLeafName || !*newLeafName)
+        return NS_ERROR_NULL_POINTER;
+    
+    nsIImapUrl* imapUrl;
+    nsString2 urlSpec(eOneByte);
+    nsresult rv;
+
+    rv = CreateStartOfImapUrl(imapUrl, srcFolder, urlSpec);
+    if (NS_SUCCEEDED(rv) && imapUrl)
+    {
+        rv = SetImapUrlSink(srcFolder, imapUrl);
+        if (NS_SUCCEEDED(rv))
+        {
+            char hierarchySeparator = '/';
+            nsString2 folderName(eOneByte);
+            GetFolderName(srcFolder, folderName);
+            urlSpec.Append("/rename>");
+            urlSpec.Append(hierarchySeparator);
+            urlSpec.Append(folderName.GetBuffer());
+            urlSpec.Append('>');
+            PRInt32 leafNameStart = 
+                folderName.RFindChar('/'); // ** troublesome hierarchyseparator
+            if (leafNameStart != -1)
+                folderName.SetLength(leafNameStart+1);
+            urlSpec.Append(hierarchySeparator);
+            urlSpec.Append(folderName.GetBuffer());
+            urlSpec.Append(newLeafName);
+            nsCOMPtr<nsIURI> uri = do_QueryInterface(imapUrl, &rv);
+            if (NS_SUCCEEDED(rv) && uri)
+            {
+                rv = uri->SetSpec((char*) urlSpec.GetBuffer());
+                if (NS_SUCCEEDED(rv))
+                    rv = GetImapConnectionAndLoadUrl(eventQueue, imapUrl,
+                                                     urlListener, nsnull,
+                                                     url);
+            } // if (NS_SUCCEEDED(rv) && uri)
+        } // if (NS_SUCCEEDED(rv))
+        NS_RELEASE(imapUrl);
+    } // if (NS_SUCCEEDED(rv) && imapUrl)
     return rv;
 }
 

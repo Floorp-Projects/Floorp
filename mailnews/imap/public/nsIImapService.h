@@ -153,7 +153,16 @@ public:
                                      nsIUrlListener* aUrlListener,
                                      nsIURI** aURL,
                                      nsISupports* copyState) = 0;
-                                     
+    NS_IMETHOD MoveFolder(nsIEventQueue* aClientEventQ,
+                          nsIMsgFolder* srcFolder,
+                          nsIMsgFolder* dstFolder,
+                          nsIUrlListener* urlListener,
+                          nsIURI** aUrl) = 0;
+    NS_IMETHOD RenameLeaf(nsIEventQueue* aClientEventQ,
+                          nsIMsgFolder* srcFolder,
+                          const char* leafName,
+                          nsIUrlListener* urlListener,
+                          nsIURI** url) = 0;
 };
 
 
