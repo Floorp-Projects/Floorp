@@ -4546,15 +4546,22 @@ nsNSSCertificateDB::EnableOCSP()
 NS_IMETHODIMP
 nsNSSCertificateDB::GetEmailEncryptionCert(const PRUnichar* aNickname, nsIX509Cert **_retval)
 {
+  if (!aNickname || !_retval)
+    return NS_ERROR_FAILURE;
+
+  *_retval = 0;
+
+  nsDependentString aDepNickname(aNickname);
+  if (aDepNickname.IsEmpty())
+    return NS_OK;
+
   nsresult rv = NS_OK;
   CERTCertificate *cert = 0;
   nsCOMPtr<nsIInterfaceRequestor> ctx = new PipUIContext();
   nsNSSCertificate *nssCert = nsnull;
   char *asciiname = NULL;
-  NS_ConvertUCS2toUTF8 aUtf8Nickname(aNickname);
+  NS_ConvertUCS2toUTF8 aUtf8Nickname(aDepNickname);
   asciiname = NS_CONST_CAST(char*, aUtf8Nickname.get());
-
-  *_retval = 0;
 
   /* Find a good cert in the user's database */
   cert = CERT_FindUserCertByUsage(CERT_GetDefaultCertDB(), asciiname, 
@@ -4579,15 +4586,22 @@ loser:
 NS_IMETHODIMP
 nsNSSCertificateDB::GetEmailSigningCert(const PRUnichar* aNickname, nsIX509Cert **_retval)
 {
+  if (!aNickname || !_retval)
+    return NS_ERROR_FAILURE;
+
+  *_retval = 0;
+
+  nsDependentString aDepNickname(aNickname);
+  if (aDepNickname.IsEmpty())
+    return NS_OK;
+
   nsresult rv = NS_OK;
   CERTCertificate *cert = 0;
   nsCOMPtr<nsIInterfaceRequestor> ctx = new PipUIContext();
   nsNSSCertificate *nssCert = nsnull;
   char *asciiname = NULL;
-  NS_ConvertUCS2toUTF8 aUtf8Nickname(aNickname);
+  NS_ConvertUCS2toUTF8 aUtf8Nickname(aDepNickname);
   asciiname = NS_CONST_CAST(char*, aUtf8Nickname.get());
-
-  *_retval = 0;
 
   /* Find a good cert in the user's database */
   cert = CERT_FindUserCertByUsage(CERT_GetDefaultCertDB(), asciiname, 
