@@ -19,6 +19,7 @@
 #ifndef _NSMSGUTILS_H
 #define _NSMSGUTILS_H
 
+#include "nsIURL.h"
 #include "nsIMsgMessageService.h"
 #include "nsString.h"
 #include "nsIEnumerator.h"
@@ -34,6 +35,7 @@ NS_MSG_BASE nsresult GetMessageServiceProgIDForURI(const char *uri, nsString &pr
 NS_MSG_BASE nsresult GetMessageServiceFromURI(const char *uri, nsIMsgMessageService **messageService);
 NS_MSG_BASE nsresult ReleaseMessageServiceFromURI(const char *uri, nsIMsgMessageService *messageService);
 
+NS_MSG_BASE nsresult CreateStartupUrl(char *uri, nsIURI** aUrl);
 
 //An enumerator for converting nsIMsgHdrs to nsIMessages.
 class NS_MSG_BASE nsMessageFromMsgHdrEnumerator: public nsISimpleEnumerator

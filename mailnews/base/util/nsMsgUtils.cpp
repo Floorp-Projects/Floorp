@@ -25,6 +25,17 @@
 #include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
+#include "nsIImapUrl.h"
+#include "nsIMailboxUrl.h"
+#include "nsINntpUrl.h"
+#include "nsMsgNewsCID.h"
+#include "nsMsgLocalCID.h"
+#include "nsMsgBaseCID.h"
+#include "nsMsgImapCID.h"
+
+static NS_DEFINE_CID(kImapUrlCID, NS_IMAPURL_CID);
+static NS_DEFINE_CID(kCMailboxUrl, NS_MAILBOXURL_CID);
+static NS_DEFINE_CID(kCNntpUrlCID, NS_NNTPURL_CID);
 
 #if defined(DEBUG_sspitzer_) || defined(DEBUG_seth_)
 #define DEBUG_NS_MsgHashIfNecessary 1
@@ -76,6 +87,47 @@ nsresult ReleaseMessageServiceFromURI(const char *uri, nsIMsgMessageService *mes
 	if(NS_SUCCEEDED(rv))
 		rv = nsServiceManager::ReleaseService(nsCAutoString(progID), messageService);
 	return rv;
+}
+
+
+nsresult CreateStartupUrl(char *uri, nsIURI** aUrl)
+{
+    nsresult rv = NS_ERROR_NULL_POINTER;
+    if (!uri || !*uri || !aUrl) return rv;
+    *aUrl = nsnull;
+    if (PL_strncasecmp(uri, "imap", 4) == 0)
+    {
+        nsCOMPtr<nsIImapUrl> imapUrl;
+        rv = nsComponentManager::CreateInstance(kImapUrlCID, nsnull,
+                                                nsIImapUrl::GetIID(),
+                                                getter_AddRefs(imapUrl));
+        if (NS_SUCCEEDED(rv) && imapUrl)
+            rv = imapUrl->QueryInterface(nsCOMTypeInfo<nsIURI>::GetIID(),
+                                         (void**) aUrl);
+    }
+    else if (PL_strncasecmp(uri, "mailbox", 7) == 0)
+    {
+        nsCOMPtr<nsIMailboxUrl> mailboxUrl;
+        rv = nsComponentManager::CreateInstance(kCMailboxUrl, nsnull,
+                                                nsIMailboxUrl::GetIID(),
+                                                getter_AddRefs(mailboxUrl));
+        if (NS_SUCCEEDED(rv) && mailboxUrl)
+            rv = mailboxUrl->QueryInterface(nsCOMTypeInfo<nsIURI>::GetIID(),
+                                            (void**) aUrl);
+    }
+    else if (PL_strncasecmp(uri, "news", 4) == 0)
+    {
+        nsCOMPtr<nsINntpUrl> nntpUrl;
+        rv = nsComponentManager::CreateInstance(kCNntpUrlCID, nsnull,
+                                                nsINntpUrl::GetIID(),
+                                                getter_AddRefs(nntpUrl));
+        if (NS_SUCCEEDED(rv) && nntpUrl)
+            rv = nntpUrl->QueryInterface(nsCOMTypeInfo<nsIURI>::GetIID(),
+                                         (void**) aUrl);
+    }
+    if (*aUrl)
+        (*aUrl)->SetSpec(uri);
+    return rv;
 }
 
 
