@@ -96,6 +96,16 @@
             accesskey="&findTypeLinksCmd.accesskey;"
             command="cmd_findTypeLinks"/>
 
+  <menu id="menu_Toolbars"
+        label="&viewToolbarsMenu.label;"
+        accesskey="&viewToolbarsMenu.accesskey;"/>
+  
+  <menuitem id="menu_showTaskbar"
+            label="&showTaskbarCmd.label;" 
+            accesskey="&showTaskbarCmd.accesskey;" 
+            oncommand="goToggleToolbar('status-bar', 'menu_showTaskbar')" 
+            checked="true"/>
+
   <!-- These key nodes are here only for show. The real bindings come from
        XBL, in platformHTMLBindings.xml. See bugs 57078 and 71779. -->
 
