@@ -58,7 +58,7 @@ public:
   * Indicates that we're done adding child content
   * to the select during document loading.
   */
-  NS_IMETHOD DoneAddingContent() = 0;
+  NS_IMETHOD DoneAddingContent(PRBool aIsDone) = 0;
 
   /**
   * Returns whether we're done adding child content

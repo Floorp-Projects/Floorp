@@ -181,7 +181,7 @@ public:
   // nsISelectElement
   NS_IMETHOD AddOption(nsIContent* aContent);
   NS_IMETHOD RemoveOption(nsIContent* aContent);
-  NS_IMETHOD DoneAddingContent();
+  NS_IMETHOD DoneAddingContent(PRBool aIsDone);
   NS_IMETHOD IsDoneAddingContent(PRBool * aIsDone);
 
 protected:
@@ -217,7 +217,7 @@ nsHTMLSelectElement::nsHTMLSelectElement(nsIAtom* aTag)
   mInner.Init(this, aTag);
   mOptions = nsnull;
   mForm = nsnull;
-  mIsDoneAddingContent = PR_FALSE;
+  mIsDoneAddingContent = PR_TRUE;
 }
 
 nsHTMLSelectElement::~nsHTMLSelectElement()
@@ -714,16 +714,16 @@ nsHTMLSelectElement::IsDoneAddingContent(PRBool * aIsDone)
 }
 
 NS_IMETHODIMP
-nsHTMLSelectElement::DoneAddingContent()
+nsHTMLSelectElement::DoneAddingContent(PRBool aIsDone)
 {
-  mIsDoneAddingContent = PR_TRUE;
+  mIsDoneAddingContent = aIsDone;
   nsIFormControlFrame* fcFrame = nsnull;
   nsresult result = nsGenericHTMLElement::GetPrimaryFrame(this, fcFrame);
   if (NS_SUCCEEDED(result) && (nsnull != fcFrame)) {
     nsISelectControlFrame* selectFrame = nsnull;
     result = fcFrame->QueryInterface(nsISelectControlFrame::GetIID(),(void **) &selectFrame);
     if (NS_SUCCEEDED(result) && (nsnull != selectFrame)) {
-      result = selectFrame->DoneAddingContent();
+      result = selectFrame->DoneAddingContent(mIsDoneAddingContent);
     }
   }
   return NS_OK;
