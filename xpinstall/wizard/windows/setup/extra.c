@@ -2654,11 +2654,28 @@ ULONGLONG GetDiskSpaceRequired(DWORD dwType)
   return(ullTotalSize);
 }
 
+int LocateExistingPath(char *szPath, char *szExistingPath, DWORD dwExistingPathSize)
+{
+  char szBuf[MAX_BUF];
+
+  lstrcpy(szExistingPath, szPath);
+  AppendBackSlash(szExistingPath, dwExistingPathSize);
+  while((FileExists(szExistingPath) == FALSE))
+  {
+    RemoveBackSlash(szExistingPath);
+    ParsePath(szExistingPath, szBuf, sizeof(szBuf), PP_PATH_ONLY);
+    lstrcpy(szExistingPath, szBuf);
+    AppendBackSlash(szExistingPath, dwExistingPathSize);
+  }
+  return(WIZ_OK);
+}
+
 /* returns the value in bytes */
 ULONGLONG GetDiskSpaceAvailable(LPSTR szPath)
 {
   char            szTempPath[MAX_BUF];
   char            szBuf[MAX_BUF];
+  char            szExistingPath[MAX_BUF];
   char            szBuf2[MAX_BUF];
   ULARGE_INTEGER  uliFreeBytesAvailableToCaller;
   ULARGE_INTEGER  uliTotalNumberOfBytesToCaller;
@@ -2681,9 +2698,9 @@ ULONGLONG GetDiskSpaceAvailable(LPSTR szPath)
   }
   else if(NS_GetDiskFreeSpaceEx != NULL)
   {
-    lstrcpy(szTempPath, szPath);
-    AppendBackSlash(szTempPath, MAX_BUF);
-    if(NS_GetDiskFreeSpaceEx(szTempPath,
+    LocateExistingPath(szPath, szExistingPath, sizeof(szExistingPath));
+    AppendBackSlash(szExistingPath, sizeof(szExistingPath));
+    if(NS_GetDiskFreeSpaceEx(szExistingPath,
                              &uliFreeBytesAvailableToCaller,
                              &uliTotalNumberOfBytesToCaller,
                              &uliTotalNumberOfFreeBytes) == FALSE)
@@ -2693,7 +2710,7 @@ ULONGLONG GetDiskSpaceAvailable(LPSTR szPath)
       if(NS_LoadString(hSetupRscInst, IDS_ERROR_DETERMINING_DISK_SPACE, szEDeterminingDiskSpace, MAX_BUF) == WIZ_OK)
       {
         lstrcpy(szBuf2, "\n    ");
-        lstrcat(szBuf2, szTempPath);
+        lstrcat(szBuf2, szPath);
         wsprintf(szBuf, szEDeterminingDiskSpace, szBuf2);
         PrintError(szBuf, ERROR_CODE_SHOW);
       }
