@@ -1230,8 +1230,10 @@ GeometryManager(Widget child,XtWidgetGeometry *request,XtWidgetGeometry *reply)
 	XtGeometryMask		mask = request->request_mode;
 	XtGeometryResult	our_result = XtGeometryNo;
 
-/* 	printf("GeometryManager(%s) - child = %s\n",XtName(w),XtName(child)); */
-	
+#ifdef DEBUG
+	XfeDebugPrintfFunction(w,"GeometryManager",NULL,NULL);
+#endif
+
 	/* Ignore x changes */
 	if (mask & CWX)
 	{
@@ -2477,6 +2479,7 @@ XfeManagerSetChildrenValues(Widget		w,
 XfeManagerApply(Widget				w,
 				XfeManagerApplyProc	proc,
 				XtPointer			data,
+                Boolean				private_components,
 				Boolean				only_managed)
 {
    Cardinal i;
@@ -2499,20 +2502,21 @@ XfeManagerApply(Widget				w,
    {
 	   Widget child = _XfemChildren(w)[i];
 	   
-	   if (child && 
-		   _XfeIsAlive(child) && 
-		   !_XfeManagerPrivateComponent(child))
+	   if (child && _XfeIsAlive(child))
 	   {
-		   if (only_managed)
+		   if ( (!_XfeManagerPrivateComponent(child)) || private_components)
 		   {
-			   if (XtIsManaged(child))
+			   if (only_managed)
+			   {
+				   if (XtIsManaged(child))
+				   {
+					   proc(w,child,data);
+				   }
+			   }
+			   else
 			   {
 				   proc(w,child,data);
 			   }
-		   }
-		   else
-		   {
-			   proc(w,child,data);
 		   }
 	   }
    }

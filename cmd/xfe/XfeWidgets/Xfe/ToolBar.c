@@ -697,7 +697,7 @@ SetValues(Widget ow,Widget rw,Widget nw,ArgList args,Cardinal *nargs)
     /* button_layout */
     if (np->button_layout != op->button_layout)
     {
-		XfeManagerApply(nw,ApplyButtonLayout,(XtPointer) nw,False);
+		XfeManagerApply(nw,ApplyButtonLayout,(XtPointer) nw,False,False);
 
 		_XfemConfigFlags(nw) |= XfeConfigGLE;
 
@@ -707,7 +707,7 @@ SetValues(Widget ow,Widget rw,Widget nw,ArgList args,Cardinal *nargs)
     /* child_use_pref_width */
     if (np->child_use_pref_width != op->child_use_pref_width)
     {
-		XfeManagerApply(nw,ApplyChildUsePrefWidth,(XtPointer) nw,False);
+		XfeManagerApply(nw,ApplyChildUsePrefWidth,(XtPointer) nw,False,False);
 
 		_XfemConfigFlags(nw) |= XfeConfigGLE;
 
@@ -717,7 +717,7 @@ SetValues(Widget ow,Widget rw,Widget nw,ArgList args,Cardinal *nargs)
     /* child_use_pref_height */
     if (np->child_use_pref_height != op->child_use_pref_height)
     {
-		XfeManagerApply(nw,ApplyChildUsePrefHeight,(XtPointer) nw,False);
+		XfeManagerApply(nw,ApplyChildUsePrefHeight,(XtPointer) nw,False,False);
 
 		_XfemConfigFlags(nw) |= XfeConfigGLE;
 
@@ -760,7 +760,7 @@ SetValues(Widget ow,Widget rw,Widget nw,ArgList args,Cardinal *nargs)
 			ButtonSetActiveWidget(nw,NULL,False,NULL);
 		}
 
-		XfeManagerApply(nw,ApplyActiveEnabled,(XtPointer) nw,False);
+		XfeManagerApply(nw,ApplyActiveEnabled,(XtPointer) nw,False,False);
 	}
 
 	/* selected_button */
@@ -785,13 +785,13 @@ SetValues(Widget ow,Widget rw,Widget nw,ArgList args,Cardinal *nargs)
 			ButtonSetSelectedWidget(nw,NULL,False,NULL);
 		}
 
-		XfeManagerApply(nw,ApplySelectedEnabled,(XtPointer) nw,False);
+		XfeManagerApply(nw,ApplySelectedEnabled,(XtPointer) nw,False,False);
 	}
 
     /* selection_modifiers */
     if (np->selection_modifiers != op->selection_modifiers)
     {
-		XfeManagerApply(nw,ApplySelectionModifiers,(XtPointer) nw,False);
+		XfeManagerApply(nw,ApplySelectionModifiers,(XtPointer) nw,False,False);
     }
 
     /* indicator_position */

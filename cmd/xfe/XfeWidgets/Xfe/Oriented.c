@@ -1127,6 +1127,6 @@ XfeOrientedChildrenSetAllowDrag(Widget w,Boolean allow_drag)
 		return;
 	}
 	
-	XfeManagerApply(w,ApplyChildSetAllowDrag,(XtPointer) allow_drag,False);
+	XfeManagerApply(w,ApplyChildSetAllowDrag,(XtPointer) allow_drag,False,False);
 }
 /*----------------------------------------------------------------------*/

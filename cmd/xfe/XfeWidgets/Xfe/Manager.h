@@ -76,6 +76,7 @@ extern void
 XfeManagerApply					(Widget					w,
 								 XfeManagerApplyProc	proc,
 								 XtPointer				data,
+                                 Boolean				private_components,
 								 Boolean				only_managed);
 /*----------------------------------------------------------------------*/
 
