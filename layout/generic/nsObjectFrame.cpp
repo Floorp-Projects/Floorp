@@ -1997,7 +1997,7 @@ NS_IMPL_ISUPPORTS2(nsPluginDOMContextMenuListener, nsIDOMContextMenuListener, ns
 NS_IMETHODIMP
 nsPluginDOMContextMenuListener::ContextMenu(nsIDOMEvent* aContextMenuEvent)
 {
-  aContextMenuEvent->PreventDefault(); /* consume event */
+  aContextMenuEvent->PreventDefault(); // consume event
 
   return NS_OK;
 }
