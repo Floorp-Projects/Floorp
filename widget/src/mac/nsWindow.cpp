@@ -411,7 +411,7 @@ NS_IMETHODIMP nsWindow::Enable(PRBool bState)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsWindow::SetFocus(void)
 {
-	gFocusHandler.SetFocus(this);
+	gEventDispatchHandler.SetFocus(this);
 	return NS_OK;
 }
 
