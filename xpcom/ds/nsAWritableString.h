@@ -233,16 +233,18 @@ class basic_nsAWritableString
 
 
 
-      virtual void Assign( const basic_nsAReadableString<CharT>& rhs ) = 0;
+      virtual void Assign( const basic_nsAReadableString<CharT>& rhs );
       // virtual void AssignChar( CharT ) = 0;
 
-      virtual void Append( const basic_nsAReadableString<CharT>& ) = 0;
-      virtual void AppendChar( CharT ) = 0;
+      virtual void Append( const basic_nsAReadableString<CharT>& );
+      virtual void AppendChar( CharT );
 
-      virtual void Insert( const basic_nsAReadableString<CharT>&, PRUint32 atPosition ) = 0;
+      virtual void Insert( const basic_nsAReadableString<CharT>&, PRUint32 atPosition );
       // virtual void InsertChar( CharT, PRUint32 atPosition ) = 0;
 
-      virtual void Cut( PRUint32 cutStart, PRUint32 cutEnd ) = 0;
+      virtual void Cut( PRUint32 cutStart, PRUint32 cutLength );
+
+      virtual void Replace( PRUint32 cutStart, PRUint32 cutLength, const basic_nsAReadableString<CharT>& );
 
 
       basic_nsAWritableString<CharT>&
@@ -276,6 +278,75 @@ class basic_nsAWritableString
 
 NS_DEF_STRING_COMPARISONS(basic_nsAWritableString<CharT>)
 
+template <class CharT>
+void
+basic_nsAWritableString<CharT>::Assign( const basic_nsAReadableString<CharT>& rhs )
+  {
+    SetLength(rhs.Length());
+    std::copy(rhs.Begin(), rhs.End(), Begin());
+  }
+
+template <class CharT>
+void
+basic_nsAWritableString<CharT>::Append( const basic_nsAReadableString<CharT>& rhs )
+  {
+    PRUint32 oldLength = Length();
+    SetLength(oldLength + rhs.Length());
+    std::copy(rhs.Begin(), rhs.End(), Begin(oldLength));
+  }
+
+template <class CharT>
+void
+basic_nsAWritableString<CharT>::AppendChar( CharT aChar )
+  {
+    SetLength(Length()+1);
+    *End(1) = aChar;
+  }
+
+template <class CharT>
+void
+basic_nsAWritableString<CharT>::Insert( const basic_nsAReadableString<CharT>& aReadable, PRUint32 aPosition )
+  {
+    PRUint32 oldLength = Length();
+    SetLength(oldLength + aReadable.Length());
+    if ( aPosition < oldLength )
+      std::copy_backward(Begin(aPosition), Begin(oldLength), End());
+    else
+      aPosition = oldLength;
+    std::copy(aReadable.Begin(), aReadable.End(), Begin(aPosition));
+  }
+
+template <class CharT>
+void
+basic_nsAWritableString<CharT>::Cut( PRUint32 cutStart, PRUint32 cutLength )
+  {
+    std::copy(Begin(cutStart+cutLength), End(), Begin(cutStart));
+    SetLength(Length()-cutLength);
+  }
+
+template <class CharT>
+void
+basic_nsAWritableString<CharT>::Replace( PRUint32 cutStart, PRUint32 cutLength, const basic_nsAReadableString<CharT>& aReplacement )
+  {
+    PRUint32 oldLength = Length();
+
+    cutStart = min(cutStart, oldLength);
+    cutLength = min(cutLength, oldLength-cutStart);
+    PRUint32 cutEnd = cutStart + cutLength;
+
+    PRUint32 replacementLength = aReplacement.Length();
+    PRUint32 replacementEnd = cutStart + replacementLength;
+
+    PRUint32 newLength = oldLength - cutLength + replacementLength;
+
+    if ( cutLength > replacementLength )
+      std::copy(Begin(cutEnd), End(), Begin(replacementEnd));
+    SetLength(newLength);
+    if ( cutLength < replacementLength )
+      std::copy_backward(Begin(cutEnd), Begin(oldLength), Begin(replacementEnd));
+
+    std::copy(aReplacement.Begin(), aReplacement.End(), Begin(cutStart));
+  }
 
 // operator>>
 // getline (maybe)
