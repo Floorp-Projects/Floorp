@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 3; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 3; indent-tabs-mode: nil; c-basic-offset: 3 -*-
  *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -1761,16 +1761,16 @@ NS_IMETHODIMP nsDocShell::ReportScriptError(const char* aErrorString,
       }
 
    PRBool showAlert;
-
    if(mItemType == typeContent)
       {
       // Include a message for the beta release suggesting remedy
       error +=
-        "\n"
-        "This error may indicate that the site has not been updated "
-        "for Mozilla.  Please contact the site administrator, or see "
-        "http://developer.netscape.com/mozilla/";
-      
+         "\n"
+         "If you visit this page with another browser and don't see a similar "
+         "error, it may indicate that the site has not yet been updated to "
+         "support standards implemented by the Mozilla browser such as the "
+         "W3C Document Object Model (DOM).  Please see "
+         "http://developer.netsape.com/mozilla/ for more information.";
       showAlert = PR_TRUE;
       }
    else
@@ -1784,18 +1784,33 @@ NS_IMETHODIMP nsDocShell::ReportScriptError(const char* aErrorString,
 #endif
       }
 
+   // Disable error alerts unless pref is set.
+   PRBool alertPref;
+   if (showAlert == PR_TRUE
+       && mPrefs != nsnull
+       && (NS_SUCCEEDED(mPrefs->GetBoolPref("javascript.error.alerts",
+                                            &alertPref)))
+       && (alertPref == PR_TRUE))
+      {
+      showAlert = PR_TRUE;
+      }
+   else
+      {
+      showAlert = PR_FALSE;
+      }
+
    if(showAlert)
       {
       // Show an alert for the error.  At some point, we may have a JavaScript
       // console to show errors in.
       nsCOMPtr<nsIPrompt> prompt = do_GetInterface(mTreeOwner);
       if(prompt)
-        {
-        prompt->Alert(error.GetUnicode());
+         {
+         prompt->Alert(error.GetUnicode());
 #ifndef DEBUG
-        return NS_OK;
+         return NS_OK;
 #endif
-        }
+         }
       }
 
    // else if not showing alert or failed to get prompt interface or

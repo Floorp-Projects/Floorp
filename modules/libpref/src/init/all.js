@@ -186,6 +186,7 @@ pref("javascript.enabled",                  true);
 pref("javascript.allow.mailnews",           true);
 pref("javascript.allow.signing",            true);
 pref("javascript.reflect_preferences",      false);     // for PE
+pref("javascript.error.alerts",             false);
 
 // advanced prefs
 pref("advanced.always_load_images",         true);
