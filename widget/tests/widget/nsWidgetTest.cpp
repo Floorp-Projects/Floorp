@@ -1171,17 +1171,10 @@ nsresult WidgetTest(int *argc, char **argv)
     // create the main window
     //
     NSRepository::CreateInstance(kCWindowCID, nsnull, kIWidgetIID, (void**)&window);
-#ifdef XP_PC
     nsRect rect(100, 100, 600, 700);
-    window->Create((nsIWidget*)NULL, rect, HandleEvent, NULL);
-#endif
-#ifdef XP_UNIX
-    nsRect rect(0, 0, 600, 700);
-    window->Create((nsNativeWidget)NULL, rect, HandleEvent, 
-                   (nsIDeviceContext *)nsnull, 
-                   (nsIToolkit *)nsnull,
-                   (nsWidgetInitData*)appShell->GetNativeData(NS_NATIVE_SHELL));
-#endif
+    window->Create((nsIWidget*) nsnull, rect, HandleEvent, 
+                   (nsIDeviceContext *) nsnull,
+                   appShell);
     window->SetTitle("TOP-LEVEL window");
     window->Show(PR_TRUE);
     window->SetBackgroundColor(NS_RGB(196, 196, 196));

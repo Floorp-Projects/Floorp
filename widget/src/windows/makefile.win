@@ -49,8 +49,9 @@ OBJS =                                   \
 	.\$(OBJDIR)\nsFileWidget.obj     \
 	.\$(OBJDIR)\nsScrollbar.obj      \
 	.\$(OBJDIR)\nsTabWidget.obj      \
-    .\$(OBJDIR)\nsTooltipWidget.obj  \
-	.\$(OBJDIR)\nsAppShell.obj  \
+	.\$(OBJDIR)\nsTooltipWidget.obj  \
+	.\$(OBJDIR)\nsAppShell.obj       \
+	.\$(OBJDIR)\nsLookAndFeel.obj    \
 	$(NULL)
 
 LINCS=                                  \

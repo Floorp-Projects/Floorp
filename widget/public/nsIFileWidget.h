@@ -60,6 +60,7 @@ public:
                         nsString& aTitle,
                         nsMode aMode,
                         nsIDeviceContext *aContext = nsnull,
+                        nsIAppShell *aAppShell = nsnull,
                         nsIToolkit *aToolkit = nsnull,
                         void *aInitData = 0) = 0;
 
