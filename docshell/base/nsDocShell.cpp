@@ -4358,8 +4358,7 @@ nsDocShell::InternalLoad(nsIURI * aURI,
 	}
     
     mURIResultedInDocument = PR_FALSE;  // reset the clock...
-    mLSHE = aSHEntry;
-    
+   
     //
     // First:
     // Check to see if the new URI is an anchor in the existing document.
@@ -4373,10 +4372,20 @@ nsDocShell::InternalLoad(nsIURI * aURI,
         if (wasAnchor) {
             mLoadType = aLoadType;
             mURIResultedInDocument = PR_TRUE;
+            /* This is a anchor traversal with in the same page.
+             * call OnNewURI() so that, this traversal will be 
+             * recorded in session and global history.
+             */             
             OnNewURI(aURI, nsnull, mLoadType);
-
-            // Save the new entry in mOSHE
-            if (mLSHE)
+            
+            /* If this is a history load, OnNewURI() will not create
+             * a mLSHE. In that case, we want to assign mOSHE to aSHEntry 
+             * passed by SH, otherwise, mLSHE created by OnNewURI() should
+             * be assigned to mOSHE.
+             */
+            if (aSHEntry && !mLSHE)
+              mOSHE = aSHEntry;            
+            else if (mLSHE)
               mOSHE = mLSHE;
 
             /* Clear out mLSHE so that further anchor visits get
@@ -4410,7 +4419,9 @@ nsDocShell::InternalLoad(nsIURI * aURI,
     
 
     mLoadType = aLoadType;
-    
+    // mLSHE should be assigned to aSHEntry, only after Stop() has
+    // been called. 
+    mLSHE = aSHEntry;
 
     nsDocShellInfoLoadType loadCmd =
         ConvertLoadTypeToDocShellLoadInfo(mLoadType);
