@@ -178,6 +178,7 @@ static nsresult    initialize_prefs        (void);
   
 // this is the last window that had a drag event happen on it.
 nsWindow *nsWindow::mLastDragMotionWindow = NULL;
+PRBool nsWindow::sIsDraggingOutOf = PR_FALSE;
 
 // This is the time of the last button press event.  The drag service
 // uses it as the time to start drags.
@@ -1087,13 +1088,18 @@ nsWindow::CaptureRollupEvents(nsIRollupListener *aListener,
         gRollupListener = aListener;
         gRollupWindow = do_GetWeakReference(NS_STATIC_CAST(nsIWidget*,
                                                            this));
-        gtk_grab_add(widget);
-        GrabPointer();
-        GrabKeyboard();
+        // real grab is only done when there is no dragging
+        if (!nsWindow::DragInProgress()) {
+            gtk_grab_add(widget);
+            GrabPointer();
+            GrabKeyboard();
+        }
     }
     else {
-        ReleaseGrabs();
-        gtk_grab_remove(widget);
+        if (!nsWindow::DragInProgress()) {
+            ReleaseGrabs();
+            gtk_grab_remove(widget);
+        }
         gRollupListener = nsnull;
         gRollupWindow = nsnull;
     }
@@ -1270,6 +1276,10 @@ nsWindow::OnLeaveNotifyEvent(GtkWidget *aWidget, GdkEventCrossing *aEvent)
 void
 nsWindow::OnMotionNotifyEvent(GtkWidget *aWidget, GdkEventMotion *aEvent)
 {
+    // when we receive this, it must be that the gtk dragging is over,
+    // it is dropped either in or out of mozilla, clear the flag
+    sIsDraggingOutOf = PR_FALSE;
+
     // see if we can compress this event
     XEvent xevent;
     PRPackedBool synthEvent = PR_FALSE;
@@ -1688,6 +1698,8 @@ nsWindow::OnDragMotionEvent(GtkWidget *aWidget,
 {
     LOG(("nsWindow::OnDragMotionSignal\n"));
 
+    sIsDraggingOutOf = PR_FALSE;
+
     // Reset out drag motion timer
     ResetDragMotionTimer(aWidget, aDragContext, aX, aY, aTime);
 
@@ -1775,6 +1787,8 @@ nsWindow::OnDragLeaveEvent(GtkWidget *aWidget,
                            gpointer aData)
 {
     LOG(("nsWindow::OnDragLeaveSignal(%p)\n", this));
+
+    sIsDraggingOutOf = PR_TRUE;
 
     // make sure to unset any drag motion timers here.
     ResetDragMotionTimer(0, 0, 0, 0, 0);
@@ -2829,6 +2843,16 @@ check_for_rollup(GdkWindow *aWindow, gdouble aMouseX, gdouble aMouseY,
     }
 
     return retVal;
+}
+
+/* static */
+PRBool
+nsWindow::DragInProgress(void)
+{
+    // mLastDragMotionWindow means the drag arrow is over mozilla
+    // sIsDraggingOutOf means the drag arrow is out of mozilla
+    // both cases mean the dragging is happenning.
+    return (mLastDragMotionWindow || sIsDraggingOutOf);
 }
 
 /* static */
