@@ -742,16 +742,16 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
       NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager,
                       NS_SCRIPTSECURITYMANAGER_PROGID, &result);
       nsCOMPtr<nsIURI> actionURL;
-      if (NS_FAILED(result) ||
-          NS_FAILED(result = NS_NewURI(getter_AddRefs(actionURL), href, docURL)) ||
-          NS_FAILED(result = securityManager->CheckLoadURI(docURL, actionURL,
-	                                                   PR_FALSE))) 
-      {
-        return result;
+      if (NS_FAILED(result)) return result;
+
+      result = NS_NewURI(getter_AddRefs(actionURL), href, docURL);
+      if (NS_SUCCEEDED(result)) {
+        result = securityManager->CheckLoadURI(docURL, actionURL, PR_FALSE);
+        if (NS_FAILED(result)) return result;
       }
 
       nsXPIDLCString scheme;
-      if (NS_FAILED(result = actionURL->GetScheme(getter_Copies(scheme))))
+      if (actionURL && NS_FAILED(result = actionURL->GetScheme(getter_Copies(scheme))))
         return result;
       if (nsCRT::strcmp(scheme, "mailto") == 0) {
         PRBool enabled;
