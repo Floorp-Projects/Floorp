@@ -304,6 +304,15 @@
           ]]>
         </body>
       </method>
+      <method name="saveTo">
+        <argument name="searchValue"/>
+        <body>
+          <![CDATA[
+            this.internalSearchValue = searchValue;
+            this.save();
+          ]]>
+        </body>
+      </method>
     </interface>
   </binding>
   <binding id="searchterm" extends="xul:box">
@@ -400,7 +409,12 @@
             var searchTerm = this.searchTerm;
             searchTerm.attrib = this.searchattribute.value;
             searchTerm.op = this.searchoperator.value;
-            this.searchvalue.save();
+            dump("saving search value..\n");
+            if (this.searchvalue.value)
+              this.searchvalue.save();
+            else
+              this.searchvalue.saveTo(searchTerm.value);
+            dump("Reassigning back to me!\n");
             searchTerm.value = this.searchvalue.value;
             searchTerm.booleanAnd = this.booleanAnd;
           ]]>
