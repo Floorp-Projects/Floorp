@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include "nsRepository.h" 
-#include "nsMsgBaseCID.h"
+#include "nsMsgCompCID.h"
 #include "nsIMsgCompose.h"
 #include "nsIMsgCompFields.h"
 
@@ -24,8 +24,8 @@ static NS_DEFINE_CID(kMsgCompFieldsCID, NS_MSGCOMPFIELDS_CID);
 	nsresult res;
 
 	// register our dll
-	nsRepository::RegisterFactory(kMsgComposeCID, "mailnews.dll", PR_FALSE, PR_FALSE);
-	nsRepository::RegisterFactory(kMsgCompFieldsCID, "mailnews.dll", PR_FALSE, PR_FALSE);
+	nsRepository::RegisterFactory(kMsgComposeCID, "msgcompose.dll", PR_FALSE, PR_FALSE);
+	nsRepository::RegisterFactory(kMsgCompFieldsCID, "msgcompose.dll", PR_FALSE, PR_FALSE);
    
 	res = nsRepository::CreateInstance(kMsgCompFieldsCID, 
 												NULL, 
@@ -61,8 +61,6 @@ static NS_DEFINE_CID(kMsgCompFieldsCID, NS_MSGCOMPFIELDS_CID);
 		pMsgCompFields->SetHTMLPart("field #22 HTML_PART", NULL);
 		pMsgCompFields->SetTemplateName("field #23 TEMPLATE_NAME", NULL);
 		pMsgCompFields->SetReturnReceipt(PR_TRUE, NULL);
-		pMsgCompFields->SetEncrypted(PR_TRUE, NULL);
-		pMsgCompFields->SetSigned(PR_TRUE, NULL);
 		pMsgCompFields->SetAttachVCard(PR_TRUE, NULL);
 
 		nsIMsgCompFields * pCopyFields;
@@ -109,8 +107,6 @@ static NS_DEFINE_CID(kMsgCompFieldsCID, NS_MSGCOMPFIELDS_CID);
 	NS_IMETHOD GetHTMLPart(char **_retval);
 	NS_IMETHOD GetTemplateName(char **_retval);
 	NS_IMETHOD GetReturnReceipt(PRBool *_retval);
-	NS_IMETHOD GetEncrypted(PRBool *_retval);
-	NS_IMETHOD GetSigned(PRBool *_retval);
 	NS_IMETHOD GetAttachVCard(PRBool *_retval);
 */
 
