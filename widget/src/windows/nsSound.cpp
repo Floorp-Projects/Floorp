@@ -23,11 +23,14 @@
 #include "nscore.h"
 #include "nsIAllocator.h"
 #include "plstr.h"
-#include "stdio.h"
+#include <stdio.h>
 
 #include <windows.h>
 
 #include "nsSound.h"
+#include "nsIURI.h"
+#include "nsNetUtil.h"
+#include "prmem.h"
 
 NS_IMPL_ISUPPORTS(nsSound, nsCOMTypeInfo<nsISound>::GetIID());
 
@@ -39,6 +42,10 @@ nsSound::nsSound()
 
 nsSound::~nsSound()
 {
+	if (mPlayBuf)
+		PR_Free( mPlayBuf );
+	if (mBuffer)
+		PR_Free( mBuffer );
 }
 
 nsresult NS_NewSound(nsISound** aSound)
@@ -46,11 +53,18 @@ nsresult NS_NewSound(nsISound** aSound)
   NS_PRECONDITION(aSound != nsnull, "null ptr");
   if (! aSound)
     return NS_ERROR_NULL_POINTER;
+
+  nsSound** mySound;
   
   *aSound = new nsSound();
   if (! *aSound)
     return NS_ERROR_OUT_OF_MEMORY;
-  
+  mySound = (nsSound **) aSound;
+  (*mySound)->mBufferSize = 4098;
+  (*mySound)->mBuffer = (char *) PR_Malloc( (*mySound)->mBufferSize );
+  if ( (*mySound)->mBuffer == (char *) NULL )
+	return NS_ERROR_OUT_OF_MEMORY;
+  (*mySound)->mPlayBuf = (char *) NULL;
   NS_ADDREF(*aSound);
   return NS_OK;
 }
@@ -69,15 +83,46 @@ NS_METHOD nsSound::Beep()
   return NS_OK;
 }
 
-NS_METHOD nsSound::Play(nsIFileSpec *filespec)
+NS_METHOD nsSound::Play(nsIURI *aURI)
 {
-  char *filename;
-  filespec->GetNativePath(&filename);
-
-  ::PlaySound(filename, nsnull, SND_FILENAME | SND_NODEFAULT | SND_ASYNC);
-
-  nsCRT::free(filename);
-
+  nsresult rv;
+  nsIInputStream *inputStream;
+  PRUint32 totalLen = 0;
+  PRUint32 len;
+  
+  if ( mPlayBuf ) {
+	  ::PlaySound(nsnull, nsnull, 0);	// stop what might be playing so we can free 
+	  PR_Free( this->mPlayBuf );
+	  this->mPlayBuf = (char *) NULL;
+  }
+  rv = NS_OpenURI(&inputStream, aURI);
+  if (NS_FAILED(rv)) 
+	  return rv;
+  do {
+	rv = inputStream->Read(this->mBuffer, this->mBufferSize, &len);
+	if ( len ) {
+		totalLen += len;
+		if ( this->mPlayBuf == (char *) NULL ) {
+			this->mPlayBuf = (char *) PR_Malloc( len );
+			if ( this->mPlayBuf == (char *) NULL ) {
+					NS_IF_RELEASE( inputStream );
+					return NS_ERROR_OUT_OF_MEMORY;
+			}
+			memcpy( this->mPlayBuf, this->mBuffer, len );
+		}
+		else {
+			this->mPlayBuf = (char *) PR_Realloc( this->mPlayBuf, totalLen );
+			if ( this->mPlayBuf == (char *) NULL ) {
+					NS_IF_RELEASE( inputStream );
+					return NS_ERROR_OUT_OF_MEMORY;
+			}
+			memcpy( this->mPlayBuf + (totalLen - len), this->mBuffer, len );
+		}
+	}
+  } while (len > 0);
+  if ( this->mPlayBuf != (char *) NULL )
+	::PlaySound(this->mPlayBuf, nsnull, SND_MEMORY | SND_NODEFAULT | SND_ASYNC);
+  NS_IF_RELEASE( inputStream );
   return NS_OK;
 }
 

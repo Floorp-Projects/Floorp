@@ -69,7 +69,7 @@ NS_METHOD nsSound::Beep()
   return NS_OK;
 }
 
-NS_METHOD nsSound::Play(nsIFileSpec *filespec)
+NS_METHOD nsSound::Play(nsIURI *aURI)
 {
   NS_NOTYETIMPLEMENTED("nsSound::Play");
   return NS_OK;
