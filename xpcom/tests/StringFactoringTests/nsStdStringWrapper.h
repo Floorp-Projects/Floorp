@@ -136,11 +136,8 @@ class basic_nsStdStringWrapper
           mRawString.resize(aNewLength);
         }
 
-      virtual void Assign( const basic_nsAReadableString<CharT>& );
-      virtual void Append( const basic_nsAReadableString<CharT>& );
-      virtual void AppendChar( CharT );
-      virtual void Insert( const basic_nsAReadableString<CharT>&, PRUint32 pos );
-      virtual void Cut( PRUint32 pos, PRUint32 len );
+    protected:
+      virtual void do_AssignFromReadable( const basic_nsAReadableString<CharT>& );
 
     // ...
   };
@@ -198,47 +195,15 @@ basic_nsStdStringWrapper<CharT, TraitsT, AllocatorT>::GetWritableFragment( nsWri
 
 template <class CharT, class TraitsT, class AllocatorT>
 void
-basic_nsStdStringWrapper<CharT, TraitsT, AllocatorT>::Assign( const basic_nsAReadableString<CharT>& rhs )
+basic_nsStdStringWrapper<CharT, TraitsT, AllocatorT>::do_AssignFromReadable( const basic_nsAReadableString<CharT>& rhs )
   {
     typedef basic_nsStdStringWrapper<CharT, TraitsT, AllocatorT> this_t;
 
     if ( SameImplementation(*this, rhs) )
       mRawString = NS_STATIC_CAST(this_t, rhs).mRawString;
     else
-      {
-        mRawString.reserve(rhs.Length());
-        basic_nsAWritableString<CharT>::Assign(rhs);
-      }
+      basic_nsAWritableString<CharT>::do_AssignFromReadable(rhs);
   }
-
-template <class CharT, class TraitsT, class AllocatorT>
-void
-basic_nsStdStringWrapper<CharT, TraitsT, AllocatorT>::Append( const basic_nsAReadableString<CharT>& rhs )
-  {
-    mRawString.append(rhs.BeginReading(), rhs.EndReading());
-  }
-
-template <class CharT, class TraitsT, class AllocatorT>
-void
-basic_nsStdStringWrapper<CharT, TraitsT, AllocatorT>::AppendChar( CharT c )
-  {
-    mRawString.append(1, c);
-  }
-
-template <class CharT, class TraitsT, class AllocatorT>
-void
-basic_nsStdStringWrapper<CharT, TraitsT, AllocatorT>::Insert( const basic_nsAReadableString<CharT>& rhs, PRUint32 atPosition )
-  {
-    mRawString.insert(mRawString.begin()+atPosition, rhs.BeginReading(), rhs.EndReading());
-  }
-
-template <class CharT, class TraitsT, class AllocatorT>
-void
-basic_nsStdStringWrapper<CharT, TraitsT, AllocatorT>::Cut( PRUint32 cutStart, PRUint32 cutLength )
-  {
-    mRawString.erase(cutStart, cutLength);
-  }
-
 
 
 typedef basic_nsStdStringWrapper<PRUnichar> nsStdString;

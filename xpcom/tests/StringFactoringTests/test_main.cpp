@@ -1,5 +1,8 @@
 #include <iostream.h>
 
+#define TEST_STD_STRING
+
+
 #include "nsString.h"
 #include "nsSharedString.h"
 #ifdef TEST_STD_STRING
@@ -99,7 +102,7 @@ test_multifragment_iterators( const basic_nsAReadableString<CharT>& aString )
       does not have the same bug.  Make sure the first fragment is only one character long.
     */
   {
-    typedef typename basic_nsAReadableString<CharT>::ConstIterator ConstIterator;
+    typedef typename basic_nsAReadableString<CharT>::const_iterator ConstIterator;
 
     int tests_failed = 0;
 
@@ -155,7 +158,7 @@ test_readable_hello( const basic_nsAReadableString<CharT>& aReadable )
         ++tests_failed;
       }
 
-    basic_nsAReadableString<CharT>::ConstIterator iter = aReadable.BeginReading();
+    basic_nsAReadableString<CharT>::const_iterator iter = aReadable.BeginReading();
     if ( *iter != CharT('H') )
       {
         cout << "FAILED |test_readable_hello|: didn't start out pointing to the right thing, or else couldn't be dereferenced. --> '" << *iter << "'" << endl;
@@ -178,14 +181,14 @@ test_readable_hello( const basic_nsAReadableString<CharT>& aReadable )
         ++tests_failed;
       }
 
-    basic_nsAReadableString<CharT>::ConstIterator iter1 = aReadable.BeginReading(3);
+    basic_nsAReadableString<CharT>::const_iterator iter1 = aReadable.BeginReading(3);
     if ( *iter1 != CharT('l') )
       {
         cout << "FAILED |test_readable_hello|: iterator couldn't be set to |BeginReading(n)|, or else couldn't be dereferenced. --> '" << *iter1 << "'" << endl;
         ++tests_failed;
       }
 
-    basic_nsAReadableString<CharT>::ConstIterator iter2 = aReadable.EndReading(2);
+    basic_nsAReadableString<CharT>::const_iterator iter2 = aReadable.EndReading(2);
     if ( *iter2 != CharT('l') )
       {
         cout << "FAILED |test_readable_hello|: iterator couldn't be set to |EndReading(n)|, or else couldn't be dereferenced. --> '" << *iter2 << "'" << endl;

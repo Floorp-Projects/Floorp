@@ -277,7 +277,7 @@ test_repeated_append_char()
           nsCString s1;
           for ( int j=0; j<1000; ++j )
             {
-              s1.AppendChar('e');
+              s1.Append('e');
               len += TotalLength(s1);
             }
         }
