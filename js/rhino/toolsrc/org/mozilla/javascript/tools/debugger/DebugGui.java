@@ -1105,9 +1105,11 @@ class Evaluator extends JTable {
     }
 }
 
-class VariableModel implements TreeTableModel {
+class VariableModel implements TreeTableModel
+{
 
-    static class VariableNode {
+    static class VariableNode
+    {
         Object object;
         Object id;
         VariableNode[] children;
@@ -1155,7 +1157,9 @@ class VariableModel implements TreeTableModel {
 
     public Object getRoot()
     {
-        if (debugger == null) { return null; }
+        if (debugger == null) {
+            return "";
+        }
         return root;
     }
 
