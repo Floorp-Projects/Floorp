@@ -53,6 +53,7 @@ Contributor(s): ______________________________________. -->
 
   <!-- JS from navigator.xul, to handle the menu commands -->
   <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
+  <script type="application/x-javascript" src="chrome://navigator/content/browser.js"/>
   <script type="application/x-javascript" src="chrome://navigator/content/navigator.js"/>
 
   <stringbundleset id="stringbundleset"/>
