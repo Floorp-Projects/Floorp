@@ -123,6 +123,7 @@ static void ns_observer_proc (XP_Observable aSource,
                              nsnull);
             break;
           case IL_ABORTED:
+	    image_request->SetImageRequest(nsnull);
             observer->Notify(image_request,
                              image, nsImageNotification_kAborted, 0, 0,
                              nsnull);
