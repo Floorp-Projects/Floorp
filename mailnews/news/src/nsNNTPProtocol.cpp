@@ -2218,132 +2218,141 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommand(nsIURI * url)
 
 PRInt32 nsNNTPProtocol::SendFirstNNTPCommandResponse()
 {
-	PRInt32 status = 0;
-	PRInt32 major_opcode = MK_NNTP_RESPONSE_TYPE(m_responseCode);
+  PRInt32 status = 0;
+  PRInt32 major_opcode = MK_NNTP_RESPONSE_TYPE(m_responseCode);
+  
+  if((major_opcode == MK_NNTP_RESPONSE_TYPE_CONT &&
+    m_typeWanted == NEWS_POST)
+    || (major_opcode == MK_NNTP_RESPONSE_TYPE_OK &&
+    m_typeWanted != NEWS_POST) )
+  {
     
-	if((major_opcode == MK_NNTP_RESPONSE_TYPE_CONT &&
-        m_typeWanted == NEWS_POST)
-	 	|| (major_opcode == MK_NNTP_RESPONSE_TYPE_OK &&
-            m_typeWanted != NEWS_POST) )
-      {
-
-        m_nextState = SETUP_NEWS_STREAM;
-		SetFlag(NNTP_SOME_PROTOCOL_SUCCEEDED);
-        return(0);  /* good */
-      }
+    m_nextState = SETUP_NEWS_STREAM;
+    SetFlag(NNTP_SOME_PROTOCOL_SUCCEEDED);
+    return(0);  /* good */
+  }
+  else
+  {
+    nsresult rv = NS_OK;
+    
+    nsXPIDLCString group_name;
+    NS_ASSERTION(m_newsFolder, "no newsFolder");
+    if (m_newsFolder) {
+      rv = m_newsFolder->GetAsciiName(getter_Copies(group_name));
+    }
+    
+    if (m_responseCode == MK_NNTP_RESPONSE_GROUP_NO_GROUP &&
+      m_typeWanted == GROUP_WANTED) {
+      PR_LOG(NNTP,PR_LOG_ALWAYS,("(%p) group (%s) not found, so unset m_currentGroup",this,(const char *)group_name));
+      m_currentGroup = "";
+      
+      m_nntpServer->GroupNotFound(m_msgWindow, group_name.get(), PR_TRUE /* opening */);
+    }
+    
+    /* if the server returned a 400 error then it is an expected
+    * error.  the NEWS_ERROR state will not sever the connection
+    */
+    if(major_opcode == MK_NNTP_RESPONSE_TYPE_CANNOT)
+      m_nextState = NEWS_ERROR;
     else
-      {
-        nsresult rv = NS_OK;
-
-        nsXPIDLCString group_name;
-        NS_ASSERTION(m_newsFolder, "no newsFolder");
-        if (m_newsFolder) {
-            rv = m_newsFolder->GetAsciiName(getter_Copies(group_name));
+      m_nextState = NNTP_ERROR;
+    // if we have no channel listener, then we're likely downloading
+    // the message for offline use (or at least not displaying it)
+    PRBool savingArticleOffline = (m_channelListener == nsnull);
+    
+    if (m_runningURL)
+      DoomCacheEntryForRunningUrl();
+    
+    if (NS_SUCCEEDED(rv) && group_name && !savingArticleOffline) {
+      MarkCurrentMsgRead();
+      nsXPIDLString titleStr;
+      rv = GetNewsStringByName("htmlNewsErrorTitle", getter_Copies(titleStr));
+      NS_ENSURE_SUCCESS(rv,rv);
+      
+      nsXPIDLString newsErrorStr;
+      rv = GetNewsStringByName("htmlNewsError", getter_Copies(newsErrorStr));
+      NS_ENSURE_SUCCESS(rv,rv);
+      nsAutoString errorHtml;
+      errorHtml.Append(newsErrorStr);
+      
+      errorHtml.Append(NS_LITERAL_STRING("<b>").get());
+      errorHtml.AppendWithConversion(m_responseText);
+      errorHtml.Append(NS_LITERAL_STRING("</b><p>").get());
+      
+      rv = GetNewsStringByName("articleExpired", getter_Copies(newsErrorStr));
+      NS_ENSURE_SUCCESS(rv,rv);
+      errorHtml.Append(newsErrorStr);
+      
+      char outputBuffer[OUTPUT_BUFFER_SIZE];
+      
+      if ((m_key != nsMsgKey_None) && m_newsFolder) {
+        nsXPIDLCString messageID;
+        rv = m_newsFolder->GetMessageIdForKey(m_key, getter_Copies(messageID));
+        if (NS_SUCCEEDED(rv)) {
+          PR_snprintf(outputBuffer,OUTPUT_BUFFER_SIZE,"<P>&lt;%.512s&gt; (%lu)", (const char *)messageID, m_key);
+          errorHtml.AppendWithConversion(outputBuffer);
         }
-
-		if (m_responseCode == MK_NNTP_RESPONSE_GROUP_NO_GROUP &&
-            m_typeWanted == GROUP_WANTED) {
-            PR_LOG(NNTP,PR_LOG_ALWAYS,("(%p) group (%s) not found, so unset m_currentGroup",this,(const char *)group_name));
-            m_currentGroup = "";
-
-            m_nntpServer->GroupNotFound(m_msgWindow, group_name.get(), PR_TRUE /* opening */);
-        }
-
-        /* if the server returned a 400 error then it is an expected
-         * error.  the NEWS_ERROR state will not sever the connection
-         */
-        if(major_opcode == MK_NNTP_RESPONSE_TYPE_CANNOT)
-          m_nextState = NEWS_ERROR;
-        else
-          m_nextState = NNTP_ERROR;
-        // if we have no channel listener, then we're likely downloading
-        // the message for offline use (or at least not displaying it)
-        PRBool savingArticleOffline = (m_channelListener == nsnull);
-
-        if (m_runningURL)
-          DoomCacheEntryForRunningUrl();
-
-        if (NS_SUCCEEDED(rv) && group_name && !savingArticleOffline) {
-            MarkCurrentMsgRead();
-            nsXPIDLString titleStr;
-			rv = GetNewsStringByName("htmlNewsErrorTitle", getter_Copies(titleStr));
-            NS_ENSURE_SUCCESS(rv,rv);
-
-            nsXPIDLString newsErrorStr;
-			rv = GetNewsStringByName("htmlNewsError", getter_Copies(newsErrorStr));
-            NS_ENSURE_SUCCESS(rv,rv);
-            nsAutoString errorHtml;
-            errorHtml.Append(newsErrorStr);
-
-            errorHtml.Append(NS_LITERAL_STRING("<b>").get());
-            errorHtml.AppendWithConversion(m_responseText);
-            errorHtml.Append(NS_LITERAL_STRING("</b><p>").get());
-
-			rv = GetNewsStringByName("articleExpired", getter_Copies(newsErrorStr));
-            NS_ENSURE_SUCCESS(rv,rv);
-            errorHtml.Append(newsErrorStr);
-            
-            char outputBuffer[OUTPUT_BUFFER_SIZE];
-
-			if ((m_key != nsMsgKey_None) && m_newsFolder) {
-                nsXPIDLCString messageID;
-                rv = m_newsFolder->GetMessageIdForKey(m_key, getter_Copies(messageID));
-                if (NS_SUCCEEDED(rv)) {
-                    PR_snprintf(outputBuffer,OUTPUT_BUFFER_SIZE,"<P>&lt;%.512s&gt; (%lu)", (const char *)messageID, m_key);
-                    errorHtml.AppendWithConversion(outputBuffer);
-                }
-			}
-
-            if (m_newsFolder) {
-                nsCOMPtr <nsIMsgFolder> folder = do_QueryInterface(m_newsFolder, &rv);
-                if (NS_SUCCEEDED(rv) && folder) {
-                    nsXPIDLCString folderURI;
-                    rv = folder->GetURI(getter_Copies(folderURI));
-                    if (NS_SUCCEEDED(rv)) {
-                        PR_snprintf(outputBuffer,OUTPUT_BUFFER_SIZE,"<P> <A HREF=\"%s?list-ids\">", (const char *)folderURI);
-                    }
-                }
-            }
-
-            errorHtml.AppendWithConversion(outputBuffer);
-
-			rv = GetNewsStringByName("removeExpiredArtLinkText", getter_Copies(newsErrorStr));
-            NS_ENSURE_SUCCESS(rv,rv);
-            errorHtml.Append(newsErrorStr);
-            errorHtml.Append(NS_LITERAL_STRING("</A> </P>").get());
-
-            if (!m_msgWindow) {
-                nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
-                if (mailnewsurl) {
-                    rv = mailnewsurl->GetMsgWindow(getter_AddRefs(m_msgWindow));
-                    NS_ENSURE_SUCCESS(rv,rv);
-                }
-            }
-            if (!m_msgWindow) return NS_ERROR_FAILURE;
-
-            // note, this will cause us to close the connection.
-            // this will call nsDocShell::LoadURI(), which will
-            // call nsDocShell::Stop(STOP_NETWORK), which will eventually
-            // call nsNNTPProtocol::Cancel(), which will close the socket.
-            // we need to fix this, since the connection is still valid.
-            rv = m_msgWindow->DisplayHTMLInMessagePane((const PRUnichar *)titleStr, errorHtml.get());
-            NS_ENSURE_SUCCESS(rv,rv);
-        }
-		return MK_NNTP_SERVER_ERROR;
       }
+      
+      if (m_newsFolder) {
+        nsCOMPtr <nsIMsgFolder> folder = do_QueryInterface(m_newsFolder, &rv);
+        if (NS_SUCCEEDED(rv) && folder) {
+          nsXPIDLCString folderURI;
+          rv = folder->GetURI(getter_Copies(folderURI));
+          if (NS_SUCCEEDED(rv)) {
+            PR_snprintf(outputBuffer,OUTPUT_BUFFER_SIZE,"<P> <A HREF=\"%s?list-ids\">", (const char *)folderURI);
+          }
+        }
+      }
+      
+      errorHtml.AppendWithConversion(outputBuffer);
+      
+      rv = GetNewsStringByName("removeExpiredArtLinkText", getter_Copies(newsErrorStr));
+      NS_ENSURE_SUCCESS(rv,rv);
+      errorHtml.Append(newsErrorStr);
+      errorHtml.Append(NS_LITERAL_STRING("</A> </P>").get());
+      
+      if (!m_msgWindow) {
+        nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
+        if (mailnewsurl) {
+          rv = mailnewsurl->GetMsgWindow(getter_AddRefs(m_msgWindow));
+          NS_ENSURE_SUCCESS(rv,rv);
+        }
+      }
+      if (!m_msgWindow) return NS_ERROR_FAILURE;
+      
+      // note, this will cause us to close the connection.
+      // this will call nsDocShell::LoadURI(), which will
+      // call nsDocShell::Stop(STOP_NETWORK), which will eventually
+      // call nsNNTPProtocol::Cancel(), which will close the socket.
+      // we need to fix this, since the connection is still valid.
+      rv = m_msgWindow->DisplayHTMLInMessagePane((const PRUnichar *)titleStr, errorHtml.get());
+      NS_ENSURE_SUCCESS(rv,rv);
+    }
+    // let's take the opportunity of removing the hdr from the db so we don't try to download
+    // it again.
+    else if (savingArticleOffline)
+    {
+      if ((m_key != nsMsgKey_None) && (m_newsFolder)) {
+         rv = m_newsFolder->RemoveMessage(m_key);
+      }
+    }
 
-	/* start the graph progress indicator
-     */
+    return MK_NNTP_SERVER_ERROR;
+  }
+  
+  /* start the graph progress indicator
+  */
 #ifdef UNREADY_CODE
-    FE_GraphProgressInit(ce->window_id, ce->URL_s, ce->URL_s->content_length);
+  FE_GraphProgressInit(ce->window_id, ce->URL_s, ce->URL_s->content_length);
 #else
-	NNTP_LOG_NOTE("start the graph progress indicator");
+  NNTP_LOG_NOTE("start the graph progress indicator");
 #endif
-	SetFlag(NNTP_DESTROY_PROGRESS_GRAPH);
+  SetFlag(NNTP_DESTROY_PROGRESS_GRAPH);
 #ifdef UNREADY_CODE
-    m_originalContentLength = ce->URL_s->content_length;
+  m_originalContentLength = ce->URL_s->content_length;
 #endif
-	return(status);
+  return(status);
 }
 
 PRInt32 nsNNTPProtocol::SendGroupForArticle()
