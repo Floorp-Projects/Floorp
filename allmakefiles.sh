@@ -952,7 +952,6 @@ $MAKEFILES_plugin
 $MAKEFILES_netwerk
 $MAKEFILES_profile
 $MAKEFILES_rdf
-$MAKEFILES_security
 $MAKEFILES_sun_java
 $MAKEFILES_themes
 $MAKEFILES_uriloader
