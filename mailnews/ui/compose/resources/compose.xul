@@ -48,17 +48,6 @@
 	function startup()
 	{
 		dump("Compose: StartUp\n");
-		compAppCore = XPAppCoresManager.Find("ComposeAppCore");  
-		if (compAppCore==null) {
-			compAppCore = new ComposeAppCore();
-			if (compAppCore != null) {
-				dump("ComposeAppCore was created!\n");
-				compAppCore.Init("ComposeAppCore");
-				compAppCore.SetWindow(window);
-				compAppCore.CompleteCallback("MessageSent();");
-				XPAppCoresManager.Add(compAppCore);  
-			}
-		}
 
 		editAppCore = XPAppCoresManager.Find("EditorAppCore");  
 		dump("Looking up EditorAppCore...\n");
@@ -78,6 +67,20 @@
 		else {
 			dump("EditorAppCore has already been created! Why?\n");
 		}
+
+		compAppCore = XPAppCoresManager.Find("ComposeAppCore");  
+		if (compAppCore==null) {
+			compAppCore = new ComposeAppCore();
+			if (compAppCore != null) {
+				dump("ComposeAppCore was created!\n");
+				compAppCore.Init("ComposeAppCore");
+				compAppCore.SetWindow(window);
+				compAppCore.SetEditor(editAppCore);
+				compAppCore.CompleteCallback("MessageSent();");
+				XPAppCoresManager.Add(compAppCore);  
+			}
+		}
+
 	}
 
 	function EditorGetText()
@@ -95,12 +98,13 @@
 	{
 		dump("SendMessage!\n");
 		if (compAppCore != null) {
-			compAppCore.SendMessage(document.getElementById('msgTo').value, 
-					   document.getElementById('msgCc').value, 
-					   document.getElementById('msgBcc').value, 
-					   document.getElementById('msgSubject').value, 
+//			compAppCore.SendMessage(document.getElementById('msgTo').value, 
+//					   document.getElementById('msgCc').value, 
+//					   document.getElementById('msgBcc').value, 
+//					   document.getElementById('msgSubject').value, 
 //					   window.parent.frames[0].document.forms["fbody"].elements["body"].value);
-					   EditorGetText());
+//					   EditorGetText());
+			compAppCore.SendMessage2();
 		}
 	}
 
