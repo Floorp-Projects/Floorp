@@ -101,8 +101,6 @@ NS_METHOD nsAppShell::Create(int* bac, char ** bav)
                               NULL,           // args
                               0);             // num_args
 
-  xlib_set_xt_app_context(sAppContext);
-
   printf("nsAppShell::Create() app_context = %p\n",sAppContext);
 
   xlib_rgb_init(XtDisplay(mTopLevel), XtScreen(mTopLevel));
