@@ -33,6 +33,11 @@
 #include "nsViewSourceHTML.h" 
 #include "nsHTMLContentSinkStream.h" //this is here so we can get a null sink, which really should be gotten from nsICOntentSink.h
 #include "nsIStringStream.h"
+#ifdef NECKO
+#include "nsIChannel.h"
+#include "nsIProgressEventSink.h"
+#include "nsIBufferInputStream.h"
+#endif
 
 #undef rickgdebug 
 #ifdef  rickgdebug
@@ -179,6 +184,9 @@ nsParser::nsParser(nsITokenObserver* anObserver) : mCommand(""), mUnusedInput(""
   NS_INIT_REFCNT();
   mParserFilter = 0;
   mObserver = 0;
+#ifdef NECKO
+  mProgressEventSink = nsnull;
+#endif
   mSink=0;
   mParserContext=0;
   mTokenObserver=anObserver;
@@ -198,6 +206,9 @@ nsParser::nsParser(nsITokenObserver* anObserver) : mCommand(""), mUnusedInput(""
  */
 nsParser::~nsParser() {
   NS_IF_RELEASE(mObserver);
+#ifdef NECKO
+  NS_IF_RELEASE(mProgressEventSink);
+#endif
   NS_IF_RELEASE(mSink);
 
   //don't forget to add code here to delete 
@@ -619,10 +630,17 @@ nsresult nsParser::Parse(nsIURL* aURL,nsIStreamObserver* aListener,PRBool aVerif
   nsresult result=kBadURL;
   mDTDVerification=aVerifyEnabled;
   if(aURL) {
+#ifdef NECKO
+    char* spec;
+#else
     const char* spec;
+#endif
     nsresult rv = aURL->GetSpec(&spec);
     if (rv != NS_OK) return rv;
     nsAutoString theName(spec);
+#ifdef NECKO
+    nsCRT::free(spec);
+#endif
 
     CParserContext* pc=new CParserContext(new nsScanner(theName,PR_FALSE, mCharset, mCharsetSource),aKey,aListener);
     if(pc) {
@@ -929,6 +947,7 @@ nsITokenizer* nsParser::GetTokenizer(void) {
   These methods are used to talk to the netlib system...
  *******************************************************************/
 
+#ifndef NECKO
 /**
  *  
  *  
@@ -940,6 +959,7 @@ nsresult nsParser::GetBindInfo(nsIURL* aURL, nsStreamBindingInfo* aInfo){
   nsresult result=0;
   return result;
 }
+#endif
 
 /**
  *  
@@ -949,12 +969,22 @@ nsresult nsParser::GetBindInfo(nsIURL* aURL, nsStreamBindingInfo* aInfo){
  *  @return  error code -- 0 if ok, non-zero if error.
  */
 nsresult
+#ifdef NECKO
+nsParser::OnProgress(nsISupports* aContext, PRUint32 aProgress, PRUint32 aProgressMax)
+#else
 nsParser::OnProgress(nsIURL* aURL, PRUint32 aProgress, PRUint32 aProgressMax)
+#endif
 {
   nsresult result=0;
+#ifdef NECKO
+  if (nsnull != mProgressEventSink) {
+    mProgressEventSink->OnProgress(aContext, aProgress, aProgressMax);
+  }
+#else
   if (nsnull != mObserver) {
     mObserver->OnProgress(aURL, aProgress, aProgressMax);
   }
+#endif
   return result;
 }
 
@@ -966,12 +996,22 @@ nsParser::OnProgress(nsIURL* aURL, PRUint32 aProgress, PRUint32 aProgressMax)
  *  @return  error code -- 0 if ok, non-zero if error.
  */
 nsresult
+#ifdef NECKO
+nsParser::OnStatus(nsISupports* aContext, const PRUnichar* aMsg)
+#else
 nsParser::OnStatus(nsIURL* aURL, const PRUnichar* aMsg)
+#endif
 {
   nsresult result=0;
+#ifdef NECKO
+  if (nsnull != mProgressEventSink) {
+    mProgressEventSink->OnStatus(aContext, aMsg);
+  }
+#else
   if (nsnull != mObserver) {
     mObserver->OnStatus(aURL, aMsg);
   }
+#endif
   return result;
 }
 
@@ -986,16 +1026,38 @@ nsParser::OnStatus(nsIURL* aURL, const PRUnichar* aMsg)
  *  @param   
  *  @return  error code -- 0 if ok, non-zero if error.
  */
-nsresult nsParser::OnStartBinding(nsIURL* aURL, const char *aSourceType){
+#ifdef NECKO
+nsresult nsParser::OnStartBinding(nsISupports* aContext)
+#else
+nsresult nsParser::OnStartBinding(nsIURL* aURL, const char *aSourceType)
+#endif
+{
   NS_PRECONDITION((eNone==mParserContext->mStreamListenerState),kBadListenerInit);
 
   if (nsnull != mObserver) {
+#ifdef NECKO
+    mObserver->OnStartBinding(aContext);
+#else
     mObserver->OnStartBinding(aURL, aSourceType);
+#endif
   }
   mParserContext->mStreamListenerState=eOnStart;
   mParserContext->mAutoDetectStatus=eUnknownDetect;
   mParserContext->mDTD=0;
+#ifdef NECKO
+  nsresult rv;
+  nsIChannel* channel;
+  rv = aContext->QueryInterface(nsIChannel::GetIID(), (void**)&channel);
+  if (NS_SUCCEEDED(rv)) {
+    char* contentType;
+    (void)channel->GetContentType(&contentType); // XXX ignore error?
+    mParserContext->mSourceType = contentType;
+    nsCRT::free(contentType);
+    NS_RELEASE(channel);
+  }
+#else
   mParserContext->mSourceType=aSourceType;
+#endif
 
 #ifdef rickgdebug
   gDumpFile = new fstream("c:/temp/out.file",ios::trunc);
@@ -1003,6 +1065,20 @@ nsresult nsParser::OnStartBinding(nsIURL* aURL, const char *aSourceType){
 
   return NS_OK;
 }
+
+#ifdef NECKO
+NS_IMETHODIMP
+nsParser::OnStartRequest(nsISupports *ctxt)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsParser::OnStopRequest(nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+#endif // NECKO
 
 /**
  *  
@@ -1012,7 +1088,12 @@ nsresult nsParser::OnStartBinding(nsIURL* aURL, const char *aSourceType){
  *  @param   length is the number of bytes waiting input
  *  @return  error code (usually 0)
  */
-nsresult nsParser::OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream, PRUint32 aLength){
+#ifdef NECKO
+nsresult nsParser::OnDataAvailable(nsISupports* aContext, nsIBufferInputStream *pIStream, PRUint32 sourceOffset, PRUint32 aLength)
+#else
+nsresult nsParser::OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream, PRUint32 aLength)
+#endif
+{
 /*  if (nsnull != mListener) {
       //Rick potts removed this.
       //Does it need to be here?
@@ -1080,7 +1161,12 @@ nsresult nsParser::OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream, PRUin
  *  @param   
  *  @return  
  */
-nsresult nsParser::OnStopBinding(nsIURL* aURL, nsresult status, const PRUnichar* aMsg){
+#ifdef NECKO
+nsresult nsParser::OnStopBinding(nsISupports* aContext, nsresult status, const PRUnichar* aMsg)
+#else
+nsresult nsParser::OnStopBinding(nsIURL* aURL, nsresult status, const PRUnichar* aMsg)
+#endif
+{
   mParserContext->mStreamListenerState=eOnStop;
   mStreamStatus=status;
 
@@ -1095,7 +1181,11 @@ nsresult nsParser::OnStopBinding(nsIURL* aURL, nsresult status, const PRUnichar*
   // XXX Should we wait to notify our observers as well if the
   // parser isn't yet enabled?
   if (nsnull != mObserver) {
+#ifdef NECKO
+    mObserver->OnStopBinding(aContext, status, aMsg);
+#else
     mObserver->OnStopBinding(aURL, status, aMsg);
+#endif
   }
 
 #ifdef rickgdebug

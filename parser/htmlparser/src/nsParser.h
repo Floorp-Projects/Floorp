@@ -68,6 +68,9 @@ class IContentSink;
 class nsIDTD;
 class nsScanner;
 class nsIParserFilter;
+#ifdef NECKO
+class nsIProgressEventSink;
+#endif
 
 
 #include <fstream.h>
@@ -236,12 +239,25 @@ friend class CTokenHandler;
       // These methods are callback methods used by
       // net lib to let us know about our inputstream.
       //*********************************************
+#ifdef NECKO
+    // nsIProgressEventSink methods:
+    NS_IMETHOD OnProgress(nsISupports* context, PRUint32 Progress, PRUint32 ProgressMax);
+    NS_IMETHOD OnStatus(nsISupports* context, const PRUnichar* aMmsg);
+    // nsIStreamObserver methods:
+    NS_IMETHOD OnStartBinding(nsISupports *ctxt);
+    NS_IMETHOD OnStopBinding(nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg);
+    NS_IMETHOD OnStartRequest(nsISupports *ctxt);
+    NS_IMETHOD OnStopRequest(nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg);
+    // nsIStreamListener methods:
+    NS_IMETHOD OnDataAvailable(nsISupports *ctxt, nsIBufferInputStream *inStr, PRUint32 sourceOffset, PRUint32 count);
+#else
     NS_IMETHOD GetBindInfo(nsIURL* aURL, nsStreamBindingInfo* aInfo);
     NS_IMETHOD OnProgress(nsIURL* aURL, PRUint32 Progress, PRUint32 ProgressMax);
     NS_IMETHOD OnStatus(nsIURL* aURL, const PRUnichar* aMmsg);
     NS_IMETHOD OnStartBinding(nsIURL* aURL, const char *aContentType);
     NS_IMETHOD OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream, PRUint32 length);
     NS_IMETHOD OnStopBinding(nsIURL* aURL, nsresult status, const PRUnichar* aMsg);
+#endif
 
     void              PushContext(CParserContext& aContext);
     CParserContext*   PopContext();
@@ -340,6 +356,9 @@ protected:
     PRInt32             mMinorIteration;
 
     nsIStreamObserver*  mObserver;
+#ifdef NECKO
+    nsIProgressEventSink* mProgressEventSink;
+#endif
     nsIContentSink*     mSink;
     nsIParserFilter*    mParserFilter;
     PRBool              mDTDVerification;
