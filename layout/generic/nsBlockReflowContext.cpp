@@ -377,17 +377,19 @@ nsBlockReflowContext::PlaceBlock(PRBool aForceFit,
 #endif
     }
 
+#if XXX
     // For empty blocks we revert the y coordinate back so that the
     // top margin is no longer applied.
-    nsIHTMLReflow* htmlReflow;
-    nsresult rv = mFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow);
+    nsBlockFrame* bf;
+    nsresult rv = mFrame->QueryInterface(kBlockFrameCID, (void**)&bf);
     if (NS_SUCCEEDED(rv)) {
       // XXX This isn't good enough. What if the floater was placed
       // downward, just below another floater?
       nscoord dy = mSpace.y - mY;
-      htmlReflow->MoveInSpaceManager(mPresContext,
-                                     mOuterReflowState.mSpaceManager, 0, dy);
+      bf->MoveInSpaceManager(mPresContext, mOuterReflowState.mSpaceManager,
+                             dy);
     }
+#endif
     y = mSpace.y;
 
     // Empty blocks do not have anything special done to them and they
@@ -523,6 +525,8 @@ nsBlockReflowContext::PlaceBlock(PRBool aForceFit,
       // Now place the frame
       mFrame->SetRect(nsRect(x, y, mMetrics.width, mMetrics.height));
 
+// XXX obsolete, i believe...
+#if 0
       // If the block frame ended up moving then we need to slide
       // anything inside of it that impacts the space manager
       // (otherwise the impacted space in the space manager will be
@@ -541,6 +545,7 @@ nsBlockReflowContext::PlaceBlock(PRBool aForceFit,
                                          dx, dy);
         }
       }
+#endif
 
       // Adjust the max-element-size in the metrics to take into
       // account the margins around the block element. Note that we
