@@ -3,6 +3,7 @@
 
 .tabbrowser-strip {
   border-bottom: 1px solid ThreeDShadow;
+  padding-bottom: 1px;
 }
 
 tabpanels {

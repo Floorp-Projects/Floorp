@@ -33,7 +33,11 @@ splitter {
   -moz-box-align: center;
   -moz-box-pack: center;
   cursor: e-resize;
-  min-width: 5px;
+  border-width: 0 2px;
+  border-style: solid;
+  -moz-border-left-colors: ThreeDShadow ThreeDHighlight;
+  -moz-border-right-colors: ThreeDDarkShadow ThreeDFace;
+  min-width: 6px;
   background-color: ThreeDFace;
 }
 
@@ -41,10 +45,10 @@ splitter {
 
 splitter[orient="vertical"] {
   cursor: n-resize;
-  min-height: 8px;
-  border-width: 1px 0;
-  border-style: solid;
-  border-color: ThreeDShadow;
+  border-width: 2px 0;
+  -moz-border-top-colors: ThreeDShadow ThreeDHighlight;
+  -moz-border-bottom-colors: ThreeDDarkShadow ThreeDFace;
+  min-height: 6px;
 }
 
 /* ::::: splitter grippy ::::: */
