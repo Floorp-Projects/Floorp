@@ -2970,8 +2970,9 @@ RDFGenericBuilderImpl::AddDatabasePropertyToHTMLElement(nsIContent* aElement, ns
         return NS_ERROR_UNEXPECTED;
 
     nsCOMPtr<nsIScriptObjectOwner> owner = do_QueryInterface(aElement);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get script object owner");
-    if (NS_FAILED(rv)) return rv;
+    NS_ASSERTION(owner != nsnull, "unable to get script object owner");
+    if (! owner)
+         return NS_ERROR_UNEXPECTED;
 
     JSObject* jselement;
     rv = owner->GetScriptObject(context, (void**) &jselement);
