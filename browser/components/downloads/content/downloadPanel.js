@@ -219,3 +219,20 @@ function createLocalFile(aFilePath)
   lf.initWithPath(aFilePath);
   return lf;
 }
+
+function buildContextMenu()
+{
+  var selectionCount = gDownloadHistoryView.selectedCount;
+  if (!selectionCount)
+    return false;
+
+  var launchItem = document.getElementById("menuitem_launch");
+  var launchSep = document.getElementById("menuseparator_launch");
+  var removeItem = document.getElementById("menuitem_remove");
+  var showItem = document.getElementById("menuitem_show");
+  showItem.hidden = selectionCount != 1;
+  launchItem.hidden = selectionCount != 1;
+  launchSep.hidden = selectionCount != 1;
+  return true;
+}
+    
