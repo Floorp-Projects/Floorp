@@ -315,7 +315,7 @@ cmdEditInsert.prototype =
     var attrValue = { value: "" };
     var dummy = { value: false };
 
-    var bundle = this.mPanel.panelset.stringBundle;
+    var bundle = viewer.pane.panelset.stringBundle;
     var msg = bundle.getString("enterAttrName.message");
     var title = bundle.getString("newAttribute.title");
 
@@ -389,7 +389,7 @@ cmdEditEdit.prototype =
       var attrValue = { value: attr.nodeValue };
       var dummy = { value: false };
 
-      var bundle = this.mPanel.panelset.stringBundle;
+      var bundle = viewer.pane.panelset.stringBundle;
       var msg = bundle.getString("enterAttrName.message");
       var title = bundle.getString("editAttribute.title");
 
