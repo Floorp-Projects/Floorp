@@ -293,7 +293,6 @@
   		<menuitem value="&compositionToolbarCmd.label;" accesskey="&compositiontb.accesskey;" observes="cmd_viewCompToolbar"  />
   		<menuitem value="&formattingToolbarCmd.label;"  accesskey="&formattingtb.accesskey;"  observes="cmd_viewFormatToolbar" />
   		<menuitem value="&taskbarCmd.label;"            accesskey="&taskbarCmd.accesskey;"    observes="cmd_viewtaskbar" />
-
       </menupopup>
     </menu>
     <menuitem id="showEditModeBar" value="&editmodeToolbarCmd.label;"    accesskey="&editmodetb.accesskey;"    observes="cmd_viewEditModeToolbar" />
@@ -595,7 +594,7 @@
             oncommand="goDoCommand('cmd_colorProperties')"/>
 
   <menu id="tableMenu" value="&tableMenu.label;" accesskey="&tablemenu.accesskey;">
-    <menupopup>
+    <menupopup  oncreate="InitTableMenu()">
       <menu id="tableSelectMenu" value="&tableSelectMenu.label;"
               accesskey="&tableselectmenu.accesskey;">
         <menupopup>
@@ -629,10 +628,10 @@
         </menupopup>
       </menu>
       <menuseparator />
-      <menuitem id="tableFixupMenuitem"      value="&tableFixup.label;"      accesskey="&tablefixup.accesskey;"   oncommand="EditorNormalizeTable()"/>
-      <!-- menu text set in InitTableMenu -->
-      <menuitem id="tableJoinCellsMenuitem"  value="TEST Join"  accesskey="&tablejoin.accesskey;"    oncommand="EditorJoinTableCells()" oncreate="InitTableMenu()"/>
-      <menuitem id="tablePropertiesMenuitem" value="&tableProperties.label;" accesskey="&properties.accesskey;"   observes="cmd_editTable"/>
+      <menuitem id="tableNormalizeTable" accesskey="&tablefixup.accesskey;"     oncommand="EditorNormalizeTable()" value="&tableFixup.label;"      />
+      <menuitem id="tableJoinCells"      accesskey="&tablejoincells.accesskey;" oncommand="EditorJoinTableCells()"/><!-- menu text set in InitTableMenu -->
+      <menuitem id="tableSlitCell"       accesskey="&tablesplitcell.accesskey;" oncommand="EditorSplitTableCell()" value="&tableSplitCell.label;"  />
+      <menuitem id="tableProperties"     accesskey="&properties.accesskey;"     observes="cmd_editTable"           value="&tableProperties.label;" />
     </menupopup>
   </menu>
 

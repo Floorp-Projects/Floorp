@@ -636,6 +636,20 @@ nsHTMLEditorLog:: JoinTableCells()
   return nsHTMLEditor::JoinTableCells();
 }
 
+NS_IMETHODIMP
+nsHTMLEditorLog:: SplitTableCell()
+{
+  nsAutoHTMLEditorLogLock logLock(this);
+
+  if (!mLocked && mFileSpec)
+  {
+    Write("window.editorShell.SplitTableCell();\n");
+    Flush();
+  }
+
+  return nsHTMLEditor::SplitTableCell();
+}
+
 
 NS_IMETHODIMP
 nsHTMLEditorLog:: NormalizeTable(nsIDOMElement *aTable)

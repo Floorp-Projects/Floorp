@@ -100,6 +100,7 @@ public:
   NS_IMETHOD DeleteTableColumn(PRInt32 aNumber);
   NS_IMETHOD DeleteTableRow(PRInt32 aNumber);
   NS_IMETHOD JoinTableCells();
+  NS_IMETHOD SplitTableCell();
   NS_IMETHOD NormalizeTable(nsIDOMElement *aTable);
 
   NS_IMETHOD StartLogging(nsIFileSpec *aLogFile);
