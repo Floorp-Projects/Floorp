@@ -275,7 +275,7 @@ function testSessionHistory(webNav)
 {
   if (!webNav) {
     alert("Didn't get web navigation object");
-    return false;
+    return null;
   }
    // Get the session history 
   getSHistory = webNav.sessionHistory; 

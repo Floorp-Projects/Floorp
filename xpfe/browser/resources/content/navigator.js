@@ -516,14 +516,7 @@ function Startup()
 
   //initConsoleListener();
 
-  // XXXjag work-around for bug 113076
-  // there's another bug where we throw an exception when getting
-  // sessionHistory if it is null, which I'm exploiting here to
-  // detect the situation described in bug 113076.
-  // The same problem caused bug 139522, also worked around below.
-  try {
-    getBrowser().sessionHistory;
-  } catch (e) {
+  if (!getBrowser().sessionHistory) {
     /* Session history might not be available,
        so we wrap access to it in a try block */
     try {
