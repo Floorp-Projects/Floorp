@@ -2934,11 +2934,7 @@ nsRenderingContextWin::InitBidiInfo()
     const PRUnichar one     = 0x0031;
 
     int distanceArray[2];
-#ifdef __MINGW32__
-    UINT glyphArray[2];
-#else
     PRUnichar glyphArray[2];
-#endif
     PRUnichar outStr[] = {0, 0};
 
     GCP_RESULTSW gcpResult;
