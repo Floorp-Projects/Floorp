@@ -208,6 +208,7 @@ bin/chrome/blue.jar
 bin/defaults/pref/*
 ; this is only here if you have plugins -blizzard
 ; bin/plugins/*
+bin/plugins/libnullplugin.so
 bin/res/entityTables/*
 bin/defaults/wallet/FieldSchema.tbl
 bin/defaults/wallet/SchemaConcat.tbl
