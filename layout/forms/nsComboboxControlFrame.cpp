@@ -1815,7 +1815,6 @@ nsComboboxControlFrame::DoneAddingChildren(PRBool aIsDone)
     rv = CallQueryInterface(mDropdownFrame, &listFrame);
     if (listFrame) {
       rv = listFrame->DoneAddingChildren(aIsDone);
-      NS_RELEASE(listFrame);
     }
   }
   return rv;
@@ -1850,12 +1849,12 @@ NS_IMETHODIMP
 nsComboboxControlFrame::GetOptionSelected(PRInt32 aIndex, PRBool* aValue)
 {
   nsISelectControlFrame* listFrame = nsnull;
-  nsresult rv = CallQueryInterface(mDropdownFrame, &listFrame);
-  if (listFrame) {
-    rv = listFrame->GetOptionSelected(aIndex, aValue);
-    NS_RELEASE(listFrame);
-  }
-  return rv;
+  NS_ASSERTION(mDropdownFrame, "No dropdown frame!");
+
+  CallQueryInterface(mDropdownFrame, &listFrame);
+  NS_ASSERTION(listFrame, "No list frame!");
+
+  return listFrame->GetOptionSelected(aIndex, aValue);
 }
 
 //---------------------------------------------------------
@@ -1869,11 +1868,7 @@ nsComboboxControlFrame::GetDummyFrame(nsIFrame** aFrame)
   CallQueryInterface(mDropdownFrame, &listFrame);
   NS_ASSERTION(listFrame, "No list frame!");
 
-  if (listFrame) {
-    listFrame->GetDummyFrame(aFrame);
-  }
-
-  return NS_OK;
+  return listFrame->GetDummyFrame(aFrame);
 }
 
 NS_IMETHODIMP
@@ -1885,11 +1880,19 @@ nsComboboxControlFrame::SetDummyFrame(nsIFrame* aFrame)
   CallQueryInterface(mDropdownFrame, &listFrame);
   NS_ASSERTION(listFrame, "No list frame!");
 
-  if (listFrame) {
-    listFrame->SetDummyFrame(aFrame);
-  }
+  return listFrame->SetDummyFrame(aFrame);
+}
 
-  return NS_OK;
+NS_IMETHODIMP
+nsComboboxControlFrame::OnSetSelectedIndex(PRInt32 aOldIndex, PRInt32 aNewIndex)
+{
+  nsISelectControlFrame* listFrame = nsnull;
+  NS_ASSERTION(mDropdownFrame, "No dropdown frame!");
+
+  CallQueryInterface(mDropdownFrame, &listFrame);
+  NS_ASSERTION(listFrame, "No list frame!");
+
+  return listFrame->OnSetSelectedIndex(aOldIndex, aNewIndex);
 }
 
 // End nsISelectControlFrame

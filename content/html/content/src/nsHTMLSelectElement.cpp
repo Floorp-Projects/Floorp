@@ -1105,8 +1105,19 @@ nsHTMLSelectElement::GetSelectedIndex(PRInt32* aValue)
 NS_IMETHODIMP
 nsHTMLSelectElement::SetSelectedIndex(PRInt32 aIndex)
 {
-  return SetOptionsSelectedByIndex(aIndex, aIndex, PR_TRUE,
-                                   PR_TRUE, PR_TRUE, PR_TRUE, nsnull);
+  PRInt32 oldSelectedIndex = mSelectedIndex;
+
+  nsresult rv = SetOptionsSelectedByIndex(aIndex, aIndex, PR_TRUE,
+                                          PR_TRUE, PR_TRUE, PR_TRUE, nsnull);
+
+  if (NS_SUCCEEDED(rv)) {
+    nsISelectControlFrame* selectFrame = GetSelectFrame();
+    if (selectFrame) {
+      rv = selectFrame->OnSetSelectedIndex(oldSelectedIndex, mSelectedIndex);
+    }
+  }
+
+  return rv;
 }
 
 NS_IMETHODIMP
