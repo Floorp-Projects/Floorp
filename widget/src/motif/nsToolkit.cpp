@@ -41,7 +41,8 @@ int nsToolkitErrorHandler (Display * mydisplay, XErrorEvent * myerr)
   fprintf (stderr, "-------------------------------------\n");
   fprintf (stderr, "Error code %s\n", msg) ; 
   fprintf (stderr, "-------------------------------------\n");
-  //exit() ; 
+  //exit() ;
+  return 0;
 } 
   
 
