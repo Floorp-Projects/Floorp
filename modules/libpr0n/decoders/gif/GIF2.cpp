@@ -56,7 +56,7 @@ or revised. This service is offered free of charge; please provide us with your
 mailing address.
 */
 
-#include "nsIImageDecoder.h"
+#include "imgIDecoder.h"
 #include "prmem.h"
 #include "GIF2.h"
 #include "nsCRT.h"

@@ -22,10 +22,10 @@
  */
 
 #include "imgRequest.h"
-#include "nsIImageDecoderObserver.h"
+#include "imgIDecoderObserver.h"
 
 #include "gfxIImageContainer.h"
-#include "nsIImageDecoder.h"
+#include "imgIDecoder.h"
 #include "nsCOMPtr.h"
 
 #define NS_IMGREQUESTPROXY_CID \
@@ -37,7 +37,7 @@
 }
 
 class imgRequestProxy : public imgIRequest,
-                            public nsIImageDecoderObserver
+                            public imgIDecoderObserver
 {
 public:
   NS_DECL_ISUPPORTS
@@ -49,10 +49,10 @@ public:
   virtual ~imgRequestProxy();
 
   /* additional members */
-  nsresult Init(imgRequest *request, nsIImageDecoderObserver *aObserver, nsISupports *cx);
+  nsresult Init(imgRequest *request, imgIDecoderObserver *aObserver, nsISupports *cx);
 
 private:
-  nsCOMPtr<nsIImageDecoderObserver> mObserver;
+  nsCOMPtr<imgIDecoderObserver> mObserver;
 
   nsCOMPtr<nsISupports> mContext;
 

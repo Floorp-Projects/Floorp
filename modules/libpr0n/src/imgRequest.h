@@ -30,8 +30,8 @@
 
 #include "nsIChannel.h"
 #include "gfxIImageContainer.h"
-#include "nsIImageDecoder.h"
-#include "nsIImageDecoderObserver.h"
+#include "imgIDecoder.h"
+#include "imgIDecoderObserver.h"
 #include "nsIStreamListener.h"
 #include "nsCOMPtr.h"
 
@@ -54,7 +54,7 @@ enum {
 };
 
 class imgRequest : public imgIRequest,
-                   public nsIImageDecoderObserver, 
+                   public imgIDecoderObserver, 
                    public nsIStreamListener
 {
 public:
@@ -63,8 +63,8 @@ public:
 
   /* additional members */
   nsresult Init(nsIChannel *aChannel);
-  nsresult AddObserver(nsIImageDecoderObserver *observer);
-  nsresult RemoveObserver(nsIImageDecoderObserver *observer, nsresult status);
+  nsresult AddObserver(imgIDecoderObserver *observer);
+  nsresult RemoveObserver(imgIDecoderObserver *observer, nsresult status);
 
   NS_DECL_ISUPPORTS
   NS_DECL_IMGIREQUEST
@@ -76,7 +76,7 @@ public:
 private:
   nsCOMPtr<nsIChannel> mChannel;
   nsCOMPtr<gfxIImageContainer> mImage;
-  nsCOMPtr<nsIImageDecoder> mDecoder;
+  nsCOMPtr<imgIDecoder> mDecoder;
 
   nsVoidArray mObservers;
 

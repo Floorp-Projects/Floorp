@@ -27,7 +27,7 @@
 
 #include "nsIChannel.h"
 #include "nsIInputStream.h"
-#include "nsIImageLoader.h"
+#include "imgILoader.h"
 #include "nsIComponentManager.h"
 
 #include "nsIComponentManager.h"
@@ -39,7 +39,7 @@
 
 
 NS_IMPL_ISUPPORTS5(imgRequest, imgIRequest, 
-                   nsIImageDecoderObserver, gfxIImageContainerObserver,
+                   imgIDecoderObserver, gfxIImageContainerObserver,
                    nsIStreamListener, nsIStreamObserver)
 
 imgRequest::imgRequest() : 
@@ -70,7 +70,7 @@ nsresult imgRequest::Init(nsIChannel *aChannel)
   return NS_OK;
 }
 
-nsresult imgRequest::AddObserver(nsIImageDecoderObserver *observer)
+nsresult imgRequest::AddObserver(imgIDecoderObserver *observer)
 {
   mObservers.AppendElement(NS_STATIC_CAST(void*, observer));
 
@@ -89,7 +89,7 @@ nsresult imgRequest::AddObserver(nsIImageDecoderObserver *observer)
   return NS_OK;
 }
 
-nsresult imgRequest::RemoveObserver(nsIImageDecoderObserver *observer, nsresult status)
+nsresult imgRequest::RemoveObserver(imgIDecoderObserver *observer, nsresult status)
 {
   mObservers.RemoveElement(NS_STATIC_CAST(void*, observer));
 
@@ -116,7 +116,7 @@ NS_IMETHODIMP imgRequest::Cancel(nsresult status)
   return rv;
 }
 
-/* readonly attribute nsIImage image; */
+/* readonly attribute gfxIImageContainer image; */
 NS_IMETHODIMP imgRequest::GetImage(gfxIImageContainer * *aImage)
 {
   *aImage = mImage;
@@ -143,14 +143,14 @@ NS_IMETHODIMP imgRequest::FrameChanged(gfxIImageContainer *container, nsISupport
   PRInt32 count = mObservers.Count();
 
   while (++i < count) {
-    nsIImageDecoderObserver *ob = NS_STATIC_CAST(nsIImageDecoderObserver*, mObservers[i]);
+    imgIDecoderObserver *ob = NS_STATIC_CAST(imgIDecoderObserver*, mObservers[i]);
     if (ob) ob->FrameChanged(container, cx, newframe, dirtyRect);
   }
 
   return NS_OK;
 }
 
-/** nsIImageDecoderObserver methods **/
+/** imgIDecoderObserver methods **/
 
 /* void onStartDecode (in imgIRequest request, in nsISupports cx); */
 NS_IMETHODIMP imgRequest::OnStartDecode(imgIRequest *request, nsISupports *cx)
@@ -161,7 +161,7 @@ NS_IMETHODIMP imgRequest::OnStartDecode(imgIRequest *request, nsISupports *cx)
   PRInt32 count = mObservers.Count();
 
   while (++i < count) {
-    nsIImageDecoderObserver *ob = NS_STATIC_CAST(nsIImageDecoderObserver*, mObservers[i]);
+    imgIDecoderObserver *ob = NS_STATIC_CAST(imgIDecoderObserver*, mObservers[i]);
     if (ob) ob->OnStartDecode(request, cx);
   }
 
@@ -179,7 +179,7 @@ NS_IMETHODIMP imgRequest::OnStartContainer(imgIRequest *request, nsISupports *cx
   PRInt32 count = mObservers.Count();
 
   while (++i < count) {
-    nsIImageDecoderObserver *ob = NS_STATIC_CAST(nsIImageDecoderObserver*, mObservers[i]);
+    imgIDecoderObserver *ob = NS_STATIC_CAST(imgIDecoderObserver*, mObservers[i]);
     if (ob) ob->OnStartContainer(request, cx, image);
   }
 
@@ -193,7 +193,7 @@ NS_IMETHODIMP imgRequest::OnStartFrame(imgIRequest *request, nsISupports *cx, gf
   PRInt32 count = mObservers.Count();
 
   while (++i < count) {
-    nsIImageDecoderObserver *ob = NS_STATIC_CAST(nsIImageDecoderObserver*, mObservers[i]);
+    imgIDecoderObserver *ob = NS_STATIC_CAST(imgIDecoderObserver*, mObservers[i]);
     if (ob) ob->OnStartFrame(request, cx, frame);
   }
 
@@ -207,7 +207,7 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(imgIRequest *request, nsISupports *cx,
   PRInt32 count = mObservers.Count();
 
   while (++i < count) {
-    nsIImageDecoderObserver *ob = NS_STATIC_CAST(nsIImageDecoderObserver*, mObservers[i]);
+    imgIDecoderObserver *ob = NS_STATIC_CAST(imgIDecoderObserver*, mObservers[i]);
     if (ob) ob->OnDataAvailable(request, cx, frame, rect);
   }
 
@@ -221,7 +221,7 @@ NS_IMETHODIMP imgRequest::OnStopFrame(imgIRequest *request, nsISupports *cx, gfx
   PRInt32 count = mObservers.Count();
 
   while (++i < count) {
-    nsIImageDecoderObserver *ob = NS_STATIC_CAST(nsIImageDecoderObserver*, mObservers[i]);
+    imgIDecoderObserver *ob = NS_STATIC_CAST(imgIDecoderObserver*, mObservers[i]);
     if (ob) ob->OnStopFrame(request, cx, frame);
   }
 
@@ -238,7 +238,7 @@ NS_IMETHODIMP imgRequest::OnStopContainer(imgIRequest *request, nsISupports *cx,
   PRInt32 count = mObservers.Count();
 
   while (++i < count) {
-    nsIImageDecoderObserver *ob = NS_STATIC_CAST(nsIImageDecoderObserver*, mObservers[i]);
+    imgIDecoderObserver *ob = NS_STATIC_CAST(imgIDecoderObserver*, mObservers[i]);
     if (ob) ob->OnStopContainer(request, cx, image);
   }
 
@@ -257,7 +257,7 @@ NS_IMETHODIMP imgRequest::OnStopDecode(imgIRequest *request, nsISupports *cx, ns
   PRInt32 count = mObservers.Count();
 
   while (++i < count) {
-    nsIImageDecoderObserver *ob = NS_STATIC_CAST(nsIImageDecoderObserver*, mObservers[i]);
+    imgIDecoderObserver *ob = NS_STATIC_CAST(imgIDecoderObserver*, mObservers[i]);
     if (ob) ob->OnStopDecode(request, cx, status, statusArg);
   }
 

@@ -21,7 +21,7 @@
  *   Stuart Parmenter <pavlov@netscape.com>
  */
 
-#include "nsImageLoader.h"
+#include "imgLoader.h"
 
 #include "imgIRequest.h"
 
@@ -50,12 +50,12 @@ static NS_DEFINE_CID(kImageRequestCID, NS_IMGREQUEST_CID);
 static NS_DEFINE_CID(kImageRequestProxyCID, NS_IMGREQUESTPROXY_CID);
 
 #ifdef LOADER_THREADSAFE
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsImageLoader, nsIImageLoader)
+NS_IMPL_THREADSAFE_ISUPPORTS1(imgLoader, imgILoader)
 #else
-NS_IMPL_ISUPPORTS1(nsImageLoader, nsIImageLoader)
+NS_IMPL_ISUPPORTS1(imgLoader, imgILoader)
 #endif
 
-nsImageLoader::nsImageLoader()
+imgLoader::imgLoader()
 {
   NS_INIT_ISUPPORTS();
   /* member initializers and constructor code */
@@ -64,7 +64,7 @@ nsImageLoader::nsImageLoader()
 #endif
 }
 
-nsImageLoader::~nsImageLoader()
+imgLoader::~imgLoader()
 {
   /* destructor code */
 #ifdef LOADER_THREADSAFE
@@ -72,10 +72,10 @@ nsImageLoader::~nsImageLoader()
 #endif
 }
 
-/* imgIRequest loadImage (in nsIURI uri, in nsIImageDecoderObserver aObserver, in nsISupports cx); */
-NS_IMETHODIMP nsImageLoader::LoadImage(nsIURI *aURI, nsIImageDecoderObserver *aObserver, nsISupports *cx, imgIRequest **_retval)
+/* imgIRequest loadImage (in nsIURI uri, in imgIDecoderObserver aObserver, in nsISupports cx); */
+NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI, imgIDecoderObserver *aObserver, nsISupports *cx, imgIRequest **_retval)
 {
-  NS_ASSERTION(aURI, "nsImageLoader::LoadImage -- NULL URI pointer");
+  NS_ASSERTION(aURI, "imgLoader::LoadImage -- NULL URI pointer");
 
   imgRequest *request = nsnull;
 
@@ -117,10 +117,10 @@ NS_IMETHODIMP nsImageLoader::LoadImage(nsIURI *aURI, nsIImageDecoderObserver *aO
   return NS_OK;
 }
 
-/* imgIRequest loadImageWithChannel(in nsIChannel, in nsIImageDecoderObserver aObserver, in nsISupports cx, out nsIStreamListener); */
-NS_IMETHODIMP nsImageLoader::LoadImageWithChannel(nsIChannel *channel, nsIImageDecoderObserver *aObserver, nsISupports *cx, nsIStreamListener **listener, imgIRequest **_retval)
+/* imgIRequest loadImageWithChannel(in nsIChannel, in imgIDecoderObserver aObserver, in nsISupports cx, out nsIStreamListener); */
+NS_IMETHODIMP imgLoader::LoadImageWithChannel(nsIChannel *channel, imgIDecoderObserver *aObserver, nsISupports *cx, nsIStreamListener **listener, imgIRequest **_retval)
 {
-  NS_ASSERTION(channel, "nsImageLoader::LoadImageWithChannel -- NULL channel pointer");
+  NS_ASSERTION(channel, "imgLoader::LoadImageWithChannel -- NULL channel pointer");
 
   imgRequest *request = nsnull;
 
@@ -169,7 +169,7 @@ NS_IMETHODIMP nsImageLoader::LoadImageWithChannel(nsIChannel *channel, nsIImageD
 }
 
 /* readonly attribute nsISimpleEnumerator requests; */
-NS_IMETHODIMP nsImageLoader::GetRequests(nsISimpleEnumerator * *aRequests)
+NS_IMETHODIMP imgLoader::GetRequests(nsISimpleEnumerator * *aRequests)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }

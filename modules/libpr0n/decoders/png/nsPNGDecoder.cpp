@@ -43,7 +43,7 @@
 // XXX we need to be sure to fire onStopDecode messages to mObserver in error cases.
 
 
-NS_IMPL_ISUPPORTS2(nsPNGDecoder, nsIImageDecoder, nsIOutputStream)
+NS_IMPL_ISUPPORTS2(nsPNGDecoder, imgIDecoder, nsIOutputStream)
 
 
 nsPNGDecoder::nsPNGDecoder()
@@ -68,7 +68,7 @@ nsPNGDecoder::~nsPNGDecoder()
 }
 
 
-/** nsIImageDecoder methods **/
+/** imgIDecoder methods **/
 
 /* void init (in imgIRequest aRequest); */
 NS_IMETHODIMP nsPNGDecoder::Init(imgIRequest *aRequest)

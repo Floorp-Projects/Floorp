@@ -26,7 +26,7 @@
 #include "nsXPIDLString.h"
 
 #include "nsIInputStream.h"
-#include "nsIImageLoader.h"
+#include "imgILoader.h"
 #include "nsIComponentManager.h"
 
 #include "nsIComponentManager.h"
@@ -40,7 +40,7 @@
 
 #include "nspr.h"
 
-NS_IMPL_ISUPPORTS3(imgRequestProxy, imgIRequest, nsIImageDecoderObserver, gfxIImageContainerObserver)
+NS_IMPL_ISUPPORTS3(imgRequestProxy, imgIRequest, imgIDecoderObserver, gfxIImageContainerObserver)
 
 imgRequestProxy::imgRequestProxy()
 {
@@ -56,7 +56,7 @@ imgRequestProxy::~imgRequestProxy()
 
 
 
-nsresult imgRequestProxy::Init(imgRequest *request, nsIImageDecoderObserver *aObserver, nsISupports *cx)
+nsresult imgRequestProxy::Init(imgRequest *request, imgIDecoderObserver *aObserver, nsISupports *cx)
 {
   PR_ASSERT(request);
 
@@ -79,7 +79,7 @@ NS_IMETHODIMP imgRequestProxy::Cancel(nsresult status)
   return NS_REINTERPRET_CAST(imgRequest*, mOwner.get())->RemoveObserver(this, status);
 }
 
-/* readonly attribute nsIImage image; */
+/* readonly attribute gfxIImageContainer image; */
 NS_IMETHODIMP imgRequestProxy::GetImage(gfxIImageContainer * *aImage)
 {
   return mOwner->GetImage(aImage);
@@ -104,7 +104,7 @@ NS_IMETHODIMP imgRequestProxy::FrameChanged(gfxIImageContainer *container, nsISu
   return NS_OK;
 }
 
-/** nsIImageDecoderObserver methods **/
+/** imgIDecoderObserver methods **/
 
 /* void onStartDecode (in imgIRequest request, in nsISupports cx); */
 NS_IMETHODIMP imgRequestProxy::OnStartDecode(imgIRequest *request, nsISupports *cx)

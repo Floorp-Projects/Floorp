@@ -31,8 +31,8 @@ LIBRARY_NAME	= imglib2
 IS_COMPONENT	= 1
 
 CPPSRCS		= ImageCache.cpp \
-			nsImageFactory.cpp    \
-			nsImageLoader.cpp         \
+			ImageFactory.cpp    \
+			imgLoader.cpp         \
 			imgRequest.cpp        \
 			imgRequestProxy.cpp
 

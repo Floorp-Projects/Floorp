@@ -25,9 +25,9 @@
 #define _nsGIFDecoder2_h
 
 #include "nsCOMPtr.h"
-#include "nsIImageDecoder.h"
+#include "imgIDecoder.h"
 #include "gfxIImageContainer.h"
-#include "nsIImageDecoderObserver.h"
+#include "imgIDecoderObserver.h"
 #include "gfxIImageFrame.h"
 #include "imgIRequest.h"
 
@@ -44,7 +44,7 @@
 //////////////////////////////////////////////////////////////////////
 // nsGIFDecoder2 Definition
 
-class nsGIFDecoder2 : public nsIImageDecoder   
+class nsGIFDecoder2 : public imgIDecoder   
 {
 public:
   NS_DECL_ISUPPORTS
@@ -61,7 +61,7 @@ public:
   nsCOMPtr<gfxIImageContainer> mImageContainer;
   nsCOMPtr<gfxIImageFrame> mImageFrame;
   nsCOMPtr<imgIRequest> mImageRequest;
-  nsCOMPtr<nsIImageDecoderObserver> mObserver; // this is just qi'd from mRequest for speed
+  nsCOMPtr<imgIDecoderObserver> mObserver; // this is just qi'd from mRequest for speed
   
   gif_struct mGIFStruct;
   

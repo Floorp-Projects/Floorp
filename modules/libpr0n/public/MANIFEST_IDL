@@ -1,4 +1,4 @@
-nsIImageDecoder.idl
-nsIImageDecoderObserver.idl
-nsIImageLoader.idl
+imgIDecoder.idl
+imgIDecoderObserver.idl
+imgILoader.idl
 imgIRequest.idl

@@ -24,12 +24,12 @@
 #ifndef nsPPMDecoder_h__
 #define nsPPMDecoder_h__
 
-#include "nsIImageDecoder.h"
+#include "imgIDecoder.h"
 
 #include "nsCOMPtr.h"
 
 #include "gfxIImageContainer.h"
-#include "nsIImageDecoderObserver.h"
+#include "imgIDecoderObserver.h"
 #include "gfxIImageFrame.h"
 #include "imgIRequest.h"
 
@@ -41,7 +41,7 @@
     {0x82, 0x17, 0xf3, 0x8f, 0xe5, 0xd4, 0x31, 0xa2} \
 }
 
-class nsPPMDecoder : public nsIImageDecoder
+class nsPPMDecoder : public imgIDecoder
 {
 public:
   NS_DECL_ISUPPORTS
@@ -55,7 +55,7 @@ private:
   nsCOMPtr<gfxIImageContainer> mImage;
   nsCOMPtr<gfxIImageFrame> mFrame;
   nsCOMPtr<imgIRequest> mRequest;
-  nsCOMPtr<nsIImageDecoderObserver> mObserver; // this is just qi'd from mRequest for speed
+  nsCOMPtr<imgIDecoderObserver> mObserver; // this is just qi'd from mRequest for speed
 
   PRUint32 mDataReceived;
   PRUint32 mDataWritten;

@@ -33,14 +33,14 @@ interface gfxIImageFrame;
 %}
 
 /**
- * nsIImageDecoderObserver interface
+ * imgIDecoderObserver interface
  *
  * @author Stuart Parmenter <pavlov@netscape.com>
  * @version 0.1
  * @see imagelib2
  */
 [scriptable, uuid(350163d2-1dd2-11b2-9e69-89959ecec1f3)]
-interface nsIImageDecoderObserver : gfxIImageContainerObserver
+interface imgIDecoderObserver : gfxIImageContainerObserver
 {
   /**
    * called as soon as the image begins getting decoded
