@@ -88,8 +88,8 @@ nsSound::~nsSound()
 NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
                                         nsISupports *context,
                                         nsresult aStatus,
-                                        PRUint32 stringLen,
-                                        const char *string)
+                                        PRUint32 dataLen,
+                                        const PRUint8 *data)
 {
 
   if (NS_FAILED(aStatus)) {
@@ -114,7 +114,7 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
     return NS_ERROR_FAILURE;
   }
 
-  if (PL_strncmp(string, "RIFF", 4) || (!gMMPMInstalled)) {
+  if (PL_strncmp(data, "RIFF", 4) || (!gMMPMInstalled)) {
 #ifdef DEBUG
     printf("We only support WAV files currently.\n");
 #endif
@@ -132,7 +132,7 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
   nsCAutoString soundFilename;
   (void) soundTmp->GetNativePath(soundFilename);
   FILE *fp = fopen(soundFilename.get(), "wb+");
-  fwrite(string, stringLen, 1, fp);
+  fwrite(data, dataLen, 1, fp);
   fclose(fp);
   HOBJECT hobject = WinQueryObject(soundFilename.get());
   WinSetObjectData(hobject, "OPEN=DEFAULT");
@@ -148,8 +148,8 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
 
   memset(&mmioinfo, 0, sizeof(MMIOINFO));
   mmioinfo.fccIOProc = FOURCC_MEM;
-  mmioinfo.cchBuffer = stringLen;
-  mmioinfo.pchBuffer = (char*)string;
+  mmioinfo.cchBuffer = dataLen;
+  mmioinfo.pchBuffer = (char*)data;
   USHORT usDeviceID;
 
   hmmio = mmioOpen(NULL, &mmioinfo, MMIO_READWRITE);

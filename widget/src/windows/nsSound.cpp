@@ -130,8 +130,8 @@ NS_IMETHODIMP nsSound::Beep()
 NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
                                         nsISupports *context,
                                         nsresult aStatus,
-                                        PRUint32 stringLen,
-                                        const char *string)
+                                        PRUint32 dataLen,
+                                        const PRUint8 *data)
 {
   // print a load error on bad status
   if (NS_FAILED(aStatus)) {
@@ -158,19 +158,18 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
 
   PurgeLastSound();
 
-  if (string && stringLen > 0) {
+  if (data && dataLen > 0) {
     DWORD flags = SND_MEMORY | SND_NODEFAULT;
     // We try to make a copy so we can play it async.
-    // XXX Can sharable strings improve this?
-    mLastSound = (char *) malloc(stringLen);
+    mLastSound = (char *) malloc(dataLen);
     if (mLastSound) {
-      memcpy(mLastSound, string, stringLen);
-      string = mLastSound;
+      memcpy(mLastSound, data, dataLen);
+      data = mLastSound;
       flags |= SND_ASYNC;
     }
 
     CWinMM& theMM = CWinMM::GetModule();
-    theMM.PlaySound(string, 0, flags);
+    theMM.PlaySound(NS_REINTERPRET_CAST(const char*, data), 0, flags);
   }
 
   return NS_OK;

@@ -51,7 +51,7 @@ interface nsIStreamLoaderObserver : nsISupports
                           in nsISupports ctxt,
                           in nsresult status,
                           in unsigned long resultLength,
-                          [size_is(resultLength)] in string result);
+                          [const,array,size_is(resultLength)] in octet result);
 };
 
 /**

@@ -3079,7 +3079,7 @@ nsXULDocument::OnStreamComplete(nsIStreamLoader* aLoader,
                                 nsISupports* context,
                                 nsresult aStatus,
                                 PRUint32 stringLen,
-                                const char* string)
+                                const PRUint8* string)
 {
 #ifdef DEBUG
     // print a load error on bad status
@@ -3130,7 +3130,8 @@ nsXULDocument::OnStreamComplete(nsIStreamLoader* aLoader,
         // not to reach here.
         nsCOMPtr<nsIURI> uri = scriptProto->mSrcURI;
 
-        nsString stringStr; stringStr.AssignWithConversion(string, stringLen);
+        // XXX this seems broken - what if the script is non-ascii? (bug 241739)
+        nsString stringStr; stringStr.AssignWithConversion(NS_REINTERPRET_CAST(const char*, string), stringLen);
         rv = scriptProto->Compile(stringStr.get(), stringLen, uri, 1, this,
                                   mCurrentPrototype);
 

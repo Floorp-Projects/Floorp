@@ -142,7 +142,7 @@ RemoteURILoadManager::~RemoteURILoadManager()
 
 NS_IMPL_ISUPPORTS1(RemoteURILoadManager, nsIStreamLoaderObserver)
 
-NS_IMETHODIMP RemoteURILoadManager::OnStreamComplete(nsIStreamLoader *loader, nsISupports *ctxt, nsresult status, PRUint32 resultLength, const char *result)
+NS_IMETHODIMP RemoteURILoadManager::OnStreamComplete(nsIStreamLoader *loader, nsISupports *ctxt, nsresult status, PRUint32 resultLength, const PRUint8 *result)
 {
   StreamLoaderContext* loaderContext = NS_STATIC_CAST(StreamLoaderContext*, ctxt);
   if (loaderContext)

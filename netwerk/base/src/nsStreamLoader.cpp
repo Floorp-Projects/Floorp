@@ -130,7 +130,9 @@ nsStreamLoader::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
     // provide nsIStreamLoader::request during call to OnStreamComplete
     mRequest = request;
     mObserver->OnStreamComplete(this, mContext, aStatus, 
-                                mData.Length(), mData.get());
+                                mData.Length(),
+                                NS_REINTERPRET_CAST(const PRUint8*,
+                                                    mData.get()));
     // done.. cleanup
     mRequest = 0;
     mObserver = 0;

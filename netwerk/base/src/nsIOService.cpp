@@ -49,7 +49,6 @@
 #include "nsInputStreamChannel.h"
 #include "nsXPIDLString.h" 
 #include "nsReadableUtils.h"
-#include "nsPrintfCString.h"
 #include "nsIErrorService.h" 
 #include "netCore.h"
 #include "nsIObserverService.h"

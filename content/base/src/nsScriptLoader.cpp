@@ -736,7 +736,7 @@ nsScriptLoader::OnStreamComplete(nsIStreamLoader* aLoader,
                                  nsISupports* aContext,
                                  nsresult aStatus,
                                  PRUint32 stringLen,
-                                 const char* string)
+                                 const PRUint8* string)
 {
   nsresult rv;
   nsScriptLoadRequest* request = NS_STATIC_CAST(nsScriptLoadRequest*, aContext);
@@ -800,7 +800,7 @@ nsScriptLoader::OnStreamComplete(nsIStreamLoader* aLoader,
     }
 
     if (NS_FAILED(rv) || characterSet.IsEmpty()) {
-      DetectByteOrderMark((const unsigned char*)string, stringLen, characterSet);
+      DetectByteOrderMark(string, stringLen, characterSet);
     }
 
     if (characterSet.IsEmpty()) {
@@ -832,7 +832,7 @@ nsScriptLoader::OnStreamComplete(nsIStreamLoader* aLoader,
     if (NS_SUCCEEDED(rv)) {
       PRInt32 unicodeLength = 0;
 
-      rv = unicodeDecoder->GetMaxLength(string, stringLen, &unicodeLength);
+      rv = unicodeDecoder->GetMaxLength(NS_REINTERPRET_CAST(const char*, string), stringLen, &unicodeLength);
       if (NS_SUCCEEDED(rv)) {
         nsString tempStr;
         tempStr.SetLength(unicodeLength);
@@ -844,7 +844,7 @@ nsScriptLoader::OnStreamComplete(nsIStreamLoader* aLoader,
         PRInt32 convertedLength = 0;
         PRInt32 bufferLength = unicodeLength;
         do {
-          rv = unicodeDecoder->Convert(string, (PRInt32 *) &stringLen, ustr,
+          rv = unicodeDecoder->Convert(NS_REINTERPRET_CAST(const char*, string), (PRInt32 *) &stringLen, ustr,
                                        &unicodeLength);
           if (NS_FAILED(rv)) {
             // if we failed, we consume one byte, replace it with U+FFFD

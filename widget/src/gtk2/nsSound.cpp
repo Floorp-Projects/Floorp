@@ -38,6 +38,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include <string.h>
+
 #include "nscore.h"
 #include "plstr.h"
 #include "prlink.h"
@@ -124,16 +126,14 @@ nsSound::Init()
     return NS_OK;
 }
 
-#define GET_WORD(s, i) ((unsigned char)s[i+1] << 8) | (unsigned char)s[i]
-#define GET_DWORD(s, i) ((unsigned char)s[i+3] << 24) | \
-    ((unsigned char)s[i+2] << 16) | ((unsigned char)s[i+1] << 8) | \
-    (unsigned char)s[i]
+#define GET_WORD(s, i) (s[i+1] << 8) | s[i]
+#define GET_DWORD(s, i) (s[i+3] << 24) | (s[i+2] << 16) | (s[i+1] << 8) | s[i]
 
 NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
                                         nsISupports *context,
                                         nsresult aStatus,
-                                        PRUint32 stringLen,
-                                        const char *string)
+                                        PRUint32 dataLen,
+                                        const PRUint8 *data)
 {
 
 #ifdef DEBUG
@@ -163,7 +163,7 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
     unsigned long rate=0;
     unsigned short format, channels = 1, block_align, bits_per_sample=0;
 
-    if (PL_strncmp(string, "RIFF", 4)) {
+    if (memcmp(data, "RIFF", 4)) {
 #ifdef DEBUG
         printf("We only support WAV files currently.\n");
 #endif
@@ -171,33 +171,33 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
     }
 
     PRUint32 i;
-    for (i= 0; i < stringLen; i++) {
-        if (i+3 <= stringLen) 
-            if ((string[i] == 'f') &&
-                (string[i+1] == 'm') &&
-                (string[i+2] == 't') &&
-                (string[i+3] == ' ')) {
+    for (i= 0; i < dataLen; i++) {
+        if (i+3 <= dataLen) 
+            if ((data[i] == 'f') &&
+                (data[i+1] == 'm') &&
+                (data[i+2] == 't') &&
+                (data[i+3] == ' ')) {
                 i += 4;
 
                 /* length of the rest of this subblock (should be 16 for PCM data */
                 i+=4;
     
-                format = GET_WORD(string, i);
+                format = GET_WORD(data, i);
                 i+=2;
 
-                channels = GET_WORD(string, i);
+                channels = GET_WORD(data, i);
                 i+=2;
 
-                samples_per_sec = GET_DWORD(string, i);
+                samples_per_sec = GET_DWORD(data, i);
                 i+=4;
 
-                avg_bytes_per_sec = GET_DWORD(string, i);
+                avg_bytes_per_sec = GET_DWORD(data, i);
                 i+=4;
 
-                block_align = GET_WORD(string, i);
+                block_align = GET_WORD(data, i);
                 i+=2;
 
-                bits_per_sample = GET_WORD(string, i);
+                bits_per_sample = GET_WORD(data, i);
                 i+=2;
 
                 rate = samples_per_sec;
@@ -215,6 +215,7 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
     EsdPlayStreamFallbackType EsdPlayStreamFallback = 
         (EsdPlayStreamFallbackType) PR_FindSymbol(elib, 
                                                   "esd_play_stream_fallback");
+    // XXX what if that fails? (Bug 241738)
   
     mask = ESD_PLAY | ESD_STREAM;
 
@@ -235,7 +236,7 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
     }
 
     /* write data out */
-    write(fd, string, stringLen);
+    write(fd, data, dataLen);
   
     close(fd);
 
