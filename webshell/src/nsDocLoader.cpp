@@ -79,6 +79,7 @@ NS_DEFINE_IID(kINetServiceIID,            NS_INETSERVICE_IID);
 
 /* Define CIDs... */
 NS_DEFINE_IID(kCHTMLDocumentCID,          NS_HTMLDOCUMENT_CID);
+NS_DEFINE_IID(kCXMLDocumentCID,           NS_XMLDOCUMENT_CID);
 NS_DEFINE_IID(kCImageDocumentCID,         NS_IMAGEDOCUMENT_CID);
 NS_DEFINE_IID(kNetServiceCID,             NS_NETSERVICE_CID);
 
@@ -165,6 +166,18 @@ public:
 
     nsresult InitUAStyleSheet();
 
+    nsresult CreateDefaultDocument(nsIURL* aURL, 
+                                   const char* aCommand,
+                                   nsIContentViewerContainer* aContainer,
+                                   nsIStreamListener** aDocListener,
+                                   nsIContentViewer** aDocViewer);
+
+    nsresult CreateXMLDocument(nsIURL* aURL, 
+                               const char* aCommand,
+                               nsIContentViewerContainer* aContainer,
+                               nsIStreamListener** aDocListener,
+                               nsIContentViewer** aDocViewer);
+
     nsresult CreateImageDocument(nsIURL* aURL, 
                                  const char* aCommand,
                                  nsIContentViewerContainer* aContainer,
@@ -191,7 +204,8 @@ nsDocFactoryImpl::nsDocFactoryImpl()
  */
 NS_IMPL_ISUPPORTS(nsDocFactoryImpl,kIDocumentLoaderFactoryIID);
 
-static char* gValidTypes[] = {"text/html","text/xml","application/rtf",0};
+static char* gValidTypes[] = {"text/html","application/rtf",0};
+static char* gXMLTypes[] = {"text/xml", "application/xml", 0};
 
 static char* gImageTypes[] = {"image/gif", "image/jpeg", 0 };
 
@@ -224,13 +238,25 @@ nsDocFactoryImpl::CreateInstance(nsIURL* aURL,
                                  nsIContentViewer** aDocViewer)
 {
     nsresult rv = NS_ERROR_FAILURE;
-    nsIDocument* doc = nsnull;
-    nsIDocumentViewer* docv = nsnull;
 
     int typeIndex=0;
     while(gValidTypes[typeIndex]) {
       if (0== PL_strcmp(gValidTypes[typeIndex++], aContentType)) {
-        goto nextstep;
+          return CreateDefaultDocument(aURL, aCommand,
+                                       aContainer,
+                                       aDocListener,
+                                       aDocViewer);
+      }
+    }
+
+    // Try XML
+    typeIndex = 0;
+    while(gValidTypes[typeIndex]) {
+      if (0== PL_strcmp(gXMLTypes[typeIndex++], aContentType)) {
+          return CreateXMLDocument(aURL, aCommand,
+                                   aContainer,
+                                   aDocListener,
+                                   aDocViewer);
       }
     }
 
@@ -255,9 +281,21 @@ nsDocFactoryImpl::CreateInstance(nsIURL* aURL,
                                       aDocViewer);
       }
     }
-    goto done;
 
-nextstep:
+    return rv;
+}
+
+nsresult
+nsDocFactoryImpl::CreateDefaultDocument(nsIURL* aURL, 
+                                        const char* aCommand,
+                                        nsIContentViewerContainer* aContainer,
+                                        nsIStreamListener** aDocListener,
+                                        nsIContentViewer** aDocViewer)
+{
+    nsresult rv = NS_ERROR_FAILURE;
+    nsIDocument* doc = nsnull;
+    nsIDocumentViewer* docv = nsnull;
+
     // Load the UA style sheet if we haven't already done that
     if (nsnull == gUAStyleSheet) {
         InitUAStyleSheet();
@@ -276,6 +314,65 @@ nextstep:
 
     /*
      * Create the HTML Content Viewer...
+     */
+    rv = NS_NewDocumentViewer(docv);
+    if (NS_OK != rv) {
+        goto done;
+    }
+    docv->SetUAStyleSheet(gUAStyleSheet);
+
+    /* 
+     * Initialize the document to begin loading the data...
+     *
+     * An nsIStreamListener connected to the parser is returned in
+     * aDocListener.
+     */
+    rv = doc->StartDocumentLoad(aURL, aContainer, aDocListener, aCommand);
+    if (NS_OK != rv) {
+        NS_IF_RELEASE(docv);
+        goto done;
+    }
+
+    /*
+     * Bind the document to the Content Viewer...
+     */
+    rv = docv->BindToDocument(doc, aCommand);
+    *aDocViewer = docv;
+
+done:
+    NS_IF_RELEASE(doc);
+    return rv;
+}
+
+nsresult
+nsDocFactoryImpl::CreateXMLDocument(nsIURL* aURL, 
+                                    const char* aCommand,
+                                    nsIContentViewerContainer* aContainer,
+                                    nsIStreamListener** aDocListener,
+                                    nsIContentViewer** aDocViewer)
+{
+    nsresult rv = NS_ERROR_FAILURE;
+    nsIDocument* doc = nsnull;
+    nsIDocumentViewer* docv = nsnull;
+
+    // Load the UA style sheet if we haven't already done that
+    if (nsnull == gUAStyleSheet) {
+        InitUAStyleSheet();
+    }
+
+    /*
+     * Create the image document...
+     */
+    rv = nsRepository::CreateInstance(kCXMLDocumentCID,
+                                      nsnull,
+                                      kIDocumentIID,
+                                      (void **)&doc);
+    if (NS_OK != rv) {
+        goto done;
+    }
+
+    /*
+     * Create the image content viewer...
      */
     rv = NS_NewDocumentViewer(docv);
     if (NS_OK != rv) {
