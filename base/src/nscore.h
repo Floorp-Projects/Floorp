@@ -58,7 +58,9 @@ typedef PRUcs2 PRUnichar;
 
 #ifdef NS_WIN32
 #define NS_IMPORT _declspec(dllimport)
+#define NS_IMPORT_(type) _declspec(dllimport) type __stdcall
 #define NS_EXPORT _declspec(dllexport)
+#define NS_EXPORT_(type) _declspec(dllexport) type __stdcall
 #else
 /* XXX do something useful? */
 #define NS_IMPORT
@@ -97,14 +99,18 @@ typedef PRUcs2 PRUnichar;
 
 #ifdef _IMPL_NS_GFXNONXP
 #define NS_GFXNONXP NS_EXPORT
+#define NS_GFXNONXP_(type) NS_EXPORT_(type)
 #else
 #define NS_GFXNONXP NS_IMPORT
+#define NS_GFXNONXP_(type) NS_IMPORT_(type)
 #endif
 
 #ifdef _IMPL_NS_GFX
 #define NS_GFX NS_EXPORT
+#define NS_GFX_(type) NS_EXPORT_(type)
 #else
 #define NS_GFX NS_IMPORT
+#define NS_GFX_(type) NS_IMPORT_(type)
 #endif
 
 #ifdef _IMPL_NS_PLUGIN
