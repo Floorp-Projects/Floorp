@@ -1290,7 +1290,7 @@ nsWebBrowserPersist::GetExtensionForContentType(const PRUnichar *aContentType, P
     rv = mMIMEService->GetPrimaryExtension(contentType, EmptyCString(), ext);
     if (NS_SUCCEEDED(rv))
     {
-        *aExt = ToNewUnicode(ext);
+        *aExt = UTF8ToNewUnicode(ext);
         NS_ENSURE_TRUE(*aExt, NS_ERROR_OUT_OF_MEMORY);
         return NS_OK;
     }
