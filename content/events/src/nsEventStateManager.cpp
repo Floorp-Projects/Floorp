@@ -3436,24 +3436,24 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent,
             nextInput->GetDisabled(&disabled);
             nextInput->GetTabIndex(&tabIndex);
 
-            nsAutoString type;
-            nextInput->GetType(type);
-            if (type.EqualsIgnoreCase("text") 
-                || type.EqualsIgnoreCase("autocomplete")
-                || type.EqualsIgnoreCase("password")) {
-              // It's a text field or password field
-              disabled = PR_FALSE;
-            }
-            else if (type.EqualsIgnoreCase("hidden")) {
-              hidden = PR_TRUE;
-            }
-            else if (type.EqualsIgnoreCase("file")) {
-              disabled = PR_TRUE;
-            }
-            else {
-              // it's some other type of form element
-              disabled =
-                disabled || !(tabFocusModel & eTabFocus_formElementsMask);
+            // The type attribute is unreliable; use the actual input type
+            nsCOMPtr<nsIFormControl> formControl(do_QueryInterface(child));
+            NS_ASSERTION(formControl, "DOMHTMLInputElement must QI to nsIFormControl!");
+            switch (formControl->GetType()) {
+              case NS_FORM_INPUT_TEXT:
+              case NS_FORM_INPUT_PASSWORD:
+                disabled = PR_FALSE;
+                break;
+              case NS_FORM_INPUT_HIDDEN:
+                hidden = PR_TRUE;
+                break;
+              case NS_FORM_INPUT_FILE:
+                disabled = PR_TRUE;
+                break;
+              default:
+                disabled =
+                  disabled || !(tabFocusModel & eTabFocus_formElementsMask);
+                break;
             }
           }
         }
