@@ -19,9 +19,6 @@
 # 
 # Contributor(s): 
 # 
-
-DEPTH = ..\..\..\..\..
-
-DIRS = en-US
+DEPTH = ..\..\..\..\..\..
 
 include <$(DEPTH)\config\rules.mak>
