@@ -2614,7 +2614,7 @@ js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 
         attrs = sprop->attrs;
         if ((attrs & JSPROP_READONLY) || SCOPE_IS_SEALED(scope)) {
-            OBJ_DROP_PROPERTY(cx, pobj, (JSProperty *)sprop);
+            JS_UNLOCK_SCOPE(cx, scope);
             if ((attrs & JSPROP_READONLY) && JSVERSION_IS_ECMA(cx->version))
                 return JS_TRUE;
             goto read_only_error;
