@@ -1292,6 +1292,14 @@ nsFrame::DidReflow(nsIPresContext& aPresContext,
         }
       }
 
+      // If we have visible content that overflows the content area, then we
+      // need the view marked as having transparent content
+      if (NS_STYLE_OVERFLOW_VISIBLE == display->mOverflow) {
+        if (mState & NS_FRAME_OUTSIDE_CHILDREN) {
+          viewHasTransparentContent = PR_TRUE;
+        }
+      }
+
       // Make sure visibility is correct
       vm->SetViewVisibility(mView, viewIsVisible ? nsViewVisibility_kShow :
                             nsViewVisibility_kHide);

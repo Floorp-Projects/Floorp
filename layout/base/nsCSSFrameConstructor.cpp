@@ -7141,6 +7141,17 @@ SyncAndInvalidateView(nsIView* aView, nsIFrame* aFrame,
     }
   }
 
+  // If the frame has visible content that overflows the content area, then we
+  // need the view marked as having transparent content
+  if (NS_STYLE_OVERFLOW_VISIBLE == disp->mOverflow) {
+    nsFrameState  frameState;
+
+    aFrame->GetFrameState(&frameState);
+    if (frameState & NS_FRAME_OUTSIDE_CHILDREN) {
+      viewHasTransparentContent = PR_TRUE;
+    }
+  }
+  
   if (viewIsVisible) {
     aViewManager->SetViewContentTransparency(aView, viewHasTransparentContent);
     aViewManager->SetViewVisibility(aView, nsViewVisibility_kShow);
