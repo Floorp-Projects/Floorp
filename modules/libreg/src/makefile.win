@@ -83,10 +83,9 @@ LLIBS = \
 include <$(DEPTH)/config/rules.mak>
 
 export:: $(DLL)	
-    $(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
     $(MAKE_INSTALL) $(DLL) $(DIST)\bin
 
-install:: $(DLL)
+libs:: $(DLL)
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
 
 clobber::
