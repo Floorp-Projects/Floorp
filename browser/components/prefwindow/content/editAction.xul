@@ -1,0 +1,55 @@
+<?xml version="1.0"?>
+
+<?xml-stylesheet href="chrome://global/skin/"?>
+<?xml-stylesheet href="chrome://browser/skin/pref/pref.css" type="text/css"?>
+
+<!DOCTYPE window SYSTEM "chrome://browser/locale/pref/editAction.dtd">
+
+<dialog id="editAction" title="&changeAction.title;"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="init();" ondialogaccept="onAccept();" style="width: 36em;"
+        persist="screenX screenY">
+
+  <script type="application/x-javascript" src="chrome://browser/content/pref/editAction.js"/>
+
+  <groupbox>
+    <caption label="&whenDownloading.label;"/>
+
+    <separator class="thin"/>
+    
+    <hbox align="center" class="small-indent">
+      <image id="typeIcon"/>
+      <textbox id="typeField" class="plain" readonly="true" flex="1"/>
+    </hbox>
+    <separator/>
+    
+    <label>&always.label;</label>
+
+    <vbox class="small-indent" flex="1">
+
+      <radiogroup id="handlerGroup" onselect="doEnabling(this.selectedItem);" flex="1">
+        <separator class="thin"/>
+        <radio id="openDefault" value="system" label="&openDefault.label;"/>
+        <hbox class="biggerIndent">
+          <textbox id="defaultAppName" class="plain" readonly="true" flex="1"/>
+        </hbox>
+        <separator class="thin"/>
+        <radio id="openApplication" value="app" label="&openApplication.label;"/>
+        <hbox align="center" class="biggerIndent">
+          <textbox id="customAppPath" readonly="true" flex="1"/>
+          <button id="changeApp" oncommand="changeApp();"
+                  label="&changeApp.label;" accesskey="&changeApp.accesskey;"/>
+        </hbox>
+        <separator class="thin"/>
+        <radio id="saveToDisk" value="save" label="&saveToDisk.label;"/>
+      </radiogroup>
+      <separator/>
+    </vbox>
+  
+  </groupbox>
+    
+  <separator class="thin"/>
+  
+</dialog>
+
+        

@@ -1,0 +1,14 @@
+
+
+<!ENTITY  changeAction.title                        "Change Action">
+
+<!ENTITY  whenDownloading.label                     "When downloading files of type:">
+<!ENTITY  always.label                              "automatically:">
+
+<!ENTITY  openDefault.label                         "Open them in the Default application:">
+<!ENTITY  openApplication.label                     "Open them in this application:">
+<!ENTITY  changeApp.label                           "Change...">
+<!ENTITY  changeApp.accesskey                       "c">
+<!ENTITY  customAppPath.label                       "Click 'Change ...' to choose an application.">
+<!ENTITY  saveToDisk.label                          "Save to Disk">
+
