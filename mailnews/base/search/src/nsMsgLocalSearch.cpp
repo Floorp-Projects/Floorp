@@ -217,7 +217,7 @@ PRInt32 nsMsgSearchBoolExpression::GenerateEncodeStr(nsString2 * buffer)
 
 //---------------- Adapter class for searching offline IMAP folders -----------
 //-----------------------------------------------------------------------------
-nsMsgSearchIMAPOfflineMail::nsMsgSearchIMAPOfflineMail (nsMsgScopeTerm *scope, nsMsgSearchTermArray &termList) : nsMsgSearchOfflineMail(scope, termList)
+nsMsgSearchIMAPOfflineMail::nsMsgSearchIMAPOfflineMail (nsMsgSearchScopeTerm *scope, nsMsgSearchTermArray &termList) : nsMsgSearchOfflineMail(scope, termList)
 { 
 
 }                                                                                                                                                                                                                                                                                                                                                                                                                                   
@@ -266,7 +266,7 @@ nsresult nsMsgSearchIMAPOfflineMail::ValidateTerms ()
 //-----------------------------------------------------------------------------
 
 
-nsMsgSearchOfflineMail::nsMsgSearchOfflineMail (nsMsgScopeTerm *scope, nsMsgSearchTermArray &termList) : nsMsgSearchAdapter (scope, termList)
+nsMsgSearchOfflineMail::nsMsgSearchOfflineMail (nsMsgSearchScopeTerm *scope, nsMsgSearchTermArray &termList) : nsMsgSearchAdapter (scope, termList)
 {
     m_db = nsnull;
     m_listContext = nsnull;
@@ -445,7 +445,7 @@ nsresult nsMsgSearchOfflineMail::SummaryFileError ()
 
 nsresult nsMsgSearchOfflineMail::MatchTermsForFilter(nsIMsgDBHdr *msgToMatch,
                                                            nsMsgSearchTermArray & termList,
-                                                           nsMsgScopeTerm * scope,
+                                                           nsMsgSearchScopeTerm * scope,
                                                            nsIMsgDatabase * db, 
                                                            char * headers,
                                                            PRUint32 headerSize)
@@ -456,7 +456,7 @@ nsresult nsMsgSearchOfflineMail::MatchTermsForFilter(nsIMsgDBHdr *msgToMatch,
 // static method which matches a header against a list of search terms.
 nsresult nsMsgSearchOfflineMail::MatchTermsForSearch(nsIMsgDBHdr *msgToMatch, 
                                                 nsMsgSearchTermArray &termList,
-                                                nsMsgScopeTerm *scope,
+                                                nsMsgSearchScopeTerm *scope,
                                                 nsIMsgDatabase *db)
 {
     return MatchTerms(msgToMatch, termList, scope, db, nsnull, 0, FALSE);
@@ -464,7 +464,7 @@ nsresult nsMsgSearchOfflineMail::MatchTermsForSearch(nsIMsgDBHdr *msgToMatch,
 
 nsresult nsMsgSearchOfflineMail::MatchTerms(nsIMsgDBHdr *msgToMatch,
                                                            nsMsgSearchTermArray & termList,
-                                                           nsMsgScopeTerm * scope,
+                                                           nsMsgSearchScopeTerm * scope,
                                                            nsIMsgDatabase * db, 
                                                            char * headers,
                                                            PRUint32 headerSize,
@@ -761,7 +761,7 @@ nsresult nsMsgSearchOfflineMail::AddResultElement (nsIMsgDBHdr *pHeaders)
     return err;
 }
 
-int
+NS_IMETHODIMP
 nsMsgSearchOfflineMail::Abort ()
 {
     // Let go of the DB when we're done with it so we don't kill the db cache

@@ -67,8 +67,8 @@ public:
 		PRBool *BooleanAnd,				/* TRUE if AND is the boolean operator. FALSE if OR is the boolean operator */
 		char ** arbitraryHeader);        /* arbitrary header specified by user. ignore unless attrib = attribOtherHeader */
 
-	NS_IMETHOD SetScope(nsMsgScopeTerm *scope);
-	NS_IMETHOD GetScope(nsMsgScopeTerm **scope);
+	NS_IMETHOD SetScope(nsMsgSearchScopeTerm *scope);
+	NS_IMETHOD GetScope(nsMsgSearchScopeTerm **scope);
 
 	/* if type is acChangePriority, value is a pointer to priority.
 	   If type is acMoveToFolder, value is pointer to folder name.
@@ -76,7 +76,7 @@ public:
 	*/
 	NS_IMETHOD SetAction(nsMsgRuleActionType type, void *value);
 	NS_IMETHOD GetAction(nsMsgRuleActionType *type, void **value) ;
-	NS_IMETHOD MatchHdr(nsIMsgDBHdr	*msgHdr, char *headers, PRUint32 headersSize) ;
+	NS_IMETHOD MatchHdr(nsIMsgDBHdr	*msgHdr, nsIMsgFolder *folder, nsIMsgDatabase *db, char *headers, PRUint32 headersSize) ;
 	NS_IMETHOD LogRuleHit(nsOutputStream *stream, nsIMsgDBHdr *header);
 
 
@@ -122,7 +122,7 @@ protected:
 
 	nsMsgFilterList *m_filterList;	/* owning filter list */
     nsMsgSearchTermArray m_termList;       /* linked list of criteria terms */
-    nsMsgScopeTerm       *m_scope;         /* default for mail rules is inbox, but news rules could
+    nsMsgSearchScopeTerm       *m_scope;         /* default for mail rules is inbox, but news rules could
 have a newsgroup - LDAP would be invalid */
 
 };

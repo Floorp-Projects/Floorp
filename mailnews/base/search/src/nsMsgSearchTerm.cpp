@@ -572,7 +572,7 @@ void nsMsgSearchTerm::StripQuotedPrintable (unsigned char *src)
 
 // Looks in the MessageDB for the user specified arbitrary header, if it finds the header, it then looks for a match against
 // the value for the header. 
-nsresult nsMsgSearchTerm::MatchArbitraryHeader (nsMsgScopeTerm *scope, PRUint32 offset, PRUint32 length /* in lines*/, const char *charset,
+nsresult nsMsgSearchTerm::MatchArbitraryHeader (nsMsgSearchScopeTerm *scope, PRUint32 offset, PRUint32 length /* in lines*/, const char *charset,
 														nsIMsgDBHdr *msg, nsIMsgDatabase* db, char * headers, PRUint32 headersSize, PRBool ForFiltering)
 {
 	nsresult err = NS_COMFALSE;
@@ -641,7 +641,7 @@ nsresult nsMsgSearchTerm::MatchArbitraryHeader (nsMsgScopeTerm *scope, PRUint32 
 	}
 }
 
-nsresult nsMsgSearchTerm::MatchBody (nsMsgScopeTerm *scope, PRUint32 offset, PRUint32 length /*in lines*/, const char *folderCharset,
+nsresult nsMsgSearchTerm::MatchBody (nsMsgSearchScopeTerm *scope, PRUint32 offset, PRUint32 length /*in lines*/, const char *folderCharset,
 										   nsIMsgDBHdr *msg, nsIMsgDatabase* db)
 {
 	nsresult err = NS_COMFALSE;
@@ -1082,11 +1082,94 @@ nsresult nsMsgSearchTerm::InitHeaderAddressParser()
 }
 
 //-----------------------------------------------------------------------------
+// nsMsgSearchScopeTerm implementation
+//-----------------------------------------------------------------------------
+nsMsgSearchScopeTerm::nsMsgSearchScopeTerm (nsMsgSearchScopeAttribute attribute, nsIMsgFolder *folder)
+{
+	m_attribute = attribute;
+	m_folder = folder;
+	m_searchServer = PR_TRUE;
+}
+
+nsMsgSearchScopeTerm::nsMsgSearchScopeTerm ()
+{
+	m_searchServer = PR_TRUE;
+}
+
+nsMsgSearchScopeTerm::~nsMsgSearchScopeTerm ()
+{
+}
+
+// ### purely temporary
+static NET_IsOffline()
+{
+	return PR_FALSE;
+}
+
+PRBool nsMsgSearchScopeTerm::IsOfflineNews()
+{
+	switch (m_attribute)
+	{
+	case nsMsgSearchScopeNewsgroup:
+	case nsMsgSearchScopeAllSearchableGroups:
+		if (NET_IsOffline() || !m_searchServer)
+			return PR_TRUE;
+		else
+			return PR_FALSE;
+	case nsMsgSearchScopeOfflineNewsgroup:
+		return PR_TRUE;
+	default:
+		return PR_FALSE;
+	}
+}
+
+PRBool nsMsgSearchScopeTerm::IsOfflineMail ()
+{
+	// Find out whether "this" mail folder is online or offline
+	NS_ASSERTION(m_folder, "scope doesn't have folder");
+//	if (m_folder->GetType() == FOLDER_IMAPMAIL && !NET_IsOffline() && m_searchServer)    // make sure we are not in offline IMAP (mscott)
+//		return PR_FALSE;
+	return PR_TRUE;  // if POP or IMAP in offline mode
+}
+
+PRBool nsMsgSearchScopeTerm::IsOfflineIMAPMail()
+{
+	// Find out whether "this" mail folder is an offline IMAP folder
+	NS_ASSERTION(m_folder, "scope doesn't have folder");
+//	if (m_folder->GetType() == FOLDER_IMAPMAIL && (NET_IsOffline() || !m_searchServer))
+//		return PR_TRUE;
+	return PR_FALSE;       // we are not an IMAP folder that is offline
+}
+
+const char *nsMsgSearchScopeTerm::GetMailPath()
+{
+	return nsnull;
+}
+
+nsresult nsMsgSearchScopeTerm::TimeSlice ()
+{
+	return NS_OK;
+}
+
+
+nsresult nsMsgSearchScopeTerm::InitializeAdapter (nsMsgSearchTermArray &termList)
+{
+	return NS_OK;
+}
+
+
+char *nsMsgSearchScopeTerm::GetStatusBarName ()
+{
+	return nsnull;
+}
+
+
+//-----------------------------------------------------------------------------
 // nsMsgResultElement implementation
 //-----------------------------------------------------------------------------
 
 
-nsMsgResultElement::nsMsgResultElement(nsMsgSearchAdapter *adapter)
+nsMsgResultElement::nsMsgResultElement(nsIMsgSearchAdapter *adapter)
 {
 	m_adapter = adapter;
 }

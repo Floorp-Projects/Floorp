@@ -26,7 +26,7 @@
 
 class nsIMsgDatabase;
 class nsIMsgFolder;
-class nsMsgSearchAdapter;
+class nsIMsgSearchAdapter;
 class nsIMsgDBHdr;
 
 typedef enum
@@ -174,7 +174,7 @@ typedef struct nsMsgSearchValue
     } u;
 } nsMsgSearchValue;
 
-struct nsMsgScopeTerm;
+class nsMsgSearchScopeTerm;
 struct nsMsgDIRServer;
 class nsMsgSearchTerm;
 
@@ -190,10 +190,10 @@ public:
 	nsMsgSearchValue *ElementAt(PRUint32 i) const { return (nsMsgSearchValue*) nsVoidArray::ElementAt(i); }
 };
 
-class nsMsgScopeTermArray : public nsVoidArray
+class nsMsgSearchScopeTermArray : public nsVoidArray
 {
 public:
-	nsMsgScopeTerm *ElementAt(PRUint32 i) const { return (nsMsgScopeTerm*) nsVoidArray::ElementAt(i); }
+	nsMsgSearchScopeTerm *ElementAt(PRUint32 i) const { return (nsMsgSearchScopeTerm*) nsVoidArray::ElementAt(i); }
 };
 
 //-----------------------------------------------------------------------------
@@ -271,6 +271,31 @@ protected:
 	nsMsgSearchBoolExpression * leftToRightAddTerm(nsMsgSearchTerm * newTerm, PRBool EvaluationValue, char * encodingStr); 
 };
 
+class nsMsgSearchScopeTerm 
+{
+public:
+	nsMsgSearchScopeTerm (nsMsgSearchScopeAttribute, nsIMsgFolder *);
+	nsMsgSearchScopeTerm ();
+	virtual ~nsMsgSearchScopeTerm ();
+
+	PRBool IsOfflineNews();
+	PRBool IsOfflineMail ();
+	PRBool IsOfflineIMAPMail();  // added by mscott 
+	const char *GetMailPath();
+	nsresult TimeSlice ();
+
+	nsresult InitializeAdapter (nsMsgSearchTermArray &termList);
+
+	char *GetStatusBarName ();
+
+	nsMsgSearchScopeAttribute m_attribute;
+	char *m_name;
+	nsCOMPtr <nsIMsgFolder> m_folder;
+//	XP_File m_file;
+	nsCOMPtr <nsIMsgSearchAdapter> m_adapter;
+	PRBool m_searchServer;
+
+};
 
 
 // nsMsgResultElement specifies a single search hit.
@@ -283,7 +308,7 @@ protected:
 class nsMsgResultElement
 {
 public:
-	nsMsgResultElement (nsMsgSearchAdapter *);
+	nsMsgResultElement (nsIMsgSearchAdapter *);
 	virtual ~nsMsgResultElement ();
 
 	static nsresult AssignValues (nsMsgSearchValue *src, nsMsgSearchValue *dst);
@@ -303,7 +328,7 @@ public:
 	static nsresult DestroyValue (nsMsgSearchValue *value);
 
 	nsMsgSearchValueArray m_valueList;
-	nsMsgSearchAdapter *m_adapter;
+	nsIMsgSearchAdapter *m_adapter;
 
 protected:
 };
@@ -338,8 +363,8 @@ public:
 	PRInt32 GetNextIMAPOfflineMsgLine (char * buf, int bufferSize, int msgOffset, nsIMessage * msg, nsIMsgDatabase * db);
 
 
-	nsresult MatchBody (nsMsgScopeTerm*, PRUint32 offset, PRUint32 length, const char *charset, nsIMsgDBHdr * msg, nsIMsgDatabase * db);
-	nsresult MatchArbitraryHeader (nsMsgScopeTerm *,PRUint32 offset, PRUint32 length, const char *charset, nsIMsgDBHdr * msg, nsIMsgDatabase *db,
+	nsresult MatchBody (nsMsgSearchScopeTerm*, PRUint32 offset, PRUint32 length, const char *charset, nsIMsgDBHdr * msg, nsIMsgDatabase * db);
+	nsresult MatchArbitraryHeader (nsMsgSearchScopeTerm *,PRUint32 offset, PRUint32 length, const char *charset, nsIMsgDBHdr * msg, nsIMsgDatabase *db,
 											char * headers, /* NULL terminated header list for msgs being filtered. Ignored unless ForFilters */
 											PRUint32 headersSize, /* size of the NULL terminated list of headers */
 											PRBool ForFilters /* true if we are filtering */);
@@ -400,11 +425,11 @@ typedef struct nsMsgSearchMenuItem
 class nsMsgBodyHandler
 {
 public:
-	nsMsgBodyHandler (nsMsgScopeTerm *, PRUint32 offset, PRUint32 length, nsIMsgDBHdr * msg, nsIMsgDatabase * db);
+	nsMsgBodyHandler (nsMsgSearchScopeTerm *, PRUint32 offset, PRUint32 length, nsIMsgDBHdr * msg, nsIMsgDatabase * db);
 	
 	// we can also create a body handler when doing arbitrary header filtering...we need the list of headers and the header size as well
 	// if we are doing filtering...if ForFilters is false, headers and headersSize is ignored!!!
-	nsMsgBodyHandler (nsMsgScopeTerm *, PRUint32 offset, PRUint32 length, nsIMsgDBHdr * msg, nsIMsgDatabase * db,
+	nsMsgBodyHandler (nsMsgSearchScopeTerm *, PRUint32 offset, PRUint32 length, nsIMsgDBHdr * msg, nsIMsgDatabase * db,
 					 char * headers /* NULL terminated list of headers */, PRUint32 headersSize, PRBool ForFilters);
 
 	virtual ~nsMsgBodyHandler();
@@ -430,7 +455,7 @@ protected:
     void OpenLocalFolder();
 	PRInt32 GetNextLocalLine(char * buf, int bufSize);      // goes through the mail folder 
 
-	nsMsgScopeTerm *m_scope;
+	nsMsgSearchScopeTerm *m_scope;
 
 	// local file state
 //	XP_File	*m_localFile;

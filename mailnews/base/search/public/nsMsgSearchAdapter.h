@@ -20,6 +20,7 @@
 #define _nsMsgSearchAdapter_H_
 
 #include "nsMsgSearchCore.h"
+#include "nsIMsgSearchAdapter.h"
 
 //-----------------------------------------------------------------------------
 // These Adapter classes contain the smarts to convert search criteria from 
@@ -33,7 +34,7 @@
 class nsMsgSearchAdapter : public nsIMsgSearchAdapter
 {
 public:
-	nsMsgSearchAdapter (nsMsgScopeTerm*, nsMsgSearchTermArray&);
+	nsMsgSearchAdapter (nsMsgSearchScopeTerm*, nsMsgSearchTermArray&);
 	virtual ~nsMsgSearchAdapter ();
 
 	NS_IMETHOD ValidateTerms ();
@@ -44,11 +45,11 @@ public:
 	NS_IMETHOD GetEncoding (const char **encoding) { return NS_OK; }
 
 	NS_IMETHOD FindTargetFolder (nsMsgResultElement*, nsIMsgFolder **aFolder);
+	NS_IMETHOD Abort ();
 
-	nsMsgScopeTerm		*m_scope;
+	nsMsgSearchScopeTerm		*m_scope;
 	nsMsgSearchTermArray &m_searchTerms;
 
-	virtual int Abort ();
 	PRBool m_abortCalled;
 
 	static nsresult EncodeImap (char **ppEncoding, 

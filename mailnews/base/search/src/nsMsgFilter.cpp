@@ -23,6 +23,7 @@
 #include "nsMsgFilter.h"
 #include "nsMsgUtils.h"
 #include "nsFileStream.h"
+#include "nsMsgLocalSearch.h"
 
 static const char *kImapPrefix = "//imap:";
 
@@ -55,18 +56,27 @@ NS_IMETHODIMP nsMsgFilter::QueryInterface(REFNSIID aIID, void** aResult)
     return NS_NOINTERFACE;
 }   
 
-NS_IMETHODIMP nsMsgFilter::GetFilterType(nsMsgFilterType *filterType)
+NS_IMETHODIMP nsMsgFilter::GetFilterType(nsMsgFilterType *aResult)
 {
+	if (aResult == NULL)  
+        return NS_ERROR_NULL_POINTER;  
+
+	*aResult = m_type;
 	return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgFilter::EnableFilter(PRBool enable)
 {
+	m_enabled = enable;
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgFilter::IsFilterEnabled(PRBool *enabled)
+NS_IMETHODIMP nsMsgFilter::IsFilterEnabled(PRBool *aResult)
 {
+	if (aResult == NULL)  
+        return NS_ERROR_NULL_POINTER;  
+
+	*aResult = m_enabled;
 	return NS_OK;
 }
 
@@ -100,8 +110,12 @@ NS_IMETHODIMP nsMsgFilter::AddTerm(
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgFilter::GetNumTerms(PRInt32 *numTerms)
+NS_IMETHODIMP nsMsgFilter::GetNumTerms(PRInt32 *aResult)
 {
+	if (aResult == NULL)  
+        return NS_ERROR_NULL_POINTER;  
+
+	*aResult = m_termList.Count();
 	return NS_OK;
 }
 
@@ -110,19 +124,37 @@ NS_IMETHODIMP nsMsgFilter::GetTerm(PRInt32 termIndex,
 	nsMsgSearchAttribute *attrib,    /* attribute for this term                */
 	nsMsgSearchOperator *op,         /* operator e.g. opContains               */
 	nsMsgSearchValue *value,         /* value e.g. "Dogbert"                   */
-	PRBool *BooleanAnd,				/* TRUE if AND is the boolean operator. FALSE if OR is the boolean operator */
+	PRBool *booleanAnd,				/* TRUE if AND is the boolean operator. FALSE if OR is the boolean operator */
 	char ** arbitraryHeader)        /* arbitrary header specified by user. ignore unless attrib = attribOtherHeader */
 {
+	if (!attrib || !op || !value || !booleanAnd || !arbitraryHeader)
+		return NS_ERROR_NULL_POINTER;
+
+	nsMsgSearchTerm *term = m_termList.ElementAt (termIndex);
+	if (term)
+	{
+		*attrib = term->m_attribute;
+		*op = term->m_operator;
+		*value = term->m_value;
+		*booleanAnd = term->m_booleanOp;
+		if (term->m_attribute == nsMsgSearchAttribOtherHeader)
+			*arbitraryHeader = PL_strdup(term->m_arbitraryHeader.GetBuffer());
+	}
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgFilter::SetScope(nsMsgScopeTerm *scope)
+NS_IMETHODIMP nsMsgFilter::SetScope(nsMsgSearchScopeTerm *aResult)
 {
+	m_scope = aResult;
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgFilter::GetScope(nsMsgScopeTerm **scope)
+NS_IMETHODIMP nsMsgFilter::GetScope(nsMsgSearchScopeTerm **aResult)
 {
+	if (aResult == NULL)  
+        return NS_ERROR_NULL_POINTER;  
+
+	*aResult = m_scope;
 	return NS_OK;
 }
 
@@ -220,9 +252,15 @@ NS_IMETHODIMP nsMsgFilter::LogRuleHit(nsOutputStream *stream, nsIMsgDBHdr *msgHd
 }
 
 
-NS_IMETHODIMP nsMsgFilter::MatchHdr(nsIMsgDBHdr	*msgHdr, char *headers, PRUint32 headersSize)
+NS_IMETHODIMP nsMsgFilter::MatchHdr(nsIMsgDBHdr	*msgHdr, nsIMsgFolder *folder, nsIMsgDatabase *db, char *headers, PRUint32 headersSize)
 {
-	return NS_ERROR_NOT_IMPLEMENTED;
+
+	nsMsgSearchScopeTerm scope (nsMsgSearchScopeMailFolder, folder);
+	return nsMsgSearchOfflineMail::MatchTermsForFilter(msgHdr, m_termList,
+                                                           &scope,
+                                                           db, 
+                                                           headers,
+                                                           headersSize);
 }
 
 void nsMsgFilter::SetFilterList(nsMsgFilterList *filterList)

@@ -20,7 +20,7 @@
 #include "nsMsgSearchCore.h"
 #include "nsMsgUtils.h"
 
-nsMsgBodyHandler::nsMsgBodyHandler (nsMsgScopeTerm * scope, PRUint32 offset, PRUint32 numLines, nsIMsgDBHdr* msg, nsIMsgDatabase * db)
+nsMsgBodyHandler::nsMsgBodyHandler (nsMsgSearchScopeTerm * scope, PRUint32 offset, PRUint32 numLines, nsIMsgDBHdr* msg, nsIMsgDatabase * db)
 {
 	m_scope = scope;
 	m_localFileOffset = offset;
@@ -43,7 +43,7 @@ nsMsgBodyHandler::nsMsgBodyHandler (nsMsgScopeTerm * scope, PRUint32 offset, PRU
 #endif
 }
 
-nsMsgBodyHandler::nsMsgBodyHandler(nsMsgScopeTerm * scope, PRUint32 offset, PRUint32 numLines, nsIMsgDBHdr* msg, nsIMsgDatabase* db,
+nsMsgBodyHandler::nsMsgBodyHandler(nsMsgSearchScopeTerm * scope, PRUint32 offset, PRUint32 numLines, nsIMsgDBHdr* msg, nsIMsgDatabase* db,
 								 char * headers, PRUint32 headersSize, PRBool Filtering)
 {
 	m_scope = scope;

@@ -60,8 +60,8 @@ public:
 		PRBool *BooleanAnd,				/* TRUE if AND is the boolean operator. FALSE if OR is the boolean operator */
 		char ** arbitraryHeader)= 0;        /* arbitrary header specified by user. ignore unless attrib = attribOtherHeader */
 
-	NS_IMETHOD SetScope(nsMsgScopeTerm *scope)= 0;
-	NS_IMETHOD GetScope(nsMsgScopeTerm **scope)= 0;
+	NS_IMETHOD SetScope(nsMsgSearchScopeTerm *scope)= 0;
+	NS_IMETHOD GetScope(nsMsgSearchScopeTerm **scope)= 0;
 
 	/* if type is acChangePriority, value is a pointer to priority.
 	   If type is acMoveToFolder, value is pointer to folder name.
@@ -70,7 +70,7 @@ public:
 	NS_IMETHOD SetAction(nsMsgRuleActionType type, void *value)= 0;
 	NS_IMETHOD GetAction(nsMsgRuleActionType *type, void **value) = 0;
 
-	NS_IMETHOD MatchHdr(nsIMsgDBHdr	*msgHdr, char *headers, PRUint32 headersSize) = 0;
+	NS_IMETHOD MatchHdr(nsIMsgDBHdr	*msgHdr, nsIMsgFolder *folder, nsIMsgDatabase *db, char *headers, PRUint32 headersSize) = 0;
 	NS_IMETHOD LogRuleHit(nsOutputStream *stream, nsIMsgDBHdr *header) = 0;
 };
 

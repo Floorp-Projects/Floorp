@@ -35,6 +35,7 @@ CPPSRCS = \
 	nsMsgSearchTerm.cpp\
 	nsMsgBodyHandler.cpp\
 	nsMsgLocalSearch.cpp\
+	nsMsgSearchAdapter.cpp\
 	$(NULL)
 
 EXTRA_DSO_LDOPTS = \

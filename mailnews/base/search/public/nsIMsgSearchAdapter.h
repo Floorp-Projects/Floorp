@@ -34,7 +34,7 @@ class nsIMsgSearchAdapter : public nsISupports
 {
 public:
     static const nsIID& GetIID() { static nsIID iid = NS_IMSGSEARCHADAPTOR_IID; return iid; }
-	NS_IMETHOD Init(nsMsgScopeTerm* scope, nsMsgSearchTermArray *terms) = 0;
+	NS_IMETHOD Init(nsMsgSearchScopeTerm* scope, nsMsgSearchTermArray *terms) = 0;
 	NS_IMETHOD ValidateTerms () = 0;
 	NS_IMETHOD Search () = 0;
 	NS_IMETHOD SendUrl () = 0;
@@ -42,6 +42,7 @@ public:
 	NS_IMETHOD ModifyResultElement (nsMsgResultElement*, nsMsgSearchValue*) = 0;
 	NS_IMETHOD GetEncoding (const char **encoding) = 0;
 	NS_IMETHOD FindTargetFolder (const nsMsgResultElement *, nsIMsgFolder **aFolder) = 0;
+	NS_IMETHOD Abort () = 0;
 };
 
 

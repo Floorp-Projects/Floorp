@@ -30,16 +30,17 @@ class nsMsgMailboxParser;
 class nsMsgSearchOfflineMail : public nsMsgSearchAdapter
 {
 public:
-	nsMsgSearchOfflineMail (nsMsgScopeTerm*, nsMsgSearchTermArray&);
+	nsMsgSearchOfflineMail (nsMsgSearchScopeTerm*, nsMsgSearchTermArray&);
 	virtual ~nsMsgSearchOfflineMail ();
 
 	NS_IMETHOD ValidateTerms ();
 	NS_IMETHOD Search ();
-	static nsresult  MatchTermsForFilter(nsIMsgDBHdr * msgToMatch,nsMsgSearchTermArray &termList, nsMsgScopeTerm *scope, 
+	NS_IMETHOD Abort ();
+	static nsresult  MatchTermsForFilter(nsIMsgDBHdr * msgToMatch,nsMsgSearchTermArray &termList, nsMsgSearchScopeTerm *scope, 
                                         nsIMsgDatabase * db, 
 												char * headers, PRUint32 headerSize);
 
-	static nsresult MatchTermsForSearch(nsIMsgDBHdr * msgTomatch, nsMsgSearchTermArray & termList, nsMsgScopeTerm *scope,
+	static nsresult MatchTermsForSearch(nsIMsgDBHdr * msgTomatch, nsMsgSearchTermArray & termList, nsMsgSearchScopeTerm *scope,
                                                 nsIMsgDatabase *db);
 
 	virtual nsresult BuildSummaryFile ();
@@ -48,10 +49,9 @@ public:
 
 	nsresult AddResultElement (nsIMsgDBHdr *);
 
-	virtual int Abort ();
 
 protected:
-	static	nsresult MatchTerms(nsIMsgDBHdr *msgToMatch,nsMsgSearchTermArray &termList, nsMsgScopeTerm *scope, 
+	static	nsresult MatchTerms(nsIMsgDBHdr *msgToMatch,nsMsgSearchTermArray &termList, nsMsgSearchScopeTerm *scope, 
                                         nsIMsgDatabase * db, 
 										char * headers, PRUint32 headerSize, PRBool ForFilters);
 	struct ListContext *m_cursor;
@@ -73,7 +73,7 @@ protected:
 class nsMsgSearchIMAPOfflineMail : public nsMsgSearchOfflineMail
 {
 public:
-	nsMsgSearchIMAPOfflineMail (nsMsgScopeTerm*, nsMsgSearchTermArray&);
+	nsMsgSearchIMAPOfflineMail (nsMsgSearchScopeTerm*, nsMsgSearchTermArray&);
 	virtual ~nsMsgSearchIMAPOfflineMail ();
 
 	NS_IMETHOD ValidateTerms ();
@@ -84,7 +84,7 @@ public:
 class nsMsgSearchOfflineNews : public nsMsgSearchOfflineMail
 {
 public:
-	nsMsgSearchOfflineNews (nsMsgScopeTerm*, nsMsgSearchTermArray&);
+	nsMsgSearchOfflineNews (nsMsgSearchScopeTerm*, nsMsgSearchTermArray&);
 	virtual ~nsMsgSearchOfflineNews ();
 	NS_IMETHOD ValidateTerms ();
 
