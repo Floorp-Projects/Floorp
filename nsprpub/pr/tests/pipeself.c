@@ -157,6 +157,85 @@ int main()
         exit(1);
     }
 
+#ifdef XP_UNIX
+	/*
+	 * Test PR_Available for pipes
+	 */
+    status = PR_CreatePipe(&ping_in, &ping_out);
+    if (status == PR_FAILURE) {
+        fprintf(stderr, "PR_CreatePipe failed\n");
+        exit(1);
+    }
+	nBytes = PR_Write(ping_out, buf, 250);
+	if (nBytes == -1) {
+		fprintf(stderr, "PR_Write failed: (%d, %d)\n", PR_GetError(),
+				PR_GetOSError());
+		exit(1);
+	}
+	nBytes = PR_Available(ping_in);
+	if (nBytes < 0) {
+		fprintf(stderr, "PR_Available failed: (%d, %d)\n", PR_GetError(),
+				PR_GetOSError());
+		exit(1);
+	} else if (nBytes != 250) {
+		fprintf(stderr, "PR_Available: expected 250 bytes but got %d bytes\n",
+				nBytes);
+		exit(1);
+	}
+	printf("PR_Available: expected %d, got %d bytes\n",250, nBytes);
+	/* read some data */
+	nBytes = PR_Read(ping_in, buf, 7);
+	if (nBytes == -1) {
+		fprintf(stderr, "PR_Read failed\n");
+		exit(1);
+	}
+	/* check available data */
+	nBytes = PR_Available(ping_in);
+	if (nBytes < 0) {
+		fprintf(stderr, "PR_Available failed: (%d, %d)\n", PR_GetError(),
+				PR_GetOSError());
+		exit(1);
+	} else if (nBytes != (250 - 7)) {
+		fprintf(stderr, "PR_Available: expected 243 bytes but got %d bytes\n",
+				nBytes);
+		exit(1);
+	}
+	printf("PR_Available: expected %d, got %d bytes\n",243, nBytes);
+	/* read all data */
+	nBytes = PR_Read(ping_in, buf, sizeof(buf));
+	if (nBytes == -1) {
+		fprintf(stderr, "PR_Read failed\n");
+		exit(1);
+	} else if (nBytes != 243) {
+		fprintf(stderr, "PR_Read failed: expected %d, got %d bytes\n",
+							243, nBytes);
+		exit(1);
+	}
+	/* check available data */
+	nBytes = PR_Available(ping_in);
+	if (nBytes < 0) {
+		fprintf(stderr, "PR_Available failed: (%d, %d)\n", PR_GetError(),
+				PR_GetOSError());
+		exit(1);
+	} else if (nBytes != 0) {
+		fprintf(stderr, "PR_Available: expected 0 bytes but got %d bytes\n",
+				nBytes);
+		exit(1);
+	}
+	printf("PR_Available: expected %d, got %d bytes\n", 0, nBytes);
+
+    status = PR_Close(ping_in);
+    if (status == PR_FAILURE) {
+        fprintf(stderr, "PR_Close failed\n");
+        exit(1);
+    }
+    status = PR_Close(ping_out);
+    if (status == PR_FAILURE) {
+        fprintf(stderr, "PR_Close failed\n");
+        exit(1);
+    }
+#endif /* XP_UNIX */
+
     printf("PASS\n");
     return 0;
 }
