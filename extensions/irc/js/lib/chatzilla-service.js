@@ -107,13 +107,14 @@ function (iid) {
 }
 
 IRCContentHandler.prototype.handleContent =
-function (aContentType, aCommand, aWindowTarget, aSourceContext, aChannel)
+function (aContentType, aCommand, aWindowTarget, aSourceContext, aRequest)
 {
     var e;
-    
+    var channel = aRequest.QueryInterface(nsIChannel);
+
     dump ("ircLoader.handleContent (" + aContentType + ", " +
           aCommand + ", " + aWindowTarget + ", " + aSourceContext + ", " +
-          aChannel.URI.spec + ")\n");
+          channel.URI.spec + ")\n");
     
     var windowManager =
         Components.classes[MEDIATOR_CONTRACTID].getService(nsIWindowMediator);
@@ -123,13 +124,13 @@ function (aContentType, aCommand, aWindowTarget, aSourceContext, aChannel)
     if (w)
     {
         w.focus();
-        w.gotoIRCURL(aChannel.URI.spec);
+        w.gotoIRCURL(channel.URI.spec);
     }
     else
     {
         var ass = Components.classes[ASS_CONTRACTID].getService(nsIAppShellService);
         w = ass.getHiddenDOMWindow();
-        w.open("chrome://chatzilla/content/chatzilla.xul?" + aChannel.URI.spec,
+        w.open("chrome://chatzilla/content/chatzilla.xul?" + channel.URI.spec,
                "_blank", "chrome,menubar,toolbar,resizable");
     }
     
@@ -210,8 +211,6 @@ function (iid) {
 }
 
 /* nsIChannel */
-BogusChannel.prototype.transferOffset = 0;
-BogusChannel.prototype.transferCount = 0;
 BogusChannel.prototype.loadAttributes = null;
 BogusChannel.prototype.contentType = "x-application-irc";
 BogusChannel.prototype.contentLength = 0;
@@ -219,10 +218,6 @@ BogusChannel.prototype.owner = null;
 BogusChannel.prototype.loadGroup = null;
 BogusChannel.prototype.notificationCallbacks = null;
 BogusChannel.prototype.securityInfo = null;
-BogusChannel.prototype.bufferSegmentSize = 0;
-BogusChannel.prototype.bufferMaxSize = 0;
-BogusChannel.prototype.shouldCache = false;
-BogusChannel.prototype.pipeliningAllowed = false;
 
 BogusChannel.prototype.open =
 BogusChannel.prototype.asyncOpen =
