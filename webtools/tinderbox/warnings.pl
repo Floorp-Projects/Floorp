@@ -53,7 +53,7 @@ for $br (last_successful_builds($tree)) {
   $warn_file =~ s/.gz$/.html/;
 
   $fh->open(">$warn_file") or die "Unable to open $warn_file: $!\n";
-  &print_warnings_as_html($fh, $br->{buildname}, $br->{buildtime});
+  &print_warnings_as_html($fh, $br);
   $fh->close;
 
   last;
@@ -257,7 +257,7 @@ __END_HEADER
         # Build log link
         my $log_line = $warn_rec->{first_seen_line};
         print " (<a href='"
-          .build_url($tree, $warn_rec->{log_file}, $log_line)
+          .build_url($tree, $br, $log_line)
           ."'target='_other'>";
         if ($warn_rec->{count} == 1) {
           print "See build log";
@@ -305,10 +305,16 @@ __END_FOOTER
 }
 
 sub build_url {
-  my ($tree, $log_file, $linenum) = @_;
+  my ($tree, $br, $linenum) = @_;
+
+  my $name = $br->{buildname};
+  $name =~ s/ /%20/g;
 
   return "http://tinderbox.mozilla.org/showlog.cgi?tree=$tree"
-        ."&logfile=$log_file"
+        ."&logfile=$br->{logfile}"
+        ."&errorparser=$br->{errorparser}"
+        ."&buildname=$name"
+        ."&buildtime=$br->{buildtime}"
         ."&line=$linenum"
         ."&numlines=50";
 }
