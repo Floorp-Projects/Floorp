@@ -32,6 +32,7 @@
 #include "nsIPop3IncomingServer.h"  // need this for an interface ID
 #include "nsMsgTxn.h"
 #include "nsIMsgMessageService.h"
+#include "nsIMsgParseMailMsgState.h"
 
 #define FOUR_K 4096
 
@@ -45,6 +46,7 @@ struct nsLocalMailCopyState
   nsCOMPtr<nsISupportsArray> messages;
   nsCOMPtr<nsMsgTxn> undoMsgTxn;
   nsCOMPtr<nsIMessage> message; // current copy message
+  nsCOMPtr<nsIMsgParseMailMsgState> parseMsgState;
   
   nsIMsgMessageService* messageService;
   PRBool isMove;

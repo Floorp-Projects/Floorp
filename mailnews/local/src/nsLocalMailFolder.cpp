@@ -1319,6 +1319,7 @@ nsMsgLocalMailFolder::CopyFileMessage(nsIFileSpec* fileSpec, nsIMessage*
 
   nsInputFileStream *inputFileStream = nsnull;
   nsCOMPtr<nsIInputStream> inputStream;
+  nsParseMailMessageState* parseMsgState = nsnull;
   PRUint32 fileSize = 0;
   nsCOMPtr<nsISupports> fileSupport(do_QueryInterface(fileSpec, &rv));
   if (NS_FAILED(rv)) return rv;
@@ -1335,6 +1336,16 @@ nsMsgLocalMailFolder::CopyFileMessage(nsIFileSpec* fileSpec, nsIMessage*
 
   rv = InitCopyState(fileSupport, messages, msgToReplace ? PR_TRUE:PR_FALSE);
   if (NS_FAILED(rv)) goto done;
+
+  parseMsgState = new nsParseMailMessageState();
+  if (parseMsgState)
+  {
+    nsCOMPtr<nsIMsgDatabase> msgDb;
+    mCopyState->parseMsgState = do_QueryInterface(parseMsgState, &rv);
+    rv = GetMsgDatabase(getter_AddRefs(msgDb));
+    if (msgDb)
+      parseMsgState->SetMailDB(msgDb);
+  }
 
   inputFileStream = new nsInputFileStream(fileSpec);
   if (!inputFileStream)
@@ -1486,6 +1497,14 @@ NS_IMETHODIMP nsMsgLocalMailFolder::BeginCopy(nsIMessage *message)
   if (!mCopyState) return NS_ERROR_NULL_POINTER;
   nsresult rv = NS_OK;
   mCopyState->curDstKey = mCopyState->fileStream->tell();
+
+  // CopyFileMessage() only
+  if (mCopyState->parseMsgState)
+  {
+    mCopyState->parseMsgState->SetEnvelopePos(mCopyState->curDstKey);
+    mCopyState->parseMsgState->SetState(nsIMsgParseMailMsgState::ParseHeadersState);
+  }
+
   if (message)
     mCopyState->message = do_QueryInterface(message, &rv);
   return rv;
@@ -1516,6 +1535,24 @@ NS_IMETHODIMP nsMsgLocalMailFolder::CopyData(nsIInputStream *aIStream, PRInt32 a
     mCopyState->dataBuffer[readCount] ='\0';
     mCopyState->fileStream->seek(PR_SEEK_END, 0);
     *(mCopyState->fileStream) << mCopyState->dataBuffer;
+
+    // CopyFileMessage() only
+    if (mCopyState->parseMsgState)
+    {
+      char* start = mCopyState->dataBuffer;
+      char* end = PL_strstr(mCopyState->dataBuffer, CRLF);
+      
+      while (start && end)
+      {
+        // +2 counting for the CRLF
+        mCopyState->parseMsgState->ParseAFolderLine(start, end-start+2);
+        start = end+2;
+        if (start >= &mCopyState->dataBuffer[readCount])
+          break;
+        end = PL_strstr(start, CRLF);
+      }
+    }
+
     aLength -= readCount;
   }
 
@@ -1575,6 +1612,21 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
     {
       if (NS_SUCCEEDED(result))
         copyService->NotifyCompletion(mCopyState->srcSupport, this, rv);
+      
+      // CopyFileMessage() only
+      if (mCopyState->parseMsgState)
+      {
+        nsCOMPtr<nsIMsgDatabase> msgDb;
+        nsCOMPtr<nsIMsgDBHdr> newHdr;
+        result =
+          mCopyState->parseMsgState->GetNewMsgHdr(getter_AddRefs(newHdr));
+        if (NS_SUCCEEDED(result) && newHdr)
+        {
+          result = GetMsgDatabase(getter_AddRefs(msgDb));
+          if (NS_SUCCEEDED(result) && msgDb)
+            msgDb->AddNewHdrToDB(newHdr, PR_TRUE);
+        }
+      }
     }
 
     if (mTxnMgr && NS_SUCCEEDED(rv) && mCopyState->undoMsgTxn)
