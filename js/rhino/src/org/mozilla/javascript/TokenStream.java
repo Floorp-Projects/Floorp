@@ -64,9 +64,6 @@ class TokenStream
     private final static int
         EOF_CHAR = -1;
 
-    final static int
-        TSF_REGEXP      = 1 << 0;  // looking for a regular expression
-
     TokenStream(Parser parser, Reader sourceReader, String sourceString,
                 int lineno)
     {
@@ -292,7 +289,7 @@ class TokenStream
 
     final boolean eof() { return hitEOF; }
 
-    final int getToken(int flags) throws IOException
+    final int getToken() throws IOException
     {
         int c;
 
@@ -758,47 +755,6 @@ class TokenStream
                     }
                 }
 
-                // is it a regexp?
-                if ((flags & TSF_REGEXP) != 0) {
-                    stringBufferTop = 0;
-                    while ((c = getChar()) != '/') {
-                        if (c == '\n' || c == EOF_CHAR) {
-                            ungetChar(c);
-                            parser.addError("msg.unterminated.re.lit");
-                            return Token.ERROR;
-                        }
-                        if (c == '\\') {
-                            addToString(c);
-                            c = getChar();
-                        }
-
-                        addToString(c);
-                    }
-                    int reEnd = stringBufferTop;
-
-                    while (true) {
-                        if (matchChar('g'))
-                            addToString('g');
-                        else if (matchChar('i'))
-                            addToString('i');
-                        else if (matchChar('m'))
-                            addToString('m');
-                        else
-                            break;
-                    }
-
-                    if (isAlpha(peekChar())) {
-                        parser.addError("msg.invalid.re.flag");
-                        return Token.ERROR;
-                    }
-
-                    this.string = new String(stringBuffer, 0, reEnd);
-                    this.regExpFlags = new String(stringBuffer, reEnd,
-                                                  stringBufferTop - reEnd);
-                    return Token.REGEXP;
-                }
-
-
                 if (matchChar('=')) {
                     return Token.ASSIGN_DIV;
                 } else {
@@ -896,6 +852,55 @@ class TokenStream
     private static boolean isJSFormatChar(int c)
     {
         return c > 127 && Character.getType((char)c) == Character.FORMAT;
+    }
+
+    /**
+     * Parser calls the method when it gets / or /= in literal context.
+     */
+    void readRegExp(int startToken)
+        throws IOException
+    {
+        stringBufferTop = 0;
+        if (startToken == Token.ASSIGN_DIV) {
+            // Miss-scanned /=
+            addToString('=');
+        } else {
+            if (startToken != Token.DIV) Kit.codeBug();
+        }
+
+        int c;
+        while ((c = getChar()) != '/') {
+            if (c == '\n' || c == EOF_CHAR) {
+                ungetChar(c);
+                throw parser.reportError("msg.unterminated.re.lit");
+            }
+            if (c == '\\') {
+                addToString(c);
+                c = getChar();
+            }
+
+            addToString(c);
+        }
+        int reEnd = stringBufferTop;
+
+        while (true) {
+            if (matchChar('g'))
+                addToString('g');
+            else if (matchChar('i'))
+                addToString('i');
+            else if (matchChar('m'))
+                addToString('m');
+            else
+                break;
+        }
+
+        if (isAlpha(peekChar())) {
+            throw parser.reportError("msg.invalid.re.flag");
+        }
+
+        this.string = new String(stringBuffer, 0, reEnd);
+        this.regExpFlags = new String(stringBuffer, reEnd,
+                                      stringBufferTop - reEnd);
     }
 
     boolean isXMLAttribute()
