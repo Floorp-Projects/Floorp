@@ -1,3 +1,0 @@
-#!/usr/bin/sh
-ME=`who am i |awk '{print $1}'`
-for d in `ipcs -q | grep $ME |awk '{print $2}'`;do ipcrm -q $d;done

@@ -1,3 +1,0 @@
-echo diff clientComb.res serverComb.res
-diff clientComb.res serverComb.res
-
