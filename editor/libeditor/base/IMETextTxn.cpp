@@ -81,7 +81,7 @@ NS_IMETHODIMP IMETextTxn::Init(nsIDOMCharacterData     *aElement,
                                PRUint32                 aOffset,
                                PRUint32                 aReplaceLength,
                                nsIPrivateTextRangeList *aTextRangeList,
-                               const nsAReadableString &aStringToInsert,
+                               const nsAString         &aStringToInsert,
                                nsWeakPtr                aSelConWeak)
 {
   NS_ASSERTION(aElement, "illegal value- null ptr- aElement");
@@ -205,7 +205,7 @@ NS_IMETHODIMP IMETextTxn::MarkFixed(void)
   return NS_OK;
 }
 
-NS_IMETHODIMP IMETextTxn::GetTxnDescription(nsAWritableString& aString)
+NS_IMETHODIMP IMETextTxn::GetTxnDescription(nsAString& aString)
 {
   aString.Assign(NS_LITERAL_STRING("IMETextTxn: "));
   aString += mStringToInsert;

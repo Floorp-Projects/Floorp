@@ -70,8 +70,8 @@ public:
     */
   NS_IMETHOD Init(nsIEditor      *aEditor,
                   nsIDOMElement  *aNode,
-                  const nsAReadableString& aAttribute,
-                  const nsAReadableString& aValue,
+                  const nsAString& aAttribute,
+                  const nsAString& aValue,
                   PRBool aRemoveAttribute);
 
 private:
@@ -87,7 +87,7 @@ public:
 
   NS_IMETHOD Merge(nsITransaction *aTransaction, PRBool *aDidMerge);
 
-  NS_IMETHOD GetTxnDescription(nsAWritableString& aTxnDescription);
+  NS_IMETHOD GetTxnDescription(nsAString& aTxnDescription);
 
 protected:
 

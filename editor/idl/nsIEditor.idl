@@ -37,7 +37,7 @@ interface nsIEditActionListener;
 
 %{C++
 
-#include "nsAWritableString.h"
+#include "nsAString.h"
 
 class nsIPresShell;
 class nsIContent;

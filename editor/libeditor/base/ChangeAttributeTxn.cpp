@@ -51,8 +51,8 @@ ChangeAttributeTxn::~ChangeAttributeTxn()
 
 NS_IMETHODIMP ChangeAttributeTxn::Init(nsIEditor      *aEditor,
                                        nsIDOMElement  *aElement,
-                                       const nsAReadableString& aAttribute,
-                                       const nsAReadableString& aValue,
+                                       const nsAString& aAttribute,
+                                       const nsAString& aValue,
                                        PRBool aRemoveAttribute)
 {
 	NS_ASSERTION(aEditor && aElement, "bad arg");
@@ -125,7 +125,7 @@ NS_IMETHODIMP ChangeAttributeTxn::Merge(nsITransaction *aTransaction, PRBool *aD
   return NS_OK;
 }
 
-NS_IMETHODIMP ChangeAttributeTxn::GetTxnDescription(nsAWritableString& aString)
+NS_IMETHODIMP ChangeAttributeTxn::GetTxnDescription(nsAString& aString)
 {
   aString.Assign(NS_LITERAL_STRING("ChangeAttributeTxn: "));
 

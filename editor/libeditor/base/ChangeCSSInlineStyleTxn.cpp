@@ -49,9 +49,9 @@
 #include "nsUnicharUtils.h"
 
 void
-ChangeCSSInlineStyleTxn::AppendDeclaration(nsAWritableString & aOutputString,
-                                           nsAReadableString & aProperty,
-                                           nsAReadableString & aValues)
+ChangeCSSInlineStyleTxn::AppendDeclaration(nsAString & aOutputString,
+                                           const nsAString & aProperty,
+                                           const nsAString & aValues)
 {
   aOutputString.Append(aProperty
                        + NS_LITERAL_STRING(": ")
@@ -62,7 +62,7 @@ ChangeCSSInlineStyleTxn::AppendDeclaration(nsAWritableString & aOutputString,
 // answers true if aValue is in the string list of white-space separated values aValueList
 // a case-sensitive search is performed if aCaseSensitive is true
 PRBool
-ChangeCSSInlineStyleTxn::ValueIncludes(const nsAReadableString &aValueList, const nsAReadableString &aValue, PRBool aCaseSensitive)
+ChangeCSSInlineStyleTxn::ValueIncludes(const nsAString &aValueList, const nsAString &aValue, PRBool aCaseSensitive)
 {
   nsAutoString  valueList(aValueList);
   PRBool result = PR_FALSE;
@@ -107,7 +107,7 @@ ChangeCSSInlineStyleTxn::ValueIncludes(const nsAReadableString &aValueList, cons
 
 // removes the value aRemoveValue from the string list of white-space separated values aValueList
 void
-ChangeCSSInlineStyleTxn::RemoveValueFromListOfValues(nsAWritableString & aValues, const nsAReadableString  & aRemoveValue)
+ChangeCSSInlineStyleTxn::RemoveValueFromListOfValues(nsAString & aValues, const nsAString  & aRemoveValue)
 {
   nsAutoString  classStr(aValues);  // copy to work buffer   nsAutoString  rv(aRemoveValue);
   nsAutoString  outString;
@@ -151,7 +151,7 @@ ChangeCSSInlineStyleTxn::~ChangeCSSInlineStyleTxn()
 NS_IMETHODIMP ChangeCSSInlineStyleTxn::Init(nsIEditor      *aEditor,
                                             nsIDOMElement  *aElement,
                                             nsIAtom        *aProperty,
-                                            const nsAReadableString& aValue,
+                                            const nsAString& aValue,
                                             PRBool aRemoveProperty)
 {
   NS_ASSERTION(aEditor && aElement, "bad arg");
@@ -338,7 +338,7 @@ NS_IMETHODIMP ChangeCSSInlineStyleTxn::Merge(nsITransaction *aTransaction, PRBoo
   return NS_OK;
 }
 
-NS_IMETHODIMP ChangeCSSInlineStyleTxn::GetTxnDescription(nsAWritableString& aString)
+NS_IMETHODIMP ChangeCSSInlineStyleTxn::GetTxnDescription(nsAString& aString)
 {
   aString.Assign(NS_LITERAL_STRING("ChangeCSSInlineStyleTxn: "));
 
@@ -367,7 +367,7 @@ ChangeCSSInlineStyleTxn::AcceptsMoreThanOneValue(nsIAtom *aCSSProperty)
 
 // adds the value aNewValue to the list of white-space separated values aValues
 NS_IMETHODIMP
-ChangeCSSInlineStyleTxn::AddValueToMultivalueProperty(nsAWritableString & aValues, const nsAReadableString & aNewValue)
+ChangeCSSInlineStyleTxn::AddValueToMultivalueProperty(nsAString & aValues, const nsAString & aNewValue)
 {
   if (aValues.IsEmpty()
       || aValues.Equals(NS_LITERAL_STRING("none"),

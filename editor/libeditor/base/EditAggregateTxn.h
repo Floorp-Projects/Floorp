@@ -76,7 +76,7 @@ public:
 
   NS_IMETHOD Merge(nsITransaction *aTransaction, PRBool *aDidMerge);
 
-  NS_IMETHOD GetTxnDescription(nsAWritableString& aTxnDescription);
+  NS_IMETHOD GetTxnDescription(nsAString& aTxnDescription);
 
   /** append a transaction to this aggregate */
   NS_IMETHOD AppendChild(EditTxn *aTxn);

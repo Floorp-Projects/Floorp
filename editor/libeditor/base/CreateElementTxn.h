@@ -68,7 +68,7 @@ public:
     *                        if eAppend, the new element is appended as the last child
     */
   NS_IMETHOD Init(nsEditor *aEditor,
-                  const nsAReadableString& aTag,
+                  const nsAString& aTag,
                   nsIDOMNode *aParent,
                   PRUint32 aOffsetInParent);
 
@@ -87,7 +87,7 @@ public:
 
   NS_IMETHOD Merge(nsITransaction *aTransaction, PRBool *aDidMerge);
 
-  NS_IMETHOD GetTxnDescription(nsAWritableString& aTxnDescription);
+  NS_IMETHOD GetTxnDescription(nsAString& aTxnDescription);
 
   NS_IMETHOD GetNewNode(nsIDOMNode **aNewNode);
 

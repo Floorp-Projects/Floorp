@@ -148,7 +148,7 @@ NS_IMETHODIMP EditAggregateTxn::Merge(nsITransaction *aTransaction, PRBool *aDid
 
 }
 
-NS_IMETHODIMP EditAggregateTxn::GetTxnDescription(nsAWritableString& aString)
+NS_IMETHODIMP EditAggregateTxn::GetTxnDescription(nsAString& aString)
 {
   aString.Assign(NS_LITERAL_STRING("EditAggregateTxn: "));
 

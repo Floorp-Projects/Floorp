@@ -203,7 +203,7 @@ NS_IMETHODIMP SplitElementTxn::Merge(nsITransaction *aTransaction, PRBool *aDidM
   return NS_OK;
 }
 
-NS_IMETHODIMP SplitElementTxn::GetTxnDescription(nsAWritableString& aString)
+NS_IMETHODIMP SplitElementTxn::GetTxnDescription(nsAString& aString)
 {
   aString.Assign(NS_LITERAL_STRING("SplitElementTxn"));
   return NS_OK;

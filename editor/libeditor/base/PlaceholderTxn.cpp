@@ -232,7 +232,7 @@ NS_IMETHODIMP PlaceholderTxn::Merge(nsITransaction *aTransaction, PRBool *aDidMe
   return res;
 }
 
-NS_IMETHODIMP PlaceholderTxn::GetTxnDescription(nsAWritableString& aString)
+NS_IMETHODIMP PlaceholderTxn::GetTxnDescription(nsAString& aString)
 {
   aString.Assign(NS_LITERAL_STRING("PlaceholderTxn: "));
 

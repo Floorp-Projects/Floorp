@@ -173,7 +173,7 @@ nsresult JoinElementTxn::Merge(nsITransaction *aTransaction, PRBool *aDidMerge)
   return NS_OK;
 }
 
-NS_IMETHODIMP JoinElementTxn::GetTxnDescription(nsAWritableString& aString)
+NS_IMETHODIMP JoinElementTxn::GetTxnDescription(nsAString& aString)
 {
   aString.Assign(NS_LITERAL_STRING("JoinElementTxn"));
   return NS_OK;

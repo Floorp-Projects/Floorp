@@ -85,7 +85,7 @@ NS_IMETHODIMP EditTxn::Merge(nsITransaction *aTransaction, PRBool *aDidMerge)
   return NS_OK;
 }
 
-NS_IMETHODIMP EditTxn::GetTxnDescription(nsAWritableString& aString)
+NS_IMETHODIMP EditTxn::GetTxnDescription(nsAString& aString)
 {
   aString.Assign(NS_LITERAL_STRING("EditTxn"));
   return NS_OK;

@@ -168,7 +168,7 @@ AddStyleSheetTxn::Merge(nsITransaction *aTransaction, PRBool *aDidMerge)
 }
 
 NS_IMETHODIMP
-AddStyleSheetTxn::GetTxnDescription(nsAWritableString& aString)
+AddStyleSheetTxn::GetTxnDescription(nsAString& aString)
 {
   aString.Assign(NS_LITERAL_STRING("AddStyleSheetTxn"));
   return NS_OK;
@@ -295,7 +295,7 @@ RemoveStyleSheetTxn::Merge(nsITransaction *aTransaction, PRBool *aDidMerge)
 }
 
 NS_IMETHODIMP
-RemoveStyleSheetTxn::GetTxnDescription(nsAWritableString& aString)
+RemoveStyleSheetTxn::GetTxnDescription(nsAString& aString)
 {
   aString.Assign(NS_LITERAL_STRING("RemoveStyleSheetTxn"));
   return NS_OK;

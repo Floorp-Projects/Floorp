@@ -896,7 +896,7 @@ nsEditor::GetDocumentModified(PRBool *outDocModified)
 }
 
 NS_IMETHODIMP
-nsEditor::GetDocumentCharacterSet(nsAWritableString &characterSet)
+nsEditor::GetDocumentCharacterSet(nsAString &characterSet)
 {
   nsresult rv;
   nsCOMPtr<nsIDocument> doc;
@@ -916,7 +916,7 @@ nsEditor::GetDocumentCharacterSet(nsAWritableString &characterSet)
 }
 
 NS_IMETHODIMP
-nsEditor::SetDocumentCharacterSet(const nsAReadableString& characterSet)
+nsEditor::SetDocumentCharacterSet(const nsAString& characterSet)
 {
   nsresult rv;
   nsCOMPtr<nsIDocument> doc;
@@ -1009,7 +1009,7 @@ nsEditor::InsertFromDrop(nsIDOMEvent *aEvent)
 
 
 NS_IMETHODIMP 
-nsEditor::SetAttribute(nsIDOMElement *aElement, const nsAReadableString & aAttribute, const nsAReadableString & aValue)
+nsEditor::SetAttribute(nsIDOMElement *aElement, const nsAString & aAttribute, const nsAString & aValue)
 {
   ChangeAttributeTxn *txn;
   nsresult result = CreateTxnForSetAttribute(aElement, aAttribute, aValue, &txn);
@@ -1023,8 +1023,8 @@ nsEditor::SetAttribute(nsIDOMElement *aElement, const nsAReadableString & aAttri
 
 NS_IMETHODIMP 
 nsEditor::GetAttributeValue(nsIDOMElement *aElement, 
-                            const nsAReadableString & aAttribute, 
-                            nsAWritableString & aResultValue, 
+                            const nsAString & aAttribute, 
+                            nsAString & aResultValue, 
                             PRBool *aResultIsSet)
 {
   if (!aResultIsSet)
@@ -1045,7 +1045,7 @@ nsEditor::GetAttributeValue(nsIDOMElement *aElement,
 }
 
 NS_IMETHODIMP 
-nsEditor::RemoveAttribute(nsIDOMElement *aElement, const nsAReadableString& aAttribute)
+nsEditor::RemoveAttribute(nsIDOMElement *aElement, const nsAString& aAttribute)
 {
   ChangeAttributeTxn *txn;
   nsresult result = CreateTxnForRemoveAttribute(aElement, aAttribute, &txn);
@@ -1075,7 +1075,7 @@ nsEditor::MarkNodeDirty(nsIDOMNode* aNode)
 #pragma mark -
 #endif
 
-NS_IMETHODIMP nsEditor::CreateNode(const nsAReadableString& aTag,
+NS_IMETHODIMP nsEditor::CreateNode(const nsAString& aTag,
                                    nsIDOMNode *    aParent,
                                    PRInt32         aPosition,
                                    nsIDOMNode **   aNewNode)
@@ -1326,9 +1326,9 @@ NS_IMETHODIMP nsEditor::DeleteNode(nsIDOMNode * aElement)
 nsresult
 nsEditor::ReplaceContainer(nsIDOMNode *inNode, 
                            nsCOMPtr<nsIDOMNode> *outNode, 
-                           const nsAReadableString &aNodeType,
-                           const nsAReadableString *aAttribute,
-                           const nsAReadableString *aValue,
+                           const nsAString &aNodeType,
+                           const nsAString *aAttribute,
+                           const nsAString *aValue,
                            PRBool aCloneAttributes)
 {
   if (!inNode || !outNode)
@@ -1448,9 +1448,9 @@ nsEditor::RemoveContainer(nsIDOMNode *inNode)
 nsresult
 nsEditor::InsertContainerAbove( nsIDOMNode *inNode, 
                                 nsCOMPtr<nsIDOMNode> *outNode, 
-                                const nsAReadableString &aNodeType,
-                                const nsAReadableString *aAttribute,
-                                const nsAReadableString *aValue)
+                                const nsAString &aNodeType,
+                                const nsAString *aAttribute,
+                                const nsAString *aValue)
 {
   if (!inNode || !outNode)
     return NS_ERROR_NULL_POINTER;
@@ -1706,8 +1706,8 @@ nsEditor::RemoveDocumentStateListener(nsIDocumentStateListener *aListener)
 #pragma mark -
 #endif
 
-NS_IMETHODIMP nsEditor::OutputToString(nsAWritableString& aOutputString,
-                                       const nsAReadableString& aFormatType,
+NS_IMETHODIMP nsEditor::OutputToString(nsAString& aOutputString,
+                                       const nsAString& aFormatType,
                                        PRUint32 aFlags)
 {
   // these should be implemented by derived classes.
@@ -1716,8 +1716,8 @@ NS_IMETHODIMP nsEditor::OutputToString(nsAWritableString& aOutputString,
 
 NS_IMETHODIMP
 nsEditor::OutputToStream(nsIOutputStream* aOutputStream,
-                         const nsAReadableString& aFormatType,
-                         const nsAReadableString& aCharsetOverride,
+                         const nsAString& aFormatType,
+                         const nsAString& aCharsetOverride,
                          PRUint32 aFlags)
 {
   // these should be implemented by derived classes.
@@ -1886,7 +1886,7 @@ nsEditor::EndComposition(void)
 }
 
 NS_IMETHODIMP
-nsEditor::SetCompositionString(const nsAReadableString& aCompositionString, nsIPrivateTextRangeList* aTextRangeList,nsTextEventReply* aReply)
+nsEditor::SetCompositionString(const nsAString& aCompositionString, nsIPrivateTextRangeList* aTextRangeList,nsTextEventReply* aReply)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -2226,7 +2226,7 @@ NS_IMETHODIMP nsEditor::ScrollIntoView(PRBool aScrollToBegin)
 }
 
 /** static helper method */
-nsresult nsEditor::GetTextNodeTag(nsAWritableString& aOutString)
+nsresult nsEditor::GetTextNodeTag(nsAString& aOutString)
 {
   aOutString.SetLength(0);
   static nsString *gTextNodeTag=nsnull;
@@ -2241,7 +2241,7 @@ nsresult nsEditor::GetTextNodeTag(nsAWritableString& aOutString)
 }
 
 
-NS_IMETHODIMP nsEditor::InsertTextImpl(const nsAReadableString& aStringToInsert, 
+NS_IMETHODIMP nsEditor::InsertTextImpl(const nsAString& aStringToInsert, 
                                           nsCOMPtr<nsIDOMNode> *aInOutNode, 
                                           PRInt32 *aInOutOffset,
                                           nsIDOMDocument *aDoc)
@@ -2302,7 +2302,7 @@ NS_IMETHODIMP nsEditor::InsertTextImpl(const nsAReadableString& aStringToInsert,
 }
 
 
-NS_IMETHODIMP nsEditor::InsertTextIntoTextNodeImpl(const nsAReadableString& aStringToInsert, 
+NS_IMETHODIMP nsEditor::InsertTextIntoTextNodeImpl(const nsAString& aStringToInsert, 
                                                      nsIDOMCharacterData *aTextNode, 
                                                      PRInt32 aOffset)
 {
@@ -2517,7 +2517,7 @@ nsEditor::NotifyDocumentListeners(TDocumentListenerNotification aNotificationTyp
 }
 
 
-NS_IMETHODIMP nsEditor::CreateTxnForInsertText(const nsAReadableString & aStringToInsert,
+NS_IMETHODIMP nsEditor::CreateTxnForInsertText(const nsAString & aStringToInsert,
                                                nsIDOMCharacterData *aTextNode,
                                                PRInt32 aOffset,
                                                InsertTextTxn ** aTxn)
@@ -3449,7 +3449,7 @@ nsEditor::NodeIsType(nsIDOMNode *aNode, nsIAtom *aTag)
 }
 
 PRBool 
-nsEditor::NodeIsType(nsIDOMNode *aNode, const nsAReadableString &aTagStr)
+nsEditor::NodeIsType(nsIDOMNode *aNode, const nsAString &aTagStr)
 {
   nsCOMPtr<nsIDOMElement>element;
   element = do_QueryInterface(aNode);
@@ -3464,7 +3464,7 @@ nsEditor::NodeIsType(nsIDOMNode *aNode, const nsAReadableString &aTagStr)
 }
 
 PRBool 
-nsEditor::CanContainTag(nsIDOMNode* aParent, const nsAReadableString &aChildTag)
+nsEditor::CanContainTag(nsIDOMNode* aParent, const nsAString &aChildTag)
 {
   nsAutoString parentStringTag;
   
@@ -3476,7 +3476,7 @@ nsEditor::CanContainTag(nsIDOMNode* aParent, const nsAReadableString &aChildTag)
 }
 
 PRBool 
-nsEditor::TagCanContain(const nsAReadableString &aParentTag, nsIDOMNode* aChild)
+nsEditor::TagCanContain(const nsAString &aParentTag, nsIDOMNode* aChild)
 {
   nsAutoString childStringTag;
   
@@ -3494,7 +3494,7 @@ nsEditor::TagCanContain(const nsAReadableString &aParentTag, nsIDOMNode* aChild)
 }
 
 PRBool 
-nsEditor::TagCanContainTag(const nsAReadableString &aParentTag, const nsAReadableString &aChildTag)
+nsEditor::TagCanContainTag(const nsAString &aParentTag, const nsAString &aChildTag)
 {
   // if we don't have a dtd then assume we can insert whatever want
   if (!mDTD) return PR_TRUE;
@@ -3757,7 +3757,7 @@ nsEditor::GetTag(nsIDOMNode *aNode)
 // GetTagString: digs out string for the tag of this node
 //                    
 nsresult 
-nsEditor::GetTagString(nsIDOMNode *aNode, nsAWritableString& outString)
+nsEditor::GetTagString(nsIDOMNode *aNode, nsAString& outString)
 {
   nsCOMPtr<nsIAtom> atom;
   
@@ -4338,7 +4338,7 @@ nsEditor::DeleteSelectionImpl(nsIEditor::EDirection aAction)
 
 // XXX: error handling in this routine needs to be cleaned up!
 NS_IMETHODIMP
-nsEditor::DeleteSelectionAndCreateNode(const nsAReadableString& aTag,
+nsEditor::DeleteSelectionAndCreateNode(const nsAString& aTag,
                                            nsIDOMNode ** aNewNode)
 {
   nsCOMPtr<nsIDOMNode> parentSelectedNode;
@@ -4505,8 +4505,8 @@ nsEditor::DoAfterRedoTransaction()
 
 NS_IMETHODIMP 
 nsEditor::CreateTxnForSetAttribute(nsIDOMElement *aElement, 
-                                   const nsAReadableString& aAttribute, 
-                                   const nsAReadableString& aValue,
+                                   const nsAString& aAttribute, 
+                                   const nsAString& aValue,
                                    ChangeAttributeTxn ** aTxn)
 {
   nsresult result = NS_ERROR_NULL_POINTER;
@@ -4523,7 +4523,7 @@ nsEditor::CreateTxnForSetAttribute(nsIDOMElement *aElement,
 
 NS_IMETHODIMP 
 nsEditor::CreateTxnForRemoveAttribute(nsIDOMElement *aElement, 
-                                      const nsAReadableString& aAttribute,
+                                      const nsAString& aAttribute,
                                       ChangeAttributeTxn ** aTxn)
 {
   nsresult result = NS_ERROR_NULL_POINTER;
@@ -4540,7 +4540,7 @@ nsEditor::CreateTxnForRemoveAttribute(nsIDOMElement *aElement,
 }
 
 
-NS_IMETHODIMP nsEditor::CreateTxnForCreateElement(const nsAReadableString& aTag,
+NS_IMETHODIMP nsEditor::CreateTxnForCreateElement(const nsAString& aTag,
                                                   nsIDOMNode     *aParent,
                                                   PRInt32         aPosition,
                                                   CreateElementTxn ** aTxn)
@@ -4628,7 +4628,7 @@ NS_IMETHODIMP nsEditor::CreateTxnForDeleteElement(nsIDOMNode * aElement,
 */
 
 NS_IMETHODIMP 
-nsEditor::CreateTxnForIMEText(const nsAReadableString& aStringToInsert,
+nsEditor::CreateTxnForIMEText(const nsAString& aStringToInsert,
                               IMETextTxn ** aTxn)
 {
   NS_ASSERTION(aTxn, "illegal value- null ptr- aTxn");
@@ -5002,7 +5002,7 @@ nsresult nsEditor::ClearSelection()
 }
 
 nsresult
-nsEditor::CreateHTMLContent(const nsAReadableString& aTag, nsIContent** aContent)
+nsEditor::CreateHTMLContent(const nsAString& aTag, nsIContent** aContent)
 {
   nsresult rv;
 
@@ -5049,15 +5049,15 @@ nsEditor::CreateHTMLContent(const nsAReadableString& aTag, nsIContent** aContent
 
 nsresult
 nsEditor::SetAttributeOrEquivalent(nsIDOMElement * aElement,
-                                   const nsAReadableString & aAttribute,
-                                   const nsAReadableString & aValue)
+                                   const nsAString & aAttribute,
+                                   const nsAString & aValue)
 {
   return SetAttribute(aElement, aAttribute, aValue);
 }
 
 nsresult
 nsEditor::RemoveAttributeOrEquivalent(nsIDOMElement * aElement,
-                                      const nsAReadableString & aAttribute)
+                                      const nsAString & aAttribute)
 {
   return RemoveAttribute(aElement, aAttribute);
 }
