@@ -44,10 +44,14 @@ public:
   static nscoord CalcFontPointSize(PRInt32 aHTMLSize, PRInt32 aBasePointSize, 
                                    float aScalingFactor, nsIPresContext* aPresContext,
                                    nsFontSizeType aFontSizeType = eFontSize_HTML);
+
   static PRInt32 FindNextSmallerFontSize(nscoord aFontSize, PRInt32 aBasePointSize, 
-                                         float aScalingFactor, nsIPresContext* aPresContext);
+                                         float aScalingFactor, nsIPresContext* aPresContext,
+                                         nsFontSizeType aFontSizeType = eFontSize_HTML);
+
   static PRInt32 FindNextLargerFontSize(nscoord aFontSize, PRInt32 aBasePointSize, 
-                                        float aScalingFactor, nsIPresContext* aPresContext);
+                                        float aScalingFactor, nsIPresContext* aPresContext,
+                                        nsFontSizeType aFontSizeType = eFontSize_HTML);
 
   static PRInt32 ConstrainFontWeight(PRInt32 aWeight);
 

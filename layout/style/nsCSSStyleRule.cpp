@@ -1386,14 +1386,14 @@ MapDeclarationFontInto(nsICSSDeclaration* aDeclaration,
             font->mFixedFont.size = nsStyleUtil::CalcFontPointSize(value, (PRInt32)defaultFixedFont.size, scaleFactor, aPresContext, eFontSize_CSS);
           }
           else if (NS_STYLE_FONT_SIZE_LARGER == value) {
-            PRInt32 index = nsStyleUtil::FindNextLargerFontSize(parentFont->mFont.size, (PRInt32)defaultFont.size, scaleFactor, aPresContext);
-            font->mFont.size = nsStyleUtil::CalcFontPointSize(index, (PRInt32)defaultFont.size, scaleFactor, aPresContext);
-            font->mFixedFont.size = nsStyleUtil::CalcFontPointSize(index, (PRInt32)defaultFixedFont.size, scaleFactor, aPresContext);
+            PRInt32 index = nsStyleUtil::FindNextLargerFontSize(parentFont->mFont.size, (PRInt32)defaultFont.size, scaleFactor, aPresContext, eFontSize_CSS);
+            font->mFont.size = nsStyleUtil::CalcFontPointSize(index, (PRInt32)defaultFont.size, scaleFactor, aPresContext, eFontSize_CSS);
+            font->mFixedFont.size = nsStyleUtil::CalcFontPointSize(index, (PRInt32)defaultFixedFont.size, scaleFactor, aPresContext, eFontSize_CSS);
           }
           else if (NS_STYLE_FONT_SIZE_SMALLER == value) {
-            PRInt32 index = nsStyleUtil::FindNextSmallerFontSize(parentFont->mFont.size, (PRInt32)defaultFont.size, scaleFactor, aPresContext);
-            font->mFont.size = nsStyleUtil::CalcFontPointSize(index, (PRInt32)defaultFont.size, scaleFactor, aPresContext);
-            font->mFixedFont.size = nsStyleUtil::CalcFontPointSize(index, (PRInt32)defaultFixedFont.size, scaleFactor, aPresContext);
+            PRInt32 index = nsStyleUtil::FindNextSmallerFontSize(parentFont->mFont.size, (PRInt32)defaultFont.size, scaleFactor, aPresContext, eFontSize_CSS);
+            font->mFont.size = nsStyleUtil::CalcFontPointSize(index, (PRInt32)defaultFont.size, scaleFactor, aPresContext, eFontSize_CSS);
+            font->mFixedFont.size = nsStyleUtil::CalcFontPointSize(index, (PRInt32)defaultFixedFont.size, scaleFactor, aPresContext, eFontSize_CSS);
           }
           // this does NOT explicitly set font size
           font->mFlags &= ~NS_STYLE_FONT_SIZE_EXPLICIT;
