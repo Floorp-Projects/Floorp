@@ -189,6 +189,7 @@ nsDOMCSSDeclaration::SetProperty(const nsString& aPropertyName,
     declString.SetString(aPropertyName);
     declString.Append(":");
     declString.Append(aValue);
+    declString.Append(aPriority);
 
     nsICSSParser* css;
     result = NS_NewCSSParser(&css);
@@ -196,11 +197,6 @@ nsDOMCSSDeclaration::SetProperty(const nsString& aPropertyName,
       PRInt32 hint;
       result = css->ParseAndAppendDeclaration(declString, nsnull, decl, &hint);
       if (NS_OK == result) {
-        if (aPriority.Equals("!important")) {
-          char prop[50];
-          aPropertyName.ToCString(prop, sizeof(prop));
-          decl->SetValueImportant(prop);
-        }
         result = StylePropertyChanged(aPropertyName, hint);
       }
       NS_RELEASE(css);
