@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.30 $ $Date: 2002/01/24 15:45:55 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.31 $ $Date: 2002/02/01 17:25:15 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
@@ -109,8 +109,10 @@ token_destructor(void *t)
 #ifdef NSS_3_4_CODE
     /* in 3.4, also destroy the slot (managed separately) */
     (void)nssSlot_Destroy(tok->slot);
-#endif
+    STAN_DestroyNSSToken(tok);
+#else
     (void)nssToken_Destroy(tok);
+#endif
 }
 
 NSS_IMPLEMENT PRStatus
@@ -419,13 +421,17 @@ NSSTrustDomain_FindBestCertificateByNickname
     search.cbarg = &best;
     search.cached = nameList;
     search.searchType = nssTokenSearchType_TokenOnly;
+    nssCertificateList_DoCallback(nameList, 
+                                  nssBestCertificate_Callback, &best);
     /* traverse the tokens */
     for (token  = (NSSToken *)nssListIterator_Start(td->tokens);
          token != (NSSToken *)NULL;
          token  = (NSSToken *)nssListIterator_Next(td->tokens))
     {
-	nssrv = nssToken_TraverseCertificatesByNickname(token, NULL, 
-	                                                name, &search);
+	if (nssToken_SearchCerts(token)) {
+	    nssrv = nssToken_TraverseCertificatesByNickname(token, NULL, 
+	                                                    name, &search);
+	}
     }
     nssListIterator_Finish(td->tokens);
     nssList_Clear(nameList, cert_destructor);
@@ -468,8 +474,10 @@ NSSTrustDomain_FindCertificatesByNickname
          token != (NSSToken *)NULL;
          token  = (NSSToken *)nssListIterator_Next(td->tokens))
     {
-	nssrv = nssToken_TraverseCertificatesByNickname(token, NULL, 
-	                                                name, &search);
+	if (nssToken_SearchCerts(token)) {
+	    nssrv = nssToken_TraverseCertificatesByNickname(token, NULL, 
+	                                                    name, &search);
+	}
     }
     nssListIterator_Finish(td->tokens);
     count = nssList_Count(nameList);
@@ -511,11 +519,13 @@ NSSTrustDomain_FindCertificateByIssuerAndSerialNumber
          tok != (NSSToken *)NULL;
          tok  = (NSSToken *)nssListIterator_Next(td->tokens))
     {
-	rvCert = nssToken_FindCertificateByIssuerAndSerialNumber(tok,
+	if (nssToken_SearchCerts(tok)) {
+	    rvCert = nssToken_FindCertificateByIssuerAndSerialNumber(tok,
 	                                                         NULL,
 	                                                         issuer,
 	                                                         serialNumber,
 	                                        nssTokenSearchType_TokenOnly);
+	}
 #ifdef NSS_3_4_CODE
 	if (!rvCert) {
 	    /* Some tokens expect a decoded serial number.  For compatibility,
@@ -531,11 +541,14 @@ NSSTrustDomain_FindCertificateByIssuerAndSerialNumber
 	    if (secrv == SECSuccess) {
 		decodedSerial.data = ds.data;
 		decodedSerial.size = ds.len;
-		rvCert = nssToken_FindCertificateByIssuerAndSerialNumber(tok,
+		if (nssToken_SearchCerts(tok)) {
+		    rvCert = nssToken_FindCertificateByIssuerAndSerialNumber(
+		                                tok,
 	                                        NULL,
 	                                        issuer,
 	                                        &decodedSerial,
 	                                        nssTokenSearchType_TokenOnly);
+		}
 		PORT_Free(ds.data);
 	    }
 	}
@@ -575,13 +588,17 @@ NSSTrustDomain_FindBestCertificateBySubject
     search.cbarg = &best;
     search.cached = subjectList;
     search.searchType = nssTokenSearchType_TokenOnly;
+    nssCertificateList_DoCallback(subjectList, 
+                                  nssBestCertificate_Callback, &best);
     /* traverse the tokens */
     for (token  = (NSSToken *)nssListIterator_Start(td->tokens);
          token != (NSSToken *)NULL;
          token  = (NSSToken *)nssListIterator_Next(td->tokens))
     {
-	nssrv = nssToken_TraverseCertificatesBySubject(token, NULL, 
-	                                               subject, &search);
+	if (nssToken_SearchCerts(token)) {
+	    nssrv = nssToken_TraverseCertificatesBySubject(token, NULL, 
+	                                                   subject, &search);
+	}
     }
     nssListIterator_Finish(td->tokens);
     nssList_Clear(subjectList, cert_destructor);
@@ -624,8 +641,10 @@ NSSTrustDomain_FindCertificatesBySubject
          token != (NSSToken *)NULL;
          token  = (NSSToken *)nssListIterator_Next(td->tokens))
     {
-	nssrv = nssToken_TraverseCertificatesBySubject(token, NULL, 
-	                                               subject, &search);
+	if (nssToken_SearchCerts(token)) {
+	    nssrv = nssToken_TraverseCertificatesBySubject(token, NULL, 
+	                                                   subject, &search);
+	}
     }
     nssListIterator_Finish(td->tokens);
     count = nssList_Count(subjectList);
@@ -692,9 +711,11 @@ NSSTrustDomain_FindCertificateByEncodedCertificate
          tok != (NSSToken *)NULL;
          tok  = (NSSToken *)nssListIterator_Next(td->tokens))
     {
-	rvCert = nssToken_FindCertificateByEncodedCertificate(tok, NULL,
+	if (nssToken_SearchCerts(tok)) {
+	    rvCert = nssToken_FindCertificateByEncodedCertificate(tok, NULL,
 	                                        encodedCertificate,
 	                                        nssTokenSearchType_TokenOnly);
+	}
 	if (rvCert) {
 	    /* cache it */
 	    nssTrustDomain_AddCertsToCache(td, &rvCert, 1);
@@ -730,13 +751,17 @@ NSSTrustDomain_FindCertificateByEmail
     search.cbarg = &best;
     search.cached = emailList;
     search.searchType = nssTokenSearchType_TokenOnly;
+    nssCertificateList_DoCallback(emailList, 
+                                  nssBestCertificate_Callback, &best);
     /* traverse the tokens */
     for (token  = (NSSToken *)nssListIterator_Start(td->tokens);
          token != (NSSToken *)NULL;
          token  = (NSSToken *)nssListIterator_Next(td->tokens))
     {
-	nssrv = nssToken_TraverseCertificatesByEmail(token, NULL, 
-	                                             email, &search);
+	if (nssToken_SearchCerts(token)) {
+	    nssrv = nssToken_TraverseCertificatesByEmail(token, NULL, 
+	                                                 email, &search);
+	}
     }
     nssListIterator_Finish(td->tokens);
     nssList_Clear(emailList, cert_destructor);
@@ -927,12 +952,16 @@ NSSTrustDomain_TraverseCertificates
     search.cbarg = &ta;
     search.cached = certList;
     search.searchType = nssTokenSearchType_TokenOnly;
+    nssCertificateList_DoCallback(certList, 
+                                  traverse_callback, &ta);
     /* traverse the tokens */
     for (token  = (NSSToken *)nssListIterator_Start(td->tokens);
          token != (NSSToken *)NULL;
          token  = (NSSToken *)nssListIterator_Next(td->tokens))
     {
-	nssrv = nssToken_TraverseCertificates(token, NULL, &search);
+	if (nssToken_SearchCerts(token)) {
+	    nssrv = nssToken_TraverseCertificates(token, NULL, &search);
+	}
     }
     nssListIterator_Finish(td->tokens);
 #ifdef NSS_3_4_CODE

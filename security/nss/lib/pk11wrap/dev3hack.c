@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: dev3hack.c,v $ $Revision: 1.4 $ $Date: 2002/01/31 17:28:49 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: dev3hack.c,v $ $Revision: 1.5 $ $Date: 2002/02/01 17:25:12 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSS_3_4_CODE
@@ -152,6 +152,24 @@ nssToken_CreateFromPK11SlotInfo(NSSTrustDomain *td, PK11SlotInfo *nss3slot)
     rvToken->slot->token = rvToken;
     rvToken->defaultSession->slot = rvToken->slot;
     return rvToken;
+}
+
+NSS_IMPLEMENT PRStatus
+nssSlot_Refresh
+(
+  NSSSlot *slot
+)
+{
+    PK11SlotInfo *nss3slot = slot->pk11slot;
+    if (PK11_InitToken(nss3slot, PR_FALSE) != SECSuccess) {
+	return PR_FAILURE;
+    }
+    slot->token->defaultSession = nssSession_ImportNSS3Session(slot->arena,
+                                                       nss3slot->session,
+                                                       nss3slot->sessionLock,
+                                                       nss3slot->defRWSession);
+    nssToken_DestroyCertList(slot->token);
+    return nssToken_LoadCerts(slot->token);
 }
 
 
