@@ -12,6 +12,11 @@
 	getRowProperties : function(index, prop) {},
 	getCellProperties : function(index, col, prop) {},
 	getColumnProperties : function(col, elt, prop) {},
+        isSeparator : function(index) {
+          if (index % 10 == 0)
+            return true;
+          return false;
+        },
 	outlinerbox : null,
 	setOutliner : function(out) { this.outlinerbox = out; },
 	getCellText : function(i, col) { return "Text at row #" + i + " in col " + col; }

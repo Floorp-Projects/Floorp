@@ -375,6 +375,9 @@ protected:
   // convert pixels, probably from an event, into twips in our coordinate space
   void AdjustEventCoordsToBoxCoordSpace ( PRInt32 inX, PRInt32 inY, PRInt32* outX, PRInt32* outY ) ;
 
+  // Convert a border style into line style.
+  nsLineStyle ConvertBorderStyleToLineStyle(PRUint8 aBorderStyle);
+
 protected: // Data Members
   // Our cached pres context.
   nsIPresContext* mPresContext;

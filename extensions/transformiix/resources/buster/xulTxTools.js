@@ -36,6 +36,7 @@ var view = ({
   getColumnProperties : function(index, prop) {},
   getCellProperties : function(index, prop) {},
   isContainer : function(index) {return false;},
+  isSeparator : function(index) {return false;},
   outliner : null,
   setOutliner : function(out) { this.outliner = out; },
   getCellText : function(i, col) {

@@ -158,6 +158,9 @@ nsFileView.prototype = {
   /* boolean isContainerEmpty(in long index); */
   isContainerEmpty: function(index) { return false; },
 
+  /* boolean isSeparator(in long index); */
+  isSeparator: function(index) { return false; },
+
   /* boolean isSorted (); */
   isSorted: function() { return (this.mSortType > 0); },
 
