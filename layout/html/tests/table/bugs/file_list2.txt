@@ -5,7 +5,10 @@ file:///s|/mozilla/layout/html/tests/table/bugs/bug14159-2.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug14159-3.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug1430.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug14323.html
+file:///s|/mozilla/layout/html/tests/table/bugs/bug149275-1.html
+file:///s|/mozilla/layout/html/tests/table/bugs/bug149275-2.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug14929.html
+file:///s|/mozilla/layout/html/tests/table/bugs/bug154780.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug15544.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug14489.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug1474.html

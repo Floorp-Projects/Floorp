@@ -51,6 +51,10 @@ file:///s:/mozilla/layout/html/tests/block/bugs/12233.html
 file:///s:/mozilla/layout/html/tests/block/bugs/12451.html
 file:///s:/mozilla/layout/html/tests/block/bugs/12709.html
 file:///s:/mozilla/layout/html/tests/block/bugs/12760.html
+file:///s:/mozilla/layout/html/tests/block/bugs/131065-1.html
+file:///s:/mozilla/layout/html/tests/block/bugs/131065-2.html
+file:///s:/mozilla/layout/html/tests/block/bugs/131065-3.html
+file:///s:/mozilla/layout/html/tests/block/bugs/131065-4.html
 file:///s:/mozilla/layout/html/tests/block/bugs/13196.html
 file:///s:/mozilla/layout/html/tests/block/bugs/13258.html
 file:///s:/mozilla/layout/html/tests/block/bugs/13481.html
