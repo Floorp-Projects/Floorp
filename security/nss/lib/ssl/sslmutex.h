@@ -30,7 +30,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslmutex.h,v 1.2 2001/06/12 01:10:01 nelsonb%netscape.com Exp $
+ * $Id: sslmutex.h,v 1.3 2001/10/06 00:14:33 jpierre%netscape.com Exp $
  */
 #ifndef __SSLMUTEX_H_
 #define __SSLMUTEX_H_ 1
@@ -54,10 +54,27 @@
  * So, this API looks a lot like POSIX pthread mutexes.
  */
 
+#include "prtypes.h"
+#include "prlock.h"
+
 #if defined(WIN32)
 
 #include <wtypes.h>
-typedef HANDLE sslMutex;
+
+typedef struct 
+{
+    PRBool isMultiProcess;
+#ifdef WINNT
+    /* on WINNT we need both the PRLock and the Win32 mutex for fibers */
+    struct {
+#else
+    union {
+#endif
+        PRLock* sslLock;
+        HANDLE sslMutx;
+    } u;
+} sslMutex;
+
 typedef int    sslPID;
 
 #elif defined(LINUX) || defined(AIX)
@@ -66,8 +83,14 @@ typedef int    sslPID;
 #include "prtypes.h"
 
 typedef struct { 
-    int      mPipes[3]; 
-    PRInt32  nWaiters;
+    PRBool isMultiProcess;
+    union {
+        PRLock* sslLock;
+        struct {
+            int      mPipes[3]; 
+            PRInt32  nWaiters;
+        } pipeStr;
+    } u;
 } sslMutex;
 typedef pid_t sslPID;
 
@@ -76,14 +99,29 @@ typedef pid_t sslPID;
 #include <sys/types.h>	/* for pid_t */
 #include <semaphore.h>  /* for sem_t, and sem_* functions */
 
-typedef sem_t sslMutex;
+typedef struct
+{
+    PRBool isMultiProcess;
+    union {
+        PRLock* sslLock;
+        sem_t  sem;
+    } u;
+} sslMutex;
+
 typedef pid_t sslPID;
 
 #else
 
 /* what platform is this ?? */
 
-typedef int sslMutex;
+typedef struct { 
+    PRBool isMultiProcess;
+    union {
+        PRLock* sslLock;
+        /* include cross-process locking mechanism here */
+    } u;
+} sslMutex;
+
 typedef int sslPID;
 
 #endif
@@ -99,6 +137,12 @@ extern SECStatus sslMutex_Destroy(sslMutex *sem);
 extern SECStatus sslMutex_Unlock(sslMutex *sem);
 
 extern SECStatus sslMutex_Lock(sslMutex *sem);
+
+#ifdef WINNT
+
+extern SECStatus sslMutex_2LevelInit(sslMutex *sem);
+
+#endif
 
 SEC_END_PROTOS
 

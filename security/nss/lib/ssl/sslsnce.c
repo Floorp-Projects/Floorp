@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslsnce.c,v 1.14 2001/09/18 01:59:20 nelsonb%netscape.com Exp $
+ * $Id: sslsnce.c,v 1.15 2001/10/06 00:14:33 jpierre%netscape.com Exp $
  */
 
 /* Note: ssl_FreeSID() in sslnonce.c gets used for both client and server 
@@ -1180,6 +1180,11 @@ SSL_InheritMPServerSIDCacheInstance(cacheDesc *cache, const char * envString)
     ptrdiff_t       ptr;
     inheritance     inherit;
     cacheDesc       my;
+#ifdef WINNT
+    sidCacheLock* newLocks;
+    int           locks_initialized = 0;
+    int           locks_to_initialize = 0;
+#endif
 
     myPid = SSL_GETPID();
 
@@ -1260,6 +1265,40 @@ SSL_InheritMPServerSIDCacheInstance(cacheDesc *cache, const char * envString)
     *(ptrdiff_t *)(&cache->sidCacheData ) += ptr;
     *(ptrdiff_t *)(&cache->certCacheData) += ptr;
     *(ptrdiff_t *)(&cache->keyCacheData ) += ptr;
+
+#ifdef WINNT
+    /*  On Windows NT we need to "fix" the sidCacheLocks here to support fibers
+        When NT fibers are used in a multi-process server, a second level of
+        locking is needed to prevent a deadlock, in case a fiber acquires the
+        cross-process mutex, yields, and another fiber is later scheduled on
+        the same native thread and tries to acquire the cross-process mutex.
+        We do this by using a PRLock in the sslMutex. However, it is stored in
+        shared memory as part of sidCacheLocks, and we don't want to overwrite
+        the PRLock of the parent process. So we need to make new, private
+        copies of sidCacheLocks before modifying the sslMutex with our own
+        PRLock
+    */
+    
+    newLocks = (sidCacheLock*)PORT_Alloc(sizeof(sidCacheLock)*(cache->numSIDCacheLocks + 2));
+    /* note from jpierre : this should be free'd in child processes when
+       a function is added to delete the SSL session cache in the future */
+    /* fix the locks */		
+    for (locks_to_initialize = cache->numSIDCacheLocks + 2;
+         locks_initialized < locks_to_initialize; 
+         ++locks_initialized) {
+        /* copy the old lock */
+        memcpy(&newLocks[locks_initialized], &cache->sidCacheLocks[locks_initialized], sizeof(sidCacheLock));
+        /* now, make a local PRLock in this sslMutex for this child process */
+        sslMutex_2LevelInit(&newLocks[locks_initialized].mutex);
+    }
+    
+    /* then, make our cache object point to our new private sidCacheLocks */
+    /* first the session cache */
+    cache->sidCacheLocks = newLocks;
+    /* also fix the key and cert cache which use the last 2 lock entries */
+    cache->keyCacheLock  = cache->sidCacheLocks + cache->numSIDCacheLocks;
+    cache->certCacheLock = cache->keyCacheLock  + 1;
+#endif
 
     PORT_Free(decoString);
     isMultiProcess = PR_TRUE;
