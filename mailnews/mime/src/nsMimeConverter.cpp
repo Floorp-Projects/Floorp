@@ -116,7 +116,7 @@ nsMimeConverter::DecodeMimePartIIStr(const nsString& header,
       }
       PR_Free(decodedCstr);
     }
-    delete [] encodedCstr;
+	nsAllocator::Free(encodedCstr);
   }
   return res;
 }
