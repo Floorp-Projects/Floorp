@@ -82,6 +82,8 @@ NS_IMETHODIMP nsChromeTreeOwner::GetInterface(const nsIID& aIID, void** aSink)
     return mXULWindow->GetInterface(aIID, aSink);
   if(aIID.Equals(NS_GET_IID(nsIWebBrowserChrome)))
     return mXULWindow->GetInterface(aIID, aSink);
+  if (aIID.Equals(NS_GET_IID(nsIXULWindow)))
+    return mXULWindow->QueryInterface(aIID, aSink);
 
   return QueryInterface(aIID, aSink);
 }
@@ -179,12 +181,6 @@ NS_IMETHODIMP nsChromeTreeOwner::SizeShellTo(nsIDocShellTreeItem* aShellItem,
    PRInt32 aCX, PRInt32 aCY)
 {
    return mXULWindow->SizeShellTo(aShellItem, aCX, aCY);
-}
-
-NS_IMETHODIMP nsChromeTreeOwner::GetNewWindow(PRInt32 aChromeFlags,
-   nsIDocShellTreeItem** aDocShellTreeItem)
-{
-   return mXULWindow->GetNewWindow(aChromeFlags, aDocShellTreeItem);
 }
 
 NS_IMETHODIMP

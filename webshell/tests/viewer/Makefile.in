@@ -31,6 +31,7 @@ DIRS			:= public
 MODULE			= webshell_tests
 REQUIRES	= xpcom \
 		  string \
+		  embed_base \
 		  webshell \
 		  widget \
 		  gfx \
@@ -50,6 +51,7 @@ REQUIRES	= xpcom \
 		  intl \
 		  editor \
 		  cookie \
+		  windowwatcher \
 		  xpconnect \
 		  $(NULL)
 
@@ -70,6 +72,7 @@ CPPSRCS			= \
 			nsViewerApp.cpp \
 			nsWebCrawler.cpp \
 			nsWebBrowserChrome.cpp \
+			nsWindowCreator.cpp \
 			$(NULL)
 
 ifeq (,$(filter beos os2 photon mac,$(MOZ_WIDGET_TOOLKIT)))

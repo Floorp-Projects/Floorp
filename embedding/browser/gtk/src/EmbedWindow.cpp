@@ -170,43 +170,6 @@ EmbedWindow::SetChromeFlags(PRUint32 aChromeFlags)
 }
 
 NS_IMETHODIMP
-EmbedWindow::CreateBrowserWindow(PRUint32 aChromeFlags, 
-				 PRInt32 aX, PRInt32 aY,
-				 PRInt32 aCX, PRInt32 aCY,
-				 nsIWebBrowser **_retval)
-{
-  GtkMozEmbed *newEmbed = nsnull;
-
-  gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
-		  moz_embed_signals[NEW_WINDOW],
-		  &newEmbed, (guint)aChromeFlags);
-
-  if (!newEmbed)
-    return NS_ERROR_FAILURE;
-
-  // The window _must_ be realized before we pass it back to the
-  // function that created it. Functions that create new windows
-  // will do things like GetDocShell() and the widget has to be
-  // realized before that can happen.
-  gtk_widget_realize(GTK_WIDGET(newEmbed));
-
-  EmbedPrivate *newEmbedPrivate = NS_STATIC_CAST(EmbedPrivate *,
-						 newEmbed->data);
-
-  // set the chrome flag on the new window if it's a chrome open
-  if (aChromeFlags & nsIWebBrowserChrome::CHROME_OPENAS_CHROME)
-    newEmbedPrivate->mIsChrome = PR_TRUE;
-
-  newEmbedPrivate->mWindow->GetWebBrowser(_retval);
-  
-  if (*_retval)
-    return NS_OK;
-
-  return NS_ERROR_FAILURE;
-
-}
-
-NS_IMETHODIMP
 EmbedWindow::DestroyBrowserWindow(void)
 {
   gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),

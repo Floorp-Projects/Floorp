@@ -116,6 +116,9 @@ NS_IMETHODIMP nsContentTreeOwner::GetInterface(const nsIID& aIID, void** aSink)
     return NS_ERROR_FAILURE;
   }
 
+  if (aIID.Equals(NS_GET_IID(nsIXULWindow)))
+    return mXULWindow->QueryInterface(aIID, aSink);
+
   return QueryInterface(aIID, aSink);
 }
 
@@ -208,12 +211,6 @@ NS_IMETHODIMP nsContentTreeOwner::SizeShellTo(nsIDocShellTreeItem* aShellItem,
    PRInt32 aCX, PRInt32 aCY)
 {
    return mXULWindow->SizeShellTo(aShellItem, aCX, aCY);
-}
-
-NS_IMETHODIMP nsContentTreeOwner::GetNewWindow(PRInt32 aChromeFlags,
-   nsIDocShellTreeItem** aDocShellTreeItem)
-{
-   return mXULWindow->GetNewWindow(aChromeFlags, aDocShellTreeItem);
 }
 
 NS_IMETHODIMP
@@ -370,8 +367,11 @@ NS_IMETHODIMP nsContentTreeOwner::SetWebBrowser(nsIWebBrowser* aWebBrowser)
 
 NS_IMETHODIMP nsContentTreeOwner::GetWebBrowser(nsIWebBrowser** aWebBrowser)
 {
-   NS_ERROR("Haven't Implemented this yet");
-   return NS_ERROR_FAILURE;
+  // Unimplemented, and probably will remain so; xpfe windows have docshells,
+  // not webbrowsers. Note that we're relying on this to differentiate
+  // embedded instances from Mozilla in nsWindowWatcher::InitializeDocshell.
+  // (Don't let me stop you, but keep that in mind.)
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP nsContentTreeOwner::SetChromeFlags(PRUint32 aChromeFlags)
@@ -388,13 +388,6 @@ NS_IMETHODIMP nsContentTreeOwner::GetChromeFlags(PRUint32* aChromeFlags)
 
    *aChromeFlags = mChromeFlags;
    return NS_OK;
-}
-
-NS_IMETHODIMP nsContentTreeOwner::CreateBrowserWindow(PRUint32 aChromeFlags,
-   PRInt32 aX, PRInt32 aY, PRInt32 aCX, PRInt32 aCY, nsIWebBrowser** aWebBrowser)
-{
-   NS_ERROR("Haven't Implemented this yet");
-   return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP nsContentTreeOwner::DestroyBrowserWindow()

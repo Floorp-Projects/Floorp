@@ -192,22 +192,6 @@ NS_IMETHODIMP CBrowserImpl::SetChromeFlags(PRUint32 aChromeMask)
    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-// Gets called in response to create a new browser window. 
-// Ex: In response to a JavaScript Window.Open() call
-//
-//
-NS_IMETHODIMP CBrowserImpl::CreateBrowserWindow(PRUint32 chromeMask, PRInt32 aX, PRInt32 aY, PRInt32 aCX, PRInt32 aCY, nsIWebBrowser **aWebBrowser)
-{
-	if(! m_pBrowserFrameGlue)
-		return NS_ERROR_FAILURE;
-
-	if(m_pBrowserFrameGlue->CreateNewBrowserFrame(chromeMask, 
-								aX, aY, aCX, aCY, aWebBrowser))
-		return NS_OK;
-	else
-	    return NS_ERROR_FAILURE;
-}
-
 // Will get called in response to JavaScript window.close()
 //
 NS_IMETHODIMP CBrowserImpl::DestroyBrowserWindow()

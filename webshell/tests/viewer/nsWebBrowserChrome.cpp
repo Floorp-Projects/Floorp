@@ -90,7 +90,17 @@ NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP nsWebBrowserChrome::GetInterface(const nsIID &aIID, void** aInstancePtr)
 {
-   return QueryInterface(aIID, aInstancePtr);
+  NS_ENSURE_ARG_POINTER(aInstancePtr);
+
+  /* WindowCreator wants the main content shell when it asks a chrome window
+     for this interface. */
+  if (aIID.Equals(NS_GET_IID(nsIDOMWindow))) {
+    nsIDOMWindow *contentWin;
+    mBrowserWindow->mWebBrowser->GetContentDOMWindow(&contentWin);
+    *aInstancePtr = contentWin;
+    return NS_OK;
+  }
+  return QueryInterface(aIID, aInstancePtr);
 }
 
 //*****************************************************************************
@@ -122,8 +132,11 @@ NS_IMETHODIMP nsWebBrowserChrome::SetWebBrowser(nsIWebBrowser* aWebBrowser)
 
 NS_IMETHODIMP nsWebBrowserChrome::GetWebBrowser(nsIWebBrowser** aWebBrowser)
 {
-   NS_ERROR("Haven't Implemented this yet");
-   return NS_ERROR_FAILURE;
+  // Unimplemented, and probably will remain so; xpfe windows have docshells,
+  // not webbrowsers. Note that we're relying on this to differentiate
+  // embedded instances from Mozilla in nsWindowWatcher::InitializeDocshell.
+  // (Don't let me stop you, but keep that in mind.)
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP nsWebBrowserChrome::SetChromeFlags(PRUint32 aChromeFlags)
@@ -135,28 +148,6 @@ NS_IMETHODIMP nsWebBrowserChrome::SetChromeFlags(PRUint32 aChromeFlags)
 NS_IMETHODIMP nsWebBrowserChrome::GetChromeFlags(PRUint32* aChromeFlags)
 {
    *aChromeFlags = mChromeFlags;
-   return NS_OK;
-}
-
-NS_IMETHODIMP nsWebBrowserChrome::CreateBrowserWindow(PRUint32 aChromeMask,
-   PRInt32 aX, PRInt32 aY, PRInt32 aCX, PRInt32 aCY, nsIWebBrowser** aWebBrowser)
-{
-   if(mBrowserWindow->mWebCrawler && (mBrowserWindow->mWebCrawler->Crawling() || 
-      mBrowserWindow->mWebCrawler->LoadingURLList()))
-      {
-      // Do not fly javascript popups when we are crawling
-      *aWebBrowser = nsnull;
-      return NS_ERROR_NOT_IMPLEMENTED;
-      }
-
-   nsBrowserWindow* browser = nsnull;
-   mBrowserWindow->mApp->OpenWindow(aChromeMask, browser);
-
-   NS_ENSURE_TRUE(browser, NS_ERROR_FAILURE);
-   browser->mWebBrowserChrome->SetChromeFlags(aChromeMask);
-
-   *aWebBrowser = browser->mWebBrowser;
-   NS_IF_ADDREF(*aWebBrowser);
    return NS_OK;
 }
 
@@ -678,7 +669,4 @@ void nsWebBrowserChrome::OnWindowActivityFinished()
 
 void nsWebBrowserChrome::EnableParent(PRBool aEnable)
 {
-  nsCOMPtr<nsIWidget> parentWidget = mBrowserWindow->mWindow;
-  if (parentWidget)
-    parentWidget->Enable(aEnable);
 }

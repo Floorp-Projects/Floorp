@@ -46,8 +46,10 @@
 #include "nsViewerApp.h"
 #include "nsBrowserWindow.h"
 #include "nsWidgetsCID.h"
+#include "nsWindowCreator.h"
 #include "nsIAppShell.h"
 #include "nsIPref.h"
+#include "nsIWindowWatcher.h"
 
 // Form Processor
 #include "nsIFormProcessor.h"
@@ -321,6 +323,8 @@ nsViewerApp::Initialize(int argc, char** argv)
      return rv;
   }
 
+  InitializeWindowCreator();
+
   // Create widget application shell
   rv = nsComponentManager::CreateInstance(kAppShellCID, nsnull, kIAppShellIID,
                                           (void**)&mAppShell);
@@ -343,6 +347,27 @@ nsViewerApp::Initialize(int argc, char** argv)
 
   mIsInitialized = PR_TRUE;
   return rv;
+}
+
+/* InitializeWindowCreator creates and hands off an object with a callback
+   to a window creation function. This is how all new windows are opened,
+   except any created directly by the viewer app. */
+nsresult
+nsViewerApp::InitializeWindowCreator()
+{
+  // create an nsWindowCreator and give it to the WindowWatcher service
+  nsWindowCreator *creatorCallback = new nsWindowCreator(this);
+  if (creatorCallback) {
+    nsCOMPtr<nsIWindowCreator> windowCreator(dont_QueryInterface(NS_STATIC_CAST(nsIWindowCreator *, creatorCallback)));
+    if (windowCreator) {
+      nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+      if (wwatch) {
+        wwatch->SetWindowCreator(windowCreator);
+        return NS_OK;
+      }
+    }
+  }
+  return NS_ERROR_FAILURE;
 }
 
 nsresult

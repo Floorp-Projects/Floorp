@@ -66,16 +66,6 @@ interface nsIDocShellTreeOwner : nsISupports
 	void sizeShellTo(in nsIDocShellTreeItem shell, in long cx, in long cy);
 
 	/*
-	Tells the implementer of this interface to create a new window.  This is
-	a new logical window.  Meaning in some implementations the result may not
-	be an actual new window, but rather a new tab or view in an existing
-	window.  What is returned is the new DocShellTreeItem from which the
-	internals can operate on.  This most often will be called when there is
-	a need for a new JS window, etc.	
-	*/
-	nsIDocShellTreeItem getNewWindow(in long aChromeFlags);
-
-	/*
 	Sets the persistence of different attributes of the window.
 	*/
 	void setPersistence(in boolean aPersistPosition,

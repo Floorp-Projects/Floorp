@@ -593,37 +593,6 @@ CWebBrowserContainer::SetChromeFlags(PRUint32 aChromeFlags)
 
 
 NS_IMETHODIMP
-CWebBrowserContainer::CreateBrowserWindow(PRUint32 chromeFlags,  PRInt32 aX, PRInt32 aY, PRInt32 aCX, PRInt32 aCY, nsIWebBrowser **_retval)
-{
-      IDispatch *pDispNew = NULL;
-      VARIANT_BOOL bCancel = VARIANT_FALSE;
-
-    *_retval = nsnull;
-
-      // Test if the event sink can give us a new window to navigate into
-      m_pEvents2->Fire_NewWindow2(&pDispNew, &bCancel);
-
-    if ((bCancel == VARIANT_FALSE) && pDispNew)
-      {
-        CComQIPtr<IMozControlBridge, &IID_IMozControlBridge> cpBridge = pDispNew;
-        if (cpBridge)
-        {
-            nsIWebBrowser *browser = nsnull;
-            cpBridge->GetWebBrowser((void **) &browser);
-            if (browser)
-            {
-                *_retval = browser;
-                return NS_OK;
-            }
-        }
-        pDispNew->Release();
-    }
-
-    return NS_ERROR_FAILURE;
-}
-
-
-NS_IMETHODIMP
 CWebBrowserContainer::DestroyBrowserWindow(void)
 {
     return NS_ERROR_FAILURE;

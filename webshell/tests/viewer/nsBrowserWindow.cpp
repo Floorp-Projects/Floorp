@@ -1345,36 +1345,27 @@ nsBrowserWindow::~nsBrowserWindow()
   }
 }
 
-NS_IMPL_ADDREF(nsBrowserWindow)
-NS_IMPL_RELEASE(nsBrowserWindow)
+NS_IMPL_ISUPPORTS4(nsBrowserWindow, nsIBaseWindow, nsIInterfaceRequestor, nsIProgressEventSink, nsIWebShellContainer);
 
 nsresult
-nsBrowserWindow::QueryInterface(const nsIID& aIID,
-                                void** aInstancePtrResult)
+nsBrowserWindow::GetInterface(const nsIID& aIID,
+                              void** aInstancePtrResult)
 {
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null pointer");
-  if (nsnull == aInstancePtrResult) {
+  nsresult rv;
+
+  NS_PRECONDITION(aInstancePtrResult, "null pointer");
+  if (!aInstancePtrResult)
     return NS_ERROR_NULL_POINTER;
-  }
 
   *aInstancePtrResult = NULL;
 
-  if (aIID.Equals(kIWebShellContainerIID)) {
-    *aInstancePtrResult = (void*) ((nsIWebShellContainer*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
+  if (aIID.Equals(NS_GET_IID(nsIWebBrowserChrome))) {
+    rv = EnsureWebBrowserChrome();
+    if (NS_SUCCEEDED(rv))
+      return mWebBrowserChrome->QueryInterface(aIID, aInstancePtrResult);
   }
-  if (aIID.Equals(NS_GET_IID(nsIProgressEventSink))) {
-    *aInstancePtrResult = (void*) ((nsIProgressEventSink*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kISupportsIID)) {
-    *aInstancePtrResult = (void*) ((nsISupports*)((nsIWebShellContainer*)this));
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
+
+  return QueryInterface(aIID, aInstancePtrResult);
 }
 
 nsresult

@@ -30,6 +30,7 @@ include $(topsrcdir)/config/config.mk
 
 MODULE		= apprunner
 REQUIRES	= xpcom \
+		  xpconnect \
 		  string \
 		  webbrwsr \
 		  widget \
@@ -57,7 +58,6 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 REQUIRES	+= \
 		  intl \
 		  profile \
-		  xpconnect \
 		  $(NULL)
 endif
 

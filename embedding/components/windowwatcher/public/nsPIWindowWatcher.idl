@@ -55,8 +55,7 @@ interface nsPIWindowWatcher : nsISupports
   void removeWindow(in nsIDOMWindow aWindow);
 
   /** Like the public interface's open(), but can deal with openDialog
-      style arguments. The exact definition of this method is temporary
-      pending the XPIDL rewrite of the DOM.
+      style arguments.
       @param aParent parent window, if any. null if not.
       @param aURL url to which to open the new window. Must already be
              escaped, if applicable. can be null.
@@ -71,6 +70,35 @@ interface nsPIWindowWatcher : nsISupports
   nsIDOMWindow openWindowJS(in nsIDOMWindow aParent, in string aUrl,
                in string aName, in string aFeatures, in boolean aDialog,
                in PRUint32 argc, in jsvalptr argv);
+
+  /** One of several internal-use stages in creating a new chrome window.
+      The interface(s) for creating a window are arguably
+      <pre>
+      1) nsIWindowWatcher::openWindow (public interface)
+      2) nsPIWindowWatcher::openWindowJS (internal, called by above)
+      3) nsPIWindowWatcher::createChromeWindow (internal, called by above)
+      4) nsIWindowCreator::createChromeWindow (implemented by the embedding app)
+      </pre>
+      The fourth level is implementation-dependent and must be supplied.
+      It must create the window (of course) and synchronously load some
+      appropriate URL into the embedded docshell, guaranteeing that the
+      docshell is ready for use as soon as the function returns.
+      The third level wraps the fourth with some internal bookkeeping
+      necessary for the expected implementation of the fourth level
+      (a captive event loop) to work. Internally to Mozilla code, the
+      fourth level should never be accessed directly except through
+      the third level.  The second level allows JavaScript-style parameters
+      to be passed. The top level is nominally the only public access point.
+      @param aParent parent window, or null if no parent.
+      @param aChromeFlags chrome features from nsIWebBrowserChrome.
+                          The position parameters should be ignored
+                          unless the CHROME_WITH_POSITION chrome flags is set.
+                          The size parameters should be ignored unless
+                          the CHROME_WITH_SIZE chrome flag is set. 
+      @return the new window
+  */
+  nsIWebBrowserChrome createChromeWindow(in nsIWebBrowserChrome aParent,
+                      in PRUint32 aChromeFlags);
 
 };
 

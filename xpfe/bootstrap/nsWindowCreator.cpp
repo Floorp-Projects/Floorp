@@ -66,15 +66,21 @@
 
 #include "nsCOMPtr.h"
 #include "nsAppShellCIDs.h"
+#include "nsWidgetsCID.h"
+#include "nsWindowCreator.h"
+
+#include "nsIAppShell.h"
 #include "nsIAppShellService.h"
+#include "nsIDocShellTreeItem.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
+#include "nsIJSContextStack.h"
 #include "nsIServiceManager.h"
 #include "nsIXULWindow.h"
 #include "nsIWebBrowserChrome.h"
-#include "nsWindowCreator.h"
 
 static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
+static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 
 nsWindowCreator::nsWindowCreator() {
   NS_INIT_REFCNT();
@@ -93,31 +99,33 @@ nsWindowCreator::CreateChromeWindow(nsIWebBrowserChrome *aParent,
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = 0;
 
-  /* There is no valid way to get from an nsIWebBrowserChrome interface
-     to the corresponding nsXULWindow, so we can't really service a request
-     to make a window with a parent. This shouldn't be a problem, since
-     convention suggests this method only be used when there is no parent
-     window (otherwise, just call Open() on the parent). However, we
-     should say something, just to be sure: */
-  NS_ASSERTION(!aParent, "window creator reached with non-null parent");
-  if (aParent)
-    return NS_ERROR_INVALID_ARG;
-
-  /* And you really shouldn't be making dependent windows without a parent.
-     But unparented modal (and therefore dependent) windows happen
-     in our codebase, so we allow it after some bellyaching: */
-  if (aChromeFlags & nsIWebBrowserChrome::CHROME_DEPENDENT)
-    NS_WARNING("dependent window created without a parent");
-
-  nsCOMPtr<nsIAppShellService> appShell(do_GetService(kAppShellServiceCID));
-  if (!appShell)
-    return NS_ERROR_FAILURE;
-  
   nsCOMPtr<nsIXULWindow> newWindow;
-  appShell->CreateTopLevelWindow(0, 0, PR_FALSE, PR_FALSE,
-    aChromeFlags, nsIAppShellService::SIZE_TO_CONTENT,
-    nsIAppShellService::SIZE_TO_CONTENT, getter_AddRefs(newWindow));
 
+  if (aParent) {
+    nsCOMPtr<nsIXULWindow> xulParent(do_GetInterface(aParent));
+    NS_ASSERTION(xulParent, "window created using non-XUL parent. that's unexpected, but may work.");
+    if (xulParent)
+      xulParent->CreateNewWindow(aChromeFlags, getter_AddRefs(newWindow));
+  }
+
+  // no parent or incompetent parent. try again using basic methods:
+  if (!newWindow) {
+    /* You really shouldn't be making dependent windows without a parent.
+      But unparented modal (and therefore dependent) windows happen
+      in our codebase, so we allow it after some bellyaching: */
+    if (aChromeFlags & nsIWebBrowserChrome::CHROME_DEPENDENT)
+      NS_WARNING("dependent window created without a parent");
+
+    nsCOMPtr<nsIAppShellService> appShell(do_GetService(kAppShellServiceCID));
+    if (!appShell)
+      return NS_ERROR_FAILURE;
+    
+    appShell->CreateTopLevelWindow(0, 0, PR_FALSE, PR_FALSE,
+      aChromeFlags, nsIAppShellService::SIZE_TO_CONTENT,
+      nsIAppShellService::SIZE_TO_CONTENT, getter_AddRefs(newWindow));
+  }
+
+  // if anybody gave us anything to work with, use it
   nsCOMPtr<nsIInterfaceRequestor> thing(do_QueryInterface(newWindow));
   if (thing)
     thing->GetInterface(NS_GET_IID(nsIWebBrowserChrome), (void **) _retval);
