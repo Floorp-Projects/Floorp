@@ -26,7 +26,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-ifdef MOZ_PSM
+ifdef BUILD_SMIME
 DIRS		= smime
 endif
 

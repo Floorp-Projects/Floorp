@@ -21,6 +21,8 @@
 
 DEPTH=..\..
 
+!if defined(BUILD_SMIME)
 DIRS=smime
+!endif
 
 include <$(DEPTH)\config\rules.mak>
