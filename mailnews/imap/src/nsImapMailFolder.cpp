@@ -36,6 +36,7 @@
 #include "nsImapUtils.h"
 #include "nsMsgUtils.h"
 #include "nsIMsgMailSession.h"
+#include "nsImapMessage.h"
 
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
 // that doesn't allow you to call ::nsISupports::GetIID() inside of a class
@@ -301,6 +302,28 @@ NS_IMETHODIMP nsImapMailFolder::GetSubFolders(nsIEnumerator* *result)
         // doesn't end with .sbd
 
         PRInt32 newFlags = MSG_FOLDER_FLAG_MAIL;
+		if (mDepth == 0)
+		{
+#if 0
+			// temporary until we do folder discovery correctly.
+			nsAutoString name("Inbox");
+			nsIMsgFolder *child;
+
+			AddSubfolder(name, &child);
+			if (NS_SUCCEEDED(GetDatabase()))
+			{
+				nsIDBFolderInfo *dbFolderInfo = nsnull;
+				m_mailDatabase->GetDBFolderInfo(&dbFolderInfo);
+				if (dbFolderInfo)
+				{
+					dbFolderInfo->SetMailboxName(name);
+					NS_RELEASE(dbFolderInfo);
+				}
+			}
+			if (child)
+				NS_RELEASE(child);
+#endif
+		}
         if (path.IsDirectory()) {
             newFlags |= (MSG_FOLDER_FLAG_DIRECTORY | MSG_FOLDER_FLAG_ELIDED);
             SetFlag(newFlags);
@@ -349,13 +372,13 @@ NS_IMETHODIMP nsImapMailFolder::ReplaceElement(nsISupports* element,
 //returns NS_OK.  Otherwise returns a failure error value.
 nsresult nsImapMailFolder::GetDatabase()
 {
+	nsresult folderOpen = NS_OK;
 	if (m_mailDatabase == nsnull)
 	{
 		nsNativeFileSpec path;
 		nsresult rv = GetPathName(path);
 		if (NS_FAILED(rv)) return rv;
 
-		nsresult folderOpen = NS_OK;
 		nsIMsgDatabase * mailDBFactory = nsnull;
 
 		rv = nsComponentManager::CreateInstance(kCImapDB, nsnull, nsIMsgDatabase::GetIID(), (void **) &mailDBFactory);
@@ -382,7 +405,7 @@ nsresult nsImapMailFolder::GetDatabase()
 			}
 		}
 	}
-	return NS_OK;
+	return folderOpen;
 }
 
 
@@ -481,7 +504,9 @@ NS_IMETHODIMP nsImapMailFolder::CreateSubfolder(const char *folderName)
 			rv = unusedDB->GetDBFolderInfo(&folderInfo);
 			if(NS_SUCCEEDED(rv))
 			{
-				//folderInfo->SetMailboxName(leafNameFromUser);
+				nsString folderNameStr(folderName);
+				// ### DMB used to be leafNameFromUser?
+				folderInfo->SetMailboxName(folderNameStr);
 				NS_IF_RELEASE(folderInfo);
 			}
 
@@ -540,6 +565,8 @@ NS_IMETHODIMP nsImapMailFolder::GetChildNamed(nsString& name, nsISupports **
 
 NS_IMETHODIMP nsImapMailFolder::GetName(char ** name)
 {
+	nsresult result = NS_OK;
+
     if(!name)
         return NS_ERROR_NULL_POINTER;
     
@@ -551,13 +578,29 @@ NS_IMETHODIMP nsImapMailFolder::GetName(char ** name)
             GetHostName(&hostName);
             SetName(hostName);
             PR_FREEIF(hostName);
-            m_haveReadNameFromDB = TRUE;
+            m_haveReadNameFromDB = PR_TRUE;
             *name = mName.ToNewCString();
             return NS_OK;
         }
         else
         {
             //Need to read the name from the database
+			result = GetDatabase();
+			if (NS_SUCCEEDED(result) && m_mailDatabase)
+			{
+				nsString folderName;
+
+				nsIDBFolderInfo *dbFolderInfo = nsnull;
+				m_mailDatabase->GetDBFolderInfo(&dbFolderInfo);
+				if (dbFolderInfo)
+				{
+					dbFolderInfo->GetMailboxName(folderName);
+					m_haveReadNameFromDB = PR_TRUE;
+					NS_RELEASE(dbFolderInfo);
+					*name = folderName.ToNewCString();
+					return NS_OK;
+				}
+			}
         }
     }
 	nsAutoString folderName;
@@ -1044,10 +1087,48 @@ NS_IMETHODIMP nsImapMailFolder::AbortHeaderParseStream(nsIImapProtocol*
     return rv;
 }
  
-NS_IMETHODIMP nsImapMailFolder::CreateMessageFromMsgDBHdr(nsIMsgDBHdr *msgHdr, nsIMessage **message)
+NS_IMETHODIMP nsImapMailFolder::CreateMessageFromMsgDBHdr(nsIMsgDBHdr *msgDBHdr, nsIMessage **message)
 {
+	
+    nsresult rv; 
+    NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv); 
+    if (NS_FAILED(rv)) return rv;
 
-	return NS_ERROR_FAILURE;
+	char* msgURI = nsnull;
+	nsFileSpec path;
+	nsMsgKey key;
+    nsIRDFResource* res;
+
+	rv = msgDBHdr->GetMessageKey(&key);
+
+	if(NS_SUCCEEDED(rv))
+		rv = GetPathName(path);
+
+	if(NS_SUCCEEDED(rv))
+		rv = nsBuildImapMessageURI(path, key, &msgURI);
+
+	if(NS_SUCCEEDED(rv))
+	{
+		rv = rdfService->GetResource(msgURI, &res);
+    }
+	if(msgURI)
+		PR_smprintf_free(msgURI);
+
+	if(NS_SUCCEEDED(rv))
+	{
+		nsIMessage *messageResource;
+		rv = res->QueryInterface(nsIMessage::GetIID(), (void**)&messageResource);
+		if(NS_SUCCEEDED(rv))
+		{
+			//We know from our factory that imap message resources are going to be
+			//nsImapMessages.
+			nsImapMessage *imapMessage = NS_STATIC_CAST(nsImapMessage*, messageResource);
+			imapMessage->SetMsgDBHdr(msgDBHdr);
+			*message = messageResource;
+		}
+		NS_IF_RELEASE(res);
+	}
+	return rv;
 }
 
   

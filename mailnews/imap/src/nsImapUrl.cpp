@@ -1060,7 +1060,7 @@ void nsImapUrl::ParseImapPart(char *imapPartOfUrl)
 			if (m_tokenPlaceHolder && *m_tokenPlaceHolder)
 				ParseListofMessageIds();
 			else
-				m_listOfMessageIds = "";
+				m_listOfMessageIds = PL_strdup("");
 		}
 		else if (!PL_strcasecmp(m_urlidSubString, "liteselect"))
 		{
@@ -1070,14 +1070,14 @@ void nsImapUrl::ParseImapPart(char *imapPartOfUrl)
 		else if (!PL_strcasecmp(m_urlidSubString, "selectnoop"))
 		{
 			m_imapAction   					 = nsImapSelectNoopFolder;
-			m_listOfMessageIds = "";
+			m_listOfMessageIds = PL_strdup("");
 			ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
 		}
 		else if (!PL_strcasecmp(m_urlidSubString, "expunge"))
 		{
 			m_imapAction   					 = nsImapExpungeFolder;
 			ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
-			m_listOfMessageIds = "";		// no ids to UNDO
+			m_listOfMessageIds = PL_strdup("");		// no ids to UNDO
 		}
 		else if (!PL_strcasecmp(m_urlidSubString, "create"))
 		{

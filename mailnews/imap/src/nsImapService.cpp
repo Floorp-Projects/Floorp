@@ -32,9 +32,26 @@
 #include "nsCOMPtr.h"
 #include "nsIMsgFolder.h"
 
+#include "nsImapUtils.h"
+
+#include "nsIRDFService.h"
+#include "nsIEventQueueService.h"
+#include "nsRDFCID.h"
+#include "nsXPComCIID.h"
+// we need this because of an egcs 1.0 (and possibly gcc) compiler bug
+// that doesn't allow you to call ::nsISupports::GetIID() inside of a class
+// that multiply inherits from nsISupports
+static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+
+static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
+static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kCImapHostSessionList, NS_IIMAPHOSTSESSIONLIST_CID);
 static NS_DEFINE_CID(kImapProtocolCID, NS_IMAPPROTOCOL_CID);
 static NS_DEFINE_CID(kImapUrlCID, NS_IMAPURL_CID);
+
+NS_IMPL_THREADSAFE_ADDREF(nsImapService);
+NS_IMPL_THREADSAFE_RELEASE(nsImapService);
+
 
 nsImapService::nsImapService()
 {
@@ -53,7 +70,35 @@ nsImapService::~nsImapService()
 		(void)nsServiceManager::ReleaseService(kCImapHostSessionList, m_sessionList);
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS(nsImapService, nsIImapService::GetIID());
+nsresult nsImapService::QueryInterface(const nsIID &aIID, void** aInstancePtr)
+{
+    if (nsnull == aInstancePtr)
+        return NS_ERROR_NULL_POINTER;
+ 
+    if (aIID.Equals(nsIImapService::GetIID()) || aIID.Equals(kISupportsIID)) 
+	{
+        *aInstancePtr = (void*) ((nsIImapService*)this);
+        AddRef();
+        return NS_OK;
+    }
+    if (aIID.Equals(nsIMsgMessageService::GetIID())) 
+	{
+        *aInstancePtr = (void*) ((nsIMsgMessageService*)this);
+        AddRef();
+        return NS_OK;
+    }
+
+#if defined(NS_DEBUG)
+    /*
+     * Check for the debug-only interface indicating thread-safety
+     */
+    static NS_DEFINE_IID(kIsThreadsafeIID, NS_ISTHREADSAFE_IID);
+    if (aIID.Equals(kIsThreadsafeIID))
+        return NS_OK;
+#endif
+ 
+    return NS_NOINTERFACE;
+}
 
 NS_IMETHODIMP
 nsImapService::CreateImapConnection(PLEventQueue *aEventQueue, 
@@ -96,6 +141,7 @@ nsImapService::SelectFolder(PLEventQueue * aClientEventQueue,
                                           protocolInstance, urlSpec);
 	if (NS_SUCCEEDED(rv) && imapUrl)
 	{
+		PRBool gotFolder = PR_FALSE;
 		rv = imapUrl->SetImapAction(nsIImapUrl::nsImapSelectFolder);
         rv = SetImapUrlSink(aImapMailFolder, imapUrl);
 
@@ -103,6 +149,7 @@ nsImapService::SelectFolder(PLEventQueue * aClientEventQueue,
 		{
 			char *folderName = nsnull;
             aImapMailFolder->GetName(&folderName);
+			gotFolder = folderName && PL_strlen(folderName) > 0;
 			urlSpec.Append("/select>/");
             urlSpec.Append(folderName);
 			rv = imapUrl->SetSpec(urlSpec.GetBuffer());
@@ -110,7 +157,8 @@ nsImapService::SelectFolder(PLEventQueue * aClientEventQueue,
 		} // if we got a host name
 
 		imapUrl->RegisterListener(aUrlListener);  // register listener if there is one.
-		protocolInstance->LoadUrl(imapUrl, nsnull);
+		if (gotFolder)
+			protocolInstance->LoadUrl(imapUrl, nsnull);
 		if (aURL)
 			*aURL = imapUrl; 
 		else
@@ -175,6 +223,70 @@ nsImapService::LiteSelectFolder(PLEventQueue * aClientEventQueue,
 static const char *sequenceString = "SEQUENCE";
 static const char *uidString = "UID";
 
+NS_IMETHODIMP nsImapService::DisplayMessage(const char* aMessageURI, nsISupports * aDisplayConsumer, 
+										  nsIUrlListener * aUrlListener, nsIURL ** aURL)
+{
+	nsImapUrl * imapUrl = nsnull;
+	nsIImapUrl * url = nsnull;
+	nsresult rv = NS_OK;
+    PLEventQueue *queue;
+	nsIRDFService* rdf = nsnull;
+ 	// get the Event Queue for this thread...
+    nsIEventQueueService* pEventQService = nsnull;
+    rv = nsServiceManager::GetService(kEventQueueServiceCID,
+                                          nsIEventQueueService::GetIID(),
+                                          (nsISupports**)&pEventQService);
+	if (NS_SUCCEEDED(rv) && pEventQService)
+	{
+		rv = pEventQService->GetThreadEventQueue(PR_GetCurrentThread(),&queue);
+		NS_RELEASE(pEventQService);
+		rv = nsServiceManager::GetService(kRDFServiceCID,
+										nsIRDFService::GetIID(),
+										(nsISupports**)&rdf);
+
+	}
+
+	nsString	folderURI;
+	nsMsgKey	msgKey;
+	rv = nsParseImapMessageURI(aMessageURI, folderURI, &msgKey);
+	if (NS_SUCCEEDED(rv))
+	{
+		nsIRDFResource* res;
+		rv = rdf->GetResource(nsAutoCString(folderURI), &res);
+		if (NS_FAILED(rv))
+			return rv;
+		nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(res, &rv));
+		if (NS_SUCCEEDED(rv))
+		{
+			nsCOMPtr<nsIImapMessageSink> imapMessageSink(do_QueryInterface(res, &rv));
+			if (NS_SUCCEEDED(rv))
+			{
+				nsString2 messageIdString(eOneByte);
+
+				messageIdString.Append(msgKey, 10);
+				rv = FetchMessage(queue, folder, imapMessageSink, aUrlListener, 
+					aURL, messageIdString.GetBuffer(), PR_TRUE);
+			}
+						
+		}
+	}
+	if (rdf)
+		(void)nsServiceManager::ReleaseService(kRDFServiceCID, rdf);
+
+	if (pEventQService)
+		(void)nsServiceManager::ReleaseService(kRDFServiceCID, pEventQService);
+
+	return rv;
+}
+
+NS_IMETHODIMP
+nsImapService::CopyMessage(const char * aSrcMailboxURI, nsIStreamListener * aMailboxCopy, PRBool moveMessage,
+						   nsIUrlListener * aUrlListener, nsIURL **aURL)
+{
+	return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
 /* fetching RFC822 messages */
 /* imap4://HOST>fetch><UID/SEQUENCE>>MAILBOXPATH>x */
 /*   'x' is the message UID or sequence number list */
@@ -218,6 +330,7 @@ nsImapService::FetchMessage(PLEventQueue * aClientEventQueue,
             char *folderName = nsnull;
             aImapMailFolder->GetName(&folderName);
 			urlSpec.Append(folderName);
+			urlSpec.Append(">");
 			urlSpec.Append(messageIdentifierList);
             delete [] folderName;
 			rv = imapUrl->SetSpec(urlSpec.GetBuffer());

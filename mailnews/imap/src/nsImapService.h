@@ -20,13 +20,14 @@
 #define nsImapService_h___
 
 #include "nsIImapService.h"
+#include "nsIMsgMessageService.h"
 
 class nsIImapHostSessionList; 
 class nsString2;
 class nsIImapUrl;
 class nsIMsgFolder;
 
-class nsImapService : public nsIImapService
+class nsImapService : public nsIImapService, public nsIMsgMessageService
 {
 public:
 
@@ -110,6 +111,14 @@ public:
 	////////////////////////////////////////////////////////////////////////////////////////
 	// End support of nsIImapService interface 
 	////////////////////////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////////////////
+	// we suppport the nsIMsgMessageService Interface 
+	////////////////////////////////////////////////////////////////////////////////////////
+	NS_IMETHOD CopyMessage(const char * aSrcMailboxURI, nsIStreamListener * aMailboxCopy, PRBool moveMessage,
+						   nsIUrlListener * aUrlListener, nsIURL **aURL);
+
+	NS_IMETHOD DisplayMessage(const char* aMessageURI, nsISupports * aDisplayConsumer, 
+							  nsIUrlListener * aUrlListener, nsIURL ** aURL);
 
 protected:
 	nsresult GetImapConnectionAndUrl(PLEventQueue * aClientEventQueue,

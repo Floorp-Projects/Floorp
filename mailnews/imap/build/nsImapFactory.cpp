@@ -41,7 +41,6 @@ static NS_DEFINE_CID(kCImapService, NS_IMAPSERVICE_CID);
 static NS_DEFINE_CID(kCImapResource, NS_IMAPRESOURCE_CID);
 static NS_DEFINE_CID(kCImapMessageResource, NS_IMAPMESSAGERESOURCE_CID);
 
-
 ////////////////////////////////////////////////////////////
 //
 ////////////////////////////////////////////////////////////
@@ -141,14 +140,21 @@ nsresult nsImapFactory::CreateInstance(nsISupports *aOuter, const nsIID &aIID, v
 	{
 		inst = NS_STATIC_CAST(nsIImapService *, new nsImapService());
 	}
-	else if (mClassID.Equals(kCImapMessageResource)) 
- 	{
- 		inst = NS_STATIC_CAST(nsIMessage*, new nsImapMessage());
- 	}
 	else if (mClassID.Equals(kCImapResource))
 	{
 		inst = NS_STATIC_CAST(nsIMsgImapMailFolder *, new nsImapMailFolder());
 	}
+	else if (mClassID.Equals(kCImapMessageResource)) 
+	{
+		nsImapMessage * imapMessage = new nsImapMessage();
+		if (imapMessage)
+			rv = imapMessage->QueryInterface(aIID, aResult);
+		else
+			rv = NS_ERROR_OUT_OF_MEMORY;
+		if (NS_FAILED(rv) && imapMessage)
+			delete imapMessage;
+		return rv;
+ 	}
 	if (inst == nsnull)
 		return NS_ERROR_OUT_OF_MEMORY;
 
@@ -225,22 +231,27 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
 
 	if (NS_FAILED(rv)) goto done;
 
-  // register our RDF resource factories:
-  rv = compMgr->RegisterComponent(kCImapResource,
-                                  "Mail/News Imap Resource Factory",
-                                  NS_RDF_RESOURCE_FACTORY_PROGID_PREFIX "imap",
-                                  path, PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) goto done;
+	// register our RDF resource factories:
+	rv = compMgr->RegisterComponent(kCImapResource,
+								  "Mail/News Imap Resource Factory",
+								  NS_RDF_RESOURCE_FACTORY_PROGID_PREFIX "imap",
+								  path, PR_TRUE, PR_TRUE);
+	if (NS_FAILED(rv)) goto done;
 
-
-//  rv = compMgr->RegisterComponent(kImapServiceCID, nsnull, 
-//								  "component://netscape/messenger/messageservice;type=imap_message", 
-  //                                path, PR_TRUE, PR_TRUE);
-
+	rv = compMgr->RegisterComponent(kCImapService, nsnull, 
+								  "component://netscape/messenger/messageservice;type=imap_message", 
+								path, PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) goto done;
 
 	rv = compMgr->RegisterComponent(kCImapService, nsnull, nsnull,
 									path, PR_TRUE, PR_TRUE);
+
+   rv = compMgr->RegisterComponent(kCImapMessageResource,
+                                   "Imap Message Resource Factory",
+                                   NS_RDF_RESOURCE_FACTORY_PROGID_PREFIX "imap_message",
+                                   path, PR_TRUE, PR_TRUE);
+
+   if (NS_FAILED(rv)) goto done;
 
 	done:
 		(void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
