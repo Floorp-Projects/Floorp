@@ -181,7 +181,7 @@ NS_IMETHODIMP nsDeviceContextXp :: GetDrawingSurface(nsIRenderingContext &aConte
  */
 NS_IMETHODIMP nsDeviceContextXp :: CheckFontExistence(const nsString& aFontName)
 {
-  return nsFontMetricsXlib::FamilyExists(aFontName);
+  return nsFontMetricsXlib::FamilyExists(this, aFontName);
 }
 
 NS_IMETHODIMP nsDeviceContextXp :: GetSystemAttribute(nsSystemAttrID anID, 
