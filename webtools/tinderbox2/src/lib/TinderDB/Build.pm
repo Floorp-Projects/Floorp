@@ -7,8 +7,8 @@
 # the build was and display a link to the build log.
 
 
-# $Revision: 1.39 $ 
-# $Date: 2002/05/02 02:19:44 $ 
+# $Revision: 1.40 $ 
+# $Date: 2002/05/02 04:38:52 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/Build.pm,v $ 
 # $Name:  $ 
@@ -1164,7 +1164,7 @@ sub status_table_row {
       my ($mindate) = $current_rec->{'previousbuildtime'};
 
       $links .= (
-                 "\n". 
+                 "\t\t". 
                  VCDisplay::query(
                                    'linktxt'=> "C",
                                    'tree' => $tree,
