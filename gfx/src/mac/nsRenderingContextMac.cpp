@@ -1275,18 +1275,9 @@ NS_IMETHODIMP nsRenderingContextMac::GetWidth(const PRUnichar *aString, PRUint32
  	if (NS_FAILED(rv))
  		return rv;
 
-	NS_PRECONDITION(mGS->mFontMetrics != nsnull, "No font metrics in SetPortTextState");
-	
-	if (nsnull == mGS->mFontMetrics)
- 		return NS_ERROR_NULL_POINTER;
-
-#ifdef IBMBIDI
 	rv = mUnicodeRenderingToolkit.PrepareToDraw(mP2T, mContext, mGS,mPort, mRightToLeftText);
-#else
-	rv = mUnicodeRenderingToolkit.PrepareToDraw(mP2T, mContext, mGS,mPort);
-#endif
 	if (NS_SUCCEEDED(rv))
-    	rv = mUnicodeRenderingToolkit.GetWidth(aString, aLength, aWidth, aFontID);
+    rv = mUnicodeRenderingToolkit.GetWidth(aString, aLength, aWidth, aFontID);
     
 	return rv;
 }
@@ -1297,24 +1288,30 @@ NS_IMETHODIMP
 nsRenderingContextMac::GetTextDimensions(const char* aString, PRUint32 aLength,
                                         nsTextDimensions& aDimensions)
 {
-  if (mGS->mFontMetrics) {
+  nsresult rv= GetWidth(aString, aLength, aDimensions.width);
+  if (NS_SUCCEEDED(rv) && (mGS->mFontMetrics))
+  {
     mGS->mFontMetrics->GetMaxAscent(aDimensions.ascent);
     mGS->mFontMetrics->GetMaxDescent(aDimensions.descent);
   }
-  return GetWidth(aString, aLength, aDimensions.width);
+  return rv;
 }
 
 NS_IMETHODIMP
 nsRenderingContextMac::GetTextDimensions(const PRUnichar* aString, PRUint32 aLength,
                                          nsTextDimensions& aDimensions, PRInt32* aFontID)
 {
-  //XXX temporary - bug 96609
-  //XXX need to have nsUnicodeRenderingToolkit::GetTextDimensions()
-  if (mGS->mFontMetrics) {
-    mGS->mFontMetrics->GetMaxAscent(aDimensions.ascent);
-    mGS->mFontMetrics->GetMaxDescent(aDimensions.descent);
-  }
-  return GetWidth(aString, aLength, aDimensions.width, aFontID);
+  StPortSetter setter(mPort);
+  
+  nsresult rv = SetPortTextState();
+  if (NS_FAILED(rv))
+    return rv;
+
+  rv = mUnicodeRenderingToolkit.PrepareToDraw(mP2T, mContext, mGS,mPort, mRightToLeftText);
+	if (NS_SUCCEEDED(rv))
+    rv = mUnicodeRenderingToolkit.GetTextDimensions(aString, aLength, aDimensions, aFontID);
+    
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -1407,11 +1404,7 @@ NS_IMETHODIMP nsRenderingContextMac::DrawString2(const PRUnichar *aString, PRUin
 	if (nsnull == mGS->mFontMetrics)
 		return NS_ERROR_NULL_POINTER;
 
-#ifdef IBMBIDI	
 	rv = mUnicodeRenderingToolkit.PrepareToDraw(mP2T, mContext, mGS,mPort,mRightToLeftText);
-#else
-	rv = mUnicodeRenderingToolkit.PrepareToDraw(mP2T, mContext, mGS,mPort);
-#endif
 	if (NS_SUCCEEDED(rv))
 		rv = mUnicodeRenderingToolkit.DrawString(aString, aLength, aX, aY, aFontID, aSpacing);
 

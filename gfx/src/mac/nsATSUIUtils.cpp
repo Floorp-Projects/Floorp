@@ -404,41 +404,42 @@ void nsATSUIToolkit::EndDraw(GrafPtr aSavePort)
 //	GetWidth
 //
 //------------------------------------------------------------------------
-NS_IMETHODIMP nsATSUIToolkit::GetWidth(
-	const PRUnichar *aCharPt, 
-	short& oWidth,
-	short aSize, short aFontNum,
-	PRBool aBold, PRBool aItalic, nscolor aColor)
+nsresult
+nsATSUIToolkit::GetTextDimensions(
+  const PRUnichar *aCharPt, 
+  nsTextDimensions& oDim,
+  short aSize, short aFontNum,
+  PRBool aBold, PRBool aItalic, nscolor aColor)
 {
-  oWidth = 0;
   if (!nsATSUIUtils::IsAvailable())
-  	return NS_ERROR_NOT_INITIALIZED;
-  	
+    return NS_ERROR_NOT_INITIALIZED;
+    
   nsresult res = NS_ERROR_FAILURE;
   GrafPtr savePort;
   ATSUTextLayout aTxtLayout;
   
   StartDraw(aCharPt, aSize, aFontNum, aBold, aItalic, aColor , savePort, aTxtLayout);
   if (nsnull == aTxtLayout) 
-    {
-      // goto done;
-      return res;
-  	}
-
-  OSStatus err = noErr;	
-  ATSUTextMeasurement iAfter; 
-  err = ATSUMeasureText( aTxtLayout, 0, 1, NULL, &iAfter, NULL, NULL );
-  if(noErr != err) {
-     NS_WARNING("ATSUMeasureText failed");     
-     // goto done1;
-     EndDraw(savePort);
+  {
      return res;
   }
-  oWidth = FixRound(iAfter);
+
+  OSStatus err = noErr;  
+  ATSUTextMeasurement after; 
+  ATSUTextMeasurement ascent; 
+  ATSUTextMeasurement descent; 
+  err = ATSUMeasureText( aTxtLayout, 0, 1, NULL, &after, &ascent, &descent );
+  if (noErr != err) 
+  {
+    NS_WARNING("ATSUMeasureText failed");     
+    EndDraw(savePort);
+    return res;
+  }
+  oDim.width = after;
+  oDim.ascent = ascent;
+  oDim.descent = descent;
   res = NS_OK;
-  /* done1: */
   EndDraw(savePort);
-  /* done: */
   return res;
 }
 
@@ -447,7 +448,8 @@ NS_IMETHODIMP nsATSUIToolkit::GetWidth(
 //	DrawString
 //
 //------------------------------------------------------------------------
-NS_IMETHODIMP nsATSUIToolkit::DrawString(
+nsresult
+nsATSUIToolkit::DrawString(
 	const PRUnichar *aCharPt, 
 	PRInt32 x, PRInt32 y, 
 	short &oWidth,

@@ -161,157 +161,191 @@ nsUnicodeFallbackCache* nsUnicodeRenderingToolkit :: GetTECFallbackCache()
 	return gTECFallbackCache;
 }
 //------------------------------------------------------------------------
-PRBool nsUnicodeRenderingToolkit :: TECFallbackGetWidth(
-	const PRUnichar *aCharPt, 
-	short& oWidth, 
-	short origFontNum, 
-	const short* scriptFallbackFonts)
-{
-	OSStatus err = noErr;
-	char buf[20];
-	ByteCount processBytes = 0;
-	ByteCount outLen = 0;
-	ScriptCode fallbackScript;
-	nsUnicodeFallbackCache* cache = GetTECFallbackCache();
-	
-	if ((0xf780 <= *aCharPt) && (*aCharPt <= 0xf7ff))
-	{
-		// If we are encountering our PUA characters for User-Defined characters, we better
-		// just drop the high-byte and return the width for the low-byte.
-		*buf = (*aCharPt & 0x00FF);
-		GetScriptTextWidth (buf,1,oWidth);
 
-		return PR_TRUE;
-	}
-	else if( cache->Get(*aCharPt, fallbackScript))
-	{
-		if(BAD_SCRIPT == fallbackScript)
-			return PR_FALSE;
-			
-		UnicodeToTextInfo fallbackConverter = GetConverterByScript(fallbackScript);
-		if( fallbackConverter ) {
-	  	  	 err = ::ConvertFromUnicodeToText(fallbackConverter, (ByteCount)(2), (ConstUniCharArrayPtr) aCharPt, 
-	 						kUnicodeLooseMappingsMask , 0, NULL, 0, NULL,
-	 						STACK_TREASHOLD, &processBytes, &outLen, 
-	                        (LogicalAddress)buf);
-	        if( outLen > 0) {
-		  	  	::TextFont(scriptFallbackFonts[fallbackScript]);
-		  	  	GetScriptTextWidth(buf, outLen, oWidth);
-				::TextFont(origFontNum);
-			}
-		}
-		return PR_TRUE;
-	}
-	
-	for( fallbackScript = 0 ; fallbackScript < 32; fallbackScript++)
-	{
-		if(BAD_FONT_NUM != scriptFallbackFonts[fallbackScript])
-		{
-			UnicodeToTextInfo fallbackConverter = GetConverterByScript(fallbackScript);
-			if( fallbackConverter ) {
-		  	  	 err = ::ConvertFromUnicodeToText(fallbackConverter, (ByteCount)(2), (ConstUniCharArrayPtr) aCharPt, 
-		 						kUnicodeLooseMappingsMask , 0, NULL, 0, NULL,
-		 						STACK_TREASHOLD, &processBytes, &outLen, 
-		                        (LogicalAddress)buf);
-		  	  	 if(outLen > 0)
-		  	  	 {
-					NS_PRECONDITION(0 == (processBytes % 2), "strange conversion result");
-		  	  	 	::TextFont(scriptFallbackFonts[fallbackScript]);
-		  	  	 	GetScriptTextWidth(buf, outLen, oWidth);
-					::TextFont(origFontNum);				
-					break;
-		   	  	 }			  	  	                        
-			}  	  		
-		}
-	}
-	
-	if( 0 == outLen )
-		fallbackScript = BAD_SCRIPT;
-		
-	// put into cache
-	cache->Set(*aCharPt, fallbackScript);
-	
-	return (BAD_SCRIPT != fallbackScript);
+PRBool 
+nsUnicodeRenderingToolkit::TECFallbackGetDimensions(
+  const PRUnichar *aCharPt, 
+  nsTextDimensions& oDim, 
+  short origFontNum, 
+  const short* scriptFallbackFonts)
+{
+  OSStatus err = noErr;
+  char buf[20];
+  ByteCount processBytes = 0;
+  ByteCount outLen = 0;
+  ScriptCode fallbackScript;
+  nsUnicodeFallbackCache* cache = GetTECFallbackCache();
+  short aWidth;
+  FontInfo finfo;
+  
+  if ((0xf780 <= *aCharPt) && (*aCharPt <= 0xf7ff))
+  {
+    // If we are encountering our PUA characters for User-Defined characters, we better
+    // just drop the high-byte and return the width for the low-byte.
+    *buf = (*aCharPt & 0x00FF);
+    ::GetFontInfo(&finfo);
+    oDim.ascent = finfo.ascent;
+    oDim.descent = finfo.descent;
+    
+    GetScriptTextWidth (buf,1,aWidth);
+    oDim.width = aWidth;
+
+    return PR_TRUE;
+  }
+  else if (cache->Get(*aCharPt, fallbackScript))
+  {
+    if (BAD_SCRIPT == fallbackScript)
+      return PR_FALSE;
+      
+    UnicodeToTextInfo fallbackConverter = GetConverterByScript(fallbackScript);
+    if (fallbackConverter) 
+    {
+      err = ::ConvertFromUnicodeToText(fallbackConverter, (ByteCount)(2), 
+                                       (ConstUniCharArrayPtr) aCharPt, 
+                                        kUnicodeLooseMappingsMask , 0, NULL, 0, NULL,
+                                        STACK_TREASHOLD, &processBytes, &outLen, 
+                                       (LogicalAddress)buf);
+      if (outLen > 0) 
+      {
+        ::TextFont(scriptFallbackFonts[fallbackScript]);
+        GetScriptTextWidth(buf, outLen, aWidth);
+        ::GetFontInfo(&finfo);
+        oDim.ascent = finfo.ascent;
+        oDim.descent = finfo.descent;
+        oDim.width = aWidth;
+        ::TextFont(origFontNum);
+      }
+    }
+    return PR_TRUE;
+  }
+  
+  for(fallbackScript = 0 ; fallbackScript < 32; fallbackScript++)
+  {
+    if (BAD_FONT_NUM != scriptFallbackFonts[fallbackScript])
+    {
+      UnicodeToTextInfo fallbackConverter = GetConverterByScript(fallbackScript);
+      if (fallbackConverter) 
+      {
+        err = ::ConvertFromUnicodeToText(fallbackConverter, (ByteCount)(2), 
+                                         (ConstUniCharArrayPtr) aCharPt, 
+                                         kUnicodeLooseMappingsMask , 0, NULL, 0, NULL,
+                                         STACK_TREASHOLD, &processBytes, &outLen, 
+                                         (LogicalAddress)buf);
+        if (outLen > 0)
+        {
+          NS_PRECONDITION(0 == (processBytes % 2), "strange conversion result");
+          ::TextFont(scriptFallbackFonts[fallbackScript]);
+          GetScriptTextWidth(buf, outLen, aWidth);
+          ::GetFontInfo(&finfo);
+          oDim.ascent = finfo.ascent;
+          oDim.descent = finfo.descent;
+          oDim.width = aWidth;
+          ::TextFont(origFontNum);        
+          break;
+        }                                      
+      }          
+    }
+  }
+  
+  if (0 == outLen)
+    fallbackScript = BAD_SCRIPT;
+    
+  // put into cache
+  cache->Set(*aCharPt, fallbackScript);
+  
+  return (BAD_SCRIPT != fallbackScript);
 }
 //------------------------------------------------------------------------
-PRBool nsUnicodeRenderingToolkit :: TECFallbackDrawChar(
-	const PRUnichar *aCharPt, 
-	PRInt32 x, 
-	PRInt32 y, 
-	short& oWidth, 
-	short origFontNum, 
-	const short* scriptFallbackFonts)
-{
-	OSStatus err = noErr;
-	char buf[20];
-	ByteCount processBytes = 0;
-	ByteCount outLen = 0;
-	ScriptCode fallbackScript;
-	nsUnicodeFallbackCache* cache = GetTECFallbackCache();
-	
-	// since we always call TECFallbackGetWidth before TECFallbackDrawChar
-	// we could assume that we can always get the script code from cache.
-	if ((0xf780 <= *aCharPt) && (*aCharPt <= 0xf7ff))
-	{
-		// If we are encountering our PUA characters for User-Defined characters, we better
-		// just drop the high-byte and draw the text for the low-byte.
-		*buf = (*aCharPt & 0x00FF);
-		DrawScriptText (buf,1,x,y,oWidth);
 
-		return PR_TRUE;
-	}
-	else if( cache->Get(*aCharPt, fallbackScript))
-	{
-		if(BAD_SCRIPT == fallbackScript)
-			return PR_FALSE;
-			
-		UnicodeToTextInfo fallbackConverter = GetConverterByScript(fallbackScript);
-		if( fallbackConverter ) {
-	  	  	 err = ::ConvertFromUnicodeToText(fallbackConverter, (ByteCount)(2), (ConstUniCharArrayPtr) aCharPt, 
-	 						kUnicodeLooseMappingsMask , 0, NULL, 0, NULL,
-	 						STACK_TREASHOLD, &processBytes, &outLen, 
-	                        (LogicalAddress)buf);
-	        if( outLen > 0) {
-		  	  	::TextFont(scriptFallbackFonts[fallbackScript]);
-		  	  	DrawScriptText(buf, outLen, x, y, oWidth);
-				::TextFont(origFontNum);
-			}
-		}
-		return PR_TRUE;
-	}
-	return PR_FALSE;
+PRBool nsUnicodeRenderingToolkit :: TECFallbackDrawChar(
+  const PRUnichar *aCharPt, 
+  PRInt32 x, 
+  PRInt32 y, 
+  short& oWidth, 
+  short origFontNum, 
+  const short* scriptFallbackFonts)
+{
+  OSStatus err = noErr;
+  char buf[20];
+  ByteCount processBytes = 0;
+  ByteCount outLen = 0;
+  ScriptCode fallbackScript;
+  nsUnicodeFallbackCache* cache = GetTECFallbackCache();
+  
+  // since we always call TECFallbackGetWidth before TECFallbackDrawChar
+  // we could assume that we can always get the script code from cache.
+  if ((0xf780 <= *aCharPt) && (*aCharPt <= 0xf7ff))
+  {
+    // If we are encountering our PUA characters for User-Defined characters, we better
+    // just drop the high-byte and draw the text for the low-byte.
+    *buf = (*aCharPt & 0x00FF);
+    DrawScriptText (buf,1,x,y,oWidth);
+
+    return PR_TRUE;
+  }
+  else if (cache->Get(*aCharPt, fallbackScript))
+  {
+    if (BAD_SCRIPT == fallbackScript)
+      return PR_FALSE;
+      
+    UnicodeToTextInfo fallbackConverter = GetConverterByScript(fallbackScript);
+    if (fallbackConverter) 
+    {
+      err = ::ConvertFromUnicodeToText(fallbackConverter, (ByteCount)(2), 
+                                       (ConstUniCharArrayPtr) aCharPt, 
+                                       kUnicodeLooseMappingsMask , 0, NULL, 0, NULL,
+                                       STACK_TREASHOLD, &processBytes, &outLen, 
+                                       (LogicalAddress)buf);
+      if (outLen > 0) 
+      {
+        ::TextFont(scriptFallbackFonts[fallbackScript]);
+        DrawScriptText(buf, outLen, x, y, oWidth);
+        ::TextFont(origFontNum);
+      }
+    }
+    return PR_TRUE;
+  }
+  return PR_FALSE;
 }
 //------------------------------------------------------------------------
 static PRUnichar gSymbolReplacement[]={0xf8ee,0xf8f9,0xf8f0,0xf8fb,0x3008,0x3009};
 
-PRBool nsUnicodeRenderingToolkit :: ATSUIFallbackGetWidth(
+PRBool 
+nsUnicodeRenderingToolkit::ATSUIFallbackGetDimensions(
 	const PRUnichar *aCharPt, 
-	short& oWidth, 
+  nsTextDimensions& oDim, 
 	short origFontNum,
 	short aSize, PRBool aBold, PRBool aItalic, nscolor aColor) 
 {
 	if (nsATSUIUtils::IsAvailable()  
-	    &&  (IN_STANDARD_MAC_ROMAN_FONT(*aCharPt) ||IN_SYMBOL_FONT(*aCharPt)||SPECIAL_IN_SYMBOL_FONT(*aCharPt)))
+      && (IN_STANDARD_MAC_ROMAN_FONT(*aCharPt) 
+          || IN_SYMBOL_FONT(*aCharPt)
+          || SPECIAL_IN_SYMBOL_FONT(*aCharPt)))
 	{
 		mATSUIToolkit.PrepareToDraw(mPort, mContext );
 		nsresult res;
-		if(SPECIAL_IN_SYMBOL_FONT(*aCharPt)) {
+    if (SPECIAL_IN_SYMBOL_FONT(*aCharPt))
+    {
 			 short rep = 0;
-			 if((*aCharPt) > 0x230b)
+      if ((*aCharPt) > 0x230b)
 			 	rep = (*aCharPt) - 0x2325;
 			 else 
 			 	rep = (*aCharPt) - 0x2308;
-			 res = mATSUIToolkit.GetWidth(gSymbolReplacement+rep, oWidth, aSize, 
+      res = mATSUIToolkit.GetTextDimensions(gSymbolReplacement+rep, oDim, aSize, 
 													origFontNum, 
 													aBold, aItalic, aColor);
-		} else {
-			 res = mATSUIToolkit.GetWidth(aCharPt, oWidth, aSize, 
+    } 
+    else 
+    {
+      res = mATSUIToolkit.GetTextDimensions(aCharPt, oDim, aSize, 
 													origFontNum, 
 													aBold, aItalic, aColor);
 		}
-		if(NS_SUCCEEDED(res))
+    if (NS_SUCCEEDED(res)) 
+    {
 			return PR_TRUE;
 	}
+  }
 	return PR_FALSE;
 }
 //------------------------------------------------------------------------
@@ -828,143 +862,191 @@ void nsUnicodeRenderingToolkit :: DrawScriptText(
 }
 //------------------------------------------------------------------------
 
-nsresult nsUnicodeRenderingToolkit :: GetTextSegmentWidth(
+nsresult 
+nsUnicodeRenderingToolkit::GetTextSegmentWidth(
 			const PRUnichar *aString, PRUint32 aLength, 
 			short fontNum, const short *scriptFallbackFonts, 
 			PRUint32& oWidth)
 {
-	if(aLength == 0) {
-		oWidth = 0;
-		return NS_OK;
-	}	
- 	NS_PRECONDITION(BAD_FONT_NUM != fontNum, "illegal font num");
-    short textWidth = 0;
-    PRUint32 processLen = 0;
-    char *heapBuf = nsnull;
-    PRUint32 heapBufSize = 0;
-    short thisWidth = 0;
-    char stackBuf[STACK_TREASHOLD];
-    char *buf ;
-    ByteCount processBytes;
-    ByteCount outLen;
-  	OSStatus err = noErr;
+  nsTextDimensions dim;
+  nsresult res = GetTextSegmentDimensions(aString, aLength, fontNum, scriptFallbackFonts, dim);
+  oWidth = dim.width;
+  return res;
+}
+//------------------------------------------------------------------------
 
-    ::TextFont(fontNum);
-    ScriptCode script = ::FontToScript(fontNum);
-    UnicodeToTextInfo converter = GetConverterByScript(script);
-  	
-  	// find buf from stack or heap. We only need to do this once in this function.
-  	// put this out of the loop for performance...
-  	ByteCount bufLen = aLength * 2 + 10;
-  	if( bufLen > STACK_TREASHOLD)
-  	{
-  	 	if(bufLen > heapBufSize )
-  	 	{
-  	 		if(heapBuf)
-  	 			delete[] heapBuf;
-  	 		heapBuf = new char [bufLen];
-  	 		heapBufSize = bufLen;
-  	 		if(nsnull == heapBuf) {
-  	 			return NS_ERROR_OUT_OF_MEMORY;
-  	 		}  	  	 		
-  	 	} 
-  	 	buf = heapBuf;
-  	 } else {
-  	 	bufLen = STACK_TREASHOLD;
-  	 	buf = stackBuf;
-  	}
 
-    do {
-  	  if(converter)
-  	  {
-	  	outLen = 0;
- 	  	err = noErr;
-  	  	processBytes = 0;
-  	  	err = ::ConvertFromUnicodeToText(converter, (ByteCount)(2*(aLength - processLen)), (ConstUniCharArrayPtr) aString, 
-  	  	 						0 , 0, NULL, 0, NULL,
-  	  	 						bufLen, &processBytes, &outLen, 
-  	  	                        (LogicalAddress)buf);
-  	  	   	  	 
-  	  	 // no mater if failed or not, as long as it convert some text, we process it.
-  	  	 if(outLen > 0)
-  	  	 {
-			GetScriptTextWidth(buf, outLen, thisWidth);
-			
-			textWidth += thisWidth;
+nsresult 
+nsUnicodeRenderingToolkit::GetTextSegmentDimensions(
+      const PRUnichar *aString, PRUint32 aLength, 
+      short fontNum, const short *scriptFallbackFonts, 
+      nsTextDimensions& oDim)
+{
+  oDim.Clear();
+  if(aLength == 0) 
+    return NS_OK;
+  NS_PRECONDITION(BAD_FONT_NUM != fontNum, "illegal font num");
+  short textWidth = 0;
+  PRUint32 processLen = 0;
+  char *heapBuf = nsnull;
+  PRUint32 heapBufSize = 0;
+  short thisWidth = 0;
+  char stackBuf[STACK_TREASHOLD];
+  char *buf ;
+  ByteCount processBytes;
+  ByteCount outLen;
+  OSStatus err = noErr;
 
- 	  	 	NS_PRECONDITION(0 == (processBytes % 2), "strange conversion result");
+  ::TextFont(fontNum);
+  
+  FontInfo fInfo;
+  ::GetFontInfo(&fInfo);
+  nsTextDimensions segDim;
+  segDim.ascent = fInfo.ascent;
+  segDim.descent = fInfo.descent;
+  oDim.Combine(segDim);
+  
+  ScriptCode script = ::FontToScript(fontNum);
+  UnicodeToTextInfo converter = GetConverterByScript(script);
+    
+  // find buf from stack or heap. We only need to do this once in this function.
+  // put this out of the loop for performance...
+  ByteCount bufLen = aLength * 2 + 10;
+  if (bufLen > STACK_TREASHOLD)
+  {
+    if (bufLen > heapBufSize)
+    {
+      if (heapBuf)
+        nsMemory::Free(heapBuf);
+      heapBuf = (char*) nsMemory::Alloc(bufLen);
+      heapBufSize = bufLen;
+      if (nsnull == heapBuf) 
+        return NS_ERROR_OUT_OF_MEMORY;
+    } 
+    buf = heapBuf;
+  } 
+  else 
+  {
+    bufLen = STACK_TREASHOLD;
+    buf = stackBuf;
+  }
+  do {
+    if (converter)
+    {
+      outLen = 0;
+      err = noErr;
+      processBytes = 0;
+      err = ::ConvertFromUnicodeToText(converter, (ByteCount)(2*(aLength - processLen)), 
+                                       (ConstUniCharArrayPtr) aString, 
+                                       0 , 0, NULL, 0, NULL,
+                                       bufLen, &processBytes, &outLen, 
+                                       (LogicalAddress)buf);
+                  
+      // no mater if failed or not, as long as it convert some text, we process it.
+      if (outLen > 0)
+      {
+        GetScriptTextWidth(buf, outLen, thisWidth);
+      
+        segDim.Clear();
+        segDim.width = thisWidth;
+        oDim.Combine(segDim);
 
-  	  	 	PRInt32 processUnicode = processBytes / 2;
-  	  	 	processLen += processUnicode;
-  	  	 	aString += processUnicode;
-  	  	 }
-  	  	 
-  	  }
-  	  // Cannot precess by TEC, process one char a time by fallback mechanism
-  	  if( processLen < aLength)
-  	  {
-		  PRBool fallbackDone = PR_FALSE;
+        NS_PRECONDITION(0 == (processBytes % 2), "strange conversion result");
+
+        PRInt32 processUnicode = processBytes / 2;
+        processLen += processUnicode;
+        aString += processUnicode;
+      }
+         
+    }
+    // Cannot precess by TEC, process one char a time by fallback mechanism
+    if (processLen < aLength)
+    {
+      PRBool fallbackDone = PR_FALSE;
+      segDim.Clear();
+      
 #ifndef DISABLE_TEC_FALLBACK
-		  // Fallback by try different Script code
-		 fallbackDone = TECFallbackGetWidth(aString, thisWidth, fontNum, scriptFallbackFonts);
+      // Fallback by try different Script code
+     fallbackDone = TECFallbackGetDimensions(aString, segDim, fontNum, scriptFallbackFonts);
 #endif
 
-		  //
-		  // We really don't care too much of performance after this
-		  // This will only be called when we cannot display this character in ANY mac script avaliable
-		  // 
+      //
+      // We really don't care too much of performance after this
+      // This will only be called when we cannot display this character in ANY mac script avaliable
+      // 
 #ifndef DISABLE_ATSUI_FALLBACK  
-		  // Fallback by using ATSUI
-		  if(! fallbackDone)  {
-		  	const nsFont *font;
-			  mGS->mFontMetrics->GetFont(font);
-			  float textZoom;
-			  mContext->GetTextZoom(textZoom);
-		  	fallbackDone = ATSUIFallbackGetWidth(aString, thisWidth, fontNum, 
-									  		font->size * textZoom, 
-									  		(font->weight > NS_FONT_WEIGHT_NORMAL), 
-									  		((NS_FONT_STYLE_ITALIC ==  font->style) || (NS_FONT_STYLE_OBLIQUE ==  font->style)),
-									  		mGS->mColor );
-		  }
+      // Fallback by using ATSUI
+      if (!fallbackDone)  
+      {
+        const nsFont *font;
+        mGS->mFontMetrics->GetFont(font);
+        float textZoom;
+        mContext->GetTextZoom(textZoom);
+        fallbackDone = ATSUIFallbackGetDimensions(aString, segDim, fontNum, 
+                                                  font->size * textZoom, 
+                                                  (font->weight > NS_FONT_WEIGHT_NORMAL), 
+                                                  ((NS_FONT_STYLE_ITALIC ==  font->style) || 
+                                                   (NS_FONT_STYLE_OBLIQUE ==  font->style)),
+                                                  mGS->mColor );
+      }
+
 #endif
 #ifndef DISABLE_LATIN_FALLBACK
-		  if(! fallbackDone)
-		  	fallbackDone = LatinFallbackGetWidth(aString, thisWidth);
+      if (!fallbackDone) 
+      {
+        fallbackDone = LatinFallbackGetWidth(aString, thisWidth);
+        if (fallbackDone)
+          segDim.width = thisWidth;
+      }
 #endif
 #ifndef DISABLE_PRECOMPOSEHANGUL_FALLBACK
-		  if(! fallbackDone)
-		  	fallbackDone = PrecomposeHangulFallbackGetWidth(aString, thisWidth,scriptFallbackFonts[smKorean], fontNum);
+      if (!fallbackDone)
+      {
+        fallbackDone = PrecomposeHangulFallbackGetWidth(aString, thisWidth,
+                                                        scriptFallbackFonts[smKorean], fontNum);
+        if (fallbackDone)
+          segDim.width = thisWidth;
+      }
 #endif
 #ifndef DISABLE_TRANSLITERATE_FALLBACK  
-		  // Fallback to Transliteration
-		  if(! fallbackDone) {
-		  	fallbackDone = TransliterateFallbackGetWidth(aString, thisWidth);
-		  }
+      // Fallback to Transliteration
+      if (!fallbackDone) 
+      {
+        fallbackDone = TransliterateFallbackGetWidth(aString, thisWidth);
+        if (fallbackDone)
+          segDim.width = thisWidth;
+      }
 #endif
 #ifndef DISABLE_UPLUS_FALLBACK  
-		  // Fallback to UPlus
-		  if(! fallbackDone)
-		  	fallbackDone = UPlusFallbackGetWidth(aString, thisWidth);
+      // Fallback to UPlus
+      if (!fallbackDone)
+      {
+        fallbackDone = UPlusFallbackGetWidth(aString, thisWidth);
+        if (fallbackDone)
+          segDim.width = thisWidth;
+      }
 #endif
-		  	
-		  // Fallback to question mark
-		  if(! fallbackDone)
-		  	QuestionMarkFallbackGetWidth(aString, thisWidth);
-		  	
-		  textWidth += thisWidth;
-		  
-		  // for fallback measure/drawing, we always do one char a time.
-	  	  aString++;
-	  	  processLen++;
-	  }
-    } while (processLen < aLength);
+        
+      // Fallback to question mark
+      if (!fallbackDone) 
+      {
+        QuestionMarkFallbackGetWidth(aString, thisWidth);
+        if (fallbackDone)
+          segDim.width = thisWidth;
+      }
+      
+      oDim.Combine(segDim);    
+      // for fallback measure/drawing, we always do one char a time.
+      aString++;
+      processLen++;
+    }
+  } while (processLen < aLength);
     
     // release buffer if it is from heap
-    if(heapBuf)
-    	delete[] heapBuf;
-    	
-    oWidth = textWidth;
-    return NS_OK;
+  if (heapBuf)
+    nsMemory::Free(heapBuf);
+      
+  return NS_OK;
 }
 //------------------------------------------------------------------------
 
@@ -1111,47 +1193,65 @@ nsresult nsUnicodeRenderingToolkit :: DrawTextSegment(
 }
 //------------------------------------------------------------------------
 
-NS_IMETHODIMP nsUnicodeRenderingToolkit :: GetWidth(const PRUnichar *aString, PRUint32 aLength, nscoord &aWidth, PRInt32 *aFontID)
+nsresult 
+nsUnicodeRenderingToolkit::GetWidth(const PRUnichar *aString, PRUint32 aLength, 
+                                    nscoord &aWidth, PRInt32 *aFontID)
 {
- 	nsresult res = NS_OK;
-    nsFontMetricsMac *metrics = (nsFontMetricsMac*) mGS->mFontMetrics;
-    nsUnicodeFontMappingMac* fontmap = metrics->GetUnicodeFontMapping();
+  nsTextDimensions dim;
 
-    PRUint32 i;
-    short fontNum[2];
-    fontNum[0] = fontNum[1] = BAD_FONT_NUM;
-    PRUint32 start;
+  nsresult res = GetTextDimensions(aString, aLength, dim, aFontID);
+  aWidth = dim.width;
+  return res;
+}
+
+nsresult 
+nsUnicodeRenderingToolkit::GetTextDimensions(const PRUnichar *aString, PRUint32 aLength, 
+                                              nsTextDimensions &aDim, PRInt32 *aFontID)
+{
+  nsresult res = NS_OK;
+  nsFontMetricsMac *metrics = (nsFontMetricsMac*) mGS->mFontMetrics;
+  nsUnicodeFontMappingMac* fontmap = metrics->GetUnicodeFontMapping();
+
+  PRUint32 i;
+  short fontNum[2];
+  fontNum[0] = fontNum[1] = BAD_FONT_NUM;
+  PRUint32 start;
     
-    PRUint32 textWidth = 0;
-    PRUint32 thisWidth = 0;
-    const short *scriptFallbackFonts = fontmap->GetScriptFallbackFonts();
-    for(i =0, start = 0; i < aLength; i++)
-    {
-       fontNum[ i % 2] = fontmap->GetFontID(aString[i]);
-       if((fontNum[0] != fontNum[1]) && (0 != i))
-       {  // start new font run...
-       	  PRUint32 thisWidth = 0;
-       	  res =  GetTextSegmentWidth(aString+start, i-start, fontNum[ (i+1) % 2], scriptFallbackFonts, thisWidth);
-       	  if(NS_FAILED (res)) 
- 				return res;		
-          textWidth += thisWidth;
-          start = i;
-       }
+  nsTextDimensions textDim;
+  nsTextDimensions thisDim;
+  
+  const short *scriptFallbackFonts = fontmap->GetScriptFallbackFonts();
+  for(i =0, start = 0; i < aLength; i++)
+  {
+    fontNum[ i % 2] = fontmap->GetFontID(aString[i]);
+    if ((fontNum[0] != fontNum[1]) && (0 != i))
+    {  // start new font run...
+      thisDim.Clear();
+      res =  GetTextSegmentDimensions(aString+start, i - start, fontNum[(i + 1) % 2], scriptFallbackFonts, thisDim);
+      if (NS_FAILED (res)) 
+        return res;    
+      textDim.Combine(thisDim);
+      start = i;
     }
-	res = GetTextSegmentWidth(aString+start, aLength-start, fontNum[ (i+1) % 2], scriptFallbackFonts, thisWidth);
-    if(NS_FAILED (res)) 
-		return res;		
-    textWidth += thisWidth;	
+  }
+  res = GetTextSegmentDimensions(aString+start, aLength - start, fontNum[(i + 1) % 2], scriptFallbackFonts, thisDim);
+  if (NS_FAILED (res)) 
+    return res;    
+  textDim.Combine(thisDim);
 
-    aWidth = NSToCoordRound(float(textWidth) * mP2T);
-	return res;  
+  aDim.width = NSToCoordRound(float(textDim.width) * mP2T);
+  aDim.ascent = NSToCoordRound(float(textDim.ascent) * mP2T);
+  aDim.descent = NSToCoordRound(float(textDim.descent) * mP2T);
+  return res;  
 }
 
 #define IS_FORMAT_CONTROL_CHARS(c) 	((0x2000==((c)&0xFFF0))||(0x2028==((c)&0xFFF8)))
 #define IS_CONTEXTUAL_CHARS(c) 		  ((0x0600<=(c))&&((c)<0x1000))
 #define IS_COMBINING_CHARS(c) 		  ((0x0300<=(c))&&((c)<0x0370))
 //------------------------------------------------------------------------
-NS_IMETHODIMP nsUnicodeRenderingToolkit :: DrawString(const PRUnichar *aString, PRUint32 aLength,
+
+nsresult
+nsUnicodeRenderingToolkit::DrawString(const PRUnichar *aString, PRUint32 aLength,
                                          nscoord aX, nscoord aY, PRInt32 aFontID,
                                          const nscoord* aSpacing)
 {
@@ -1270,20 +1370,15 @@ NS_IMETHODIMP nsUnicodeRenderingToolkit :: DrawString(const PRUnichar *aString, 
 
 
 //------------------------------------------------------------------------
-NS_IMETHODIMP nsUnicodeRenderingToolkit :: PrepareToDraw(float aP2T, nsIDeviceContext* aContext, nsGraphicState* aGS, 
-#ifdef IBMBIDI
-GrafPtr aPort, PRBool aRightToLeftText
-#else
-GrafPtr aPort
-#endif
-)
+nsresult
+nsUnicodeRenderingToolkit::PrepareToDraw(float aP2T, nsIDeviceContext* aContext,
+                                         nsGraphicState* aGS, 
+                                         GrafPtr aPort, PRBool aRightToLeftText )
 {
 	mP2T = aP2T;
 	mContext = aContext;
 	mGS = aGS;
 	mPort = aPort;
-#ifdef IBMBIDI
 	mRightToLeftText = aRightToLeftText;
-#endif
 	return NS_OK;
 }
