@@ -37,10 +37,13 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+
 #include "nsImageWin.h"
 #include "nsRenderingContextWin.h"
 
+
 static nsresult BuildDIB(LPBITMAPINFOHEADER  *aBHead,PRInt32 aWidth,PRInt32 aHeight,PRInt32 aDepth,PRInt8  *aNumBitPix);
+
 
 
 
@@ -48,12 +51,15 @@ static PRInt32 GetPlatform()
 {
   OSVERSIONINFO versionInfo;
 
+
   versionInfo.dwOSVersionInfoSize = sizeof(versionInfo);
   ::GetVersionEx(&versionInfo);
   return versionInfo.dwPlatformId;
 }
 
+
 PRInt32 nsImageWin::gPlatform = GetPlatform();
+
 
 /** ----------------------------------------------------------------
   * Constructor for nsImageWin
@@ -63,6 +69,7 @@ nsImageWin :: nsImageWin()
 {
   NS_INIT_REFCNT();
 
+
   mImageBits = nsnull;
   mHBitmap = nsnull;
   mDIBSection = nsnull;
@@ -71,17 +78,21 @@ nsImageWin :: nsImageWin()
   mColorMap = nsnull;
   mBHead = nsnull;
 
+
   mNaturalWidth = 0;
   mNaturalHeight = 0;
   mIsLocked = PR_FALSE;
   mDIBTemp = PR_FALSE;
+
 
   //CleanUp(PR_TRUE);
   CleanUpDIBSection();
   CleanUpDDB();
   CleanUpDIB();
 
+
 }
+
 
 /** ----------------------------------------------------------------
   * destructor for nsImageWin
@@ -95,7 +106,9 @@ nsImageWin :: ~nsImageWin()
   CleanUpDIB();
 }
 
+
 NS_IMPL_ISUPPORTS1(nsImageWin, nsIImage);
+
 
 /** ---------------------------------------------------
  *  See documentation in nsIImageWin.h  
@@ -109,6 +122,7 @@ nsresult nsImageWin :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMa
   CleanUpDDB();
   CleanUpDIB();
 
+
   if (8 == aDepth) {
     mNumPaletteColors = 256;
     mNumBytesPixel = 1;
@@ -120,10 +134,13 @@ nsresult nsImageWin :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMa
     return NS_ERROR_UNEXPECTED;
   }
 
+
   SetDecodedRect(0,0,0,0);  //init
+
 
   SetNaturalWidth(0);
   SetNaturalHeight(0);
+
 
   mIsTopToBottom = PR_FALSE;
   if (mNumPaletteColors >= 0){
@@ -149,9 +166,11 @@ nsresult nsImageWin :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMa
     mBHead->biClrUsed = mNumPaletteColors;
     mBHead->biClrImportant = mNumPaletteColors;
 
+
     // Compute the size of the image
     mRowBytes = CalcBytesSpan(mBHead->biWidth);
     mSizeImage = mRowBytes * mBHead->biHeight; // no compression
+
 
     // Allocate the image bits
     mImageBits = new unsigned char[mSizeImage];
@@ -167,6 +186,7 @@ nsresult nsImageWin :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMa
     }
 */
 
+
     if (256 == mNumPaletteColors) {
       // Initialize the array of indexes into the logical palette
       WORD* palIndx = (WORD*)(((LPBYTE)mBHead) + mBHead->biSize);
@@ -174,6 +194,7 @@ nsresult nsImageWin :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMa
         *palIndx++ = index;
       }
     }
+
 
     // Allocate mask image bits if requested
     if (mAlphaBits)
@@ -189,8 +210,10 @@ nsresult nsImageWin :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMa
         mAlphaDepth = 8;
       }
 
+
       // 32-bit align each row
       mARowBytes = (mARowBytes + 3) & ~0x3;
+
 
       mAlphaBits = new unsigned char[mARowBytes * aHeight];
       mAlphaWidth = aWidth;
@@ -201,14 +224,17 @@ nsresult nsImageWin :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMa
       mAlphaHeight = 0;
     }
 
+
     // XXX Let's only do this if we actually have a palette...
     mColorMap = new nsColorMap;
+
 
     if (mColorMap != nsnull){
       mColorMap->NumColors = mNumPaletteColors;
       mColorMap->Index = nsnull;
       if (mColorMap->NumColors > 0) {
         mColorMap->Index = new PRUint8[3 * mColorMap->NumColors];
+
 
         // XXX Note: I added this because purify claims that we make a
         // copy of the memory (which we do!). I'm not sure if this
@@ -218,8 +244,10 @@ nsresult nsImageWin :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMa
     }
   }
 
+
   return NS_OK;
 }
+
 
 /** ---------------------------------------------------
  *  See documentation in nsIImageWin.h  
@@ -230,11 +258,14 @@ nsImageWin :: ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRect *a
 {
 }
 
+
 //------------------------------------------------------------
+
 
 struct MONOBITMAPINFO {
   BITMAPINFOHEADER  bmiHeader;
   RGBQUAD           bmiColors[2];
+
 
   MONOBITMAPINFO(LONG aWidth, LONG aHeight)
   {
@@ -244,6 +275,7 @@ struct MONOBITMAPINFO {
     bmiHeader.biHeight = aHeight;
     bmiHeader.biPlanes = 1;
     bmiHeader.biBitCount = 1;
+
 
     // Note that the palette is being set up so the DIB and the DDB have white and
     // black reversed. This is because we need the mask to have 0 for the opaque
@@ -261,9 +293,11 @@ struct MONOBITMAPINFO {
   }
 };
 
+
 struct ALPHA8BITMAPINFO {
   BITMAPINFOHEADER  bmiHeader;
   RGBQUAD           bmiColors[256];
+
 
   ALPHA8BITMAPINFO(LONG aWidth, LONG aHeight)
   {
@@ -273,6 +307,7 @@ struct ALPHA8BITMAPINFO {
     bmiHeader.biHeight = aHeight;
     bmiHeader.biPlanes = 1;
     bmiHeader.biBitCount = 8;
+
 
     /* fill in gray scale palette */
      int i;
@@ -285,8 +320,10 @@ struct ALPHA8BITMAPINFO {
   }
 };
 
+
 struct ALPHA24BITMAPINFO {
   BITMAPINFOHEADER  bmiHeader;
+
 
   ALPHA24BITMAPINFO(LONG aWidth, LONG aHeight)
   {
@@ -299,8 +336,10 @@ struct ALPHA24BITMAPINFO {
   }
 };
 
+
 struct ALPHA32BITMAPINFO {
   BITMAPINFOHEADER  bmiHeader;
+
 
   ALPHA32BITMAPINFO(LONG aWidth, LONG aHeight)
   {
@@ -314,9 +353,11 @@ struct ALPHA32BITMAPINFO {
 };
 
 
+
 static void CompositeBitsInMemory(HDC aTheHDC, int aDX, int aDY, int aDWidth, int aDHeight,
                     int aSX, int aSY, int aSWidth, int aSHeight,PRInt32 aSrcy,
                     PRUint8 *aAlphaBits,MONOBITMAPINFO  *aBMI,PRUint8* aImageBits,LPBITMAPINFOHEADER aBHead,PRInt16 aNumPaletteColors);
+
 
 
 // Raster op used with MaskBlt(). Assumes our transparency mask has 0 for the
@@ -325,12 +366,14 @@ static void CompositeBitsInMemory(HDC aTheHDC, int aDX, int aDY, int aDWidth, in
 // (value of 1) to just use the destination bits
 #define MASKBLT_ROP MAKEROP4((DWORD)0x00AA0029, SRCCOPY)
 
+
 void nsImageWin::CreateImageWithAlphaBits(HDC TheHDC)
 {
   unsigned char *imageWithAlphaBits;
   ALPHA32BITMAPINFO bmi(mBHead->biWidth, mBHead->biHeight);
   mHBitmap = ::CreateDIBSection(TheHDC, (LPBITMAPINFO)&bmi, DIB_RGB_COLORS,
                                 (LPVOID *)&imageWithAlphaBits, NULL, 0);
+
 
   if (!mHBitmap) {
     mIsOptimized = PR_FALSE;
@@ -342,6 +385,7 @@ void nsImageWin::CreateImageWithAlphaBits(HDC TheHDC)
       unsigned char *imageWithAlphaRow = imageWithAlphaBits + y * mBHead->biWidth * 4;
       unsigned char *imageRow = mImageBits + y * mRowBytes;
       unsigned char *alphaRow = mAlphaBits + y * mARowBytes;
+
 
       for (int x = 0; x < mBHead->biWidth;
            x++, imageWithAlphaRow += 4, imageRow++, alphaRow++) {
@@ -360,6 +404,7 @@ void nsImageWin::CreateImageWithAlphaBits(HDC TheHDC)
       unsigned char *imageRow = mImageBits + y * mRowBytes;
       unsigned char *alphaRow = mAlphaBits + y * mARowBytes;
 
+
       for (int x = 0; x < mBHead->biWidth;
           x++, imageWithAlphaRow += 4, imageRow += 3, alphaRow++) {
         FAST_DIVIDE_BY_255(imageWithAlphaRow[0], imageRow[0] * *alphaRow);
@@ -372,6 +417,7 @@ void nsImageWin::CreateImageWithAlphaBits(HDC TheHDC)
   mIsOptimized = PR_TRUE;
 }
 
+
 /** ---------------------------------------------------
  *  See documentation in nsIImageWin.h  
  *  @update 3/27/00 dwc
@@ -381,7 +427,9 @@ nsImageWin :: CreateDDB(nsDrawingSurface aSurface)
 {
   HDC TheHDC;
 
+
   ((nsDrawingSurfaceWin *)aSurface)->GetDC(&TheHDC);
+
 
   if (TheHDC != NULL){
     // Temporary fix for bug 135226 until we do better decode-time
@@ -406,6 +454,7 @@ nsImageWin :: CreateDDB(nsDrawingSurface aSurface)
   }
 }
 
+
 /** ---------------------------------------------------
  *  See documentation in nsIImageWin.h  
  *  @update 3/27/00 dwc
@@ -422,11 +471,14 @@ nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
   PRInt32 origSHeight = aSHeight, origDHeight = aDHeight;
   PRInt32 origSWidth = aSWidth, origDWidth = aDWidth;
 
+
   if (mBHead == nsnull || aSWidth < 0 || aDWidth < 0 || aSHeight < 0 || aDHeight < 0) 
     return NS_ERROR_FAILURE;
 
+
   if (0 == aSWidth || 0 == aDWidth || 0 == aSHeight || 0 == aDHeight)
     return NS_OK;
+
 
   // limit the size of the blit to the amount of the image read in
   if (aSX + aSWidth > mDecodedX2) {
@@ -438,6 +490,7 @@ nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
     aSX = mDecodedX1;
   }
 
+
   if (aSY + aSHeight > mDecodedY2) {
     aDHeight -= ((aSY + aSHeight - mDecodedY2)*origDHeight)/origSHeight;
     aSHeight -= (aSY + aSHeight) - mDecodedY2;
@@ -447,14 +500,18 @@ nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
     aSY = mDecodedY1;
   }
 
+
   if (aDWidth <= 0 || aDHeight <= 0)
     return NS_OK;
+
 
   // Translate to bottom-up coordinates for the source bitmap
   srcy = mBHead->biHeight - (aSY + aSHeight);
 
+
   // if DC is not for a printer, and the image can be optimized, 
   ((nsDrawingSurfaceWin *)aSurface)->GetDC(&TheHDC);
+
 
   // find out if the surface is a printer.
   ((nsDrawingSurfaceWin *)aSurface)->GetTECHNOLOGY(&canRaster);
@@ -463,10 +520,12 @@ nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
       CreateDDB(aSurface);
   }
 
+
   if (nsnull != TheHDC){
     PRBool  didComposite = PR_FALSE;
     if (!IsOptimized() || nsnull==mHBitmap){
       rop = SRCCOPY;
+
 
       if (nsnull != mAlphaBits){
         if (1==mAlphaDepth){
@@ -477,7 +536,9 @@ nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
             didComposite = PR_TRUE;
           } else {
 
+
             MONOBITMAPINFO  bmi(mAlphaWidth, mAlphaHeight);
+
 
             ::StretchDIBits(TheHDC, aDX, aDY, aDWidth, aDHeight,aSX, srcy,aSWidth, aSHeight, mAlphaBits,
                                             (LPBITMAPINFO)&bmi, DIB_RGB_COLORS, SRCAND);
@@ -485,6 +546,7 @@ nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
           }  
         }
       }
+
 
       
       if (PR_FALSE == didComposite){
@@ -498,6 +560,7 @@ nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
         }
       }
 
+
     }else{
       nsIDeviceContext    *dx;
       aContext.GetDeviceContext(dx);
@@ -506,10 +569,13 @@ nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
       nsDrawingSurfaceWin *srcDS = (nsDrawingSurfaceWin *)ds;
       HDC                 srcDC;
 
+
       if (nsnull != srcDS){
         srcDS->GetDC(&srcDC);
 
+
         rop = SRCCOPY;
+
 
         if (nsnull != mAlphaBits){
           if (1==mAlphaDepth){
@@ -578,6 +644,7 @@ nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
           }
         }
 
+
         ::SelectObject(srcDC, oldBits);
         srcDS->ReleaseDC();
       }
@@ -586,8 +653,10 @@ nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
     ((nsDrawingSurfaceWin *)aSurface)->ReleaseDC();
   }
 
+
   return NS_OK;
 }
+
 
 /** ---------------------------------------------------
  *  This is a helper routine to do the blending for the DrawComposited method
@@ -601,6 +670,7 @@ void nsImageWin::DrawComposited24(unsigned char *aBits, int aX, int aY, int aWid
     unsigned char *imageRow = mImageBits + (y + aY) * mRowBytes + 3 * aX;
     unsigned char *alphaRow = mAlphaBits + (y + aY) * mARowBytes + aX;
 
+
     for (int x = 0; x < aWidth;
          x++, targetRow += 3, imageRow += 3, alphaRow++) {
       unsigned alpha = *alphaRow;
@@ -610,6 +680,7 @@ void nsImageWin::DrawComposited24(unsigned char *aBits, int aX, int aY, int aWid
     }
   }
 }
+
 
 /** ---------------------------------------------------
  *  Blend the image into a 24 bit buffer.. using an 8 bit alpha mask 
@@ -630,21 +701,26 @@ void nsImageWin::DrawComposited(HDC TheHDC, int aDX, int aDY, int aDWidth, int a
   }
   HBITMAP oldBitmap = (HBITMAP)::SelectObject(memDC, tmpBitmap);
 
+
   /* Copy from the HDC */
   ::StretchBlt(memDC, 0, 0, aSWidth, aSHeight,
                TheHDC, aDX, aDY, aDWidth, aDHeight, SRCCOPY);
 
+
   /* Do composite */
   DrawComposited24(screenBits, aSX, aSY, aSWidth, aSHeight);
+
 
   /* Copy back to the HDC */
   ::StretchBlt(TheHDC, aDX, aDY, aDWidth, aDHeight,
                memDC, 0, 0, aSWidth, aSHeight, SRCCOPY);
 
+
   ::SelectObject(memDC, oldBitmap);
   ::DeleteObject(tmpBitmap);
   ::DeleteDC(memDC);
 }
+
 
 /** ---------------------------------------------------
  *  See documentation in nsIImageWin.h
@@ -655,6 +731,7 @@ NS_IMETHODIMP nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface
 {
   return Draw(aContext, aSurface, 0, 0, mNaturalWidth, mNaturalHeight, aX, aY, aWidth, aHeight);
 }
+
 
 /** ---------------------------------------------------
  *  See documentation in nsIRenderingContext.h
@@ -677,8 +754,10 @@ NS_IMETHODIMP nsImageWin::DrawTile(nsIRenderingContext &aContext,
   nsRect          destRect,srcRect;
   nscoord         ScaledTileWidth,ScaledTileHeight;
 
+
   aContext.GetDeviceContext(*getter_AddRefs(theDeviceContext));
   theDeviceContext->GetCanonicalPixelScale(scale);
+
 
   destScaledWidth  = PR_MAX(PRInt32(mBHead->biWidth*scale), 1);
   destScaledHeight = PR_MAX(PRInt32(mBHead->biHeight*scale), 1);
@@ -687,6 +766,7 @@ NS_IMETHODIMP nsImageWin::DrawTile(nsIRenderingContext &aContext,
   validY = 0;
   validWidth  = mBHead->biWidth;
   validHeight = mBHead->biHeight;
+
 
   
   // limit the image rectangle to the size of the image data which
@@ -711,20 +791,25 @@ NS_IMETHODIMP nsImageWin::DrawTile(nsIRenderingContext &aContext,
   }
 
 
+
   // put the DestRect into absolute coordintes of the device
   y0 = aDestRect.y - aSYOffset;
   x0 = aDestRect.x - aSXOffset;
   y1 = aDestRect.y + aDestRect.height;
   x1 = aDestRect.x + aDestRect.width;
 
+
   // this is the width and height of the image in pixels
   // we need to map this to the pixel height of the device
   ScaledTileWidth = PR_MAX(PRInt32(mBHead->biWidth*scale), 1);
   ScaledTileHeight = PR_MAX(PRInt32(mBHead->biHeight*scale), 1);
 
+
   ((nsDrawingSurfaceWin *)aSurface)->GetTECHNOLOGY(&canRaster);
 
+
   // do alpha depth equal to 8 here.. this needs some special attention
+
 
   if ( mAlphaDepth == 8) {
     unsigned char *screenBits=nsnull;
@@ -733,9 +818,11 @@ NS_IMETHODIMP nsImageWin::DrawTile(nsIRenderingContext &aContext,
     unsigned char alpha;
     PRInt32       targetBytesPerPixel,imageBytesPerPixel;
 
+
     if (!mImageBits) {
       ConvertDDBtoDIB();
     }
+
 
     // draw the alpha and the bitmap to an offscreen buffer.. for the blend.. first 
     ((nsDrawingSurfaceWin *)aSurface)->GetDC(&theHDC);
@@ -745,9 +832,11 @@ NS_IMETHODIMP nsImageWin::DrawTile(nsIRenderingContext &aContext,
       width = x1-x0;
       height = y1-y0;
 
+
       ALPHA24BITMAPINFO bmi(width, height);
       tmpBitmap = ::CreateDIBSection(memDC, (LPBITMAPINFO)&bmi, DIB_RGB_COLORS, (LPVOID *)&screenBits, NULL, 0);
       oldBitmap = (HBITMAP)::SelectObject(memDC, tmpBitmap);
+
 
       // number of bytes in a row on a 32 bit boundary
       targetRowBytes = (bmi.bmiHeader.biWidth * bmi.bmiHeader.biBitCount) >> 5;  // number of 32 bit longs
@@ -756,8 +845,10 @@ NS_IMETHODIMP nsImageWin::DrawTile(nsIRenderingContext &aContext,
       }
       targetRowBytes <<= 2;   // divide by 4 to get the number of bytes from the number of 32 bit longs
 
+
       targetBytesPerPixel = bmi.bmiHeader.biBitCount/8;
     }
+
 
     if (!tmpBitmap) {
       if (memDC) {
@@ -774,9 +865,11 @@ NS_IMETHODIMP nsImageWin::DrawTile(nsIRenderingContext &aContext,
       ScaledTileHeight_Offset = ScaledTileHeight + aSYOffset;
       ScaledTileWidth_Offset = ScaledTileWidth + aSXOffset;
 
+
       // this is the adjusted width of these imagebuffers
       temp1 = mRowBytes + imageBytesPerPixel * aSXOffset;
       temp2 = mARowBytes + aSXOffset;
+
 
       for (int y = 0,byw=aSYOffset; y < height; y++,byw++) {
         if (byw >= ScaledTileHeight_Offset) {
@@ -786,6 +879,7 @@ NS_IMETHODIMP nsImageWin::DrawTile(nsIRenderingContext &aContext,
         imageRow = mImageBits + (byw * temp1);
         alphaRow = mAlphaBits + (byw * temp2);
 
+
         for (int x=0,bxw=aSXOffset;x<width;x++,targetRow+=targetBytesPerPixel,imageRow+=imageBytesPerPixel,bxw++, alphaRow++) {
           // if we went past the row width of our buffer.. go back and start again
           if (bxw>=ScaledTileWidth_Offset) {
@@ -794,6 +888,7 @@ NS_IMETHODIMP nsImageWin::DrawTile(nsIRenderingContext &aContext,
             alphaRow = mAlphaBits + (byw * temp2);
           }
 
+
           alpha = *alphaRow;
           MOZ_BLEND(targetRow[0], targetRow[0], imageRow[0], alpha);
           MOZ_BLEND(targetRow[1], targetRow[1], imageRow[1], alpha);
@@ -801,8 +896,10 @@ NS_IMETHODIMP nsImageWin::DrawTile(nsIRenderingContext &aContext,
         }
       }
 
+
       // copy the blended image back to the screen
       ::StretchBlt(theHDC, aDestRect.x, aDestRect.y, width, height,memDC, 0, 0, width, height, SRCCOPY);
+
 
       ::SelectObject(memDC, oldBitmap);
       ::DeleteObject(tmpBitmap);
@@ -812,7 +909,9 @@ NS_IMETHODIMP nsImageWin::DrawTile(nsIRenderingContext &aContext,
     } 
   }
 
+
   numTiles = (aDestRect.width*aDestRect.height)/(ScaledTileWidth*ScaledTileHeight);
+
 
   // if alpha is less than 8,not printing, and not 8 bit palette image then we can do
   // a progressive tile and the tile is at least 8 times smaller than the area to update
@@ -827,6 +926,7 @@ NS_IMETHODIMP nsImageWin::DrawTile(nsIRenderingContext &aContext,
     }
   }
 
+
   // if we got to this point.. everything else failed.. and the slow blit backstop
   // will finish this tiling
   for (y=y0;y<y1;y+=ScaledTileHeight) {
@@ -838,6 +938,7 @@ NS_IMETHODIMP nsImageWin::DrawTile(nsIRenderingContext &aContext,
   } 
   return(NS_OK);
 }
+
 
 /** ---------------------------------------------------
  *  See documentation in nsImageWin.h
@@ -855,26 +956,32 @@ nsImageWin::ProgressiveDoubleBlit(nsDrawingSurface aSurface,
   HDC     theHDC,offDC,maskDC;
   HBITMAP maskBits,tileBits,oldBits,oldMaskBits; 
 
+
     // create a larger tile from the smaller one
     ((nsDrawingSurfaceWin *)aSurface)->GetDC(&theHDC);
     if (NULL == theHDC) {
       return (PR_FALSE);
     }
 
+
     // so we will create a screen compatible bitmap and then install this into the offscreen DC
     offDC = ::CreateCompatibleDC(theHDC);
+
 
     if (NULL ==offDC) {
         return (PR_FALSE);
     }
 
+
     tileBits = ::CreateCompatibleBitmap(theHDC, aDestBufferWidth,aDestBufferHeight);
+
 
     if (NULL == tileBits) {
       ::DeleteDC(offDC);
       return (PR_FALSE);
     }
     oldBits =(HBITMAP) ::SelectObject(offDC,tileBits);
+
 
     if (1==mAlphaDepth) {
       // larger tile for mask
@@ -894,17 +1001,21 @@ nsImageWin::ProgressiveDoubleBlit(nsDrawingSurface aSurface,
         return (PR_FALSE);
       }
 
+
       oldMaskBits = (HBITMAP)::SelectObject(maskDC,maskBits);
+
 
       // get the mask into our new tiled mask
       MONOBITMAPINFO  bmi(mAlphaWidth,mAlphaHeight);
       ::StretchDIBits(maskDC, 0, 0, aScaledTileWidth, aScaledTileHeight,0, 0, 
                       mAlphaWidth, mAlphaHeight, mAlphaBits,(LPBITMAPINFO)&bmi, DIB_RGB_COLORS, SRCCOPY);
 
+
       ::BitBlt(maskDC,0,0,aScaledTileWidth,aScaledTileHeight,maskDC,0,0,SRCCOPY);
       srcRect.SetRect(0,0,aScaledTileWidth,aScaledTileHeight);
       BuildTile(maskDC,srcRect,aDestBufferWidth/2,aDestBufferHeight/2,SRCCOPY);
     }
+
 
     // put the initial tile of background image into the offscreen
     if (!IsOptimized() || nsnull==mHBitmap) {
@@ -919,13 +1030,16 @@ nsImageWin::ProgressiveDoubleBlit(nsDrawingSurface aSurface,
       ::SelectObject(theHDC, oldBits);
     }
 
+
     srcRect.SetRect(0,0,aScaledTileWidth,aScaledTileHeight);
     BuildTile(offDC,srcRect,aDestBufferWidth/2,aDestBufferHeight/2,SRCCOPY);
+
 
     // now duplicate our tile into the background
     destRect = srcRect;
     width = destRect.width;
     height = destRect.height;
+
 
     if (1!=mAlphaDepth) {
       for (y=aY0;y<aY1;y+=srcRect.height) {
@@ -949,19 +1063,24 @@ nsImageWin::ProgressiveDoubleBlit(nsDrawingSurface aSurface,
       ::DeleteDC(maskDC);
     }
 
+
   ::SelectObject(offDC,oldBits);
   ::DeleteObject(tileBits);
   ::DeleteDC(offDC);
+
 
   return(PR_TRUE);
 }
 
 
+
 ALPHABLENDPROC nsImageWin::gAlphaBlend = NULL;
+
 
 PRBool nsImageWin::CanAlphaBlend(void)
 {
   static PRBool alreadyChecked = PR_FALSE;
+
 
   if (!alreadyChecked) {
     OSVERSIONINFO os;
@@ -978,8 +1097,10 @@ PRBool nsImageWin::CanAlphaBlend(void)
     alreadyChecked = PR_TRUE;
   }
 
+
   return gAlphaBlend != NULL;
 }
+
 
 /** ----------------------------------------------------------------
  * Create an optimized bitmap, -- this routine may need to be deleted, not really used now
@@ -999,6 +1120,7 @@ nsImageWin :: Optimize(nsIDeviceContext* aContext)
   return NS_OK;
 }
 
+
 /** ----------------------------------------------------------------
  * Calculate the number of bytes in a span for this image
  * @update dc - 11/20/98
@@ -1010,15 +1132,20 @@ nsImageWin :: CalcBytesSpan(PRUint32  aWidth)
 {
   PRInt32 spanBytes;
 
+
   spanBytes = (aWidth * mBHead->biBitCount) >> 5;
+
 
   if (((PRUint32)mBHead->biWidth * mBHead->biBitCount) & 0x1F) 
     spanBytes++;
 
+
   spanBytes <<= 2;
+
 
   return(spanBytes);
 }
+
 
 /** ---------------------------------------------------
  *  See documentation in nsImageWin.h
@@ -1032,6 +1159,7 @@ nsImageWin::CleanUpDIB()
     mImageBits = nsnull;
   }
 
+
   // Should be an ISupports, so we can release
   if (mColorMap != nsnull){
     delete [] mColorMap->Index;
@@ -1039,11 +1167,14 @@ nsImageWin::CleanUpDIB()
     mColorMap = nsnull;
   }
 
+
   //mNumPaletteColors = -1;
   //mNumBytesPixel = 0;
   mSizeImage = 0;
 
+
 }
+
 
 void
 nsImageWin::CleanUpDIBSection()
@@ -1059,6 +1190,7 @@ nsImageWin::CleanUpDIBSection()
   }
 }
 
+
 /** ---------------------------------------------------
  *  See documentation in nsImageWin.h
  *  @update 4/05/00 dwc
@@ -1071,15 +1203,19 @@ nsImageWin :: CleanUpDDB()
     mHBitmap = nsnull;
   }
 
+
   if (mBHead) {
     delete[] mBHead;
     mBHead = nsnull;
   }
 
+
   mCanOptimize = PR_FALSE;
   mIsOptimized = PR_FALSE;
 
+
 }
+
 
 /** ----------------------------------------------------------------
  * See documentation in nsIImage.h
@@ -1092,10 +1228,12 @@ nsImageWin::PrintDDB(nsDrawingSurface aSurface,PRInt32 aX, PRInt32 aY, PRInt32 a
   HDC   theHDC;
   UINT  palType;
 
+
   if (mIsOptimized == PR_TRUE){
     if (mHBitmap != nsnull){
       ConvertDDBtoDIB();
       ((nsDrawingSurfaceWin *)aSurface)->GetDC(&theHDC);
+
 
       if (mBHead->biBitCount == 8) {
         palType = DIB_PAL_COLORS;
@@ -1103,8 +1241,10 @@ nsImageWin::PrintDDB(nsDrawingSurface aSurface,PRInt32 aX, PRInt32 aY, PRInt32 a
         palType = DIB_RGB_COLORS;
       }
 
+
       ::StretchDIBits(theHDC, aX, aY, aWidth, aHeight,
           0, 0, mBHead->biWidth, mBHead->biHeight, mImageBits,(LPBITMAPINFO)mBHead,palType, aROP);
+
 
       // we are finished with this, so delete it           
       if (mImageBits != nsnull) {
@@ -1114,8 +1254,10 @@ nsImageWin::PrintDDB(nsDrawingSurface aSurface,PRInt32 aX, PRInt32 aY, PRInt32 a
     }
   }
 
+
   return NS_OK;
 }
+
 
 /** ----------------------------------------------------------------
  * See documentation in nsIImage.h
@@ -1131,16 +1273,20 @@ nsImageWin::ConvertDDBtoDIB()
   HDC                 memPrDC;
   UINT                palType;
 
+
   if (mIsOptimized == PR_TRUE){
+
 
     if (mHBitmap != nsnull){
       memPrDC = ::CreateDC("DISPLAY",NULL,NULL,NULL);
       oldbits = (HBITMAP)::SelectObject(memPrDC,mHBitmap);
 
+
       numbytes = ::GetObject(mHBitmap,sizeof(BITMAP),&srcinfo);
       
       tWidth = mBHead->biWidth;
       tHeight = mBHead->biHeight;
+
 
       if (nsnull != mBHead){
         delete[] mBHead;
@@ -1149,8 +1295,10 @@ nsImageWin::ConvertDDBtoDIB()
       mRowBytes = CalcBytesSpan(mBHead->biWidth);
       mSizeImage = mRowBytes * mBHead->biHeight; // no compression
 
+
       // Allocate the image bits
       mImageBits = new unsigned char[mSizeImage];
+
 
       if (mBHead->biBitCount == 8) {
         palType = DIB_PAL_COLORS;
@@ -1158,14 +1306,17 @@ nsImageWin::ConvertDDBtoDIB()
         palType = DIB_RGB_COLORS;
       }
 
+
       numbytes = ::GetDIBits(memPrDC,mHBitmap,0,srcinfo.bmHeight,mImageBits,(LPBITMAPINFO)mBHead,palType);
       ::SelectObject(memPrDC,oldbits);
       DeleteDC(memPrDC);
     }
   }
 
+
   return NS_OK;
 }
+
 
 /** ----------------------------------------------------------------
  * Build A DIB header and allocate memory 
@@ -1176,6 +1327,7 @@ nsresult
 BuildDIB(LPBITMAPINFOHEADER  *aBHead,PRInt32 aWidth,PRInt32 aHeight,PRInt32 aDepth,PRInt8 *aNumBytesPix)
 {
   PRInt16 numPaletteColors;
+
 
   if (8 == aDepth) {
     numPaletteColors = 256;
@@ -1194,6 +1346,7 @@ BuildDIB(LPBITMAPINFOHEADER  *aBHead,PRInt32 aWidth,PRInt32 aHeight,PRInt32 aDep
     return NS_ERROR_UNEXPECTED;
   }
 
+
   if (0 == numPaletteColors) {
     // space for the header only (no color table)
     (*aBHead) = (LPBITMAPINFOHEADER)new char[sizeof(BITMAPINFO)];
@@ -1203,6 +1356,7 @@ BuildDIB(LPBITMAPINFOHEADER  *aBHead,PRInt32 aWidth,PRInt32 aHeight,PRInt32 aDep
     // index into the currently realized logical palette
     (*aBHead) = (LPBITMAPINFOHEADER)new char[sizeof(BITMAPINFOHEADER) + (256 * sizeof(WORD))];
   }
+
 
   (*aBHead)->biSize = sizeof(BITMAPINFOHEADER);
   (*aBHead)->biWidth = aWidth;
@@ -1216,8 +1370,10 @@ BuildDIB(LPBITMAPINFOHEADER  *aBHead,PRInt32 aWidth,PRInt32 aHeight,PRInt32 aDep
   (*aBHead)->biClrUsed = numPaletteColors;
   (*aBHead)->biClrImportant = numPaletteColors;
 
+
   return NS_OK;
 }
+
 
 /** ---------------------------------------------------
  *  Lock down the image pixels
@@ -1228,10 +1384,13 @@ nsImageWin::LockImagePixels(PRBool aMaskPixels)
   /*  if (!mHBitmap) return NS_ERROR_NOT_INITIALIZED;
    ... and do Windows locking of image pixels here, if necessary */
 
+
   mIsLocked = PR_TRUE;
+
 
   return NS_OK;
 }
+
 
 /** ---------------------------------------------------
  *  Unlock the pixels, optimize this nsImageWin
@@ -1248,8 +1407,10 @@ nsImageWin::UnlockImagePixels(PRBool aMaskPixels)
       mImageBits = nsnull;
       }
 
+
     mDIBTemp = PR_FALSE;
   }
+
 
   /* if (!mHBitmap)
     return NS_ERROR_NOT_INITIALIZED;
@@ -1257,10 +1418,13 @@ nsImageWin::UnlockImagePixels(PRBool aMaskPixels)
   if (aMaskPixels && !mAlphamHBitmap)
     return NS_ERROR_NOT_INITIALIZED;
 
+
    ... and do Windows unlocking of image pixels here, if necessary */
+
 
   return NS_OK;
 }
+
 
 /** ---------------------------------------------------
  *  Set the decoded dimens of the image
@@ -1274,6 +1438,7 @@ nsImageWin::SetDecodedRect(PRInt32 x1, PRInt32 y1, PRInt32 x2, PRInt32 y2)
   mDecodedY2 = y2; 
   return NS_OK;
 }
+
 
 /** ---------------------------------------------------
  *  A bit blitter to tile images to the background recursively
@@ -1305,6 +1470,7 @@ nsImageWin::BuildTile(HDC TheHDC,nsRect &aSrcRect,PRInt16 aWidth,PRInt16 aHeight
   } 
 }
 
+
 /**
  * Get a pointer to the bits for the pixelmap. Will convert to DIB if
  * only stored in optimized HBITMAP form.  Using this routine will
@@ -1312,6 +1478,7 @@ nsImageWin::BuildTile(HDC TheHDC,nsRect &aSrcRect,PRInt16 aWidth,PRInt16 aHeight
  *
  * @return address of the DIB pixel array
  */
+
 
 PRUint8*
 nsImageWin::GetBits()
@@ -1322,78 +1489,181 @@ nsImageWin::GetBits()
     mDIBTemp = PR_TRUE;   // only set to true if the DIB is being created here as temporary
   }
 
+
   return mImageBits;
+
 
 } // GetBits
 
+
 #ifdef USE_IMG2
+/** ---------------------------------------------------
+ *  This blends together GIF's for the animation... called by gfxImageFrame   
+ *  currently does not support and 8bit blend.  Assumed for animated GIF's only
+ *  @update 07/09/2002 dwc
+ *  @param aDstImage -- destination where to copy to
+ *  @param aDX -- x location of the image
+ *  @param aDY -- y location of the image
+ *  @param aDWidth -- width of the image
+ *  @param aDHeight -- height of the image
+ */
 NS_IMETHODIMP nsImageWin::DrawToImage(nsIImage* aDstImage, nscoord aDX, nscoord aDY, nscoord aDWidth, nscoord aDHeight)
 {
-  PRInt32 srcy;
-  HBITMAP oldDstBits;
-  DWORD   rop;
-  PRInt32 origDHeight = aDHeight;
-  PRInt32 origDWidth = aDWidth;
 
-  if (mBHead == nsnull || aDWidth < 0 || aDHeight < 0) 
+
+  NS_ASSERTION(mAlphaDepth <= 1, "nsImageWin::DrawToImage can only handle 0 & 1 bit Alpha");
+
+
+  if (mAlphaDepth > 1)
+    return NS_ERROR_UNEXPECTED;
+
+
+  nsImageWin *dest = NS_STATIC_CAST(nsImageWin *, aDstImage);
+
+
+  if (!dest)
     return NS_ERROR_FAILURE;
 
-  if (0 == aDWidth || 0 == aDHeight)
+
+  if (aDX >= dest->mBHead->biWidth || aDY >= dest->mBHead->biHeight)
     return NS_OK;
 
-  // Translate to bottom-up coordinates for the source bitmap
-  srcy = mBHead->biHeight - mNaturalHeight;
 
-  // Create a memory DC that is compatible with the screen
-  HDC dstMemDC = ::CreateCompatibleDC(nsnull);
+  if (!dest->mImageBits)
+    return NS_ERROR_FAILURE;
+    
+     
+  if (!dest->mIsOptimized) {
+    // set up some local variable to make things run faster in the loop
+    PRUint8 *rgbPtr=0, *alphaPtr=0;
+    PRUint32 rgbStride, alphaStride;
+    PRInt32 srcHeight;
+    PRUint8 *dstRgbPtr=0, *dstAlphaPtr=0;
+    PRUint32 dstRgbStride, dstAlphaStride;
+    PRInt32 dstHeight;
 
-  nsImageWin* imgWin = NS_STATIC_CAST(nsImageWin*, aDstImage); 
-  if (!imgWin->mHBitmap)
-  {
-    if (imgWin->mSizeImage > 0) {
-      void* bits;
-      imgWin->mHBitmap = CreateDIBSection(dstMemDC,(LPBITMAPINFO)imgWin->mBHead,DIB_RGB_COLORS,&bits,nsnull,nsnull);
-      if (!imgWin->mHBitmap) {
-        ::DeleteDC(dstMemDC);
-        return NS_ERROR_UNEXPECTED;
-      }
-      imgWin->mDIBSection = imgWin->mHBitmap;
-      oldDstBits = (HBITMAP)::SelectObject(dstMemDC, imgWin->mHBitmap);
 
-      rop = SRCCOPY;
+    rgbPtr = mImageBits;
+    rgbStride = mRowBytes;
+    alphaPtr = mAlphaBits;
+    alphaStride = mARowBytes;
+    srcHeight = mBHead->biHeight;
 
-      if (nsnull != imgWin->mAlphaBits) {
-        if (1==imgWin->mAlphaDepth) {
-          MONOBITMAPINFO  bmi(imgWin->mAlphaWidth, imgWin->mAlphaHeight);
 
-          ::StretchDIBits(dstMemDC, 0, 0, aDWidth, aDHeight,0, 0,mNaturalWidth, mNaturalHeight, imgWin->mAlphaBits,
-                                        (LPBITMAPINFO)&bmi, DIB_RGB_COLORS, SRCAND);
-           rop = SRCPAINT;
+    dstRgbPtr = dest->mImageBits;
+    dstRgbStride = dest->mRowBytes;
+    dstAlphaPtr = dest->mAlphaBits;
+    dstAlphaStride = dest->mARowBytes;
+    dstHeight = dest->mBHead->biHeight;
+
+
+    PRInt32 y;
+    PRInt32 ValidWidth = ( aDWidth < ( dest->mBHead->biWidth - aDX ) ) ? aDWidth : ( dest->mBHead->biWidth - aDX );
+    PRInt32 ValidHeight = ( aDHeight < ( dstHeight - aDY ) ) ? aDHeight : ( dstHeight - aDY );
+    PRUint8 *dst;
+    PRUint8 *src;
+
+
+    // now composite the two images together
+    switch (mAlphaDepth) {
+    case 1:
+      {
+        PRUint8 *dstAlpha;
+        PRUint8 *alpha;
+        PRUint8 *dstGatherStart = nsnull;  // assign null to kill compiler warning
+        PRUint8 *srcGatherStart = nsnull;
+        PRUint8 offset = aDX & 0x7; // x starts at 0
+
+
+        for (y=0; y<ValidHeight; y++) {
+          dst = dstRgbPtr + (dstHeight - (aDY+y) - 1)*dstRgbStride + (3*aDX);
+          dstAlpha = dstAlphaPtr + (dstHeight - (aDY+y) - 1)*dstAlphaStride;
+          src = rgbPtr + (srcHeight - y - 1)*rgbStride;
+          alpha = alphaPtr + (srcHeight - y - 1)*alphaStride;
+          for (int x=0; x<ValidWidth; x += 8, dst += 3*8, src += 3*8) {
+            PRUint8 alphaPixels = *alpha++;
+            if (alphaPixels == 0) {
+              // all 8 transparent; jump forward
+              continue;
+            }
+
+
+            // 1 or more bits are set, handle dstAlpha now - may not be aligned.
+            // Are all 8 of these alpha pixels used?
+            if (x+7 >= ValidWidth) {
+              alphaPixels &= 0xff << (8 - (ValidWidth-x)); // no, mask off unused
+              if (alphaPixels == 0)
+                continue;  // no 1 alpha pixels left
+            }
+            if (offset == 0) {
+              dstAlpha[(aDX+x)>>3] |= alphaPixels; // the cheap aligned case
+            } else {
+              dstAlpha[(aDX+x)>>3]       |= alphaPixels >> offset;
+              // avoid write if no 1's to write - also avoids going past end of array
+              // compiler should merge the common sub-expressions
+              if (alphaPixels << (8U - offset))
+                dstAlpha[((aDX+x)>>3) + 1] |= alphaPixels << (8U - offset);
+            }
+
+
+            if (alphaPixels == 0xff) {
+              // fix - could speed up by gathering a run of 0xff's and doing 1 memcpy
+              // all 8 pixels set; copy and jump forward
+              memcpy(dst,src,8*3);
+              continue;
+            } else {
+              // else mix of 1's and 0's in alphaPixels, do 1 bit at a time
+              // Don't go past end of line!
+              PRUint8 *d = dst, *s = src;
+              for (PRUint8 aMask = 1<<7, j = 0; aMask && j < ValidWidth-x; aMask >>= 1, j++) {
+                // if this pixel is opaque then copy into the destination image
+                if (alphaPixels & aMask) {
+                  // might be faster with *d++ = *s++ 3 times?
+                  d[0] = s[0];
+                  d[1] = s[1];
+                  d[2] = s[2];
+                  // dstAlpha bit already set
+                }
+                d += 3;
+                s += 3;
+              }
+            }
+          }
         }
       }
+      break;
+    case 0:
+    default:
+      dst = dstRgbPtr + (dstHeight - aDY - 1)*dstRgbStride + 3*aDX;
+      src = rgbPtr + (srcHeight - 1)*rgbStride;
 
-      if (8==imgWin->mAlphaDepth) {              
-        DrawComposited(dstMemDC, aDX, aDY, aDWidth, aDHeight,0, 0, mNaturalHeight, mNaturalWidth);
-      } else {
-        ::StretchDIBits(dstMemDC, aDX, aDY, aDWidth, aDHeight,0, 0, mNaturalWidth, mNaturalHeight, imgWin->mImageBits,
-          (LPBITMAPINFO)imgWin->mBHead, DIB_RGB_COLORS, rop);
+
+      for (y=0; y<ValidHeight; y++) {
+        memcpy(dst, src, 3*ValidWidth);
+        dst -= dstRgbStride;
+        src -= rgbStride;
       }
-      imgWin->mIsOptimized = PR_TRUE;
-      imgWin->CleanUpDIB();
-      imgWin->mImageBits = (PRUint8*)bits;
     }
-  } else
-    oldDstBits = (HBITMAP)::SelectObject(dstMemDC, imgWin->mHBitmap);
+    nsRect rect(aDX, aDY, ValidWidth, ValidHeight);
+    dest->ImageUpdated(nsnull, 0, &rect);
+  } else {
+    // dst's Image is optimized (dest->mHBitmap is linked to dest->mImageBits), so just paint on it
+    if (!dest->mHBitmap)
+      return NS_ERROR_UNEXPECTED;
+      
+    HDC dstMemDC = ::CreateCompatibleDC(nsnull);
+    HBITMAP oldDstBits;
+    DWORD rop;
 
-#if 0
-  if (!IsOptimized() || nsnull==mHBitmap)
-#endif
-  {
+
+    oldDstBits = (HBITMAP)::SelectObject(dstMemDC, dest->mHBitmap);
     rop = SRCCOPY;
 
-    if (nsnull != mAlphaBits) {
+
+    if (mAlphaBits) {
       if (1==mAlphaDepth) {
         MONOBITMAPINFO  bmi(mAlphaWidth, mAlphaHeight);
+
 
         ::StretchDIBits(dstMemDC, aDX, aDY, aDWidth, aDHeight,0, 0,mNaturalWidth, mNaturalHeight, mAlphaBits,
                         (LPBITMAPINFO)&bmi, DIB_RGB_COLORS, SRCAND);
@@ -1401,44 +1671,37 @@ NS_IMETHODIMP nsImageWin::DrawToImage(nsIImage* aDstImage, nscoord aDX, nscoord 
       }
     }
 
+
     if (8==mAlphaDepth) {
       DrawComposited(dstMemDC, aDX, aDY, aDWidth, aDHeight, 0, 0, mNaturalHeight, mNaturalWidth);
+    } 
+    
+    // Copy/Paint our rgb to dest
+    if (mIsOptimized && mHBitmap) {
+      // We are optimized, use Stretchblt
+      HDC srcMemDC = ::CreateCompatibleDC(nsnull);
+      HBITMAP oldSrcBits;
+      oldSrcBits = (HBITMAP)::SelectObject(srcMemDC, mHBitmap);
+       
+      ::StretchBlt(dstMemDC, aDX, aDY, aDWidth, aDHeight, srcMemDC, 0, 0, mNaturalWidth, mNaturalHeight, rop);
+      
+      ::SelectObject(srcMemDC, oldSrcBits);
+      ::DeleteDC(srcMemDC);
     } else {
-      ::StretchDIBits(dstMemDC, aDX, aDY, aDWidth, aDHeight,0, 0, mNaturalWidth, mNaturalHeight, mImageBits,
-                      (LPBITMAPINFO)mBHead, DIB_RGB_COLORS, rop);
+      ::StretchDIBits(dstMemDC, aDX, aDY, aDWidth, aDHeight, 0, 0, mNaturalWidth, mNaturalHeight, mImageBits,
+                     (LPBITMAPINFO)mBHead, DIB_RGB_COLORS, rop);
     }
+    ::SelectObject(dstMemDC, oldDstBits);
+    ::DeleteDC(dstMemDC);
   }
-#if 0
-  else{
-    rop = SRCCOPY;
-    if (1==mAlphaDepth && mAlphaBits){
-      MONOBITMAPINFO  bmi(mAlphaWidth, mAlphaHeight);
 
-      ::StretchDIBits(dstMemDC, aDX, aDY, aDWidth, aDHeight,0, 0, mNaturalWidth, mNaturalHeight, mAlphaBits,
-                      (LPBITMAPINFO)&bmi, DIB_RGB_COLORS, SRCAND);
-      rop = SRCPAINT;
-      ::StretchDIBits(dstMemDC, aDX, aDY, aDWidth, aDHeight,0, 0, mNaturalWidth, mNaturalHeight, mHBitmap,
-                      (LPBITMAPINFO)mBHead, DIB_RGB_COLORS, rop);
-    } else if (8 == mAlphaDepth && mAlphaBits) {
-      BLENDFUNCTION blendFunction;
-      blendFunction.BlendOp = AC_SRC_OVER;
-      blendFunction.BlendFlags = 0;
-      blendFunction.SourceConstantAlpha = 255;
-      blendFunction.AlphaFormat = 1; //AC_SRC_ALPHA*
-      gAlphaBlend(dstMemDC, aDX, aDY, aDWidth, aDHeight, dstMemDC, 0, 0, mNaturalWidth, mNaturalHeight, blendFunction);
-    } else {
-      ::StretchBlt(dstMemDC, aDX, aDY, aDWidth, aDHeight, dstMemDC, 0, 0, mNaturalWidth, mNaturalHeight, rop);
-    }
-  }
-#endif
-
-  ::SelectObject(dstMemDC, oldDstBits);
-  ::DeleteDC(dstMemDC);
 
   return NS_OK;
 }
 
+
 #endif
+
 
 
 /** ---------------------------------------------------
@@ -1452,20 +1715,25 @@ CompositeBitsInMemory(HDC aTheHDC, int aDX, int aDY, int aDWidth, int aDHeight,
 {
   unsigned char *screenBits;
 
+
   HDC memDC = ::CreateCompatibleDC(NULL);
+
 
   if(0!=memDC){
     ALPHA24BITMAPINFO offbmi(aSWidth, aSHeight);
     HBITMAP tmpBitmap = ::CreateDIBSection(memDC, (LPBITMAPINFO)&offbmi, DIB_RGB_COLORS,
                                            (LPVOID *)&screenBits, NULL, 0);
 
+
     if(0 != tmpBitmap){
       HBITMAP oldBitmap = (HBITMAP)::SelectObject(memDC, tmpBitmap);
+
 
       if(0!=oldBitmap) {
         // pop in the alpha channel
         ::StretchDIBits(memDC, 0, 0, aSWidth, aSHeight,aSX, aSrcy,aSWidth, aSHeight, aAlphaBits,
                                                 (LPBITMAPINFO)aBMI, DIB_RGB_COLORS, SRCCOPY); 
+
 
         // paint in the image
         ::StretchDIBits(memDC, 0, 0, aSWidth, aSHeight,aSX, aSrcy, aSWidth, aSHeight, aImageBits,
@@ -1473,9 +1741,11 @@ CompositeBitsInMemory(HDC aTheHDC, int aDX, int aDY, int aDWidth, int aDHeight,
 
 
 
+
         // output the composed image
         ::StretchDIBits(aTheHDC, aDX, aDY, aDWidth, aDHeight,aSX, aSrcy, aSWidth, aSHeight, screenBits,
                 (LPBITMAPINFO)&offbmi, 256 == aNumPaletteColors ? DIB_PAL_COLORS : DIB_RGB_COLORS, SRCCOPY);
+
 
 
         ::SelectObject(memDC, oldBitmap);
