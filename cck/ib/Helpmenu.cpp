@@ -30,7 +30,7 @@ void CreateHelpMenu (void)
 
 	ofstream Hlp(HelpMenuFile);
 	CString HelpMenuName = GetGlobal("HelpMenuCommandName");
-	CString HelpMenuUrl = GetGlobal("HelpMenuCommandUrl");
+	CString HelpMenuUrl = GetGlobal("HelpMenuCommandURL");
 	
 	if (HelpMenuName.IsEmpty())
 		HelpMenuName = config + "-Help";

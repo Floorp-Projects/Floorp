@@ -678,13 +678,14 @@ int StartIB(CString parms, WIDGET *curWidget)
 		SetGlobal("AnimatedLogoURL",httpvalue);
 	}
 	
-	CString HelpUrl = GetGlobal("HelpMenuCommandUrl");
+	CString HelpUrl = GetGlobal("HelpMenuCommandURL");
+
 	leftvalue = HelpUrl.Left(7);
 	httpvalue = "http://";
 	if (leftvalue.CompareNoCase("http://") != 0)
 	{
 		httpvalue = httpvalue + HelpUrl;
-		SetGlobal("HelpMenuCommandUrl",httpvalue);
+		SetGlobal("HelpMenuCommandURL",httpvalue);
 	}
 // Create the HelpMenu.xul in the beginning so that it can be called from the script.ib
 	CString setHlpXul = tempPath +"\\HelpMenu.xul";
