@@ -215,11 +215,17 @@ HistoryImpl::GoIndex(PRInt32 aDelta)
   NS_ENSURE_TRUE(webnav, NS_ERROR_FAILURE);
 
   PRInt32 curIndex=-1;
-
-  nsresult rv = session_history->GetIndex(&curIndex);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return webnav->GotoIndex(curIndex + aDelta);
+  PRInt32 len = 0;
+  nsresult rv = session_history->GetIndex(&curIndex);  
+  rv = session_history->GetCount(&len);
+  
+  PRInt32 index = curIndex + aDelta;
+  if (index > -1  &&  index < len)
+     webnav->GotoIndex(index);
+  // We always want to return a NS_OK, since returning errors 
+  // from GotoIndex() can lead to exceptions and a possible leak
+  // of history length
+  return NS_OK;
 }
 
 NS_IMETHODIMP
