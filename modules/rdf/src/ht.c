@@ -1477,12 +1477,12 @@ HT_AddToContainer (HT_Resource container, char *url, char *optionalTitle)
 
 
 PR_PUBLIC_API(void)
-HT_LayoutComplete(MWContext *cx, char *url)
+HT_LayoutComplete(TagList *metaTags, char *url)
 {
-	XP_ASSERT(cx != NULL);
+	XP_ASSERT(metaTags != NULL);
 	XP_ASSERT(url != NULL);
 
-	if ((cx != NULL) && (url != NULL))
+	if ((metaTags != NULL) && (url != NULL))
 	{
 		/* if url exists in RDF graph, then get any META tags
 		   for this document from the context, and save them */
