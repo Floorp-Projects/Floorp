@@ -98,6 +98,12 @@
 #define RATE_STR_BUF_LEN 32
 #define UPDATE_THRESHHOLD 25600 /* only update every 25 KB */
 
+// neither push auth nor extensions are supported yet
+// since there is a lot of work to do on the news code
+// for example, nsNNTPHost and nsNNTPNewgroup are
+// going away.  until then, after doing "mode reader"
+// skip to the first nntp command.
+//#define HAVE_PUSH_AUTH_AND_EXTENSIONS
 
 #define NEWS_MSGS_URL       "chrome://messenger/locale/news.properties"
 // ***jt -- the following were pirated from xpcom/io/nsByteBufferInputStream
@@ -586,6 +592,10 @@ NS_IMETHODIMP nsNNTPProtocol::Initialize(nsIURI * aURL, nsIMsgWindow *aMsgWindow
     else {
 	    rv = OpenNetworkSocket(m_url, nsnull);
     }
+	m_nextState = NNTP_LOGIN_RESPONSE;
+  }
+  else {
+    m_nextState = SEND_FIRST_NNTP_COMMAND;
   }
 	m_dataBuf = (char *) PR_Malloc(sizeof(char) * OUTPUT_BUFFER_SIZE);
 	m_dataBufSize = OUTPUT_BUFFER_SIZE;
@@ -593,8 +603,6 @@ NS_IMETHODIMP nsNNTPProtocol::Initialize(nsIURI * aURL, nsIMsgWindow *aMsgWindow
   if (!m_lineStreamBuffer)
 	  m_lineStreamBuffer = new nsMsgLineStreamBuffer(OUTPUT_BUFFER_SIZE, CRLF, PR_TRUE /* create new lines */);
 
-	m_nextState = SEND_FIRST_NNTP_COMMAND;
-  m_nextStateAfterResponse = NNTP_CONNECT;
 	m_typeWanted = 0;
 	m_responseCode = 0;
 	m_previousResponseCode = 0;
@@ -993,9 +1001,6 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
 	  goto FAIL;	/* we don't need to do any of this connection stuff */
 #endif
 
-
-  m_nextState = SEND_FIRST_NNTP_COMMAND;
-
  FAIL:
   PR_FREEIF (commandSpecificData);
 
@@ -1225,7 +1230,7 @@ PRInt32 nsNNTPProtocol::SendData(nsIURI * aURL, const char * dataBuffer, PRBool 
         PR_LOG(NNTP, out, ("Logging suppressed for this command (it probably contained authentication information)"));
     }
 
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_seth
 	printf("SEND: %s\n",dataBuffer);
 #endif
 	return nsMsgProtocol::SendData(aURL, dataBuffer); // base class actually transmits the data
@@ -1277,7 +1282,7 @@ PRInt32 nsNNTPProtocol::NewsResponse(nsIInputStream * inputStream, PRUint32 leng
 	m_previousResponseCode = m_responseCode;
 
     PR_sscanf(line, "%d", &m_responseCode);
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_seth
 	printf("RECV: %s\n",line);
 #endif
 	
@@ -1344,6 +1349,7 @@ PRInt32 nsNNTPProtocol::SendModeReader()
 {  
 	nsresult status = NS_OK;
 	nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
+    NS_ASSERTION(mailnewsurl, "no mailnews url");
 	if (mailnewsurl)
 		status = SendData(mailnewsurl, NNTP_CMD_MODE_READER); 
     m_nextState = NNTP_RESPONSE;
@@ -1355,6 +1361,8 @@ PRInt32 nsNNTPProtocol::SendModeReader()
 PRInt32 nsNNTPProtocol::SendModeReaderResponse()
 {
 	SetFlag(NNTP_READER_PERFORMED);
+
+#ifdef HAVE_PUSH_AUTH_AND_EXTENSIONS
 	/* ignore the response code and continue
 	 */
     PRBool pushAuth;
@@ -1366,6 +1374,9 @@ PRInt32 nsNNTPProtocol::SendModeReaderResponse()
 		m_nextState = NNTP_BEGIN_AUTHORIZE;
 	else
 		m_nextState = SEND_LIST_EXTENSIONS;
+#else
+	 m_nextState = SEND_FIRST_NNTP_COMMAND;
+#endif  /* HAVE_PUSH_AUTH_AND_EXTENSIONS */
 
 	return(0);
 }
@@ -2553,6 +2564,7 @@ PRInt32 nsNNTPProtocol::AuthorizationResponse()
         MK_NNTP_RESPONSE_AUTHINFO_SIMPLE_OK == m_responseCode) 
 	  {
 		/* successful login */
+#ifdef HAVE_PUSH_AUTH_AND_EXTENSIONS
         PRBool pushAuth;
 		/* If we're here because the host demanded authentication before we
 		 * even sent a single command, then jump back to the beginning of everything
@@ -2569,6 +2581,12 @@ PRInt32 nsNNTPProtocol::AuthorizationResponse()
 		else
 			/* Normal authentication */
 			m_nextState = SEND_FIRST_NNTP_COMMAND;
+#else
+        if (!TestFlag(NNTP_READER_PERFORMED))
+			m_nextState = NNTP_SEND_MODE_READER;
+        else
+			m_nextState = SEND_FIRST_NNTP_COMMAND;
+#endif /* HAVE_PUSH_AUTH_AND_EXTENSIONS */
 
 		return(0); 
 	  }
@@ -2668,6 +2686,7 @@ PRInt32 nsNNTPProtocol::PasswordResponse()
         MK_NNTP_RESPONSE_AUTHINFO_SIMPLE_OK == m_responseCode) 
 	  {
         /* successful login */
+#ifdef HAVE_PUSH_AUTH_AND_EXTENSIONS
         PRBool pushAuth;
 		/* If we're here because the host demanded authentication before we
 		 * even sent a single command, then jump back to the beginning of everything
@@ -2684,6 +2703,12 @@ PRInt32 nsNNTPProtocol::PasswordResponse()
 		else
 			/* Normal authentication */
 			m_nextState = SEND_FIRST_NNTP_COMMAND;
+#else
+        if (!TestFlag(NNTP_READER_PERFORMED))
+			m_nextState = NNTP_SEND_MODE_READER;
+        else
+			m_nextState = SEND_FIRST_NNTP_COMMAND;
+#endif /* HAVE_PUSH_AUTH_AND_EXTENSIONS */
 
 		// if we are posting, m_newsgroup will be null
 		if (!m_newsgroupList && m_newsgroup) {
