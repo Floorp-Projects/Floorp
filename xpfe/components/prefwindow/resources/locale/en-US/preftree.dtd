@@ -20,6 +20,7 @@
 <!ENTITY return.label "Return Receipts">
 <!ENTITY disk.label "Disk Space">
 <!ENTITY compose.label "Composer">
+<!ENTITY editing.label "Editing">
 <!ENTITY publish.label "Publish">
 <!ENTITY offline.label "Offline">
 <!ENTITY advance.label "Advanced">
