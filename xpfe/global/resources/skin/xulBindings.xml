@@ -120,7 +120,7 @@
   
     <binding name="checkbox">
     <content>
-      <xul:box class="internal-box" autostretch="never">
+      <xul:box flex="1" class="internal-box" autostretch="never">
         <xul:box class="checkmark-box" autostretch="never">
           <xul:image inherits="src"/>
         </xul:box>
@@ -135,7 +135,7 @@
 
   <binding name="radio">
     <content>
-      <xul:box class="internal-box" autostretch="never">
+      <xul:box flex="1" class="internal-box" autostretch="never">
         <xul:box class="checkmark-box" autostretch="never">
           <xul:image inherits="src"/>
         </xul:box>
