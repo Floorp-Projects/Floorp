@@ -56,12 +56,6 @@ public:
                                                 jsval aId,
                                                 jsval* aReturn);
 
-  static NS_EXPORT PRBool nsLookupGlobalName(nsISupports* aSupports,
-                                   JSContext* aContext,
-                                   JSObject* aObj,
-                                   jsval aId,
-                                   jsval* aReturn);
-
   static NS_EXPORT PRBool nsCallJSScriptObjectSetProperty(nsISupports* aSupports,
                                                 JSContext* aContext,
                                                 JSObject* aObj,

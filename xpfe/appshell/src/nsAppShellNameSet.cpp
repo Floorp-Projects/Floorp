@@ -23,12 +23,14 @@
 
 #include "nsAppShellNameSet.h"
 #include "nsIScriptContext.h"
+#include "nsIScriptObjectOwner.h"
 #include "nsIScriptNameSpaceManager.h"
 #include "nsIDOMXPConnectFactory.h"
 #include "nsAppShellCIDs.h" 
 
 
 static NS_DEFINE_CID(kXPConnectFactoryCID,       NS_XPCONNECTFACTORY_CID);
+static NS_DEFINE_IID(kIScriptObjectOwnerIID,     NS_ISCRIPTOBJECTOWNER_IID);
 
 nsAppShellNameSet::nsAppShellNameSet()
 {
@@ -66,6 +68,7 @@ nsAppShellNameSet::AddNameSet(nsIScriptContext* aScriptContext)
   rv = aScriptContext->GetNameSpaceManager(&manager);
   if (NS_SUCCEEDED(rv)) {
     rv = manager->RegisterGlobalName(NS_ConvertASCIItoUCS2("XPComFactory"), 
+				     kIScriptObjectOwnerIID,
                                      kXPConnectFactoryCID, 
                                      PR_FALSE);
     NS_RELEASE(manager);

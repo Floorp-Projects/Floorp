@@ -585,12 +585,14 @@ nsSoftwareUpdateNameSet::AddNameSet(nsIScriptContext* aScriptContext)
     if (NS_SUCCEEDED(result)) 
     {
         result = manager->RegisterGlobalName(NS_ConvertASCIItoUCS2("InstallVersion"), 
+					     kIScriptObjectOwnerIID,
                                              kInstallVersion_CID, 
                                              PR_TRUE);
         
         if (NS_FAILED(result))  return result;
         
         result = manager->RegisterGlobalName(NS_ConvertASCIItoUCS2("InstallTrigger"), 
+					     kIScriptObjectOwnerIID,
                                              kInstallTrigger_CID, 
                                              PR_FALSE);
 

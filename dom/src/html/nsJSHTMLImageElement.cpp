@@ -683,7 +683,8 @@ PR_STATIC_CALLBACK(JSBool)
 HTMLImageElement(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsresult result;
-  nsIID classID;
+  nsIID interfaceID, classID;
+  PRBool isConstructor;
   nsIDOMHTMLImageElement *nativeThis;
   nsIScriptObjectOwner *owner = nsnull;
   nsIJSNativeInitializer* initializer = nsnull;
@@ -703,7 +704,7 @@ HTMLImageElement(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
     return JS_FALSE;
   }
 
-  result = manager->LookupName(NS_ConvertASCIItoUCS2("HTMLImageElement"), PR_TRUE, classID);
+  result = manager->LookupName(NS_ConvertASCIItoUCS2("HTMLImageElement"), isConstructor, interfaceID, classID);
   if (NS_OK != result) {
     return JS_FALSE;
   }
