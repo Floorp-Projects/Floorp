@@ -55,3 +55,6 @@ INCLUDES	+= -I$(srcdir)/../public -I$(srcdir)/services
 libs::
 	$(INSTALL) $(srcdir)/test.properties $(DIST)/bin/res
 
+install::
+	$(SYSINSTALL) $(IFLAGS1) $(srcdir)/test.properties $(DESTDIR)$(mozappdir)/res
+

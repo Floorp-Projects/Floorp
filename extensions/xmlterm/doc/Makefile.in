@@ -59,3 +59,7 @@ XMLTERM_DOCS = \
 
 libs:: 
 	$(INSTALL) -m 555 $(XMLTERM_DOCS) $(DIST)/bin
+
+install:: 
+	$(SYSINSTALL) -m 555 $(XMLTERM_DOCS) $(DESTDIR)$(mozappdir)
+

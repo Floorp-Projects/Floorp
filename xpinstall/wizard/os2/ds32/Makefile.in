@@ -35,7 +35,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MOZTOOLSDIR = $(subst \,/,$(MOZTOOLS))
 
-libs:: $(PROGRAM)
+libs install:: $(PROGRAM)
 	-mkdir $(MOZTOOLSDIR)/bin
 	cp $(PROGRAM) $(MOZTOOLSDIR)/bin
 

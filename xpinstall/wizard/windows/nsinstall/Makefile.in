@@ -43,5 +43,8 @@ include $(topsrcdir)/config/rules.mk
 libs:: $(PROGRAM)
 	$(INSTALL) $(PROGRAM) $(DIST)/install
 
+install:: $(PROGRAM)
+	$(SYSINSTALL) $(IFLAGS2) $(PROGRAM) $(DESTDIR)$(mozappdir)/install
+
 clean clobber realclean clobber_all::
 	$(RM) $(DIST)/install/$(PROGRAM)

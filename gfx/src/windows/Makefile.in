@@ -88,6 +88,9 @@ export:: ../nsCompressedCharMap.cpp
 libs:: fontEncoding.properties
 	$(INSTALL) $^ $(DIST)/bin/res/fonts
 
+install:: fontEncoding.properties
+	$(INSTALL) $^ $(DESTDIR)$(mozappdir)/res/fonts
+
 DEFINES	+= -D_IMPL_NS_GFXNONXP -DWIN32_LEAN_AND_MEAN -DSTRICT 
 
 EXTRA_DSO_LDOPTS += \

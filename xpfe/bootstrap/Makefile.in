@@ -248,19 +248,29 @@ CXXFLAGS	+= $(MOZ_TOOLKIT_REGISTRY_CFLAGS)
 LOCAL_INCLUDES	= -I$(srcdir)
 
 ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
-libs:: mozilla.1
-	$(INSTALL) $< $(DIST)/man/man1
-
 mozilla.1: mozilla.man.in Makefile.in Makefile $(DEPTH)/config/autoconf.mk
 	@sed -e "s|\@bindir\@|${bindir}|" -e "s|\@libdir\@|${libdir}|" \
 		-e "s|\@mozilla_version\@|${MOZILLA_VERSION}|" < $< > $@
 
-GARBAGE += mozilla.1
-endif
+libs:: mozilla.1
+	$(INSTALL) $< $(DIST)/man/man1
 
-ifeq (,$(filter WINNT OS2,$(OS_ARCH)))
-libs:: $(srcdir)/mozilla
+install:: mozilla.1
+	$(SYSINSTALL) $(IFLAGS) $< $(DESTDIR)$(mandir)/man1
+
+mozilla:: mozilla.in Makefile.in Makefile $(DEPTH)/config/autoconf.mk
+	cat $< | sed -e "s|%MOZAPPDIR%|$(mozappdir)|" \
+		-e "s|%MREDIR%|$(mredir)|" > $@
+	chmod +x $@
+
+libs:: mozilla
 	$(INSTALL) $< $(DIST)/bin
+
+install:: mozilla
+	$(SYSINSTALL) $< $(DESTDIR)$(bindir)
+
+GARBAGE += mozilla.1 mozilla
+
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),photon)

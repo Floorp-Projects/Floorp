@@ -29,9 +29,37 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/rules.mk
 
-export:: 
-	chmod 755 mozilla-config
-	$(INSTALL) -m 755 mozilla-config $(DIST)/bin
+# Hack to make sure that mozilla-config has the proper nspr dependencies
+ifdef MOZ_NATIVE_NSPR
+FULL_NSPR_CFLAGS=$(shell $(NSPR_CONFIG) --cflags)
+FULL_NSPR_LIBS=$(shell $(NSPR_CONFIG) --libs)
+else
+FULL_NSPR_CFLAGS=-I$(includedir)/nspr
+FULL_NSPR_LIBS=$(subst -L$(libdir),-L$(mozappdir),$(shell $(DEPTH)/nsprpub/config/nspr-config --libs))
+endif
+
+_DEFS = $(subst \",\\\\\",$(ACDEFINES))
+
+mozilla-config:: mozilla-config.in Makefile.in Makefile
+	cat $< | sed \
+	-e "s|%prefix%|$(prefix)|" \
+	-e "s|%exec_prefix%|$(exec_prefix)|" \
+	-e "s|%includedir%|$(includedir)|" \
+	-e "s|%libdir%|$(mozappdir)|" \
+	-e "s|%DEFS%|$(_DEFS)|" \
+	-e "s|%FULL_NSPR_LIBS%|$(FULL_NSPR_LIBS)|" \
+	-e "s|%FULL_NSPR_CFLAGS%|$(FULL_NSPR_CFLAGS)|" > $@
+
+libs:: mozilla-config
+	chmod 755 $<
+	$(INSTALL) -m 755 $< $(DIST)/bin
 
 libs:: $(srcdir)/run-mozilla.sh
 	$(INSTALL) $< $(DIST)/bin
+
+install:: run-mozilla.sh
+	$(SYSINSTALL) $(IFLAGS2) $< $(DESTDIR)$(mozappdir)
+
+install:: mozilla-config
+	$(SYSINSTALL) $(IFLAGS2) $< $(DESTDIR)$(bindir)
+

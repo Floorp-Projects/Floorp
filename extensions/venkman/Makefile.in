@@ -40,9 +40,7 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS        = resources
 
+EXTRA_COMPONENTS = js/venkman-service.js
+
 include $(topsrcdir)/config/rules.mk
-
-libs::
-	$(INSTALL) $(srcdir)/js/venkman-service.js $(DIST)/bin/components
-
 

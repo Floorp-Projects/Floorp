@@ -69,5 +69,8 @@ OS_LIBS		+= ole32.lib comdlg32.lib shell32.lib version.lib
 libs:: $(PROGRAM)
 	$(INSTALL) $(PROGRAM) $(DIST)/install
 
+install:: $(PROGRAM)
+	$(INSTALL) $(PROGRAM) $(DESTDIR)$(mozappdir)/install
+
 clean clobber realclean clobber_all::
 	$(RM) $(DIST)/install/$(PROGRAM)

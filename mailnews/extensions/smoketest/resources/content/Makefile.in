@@ -29,4 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 libs::
 	$(INSTALL) $(srcdir)/smime.js $(DIST)/bin/defaults/pref
 
+install::
+	$(SYSINSTALL) $(IFLAGS1) $(srcdir)/smime.js $(DESTDIR)$(mozappdir)/defaults/pref
+
 include $(topsrcdir)/config/rules.mk

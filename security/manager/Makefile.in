@@ -115,6 +115,26 @@ endif
 	$(MAKE) -C ssl $@
 	$(MAKE) -C pki $@
 
+install::
+	$(SYSINSTALL) -m 755 $(DIST)/lib/$(LOADABLE_ROOT_MODULE) $(DESTDIR)$(mozappdir)
+ifdef NSS_3_4
+	$(SYSINSTALL) -m 755 $(DIST)/lib/$(SOFTOKEN3_LIB) $(DESTDIR)$(mozappdir)
+	$(SYSINSTALL) -m 755 $(DIST)/lib/$(NSS3_LIB) $(DESTDIR)$(mozappdir)
+	$(SYSINSTALL) -m 755 $(DIST)/lib/$(SSL3_LIB) $(DESTDIR)$(mozappdir)
+	$(SYSINSTALL) -m 755 $(DIST)/lib/$(SMIME3_LIB) $(DESTDIR)$(mozappdir)
+endif
+ifneq (,$(filter SunOS HP-UX,$(OS_ARCH)))
+ifneq ($(OS_TEST),i86pc)
+ifndef HAVE_64BIT_OS
+	$(SYSINSTALL) -m 755 $(DIST)/lib/$(FREEBL_PURE32_MODULE) $(DESTDIR)$(mozappdir)
+	$(SYSINSTALL) -m 755 $(DIST)/lib/$(FREEBL_HYBRID_MODULE) $(DESTDIR)$(mozappdir)
+endif
+endif
+endif
+	$(MAKE) -C boot $@
+	$(MAKE) -C ssl $@
+	$(MAKE) -C pki $@
+	
 clean clobber clobber_all realclean distclean depend::
 	$(MAKE) -C boot $@
 	$(MAKE) -C ssl $@

@@ -21,7 +21,8 @@ srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
+
+EXTRA_COMPONENTS = nsSidebar.js
+
 include $(topsrcdir)/config/rules.mk
 
-libs::
-	$(INSTALL) $(srcdir)/nsSidebar.js $(DIST)/bin/components

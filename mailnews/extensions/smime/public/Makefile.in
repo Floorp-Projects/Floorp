@@ -28,9 +28,6 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= msgsmime
 
-EXPORTS		= \
-		$(NULL)
-
 XPIDLSRCS	= \
 		nsIMsgSMIMECompFields.idl \
 		nsIMsgSMIMEHeaderSink.idl \

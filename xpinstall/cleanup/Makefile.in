@@ -74,3 +74,7 @@ endif
 
 libs::
 	$(INSTALL) $(srcdir)/cmessage.txt $(DIST)/bin/res
+
+install::
+	$(SYSINSTALL) $(IFLAGS1) $(srcdir)/cmessage.txt $(DESTDIR)$(mozappdir)/res
+

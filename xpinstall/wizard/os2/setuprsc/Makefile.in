@@ -44,3 +44,7 @@ include $(topsrcdir)/config/rules.mk
 
 libs:: 
 	$(INSTALL) -m 555 $(SHARED_LIBRARY) $(DIST)/install
+
+install:: 
+	$(SYSINSTALL) -m 555 $(SHARED_LIBRARY) $(DIST)/install
+

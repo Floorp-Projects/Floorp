@@ -64,4 +64,8 @@ endif
 
 libs:: install-plugin
 
+ifdef SHARED_LIBRARY
+install:: $(SHARED_LIBRARY)
+	$(SYSINSTALL) $(IFLAGS2) $< $(DESTDIR)$(mozappdir)/plugins 
+endif
 

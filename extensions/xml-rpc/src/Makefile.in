@@ -23,11 +23,9 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-JSFILES         = \
+EXTRA_COMPONENTS = \
                 $(srcdir)/nsDictionary.js \
                 $(srcdir)/nsXmlRpcClient.js \
 
 include $(topsrcdir)/config/rules.mk
 
-libs::
-	$(INSTALL) $(JSFILES) $(DIST)/bin/components

@@ -40,3 +40,6 @@ include $(topsrcdir)/config/rules.mk
 libs::
 	$(INSTALL) $(EXPORT_RESOURCE) $(DIST)/bin/defaults/profile/$(THEME)
 
+install::
+	$(SYSINSTALL) $(IFLAGS1) $(EXPORT_RESOURCE) $(DESTDIR)$(mozappdir)/defaults/profile/$(THEME)
+

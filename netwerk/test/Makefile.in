@@ -86,3 +86,7 @@ _RES_FILES = \
 
 libs:: $(_RES_FILES)
 		$(INSTALL) $^ $(DIST)/bin/res
+
+install:: $(_RES_FILES)
+	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/res
+

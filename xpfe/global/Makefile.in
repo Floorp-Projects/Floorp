@@ -50,3 +50,6 @@ build.dtd: build.dtd.in $(DEPTH)/config/build_number
 
 libs::
 	@$(REGCHROME) locale en-US/global-platform en-$(CHROME_PLATFORM).jar
+
+install::
+	@$(REGCHROME_INSTALL) locale en-US/global-platform en-$(CHROME_PLATFORM).jar

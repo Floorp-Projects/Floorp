@@ -42,3 +42,7 @@ libs::
 	@$(REGCHROME) content communicator comm.jar
 	@$(REGCHROME) locale en-US/communicator en-US.jar
 
+install::
+	@$(REGCHROME_INSTALL) content communicator comm.jar
+	@$(REGCHROME_INSTALL) locale en-US/communicator en-US.jar
+

@@ -50,3 +50,6 @@ include $(topsrcdir)/config/rules.mk
 libs::
 	$(INSTALL) $(addprefix $(srcdir)/, $(FILES)) $(DIST)/bin/res/rdf
 
+install:: $(FILES)
+	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/res/rdf
+

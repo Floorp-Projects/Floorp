@@ -16,7 +16,7 @@
 # Reserved.
 #
 
-## $Id: mozilla,v 1.15 2002/03/20 01:34:25 seawood%netscape.com Exp $
+## $Id: mozilla.in,v 1.1 2002/04/25 02:51:10 seawood%netscape.com Exp $
 ## 
 ## Usage:
 ##
@@ -32,13 +32,12 @@
 #uncomment for debugging
 #set -x
 
-#moz_libdir=@libdir@/mozilla
+moz_libdir=%MOZAPPDIR%
+MRE_HOME=%MREDIR%
 
 # honor MOZILLA_FIVE_HOME if it's there
 if [ -n "$MOZILLA_FIVE_HOME" ] ; then
   dist_bin="$MOZILLA_FIVE_HOME"
-elif [ -d "$moz_libdir" ]; then
-  dist_bin=$moz_libdir
 else
   # Use run-mozilla.sh in the current dir if it exists
   # If not, then start resolving symlinks until we find run-mozilla.sh
@@ -51,26 +50,31 @@ else
     found=1
   else
     here=`/bin/pwd`
-    while [ -L "$progname" ]; do
-      bn=`basename "$progname"`
-      cd `dirname "$progname"`
-      progname=`/bin/ls -l "$bn" |sed -e 's/^.* -> //' `
-      if [ ! -x "$progname" ]; then
-        break
-      fi
-      curdir=`dirname $progname`
+    until test $found != 0 -o ! -L "$progname" ; do
       run_moz="$curdir/run-mozilla.sh"
       if [ -x $run_moz ]; then
         dist_bin=$curdir
         found=1
-        break
+      else
+        bn=`basename "$progname"`
+        cd `dirname "$progname"`
+        progname=`/bin/ls -l "$bn" |sed -e 's/^.* -> //' `
+        if [ ! -x "$progname" ]; then
+          break
+        fi
+        curdir=`dirname $progname`
       fi
     done
     cd $here
   fi
   if [ $found = 0 ]; then
-    echo "Cannot find mozilla runtime directory. Exiting."
-    exit 1
+    # Check default compile-time libdir
+    if [ -x "$moz_libdir/run-mozilla.sh" ]; then
+      dist_bin=$moz_libdir
+    else 
+      echo "Cannot find mozilla runtime directory. Exiting."
+      exit 1
+    fi
   fi
 fi
 
@@ -106,6 +110,7 @@ do
   esac
 done
 
+export MRE_HOME
 eval "set -- $moreargs"
 if [ $debugging = 1 ]
 then

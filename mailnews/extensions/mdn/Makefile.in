@@ -34,3 +34,8 @@ libs::
 	$(INSTALL) $(srcdir)/resources/content/mdn.js $(DIST)/bin/defaults/pref
 	@$(REGCHROME) content messenger-mdn messenger.jar
 	@$(REGCHROME) locale en-US/messenger-mdn en-US.jar
+
+install::
+	$(SYSINSTALL) $(IFLAGS1) $(srcdir)/resources/content/mdn.js $(DESTDIR)$(mozappdir)/defaults/pref
+	@$(REGCHROME_INSTALL) content messenger-mdn messenger.jar
+	@$(REGCHROME_INSTALL) locale en-US/messenger-mdn en-US.jar

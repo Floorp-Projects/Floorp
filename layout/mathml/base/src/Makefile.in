@@ -110,4 +110,6 @@ _PROPERTIES 	= \
 libs:: $(_PROPERTIES)
 	$(INSTALL) $^ $(DIST)/bin/res/fonts
 
+install:: $(_PROPERTIES)
+	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/res/fonts
 

@@ -28,8 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 ifdef MOZ_LDAP_XPCOM
 REQUIRES	+= mozldap necko
-libs:: ./src/nsLDAPPrefsService.js
-	$(INSTALL) $< $(DIST)/bin/components
+EXTRA_COMPONENTS += src/nsLDAPPrefsService.js
 endif
 
 DIRS		= public src build

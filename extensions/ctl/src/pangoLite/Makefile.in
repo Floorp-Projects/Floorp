@@ -71,3 +71,6 @@ EXTRA_DSO_LDOPTS += $(GLIB_GMODULE_LIBS)
 # Install pango.modules file for Shaping Modules.
 libs::
 	$(INSTALL) $(srcdir)/pango.modules $(DIST)/bin
+
+install:: pango.modules
+	$(SYSINSTALL) $(IFLAGS1) $< $(DESTDIR)$(mozappdir)

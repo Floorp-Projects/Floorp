@@ -38,9 +38,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-JSFILES         = $(srcdir)/nsLDAPDataSource.js
+EXTRA_COMPONENTS = $(srcdir)/nsLDAPDataSource.js
 
 include $(topsrcdir)/config/rules.mk
 
-libs::
-	$(INSTALL) $(JSFILES) $(DIST)/bin/components

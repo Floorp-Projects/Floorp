@@ -35,3 +35,6 @@ include $(topsrcdir)/config/rules.mk
 libs:: $(BUILTIN_RESOURCES)
 	$(INSTALL) $^ $(DIST)/bin/res/builtin
 
+install:: $(BUILTIN_RESOURCES)
+	$(INSTALL) $^ $(DESTDIR)$(mozappdir)/res/builtin
+

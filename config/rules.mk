@@ -722,6 +722,59 @@ endif
 endif # !NO_DIST_INSTALL
 	+$(LOOP_OVER_DIRS)
 
+##############################################
+install:: $(SUBMAKEFILES) $(MAKE_DIRS)
+	+$(LOOP_OVER_DIRS)
+
+install:: $(EXPORTS)
+ifndef NO_INSTALL
+ifdef EXPORTS
+	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(includedir)/$(MODULE)
+endif
+endif
+
+install:: $(SHARED_LIBRARY) $(IMPORT_LIBRARY) $(LIBRARY) $(PROGRAM) $(SIMPLE_PROGRAMS)
+ifndef NO_INSTALL
+#ifdef LIBRARY
+#ifndef IS_COMPONENT
+#ifdef MRE_DIST
+#	$(SYSINSTALL) $(IFLAGS1) $(LIBRARY) $(DESTDIR)$(mredir)
+#else
+#	$(SYSINSTALL) $(IFLAGS1) $(LIBRARY) $(DESTDIR)$(mozappdir)
+#endif
+#endif # !IS_COMPONENT
+#endif # LIBRARY
+ifdef SHARED_LIBRARY
+ifdef IS_COMPONENT
+ifdef MRE_DIST
+	$(SYSINSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(IMPORT_LIBRARY) $(DESTDIR)$(mredir)/$(COMPONENTS_PATH)
+else
+	$(SYSINSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(IMPORT_LIBRARY) $(DESTDIR)$(mozappdir)/$(COMPONENTS_PATH)
+endif
+else
+ifdef MRE_DIST
+	$(SYSINSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(IMPORT_LIBRARY) $(DESTDIR)$(mredir)
+else
+	$(SYSINSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(IMPORT_LIBRARY) $(DESTDIR)$(mozappdir)
+endif
+endif
+endif # SHARED_LIBRARY
+ifdef PROGRAM
+ifdef MRE_DIST
+	$(SYSINSTALL) $(IFLAGS2) $(PROGRAM) $(DESTDIR)$(mredir)
+else
+	$(SYSINSTALL) $(IFLAGS2) $(PROGRAM) $(DESTDIR)$(mozappdir)
+endif
+endif # PROGRAM
+ifdef SIMPLE_PROGRAMS
+ifdef MRE_DIST
+	$(SYSINSTALL) $(IFLAGS2) $(SIMPLE_PROGRAMS) $(DESTDIR)$(mredir)
+else
+	$(SYSINSTALL) $(IFLAGS2) $(SIMPLE_PROGRAMS) $(DESTDIR)$(mozappdir)
+endif
+endif # SIMPLE_PROGRAMS
+endif # NO_INSTALL
+
 checkout:
 	$(MAKE) -C $(topsrcdir) -f client.mk checkout
 
@@ -1274,7 +1327,7 @@ JMC_EXPORT_FILES	= $(patsubst %,$(JAVA_DESTPATH)/$(PACKAGE)/%.class,$(JMC_EXPORT
 #
 export:: $(JMC_EXPORT_FILES) $(JMCSRCDIR)
 ifndef NO_DIST_INSTALL
-	$(NSINSTALL) -t $(IFLAGS1) $(JMC_EXPORT_FILES) $(JMCSRCDIR)
+	$(SYSINSTALL) $(IFLAGS1) $(JMC_EXPORT_FILES) $(JMCSRCDIR)
 endif
 endif # JAVA_OR_NSJVM
 endif
@@ -1347,6 +1400,11 @@ export:: $(PREF_JS_EXPORTS) $(DIST)/bin/defaults/pref
 ifndef NO_DIST_INSTALL
 	$(INSTALL) $(IFLAGS1) $^
 endif
+
+install:: $(PREF_JS_EXPORTS)
+ifndef NO_INSTALL
+	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/defaults/pref
+endif
 endif 
 ################################################################################
 # Copy each element of AUTOCFG_JS_EXPORTS to $(DIST)/bin/defaults/autoconfig
@@ -1358,6 +1416,11 @@ $(DIST)/bin/defaults/autoconfig::
 export:: $(AUTOCFG_JS_EXPORTS) $(DIST)/bin/defaults/autoconfig
 ifndef NO_DIST_INSTALL
 	$(INSTALL) $(IFLAGS1) $^
+endif
+
+install:: $(AUTOCFG_JS_EXPORTS)
+ifndef NO_INSTALL
+	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/defaults/autoconfig
 endif
 endif 
 ################################################################################
@@ -1411,6 +1474,15 @@ libs:: $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt
 ifndef NO_DIST_INSTALL
 	$(INSTALL) $(IFLAGS1) $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt $(DIST)/bin/$(COMPONENTS_PATH)
 endif
+
+install:: $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt
+ifndef NO_INSTALL
+ifdef MRE_DIST
+	$(SYSINSTALL) $(IFLAGS1) $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt $(DESTDIR)$(mredir)/$(COMPONENTS_PATH)
+else 
+	$(SYSINSTALL) $(IFLAGS1) $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt $(DESTDIR)$(mozappdir)/$(COMPONENTS_PATH)
+endif 
+endif # NO_INSTALL
 endif # NO_GEN_XPT
 
 GARBAGE_DIRS		+= $(XPIDL_GEN_DIR)
@@ -1453,6 +1525,20 @@ endif
 endif # SDK_XPIDLSRCS
 
 ################################################################################
+# Copy each element of EXTRA_COMPONENTS to $(DIST)/bin/components
+ifdef EXTRA_COMPONENTS
+libs:: $(EXTRA_COMPONENTS)
+ifndef NO_DIST_INSTALL
+	$(INSTALL) $(IFLAGS2) $^ $(DIST)/bin/components
+endif
+
+install:: $(EXTRA_COMPONENTS)
+ifndef NO_INSTALL
+	$(SYSINSTALL) $(IFLAGS2) $^ $(DESTDIR)$(mozappdir)/components
+endif
+endif
+
+################################################################################
 # SDK
 
 ifneq (,$(SDK_BINARY))
@@ -1486,10 +1572,19 @@ _NO_FLOCK=-l
 endif
 
 libs:: $(CHROME_DEPS)
+ifndef NO_DIST_INSTALL
 	@if test -f $(JAR_MANIFEST); then $(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/make-jars.pl $(_NO_FLOCK) $(_JAR_AUTO_REG) -f $(MOZ_CHROME_FILE_FORMAT) -d $(DIST)/bin/chrome -s $(srcdir) < $(JAR_MANIFEST); fi
 	@if test -f $(JAR_MANIFEST); then $(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/make-chromelist.pl $(DIST)/bin/chrome $(JAR_MANIFEST) $(_NO_FLOCK); fi
+endif
+
+install:: $(CHROME_DEPS)
+ifndef NO_INSTALL
+	@if test -f $(JAR_MANIFEST); then $(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/make-jars.pl $(_NO_FLOCK) $(_JAR_AUTO_REG) -f $(MOZ_CHROME_FILE_FORMAT) -d $(DESTDIR)$(mozappdir)/chrome -s $(srcdir) < $(JAR_MANIFEST); fi
+	@if test -f $(JAR_MANIFEST); then $(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/make-chromelist.pl $(DESTDIR)$(mozappdir)/chrome $(JAR_MANIFEST) $(_NO_FLOCK); fi
+endif
 
 REGCHROME = $(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/add-chrome.pl $(DIST)/bin/chrome/installed-chrome.txt $(_JAR_REGCHROME_DISABLE_JAR)
+REGCHROME_INSTALL = $(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/add-chrome.pl $(DESTDIR)$(mozappdir)/chrome/installed-chrome.txt $(_JAR_REGCHROME_DISABLE_JAR)
 
 ##############################################################################
 
