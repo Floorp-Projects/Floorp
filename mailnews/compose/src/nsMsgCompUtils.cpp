@@ -1051,8 +1051,8 @@ msg_generate_message_id (nsIMsgIdentity *identity)
 	PRUint32 salt = 0;
 	const char *host = 0;
   
-	char *from;
-  nsresult rv = identity->GetEmail(&from);
+	nsXPIDLCString from;
+  nsresult rv = identity->GetEmail(getter_Copies(from));
   if (NS_FAILED(rv)) return nsnull;
 
 	GenerateGlobalRandomBytes((unsigned char *) &salt, sizeof(salt));
