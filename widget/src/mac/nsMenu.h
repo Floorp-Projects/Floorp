@@ -25,9 +25,10 @@
 
 #include "nsCOMPtr.h"
 #include "nsIMenu.h"
-#include "nsVoidArray.h"
+#include "nsSupportsArray.h"
 #include "nsIMenuListener.h"
 #include "nsIChangeManager.h"
+#include "nsWeakReference.h"
 
 #include <Menus.h>
 #include <UnicodeConverter.h>
@@ -38,14 +39,14 @@ class nsIDOMElement;
 
 
 // temporary hack to get apple menu -- sfraser, approved saari
-#define APPLE_MENU_HACK		1
+#define APPLE_MENU_HACK   1
 
 #ifdef APPLE_MENU_HACK
 extern const PRInt16 kMacMenuID;
 extern const PRInt16 kAppleMenuID;
 #endif /* APPLE_MENU_HACK */
 
-//static PRInt16      mMacMenuIDCount;		// use GetUniqueMenuID()
+//static PRInt16      mMacMenuIDCount;    // use GetUniqueMenuID()
  extern PRInt16 mMacMenuIDCount;// = kMacMenuID;
 
 
@@ -56,7 +57,10 @@ namespace MenuHelpers
 }
 
 
-class nsMenu : public nsIMenu, public nsIMenuListener, public nsIChangeObserver
+class nsMenu :  public nsIMenu,
+                public nsIMenuListener,
+                public nsIChangeObserver,
+                public nsSupportsWeakReference
 {
 
 public:
@@ -103,35 +107,34 @@ public:
   NS_IMETHOD AddMenu(nsIMenu * aMenu);
 
   // MacSpecific
-  static PRInt16	GetUniqueMenuID() {
-  						if (mMacMenuIDCount == 32767)
-  							mMacMenuIDCount = 256;
-  						return mMacMenuIDCount++;
-  						}
+  static PRInt16  GetUniqueMenuID()
+                  {
+                    if (mMacMenuIDCount == 32767)
+                      mMacMenuIDCount = 256;
+                    return mMacMenuIDCount++;
+                  }
 
 protected:
-  nsString     mLabel;
-  PRUint32     mNumMenuItems;
-  nsVoidArray  mMenuItemVoidArray;
+  nsString          mLabel;
+  PRUint32          mNumMenuItems;
+  nsSupportsArray   mMenuItemsArray;       // array holds refs
 
-  nsIMenu    * mMenuParent;              // weak, my parent owns me
-  nsIMenuBar * mMenuBarParent;
+  nsIMenu*          mMenuParent;           // weak, my parent owns me
+  nsIMenuBar*       mMenuBarParent;
+  nsIChangeManager* mManager;             // weak ref, it will outlive us
+  nsWeakPtr                  mWebShellWeakRef;    // weak ref to webshell
+  nsCOMPtr<nsIDOMNode>       mDOMNode;     //strong ref
+  nsCOMPtr<nsIMenuListener>  mListener;
 
-  nsIDOMNode*             mDOMNode;      // weak ref, content model outlives us
-  nsCOMPtr<nsIDOMElement> mDOMElement;   // for convenience; strong ref to manage the QI
-  nsIWebShell*            mWebShell;
-  nsIChangeManager* mManager;            // weak ref, it will outlive us
-  bool            mConstructed;
-
+  bool                  mConstructed;
   // MacSpecific
-  PRInt16			   mMacMenuID;
-  MenuHandle           mMacMenuHandle;
-  nsIMenuListener *    mListener;
-  UnicodeToTextRunInfo mUnicodeTextRunConverter;
-  PRInt16              mHelpMenuOSItemsCount;
-  PRBool               mIsHelpMenu;
-  PRBool               mIsEnabled;
-  PRBool               mDestroyHandlerCalled;
+  PRInt16               mMacMenuID;
+  MenuHandle            mMacMenuHandle;
+  UnicodeToTextRunInfo  mUnicodeTextRunConverter;
+  PRInt16               mHelpMenuOSItemsCount;
+  PRPackedBool          mIsHelpMenu;
+  PRPackedBool          mIsEnabled;
+  PRPackedBool          mDestroyHandlerCalled;
 
     // fetch the content node associated with the menupopup item
   void GetMenuPopupElement ( nsIDOMNode** aResult ) ;
@@ -146,7 +149,7 @@ protected:
   void LoadSubMenu( nsIMenu * pParentMenu, nsIDOMElement * menuElement, nsIDOMNode * menuNode);  
   nsEventStatus HelpMenuConstruct( const nsMenuEvent & aMenuEvent, nsIWidget* aParentWindow, 
                                     void* menuNode, void* aWebShell);
-	
+  
   void NSStringSetMenuItemText(MenuHandle macMenuHandle, short menuItem, nsString& nsString);
   MenuHandle NSStringNewMenu(short menuID, nsString& menuTitle);
   MenuHandle NSStringNewChildMenu(short menuID, nsString& menuTitle);

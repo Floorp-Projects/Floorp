@@ -28,6 +28,7 @@
 #include "nsString.h"
 #include "nsIMenuListener.h"
 #include "nsIChangeManager.h"
+#include "nsWeakReference.h"
 
 
 class nsIMenu;
@@ -37,7 +38,10 @@ class nsIWidget;
  * Native Motif MenuItem wrapper
  */
 
-class nsMenuItem : public nsIMenuItem, public nsIMenuListener, public nsIChangeObserver
+class nsMenuItem :  public nsIMenuItem,
+                    public nsIMenuListener,
+                    public nsIChangeObserver,
+                    public nsSupportsWeakReference
 {
 public:
   nsMenuItem();
@@ -80,24 +84,22 @@ protected:
 
   void UncheckRadioSiblings ( nsIDOMElement* inCheckedElement ) ;
 
-  nsAutoString   mLabel;
-  nsAutoString   mKeyEquivalent;
+  nsString        mLabel;
+  nsString        mKeyEquivalent;
 
-  nsIMenu      * mMenuParent;       // weak, parent owns us
-  nsIWidget    * mTarget;
+  nsIMenu*                  mMenuParent;          // weak, parent owns us
+  nsIChangeManager*         mManager;             // weak
 
+  nsCOMPtr<nsIWidget>       mTarget;              // never set?
   nsCOMPtr<nsIMenuListener> mXULCommandListener;
-  PRBool            mIsSeparator;
-  nsIMenuListener * mListener;
   
-  nsIWebShell*      mWebShell;            // weak, document outlives us
-  nsCOMPtr<nsIDOMElement> mDOMElement;    // for convenience; strong to manage QI
-  nsIDOMNode*       mDOMNode;             // weak, content outlives us
-  nsIChangeManager* mManager;             // weak, manager outlives us
+  nsWeakPtr                 mWebShellWeakRef;     // weak ref to webshell
+  nsCOMPtr<nsIDOMNode>      mDOMNode; 
   
   PRUint8           mModifiers;
-  PRBool            mEnabled;
-  PRBool            mIsChecked;
+  PRPackedBool      mIsSeparator;
+  PRPackedBool      mEnabled;
+  PRPackedBool      mIsChecked;
   EMenuItemType     mMenuType;
 };
 

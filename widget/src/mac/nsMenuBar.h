@@ -27,13 +27,15 @@
 #include "nsIMenuListener.h"
 #include "nsIDocumentObserver.h"
 #include "nsIChangeManager.h"
+#include "nsSupportsArray.h"
 #include "nsVoidArray.h"
 #include "nsHashtable.h"
+#include "nsWeakReference.h"
 
-#include "Types.h"
+#include <MacTypes.h>
 #include <UnicodeConverter.h>
 
-extern nsIMenuBar * gMacMenubar;
+extern nsWeakPtr gMacMenubar;
 
 class nsIWidget;
 
@@ -41,8 +43,11 @@ class nsIWidget;
  * Native Mac MenuBar wrapper
  */
 
-class nsMenuBar : public nsIMenuBar, public nsIMenuListener, public nsIDocumentObserver,
-                    public nsIChangeManager
+class nsMenuBar : public nsIMenuBar,
+                  public nsIMenuListener,
+                  public nsIDocumentObserver,
+                  public nsIChangeManager,
+                  public nsSupportsWeakReference
 {
 public:
   
@@ -130,16 +135,17 @@ public:
   
 protected:
 
-  nsHashtable mObserverTable;   // stores observers for content change notification
+  nsHashtable           mObserverTable;   // stores observers for content change notification
   
-  PRUint32     mNumMenus;
-  nsVoidArray mMenuVoidArray;
-  nsIWidget *  mParent;
+  PRUint32              mNumMenus;
+  nsSupportsArray       mMenusArray;        // holds refs
+  nsCOMPtr<nsIDOMNode>  mDOMNode;
+  nsIWidget *           mParent;            // weak ref
 
-  PRBool      mIsMenuBarAdded;
+  PRBool       mIsMenuBarAdded;
   
-  nsIWebShell * mWebShell;
-  nsIDOMNode  * mDOMNode;
+  nsWeakPtr   mWebShellWeakRef;    // weak ref to webshell
+
 
   void RegisterAsDocumentObserver ( nsIWebShell* inWebShell ) ;
 
@@ -148,7 +154,7 @@ protected:
   Handle      mOriginalMacMBarHandle;
   UnicodeToTextRunInfo mUnicodeTextRunConverter;
   void NSStringSetMenuItemText(MenuHandle macMenuHandle, short menuItem, nsString& nsString);
-
+  
 };
 
 #endif // nsMenuBar_h__
