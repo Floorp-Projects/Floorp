@@ -1215,7 +1215,7 @@ NET_IsURLInMemCache
 # NET_LoadNetHelpTopic
 # NET_LoadProxyConfig
 # NET_LoadingPac
-# NET_MakeAbsoluteURL
+NET_MakeAbsoluteURL
 # NET_MakeRelativeURL
 # NET_MakeTargetURL
 # NET_MakeUploadURL
