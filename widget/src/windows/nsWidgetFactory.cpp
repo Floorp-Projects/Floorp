@@ -187,13 +187,6 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     else if (mClassID.Equals(kCTabWidget)) {
         inst = (nsObject*)new nsTabWidget(aOuter);
     }
-
-    printf("inside the widget factory\n");
-    printf("inside the widget factory\n");
-    printf("inside the widget factory\n");
-    printf("inside the widget factory\n");
-    printf("inside the widget factory\n");
-
   
     if (inst == NULL) {  
         return NS_ERROR_OUT_OF_MEMORY;  
