@@ -374,7 +374,7 @@ function NSGetModule(compMgr, fileSpec) {
 
 /* static functions */
 if (DEBUG)
-    debug = function (s) { dump("-*- sidebar: " + s + "\n"); }
+    debug = function (s) { dump("-*- sidebar component: " + s + "\n"); }
 else
     debug = function (s) {}
 
@@ -387,11 +387,11 @@ function getSidebarDatasourceURI(panels_file_id)
          * database of the user's currently selected panels. */
         var directory_service = Components.classes[DIR_SERV_PROGID].getService();
         if (directory_service)
-            directory_service = locator_service.QueryInterface(nsIProperties);
+            directory_service = directory_service.QueryInterface(Components.interfaces.nsIProperties);
 
         /* if <profile>/panels.rdf doesn't exist, get will copy
          *bin/defaults/profile/panels.rdf to <profile>/panels.rdf */
-        var sidebar_file = directory_service.get(panels_file_id, nsIFile);
+        var sidebar_file = directory_service.get(panels_file_id, Components.interfaces.nsIFile);
 
         if (!sidebar_file.exists())
         {
@@ -401,7 +401,7 @@ function getSidebarDatasourceURI(panels_file_id)
             return null;
         }
 
-        var file_url = Components.classes[STD_URL_PROGID].createInstance(nsIFileURL);
+        var file_url = Components.classes[STD_URL_PROGID].createInstance(Components.interfaces.nsIFileURL);
         file_url.file = sidebar_file;
 
         debug("sidebar uri is " + file_url.spec);
