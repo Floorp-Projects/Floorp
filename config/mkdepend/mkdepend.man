@@ -22,7 +22,10 @@
 .\" be used in advertising or otherwise to promote the sale, use or other 
 .\" dealing in this Software without prior written authorization from The
 .\" Open Group.
-.TH MAKEDEPEND 1 "Release 6.4" "X Version 11"
+.\"
+.\" $XFree86: xc/config/makedepend/mkdepend.man,v 1.7 2002/12/14 02:39:45 dawes Exp $
+.\"
+.TH MAKEDEPEND 1 __xorgversion__
 .UC 4
 .SH NAME
 makedepend \- create dependencies in makefiles
@@ -40,6 +43,8 @@ makedepend \- create dependencies in makefiles
 .B \-a
 ] [
 .BI \-f makefile
+] [
+.BI \-include \ file
 ] [
 .BI \-o objsuffix
 ] [
@@ -111,7 +116,7 @@ option.
 It first searches the makefile for
 the line
 .sp
-    # DO NOT DELETE THIS LINE \-\^\- make depend depends on it.
+\&    # DO NOT DELETE THIS LINE \-\^\- make depend depends on it.
 .sp
 or one provided with the
 .B \-s
@@ -198,6 +203,12 @@ This allows you to specify an alternate makefile in which
 can place its output.
 Specifying ``\-'' as the file name (i.e., \fB\-f\-\fP) sends the
 output to standard output instead of modifying an existing file.
+.TP 5
+.B \-include \fIfile\fP
+Process file as input, and include all the resulting output
+before processing the regular input file. This has the same
+affect as if the specified file is an include statement that
+appears before the very first line of the regular input file.
 .TP 5
 .B \-o\fIobjsuffix\fP
 Object file suffix.
@@ -342,9 +353,8 @@ to the list of dependencies for
 cc(1), make(1)
 .SH BUGS
 .B makedepend
-parses, but does not currently evaluate, the SVR4
-#predicate(token-list) preprocessor expression;
-such expressions are simply assumed to be true.
+parses, but does not currently evaluate, the SVR4 #predicate(token-list)
+preprocessor expression; such expressions are simply assumed to be true.
 This may cause the wrong
 .I #include
 directives to be evaluated.

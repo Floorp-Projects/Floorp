@@ -24,6 +24,7 @@ used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from The Open Group.
 
 */
+/* $XFree86: xc/config/makedepend/pr.c,v 1.5 2001/12/14 19:53:21 dawes Exp $ */
 
 #include "def.h"
 
@@ -37,11 +38,9 @@ extern boolean	verbose;
 extern boolean	show_where_not;
 
 void
-add_include(filep, file, file_red, include, dot, failOK)
-	struct filepointer	*filep;
-	struct inclist	*file, *file_red;
-	char	*include;
-	boolean	dot;
+add_include(struct filepointer *filep, struct inclist *file, 
+	    struct inclist *file_red, char *include, int type,
+	    boolean failOK)
 {
 	register struct inclist	*newfile;
 	register struct filepointer	*content;
@@ -49,7 +48,7 @@ add_include(filep, file, file_red, include, dot, failOK)
 	/*
 	 * First decide what the pathname of this include file really is.
 	 */
-	newfile = inc_path(file->i_file, include, dot);
+	newfile = inc_path(file->i_file, include, type);
 	if (newfile == NULL) {
 		if (failOK)
 		    return;
@@ -60,7 +59,7 @@ add_include(filep, file, file_red, include, dot, failOK)
 			warning("%s, line %d: ", file->i_file, filep->f_line);
 		warning1("cannot find include file \"%s\"\n", include);
 		show_where_not = TRUE;
-		newfile = inc_path(file->i_file, include, dot);
+		newfile = inc_path(file->i_file, include, type);
 		show_where_not = FALSE;
 	}
 
@@ -75,10 +74,8 @@ add_include(filep, file, file_red, include, dot, failOK)
 	}
 }
 
-void
-pr(ip, file, base)
-	register struct inclist  *ip;
-	char	*file, *base;
+static void
+pr(struct inclist *ip, char *file, char *base)
 {
 	static char	*lastfile;
 	static int	current_len;
@@ -113,11 +110,9 @@ pr(ip, file, base)
 }
 
 void
-recursive_pr_include(head, file, base)
-	register struct inclist	*head;
-	register char	*file, *base;
+recursive_pr_include(struct inclist *head, char *file, char *base)
 {
-	register int	i;
+	int	i;
 
 	if (head->i_flags & MARKED)
 		return;
