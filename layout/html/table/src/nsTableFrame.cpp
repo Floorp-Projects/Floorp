@@ -1667,7 +1667,7 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext& aPresContext,
     // set aDesiredSize and aMaxElementSize
   }
 
-  if (gsDebugNT==PR_TRUE) 
+  if (PR_TRUE==gsDebug || PR_TRUE==gsDebugNT) 
   {
     if (nsnull!=aDesiredSize.maxElementSize)
       printf("%p: Inner table reflow complete, returning aDesiredSize = %d,%d and aMaxElementSize=%d,%d\n",
