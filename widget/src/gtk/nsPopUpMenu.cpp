@@ -185,8 +185,8 @@ NS_METHOD nsPopUpMenu::RemoveAll()
 //-------------------------------------------------------------------------
 void nsPopUpMenu::GetXY(GtkMenu *menu, gint *x, gint *y, gpointer user_data)
 {
-  *x = mX;
-  *y = mY;
+  *x = ((nsPopUpMenu *)(user_data))->mX;
+  *y = ((nsPopUpMenu *)(user_data))->mY;
 }
 
 //-------------------------------------------------------------------------
@@ -199,7 +199,7 @@ NS_METHOD nsPopUpMenu::ShowMenu(PRInt32 aX, PRInt32 aY)
 		  NULL,
 		  NULL,
                   GetXY,
-		  NULL,
+		  this,
 		  0,
 		  GDK_CURRENT_TIME);
   return NS_OK;
