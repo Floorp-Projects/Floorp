@@ -24,11 +24,7 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/config.mk
 
-ifeq ($(MOZ_GFX_TOOLKIT),xlib)
-XLIBRGB_DIRS = xlibrgb
-endif
-
-DIRS = ps $(XLIBRGB_DIRS) $(MOZ_GFX_TOOLKIT)
+DIRS = ps xlibrgb $(MOZ_GFX_TOOLKIT)
 
 LIBRARY_NAME = raptorgfx
 
