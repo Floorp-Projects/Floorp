@@ -320,14 +320,14 @@ do
 	echo "********************* $testname ****************************"
 	sparam=`echo $sparam | sed -e 's;_; ;g'`
 	cparam=`echo $cparam | sed -e 's;_; ;g'`
-	echo "selfserv -p ${PORT} -d ${SERVERDIR} -n ${HOST}.${DOMSUF} -w nss ${sparam} -i ${SERVERPID} $verbose &"
+	echo "selfserv -p ${PORT} -d ${SERVERDIR} -n ${HOST}.${DOMSUF} -w nss ${sparam} -i ${SERVERPID} $verbose & started at `date`"
 	if [ ${fileout} -eq 1 ]; then
 	    selfserv -p ${PORT} -d ${SERVERDIR} -n ${HOST}.${DOMSUF} -w nss ${sparam} -i ${SERVERPID} $verbose > ${SERVEROUTFILE} 2>&1 &
 	else
 	    selfserv -p ${PORT} -d ${SERVERDIR} -n ${HOST}.${DOMSUF} -w nss ${sparam} -i ${SERVERPID} $verbose &
 	fi
 	#sleep 20
-	echo "tstclnt -p ${PORT} -h ${HOST} -q -d ${CLIENTDIR} < ${REQUEST_FILE}"
+	echo "tstclnt -p ${PORT} -h ${HOST} -q -d ${CLIENTDIR} < ${REQUEST_FILE} started at `date`"
 	tstclnt -p ${PORT} -h ${HOST} -q -d ${CLIENTDIR} < ${REQUEST_FILE}
 	if [ $? -ne 0 ]; then
     	echo "<TR><TD> Wait for Server </TD><TD bgcolor=red>Failed</TD><TR>" >> ${RESULTS}
@@ -335,8 +335,10 @@ do
 		tstclnt -p ${PORT} -h ${HOST} -q -d ${CLIENTDIR} < ${REQUEST_FILE}
 	fi
 
-	echo "strsclnt -p ${PORT} -d . -w nss $cparam $verbose ${HOST}.${DOMSUF} "
+	echo "strsclnt -p ${PORT} -d . -w nss $cparam $verbose ${HOST}.${DOMSUF}  started at `date`"
 	strsclnt -p ${PORT} -d . -w nss $cparam $verbose ${HOST}.${DOMSUF} 
+	echo "strsclnt completed at `date`"
+
 	if [ $? -ne $value ]; then
 	    echo "<TR><TD>"${testname}"</TD><TD bgcolor=red>Failed</TD><TR>" >> ${RESULTS}
 	else
