@@ -154,7 +154,7 @@ function ComposeStartup()
 			// setEditorType MUST be call before setContentWindow
 			if (msgCompose.composeHTML)
 			{
-				window.editorShell.SetEditorType("html");
+				window.editorShell.SetEditorType("htmlmail");
 				dump("editor initialized in HTML mode\n");
 			}
 			else
