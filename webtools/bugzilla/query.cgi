@@ -33,7 +33,7 @@ if {[info exists FORM(GoAheadAndLogIn)]} {
 
 
 if {![info exists COOKIE(DEFAULTQUERY)]} {
-    set COOKIE(DEFAULTQUERY) "bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&product=Communicator&order=%22Importance%22"
+    set COOKIE(DEFAULTQUERY) "bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&product=Mozilla&order=%22Importance%22"
 }
 
 if {![info exists buffer] || $buffer == ""} {

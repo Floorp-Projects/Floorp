@@ -34,12 +34,12 @@ program tinytext
 
 
 
-insert into versions (value, program) values ("other", "Communicator");
-insert into versions (value, program) values ("1998-03-31", "Communicator");
-insert into versions (value, program) values ("1998-04-08", "Communicator");
-insert into versions (value, program) values ("1998-04-29", "Communicator");
-insert into versions (value, program) values ("1998-06-03", "Communicator");
-insert into versions (value, program) values ("1998-07-28", "Communicator");
+insert into versions (value, program) values ("other", "Mozilla");
+insert into versions (value, program) values ("1998-03-31", "Mozilla");
+insert into versions (value, program) values ("1998-04-08", "Mozilla");
+insert into versions (value, program) values ("1998-04-29", "Mozilla");
+insert into versions (value, program) values ("1998-06-03", "Mozilla");
+insert into versions (value, program) values ("1998-07-28", "Mozilla");
 insert into versions (value, program) values ("1.0", "Bugzilla");
 insert into versions (value, program) values ("other", "Bugzilla");
 
