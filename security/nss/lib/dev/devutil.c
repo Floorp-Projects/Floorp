@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devutil.c,v $ $Revision: 1.22 $ $Date: 2003/09/12 19:17:15 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: devutil.c,v $ $Revision: 1.23 $ $Date: 2003/09/23 20:47:43 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEVM_H
@@ -647,15 +647,15 @@ create_object_array (
   PRStatus *status
 )
 {
-    nssCryptokiObject **op = objects;
     nssCryptokiObjectAndAttributes **rvOandA = NULL;
     *numObjects = 0;
     /* There are no objects for this type */
-    if (!objects) {
-	return (nssCryptokiObjectAndAttributes **)NULL;
+    if (!objects || !*objects) {
+	*status = PR_SUCCESS;
+	return rvOandA;
     }
-    while (*op++) (*numObjects)++;
-    if (*numObjects == MAX_LOCAL_CACHE_OBJECTS) {
+    while (*objects++) (*numObjects)++;
+    if (*numObjects >= MAX_LOCAL_CACHE_OBJECTS) {
 	/* Hit the maximum allowed, so don't use a cache (there are
 	 * too many objects to make caching worthwhile, presumably, if
 	 * the token can handle that many objects, it can handle searching.
@@ -663,11 +663,11 @@ create_object_array (
 	*doObjects = PR_FALSE;
 	*status = PR_FAILURE;
 	*numObjects = 0;
-    } else if (*numObjects > 0) {
+    } else {
 	rvOandA = nss_ZNEWARRAY(NULL, 
 	                        nssCryptokiObjectAndAttributes *, 
 	                        *numObjects + 1);
-	*status = rvOandA ? PR_SUCCESS : PR_FALSE;
+	*status = rvOandA ? PR_SUCCESS : PR_FAILURE;
     }
     return rvOandA;
 }
@@ -675,7 +675,7 @@ create_object_array (
 static nssCryptokiObjectAndAttributes *
 create_object (
   nssCryptokiObject *object,
-  CK_ATTRIBUTE_TYPE *types,
+  const CK_ATTRIBUTE_TYPE *types,
   PRUint32 numTypes,
   PRStatus *status
 )
@@ -691,8 +691,7 @@ create_object (
 
     arena = nssArena_Create();
     if (!arena) {
-	nssSlot_Destroy(slot);
-	return (nssCryptokiObjectAndAttributes *)NULL;
+	goto loser;
     }
     rvCachedObject = nss_ZNEW(arena, nssCryptokiObjectAndAttributes);
     if (!rvCachedObject) {
@@ -731,7 +730,8 @@ loser:
     if (slot) {
 	nssSlot_Destroy(slot);
     }
-    nssArena_Destroy(arena);
+    if (arena)
+	nssArena_Destroy(arena);
     return (nssCryptokiObjectAndAttributes *)NULL;
 }
 
@@ -802,7 +802,7 @@ create_cert (
   PRStatus *status
 )
 {
-    CK_ATTRIBUTE_TYPE certAttr[] = {
+    static const CK_ATTRIBUTE_TYPE certAttr[] = {
 	CKA_CLASS,
 	CKA_TOKEN,
 	CKA_LABEL,
@@ -814,7 +814,7 @@ create_cert (
 	CKA_SUBJECT,
 	CKA_NETSCAPE_EMAIL
     };
-    PRUint32 numCertAttr = sizeof(certAttr) / sizeof(certAttr[0]);
+    static const PRUint32 numCertAttr = sizeof(certAttr) / sizeof(certAttr[0]);
     return create_object(object, certAttr, numCertAttr, status);
 }
 
@@ -863,8 +863,8 @@ get_token_certs_for_cache (
 	PRUint32 j;
 	for (j=0; j<i; j++) {
 	    /* sigh */
-	    nssToken_AddRef(cache->objects[cachedCerts][i]->object->token);
-	    nssArena_Destroy(cache->objects[cachedCerts][i]->arena);
+	    nssToken_AddRef(cache->objects[cachedCerts][j]->object->token);
+	    nssArena_Destroy(cache->objects[cachedCerts][j]->arena);
 	}
 	nssCryptokiObjectArray_Destroy(objects);
     }
@@ -878,7 +878,7 @@ create_trust (
   PRStatus *status
 )
 {
-    CK_ATTRIBUTE_TYPE trustAttr[] = {
+    static const CK_ATTRIBUTE_TYPE trustAttr[] = {
 	CKA_CLASS,
 	CKA_TOKEN,
 	CKA_LABEL,
@@ -891,7 +891,7 @@ create_trust (
 	CKA_TRUST_EMAIL_PROTECTION,
 	CKA_TRUST_CODE_SIGNING
     };
-    PRUint32 numTrustAttr = sizeof(trustAttr) / sizeof(trustAttr[0]);
+    static const PRUint32 numTrustAttr = sizeof(trustAttr) / sizeof(trustAttr[0]);
     return create_object(object, trustAttr, numTrustAttr, status);
 }
 
@@ -940,8 +940,8 @@ get_token_trust_for_cache (
 	PRUint32 j;
 	for (j=0; j<i; j++) {
 	    /* sigh */
-	    nssToken_AddRef(cache->objects[cachedTrust][i]->object->token);
-	    nssArena_Destroy(cache->objects[cachedTrust][i]->arena);
+	    nssToken_AddRef(cache->objects[cachedTrust][j]->object->token);
+	    nssArena_Destroy(cache->objects[cachedTrust][j]->arena);
 	}
 	nssCryptokiObjectArray_Destroy(objects);
     }
@@ -955,7 +955,7 @@ create_crl (
   PRStatus *status
 )
 {
-    CK_ATTRIBUTE_TYPE crlAttr[] = {
+    static const CK_ATTRIBUTE_TYPE crlAttr[] = {
 	CKA_CLASS,
 	CKA_TOKEN,
 	CKA_LABEL,
@@ -964,7 +964,7 @@ create_crl (
 	CKA_NETSCAPE_KRL,
 	CKA_NETSCAPE_URL
     };
-    PRUint32 numCRLAttr = sizeof(crlAttr) / sizeof(crlAttr[0]);
+    static const PRUint32 numCRLAttr = sizeof(crlAttr) / sizeof(crlAttr[0]);
     return create_object(object, crlAttr, numCRLAttr, status);
 }
 
@@ -1013,8 +1013,8 @@ get_token_crls_for_cache (
 	PRUint32 j;
 	for (j=0; j<i; j++) {
 	    /* sigh */
-	    nssToken_AddRef(cache->objects[cachedCRLs][i]->object->token);
-	    nssArena_Destroy(cache->objects[cachedCRLs][i]->arena);
+	    nssToken_AddRef(cache->objects[cachedCRLs][j]->object->token);
+	    nssArena_Destroy(cache->objects[cachedCRLs][j]->arena);
 	}
 	nssCryptokiObjectArray_Destroy(objects);
     }
