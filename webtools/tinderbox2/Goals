@@ -16,7 +16,7 @@ gradations of failure then just 'busted' or 'test-failed' to
 distinguish the types of tests which have failed.
 
 It should be possible to watch projects milestone progress via
-tinderbox.  Each milestone could be recoreded as a column which tests
+tinderbox.  Each milestone could be recorded as a column which tests
 for the features in the milestone.  When milestones are hit the column
 turns green.  The project is over when all columns turn green.
 
