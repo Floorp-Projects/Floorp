@@ -858,7 +858,8 @@ public:
                                  nsIReflowCommand::ReflowType* aCmdType);  
   NS_IMETHOD CancelReflowCommandInternal(nsIFrame*                     aTargetFrame, 
                                          nsIReflowCommand::ReflowType* aCmdType,
-                                         nsVoidArray&                  aQueue);  
+                                         nsVoidArray&                  aQueue,
+                                         PRBool                        aProcessDummyLayoutRequest = PR_TRUE);  
   NS_IMETHOD CancelAllReflowCommands();
   NS_IMETHOD IsSafeToFlush(PRBool& aIsSafeToFlush);
   NS_IMETHOD FlushPendingNotifications();
@@ -3515,9 +3516,10 @@ PresShell :: IsDragInProgress ( ) const
 
 
 NS_IMETHODIMP
-PresShell::CancelReflowCommandInternal(nsIFrame* aTargetFrame, 
+PresShell::CancelReflowCommandInternal(nsIFrame*                     aTargetFrame, 
                                        nsIReflowCommand::ReflowType* aCmdType,
-                                       nsVoidArray& aQueue)
+                                       nsVoidArray&                  aQueue,
+                                       PRBool                        aProcessDummyLayoutRequest)
 {
   PRInt32 i, n = aQueue.Count();
   for (i = 0; i < n; i++) {
@@ -3554,7 +3556,9 @@ PresShell::CancelReflowCommandInternal(nsIFrame* aTargetFrame,
     }
   }
 
-  DoneRemovingReflowCommands();
+  if (aProcessDummyLayoutRequest) {
+    DoneRemovingReflowCommands();
+  }
 
   return NS_OK;
 }
@@ -5862,11 +5866,12 @@ PresShell::SendInterruptNotificationTo(nsIFrame*                   aFrame,
 }
 
 nsresult
-PresShell::CancelInterruptNotificationTo(nsIFrame*                    aFrame,
-                                         nsIPresShell:: InterruptType aInterruptType)
+PresShell::CancelInterruptNotificationTo(nsIFrame*                   aFrame,
+                                         nsIPresShell::InterruptType aInterruptType)
 
 {
-  return CancelReflowCommandInternal(aFrame, nsnull, mTimeoutReflowCommands);
+  // cancel the reflow command without affecting the dummy layout request
+  return CancelReflowCommandInternal(aFrame, nsnull, mTimeoutReflowCommands, PR_FALSE);
 }
 
 nsresult
