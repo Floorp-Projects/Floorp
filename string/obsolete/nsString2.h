@@ -581,6 +581,9 @@ class NS_COM NS_ConvertUTF8toUCS2
       NS_ConvertUTF8toUCS2( PRUnichar );
   };
 
+#define PLANE1_BASE           0x00010000  
+#define UCS2_REPLACEMENT_CHAR 0xfffd     
+
 class ConvertUTF8toUCS2
   {
     public:
@@ -672,7 +675,7 @@ class ConvertUTF8toUCS2
             if ( ucs4 < minUcs4 )
               {
                 // Overlong sequence
-                *mBuffer++ = 0xFFFD;
+                *mBuffer++ = UCS2_REPLACEMENT_CHAR;
               }
             else if ( ucs4 <= 0xD7FF )
               {
@@ -681,16 +684,23 @@ class ConvertUTF8toUCS2
             else if ( /* ucs4 >= 0xD800 && */ ucs4 <= 0xDFFF )
               {
                 // Surrogates
-                *mBuffer++ = 0xFFFD;
+                *mBuffer++ = UCS2_REPLACEMENT_CHAR;
               }
             else if ( ucs4 == 0xFFFE || ucs4 == 0xFFFF )
               {
                 // Prohibited characters
-                *mBuffer++ = 0xFFFD;
+                *mBuffer++ = UCS2_REPLACEMENT_CHAR;
               }
-            else if ( ucs4 >= 0x00010000 )
+            else if ( ucs4 >= PLANE1_BASE )
               {
-                *mBuffer++ = 0xFFFD;
+                if ( ucs4 >= 0x00110000 )
+                  *mBuffer++ = UCS2_REPLACEMENT_CHAR;
+                else {
+                  // surrogate, see unicode specification 3.7 for following math.
+                  ucs4 -= PLANE1_BASE;
+                  *mBuffer++ = (PRUnichar)(ucs4 >> 10) | 0xd800u;
+                  *mBuffer++ = (PRUnichar)(ucs4 & 0x3ff) | 0xdc00u;
+                }
               }
             else
               {
