@@ -1070,7 +1070,8 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext&          aPresContext,
         aPresContext.ResolvePseudoStyleContextFor(mContent, nsHTMLAtoms::framesetBlankPseudo,
                                                   mStyleContext, PR_FALSE,
                                                   &pseudoStyleContext);
-        blankFrame->Init(aPresContext, mContent, this, pseudoStyleContext, nsnull);
+        if(blankFrame)
+          blankFrame->Init(aPresContext, mContent, this, pseudoStyleContext, nsnull);
         NS_RELEASE(pseudoStyleContext);
 
         if (nsnull == lastChild) {
