@@ -18,7 +18,7 @@
 
 /*
 ** File:		prrwlock.h
-** Description:	API to basic reader-writer lock functions of NSPS.
+** Description:	API to basic reader-writer lock functions of NSPR.
 **
 **/
 
@@ -33,7 +33,7 @@ PR_BEGIN_EXTERN_C
  * PRRWLock --
  *
  *	The reader writer lock, PRRWLock, is an opaque object to the clients
- *	of NSPS.  All routines operate on a pointer to this opaque entity.
+ *	of NSPR.  All routines operate on a pointer to this opaque entity.
  */
 
 
