@@ -786,6 +786,16 @@ void stub_abort(NET_StreamClass *stream, int status)
 
     TRACEMSG(("+++ stream abort.  Status = %d\n", status));
 
+    NS_ASSERTION(pConn, "pConn == nsnull");
+    if (!pConn) {
+	return;
+    }
+    
+    NS_ASSERTION(pConn->pNetStream, "pConn->pNetStream == nsnull");
+    if (!pConn->pNetStream) {
+	return;
+    }
+
     /* Close the stream and remove it from the ConnectionInfo... */
     pConn->pNetStream->Close();
     NS_RELEASE(pConn->pNetStream);
