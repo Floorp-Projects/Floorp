@@ -23,7 +23,7 @@ srcdir		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= silentdl
-LIBRARY_NAME	= silentdl
+#LIBRARY_NAME	= silentdl
 IS_COMPONENT	= 1
 
 #CPPSRCS = \
