@@ -89,7 +89,7 @@
 <!ENTITY pkcs12.setpassword.reminder "Important: If you forget your portable security password, you will not be able to restore this backup later.  Please record it in a safe location.">
 
 <!ENTITY pkcs12.getpassword.title  "Password Entry Dialog">
-<!ENTITY pkcs12.getpassword.message  "Please enter the portable security password protecting this security certificate and private key.">
+<!ENTITY pkcs12.getpassword.message "Please enter the password that was used to encrypt this certificate backup.">
 
 <!ENTITY chooseToken.title  "Choose Token Dialog">
 <!ENTITY chooseToken.message1 "Please choose a token.">
