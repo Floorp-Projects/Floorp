@@ -22,7 +22,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-PROGRAM		= Convert
+PROGRAM		= outtest
 
 CPPSRCS		= \
 		Convert.cpp \

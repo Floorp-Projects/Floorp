@@ -95,13 +95,18 @@ nsresult HTML2text(int toHTML)
   rv = NS_NewNavHTMLDTD(&dtd);
   if (NS_FAILED(rv))
   {
-    printf("Couldn't create new content sink: 0x%x\n", rv);
+    printf("Couldn't create new HTML DTD: 0x%x\n", rv);
     return rv;
   }
 
   parser->RegisterDTD(dtd);
 
-  parser->Parse(inString, 0, "text/html", PR_FALSE, PR_TRUE);
+  rv = parser->Parse(inString, 0, "text/html", PR_FALSE, PR_TRUE);
+  if (NS_FAILED(rv))
+  {
+    printf("Parse() failed! 0x%x\n", rv);
+    return rv;
+  }
 
   printf("Output string is: %s\n-------------------- \n",
          outString.ToNewCString());
