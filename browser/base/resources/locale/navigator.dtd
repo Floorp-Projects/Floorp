@@ -174,8 +174,8 @@
 <!ENTITY textZoomOtherCmd.accesskey     "o">
 
 <!-- extracted from charsetOverlay.xul -->
-<!ENTITY charsetMenu.label        "Character Coding">
-<!ENTITY charsetMenu.accesskey        "C">
+<!ENTITY charsetMenu.label        "Encoding">
+<!ENTITY charsetMenu.accesskey        "E">
 <!ENTITY charsetMenuAutodet.label     "Auto-Detect">
 <!ENTITY charsetMenuAutodet.accesskey     "a">
 <!ENTITY charsetMenuMore.label        "More">
@@ -259,3 +259,19 @@
 <!ENTITY aboutCmd.accesskey       "A">
 <!ENTITY aboutCommPluginsCmd.label      "About Plug-ins">
 <!ENTITY aboutCommPluginsCmd.accesskey      "p">
+
+<!ENTITY javaConsoleCmd.label         "Java Console">
+<!ENTITY javaConsoleCmd.accesskey       "j">
+
+<!ENTITY javaScriptConsoleCmd.label                             "JavaScript Console">
+<!ENTITY javaScriptConsoleCmd.accesskey       "S">
+
+<!ENTITY tasksMenu.label            "Tools">
+<!ENTITY tasksMenu.accesskey                "T"> 
+
+<!ENTITY downloadManagerCmd.label "Download Manager">
+<!ENTITY downloadManagerCmd.accesskey "D">
+
+<!ENTITY historyCmd.label "History">
+<!ENTITY historyCmd.accesskey "H">
+<!ENTITY historyCmd.commandkey "H">
