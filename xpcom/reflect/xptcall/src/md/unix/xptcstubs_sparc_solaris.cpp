@@ -110,13 +110,14 @@ PrepareAndDispatch(nsXPTCStubBase* self, uint32 methodIndex, uint32* args)
     return result;
 }
 
-extern "C" int SharedStub(int);
+extern "C" int SharedStub(int, int*);
 
-#define STUB_ENTRY(n)       \
-nsresult nsXPTCStubBase::Stub##n()   \
-{                           \
-    return SharedStub(n);   \
-}                           \
+#define STUB_ENTRY(n) \
+nsresult nsXPTCStubBase::Stub##n() \
+{ \
+	int dummy; /* defeat tail-call optimization */ \
+	return SharedStub(n, &dummy); \
+}
 
 #define SENTINEL_ENTRY(n) \
 nsresult nsXPTCStubBase::Sentinel##n() \

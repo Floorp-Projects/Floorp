@@ -43,8 +43,8 @@ SharedStub:
         st      %i4, [%fp + 84]
         st      %i5, [%fp + 88]
 ! now we can build our own stack frame
-        save    %sp,-(64 + 16),%sp   ! room for the register window and
-                                    ! struct pointer, rounded up to 0 % 16
+        save    %sp,-(64 + 32),%sp   ! room for the register window and
+                                    ! struct pointer, rounded up to 0 % 32
 ! our function now appears to have been called
 ! as SharedStub(nsISupports* that, PRUint32 index, PRUint32* args)
 ! so we can just copy these through
@@ -60,3 +60,6 @@ SharedStub:
 .LL1:
         ret
         restore
+
+       .size    SharedStub, .-SharedStub
+       .type    SharedStub, #function

@@ -30,8 +30,8 @@
     
 */
 XPTC_InvokeByIndex:
-        save    %sp,-(64 + 16),%sp  ! room for the register window and
-                                    ! struct pointer, rounded up to 0 % 16
+        save    %sp,-(64 + 32),%sp  ! room for the register window and
+                                    ! struct pointer, rounded up to 0 % 32
         sll     %i2,3,%l0           ! assume the worst case
                                     ! paramCount * 2 * 4 bytes
         cmp     %l0, 0              ! are there any args? If not,
@@ -56,7 +56,7 @@ XPTC_InvokeByIndex:
 !
 !   calculate the target address from the vtable
 !
-invoke:
+.invoke:
         sll     %i1,2,%l0           ! index *= 4
         add     %l0,8,%l0           ! there are 2 extra entries in the vTable
         ld      [%i0],%l1           ! *that --> address of vtable
@@ -68,3 +68,5 @@ invoke:
         mov     %o0,%i0             ! propogate return value
         ret
         restore
+
+        .size    XPTC_InvokeByIndex, .-XPTC_InvokeByIndex
