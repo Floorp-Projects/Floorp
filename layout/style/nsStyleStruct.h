@@ -710,6 +710,7 @@ struct nsStyleDisplay : public nsStyleStruct {
   PRInt32 CalcDifference(const nsStyleDisplay& aOther) const;
   
   PRUint8 mDisplay;             // [reset] see nsStyleConsts.h NS_STYLE_DISPLAY_*
+  PRUint8 mOriginalDisplay;     // [reset] saved mDisplay for position:absolute/fixed
   PRUint8 mAppearance;          // [reset]
   nsString  mBinding;           // [reset] absolute url string
   PRUint8   mPosition;          // [reset] see nsStyleConsts.h
