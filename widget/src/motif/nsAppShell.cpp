@@ -65,6 +65,15 @@ NS_METHOD nsAppShell::SetDispatchListener(nsDispatchListener* aDispatchListener)
 //
 //-------------------------------------------------------------------------
 
+// EVIL
+#if 1
+extern Display *  gDisplay;
+extern Screen *   gScreen;
+extern Visual *   gVisual;
+extern int        gDepth;
+extern XVisualInfo     *gVisualInfo;
+#endif
+
 NS_METHOD nsAppShell::Create(int* bac, char ** bav)
 {
   //char *home=nsnull;
@@ -104,6 +113,30 @@ NS_METHOD nsAppShell::Create(int* bac, char ** bav)
   // XXX This is BAD -- needs to be fixed
   gAppContext = mAppContext;
 
+#if 1
+  gDisplay = XtDisplay(mTopLevel);
+  gScreen = XtScreen(mTopLevel);
+
+  printf("%s\tgDisplay = %p\n",__FUNCTION__,gDisplay);
+
+  int          numVisuals;
+  XVisualInfo  visualInfo;
+
+  xlib_rgb_init(gDisplay, gScreen);
+
+  gVisual = xlib_rgb_get_visual();
+
+  visualInfo.visualid = XVisualIDFromVisual(gVisual);
+
+  gVisualInfo = XGetVisualInfo(gDisplay, 
+                               VisualIDMask,
+                               &visualInfo, 
+                               &numVisuals);
+  
+  gDepth = gVisualInfo->depth;
+#endif
+
+
   return NS_OK;
 }
 
@@ -123,22 +156,6 @@ static void event_processor_callback(XtPointer       aClosure,
   nsIEventQueue *eventQueue = (nsIEventQueue*) aClosure;
   eventQueue->ProcessPendingEvents();
 }
-
-// NS_METHOD nsAppShell::Run()
-// {
-//   XtRealizeWidget(mTopLevel);
-
-//   XEvent event;
-//   for (;;) {
-//     XtAppNextEvent(mAppContext, &event);
-//     XtDispatchEvent(&event);
-//     if (mDispatchListener)
-//       mDispatchListener->AfterDispatch();
-//   } 
-
-//   return NS_OK;
-// }
-
 
 NS_METHOD nsAppShell::Run()
 {
