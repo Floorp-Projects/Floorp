@@ -203,9 +203,9 @@
 	title="&messengerWindow.title;"
         style="width:100%;height:100%">
 
-<html:script src="resource:/res/mailnews/messenger/widgetglue.js"></html:script>
-<html:script src="resource:/res/mailnews/messenger/commandglue.js"></html:script>
-<html:script src="resource:/res/mailnews/messenger/shareglue.js"></html:script>
+<html:script src="resource:/res/mailnews/messenger/widgetglue.js"/>
+<html:script src="resource:/res/mailnews/messenger/commandglue.js"/>
+<html:script src="resource:/res/mailnews/messenger/shareglue.js"/>
 
   <menubar>
     <menu name="&fileMenu.label;">
