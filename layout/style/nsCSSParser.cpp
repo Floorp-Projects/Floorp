@@ -515,7 +515,7 @@ CSSParserImpl::ParseAndAppendDeclaration(const nsString&    aBuffer,
                                          nsICSSDeclaration* aDeclaration,
                                          PRInt32*           aHint)
 {
-  NS_ASSERTION(nsnull != aBaseURL, "need base URL");
+//  NS_ASSERTION(nsnull != aBaseURL, "need base URL");
 
   nsString* str = new nsString(aBuffer);
   if (nsnull == str) {
