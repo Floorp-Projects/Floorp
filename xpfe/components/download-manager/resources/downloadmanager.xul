@@ -96,6 +96,8 @@
                oncommand="goDoCommand('cmd_cancel');"/>
       <command id="cmd_remove"
                oncommand="goDoCommand('cmd_remove');"/>
+      <command id="cmd_copyurl"
+               oncommand="goDoCommand('cmd_copyurl');"/>
       <command id="cmd_openfile"
                oncommand="goDoCommand('cmd_openfile');"/>
       <command id="cmd_showinshell"
@@ -125,6 +127,8 @@
 
     <key id="key_properties" key="&cmd.properties.keybinding;"
          command="cmd_properties" modifiers="accel"/>
+
+    <key id="key_copy" command="cmd_copyurl"/>
   </keyset>
 
   <popup id="downloadPaneContext">
@@ -141,6 +145,10 @@
               label="&cmd.remove.label;"
               accesskey="&cmd.remove.accesskey;"
               command="cmd_remove"/>
+    <menuitem id="downloadPaneContext-copyurl"
+              label="&cmd.copyurl.label;"
+              accesskey="&cmd.copyurl.accesskey;"
+              command="cmd_copyurl"/>
     <menuseparator id="downloadPaneContext-sep2"/>
     <menuitem id="downloadPaneContext-openfile"
               label="&cmd.openfile.label;"
@@ -161,6 +169,8 @@
                      command="cmd_cancel"/>
       <toolbarbutton label="&cmd.remove.label;" accesskey="&cmd.remove.accesskey;"
                      command="cmd_remove"/>
+      <toolbarbutton id="btn_copyurl" label="&cmd.copyurl.label;" accesskey="&cmd.copyurl.accesskey;"
+                     command="cmd_copyurl"/>
       <toolbarseparator/>
       <toolbarbutton id="btn_openfile" label="&cmd.openfile.label;" accesskey="&cmd.openfile.accesskey;"
                      command="cmd_openfile"/>
