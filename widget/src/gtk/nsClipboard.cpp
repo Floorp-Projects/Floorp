@@ -593,24 +593,19 @@ nsClipboard::SelectionReceiver (GtkWidget *aWidget,
     g_print("        Converting from current locale to unicode\n");
 #endif
 
-    static nsCOMPtr<nsIUnicodeDecoder> decoder;
-    static PRBool hasConverter = PR_FALSE;
-    if ( !hasConverter ) {
-      // get the charset
-      nsAutoString platformCharset;
-      nsCOMPtr <nsIPlatformCharset> platformCharsetService = do_GetService(NS_PLATFORMCHARSET_PROGID, &rv);
-      if (NS_SUCCEEDED(rv))
-        rv = platformCharsetService->GetCharset(kPlatformCharsetSel_Menu, platformCharset);
-      if (NS_FAILED(rv))
-        platformCharset.AssignWithConversion("ISO-8859-1");
+    nsCOMPtr<nsIUnicodeDecoder> decoder;
+    // get the charset
+    nsAutoString platformCharset;
+    nsCOMPtr <nsIPlatformCharset> platformCharsetService = do_GetService(NS_PLATFORMCHARSET_PROGID, &rv);
+    if (NS_SUCCEEDED(rv))
+      rv = platformCharsetService->GetCharset(kPlatformCharsetSel_Menu, platformCharset);
+    if (NS_FAILED(rv))
+      platformCharset.AssignWithConversion("ISO-8859-1");
       
-      // get the decoder
-      NS_WITH_SERVICE(nsICharsetConverterManager, ccm, NS_CHARSETCONVERTERMANAGER_PROGID, &rv);  
-      rv = ccm->GetUnicodeDecoder(&platformCharset, getter_AddRefs(decoder));
+    // get the decoder
+    nsCOMPtr<nsICharsetConverterManager> ccm = do_GetService(NS_CHARSETCONVERTERMANAGER_PROGID, &rv);
+    rv = ccm->GetUnicodeDecoder(&platformCharset, getter_AddRefs(decoder));
       
-      hasConverter = PR_TRUE;
-    }
-  
     // Estimate out length and allocate the buffer based on a worst-case estimate, then do
     // the conversion. 
     decoder->GetMaxLength(data, numberOfBytes, &outUnicodeLen);   // |outUnicodeLen| is number of chars
@@ -892,23 +887,18 @@ void nsClipboard::SelectionGetCB(GtkWidget        *widget,
       // Get the appropriate unicode encoder. We're guaranteed that this won't change
       // through the life of the app so we can cache it.
 
-      static nsCOMPtr<nsIUnicodeEncoder> encoder;
-      static PRBool hasConverter = PR_FALSE;
-      if ( !hasConverter ) {
-        // get the charset
-        nsAutoString platformCharset;
-        nsCOMPtr <nsIPlatformCharset> platformCharsetService = do_GetService(NS_PLATFORMCHARSET_PROGID, &rv);
-        if (NS_SUCCEEDED(rv))
-          rv = platformCharsetService->GetCharset(kPlatformCharsetSel_Menu, platformCharset);
-        if (NS_FAILED(rv))
-          platformCharset.AssignWithConversion("ISO-8859-1");
+      nsCOMPtr<nsIUnicodeEncoder> encoder;
+      // get the charset
+      nsAutoString platformCharset;
+      nsCOMPtr <nsIPlatformCharset> platformCharsetService = do_GetService(NS_PLATFORMCHARSET_PROGID, &rv);
+      if (NS_SUCCEEDED(rv))
+        rv = platformCharsetService->GetCharset(kPlatformCharsetSel_Menu, platformCharset);
+      if (NS_FAILED(rv))
+        platformCharset.AssignWithConversion("ISO-8859-1");
       
-        // get the encoder
-        NS_WITH_SERVICE(nsICharsetConverterManager, ccm, NS_CHARSETCONVERTERMANAGER_PROGID, &rv);  
-        rv = ccm->GetUnicodeEncoder(&platformCharset, getter_AddRefs(encoder));
-
-        hasConverter = PR_TRUE;
-      }
+      // get the encoder
+      nsCOMPtr<nsICharsetConverterManager> ccm = do_GetService(NS_CHARSETCONVERTERMANAGER_PROGID, &rv);
+      rv = ccm->GetUnicodeEncoder(&platformCharset, getter_AddRefs(encoder));
 
       // Estimate out length and allocate the buffer based on a worst-case estimate, then do
       // the conversion.
