@@ -49,35 +49,6 @@ interface nsIPSMComponent : nsISupports
    *  This will send PSM all preferences that we know about.
    */
   void passPrefs();
-
- /* Sig Verification Error Codes */
-  const long VERIFY_OK = 0;
-  const long VERIFY_NOSIG = -2;
-  const long VERIFY_ERROR_UNKNOWN_CA  = -8172;
-  
-  /* Hash Algorithms (based on cmtcmn.h) */ 
-  const short MD2  = 1;
-  const short MD5  = 2;
-  const short SHA1 = 3;
-  const unsigned long MD2_LENGTH  = 16;
-  const unsigned long MD5_LENGTH  = 16;
-  const unsigned long SHA1_LENGTH = 20;
-  const unsigned long MAX_HASH_LENGTH = SHA1_LENGTH;
-
-  /* Secure Hashing functions */
-  void hashBegin(in unsigned long alg, out unsigned long id);
-  void hashUpdate(in unsigned long id, in string buf, in unsigned long buflen);
-  void hashEnd(in unsigned long id, out string hash, out unsigned long hashlen,
-               in unsigned long maxLen);
-  
-  /* Signature Verification functions */
-  void verifyRSABegin(out unsigned long id);
-  void verifyRSAUpdate(in unsigned long id, in string buf, 
-                       in unsigned long buflen);
-  void verifyRSAEnd(in unsigned long id, in string plaintext,
-                    in unsigned long plaintextLen,
-                    in boolean keepCert, out nsIPrincipal principal, out long result);
-  nsIPrincipal CreatePrincipalFromCert(in unsigned long certID);
 };
 
 %{C++

@@ -50,6 +50,7 @@
 #include "nsZipArchive.h"
 #include "zipfile.h"
 #include "nsIPrincipal.h"
+#include "nsISignatureVerifier.h"
 
 class nsIInputStream;
 
@@ -87,23 +88,22 @@ class nsJAR : public nsIZipReader
     PRInt16                  mGlobalStatus;   // Global signature verification status
 
     //-- Private functions
-    nsresult ParseManifest();
+    nsresult ParseManifest(nsISignatureVerifier* verifier);
     void     ReportError(const char* aFilename, PRInt16 errorCode);
     nsresult CreateInputStream(const char* aFilename, PRBool verify,
                                nsIInputStream** result);
     nsresult LoadEntry(const char* aFilename, char** aBuf, 
                        PRUint32* aBufLen = nsnull);
     PRInt32  ReadLine(const char** src); 
-    nsresult ParseOneFile(const char* filebuf, PRInt16 aFileType);
-    nsresult VerifyEntry(const char* aEntryName, char* aEntryData, 
+    nsresult ParseOneFile(nsISignatureVerifier* verifier,
+                          const char* filebuf, PRInt16 aFileType);
+    nsresult VerifyEntry(const char* aEntryName, const char* aEntryData, 
                          PRUint32 aLen);
     nsresult RestoreModTime(nsZipItem *aItem, nsIFile *aExtractedFile);
 
-    nsresult CalculateDigest(const char* aInBuf, PRUint32 aInBufLen,
+    nsresult CalculateDigest(nsISignatureVerifier* verifier, 
+                             const char* aInBuf, PRUint32 aInBufLen,
                              char** digest);
-    nsresult VerifySignature(const char* sfBuf, PRUint32 sfBufLen,
-                             const char* rsaBuf, PRUint32 rsaBufLen, 
-                             nsIPrincipal** aPrincipal, PRInt16* status);
 
     //-- Debugging
     void DumpMetadata(const char* aMessage);

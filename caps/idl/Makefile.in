@@ -34,6 +34,7 @@ XPIDLSRCS	= \
 		nsICodebasePrincipal.idl \
 		nsICertificatePrincipal.idl \
 		nsIAggregatePrincipal.idl \
+		nsISignatureVerifier.idl \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
