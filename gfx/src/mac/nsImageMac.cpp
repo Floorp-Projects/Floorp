@@ -25,8 +25,10 @@
 
 static NS_DEFINE_IID(kIImageIID, NS_IIMAGE_IID);
 
-//------------------------------------------------------------
-
+/** ---------------------------------------------------
+ *  See documentation in nsImageMac.h
+ *	@update 
+ */
 nsImageMac :: nsImageMac()
 {
 
@@ -37,8 +39,10 @@ nsImageMac :: nsImageMac()
   mHeight = 0;	
 }
 
-//------------------------------------------------------------
-
+/** ---------------------------------------------------
+ *  See documentation in nsImageMac.h
+ *	@update 
+ */
 nsImageMac :: ~nsImageMac()
 {
 	if(mImageBits)
@@ -52,16 +56,22 @@ nsImageMac :: ~nsImageMac()
 
 NS_IMPL_ISUPPORTS(nsImageMac, kIImageIID);
 
-//------------------------------------------------------------
-
-PRUint8* nsImageMac::GetBits()
+/** ---------------------------------------------------
+ *  See documentation in nsImageMac.h
+ *	@update 
+ */
+PRUint8* 
+nsImageMac::GetBits()
 { 
 	return mImageBits; 
 }
 
-//------------------------------------------------------------
-
-nsresult nsImageMac :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMaskRequirements aMaskRequirements)
+/** ---------------------------------------------------
+ *  See documentation in nsImageMac.h
+ *	@update 08/03/99 -- cleared out the image pointer - dwc
+ */
+nsresult 
+nsImageMac :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMaskRequirements aMaskRequirements)
 {
 PRInt32	bufferdepth;
 
@@ -104,6 +114,8 @@ PRInt32	bufferdepth;
 		}
 		
 	if(mImageBits){
+		memset(mImageBits,0,mSizeImage);						// clear out any garbage
+		
 		mThePixelmap.baseAddr = (char*) mImageBits;
 		mThePixelmap.rowBytes = mRowBytes | 0x8000;
 		mThePixelmap.bounds.top = 0;
@@ -162,8 +174,10 @@ PRInt32	bufferdepth;
   return NS_OK;
 }
 
-//------------------------------------------------------------
-
+/** ---------------------------------------------------
+ *  See documentation in nsImageMac.h
+ *	@update 
+ */
 PRInt32  nsImageMac :: CalcBytesSpan(PRUint32  aWidth,PRUint32	aDepth)
 {
 PRInt32 spanbytes;
@@ -177,9 +191,10 @@ PRInt32 spanbytes;
   return 0;
 }
 
-//------------------------------------------------------------
-
-// set up the pallete to the passed in color array, RGB only in this array
+/** ---------------------------------------------------
+ *  See documentation in nsImageMac.h
+ *	@update 
+ */
 void nsImageMac :: ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRect *aUpdateRect)
 {
 
@@ -192,9 +207,10 @@ void nsImageMac :: ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRe
 }
 
 
-//------------------------------------------------------------
-
-// Draw the bitmap, this method has a source and destination coordinates
+/** ---------------------------------------------------
+ *  See documentation in nsImageMac.h
+ *	@update 
+ */
 NS_IMETHODIMP nsImageMac :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface, PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
                                  PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight)
 {
@@ -227,9 +243,10 @@ NS_IMETHODIMP nsImageMac :: Draw(nsIRenderingContext &aContext, nsDrawingSurface
   return NS_OK;
 }
 
-//------------------------------------------------------------
-
-// Draw the bitmap, this draw just has destination coordinates
+/** ---------------------------------------------------
+ *  See documentation in nsImageMac.h
+ *	@update 
+ */
 NS_IMETHODIMP nsImageMac :: Draw(nsIRenderingContext &aContext, 
                                  nsDrawingSurface aSurface,
                                  PRInt32 aX, PRInt32 aY, 
@@ -239,8 +256,10 @@ NS_IMETHODIMP nsImageMac :: Draw(nsIRenderingContext &aContext,
   return Draw(aContext,aSurface,0,0,mWidth,mHeight,aX,aY,aWidth,aHeight);
 }
 
-//------------------------------------------------------------
-
+/** ---------------------------------------------------
+ *  See documentation in nsImageMac.h
+ *	@update 
+ */
 nsresult nsImageMac::Optimize(nsIDeviceContext* aContext)
 {
   return NS_OK;
