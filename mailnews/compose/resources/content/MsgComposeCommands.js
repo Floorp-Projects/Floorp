@@ -1585,7 +1585,14 @@ function GenericSendMessage( msgType )
         //We disable spellcheck for the following -subject line, attachment pane, identity and addressing widget
         //therefore we need to explicitly focus on the mail body when we have to do a spellcheck.
           editorShell.contentWindow.focus();
-          goDoCommand('cmd_spelling');
+          window.cancelSendMessage = false;
+          try {
+            window.openDialog("chrome://editor/content/EdSpellCheck.xul", "_blank",
+                    "chrome,close,titlebar,modal", true);
+          }
+          catch(ex){}
+          if(window.cancelSendMessage)
+            return;
         }
 
         //Check if we have a subject, else ask user for confirmation
