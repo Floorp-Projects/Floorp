@@ -341,6 +341,7 @@ widget/tests/widget/Makefile
 xpcom/Makefile
 xpcom/public/Makefile
 xpcom/src/Makefile
+xpcom/sample/Makefile
 xpcom/tests/Makefile
 xpcom/tests/dynamic/Makefile
 xpcom/tools/Makefile
