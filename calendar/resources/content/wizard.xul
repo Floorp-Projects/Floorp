@@ -47,7 +47,7 @@
 <!-- DTDs -->
 
 <!-- DTD File with all strings specific to the calendar -->
-<!DOCTYPE window 
+<!DOCTYPE wizard 
 [
     <!ENTITY % dtd1 SYSTEM "chrome://calendar/locale/global.dtd" > %dtd1;
     <!ENTITY % dtd2 SYSTEM "chrome://calendar/locale/calendar.dtd" > %dtd2;
@@ -86,10 +86,10 @@
    </wizardpage>
    
    <wizardpage pageid="import-2" onpagehide="" onpageshow="">
-      <description>Should I import the events without opening each one? </description>
+      <description>Should I open each event before importing it?</description>
       <radiogroup id="import-2-radiogroup">
-         <radio id="import-2-yes" value="silent"  label="Yes" selected="true"/>
-         <radio id="import-2-no"  value="prompt"  label="No"/>
+         <radio id="import-2-no"  value="silent"  label="No, just import the events." selected="true"/>
+         <radio id="import-2-yes" value="promtp"  label="Yes, open each event."/>
       </radiogroup>   
    </wizardpage>
    
