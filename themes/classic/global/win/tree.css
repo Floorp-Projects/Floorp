@@ -231,18 +231,19 @@ treechildren:-moz-tree-column(insertafter) {
 /* ::::: twisty :::::  */
 
 treechildren:-moz-tree-twisty {
-  padding-right: 2px;
-  width: 10px; /* The image's width is 10 pixels */
+  padding-right: 4px;
+  padding-top: 1px;
+  width: 9px; /* The image's width is 9 pixels */
   list-style-image: url("chrome://global/skin/tree/twisty-clsd.gif");
 }
 
 treechildren:-moz-tree-twisty(open) {
-  width: 10px; /* The image's width is 10 pixels */
+  width: 9px; /* The image's width is 9 pixels */
   list-style-image: url("chrome://global/skin/tree/twisty-open.gif");
 }
 
 treechildren:-moz-tree-indentation {
-  width: 16px;
+  width: 18px;
 }
 
 /* ::::: gridline style ::::: */
