@@ -22,6 +22,7 @@
 
 #include "nscore.h"
 #include "nsIMsgAccount.h"
+#include "nsIPref.h"
 
 class nsMsgAccount : public nsIMsgAccount
 {
