@@ -1613,21 +1613,30 @@ public abstract class ScriptableObject implements Scriptable {
         if (slots == null)
             slots = new Slot[5];
         int start = (index & 0x7fffffff) % slots.length;
+        boolean sawRemoved = false;
         int i = start;
         do {
             Slot slot = slots[i];
             if (slot == null) {
                 return addSlot(id, index, getterSlot);
             }
-            if (slot != REMOVED && slot.intKey == index && 
-                (slot.stringKey == id || (id != null && 
-                                          id.equals(slot.stringKey))))
+            if (slot == REMOVED) {
+                sawRemoved = true;
+            } else if (slot.intKey == index && 
+                       (slot.stringKey == id || 
+                        (id != null && id.equals(slot.stringKey))))
             {
                 return slot;
             }
             if (++i == slots.length)
                 i = 0;
         } while (i != start);
+        if (sawRemoved) {
+            // Table could be full, but with some REMOVED elements. 
+            // Call to addSlot will use a slot currently taken by 
+            // a REMOVED.
+            return addSlot(id, index, getterSlot);
+        }
         throw new RuntimeException("Hashtable internal error");
     }
 
@@ -1692,6 +1701,7 @@ public abstract class ScriptableObject implements Scriptable {
      */
     private synchronized void grow() {
         Slot[] newSlots = new Slot[slots.length*2 + 1];
+        int newCount = 0;
         for (int j=slots.length-1; j >= 0 ; j--) {
             Slot slot = slots[j];
             if (slot == null || slot == REMOVED)
@@ -1707,8 +1717,10 @@ public abstract class ScriptableObject implements Scriptable {
             // on the MS JVM
             //synchronized (slot) { }
             newSlots[k] = slot;
+            newCount++;
         }
         slots = newSlots;
+        count = newCount;
     }
 
     private static Hashtable getExclusionList() {
