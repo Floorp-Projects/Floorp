@@ -42,14 +42,17 @@
 
 #ifdef XP_UNIX
 #define ARTICLE_PATH "/usr/tmp/tempMessage.eml"
+#define ERROR_PATH "/usr/tmp/errorMessage.htm"
 #endif
 
 #ifdef XP_PC
 #define ARTICLE_PATH  "c:\\temp\\tempMessage.eml"
+#define ERROR_PATH "c:\\temp\\errorMessage.htm"
 #endif
 
 #ifdef XP_MAC
-#define ARTICLE_PATH "tempMessage.eml"	
+#define ARTICLE_PATH "tempMessage.eml"
+#define ERROR_PATH "errorMessage.htm"
 #endif
 
 // State Flags (Note, I use the word state in terms of storing 
@@ -181,6 +184,10 @@ private:
 	// converter interface...
 	nsCOMPtr<nsIOutputStream> m_tempArticleStream;
 	nsFileSpec m_tempArticleFile;
+    // same trick as above, but used for showing error message in the 
+    // message pane.
+	nsCOMPtr<nsIOutputStream> m_tempErrorStream;
+	nsFileSpec m_tempErrorFile;
 
 	// News Event Sinks
     nsCOMPtr <nsINNTPNewsgroupList> m_newsgroupList;

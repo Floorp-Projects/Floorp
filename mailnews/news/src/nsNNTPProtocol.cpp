@@ -365,7 +365,7 @@ char *MSG_UnEscapeSearchUrl (const char *commandSpecificData)
 ///////////////////////////////////////////////////////////////////////////////////////////
 
 
-nsNNTPProtocol::nsNNTPProtocol() : m_tempArticleFile(ARTICLE_PATH)
+nsNNTPProtocol::nsNNTPProtocol() : m_tempArticleFile(ARTICLE_PATH), m_tempErrorFile(ERROR_PATH)
 {
 	m_cancelFromHdr = nsnull;
 	m_cancelNewsgroups = nsnull;
@@ -1833,7 +1833,7 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommandResponse()
         else
           m_nextState = NNTP_ERROR;
 
-        /* START OF HACK */
+        /* START OF HACK TO DISPLAY THE ERROR IN THE MESSAGE PANE */
         nsresult rv = NS_OK;
         char *group_name = nsnull;
         char outputBuffer[OUTPUT_BUFFER_SIZE];
@@ -1846,39 +1846,39 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommandResponse()
 #if 0
             PR_snprintf(outputBuffer, OUTPUT_BUFFER_SIZE, "<P> <A HREF=\"%s//%s/%s?list-ids\">%s</A> </P>\n", "news:", m_hostName, group_name, "Click here to remove all expired articles");
 #else
-            PR_snprintf(outputBuffer,OUTPUT_BUFFER_SIZE,"Path: secnews.netscape.com!not-for-mail\nFrom: article expired\nSubject: Error!  Article cancelled.\nOrganization: article expired\nNewsgroups: article expired\nLines: 5\nMime-Version: 1.0\nContent-Type: text/html; charset=us-ascii\nContent-Transfer-Encoding: 7bit\nX-Mailer: Mozilla 5.0 [en] (Unix; I)\nX-Accept-Language: en\n\n<h1>Error!</h1><br>\nnewsgroup server responded: Bad article number<br>\nPerhaps the article has expired<br>\n &lt;%s&gt; (%d)<br>\n<P> <A HREF=\"%s//%s/%s?list-ids\">%s</A> </P>\n", "foobar", -1, "news:", m_hostName, group_name, "Click here to remove all expired articles");
+            PR_snprintf(outputBuffer,OUTPUT_BUFFER_SIZE,"<h1>Error!</h1><br>\nnewsgroup server responded: Bad article number<br>\nPerhaps the article has expired<br>\n &lt;%s&gt; (%d)<br>\n<P> <A HREF=\"%s/%s/%s?list-ids\">%s</A> </P>\n", "foobar", -1, kNewsRootURI, m_hostName, group_name, "Click here to remove all expired articles");
 #endif
         }
 
-        m_tempArticleFile.Delete(PR_FALSE);
+        m_tempErrorFile.Delete(PR_FALSE);
         nsISupports * supports;
-        NS_NewIOFileStream(&supports, m_tempArticleFile, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 00700);
-        m_tempArticleStream = do_QueryInterface(supports);
+        NS_NewIOFileStream(&supports, m_tempErrorFile, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 00700);
+        m_tempErrorStream = do_QueryInterface(supports);
         NS_IF_RELEASE(supports);
   
-        if (m_tempArticleStream) {
+        if (m_tempErrorStream) {
             PRUint32 count = 0;
-        	m_tempArticleStream->Write(outputBuffer, PL_strlen(outputBuffer), &count);
+        	m_tempErrorStream->Write(outputBuffer, PL_strlen(outputBuffer), &count);
         }
 
         // and close the article file if it was open....
-		if (m_tempArticleStream)
-			m_tempArticleStream->Close();
+		if (m_tempErrorStream)
+			m_tempErrorStream->Close();
 
         /* cut and paste from below */
         if (m_displayConsumer)
 		{
-			nsFilePath filePath(ARTICLE_PATH);
+			nsFilePath filePath(ERROR_PATH);
 			nsFileURL  fileURL(filePath);
-			char * article_path_url = PL_strdup(fileURL.GetAsString());
+			char * error_path_url = PL_strdup(fileURL.GetAsString());
 
 #ifdef DEBUG_NEWS
-			printf("load this url to display the message: %s\n", article_path_url);
+			printf("load this url to display the error message: %s\n", error_path_url);
 #endif
 
-			m_displayConsumer->LoadURL(nsAutoString(article_path_url).GetUnicode(), nsnull, PR_TRUE, nsURLReload, 0);
+			m_displayConsumer->LoadURL(nsAutoString(error_path_url).GetUnicode(), nsnull, PR_TRUE, nsURLReload, 0);
 			
-			PR_FREEIF(article_path_url);
+			PR_FREEIF(error_path_url);
 		}
         /* cut and paste from below */
         /* END OF HACK */        
