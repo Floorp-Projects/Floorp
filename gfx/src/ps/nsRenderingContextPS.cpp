@@ -24,7 +24,7 @@
 #include "nsIScriptGlobalObject.h"
 #include "prprf.h"
 #include "nsPrintManager.h"
-#include "nsPSStructs.h"        //XXX:PS This should be removed
+#include "nsPSStructs.h"        
 
 static NS_DEFINE_IID(kIRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
 
@@ -36,6 +36,11 @@ static NS_DEFINE_IID(kIRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
 #define NS_PS_BLUE(x) (((float)(NS_GET_B(x))) / 255.0) 
 #define NS_IS_BOLD(x) (((x) >= 500) ? 1 : 0) 
 
+#define FLAG_CLIP_VALID       0x0001
+#define FLAG_CLIP_CHANGED     0x0002
+#define FLAG_LOCAL_CLIP_VALID 0x0004
+
+#define FLAGS_ALL             (FLAG_CLIP_VALID | FLAG_CLIP_CHANGED | FLAG_LOCAL_CLIP_VALID)
 
 /** ---------------------------------------------------
  *  Class definition of a postscript graphics state to me maintained
@@ -57,6 +62,7 @@ public:
   nscolor         mPenColor;
   nscolor         mTextColor;
   nsLineStyle     mLineStyle;
+  PRInt32         mFlags;
 };
 
 /** ---------------------------------------------------
@@ -344,6 +350,50 @@ NS_IMETHODIMP nsRenderingContextPS :: IsVisibleRect(const nsRect& aRect, PRBool 
  */
 NS_IMETHODIMP nsRenderingContextPS :: SetClipRect(const nsRect& aRect, nsClipCombine aCombine, PRBool &aClipEmpty)
 {
+nsRect  trect = aRect;
+int     cliptype;
+
+  mStates->mLocalClip = aRect;
+
+	mTMatrix->TransformCoord(&trect.x, &trect.y,&trect.width, &trect.height);
+  mStates->mFlags |= FLAG_LOCAL_CLIP_VALID;
+
+  // how we combine the new rect with the previous?
+  if (aCombine == nsClipCombine_kIntersect){
+    
+    //PushClipState();
+    // push the clipstate onto the postscript stack
+    xl_graphics_save(mPrintContext);
+
+    //cliptype = ::IntersectClipRect(mDC, trect.x,trect.y,trect.XMost(),trect.YMost());
+  } else if (aCombine == nsClipCombine_kUnion){
+    //PushClipState();
+    xl_graphics_save(mPrintContext);
+    //HRGN  tregion = ::CreateRectRgn(trect.x,trect.y,trect.XMost(),trect.YMost());
+
+    //cliptype = ::ExtSelectClipRgn(mDC, tregion, RGN_OR);
+    //::DeleteObject(tregion);
+  }else if (aCombine == nsClipCombine_kSubtract){
+    //PushClipState();
+    xl_graphics_save(mPrintContext);
+
+    //cliptype = ::ExcludeClipRect(mDC, trect.x,trect.y,trect.XMost(),trect.YMost());
+  }else if (aCombine == nsClipCombine_kReplace){
+    //PushClipState();
+    xl_graphics_save(mPrintContext);
+
+    //HRGN  tregion = ::CreateRectRgn(trect.x,trect.y,trect.XMost(),trect.YMost());
+    //cliptype = ::SelectClipRgn(mDC, tregion);
+    //::DeleteObject(tregion);
+  }else{
+    NS_ASSERTION(FALSE, "illegal clip combination");
+  }
+
+  if (cliptype == NULLREGION)
+    aClipEmpty = PR_TRUE;
+  else
+    aClipEmpty = PR_FALSE;
+
   return NS_OK;
 }
 
@@ -354,8 +404,14 @@ NS_IMETHODIMP nsRenderingContextPS :: SetClipRect(const nsRect& aRect, nsClipCom
 NS_IMETHODIMP 
 nsRenderingContextPS :: GetClipRect(nsRect &aRect, PRBool &aClipValid)
 {
-  return NS_OK; 
-}
+  if (mStates->mFlags & FLAG_LOCAL_CLIP_VALID){
+    aRect = mStates->mLocalClip;
+    aClipValid = PR_TRUE;
+  }else{
+    aClipValid = PR_FALSE;
+  }
+
+  return NS_OK;}
 
 /** ---------------------------------------------------
  *  See documentation in nsIRenderingContext.h
@@ -523,14 +579,9 @@ nsRenderingContextPS :: DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord 
 	mTMatrix->TransformCoord(&aX0,&aY0);
 	mTMatrix->TransformCoord(&aX1,&aY1);
 
+  // this has the moveto,lineto and the stroke
   xl_line(mPrintContext,NS_PIXELS_TO_POINTS(aX0),NS_PIXELS_TO_POINTS(aY0),
-                      NS_PIXELS_TO_POINTS(aX1),NS_PIXELS_TO_POINTS(aY1),1);
-
-  //SetupPen();
-
-  // support dashed lines here
-  //::MoveToEx(mDC, (int)(aX0), (int)(aY0), NULL);
-  //::LineTo(mDC, (int)(aX1), (int)(aY1));
+          NS_PIXELS_TO_POINTS(aX1),NS_PIXELS_TO_POINTS(aY1),1);
 
   return NS_OK;
 }
@@ -543,36 +594,29 @@ NS_IMETHODIMP
 nsRenderingContextPS :: DrawPolyline(const nsPoint aPoints[], PRInt32 aNumPoints)
 {
 
-  if (nsLineStyle_kNone == mCurrLineStyle)
-    return NS_OK;
+const nsPoint*  np;
+POINT           pp;
 
   // First transform nsPoint's into POINT's; perform coordinate space
   // transformation at the same time
-  POINT pts[20];
-  POINT* pp0 = pts;
+  np = &aPoints[0];
 
-  if (aNumPoints > 20)
-    pp0 = new POINT[aNumPoints];
+	pp.x = np->x;
+	pp.y = np->y;
+  mTMatrix->TransformCoord((int*)&pp.x,(int*)&pp.y);
+  xl_moveto_loc(mPrintContext,NS_PIXELS_TO_POINTS(pp.x),NS_PIXELS_TO_POINTS(pp.y));
+  np++;
 
-  POINT* pp = pp0;
-  const nsPoint* np = &aPoints[0];
-
-	for (PRInt32 i = 0; i < aNumPoints; i++, pp++, np++){
-		pp->x = np->x;
-		pp->y = np->y;
-		mTMatrix->TransformCoord((int*)&pp->x,(int*)&pp->y);
+  // we are ignoring the linestyle
+	for (PRInt32 i = 1; i < aNumPoints; i++, np++){
+		pp.x = np->x;
+		pp.y = np->y;
+		mTMatrix->TransformCoord((int*)&pp.x,(int*)&pp.y);
+    xl_lineto(mPrintContext,NS_PIXELS_TO_POINTS(pp.x),NS_PIXELS_TO_POINTS(pp.y));
 	}
 
-
-
-
-  // Draw the polyline
-  //SetupPen();
-  //::Polyline(mDC, pp0, int(aNumPoints));
-
-  // Release temporary storage if necessary
-  if (pp0 != pts)
-    delete pp0;
+  // we dont close the path, this will give us a polyline
+  xl_stroke(mPrintContext);
 
   return NS_OK;
 }
@@ -584,17 +628,14 @@ nsRenderingContextPS :: DrawPolyline(const nsPoint aPoints[], PRInt32 aNumPoints
 NS_IMETHODIMP 
 nsRenderingContextPS :: DrawRect(const nsRect& aRect)
 {
-RECT nr;
 nsRect	tr;
 
 	tr = aRect;
 	mTMatrix->TransformCoord(&tr.x,&tr.y,&tr.width,&tr.height);
-	nr.left = tr.x;
-	nr.top = tr.y;
-	nr.right = tr.x+tr.width;
-	nr.bottom = tr.y+tr.height;
 
-  //::FrameRect(mDC, &nr, SetupSolidBrush());
+  xl_moveto(mPrintContext, NS_PIXELS_TO_POINTS(tr.x), NS_PIXELS_TO_POINTS(tr.y));
+  xl_box(mPrintContext, NS_PIXELS_TO_POINTS(tr.width), NS_PIXELS_TO_POINTS(tr.height));
+  xl_stroke(mPrintContext);
 
   return NS_OK;
 }
@@ -606,15 +647,11 @@ nsRect	tr;
 NS_IMETHODIMP 
 nsRenderingContextPS :: DrawRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
-RECT nr;
 
 	mTMatrix->TransformCoord(&aX,&aY,&aWidth,&aHeight);
-	nr.left = aX;
-	nr.top = aY;
-	nr.right = aX+aWidth;
-	nr.bottom = aY+aHeight;
-
-  //::FrameRect(mDC, &nr, SetupSolidBrush());
+  xl_moveto(mPrintContext, NS_PIXELS_TO_POINTS(aX), NS_PIXELS_TO_POINTS(aY));
+  xl_box(mPrintContext, NS_PIXELS_TO_POINTS(aWidth), NS_PIXELS_TO_POINTS(aHeight));
+  xl_stroke(mPrintContext);
 
   return NS_OK;
 }
@@ -626,19 +663,17 @@ RECT nr;
 NS_IMETHODIMP 
 nsRenderingContextPS :: FillRect(const nsRect& aRect)
 {
-  RECT nr;
-	nsRect	tr;
+nsRect	tr;
 
 	tr = aRect;
 	mTMatrix->TransformCoord(&tr.x,&tr.y,&tr.width,&tr.height);
-	nr.left = tr.x;
-	nr.top = tr.y;
-	nr.right = tr.x+tr.width;
-	nr.bottom = tr.y+tr.height;
 
-	PostscriptFillRect(NS_PIXELS_TO_POINTS(tr.x), NS_PIXELS_TO_POINTS(tr.y), 
-		 NS_PIXELS_TO_POINTS(tr.width), NS_PIXELS_TO_POINTS(tr.height));
+  xl_moveto(mPrintContext, NS_PIXELS_TO_POINTS(tr.x), NS_PIXELS_TO_POINTS(tr.y));
+  xl_box(mPrintContext, NS_PIXELS_TO_POINTS(tr.width), NS_PIXELS_TO_POINTS(tr.height));
+  xl_stroke(mPrintContext);
 
+  // should be fill, but layout ordering is broken, so we will settle for this now
+  //xl_fill(mPrintContext);
   return NS_OK;
 }
 
@@ -649,17 +684,12 @@ nsRenderingContextPS :: FillRect(const nsRect& aRect)
 NS_IMETHODIMP 
 nsRenderingContextPS :: FillRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
-  RECT nr;
-	nsRect	tr;
 
 	mTMatrix->TransformCoord(&aX,&aY,&aWidth,&aHeight);
-	nr.left = aX;
-	nr.top = aY;
-	nr.right = aX+aWidth;
-	nr.bottom = aY+aHeight;
-
-  //::FillRect(mDC, &nr, SetupSolidBrush());
-
+  xl_moveto(mPrintContext, NS_PIXELS_TO_POINTS(aX), NS_PIXELS_TO_POINTS(aY));
+  xl_box(mPrintContext, NS_PIXELS_TO_POINTS(aWidth), NS_PIXELS_TO_POINTS(aHeight));
+  xl_stroke(mPrintContext);
+  // should be fill, but layout ordering is broken, so we will settle for this now
   return NS_OK;
 }
 
@@ -670,38 +700,29 @@ nsRenderingContextPS :: FillRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord
 NS_IMETHODIMP 
 nsRenderingContextPS :: DrawPolygon(const nsPoint aPoints[], PRInt32 aNumPoints)
 {
+const nsPoint*  np;
+POINT           pp;
+
   // First transform nsPoint's into POINT's; perform coordinate space
   // transformation at the same time
-  POINT pts[20];
-  POINT* pp0 = pts;
+  np = &aPoints[0];
 
-  if (aNumPoints > 20)
-    pp0 = new POINT[aNumPoints];
+	pp.x = np->x;
+	pp.y = np->y;
+  mTMatrix->TransformCoord((int*)&pp.x,(int*)&pp.y);
+  xl_moveto_loc(mPrintContext,NS_PIXELS_TO_POINTS(pp.x),NS_PIXELS_TO_POINTS(pp.y));
+  np++;
 
-  POINT* pp = pp0;
-  const nsPoint* np = &aPoints[0];
-
-	for (PRInt32 i = 0; i < aNumPoints; i++, pp++, np++){
-		pp->x = np->x;
-		pp->y = np->y;
-		//mTMatrix->TransformCoord((int*)&pp->x,(int*)&pp->y);
+  // we are ignoring the linestyle
+	for (PRInt32 i = 1; i < aNumPoints; i++, np++){
+		pp.x = np->x;
+		pp.y = np->y;
+		mTMatrix->TransformCoord((int*)&pp.x,(int*)&pp.y);
+    xl_lineto(mPrintContext,NS_PIXELS_TO_POINTS(pp.x),NS_PIXELS_TO_POINTS(pp.y));
 	}
 
-  // Outline the polygon - note we are implicitly ignoring the linestyle here
-  LOGBRUSH lb;
-  lb.lbStyle = BS_NULL;
-  lb.lbColor = 0;
-  lb.lbHatch = 0;
-  //SetupSolidPen();
-  //HBRUSH brush = ::CreateBrushIndirect(&lb);
-  //HBRUSH oldBrush = (HBRUSH)::SelectObject(mDC, brush);
-  //::Polygon(mDC, pp0, int(aNumPoints));
-  //::SelectObject(mDC, oldBrush);
-  //::DeleteObject(brush);
-
-  // Release temporary storage if necessary
-  if (pp0 != pts)
-    delete pp0;
+  xl_closepath(mPrintContext);
+  xl_stroke(mPrintContext);
 
   return NS_OK;
 }
@@ -713,37 +734,29 @@ nsRenderingContextPS :: DrawPolygon(const nsPoint aPoints[], PRInt32 aNumPoints)
 NS_IMETHODIMP 
 nsRenderingContextPS :: FillPolygon(const nsPoint aPoints[], PRInt32 aNumPoints)
 {
+const nsPoint*  np;
+POINT           pp;
+
   // First transform nsPoint's into POINT's; perform coordinate space
   // transformation at the same time
+  np = &aPoints[0];
 
-  POINT pts[20];
-  POINT* pp0 = pts;
+	pp.x = np->x;
+	pp.y = np->y;
+  mTMatrix->TransformCoord((int*)&pp.x,(int*)&pp.y);
+  xl_moveto_loc(mPrintContext,NS_PIXELS_TO_POINTS(pp.x),NS_PIXELS_TO_POINTS(pp.y));
+  np++;
 
-  if (aNumPoints > 20)
-    pp0 = new POINT[aNumPoints];
-
-  POINT* pp = pp0;
-  const nsPoint* np = &aPoints[0];
-
-	for (PRInt32 i = 0; i < aNumPoints; i++, pp++, np++){
-		pp->x = np->x;
-		pp->y = np->y;
-		mTMatrix->TransformCoord((int*)&pp->x,(int*)&pp->y);
+  // we are ignoring the linestyle
+	for (PRInt32 i = 1; i < aNumPoints; i++, np++){
+		pp.x = np->x;
+		pp.y = np->y;
+		mTMatrix->TransformCoord((int*)&pp.x,(int*)&pp.y);
+    xl_lineto(mPrintContext,NS_PIXELS_TO_POINTS(pp.x),NS_PIXELS_TO_POINTS(pp.y));
 	}
 
-  // Fill the polygon
-  //SetupSolidBrush();
-
-  //if (NULL == mNullPen)
-    //mNullPen = ::CreatePen(PS_NULL, 0, 0);
-
-  //HPEN oldPen = (HPEN)::SelectObject(mDC, mNullPen);
-  //::Polygon(mDC, pp0, int(aNumPoints));
-  //::SelectObject(mDC, oldPen);
-
-  // Release temporary storage if necessary
-  if (pp0 != pts)
-    delete pp0;
+  xl_closepath(mPrintContext);
+  xl_fill(mPrintContext);
 
   return NS_OK;
 }
@@ -952,8 +965,10 @@ nsRenderingContextPS :: GetWidth(const char* aString,PRUint32 aLength,nscoord& a
 
     SetupFontAndColor();
     aWidth = 12;
-    //::GetTextExtentPoint32W(mDC, aString, aLength, &size);
-    //aWidth = NSToCoordRound(float(size.cx) * mP2T);
+   
+    // XXX WINDOWS ONLY
+    aWidth = ::GetTextExtentPoint32(((nsDeviceContextPS*)mContext)->mDC , aString, aLength, &size);
+    aWidth = NSToCoordRound(float(size.cx) * mP2T);
 
     return NS_OK;
   }
@@ -983,8 +998,10 @@ nsRenderingContextPS :: GetWidth(const PRUnichar *aString,PRUint32 aLength,nscoo
 
     SetupFontAndColor();
     aWidth = 12;
-    //::GetTextExtentPoint32W(mDelRenderingContext->mDC, aString, aLength, &size);
-    //aWidth = NSToCoordRound(float(size.cx) * mP2T);
+
+    // XXX WINDOWS ONLY
+    aWidth = ::GetTextExtentPoint32W( ((nsDeviceContextPS*)mContext)->mDC, aString, aLength, &size);
+    aWidth = NSToCoordRound(float(size.cx) * mP2T);
 
     if (nsnull != aFontID)
       *aFontID = 0;
@@ -1020,9 +1037,7 @@ PRInt32       y = aY;
   }
 
 	mTMatrix->TransformCoord(&x, &y);
-  //::ExtTextOut(mDC, x, y, 0, NULL, aString, aLength, aSpacing ? dx0 : NULL);
-   //XXX: Remove ::ExtTextOut later
-  PostscriptTextOut(aString, aLength, NS_PIXELS_TO_POINTS(x), NS_PIXELS_TO_POINTS(y), 0, aSpacing ? dx0 : NULL, FALSE);
+  PostscriptTextOut(aString, aLength, NS_PIXELS_TO_POINTS(x), NS_PIXELS_TO_POINTS(y), aLength, aSpacing ? dx0 : NULL, FALSE);
 
   if ((nsnull != aSpacing) && (dx0 != dxMem)) {
     delete [] dx0;
@@ -1039,7 +1054,7 @@ PRInt32       y = aY;
     if (decorations & NS_FONT_DECORATION_OVERLINE){
       nscoord offset;
       nscoord size;
-      //mFontMetrics->GetUnderline(offset, size);
+      mFontMetrics->GetUnderline(offset, size);
       FillRect(aX, aY, aWidth, size);
     }
   }
@@ -1065,10 +1080,6 @@ nsIFontMetrics  *fMetrics;
   SetupFontAndColor();
 
   if (nsnull != aSpacing){
-    // XXX Fix path to use a twips transform in the DC and use the
-    // spacing values directly and let windows deal with the sub-pixel
-    // positioning.
-
     // Slow, but accurate rendering
     const PRUnichar* end = aString + aLength;
     while (aString < end){
@@ -1082,6 +1093,21 @@ nsIFontMetrics  *fMetrics;
   } else {
     mTMatrix->TransformCoord(&x, &y);
 	  PostscriptTextOut((const char *)aString, aLength, NS_PIXELS_TO_POINTS(x), NS_PIXELS_TO_POINTS(y), aFontID, aSpacing, PR_TRUE);
+  }
+
+  fMetrics = mFontMetrics;
+
+  if (nsnull != fMetrics){
+    nsFont *font;
+    fMetrics->GetFont(font);
+    PRUint8 decorations = font->decorations;
+
+    if (decorations & NS_FONT_DECORATION_OVERLINE){
+      nscoord offset;
+      nscoord size;
+      fMetrics->GetUnderline(offset, size);
+      //FillRect(aX, aY, aWidth, size);
+    }
   }
   return NS_OK;
 }
@@ -1187,11 +1213,20 @@ nsRenderingContextPS :: SetupFontAndColor(void)
 {
 nscoord         fontHeight = 0;
 nsFont          *font;
-nsIFontMetrics  *fMetrics;
+nsFontHandle    fontHandle;       // WINDOWS ONLY
 
-  fMetrics = mFontMetrics;
-  fMetrics->GetHeight(fontHeight);
-  fMetrics->GetFont(font);
+
+  mFontMetrics->GetHeight(fontHeight);
+  mFontMetrics->GetFont(font);
+
+
+  mFontMetrics->GetFontHandle(fontHandle);
+
+  HFONT         tfont = (HFONT)fontHandle;                      // WINDOWS ONLY
+  ::SelectObject(((nsDeviceContextPS*)mContext)->mDC, tfont);    // WINDOWS ONLY
+
+  //mStates->mFont = mCurrFont = tfont;
+  mStates->mFontMetrics = mFontMetrics;
 
   PostscriptFont(fontHeight,font->style,font->variant,font->weight,font->decorations);
 }
@@ -1205,17 +1240,6 @@ nsRenderingContextPS :: PostscriptColor(nscolor aColor)
 {
   XP_FilePrintf(mPrintContext->prSetup->out,"%3.2f %3.2f %3.2f setrgbcolor\n", NS_PS_RED(aColor), NS_PS_GREEN(aColor),
 		  NS_PS_BLUE(aColor));
-}
-
-/** ---------------------------------------------------
- *  See documentation in nsRenderingContextPS.h
- *	@update 12/21/98 dwc
- */
-void 
-nsRenderingContextPS :: PostscriptFillRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
-{
-  xl_moveto(mPrintContext, aX, aY);
-  xl_box(mPrintContext, aWidth, aHeight);
 }
 
 /** ---------------------------------------------------
@@ -1301,18 +1325,14 @@ nsRenderingContextPS :: PostscriptTextOut(const char *aString, PRUint32 aLength,
 int             ptr = 0;
 unsigned int    i;
 char            *buf = 0;
-nscoord         fontHeight = 0;
+nscoord         fontHeight = 0,yCoord;
 nsFont          *font;
-nsIFontMetrics  *fMetrics;
 
-  fMetrics = mFontMetrics;
-  fMetrics->GetHeight(fontHeight);
-  fMetrics->GetFont(font);
+  mFontMetrics->GetHeight(fontHeight);
+  mFontMetrics->GetFont(font);
 
-   //XXX: NGLAYOUT expects font to be positioned based on center.
-   // fontHeight / 2 is a crude approximation of this. TODO: use the correct
-   // postscript command to offset from center of the text.
-  xl_moveto(mPrintContext, aX, aY + (fontHeight / 2));
+  yCoord = aY + (fontHeight / 2);
+  xl_moveto(mPrintContext, aX, yCoord);
   if (PR_TRUE == aIsUnicode) {
     //XXX: Investigate how to really do unicode with Postscript
 	  // Just remove the extra byte per character and draw that instead
@@ -1320,7 +1340,7 @@ nsIFontMetrics  *fMetrics;
 
     for (i = 0; i < aLength; i++) {
       buf[i] = aString[ptr];
-	  ptr+=2;
+	    ptr+=2;
 	  }
 	xl_show(mPrintContext, buf, aLength, "");
 	delete buf;

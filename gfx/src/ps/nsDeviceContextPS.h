@@ -28,17 +28,24 @@
 #include "nsVoidArray.h"
 #include "nsPSStructs.h"
 
-extern "C" void xl_begin_document(PSContext *cx);
-extern "C" void xl_initialize_translation(PSContext *cx, PrintSetup* ps);
-extern "C" void xl_end_document(PSContext *cx);
-extern "C" void xl_begin_page(PSContext *cx, int pn);
-extern "C" void xl_end_page(PSContext *cx, int pn);
-extern "C" void xl_finalize_translation(PSContext *cx);
-extern "C" void xl_show(PSContext *cx, char* txt, int len, char *align);
-extern "C" void xl_translate(PSContext* cx, int x, int y);
-extern "C" void xl_moveto(PSContext* cx, int x, int y);
-extern "C" void xl_line(PSContext* cx, int x1, int y1, int x2, int y2, int thick);
-extern "C" void xl_box(PSContext* cx, int w, int h);
+extern "C" void xl_begin_document(PSContext *aCX);
+extern "C" void xl_initialize_translation(PSContext *aCX, PrintSetup* aPS);
+extern "C" void xl_end_document(PSContext *aCX);
+extern "C" void xl_begin_page(PSContext *aCX, int aPN);
+extern "C" void xl_end_page(PSContext *aCX, int aPN);
+extern "C" void xl_finalize_translation(PSContext *aCX);
+extern "C" void xl_show(PSContext *aCX, char* aTxt, int aLen, char *aAlign);
+extern "C" void xl_translate(PSContext* aCX, int aX, int aY);
+extern "C" void xl_moveto(PSContext* aCX, int aX, int aY);
+extern "C" void xl_line(PSContext* aCX, int aX1, int aY1, int aX2, int aY2, int aThick);
+extern "C" void xl_box(PSContext* aCX, int w, int h);
+extern "C" void xl_moveto_loc(PSContext* aCX, int aX, int aY);
+extern "C" void xl_lineto(PSContext* aCX, int aX1, int aY1);
+extern "C" void xl_stroke(PSContext* aCX);
+extern "C" void xl_fill(PSContext* aCX);
+extern "C" void xl_closepath(PSContext* aCX);
+extern "C" void xl_graphics_save(PSContext *aCX);
+extern "C" void xl_graphics_restore(PSContext *aCX);
 
 class nsDeviceContextWin;       // need to be a friend of the class using us.
 
@@ -66,15 +73,16 @@ public:
 
 
   NS_IMETHOD 	  CheckFontExistence(const nsString& aFontName);
-  NS_IMETHOD 	  CreateILColorSpace(IL_ColorSpace*& aColorSpace);
+  //NS_IMETHOD 	  CreateILColorSpace(IL_ColorSpace*& aColorSpace);
   NS_IMETHODIMP GetILColorSpace(IL_ColorSpace*& aColorSpace);
   NS_IMETHOD 	  GetDepth(PRUint32& aDepth);
   NS_IMETHOD 	  ConvertPixel(nscolor aColor, PRUint32 & aPixel);
 
   NS_IMETHOD 	GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRInt32 &aHeight);
 
-  NS_IMETHOD 	GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
-                                 nsIDeviceContext *&aContext);
+  NS_IMETHOD 	GetDeviceContextFor(nsIDeviceContextSpec *aDevice,nsIDeviceContext *&aContext);
+  NS_IMETHOD  GetSystemAttribute(nsSystemAttrID anID, SystemAttrStruct * aInfo) const;
+
 
   NS_IMETHOD  GetMetricsFor(const nsFont& aFont, nsIFontMetrics*& aMetrics);
   NS_IMETHOD 	BeginDocument(void);
@@ -93,7 +101,7 @@ protected:
   PrintSetup            *mPrintSetup;
   float                 mPixelScale;
   nsVoidArray           mFontMetrics;  // we are not using the normal font cache, this is special for PostScript.
-
+  PRUint16              mPageNumber;
 
 
 public:
@@ -101,7 +109,7 @@ public:
   PSContext*    GetPrintContext() { return mPrintContext; }
 
 public:
-  HDC           mDC;
+  HDC           mDC;               // this is temporary!!!
 
 friend nsDeviceContextWin;         // need to be a friend of the class using us.
 };

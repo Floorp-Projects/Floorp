@@ -161,12 +161,6 @@ public:
   void PostscriptColor(nscolor aColor);
 
   /** ---------------------------------------------------
-   *  Fill a postscript rectangle to a file set up by the nsDeviceContextPS
-   *	@update 12/21/98 dwc
-   */
-  void PostscriptFillRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
-
-  /** ---------------------------------------------------
    *  Render a bitmap in postscript to a file set up by the nsDeviceContextPS
    *	@update 12/21/98 dwc
    */

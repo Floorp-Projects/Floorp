@@ -21,6 +21,7 @@
 #include "nsString.h"
 #include "nsFontMetricsPS.h"
 #include "prprf.h"
+#include "il_util.h"
 
 static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
 
@@ -80,7 +81,7 @@ NS_IMETHODIMP nsDeviceContextPS :: Init(nsIDeviceContext *aCreatingDeviceContext
 float origscale, newscale;
 float t2d, a2d;
 
-  mDepth = 1;
+  mDepth = 1;     // just for arguments sake
 
   mDC = aTheDC;
 
@@ -169,14 +170,6 @@ NS_IMETHODIMP nsDeviceContextPS::GetDepth(PRUint32& aDepth)
   return(1);    // postscript is 1 bit
 }
 
-/** ---------------------------------------------------
- *  See documentation in nsIDeviceContext.h
- *	@update 12/21/98 dwc
- */
-NS_IMETHODIMP nsDeviceContextPS::CreateILColorSpace(IL_ColorSpace*& aColorSpace)
-{
-  return NS_OK;
-}
 
 /** ---------------------------------------------------
  *  See documentation in nsIDeviceContext.h
@@ -184,10 +177,46 @@ NS_IMETHODIMP nsDeviceContextPS::CreateILColorSpace(IL_ColorSpace*& aColorSpace)
  */
 NS_IMETHODIMP nsDeviceContextPS::GetILColorSpace(IL_ColorSpace*& aColorSpace)
 {
-  aColorSpace = nsnull;
+#ifdef NOTNOW
+  if (nsnull == mColorSpace) {
+    mColorSpace = IL_CreateGreyScaleColorSpace(1, 1);
+
+    if (nsnull == mColorSpace) {
+      aColorSpace = nsnull;
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+  }
+
+  // Return the color space
+  aColorSpace = mColorSpace;
+  IL_AddRefToColorSpace(aColorSpace);
+#endif
+
+  if(nsnull==mColorSpace) {
+      IL_RGBBits colorRGBBits;
+    
+      // Create a 24-bit color space
+      colorRGBBits.red_shift = 16;  
+      colorRGBBits.red_bits = 8;
+      colorRGBBits.green_shift = 8;
+      colorRGBBits.green_bits = 8; 
+      colorRGBBits.blue_shift = 0; 
+      colorRGBBits.blue_bits = 8;  
+    
+      mColorSpace = IL_CreateTrueColorSpace(&colorRGBBits, 24);
+
+    if (nsnull == mColorSpace) {
+      aColorSpace = nsnull;
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+  }
+
+  // Return the color space
+  aColorSpace = mColorSpace;
+  IL_AddRefToColorSpace(aColorSpace);
+
   return NS_OK;
 }
-
 
 /** ---------------------------------------------------
  *  See documentation in nsIDeviceContext.h
@@ -197,6 +226,20 @@ NS_IMETHODIMP nsDeviceContextPS :: CheckFontExistence(const nsString& aFontName)
 {
 
   // XXX this needs to find out if this font is supported for postscript
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDeviceContextPS :: GetSystemAttribute(nsSystemAttrID anID, SystemAttrStruct * aInfo) const
+{
+  nsresult status = NS_OK;
+
+  switch (anID) {
+    case 0:
+      break;
+    default:
+      break;
+  }
+
   return NS_OK;
 }
 
@@ -245,7 +288,7 @@ PrintSetup* ps = new PrintSetup();
   ps->header = "header";
   ps->footer = "footer";
   ps->sizes = NULL;
-  ps->reverse = 1;                 /* Output order */
+  ps->reverse = 0;                 /* Output order, 0 is acsending */
   ps->color = TRUE;                /* Image output */
   ps->deep_color = TRUE;		      /* 24 bit color output */
   ps->landscape = FALSE;           /* Rotated output */
@@ -311,9 +354,8 @@ PrintSetup* ps = new PrintSetup();
   xl_initialize_translation(mPrintContext, ps);
   xl_begin_document(mPrintContext);	
   mPrintSetup = ps;
+  mPageNumber = 1;  // we are on the first page
   
-  // begin the page
-  xl_begin_page(mPrintContext, 1); 
 
   return NS_OK;
 }
@@ -324,8 +366,6 @@ PrintSetup* ps = new PrintSetup();
  */
 NS_IMETHODIMP nsDeviceContextPS::EndDocument(void)
 {
-   // end the page
-  xl_end_page(mPrintContext, 1);
 
   // end the document
   xl_end_document(mPrintContext);
@@ -355,6 +395,8 @@ NS_IMETHODIMP nsDeviceContextPS::EndDocument(void)
  */
 NS_IMETHODIMP nsDeviceContextPS::BeginPage(void)
 {
+  // begin the page
+  xl_begin_page(mPrintContext, mPageNumber); 
   return NS_OK;
 }
 
@@ -365,6 +407,9 @@ NS_IMETHODIMP nsDeviceContextPS::BeginPage(void)
  */
 NS_IMETHODIMP nsDeviceContextPS::EndPage(void)
 {
+  // end the page
+  xl_end_page(mPrintContext, mPageNumber);
+  mPageNumber++;
   return NS_OK;
 }
 

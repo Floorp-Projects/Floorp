@@ -70,10 +70,12 @@ typedef struct LineRecord_struct LineRecord;
 ** PAGE coordinates are 720/inch, layout happens in this space
 ** POINT coordinates are 72/inch, the printer wants these
 */
+
 #define INCH_TO_PAGE(f) ((int) (.5 + (f)*720))
 #define PAGE_TO_POINT_I(f) ((int) ((f) / 10.0))
 #define PAGE_TO_POINT_F(f) ((f) / 10.0)
 #define POINT_TO_PAGE(p) ((p)*10)
+
 
 /*
 ** Used to pass info into text and/or postscript translation
