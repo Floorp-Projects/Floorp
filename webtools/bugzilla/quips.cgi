@@ -46,23 +46,6 @@ my $action = $::FORM{'action'} || "";
 
 if ($action eq "show") {
     # Read in the entire quip list
-    SendSQL("SELECT quip FROM quips");
-
-    my @quips;
-    while (MoreSQLData()) {
-        my ($quip) = FetchSQLData();
-        push(@quips, $quip);
-    }
-
-    $vars->{'quips'} = \@quips;
-    $vars->{'show_quips'} = 1;
-}
-
-if ($action eq "edit") {
-    if (!UserInGroup('admin')) {
-        ThrowUserError("quips_edit_denied");
-    }
-    # Read in the entire quip list
     SendSQL("SELECT quipid,userid,quip FROM quips");
 
     my $quips;
@@ -83,7 +66,7 @@ if ($action eq "edit") {
     $vars->{'quipids'} = \@quipids;
     $vars->{'quips'} = $quips;
     $vars->{'users'} = $users;
-    $vars->{'edit_quips'} = 1;
+    $vars->{'show_quips'} = 1;
 }
 
 if ($action eq "add") {

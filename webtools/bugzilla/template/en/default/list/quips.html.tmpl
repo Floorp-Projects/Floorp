@@ -62,46 +62,51 @@
 </form>
 
 [% IF show_quips %]
-  <h2>
-    Existing quips:
-  </h2>
-  <ul>
-    [% FOREACH quip = quips %]
-      <li>[% quip FILTER html %]</li>
-    [% END %]
-  </ul>
-[% ELSIF edit_quips %]
-  <h2>Edit existing quips:</h2>
-  <table border="1">
-    <thead><tr>
-      <th>Action</th>
-      <th>User</th>
-      <th>Quip</th>
-    </tr></thead><tbody>
-    [% FOREACH quipid = quipids %]
-      <tr>
-        <td>
-          <a href="quips.cgi?action=delete&amp;quipid=[% quipid FILTER uri%]">
-            Delete
-          </a>
-        </td>
-        <td>
-          [% userid = quips.$quipid.userid  %]
-          [% users.$userid FILTER html      %]
-          [% "Unknown" IF NOT users.$userid %]
-        </td>
-        <td>[% quips.$quipid.quip FILTER html %]</td>
-      </tr>
-    [% END %]
-    </tbody></table>
+  [% IF !UserInGroup('admin') %]
+    <h2>
+      Existing quips:
+    </h2>
+    <ul>
+      [% FOREACH quip = quips %]
+        <li>[% quip FILTER html %]</li>
+      [% END %]
+    </ul>
+  [% ELSE %]
+    <h2>Edit existing quips:</h2>
+    <table border="1">
+      <thead><tr>
+        <th>Quip</th>
+        <th>Author</th>
+        <th>Action</th>
+      </tr></thead><tbody>
+      [% FOREACH quipid = quipids %]
+        <tr>
+          <td>[% quips.$quipid.quip FILTER html %]</td>
+          <td>
+            [% userid = quips.$quipid.userid  %]
+            [% users.$userid FILTER html      %]
+            [% "Unknown" IF NOT users.$userid %]
+          </td>
+          <td>
+            <a href="quips.cgi?action=delete&amp;quipid=[% quipid FILTER uri%]">
+              Delete
+            </a>
+          </td>
+        </tr>
+      [% END %]
+      </tbody>
+    </table>
+    <br>
+  [% END %]
 [% ELSE %]
   <p>
     Those who like their wisdom in large doses can 
-    <a href="quips.cgi?action=show">view the whole quip list</a>.
+    <a href="quips.cgi?action=show">view 
+    [% IF UserInGroup('admin') %]
+      and edit
+    [% END %]
+    the whole quip list</a>.
   </p>
-  [% IF UserInGroup('admin') %]
-    <p><a href="quips.cgi?action=edit">Edit</a> the quip list.</p>
-  [% END %]
 [% END %]
 
 [% PROCESS global/footer.html.tmpl %]
