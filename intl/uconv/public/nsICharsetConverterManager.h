@@ -21,6 +21,7 @@
 #define nsICharsetConverterManager_h___
 
 #include "nsString.h"
+#include "nsError.h"
 #include "nsISupports.h"
 #include "nsIUnicodeEncoder.h"
 #include "nsIUnicodeDecoder.h"
@@ -35,11 +36,8 @@ NS_DECLARE_ID(kICharsetConverterManagerIID,
 NS_DECLARE_ID(kCharsetConverterManagerCID, 
   0x1e3f79f1, 0x6b6b, 0x11d2, 0x8a, 0x86, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36);
 
-// XXX move this into xpcom/nsError.h
-#define NS_ERROR_MODULE_INTL    10
-
-#define NS_CONVERTER_NOT_FOUND \
-  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_INTL,1)
+#define NS_ERROR_UCONV_NOCONV \
+  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_UCONV,1)
 
 /**
  * Interface for a Manager of Charset Converters.
@@ -50,7 +48,7 @@ NS_DECLARE_ID(kCharsetConverterManagerCID,
  * source-code only, in the attached documents I will be either using the 
  * full expression or I'll specify a different convetion.
  *
- * XXX Move the ICharsetManager methods (the last methods in the interface) 
+ * XXX Move the ICharsetManager methods (the last 2 methods in the interface) 
  * into a separate interface. They are conceptually independent. I left them 
  * here only for easier implementation.
  *
@@ -69,7 +67,7 @@ public:
    *
    * @param aDest   [IN] the known name/alias of the destination charset
    * @param aResult [OUT] the charset converter
-   * @return        NS_CONVERTER_NOT_FOUND if no converter was found for
+   * @return        NS_ERROR_UCONV_NOCONV if no converter was found for
    *                this charset
    */
   NS_IMETHOD GetUnicodeEncoder(const nsString * aDest, 
@@ -81,7 +79,7 @@ public:
    *
    * @param aSrc    [IN] the known name/alias of the source charset
    * @param aResult [OUT] the charset converter
-   * @return        NS_CONVERTER_NOT_FOUND if no converter was found for
+   * @return        NS_ERROR_UCONV_NOCONV if no converter was found for
    *                this charset
    */
   NS_IMETHOD GetUnicodeDecoder(const nsString * aSrc, 
