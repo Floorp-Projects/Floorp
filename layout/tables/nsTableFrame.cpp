@@ -1669,43 +1669,37 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext* aPresContext,
     
     // See if the pass1 maximum width is no longer valid because one of the
     // cell maximum widths changed
-    if (isAutoOrPctWidth) {
-      if (!IsMaximumWidthValid()) {
-        // Initialize the strategy and have it compute the natural size of
-        // the table
-        mTableLayoutStrategy->Initialize(aPresContext, nsnull, NS_UNCONSTRAINEDSIZE, aReflowState);
+    if (!IsMaximumWidthValid()) {
+      // Initialize the strategy and have it compute the natural size of
+      // the table
+      mTableLayoutStrategy->Initialize(aPresContext, nsnull, NS_UNCONSTRAINEDSIZE, aReflowState);
 
-        // Ask the strategy for the natural width of the content area 
-        aDesiredSize.mMaximumWidth = mTableLayoutStrategy->GetTableMaxWidth();
+      // Ask the strategy for the natural width of the content area 
+      aDesiredSize.mMaximumWidth = mTableLayoutStrategy->GetTableMaxWidth();
      
-        // Add in space for border
-        nsMargin border;
-        GetTableBorder (border); // this gets the max border value at every edge
-        aDesiredSize.mMaximumWidth += border.left + border.right;
+      // Add in space for border
+      nsMargin border;
+      GetTableBorder (border); // this gets the max border value at every edge
+      aDesiredSize.mMaximumWidth += border.left + border.right;
 
-        // Add in space for padding
-        aDesiredSize.mMaximumWidth += aReflowState.mComputedPadding.left +
-                                      aReflowState.mComputedPadding.right;
+      // Add in space for padding
+      aDesiredSize.mMaximumWidth += aReflowState.mComputedPadding.left +
+                                    aReflowState.mComputedPadding.right;
 
-        SetPreferredWidth(aDesiredSize.mMaximumWidth); // cache the value
-
-        // Initializing the table layout strategy assigns preliminary column
-        // widths. We can't leave the column widths this way, and so we need to
-        // balance the column widths to get them back to what we had previously.
-        // XXX It would be nice to have a cleaner way to calculate the updated
-        // maximum width
-        BalanceColumnWidths(aPresContext, aReflowState,
-                            nsSize(aReflowState.availableWidth, aReflowState.availableHeight), 
-                            aDesiredSize.maxElementSize);
-        // Now the maximum width is valid
-        mBits.mMaximumWidthValid = PR_TRUE;
-      } else {
-        aDesiredSize.mMaximumWidth = GetPreferredWidth();
-      }
-    } else {
-      // We're not auto width so the natural width is the same as the desired width
-      aDesiredSize.mMaximumWidth = aDesiredSize.width;
       SetPreferredWidth(aDesiredSize.mMaximumWidth); // cache the value
+
+      // Initializing the table layout strategy assigns preliminary column
+      // widths. We can't leave the column widths this way, and so we need to
+      // balance the column widths to get them back to what we had previously.
+      // XXX It would be nice to have a cleaner way to calculate the updated
+      // maximum width
+      BalanceColumnWidths(aPresContext, aReflowState,
+                          nsSize(aReflowState.availableWidth, aReflowState.availableHeight), 
+                          aDesiredSize.maxElementSize);
+      // Now the maximum width is valid
+      mBits.mMaximumWidthValid = PR_TRUE;
+    } else {
+      aDesiredSize.mMaximumWidth = GetPreferredWidth();
     }
   }
 
@@ -2823,6 +2817,8 @@ nscoord nsTableFrame::ComputeDesiredWidth(const nsHTMLReflowState& aReflowState)
 {
   nscoord desiredWidth = aReflowState.availableWidth;
   if (NS_UNCONSTRAINEDSIZE == desiredWidth) { 
+    // XXX this code path is not used, but if it is needed, then borders and padding must be added
+    NS_ASSERTION(PR_FALSE, "code path in ComputeDesiredWidth is not complete");
     nsITableLayoutStrategy* tableLayoutStrategy = mTableLayoutStrategy;
     if (mPrevInFlow) {
       // Get the table layout strategy from the first-in-flow
@@ -3347,21 +3343,6 @@ void nsTableFrame::SetTableWidth(nsIPresContext*          aPresContext,
   nsRect tableSize = mRect;
   tableSize.width = tableWidth;
   SetRect(aPresContext, tableSize);
-}
-
-nscoord 
-GetVertMarginBorderPadding(const nsHTMLReflowState* aReflowState)
-{
-  nscoord result = 0;
-  if (!aReflowState) return result;
-
-  nsMargin margin = aReflowState->mComputedMargin;
-  nsTableOuterFrame::ZeroAutoMargin(margin);
-  result += margin.top + margin.bottom;
-  result += aReflowState->mComputedBorderPadding.top + 
-            aReflowState->mComputedBorderPadding.bottom;
-
-  return result;
 }
 
 /**
@@ -4177,11 +4158,18 @@ nscoord nsTableFrame::GetMinTableWidth()
 }
 
 /** return the maximum width of the table.  Return 0 if the max width is unknown. */
-nscoord nsTableFrame::GetMaxTableWidth()
+nscoord nsTableFrame::GetMaxTableWidth(const nsHTMLReflowState& aState)
 {
   nscoord result = 0;
-  if (nsnull!=mTableLayoutStrategy)
-    result = mTableLayoutStrategy->GetTableMaxWidth();
+  if (mTableLayoutStrategy) {
+    if (eStyleUnit_Coord == aState.mStylePosition->mWidth.GetUnit()) {
+      // only fixed width values are returned as the preferred width
+      result = PR_MAX(aState.mComputedWidth, mTableLayoutStrategy->GetTableMinWidth());
+    }
+    else {
+      result = mTableLayoutStrategy->GetTableMaxWidth();
+    }
+  }
   return result;
 }
 

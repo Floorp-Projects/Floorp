@@ -802,7 +802,7 @@ public: /* ----- Cell Map public methods ----- */
 
   /** return the maximum content width of the table (excludes borders and padding). 
       Return 0 if the max width is unknown. */
-  nscoord GetMaxTableWidth();
+  nscoord GetMaxTableWidth(const nsHTMLReflowState& aReflowState);
 
   /** compute the max-element-size for the table
     * @param aMaxElementSize  [OUT] width field set to the min legal width of the table
