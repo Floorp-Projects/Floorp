@@ -94,7 +94,7 @@ static char *               m_SavedLine = NULL;
 typedef union
 {
 	char*		stringVal;
-	int32		intVal;
+	PRInt32		intVal;
 	PRBool		boolVal;
 } PrefValue;
  
@@ -106,7 +106,7 @@ typedef struct
 } PrefNode;
 
 static JSBool pref_HashJSPref(unsigned int argc, jsval *argv, PrefAction action);
-static XP_Bool pref_ValueChanged(PrefValue oldValue, PrefValue newValue, PrefType type);
+static PRBool pref_ValueChanged(PrefValue oldValue, PrefValue newValue, PrefType type);
 
 /* Hash table allocation */
 PR_IMPLEMENT(void *)
@@ -140,7 +140,7 @@ pref_FreeEntry(void *pool, PRHashEntry *he, uint flag)
 	}
 
     if (flag == HT_FREE_ENTRY) {
-		PR_FREEIF(he->key);
+		PR_FREEIF((void*)he->key);
         PR_Free(he);
 	}
 }
@@ -174,8 +174,8 @@ PRBool pref_VerifyLockFile(char* buf, long buflen);
 
 PrefResult pref_GetCharPref(const char *pref_name, char * return_buffer, int * length, PRBool get_default);
 PrefResult pref_CopyCharPref(const char *pref_name, char ** return_buffer, PRBool get_default);
-PrefResult pref_GetIntPref(const char *pref_name,int32 * return_int, PRBool get_default);
-PrefResult pref_GetBoolPref(const char *pref_name, XP_Bool * return_value, PRBool get_default);
+PrefResult pref_GetIntPref(const char *pref_name,PRInt32 * return_int, PRBool get_default);
+PrefResult pref_GetBoolPref(const char *pref_name, PRBool * return_value, PRBool get_default);
 
 JSBool PR_CALLBACK pref_BranchCallback(JSContext *cx, JSScript *script);
 void pref_ErrorReporter(JSContext *cx, const char *message,JSErrorReport *report);
@@ -340,7 +340,7 @@ PRBool pref_VerifyLockFile(char* buf, long buflen)
 }
 
 PR_IMPLEMENT(PrefResult)
-PREF_ReadLIJSFile(char *filename)
+PREF_ReadLIJSFile(const char *filename)
 {
 	PrefResult ok;
 
@@ -352,7 +352,7 @@ PREF_ReadLIJSFile(char *filename)
 }
 
 PR_IMPLEMENT(PrefResult)
-PREF_ReadUserJSFile(char *filename)
+PREF_ReadUserJSFile(const char *filename)
 {
 	PrefResult ok = pref_OpenFile(filename, PR_FALSE, PR_FALSE, PR_TRUE, PR_FALSE);
 
@@ -360,7 +360,7 @@ PREF_ReadUserJSFile(char *filename)
 }
 
 PR_IMPLEMENT(PRBool)
-PREF_Init(char *filename)
+PREF_Init(const char *filename)
 {
     PRBool ok = PR_TRUE;
 
@@ -378,7 +378,7 @@ PREF_Init(char *filename)
     }
 
     if (!m_mochaTaskState)
-		m_mochaTaskState = JS_Init((uint32) 0xffffffffL);
+		m_mochaTaskState = JS_Init((PRUint32) 0xffffffffL);
 
     if (!m_mochaContext) {
 		m_mochaContext = JS_NewContext(m_mochaTaskState, 8192);  /* ???? What size? */
@@ -680,7 +680,7 @@ PREF_SetCharPref(const char *pref_name, const char *value)
 }
 
 PR_IMPLEMENT(PrefResult)
-PREF_SetIntPref(const char *pref_name, int32 value)
+PREF_SetIntPref(const char *pref_name, PRInt32 value)
 {
 	PrefValue pref;
 	pref.intVal = value;
@@ -727,7 +727,7 @@ PREF_SetColorPref(const char *pref_name, uint8 red, uint8 green, uint8 blue)
 #define MYGetRValue(rgb)   ((uint8) (rgb)) 
 
 PR_IMPLEMENT(PrefResult)
-PREF_SetColorPrefDWord(const char *pref_name, uint32 colorref)
+PREF_SetColorPrefDWord(const char *pref_name, PRUint32 colorref)
 {
 	int red,green,blue;
 	char colstr[63];
@@ -767,7 +767,7 @@ PREF_SetDefaultCharPref(const char *pref_name,const char *value)
 
 
 PR_IMPLEMENT(PrefResult)
-PREF_SetDefaultIntPref(const char *pref_name,int32 value)
+PREF_SetDefaultIntPref(const char *pref_name,PRInt32 value)
 {
 	PrefValue pref;
 	pref.intVal = value;
@@ -1205,7 +1205,7 @@ PrefResult pref_CopyCharPref(const char *pref_name, char ** return_buffer, PRBoo
 	return result;
 }
 
-PrefResult pref_GetIntPref(const char *pref_name,int32 * return_int, PRBool get_default)
+PrefResult pref_GetIntPref(const char *pref_name,PRInt32 * return_int, PRBool get_default)
 {
 	PrefResult result = PREF_ERROR;	
 	PrefNode* pref;
@@ -1224,7 +1224,7 @@ PrefResult pref_GetIntPref(const char *pref_name,int32 * return_int, PRBool get_
 	return result;
 }
 
-PrefResult pref_GetBoolPref(const char *pref_name, XP_Bool * return_value, PRBool get_default)
+PrefResult pref_GetBoolPref(const char *pref_name, PRBool * return_value, PRBool get_default)
 {
 	PrefResult result = PREF_ERROR;
 	PrefNode* pref;
@@ -1257,13 +1257,13 @@ PREF_CopyCharPref(const char *pref_name, char ** return_buffer)
 }
 
 PR_IMPLEMENT(PrefResult)
-PREF_GetIntPref(const char *pref_name,int32 * return_int)
+PREF_GetIntPref(const char *pref_name,PRInt32 * return_int)
 {
 	return pref_GetIntPref(pref_name, return_int, PR_FALSE);
 }
 
 PR_IMPLEMENT(PrefResult)
-PREF_GetBoolPref(const char *pref_name, XP_Bool * return_value)
+PREF_GetBoolPref(const char *pref_name, PRBool * return_value)
 {
 	return pref_GetBoolPref(pref_name, return_value, PR_FALSE);
 }
@@ -1287,10 +1287,10 @@ PREF_GetColorPref(const char *pref_name, uint8 *red, uint8 *green, uint8 *blue)
 	return result;
 }
 
-#define MYRGB(r, g ,b)  ((uint32) (((uint8) (r) | ((uint16) (g) << 8)) | (((uint32) (uint8) (b)) << 16))) 
+#define MYRGB(r, g ,b)  ((PRUint32) (((uint8) (r) | ((uint16) (g) << 8)) | (((PRUint32) (uint8) (b)) << 16))) 
 
 PR_IMPLEMENT(PrefResult)
-PREF_GetColorPrefDWord(const char *pref_name, uint32 *colorref)
+PREF_GetColorPrefDWord(const char *pref_name, PRUint32 *colorref)
 {
     uint8 red, green, blue;
     PrefResult   result;
@@ -1417,13 +1417,13 @@ PREF_CopyDefaultCharPref(const char *pref_name, char  ** return_buffer)
 }
 
 PR_IMPLEMENT(PrefResult)
-PREF_GetDefaultIntPref(const char *pref_name, int32 * return_int)
+PREF_GetDefaultIntPref(const char *pref_name, PRInt32 * return_int)
 {
 	return pref_GetIntPref(pref_name, return_int, PR_TRUE);
 }
 
 PR_IMPLEMENT(PrefResult)
-PREF_GetDefaultBoolPref(const char *pref_name, XP_Bool * return_value)
+PREF_GetDefaultBoolPref(const char *pref_name, PRBool * return_value)
 {
 	return pref_GetBoolPref(pref_name, return_value, PR_TRUE);
 }
@@ -1455,7 +1455,7 @@ PREF_GetDefaultColorPref(const char *pref_name, uint8 *red, uint8 *green, uint8 
 }
 
 PR_IMPLEMENT(PrefResult)
-PREF_GetDefaultColorPrefDWord(const char *pref_name, uint32 * colorref)
+PREF_GetDefaultColorPrefDWord(const char *pref_name, PRUint32 * colorref)
 {
     uint8 red, green, blue;
     PrefResult   result;
@@ -1602,7 +1602,7 @@ PREF_CopyIndexConfigString(const char *obj_name,
 }
 
 PR_IMPLEMENT(PrefResult)
-PREF_GetConfigInt(const char *obj_name, int32 *return_int)
+PREF_GetConfigInt(const char *obj_name, PRInt32 *return_int)
 {
 	PrefResult success = PREF_ERROR;
 	
@@ -1617,7 +1617,7 @@ PREF_GetConfigInt(const char *obj_name, int32 *return_int)
 }
 
 PR_IMPLEMENT(PrefResult)
-PREF_GetConfigBool(const char *obj_name, XP_Bool *return_bool)
+PREF_GetConfigBool(const char *obj_name, PRBool *return_bool)
 {
 	PrefResult success = PREF_ERROR;
 	
@@ -1680,7 +1680,7 @@ PREF_LockPref(const char *key)
 /*
  * Hash table functions
  */
-static XP_Bool pref_ValueChanged(PrefValue oldValue, PrefValue newValue, PrefType type)
+static PRBool pref_ValueChanged(PrefValue oldValue, PrefValue newValue, PrefType type)
 {
 	PRBool changed = PR_TRUE;
 	if (type & PREF_STRING) {
@@ -1727,7 +1727,7 @@ PrefResult pref_HashPref(const char *key, PrefValue value, PrefType type, PrefAc
 		/* ugly hack -- define it to a default that no pref will ever default to
 		   this should really get fixed right by some out of band data */
 		if (pref->flags & PREF_INT)
-			pref->defaultPref.intVal = (int32) -5632;
+			pref->defaultPref.intVal = (PRInt32) -5632;
     	PR_HashTableAdd(m_HashTable, PL_strdup(key), pref);
     }
     else if ((pref->flags & PREF_VALUETYPE_MASK) != (type & PREF_VALUETYPE_MASK)) {
@@ -2101,7 +2101,7 @@ PrefResult pref_copyTree(const char *srcPrefix, const char *destPrefix, const ch
 					
 					case PREF_INT:
 							{
-							int32 	prefValInt;
+							PRInt32 	prefValInt;
 							
 							result = PREF_GetIntPref(child, &prefValInt);
 							if (result == PREF_NOERROR)
@@ -2111,7 +2111,7 @@ PrefResult pref_copyTree(const char *srcPrefix, const char *destPrefix, const ch
 						
 					case PREF_BOOL:
 						{
-							XP_Bool	prefBool;
+							PRBool	prefBool;
 							
 							result = PREF_GetBoolPref(child, &prefBool);
 							if (result == PREF_NOERROR)
@@ -2364,7 +2364,7 @@ PREF_AboutConfig()
 JSBool PR_CALLBACK
 pref_BranchCallback(JSContext *cx, JSScript *script)
 { 
-	static uint32	count = 0;
+	static PRUint32	count = 0;
 	
 	/*
 	 * If we've been running for a long time, then try a GC to 

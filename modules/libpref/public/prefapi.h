@@ -94,10 +94,10 @@ PrefResult pref_InitInitialObjects(JSContext *js_context,JSObject *js_object);
 */
 
 PR_EXTERN(PrefResult)
-PREF_ReadUserJSFile(char *filename);
+PREF_ReadUserJSFile(const char *filename);
 
 PR_EXTERN(PrefResult)
-PREF_ReadLIJSFile(char *filename);
+PREF_ReadLIJSFile(const char *filename);
 
 #if defined (XP_PC) || defined (XP_MAC)
 /* PREF_Init actually returns a profile object */
@@ -109,7 +109,7 @@ PREF_GetCurrentProfile(void);
 #endif
 
 PR_EXTERN(PRBool) 
-PREF_Init(char *filename);
+PREF_Init(const char *filename);
 
 PR_EXTERN(PrefResult)
 PREF_LockPref(const char *key);
@@ -215,12 +215,12 @@ typedef enum { PREF_INVALID = 0,
 // </font>
 */
 PR_EXTERN(PrefResult) PREF_SetCharPref(const char *pref,const char* value);
-PR_EXTERN(PrefResult) PREF_SetIntPref(const char *pref,int32 value);
+PR_EXTERN(PrefResult) PREF_SetIntPref(const char *pref,PRInt32 value);
 PR_EXTERN(PrefResult) PREF_SetBoolPref(const char *pref,PRBool value);
 PR_EXTERN(PrefResult) PREF_SetBinaryPref(const char *pref,void * value, long size);
-PR_EXTERN(PrefResult) PREF_SetColorPref(const char *pref_name, uint8 red, uint8 green, uint8 blue);
-PR_EXTERN(PrefResult) PREF_SetColorPrefDWord(const char *pref_name, uint32 colorref);
-PR_EXTERN(PrefResult) PREF_SetRectPref(const char *pref_name, int16 left, int16 top, int16 right, int16 bottom);
+PR_EXTERN(PrefResult) PREF_SetColorPref(const char *pref_name, PRUint8 red, PRUint8 green, PRUint8 blue);
+PR_EXTERN(PrefResult) PREF_SetColorPrefDWord(const char *pref_name, PRUint32 colorref);
+PR_EXTERN(PrefResult) PREF_SetRectPref(const char *pref_name, PRInt16 left, PRInt16 top, PRInt16 right, PRInt16 bottom);
 
 /*
 // <font color=blue>
@@ -232,11 +232,11 @@ PR_EXTERN(PrefResult) PREF_SetRectPref(const char *pref_name, int16 left, int16 
 // </font>
 */
 PR_EXTERN(PrefResult) PREF_SetDefaultCharPref(const char *pref,const char* value);
-PR_EXTERN(PrefResult) PREF_SetDefaultIntPref(const char *pref,int32 value);
+PR_EXTERN(PrefResult) PREF_SetDefaultIntPref(const char *pref,PRInt32 value);
 PR_EXTERN(PrefResult) PREF_SetDefaultBoolPref(const char *pref,PRBool value);
 PR_EXTERN(PrefResult) PREF_SetDefaultBinaryPref(const char *pref,void * value, long size);
-PR_EXTERN(PrefResult) PREF_SetDefaultColorPref(const char *pref_name, uint8 red, uint8 green, uint8 blue);
-PR_EXTERN(PrefResult) PREF_SetDefaultRectPref(const char *pref_name, int16 left, int16 top, int16 right, int16 bottom);
+PR_EXTERN(PrefResult) PREF_SetDefaultColorPref(const char *pref_name, PRUint8 red, PRUint8 green, PRUint8 blue);
+PR_EXTERN(PrefResult) PREF_SetDefaultRectPref(const char *pref_name, PRInt16 left, PRInt16 top, PRInt16 right, PRInt16 bottom);
 
 /*
 // <font color=blue>
@@ -257,12 +257,12 @@ PR_EXTERN(PrefResult) PREF_SetDefaultRectPref(const char *pref_name, int16 left,
 // </font>
 */
 PR_EXTERN(PrefResult) PREF_GetCharPref(const char *pref, char * return_buf, int * buf_length);
-PR_EXTERN(PrefResult) PREF_GetIntPref(const char *pref, int32 * return_int);	
-PR_EXTERN(PrefResult) PREF_GetBoolPref(const char *pref, XP_Bool * return_val);	
+PR_EXTERN(PrefResult) PREF_GetIntPref(const char *pref, PRInt32 * return_int);	
+PR_EXTERN(PrefResult) PREF_GetBoolPref(const char *pref, PRBool * return_val);	
 PR_EXTERN(PrefResult) PREF_GetBinaryPref(const char *pref, void * return_val, int * buf_length);	
-PR_EXTERN(PrefResult) PREF_GetColorPref(const char *pref_name, uint8 *red, uint8 *green, uint8 *blue);
-PR_EXTERN(PrefResult) PREF_GetColorPrefDWord(const char *pref_name, uint32 *colorref);
-PR_EXTERN(PrefResult) PREF_GetRectPref(const char *pref_name, int16 *left, int16 *top, int16 *right, int16 *bottom);
+PR_EXTERN(PrefResult) PREF_GetColorPref(const char *pref_name, PRUint8 *red, PRUint8 *green, PRUint8 *blue);
+PR_EXTERN(PrefResult) PREF_GetColorPrefDWord(const char *pref_name, PRUint32 *colorref);
+PR_EXTERN(PrefResult) PREF_GetRectPref(const char *pref_name, PRInt16 *left, PRInt16 *top, PRInt16 *right, PRInt16 *bottom);
 
 /*
 // <font color=blue>
@@ -298,12 +298,12 @@ PR_EXTERN(PrefResult) PREF_SetPathPref(const char *pref_name, const char *path, 
 // </font>
 */
 PR_EXTERN(PrefResult) PREF_GetDefaultCharPref(const char *pref, char * return_buf, int * buf_length);
-PR_EXTERN(PrefResult) PREF_GetDefaultIntPref(const char *pref, int32 * return_int);	
-PR_EXTERN(PrefResult) PREF_GetDefaultBoolPref(const char *pref, XP_Bool * return_val);	
+PR_EXTERN(PrefResult) PREF_GetDefaultIntPref(const char *pref, PRInt32 * return_int);	
+PR_EXTERN(PrefResult) PREF_GetDefaultBoolPref(const char *pref, PRBool * return_val);	
 PR_EXTERN(PrefResult) PREF_GetDefaultBinaryPref(const char *pref, void * return_val, int * buf_length);	
-PR_EXTERN(PrefResult) PREF_GetDefaultColorPref(const char *pref_name, uint8 *red, uint8 *green, uint8 *blue);
-PR_EXTERN(PrefResult) PREF_GetDefaultColorPrefDWord(const char *pref_name, uint32 *colorref);
-PR_EXTERN(PrefResult) PREF_GetDefaultRectPref(const char *pref_name, int16 *left, int16 *top, int16 *right, int16 *bottom);
+PR_EXTERN(PrefResult) PREF_GetDefaultColorPref(const char *pref_name, PRUint8 *red, PRUint8 *green, PRUint8 *blue);
+PR_EXTERN(PrefResult) PREF_GetDefaultColorPrefDWord(const char *pref_name, PRUint32 *colorref);
+PR_EXTERN(PrefResult) PREF_GetDefaultRectPref(const char *pref_name, PRInt16 *left, PRInt16 *top, PRInt16 *right, PRInt16 *bottom);
 
 /*
 // <font color=blue>
@@ -322,8 +322,8 @@ PR_EXTERN(PrefResult) PREF_GetDefaultRectPref(const char *pref_name, int16 *left
 PR_EXTERN(PrefResult) PREF_CopyConfigString(const char *obj_name, char **return_buffer);
 PR_EXTERN(PrefResult) PREF_CopyIndexConfigString(const char *obj_name, int index,
 	const char *field, char **return_buffer);
-PR_EXTERN(PrefResult) PREF_GetConfigInt(const char *obj_name, int32 *return_int);
-PR_EXTERN(PrefResult) PREF_GetConfigBool(const char *obj_name, XP_Bool *return_bool);
+PR_EXTERN(PrefResult) PREF_GetConfigInt(const char *obj_name, PRInt32 *return_int);
+PR_EXTERN(PrefResult) PREF_GetConfigBool(const char *obj_name, PRBool *return_bool);
 
 /* OLD:: */PR_EXTERN(PrefResult) PREF_GetConfigString(const char *obj_name, char * return_buffer, int size,
 	int index, const char *field);
@@ -392,17 +392,14 @@ PR_EXTERN(PrefResult) PREF_ClearUserPref(const char *pref_name);
 PR_EXTERN(PrefResult) PREF_CreateChildList(const char* parent_node, char **child_list);
 PR_EXTERN(char*) PREF_NextChild(char *child_list, int *index);
 
-/*
- * Copies parts of the hierarchy from one root to another.
- 	For example, PREF_CopyPrefsTree("mail","newmail") copies all
- 	the "mail." prefs to "newmail." prefs. It does not delete the
- 	source tree; you should do that yourself.
- 	
- 	Either srcRoot or destRoot can be empty strings, to denote 
- 	the root of the entire tree, but cannot be NULL.
- *
- *
-*/
+/*  The following function parts of the hierarchy from one root to another.
+ *	For example, PREF_CopyPrefsTree("mail","newmail") copies all
+ *	the "mail." prefs to "newmail." prefs. It does not delete the
+ *	source tree; you should do that yourself.
+ *	
+ *	Either srcRoot or destRoot can be empty strings, to denote 
+ *	the root of the entire tree, but cannot be NULL.
+ */
 PR_EXTERN(PrefResult) PREF_CopyPrefsTree(const char *srcRoot, const char *destRoot);
 
 /*
