@@ -2086,6 +2086,7 @@ GlobalWindowImpl::SizeAndShowOpenedWebShell(nsIWebShell *aOuterShell, char *aFea
   if (nsnull != openedWindow) {
 
     nsRect   contentOffsets; // constructor sets all values to 0
+    PRBool   sizeSpecified = PR_FALSE;
     PRUint32 chromeFlags = CalculateChromeFlags(aFeatures);
     PRBool   openAsContent = ((chromeFlags & NS_CHROME_OPEN_AS_CHROME) == 0);
 
@@ -2121,14 +2122,26 @@ GlobalWindowImpl::SizeAndShowOpenedWebShell(nsIWebShell *aOuterShell, char *aFea
         defaultBounds.x = left;
       if (top)
         defaultBounds.y = top;
-      if (width)
+      if (width) {
+        sizeSpecified = PR_TRUE;
         defaultBounds.width = width;
-      if (height)
+      }
+      if (height) {
+        sizeSpecified = PR_TRUE;
         defaultBounds.height = height;
+      }
     }
 
     // beard: don't resize/reposition the window if it is the same web shell.
     if (aOuterShell != mWebShell) {
+
+      // whimper. special treatment for windows which will be intrinsically sized.
+      // we can count on a Show() coming through at EndDocumentLoad time, and we
+      // can count on their size being wrong at this point, and flashing.  so
+      // delay some things, if this is true.
+      PRBool sizeLater = PR_FALSE;
+      openedWindow->IsIntrinsicallySized(sizeLater);
+
       if (openAsContent) {
         openedWindow->SizeWindowTo(defaultBounds.width + contentOffsets.width,
                                    defaultBounds.height + contentOffsets.height);
@@ -2140,12 +2153,14 @@ GlobalWindowImpl::SizeAndShowOpenedWebShell(nsIWebShell *aOuterShell, char *aFea
         // i could calculate a triple offset, but commenting it out is easier,
         // and probably effectively the same thing.
 //      openedWindow->SizeContentTo(defaultBounds.width, defaultBounds.height);
-      } else
+      } else if (sizeSpecified)
         openedWindow->SizeWindowTo(defaultBounds.width, defaultBounds.height);
-      
+
       openedWindow->MoveTo(defaultBounds.x + contentOffsets.x,
                       defaultBounds.y + contentOffsets.y);
-      openedWindow->Show();
+
+      if (!sizeLater)
+        openedWindow->Show();
     }
 
     NS_RELEASE(openedWindow);
