@@ -280,7 +280,7 @@ InitOperators(void)
   nsresult rv;
   nsCOMPtr<nsIPersistentProperties> mathfontProp;
   rv = NS_LoadPersistentPropertiesFromURISpec(getter_AddRefs(mathfontProp),
-       NS_LITERAL_CSTRING("resource:/res/fonts/mathfont.properties"));
+       NS_LITERAL_CSTRING("resource://gre/res/fonts/mathfont.properties"));
   if NS_FAILED(rv) return rv;
 
   // Get the list of invariant chars
