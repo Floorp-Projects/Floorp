@@ -1,3 +1,15 @@
+1999-10-07    <Ed Burns <ed.burns@sun.com>>
+
+	* This change fixes
+ 	http://bugzilla.mozilla.org/show_bug.cgi?id=15793 which caused one
+ 	to have to copy the component.reg and components directory.  It
+ 	also causes webclient to do autoregistration.  It also adds a
+ 	debugging method to BrowserControlMozillaShim.java
+ 	nativeDebugBreak().
+
+	Reviewed by Mark Lin <marklin@eng.sun.com>
+	Approved by Ed Burns <edburns@acm.org>, module owner
+	
 Mon Aug  9 20:25:49 1999 Mark Lin <mark.lin@eng.sun.com>
 	* Ported webclient to Linux
 	* Added a motif and win32 directory under classes/org/mozilla/webclient

@@ -12,7 +12,7 @@ Win32 Build Directions:
 ========================================================================
 Requirements:
 
-* built M8 mozilla tree for WinNT4.0
+* built mozilla with source code from after 10/5/99
 
 * JDK1.1.7 or greater
 
@@ -25,16 +25,6 @@ How To Build:
 * Follow the directions in ..\README
 
 * type "nmake /f makefile.win all" and hope for the best
-
-* Due to bug 10561 (http://bugzilla.mozilla.org/show_bug.cgi?id=10561)
-  one must do a horrendous workaround:
-
-  In the directory mozilla/dist/WIN32_D.OBJ/bin, copy the components.reg
-  file and the components directory to the following places:
-
-  C:\WINNT\System32
-  %JDKHOME%\jre\bin
-  %JDKHOME%\bin
 
 How to Run:
 

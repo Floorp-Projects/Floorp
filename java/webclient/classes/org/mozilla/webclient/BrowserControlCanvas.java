@@ -44,7 +44,7 @@ import java.awt.*;
 
  * See concrete subclasses for scope info.
 
- * @version $Id: BrowserControlCanvas.java,v 1.2 1999/08/13 23:02:39 mark.lin%eng.sun.com Exp $
+ * @version $Id: BrowserControlCanvas.java,v 1.3 1999/10/08 00:48:00 edburns%acm.org Exp $
 
  * @see	org.mozilla.webclient.win32.Win32BrowserControlCanvas
 
@@ -93,7 +93,7 @@ private Rectangle		windowRelativeBounds;
  * Initialize the BrowserControlMozillaShim. For now,
  * this initializes the Mozilla registry.
  */
-public BrowserControlCanvas () 
+protected BrowserControlCanvas () 
 {
 	nativeWindow = 0;
 	webShell = null;
@@ -101,14 +101,17 @@ public BrowserControlCanvas ()
 	boundsValid = false;
 	hasFocus = false;
 	
+} // BrowserControlCanvas() ctor
+
+protected static void initialize(String verifiedBinDirAbsolutePath)
+{
 	try {
-		BrowserControlMozillaShim.initialize();
+		BrowserControlMozillaShim.initialize(verifiedBinDirAbsolutePath);
 	} catch (Exception e) {
 		System.out.println(e.toString());
 	}
-} // BrowserControlCanvas() ctor
-	
-	
+}
+
 /**
   * Obtain the native window handle for this component's
   * peer.
@@ -137,7 +140,7 @@ public void addNotify ()
 	// accessing its native window handle.
 	dsi.lock();
 	nativeWindow = getWindow(dsi);
-	
+
 	try {
 		Rectangle r = new Rectangle(getBoundsRelativeToWindow());
 		webShell = new BrowserControlImpl(nativeWindow, r);
