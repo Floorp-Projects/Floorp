@@ -60,6 +60,7 @@ jsscope.c
 jsscope.h
 jsscript.c
 jsscript.h
+jsstddef.h
 jsstr.c
 jsstr.h
 jsxdrapi.c
