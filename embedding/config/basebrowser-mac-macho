@@ -204,7 +204,7 @@ res/language.properties
 res/langGroups.properties
 res/charsetData.properties
 res/charsetalias.properties
-res/unixcharset.properties
+res/maccharset.properties
 ; res/strres.properties 
 
 ; required i18n libs
