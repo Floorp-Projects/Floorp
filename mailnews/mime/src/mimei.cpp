@@ -166,10 +166,10 @@ add_content_type_attribs(const char *content_type,
 PRBool
 force_inline_display(const char *content_type)
 {
-  PRBool     force_inline_display;
+  PRBool     force_inline_disp;
 
-  find_content_type_attribs(content_type, &force_inline_display);
-  return (force_inline_display);
+  find_content_type_attribs(content_type, &force_inline_disp);
+  return (force_inline_disp);
 }
 
 /* 
@@ -1223,9 +1223,9 @@ MimeOptions_write(MimeDisplayOptions *opt, char *data, PRInt32 length,
 	  else
 		{
 		  char sep[] = "<HR WIDTH=\"90%\" SIZE=4>";
-		  int status = opt->output_fn(sep, PL_strlen(sep), closure);
+		  int lstatus = opt->output_fn(sep, PL_strlen(sep), closure);
 		  opt->state->separator_suppressed_p = PR_FALSE;
-		  if (status < 0) return status;
+		  if (lstatus < 0) return lstatus;
 		}
 	}
   if (user_visible_p)

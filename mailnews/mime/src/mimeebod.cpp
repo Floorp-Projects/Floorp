@@ -150,7 +150,7 @@ MimeExternalBody_parse_line (char *line, PRInt32 length, MimeObject *obj)
 
 char *
 MimeExternalBody_make_url(const char *ct,
-						  const char *at, const char *exp, const char *size,
+						  const char *at, const char *lexp, const char *size,
 						  const char *perm, const char *dir, const char *mode,
 						  const char *name, const char *url, const char *site,
 						  const char *svr, const char *subj, const char *body)
@@ -280,7 +280,7 @@ MimeExternalBody_parse_eof (MimeObject *obj, PRBool abort_p)
 
 	  char *ct = MimeHeaders_get(obj->headers, HEADER_CONTENT_TYPE,
 								 PR_FALSE, PR_FALSE);
-	  char *at, *exp, *size, *perm;
+	  char *at, *lexp, *size, *perm;
 	  char *url, *dir, *mode, *name, *site, *svr, *subj;
 	  char *h = 0, *lname = 0, *lurl = 0, *body = 0;
 	  MimeHeaders *hdrs = 0;
@@ -288,7 +288,7 @@ MimeExternalBody_parse_eof (MimeObject *obj, PRBool abort_p)
 	  if (!ct) return MK_OUT_OF_MEMORY;
 
 	  at   = MimeHeaders_get_parameter(ct, "access-type", NULL, NULL);
-	  exp  = MimeHeaders_get_parameter(ct, "expiration", NULL, NULL);
+	  lexp  = MimeHeaders_get_parameter(ct, "expiration", NULL, NULL);
 	  size = MimeHeaders_get_parameter(ct, "size", NULL, NULL);
 	  perm = MimeHeaders_get_parameter(ct, "permission", NULL, NULL);
 	  dir  = MimeHeaders_get_parameter(ct, "directory", NULL, NULL);
@@ -305,7 +305,7 @@ MimeExternalBody_parse_eof (MimeObject *obj, PRBool abort_p)
 						   PR_TRUE, PR_FALSE);
 
 	  h = (char *) PR_MALLOC((at ? PL_strlen(at) : 0) +
-							(exp ? PL_strlen(exp) : 0) +
+							(lexp ? PL_strlen(lexp) : 0) +
 							(size ? PL_strlen(size) : 0) +
 							(perm ? PL_strlen(perm) : 0) +
 							(dir ? PL_strlen(dir) : 0) +
@@ -362,14 +362,14 @@ MimeExternalBody_parse_eof (MimeObject *obj, PRBool abort_p)
 	  FROB("Size",			size);
 	  FROB("Mode",			mode);
 	  FROB("Permission",	perm);
-	  FROB("Expiration",	exp);
+	  FROB("Expiration",	lexp);
 	  FROB("Subject",		subj);
 # undef FROB
 	  PL_strcpy(h, MSG_LINEBREAK);
 	  status = MimeHeaders_parse_line(h, PL_strlen(h), hdrs);
 	  if (status < 0) goto FAIL;
 
-	  lurl = MimeExternalBody_make_url(ct, at, exp, size, perm, dir, mode,
+	  lurl = MimeExternalBody_make_url(ct, at, lexp, size, perm, dir, mode,
 									   name, url, site, svr, subj, bod->body);
 	  if (lurl)
 		{
@@ -438,7 +438,7 @@ MimeExternalBody_parse_eof (MimeObject *obj, PRBool abort_p)
 	  PR_FREEIF(body);
 	  PR_FREEIF(ct);
 	  PR_FREEIF(at);
-	  PR_FREEIF(exp);
+	  PR_FREEIF(lexp);
 	  PR_FREEIF(size);
 	  PR_FREEIF(perm);
 	  PR_FREEIF(dir);

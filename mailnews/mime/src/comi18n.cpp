@@ -128,7 +128,7 @@ do \
 
 static unsigned char *
 xp_word_wrap(unsigned char *str, int maxColumn, int checkQuoting,
-			       const char *prefix, int addCRLF)
+			       const char *pfix, int addCRLF)
 {
 	unsigned char	*beginningOfLine;
 	int		byteWidth;
@@ -172,7 +172,7 @@ xp_word_wrap(unsigned char *str, int maxColumn, int checkQuoting,
 			if (*in)
 			{
 				NEW_LINE(addCRLF);
-				if (prefix) OUTPUTSTR(prefix);
+				if (pfix) OUTPUTSTR(pfix);
 			}
 			else
 			{
@@ -196,7 +196,7 @@ xp_word_wrap(unsigned char *str, int maxColumn, int checkQuoting,
 					}
 				}
 				NEW_LINE(addCRLF);
-				if (prefix) OUTPUTSTR(prefix);
+				if (pfix) OUTPUTSTR(pfix);
 				continue;
 			}
 			byteWidth = PL_strlen((const char *) in);
@@ -222,7 +222,7 @@ xp_word_wrap(unsigned char *str, int maxColumn, int checkQuoting,
 					}
 					in = lastBreakablePos;
 					OUTPUT_NEW_LINE(addCRLF);
-					if (prefix) OUTPUTSTR(prefix);
+					if (pfix) OUTPUTSTR(pfix);
 					continue;
 				}
 			}

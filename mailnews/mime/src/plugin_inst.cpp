@@ -124,7 +124,6 @@ MimePluginInstance::DetermineOutputFormat(const char *url)
   char *format = PL_strcasestr(url, "?outformat=");
   char *part   = PL_strcasestr(url, "?part=");
   char *header = PL_strcasestr(url, "?header=");
-  char *ptr;
 
   if (!format) format = PL_strcasestr(url, "&outformat=");
   if (!part) part = PL_strcasestr(url, "&part=");
@@ -175,8 +174,8 @@ MimePluginInstance::DetermineOutputFormat(const char *url)
   {
     if (header)
     {
-      ptr = PL_strcasestr ("only", (header+PL_strlen("?header=")));
-      if (ptr)
+      char *ptr2 = PL_strcasestr ("only", (header+PL_strlen("?header=")));
+      if (ptr2)
       {
         PR_FREEIF(mOutputFormat);
         mOutputFormat = PL_strdup("text/xml");

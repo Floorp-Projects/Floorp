@@ -256,7 +256,7 @@ HG09091
 		  obj->options->write_html_p &&
 		  obj->options->generate_header_html_fn)
 		{
-		  int status = 0;
+		  int lstatus = 0;
 		  char *html = 0;
 
 		  /* The generate_header_html_fn might return HTML, so it's important
@@ -264,8 +264,8 @@ HG09091
 			 make the MimeObject_write() call below. */
 		  if (!obj->options->state->first_data_written_p)
 			{
-			  status = MimeObject_output_init (obj, TEXT_HTML);
-			  if (status < 0) return status;
+			  lstatus = MimeObject_output_init (obj, TEXT_HTML);
+			  if (lstatus < 0) return lstatus;
 			  PR_ASSERT(obj->options->state->first_data_written_p);
 			}
 
@@ -274,9 +274,9 @@ HG09091
 													   msg->hdrs);
 		  if (html)
 			{
-			  status = MimeObject_write(obj, html, PL_strlen(html), PR_FALSE);
+			  lstatus = MimeObject_write(obj, html, PL_strlen(html), PR_FALSE);
 			  PR_Free(html);
-			  if (status < 0) return status;
+			  if (lstatus < 0) return lstatus;
 			}
 		}
 
@@ -407,17 +407,21 @@ HG09091
      )
   {
     char  *charset = NULL;
-    char  *ct = MimeHeaders_get (msg->hdrs, HEADER_CONTENT_TYPE,
+    char  *lct = MimeHeaders_get (msg->hdrs, HEADER_CONTENT_TYPE,
 									                PR_FALSE, PR_FALSE);
-		if (ct)
-      charset = MimeHeaders_get_parameter (ct, "charset", NULL, NULL);
+		if (lct)
+      charset = MimeHeaders_get_parameter (lct, "charset", NULL, NULL);
 
     char  *msgID = MimeHeaders_get (msg->hdrs, HEADER_MESSAGE_ID,
 									                  PR_FALSE, PR_FALSE);
 
-    mimeEmitter->StartBody((obj->options->headers == MimeHeadersNone), msgID);
+    char  *outCharset = NULL;
+    if (!obj->options->force_user_charset)  /* Only convert if the user prefs is false */
+      outCharset = "UTF-8";
+
+    mimeEmitter->StartBody((obj->options->headers == MimeHeadersNone), msgID, outCharset);
     PR_FREEIF(msgID);
-    PR_FREEIF(ct);
+    PR_FREEIF(lct);
     PR_FREEIF(charset);
   }
 
@@ -467,9 +471,9 @@ MimeMessage_parse_eof (MimeObject *obj, PRBool abort_p)
 											   msg->hdrs);
 	  if (html)
 		{
-		  int status = MimeObject_write(obj, html, PL_strlen(html), PR_FALSE);
+		  int lstatus = MimeObject_write(obj, html, PL_strlen(html), PR_FALSE);
 		  PR_Free(html);
-		  if (status < 0) return status;
+		  if (lstatus < 0) return lstatus;
 		}
 	}
 
@@ -575,7 +579,8 @@ MimeMessage_write_headers_html (MimeObject *obj)
   mimeEmitter->StartHeader( 
                             (obj == obj->options->state->root), 
                             (obj->options->headers == MimeHeadersOnly),
-                            msgID
+                            msgID,
+                            "UTF-8"
                           );
   PR_FREEIF(msgID);
 

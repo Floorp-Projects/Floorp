@@ -166,7 +166,7 @@ MimeMultipartRelated_initialize(MimeObject* obj)
 
 static PR_CALLBACK 
 PRIntn mime_multipart_related_nukehash(PLHashEntry *table, 
-          				       						   PRIntn index, void *arg)                             
+          				       						   PRIntn indx, void *arg)                             
 {
   if (table->key)
     PR_Free((char*) table->key);
@@ -626,10 +626,10 @@ real_write(MimeMultipartRelated* relobj, char* buf, PRInt32 size)
   else
 #endif /* MIME_DRAFTS */
 	{
-	  if (!closure) {
-		MimeObject* obj = (MimeObject*) relobj;
-		closure = obj->options->stream_closure;
-	  }
+    if (!closure) {
+      MimeObject* lobj = (MimeObject*) relobj;
+      closure = lobj->options->stream_closure;
+    }
 	  return relobj->real_output_fn(buf, size, closure);
 	}
 }

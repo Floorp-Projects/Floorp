@@ -118,8 +118,8 @@ MimeContainer_parse_eof (MimeObject *object, PRBool abort_p)
 		  MimeObject *kid = cont->children[i];
 		  if (kid && !kid->closed_p)
 			{
-			  int status = kid->clazz->parse_eof(kid, abort_p);
-			  if (status < 0) return status;
+			  int lstatus = kid->clazz->parse_eof(kid, abort_p);
+			  if (lstatus < 0) return lstatus;
 			}
 		}
 	}
@@ -148,8 +148,8 @@ MimeContainer_parse_end (MimeObject *object, PRBool abort_p)
 		  MimeObject *kid = cont->children[i];
 		  if (kid && !kid->parsed_p)
 			{
-			  int status = kid->clazz->parse_end(kid, abort_p);
-			  if (status < 0) return status;
+			  int lstatus = kid->clazz->parse_end(kid, abort_p);
+			  if (lstatus < 0) return lstatus;
 			}
 		}
 	}

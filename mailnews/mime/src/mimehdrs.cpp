@@ -290,10 +290,10 @@ MimeHeaders_build_heads_list(MimeHeaders *hdrs)
   PR_ASSERT(hdrs->all_headers_fp <= hdrs->all_headers_size);
   if (hdrs->all_headers_fp + 60 <= hdrs->all_headers_size)
 	{
-	  char *s = (char *)PR_Realloc(hdrs->all_headers, hdrs->all_headers_fp);
-	  if (s) /* can this ever fail?  we're making it smaller... */
+	  char *ls = (char *)PR_Realloc(hdrs->all_headers, hdrs->all_headers_fp);
+	  if (ls) /* can this ever fail?  we're making it smaller... */
 		{
-		  hdrs->all_headers = s;  /* in case it got relocated */
+		  hdrs->all_headers = ls;  /* in case it got relocated */
 		  hdrs->all_headers_size = hdrs->all_headers_fp;
 		}
 	}

@@ -714,9 +714,9 @@ nsMimeURLUtils::MakeAbsoluteURL(char * absolute_url, char * relative_url, char *
       * remove the stuff before and at the colon and treat it as a normal
       * relative url
       */
-      char * colon = PL_strchr(relative_url, ':');
+      char * colon2 = PL_strchr(relative_url, ':');
       
-      relative_url = colon+1;
+      relative_url = colon2 + 1;
 		  }
   }
   

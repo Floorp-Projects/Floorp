@@ -1065,13 +1065,14 @@ msg_extract_Header_address_names(const char *line)
 	int status = msg_parse_Header_addresses(line, &names, &addrs);
 	if (status <= 0)
 		return 0;
+  PRUint32 j1, j2;
 
 	s1 = names;
 	s2 = addrs;
 	for (i = 0; (int)i < status; i++)
 	{
-		PRUint32 j1 = PL_strlen(s1);
-		PRUint32 j2 = PL_strlen(s2);
+		j1 = PL_strlen(s1);
+		j2 = PL_strlen(s2);
 		s1 += j1 + 1;
 		s2 += j2 + 1;
 		size += (j1 ? j1 : j2) + 2;
@@ -1090,8 +1091,8 @@ msg_extract_Header_address_names(const char *line)
 	s2 = addrs;
 	for (i = 0; (int)i < status; i++)
 	{
-		PRUint32 j1 = PL_strlen(s1);
-		PRUint32 j2 = PL_strlen(s2);
+		j1 = PL_strlen(s1);
+		j2 = PL_strlen(s2);
 
 		if (j1)
 		{
@@ -1161,6 +1162,7 @@ msg_format_Header_addresses (const char *names, const char *addrs,
 	const char *s1, *s2;
 	PRUint32 i, size = 0;
 	PRUint32 column = 10;
+  PRUint32    j1, j2;
 
 	if (count <= 0)
 		return 0;
@@ -1169,8 +1171,8 @@ msg_format_Header_addresses (const char *names, const char *addrs,
 	s2 = addrs;
 	for (i = 0; (int)i < count; i++)
 	{
-		PRUint32 j1 = PL_strlen(s1);
-		PRUint32 j2 = PL_strlen(s2);
+		j1 = PL_strlen(s1);
+		j2 = PL_strlen(s2);
 		s1 += j1 + 1;
 		s2 += j2 + 1;
 		size += j1 + j2 + 10;
@@ -1186,8 +1188,8 @@ msg_format_Header_addresses (const char *names, const char *addrs,
 	for (i = 0; (int)i < count; i++)
 	{
 		char *o;
-		PRUint32 j1 = PL_strlen(s1);
-		PRUint32 j2 = PL_strlen(s2);
+		j1 = PL_strlen(s1);
+		j2 = PL_strlen(s2);
 
 		if (   wrap_lines_p && i > 0
 		    && (column + j1 + j2 + 3 + (((int)(i+1) < count) ? 2 : 0) > 76))
