@@ -1070,7 +1070,7 @@ int main(int argc, char* argv[])
 #endif
 
   // Handle -help and -version command line arguments.
-  // They should return quick, so we deal with them here.
+  // They should% return quick, so we deal with them here.
   if (HandleDumpArguments(argc, argv))
     return 0;
 

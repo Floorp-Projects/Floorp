@@ -79,6 +79,14 @@ pref("browser.chrome.show_url_bar",         true);
 pref("browser.chrome.show_security_bar",    true);
 pref("browser.chrome.button_style",         0);
 
+pref("browser.toolbars.showbutton.bookmarks", false);
+pref("browser.toolbars.showbutton.go",      false);
+pref("browser.toolbars.showbutton.home",    true);
+pref("browser.toolbars.showbutton.mynetscape", true);
+pref("browser.toolbars.showbutton.net2phone", true);
+pref("browser.toolbars.showbutton.print",   true);
+pref("browser.toolbars.showbutton.search",  true);
+
 pref("browser.background_option",           0); // DEFAULT_BACKGROUND
 pref("browser.link_expiration",             9);
 pref("browser.cache.check_doc_frequency",   0);
