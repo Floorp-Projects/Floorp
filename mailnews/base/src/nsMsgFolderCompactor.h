@@ -95,11 +95,17 @@ protected:
   nsCOMPtr <nsIMsgMessageService> m_messageService; // message service for copying 
   nsCOMPtr<nsISupportsArray> m_folderArray; // to store all the folders in case of compact all
   nsCOMPtr <nsIMsgWindow> m_window;
+  nsCOMPtr <nsIMsgDBHdr> m_curSrcHdr;
   PRUint32 m_folderIndex; // tells which folder to compact in case of compact all
   PRBool m_compactAll;  //flag for compact all
   PRBool m_compactOfflineAlso; //whether to compact offline also
-  nsCOMPtr <nsISupportsArray> m_offlineFolderArray;
   PRBool m_parsingFolder; //flag for parsing local folders;
+  // these members are used to add missing status lines to compacted messages.
+  PRBool m_needStatusLine;
+  PRBool m_startOfMsg;
+  PRInt32 m_statusOffset;
+  PRInt32 m_statusLineSize;
+  nsCOMPtr <nsISupportsArray> m_offlineFolderArray;
 
 };
 

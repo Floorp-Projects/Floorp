@@ -56,6 +56,8 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIMsgLocalMailFolder.h"
 #include "nsMsgI18N.h"
+#include "prprf.h"
+#include "nsMsgLocalFolderHdrs.h"
 
 static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
 static NS_DEFINE_CID(kRDFServiceCID,							NS_RDFSERVICE_CID);
@@ -76,6 +78,8 @@ nsFolderCompactState::nsFolderCompactState()
   m_compactOfflineAlso = PR_FALSE;
   m_parsingFolder=PR_FALSE;
   m_folderIndex =0;
+  m_startOfMsg = PR_TRUE;
+  m_needStatusLine = PR_FALSE;
 }
 
 nsFolderCompactState::~nsFolderCompactState()
@@ -525,18 +529,85 @@ nsFolderCompactState::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
                                       nsIInputStream *inStr, 
                                       PRUint32 sourceOffset, PRUint32 count)
 {
-  nsresult rv = NS_ERROR_FAILURE;
-  if (!m_fileStream || !inStr) return rv;
+  if (!m_fileStream || !inStr) 
+    return NS_ERROR_FAILURE;
 
+  nsresult rv = NS_OK;
+  PRUint32 msgFlags;
+  if (m_startOfMsg)
+  {
+    m_statusOffset = 0;
+    m_messageUri.SetLength(0); // clear the previous message uri
+    if (NS_SUCCEEDED(BuildMessageURI(m_baseMessageUri, m_keyArray[m_curIndex],
+                                m_messageUri)))
+    {
+      rv = GetMessage(getter_AddRefs(m_curSrcHdr));
+      NS_ENSURE_SUCCESS(rv, rv);
+      if (m_curSrcHdr)
+      {
+        (void) m_curSrcHdr->GetFlags(&msgFlags);
+        PRUint32 statusOffset;
+        (void) m_curSrcHdr->GetStatusOffset(&statusOffset);
+        if (statusOffset == 0)
+          m_needStatusLine = PR_TRUE;
+      }
+    }
+    m_startOfMsg = PR_FALSE;
+  }
   PRUint32 maxReadCount, readCount, writeCount;
-  rv = NS_OK;
   while (NS_SUCCEEDED(rv) && (PRInt32) count > 0)
   {
     maxReadCount = count > 4096 ? 4096 : count;
     rv = inStr->Read(m_dataBuffer, maxReadCount, &readCount);
     if (NS_SUCCEEDED(rv))
     {
-      writeCount = m_fileStream->write(m_dataBuffer, readCount);
+      if (m_needStatusLine)
+      {
+        m_needStatusLine = PR_FALSE;
+        // we need to parse out the "From " header, write it out, then 
+        // write out the x-mozilla-status headers, and set the 
+        // status offset of the dest hdr for later use 
+        // in OnEndCopy).
+        if (!strncmp(m_dataBuffer, "From ", 5))
+        {
+          PRInt32 charIndex;
+          for (charIndex = 5; charIndex < readCount; charIndex++)
+          {
+            if (m_dataBuffer[charIndex] == nsCRT::CR || m_dataBuffer[charIndex] == nsCRT::LF)
+            {
+              charIndex++;
+              if (m_dataBuffer[charIndex- 1] == nsCRT::CR && m_dataBuffer[charIndex] == nsCRT::LF)
+                charIndex++;
+              break;
+            }
+          }
+          char statusLine[50];
+          writeCount = m_fileStream->write(m_dataBuffer, charIndex);
+          m_statusOffset = charIndex;
+          PR_snprintf(statusLine, sizeof(statusLine), X_MOZILLA_STATUS_FORMAT MSG_LINEBREAK, msgFlags & 0xFFFF);
+          m_statusLineSize = m_fileStream->write(statusLine, strlen(statusLine));
+          PR_snprintf(statusLine, sizeof(statusLine), X_MOZILLA_STATUS2_FORMAT MSG_LINEBREAK, msgFlags & 0xFFFF0000);
+          m_statusLineSize += m_fileStream->write(statusLine, strlen(statusLine));
+          writeCount += m_fileStream->write(m_dataBuffer + charIndex, readCount - charIndex);
+
+        }
+        else
+        {
+          NS_ASSERTION(PR_FALSE, "not an envelope");
+          // try to mark the db as invalid so it will be reparsed.
+          nsCOMPtr <nsIMsgDatabase> srcDB;
+          m_folder->GetMsgDatabase(nsnull, getter_AddRefs(srcDB));
+          if (srcDB)
+          {
+            srcDB->SetSummaryValid(PR_FALSE);
+            srcDB->ForceClosed();
+          }
+        }
+      }
+      else
+      {
+        writeCount = m_fileStream->write(m_dataBuffer, readCount);
+      }
       count -= readCount;
       if (writeCount != readCount)
       {
@@ -711,7 +782,6 @@ nsFolderCompactState::EndCopy(nsISupports *url, nsresult aStatus)
 {
   nsCOMPtr<nsIMsgDBHdr> msgHdr;
   nsCOMPtr<nsIMsgDBHdr> newMsgHdr;
-  m_messageUri.SetLength(0); // clear the previous message uri
 
   if (m_curIndex >= m_size)
   {
@@ -719,19 +789,24 @@ nsFolderCompactState::EndCopy(nsISupports *url, nsresult aStatus)
     return NS_OK;
   }
 
-  nsresult rv = BuildMessageURI(m_baseMessageUri, m_keyArray[m_curIndex],
-                              m_messageUri);
-
-  rv = GetMessage(getter_AddRefs(msgHdr));
-  NS_ENSURE_SUCCESS(rv, rv);
     // okay done with the current message; copying the existing message header
     // to the new database
-  m_db->CopyHdrFromExistingHdr(m_startOfNewMsg, msgHdr, PR_TRUE,
+  if (m_curSrcHdr)
+    m_db->CopyHdrFromExistingHdr(m_startOfNewMsg, m_curSrcHdr, PR_TRUE,
                                getter_AddRefs(newMsgHdr));
+  m_curSrcHdr = nsnull;
+  if (newMsgHdr && m_statusOffset != 0)
+  {
+    PRUint32 oldMsgSize;
+    newMsgHdr->SetStatusOffset(m_statusOffset);
+    (void) newMsgHdr->GetMessageSize(&oldMsgSize);
+    newMsgHdr->SetMessageSize(oldMsgSize + m_statusLineSize);
+  }
 
 //  m_db->Commit(nsMsgDBCommitType::kLargeCommit);  // no sense commiting until the end
     // advance to next message 
   m_curIndex ++;
+  m_startOfMsg = PR_TRUE;
   nsCOMPtr <nsIMsgStatusFeedback> statusFeedback;
   if (m_window)
   {
