@@ -29,6 +29,10 @@
    :: window rules are in xul.css
    ::::: */
  
+window[chromehidden~="popupcontrol"] #popup-control {
+  display: none;
+}
+
 window[chromehidden~="toolbar"] #nav-bar-buttons,
 window[chromehidden~="toolbar"] #print-button {
   display: none;
