@@ -456,7 +456,7 @@ PRBool OESettings::IdentityMatches( nsIMsgIdentity *pIdent, const char *pName, c
 	rv = pIdent->GetEmail( &pIEmail);
 	rv = pIdent->GetReplyTo( &pIReply);
 	if (ppIName) {
-		nsString name = ppIName;
+		nsString name(ppIName);
 		nsCRT::free( ppIName);
 		pIName = name.ToNewCString();
 	}

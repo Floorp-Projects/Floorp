@@ -1419,7 +1419,7 @@ nsMsgNewsFolder::GetGroupPasswordWithUI(const PRUnichar * aPromptMessage, const
       rv = CreateNewsgroupPasswordUrlForSignon(mURI, getter_Copies(signonURL));
       if (NS_FAILED(rv)) return rv;
 
-      nsAutoString realm = NS_ConvertToString(signonURL);
+      nsAutoString realm(NS_ConvertToString(signonURL));
       rv = dialog->PromptPassword(aPromptTitle, aPromptMessage, realm.GetUnicode(), nsIPrompt::SAVE_PASSWORD_PERMANENTLY,
                                   getter_Copies(uniGroupPassword), &okayValue);
       if (NS_FAILED(rv)) return rv;
@@ -1484,7 +1484,7 @@ nsMsgNewsFolder::GetGroupUsernameWithUI(const PRUnichar * aPromptMessage, const
             rv = CreateNewsgroupUsernameUrlForSignon(mURI, getter_Copies(signonURL));
             if (NS_FAILED(rv)) return rv;
 
-            nsAutoString realm = NS_ConvertToString(signonURL);
+            nsAutoString realm(NS_ConvertToString(signonURL));
             rv = dialog->Prompt(aPromptTitle, aPromptMessage, realm.GetUnicode(), 
                                 nsIPrompt::SAVE_PASSWORD_PERMANENTLY, nsnull,
                                 getter_Copies(uniGroupUsername), &okayValue);

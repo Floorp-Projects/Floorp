@@ -511,7 +511,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::AddSubfolder(nsAutoString *name,
   // XXX URI should use UTF-8?
   // (see RFC2396 Uniform Resource Identifiers (URI): Generic Syntax)
 
-  const nsString fileCharset = nsMsgI18NFileSystemCharset();
+  const nsString fileCharset(nsMsgI18NFileSystemCharset());
   char *convertedName;
   rv = ConvertFromUnicode(fileCharset, *name, &convertedName);
   if (NS_FAILED(rv))
@@ -1382,7 +1382,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Rename(const PRUnichar *aNewName)
 	// convert from PRUnichar* to char* due to not having Rename(PRUnichar*)
 	// function in nsIFileSpec
 
-	const nsString fileCharset = nsMsgI18NFileSystemCharset();
+	const nsString fileCharset(nsMsgI18NFileSystemCharset());
 	char *convertedNewName;
 	if (NS_FAILED(ConvertFromUnicode(fileCharset, nsAutoString(aNewName), &convertedNewName)))
 		return NS_ERROR_FAILURE;

@@ -415,7 +415,7 @@ PRBool OutlookSettings::IdentityMatches( nsIMsgIdentity *pIdent, const char *pNa
 	rv = pIdent->GetReplyTo( &pIReply);
 	
 	if (ppIName) {
-		nsString name = ppIName;
+		nsString name(ppIName);
 		nsCRT::free( ppIName);
 		pIName = name.ToNewCString();
 	}

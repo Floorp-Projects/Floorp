@@ -1279,7 +1279,7 @@ void CMapiApi::ReportLongProp( const char *pTag, LPSPropValue pVal)
 void CMapiApi::ReportStringProp( const char *pTag, LPSPropValue pVal)
 {
 	if ( pVal && (PROP_TYPE( pVal->ulPropTag) == PT_TSTRING)) {
-		nsCString val = (LPCTSTR) (pVal->Value.LPSZ);
+		nsCString val((LPCTSTR) (pVal->Value.LPSZ));
 		MAPI_TRACE2( "%s %s\n", pTag, (const char *)val);
 	}
 	else if (pVal && (PROP_TYPE( pVal->ulPropTag) == PT_NULL)) {

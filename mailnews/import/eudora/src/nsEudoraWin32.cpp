@@ -99,7 +99,7 @@ PRBool nsEudoraWin32::FindEudoraLocation( nsIFileSpec *pFolder, PRBool findIni)
 		// get the value of "Current"
 		BYTE *pBytes = GetValueBytes( sKey, "Current");
 		if (pBytes) {
-			nsCString str = (const char *)pBytes;
+			nsCString str((const char *)pBytes);
 			delete [] pBytes;
 			
 			// Command line is Eudora mailfolder eudora.ini
@@ -513,7 +513,7 @@ nsresult nsEudoraWin32::FindTOCFile( nsIFileSpec *pMailFile, nsIFileSpec **ppTOC
 	if (NS_FAILED( rv))
 		return( rv);
 
-	nsCString	leaf = pName;
+	nsCString	leaf(pName);
 	nsCRT::free( pName);
 	nsCString	name;
 	if ((leaf.Length() > 4) && (leaf.CharAt( leaf.Length() - 4) == '.'))
@@ -559,7 +559,7 @@ PRBool nsEudoraWin32::ImportSettings( nsIFileSpec *pIniFile, nsIMsgAccount **loc
 	if (!pIniPath)
 		return( PR_FALSE);
 
-	nsCString	iniPath = pIniPath;
+	nsCString	iniPath(pIniPath);
 	nsCRT::free( pIniPath);
 	
 	UINT			valInt;
@@ -567,7 +567,7 @@ PRBool nsEudoraWin32::ImportSettings( nsIFileSpec *pIniFile, nsIMsgAccount **loc
 	DWORD			sSize;
 	DWORD			sOffset = 0;
 	DWORD			start;
-	nsCString		sectionName = "Settings";
+	nsCString		sectionName("Settings");
 	int				popCount = 0;
 	int				accounts = 0;
 	
@@ -684,7 +684,7 @@ void nsEudoraWin32::GetAccountName( const char *pSection, nsString& str)
 {
 	str.Truncate();
 
-	nsCString	s = pSection;
+	nsCString	s(pSection);
 	
 	if (!s.CompareWithConversion( "Settings", PR_TRUE)) {
 		str.AssignWithConversion("Eudora ");
@@ -902,7 +902,7 @@ nsresult nsEudoraWin32::GetAttachmentInfo( const char *pFileName, nsIFileSpec *p
 		pSpec->GetLeafName( &pLeaf);
 		if (!pLeaf)
 			return( NS_ERROR_FAILURE);
-		nsCString name = pLeaf;
+		nsCString name(pLeaf);
 		nsCRT::free( pLeaf);
 		if (name.Length() > 4) {
 			nsCString ext;
@@ -1042,7 +1042,7 @@ void nsEudoraWin32::GetMimeTypeFromExtension( nsCString& ext, nsCString& mimeTyp
 		pSpec->GetNativePath( &pName);
 		if (!pName)
 			return;
-		nsCString	fileName = pName;
+		nsCString	fileName(pName);
 		nsCRT::free( pName);
 
 		// Read the mime map section
@@ -1225,7 +1225,7 @@ nsresult nsEudoraWin32::FindAddressBooks( nsIFileSpec *pRoot, nsISupportsArray *
 	spec->GetNativePath( &pName);
 	if (!pName)
 		return( NS_OK);
-	nsCString	fileName = pName;
+	nsCString	fileName(pName);
 	nsCRT::free( pName);
 	
 	// This is the supposed ini file name!
@@ -1238,7 +1238,7 @@ nsresult nsEudoraWin32::FindAddressBooks( nsIFileSpec *pRoot, nsISupportsArray *
 		delete [] pBuffer;
 		return( NS_OK);
 	}
-	nsCString	dirs = pBuffer;
+	nsCString	dirs(pBuffer);
 	delete [] pBuffer;
 	dirs.Trim( kWhitespace);
 	PRInt32	idx = 0;

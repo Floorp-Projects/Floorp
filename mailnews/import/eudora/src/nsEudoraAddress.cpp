@@ -724,13 +724,13 @@ void nsEudoraAddress::BuildSingleCard( CAliasEntry *pEntry, CAliasData *pData, n
 		
 	*/
 
-	nsCString	displayName = pData->m_realName;
+	nsCString	displayName(pData->m_realName);
 	nsCString	name;
 	nsCString	fax;
 	nsCString	phone;
 	nsCString	address;
 	nsCString	address2;
-	nsCString	note = pEntry->m_notes;
+	nsCString	note(pEntry->m_notes);
 	if (note.Length() > 0) {
 		ExtractNoteField( note, fax, "fax");
 		ExtractNoteField( note, phone, "phone");

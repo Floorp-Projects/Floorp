@@ -186,7 +186,7 @@ nsresult nsOutlookMail::GetMailFolders( nsISupportsArray **pArray)
 
 PRBool nsOutlookMail::IsAddressBookNameUnique( nsCString& name, nsCString& list)
 {
-	nsCString		usedName = "[";
+	nsCString		usedName("[");
 	usedName.Append( name);
 	usedName.Append( "],");
 
@@ -803,7 +803,7 @@ void nsOutlookMail::BuildAttachments( CMapiMessage& msg, int count)
 						a->description = nsCRT::strdup( msg.GetFileName());
 						if (!nsCRT::strlen( a->description)) {
 							nsCRT::free( a->description);
-							nsCString	str = "Attachment ";
+							nsCString	str("Attachment ");
 							str.AppendInt( (PRInt32) i);
 							a->description = nsCRT::strdup( (const char *)str);
 						}
