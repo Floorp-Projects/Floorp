@@ -20,7 +20,7 @@ function GetArgs()
 	return args;
 }
 
-function startup()
+function ComposeStartup()
 {
 	dump("Compose: StartUp\n");
 	var sessionID;
@@ -53,12 +53,20 @@ function startup()
 	if (editorAppCore)
 	{
 		dump("initalizing the editor app core\n");
+		editorName = appCoreName; //Very important to set this variable used by Editor js
 
 		// setEditorType MUST be call before setContentWindow
+dump("args.editorType.toLowerCase(): " + args.editorType.toLowerCase() + "\n");
 		if (args.editorType && args.editorType.toLowerCase() == "html")
+		{
 			editorAppCore.setEditorType("html");
+			dump("editor initialized in HTML mode\n");
+		}
 		else
+		{
 			editorAppCore.setEditorType("text");
+			dump("editor initialized in PLAIN TEXT mode\n");
+		}
 		editorAppCore.setContentWindow(window.frames[0]);
 		editorAppCore.setWebShellWindow(window);
 		editorAppCore.setToolbarWindow(window);
@@ -91,18 +99,19 @@ function startup()
 	}
 }
 
-function finish()
+function ComposeExit()
 {
 	dump("\nPage Unloaded from XUL\n");
-	if (composeAppCore)
-	{
-//		dump("\nClosing compose app core\n");
-//		composeAppCore.exit();
-	}
 	if (editorAppCore)
 	{
 		dump("\nClosing editor app core\n");
 		editorAppCore.exit();
+	}
+	if (composeAppCore)
+	{
+		dump("\nClosing compose app core\n");
+//		composeAppCore.exit();
+dump("composeAppCore.exit() not yet implemented!\n");
 	}
 }
 
@@ -141,8 +150,4 @@ function MessageSent()
 	}
 
 	window.close();	// <-- doesn't work yet!
-}
-
-function ComposeExit()
-{
 }
