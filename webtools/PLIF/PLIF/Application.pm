@@ -93,9 +93,6 @@ sub registerCoreServices {
         PLIF::Service::XML
         PLIF::Service::Coses
         PLIF::Service::TemplateToolkit
-        PLIF::Service::GenericOutputs
-        PLIF::DataSource::FileStrings
-        PLIF::DataSource::DebugStrings
         PLIF::Service::Components::AdminCommands
     ));
 }
@@ -145,6 +142,9 @@ sub registerFallbackServices {
     my $self = shift;
     # install the configuration system
     $self->register(qw(
+        PLIF::DataSource::FileStrings
+        PLIF::DataSource::DebugStrings
+        PLIF::Service::GenericOutputs
         PLIF::Input::CommandLine
         PLIF::Input::Default
     ));
