@@ -79,7 +79,11 @@
 #define LAYOUT_DLL "LAYOUT_DLL"
 #endif
 
+#ifdef XP_MAC
+#define REL_LAYOUT_DLL LAYOUT_DLL
+#else
 #define REL_LAYOUT_DLL "rel:"LAYOUT_DLL
+#endif
 
 //uncomment this to use netlib to determine what the
 //user agent string is. we really *want* to do this,
