@@ -140,7 +140,6 @@ function init() {
   helpGlossaryPanel = document.getElementById("help-glossary-panel");
   helpBrowser = document.getElementById("help-content");
   helpExternal = document.getElementById("help-external");
-  // XXXbz this is never unset.  That should be fixed.  See the IDL.
   helpExternal
     .docShell
     .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
