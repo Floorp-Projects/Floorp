@@ -45,7 +45,6 @@ class nsILoadGroup;
 class nsIViewManager;
 class nsString;
 class nsIScriptContextOwner;
-class nsIContentViewerContainer;
 class nsIDOMEvent;
 class nsIDeviceContext;
 class nsIParser;
@@ -96,7 +95,7 @@ public:
   NS_IMETHOD StartDocumentLoad(const char* aCommand,
                                nsIChannel* aChannel,
                                nsILoadGroup* aLoadGroup,
-                               nsIContentViewerContainer* aContainer,
+                               nsISupports* aContainer,
                                nsIStreamListener **aDocListener) = 0;
 
   /**

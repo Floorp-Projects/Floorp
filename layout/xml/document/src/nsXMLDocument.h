@@ -53,7 +53,7 @@ public:
   NS_IMETHOD StartDocumentLoad(const char* aCommand,
                                nsIChannel* aChannel,
                                nsILoadGroup* aLoadGroup,
-                               nsIContentViewerContainer* aContainer,
+                               nsISupports* aContainer,
                                nsIStreamListener **aDocListener);
 
   NS_IMETHOD EndLoad();

@@ -41,7 +41,6 @@
 #include "nsICSSParser.h"
 #include "nsICSSStyleSheet.h"
 #include "nsIContentSink.h"
-#include "nsIContentViewerContainer.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMEventListener.h"
 #include "nsIDOMHTMLFormElement.h"

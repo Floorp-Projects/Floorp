@@ -845,7 +845,7 @@ nsresult
 nsDocument::StartDocumentLoad(const char* aCommand,
                               nsIChannel* aChannel,
                               nsILoadGroup* aLoadGroup,
-                              nsIContentViewerContainer* aContainer,
+                              nsISupports* aContainer,
                               nsIStreamListener **aDocListener)
 {
   return Reset(aChannel, aLoadGroup);

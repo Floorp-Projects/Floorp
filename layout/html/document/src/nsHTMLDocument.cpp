@@ -49,7 +49,6 @@
 #include "nsIIOService.h"
 #include "nsIURL.h"
 #include "nsNeckoUtil.h"
-#include "nsIContentViewerContainer.h"
 #include "nsIWebShell.h"
 #include "nsIWebShellServices.h"
 #include "nsIDocumentLoader.h"
@@ -382,7 +381,7 @@ NS_IMETHODIMP
 nsHTMLDocument::StartDocumentLoad(const char* aCommand,
                                   nsIChannel* aChannel,
                                   nsILoadGroup* aLoadGroup,
-                                  nsIContentViewerContainer* aContainer,
+                                  nsISupports* aContainer,
                                   nsIStreamListener **aDocListener)
 {
   nsresult rv = nsDocument::StartDocumentLoad(aCommand,

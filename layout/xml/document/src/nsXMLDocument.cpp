@@ -29,7 +29,6 @@
 #include "nsIXMLContentSink.h"
 #include "nsIPresShell.h"
 #include "nsIPresContext.h" 
-#include "nsIContentViewerContainer.h"
 #include "nsIWebShell.h"
 #include "nsIDocumentLoader.h"
 #include "nsIHTMLContent.h"
@@ -194,7 +193,7 @@ NS_IMETHODIMP
 nsXMLDocument::StartDocumentLoad(const char* aCommand,
                                nsIChannel* aChannel,
                                nsILoadGroup* aLoadGroup,
-                               nsIContentViewerContainer* aContainer,
+                               nsISupports* aContainer,
                                nsIStreamListener **aDocListener)
 {
   nsresult rv = nsDocument::StartDocumentLoad(aCommand,

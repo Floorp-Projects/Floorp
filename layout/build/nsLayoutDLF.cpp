@@ -36,7 +36,6 @@
 #include "nsIXULContentSink.h"
 #include "nsIStreamLoadableDocument.h"
 #include "nsIDocStreamLoaderFactory.h"
-#include "nsIContentViewerContainer.h"
 
 // Factory code for creating variations on html documents
 
@@ -361,8 +360,7 @@ nsLayoutDLF::CreateDocument(const char* aCommand,
     // Initialize the document to begin loading the data.  An
     // nsIStreamListener connected to the parser is returned in
     // aDocListener.
-    nsCOMPtr<nsIContentViewerContainer> container(do_QueryInterface(aContainer));
-    rv = doc->StartDocumentLoad(aCommand, aChannel, aLoadGroup, container, aDocListener);
+    rv = doc->StartDocumentLoad(aCommand, aChannel, aLoadGroup, aContainer, aDocListener);
     if (NS_FAILED(rv))
       break;
 
@@ -453,8 +451,7 @@ nsLayoutDLF::CreateRDFDocument(const char* aCommand,
    * An nsIStreamListener connected to the parser is returned in
    * aDocListener.
    */
-  nsCOMPtr<nsIContentViewerContainer> container(do_QueryInterface(aContainer));
-  rv = doc->StartDocumentLoad(aCommand, aChannel, aLoadGroup, container, aDocListener);
+  rv = doc->StartDocumentLoad(aCommand, aChannel, aLoadGroup, aContainer, aDocListener);
   if (NS_SUCCEEDED(rv)) {
     /*
      * Bind the document to the Content Viewer...
@@ -493,8 +490,7 @@ nsLayoutDLF::CreateXULDocumentFromStream(nsIInputStream& aXULStream,
     if ( NS_FAILED(status) )
       break;
 
-    nsCOMPtr<nsIContentViewerContainer> container(do_QueryInterface(aContainer));
-    status = loader->LoadFromStream(aXULStream, container, aCommand);
+    status = loader->LoadFromStream(aXULStream, aContainer, aCommand);
   }
   while (0);
 

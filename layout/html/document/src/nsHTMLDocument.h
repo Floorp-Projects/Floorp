@@ -34,7 +34,6 @@
 #include "jsapi.h"
 
 class nsContentList;
-class nsIContentViewerContainer;
 class nsIHTMLStyleSheet;
 class nsIHTMLCSSStyleSheet;
 class nsIParser;
@@ -66,7 +65,7 @@ public:
   NS_IMETHOD StartDocumentLoad(const char* aCommand,
                                nsIChannel* aChannel,
                                nsILoadGroup* aLoadGroup,
-                               nsIContentViewerContainer* aContainer,
+                               nsISupports* aContainer,
                                nsIStreamListener **aDocListener);
 
   NS_IMETHOD EndLoad();

@@ -23,7 +23,6 @@
 #include "nscore.h"
 #include "nsCRT.h"
 #include "nsIContentViewer.h"
-#include "nsIContentViewerContainer.h"
 #include "nsIPluginHost.h"
 #include "nsIPluginInstance.h"
 #include "nsIStreamListener.h"

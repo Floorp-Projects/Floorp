@@ -39,7 +39,6 @@ class nsIContent; // XXX nsIXMLDocument.h is bad and doesn't declare this class.
 
 class nsForwardReference;
 class nsIAtom;
-class nsIContentViewerContainer;
 class nsIDOMElement;
 class nsIDOMHTMLFormElement;
 class nsIPrincipal;
@@ -110,7 +109,7 @@ public:
   NS_IMETHOD CreateFromPrototype(const char* aCommand,
                                  nsIXULPrototypeDocument* aPrototype,
                                  nsIPrincipal* aPrincipal,
-                                 nsIContentViewerContainer* aContainer) = 0;
+                                 nsISupports* aContainer) = 0;
 };
 
 // factory functions
