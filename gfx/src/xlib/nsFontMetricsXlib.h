@@ -19,9 +19,9 @@
  * Rights Reserved.
  *
  * Contributor(s): 
- * Tony Tsui <tony@igelaus.com.au>
- * Tim Copperfield <timecop@network.email.ne.jp>
- * Roland Mainz <roland.mainz@informatik.med.uni-giessen.de> 
+ *   Tony Tsui <tony@igelaus.com.au>
+ *   Tim Copperfield <timecop@network.email.ne.jp>
+ *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de> 
  */
 
 #ifndef nsFontMetricsXlib_h__
@@ -192,7 +192,7 @@ public:
   PRUint16           mFontsAlloc;
   PRUint16           mFontsCount;
   PRUint16           mFontsIndex;
-  nsVoidArray        mFontIsGeneric;
+  nsAutoVoidArray    mFontIsGeneric;
 
   nsFontXlib         **mLoadedFonts;
   PRUint16           mLoadedFontsAlloc;
