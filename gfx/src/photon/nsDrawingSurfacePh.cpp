@@ -314,7 +314,7 @@ NS_IMETHODIMP nsDrawingSurfacePh :: Init( PhGC_t * &aGC, PRUint32 aWidth,
   mHeight = aHeight;
   mFlags = aFlags;
 
-  mIsOffsc*‰Š  PR_TRUE;
+  mIsOffscreen = PR_TRUE;
 
   PhDim_t     dim;
   PhArea_t    area;
