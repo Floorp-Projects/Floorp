@@ -935,7 +935,7 @@ export:: $(XPIDLSRCS) $(XPDIST)/idl
 $(XPIDL_GEN_DIR):
 	@if test ! -d $@; then echo Creating $@; rm -rf $@; mkdir $@; else true; fi
 
-$(XPIDL_GEN_DIR)/%.h: %.idl $(IDL_COMPILE) $(XPIDL_GEN_DIR)
+$(XPIDL_GEN_DIR)/%.h: %.idl $(XPIDL_COMPILE) $(XPIDL_GEN_DIR)
 	$(XPIDL_COMPILE) -m header -w -I $(XPDIST)/idl -I$(srcdir) -o $(XPIDL_GEN_DIR)/$* $<
 	@if test -n "$(findstring $*.h, $(EXPORTS))"; \
 	  then echo "*** WARNING: file $*.h generated from $*.idl overrides $(srcdir)/$*.h"; else true; fi
@@ -946,7 +946,7 @@ export:: $(patsubst %.idl,$(XPIDL_GEN_DIR)/%.h, $(XPIDLSRCS)) $(XPDIST)/include
 ifndef NO_GEN_XPT
 # generate intermediate .xpt files into $(XPIDL_GEN_DIR), then link
 # into $(XPIDL_MODULE).xpt and export it to $(DIST)/bin/components.
-$(XPIDL_GEN_DIR)/%.xpt: %.idl $(IDL_COMPILE) $(XPIDL_GEN_DIR)
+$(XPIDL_GEN_DIR)/%.xpt: %.idl $(XPIDL_COMPILE) $(XPIDL_GEN_DIR)
 	$(XPIDL_COMPILE) -m typelib -w -I $(XPDIST)/idl -I$(srcdir) -o $(XPIDL_GEN_DIR)/$* $<
 
 $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt: $(patsubst %.idl,$(XPIDL_GEN_DIR)/%.xpt,$(XPIDLSRCS))
