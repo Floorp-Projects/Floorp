@@ -74,7 +74,8 @@ public:
   NS_IMETHOD  GetSystemAttribute(nsSystemAttrID anID, SystemAttrStruct * aInfo) const;
 
 
-  NS_IMETHOD  GetMetricsFor(const nsFont& aFont, nsIFontMetrics*& aMetrics);
+  NS_IMETHOD    GetMetricsFor(const nsFont& aFont, nsIFontMetrics*& aMetrics);
+  NS_IMETHOD	GetMetricsFor(const nsFont& aFont, nsIAtom* aLangGroup, nsIFontMetrics*& aMetrics);
   NS_IMETHOD 	BeginDocument(void);
   NS_IMETHOD 	EndDocument(void);
   NS_IMETHOD 	BeginPage(void);
