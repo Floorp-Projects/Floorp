@@ -50,9 +50,10 @@ my %MODULES = ('PLIF' => 1);
 #  9 = verbose debugging information
 # 10 = ridiculously verbose debugging spam
 
-# Note. All of the methods described in this class except for the
-# propertyGet, propertySet and propertyExists methods are class
-# methods. You can call "$class->notImplemented" without a problem.
+# Note. All of the methods described in this class except for
+# propertyGet, propertySet, the init and load methods, and AUTOLOAD
+# are class methods. You can call "$class->notImplemented" without a
+# problem.
 
 # provide a standard virtual constructor
 # if already created, merely return $self
@@ -118,29 +119,54 @@ sub bless {
 sub load {
     my $self = shift;
     my($package) = @_;
-    return if $MODULES{$package};
+    if (defined $MODULES{$package}) {
+        syntaxError "$package->create() called despite failing to load package" if $MODULES{$package} == 0;
+        return;
+    }
+    $MODULES{$package} = -1;
     foreach (eval "\@$package\::ISA") {
         $self->load($_) unless $_ eq __PACKAGE__;
     }
-    $MODULES{$package} = 1;
     local $/ = undef;
     my $data = "package $package;use strict;" . eval "<$package\::DATA>";
-    #print STDERR "================================================================================\n$data\n================================================================================\n";
-    evalString $data, "${package}::DATA block";
+    evalString $data, "${package} on-demand section";
     if ($@) {
         $self->error(1, "Error while loading '$package': $@");
+        $MODULES{$package} = 0;
+    } else {
+        $MODULES{$package} = 1;
     }
 }
 
-# provide method-like access for any scalars in $self
+# turn the magic AUTOLOAD into the slightly more useful and less
+# magical implyMethod().
 sub AUTOLOAD {
     my $self = shift;
     my $name = $AUTOLOAD;
-    syntaxError "Use of inherited AUTOLOAD for non-method $name is deprecated", 1 if not defined($self);
-    $name =~ s/^.*://o; # strip fully-qualified portion
-    my $method = $self->can('implyMethod'); # get a function pointer
-    @_ = ($self, $name, @_); # set the arguments
-    goto &$method; # invoke the method using deep magic
+    syntaxError "$name() called without object" if not ref($self);
+    $name =~ s/^(.*):://os; # strip fully-qualified portion
+    my $package = $1;
+    if ($package =~ /::SUPER$/os) {
+        # handle calling inherited methods
+        $package =~ s/::SUPER$//os;
+        my @ISA = eval "if (defined(\@$package\::ISA)) { return \@$package\::ISA }";
+        if (@ISA == 1) {
+            $package = $ISA[0];
+        } else {
+            syntaxError "$package\::SUPER->$name() called but $package has multiple ancestors";
+        }
+    }
+    if (not exists $MODULES{$package}) {
+        syntaxError "$package->$name() called without loading package";
+    } elsif ($MODULES{$package} == 1) {
+        my $method = $package->can('implyMethod'); # get a function pointer
+        @_ = ($self, $name, @_); # set the arguments
+        goto &$method; # invoke the method using deep magic
+    } elsif ($MODULES{$package} == 0) {
+        syntaxError "$package->$name() called despite failing to load package";
+    } else {
+        syntaxError "$package->$name() called while loading package";
+    }
 }
 
 sub propertySet {
@@ -160,7 +186,7 @@ sub propertyGet {
 sub implyMethod {
     my $self = shift;
     my($method) = @_;
-    syntaxError "Tried to access non-existent method '$method' in object '$self'", 1;
+    syntaxError "Tried to access non-existent method '$method' in object '$self'";
 }
 
 
