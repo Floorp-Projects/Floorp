@@ -87,6 +87,9 @@ public:
   NS_IMETHOD    GetValue(nsString& aValue)=0;
   NS_IMETHOD    SetValue(const nsString& aValue)=0;
 
+  NS_IMETHOD    GetAutocomplete(nsString& aAutocomplete)=0;
+  NS_IMETHOD    SetAutocomplete(const nsString& aAutocomplete)=0;
+
   NS_IMETHOD    Blur()=0;
 
   NS_IMETHOD    Focus()=0;
@@ -132,6 +135,8 @@ public:
   NS_IMETHOD    SetUseMap(const nsString& aUseMap);  \
   NS_IMETHOD    GetValue(nsString& aValue);  \
   NS_IMETHOD    SetValue(const nsString& aValue);  \
+  NS_IMETHOD    GetAutocomplete(nsString& aAutocomplete);  \
+  NS_IMETHOD    SetAutocomplete(const nsString& aAutocomplete);  \
   NS_IMETHOD    Blur();  \
   NS_IMETHOD    Focus();  \
   NS_IMETHOD    Select();  \
@@ -174,6 +179,8 @@ public:
   NS_IMETHOD    SetUseMap(const nsString& aUseMap) { return _to SetUseMap(aUseMap); } \
   NS_IMETHOD    GetValue(nsString& aValue) { return _to GetValue(aValue); } \
   NS_IMETHOD    SetValue(const nsString& aValue) { return _to SetValue(aValue); } \
+  NS_IMETHOD    GetAutocomplete(PRInt32* aAutocomplete) { return _to GetAutocomplete(aAutocomplete); } \
+  NS_IMETHOD    SetAutocomplete(PRInt32 aAutocomplete) { return _to SetAutocomplete(aAutocomplete); } \
   NS_IMETHOD    Blur() { return _to Blur(); }  \
   NS_IMETHOD    Focus() { return _to Focus(); }  \
   NS_IMETHOD    Select() { return _to Select(); }  \
