@@ -101,6 +101,9 @@ CBrowserWindow::CBrowserWindow(LStream*	inStream)
 
 CBrowserWindow::~CBrowserWindow()
 {
+   if (mBrowserShell)
+      mBrowserShell->SetTopLevelWindow(nsnull);
+   
    if (mBrowserChrome)
    {
       mBrowserChrome->BrowserShell() = nsnull;
