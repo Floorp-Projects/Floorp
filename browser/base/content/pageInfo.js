@@ -721,7 +721,8 @@ function saveMedia()
   var url = imageView.data[tree.currentIndex][0];
 
   if (url)
-    saveURL(url, null, 'SaveImageTitle', false, makeURI(item.baseURI));
+    // XXX Firefox specfic
+    saveURL(url, null, 'SaveImageTitle', false, false, makeURI(item.baseURI));
 }
 
 function onImageSelect()
