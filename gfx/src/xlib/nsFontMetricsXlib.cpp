@@ -287,6 +287,11 @@ static nsFontCharSetInfoXlib Special = { nsnull };
 static nsFontCharSetInfoXlib CP1251 =
   { "windows-1251", SingleByteConvert, 0,
     TT_OS2_CPR1_CYRILLIC, TT_OS2_CPR2_RUSSIAN };
+static nsFontCharSetInfoXlib USASCII =
+  { "us-ascii", SingleByteConvert, 0,
+    TT_OS2_CPR1_LATIN1 | TT_OS2_CPR1_MAC_ROMAN,
+    TT_OS2_CPR2_CA_FRENCH |  TT_OS2_CPR2_PORTUGESE
+    | TT_OS2_CPR2_WE_LATIN1 |  TT_OS2_CPR2_US };
 static nsFontCharSetInfoXlib ISO88591 =
   { "ISO-8859-1", SingleByteConvert, 0,
     TT_OS2_CPR1_LATIN1 | TT_OS2_CPR1_MAC_ROMAN,
@@ -545,7 +550,7 @@ static const nsFontCharSetMapXlib gConstCharSetMap[] =
   { "gb18030.2000-0",     &FLG_ZHCN,    &GB18030_0     },
   { "gb18030.2000-1",     &FLG_ZHCN,    &GB18030_1     },
   { "gbk-0",              &FLG_ZHCN,    &GBK           },
-  { "gbk1988.1989-0",     &FLG_ZHCN,    &GBK           },
+  { "gbk1988.1989-0",     &FLG_ZHCN,    &USASCII       },
   { "hkscs-1",            &FLG_ZHTW,    &HKSCS         },
   { "hp-japanese15",      &FLG_NONE,    &Unknown       },
   { "hp-japaneseeuc",     &FLG_NONE,    &Unknown       },
