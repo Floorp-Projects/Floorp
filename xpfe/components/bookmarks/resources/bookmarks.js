@@ -211,7 +211,7 @@ function copySelectionToClipboard()
     if (!trans) return false;
 
     var clip_uri = "component://netscape/widget/clipboard";
-    var clip = Components.classes[clip_uri].createInstance();
+    var clip = Components.classes[clip_uri].getService();
     if (clip) clip = clip.QueryInterface(Components.interfaces.nsIClipboard);
     if (!clip) return false;
     clip.emptyClipboard(Components.interfaces.nsIClipboard.kGlobalClipboard);
