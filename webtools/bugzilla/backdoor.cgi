@@ -61,9 +61,6 @@ if (!defined $passwd || !defined $::FORM{'passwd'} ||
 
 
 
-my %prodmap = ("Communicator" => "Mozilla");
-
-    
 my $prod = $::FORM{'product'};
 my $comp = $::FORM{'component'};
 my $version = $::FORM{'version'};
@@ -102,6 +99,12 @@ if (lsearch($::components{$prod}, $comp) < 0) {
 if (lsearch($::versions{$prod}, $version) < 0) {
     Punt("version", $comp);
 }
+
+
+$::FORM{'product'} = $prod;
+$::FORM{'component'} = $comp;
+$::FORM{'version'} = $version;
+
 
 $::FORM{'long_desc'} =
     "(This bug imported from BugSplat, Netscape's internal bugsystem.  It
