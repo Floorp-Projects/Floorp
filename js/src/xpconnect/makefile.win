@@ -31,22 +31,24 @@ REQUIRES=xpcom js
 DEFINES=-DWIN32_LEAN_AND_MEAN -DEXPORT_XPC_API
 
 OBJS=					\
+	.\$(OBJDIR)\nsXPConnect.obj	\
+	.\$(OBJDIR)\xpcarbitrary.obj	\
+	.\$(OBJDIR)\xpcbogusii.obj	\
+	.\$(OBJDIR)\xpcbogusjs.obj	\
+	.\$(OBJDIR)\xpccontext.obj	\
 	.\$(OBJDIR)\xpcconvert.obj	\
+	.\$(OBJDIR)\xpcinvoke.obj	\
+	.\$(OBJDIR)\xpcmaps.obj	\
 	.\$(OBJDIR)\xpcnsid.obj	\
 	.\$(OBJDIR)\xpcstubs.obj	\
-	.\$(OBJDIR)\xpcmaps.obj	\
-	.\$(OBJDIR)\xpccontext.obj	\
-	.\$(OBJDIR)\xpcbogusjs.obj	\
-	.\$(OBJDIR)\xpcbogusii.obj	\
-	.\$(OBJDIR)\xpcinvoke.obj	\
 	.\$(OBJDIR)\xpcwrappedjs.obj	\
 	.\$(OBJDIR)\xpcwrappedjsclass.obj	\
 	.\$(OBJDIR)\xpcwrappednative.obj	\
 	.\$(OBJDIR)\xpcwrappednativeclass.obj	\
-	.\$(OBJDIR)\nsXPConnect.obj	\
 	$(NULL)
 
 EXPORTS =					\
+    nsIXPCScriptable.h \
     nsIXPConnect.h     \
     xpcbogusii.h       \
 	$(NULL)

@@ -46,6 +46,7 @@ XPCContext::newXPCContext(JSContext* aJSContext,
                         WrappedNativeClassMapSize);
 
     if(xpcc                             &&
+       xpcc->GetXPConnect()             &&
        xpcc->GetWrappedJSMap()          &&
        xpcc->GetWrappedNativeMap()      &&
        xpcc->GetWrappedJSClassMap()     &&
@@ -67,6 +68,7 @@ XPCContext::XPCContext(JSContext* aJSContext,
                      int WrappedJSClassMapSize,
                      int WrappedNativeClassMapSize)
 {
+    mXPConnect = nsXPConnect::GetXPConnect();
     mJSContext = aJSContext;
     mGlobalObj = aGlobalObj;
     mWrappedJSMap = JSObject2WrappedJSMap::newMap(WrappedJSMapSize);
@@ -77,6 +79,8 @@ XPCContext::XPCContext(JSContext* aJSContext,
 
 XPCContext::~XPCContext()
 {
+    if(mXPConnect)
+        NS_RELEASE(mXPConnect);
     if(mWrappedJSMap)
         delete mWrappedJSMap;
     if(mWrappedNativeMap)

@@ -70,6 +70,9 @@ public:
 };
 
 /***************************************************************************/
+// forward declaration...
+class nsIXPCScriptable;
+
 // {215DBE02-94A7-11d2-BA58-00805F8A5DD7}
 #define NS_IXPCONNECT_WRAPPED_NATIVE_IID   \
 { 0x215dbe02, 0x94a7, 0x11d2,               \
@@ -77,7 +80,10 @@ public:
 
 class nsIXPConnectWrappedNative : public nsISupports
 {
-    // no methods!
+public:
+    // XXX add the rest of the fun methods
+    NS_IMETHOD GetDynamicScriptable(nsIXPCScriptable** p) = 0;
+    NS_IMETHOD GetArbitraryScriptable(nsIXPCScriptable** p) = 0;
 };
 
 /***************************************************************************/
@@ -88,7 +94,7 @@ class nsIXPConnectWrappedNative : public nsISupports
 
 class nsIXPConnectWrappedJS : public nsISupports
 {
-    // no methods!
+    // no methods allowed since this is a shared vtbl!
 };
 
 /***************************************************************************/

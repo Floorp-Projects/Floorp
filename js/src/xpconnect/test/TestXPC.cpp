@@ -1,9 +1,51 @@
 
 #include "nsIXPConnect.h"
+#include "nsIXPCScriptable.h"
 #include "jsapi.h"
 #include <stdio.h>
 
 #include "xpcbogusii.h"
+
+/***************************************************************************/
+class MyScriptable : public nsIXPCScriptable
+{
+    NS_DECL_ISUPPORTS;
+    XPC_DECLARE_IXPCSCRIPTABLE;
+};
+
+NS_IMPL_ISUPPORTS(MyScriptable,NS_IXPCSCRIPTABLE_IID);
+
+// XPC_IMPLEMENT_FORWARD_IXPCSCRIPTABLE(MyScriptable);
+    XPC_IMPLEMENT_FORWARD_CREATE(MyScriptable);
+    XPC_IMPLEMENT_FORWARD_LOOKUPPROPERTY(MyScriptable);
+    XPC_IMPLEMENT_FORWARD_DEFINEPROPERTY(MyScriptable);
+    XPC_IMPLEMENT_FORWARD_GETPROPERTY(MyScriptable);
+    XPC_IMPLEMENT_FORWARD_SETPROPERTY(MyScriptable);
+    XPC_IMPLEMENT_FORWARD_GETATTRIBUTES(MyScriptable);
+    XPC_IMPLEMENT_FORWARD_SETATTRIBUTES(MyScriptable);
+    XPC_IMPLEMENT_FORWARD_DELETEPROPERTY(MyScriptable);
+//    XPC_IMPLEMENT_FORWARD_DEFAULTVALUE(MyScriptable);
+    XPC_IMPLEMENT_FORWARD_ENUMERATE(MyScriptable);
+    XPC_IMPLEMENT_FORWARD_CHECKACCESS(MyScriptable);
+    XPC_IMPLEMENT_FORWARD_CALL(MyScriptable);
+    XPC_IMPLEMENT_FORWARD_CONSTRUCT(MyScriptable);
+    XPC_IMPLEMENT_FORWARD_FINALIZE(MyScriptable);
+
+nsresult
+MyScriptable::DefaultValue(JSContext *cx, JSObject *obj,             
+                            JSType type, jsval *vp,                         
+                            nsIXPConnectWrappedNative* wrapper,             
+                            nsIXPCScriptable* arbitrary,                    
+                            JSBool* retval)
+{
+    if(type == JSTYPE_STRING || type == JSTYPE_VOID)
+    {
+        *vp = STRING_TO_JSVAL(JS_NewStringCopyZ(cx, "obj with MyScriptable"));
+        *retval = JS_TRUE;
+        return NS_OK;
+    }
+    return arbitrary->DefaultValue(cx, obj, type, vp, wrapper, NULL, retval);
+}                                                             
 
 
 /***************************************************************************/
@@ -40,10 +82,30 @@ class nsTestXPCFoo : public nsITestXPCFoo2
 
 nsresult nsTestXPCFoo::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
-    // XXX bogus trust...
+  if (NULL == aInstancePtr) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  *aInstancePtr = NULL;
+
+  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+  static NS_DEFINE_IID(kClassIID, NS_ITESTXPC_FOO_IID);
+  static NS_DEFINE_IID(kClass2IID, NS_ITESTXPC_FOO2_IID);
+  static NS_DEFINE_IID(kScriptableIID, NS_IXPCSCRIPTABLE_IID);
+
+  if (aIID.Equals(kClassIID) || 
+      aIID.Equals(kClass2IID) ||
+      aIID.Equals(kISupportsIID)) {
     *aInstancePtr = (void*) this;
     NS_ADDREF_THIS();
     return NS_OK;
+  }
+  if (aIID.Equals(kScriptableIID)) {
+    *aInstancePtr = (void*) new MyScriptable();
+    return NS_OK;
+  }
+
+  return NS_NOINTERFACE;
 }
 
 nsresult nsTestXPCFoo::Test(int p1, int p2, int* retval)
@@ -172,17 +234,22 @@ int main()
             JS_SetProperty(cx, glob, "foo", &v);
 
             char* txt[] = {
-                "print('foo = '+foo)",
-                "print('foo.five = '+ foo.five)",
-                "print('foo.six = '+ foo.six)",
-                "print('foo.bogus = '+ foo.bogus)",
-                "print('foo.Test(10,20) returned: '+foo.Test(10,20))",
+                "print('foo = '+foo);",
+                "foo.toString = function(){return 'foo_baby';}",
+                "print('foo = '+foo);",
+                "print('foo = '+foo.toString());",
+                "print('foo.five = '+ foo.five);",
+                "print('foo.six = '+ foo.six);",
+                "print('foo.bogus = '+ foo.bogus);",
+                "foo.bogus = 5;",
+                "print('foo.bogus = '+ foo.bogus);",
+                "print('foo.Test(10,20) returned: '+foo.Test(10,20));",
                 "function Test(p1, p2){print('test called in JS with p1 = '+p1+' and p2 = '+p2);return p1+p2;}",
-                "bar = new Object()",
-                "bar.Test = Test",
-//                "bar.Test(5,7)",
+                "bar = new Object();",
+                "bar.Test = Test;",
+//                "bar.Test(5,7);",
                 "function QI(iid){print('QueryInterface called in JS with iid = '+iid); return  this;}",
-                "bar.QueryInterface = QI",
+                "bar.QueryInterface = QI;",
                 0,
             };
 
