@@ -25,13 +25,12 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// XXX regenerate:
 #define NS_IRUNNABLE_IID                             \
-{ /* 677d9a90-93ee-11d2-816a-006008119d7a */         \
-    0x677d9a90,                                      \
-    0x93ee,                                          \
-    0x11d2,                                          \
-    {0x81, 0x6a, 0x00, 0x60, 0x19, 0x11, 0x9d, 0x7a} \
+{ /* e06996e0-0d6b-11d3-9331-00104ba0fd40 */         \
+    0xe06996e0,                                      \
+    0x0d6b,                                          \
+    0x11d3,                                          \
+    {0x93, 0x31, 0x00, 0x10, 0x4b, 0xa0, 0xfd, 0x40} \
 }
 
 class nsIRunnable : public nsISupports
@@ -45,13 +44,12 @@ public:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// XXX regenerate:
 #define NS_ITHREAD_IID                               \
-{ /* 677d9a90-93ee-11d2-816a-006008119d7a */         \
-    0x677d9a90,                                      \
-    0x93ee,                                          \
-    0x11d2,                                          \
-    {0x81, 0x6a, 0x00, 0x60, 0x29, 0x11, 0x9d, 0x7a} \
+{ /* ecbb89e0-0d6b-11d3-9331-00104ba0fd40 */         \
+    0xecbb89e0,                                      \
+    0x0d6b,                                          \
+    0x11d3,                                          \
+    {0x93, 0x31, 0x00, 0x10, 0x4b, 0xa0, 0xfd, 0x40} \
 }
 
 class nsIThread : public nsISupports 
@@ -60,10 +58,10 @@ public:
     NS_DEFINE_STATIC_IID_ACCESSOR(NS_ITHREAD_IID);
 
     // returns the nsIThread for the current thread:
-    static NS_BASE nsresult GetCurrent(nsIThread* *result);
+    static NS_COM nsresult GetCurrent(nsIThread* *result);
 
     // returns the nsIThread for an arbitrary PRThread:
-    static NS_BASE nsresult GetIThread(PRThread* prthread, nsIThread* *result);
+    static NS_COM nsresult GetIThread(PRThread* prthread, nsIThread* *result);
 
     NS_IMETHOD Join() = 0;
 
@@ -78,7 +76,7 @@ public:
     NS_IMETHOD GetPRThread(PRThread* *result) = 0;
 };
 
-extern NS_BASE nsresult
+extern NS_COM nsresult
 NS_NewThread(nsIThread* *result, 
              nsIRunnable* runnable,
              PRUint32 stackSize = 0,
@@ -88,13 +86,12 @@ NS_NewThread(nsIThread* *result,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// XXX regenerate:
 #define NS_ITHREADPOOL_IID                           \
-{ /* 677d9a90-93ee-11d2-816a-006008119d7a */         \
-    0x677d9a90,                                      \
-    0x93ee,                                          \
-    0x11d2,                                          \
-    {0x81, 0x6a, 0x00, 0x60, 0x39, 0x11, 0x9d, 0x7a} \
+{ /* 074d0170-0d6c-11d3-9331-00104ba0fd40 */         \
+    0x074d0170,                                      \
+    0x0d6c,                                          \
+    0x11d3,                                          \
+    {0x93, 0x31, 0x00, 0x10, 0x4b, 0xa0, 0xfd, 0x40} \
 }
 
 /**
@@ -114,7 +111,7 @@ public:
     NS_IMETHOD Shutdown() = 0;
 };
 
-extern NS_BASE nsresult
+extern NS_COM nsresult
 NS_NewThreadPool(nsIThreadPool* *result,
                  PRUint32 minThreads, PRUint32 maxThreads,
                  PRUint32 stackSize = 0,

@@ -14,11 +14,9 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-DEPTH=..\..
+DEPTH=..\..\..
 IGNORE_MANIFEST=1
 
-# Don't recur into xptinfo and xptcall, because they may require xpidl,
-# which hasn't been built yet.  They'll be called from the xpcom makefile.
 DIRS=public src tests tools
 
 include <$(DEPTH)\config\rules.mak>

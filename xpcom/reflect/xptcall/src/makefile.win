@@ -20,46 +20,30 @@ IGNORE_MANIFEST=1
 
 DIRS=md
 
-MAKE_OBJ_TYPE	= DLL
-DLLNAME		= xptcall$(MOZ_BITS)
-#PDBFILE		= $(DLLNAME).pdb
-#MAPFILE		= $(DLLNAME).map
-DLL		=.\$(OBJDIR)\$(DLLNAME).dll
+MODULE=xpcom
 
-MODULE=xptcall
-REQUIRES=xpcom libxpt xptinfo
+LIBRARY_NAME = xpcomxptcall_s
 
 DEFINES=-DWIN32_LEAN_AND_MEAN -DEXPORT_XPTC_API
 
-OBJS=					\
-	.\$(OBJDIR)\xptcall.obj	\
-	.\md\win32\$(OBJDIR)\xptcinvoke.obj	\
-	.\md\win32\$(OBJDIR)\xptcstubs.obj	\
+OBJS=                           \
+	.\$(OBJDIR)\xptcall.obj \
 	$(NULL)
 
 EXPORTS =					\
 	$(NULL)
 
-LINCS=-I$(PUBLIC)\xptcall -I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor \
-      -I$(PUBLIC)\libxpt -I$(PUBLIC)\xptinfo
+LINCS=-I$(PUBLIC)\xpcom
 
 LCFLAGS = \
         $(LCFLAGS) \
         $(DEFINES) \
         $(NULL)
 
-LLIBS=	$(LIBNSPR)	\
-	$(DIST)\lib\xpcom.lib	\
-	$(DIST)\lib\xptinfo$(MOZ_BITS).lib	\
-	$(NULL)
-
 include <$(DEPTH)\config\rules.mak>
 
-install:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
-    
+libs:: $(LIBRARY)
+	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
 
 clobber::
-	rm -f $(DIST)\lib\$(DLLNAME).lib
-	rm -f $(DIST)\bin\$(DLLNAME).dll
+        rm -f $(DIST)\lib\$(LIBRARY_NAME).lib

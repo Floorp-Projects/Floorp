@@ -45,7 +45,6 @@
 #include "nsIPluginHost.h"
 #include "nsIPluginManager.h"
 #include "nsIServiceManager.h"
-#include "nsXPComCIID.h"
 #include "nsIEventQueueService.h"
 #include "lcglue.h"
 #include "xpgetstr.h"

@@ -17,27 +17,15 @@
 
 IGNORE_MANIFEST=1
 
-MAKE_OBJ_TYPE	= DLL
-
 DEPTH=..\..\..\..
+MODULE	= 	xpcom
 
-DLLNAME = xptinfo$(MOZ_BITS)
-DLL		=.\$(OBJDIR)\$(DLLNAME).dll
+LIBRARY_NAME=xpcomxptinfo_s
 
-LCFLAGS = -DEXPORT_XPTI_API -DWIN32_LEAN_AND_MEAN
+LCFLAGS = -DWIN32_LEAN_AND_MEAN -DEXPORT_XPTI_API -DEXPORT_XPT_API 
 
 LINCS = 	\
 		-I$(PUBLIC)\xpcom \
-		-I$(PUBLIC)\raptor \
-		-I$(PUBLIC)\libxpt	\
-		-I$(PUBLIC)\xptinfo	\
-		$(NULL)
-
-LLIBS	=	\
-		$(DIST)\lib\libxpt$(MOZ_BITS).lib	\
-		$(DIST)\lib\xpcom.lib	\
-		$(LIBNSPR)		\
-        $(DIST)\lib\plc3.lib \
 		$(NULL)
 
 CSRCS	=	\
@@ -61,10 +49,10 @@ CPP_OBJS =	\
 		.\$(OBJDIR)\nsTypelibRecord.obj		\
 		$(NULL)
 
-MODULE	= 	xptinfo
-
 include <$(DEPTH)\config\rules.mak>
 
-install:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
+libs:: $(LIBRARY)
+	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
+
+clobber::
+        rm -f $(DIST)\lib\$(LIBRARY_NAME).lib

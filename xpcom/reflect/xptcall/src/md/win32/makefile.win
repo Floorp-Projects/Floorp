@@ -16,20 +16,20 @@
 # Reserved.
 
 DEPTH=..\..\..\..\..\..
+MODULE = xpcom
 IGNORE_MANIFEST=1
 include <$(DEPTH)\config\config.mak>
 
 DEFINES=-DWIN32_LEAN_AND_MEAN -DEXPORT_XPTC_API
 
-LINCS=-I..\.. -I$(PUBLIC)\xptcall -I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor \
-      -I$(PUBLIC)\libxpt -I$(PUBLIC)\xptinfo
+LINCS=-I..\.. -I$(PUBLIC)\xpcom
 
 LCFLAGS = \
         $(LCFLAGS) \
         $(DEFINES) \
         $(NULL)
 
-LIBRARY_NAME			= xptcmd
+LIBRARY_NAME = xpcomxptcmd_s
 
 OBJS=					\
 	.\$(OBJDIR)\xptcinvoke.obj	\
@@ -38,4 +38,8 @@ OBJS=					\
 
 include <$(DEPTH)\config\rules.mak>
 
-install:: $(LIBRARY)
+libs:: $(LIBRARY)
+	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
+
+clobber::
+        rm -f $(DIST)\lib\$(LIBRARY_NAME).lib

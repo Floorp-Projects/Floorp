@@ -57,23 +57,23 @@ public:
  * Find an atom that matches the given iso-latin1 C string. The
  * C string is translated into it's unicode equivalent.
  */
-extern NS_BASE nsIAtom* NS_NewAtom(const char* isolatin1);
+extern NS_COM nsIAtom* NS_NewAtom(const char* isolatin1);
 
 /**
  * Find an atom that matches the given unicode string. The string is assumed
  * to be zero terminated.
  */
-extern NS_BASE nsIAtom* NS_NewAtom(const PRUnichar* unicode);
+extern NS_COM nsIAtom* NS_NewAtom(const PRUnichar* unicode);
 
 /**
  * Find an atom that matches the given string.
  */
-extern NS_BASE nsIAtom* NS_NewAtom(const nsString& aString);
+extern NS_COM nsIAtom* NS_NewAtom(const nsString& aString);
 
 /**
  * Return a count of the total number of atoms currently
  * alive in the system.
  */
-extern NS_BASE nsrefcnt NS_GetNumberOfAtoms(void);
+extern NS_COM nsrefcnt NS_GetNumberOfAtoms(void);
 
 #endif /* nsIAtom_h___ */

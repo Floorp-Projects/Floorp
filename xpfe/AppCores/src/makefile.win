@@ -54,13 +54,12 @@ LINCS= \
 
 LLIBS =				            \
     $(DIST)\lib\netlib.lib      \
- 	$(DIST)\lib\xpcom32.lib     \
+ 	$(DIST)\lib\xpcom.lib     \
     $(DIST)\lib\xppref32.lib    \
     $(DIST)\lib\xplib.lib       \
     $(DIST)\lib\js3250.lib      \
     $(DIST)\lib\jsdombase_s.lib \
     $(DIST)\lib\jsdomevents_s.lib \
-    $(DIST)\lib\raptorbase.lib  \
 	$(DIST)\lib\raptorgfxwin.lib	\
 	$(LIBNSPR)		            \
     $(DIST)\lib\plc3.lib    \

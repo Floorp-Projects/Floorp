@@ -39,7 +39,7 @@
 #include "nspr.h"
 #include "jsapi.h"
 
-#include "nsIXPInstallProgressNotifier.h"
+#include "nsIEventQueueService.h"
 
 
 static NS_DEFINE_IID(kISoftwareUpdateIID, NS_ISOFTWAREUPDATE_IID);

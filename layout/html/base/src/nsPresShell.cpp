@@ -49,7 +49,6 @@
 #include "nsHTMLAtoms.h"
 #include "nsCOMPtr.h"
 #include "nsIEventQueueService.h"
-#include "nsXPComCIID.h"
 #include "nsIServiceManager.h"
 #include "nsICaret.h"
 #include "nsCaretProperties.h"

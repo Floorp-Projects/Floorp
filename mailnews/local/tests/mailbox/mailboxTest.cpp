@@ -78,7 +78,6 @@
 #include "nsINetService.h"
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
-#include "nsXPComCIID.h"
 #include "nsRDFCID.h"
 
 #ifdef XP_PC

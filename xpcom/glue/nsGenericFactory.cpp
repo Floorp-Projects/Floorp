@@ -35,11 +35,11 @@ NS_METHOD nsGenericFactory::QueryInterface(const nsIID& aIID, void** aInstancePt
     if (NULL == aInstancePtr) {                                            
         return NS_ERROR_NULL_POINTER;                                        
     }                                                                      
-    if (aIID.Equals(nsIFactory::GetIID()) ||
-    	aIID.Equals(nsIGenericFactory::GetIID()) ||
-        aIID.Equals(nsISupports::GetIID())) {
-        *aInstancePtr = (void*) this;
-        AddRef();
+    if (aIID.Equals(nsIGenericFactory::GetIID()) ||
+        aIID.Equals(nsIFactory::GetIID()) ||
+    	aIID.Equals(nsISupports::GetIID())) {
+        *aInstancePtr = (nsIGenericFactory*) this;
+        NS_ADDREF_THIS();
         return NS_OK; 
     } 
     return NS_NOINTERFACE;
@@ -86,3 +86,25 @@ NS_METHOD nsGenericFactory::Create(nsISupports* outer, const nsIID& aIID, void* 
 	}
 	return res;
 }
+
+extern nsresult
+NS_NewGenericFactory(nsIGenericFactory* *result,
+                     nsIGenericFactory::ConstructorProcPtr constructor,
+                     nsIGenericFactory::DestructorProcPtr destructor)
+{
+    nsresult rv;
+    nsIGenericFactory* fact;
+    rv = nsGenericFactory::Create(NULL, nsIGenericFactory::GetIID(), (void**)&fact);
+    if (NS_FAILED(rv)) return rv;
+    rv = fact->SetConstructor(constructor);
+    if (NS_FAILED(rv)) goto error;
+    rv = fact->SetDestructor(destructor);
+    if (NS_FAILED(rv)) goto error;
+    *result = fact;
+    return rv;
+
+  error:
+    NS_RELEASE(fact);
+    return rv;
+}
+

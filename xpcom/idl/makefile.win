@@ -23,6 +23,7 @@ XPIDLSRCS=      .\nsrootidl.idl         \
                 .\nsIEnumerator.idl     \
                 .\nsIFactory.idl        \
                 .\nsICollection.idl     \
+                .\nsIFileSpec.idl       \
                 $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

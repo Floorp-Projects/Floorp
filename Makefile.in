@@ -49,7 +49,6 @@ endif
 
 DIRS +=				\
   modules/libutil		\
-  base				\
   intl				\
   js				\
   modules/security/freenav	\

@@ -1,0 +1,8 @@
+nsIComponentManager.h
+nsIFactory.h
+nsIGenericFactory.h
+nsIRegistry.h
+nsIServiceManager.h
+nsIServiceProvider.h
+nsRepository.h
+nsXPComFactory.h

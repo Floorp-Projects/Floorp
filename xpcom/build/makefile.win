@@ -23,16 +23,23 @@ MODULE = xpcom
 LIBNAME = .\$(OBJDIR)\xpcom
 DLL = $(LIBNAME).dll
 
-LINCS =                   \
-	-I$(PUBLIC)\xpcom \
-        -I..\base         \
-        -I..\ds           \
-        -I..\io           \
-        -I..\components   \
-        -I..\threads      \
+LINCS =                          \
+	-I$(PUBLIC)\xpcom        \
+        -I..\base                \
+        -I..\ds                  \
+        -I..\io                  \
+        -I..\components          \
+        -I..\threads             \
+        -I..\reflect\xptinfo\src \
+        -I..\proxy\src           \
 	$(NULL)
 
-LCFLAGS = -D_IMPL_NS_COM -D_IMPL_NS_BASE -DWIN32_LEAN_AND_MEAN
+LCFLAGS=-D_IMPL_NS_COM        \
+        -D_IMPL_NS_BASE       \
+        -DWIN32_LEAN_AND_MEAN \
+        -DEXPORT_XPT_API      \
+        -DEXPORT_XPTC_API     \
+        -DEXPORT_XPTI_API
 
 CPP_OBJS =                             \
         .\$(OBJDIR)\nsXPComInit.obj    \
@@ -47,6 +54,11 @@ LLIBS =                                \
         $(DIST)\lib\xpcomio_s.lib      \
         $(DIST)\lib\xpcomcomp_s.lib    \
         $(DIST)\lib\xpcomthreads_s.lib \
+        $(DIST)\lib\xpcomxpt_s.lib     \
+	$(DIST)\lib\xpcomxptcall_s.lib \
+	$(DIST)\lib\xpcomxptcmd_s.lib  \
+        $(DIST)\lib\xpcomxptinfo_s.lib \
+        $(DIST)\lib\xpcomproxy_s.lib   \
 	$(DIST)\lib\libreg32.lib       \
         shell32.lib                    \
 !if "$(MOZ_BITS)"=="32" && defined(MOZ_DEBUG) && defined(GLOWCODE)

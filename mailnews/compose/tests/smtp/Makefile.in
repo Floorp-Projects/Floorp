@@ -53,7 +53,6 @@ LIBS = \
 	-lxp	\
 	-lpref	\
 	-lmozjs	\
-	-lraptorbase \
 	-lraptorhtml	\
 	-lraptorhtmlpars \
 	-lexpat \
@@ -66,7 +65,6 @@ LIBS = \
 	-ljpeg	\
 	-lxp	\
 	-lmozutil \
-	-lgmbase$(MOZ_TOOLKIT) \
 	-lsecfree \
 	$(ZLIB_LIBS) \
 	$(DIST)/lib/librdfbase_s.a \

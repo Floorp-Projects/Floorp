@@ -1,4 +1,4 @@
-#!nmake
+!#!nmake
 #
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "NPL"); you may not use this file except in
@@ -23,7 +23,7 @@ PROGRAM = .\$(OBJDIR)\logparse.exe
 
 MISCDEP=				\
  $(DIST)\lib\raptorhtmlpars.lib		\
- $(DIST)\lib\xpcom32.lib		\
+ $(DIST)\lib\xpcom.lib		\
  $(LIBNSPR)
 
 OBJS =					\
@@ -37,7 +37,7 @@ LINCS=					\
 
 MYLIBS=					\
  $(DIST)\lib\raptorhtmlpars.lib		\
- $(DIST)\lib\xpcom32.lib	        \
+ $(DIST)\lib\xpcom.lib	        \
  $(LIBNSPR)				\
  $(NULL)
 

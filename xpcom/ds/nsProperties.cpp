@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -22,10 +22,23 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-NS_IMPL_ISUPPORTS(nsProperties, nsIProperties::GetIID());
-
-nsProperties::nsProperties()
+nsProperties::nsProperties(nsISupports* outer)
 {
+    NS_INIT_AGGREGATED(outer);
+}
+
+NS_METHOD
+nsProperties::Create(nsISupports *outer, REFNSIID aIID, void **aResult)
+{
+    if (outer && !aIID.Equals(nsISupports::GetIID()))
+        return NS_NOINTERFACE;   // XXX right error?
+    nsProperties* props = new nsProperties(outer);
+    if (props == NULL)
+        return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(props);
+    nsresult rv = props->QueryInterface(aIID, aResult);
+    NS_RELEASE(props);
+    return NS_OK;
 }
 
 PRBool
@@ -39,6 +52,23 @@ nsProperties::ReleaseValues(nsHashKey* key, void* data, void* closure)
 nsProperties::~nsProperties()
 {
     Enumerate(ReleaseValues);
+}
+
+NS_IMPL_AGGREGATED(nsProperties);
+
+NS_METHOD
+nsProperties::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr) 
+{
+    if (NULL == aInstancePtr) {                                            
+        return NS_ERROR_NULL_POINTER;                                        
+    }                                                                      
+    if (aIID.Equals(nsIProperties::GetIID()) || 
+        aIID.Equals(nsISupports::GetIID())) {
+        *aInstancePtr = (void*) this; 
+        NS_ADDREF_THIS(); 
+        return NS_OK; 
+    } 
+    return NS_NOINTERFACE;
 }
 
 NS_IMETHODIMP
@@ -108,12 +138,7 @@ nsProperties::HasProperty(const char* prop, nsISupports* expectedValue)
 nsresult
 NS_NewIProperties(nsIProperties* *result)
 {
-    nsProperties* props = new nsProperties();
-    if (props == NULL)
-        return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(props);
-    *result = props;
-    return NS_OK;
+    return nsProperties::Create(NULL, nsIProperties::GetIID(), (void**)result);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -121,7 +146,6 @@ NS_NewIProperties(nsIProperties* *result)
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "nsID.h"
-#include "nsBaseDLL.h"
 #include "nsCRT.h"
 #include "nsIInputStream.h"
 #include "nsIProperties.h"
@@ -154,6 +178,20 @@ nsPersistentProperties::~nsPersistentProperties()
     PL_HashTableDestroy(mTable);
     mTable = nsnull;
   }
+}
+
+NS_METHOD
+nsPersistentProperties::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
+{
+    if (aOuter)
+        return NS_ERROR_NO_AGGREGATION;
+    nsPersistentProperties* props = new nsPersistentProperties();
+    if (props == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(props);
+    nsresult rv = props->QueryInterface(aIID, aResult);
+    NS_RELEASE(props);
+    return rv;
 }
 
 NS_IMPL_ADDREF(nsPersistentProperties)

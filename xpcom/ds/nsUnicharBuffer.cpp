@@ -15,43 +15,48 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-#include "nsIUnicharBuffer.h"
+
+#include "nsUnicharBuffer.h"
 #include "nsIUnicharInputStream.h"
 #include "nsCRT.h"
 
 #define MIN_BUFFER_SIZE 32
 
-class UnicharBufferImpl : public nsIUnicharBuffer {
-public:
-  UnicharBufferImpl(PRUint32 aBufferSize);
-  virtual ~UnicharBufferImpl();
+UnicharBufferImpl::UnicharBufferImpl()
+  : mBuffer(NULL), mSpace(0), mLength(0)
+{
+  NS_INIT_REFCNT();
+}
 
-  NS_DECL_ISUPPORTS
-  virtual PRInt32 GetLength() const;
-  virtual PRInt32 GetBufferSize() const;
-  virtual PRUnichar* GetBuffer() const;
-  virtual PRBool Grow(PRInt32 aNewSize);
-  virtual PRInt32 Fill(nsresult* aErrorCode, nsIUnicharInputStream* aStream,
-                       PRInt32 aKeep);
+NS_METHOD
+UnicharBufferImpl::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
+{
+  if (aOuter)
+    return NS_ERROR_NO_AGGREGATION;
 
-  PRUnichar* mBuffer;
-  PRUint32 mSpace;
-  PRUint32 mLength;
-};
+  UnicharBufferImpl* it = new UnicharBufferImpl();
+  if (it == nsnull) 
+    return NS_ERROR_OUT_OF_MEMORY;
 
-UnicharBufferImpl::UnicharBufferImpl(PRUint32 aBufferSize)
+  NS_ADDREF(it);
+  nsresult rv = it->QueryInterface(aIID, aResult);
+  NS_RELEASE(it);
+  return rv;
+}
+
+NS_IMETHODIMP
+UnicharBufferImpl::Init(PRUint32 aBufferSize)
 {
   if (aBufferSize < MIN_BUFFER_SIZE) {
     aBufferSize = MIN_BUFFER_SIZE;
   }
   mSpace = aBufferSize;
-  mBuffer = new PRUnichar[aBufferSize];
   mLength = 0;
-  NS_INIT_REFCNT();
+  mBuffer = new PRUnichar[aBufferSize];
+  return mBuffer ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
-NS_DEFINE_IID(kUnicharBufferIID, NS_IUNICHAR_BUFFER_IID);
-NS_IMPL_ISUPPORTS(UnicharBufferImpl,kUnicharBufferIID)
+NS_IMPL_ISUPPORTS(UnicharBufferImpl, nsIUnicharBuffer::GetIID())
 
 UnicharBufferImpl::~UnicharBufferImpl()
 {
@@ -62,22 +67,26 @@ UnicharBufferImpl::~UnicharBufferImpl()
   mLength = 0;
 }
 
-PRInt32 UnicharBufferImpl::GetLength() const
+NS_IMETHODIMP_(PRInt32)
+UnicharBufferImpl::GetLength() const
 {
   return mLength;
 }
 
-PRInt32 UnicharBufferImpl::GetBufferSize() const
+NS_IMETHODIMP_(PRInt32)
+UnicharBufferImpl::GetBufferSize() const
 {
   return mSpace;
 }
 
-PRUnichar* UnicharBufferImpl::GetBuffer() const
+NS_IMETHODIMP_(PRUnichar*)
+UnicharBufferImpl::GetBuffer() const
 {
   return mBuffer;
 }
 
-PRBool UnicharBufferImpl::Grow(PRInt32 aNewSize)
+NS_IMETHODIMP_(PRBool)
+UnicharBufferImpl::Grow(PRInt32 aNewSize)
 {
   if (PRUint32(aNewSize) < MIN_BUFFER_SIZE) {
     aNewSize = MIN_BUFFER_SIZE;
@@ -94,9 +103,10 @@ PRBool UnicharBufferImpl::Grow(PRInt32 aNewSize)
   return PR_FALSE;
 }
 
-PRInt32 UnicharBufferImpl::Fill(nsresult* aErrorCode,
-                                nsIUnicharInputStream* aStream,
-                                PRInt32 aKeep)
+NS_IMETHODIMP_(PRInt32)
+UnicharBufferImpl::Fill(nsresult* aErrorCode,
+                        nsIUnicharInputStream* aStream,
+                        PRInt32 aKeep)
 {
   NS_PRECONDITION(nsnull != aStream, "null stream");
   NS_PRECONDITION(PRUint32(aKeep) < PRUint32(mLength), "illegal keep count");
@@ -127,16 +137,21 @@ PRInt32 UnicharBufferImpl::Fill(nsresult* aErrorCode,
   return nb;
 }
 
-NS_BASE nsresult NS_NewUnicharBuffer(nsIUnicharBuffer** aInstancePtrResult,
-                                     nsISupports* aOuter,
-                                     PRUint32 aBufferSize)
+NS_COM nsresult
+NS_NewUnicharBuffer(nsIUnicharBuffer** aInstancePtrResult,
+                    nsISupports* aOuter,
+                    PRUint32 aBufferSize)
 {
-  if (nsnull != aOuter) {
-    return NS_ERROR_NO_AGGREGATION;
+  nsresult rv;
+  nsIUnicharBuffer* buf;
+  rv = UnicharBufferImpl::Create(aOuter, nsIUnicharBuffer::GetIID(), 
+                                 (void**)&buf);
+  if (NS_FAILED(rv)) return rv;
+  rv = buf->Init(aBufferSize);
+  if (NS_FAILED(rv)) {
+    NS_RELEASE(buf);
+    return rv;
   }
-  UnicharBufferImpl* it = new UnicharBufferImpl(aBufferSize);
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  return it->QueryInterface(kUnicharBufferIID, (void **) aInstancePtrResult);
+  *aInstancePtrResult = buf;
+  return rv;
 }

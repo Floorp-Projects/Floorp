@@ -69,7 +69,7 @@ PROGRAM=.\$(OBJDIR)\$(EXENAME).EXE
 #//------------------------------------------------------------------------
 LCFLAGS=-DNETSCAPE
 LLIBS=	 $(LLIBS) ole32.lib	\
-	 $(DIST)\lib\xpcom32.lib
+	 $(DIST)\lib\xpcom.lib
 	
 
 LINCS=$(LINCS)  -I. \

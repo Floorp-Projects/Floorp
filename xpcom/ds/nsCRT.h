@@ -69,7 +69,7 @@ extern const PRUnichar kIsoLatin1ToUCS2[256];
 
 /// This is a wrapper class around all the C runtime functions. 
 
-class NS_BASE nsCRT {
+class NS_COM nsCRT {
 public:
 
   /** Copy bytes from aSrc to aDest.

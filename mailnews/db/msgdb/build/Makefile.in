@@ -46,7 +46,6 @@ EXTRA_DSO_LDOPTS = 	\
 	-L$(DIST)/bin			\
 	-L$(DIST)/lib			\
 	-lxpcom					\
-	-lraptorbase			\
 	-lxp					\
 	-lmsgbaseutil			\
 	-lmork					\

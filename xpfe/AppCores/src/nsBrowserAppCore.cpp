@@ -18,6 +18,7 @@
  */
 
 #include "nsBrowserAppCore.h"
+
 #include "nsIBrowserWindow.h"
 #include "nsIWebShell.h"
 #include "pratom.h"
@@ -27,8 +28,8 @@
 #include "nsAppCoresCIDs.h"
 #include "nsIDOMAppCoresManager.h"
 
-#include "nsIFileWidget.h"
-#include "nsWidgetsCID.h"
+#define FILE_WIDGET_DEPENDENCY
+#include "nsIFileSpec.h"
 
 #include "nsIScriptContext.h"
 #include "nsIScriptContextOwner.h"
@@ -63,10 +64,6 @@
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
 #include "nsFileSpec.h"  // needed for nsAutoCString
-
-// FileDialog
-static NS_DEFINE_IID(kCFileWidgetCID, NS_FILEWIDGET_CID);
-static NS_DEFINE_IID(kIFileWidgetIID, NS_IFILEWIDGET_IID);
 
 #if defined(ClientWallet) || defined(SingleSignon)
 #ifdef ClientWallet
@@ -1134,35 +1131,30 @@ static void BuildFileURL(const char * aFileName, nsString & aFileURL)
   delete[] str;
 }
 
-NS_IMETHODIMP    
-nsBrowserAppCore::OpenWindow()
+//----------------------------------------------------------------------------------------
+NS_IMETHODIMP nsBrowserAppCore::OpenWindow()
+//----------------------------------------------------------------------------------------
 {  
-  nsIFileWidget *fileWidget;
+  nsCOMPtr<nsIFileSpec> fileSpec;
+  nsresult rv = NS_NewFileSpec(getter_AddRefs(fileSpec));
+  if (NS_FAILED(rv))
+  	return rv;
 
-  nsString title("Open File");
-  if (NS_OK == nsComponentManager::CreateInstance(kCFileWidgetCID, nsnull, kIFileWidgetIID, (void**)&fileWidget)) {
-    nsString titles[] = {"All Readable Files", "HTML Files",
-                         "XML Files", "Image Files", "All Files"};
-    nsString filters[] = {"*.htm; *.html; *.xml; *.gif; *.jpg; *.jpeg; *.png",
-                          "*.htm; *.html",
-                          "*.xml",
-                          "*.gif; *.jpg; *.jpeg; *.png",
-                          "*.*"};
-    fileWidget->SetFilterList(5, titles, filters);
-
-    nsFileSpec fileSpec;
-    if (fileWidget->GetFile(nsnull, title, fileSpec) == nsFileDlgResults_OK) {
-      nsFileURL fileURL(fileSpec);
-      char buffer[1024];
-      const nsAutoCString cstr(fileURL.GetAsString());
-      PR_snprintf( buffer, sizeof buffer, "OpenFile(\"%s\")", (const char*)cstr);
-      ExecuteScript( mToolbarScriptContext, buffer );
-    }
-    NS_RELEASE(fileWidget);
-  }
-
-  return NS_OK;
-}
+  rv = fileSpec->chooseInputFile(
+  	"Open File", nsIFileSpec::eAllStandardFilters, nsnull, nsnull);
+  if (NS_FAILED(rv))
+    return rv;
+  
+  char buffer[1024];
+  char* urlString;
+  rv = fileSpec->GetURLString(&urlString);
+  if (NS_FAILED(rv))
+    return rv;
+  PR_snprintf( buffer, sizeof buffer, "OpenFile(\"%s\")", urlString);
+  nsCRT::free(urlString);
+  ExecuteScript( mToolbarScriptContext, buffer );
+  return rv;
+} // nsBrowserAppCore::OpenWindow
 
 //----------------------------------------
 void nsBrowserAppCore::SetButtonImage(nsIDOMNode * aParentNode, PRInt32 aBtnNum, const nsString &aResName)
@@ -1444,5 +1436,3 @@ FindNamedXULElement(nsIWebShell * aShell,
     }
     return rv;
 }
-
-

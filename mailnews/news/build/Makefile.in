@@ -48,7 +48,6 @@ EXTRA_DSO_LDOPTS =	       \
 	$(MKSHLIB_UNFORCE_ALL) \
 	-L$(DIST)/bin		\
 	-lmozjs			\
-	-lraptorbase		\
 	-lxpcom			\
 	-lreg			\
 	-lmsgbaseutil		\

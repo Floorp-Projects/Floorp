@@ -41,7 +41,6 @@ EXTRA_DSO_LDOPTS = \
 	$(NSPR_LIBS)	\
 	-lxpcom		\
 	-lreg		\
-	-lraptorbase	\
 	-lmork		\
 	-lmsgbaseutil	\
 	$(NULL)

@@ -34,30 +34,6 @@ static NS_DEFINE_IID(kObserverServiceCID, NS_OBSERVERSERVICE_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class nsObserverService : public nsIObserverService {
-public:
-
-	static nsresult GetObserverService(nsIObserverService** anObserverService);
-    
-	NS_IMETHOD AddObserver(nsIObserver** anObserver, nsString* aTopic);
-    NS_IMETHOD RemoveObserver(nsIObserver** anObserver, nsString* aTopic);
-	NS_IMETHOD EnumerateObserverList(nsIEnumerator** anEnumerator, nsString* aTopic);
-
-   
-    nsObserverService();
-    virtual ~nsObserverService(void);
-     
-    NS_DECL_ISUPPORTS
-
-   
-private:
-	
-    NS_IMETHOD GetObserverList(nsIObserverList** anObserverList, nsString* aTopic);
-
-    nsHashtable   *mObserverTopicTable;
-
-};
-
 static nsObserverService* gObserverService = nsnull; // The one-and-only ObserverService
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -66,7 +42,7 @@ static nsObserverService* gObserverService = nsnull; // The one-and-only Observe
 
 NS_IMPL_ISUPPORTS(nsObserverService, kIObserverServiceIID);
 
-NS_BASE nsresult NS_NewObserverService(nsIObserverService** anObserverService)
+NS_COM nsresult NS_NewObserverService(nsIObserverService** anObserverService)
 {
     return nsObserverService::GetObserverService(anObserverService);
 }
@@ -85,6 +61,18 @@ nsObserverService::~nsObserverService(void)
     gObserverService = nsnull;
 }
 
+NS_METHOD
+nsObserverService::Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr)
+{
+    nsresult rv;
+    nsObserverService* os = new nsObserverService();
+    if (os == NULL)
+        return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(os);
+    rv = os->QueryInterface(aIID, aInstancePtr);
+    NS_RELEASE(os);
+    return rv;
+}
 
 nsresult nsObserverService::GetObserverService(nsIObserverService** anObserverService)
 {

@@ -21,7 +21,7 @@
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsAutoLock.h"
-#include "nsPageMgr.h"
+#include "nsIPageManager.h"
 #include "nsCRT.h"
 #include "prprf.h"
 #include "prmem.h"

@@ -113,5 +113,8 @@ nsEventQueueImpl::Create(nsISupports *aOuter,
   if (evt == NULL)
     return NS_ERROR_OUT_OF_MEMORY;
   nsresult rv = evt->QueryInterface(aIID, aResult);
+  if (NS_FAILED(rv)) {
+    delete evt;
+  }
   return rv;
 }

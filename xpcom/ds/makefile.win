@@ -58,6 +58,8 @@ EXPORTS =                          \
         plvector.h                 \
         $(NULL)			
 
+XPILD_MODULE = xpcom_ds
+
 XPIDLSRCS =                 \
         .\nsICollection.idl \
         .\nsIEnumerator.idl \
@@ -92,7 +94,6 @@ CPP_OBJS =                                        \
         .\$(OBJDIR)\nsObserverList.obj            \
         .\$(OBJDIR)\nsObserverService.obj         \
         .\$(OBJDIR)\nsPageMgr.obj                 \
-        .\$(OBJDIR)\nsPipe.obj                    \
         .\$(OBJDIR)\nsProperties.obj              \
         .\$(OBJDIR)\nsQuickSort.obj               \
         .\$(OBJDIR)\nsRBTree.obj                  \

@@ -38,7 +38,6 @@
 #include "nsIDOMXULDocument.h"
 #include "nsIDocument.h"
 #include "nsIDOMElement.h"
-#include "nsXPComCIID.h"
 
 class nsIScriptContext;
 

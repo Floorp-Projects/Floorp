@@ -21,7 +21,6 @@
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
 #include "nsIRegistry.h"
-#include "nsXPComCIID.h"
 #include "nsIEnumerator.h"
 #include "prmem.h"
 #include "plstr.h"

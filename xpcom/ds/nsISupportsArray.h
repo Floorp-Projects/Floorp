@@ -29,6 +29,14 @@ class nsIBidirectionalEnumerator;
 {0x791eafa0, 0xb9e6, 0x11d1,  \
     {0x80, 0x31, 0x00, 0x60, 0x08, 0x15, 0x9b, 0x5a}}
 
+#define NS_SUPPORTSARRAY_CID                         \
+{ /* bda17d50-0d6b-11d3-9331-00104ba0fd40 */         \
+    0xbda17d50,                                      \
+    0x0d6b,                                          \
+    0x11d3,                                          \
+    {0x93, 0x31, 0x00, 0x10, 0x4b, 0xa0, 0xfd, 0x40} \
+}
+
 // Enumerator callback function. Return PR_FALSE to stop
 typedef PRBool (*nsISupportsArrayEnumFunc)(nsISupports* aElement, void *aData);
 

@@ -1723,7 +1723,7 @@ ostream& operator<<(ostream& os,nsString2& aString){
  * @param 
  * @return
  */
-NS_BASE int fputs(const nsString2& aString, FILE* out)
+NS_COM int fputs(const nsString2& aString, FILE* out)
 {
   char buf[100];
   char* cp = buf;

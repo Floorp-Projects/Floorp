@@ -69,11 +69,6 @@ EXTRA_DSO_LDOPTS = \
 	-L$(DIST)/bin \
 	-l$(MOZ_LIB_JS_PREFIX)js \
 	-lxpcom \
-	-lxpt \
-	-lxptinfo \
-	-lxptcall \
-	-lxptcmd \
-	-lraptorbase \
 	-lreg \
 	$(NSPR_LIBS) \
 	$(NULL)

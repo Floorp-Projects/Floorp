@@ -23,20 +23,13 @@ MAKE_OBJ_TYPE	= EXE
 PROG1 = .\$(OBJDIR)\TestInterfaceInfo.exe
 PROGRAMS = $(PROG1)
 
-LCFLAGS=-DUSE_NSREG
+LCFLAGS=-DUSE_NSREG -DEXPORT_XPTI_API -DWIN32_LEAN_AND_MEAN
 
-DEFINES=-DWIN32_LEAN_AND_MEAN
+LINCS=-I$(PUBLIC)\xpcom
 
-REQUIRES=xpcom libxpt xptinfo
-
-LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor \
-      -I$(PUBLIC)\libxpt -I$(PUBLIC)\xptinfo
-
-LLIBS=					\
- $(DIST)\lib\xpcom.lib		\
- $(DIST)\lib\libxpt32.lib		\
- $(DIST)\lib\xptinfo32.lib		\
- $(LIBNSPR)				\
+LLIBS=                          \
+ $(DIST)\lib\xpcom.lib          \
+ $(LIBNSPR)                     \
  $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

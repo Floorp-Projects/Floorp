@@ -31,6 +31,7 @@ EXPORTS =                          \
         nsIBaseStream.h            \
         nsIByteBufferInputStream.h \
         nsIFileStream.h            \
+        nsIFileWidget.h            \
         nsIInputStream.h           \
         nsIOutputStream.h          \
         nsIStringStream.h          \
@@ -38,7 +39,23 @@ EXPORTS =                          \
         nsSpecialSystemDirectory.h \
         $(NULL)			
 
-XPIDLSRCS =               \
+NO_XPT_GEN=1
+XPILD_MODULE = xpcom_io
+
+XPIDLSRCS =                     \
+        .\nsIFileSpec.idl       \
+        $(NULL)
+
+xXPIDLSRCS =                     \
+        .\nsIUri.idl            \
+        .\nsIUrl.idl            \
+        .\nsIIOService.idl      \
+        .\nsIIOSpec.idl         \
+        .\nsIFileSpec.idl       \
+        .\nsIStreamObserver.idl \
+        .\nsIBaseStream.idl     \
+        .\nsIInputStream.idl    \
+        .\nsIOutputStream.idl   \
         $(NULL)
 
 ################################################################################
@@ -52,16 +69,20 @@ LINCS =                         \
         -I$(PUBLIC)\unicharutil \
 	$(NULL)
 
+LINCS = $(LINCS) -I$(PUBLIC)\raptor     # until we sort out the filespec/widgets dependency
+
 LCFLAGS = -D_IMPL_NS_COM -D_IMPL_NS_BASE -DWIN32_LEAN_AND_MEAN
 
 CPP_OBJS =                                       \
         .\$(OBJDIR)\nsByteBufferInputStream.obj  \
         .\$(OBJDIR)\nsEscape.obj                 \
         .\$(OBJDIR)\nsFileSpec.obj               \
+        .\$(OBJDIR)\nsFileSpecImpl.obj           \
         .\$(OBJDIR)\nsFileSpecStreaming.obj      \
         .\$(OBJDIR)\nsFileStream.obj             \
         .\$(OBJDIR)\nsIFileStream.obj            \
         .\$(OBJDIR)\nsIStringStream.obj          \
+        .\$(OBJDIR)\nsPipe.obj                   \
         .\$(OBJDIR)\nsSpecialSystemDirectory.obj \
         .\$(OBJDIR)\nsUnicharInputStream.obj     \
         $(NULL)

@@ -52,12 +52,10 @@ LIBS = \
 	-lxp	\
 	-lpref	\
 	-lmozjs	\
-	-lraptorbase \
 	-ljsdom	\
 	-ljsurl	\
 	-lrdfbase_s \
 	-lrdfutil_s \
-	-lgmbase$(MOZ_TOOLKIT) \
 	-lsecfree \
 	$(ZLIB_LIBS) \
 	$(NSPR_LIBS) \

@@ -28,17 +28,22 @@ LIBRARY_NAME = xpcomio_s
 
 MODULE = xpcom
 
+XPIDL_MODULE = xpcom_io
+
 XPIDLSRCS =			\
+	nsIFileSpec.idl		\
 	$(NULL)
 
-CPPSRCS =				\
+CPPSRCS =			     \
 	nsByteBufferInputStream.cpp  \
 	nsEscape.cpp                 \
 	nsFileSpec.cpp               \
 	nsFileSpecStreaming.cpp      \
 	nsFileStream.cpp             \
+	nsFileSpecImpl.cpp           \
 	nsIFileStream.cpp            \
 	nsIStringStream.cpp          \
+	nsPipe.cpp                   \
 	nsSpecialSystemDirectory.cpp \
 	nsUnicharInputStream.cpp     \
 	$(NULL)
@@ -51,6 +56,7 @@ EXPORTS = \
 	nsIBaseStream.h            \
 	nsIByteBufferInputStream.h \
 	nsIFileStream.h            \
+	nsIFileWidget.h            \
 	nsIInputStream.h           \
 	nsIOutputStream.h          \
 	nsIStringStream.h          \

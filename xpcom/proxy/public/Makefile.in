@@ -21,7 +21,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= proxy 
+MODULE		= xpcom
 
 EXPORTS		= nsProxyEvent.h        \
 		  nsProxyObjectManager.h\

@@ -18,7 +18,6 @@
 
 #define NS_IMPL_IDS
 
-#include "nsXPComCIID.h"
 #include "nsIEventQueueService.h"
 #include "nsINetService.h"
 #include "nsIProperties.h"

@@ -31,7 +31,6 @@
 #include "nsImapFlagAndUidState.h"
 #include "nsParseMailbox.h"
 #include "nsIEventQueueService.h"
-#include "nsXPComCIID.h"
 #include "nsIImapUrl.h"
 #include "nsImapUtils.h"
 #include "nsMsgUtils.h"

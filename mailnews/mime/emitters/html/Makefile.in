@@ -37,7 +37,6 @@ EXTRA_DSO_LDOPTS	= 	\
 	-L$(DIST)/bin	\
 	-L$(DIST)/lib	\
 	-lmozjs		\
-	-lraptorbase    \
 	-lreg    	\
 	-lxpcom         \
 	-lemitterutil   \

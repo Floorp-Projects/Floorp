@@ -99,7 +99,7 @@ nsresult StringUnicharInputStream::Close()
 
 NS_IMPL_ISUPPORTS(StringUnicharInputStream, kIUnicharInputStreamIID);
 
-NS_BASE nsresult
+NS_COM nsresult
 NS_NewStringUnicharInputStream(nsIUnicharInputStream** aInstancePtrResult,
                                nsString* aString)
 {
@@ -121,7 +121,7 @@ NS_NewStringUnicharInputStream(nsIUnicharInputStream** aInstancePtrResult,
 //----------------------------------------------------------------------
 
 /**
- * This function used to be public, with the NS_BASE declaration. I am 
+ * This function used to be public, with the NS_COM declaration. I am 
  * changing it right now into a module private visibility because there are
  * better and more xpcom-like ways to get a Converter.
  */
@@ -286,7 +286,7 @@ PRInt32 ConverterInputStream::Fill(nsresult * aErrorCode)
 }
 
 // XXX hook up auto-detect here (do we need more info, like the url?)
-NS_BASE nsresult
+NS_COM nsresult
 NS_NewConverterStream(nsIUnicharInputStream** aInstancePtrResult,
                       nsISupports* aOuter,
                       nsIInputStream* aStreamToWrap,

@@ -225,7 +225,7 @@ nsBufferInputStream::Fill()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-NS_BASE nsresult
+NS_COM nsresult
 NS_NewBufferInputStream(nsIInputStream* *result, nsIBuffer* buffer, PRBool blocking)
 {
     nsBufferInputStream* str = new nsBufferInputStream(buffer, blocking);
@@ -376,7 +376,7 @@ nsBufferOutputStream::Flush(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-NS_BASE nsresult
+NS_COM nsresult
 NS_NewBufferOutputStream(nsIOutputStream* *result, nsIBuffer* buffer, PRBool blocking)
 {
     nsBufferOutputStream* ostr = new nsBufferOutputStream(buffer, blocking);
@@ -389,7 +389,7 @@ NS_NewBufferOutputStream(nsIOutputStream* *result, nsIBuffer* buffer, PRBool blo
 
 ////////////////////////////////////////////////////////////////////////////////
 
-NS_BASE nsresult
+NS_COM nsresult
 NS_NewPipe2(nsIInputStream* *inStrResult,
            nsIOutputStream* *outStrResult,
            PRUint32 growBySize, PRUint32 maxSize)

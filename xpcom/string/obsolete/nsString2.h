@@ -52,9 +52,9 @@ class nsISizeOfHandler;
 #define nsAutoString2 nsAutoString
 #endif
 
-class NS_BASE nsSubsumeStr;
+class NS_COM nsSubsumeStr;
 
-class NS_BASE nsString2 : public nsStr {
+class NS_COM nsString2 : public nsStr {
 
   public: 
 
@@ -726,7 +726,7 @@ virtual void  DebugDump(ostream& aStream) const;
 
 };
 
-extern NS_BASE int fputs(const nsString2& aString, FILE* out);
+extern NS_COM int fputs(const nsString2& aString, FILE* out);
 ostream& operator<<(ostream& os,nsString2& aString);
 
 
@@ -736,7 +736,7 @@ ostream& operator<<(ostream& os,nsString2& aString);
   If the buffer needs to grow, it gets reallocated on the heap.
  **************************************************************/
 
-class NS_BASE nsAutoString2 : public nsString2 {
+class NS_COM nsAutoString2 : public nsString2 {
 public: 
 
     nsAutoString2(eCharSize aCharSize=kDefaultCharSize);
@@ -786,7 +786,7 @@ public:
   You should probably not use this class unless you really know
   what you're doing.
  ***************************************************************/
-class NS_BASE nsSubsumeStr : public nsString2 {
+class NS_COM nsSubsumeStr : public nsString2 {
 public:
   nsSubsumeStr(nsString2& aString);
   nsSubsumeStr(nsStr& aString);

@@ -2217,7 +2217,7 @@ ostream& operator<<(ostream& os,nsAutoString1& aString){
  * @param 
  * @return
  */
-NS_BASE int fputs(const nsString1& aString, FILE* out){
+NS_COM int fputs(const nsString1& aString, FILE* out){
   char buf[200];
   char* cp = buf;
   PRInt32 aLength=aString.Length();

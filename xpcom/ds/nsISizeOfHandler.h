@@ -60,7 +60,7 @@ public:
   NS_IMETHOD GetSize(PRUint32& aResult) = 0;
 };
 
-extern NS_BASE nsresult
+extern NS_COM nsresult
 NS_NewSizeOfHandler(nsISizeOfHandler** aInstancePtrResult);
 
 #endif /* nsISizeofHandler_h___ */

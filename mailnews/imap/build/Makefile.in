@@ -47,7 +47,6 @@ EXTRA_DSO_LDOPTS = 	\
 	-L$(DIST)/lib			\
 	-lxpcom					\
 	-lreg					\
-	-lraptorbase			\
 	-lrdfutil_s				\
 	-lmsgbaseutil			\
 	-llocalmail				\

@@ -34,7 +34,6 @@
 #include "nsINetService.h"
 #include "nsIComponentManager.h"
 #include "nsString.h"
-#include "nsXPComCIID.h"
 
 #include "nsNewsDatabase.h"
 #include "nsMsgDBCID.h"

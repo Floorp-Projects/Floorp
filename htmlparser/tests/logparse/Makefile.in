@@ -32,7 +32,6 @@ include $(topsrcdir)/config/config.mk
 
 LIBS = \
 	-lraptorhtmlpars \
-	-lraptorbase \
 	-lxpcom \
 	-lreg \
 	$(NSPR_LIBS) \

@@ -26,7 +26,6 @@
 #endif
 
 #include "nsIEventQueueService.h"
-#include "nsXPComCIID.h"
 
 #include "nsImapCore.h"
 #include "nsImapProtocol.h"

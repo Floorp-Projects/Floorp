@@ -21,7 +21,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= xptcall
+MODULE		= xpcom
 
 EXPORTS =	xptcall.h	\
 		xptcstubsdecl.inc \

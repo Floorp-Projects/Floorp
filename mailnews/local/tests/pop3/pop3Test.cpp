@@ -46,7 +46,6 @@
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
 #include "nsIEventQueue.h"
-#include "nsXPComCIID.h"
 
 #include "nsIMsgIdentity.h"
 #include "nsIMsgMailSession.h"

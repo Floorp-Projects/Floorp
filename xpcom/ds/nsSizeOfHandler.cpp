@@ -110,7 +110,7 @@ nsSizeOfHandler::GetSize(PRUint32& aResult)
   return NS_OK;
 }
 
-NS_BASE nsresult
+NS_COM nsresult
 NS_NewSizeOfHandler(nsISizeOfHandler** aInstancePtrResult)
 {
   nsISizeOfHandler *it = new nsSizeOfHandler();

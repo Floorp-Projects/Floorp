@@ -50,7 +50,6 @@ DIRS = \
   modules\libutil		\
   sun-java			\
   js				\
-  base                          \
   modules\security\freenav	\
   modules\libimg		\
   modules\plugin		\

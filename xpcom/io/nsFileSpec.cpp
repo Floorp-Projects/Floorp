@@ -437,11 +437,11 @@ void nsFileSpecHelpers::MakeAllDirectories(const char* inPath, int mode)
 #endif // XP_PC || XP_UNIX
 
 #if defined(XP_PC)
-#include "windows/nsFileSpecWin.cpp" // Windows-specific implementations
+#include "nsFileSpecWin.cpp" // Windows-specific implementations
 #elif defined(XP_MAC)
 #include "nsFileSpecMac.cpp" // Macintosh-specific implementations
 #elif defined(XP_UNIX)
-#include "unix/nsFileSpecUnix.cpp" // Unix-specific implementations
+#include "nsFileSpecUnix.cpp" // Unix-specific implementations
 #endif
 
 //========================================================================================

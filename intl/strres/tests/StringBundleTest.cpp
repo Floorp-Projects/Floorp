@@ -22,7 +22,6 @@
 #include "nsINetService.h"
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
-#include "nsXPComCIID.h"
 
 #define TEST_URL "resource:/res/strres.properties"
 

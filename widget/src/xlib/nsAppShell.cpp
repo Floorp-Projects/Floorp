@@ -22,7 +22,6 @@
 #include "nsAppShell.h"
 #include "nsIWidget.h"
 #include "nsIEventQueueService.h"
-#include "nsXPComCIID.h"
 #include "nsIServiceManager.h"
 #include "nsITimer.h"
 

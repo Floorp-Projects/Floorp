@@ -26,7 +26,7 @@ include $(topsrcdir)/config/config.mk
 CFLAGS		+= -DEXPORT_XPTC_API
 
 LIBRARY_NAME	= xptcmd
-MODULE		= xptcall
+MODULE		= xpcom
 
 CPPSRCS		= \
 		  xptcinvoke_unsupported.cpp \
@@ -56,6 +56,10 @@ ASFILES		= \
 		  $(NULL)
 endif
 endif
+
+# we don't want the shared lib, but we want to force the creation of a static lib.
+override NO_SHARED_LIB=1
+override NO_STATIC_LIB=
 
 include $(topsrcdir)/config/rules.mk
 

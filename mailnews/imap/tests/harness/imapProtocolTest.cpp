@@ -54,7 +54,6 @@
 
 #include "nsIEventQueueService.h"
 #include "nsIEventQueue.h"
-#include "nsXPComCIID.h"
 #include "nsFileSpec.h"
 #include "nsMsgDBCID.h"
 

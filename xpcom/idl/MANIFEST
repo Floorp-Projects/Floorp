@@ -2,3 +2,4 @@ nsIEnumerator.idl
 nsIFactory.idl
 nsISupports.idl
 nsrootidl.idl
+nsIFilespec.idl

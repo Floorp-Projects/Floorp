@@ -28,12 +28,12 @@ MAKE_OBJ_TYPE	= EXE
 PROG1 = .\$(OBJDIR)\regExport.exe
 PROGRAMS = $(PROG1)
 
-LLIBS = \
-        $(LIBNSPR)                       \
-		$(DIST)\lib\plc3.lib         \
-        $(DIST)\lib\xpcom$(MOZ_BITS).lib \
+LLIBS =                         \
+        $(LIBNSPR)              \
+        $(DIST)\lib\plc3.lib    \
+        $(DIST)\lib\xpcom.lib   \
 !if "$(MOZ_BITS)"=="32" && defined(MOZ_DEBUG) && defined(GLOWCODE)
-        $(GLOWDIR)\glowcode.lib          \
+        $(GLOWDIR)\glowcode.lib \
 !endif
         $(NULL)
 

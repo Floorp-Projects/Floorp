@@ -25,7 +25,7 @@ class nsISizeOfHandler;
 typedef PRBool (*nsVoidArrayEnumFunc)(void* aElement, void *aData);
 
 /// A basic zero-based array of void*'s that manages its own memory
-class NS_BASE nsVoidArray {
+class NS_COM nsVoidArray {
 public:
   nsVoidArray();
   nsVoidArray(PRInt32 aCount);  // initial count of aCount elements set to nsnull
@@ -76,7 +76,7 @@ class nsString;
 
 typedef PRBool (*nsStringArrayEnumFunc)(nsString& aElement, void *aData);
 
-class NS_BASE nsStringArray: protected nsVoidArray
+class NS_COM nsStringArray: protected nsVoidArray
 {
 public:
   nsStringArray(void);

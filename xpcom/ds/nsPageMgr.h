@@ -102,6 +102,9 @@ class nsPageMgr : public nsIPageManager, public nsIAllocator {
   public:
     NS_DECL_ISUPPORTS
 
+    static NS_METHOD
+    Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+
     // nsIPageManager methods:
     NS_IMETHOD AllocPages(PRUint32 pageCount, void* *result);
     NS_IMETHOD DeallocPages(PRUint32 pageCount, void* pages);

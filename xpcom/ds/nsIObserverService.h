@@ -43,7 +43,7 @@ public:
 	NS_IMETHOD EnumerateObserverList(nsIEnumerator** anEnumerator, nsString* aTopic) = 0;
 };
 
-extern NS_BASE nsresult NS_NewObserverService(nsIObserverService** anObserverService);
+extern NS_COM nsresult NS_NewObserverService(nsIObserverService** anObserverService);
 
 #define NS_OBSERVERSERVICE_PROGID             "component:||netscape|ObserverService"
 

@@ -179,7 +179,7 @@ nsresult ns_file_convert_result(PRInt32 nativeErr);
 #define NS_FILE_FAILURE NS_FILE_RESULT(-1)
 
 //========================================================================================
-class NS_BASE nsAutoCString
+class NS_COM nsAutoCString
 //
 // This should be in nsString.h, but the owner would not reply to my proposal.  After four
 // weeks, I decided to put it in here.
@@ -209,7 +209,7 @@ protected:
 }; // class nsAutoCString
 
 //========================================================================================
-class NS_BASE nsSimpleCharString
+class NS_COM nsSimpleCharString
 //  An envelope for char*: reference counted. Used internally by all the nsFileSpec
 //  classes below.
 //========================================================================================
@@ -282,7 +282,7 @@ protected:
 }; // class nsSimpleCharString
 
 //========================================================================================
-class NS_BASE nsFileSpec
+class NS_COM nsFileSpec
 //    This is whatever each platform really prefers to describe files as.  Declared first
 //  because the other two types have an embedded nsFileSpec object.
 //========================================================================================
@@ -501,7 +501,7 @@ class NS_BASE nsFileSpec
 typedef nsFileSpec nsNativeFileSpec;
 
 //========================================================================================
-class NS_BASE nsFileURL
+class NS_COM nsFileURL
 //    This is an escaped string that looks like "file:///foo/bar/mumble%20fish".  Since URLs
 //    are the standard way of doing things in mozilla, this allows a string constructor,
 //    which just stashes the string with no conversion.
@@ -558,7 +558,7 @@ class NS_BASE nsFileURL
 }; // class nsFileURL
 
 //========================================================================================
-class NS_BASE nsFilePath
+class NS_COM nsFilePath
 //    This is a string that looks like "/foo/bar/mumble fish".  Same as nsFileURL, but
 //    without the "file:// prefix", and NOT %20 ENCODED! Strings passed in must be
 //    valid unix-style paths in this format.
@@ -612,7 +612,7 @@ class NS_BASE nsFilePath
 }; // class nsFilePath
 
 //========================================================================================
-class NS_BASE nsPersistentFileDescriptor
+class NS_COM nsPersistentFileDescriptor
 // To save information about a file's location in another file, initialize
 // one of these from your nsFileSpec, and then write this out to your output stream.
 // To retrieve the info, create one of these, read its value from an input stream.
@@ -622,13 +622,13 @@ class NS_BASE nsPersistentFileDescriptor
     public:
                                 nsPersistentFileDescriptor() {}
                                     // For use prior to reading in from a stream
-                                nsPersistentFileDescriptor(const nsPersistentFileDescriptor& inPath);
+                                nsPersistentFileDescriptor(const nsPersistentFileDescriptor& inEncodedData);
         virtual                 ~nsPersistentFileDescriptor();
-        void					operator = (const nsPersistentFileDescriptor& inPath);
+        void					operator = (const nsPersistentFileDescriptor& inEncodedData);
         
         // Conversions
-        NS_EXPLICIT             nsPersistentFileDescriptor(const nsFileSpec& inPath);
-        void					operator = (const nsFileSpec& inPath);
+        NS_EXPLICIT             nsPersistentFileDescriptor(const nsFileSpec& inSpec);
+        void					operator = (const nsFileSpec& inSpec);
         
 		// The following four functions are declared here (as friends). Their implementations
 		// are in mozilla/base/src/nsFileSpecStreaming.cpp.
@@ -636,9 +636,9 @@ class NS_BASE nsPersistentFileDescriptor
     	friend nsresult         Read(nsIInputStream* aStream, nsPersistentFileDescriptor&);
     	friend nsresult         Write(nsIOutputStream* aStream, const nsPersistentFileDescriptor&);
     	    // writes the data to a file
-    	friend NS_BASE nsInputStream& operator >> (nsInputStream&, nsPersistentFileDescriptor&);
+    	friend NS_COM nsInputStream& operator >> (nsInputStream&, nsPersistentFileDescriptor&);
     		// reads the data from a file
-    	friend NS_BASE nsOutputStream& operator << (nsOutputStream&, const nsPersistentFileDescriptor&);
+    	friend NS_COM nsOutputStream& operator << (nsOutputStream&, const nsPersistentFileDescriptor&);
     	    // writes the data to a file
         friend class nsFileSpec;
 
@@ -658,7 +658,7 @@ class NS_BASE nsPersistentFileDescriptor
 }; // class nsPersistentFileDescriptor
 
 //========================================================================================
-class NS_BASE nsDirectoryIterator
+class NS_COM nsDirectoryIterator
 //  Example:
 //
 //       nsFileSpec parentDir(...); // directory over whose children we shall iterate
@@ -721,7 +721,7 @@ class NS_BASE nsDirectoryIterator
 }; // class nsDirectoryIterator
 
 //========================================================================================
-class NS_BASE nsNSPRPath
+class NS_COM nsNSPRPath
 //  This class will allow you to pass any one of the nsFile* classes directly into NSPR
 //  without the need to worry about whether you have the right kind of filepath or not.
 //  It will also take care of cleaning up any allocated memory. 

@@ -60,7 +60,7 @@ EXPORTS= nsUCVJA2CID.h			\
 	$(NULL)
 
 LLIBS=					\
- $(DIST)\lib\xpcom32.lib		\
+ $(DIST)\lib\xpcom.lib		\
  $(LIBNSPR)
 
 MISCDEP = $(LLIBS)

@@ -47,7 +47,6 @@ extern "C" {
 #include "nsIURLGroup.h"
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
-#include "nsXPComCIID.h"
 #include "nsCRT.h"
 #include "nsSocketTransport.h"
 

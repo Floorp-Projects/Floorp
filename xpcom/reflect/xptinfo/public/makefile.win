@@ -18,13 +18,12 @@
 IGNORE_MANIFEST=1
 
 DEPTH=..\..\..\..
+MODULE	= xpcom
 
 EXPORTS = \
     xptinfo.h                       \
     nsIInterfaceInfoManager.h       \
     nsIInterfaceInfo.h              \
-	$(NULL)
-
-MODULE	=	xptinfo
+    $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

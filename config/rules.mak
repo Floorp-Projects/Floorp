@@ -656,7 +656,11 @@ XPIDL_TYPELIBS=$(XPIDL_TYPELIBS:.\=.\_xpidlgen\)
 .idl{$(XPIDL_GEN_DIR)}.xpt:
         $(XPIDL_PROG) -m typelib $(XPIDL_INCLUDES) -o $* $<
 
-TYPELIB = $(XPIDL_GEN_DIR)\$(MODULE).xpt
+!ifndef XPILD_MODULE
+XPILD_MODULE = $(MODULE)
+!endif
+
+TYPELIB = $(XPIDL_GEN_DIR)\$(XPILD_MODULE).xpt
 
 $(TYPELIB): $(XPIDL_TYPELIBS)
         @echo +++ make: Creating typelib: $(TYPELIB)
@@ -707,6 +711,8 @@ clobber::
 
 clobber_all::
         -$(RM_R) $(GARBAGE) 2> NUL
+
+GARBAGE=$(GARBAGE) $(XPIDL_GEN_DIR) $(DIST)\bin\components\$(XPIDL_MODULE).xpt
 
 !endif
 !endif

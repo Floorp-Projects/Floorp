@@ -887,12 +887,16 @@ endif
 # Export the elements of $(XPIDLSRCS), generating .h and .xpt files and
 # moving them to the appropriate places.
 
+ifndef XPIDL_MODULE
+XPIDL_MODULE = $(MODULE)
+endif
+
 ifneq ($(XPIDLSRCS),)
-ifeq ($(MODULE),) # we need $(MODULE) to make $(MODULE).xpt
+ifeq ($(XPIDL_MODULE),) # we need $(XPIDL_MODULE) to make $(XPIDL_MODULE).xpt
 export:: FORCE
 	@echo
 	@echo "*** Error processing XPIDLSRCS:"
-	@echo "Please define MODULE when defining XPIDLSRCS,"
+	@echo "Please define MODULE or XPIDL_MODULE when defining XPIDLSRCS,"
 	@echo "so we have a module name to use when creating MODULE.xpt."
 	@echo; sleep 2; false
 else
@@ -919,15 +923,15 @@ export:: $(patsubst %.idl,$(XPIDL_GEN_DIR)/%.h, $(XPIDLSRCS)) $(XPDIST)/include
 
 ifndef NO_GEN_XPT
 # generate intermediate .xpt files into $(XPIDL_GEN_DIR), then link
-# into $(MODULE).xpt and export it to $(DIST)/bin/components.
+# into $(XPIDL_MODULE).xpt and export it to $(DIST)/bin/components.
 $(XPIDL_GEN_DIR)/%.xpt: %.idl $(IDL_COMPILE) $(XPIDL_GEN_DIR)
 	$(XPIDL_COMPILE) -m typelib -w -I $(XPDIST)/idl -I$(srcdir) -o $(XPIDL_GEN_DIR)/$* $<
 
-$(XPIDL_GEN_DIR)/$(MODULE).xpt: $(patsubst %.idl,$(XPIDL_GEN_DIR)/%.xpt,$(XPIDLSRCS))
-	$(XPIDL_LINK) $(XPIDL_GEN_DIR)/$(MODULE).xpt $^
+$(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt: $(patsubst %.idl,$(XPIDL_GEN_DIR)/%.xpt,$(XPIDLSRCS))
+	$(XPIDL_LINK) $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt $^
 
-install:: $(XPIDL_GEN_DIR)/$(MODULE).xpt
-	$(INSTALL) -m 444 $(XPIDL_GEN_DIR)/$(MODULE).xpt $(DIST)/bin/components
+install:: $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt
+	$(INSTALL) -m 444 $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt $(DIST)/bin/components
 
 endif
 

@@ -32,8 +32,7 @@ MISCDEP =                       \
  $(DIST)\lib\raptorhtmlpars.lib		\
  $(DIST)\lib\raptorbasewidget_s.lib		\
  $(DIST)\lib\raptorwidget_s.lib	\
- $(DIST)\lib\xpcom32.lib        \
- $(DIST)\lib\raptorbase.lib     \
+ $(DIST)\lib\xpcom.lib        \
  $(DIST)\lib\raptorgfxwin.lib   \
  $(DIST)\lib\raptorbasewidget_s.lib     
 
@@ -61,10 +60,9 @@ LLIBS=                                  \
  Uuid.lib								\
  ole32.lib								\
  shell32.lib                           \
- $(DIST)\lib\xpcom32.lib                \
+ $(DIST)\lib\xpcom.lib                \
  $(DIST)\lib\raptorhtmlpars.lib		\
  $(DIST)\lib\raptorgfxwin.lib           \
- $(DIST)\lib\raptorbase.lib             \
  $(DIST)\lib\raptorbasewidget_s.lib		  \
  $(DIST)\lib\raptorwidget_s.lib	        \
  $(LIBNSPR) 

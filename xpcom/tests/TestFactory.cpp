@@ -20,6 +20,7 @@
 #include "TestFactory.h"
 #include "nsISupports.h"
 #include "nsIComponentManager.h"
+#include "nsIServiceManager.h"
 
 NS_DEFINE_IID(kFactoryIID, NS_IFACTORY_IID);
 NS_DEFINE_CID(kTestFactoryCID, NS_TESTFACTORY_CID);
@@ -27,6 +28,17 @@ NS_DEFINE_CID(kTestLoadedFactoryCID, NS_TESTLOADEDFACTORY_CID);
 NS_DEFINE_IID(kTestClassIID, NS_ITESTCLASS_IID);
 
 int main(int argc, char **argv) {
+  nsresult rv;
+  nsIServiceManager* servMgr;
+
+  rv = NS_InitXPCOM(&servMgr);
+  if (NS_FAILED(rv)) return rv;
+
+  // XXX why do I have to do this?!
+  rv = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup,
+                                        "components");
+  if (NS_FAILED(rv)) return rv;
+
   RegisterTestFactories();
 
   ITestClass *t = NULL;

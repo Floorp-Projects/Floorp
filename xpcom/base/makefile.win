@@ -38,6 +38,8 @@ EXPORTS =                  \
         nscore.h           \
         $(NULL)			
 
+XPILD_MODULE = xpcom_base
+
 XPIDLSRCS =               \
         .\nsrootidl.idl   \
         .\nsISupports.idl \

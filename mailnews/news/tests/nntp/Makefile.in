@@ -53,8 +53,6 @@ LIBS = \
 	-lxp	\
 	-lpref	\
 	-lmozjs	\
-	-lraptorbase \
-	-lgmbase$(MOZ_TOOLKIT) \
 	-lsecfree \
 	-lraptorhtml \
 	-lraptorhtmlpars	\

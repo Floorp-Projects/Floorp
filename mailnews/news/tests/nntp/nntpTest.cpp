@@ -49,7 +49,6 @@
 #include "nsIServiceManager.h"
 #include "nsIEventQueue.h" 
 #include "nsIEventQueueService.h"
-#include "nsXPComCIID.h"
 #include "nsIUrlListener.h"
 
 #include "nsIPref.h"

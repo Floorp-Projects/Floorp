@@ -262,9 +262,9 @@ nsPageMgr::InitPages(nsPageCount minPages, nsPageCount maxPages)
     mSegTable = mSegTable;
     mSegTableCount = mSegTableCount;
     
-    mSegTable[0].handle = h;
-    mSegTable[0].firstPage = firstPage;
-    mSegTable[0].lastPage = lastPage;
+    mSegTable[0].mHandle = h;
+    mSegTable[0].mFirstPage = firstPage;
+    mSegTable[0].mLastPage = lastPage;
 
     /* XXX hack for now -- just one segment */
     mMemoryBase = firstPage;
@@ -328,8 +328,8 @@ nsPageMgr::FinalizePages()
     OSErr err;
     PRUword i;
     for (i = 0; i < mSegTableCount; i++) {
-        if (mSegTable[i].handle) {
-            TempDisposeHandle(mSegTable[i].handle, &err);
+        if (mSegTable[i].mHandle) {
+            TempDisposeHandle(mSegTable[i].mHandle, &err);
             PR_ASSERT(err == 0);
         }
     }
@@ -414,6 +414,26 @@ nsPageMgr::~nsPageMgr()
         chain = chain->mNext;
         PR_Free(desc);
     }
+}
+
+NS_METHOD
+nsPageMgr::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
+{
+    if (aOuter)
+        return NS_ERROR_NO_AGGREGATION;
+    nsPageMgr* pageMgr = new nsPageMgr();
+    if (pageMgr == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    NS_ADDREF(pageMgr);
+    nsresult rv = pageMgr->Init();
+    if (NS_FAILED(rv)) {
+        NS_RELEASE(pageMgr);
+        return rv;
+    }
+    rv = pageMgr->QueryInterface(aIID, aResult);
+    NS_RELEASE(pageMgr);
+    return NS_OK;
 }
 
 NS_IMPL_ADDREF(nsPageMgr);

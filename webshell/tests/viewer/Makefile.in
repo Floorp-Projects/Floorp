@@ -49,7 +49,6 @@ EXPORT_RESOURCE_THROBBER := \
 
 TOOLKIT_GFX_LIB		:= -lgfx$(MOZ_TOOLKIT)
 TOOLKIT_WIDGET_LIB	:= -lwidget$(MOZ_TOOLKIT)
-TOOLKIT_BASE_LIB	:= -lgmbase$(MOZ_TOOLKIT)
 
 # Hardcoding dlopen()'s?  This needs to get fixed.
 #
@@ -94,7 +93,6 @@ ifdef MOZ_OJI
 endif
 
 BASE_LIBS =	     \
-	-lraptorbase \
 	-lpref	     \
 	$(ZLIB_LIBS) \
 	-lreg	     \
@@ -110,7 +108,6 @@ GECKO_LIBS =			\
 	-lraptorgfx		\
 	$(TOOLKIT_GFX_LIB)	\
 	-lgfxps			\
-	$(TOOLKIT_BASE_LIB)	\
 	-lraptorhtmlpars	\
 	-lexpat			\
 	-lxmltok		\

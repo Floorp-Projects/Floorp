@@ -1,0 +1,12 @@
+nsAgg.h
+nsIAllocator.h
+nsCOMPtr.h
+nsCom.h
+nsDebug.h
+nsError.h
+nsID.h 
+nsIID.h
+nsIPtr.h
+nsISupportsUtils.h
+nsTraceRefcnt.h
+nscore.h

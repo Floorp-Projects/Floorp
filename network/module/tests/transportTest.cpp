@@ -55,7 +55,6 @@ PRBool bLoadAsync;
 #include "nsINetService.h"
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
-#include "nsXPComCIID.h"
 
 #ifdef XP_PC
 #define NETLIB_DLL "netlib.dll"

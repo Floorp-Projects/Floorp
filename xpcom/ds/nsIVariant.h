@@ -52,7 +52,9 @@ public:
     nsVariantValue(PRInt32 value) { mUnion._PRInt32 = value; }
     nsVariantValue(PRUint32 value) { mUnion._PRUint32 = value; }
     nsVariantValue(PRInt64 value) { mUnion._PRInt64 = value; }
+#ifndef XP_MAC
     nsVariantValue(PRUint64 value) { mUnion._PRUint64 = value; }
+#endif
     nsVariantValue(float value) { mUnion._float = value; }
     nsVariantValue(PRFloat64 value) { mUnion._PRFloat64 = value; }
 //    nsVariantValue(PRTime value) { mUnion._PRTime = value; }
@@ -66,7 +68,9 @@ public:
     operator PRInt32() { return mUnion._PRInt32; }
     operator PRUint32() { return mUnion._PRUint32; }
     operator PRInt64() { return mUnion._PRInt64; }
+#ifndef XP_MAC
     operator PRUint64() { return mUnion._PRUint64; }
+#endif
     operator float() { return mUnion._float; }
     operator PRFloat64() { return mUnion._PRFloat64; }
 //    operator PRTime() { return mUnion._PRTime; }
@@ -142,7 +146,7 @@ public:
 
 };
 
-extern NS_BASE nsresult
+extern NS_COM nsresult
 NS_NewIVariant(nsVariantType initialType, nsVariantValue& initialValue,
                nsIVariant* *result);
 

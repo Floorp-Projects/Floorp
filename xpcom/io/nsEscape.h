@@ -34,26 +34,26 @@ typedef enum {
 #ifdef __cplusplus
 extern "C" {
 #endif
-NS_BASE char * nsEscape(const char * str, nsEscapeMask mask);
+NS_COM char * nsEscape(const char * str, nsEscapeMask mask);
 	/* Caller must use delete [] on the result */
 
-NS_BASE char * nsUnescape(char * str);
+NS_COM char * nsUnescape(char * str);
 	/* decode % escaped hex codes into character values,
 	 * modifies the parameter, returns the same buffer
 	 */
 
-NS_BASE char * nsEscapeCount(const char * str, PRInt32 len, nsEscapeMask mask, PRInt32* out_len);
+NS_COM char * nsEscapeCount(const char * str, PRInt32 len, nsEscapeMask mask, PRInt32* out_len);
 	/* Like nsEscape, but if out_len is non-null, return result string length
 	 * in *out_len, and uses len instead of NUL termination.
 	 * Caller must use delete [] on the result.
 	 */
-NS_BASE PRInt32 nsUnescapeCount (char * str);
+NS_COM PRInt32 nsUnescapeCount (char * str);
 	/* decode % escaped hex codes into character values,
 	 * modifies the parameter buffer, returns the length of the result
 	 * (result may contain \0's).
 	 */
 
-NS_BASE char *
+NS_COM char *
 nsEscapeHTML(const char * string);
  /*
   * Escape problem char's for HTML display 

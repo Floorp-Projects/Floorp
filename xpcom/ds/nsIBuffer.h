@@ -59,23 +59,23 @@ public:
     NS_IMETHOD SetEOF() = 0;
 };
 
-extern NS_BASE nsresult
+extern NS_COM nsresult
 NS_NewBuffer(nsIBuffer* *result,
              PRUint32 growBySize, PRUint32 maxSize);
 
-extern NS_BASE nsresult
+extern NS_COM nsresult
 NS_NewPageBuffer(nsIBuffer* *result,
                  PRUint32 growBySize, PRUint32 maxSize);
 
-extern NS_BASE nsresult
+extern NS_COM nsresult
 NS_NewBufferInputStream(nsIInputStream* *result,
                         nsIBuffer* buffer, PRBool blocking = PR_FALSE);
 
-extern NS_BASE nsresult
+extern NS_COM nsresult
 NS_NewBufferOutputStream(nsIOutputStream* *result,
                          nsIBuffer* buffer, PRBool blocking = PR_FALSE);
 
-extern NS_BASE nsresult
+extern NS_COM nsresult
 NS_NewPipe2(nsIInputStream* *inStrResult,
            nsIOutputStream* *outStrResult,
            PRUint32 growBySize, PRUint32 maxSize);

@@ -19,7 +19,7 @@ DEPTH=..\..\..
 IGNORE_MANIFEST=1
 
 MAKE_OBJ_TYPE = DLL
-MODULE=libproxy
+MODULE=xpcom
 
 EXPORTS =                        \
     nsProxyEvent.h               \

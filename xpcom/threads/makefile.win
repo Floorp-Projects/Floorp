@@ -28,8 +28,6 @@ EXPORTS =                      \
         nsIEventQueue.h        \
         nsIEventQueueService.h \
         nsIThread.h            \
-        nsITimer.h             \
-        nsITimerCallback.h     \
         $(NULL)			
 
 XPIDLSRCS =               \
@@ -51,7 +49,6 @@ CPP_OBJS =                                  \
         .\$(OBJDIR)\nsEventQueue.obj        \
         .\$(OBJDIR)\nsEventQueueService.obj \
         .\$(OBJDIR)\nsThread.obj            \
-        .\$(OBJDIR)\nsTimer_win.obj         \
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

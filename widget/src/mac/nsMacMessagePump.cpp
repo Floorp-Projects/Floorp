@@ -39,7 +39,6 @@
 
 #include "nsRepeater.h"
 
-#include "nsXPComCIID.h"
 #include "nsIEventQueueService.h"
 #include "nsIServiceManager.h"
 #include "plevent.h"

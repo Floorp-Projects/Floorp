@@ -30,7 +30,6 @@ INCLUDES	+= -I$(srcdir)/../public -I$(DIST)/include
 
 LIBS	= \
 	-lxpcom \
-	-lraptorbase \
 	-lreg \
 	$(NSPR_LIBS) \
 	$(NULL)

@@ -36,7 +36,7 @@ INCLUDES	+= -I$(srcdir)/../ucvlatin  \
                    -I$(srcdir)/../ucvja2
 
 
-LIBS	        += $(NSPR_LIBS) -L$(DIST)/bin/ -lxpcom -lraptorbase -lreg -luconv
+LIBS	        += $(NSPR_LIBS) -L$(DIST)/bin/ -lxpcom -lreg -luconv
 
 # needed for mac linux
 ifeq ($(OS_ARCH),Linux)

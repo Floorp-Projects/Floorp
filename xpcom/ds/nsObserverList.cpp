@@ -36,7 +36,7 @@ static NS_DEFINE_IID(kObserverListCID, NS_OBSERVERLIST_CID);
 
 NS_IMPL_ISUPPORTS(nsObserverList, kIObserverListIID);
 
-NS_BASE nsresult NS_NewObserverList(nsIObserverList** anObserverList)
+NS_COM nsresult NS_NewObserverList(nsIObserverList** anObserverList)
 {
 
     if (anObserverList == NULL)

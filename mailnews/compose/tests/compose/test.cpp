@@ -23,7 +23,6 @@
 #include "nsIUrlListener.h"
 #include "nsIEventQueueService.h"
 #include "nsIEventQueue.h"
-#include "nsXPComCIID.h"
 #include "nsIFileLocator.h"
 
 #include "MsgCompGlue.h"

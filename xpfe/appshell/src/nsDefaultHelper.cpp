@@ -25,7 +25,6 @@
 #include "nsIEventQueueService.h"
 #include "nsIServiceManager.h"
 #include "nsXPComFactory.h"
-#include "nsXPComCIID.h"
 
 // Class IDs...
 static NS_DEFINE_IID(kEventQueueServiceCID,  NS_EVENTQUEUESERVICE_CID);

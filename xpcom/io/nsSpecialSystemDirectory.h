@@ -35,7 +35,7 @@
 // SEE ALSO:
 //      mozilla/xpfe/appshell/public/nsFileLocations.h
 
-class NS_BASE nsSpecialSystemDirectory : public nsFileSpec
+class NS_COM nsSpecialSystemDirectory : public nsFileSpec
 {
 
     public:
@@ -106,6 +106,6 @@ class NS_BASE nsSpecialSystemDirectory : public nsFileSpec
 private:
     void            operator = (const char* inPath) { *(nsFileSpec*)this = inPath; }
 
-}; // class NS_BASE nsSpecialSystemDirectory
+}; // class NS_COM nsSpecialSystemDirectory
 
 #endif

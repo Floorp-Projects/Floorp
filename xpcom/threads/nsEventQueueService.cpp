@@ -16,55 +16,13 @@
  * Corporation.  Portions created by Netscape are Copyright (C) 1998
  * Netscape Communications Corporation.  All Rights Reserved.
  */
+
+#include "nsEventQueueService.h"
 #include "prmon.h"
 #include "nsComponentManager.h"
-#include "nsIEventQueueService.h"
 #include "nsIEventQueue.h"
-#include "nsHashtable.h"
-#include "nsXPComFactory.h"
 
 static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
-
-// XXX move to nsID.h or nsHashtable.h? (copied from nsComponentManager.cpp)
-class ThreadKey: public nsHashKey {
-private:
-    const PRThread* id;
-  
-public:
-    ThreadKey(const PRThread* aID) {
-        id = aID;
-    }
-  
-    PRUint32 HashValue(void) const {
-        return (PRUint32)id;
-    }
-
-    PRBool Equals(const nsHashKey *aKey) const {
-        return (id == ((const ThreadKey *) aKey)->id);
-    }
-
-    nsHashKey *Clone(void) const {
-        return new ThreadKey(id);
-    }
-};
-
-
-/* This class is used with the EventQueueEntries to allow us to nest
-   event queues */
-class EventQueueStack
-{
-public:
-	EventQueueStack(EventQueueStack* next = NULL);
-	~EventQueueStack();
-
-	nsIEventQueue* GetEventQueue();
-	EventQueueStack* GetNext();
-  void SetNext(EventQueueStack* aStack);
-
-private:
-	nsIEventQueue* mEventQueue;
-	EventQueueStack* mNextQueue;
-};
 
 static NS_DEFINE_IID(kIEventQueueIID, NS_IEVENTQUEUE_IID);
 static NS_DEFINE_IID(kEventQueueCID, NS_EVENTQUEUE_CID);
@@ -113,30 +71,7 @@ void EventQueueStack::SetNext(EventQueueStack* aStack)
 	mNextQueue = aStack;
 }
 
-/*
- * This class maintains the data associated with each entry in the EventQueue
- * service's hash table...
- *
- * It derives from nsISupports merely as a convienence since the entries are
- * reference counted...
- */
-class EventQueueEntry : public nsISupports 
-{
-public:
-  EventQueueEntry();
-  virtual ~EventQueueEntry();
-
-  // nsISupports interface...
-  NS_DECL_ISUPPORTS
-
-  nsIEventQueue* GetEventQueue(void);
-  
-	void PushQueue(void);
-  void PopQueue(void);
-
-private: 
-	EventQueueStack* mQueueStack;
-};
+////////////////////////////////////////////////////////////////////////////////
 
 /* nsISupports interface implementation... */
 NS_IMPL_ISUPPORTS(EventQueueEntry,kISupportsIID);
@@ -182,34 +117,7 @@ void EventQueueEntry::PopQueue(void)
 	delete popped;
 }
 
-class nsEventQueueServiceImpl : public nsIEventQueueService
-{
-public:
-  nsEventQueueServiceImpl();
-  virtual ~nsEventQueueServiceImpl();
-
-  // nsISupports interface...
-  NS_DECL_ISUPPORTS
-
-  // nsIEventQueueService interface...
-  NS_IMETHOD CreateThreadEventQueue(void);
-  NS_IMETHOD DestroyThreadEventQueue(void);
-  NS_IMETHOD GetThreadEventQueue(PRThread* aThread, nsIEventQueue** aResult);
-
-	NS_IMETHOD CreateFromPLEventQueue(PLEventQueue* aPLEventQueue, nsIEventQueue** aResult);
-
-	NS_IMETHOD PushThreadEventQueue(void);
-	NS_IMETHOD PopThreadEventQueue(void);
-
-#ifdef XP_MAC
-  NS_IMETHOD ProcessEvents();
-#endif // XP_MAC
-
-private:
-  nsHashtable* mEventQTable;
-  PRMonitor*   mEventQMonitor;
-};
-
+////////////////////////////////////////////////////////////////////////////////
 
 nsEventQueueServiceImpl::nsEventQueueServiceImpl()
 {
@@ -237,6 +145,20 @@ nsEventQueueServiceImpl::~nsEventQueueServiceImpl()
   delete mEventQTable;
 
   PR_DestroyMonitor(mEventQMonitor);
+}
+
+NS_METHOD
+nsEventQueueServiceImpl::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
+{
+  if (aOuter)
+    return NS_ERROR_NO_AGGREGATION;
+  nsEventQueueServiceImpl* eqs = new nsEventQueueServiceImpl();
+  if (eqs == NULL)
+    return NS_ERROR_OUT_OF_MEMORY;
+  NS_ADDREF(eqs);
+  nsresult rv = eqs->QueryInterface(aIID, aResult);
+  NS_RELEASE(eqs);
+  return rv;
 }
 
 /* nsISupports interface implementation... */
@@ -418,6 +340,7 @@ done:
   PR_ExitMonitor(mEventQMonitor);
   return rv;
 }
+
 #ifdef XP_MAC
 // Callback from the enumeration of the HashTable.
 static  PRBool EventDispatchingFunc(nsHashKey *aKey, void *aData, void* closure)
@@ -442,77 +365,5 @@ NS_IMETHODIMP nsEventQueueServiceImpl::ProcessEvents()
 }
 
 #endif 
-//----------------------------------------------------------------------
 
-static nsEventQueueServiceImpl* gServiceInstance = NULL;
-
-NS_DEF_FACTORY(EventQueueServiceGen,nsEventQueueServiceImpl)
-
-class nsEventQueueServiceFactory : public nsEventQueueServiceGenFactory
-{
-public:
-  NS_IMETHOD CreateInstance(nsISupports *aOuter,
-                            const nsIID &aIID,
-                            void **aResult);
-};
-
-NS_IMETHODIMP
-nsEventQueueServiceFactory::CreateInstance(nsISupports *aOuter,
-                                           const nsIID &aIID,
-                                           void **aResult)
-{
-  nsresult rv;
-  nsISupports* inst;
-
-  // Parameter validation...
-  if (NULL == aResult) {
-    rv = NS_ERROR_NULL_POINTER;
-    goto done;
-  }
-  // Do not support aggregatable components...
-  *aResult = NULL;
-  if (NULL != aOuter) {
-    rv = NS_ERROR_NO_AGGREGATION;
-    goto done;
-  }
-
-  if (NULL == gServiceInstance) {
-    // Create a new instance of the component...
-    NS_NEWXPCOM(gServiceInstance, nsEventQueueServiceImpl);
-    if (NULL == gServiceInstance) {
-      rv = NS_ERROR_OUT_OF_MEMORY;
-      goto done;
-    }
-    NS_ADDREF(gServiceInstance);
-  }
-
-  // If the QI fails, the component will be destroyed...
-  //
-  // Use a local copy so the NS_RELEASE() will not null the global
-  // pointer...
-  inst = gServiceInstance;
-
-  NS_ADDREF(inst);
-  rv = inst->QueryInterface(aIID, aResult);
-  NS_RELEASE(inst);
-
-done:
-  return rv;
-}
-
-
-// Entry point to create nsEventQueueService factory instances...
-
-nsresult NS_NewEventQueueServiceFactory(nsIFactory** aResult)
-{
-  nsresult rv = NS_OK;
-  nsIFactory* inst = new nsEventQueueServiceFactory();
-  if (NULL == inst) {
-    rv = NS_ERROR_OUT_OF_MEMORY;
-  }
-  else {
-    NS_ADDREF(inst);
-  }
-  *aResult = inst;
-  return rv;
-}
+////////////////////////////////////////////////////////////////////////////////

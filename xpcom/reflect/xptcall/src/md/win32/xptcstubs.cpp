@@ -144,3 +144,7 @@ nsresult __stdcall nsXPTCStubBase::Sentinel##n() \
 #include "xptcstubsdef.inc"
 #pragma warning(default : 4035) // restore default
 
+void
+xptc_dummy()
+{
+}

@@ -47,7 +47,6 @@ LIBS = \
 	-lgophurl \
 	-lremoturl \
 	-lnetcnvts \
-	-lraptorbase \
 	-labouturl \
 	-lhttpurl \
 	-lmimetype \
@@ -55,7 +54,6 @@ LIBS = \
 	-lnetcache \
 	-lsockstuburl \
 	-lnetwork \
-	-lgmbase$(MOZ_TOOLKIT) \
 	$(TK_LIBS) \
 	-lpref \
 	-lsecfree \
