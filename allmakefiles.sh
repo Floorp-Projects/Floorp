@@ -1042,11 +1042,6 @@ for extension in $MOZ_EXTENSIONS; do
         p3p ) MAKEFILES_extensions="$MAKEFILES_extensions
             extensions/p3p/Makefile
             extensions/p3p/public/Makefile
-            extensions/p3p/resources/Makefile
-            extensions/p3p/resources/content/Makefile
-            extensions/p3p/resources/locale/Makefile
-            extensions/p3p/resources/locale/en-US/Makefile
-            extensions/p3p/resources/skin/Makefile
             extensions/p3p/src/Makefile
             " ;;
         pics ) MAKEFILES_extensions="$MAKEFILES_extensions
