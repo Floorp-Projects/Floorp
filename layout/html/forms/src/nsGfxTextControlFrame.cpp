@@ -2054,7 +2054,7 @@ nsGfxTextControlFrame::Reflow(nsIPresContext* aPresContext,
   mFramePresContext->GetPixelsToTwips(&p2t);
   // resize the sub document within the defined rect 
   // the sub-document will fit inside the border
-  if (NS_SUCCEEDED(rv)) 
+  if (NS_SUCCEEDED(rv))
   {
     nsRect subBounds;
     nsRect subBoundsInPixels;
@@ -2134,11 +2134,11 @@ nsGfxTextControlFrame::Reflow(nsIPresContext* aPresContext,
         
           // create the style context for the anonymous frame
           nsCOMPtr<nsIStyleContext> styleContext;
-          rv = aPresContext->ResolvePseudoStyleContextFor(content, 
-                                                         nsHTMLAtoms::mozSingleLineTextControlFrame,
-                                                         mStyleContext,
-                                                         PR_FALSE,
-                                                         getter_AddRefs(styleContext));
+          rv = aPresContext->ResolvePseudoStyleContextFor(mContent, 
+                                                          nsHTMLAtoms::mozSingleLineTextControlFrame,
+                                                          mStyleContext,
+                                                          PR_FALSE,
+                                                          getter_AddRefs(styleContext));
           if (NS_FAILED(rv)) { return rv; }
           if (!styleContext) { return NS_ERROR_NULL_POINTER; }
 
@@ -2148,11 +2148,11 @@ nsGfxTextControlFrame::Reflow(nsIPresContext* aPresContext,
           if (NS_FAILED(rv)) { return rv; }
           if (!textFrame) { return NS_ERROR_NULL_POINTER; }
           nsCOMPtr<nsIStyleContext> textStyleContext;
-          rv = aPresContext->ResolvePseudoStyleContextFor(content, 
-                                                         nsHTMLAtoms::mozSingleLineTextControlFrame,
-                                                         styleContext,
-                                                         PR_FALSE,
-                                                         getter_AddRefs(textStyleContext));
+          rv = aPresContext->ResolvePseudoStyleContextFor(mContent, 
+                                                          nsHTMLAtoms::mozSingleLineTextControlFrame,
+                                                          styleContext,
+                                                          PR_FALSE,
+                                                          getter_AddRefs(textStyleContext));
           if (NS_FAILED(rv)) { return rv; }
           if (!textStyleContext) { return NS_ERROR_NULL_POINTER; }
           textFrame->Init(aPresContext, content, mDisplayFrame, textStyleContext, nsnull);
@@ -4097,7 +4097,6 @@ nsEnderListenerForContent::~nsEnderListenerForContent()
 nsresult 
 nsEnderListenerForContent::HandleEvent(nsIDOMEvent* aEvent)
 {
-  printf("frame forContent generic HandleEvent\n");
   return NS_OK;
 }
 
@@ -4108,7 +4107,7 @@ nsEnderListenerForContent::HandleEvent(nsIDOMEvent* aEvent)
 nsresult
 nsEnderListenerForContent::DragGesture(nsIDOMEvent* aDragEvent)
 {
-  printf("frame forContent DragGesture\n");
+  //printf("frame forContent DragGesture\n");
   // ...figure out if a drag should be started...
   
   // ...until we have this implemented, just eat the drag event so it
@@ -4122,7 +4121,7 @@ nsEnderListenerForContent::DragGesture(nsIDOMEvent* aDragEvent)
 nsresult
 nsEnderListenerForContent::DragEnter(nsIDOMEvent* aDragEvent)
 {
-  printf("frame forContent DragEnter\n");
+  //printf("frame forContent DragEnter\n");
   // see nsTextEditorDragListener
   return NS_OK;
 }
@@ -4131,7 +4130,7 @@ nsEnderListenerForContent::DragEnter(nsIDOMEvent* aDragEvent)
 nsresult
 nsEnderListenerForContent::DragOver(nsIDOMEvent* aDragEvent)
 {
-  printf("frame forContent DragOver\n");
+  //printf("frame forContent DragOver\n");
   // see nsTextEditorDragListener
   return NS_OK;
 }
@@ -4140,7 +4139,7 @@ nsEnderListenerForContent::DragOver(nsIDOMEvent* aDragEvent)
 nsresult
 nsEnderListenerForContent::DragExit(nsIDOMEvent* aDragEvent)
 {
-  printf("frame forContent DragExit\n");
+  //printf("frame forContent DragExit\n");
   // see nsTextEditorDragListener
   return NS_OK;
 }
@@ -4150,7 +4149,7 @@ nsEnderListenerForContent::DragExit(nsIDOMEvent* aDragEvent)
 nsresult
 nsEnderListenerForContent::DragDrop(nsIDOMEvent* aMouseEvent)
 {
-  printf("frame forContent DragDrop\n");
+  //printf("frame forContent DragDrop\n");
   // see nsTextEditorDragListener
   return NS_OK;
 }
