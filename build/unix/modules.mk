@@ -66,8 +66,8 @@ BM_CVS_NS_xpidl		= xpcom/typelib xpcom/typelib/xpidl
 
 # xpcom
 #
-BM_DIRS_xpcom		= $(NSPRPUB_DIR) modules/libreg string xpcom
-BM_CVS_xpcom		= $(NSPRPUB_DIR) modules/libreg string xpcom
+BM_DIRS_xpcom		= $(NSPRPUB_DIR) lib/mac/MoreFiles modules/libreg string xpcom
+BM_CVS_xpcom		= $(NSPRPUB_DIR) lib/mac/MoreFiles modules/libreg string xpcom
 
 #
 # xpconnect
