@@ -306,52 +306,53 @@ my $insideversion=0;
 if (open(RCINCLUDE, "<$rcinclude")) 
 {
 	print RCFILE "// From included resource $rcinclude\n";
-	my $mstring="";
+#	my $mstring="";
 	while (<RCINCLUDE>) 
 	{
-		my $instr=$_;
-		chomp($instr);
-		$mstring .= "$instr\;";
+                print RCFILE $_;
+#		my $instr=$_;
+#		chomp($instr);
+#		$mstring .= "$instr\;";
 	}
 	close(RCINCLUDE);
-	$mstring =~ s/\/\*.*\*\///g;
-	my @mlines = split(/\;/,$mstring);
-	for(@mlines)
-	{
-		my ($nocomment)=split(/\/\//,$_);
-		if (defined($nocomment) && $nocomment ne "")
-		{
-			my ($firststring,$secondstring) = split(/\s+/,$nocomment);
-			if (!defined($firststring)) {$firststring="";}
-			if (!defined($secondstring)) {$secondstring="";}
-			if ($secondstring eq "VERSIONINFO") 
-			{
-if (!$quiet || $quiet ne "1") { 
-				print "$bufferstr" . "WARNING: Included RC file ($rcinclude, $module, $binary)\n";
-				print "$bufferstr" . "WARNING: contains versioning information that will be discarded\n";
-				print "$bufferstr" . "WARNING: Remove it and use relevant overrides (in module.ver)\n";
-}
-				$versionlevel = 0;
-				$insideversion = 1; 
-			}
-			if ($firststring eq "BEGIN") { $versionlevel++; }
-			if ($secondstring eq "END") 
-			{ 
-				$versionlevel--; 
-				if ($insideversion==1 && $versionlevel==0) {$versionlevel=0;}
-			}
-			my $includecheck = $firststring . $secondstring;
-			$includecheck =~ s/<|>/"/g;
-			$includecheck = lc($includecheck);
-			if ($includecheck ne "#include\"winver.h\"")
-			{
-				if ($insideversion == 0 && $versionlevel == 0)
-				{
-					print RCFILE "$nocomment\n";	
-				}
-			}
-		}
-	}
+#	$mstring =~ s/\/\*.*\*\///g;
+#	my @mlines = split(/\;/,$mstring);
+#	for(@mlines)
+#	{
+#		my ($nocomment)=split(/\/\//,$_);
+#		if (defined($nocomment) && $nocomment ne "")
+#		{
+#			my ($firststring,$secondstring) = split(/\s+/,$nocomment);
+#			if (!defined($firststring)) {$firststring="";}
+#			if (!defined($secondstring)) {$secondstring="";}
+#			if ($secondstring eq "VERSIONINFO") 
+#			{
+#if (!$quiet || $quiet ne "1") { 
+#				print "$bufferstr" . "WARNING: Included RC file ($rcinclude, $module, $binary)\n";
+#				print "$bufferstr" . "WARNING: contains versioning information that will be discarded\n";
+#				print "$bufferstr" . "WARNING: Remove it and use relevant overrides (in module.ver)\n";
+#}
+#				$versionlevel = 0;
+#				$insideversion = 1; 
+#			}
+#			if ($firststring eq "BEGIN") { $versionlevel++; }
+#			if ($secondstring eq "END") 
+#			{ 
+#				$versionlevel--; 
+#				if ($insideversion==1 && $versionlevel==0) {$versionlevel=0;}
+#			}
+#			my $includecheck = $firststring . $secondstring;
+#			$includecheck =~ s/<|>/"/g;
+#			$includecheck = lc($includecheck);
+#			if ($includecheck ne "#include\"winver.h\"")
+#			{
+#				if ($insideversion == 0 && $versionlevel == 0)
+#				{
+#					print RCFILE "$nocomment\n";	
+#				}
+#			}
+#		}
+#	}
 	
 }
 
