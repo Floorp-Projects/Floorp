@@ -867,7 +867,7 @@ TextFrame::ReflowNormal(nsCSSLineLayout& aLineLayout,
         aMetrics.maxElementSize->height = 0;
       }
       NS_RELEASE(fm);
-      return NS_INLINE_REFLOW_COMPLETE;
+      return NS_FRAME_COMPLETE;
     }
   }
 
@@ -884,7 +884,7 @@ TextFrame::ReflowNormal(nsCSSLineLayout& aLineLayout,
     aMetrics.maxElementSize->height = fm->GetHeight();
   }
   NS_RELEASE(fm);
-  return (cp == end) ? NS_INLINE_REFLOW_COMPLETE : NS_INLINE_REFLOW_NOT_COMPLETE;
+  return (cp == end) ? NS_FRAME_COMPLETE : NS_FRAME_NOT_COMPLETE;
 }
 
 nsInlineReflowStatus
@@ -894,7 +894,7 @@ TextFrame::ReflowPre(nsCSSLineLayout& aLineLayout,
                      const nsStyleFont& aFont,
                      PRInt32 aStartingOffset)
 {
-  nsInlineReflowStatus rs = NS_INLINE_REFLOW_COMPLETE;
+  nsInlineReflowStatus rs = NS_FRAME_COMPLETE;
 
   Text* txt = (Text*) mContent;
   const PRUnichar* cp = txt->mText + aStartingOffset;
@@ -914,7 +914,9 @@ TextFrame::ReflowPre(nsCSSLineLayout& aLineLayout,
   while (cp < end) {
     PRUnichar ch = *cp++;
     if (ch == '\n') {
-      rs = NS_INLINE_REFLOW_LINE_BREAK_AFTER;
+      rs = (cp == end)
+        ? NS_INLINE_LINE_BREAK_AFTER(NS_FRAME_COMPLETE)
+        : NS_INLINE_LINE_BREAK_AFTER(NS_FRAME_NOT_COMPLETE);
       break;
     }
     if (ch == '\t') {
