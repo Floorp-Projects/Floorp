@@ -60,8 +60,12 @@ EXTRA_DSO_LDOPTS = \
 		$(SHARED_LIBRARY_LIBS) \
 		$(MKSHLIB_UNFORCE_ALL) \
 		-L$(DIST)/bin \
+		$(NSPR_LIBS)	\
+		-lxpcom		\
 		-lraptorhtmlpars \
+		-lraptorgfx		\
 		-ljsdom \
+		-lmozjs	\
 		-L$(DIST)/lib \
 		$(MOZ_TIMER_LIBS) \
 		$(NULL)
