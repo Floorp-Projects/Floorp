@@ -2487,14 +2487,30 @@ nscolor   sideColor;
 nsPoint   polypath[MAXPOLYPATHSIZE];
 PRInt32   curIndex,c1Index,c2Index,junk;
 PRInt8    border_Style;
-PRInt16   r,g,b;
+PRInt16   r,g,b,thickness;
 
   // set the style information
   aBorderStyle.GetBorderColor(aSide,sideColor);
   aRenderingContext.SetColor ( sideColor );
 
+  thickness = 0;
+  switch(aSide){
+    case  NS_SIDE_LEFT:
+      thickness = aBorThick.left;
+      break;
+    case  NS_SIDE_TOP:
+      thickness = aBorThick.top;
+      break;
+    case  NS_SIDE_RIGHT:
+      thickness = aBorThick.right;
+      break;
+    case  NS_SIDE_BOTTOM:
+      thickness = aBorThick.bottom;
+      break;
+  }
+
   // if the border is thin, just draw it 
-  if (aBorThick.top<aTwipsPerPixel) {
+  if (thickness<aTwipsPerPixel) {
     // NOTHING FANCY JUST DRAW OUR OUTSIDE BORDER
     thecurve.SetPoints(aPoints[0].x,aPoints[0].y,aPoints[1].x,aPoints[1].y,aPoints[2].x,aPoints[2].y);
     thecurve.SubDivide((nsIRenderingContext*)&aRenderingContext,0,0);
