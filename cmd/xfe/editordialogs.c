@@ -22,7 +22,7 @@
  *  Should only be built for the editor.
  *  Created: David Williams <djw@netscape.com>, Mar-12-1996
  *
- *  RCSID: "$Id: editordialogs.c,v 3.4 1998/09/02 01:39:39 akkana%netscape.com Exp $"
+ *  RCSID: "$Id: editordialogs.c,v 3.5 1998/09/03 21:33:45 akkana%netscape.com Exp $"
  */
 
 #include "mozilla.h"
@@ -97,7 +97,8 @@ extern int XFE_EDITOR_TABLE_IMAGE_WIDTH_RANGE;
 extern int XFE_EDITOR_TABLE_IMAGE_HEIGHT_RANGE;
 extern int XFE_EDITOR_TABLE_IMAGE_SPACE_RANGE;
 
-extern int XP_EDT_I18N_HAS_CHARSET;
+extern int XP_EDT_CHARSET_CONVERT_PAGE;
+extern int XP_EDT_CHARSET_SET_METATAG;
 
 #define IMAGE_MIN_WIDTH  1
 #define IMAGE_MAX_WIDTH  10000
@@ -11558,47 +11559,74 @@ fe_HintDialog(MWContext* context, char* message)
 	return FALSE;
 }
 
-ED_CharsetEncode FE_EncodingDialog(MWContext* context)
+static void
+flip_toggle_cb (Widget w, XtPointer closure, XtPointer call_data)
+{
+    Widget toggle = (Widget)closure;
+
+    if (XmToggleButtonGadgetGetState(w))
+        XmToggleButtonGadgetSetState(toggle, FALSE, FALSE);
+}
+
+ED_CharsetEncode FE_EncodingDialog(MWContext* context, char* newCharset)
 {
     ED_CharsetEncode retval = ED_ENCODE_CANCEL;
     int done;
     Widget mainw = CONTEXT_WIDGET (context);
-    Widget dialog, toggle_radio, toggle_button;
+    Widget dialog, radio, toggle1, toggle2;
     Arg av [20];
     int ac;
     Visual *v = 0;
     Colormap cmap = 0;
     Cardinal depth = 0;
     XmString xm_message;
-    char* pMessage = XP_GetString(XP_EDT_I18N_HAS_CHARSET);
+    char* pMessage;
+    /* newCharset needs to be plugged in to the strings in the togglebuttons */
+    char* newCharset = "the new character set";
 
     XtVaGetValues (mainw, XtNvisual, &v, XtNcolormap, &cmap,
                    XtNdepth, &depth, 0);
-    xm_message = XmStringCreateLocalized(pMessage);
     ac = 0;
     XtSetArg(av[ac], XmNvisual, v); ac++;
     XtSetArg(av[ac], XmNdepth, depth); ac++;
     XtSetArg(av[ac], XmNcolormap, cmap); ac++;
     XtSetArg(av[ac], XmNtransientFor, mainw); ac++;
     XtSetArg(av[ac], XmNdefaultButtonType, XmDIALOG_OK_BUTTON); ac++;
-    XtSetArg(av[ac], XmNmessageString, xm_message); ac++;
     dialog = XmCreateQuestionDialog(mainw, "changeEncoding", av, ac);
+
+    ac = 0;
+    XtSetArg(av[ac], XmNorientation, XmVERTICAL); ac++;
+    radio = XmCreateRowColumn(dialog, "_radio", av, ac);
+    XtManageChild(radio);
+
+    ac = 0;
+    XtSetArg(av[ac], XmNindicatorType, XmN_OF_MANY); ac++;
+    toggle1 = XmCreateToggleButtonGadget(radio, "convertPageToggle", av, ac);
+    XtManageChild(toggle1);
+    XmToggleButtonGadgetSetState(toggle1, TRUE, FALSE);
+
+    pMessage = XP_GetString(XP_EDT_CHARSET_CONVERT_PAGE);
+    xm_message = XmStringCreateLocalized(pMessage);
+    XtVaCreateManagedWidget("convertPageLabl", xmLabelGadgetClass, radio,
+                            XmNlabelString, xm_message,
+                            0);
     XmStringFree(xm_message);
 
     ac = 0;
-    XtSetArg(av[ac], XmNorientation, XmHORIZONTAL); ac++;
-    toggle_radio = XmCreateRadioBox(dialog, "_radio", av, ac);
-    XtManageChild(toggle_radio);
+    XtSetArg(av[ac], XmNindicatorType, XmN_OF_MANY); ac++;
+    toggle2 = XmCreateToggleButtonGadget(radio, "changeMetatagToggle", av, ac);
+    XtManageChild(toggle2);
 
-    ac = 0;
-    /*XtSetArg(av[ac], XmNindicatorType, XmN_OF_MANY); ac++;*/
-    toggle_button = XmCreateToggleButtonGadget(toggle_radio, "encodeContent",
-                                               av, ac);
-    XtManageChild(toggle_button);
-    XmToggleButtonSetState(toggle_button, TRUE, FALSE);
-    toggle_button = XmCreateToggleButtonGadget(toggle_radio,
-                                               "dontEncodeContent", av, ac);
-    XtManageChild(toggle_button);
+    pMessage = XP_GetString(XP_EDT_CHARSET_SET_METATAG);
+    xm_message = XmStringCreateLocalized(pMessage);
+    XtVaCreateManagedWidget("setMetatagLabl", xmLabelGadgetClass, radio,
+                            XmNlabelString, xm_message,
+                            0);
+    XmStringFree(xm_message);
+
+    /* Make the toggles mirror each other (radio behavior) */
+    XtAddCallback(toggle1, XmNvalueChangedCallback, flip_toggle_cb, toggle2);
+    XtAddCallback(toggle2, XmNvalueChangedCallback, flip_toggle_cb, toggle1);
 
 #ifdef NO_HELP
     fe_UnmanageChild_safe (XmMessageBoxGetChild (dialog, XmDIALOG_HELP_BUTTON));
@@ -11618,13 +11646,13 @@ ED_CharsetEncode FE_EncodingDialog(MWContext* context)
     {
         retval = ED_ENCODE_CANCEL;
     }
-    else if (XmToggleButtonGetState(toggle_button))
+    else if (XmToggleButtonGetState(toggle1))
     {
         retval = ED_ENCODE_CHANGE_METATAG;
     }
     else
     {
-        retval = ED_ENDCODE_CHANGE_CHARSET;
+        retval = ED_ENCODE_CHANGE_CHARSET;
     }
     XtDestroyWidget(dialog);
     return retval;

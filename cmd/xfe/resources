@@ -3223,9 +3223,9 @@ dialog_cancel_button
 *hintDialog.dontDisplayAgainRow.marginWidth: 9
 
 ! The Editor encoding dialog
-*changeEncoding_popup.title:		@NAME@: Change Encoding
-*encodeContent.labelString:		Change Encoding for content
-*dontEncodeContent.labelString:		Change encoding but leave content untouched
+*changeEncoding_popup.title:		@NAME@: Change Character Set
+*convertPageToggle.labelString:		Convert page contents to the new character set
+*changeMetatagToggle.labelString:	Change the character set label to the new character set
 
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ! Editor popups.
