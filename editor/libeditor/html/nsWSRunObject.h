@@ -50,7 +50,18 @@ class nsWSRunObject
     ~nsWSRunObject();
     
     // public methods
-    static nsresult PrepareToJoinBlocks(nsHTMLEditor *aEd, nsIDOMNode *aLeftParent, nsIDOMNode *aRightParent);
+    static nsresult PrepareToJoinBlocks(nsHTMLEditor *aEd, 
+                                        nsIDOMNode *aLeftParent,
+                                        nsIDOMNode *aRightParent);
+    static nsresult PrepareToDeleteRange(nsHTMLEditor *aHTMLEd, 
+                                         nsCOMPtr<nsIDOMNode> *aStartNode,
+                                         PRInt32 *aStartOffset, 
+                                         nsCOMPtr<nsIDOMNode> *aEndNode,
+                                         PRInt32 *aEndOffset);
+    static nsresult PrepareToDeleteNode(nsHTMLEditor *aHTMLEd, 
+                                        nsIDOMNode *aNode);
+    static nsresult PrepareToSplitAcrossBlocks(nsCOMPtr<nsIDOMNode> *aSplitNode, 
+                                               PRInt32 *aSplitOffset);
 
     nsresult InsertBreak(nsCOMPtr<nsIDOMNode> *aInOutParent, 
                          PRInt32 *aInOutOffset, 
@@ -62,8 +73,6 @@ class nsWSRunObject
                         nsIDOMDocument *aDoc);
     nsresult DeleteWSBackward();
     nsresult DeleteWSForward();
-    nsresult PrepareToDeleteRange(nsWSRunObject* aEndObject);
-    nsresult PrepareToSplitAcrossBlocks(nsCOMPtr<nsIDOMNode> *aSplitNode, PRInt32 *aSplitOffset);
     nsresult PriorVisibleNode(nsIDOMNode *aNode, 
                               PRInt32 aOffset, 
                               nsCOMPtr<nsIDOMNode> *outVisNode, 
@@ -85,6 +94,10 @@ class nsWSRunObject
     enum {eOtherBlock = 1 << 6};
     enum {eThisBlock  = 1 << 7};
     enum {eBlock      = eOtherBlock | eThisBlock};
+    
+    enum {eBefore = 1};
+    enum {eAfter  = 1 << 1};
+    enum {eBoth   = eBefore | eAfter};
     
   protected:
   
@@ -136,17 +149,23 @@ class nsWSRunObject
                            PRInt16     aOffset, 
                            nsIDOMNode *aBlockParent, 
                            nsCOMPtr<nsIDOMNode> *aNextNode);
+    nsresult PrepareToDeleteRangePriv(nsWSRunObject* aEndObject);
     nsresult DeleteChars(nsIDOMNode *aStartNode, PRInt32 aStartOffset, 
                          nsIDOMNode *aEndNode, PRInt32 aEndOffset);
-    nsresult GetCharAfter(WSFragment *run, nsIDOMNode *aNode, PRInt32 aOffset, WSPoint *outPoint);
-    nsresult GetCharBefore(WSFragment *run, nsIDOMNode *aNode, PRInt32 aOffset, WSPoint *outPoint);
+    nsresult GetCharAfter(nsIDOMNode *aNode, PRInt32 aOffset, WSPoint *outPoint);
+    nsresult GetCharBefore(nsIDOMNode *aNode, PRInt32 aOffset, WSPoint *outPoint);
     nsresult GetCharAfter(WSPoint &aPoint, WSPoint *outPoint);
     nsresult GetCharBefore(WSPoint &aPoint, WSPoint *outPoint);
     nsresult ConvertToNBSP(WSPoint aPoint);
+    nsresult GetAsciiWSBounds(PRInt16 aDir, nsIDOMNode *aNode, PRInt32 aOffset,
+                                nsCOMPtr<nsIDOMNode> *outStartNode, PRInt32 *outStartOffset,
+                                nsCOMPtr<nsIDOMNode> *outEndNode, PRInt32 *outEndOffset);
     nsresult FindRun(nsIDOMNode *aNode, PRInt32 aOffset, WSFragment **outRun, PRBool after);
     PRUnichar GetCharAt(nsITextContent *aTextNode, PRInt32 aOffset);
     nsresult GetWSPointAfter(nsIDOMNode *aNode, PRInt32 aOffset, WSPoint *outPoint);
     nsresult GetWSPointBefore(nsIDOMNode *aNode, PRInt32 aOffset, WSPoint *outPoint);
+    nsresult CheckTrailingNBSP(WSFragment *aRun, nsIDOMNode *aNode, PRInt32 aOffset);
+    nsresult CheckLeadingNBSP(WSFragment *aRun, nsIDOMNode *aNode, PRInt32 aOffset);
     
     // member variables
     nsCOMPtr<nsIDOMNode> mNode;
@@ -162,7 +181,6 @@ class nsWSRunObject
     nsCOMPtr<nsIDOMNode> mLastNBSPNode;
     PRInt32 mLastNBSPOffset;
     nsCOMPtr<nsISupportsArray> mNodeArray;
-    WSFragment *mRootRun;
     WSFragment *mStartRun;
     WSFragment *mEndRun;
     nsHTMLEditor *mHTMLEditor;  // non-owning.
