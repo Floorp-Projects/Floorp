@@ -134,12 +134,10 @@ nsSVGCairoCanvas::Init(nsIRenderingContext *ctx,
 
   // clip to dirtyRect
   cairo_new_path(mCR);
-  cairo_move_to(mCR, dirtyRect.x, dirtyRect.y);
-  cairo_line_to(mCR, dirtyRect.x + dirtyRect.width, dirtyRect.y);
-  cairo_line_to(mCR, dirtyRect.x + dirtyRect.width, dirtyRect.y + dirtyRect.height);
-  cairo_line_to(mCR, dirtyRect.x, dirtyRect.y + dirtyRect.height);
-  cairo_close_path(mCR);
+  cairo_rectangle(mCR,
+                  dirtyRect.x, dirtyRect.y, dirtyRect.width, dirtyRect.height);
   cairo_clip(mCR);
+  cairo_new_path(mCR);
 
   return NS_OK;
 }
@@ -256,8 +254,6 @@ nsSVGCairoCanvas::SetClipRect(nsIDOMSVGMatrix *aCTM, float aX, float aY,
   if (!aCTM)
     return NS_ERROR_FAILURE;
 
-  cairo_save(mCR);
-
   float m[6];
   float val;
   aCTM->GetA(&val);
@@ -279,40 +275,28 @@ nsSVGCairoCanvas::SetClipRect(nsIDOMSVGMatrix *aCTM, float aX, float aY,
   m[5] = val;
 
   cairo_matrix_t *matrix = cairo_matrix_create();
+  cairo_matrix_t *oldMatrix = cairo_matrix_create();
   if (!matrix) {
-    cairo_restore(mCR);
+    cairo_matrix_destroy(matrix);
+    return NS_ERROR_FAILURE;
+  }
+  if (!oldMatrix) {
+    cairo_matrix_destroy(oldMatrix);
     return NS_ERROR_FAILURE;
   }
 
+  cairo_current_matrix(mCR, oldMatrix);
   cairo_matrix_set_affine(matrix, m[0], m[1], m[2], m[3], m[4], m[5]);
   cairo_concat_matrix(mCR, matrix);
   cairo_matrix_destroy(matrix);
 
-  double x[4], y[4];
-  x[0] = aX;
-  y[0] = aY;
-  x[1] = aX + aWidth;
-  y[1] = aY;
-  x[2] = aX + aWidth;
-  y[2] = aY + aHeight;
-  x[3] = aX;
-  y[3] = aY + aHeight;
-
-  cairo_transform_point(mCR, &x[0], &y[0]);
-  cairo_transform_point(mCR, &x[1], &y[1]);
-  cairo_transform_point(mCR, &x[2], &y[2]);
-  cairo_transform_point(mCR, &x[3], &y[3]);
-
-  cairo_restore(mCR);
-
   cairo_new_path(mCR);
-  cairo_move_to(mCR, x[0], y[0]);
-  cairo_line_to(mCR, x[1], y[1]);
-  cairo_line_to(mCR, x[2], y[2]);
-  cairo_line_to(mCR, x[3], y[3]);
-  cairo_close_path(mCR);
+  cairo_rectangle(mCR, aX, aY, aWidth, aHeight);
   cairo_clip(mCR);
   cairo_new_path(mCR);
+
+  cairo_set_matrix(mCR, oldMatrix);
+  cairo_matrix_destroy(oldMatrix);
 
   return NS_OK;
 }
