@@ -964,10 +964,12 @@ nsFileTransport::Process(void)
                  ("nsFileTransport: END_WRITE [this=%x %s] status=%x",
                   this, (const char*)mSpec, mStatus));
 
-          mSink->Flush();
+          if (mSink) {
+              mSink->Flush();
+          }
           if (mBufferInputStream)
               mBufferInputStream = null_nsCOMPtr();
-          else {
+          else if (mBuffer) {
               delete mBuffer;
               mBuffer = nsnull;
           }
