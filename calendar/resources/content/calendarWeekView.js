@@ -701,6 +701,7 @@ WeekView.prototype.clearSelectedDate = function( )
 
 
 var gStartDate = null;
+var gDayIndex = null;
 
 var eventEndObserver = {
   getSupportedFlavours : function () {
@@ -709,6 +710,8 @@ var eventEndObserver = {
     return weekflavours;
   },
   onDragOver: function (evt,flavour,session){
+      if( evt.target.getAttribute( "day" ) != gDayIndex )
+         return false;
       dump( "\nDragged Over" );
       evt.target.setAttribute( "draggedover", "true" );    
   },
@@ -733,7 +736,7 @@ var eventEndObserver = {
 
 var eventStartObserver  = {
   onDragStart: function (evt, transferData, action){
-      var dayIndex = evt.target.getAttribute( "day" );
+      gDayIndex = evt.target.getAttribute( "day" );
 
       var newDate = gHeaderDateItemArray[dayIndex].getAttribute( "date" );
       //gCalendarWindow.setSelectedDate( newDate );
