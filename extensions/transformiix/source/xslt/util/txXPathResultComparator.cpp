@@ -87,8 +87,13 @@ nsresult txResultStringComparator::init(const nsAFlatString& aLanguage)
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsILocale> locale;
-    rv = localeService->NewLocale(aLanguage.get(),
-                                  getter_AddRefs(locale));
+    if (!aLanguage.IsEmpty()) {
+        rv = localeService->NewLocale(aLanguage.get(),
+                                      getter_AddRefs(locale));
+    }
+    else {
+        rv = localeService->GetApplicationLocale(getter_AddRefs(locale));
+    }
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsICollationFactory> colFactory =
@@ -228,7 +233,7 @@ int txResultStringComparator::compareValues(TxObject* aVal1, TxObject* aVal2)
     }
 
     return ((mSorting & kAscending) ? 1 : -1) *
-           ((mSorting & kUpperFirst) ? 1 : -1) * result;
+           ((mSorting & kUpperFirst) ? -1 : 1) * result;
 #endif
 }
 
