@@ -31,6 +31,7 @@
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
 #include "nsINameSpaceManager.h"
+#include "nsString.h"
 
 nsIAtom*             nsXULTreeElement::kSelectedAtom;
 int                  nsXULTreeElement::gRefCnt = 0;
@@ -311,6 +312,14 @@ nsXULTreeElement::FireOnSelectHandler()
   nsCOMPtr<nsIContent> content = do_QueryInterface(mOuter);
   nsCOMPtr<nsIDocument> document;
   content->GetDocument(*getter_AddRefs(document));
+
+  // The frame code can suppress the firing of this handler by setting an attribute
+  // for us.  Look for that and bail if it's present.
+  nsCOMPtr<nsIAtom> kSuppressSelectChange = dont_AddRef(NS_NewAtom("suppressonselect"));
+  nsAutoString value;
+  content->GetAttribute(kNameSpaceID_None, kSuppressSelectChange, value);
+  if (value == "true")
+    return;
 
   PRInt32 count = document->GetNumberOfShells();
 	for (PRInt32 i = 0; i < count; i++) {
