@@ -27,15 +27,14 @@
 #include "logo.xpm"
 
 nsXIContext *gCtx = NULL;
+static GtkWidget *sErrDlg = NULL;
 
-nsXInstaller::nsXInstaller() :
-    mTitle(NULL)
+nsXInstaller::nsXInstaller()
 {
 }
 
 nsXInstaller::~nsXInstaller()
 {
-    XI_IF_FREE(mTitle);
     XI_IF_DELETE(gCtx);
 }
 
@@ -129,16 +128,14 @@ nsXInstaller::RunWizard(int argc, char **argv)
 
     gCtx->window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     XI_VERIFY(gCtx->window);
+
+    gtk_window_set_position(GTK_WINDOW(gCtx->window), GTK_WIN_POS_CENTER);
     gtk_signal_connect(GTK_OBJECT(gCtx->window), "delete_event",
                        GTK_SIGNAL_FUNC(Kill), NULL);
 
     gtk_widget_set_usize(gCtx->window, XI_WIN_WIDTH, XI_WIN_HEIGHT);
     gtk_container_set_border_width(GTK_CONTAINER(gCtx->window), 5);
-    if (mTitle)
-        gtk_window_set_title(GTK_WINDOW(gCtx->window), mTitle);
-    else
-        gtk_window_set_title(GTK_WINDOW(gCtx->window),
-            gCtx->Res("DEFAULT_TITLE"));
+    gtk_window_set_title(GTK_WINDOW(gCtx->window), gCtx->opt->mTitle);
     gtk_widget_show(gCtx->window);
 
     // create and display the logo and cancel button
@@ -263,19 +260,19 @@ nsXInstaller::DrawNavButtons()
     gtk_box_pack_start(GTK_BOX(gCtx->mainbox), navbtnhbox, FALSE, FALSE, 0); 
 
     // put a table in the nav btn box
-    navbtntable = gtk_table_new(1, 6, TRUE);
+    navbtntable = gtk_table_new(1, 4, TRUE);
     gtk_box_pack_start(GTK_BOX(navbtnhbox), navbtntable, TRUE, TRUE, 0);
 
-    gtk_table_attach(GTK_TABLE(navbtntable), gCtx->back, 4, 5, 0, 1, 
+    gtk_table_attach(GTK_TABLE(navbtntable), gCtx->back, 2, 3, 0, 1, 
         static_cast<GtkAttachOptions>(GTK_FILL | GTK_EXPAND),
-		static_cast<GtkAttachOptions>(GTK_FILL | GTK_EXPAND),
-		5, 5);
-    gtk_table_attach(GTK_TABLE(navbtntable), gCtx->next, 5, 6, 0, 1,
+               static_cast<GtkAttachOptions>(GTK_FILL | GTK_EXPAND),
+               5, 5);
+    gtk_table_attach(GTK_TABLE(navbtntable), gCtx->next, 3, 4, 0, 1,
         static_cast<GtkAttachOptions>(GTK_FILL | GTK_EXPAND),
-		static_cast<GtkAttachOptions>(GTK_FILL | GTK_EXPAND),
-		5, 5);
+               static_cast<GtkAttachOptions>(GTK_FILL | GTK_EXPAND),
+               5, 5);
 
-    gtk_widget_show(navbtntable);    
+    gtk_widget_show(navbtntable); 
     gtk_widget_show(navbtnhbox); 
     gtk_widget_show(canvasvbox);
 
@@ -312,9 +309,12 @@ nsXInstaller::ParseGeneral(nsINIParser *aParser)
     size = 0;
     err = aParser->GetStringAlloc(GENERAL, TITLE, &title, &size);
     if (err == OK && size > 0)
-        mTitle = title;
+        gCtx->opt->mTitle = title;
     else
+    {
         err = OK; /* optional so no error if we didn't find it */
+        strcpy(gCtx->opt->mTitle, gCtx->Res("DEFAULT_TITLE"));
+    }
 
     return err;
 }
@@ -344,7 +344,7 @@ main(int argc, char **argv)
 int 
 ErrorHandler(int aErr)
 {
-    GtkWidget *okButton, *label, *dialog;
+    GtkWidget *okButton, *label;
     char msg[256];
     char errStr[16];
     
@@ -354,18 +354,20 @@ ErrorHandler(int aErr)
     else
         sprintf(msg, gCtx->Res("FATAL_ERROR"), aErr, gCtx->Res(errStr));
     
-    dialog = gtk_dialog_new();
+    sErrDlg = gtk_dialog_new();
+    gtk_window_set_title(GTK_WINDOW(sErrDlg), gCtx->Res("ERROR_TITLE"));
     okButton = gtk_button_new_with_label(gCtx->Res("OK_LABEL"));
     label = gtk_label_new(msg);
 
-    gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->action_area), 
+    gtk_window_set_position(GTK_WINDOW(sErrDlg), GTK_WIN_POS_CENTER);
+    gtk_container_add(GTK_CONTAINER(GTK_DIALOG(sErrDlg)->action_area), 
                       okButton);
     gtk_signal_connect(GTK_OBJECT(okButton), "clicked",
                        GTK_SIGNAL_FUNC(ErrDlgOK), (void*)aErr);
 
-    gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox), label);
+    gtk_container_add(GTK_CONTAINER(GTK_DIALOG(sErrDlg)->vbox), label);
     
-    gtk_widget_show_all(dialog);
+    gtk_widget_show_all(sErrDlg);
 
     return aErr;
 }
@@ -375,7 +377,12 @@ ErrDlgOK(GtkWidget *aWidget, gpointer aData)
 {
     int err = (int) aData;
     
-    gtk_widget_destroy(aWidget);
+    if (sErrDlg)
+    {
+        gtk_widget_destroy(sErrDlg);
+        sErrDlg = NULL;
+    }
+
     if (IsErrFatal(err))
         exit(err);
 }

@@ -54,6 +54,7 @@ public:
                                        GtkFileSelection *aFileSel);
     static void         RadBtnToggled(GtkWidget *aWidget, gpointer aData);
     static int          VerifyDestination();
+    static void         NoPermsOK(GtkWidget *aWidget, gpointer aData);
     static void         CreateDestYes(GtkWidget *aWidget, gpointer aData);
     static void         CreateDestNo(GtkWidget *aWidget, gpointer aData);
     static int          DeleteOldInst();

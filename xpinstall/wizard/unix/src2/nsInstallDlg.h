@@ -29,6 +29,8 @@
 #include "XIErrors.h"
 #include "nsRunApp.h"
 
+#include <sys/time.h>
+
 class nsInstallDlg : public nsXInstallerDlg
 {
 public:
@@ -68,6 +70,10 @@ public:
 
 private:
     static void     *WorkDammitWork(void *arg); // install start
+    static void     SaveModulesToggled(GtkWidget *aWidget, gpointer aData);
+    static void     ShowProxySettings(GtkWidget *aWidget, gpointer aData);
+    static void     PSDlgOK    (GtkWidget *aWidget, gpointer aData);
+    static void     PSDlgCancel(GtkWidget *aWidget, gpointer aData);
     static void     ShowCompleteDlg();
     static void     CompleteOK(GtkWidget *aWidget, gpointer aData);
     static void     RunApps();

@@ -245,6 +245,7 @@ nsLicenseDlg::GetLicenseContents()
     char *buf = NULL;
     FILE *fd = NULL;
     struct stat attr;
+    int buflen;
 
     DUMP(mLicenseFile);
     if (!mLicenseFile)
@@ -261,8 +262,10 @@ nsLicenseDlg::GetLicenseContents()
     DUMP("license fstat");
 
     // allocate buffer of file length
-    buf = (char *) malloc(sizeof(char) * attr.st_size);
+    buflen = sizeof(char) * (attr.st_size + 1);
+    buf = (char *) malloc(buflen);
     if (!buf) return NULL;
+    memset(buf, 0, buflen);
     DUMP("license buf malloc");
 
     // read entire file into buffer

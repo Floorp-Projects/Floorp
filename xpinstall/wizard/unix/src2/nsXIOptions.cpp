@@ -25,8 +25,14 @@
 #include "nsXIOptions.h"
 
 nsXIOptions::nsXIOptions() :
+    mTitle(NULL),
     mDestination(NULL),
-    mSetupType(-1)
+    mSetupType(-1),
+    mProxyHost(NULL),
+    mProxyPort(NULL),
+    mProxyUser(NULL),
+    mProxyPswd(NULL),
+    mSaveModules(FALSE)
 {
 }
 

@@ -168,6 +168,15 @@ nsXIContext::LoadResources()
         "INSTALLING_XPI",
         "PROCESSING_FILE",
         "COMPLETED",
+        "NO_PERMS",
+        "DL_SETTINGS",
+        "SAVE_MODULES",
+        "PROXY_SETTINGS",
+        "PS_LABEL0",
+        "PS_LABEL1",
+        "PS_LABEL2",
+        "PS_LABEL3",
+        "ERROR_TITLE",
 
         __EOT__
     };
@@ -210,7 +219,7 @@ nsXIContext::LoadResources()
 BAIL:
     if (err != OK)
     {
-        fprintf(stderr, "FATAL ERROR: Failed to load resources!");
+        fprintf(stderr, "FATAL ERROR: Failed to load resources!\n");
     }
     XI_IF_FREE(resfile);
     XI_IF_DELETE(parser);

@@ -22,9 +22,14 @@
  *     Samir Gehani <sgehani@netscape.com>
  */
 
+#include "nsFTPConn.h"
+#include "nsHTTPConn.h"
 #include "nsXIEngine.h"
 
 #define CORE_LIB_COUNT 11
+
+const char kHTTPProto[8] = "http://";
+const char kFTPProto[7] = "ftp://";
 
 nsXIEngine::nsXIEngine() :
     mTmp(NULL),
@@ -54,11 +59,15 @@ nsXIEngine::Download(int aCustom, nsComponentList *aComps)
 
     int err = OK;
     nsComponent *currComp = aComps->GetHead();
-    nsFTPConn *conn = NULL;
     char *currURL = NULL;
     char *currHost = NULL;
-    char *currDir = NULL;
+    char *currPath = NULL;
+    char localPath[MAXPATHLEN];
+    char *srvPath = NULL;
+    char *proxyURL = NULL;
+    char *qualURL = NULL;
     int i;
+    int currPort;
     
     mTmp = NULL;
     err = MakeUniqueTmpDir();
@@ -79,39 +88,153 @@ nsXIEngine::Download(int aCustom, nsComponentList *aComps)
                 currURL = currComp->GetURL(i);
                 if (!currURL) break;
                 
-                currHost = NULL;
-                currDir = NULL;
-                err = ParseURL(currURL, &currHost, &currDir);
-                if (err == OK)
+                nsInstallDlg::SetDownloadComp(currComp->GetDescShort(),
+                    currCompNum, mTotalComps);
+
+                // has a proxy server been specified?
+                if (gCtx->opt->mProxyHost && gCtx->opt->mProxyPort)
                 {
-                    nsInstallDlg::SetDownloadComp(currComp->GetDescShort(),
-                        currCompNum, mTotalComps);
-            
-                    conn = new nsFTPConn(currHost);
+                    // URL of the proxy server
+                    proxyURL = (char *) malloc(strlen(kHTTPProto) + 
+                                        strlen(gCtx->opt->mProxyHost) + 1 +
+                                        strlen(gCtx->opt->mProxyPort) + 1);
+                    if (!proxyURL)
+                    {
+                        err = E_MEM;
+                        break;
+                    }
+
+                    sprintf(proxyURL, "%s%s:%s", kHTTPProto,
+                            gCtx->opt->mProxyHost, gCtx->opt->mProxyPort);
+
+                    nsHTTPConn *conn = new nsHTTPConn(proxyURL);
+                    if (!conn)
+                    {
+                        err = E_MEM;
+                        break;
+                    }
+
+                    // URL of the actual file to download
+                    qualURL = (char *) malloc(strlen(currURL) + 
+                                       strlen(currComp->GetArchive()) + 1);
+                    if (!qualURL)
+                    {
+                        err = E_MEM;
+                        break;
+                    }
+                    sprintf(qualURL, "%s%s", currURL, currComp->GetArchive());
+
+                    conn->SetProxyInfo(qualURL, gCtx->opt->mProxyUser,
+                                                gCtx->opt->mProxyPswd);
                     err = conn->Open();
-                    if (err != nsFTPConn::OK)
+                    if (err == nsHTTPConn::OK)
                     {
-                        /* open failed: failover to next URL */
-                        XI_IF_DELETE(conn);
-                        XI_IF_FREE(currHost);
-                        XI_IF_FREE(currDir);
-                        continue;
-                    }
-
-                    err = FTPAnonGet(conn, currDir, currComp->GetArchive());
-                    nsInstallDlg::ClearRateLabel(); // clean after ourselves
-
-                    if (conn)
+                        sprintf(localPath, "%s/%s", mTmp,
+                            currComp->GetArchive());
+                        err = conn->Get(nsInstallDlg::DownloadCB, localPath);
                         conn->Close();
-                    XI_IF_DELETE(conn);
-                    XI_IF_FREE(currHost);
-                    XI_IF_FREE(currDir);
-
-                    if (err == OK) 
-                    {
-                        currCompNum++;
-                        break;  // no need to failover
                     }
+                    
+                    XI_IF_FREE(proxyURL);
+                    XI_IF_FREE(qualURL);
+                    XI_IF_DELETE(conn);
+
+                    if (err != nsHTTPConn::OK)
+                        continue; // failover
+                }
+            
+                // is this an HTTP URL?
+                else if (strncmp(currURL, kHTTPProto, strlen(kHTTPProto)) == 0)
+                {
+                    // URL of the actual file to download
+                    qualURL = (char *) malloc(strlen(currURL) + 
+                                       strlen(currComp->GetArchive()) + 1);
+                    if (!qualURL)
+                    {
+                        err = E_MEM;
+                        break;
+                    }
+                    sprintf(qualURL, "%s%s", currURL, currComp->GetArchive());
+
+                    nsHTTPConn *conn = new nsHTTPConn(qualURL);
+                    if (!conn)
+                    {
+                        err = E_MEM;
+                        break;
+                    }
+    
+                    err = conn->Open();
+                    if (err == nsHTTPConn::OK)
+                    {
+                        sprintf(localPath, "%s/%s", mTmp,
+                            currComp->GetArchive());
+                        err = conn->Get(nsInstallDlg::DownloadCB, localPath);
+                        conn->Close();
+                    }
+
+                    XI_IF_FREE(qualURL);
+                    XI_IF_DELETE(conn);
+
+                    if (err != nsHTTPConn::OK)
+                        continue; // failover
+                }
+
+                // or is this an FTP URL? 
+                else if (strncmp(currURL, kFTPProto, strlen(kFTPProto)) == 0)
+                {
+                    err = nsHTTPConn::ParseURL(kFTPProto, currURL, &currHost, 
+                            &currPort, &currPath);
+                    if (err != nsHTTPConn::OK)
+                        break;
+    
+                    // path on the remote server
+                    srvPath = (char *) malloc(strlen(currPath) +
+                                        strlen(currComp->GetArchive()) + 1);
+                    if (!srvPath)
+                    {
+                        err = E_MEM;
+                        break;
+                    }
+                    sprintf(srvPath, "%s%s", currPath, currComp->GetArchive());
+
+                    nsFTPConn *conn = new nsFTPConn(currHost);
+                    if (!conn)
+                    {
+                        err = E_MEM;
+                        break;
+                    }
+                
+                    err = conn->Open();
+                    if (err == nsFTPConn::OK)
+                    {
+                        sprintf(localPath, "%s/%s", mTmp,
+                            currComp->GetArchive());
+                        err = conn->Get(srvPath, localPath, nsFTPConn::BINARY, 
+                                1, nsInstallDlg::DownloadCB);
+                        conn->Close();
+                    }
+
+                    XI_IF_FREE(currHost);
+                    XI_IF_FREE(currPath);
+                    XI_IF_FREE(srvPath);
+                    XI_IF_DELETE(conn);
+
+                    if (err != nsFTPConn::OK)
+                        continue; // failover
+                }
+
+                // else error: malformed URL
+                else
+                {
+                    err = nsHTTPConn::E_MALFORMED_URL;
+                }
+
+                nsInstallDlg::ClearRateLabel(); // clean after ourselves
+
+                if (err == OK) 
+                {
+                    currCompNum++;
+                    break;  // no need to failover
                 }
             }
         }
@@ -497,4 +620,22 @@ nsXIEngine::CopyToTmp(int aCustom, nsComponentList *aComps)
     }
     
     return err;
+}
+
+void
+nsXIEngine::SaveXPIs(void)
+{
+    char xpidir[MAXPATHLEN];
+    char cpcmd[3 + MAXPATHLEN + 1 + MAXPATHLEN + 1];
+
+    // make local "xpi" directory next to installer binary
+    sprintf(xpidir, "%s/xpi", mOriginalDir);
+    if (0 != mkdir(xpidir, 0755))
+        return;
+
+    // cp all xpis from tmp to "xpi" dir
+    sprintf(cpcmd, "cp %s/*.xpi %s", mTmp, xpidir);
+    DUMP(cpcmd);
+
+    system(cpcmd);
 }

@@ -33,8 +33,16 @@ public:
     nsXIOptions();
     ~nsXIOptions();
     
+    char    *mTitle;
     char    *mDestination;
     int     mSetupType;
+
+    char    *mProxyHost;
+    char    *mProxyPort;
+    char    *mProxyUser;
+    char    *mProxyPswd;
+
+    int     mSaveModules;
 };
     
 #endif /* _NS_XIOPTIONS_H_ */

@@ -62,7 +62,8 @@
         E_CP_FAIL       = -622,     /* copy of a xpi failed */
         E_NO_DEST       = -623,     /* destination dir doesn't exist */
         E_MKDIR_FAIL    = -624,     /* can't make destination dir */
-        E_OLD_INST      = -625      /* old instllation exists */
+        E_OLD_INST      = -625,     /* old instllation exists */
+        E_NO_PERMS      = -626      /* don't have rwx perms on selected dir */
     };
 
 #endif /* _XI_ERRORS_H_ */
