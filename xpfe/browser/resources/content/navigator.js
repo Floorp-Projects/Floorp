@@ -2239,10 +2239,7 @@ function createShowPopupsMenu(parent) {
 function popupBlockerMenuCommand(target) {
   var uri = target.getAttribute("uri");
   if (uri) {
-    // Make sure we use the content window to open the popup to
-    // prevent it from being able to set flags it shoudn't be able to
-    // set.
-    window.content.open(uri, "", target.getAttribute("features"));
+    window.open(uri, "", target.getAttribute("features"));
   }
 }
 
