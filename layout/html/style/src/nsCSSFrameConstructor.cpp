@@ -386,6 +386,8 @@ struct nsTableCreator {
     mPresShell = aPresShell;
   }
 
+  virtual ~nsTableCreator() {};
+
   nsCOMPtr<nsIPresShell> mPresShell;
 };
 
