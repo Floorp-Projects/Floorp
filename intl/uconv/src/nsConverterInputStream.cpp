@@ -41,7 +41,8 @@
 
 #define CONVERTER_BUFFER_SIZE 8192
 
-NS_IMPL_ISUPPORTS1(nsConverterInputStream, nsIConverterInputStream)
+NS_IMPL_ISUPPORTS2(nsConverterInputStream, nsIConverterInputStream,
+                   nsIUnicharInputStream)
     
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
