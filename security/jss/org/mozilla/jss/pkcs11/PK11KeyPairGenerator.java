@@ -334,7 +334,6 @@ public final class PK11KeyPairGenerator
             Assert._assert(PQG1024.paramsAreValid());
             Assert._assert(PQG768.paramsAreValid());
             Assert._assert(PQG512.paramsAreValid());
-			System.out.println("Default PQG Parameters passed!");
             defaultsTested = true;
         }
     }

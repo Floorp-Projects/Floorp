@@ -45,7 +45,7 @@ import java.security.InvalidParameterException;
  * CryptoManager class.
  *
  * @author nicolson
- * @version $Revision: 1.5 $ $Date: 2002/07/15 22:47:53 $ 
+ * @version $Revision: 1.6 $ $Date: 2002/10/04 20:59:16 $ 
  * @see org.mozilla.jss.CryptoManager
  */
 public final class PK11Token implements CryptoToken {
@@ -461,12 +461,10 @@ public final class PK11Token implements CryptoToken {
 
 			if (keyType.equalsIgnoreCase("dsa")) {
 				if ((P == null) && (Q == null) && (G == null)) {
-					System.out.println("no pqg supplied, self-generating...");
 					PQGParams pqg;
 					try {
 						 pqg = PQGParams.generate(keysize);
 					} catch (PQGParamGenException e) {
-						System.out.println(e.toString());
 						throw e;
 					}
 					byte[] p = PQGParams.BigIntegerToUnsignedByteArray(pqg.getP());

@@ -973,11 +973,8 @@ Java_org_mozilla_jss_CryptoManager_importCertPackageNative
                                     numCerts-userCertFound,
                                     certUsageUserCertImport);
         if(status != SECSuccess) {
-            JSS_trace(env, JSS_TRACE_ERROR,
-                "CERT_ImportCAChain returned an error in "
-                "CryptoManager.importCertPackage.");
-            JSS_throwMsg(env, CERTIFICATE_ENCODING_EXCEPTION,
-                "CERT_ImportCAChain returned an error");
+            JSS_throwMsgPrErr(env, CERTIFICATE_ENCODING_EXCEPTION,
+                "CERT_ImportCAChainTrusted returned an error");
             goto finish;
         }
       } else if (certi == numCerts) {
@@ -985,11 +982,8 @@ Java_org_mozilla_jss_CryptoManager_importCertPackageNative
                                     numCerts-userCertFound,
                                     certUsageUserCertImport);
         if(status != SECSuccess) {
-            JSS_trace(env, JSS_TRACE_ERROR,
-                "CERT_ImportCAChain returned an error in "
-                "CryptoManager.importCertPackage.");
-            JSS_throwMsg(env, CERTIFICATE_ENCODING_EXCEPTION,
-                "CERT_ImportCAChain returned an error");
+            JSS_throwMsgPrErr(env, CERTIFICATE_ENCODING_EXCEPTION,
+                "CERT_ImportCAChainTrusted returned an error");
             goto finish;
         }
       } else {
@@ -997,11 +991,8 @@ Java_org_mozilla_jss_CryptoManager_importCertPackageNative
                    certi,
                    certUsageUserCertImport);
         if(status != SECSuccess) {
-            JSS_trace(env, JSS_TRACE_ERROR,
-                "CERT_ImportCAChain returned an error in "
-                "CryptoManager.importCertPackage.");
-            JSS_throwMsg(env, CERTIFICATE_ENCODING_EXCEPTION,
-                "CERT_ImportCAChain returned an error");
+            JSS_throwMsgPrErr(env, CERTIFICATE_ENCODING_EXCEPTION,
+                "CERT_ImportCAChainTrusted returned an error");
             goto finish;
         }
 
@@ -1009,11 +1000,8 @@ Java_org_mozilla_jss_CryptoManager_importCertPackageNative
                    numCerts-certi-1,
                    certUsageUserCertImport);
         if(status != SECSuccess) {
-            JSS_trace(env, JSS_TRACE_ERROR,
-                "CERT_ImportCAChain returned an error in "
-                "CryptoManager.importCertPackage.");
-            JSS_throwMsg(env, CERTIFICATE_ENCODING_EXCEPTION,
-                "CERT_ImportCAChain returned an error");
+            JSS_throwMsgPrErr(env, CERTIFICATE_ENCODING_EXCEPTION,
+                "CERT_ImportCAChainTrusted returned an error");
             goto finish;
         }
 
