@@ -403,12 +403,14 @@ sub CheckCanChangeField {
     }
     
     # Allow anyone with "canconfirm" to confirm bugs.
-    if (($field eq "bug_status") && 
-        ($oldvalue eq $::unconfirmedstate) &&
-        IsOpenedState($newvalue) &&
-        $UserInCanConfirmGroupSet) 
-    {
-        return 1;
+    if ($UserInCanConfirmGroupSet) {
+        if (($field eq "canconfirm") ||
+            (($field eq "bug_status") && 
+             ($oldvalue eq $::unconfirmedstate) &&
+             IsOpenedState($newvalue)))
+        {
+            return 1;
+        }
     }
     
     # START DO_NOT_CHANGE
