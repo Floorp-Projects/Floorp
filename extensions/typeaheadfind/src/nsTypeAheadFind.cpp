@@ -1263,19 +1263,33 @@ nsTypeAheadFind::RangeStartsInsideLink(nsIDOMRange *aRange,
   // We now have the correct start node for the range
   // Search for links, starting with startNode, and going up parent chain
 
-  nsCOMPtr<nsIAtom> tag;
+  nsCOMPtr<nsIAtom> tag, hrefAtom(do_GetAtom("href"));
+  nsCOMPtr<nsIAtom> typeAtom(do_GetAtom("type"));
 
   while (PR_TRUE) {
     // Keep testing while textContent is equal to something,
     // eventually we'll run out of ancestors
 
-    nsCOMPtr<nsILink> link(do_QueryInterface(startContent));
+    if (startContent->IsContentOfType(nsIContent::eHTML)) {
+      nsCOMPtr<nsILink> link(do_QueryInterface(startContent));
+      if (link) {
+        // Check to see if inside HTML link
+        *aIsInsideLink = startContent->HasAttr(kNameSpaceID_None, hrefAtom);
+        return;
+      }
+    }
+    else {
+      // Any xml element can be an xlink
+      *aIsInsideLink = startContent->HasAttr(kNameSpaceID_XLink, hrefAtom);
+      if (*aIsInsideLink) {
+        nsAutoString xlinkType;
+        startContent->GetAttr(kNameSpaceID_XLink, typeAtom, xlinkType);
+        if (!xlinkType.Equals(NS_LITERAL_STRING("simple"))) {
+          *aIsInsideLink = PR_FALSE;  // Xlink must be type="simple"
+        }
 
-    if (link) {
-      nsCOMPtr<nsIAtom> hrefAtom(do_GetAtom("href"));
-      *aIsInsideLink = startContent->HasAttr(kNameSpaceID_None, hrefAtom);
-
-      return;
+        return;
+      }
     }
 
     // Get the parent
