@@ -622,7 +622,9 @@ function updateButtons(tree,serverId) {
     var server = account.incomingServer;
     var type = server.type;
 
-    if (account.identities.Count() < 1)
+    if (account == accountManager.defaultAccount ||
+        !server.canBeDefaultServer ||
+        account.identities.Count() < 1)
       canSetDefault = false;
 
     //dump("servertype = " + type + "\n");
