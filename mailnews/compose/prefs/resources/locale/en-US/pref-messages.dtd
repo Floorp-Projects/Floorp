@@ -1,0 +1,41 @@
+<!--
+The contents of this file are subject to the Netscape Public
+License Version 1.1 (the "License"); you may not use this file
+except in compliance with the License. You may obtain a copy of
+the License at http://www.mozilla.org/NPL/
+
+Software distributed under the License is distributed on an "AS
+IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+implied. See the License for the specific language governing
+rights and limitations under the License.
+
+The Original Code is Mozilla Communicator client code, released
+March 31, 1998.
+
+The Initial Developer of the Original Code is Netscape
+Communications Corporation. Portions created by Netscape are
+ Copyright (C) 1998-1999 Netscape Communications Corporation. All
+Rights Reserved.
+--> 
+
+<!ENTITY window.title "Messages">
+<!ENTITY pane.title "Messages">
+<!ENTITY forwardReply.label "Forwarding and Replying to Messages">
+<!ENTITY forwardMsg.label "By default, forward messages:">
+<!ENTITY inline.label "Inline">
+<!ENTITY quoted.label "Quoted">
+<!ENTITY asAttachment.label "As Attachment">
+<!ENTITY then.label "Then,">
+<!ENTITY autoQuote.label "Automatically quote the original message when replying">
+<!ENTITY aboveQuote.label "start my reply above the quoted text">
+<!ENTITY belowQuote.label "start my reply below the quoted text">
+<!ENTITY selectquote.label "select the quoted text">
+<!ENTITY spellCheck.label "Spell check messages before sending">
+<!ENTITY msgWrapping.label "Message Wrapping">
+<!ENTITY wrapInMsg.label "Wrap incoming, plain text messages to window width">
+<!ENTITY wrapOutMsg.label "Wrap outgoing, plain text messages at">
+<!ENTITY char.label "characters">
+<!ENTITY use8Bits.label "Send messages that use 8-bit characters">
+<!ENTITY cleanupMsg.label "When it's time to clean up messages:">
+<!ENTITY asIs.label "As is (does not work well with some mail servers)">
+<!ENTITY useMIME.label "Using the 'quoted printable' MIME encoding (does not work well with some mail or newsgroups readers)">

@@ -1,0 +1,31 @@
+<!--
+The contents of this file are subject to the Netscape Public
+License Version 1.1 (the "License"); you may not use this file
+except in compliance with the License. You may obtain a copy of
+the License at http://www.mozilla.org/NPL/
+
+Software distributed under the License is distributed on an "AS
+IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+implied. See the License for the specific language governing
+rights and limitations under the License.
+
+The Original Code is Mozilla Communicator client code, released
+March 31, 1998.
+
+The Initial Developer of the Original Code is Netscape
+Communications Corporation. Portions created by Netscape are
+ Copyright (C) 1998-1999 Netscape Communications Corporation. All
+Rights Reserved.
+--> 
+
+<!ENTITY window.title "Formatting">
+<!ENTITY pane.title "Formatting">
+<!ENTITY msgFormatting.label "Message formatting">
+<!ENTITY useHtml.label "Use the HTML editor to compose messages.">
+<!ENTITY usePlain.label "Use the plain text editor to compose messages.">
+<!ENTITY sendMail.label "When sending HTML mail messages to recipients who are not listed as being able to receive them:">
+<!ENTITY askMe.label "Ask me what to do if the message has HTML formatting, otherwise send plain text.">
+<!ENTITY convertPlain.label "Convert the message into plain text (may lose some formatting).">
+<!ENTITY sendHTML.label "Send the message in HTML anyway (some recipients may not be able to read it).">
+<!ENTITY sendBoth.label "Send the message in plain text and HTML (uses more disk space).">
+<!ENTITY override.label "You can override these settings in any message through the options panel of the message composition window.">
