@@ -3254,8 +3254,9 @@ nsEditor::GetPriorNode(nsIDOMNode  *aCurrentNode,
   // otherwise, walk up the parent change until there is a child that comes before 
   // the ancestor of aCurrentNode.  Then return that node's rightmost child
   nsCOMPtr<nsIDOMNode> parent = do_QueryInterface(aCurrentNode);
+  nsCOMPtr<nsIDOMNode> node, notEditableNode;
   do {
-    nsCOMPtr<nsIDOMNode> node(parent);
+    node = parent;
     result = node->GetParentNode(getter_AddRefs(parent));
     if ((NS_SUCCEEDED(result)) && parent)
     {
@@ -3289,7 +3290,7 @@ nsEditor::GetPriorNode(nsIDOMNode  *aCurrentNode,
         if (IsEditable(*aResultNode)) return result;
         else 
         { // restart the search from the non-editable node we just found
-          nsCOMPtr<nsIDOMNode> notEditableNode = do_QueryInterface(*aResultNode);
+          notEditableNode = do_QueryInterface(*aResultNode);
           return GetPriorNode(notEditableNode, aEditableNode, aResultNode, bNoBlockCrossing);
         }
       }
@@ -3354,8 +3355,9 @@ nsEditor::GetNextNode(nsIDOMNode  *aCurrentNode,
   // the ancestor of aCurrentNode.  Then return that node's leftmost child
 
   nsCOMPtr<nsIDOMNode> parent(do_QueryInterface(aCurrentNode));
+  nsCOMPtr<nsIDOMNode> node, notEditableNode;
   do {
-    nsCOMPtr<nsIDOMNode> node(parent);
+    node = parent;
     result = node->GetParentNode(getter_AddRefs(parent));
     if ((NS_SUCCEEDED(result)) && parent)
     {
@@ -3389,7 +3391,7 @@ nsEditor::GetNextNode(nsIDOMNode  *aCurrentNode,
         if (IsEditable(*aResultNode)) return result;
         else 
         { // restart the search from the non-editable node we just found
-          nsCOMPtr<nsIDOMNode> notEditableNode = do_QueryInterface(*aResultNode);
+          notEditableNode = do_QueryInterface(*aResultNode);
           return GetNextNode(notEditableNode, aEditableNode, aResultNode, bNoBlockCrossing);
         }
       }
