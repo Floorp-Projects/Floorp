@@ -3860,22 +3860,16 @@ nsXULElement::ExecuteOnBroadcastHandler(nsIDOMElement* anElement, const nsAReada
     // Now we execute the onchange handler in the context of the
     // observer. We need to find the observer in order to
     // execute the handler.
-    nsAutoString obs;
-    anElement->GetAttribute(NS_LITERAL_STRING("observes"), obs);
-    if (obs.Length() > 0)
-      return NS_OK;
-
-    nsCOMPtr<nsIDOMNodeList> nodeList;
-    if (NS_SUCCEEDED(anElement->GetElementsByTagName(NS_LITERAL_STRING("observes"),
-                                                     getter_AddRefs(nodeList)))) {
-        // We have a node list that contains some observes nodes.
-        PRUint32 length;
-        nodeList->GetLength(&length);
-        for (PRUint32 i = 0; i < length; i++) {
-            nsIDOMNode* domNode;
-            nodeList->Item(i, &domNode);
-            nsCOMPtr<nsIDOMElement> domElement;
-            domElement = do_QueryInterface(domNode);
+    nsCOMPtr<nsIContent> content(do_QueryInterface(anElement));
+    PRInt32 count;
+    content->ChildCount(count);
+    for (PRInt32 i = 0; i < count; i++) {
+        nsCOMPtr<nsIContent> child;
+        content->ChildAt(i, *getter_AddRefs(child));
+        nsCOMPtr<nsIAtom> tag;
+        child->GetTag(*getter_AddRefs(tag));
+        if (tag.get() == nsXULAtoms::observes) {
+            nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(child));
             if (domElement) {
                 // We have a domElement. Find out if it was listening to us.
                 nsAutoString listeningToID;
@@ -3897,7 +3891,6 @@ nsXULElement::ExecuteOnBroadcastHandler(nsIDOMElement* anElement, const nsAReada
                     }
                 }
             }
-            NS_IF_RELEASE(domNode);
         }
     }
 
