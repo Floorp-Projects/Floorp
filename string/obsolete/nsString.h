@@ -425,8 +425,8 @@ public:
    * @param   aString: string to be added to this
    * @return  this
    */
-  nsCString& operator=(PRUnichar aChar)           {return Assign(aChar);}
-  nsCString& operator=(char aChar)                {AssignWithConversion(aChar); return *this;}
+  nsCString& operator=(PRUnichar aChar)           {AssignWithConversion(aChar); return *this;}
+  nsCString& operator=(char aChar)                {return Assign(aChar);}
   nsCString& operator=(const PRUnichar* aString)  {AssignWithConversion(aString); return *this;}
 
   nsCString& operator=(const nsCString& aString)  {return Assign(aString);}
@@ -775,10 +775,10 @@ public:
 private:
     // NOT TO BE IMPLEMENTED
     //  these signatures help clients not accidentally call the wrong thing helped by C++ automatic integral promotion
-  void AssignWithConversion( char ) { }
-  void AssignWithConversion( const char*, PRInt32=-1 ) { }
-  void AppendWithConversion( char ) { }
-  void InsertWithConversion( char, PRUint32 ) { }
+  void AssignWithConversion( char );
+  void AssignWithConversion( const char*, PRInt32=-1 );
+  void AppendWithConversion( char );
+  void InsertWithConversion( char, PRUint32 );
 };
 
 #if 0//def NEW_STRING_APIS
