@@ -1057,7 +1057,6 @@ class Parser {
             pn = nf.createBinary(tt, pn, unaryExpr(ts));
         }
 
-
         return pn;
     }
 
@@ -1466,7 +1465,7 @@ class ParserException extends Exception { }
 class Decompiler
 {
 
-    public void startScript()
+    void startScript()
     {
         sourceTop = 0;
 
@@ -1474,7 +1473,7 @@ class Decompiler
         addToken(Token.SCRIPT);
     }
 
-    public String stopScript()
+    String stopScript()
     {
         String encoded = sourceToString(0);
         sourceBuffer = null; // It helpds GC
@@ -1482,7 +1481,7 @@ class Decompiler
         return encoded;
     }
 
-    public int startFunction(int functionIndex)
+    int startFunction(int functionIndex)
     {
         if (!(0 <= functionIndex))
             throw new IllegalArgumentException();
@@ -1494,7 +1493,7 @@ class Decompiler
         return sourceTop;
     }
 
-    public String stopFunction(int savedTop)
+    String stopFunction(int savedTop)
     {
         if (!(0 <= savedTop && savedTop <= sourceTop))
             throw new IllegalArgumentException();
@@ -1504,7 +1503,7 @@ class Decompiler
         return encoded;
     }
 
-    public void addToken(int token)
+    void addToken(int token)
     {
         if (!(0 <= token && token <= Token.LAST_TOKEN))
             throw new IllegalArgumentException();
@@ -1512,7 +1511,7 @@ class Decompiler
         append((char)token);
     }
 
-    public void addEOL(int token)
+    void addEOL(int token)
     {
         if (!(0 <= token && token <= Token.LAST_TOKEN))
             throw new IllegalArgumentException();
@@ -1521,7 +1520,7 @@ class Decompiler
         append((char)Token.EOL);
     }
 
-    public void addOp(int token, int op)
+    void addOp(int token, int op)
     {
         if (!(0 <= token && token <= Token.LAST_TOKEN))
             throw new IllegalArgumentException();
@@ -1532,25 +1531,25 @@ class Decompiler
         append((char)op);
     }
 
-    public void addName(String str)
+    void addName(String str)
     {
         addToken(Token.NAME);
         appendString(str);
     }
 
-    public void addString(String str)
+    void addString(String str)
     {
         addToken(Token.STRING);
         appendString(str);
     }
 
-    public void addRegexp(String regexp, String flags)
+    void addRegexp(String regexp, String flags)
     {
         addToken(Token.REGEXP);
         appendString('/' + regexp + '/' + flags);
     }
 
-    public void addNumber(double n)
+    void addNumber(double n)
     {
         addToken(Token.NUMBER);
 
@@ -1681,21 +1680,18 @@ class Decompiler
      * @param indentGap the identation offset for case labels
      *
      */
-    public static String decompile(Object encodedSourcesTree,
-                                   boolean justbody,
-                                   int indent, int indentGap, int caseGap)
+    static String decompile(Object encodedSourcesTree, boolean justbody,
+                            int indent, int indentGap, int caseGap)
     {
         StringBuffer result = new StringBuffer();
-        Object[] srcData = new Object[1];
-        decompile_r(encodedSourcesTree, false, justbody, srcData,
+        decompile_r(encodedSourcesTree, false, justbody,
                     indent, indentGap, caseGap, result);
         return result.toString();
     }
 
     private static void decompile_r(Object encodedSourcesTree,
                                     boolean nested, boolean justbody,
-                                    Object[] srcData, int indent,
-                                    int indentGap, int caseGap,
+                                    int indent, int indentGap, int caseGap,
                                     StringBuffer result)
     {
         String source;
@@ -1770,11 +1766,12 @@ class Decompiler
                             break skipLoop;
                         case Token.NAME:
                             // Skip function or argument name
-                            i = getSourceString(source, i, null);
+                            i = getSourceStringEnd(source, i);
                             break;
                         case Token.LP:
                         case Token.COMMA:
                         case Token.RP:
+                        case Token.LC:
                             break;
                         default:
                             // Bad function header
@@ -1791,29 +1788,15 @@ class Decompiler
             switch(source.charAt(i)) {
             case Token.NAME:
             case Token.REGEXP:  // re-wrapped in '/'s in parser...
-                /* NAMEs are encoded as NAME, (char) length, string...
-                 * Note that lookahead for detecting labels depends on
-                 * this encoding; change there if this changes.
-
-                 * Also change function-header skipping code above,
-                 * used when decompling under decompileFunctionBody.
-                 */
-                i = getSourceString(source, i + 1, srcData);
-                result.append((String)srcData[0]);
+                i = printSourceString(source, i + 1, false, result);
                 continue;
-
-            case Token.NUMBER: {
-                i = getSourceNumber(source, i + 1, srcData);
-                double number = ((Number)srcData[0]).doubleValue();
-                result.append(ScriptRuntime.numberToString(number, 10));
-                continue;
-            }
 
             case Token.STRING:
-                i = getSourceString(source, i + 1, srcData);
-                result.append('"');
-                result.append(ScriptRuntime.escapeString((String)srcData[0]));
-                result.append('"');
+                i = printSourceString(source, i + 1, true, result);
+                continue;
+
+            case Token.NUMBER:
+                i = printSourceNumber(source, i + 1, result);
                 continue;
 
             case Token.PRIMARY:
@@ -1864,8 +1847,7 @@ class Decompiler
                         ("msg.no.function.ref.found",
                          new Integer(functionIndex)));
                 }
-                decompile_r(childNodes[functionIndex + 1],
-                            true, false, srcData,
+                decompile_r(childNodes[functionIndex + 1], true, false,
                             indent, indentGap, caseGap, result);
                 break;
             }
@@ -1940,7 +1922,7 @@ class Decompiler
                      * Depends on how NAME is encoded.
                      */
                     else if (nextToken == Token.NAME) {
-                        int afterName = getSourceString(source, i + 2, null);
+                        int afterName = getSourceStringEnd(source, i + 2);
                         if (source.charAt(afterName) == Token.COLON)
                             less = indentGap;
                     }
@@ -2283,8 +2265,14 @@ class Decompiler
         return (i + 1 < length) ? source.charAt(i + 1) == token : false;
     }
 
-    private static int getSourceString(String source, int offset,
-                                       Object[] result)
+    private static int getSourceStringEnd(String source, int offset)
+    {
+        return printSourceString(source, offset, false, null);
+    }
+
+    private static int printSourceString(String source, int offset,
+                                         boolean asQuotedString,
+                                         StringBuffer sb)
     {
         int length = source.charAt(offset);
         ++offset;
@@ -2292,46 +2280,54 @@ class Decompiler
             length = ((0x7FFF & length) << 16) | source.charAt(offset);
             ++offset;
         }
-        if (result != null) {
-            result[0] = source.substring(offset, offset + length);
+        if (sb != null) {
+            String str = source.substring(offset, offset + length);
+            if (!asQuotedString) {
+                sb.append(str);
+            } else {
+                sb.append('"');
+                sb.append(ScriptRuntime.escapeString(str));
+                sb.append('"');
+            }
         }
         return offset + length;
     }
 
-    private static int getSourceNumber(String source, int offset,
-                                       Object[] result)
+    private static int printSourceNumber(String source, int offset,
+                                         StringBuffer sb)
     {
+        double number = 0.0;
         char type = source.charAt(offset);
         ++offset;
         if (type == 'S') {
-            if (result != null) {
+            if (sb != null) {
                 int ival = source.charAt(offset);
-                result[0] = new Integer(ival);
+                number = ival;
             }
             ++offset;
         } else if (type == 'J' || type == 'D') {
-            if (result != null) {
+            if (sb != null) {
                 long lbits;
                 lbits = (long)source.charAt(offset) << 48;
                 lbits |= (long)source.charAt(offset + 1) << 32;
                 lbits |= (long)source.charAt(offset + 2) << 16;
                 lbits |= (long)source.charAt(offset + 3);
-                double dval;
                 if (type == 'J') {
-                    dval = lbits;
+                    number = lbits;
                 } else {
-                    dval = Double.longBitsToDouble(lbits);
+                    number = Double.longBitsToDouble(lbits);
                 }
-                result[0] = new Double(dval);
             }
             offset += 4;
         } else {
             // Bad source
             throw new RuntimeException();
         }
+        if (sb != null) {
+            sb.append(ScriptRuntime.numberToString(number, 10));
+        }
         return offset;
     }
-
 
     private char[] sourceBuffer = new char[128];
 
