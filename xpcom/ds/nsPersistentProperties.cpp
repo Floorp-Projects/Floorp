@@ -118,20 +118,29 @@ static const struct PLDHashTableOps property_HashTableOps = {
 };
 
 nsPersistentProperties::nsPersistentProperties()
+: mIn(nsnull)
 {
-  mIn = nsnull;
-  mSubclass = NS_STATIC_CAST(nsIPersistentProperties*, this);
-  PL_DHashTableInit(&mTable, &property_HashTableOps, nsnull,
-                    sizeof(propertyTableEntry), 20);
-
-  PL_INIT_ARENA_POOL(&mArena, "PersistentPropertyArena", 2048);
-  
+    mSubclass = NS_STATIC_CAST(nsIPersistentProperties*, this);
+    mTable.ops = nsnull;
+    PL_INIT_ARENA_POOL(&mArena, "PersistentPropertyArena", 2048);
 }
 
 nsPersistentProperties::~nsPersistentProperties()
 {
     PL_FinishArenaPool(&mArena);
-    PL_DHashTableFinish(&mTable);
+    if (mTable.ops)
+        PL_DHashTableFinish(&mTable);
+}
+
+nsresult
+nsPersistentProperties::Init()
+{
+    if (!PL_DHashTableInit(&mTable, &property_HashTableOps, nsnull,
+                           sizeof(propertyTableEntry), 20)) {
+        mTable.ops = nsnull;
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+    return NS_OK;
 }
 
 NS_METHOD
@@ -142,8 +151,12 @@ nsPersistentProperties::Create(nsISupports *aOuter, REFNSIID aIID, void **aResul
     nsPersistentProperties* props = new nsPersistentProperties();
     if (props == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
+
     NS_ADDREF(props);
-    nsresult rv = props->QueryInterface(aIID, aResult);
+    nsresult rv = props->Init();
+    if (NS_SUCCEEDED(rv))
+        rv = props->QueryInterface(aIID, aResult);
+
     NS_RELEASE(props);
     return rv;
 }
@@ -355,7 +368,7 @@ nsPersistentProperties::Enumerate(nsISimpleEnumerator** aResult)
   // Step through hash entries populating a transient array
   PRUint32 n =
       PL_DHashTableEnumerate(&mTable, AddElemToArray, (void *)propArray);
-  if ( n < (PRIntn) mTable.entryCount )
+  if ( n < mTable.entryCount )
       return NS_ERROR_OUT_OF_MEMORY;
 
   return NS_NewArrayEnumerator(aResult, propArray); 
