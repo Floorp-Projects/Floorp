@@ -47,7 +47,6 @@
 #include "nsAuthEngine.h"
 #include "nsINetDataCacheManager.h"
 #include "nsINetDataCache.h"
-#include "nsICachedNetData.h"
 
 // FIXME - Temporary include.  Delete this when cache is enabled on all platforms
 #include "nsIPref.h"
