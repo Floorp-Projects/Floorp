@@ -183,7 +183,9 @@ static NS_DEFINE_IID(kIPopUpMenuIID, NS_IPOPUPMENU_IID);
 static NS_DEFINE_IID(kIMenuButtonIID, NS_IMENUBUTTON_IID);
 static NS_DEFINE_IID(kIXPBaseWindowIID, NS_IXPBASE_WINDOW_IID);
 static NS_DEFINE_IID(kINetSupportIID, NS_INETSUPPORT_IID);
+#ifdef NGEDITOR
 static NS_DEFINE_IID(kIEditorIID, NS_IEDITOR_IID);
+#endif
 
 static const char* gsAOLFormat = "AOLMAIL";
 static const char* gsHTMLFormat = "text/html";
