@@ -73,6 +73,7 @@ static NSString *LocationToolbarItemIdentifier	= @"Location Toolbar Item";
 static NSString *SidebarToolbarItemIdentifier	= @"Sidebar Toolbar Item";
 static NSString *PrintToolbarItemIdentifier	= @"Print Toolbar Item";
 static NSString *ThrobberToolbarItemIdentifier = @"Throbber Toolbar Item";
+static NSString *SearchToolbarItemIdentifier = @"Search Toolbar Item";
 
 @interface BrowserWindowController(Private)
 - (void)setupToolbar;
@@ -354,6 +355,7 @@ static NSString *ThrobberToolbarItemIdentifier = @"Throbber Toolbar Item";
                                         LocationToolbarItemIdentifier,
                                         SidebarToolbarItemIdentifier,
                                         ThrobberToolbarItemIdentifier,
+                                        SearchToolbarItemIdentifier,
                                         PrintToolbarItemIdentifier,
                                         NSToolbarCustomizeToolbarItemIdentifier,
                                         NSToolbarFlexibleSpaceItemIdentifier,
@@ -368,6 +370,7 @@ static NSString *ThrobberToolbarItemIdentifier = @"Throbber Toolbar Item";
                                         ForwardToolbarItemIdentifier,
                                         ReloadToolbarItemIdentifier,
                                         StopToolbarItemIdentifier,
+                                        SearchToolbarItemIdentifier,
                                         LocationToolbarItemIdentifier,
                                         SidebarToolbarItemIdentifier,
 #if CORPORATE_BRANDING
@@ -375,6 +378,8 @@ static NSString *ThrobberToolbarItemIdentifier = @"Throbber Toolbar Item";
 #endif
                                         nil];
 }
+
+// XXX use a dictionary to speed up the following?
 
 - (NSToolbarItem *) toolbar:(NSToolbar *)toolbar
       itemForItemIdentifier:(NSString *)itemIdent
@@ -423,6 +428,14 @@ static NSString *ThrobberToolbarItemIdentifier = @"Throbber Toolbar Item";
         [toolbarItem setImage:[NSImage imageNamed:@"sidebarClosed"]];
         [toolbarItem setTarget:self];
         [toolbarItem setAction:@selector(toggleSidebar:)];
+    } else if ( [itemIdent isEqual:SearchToolbarItemIdentifier] ) {
+        [toolbarItem setLabel:@"Search"];
+        [toolbarItem setPaletteLabel:@"Search"];
+        [toolbarItem setToolTip:@"Search the Internet"];
+        // XXX until we get a better search icon.
+        [toolbarItem setImage:[[[NSImage alloc] initWithContentsOfFile:@"/System/Library/CoreServices/Finder.app/Contents/Resources/find.icns"] autorelease]];
+        [toolbarItem setTarget:self];
+        [toolbarItem setAction:@selector(performSearch)];
     } else if ( [itemIdent isEqual:ThrobberToolbarItemIdentifier] ) {
         [toolbarItem setLabel:@""];
         [toolbarItem setPaletteLabel:@"Progress"];
@@ -610,6 +623,12 @@ static NSString *ThrobberToolbarItemIdentifier = @"Throbber Toolbar Item";
 - (void)printPreview
 {
   [[mBrowserView getBrowserView] printPreview];
+}
+
+- (void)performSearch
+{
+    // XXX go to the user's preferred search engine.
+    [[mBrowserView getBrowserView] loadURI:[NSURL URLWithString: @"http://dmoz.org/"] flags:NSLoadFlagsNone];
 }
 
 static Boolean movieControllerFilter(MovieController mc, short action, void *params, long refCon)
