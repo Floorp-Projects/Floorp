@@ -160,32 +160,6 @@ struct nsMenuEvent : public nsGUIEvent {
   PRUint32      mCommand;           
 };
 
-/**
- * Event status for D&D Event
- */
-
-enum nsDragDropEventStatus {  
-    /// The event is a enter
-  nsDragDropEventStatus_eDragEntered,            
-    /// The event is exit
-  nsDragDropEventStatus_eDragExited, 
-    /// The event is drop
-  nsDragDropEventStatus_eDrop  
-};
-
-
-/**
- * Drag & Drop event
- * 
- * When this event occurs the widget field in nsGUIEvent holds the "target"
- * for the event
- */
-
-struct nsDragDropEvent : public nsGUIEvent {
-  nsDragDropEventStatus mType;
-  PRBool                mIsFileURL;
-  PRUnichar *           mURL;           
-};
 
 /**
  * Event Struct Types
@@ -201,7 +175,7 @@ struct nsDragDropEvent : public nsGUIEvent {
 #define NS_TOOLTIP_EVENT    9
 #define NS_MENU_EVENT       10
 #define NS_DRAGDROP_EVENT   11
-#define NS_TEXT_EVENT		12
+#define NS_TEXT_EVENT		    12
  
  /**
  * GUI MESSAGES
@@ -283,6 +257,13 @@ struct nsDragDropEvent : public nsGUIEvent {
 #define NS_FOCUS_EVENT_START            1300
 #define NS_FOCUS_CONTENT                (NS_FOCUS_EVENT_START)
 #define NS_BLUR_CONTENT                 (NS_FOCUS_EVENT_START + 1)
+
+
+#define NS_DRAGDROP_EVENT_START         1400
+#define NS_DRAGDROP_ENTER               (NS_DRAGDROP_EVENT_START)
+#define NS_DRAGDROP_OVER                (NS_DRAGDROP_EVENT_START + 1)
+#define NS_DRAGDROP_EXIT                (NS_DRAGDROP_EVENT_START + 2)
+#define NS_DRAGDROP_DROP                (NS_DRAGDROP_EVENT_START + 3)
 
 //@}
 
