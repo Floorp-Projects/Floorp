@@ -113,8 +113,8 @@
 <!ENTITY editcheckspelling.keybinding "k">
 
 <!-- View menu items -->
-<!ENTITY viewToolbarsMenu.label "Toolbars"> 
-<!ENTITY viewToolbarsMenu.accesskey "t"> 
+<!ENTITY viewToolbarsMenu.label "Show"> 
+<!ENTITY viewToolbarsMenu.accesskey "w"> 
 <!ENTITY compositionToolbarCmd.label "Composition Toolbar">
 <!ENTITY compositiontb.accesskey "c">
 <!ENTITY formattingToolbarCmd.label "Format Toolbar">
