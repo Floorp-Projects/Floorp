@@ -1519,10 +1519,6 @@ nsChannelListener::OnStartRequest(nsIChannel *aChannel, nsISupports *aContext)
 
   if (!useURILoader)
   {
-    nsXPIDLCString contentType;
-    rv = aChannel->GetContentType(getter_Copies(contentType));
-    if (NS_FAILED(rv)) return rv;
-
     PRBool conversionRequired = PR_FALSE;
     nsAutoString from, to;
 
