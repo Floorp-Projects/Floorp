@@ -604,7 +604,6 @@ PR_IMPLEMENT(void) PR_SetThreadPriority(PRThread *thred, PRThreadPriority newPri
         PR_ASSERT(0 == rv);
         schedule.sched_priority = pt_PriorityMap(newPri);
         rv = pthread_setschedparam(thred->id, policy, &schedule);
-        PR_ASSERT(0 == rv || EPERM == rv);
         if (EPERM == rv)
         {
             pt_schedpriv = EPERM;

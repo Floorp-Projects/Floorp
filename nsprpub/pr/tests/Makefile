@@ -472,13 +472,13 @@ clean::
 
 ifeq ($(USE_PTHREADS), 1)
 $(OBJDIR)/foreign: $(OBJDIR)/foreign.o
-	$(CC) $(XCFLAGS) $< $(LDOPTS) $(LIBPLC) $(LIBPR) $(LIBPTHREAD) $(EXTRA_LIBS) -o $@
+	$(PURE) $(CC) $(XCFLAGS) $< $(LDOPTS) $(LIBPLC) $(LIBPR) $(LIBPTHREAD) $(EXTRA_LIBS) -o $@
 $(OBJDIR)/provider: $(OBJDIR)/provider.o
-	$(CC) $(XCFLAGS) $< $(LDOPTS) $(LIBPLC) $(LIBPR) $(LIBPTHREAD) $(EXTRA_LIBS) -o $@
+	$(PURE) $(CC) $(XCFLAGS) $< $(LDOPTS) $(LIBPLC) $(LIBPR) $(LIBPTHREAD) $(EXTRA_LIBS) -o $@
 $(OBJDIR)/socket: $(OBJDIR)/socket.o
-	$(CC) $(XCFLAGS) $< $(LDOPTS) $(LIBPLC) $(LIBPR) $(LIBPTHREAD) $(EXTRA_LIBS) -o $@
+	$(PURE) $(CC) $(XCFLAGS) $< $(LDOPTS) $(LIBPLC) $(LIBPR) $(LIBPTHREAD) $(EXTRA_LIBS) -o $@
 $(OBJDIR)/testfile: $(OBJDIR)/testfile.o
-	$(CC) $(XCFLAGS) $< $(LDOPTS) $(LIBPLC) $(LIBPR) $(LIBPTHREAD) $(EXTRA_LIBS) -o $@
+	$(PURE) $(CC) $(XCFLAGS) $< $(LDOPTS) $(LIBPLC) $(LIBPR) $(LIBPTHREAD) $(EXTRA_LIBS) -o $@
 endif
 
 #

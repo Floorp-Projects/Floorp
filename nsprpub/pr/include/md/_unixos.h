@@ -530,7 +530,7 @@ extern int poll(struct pollfd *, unsigned long, int);
 */
 typedef PRInt64 off64_t;
 typedef PRUint64 ino64_t;
-typedef PRUint64 blkcnt64_t;
+typedef PRInt64 blkcnt64_t;
 struct stat64 {
     dev_t st_dev;
     long st_pad1[3];
