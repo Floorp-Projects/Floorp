@@ -40,8 +40,6 @@
    wallet.cpp
 */
 
-#define AutoCapture
-
 #include "wallet.h"
 #include "singsign.h"
 
@@ -103,21 +101,12 @@ PRLogModuleInfo* gWalletLog = nsnull;
 /********************************************************/
 
 static const char *pref_Caveat = "wallet.caveat";
-#ifdef AutoCapture
 static const char *pref_captureForms = "wallet.captureForms";
 static const char *pref_enabled = "wallet.enabled";
-#else
-static const char *pref_WalletNotified = "wallet.Notified";
-#endif /* AutoCapture */
 static const char *pref_WalletSchemaValueFileName = "wallet.SchemaValueFileName";
 
-#ifdef AutoCapture
 PRIVATE PRBool wallet_captureForms = PR_FALSE;
-#else
-PRIVATE PRBool wallet_Notified = PR_FALSE;
-#endif
 
-#ifdef AutoCapture
 PRIVATE void
 wallet_SetFormsCapturingPref(PRBool x)
 {
@@ -174,25 +163,6 @@ wallet_GetEnabledPref(void)
   }
   return enabled;
 }
-
-#else
-
-PRIVATE void
-wallet_SetWalletNotificationPref(PRBool x) {
-  SI_SetBoolPref(pref_WalletNotified, x);
-  wallet_Notified = x;
-}
-
-PRIVATE PRBool
-wallet_GetWalletNotificationPref(void) {
-  static PRBool first_time = PR_TRUE;
-  if (first_time) {
-    PRBool x = SI_GetBoolPref(pref_WalletNotified, PR_FALSE);
-    wallet_Notified = x;
-  }
-  return wallet_Notified;
-}
-#endif /* ! AutoCapture */
 
 
 /***************************************************/
@@ -294,9 +264,7 @@ PRIVATE nsVoidArray * wallet_SchemaStrings_list = 0;
 PRIVATE nsVoidArray * wallet_PositionalSchema_list = 0;
 PRIVATE nsVoidArray * wallet_StateSchema_list = 0;
 PRIVATE nsVoidArray * wallet_URL_list = 0;
-#ifdef AutoCapture
 PRIVATE nsVoidArray * wallet_DistinguishedSchema_list = 0;
-#endif
 
 #define NO_CAPTURE(x) x[0]
 #define NO_PREVIEW(x) x[1]
@@ -1265,9 +1233,7 @@ const char schemaConcatFileName[] = "SchemaConcat.tbl";
 const char schemaStringsFileName[] = "SchemaStrings.tbl";
 const char positionalSchemaFileName[] = "PositionalSchema.tbl";
 const char stateSchemaFileName[] = "StateSchema.tbl";
-#ifdef AutoCapture
 const char distinguishedSchemaFileName[] = "DistinguishedSchema.tbl";
-#endif
 
 
 /******************************************************/
@@ -1514,14 +1480,12 @@ wallet_ReadFromFile
       break;
     }
 
-#ifdef AutoCapture
     /* Distinguished schema list is a list of single entries, not name/value pairs */
     if (!PL_strcmp(filename, distinguishedSchemaFileName)) {
       nsVoidArray* dummy = NULL;
       wallet_WriteToList(helpMac->item1, helpMac->item1, dummy, list, PR_FALSE, placement);
       continue;
     }
-#endif
 
     if (NS_FAILED(wallet_GetLine(strm, &helpMac->item2))) {
       /* unexpected end of file reached */
@@ -2511,9 +2475,7 @@ Wallet_ReleaseAllLists() {
     wallet_Clear(&wallet_SchemaStrings_list); /* otherwise we will duplicate the list */
     wallet_Clear(&wallet_PositionalSchema_list); /* otherwise we will duplicate the list */
     wallet_Clear(&wallet_StateSchema_list); /* otherwise we will duplicate the list */
-#ifdef AutoCapture
     wallet_Clear(&wallet_DistinguishedSchema_list); /* otherwise we will duplicate the list */
-#endif
     wallet_DeallocateMapElements();
     delete helpMac;
     helpMac = nsnull;
@@ -2571,9 +2533,7 @@ wallet_Initialize(PRBool unlockDatabase=PR_TRUE) {
 
     Wallet_ReleaseAllLists();
     helpMac = new wallet_HelpMac; /* to speed up startup time on the mac */
-#ifdef AutoCapture
     wallet_ReadFromFile(distinguishedSchemaFileName, wallet_DistinguishedSchema_list, PR_FALSE);
-#endif
     wallet_ReadFromFile(fieldSchemaFileName, wallet_FieldToSchema_list, PR_FALSE);
     wallet_ReadFromFile(vcardSchemaFileName, wallet_VcardToSchema_list, PR_FALSE);
     wallet_ReadFromFile(schemaConcatFileName, wallet_SchemaConcat_list, PR_FALSE);
@@ -2602,11 +2562,9 @@ wallet_Initialize(PRBool unlockDatabase=PR_TRUE) {
     size = wallet_Size(wallet_StateSchema_list);
     totalSize += size;
     printf("StateSchema: %d\n", size);
-#ifdef AutoCapture
     size = wallet_Size(wallet_DistinguishedSchema_list);
     totalSize += size;
     printf("DistinguishedSchema: %d\n", size);
-#endif
     printf("Total size: %d\n", totalSize);
 #endif
 
@@ -2823,7 +2781,6 @@ Wallet_SignonViewerReturn(const nsString& results)
     }
 }
 
-#ifdef AutoCapture
 /*
  * see if user wants to capture data on current page
  */
@@ -2869,7 +2826,6 @@ wallet_OKToCapture(const nsAFlatCString& url, nsIDOMWindowInternal* window) {
   WALLET_FREE(message);
   return (button == YES_BUTTON);
 }
-#endif
 
 /*
  * capture the value of a form element
@@ -3848,7 +3804,6 @@ public:
   PRBool isPassword;
 };
 
-#ifdef AutoCapture
 PRIVATE PRBool
 wallet_IsNewValue(nsIDOMNode* elementNode, nsString valueOnForm) {
   if (valueOnForm.Equals(EmptyString())) {
@@ -3868,7 +3823,6 @@ wallet_IsNewValue(nsIDOMNode* elementNode, nsString valueOnForm) {
   }
   return PR_TRUE;
 }
-#endif
 
 PUBLIC void
 WLLT_OnSubmit(nsIContent* currentForm, nsIDOMWindowInternal* window) {
@@ -3906,9 +3860,6 @@ WLLT_OnSubmit(nsIContent* currentForm, nsIDOMWindowInternal* window) {
     nsCOMPtr<nsIDOMNode> formNode;
     forms->Item(formX, getter_AddRefs(formNode));
     if (nsnull != formNode) {
-#ifndef AutoCapture
-      PRInt32 fieldcount = 0;
-#endif
       nsCOMPtr<nsIDOMHTMLFormElement> formElement(do_QueryInterface(formNode));
       if ((nsnull != formElement)) {
         nsCOMPtr<nsIDOMHTMLCollection> elements;
@@ -3919,7 +3870,6 @@ WLLT_OnSubmit(nsIContent* currentForm, nsIDOMWindowInternal* window) {
           si_SignonDataStruct * data;
           PRUint32 numElements;
           elements->GetLength(&numElements);
-#ifdef AutoCapture
           PRBool OKToPrompt = PR_FALSE;
           PRInt32 passwordcount = 0;
           PRInt32 hits = 0;
@@ -3927,7 +3877,6 @@ WLLT_OnSubmit(nsIContent* currentForm, nsIDOMWindowInternal* window) {
           wallet_InitializeCurrentURL(doc);
           wallet_InitializeStateTesting();
           PRBool newValueFound = PR_FALSE;
-#endif
           for (PRUint32 elementX = 0; elementX < numElements; elementX++) {
             nsCOMPtr<nsIDOMNode> elementNode;
             elements->Item(elementX, getter_AddRefs(elementNode));
@@ -3980,11 +3929,11 @@ WLLT_OnSubmit(nsIContent* currentForm, nsIDOMWindowInternal* window) {
                     }
                   }
 
-#ifdef AutoCapture
                   if (isPassword) {
                     passwordcount++;
                     OKToPrompt = PR_FALSE;
                   }
+
                   if (isText) {
                     if (passwordcount == 0 && !newValueFound && !OKToPrompt) {
                       nsAutoString valueOnForm;
@@ -3997,11 +3946,7 @@ WLLT_OnSubmit(nsIContent* currentForm, nsIDOMWindowInternal* window) {
                       }
                     }
                   }
-#else
-                  if (isText) {
-                    fieldcount++;
-                  }
-#endif
+
                   if (isText || isPassword) {
                     nsAutoString value;
                     rv = inputElement->GetValue(value);
@@ -4030,7 +3975,6 @@ WLLT_OnSubmit(nsIContent* currentForm, nsIDOMWindowInternal* window) {
                         }
                         data->isPassword = isPassword;
                         signonData->AppendElement(data);
-#ifdef AutoCapture
                         if (passwordcount == 0 && !OKToPrompt) {
                           /* get schema from field */
                           nsCAutoString schema;
@@ -4069,7 +4013,6 @@ WLLT_OnSubmit(nsIContent* currentForm, nsIDOMWindowInternal* window) {
                             }
                           }
                         }
-#endif
                       }
                     }
                   }
@@ -4096,17 +4039,6 @@ WLLT_OnSubmit(nsIContent* currentForm, nsIDOMWindowInternal* window) {
           }
           delete signonData;
 
-#ifndef AutoCapture
-          /* give notification if this is first significant form submitted */
-          if ((fieldcount>=3) && !wallet_GetWalletNotificationPref()) {
-
-            /* conditions all met, now give notification */
-            PRUnichar * notification = Wallet_Localize("WalletNotification");
-            wallet_SetWalletNotificationPref(PR_TRUE);
-            wallet_Alert(notification, window);
-            WALLET_FREE(notification);
-          }
-#else
           /* save form if it meets all necessary conditions */
           if (wallet_GetFormsCapturingPref() &&
               (OKToPrompt) && wallet_OKToCapture(strippedURLNameUTF8, window)) {
@@ -4124,7 +4056,6 @@ WLLT_OnSubmit(nsIContent* currentForm, nsIDOMWindowInternal* window) {
               }
             }
           }
-#endif
         }
       }
     }

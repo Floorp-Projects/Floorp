@@ -137,7 +137,6 @@ pref("signon.rememberSignons",              true);
 pref("signon.expireMasterPassword",         false);
 
 pref("wallet.captureForms",                 true);
-pref("wallet.notified",                     false);
 pref("wallet.Server",                       "chrome://navigator/locale/navigator.properties");
 pref("wallet.Samples",                      "chrome://navigator/locale/navigator.properties");
 pref("wallet.version",                      "1");

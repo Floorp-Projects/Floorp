@@ -196,7 +196,6 @@ pref("javascript.options.showInConsole",    true);
 
 pref("network.enableIDN",                   false); // Turn on/off IDN (Internationalized Domain Name) resolution
 pref("wallet.captureForms",                 true);
-pref("wallet.notified",                     false);
 pref("wallet.TutorialFromMenu",             "chrome://navigator/locale/navigator.properties");
 pref("wallet.Server",                       "chrome://navigator/locale/navigator.properties");
 pref("wallet.Samples",                      "chrome://navigator/locale/navigator.properties");
