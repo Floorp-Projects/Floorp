@@ -471,7 +471,7 @@ nsThrobber::LoadThrobberImages(const nsString& aFileNameMask, PRInt32 aNumImages
   }
 
   if (nsnull != mask)
-    delete [] mask;
+    nsAllocator::Free(mask);
 
   mWidget->Invalidate(PR_TRUE);
 

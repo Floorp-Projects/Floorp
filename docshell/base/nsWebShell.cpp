@@ -27,6 +27,8 @@
 #ifdef NECKO
 #include "nsIPrompt.h"
 #include "nsNeckoUtil.h"
+#include "nsIProtocolHandler.h"
+#include "nsIDNSService.h"
 #else
 #include "nsINetSupport.h"
 #include "nsIRefreshUrl.h"
@@ -1866,6 +1868,18 @@ nsWebShell::DoLoadURL(const nsString& aUrlSpec,
       rv = NS_NewURL(getter_AddRefs(url), aUrlSpec);
 #else 
       rv = NS_NewURI(getter_AddRefs(url), aUrlSpec);
+#ifdef DEBUG
+      char* urlStr = aUrlSpec.ToNewCString();
+      if (rv == NS_ERROR_UNKNOWN_PROTOCOL)
+        printf("Error: Unknown protocol: %s\n", urlStr);
+      else if (rv == NS_ERROR_UNKNOWN_HOST)
+        printf("Error: Unknown host: %s\n", urlStr);
+      else if (rv == NS_ERROR_MALFORMED_URI)
+        printf("Error: Malformed URI: %s\n", urlStr);
+      else if (NS_FAILED(rv))
+        printf("Error: Can't load: %s (%x)\n", urlStr, rv);
+      nsCRT::free(urlStr);
+#endif
 #endif // NECKO
       if (NS_FAILED(rv)) return rv;      
       if (url && docURL && EqualBaseURLs(docURL, url)) {
@@ -2695,7 +2709,7 @@ nsWebShell::HandleLinkClickEvent(nsIContent *aContent,
       {
         nsIWebShell* shell = GetTarget(target.GetUnicode());
         if (nsnull != shell) {
-          shell->LoadURL(aURLSpec, aPostData);
+          (void)shell->LoadURL(aURLSpec, aPostData);
           NS_RELEASE(shell);
         }
       }
