@@ -119,7 +119,7 @@ nsFtpProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
                              nsIURI **result)
 {
     nsresult rv;
-    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("nsFtpProtocolHandler::NewURI(%s); ", aSpec));
+    PR_LOG(gFTPLog, PR_LOG_ALWAYS, ("FTP attempt at %s ", aSpec));
 
     // Ftp URLs (currently) have no additional structure beyond that provided by standard
     // URLs, so there is no "outer" given to CreateInstance 
