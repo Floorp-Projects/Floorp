@@ -502,11 +502,22 @@ nsObjectFrame::GetDesiredSize(nsIPresContext* aPresContext,
   // the first time, mInstanceOwner will be null, so we a temporary default
   if(mInstanceOwner != nsnull)
   {
-    mInstanceOwner->GetWidth(&width);
-    mInstanceOwner->GetHeight(&height);
-	// XXX this is temporary fix so plugins display until we support padding
-	haveHeight = PR_FALSE;
-	haveWidth = PR_FALSE;
+    // if no width and height attributes specified try to use whatever we already have.
+    if(NS_OK != mInstanceOwner->GetWidth(&width))
+    {
+      width = aMetrics.width;
+  	  haveWidth = PR_TRUE;
+    }
+    else
+	    haveWidth = PR_FALSE;
+
+    if(NS_OK != mInstanceOwner->GetHeight(&height))
+    {
+      height = aMetrics.height;
+  	  haveHeight = PR_TRUE;
+    }
+    else
+	    haveHeight = PR_FALSE;
   }
 
 
