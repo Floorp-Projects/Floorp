@@ -24,6 +24,33 @@ package org.mozilla.webclient;
 
 import java.util.Properties;
 
+/**
+ * <p>This interface provides a way to set browser specific preferences
+ * on the underlying browser implementation.</p>
+ *
+ * <p>The following mozilla preferences are especially useful:</p>
+ *
+ * 	<ul>
+ *
+ *	  <li><p><code>network.cookie.cookieBehavior</code></p>
+ *
+ *    <table>
+ *
+ *    <tr><th>Pref Value</th> <th>Pref meaning</th></tr>
+ *
+ *    <tr><td>0</td> <td>Allow all cookies</td></tr>
+ *
+ *    <tr><td>1</td> <td>Allow cookies from the originating website
+ *    only</td></tr>
+ *
+ *    <tr><td>2</td> <td>Block cookies</td></tr>
+ *
+ *    </table>
+ *    </li>
+ *
+ *	</ul>
+ */
+
 public interface Preferences
 {
   public void setPref(String prefName, String prefValue);
