@@ -354,6 +354,8 @@ widget/src/motif/Makefile
 widget/src/motif/app_context/Makefile
 widget/src/photon/Makefile
 widget/src/rhapsody/Makefile
+widget/src/unix_services/Makefile
+widget/src/unix_services/toolkit_service/Makefile
 widget/src/xlib/Makefile
 widget/src/xlib/window_service/Makefile
 widget/src/xpwidgets/Makefile
