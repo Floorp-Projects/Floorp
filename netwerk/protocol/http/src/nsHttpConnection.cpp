@@ -771,7 +771,8 @@ nsHttpConnection::GetInterface(const nsIID &iid, void **result)
     if (mTransaction) {
         nsCOMPtr<nsIInterfaceRequestor> callbacks;
         mTransaction->GetSecurityCallbacks(getter_AddRefs(callbacks));
-        return callbacks->GetInterface(iid, result);
+        if (callbacks)
+            return callbacks->GetInterface(iid, result);
     }
 
     return NS_ERROR_NO_INTERFACE;
