@@ -75,14 +75,17 @@ function selectDialogOnLoad() {
 
   listBox = document.getElementById("list");
   var numItems = param.GetInt( 2 )
+  var firstItem, nextItem;
 
   for ( i = 2; i <= numItems+1; i++ ) {
     var newString = param.GetString( i );
     dump("setting string "+newString+"\n");
-    AppendStringToTreelist(listBox, newString);
+    nextItem = AppendStringToTreelist(listBox, newString);
+    if (i == 2) {
+      firstItem = nextItem;
+    }
   }
-  dump("number of items "+ listBox.options.length +" "+listBox.length+"\n");
-  listBox.selectedIndex = 0;
+  listBox.selectItem(firstItem);
 
   // resize the window to the content
   window.sizeToContent();
