@@ -803,10 +803,7 @@ nsImapIncomingServer::CreateImapConnection(nsIEventQueue *aEventQueue,
   }
   else // cannot get anyone to handle the url queue it
   {
-#ifdef DEBUG_bienvenu
-    NS_ASSERTION(PR_FALSE, "no one will handle this, I don't think");
-#endif
-      // queue the url
+      // caller will queue the url
   }
 
   PR_CExitMonitor(this);
@@ -1682,11 +1679,6 @@ NS_IMETHODIMP nsImapIncomingServer::SetFolderAdminURL(const char *aFolderName, c
     }
   }
   return rv;
-}
-
-NS_IMETHODIMP  nsImapIncomingServer::SubscribeUpgradeFinished(PRBool bringUpSubscribeUI) 
-{
-	return NS_OK;
 }
 
 NS_IMETHODIMP  nsImapIncomingServer::FolderVerifiedOnline(const char *folderName, PRBool *aResult) 

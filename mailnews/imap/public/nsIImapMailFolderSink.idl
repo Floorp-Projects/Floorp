@@ -76,9 +76,6 @@ interface nsIImapMailFolderSink : nsISupports {
                                    in nsIMailboxSpec aSpec);
   void UpdateImapMailboxStatus(in nsIImapProtocol aProtocol,
                                      in nsIMailboxSpec aSpec);
-  void ChildDiscoverySucceeded(in nsIImapProtocol aProtocol) ;
-  void PromptUserForSubscribeUpdatePath(in nsIImapProtocol aProtocol,
-                                              out boolean aBool) ;
   void parseMsgHdrs(in nsIImapProtocol aProtocol, in nsIImapHeaderXferInfo aHdrXferInfo);
   void AbortHeaderParseStream(in nsIImapProtocol aProtocol) ;
   

@@ -55,7 +55,6 @@ interface nsIImapServerSink : nsISupports {
   void folderIsNoSelect(in string aFolderName, out boolean aResult);
   void setFolderAdminURL(in string aFolderName, in string adminUrl);
   boolean folderVerifiedOnline(in string aFolderName);
-  void subscribeUpgradeFinished(in boolean bringUpSubscribeUI);
 
   void setCapability(in unsigned long capability);
   void loadNextQueuedUrl(out boolean urlRun);

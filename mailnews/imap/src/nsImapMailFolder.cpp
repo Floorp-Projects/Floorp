@@ -715,9 +715,7 @@ nsImapMailFolder::UpdateFolder(nsIMsgWindow *msgWindow)
                                                     getter_AddRefs(eventQ));
             rv = imapService->SelectFolder(eventQ, this, this, msgWindow,
                                            nsnull);
-            if (NS_SUCCEEDED(rv))
-                m_urlRunning = PR_TRUE;
-            else if ((rv == NS_MSG_ERROR_OFFLINE) ||
+            if ((rv == NS_MSG_ERROR_OFFLINE) ||
                      (rv == NS_BINDING_ABORTED))
                 {
                     rv = NS_OK;
@@ -2485,20 +2483,6 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
 
 NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxStatus(
   nsIImapProtocol* aProtocol, nsIMailboxSpec* aSpec)
-{
-  nsresult rv = NS_ERROR_FAILURE;
-  return rv;
-}
-
-NS_IMETHODIMP nsImapMailFolder::ChildDiscoverySucceeded(
-  nsIImapProtocol* aProtocol)
-{
-  nsresult rv = NS_ERROR_FAILURE;
-  return rv;
-}
-
-NS_IMETHODIMP nsImapMailFolder::PromptUserForSubscribeUpdatePath(
-  nsIImapProtocol* aProtocol, PRBool* aBool)
 {
   nsresult rv = NS_ERROR_FAILURE;
   return rv;

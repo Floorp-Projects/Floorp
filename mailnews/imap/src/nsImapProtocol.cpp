@@ -1370,6 +1370,9 @@ PRBool nsImapProtocol::ProcessCurrentURL()
   ReleaseUrlState();
   ResetProgressInfo();
 
+  ClearFlag(IMAP_CLEAN_UP_URL_STATE);
+  m_urlInProgress = PR_FALSE;
+
   if (GetConnectionStatus() >= 0 && imapMailFolderSink)
   {
       imapMailFolderSink->PrepareToReleaseObject(copyState);
@@ -1384,8 +1387,6 @@ PRBool nsImapProtocol::ProcessCurrentURL()
   {
     if (GetConnectionStatus() >= 0)
     {
-      ClearFlag(IMAP_CLEAN_UP_URL_STATE);
-      m_urlInProgress = PR_FALSE;
       rv = m_imapServerSink->LoadNextQueuedUrl(&anotherUrlRun);
       SetFlag(IMAP_FIRST_PASS_IN_THREAD);
     }
@@ -3637,7 +3638,8 @@ void nsImapProtocol::PeriodicBiff()
 
 void nsImapProtocol::SendSetBiffIndicatorEvent(nsMsgBiffState newState)
 {
-    m_imapMiscellaneousSink->SetBiffStateAndUpdate(this, newState);
+    if (m_imapMiscellaneousSink)
+      m_imapMiscellaneousSink->SetBiffStateAndUpdate(this, newState);
 
   if (newState == nsIMsgFolder::nsMsgBiffState_NewMail)
     m_mailToFetch = PR_TRUE;
@@ -6788,9 +6790,6 @@ void nsImapProtocol::ProcessAuthenticatedStateURL()
         if (canonicalParent)
         {
           NthLevelChildList(canonicalParent, depth);
-          if (GetServerStateParser().LastCommandSuccessful() &&
-            m_imapMailFolderSink)
-            m_imapMailFolderSink->ChildDiscoverySucceeded(this);
           PR_Free(canonicalParent);
         }
         break;
