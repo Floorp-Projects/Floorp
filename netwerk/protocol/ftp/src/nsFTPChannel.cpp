@@ -134,8 +134,15 @@ nsFTPChannel::IsPending(PRBool *result) {
 
 NS_IMETHODIMP
 nsFTPChannel::Cancel(void) {
+    nsresult rv = NS_OK;
+    // if we hit this assert, someone's hanging onto the channel too long.
     NS_ASSERTION(mConnThread, "lost the connection thread.");
-    return mConnThread->Cancel();
+
+    // it's ok for this method to *not* have the underlying thread because 
+    // the user obviously want's the underlying channel/connection to go away.
+    if (mConnThread)
+        rv = mConnThread->Cancel();
+    return rv;
 }
 
 NS_IMETHODIMP
