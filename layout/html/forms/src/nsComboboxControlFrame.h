@@ -24,7 +24,6 @@
 #include "nsIFormControlFrame.h"
 #include "nsIComboboxControlFrame.h"
 #include "nsIDOMMouseListener.h"
-#include "nsIDOMFocusListener.h"
 #include "nsVoidArray.h"
 #include "nsIAnonymousContentCreator.h"
 #include "nsISelectControlFrame.h"
@@ -49,7 +48,6 @@ class nsComboboxControlFrame : public nsAreaFrame,
                                public nsIFormControlFrame,
                                public nsIComboboxControlFrame,
                                public nsIDOMMouseListener,
-                               public nsIDOMFocusListener,
                                public nsIAnonymousContentCreator,
                                public nsISelectControlFrame,
 			                         public nsIStatefulFrame,
@@ -114,7 +112,8 @@ public:
   NS_IMETHOD GetFormContent(nsIContent*& aContent) const;
   virtual nscoord GetVerticalBorderWidth(float aPixToTwip) const;
   virtual nscoord GetHorizontalBorderWidth(float aPixToTwip) const;
-  virtual nscoord GetVerticalInsidePadding(float aPixToTwip,
+  virtual nscoord GetVerticalInsidePadding(nsIPresContext& aPresContext,
+                                           float aPixToTwip,
                                            nscoord aInnerHeight) const;
   virtual nscoord GetHorizontalInsidePadding(nsIPresContext& aPresContext,
                                              float aPixToTwip, 
@@ -153,10 +152,6 @@ public:
   virtual nsresult MouseOver(nsIDOMEvent* aMouseEvent)     { return NS_OK; }
   virtual nsresult MouseOut(nsIDOMEvent* aMouseEvent)      { return NS_OK; }
   virtual nsresult HandleEvent(nsIDOMEvent* aEvent)        { return NS_OK; }
-
-  //nsIDOMFocusListener
-  virtual nsresult Focus(nsIDOMEvent* aEvent);
-  virtual nsresult Blur(nsIDOMEvent* aEvent);
 
   //nsIStatefulFrame
   NS_IMETHOD GetStateType(StateType* aStateType);
