@@ -38,6 +38,7 @@
 
 #include "nsXMLElement.h"
 #include "nsHTMLAtoms.h"
+#include "nsIDocument.h"
 
 class nsXMLEventsElement : public nsXMLElement {
 public:

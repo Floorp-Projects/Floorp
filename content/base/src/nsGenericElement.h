@@ -40,25 +40,14 @@
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
 #include "nsIHTMLContent.h"
-#include "nsIDOMAttr.h"
-#include "nsIDOMNamedNodeMap.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMDocumentFragment.h"
-#include "nsIDOMNodeList.h"
-#include "nsIDOMLinkStyle.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIDOM3EventTarget.h"
 #include "nsIDOM3Node.h"
-#include "nsIStyleSheetLinkingElement.h"
-#include "nsICSSStyleSheet.h"
-#include "nsICSSLoaderObserver.h"
-#include "nsIDocument.h"
-#include "nsVoidArray.h"
 #include "nsILinkHandler.h"
 #include "nsGenericDOMNodeList.h"
 #include "nsIEventListenerManager.h"
-#include "nsINodeInfo.h"
-#include "nsIParser.h"
 #include "nsContentUtils.h"
 #include "pldhash.h"
 #include "nsAttrAndChildArray.h"
@@ -67,10 +56,13 @@ class nsIDOMAttr;
 class nsIDOMEventListener;
 class nsIFrame;
 class nsISupportsArray;
+class nsIDOMNamedNodeMap;
 class nsDOMCSSDeclaration;
 class nsIDOMCSSStyleDeclaration;
 class nsDOMAttributeMap;
 class nsIURI;
+class nsVoidArray;
+class nsINodeInfo;
 
 typedef unsigned long PtrBits;
 

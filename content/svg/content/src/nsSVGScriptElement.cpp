@@ -42,6 +42,7 @@
 #include "nsIDOMSVGURIReference.h"
 #include "nsCOMPtr.h"
 #include "nsSVGAnimatedString.h"
+#include "nsIDocument.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 #include "nsIScriptElement.h"

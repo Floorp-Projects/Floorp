@@ -44,6 +44,7 @@
 #include "nsNodeInfoManager.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOMAttr.h"
 #include "nsDOMError.h"
 #include "nsIDOM3Node.h"
 #include "nsLayoutAtoms.h"

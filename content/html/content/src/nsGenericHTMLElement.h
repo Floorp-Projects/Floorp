@@ -39,18 +39,12 @@
 #define nsGenericHTMLElement_h___
 
 #include "nsGenericElement.h"
-#include "nsHTMLParts.h"
 #include "nsIDOMHTMLElement.h"
-#include "nsIContent.h"
-#include "nsHTMLValue.h"
-#include "nsVoidArray.h"
 #include "nsINameSpaceManager.h"  // for kNameSpaceID_None
 #include "nsIFormControl.h"
 #include "nsIDOMNSHTMLFrameElement.h"
 #include "nsIChromeEventHandler.h"
 #include "nsIFrameLoader.h"
-
-#include "nsIStatefulFrame.h"
 
 class nsIDOMAttr;
 class nsIDOMEventListener;
@@ -69,6 +63,7 @@ class nsIForm;
 class nsIPresState;
 class nsIScrollableView;
 class nsILayoutHistoryState;
+class nsHTMLValue;
 struct nsRect;
 struct nsSize;
 
