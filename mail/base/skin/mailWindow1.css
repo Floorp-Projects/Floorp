@@ -973,14 +973,14 @@ treechildren::-moz-tree-cell-text(lc-black, selected) {
 /* ..... folder pane adjustments ..... */
 
 #folderPaneHeaderContainer {
-  border-left: 1px solid ThreeDShadow;  
+  border-top: 1px solid ThreeDHighlight;
 }
 
 #folderPaneHeader {
-  height: 28px;
+  height: 27px;
   border-bottom: none;
   border-left: 1px solid ThreeDHighlight;
-  border-top: 1px solid ThreeDHighlight;
+  border-top: none;
 }
 
 /* ::::: border adjustments for focus ring and joined splitters ::::: */
@@ -1008,8 +1008,6 @@ treechildren::-moz-tree-cell-text(lc-black, selected) {
 
 #searchBox {
   border-top: 1px solid ThreeDHighlight;
-  border-right: 2px solid;
-  -moz-border-right-colors: ThreeDHighlight ThreeDShadow;
 }
 
 /* ..... message pane adjustments ..... */
