@@ -38,22 +38,14 @@ native nsMsgPriority(nsMsgPriority);
 [scriptable, uuid(4e994f60-c317-11d2-8cc9-0060b0fc14a3)]
 interface nsIMsgHdr : nsISupports
 {
+    /* general property routines - I think this can retrieve any
+       header in the db */
     [noscript] void getProperty(in string propertyName, in nsStringRef propertyValue);
     [noscript] void setProperty(in string propertyName, in nsStringRef propertyStr);
 
     unsigned long getUint32Property(in string propertyName);
     void setUint32Property(in string propertyName,
                            in unsigned long propertyVal);
-
-    readonly attribute unsigned short numReferences;
-    [noscript] void getStringReference(in long refNum, in nsCStringRef ref);
-
-    attribute PRTime date;
-    
-    attribute string messageId;
-    attribute string ccList;
-    attribute unsigned long statusOffset;
-    readonly attribute unsigned long messageOffset;
     
 	// Mark message routines
     // attribute boolean read;
@@ -69,13 +61,21 @@ interface nsIMsgHdr : nsISupports
     unsigned long OrFlags(in unsigned long flags);
     unsigned long AndFlags(in unsigned long flags);
 
+    /* various threading stuff */
     attribute nsMsgKey threadId;
     attribute nsMsgKey messageKey;
     attribute nsMsgKey threadParent;
 
+    /* meta information about the message, learned from reading the message */
     attribute unsigned long messageSize;
     attribute unsigned long lineCount;
-    
+    attribute unsigned long statusOffset;
+    readonly attribute unsigned long messageOffset;
+
+    /* common headers */
+    attribute PRTime date;
+    attribute string messageId;
+    attribute string ccList;
     attribute string author;
     attribute string subject;
     attribute string recipients;
@@ -83,6 +83,8 @@ interface nsIMsgHdr : nsISupports
     
     /* anything below here still has to be fixed */
     void setReferences(in string references);
+    readonly attribute unsigned short numReferences;
+    [noscript] void getStringReference(in long refNum, in nsCStringRef ref);
 
 	void setRecipientsArray(in string names, in string addresses,
                             in unsigned long numAddresses);
