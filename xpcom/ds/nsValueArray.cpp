@@ -120,7 +120,7 @@ nsValueArray& nsValueArray::operator=(const nsValueArray& aOther) {
 
         NS_ASSERTION(nsnull != mValueArray, "loss of value array assignment and original data.");
         if (nsnull != mValueArray) {
-            nsCRT::memcpy(mValueArray, aOther.mValueArray, mCount * mBytesPerValue);
+            memcpy(mValueArray, aOther.mValueArray, mCount * mBytesPerValue);
         }
         else {
             mCount = mCapacity = 0;

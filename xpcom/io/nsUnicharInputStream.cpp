@@ -217,7 +217,7 @@ nsresult UTF8InputStream::Read(PRUnichar* aBuf,
     rv = aCount;
   }
   memcpy(aBuf + aOffset, mUnicharData->GetBuffer() + mUnicharDataOffset,
-                rv * sizeof(PRUnichar));
+         rv * sizeof(PRUnichar));
   mUnicharDataOffset += rv;
   *aReadCount = rv;
   return NS_OK;
