@@ -23,6 +23,7 @@
  */
 
 const nsIFilePicker = Components.interfaces.nsIFilePicker;
+const nsIFileURL    = Components.interfaces.nsIFileURL;
 
 function getFileOrFolderSpec( aTitle, aFolder )
 {
@@ -43,7 +44,9 @@ function getFileOrFolderSpec( aTitle, aFolder )
 
     fp.init(window, aTitle, mode);
     fp.appendFilters(nsIFilePicker.filterAll);
-    fp.show();
+    var ret = fp.show();
+    if (ret == nsIFilePicker.returnCancel)
+      return -1;
   }
   catch(e) {
     dump("Error: " + e + "\n");
@@ -67,12 +70,10 @@ function prefNavSelectFile(folderFieldId, stringId, useNative)
     }
     else
     {
-      // Hack to get a file: url from an nsIFile
-      var tempFileSpec = Components.classes["@mozilla.org/filespec;1"].createInstance(Components.interfaces.nsIFileSpec);
-      tempFileSpec.nativePath = file.unicodePath;
-
       try {
-        var url = tempFileSpec.URLString;
+        var fileURL = Components.classes["@mozilla.org/network/standard-url;1"].createInstance(nsIFileURL);
+        fileURL.file = file;
+        var url = fileURL.spec;
         if( url )
           folderField.value = url;
       }
