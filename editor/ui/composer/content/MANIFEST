@@ -25,6 +25,7 @@
 editor.xul
 TextEditorAppShell.xul
 EditorCommands.js
+ComposerCommands.js
 EditorCommandsDebug.js
 EditorInitPage.html
 EditorInitPagePlain.html

@@ -27,6 +27,7 @@ install::
 	$(MAKE_INSTALL) editor.xul         $(DIST)\bin\chrome\editor\content
 	$(MAKE_INSTALL) TextEditorAppShell.xul     $(DIST)\bin\chrome\editor\content
 	$(MAKE_INSTALL) EditorCommands.js          $(DIST)\bin\chrome\editor\content
+	$(MAKE_INSTALL) ComposerCommands.js        $(DIST)\bin\chrome\editor\content
 	$(MAKE_INSTALL) EditorCommandsDebug.js     $(DIST)\bin\chrome\editor\content
 	$(MAKE_INSTALL) EditorInitPage.html        $(DIST)\bin\chrome\editor\content
 	$(MAKE_INSTALL) EditorInitPagePlain.html   $(DIST)\bin\chrome\editor\content
@@ -49,6 +50,7 @@ clobber::
   rm -f $(DIST)\bin\chrome\editor\content\editor.xul
   rm -f $(DIST)\bin\chrome\editor\content\TextEditorAppShell.xul
   rm -f $(DIST)\bin\chrome\editor\content\EditorCommands.js	
+  rm -f $(DIST)\bin\chrome\editor\content\ComposerCommands.js	
   rm -f $(DIST)\bin\chrome\editor\content\EditorCommandsDebug.js	
   rm -f $(DIST)\bin\chrome\editor\content\EditorInitPage.html 
   rm -f $(DIST)\bin\chrome\editor\content\EditorInitPagePlain.html	
