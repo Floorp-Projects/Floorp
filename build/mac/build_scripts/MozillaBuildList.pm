@@ -1048,11 +1048,7 @@ sub BuildIDLProjects()
     # necko
     BuildIDLProject(":mozilla:netwerk:macbuild:netwerkIDL.mcp","necko");
     BuildIDLProject(":mozilla:uriloader:macbuild:uriLoaderIDL.mcp",                 "uriLoader");
-
-    if ($main::options{cache})
-    {
-        BuildIDLProject(":mozilla:netwerk:macbuild:cacheIDL.mcp", "cache");
-    }
+    BuildIDLProject(":mozilla:netwerk:macbuild:cacheIDL.mcp", "cache");
     if ($main::options{psm}) {
     	# psm glue
     	BuildIDLProject(":mozilla:extensions:psm-glue:macbuild:psmglueIDL.mcp",         "psmglue");
@@ -1431,10 +1427,7 @@ sub BuildNeckoProjects()
     BuildOneProjectWithOutput(":mozilla:netwerk:macbuild:netwerk.mcp", "Necko$C$D.shlb", "Necko$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:netwerk:macbuild:netwerk2.mcp",          "Necko2$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
 
-    if ($main::options{cache})
-    {
-        BuildOneProject(":mozilla:netwerk:macbuild:cache.mcp",         "Cache$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
-    }
+    BuildOneProject(":mozilla:netwerk:macbuild:cache.mcp",         "Cache$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
 
     BuildOneProject(":mozilla:dom:src:jsurl:macbuild:JSUrl.mcp",       "JSUrl$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
           
@@ -1974,7 +1967,7 @@ sub BuildMozilla()
     }
     
     # build XPCShell to test the cache in debugging builds only.
-    if ($main::DEBUG && $main::options{cache}) {
+    if ($main::DEBUG) {
         BuildOneProject(":mozilla:js:macbuild:XPCShell.mcp", "XPCShellDebug", 0, 0, 1);
     }
     
