@@ -49,6 +49,8 @@ GARBAGE = *.obj *.sbr *.pdb build_number nsBuildID.h
 GARBAGE = $(GARBAGE) trace.dll trace.lib trace.exp
 !endif
 
+EXPORTS	= nsBuildID.h
+
 #//------------------------------------------------------------------------
 #//
 #// Include the common makefile rules
@@ -119,7 +121,6 @@ export:: \
         trace.dll     \
 !endif
         $(NULL)
-       $(MAKE_INSTALL) nsBuildID.h $(PUBLIC)
 !ifdef MOZ_COVERAGE
        $(MAKE_INSTALL) trace.dll $(DIST)/bin
        $(MAKE_INSTALL) trace.lib $(DIST)/lib
