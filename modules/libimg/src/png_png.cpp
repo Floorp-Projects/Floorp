@@ -18,11 +18,10 @@
 
 /* png_png.c - modified from example.c code */
 
+#include "png.h"
 #include "if.h"
 
-#include "png.h"
 #include "ipng.h"
-#include "png.h"
 
 
 #define OK 1
