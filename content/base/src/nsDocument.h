@@ -563,6 +563,8 @@ protected:
                          nsCompatibility aCompatMode,
                          nsIPresShell** aInstancePtrResult);
 
+  nsresult ResetStylesheetsToURI(nsIURI* aURI);
+
   nsresult CreateElement(nsINodeInfo *aNodeInfo, nsIDOMElement** aResult);
 
   nsDocument();
@@ -613,6 +615,8 @@ protected:
   nsCOMPtr<nsIHTMLCSSStyleSheet> mStyleAttrStyleSheet;
 
   nsCOMPtr<nsIScriptEventManager> mScriptEventManager;
+
+  nsString mBaseTarget;
 
 private:
   nsresult IsAllowedAsChild(PRUint16 aNodeType, nsIContent* aRefContent);

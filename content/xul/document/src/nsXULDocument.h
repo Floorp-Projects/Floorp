@@ -146,7 +146,6 @@ public:
     NS_IMETHOD SetMasterPrototype(nsIXULPrototypeDocument* aDocument);
     NS_IMETHOD GetMasterPrototype(nsIXULPrototypeDocument** aDocument);
     NS_IMETHOD SetCurrentPrototype(nsIXULPrototypeDocument* aDocument);
-    NS_IMETHOD PrepareStyleSheets(nsIURI* anURL);
     NS_IMETHOD AddSubtreeToDocument(nsIContent* aElement);
     NS_IMETHOD RemoveSubtreeFromDocument(nsIContent* aElement);
     NS_IMETHOD SetTemplateBuilderFor(nsIContent* aContent,

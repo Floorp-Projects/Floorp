@@ -683,6 +683,7 @@ nsDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
 void
 nsDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup)
 {
+  NS_PRECONDITION(aURI, "Null URI passed to ResetToURI");
   mDocumentTitle.Truncate();
 
   mPrincipal = nsnull;
@@ -707,24 +708,9 @@ nsDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup)
   }
   mChildren.Clear();
 
-  // The stylesheets should forget us
-  PRInt32 indx = mStyleSheets.Count();
-  while (--indx >= 0) {
-    nsIStyleSheet* sheet = mStyleSheets[indx];
-    sheet->SetOwningDocument(nsnull);
-
-    PRBool applicable;
-    sheet->GetApplicable(applicable);
-    if (applicable) {
-      RemoveStyleSheetFromStyleSets(sheet);
-    }
-
-    // XXX Tell observers?
-  }
-
-  // Release all the sheets
-  mStyleSheets.Clear();
-
+  // Reset our stylesheets
+  ResetStylesheetsToURI(aURI);
+  
   // Release the listener manager
   mListenerManager = nsnull;
 
@@ -744,8 +730,58 @@ nsDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup)
   mLastModified.Truncate();
   mContentType.Truncate();
   mContentLanguage.Truncate();
+  mBaseTarget.Truncate();
 
   mXMLDeclarationBits = 0;
+}
+
+nsresult
+nsDocument::ResetStylesheetsToURI(nsIURI* aURI)
+{
+  NS_PRECONDITION(aURI, "Null URI passed to ResetStylesheetsToURI");
+  
+  // The stylesheets should forget us
+  PRInt32 indx = mStyleSheets.Count();
+  while (--indx >= 0) {
+    nsIStyleSheet* sheet = mStyleSheets[indx];
+    sheet->SetOwningDocument(nsnull);
+
+    PRBool applicable;
+    sheet->GetApplicable(applicable);
+    if (applicable) {
+      RemoveStyleSheetFromStyleSets(sheet);
+    }
+
+    // XXX Tell observers?
+  }
+
+  // Release all the sheets
+  mStyleSheets.Clear();
+
+  // Now reset our inline style and attribute sheets.  Note that we
+  // already set their owning document to null in the loop above, but
+  // we'll reset it when we call AddStyleSheet on them.
+  nsresult rv;
+  if (mAttrStyleSheet) {
+    rv = mAttrStyleSheet->Reset(aURI);
+  } else {
+    rv = NS_NewHTMLStyleSheet(getter_AddRefs(mAttrStyleSheet), aURI, this);
+  }
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  AddStyleSheet(mAttrStyleSheet, 0);
+
+  if (mStyleAttrStyleSheet) {
+    rv = mStyleAttrStyleSheet->Reset(aURI);
+  } else {
+    rv = NS_NewHTMLCSSStyleSheet(getter_AddRefs(mStyleAttrStyleSheet), aURI,
+                                                this);
+  }
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  AddStyleSheet(mStyleAttrStyleSheet, 0);
+
+  return rv;
 }
 
 nsresult
@@ -870,12 +906,13 @@ nsDocument::SetBaseURI(nsIURI* aURI)
 void
 nsDocument::GetBaseTarget(nsAString &aBaseTarget) const
 {
-  aBaseTarget.Truncate();
+  aBaseTarget.Assign(mBaseTarget);
 }
 
 void
 nsDocument::SetBaseTarget(const nsAString &aBaseTarget)
 {
+  mBaseTarget.Assign(aBaseTarget);
 }
 
 void
