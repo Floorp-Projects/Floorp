@@ -240,3 +240,10 @@ SEC_PKCS12DecoderSetTargetTokenCAs;
 ;+    local:
 ;+       *;
 ;+};
+;+NSS_3.9 {   # NSS 3.9 release
+;+    global:
+SEC_PKCS7DecoderAbort;
+SEC_PKCS7EncoderAbort;
+;+    local:
+;+       *;
+;+};

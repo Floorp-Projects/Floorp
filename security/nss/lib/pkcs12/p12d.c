@@ -716,6 +716,7 @@ sec_pkcs12_decoder_safe_contents_callback(void *arg, const char *buf,
 	 * we didn't have the correct password. */
 	PORT_SetError(SEC_ERROR_BAD_PASSWORD);
 	p12dcx->errorValue = SEC_ERROR_PKCS12_CORRUPT_PFX_STRUCTURE;
+	SEC_PKCS7DecoderAbort(p12dcx->currentASafeP7Dcx,SEC_ERROR_BAD_PASSWORD);
 	goto loser;
     }
 
