@@ -2881,6 +2881,15 @@ void CommitInstall(void)
       /* PRE_XPCOM process file manipulation functions */
       ProcessFileOpsForAll(T_PRE_XPCOM);
 
+      if(CheckInstances())
+      {
+        bSDUserCanceled = TRUE;
+        CleanupXpcomFile();
+        PostQuitMessage(0);
+
+        return;
+      }
+
       if(ProcessXpinstallEngine() != WIZ_OK)
       {
         bSDUserCanceled = TRUE;
@@ -2901,15 +2910,6 @@ void CommitInstall(void)
       /* save the installer files in the local machine */
       if(diAdditionalOptions.bSaveInstaller)
         SaveInstallerFiles();
-
-      if(CheckInstances())
-      {
-        bSDUserCanceled = TRUE;
-        CleanupXpcomFile();
-        PostQuitMessage(0);
-
-        return;
-      }
 
       lstrcat(szDestPath, "uninstall\\");
       CreateDirectoriesAll(szDestPath, ADD_TO_UNINSTALL_LOG);
