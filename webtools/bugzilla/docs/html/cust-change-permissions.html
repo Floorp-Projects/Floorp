@@ -1,0 +1,306 @@
+<HTML
+><HEAD
+><TITLE
+>Change Permission Customization</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.76b+
+"><LINK
+REL="HOME"
+TITLE="The Bugzilla Guide"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Administering Bugzilla"
+HREF="administration.html"><LINK
+REL="PREVIOUS"
+TITLE="Template Customization"
+HREF="cust-templates.html"><LINK
+REL="NEXT"
+TITLE="Upgrading to New Releases"
+HREF="upgrading.html"></HEAD
+><BODY
+CLASS="section"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>The Bugzilla Guide</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="cust-templates.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 5. Administering Bugzilla</TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="upgrading.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="section"
+><H1
+CLASS="section"
+><A
+NAME="cust-change-permissions"
+></A
+>5.8. Change Permission Customization</H1
+><DIV
+CLASS="warning"
+><P
+></P
+><TABLE
+CLASS="warning"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/warning.gif"
+HSPACE="5"
+ALT="Warning"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>&#13;        This feature should be considered experimental; the Bugzilla code you
+        will be changing is not stable, and could change or move between 
+        versions. Be aware that if you make modifications to it, you may have
+        to re-make them or port them if Bugzilla changes internally between
+        versions.
+      </P
+></TD
+></TR
+></TABLE
+></DIV
+><P
+>&#13;      Companies often have rules about which employees, or classes of employees,
+      are allowed to change certain things in the bug system. For example, 
+      only the bug's designated QA Contact may be allowed to VERIFY the bug.
+      Bugzilla has been
+      designed to make it easy for you to write your own custom rules to define
+      who is allowed to make what sorts of value transition.
+    </P
+><P
+>&#13;      For maximum flexibility, customizing this means editing Bugzilla's Perl 
+      code. This gives the administrator complete control over exactly who is
+      allowed to do what. The relevant function is called 
+      <TT
+CLASS="filename"
+>CheckCanChangeField()</TT
+>,
+      and is found in <TT
+CLASS="filename"
+>process_bug.cgi</TT
+> in your 
+      Bugzilla directory. If you open that file and grep for 
+      "sub CheckCanChangeField", you'll find it.
+    </P
+><P
+>&#13;      This function has been carefully commented to allow you to see exactly
+      how it works, and give you an idea of how to make changes to it. Certain
+      marked sections should not be changed - these are the "plumbing" which
+      makes the rest of the function work. In between those sections, you'll
+      find snippets of code like:
+      <TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="programlisting"
+>    # Allow the owner to change anything.
+    if ($ownerid eq $whoid) {
+        return 1;
+    }</PRE
+></FONT
+></TD
+></TR
+></TABLE
+>
+      It's fairly obvious what this piece of code does.
+    </P
+><P
+>&#13;      So, how does one go about changing this function? Well, simple changes
+      can be made just be removing pieces - for example, if you wanted to 
+      prevent any user adding a comment to a bug, just remove the lines marked
+      "Allow anyone to change comments." And if you want the reporter to have
+      no special rights on bugs they have filed, just remove the entire section
+      which refers to him.
+    </P
+><P
+>&#13;      More complex customizations are not much harder. Basically, you add
+      a check in the right place in the function, i.e. after all the variables
+      you are using have been set up. So, don't look at $ownerid before 
+      $ownerid has been obtained from the database. You can either add a
+      positive check, which returns 1 (allow) if certain conditions are true,
+      or a negative check, which returns 0 (deny.) E.g.:
+      <TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="programlisting"
+>    if ($field eq "qacontact") {
+        if (UserInGroup("quality_assurance")) {
+            return 1;
+        } 
+        else {
+            return 0;
+        }
+    }</PRE
+></FONT
+></TD
+></TR
+></TABLE
+>
+      This says that only users in the group "quality_assurance" can change
+      the QA Contact field of a bug. Getting more weird:
+      <TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="programlisting"
+>    if (($field eq "priority") &#38;&#38;
+        ($vars-&#62;{'user'}{'login'} =~ /.*\@example\.com$/))
+    {
+        if ($oldvalue eq "P1") {
+            return 1;
+        } 
+        else {
+            return 0;
+        }
+    }</PRE
+></FONT
+></TD
+></TR
+></TABLE
+>
+      This says that if the user is trying to change the priority field,
+      and their email address is @example.com, they can only do so if the
+      old value of the field was "P1". Not very useful, but illustrative.
+    </P
+><P
+>&#13;      For a list of possible field names, look in 
+      <TT
+CLASS="filename"
+>data/versioncache</TT
+> for the list called 
+      <TT
+CLASS="filename"
+>@::log_columns</TT
+>. If you need help writing custom
+      rules for your organization, ask in the newsgroup.
+    </P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="cust-templates.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="upgrading.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Template Customization</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="administration.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Upgrading to New Releases</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

@@ -1,7 +1,7 @@
 <HTML
 ><HEAD
 ><TITLE
->Perforce SCM</TITLE
+>Modifying Your Running System</TITLE
 ><META
 NAME="GENERATOR"
 CONTENT="Modular DocBook HTML Stylesheet Version 1.76b+
@@ -10,14 +10,14 @@ REL="HOME"
 TITLE="The Bugzilla Guide"
 HREF="index.html"><LINK
 REL="UP"
-TITLE="Bugzilla Variants and Competitors"
-HREF="variants.html"><LINK
+TITLE="The Bugzilla Database"
+HREF="database.html"><LINK
 REL="PREVIOUS"
-TITLE="Scarab"
-HREF="variant-scarab.html"><LINK
+TITLE="The Bugzilla Database"
+HREF="database.html"><LINK
 REL="NEXT"
-TITLE="SourceForge"
-HREF="variant-sourceforge.html"></HEAD
+TITLE="MySQL Bugzilla Database Introduction"
+HREF="dbdoc.html"></HEAD
 ><BODY
 CLASS="section"
 BGCOLOR="#FFFFFF"
@@ -45,7 +45,7 @@ WIDTH="10%"
 ALIGN="left"
 VALIGN="bottom"
 ><A
-HREF="variant-scarab.html"
+HREF="database.html"
 ACCESSKEY="P"
 >Prev</A
 ></TD
@@ -53,13 +53,13 @@ ACCESSKEY="P"
 WIDTH="80%"
 ALIGN="center"
 VALIGN="bottom"
->Appendix D. Bugzilla Variants and Competitors</TD
+>Appendix B. The Bugzilla Database</TD
 ><TD
 WIDTH="10%"
 ALIGN="right"
 VALIGN="bottom"
 ><A
-HREF="variant-sourceforge.html"
+HREF="dbdoc.html"
 ACCESSKEY="N"
 >Next</A
 ></TD
@@ -73,27 +73,49 @@ CLASS="section"
 ><H1
 CLASS="section"
 ><A
-NAME="variant-perforce"
+NAME="dbmodify"
 ></A
->D.5. Perforce SCM</H1
+>B.1. Modifying Your Running System</H1
 ><P
->Although Perforce isn't really a bug tracker, it can be used as
-    such through the <SPAN
+>Bugzilla optimizes database lookups by storing all relatively
+      static information in the 
+      <TT
+CLASS="filename"
+>versioncache</TT
+> file, located in the 
+      <TT
+CLASS="filename"
+>data/</TT
+>
+      subdirectory under your installation directory.</P
+><P
+>If you make a change to the structural data in your database (the
+      versions table for example), or to the 
+      <SPAN
 CLASS="QUOTE"
->"jobs"</SPAN
+>"constants"</SPAN
 >
-    functionality.</P
-><P
->URL: 
-    <A
-HREF="http://www.perforce.com/perforce/technotes/note052.html"
-TARGET="_top"
->&#13;    http://www.perforce.com/perforce/technotes/note052.html
-    </A
+
+      encoded in <TT
+CLASS="filename"
+>defparams.pl</TT
+>, you will need to remove 
+      the cached content from the data directory (by doing a 
+      <SPAN
+CLASS="QUOTE"
+>"rm data/versioncache"</SPAN
 >
-    </P
+
+      ), or your changes won't show up.</P
 ><P
->This section last updated 27 Jul 2002</P
+> <TT
+CLASS="filename"
+>versioncache</TT
+> 
+      gets automatically regenerated whenever it's more than
+      an hour old, so Bugzilla will eventually notice your changes by itself,
+      but generally you want it to notice right away, so that you can test
+      things.</P
 ></DIV
 ><DIV
 CLASS="NAVFOOTER"
@@ -111,7 +133,7 @@ WIDTH="33%"
 ALIGN="left"
 VALIGN="top"
 ><A
-HREF="variant-scarab.html"
+HREF="database.html"
 ACCESSKEY="P"
 >Prev</A
 ></TD
@@ -129,7 +151,7 @@ WIDTH="33%"
 ALIGN="right"
 VALIGN="top"
 ><A
-HREF="variant-sourceforge.html"
+HREF="dbdoc.html"
 ACCESSKEY="N"
 >Next</A
 ></TD
@@ -139,13 +161,13 @@ ACCESSKEY="N"
 WIDTH="33%"
 ALIGN="left"
 VALIGN="top"
->Scarab</TD
+>The Bugzilla Database</TD
 ><TD
 WIDTH="34%"
 ALIGN="center"
 VALIGN="top"
 ><A
-HREF="variants.html"
+HREF="database.html"
 ACCESSKEY="U"
 >Up</A
 ></TD
@@ -153,7 +175,7 @@ ACCESSKEY="U"
 WIDTH="33%"
 ALIGN="right"
 VALIGN="top"
->SourceForge</TD
+>MySQL Bugzilla Database Introduction</TD
 ></TR
 ></TABLE
 ></DIV

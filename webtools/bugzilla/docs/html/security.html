@@ -16,7 +16,7 @@ REL="PREVIOUS"
 TITLE="Groups and Group Security"
 HREF="groups.html"><LINK
 REL="NEXT"
-TITLE="Template Customisation"
+TITLE="Template Customization"
 HREF="cust-templates.html"></HEAD
 ><BODY
 CLASS="section"
@@ -149,12 +149,6 @@ TARGET="_top"
 TYPE="1"
 ><LI
 ><P
->Ensure you are running at least MysQL version 3.22.32 or newer.
-        Earlier versions had notable security holes and (from a security
-        point of view) poor default configuration choices.</P
-></LI
-><LI
-><P
 >&#13;        <EM
 >There is no substitute for understanding the tools on your
         system!</EM
@@ -170,9 +164,12 @@ TARGET="_top"
 ></LI
 ><LI
 ><P
->Lock down /etc/inetd.conf. Heck, disable inet entirely on this
-        box. It should only listen to port 25 for Sendmail and port 80 for
-        Apache.</P
+>Lock down <TT
+CLASS="filename"
+>/etc/inetd.conf</TT
+>. Heck, disable
+        inet entirely on this box. It should only listen to port 25 for
+        Sendmail and port 80 for Apache.</P
 ></LI
 ><LI
 ><P
@@ -232,29 +229,106 @@ CLASS="QUOTE"
 ><LI
 ><P
 >Ensure you have adequate access controls for the
-        $BUGZILLA_HOME/data/ directory, as well as the
-        $BUGZILLA_HOME/localconfig file.
+        <TT
+CLASS="filename"
+>$BUGZILLA_HOME/data/</TT
+> directory, as well as the
+        <TT
+CLASS="filename"
+>$BUGZILLA_HOME/localconfig</TT
+> file.
         The localconfig file stores your "bugs" database account password. 
         In addition, some
-        files under $BUGZILLA_HOME/data/ store sensitive information.
+        files under <TT
+CLASS="filename"
+>$BUGZILLA_HOME/data/</TT
+> store sensitive
+        information.
         </P
 ><P
->Bugzilla provides default .htaccess files to protect the most
-        common Apache installations. However, you should verify these are
-        adequate according to the site-wide security policy of your web
-        server, and ensure that the .htaccess files are allowed to
-        "override" default permissions set in your Apache configuration
-        files. Covering Apache security is beyond the scope of this Guide;
-        please consult the Apache documentation for details.</P
+>Also, beware that some text editors create backup files in the
+        current working directory so you need to also secure files like
+        <TT
+CLASS="filename"
+>localconfig~</TT
+>.
+        </P
+><DIV
+CLASS="note"
+><P
+></P
+><TABLE
+CLASS="note"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/note.gif"
+HSPACE="5"
+ALT="Note"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>Simply blocking <TT
+CLASS="computeroutput"
+>.*localconfig.*</TT
+>
+          won't work because the QuickSearch feature requires the web browser
+          to be able to retrieve <TT
+CLASS="filename"
+>localconfig.js</TT
+> and
+          others may be introduced in the future (see 
+          <A
+HREF="http://bugzilla.mozilla.org/show_bug.cgi?id=186383"
+TARGET="_top"
+>bug
+          186383</A
+> for more information.
+          </P
+></TD
+></TR
+></TABLE
+></DIV
+><P
+>Bugzilla provides default <TT
+CLASS="filename"
+>.htaccess</TT
+> files
+        to protect the most common Apache installations. However, you should
+        verify these are adequate according to the site-wide security policy
+        of your web server, and ensure that the <TT
+CLASS="filename"
+>.htaccess</TT
+>
+        files are allowed to <SPAN
+CLASS="QUOTE"
+>"override"</SPAN
+> default permissions set
+        in your Apache configuration files. Covering Apache security is beyond
+        the scope of this Guide; please consult the Apache documentation for
+        details.
+        </P
 ><P
 >If you are using a web server that does not support the
-        .htaccess control method, 
+        <TT
+CLASS="filename"
+>.htaccess</TT
+> control method, 
         <EM
 >you are at risk!</EM
 >
 
         After installing, check to see if you can view the file
-        "localconfig" in your web browser (e.g.: 
+        <TT
+CLASS="filename"
+>localconfig</TT
+> in your web browser (e.g.: 
         <A
 HREF="http://bugzilla.mozilla.org/localconfig"
 TARGET="_top"
@@ -266,11 +340,17 @@ TARGET="_top"
         problem before deploying Bugzilla. If, however, it gives you a
         "Forbidden" error, then it probably respects the .htaccess
         conventions and you are good to go.</P
+></LI
+><LI
 ><P
 >When you run checksetup.pl, the script will attempt to modify
         various permissions on files which Bugzilla uses. If you do not have
-        a webservergroup set in the localconfig file, then Bugzilla will have
-        to make certain files world readable and/or writable. 
+        a webservergroup set in the <TT
+CLASS="filename"
+>localconfig</TT
+> file,
+        then Bugzilla will have to make certain files world readable and/or
+        writable. 
         <EM
 >THIS IS INSECURE!</EM
 >
@@ -307,16 +387,26 @@ VALIGN="TOP"
 ></TABLE
 ></DIV
 ><P
->On Apache, you can use .htaccess files to protect access to
-        these directories, as outlined in 
+>On Apache, you can use <TT
+CLASS="filename"
+>.htaccess</TT
+> files to
+        protect access to these directories, as outlined in Bugs 
         <A
 HREF="http://bugzilla.mozilla.org/show_bug.cgi?id=57161"
 TARGET="_top"
->Bug
-        57161</A
+>&#13;        57161</A
+> and
+        <A
+HREF="http://bugzilla.mozilla.org/show_bug.cgi?id=186383"
+TARGET="_top"
+>&#13;        186383</A
 >
 
-        for the localconfig file, and 
+        for the <TT
+CLASS="filename"
+>localconfig</TT
+> file, and 
         <A
 HREF="http://bugzilla.mozilla.org/show_bug.cgi?id=65572"
 TARGET="_top"
@@ -324,30 +414,188 @@ TARGET="_top"
         65572</A
 >
 
-        for adequate protection in your data/ directory.</P
+        for adequate protection in your <TT
+CLASS="filename"
+>data/</TT
+> directory.
+        Also, don't forget about the <TT
+CLASS="filename"
+>template/</TT
+> and
+        <TT
+CLASS="filename"
+>Bugzilla/</TT
+> directories and to allow access to the
+        <TT
+CLASS="filename"
+>data/webdot</TT
+> directory for the
+        <TT
+CLASS="computeroutput"
+>192.20.225.10</TT
+> IP address if you are
+        using webdot from research.att.com.  The easiest way to
+        accomplish this is to set <TT
+CLASS="function"
+>$create_htaccess</TT
+> to 1
+        in <TT
+CLASS="filename"
+>localconfig</TT
+>.  However, the information below
+        is provided for those that want to know exactly what is created.
+        </P
 ><P
 >Note the instructions which follow are Apache-specific. If you
         use IIS, Netscape, or other non-Apache web servers, please consult
         your system documentation for how to secure these files from being
         transmitted to curious users.</P
 ><P
->Place the following text into a file named ".htaccess",
-        readable by your web server, in your $BUGZILLA_HOME/data directory. 
-        <P
-CLASS="literallayout"
->&#60;Files&nbsp;comments&#62;&nbsp;allow&nbsp;from&nbsp;all&nbsp;&#60;/Files&#62;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;deny&nbsp;from&nbsp;all</P
+><TT
+CLASS="filename"
+>$BUGZILLA_HOME/.htaccess</TT
+>
+        <TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="programlisting"
+>&#13;# don't allow people to retrieve non-cgi executable files or our private data
+&#60;FilesMatch ^(.*\.pl|.*localconfig.*|processmail|runtests.sh)$&#62;
+  deny from all
+&#60;/FilesMatch&#62;
+&#60;FilesMatch ^(localconfig.js|localconfig.rdf)$&#62;
+  allow from all
+&#60;/FilesMatch&#62;
+        </PRE
+></FONT
+></TD
+></TR
+></TABLE
+> 
+        </P
+><P
+><TT
+CLASS="filename"
+>$BUGZILLA_HOME/data/.htaccess</TT
+> 
+        <TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="programlisting"
+>&#13;# nothing in this directory is retrievable unless overriden by an .htaccess
+# in a subdirectory; the only exception is duplicates.rdf, which is used by
+# duplicates.xul and must be loadable over the web
+deny from all
+&#60;Files duplicates.rdf&#62;
+  allow from all
+&#60;/Files&#62;
+        </PRE
+></FONT
+></TD
+></TR
+></TABLE
 >
         </P
 ><P
->Place the following text into a file named ".htaccess",
-        readable by your web server, in your $BUGZILLA_HOME/ directory. 
-        <P
-CLASS="literallayout"
->&#60;Files&nbsp;localconfig&#62;&nbsp;deny&nbsp;from&nbsp;all&nbsp;&#60;/Files&#62;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;allow&nbsp;from&nbsp;all</P
+><TT
+CLASS="filename"
+>$BUGZILLA_HOME/data/webdot</TT
+>
+        <TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="programlisting"
+>&#13;# Restrict access to .dot files to the public webdot server at research.att.com 
+# if research.att.com ever changed their IP, or if you use a different
+# webdot server, you'll need to edit this
+&#60;FilesMatch ^[0-9]+\.dot$&#62;
+  Allow from 192.20.225.10
+  Deny from all
+&#60;/FilesMatch&#62;
+
+# Allow access by a local copy of 'dot' to .png, .gif, .jpg, and
+# .map files
+&#60;FilesMatch ^[0-9]+\.(png|gif|jpg|map)$&#62;
+  Allow from all
+&#60;/FilesMatch&#62;
+
+# And no directory listings, either.
+Deny from all
+        </PRE
+></FONT
+></TD
+></TR
+></TABLE
 >
         </P
+><P
+><TT
+CLASS="filename"
+>$BUGZILLA_HOME/Bugzilla/.htaccess</TT
+>
+        <TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="programlisting"
+>&#13;# nothing in this directory is retrievable unless overriden by an .htaccess
+# in a subdirectory
+deny from all
+         </PRE
+></FONT
+></TD
+></TR
+></TABLE
+>
+         </P
+><P
+><TT
+CLASS="filename"
+>$BUGZILLA_HOME/template/.htaccess</TT
+>
+        <TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="programlisting"
+>&#13;# nothing in this directory is retrievable unless overriden by an .htaccess
+# in a subdirectory
+deny from all
+         </PRE
+></FONT
+></TD
+></TR
+></TABLE
+>
+         </P
 ></LI
 ></OL
 >
@@ -411,7 +659,7 @@ ACCESSKEY="U"
 WIDTH="33%"
 ALIGN="right"
 VALIGN="top"
->Template Customisation</TD
+>Template Customization</TD
 ></TR
 ></TABLE
 ></DIV

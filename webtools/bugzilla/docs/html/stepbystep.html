@@ -152,7 +152,7 @@ HREF="http://www.mysql.com/"
 TARGET="_top"
 >MySQL database server</A
 >
-    (3.22.5 or greater)
+    (3.23.6 or greater)
   </P
 ></LI
 ><LI
@@ -162,7 +162,7 @@ HREF="http://www.perl.org"
 TARGET="_top"
 >Perl</A
 >
-    (5.005 or greater, 5.6.1 is recommended if you wish to
+    (5.6, 5.6.1 is recommended if you wish to
     use Bundle::Bugzilla)
   </P
 ></LI
@@ -180,7 +180,7 @@ HREF="http://www.template-toolkit.org"
 TARGET="_top"
 >Template</A
 >
-        (v2.07)
+        (v2.08)
       </P
 ></LI
 ><LI
@@ -189,7 +189,8 @@ TARGET="_top"
 HREF="http://www.perldoc.com/perl5.6/lib/File/Temp.html"
 TARGET="_top"
 >&#13;	File::Temp</A
-> (v1.804) (Prerequisite for Template)
+>
+        (1.804) (Prerequisite for Template)
       </P
 ></LI
 ><LI
@@ -200,7 +201,7 @@ TARGET="_top"
 >AppConfig 
         </A
 >
-        (v1.52)
+        (1.52)
       </P
 ></LI
 ><LI
@@ -210,7 +211,7 @@ HREF="http://www.cpan.org/authors/id/MUIR/modules/Text-Tabs%2BWrap-2001.0131.tar
 TARGET="_top"
 >Text::Wrap</A
 > 
-        (v2001.0131)
+        (2001.0131)
       </P
 ></LI
 ><LI
@@ -221,7 +222,7 @@ TARGET="_top"
 >File::Spec 
         </A
 >
-        (v0.8.2)
+        (0.82)
       </P
 ></LI
 ><LI
@@ -243,7 +244,7 @@ TARGET="_top"
 >DBD::mysql
         </A
 > 
-        (v1.2209)
+        (1.2209)
       </P
 ></LI
 ><LI
@@ -253,7 +254,7 @@ HREF="http://www.cpan.org/modules/by-module/DBI/"
 TARGET="_top"
 >DBI</A
 > 
-        (v1.13)
+        (1.13)
       </P
 ></LI
 ><LI
@@ -269,8 +270,13 @@ TARGET="_top"
 ></LI
 ><LI
 ><P
->&#13;        CGI::Carp 
-        (any)
+>&#13;        <A
+HREF="http://www.cpan.org/modules/by-module/CGI/"
+TARGET="_top"
+>CGI
+        </A
+> 
+        (2.88)
       </P
 ></LI
 ></OL
@@ -287,7 +293,19 @@ HREF="http://www.cpan.org/modules/by-module/GD/"
 TARGET="_top"
 >GD</A
 >
-        (v1.19) for bug charting
+        (1.20) for bug charting
+      </P
+></LI
+><LI
+><P
+>&#13;        GD::Chart
+        (any) for bug charting
+      </P
+></LI
+><LI
+><P
+>&#13;        GD::Text::Align
+        (any) for bug charting
       </P
 ></LI
 ><LI
@@ -298,7 +316,7 @@ TARGET="_top"
 >Chart::Base 
         </A
 >
-        (v0.99c) for bug charting
+        (0.99c) for bug charting
       </P
 ></LI
 ><LI
@@ -606,10 +624,10 @@ TARGET="_top"
 >perl.com</A
 > for the rare 
       *nix systems which don't have it. 
-      Although Bugzilla runs with all post-5.005
-      versions of Perl, it's a good idea to be up to the very latest version
+      Although Bugzilla runs with perl 5.6,
+      it's a good idea to be up to the very latest version
       if you can when running Bugzilla. As of this writing, that is Perl
-      version 5.6.1.</P
+      version 5.8.</P
 ><DIV
 CLASS="tip"
 ><A
@@ -845,7 +863,7 @@ CLASS="section"
 ><H3
 CLASS="section"
 ><A
-NAME="AEN645"
+NAME="AEN650"
 ></A
 >4.1.5.1. DBI</H3
 ><P
@@ -860,7 +878,7 @@ CLASS="section"
 ><H3
 CLASS="section"
 ><A
-NAME="AEN648"
+NAME="AEN653"
 ></A
 >4.1.5.2. Data::Dumper</H3
 ><P
@@ -874,7 +892,7 @@ CLASS="section"
 ><H3
 CLASS="section"
 ><A
-NAME="AEN651"
+NAME="AEN656"
 ></A
 >4.1.5.3. MySQL-related modules</H3
 ><P
@@ -900,7 +918,7 @@ CLASS="section"
 ><H3
 CLASS="section"
 ><A
-NAME="AEN656"
+NAME="AEN661"
 ></A
 >4.1.5.4. TimeDate modules</H3
 ><P
@@ -916,7 +934,7 @@ CLASS="section"
 ><H3
 CLASS="section"
 ><A
-NAME="AEN659"
+NAME="AEN664"
 ></A
 >4.1.5.5. GD (optional)</H3
 ><P
@@ -971,7 +989,7 @@ CLASS="section"
 ><H3
 CLASS="section"
 ><A
-NAME="AEN666"
+NAME="AEN671"
 ></A
 >4.1.5.6. Chart::Base (optional)</H3
 ><P
@@ -986,17 +1004,15 @@ CLASS="section"
 ><H3
 CLASS="section"
 ><A
-NAME="AEN669"
+NAME="AEN674"
 ></A
 >4.1.5.7. Template Toolkit</H3
 ><P
 >When you install Template Toolkit, you'll get asked various
       questions about features to enable. The defaults are fine, except
       that it is recommended you use the high speed XS Stash of the Template
-      Toolkit, in order to achieve best performance.  However, there are
-      known problems with XS Stash and Perl 5.005_02 and lower.  If you
-      wish to use these older versions of Perl, please use the regular
-      stash.</P
+      Toolkit, in order to achieve best performance.
+      </P
 ></DIV
 ></DIV
 ><DIV
@@ -1004,7 +1020,7 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN672"
+NAME="AEN677"
 ></A
 >4.1.6. HTTP Server</H2
 ><P
@@ -1182,7 +1198,7 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN691"
+NAME="AEN696"
 ></A
 >4.1.7. Bugzilla</H2
 ><P
@@ -1352,7 +1368,7 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN716"
+NAME="AEN721"
 ></A
 >4.1.8. Setting Up the MySQL Database</H2
 ><P
@@ -1525,7 +1541,7 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN752"
+NAME="AEN757"
 ></A
 >4.1.9. <TT
 CLASS="filename"
@@ -1678,7 +1694,7 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN784"
+NAME="AEN789"
 ></A
 >4.1.10. Securing MySQL</H2
 ><P
@@ -1956,7 +1972,7 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN850"
+NAME="AEN855"
 ></A
 >4.1.11. Configuring Bugzilla</H2
 ><P

@@ -245,12 +245,12 @@ HREF="#security"
 ><DT
 >5.7. <A
 HREF="#cust-templates"
->Template Customisation</A
+>Template Customization</A
 ></DT
 ><DT
 >5.8. <A
 HREF="#cust-change-permissions"
->Change Permission Customisation</A
+>Change Permission Customization</A
 ></DT
 ><DT
 >5.9. <A
@@ -369,19 +369,19 @@ CLASS="LOT"
 ></DT
 ><DT
 >4-1. <A
-HREF="#AEN1028"
+HREF="#AEN1035"
 >Installing ActivePerl ppd Modules on Microsoft
             Windows</A
 ></DT
 ><DT
 >4-2. <A
-HREF="#AEN1041"
+HREF="#AEN1048"
 >Installing OpenInteract ppd Modules manually on Microsoft
             Windows</A
 ></DT
 ><DT
 >4-3. <A
-HREF="#AEN1207"
+HREF="#AEN1214"
 >Removing encrypt() for Windows NT Bugzilla version 2.12 or
           earlier</A
 ></DT
@@ -2588,7 +2588,7 @@ HREF="http://www.mysql.com/"
 TARGET="_top"
 >MySQL database server</A
 >
-    (3.22.5 or greater)
+    (3.23.6 or greater)
   </P
 ></LI
 ><LI
@@ -2598,7 +2598,7 @@ HREF="http://www.perl.org"
 TARGET="_top"
 >Perl</A
 >
-    (5.005 or greater, 5.6.1 is recommended if you wish to
+    (5.6, 5.6.1 is recommended if you wish to
     use Bundle::Bugzilla)
   </P
 ></LI
@@ -2616,7 +2616,7 @@ HREF="http://www.template-toolkit.org"
 TARGET="_top"
 >Template</A
 >
-        (v2.07)
+        (v2.08)
       </P
 ></LI
 ><LI
@@ -2625,7 +2625,8 @@ TARGET="_top"
 HREF="http://www.perldoc.com/perl5.6/lib/File/Temp.html"
 TARGET="_top"
 >&#13;	File::Temp</A
-> (v1.804) (Prerequisite for Template)
+>
+        (1.804) (Prerequisite for Template)
       </P
 ></LI
 ><LI
@@ -2636,7 +2637,7 @@ TARGET="_top"
 >AppConfig 
         </A
 >
-        (v1.52)
+        (1.52)
       </P
 ></LI
 ><LI
@@ -2646,7 +2647,7 @@ HREF="http://www.cpan.org/authors/id/MUIR/modules/Text-Tabs%2BWrap-2001.0131.tar
 TARGET="_top"
 >Text::Wrap</A
 > 
-        (v2001.0131)
+        (2001.0131)
       </P
 ></LI
 ><LI
@@ -2657,7 +2658,7 @@ TARGET="_top"
 >File::Spec 
         </A
 >
-        (v0.8.2)
+        (0.82)
       </P
 ></LI
 ><LI
@@ -2679,7 +2680,7 @@ TARGET="_top"
 >DBD::mysql
         </A
 > 
-        (v1.2209)
+        (1.2209)
       </P
 ></LI
 ><LI
@@ -2689,7 +2690,7 @@ HREF="http://www.cpan.org/modules/by-module/DBI/"
 TARGET="_top"
 >DBI</A
 > 
-        (v1.13)
+        (1.13)
       </P
 ></LI
 ><LI
@@ -2705,8 +2706,13 @@ TARGET="_top"
 ></LI
 ><LI
 ><P
->&#13;        CGI::Carp 
-        (any)
+>&#13;        <A
+HREF="http://www.cpan.org/modules/by-module/CGI/"
+TARGET="_top"
+>CGI
+        </A
+> 
+        (2.88)
       </P
 ></LI
 ></OL
@@ -2723,7 +2729,19 @@ HREF="http://www.cpan.org/modules/by-module/GD/"
 TARGET="_top"
 >GD</A
 >
-        (v1.19) for bug charting
+        (1.20) for bug charting
+      </P
+></LI
+><LI
+><P
+>&#13;        GD::Chart
+        (any) for bug charting
+      </P
+></LI
+><LI
+><P
+>&#13;        GD::Text::Align
+        (any) for bug charting
       </P
 ></LI
 ><LI
@@ -2734,7 +2752,7 @@ TARGET="_top"
 >Chart::Base 
         </A
 >
-        (v0.99c) for bug charting
+        (0.99c) for bug charting
       </P
 ></LI
 ><LI
@@ -3042,10 +3060,10 @@ TARGET="_top"
 >perl.com</A
 > for the rare 
       *nix systems which don't have it. 
-      Although Bugzilla runs with all post-5.005
-      versions of Perl, it's a good idea to be up to the very latest version
+      Although Bugzilla runs with perl 5.6,
+      it's a good idea to be up to the very latest version
       if you can when running Bugzilla. As of this writing, that is Perl
-      version 5.6.1.</P
+      version 5.8.</P
 ><DIV
 CLASS="tip"
 ><A
@@ -3281,7 +3299,7 @@ CLASS="section"
 ><HR><H3
 CLASS="section"
 ><A
-NAME="AEN645"
+NAME="AEN650"
 ></A
 >4.1.5.1. DBI</H3
 ><P
@@ -3296,7 +3314,7 @@ CLASS="section"
 ><HR><H3
 CLASS="section"
 ><A
-NAME="AEN648"
+NAME="AEN653"
 ></A
 >4.1.5.2. Data::Dumper</H3
 ><P
@@ -3310,7 +3328,7 @@ CLASS="section"
 ><HR><H3
 CLASS="section"
 ><A
-NAME="AEN651"
+NAME="AEN656"
 ></A
 >4.1.5.3. MySQL-related modules</H3
 ><P
@@ -3336,7 +3354,7 @@ CLASS="section"
 ><HR><H3
 CLASS="section"
 ><A
-NAME="AEN656"
+NAME="AEN661"
 ></A
 >4.1.5.4. TimeDate modules</H3
 ><P
@@ -3352,7 +3370,7 @@ CLASS="section"
 ><HR><H3
 CLASS="section"
 ><A
-NAME="AEN659"
+NAME="AEN664"
 ></A
 >4.1.5.5. GD (optional)</H3
 ><P
@@ -3407,7 +3425,7 @@ CLASS="section"
 ><HR><H3
 CLASS="section"
 ><A
-NAME="AEN666"
+NAME="AEN671"
 ></A
 >4.1.5.6. Chart::Base (optional)</H3
 ><P
@@ -3422,17 +3440,15 @@ CLASS="section"
 ><HR><H3
 CLASS="section"
 ><A
-NAME="AEN669"
+NAME="AEN674"
 ></A
 >4.1.5.7. Template Toolkit</H3
 ><P
 >When you install Template Toolkit, you'll get asked various
       questions about features to enable. The defaults are fine, except
       that it is recommended you use the high speed XS Stash of the Template
-      Toolkit, in order to achieve best performance.  However, there are
-      known problems with XS Stash and Perl 5.005_02 and lower.  If you
-      wish to use these older versions of Perl, please use the regular
-      stash.</P
+      Toolkit, in order to achieve best performance.
+      </P
 ></DIV
 ></DIV
 ><DIV
@@ -3440,7 +3456,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN672"
+NAME="AEN677"
 ></A
 >4.1.6. HTTP Server</H2
 ><P
@@ -3618,7 +3634,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN691"
+NAME="AEN696"
 ></A
 >4.1.7. Bugzilla</H2
 ><P
@@ -3788,7 +3804,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN716"
+NAME="AEN721"
 ></A
 >4.1.8. Setting Up the MySQL Database</H2
 ><P
@@ -3961,7 +3977,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN752"
+NAME="AEN757"
 ></A
 >4.1.9. <TT
 CLASS="filename"
@@ -4114,7 +4130,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN784"
+NAME="AEN789"
 ></A
 >4.1.10. Securing MySQL</H2
 ><P
@@ -4392,7 +4408,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN850"
+NAME="AEN855"
 ></A
 >4.1.11. Configuring Bugzilla</H2
 ><P
@@ -4418,7 +4434,7 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN856"
+NAME="AEN861"
 ></A
 >4.2.1. Dependency Charts</H2
 ><P
@@ -4482,7 +4498,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN871"
+NAME="AEN876"
 ></A
 >4.2.2. Bug Graphs</H2
 ><P
@@ -4541,7 +4557,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN884"
+NAME="AEN889"
 ></A
 >4.2.3. The Whining Cron</H2
 ><P
@@ -4837,10 +4853,42 @@ CLASS="QUOTE"
 CLASS="QUOTE"
 >"UTF-8"</SPAN
 >.</P
+><DIV
+CLASS="note"
 ><P
->Note: using &#60;meta&#62; tags to set the charset is not
-      recommended, as there's a bug in Netscape 4.x which causes pages
-      marked up in this way to load twice.</P
+></P
+><TABLE
+CLASS="note"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/note.gif"
+HSPACE="5"
+ALT="Note"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>Using &#60;meta&#62; tags to set the charset is not
+        recommended, as there's a bug in Netscape 4.x which causes pages
+        marked up in this way to load twice. See 
+        <A
+HREF="http://bugzilla.mozilla.org/show_bug.cgi?id=126266"
+TARGET="_top"
+>bug
+        126266</A
+> for more information including progress toward making
+        bugzilla charset aware by default.
+        </P
+></TD
+></TR
+></TABLE
+></DIV
 ></DIV
 ><DIV
 CLASS="section"
@@ -5430,7 +5478,7 @@ CLASS="command"
 ><DIV
 CLASS="example"
 ><A
-NAME="AEN1028"
+NAME="AEN1035"
 ></A
 ><P
 ><B
@@ -5490,7 +5538,7 @@ TARGET="_top"
           <DIV
 CLASS="example"
 ><A
-NAME="AEN1041"
+NAME="AEN1048"
 ></A
 ><P
 ><B
@@ -6516,7 +6564,7 @@ VALIGN="TOP"
 ><P
 >From Andrew Pearson: 
         <A
-NAME="AEN1195"
+NAME="AEN1202"
 ></A
 ><BLOCKQUOTE
 CLASS="BLOCKQUOTE"
@@ -6601,7 +6649,7 @@ VALIGN="TOP"
         <DIV
 CLASS="example"
 ><A
-NAME="AEN1207"
+NAME="AEN1214"
 ></A
 ><P
 ><B
@@ -6799,7 +6847,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN1241"
+NAME="AEN1248"
 ></A
 >4.5.1. Bundle::Bugzilla makes me upgrade to Perl 5.6.1</H2
 ><P
@@ -6824,7 +6872,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN1246"
+NAME="AEN1253"
 ></A
 >4.5.2. DBD::Sponge::db prepare failed</H2
 ><P
@@ -7028,37 +7076,30 @@ CLASS="filename"
 ><P
 >&#13;        <B
 CLASS="command"
->usebuggroups</B
+>makeproductgroups</B
 >:
-        This dictates whether or not to implement group-based security for
-        Bugzilla. If set, Bugzilla bugs can have an associated 'group',
-        defining which users are allowed to see and edit the
-        bug.</P
-><P
->Set "usebuggroups" to "on" 
-        <EM
->only</EM
->
-        if you may wish to restrict access to particular bugs to certain
-        groups of users. I suggest leaving
-        this parameter <EM
->off</EM
->
-        while initially testing your Bugzilla.</P
+        This dictates whether or not to automatically create groups
+        when new products are created.
+        </P
 ></LI
 ><LI
 ><P
 >&#13;        <B
 CLASS="command"
->usebuggroupsentry</B
+>useentrygroupdefault</B
 >:
-        Bugzilla Products can have a group associated with them, so that
-        certain users can only see bugs in certain products. When this parameter
-        is set to <SPAN
+        Bugzilla products can have a group associated with them, so that
+        certain users can only see bugs in certain products. When this 
+        parameter is set to <SPAN
 CLASS="QUOTE"
 >"on"</SPAN
->, this places all newly-created bugs in the
-        group for their product immediately.</P
+>, this 
+        causes the initial group controls on newly created products 
+        to place all newly-created bugs in the group 
+        having the same name as the product immediately.
+        After a product is initially created, the group controls
+        can be further adjusted without interference by 
+        this mechanism.</P
 ></LI
 ><LI
 ><P
@@ -7954,45 +7995,120 @@ NAME="groups"
 ><P
 >Groups allow the administrator
     to isolate bugs or products that should only be seen by certain people.
-    There are two types of group - Generic Groups, and Product-Based Groups.
+    The association between products and groups is controlled from
+    the product edit page under <SPAN
+CLASS="QUOTE"
+>"Edit Group Controls."</SPAN
+>
     </P
 ><P
->&#13;    Product-Based Groups are matched with products, and allow you to restrict
-    access to bugs on a per-product basis. They are enabled using the 
-    usebuggroups Param. Turning on the usebuggroupsentry
-    Param will mean bugs automatically get added to their product group when 
-    filed.   
+>&#13;    If the makeproductgroups param is on, a new group will be automatically
+    created for every new product.
     </P
 ><P
->&#13;    Generic Groups have no special relationship to products; 
-    you create them, and put bugs in them
-    as required. One example of the use of Generic Groups 
-    is Mozilla's "Security" group,
-    into which security-sensitive bugs are placed until fixed. Only the
-    Mozilla Security Team are members of this group.
+>&#13;    On the product edit page, there is a page to edit the 
+    <SPAN
+CLASS="QUOTE"
+>"Group Controls"</SPAN
+> 
+    for a product and determine which groups are applicable, default, 
+    and mandatory for each product as well as controlling entry 
+    for each product and being able to set bugs in a product to be 
+    totally read-only unless some group restrictions are met. 
     </P
 ><P
->To create Generic Groups:</P
+>&#13;    For each group, it is possible to specify if membership in that
+    group is...
+    </P
 ><P
 ></P
 ><OL
 TYPE="1"
 ><LI
 ><P
->Select the "groups"
+>&#13;        required for bug entry, 
+        </P
+></LI
+><LI
+><P
+>&#13;        Not applicable to this product(NA),
+        a possible restriction for a member of the 
+        group to place on a bug in this product(Shown),
+        a default restriction for a member of the 
+        group to place on a bug in this product(Default),
+        or a mandatory restriction to be placed on bugs 
+        in this product(Mandatory).
+        </P
+></LI
+><LI
+><P
+>&#13;        Not applicable by non-members to this product(NA),
+        a possible restriction for a non-member of the 
+        group to place on a bug in this product(Shown),
+        a default restriction for a non-member of the 
+        group to place on a bug in this product(Default),
+        or a mandatory restriction to be placed on bugs 
+        in this product when entered by a non-member(Mandatory).
+        </P
+></LI
+><LI
+><P
+>&#13;        required in order to make <EM
+>any</EM
+> change
+        to bugs in this product <EM
+>including comments.</EM
+>
+        </P
+></LI
+></OL
+><P
+>To create Groups:</P
+><P
+></P
+><OL
+TYPE="1"
+><LI
+><P
+>Select the <SPAN
+CLASS="QUOTE"
+>"groups"</SPAN
+>
         link in the footer.</P
 ></LI
 ><LI
 ><P
->Take a moment to understand the instructions on the "Edit
-        Groups" screen, then select the "Add Group" link.</P
+>Take a moment to understand the instructions on the <SPAN
+CLASS="QUOTE"
+>"Edit
+        Groups"</SPAN
+> screen, then select the <SPAN
+CLASS="QUOTE"
+>"Add Group"</SPAN
+> link.</P
 ></LI
 ><LI
 ><P
->Fill out the "Group", "Description", and 
-        "User RegExp" fields. "New User RegExp" allows you to automatically
+>Fill out the <SPAN
+CLASS="QUOTE"
+>"Group"</SPAN
+>, <SPAN
+CLASS="QUOTE"
+>"Description"</SPAN
+>, 
+         and <SPAN
+CLASS="QUOTE"
+>"User RegExp"</SPAN
+> fields. 
+         <SPAN
+CLASS="QUOTE"
+>"User RegExp"</SPAN
+> allows you to automatically
          place all users who fulfill the Regular Expression into the new group. 
-         When you have finished, click "Add".</P
+         When you have finished, click <SPAN
+CLASS="QUOTE"
+>"Add"</SPAN
+>.</P
 ><DIV
 CLASS="warning"
 ><P
@@ -8032,31 +8148,22 @@ VALIGN="TOP"
 ></LI
 ></OL
 ><P
->To use Product-Based Groups:</P
-><P
-></P
-><OL
-TYPE="1"
-><LI
-><P
->Turn on "usebuggroups" and "usebuggroupsentry" in the "Edit
-        Parameters" screen.</P
-></LI
-><LI
-><P
->In future, when you create a Product, a matching group will be
-        automatically created. If you need to add a Product Group to
-        a Product which was created before you turned on usebuggroups,
-        then simply create a new group, as outlined above, with the
-        same name as the Product.</P
-></LI
-></OL
-><P
 >&#13;      Note that group permissions are such that you need to be a member
       of <EM
 >all</EM
 > the groups a bug is in, for whatever
-      reason, to see that bug.
+      reason, to see that bug. Similarly, you must be a member 
+      of <EM
+>all</EM
+> of the entry groups for a product 
+      to add bugs to a product and you must be a member 
+      of <EM
+>all</EM
+> of the canedit groups for a product
+      in order to make <EM
+>any</EM
+> change to bugs in that
+      product.
     </P
 ></DIV
 ><DIV
@@ -8140,12 +8247,6 @@ TARGET="_top"
 TYPE="1"
 ><LI
 ><P
->Ensure you are running at least MysQL version 3.22.32 or newer.
-        Earlier versions had notable security holes and (from a security
-        point of view) poor default configuration choices.</P
-></LI
-><LI
-><P
 >&#13;        <EM
 >There is no substitute for understanding the tools on your
         system!</EM
@@ -8161,9 +8262,12 @@ TARGET="_top"
 ></LI
 ><LI
 ><P
->Lock down /etc/inetd.conf. Heck, disable inet entirely on this
-        box. It should only listen to port 25 for Sendmail and port 80 for
-        Apache.</P
+>Lock down <TT
+CLASS="filename"
+>/etc/inetd.conf</TT
+>. Heck, disable
+        inet entirely on this box. It should only listen to port 25 for
+        Sendmail and port 80 for Apache.</P
 ></LI
 ><LI
 ><P
@@ -8223,29 +8327,106 @@ CLASS="QUOTE"
 ><LI
 ><P
 >Ensure you have adequate access controls for the
-        $BUGZILLA_HOME/data/ directory, as well as the
-        $BUGZILLA_HOME/localconfig file.
+        <TT
+CLASS="filename"
+>$BUGZILLA_HOME/data/</TT
+> directory, as well as the
+        <TT
+CLASS="filename"
+>$BUGZILLA_HOME/localconfig</TT
+> file.
         The localconfig file stores your "bugs" database account password. 
         In addition, some
-        files under $BUGZILLA_HOME/data/ store sensitive information.
+        files under <TT
+CLASS="filename"
+>$BUGZILLA_HOME/data/</TT
+> store sensitive
+        information.
         </P
 ><P
->Bugzilla provides default .htaccess files to protect the most
-        common Apache installations. However, you should verify these are
-        adequate according to the site-wide security policy of your web
-        server, and ensure that the .htaccess files are allowed to
-        "override" default permissions set in your Apache configuration
-        files. Covering Apache security is beyond the scope of this Guide;
-        please consult the Apache documentation for details.</P
+>Also, beware that some text editors create backup files in the
+        current working directory so you need to also secure files like
+        <TT
+CLASS="filename"
+>localconfig~</TT
+>.
+        </P
+><DIV
+CLASS="note"
+><P
+></P
+><TABLE
+CLASS="note"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/note.gif"
+HSPACE="5"
+ALT="Note"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>Simply blocking <TT
+CLASS="computeroutput"
+>.*localconfig.*</TT
+>
+          won't work because the QuickSearch feature requires the web browser
+          to be able to retrieve <TT
+CLASS="filename"
+>localconfig.js</TT
+> and
+          others may be introduced in the future (see 
+          <A
+HREF="http://bugzilla.mozilla.org/show_bug.cgi?id=186383"
+TARGET="_top"
+>bug
+          186383</A
+> for more information.
+          </P
+></TD
+></TR
+></TABLE
+></DIV
+><P
+>Bugzilla provides default <TT
+CLASS="filename"
+>.htaccess</TT
+> files
+        to protect the most common Apache installations. However, you should
+        verify these are adequate according to the site-wide security policy
+        of your web server, and ensure that the <TT
+CLASS="filename"
+>.htaccess</TT
+>
+        files are allowed to <SPAN
+CLASS="QUOTE"
+>"override"</SPAN
+> default permissions set
+        in your Apache configuration files. Covering Apache security is beyond
+        the scope of this Guide; please consult the Apache documentation for
+        details.
+        </P
 ><P
 >If you are using a web server that does not support the
-        .htaccess control method, 
+        <TT
+CLASS="filename"
+>.htaccess</TT
+> control method, 
         <EM
 >you are at risk!</EM
 >
 
         After installing, check to see if you can view the file
-        "localconfig" in your web browser (e.g.: 
+        <TT
+CLASS="filename"
+>localconfig</TT
+> in your web browser (e.g.: 
         <A
 HREF="http://bugzilla.mozilla.org/localconfig"
 TARGET="_top"
@@ -8257,11 +8438,17 @@ TARGET="_top"
         problem before deploying Bugzilla. If, however, it gives you a
         "Forbidden" error, then it probably respects the .htaccess
         conventions and you are good to go.</P
+></LI
+><LI
 ><P
 >When you run checksetup.pl, the script will attempt to modify
         various permissions on files which Bugzilla uses. If you do not have
-        a webservergroup set in the localconfig file, then Bugzilla will have
-        to make certain files world readable and/or writable. 
+        a webservergroup set in the <TT
+CLASS="filename"
+>localconfig</TT
+> file,
+        then Bugzilla will have to make certain files world readable and/or
+        writable. 
         <EM
 >THIS IS INSECURE!</EM
 >
@@ -8298,16 +8485,26 @@ VALIGN="TOP"
 ></TABLE
 ></DIV
 ><P
->On Apache, you can use .htaccess files to protect access to
-        these directories, as outlined in 
+>On Apache, you can use <TT
+CLASS="filename"
+>.htaccess</TT
+> files to
+        protect access to these directories, as outlined in Bugs 
         <A
 HREF="http://bugzilla.mozilla.org/show_bug.cgi?id=57161"
 TARGET="_top"
->Bug
-        57161</A
+>&#13;        57161</A
+> and
+        <A
+HREF="http://bugzilla.mozilla.org/show_bug.cgi?id=186383"
+TARGET="_top"
+>&#13;        186383</A
 >
 
-        for the localconfig file, and 
+        for the <TT
+CLASS="filename"
+>localconfig</TT
+> file, and 
         <A
 HREF="http://bugzilla.mozilla.org/show_bug.cgi?id=65572"
 TARGET="_top"
@@ -8315,30 +8512,188 @@ TARGET="_top"
         65572</A
 >
 
-        for adequate protection in your data/ directory.</P
+        for adequate protection in your <TT
+CLASS="filename"
+>data/</TT
+> directory.
+        Also, don't forget about the <TT
+CLASS="filename"
+>template/</TT
+> and
+        <TT
+CLASS="filename"
+>Bugzilla/</TT
+> directories and to allow access to the
+        <TT
+CLASS="filename"
+>data/webdot</TT
+> directory for the
+        <TT
+CLASS="computeroutput"
+>192.20.225.10</TT
+> IP address if you are
+        using webdot from research.att.com.  The easiest way to
+        accomplish this is to set <TT
+CLASS="function"
+>$create_htaccess</TT
+> to 1
+        in <TT
+CLASS="filename"
+>localconfig</TT
+>.  However, the information below
+        is provided for those that want to know exactly what is created.
+        </P
 ><P
 >Note the instructions which follow are Apache-specific. If you
         use IIS, Netscape, or other non-Apache web servers, please consult
         your system documentation for how to secure these files from being
         transmitted to curious users.</P
 ><P
->Place the following text into a file named ".htaccess",
-        readable by your web server, in your $BUGZILLA_HOME/data directory. 
-        <P
-CLASS="literallayout"
->&#60;Files&nbsp;comments&#62;&nbsp;allow&nbsp;from&nbsp;all&nbsp;&#60;/Files&#62;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;deny&nbsp;from&nbsp;all</P
+><TT
+CLASS="filename"
+>$BUGZILLA_HOME/.htaccess</TT
+>
+        <TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="programlisting"
+>&#13;# don't allow people to retrieve non-cgi executable files or our private data
+&#60;FilesMatch ^(.*\.pl|.*localconfig.*|processmail|runtests.sh)$&#62;
+  deny from all
+&#60;/FilesMatch&#62;
+&#60;FilesMatch ^(localconfig.js|localconfig.rdf)$&#62;
+  allow from all
+&#60;/FilesMatch&#62;
+        </PRE
+></FONT
+></TD
+></TR
+></TABLE
+> 
+        </P
+><P
+><TT
+CLASS="filename"
+>$BUGZILLA_HOME/data/.htaccess</TT
+> 
+        <TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="programlisting"
+>&#13;# nothing in this directory is retrievable unless overriden by an .htaccess
+# in a subdirectory; the only exception is duplicates.rdf, which is used by
+# duplicates.xul and must be loadable over the web
+deny from all
+&#60;Files duplicates.rdf&#62;
+  allow from all
+&#60;/Files&#62;
+        </PRE
+></FONT
+></TD
+></TR
+></TABLE
 >
         </P
 ><P
->Place the following text into a file named ".htaccess",
-        readable by your web server, in your $BUGZILLA_HOME/ directory. 
-        <P
-CLASS="literallayout"
->&#60;Files&nbsp;localconfig&#62;&nbsp;deny&nbsp;from&nbsp;all&nbsp;&#60;/Files&#62;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;allow&nbsp;from&nbsp;all</P
+><TT
+CLASS="filename"
+>$BUGZILLA_HOME/data/webdot</TT
+>
+        <TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="programlisting"
+>&#13;# Restrict access to .dot files to the public webdot server at research.att.com 
+# if research.att.com ever changed their IP, or if you use a different
+# webdot server, you'll need to edit this
+&#60;FilesMatch ^[0-9]+\.dot$&#62;
+  Allow from 192.20.225.10
+  Deny from all
+&#60;/FilesMatch&#62;
+
+# Allow access by a local copy of 'dot' to .png, .gif, .jpg, and
+# .map files
+&#60;FilesMatch ^[0-9]+\.(png|gif|jpg|map)$&#62;
+  Allow from all
+&#60;/FilesMatch&#62;
+
+# And no directory listings, either.
+Deny from all
+        </PRE
+></FONT
+></TD
+></TR
+></TABLE
 >
         </P
+><P
+><TT
+CLASS="filename"
+>$BUGZILLA_HOME/Bugzilla/.htaccess</TT
+>
+        <TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="programlisting"
+>&#13;# nothing in this directory is retrievable unless overriden by an .htaccess
+# in a subdirectory
+deny from all
+         </PRE
+></FONT
+></TD
+></TR
+></TABLE
+>
+         </P
+><P
+><TT
+CLASS="filename"
+>$BUGZILLA_HOME/template/.htaccess</TT
+>
+        <TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="programlisting"
+>&#13;# nothing in this directory is retrievable unless overriden by an .htaccess
+# in a subdirectory
+deny from all
+         </PRE
+></FONT
+></TD
+></TR
+></TABLE
+>
+         </P
 ></LI
 ></OL
 >
@@ -8351,9 +8706,9 @@ CLASS="section"
 ><A
 NAME="cust-templates"
 ></A
->5.7. Template Customisation</H1
+>5.7. Template Customization</H1
 ><P
->&#13;      One of the large changes for 2.16 was the templatisation of the
+>&#13;      One of the large changes for 2.16 was the templatization of the
       entire user-facing UI, using the 
       <A
 HREF="http://www.template-toolkit.org"
@@ -8365,9 +8720,9 @@ TARGET="_top"
       conflicts when they upgrade to a newer version in the future.
     </P
 ><P
->&#13;      Templatisation also makes localised versions of Bugzilla possible, 
+>&#13;      Templatization also makes localized versions of Bugzilla possible, 
       for the first time. In the future, a Bugzilla installation may
-      have templates installed for multiple localisations, and select
+      have templates installed for multiple localizations, and select
       which ones to use based on the user's browser language setting.      
     </P
 ><DIV
@@ -8375,7 +8730,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN1553"
+NAME="AEN1613"
 ></A
 >5.7.1. What to Edit</H2
 ><P
@@ -8386,7 +8741,7 @@ NAME="AEN1553"
 CLASS="filename"
 >template</TT
 >, which contains a directory for
-        each installed localisation. The default English templates are
+        each installed localization. The default English templates are
         therefore in <TT
 CLASS="filename"
 >en</TT
@@ -8410,7 +8765,7 @@ CLASS="filename"
         must be created if you want to use it.
       </P
 ><P
->&#13;        The first method of making customisations is to directly edit the
+>&#13;        The first method of making customizations is to directly edit the
         templates in <TT
 CLASS="filename"
 >template/en/default</TT
@@ -8490,7 +8845,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN1572"
+NAME="AEN1632"
 ></A
 >5.7.2. How To Edit Templates</H2
 ><P
@@ -8572,7 +8927,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN1582"
+NAME="AEN1642"
 ></A
 >5.7.3. Template Formats</H2
 ><P
@@ -8634,12 +8989,12 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN1595"
+NAME="AEN1655"
 ></A
 >5.7.4. Particular Templates</H2
 ><P
 >&#13;        There are a few templates you may be particularly interested in
-        customising for your installation.
+        customizing for your installation.
       </P
 ><P
 >&#13;        <B
@@ -8666,7 +9021,7 @@ CLASS="command"
 >:
         This contains the "banner", the part of the header that appears
         at the top of all Bugzilla pages.  The default banner is reasonably
-        barren, so you'll probably want to customise this to give your
+        barren, so you'll probably want to customize this to give your
         installation a distinctive look and feel.  It is recommended you
         preserve the Bugzilla version number in some form so the version 
         you are running can be determined, and users know what docs to read.
@@ -8826,7 +9181,7 @@ CLASS="section"
 ><A
 NAME="cust-change-permissions"
 ></A
->5.8. Change Permission Customisation</H1
+>5.8. Change Permission Customization</H1
 ><DIV
 CLASS="warning"
 ><P
@@ -8867,7 +9222,7 @@ VALIGN="TOP"
       who is allowed to make what sorts of value transition.
     </P
 ><P
->&#13;      For maximum flexibility, customising this means editing Bugzilla's Perl 
+>&#13;      For maximum flexibility, customizing this means editing Bugzilla's Perl 
       code. This gives the administrator complete control over exactly who is
       allowed to do what. The relevant function is called 
       <TT
@@ -8917,7 +9272,7 @@ CLASS="programlisting"
       which refers to him.
     </P
 ><P
->&#13;      More complex customisations are not much harder. Basically, you add
+>&#13;      More complex customizations are not much harder. Basically, you add
       a check in the right place in the function, i.e. after all the variables
       you are using have been set up. So, don't look at $ownerid before 
       $ownerid has been obtained from the database. You can either add a
@@ -8987,7 +9342,7 @@ CLASS="filename"
 CLASS="filename"
 >@::log_columns</TT
 >. If you need help writing custom
-      rules for your organisation, ask in the newsgroup.
+      rules for your organization, ask in the newsgroup.
     </P
 ></DIV
 ><DIV
@@ -9014,12 +9369,12 @@ CLASS="filename"
 ><P
 >However, things get a bit more complicated if you've made
     changes to Bugzilla's code. In this case, you may have to re-make or
-    reapply those changes. One good method is to take a diff of your customised
+    reapply those changes. One good method is to take a diff of your customized
     version against the original, so you can survey all that you've changed.
-    Hopefully, templatisation will reduce the need for
+    Hopefully, templatization will reduce the need for
     this in the future.</P
 ><P
->From version 2.8 onwards, Bugzilla databases can be automatically
+>From version 2.8 onward, Bugzilla databases can be automatically
     carried forward during an upgrade. However, because the developers of
     Bugzilla are constantly adding new
     tables, columns and fields, you'll probably get SQL errors if you just
@@ -9177,64 +9532,64 @@ HREF="#faq-general"
 ><DL
 ><DT
 >A.1.1. <A
-HREF="#AEN1682"
+HREF="#AEN1742"
 >&#13;	    Where can I find information about Bugzilla?</A
 ></DT
 ><DT
 >A.1.2. <A
-HREF="#AEN1688"
+HREF="#AEN1748"
 >&#13;	    What license is Bugzilla distributed under?
 	  </A
 ></DT
 ><DT
 >A.1.3. <A
-HREF="#AEN1694"
+HREF="#AEN1754"
 >&#13;	    How do I get commercial support for Bugzilla?
 	  </A
 ></DT
 ><DT
 >A.1.4. <A
-HREF="#AEN1701"
+HREF="#AEN1763"
 >&#13;	    What major companies or projects are currently using Bugzilla
 	    for bug-tracking?
 	  </A
 ></DT
 ><DT
 >A.1.5. <A
-HREF="#AEN1726"
+HREF="#AEN1787"
 >&#13;	    Who maintains Bugzilla?
 	  </A
 ></DT
 ><DT
 >A.1.6. <A
-HREF="#AEN1732"
+HREF="#AEN1793"
 >&#13;	    How does Bugzilla stack up against other bug-tracking databases?
 	  </A
 ></DT
 ><DT
 >A.1.7. <A
-HREF="#AEN1738"
->&#13;	    Why doesn't Bugzilla offer this or that feature or compatability
+HREF="#AEN1799"
+>&#13;	    Why doesn't Bugzilla offer this or that feature or compatibility
 	    with this other tracking software?
 	  </A
 ></DT
 ><DT
 >A.1.8. <A
-HREF="#AEN1745"
+HREF="#AEN1806"
 >&#13;	    Why MySQL?  I'm interested in seeing Bugzilla run on
 	    Oracle/Sybase/Msql/PostgreSQL/MSSQL.
 	  </A
 ></DT
 ><DT
 >A.1.9. <A
-HREF="#AEN1750"
+HREF="#AEN1815"
 >&#13;	    Why do the scripts say "/usr/bonsaitools/bin/perl" instead of
 	    "/usr/bin/perl" or something else?
 	  </A
 ></DT
 ><DT
 >A.1.10. <A
-HREF="#AEN1756"
+HREF="#AEN1821"
 >&#13;	    Is there an easy way to change the Bugzilla cookie name?
 	  </A
 ></DT
@@ -9249,41 +9604,41 @@ HREF="#faq-phb"
 ><DL
 ><DT
 >A.2.1. <A
-HREF="#AEN1766"
+HREF="#AEN1831"
 >&#13;	    Is Bugzilla web-based, or do you have to have specific software or
 	    a specific operating system on your machine?
 	  </A
 ></DT
 ><DT
 >A.2.2. <A
-HREF="#AEN1771"
+HREF="#AEN1836"
 >&#13;	    Can Bugzilla integrate with
 	    Perforce (SCM software)?
 	  </A
 ></DT
 ><DT
 >A.2.3. <A
-HREF="#AEN1776"
+HREF="#AEN1841"
 >&#13;	    Does Bugzilla allow the user to track multiple projects?
 	  </A
 ></DT
 ><DT
 >A.2.4. <A
-HREF="#AEN1781"
+HREF="#AEN1846"
 >&#13;	    If I am on many projects, and search for all bugs assigned to me, will
 	    Bugzilla list them for me and allow me to sort by project, severity etc?
 	  </A
 ></DT
 ><DT
 >A.2.5. <A
-HREF="#AEN1786"
+HREF="#AEN1851"
 >&#13;	    Does Bugzilla allow attachments (text, screenshots, URLs etc)? If yes,
 	    are there any that are NOT allowed?
 	  </A
 ></DT
 ><DT
 >A.2.6. <A
-HREF="#AEN1791"
+HREF="#AEN1856"
 >&#13;	    Does Bugzilla allow us to define our own priorities and levels? Do we
 	    have complete freedom to change the labels of fields and format of them, and
 	    the choice of acceptable values?
@@ -9291,35 +9646,35 @@ HREF="#AEN1791"
 ></DT
 ><DT
 >A.2.7. <A
-HREF="#AEN1798"
+HREF="#AEN1863"
 >&#13;	    Does Bugzilla provide any reporting features, metrics, graphs, etc? You
 	    know, the type of stuff that management likes to see. :)
 	  </A
 ></DT
 ><DT
 >A.2.8. <A
-HREF="#AEN1805"
+HREF="#AEN1870"
 >&#13;	    Is there email notification and if so, what do you see when you get an
 	    email?
 	  </A
 ></DT
 ><DT
 >A.2.9. <A
-HREF="#AEN1810"
+HREF="#AEN1875"
 >&#13;	    Can email notification be set up to send to multiple
 	    people, some on the To List, CC List, BCC List etc?
 	  </A
 ></DT
 ><DT
 >A.2.10. <A
-HREF="#AEN1815"
+HREF="#AEN1880"
 >&#13;	    Do users have to have any particular
 	    type of email application?
 	  </A
 ></DT
 ><DT
 >A.2.11. <A
-HREF="#AEN1822"
+HREF="#AEN1887"
 >&#13;	    Does Bugzilla allow data to be imported and exported? If I had outsiders
 	    write up a bug report using a MS Word bug template, could that template be
 	    imported into "matching" fields? If I wanted to take the results of a query
@@ -9328,28 +9683,28 @@ HREF="#AEN1822"
 ></DT
 ><DT
 >A.2.12. <A
-HREF="#AEN1830"
+HREF="#AEN1899"
 >&#13;	    Has anyone converted Bugzilla to another language to be used in other
 	    countries? Is it localizable?
 	  </A
 ></DT
 ><DT
 >A.2.13. <A
-HREF="#AEN1835"
+HREF="#AEN1906"
 >&#13;	    Can a user create and save reports? Can they do this in Word format?
 	    Excel format?
 	  </A
 ></DT
 ><DT
 >A.2.14. <A
-HREF="#AEN1840"
+HREF="#AEN1911"
 >&#13;	    Does Bugzilla have the ability to search by word, phrase, compound
 	    search?
 	  </A
 ></DT
 ><DT
 >A.2.15. <A
-HREF="#AEN1845"
+HREF="#AEN1916"
 >&#13;	     Does Bugzilla provide record locking when there is simultaneous access
 	    to the same bug? Does the second person get a notice that the bug is in use
 	    or how are they notified?
@@ -9357,19 +9712,19 @@ HREF="#AEN1845"
 ></DT
 ><DT
 >A.2.16. <A
-HREF="#AEN1850"
+HREF="#AEN1921"
 >&#13;	    Are there any backup features provided?
 	  </A
 ></DT
 ><DT
 >A.2.17. <A
-HREF="#AEN1856"
+HREF="#AEN1927"
 >&#13;	    Can users be on the system while a backup is in progress?
 	  </A
 ></DT
 ><DT
 >A.2.18. <A
-HREF="#AEN1861"
+HREF="#AEN1932"
 >&#13;	    What type of human resources are needed to be on staff to install and
 	    maintain Bugzilla? Specifically, what type of skills does the person need to
 	    have? I need to find out if we were to go with Bugzilla, what types of
@@ -9379,7 +9734,7 @@ HREF="#AEN1861"
 ></DT
 ><DT
 >A.2.19. <A
-HREF="#AEN1867"
+HREF="#AEN1938"
 >&#13;	    What time frame are we looking at if we decide to hire people to install
 	    and maintain the Bugzilla? Is this something that takes hours or weeks to
 	    install and a couple of hours per week to maintain and customize or is this
@@ -9389,7 +9744,7 @@ HREF="#AEN1867"
 ></DT
 ><DT
 >A.2.20. <A
-HREF="#AEN1872"
+HREF="#AEN1943"
 >&#13;	    Is there any licensing fee or other fees for using Bugzilla? Any
 	    out-of-pocket cost other than the bodies needed as identified above?
 	  </A
@@ -9405,20 +9760,20 @@ HREF="#faq-security"
 ><DL
 ><DT
 >A.3.1. <A
-HREF="#AEN1879"
+HREF="#AEN1950"
 >&#13;	    How do I completely disable MySQL security if it's giving me problems
 	    (I've followed the instructions in the installation section of this guide)?
 	  </A
 ></DT
 ><DT
 >A.3.2. <A
-HREF="#AEN1885"
+HREF="#AEN1956"
 >&#13;	    Are there any security problems with Bugzilla?
 	  </A
 ></DT
 ><DT
 >A.3.3. <A
-HREF="#AEN1890"
+HREF="#AEN1961"
 >&#13;	    I've implemented the security fixes mentioned in Chris Yeh's security
 	    advisory of 5/10/2000 advising not to run MySQL as root, and am running into
 	    problems with MySQL no longer working correctly.
@@ -9435,48 +9790,48 @@ HREF="#faq-email"
 ><DL
 ><DT
 >A.4.1. <A
-HREF="#AEN1897"
+HREF="#AEN1968"
 >&#13;	    I have a user who doesn't want to receive any more email from Bugzilla.
 	    How do I stop it entirely for this user?
 	  </A
 ></DT
 ><DT
 >A.4.2. <A
-HREF="#AEN1902"
+HREF="#AEN1974"
 >&#13;	    I'm evaluating/testing Bugzilla, and don't want it to send email to
 	    anyone but me. How do I do it?
 	  </A
 ></DT
 ><DT
 >A.4.3. <A
-HREF="#AEN1907"
+HREF="#AEN1979"
 >&#13;	    I want whineatnews.pl to whine at something more, or other than, only new
 	    bugs. How do I do it?
 	  </A
 ></DT
 ><DT
 >A.4.4. <A
-HREF="#AEN1913"
+HREF="#AEN1985"
 >&#13;	    I don't like/want to use Procmail to hand mail off to bug_email.pl.
 	    What alternatives do I have?
 	  </A
 ></DT
 ><DT
 >A.4.5. <A
-HREF="#AEN1920"
+HREF="#AEN1992"
 >&#13;	    How do I set up the email interface to submit/change bugs via email?
 	  </A
 ></DT
 ><DT
 >A.4.6. <A
-HREF="#AEN1925"
+HREF="#AEN1997"
 >&#13;	    Email takes FOREVER to reach me from Bugzilla -- it's extremely slow.
 	    What gives?
 	  </A
 ></DT
 ><DT
 >A.4.7. <A
-HREF="#AEN1932"
+HREF="#AEN2004"
 >&#13;	     How come email from Bugzilla changes never reaches me?
 	  </A
 ></DT
@@ -9491,39 +9846,33 @@ HREF="#faq-db"
 ><DL
 ><DT
 >A.5.1. <A
-HREF="#AEN1940"
+HREF="#AEN2012"
 >&#13;	    I've heard Bugzilla can be used with Oracle?
 	  </A
 ></DT
 ><DT
 >A.5.2. <A
-HREF="#AEN1945"
+HREF="#AEN2017"
 >&#13;	    I think my database might be corrupted, or contain invalid entries. What
 	    do I do?
 	  </A
 ></DT
 ><DT
 >A.5.3. <A
-HREF="#AEN1953"
+HREF="#AEN2025"
 >&#13;	    I want to manually edit some entries in my database. How?
 	  </A
 ></DT
 ><DT
 >A.5.4. <A
-HREF="#AEN1958"
->&#13;	    I try to add myself as a user, but Bugzilla always tells me my password is wrong.
-	  </A
-></DT
-><DT
->A.5.5. <A
-HREF="#AEN1963"
+HREF="#AEN2033"
 >&#13;	    I think I've set up MySQL permissions correctly, but Bugzilla still can't
 	    connect.
 	  </A
 ></DT
 ><DT
->A.5.6. <A
-HREF="#AEN1968"
+>A.5.5. <A
+HREF="#AEN2041"
 >&#13;	    How do I synchronize bug information among multiple different Bugzilla
 	    databases?
 	  </A
@@ -9539,26 +9888,26 @@ HREF="#faq-nt"
 ><DL
 ><DT
 >A.6.1. <A
-HREF="#AEN1977"
+HREF="#AEN2050"
 >&#13;	    What is the easiest way to run Bugzilla on Win32 (Win98+/NT/2K)?
 	  </A
 ></DT
 ><DT
 >A.6.2. <A
-HREF="#AEN1982"
+HREF="#AEN2055"
 >&#13;	    Is there a "Bundle::Bugzilla" equivalent for Win32?
 	  </A
 ></DT
 ><DT
 >A.6.3. <A
-HREF="#AEN1987"
+HREF="#AEN2060"
 >&#13;	    CGI's are failing with a "something.cgi is not a valid Windows NT
 	    application" error. Why?
 	  </A
 ></DT
 ><DT
 >A.6.4. <A
-HREF="#AEN1995"
+HREF="#AEN2068"
 >&#13;	    I'm having trouble with the perl modules for NT not being able to talk to
 	    to the database.
 	  </A
@@ -9574,40 +9923,33 @@ HREF="#faq-use"
 ><DL
 ><DT
 >A.7.1. <A
-HREF="#AEN2016"
+HREF="#AEN2089"
 >&#13;	    How do I change my user name (email address) in Bugzilla?
 	  </A
 ></DT
 ><DT
 >A.7.2. <A
-HREF="#AEN2021"
+HREF="#AEN2094"
 >&#13;	    The query page is very confusing.  Isn't there a simpler way to query?
 	  </A
 ></DT
 ><DT
 >A.7.3. <A
-HREF="#AEN2026"
+HREF="#AEN2099"
 >&#13;	    I'm confused by the behavior of the "accept" button in the Show Bug form.
 	    Why doesn't it assign the bug to me when I accept it?
 	  </A
 ></DT
 ><DT
 >A.7.4. <A
-HREF="#AEN2036"
+HREF="#AEN2109"
 >&#13;	    I can't upload anything into the database via the "Create Attachment"
 	    link.  What am I doing wrong?
 	  </A
 ></DT
 ><DT
 >A.7.5. <A
-HREF="#AEN2041"
->&#13;	    Email submissions to Bugzilla that have attachments end up asking me to
-	    save it as a "cgi" file.
-	  </A
-></DT
-><DT
->A.7.6. <A
-HREF="#AEN2046"
+HREF="#AEN2114"
 >&#13;	    How do I change a keyword in Bugzilla, once some bugs are using it?
 	  </A
 ></DT
@@ -9622,26 +9964,26 @@ HREF="#faq-hacking"
 ><DL
 ><DT
 >A.8.1. <A
-HREF="#AEN2053"
+HREF="#AEN2121"
 >&#13;	    What kind of style should I use for templatization?
 	  </A
 ></DT
 ><DT
 >A.8.2. <A
-HREF="#AEN2061"
+HREF="#AEN2129"
 >&#13;	    What bugs are in Bugzilla right now?
 	  </A
 ></DT
 ><DT
 >A.8.3. <A
-HREF="#AEN2070"
+HREF="#AEN2138"
 >&#13;	    How can I change the default priority to a null value?  For instance, have the default
 	    priority be "---" instead of "P2"?
 	  </A
 ></DT
 ><DT
 >A.8.4. <A
-HREF="#AEN2076"
+HREF="#AEN2144"
 >&#13;	    What's the best way to submit patches?  What guidelines should I follow?
 	  </A
 ></DT
@@ -9661,7 +10003,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1682"
+NAME="AEN1742"
 ></A
 ><B
 >A.1.1. </B
@@ -9689,7 +10031,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1688"
+NAME="AEN1748"
 ></A
 ><B
 >A.1.2. </B
@@ -9718,7 +10060,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1694"
+NAME="AEN1754"
 ></A
 ><B
 >A.1.3. </B
@@ -9732,7 +10074,16 @@ CLASS="answer"
 ><B
 > </B
 >
-	    <A
+            <A
+HREF="http://bugzilla.org/consulting.html"
+TARGET="_top"
+>http://bugzilla.org/consulting.html</A
+>
+            is a list of people and companies who have asked us to list them
+            as consultants for Bugzilla.
+          </P
+><P
+>&#13;	    <A
 HREF="http://www.collab.net/"
 TARGET="_top"
 >www.collab.net</A
@@ -9755,7 +10106,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1701"
+NAME="AEN1763"
 ></A
 ><B
 >A.1.4. </B
@@ -9772,7 +10123,7 @@ CLASS="answer"
 >
 	    There are <EM
 >dozens</EM
-> of major comapanies with public
+> of major companies with public
 	    Bugzilla sites to track bugs in their products.  A few include:
 	    <P
 ></P
@@ -9790,10 +10141,6 @@ BORDER="0"
 ><TR
 ><TD
 >NASA</TD
-></TR
-><TR
-><TD
->AtHome Corporation</TD
 ></TR
 ><TR
 ><TD
@@ -9865,7 +10212,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1726"
+NAME="AEN1787"
 ></A
 ><B
 >A.1.5. </B
@@ -9885,7 +10232,7 @@ HREF="http://www.bugzilla.org/who_we_are.html"
 TARGET="_top"
 >core team</A
 >,
-      led by Dave Miller (justdave@syndicomm.com).      
+      led by Dave Miller (justdave@netscape.com).      
 	  </P
 ></DIV
 ></DIV
@@ -9895,7 +10242,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1732"
+NAME="AEN1793"
 ></A
 ><B
 >A.1.6. </B
@@ -9933,12 +10280,12 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1738"
+NAME="AEN1799"
 ></A
 ><B
 >A.1.7. </B
 >
-	    Why doesn't Bugzilla offer this or that feature or compatability
+	    Why doesn't Bugzilla offer this or that feature or compatibility
 	    with this other tracking software?
 	  </P
 ></DIV
@@ -9973,7 +10320,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1745"
+NAME="AEN1806"
 ></A
 ><B
 >A.1.8. </B
@@ -9988,9 +10335,28 @@ CLASS="answer"
 ><B
 > </B
 >
-      There is DB-independence work afoot. PostgreSQL support is planned
-      for 2.18, and full DB-independence can't be far further on.
+            MySQL was originally chosen because it is free, easy to install,
+            and was available for the hardware Netscape intended to run it on.
 	  </P
+><P
+>&#13;            There is currently work in progress to make Bugzilla work on
+            PostgreSQL and Sybase in the default distribution.  You can track
+            the progress of these initiatives in bugs <A
+HREF="http://bugzilla.mozilla.org/show_bug.cgi?id=98304"
+TARGET="_top"
+>98304</A
+>
+            and <A
+HREF="http://bugzilla.mozilla.org/show_bug.cgi?id=173130"
+TARGET="_top"
+>173130</A
+>
+            respectively.
+          </P
+><P
+>&#13;            Once both of these are done, adding support for additional
+            database servers should be trivial.
+          </P
 ></DIV
 ></DIV
 ><DIV
@@ -9999,7 +10365,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1750"
+NAME="AEN1815"
 ></A
 ><B
 >A.1.9. </B
@@ -10032,7 +10398,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1756"
+NAME="AEN1821"
 ></A
 ><B
 >A.1.10. </B
@@ -10094,7 +10460,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1766"
+NAME="AEN1831"
 ></A
 ><B
 >A.2.1. </B
@@ -10120,7 +10486,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1771"
+NAME="AEN1836"
 ></A
 ><B
 >A.2.2. </B
@@ -10146,7 +10512,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1776"
+NAME="AEN1841"
 ></A
 ><B
 >A.2.3. </B
@@ -10160,10 +10526,8 @@ CLASS="answer"
 ><B
 > </B
 >
-	    Absolutely!  You can track any number of Products (although you
-      are limited to about 55 or so if
-      you are using Product-Based Groups), that can each be composed of any
-      number of Components.
+	    Absolutely!  You can track any number of Products that can each be
+            composed of any number of Components.
 	  </P
 ></DIV
 ></DIV
@@ -10173,7 +10537,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1781"
+NAME="AEN1846"
 ></A
 ><B
 >A.2.4. </B
@@ -10198,7 +10562,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1786"
+NAME="AEN1851"
 ></A
 ><B
 >A.2.5. </B
@@ -10215,9 +10579,9 @@ CLASS="answer"
 >
 	    Yes - any sort of attachment is allowed, although administrators can
       configure a maximum size.  
-      There are many specific MIME-types that are pre-defined by Bugzilla,
-	    but you may specify any arbitrary MIME-type you need when you
-	    upload the file. 
+            Bugzilla gives the user the option of either using the MIME-type
+            supplied by the browser, choosing from a pre-defined list or
+            manually typing any arbitrary MIME-type. 
 	  </P
 ></DIV
 ></DIV
@@ -10227,7 +10591,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1791"
+NAME="AEN1856"
 ></A
 ><B
 >A.2.6. </B
@@ -10264,7 +10628,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1798"
+NAME="AEN1863"
 ></A
 ><B
 >A.2.7. </B
@@ -10280,19 +10644,19 @@ CLASS="answer"
 > </B
 >
 	    Yes.  Look at <A
-HREF="http://bugzilla.mozilla.org/reports.cgi"
+HREF="http://bugzilla.mozilla.org/report.cgi"
 TARGET="_top"
->&#13;	    http://bugzilla.mozilla.org/reports.cgi</A
-> for basic reporting
-	    and graphing facilities.
+>&#13;	    http://bugzilla.mozilla.org/report.cgi</A
+> for samples of what
+            Bugzilla can do in reporting and graphing.
 	  </P
 ><P
->&#13;	    For more advanced reporting, I recommend hooking up a professional
-	    reporting package, such as Crystal Reports, and use ODBC to access
-	    the MySQL database.  You can do a lot through the Query page of
-	    Bugzilla as well, but right now Advanced Reporting is much
-	    better accomplished through third-party utilities that can
-	    interface with the database directly.
+>&#13;            If you can not get the reports you want from the included reporting
+            scripts, it is possible to hook up a professional reporting package
+            such as Crystal Reports using ODBC. If you choose to do this,
+            beware that giving direct access to the database does contain some
+            security implications. Even if you give read-only access to the
+            bugs database it will bypass the secure bugs features of Bugzilla.
 	  </P
 ></DIV
 ></DIV
@@ -10302,7 +10666,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1805"
+NAME="AEN1870"
 ></A
 ><B
 >A.2.8. </B
@@ -10329,7 +10693,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1810"
+NAME="AEN1875"
 ></A
 ><B
 >A.2.9. </B
@@ -10354,7 +10718,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1815"
+NAME="AEN1880"
 ></A
 ><B
 >A.2.10. </B
@@ -10413,7 +10777,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1822"
+NAME="AEN1887"
 ></A
 ><B
 >A.2.11. </B
@@ -10430,28 +10794,43 @@ CLASS="answer"
 ><B
 > </B
 >
-	    Mozilla allows data export through a custom DTD in XML format.
-	    It does not, however, export to specific formats other than the
-	    XML Mozilla DTD.  Importing the data into Excel or any other application
-	    is left as an exercise for the reader.
-	  </P
+            Bugzilla can output buglists as HTML (the default), CSV or RDF.
+            The link for CSV can be found at the bottom of the buglist in HTML
+            format.  This CSV format can easily be imported into MS Excel or
+            other spread-sheet applications.
+          </P
 ><P
->&#13;	    If you create import filters to other applications from Mozilla's XML,
-	    please submit your modifications for inclusion in future Bugzilla
-	    distributions.
-	  </P
+>&#13;            To use the RDF format of the buglist it is necessary to append a
+            <TT
+CLASS="computeroutput"
+>&#38;ctype=rdf</TT
+> to the URL.  RDF
+            is meant to be machine readable and thus it is assumed that the
+            URL would be generated progmatically so there is no user visible
+            link to this format.
+          </P
 ><P
->&#13;	    As for data import, any application can send data to Bugzilla through
-	    the HTTP protocol, or through Mozilla's XML API.  However, it seems
-	    kind of silly to put another front-end in front of Bugzilla;
-	    it makes more sense to create a simplified bug submission form in
-	    HTML.  You can find an excellent example at
-	    <A
-HREF="http://www.mozilla.org/quality/help/bugzilla-helper.html"
-TARGET="_top"
->&#13;	    http://www.mozilla.org/quality/help/bugzilla-helper.html</A
+>&#13;            Currently the only script included with Bugzilla that can import
+            data is <TT
+CLASS="filename"
+>importxml.pl</TT
+> which is intended to be
+            used for importing the data generated by <TT
+CLASS="filename"
+>xml.cgi</TT
 >
-	  </P
+            in association with bug moving. Any other use is left as an
+            exercise for the user.
+          </P
+><P
+>&#13;            There are also scripts included in the <TT
+CLASS="filename"
+>contrib/</TT
+>
+            directory for using e-mail to import information into Bugzilla,
+            but these scripts are not currently supported and included for
+            educational purposes.
+          </P
 ></DIV
 ></DIV
 ><DIV
@@ -10460,7 +10839,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1830"
+NAME="AEN1899"
 ></A
 ><B
 >A.2.12. </B
@@ -10475,10 +10854,20 @@ CLASS="answer"
 ><B
 > </B
 >
-	    To a certain extent, yes. 2.16's templates mean that you can localise
-      the user-facing UI (and several projects are doing exactly that.) However,
-      error messages and the admin interface are currently not localisable.
-      This should be achieved by 2.18.
+            Yes.  For more information including available translated templates,
+            see <A
+HREF="http://www.bugzilla.org/download.html"
+TARGET="_top"
+>http://www.bugzilla.org/download.html</A
+>.
+            The admin interfaces are still not included in these translated
+            templates and is therefore still English only.  Also, there may be
+            issues with the charset not being declared.  See <A
+HREF="http://bugzilla.mozilla.org/show_bug.cgi?id=126266"
+TARGET="_top"
+>bug 126226</A
+>
+            for more information.
 	  </P
 ></DIV
 ></DIV
@@ -10488,7 +10877,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1835"
+NAME="AEN1906"
 ></A
 ><B
 >A.2.13. </B
@@ -10503,7 +10892,7 @@ CLASS="answer"
 ><B
 > </B
 >
-	    Yes.  No.  No.
+	    Yes.  No.  Yes (using the CSV format).
 	  </P
 ></DIV
 ></DIV
@@ -10513,7 +10902,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1840"
+NAME="AEN1911"
 ></A
 ><B
 >A.2.14. </B
@@ -10539,7 +10928,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1845"
+NAME="AEN1916"
 ></A
 ><B
 >A.2.15. </B
@@ -10566,7 +10955,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1850"
+NAME="AEN1921"
 ></A
 ><B
 >A.2.16. </B
@@ -10596,7 +10985,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1856"
+NAME="AEN1927"
 ></A
 ><B
 >A.2.17. </B
@@ -10622,7 +11011,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1861"
+NAME="AEN1932"
 ></A
 ><B
 >A.2.18. </B
@@ -10657,7 +11046,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1867"
+NAME="AEN1938"
 ></A
 ><B
 >A.2.19. </B
@@ -10690,7 +11079,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1872"
+NAME="AEN1943"
 ></A
 ><B
 >A.2.20. </B
@@ -10724,7 +11113,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1879"
+NAME="AEN1950"
 ></A
 ><B
 >A.3.1. </B
@@ -10753,7 +11142,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1885"
+NAME="AEN1956"
 ></A
 ><B
 >A.3.2. </B
@@ -10781,7 +11170,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1890"
+NAME="AEN1961"
 ></A
 ><B
 >A.3.3. </B
@@ -10817,7 +11206,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1897"
+NAME="AEN1968"
 ></A
 ><B
 >A.4.1. </B
@@ -10833,7 +11222,11 @@ CLASS="answer"
 > </B
 >
 	    The user should be able to set
-	    this in user email preferences (uncheck all boxes.)
+	    this in user email preferences (uncheck all boxes) or you can add
+            their email address to the <TT
+CLASS="filename"
+>data/nomail</TT
+> file.
 	  </P
 ></DIV
 ></DIV
@@ -10843,7 +11236,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1902"
+NAME="AEN1974"
 ></A
 ><B
 >A.4.2. </B
@@ -10858,7 +11251,7 @@ CLASS="answer"
 ><B
 > </B
 >
-	    Edit the "changedmail" Param. Replace "To:" with "X-Real-To:",
+	    Edit the "newchangedmail" Param. Replace "To:" with "X-Real-To:",
 	    replace "Cc:" with "X-Real-CC:", and add a "To: &#60;youremailaddress&#62;".
 	  </P
 ></DIV
@@ -10869,7 +11262,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1907"
+NAME="AEN1979"
 ></A
 ><B
 >A.4.3. </B
@@ -10901,7 +11294,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1913"
+NAME="AEN1985"
 ></A
 ><B
 >A.4.4. </B
@@ -10919,7 +11312,7 @@ CLASS="answer"
 	    You can call bug_email.pl directly from your aliases file, with
 	    an entry like this:
 	    <A
-NAME="AEN1917"
+NAME="AEN1989"
 ></A
 ><BLOCKQUOTE
 CLASS="BLOCKQUOTE"
@@ -10940,7 +11333,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1920"
+NAME="AEN1992"
 ></A
 ><B
 >A.4.5. </B
@@ -10965,7 +11358,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1925"
+NAME="AEN1997"
 ></A
 ><B
 >A.4.6. </B
@@ -11000,7 +11393,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1932"
+NAME="AEN2004"
 ></A
 ><B
 >A.4.7. </B
@@ -11040,7 +11433,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1940"
+NAME="AEN2012"
 ></A
 ><B
 >A.5.1. </B
@@ -11054,10 +11447,11 @@ CLASS="answer"
 ><B
 > </B
 >
-	    Red Hat Bugzilla works with Oracle.  The current version
-	    from Mozilla.org does not have this capability.  Unfortunately, though
-	    you will sacrifice a lot of the really great features available in
-	    Bugzilla 2.14 and 2.16 if you go with the 2.8-based Redhat version.
+            Red Hat's old version of Bugzilla (based on 2.8) worked on Oracle.
+            Red Hat's newer version (based on 2.17.1 and soon to be merged into
+            the main distribution) runs on PostgreSQL.  At this time we know of
+            no recent ports of Bugzilla to Oracle but do intend to support it
+            in the future (possibly the 2.20 time-frame).
 	  </P
 ></DIV
 ></DIV
@@ -11067,7 +11461,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1945"
+NAME="AEN2017"
 ></A
 ><B
 >A.5.2. </B
@@ -11114,7 +11508,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1953"
+NAME="AEN2025"
 ></A
 ><B
 >A.5.3. </B
@@ -11130,10 +11524,22 @@ CLASS="answer"
 >
 	     There is no facility in Bugzilla itself to do this. It's also generally
 	    not a smart thing to do if you don't know exactly what you're doing.
-	    However, if you understand SQL you can use the mysqladmin utility to
-	    manually insert, delete, and modify table information. Personally, I
-	    use "phpMyAdmin". You have to compile a PHP module with MySQL
-	    support to make it work, but it's very clean and easy to use.
+	    However, if you understand SQL you can use the <B
+CLASS="command"
+>mysql</B
+>
+            command line utility to manually insert, delete and modify table
+            information.  There are also more intuitive GUI clients available.
+            Personal favorites of the Bugzilla team are <A
+HREF="http://www.phpmyadmin.net/"
+TARGET="_top"
+>phpMyAdmin</A
+> and <A
+HREF="http://www.mysql.com/downloads/gui-mycc.html"
+TARGET="_top"
+>MySQL Control
+            Center</A
+>.
 	  </P
 ></DIV
 ></DIV
@@ -11143,36 +11549,10 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1958"
+NAME="AEN2033"
 ></A
 ><B
 >A.5.4. </B
->
-	    I try to add myself as a user, but Bugzilla always tells me my password is wrong.
-	  </P
-></DIV
-><DIV
-CLASS="answer"
-><P
-><B
-> </B
->
-	    Certain version of MySQL (notably, 3.23.29 and 3.23.30) accidentally disabled
-	    the "crypt()" function.  This prevented MySQL from storing encrypted passwords.
-	    Upgrade to the "3.23 stable" version of MySQL and you should be good to go.
-	  </P
-></DIV
-></DIV
-><DIV
-CLASS="qandaentry"
-><DIV
-CLASS="question"
-><P
-><A
-NAME="AEN1963"
-></A
-><B
->A.5.5. </B
 >
 	    I think I've set up MySQL permissions correctly, but Bugzilla still can't
 	    connect.
@@ -11186,10 +11566,42 @@ CLASS="answer"
 >
 	    Try running MySQL from its binary: "mysqld --skip-grant-tables". This
 	    will allow you to completely rule out grant tables as the cause of your
-	    frustration. However, I do not recommend you run it this way on a regular
-	    basis, unless you really want your web site defaced and your machine
-	    cracked.
-	  </P
+            frustration. If this Bugzilla is able to connect at this point then
+            you need to check that you have granted proper permission to the user
+            password combo defined in <TT
+CLASS="filename"
+>localconfig</TT
+>.
+          </P
+><DIV
+CLASS="warning"
+><P
+></P
+><TABLE
+CLASS="warning"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/warning.gif"
+HSPACE="5"
+ALT="Warning"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>&#13;              Running MySQL with this command line option is very insecure and
+              should only be done when not connected to the external network
+              as a troubleshooting step.
+            </P
+></TD
+></TR
+></TABLE
+></DIV
 ></DIV
 ></DIV
 ><DIV
@@ -11198,10 +11610,10 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1968"
+NAME="AEN2041"
 ></A
 ><B
->A.5.6. </B
+>A.5.5. </B
 >
 	    How do I synchronize bug information among multiple different Bugzilla
 	    databases?
@@ -11244,7 +11656,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1977"
+NAME="AEN2050"
 ></A
 ><B
 >A.6.1. </B
@@ -11269,7 +11681,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1982"
+NAME="AEN2055"
 ></A
 ><B
 >A.6.2. </B
@@ -11295,7 +11707,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1987"
+NAME="AEN2060"
 ></A
 ><B
 >A.6.3. </B
@@ -11318,7 +11730,7 @@ CLASS="answer"
 ><P
 >&#13;	    Microsoft has some advice on this matter, as well:
 	    <A
-NAME="AEN1992"
+NAME="AEN2065"
 ></A
 ><BLOCKQUOTE
 CLASS="BLOCKQUOTE"
@@ -11343,7 +11755,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1995"
+NAME="AEN2068"
 ></A
 ><B
 >A.6.4. </B
@@ -11420,7 +11832,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN2016"
+NAME="AEN2089"
 ></A
 ><B
 >A.7.1. </B
@@ -11445,7 +11857,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN2021"
+NAME="AEN2094"
 ></A
 ><B
 >A.7.2. </B
@@ -11471,7 +11883,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN2026"
+NAME="AEN2099"
 ></A
 ><B
 >A.7.3. </B
@@ -11526,7 +11938,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN2036"
+NAME="AEN2109"
 ></A
 ><B
 >A.7.4. </B
@@ -11553,37 +11965,10 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN2041"
+NAME="AEN2114"
 ></A
 ><B
 >A.7.5. </B
->
-	    Email submissions to Bugzilla that have attachments end up asking me to
-	    save it as a "cgi" file.
-	  </P
-></DIV
-><DIV
-CLASS="answer"
-><P
-><B
-> </B
->
-	    Yup.  Just rename it once you download it, or save it under a different
-	    filename.  This will not be fixed anytime soon, because it would
-	    cripple some other functionality.
-	  </P
-></DIV
-></DIV
-><DIV
-CLASS="qandaentry"
-><DIV
-CLASS="question"
-><P
-><A
-NAME="AEN2046"
-></A
-><B
->A.7.6. </B
 >
 	    How do I change a keyword in Bugzilla, once some bugs are using it?
 	  </P
@@ -11614,7 +11999,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN2053"
+NAME="AEN2121"
 ></A
 ><B
 >A.8.1. </B
@@ -11628,7 +12013,7 @@ CLASS="answer"
 ><B
 > </B
 >
-	    Gerv and Myk suggest a 2-space endent, with embedded code sections on
+	    Gerv and Myk suggest a 2-space indent, with embedded code sections on
 	    their own line, in line with outer tags.  Like this:</P
 ><TABLE
 BORDER="0"
@@ -11673,7 +12058,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN2061"
+NAME="AEN2129"
 ></A
 ><B
 >A.8.2. </B
@@ -11719,7 +12104,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN2070"
+NAME="AEN2138"
 ></A
 ><B
 >A.8.3. </B
@@ -11751,7 +12136,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN2076"
+NAME="AEN2144"
 ></A
 ><B
 >A.8.4. </B
@@ -11975,7 +12360,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN2119"
+NAME="AEN2187"
 ></A
 >B.2.1. Bugzilla Database Basics</H2
 ><P
@@ -12091,7 +12476,7 @@ CLASS="section"
 ><HR><H3
 CLASS="section"
 ><A
-NAME="AEN2146"
+NAME="AEN2214"
 ></A
 >B.2.1.1. Bugzilla Database Tables</H3
 ><P
@@ -12515,12 +12900,21 @@ NAME="rhbugzilla"
 ></A
 >D.1. Red Hat Bugzilla</H1
 ><P
->Red Hat Bugzilla is a fork of Bugzilla 2.8. 
-    One of its major benefits is the ability
-    to work with Oracle, MySQL, and PostGreSQL databases serving as the
-    back-end, instead of just MySQL. Dave Lawrence of Red Hat is 
-    active in the Bugzilla community, and we hope to see a reunification
-    of the fork before too long.</P
+>Red Hat's old fork of Bugzilla which was based on version 2.8 is now
+    obsolete.  The newest version in use is based on version 2.17.1 and is in
+    the process of being integrated into the main Bugzilla source tree.  The
+    back-end is modified to work with PostgreSQL instead of MySQL and they have
+    custom templates to get their desired look and feel, but other than that it
+    is Bugzilla 2.17.1.  Dave Lawrence of Red Hat put forth a great deal of
+    effort to make sure that the changes he made could be integrated back into
+    the main tree. 
+    <A
+HREF="http://bugzilla.mozilla.org/show_bug.cgi?id=98304"
+TARGET="_top"
+>Bug
+    98304</A
+> exists to track this integration.
+    </P
 ><P
 >URL: 
     <A
@@ -12529,6 +12923,8 @@ TARGET="_top"
 >&#13;    http://bugzilla.redhat.com/bugzilla/</A
 >
     </P
+><P
+>This section last updated 24 Dec 2002</P
 ></DIV
 ><DIV
 CLASS="section"
@@ -12543,6 +12939,8 @@ NAME="variant-fenris"
     Loki went into receivership, it died. While Loki's other code lives on,
     its custodians recommend Bugzilla for future bug-tracker deployments.
     </P
+><P
+>This section last updated 27 Jul 2002</P
 ></DIV
 ><DIV
 CLASS="section"
@@ -12560,6 +12958,8 @@ NAME="variant-issuezilla"
 HREF="#variant-scarab"
 >Scarab</A
 >.</P
+><P
+>This section last updated 27 Jul 2002</P
 ></DIV
 ><DIV
 CLASS="section"
@@ -12580,6 +12980,8 @@ TARGET="_top"
 >http://scarab.tigris.org</A
 >
     </P
+><P
+>This section last updated 27 Jul 2002</P
 ></DIV
 ><DIV
 CLASS="section"
@@ -12605,6 +13007,8 @@ TARGET="_top"
     </A
 >
     </P
+><P
+>This section last updated 27 Jul 2002</P
 ></DIV
 ><DIV
 CLASS="section"
@@ -12626,6 +13030,8 @@ TARGET="_top"
 >&#13;    http://www.sourceforge.net</A
 >
     </P
+><P
+>This section last updated 27 Jul 2002</P
 ></DIV
 ></DIV
 ><DIV
@@ -12640,7 +13046,7 @@ CLASS="glossdiv"
 ><H1
 CLASS="glossdiv"
 ><A
-NAME="AEN2225"
+NAME="AEN2300"
 ></A
 >0-9, high ascii</H1
 ><DL

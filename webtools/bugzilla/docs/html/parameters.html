@@ -124,37 +124,30 @@ CLASS="filename"
 ><P
 >&#13;        <B
 CLASS="command"
->usebuggroups</B
+>makeproductgroups</B
 >:
-        This dictates whether or not to implement group-based security for
-        Bugzilla. If set, Bugzilla bugs can have an associated 'group',
-        defining which users are allowed to see and edit the
-        bug.</P
-><P
->Set "usebuggroups" to "on" 
-        <EM
->only</EM
->
-        if you may wish to restrict access to particular bugs to certain
-        groups of users. I suggest leaving
-        this parameter <EM
->off</EM
->
-        while initially testing your Bugzilla.</P
+        This dictates whether or not to automatically create groups
+        when new products are created.
+        </P
 ></LI
 ><LI
 ><P
 >&#13;        <B
 CLASS="command"
->usebuggroupsentry</B
+>useentrygroupdefault</B
 >:
-        Bugzilla Products can have a group associated with them, so that
-        certain users can only see bugs in certain products. When this parameter
-        is set to <SPAN
+        Bugzilla products can have a group associated with them, so that
+        certain users can only see bugs in certain products. When this 
+        parameter is set to <SPAN
 CLASS="QUOTE"
 >"on"</SPAN
->, this places all newly-created bugs in the
-        group for their product immediately.</P
+>, this 
+        causes the initial group controls on newly created products 
+        to place all newly-created bugs in the group 
+        having the same name as the product immediately.
+        After a product is initially created, the group controls
+        can be further adjusted without interference by 
+        this mechanism.</P
 ></LI
 ><LI
 ><P
