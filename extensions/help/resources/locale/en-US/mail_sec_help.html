@@ -44,16 +44,16 @@
 <a NAME="about_sigs_encrypt"></a>
 <h2>About Digital Signatures &amp; Encryption </h2>
 
-<p>When you compose a mail message, you can choose to attach your digital signature to it. A <a href="glossary.html#digital_signature">digital signature</a> allows recipients of the message to verify that the message really comes from you and hasn't been tampered with since you sent it.
+<p>When you compose a mail message, you can choose to attach your digital signature to it. A <a href="glossary.xhtml#digital_signature">digital signature</a> allows recipients of the message to verify that the message really comes from you and hasn't been tampered with since you sent it.
 
-<p>When you compose a mail message, you can also choose to encrypt it. <a href="glossary.html#encryption">Encryption</a> makes it very difficult for anyone other than the intended recipient to read the message while it is in transit over the Internet. 
+<p>When you compose a mail message, you can also choose to encrypt it. <a href="glossary.xhtml#encryption">Encryption</a> makes it very difficult for anyone other than the intended recipient to read the message while it is in transit over the Internet. 
 
 <p>Signing and encryption are not available for newsgroup messages.
 
 <p>Before you can sign or encrypt a message, you must take these preliminary steps:
 
 <ol>
-	<li>Obtain one or more <a href="glossary.html#certificate">certificates</a> (the digital equivalents of ID cards). For details, see <a href="using_certs_help.html#using_certs_get">Getting Your Own Certificate</a>.</li>
+	<li>Obtain one or more <a href="glossary.xhtml#certificate">certificates</a> (the digital equivalents of ID cards). For details, see <a href="using_certs_help.html#using_certs_get">Getting Your Own Certificate</a>.</li>
 
 	<li>Configure the security settings for your email account. For details, see <a href="#config_account">Configuring Your Security Settings</a>.</li>
 
@@ -68,18 +68,18 @@
 <a NAME="how_sigs_work"></a>
 <h3>How Digital Signatures Work</h3>
 
-<p>A digital signature is a special code, unique to each message, created by means of <a href="glossary.html#public-key_cryptography">public-key cryptography</a>. 
+<p>A digital signature is a special code, unique to each message, created by means of <a href="glossary.xhtml#public-key_cryptography">public-key cryptography</a>. 
 
 <p>A digital signature is completely different from a handwritten signature, although it can sometimes be used for similar legal purposes, such as signing a contract. 
 
 <p>To create a digital signature for an email message that you are sending, you need two things:
 
 <ul>
-	<li>A <a href="glossary.html#signing_certificate">signing certificate</a> that identifies you for this purpose. Every time you sign a message, your signing certificate is included with the message. The certificate includes a <a href="glossary.html#public_key">public key</a>. The presence of the certificate in the message permits the recipient to verify your digital signature.</li> 
+	<li>A <a href="glossary.xhtml#signing_certificate">signing certificate</a> that identifies you for this purpose. Every time you sign a message, your signing certificate is included with the message. The certificate includes a <a href="glossary.xhtml#public_key">public key</a>. The presence of the certificate in the message permits the recipient to verify your digital signature.</li> 
 	<p>Your certificate is a bit like your name and phone number in the phonebook&mdash;it is public information that helps other people communicate with you. 
-	<li>A <a href="glossary.html#private_key">private key</a>, which is created and stored on your computer when you first obtain a certificate. </li>
+	<li>A <a href="glossary.xhtml#private_key">private key</a>, which is created and stored on your computer when you first obtain a certificate. </li>
 
-	<p>Your private key for a signing certificate is protected by your <a href="glossary.html#master_password">master password,</a> and the Mozilla program does not disclose it to anyone else. The Mail &amp; Newsgroup software uses your private key to create a unique, verifiable digital signature for every message you choose to sign. 
+	<p>Your private key for a signing certificate is protected by your <a href="glossary.xhtml#master_password">master password,</a> and the Mozilla program does not disclose it to anyone else. The Mail &amp; Newsgroup software uses your private key to create a unique, verifiable digital signature for every message you choose to sign. 
 </ul>
 
 
@@ -88,7 +88,7 @@
 <h3>
 How Encryption Works</h3>
 
-<p>To encrypt an email message, you must have an <a href="glossary.html#encryption_certificate">encryption certificate</a> for each of the message's recipients. The public key in each certificate is used to encrypt the message for that recipient. 
+<p>To encrypt an email message, you must have an <a href="glossary.xhtml#encryption_certificate">encryption certificate</a> for each of the message's recipients. The public key in each certificate is used to encrypt the message for that recipient. 
 
 <p>If you don&apos;t have a certificate for even a single recipient, the message cannot be encrypted.
 
@@ -136,7 +136,7 @@ How Encryption Works</h3>
 <ol>
 	<li>Open the Edit menu and choose Mail &amp; Newsgroups Account Settings.</li>
    	<li>Click Security under the name of the mail account whose security settings you want to configure.</li>
-	<li>Under Digital Signing, click Select. (You may be asked to provide your <a href="glossary.html#master_password">Master Password</a> before you can proceed further.)</li>
+	<li>Under Digital Signing, click Select. (You may be asked to provide your <a href="glossary.xhtml#master_password">Master Password</a> before you can proceed further.)</li>
 	<p>A dialog box appears that allows you to select from among your available signing certificates.
 	<li>Choose the signing certificate you want to use, then click OK.</li>
 	<li>Follow the same steps under Encryption: click the Select button, select the encryption certificate you want to use, and click OK.</li>
@@ -235,7 +235,7 @@ How Encryption Works</h3>
 	<ul>
 		<li><b>Yes:</b> Digital signing has been enabled for this message, you have a valid certificate identifying you, and the message can be signed.</li>
 		<li><b>No:</b> Digital signing has been disabled for this message.</li>
-		<li><b>Not possible:</b> Digital signing has been enabled for this message. However, a valid <a href="glossary.html#certificate">certificate</a> identifying you for this purpose is not available, or there is some other problem that makes signing impossible.</li>
+		<li><b>Not possible:</b> Digital signing has been enabled for this message. However, a valid <a href="glossary.xhtml#certificate">certificate</a> identifying you for this purpose is not available, or there is some other problem that makes signing impossible.</li>
 
 	</ul>
 

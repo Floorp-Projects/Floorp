@@ -43,20 +43,39 @@ body {
 	max-width: 120ex;
 }
 
+dd { margin-left: 0px; margin-bottom: 1em; }
+dt { font-size: 10pt; font-weight: bold; }
+
 :link:hover { color: red; }
 
 h1 { font-size: 20pt; }
-h2 { border-top: 1px solid black; font-size: 16pt; }
+h2 { border-top: 1px solid black; font-size: 16pt; padding-top: 0.2em; }
 h3 { color: #009; font-size: 10pt; margin-bottom: 0px; margin-top: 35px; }
 
 kbd { font-family: sans-serif; }
+
+table.defaultTable { border-collapse: collapse; border: 1px solid grey;
+  width: 100%; }
+
+table.defaultTable td { border: 1px solid grey; padding: 4px; }
+
+table.defaultTable th { background-color: #99ccff;
+  border: 1px solid grey; font-size: 10pt; padding: 4px; text-align: left; }
+
+table.defaultTable tbody > tr.even { background-color: #eeeeee; }
+
+.boilerPlate { font-size: 7pt; }
+
+col.commandColumn { width: 40%; }
+col.osFirstColumn { width: 20%; }
+col.osSecondColumn { width: 20%; }
+col.osThirdColumn { width: 20%; }
 
 p:first-child { padding-top: 0; margin-top: 0; }
 
 .separate > li { margin-bottom: 0.5em; }
 
 .ui { background-color: #B7F5C7 }
-
 
 .contentsBox {
 	margin-top: 12px;
@@ -72,11 +91,6 @@ p:first-child { padding-top: 0; margin-top: 0; }
 
 .makeLeftMargin {
 	margin-left: 25px;
-}
-
-.headingCell {
-	background-color: #99ccff;    /* light aqua */
-	font-weight: bold;
 }
 
 a[href^="http://"]:after { content: url("chrome://help/locale/images/web-links.png"); }

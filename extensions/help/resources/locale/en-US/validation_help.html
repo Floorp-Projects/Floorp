@@ -60,7 +60,7 @@
 <a NAME="CRL"></a>
 <h3>CRL</h3>
 
-<p>A certificate revocation list (CRL) is a list of revoked certificates that is generated and signed by a <a href="glossary.html#certificate_authority">certificate authority (CA)</a>. It's possible to download a CRL to your browser, which can check it to ensure that certificates are still valid before permitting their use for authentication. <P>
+<p>A certificate revocation list (CRL) is a list of revoked certificates that is generated and signed by a <a href="glossary.xhtml#certificate_authority">certificate authority (CA)</a>. It's possible to download a CRL to your browser, which can check it to ensure that certificates are still valid before permitting their use for authentication. <P>
 
 <p>Click Manage CRLs to see a list of the CRLs available to Certificate Manager. 
 
@@ -76,7 +76,7 @@
 <p>To specify how Certificate Manager uses OCSP, choose one of these settings in the OCSP section of  Validation Settings:</P>
 
 <ul>
-        <LI><B>Do not use OCSP for certificate verification.</B> Select this setting if you don't want Certificate Manager to perform an online status check each time it verifies a certificate. Instead, whenever Certificate Manager performs <a href="glossary.html#certificate_verification">certificate verification</a>, it only confirms the certificate's validity period and that it is correctly signed by a CA whose own CA certificate is both listed under the CA Certificates tab (in the main Certificate Manager window) and marked as trusted for issuing that kind of certificate.</LI>
+        <LI><B>Do not use OCSP for certificate verification.</B> Select this setting if you don't want Certificate Manager to perform an online status check each time it verifies a certificate. Instead, whenever Certificate Manager performs <a href="glossary.xhtml#certificate_verification">certificate verification</a>, it only confirms the certificate's validity period and that it is correctly signed by a CA whose own CA certificate is both listed under the CA Certificates tab (in the main Certificate Manager window) and marked as trusted for issuing that kind of certificate.</LI>
 	<LI><B>Use OCSP to verify only certificates that specify an OCSP service URL.</B> Select this setting if you want Certificate Manager perform an online status check each time it verifies a certificate that specifies a URL for the purpose of performing such a check. If a URL is specified by the certificate, Certificate Manager makes sure that the certificate is listed there as valid and checks the validity period and trust settings.</LI>
 	<LI><B>Use OCSP to verify all certificates, using the URL and signer specified here.</B> Select this setting if you want Certificate Manager to perform an online status check each time it verifies any certificate. If you select this setting, you should also choose the certificate from the Response Signer pop-up menu that identifies the signer of the OCSP responses. With this setting, the only certificates Certificate Manager recognizes are those that can be verified by an OCSP response signed with the Response Signer certificate (or signed using a certificate that chains to it).
 
@@ -97,7 +97,7 @@
    <li>Click Manage CRLs.
 </ol>
 
-<p>This dialog box displays a list of the <a href="glossary.html#certificate_revocation_list">CRLs</a> that you have downloaded for use by your browser. Typically, you download a CRL by clicking a URL. FOr information about how CRLs work, see <a href="using_certs_help.html#Managing_CRLs">Managing CRLs</a>.
+<p>This dialog box displays a list of the <a href="glossary.xhtml#certificate_revocation_list">CRLs</a> that you have downloaded for use by your browser. Typically, you download a CRL by clicking a URL. FOr information about how CRLs work, see <a href="using_certs_help.html#Managing_CRLs">Managing CRLs</a>.
 
 <p>To select a CRL, click it. You can then perform any of these actions:
 

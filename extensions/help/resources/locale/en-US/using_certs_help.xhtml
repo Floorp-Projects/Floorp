@@ -53,9 +53,9 @@
 
 <p>You can obtain a certificate today by visiting the URL for a certificate authority and following the on-screen instructions. For a list of certificate authorities, see the online document <a href="https://certs.netscape.com/" TARGET="_blank">Client Certificates</a>. </p>
 
-<p>Once you obtain a certificate, it is automatically stored in a <a href="glossary.html#security_device">security device</a>. Your browser comes with its own built-in Software Security Device. A security device can also be a piece of hardware, such as a smart card.</p>
+<p>Once you obtain a certificate, it is automatically stored in a <a href="glossary.xhtml#security_device">security device</a>. Your browser comes with its own built-in Software Security Device. A security device can also be a piece of hardware, such as a smart card.</p>
 
-<p>Like a driver's license or a credit card, a certificate is a valuable form of identification that can be abused if it falls into the wrong hands. Once you've obtained a certificate that identifies you, you should protect it in two ways: by backing it up and by setting your <a href="glossary.html#master_password">master password</a>. 
+<p>Like a driver's license or a credit card, a certificate is a valuable form of identification that can be abused if it falls into the wrong hands. Once you've obtained a certificate that identifies you, you should protect it in two ways: by backing it up and by setting your <a href="glossary.xhtml#master_password">master password</a>. 
 
 <p>When you first obtain a certificate, you may be prompted to back it up. If you haven't yet created a master password, you will be asked to create one.
 
@@ -77,7 +77,7 @@
 <a NAME="encryption:status_of_web_pageIDX"></a>
 <h1>Checking Security for a Web Page</h1>
 
-<p>When you're viewing any web page, the lock icon near the lower-right corner of the window informs you whether the entire contents of the page was protected by <a href="glossary.html#encryption">encryption</a> while it was being received by your computer:</p>
+<p>When you're viewing any web page, the lock icon near the lower-right corner of the window informs you whether the entire contents of the page was protected by <a href="glossary.xhtml#encryption">encryption</a> while it was being received by your computer:</p>
 
 
 <table summary="lock icons"> <tr><td>&nbsp;</td><td><img alt="closed lock icon"src="chrome://communicator/skin/icons/lock-secure.gif">&nbsp;</td><td>A closed lock means that the page was protected by encryption when it was received.</td></tr>
@@ -108,7 +108,7 @@
 <a NAME="using_certs_manage"></a><a NAME="certificates:managingIDX"></a>
 <h1>Managing Certificates</h1>
 
-<p>You can use the Certificate Manager to manage the certificates you have available. Certificates may be stored on your computer's hard disk or on <a href="glossary.html#smart_card">smart cards</a> or other security devices attached to your computer.</p>
+<p>You can use the Certificate Manager to manage the certificates you have available. Certificates may be stored on your computer's hard disk or on <a href="glossary.xhtml#smart_card">smart cards</a> or other security devices attached to your computer.</p>
 
 <p>To open the Certificate Manager:
 
@@ -143,7 +143,7 @@
 <ul>
 	<li><b>Import.</b> Click this button if you want to import a certificate that you've previously backed up or transferred from one machine to another.
 
-	<li><b>Backup All.</b> Click this button to back up all your own certificates stored in the <a href="glossary.html#software_security_device">Software Security Device</a>. 
+	<li><b>Backup All.</b> Click this button to back up all your own certificates stored in the <a href="glossary.xhtml#software_security_device">Software Security Device</a>. 
 
 </ul>
 
@@ -161,7 +161,7 @@
 <a NAME="using_certs_others"></a><a NAME="certificates:other peopleIDX"></a>
 <H2>Managing Certificates that Identify Others</H2>
 
-<p><p>When you compose a mail message, you can choose to attach your digital signature to it. A <a href="glossary.html#digital_signature">digital signature</a> allows recipients of the message to verify that the message really comes from you and hasn't been tampered with since you sent it.
+<p><p>When you compose a mail message, you can choose to attach your digital signature to it. A <a href="glossary.xhtml#digital_signature">digital signature</a> allows recipients of the message to verify that the message really comes from you and hasn't been tampered with since you sent it.
 
 <p>Every time you send a digitally signed message, your encryption certificate is automatically included with the message. This certificate allows the message recipients to send you encrypted messages. 
 
@@ -206,7 +206,7 @@
 <a NAME="using_certs_cas"></a><a NAME="certificates:certificate_authorityIDX"></a>
 <H2>Managing Certificates that Identify Certificate Authorities</H2>
 
-<p>Like other commonly used forms of ID, a certificate is issued by an organization with recognized authority to issue such identification. An organization that issues certificates is called a <a href="glossary.html#certificate_authority_(CA)">certificate authority (CA)</a>. A certificate that identifies a CA is called a CA certificate.
+<p>Like other commonly used forms of ID, a certificate is issued by an organization with recognized authority to issue such identification. An organization that issues certificates is called a <a href="glossary.xhtml#certificate_authority">certificate authority (CA)</a>. A certificate that identifies a CA is called a CA certificate.
 
 <p> Certificate Manager typically has many CA certificates on file. These CA certificates permit Certificate Manager to recognize and work with certificates issued by the corresponding CAs. However, the presence of a CA certificate in this list does <i>not</i> guarantee that the certificates it issues can be trusted. You or your system administrator must make decisions about what kinds of certificates to trust depending on your security needs.  
 
@@ -233,7 +233,7 @@
 <a NAME="tokensSDX"></a>
 <h1>Managing Smart Cards and Other Security Devices</h1>
 
-<p>A smart card is a small device, typically about the size of a credit card, that contains a microprocessor and is capable of storing information about your identity (such as your <a href="glossary.html#private_key">private keys</a> and <a href="glossary.html#certificate">certificates</a>) and performing cryptographic operations. 
+<p>A smart card is a small device, typically about the size of a credit card, that contains a microprocessor and is capable of storing information about your identity (such as your <a href="glossary.xhtml#private_key">private keys</a> and <a href="glossary.xhtml#certificate">certificates</a>) and performing cryptographic operations. 
 
 <p>To use a smart card, you typically need to have a smart card reader (a piece of hardware) attached to your computer, as well as software on your computer that controls the reader. 
 
@@ -264,7 +264,7 @@
 
 <p>The Device Manager displays a window that lists the available security devices. You can use the Device Manager to manage any security devices, including smart cards, that support the Public Key Cryptography Standard (PKCS) #11.
 
-<p>A <a href="glossary.html#PKCS_11_module">PKCS #11 module</a> (sometimes called a security module) controls one or more security devices in much the same way that a software driver controls an external device such as a printer or modem. If you are installing a smart card, you must install the PKCS #11 module for the smart card on your computer as well as connecting the smart card reader.
+<p>A <a href="glossary.xhtml#pkcs_11_module">PKCS #11 module</a> (sometimes called a security module) controls one or more security devices in much the same way that a software driver controls an external device such as a printer or modem. If you are installing a smart card, you must install the PKCS #11 module for the smart card on your computer as well as connecting the smart card reader.
 
 <p>By default, the Device Manager controls two internal PKCS #11 modules that manage three security devices:
 
@@ -274,7 +274,7 @@
 		<li><b>Generic Crypto Services:</b> A special security device that performs all cryptographic operations required by the Mozilla Internal PKCS #11 Module.
 		<li><b>Software Security Device:L</b> Stores your certificates and keys that aren't stored on external security devices, including any CA certificates that you may have installed in addition to those that come with the browser.
 	</ul>
-	<li><b>Builtin Roots Module:</b> Controls a special security device called the Builtin Object Token. This security device stores the default <a href="glossary.html#CA_certificate">CA certificates</a> that come with the browser.
+	<li><b>Builtin Roots Module:</b> Controls a special security device called the Builtin Object Token. This security device stores the default <a href="glossary.xhtml#ca_certificate">CA certificates</a> that come with the browser.
 
 </ul>
 
@@ -363,7 +363,7 @@
 <a NAME="using_certs_ssl"></a>
 <h1>Managing SSL Warnings and Settings</h1>
 
-<p>The Secure Sockets Layer (SSL) protocol allows your computer to exchange information with other computers on the Internet in encrypted form&mdash;that is, the information is scrambled while in transit so that no one else can make sense of it. SSL is also used to identify computers on the Internet by means of <a href="glossary.html#certificate">certificates</a>.
+<p>The Secure Sockets Layer (SSL) protocol allows your computer to exchange information with other computers on the Internet in encrypted form&mdash;that is, the information is scrambled while in transit so that no one else can make sense of it. SSL is also used to identify computers on the Internet by means of <a href="glossary.xhtml#certificate">certificates</a>.
 
 <p>The Transport Layer Security (TLS) protocol is a new standard based on SSL. By default, the browser supports both SSL and TLS. This approach works for most people, because it guarantees that the browser will work with virtually all other existing software on the Internet that supports any version of SSL or TLS. 
 
@@ -395,7 +395,7 @@
 
 <p>As discussed above under <a href="#using_certs_get">Get Your Own Certificate</a>, a certificate is a form of identification, much like a driver's license, that you can use to identify yourself over the Internet and other networks. However, also like a driver's license, a certificate may expire or become invalid for some other reason. Therefore, your browser software needs to confirm the validity of any given certificate in some way before trusting it for identification purposes. 
 
-<p>This section describes how Certificate Manager validates certificates and how to control that process. To understand the process, you should have some familiarity with <a href="glossary.html#public-key_cryptography">public-key cryptography</a>. If you are not familiar with the use of certificates, you should check with your system administrator before attempting to change any of your browser's certificate validation settings.<p>
+<p>This section describes how Certificate Manager validates certificates and how to control that process. To understand the process, you should have some familiarity with <a href="glossary.xhtml#public-key_cryptography">public-key cryptography</a>. If you are not familiar with the use of certificates, you should check with your system administrator before attempting to change any of your browser's certificate validation settings.<p>
 
 <table summary="list of headings" cellpadding=4 cellspacing=2 bgcolor="#cccccc" Width=324>
 <tr>
@@ -419,7 +419,7 @@
 
 <p>Whenever you use or view a certificate stored by Certificate Manager, it takes several steps to verify the certificate. At a minimum, it confirms that the CA's digital signature on the certificate was created by a CA whose own certificate is (1) present in the Certificate Manager's list of available CA certificates and (2) marked as trusted for issuing the kind of certificate being verified. 
 
-<p>If the CA certificate is not itself present, the <a href="glossary.html#certificate_chain">certificate chain</a> for the CA certificate must include a higher-level CA certificate that is present and correctly trusted. Certificate Manager also confirms that the certificate being verified is currently marked as trusted in the certificate store. If any one of these checks fails, Certificate Manager marks the certificate as unverified and won't recognize the identity it certifies.
+<p>If the CA certificate is not itself present, the <a href="glossary.xhtml#certificate_chain">certificate chain</a> for the CA certificate must include a higher-level CA certificate that is present and correctly trusted. Certificate Manager also confirms that the certificate being verified is currently marked as trusted in the certificate store. If any one of these checks fails, Certificate Manager marks the certificate as unverified and won't recognize the identity it certifies.
 
 <p>A certificate can pass all these tests and still be compromised in some way; for example, the certificate may be revoked because an unauthorized person has gained access to the certificate's private key. A compromised certificate can allow an unauthorized person (or web site) to pretend to be the certificate owner.
 
@@ -435,7 +435,7 @@
 <p>&nbsp;</p>
 <a name="Managing_CRLs"></a><h2>Managing CRLs</h2>
 
-<p>A certificate revocation list (CRL) is list of revoked certificates.  A <a href="glossary.html#certificate_authority (CA)">certificate authority (CA)</a> might revoke a certificate, for example, if it has been compromised in some way&mdash;much the way a credit card company might revoke your credit card if you report that it's been stolen.
+<p>A certificate revocation list (CRL) is list of revoked certificates.  A <a href="glossary.xhtml#certificate_authority">certificate authority (CA)</a> might revoke a certificate, for example, if it has been compromised in some way&mdash;much the way a credit card company might revoke your credit card if you report that it's been stolen.
 </p>
 
 <p>This section describes how to import and manage CRLs. <p>For background information, see <a href="#How_Certificate_Validation_Works">How Validation Works</a>. 
