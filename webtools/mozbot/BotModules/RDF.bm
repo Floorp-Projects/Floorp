@@ -1,8 +1,11 @@
 ################################
 # RDF Module                   #
 ################################
+# this is really an RSS module, not an RDF module.
+# but oh well.
 
 package BotModules::RDF;
+use XML::RSS;
 use vars qw(@ISA);
 @ISA = qw(BotModules);
 1;
@@ -39,7 +42,7 @@ sub Help {
     my ($event) = @_;
     my %commands; 
     if ($self->isAdmin($event)) {
-        $commands{''} = "The RDF module monitors various websites. Add new RDF channels to the 'sites' hash. Duplicates with different nicknames are fine. For example, \"vars $self->{'_name'} sites '+|slashdot|http://...'\" and \"vars $self->{'_name'} sites '+|/.|http://...'\" is fine.";
+        $commands{''} = "The RDF module monitors various websites. Add new RDF channels to the 'sites' hash. Duplicates with different nicknames are fine. For example, \"vars $self->{'_name'} sites '+|slashdot|http://...'\" and \"vars $self->{'_name'} sites '+|/.|http://...'\" is fine.  To remove a site from the RDF 'sites' hash, use this syntax \"vars $self->{_name} sites '-slashdot'";
         $commands{'mute'} = 'Disable reporting of a site in a channel. (Only does something if the given site exists.) Syntax: mute <site> in <channel>';
         $commands{'unmute'} = 'Enable reporting of a site in a channel. By default, sites are reported in all channels that the module is active in. Syntax: unmute <site> in <channel>';
     } else {
@@ -131,38 +134,28 @@ sub GotURI {
     if ($output) {
 
         # last update stamp
-        $self->{'data'}->{$uri}->{'last'} = $event->{'time'};
+        my $last = $event->{'time'};
+        $self->{'data'}->{$uri}->{'last'} = $last;
 
-        # this, of course, is a disaster waiting to happen.
-        # for example, we don't cope with comments.
-        # someone write a real XML version of this pleeeeease... XXX
-
-        # get the juicy stuff out
-        my $channelpart = "";
-        if ($output =~ /<channel>(.*)<\/channel>/osi) {
-            $channelpart = $1;
+        # Parse It
+        my $rss = XML::RSS->new();
+        eval { $rss->parse($output) };
+        if ($@) {
+            $self->debug("$uri is not a valid RSS file");
+            if ($intent eq 'request') {
+                $self->say($event, "$event->{'from'}: Dude, the file is not valid RSS! ($uri)");
+            }
+            return;
         }
 
-        # remove any image related stuff
-        $output =~ s/<image>.*<\/image>//gosi;
+        # Set Link and Title
+        $self->{data}->{$uri}->{'link'} = $rss->{'channel'}->{'link'};
+        $self->{data}->{$uri}->{'title'} = $rss->{'channel'}->{'title'};
 
-        # get the channel title
-        $self->{'data'}->{$uri}->{'title'} = $uri;
-        if ($channelpart =~ /<title>\s*(.+?)\s*<\/title>/osi) {
-            $self->{'data'}->{$uri}->{'title'} = $self->unescapeXML($1);
-            $self->{'data'}->{$uri}->{'title'} =~ s/: News for nerds, stuff that matters//gosi if $self->{'trimTitles'};
-        }
-
-        # get the channel website
-        $self->{'data'}->{$uri}->{'link'} = $uri;
-        if ($channelpart =~ /<link>\s*(.+?)\s*<\/link>/osi) {
-            $self->{'data'}->{$uri}->{'link'} = $self->unescapeXML($1);
-        }
-
-        # get all the items
-        while ($output =~ /<item>.*?<title>\s*(.+?)\s*<\/title>.*?<\/item>/osig) {
-            unless (($1 =~ /^last update/osi) or (defined($self->{'data'}->{$uri}->{'items'}->{$self->unescapeXML($1)}))) {
-                $self->{'data'}->{$uri}->{'items'}->{$self->unescapeXML($1)} = $self->{'data'}->{$uri}->{'last'};
+        foreach my $item (@{$rss->{'items'}}) {
+            unless (($item->{title} =~ /^last update/osi) || 
+                    (defined($self->{'data'}->{$uri}->{'items'}->{$item->{'title'}}))) {
+                $self->{'data'}->{$uri}->{'items'}->{$item->{'title'}} = $last;
             }
         }
 
@@ -203,8 +196,24 @@ sub ReportDiffs {
     foreach (keys(%{$self->{'data'}->{$uri}->{'items'}})) {
         push(@output, $_) if ($self->{'data'}->{$uri}->{'items'}->{$_} == $last);
     }
-    if (@output) {
 
+    # -- #mrt was here --
+    #     <mozbot> Friday's security advisories -- The first stable
+    #              Xen release -- Linux Gazette #95
+    #     <mozbot> KDE Under The Microscope -- Additional OpenSSL info
+    #      <Hixie> wtf
+    #     <mozbot> Just appeared in jbisbee.com -
+    #              http://www.jbisbee.com/ : PoCo::RSS::Aggregator
+    #      <Hixie> why is it repeating the same thing over and over
+    #     <mozbot> PoCo::RSSAggregator & XML::RSS::Feed Uploaded to
+    #              CPAN -- More PoCo::RSSAggregator
+    #      <Hixie> mozbot: shutup please
+    #     <mozbot> Ok, threw away 2558 messages.
+
+    # Ahem. So now we limit the diff reporting code to maxInChannel
+    # items at a time...
+
+    if (@output and @output < $self->{'maxInChannel'}) {
         @output = $self->prettyPrint($self->{'preferredLineLength'}, 
                                      "Just appeared in $self->{'data'}->{$uri}->{'title'} - $self->{'data'}->{$uri}->{'link'} :  ",
                                      '', ' -- ', @output);
