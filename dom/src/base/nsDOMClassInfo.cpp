@@ -6401,11 +6401,36 @@ nsHTMLDocumentSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
         JSObject *helper =
           GetDocumentAllHelper(cx, ::JS_GetPrototype(cx, obj));
 
+        JSObject *proto = ::JS_GetPrototype(cx, helper ? helper : obj);
+
+        // Check if the property all is defined on obj's (or helper's
+        // if obj doesn't exist) prototype, it it is, don't expose our
+        // document.all helper.
+
+        JSBool hasAll = JS_FALSE;
+        if (proto && !JS_HasProperty(cx, proto, "all", &hasAll)) {
+          return NS_ERROR_UNEXPECTED;
+        }
+
+        if (hasAll && helper) {
+          // Our helper's prototype now has an "all" property, remove
+          // the helper out of the prototype chain to prevent
+          // shadowing of the now defined "all" property.
+          JSObject *tmp = obj, *tmpProto;
+
+          while ((tmpProto = ::JS_GetPrototype(cx, tmp)) != helper) {
+            tmp = tmpProto;
+          }
+
+          ::JS_SetPrototype(cx, tmp, proto);
+        }
+
         // If we don't already have a helper, and we're resolving
         // document.all qualified, and we're *not* detecting
-        // document.all, e.g. if (document.all), create a helper.
+        // document.all, e.g. if (document.all), and "all" isn't
+        // already defined on our prototype, create a helper.
         if (!helper && flags & JSRESOLVE_QUALIFIED &&
-            !(flags & JSRESOLVE_DETECTING)) {
+            !(flags & JSRESOLVE_DETECTING) && !hasAll) {
           helper = JS_NewObject(cx, &sHTMLDocumentAllHelperClass,
                                 ::JS_GetPrototype(cx, obj),
                                 GetGlobalJSObject(cx, obj));
