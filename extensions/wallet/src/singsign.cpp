@@ -2270,6 +2270,69 @@ SINGSIGN_StorePassword(const char *passwordRealm, const PRUnichar *user, const P
   return PR_TRUE;
 }
 
+enum DialogType {promptUsernameAndPassword, promptPassword, prompt};
+
+PRIVATE nsresult
+si_DoDialogIfPrefIsOff(
+    const PRUnichar *dialogTitle,
+    const PRUnichar *text,
+    PRUnichar **user,
+    PRUnichar **pwd,
+    const PRUnichar *defaultText,
+    PRUnichar **resultText,
+    const char *passwordRealm,
+    nsIPrompt* dialog,
+    PRBool *pressedOK, 
+    PRUint32 savePassword,
+    DialogType dlg) {
+
+  nsresult res;
+  nsAutoString realm;
+  CopyASCIItoUCS2(nsLiteralCString(passwordRealm), realm);
+  const PRUnichar * prompt_string = dialogTitle;
+  if (dialogTitle == nsnull || nsCRT::strlen(dialogTitle) == 0) {
+    prompt_string = Wallet_Localize("PromptForData");
+  }
+
+  switch (dlg) {
+    case promptUsernameAndPassword:
+      res = dialog->PromptUsernameAndPassword(prompt_string,
+                                              text,
+                                              realm.GetUnicode(), 
+                                              savePassword,
+                                              user,
+                                              pwd,
+                                              pressedOK);
+      break;
+    case promptPassword:
+      res = dialog->PromptPassword(prompt_string,
+                                   text,
+                                   realm.GetUnicode(),
+                                   savePassword,
+                                   pwd,
+                                   pressedOK);
+      break;
+    case prompt:
+      res = dialog->Prompt(prompt_string,
+                           text,
+                           realm.GetUnicode(),
+                           savePassword,
+                           defaultText,
+                           resultText,
+                           pressedOK);
+#ifdef DEBUG
+      break;
+    default:
+      NS_ASSERTION(PR_FALSE, "Undefined DialogType in si_DoDialogIfPrefIsOff");
+#endif
+  }
+
+  if (dialogTitle != prompt_string) {
+    Recycle(NS_CONST_CAST(PRUnichar*, prompt_string));
+  }
+  return res;
+}
+
 /* The following comments apply to the three prompt routines that follow
  *
  * If a password was successfully obtain (either from the single-signon
@@ -2293,10 +2356,17 @@ SINGSIGN_PromptUsernameAndPassword
 
   /* do only the dialog if signon preference is not enabled */
   if (!si_GetSignonRememberingPref()){
-    nsString realm; // XXX hack
-    CopyASCIItoUCS2(nsLiteralCString(passwordRealm), realm);
-    return dialog->PromptUsernameAndPassword(dialogTitle, text, realm.GetUnicode(), 
-                                             savePassword, user, pwd, pressedOK);
+    return si_DoDialogIfPrefIsOff(dialogTitle,
+                                  text,
+                                  user,
+                                  pwd,
+                                  nsnull,
+                                  nsnull,
+                                  passwordRealm,
+                                  dialog,
+                                  pressedOK, 
+                                  savePassword,
+                                  promptUsernameAndPassword);
   }
 
   /* prefill with previous username/password if any */
@@ -2336,12 +2406,17 @@ SINGSIGN_PromptPassword
 
   /* do only the dialog if signon preference is not enabled */
   if (!si_GetSignonRememberingPref()){
-    nsString realm; // XXX hack
-    CopyASCIItoUCS2(nsLiteralCString(passwordRealm), realm);
-    res = dialog->PromptPassword(dialogTitle,
-                                 text, realm.GetUnicode(), savePassword,
-                                 pwd, pressedOK);
-    return res;
+    return si_DoDialogIfPrefIsOff(dialogTitle,
+                                  text,
+                                  nsnull,
+                                  pwd,
+                                  nsnull,
+                                  nsnull,
+                                  passwordRealm,
+                                  dialog,
+                                  pressedOK, 
+                                  savePassword,
+                                  promptPassword);
   }
 
   /* get previous password used with this username, pick first user if no username found */
@@ -2384,10 +2459,17 @@ SINGSIGN_Prompt
 
   /* do only the dialog if signon preference is not enabled */
   if (!si_GetSignonRememberingPref()){
-    nsString realm; // XXX hack
-    CopyASCIItoUCS2(nsLiteralCString(passwordRealm), realm);
-    res = dialog->Prompt(dialogTitle, text, realm.GetUnicode(), savePassword, defaultText, resultText, pressedOK);
-    return res;
+    return si_DoDialogIfPrefIsOff(dialogTitle,
+                                  text,
+                                  nsnull,
+                                  nsnull,
+                                  defaultText,
+                                  resultText,
+                                  passwordRealm,
+                                  dialog,
+                                  pressedOK, 
+                                  savePassword,
+                                  prompt);
   }
 
   /* get previous data used with this hostname */
@@ -2533,7 +2615,6 @@ SINGSIGN_SignonViewerReturn(const nsString& results) {
   Wallet_SignonViewerReturn(results);
 }
 
-#define BUFLEN2 5000
 #define BREAK '\001'
 
 PUBLIC void
