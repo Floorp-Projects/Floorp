@@ -52,7 +52,7 @@ class nsImapMailFolder;
 
 #include "nsISupportsArray.h"
 
-class nsImapMoveCoalescer : public nsISupports
+class NS_MSG_BASE nsImapMoveCoalescer : public nsISupports
 {
 public:
   NS_DECL_ISUPPORTS

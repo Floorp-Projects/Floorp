@@ -107,7 +107,6 @@ CPPSRCS		= \
 		nsImapService.cpp \
 		nsImapUrl.cpp \
 		nsImapFlagAndUidState.cpp \
-		nsImapMoveCoalescer.cpp \
 		nsImapUndoTxn.cpp \
 		nsImapStringBundle.cpp \
 		nsImapOfflineSync.cpp \

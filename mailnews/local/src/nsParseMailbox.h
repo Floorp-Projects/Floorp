@@ -57,6 +57,7 @@
 #include "nsIDBChangeListener.h"
 #include "nsIWeakReference.h"
 #include "nsIMsgWindow.h"
+#include "nsImapMoveCoalescer.h"
 
 #include "nsIMsgFilterList.h"
 #include "nsIMsgFilterHitNotify.h"
@@ -247,7 +248,7 @@ protected:
   virtual nsresult GetTrashFolder(nsIMsgFolder **pTrashFolder);
   virtual nsresult  MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr, 
                                           nsIMsgDatabase *sourceDB, 
-                                          const nsACString& destFolder,
+                                          nsIMsgFolder *destIFolder,
                                           nsIMsgFilter *filter,
                                           nsIMsgWindow *msgWindow);
   virtual int   MarkFilteredMessageRead(nsIMsgDBHdr *msgHdr);
@@ -257,6 +258,9 @@ protected:
   nsCOMPtr <nsIMsgWindow> m_msgWindow;
   nsCOMPtr <nsIMsgFolder> m_downloadFolder;
   nsCOMArray <nsIMsgFolder> m_filterTargetFolders;
+
+  nsImapMoveCoalescer *m_moveCoalescer; // strictly owned by nsParseNewMailState;
+
   nsIOFileStream  *m_inboxFileStream;
   nsFileSpec    m_inboxFileSpec;
   PRBool        m_disableFilters;
