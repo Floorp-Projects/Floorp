@@ -109,7 +109,8 @@ nsHTTPRequest::nsHTTPRequest(nsIURI* i_URL, HTTPMethod i_Method):
 
     // Send */*. We're no longer chopping MIME-types for acceptance.
     // MIME based content negotiation has died.
-    //SetHeader(nsHTTPAtoms::Accept, "image/gif, image/x-xbitmap, image/jpeg, image/pjpeg, image/png, */*");
+    // SetHeader(nsHTTPAtoms::Accept, "image/gif, image/x-xbitmap, image/jpeg, 
+    // image/pjpeg, image/png, */*");
     SetHeader(nsHTTPAtoms::Accept, "*/*");
 
     nsXPIDLCString acceptLanguages;
@@ -141,29 +142,7 @@ nsHTTPRequest::~nsHTTPRequest()
 NS_IMPL_THREADSAFE_ADDREF(nsHTTPRequest);
 NS_IMPL_THREADSAFE_RELEASE(nsHTTPRequest);
 
-NS_IMETHODIMP
-nsHTTPRequest::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-    if (NULL == aInstancePtr)
-        return NS_ERROR_NULL_POINTER;
-
-    *aInstancePtr = NULL;
-    
-    if (aIID.Equals(NS_GET_IID(nsIStreamObserver)) ||
-        aIID.Equals(NS_GET_IID(nsISupports))) {
-        *aInstancePtr = NS_STATIC_CAST(nsIStreamObserver*, this);
-        NS_ADDREF_THIS();
-        return NS_OK;
-    }
-    if (aIID.Equals(NS_GET_IID(nsIRequest))) {
-        *aInstancePtr = NS_STATIC_CAST(nsIRequest*, this);
-        NS_ADDREF_THIS();
-        return NS_OK;
-    }
-
-    return NS_NOINTERFACE;
-}
-
+NS_IMPL_QUERY_INTERFACE2(nsHTTPRequest, nsIStreamObserver, nsIRequest);
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsIRequest methods:
@@ -485,7 +464,8 @@ nsHTTPRequest::OnStopRequest(nsIChannel* channel, nsISupports* i_Context,
                ("nsHTTPRequest [this=%x]. Writing POST data to the server.\n",
                 this));
 
-        rv = mTransport->AsyncWrite(mPostDataStream, 0, -1, (nsISupports*)(nsIRequest*)mConnection, this);
+        rv = mTransport->AsyncWrite(mPostDataStream, 0, -1, 
+                (nsISupports*)(nsIRequest*)mConnection, this);
 
         /* the mPostDataStream is released below... */
       }
@@ -498,7 +478,8 @@ nsHTTPRequest::OnStopRequest(nsIChannel* channel, nsISupports* i_Context,
                 "\tStatus: %x\n", 
                 this, iStatus));
 
-        nsHTTPResponseListener* pListener = new nsHTTPServerListener(mConnection);
+        nsHTTPResponseListener* pListener = 
+            new nsHTTPServerListener(mConnection);
         if (pListener) {
           NS_ADDREF(pListener);
           rv = mTransport->AsyncRead(0, -1, i_Context, pListener);

@@ -44,6 +44,8 @@ public:
     nsAuthEngine(void);
     virtual ~nsAuthEngine();
 
+    nsresult        Init();
+
     // Get an auth string
     NS_IMETHOD      GetAuthString(nsIURI* i_URI, char** o_AuthString);
 
