@@ -42,8 +42,9 @@
 #include "pldhash.h"
 #include "plarena.h"
 #include "nsString.h"
+#include "nsCOMPtr.h"
 
-class nsIUnicharInputStream;
+#include "nsIUnicharInputStream.h"
 
 static NS_DEFINE_CID(kPropertyElementCID, NS_IPROPERTYELEMENT_CID);
 static NS_DEFINE_CID(kPersistentPropertiesCID, NS_IPERSISTENTPROPERTIES_CID);
@@ -64,13 +65,22 @@ public:
   PRInt32 SkipLine(PRInt32 c);
   PRInt32 SkipWhiteSpace(PRInt32 c);
 
+#if 0
+  static NS_METHOD
+  SegmentWriter(nsIInputStream* aStream,
+                void* aClosure,
+                const char* aFromSegment,
+                PRUint32 aToOffset,
+                PRUint32 aCount,
+                PRUint32 *aWriteCount);
+#endif
+  
   static NS_METHOD
   Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
 protected:
-  nsIUnicharInputStream* mIn;
-  PRUint32 mBufferPos;
-  PRUint32 mBufferLength;
+  nsCOMPtr<nsIUnicharInputStream> mIn;
+  
   nsIPersistentProperties* mSubclass;
   struct PLDHashTable mTable;
   PLArenaPool mArena;
