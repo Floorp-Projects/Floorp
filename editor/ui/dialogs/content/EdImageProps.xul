@@ -173,7 +173,8 @@
                   class    = "narrow"
                   onfocus  = "oldSourceInt = this.value;"
                   onkeyup  = "constrainProportions(this.id, 'heightInput')"/>
-                <menulist id = "widthUnitsMenulist"/>
+                <menulist id = "widthUnitsMenulist"
+                  oncommand = "doDimensionEnabling();" />
                 <!-- contents are appended by JS -->
               </row>
               <!--////// IMAGE HEIGHT //////-->
@@ -187,7 +188,8 @@
                   class    = "narrow"
                   onfocus  = "oldSourceInt = this.value;"
                   onkeyup  = "constrainProportions(this.id, 'widthInput')"/>
-                <menulist id = "heightUnitsMenulist"/>
+                <menulist id = "heightUnitsMenulist"
+                  oncommand = "doDimensionEnabling();" />
                 <!-- contents are appended by JS -->
               </row>
             </rows>          
