@@ -21,4 +21,9 @@
 
 </search>
 
-<BROWSER alsomatch="http://technews.netscape.com/news/search/results/1,10199,0-1002,00.html">
+<BROWSER
+    alsomatch="http://technews.netscape.com/news/search/results/1,10199,0-1002,00.html"
+    update="http://search.netscape.com/sherlock/Tech_News.src" 
+    updateIcon="http://search.netscape.com/sherlock/Tech_News.gif" 
+    updateCheckDays="3" 
+> 

@@ -28,4 +28,9 @@
 
 </search>
 
-<BROWSER alsomatch="http://classifiedPlus.netscape.com/aolnc.netc/icleng">
+<BROWSER
+  alsomatch="http://classifiedPlus.netscape.com/aolnc.netc/icleng"
+  update="http://search.netscape.com/sherlock/ClassifiedPlus.src" 
+  updateIcon="http://search.netscape.com/sherlock/ClassifiedPlus.gif" 
+  updateCheckDays="3" 
+>

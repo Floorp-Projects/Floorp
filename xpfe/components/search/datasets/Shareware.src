@@ -24,4 +24,9 @@
 
 </search>
 
-<BROWSER alsomatch="http://sharewaresearch.netscape.com/cgi-bin/search.cgi">
+<BROWSER
+      alsomatch="http://sharewaresearch.netscape.com/cgi-bin/search.cgi"
+      update="http://search.netscape.com/sherlock/Shareware.src" 
+      updateIcon="http://search.netscape.com/sherlock/Shareware.gif" 
+      updateCheckDays="3"
+>

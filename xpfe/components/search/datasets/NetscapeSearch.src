@@ -51,4 +51,9 @@
 
 </SEARCH>
 
-<BROWSER alsomatch="http://search.netscape.com/cgi-bin/search http://search.netscape.com/search.tmpl http://google.netscape.com/netscape">
+<BROWSER
+      alsomatch="http://search.netscape.com/cgi-bin/search http://search.netscape.com/search.tmpl http://google.netscape.com/netscape"
+      update="http://search.netscape.com/sherlock/NetscapeSearch.src" 
+      updateIcon="http://search.netscape.com/sherlock/NetscapeSearch.gif" 
+      updateCheckDays="3"
+>

@@ -24,4 +24,9 @@
 
 </search>
 
-<BROWSER alsomatch="http://rollingstone.netscape.com/artist/list.btq">
+<BROWSER
+      alsomatch="http://rollingstone.netscape.com/artist/list.btq"
+      update="http://search.netscape.com/sherlock/Music_Artist.src" 
+      updateIcon="http://search.netscape.com/sherlock/Music_Artist.gif" 
+      updateCheckDays="3"
+>

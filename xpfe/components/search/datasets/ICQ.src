@@ -23,4 +23,9 @@
 
 </SEARCH>
 
-<BROWSER alsomatch="http://search.icq.com/dirsearch.adp">
+<BROWSER
+      alsomatch="http://search.icq.com/dirsearch.adp"
+      update="http://search.netscape.com/sherlock/ICQ.src" 
+      updateIcon="http://search.netscape.com/sherlock/ICQ.gif" 
+      updateCheckDays="3"
+>

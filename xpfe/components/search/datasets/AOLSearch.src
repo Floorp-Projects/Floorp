@@ -22,4 +22,9 @@
 
 </SEARCH>
 
-<BROWSER alsomatch="http://search.aol.com/dirsearch.adp">
+<BROWSER
+      alsomatch="http://search.aol.com/dirsearch.adp"
+      update="http://search.netscape.com/sherlock/AOLSearch.src" 
+      updateIcon="http://search.netscape.com/sherlock/AOLSearch.gif" 
+      updateCheckDays="3"
+>

@@ -27,4 +27,9 @@
 
 </search>
 
-<BROWSER alsomatch="http://shopping.search.aol.com/">
+<BROWSER
+      alsomatch="http://shopping.search.aol.com/"
+      update="http://search.netscape.com/sherlock/ShopNetscape.src" 
+      updateIcon="http://search.netscape.com/sherlock/ShopNetscape.gif" 
+      updateCheckDays="3"
+>

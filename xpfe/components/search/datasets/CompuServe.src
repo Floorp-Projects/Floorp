@@ -25,4 +25,9 @@
 
 </SEARCH>
 
-<BROWSER alsomatch="http://cissearch.compuserve.com/search/cssearch/cssearch-results.adp">
+<BROWSER
+        alsomatch="http://cissearch.compuserve.com/search/cssearch/cssearch-results.adp"
+        update="http://search.netscape.com/sherlock/CompuServe.src" 
+        updateIcon="http://search.netscape.com/sherlock/CompuServe.jpg" 
+        updateCheckDays="3" 
+>
