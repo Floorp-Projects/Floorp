@@ -46,6 +46,10 @@ nsFontMetricsPh :: nsFontMetricsPh()
   mAscent = 0;
   mDescent = 0;
   mLeading = 0;
+  mEmHeight = 0;
+  mEmAscent = 0;
+  mEmDescent = 0;
+  mMaxHeight = 0;
   mMaxAscent = 0;
   mMaxDescent = 0;
   mMaxAdvance = 0;
@@ -177,7 +181,7 @@ nsFontMetricsPh :: Init ( const nsFont& aFont, nsIAtom* aLangGroup,
 	  float f;
 		mDeviceContext->GetDevUnitsToAppUnits(f);
 		PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsFontMetricsPh::Init with nsFont: Internal Name <%s> f=<%f>\n",fontInfo.font, f));
-		mFontHandle = nsString(NSFullFontName);
+		mFontHandle = nsString( (const PRUnichar *) NSFullFontName, strlen(NSFullFontName));
 
 		/* These are in pixels and need to be converted! */
 		float height;
@@ -314,6 +318,30 @@ nsFontMetricsPh :: GetLeading(nscoord &aLeading)
 {
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsFontMetricsPh::GetLeading mLeading=<%d>- Not Implemented\n", mLeading));
   aLeading = mLeading;
+  return NS_OK;
+}
+
+NS_IMETHODIMP  nsFontMetricsPh::GetEmHeight(nscoord &aHeight)
+{
+  aHeight = mEmHeight;
+  return NS_OK;
+}
+
+NS_IMETHODIMP  nsFontMetricsPh::GetEmAscent(nscoord &aAscent)
+{
+  aAscent = mEmAscent;
+  return NS_OK;
+}
+
+NS_IMETHODIMP  nsFontMetricsPh::GetEmDescent(nscoord &aDescent)
+{
+  aDescent = mEmDescent;
+  return NS_OK;
+}
+
+NS_IMETHODIMP  nsFontMetricsPh::GetMaxHeight(nscoord &aHeight)
+{
+  aHeight = mMaxHeight;
   return NS_OK;
 }
 
@@ -481,7 +509,7 @@ static nsFontFamily* GetFontNames(char* aPattern)
       {
         PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsFontEnumeratorPh::GetFontNames Adding font <%s>\n", fDetails[index].desc));
 
-        nsAutoString familyName2(fDetails[index].desc);
+        nsAutoString familyName2( (const PRUnichar *) fDetails[index].desc, strlen(fDetails[index].desc) );
         family = (nsFontFamily*) PL_HashTableLookup(gFamilies, (nsString*) &familyName2);
         if (!family)
         {
@@ -490,7 +518,7 @@ static nsFontFamily* GetFontNames(char* aPattern)
           {
             continue;
           }
-          nsString* copy = new nsString(fDetails[index].desc);
+          nsString* copy = new nsString((const PRUnichar *) fDetails[index].desc, strlen( fDetails[index].desc) );
           if (!copy) {
            delete family;
            continue;
