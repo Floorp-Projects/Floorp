@@ -2005,8 +2005,6 @@ js_NewDateObjectMsec(JSContext *cx, jsdouble msec_time)
     if (!obj)
 	return NULL;
 
-    JS_DefineFunctions(cx, obj, date_methods);
-
     date = date_constructor(cx, obj);
     if (!date)
 	return NULL;
