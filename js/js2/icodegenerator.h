@@ -48,11 +48,23 @@ namespace JavaScript {
         SET_PROP,       // StringAtom &             Base Register               Source Register
 
         ADD,            // Source Register 1        Source Register 2           Destination Register
+        SUBTRACT,
+        MULTIPLY,
+        DIVIDE,
+        
         COMPARE,        // Source Register 1        Source Register 2           Destination Register
         NOT,            // Source Register          Destination Register
 
         BRANCH,         // Target label
-        BRANCH_COND     // Target label             Condition Register
+
+        BRANCH_LT,      // Target label             Condition Register
+        BRANCH_LE,
+        BRANCH_EQ,
+        BRANCH_NE,
+        BRANCH_GE,
+        BRANCH_GT,
+        
+        RETURN          // Source Register
     };
 
     class Instruction {
@@ -103,11 +115,12 @@ namespace JavaScript {
     typedef Instruction_3<StringAtom*, Register, Register> SetProp;
     typedef Instruction_2<StringAtom*, Register> LoadName, SaveName;
     typedef Instruction_2<float64, Register> LoadImmediate;
-    typedef Instruction_2<int32, Register> LoadVar, SaveVar;
+    typedef Instruction_2<uint32, Register> LoadVar, SaveVar;
     typedef Instruction_1<int32> Branch;
     typedef Instruction_2<int32, Register> BranchCond;
     typedef Instruction_3<Register, Register, Register> Arithmetic;
     typedef Instruction_2<Register, Register> Move;
+    typedef Instruction_1<Register> Return;
 
     typedef std::vector<Instruction *> InstructionStream;
     typedef InstructionStream::iterator InstructionIterator;
@@ -172,7 +185,7 @@ namespace JavaScript {
         void setLabel(InstructionStream *stream, int32 label);
 
         void branch(int32 label);
-        void branchConditional(int32 label, Register condition);
+        void branchConditional(int32 label, Register condition, ICodeOp branchOp = BRANCH_NE);
     
       public:
         ICodeGenerator() : topRegister(0) { iCode = new InstructionStream(); }
@@ -180,16 +193,17 @@ namespace JavaScript {
         void mergeStream(InstructionStream *sideStream);
         
         InstructionStream *complete();
+        InstructionStream *complete(Register result);
 
         ostream &print(ostream &s);
 
         Register op(ICodeOp op, Register source);
         Register op(ICodeOp op, Register source1, Register source2);
 
-        Register loadVariable(int32 frameIndex);
+        Register loadVariable(uint32 frameIndex);
         Register loadImmediate(double value);
 
-        void saveVariable(int32 frameIndex, Register value);
+        void saveVariable(uint32 frameIndex, Register value);
 
         Register loadName(StringAtom &name);
         Register getProperty(StringAtom &name, Register base);
@@ -210,7 +224,7 @@ namespace JavaScript {
     
         
         void beginWhileStatement(uint32 pos);
-        void endWhileExpression(Register condition);
+        void endWhileExpression(Register condition, ICodeOp branchOp = BRANCH_NE);
         void endWhileStatement();
 
     

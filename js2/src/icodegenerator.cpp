@@ -51,17 +51,24 @@ namespace JavaScript {
             if ((*ii)->itsOp == BRANCH)
                 static_cast<Branch *>(*ii)->itsOperand1 = labels[static_cast<Branch *>(*ii)->itsOperand1]->itsOffset;
             else 
-                if ((*ii)->itsOp == BRANCH_COND)
+                if ((*ii)->itsOp >= BRANCH_LT && (*ii)->itsOp <= BRANCH_GT)
                     static_cast<BranchCond *>(*ii)->itsOperand1 = labels[static_cast<BranchCond *>(*ii)->itsOperand1]->itsOffset;
         }
 
         return iCode;
     }
+    
+    InstructionStream *ICodeGenerator::complete(Register result)
+    {
+        Return *instr = new Return(RETURN, result);
+        iCode->push_back(instr);
+        return complete();
+    }
 
 
     /***********************************************************************************************/
 
-    Register ICodeGenerator::loadVariable(int32 frameIndex)
+    Register ICodeGenerator::loadVariable(uint32 frameIndex)
     {
         Register dest = getRegister();
         LoadVar *instr = new LoadVar(LOAD_VAR, frameIndex, dest);
@@ -93,7 +100,7 @@ namespace JavaScript {
         return dest;
     }
 
-    void ICodeGenerator::saveVariable(int32 frameIndex, Register value)
+    void ICodeGenerator::saveVariable(uint32 frameIndex, Register value)
     {
         SaveVar *instr = new SaveVar(SAVE_VAR, frameIndex, value);
         iCode->push_back(instr);
@@ -121,9 +128,9 @@ namespace JavaScript {
         iCode->push_back(instr);
     }
 
-    void ICodeGenerator::branchConditional(int32 label, Register condition)
+    void ICodeGenerator::branchConditional(int32 label, Register condition, ICodeOp branchOp)
     {
-        BranchCond *instr = new BranchCond(BRANCH_COND, label, condition);
+        BranchCond *instr = new BranchCond(branchOp, label, condition);
         iCode->push_back(instr);
     }
 
@@ -204,12 +211,12 @@ namespace JavaScript {
         iCode = new InstructionStream();
     }
 
-    void ICodeGenerator::endWhileExpression(Register condition)
+    void ICodeGenerator::endWhileExpression(Register condition, ICodeOp branchOp)
     {
         WhileCodeState *ics = static_cast<WhileCodeState *>(stitcher.back());
         ASSERT(ics->stateKind == While_state);
 
-        branchConditional(ics->whileBody, condition);
+        branchConditional(ics->whileBody, condition, branchOp);
         resetTopRegister();
         // stash away the condition expression and switch 
         // back to the main stream
@@ -530,10 +537,19 @@ namespace JavaScript {
             "get_prop",
             "set_prop", 
             "add",
+            "subtract",
+            "multiply",
+            "divide",
             "compare",
             "not",
             "branch",
-            "branch_cond",
+            "branch_lt",
+            "branch_le",
+            "branch_eq",
+            "branch_ne",
+            "branch_ge",
+            "branch_gt",
+            "return"
     };
 
     ostream &operator<<(ostream &s, StringAtom &str)
@@ -580,7 +596,12 @@ namespace JavaScript {
                         s << "target #" << t->itsOperand1;
                     }
                     break;
-                case BRANCH_COND :
+                case BRANCH_LT :
+                case BRANCH_LE :
+                case BRANCH_EQ :
+                case BRANCH_NE :
+                case BRANCH_GE :
+                case BRANCH_GT :
                     {
                         BranchCond *t = static_cast<BranchCond * >(instr);
                         s << "target #" << t->itsOperand1 << ", R" << t->itsOperand2;
@@ -600,6 +621,12 @@ namespace JavaScript {
                          s << "R" << t->itsOperand1 << ", R" << t->itsOperand2;
                     }
                     break;
+                case RETURN :
+                    {
+                         Return *t = static_cast<Return * >(instr);
+                         s << "R" << t->itsOperand1;
+                    }
+                    break;
             }
             s << "\n";
         }
@@ -612,6 +639,3 @@ namespace JavaScript {
 
 
 }   // namespace JavaScript
-
-
-
