@@ -54,6 +54,14 @@ public:
                        PRBool aIsAdjacentWithTop,
                        nsReflowStatus& aReflowStatus);
 
+  // Add frame into the reflow state as if this code reflowed it so
+  // that it can be manipulated by the vertical/horizontal,
+  // etc. alignment routines.
+  void AddFrame(nsIFrame* aFrame, const nsHTMLReflowMetrics& aMetrics);
+
+  // Take aFrame out of the list of frames to align
+  void RemoveFrame(nsIFrame* aFrame);
+
   void VerticalAlignFrames(nsRect& aLineBox,
                            nscoord& aMaxAscent,
                            nscoord& aMaxDescent);
@@ -88,6 +96,8 @@ public:
   nscoord GetAvailWidth() const {
     return mRightEdge - mX;
   }
+
+  PRBool IsZeroHeight() const;
 
 protected:
   nsresult SetFrame(nsIFrame* aFrame);
