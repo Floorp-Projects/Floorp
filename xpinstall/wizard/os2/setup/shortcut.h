@@ -20,7 +20,6 @@
  *
  * Contributor(s): 
  *     Sean Su <ssu@netscape.com>
- *     IBM Corp. 
  */
 
 #ifndef _SHORTCUT_H_
@@ -35,7 +34,7 @@ extern "C"
 {
 #endif
 
-APIRET CreateALink(PSZ lpszPathObj, PSZ lpszPathLink, PSZ lpszDesc, PSZ lpszWorkingPath, PSZ lpszArgs, PSZ lpszIconFullPath, int iIcon);
+HRESULT CreateALink(LPSTR lpszPathObj, LPSTR lpszPathLink, LPSTR lpszDesc, LPSTR lpszWorkingPath, LPSTR lpszArgs, LPSTR lpszIconFullPath, int iIcon);
 
 #ifdef __cplusplus
 }

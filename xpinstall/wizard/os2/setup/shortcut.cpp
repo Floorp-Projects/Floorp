@@ -20,7 +20,6 @@
  *
  * Contributor(s): 
  *     Sean Su <ssu@netscape.com>
- *     IBM Corp. 
  */
 
 /* This is a hack for vc5.0.  It needs to be set *before* any shell
@@ -37,16 +36,16 @@ DEFINE_OLEGUID(IID_IPersistFile, 0x0000010BL, 0, 0);
 #include <shlguid.h>
 #include "shortcut.h"
 
-APIRET CreateALink(PSZ lpszPathObj, PSZ lpszPathLink, PSZ lpszDesc, PSZ lpszWorkingPath, PSZ lpszArgs, PSZ lpszIconFullPath, int iIcon)
+HRESULT CreateALink(LPSTR lpszPathObj, LPSTR lpszPathLink, LPSTR lpszDesc, LPSTR lpszWorkingPath, LPSTR lpszArgs, LPSTR lpszIconFullPath, int iIcon)
 { 
-    APIRET    hres; 
+    HRESULT    hres; 
     IShellLink *psl;
     char       lpszFullPath[MAX_BUF];
 
-    lstrcpy(lpszFullPath, lpszPathLink);
-    lstrcat(lpszFullPath, "\\");
-    lstrcat(lpszFullPath, lpszDesc);
-    lstrcat(lpszFullPath, ".lnk");
+    strcpy(lpszFullPath, lpszPathLink);
+    strcat(lpszFullPath, "\\");
+    strcat(lpszFullPath, lpszDesc);
+    strcat(lpszFullPath, ".lnk");
 
     CreateDirectory(lpszPathLink, NULL);
     CoInitialize(NULL);
@@ -60,7 +59,12 @@ APIRET CreateALink(PSZ lpszPathObj, PSZ lpszPathLink, PSZ lpszDesc, PSZ lpszWork
         // Set the path to the shortcut target, and add the 
         // description. 
         psl->SetPath(lpszPathObj);
-        psl->SetDescription(lpszDesc);
+
+        // Do not set the description at this time.  We need to fix this
+        // parameter so it can be passed in independent of the shortcut name
+        // itself.  Comment this code out for now until a real fix can be done.
+        // psl->SetDescription(lpszDesc);
+
         if(lpszWorkingPath)
             psl->SetWorkingDirectory(lpszWorkingPath);
         if(lpszArgs)
@@ -72,7 +76,7 @@ APIRET CreateALink(PSZ lpszPathObj, PSZ lpszPathLink, PSZ lpszDesc, PSZ lpszWork
         hres = psl->QueryInterface(IID_IPersistFile, (LPVOID FAR *)&ppf); 
         if(SUCCEEDED(hres))
         { 
-            LONG wsz[MAX_BUF]; 
+            WORD wsz[MAX_BUF]; 
  
             // Ensure that the string is ANSI. 
             MultiByteToWideChar(CP_ACP, 0, lpszFullPath, -1, (wchar_t *)wsz, MAX_BUF);

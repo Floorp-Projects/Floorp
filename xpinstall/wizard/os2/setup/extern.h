@@ -20,7 +20,6 @@
  *
  * Contributor(s): 
  *     Sean Su <ssu@netscape.com>
- *     IBM Corp.  
  */
 
 #ifndef _EXTERN_H_
@@ -29,41 +28,39 @@
 #include "setup.h"
 
 /* external global variables */
-extern HOBJECT        hInst;
-extern HOBJECT        hSetupRscInst;
-extern HOBJECT        hSDInst;
-extern HOBJECT        hXPIStubInst;
+extern HINSTANCE        hInst;
+extern HINSTANCE        hSetupRscInst;
+extern HINSTANCE        hSDInst;
+extern HINSTANCE        hXPIStubInst;
 
 extern HBITMAP          hbmpBoxChecked;
 extern HBITMAP          hbmpBoxCheckedDisabled;
 extern HBITMAP          hbmpBoxUnChecked;
 
-extern LHANDLE           hAccelTable;
-
 extern HWND             hDlgCurrent;
 extern HWND             hDlgMessage;
 extern HWND             hWndMain;
 
-extern PSZ            szEGlobalAlloc;
-extern PSZ            szEStringLoad;
-extern PSZ            szEDllLoad;
-extern PSZ            szEStringNull;
-extern PSZ            szTempSetupPath;
+extern LPSTR            szEGlobalAlloc;
+extern LPSTR            szEStringLoad;
+extern LPSTR            szEDllLoad;
+extern LPSTR            szEStringNull;
+extern LPSTR            szTempSetupPath;
 
-extern PSZ            szSetupDir;
-extern PSZ            szTempDir;
-extern PSZ            szOSTempDir;
-extern PSZ            szFileIniConfig;
-extern PSZ            szFileIniInstall;
+extern LPSTR            szSetupDir;
+extern LPSTR            szTempDir;
+extern LPSTR            szOSTempDir;
+extern LPSTR            szFileIniConfig;
+extern LPSTR            szFileIniInstall;
 
-extern PSZ            szSiteSelectorDescription;
+extern LPSTR            szSiteSelectorDescription;
 
-extern ULONG            dwWizardState;
-extern ULONG            dwSetupType;
+extern ULONG            ulWizardState;
+extern ULONG            ulSetupType;
 
-extern ULONG            dwTempSetupType;
-extern ULONG            gdwUpgradeValue;
-extern ULONG            gdwSiteSelectorStatus;
+extern ULONG            ulTempSetupType;
+extern ULONG            gulUpgradeValue;
+extern ULONG            gulSiteSelectorStatus;
 
 extern BOOL             bSDUserCanceled;
 extern BOOL             bIdiArchivesExists;
@@ -74,17 +71,19 @@ extern BOOL             gbPreviousUnfinishedDownload;
 extern BOOL             gbIgnoreRunAppX;
 extern BOOL             gbIgnoreProgramFolderX;
 extern BOOL             gbRestrictedAccess;
+extern BOOL             gbDownloadTriggered;
 
 extern setupGen         sgProduct;
 extern diS              diSetup;
 extern diW              diWelcome;
+extern diQL             diQuickLaunch;
 extern diL              diLicense;
 extern diST             diSetupType;
 extern diSC             diSelectComponents;
 extern diSC             diSelectAdditionalComponents;
 extern diWI             diWindowsIntegration;
 extern diPF             diProgramFolder;
-extern diDO             diDownloadOptions;
+extern diDO             diAdditionalOptions;
 extern diAS             diAdvancedSettings;
 extern diSI             diStartInstall;
 extern diD              diDownload;

@@ -18,7 +18,6 @@
  * 
  * Contributor(s): 
  *   Sean Su <ssu@netscape.com>
- *     IBM Corp. 
  */
 
 #ifndef _XPNETHOOK_H_
@@ -37,10 +36,9 @@ int DownloadFiles(char *szInputIniFile,
                   char *szProxyUser,
                   char *szProxyPasswd,
                   BOOL bShowRetryMsg,
-                  int *iNetRetries,
                   BOOL bIgnoreNetworkError,
                   char *szFailedFile,
-                  ULONG dwFailedFileSize);
+                  DWORD dwFailedFileSize);
 
 #endif /* _XPNETHOOK_H_ */
 

@@ -1,61 +1,80 @@
 #
-# The contents of this file are subject to the Netscape Public
+# The contents of this file are subject to the Mozilla Public
 # License Version 1.1 (the "License"); you may not use this file
 # except in compliance with the License. You may obtain a copy of
-# the License at http://www.mozilla.org/NPL/
-#
+# the License at http://www.mozilla.org/MPL/
+# 
 # Software distributed under the License is distributed on an "AS
 # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
 # implied. See the License for the specific language governing
 # rights and limitations under the License.
-#
-# The Original Code is Mozilla Communicator client code, 
-# released March 31, 1998. 
-#
-# The Initial Developer of the Original Code is Netscape Communications 
-# Corporation.  Portions created by Netscape are
-# Copyright (C) 1999 Netscape Communications Corporation. All
+# 
+# The Original Code is mozilla.org code
+# 
+# The Initial Developer of the Original Code is Netscape
+# Communications Corporation.  Portions created by Netscape are 
+# Copyright (C) 2001 Netscape Communications Corporation.  All
 # Rights Reserved.
+# 
+# Contributor(s):
 #
-# Contributor(s): 
-#     Sean Su <ssu@netscape.com>
 
-DEPTH=../../../..
+DEPTH		= ../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
-MODULE          = setup
-PROGRAM         = $(MODULE).exe
-RESFILE         = $(MODULE).res
-
-CSRCS =                          \
-    dialogs.c     \
-    extra.c       \
-    ifuncns.c     \
-    setup.c       \
-    xpi.c         \
-    logging.c     \
-    $(NULL)
-
-CPPSRCS =                          \
-    shortcut.cpp    \
-    xpnetHook.cpp   \
-    nsEscape.cpp    \
-    $(NULL)
-
-LIBS=                          \
-    $(DIST)/lib/nsreg_s.lib     \
-    $(DIST)/lib/jar_s.lib       \
-    $(DIST)/lib/zlib_s.lib      \
-    $(DIST)/lib/xpnet_s.lib     \
-    $(NULL)
-
-#LLFLAGS= /NODEFAULTLIB libc.lib libcd.lib
-
 include $(DEPTH)/config/autoconf.mk
+
+PROGRAM		= setup$(BIN_SUFFIX)
+RESFILE		= setup.res
+REQUIRES	= \
+		setuprsc \
+		xpnet \
+		$(NULL)
+
+EXTRA_DSO_LIBS	= \
+		mozregsa_s \
+		jar50_s \
+		mozz_s \
+		xpnet_s \
+		$(NULL)
+
+USE_NON_MT_LIBS = 1
+
+CSRCS		= \
+		setup.c \
+		extra.c \
+		ifuncns.c \
+		logging.c \
+		xpi.c \
+		dialogs.c
+
+
+CPPSRCS		= \
+		nsEscape.cpp \
+		nsINIParser.cpp \
+		$(NULL)
+
+#		xpnetHook.cpp \
+#		shortcut.cpp \
+
+LIBS		= $(EXTRA_DSO_LIBS)
+
+LOCAL_INCLUDES	= -I$(srcdir)/../uninstall
+
+NO_DIST_INSTALL	= 1
+
 
 include $(topsrcdir)/config/rules.mk
 
+LDFLAGS += /PM:PM
+
 libs:: $(PROGRAM)
-	$(MAKE_INSTALL) $(PROGRAM) $(DIST)/install
+	$(INSTALL) $(PROGRAM) $(DIST)/install
+
+install:: $(PROGRAM)
+	$(INSTALL) $(PROGRAM) $(DESTDIR)$(mozappdir)/install
+
+clean clobber realclean clobber_all::
+	$(RM) $(DIST)/install/$(PROGRAM)

@@ -48,9 +48,12 @@ LDFLAGS += /PM:PM
 
 libs:: $(PROGRAM)
 	$(INSTALL) $(PROGRAM) $(DIST)/install
+	$(INSTALL) $(RESFILE) $(DIST)/install
 
 install:: $(PROGRAM)
 	$(SYSINSTALL) $(IFLAGS2) $(PROGRAM) $(DESTDIR)$(mozappdir)/install
+	$(SYSINSTALL) $(IFLAGS2) $(RESFILE) $(DESTDIR)$(mozappdir)/install
 
 clean clobber realclean clobber_all::
 	$(RM) $(DIST)/install/$(PROGRAM)
+	$(RM) $(DIST)/install/$(RESFILE)

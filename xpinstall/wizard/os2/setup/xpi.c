@@ -20,7 +20,6 @@
  *
  * Contributor(s): 
  *     Sean Su <ssu@netscape.com>
- *     IBM Corp. 
  */
 
 #include "extern.h"
@@ -35,9 +34,9 @@
 #define BDIR_RIGHT 1
 #define BDIR_LEFT  2
 
-typedef APIRET (_cdecl *XpiInit)(const char *, const char *aLogName, pfnXPIProgress);
-typedef APIRET (_cdecl *XpiInstall)(const char *, const char *, long);
-typedef void    (_cdecl *XpiExit)(void);
+typedef HRESULT (_Optlink *XpiInit)(const char *, const char *aLogName, pfnXPIProgress);
+typedef HRESULT (_Optlink *XpiInstall)(const char *, const char *, long);
+typedef void    (_Optlink *XpiExit)(void);
 
 static XpiInit          pfnXpiInit;
 static XpiInstall       pfnXpiInstall;
@@ -46,9 +45,9 @@ static XpiExit          pfnXpiExit;
 static long             lFileCounter;
 static long             lBarberCounter;
 static BOOL             bBarberBar;
-static ULONG            dwBarberDirection;
-static ULONG            dwCurrentArchive;
-static ULONG            dwTotalArchives;
+static DWORD            dwBarberDirection;
+static DWORD            dwCurrentArchive;
+static DWORD            dwTotalArchives;
 char                    szStrProcessingFile[MAX_BUF];
 char                    szStrCopyingFile[MAX_BUF];
 char                    szStrInstalling[MAX_BUF];
@@ -66,56 +65,55 @@ struct ExtractFilesDlgInfo
 	int		nArchiveBars;		  // current number of bars to display
 } dlgInfo;
 
-APIRET InitializeXPIStub()
+HRESULT InitializeXPIStub()
 {
   char szBuf[MAX_BUF];
   char szXPIStubFile[MAX_BUF];
   char szEGetProcAddress[MAX_BUF];
-  HINI  hiniInstall;
 
   hXPIStubInst = NULL;
-  hiniInstall = PrfOpenProfile((HAB)0, szFileIniInstall);
-  if(!PrfQueryProfileString(hiniInstall, "Messages", "ERROR_GETPROCADDRESS", "", szEGetProcAddress, sizeof(szEGetProcAddress)))
-  {
-    PrfCloseProfile(hiniInstall);
+
+  if(!GetPrivateProfileString("Messages", "ERROR_GETPROCADDRESS", "", szEGetProcAddress, sizeof(szEGetProcAddress), szFileIniInstall))
     return(1);
-  }
-  PrfCloseProfile(hiniInstall);
+
   /* change current directory to where xpistub.dll */
-  lstrcpy(szBuf, siCFXpcomFile.szDestination);
+  /* change current directory to where xpistub.dll */
+  strcpy(szBuf, siCFXpcomFile.szDestination);
   AppendBackSlash(szBuf, sizeof(szBuf));
-  lstrcat(szBuf, "bin");
+  strcat(szBuf, "bin");
   chdir(szBuf);
 
+  /* Add it to LIBPATH just in case */
+  DosSetExtLIBPATH(szBuf, BEGIN_LIBPATH);
+
   /* build full path to xpistub.dll */
-  lstrcpy(szXPIStubFile, szBuf);
+  strcpy(szXPIStubFile, szBuf);
   AppendBackSlash(szXPIStubFile, sizeof(szXPIStubFile));
-  lstrcat(szXPIStubFile, "xpistub.dll");
+  strcat(szXPIStubFile, "xpistub.dll");
 
   if(FileExists(szXPIStubFile) == FALSE)
     return(2);
 
   /* load xpistub.dll */
-  
-  if(DosLoadModule(NULL, 0, szXPIStubFile, hXPIStubInst) != NO_ERROR)
+  if(DosLoadModule(NULL, 0, szXPIStubFile, &hXPIStubInst) != NO_ERROR)
   {
     sprintf(szBuf, szEDllLoad, szXPIStubFile);
     PrintError(szBuf, ERROR_CODE_SHOW);
     return(1);
   }
-  if(DosQueryProcAddr(hXPIstubInst, 0, "XPI_Init", pfnXpiInit) != NO_ERROR)
+  if(DosQueryProcAddr(hXPIStubInst, 0, "XPI_Init", &pfnXpiInit) != NO_ERROR)
   {
     sprintf(szBuf, szEGetProcAddress, "XPI_Init");
     PrintError(szBuf, ERROR_CODE_SHOW);
     return(1);
   }
-  if(DosQueryProcAddr(hXPIstubInst, 0, "XPI_Install", pfnXpiInstall) != NO_ERROR)
+  if(DosQueryProcAddr(hXPIStubInst, 0, "XPI_Install", &pfnXpiInstall) != NO_ERROR)
   {
     sprintf(szBuf, szEGetProcAddress, "XPI_Install");
     PrintError(szBuf, ERROR_CODE_SHOW);
     return(1);
   }
-  if(DosQueryProcAddr(hXPIstubInst, 0, "XPI_Exit", pfnXpiExit) != NO_ERROR)
+  if(DosQueryProcAddr(hXPIStubInst, 0, "XPI_Exit", &pfnXpiExit) != NO_ERROR)
   {
     sprintf(szBuf, szEGetProcAddress, "XPI_Exit");
     PrintError(szBuf, ERROR_CODE_SHOW);
@@ -125,7 +123,7 @@ APIRET InitializeXPIStub()
   return(0);
 }
 
-APIRET DeInitializeXPIStub()
+HRESULT DeInitializeXPIStub()
 {
   pfnXpiInit    = NULL;
   pfnXpiInstall = NULL;
@@ -140,7 +138,7 @@ APIRET DeInitializeXPIStub()
 
 void GetTotalArchivesToInstall(void)
 {
-  ULONG     dwIndex0;
+  DWORD     dwIndex0;
   siC       *siCObject = NULL;
 
   dwIndex0        = 0;
@@ -156,7 +154,7 @@ void GetTotalArchivesToInstall(void)
   }
 }
 
-char *GetErrorString(ULONG dwError, char *szErrorString, ULONG dwErrorStringSize)
+char *GetErrorString(DWORD dwError, char *szErrorString, DWORD dwErrorStringSize)
 {
   int  i = 0;
   char szErrorNumber[MAX_BUF];
@@ -170,10 +168,10 @@ char *GetErrorString(ULONG dwError, char *szErrorString, ULONG dwErrorStringSize
     if(*XpErrorList[i] == '\0')
       break;
 
-    if(lstrcmpi(szErrorNumber, XpErrorList[i]) == 0)
+    if(strcmpi(szErrorNumber, XpErrorList[i]) == 0)
     {
       if(*XpErrorList[i + 1] != '\0')
-        lstrcpy(szErrorString, XpErrorList[i + 1]);
+        strcpy(szErrorString, XpErrorList[i + 1]);
 
       break;
     }
@@ -184,61 +182,64 @@ char *GetErrorString(ULONG dwError, char *szErrorString, ULONG dwErrorStringSize
   return(szErrorString);
 }
 
-APIRET SmartUpdateJars()
+#ifdef OLDCODE
+/* function that clears the file progress bar of the xpinstall progress
+ * dialog.
+ */
+void InvalidateBarberBarArea()
 {
-  ULONG     dwIndex0;
+  HWND	hWndGauge;
+  RECT	rect;
+
+  /* get the file progress bar gauge */
+  hWndGauge = GetDlgItem(dlgInfo.hWndDlg, IDC_GAUGE_FILE);
+  /* get the dimensions of the gauge */
+  GetClientRect(hWndGauge, &rect);
+  /* invalidate the rect area of the gauge */
+  InvalidateRect(hWndGauge, &rect, FALSE);
+  /* update the dialog */
+  UpdateWindow(dlgInfo.hWndDlg);
+}
+#endif
+
+HRESULT SmartUpdateJars()
+{
+  DWORD     dwIndex0;
   siC       *siCObject = NULL;
-  APIRET   hrResult;
+  HRESULT   hrResult;
   char      szBuf[MAX_BUF];
   char      szEXpiInstall[MAX_BUF];
   char      szArchive[MAX_BUF];
   char      szMsgSmartUpdateStart[MAX_BUF];
   char      szDlgExtractingTitle[MAX_BUF];
-  HINI       hiniInstall;
 
-  hiniInstall = PrfOpenProfile((HAB)0, szFileIniInstall);
-  if(!PrfQueryProfileString(hiniInstall, "Messages", "MSG_SMARTUPDATE_START", "", szMsgSmartUpdateStart, sizeof(szMsgSmartUpdateStart)))
-  {
-    PrfCloseProfile(hiniInstall);
+  if(!GetPrivateProfileString("Messages", "MSG_SMARTUPDATE_START", "", szMsgSmartUpdateStart, sizeof(szMsgSmartUpdateStart), szFileIniInstall))
     return(1);
-  }
-  if(!PrfQueryProfileString(hiniInstall, "Messages", "DLG_EXTRACTING_TITLE", "", szDlgExtractingTitle, sizeof(szDlgExtractingTitle)))
-  {
-    PrfCloseProfile(hiniInstall);
+  if(!GetPrivateProfileString("Messages", "DLG_EXTRACTING_TITLE", "", szDlgExtractingTitle, sizeof(szDlgExtractingTitle), szFileIniInstall))
     return(1);
-  }
-  if(!PrfQueryProfileString(hiniInstall, "Messages", "STR_PROCESSINGFILE", "", szStrProcessingFile, sizeof(szStrProcessingFile)))
-  {
-    PrfCloseProfile(hiniInstall);
+  if(!GetPrivateProfileString("Messages", "STR_PROCESSINGFILE", "", szStrProcessingFile, sizeof(szStrProcessingFile), szFileIniInstall))
     exit(1);
-  }
-  if(!PrfQueryProfileString(hiniInstall, "Messages", "STR_INSTALLING", "", szStrInstalling, sizeof(szStrInstalling)))
-  {
-    PrfCloseProfile(hiniInstall);
+  if(!GetPrivateProfileString("Messages", "STR_INSTALLING", "", szStrInstalling, sizeof(szStrInstalling), szFileIniInstall))
     exit(1);
-  }
-  if(!PrfQueryProfileString(hiniInstall, "Messages", "STR_COPYINGFILE", "", szStrCopyingFile, sizeof(szStrCopyingFile)))
-  {
-    PrfCloseProfile(hiniInstall);
+  if(!GetPrivateProfileString("Messages", "STR_COPYINGFILE", "", szStrCopyingFile, sizeof(szStrCopyingFile), szFileIniInstall))
     exit(1);
-  }
 
   ShowMessage(szMsgSmartUpdateStart, TRUE);
   if(InitializeXPIStub() == WIZ_OK)
   {
     LogISXPInstall(W_START);
-    lstrcpy(szBuf, sgProduct.szPath);
+    strcpy(szBuf, sgProduct.szPath);
     if(*sgProduct.szSubPath != '\0')
     {
       AppendBackSlash(szBuf, sizeof(szBuf));
-      lstrcat(szBuf, sgProduct.szSubPath);
+      strcat(szBuf, sgProduct.szSubPath);
     }
     hrResult = pfnXpiInit(szBuf, FILE_INSTALL_LOG, cbXPIProgress);
 
     ShowMessage(szMsgSmartUpdateStart, FALSE);
-    InitProgressDlg();
+//    InitProgressDlg();
     GetTotalArchivesToInstall();
-    WinSetWindowText(dlgInfo.hWndDlg, szDlgExtractingTitle);
+//    WinSetWindowText(dlgInfo.hWndDlg, szDlgExtractingTitle);
 
     dwIndex0          = 0;
     dwCurrentArchive  = 0;
@@ -260,31 +261,30 @@ APIRET SmartUpdateJars()
         lBarberCounter    = 0;
         dwBarberDirection = BDIR_RIGHT;
 			  dlgInfo.nFileBars = 0;
-        UpdateGaugeFileProgressBar(0);
+//        UpdateGaugeFileProgressBar(0);
 
-        lstrcpy(szArchive, sgProduct.szAlternateArchiveSearchPath);
+        strcpy(szArchive, sgProduct.szAlternateArchiveSearchPath);
         AppendBackSlash(szArchive, sizeof(szArchive));
-        lstrcat(szArchive, siCObject->szArchiveName);
+        strcat(szArchive, siCObject->szArchiveName);
         if((*sgProduct.szAlternateArchiveSearchPath == '\0') || (!FileExists(szArchive)))
         {
-          lstrcpy(szArchive, szSetupDir);
+          strcpy(szArchive, szSetupDir);
           AppendBackSlash(szArchive, sizeof(szArchive));
-          lstrcat(szArchive, siCObject->szArchiveName);
+          strcat(szArchive, siCObject->szArchiveName);
           if(!FileExists(szArchive))
           {
-            lstrcpy(szArchive, szTempDir);
+            strcpy(szArchive, szTempDir);
             AppendBackSlash(szArchive, sizeof(szArchive));
-            lstrcat(szArchive, siCObject->szArchiveName);
+            strcat(szArchive, siCObject->szArchiveName);
             if(!FileExists(szArchive))
             {
               char szEFileNotFound[MAX_BUF];
 
-              if(PrfQueryProfileString(hiniInstall, "Messages", "ERROR_FILE_NOT_FOUND", "", szEFileNotFound, sizeof(szEFileNotFound)))
+              if(GetPrivateProfileString("Messages", "ERROR_FILE_NOT_FOUND", "", szEFileNotFound, sizeof(szEFileNotFound), szFileIniInstall))
               {
                 sprintf(szBuf, szEFileNotFound, szArchive);
                 PrintError(szBuf, ERROR_CODE_HIDE);
               }
-              PrfCloseProfile(hiniInstall);
               return(1);
             }
           }
@@ -293,11 +293,11 @@ APIRET SmartUpdateJars()
         if(dwCurrentArchive == 0)
         {
           ++dwCurrentArchive;
-          UpdateGaugeArchiveProgressBar((unsigned)(((double)(dwCurrentArchive)/(double)dwTotalArchives)*(double)100));
+//          UpdateGaugeArchiveProgressBar((unsigned)(((double)(dwCurrentArchive)/(double)dwTotalArchives)*(double)100));
         }
 
         sprintf(szBuf, szStrInstalling, siCObject->szDescriptionShort);
-        WinSetDlgItemText(dlgInfo.hWndDlg, IDC_STATUS0, szBuf);
+//        SetDlgItemText(dlgInfo.hWndDlg, IDC_STATUS0, szBuf);
         LogISXPInstallComponent(siCObject->szDescriptionShort);
 
         hrResult = pfnXpiInstall(szArchive, "", 0xFFFF);
@@ -308,7 +308,7 @@ APIRET SmartUpdateJars()
         {
           LogMSXPInstallStatus(siCObject->szArchiveName, hrResult);
           LogISXPInstallComponentResult(hrResult);
-          if(PrfQueryProfileString(hiniInstall, "Messages", "ERROR_XPI_INSTALL", "", szEXpiInstall, sizeof(szEXpiInstall)))
+          if(GetPrivateProfileString("Messages", "ERROR_XPI_INSTALL", "", szEXpiInstall, sizeof(szEXpiInstall), szFileIniInstall))
           {
             char szErrorString[MAX_BUF];
 
@@ -322,8 +322,8 @@ APIRET SmartUpdateJars()
         }
 
         ++dwCurrentArchive;
-        UpdateGaugeArchiveProgressBar((unsigned)(((double)(dwCurrentArchive)/(double)dwTotalArchives)*(double)100));
-        ProcessWindowsMessages();
+//        UpdateGaugeArchiveProgressBar((unsigned)(((double)(dwCurrentArchive)/(double)dwTotalArchives)*(double)100));
+//        ProcessWindowsMessages();
         LogISXPInstallComponentResult(hrResult);
 
         if((hrResult != WIZ_OK) &&
@@ -345,7 +345,7 @@ APIRET SmartUpdateJars()
 
     LogMSXPInstallStatus(NULL, hrResult);
     pfnXpiExit();
-    DeInitProgressDlg();
+//    DeInitProgressDlg();
   }
   else
   {
@@ -354,7 +354,7 @@ APIRET SmartUpdateJars()
 
   DeInitializeXPIStub();
   LogISXPInstall(W_END);
-  PrfCloseProfile(hiniInstall);
+
   return(hrResult);
 }
 
@@ -368,16 +368,16 @@ void cbXPIProgress(const char* msg, PRInt32 val, PRInt32 max)
   char szStrProcessingFileBuf[MAX_BUF];
   char szStrCopyingFileBuf[MAX_BUF];
 
-  if(sgProduct.dwMode != SILENT)
+  if(sgProduct.ulMode != SILENT)
   {
     ParsePath((char *)msg, szFilename, sizeof(szFilename), FALSE, PP_FILENAME_ONLY);
 
     if(max == 0)
     {
       sprintf(szStrProcessingFileBuf, szStrProcessingFile, szFilename);
-      WinSetDlgItemText(dlgInfo.hWndDlg, IDC_STATUS3, szStrProcessingFileBuf);
+//      SetDlgItemText(dlgInfo.hWndDlg, IDC_STATUS3, szStrProcessingFileBuf);
       bBarberBar = TRUE;
-      UpdateGaugeFileBarber();
+//      UpdateGaugeFileBarber();
     }
     else
     {
@@ -385,13 +385,14 @@ void cbXPIProgress(const char* msg, PRInt32 val, PRInt32 max)
       {
         dlgInfo.nFileBars = 0;
         ++dwCurrentArchive;
-        UpdateGaugeArchiveProgressBar((unsigned)(((double)(dwCurrentArchive)/(double)dwTotalArchives)*(double)100));
+//        UpdateGaugeArchiveProgressBar((unsigned)(((double)(dwCurrentArchive)/(double)dwTotalArchives)*(double)100));
+//        InvalidateBarberBarArea();
         bBarberBar = FALSE;
       }
 
       sprintf(szStrCopyingFileBuf, szStrCopyingFile, szFilename);
-      WinSetDlgItemText(dlgInfo.hWndDlg, IDC_STATUS3, szStrCopyingFileBuf);
-      UpdateGaugeFileProgressBar((unsigned)(((double)(val+1)/(double)max)*(double)100));
+//      SetDlgItemText(dlgInfo.hWndDlg, IDC_STATUS3, szStrCopyingFileBuf);
+//      UpdateGaugeFileProgressBar((unsigned)(((double)(val+1)/(double)max)*(double)100));
     }
   }
 
@@ -404,6 +405,7 @@ void cbXPIFinal(const char *URL, PRInt32 finalStatus)
 
 
 
+#ifdef OLDCODE
 /////////////////////////////////////////////////////////////////////////////
 // Progress bar
 
@@ -412,34 +414,29 @@ void cbXPIFinal(const char *URL, PRInt32 finalStatus)
 static void
 CenterWindow(HWND hWndDlg)
 {
-	RECTL	rect;
+	RECT	rect;
 	int		iLeft, iTop;
 
-	WinQueryWindowRect(hWndDlg, &rect);
-	iLeft = (WinQuerySysValue(SV_CXSCREEN) - (rect.xRight - rect.xLeft)) / 2;
-	iTop  = (WinQuerySysValue(SV_CYSCREEN) - (rect.yBottom - rect.yTop)) / 2;
+	GetWindowRect(hWndDlg, &rect);
+	iLeft = (GetSystemMetrics(SM_CXSCREEN) - (rect.right - rect.left)) / 2;
+	iTop  = (GetSystemMetrics(SM_CYSCREEN) - (rect.bottom - rect.top)) / 2;
 
-	WinSetWindowPos(hWndDlg, NULL, iLeft, iTop, -1, -1, SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
+	SetWindowPos(hWndDlg, NULL, iLeft, iTop, -1, -1, SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
 }
 
 // Window proc for dialog
-MRESULT EXPENTRY
-ProgressDlgProc(HWND hWndDlg, UINT msg, WPARAM wParam, WPARAM lParam)
+LRESULT CALLBACK
+ProgressDlgProc(HWND hWndDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-   PSZ pszFontNameSize;
-   ULONG ulFontNameSizeLength;
 	switch (msg)
   {
 		case WM_INITDIALOG:
       DisableSystemMenuItems(hWndDlg, TRUE);
 			CenterWindow(hWndDlg);
-      pszFontNameSize = myGetSysFont();
-      ulFontNameSizeLength = sizeof(pszFontNameSize) + 1;
-
-      WinSetPresParam(WinWindowFromID(hDlg, IDC_STATUS0), PP_FONTNAMESIZE, ulFontNameSizeLength, pszFontNameSize);
-      WinSetPresParam(WinWindowFromID(hDlg, IDC_GAUGE_ARCHIVE), PP_FONTNAMESIZE, ulFontNameSizeLength, pszFontNameSize);
-      WinSetPresParam(WinWindowFromID(hDlg, IDC_STATUS3), PP_FONTNAMESIZE, ulFontNameSizeLength, pszFontNameSize);
-      WinSetPresParam(WinWindowFromID(hDlg, IDC_GAUGE_FILE), PP_FONTNAMESIZE, ulFontNameSizeLength, pszFontNameSize);
+      SendDlgItemMessage (hWndDlg, IDC_STATUS0, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L); 
+      SendDlgItemMessage (hWndDlg, IDC_GAUGE_ARCHIVE, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L); 
+      SendDlgItemMessage (hWndDlg, IDC_STATUS3, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L); 
+      SendDlgItemMessage (hWndDlg, IDC_GAUGE_FILE, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L); 
 			return FALSE;
 
 		case WM_COMMAND:
@@ -456,14 +453,17 @@ UpdateGaugeFileBarber()
 {
 	int	  nBars;
 	HWND	hWndGauge;
-	RECTL	rect;
+	RECT	rect;
 
   if(sgProduct.dwMode != SILENT)
   {
-	  hWndGauge = WinWindowFromID(dlgInfo.hWndDlg, IDC_GAUGE_FILE);
+	  hWndGauge = GetDlgItem(dlgInfo.hWndDlg, IDC_GAUGE_FILE);
     if(dwBarberDirection == BDIR_RIGHT)
     {
-      if(lBarberCounter < 151)
+      // 121 is the (number of bars) + (number bars in barber bar).
+      // this number determines how far to the right to draw the barber bat
+      // so as to make it look like it disappears off the progress meter area.
+      if(lBarberCounter < 121)
         ++lBarberCounter;
       else
         dwBarberDirection = BDIR_LEFT;
@@ -483,13 +483,13 @@ UpdateGaugeFileBarber()
     dlgInfo.nFileBars = nBars;
 
     // Only invalidate the part that needs updating
-    WinQueryWindowRect(hWndGauge, &rect);
-    WinInvalidateRect(hWndGauge, &rect, FALSE);
+    GetClientRect(hWndGauge, &rect);
+    InvalidateRect(hWndGauge, &rect, FALSE);
 
     // Update the whole extracting dialog. We do this because we don't
     // have a message loop to process WM_PAINT messages in case the
     // extracting dialog was exposed
-    WinUpdateWindow(dlgInfo.hWndDlg);
+    UpdateWindow(dlgInfo.hWndDlg);
   }
 }
 
@@ -508,20 +508,20 @@ UpdateGaugeFileProgressBar(unsigned value)
     // Only paint if we need to display more bars
     if((nBars > dlgInfo.nFileBars) || (dlgInfo.nFileBars == 0))
     {
-      HWND	hWndGauge = WinWindowFromID(dlgInfo.hWndDlg, IDC_GAUGE_FILE);
-      RECTL	rect;
+      HWND	hWndGauge = GetDlgItem(dlgInfo.hWndDlg, IDC_GAUGE_FILE);
+      RECT	rect;
 
       // Update the gauge state before painting
       dlgInfo.nFileBars = nBars;
 
       // Only invalidate the part that needs updating
-      WinQueryWindowRect(hWndGauge, &rect);
-      WinInvalidateRect(hWndGauge, &rect, FALSE);
+      GetClientRect(hWndGauge, &rect);
+      InvalidateRect(hWndGauge, &rect, FALSE);
     
       // Update the whole extracting dialog. We do this because we don't
       // have a message loop to process WM_PAINT messages in case the
       // extracting dialog was exposed
-      WinUpdateWindow(dlgInfo.hWndDlg);
+      UpdateWindow(dlgInfo.hWndDlg);
     }
   }
 }
@@ -541,20 +541,20 @@ UpdateGaugeArchiveProgressBar(unsigned value)
     // Only paint if we need to display more bars
     if (nBars > dlgInfo.nArchiveBars)
     {
-      HWND	hWndGauge = WinWindowFromID(dlgInfo.hWndDlg, IDC_GAUGE_ARCHIVE);
-      RECTL	rect;
+      HWND	hWndGauge = GetDlgItem(dlgInfo.hWndDlg, IDC_GAUGE_ARCHIVE);
+      RECT	rect;
 
       // Update the gauge state before painting
       dlgInfo.nArchiveBars = nBars;
 
       // Only invalidate the part that needs updating
-      WinQueryWindowRect(hWndGauge, &rect);
-      WinInvalidateRect(hWndGauge, &rect, FALSE);
+      GetClientRect(hWndGauge, &rect);
+      InvalidateRect(hWndGauge, &rect, FALSE);
     
       // Update the whole extracting dialog. We do this because we don't
       // have a message loop to process WM_PAINT messages in case the
       // extracting dialog was exposed
-      WinUpdateWindow(dlgInfo.hWndDlg);
+      UpdateWindow(dlgInfo.hWndDlg);
     }
   }
 }
@@ -564,15 +564,14 @@ static void
 DrawGaugeBorder(HWND hWnd)
 {
 	HDC		hDC = GetWindowDC(hWnd);
-    HPS       hPS = WinGetPS(hWnd);
-	RECTL	rect;
+	RECT	rect;
 	int		cx, cy;
 	HPEN	hShadowPen = CreatePen(PS_SOLID, 1, GetSysColor(COLOR_BTNSHADOW));
 	HGDIOBJ	hOldPen;
 
-	WinQueryWindowRect(hWnd, &rect);
-	cx = rect.xRight - rect.xLeft;
-	cy = rect.yBottom - rect.yTop;
+	GetWindowRect(hWnd, &rect);
+	cx = rect.right - rect.left;
+	cy = rect.bottom - rect.top;
 
 	// Draw a dark gray line segment
 	hOldPen = SelectObject(hDC, (HGDIOBJ)hShadowPen);
@@ -589,7 +588,6 @@ DrawGaugeBorder(HWND hWnd)
 	SelectObject(hDC, hOldPen);
 	DeleteObject(hShadowPen);
 	ReleaseDC(hWnd, hDC);
-    WinReleasePS(hPS);
 }
 
 // Draws the blue progress bar
@@ -597,36 +595,40 @@ static void
 DrawProgressBar(HWND hWnd, int nBars)
 {
   int         i;
-	RECTL        rect;
+	PAINTSTRUCT	ps;
+	HDC         hDC;
+	RECT        rect;
 	HBRUSH      hBrush;
-    HPS           hPS;
 
-  hPS = WinBeginPaint(hWnd, NULLHANDLE, &rect);
-	WinQueryWindowRect(hWnd, &rect);
+  hDC = BeginPaint(hWnd, &ps);
+	GetClientRect(hWnd, &rect);
   if(nBars <= 0)
   {
     /* clear the bars */
-    WinFillRect(hPS, &rect, SYSCLR_MENU);
+    hBrush = CreateSolidBrush(GetSysColor(COLOR_MENU));
+    FillRect(hDC, &rect, hBrush);
   }
   else
   {
   	// Draw the bars
-	  rect.xLeft     = rect.yTop = BAR_MARGIN;
-	  rect.yBottom  -= BAR_MARGIN;
-	  rect.xRight    = rect.xLeft + BAR_WIDTH;
+    hBrush = CreateSolidBrush(RGB(0, 0, 128));
+	  rect.left     = rect.top = BAR_MARGIN;
+	  rect.bottom  -= BAR_MARGIN;
+	  rect.right    = rect.left + BAR_WIDTH;
 
 	  for(i = 0; i < nBars; i++)
     {
-		  RECTL	dest;
+		  RECT	dest;
 
-		  if(WinIntersectRect((HAB)0, &dest, &ps.rcPaint, &rect))
-			  WinFillRect(hPS, &rect, CLR_DARKBLUE);
+		  if(IntersectRect(&dest, &ps.rcPaint, &rect))
+			  FillRect(hDC, &rect, hBrush);
 
-      WinOffsetRect((HAB)0, &rect, BAR_WIDTH + BAR_SPACING, 0);
+      OffsetRect(&rect, BAR_WIDTH + BAR_SPACING, 0);
 	  }
   }
 
-	WinEndPaint(hPS);
+	DeleteObject(hBrush);
+	EndPaint(hWnd, &ps);
 }
 
 // Draws the blue progress bar
@@ -636,80 +638,89 @@ DrawBarberBar(HWND hWnd, int nBars)
   int         i;
 	PAINTSTRUCT	ps;
 	HDC         hDC;
-    HPS         hPS;
-	RECTL        rect;
+	RECT        rect;
 	HBRUSH      hBrush      = NULL;
 	HBRUSH      hBrushClear = NULL;
 
-  hPS = WinBeginPaint(hWnd, NULLHANDLE, &rect);
-	WinQueryWindowRect(hWnd, &rect);
+  hDC = BeginPaint(hWnd, &ps);
+	GetClientRect(hWnd, &rect);
   if(nBars <= 0)
   {
     /* clear the bars */
-    WinFillRect(hPS, &rect, SYSCLR_MENU);
+    hBrushClear = CreateSolidBrush(GetSysColor(COLOR_MENU));
+    FillRect(hDC, &rect, hBrushClear);
   }
   else
   {
   	// Draw the bars
-	  rect.xLeft     = rect.yTop = BAR_MARGIN;
-	  rect.yBottom  -= BAR_MARGIN;
-	  rect.xRight    = rect.xLeft + BAR_WIDTH;
+    hBrushClear   = CreateSolidBrush(GetSysColor(COLOR_MENU));
+    hBrush        = CreateSolidBrush(RGB(0, 0, 128));
+	  rect.left     = rect.top = BAR_MARGIN;
+	  rect.bottom  -= BAR_MARGIN;
+	  rect.right    = rect.left + BAR_WIDTH;
 
 	  for(i = 0; i < (nBars + 1); i++)
     {
-		  RECTL	dest;
+		  RECT	dest;
 
-		  if(WinIntersectRect((HAB)0, &dest, &ps.rcPaint, &rect))
+		  if(IntersectRect(&dest, &ps.rcPaint, &rect))
       {
         if((i >= (nBars - 15)) && (i < nBars))
-			    WinFillRect(hPS, &rect, CLR_DARKBLUE);
+			    FillRect(hDC, &rect, hBrush);
         else
-			    WinFillRect(hPS, &rect, SYSCLR_MENU);
+			    FillRect(hDC, &rect, hBrushClear);
       }
 
-      WinOffsetRect((HAB)0, &rect, BAR_WIDTH + BAR_SPACING, 0);
+      OffsetRect(&rect, BAR_WIDTH + BAR_SPACING, 0);
 	  }
   }
-	WinEndPaint(hPS);
+
+  if(hBrushClear)
+    DeleteObject(hBrushClear);
+
+  if(hBrush)
+    DeleteObject(hBrush);
+
+	EndPaint(hWnd, &ps);
 }
 
 // Adjusts the width of the gauge based on the maximum number of bars
 static void
 SizeToFitGauge(HWND hWnd, int nMaxBars)
 {
-	RECTL	rect;
+	RECT	rect;
 	int		cx;
 
 	// Get the window size in pixels
-	WinQueryWindowRect(hWnd, &rect);
+	GetWindowRect(hWnd, &rect);
 
 	// Size the width to fit
-	cx = 2 * WinQuerySysValue(SV_CXBORDER) + 2 * BAR_MARGIN +
+	cx = 2 * GetSystemMetrics(SM_CXBORDER) + 2 * BAR_MARGIN +
 		nMaxBars * BAR_WIDTH + (nMaxBars - 1) * BAR_SPACING;
 
-	WinSetWindowPos(hWnd, NULL, -1, -1, cx, rect.yBottom - rect.yTop,
+	SetWindowPos(hWnd, NULL, -1, -1, cx, rect.bottom - rect.top,
 		SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
 }
 
 // Window proc for file gauge
-MRESULT EXPENTRY
-GaugeFileWndProc(HWND hWnd, UINT msg, WPARAM wParam, WPARAM lParam)
+LRESULT CALLBACK
+GaugeFileWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-	ULONG	dwStyle;
-	RECTL	rect;
+	DWORD	dwStyle;
+	RECT	rect;
 
 	switch(msg)
   {
 		case WM_NCCREATE:
-			dwStyle = WinQueryWindowULong(hWnd, GWL_STYLE);
-			WinSetWindowULong(hWnd, GWL_STYLE, dwStyle | WS_BORDER);
+			dwStyle = GetWindowLong(hWnd, GWL_STYLE);
+			SetWindowLong(hWnd, GWL_STYLE, dwStyle | WS_BORDER);
 			return(TRUE);
 
 		case WM_CREATE:
 			// Figure out the maximum number of bars that can be displayed
-			WinQueryWindowRect(hWnd, &rect);
+			GetClientRect(hWnd, &rect);
 			dlgInfo.nFileBars = 0;
-			dlgInfo.nMaxFileBars = (rect.xRight - rect.xLeft - 2 * BAR_MARGIN + BAR_SPACING) / (BAR_WIDTH + BAR_SPACING);
+			dlgInfo.nMaxFileBars = (rect.right - rect.left - 2 * BAR_MARGIN + BAR_SPACING) / (BAR_WIDTH + BAR_SPACING);
 
 			// Size the gauge to exactly fit the maximum number of bars
 			SizeToFitGauge(hWnd, dlgInfo.nMaxFileBars);
@@ -732,24 +743,24 @@ GaugeFileWndProc(HWND hWnd, UINT msg, WPARAM wParam, WPARAM lParam)
 }
 
 // Window proc for file gauge
-MRESULT EXPENTRY
-GaugeArchiveWndProc(HWND hWnd, UINT msg, WPARAM wParam, WPARAM lParam)
+LRESULT CALLBACK
+GaugeArchiveWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-	ULONG	dwStyle;
-	RECTL	rect;
+	DWORD	dwStyle;
+	RECT	rect;
 
 	switch(msg)
   {
 		case WM_NCCREATE:
-			dwStyle = WinQueryWindowULong(hWnd, GWL_STYLE);
-			WinSetWindowULong(hWnd, GWL_STYLE, dwStyle | WS_BORDER);
+			dwStyle = GetWindowLong(hWnd, GWL_STYLE);
+			SetWindowLong(hWnd, GWL_STYLE, dwStyle | WS_BORDER);
 			return(TRUE);
 
 		case WM_CREATE:
 			// Figure out the maximum number of bars that can be displayed
-			WinQueryWindowRect(hWnd, &rect);
+			GetClientRect(hWnd, &rect);
 			dlgInfo.nArchiveBars = 0;
-			dlgInfo.nMaxArchiveBars = (rect.xRight - rect.xLeft - 2 * BAR_MARGIN + BAR_SPACING) / (BAR_WIDTH + BAR_SPACING);
+			dlgInfo.nMaxArchiveBars = (rect.right - rect.left - 2 * BAR_MARGIN + BAR_SPACING) / (BAR_WIDTH + BAR_SPACING);
 
 			// Size the gauge to exactly fit the maximum number of bars
 			SizeToFitGauge(hWnd, dlgInfo.nMaxArchiveBars);
@@ -786,8 +797,8 @@ void InitProgressDlg()
     RegisterClass(&wc);
 
     // Display the dialog box
-    dlgInfo.hWndDlg = WinCreateDlg(hWndMain, NULLHANDLE, MAKEINTRESOURCE(DLG_EXTRACTING), (PFNWP)ProgressDlgProc, MAKEINTRESOURCE(DLG_EXTRACTING), NULL);
-    WinUpdateWindow(dlgInfo.hWndDlg);
+    dlgInfo.hWndDlg = CreateDialog(hSetupRscInst, MAKEINTRESOURCE(DLG_EXTRACTING), hWndMain, (WNDPROC)ProgressDlgProc);
+    UpdateWindow(dlgInfo.hWndDlg);
   }
 }
 
@@ -795,8 +806,9 @@ void DeInitProgressDlg()
 {
   if(sgProduct.dwMode != SILENT)
   {
-    WinDestroyWindow(dlgInfo.hWndDlg);
+    DestroyWindow(dlgInfo.hWndDlg);
     UnregisterClass("GaugeFile", hInst);
     UnregisterClass("GaugeArchive", hInst);
   }
 }
+#endif

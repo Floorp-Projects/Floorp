@@ -20,7 +20,6 @@
  *
  * Contributor(s): 
  *     Daniel Veditz <dveditz@netscape.com>
- *     IBM Corp.
  */
 
 #ifndef _zipfile_h

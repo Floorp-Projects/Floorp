@@ -20,22 +20,21 @@
  *
  * Contributor(s): 
  *     Sean Su <ssu@netscape.com>
- *     IBM Corp. 
  */
 
 #ifndef _XPI_H_
 #define _XPI_H_
 
-APIRET         InitializeXPIStub(void);
-APIRET         DeInitializeXPIStub(void);
-APIRET         SmartUpdateJars(void);
+HRESULT         InitializeXPIStub(void);
+HRESULT         DeInitializeXPIStub(void);
+HRESULT         SmartUpdateJars(void);
 void            cbXPIStart(const char *, const char *UIName);
 void            cbXPIProgress(const char* msg, PRInt32 val, PRInt32 max);
 void            cbXPIFinal(const char *, PRInt32 finalStatus);
 void            InitProgressDlg(void);
 void            DeInitProgressDlg(void);
 void            GetTotalArchivesToInstall(void);
-char            *GetErrorString(ULONG dwError, char *szErrorString, ULONG dwErrorStringSize);
+char            *GetErrorString(DWORD dwError, char *szErrorString, DWORD dwErrorStringSize);
 
 #endif /* _XPI_H_ */
 

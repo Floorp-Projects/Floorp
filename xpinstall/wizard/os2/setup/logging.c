@@ -18,7 +18,6 @@
  * 
  * Contributor(s): 
  *   Sean Su <ssu@netscape.com>
- *   IBM Corp.  
  */
 
 #include "extern.h"
@@ -31,12 +30,12 @@
 
 int AppendToGlobalMessageStream(char *szInfo)
 {
-  ULONG dwInfoLen = lstrlen(szInfo);
-  ULONG dwMessageLen;
+  DWORD dwInfoLen = strlen(szInfo);
+  DWORD dwMessageLen;
 
   if(gErrorMessageStream.bEnabled && gErrorMessageStream.szMessage)
   {
-    dwMessageLen = lstrlen(gErrorMessageStream.szMessage);
+    dwMessageLen = strlen(gErrorMessageStream.szMessage);
     if((dwInfoLen + dwMessageLen) >= gErrorMessageStream.dwMessageBufSize)
     {
       if(NS_GlobalReAlloc(&gErrorMessageStream.szMessage,
@@ -49,7 +48,7 @@ int AppendToGlobalMessageStream(char *szInfo)
                                              MAX_BUF_TINY;
     }
 
-    lstrcat(gErrorMessageStream.szMessage, szInfo);
+    strcat(gErrorMessageStream.szMessage, szInfo);
   }
 
   return(WIZ_OK);
@@ -58,28 +57,16 @@ int AppendToGlobalMessageStream(char *szInfo)
 void LogISTime(int iType)
 {
   char       szBuf[MAX_BUF];
-  char       szTime[MAX_BUF_TINY];
-  char       szDate[MAX_BUF_TINY];
-  SYSTEMTIME stLocalTime;
+  time_t     rawtime;
+  struct tm* timeinfo;
 
-  GetLocalTime(&stLocalTime);
-  GetTimeFormat(LOCALE_NEUTRAL,
-                LOCALE_NOUSEROVERRIDE,
-                &stLocalTime,
-                NULL,
-                szTime,
-                sizeof(szTime));
-  GetDateFormat(LOCALE_NEUTRAL,
-                LOCALE_NOUSEROVERRIDE,
-                &stLocalTime,
-                NULL,
-                szDate,
-                sizeof(szDate));
+  time ( &rawtime );
+  timeinfo = localtime ( &rawtime );
 
   if(iType == W_START)
-    sprintf(szBuf, "Start Log: %s - %s\n", szDate, szTime);
+    sprintf(szBuf, "Start Log: %s\n", asctime (timeinfo));
   else
-    sprintf(szBuf, "End Log: %s - %s\n", szDate, szTime);
+    sprintf(szBuf, "End Log: %s\n", asctime (timeinfo));
 
   UpdateInstallStatusLog(szBuf);
 }
@@ -91,7 +78,7 @@ void LogISProductInfo(void)
   sprintf(szBuf, "\n    Product Info:\n");
   UpdateInstallStatusLog(szBuf);
 
-  switch(sgProduct.dwMode)
+  switch(sgProduct.ulMode)
   {
     case SILENT:
       sprintf(szBuf, "        Install mode: Silent\n");
@@ -105,9 +92,10 @@ void LogISProductInfo(void)
   }
   UpdateInstallStatusLog(szBuf);
 
-  sprintf(szBuf, "        Company name: %s\n        Product name: %s\n        Uninstall Filename: %s\n        UserAgent: %s\n        Alternate search path: %s\n",
+  sprintf(szBuf, "        Company name: %s\n        Product name (external): %s\n        Product name (internal): %s\n        Uninstall Filename: %s\n        UserAgent: %s\n        Alternate search path: %s\n",
            sgProduct.szCompanyName,
            sgProduct.szProductName,
+           sgProduct.szProductNameInternal,
            sgProduct.szUninstallFilename,
            sgProduct.szUserAgent,
            sgProduct.szAlternateArchiveSearchPath);
@@ -129,7 +117,7 @@ void LogISSetupType(void)
 {
   char szBuf[MAX_BUF_TINY];
 
-  switch(dwSetupType)
+  switch(ulSetupType)
   {
     case ST_RADIO3:
       sprintf(szBuf, "\n    Setup Type: %s\n",
@@ -253,20 +241,60 @@ void LogISComponentsToDownload(void)
   }
 }
 
+void LogISDownloadProtocol(DWORD dwProtocolType)
+{
+  char szBuf[MAX_BUF];
+  char szProtocolType[MAX_BUF];
+
+  switch(dwProtocolType)
+  {
+    case UP_HTTP:
+      strcpy(szProtocolType, "HTTP");
+      break;
+
+    default:
+      strcpy(szProtocolType, "FTP");
+      break;
+  }
+
+  sprintf(szBuf, "\n    Download protocol: %s\n", szProtocolType);
+  UpdateInstallStatusLog(szBuf);
+}
+
 void LogISDownloadStatus(char *szStatus, char *szFailedFile)
 {
   char szBuf[MAX_BUF];
+  siC   *siCObject = NULL;
+  DWORD dwIndex;
 
   if(szFailedFile)
     sprintf(szBuf,
-             "\n    Download status:\n        %s\n          file: %s\n",
+             "\n    Download status: %s\n          file: %s\n\n",
              szStatus,
              szFailedFile);
   else
     sprintf(szBuf,
-             "\n    Download status:\n        %s\n",
+             "\n    Download status: %s\n",
              szStatus);
   UpdateInstallStatusLog(szBuf);
+
+  dwIndex = 0;
+  siCObject = SiCNodeGetObject(dwIndex, TRUE, AC_ALL);
+  while(siCObject)
+  {
+    if(siCObject->dwAttributes & SIC_SELECTED)
+    {
+      sprintf(szBuf, "        %s: NetRetries:%d, CRCRetries:%d, NetTimeOuts:%d\n",
+               siCObject->szDescriptionShort,
+               siCObject->iNetRetries,
+               siCObject->iCRCRetries,
+               siCObject->iNetTimeOuts);
+      UpdateInstallStatusLog(szBuf);
+    }
+
+    ++dwIndex;
+    siCObject = SiCNodeGetObject(dwIndex, TRUE, AC_ALL);
+  }
 }
 
 void LogISComponentsFailedCRC(char *szList, int iWhen)
@@ -317,12 +345,12 @@ void LogISXPInstallComponent(char *szComponentName)
   UpdateInstallStatusLog(szBuf);
 }
 
-void LogISXPInstallComponentResult(ULONG dwErrorNumber)
+void LogISXPInstallComponentResult(DWORD dwErrorNumber)
 {
   char szBuf[MAX_BUF];
   char szErrorString[MAX_BUF];
 
-  GetErrorString(dwErrorNumber, szErrorString, sizeof(szErrorString));
+//  GetErrorString(dwErrorNumber, szErrorString, sizeof(szErrorString));
   sprintf(szBuf, ": %d %s\n", dwErrorNumber, szErrorString);
   UpdateInstallStatusLog(szBuf);
 }
@@ -343,7 +371,15 @@ void LogISLaunchAppsComponent(char *szComponentName)
 {
   char szBuf[MAX_BUF];
 
-  sprintf(szBuf, "        %s\n", szComponentName);
+  sprintf(szBuf, "        launching %s\n", szComponentName);
+  UpdateInstallStatusLog(szBuf);
+}
+
+void LogISLaunchAppsComponentUncompress(char *szComponentName, DWORD dwErr)
+{
+  char szBuf[MAX_BUF];
+
+  sprintf(szBuf, "        uncompressing %s: %d\n", szComponentName, dwErr);
   UpdateInstallStatusLog(szBuf);
 }
 
@@ -361,7 +397,7 @@ void LogISProcessXpcomFile(int iStatus, int iResult)
 
 void LogISDiskSpace(dsN *dsnComponentDSRequirement)
 {
-  ULONGLONG ullDSAvailable;
+  ULONG     ulDSAvailable;
   dsN       *dsnTemp = NULL;
   char      szBuf[MAX_BUF];
   char      szDSRequired[MAX_BUF_TINY];
@@ -377,9 +413,9 @@ void LogISDiskSpace(dsN *dsnComponentDSRequirement)
       if(!dsnTemp)
         break;
 
-      ullDSAvailable = GetDiskSpaceAvailable(dsnTemp->szVDSPath);
-      _ui64toa(ullDSAvailable, szDSAvailable, 10);
-      _ui64toa(dsnTemp->ullSpaceRequired, szDSRequired, 10);
+      ulDSAvailable = GetDiskSpaceAvailable(dsnTemp->szVDSPath);
+      itoa(ulDSAvailable, szDSAvailable, 10);
+      itoa(dsnTemp->ulSpaceRequired, szDSRequired, 10);
       sprintf(szBuf,
                "             Path: %s\n         Required: %sKB\n        Available: %sKB\n",
                dsnTemp->szVDSPath,
@@ -390,6 +426,18 @@ void LogISDiskSpace(dsN *dsnComponentDSRequirement)
       dsnTemp = dsnTemp->Next;
     } while((dsnTemp != NULL) && (dsnTemp != dsnComponentDSRequirement));
   }
+}
+
+void LogISTurboMode(BOOL bTurboMode)
+{
+  char szBuf[MAX_BUF];
+
+  if(bTurboMode)
+    sprintf(szBuf, "\n    Turbo Mode: true\n");
+  else
+    sprintf(szBuf, "\n    Turbo Mode: false\n");
+
+  UpdateInstallStatusLog(szBuf);
 }
 
 void LogMSProductInfo(void)
@@ -403,20 +451,40 @@ void LogMSProductInfo(void)
              sgProduct.szProductName,
              sgProduct.szUserAgent,
              szOSType,
-             gSystemInfo.dwMajorVersion,
-             gSystemInfo.dwMinorVersion,
-             gSystemInfo.dwBuildNumber,
+             gSystemInfo.ulMajorVersion,
+             gSystemInfo.ulMinorVersion,
+             gSystemInfo.ulBuildNumber,
              gSystemInfo.szExtraString);
   else
     sprintf(szBuf, "UserAgent=%s/%s (%s,%d.%d.%d)",
              sgProduct.szProductName,
              sgProduct.szUserAgent,
              szOSType,
-             gSystemInfo.dwMajorVersion,
-             gSystemInfo.dwMinorVersion,
-             gSystemInfo.dwBuildNumber);
+             gSystemInfo.ulMajorVersion,
+             gSystemInfo.ulMinorVersion,
+             gSystemInfo.ulBuildNumber);
 
   AppendToGlobalMessageStream(szBuf);
+}
+
+void LogMSDownloadProtocol(DWORD dwProtocolType)
+{
+  char szMessageStream[MAX_BUF_TINY];
+  char szProtocolType[MAX_BUF];
+
+  switch(dwProtocolType)
+  {
+    case UP_HTTP:
+      strcpy(szProtocolType, "HTTP");
+      break;
+
+    default:
+      strcpy(szProtocolType, "FTP");
+      break;
+  }
+
+  sprintf(szMessageStream, "&DownloadProtocol=%s", szProtocolType);
+  AppendToGlobalMessageStream(szMessageStream);
 }
 
 void LogMSDownloadStatus(int iDownloadStatus)
@@ -431,7 +499,7 @@ void LogMSDownloadStatus(int iDownloadStatus)
 void LogMSDownloadFileStatus(void)
 {
   siC   *siCObject = NULL;
-  ULONG dwIndex;
+  DWORD dwIndex;
   char  szMessageStream[MAX_BUF];
 
   memset(szMessageStream, 0, sizeof(szMessageStream));
@@ -439,17 +507,20 @@ void LogMSDownloadFileStatus(void)
   siCObject = SiCNodeGetObject(dwIndex, TRUE, AC_ALL);
   while(siCObject)
   {
-    if(siCObject->iNetRetries || siCObject->iCRCRetries)
+    if(siCObject->iNetRetries ||
+       siCObject->iCRCRetries ||
+       siCObject->iNetTimeOuts)
     {
       char szFileInfo[MAX_BUF_SMALL];
 
       sprintf(szFileInfo,
-               "&%s=%d,%d",
+               "&%s=%d,%d,%d",
                siCObject->szArchiveName,
                siCObject->iNetRetries,
-               siCObject->iCRCRetries);
+               siCObject->iCRCRetries,
+               siCObject->iNetTimeOuts);
 
-      lstrcat(szMessageStream, szFileInfo);
+      strcat(szMessageStream, szFileInfo);
     }
     ++dwIndex;
     siCObject = SiCNodeGetObject(dwIndex, TRUE, AC_ALL);
@@ -480,5 +551,13 @@ void LogMSXPInstallStatus(char *szFile, int iErr)
      ((iErr != E_USER_CANCEL) &&
       (iErr != WIZ_OK))))
     gErrorMessageStream.bSendMessage = TRUE;
+}
+
+void LogMSTurboMode(BOOL bTurboMode)
+{
+  char szMessageStream[MAX_BUF];
+
+  sprintf(szMessageStream, "&TM=%d", bTurboMode);
+  AppendToGlobalMessageStream(szMessageStream);
 }
 
