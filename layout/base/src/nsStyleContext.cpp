@@ -30,6 +30,17 @@
 
 static NS_DEFINE_IID(kIStyleContextIID, NS_ISTYLECONTEXT_IID);
 
+// Default border widths for enumerated values
+//
+// NOTE: don't use NSIntPointsToTwips here because that results in a
+// global constructor been created to do the *runtime* initializing
+// because some compilers don't know how to expand inline methods in
+// this situation.
+static nscoord kBorderWidths[3] = {
+  nscoord(1 * TWIPS_PER_POINT_INT),
+  nscoord(3 * TWIPS_PER_POINT_INT),
+  nscoord(5 * TWIPS_PER_POINT_INT)
+};
 
 // --------------------
 // nsStyleFont
@@ -248,11 +259,6 @@ void nsStyleSpacing::CalcPaddingFor(const nsIFrame* aFrame, nsMargin& aPadding) 
     CalcSidesFor(aFrame, mPadding, NS_SPACING_PADDING, nsnull, 0, aPadding);
   }
 }
-
-static const nscoord kBorderWidths[3] = 
-  { NSIntPointsToTwips(1), 
-    NSIntPointsToTwips(3), 
-    NSIntPointsToTwips(5) };
 
 void nsStyleSpacing::CalcBorderFor(const nsIFrame* aFrame, nsMargin& aBorder) const
 {
@@ -685,10 +691,16 @@ public:
                    nsIPresContext* aPresContext);
   virtual ~StyleContextImpl();
 
-  void* operator new(size_t sz) {
-    void* rv = new char[sz];
-    nsCRT::zero(rv, sz);
+  void* operator new(size_t size) {
+    void* rv = ::operator new(size);
+    if (rv) {
+      nsCRT::zero(rv, size);
+    }
     return rv;
+  }
+
+  void operator delete(void* ptr, size_t size) {
+    ::operator delete(ptr);
   }
 
   NS_DECL_ISUPPORTS
