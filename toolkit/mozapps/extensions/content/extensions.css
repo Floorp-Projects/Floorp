@@ -1,5 +1,6 @@
 view {
   -moz-binding: url("chrome://mozapps/skin/shared/richview.xml#richview");
+  width: 20em;
 }
 
 extension {
@@ -33,5 +34,13 @@ extension[toBeInstalled="true"] {
 
 extension[toBeUninstalled="true"] {
   -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#extension-tobeuninstalled");
+}
+
+extension[itemType="theme"] {
+  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#theme");
+}
+
+.themePreviewArea {
+  width: 0px;
 }
 

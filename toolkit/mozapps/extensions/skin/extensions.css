@@ -39,6 +39,13 @@
   margin-left: 5px;
 }
 
+#getMore {
+  color: #0000FF;
+  text-decoration: underline !important;
+  cursor: pointer;
+  text-align: right;
+}
+
 /* Extension Buttons (Iconic buttons in each extension item) */
 .extension-button {
   width: 10px;
@@ -89,5 +96,19 @@ extension[disabled="true"] .extension-icon {
 
 .extension-icon {
   margin-right: 10px; 
+}
+
+.previewText {
+  font-size: larger;
+  font-weight: bold;
+  color: ThreeDShadow;
+}
+
+extension[itemType="theme"] {
+  padding: 7px 5px 7px 6px;
+}
+
+extension[itemType="theme"] .extension-icon {
+  margin-right: 3px;
 }
 

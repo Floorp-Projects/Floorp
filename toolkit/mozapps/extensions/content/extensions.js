@@ -10,8 +10,12 @@ var gExtensionssView  = null;
 var gWindowState      = "";
 var gURIPrefix        = ""; // extension or theme prefix
 var gDSRoot           = ""; // extension or theme root
+var gGetMoreURL       = "";
 
-const PREF_EM_EXTENSIONS_DISABLED = "extensions.safeMode";
+const PREF_APP_ID                           = "app.id";
+const PREF_EXTENSIONS_GETMORETHEMESURL      = "extensions.getMoreThemesURL";
+const PREF_EXTENSIONS_GETMOREEXTENSIONSURL  = "extensions.getMoreExtensionsURL";
+const PREF_GENERAL_SKINS_SELECTEDSKIN       = "general.skins.selectedSkin";
 
 ///////////////////////////////////////////////////////////////////////////////
 // Utility Functions 
@@ -60,8 +64,9 @@ function onExtensionSelect(aEvent)
 function Startup() 
 {
   gWindowState = window.arguments[0];
-  gURIPrefix  = gWindowState == "extensions" ? "urn:mozilla:extension:" : "urn:mozilla:theme:";
-  gDSRoot     = gWindowState == "extensions" ? "urn:mozilla:extension:root" : "urn:mozilla:theme:root";
+  var isExtensions = gWindowState == "extensions";
+  gURIPrefix  = isExtensions ? "urn:mozilla:extension:" : "urn:mozilla:theme:";
+  gDSRoot     = isExtensions ? "urn:mozilla:extension:root" : "urn:mozilla:theme:root";
   
   document.documentElement.setAttribute("windowtype", document.documentElement.getAttribute("windowtype") + "-" + gWindowState);
 
@@ -94,10 +99,78 @@ function Startup()
   document.documentElement.setAttribute("title", extensionsStrings.getString(gWindowState + "Title"));
   
   gExtensionsViewController.onCommandUpdate(); 
+  
+  var pref = Components.classes["@mozilla.org/preferences-service;1"]
+                       .getService(Components.interfaces.nsIPrefBranch);
+  gGetMoreURL = pref.getComplexValue(isExtensions ? PREF_EXTENSIONS_GETMOREEXTENSIONSURL 
+                                                  : PREF_EXTENSIONS_GETMORETHEMESURL, 
+                                     Components.interfaces.nsIPrefLocalizedString).data;
+  gGetMoreURL = gGetMoreURL.replace(/%APPID%/g, pref.getCharPref(PREF_APP_ID));
+  // Update various pieces of state-dependant UI
+  var getMore = document.getElementById("getMore");
+  getMore.setAttribute("value", getMore.getAttribute(isExtensions ? "valueextensions" : "valuethemes"));
+  getMore.setAttribute("tooltiptext", getMore.getAttribute(isExtensions ? "tooltiptextextensions" : "tooltiptextthemes"));
+  
+  if (!isExtensions) {
+    var themePreviewArea = document.getElementById("themePreviewArea");
+    themePreviewArea.hidden = false;
+    gExtensionsView.removeAttribute("flex");
+    
+    var win = document.documentElement;
+    if (!win.hasAttribute("width") || !win.hasAttribute("height")) {
+      win.setAttribute("width", 500);
+      win.setAttribute("width", 380);
+      
+      gExtensionsView.addEventListener("richview-select", onThemeSelect, false);
+    }
+  }
 }
 
 function Shutdown() 
 {
+  if (gWindowState != "extensions")
+    gExtensionsView.removeEventListener("richview-select", onThemeSelect, false);
+}
+
+function onViewDoubleClick()
+{
+  switch (gWindowState) {
+  case "extensions":
+    gExtensionsViewController.doCommand('cmd_options');
+    break;
+  case "themes":
+    if (!gExtensionsView.selected)
+      return;
+    var cr = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
+                       .getService(Components.interfaces.nsIXULChromeRegistry);
+    var pref = Components.classes["@mozilla.org/preferences-service;1"]
+                         .getService(Components.interfaces.nsIPrefBranch);
+    var internalName = gExtensionsView.selected.getAttribute("internalName");
+    var inUse = cr.isSkinSelected(internalName, true);
+    if (inUse == Components.interfaces.nsIChromeRegistry.FULL)
+      return;
+      
+    pref.setCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN, internalName);
+    cr.selectSkin(internalName, true);
+    cr.refreshSkins();
+    break;
+  }
+}
+
+function onThemeSelect(aEvent)
+{
+  var previewImageDeck = document.getElementById("previewImageDeck");
+  if (!gExtensionsView.selected) {
+    previewImageDeck.setAttribute("index", "0");
+    return;
+  }
+  var url = gExtensionsView.selected.getAttribute("previewImage");
+  if (url) {
+    previewImageDeck.setAttribute("index", "2");
+    previewImage.setAttribute("src", url);
+  }
+  else
+    previewImageDeck.setAttribute("index", "1");
 }
 
 ///////////////////////////////////////////////////////////////////////////////
