@@ -21,6 +21,7 @@
 
 #include "nsIRDFNode.h"
 #include "nscore.h"
+class nsIRDFService;
 
 /**
  * This simple base class implements nsIRDFResource, and can be used as a
@@ -46,7 +47,9 @@ public:
 
 protected:
     char* mURI;
-    
+
+    static PRInt32        gRefCnt;
+    static nsIRDFService* gRDFService;
 };
 
 #endif // nsRDFResource_h__
