@@ -61,21 +61,12 @@ class nsWindow : public nsCommonWidget {
 			    nsIToolkit       *aToolkit,
 			    nsWidgetInitData *aInitData);
   NS_IMETHOD         Destroy(void);
-  NS_IMETHOD         Show(PRBool aState);
   NS_IMETHOD         SetModal(PRBool aModal);
   NS_IMETHOD         IsVisible(PRBool & aState);
   NS_IMETHOD         ConstrainPosition(PRInt32 *aX,
 				       PRInt32 *aY);
   NS_IMETHOD         Move(PRInt32 aX,
 			   PRInt32 aY);
-  NS_IMETHOD         Resize(PRInt32 aWidth,
-			    PRInt32 aHeight,
-			    PRBool  aRepaint);
-  NS_IMETHOD         Resize(PRInt32 aX,
-			    PRInt32 aY,
-			    PRInt32 aWidth,
-			    PRInt32 aHeight,
-			    PRBool   aRepaint);
   NS_IMETHOD         PlaceBehind(nsIWidget *aWidget,
 				 PRBool     aActivate);
   NS_IMETHOD         Enable(PRBool aState);
@@ -163,10 +154,6 @@ class nsWindow : public nsCommonWidget {
 				       GdkEventKey *aEvent);
   void               OnScrollEvent(GtkWidget *aWidget,
 				   GdkEventScroll *aEvent);
-  void               SendResizeEvent(nsRect &aRect,
-				     nsEventStatus &aStatus);
-
- private:
 
   nsresult NativeCreate(nsIWidget        *aParent,
 		        nsNativeWidget    aNativeParent,
@@ -177,11 +164,24 @@ class nsWindow : public nsCommonWidget {
 		        nsIToolkit       *aToolkit,
 		        nsWidgetInitData *aInitData);
 
+  void     NativeResize(PRInt32 aWidth,
+			PRInt32 aHeight,
+			PRBool  aRepaint);
+
+  void     NativeResize(PRInt32 aX,
+			PRInt32 aY,
+			PRInt32 aWidth,
+			PRInt32 aHeight,
+			PRBool  aRepaint);
+
+  void     NativeShow  (PRBool  aAction);
+
+ private:
+
   GtkWidget          *mShell;
   MozContainer       *mContainer;
   MozDrawingarea     *mDrawingarea;
 
-  PRPackedBool        mIsTopLevel;
   PRPackedBool        mIsDestroyed;
 
   PRPackedBool        mContainerGotFocus;

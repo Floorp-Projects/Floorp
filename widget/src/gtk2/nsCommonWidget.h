@@ -47,7 +47,7 @@ class nsCommonWidget : public nsBaseWidget {
 
   virtual nsIWidget *GetParent(void);
 
-  void CommonCreate(nsIWidget *aParent);
+  void CommonCreate(nsIWidget *aParent, nsNativeWidget aNativeParent);
 
   // event handling code
   void InitPaintEvent(nsPaintEvent &aEvent);
@@ -64,19 +64,54 @@ class nsCommonWidget : public nsBaseWidget {
   void DispatchLostFocusEvent(void);
   void DispatchActivateEvent(void);
   void DispatchDeactivateEvent(void);
-  
-  NS_IMETHOD DispatchEvent(nsGUIEvent *aEvent,
-			   nsEventStatus &aStatus);
+  void DispatchResizeEvent(nsRect &aRect, nsEventStatus &aStatus);
 
+  NS_IMETHOD DispatchEvent(nsGUIEvent *aEvent, nsEventStatus &aStatus);
+
+  // virtual interfaces for some nsIWidget methods
+  virtual void NativeResize(PRInt32 aWidth,
+			    PRInt32 aHeight,
+			    PRBool  aRepaint) = 0;
+  
+  virtual void NativeResize(PRInt32 aX,
+			    PRInt32 aY,
+			    PRInt32 aWidth,
+			    PRInt32 aHeight,
+			    PRBool  aRepaint) = 0;
+  
+  virtual void NativeShow  (PRBool  aAction) = 0;
+
+  // Some of the nsIWidget methods
+  NS_IMETHOD         Show(PRBool aState);
+  NS_IMETHOD         Resize(PRInt32 aWidth,
+			    PRInt32 aHeight,
+			    PRBool  aRepaint);
+  NS_IMETHOD         Resize(PRInt32 aX,
+			    PRInt32 aY,
+			    PRInt32 aWidth,
+			    PRInt32 aHeight,
+			    PRBool   aRepaint);
+  
   // called when we are destroyed
   void OnDestroy(void);
 
-  // convert a key code into a DOM code
-  static int ConvertKeyCodeToDOMKeyCode(int aKeysym);
+  // called to check and see if a widget's dimensions are sane
+  PRBool AreBoundsSane(void);
 
  protected:
   nsCOMPtr<nsIWidget> mParent;
+  // Is this a toplevel window?
+  PRPackedBool        mIsTopLevel;
+  // Has someone called OnDestroy() yet?
   PRPackedBool        mOnDestroyCalled;
+  // This is a flag that tracks if we need to resize a widget or
+  // window before we call |Show| on that widget.
+  PRPackedBool        mNeedsResize;
+  // Should we send resize events on all resizes?
+  PRPackedBool        mListenForResizes;
+  // This flag tracks if we're hidden or shown.
+  PRPackedBool        mIsShown;
+  PRPackedBool        mNeedsShow;
 };
 
 #endif /* __nsCommonWidget_h__ */

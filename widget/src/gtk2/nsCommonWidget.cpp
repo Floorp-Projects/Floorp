@@ -38,7 +38,12 @@
 
 nsCommonWidget::nsCommonWidget()
 {
-  mOnDestroyCalled = PR_FALSE;
+  mIsTopLevel       = PR_FALSE;
+  mOnDestroyCalled  = PR_FALSE;
+  mNeedsResize      = PR_FALSE;
+  mListenForResizes = PR_FALSE;
+  mIsShown          = PR_FALSE;
+  mNeedsShow        = PR_FALSE;
 }
 
 nsCommonWidget::~nsCommonWidget()
@@ -55,9 +60,11 @@ nsCommonWidget::GetParent(void)
 }
 
 void
-nsCommonWidget::CommonCreate(nsIWidget *aParent)
+nsCommonWidget::CommonCreate(nsIWidget *aParent, nsNativeWidget aNativeParent)
 {
   mParent = aParent;
+  if (aNativeParent)
+    mListenForResizes = PR_TRUE;
 }
 
 void
@@ -223,6 +230,22 @@ nsCommonWidget::DispatchDeactivateEvent(void)
   DispatchEvent(&event, status);
 }
 
+void
+nsCommonWidget::DispatchResizeEvent(nsRect &aRect, nsEventStatus &aStatus)
+{
+  nsSizeEvent event;
+  InitSizeEvent(event);
+
+  event.windowSize = &aRect;
+  event.point.x = aRect.x;
+  event.point.y = aRect.y;
+  event.mWinWidth = aRect.width;
+  event.mWinHeight = aRect.height;
+
+  nsEventStatus status;
+  DispatchEvent(&event, status); 
+}
+
 NS_IMETHODIMP
 nsCommonWidget::DispatchEvent(nsGUIEvent *aEvent,
 			      nsEventStatus &aStatus)
@@ -245,6 +268,152 @@ nsCommonWidget::DispatchEvent(nsGUIEvent *aEvent,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsCommonWidget::Show(PRBool aState)
+{
+  mIsShown = aState;
+
+  printf("nsCommonWidget::Show [%p] state %d\n", (void *)this, aState);
+
+  // Ok, someone called show on a window that isn't sized to a sane
+  // value.  Mark this window as needing to have Show() called on it
+  // and return.
+  if (aState && !AreBoundsSane()) {
+    printf("\tbounds are insane\n");
+    mNeedsShow = PR_TRUE;
+    return NS_OK;
+  }
+
+  // If someone is hiding this widget, clear any needing show flag.
+  if (!aState)
+    mNeedsShow = PR_FALSE;
+
+  // If someone is showing this window and it needs a resize then
+  // resize the widget.
+  if (aState && mNeedsResize) {
+    printf("\tresizing\n");
+    NativeResize(mBounds.x, mBounds.y, mBounds.width, mBounds.height,
+		 PR_FALSE);
+  }
+
+  NativeShow(aState);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCommonWidget::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
+{
+  mBounds.width = aWidth;
+  mBounds.height = aHeight;
+
+  // There are several cases here that we need to handle, based on a
+  // matrix of the visibility of the widget, the sanity of this resize
+  // and whether or not the widget was previously sane.
+
+  // Has this widget been set to visible?
+  if (mIsShown) {
+    // Are the bounds sane?
+    if (AreBoundsSane()) {
+      // Yep?  Resize the window
+      NativeResize(aWidth, aHeight, aRepaint);
+      // Does it need to be shown because it was previously insane?
+      if (mNeedsShow)
+	NativeShow(PR_TRUE);
+    }
+    else {
+      // If someone has set this so that the needs show flag is false
+      // and it needs to be hidden, update the flag and hide the
+      // window.  This flag will be cleared the next time someone
+      // hides the window or shows it.  It also prevents us from
+      // calling NativeShow(PR_FALSE) excessively on the window which
+      // causes unneeded X traffic.
+      if (!mNeedsShow) {
+	mNeedsShow = PR_TRUE;
+	NativeShow(PR_FALSE);
+      }
+    }
+  }
+  // If the widget hasn't been shown, mark the widget as needing to be
+  // resized before it is shown.
+  else {
+    // For widgets that we listen for resizes for (widgets created
+    // with native parents) we apparently _always_ have to resize.  I
+    // dunno why, but apparently we're lame like that.
+    if (mListenForResizes)
+      NativeResize(aWidth, aHeight, aRepaint);
+    else
+      mNeedsResize = PR_TRUE;
+  }
+
+  // synthesize a resize event if this isn't a toplevel
+  if (mIsTopLevel || mListenForResizes) {
+    nsRect rect(mBounds.x, mBounds.y, aWidth, aHeight);
+    nsEventStatus status;
+    DispatchResizeEvent(rect, status);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCommonWidget::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,
+		 PRBool aRepaint)
+{
+  mBounds.x = aX;
+  mBounds.y = aY;
+  mBounds.width = aWidth;
+  mBounds.height = aHeight;
+
+  // There are several cases here that we need to handle, based on a
+  // matrix of the visibility of the widget, the sanity of this resize
+  // and whether or not the widget was previously sane.
+
+  // Has this widget been set to visible?
+  if (mIsShown) {
+    // Are the bounds sane?
+    if (AreBoundsSane()) {
+      // Yep?  Resize the window
+      NativeResize(aX, aY, aWidth, aHeight, aRepaint);
+      // Does it need to be shown because it was previously insane?
+      if (mNeedsShow)
+	NativeShow(PR_TRUE);
+    }
+    else {
+      // If someone has set this so that the needs show flag is false
+      // and it needs to be hidden, update the flag and hide the
+      // window.  This flag will be cleared the next time someone
+      // hides the window or shows it.  It also prevents us from
+      // calling NativeShow(PR_FALSE) excessively on the window which
+      // causes unneeded X traffic.
+      if (!mNeedsShow) {
+	mNeedsShow = PR_TRUE;
+	NativeShow(PR_FALSE);
+      }
+    }
+  }
+  // If the widget hasn't been shown, mark the widget as needing to be
+  // resized before it is shown
+  else {
+    // For widgets that we listen for resizes for (widgets created
+    // with native parents) we apparently _always_ have to resize.  I
+    // dunno why, but apparently we're lame like that.
+    if (mListenForResizes)
+      NativeResize(aX, aY, aWidth, aHeight, aRepaint);
+    else
+      mNeedsResize = PR_TRUE;
+  }
+
+  if (mIsTopLevel || mListenForResizes) {
+    // synthesize a resize event
+    nsRect rect(aX, aY, aWidth, aHeight);
+    nsEventStatus status;
+    DispatchResizeEvent(rect, status);
+  }
+
+  return NS_OK;
+}
+
 void
 nsCommonWidget::OnDestroy(void)
 {
@@ -263,4 +432,13 @@ nsCommonWidget::OnDestroy(void)
   
   nsEventStatus status;
   DispatchEvent(&event, status);
+}
+
+PRBool
+nsCommonWidget::AreBoundsSane(void)
+{
+  if (mBounds.width > 1 && mBounds.height > 1)
+    return PR_TRUE;
+
+  return PR_FALSE;
 }
