@@ -96,6 +96,9 @@ nsCaret::nsCaret()
 , mLastCaretFrame(nsnull)
 , mLastCaretView(nsnull)
 , mLastContentOffset(0)
+#ifdef IBMBIDI
+, mKeyboardRTL(PR_FALSE)
+#endif
 {
 }
 
@@ -109,52 +112,56 @@ nsCaret::~nsCaret()
 //-----------------------------------------------------------------------------
 NS_IMETHODIMP nsCaret::Init(nsIPresShell *inPresShell)
 {
-  if (!inPresShell)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_ARG(inPresShell);
   
   mPresShell = getter_AddRefs(NS_GetWeakReference(inPresShell));    // the presshell owns us, so no addref
+  NS_ASSERTION(mPresShell, "Hey, pres shell should support weak refs");
 
-  nsILookAndFeel* touchyFeely;
-  if (NS_SUCCEEDED(nsComponentManager::CreateInstance(kLookAndFeelCID, nsnull, NS_GET_IID(nsILookAndFeel), (void**)&touchyFeely)))
+  // get nsILookAndFeel from the pres context, which has one cached.
+  nsCOMPtr<nsILookAndFeel> lookAndFeel;
+  
+  nsCOMPtr<nsIPresContext> presContext;
+  inPresShell->GetPresContext(getter_AddRefs(presContext));
+  if (presContext)
+    presContext->GetLookAndFeel(getter_AddRefs(lookAndFeel));
+  if (lookAndFeel)
   {
     PRInt32 tempInt;
-    
-    if (NS_SUCCEEDED(touchyFeely->GetMetric(nsILookAndFeel::eMetric_SingleLineCaretWidth, tempInt)))
-      mCaretTwipsWidth = (nscoord)tempInt;
-    if (NS_SUCCEEDED(touchyFeely->GetMetric(nsILookAndFeel::eMetric_CaretBlinkTime, tempInt)))
+    if (NS_SUCCEEDED(lookAndFeel->GetMetric(nsILookAndFeel::eMetric_SingleLineCaretWidth, tempInt)))
+      mCaretPixelsWidth = (nscoord)tempInt;
+    if (NS_SUCCEEDED(lookAndFeel->GetMetric(nsILookAndFeel::eMetric_CaretBlinkTime, tempInt)))
       mBlinkRate = (PRUint32)tempInt;
-    if (NS_SUCCEEDED(touchyFeely->GetMetric(nsILookAndFeel::eMetric_ShowCaretDuringSelection, tempInt)))
+    if (NS_SUCCEEDED(lookAndFeel->GetMetric(nsILookAndFeel::eMetric_ShowCaretDuringSelection, tempInt)))
       mShowDuringSelection = tempInt ? PR_TRUE : PR_FALSE;
-    
-    NS_RELEASE(touchyFeely);
   }
   
   // get the selection from the pres shell, and set ourselves up as a selection
   // listener
-  
-	
-  nsCOMPtr<nsISelection> domSelection;
-  nsCOMPtr<nsISelectionPrivate> privateSelection;
+
   nsCOMPtr<nsISelectionController> selCon = do_QueryReferent(mPresShell);
-  if (selCon)
-  {
-    if (NS_SUCCEEDED(selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(domSelection))))
-    {
-      privateSelection = do_QueryInterface(domSelection);
-      privateSelection->AddSelectionListener(this);
-      mDomSelectionWeak = getter_AddRefs( NS_GetWeakReference(domSelection) );
-    }
-  }
-  else
+  if (!selCon)
     return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsISelection> domSelection;
+  nsresult rv = selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(domSelection));
+  if (NS_FAILED(rv))
+    return rv;
+  if (!domSelection)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsISelectionPrivate> privateSelection = do_QueryInterface(domSelection);
+  if (privateSelection)
+    privateSelection->AddSelectionListener(this);
+  mDomSelectionWeak = getter_AddRefs(NS_GetWeakReference(domSelection));
   
   // set up the blink timer
   if (mVisible)
   {
-    nsresult  err = StartBlinking();
-    if (NS_FAILED(err))
-      return err;
+    rv = StartBlinking();
+    if (NS_FAILED(rv))
+      return rv;
   }
+
 #ifdef IBMBIDI
   PRBool isRTL;
   mBidiKeyboard = do_GetService("@mozilla.org/widget/bidikeyboard;1");
@@ -166,42 +173,38 @@ NS_IMETHODIMP nsCaret::Init(nsIPresShell *inPresShell)
 }
 
 
-
 //-----------------------------------------------------------------------------
-NS_IMPL_ADDREF(nsCaret);
-NS_IMPL_RELEASE(nsCaret);
-//-----------------------------------------------------------------------------
-NS_IMETHODIMP nsCaret::QueryInterface(const nsIID& aIID,
-                                     void** aInstancePtrResult)
+NS_IMETHODIMP nsCaret::Terminate()
 {
+  // this doesn't erase the caret if it's drawn. Should it? We might not have a good
+  // drawing environment during teardown.
+  
+  KillTimer();
+  mBlinkTimer = nsnull;
+  
+  mRendContext = nsnull;
 
-  NS_PRECONDITION(aInstancePtrResult, "null pointer");
-  if (!aInstancePtrResult)
-  return NS_ERROR_NULL_POINTER;
+  // unregiser ourselves as a selection listener
+  nsCOMPtr<nsISelection> domSelection = do_QueryReferent(mDomSelectionWeak);
+  nsCOMPtr<nsISelectionPrivate> privateSelection(do_QueryInterface(domSelection));
+  if (privateSelection)
+    privateSelection->RemoveSelectionListener(this);
+  mDomSelectionWeak = nsnull;
+  mPresShell = nsnull;
 
-  nsISupports* foundInterface;  
+  mLastCaretFrame = nsnull;
+  mLastCaretView = nsnull;
+  
+#ifdef IBMBIDI
+  mBidiKeyboard = nsnull;
+#endif
 
-  if (aIID.Equals(NS_GET_IID(nsISupports)))
-    foundInterface = (nsISupports*)(nsICaret*)this;   // whoo boy
-  else if (aIID.Equals(NS_GET_IID(nsICaret)))
-    foundInterface = (nsICaret*)this;
-  else if (aIID.Equals(NS_GET_IID(nsISelectionListener)))
-    foundInterface = (nsISelectionListener*)this;
-  else
-    foundInterface = nsnull;
-
-  nsresult status;
-  if (! foundInterface)
-    status = NS_NOINTERFACE;
-  else
-  {
-    NS_ADDREF(foundInterface);
-    status = NS_OK;
-  }
-
-  *aInstancePtrResult = foundInterface;
-  return status;
+  return NS_OK;
 }
+
+
+//-----------------------------------------------------------------------------
+NS_IMPL_ISUPPORTS2(nsCaret, nsICaret, nsISelectionListener);
 
 //-----------------------------------------------------------------------------
 NS_IMETHODIMP nsCaret::GetCaretDOMSelection(nsISelection **aDOMSel)
@@ -236,6 +239,8 @@ NS_IMETHODIMP nsCaret::SetCaretVisible(PRBool inMakeVisible)
   return err;
 }
 
+
+//-----------------------------------------------------------------------------
 NS_IMETHODIMP nsCaret::GetCaretVisible(PRBool *outMakeVisible)
 {
   NS_ENSURE_ARG_POINTER(outMakeVisible);
@@ -259,11 +264,10 @@ NS_IMETHODIMP nsCaret::GetCaretCoordinates(EViewCoordinates aRelativeToType, nsI
     return NS_ERROR_NOT_INITIALIZED;
   if (!outCoordinates || !outIsCollapsed)
     return NS_ERROR_NULL_POINTER;
-		
-	nsCOMPtr<nsISelection> domSelection = aDOMSel;
-	nsCOMPtr<nsISelectionPrivate> privateSelection(do_QueryInterface(domSelection));
-  nsresult err;
-  if (!domSelection)
+
+  nsCOMPtr<nsISelection> domSelection = aDOMSel;
+  nsCOMPtr<nsISelectionPrivate> privateSelection(do_QueryInterface(domSelection));
+  if (!privateSelection)
     return NS_ERROR_NOT_INITIALIZED;    // no selection
 
   if (outView)
@@ -276,7 +280,7 @@ NS_IMETHODIMP nsCaret::GetCaretCoordinates(EViewCoordinates aRelativeToType, nsI
   outCoordinates->height = -1;
   *outIsCollapsed = PR_FALSE;
   
-  err = domSelection->GetIsCollapsed(outIsCollapsed);
+  nsresult err = domSelection->GetIsCollapsed(outIsCollapsed);
   if (NS_FAILED(err)) 
     return err;
     
@@ -332,7 +336,6 @@ NS_IMETHODIMP nsCaret::GetCaretCoordinates(EViewCoordinates aRelativeToType, nsI
   nsPoint   viewOffset(0, 0);
   nsRect    clipRect;
   nsIView   *drawingView;     // views are not refcounted
-
 
   GetViewForRendering(theFrame, aRelativeToType, viewOffset, clipRect, &drawingView, outView);
   if (!drawingView)
@@ -408,6 +411,37 @@ NS_IMETHODIMP nsCaret::EraseCaret()
 {
   if (mDrawn)
     DrawCaret();
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsCaret::SetCaretWidth(nscoord aPixels)
+{
+  if (aPixels <= 0)
+    return NS_ERROR_FAILURE;
+
+  // no need to optimize this, but if it gets too slow, we can check for
+  // case aPixels==mCaretPixelsWidth
+  mCaretPixelsWidth = aPixels;
+  mCaretTwipsWidth = -1;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsCaret::SetVisibilityDuringSelection(PRBool aVisibility) 
+{
+  mShowDuringSelection = aVisibility;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsCaret::DrawAtPosition(nsIDOMNode* aNode, PRInt32 aOffset)
+{
+  NS_ENSURE_ARG(aNode);
+  
+  // XXX we need to do more work here to get the correct hint.
+  if (!SetupDrawingFrameAndOffset(aNode, aOffset, nsIFrameSelection::HINTLEFT))
+    return NS_ERROR_FAILURE;
+
+  GetCaretRectAndInvert();
   return NS_OK;
 }
 
@@ -511,30 +545,9 @@ nsresult nsCaret::StopBlinking()
 // Get the nsIFrame and the content offset for the current caret position.
 // Returns PR_TRUE if we should go ahead and draw, PR_FALSE otherwise. 
 //
-PRBool nsCaret::SetupDrawingFrameAndOffset()
-{
-  if (!mDomSelectionWeak)
-    return PR_FALSE;
-
-  
-  nsCOMPtr<nsISelection> domSelection = do_QueryReferent(mDomSelectionWeak);
-  nsCOMPtr<nsISelectionPrivate> privateSelection(do_QueryInterface(domSelection));
-  if (!domSelection) return PR_FALSE;
-  
-  PRBool isCollapsed = PR_FALSE;
-  domSelection->GetIsCollapsed(&isCollapsed);
-  if (!mShowDuringSelection && !isCollapsed) return PR_FALSE;
-
-  // start and end parent should be the same since we are collapsed
-  nsCOMPtr<nsIDOMNode>  focusNode;
-  domSelection->GetFocusNode(getter_AddRefs(focusNode));
-  if (!focusNode) return PR_FALSE;
-  
-  PRInt32 contentOffset;
-  if (NS_FAILED(domSelection->GetFocusOffset(&contentOffset)))
-    return PR_FALSE;
-  
-  nsCOMPtr<nsIContent> contentNode = do_QueryInterface(focusNode);
+PRBool nsCaret::SetupDrawingFrameAndOffset(nsIDOMNode* aNode, PRInt32 aOffset, nsIFrameSelection::HINT aFrameHint)
+{  
+  nsCOMPtr<nsIContent> contentNode = do_QueryInterface(aNode);
   if (!contentNode) return PR_FALSE;
       
   //get frame selection and find out what frame to use...
@@ -547,15 +560,11 @@ PRBool nsCaret::SetupDrawingFrameAndOffset()
   if (!frameSelection)
     return PR_FALSE;
 
-  PRBool hintRight;
-  privateSelection->GetInterlinePosition(&hintRight);//translate hint.
-  nsIFrameSelection::HINT hint;
-  hint = (hintRight) ? nsIFrameSelection::HINTRIGHT : nsIFrameSelection::HINTLEFT;
 
   nsIFrame* theFrame = nsnull;
   PRInt32   theFrameOffset = 0;
 
-  nsresult rv = frameSelection->GetFrameForNodeOffset(contentNode, contentOffset, hint, &theFrame, &theFrameOffset);
+  nsresult rv = frameSelection->GetFrameForNodeOffset(contentNode, aOffset, aFrameHint, &theFrame, &theFrameOffset);
   if (NS_FAILED(rv) || !theFrame)
     return PR_FALSE;
 
@@ -608,7 +617,7 @@ PRBool nsCaret::SetupDrawingFrameAndOffset()
     if (start == 0 || end == 0 || start == theFrameOffset || end == theFrameOffset)
     {
       /* Boundary condition, we need to know the Bidi levels of the characters before and after the cursor */
-      if (NS_SUCCEEDED(frameSelection->GetPrevNextBidiLevels(presContext, contentNode, contentOffset,
+      if (NS_SUCCEEDED(frameSelection->GetPrevNextBidiLevels(presContext, contentNode, aOffset,
                                                              &frameBefore, &frameAfter,
                                                              &levelBefore, &levelAfter)))
       {
@@ -915,10 +924,10 @@ PRBool nsCaret::MustDrawCaret()
       return PR_FALSE;
   }
 
-	if (mDrawn)
-		return PR_TRUE;
-		
-	nsCOMPtr<nsISelection> domSelection = do_QueryReferent(mDomSelectionWeak);
+  if (mDrawn)
+    return PR_TRUE;
+
+  nsCOMPtr<nsISelection> domSelection = do_QueryReferent(mDomSelectionWeak);
   if (!domSelection)
     return PR_FALSE;
   PRBool isCollapsed;
@@ -948,10 +957,38 @@ void nsCaret::DrawCaret()
   // if we are drawing, not erasing, then set up the frame etc.
   if (!mDrawn)
   {
-    if (!SetupDrawingFrameAndOffset())
+    nsCOMPtr<nsISelection> domSelection = do_QueryReferent(mDomSelectionWeak);
+    nsCOMPtr<nsISelectionPrivate> privateSelection(do_QueryInterface(domSelection));
+    if (!privateSelection) return;
+    
+    PRBool isCollapsed = PR_FALSE;
+    domSelection->GetIsCollapsed(&isCollapsed);
+    if (!mShowDuringSelection && !isCollapsed)
+      return;
+
+    PRBool hintRight;
+    privateSelection->GetInterlinePosition(&hintRight);//translate hint.
+    nsIFrameSelection::HINT hint = (hintRight) ? nsIFrameSelection::HINTRIGHT : nsIFrameSelection::HINTLEFT;
+
+    // get the node and offset, which is where we want the caret to draw
+    nsCOMPtr<nsIDOMNode>  focusNode;
+    domSelection->GetFocusNode(getter_AddRefs(focusNode));
+    if (!focusNode)
+      return;
+    
+    PRInt32 contentOffset;
+    if (NS_FAILED(domSelection->GetFocusOffset(&contentOffset)))
+      return;
+
+    if (!SetupDrawingFrameAndOffset(focusNode, contentOffset, hint))
       return;
   }
-  
+
+  GetCaretRectAndInvert();
+}
+
+void nsCaret::GetCaretRectAndInvert()
+{
   NS_ASSERTION(mLastCaretFrame != nsnull, "Should have a frame here");
   
   nsRect    frameRect;
@@ -978,7 +1015,7 @@ void nsCaret::DrawCaret()
     return;
 
   // if the view changed, or we don't have a rendering context, make one
-  // because of drawing issues, always make a new RC at the momemt. See bug 28068
+  // because of drawing issues, always make a new RC at the moment. See bug 28068
   if (
 #ifdef DONT_REUSE_RENDERING_CONTEXT
       PR_TRUE ||
@@ -1045,9 +1082,8 @@ void nsCaret::DrawCaret()
 
     caretRect += mCachedFrameOffset;
     
-    //printf("Content offset %ld, frame offset %ld\n", focusOffset, framePos.x);
-    if(mCaretTwipsWidth < 0)
-    {// need to re-compute the pixel width
+    if (mCaretTwipsWidth < 0)    // need to re-compute the pixel width
+    {
       float tDevUnitsToTwips = 15;
       nsCOMPtr<nsIDeviceContext> dx;
       presContext->GetDeviceContext(getter_AddRefs(dx));
@@ -1151,6 +1187,7 @@ void nsCaret::DrawCaret()
     mRendContext->SetColor(NS_RGB(85, 85, 85));   // we are drawing it; gray
   else
     mRendContext->SetColor(NS_RGB(255,255,255));
+
   mRendContext->InvertRect(mCaretRect);
 
   // Ensure the buffer is flushed (Cocoa needs this), since we're drawing
@@ -1162,7 +1199,7 @@ void nsCaret::DrawCaret()
     mRendContext->InvertRect(mHookRect);
 #endif
 
-  PRBool emptyClip;   // I know what you're thinking. "Did he fire six shots or only five?"
+  PRBool emptyClip;
   mRendContext->PopState(emptyClip);
   
   ToggleDrawnStatus();
@@ -1199,20 +1236,3 @@ nsresult NS_NewCaret(nsICaret** aInstancePtrResult)
   return caret->QueryInterface(NS_GET_IID(nsICaret), (void**) aInstancePtrResult);
 }
 
-NS_IMETHODIMP nsCaret::SetCaretWidth(nscoord aPixels)
-{
-  if(!aPixels)
-    return NS_ERROR_FAILURE;
-  else
-  { //no need to optimize this, but if it gets too slow, we can check for case aPixels==mCaretPixelsWidth
-    mCaretPixelsWidth = aPixels;
-    mCaretTwipsWidth = -1;
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsCaret::SetVisibilityDuringSelection(PRBool aVisibility) 
-{
-  mShowDuringSelection = aVisibility;
-  return NS_OK;
-}

@@ -34,12 +34,6 @@
 
 class nsIView;
 
-class nsISelectionController;
-
-// {E14B66F6-BFC5-11d2-B57E-00105AA83B2F}
-#define NS_CARET_CID \
-{ 0xe14b66f6, 0xbfc5, 0x11d2, { 0xb5, 0x7e, 0x0, 0x10, 0x5a, 0xa8, 0x3b, 0x2f } };
-
 //-----------------------------------------------------------------------------
 
 class nsCaret : public nsICaret,
@@ -56,6 +50,7 @@ class nsCaret : public nsICaret,
   
     // nsICaret interface
     NS_IMETHOD    Init(nsIPresShell *inPresShell);
+    NS_IMETHOD    Terminate();
 
     NS_IMETHOD    GetCaretDOMSelection(nsISelection **outDOMSel);
     NS_IMETHOD    SetCaretDOMSelection(nsISelection *inDOMSel);
@@ -68,6 +63,7 @@ class nsCaret : public nsICaret,
 
     NS_IMETHOD    SetCaretWidth(nscoord aPixels);
     NS_IMETHOD    SetVisibilityDuringSelection(PRBool aVisibility);
+    NS_IMETHOD    DrawAtPosition(nsIDOMNode* aNode, PRInt32 aOffset);
 
     //nsISelectionListener interface
     NS_IMETHOD    NotifySelectionChanged(nsIDOMDocument *aDoc, nsISelection *aSel, short aReason);
@@ -83,9 +79,10 @@ class nsCaret : public nsICaret,
     nsresult      StopBlinking();
     
     void          GetViewForRendering(nsIFrame *caretFrame, EViewCoordinates coordType, nsPoint &viewOffset, nsRect& outClipRect, nsIView **outRenderingView, nsIView **outRelativeView);
-    PRBool        SetupDrawingFrameAndOffset();
+    PRBool        SetupDrawingFrameAndOffset(nsIDOMNode* aNode, PRInt32 aOffset, nsIFrameSelection::HINT aFrameHint);
     PRBool        MustDrawCaret();
     void          DrawCaret();
+    void          GetCaretRectAndInvert();
     void          ToggleDrawnStatus() {   mDrawn = !mDrawn; }
 
 protected:
@@ -98,7 +95,7 @@ protected:
 
     PRUint32              mBlinkRate;         // time for one cyle (off then on), in milliseconds
 
-    nscoord               mCaretTwipsWidth;   // caret width in twips
+    nscoord               mCaretTwipsWidth;   // caret width in twips. this gets calculated laziiy
     nscoord               mCaretPixelsWidth;  // caret width in pixels
     
     PRPackedBool          mVisible;           // is the caret blinking
@@ -114,11 +111,9 @@ protected:
     nsIView*              mLastCaretView;     // last view that we used for drawing. Cached so we can tell when we need to make a new RC
     PRInt32               mLastContentOffset;
 #ifdef IBMBIDI
-//---------------------------------------IBMBIDI----------------------------------------------
     nsRect                mHookRect;          // directional hook on the caret
     nsCOMPtr<nsIBidiKeyboard> mBidiKeyboard;  // Bidi keyboard object to set and query keyboard language
     PRPackedBool          mKeyboardRTL;       // is the keyboard language right-to-left
-//-------------------------------------END OF IBM BIDI----------------------------------------
 #endif
 };
 

@@ -42,13 +42,15 @@
 #include "nsCOMPtr.h"
 #include "nsCoord.h"
 
+struct nsRect;
+struct nsPoint;
+
 class nsIRenderingContext;
 class nsIFrame;
 class nsIView;
 class nsIPresShell;
-struct nsRect;
-struct nsPoint;
 class nsISelection;
+class nsIDOMNode;
 
 // IID for the nsICaret interface
 #define NS_ICARET_IID       \
@@ -59,14 +61,15 @@ class nsICaret: public nsISupports
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICARET_IID)
 
-  typedef enum EViewCoordinates {
+  enum EViewCoordinates {
       eTopLevelWindowCoordinates,
       eRenderingViewCoordinates,
       eClosestViewCoordinates,
       eIMECoordinates
-    } EViewCoordinates;
+    };
 
   NS_IMETHOD Init(nsIPresShell *inPresShell) = 0;
+  NS_IMETHOD Terminate() = 0;
   
   NS_IMETHOD GetCaretDOMSelection(nsISelection **aDOMSel) = 0;
   NS_IMETHOD SetCaretDOMSelection(nsISelection *aDOMSel) = 0;
@@ -112,6 +115,16 @@ public:
   NS_IMETHOD SetCaretWidth(nscoord aPixels) = 0;
 
   NS_IMETHOD SetVisibilityDuringSelection(PRBool aVisibilityDuringSelection) = 0;
+  
+  /** DrawAtPosition
+   *  
+   *  Draw the caret explicitly, at the specified node and offset.
+   *  To avoid drawing glitches, you should call EraseCaret()
+   *  after each call to DrawAtPosition().
+   *
+   **/
+  NS_IMETHOD DrawAtPosition(nsIDOMNode* aNode, PRInt32 aOffset) = 0;
+
 };
 
 extern nsresult NS_NewCaret(nsICaret** aInstancePtrResult);

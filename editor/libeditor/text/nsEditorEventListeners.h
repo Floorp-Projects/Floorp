@@ -52,6 +52,7 @@
 
 #include "nsIEditor.h"
 #include "nsIPlaintextEditor.h"
+#include "nsICaret.h"
 
 /** The nsTextEditorKeyListener public nsIDOMKeyListener
  *  This class will delegate events to its editor according to the translation
@@ -207,7 +208,8 @@ public:
   /** SetEditor gives an address to the editor that will be accessed
    *  @param aEditor the editor this listener calls for editing operations
    */
-  void SetEditor(nsIEditor *aEditor){mEditor = aEditor;}
+  void SetEditor(nsIEditor *aEditor)          { mEditor = aEditor; }
+  void SetPresShell(nsIPresShell *aPresShell) { mPresShell = aPresShell; }
 
 /*interfaces for addref and release and queryinterface*/
   NS_DECL_ISUPPORTS
@@ -222,7 +224,16 @@ public:
 /*END implementations of dragevent handler interface*/
 
 protected:
+
+  PRBool     CanDrop(nsIDOMEvent* aEvent);
+  
+protected:
+
   nsIEditor*    mEditor;
+  nsIPresShell* mPresShell;
+  
+  nsCOMPtr<nsICaret> mCaret;
+  PRBool             mCaretDrawn;
 
 };
 
@@ -272,7 +283,8 @@ extern nsresult NS_NewEditorTextListener(nsIDOMEventListener** aInstancePtrResul
 
 /** factory for the editor drag listener
  */
-extern nsresult NS_NewEditorDragListener(nsIDOMEventListener ** aInstancePtrResult, nsIEditor *aEditor);
+extern nsresult NS_NewEditorDragListener(nsIDOMEventListener ** aInstancePtrResult, nsIPresShell* aPresShell,
+                                            nsIEditor *aEditor);
 
 /** factory for the editor composition listener 
  */

@@ -102,6 +102,7 @@
 #include "nsITextContent.h"
 #include "nsIXBLService.h"
 #include "nsIFrameLoader.h"
+#include "nsICaret.h"
 #include "nsLayoutAtoms.h"
 #include "nsPlainTextSerializer.h"
 #include "mozSanitizingSerializer.h"
@@ -412,6 +413,7 @@ MAKE_CTOR(CreateNewScrollBoxObject,     nsIBoxObject,           NS_NewScrollBoxO
 MAKE_CTOR(CreateNewTreeBoxObject,       nsIBoxObject,           NS_NewTreeBoxObject)
 MAKE_CTOR(CreateNewAutoCopyService,     nsIAutoCopyService,     NS_NewAutoCopyService)
 MAKE_CTOR(CreateSelectionImageService,  nsISelectionImageService,NS_NewSelectionImageService)
+MAKE_CTOR(CreateCaret,                  nsICaret,               NS_NewCaret)
 
 MAKE_CTOR(CreateNameSpaceManager,         nsINameSpaceManager,         NS_GetNameSpaceManager)
 MAKE_CTOR(CreateEventListenerManager,     nsIEventListenerManager,     NS_NewEventListenerManager)
@@ -618,7 +620,12 @@ static const nsModuleComponentInfo gComponents[] = {
   { "selection image storage",
     NS_SELECTIONIMAGESERVICE_CID,
     nsnull,
-    CreateSelectionImageService},
+    CreateSelectionImageService },
+
+  { "caret",
+    NS_CARET_CID,
+    "@mozilla.org/layout/caret;1",
+    CreateCaret },
 
   // XXX ick
   { "Presentation shell",

@@ -385,6 +385,8 @@ nsHTMLEditor::InstallEventListeners()
   NS_ASSERTION(mDocWeak, "no document set on this editor");
   if (!mDocWeak) return NS_ERROR_NOT_INITIALIZED;
 
+  if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
+
   nsresult result;
   // get a key listener
   result = NS_NewEditorKeyListener(getter_AddRefs(mKeyListenerP), this);
@@ -421,7 +423,8 @@ printf("nsTextEditor.cpp: failed to get TextEvent Listener\n");
   }
 
   // get a drag listener
-  result = NS_NewEditorDragListener(getter_AddRefs(mDragListenerP), this);
+  nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShellWeak);
+  result = NS_NewEditorDragListener(getter_AddRefs(mDragListenerP), presShell, this);
   if (NS_FAILED(result)) {
     HandleEventListenerError();
     return result;
@@ -4216,7 +4219,8 @@ nsHTMLEditor::SetCompositionString(const nsAString& aCompositionString, nsIPriva
     mIMEBufferLength = aCompositionString.Length();
 
     ps->GetCaret(getter_AddRefs(caretP));
-    caretP->SetCaretDOMSelection(selection);
+    if (caretP)
+      caretP->SetCaretDOMSelection(selection);
 
     // second part of 23558 fix:
     if (aCompositionString.IsEmpty()) 
