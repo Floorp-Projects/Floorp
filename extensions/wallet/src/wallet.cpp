@@ -1806,7 +1806,7 @@ wallet_PutHeader(nsOutputFileStream strm, nsKeyType saveCount, nsKeyType writeCo
  * write contents of designated list into designated file
  */
 void
-wallet_WriteToFile(const char filename[], nsVoidArray* list, PRBool obscure) {
+wallet_WriteToFile(const char * filename, nsVoidArray* list, PRBool obscure) {
   wallet_MapElement * ptr;
 
   if (obscure && !Wallet_KeySet()) {
@@ -1873,7 +1873,7 @@ wallet_WriteToFile(const char filename[], nsVoidArray* list, PRBool obscure) {
  */
 void
 wallet_ReadFromFile
-    (const char filename[], nsVoidArray*& list, PRBool obscure, PRBool localFile, PlacementType placement = DUP_AFTER) {
+    (const char * filename, nsVoidArray*& list, PRBool obscure, PRBool localFile, PlacementType placement = DUP_AFTER) {
 
   /* open input stream */
   nsFileSpec dirSpec;
@@ -1986,7 +1986,7 @@ wallet_ReadFromFile
  */
 void
 wallet_ReadFromURLFieldToSchemaFile
-    (const char filename[], nsVoidArray*& list, PlacementType placement = DUP_AFTER) {
+    (const char * filename, nsVoidArray*& list, PlacementType placement = DUP_AFTER) {
 
   /* open input stream */
   nsFileSpec dirSpec;
