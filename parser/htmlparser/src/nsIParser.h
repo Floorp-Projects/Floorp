@@ -68,6 +68,7 @@ enum eCRCQuality {
 
 typedef enum {
    kCharsetUninitialized = 0,
+   kCharsetFromWeakDocTypeDefault,
    kCharsetFromUserDefault ,
    kCharsetFromDocTypeDefault,
    kCharsetFromParentFrame,
