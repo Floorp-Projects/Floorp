@@ -59,10 +59,13 @@ PC_HFILES =		\
 
 HFILES = $(PC_HFILES)
 
-# also make JS.c from JS.xs here?
 PC_CFILES =	\
 	jsperl.c \
+	JS.c \
 	$(NULL)
+
+JS.c: JS.xs typemap
+	perl /usr/lib/perl5/ExtUtils/xsubpp -typemap /usr/lib/perl5/ExtUtils/typemap -typemap typemap JS.xs > JS.c
 
 LIB_CFILES  = $(PC_CFILES)
 
