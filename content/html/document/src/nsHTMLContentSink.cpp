@@ -134,9 +134,12 @@ static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CI
 #ifdef NS_DEBUG
 static PRLogModuleInfo* gSinkLogModuleInfo;
 
-#define SINK_TRACE_CALLS        0x1
-#define SINK_TRACE_REFLOW       0x2
-#define SINK_ALWAYS_REFLOW      0x4
+#define SINK_TRACE_CALLS              0x1
+#define SINK_TRACE_REFLOW             0x2
+#define SINK_ALWAYS_REFLOW            0x4
+
+#define NS_SINK_FLAG_SCRIPT_ENABLED   0x8
+#define NS_SINK_FLAG_FRAMES_ENABLED   0x10
 
 #define SINK_LOG_TEST(_lm,_bit) (PRIntn((_lm)->level) & (_bit))
 
@@ -213,8 +216,7 @@ public:
   NS_IMETHOD CloseFrameset(const nsIParserNode& aNode);
   NS_IMETHOD OpenMap(const nsIParserNode& aNode);
   NS_IMETHOD CloseMap(const nsIParserNode& aNode);
-  NS_IMETHOD OpenNoscript(const nsIParserNode& aNode);
-  NS_IMETHOD CloseNoscript(const nsIParserNode& aNode);
+  NS_IMETHOD GetPref(PRInt32 aTag,PRBool& aPref);
 
 
   NS_IMETHOD DoFragment(PRBool aFlag);
@@ -351,6 +353,7 @@ public:
   nsICSSLoader*       mCSSLoader;
   PRInt32             mInsideNoXXXTag;
   PRInt32             mInMonolithicContainer;
+  PRUint32            mFlags;
 
   void StartLayout();
 
@@ -2203,6 +2206,7 @@ HTMLContentSink::HTMLContentSink() {
   mInMonolithicContainer = 0;
   mInsideNoXXXTag  = 0;
   mNodeInfoManager = nsnull;
+  mFlags=0;
 }
 
 HTMLContentSink::~HTMLContentSink()
@@ -2306,6 +2310,22 @@ HTMLContentSink::Init(nsIDocument* aDoc,
   NS_ADDREF(aURL);
   mWebShell = aContainer;
   NS_ADDREF(aContainer);
+
+  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mWebShell));
+  NS_ASSERTION(docShell,"oops no docshell!");
+  if (docShell) {
+    PRBool enabled;
+    
+    docShell->GetAllowJavascript(&enabled);
+    if (enabled) {
+      mFlags |= NS_SINK_FLAG_SCRIPT_ENABLED;
+    }
+    
+    docShell->GetAllowSubframes(&enabled);
+    if (enabled) {
+      mFlags |= NS_SINK_FLAG_FRAMES_ENABLED;
+    }
+  }
 
   NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
 
@@ -3014,7 +3034,8 @@ HTMLContentSink::OpenFrameset(const nsIParserNode& aNode)
                   mCurrentContext->mStackPos, this);
 
   nsresult rv = mCurrentContext->OpenContainer(aNode);
-  if ((NS_OK == rv) && (nsnull == mFrameset)) {
+  if ((NS_SUCCEEDED(rv)) && (!mFrameset) && 
+      (mFlags & NS_SINK_FLAG_FRAMES_ENABLED)) {
     mFrameset = mCurrentContext->mStack[mCurrentContext->mStackPos-1].mContent;
     NS_ADDREF(mFrameset);
   }
@@ -3038,7 +3059,8 @@ HTMLContentSink::CloseFrameset(const nsIParserNode& aNode)
   nsresult rv = sc->CloseContainer(aNode);
   MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::CloseFrameset()\n"));
   MOZ_TIMER_STOP(mWatch);
-  if (done) {
+
+  if (done && (mFlags & NS_SINK_FLAG_FRAMES_ENABLED)) {
     StartLayout();
   }
   return rv;
@@ -3080,84 +3102,21 @@ HTMLContentSink::CloseMap(const nsIParserNode& aNode)
   return rv;
 }
 
-/**
- *  From the pref determine if the noscript content should be
- *  processed or not.  If java script is enabled then inform
- *  DTD that the content should be treated as an alternate content,i.e.,
- *  the content should not be treated as a regular content.
- *
- *  harishd 08/24/00
- *  @param  aNode - The noscript node
- *  return  NS_OK if succeeded else ERROR
- */
-
 NS_IMETHODIMP
-HTMLContentSink::OpenNoscript(const nsIParserNode& aNode) {
-  nsresult result=NS_OK;
-
-  MOZ_TIMER_DEBUGLOG(("Start: nsHTMLContentSink::OpenNoscript()\n"));
-  MOZ_TIMER_START(mWatch);
-  SINK_TRACE_NODE(SINK_TRACE_CALLS,
-                  "HTMLContentSink::OpenNoscript", aNode, 
-                   mCurrentContext->mStackPos, this);
-
-  nsCOMPtr<nsIPref> prefs(do_GetService("@mozilla.org/preferences;1", &result));
-  if(NS_SUCCEEDED(result)) {
-    PRBool jsEnabled;
-    result=prefs->GetBoolPref("javascript.enabled", &jsEnabled);
-    if(NS_SUCCEEDED(result)){
-      // If JS is disabled then we want to lose the noscript element
-      // ,and therefore don't OpenContainer, so that the noscript contents 
-      // get handled as if noscript  wasn't present.
-      if(jsEnabled) {
-
-        result=mCurrentContext->OpenContainer(aNode);
-
-        if(NS_SUCCEEDED(result)) {
-          mInsideNoXXXTag++;            // To indicate that no processing should be done to this content
-          result=NS_HTMLPARSER_ALTERNATECONTENT; // Inform DTD that the noscript content should be treated as CDATA.
-        }
-      }
-    }
+HTMLContentSink::GetPref(PRInt32 aTag,PRBool& aPref) {
+  nsHTMLTag theHTMLTag = nsHTMLTag(aTag);
+    
+  if (theHTMLTag == eHTMLTag_script) {
+    aPref = mFlags & NS_SINK_FLAG_SCRIPT_ENABLED;
+  } 
+  else if (theHTMLTag == eHTMLTag_frameset) {
+    aPref = mFlags & NS_SINK_FLAG_FRAMES_ENABLED;
   }
-
-  MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::OpenNoscript()\n"));
-  MOZ_TIMER_STOP(mWatch);
-  
-  return result;
-}
-
-/**
- *  Close noscript and enable processing for rest of the content,
- *  outside noscript
- *
- *  harishd 08/24/00
- *  @param  aNode - The noscript node
- *  return  NS_OK if succeeded else ERROR
- */
-NS_IMETHODIMP
-HTMLContentSink::CloseNoscript(const nsIParserNode& aNode) {
-
-  // When JS is diabled this method wouldn't get called because
-  // noscript element will not be present then.
-
-  MOZ_TIMER_DEBUGLOG(("Start: nsHTMLContentSink::CloseNoscript()\n"));
-  MOZ_TIMER_START(mWatch);
-  SINK_TRACE_NODE(SINK_TRACE_CALLS,
-                  "HTMLContentSink::CloseNoscript", aNode, 
-                  mCurrentContext->mStackPos-1, this);
- 
-  nsresult result=mCurrentContext->CloseContainer(aNode);
-  if(NS_SUCCEEDED(result)) {
-    NS_ASSERTION((mInsideNoXXXTag > -1), "mInsideNoXXXTag underflow");
-    if (mInsideNoXXXTag > 0) {
-      mInsideNoXXXTag--;
-    }
+  else {
+    aPref = PR_FALSE;
   }
-  
-  MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::CloseNoscript()\n"));
-  MOZ_TIMER_STOP(mWatch);
-  return result;
+   
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -3168,11 +3127,11 @@ HTMLContentSink::OpenContainer(const nsIParserNode& aNode)
   nsresult rv = NS_OK;
   // XXX work around parser bug
   if (eHTMLTag_frameset == aNode.GetNodeType()) {
-    MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::OpenContainer()\n"));
-    MOZ_TIMER_STOP(mWatch);
-    return OpenFrameset(aNode);
+    rv = OpenFrameset(aNode);
   }
-  rv = mCurrentContext->OpenContainer(aNode);
+  else {
+    rv = mCurrentContext->OpenContainer(aNode);
+  }
   MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::OpenContainer()\n"));
   MOZ_TIMER_STOP(mWatch);
   return rv;

@@ -629,6 +629,13 @@ NS_IMETHODIMP nsWebBrowser::SetProperty(PRUint32 aId, PRUint32 aValue)
            mDocShell->SetAllowMetaRedirects(aValue);
         }
         break;
+    case nsIWebBrowserSetup::SETUP_ALLOW_SUBFRAMES:
+        {
+           NS_ENSURE_STATE(mDocShell);
+           NS_ENSURE_TRUE((aValue == PR_TRUE || aValue == PR_FALSE), NS_ERROR_INVALID_ARG);
+           mDocShell->SetAllowSubframes(aValue);
+        }
+        break;
     default:
         return NS_ERROR_INVALID_ARG;
   

@@ -92,6 +92,7 @@ public:
   NS_IMETHOD CloseFrameset(const nsIParserNode& aNode);
   NS_IMETHOD OpenNoscript(const nsIParserNode& aNode);
   NS_IMETHOD CloseNoscript(const nsIParserNode& aNode);
+  NS_IMETHOD GetPref(PRInt32 aTag,PRBool& aPref) { return NS_OK; }
   NS_IMETHOD OpenMap(const nsIParserNode& aNode);
   NS_IMETHOD CloseMap(const nsIParserNode& aNode);
   NS_IMETHOD FlushPendingNotifications() { return NS_OK; }

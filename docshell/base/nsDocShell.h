@@ -293,6 +293,7 @@ protected:
    PRBool                     mAllowPlugins;
    PRBool                     mAllowJavascript;
    PRBool                     mAllowMetaRedirects;
+   PRBool                     mAllowSubframes;
    PRUint32                   mAppType;
    PRInt32                    mChildOffset;  // Offset in the parent's child list.
    PRUint32                   mBusyFlags;

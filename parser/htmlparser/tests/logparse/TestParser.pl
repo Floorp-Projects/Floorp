@@ -2,8 +2,9 @@
 
  use Cwd;
 
- $path=`cd`;
- $path=~m/:/;
+ $path=`pwd`;;
+
+ $path=~m/mozilla/;
 
  $drive=$`;
 
@@ -17,14 +18,16 @@
 
  if($ARGV[0] eq "-b") {
    foreach $input(<FILE_LIST>) {
+     $input =~s/\n//g;
      @output=split(/\./,$input);
-     system("$drive://mozilla//dist//WIN32_D.obj//bin//TestParser.exe $input $output[0].b");
+     system("$drive\mozilla/dist/WIN32_D.obj/bin/TestParser.exe $input $output[0].b");
    }
  }
  elsif($ARGV[0] eq "-v") {
    foreach $input(<FILE_LIST>) {
+     $input =~s/\n//g;
      @output=split(/\./,$input);
-     system("$drive://mozilla//dist//WIN32_D.obj//bin//TestParser.exe $input $output[0].v");
+     system("$drive\mozilla/dist/WIN32_D.obj/bin/TestParser.exe $input $output[0].v");
 	 system("fc $output[0].b $output[0].v");
    }
  }

@@ -571,8 +571,6 @@ USE_GENERAL_OPEN_METHOD(OpenMap, eHTMLTag_map)
 USE_GENERAL_CLOSE_METHOD(CloseMap, eHTMLTag_map)
 USE_GENERAL_OPEN_METHOD(OpenFrameset, eHTMLTag_frameset)
 USE_GENERAL_CLOSE_METHOD(CloseFrameset, eHTMLTag_frameset)
-USE_GENERAL_OPEN_METHOD(OpenNoscript, eHTMLTag_noscript)
-USE_GENERAL_CLOSE_METHOD(CloseNoscript, eHTMLTag_noscript)
 
 /**
  *

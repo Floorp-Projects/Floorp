@@ -112,6 +112,9 @@ pref("browser.PICS.service.http___home_netscape_com_default_rating.s", 0);
 
 pref("browser.target_new_blocked", false);
 
+// loading and rendering of framesets and iframes
+pref("browser.frames.enabled", true);
+
 // view source
 pref("view_source.syntax_highlight", true);
 

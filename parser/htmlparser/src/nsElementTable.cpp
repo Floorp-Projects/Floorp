@@ -350,7 +350,7 @@ void InitializeElementTable(void) {
       /*autoclose starttags and endtags*/ &gBodyAutoClose,0,0,0,
       /*parent,incl,exclgroups*/          kHTMLContent,(kFlowEntity|kSelf), kNone,	
       /*special props, prop-range*/       kOmitEndTag, kBodyPropRange,
-      /*special parents,kids,skip*/       &gInNoframes,&gBodyKids,eHTMLTag_unknown);
+      /*special parents,kids,skip*/       0,&gBodyKids,eHTMLTag_unknown);
 
     Initialize( 
       /*tag*/                             eHTMLTag_br,
@@ -857,7 +857,7 @@ void InitializeElementTable(void) {
       /*autoclose starttags and endtags*/ 0,0,0,0,
       /*parent,incl,exclgroups*/          kBlock, kFlowEntity, kNone,	
       /*special props, prop-range*/       0, kNoPropRange,
-      /*special parents,kids,skip*/       &gNoframeRoot,0,eHTMLTag_noframes); // Added noframes - fix bug 62803 - since Mozilla supports frames.
+      /*special parents,kids,skip*/       &gNoframeRoot,0,eHTMLTag_unknown); 
 
     Initialize( 
       /*tag*/                             eHTMLTag_nolayer,
