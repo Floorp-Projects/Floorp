@@ -979,6 +979,11 @@ NS_IMETHODIMP
 nsJSContext::CallEventHandler(void *aTarget, void *aHandler, PRUint32 argc,
                               void *argv, PRBool *aBoolResult, PRBool aReverseReturnResult)
 {
+  if (!mScriptsEnabled) {
+    *aBoolResult = !aReverseReturnResult;
+    return NS_OK;
+  }
+
   // This one's a lot easier than EvaluateString because we don't have to
   // hassle with principals: they're already compiled into the JS function.
   nsresult rv;
