@@ -32,6 +32,7 @@ var key = {
  "?appearance_pref_colors":  "chrome://help/locale/cs_nav_prefs_appearance.html#colors",
  "?appearance_pref_fonts":  "chrome://help/locale/cs_nav_prefs_appearance.html#fonts",
  "?appearance_pref_themes":  "chrome://help/locale/cs_nav_prefs_appearance.html#themes",
+ "?appearance_pref_content_packs":  "chrome://help/locale/cs_nav_prefs_appearance.html#content",
 
  "?navigator_pref":  "chrome://help/locale/cs_nav_prefs_navigator.html",
  "?navigator_pref_navigator":  "chrome://help/locale/cs_nav_prefs_navigator.html#Navigator",
