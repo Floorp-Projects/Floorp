@@ -264,6 +264,7 @@ nsHTTPHandler::NewChannel(const char* verb, nsIURI* i_URL,
                                      bufferSegmentSize,
                                      bufferMaxSize);
         if (pChannel) {
+            PRBool checkForProxy = PR_FALSE;
             NS_ADDREF(pChannel);
             rv = pChannel->Init(aLoadGroup);
             if (NS_FAILED(rv)) goto done;
@@ -272,7 +273,6 @@ nsHTTPHandler::NewChannel(const char* verb, nsIURI* i_URL,
             rv = pChannel->SetNotificationCallbacks(notificationCallbacks);
             if (NS_FAILED(rv)) goto done;
 
-            PRBool checkForProxy = PR_FALSE;
             rv = mProxySvc->GetProxyEnabled(&checkForProxy);
             if (checkForProxy)
             {
