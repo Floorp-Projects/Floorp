@@ -19,7 +19,7 @@
  *
  * Contributor(s): 
  * jce2@po.cwru.edu <Jason Eager>: Added pref to turn on/off 
- *                                 syntax hilighting in view source
+ *                                 syntax highlighting in view source
  *                                 window.
  *                                
  * 
@@ -875,10 +875,10 @@ nsresult CViewSourceHTML::WriteTag(nsString &theXMLTagName,const nsAReadableStri
   CSharedVSContext& theContext=CSharedVSContext::GetSharedContext();
 #ifdef VIEW_SOURCE_COLORING
   // This determines the value of the boolean syntax_highlight preference.
-  PRBool syntaxHilight = PR_FALSE;
+  PRBool syntaxHighlight = PR_FALSE;
   NS_WITH_SERVICE(nsIPref, thePrefsService, kPrefCID, &result);
   if (NS_SUCCEEDED(result) && thePrefsService)
-      thePrefsService->GetBoolPref("browser.view_source.syntax_highlight", &syntaxHilight);
+      thePrefsService->GetBoolPref("view_source.syntax_highlight", &syntaxHighlight);
 #endif // VIEW_SOURCE_COLORING
 
 #ifdef VIEW_SOURCE_HTML
@@ -898,7 +898,7 @@ nsresult CViewSourceHTML::WriteTag(nsString &theXMLTagName,const nsAReadableStri
 #endif // VIEW_SOURCE_HTML
 
 #ifdef VIEW_SOURCE_COLORING
-  if (syntaxHilight)
+  if (syntaxHighlight)
   {
   	theContext.mStartNode.Init(&theTagToken,mLineNumber);
 #ifdef VIEW_SOURCE_HTML
@@ -939,7 +939,7 @@ nsresult CViewSourceHTML::WriteTag(nsString &theXMLTagName,const nsAReadableStri
 
 #ifdef VIEW_SOURCE_HTML
 #ifdef VIEW_SOURCE_COLORING
-  if (syntaxHilight)
+  if (syntaxHighlight)
   {
     theContext.mStartNode.ReleaseAll(); 
     CEndToken theEndToken(eHTMLTag_span);
