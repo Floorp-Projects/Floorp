@@ -438,11 +438,7 @@ protected:
   nsIArena* mArena;
   nsString* mDocumentTitle;
   nsIURI* mDocumentURL;
-#ifdef NECKO
   nsILoadGroup* mDocumentLoadGroup;
-#else
-  nsILoadGroup* mDocumentLoadGroup;
-#endif
   nsString mCharacterSet;
   nsIDocument* mParentDocument;
   nsVoidArray mSubDocuments;

@@ -1595,28 +1595,7 @@ nsresult nsDocumentBindInfo::Bind(nsIURI* aURL, nsIStreamListener* aListener)
     nsServiceManager::ReleaseService(kNetServiceCID, inet);
   }
 #else
-  NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  nsIURI *uri = nsnull;
-  rv = m_Url->QueryInterface(nsIURI::GetIID(), (void**)&uri);
-  if (NS_FAILED(rv)) return rv;
-  
-  nsIChannel *channel = nsnull;
-  // XXX NECKO verb? sinkGetter?
-  rv = service->NewChannelFromURI("load", uri, nsnull, &channel);
-  NS_RELEASE(uri);
-  if (NS_FAILED(rv)) return rv;
-
-  nsIEventQueue *eventQ = nsnull;
-  NS_WITH_SERVICE(nsIEventQueueService, eqService, kEventQueueServiceCID, &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  rv = eqService->GetThreadEventQueue(PR_CurrentThread(), &eventQ);
-  if (NS_FAILED(rv)) return rv;
-
-  rv = channel->AsyncRead(0, -1, nsnull, eventQ, this);
-  NS_RELEASE(eventQ);
+  rv = NS_OpenURI(this, m_Url);
 #endif // NECKO
 
   return rv;
