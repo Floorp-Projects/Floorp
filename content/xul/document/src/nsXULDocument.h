@@ -584,7 +584,7 @@ protected:
     nsVoidArray                mSubDocuments;     // [OWNER] of subelements
     PRPackedBool               mIsPopup;
     PRPackedBool               mIsFastLoad;
-    PRPackedBool               mApplyingPersitedAttrs;
+    PRPackedBool               mApplyingPersistedAttrs;
     nsXULDocument*             mNextFastLoad;
     nsCOMPtr<nsIDOMXULCommandDispatcher>     mCommandDispatcher; // [OWNER] of the focus tracker
 
@@ -787,6 +787,11 @@ protected:
                            nsIContent* aElement,
                            PRBool* aNeedsHookup,
                            PRBool* aDidResolve);
+
+    void
+    SynchronizeBroadcastListener(nsIDOMElement   *aBroadcaster,
+                                 nsIDOMElement   *aListener,
+                                 const nsAString &aAttr);
 
     static
     nsresult

@@ -441,7 +441,7 @@ nsXULDocument::nsXULDocument(void)
       mDisplaySelection(PR_FALSE),
       mIsPopup(PR_FALSE),
       mIsFastLoad(PR_FALSE),
-      mApplyingPersitedAttrs(PR_FALSE),
+      mApplyingPersistedAttrs(PR_FALSE),
       mNextFastLoad(nsnull),
       mBoxObjectTable(nsnull),
       mTemplateBuilderTable(nsnull),
@@ -1728,10 +1728,10 @@ CanBroadcast(PRInt32 aNameSpaceID, nsIAtom* aAttribute)
     return PR_TRUE;
 }
 
-static void
-SynchronizeBroadcastListener(nsIDOMElement* aBroadcaster,
-                             nsIDOMElement* aListener,
-                             const nsAString& aAttr)
+void
+nsXULDocument::SynchronizeBroadcastListener(nsIDOMElement   *aBroadcaster,
+                                            nsIDOMElement   *aListener,
+                                            const nsAString &aAttr)
 {
     nsCOMPtr<nsIContent> broadcaster = do_QueryInterface(aBroadcaster);
     nsCOMPtr<nsIContent> listener = do_QueryInterface(aListener);
@@ -1754,6 +1754,15 @@ SynchronizeBroadcastListener(nsIDOMElement* aBroadcaster,
             nsAutoString value;
             broadcaster->GetAttr(nameSpaceID, name, value);
             listener->SetAttr(nameSpaceID, name, value, PR_TRUE);
+
+#if 0
+            // XXX we don't fire the |onbroadcast| handler during
+            // initial hookup: doing so would potentially run the
+            // |onbroadcast| handler before the |onload| handler,
+            // which could define JS properties that mask XBL
+            // properties, etc.
+            ExecuteOnBroadcastHandlerFor(broadcaster, aListener, name);
+#endif
         }
     }
     else {
@@ -1770,6 +1779,14 @@ SynchronizeBroadcastListener(nsIDOMElement* aBroadcaster,
         else {
             listener->UnsetAttr(kNameSpaceID_None, name, PR_TRUE);
         }
+
+#if 0
+        // XXX we don't fire the |onbroadcast| handler during initial
+        // hookup: doing so would potentially run the |onbroadcast|
+        // handler before the |onload| handler, which could define JS
+        // properties that mask XBL properties, etc.
+        ExecuteOnBroadcastHandlerFor(broadcaster, aListener, name);
+#endif
     }
 }
 
@@ -1918,6 +1935,10 @@ nsXULDocument::ExecuteOnBroadcastHandlerFor(nsIContent* aBroadcaster,
     PRInt32 count;
     listener->ChildCount(count);
     for (PRInt32 i = 0; i < count; ++i) {
+        // Look for an <observes> element beneath the listener. This
+        // ought to have an |element| attribute that refers to
+        // aBroadcaster, and an |attribute| element that tells us what
+        // attriubtes we're listening for.
         nsCOMPtr<nsIContent> child;
         listener->ChildAt(i, *getter_AddRefs(child));
 
@@ -1928,7 +1949,7 @@ nsXULDocument::ExecuteOnBroadcastHandlerFor(nsIContent* aBroadcaster,
 
         // Is this the element that was listening to us?
         nsAutoString listeningToID;
-        aBroadcaster->GetAttr(kNameSpaceID_None, nsXULAtoms::element, listeningToID);
+        child->GetAttr(kNameSpaceID_None, nsXULAtoms::element, listeningToID);
 
         nsAutoString broadcasterID;
         aBroadcaster->GetAttr(kNameSpaceID_None, nsXULAtoms::id, broadcasterID);
@@ -1939,15 +1960,16 @@ nsXULDocument::ExecuteOnBroadcastHandlerFor(nsIContent* aBroadcaster,
         // We are observing the broadcaster, but is this the right
         // attribute?
         nsAutoString listeningToAttribute;
-        listener->GetAttr(kNameSpaceID_None, nsXULAtoms::attribute, listeningToAttribute);
+        child->GetAttr(kNameSpaceID_None, nsXULAtoms::attribute,
+                       listeningToAttribute);
 
-        if (!listeningToAttribute.Equals(attrName) &&
-            !listeningToAttribute.Equals(NS_LITERAL_STRING("*"))) {
+        if (listeningToAttribute != attrName &&
+            listeningToAttribute != NS_LITERAL_STRING("*")) {
             continue;
         }
 
-        // This is the right observes node. Execute the onchange
-        // event handler
+        // This is the right <observes> element. Execute the
+        // |onbroadcast| event handler
         nsEvent event;
         event.eventStructType = NS_EVENT;
         event.message = NS_XUL_BROADCAST;
@@ -1961,7 +1983,7 @@ nsXULDocument::ExecuteOnBroadcastHandlerFor(nsIContent* aBroadcaster,
 
             // Handle the DOM event
             nsEventStatus status = nsEventStatus_eIgnore;
-            listener->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+            child->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
         }
     }
 
@@ -1976,10 +1998,6 @@ nsXULDocument::AttributeChanged(nsIContent* aElement,
 {
     nsresult rv;
 
-    PRInt32 nameSpaceID;
-    rv = aElement->GetNameSpaceID(nameSpaceID);
-    if (NS_FAILED(rv)) return rv;
-
     // First see if we need to update our element map.
     if ((aAttribute == nsXULAtoms::id) || (aAttribute == nsXULAtoms::ref)) {
 
@@ -1990,30 +2008,6 @@ nsXULDocument::AttributeChanged(nsIContent* aElement,
         // the map. So add 'em back now.
         rv = AddElementToMap(aElement);
         if (NS_FAILED(rv)) return rv;
-    }
-
-    // Now notify external observers
-    for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
-        nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
-        observer->AttributeChanged(this, aElement, aNameSpaceID, aAttribute, aModType, aHint);
-    }
-
-    // See if there is anything we need to persist in the localstore.
-    //
-    // XXX Namespace handling broken :-(
-    nsAutoString persist;
-    rv = aElement->GetAttr(kNameSpaceID_None, nsXULAtoms::persist, persist);
-    if (NS_FAILED(rv)) return rv;
-
-    if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
-        nsAutoString attr;
-        rv = aAttribute->ToString(attr);
-        if (NS_FAILED(rv)) return rv;
-
-        if (persist.Find(attr) >= 0) {
-            rv = Persist(aElement, kNameSpaceID_None, aAttribute);
-            if (NS_FAILED(rv)) return rv;
-        }
     }
 
     // Synchronize broadcast listeners
@@ -2053,6 +2047,30 @@ nsXULDocument::AttributeChanged(nsIContent* aElement,
                                                  aAttribute);
                 }
             }
+        }
+    }
+
+    // Now notify external observers
+    for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
+        nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
+        observer->AttributeChanged(this, aElement, aNameSpaceID, aAttribute, aModType, aHint);
+    }
+
+    // See if there is anything we need to persist in the localstore.
+    //
+    // XXX Namespace handling broken :-(
+    nsAutoString persist;
+    rv = aElement->GetAttr(kNameSpaceID_None, nsXULAtoms::persist, persist);
+    if (NS_FAILED(rv)) return rv;
+
+    if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
+        nsAutoString attr;
+        rv = aAttribute->ToString(attr);
+        if (NS_FAILED(rv)) return rv;
+
+        if (persist.Find(attr) >= 0) {
+            rv = Persist(aElement, kNameSpaceID_None, aAttribute);
+            if (NS_FAILED(rv)) return rv;
         }
     }
 
@@ -2849,7 +2867,7 @@ nsXULDocument::Persist(const nsAReadableString& aID,
 {
     // If we're currently reading persisted attributes out of the
     // localstore, _don't_ re-enter and try to set them again!
-    if (mApplyingPersitedAttrs)
+    if (mApplyingPersistedAttrs)
         return NS_OK;
 
     nsresult rv;
@@ -2886,7 +2904,7 @@ nsresult
 nsXULDocument::Persist(nsIContent* aElement, PRInt32 aNameSpaceID,
                        nsIAtom* aAttribute)
 {
-    // First make sure we _have_ a local store to stuff the persited
+    // First make sure we _have_ a local store to stuff the persisted
     // information into. (We might not have one if profile information
     // hasn't been loaded yet...)
     if (! mLocalStore)
@@ -5224,7 +5242,7 @@ nsXULDocument::ApplyPersistentAttributes()
     if (! mLocalStore)
         return NS_OK;
 
-    mApplyingPersitedAttrs = PR_TRUE;
+    mApplyingPersistedAttrs = PR_TRUE;
 
     nsSupportsArray elements;
 
@@ -5271,7 +5289,7 @@ nsXULDocument::ApplyPersistentAttributes()
         ApplyPersistentAttributesToElements(resource, &elements);
     }
 
-    mApplyingPersitedAttrs = PR_FALSE;
+    mApplyingPersistedAttrs = PR_FALSE;
 
     return NS_OK;
 }
