@@ -50,6 +50,7 @@ CSRCS		= et_mocha.c \
 		  lm_span.c \
 		  lm_supdt.c \
 		  lm_taint.c \
+                  lm_trans.c \
 		  lm_trggr.c \
 		  lm_url.c \
 		  lm_win.c \
