@@ -78,12 +78,12 @@ public:
                                 // and mozilla/netwerks/base/nsIFileStreams.idl
 
 /* a6cf90e6-15b3-11d2-932e-00805f8add32 */
-#define NS_IFILEINPUTSTREAM_IID \
+#define NS_IFILESPECINPUTSTREAM_IID \
 { 0xa6cf90e6, 0x15b3, 0x11d2, \
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32} }
     
 //========================================================================================
-class nsIFileInputStream
+class nsIFileSpecInputStream
 // These are additional file-specific methods that files have, above what
 // nsIInputStream supports.  The current implementation supports both
 // interfaces.
@@ -91,16 +91,16 @@ class nsIFileInputStream
 : public nsIInputStream
 {
 public:
-    static const nsIID& GetIID() { static nsIID iid = NS_IFILEINPUTSTREAM_IID; return iid; }
-}; // class nsIFileInputStream
+    static const nsIID& GetIID() { static nsIID iid = NS_IFILESPECINPUTSTREAM_IID; return iid; }
+}; // class nsIFileSpecInputStream
 
 /* a6cf90e7-15b3-11d2-932e-00805f8add32 */
-#define NS_IFILEOUTPUTSTREAM_IID \
+#define NS_IFILESPECOUTPUTSTREAM_IID \
 { 0xa6cf90e7, 0x15b3, 0x11d2, \
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32} }
 
 //========================================================================================
-class nsIFileOutputStream
+class nsIFileSpecOutputStream
 // These are additional file-specific methods that files have, above what
 // nsIOutputStream supports.  The current implementation supports both
 // interfaces.
@@ -108,8 +108,8 @@ class nsIFileOutputStream
 : public nsIOutputStream
 {
 public:
-    static const nsIID& GetIID() { static nsIID iid = NS_IFILEOUTPUTSTREAM_IID; return iid; }
-}; // class nsIFileOutputStream
+    static const nsIID& GetIID() { static nsIID iid = NS_IFILESPECOUTPUTSTREAM_IID; return iid; }
+}; // class nsIFileSpecOutputStream
 
 #endif // NO_XPCOM_FILE_STREAMS
 
@@ -152,4 +152,4 @@ extern "C" NS_COM nsresult NS_NewIOFileStream(
     // Factory method to get an object that implements both nsIInputStream
     // and nsIOutputStream, associated with a single file.
 
-#endif /* nsIFileStream_h___ */
+#endif /* nsIFileSpecStream_h___ */
