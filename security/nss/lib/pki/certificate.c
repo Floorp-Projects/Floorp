@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.7 $ $Date: 2001/10/11 18:41:50 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.8 $ $Date: 2001/10/15 18:19:03 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
@@ -344,7 +344,7 @@ NSSCertificate_Encode
     return nssItem_Duplicate((NSSItem *)&c->encoding, arenaOpt, rvOpt);
 }
 
-static nssDecodedCert *
+NSS_IMPLEMENT nssDecodedCert *
 nssCertificate_GetDecoding
 (
   NSSCertificate *c
