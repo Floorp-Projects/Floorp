@@ -273,6 +273,12 @@ nsSmtpService::AllowPort(PRInt32 port, const char *scheme, PRBool *_retval)
     return NS_OK;
 }
 
+NS_IMETHODIMP nsSmtpService::GetURIType(PRInt16 *result)
+{
+    *result = URI_NORELATIVE;
+    return NS_OK; 	
+}
+
 //////////////////////////////////////////////////////////////////////////
 // This is just a little stub channel class for mailto urls. Mailto urls
 // don't really have any data for the stream calls in nsIChannel to make much sense.

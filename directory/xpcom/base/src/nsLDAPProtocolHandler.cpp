@@ -77,6 +77,15 @@ nsLDAPProtocolHandler::GetDefaultPort(PRInt32 *result)
   return NS_OK;
 }
 
+// getter method for uritype attribute
+//
+NS_IMETHODIMP
+nsLDAPProtocolHandler::GetURIType(PRInt16 *result)
+{
+  *result = URI_NORELATIVE;
+  return NS_OK;
+}
+
 // construct an appropriate URI
 //
 NS_IMETHODIMP

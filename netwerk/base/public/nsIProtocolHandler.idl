@@ -30,13 +30,33 @@ interface nsIProtocolHandler : nsISupports
 {
     readonly attribute string scheme;
 
-	/** 
-	 * Default Port will be the port that this protocol normally
-	 * uses.  If a port does not make sense for the protocol (eg about://)
-	 * -1 will be returned.
-	 */
+    /** 
+     * Default Port will be the port that this protocol normally
+     * uses.  If a port does not make sense for the protocol (eg about://)
+     * -1 will be returned.
+     */
 
     readonly attribute long defaultPort;
+
+    /** 
+     * constants for the uritype mask
+     */
+
+    /* the first is the default mask 0, the following masks are deviations */
+
+    /* standard full uri, has authority component and 
+       has concept of relative uris (http, ftp, ...) */
+    const short URI_STD    = 0;
+
+    /* no concept of relative uris, (about, rdf, javascript, finger, ...) */
+    const short URI_NORELATIVE = (1<<0);
+
+    /* no authority component (file, ...) */
+    const short URI_NOAUTH         = (1<<1);
+
+    /* more to come as needed */
+
+    readonly attribute short URIType;
 
     /**
      * Makes a URI object that is suitable for loading by this protocol.

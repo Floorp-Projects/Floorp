@@ -692,6 +692,13 @@ nsJSProtocolHandler::GetDefaultPort(PRInt32 *result)
 }
 
 NS_IMETHODIMP
+nsJSProtocolHandler::GetURIType(PRInt16 *result)
+{
+    *result = URI_NORELATIVE | URI_NOAUTH;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsJSProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
                             nsIURI **result)
 {

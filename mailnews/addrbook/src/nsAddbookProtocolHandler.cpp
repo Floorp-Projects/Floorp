@@ -94,6 +94,12 @@ NS_IMETHODIMP nsAddbookProtocolHandler::GetDefaultPort(PRInt32 *aDefaultPort)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsAddbookProtocolHandler::GetURIType(PRInt16 *aUritype)
+{
+  *aUritype = URI_STD;
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsAddbookProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI **_retval)
 {
   // get a new smtp url

@@ -326,6 +326,13 @@ NS_IMETHODIMP nsPop3Service::GetDefaultDoBiff(PRBool *aDoBiff)
     return NS_OK;
 }
 
+NS_IMETHODIMP nsPop3Service::GetURIType(PRInt16 *result)
+{
+    NS_ENSURE_ARG_POINTER(result);
+    *result = URI_NORELATIVE;
+    return NS_OK;
+}
+
 NS_IMETHODIMP nsPop3Service::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI **_retval)
 {
     nsresult rv = NS_ERROR_FAILURE;

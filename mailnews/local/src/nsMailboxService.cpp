@@ -43,6 +43,7 @@
 #include "nsIDocShellLoadInfo.h"
 #include "nsIWebNavigation.h"
 #include "prprf.h"
+#include "nsEscape.h"
 
 static NS_DEFINE_CID(kIStreamConverterServiceCID,
                      NS_STREAMCONVERTERSERVICE_CID);
@@ -349,7 +350,7 @@ nsresult nsMailboxService::PrepareMessageCopyUrl(nsIMsgFolder *folder, nsIUrlLis
       urlSpec = PR_smprintf("mailbox://%s", (const char *) filePath);
             
 			nsCOMPtr <nsIMsgMailNewsUrl> url = do_QueryInterface(*aMailboxUrl);
-			url->SetSpec(urlSpec);
+    		url->SetSpec(urlSpec);
 			PR_FREEIF(urlSpec);
    
       (*aMailboxUrl)->SetMailboxAction(aMailboxAction);
@@ -402,14 +403,16 @@ nsresult nsMailboxService::PrepareMessageUrl(const char * aSrcMsgMailboxURI, nsI
 		{
 			// set up the url spec and initialize the url with it.
 			nsFilePath filePath(folderPath); // convert to file url representation...
-
+            nsXPIDLCString escapedFilePath;
+            *((char**)getter_Copies(escapedFilePath)) =
+                                    nsEscape(filePath, url_Path);
       if (mPrintingOperation)
-          urlSpec = PR_smprintf("mailbox://%s?number=%d&header=print", (const char *) filePath, msgKey);
+          urlSpec = PR_smprintf("mailbox://%s?number=%d&header=print", (const char *) escapedFilePath, msgKey);
       else if (part)
           urlSpec = PR_smprintf("mailbox://%s?number=%d&%s", (const char *)
-                                filePath, msgKey, part);
+                                escapedFilePath, msgKey, part);
       else
-          urlSpec = PR_smprintf("mailbox://%s?number=%d", (const char *) filePath, msgKey);
+          urlSpec = PR_smprintf("mailbox://%s?number=%d", (const char *) escapedFilePath, msgKey);
             
 			nsCOMPtr <nsIMsgMailNewsUrl> url = do_QueryInterface(*aMailboxUrl);
 			url->SetSpec(urlSpec);
@@ -460,6 +463,12 @@ NS_IMETHODIMP nsMailboxService::AllowPort(PRInt32 port, const char *scheme, PRBo
     // don't override anything.  
     *_retval = PR_FALSE;
     return NS_OK;
+}
+
+NS_IMETHODIMP nsMailboxService::GetURIType(PRInt16 *result)
+{
+    *result = URI_STD;
+    return NS_OK; 	
 }
 
 NS_IMETHODIMP nsMailboxService::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI **_retval)

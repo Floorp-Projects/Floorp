@@ -154,6 +154,8 @@ function XMLTermProtocolHandler()
 
 XMLTermProtocolHandler.prototype.scheme = "terminal";
 XMLTermProtocolHandler.prototype.defaultPort = -1;
+XMLTermProtocolHandler.prototype.URIType = 
+                 Components.interfaces.nsIProtocolHandler.URI_NORELATIVE;
 
 XMLTermProtocolHandler.prototype.newURI =
 function (aSpec, aBaseURI)

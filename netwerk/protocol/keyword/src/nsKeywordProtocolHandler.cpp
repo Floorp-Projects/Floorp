@@ -95,6 +95,12 @@ nsKeywordProtocolHandler::GetDefaultPort(PRInt32 *result) {
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsKeywordProtocolHandler::GetURIType(PRInt16 *result) {
+    *result = URI_NORELATIVE | URI_NOAUTH;
+    return NS_OK;
+}
+
 // digests a spec _without_ the preceeding "keyword:" scheme.
 static char *
 MangleKeywordIntoHTTPURL(const char *aSpec, const char *aHTTPURL) {

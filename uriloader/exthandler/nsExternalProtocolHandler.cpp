@@ -302,6 +302,13 @@ PRBool nsExternalProtocolHandler::HaveProtocolHandler(nsIURI * aURI)
   return haveHandler;
 }
 
+NS_IMETHODIMP nsExternalProtocolHandler::GetURIType(PRInt16 *aUritype)
+{
+    // Make it norelative since it is a simple uri
+    *aUritype = URI_NORELATIVE;
+    return NS_OK;
+}
+
 NS_IMETHODIMP nsExternalProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI **_retval)
 {
   nsresult rv = NS_ERROR_UNKNOWN_PROTOCOL;

@@ -162,6 +162,8 @@ function IRCProtocolHandler()
 
 IRCProtocolHandler.prototype.scheme = "irc";
 IRCProtocolHandler.prototype.defaultPort = 6667;
+IRCProtocolHandler.prototype.URIType = 
+                   Components.interfaces.nsIProtocolHandler.URI_NORELATIVE;
 
 IRCProtocolHandler.prototype.allowPort =
 function (aPort, aScheme)

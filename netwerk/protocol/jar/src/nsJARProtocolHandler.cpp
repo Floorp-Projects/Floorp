@@ -112,6 +112,16 @@ nsJARProtocolHandler::GetDefaultPort(PRInt32 *result)
 }
 
 NS_IMETHODIMP
+nsJARProtocolHandler::GetURIType(PRInt16 *result)
+{
+    *result = URI_NORELATIVE | URI_NOAUTH;
+    /* Although jar uris have their own concept of relative urls
+       it is very different from the standard behaviour, so we
+       have to say norelative here! */
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsJARProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
                              nsIURI **result)
 {

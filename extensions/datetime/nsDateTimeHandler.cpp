@@ -73,6 +73,12 @@ nsDateTimeHandler::GetDefaultPort(PRInt32 *result) {
 }
 
 NS_IMETHODIMP
+nsDateTimeHandler::GetURIType(PRInt16 *result) {
+    *result = URI_NORELATIVE | URI_NOAUTH;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDateTimeHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
                              nsIURI **result) {
     nsresult rv;

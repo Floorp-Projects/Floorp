@@ -1245,6 +1245,13 @@ nsNntpService::GetDefaultServerPort(PRBool isSecure, PRInt32 *aDefaultPort)
     return rv;
 }
 
+NS_IMETHODIMP nsNntpService::GetURIType(PRInt16 *aUritype)
+{
+    NS_ENSURE_ARG_POINTER(aUritype);
+    *aUritype = URI_NORELATIVE;
+    return NS_OK;
+}
+
 NS_IMETHODIMP nsNntpService::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI **_retval)
 {
 	nsresult rv = NS_OK;
