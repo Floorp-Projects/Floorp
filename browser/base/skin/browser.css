@@ -21,6 +21,7 @@
  * Contributor(s):
  *   Joe Hewitt (hewitt@netscape.com)
  *   Jason Kersey (kerz@netscape.com)
+ *   Pierre Chanial (chanial@noos.fr)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,26 +38,39 @@
  * ***** END LICENSE BLOCK ***** */
 
 @import url("chrome://communicator/skin/");
-@import url("chrome://communicator/skin/bookmarks/bookmarksToolbar.css");
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 
-/* ::::: bookmark toolbar buttons ::::: */
-
-/* ..... bookmark items ..... */
-
-toolbarbutton.bookmark-item {
-  cursor: pointer;
-  min-width: 0;
-  max-width: 10em;
-  color: black !important;
+#PersonalToolbar {
+  min-height: 26px;
 }
 
-toolbarbutton.bookmark-item[container="true"],
-toolbarbutton.bookmark-item[container="true"]:hover {
+/* ::::: bookmark buttons ::::: */
+
+toolbarbutton.bookmark-item {
+  min-width: 0;
+  max-width: 13em;
+  border: 1px solid transparent !important;
+  color: black !important;
   cursor: default;
-  text-decoration: none;
+  margin-left: -3px;
+  padding-left: 3px;
+  padding-right: 3px
+}
+
+toolbarbutton.bookmark-item:not([container="true"]):hover {
+  -moz-border-top-colors: transparent !important;
+  -moz-border-right-colors: transparent !important;
+  -moz-border-bottom-colors: transparent !important;
+  -moz-border-left-colors: transparent !important;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+toolbarbutton.bookmark-item:not([container="true"]):hover:active {
+  padding-left: 4px;
+  padding-right: 2px
 }
 
 .bookmark-item > .toolbarbutton-icon {
@@ -68,48 +82,29 @@ toolbarbutton.bookmark-item[container="true"]:hover {
   display: none;
 }
 
-/* ..... drag and drop styles ..... */
-
-toolbarbutton.bookmark-item[dragover-left="true"] {
-  border-left-color: #000000;
-}
-
-toolbarbutton.bookmark-item[dragover-right="true"] {
-  border-right-color: #000000;
-}
-
-toolbarbutton.bookmark-item[dragover-top="true"] {
-  border: 1px solid #000000;
-}
-
-#PersonalToolbar {
-  min-height: 26px;
-}
-
 /* ::::: bookmark menus ::::: */
-
 menu.bookmark-item,
 menuitem.bookmark-item {
+  min-width: 0;
+  max-width: 26em;
   border-top: 1px solid transparent !important;
   border-bottom: 1px solid transparent !important;
-  padding: 1px 2px;
+  padding: 1px 3px 1px 2px;
+  margin-top: -1px;
 }
 
 /* ..... drag and drop styles ..... */
-
-menu.bookmark-item[dragover-top="true"],
-menuitem.bookmark-item[dragover-top="true"] {
-  border-top: 1px solid #000000 !important;
+.bookmark-item[dragover-left="true"] {
+  -moz-border-left-colors: #000000;
 }
-
-menu.bookmark-item[dragover-bottom="true"],
-menuitem.bookmark-item[dragover-bottom="true"] {
-  border-bottom: 1px solid #000000 !important;
+.bookmark-item[dragover-right="true"] {
+  -moz-border-right-colors: #000000;
 }
-
-menu.bookmark-item[dragover="true"] {
-  background: #424F63 !important;
-  color: #FFFFFF !important;
+.bookmark-item[dragover-top="true"] {
+  -moz-border-top-colors: #000000;
+}
+.bookmark-item[dragover-bottom="true"] {
+  -moz-border-bottom-colors: #000000;
 }
 
 /* ::::: bookmark items ::::: */
@@ -117,7 +112,6 @@ menu.bookmark-item[dragover="true"] {
 treechildren:-moz-tree-image(Name) {
   padding-right: 2px;
 }
-
 
 .bookmark-item,
 treechildren:-moz-tree-image(Name) {
@@ -148,7 +142,6 @@ treechildren:-moz-tree-image(Name, container) {
 treechildren:-moz-tree-image(Name, open) {
   -moz-image-region: rect(16px 48px 32px 32px);
 }
-
 
 treechildren:-moz-tree-twisty(group, hidetwisty) {
   list-style-image: none;
