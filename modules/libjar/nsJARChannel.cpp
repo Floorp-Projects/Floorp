@@ -29,6 +29,7 @@
 #include "nsAutoLock.h"
 #include "nsIFileStreams.h"
 #include "nsIPrincipal.h"
+#include "nsMimeTypes.h"
 
 static NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kMIMEServiceCID, NS_MIMESERVICE_CID);
@@ -499,7 +500,7 @@ nsJARChannel::GetContentType(char* *aContentType)
         }
 
         if (NS_FAILED(rv)) {
-            mContentType = nsCRT::strdup(UNKNOWN_MIME);
+            mContentType = nsCRT::strdup(UNKNOWN_CONTENT_TYPE);
             if (mContentType == nsnull)
                 rv = NS_ERROR_OUT_OF_MEMORY;
             else

@@ -29,7 +29,7 @@
 #include "nsIFileTransportService.h"
 #include "nsIFile.h"
 #include "nsInt64.h"
-
+#include "nsMimeTypes.h"
 #include "prio.h"	// Need to pick up def of PR_RDONLY
 
 static NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
@@ -347,7 +347,7 @@ nsFileChannel::GetContentType(char * *aContentType)
         }
 
         if (mContentType.IsEmpty()) {
-            mContentType = UNKNOWN_MIME;
+            mContentType = UNKNOWN_CONTENT_TYPE;
         }
     }
     *aContentType = mContentType.ToNewCString();

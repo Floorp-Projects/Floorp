@@ -575,14 +575,16 @@ nsHTTPHandler::Init()
     nsXPIDLCString locale;
     rv = prefs->CopyCharPref("general.useragent.locale", 
         getter_Copies(locale));
-    if (NS_FAILED(rv)) return rv;
-    mAppLanguage = locale;
+    if (NS_SUCCEEDED(rv)) {
+        mAppLanguage = locale;
+    }
 
     nsXPIDLCString milestone;
     rv = prefs->CopyCharPref("general.milestone",
         getter_Copies(milestone));
-    if (NS_FAILED(rv)) return rv;
-    mAppVersion += milestone;
+    if (NS_SUCCEEDED(rv)) {
+        mAppVersion += milestone;
+    }
 
     // Platform
 #if defined(XP_PC)
