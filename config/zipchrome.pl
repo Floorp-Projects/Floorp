@@ -23,34 +23,50 @@
 # 
 
 # Make sure there are at least four arguments
-if($#ARGV < 1)
+if(($#ARGV < 2) ||
+  ((!($ARGV[0] =~ /^win32$/i)) &&
+   (!($ARGV[0] =~ /^mac$/i)) &&
+   (!($ARGV[0] =~ /^unix$/i))) ||
+  ((!($ARGV[1] =~ /^update$/i)) &&
+   (!($ARGV[1] =~ /^noupdate$/i))))
 {
-  die "usage: $0 <os> <source path> [target path]
+  PrintUsage();
+  exit(1);
+}
+
+require "$ENV{MOZ_SRC}/mozilla/config/zipcfunc.pl";
+
+if($#ARGV == 2)
+{
+  if(&ZipChrome($ARGV[0], $ARGV[1], $ARGV[2], $ARGV[2]) != 0)
+  {
+    die "\n Error: ZipChrome($ARGV[0], $ARGV[1], $ARGV[2], $ARGV[2])\n";
+  }
+}
+else
+{
+  if(&ZipChrome($ARGV[0], $ARGV[1], $ARGV[2], $ARGV[3]) != 0)
+  {
+    die "\n Error: ZipChrome($ARGV[0], $ARGV[1], $ARGV[2], $ARGV[3])\n";
+  }
+}
+exit(0);
+
+sub PrintUsage()
+{
+  print "usage: $0 <os> <update> <source path> [target path]
 
        os                : win32, mac, unix
+
+       update            : update    - enables time/date compare file update of chrome archives
+                           noupdate  - disables time/date compare file update of chrome archives.
+                                       it will always update chrome files regardless of time/date stamp.
 
        source path       : path to where the chrome dir is at
 
        target path       : (optional) path to where the chrome jar files should be copied to
 
-              ie: $0 $ENV{MOZ_SRC}\\mozilla\\dist\\win32_d.obj\\tmpchrome $ENV{MOZ_SRC}\\mozilla\\dist\\win32_d.obj\\bin\\chrome
+              ie: $0 update $ENV{MOZ_SRC}\\mozilla\\dist\\win32_d.obj\\tmpchrome $ENV{MOZ_SRC}\\mozilla\\dist\\win32_d.obj\\bin\\chrome
        \n";
-}
-
-require "$ENV{MOZ_SRC}/mozilla/config/zipcfunc.pl";
-
-if($#ARGV == 1)
-{
-  if(&ZipChrome($ARGV[0], $ARGV[1], $ARGV[1]) != 0)
-  {
-    die "\n Error: ZipChrome($ARGV[0], $ARGV[1], $ARGV[1])\n";
-  }
-}
-else
-{
-  if(&ZipChrome($ARGV[0], $ARGV[1], $ARGV[2]) != 0)
-  {
-    die "\n Error: ZipChrome($ARGV[0], $ARGV[1], $ARGV[2])\n";
-  }
 }
 

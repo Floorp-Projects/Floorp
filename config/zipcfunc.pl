@@ -27,10 +27,16 @@ return(1);
 
 sub ZipChrome()
 {
+  # inOsType     - Os type
+  # inUpdate     - update or noupdate
+  #                update   - enables time/date compare file update of chrome archives
+  #                noupdate - disables time/date compare file update of chrome archives.
+  #                           it will always update chrome files regardless of time/date stamp.
   # inSourcePath - path to where the tmpchrome dir
   # inTargetPath - path to where the bin\chrome dir
-  ($inOsType, $inSourcePath, $inTargetPath) = @_;
+  ($inOsType, $inUpdate, $inSourcePath, $inTargetPath) = @_;
 
+  # check Os type
   if($inOsType =~ /win32/i)
   {
     $gPathDelimiter="\\";
@@ -42,6 +48,17 @@ sub ZipChrome()
   elsif($inOsType =~ /unix/i)
   {
     $gPathDelimiter="/";
+  }
+  else
+  {
+    return(2);
+  }
+
+  # Verify Update
+  if(!($inUpdate =~ /update/i) &&
+     !($inUpdate =~ /noupdate/i))
+  {
+    return(2);
   }
 
   if($inOsType =~ /win32/i)
@@ -78,6 +95,7 @@ sub CreateArchive()
   my(@dirItem);
   my($dirName);
   my($saveCwdir);
+  my($mZipParam);
 
   # Make sure $inSrc exists
   if(!(-e "$inSrc"))
@@ -137,25 +155,42 @@ sub CreateArchive()
 
     if(-d "$dir")
     {
-      print "\n";
-
-      # Delete archive is one already exists in target location
-      if(-e "..$gPathDelimiter$dirName.$inExtension")
-      {
-        print "\n";
-        print " Removing ..$gPathDelimiter$dirName.$inExtension\n";
-        unlink "..$gPathDelimiter$dirName.$inExtension";
-      }
-
       # Zip only works for win32 and unix systems
       if(($inOsType =~ /win32/i) || ($inOsType =~ /unix/i))
       {
-        # Create the archive in $inDest
-        print " Creating $dirName.$inExtension\n";
-        chdir("$dirName");
-        if(system("zip -r ..$gPathDelimiter..$gPathDelimiter$dirName.$inExtension *") != 0)
+        if($inUpdate =~ /noupdate/i)
         {
-          print "Error: zip -r ..$gPathDelimiter..$gPathDelimiter$dirName.$inExtension *\n";
+          print "\n";
+          if(-e "..$gPathDelimiter$dirName.$inExtension")
+          {
+            # Delete archive is one already exists in target location
+            print " Removing $dirName.$inExtension\n";
+            unlink "..$gPathDelimiter$dirName.$inExtension";
+          }
+
+          print " Creating $dirName.$inExtension\n";
+          $mZipParam = "";
+        }
+        elsif($inUpdate =~ /update/i)
+        {
+          if(!(-e "..$gPathDelimiter$dirName.$inExtension"))
+          {
+            print "\n";
+            print " Creating $dirName.$inExtension\n";
+            $mZipParam = "";
+          }
+          else
+          {
+            print " Updating $dirName.$inExtension\n";
+            $mZipParam = "-u";
+          }
+        }
+
+        # Create the archive in $inDest
+        chdir("$dirName");
+        if(system("zip $mZipParam -r ..$gPathDelimiter..$gPathDelimiter$dirName.$inExtension *") != 0)
+        {
+          print "Error: zip $mZipParam -r ..$gPathDelimiter..$gPathDelimiter$dirName.$inExtension *\n";
           chdir("..");
           return(1);
         }
