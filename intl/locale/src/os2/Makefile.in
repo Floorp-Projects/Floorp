@@ -35,7 +35,7 @@ REQUIRES	= xpcom \
 		  uconv \
 		  $(NULL)
 
-SHARED_LIBRARY_LIBS = ../libnslocale.$(LIB_SUFFIX)
+SHARED_LIBRARY_LIBS = ../libnslocale_s.$(LIB_SUFFIX)
 
 CPPSRCS		= \
 		nsOS2Locale.cpp \
