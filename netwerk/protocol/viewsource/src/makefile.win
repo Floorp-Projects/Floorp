@@ -20,12 +20,13 @@
 # Contributor(s): 
 #  Chak Nanga <chak@netscape.com>
 
-MODULE = necko
+MODULE = necko2
 
 DEPTH = ..\..\..\..
 REQUIRES	= xpcom \
 		  string \
 		  mimetype \
+		  necko \
 		  $(NULL)
 
 LIBRARY_NAME=nkviewsource_s

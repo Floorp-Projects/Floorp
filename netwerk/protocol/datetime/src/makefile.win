@@ -17,11 +17,12 @@
 #
 # Contributor(s): 
 
-MODULE = necko
+MODULE = necko2
 
 DEPTH = ..\..\..\..
-REQUIRES	= xpcom \
+REQUIRES= xpcom \
 		  string \
+		  necko \
 		  $(NULL)
 
 LIBRARY_NAME=nkdatetm_s
