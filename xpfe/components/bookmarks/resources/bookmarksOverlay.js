@@ -295,7 +295,7 @@ BookmarksUIElement.prototype = {
       this.commands.openFolder(selectedItem);
       break;
     case "bm_openinnewwindow":
-      if (selectedItem.getAttribute("type") == NC_NS + "Folder")
+      if (this.resolveType(selectedItem.id) == NC_NS + "Folder")
         this.openFolderInNewWindow(selectedItem);
       else
         this.open(null, selectedItem, true);
