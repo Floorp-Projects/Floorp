@@ -200,7 +200,10 @@ if test "$GNU_CC"; then
     #             be a little bit stricter
     # -pipe     - speeds up the build a little by using pipes rather than
     #             temp files
-    _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wall -Wconversion -Wshadow -Wpointer-arith -Wbad-function-cast -Wcast-align"
+    # Warnings slamm took out for now (these were giving more noise than help):
+    # -Wbad-function-cast - warns when casting a function to a new return type
+    # -Wconversion - complained when char's or short's were used a function args
+    _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wall -Wshadow -Wpointer-arith -Wcast-align"
 
     _DEFINES_CFLAGS='-include $(DEPTH)/config-defs.h'
     _USE_CPP_INCLUDE_FLAG=1
