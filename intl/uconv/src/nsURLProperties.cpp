@@ -80,8 +80,14 @@ nsURLProperties::nsURLProperties(nsString& aUrl)
                                          kIPersistentPropertiesIID, 
                                          (void**)&mDelegate);
 
-  if(NS_SUCCEEDED(res))
-     res = mDelegate->Load(in);
+  if(NS_SUCCEEDED(res)) {
+     if(in) {
+       res = mDelegate->Load(in);
+     }
+     else {
+       res = NS_ERROR_FAILURE;
+     }
+  }
 
   if(NS_FAILED(res)) {
     NS_IF_RELEASE(mDelegate);
