@@ -217,7 +217,14 @@ NS_METHOD nsWindow::CreateNative(PtWidget_t *parentWidget)
     PtSetArg( &arg[1], Pt_ARG_DIM, &dim, 0 );
     PtSetArg( &arg[2], Pt_ARG_RESIZE_FLAGS, 0, Pt_RESIZE_XY_BITS );
     PtSetArg( &arg[3], Pt_ARG_WINDOW_RENDER_FLAGS, render_flags, 0xFFFFFFFF );
-    mWidget = PtCreateWidget( PtWindow, parentWidget, 4, arg );
+
+    if( parentWidget )
+      mWidget = PtCreateWidget( PtWindow, parentWidget, 4, arg );
+    else
+    {
+      PtSetParentWidget( nsnull );
+      mWidget = PtCreateWidget( PtWindow, nsnull, 4, arg );
+    }
     
     // Must also create the client-area widget
     if( mWidget )
@@ -648,6 +655,7 @@ NS_METHOD nsWindow::GetClientBounds( nsRect &aRect )
         aRect.y = 0;
         aRect.width = dim->w + 2*(*border);
         aRect.height = dim->h + 2*(*border);
+        PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::GetClientBounds = %ld,%ld,%ld,%ld\n", aRect.x, aRect.y, aRect.width, aRect.height ));
         res = NS_OK;
       }
     }
@@ -659,7 +667,7 @@ NS_METHOD nsWindow::GetClientBounds( nsRect &aRect )
 
 NS_METHOD nsWindow::SetMenuBar( nsIMenuBar * aMenuBar )
 {
-//  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::SetMenuBar\n"));
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::SetMenuBar (%p)\n", this ));
 
   nsresult res = NS_ERROR_FAILURE;
 
@@ -708,7 +716,7 @@ NS_METHOD nsWindow::SetMenuBar( nsIMenuBar * aMenuBar )
         PtSetArg( &arg[0], Pt_ARG_AREA, &old_area, 0 );
         if( PtSetResources( mClientWidget, 1, arg ) == 0 )
         {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::SetMenuBar - client shifted down by %i\n", menu_h ));
+          PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::SetMenuBar - window=(%i,%i) client=(%i,%i)\n", new_area.size.w, new_area.size.h, old_area.size.w, old_area.size.h ));
           res = NS_OK;
         }
       }
