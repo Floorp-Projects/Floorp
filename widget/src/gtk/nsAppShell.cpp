@@ -24,6 +24,10 @@
 #include "nsICmdLineService.h"
 #include <stdlib.h>
 
+#ifdef MOZ_GLE
+#include <gle/gle.h>
+#endif
+
 #include "nsIWidget.h"
 #include "nsIPref.h"
 
@@ -218,6 +222,10 @@ NS_IMETHODIMP nsAppShell::Create(int *bac, char **bav)
   gtk_set_locale ();
 
   gtk_init (&argc, &argv);
+
+#ifdef MOZ_GLE
+  gle_init (&argc, &argv);
+#endif
 
   // delete the cmdLineArgs thing?
 

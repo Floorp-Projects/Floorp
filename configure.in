@@ -1009,12 +1009,42 @@ then
     AM_PATH_GTK($GTK_VERSION,,
       AC_MSG_ERROR(Test for GTK failed.))
 
+	dnl ========================================================
+	dnl =
+	dnl = GLE support
+	dnl = 
+	dnl = See http://www.SoftHome.net/pub/users/timj/gle/index.htm
+	dnl = 
+	dnl ========================================================
+    MOZ_GLE=
+    MOZ_GLE_LDFLAGS=
+
+	AC_ARG_WITH(gle,
+	[  --with-gle         GLE support (for debugging gtk widgets) ],
+	[
+		if test "$withval" = "yes"
+		then
+			MOZ_GLE=1
+            MOZ_GLE_LDFLAGS=-lgle
+            AC_DEFINE(MOZ_GLE)
+    	else
+			MOZ_GLE=
+            MOZ_GLE_LDFLAGS=
+    	fi
+	])
+
     AC_ARG_WITH(static-gtk,
     [  --with-static-gtk       link gtk statically if possible],
 	sysstaticgtk=$withval)
 
-    if test "$sysstaticgtk" != "yes"; then
-       MOZ_GTK_LDFLAGS=$GTK_LIBS
+    if test "$sysstaticgtk" != "yes"
+    then
+        MOZ_GTK_LDFLAGS=$GTK_LIBS
+
+        if test "$MOZ_GLE"
+        then
+            MOZ_GTK_LDFLAGS=`echo $MOZ_GTK_LDFLAGS | sed -e 's/-lgtk/-lgle -lgtk/'`
+        fi
     else
        changequote(,)
 
@@ -1056,6 +1086,8 @@ then
 			MOZ_ENABLE_GTK_MOZILLA=1
 		;;
 	esac
+
+
 fi
 dnl ========================================================
 dnl =                                                      =
@@ -2689,6 +2721,9 @@ AC_SUBST(FULL_STATIC_BUILD)
 AC_SUBST(NO_UNIX_LDAP)
 AC_SUBST(BUILD_IDLC)
 AC_SUBST(MOZ_ENABLE_GTK_MOZILLA)
+
+AC_SUBST(MOZ_GLE)
+
 AC_SUBST(MOZ_BUILD_ROOT)
 
 AC_SUBST(MOZ_POST_DSO_LIB_COMMAND)
