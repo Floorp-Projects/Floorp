@@ -330,13 +330,12 @@ PRBool nsDocument::RemoveObserver(nsIDocumentObserver* aObserver)
 }
 
 void nsDocument::ContentChanged(nsIContent* aContent,
-                                nsISubContent* aSubContent,
-                                PRInt32 aChangeType)
+                                nsISupports* aSubContent)
 {
   PRInt32 count = mObservers.Count();
   for (PRInt32 i = 0; i < count; i++) {
     nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
-    observer->ContentChanged(aContent, aSubContent, aChangeType);
+    observer->ContentChanged(aContent, aSubContent);
   }
 }
 

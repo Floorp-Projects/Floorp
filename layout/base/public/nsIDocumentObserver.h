@@ -62,13 +62,10 @@ public:
    *
    * @param aContent the piece of content that changed
    * @param aSubContent subrange information about the piece of content
-   *  that change
-   * @param aChangeType one of the change types (kLogicalChange,
-   *  kPhysicalChange or kRenderingChange)
+   *  that changed
    */
   virtual void ContentChanged(nsIContent* aContent,
-                              nsISubContent* aSubContent,
-                              PRInt32 aChangeType) = 0;
+                              nsISupports* aSubContent) = 0;
 
   /**
    * Notifcation that the content model has had data appended to the

@@ -107,8 +107,7 @@ public:
   // Observation hooks used by content nodes to propagate
   // notifications to document observers.
   virtual void ContentChanged(nsIContent* aContent,
-                              nsISubContent* aSubContent,
-                              PRInt32 aChangeType);
+                              nsISupports* aSubContent);
 
   virtual void ContentAppended(nsIContent* aContainer);
 
