@@ -624,13 +624,6 @@ nsresult nsParser::Parse(nsIURL* aURL,nsIStreamObserver* aListener,PRBool aVerif
     if (rv != NS_OK) return rv;
     nsAutoString theName(spec);
 
-    // Temp hack to prevent reload on mail message
-    if(-1 != theName.Find("tempMessage.eml"))
-    {
-      nsAutoString utf8("UTF-8");
-      SetDocumentCharset(utf8, kCharsetFromPreviousLoading);
-    }
-
     CParserContext* pc=new CParserContext(new nsScanner(theName,PR_FALSE, mCharset, mCharsetSource),aKey,aListener);
     if(pc) {
       pc->mMultipart=PR_TRUE;
