@@ -18,7 +18,6 @@
       window.openDialog("chrome://messenger-newsblog/content/subscriptions.xul", "",
                         "centerscreen,resizable=yes");
   }
-
 </script>
 
 <menupopup id="taskPopup">
@@ -35,6 +34,17 @@
                    tooltiptext="&newsBlogMenu.tooltip;"
                    oncommand="openSubscriptionsDialog();"/>
 </toolbarpalette>
+
+<!-- Overlay into the folder pane context menu. If you change the id for the menu item, please
+     update mailContextMenus.js 
+--> 
+<popup id="folderPaneContext">
+  <menuitem id="folderPaneContext-rssSubscribe"
+    insertafter="folderPaneContext-subscribe"
+    label="&folderContextRSSSubscribe.label;"
+    accesskey="&folderContextRSSSubscribe.accesskey;"
+    oncommand="openSubscriptionsDialog();"/>
+</popup>
 
 </overlay>
 

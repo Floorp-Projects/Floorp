@@ -302,6 +302,10 @@ function fillFolderPaneContextMenu()
   ShowMenuItem("folderPaneContext-subscribe", (numSelected <= 1) && canSubscribeToFolder);
   EnableMenuItem("folderPaneContext-subscribe", true);
 
+  // XXX: Hack for RSS servers...
+  ShowMenuItem("folderPaneContext-rssSubscribe", (numSelected <= 1) && (serverType == "rss"));
+  EnableMenuItem("folderPaneContext-rssSubscribe", true);
+
   ShowMenuItem("folderPaneContext-sep1", (numSelected <= 1) && !isServer);
 // News folder context menu =============================================
 

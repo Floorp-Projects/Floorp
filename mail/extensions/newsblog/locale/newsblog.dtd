@@ -6,6 +6,10 @@
 <!ENTITY newsBlogMenu.label "News &amp; Blogs">
 <!ENTITY newsBlogMenu.tooltip "Manage news and blog feeds">
 
+<!-- folder pane context menu item -->
+<!ENTITY folderContextRSSSubscribe.label    "Subscribe to Feeds...">
+<!ENTITY folderContextRSSSubscribe.accesskey   "b">
+
 <!-- Subscription Dialog -->
 <!ENTITY newsBlogSubscriptions.label "News Feed Subscriptions">
 <!ENTITY subscriptionDesc.label "Manage your News &amp; Blogs feeds.">
