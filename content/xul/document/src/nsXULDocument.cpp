@@ -2210,7 +2210,7 @@ nsXULDocument::Init()
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get HTML element factory");
         if (NS_FAILED(rv)) return rv;
 
-        rv = CallCreateInstance(kXMLElementFactoryCID, &gXMLElementFactory);
+        rv = CallGetService(kXMLElementFactoryCID, &gXMLElementFactory);
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get XML element factory");
         if (NS_FAILED(rv)) return rv;
 
