@@ -646,7 +646,7 @@ static Boolean movieControllerFilter(MovieController mc, short action, void *par
 {
     // find our throbber toolbar item.
     NSToolbar* toolbar = [[self window] toolbar];
-    NSArray* items = [toolbar items];
+    NSArray* items = [toolbar visibleItems];
     unsigned count = [items count];
     for (unsigned i = 0; i < count; ++i) {
         NSToolbarItem* item = [items objectAtIndex: i];
@@ -716,10 +716,14 @@ static Boolean movieControllerFilter(MovieController mc, short action, void *par
         }
     }
 #else
+    // optimization:  only throb if the throbber toolbar item is visible.
     if (mThrobberTimer == nil) {
-        mThrobberTimer = [[NSTimer scheduledTimerWithTimeInterval: (1.0 / 15.0)
-                                   target: self selector: @selector(pulseThrobber:)
-                                   userInfo: [self throbberItem] repeats: YES] retain];
+        NSToolbarItem* throbberItem = [self throbberItem];
+        if (throbberItem != nil) {
+            mThrobberTimer = [[NSTimer scheduledTimerWithTimeInterval: 0.2
+                                       target: self selector: @selector(pulseThrobber:)
+                                       userInfo: throbberItem repeats: YES] retain];
+        }
     }
 #endif
 }
