@@ -152,7 +152,7 @@ class _Class:
     def createInstance(self, iid = None):
         import xpcom.client
         return xpcom.client.Component(self.contractid, _get_good_iid(iid))
-    def getService(self, iid):
+    def getService(self, iid = None):
         return _xpcom.GetGlobalServiceManager().getService(self.contractid, _get_good_iid(iid))
 
 class _Classes(_ComponentCollection):
