@@ -412,23 +412,23 @@ TestSecurityManager(JSContext* jscontext, JSObject* glob, nsIXPConnect* xpc)
 
     sm->SetMode(MySecMan::OK_ALL);
     printf("  getService no veto: ");
-    t = "try{Components.classes.nsIXPConnect.getService(); print('passed');}catch(e){failed = true; print('failed');}";
+    t = "try{Components.classes['@mozilla.org/js/xpc/XPConnect;1'].getService(); print('passed');}catch(e){failed = true; print('failed');}";
     JS_EvaluateScript(jscontext, glob, t, strlen(t), "builtin", 1, &rval);
 
     sm->SetMode(MySecMan::VETO_ALL);
     printf("  getService with veto: ");
-    t = "try{Components.classes.nsIXPConnect.getService(); failed = true; print('failed');}catch(e){print('passed');}";
+    t = "try{Components.classes['@mozilla.org/js/xpc/XPConnect;1'].getService(); failed = true; print('failed');}catch(e){print('passed');}";
     JS_EvaluateScript(jscontext, glob, t, strlen(t), "builtin", 1, &rval);
 
 
     sm->SetMode(MySecMan::OK_ALL);
     printf("  createInstance no veto: ");
-    t = "try{Components.classes.nsID.createInstance(Components.interfaces.nsIJSID); print('passed');}catch(e){failed = true; print('failed');}";
+    t = "try{Components.classes['@mozilla.org/js/xpc/ID;1'].createInstance(Components.interfaces.nsIJSID); print('passed');}catch(e){failed = true; print('failed');}";
     JS_EvaluateScript(jscontext, glob, t, strlen(t), "builtin", 1, &rval);
 
     sm->SetMode(MySecMan::VETO_ALL);
     printf("  getService with veto: ");
-    t = "try{Components.classes.nsID.createInstance(Components.interfaces.nsIJSID); failed = true; print('failed');}catch(e){print('passed');}";
+    t = "try{Components.classes['@mozilla.org/js/xpc/ID;1'].createInstance(Components.interfaces.nsIJSID); failed = true; print('failed');}catch(e){print('passed');}";
     JS_EvaluateScript(jscontext, glob, t, strlen(t), "builtin", 1, &rval);
 
 
