@@ -70,20 +70,20 @@ PR_END_EXTERN_C
 #include "nsCLiveconnect.h"
 
 #include "jsinterp.h"  // XXX private API so we can auto-push a JSStackFrame
-
+#include "nsIScriptSecurityManager.h"
 #include "nsIPrincipal.h"
 #include "nsNetUtil.h"
 #include "nsISecurityContext.h"
-#include "nsIScriptSecurityManager.h"
 #include "prmem.h"
 
 static nsresult
-CreatePrincipal(nsISupports* securitySupports,
-                nsIPrincipal ** outPrincipal)
+CreatePrincipal(nsISupports* aSecuritySupports,
+                nsIScriptSecurityManager* aSecMan,
+                nsIPrincipal ** aOutPrincipal)
 {
     nsresult rv;
     nsCOMPtr<nsISecurityContext> securityContext(
-        do_QueryInterface(securitySupports, &rv));
+        do_QueryInterface(aSecuritySupports, &rv));
     if (NS_FAILED(rv)) return rv;
 
     char originBuf1[512];
@@ -113,11 +113,7 @@ CreatePrincipal(nsISupports* securitySupports,
         PR_Free(origin);
     if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsIScriptSecurityManager> secMan(
-        do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv));
-    if (NS_FAILED(rv)) return rv;
-
-    return secMan->GetCodebasePrincipal(originURI, outPrincipal);
+    return aSecMan->GetCodebasePrincipal(originURI, aOutPrincipal);
 }
 
 /***************************************************************************/
@@ -131,7 +127,8 @@ CreatePrincipal(nsISupports* securitySupports,
 class AutoPushJSContext
 {
 public:
-    AutoPushJSContext(nsISupports* aSecuritySupports, JSContext *cx);
+    AutoPushJSContext(nsISupports* aSecuritySupports,
+                      JSContext *cx);
 
     ~AutoPushJSContext();
 
@@ -164,40 +161,53 @@ AutoPushJSContext::AutoPushJSContext(nsISupports* aSecuritySupports,
                 // Leave the reference to the mContextStack to
                 // indicate that we need to pop it in our dtor.                                               
             }
-
         }
     }
 
+    nsCOMPtr<nsIScriptSecurityManager> secMan(
+        do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &mPushResult));
+
+    if (NS_FAILED(mPushResult))
+        return;
+
+    nsCOMPtr<nsIPrincipal> principal;
+    if (aSecuritySupports)
+        mPushResult = CreatePrincipal(aSecuritySupports, secMan, getter_AddRefs(principal));
+    else
+        mPushResult = secMan->GetPrincipalFromContext(cx, getter_AddRefs(principal));
+
+    if (NS_FAILED(mPushResult))
+    {
+        JS_ReportError(cx, "failed to get a principal");
+        return;
+    }
+
+    // See if Javascript is enabled for the current window
+    PRBool jsEnabled = PR_FALSE;
+    mPushResult = secMan->CanExecuteScripts(cx, principal, &jsEnabled);
+    if (!jsEnabled)
+        mPushResult = NS_ERROR_FAILURE;
+
     memset(&mFrame, 0, sizeof(mFrame));
 
-    // See if there are any scripts on the stack.
-    // If not, we need to add a dummy frame with a principal.
-    PRBool hasScript = PR_FALSE;
-    JSStackFrame* tempFP = cx->fp;
-    while (tempFP)
+    if (NS_SUCCEEDED(mPushResult))
     {
-        if (tempFP->script)
-        {
-            hasScript = PR_TRUE;
-            break;
-        }
-        tempFP = tempFP->down;
-    };
+        // See if there are any scripts on the stack.
+        // If not, we need to add a dummy frame with a principal.
 
-    if (!hasScript)
-    {
-        nsCOMPtr<nsIPrincipal> principal;
-        if (aSecuritySupports)
-            mPushResult = CreatePrincipal(aSecuritySupports, getter_AddRefs(principal));
-        else
+        PRBool hasScript = PR_FALSE;
+        JSStackFrame* tempFP = cx->fp;
+        while (tempFP)
         {
-            nsCOMPtr<nsIScriptSecurityManager> secMan(
-                do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &mPushResult));
-            if (NS_SUCCEEDED(mPushResult))
-                mPushResult = secMan->GetPrincipalFromContext(cx, getter_AddRefs(principal));
-        }
+            if (tempFP->script)
+            {
+                hasScript = PR_TRUE;
+                break;
+            }
+            tempFP = tempFP->down;
+        };
 
-        if (NS_SUCCEEDED(mPushResult))
+        if (!hasScript)
         {
             JSPrincipals* jsprinc;
             principal->GetJSPrincipals(&jsprinc);
@@ -214,8 +224,6 @@ AutoPushJSContext::AutoPushJSContext(nsISupports* aSecuritySupports,
             else
                 mPushResult = NS_ERROR_OUT_OF_MEMORY;
         }
-        else
-            JS_ReportError(cx, "failed to get a principal");
     }
 }
 
