@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -3322,12 +3322,17 @@ BinarySearchForPosition(nsIRenderingContext* acx,
                         PRInt32&   aTextWidth)
 {
   PRInt32 range = aEndInx - aStartInx;
-  if (range == 1) {
+  if ((range == 1) || (range == 2 && IS_HIGH_SURROGATE(aText[aStartInx]))) {
     aIndex   = aStartInx + aBaseInx;
     acx->GetWidth(aText, aIndex, aTextWidth);
     return PR_TRUE;
   }
+
   PRInt32 inx = aStartInx + (range / 2);
+
+  // Make sure we don't leave a dangling low surrogate
+  if (IS_HIGH_SURROGATE(aText[inx-1]))
+    inx++;
 
   PRInt32 textWidth = 0;
   acx->GetWidth(aText, inx, textWidth);
@@ -3461,7 +3466,10 @@ nsTextFrame::GetPosition(nsPresContext* aCX,
 #endif // IBMBIDI
         if (found) {
           PRInt32 charWidth;
-          acx->GetWidth(text[indx], charWidth);
+          if (IS_HIGH_SURROGATE(text[indx]))
+            acx->GetWidth(&text[indx], 2, charWidth);
+          else
+            acx->GetWidth(text[indx], charWidth);
           charWidth /= 2;
 
 #ifdef IBMBIDI
