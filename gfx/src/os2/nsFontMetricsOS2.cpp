@@ -1937,8 +1937,8 @@ NS_IMPL_ISUPPORTS1(nsFontEnumeratorOS2, nsIFontEnumerator)
 static int PR_CALLBACK
 CompareFontNames(const void* aArg1, const void* aArg2, void* aClosure)
 {
-  const nsString str1( *((const PRUnichar**)aArg1) );
-  const nsString str2( *((const PRUnichar**)aArg2) );
+  const nsDependentString str1( *((const PRUnichar**)aArg1) );
+  const nsDependentString str2( *((const PRUnichar**)aArg2) );
 
    // intermingle vertical fonts (start with '@') with horizontal fonts
   if( str1.First() == PRUnichar('@') )
@@ -1949,7 +1949,7 @@ CompareFontNames(const void* aArg1, const void* aArg2, void* aClosure)
     {
       nsString temp( str1 );
       temp.Trim( "@", PR_TRUE, PR_FALSE );
-      int rv = temp.CompareWithConversion( str2 );
+      int rv = temp.Equals( str2, nsCaseInsensitiveStringComparator() );
       if( rv == 0 )
         return 1;
       else
@@ -1960,14 +1960,14 @@ CompareFontNames(const void* aArg1, const void* aArg2, void* aClosure)
   {
     nsString temp( str2 );
     temp.Trim( "@", PR_TRUE, PR_FALSE );
-    int rv = str1.CompareWithConversion( temp );
+    int rv = str2.Equals( temp, nsCaseInsensitiveStringComparator() );
     if( rv == 0 )
       return -1;
     else
       return rv;
   }
   else
-    return str1.CompareWithConversion( str2 );
+    return str2.Equals( str2, nsCaseInsensitiveStringComparator() );
 }
 
 NS_IMETHODIMP
