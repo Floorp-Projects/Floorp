@@ -58,10 +58,7 @@ interface nsINNTPNewsgroupPost : nsISupports {
     readonly attribute string newsgroups;
     
     attribute string subject;
-    readonly attribute string messageID;
     attribute string path;
-
-    boolean isValid();
     
     /* Secion 2.2 - optional headers */
     attribute string replyTo;
@@ -70,7 +67,6 @@ interface nsINNTPNewsgroupPost : nsISupports {
     attribute string dateRecieved;
     attribute string expires;
 
-    void AddReference(in string referenceID);
     readonly attribute string references;
 
     attribute string control;

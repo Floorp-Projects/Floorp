@@ -14,12 +14,10 @@
  *
  * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is 
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -88,12 +86,8 @@ public:
     NS_IMPL_CLASS_GETSET_STR(From, m_header[HEADER_FROM]);
     NS_IMPL_CLASS_GETSET_STR(Date, m_header[HEADER_DATE]);
     NS_IMPL_CLASS_GETSET_STR(Subject, m_header[HEADER_SUBJECT]);
-    
-    NS_IMETHOD AddNewsgroup(const char *newsgroupName);
-    NS_IMPL_CLASS_GETTER_STR(GetNewsgroups, m_header[HEADER_NEWSGROUPS]);
-    
-    NS_IMETHOD GetMessageID(char * *aMessageID);
-    
+
+    NS_IMPL_CLASS_GETTER_STR(GetNewsgroups, m_header[HEADER_NEWSGROUPS]); 
     NS_IMPL_CLASS_GETSET_STR(Path, m_header[HEADER_PATH]);
 
     // Optional Headers
@@ -106,19 +100,16 @@ public:
     NS_IMPL_CLASS_GETSET_STR(Distribution, m_header[HEADER_DISTRIBUTION]);
     NS_IMPL_CLASS_GETSET_STR(Organization, m_header[HEADER_ORGANIZATION]);
     NS_IMPL_CLASS_GETSET_STR(Body, m_body);    
-
-    NS_IMETHOD AddReference(const char *referenceID);
     NS_IMPL_CLASS_GETTER_STR(GetReferences, m_header[HEADER_REFERENCES]);
-
-
-    NS_IMETHOD IsValid(PRBool *_retval);
 
     NS_IMPL_CLASS_GETTER(GetIsControl, PRBool, m_isControl);
 
     // the message can be stored in a file....allow accessors for getting and setting
-	// the file name to post...
-	NS_IMETHOD SetPostMessageFile(nsIFileSpec * aFileName);
-	NS_IMETHOD GetPostMessageFile(nsIFileSpec ** aFileName);
+	  // the file name to post...
+	  NS_IMETHOD SetPostMessageFile(nsIFileSpec * aFileName);
+	  NS_IMETHOD GetPostMessageFile(nsIFileSpec ** aFileName);
+
+    NS_IMETHOD AddNewsgroup(const char *newsgroupName);
     
     // helper routines
     static char *AppendAndAlloc(char *string, const char *newSubstring,
@@ -126,8 +117,6 @@ public:
 private:
     nsIFileSpec *m_postMessageFile;
     char *m_header[HEADER_LAST+1];
-    static const char *m_headerName[HEADER_LAST+1];
-    
     char *m_body;
     char *m_messageBuffer;
     PRBool m_isControl;

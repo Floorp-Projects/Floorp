@@ -44,33 +44,6 @@
 #include "plstr.h"
 #include "prmem.h"
 
-// for CRLF
-//#include "fe_proto.h"
-
-const char* nsNNTPNewsgroupPost::m_headerName[HEADER_LAST+1]=
-{
-    "From: ",
-    "Newsgroups: ",
-    "Subject: ",
-
-    "Path: ",
-    "Date: ",
-    
-    "Reply-To: ",
-    "Sender: ",
-    "Followup-To: ",
-    "Date-Received: ",
-    "Expires: ",
-    "Control: ",
-    "Distribution: ",
-    "Organization: ",
-    "References: ",
-    
-    "Relay-Version: ",
-    "Posting-Version: ",
-    "Message-ID: ",
-};
-    
 NS_IMPL_ISUPPORTS1(nsNNTPNewsgroupPost, nsINNTPNewsgroupPost)
 
 nsNNTPNewsgroupPost::nsNNTPNewsgroupPost()
@@ -97,30 +70,6 @@ nsNNTPNewsgroupPost::~nsNNTPNewsgroupPost()
     PR_FREEIF(m_body);
     PR_FREEIF(m_messageBuffer);
     NS_IF_RELEASE(m_postMessageFile);
-}
-
-nsresult
-nsNNTPNewsgroupPost::IsValid(PRBool *_retval)
-{
-    if (!_retval) return NS_OK;
-
-    // hack to get lazy-generated message ID to work
-    char *messageid;
-    GetMessageID(&messageid);
-
-    PRBool valid=PR_TRUE;
-    int i;
-    for (i=0; i<=HEADER_LAST_REQUIRED;i++) {
-        if (!m_header[i]) {
-            valid=PR_FALSE;
-            break;
-        }
-    }
-
-    *_retval=valid;
-    printf("nsNNTPNewsgroupPost::IsValid() -> %s (%d is first invalid)\n",
-           *_retval ? "TRUE": "FALSE", i);
-    return NS_OK;
 }
 
 char *
@@ -152,24 +101,6 @@ nsresult
 nsNNTPNewsgroupPost::AddNewsgroup(const char *newsgroup)
 {
     m_header[HEADER_NEWSGROUPS]=AppendAndAlloc(m_header[HEADER_NEWSGROUPS], newsgroup, PR_TRUE);
-    return NS_OK;
-}
-nsresult
-nsNNTPNewsgroupPost::AddReference(const char *reference)
-{
-    m_header[HEADER_REFERENCES]=AppendAndAlloc(m_header[HEADER_REFERENCES], reference, PR_FALSE);
-    return NS_OK;
-}
-
-nsresult
-nsNNTPNewsgroupPost::GetMessageID(char **messageID)
-{
-    // hack - this is where we will somehow generate the ID
-    static char *fakeID = "<ABCDEFG@mcom.com>";
-    //    m_header[HEADER_MESSAGEID] = fakeID;
-    
-    *messageID = fakeID;
-    if (!messageID) return NS_ERROR_NULL_POINTER;
     return NS_OK;
 }
 
