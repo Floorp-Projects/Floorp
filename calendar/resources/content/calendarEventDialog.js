@@ -134,22 +134,8 @@ function loadCalendarEventDialog()
    }
    
    var titleString = titleDataItem.getAttribute( "value" );
-   setFieldValue( "standard-dialog-title-text", titleString );
+   document.getElementById("calendar-new-eventwindow").setAttribute("title", titleString);
 
-   // show proper tip
-   
-   if( "new" == args.mode )
-   {
-      setFieldValue( "tip-new", false, "collapsed" );
-      setFieldValue( "tip-edit", true, "collapsed" );
-   }
-   else
-   {
-      setFieldValue( "tip-new", true, "collapsed" );
-      setFieldValue( "tip-edit", false, "collapsed" );
-   }
-   
-  
    //create the category drop down
    //if( !gCategoryManager )
    //   Categories = opener.gCategoryManager.getAllCategories();

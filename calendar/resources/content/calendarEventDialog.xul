@@ -57,7 +57,7 @@
 
 <window
    id="calendar-new-eventwindow"
-   title="Internet Appliance Dialog - Calendar Event"
+   title="Calendar Event"
    orient="vertical"
    onload="loadCalendarEventDialog()"
    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -96,25 +96,6 @@
     
     <vbox id="dialog-box" flex="1">  
    
-      <!-- standard-dialog-title: from dialogOverlay.xul -->
-      
-      <box id="standard-dialog-title">
-         <image id="standard-dialog-title-icon" insertbefore="standard-dialog-title-text-box"/>
-         <spacer flex="1" insertafter="standard-dialog-title-icon"/>
-         <box id="standard-dialog-title-text-box">
-            <label id="standard-dialog-title-text"/>
-         </box>
-         <spacer id="second-title-spring" flex="1" insertafter="standard-dialog-title-text-box"/>
-      </box>
- 
-            
-        <!-- standard-dialog-tips: from dialogOverlay.xul  Proper tip is shown in on load code-->
-        
-        <box id="standard-dialog-tips">
-          <description id="tip-new"  collapsed ="true" >&event.tip.new;</description>
-          <description id="tip-edit" collapsed ="false">&event.tip.edit;</description>
-        </box>
-        
         <!-- standard-dialog-content: from dialogOverlay.xul  -->
         
         <vbox id="standard-dialog-content"  flex="1">
