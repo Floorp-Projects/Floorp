@@ -3007,18 +3007,17 @@ WLLT_OnSubmit(nsIContent* formNode) {
 
   /* get url name as ascii string */
   char *URLName = nsnull;
-  nsIURI* docURL = nsnull;
-  nsIDocument* doc = nsnull;
-  formNode->GetDocument(doc);
+  nsCOMPtr<nsIURI> docURL;
+  nsCOMPtr<nsIDocument> doc;
+  formNode->GetDocument(*getter_AddRefs(doc));
   if (!doc) {
     return;
   }
-  docURL = doc->GetDocumentURL();
+  docURL = dont_AddRef(doc->GetDocumentURL());
   if (!docURL) {
     return;
   }
   (void)docURL->GetSpec(&URLName);
-  NS_IF_RELEASE(docURL);
 
   /* get to the form elements */
   PRInt32 count = 0;
