@@ -25,6 +25,7 @@ none=1
 coverage=0
 auth=0
 stress=0
+certs=1
 fileout=0
 
 for i in $*
@@ -34,10 +35,20 @@ do
 	none=0; coverage=1; auth=1; stress=1;;
     [aA][uU]*)
 	none=0; auth=1;;
-    [Cc]*)
+    [Nn][Oo][aA][uU]*)
+	auth=0;;
+    [Cc][Oo]*)
 	none=0; coverage=1;;
+    [Nn][Oo][Cc][Oo]*)
+	coverage=0;;
+    [Cc][Ee]*)
+	none=0; certs=1;;
+    [Nn][Oo][Cc][Ee]*)
+	certs=0;;
     [Ss]*)
 	none=0; stress=1;;
+    [Nn][Oo][Ss]*)
+	stress=0;;
      f)
 	fileout=1;
      esac
@@ -55,7 +66,7 @@ fi
 #
 trap "rm -f ${TEMPFILES};  exit"  2 3
 
-
+if [ $certs -eq 1 ]; then
 # Generate noise for our CA cert.
 #
 # NOTE: these keys are only suitable for testing, as this whole thing bypasses
@@ -138,6 +149,7 @@ fi
 echo "</TABLE><BR>" >> ${RESULTS}
 
 rm -f ${TEMPFILES}
+fi
 
 
 # OK now lets run the tests....
