@@ -103,7 +103,6 @@ PRLogModuleInfo* gWalletLog = nsnull;
 /* The following data and procedures are for preference */
 /********************************************************/
 
-static const char *pref_WalletExtractTables = "wallet.extractTables";
 static const char *pref_Caveat = "wallet.caveat";
 #ifdef AutoCapture
 static const char *pref_captureForms = "wallet.captureForms";
@@ -112,16 +111,12 @@ static const char *pref_enabled = "wallet.enabled";
 static const char *pref_WalletNotified = "wallet.Notified";
 #endif /* AutoCapture */
 static const char *pref_WalletSchemaValueFileName = "wallet.SchemaValueFileName";
-static const char *pref_WalletServer = "wallet.Server";
-static const char *pref_WalletVersion = "wallet.version";
-static const char *pref_WalletLastModified = "wallet.lastModified";
 
 #ifdef AutoCapture
 PRIVATE PRBool wallet_captureForms = PR_FALSE;
 #else
 PRIVATE PRBool wallet_Notified = PR_FALSE;
 #endif
-PRIVATE char * wallet_Server = nsnull;
 
 #ifdef AutoCapture
 PRIVATE void
@@ -1179,11 +1174,6 @@ Wallet_UTF8Put(nsOutputFileStream& strm, PRUnichar c) {
     strm.put(((PRUnichar)0x80) | ((c>>6) & 0x3F));
     strm.put(((PRUnichar)0x80) | (c & 0x3F));
   }
-}
-
-static void
-wallet_Put(nsOutputFileStream& strm, char c) {
-  strm.put(c);
 }
 
 static char
