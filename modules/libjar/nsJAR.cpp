@@ -151,8 +151,11 @@ DeleteManifestEntry(nsHashKey* aKey, void* aData, void* closure)
 // The following initialization makes a guess of 10 entries per jarfile.
 nsJAR::nsJAR(): mManifestData(nsnull, nsnull, DeleteManifestEntry, nsnull, 10),
                 mParsedManifest(PR_FALSE), mGlobalStatus(nsIJAR::NOT_SIGNED),
-                mReleaseTime(PR_INTERVAL_NO_TIMEOUT), mCache(nsnull), mLock(nsnull),
-                mTotalItemsInManifest(0)
+                mReleaseTime(PR_INTERVAL_NO_TIMEOUT), 
+                mCache(nsnull), 
+                mLock(nsnull),
+                mTotalItemsInManifest(0),
+                mFd(nsnull)
 {
 }
 
