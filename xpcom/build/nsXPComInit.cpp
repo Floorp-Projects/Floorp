@@ -39,6 +39,7 @@
 #include "nsXPCOMPrivate.h"
 #include "nsIRegistry.h"
 #include "nscore.h"
+#include "prlink.h"
 #include "nsCOMPtr.h"
 #include "nsObserverList.h"
 #include "nsObserver.h"
@@ -289,6 +290,11 @@ static const nsModuleComponentInfo components[] = {
 
 const int components_length = sizeof(components) / sizeof(components[0]);
 
+static const PRStaticLinkTable sGlueSymbols[] = {
+    "NS_GetFrozenFunctions",
+    (void (*)())&NS_GetFrozenFunctions
+} ;
+
 // gMemory will be freed during shutdown.
 static nsIMemory* gMemory = nsnull;
 nsresult NS_COM NS_GetMemoryManager(nsIMemory* *result)
@@ -342,6 +348,8 @@ nsresult NS_COM NS_InitXPCOM2(nsIServiceManager* *result,
     NS_StartupLocalFile();
 
     StartupSpecialSystemDirectory();
+
+    PR_LoadStaticLibrary("XPCOMComponentGlue", sGlueSymbols);
 
     // Start the directory service so that the component manager init can use it.
     rv = nsDirectoryService::Create(nsnull,
@@ -629,6 +637,8 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
     // shutting down the component manager
     nsTimerImpl::Shutdown();
 
+    CallExitRoutines();
+
     // Shutdown xpcom. This will release all loaders and cause others holding
     // a refcount to the component manager to release it.
     rv = (nsComponentManagerImpl::gComponentManager)->Shutdown();
@@ -662,8 +672,6 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
 
     nsThread::Shutdown();
     NS_PurgeAtomTable();
-
-    CallExitRoutines();
 
 #ifdef NS_BUILD_REFCNT_LOGGING
     nsTraceRefcnt::DumpStatistics();

@@ -54,7 +54,7 @@ static XPCOMFunctions *xpcomFunctions = nsnull;
 
 // seawood tells me there isn't a better way...
 #ifdef XP_PC
-#define XPCOM_DLL  "xpcom32.dll"
+#define XPCOM_DLL  "xpcom.dll"
 #else
 #ifdef XP_MAC
 #define XPCOM_DLL "XPCOM_DLL"
@@ -249,109 +249,3 @@ NS_UnregisterXPCOMExitRoutine(XPCOMExitRoutine exitRoutine)
         return NS_ERROR_NOT_INITIALIZED;
     return xpcomFunctions->unregisterExitRoutine(exitRoutine);
 }
-
-#if DEBUG_dougt
-
-struct nsTraceRefcntStats {
-  nsrefcnt mAddRefs;
-  nsrefcnt mReleases;
-  nsrefcnt mCreates;
-  nsrefcnt mDestroys;
-  double mRefsOutstandingTotal;
-  double mRefsOutstandingSquared;
-  double mObjsOutstandingTotal;
-  double mObjsOutstandingSquared;
-};
-
-// Function type used by GatherStatistics. For each type that data has
-// been gathered for, this function is called with the counts of the
-// various operations that have been logged. The function can return
-// PR_FALSE if the gathering should stop.
-//
-// aCurrentStats is the current value of the counters. aPrevStats is
-// the previous value of the counters which is established by the
-// nsTraceRefcnt::SnapshotStatistics call.
-typedef PRBool (PR_CALLBACK *nsTraceRefcntStatFunc)
-  (const char* aTypeName,
-   PRUint32 aInstanceSize,
-   nsTraceRefcntStats* aCurrentStats,
-   nsTraceRefcntStats* aPrevStats,
-   void *aClosure);
-
-class nsTraceRefcnt {
-public:
-  static NS_EXPORT void Startup(){};
-
-  static NS_EXPORT void Shutdown(){};
-
-  static NS_EXPORT void LogAddRef(void* aPtr,
-                               nsrefcnt aNewRefCnt,
-                               const char* aTypeName,
-                               PRUint32 aInstanceSize){};
-
-  static NS_EXPORT void LogRelease(void* aPtr,
-                                nsrefcnt aNewRefCnt,
-                                const char* aTypeName){};
-
-  static NS_EXPORT void LogNewXPCOM(void* aPtr,
-                                 const char* aTypeName,
-                                 PRUint32 aInstanceSize,
-                                 const char* aFile,
-                                 int aLine){};
-
-  static NS_EXPORT void LogDeleteXPCOM(void* aPtr,
-                                    const char* aFile,
-                                    int aLine){};
-
-  static NS_EXPORT nsrefcnt LogAddRefCall(void* aPtr,
-                                       nsrefcnt aNewRefcnt,
-                                       const char* aFile,
-                                       int aLine){return 0;};
-
-  static NS_EXPORT nsrefcnt LogReleaseCall(void* aPtr,
-                                        nsrefcnt aNewRefcnt,
-                                        const char* aFile,
-                                        int aLine){return 0;};
-
-  static NS_EXPORT void LogCtor(void* aPtr, const char* aTypeName,
-                             PRUint32 aInstanceSize){};
-
-  static NS_EXPORT void LogDtor(void* aPtr, const char* aTypeName,
-                             PRUint32 aInstanceSize){};
-
-  static NS_EXPORT void LogAddCOMPtr(void *aCOMPtr, nsISupports *aObject){};
-
-  static NS_EXPORT void LogReleaseCOMPtr(void *aCOMPtr, nsISupports *aObject){};
-
-  enum StatisticsType {
-    ALL_STATS,
-    NEW_STATS
-  };
-
-  static NS_EXPORT nsresult DumpStatistics(StatisticsType type = ALL_STATS,
-                                        FILE* out = 0){return NS_ERROR_NOT_IMPLEMENTED;};
-  
-  static NS_EXPORT void ResetStatistics(void){};
-
-  static NS_EXPORT void GatherStatistics(nsTraceRefcntStatFunc aFunc,
-                                      void* aClosure){};
-
-  static NS_EXPORT void LoadLibrarySymbols(const char* aLibraryName,
-                                        void* aLibrayHandle){};
-
-  static NS_EXPORT void DemangleSymbol(const char * aSymbol, 
-                                    char * aBuffer,
-                                    int aBufLen){};
-
-  static NS_EXPORT void WalkTheStack(FILE* aStream){};
-  
-  static NS_EXPORT void SetPrefServiceAvailability(PRBool avail){};
-
-  /**
-   * Tell nsTraceRefcnt whether refcounting, allocation, and destruction
-   * activity is legal.  This is used to trigger assertions for any such
-   * activity that occurs because of static constructors or destructors.
-   */
-  static NS_EXPORT void SetActivityIsLegal(PRBool aLegal){};
-};
-#endif

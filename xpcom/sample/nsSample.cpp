@@ -47,11 +47,12 @@
 
 #include "nsSample.h"
 #include "nsMemory.h"
-
+#include "nsXPCOMGlue.h"
 ////////////////////////////////////////////////////////////////////////
 
 nsSampleImpl::nsSampleImpl() : mValue(nsnull)
 {
+    XPCOMGlueStartup("XPCOMComponentGlue");
     NS_INIT_ISUPPORTS();
     mValue = (char*)nsMemory::Clone("initial value", 14);
 }
@@ -60,6 +61,8 @@ nsSampleImpl::~nsSampleImpl()
 {
     if (mValue)
         nsMemory::Free(mValue);
+
+    XPCOMGlueShutdown();
 }
 
 /**
