@@ -89,7 +89,7 @@ function open()
               break;
             case "1": 
               dump("*** foopy\n");
-              window.opener.delayedOpenWindow( "chrome://navigator/content/navigator.xul", "all,dialog=no", dialog.input.value );
+              window.opener.delayedOpenWindow( getBrowserURL(), "all,dialog=no", dialog.input.value );
               break;
             case "2":
               window.opener.delayedOpenWindow( "chrome://editor/content", "chrome,all,dialog=no", dialog.input.value );

@@ -433,7 +433,7 @@ function ViewPageSource(messages)
 			url += "?header=src";
 
 		// Use a browser window to view source
-		window.openDialog( "chrome://navigator/content/navigator.xul",
+		window.openDialog( getBrowserURL(),
 						   "_blank",
 						   "chrome,menubar,status,dialog=no,resizable",
 							url,

@@ -775,7 +775,7 @@ function sidebarOpenURL(event, treeitem, root)
   if ( window.content )
     window.content.location = id;
   else {
-    window.openDialog( "chrome://navigator/content/navigator.xul", "_blank", "chrome,all,dialog=no", id );
+    window.openDialog( getBrowserURL(), "_blank", "chrome,all,dialog=no", id );
   }
 }
 

@@ -1,5 +1,24 @@
 var goPrefWindow = 0;
 
+function getBrowserURL() {
+
+  try {
+    var prefs = Components.classes["component://netscape/preferences"];
+    if (prefs) {
+      prefs = prefs.getService();
+      if (prefs)
+        prefs = prefs.QueryInterface(Components.interfaces.nsIPref);
+    }
+    if (prefs) {
+      var url = prefs.CopyCharPref("browser.chromeURL");
+      if (url)
+        return url;
+    }
+  } catch(e) {
+  }
+  return "chrome://navigator/content/navigator.xul";
+}
+
 function goPageSetup()
 {
 }
@@ -140,7 +159,7 @@ function goHelpMenu( url )
 {
   /* note that this chrome url should probably change to not have all of the navigator controls */
   /* also, do we want to limit the number of help windows that can be spawned? */
-  window.openDialog( "chrome://navigator/content/navigator.xul", "_blank", "chrome,all,dialog=no", url );
+  window.openDialog( getBrowserURL(), "_blank", "chrome,all,dialog=no", url );
 }
 
 
@@ -166,7 +185,7 @@ function openTopWin( url )
     else
     {
         dump(" No browser window. Should be disabling this button \n");
-        window.openDialog( "chrome://navigator/content/navigator.xul", "_blank", "chrome,all,dialog=no", url );
+        window.openDialog( getBrowserURL(), "_blank", "chrome,all,dialog=no", url );
     }
 }
 
@@ -185,7 +204,7 @@ function goAboutDialog()
   if( defaultAboutState )
   	window.openDialog("chrome:global/content/about.xul", "About", "modal,chrome,resizable=yes,height=450,width=550");
   else 
-    window.openDialog( "chrome://navigator/content/navigator.xul", "_blank", "chrome,all,dialog=no", 'chrome://global/content/about.html' );
+    window.openDialog( getBrowserURL(), "_blank", "chrome,all,dialog=no", 'chrome://global/content/about.html' );
 }
 
 

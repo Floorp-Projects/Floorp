@@ -68,7 +68,6 @@
 #include "nsIURL.h"
 #include "nsIIOService.h"
 #include "nsIURL.h"
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsIWidget.h"
 #include "plevent.h"
 
@@ -103,9 +102,6 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsNetUtil.h"
 #include "nsICmdLineHandler.h"
 
-static NS_DEFINE_IID(kIWalletServiceIID, NS_IWALLETSERVICE_IID);
-static NS_DEFINE_IID(kWalletServiceCID, NS_WALLETSERVICE_CID);
-
 // Interface for "unknown content type handler" component/service.
 #include "nsIUnkContentTypeHandler.h"
 
@@ -116,6 +112,11 @@ static NS_DEFINE_IID(kWalletServiceCID, NS_WALLETSERVICE_CID);
 #include "nsINameSpaceManager.h"
 #include "nsFileStream.h"
  
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+static NS_DEFINE_IID(kIWalletServiceIID, NS_IWALLETSERVICE_IID);
+static NS_DEFINE_IID(kWalletServiceCID, NS_WALLETSERVICE_CID);
+static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
+
 
 #ifdef DEBUG
 #ifndef DEBUG_pavlov
@@ -1840,7 +1841,27 @@ nsBrowserContentHandler::~nsBrowserContentHandler()
 {
 }
 
-CMDLINEHANDLER2_IMPL(nsBrowserContentHandler,"-chrome","general.startup.browser","chrome://navigator/content/navigator.xul","Start with browser.",NS_BROWSERSTARTUPHANDLER_PROGID,"Browser Startup Handler", PR_TRUE, PR_FALSE)
+CMDLINEHANDLER_OTHERS_IMPL(nsBrowserContentHandler,"-chrome","general.startup.browser","Start with browser.",NS_BROWSERSTARTUPHANDLER_PROGID,"Browser Startup Handler", PR_TRUE, PR_FALSE)
+
+NS_IMETHODIMP nsBrowserContentHandler::GetChromeUrlForTask(char **aChromeUrlForTask) {
+
+  if (!aChromeUrlForTask)
+    return NS_ERROR_NULL_POINTER;
+
+  nsresult rv = NS_ERROR_FAILURE;
+  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID));
+  if (prefs) {
+    rv = prefs->CopyCharPref("browser.chromeURL", aChromeUrlForTask);
+    if (NS_SUCCEEDED(rv) && (*aChromeUrlForTask)[0] == '\0') {
+      PL_strfree(*aChromeUrlForTask);
+      rv = NS_ERROR_FAILURE;
+    }
+  }
+  if (NS_FAILED(rv))
+    *aChromeUrlForTask = PL_strdup("chrome://navigator/content/navigator.xul");
+
+  return NS_OK;
+}
 
 NS_IMETHODIMP nsBrowserContentHandler::GetDefaultArgs(PRUnichar **aDefaultArgs) 
 { 
