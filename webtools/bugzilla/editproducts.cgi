@@ -1461,6 +1461,8 @@ if ($action eq 'update') {
 
 if ($action eq 'editgroupcontrols') {
     my $product_id = get_product_id($product);
+    $product_id
+      || ThrowUserError("invalid_product_name", { product => $product });
     # Display a group if it is either enabled or has bugs for this product.
     SendSQL("SELECT id, name, entry, membercontrol, othercontrol, canedit, " .
             "isactive, COUNT(bugs.bug_id) " .
