@@ -4418,11 +4418,6 @@ RDFGenericBuilderImpl::CreateTemplateAndContainerContents(nsIContent* aElement,
     // container resource in the RDF graph).
     nsresult rv;
 
-    if (! mRulesCompiled) {
-        rv = CompileRules();
-        if (NS_FAILED(rv)) return rv;
-    }
-
     // If we're asked to return the first generated child, then
     // initialize to "none".
     if (aContainer) {
@@ -4466,6 +4461,12 @@ RDFGenericBuilderImpl::CreateContainerContents(nsIContent* aElement,
     // "containment" arcs out of the element's resource.
     nsresult rv;
 
+	// Compile the rules now, if they haven't been already.
+    if (! mRulesCompiled) {
+        rv = CompileRules();
+        if (NS_FAILED(rv)) return rv;
+    }
+    
     if (aContainer) {
         *aContainer = nsnull;
         *aNewIndexInContainer = -1;
