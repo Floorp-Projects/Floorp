@@ -548,8 +548,8 @@ function MsgDeleteSelectedMessages()
 
 function SetNextMessageAfterDelete()
 {
-    dump("setting next msg view index after delete to " + gSearchView.firstSelected + "\n");
-    gNextMessageViewIndexAfterDelete = gSearchView.firstSelected;
+    dump("setting next msg view index after delete to " + gSearchView.msgToSelectAfterDelete + "\n");
+    gNextMessageViewIndexAfterDelete = gSearchView.msgToSelectAfterDelete;
 }
 
 function HandleDeleteOrMoveMessageFailed(folder)
@@ -560,8 +560,6 @@ function HandleDeleteOrMoveMessageFailed(folder)
 
 function HandleDeleteOrMoveMessageCompleted(folder)
 {
-    if(gNextMessageViewIndexAfterDelete != -1)
-    {
         var outlinerView = gSearchView.QueryInterface(Components.interfaces.nsIOutlinerView);
         var outlinerSelection = outlinerView.selection;
         viewSize = outlinerView.rowCount;
@@ -593,8 +591,6 @@ function HandleDeleteOrMoveMessageCompleted(folder)
         else
             outlinerSelection.clearSelection(); /* clear selection in either case  */
 
-        gNextMessageViewIndexAfterDelete = -1;
-    }
 }
 
 function SetDatasources()

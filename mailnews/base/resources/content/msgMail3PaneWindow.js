@@ -193,9 +193,9 @@ function HandleDeleteOrMoveMsgFailed(folder)
 function HandleDeleteOrMoveMsgCompleted(folder)
 {
   if (IsCurrentLoadedFolder(folder)) {
+    var outlinerView = gDBView.QueryInterface(Components.interfaces.nsIOutlinerView);
+    var outlinerSelection = outlinerView.selection;
     if (gNextMessageViewIndexAfterDelete != -1) {
-      var outlinerView = gDBView.QueryInterface(Components.interfaces.nsIOutlinerView);
-      var outlinerSelection = outlinerView.selection;
       viewSize = outlinerView.rowCount;
       if (gNextMessageViewIndexAfterDelete >= viewSize) {
         if (viewSize > 0)
@@ -203,6 +203,7 @@ function HandleDeleteOrMoveMsgCompleted(folder)
         else
           gNextMessageViewIndexAfterDelete = -1;
       }
+     }
 
       // if we are about to set the selection with a new element then DON'T clear
       // the selection then add the next message to select. This just generates
@@ -223,8 +224,6 @@ function HandleDeleteOrMoveMsgCompleted(folder)
         ClearMessagePane();
       }
 
-      gNextMessageViewIndexAfterDelete = -1;
-    }
   }
 }
 
@@ -911,8 +910,8 @@ function GetCompositeDataSource(command)
 
 function SetNextMessageAfterDelete()
 {
-    //dump("setting next msg view index after delete to " + gDBView.firstSelected + "\n");
-    gNextMessageViewIndexAfterDelete = gDBView.firstSelected;
+    //dump("setting next msg view index after delete to " + gDBView.msgToSelectAfterDelete + "\n");
+    gNextMessageViewIndexAfterDelete = gDBView.msgToSelectAfterDelete;
 }
 
 function SelectFolder(folderUri)

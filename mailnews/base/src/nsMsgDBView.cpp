@@ -95,6 +95,7 @@ nsMsgDBView::nsMsgDBView()
   mSupressMsgDisplay = PR_FALSE;
   mIsSpecialFolder = PR_FALSE;
   mIsNews = PR_FALSE;
+  mDeleteModel = nsMsgImapDeleteModels::MoveToTrash;
 
   // initialize any static atoms or unicode strings
   if (gInstanceCount == 0) 
@@ -710,7 +711,7 @@ NS_IMETHODIMP nsMsgDBView::GetCellProperties(PRInt32 aRow, const PRUnichar *colI
   if (flags & MSG_FLAG_ATTACHMENT) 
     properties->AppendElement(kAttachMsgAtom);
 
-  if (flags & MSG_FLAG_IMAP_DELETED) 
+  if ((mDeleteModel == nsMsgImapDeleteModels::IMAPDelete) && (flags & MSG_FLAG_IMAP_DELETED)) 
     properties->AppendElement(kImapDeletedMsgAtom);
 
   if (mIsNews)
@@ -1078,7 +1079,7 @@ NS_IMETHODIMP nsMsgDBView::Open(nsIMsgFolder *folder, nsMsgViewSortTypeValue sor
     rv = server->GetType(getter_Copies(type));
     NS_ENSURE_SUCCESS(rv,rv);
     mIsNews = !nsCRT::strcmp("nntp",type.get());
-
+    GetImapDeleteModel(nsnull);
     // for sent, unsent and draft folders, be sure to set mIsSpecialFolder so we'll show the recipient field
     // in place of the author.
     PRUint32 folderFlags = 0;
@@ -4074,29 +4075,36 @@ nsMsgDBView::GetNumSelected(PRUint32 *numSelected)
 }
 
 NS_IMETHODIMP 
-nsMsgDBView::GetFirstSelected(nsMsgViewIndex *firstSelected)
+nsMsgDBView::GetMsgToSelectAfterDelete(nsMsgViewIndex *msgToSelectAfterDelete)
 {
-  NS_ENSURE_ARG_POINTER(firstSelected);
-  *firstSelected = nsMsgViewIndex_None;
+  NS_ENSURE_ARG_POINTER(msgToSelectAfterDelete);
+  *msgToSelectAfterDelete = nsMsgViewIndex_None;
   if (!mOutlinerSelection) 
   {
     // if we don't have an outliner selection then we must be in stand alone mode.
     // return the index of the current message key as the first selected index.
-    *firstSelected = FindViewIndex(m_currentlyDisplayedMsgKey);
+    *msgToSelectAfterDelete = FindViewIndex(m_currentlyDisplayedMsgKey);
     return NS_OK;
   }
    
   PRInt32 selectionCount;
+  PRInt32 startRange;
+  PRInt32 endRange;
   nsresult rv = mOutlinerSelection->GetRangeCount(&selectionCount);
   for (PRInt32 i = 0; i < selectionCount; i++) 
   {
-    PRInt32 startRange;
-    PRInt32 endRange;
     rv = mOutlinerSelection->GetRangeAt(i, &startRange, &endRange);
-    *firstSelected = PR_MIN(*firstSelected, startRange);
+    *msgToSelectAfterDelete = PR_MIN(*msgToSelectAfterDelete, startRange);
   }
+  if (mDeleteModel == nsMsgImapDeleteModels::IMAPDelete)
+    if (selectionCount > 1 || (endRange-startRange) > 0)  //multiple selection either using Ctrl or Shift keys
+      *msgToSelectAfterDelete = -1;
+    else
+      *msgToSelectAfterDelete += 1;
+
   return NS_OK;
 }
+
 
 // if nothing selected, return an NS_ERROR
 NS_IMETHODIMP
@@ -4178,4 +4186,18 @@ nsresult nsMsgDBView::AdjustRowCount(PRInt32 rowCountBeforeSort, PRInt32 rowCoun
     if (mOutliner) mOutliner->RowCountChanged(0, rowChange);
   }
   return NS_OK;
+}
+
+nsresult nsMsgDBView::GetImapDeleteModel(nsIMsgFolder *folder)
+{
+   nsresult rv = NS_OK;
+   nsCOMPtr <nsIMsgIncomingServer> server;
+   if (folder) //for the search view 
+     folder->GetServer(getter_AddRefs(server));
+   else if (m_folder)
+     m_folder->GetServer(getter_AddRefs(server));
+   nsCOMPtr<nsIImapIncomingServer> imapServer = do_QueryInterface(server, &rv);
+   if (NS_SUCCEEDED(rv) && imapServer )
+     imapServer->GetDeleteModel(&mDeleteModel);       
+   return rv;
 }

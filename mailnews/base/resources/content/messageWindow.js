@@ -210,7 +210,7 @@ function OnLoadMessageWindow()
     SetUpToolbarButtons(gCurrentFolderUri);
   }
  
-  setTimeout("var msgKey = extractMsgKeyFromURI(gCurrentMessageUri); gDBView.loadMessageByMsgKey(msgKey); gNextMessageViewIndexAfterDelete = gDBView.firstSelected;", 0);
+  setTimeout("var msgKey = extractMsgKeyFromURI(gCurrentMessageUri); gDBView.loadMessageByMsgKey(msgKey); gNextMessageViewIndexAfterDelete = gDBView.msgToSelectAfterDelete;", 0);
 
   SetupCommandUpdateHandlers();
 }
@@ -360,7 +360,7 @@ function GetCompositeDataSource(command)
 
 function SetNextMessageAfterDelete()
 {
-  gNextMessageViewIndexAfterDelete = gDBView.firstSelected;
+  gNextMessageViewIndexAfterDelete = gDBView.msgToSelectAfterDelete;
 }
 
 function SelectFolder(folderUri)

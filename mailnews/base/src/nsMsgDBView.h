@@ -41,6 +41,7 @@
 #include "nsIMsgHeaderParser.h"
 #include "nsIDOMElement.h"
 #include "nsIAtom.h"
+#include "nsIImapIncomingServer.h"
 
 #include "nsIStringBundle.h"
 
@@ -241,12 +242,14 @@ protected:
   PRUnichar * GetString(const PRUnichar *aStringName);
   void InitializeAtomsAndLiterals();
   PRInt32 GetLevelInUnreadView(nsIMsgDBHdr *msgHdr, nsMsgViewIndex startOfThread, nsMsgViewIndex viewIndex);
+  nsresult GetImapDeleteModel(nsIMsgFolder *folder);
 
   void FreeAll(nsVoidArray *ptrs);
   void ClearHdrCache();
   nsMsgKeyArray m_keys;
   nsUInt32Array m_flags;
   nsUint8Array   m_levels;
+  nsMsgImapDeleteModel mDeleteModel;
 
   // cache the most recently asked for header and corresponding msgKey.
   nsCOMPtr <nsIMsgDBHdr>  m_cachedHdr;
