@@ -23,6 +23,7 @@ top.MAX_RECIPIENTS = 0;
 
 var inputElementType = "";
 var selectElementType = "";
+var selectElementIndexTable = null;
 
 function awInputElementName()
 {
@@ -36,6 +37,21 @@ function awSelectElementName()
     if (selectElementType == "")
         selectElementType = document.getElementById("msgRecipientType#1").nodeName;
     return selectElementType;
+}
+
+function awGetSelectItemIndex(itemData)
+{
+    if (selectElementIndexTable == null)
+    {
+	    selectElementIndexTable = new Object();
+	    selectElem = document.getElementById("msgRecipientType#1");
+        for (var i = 0; i < selectElem.childNodes[0].childNodes.length; i ++)
+        {
+            aData = selectElem.childNodes[0].childNodes[i].getAttribute("data");
+            selectElementIndexTable[aData] = i;
+        }
+    }
+    return selectElementIndexTable[itemData];
 }
 
 function Recipients2CompFields(msgCompFields)
@@ -62,14 +78,7 @@ function Recipients2CompFields(msgCompFields)
 	    	fieldValue = inputField.value;
 	    	if (fieldValue != "")
 	    	{
-			var data = "addr_to";
-			try {
-				data = awGetPopupElement(i).selectedItem.getAttribute("data");
-			}
-			catch (ex) {
-				dump("failed: " + ex + "\n");
-			}
-			switch (data)
+			    switch (awGetPopupElement(i).selectedItem.getAttribute("data"))
 	    		{
 	    			case "addr_to"			: addrTo += to_Sep + fieldValue; to_Sep = ",";					break;
 	    			case "addr_cc"			: addrCc += cc_Sep + fieldValue; cc_Sep = ",";					break;
@@ -147,13 +156,7 @@ function _awSetInputAndPopup(inputValue, popupValue, parentNode, templateNode)
     var select = newNode.getElementsByTagName(awSelectElementName());
     if ( select && select.length == 1 )
     {
-//Doesn't work!	    select[0].setAttribute("value", popupValue);
-        for (var i = 0; i < select[0].childNodes[0].childNodes.length; i ++)
-            if (select[0].childNodes[0].childNodes[i].getAttribute("data") == popupValue)
-            {
-                select[0].selectedItem = select[0].childNodes[0].childNodes[i];
-                break;
-            }
+        select[0].selectedItem = select[0].childNodes[0].childNodes[awGetSelectItemIndex(popupValue)];
 	    select[0].setAttribute("id", "msgRecipientType#" + top.MAX_RECIPIENTS);
 	}
 }
@@ -235,7 +238,7 @@ function awAppendNewRow(setFocus)
 	
 	if ( body && treeitem1 )
 	{
-	    var lastRecipientType = awGetPopupElement(top.MAX_RECIPIENTS).value;
+	    var lastRecipientType = awGetPopupElement(top.MAX_RECIPIENTS).selectedItem.getAttribute("data");
 
 		newNode = awCopyNode(treeitem1, body, 0);
 		top.MAX_RECIPIENTS++;
@@ -249,8 +252,7 @@ function awAppendNewRow(setFocus)
         var select = newNode.getElementsByTagName(awSelectElementName());
         if ( select && select.length == 1 )
         {
-//doesn't work!    	    select[0].setAttribute("value", lastRecipientType);
-    	    select[0].value = lastRecipientType;
+            select[0].selectedItem = select[0].childNodes[0].childNodes[awGetSelectItemIndex(lastRecipientType)];
     	    select[0].setAttribute("id", "msgRecipientType#" + top.MAX_RECIPIENTS);
     	}
 
