@@ -53,7 +53,7 @@ public interface Function extends Scriptable {
      * length greater than 0.
      *
      * @param cx the current Context for this thread
-     * @param scope the scope to execute the function relative to. This
+     * @param scope the scope to execute the function relative to. This is
      *              set to the value returned by getParentScope() except
      *              when the function is called from a closure.
      * @param thisObj the JavaScript <code>this</code> object
