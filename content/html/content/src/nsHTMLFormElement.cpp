@@ -327,10 +327,10 @@ NS_IMETHODIMP
 nsHTMLFormElement::Reset()
 {
   // XXX Need to do something special with mailto: or news: URLs
-  nsIDocument* doc = nsnull;
+  nsIDocument* doc = nsnull; // Strong
   nsresult res = GetDocument(doc);
   if (NS_SUCCEEDED(res) && doc) {
-    nsIPresShell *shell = doc->GetShellAt(0);
+    nsIPresShell *shell = doc->GetShellAt(0); // Strong
     if (nsnull != shell) {
       nsIFrame* frame;
       shell->GetPrimaryFrameFor(this, &frame);
@@ -343,6 +343,7 @@ nsHTMLFormElement::Reset()
       }
       NS_RELEASE(shell);
     }
+    NS_RELEASE(doc);
   }
 
   return res;
@@ -458,7 +459,7 @@ nsHTMLFormElement::GetElementAt(PRInt32 aIndex, nsIFormControl** aFormControl) c
 
 NS_IMETHODIMP
 nsHTMLFormElement::AddElement(nsIFormControl* aChild) 
-{ 
+{
   PRBool rv = mControls->mElements.AppendElement(aChild);
   if (rv) {
     NS_ADDREF(aChild);
