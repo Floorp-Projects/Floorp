@@ -4418,7 +4418,7 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
                             if (reefer) {
                                 if (millis == -1) millis = 0;
                                 rv = reefer->RefreshURI(uri, millis, 
-                                                        PR_FALSE);
+                                                        PR_FALSE, PR_TRUE);
                                 if (NS_FAILED(rv)) return rv;
                             }
                         }

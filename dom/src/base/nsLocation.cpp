@@ -420,8 +420,23 @@ LocationImpl::SetHrefWithBase(const nsAReadableString& aHref,
 
     if(NS_FAILED(rv))
       return rv;
-
-    if (aReplace) {
+    
+    // Check if docshell is currently loading a document.
+    // If so, this request from JS is probably part of a onload 
+    // handler or a simple script tag with a 
+    // location.href="new location" for redirection. 
+    // In such a case, request a replace load, so that
+    // the new url will replace the existing url in SH. 
+    // NOTE: this will not be the case if a event handler had a
+    // location.href  in it or a JS timer went off well after
+    // the current document is loaded. In such cases, we will 
+    // append the new url to SH.
+    // This solution is tricky. Hopefully it isn't going to bite
+    // anywhere else. This is part of solution for bug # 39938
+    PRUint32 busyFlags = nsIDocShell::BUSY_FLAGS_NONE;
+    mDocShell->GetBusyFlags(&busyFlags);
+ 
+    if (aReplace || (busyFlags & nsIDocShell::BUSY_FLAGS_BUSY)) {
       loadInfo->SetLoadType(nsIDocShellLoadInfo::loadNormalReplace);
     }
 

@@ -2464,7 +2464,7 @@ NS_IMETHODIMP nsDocShell::ReportScriptError(nsIScriptError *errorObject)
 // nsDocShell::nsIRefreshURI
 //*****************************************************************************   
 
-NS_IMETHODIMP nsDocShell::RefreshURI(nsIURI *aURI, PRInt32 aDelay, PRBool aRepeat)
+NS_IMETHODIMP nsDocShell::RefreshURI(nsIURI *aURI, PRInt32 aDelay, PRBool aRepeat, PRBool aMetaRefresh)
 {
    NS_ENSURE_ARG(aURI);
 
@@ -2477,6 +2477,7 @@ NS_IMETHODIMP nsDocShell::RefreshURI(nsIURI *aURI, PRInt32 aDelay, PRBool aRepea
    refreshTimer->mURI = aURI;
    refreshTimer->mDelay = aDelay;
    refreshTimer->mRepeat = aRepeat;
+   refreshTimer->mMetaRefresh = aMetaRefresh;
 
    if (!mRefreshURIList)
    {
@@ -3906,7 +3907,7 @@ nsDocShell::SetupRefreshURI(nsIChannel * aChannel)
             NS_NewURI(getter_AddRefs(uri), uriAttrib, baseURI);
         }
 
-        RefreshURI (uri, millis, PR_FALSE);
+        RefreshURI (uri, millis, PR_FALSE, PR_TRUE);
       }
    }
 
@@ -4486,7 +4487,7 @@ PRBool nsDocShell::IsFrame()
 //***    nsRefreshTimer: Object Management
 //*****************************************************************************
 
-nsRefreshTimer::nsRefreshTimer() : mRepeat(PR_FALSE), mDelay(0)
+nsRefreshTimer::nsRefreshTimer() : mRepeat(PR_FALSE), mDelay(0), mMetaRefresh(PR_FALSE)
 {
   NS_INIT_REFCNT();
 }
@@ -4515,13 +4516,31 @@ NS_IMETHODIMP_(void) nsRefreshTimer::Notify(nsITimer *aTimer)
 {
     NS_ASSERTION(mDocShell, "DocShell is somehow null");
 
-    if(mDocShell)
+    if(mDocShell && aTimer)
     {
-        nsCOMPtr<nsIDocShellLoadInfo> loadInfo;        
-        mDocShell->CreateLoadInfo (getter_AddRefs (loadInfo));
-
+      // Get the delay count
+      PRUint32 delay;        
+      delay = aTimer->GetDelay();
+      // Get the current uri from the docshell.
+      nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mDocShell));
+      nsCOMPtr<nsIURI> currURI;
+      if (webNav) {
+        webNav->GetCurrentURI(getter_AddRefs(currURI));
+      }
+      nsCOMPtr<nsIDocShellLoadInfo> loadInfo;        
+      mDocShell->CreateLoadInfo (getter_AddRefs (loadInfo));
+      /* Check if this refresh causes a redirection
+       * to another site within the threshold time we 
+       * have in mind(15000 ms as defined by REFRESH_REDIRECT_TIMER).
+       * If so, pass a REPLACE flag to LoadURI().
+       */
+      PRBool equalUri = PR_FALSE;
+      if (NS_SUCCEEDED(mURI->Equals(currURI, &equalUri)) && (delay <= REFRESH_REDIRECT_TIMER) && (!equalUri) && mMetaRefresh) {
+        loadInfo->SetLoadType(nsIDocShellLoadInfo::loadNormalReplace);
+      }
+      else
         loadInfo->SetLoadType(nsIDocShellLoadInfo::loadRefresh);
-        mDocShell->LoadURI(mURI, loadInfo, nsIWebNavigation::LOAD_FLAGS_NONE);
+      mDocShell->LoadURI(mURI, loadInfo, nsIWebNavigation::LOAD_FLAGS_NONE);
     }
 
    /*
