@@ -158,7 +158,7 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI, nsILoadGroup *aLoadGroup, imgID
            ("[this=%p] imgLoader::LoadImage -- Calling channel->AsyncOpen()\n", this));
 
     // XXX are we calling this too early?
-    newChannel->AsyncOpen(NS_STATIC_CAST(nsIStreamListener *, request), cx);
+    newChannel->AsyncOpen(NS_STATIC_CAST(nsIStreamListener *, request), nsnull);
 
   } else {
     PR_LOG(gImgLog, PR_LOG_DEBUG,

@@ -22,6 +22,7 @@
  */
 
 #include "nsISupports.idl"
+#include "nsIRequest.idl"
 
 interface gfxIImageContainer;
 interface nsIURI;
@@ -34,10 +35,8 @@ interface nsIURI;
  * @see imagelib2
  */
 [scriptable, uuid(ccf705f6-1dd1-11b2-82ef-e18eccf7f7ec)]
-interface imgIRequest : nsISupports
+interface imgIRequest : nsIRequest
 {
-  void cancel(in nsresult status);
-
   /**
    * the image container...
    * @return the image object associated with the request.
@@ -64,3 +63,12 @@ interface imgIRequest : nsISupports
 
   readonly attribute nsIURI URI;
 };
+
+%{C++
+
+/**
+ * imagelib specific nsresult error codes
+ */
+#define NS_ERROR_IMAGELIB_NO_DECODER        NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_IMGLIB, 0)
+
+%}
