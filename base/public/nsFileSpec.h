@@ -255,7 +255,7 @@ class NS_BASE nsFileSpec
                                     long parID,
                                     ConstStr255Param name);
                                 nsFileSpec(const FSSpec& inSpec)
-                                    : mSpec(inSpec), mError(NS_OK) {}
+                                    : mSpec(inSpec), mError(NS_OK), mPath(nsnull) {}
         void                    operator = (const FSSpec& inSpec)
                                     { mSpec = inSpec; mError = NS_OK; }
 

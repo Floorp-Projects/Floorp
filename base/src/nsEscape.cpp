@@ -62,45 +62,64 @@ NS_BASE char* nsEscape(const char * str, nsEscapeMask mask)
 }
 
 //----------------------------------------------------------------------------------------
-NS_BASE char* nsEscapeCount(const char * str, PRInt32 len, nsEscapeMask mask, PRInt32 * out_len)
+NS_BASE char* nsEscapeCount(
+    const char * str,
+    PRInt32 len,
+    nsEscapeMask mask,
+    PRInt32* out_len)
 //----------------------------------------------------------------------------------------
 {
-    int32       i, extra = 0;
-    char        *hexChars = "0123456789ABCDEF";
+	if (!str)
+		return 0;
 
-	if(!str)
-		return(0);
+    int i, extra = 0;
+    char* hexChars = "0123456789ABCDEF";
 
-	register const unsigned char* src = (unsigned char *) str;
+	register const unsigned char* src = (const unsigned char *) str;
     for (i = 0; i < len; i++)
-	  {
-        if (!IS_OK(src[i]))
-            extra+=2; /* the escape, plus an extra byte for each nibble */
-	  }
+	{
+        if (!IS_OK(*src++))
+            extra += 2; /* the escape, plus an extra byte for each nibble */
+	}
 
 	char* result = new char[len + extra + 1];
     if (!result)
-        return(0);
+        return 0;
 
     register unsigned char* dst = (unsigned char *) result;
-    for (i = 0; i < len; i++)
-	  {
-		unsigned char c = src[i];
-		if (IS_OK(c))
-		  {
-			*dst++ = c;
-		  }
-		else if (mask == url_XPAlphas && c == ' ')
-		  {
-			*dst++ = '+'; /* convert spaces to pluses */
-		  }
-		else 
-		  {
-			*dst++ = HEX_ESCAPE;
-			*dst++ = hexChars[c >> 4];		/* high nibble */
-			*dst++ = hexChars[c & 0x0f];	/* low nibble */
-		  }
-	  }
+	src = (const unsigned char *) str;
+	if (mask == url_XPAlphas)
+	{
+	    for (i = 0; i < len; i++)
+		{
+			unsigned char c = *src++;
+			if (IS_OK(c))
+				*dst++ = c;
+			else if (c == ' ')
+				*dst++ = '+'; /* convert spaces to pluses */
+			else 
+			{
+				*dst++ = HEX_ESCAPE;
+				*dst++ = hexChars[c >> 4];		/* high nibble */
+				*dst++ = hexChars[c & 0x0f];	/* low nibble */
+			}
+		}
+	}
+	else
+	{
+	    for (i = 0; i < len; i++)
+		{
+			unsigned char c = *src++;
+			if (IS_OK(c))
+				*dst++ = c;
+			else 
+			{
+				*dst++ = HEX_ESCAPE;
+				*dst++ = hexChars[c >> 4];		/* high nibble */
+				*dst++ = hexChars[c & 0x0f];	/* low nibble */
+			}
+		}
+	}
 
     *dst = '\0';     /* tack on eos */
 	if(out_len)
@@ -125,27 +144,24 @@ NS_BASE PRInt32 nsUnescapeCount(char * str)
 
     while (*src)
         if (*src != HEX_ESCAPE)
-		  {
         	*dst++ = *src++;
-		  }
         else 	
-		  {
+		{
         	src++; /* walk over escape */
         	if (*src)
-              {
+            {
             	*dst = UNHEX(*src) << 4;
             	src++;
-              }
+            }
         	if (*src)
-              {
+            {
             	*dst = (*dst + UNHEX(*src));
             	src++;
-              }
+            }
         	dst++;
-          }
+        }
 
     *dst = 0;
-
     return (int)(dst - str);
 
 } /* NET_UnEscapeCnt */
