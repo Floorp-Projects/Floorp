@@ -84,7 +84,7 @@
 */
 //-----------------------------------------------------------------------------
 var i = 0;
-var bug = '(none)';
+var bug = 85721;
 var summary = 'Testing regular expression edge cases';
 var cnSingleSpace = ' ';
 var status = '';
