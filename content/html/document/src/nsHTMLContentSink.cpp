@@ -2264,7 +2264,7 @@ HTMLContentSink::Init(nsIDocument* aDoc,
   mNotifyOnTimer = PR_TRUE;
   prefs->GetBoolPref("content.notify.ontimer", &mNotifyOnTimer);
 
-  mBackoffCount = 3;
+  mBackoffCount = -1; // never
   prefs->GetIntPref("content.notify.backoffcount", &mBackoffCount);
 
   mNotificationInterval = 1000000;
