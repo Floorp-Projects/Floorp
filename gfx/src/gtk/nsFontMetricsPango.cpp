@@ -674,6 +674,7 @@ nsFontMetricsPango::GetTextDimensions(const PRUnichar*    aString,
             //      if (aNumCharsFit != aBreaks[i])
             //                printf("Fixing utf8 -> utf16 %d -> %d\n", aNumCharsFit, aBreaks[i]);
             aNumCharsFit = aBreaks[i];
+            break;
         }
     }
 
