@@ -386,7 +386,7 @@ foreach my $id ("1", "2") {
             if ($field eq "cc") {
                 $query .= "\t$lead cc.who = $emailid\n";
             } elsif ($field eq "longdesc") {
-                $query .= "\t$lead longdesc.who = $emailid\n";
+                $query .= "\t$lead longdescs.who = $emailid\n";
             } else {
                 $query .= "\t$lead $field = $emailid\n";
             }
