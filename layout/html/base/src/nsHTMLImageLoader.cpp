@@ -19,9 +19,7 @@
 #include "nsIHTMLReflow.h"
 #include "nsFrame.h"
 #include "nsIURL.h"
-#ifdef NECKO
 #include "nsNeckoUtil.h"
-#endif // NECKO
 
 #ifdef DEBUG
 #undef NOISY_IMAGE_LOADING
@@ -83,11 +81,7 @@ nsHTMLImageLoader::SetURL(const nsString& aNewSpec)
   if (mBaseURL && !aNewSpec.Equals("")) {
     nsString empty;
     nsresult rv;
-#ifndef NECKO
-    rv = NS_MakeAbsoluteURL(mBaseURL, empty, mURLSpec, mURL);
-#else
     rv = NS_MakeAbsoluteURI(mURLSpec, mBaseURL, mURL);
-#endif // NECKO
     if (NS_FAILED(rv)) {
       mURL = mURLSpec;
     }
@@ -156,6 +150,13 @@ nsHTMLImageLoader::Update(nsIPresContext* aPresContext,
   }
 }
 
+// The prefix for special "internal" images that are well known
+#define GOPHER_SPEC "internal-gopher-"
+
+// Note: sizeof a string constant includes the \0 at the end so
+// subtract one
+#define GOPHER_SPEC_SIZE (sizeof(GOPHER_SPEC) - 1)
+
 nsresult
 nsHTMLImageLoader::StartLoadImage(nsIPresContext* aPresContext)
 {
@@ -167,6 +168,21 @@ nsHTMLImageLoader::StartLoadImage(nsIPresContext* aPresContext)
     return NS_OK;
   }
 
+  // Note: navigator 4.* and earlier releases ignored the base tags
+  // effect on the builtin images. So we do too. Use mURLSpec instead
+  // of the absolute url...
+  nsAutoString internalImageURLSpec;
+  nsString* urlSpec = &mURL;
+  if (mURLSpec.Compare(GOPHER_SPEC, PR_FALSE, GOPHER_SPEC_SIZE) == 0) {
+    // We found a special image source value that refers to a
+    // builtin image. Rewrite the source url as a resource url.
+    urlSpec = &internalImageURLSpec;
+    mURLSpec.Mid(internalImageURLSpec, GOPHER_SPEC_SIZE,
+                 mURLSpec.Length() - GOPHER_SPEC_SIZE);
+    internalImageURLSpec.Insert("resource:/res/html/gopher-", 0);
+    internalImageURLSpec.Append(".gif");
+  }
+
   // This is kind of sick, but its possible that we will get a
   // notification *before* we have setup mImageLoader. To get around
   // this, we let the pres-context store into mImageLoader and sort
@@ -176,7 +192,7 @@ nsHTMLImageLoader::StartLoadImage(nsIPresContext* aPresContext)
   if (!mFlags.mAutoImageSize && !mFlags.mNeedIntrinsicImageSize) {
     sizeToLoadWidth = &mComputedImageSize;
   }
-  nsresult rv = aPresContext->StartLoadImage(mURL, nsnull,
+  nsresult rv = aPresContext->StartLoadImage(*urlSpec, nsnull,
                                              sizeToLoadWidth,
                                              mFrame, ImageLoadCB, (void*)this,
                                              &mImageLoader);
