@@ -945,42 +945,78 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
   NS_ASSERTION(NS_SUCCEEDED(rv), "reflow dirty lines failed");
   if (NS_FAILED(rv)) return rv;
 
-  // Put continued floaters at the beginning of the first overflow line. If the first line 
-  // is a block then create a new line as the first line and put the floaters there. If there 
-  // are no overflow lines, then create one and put the floaters in it.
-  if (state.mOverflowFloaters.NotEmpty()) {
-    nsLineList* overflowLines = GetOverflowLines(aPresContext, PR_FALSE);
-    if (overflowLines) {
-      line_iterator firstLine = overflowLines->begin(); 
-      if (firstLine->IsBlock()) { // floaters go on a new line before 1st overflow line
-        nsLineBox* newLine = state.NewLineBox(state.mOverflowFloaters.FirstChild(), 
-                                              state.mOverflowFloaters.GetLength(), PR_FALSE);
-        firstLine = mLines.before_insert(firstLine, newLine);
-      }
-      else { // floaters go on 1st overflow line
-        nsIFrame* firstFrame = firstLine->mFirstChild;
-        firstLine->mFirstChild = state.mOverflowFloaters.FirstChild();
-        PRInt32 numOverflowFloaters = state.mOverflowFloaters.GetLength();
-        // hook up the last placeholder with the original frames
-        nsPlaceholderFrame* lastPlaceholder = 
-          (nsPlaceholderFrame*)state.mOverflowFloaters.LastChild();
-        lastPlaceholder->SetNextSibling(firstFrame);
-        NS_ASSERTION(firstFrame != lastPlaceholder, "trying to set next sibling to self");
-        firstLine->SetChildCount(firstLine->GetChildCount() + numOverflowFloaters);
+  // If the block is complete, put continuted floaters in the closest ancestor 
+  // block that uses the same space manager and leave the block complete; this 
+  // allows subsequent lines on the page to be impacted by floaters. If the 
+  // block is incomplete or there is no ancestor using the same space manager, 
+  // put continued floaters at the beginning of the first overflow line.
+  nsFrameList* overflowPlace = nsnull;
+  if ((NS_UNCONSTRAINEDSIZE != aReflowState.availableHeight) && 
+      (overflowPlace = GetOverflowPlaceholders(aPresContext, PR_TRUE))) {
+    PRBool gaveToAncestor = PR_FALSE;
+    if (NS_FRAME_IS_COMPLETE(state.mReflowStatus)) {
+      // find the nearest block ancestor that uses the same space manager
+      for (const nsHTMLReflowState* ancestorRS = aReflowState.parentReflowState; 
+           ancestorRS; 
+           ancestorRS = ancestorRS->parentReflowState) {
+        nsIFrame* ancestor = ancestorRS->frame;
+        nsCOMPtr<nsIAtom> fType;
+        ancestor->GetFrameType(getter_AddRefs(fType));
+        if ((nsLayoutAtoms::blockFrame == fType) || (nsLayoutAtoms::areaFrame == fType)) {
+          if (aReflowState.mSpaceManager == ancestorRS->mSpaceManager) {
+            // Put the continued floaters in ancestor since it uses the same space manager
+            nsFrameList* ancestorPlace =
+              ((nsBlockFrame*)ancestor)->GetOverflowPlaceholders(aPresContext, PR_FALSE);
+            if (ancestorPlace) {
+              ancestorPlace->AppendFrames(ancestor, overflowPlace->FirstChild());
+            }
+            else {
+              ancestorPlace = new nsFrameList(overflowPlace->FirstChild());
+              if (ancestorPlace) {
+                ((nsBlockFrame*)ancestor)->SetOverflowPlaceholders(aPresContext, ancestorPlace);
+              }
+              else 
+                return NS_ERROR_OUT_OF_MEMORY;
+            }
+            gaveToAncestor = PR_TRUE;
+            break;
+          }
+        }
       }
     }
-    else {
-      // Create a line, put the floaters in it, and then push.
-      nsLineBox* newLine = state.NewLineBox(state.mOverflowFloaters.FirstChild(), 
-                                            state.mOverflowFloaters.GetLength(), PR_FALSE);
-      if (!newLine) 
-        return NS_ERROR_OUT_OF_MEMORY;
-      mLines.push_back(newLine);
-      nsLineList::iterator nextToLastLine = ----end_lines();
-      PushLines(state, nextToLastLine);
+    if (!gaveToAncestor) {
+      PRInt32 numOverflowPlace = overflowPlace->GetLength();
+      nsLineList* overflowLines = GetOverflowLines(aPresContext, PR_FALSE);
+      if (overflowLines) {
+        line_iterator firstLine = overflowLines->begin(); 
+        if (firstLine->IsBlock()) { 
+          // Create a new line as the first line and put the floaters there;
+          nsLineBox* newLine = state.NewLineBox(overflowPlace->FirstChild(), numOverflowPlace, PR_FALSE);
+          firstLine = mLines.before_insert(firstLine, newLine);
+        }
+        else { // floaters go on 1st overflow line
+          nsIFrame* firstFrame = firstLine->mFirstChild;
+          firstLine->mFirstChild = overflowPlace->FirstChild();
+          // hook up the last placeholder with the original frames
+          nsPlaceholderFrame* lastPlaceholder = 
+            (nsPlaceholderFrame*)overflowPlace->LastChild();
+          lastPlaceholder->SetNextSibling(firstFrame);
+          NS_ASSERTION(firstFrame != lastPlaceholder, "trying to set next sibling to self");
+          firstLine->SetChildCount(firstLine->GetChildCount() + numOverflowPlace);
+        }
+      }
+      else {
+        // Create a line, put the floaters in it, and then push.
+        nsLineBox* newLine = state.NewLineBox(overflowPlace->FirstChild(), numOverflowPlace, PR_FALSE);
+        if (!newLine) 
+          return NS_ERROR_OUT_OF_MEMORY;
+        mLines.push_back(newLine);
+        nsLineList::iterator nextToLastLine = ----end_lines();
+        PushLines(state, nextToLastLine);
+      }
+      state.mReflowStatus = NS_FRAME_NOT_COMPLETE;
     }
-    state.mReflowStatus = NS_FRAME_NOT_COMPLETE;
-    state.mOverflowFloaters.SetFrames(nsnull);
+    delete overflowPlace;
   }
 
   if (NS_FRAME_IS_NOT_COMPLETE(state.mReflowStatus)) {
@@ -3151,9 +3187,9 @@ nsBlockFrame::GetTopBlockChild(nsIPresContext* aPresContext)
 // If placeholders/floaters split during reflowing a line, but that line will 
 // be put on the next page, then put the placeholders/floaters back the way
 // they were before the line was reflowed. 
-static void
-UndoPlaceholders(nsBlockReflowState& aState,
-                 nsIFrame*           aLastPlaceholder)
+void
+nsBlockFrame::UndoSplitPlaceholders(nsBlockReflowState& aState,
+                                    nsIFrame*           aLastPlaceholder)
 {
   nsIFrame* undoPlaceholder = nsnull;
   if (aLastPlaceholder) {
@@ -3161,8 +3197,9 @@ UndoPlaceholders(nsBlockReflowState& aState,
     aLastPlaceholder->SetNextSibling(nsnull);
   }
   else {
-    undoPlaceholder = aState.mOverflowFloaters.FirstChild();
-    aState.mOverflowFloaters.SetFrames(nsnull);
+    // just remove the property
+    nsFrameList* overflowPlace = GetOverflowPlaceholders(aState.mPresContext, PR_TRUE);
+    delete overflowPlace;
   }
   // remove the next in flows of the placeholders that need to be removed
   for (nsIFrame* placeholder = undoPlaceholder; placeholder; ) {
@@ -3320,7 +3357,8 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
   }
 
   // keep track of the last overflow floater in case we need to undo any new additions
-  nsIFrame* lastPlaceholder = aState.mOverflowFloaters.LastChild();
+  nsFrameList* overflowPlace = GetOverflowPlaceholders(aState.mPresContext, PR_FALSE);
+  nsIFrame* lastPlaceholder = (overflowPlace) ? overflowPlace->LastChild() : nsnull;
 
   // Reflow the block into the available space
   nsReflowStatus frameReflowStatus=NS_FRAME_COMPLETE;
@@ -3353,7 +3391,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
 
   if (NS_INLINE_IS_BREAK_BEFORE(frameReflowStatus)) {
     // None of the child block fits.
-    ::UndoPlaceholders(aState, lastPlaceholder);
+    UndoSplitPlaceholders(aState, lastPlaceholder);
     PushLines(aState, aLine.prev());
     *aKeepReflowGoing = PR_FALSE;
     aState.mReflowStatus = NS_FRAME_NOT_COMPLETE;
@@ -3530,7 +3568,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
       else {
         // Push the line that didn't fit and any lines that follow it
         // to our next-in-flow.
-        ::UndoPlaceholders(aState, lastPlaceholder);
+        UndoSplitPlaceholders(aState, lastPlaceholder);
         PushLines(aState, aLine.prev());
         aState.mReflowStatus = NS_FRAME_NOT_COMPLETE;
       }
@@ -3644,7 +3682,7 @@ nsBlockFrame::PushTruncatedPlaceholderLine(nsBlockReflowState& aState,
                                            nsIFrame*           aLastPlaceholder,
                                            PRBool&             aKeepReflowGoing)
 {
-  ::UndoPlaceholders(aState, aLastPlaceholder);
+  UndoSplitPlaceholders(aState, aLastPlaceholder);
 
   line_iterator prevLine = aLine;
   --prevLine;
@@ -3716,7 +3754,8 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
   }
 
   // keep track of the last overflow floater in case we need to undo any new additions
-  nsIFrame* lastPlaceholder = aState.mOverflowFloaters.LastChild();
+  nsFrameList* overflowPlace = GetOverflowPlaceholders(aState.mPresContext, PR_FALSE);
+  nsIFrame* lastPlaceholder = (overflowPlace) ? overflowPlace->LastChild() : nsnull;
 
   // Reflow the frames that are already on the line first
   nsresult rv = NS_OK;
@@ -3814,7 +3853,7 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
     // no point in placing the line.
     if (!NS_INLINE_IS_BREAK_BEFORE(aState.mReflowStatus)) {
       if (PlaceLine(aState, aLineLayout, aLine, aKeepReflowGoing, aUpdateMaximumWidth)) {
-        ::UndoPlaceholders(aState, lastPlaceholder); // undo since we pushed the current line
+        UndoSplitPlaceholders(aState, lastPlaceholder); // undo since we pushed the current line
       }
     }
   }
@@ -3991,7 +4030,7 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
     // frame may already have a continuation.
     PRBool madeContinuation;
     rv = (nsLayoutAtoms::placeholderFrame == frameType)
-         ? SplitPlaceholder(aState, *aFrame)
+         ? SplitPlaceholder(*aState.mPresContext, *aFrame)
          : CreateContinuationFor(aState, aLine, aFrame, madeContinuation);
     if (NS_FAILED(rv)) 
       return rv;
@@ -4070,11 +4109,11 @@ nsBlockFrame::CreateContinuationFor(nsBlockReflowState& aState,
 }
 
 nsresult
-nsBlockFrame::SplitPlaceholder(nsBlockReflowState& aState,
-                               nsIFrame&           aPlaceholder)
+nsBlockFrame::SplitPlaceholder(nsIPresContext& aPresContext,
+                               nsIFrame&       aPlaceholder)
 {
   nsIFrame* nextInFlow;
-  nsresult rv = CreateNextInFlow(aState.mPresContext, this, &aPlaceholder, nextInFlow);
+  nsresult rv = CreateNextInFlow(&aPresContext, this, &aPlaceholder, nextInFlow);
   if (NS_FAILED(rv)) 
     return rv;
   // put the sibling list back to what it was before the continuation was created
@@ -4084,7 +4123,17 @@ nsBlockFrame::SplitPlaceholder(nsBlockReflowState& aState,
   aPlaceholder.SetNextSibling(next);
   contFrame->SetNextSibling(nsnull);
   // add the placehoder to the overflow floaters
-  aState.mOverflowFloaters.AppendFrames(this, contFrame);
+  nsFrameList* overflowPlace = GetOverflowPlaceholders(&aPresContext, PR_FALSE);
+  if (overflowPlace) {
+    overflowPlace->AppendFrames(this, contFrame);
+  }
+  else {
+    overflowPlace = new nsFrameList(contFrame);
+    if (overflowPlace) {
+      SetOverflowPlaceholders(&aPresContext, overflowPlace);
+    }
+    else return NS_ERROR_NULL_POINTER;
+  }
   return NS_OK;
 }
 
@@ -4415,7 +4464,8 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
   // Any below current line floaters to place?
   if (aState.mBelowCurrentLineFloaters.NotEmpty()) {
     // keep track of the last overflow floater in case we need to undo and push the line
-    nsIFrame* lastPlaceholder = aState.mOverflowFloaters.LastChild();
+    nsFrameList* overflowPlace = GetOverflowPlaceholders(aState.mPresContext, PR_FALSE);
+    nsIFrame* lastPlaceholder = (overflowPlace) ? overflowPlace->LastChild() : nsnull;
     // Reflow the below-current-line floaters, then add them to the
     // lines floater list if there aren't any truncated floaters.
     if (aState.PlaceBelowCurrentLineFloaters(aState.mBelowCurrentLineFloaters)) {
@@ -4739,31 +4789,12 @@ nsLineList*
 nsBlockFrame::GetOverflowLines(nsIPresContext* aPresContext,
                                PRBool          aRemoveProperty) const
 {
-  nsCOMPtr<nsIPresShell>     presShell;
-  aPresContext->GetShell(getter_AddRefs(presShell));
-
-  if (presShell) {
-    nsCOMPtr<nsIFrameManager>  frameManager;
-    presShell->GetFrameManager(getter_AddRefs(frameManager));
-  
-    if (frameManager) {
-      PRUint32  options = 0;
-      nsLineList* value;
-  
-      if (aRemoveProperty) {
-        options |= NS_IFRAME_MGR_REMOVE_PROP;
-      }
-      frameManager->GetFrameProperty(NS_CONST_CAST(nsBlockFrame*, this),
-                                     nsLayoutAtoms::overflowLinesProperty,
-                                     options,
-                                     NS_REINTERPRET_CAST(void**, &value));
-      NS_ASSERTION(!value || !value->empty(),
-                   "value should never be stored as empty");
-      return value;
-    }
-  }
-
-  return nsnull;
+  nsLineList* lines = 
+    NS_STATIC_CAST(nsLineList*, GetProperty(aPresContext, 
+                                            nsLayoutAtoms::overflowLinesProperty, 
+                                            aRemoveProperty));
+  NS_ASSERTION(!lines || !lines->empty(), "value should never be stored as empty");
+  return lines;
 }
 
 // Destructor function for the overflowLines frame property
@@ -4786,27 +4817,48 @@ nsresult
 nsBlockFrame::SetOverflowLines(nsIPresContext* aPresContext,
                                nsLineList*     aOverflowLines)
 {
-  nsCOMPtr<nsIPresShell>     presShell;
-  nsresult                   rv = NS_ERROR_FAILURE;
-
   NS_ASSERTION(aOverflowLines, "null lines");
-  NS_ASSERTION(! aOverflowLines->empty(), "empty lines");
+  NS_ASSERTION(!aOverflowLines->empty(), "empty lines");
 
-  aPresContext->GetShell(getter_AddRefs(presShell));
-  if (presShell) {
-    nsCOMPtr<nsIFrameManager>  frameManager;
-    presShell->GetFrameManager(getter_AddRefs(frameManager));
-  
-    if (frameManager) {
-      rv = frameManager->SetFrameProperty(this,
-                                          nsLayoutAtoms::overflowLinesProperty,
-                                          aOverflowLines,
-                                          DestroyOverflowLines);
+  nsresult rv = SetProperty(aPresContext, nsLayoutAtoms::overflowLinesProperty,
+                            aOverflowLines, DestroyOverflowLines);
+  // Verify that we didn't overwrite an existing overflow list
+  NS_ASSERTION(rv != NS_IFRAME_MGR_PROP_OVERWRITTEN, "existing overflow list");
+  return rv;
+}
 
-      // Verify that we didn't overwrite an existing overflow list
-      NS_ASSERTION(rv != NS_IFRAME_MGR_PROP_OVERWRITTEN, "existing overflow list");
-    }
-  }
+nsFrameList*
+nsBlockFrame::GetOverflowPlaceholders(nsIPresContext* aPresContext,
+                                      PRBool          aRemoveProperty) const
+{
+  nsFrameList* placeholders = 
+    NS_STATIC_CAST(nsFrameList*, 
+                   GetProperty(aPresContext, nsLayoutAtoms::overflowPlaceholdersProperty, 
+                               aRemoveProperty));
+  return placeholders;
+}
+
+// Destructor function for the overflowPlaceholders frame property
+static void
+DestroyOverflowPlaceholders(nsIPresContext* aPresContext,
+                            nsIFrame*       aFrame,
+                            nsIAtom*        aPropertyName,
+                            void*           aPropertyValue)
+{
+  nsFrameList* overflowPlace = NS_STATIC_CAST(nsFrameList*, aPropertyValue);
+  delete overflowPlace;
+}
+
+// This takes ownership of aOverflowLines.
+// XXX We should allocate overflowLines from presShell arena!
+nsresult
+nsBlockFrame::SetOverflowPlaceholders(nsIPresContext* aPresContext,
+                                      nsFrameList*    aOverflowPlaceholders)
+{
+  nsresult rv = SetProperty(aPresContext, nsLayoutAtoms::overflowPlaceholdersProperty,
+                            aOverflowPlaceholders, DestroyOverflowPlaceholders);
+  // Verify that we didn't overwrite an existing overflow list
+  NS_ASSERTION(rv != NS_IFRAME_MGR_PROP_OVERWRITTEN, "existing overflow placeholder list");
   return rv;
 }
 

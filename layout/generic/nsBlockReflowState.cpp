@@ -46,6 +46,7 @@
 #include "nsIPresContext.h"
 #include "nsLayoutAtoms.h"
 #include "nsIFrame.h"
+#include "nsIFrameManager.h"
 
 #include "nsINameSpaceManager.h"
 #include "nsHTMLAtoms.h"
@@ -124,7 +125,6 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
     }
   }
   mHaveRightFloaters = PR_FALSE;
-  mOverflowFloaters.SetFrames(nsnull);
 
   // Compute content area height. Unlike the width, if we have a
   // specified style height we ignore it since extra content is
@@ -847,7 +847,8 @@ nsBlockReflowState::FlowAndPlaceFloater(nsFloaterCache* aFloaterCache,
   // content.
   nscoord saveY = mY;
 
-  nsIFrame* floater = aFloaterCache->mPlaceholder->GetOutOfFlowFrame();
+  nsPlaceholderFrame* placeholder = aFloaterCache->mPlaceholder;
+  nsIFrame*           floater = placeholder->GetOutOfFlowFrame();
 
   // Grab the floater's display information
   const nsStyleDisplay* floaterDisplay;
@@ -879,8 +880,8 @@ nsBlockReflowState::FlowAndPlaceFloater(nsFloaterCache* aFloaterCache,
   }
 
   // Reflow the floater
-  mBlock->ReflowFloater(*this, aFloaterCache->mPlaceholder, aFloaterCache->mCombinedArea,
-			                  aFloaterCache->mMargins, aFloaterCache->mOffsets, aReflowStatus);
+  mBlock->ReflowFloater(*this, placeholder, aFloaterCache->mCombinedArea,
+                        aFloaterCache->mMargins, aFloaterCache->mOffsets, aReflowStatus);
 
   // Get the floaters bounding box and margin information
   floater->GetRect(region);
@@ -963,7 +964,7 @@ nsBlockReflowState::FlowAndPlaceFloater(nsFloaterCache* aFloaterCache,
       mY += mAvailSpaceRect.height;
       GetAvailableSpace();
       // reflow the floater again now since we have more space
-      mBlock->ReflowFloater(*this, aFloaterCache->mPlaceholder, aFloaterCache->mCombinedArea,
+      mBlock->ReflowFloater(*this, placeholder, aFloaterCache->mCombinedArea,
                             aFloaterCache->mMargins, aFloaterCache->mOffsets, aReflowStatus);
       // Get the floaters bounding box and margin information
       floater->GetRect(region);
@@ -974,12 +975,33 @@ nsBlockReflowState::FlowAndPlaceFloater(nsFloaterCache* aFloaterCache,
 
     }
   }
-  // If the floater is continued, it will get the same x value as its prev-in-flow
-  nsRect prevInFlowRect(0,0,0,0);
+  // If the floater is continued, it will get the same absolute x value as its prev-in-flow
+  nsRect prevRect(0,0,0,0);
   nsIFrame* prevInFlow;
   floater->GetPrevInFlow(&prevInFlow);
   if (prevInFlow) {
-    prevInFlow->GetRect(prevInFlowRect);
+    prevInFlow->GetRect(prevRect);
+
+    nsCOMPtr<nsIPresShell> presShell;
+    mPresContext->GetShell(getter_AddRefs(presShell));
+    nsCOMPtr<nsIFrameManager> frameManager;
+    presShell->GetFrameManager(getter_AddRefs(frameManager));
+
+    nsIFrame *placeParent, *placeParentPrev, *prevPlace, *prevPlaceParent;
+    // If prevInFlow's placeholder is in a block that wasn't continued, we need to adjust 
+    // prevRect.x to account for the missing frame offsets.
+    placeholder->GetParent(&placeParent);
+    placeParent->GetPrevInFlow(&placeParentPrev);
+    frameManager->GetPlaceholderFrameFor(prevInFlow, &prevPlace);
+    prevPlace->GetParent(&prevPlaceParent);
+
+    for (nsIFrame* ancestor = prevPlaceParent; 
+         ancestor && (ancestor != placeParentPrev); 
+         ancestor->GetParent(&ancestor)) {
+      nsRect rect;
+      ancestor->GetRect(rect);
+      prevRect.x += rect.x;
+    }        
   }
   // Assign an x and y coordinate to the floater. Note that the x,y
   // coordinates are computed <b>relative to the translation in the
@@ -989,7 +1011,7 @@ nsBlockReflowState::FlowAndPlaceFloater(nsFloaterCache* aFloaterCache,
   PRBool isLeftFloater;
   if (NS_STYLE_FLOAT_LEFT == floaterDisplay->mFloats) {
     isLeftFloater = PR_TRUE;
-    region.x = (prevInFlow) ? prevInFlowRect.x : mAvailSpaceRect.x;
+    region.x = (prevInFlow) ? prevRect.x : mAvailSpaceRect.x;
   }
   else {
     isLeftFloater = PR_FALSE;
@@ -997,7 +1019,7 @@ nsBlockReflowState::FlowAndPlaceFloater(nsFloaterCache* aFloaterCache,
       nsIFrame* prevInFlow;
       floater->GetPrevInFlow(&prevInFlow);
       if (prevInFlow) {
-        region.x = prevInFlowRect.x;
+        region.x = prevRect.x;
       }
       else if (!keepFloaterOnSameLine) {
         region.x = mAvailSpaceRect.XMost() - region.width;
@@ -1030,7 +1052,7 @@ nsBlockReflowState::FlowAndPlaceFloater(nsFloaterCache* aFloaterCache,
     // if the floater split, then take up all of the vertical height 
     if (NS_FRAME_IS_NOT_COMPLETE(aReflowStatus) && 
         (NS_UNCONSTRAINEDSIZE != mContentArea.height)) {
-      region.height += PR_MAX(region.height, mContentArea.height);
+      region.height = PR_MAX(region.height, mContentArea.height);
     }
 #ifdef DEBUG
     nsresult rv =
@@ -1160,7 +1182,7 @@ nsBlockReflowState::PlaceBelowCurrentLineFloaters(nsFloaterCacheList& aList)
       }
       else if (NS_FRAME_IS_NOT_COMPLETE(reflowStatus)) {
         // Create a continuation for the incomplete floater and its placeholder.
-        nsresult rv = mBlock->SplitPlaceholder(*this, *fc->mPlaceholder);
+        nsresult rv = mBlock->SplitPlaceholder(*mPresContext, *fc->mPlaceholder);
         if (NS_FAILED(rv)) 
           return PR_FALSE;
       }

@@ -386,6 +386,16 @@ public:
   //Mouse Capturing code used by the frames to tell the view to capture all the following events
   NS_IMETHOD CaptureMouse(nsIPresContext* aPresContext, PRBool aGrabMouseEvents);
   PRBool   IsMouseCaptured(nsIPresContext* aPresContext);
+
+  virtual void* GetProperty(nsIPresContext* aPresContext,
+                            nsIAtom*        aPropertyName,
+                            PRBool          aRemoveProperty) const;
+
+  virtual nsresult SetProperty(nsIPresContext*         aPresContext,
+                               nsIAtom*                aPropertyName,
+                               void*                   aPropertyValue,
+                               NSFramePropertyDtorFunc aPropDtorFunc);
+
 #ifdef IBMBIDI
   NS_IMETHOD GetBidiProperty(nsIPresContext* aPresContext,
                              nsIAtom*        aPropertyName,

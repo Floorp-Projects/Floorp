@@ -371,10 +371,10 @@ public:
                               nsIAtom*  aPropertyName,
                               PRUint32  aOptions,
                               void**    aPropertyValue);
-  NS_IMETHOD SetFrameProperty(nsIFrame*            aFrame,
-                              nsIAtom*             aPropertyName,
-                              void*                aPropertyValue,
-                              NSFMPropertyDtorFunc aPropDtorFunc);
+  NS_IMETHOD SetFrameProperty(nsIFrame*               aFrame,
+                              nsIAtom*                aPropertyName,
+                              void*                   aPropertyValue,
+                              NSFramePropertyDtorFunc aPropDtorFunc);
   NS_IMETHOD RemoveFrameProperty(nsIFrame* aFrame,
                                  nsIAtom*  aPropertyName);
 
@@ -383,13 +383,13 @@ public:
 #endif
 
   struct PropertyList {
-    nsCOMPtr<nsIAtom>    mName;          // property name
-    PLDHashTable         mFrameValueMap; // map of frame/value pairs
-    NSFMPropertyDtorFunc mDtorFunc;      // property specific value dtor function
-    PropertyList*        mNext;
+    nsCOMPtr<nsIAtom>       mName;          // property name
+    PLDHashTable            mFrameValueMap; // map of frame/value pairs
+    NSFramePropertyDtorFunc mDtorFunc;      // property specific value dtor function
+    PropertyList*           mNext;
 
-    PropertyList(nsIAtom*             aName,
-                 NSFMPropertyDtorFunc aDtorFunc);
+    PropertyList(nsIAtom*                aName,
+                 NSFramePropertyDtorFunc aDtorFunc);
     ~PropertyList();
 
     // Removes the property associated with the given frame, and destroys
@@ -2452,10 +2452,10 @@ FrameManager::GetFrameProperty(nsIFrame* aFrame,
 }
 
 NS_IMETHODIMP
-FrameManager::SetFrameProperty(nsIFrame*            aFrame,
-                               nsIAtom*             aPropertyName,
-                               void*                aPropertyValue,
-                               NSFMPropertyDtorFunc aPropDtorFunc)
+FrameManager::SetFrameProperty(nsIFrame*               aFrame,
+                               nsIAtom*                aPropertyName,
+                               void*                   aPropertyValue,
+                               NSFramePropertyDtorFunc aPropDtorFunc)
 {
   NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_AVAILABLE);
   NS_PRECONDITION(aPropertyName && aFrame, "unexpected null param");
@@ -2667,8 +2667,8 @@ UndisplayedMap::Clear(void)
 
 //----------------------------------------------------------------------
     
-FrameManager::PropertyList::PropertyList(nsIAtom*             aName,
-                                         NSFMPropertyDtorFunc aDtorFunc)
+FrameManager::PropertyList::PropertyList(nsIAtom*                aName,
+                                         NSFramePropertyDtorFunc aDtorFunc)
   : mName(aName), mDtorFunc(aDtorFunc), mNext(nsnull)
 {
   PL_DHashTableInit(&mFrameValueMap, PL_DHashGetStubOps(), this,

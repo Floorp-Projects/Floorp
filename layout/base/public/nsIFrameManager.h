@@ -41,10 +41,10 @@
 #include "nsIStatefulFrame.h"
 #include "nsString.h"
 #include "nsChangeHint.h"
+#include "nsIFrame.h"
 
 class nsIAtom;
 class nsIContent;
-class nsIFrame;
 class nsIPresContext;
 class nsIPresShell;
 class nsIStyleSet;
@@ -57,14 +57,6 @@ class nsPlaceholderFrame;
 { 0xa6cf9107, 0x15b3, 0x11d2, \
   {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32} }
   
-// Calback function used to destroy the value associated with a
-// given property. used by RemoveFrameProperty()
-typedef void 
-(*NSFMPropertyDtorFunc)(nsIPresContext* aPresContext,
-                        nsIFrame*       aFrame,
-                        nsIAtom*        aPropertyName,
-                        void*           aPropertyValue);
-
 // Option flags for GetFrameProperty() member function
 #define NS_IFRAME_MGR_REMOVE_PROP   0x0001
 
@@ -233,10 +225,10 @@ public:
    *          NS_ERROR_INVALID_ARG if the dtor function does not match the
    *            existing dtor function
    */
-  NS_IMETHOD SetFrameProperty(nsIFrame*            aFrame,
-                              nsIAtom*             aPropertyName,
-                              void*                aPropertyValue,
-                              NSFMPropertyDtorFunc aPropertyDtorFunc) = 0;
+  NS_IMETHOD SetFrameProperty(nsIFrame*               aFrame,
+                              nsIAtom*                aPropertyName,
+                              void*                   aPropertyValue,
+                              NSFramePropertyDtorFunc aPropertyDtorFunc) = 0;
 
   /**
    * Removes a property and destroys its property value by calling the dtor
