@@ -110,7 +110,7 @@ nsTableRowGroupFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   }
 }
 
-NS_METHOD nsTableRowGroupFrame::GetRowCount(PRInt32 &aCount)
+NS_METHOD nsTableRowGroupFrame::GetRowCount(PRInt32 &aCount, PRBool aDeepCount)
 {
   // init out-param
   aCount=0;
@@ -125,6 +125,11 @@ NS_METHOD nsTableRowGroupFrame::GetRowCount(PRInt32 &aCount)
     childFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
     if (NS_STYLE_DISPLAY_TABLE_ROW == childDisplay->mDisplay)
       aCount++;
+    else if (aDeepCount && NS_STYLE_DISPLAY_TABLE_ROW_GROUP == childDisplay->mDisplay) {
+      PRInt32 childRowGroupCount;
+      ((nsTableRowGroupFrame*)childFrame)->GetRowCount(childRowGroupCount);
+      aCount += childRowGroupCount;
+    }
     childFrame->GetNextSibling(&childFrame);
   }
   return NS_OK;
@@ -145,6 +150,12 @@ PRInt32 nsTableRowGroupFrame::GetStartRowIndex()
       result = ((nsTableRowFrame *)childFrame)->GetRowIndex();
       break;
     }
+    else if (NS_STYLE_DISPLAY_TABLE_ROW_GROUP == childDisplay->mDisplay) {
+      result = ((nsTableRowGroupFrame*)childFrame)->GetStartRowIndex();
+      if (result != -1)
+        break;
+    }
+
     childFrame->GetNextSibling(&childFrame);
   }
   return result;
@@ -166,6 +177,12 @@ NS_METHOD nsTableRowGroupFrame::GetMaxColumns(PRInt32 &aMaxColumns) const
       PRInt32 colCount = ((nsTableRowFrame *)childFrame)->GetMaxColumns();
       aMaxColumns = PR_MAX(aMaxColumns, colCount);
     }
+    else if (NS_STYLE_DISPLAY_TABLE_ROW_GROUP == childDisplay->mDisplay) {
+      PRInt32 rgColCount;
+      ((nsTableRowGroupFrame*)childFrame)->GetMaxColumns(rgColCount);
+      aMaxColumns = PR_MAX(aMaxColumns, rgColCount);
+    }
+
     childFrame->GetNextSibling(&childFrame);
   }
   return NS_OK;
@@ -349,6 +366,10 @@ nsTableRowGroupFrame::GetFrameForPoint(const nsPoint& aPoint, nsIFrame** aFrame)
         return kid->GetFrameForPoint(tmp, aFrame);
       }
     }
+    else if (NS_STYLE_DISPLAY_TABLE_ROW_GROUP == childDisplay->mDisplay) {
+      return kid->GetFrameForPoint(aPoint, aFrame);
+    }
+
     kid->GetNextSibling(&kid);
   }
   return NS_ERROR_FAILURE;
@@ -571,7 +592,7 @@ void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext& aPresContext,
 
   // iterate children and for each row get its height
   PRInt32 numRows;
-  GetRowCount(numRows);
+  GetRowCount(numRows, PR_FALSE);
   PRInt32 *rowHeights = new PRInt32[numRows];
   nsCRT::memset (rowHeights, 0, numRows*sizeof(PRInt32));
 
@@ -583,16 +604,18 @@ void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext& aPresContext,
 
   // For row groups that are split across pages, the first row frame won't
   // necessarily be index 0
-  PRInt32 startRowIndex;
-  if (rowFrame) {
-    startRowIndex = ((nsTableRowFrame*)rowFrame)->GetRowIndex();
-  }
+  PRInt32 startRowIndex = -1;
+  
   while (nsnull != rowFrame)
   {
     const nsStyleDisplay *childDisplay;
     rowFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
     if (NS_STYLE_DISPLAY_TABLE_ROW == childDisplay->mDisplay)
     {
+      if (startRowIndex == -1) {
+        startRowIndex = ((nsTableRowFrame*)rowFrame)->GetRowIndex();
+      }
+
       // get the height of the tallest cell in the row (excluding cells that span rows)
       // XXX GetChildMaxTopMargin and GetChildMaxBottomMargin should be removed/simplified because
       // according to CSS, all table cells must have the same top/bottom and left/right margins.
@@ -612,6 +635,7 @@ void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext& aPresContext,
     // Get the next row
     rowFrame->GetNextSibling(&rowFrame);
   }
+  
 
   /* Step 2:  Now account for cells that span rows.
    *          A spanning cell's height is the sum of the heights of the rows it spans,
@@ -640,7 +664,13 @@ void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext& aPresContext,
     {
       const nsStyleDisplay *childDisplay;
       rowFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
-      if (NS_STYLE_DISPLAY_TABLE_ROW == childDisplay->mDisplay)
+      if (NS_STYLE_DISPLAY_TABLE_ROW_GROUP == childDisplay->mDisplay) {
+        // Only for the tree widget does this code fire.
+        nsSize rowGroupSize;
+        rowFrame->GetSize(rowGroupSize);
+        rowGroupHeight += rowGroupSize.height;
+      }
+      else if (NS_STYLE_DISPLAY_TABLE_ROW == childDisplay->mDisplay)
       {
         if (gsDebug) printf("TRGF CalcRowH: Step 2 for row %d (%p)...\n",
                             rowIndex + startRowIndex, rowFrame);
