@@ -498,7 +498,6 @@ docshell/build/Makefile
 MAKEFILES_webshell="
 webshell/Makefile
 webshell/public/Makefile
-webshell/src/Makefile
 webshell/tests/Makefile
 webshell/tests/viewer/Makefile
 webshell/tests/viewer/public/Makefile
