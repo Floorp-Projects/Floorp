@@ -992,20 +992,6 @@ function MsgPreviousFlaggedMessage()
 	GoNextMessage(nsMsgNavigationType.previousFlagged, true);
 }
 
-function MsgViewAllMsgs() 
-{
-	//dump("MsgViewAllMsgs\n");
-	if(gDBView)
-	{
-		gDBView.viewType = nsMsgViewType.eShowAllThreads;
-
-        var folder = GetSelectedFolder();
-        if(folder) {
-            folder.setAttribute("viewType", nsMsgViewType.eShowAllThreads);
-        }
-	}
-}
-
 function GetFolderNameFromUri(uri, outliner)
 {
 	var folderResource = RDF.GetResource(uri);
