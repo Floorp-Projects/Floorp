@@ -135,6 +135,110 @@ HTMLAnchorRule::List(FILE* out, PRInt32 aIndent) const
 }
 
 // -----------------------------------------------------------
+// this rule only applies in NavQuirks mode
+// -----------------------------------------------------------
+class TableBackgroundRule: public nsIStyleRule {
+public:
+  TableBackgroundRule(nsIHTMLStyleSheet* aSheet);
+  virtual ~TableBackgroundRule();
+
+  NS_DECL_ISUPPORTS
+
+  NS_IMETHOD Equals(const nsIStyleRule* aRule, PRBool& aResult) const;
+  NS_IMETHOD HashValue(PRUint32& aValue) const;
+  NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aSheet) const;
+
+  // Strength is an out-of-band weighting, always 0 here
+  NS_IMETHOD GetStrength(PRInt32& aStrength) const;
+
+  NS_IMETHOD MapFontStyleInto(nsIStyleContext* aContext,
+                              nsIPresContext* aPresContext);
+  NS_IMETHOD MapStyleInto(nsIStyleContext* aContext,
+                          nsIPresContext* aPresContext);
+
+  NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+
+  nsIHTMLStyleSheet*  mSheet; // not ref-counted, cleared by content
+};
+
+TableBackgroundRule::TableBackgroundRule(nsIHTMLStyleSheet* aSheet)
+{
+  NS_INIT_REFCNT();
+  mSheet = aSheet;
+}
+
+TableBackgroundRule::~TableBackgroundRule()
+{
+}
+
+NS_IMPL_ISUPPORTS(TableBackgroundRule, kIStyleRuleIID);
+
+NS_IMETHODIMP
+TableBackgroundRule::Equals(const nsIStyleRule* aRule, PRBool& aResult) const
+{
+  aResult = PRBool(this == aRule);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TableBackgroundRule::HashValue(PRUint32& aValue) const
+{
+  aValue = 0;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TableBackgroundRule::GetStyleSheet(nsIStyleSheet*& aSheet) const
+{
+  aSheet = mSheet;
+  return NS_OK;
+}
+
+// Strength is an out-of-band weighting, useful for mapping CSS ! important
+// always 0 here
+NS_IMETHODIMP
+TableBackgroundRule::GetStrength(PRInt32& aStrength) const
+{
+  aStrength = 0;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TableBackgroundRule::MapFontStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TableBackgroundRule::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext)
+{
+  nsStyleColor* styleColor;
+  styleColor = (nsStyleColor*)aContext->GetMutableStyleData(eStyleStruct_Color);
+
+  nsIStyleContext* parentContext = aContext->GetParent();
+  const nsStyleColor* parentStyleColor;
+  parentStyleColor = (const nsStyleColor*)parentContext->GetStyleData(eStyleStruct_Color);
+
+  if (!(parentStyleColor->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT)) {
+    styleColor->mBackgroundColor = parentStyleColor->mBackgroundColor;
+    styleColor->mBackgroundFlags &= ~NS_STYLE_BG_COLOR_TRANSPARENT;
+  }
+
+  if (!(parentStyleColor->mBackgroundFlags & NS_STYLE_BG_IMAGE_NONE)) {
+    styleColor->mBackgroundImage = parentStyleColor->mBackgroundImage;
+    styleColor->mBackgroundFlags &= ~NS_STYLE_BG_IMAGE_NONE;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TableBackgroundRule::List(FILE* out, PRInt32 aIndent) const
+{
+  return NS_OK;
+}
+
+// -----------------------------------------------------------
 
 class AttributeKey: public nsHashKey
 {
@@ -304,13 +408,14 @@ protected:
   PRUint32 mInHeap : 1;
   PRUint32 mRefCnt : 31;
 
-  nsIURL*             mURL;
-  nsIDocument*        mDocument;
-  HTMLAnchorRule*     mLinkRule;
-  HTMLAnchorRule*     mVisitedRule;
-  HTMLAnchorRule*     mActiveRule;
-  nsHashtable         mAttrTable;
-  nsIHTMLAttributes*  mRecycledAttrs;
+  nsIURL*              mURL;
+  nsIDocument*         mDocument;
+  HTMLAnchorRule*      mLinkRule;
+  HTMLAnchorRule*      mVisitedRule;
+  HTMLAnchorRule*      mActiveRule;
+  TableBackgroundRule* mTableBackgroundRule;
+  nsHashtable          mAttrTable;
+  nsIHTMLAttributes*   mRecycledAttrs;
 };
 
 
@@ -360,6 +465,8 @@ HTMLStyleSheetImpl::HTMLStyleSheetImpl(void)
     mRecycledAttrs(nsnull)
 {
   NS_INIT_REFCNT();
+  mTableBackgroundRule = new TableBackgroundRule(this);
+  NS_ADDREF(mTableBackgroundRule);
 }
 
 HTMLStyleSheetImpl::~HTMLStyleSheetImpl()
@@ -377,6 +484,11 @@ HTMLStyleSheetImpl::~HTMLStyleSheetImpl()
     mActiveRule->mSheet = nsnull;
     NS_RELEASE(mActiveRule);
   }
+  if (nsnull != mTableBackgroundRule) {
+    mTableBackgroundRule->mSheet = nsnull;
+    NS_RELEASE(mTableBackgroundRule);
+  }
+    
   NS_IF_RELEASE(mRecycledAttrs);
 }
 
@@ -502,6 +614,20 @@ PRInt32 HTMLStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
           }
         } // end active rule
       } // end A tag
+      // add the quirks background compatibility rule if in quirks mode
+      else if ((tag == nsHTMLAtoms::td) ||
+               (tag == nsHTMLAtoms::th) ||
+               (tag == nsHTMLAtoms::tr) ||
+               (tag == nsHTMLAtoms::thead) || // Nav4.X doesn't support row groups, but it is a lot
+               (tag == nsHTMLAtoms::tbody) || // easier passing from the table to rows this way
+               (tag == nsHTMLAtoms::tfoot)) {
+        nsCompatibility mode;
+        aPresContext->GetCompatibilityMode(&mode);
+        if (eCompatibility_NavQuirks == mode) {
+          aResults->AppendElement(mTableBackgroundRule);
+          matchCount++;
+        }
+      }
       NS_IF_RELEASE(tag);
     } // end html namespace
 
