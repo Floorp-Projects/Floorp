@@ -19,7 +19,7 @@ use MacCVS;
 use MANIFESTO;
 
 @ISA			= qw(Exporter);
-@EXPORT			= qw( Checkout BuildDist BuildProjects BuildCommonProjects BuildLayoutProjects);
+@EXPORT			= qw(Checkout BuildDist BuildProjects BuildCommonProjects BuildLayoutProjects);
 
 # NGLayoutBuildList builds the nglayout project
 # it is configured by setting the following variables in the caller:
@@ -290,6 +290,57 @@ sub BuildDist()
 
 
 #//--------------------------------------------------------------------------------------------------
+#// Build stub projects
+#//--------------------------------------------------------------------------------------------------
+
+sub BuildStubs()
+{
+
+	unless( $main::build{stubs} ) { return; }
+	_assertRightDirectory();
+
+	#//
+	#// Clean projects
+	#//
+	BuildProjectClean(":mozilla:lib:mac:MacMemoryAllocator:MemAllocator.mcp",	"Stubs");
+	BuildProjectClean(":mozilla:lib:mac:NSStdLib:NSStdLib.mcp",              	"Stubs");
+	BuildProjectClean(":mozilla:lib:mac:NSRuntime:NSRuntime.mcp",				"Stubs");
+	BuildProjectClean(":mozilla:cmd:macfe:projects:client:Client.mcp",    		"Stubs");
+}
+
+
+#//--------------------------------------------------------------------------------------------------
+#// Build one project, and make the alias. Parameters
+#// are project path, target name, make shlb alias (boolean), make xSYM alias (boolean)
+#// 
+#// Note that this routine assumes that the target name and the shared libary name
+#// are the same.
+#//--------------------------------------------------------------------------------------------------
+
+sub BuildOneProject($$$$$)
+{
+	my ($project_path, $target_name, $toc_file, $alias_shlb, $alias_xSYM) = @_;
+
+	# $D becomes a suffix to target names for selecting either the debug or non-debug target of a project
+	my($D) = $main::DEBUG ? "Debug" : "";
+	my($dist_dir) = _getDistDirectory();
+
+	my($project_dir) = $project_path;
+	$project_dir =~ s/:[^:]+$/:/;			# chop off leaf name
+
+	if ($toc_file ne "")
+	{
+		ReconcileProject("$project_path", "$project_dir$toc_file");
+	}
+	
+	BuildProject($project_path, $target_name);
+	
+	$alias_shlb ? MakeAlias("$project_dir$target_name", "$dist_dir") : 0;
+	$alias_xSYM ? MakeAlias("$project_dir$target_name.xSYM", "$dist_dir") : 0;
+}
+
+
+#//--------------------------------------------------------------------------------------------------
 #// Build common projects
 #//--------------------------------------------------------------------------------------------------
 
@@ -301,14 +352,6 @@ sub BuildCommonProjects()
 	# $D becomes a suffix to target names for selecting either the debug or non-debug target of a project
 	my($D) = $main::DEBUG ? "Debug" : "";
 	my($dist_dir) = _getDistDirectory();
-
-	#//
-	#// Clean projects
-	#//
-	Moz::BuildProjectClean(":mozilla:lib:mac:MacMemoryAllocator:MemAllocator.mcp",	"Stubs");
-	Moz::BuildProjectClean(":mozilla:lib:mac:NSStdLib:NSStdLib.mcp",              	"Stubs");
-	Moz::BuildProjectClean(":mozilla:lib:mac:NSRuntime:NSRuntime.mcp",				"Stubs");
-	Moz::BuildProjectClean(":mozilla:cmd:macfe:projects:client:Client.mcp",    		"Stubs");
 
 	#//
 	#// Stub libraries
@@ -326,56 +369,49 @@ sub BuildCommonProjects()
 	{
 		BuildProject(":mozilla:cmd:macfe:projects:interfaceLib:Interface.mcp",			"MacOS Interfaces");
 	}
-		
-	Moz::BuildProject(":mozilla:lib:mac:NSRuntime:NSRuntime.mcp",						"NSRuntime$D.shlb");
-	MakeAlias(":mozilla:lib:mac:NSRuntime:NSRuntime$D.shlb",							"$dist_dir");
-	$main::DEBUG ? MakeAlias(":mozilla:lib:mac:NSRuntime:NSRuntime$D.shlb.xSYM",		"$dist_dir") : 0;
 	
-	Moz::BuildProject(":mozilla:lib:mac:MoreFiles:build:MoreFilesPPC.mcp",				"MoreFiles$D.shlb");
-	MakeAlias(":mozilla:lib:mac:MoreFiles:build:MoreFiles$D.shlb",						"$dist_dir");
-	$main::DEBUG ? MakeAlias(":mozilla:lib:mac:MoreFiles:build:MoreFiles$D.shlb.xSYM",	"$dist_dir") : 0;
+	BuildOneProject(":mozilla:lib:mac:NSRuntime:NSRuntime.mcp",					"NSRuntime$D.shlb", "", 1, $main::ALIAS_SYM_FILES);
 
-	ReconcileProject(":mozilla:nsprpub:macbuild:NSPR20PPC.mcp", 						":mozilla:nsprpub:macbuild:NSPR20.toc");
-	BuildProject(":mozilla:nsprpub:macbuild:NSPR20PPC.mcp",								"NSPR20$D.shlb");
-	MakeAlias(":mozilla:nsprpub:macbuild:NSPR20$D.shlb",								"$dist_dir");
-	$main::DEBUG ? MakeAlias(":mozilla:nsprpub:macbuild:NSPR20$D.shlb.xSYM",			"$dist_dir") : 0;
+	BuildOneProject(":mozilla:lib:mac:MoreFiles:build:MoreFilesPPC.mcp",		"MoreFiles$D.shlb", "", 1, $main::ALIAS_SYM_FILES);
 
-	BuildProject(":mozilla:lib:mac:MacMemoryAllocator:MemAllocator.mcp",					"MemAllocator$D.shlb");
-	MakeAlias(":mozilla:lib:mac:MacMemoryAllocator:MemAllocator$D.shlb",					"$dist_dir");
-	$main::DEBUG ? MakeAlias(":mozilla:lib:mac:MacMemoryAllocator:MemAllocator$D.shlb.xSYM","$dist_dir") : 0;
-	
-	BuildProject(":mozilla:lib:mac:NSStdLib:NSStdLib.mcp",								"NSStdLib$D.shlb");
-	MakeAlias(":mozilla:lib:mac:NSStdLib:NSStdLib$D.shlb",								"$dist_dir");
-	$main::DEBUG ? MakeAlias(":mozilla:lib:mac:NSStdLib:NSStdLib$D.shlb.xSYM",			"$dist_dir") : 0;
+	BuildOneProject(":mozilla:nsprpub:macbuild:NSPR20PPC.mcp",					"NSPR20$D.shlb", "NSPR20.toc", 1, $main::ALIAS_SYM_FILES);
 
-	ReconcileProject(":mozilla:jpeg:macbuild:JPEG.mcp", 								":mozilla:jpeg:macbuild:JPEG.toc");
-	BuildProject(":mozilla:jpeg:macbuild:JPEG.mcp",										"JPEG$D.shlb");
-	MakeAlias(":mozilla:jpeg:macbuild:JPEG$D.shlb",										"$dist_dir");
-	$main::DEBUG ? MakeAlias(":mozilla:jpeg:macbuild:JPEG$D.shlb.xSYM",					"$dist_dir") : 0;
+	BuildOneProject(":mozilla:lib:mac:MacMemoryAllocator:MemAllocator.mcp",		"MemAllocator$D.shlb", "", 1, $main::ALIAS_SYM_FILES);
 
-	ReconcileProject(":mozilla:js:macbuild:JavaScriptPPC.mcp", 							":mozilla:js:macbuild:JavaScript.toc");
-	BuildProject(":mozilla:js:macbuild:JavaScriptPPC.mcp",								"JavaScriptNoJSJ$D.shlb");
-	MakeAlias(":mozilla:js:macbuild:JavaScript$D.shlb",									"$dist_dir");
-	$main::DEBUG ? MakeAlias(":mozilla:js:macbuild:JavaScript$D.shlb.xSYM",				"$dist_dir") : 0;
+	BuildOneProject(":mozilla:lib:mac:NSStdLib:NSStdLib.mcp",					"NSStdLib$D.shlb", "", 1, $main::ALIAS_SYM_FILES);
 
-	ReconcileProject(":mozilla:modules:zlib:macbuild:zlib.mcp", 						":mozilla:modules:zlib:macbuild:zlib.toc");
-	BuildProject(":mozilla:modules:zlib:macbuild:zlib.mcp",								"zlib$D.shlb");
-	MakeAlias(":mozilla:modules:zlib:macbuild:zlib$D.shlb",								"$dist_dir");
-	$main::DEBUG ? MakeAlias(":mozilla:modules:zlib:macbuild:zlib$D.shlb.xSYM",			"$dist_dir") : 0;
+	BuildOneProject(":mozilla:jpeg:macbuild:JPEG.mcp",							"JPEG$D.shlb", "JPEG.toc", 1, $main::ALIAS_SYM_FILES);
 
-	ReconcileProject(":mozilla:xpcom:macbuild:xpcomPPC.mcp", 							":mozilla:xpcom:macbuild:xpcom.toc");
-	BuildProject(":mozilla:xpcom:macbuild:xpcomPPC.mcp",								"xpcom$D.shlb");
-	MakeAlias(":mozilla:xpcom:macbuild:xpcom$D.shlb",									"$dist_dir");
-	$main::DEBUG ? MakeAlias(":mozilla:xpcom:macbuild:xpcom$D.shlb.xSYM",				"$dist_dir") : 0;
+	BuildOneProject(":mozilla:js:macbuild:JavaScript.mcp",						"JavaScript$D.shlb", "JavaScript.toc", 1, $main::ALIAS_SYM_FILES);
 
-	ReconcileProject(":mozilla:modules:libpref:macbuild:libpref.mcp", 					":mozilla:modules:libpref:macbuild:libpref.toc");
-	BuildProject(":mozilla:modules:libpref:macbuild:libpref.mcp",						"libpref$D.shlb");
-	MakeAlias(":mozilla:modules:libpref:macbuild:libpref$D.shlb",						"$dist_dir");
-	$main::DEBUG ? MakeAlias(":mozilla:modules:libpref:macbuild:libpref$D.shlb.xSYM",	"$dist_dir") : 0;
+	BuildOneProject(":mozilla:modules:zlib:macbuild:zlib.mcp",					"zlib$D.shlb", "zlib.toc", 1, $main::ALIAS_SYM_FILES);
+
+	BuildOneProject(":mozilla:xpcom:macbuild:xpcomPPC.mcp",						"xpcom$D.shlb", "xpcom.toc", 1, $main::ALIAS_SYM_FILES);
+
+	BuildOneProject(":mozilla:modules:libpref:macbuild:libpref.mcp",			"libpref$D.shlb", "libpref.toc", 1, $main::ALIAS_SYM_FILES);
+
+	BuildOneProject(":mozilla:lib:mac:PowerPlant:PowerPlant.mcp",				"PowerPlant$D.shlb", "", 1, $main::ALIAS_SYM_FILES);
+
+	BuildOneProject(":mozilla:base:macbuild:base.mcp",							"base$D.shlb", "base.toc", 1, $main::ALIAS_SYM_FILES);
+
+	BuildOneProject(":mozilla:modules:libutil:macbuild:libutil.mcp",			"libutil$D.shlb", "libutil.toc", 1, $main::ALIAS_SYM_FILES);
+
+	ReconcileProject(":mozilla:modules:libimg:macbuild:png.mcp", 				":mozilla:modules:libimg:macbuild:png.toc");
+	BuildProject(":mozilla:modules:libimg:macbuild:png.mcp",					"png$D.o");
+
+	BuildOneProject(":mozilla:modules:libimg:macbuild:libimg.mcp",				"libimg$D.shlb", "libimg.toc", 1, $main::ALIAS_SYM_FILES);
+
+	BuildOneProject(":mozilla:network:macbuild:network.mcp",					"NetworkModular$D.shlb", "network.toc", 1, $main::ALIAS_SYM_FILES);
+
+	BuildOneProject(":mozilla:rdf:macbuild:rdf.mcp",							"rdf$D.shlb", "rdf.toc", 1, $main::ALIAS_SYM_FILES);
 }
 
 
-sub BuildResourceAliases
+#//--------------------------------------------------------------------------------------------------
+#// Make resource aliases for one directory
+#//--------------------------------------------------------------------------------------------------
+
+sub BuildFolderResourceAliases($$)
 {
 	my($src_dir, $dest_dir) = @_;
 	
@@ -396,6 +432,44 @@ sub BuildResourceAliases
 
 
 #//--------------------------------------------------------------------------------------------------
+#// Make resource aliases
+#//--------------------------------------------------------------------------------------------------
+
+sub MakeResouceAliases()
+{
+	unless( $main::build{resources} ) { return; }
+	_assertRightDirectory();
+
+
+	# $D becomes a suffix to target names for selecting either the debug or non-debug target of a project
+	my($D) = $main::DEBUG ? "Debug" : "";
+	my($dist_dir) = _getDistDirectory();
+
+	#//
+	#// Make aliases of resource files
+	#//
+	my($resource_dir) = "$dist_dir" . "res:";
+	MakeAlias(":mozilla:layout:html:document:src:ua.css",								"$resource_dir");
+
+	my($html_dir) = "$resource_dir" . "html:";
+	MakeAlias(":mozilla:layout:html:base:src:broken-image.gif",							"$html_dir");
+
+	my($throbber_dir) = "$resource_dir" . "throbber:";
+	BuildFolderResourceAliases(":mozilla:xpfe:xpviewer:src:resources:throbber:",		"$throbber_dir");
+	
+	my($samples_dir) = "$resource_dir" . "samples:";
+	BuildFolderResourceAliases(":mozilla:webshell:tests:viewer:samples:",				"$samples_dir");
+
+	my($chrome_dir) = "$resource_dir" . "chrome:";
+	BuildFolderResourceAliases(":mozilla:xpfe:xpviewer:src:resources:chrome:",			"$chrome_dir");
+	
+	my($toolbar_dir) = "$resource_dir" . "toolbar:";
+	BuildFolderResourceAliases(":mozilla:xpfe:xpviewer:src:resources:toolbar:",			"$toolbar_dir");
+
+}
+
+
+#//--------------------------------------------------------------------------------------------------
 #// Build NGLayout
 #//--------------------------------------------------------------------------------------------------
 
@@ -408,26 +482,6 @@ sub BuildLayoutProjects()
 	my($D) = $main::DEBUG ? "Debug" : "";
 	my($dist_dir) = _getDistDirectory();
 	
-	#//
-	#// Make aliases of resource files
-	#//
-	my($resource_dir) = "$dist_dir" . "res:";
-	MakeAlias(":mozilla:layout:html:document:src:ua.css",								"$resource_dir");
-
-	my($html_dir) = "$resource_dir" . "html:";
-	MakeAlias(":mozilla:layout:html:base:src:broken-image.gif",							"$html_dir");
-
-	my($throbber_dir) = "$resource_dir" . "throbber:";
-	BuildResourceAliases(":mozilla:xpfe:xpviewer:src:resources:throbber:",				"$throbber_dir");
-	
-	my($samples_dir) = "$resource_dir" . "samples:";
-	BuildResourceAliases(":mozilla:webshell:tests:viewer:samples:",						"$samples_dir");
-
-	my($chrome_dir) = "$resource_dir" . "chrome:";
-	BuildResourceAliases(":mozilla:xpfe:xpviewer:src:resources:chrome:",				"$chrome_dir");
-	
-	my($toolbar_dir) = "$resource_dir" . "toolbar:";
-	BuildResourceAliases(":mozilla:xpfe:xpviewer:src:resources:toolbar:",				"$toolbar_dir");
 
 	
 	#//
@@ -452,88 +506,84 @@ sub BuildLayoutProjects()
 	#// Build Layout projects
 	#//
 
-	#// PowerPlant now used by widget, etc.
-	BuildProject(":mozilla:lib:mac:PowerPlant:PowerPlant.mcp",							"PowerPlant$D.shlb");
-	MakeAlias(":mozilla:lib:mac:PowerPlant:PowerPlant$D.shlb",							"$dist_dir");
-	$main::DEBUG ? MakeAlias(":mozilla:lib:mac:PowerPlant:PowerPlant$D.shlb.xSYM",		"$dist_dir") : 0;
+	BuildOneProject(":mozilla:htmlparser:macbuild:htmlparser.mcp",				"htmlparser$D.shlb", "htmlparser.toc", 1, $main::ALIAS_SYM_FILES);
 
-	ReconcileProject(":mozilla:base:macbuild:base.mcp", 								":mozilla:base:macbuild:base.toc");
-	BuildProject(":mozilla:base:macbuild:base.mcp",										"base$D.shlb");
-	MakeAlias(":mozilla:base:macbuild:base$D.shlb",										"$dist_dir");
-	$main::DEBUG ? MakeAlias(":mozilla:base:macbuild:base$D.shlb.xSYM",					"$dist_dir") : 0;
-	
-	ReconcileProject(":mozilla:modules:libutil:macbuild:libutil.mcp", 					":mozilla:modules:libutil:macbuild:libutil.toc");
-	BuildProject(":mozilla:modules:libutil:macbuild:libutil.mcp",						"libutil$D.shlb");
-	MakeAlias(":mozilla:modules:libutil:macbuild:libutil$D.shlb",						"$dist_dir");
-	$main::DEBUG ? MakeAlias(":mozilla:modules:libutil:macbuild:libutil$D.shlb.xSYM",	"$dist_dir") : 0;
+	BuildOneProject(":mozilla:dom:macbuild:dom.mcp",							"dom$D.shlb", "dom.toc", 1, $main::ALIAS_SYM_FILES);
 
-	ReconcileProject(":mozilla:modules:libimg:macbuild:png.mcp", 						":mozilla:modules:libimg:macbuild:png.toc");
-	BuildProject(":mozilla:modules:libimg:macbuild:png.mcp",							"png$D.o");
-	ReconcileProject(":mozilla:modules:libimg:macbuild:libimg.mcp", 					":mozilla:modules:libimg:macbuild:libimg.toc");
-	BuildProject(":mozilla:modules:libimg:macbuild:libimg.mcp",							"libimg$D.shlb");
-	MakeAlias(":mozilla:modules:libimg:macbuild:libimg$D.shlb",							"$dist_dir");
-	$main::DEBUG ? MakeAlias(":mozilla:modules:libimg:macbuild:libimg$D.shlb.xSYM",		"$dist_dir") : 0;
+	BuildOneProject(":mozilla:gfx:macbuild:gfx.mcp",							"gfx$D.shlb", "gfx.toc", 1, $main::ALIAS_SYM_FILES);
 
-	#// beard:  now depends on libimg.
-	ReconcileProject(":mozilla:network:macbuild:network.mcp", 							":mozilla:network:macbuild:network.toc");
-	BuildProject(":mozilla:network:macbuild:network.mcp",								"NetworkModular$D.shlb");
-	MakeAlias(":mozilla:network:macbuild:NetworkModular$D.shlb",						"$dist_dir");
-	$main::DEBUG ? MakeAlias(":mozilla:network:macbuild:NetworkModular$D.shlb",			"$dist_dir") : 0;
+	BuildOneProject(":mozilla:layout:macbuild:layout.mcp",						"layout$D.shlb", "layout.toc", 1, $main::ALIAS_SYM_FILES);
+	
+	BuildOneProject(":mozilla:view:macbuild:view.mcp",							"view$D.shlb", "view.toc", 1, $main::ALIAS_SYM_FILES);
+	
+	BuildOneProject(":mozilla:widget:macbuild:widget.mcp",						"widget$D.shlb", "widget.toc", 1, $main::ALIAS_SYM_FILES);
 
-	#// waterson: depends on NetworkModular and base. IMO we should move these to "common" projects
-	ReconcileProject(":mozilla:rdf:macbuild:rdf.mcp", 									":mozilla:rdf:macbuild:rdf.toc");
-	BuildProject(":mozilla:rdf:macbuild:rdf.mcp",										"rdf$D.shlb");
-	MakeAlias(":mozilla:rdf:macbuild:rdf$D.shlb",										"$dist_dir");
+	BuildOneProject(":mozilla:webshell:macbuild:webshell.mcp",					"webshell$D.shlb", "webshell.toc", 1, $main::ALIAS_SYM_FILES);
 	
-	ReconcileProject(":mozilla:htmlparser:macbuild:htmlparser.mcp", 					":mozilla:htmlparser:macbuild:htmlparser.toc");
-	BuildProject(":mozilla:htmlparser:macbuild:htmlparser.mcp",							"htmlparser$D.shlb");
-	MakeAlias(":mozilla:htmlparser:macbuild:htmlparser$D.shlb",							"$dist_dir");
-	$main::DEBUG ? MakeAlias(":mozilla:htmlparser:macbuild:htmlparser$D.shlb.xSYM",		"$dist_dir") : 0;
-	
-	ReconcileProject(":mozilla:dom:macbuild:dom.mcp", 									":mozilla:dom:macbuild:dom.toc");
-	BuildProject(":mozilla:dom:macbuild:dom.mcp",										"dom$D.shlb");
-	MakeAlias(":mozilla:dom:macbuild:dom$D.shlb",										"$dist_dir") ;
-	$main::DEBUG ? MakeAlias(":mozilla:dom:macbuild:dom$D.shlb.xSYM",					"$dist_dir") : 0;
-
-	ReconcileProject(":mozilla:gfx:macbuild:gfx.mcp", 									":mozilla:gfx:macbuild:gfx.toc");
-	BuildProject(":mozilla:gfx:macbuild:gfx.mcp",										"gfx$D.shlb");
-	MakeAlias(":mozilla:gfx:macbuild:gfx$D.shlb",										"$dist_dir");
-	$main::DEBUG ? MakeAlias(":mozilla:gfx:macbuild:gfx$D.shlb.xSYM",					"$dist_dir") : 0;
-	
-	ReconcileProject(":mozilla:layout:macbuild:layout.mcp", 							":mozilla:layout:macbuild:layout.toc");
-	BuildProject(":mozilla:layout:macbuild:layout.mcp",									"layout$D.shlb");
-	MakeAlias(":mozilla:layout:macbuild:layout$D.shlb",									"$dist_dir");
-	$main::DEBUG ? MakeAlias(":mozilla:layout:macbuild:layout$D.shlb.xSYM",				"$dist_dir") : 0;
-	
-	ReconcileProject(":mozilla:view:macbuild:view.mcp",									":mozilla:view:macbuild:view.toc");
-	BuildProject(":mozilla:view:macbuild:view.mcp",										"view$D.shlb");
-	MakeAlias(":mozilla:view:macbuild:view$D.shlb",										"$dist_dir");
-	$main::DEBUG ? MakeAlias(":mozilla:view:macbuild:view$D.shlb.xSYM",					"$dist_dir") : 0;
-
-	ReconcileProject(":mozilla:widget:macbuild:widget.mcp",								":mozilla:widget:macbuild:widget.toc");
-	BuildProject(":mozilla:widget:macbuild:widget.mcp",									"widget$D.shlb");
-	MakeAlias(":mozilla:widget:macbuild:widget$D.shlb",									"$dist_dir");
-	$main::DEBUG ? MakeAlias(":mozilla:widget:macbuild:widget$D.shlb.xSYM",				"$dist_dir") : 0;
-	
-	ReconcileProject(":mozilla:webshell:macbuild:webshell.mcp",							":mozilla:webshell:macbuild:webshell.toc");
-	BuildProject(":mozilla:webshell:macbuild:webshell.mcp",								"webshell$D.shlb");
-	MakeAlias(":mozilla:webshell:macbuild:webshell$D.shlb",								"$dist_dir");
-	$main::DEBUG ? MakeAlias(":mozilla:webshell:macbuild:webshell$D.shlb.xSYM",			"$dist_dir") : 0;
-	
-	ReconcileProject(":mozilla:webshell:tests:viewer:mac:viewer.mcp",					":mozilla:webshell:tests:viewer:mac:viewer.toc");
-	BuildProject(":mozilla:webshell:tests:viewer:mac:viewer.mcp",						"viewer$D");
-
-#	ReconcileProject(":mozilla:xpfe:macbuild:xpfeviewer.mcp",							":mozilla:xpfe:macbuild:xpfeviewer.toc");
-#	BuildProject(":mozilla:xpfe:macbuild:xpfeviewer.mcp",								"xpfeViewer$D");
-	
-	ReconcileProject(":mozilla:xpfe:appshell:macbuild:AppShell.mcp",					":mozilla:xpfe:appshell:macbuild:AppShell.toc");
-	BuildProject(":mozilla:xpfe:appshell:macbuild:AppShell.mcp",						"AppShell$D.shlb");
-	MakeAlias(":mozilla:xpfe:appshell:macbuild:AppShell$D.shlb",						"$dist_dir");
-	$main::DEBUG ? MakeAlias(":mozilla:xpfe:appshell:macbuild:AppShell$D.shlb.xSYM",	"$dist_dir") : 0;
-	
-	ReconcileProject(":mozilla:xpfe:bootstrap:macbuild:XPAppViewer.mcp",				":mozilla:xpfe:bootstrap:macbuild:XPAppViewer.toc");
-	BuildProject(":mozilla:xpfe:bootstrap:macbuild:XPAppViewer.mcp",					"XPAppViewer$D");
 }
+
+
+#//--------------------------------------------------------------------------------------------------
+#// Build Editor Projects
+#//--------------------------------------------------------------------------------------------------
+
+sub BuildEditorProjects()
+{
+	unless( $main::build{editor} ) { return; }
+	_assertRightDirectory();
+	
+	# $D becomes a suffix to target names for selecting either the debug or non-debug target of a project
+	my($D) = $main::DEBUG ? "Debug" : "";
+	my($dist_dir) = _getDistDirectory();
+
+	BuildOneProject(":mozilla:editor:txmgr:macbuild:txmgr.mcp",					"EditorTxmgr$D.shlb", "txmgr.toc", 1, $main::ALIAS_SYM_FILES);
+
+	BuildOneProject(":mozilla:editor:guimgr:macbuild:EditorGuiManager.mcp",		"EditorGuiManager$D.shlb", "EditorGuiManager.toc", 1, $main::ALIAS_SYM_FILES);
+
+	BuildOneProject(":mozilla:editor:macbuild:editor.mcp",						"EditorCore$D.shlb", "EditorCore.toc", 1, $main::ALIAS_SYM_FILES);
+
+}
+
+
+#//--------------------------------------------------------------------------------------------------
+#// Build Viewer Projects
+#//--------------------------------------------------------------------------------------------------
+
+sub BuildViewerProjects()
+{
+	unless( $main::build{viewer} ) { return; }
+	_assertRightDirectory();
+	
+	# $D becomes a suffix to target names for selecting either the debug or non-debug target of a project
+	my($D) = $main::DEBUG ? "Debug" : "";
+	my($dist_dir) = _getDistDirectory();
+
+	BuildOneProject(":mozilla:webshell:tests:viewer:mac:viewer.mcp",			"viewer$D.shlb", "viewer.toc", 0, 0);
+
+#	BuildOneProject(":mozilla:xpfe:macbuild:xpfeviewer.mcp",					"xpfeviewer$D.shlb", "xpfeviewer.toc", 0, 0);
+
+}
+
+
+#//--------------------------------------------------------------------------------------------------
+#// Build XPApp Projects
+#//--------------------------------------------------------------------------------------------------
+
+sub BuildXPAppProjects()
+{
+	unless( $main::build{xpapp} ) { return; }
+	_assertRightDirectory();
+
+	# $D becomes a suffix to target names for selecting either the debug or non-debug target of a project
+	my($D) = $main::DEBUG ? "Debug" : "";
+	my($dist_dir) = _getDistDirectory();
+
+	BuildOneProject(":mozilla:xpfe:appshell:macbuild:AppShell.mcp",				"AppShell$D.shlb", "AppShell.toc", 1, $main::ALIAS_SYM_FILES);
+
+	BuildOneProject(":mozilla:xpfe:bootstrap:macbuild:XPAppViewer.mcp",			"XPAppViewer$D.shlb", "XPAppViewer.toc", 0, 0);
+
+}
+
 
 
 #//--------------------------------------------------------------------------------------------------
@@ -542,6 +592,11 @@ sub BuildLayoutProjects()
 
 sub BuildProjects()
 {
+	BuildStubs();
 	BuildCommonProjects();
 	BuildLayoutProjects();
+	BuildEditorProjects();
+	MakeResouceAliases();
+	BuildViewerProjects();
+	BuildXPAppProjects();
 }
