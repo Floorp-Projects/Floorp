@@ -300,6 +300,25 @@ function Startup()
   // tasks BEFORE the browser window is shown.   
   var obs = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
   obs.notifyObservers(null, "browser-window-before-show", "");
+
+  // Set a sane starting width/height for all resolutions on new profiles.
+  if (!document.documentElement.hasAttribute("width")) {
+    var defaultWidth = 994, defaultHeight;
+    if (screen.availHeight <= 600) {
+      document.documentElement.setAttribute("sizemode", "maximized");
+      defaultWidth = 610;
+      defaultHeight = 450;
+    }
+    else {
+      // Create a narrower window for large or wide-aspect displays, to suggest
+      // side-by-side page view. 
+      if ((screen.availWidth / 2) >= 800)
+        defaultWidth = (screen.availWidth / 2) - 20;
+      defaultHeight = screen.availHeight - 10;
+    }
+    document.documentElement.setAttribute("width", defaultWidth);
+    document.documentElement.setAttribute("height", defaultHeight);
+  }
   
   setTimeout(delayedStartup, 0);
 }
