@@ -38,7 +38,7 @@ class nsAppShell : public nsIAppShell
     // nsIAppShellInterface
   
     NS_IMETHOD            Create(int* argc, char ** argv);
-    virtual nsresult      Run(); 
+    NS_IMETHOD            Run(); 
     NS_IMETHOD            Spinup() { return NS_OK; }
     NS_IMETHOD            Spindown() { return NS_OK; }
     NS_IMETHOD            PushThreadEventQueue();
