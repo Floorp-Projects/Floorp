@@ -37,9 +37,9 @@ MSG_ViewIndex nsMsgKeyArray::FindIndex(MessageKey key)
 
 void nsMsgKeyArray::SetArray(MessageKey* pData, int numElements, int numAllocated)
 {
-	PR_ASSERT(pData != NULL);
-	PR_ASSERT(numElements >= 0);
-	PR_ASSERT(numAllocated >= numElements);
+	NS_ASSERTION(pData != NULL, "storage is NULL");
+	NS_ASSERTION(numElements >= 0, "negative number of elements");
+	NS_ASSERTION(numAllocated >= numElements, "num elements more than array size");
 	
 	delete [] m_pData;			// delete previous array
 	m_pData = pData;			// set new array

@@ -500,7 +500,7 @@ nsNewsSet::Optimize()
 			/* Copy it over */
 			*output_tail++ = *input_tail++;
 		}
-		PR_ASSERT(output_tail < output_end);
+		NS_ASSERTION(output_tail < output_end, "invalid end of output string");
 		if (output_tail >= output_end) {
 			PR_Free(output_data);
 			return FALSE;
@@ -641,7 +641,7 @@ nsNewsSet::Add(PRInt32 number)
 	tail = head;
 	end = head + size;
 
-	PR_ASSERT (number >= 0);
+	NS_ASSERTION (number >= 0, "can't have negative items");
 	if (number < 0)
 		return 0;
 
@@ -876,7 +876,7 @@ msg_emit_range(PRInt32* tmp, PRInt32 a, PRInt32 b)
 	if (a == b) {
 		*tmp++ = a;
 	} else {
-		PR_ASSERT(a < b && a >= 0);
+		NS_ASSERTION(a < b && a >= 0, "range is out of order");
 		*tmp++ = -(b - a);
 		*tmp++ = a;
 	}
@@ -899,7 +899,7 @@ nsNewsSet::AddRange(PRInt32 start, PRInt32 end)
 	/* We're going to modify the set, so invalidate the cache. */
 	m_cached_value = -1;
 
-	PR_ASSERT(start <= end);
+	NS_ASSERTION(start <= end, "invalid range");
 	if (start > end) return -1;
 
 	if (start == end) {
@@ -973,7 +973,7 @@ nsNewsSet::CountMissingInRange(PRInt32 range_start, PRInt32 range_end)
 	PRInt32 *tail;
 	PRInt32 *end;
 
-	PR_ASSERT (range_start >= 0 && range_end >= 0 && range_end >= range_start);
+	NS_ASSERTION (range_start >= 0 && range_end >= 0 && range_end >= range_start, "invalid range");
 	if (range_start < 0 || range_end < 0 || range_end < range_start) return -1;
 
 	head = m_data;
@@ -999,7 +999,7 @@ nsNewsSet::CountMissingInRange(PRInt32 range_start, PRInt32 range_end)
 			if (*tail >= range_start && *tail <= range_end) count--;
 			tail++;
 		}
-		PR_ASSERT (count >= 0);
+		NS_ASSERTION (count >= 0, "invalid count");
 	}
 	return count;
 }
@@ -1018,12 +1018,12 @@ nsNewsSet::FirstMissingRange(PRInt32 min, PRInt32 max,
 	PRInt32 a;
 	PRInt32 b;
 
-	PR_ASSERT(first && last);
+	NS_ASSERTION(first && last, "invalid parameter");
 	if (!first || !last) return -1;
 
 	*first = *last = 0;
 
-	PR_ASSERT(min <= max && min > 0);
+	NS_ASSERTION(min <= max && min > 0, "invalid min or max param");
 	if (min > max || min <= 0) return -1;
 
 	size = m_length;
@@ -1078,13 +1078,13 @@ nsNewsSet::LastMissingRange(PRInt32 min, PRInt32 max,
   PRInt32 a;
   PRInt32 b;
 
-  PR_ASSERT(first && last);
+  NS_ASSERTION(first && last, "invalid null param");
   if (!first || !last) return -1;
 
   *first = *last = 0;
 
 
-  PR_ASSERT(min <= max && min > 0);
+  NS_ASSERTION(min <= max && min > 0, "invalid min or max");
   if (min > max || min <= 0) return -1;
 
   size = m_length;
