@@ -67,6 +67,26 @@ static PRBool GetCurrentAppDirString(xptiInterfaceInfoManager* aMgr, char** aStr
     return PR_FALSE;
 }
 
+static PRBool CurrentAppDirMatchesPersistentDescriptor(xptiInterfaceInfoManager* aMgr, const char* inStr)
+{
+    nsCOMPtr<nsILocalFile> appDir;
+    aMgr->GetApplicationDir(getter_AddRefs(appDir));
+
+    nsCOMPtr<nsILocalFile> descDir;
+    nsresult rv = NS_NewLocalFile(nsnull, false, getter_AddRefs(descDir));
+    if (NS_FAILED(rv))
+        return PR_FALSE;
+
+    rv = descDir->SetPersistentDescriptor(inStr);
+    if (NS_FAILED(rv))
+        return PR_FALSE;
+    
+    PRBool matches;
+    rv = appDir->Equals(descDir, &matches);
+    return (NS_SUCCEEDED(rv) && matches);
+}
+
+
 PR_STATIC_CALLBACK(PRIntn)
 xpti_InterfaceWriter(PLHashEntry *he, PRIntn i, void *arg)
 {
@@ -439,7 +459,6 @@ PRBool xptiManifest::Read(xptiInterfaceInfoManager* aMgr,
                           xptiWorkingSet*           aWorkingSet)
 {
     int i;
-    nsXPIDLCString appDirString;
     char* whole = nsnull;
     PRBool succeeded = PR_FALSE;
     PRUint32 flen;
@@ -520,8 +539,7 @@ PRBool xptiManifest::Read(xptiInterfaceInfoManager* aMgr,
     if(0 != PL_strcmp(values[1], g_TOKEN_AppDir))
         goto out;
 
-    GetCurrentAppDirString(aMgr, getter_Copies(appDirString));
-    if(!appDirString || 0 != PL_strcmp(appDirString, values[2]))
+    if(!CurrentAppDirMatchesPersistentDescriptor(aMgr, values[2]))
         goto out;
 
     // Look for "Directories" section
@@ -559,7 +577,7 @@ PRBool xptiManifest::Read(xptiInterfaceInfoManager* aMgr,
             goto out;
 
         // directoryname
-        if(!aWorkingSet->DirectoryAtHasPersistentDescriptor(i, values[1]))
+        if(!aWorkingSet->DirectoryAtMatchesPersistentDescriptor(i, values[1]))
             goto out;    
     }
 

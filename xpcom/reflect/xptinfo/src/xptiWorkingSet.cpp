@@ -353,18 +353,25 @@ PRBool xptiWorkingSet::FindDirectoryOfFile(nsILocalFile* file, PRUint32* index)
     return FindDirectory(dir, index);
 }
 
-PRBool xptiWorkingSet::DirectoryAtHasPersistentDescriptor(PRUint32 i, 
-                                                          const char* desc)
+PRBool xptiWorkingSet::DirectoryAtMatchesPersistentDescriptor(PRUint32 i, 
+                                                          const char* inDesc)
 {
     nsCOMPtr<nsILocalFile> dir;
     GetDirectoryAt(i, getter_AddRefs(dir));
     if(!dir)
         return PR_FALSE;
 
-    nsXPIDLCString str;
-    if(NS_FAILED(dir->GetPersistentDescriptor(getter_Copies(str))))
+    nsCOMPtr<nsILocalFile> descDir;
+    nsresult rv = NS_NewLocalFile(nsnull, false, getter_AddRefs(descDir));
+    if (NS_FAILED(rv))
+        return PR_FALSE;
+
+    rv = descDir->SetPersistentDescriptor(inDesc);
+    if (NS_FAILED(rv))
         return PR_FALSE;
     
-    return 0 == PL_strcmp(desc, str);
+    PRBool matches;
+    rv = dir->Equals(descDir, &matches);
+    return (NS_SUCCEEDED(rv) && matches);
 }
 

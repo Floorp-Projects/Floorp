@@ -387,7 +387,7 @@ public:
     nsresult GetDirectoryAt(PRUint32 i, nsILocalFile** dir);
     PRBool   FindDirectory(nsILocalFile* dir, PRUint32* index);
     PRBool   FindDirectoryOfFile(nsILocalFile* file, PRUint32* index);
-    PRBool   DirectoryAtHasPersistentDescriptor(PRUint32 i, const char* desc);
+    PRBool   DirectoryAtMatchesPersistentDescriptor(PRUint32 i, const char* desc);
 
     // Arena stuff...
 
