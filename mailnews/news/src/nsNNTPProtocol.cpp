@@ -1518,13 +1518,8 @@ PRInt32 nsNNTPProtocol::NewsResponse(nsIInputStream * inputStream, PRUint32 leng
     /* almost correct */
     if(status > 1)
 	{
-#ifdef UNREADY_CODE
-        ce->bytes_received += status;
-        FE_GraphProgress(ce->window_id, ce->URL_s, ce->bytes_received, status, ce->URL_s->content_length);
-#else
 		mBytesReceived += status;
         mBytesReceivedSinceLastStatusUpdate += status;
-#endif
 	}
 
     m_previousResponseCode = m_responseCode;
@@ -1583,9 +1578,6 @@ PRInt32 nsNNTPProtocol::LoginResponse()
 		AlertError(MK_NNTP_ERROR_MESSAGE, m_responseText);
 
     	m_nextState = NNTP_ERROR;
-#ifdef UNREADY_CODE
-        cd->control_con->prev_cache = PR_FALSE; /* to keep if from reconnecting */
-#endif
         return MK_BAD_NNTP_CONNECTION;
 	}
 
@@ -2032,15 +2024,6 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommand(nsIURI * url)
 	    }
 		else
 		{
-#ifdef UNREADY_CODE
-#ifdef BUG_21013
-			if(!FE_Confirm(ce->window_id, XP_GetString(XP_CONFIRM_SAVE_NEWSGROUPS)))
-	  		  {
-				m_nextState = NEWS_ERROR;
-				return(MK_INTERRUPTED);
-	  		  }
-#endif /* BUG_21013 */
-#endif
 			PRBool xactive=PR_FALSE;
 			rv = m_nntpServer->QueryExtension("XACTIVE",&xactive);
 			if (NS_SUCCEEDED(rv) && xactive)
@@ -2148,11 +2131,6 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommand(nsIURI * url)
 			}
 		}
 		m_nextState = NNTP_RESPONSE;
-#ifdef UNREADY_CODE
-		if (PL_strstr(ce->URL_s->address, "PROFILE NEW"))
-			m_nextStateAfterResponse = NNTP_PROFILE_ADD_RESPONSE;
-		else
-#endif
 			m_nextStateAfterResponse = NNTP_PROFILE_DELETE_RESPONSE;
 	}
 	else if (m_typeWanted == IDS_WANTED)
@@ -2327,15 +2305,8 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommandResponse()
   
   /* start the graph progress indicator
   */
-#ifdef UNREADY_CODE
-  FE_GraphProgressInit(ce->window_id, ce->URL_s, ce->URL_s->content_length);
-#else
   NNTP_LOG_NOTE("start the graph progress indicator");
-#endif
   SetFlag(NNTP_DESTROY_PROGRESS_GRAPH);
-#ifdef UNREADY_CODE
-  m_originalContentLength = ce->URL_s->content_length;
-#endif
   return(status);
 }
 
@@ -2421,39 +2392,9 @@ PRInt32 nsNNTPProtocol::BeginArticle()
 
   /*  Set up the HTML stream
    */ 
-#ifdef UNREADY_CODE
-  ce->URL_s->content_type = nsCRT::strdup (MESSAGE_RFC822);
-#endif
 
 #ifdef NO_ARTICLE_CACHEING
   ce->format_out = CLEAR_CACHE_BIT (ce->format_out);
-#endif
-
-  if (m_typeWanted == CANCEL_WANTED)
-  {
-#ifdef UNREADY_CODE
-	  NS_ASSERTION(ce->format_out == FO_PRESENT, "format_out != FO_PRESENT");
-	  ce->format_out = FO_PRESENT;
-#endif
-  }
-
-  /* Only put stuff in the fe_data if this URL is going to get
-	 passed to MIME_MessageConverter(), since that's the only
-	 thing that knows what to do with this structure. */
-#ifdef UNREADY_CODE
-  if (CLEAR_CACHE_BIT(ce->format_out) == FO_PRESENT)
-	{
-	  status = net_InitializeNewsFeData (ce);
-	  if (status < 0)
-		{
-		  /* #### what error message? */
-		  return status;
-		}
-	}
-
-  cd->stream = NET_StreamBuilder(ce->format_out, ce->URL_s, ce->window_id);
-  NS_ASSERTION (cd->stream, "no stream");
-  if (!cd->stream) return -1;
 #endif
 
   // if we have a channel listener,
@@ -2930,15 +2871,9 @@ PRInt32 nsNNTPProtocol::BeginNewsgroups()
 {
 	PRInt32 status = 0; 
 	m_nextState = NNTP_NEWGROUPS;
-#ifdef UNREADY_CODE
-	NET_Progress(ce->window_id, XP_GetString(XP_PROGRESS_RECEIVE_NEWSGROUP));
-
-	ce->bytes_received = 0;
-#else
 	mBytesReceived = 0;
     mBytesReceivedSinceLastStatusUpdate = 0;
     m_startTime = PR_Now();
-#endif
 	return(status);
 }
 
@@ -3076,10 +3011,7 @@ PRInt32 nsNNTPProtocol::BeginReadNewsList()
     m_startTime = PR_Now();
 
 	PRInt32 status = 0;
-#ifdef UNREADY_CODE
-	NET_Progress(ce->window_id, XP_GetString(XP_PROGRESS_RECEIVE_NEWSGROUP));
-#endif
-	 
+
     return(status);
 }
 
@@ -3799,34 +3731,6 @@ PRInt32 nsNNTPProtocol::PostDataResponse()
 	if (m_responseCode != MK_NNTP_RESPONSE_POST_OK) 
 	{
 	  AlertError(MK_NNTP_ERROR_MESSAGE,m_responseText);
-#ifdef UNREADY_CODE
-	  ce->URL_s->error_msg =
-		NET_ExplainErrorDetails(MK_NNTP_ERROR_MESSAGE, 
-								m_responseText ? m_responseText : "");
-	  if (m_responseCode == MK_NNTP_RESPONSE_POST_FAILED 
-		  && MSG_GetPaneType(cd->pane) == MSG_COMPOSITIONPANE
-		  && MSG_IsDuplicatePost(cd->pane) &&
-		  MSG_GetCompositionMessageID(cd->pane)) {
-		/* The news server won't let us post.  We suspect that we're submitting
-		   a duplicate post, and that's why it's failing.  So, let's go see
-		   if there really is a message out there with the same message-id.
-		   If so, we'll just silently pretend everything went well. */
-		PR_snprintf(cd->output_buffer, OUTPUT_BUFFER_SIZE, "STAT %s" CRLF,
-					MSG_GetCompositionMessageID(cd->pane));
-		m_nextState = NNTP_RESPONSE;
-		m_nextStateAfterResponse = NNTP_CHECK_FOR_MESSAGE;
-		NNTP_LOG_WRITE(cd->output_buffer);
-		return (int) NET_BlockingWrite(ce->socket, cd->output_buffer,
-									   PL_strlen(cd->output_buffer));
-	  }
-
-	  MSG_ClearCompositionMessageID(cd->pane); /* So that if the user tries
-													  to just post again, we
-													  won't immediately decide
-													  that this was a duplicate
-													  message and ignore the
-													  error. */
-#endif
 	  m_nextState = NEWS_ERROR;
 	  return(MK_NNTP_ERROR_MESSAGE);
 	}
@@ -3847,9 +3751,6 @@ PRInt32 nsNNTPProtocol::CheckForArticle()
 	/* The article isn't there, so the failure we had earlier wasn't due to
 	   a duplicate message-id.  Return the error from that previous
 	   posting attempt (which is already in ce->URL_s->error_msg). */
-#ifdef UNREADY_CODE
-	MSG_ClearCompositionMessageID(cd->pane);
-#endif
 	return MK_NNTP_ERROR_MESSAGE;
   }
 }

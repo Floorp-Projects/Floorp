@@ -1292,44 +1292,6 @@ PRInt32 nsSmtpProtocol::SendDataResponse()
     m_urlErrorState = NS_ERROR_BUT_DONT_SHOW_ALERT;
     return(NS_ERROR_SENDING_DATA_COMMAND);
 	}
-#ifdef UNREADY_CODE
-#ifdef XP_UNIX
-	{
-	  const char * FE_UsersRealMailAddress(void); /* definition */
-	  const char *real_name;
-	  char *s = 0;
-	  PRBool suppress_sender_header = PR_FALSE;
-
-	  PREF_GetBoolPref ("mail.suppress_sender_header", &suppress_sender_header);
-	  if (!suppress_sender_header)
-	    {
-	      real_name =  FE_UsersRealMailAddress();
-	      s = (real_name ? MSG_MakeFullAddress (NULL, real_name) : 0);
-	      if (real_name && !s)
-		{
-               		m_urlErrorState = NS_ERROR_COULD_NOT_GET_UID;
-               		return(NS_ERROR_COULD_NOT_GET_UID);
-		}
-	      if(real_name)
-		{
-		  char buffer[512];
-		  PR_snprintf(buffer, sizeof(buffer), "Sender: %.256s" CRLF, real_name);
-		  NS_MsgSACat(command, buffer);
-		  if(!command)
-		    {
-		      m_urlErrorState = NS_ERROR_OUT_OF_MEMORY;
-		      return(NS_ERROR_OUT_OF_MEMORY);
-		    }
-	           
-	      status = (int) NET_BlockingWrite(CE_SOCK, command, PL_strlen(command));   
-	      if(status < 0)
-		{
-		}
-        }
-	    }
-	}
-#endif /* XP_UNIX */
-#endif /* UNREADY_CODE */
 
 	PR_FREEIF(command);
 
@@ -1338,19 +1300,6 @@ PRInt32 nsSmtpProtocol::SendDataResponse()
 
     UpdateStatus(SMTP_DELIV_MAIL);
 
-#ifdef UNREADY_CODE
-	/* get the size of the message */
-	if(CE_URL_S->post_data_is_file)
-	  {
-		XP_StatStruct stat_entry;
-
-		if(-1 != XP_Stat(CE_URL_S->post_data,
-                         &stat_entry,
-                         xpFileToPost))
-			m_totalMessageSize = stat_entry.st_size;
-	  }
-	else
-#endif /* UNREADY_CODE */
 	  {
 //		m_runningURL->GetBodySize(&m_totalMessageSize);
 	  }
@@ -1405,21 +1354,6 @@ PRInt32 nsSmtpProtocol::SendPostData()
 	   when all the data has arrived.  At the end, we want to show the
 	   "message sent; waiting for reply" status; FE_GraphProgress gets in
 	   the way of that.  See bug #23414. */
-
-#ifdef UNREADY_CODE
-	unsigned long curtime;
-	curtime = XP_TIME();
-	if (curtime != m_LastTime) {
-		FE_Progress(CE_WINDOW_ID, XP_ProgressText(m_totalMessageSize,
-												  m_totalAmountWritten,
-												  0, 0));
-		m_LastTime = curtime;
-	}
-
-	if(m_totalMessageSize)
-		FE_SetProgressBarPercent(CE_WINDOW_ID,
-						  	 m_totalAmountWritten*100/m_totalMessageSize);
-#endif /* UNREADY_CODE */
 
     return(status);
 }
