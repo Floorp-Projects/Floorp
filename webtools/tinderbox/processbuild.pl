@@ -81,7 +81,7 @@ if (defined $warning_buildnames_pat
 #   Look for build name in scrapedata.pl.
 require "$tinderbox{tree}/scrapebuilds.pl" if -r "$tinderbox{tree}/scrapebuilds.pl";
 if ($scrape_builds->{$tinderbox{build}}
-    and $tinderbox{status} eq 'success') {
+    and $tinderbox{status} ne 'building') {
   system("./scrape.pl", "$tinderbox{tree}", "$tinderbox{logfile}");
 }
 
