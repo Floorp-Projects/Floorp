@@ -36,6 +36,8 @@ nsConsoleService::nsConsoleService()
     mFull = PR_FALSE;
  
     // XXX grab this from a pref!
+    // hm, but worry about circularity, bc we want to be able to report
+    // prefs errs...
     mBufferSize = 250;
 
     // Any reasonable way to deal with failure of the below two?
@@ -114,10 +116,19 @@ nsConsoleService::GetMessageArray(nsIConsoleMessage ***messages, PRUint32 *count
     nsIConsoleMessage **messageArray;
 
     if (mCurrent == 0 && !mFull) {
-        // not sure how to return a 0-length array...
-        *messages = nsnull;
+        // Make a 1-length output array so that nobody gets confused,
+        // and return 0 count.
+        // Hopefully this will (XXX test me) result in a 0-length
+        // array object on the script end.
+        
+        // XXX if it works, remove the try/catch in console.js.
+        messageArray = (nsIConsoleMessage **)
+            nsAllocator::Alloc(sizeof (nsIConsoleMessage *));
+        *messageArray = nsnull;
+        *messages = messageArray;
         *count = 0;
-        return NS_ERROR_FAILURE;
+        
+        return NS_OK;
     }
 
     PRUint32 resultSize = mFull ? mBufferSize : mCurrent;

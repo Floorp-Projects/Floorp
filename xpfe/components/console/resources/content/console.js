@@ -39,10 +39,6 @@ var consoleListener = {
  */
 function onLoadJSConsole() 
 {
-
-    dump('\n\nconsole loading\n\n');
-
-
     try {
         var cs_class = Components.classes['consoleservice'];
         var cs_iface = Components.interfaces.nsIConsoleService;
@@ -58,28 +54,22 @@ function onLoadJSConsole()
         return;
     }
 
-
-    dump('\n\ngot console service\n\n');
-
     var o1 = {}; // Throwaway references to support 'out' parameters.
     var o2 = {};
 
     var messages;
-    try {
-        cs.getMessageArray(o1, o2);
-        messages = o1.value;
-    } catch (exn) {
-        // getMessageArray throws an exception when there are no elements.
+    cs.getMessageArray(o1, o2);
+    messages = o1.value;
+
+    // In case getMessageArray returns 0-length array as null.
+    if (messages == null)
         messages = [];
-    }
     
     for (i = 0; i < messages.length; i++) {
         appendMessage(messages[i]);
     }
 
-    dump('\n\nregistering...\n');
     cs.registerListener(consoleListener);
-    dump('registered listener\n\n');
 }
 
 function onUnloadJSConsole()
@@ -114,7 +104,6 @@ function appendMessage(messageObject)
     e.appendChild(t);
     c.appendChild(e);
 }
-
 
 // XXX q: if window is open, does it grow forever?  Is that OK?
 // or should it do its own retiring?
