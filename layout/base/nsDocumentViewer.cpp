@@ -19,6 +19,7 @@
  *
  * Contributor(s):
  *   Dan Rosen <dr@netscape.com>
+ *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
  */
 
 #include "nscore.h"
@@ -118,6 +119,13 @@ static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 #include "nsIDOMHTMLFrameSetElement.h"
 #include "nsIDOMHTMLIFrameElement.h"
 
+// Print error dialog
+#include "nsIPrompt.h"
+#include "nsIWindowWatcher.h"
+#include "nsIStringBundle.h"
+
+#define NS_ERROR_GFX_PRINTER_BUNDLE_URL "chrome://communicator/locale/printing.properties"
+
 // FrameSet
 #include "nsINodeInfo.h"
 #include "nsIDocument.h"
@@ -131,15 +139,11 @@ static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 #include "nsIDOMFocusListener.h"
 #include "nsISelectionController.h"
 
-#include "nsISound.h"
-
 #include "nsITransformMediator.h"
 
 #ifdef IBMBIDI
 #include "nsIUBidiUtils.h"
 #endif
-
-static NS_DEFINE_IID(kSoundCID,NS_SOUND_CID);
 
 static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kPresShellCID, NS_PRESSHELL_CID);
@@ -147,7 +151,7 @@ static NS_DEFINE_CID(kGalleyContextCID,  NS_GALLEYCONTEXT_CID);
 static NS_DEFINE_CID(kPrintContextCID,  NS_PRINTCONTEXT_CID);
 static NS_DEFINE_CID(kStyleSetCID,  NS_STYLESET_CID);
 
-PRBool  gCurrentlyPrinting = PR_FALSE;
+static PRBool gCurrentlyPrinting = PR_FALSE;
 
 #ifdef NS_DEBUG
 
@@ -170,11 +174,10 @@ PRBool  gCurrentlyPrinting = PR_FALSE;
 #endif
 #define PRT_YESNO(_p) ((_p)?"YES":"NO")
 
-const char * gFrameTypesStr[]       = {"eDoc", "eFrame", "eIFrame", "eFrameSet"};
-const char * gPrintFrameTypeStr[]   = {"kNoFrames", "kFramesAsIs", "kSelectedFrame", "kEachFrameSep"};
-const char * gFrameHowToEnableStr[] = {"kFrameEnableNone", "kFrameEnableAll", "kFrameEnableAsIsAndEach"};
-const char * gPrintRangeStr[]       = {"kRangeAllPages", "kRangeSpecifiedPageRange", "kRangeSelection", "kRangeFocusFrame"};
-
+static const char * gFrameTypesStr[]       = {"eDoc", "eFrame", "eIFrame", "eFrameSet"};
+static const char * gPrintFrameTypeStr[]   = {"kNoFrames", "kFramesAsIs", "kSelectedFrame", "kEachFrameSep"};
+static const char * gFrameHowToEnableStr[] = {"kFrameEnableNone", "kFrameEnableAll", "kFrameEnableAsIsAndEach"};
+static const char * gPrintRangeStr[]       = {"kRangeAllPages", "kRangeSpecifiedPageRange", "kRangeSelection", "kRangeFocusFrame"};
 
 
 #define PRINT_DEBUG_MSG1(_msg1) fprintf(mPrt->mDebugFD, (_msg1)); 
@@ -494,6 +497,9 @@ private:
                                PRUint32         aDelay);
 
   void PrepareToStartLoad(void);
+  
+  // Misc
+  void ShowPrintErrorDialog(nsresult printerror);
 
 protected:
   // IMPORTANT: The ownership implicit in the following member
@@ -4252,7 +4258,7 @@ DocumentViewerImpl::IsThereARangeSelection(nsIDOMWindowInternal * aDOMWin)
   }
   return PR_FALSE;
 }
-
+   
 /** ---------------------------------------------------
  *  See documentation above in the nsIContentViewerfile class definition
  *	@update 01/24/00 dwc
@@ -4266,17 +4272,15 @@ nsresult rv;
   // the reason we check here is because this method can be called while 
   // another is still in here (the printing dialog is a good example).
   // the only time we can print more than one job at a time is the regression tests
-  if(gCurrentlyPrinting) {
-    // Beep at the user, let them know we are not ready to print.
-    nsCOMPtr<nsISound> soundInterface( do_CreateInstance(kSoundCID, &rv) );
-    if (NS_SUCCEEDED(rv) && (soundInterface != nsnull)){
-      soundInterface->Beep();
-    }
-    return NS_ERROR_FAILURE;
-  } else {
-    gCurrentlyPrinting = PR_TRUE;
+  if (gCurrentlyPrinting) {
+    // Let the user know we are not ready to print.
+    rv = NS_ERROR_NOT_AVAILABLE;
+    ShowPrintErrorDialog(rv);
+    return rv;
   }
-
+  
+  // Let's print ...
+  gCurrentlyPrinting = PR_TRUE;
 
   mPrt = new PrintData();
   if (mPrt == nsnull) {
@@ -4370,11 +4374,11 @@ nsresult rv;
   }
 #endif
 
+  /* create factory (incl. create print dialog) */
   nsCOMPtr<nsIDeviceContextSpecFactory> factory =
-          do_CreateInstance(kDeviceContextSpecFactoryCID);
-
-  if (factory) {
-
+          do_CreateInstance(kDeviceContextSpecFactoryCID, &rv);
+          
+  if (NS_SUCCEEDED(rv)) {
 #ifdef DEBUG_dcone
     printf("PRINT JOB STARTING\n");
 #endif
@@ -4384,24 +4388,27 @@ nsresult rv;
     mPrt->mPrintDC = nsnull; // XXX why?
     mPrt->mFilePointer = aFile;
 
-    factory->CreateDeviceContextSpec(mWindow, devspec, aSilent);
-    if (nsnull != devspec) {
-      mPresContext->GetDeviceContext(getter_AddRefs(dx));
-      rv = dx->GetDeviceContextFor(devspec, *getter_AddRefs(mPrt->mPrintDC)); 
+    rv = factory->CreateDeviceContextSpec(mWindow, devspec, aSilent);
+    if (NS_SUCCEEDED(rv)) {
+      rv = mPresContext->GetDeviceContext(getter_AddRefs(dx));
+      if (NS_SUCCEEDED(rv))
+        rv = dx->GetDeviceContextFor(devspec, *getter_AddRefs(mPrt->mPrintDC));
+        
       if (NS_SUCCEEDED(rv)) {
-
         NS_RELEASE(devspec);
 
         if(webContainer) {
           // load the document and do the initial reflow on the entire document
-          nsCOMPtr<nsIPrintContext> printcon(do_CreateInstance(kPrintContextCID,&rv));
+          nsCOMPtr<nsIPrintContext> printcon(do_CreateInstance(kPrintContextCID, &rv));
           if (NS_FAILED(rv)) {
             gCurrentlyPrinting = PR_FALSE;
+            ShowPrintErrorDialog(rv);
             return rv;
           } else {
             mPrt->mPrintPC = do_QueryInterface(printcon, &rv);
             if (NS_FAILED(rv)) {
               gCurrentlyPrinting = PR_FALSE;
+              ShowPrintErrorDialog(rv);
               return rv;
             }
           }
@@ -4425,24 +4432,28 @@ nsresult rv;
           mPrt->mPrintPS = do_CreateInstance(kPresShellCID, &rv);
           if(NS_FAILED(rv)){
             gCurrentlyPrinting = PR_FALSE;
+            ShowPrintErrorDialog(rv);
             return rv;
           }
 
           mPrt->mPrintVM = do_CreateInstance(kViewManagerCID, &rv);
           if(NS_FAILED(rv)) {
             gCurrentlyPrinting = PR_FALSE;
+            ShowPrintErrorDialog(rv);
             return rv;
           }
 
           rv = mPrt->mPrintVM->Init(mPrt->mPrintDC);
           if(NS_FAILED(rv)) {
             gCurrentlyPrinting = PR_FALSE;
+            ShowPrintErrorDialog(rv);
             return rv;
           }
 
           rv = CallCreateInstance(kViewCID, &mPrt->mPrintView);
           if(NS_FAILED(rv)) {
             gCurrentlyPrinting = PR_FALSE;
+            ShowPrintErrorDialog(rv);
             return rv;
           }
 
@@ -4450,6 +4461,7 @@ nsresult rv;
           rv = mPrt->mPrintView->Init(mPrt->mPrintVM,tbounds,nsnull);
           if(NS_FAILED(rv)) {
             gCurrentlyPrinting = PR_FALSE;
+            ShowPrintErrorDialog(rv);
             return rv;
           }
 
@@ -4512,7 +4524,7 @@ nsresult rv;
           mPrt->mPrintDC->GetDeviceSurfaceDimensions(i1,i2);
           printf("    DeviceDimension w = %d h = %d\n",i1,i2);
 
-#endif
+#endif /* DEBUG_dcone */
           // Print listener setup...
           if (mPrt != nsnull) {
             mPrt->OnStartPrinting();    
@@ -4536,21 +4548,99 @@ nsresult rv;
           }
         }
       }      
-    } else {
-      if (mPagePrintTimer) {
-        mPagePrintTimer->Stop();
-        NS_RELEASE(mPagePrintTimer);
-      }
-      mPrt->OnEndPrinting(NS_ERROR_FAILURE);
+    } 
+  }
+  
+  /* cleaup on failure + notify user */
+  if (NS_FAILED(rv)) {
+    /* cleanup... */
+    if (mPagePrintTimer) {
+      mPagePrintTimer->Stop();
+      NS_RELEASE(mPagePrintTimer);
+    }
+    
+    if (mPrt) {
+      mPrt->OnEndPrinting(rv);
       delete mPrt;
       mPrt = nsnull;
-      gCurrentlyPrinting = PR_FALSE;
-      rv = NS_ERROR_FAILURE;
     }
+    gCurrentlyPrinting = PR_FALSE;
 
+    /* cleanup done, let's fire-up an error dialog to notify the user
+     * what went wrong... 
+     */   
+    ShowPrintErrorDialog(rv);
   }
-
+      
   return rv;
+}
+
+
+void
+DocumentViewerImpl::ShowPrintErrorDialog(nsresult printerror)
+{
+  nsresult rv;
+  
+  static NS_DEFINE_CID(kCStringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
+  nsCOMPtr<nsIStringBundleService> stringBundleService = do_GetService(kCStringBundleServiceCID);
+  
+  if (!stringBundleService) { 
+    NS_WARNING("ERROR: Failed to get StringBundle Service instance.\n");
+    return;
+  }
+  nsCOMPtr<nsIStringBundle> myStringBundle;
+  rv = stringBundleService->CreateBundle(NS_ERROR_GFX_PRINTER_BUNDLE_URL, getter_AddRefs(myStringBundle));    
+  if (NS_FAILED(rv)) 
+    return;
+    
+  PRUnichar   *msg        = nsnull,
+              *title      = nsnull;
+  nsAutoString stringName;
+
+  switch(printerror)
+  {
+#define NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG(nserr) case nserr: stringName = NS_LITERAL_STRING(#nserr); break;
+      NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG(NS_ERROR_GFX_PRINTER_CMD_NOT_FOUND)
+      NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG(NS_ERROR_GFX_PRINTER_CMD_FAILURE)
+      NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG(NS_ERROR_GFX_PRINTER_NO_PRINTER_AVAIULABLE)
+      NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG(NS_ERROR_GFX_PRINTER_NAME_NOT_FOUND)
+      NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG(NS_ERROR_GFX_PRINTER_ACCESS_DENIED)
+      NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG(NS_ERROR_GFX_PRINTER_INVALID_ATTRIBUTE)
+      NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG(NS_ERROR_GFX_PRINTER_PRINTER_NOT_READY)
+      NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG(NS_ERROR_GFX_PRINTER_OUT_OF_PAPER)
+      NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG(NS_ERROR_GFX_PRINTER_PRINTER_IO_ERROR)
+      NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG(NS_ERROR_GFX_PRINTER_COULD_NOT_OPEN_FILE)
+      NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG(NS_ERROR_GFX_PRINTER_FILE_IO_ERROR)
+      NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG(NS_ERROR_UNEXPECTED)
+      NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG(NS_ERROR_OUT_OF_MEMORY)
+      NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG(NS_ERROR_NOT_IMPLEMENTED)
+      NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG(NS_ERROR_NOT_AVAILABLE)
+      NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG(NS_ERROR_ABORT)
+    default:
+      NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG(NS_ERROR_FAILURE)
+#undef NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG      
+  }
+      
+  myStringBundle->GetStringFromName(stringName.get(), &msg);
+  myStringBundle->GetStringFromName(NS_LITERAL_STRING("print_error_dialog_title").get(), &title);
+  if (!msg)
+    return;
+    
+  nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+  if (wwatch) {
+    nsCOMPtr<nsIDOMWindow> active;
+    wwatch->GetActiveWindow(getter_AddRefs(active));
+
+    nsCOMPtr<nsIDOMWindowInternal> parent(do_QueryInterface(active));
+    
+    if (parent) {
+      nsCOMPtr<nsIPrompt> dialog; 
+      parent->GetPrompter(getter_AddRefs(dialog)); 
+      if (dialog) {
+        dialog->Alert(title, msg);
+      }
+    }
+  }
 }
 
 

@@ -113,7 +113,7 @@ nsresult  rv = NS_ERROR_OUT_OF_MEMORY;
     rv = NS_ERROR_OUT_OF_MEMORY;
   }
 
-  if (NS_OK != rv){
+  if (NS_FAILED(rv)) {
     NS_IF_RELEASE(aContext);
   }
 
@@ -187,20 +187,19 @@ NS_IMETHODIMP nsDeviceContextPS :: GetSystemAttribute(nsSystemAttrID anID, Syste
 NS_IMETHODIMP nsDeviceContextPS::GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRInt32 &aHeight)
 {
   nsIDeviceContextSpecPS *psSpec;
-  nsresult res;
+  nsresult rv = NS_ERROR_FAILURE;
   float width, height;
   float top,left,right,bottom;
 
   if ( nsnull != mSpec ) {
-    res = mSpec->QueryInterface(kIDeviceContextSpecPSIID, (void **) &psSpec);
-    if ( res == NS_OK ) {
+    rv = mSpec->QueryInterface(kIDeviceContextSpecPSIID, (void **) &psSpec);
+    if (NS_SUCCEEDED(rv)) {
       psSpec->GetPageDimensions( width, height );
       aWidth = NSToIntRound((72.0f*width) * mDevUnitsToAppUnits); 
       aHeight = NSToIntRound((72.0f*height) * mDevUnitsToAppUnits); 
-      return NS_OK;
     }
   }
-  return NS_ERROR_FAILURE;
+  return rv;
 }
 
 /** ---------------------------------------------------
@@ -247,7 +246,7 @@ NS_IMETHODIMP nsDeviceContextPS::BeginDocument(PRUnichar * aTitle)
   if ( nsnull != mSpec ) {
     mPSObj = new nsPostScriptObj();  
     res = mSpec->QueryInterface(kIDeviceContextSpecPSIID, (void **) &psSpec);
-    if ( res == NS_OK ) {
+    if (NS_SUCCEEDED(res)) {
       res = mPSObj->Init(psSpec,aTitle);
     }
   }
@@ -260,8 +259,8 @@ NS_IMETHODIMP nsDeviceContextPS::BeginDocument(PRUnichar * aTitle)
  */
 NS_IMETHODIMP nsDeviceContextPS::EndDocument(void)
 {
-
   delete mPSObj;
+  mPSObj = nsnull;
   return NS_OK;
 }
 
@@ -282,7 +281,6 @@ NS_IMETHODIMP nsDeviceContextPS::BeginPage(void)
  */
 NS_IMETHODIMP nsDeviceContextPS::EndPage(void)
 {
-
   // end the page
   mPSObj->end_page();
   return NS_OK;

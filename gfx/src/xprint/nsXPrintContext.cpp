@@ -124,6 +124,7 @@ NS_IMETHODIMP
 nsXPrintContext::Init(nsDeviceContextXp *dc, nsIDeviceContextSpecXp *aSpec)
 {
   PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("nsXPrintContext::Init()\n"));
+  nsresult rv = NS_ERROR_FAILURE;
 
   int   prefDepth = 8;  /* 24 or 8 for PS DDX, 24, 8, 1 for PCL DDX... 
                          * I wish current Xprt would have a 1bit/8bit StaticGray 
@@ -142,18 +143,20 @@ nsXPrintContext::Init(nsDeviceContextXp *dc, nsIDeviceContextSpecXp *aSpec)
   unsigned short width, height;
   XRectangle rect;
 
-  if( NS_FAILED( XPU_TRACE(SetupPrintContext(aSpec)) ) )
-    return NS_ERROR_FAILURE;
+  if (NS_FAILED(XPU_TRACE(rv = SetupPrintContext(aSpec))))
+    return rv;
   
   mScreen = XpGetScreenOfContext(mPDisplay, mPContext);
   mScreenNumber = XScreenNumberOfScreen(mScreen);
   mXlibRgbHandle = xxlib_rgb_create_handle_with_depth("xprint", mPDisplay, mScreen, prefDepth);
   if (!mXlibRgbHandle)
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_GFX_PRINTER_INVALID_ATTRIBUTE;
   xxlib_disallow_image_tiling(mXlibRgbHandle, TRUE);
 
   XpGetPageDimensions(mPDisplay, mPContext, &width, &height, &rect);
-  SetupWindow(rect.x, rect.y, rect.width, rect.height);
+  rv = SetupWindow(rect.x, rect.y, rect.width, rect.height);
+  if (NS_FAILED(rv))
+    return rv;
 
   XMapWindow(mPDisplay, mDrawable); 
   
@@ -261,7 +264,7 @@ nsXPrintContext::SetupPrintContext(nsIDeviceContextSpecXp *aSpec)
     PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("print to file '%s'\n", XPU_NULLXSTR(mPrintFile)));
     
     if( (mPrintFile == nsnull) || (strlen(mPrintFile) == 0) )
-      return NS_ERROR_FAILURE;
+      return NS_ERROR_GFX_PRINTER_COULD_NOT_OPEN_FILE;
   }
 
   /* workaround for crash in XCloseDisplay() on Solaris 2.7 Xserver - when 
@@ -274,7 +277,7 @@ nsXPrintContext::SetupPrintContext(nsIDeviceContextSpecXp *aSpec)
    * ToDo: report error to user (dialog)
    */
   if( XpuGetPrinter(buf, &mPDisplay, &mPContext) != 1 )
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_GFX_PRINTER_NAME_NOT_FOUND;
     
 #ifdef XPRINT_DEBUG_SOMETIMES_USEFULL
   dumpXpAttributes(mPDisplay, mPContext);
@@ -314,7 +317,7 @@ nsXPrintContext::SetupPrintContext(nsIDeviceContextSpecXp *aSpec)
    * ToDo: Report error to user (dialog)
    */
   if( XpuGetResolution(mPDisplay, mPContext, &mPrintResolution) == False )
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_GFX_PRINTER_INVALID_ATTRIBUTE;
 
   PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("print resolution %ld\n", (long)mPrintResolution));
   
@@ -379,7 +382,7 @@ nsXPrintContext::BeginDocument( PRUnichar *aTitle )
              ("nsXPrintContext::BeginDocument(): XpuPrintToFile failure %s/(%d)\n", 
              strerror(errno), errno));
 
-      return NS_ERROR_FAILURE;
+      return NS_ERROR_GFX_PRINTER_COULD_NOT_OPEN_FILE;
     }
     
     XPU_TRACE(XpuWaitForPrintNotify(mPDisplay, XPStartJobNotify));

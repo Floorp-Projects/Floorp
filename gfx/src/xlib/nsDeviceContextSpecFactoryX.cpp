@@ -18,16 +18,14 @@
  * Rights Reserved.
  *
  * Contributor(s): 
- *    Vino Fernando Crescini <vino@igelaus.com.au>
+ *   Vino Fernando Crescini <vino@igelaus.com.au>
+ *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
  */
 
 #include "nsDeviceContextSpecFactoryX.h"
 #include "nsDeviceContextSpecXlib.h"
 #include "nsGfxCIID.h"
 #include "plstr.h"
-
-static NS_DEFINE_IID(kIDeviceContextSpecIID, NS_IDEVICE_CONTEXT_SPEC_IID);
-static NS_DEFINE_IID(kDeviceContextSpecCID, NS_DEVICE_CONTEXT_SPEC_CID);
 
 NS_IMPL_ISUPPORTS1(nsDeviceContextSpecFactoryXlib, nsIDeviceContextSpecFactory)
 
@@ -49,17 +47,19 @@ NS_IMETHODIMP nsDeviceContextSpecFactoryXlib::CreateDeviceContextSpec(nsIWidget 
                                                                       nsIDeviceContextSpec *&aNewSpec,
                                                                       PRBool aQuiet)
 {
-  nsresult rv = NS_ERROR_FAILURE;
-  nsIDeviceContextSpec *devSpec = nsnull;
+  nsresult rv;
+  static NS_DEFINE_CID(kDeviceContextSpecCID, NS_DEVICE_CONTEXT_SPEC_CID);
+  nsCOMPtr<nsIDeviceContextSpec> devSpec = do_CreateInstance(kDeviceContextSpecCID, &rv);
+  if (NS_SUCCEEDED(rv))
+  {
+    rv = ((nsDeviceContextSpecXlib *)devSpec.get())->Init(aQuiet);
+    if (NS_SUCCEEDED(rv))
+    {
+      aNewSpec = devSpec;
+      NS_ADDREF(aNewSpec);
+    }
+  }
 
-	nsComponentManager::CreateInstance(kDeviceContextSpecCID, nsnull, kIDeviceContextSpecIID, (void **)&devSpec);
-
-	if (nsnull != devSpec) {
-	  if (NS_OK == ((nsDeviceContextSpecXlib *)devSpec)->Init(aQuiet)) {
-	    aNewSpec = devSpec;
-	    rv = NS_OK;
-	  }
-	}
-	return rv;
+  return rv;
 }
 

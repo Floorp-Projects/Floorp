@@ -17,7 +17,8 @@
  * Copyright (C) 1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
+ *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
  */
 
 #include "nsDeviceContextSpecFactoryG.h"
@@ -42,9 +43,6 @@ nsDeviceContextSpecFactoryGTK :: ~nsDeviceContextSpecFactoryGTK()
 {
 }
 
-static NS_DEFINE_IID(kIDeviceContextSpecIID, NS_IDEVICE_CONTEXT_SPEC_IID);
-static NS_DEFINE_CID(kDeviceContextSpecCID, NS_DEVICE_CONTEXT_SPEC_CID);
-
 NS_IMPL_ISUPPORTS1(nsDeviceContextSpecFactoryGTK, nsIDeviceContextSpecFactory)
 
 /** -------------------------------------------------------
@@ -64,16 +62,19 @@ NS_IMETHODIMP nsDeviceContextSpecFactoryGTK :: CreateDeviceContextSpec(nsIWidget
                                                                        nsIDeviceContextSpec *&aNewSpec,
                                                                        PRBool aQuiet)
 {
-nsresult  						rv = NS_ERROR_FAILURE;
-nsIDeviceContextSpec  *devSpec = nsnull;
+  nsresult rv;
+  static NS_DEFINE_CID(kDeviceContextSpecCID, NS_DEVICE_CONTEXT_SPEC_CID);
+  nsCOMPtr<nsIDeviceContextSpec> devSpec = do_CreateInstance(kDeviceContextSpecCID, &rv);
+  if (NS_SUCCEEDED(rv))
+  {
+    rv = ((nsDeviceContextSpecGTK *)devSpec.get())->Init(aQuiet);
+    if (NS_SUCCEEDED(rv))
+    {
+      aNewSpec = devSpec;
+      NS_ADDREF(aNewSpec);
+    }
+  }
 
-	nsComponentManager::CreateInstance(kDeviceContextSpecCID, nsnull, kIDeviceContextSpecIID, (void **)&devSpec);
-
-	if (nsnull != devSpec){
-	  if (NS_OK == ((nsDeviceContextSpecGTK *)devSpec)->Init(aQuiet)){
-	    aNewSpec = devSpec;
-	    rv = NS_OK;
-	  }
-	}
-	return rv;
+  return rv;  
 }
+
