@@ -39,7 +39,6 @@
 package org.mozilla.javascript;
 
 import java.io.*;
-import java.util.Enumeration;
 
 import org.mozilla.javascript.debug.*;
 
@@ -2259,8 +2258,7 @@ public class Interpreter extends LabelTable {
                     int slot = (iCode[++pc] & 0xFF);
                     Object val = stack[LOCAL_SHFT + slot];
                     ++stackTop;
-                    stack[stackTop] = ScriptRuntime.
-                        nextEnum((Enumeration)val);
+                    stack[stackTop] = ScriptRuntime.nextEnum(val);
                     break;
                 }
                 case TokenStream.GETPROTO : {

@@ -1691,7 +1691,7 @@ public class Codegen extends Interpreter {
         aload(variableObjectLocal);
         addScriptRuntimeInvoke("initEnum",
             "(Ljava/lang/Object;Lorg/mozilla/javascript/Scriptable;)",
-             "Ljava/util/Enumeration;");
+             "Ljava/lang/Object;");
         short x = getNewWordLocal();
         astore(x);
         node.putIntProp(Node.LOCAL_PROP, x);
@@ -1705,7 +1705,7 @@ public class Codegen extends Interpreter {
         Node init = (Node) node.getProp(Node.ENUM_PROP);
         int local = init.getExistingIntProp(Node.LOCAL_PROP);
         aload((short)local);
-        addScriptRuntimeInvoke("nextEnum", "(Ljava/util/Enumeration;)", "Ljava/lang/Object;");
+        addScriptRuntimeInvoke("nextEnum", "(Ljava/lang/Object;)", "Ljava/lang/Object;");
     }
 
     private void visitEnumDone(Node node, Node child) {
