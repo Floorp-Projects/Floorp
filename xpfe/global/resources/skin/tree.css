@@ -24,8 +24,13 @@ tree.inset {
 }
 
 treeitem[selected="true"] > treerow { 
-  color: white;
-  background-color: #336699;
+	color: black;
+	background-color: #CCCCCC;
+}
+
+tree:focus treeitem[selected="true"] > treerow { 
+	color: white;
+	background-color: #336699;
 }
 
 treecell { 

@@ -23,8 +23,17 @@
   display: none;
 }
 
+/* Focus rules for XUL widgets */
 checkbox,radio,tree,menulist {
   user-focus: normal;
+}
+
+menupopup, splitter {
+  user-focus: ignore;
+}
+
+treechildren, treehead, treefoot {
+  user-focus: none;
 }
 
 /** 
