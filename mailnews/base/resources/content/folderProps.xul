@@ -94,12 +94,12 @@
     </vbox>
     <vbox hidable="true" hidefor="pop3,none,nntp" valign="top" align="start">
       <hbox>
-      <label value="&folderType.label;"/>
+      <label value="&folderType.label;" id="folderTypeLabel"/>
       <label value="" id="folderType.text"/>
       </hbox>
       <label value="" id="folderDescription.text"/>
       <label value=" " />
-      <label value="&permissionsDesc.label;"/>
+      <label value="&permissionsDesc.label;" id="permissionsDescLabel"/>
       <label value="" id="folderPermissions.text"/>
       <spacer flex="100%"/>
       <button iscontrolcontainer="true" hidable="true" label="&privileges.button.label;" 

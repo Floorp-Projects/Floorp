@@ -23,7 +23,6 @@ var gFolderPropsSink = {
       var typeLabel = document.getElementById("folderType.text");
       if (typeLabel)
       {
-        dump("folder type = "+ folderTypeString + "\n");
         typeLabel.setAttribute("value",folderTypeString);
       }
       // get the element for the folder type label and set value on it.
@@ -34,7 +33,6 @@ var gFolderPropsSink = {
       var folderTypeLabel = document.getElementById("folderDescription.text");
       if (folderTypeLabel)
         folderTypeLabel.setAttribute("value", folderDescription);
-      dump("folder desc = "+ folderDescription + "\n");
     },
 
     setFolderPermissions: function(folderPermissions)
@@ -42,8 +40,19 @@ var gFolderPropsSink = {
       var permissionsLabel = document.getElementById("folderPermissions.text");
       if (permissionsLabel)
         permissionsLabel.setAttribute("value",folderPermissions);
-      dump("folder permissions = "+ folderPermissions + "\n");
+    },
+
+    serverDoesntSupportACL : function()
+    {
+      var typeLabel = document.getElementById("folderTypeLabel");
+      if (typeLabel)
+        typeLabel.setAttribute("hidden", "true");
+      var permissionsLabel = document.getElementById("permissionsDescLabel");
+      if (permissionsLabel)
+        permissionsLabel.setAttribute("hidden", "true");
+
     }
+
 };
 
 
@@ -268,6 +277,8 @@ function onFolderPrivileges()
   var imapFolder = gMsgFolder.QueryInterface(Components.interfaces.nsIMsgImapMailFolder);
   if (imapFolder)
     imapFolder.folderPrivileges(gParentMsgWindow);
+  // let's try closing the modal dialog to see if it fixes the various problems running this url
+  window.close(); 
 }
 
 
