@@ -246,6 +246,18 @@ nsHTMLEditRules::WillInsertText(PRInt32          aAction,
 {  
   if (!aSelection || !aCancel || !aHandled) { return NS_ERROR_NULL_POINTER; }
 
+  if (inString->IsEmpty() && (aAction != kInsertTextIME))
+  {
+    // HACK: this is a fix for bug 19395
+    // I can't outlaw all empty insertions
+    // because IME transaction depend on them
+    // There is more work to do to make the 
+    // world safe for IME.
+    *aCancel = PR_TRUE;
+    *aHandled = PR_FALSE;
+    return NS_OK;
+  }
+  
   // initialize out param
   *aCancel = PR_FALSE;
   *aHandled = PR_TRUE;
@@ -265,7 +277,6 @@ nsHTMLEditRules::WillInsertText(PRInt32          aAction,
     if (NS_FAILED(res)) return res;
   }
 
-  
   res = WillInsert(aSelection, aCancel);
   if (NS_FAILED(res)) return res;
   // initialize out param
@@ -677,7 +688,6 @@ nsHTMLEditRules::WillDeleteSelection(nsIDOMSelection *aSelection,
         }
         
         // deleting across blocks
-        // are the blocks of same type?
         nsCOMPtr<nsIDOMNode> leftParent = mEditor->GetBlockNodeParent(priorNode);
         nsCOMPtr<nsIDOMNode> rightParent = mEditor->GetBlockNodeParent(node);
         
@@ -686,6 +696,14 @@ nsHTMLEditRules::WillDeleteSelection(nsIDOMSelection *aSelection,
         if (!leftParent || !rightParent)
           return NS_OK;  // bail to default
           
+        // do not delete across table structures
+        if (mEditor->IsTableElement(leftParent) || mEditor->IsTableElement(rightParent))
+        {
+          *aCancel = PR_TRUE;
+          return NS_OK;
+        }
+                
+        // are the blocks of same type?
         if (mEditor->NodesSameType(leftParent, rightParent))
         {
           nsCOMPtr<nsIDOMNode> topParent;
@@ -768,9 +786,22 @@ nsHTMLEditRules::WillDeleteSelection(nsIDOMSelection *aSelection,
         }
                 
         // deleting across blocks
-        // are the blocks of same type?
         nsCOMPtr<nsIDOMNode> leftParent = mEditor->GetBlockNodeParent(node);
         nsCOMPtr<nsIDOMNode> rightParent = mEditor->GetBlockNodeParent(nextNode);
+
+        // if leftParent or rightParent is null, it's because the
+        // corresponding selection endpoint is in the body node.
+        if (!leftParent || !rightParent)
+          return NS_OK;  // bail to default
+          
+        // do not delete across table structures
+        if (mEditor->IsTableElement(leftParent) || mEditor->IsTableElement(rightParent))
+        {
+          *aCancel = PR_TRUE;
+          return NS_OK;
+        }
+                
+        // are the blocks of same type?
         if (mEditor->NodesSameType(leftParent, rightParent))
         {
           nsCOMPtr<nsIDOMNode> topParent;
@@ -896,6 +927,13 @@ nsHTMLEditRules::WillDeleteSelection(nsIDOMSelection *aSelection,
     else
       rightParent = mEditor->GetBlockNodeParent(endNode);
     
+    // do not delete across table structures
+    if (mEditor->IsTableElement(leftParent) || mEditor->IsTableElement(rightParent))
+    {
+      *aCancel = PR_TRUE;
+      return NS_OK;
+    }
+                
     // are the blocks siblings?
     nsCOMPtr<nsIDOMNode> leftBlockParent;
     nsCOMPtr<nsIDOMNode> rightBlockParent;
