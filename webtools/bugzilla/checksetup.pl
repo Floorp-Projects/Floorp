@@ -543,12 +543,23 @@ EOF
 # Global Utility Library
 ###########################################################################
 
+# globals.pl clears the PATH, but File::Find uses Cwd::cwd() instead of
+# Cwd::getcwd(), which we need to do because `pwd` isn't in the path - see
+# http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2001-09/msg00115.html
+# As a workaround, since we only use File::Find in checksetup, which doesn't
+# run in taint mode anyway, preserve the path...
+my $origPath = $::ENV{'PATH'};
+
 # Use the Bugzilla utility library for various functions.  We do this
 # here rather than at the top of the file so globals.pl doesn't define
 # localconfig variables for us before we get a chance to check for
 # their existence and create them if they don't exist.  Also, globals.pl
 # removes $ENV{'path'}, which we need in order to run `which mysql` above.
 require "globals.pl";
+
+# ...and restore it. This doesn't change tainting, so this will still cause
+# errors if this script ever does run with -T.
+$::ENV{'PATH'} = $origPath;
 
 ###########################################################################
 # Check data directory
@@ -759,7 +770,7 @@ END
 
     # The last time the global template params were changed. Keep in UTC,
     # YYYY-MM-DD
-    my $lastTemplateParamChange = str2time("2002-04-24", "UTC");
+    my $lastTemplateParamChange = str2time("2002-04-27", "UTC");
     if (-e 'data/template') {
         unless (-d 'data/template' && -e 'data/template/.lastRebuild' &&
                 (stat('data/template/.lastRebuild'))[9] >= $lastTemplateParamChange) {
@@ -793,7 +804,7 @@ END
         PRE_CHOMP => 1 ,
         TRIM => 1 ,
 
-        COMPILE_DIR => "data", # becomes data/template/en/{custom,default}
+        COMPILE_DIR => 'data/', # becomes data/template/en/{custom,default}
 
         # These don't actually need to do anything here, just exist
         FILTERS =>
@@ -806,16 +817,33 @@ END
       }) || die ("Could not create Template: " . Template->error() . "\n");
 
     sub compile {
-        return if (-d $_);
-        return if ($_ !~ /\.tmpl$/);
-        s!template/en/default/!!; # trim the bit we don't pass to TT
+        # no_chdir doesn't work on perl 5.005
 
-        $template->process($_, {})
-          || die "Could not compile $_:" . $template->error() . "\n";
+        my $origDir = $File::Find::dir;
+        my $name = $File::Find::name;
+
+        return if (-d $name);
+        return if ($name =~ /\/CVS\//);
+        return if ($name !~ /\.tmpl$/);
+        $name =~ s!template/en/default/!!; # trim the bit we don't pass to TT
+
+        chdir($::baseDir);
+
+        $template->process($name, {})
+          || die "Could not compile $name:" . $template->error() . "\n";
+
+        chdir($origDir);
     }
 
     {
         use File::Find;
+
+        use Cwd;
+
+        $::baseDir = getcwd();
+
+        # Don't hang on templates which use the CGI library
+        eval("use CGI qw(-no_debug)");
 
         # Disable warnings which come from running the compiled templates
         # This way is OK, because they're all runtime warnings.
@@ -829,8 +857,9 @@ END
         # FIXME - if we start doing dynamic INCLUDE_PATH we may have to
         # recurse all of template/, changing the INCLUDE_PATH each time
 
-        find({wanted => \&compile, no_chdir => 1}, "template/en/default");
+        find(\&compile, "template/en/default");
     }
+
     # update the time on the stamp file
     open FILE, '>data/template/.lastRebuild'; close FILE;
     utime $lastTemplateParamChange, $lastTemplateParamChange, ('data/template/.lastRebuild');
