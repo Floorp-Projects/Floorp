@@ -34,16 +34,16 @@ try {
 
 function onLoad()
 {
-  dialog.input          = document.getElementById("dialog.input");
-  dialog.open           = document.documentElement.getButton("accept");
-  dialog.openAppList    = document.getElementById("openAppList");
-  dialog.openTopWindow  = document.getElementById("currentWindow");
-  dialog.bundle         = document.getElementById("openLocationBundle");
+  dialog.input         = document.getElementById("dialog.input");
+  dialog.open          = document.documentElement.getButton("accept");
+  dialog.openWhereList = document.getElementById("openWhereList");
+  dialog.openTopWindow = document.getElementById("currentWindow");
+  dialog.bundle        = document.getElementById("openLocationBundle");
 
   if ("arguments" in window && window.arguments.length >= 1)
     browser = window.arguments[0];
    
-  dialog.openAppList.selectedItem = dialog.openTopWindow;
+  dialog.openWhereList.selectedItem = dialog.openTopWindow;
 
   // change OK button text to 'open'
   dialog.open.label = dialog.bundle.getString("openButtonLabel");
@@ -51,9 +51,9 @@ function onLoad()
   if (pref) {
     try {
       var value = pref.getIntPref("general.open_location.last_window_choice");
-      var element = dialog.openAppList.getElementsByAttribute("value", value)[0];
+      var element = dialog.openWhereList.getElementsByAttribute("value", value)[0];
       if (element)
-        dialog.openAppList.selectedItem = element;
+        dialog.openWhereList.selectedItem = element;
       dialog.input.value = pref.getComplexValue("general.open_location.last_url",
                                                 Components.interfaces.nsISupportsString).data;
     }
@@ -80,7 +80,7 @@ function open()
     url = dialog.input.value;
 
   try {
-    switch (dialog.openAppList.value) {
+    switch (dialog.openWhereList.value) {
       case "0":
         browser.loadURI(url);
         break;
@@ -104,7 +104,7 @@ function open()
     str.data = dialog.input.value;
     pref.setComplexValue("general.open_location.last_url",
                          Components.interfaces.nsISupportsString, str);
-    pref.setIntPref("general.open_location.last_window_choice", dialog.openAppList.value);
+    pref.setIntPref("general.open_location.last_window_choice", dialog.openWhereList.value);
   }
 
   // Delay closing slightly to avoid timing bug on Linux.
@@ -124,13 +124,6 @@ function onChooseFile()
   try {
     var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
     fp.init(window, dialog.bundle.getString("chooseFileDialogTitle"), nsIFilePicker.modeOpen);
-    if (dialog.openAppList.value == "2") {
-      // When loading into Composer, direct user to prefer HTML files and text files,
-      // so we call separately to control the order of the filter list
-      fp.appendFilters(nsIFilePicker.filterHTML | nsIFilePicker.filterText);
-      fp.appendFilters(nsIFilePicker.filterText);
-      fp.appendFilters(nsIFilePicker.filterAll);
-    }
     else {
       fp.appendFilters(nsIFilePicker.filterHTML | nsIFilePicker.filterText |
                        nsIFilePicker.filterAll | nsIFilePicker.filterImages | nsIFilePicker.filterXML);
