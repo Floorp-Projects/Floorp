@@ -288,6 +288,10 @@ nsMathMLmunderFrame::Place(nsIPresContext*      aPresContext,
   GetReflowAndBoundingMetricsFor(baseFrame, baseSize, bmBase);
   GetReflowAndBoundingMetricsFor(underFrame, underSize, bmUnder);
 
+  float p2t;
+  aPresContext->GetScaledPixelsToTwips(&p2t);
+  nscoord onePixel = NSIntPixelsToTwips(1, p2t);
+
   ////////////////////
   // Place Children
 
@@ -306,12 +310,13 @@ nsMathMLmunderFrame::Place(nsIPresContext*      aPresContext,
   // there are 2 different types of placement depending on 
   // whether we want an accented under or not
 
-  nscoord italicCorrection = 0;
+  nscoord correction = 0;
+  GetItalicCorrection (bmBase, correction);
+
   nscoord delta1 = 0; // gap between base and underscript
   nscoord delta2 = 0; // extra space beneath underscript
   if (!NS_MATHML_EMBELLISH_IS_ACCENTUNDER(mEmbellishData.flags)) {    
     // Rule 13a, App. G, TeXbook
-    GetItalicCorrection (bmBase, italicCorrection);
     nscoord bigOpSpacing2, bigOpSpacing4, bigOpSpacing5, dummy; 
     GetBigOpSpacings (fm, 
                       dummy, bigOpSpacing2, 
@@ -325,22 +330,27 @@ nsMathMLmunderFrame::Place(nsIPresContext*      aPresContext,
     // XXX tune the gap delta between base and underscript 
 
     // Should we use Rule 10 like \underline does?
-    delta1 = ruleThickness;
+    delta1 = ruleThickness + onePixel/2;
     delta2 = ruleThickness;
   }
   // empty under?
   if (!(bmUnder.ascent + bmUnder.descent)) delta1 = 0;
 
+  nscoord dxBase, dxUnder;
+  nscoord maxWidth = PR_MAX(bmBase.width, bmUnder.width);
+  if (NS_MATHML_EMBELLISH_IS_ACCENTUNDER(mEmbellishData.flags)) {    
+    dxUnder = (maxWidth - bmUnder.width)/2;
+  }
+  else {
+    dxUnder = -correction/2 + (maxWidth - bmUnder.width)/2;
+  }
+  dxBase = (maxWidth - bmBase.width)/2;
+
+  mBoundingMetrics.width =
+    PR_MAX(dxBase + bmBase.width, dxUnder + bmUnder.width);
   mBoundingMetrics.ascent = bmBase.ascent;
   mBoundingMetrics.descent = 
     bmBase.descent + delta1 + bmUnder.ascent + bmUnder.descent;
-  mBoundingMetrics.width = 
-    PR_MAX(bmBase.width/2,(bmUnder.width + italicCorrection/2)/2) +
-    PR_MAX(bmBase.width/2,(bmUnder.width - italicCorrection/2)/2);
-
-  nscoord dxBase = (mBoundingMetrics.width - bmBase.width) / 2;
-  nscoord dxUnder = (mBoundingMetrics.width - (bmUnder.width + italicCorrection/2)) / 2;
-  
   mBoundingMetrics.leftBearing = 
     PR_MIN(dxBase + bmBase.leftBearing, dxUnder + bmUnder.leftBearing);
   mBoundingMetrics.rightBearing = 
@@ -351,9 +361,7 @@ nsMathMLmunderFrame::Place(nsIPresContext*      aPresContext,
     PR_MAX(mBoundingMetrics.descent + delta2,
            bmBase.descent + delta1 + bmUnder.ascent + underSize.descent);
   aDesiredSize.height = aDesiredSize.ascent + aDesiredSize.descent;
-  aDesiredSize.width = 
-    PR_MAX(baseSize.width/2,(underSize.width + italicCorrection/2)/2) +
-    PR_MAX(baseSize.width/2,(underSize.width - italicCorrection/2)/2);
+  aDesiredSize.width = mBoundingMetrics.width;
   aDesiredSize.mBoundingMetrics = mBoundingMetrics;
 
   mReference.x = 0;

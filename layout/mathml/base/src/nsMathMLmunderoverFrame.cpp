@@ -331,6 +331,10 @@ nsMathMLmunderoverFrame::Place(nsIPresContext*      aPresContext,
   GetReflowAndBoundingMetricsFor(underFrame, underSize, bmUnder);
   GetReflowAndBoundingMetricsFor(overFrame, overSize, bmOver);
 
+  float p2t;
+  aPresContext->GetScaledPixelsToTwips(&p2t);
+  nscoord onePixel = NSIntPixelsToTwips(1, p2t);
+
   ////////////////////
   // Place Children
 
@@ -346,16 +350,17 @@ nsMathMLmunderoverFrame::Place(nsIPresContext*      aPresContext,
   nscoord ruleThickness;
   GetRuleThickness (aRenderingContext, fm, ruleThickness);
 
+  nscoord correction = 0;
+  GetItalicCorrection (bmBase, correction);
+
   // there are 2 different types of placement depending on 
   // whether we want an accented under or not
 
-  nscoord italicCorrection = 0;
   nscoord underDelta1 = 0; // gap between base and underscript
   nscoord underDelta2 = 0; // extra space beneath underscript
 
   if (!NS_MATHML_EMBELLISH_IS_ACCENTUNDER(mEmbellishData.flags)) {
     // Rule 13a, App. G, TeXbook
-    GetItalicCorrection (bmBase, italicCorrection);
     nscoord bigOpSpacing2, bigOpSpacing4, bigOpSpacing5, dummy; 
     GetBigOpSpacings (fm, 
                       dummy, bigOpSpacing2, 
@@ -369,19 +374,17 @@ nsMathMLmunderoverFrame::Place(nsIPresContext*      aPresContext,
     // XXX tune the gap delta between base and underscript 
 
     // Should we use Rule 10 like \underline does?
-    underDelta1 = ruleThickness;
+    underDelta1 = ruleThickness + onePixel/2;
     underDelta2 = ruleThickness;
   }
   // empty under?
   if (!(bmUnder.ascent + bmUnder.descent)) underDelta1 = 0;
 
-  nscoord correction = 0;
   nscoord overDelta1 = 0; // gap between base and overscript
   nscoord overDelta2 = 0; // extra space above overscript
 
   if (!NS_MATHML_EMBELLISH_IS_ACCENTOVER(mEmbellishData.flags)) {    
     // Rule 13a, App. G, TeXbook
-    GetItalicCorrection (bmBase, italicCorrection);
     nscoord bigOpSpacing1, bigOpSpacing3, bigOpSpacing5, dummy; 
     GetBigOpSpacings (fm, 
                       bigOpSpacing1, dummy, 
@@ -397,9 +400,8 @@ nsMathMLmunderoverFrame::Place(nsIPresContext*      aPresContext,
       overDelta1 = PR_MAX(bigOpSpacing1, (bigOpSpacing3 - (bmOver.ascent + bmOver.descent)));
   }
   else {
-    // Rule 13, App. G, TeXbook
-    GetSkewCorrectionFromChild (aPresContext, baseFrame, correction);
-    overDelta1 = ruleThickness;
+    // Rule 12, App. G, TeXbook
+    overDelta1 = ruleThickness + onePixel/2;
     if (bmBase.ascent < xHeight) { 
       overDelta1 += xHeight - bmBase.ascent;
     }
@@ -408,33 +410,78 @@ nsMathMLmunderoverFrame::Place(nsIPresContext*      aPresContext,
   // empty over?
   if (!(bmOver.ascent + bmOver.descent)) overDelta1 = 0;
 
+  nscoord dxBase, dxOver = 0, dxUnder = 0;
+
+  //////////
+  // pass 1, do what <mover> does: attach the overscript on the base
+
+  // Ad-hoc - This is to override fonts which have ready-made _accent_
+  // glyphs with negative lbearing and rbearing. We want to position
+  // the overscript ourselves
+  nscoord overWidth = bmOver.width;
+  if (!overWidth && (bmOver.rightBearing - bmOver.leftBearing > 0)) {
+    overWidth = bmOver.rightBearing - bmOver.leftBearing;
+    dxOver = -bmOver.leftBearing;
+  }
+
+  if (NS_MATHML_EMBELLISH_IS_ACCENTOVER(mEmbellishData.flags)) {
+    mBoundingMetrics.width = bmBase.width; 
+    dxOver += correction + (mBoundingMetrics.width - overWidth)/2;
+  }
+  else {
+    mBoundingMetrics.width = PR_MAX(bmBase.width, overWidth);
+    dxOver += correction/2 + (mBoundingMetrics.width - overWidth)/2;
+  }
+  dxBase = (mBoundingMetrics.width - bmBase.width)/2;
+
   mBoundingMetrics.ascent = 
     bmBase.ascent + overDelta1 + bmOver.ascent + bmOver.descent;
   mBoundingMetrics.descent = 
     bmBase.descent + underDelta1 + bmUnder.ascent + bmUnder.descent;
-  mBoundingMetrics.width = 
-    PR_MAX(bmBase.width/2,PR_MAX((bmUnder.width + italicCorrection/2)/2,(bmOver.width - correction/2)/2)) +
-    PR_MAX(bmBase.width/2,PR_MAX((bmUnder.width - italicCorrection/2)/2,(bmOver.width + correction/2)/2));
-
-  nscoord dxBase = (mBoundingMetrics.width - bmBase.width) / 2;
-  nscoord dxOver = (mBoundingMetrics.width - (bmOver.width - correction/2)) / 2;
-  nscoord dxUnder = (mBoundingMetrics.width - (bmUnder.width + italicCorrection/2)) / 2;
-
   mBoundingMetrics.leftBearing = 
-    PR_MIN(dxBase + bmBase.leftBearing, dxUnder + bmUnder.leftBearing);
+    PR_MIN(dxBase + bmBase.leftBearing, dxOver + bmOver.leftBearing);
   mBoundingMetrics.rightBearing = 
-    PR_MAX(dxBase + bmBase.rightBearing, dxUnder + bmUnder.rightBearing);
-  mBoundingMetrics.leftBearing = 
-    PR_MIN(mBoundingMetrics.leftBearing, dxOver + bmOver.leftBearing);
-  mBoundingMetrics.rightBearing = 
-    PR_MAX(mBoundingMetrics.rightBearing, dxOver + bmOver.rightBearing);
+    PR_MAX(dxBase + bmBase.rightBearing, dxOver + bmOver.rightBearing);
 
-  aDesiredSize.ascent = 
+  //////////
+  // pass 2, do what <munder> does: attach the underscript on the previous
+  // result. We conceptually view the previous result as an "anynomous base" 
+  // from where to attach the underscript. Hence if the underscript is empty,
+  // we should end up like <mover>. If the overscript is empty, we should
+  // end up like <munder>.
+
+  nsBoundingMetrics bmAnonymousBase = mBoundingMetrics;
+  nscoord ascentAnonymousBase =
     PR_MAX(mBoundingMetrics.ascent + overDelta2,
            overSize.ascent + bmOver.descent + overDelta1 + bmBase.ascent);
+
+  GetItalicCorrection(bmAnonymousBase, correction);
+
+  nscoord maxWidth = PR_MAX(bmAnonymousBase.width, bmUnder.width);
+  if (NS_MATHML_EMBELLISH_IS_ACCENTUNDER(mEmbellishData.flags)) {    
+    dxUnder = (maxWidth - bmUnder.width)/2;;
+  }
+  else {
+    dxUnder = -correction/2 + (maxWidth - bmUnder.width)/2;
+  }
+  nscoord dxAnonymousBase = (maxWidth - bmAnonymousBase.width)/2;
+
+  // adjust the offsets of the real base and overscript since their
+  // final offsets should be relative to us...
+  dxOver += dxAnonymousBase;
+  dxBase += dxAnonymousBase;
+
+  mBoundingMetrics.width =
+    PR_MAX(dxAnonymousBase + bmAnonymousBase.width, dxUnder + bmUnder.width);
+  mBoundingMetrics.leftBearing =
+    PR_MIN(dxAnonymousBase + bmAnonymousBase.leftBearing, dxUnder + bmUnder.leftBearing);
+  mBoundingMetrics.rightBearing = 
+    PR_MAX(dxAnonymousBase + bmAnonymousBase.rightBearing, dxUnder + bmUnder.rightBearing);
+
+  aDesiredSize.ascent = ascentAnonymousBase;
   aDesiredSize.descent = 
     PR_MAX(mBoundingMetrics.descent + underDelta2,
-           bmBase.descent + underDelta1 + bmUnder.ascent + underSize.descent);
+           bmAnonymousBase.descent + underDelta1 + bmUnder.ascent + underSize.descent);
   aDesiredSize.height = aDesiredSize.ascent + aDesiredSize.descent;
   aDesiredSize.width = mBoundingMetrics.width;
   aDesiredSize.mBoundingMetrics = mBoundingMetrics;
