@@ -49,7 +49,6 @@
 
 // XXX These are unfortunate dependencies
 #include "nsIHTMLContent.h"
-#include "nsHTMLTagContent.h"
 #include "nsHTMLImage.h"
 
 /* 52b33130-0b99-11d2-932e-00805f8add32 */
@@ -382,49 +381,6 @@ public:
 
   // For list-item frames, this is the bullet frame.
   BulletFrame* mBullet;
-};
-
-//----------------------------------------------------------------------
-
-/**
- * A helper content class for bullets. The content class is needed
- * primarily so that we can resolve style and force the display mode
- * for the bullet to be inline
- */
-static void
-MapAttributesInto(nsIHTMLAttributes* aAttributes,
-                  nsIStyleContext* aContext,
-                  nsIPresContext* aPresContext)
-{
-  nsStyleDisplay* display = (nsStyleDisplay*)
-    aContext->GetMutableStyleData(eStyleStruct_Display);
-  display->mDisplay = NS_STYLE_DISPLAY_INLINE;
-}
-
-class Bullet : public nsHTMLTagContent {
-public:
-  Bullet() {
-    mRefCnt = 1;
-  }
-
-  NS_IMETHOD IsSynthetic(PRBool& aResult)
-  {
-    aResult = PR_TRUE;
-    return NS_OK;
-  }
-
-  NS_IMETHOD GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) const
-  {
-    aMapFunc = &MapAttributesInto;
-    return NS_OK;
-  }
-
-  NS_IMETHOD List(FILE* out, PRInt32 aIndent) const
-  {
-    for (PRInt32 i = aIndent; --i >= 0; ) fputs("  ", out);
-    fprintf(out, "Bullet RefCnt=%d<>\n", mRefCnt);
-    return NS_OK;
-  }
 };
 
 //----------------------------------------------------------------------
@@ -1530,28 +1486,17 @@ nsBlockFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
   if ((nsnull == mPrevInFlow) &&
       (NS_STYLE_DISPLAY_LIST_ITEM == styleDisplay->mDisplay) &&
       (nsnull == mBullet)) {
-    // Create synthetic bullet content object. Note that we don't add
-    // the content object to the content tree so that the DOM can't
-    // find it.
-    Bullet* bullet;
-    NS_NEWXPCOM(bullet, Bullet);
-    if (nsnull == bullet) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
     // Create bullet frame
-    mBullet = new BulletFrame(bullet, this);
+    mBullet = new BulletFrame(mContent, this);
     if (nsnull == mBullet) {
-      NS_RELEASE(bullet);
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
     // Resolve style for the bullet frame
     nsIStyleContext* kidSC;
-    kidSC = aPresContext.ResolveStyleContextFor(bullet, this);
+    kidSC = aPresContext.ResolvePseudoStyleContextFor(nsHTMLAtoms::bulletPseudo, this);
     mBullet->SetStyleContext(&aPresContext, kidSC);
     NS_RELEASE(kidSC);
-    NS_RELEASE(bullet);
 
     // If the list bullet frame should be positioned inside then add
     // it to the flow now.
