@@ -59,6 +59,7 @@
 #include "nsIFormControl.h"
 #include "nsCSSAtoms.h"
 #include "nsIDeviceContext.h"
+#include "nsTextFragment.h"
 
 #ifdef INCLUDE_XUL
 #include "nsXULAtoms.h"
@@ -373,6 +374,7 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIPresContext*       aPresContex
   
     case eStyleContentType_Counter:
     case eStyleContentType_Counters:
+    case eStyleContentType_URL:
       return NS_ERROR_NOT_IMPLEMENTED;  // XXX not supported yet...
   
     case eStyleContentType_OpenQuote:
@@ -596,7 +598,7 @@ nsCSSFrameConstructor::ProcessChildren(nsIPresContext*  aPresContext,
     if (NS_SUCCEEDED(aContent->ChildAt(i, *getter_AddRefs(childContent)))) {
       // Construct a child frame
       ConstructFrame(aPresContext, childContent, aFrame, aAbsoluteItems,
-                     aFrameItems, aFixedItems, aFloatingItems);
+                     aFrameItems, aFixedItems, aFloatingItems, PR_FALSE);
     }
   }
 
@@ -1519,7 +1521,7 @@ nsCSSFrameConstructor::TableProcessChild(nsIPresContext*  aPresContext,
       nsAbsoluteItems floaterList(nsnull);
       rv = ConstructFrame(aPresContext, aChildContent, aParentFrame,
                           aAbsoluteItems, aChildItems, aFixedItems,
-                          floaterList);
+                          floaterList, PR_FALSE);
       NS_ASSERTION(nsnull == floaterList.childList, "floater in odd spot");
     } else {
       nsCOMPtr<nsIAtom> tag;
@@ -1542,12 +1544,12 @@ nsCSSFrameConstructor::TableProcessChild(nsIPresContext*  aPresContext,
           aParentFrame->GetParent(&outerFrame);
           rv = ConstructFrame(aPresContext, aChildContent, outerFrame,
                               aAbsoluteItems, aChildItems, aFixedItems,
-                              floaterList);
+                              floaterList, PR_FALSE);
           // XXX: Seems like this is going into the inner frame's child list instead of the outer frame. - DWH
         } else {
           rv = ConstructFrame(aPresContext, aChildContent, aParentFrame, 
                               aAbsoluteItems, aChildItems, aFixedItems,
-                              floaterList);
+                              floaterList, PR_FALSE);
         }
         NS_ASSERTION(nsnull == floaterList.childList, "floater in odd spot");
       // wrap it in a table cell, row, row group, table if it is a valid tag or display
@@ -2874,7 +2876,8 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresContext*       aPresCo
                                                    nsAbsoluteItems&      aAbsoluteItems,
                                                    nsFrameItems&         aFrameItems,
                                                    nsAbsoluteItems&      aFixedItems,
-                                                   nsAbsoluteItems&      aFloatingItems)
+                                                   nsAbsoluteItems&      aFloatingItems,
+                                                   PRBool aHaveFirstLetterStyle)
 {
   PRBool    isAbsolutelyPositioned = PR_FALSE;
   PRBool    isFixedPositioned = PR_FALSE;
@@ -3044,6 +3047,7 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresContext*       aPresCo
   else {
     PRBool  processChildren = PR_FALSE;  // whether we should process child content
     PRBool  newFrameIsFloaterContainer = PR_FALSE;
+    PRBool  haveFirstLetterStyle = PR_FALSE;
     nsIFrame* ignore;
 
     // Use the 'display' property to choose a frame type
@@ -3055,11 +3059,17 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresContext*       aPresCo
       rv = NS_NewBlockFrame(newFrame, 0);
       processChildren = PR_TRUE;
       newFrameIsFloaterContainer = PR_TRUE;
+      if (NS_SUCCEEDED(rv)) {
+        // See if the block has first-letter style applied to it...
+        haveFirstLetterStyle = HaveFirstLetterStyle(aPresContext, aContent,
+                                                    aStyleContext);
+      }
       break;
   
     case NS_STYLE_DISPLAY_INLINE:
       rv = NS_NewInlineFrame(newFrame);
       processChildren = PR_TRUE;
+      haveFirstLetterStyle = aHaveFirstLetterStyle;
       break;
   
     case NS_STYLE_DISPLAY_TABLE:
@@ -3143,9 +3153,16 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresContext*       aPresCo
       if (processChildren) {
         if (newFrameIsFloaterContainer) {
           nsAbsoluteItems floaterList(newFrame);
-          rv = ProcessChildren(aPresContext, aContent, newFrame,
-                               aAbsoluteItems, childItems, aFixedItems,
-                               aFloatingItems, PR_TRUE);
+          if (haveFirstLetterStyle) {
+            rv = ProcessBlockChildren(aPresContext, aContent, newFrame,
+                                      aAbsoluteItems, childItems, aFixedItems,
+                                      aFloatingItems, PR_TRUE);
+          }
+          else {
+            rv = ProcessChildren(aPresContext, aContent, newFrame,
+                                 aAbsoluteItems, childItems, aFixedItems,
+                                 aFloatingItems, PR_TRUE);
+          }
 
           // Set the frame's initial child list
           newFrame->SetInitialChildList(*aPresContext, nsnull,
@@ -3157,9 +3174,16 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresContext*       aPresCo
           }
         }
         else {
-          rv = ProcessChildren(aPresContext, aContent, newFrame,
-                               aAbsoluteItems, childItems, aFixedItems,
-                               aFloatingItems, PR_TRUE);
+          if (haveFirstLetterStyle) {
+            rv = ProcessBlockChildren(aPresContext, aContent, newFrame,
+                                      aAbsoluteItems, childItems, aFixedItems,
+                                      aFloatingItems, PR_TRUE);
+          }
+          else {
+            rv = ProcessChildren(aPresContext, aContent, newFrame,
+                                 aAbsoluteItems, childItems, aFixedItems,
+                                 aFloatingItems, PR_TRUE);
+          }
 
           // Set the frame's initial child list
           newFrame->SetInitialChildList(*aPresContext, nsnull,
@@ -3325,7 +3349,8 @@ nsCSSFrameConstructor::ConstructFrame(nsIPresContext*  aPresContext,
                                       nsAbsoluteItems& aAbsoluteItems,
                                       nsFrameItems&    aFrameItems,
                                       nsAbsoluteItems& aFixedItems,
-                                      nsAbsoluteItems& aFloatingItems)
+                                      nsAbsoluteItems& aFloatingItems,
+                                      PRBool aHaveFirstLetterStyle)
 {
   NS_PRECONDITION(nsnull != aParentFrame, "no parent frame");
 
@@ -3423,7 +3448,8 @@ nsCSSFrameConstructor::ConstructFrame(nsIPresContext*  aPresContext,
         rv = ConstructFrameByDisplayType(aPresContext, display, aContent,
                                          aParentFrame, styleContext,
                                          aAbsoluteItems, aFrameItems,
-                                         aFixedItems, aFloatingItems);
+                                         aFixedItems, aFloatingItems,
+                                         aHaveFirstLetterStyle);
       }
     }
   }
@@ -3701,7 +3727,7 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
       
       aContainer->ChildAt(i, *getter_AddRefs(child));
       ConstructFrame(aPresContext, child, parentFrame, absoluteItems,
-                     frameItems, fixedItems, floaterList);
+                     frameItems, fixedItems, floaterList, PR_FALSE);
     }
 
     // Adjust parent frame for table inner/outer frame
@@ -3973,7 +3999,7 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
       nsFrameItems    frameItems;
       nsAbsoluteItems fixedItems(mFixedContainingBlock);
       rv = ConstructFrame(aPresContext, aChild, parentFrame, absoluteItems,
-                          frameItems, fixedItems, floaterList);
+                          frameItems, fixedItems, floaterList, PR_FALSE);
       
       nsIFrame* newFrame = frameItems.childList;
       
@@ -5030,7 +5056,7 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresContext* aPresContext,
     rv = ConstructFrameByDisplayType(aPresContext, display, content,
                                      parentFrame, styleContext,
                                      absoluteItems, frameItems,
-                                     fixedItems, floaterList);
+                                     fixedItems, floaterList, PR_FALSE);
 
     nsIFrame* newFrame = frameItems.childList;
     if (NS_SUCCEEDED(rv)) {
@@ -5284,14 +5310,6 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsIPresContext* aPresContext,
                                                styleContext, PR_FALSE);
     }
   
-  } else if (nsHTMLAtoms::lineFrame == frameType) {
-    rv = NS_NewFirstLineFrame(&newFrame);
-    if (NS_SUCCEEDED(rv)) {
-      newFrame->Init(*aPresContext, content, aParentFrame, styleContext, aFrame);
-      nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, newFrame,
-                                               styleContext, PR_FALSE);
-    }
-  
   } else if (nsLayoutAtoms::blockFrame == frameType) {
     rv = NS_NewBlockFrame(newFrame, 0);
     if (NS_SUCCEEDED(rv)) {
@@ -5388,6 +5406,22 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsIPresContext* aPresContext,
       // Set the table cell's initial child list
       newFrame->SetInitialChildList(*aPresContext, nsnull, continuingAreaFrame);
     }
+  
+  } else if (nsLayoutAtoms::lineFrame == frameType) {
+    rv = NS_NewFirstLineFrame(&newFrame);
+    if (NS_SUCCEEDED(rv)) {
+      newFrame->Init(*aPresContext, content, aParentFrame, styleContext, aFrame);
+      nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, newFrame,
+                                               styleContext, PR_FALSE);
+    }
+  
+  } else if (nsLayoutAtoms::letterFrame == frameType) {
+    rv = NS_NewFirstLetterFrame(&newFrame);
+    if (NS_SUCCEEDED(rv)) {
+      newFrame->Init(*aPresContext, content, aParentFrame, styleContext, aFrame);
+      nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, newFrame,
+                                               styleContext, PR_FALSE);
+    }
 
   } else {
     NS_ASSERTION(PR_FALSE, "unexpected frame type");
@@ -5428,3 +5462,286 @@ nsCSSFrameConstructor::RecreateFramesForContent(nsIPresContext* aPresContext,
   return rv;
 }
 
+//////////////////////////////////////////////////////////////////////
+
+// Block frame construction code
+
+PRBool
+nsCSSFrameConstructor::HaveFirstLetterStyle(nsIPresContext* aPresContext,
+                                            nsIContent* aContent,
+                                            nsIStyleContext* aStyleContext)
+{
+  nsIStyleContext* fls = nsnull;
+  aPresContext->ProbePseudoStyleContextFor(aContent,
+                                           nsHTMLAtoms::firstLetterPseudo,
+                                           aStyleContext, PR_FALSE, &fls);
+  if (fls) {
+    NS_RELEASE(fls);
+    return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
+nsIStyleContext*
+nsCSSFrameConstructor::GetFirstLetterStyle(nsIPresContext* aPresContext,
+                                           nsIContent* aContent,
+                                           nsIStyleContext* aStyleContext)
+{
+  nsIStyleContext* fls = nsnull;
+  aPresContext->ResolvePseudoStyleContextFor(aContent,
+                                             nsHTMLAtoms::firstLetterPseudo,
+                                             aStyleContext, PR_FALSE, &fls);
+  return fls;
+}
+
+static PRBool
+ShouldCreateFirstLetterFrame(nsIPresContext*  aPresContext,
+                             nsIContent*      aContent,
+                             nsIFrame*        aFrame)
+{
+  PRBool result = PR_FALSE;
+  NS_PRECONDITION(aFrame, "null ptr");
+
+  // See if the first frame isa text frame and if it is, that it has
+  // some non-whitespace content.
+  nsIAtom* frameType;
+  aFrame->GetFrameType(&frameType);
+  if (frameType == nsLayoutAtoms::textFrame) {
+    nsITextContent* tc = nsnull;
+    nsresult rv = aContent->QueryInterface(kITextContentIID, (void**) &tc);
+    if (NS_SUCCEEDED(rv)) {
+      tc->IsOnlyWhitespace(&result);
+      result = !result;
+      NS_RELEASE(tc);
+    }
+  }
+  NS_IF_RELEASE(frameType);
+  return result;
+}
+
+nsresult
+nsCSSFrameConstructor::ProcessBlockChildren(nsIPresContext*  aPresContext,
+                                            nsIContent*      aContent,
+                                            nsIFrame*        aFrame,
+                                            nsAbsoluteItems& aAbsoluteItems,
+                                            nsFrameItems&    aFrameItems,
+                                            nsAbsoluteItems& aFixedItems,
+                                            nsAbsoluteItems& aFloatingItems,
+                                            PRBool           aCanHaveGeneratedContent)
+{
+  nsresult rv = NS_OK;
+  nsIStyleContext*  styleContext = nsnull;
+
+  if (aCanHaveGeneratedContent) {
+    // Probe for generated content before
+    nsIFrame* generatedFrame;
+    aFrame->GetStyleContext(&styleContext);
+    if (CreateGeneratedContentFrame(aPresContext, aFrame, aContent,
+                                    styleContext, nsCSSAtoms::beforePseudo,
+                                    &generatedFrame)) {
+      // Add the generated frame to the child list
+      aFrameItems.AddChild(generatedFrame);
+    }
+  }
+
+  // Iterate the child content objects and construct frames
+  PRInt32   count;
+  aContent->ChildCount(count);
+  for (PRInt32 i = 0; i < count; i++) {
+    nsCOMPtr<nsIContent> childContent;
+    if (NS_SUCCEEDED(aContent->ChildAt(i, *getter_AddRefs(childContent)))) {
+      // Construct a child frame
+      rv = ConstructFrame(aPresContext, childContent, aFrame, aAbsoluteItems,
+                          aFrameItems, aFixedItems, aFloatingItems,
+                          i == 0);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+
+      // Process first-letter frame that is the immediate child of the parent
+      if ((i == 0) &&
+          ShouldCreateFirstLetterFrame(aPresContext, childContent,
+                                       aFrameItems.childList)) {
+        rv = WrapTextFrame(aPresContext, aFrameItems.childList, aContent,
+                           childContent, aFrame, aFrameItems, aFloatingItems);
+      }
+    }
+  }
+
+  if (aCanHaveGeneratedContent) {
+    // Probe for generated content after
+    nsIFrame* generatedFrame;
+    if (CreateGeneratedContentFrame(aPresContext, aFrame, aContent,
+                                    styleContext, nsCSSAtoms::afterPseudo,
+                                    &generatedFrame)) {
+      // Add the generated frame to the child list
+      aFrameItems.AddChild(generatedFrame);
+    }
+  }
+
+  NS_IF_RELEASE(styleContext);
+  return rv;
+}
+
+// Determine how many characters in the text fragment that applies to
+// the first letter
+static PRInt32
+FirstLetterCount(nsTextFragment* aFragments, PRInt32 aNumFragments)
+{
+  PRInt32 count = 0;
+  PRInt32 firstLetterLength = 0;
+  PRBool done = PR_FALSE;
+  while (aNumFragments && !done) {
+    PRInt32 i, n = aFragments->GetLength();
+    for (i = 0; i < n; i++) {
+      PRUnichar ch = aFragments->CharAt(i);
+      if (XP_IS_SPACE(ch)) {
+        if (firstLetterLength) {
+          done = PR_TRUE;
+          break;
+        }
+        count++;
+        continue;
+      }
+      // XXX I18n
+      if ((ch == '\'') || (ch == '\"')) {
+        if (firstLetterLength) {
+          done = PR_TRUE;
+          break;
+        }
+        // keep looping
+        firstLetterLength = 1;
+      }
+      else {
+        count++;
+        done = PR_TRUE;
+        break;
+      }
+    }
+    aFragments++;
+    aNumFragments--;
+  }
+  return count;
+}
+
+static PRInt32
+TotalLength(nsTextFragment* aFragments, PRInt32 aNumFragments)
+{
+  PRInt32 sum = 0;
+  while (--aNumFragments >= 0) {
+    sum += aFragments->GetLength();
+  }
+  return sum;
+}
+
+static PRBool NeedFirstLetterContinuation(nsIContent* aContent)
+{
+  NS_PRECONDITION(aContent, "null ptr");
+
+  PRBool result = PR_FALSE;
+  if (aContent) {
+    nsITextContent* tc = nsnull;
+    nsresult rv = aContent->QueryInterface(kITextContentIID, (void**) &tc);
+    if (NS_SUCCEEDED(rv)) {
+      nsTextFragment* frags = nsnull;
+      PRInt32 numFrags = 0;
+      tc->GetText(frags, numFrags);
+      PRInt32 flc = FirstLetterCount(frags, numFrags);
+      PRInt32 tl = TotalLength(frags, numFrags);
+      if (flc < tl) {
+        result = PR_TRUE;
+      }
+    }
+  }
+  return result;
+}
+
+void
+nsCSSFrameConstructor::CreateFloatingFirstLetterFrame(
+  nsIPresContext* aPresContext,
+  nsIFrame* aTextFrame,
+  nsIContent* aContent,
+  nsIContent* aChildContent,
+  nsIFrame* aParentFrame,
+  nsFrameItems& aFrameItems,
+  nsFrameItems& aFloatingItems,
+  nsIStyleContext* aStyleContext)
+{
+  // See if we will need to continue the text frame (does it contain
+  // more than just the first-letter text or not?) If it does, then we
+  // create (in advance) a continuation frame for it.
+  nsIFrame* nextTextFrame = nsnull;
+  if (NeedFirstLetterContinuation(aChildContent)) {
+    // Create continuation
+    CreateContinuingFrame(aPresContext, aTextFrame, aParentFrame,
+                          &nextTextFrame);
+  }
+
+
+  // Create the first-letter-frame
+  nsIFrame* firstLetterFrame;
+  NS_NewFirstLetterFrame(&firstLetterFrame);
+  firstLetterFrame->Init(*aPresContext, aContent, aParentFrame,
+                         aStyleContext, nsnull);
+  firstLetterFrame->SetInitialChildList(*aPresContext, nsnull, aTextFrame);
+  aTextFrame->SetParent(firstLetterFrame);
+
+  // Now make the placeholder
+  nsIFrame* placeholderFrame;
+  CreatePlaceholderFrameFor(aPresContext, aContent, firstLetterFrame,
+                            aStyleContext, aParentFrame,
+                            &placeholderFrame);
+
+  // Update the child lists for the frame containing the floating first
+  // letter frame.
+  aFloatingItems.AddChild(firstLetterFrame);
+  aFrameItems.childList = placeholderFrame;
+  aFrameItems.lastChild = placeholderFrame;
+  if (nextTextFrame) {
+    aFrameItems.AddChild(nextTextFrame);
+  }
+}
+
+nsresult
+nsCSSFrameConstructor::WrapTextFrame(nsIPresContext* aPresContext,
+                                     nsIFrame* aTextFrame,
+                                     nsIContent* aContent,
+                                     nsIContent* aChildContent,
+                                     nsIFrame* aParentFrame,
+                                     nsFrameItems& aFrameItems,
+                                     nsFrameItems& aFloatingItems)
+{
+  // Get style context for the first-letter-frame
+  nsIStyleContext* psc;
+  if (NS_SUCCEEDED(aParentFrame->GetStyleContext(&psc)) && psc) {
+    nsIStyleContext* sc = GetFirstLetterStyle(aPresContext, aContent, psc);
+    if (sc) {
+      const nsStyleDisplay* display = (const nsStyleDisplay*)
+        sc->GetStyleData(eStyleStruct_Display);
+      if (display->IsFloating()) {
+        CreateFloatingFirstLetterFrame(aPresContext, aTextFrame, aContent,
+                                       aChildContent, aParentFrame,
+                                       aFrameItems, aFloatingItems, sc);
+      }
+      else {
+        nsIFrame* newFrame;
+        nsresult rv = NS_NewFirstLetterFrame(&newFrame);
+        if (NS_SUCCEEDED(rv)) {
+          // Initialize the first-letter-frame.
+          rv = newFrame->Init(*aPresContext, aContent, aParentFrame, sc,
+                              nsnull);
+          newFrame->SetInitialChildList(*aPresContext, nsnull, aTextFrame);
+          aTextFrame->SetParent(newFrame);
+
+          // Replace the text frame in the flow child list with the
+          // first-letter-frame
+          aFrameItems.childList = newFrame;
+          aFrameItems.lastChild = newFrame;
+        }
+      }
+      NS_RELEASE(sc);
+    }
+    NS_RELEASE(psc);
+  }
+  return NS_OK;
+}
