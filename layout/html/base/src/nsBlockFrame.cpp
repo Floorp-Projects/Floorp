@@ -134,6 +134,7 @@ nsBlockReflowState::Initialize(nsIPresContext* aPresContext,
 
   mX = 0;
   mY = 0;
+  mStyleSizeFlags = 0;
   mAvailSize = reflowState->maxSize;
   mUnconstrainedWidth = PRBool(mAvailSize.width == NS_UNCONSTRAINEDSIZE);
   mUnconstrainedHeight = PRBool(mAvailSize.height == NS_UNCONSTRAINEDSIZE);
