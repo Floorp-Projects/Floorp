@@ -89,7 +89,9 @@ nsImapURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
   // Set the folder to the url path
   nsCAutoString folder;
   rv = url->GetPath(folder);
-  
+  // can't have leading '/' in path
+  if (folder.CharAt(0) == '/')
+    folder.Cut(0, 1);
   // Now find the server from the URL
   nsCOMPtr<nsIMsgIncomingServer> server;
   nsCOMPtr<nsIMsgAccountManager> accountManager = 
