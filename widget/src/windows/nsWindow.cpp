@@ -2428,19 +2428,38 @@ BOOL nsWindow::OnChar( UINT mbcsCharCode, UINT virtualKeyCode, bool isMultiByte 
   char		charToConvert[2];
   size_t	length;
 
-  if (virtualKeyCode < 0x20) {
-    uniChar = 0;
-  } else if (! mIsControlDown) { 
+  {
 	  charToConvert[0] = LOBYTE(mbcsCharCode);
-	  length = 1;
-    ::MultiByteToWideChar(gCurrentKeyboardCP,MB_PRECOMPOSED,charToConvert,length, 
-                          &uniChar,sizeof(uniChar));
-    virtualKeyCode = 0;
-    mIsShiftDown = PR_FALSE;
+	  length=1;
   }
 
+  
+  if(mIsControlDown && (virtualKeyCode <= 0x1A)) // Ctrl+A Ctrl+Z, see Programming Windows 3.1 page 110 for details  
+  { 
+    // need to account for shift here.  bug 16486 
+    if ( mIsShiftDown ) 
+      uniChar = virtualKeyCode - 1 + 'A' ; 
+    else 
+      uniChar = virtualKeyCode - 1 + 'a' ; 
+    virtualKeyCode = 0;
+  } 
+  else 
+  { // 0x20 - SPACE, 0x3D - EQUALS
+    if(virtualKeyCode < 0x20 || (virtualKeyCode == 0x3D && mIsControlDown)) 
+    {
+      uniChar = 0;
+    } 
+    else 
+    {
+      ::MultiByteToWideChar(gCurrentKeyboardCP,MB_PRECOMPOSED,charToConvert,length,
+	    &uniChar,sizeof(uniChar));
+      virtualKeyCode = 0;
+      mIsShiftDown = PR_FALSE;
+    }
+  }
   return DispatchKeyEvent(NS_KEY_PRESS, uniChar, virtualKeyCode);
 
+  //return FALSE;
 }
 
 
@@ -2849,18 +2868,21 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 
             unsigned char    ch = (unsigned char)wParam;
             UINT            char_result;
-            UINT            virtualKeyCode;
   
-            if (mIsControlDown) {
-              virtualKeyCode = MapVirtualKey(LOBYTE(HIWORD(lParam)), 1);
-              char_result = virtualKeyCode;
-            } else {
-              char_result = ch;
-              result = OnChar(char_result,ch,false);
-              virtualKeyCode = char_result;
+            //
+            // check first for backspace or return, handle them specially 
+            //
+            if ((wParam <= 0xff) && (ch==0x0d || ch==0x08)) {
+
+                result = OnChar(ch,ch==0x0d ? VK_RETURN : VK_BACK,true);
+                break;
             }
   
-            result = OnChar(char_result, virtualKeyCode, false);
+            {
+                char_result = ch;
+                result = OnChar(char_result,ch,false);
+            }
+  
             break;
         }
         case WM_SYSKEYUP:
