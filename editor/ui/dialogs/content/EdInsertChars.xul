@@ -35,6 +35,7 @@
     xmlns:html="http://www.w3.org/1999/xhtml"
     onload = "Startup()"
     onunload = "Unload()"
+    onfocus = "onFocus()"
     orient="vertical">
 
   <!-- Methods common to all editor dialogs -->

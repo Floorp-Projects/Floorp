@@ -79,6 +79,16 @@ function onOK()
   //return true;
 }
 
+// Don't allow inserting in HTML Source Mode
+function onFocus()
+{
+  var enable = true;
+  if ("gEditorDisplayMode" in window.opener)
+    enable = !window.opener.IsInHTMLSourceMode();
+
+  SetElementEnabledById("ok", enable);
+}
+
 function Unload()
 {
   window.opener.InsertCharWindow = null;
