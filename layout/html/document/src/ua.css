@@ -210,7 +210,7 @@ parsererror|parsererror {
 parsererror|sourcetext {
   display: block;
   white-space: pre;
-  font-family: Courier;
+  font-family: -moz-fixed;
   margin-top: 2em;
   margin-bottom: 1em;
   color: red;
