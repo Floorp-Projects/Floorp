@@ -2235,9 +2235,9 @@ CreateDirectoryA( PSZ resolvedPath, PEAOP2 ppEABuf)
 static int isleadbyte(int c)
 {
   static BOOL bDBCSFilled=FALSE;
-  static BYTE DBCSInfo[12] = { 0 };  /* According to the Control Program Guide&Ref,
+  static CHAR DBCSInfo[12] = { 0 };  /* According to the Control Program Guide&Ref,
                                              12 bytes is sufficient */
-  BYTE *curr;
+  CHAR *curr;
   BOOL retval = FALSE;
 
   if( !bDBCSFilled ) {
