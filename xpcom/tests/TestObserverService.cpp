@@ -137,7 +137,7 @@ int main(int argc, char *argv[])
                 if (NS_SUCCEEDED(rv)) {
                   rv = inst->QueryInterface(NS_GET_IID(nsIObserver),(void**)&anObserver);
                   cout << "Calling observe on enumerated observer "
-                        << ((TestObserver*)inst)->mName << "..." << endl;
+                        << NS_REINTERPRET_CAST(TestObserver*, NS_REINTERPRET_CAST(void*, inst))->mName << "..." << endl;
                   rv = anObserver->Observe( inst, topicA.GetUnicode(), nsString("during enumeration").GetUnicode() );
                   testResult(rv);
                 }
