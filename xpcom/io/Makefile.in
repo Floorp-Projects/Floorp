@@ -113,18 +113,13 @@ XPIDLSRCS	= \
 		nsIByteArrayInputStream.idl \
 		nsIFastLoadFileControl.idl \
 		nsIFastLoadService.idl \
-		nsIFile.idl \
 		nsIFileSpec.idl \
-		nsIInputStream.idl \
 		nsIInputStreamTee.idl \
 		nsILineInputStream.idl \
-		nsILocalFile.idl \
 		nsIMultiplexInputStream.idl \
 		nsIObjectInputStream.idl \
 		nsIObjectOutputStream.idl \
-		nsIOutputStream.idl \
 		nsIPipe.idl \
-		nsIScriptableInputStream.idl \
 		nsISeekableStream.idl \
 		nsIStorageStream.idl \
 		nsIStreamBufferAccess.idl \
@@ -135,6 +130,11 @@ XPIDLSRCS	= \
 
 SDK_XPIDLSRCS   = \
 		nsIDirectoryService.idl \
+		nsIFile.idl \
+		nsILocalFile.idl \
+		nsIInputStream.idl \
+		nsIOutputStream.idl \
+		nsIScriptableInputStream.idl \
 		$(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
