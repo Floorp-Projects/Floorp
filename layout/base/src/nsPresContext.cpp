@@ -1500,10 +1500,7 @@ nsPresContext::LoadImage(const nsString& aURL,
     nsresult rv;
     nsCOMPtr<nsIDOMElement> element(do_QueryInterface(content));
 
-    if (!element) // this would seem bad(tm)
-      return NS_ERROR_FAILURE;
-
-    if (content) {
+    if (content && element) {
       nsCOMPtr<nsIDocument> document;
       rv = content->GetDocument(*getter_AddRefs(document));
 
