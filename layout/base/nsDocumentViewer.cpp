@@ -402,7 +402,7 @@ private:
 class PrintData {
 public:
 
-  typedef enum ePrintDataType {eIsPrinting, eIsPrintPreview };
+  typedef enum {eIsPrinting, eIsPrintPreview } ePrintDataType;
 
   PrintData(ePrintDataType aType);
   ~PrintData(); // non-virtual
