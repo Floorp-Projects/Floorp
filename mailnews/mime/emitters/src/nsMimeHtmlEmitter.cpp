@@ -34,6 +34,10 @@
 #include "nsXPIDLString.h"
 #include "nsMimeTypes.h"
 
+#include "nsIMimeConverter.h"
+#include "nsMsgMimeCID.h"
+
+static NS_DEFINE_CID(kCMimeConverterCID, NS_MIME_CONVERTER_CID);
 
 nsresult NS_NewMimeHtmlDisplayEmitter(const nsIID& iid, void **result)
 {
@@ -57,6 +61,13 @@ nsMimeHtmlDisplayEmitter::nsMimeHtmlDisplayEmitter()
 
 nsMimeHtmlDisplayEmitter::~nsMimeHtmlDisplayEmitter(void)
 {
+}
+
+nsresult nsMimeHtmlDisplayEmitter::Init()
+{
+  // we're going to need a converter to convert
+  return nsComponentManager::CreateInstance(kCMimeConverterCID, nsnull, 
+                                              NS_GET_IID(nsIMimeConverter), getter_AddRefs(mUnicodeConverter));
 }
 
 PRBool nsMimeHtmlDisplayEmitter::BroadCastHeadersAndAttachments()
@@ -141,13 +152,21 @@ nsresult nsMimeHtmlDisplayEmitter::WriteHTMLHeaders()
   {
      return nsMimeBaseEmitter::WriteHTMLHeaders();
   }
-
+ 
   // try to get a header sink if there is one....
   nsCOMPtr<nsIMsgHeaderSink> headerSink; 
   nsresult rv = GetHeaderSink(getter_AddRefs(headerSink));
 
   if (headerSink)
     headerSink->OnStartHeaders();
+
+  // We are going to iterate over all the known headers,
+  // and broadcast them to the header sink. However, we need to 
+  // convert our UTF-8 header values into unicode before 
+  // broadcasting them....
+  nsAutoString unicodeHeaderValue;
+  nsAutoString headerValue;
+  nsAutoString charset ("UTF-8");
 
   for (PRInt32 i=0; i<mHeaderArray->Count(); i++)
   {
@@ -158,9 +177,12 @@ nsresult nsMimeHtmlDisplayEmitter::WriteHTMLHeaders()
 
     if (headerSink)
     {
-      char * escapedValue = nsEscapeHTML(headerInfo->value);
-      headerSink->HandleHeader(headerInfo->name, escapedValue);
-      nsCRT::free(escapedValue);
+        headerValue = headerInfo->value;
+        // this interface for DecodeMimePartIIStr requires us to pass in nsStrings by reference
+        // we should remove the nsString requirements from the interface....
+			  rv = mUnicodeConverter->DecodeMimePartIIStr(headerValue, charset, unicodeHeaderValue);
+        if (NS_SUCCEEDED(rv))
+          headerSink->HandleHeader(headerInfo->name, unicodeHeaderValue.GetUnicode());
     }
   }
 

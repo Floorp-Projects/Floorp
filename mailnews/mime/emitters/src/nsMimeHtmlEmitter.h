@@ -33,10 +33,13 @@
 #include "nsIPref.h"
 #include "nsIChannel.h"
 #include "nsIMimeMiscStatus.h"
+#include "nsIMimeConverter.h"
 
 class nsMimeHtmlDisplayEmitter : public nsMimeBaseEmitter {
 public: 
     nsMimeHtmlDisplayEmitter ();
+    nsresult Init();
+
     virtual       ~nsMimeHtmlDisplayEmitter (void);
 
     // Header handling routines.
@@ -60,6 +63,8 @@ protected:
     PRBool        mSkipAttachment;  // attachments we shouldn't show...
 
     nsCOMPtr<nsIMsgHeaderSink> mHeaderSink;
+    nsCOMPtr<nsIMimeConverter> mUnicodeConverter;
+
     nsresult GetHeaderSink(nsIMsgHeaderSink ** aHeaderSink);
     PRBool BroadCastHeadersAndAttachments();
     nsresult DumpAttachmentMenu();

@@ -40,7 +40,7 @@
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMimeRawEmitter);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMimeXmlEmitter);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMimeXULEmitter);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsMimeHtmlDisplayEmitter);
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMimeHtmlDisplayEmitter, Init);
 
 static nsModuleComponentInfo components[] =
 {
