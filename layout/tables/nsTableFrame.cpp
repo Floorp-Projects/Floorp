@@ -3441,7 +3441,14 @@ nsTableFrame::CalcDesiredHeight(nsIPresContext*          aPresContext,
   nsAutoVoidArray rowGroups;
   PRUint32 numRowGroups;
   OrderRowGroups(rowGroups, numRowGroups, nsnull);
-  if (numRowGroups <= 0) return 0;
+  if (numRowGroups <= 0) {
+    // tables can be used as rectangular items without content
+    nscoord tableSpecifiedHeight = CalcBorderBoxHeight(aPresContext, aReflowState);
+    if ((NS_UNCONSTRAINEDSIZE != tableSpecifiedHeight) &&
+        (tableSpecifiedHeight > 0))
+      return tableSpecifiedHeight;
+    return 0;
+  }
 
   nscoord desiredHeight = borderPadding.top + cellSpacingY + borderPadding.bottom;
   for (PRUint32 rgX = 0; rgX < numRowGroups; rgX++) {
