@@ -82,8 +82,8 @@ nsImageXlib::nsImageXlib()
 , mIsSpacer(PR_TRUE)
 , mGC(nsnull)
 , mPendingUpdate(PR_FALSE)
-, mDecodedX1(0)
-, mDecodedY1(0)
+, mDecodedX1(PR_INT32_MAX)
+, mDecodedY1(PR_INT32_MAX)
 , mDecodedX2(0)
 , mDecodedY2(0)
 {
@@ -257,6 +257,9 @@ void nsImageXlib::ImageUpdated(nsIDeviceContext *aContext,
   mPendingUpdate = PR_TRUE;
   mUpdateRegion.Or(mUpdateRegion, *aUpdateRect);
 
+  mDecodedX1 = PR_MIN(mDecodedX1, aUpdateRect->x);
+  mDecodedY1 = PR_MIN(mDecodedY1, aUpdateRect->y);
+
   if (aUpdateRect->YMost() > mDecodedY2)
     mDecodedY2 = aUpdateRect->YMost();
   if (aUpdateRect->XMost() > mDecodedX2)
@@ -395,6 +398,9 @@ nsImageXlib::DrawScaled(nsIRenderingContext &aContext,
     return NS_ERROR_FAILURE;
 
   if (0 == aSWidth || 0 == aDWidth || 0 == aSHeight || 0 == aDHeight)
+    return NS_OK;
+
+  if (mDecodedX2 < mDecodedX1 || mDecodedY2 < mDecodedY1)
     return NS_OK;
 
   // limit the size of the blit to the amount of the image read in
@@ -565,6 +571,9 @@ nsImageXlib::Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
     UpdateCachedImage();
 
   if ((mAlphaDepth == 1) && mIsSpacer)
+    return NS_OK;
+
+  if (mDecodedX2 < mDecodedX1 || mDecodedY2 < mDecodedY1)
     return NS_OK;
 
   if (aSWidth != aDWidth || aSHeight != aDHeight) {
@@ -1211,6 +1220,9 @@ nsImageXlib::Draw(nsIRenderingContext &aContext,
   if (aSurface == nsnull)
     return NS_ERROR_FAILURE;
 
+  if (mDecodedX2 < mDecodedX1 || mDecodedY2 < mDecodedY1)
+    return NS_OK;
+
   if ((mAlphaDepth == 8) && mAlphaValid) {
     DrawComposited(aContext, aSurface,
         0, 0, aWidth, aHeight,
@@ -1331,7 +1343,10 @@ NS_IMETHODIMP nsImageXlib::DrawTile(nsIRenderingContext &aContext,
   if (aTileRect.width <= 0 || aTileRect.height <= 0) {
     return NS_OK;
   }
-  
+
+  if (mDecodedX2 < mDecodedX1 || mDecodedY2 < mDecodedY1)
+    return NS_OK;
+
   nsIDrawingSurfaceXlib *drawing = NS_STATIC_CAST(nsIDrawingSurfaceXlib *, aSurface);
 
   PRBool partial = PR_FALSE;

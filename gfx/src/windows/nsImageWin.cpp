@@ -76,8 +76,8 @@ nsImageWin::nsImageWin()
   , mSizeImage(0)
   , mRowBytes(0)
   , mIsOptimized(PR_FALSE)
-  , mDecodedX1(0)
-  , mDecodedY1(0)
+  , mDecodedX1(PR_INT32_MAX)
+  , mDecodedY1(PR_INT32_MAX)
   , mDecodedX2(0)
   , mDecodedY2(0)
   , mIsLocked(PR_FALSE)
@@ -229,6 +229,9 @@ nsresult nsImageWin :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMa
 void 
 nsImageWin :: ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRect *aUpdateRect)
 {
+  mDecodedX1 = PR_MIN(mDecodedX1, aUpdateRect->x);
+  mDecodedY1 = PR_MIN(mDecodedY1, aUpdateRect->y);
+
   if (aUpdateRect->YMost() > mDecodedY2)
     mDecodedY2 = aUpdateRect->YMost();
   if (aUpdateRect->XMost() > mDecodedX2)
@@ -449,6 +452,8 @@ nsImageWin::Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
   if (0 == aSWidth || 0 == aDWidth || 0 == aSHeight || 0 == aDHeight)
     return NS_OK;
 
+  if (mDecodedX2 < mDecodedX1 || mDecodedY2 < mDecodedY1)
+    return NS_OK;
 
   PRInt32 origSHeight = aSHeight, origDHeight = aDHeight;
   PRInt32 origSWidth = aSWidth, origDWidth = aDWidth;
@@ -722,6 +727,9 @@ NS_IMETHODIMP nsImageWin::DrawTile(nsIRenderingContext &aContext,
 {
   NS_ASSERTION(aSXOffset < mBHead->biWidth && aSYOffset < mBHead->biHeight,
                "Offset(s) are bigger than image.  Caller to DrawTile needs to do more thinking!");
+
+  if (mDecodedX2 < mDecodedX1 || mDecodedY2 < mDecodedY1)
+    return NS_OK;
 
   float           scale;
   unsigned char   *targetRow,*imageRow,*alphaRow;

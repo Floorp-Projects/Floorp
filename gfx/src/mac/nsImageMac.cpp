@@ -99,8 +99,8 @@ nsImageMac::nsImageMac()
 , mMaskBitsHandle(nsnull)
 , mAlphaDepth(0)
 , mARowBytes(0)
-, mDecodedX1(0)
-, mDecodedY1(0)
+, mDecodedX1(PR_INT32_MAX)
+, mDecodedY1(PR_INT32_MAX)
 , mDecodedX2(0)
 , mDecodedY2(0)
 {
@@ -249,6 +249,9 @@ nsImageMac::Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, nsMaskRequirem
  */
 void nsImageMac::ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRect *aUpdateRect)
 {
+  mDecodedX1 = PR_MIN(mDecodedX1, aUpdateRect->x);
+  mDecodedY1 = PR_MIN(mDecodedY1, aUpdateRect->y);
+
   if (aUpdateRect->YMost() > mDecodedY2)
     mDecodedY2 = aUpdateRect->YMost();
   if (aUpdateRect->XMost() > mDecodedX2)
@@ -267,6 +270,9 @@ NS_IMETHODIMP nsImageMac::Draw(nsIRenderingContext &aContext, nsDrawingSurface a
 
   if (!mImageBitsHandle)
     return NS_ERROR_FAILURE;
+
+  if (mDecodedX2 < mDecodedX1 || mDecodedY2 < mDecodedY1)
+    return NS_OK;
 
   PRInt32 srcWidth = aSWidth;
   PRInt32 srcHeight = aSHeight;
@@ -1483,6 +1489,9 @@ nsresult nsImageMac::SlowTile(nsIRenderingContext &aContext,
                                    PRInt32 aSXOffset, PRInt32 aSYOffset,
                                    const nsRect &aTileRect)
 {
+  if (mDecodedX2 < mDecodedX1 || mDecodedY2 < mDecodedY1)
+    return NS_OK;
+
   PRInt32
     validX = 0,
     validY = 0,

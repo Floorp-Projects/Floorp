@@ -60,24 +60,24 @@ NS_IMPL_ISUPPORTS1(nsImageGTK, nsIImage)
 
 nsImageGTK::nsImageGTK()
   : mImageBits(nsnull)
+  , mImagePixmap(nsnull)
+  , mTrueAlphaBits(nsnull)
+  , mAlphaBits(nsnull)
+  , mAlphaPixmap(nsnull)
+  , mAlphaXImage(nsnull)
   , mWidth(0)
   , mHeight(0)
-  , mDepth(0)
-  , mAlphaBits(nsnull)
-  , mTrueAlphaBits(nsnull)
-  , mAlphaPixmap(nsnull)
-  , mImagePixmap(nsnull)
-  , mAlphaXImage(nsnull)
-  , mAlphaDepth(0)
-  , mTrueAlphaDepth(0)
   , mRowBytes(0)
   , mSizeImage(0)
-  , mDecodedX1(0)
-  , mDecodedY1(0)
+  , mDecodedX1(PR_INT32_MAX)
+  , mDecodedY1(PR_INT32_MAX)
   , mDecodedX2(0)
   , mDecodedY2(0)
+  , mAlphaDepth(0)
+  , mTrueAlphaDepth(0)
   , mIsSpacer(PR_TRUE)
   , mPendingUpdate(PR_FALSE)
+  , mDepth(0)
   , mOptimized(PR_FALSE)
 {
 #ifdef TRACE_IMAGE_ALLOCATION
@@ -259,6 +259,9 @@ void nsImageGTK::ImageUpdated(nsIDeviceContext *aContext,
 {
   mPendingUpdate = PR_TRUE;
   mUpdateRegion.Or(mUpdateRegion, *aUpdateRect);
+
+  mDecodedX1 = PR_MIN(mDecodedX1, aUpdateRect->x);
+  mDecodedY1 = PR_MIN(mDecodedY1, aUpdateRect->y);
 
   if (aUpdateRect->YMost() > mDecodedY2)
     mDecodedY2 = aUpdateRect->YMost();
@@ -602,6 +605,9 @@ nsImageGTK::Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
     UpdateCachedImage();
 
   if ((mAlphaDepth==1) && mIsSpacer)
+    return NS_OK;
+
+  if (mDecodedX2 < mDecodedX1 || mDecodedY2 < mDecodedY1)
     return NS_OK;
 
 #ifdef TRACE_IMAGE_ALLOCATION
@@ -1065,10 +1071,10 @@ nsImageGTK::DrawCompositedGeneral(PRBool isLSB, PRBool flipBytes,
   greenFill = 0xff>>visual->green_prec;
   blueFill =  0xff>>visual->blue_prec;
 
-  for (int row=0; row<height; row++) {
+  for (unsigned row=0; row<height; row++) {
     unsigned char *ptr = srcData + row*ximage->bytes_per_line;
     unsigned char *target = readData+3*row*ximage->width;
-    for (int col=0; col<width; col++) {
+    for (unsigned col=0; col<width; col++) {
       unsigned pix;
       switch (ximage->bits_per_pixel) {
       case 1:
@@ -1303,7 +1309,8 @@ nsImageGTK::DrawCompositeTile(nsIRenderingContext &aContext,
   drawing->GetDimensions(&surfaceWidth, &surfaceHeight);
   
   int readX, readY;
-  unsigned readWidth, readHeight, destX, destY;
+  unsigned readWidth, readHeight;
+  PRInt32 destX, destY;
 
   if ((aDY>=(int)surfaceHeight) || (aDX>=(int)surfaceWidth) ||
       (aDY+aDHeight<=0) || (aDX+aDWidth<=0)) {
@@ -1365,7 +1372,7 @@ nsImageGTK::DrawCompositeTile(nsIRenderingContext &aContext,
   if (destY==mHeight)
     destY = 0;
 
-  for (PRInt32 y=0; y<readHeight; y+=compY) {
+  for (unsigned y=0; y<readHeight; y+=compY) {
     if (y==0) {
       compY = PR_MIN(mHeight-destY, readHeight-y);
     } else {
@@ -1376,7 +1383,7 @@ nsImageGTK::DrawCompositeTile(nsIRenderingContext &aContext,
     compTarget = readData + 3*y*ximage->width;
     compSource = (unsigned char *)ximage->data + y*ximage->bytes_per_line;
 
-    for (PRInt32 x=0; x<readWidth; x+=compX) {
+    for (unsigned x=0; x<readWidth; x+=compX) {
       if (x==0) {
         compX = PR_MIN(mWidth-destX, readWidth-x);
         imageOrigin = mImageBits + destY*mRowBytes + 3*destX;
@@ -1579,6 +1586,9 @@ NS_IMETHODIMP nsImageGTK::DrawTile(nsIRenderingContext &aContext,
     UpdateCachedImage();
 
   if ((mAlphaDepth==1) && mIsSpacer)
+    return NS_OK;
+
+  if (mDecodedX2 < mDecodedX1 || mDecodedY2 < mDecodedY1)
     return NS_OK;
 
   nsDrawingSurfaceGTK *drawing = (nsDrawingSurfaceGTK*)aSurface;

@@ -54,8 +54,8 @@ nsImageBeOS::nsImageBeOS()
   , mDepth(0)
   , mRowBytes(0)
   , mSizeImage(0)
-  , mDecodedX1(0)
-  , mDecodedY1(0)
+  , mDecodedX1(PR_INT32_MAX)
+  , mDecodedY1(PR_INT32_MAX)
   , mDecodedX2(0)
   , mDecodedY2(0)
   , mAlphaBits(nsnull)
@@ -136,6 +136,9 @@ void nsImageBeOS::ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRec
 	// This should be 0'd out by Draw()
 	mFlags = aFlags;
 	mImageCurrent = PR_FALSE;
+
+  mDecodedX1 = PR_MIN(mDecodedX1, aUpdateRect->x);
+  mDecodedY1 = PR_MIN(mDecodedY1, aUpdateRect->y);
 
   if (aUpdateRect->YMost() > mDecodedY2)
     mDecodedY2 = aUpdateRect->YMost();
@@ -278,6 +281,9 @@ NS_IMETHODIMP nsImageBeOS::DrawTile(nsIRenderingContext &aContext, nsDrawingSurf
 	PRInt32 aSXOffset, PRInt32 aSYOffset, const nsRect &aTileRect) {
 	
 	PRInt32 validX = 0, validY = 0, validWidth = mWidth, validHeight = mHeight;
+
+  if (mDecodedX2 < mDecodedX1 || mDecodedY2 < mDecodedY1)
+    return NS_OK;
 	
 	// Limit the image rectangle to the size of the image data which
 	// has been validated.
