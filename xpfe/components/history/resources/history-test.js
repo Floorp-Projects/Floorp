@@ -29,7 +29,13 @@ function ShowLastPageVisted() {
       history = history.QueryInterface(Components.interfaces.nsIGlobalHistory);
     }
     if (history) {
-      lastpagevisited = history.GetLastPageVisted();
+      try {
+	lastpagevisited = history.GetLastPageVisted();
+	document.getElementById('result').value =  lastpagevisited;
+      } 
+      catch (ex) {
+	dump(ex + "\n");
+	document.getElementById('result').value = "Error check console";
+      }    
     }
-    dump("lastpagevisited = " + lastpagevisited + "\n");
 }
