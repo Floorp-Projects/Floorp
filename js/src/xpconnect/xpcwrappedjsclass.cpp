@@ -26,6 +26,8 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 NS_IMPL_ISUPPORTS(nsXPCWrappedJSClass, NS_IXPCONNECT_WRAPPED_JS_CLASS_IID)
 
+static uint32 zero_methods_descriptor;
+
 // static
 nsXPCWrappedJSClass*
 nsXPCWrappedJSClass::GetNewOrUsedClass(XPCContext* xpcc,
@@ -53,6 +55,8 @@ nsXPCWrappedJSClass::GetNewOrUsedClass(XPCContext* xpcc,
             if(NS_SUCCEEDED(iimgr->GetInfoForIID(&aIID, &info)))
             {
                 clazz = new nsXPCWrappedJSClass(xpcc, aIID, info);
+                if(!clazz->mDescriptors)
+                    NS_RELEASE(clazz);  // sets clazz to NULL
                 NS_RELEASE(info);
             }
             NS_RELEASE(iimgr);
@@ -65,7 +69,8 @@ nsXPCWrappedJSClass::nsXPCWrappedJSClass(XPCContext* xpcc, REFNSIID aIID,
                                          nsIInterfaceInfo* aInfo)
     : mXPCContext(xpcc),
       mIID(aIID),
-      mInfo(aInfo)
+      mInfo(aInfo),
+      mDescriptors(NULL)
 {
     NS_ADDREF(mInfo);
 
@@ -73,10 +78,39 @@ nsXPCWrappedJSClass::nsXPCWrappedJSClass(XPCContext* xpcc, REFNSIID aIID,
     NS_ADDREF_THIS();
 
     mXPCContext->GetWrappedJSClassMap()->Add(this);
+
+    uint16 methodCount;
+    if(NS_SUCCEEDED(mInfo->GetMethodCount(&methodCount)))
+    {
+        if(methodCount)
+        {
+            if(NULL != (mDescriptors = new uint32[(methodCount/32)+1]))
+            {
+                for(int i = 0; i < methodCount; i++)
+                {
+                    const nsXPTMethodInfo* info;
+                    if(NS_SUCCEEDED(mInfo->GetMethodInfo(i, &info)))
+                        SetReflectable(i, XPCConvert::IsMethodReflectable(*info));
+                    else
+                    {
+                        delete [] mDescriptors;
+                        mDescriptors = NULL;
+                        break;
+                    }
+                }            
+            }
+        }
+        else
+        {
+            mDescriptors = &zero_methods_descriptor;
+        }
+    }
 }
 
 nsXPCWrappedJSClass::~nsXPCWrappedJSClass()
 {
+    if(mDescriptors && mDescriptors != &zero_methods_descriptor)
+        delete [] mDescriptors;   
     mXPCContext->GetWrappedJSClassMap()->Remove(this);
     NS_RELEASE(mInfo);
 }
@@ -223,7 +257,7 @@ nsXPCWrappedJSClass::GetRootJSObject(JSObject* aJSObj)
 }
 
 NS_IMETHODIMP
-nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper,
+nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
                                 const nsXPTMethodInfo* info,
                                 nsXPCMiniVariant* params)
 {
@@ -240,6 +274,11 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper,
     JSBool success;
     JSContext* cx = GetJSContext();
 
+    if(!IsReflectable(methodIndex))
+    {
+        // XXX we need to go through and free and NULL out all 'out' params
+        return NS_ERROR_FAILURE;
+    }
 
     // XXX ASSUMES that retval is last arg.
     paramCount = info->GetParamCount();
@@ -278,7 +317,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper,
             if(type.IsPointer())
                 pv = (nsXPCMiniVariant*) pv->val.p;
 
-            if(!xpc_ConvertNativeData2JS(&val, &pv->val, type))
+            if(!XPCConvert::NativeData2JS(&val, &pv->val, type))
             {
                 retval = NS_ERROR_FAILURE;
                 goto done;
@@ -333,7 +372,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper,
             if(type.IsPointer())
                 pv = (nsXPCMiniVariant*) pv->val.p;
 
-            if(!xpc_ConvertJSData2Native(cx, &pv->val, &val, type))
+            if(!XPCConvert::JSData2Native(cx, &pv->val, val, type, NULL, NULL))
             {
                 NS_ASSERTION(0, "bad type");
                 goto done;

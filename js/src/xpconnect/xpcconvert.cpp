@@ -20,6 +20,154 @@
 
 #include "xpcprivate.h"
 
+// static 
+JSBool 
+XPCConvert::IsMethodReflectable(const nsXPTMethodInfo& info)
+{
+    if(info.IsHidden())
+        return JS_FALSE;
+
+    for(int i = info.GetParamCount()-1; i >= 0; i--)
+    {
+        const nsXPTParamInfo& param = info.GetParam(i);
+        const nsXPTType& type = param.GetType();
+        if(param.IsOut())
+        {
+            if(type.IsPointer())
+            {
+                switch(type.TagPart())
+                {
+                case nsXPTType::T_I8          :
+                case nsXPTType::T_I16         :
+                case nsXPTType::T_I32         :
+                case nsXPTType::T_I64         :
+                case nsXPTType::T_U8          :
+                case nsXPTType::T_U16         :
+                case nsXPTType::T_U32         :
+                case nsXPTType::T_U64         :
+                case nsXPTType::T_FLOAT       :
+                case nsXPTType::T_DOUBLE      :
+                case nsXPTType::T_BOOL        :
+                case nsXPTType::T_CHAR        :
+                case nsXPTType::T_WCHAR       :
+                case nsXPTType::T_VOID        :
+                    return JS_FALSE;
+                case nsXPTType::T_IID         :
+                    continue;
+                case nsXPTType::T_BSTR        :
+                    return JS_FALSE;
+                case nsXPTType::T_CHAR_STR    :
+                case nsXPTType::T_WCHAR_STR   :
+                case nsXPTType::T_INTERFACE   :
+                case nsXPTType::T_INTERFACE_IS:
+                    continue;
+                default:
+                    NS_ASSERTION(0, "bad type");
+                    return JS_FALSE;
+                }
+            }
+            else    // !(type.IsPointer())
+            {
+                switch(type.TagPart())
+                {
+                case nsXPTType::T_I8          :
+                case nsXPTType::T_I16         :
+                case nsXPTType::T_I32         :
+                case nsXPTType::T_I64         :
+                case nsXPTType::T_U8          :
+                case nsXPTType::T_U16         :
+                case nsXPTType::T_U32         :
+                case nsXPTType::T_U64         :
+                case nsXPTType::T_FLOAT       :
+                case nsXPTType::T_DOUBLE      :
+                case nsXPTType::T_BOOL        :
+                case nsXPTType::T_CHAR        :
+                case nsXPTType::T_WCHAR       :
+                    continue;
+                case nsXPTType::T_VOID        :
+                case nsXPTType::T_IID         :
+                case nsXPTType::T_BSTR        :
+                case nsXPTType::T_CHAR_STR    :
+                case nsXPTType::T_WCHAR_STR   :
+                case nsXPTType::T_INTERFACE   :
+                case nsXPTType::T_INTERFACE_IS:
+                default:
+                    NS_ASSERTION(0, "bad type");
+                    return JS_FALSE;
+                }
+            }
+        }
+        else    // !(param.IsOut())
+        {
+            if(type.IsPointer())
+            {
+                switch(type.TagPart())
+                {
+                case nsXPTType::T_I8          :
+                case nsXPTType::T_I16         :
+                case nsXPTType::T_I32         :
+                case nsXPTType::T_I64         :
+                case nsXPTType::T_U8          :
+                case nsXPTType::T_U16         :
+                case nsXPTType::T_U32         :
+                case nsXPTType::T_U64         :
+                case nsXPTType::T_FLOAT       :
+                case nsXPTType::T_DOUBLE      :
+                case nsXPTType::T_BOOL        :
+                case nsXPTType::T_CHAR        :
+                case nsXPTType::T_WCHAR       :
+                    continue;
+                case nsXPTType::T_VOID        :
+                    return JS_FALSE;
+                case nsXPTType::T_IID         :
+                    continue;
+                case nsXPTType::T_BSTR        :
+                    return JS_FALSE;
+                case nsXPTType::T_CHAR_STR    :
+                case nsXPTType::T_WCHAR_STR   :
+                case nsXPTType::T_INTERFACE   :
+                case nsXPTType::T_INTERFACE_IS:
+                    continue;
+                default:
+                    NS_ASSERTION(0, "bad type");
+                    return JS_FALSE;
+                }
+            }
+            else    // !(type.IsPointer())
+            {
+                switch(type.TagPart())
+                {
+                case nsXPTType::T_I8          :
+                case nsXPTType::T_I16         :
+                case nsXPTType::T_I32         :
+                case nsXPTType::T_I64         :
+                case nsXPTType::T_U8          :
+                case nsXPTType::T_U16         :
+                case nsXPTType::T_U32         :
+                case nsXPTType::T_U64         :
+                case nsXPTType::T_FLOAT       :
+                case nsXPTType::T_DOUBLE      :
+                case nsXPTType::T_BOOL        :
+                case nsXPTType::T_CHAR        :
+                case nsXPTType::T_WCHAR       :
+                    continue;
+                case nsXPTType::T_VOID        :
+                case nsXPTType::T_IID         :
+                case nsXPTType::T_BSTR        :
+                case nsXPTType::T_CHAR_STR    :
+                case nsXPTType::T_WCHAR_STR   :
+                case nsXPTType::T_INTERFACE   :
+                case nsXPTType::T_INTERFACE_IS:
+                default:
+                    NS_ASSERTION(0, "bad type");
+                    return JS_FALSE;
+                }
+            }
+        }
+    }
+    return JS_TRUE;
+}        
+
 // XXX these conversion functions need to be finished.
 // XXX conversion functions may still need paramInfo to handle the additional
 // types
@@ -30,8 +178,10 @@
 // Win32 can't handle uint64 to double conversion
 #define JAM_DOUBLE_U64(v,d) JAM_DOUBLE(((int64)v),d)
 
+// static 
 JSBool
-xpc_ConvertNativeData2JS(jsval* d, const void* s, const nsXPTType& type)
+XPCConvert::NativeData2JS(jsval* d, const void* s, 
+                          const nsXPTType& type)
 {
     NS_PRECONDITION(s, "bad param");
     NS_PRECONDITION(d, "bad param");
@@ -54,13 +204,18 @@ xpc_ConvertNativeData2JS(jsval* d, const void* s, const nsXPTType& type)
     case nsXPTType::T_CHAR  : *d = INT_TO_JSVAL((int32)*((char*)s));     break;
     case nsXPTType::T_WCHAR : *d = INT_TO_JSVAL((int32)*((wchar_t*)s));  break;
     default:
-        switch(type)
+        if(!type.IsPointer())
         {
-        case nsXPTType::T_P_VOID:
+            NS_ASSERTION(0,"unsupported type");
+            return JS_FALSE;
+        }
+        switch(type.TagPart())
+        {
+        case nsXPTType::T_VOID:
             // XXX implement void*
             NS_ASSERTION(0,"void* params not supported");
             return JS_FALSE;
-        case nsXPTType::T_P_IID:
+        case nsXPTType::T_IID:
             // XXX implement IID
             NS_ASSERTION(0,"iid params not supported");
             return JS_FALSE;
@@ -68,11 +223,11 @@ xpc_ConvertNativeData2JS(jsval* d, const void* s, const nsXPTType& type)
             // XXX implement BSTR
             NS_ASSERTION(0,"string params not supported");
             return JS_FALSE;
-        case nsXPTType::T_P_CHAR_STR:
+        case nsXPTType::T_CHAR_STR:
             // XXX implement CHAR_STR
             NS_ASSERTION(0,"string params not supported");
             return JS_FALSE;
-        case nsXPTType::T_P_WCHAR_STR:
+        case nsXPTType::T_WCHAR_STR:
             // XXX implement WCHAR_STR
             NS_ASSERTION(0,"string params not supported");
             return JS_FALSE;
@@ -96,11 +251,12 @@ xpc_ConvertNativeData2JS(jsval* d, const void* s, const nsXPTType& type)
     return JS_TRUE;
 }
 
+// static 
 JSBool
-xpc_ConvertJSData2Native(JSContext* cx, void* d, const jsval* s,
-                         const nsXPTType& type)
+XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
+                          const nsXPTType& type, 
+                          nsIAllocator* al, const nsID* iid)
 {
-    NS_PRECONDITION(s, "bad param");
     NS_PRECONDITION(d, "bad param");
 
     int32    ti;
@@ -111,93 +267,168 @@ xpc_ConvertJSData2Native(JSContext* cx, void* d, const jsval* s,
     switch(type.TagPart())
     {
     case nsXPTType::T_I8     :
-        r = JS_ValueToECMAInt32(cx, *s, &ti);
+        r = JS_ValueToECMAInt32(cx, s, &ti);
         *((int8*)d)  = (int8) ti;
         break;
     case nsXPTType::T_I16    :
-        r = JS_ValueToECMAInt32(cx, *s, &ti);
+        r = JS_ValueToECMAInt32(cx, s, &ti);
         *((int16*)d)  = (int16) ti;
         break;
     case nsXPTType::T_I32    :
-        r = JS_ValueToECMAInt32(cx, *s, (int32*)d);
+        r = JS_ValueToECMAInt32(cx, s, (int32*)d);
         break;
     case nsXPTType::T_I64    :
-        if(JSVAL_IS_INT(*s))
+        if(JSVAL_IS_INT(s))
         {
-            r = JS_ValueToECMAInt32(cx, *s, &ti);
+            r = JS_ValueToECMAInt32(cx, s, &ti);
             *((int64*)d) = (int64) ti;
         }
         else
         {
-            r = JS_ValueToNumber(cx, *s, &td);
+            r = JS_ValueToNumber(cx, s, &td);
             if(r) *((int64*)d) = (int64) td;
         }
         break;
     case nsXPTType::T_U8     :
-        r = JS_ValueToECMAUint32(cx, *s, &tu);
+        r = JS_ValueToECMAUint32(cx, s, &tu);
         *((uint8*)d)  = (uint8) tu;
         break;
     case nsXPTType::T_U16    :
-        r = JS_ValueToECMAUint32(cx, *s, &tu);
+        r = JS_ValueToECMAUint32(cx, s, &tu);
         *((uint16*)d)  = (uint16) tu;
         break;
     case nsXPTType::T_U32    :
-        r = JS_ValueToECMAUint32(cx, *s, (uint32*)d);
+        r = JS_ValueToECMAUint32(cx, s, (uint32*)d);
         break;
     case nsXPTType::T_U64    :
-        if(JSVAL_IS_INT(*s))
+        if(JSVAL_IS_INT(s))
         {
-            r = JS_ValueToECMAUint32(cx, *s, &tu);
+            r = JS_ValueToECMAUint32(cx, s, &tu);
             *((uint64*)d) = (uint64) tu;
         }
         else
         {
-            r = JS_ValueToNumber(cx, *s, &td);
+            r = JS_ValueToNumber(cx, s, &td);
             // XXX Win32 can't handle double to uint64 directly
             if(r) *((uint64*)d) = (uint64)((int64) td);
         }
         break;
     case nsXPTType::T_FLOAT  :
-        r = JS_ValueToNumber(cx, *s, &td);
+        r = JS_ValueToNumber(cx, s, &td);
         if(r) *((float*)d) = (float) td;
         break;
     case nsXPTType::T_DOUBLE :
-        r = JS_ValueToNumber(cx, *s, (double*)d);
+        r = JS_ValueToNumber(cx, s, (double*)d);
         break;
     case nsXPTType::T_BOOL   :
-        r = JS_ValueToBoolean(cx, *s, (PRBool*)d);
+        r = JS_ValueToBoolean(cx, s, (PRBool*)d);
         break;
     case nsXPTType::T_CHAR   :
-        r = JS_ValueToECMAUint32(cx, *s, &tu);
+        r = JS_ValueToECMAUint32(cx, s, &tu);
         *((char*)d)  = (char) tu;
         break;
     case nsXPTType::T_WCHAR  :
-        r = JS_ValueToECMAUint32(cx, *s, &tu);
+        r = JS_ValueToECMAUint32(cx, s, &tu);
         *((uint16*)d)  = (uint16) tu;
         break;
     default:
-        switch(type)
+        if(!type.IsPointer())
         {
-        case nsXPTType::T_P_VOID:
-            // XXX implement void*
+            NS_ASSERTION(0,"unsupported type");
+            return JS_FALSE;
+        }
+
+        switch(type.TagPart())
+        {
+        case nsXPTType::T_VOID:
+            // XXX implement void* ?
             NS_ASSERTION(0,"void* params not supported");
             return JS_FALSE;
-        case nsXPTType::T_P_IID:
-            // XXX implement IID
-            NS_ASSERTION(0,"iid params not supported");
-            return JS_FALSE;
+        case nsXPTType::T_IID:
+        {
+            JSObject* obj;
+            const nsID* pid;
+            if(!JSVAL_IS_OBJECT(s) ||
+               (!(obj = JSVAL_TO_OBJECT(s))) ||
+               (!(pid = xpc_JSObjectToID(cx, obj))))
+            {
+                // XXX should report error
+                return JS_FALSE;
+            }
+            if(al)
+            {
+                if(!(*((void**)d) = al->Alloc(sizeof(nsID))))
+                {
+                    // XXX should report error
+                    return JS_FALSE;
+                }
+                memcpy(*((void**)d), pid, sizeof(nsID));
+            }
+            else
+                *((const nsID**)d) = pid;
+
+            return JS_TRUE;
+        }
+
         case nsXPTType::T_BSTR:
             // XXX implement BSTR
-            NS_ASSERTION(0,"string params not supported");
+            NS_ASSERTION(0,"'BSTR' string params not supported");
             return JS_FALSE;
-        case nsXPTType::T_P_CHAR_STR:
-            // XXX implement CHAR_STR
-            NS_ASSERTION(0,"string params not supported");
-            return JS_FALSE;
-        case nsXPTType::T_P_WCHAR_STR:
-            // XXX implement WCHAR_STR
-            NS_ASSERTION(0,"string params not supported");
-            return JS_FALSE;
+
+        case nsXPTType::T_CHAR_STR:
+        {
+            char* bytes;
+            JSString* str;
+
+            if(!(str = JS_ValueToString(cx, s))||
+               !(bytes = JS_GetStringBytes(str)))
+            {
+                // XXX should report error
+                return JS_FALSE;
+            }
+            if(al)
+            {
+                int len = strlen(bytes)+1;
+                if(!(*((void**)d) = al->Alloc(len)))
+                {
+                    // XXX should report error
+                    return JS_FALSE;
+                }
+                memcpy(*((void**)d), bytes, len);
+            }
+            else
+                *((char**)d) = bytes;
+
+            return JS_TRUE;
+        }
+
+        case nsXPTType::T_WCHAR_STR:
+        {
+            jschar* chars;
+            JSString* str;
+
+            if(!(str = JS_ValueToString(cx, s))||
+               !(chars = JS_GetStringChars(str)))
+            {
+                // XXX should report error
+                return JS_FALSE;
+            }
+            if(al)
+            {
+                int byte_len = (JS_GetStringLength(str)+1)*sizeof(jschar);
+                if(!(*((void**)d) = al->Alloc(byte_len)))
+                {
+                    // XXX should report error
+                    return JS_FALSE;
+                }
+                memcpy(*((void**)d), chars, byte_len);
+            }
+            else
+                *((jschar**)d) = chars;
+
+            return JS_TRUE;
+        }
+
         case nsXPTType::T_INTERFACE:
             // XXX implement INTERFACE
             // make sure 'src' is an object

@@ -70,7 +70,7 @@ nsXPCWrappedNativeClass::nsXPCWrappedNativeClass(XPCContext* xpcc, REFNSIID aIID
       mName(NULL),
       mInfo(aInfo),
       mMemberCount(-1),
-      mMembers(NULL)
+      mDescriptors(NULL)
 {
     NS_ADDREF(mInfo);
 
@@ -120,8 +120,8 @@ nsXPCWrappedNativeClass::BuildMemberDescriptors()
 
     // XXX since getters and setters share a descriptor, we might not use all
     // of the objects that get alloc'd here
-    mMembers = new XPCNativeMemberDescriptor[totalCount];
-    if(!mMembers)
+    mDescriptors = new XPCNativeMemberDescriptor[totalCount];
+    if(!mDescriptors)
         return JS_FALSE;
     mMemberCount = 0;
 
@@ -134,9 +134,7 @@ nsXPCWrappedNativeClass::BuildMemberDescriptors()
         if(NS_FAILED(mInfo->GetMethodInfo(i, &info)))
             return JS_FALSE;
 
-        // XXX perhaps this should be extended to be 'CanBeReflected()' to
-        // also cover methods with non-compliant signatures.
-        if(info->IsHidden())
+        if(!XPCConvert::IsMethodReflectable(*info))
             continue;
 
         idval = STRING_TO_JSVAL(JS_InternString(cx, info->GetName()));
@@ -151,21 +149,21 @@ nsXPCWrappedNativeClass::BuildMemberDescriptors()
         {
             NS_ASSERTION(mMemberCount,"bad setter");
             // XXX ASSUMES Getter/Setter pairs are next to each other
-            desc = &mMembers[mMemberCount-1];
+            desc = &mDescriptors[mMemberCount-1];
             NS_ASSERTION(desc->id == id,"bad setter");
-            NS_ASSERTION(desc->category == XPCNativeMemberDescriptor::ATTRIB_RO,"bad setter");
-            desc->category = XPCNativeMemberDescriptor::ATTRIB_RW;
+            NS_ASSERTION(desc->IsReadOnlyAttribute(),"bad setter");
+            desc->SetWritableAttribute();
             desc->index2 = i;
         }
         else
         {
             NS_ASSERTION(!LookupMemberByID(id),"duplicate method name");
-            desc = &mMembers[mMemberCount++];
+            desc = &mDescriptors[mMemberCount++];
             desc->id = id;
             if(info->IsGetter())
-                desc->category = XPCNativeMemberDescriptor::ATTRIB_RO;
+                desc->SetReadOnlyAttribute();
             else
-                desc->category = XPCNativeMemberDescriptor::METHOD;
+                desc->SetMethod();
             desc->index = i;
         }
     }
@@ -188,9 +186,9 @@ nsXPCWrappedNativeClass::BuildMemberDescriptors()
         }
 
         NS_ASSERTION(!LookupMemberByID(id),"duplicate method/constant name");
-        desc = &mMembers[mMemberCount++];
+        desc = &mDescriptors[mMemberCount++];
         desc->id = id;
-        desc->category = XPCNativeMemberDescriptor::CONSTANT;
+        desc->SetConstant();
         desc->index = i;
     }
 
@@ -200,13 +198,13 @@ nsXPCWrappedNativeClass::BuildMemberDescriptors()
 void
 nsXPCWrappedNativeClass::DestroyMemberDescriptors()
 {
-    if(!mMembers)
+    if(!mDescriptors)
         return;
     JSContext* cx = GetJSContext();
     for(int i = 0; i < mMemberCount; i++)
-        if(mMembers[i].invokeFuncObj)
-            JS_RemoveRoot(cx, &mMembers[i].invokeFuncObj);
-    delete [] mMembers;
+        if(mDescriptors[i].invokeFuncObj)
+            JS_RemoveRoot(cx, &mDescriptors[i].invokeFuncObj);
+    delete [] mDescriptors;
 }
 
 JS_STATIC_DLL_CALLBACK(JSBool)
@@ -285,29 +283,18 @@ isConstructorID(JSContext *cx, jsid id)
 const char*
 nsXPCWrappedNativeClass::GetMemberName(const XPCNativeMemberDescriptor* desc) const
 {
-    switch(desc->category)
-    {
-    case XPCNativeMemberDescriptor::CONSTANT:
+    if(desc->IsConstant())
     {
         const nsXPTConstant* constant;
         if(NS_SUCCEEDED(mInfo->GetConstant(desc->index, &constant)))
             return constant->GetName();
-        break;
     }
-    case XPCNativeMemberDescriptor::METHOD:
-    case XPCNativeMemberDescriptor::ATTRIB_RO:
-    case XPCNativeMemberDescriptor::ATTRIB_RW:
+    else // methods or attribute
     {
         const nsXPTMethodInfo* info;
         if(NS_SUCCEEDED(mInfo->GetMethodInfo(desc->index, &info)))
             return info->GetName();
-        break;
     }
-    default:
-        NS_ASSERTION(0,"bad category");
-        break;
-    }
-
     return NULL;
 }
 
@@ -326,7 +313,7 @@ nsXPCWrappedNativeClass::GetConstantAsJSVal(nsXPCWrappedNative* wrapper,
 {
     const nsXPTConstant* constant;
 
-    NS_ASSERTION(desc->category == XPCNativeMemberDescriptor::CONSTANT,"bad type");
+    NS_ASSERTION(desc->IsConstant(),"bad type");
     if(NS_FAILED(mInfo->GetConstant(desc->index, &constant)))
     {
         // XXX fail silently?
@@ -341,7 +328,7 @@ nsXPCWrappedNativeClass::GetConstantAsJSVal(nsXPCWrappedNative* wrapper,
     v.type = constant->GetType();
     memcpy(&v.val, &mv.val, sizeof(mv.val));
 
-    return xpc_ConvertNativeData2JS(vp, &v.val, v.type);
+    return XPCConvert::NativeData2JS(vp, &v.val, v.type);
 }
 
 void
@@ -374,15 +361,22 @@ nsXPCWrappedNativeClass::CallWrappedMethod(nsXPCWrappedNative* wrapper,
     jsval src;
     uint8 vtblIndex;
     nsresult invokeResult;
-
+    nsIAllocator* al = NULL;
+    
     *vp = JSVAL_NULL;
+
+    if(!(al = nsXPConnect::GetAllocator()))
+    {
+        ReportError(desc, "can't get xpcom shared memory allocator");
+        goto done;
+    }
 
     // make sure we have what we need
 
     if(isAttributeSet)
     {
         // fail silently if trying to write a readonly attribute
-        if(desc->category != XPCNativeMemberDescriptor::ATTRIB_RW)
+        if(!desc->IsWritableAttribute())
             goto done;
         vtblIndex = desc->index2;
     }
@@ -420,6 +414,8 @@ nsXPCWrappedNativeClass::CallWrappedMethod(nsXPCWrappedNative* wrapper,
     // iterate through the params doing conversions
     for(i = 0; i < paramCount; i++)
     {
+        nsIAllocator* conditional_al = NULL;
+        nsID* conditional_iid = NULL;
         const nsXPTParamInfo& param = info->GetParam(i);
         const nsXPTType& type = param.GetType();
 
@@ -435,15 +431,7 @@ nsXPCWrappedNativeClass::CallWrappedMethod(nsXPCWrappedNative* wrapper,
         if(param.IsOut())
         {
             dp->flags = nsXPCVariant::PTR_IS_DATA;
-
-            // XXX are there no type alignment issues here?
-            if(type.IsPointer())
-            {
-                dp->ptr = &dp->ptr2;
-                dp->ptr2 = &dp->val;
-            }
-            else
-                dp->ptr = &dp->val;
+            dp->ptr = &dp->val;
 
             if(!param.IsRetval() &&
                (!JSVAL_IS_OBJECT(argv[i]) ||
@@ -453,29 +441,32 @@ nsXPCWrappedNativeClass::CallWrappedMethod(nsXPCWrappedNative* wrapper,
                 goto done;
             }
             if(!param.IsIn())
-            {
-                // We don't need to convert the jsval.
-
-                // XXX for an out param *I think* I might need to set the flags
-                // to VAL_IS_OWNED (after clearing val.p) if the type is
-                // 'IS_POINTER' because I think the caller may have to take
-                // over ownership of a pointer. But, this depends on the
-                // type of the thing.
-
                 continue;
-            }
+
+            if(type.IsPointer())
+                conditional_al = al;
         }
         else
         {
             if(type.IsPointer())
             {
-                dp->ptr = &dp->val;
                 dp->flags = nsXPCVariant::PTR_IS_DATA;
+                dp->ptr = &dp->val;
             }
             src = argv[i];
         }
 
-        if(!xpc_ConvertJSData2Native(cx, &dp->val, &src, type))
+        if(type.TagPart() == nsXPTType::T_INTERFACE)
+        {
+            // XXX get the iid                
+        }
+        else if(type.TagPart() == nsXPTType::T_INTERFACE_IS)
+        {
+            // XXX get the iid                
+        }
+
+        if(!XPCConvert::JSData2Native(cx, &dp->val, src, type, 
+                                      conditional_al, conditional_iid))
         {
             NS_ASSERTION(0, "bad type");
             goto done;
@@ -504,7 +495,7 @@ nsXPCWrappedNativeClass::CallWrappedMethod(nsXPCWrappedNative* wrapper,
         {
             jsval v;
 
-            if(!xpc_ConvertNativeData2JS(&v, &dp->val, type))
+            if(!XPCConvert::NativeData2JS(&v, &dp->val, type))
             {
                 retval = NS_ERROR_FAILURE;
                 goto done;
@@ -544,6 +535,8 @@ done:
 
     if(dispatchParams && dispatchParams != paramBuffer)
         delete [] dispatchParams;
+    if(al)
+        NS_RELEASE(al);
     return retval;
 }
 
@@ -571,7 +564,7 @@ WrappedNative_CallMethod(JSContext *cx, JSObject *obj,
     JS_ValueToId(cx, idval, &id);
 
     const XPCNativeMemberDescriptor* desc = clazz->LookupMemberByID(id);
-    if(!desc || desc->category != XPCNativeMemberDescriptor::METHOD)
+    if(!desc || !desc->IsMethod())
         return JS_FALSE;
 
     return clazz->CallWrappedMethod(wrapper, desc, JS_FALSE, argc, argv, vp);
@@ -625,12 +618,9 @@ WrappedNative_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     const XPCNativeMemberDescriptor* desc = clazz->LookupMemberByID(id);
     if(desc)
     {
-        switch(desc->category)
-        {
-        case XPCNativeMemberDescriptor::CONSTANT:
+        if(desc->IsConstant())
             return clazz->GetConstantAsJSVal(wrapper, desc, vp);
-
-        case XPCNativeMemberDescriptor::METHOD:
+        else if(desc->IsMethod())
         {
             // allow for lazy creation of 'prototypical' function invoke object
             JSObject* invokeFunObj = clazz->GetInvokeFunObj(desc);
@@ -644,15 +634,8 @@ WrappedNative_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
             *vp = OBJECT_TO_JSVAL(funobj);
             return JS_TRUE;
         }
-
-        case XPCNativeMemberDescriptor::ATTRIB_RO:
-        case XPCNativeMemberDescriptor::ATTRIB_RW:
+        else    // attribute
             return clazz->GetAttributeAsJSVal(wrapper, desc, vp);
-
-        default:
-            NS_ASSERTION(0,"bad category");
-            return JS_FALSE;
-        }
     }
     else
     {
@@ -685,19 +668,10 @@ WrappedNative_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     const XPCNativeMemberDescriptor* desc = clazz->LookupMemberByID(id);
     if(desc)
     {
-        switch(desc->category)
-        {
-        case XPCNativeMemberDescriptor::CONSTANT:
-        case XPCNativeMemberDescriptor::METHOD:
-        case XPCNativeMemberDescriptor::ATTRIB_RO:
-            // fail silently
-            return JS_TRUE;
-        case XPCNativeMemberDescriptor::ATTRIB_RW:
+        if(desc->IsWritableAttribute())
             return clazz->SetAttributeFromJSVal(wrapper, desc, vp);
-        default:
-            NS_ASSERTION(0,"bad category");
-            return JS_FALSE;
-        }
+        else
+            return JS_TRUE; // fail silently
     }
     else
     {
