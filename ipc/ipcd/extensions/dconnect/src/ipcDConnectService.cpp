@@ -734,7 +734,7 @@ public:
 protected:
   PRUint32 mRequestIndex;
 };
-NS_IMPL_QUERY_INTERFACE1(DConnectCompletion, ipcIMessageObserver);
+NS_IMPL_QUERY_INTERFACE1(DConnectCompletion, ipcIMessageObserver)
 
 //-----------------------------------------------------------------------------
 
