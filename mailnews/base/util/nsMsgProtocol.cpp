@@ -246,7 +246,7 @@ NS_IMETHODIMP nsMsgProtocol::OnStopRequest(nsIChannel * aChannel, nsISupports *c
       GetPromptDialogFromUrl(msgUrl , getter_AddRefs(msgPrompt));
       NS_ENSURE_TRUE(msgPrompt, NS_ERROR_FAILURE);
 
-      nsAutoString alertMsg; alertMsg.AssignWithConversion("unknown error.");
+      nsAutoString alertMsg; alertMsg.AssignWithConversion("unknown error ");
 			switch (aStatus) 
       {
 				case NS_ERROR_UNKNOWN_HOST:
@@ -261,8 +261,9 @@ NS_IMETHODIMP nsMsgProtocol::OnStopRequest(nsIChannel * aChannel, nsISupports *c
 						// todo, put this into a string bundle
 						alertMsg.AssignWithConversion("Connection to the server timed out.");
 						break;
-               default:
-						break;
+            default:
+              alertMsg.AppendInt(aStatus, 16);
+              break;
 			}
 			
       rv = msgPrompt->Alert(nsnull, alertMsg.GetUnicode());
