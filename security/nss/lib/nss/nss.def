@@ -722,7 +722,7 @@ CERT_GetFirstEmailAddress;
 CERT_GetNextEmailAddress;
 CERT_VerifySignedDataWithPubKeyInfo;
 CERT_VerifySignedDataWithPublicKey;
-PK11_WaitForTokenEvent
+PK11_WaitForTokenEvent;
 ;+    local:
 ;+       *;
 ;+};
