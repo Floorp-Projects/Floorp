@@ -93,7 +93,15 @@
 
     <vbox>      
 	    <label value="&searchInput.label;"/> 
-	    <textbox id="searchInput" flex="1"  oninput="onAbSearchInput(false);"  onkeypress="onAbSearchKeyPress(event);"/>
+      <textbox id="searchInput" flex="1" onfocus="onSearchInputFocus(event);" onblur="onSearchInputBlur(event);" 
+               onclick="this.select();" oninput="onAbSearchInput(false);"
+               onkeypress="onAbSearchKeyPress(event);">
+        <button id="quick-search-button" type="menu">
+          <menupopup id="quick-search-menupopup" value="0" persist="value" popupalign="topleft" popupanchor="bottomleft">
+            <menuitem value="0" label="&SearchNameOrEmail.label;" type="radio"/>
+          </menupopup>
+        </button>
+      </textbox>
 	  </vbox>
 
     <separator class="thin"/> 
