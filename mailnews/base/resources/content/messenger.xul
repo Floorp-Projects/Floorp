@@ -497,7 +497,10 @@ Rights Reserved.
             <titledbutton id="button_forward" class="button28" align="top" value="&forwardButton.label;" onclick="MsgForwardMessage(event)"/>
             <toolbarseparator/>
             <titledbutton id="button_next" class="other28" align="top" value="&nextButton.label;" onclick="MsgNextUnreadMessage()"/>
-            <titledbutton id="button_delete" class="other28" disabled="true" align="top" value="&deleteButton.label;" onclick="goDoCommand('button_delete')"/>
+			<!-- XXX need to change back to after focus starts working again.  Workaround for Bug 18088
+			 <titledbutton id="button_delete" class="other28" disabled="true" align="top" value="&deleteButton.label;" onclick="goDoCommand('button_delete')"/>
+			 -->
+            <titledbutton id="button_delete" class="other28" disabled="true" align="top" value="&deleteButton.label;" onclick="MsgDeleteMessage(true)"/>
             <titledbutton id="button_print" class="other28" align="top" value="&printButton.label;" onclick="Print()"/>
             <titledbutton id="button_stop" class="other28" align="top" value="&stopButton.label;" onclick="MsgStop();"/>
             <spring flex="100%"/>
