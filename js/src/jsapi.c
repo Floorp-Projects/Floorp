@@ -276,10 +276,10 @@ JS_PushArgumentsVA(JSContext *cx, void **markp, const char *format, va_list ap)
 	    continue;
 	switch (c) {
 	  case 'b':
-	    *sp = BOOLEAN_TO_JSVAL(va_arg(ap, JSBool));
+	    *sp = BOOLEAN_TO_JSVAL((JSBool) va_arg(ap, int));
 	    break;
 	  case 'c':
-	    *sp = INT_TO_JSVAL(va_arg(ap, uint16));
+	    *sp = INT_TO_JSVAL((uint16) va_arg(ap, unsigned int));
 	    break;
 	  case 'i':
 	  case 'j':
