@@ -3404,7 +3404,7 @@ nsHTMLEditor::SetCompositionString(const nsAReadableString& aCompositionString, 
   if (!ps) return NS_ERROR_NOT_INITIALIZED;
   ps->GetCaret(getter_AddRefs(caretP));
   caretP->SetCaretDOMSelection(selection);
-  result = caretP->GetCaretCoordinates(nsICaret::eTopLevelWindowCoordinates, selection,
+  result = caretP->GetCaretCoordinates(nsICaret::eIMECoordinates, selection,
               &(aReply->mCursorPosition), &(aReply->mCursorIsCollapsed));
 
   // second part of 23558 fix:

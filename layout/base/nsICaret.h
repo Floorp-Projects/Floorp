@@ -45,7 +45,8 @@ public:
   typedef enum EViewCoordinates {
       eTopLevelWindowCoordinates,
       eRenderingViewCoordinates,
-      eClosestViewCoordinates
+      eClosestViewCoordinates,
+      eIMECoordinates
     } EViewCoordinates;
 
   NS_IMETHOD Init(nsIPresShell *inPresShell) = 0;

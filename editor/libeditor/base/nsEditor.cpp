@@ -1893,7 +1893,7 @@ nsEditor::QueryComposition(nsTextEventReply* aReply)
   if (NS_SUCCEEDED(result) && caretP) {
     if (aReply) {
       caretP->SetCaretDOMSelection(selection);
-      result = caretP->GetCaretCoordinates(nsICaret::eTopLevelWindowCoordinates, selection,
+      result = caretP->GetCaretCoordinates(nsICaret::eIMECoordinates, selection,
 		                      &(aReply->mCursorPosition), &(aReply->mCursorIsCollapsed));
     }
   }
