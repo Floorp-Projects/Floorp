@@ -252,18 +252,7 @@ function AbEditSelectedDirectory()
                       "editDirectory", "chrome,modal=yes,resizable=no,centerscreen", args);
       }
       else {
-        // Some addrbooks can't be renamed.
-        if ((selecteduri != kCollectedAddressbookURI) &&
-            (selecteduri != kPersonalAddressbookURI)) {
-          AbRenameAddressBook();
-        }
-        else {
-          var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
-          promptService.alert(window,
-              gAddressBookBundle.getString("cannotRenameTitle"), 
-              gAddressBookBundle.getString("cannotRenameMessage"));
-          return;
-        }
+        AbRenameAddressBook();
       }
     }
   }

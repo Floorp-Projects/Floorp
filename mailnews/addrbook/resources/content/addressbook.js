@@ -304,9 +304,12 @@ function AbRenameAddressBook()
   var bundle = strBundleService.createBundle("chrome://messenger/locale/addressbook/addressBook.properties");
   var dialogTitle = bundle.GetStringFromName('renameAddressBookTitle');
 
+  // you can't rename the PAB or the CAB
+  var canRename = (selectedABURI != kCollectedAddressbookURI && selectedABURI != kPersonalAddressbookURI);
+
   var dialog = window.openDialog(
     "chrome://messenger/content/addressbook/abAddressBookNameDialog.xul", 
-     "", "chrome,modal=yes,resizable=no,centerscreen", {title: dialogTitle, name: selectedABDirectory.directoryProperties.description,
+     "", "chrome,modal=yes,resizable=no,centerscreen", {title: dialogTitle, canRename: canRename, name: selectedABDirectory.directoryProperties.description,
       okCallback:AbOnRenameAddressBook});
 }
 

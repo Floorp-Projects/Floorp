@@ -1,8 +1,10 @@
 var okCallback = 0;
+var gCanRename = true;
 
 function abNameOnLoad()
 {
   var abName = "";
+  
 	doSetOKCancel(abNameOKButton, 0);
 
 	// look in arguments[0] for parameters
@@ -19,6 +21,9 @@ function abNameOnLoad()
 
     if ("name" in window.arguments[0])
       abName = window.arguments[0].name;
+
+    if ("canRename" in window.arguments[0])
+      gCanRename = window.arguments[0].canRename;
 	}
 	
 	// focus on input
@@ -26,7 +31,11 @@ function abNameOnLoad()
   if (name) {
     if (abName)
       name.value = abName;
-		name.focus();
+    
+    if (gCanRename)
+      name.focus();
+    else
+      name.disabled = true;
   }
 
 	moveToAlertPosition();
@@ -34,7 +43,7 @@ function abNameOnLoad()
 
 function abNameOKButton()
 {
-	if ( top.okCallback )
+	if (top.okCallback && gCanRename)
     top.okCallback(document.getElementById('name').value);
 	
 	return true;
