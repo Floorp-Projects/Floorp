@@ -29,10 +29,14 @@
 nsCWebBrowser implements:
 -------------------------
 nsIWebBrowser
+nsIDocShellTreeItem
+nsIWebNavigation
 nsIWebProgress
 nsIBaseWindow
 nsIScrollable
 nsITextScroll
+nsIInterfaceRequestor
+
 
 Outwardly communicates with:
 ----------------------------
