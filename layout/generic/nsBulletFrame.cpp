@@ -185,32 +185,36 @@ nsBulletFrame::Paint(nsIPresContext&      aCX,
 }
 
 PRInt32
-nsBulletFrame::SetListItemOrdinal(PRInt32 aNextOrdinal)
+nsBulletFrame::SetListItemOrdinal(PRInt32 aNextOrdinal,
+                                  PRBool* aChanged)
 {
-  // Assume that the ordinal comes from the block reflow state
+  // Assume that the ordinal comes from the caller
+  PRInt32 oldOrdinal = mOrdinal;
   mOrdinal = aNextOrdinal;
 
   // Try to get value directly from the list-item, if it specifies a
   // value attribute. Note: we do this with our parent's content
   // because our parent is the list-item.
   nsHTMLValue value;
-  nsIContent* parentContent;
-  mParent->GetContent(&parentContent);
-  nsIHTMLContent* hc;
-  if (NS_OK == parentContent->QueryInterface(kIHTMLContentIID, (void**) &hc)) {
-    if (NS_CONTENT_ATTR_HAS_VALUE ==
-        hc->GetHTMLAttribute(nsHTMLAtoms::value, value)) {
-      if (eHTMLUnit_Integer == value.GetUnit()) {
-        // Use ordinal specified by the value attribute
-        mOrdinal = value.GetIntValue();
-        if (mOrdinal <= 0) {
-          mOrdinal = 1;
+  nsCOMPtr<nsIContent> parentContent;
+  mParent->GetContent(getter_AddRefs(parentContent));
+  if (parentContent) {
+    nsCOMPtr<nsIHTMLContent> hc = do_QueryInterface(parentContent);
+    if (hc) {
+      if (NS_CONTENT_ATTR_HAS_VALUE ==
+          hc->GetHTMLAttribute(nsHTMLAtoms::value, value)) {
+        if (eHTMLUnit_Integer == value.GetUnit()) {
+          // Use ordinal specified by the value attribute
+          mOrdinal = value.GetIntValue();
+          if (mOrdinal <= 0) {
+            mOrdinal = 1;
+          }
         }
       }
     }
-    NS_RELEASE(hc);
   }
-  NS_RELEASE(parentContent);
+
+  *aChanged = oldOrdinal != mOrdinal;
 
   return mOrdinal + 1;
 }
