@@ -327,9 +327,12 @@ nsresult nsPop3TestDriver::OnIdentityCheck()
 	if (NS_SUCCEEDED(result) && accountManager)
 	{
 		// mscott: we really don't check an identity, we check
-		// for an outgoing 
-		nsIMsgIncomingServer * incomingServer = nsnull;
-		result = accountManager->GetCurrentServer(&incomingServer);
+		// for an outgoing
+        nsCOMPtr<nsIMsgAccount> account;
+        accountManager->GetDefaultAccount(getter_AddRefs(account));
+
+        nsCOMPtr<nsIMsgIncomingServer> incomingServer;
+        result = account->GetIncomingServer(getter_AddRefs(incomingServer));
 		if (NS_SUCCEEDED(result) && incomingServer)
 		{
 			char * value = nsnull;
@@ -344,7 +347,6 @@ nsresult nsPop3TestDriver::OnIdentityCheck()
 			incomingServer->GetPassword(&value);
 			printf("Pop Password: %s\n", value ? value : "");
 
-			NS_RELEASE(incomingServer);
 		}
 		else
 			printf("Unable to retrieve the outgoing server interface....\n");
@@ -364,13 +366,15 @@ nsresult nsPop3TestDriver::OnCheck()
                     NS_MSGACCOUNTMANAGER_PROGID, &rv);
     if (NS_FAILED(rv)) return rv;
     
-    nsIMsgIncomingServer *server;
-    rv = accountManager->GetCurrentServer(&server);
+    nsCOMPtr<nsIMsgAccount> account;
+    accountManager->GetDefaultAccount(getter_AddRefs(account));
+
+    nsCOMPtr<nsIMsgIncomingServer> incomingServer;
+    rv = account->GetIncomingServer(getter_AddRefs(incomingServer));
     if (NS_FAILED(rv)) return rv;
 
-    nsIPop3IncomingServer *popServer;
-    rv = server->QueryInterface(nsIPop3IncomingServer::GetIID(),
-                                (void **)&popServer);
+    nsCOMPtr<nsIPop3IncomingServer> popServer =
+        do_QueryInterface(incomingServer);
 
 	NS_WITH_SERVICE(nsIPop3Service, pop3Service, kPop3ServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
@@ -454,13 +458,15 @@ nsresult nsPop3TestDriver::OnGet()
 	NS_WITH_SERVICE(nsIPop3Service, pop3Service, kPop3ServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
     
-    nsIMsgIncomingServer *server;
-    rv = accountManager->GetCurrentServer(&server);
+    nsCOMPtr<nsIMsgAccount> account;
+    accountManager->GetDefaultAccount(getter_AddRefs(account));
+
+    nsCOMPtr<nsIMsgIncomingServer> server;
+    rv = account->GetIncomingServer(getter_AddRefs(server));
     if (NS_FAILED(rv)) return rv;
 
-    nsIPop3IncomingServer *popServer;
-    rv = server->QueryInterface(nsIPop3IncomingServer::GetIID(),
-                                (void **)&popServer);
+    nsCOMPtr<nsIPop3IncomingServer> popServer =
+        do_QueryInterface(server);
 
 	if (pop3Service)
 	{
