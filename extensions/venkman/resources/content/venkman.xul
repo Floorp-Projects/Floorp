@@ -47,7 +47,7 @@
 <window id="main-window" align="vertical"
   xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  onload="console.onLoad();" onclose="return console.onClose();"
+  onload="console.onLoad();" onunload="return console.onUnload();"
   width="640" height="480"
   persist="width height screenX screenY" title="&MainWindow.title;"
   windowtype="mozapp:venkman">
@@ -106,9 +106,14 @@
     <command id="cmd_reload_ui"
       oncommand="if (DEBUG) window.location.href = window.location.href;"/>
     <command id="cmd_focus" oncommand="console._slInputElement.focus();"/>
+    <command id="cmd_tmode_cycle" oncommand="cycleThrowMode();"/>
+    <command id="cmd_tmode_ignore" oncommand="setThrowMode(TMODE_IGNORE);"/>
+    <command id="cmd_tmode_trace" oncommand="setThrowMode(TMODE_TRACE);"/>
+    <command id="cmd_tmode_break" oncommand="setThrowMode(TMODE_BREAK);"/>
   </commandset>
 
   <commandset id="venkmanDebuggerCommands">
+    <!-- commands in this set will be disabled when we're not stopped -->
     <command id="cmd_step_in" oncommand="console.doCommandStep();"/>
     <command id="cmd_cont" oncommand="console.doCommandCont();"/>
   </commandset>
@@ -120,6 +125,8 @@
     <key id="key_cont" observes="cmd_cont" keycode="VK_F5"/>
     <key id="key_cont" observes="cmd_cont" keycode="VK_F5"/>
     <key id="key_step_in" observes="cmd_step_in" keycode="VK_F10"/>
+    <key id="key_tmode_cycle" observes="cmd_tmode_cycle"
+         modifiers="control" key="T"/>
   </keyset>
 
   <popupset id="tooltip-set">
@@ -136,7 +143,7 @@
           <menuitem id="menu_ReloadUI" key="key_reload_ui"
             observes="cmd_reload_ui"
             label="&ReloadUI.label;" accesskey="&ReloadUI.aKey;"/>
-          <menuseperator/>
+          <menuseparator/>
           <menuitem id="menu_close"/>
         </menupopup>
       </menu>
@@ -148,6 +155,28 @@
           <menuitem id="menu_StepInto" key="key_step_in"
             observes="cmd_step_in"
             label="&StepIn.label;" accesskey="&StepIn.aKey;"/>
+          <menuseparator/>
+          <menu id="menu_ThrowMode" label = "&TModeMenu.label;"
+                accesskey="&TModeMenu.aKey;">
+            <menupopup oncreate="console.onTModeMenuCreate();">
+              <menuitem id="menu_TModeIgnore"
+                        observes="cmd_tmode_ignore" type="checkbox"
+                        label="&TModeIgnore.label;"
+                        accesskey="&TModeIgnore.aKey;"/>
+              <menuitem id="menu_TModeTrace"
+                        observes="cmd_tmode_trace" type="checkbox"
+                        label="&TModeTrace.label;"
+                        accesskey="&TModeTrace.aKey;"/>
+              <menuitem id="menu_TModeBreak"
+                        observes="cmd_tmode_break" type="checkbox"
+                        label="&TModeBreak.label;"
+                        accesskey="&TModeBreak.aKey;"/>
+              <menuseparator/>
+              <menuitem id="menu_TModeCycle" label = "&TModeCycle.label;"
+                        observes="cmd_tmode_cycle" key="key_tmode_cycle"
+                        accesskey="&TModeCycle.aKey;"/>
+            </menupopup>
+          </menu>
         </menupopup>
       </menu>
       <menu id="tasksMenu"/>
