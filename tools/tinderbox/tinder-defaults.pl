@@ -21,7 +21,7 @@ $BloatTest = 0;
 $DomToTextConversionTest = 0;
 $MailNewsTest = 0;
 $MozConfigFileName = 'mozconfig';
-$MozProfileName = 'mozProfile';
+$MozProfileName = 'default';
 
 #- Set these to what makes sense for your system
 $Make          = 'gmake';       # Must be GNU make

@@ -18,7 +18,7 @@ use POSIX qw(sys_wait_h strftime);
 use Cwd;
 use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
-$::UtilsVersion = '$Revision: 1.18 $ ';
+$::UtilsVersion = '$Revision: 1.19 $ ';
 
 package TinderUtils;
 
@@ -599,11 +599,12 @@ sub run_tests {
     # The mailnews test also adds a couple preferences to it.
     my $pref_file = "$build_dir/.mozilla/$Settings::MozProfileName/prefs.js";
 
-    unless (-f $pref_file) {
-      print_log "Prefs file not found: $pref_file\n";
-      print_log "Creating profile...\n";
-      $test_result = CreateProfile($build_dir, $binary, $pref_file, 45);
-    }
+    # Mozilla now create the "default" profile if none exists. -slamm 5-8-00
+    #unless (-f $pref_file) {
+    #  print_log "Prefs file not found: $pref_file\n";
+    #  print_log "Creating profile...\n";
+    # $test_result = CreateProfile($build_dir, $binary, $pref_file, 45);
+    #}
 
     # Mozilla alive test
     #
