@@ -33,4 +33,15 @@
   <!-- Delete Key -->
   <key id="key_delete" keycode="VK_BACK"     command="cmd_delete"/>
 
+  <!-- This adds the Print Setup item to both Browser and Composer's 
+       Print toolbar button popup
+   -->
+  <menupopup id="printMenu">
+    <menuitem id="printSetupToolbar"
+         insertafter="printMenuItemToolbar"
+         label="&printSetupCmd.label;"
+         accesskey="&printSetupCmd.accesskey;"
+         command="cmd_printSetup"/>
+  </menupopup>
+
 </overlay>    
