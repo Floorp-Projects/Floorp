@@ -2801,9 +2801,7 @@ nsGfxTextControlFrame2::AttributeChanged(nsIPresContext* aPresContext,
       flags &= ~(nsIPlaintextEditor::eEditorDisabledMask);
       if (mSelCon)
       {
-        if (! (flags & nsIPlaintextEditor::eEditorReadonlyMask))
-          mSelCon->SetCaretEnabled(PR_TRUE);
-        mSelCon->SetDisplaySelection(nsISelectionController::SELECTION_ON);
+        mSelCon->SetDisplaySelection(nsISelectionController::SELECTION_HIDDEN);
       }
     }    
     mEditor->SetFlags(flags);
