@@ -131,7 +131,7 @@ Build file for Rhino using Ant (see http://jakarta.apache.org/ant/index.html)
   </target>
 
   <target name="package" depends="jar,copy-all,javadoc">
-    <delete file="{src.dir}/${dist.file}" />
+    <delete file="${src.dir}/${dist.file}" />
     <zip zipfile="${src.dir}/${dist.file}"
          basedir="${build.dir}" 
          includes="**"
