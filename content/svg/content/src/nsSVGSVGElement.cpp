@@ -1294,8 +1294,7 @@ nsSVGSVGElement::DidModifySVGObservable (nsISVGValue* observable,
 PRBool
 nsSVGSVGElement::IsEventName(nsIAtom* aName)
 {
-  return IsGraphicElementEventName(aName) ||
-         aName == nsSVGAtoms::onload;
+  return IsGraphicElementEventName(aName);
 }
 
 //----------------------------------------------------------------------

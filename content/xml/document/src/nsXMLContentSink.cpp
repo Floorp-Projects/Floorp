@@ -99,6 +99,7 @@
 
 #ifdef MOZ_SVG
 #include "nsSVGAtoms.h"
+#include "nsGUIEvent.h"
 #endif
 
 #define kXSLType "text/xsl"
@@ -1051,6 +1052,17 @@ nsXMLContentSink::HandleEndElement(const PRUnichar *aName)
     if (mParser) mParser->BlockParser();
     result = NS_ERROR_HTMLPARSER_BLOCK;
   }
+
+#ifdef MOZ_SVG
+  if (content->GetNameSpaceID() == kNameSpaceID_SVG &&
+      content->HasAttr(kNameSpaceID_None, nsSVGAtoms::onload)) {
+    nsEventStatus status = nsEventStatus_eIgnore;
+    nsEvent event(NS_PAGE_LOAD);
+    nsIPresShell *presShell = mDocument->GetShellAt(0);
+    if (presShell)
+      presShell->HandleDOMEventWithTarget(content, &event, &status);
+  }
+#endif
 
   return result;
 }
