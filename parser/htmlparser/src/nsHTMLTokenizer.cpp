@@ -761,12 +761,14 @@ nsresult nsHTMLTokenizer::ConsumeEndTag(PRUnichar aChar,CToken*& aToken,nsScanne
     result= aToken->Consume(aChar,aScanner,isHTML);  //tell new token to finish consuming text...    
     AddToken(aToken,result,&mTokenDeque,theAllocator);
     
-    eHTMLTags theTag=(eHTMLTags)aToken->GetTypeID();
-    if(((theTag==eHTMLTag_textarea)   || 
-        (theTag==eHTMLTag_xmp)        || 
-        (theTag==eHTMLTag_plaintext)  || 
-        (theTag==eHTMLTag_noscript))  && mRecordTrailingContent) {
-      mRecordTrailingContent=PR_FALSE;
+    if(NS_SUCCEEDED(result)) {
+      eHTMLTags theTag=(eHTMLTags)aToken->GetTypeID();
+      if(((theTag==eHTMLTag_textarea)   || 
+          (theTag==eHTMLTag_xmp)        || 
+          (theTag==eHTMLTag_plaintext)  || 
+          (theTag==eHTMLTag_noscript))  && mRecordTrailingContent) {
+        mRecordTrailingContent=PR_FALSE;
+      }
     }
   } //if
   return result;
