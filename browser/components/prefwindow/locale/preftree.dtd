@@ -12,7 +12,7 @@
 <!ENTITY applications.label "Helper Applications">
 <!--LOCALIZATION NOTE (smartBrowse.label): DONT_TRANSLATE -->
 <!ENTITY smartBrowse.label "Smart Browsing">
-<!ENTITY security.label "Privacy &amp; Security">
+<!ENTITY privacy.label "Privacy">
 <!ENTITY advance.label "Advanced">
 <!ENTITY down.label "Download">
 <!ENTITY cache.label "Cache">

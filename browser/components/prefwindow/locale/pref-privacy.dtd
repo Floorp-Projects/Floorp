@@ -1,0 +1,28 @@
+<!ENTITY lHeader                           "Privacy">
+<!ENTITY cookies.label                     "Cookies">
+<!ENTITY enableCookies.label               "Enable cookies">
+<!ENTITY enableCookies.accesskey           "c">
+<!ENTITY forOriginatingSiteOnly.label      "for originating Web site only">
+<!ENTITY forOriginatingSiteOnly.accesskey  "W">
+<!ENTITY forCurrentSessionOnly.label       "for the current session only">
+<!ENTITY forCurrentSessionOnly.accesskey   "s">
+<!ENTITY manageCookies.label               "Manage Cookies...">
+<!ENTITY manageCookies.accesskey           "M">
+<!ENTITY history.label                     "History">
+<!ENTITY pageHis.label                     "Remember visited pages for the last">
+<!ENTITY pageHis.accesskey                 "p">
+<!ENTITY days.label                        "days">
+<!ENTITY images.label                      "Images">
+<!ENTITY enableImages.label                "Enable images">
+<!ENTITY enableImages.accesskey            "i">
+<!ENTITY manageImages.label                "Manage Images...">
+<!ENTITY manageImages.accesskey            "n">
+<!ENTITY cache.label                       "Cache">
+<!ENTITY diskCache.label                   "Use up to:">
+<!ENTITY diskCache.accesskey               "U">
+<!ENTITY kbytes                            "KB of disk space for the cache.">
+<!ENTITY clearCache.label                  "Clear Cache">
+<!ENTITY clearHistory.label                "Clear History">
+<!ENTITY clearHistory.accesskey            "H">
+<!ENTITY cacheExplanation.label            "Pages you view are stored in the cache for quicker viewing later on.">
+<!ENTITY cookieExplanation.label           "Cookies are delicious delicacies.">

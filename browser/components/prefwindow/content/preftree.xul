@@ -60,75 +60,13 @@
     </treeitem>
     <treeitem>
       <treerow>
-        <treecell url="chrome://browser/content/pref/pref-languages.xul" label="&languages.label;"/> 
+        <treecell url="chrome://browser/content/pref/pref-privacy.xul" label="&privacy.label;" />
       </treerow>
     </treeitem>
-    <treeitem>
-      <treerow>
-        <treecell url="chrome://browser/content/pref/pref-applications.xul" label="&applications.label;"/> 
-      </treerow>  
-    </treeitem> 
-    <treeitem>
-      <treerow>
-        <treecell url="chrome://browser/content/pref/pref-smart_browsing.xul" label="&smartBrowse.label;"/> 
-      </treerow>
-    </treeitem>
-    <treeitem>
-      <treerow>
-        <treecell url="chrome://browser/content/pref/pref-download.xul" label="&download.label;"/>
-      </treerow>
-    </treeitem>
-    
-    <!-- Security and Privacy items -->
-    <treeitem container="true" id="securityItem">
-      <treerow>
-        <treecell url="chrome://browser/content/pref/pref-security.xul" label="&security.label;" />
-      </treerow>
-      <treechildren id="securityChildren"/>
-    </treeitem>
-
     <treeitem id="advancedItem">
       <treerow>
         <treecell url="chrome://browser/content/pref/pref-advanced.xul" label="&advance.label;"/> 
       </treerow>
-    </treeitem>
-    <treeitem>
-      <treerow>
-        <treecell url="chrome://browser/content/pref/pref-scripts.xul" label="&scriptsAndWindows.label;"/> 
-      </treerow>
-    </treeitem>
-    <treeitem>
-      <treerow>
-        <treecell url="chrome://browser/content/pref/pref-cache.xul" label="&cache.label;"/> 
-      </treerow>
-    </treeitem>
-    <treeitem>
-      <treerow>
-        <treecell url="chrome://browser/content/pref/pref-proxies.xul" label="&proxies.label;"/> 
-      </treerow>
-    </treeitem>
-    <treeitem>
-      <treerow>
-        <treecell url="chrome://browser/content/pref/pref-smartupdate.xul" label="&smart.label;"/>
-      </treerow>
-    </treeitem>
-
-    <treeitem container="true" id="debugItem">
-      <treerow>       
-        <treecell url="chrome://browser/content/pref/pref-debug.xul" label="&debug.label;"/> 
-      </treerow>
-      <treechildren id="debugChildren">
-        <treeitem>
-          <treerow>
-            <treecell url="chrome://browser/content/pref/pref-debug1.xul" label="&debug1.label;"/> 
-          </treerow>
-        </treeitem>
-        <treeitem>
-          <treerow>
-            <treecell url="chrome://browser/content/pref/pref-debug2.xul" label="&debug2.label;"/> 
-          </treerow>
-        </treeitem>
-      </treechildren>
     </treeitem>
   </treechildren>
 </tree>
