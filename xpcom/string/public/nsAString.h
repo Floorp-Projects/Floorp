@@ -651,7 +651,6 @@ class NS_COM nsStringComparator
       typedef nsAString::char_type char_type;
 
       virtual int operator()( const char_type*, const char_type*, PRUint32 aLength ) const = 0;
-      virtual int operator()( char_type, char_type ) const = 0;
   };
 
 class NS_COM nsDefaultStringComparator
@@ -659,7 +658,13 @@ class NS_COM nsDefaultStringComparator
   {
     public:
       virtual int operator()( const char_type*, const char_type*, PRUint32 aLength ) const;
-      virtual int operator() ( char_type, char_type ) const;
+  };
+
+class NS_COM nsCaseInsensitiveStringComparator
+    : public nsStringComparator
+  {
+    public:
+      virtual int operator()( const char_type*, const char_type*, PRUint32 aLength ) const;
   };
 
 NS_COM int Compare( const nsAString& lhs, const nsAString& rhs, const nsStringComparator& = nsDefaultStringComparator() );
@@ -777,7 +782,6 @@ class NS_COM nsCStringComparator
       typedef nsACString::char_type char_type;
 
       virtual int operator()( const char_type*, const char_type*, PRUint32 aLength ) const = 0;
-      virtual int operator() ( char_type, char_type ) const = 0;
   };
 
 class NS_COM nsDefaultCStringComparator
@@ -785,7 +789,6 @@ class NS_COM nsDefaultCStringComparator
   {
     public:
       virtual int operator()( const char_type*, const char_type*, PRUint32 aLength ) const;
-      virtual int operator()( char_type, char_type ) const;
   };
 
 class NS_COM nsCaseInsensitiveCStringComparator
@@ -793,7 +796,6 @@ class NS_COM nsCaseInsensitiveCStringComparator
   {
     public:
       virtual int operator()( const char_type*, const char_type*, PRUint32 aLength ) const;
-      virtual int operator()( char_type, char_type ) const;
   };
 
 NS_COM int Compare( const nsACString& lhs, const nsACString& rhs, const nsCStringComparator& = nsDefaultCStringComparator() );

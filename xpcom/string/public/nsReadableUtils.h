@@ -170,8 +170,10 @@ NS_COM PRBool IsASCII( const nsAString& aString );
   /**
    * Converts case in place in the argument string.
    */
+NS_COM void ToUpperCase( nsAString& );
 NS_COM void ToUpperCase( nsACString& );
 
+NS_COM void ToLowerCase( nsAString& );
 NS_COM void ToLowerCase( nsACString& );
 
   /**
@@ -183,10 +185,12 @@ NS_COM void ToLowerCase( nsACString& );
    * Currently, this is equivalent to the O(m*n) implementation previously on |ns[C]String|.
    * If we need something faster, then we can implement that later.
    */
+NS_COM PRBool FindInReadable( const nsAString& aPattern, nsAString::const_iterator&, nsAString::const_iterator& );
+NS_COM PRBool FindInReadable( const nsACString& aPattern, nsACString::const_iterator&, nsACString::const_iterator& );
 
-NS_COM PRBool FindInReadable( const nsAString& aPattern, nsAString::const_iterator&, nsAString::const_iterator&, const nsStringComparator& = nsDefaultStringComparator() );
-NS_COM PRBool FindInReadable( const nsACString& aPattern, nsACString::const_iterator&, nsACString::const_iterator&, const nsCStringComparator& = nsDefaultCStringComparator() );
+NS_COM PRBool CaseInsensitiveFindInReadable( const nsAString& aPattern, nsAString::const_iterator&, nsAString::const_iterator& );
 NS_COM PRBool CaseInsensitiveFindInReadable( const nsACString& aPattern, nsACString::const_iterator&, nsACString::const_iterator& );
+
 
   /**
    * Finds the rightmost occurance of |aPattern| 
