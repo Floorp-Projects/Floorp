@@ -59,7 +59,7 @@ public:
 
 protected:
   nsresult GetPublicKey(nsAString& aValue, nsAString& aChallenge, 
-			nsAString& akeyType, nsAString& aOutPublicKey,
+			nsAFlatString& akeyType, nsAString& aOutPublicKey,
 			nsAString& aPqg);
   nsresult GetSlot(PRUint32 aMechanism, PK11SlotInfo** aSlot);
 private:

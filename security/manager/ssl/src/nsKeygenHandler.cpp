@@ -353,15 +353,13 @@ loser:
 
 nsresult
 nsKeygenFormProcessor::GetPublicKey(nsAString& aValue, nsAString& aChallenge, 
-				    nsAString& aKeyType,
+				    nsAFlatString& aKeyType,
 				    nsAString& aOutPublicKey, nsAString& aPqg)
 {
     nsNSSShutDownPreventionLock locker;
     nsresult rv = NS_ERROR_FAILURE;
     char *keystring = nsnull;
     char *pqgString = nsnull, *str = nsnull;
-    nsAutoString rsaStr;
-    nsAutoString dsaStr;
     KeyType type;
     PRUint32 keyGenMechanism;
     PRInt32 primeBits;
@@ -403,12 +401,10 @@ nsKeygenFormProcessor::GetPublicKey(nsAString& aValue, nsAString& aChallenge,
     }
 
     // Set the keygen mechanism
-    rsaStr.Assign(NS_LITERAL_STRING("rsa"));
-    dsaStr.Assign(NS_LITERAL_STRING("dsa"));
-    if (aKeyType.IsEmpty() || aKeyType.Equals(rsaStr)) {
+    if (aKeyType.IsEmpty() || aKeyType.EqualsIgnoreCase("rsa")) {
         type = rsaKey;
         keyGenMechanism = CKM_RSA_PKCS_KEY_PAIR_GEN;
-    } else  if (aKeyType.Equals(dsaStr)) {
+    } else if (aKeyType.EqualsIgnoreCase("dsa")) {
         char * end;
         pqgString = ToNewCString(aPqg);
         type = dsaKey;
