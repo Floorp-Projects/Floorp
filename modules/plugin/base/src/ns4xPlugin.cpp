@@ -1816,7 +1816,7 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
     nsCOMPtr<nsIIOService> ioservice = do_GetService(NS_IOSERVICE_CONTRACTID, &res);
     if (NS_SUCCEEDED(res))
       res = ioservice->GetOffline(&offline);
-    if (NS_FAILED(rv))
+    if (NS_FAILED(res))
       return NPERR_GENERIC_ERROR;
 
     *(NPBool*)result = offline; 
