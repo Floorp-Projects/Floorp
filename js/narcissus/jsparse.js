@@ -714,7 +714,8 @@ function Expression(t, x, stop) {
 loop:
     while ((tt = t.get()) != END) {
         if (tt == stop &&
-            x.bracketLevel == bl && x.curlyLevel == cl && x.parenLevel == pl) {
+            x.bracketLevel == bl && x.curlyLevel == cl && x.parenLevel == pl &&
+            x.hookLevel == hl) {
             // Stop only if tt matches the optional stop parameter, and that
             // token is not quoted by some kind of bracket.
             break;
