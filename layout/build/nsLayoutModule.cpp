@@ -63,7 +63,11 @@
 #include "nsIServiceManager.h"
 
 #include "nsTextTransformer.h"
+#include "nsIHTTPProtocolHandler.h"
+#include "gbdate.h"
+#define PRODUCT_NAME "Gecko"
 
+static NS_DEFINE_CID(kHTTPHandlerCID, NS_IHTTPHANDLER_CID);
 static nsLayoutModule *gModule = NULL;
 
 extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
@@ -222,6 +226,8 @@ nsLayoutModule::Initialize()
       gRegistry->AddExternalNameSet(nameSet);
     }
   }
+
+  SetUserAgent();
 
   rv = nsTextTransformer::Initialize();
   if (NS_FAILED(rv)) {
@@ -412,4 +418,21 @@ nsLayoutModule::CanUnload(nsIComponentManager *aCompMgr, PRBool *okToUnload)
   }
   *okToUnload = PR_FALSE;
   return NS_ERROR_FAILURE;
+}
+
+void
+nsLayoutModule::SetUserAgent( void )
+{
+  nsString productName(PRODUCT_NAME), productVersion(PRODUCT_VERSION);
+  nsresult rv = nsnull;
+
+  nsCOMPtr<nsIHTTPProtocolHandler> theService(do_GetService(kHTTPHandlerCID,
+								   &rv));
+
+  if( NS_SUCCEEDED(rv) && (nsnull != theService) )
+  {
+    rv = theService->SetProduct(productName.GetUnicode());
+	
+    rv = theService->SetProductSub(productVersion.GetUnicode());
+  }
 }
