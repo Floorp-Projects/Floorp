@@ -884,7 +884,6 @@ AddFDef("cc", "CC", 0);
 AddFDef("dependson", "BugsThisDependsOn", 0);
 AddFDef("blocked", "OtherBugsDependingOnThis", 0);
 AddFDef("target_milestone", "Target Milestone", 0);
-AddFDef("stupidtest", "Stupidtest", 0);
     
     
 
