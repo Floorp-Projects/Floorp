@@ -4320,7 +4320,7 @@ nsTableFrame::GetFrameAtOrBefore(nsIPresContext* aPresContext,
   nsIFrame* childFrame;
   nsIFrame* lastMatchingFrame = nsnull;
   aParentFrame->FirstChild(aPresContext, nsnull, &childFrame);
-  while (childFrame != aPriorChildFrame) {
+  while (childFrame && childFrame != aPriorChildFrame) {
     childFrame->GetFrameType(&frameType);
     if (aChildType == frameType) {
       lastMatchingFrame = childFrame;
