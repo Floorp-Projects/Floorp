@@ -57,12 +57,10 @@ use vars qw($db_name
             @versions);
 
 if (length($::buffer) == 0) {
-    $vars->{'message'} = "buglist_parameters_required";
     print "Refresh: 10; URL=query.cgi\n";
     print "Content-Type: text/html\n\n";
-    $template->process("global/message.html.tmpl", $vars)
-      || ThrowTemplateError($template->error());
-    exit;
+    $vars->{'header_done'} = 1;
+    ThrowUserError("buglist_parameters_required");
 }    
 
 ConnectToDatabase();
