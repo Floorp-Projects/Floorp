@@ -35,7 +35,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the GPL.
  *
- *  $Id: mpi.c,v 1.26 2000/09/29 19:51:32 nelsonb%netscape.com Exp $
+ *  $Id: mpi.c,v 1.27 2000/10/24 21:32:53 nelsonb%netscape.com Exp $
  */
 
 #include "mpi-priv.h"
@@ -947,10 +947,7 @@ CLEANUP:
   Compute q = a / b and r = a mod b.  Input parameters may be re-used
   as output parameters.  If q or r is NULL, that portion of the
   computation will be discarded (although it will still be computed)
-
-  Pay no attention to the hacker behind the curtain.
  */
-
 mp_err mp_div(const mp_int *a, const mp_int *b, mp_int *q, mp_int *r)
 {
   mp_err   res;
@@ -1865,11 +1862,12 @@ mp_err mp_lcm(mp_int *a, mp_int *b, mp_int *c)
   mp_xgcd(a, b, g, x, y)
 
   Compute g = (a, b) and values x and y satisfying Bezout's identity
-  (that is, ax + by = g).  This uses the extended binary GCD algorithm
+  (that is, ax + by = g).  This uses the binary extended GCD algorithm
   based on the Stein algorithm used for mp_gcd()
+  See algorithm 14.61 in Handbook of Applied Cryptogrpahy.
  */
 
-mp_err mp_xgcd(mp_int *a, mp_int *b, mp_int *g, mp_int *x, mp_int *y)
+mp_err mp_xgcd(const mp_int *a, const mp_int *b, mp_int *g, mp_int *x, mp_int *y)
 {
   mp_int   gx, xc, yc, u, v, A, B, C, D;
   mp_int  *clean[9];
@@ -1880,35 +1878,37 @@ mp_err mp_xgcd(mp_int *a, mp_int *b, mp_int *g, mp_int *x, mp_int *y)
     return MP_RANGE;
 
   /* Initialize all these variables we need */
-  if((res = mp_init(&u)) != MP_OKAY) goto CLEANUP;
+  MP_CHECKOK( mp_init(&u) );
   clean[++last] = &u;
-  if((res = mp_init(&v)) != MP_OKAY) goto CLEANUP;
+  MP_CHECKOK( mp_init(&v) );
   clean[++last] = &v;
-  if((res = mp_init(&gx)) != MP_OKAY) goto CLEANUP;
+  MP_CHECKOK( mp_init(&gx) );
   clean[++last] = &gx;
-  if((res = mp_init(&A)) != MP_OKAY) goto CLEANUP;
+  MP_CHECKOK( mp_init(&A) );
   clean[++last] = &A;
-  if((res = mp_init(&B)) != MP_OKAY) goto CLEANUP;
+  MP_CHECKOK( mp_init(&B) );
   clean[++last] = &B;
-  if((res = mp_init(&C)) != MP_OKAY) goto CLEANUP;
+  MP_CHECKOK( mp_init(&C) );
   clean[++last] = &C;
-  if((res = mp_init(&D)) != MP_OKAY) goto CLEANUP;
+  MP_CHECKOK( mp_init(&D) );
   clean[++last] = &D;
-  if((res = mp_init_copy(&xc, a)) != MP_OKAY) goto CLEANUP;
+  MP_CHECKOK( mp_init_copy(&xc, a) );
   clean[++last] = &xc;
   mp_abs(&xc, &xc);
-  if((res = mp_init_copy(&yc, b)) != MP_OKAY) goto CLEANUP;
+  MP_CHECKOK( mp_init_copy(&yc, b) );
   clean[++last] = &yc;
   mp_abs(&yc, &yc);
 
   mp_set(&gx, 1);
 
-  /* Divide by two until at least one of them is even */
+  /* Divide by two until at least one of them is odd */
   while(mp_iseven(&xc) && mp_iseven(&yc)) {
-    s_mp_div_2(&xc);
-    s_mp_div_2(&yc);
-    if((res = s_mp_mul_2(&gx)) != MP_OKAY)
-      goto CLEANUP;
+    mp_size nx = mp_trailing_zeros(&xc);
+    mp_size ny = mp_trailing_zeros(&yc);
+    mp_size n  = MP_MIN(nx, ny);
+    s_mp_div_2d(&xc,n);
+    s_mp_div_2d(&yc,n);
+    MP_CHECKOK( s_mp_mul_2d(&gx,n) );
   }
 
   mp_copy(&xc, &u);
@@ -1916,16 +1916,16 @@ mp_err mp_xgcd(mp_int *a, mp_int *b, mp_int *g, mp_int *x, mp_int *y)
   mp_set(&A, 1); mp_set(&D, 1);
 
   /* Loop through binary GCD algorithm */
-  for(;;) {
+  do {
     while(mp_iseven(&u)) {
       s_mp_div_2(&u);
 
       if(mp_iseven(&A) && mp_iseven(&B)) {
 	s_mp_div_2(&A); s_mp_div_2(&B);
       } else {
-	if((res = mp_add(&A, &yc, &A)) != MP_OKAY) goto CLEANUP;
+	MP_CHECKOK( mp_add(&A, &yc, &A) );
 	s_mp_div_2(&A);
-	if((res = mp_sub(&B, &xc, &B)) != MP_OKAY) goto CLEANUP;
+	MP_CHECKOK( mp_sub(&B, &xc, &B) );
 	s_mp_div_2(&B);
       }
     }
@@ -1936,39 +1936,33 @@ mp_err mp_xgcd(mp_int *a, mp_int *b, mp_int *g, mp_int *x, mp_int *y)
       if(mp_iseven(&C) && mp_iseven(&D)) {
 	s_mp_div_2(&C); s_mp_div_2(&D);
       } else {
-	if((res = mp_add(&C, &yc, &C)) != MP_OKAY) goto CLEANUP;
+	MP_CHECKOK( mp_add(&C, &yc, &C) );
 	s_mp_div_2(&C);
-	if((res = mp_sub(&D, &xc, &D)) != MP_OKAY) goto CLEANUP;
+	MP_CHECKOK( mp_sub(&D, &xc, &D) );
 	s_mp_div_2(&D);
       }
     }
 
     if(mp_cmp(&u, &v) >= 0) {
-      if((res = mp_sub(&u, &v, &u)) != MP_OKAY) goto CLEANUP;
-      if((res = mp_sub(&A, &C, &A)) != MP_OKAY) goto CLEANUP;
-      if((res = mp_sub(&B, &D, &B)) != MP_OKAY) goto CLEANUP;
-
+      MP_CHECKOK( mp_sub(&u, &v, &u) );
+      MP_CHECKOK( mp_sub(&A, &C, &A) );
+      MP_CHECKOK( mp_sub(&B, &D, &B) );
     } else {
-      if((res = mp_sub(&v, &u, &v)) != MP_OKAY) goto CLEANUP;
-      if((res = mp_sub(&C, &A, &C)) != MP_OKAY) goto CLEANUP;
-      if((res = mp_sub(&D, &B, &D)) != MP_OKAY) goto CLEANUP;
-
+      MP_CHECKOK( mp_sub(&v, &u, &v) );
+      MP_CHECKOK( mp_sub(&C, &A, &C) );
+      MP_CHECKOK( mp_sub(&D, &B, &D) );
     }
+  } while (mp_cmp_z(&u) != 0);
 
-    /* If we're done, copy results to output */
-    if(mp_cmp_z(&u) == 0) {
-      if(x)
-	if((res = mp_copy(&C, x)) != MP_OKAY) goto CLEANUP;
+  /* copy results to output */
+  if(x)
+    MP_CHECKOK( mp_copy(&C, x) );
 
-      if(y)
-	if((res = mp_copy(&D, y)) != MP_OKAY) goto CLEANUP;
+  if(y)
+    MP_CHECKOK( mp_copy(&D, y) );
       
-      if(g)
-	if((res = mp_mul(&gx, &v, g)) != MP_OKAY) goto CLEANUP;
-
-      break;
-    }
-  }
+  if(g)
+    MP_CHECKOK( mp_mul(&gx, &v, g) );
 
  CLEANUP:
   while(last >= 0)
@@ -1979,6 +1973,51 @@ mp_err mp_xgcd(mp_int *a, mp_int *b, mp_int *g, mp_int *x, mp_int *y)
 } /* end mp_xgcd() */
 
 /* }}} */
+
+mp_size mp_trailing_zeros(const mp_int *mp)
+{
+  mp_digit d;
+  mp_size  n = 0;
+  int      ix;
+
+  if (!mp || !MP_DIGITS(mp) || !mp_cmp_z(mp))
+    return n;
+
+  for (ix = 0; !(d = MP_DIGIT(mp,ix)) && (ix < MP_USED(mp)); ++ix)
+    n += MP_DIGIT_BIT;
+  if (!d)
+    return 0;	/* shouldn't happen, but ... */
+#if (MP_DIGIT_MAX > MP_32BIT_MAX) 
+  if (!(d & 0xffffffffU)) {
+    d >>= 32;
+    n  += 32;
+  }
+#endif
+  if (!(d & 0xffffU)) {
+    d >>= 16;
+    n  += 16;
+  }
+  if (!(d & 0xffU)) {
+    d >>= 8;
+    n  += 8;
+  }
+  if (!(d & 0xfU)) {
+    d >>= 4;
+    n  += 4;
+  }
+  if (!(d & 0x3U)) {
+    d >>= 2;
+    n  += 2;
+  }
+  if (!(d & 0x1U)) {
+    d >>= 1;
+    n  += 1;
+  }
+#if MP_ARGCHK == 2
+  assert(0 != (d & 1));
+#endif
+  return n;
+}
 
 /* Given a and prime p, computes c and k such that a*c == 2**k (mod p).
 ** Returns k (positive) or error (negative).
@@ -2009,9 +2048,14 @@ mp_err s_mp_almost_inverse(const mp_int *a, const mp_int *p, mp_int *c)
   for (;;) {
     int diff_sign;
     while (mp_iseven(&f)) {
-      s_mp_div_2d(&f, 1);
-      MP_CHECKOK( s_mp_mul_2d(&d, 1) );
-      ++k;
+      mp_size n = mp_trailing_zeros(&f);
+      if (!n) {
+	res = MP_UNDEF;
+	goto CLEANUP;
+      }
+      s_mp_div_2d(&f, n);
+      MP_CHECKOK( s_mp_mul_2d(&d, n) );
+      k += n;
     }
     if (mp_cmp_d(&f, 1) == MP_EQ) {	/* f == 1 */
       res = k;
@@ -2047,7 +2091,7 @@ CLEANUP:
   return res;
 }
 
-/* Compute T = (P ** -1) mod (2 ** 32).  Also works for 16-bit mp_digits.
+/* Compute T = (P ** -1) mod MP_RADIX.  Also works for 16-bit mp_digits.
 ** This technique from the paper "Fast Modular Reciprocals" (unpublished)
 ** by Richard Schroeppel (a.k.a. Captain Nemo).
 */
@@ -2107,17 +2151,46 @@ CLEANUP:
   return res;
 }
 
-/* {{{ mp_invmod(a, m, c) */
+/* compute mod inverse using Schroeppel's method, only if m is odd */
+mp_err s_mp_invmod_odd_m(const mp_int *a, const mp_int *m, mp_int *c)
+{
+  int k;
+  mp_err  res;
+  mp_int  x;
 
-/*
-  mp_invmod(a, m, c)
+  ARGCHK(a && m && c, MP_BADARG);
 
-  Compute c = a^-1 (mod m), if there is an inverse for a (mod m).
-  This is equivalent to the question of whether (a, m) = 1.  If not,
-  MP_UNDEF is returned, and there is no inverse.
- */
+  if(mp_cmp_z(a) == 0 || mp_cmp_z(m) == 0)
+    return MP_RANGE;
+  if (mp_iseven(m))
+    return MP_UNDEF;
 
-mp_err mp_invmod(mp_int *a, mp_int *m, mp_int *c)
+  MP_DIGITS(&x) = 0;
+
+  if (a == c) {
+    if ((res = mp_init_copy(&x, a)) != MP_OKAY)
+      return res;
+    if (a == m) 
+      m = &x;
+    a = &x;
+  } else if (m == c) {
+    if ((res = mp_init_copy(&x, m)) != MP_OKAY)
+      return res;
+    m = &x;
+  } else {
+    MP_DIGITS(&x) = 0;
+  }
+
+  MP_CHECKOK( s_mp_almost_inverse(a, m, c) );
+  k = res;
+  MP_CHECKOK( s_mp_fixup_reciprocal(c, m, k, c) );
+CLEANUP:
+  mp_clear(&x);
+  return res;
+}
+
+/* Known good algorithm for computing modular inverse.  But slow. */
+mp_err mp_invmod_xgcd(const mp_int *a, const mp_int *m, mp_int *c)
 {
   mp_int  g, x;
   mp_err  res;
@@ -2129,36 +2202,12 @@ mp_err mp_invmod(mp_int *a, mp_int *m, mp_int *c)
 
   MP_DIGITS(&g) = 0;
   MP_DIGITS(&x) = 0;
-
-  if (mp_isodd(m)) {
-    int k;
-
-    if (a == c) {
-      if ((res = mp_init_copy(&x, a)) != MP_OKAY)
-	return res;
-      if (a == m) 
-	m = &x;
-      a = &x;
-    } else if (m == c) {
-      if ((res = mp_init_copy(&x, m)) != MP_OKAY)
-	return res;
-      m = &x;
-    } else {
-      MP_DIGITS(&x) = 0;
-    }
-
-    MP_CHECKOK( s_mp_almost_inverse(a, m, c) );
-    k = res;
-    MP_CHECKOK( s_mp_fixup_reciprocal(c, m, k, c) );
-    goto CLEANUP;
-  }
-
   MP_CHECKOK( mp_init(&x) );
   MP_CHECKOK( mp_init(&g) );
 
   MP_CHECKOK( mp_xgcd(a, m, &g, &x, NULL) );
 
-  if(mp_cmp_d(&g, 1) != MP_EQ) {
+  if (mp_cmp_d(&g, 1) != MP_EQ) {
     res = MP_UNDEF;
     goto CLEANUP;
   }
@@ -2171,6 +2220,166 @@ CLEANUP:
   mp_clear(&g);
 
   return res;
+}
+
+/* modular inverse where modulus is 2**k. */
+/* c = a**-1 mod 2**k */
+mp_err s_mp_invmod_2d(const mp_int *a, mp_size k, mp_int *c)
+{
+  mp_err res;
+  mp_size ix = k + 4;
+  mp_int t0, t1, val, tmp, two2k;
+
+  static const mp_digit d2 = 2;
+  static const mp_int two = { MP_ZPOS, 1, 1, (mp_digit *)&d2 };
+
+  if (mp_iseven(a))
+    return MP_UNDEF;
+  if (k <= MP_DIGIT_BIT) {
+    mp_digit i = s_mp_invmod_radix(MP_DIGIT(a,0));
+    if (k < MP_DIGIT_BIT)
+      i &= ((mp_digit)1 << k) - (mp_digit)1;
+    mp_set(c, i);
+    return MP_OKAY;
+  }
+  MP_DIGITS(&t0) = 0;
+  MP_DIGITS(&t1) = 0;
+  MP_DIGITS(&val) = 0;
+  MP_DIGITS(&tmp) = 0;
+  MP_DIGITS(&two2k) = 0;
+  MP_CHECKOK( mp_init_copy(&val, a) );
+  s_mp_mod_2d(&val, k);
+  MP_CHECKOK( mp_init_copy(&t0, &val) );
+  MP_CHECKOK( mp_init_copy(&t1, &t0)  );
+  MP_CHECKOK( mp_init(&tmp) );
+  MP_CHECKOK( mp_init(&two2k) );
+  MP_CHECKOK( s_mp_2expt(&two2k, k) );
+  do {
+    MP_CHECKOK( mp_mul(&val, &t1, &tmp)  );
+    MP_CHECKOK( mp_sub(&two, &tmp, &tmp) );
+    MP_CHECKOK( mp_mul(&t1, &tmp, &t1)   );
+    s_mp_mod_2d(&t1, k);
+    while (MP_SIGN(&t1) != MP_ZPOS) {
+      MP_CHECKOK( mp_add(&t1, &two2k, &t1) );
+    }
+    if (mp_cmp(&t1, &t0) == MP_EQ) 
+      break;
+    MP_CHECKOK( mp_copy(&t1, &t0) );
+  } while (--ix > 0);
+  if (!ix) {
+    res = MP_UNDEF;
+  } else {
+    mp_exch(c, &t1);
+  }
+
+CLEANUP:
+  mp_clear(&t0);
+  mp_clear(&t1);
+  mp_clear(&val);
+  mp_clear(&tmp);
+  mp_clear(&two2k);
+  return res;
+}
+
+mp_err s_mp_invmod_even_m(const mp_int *a, const mp_int *m, mp_int *c)
+{
+  mp_err res;
+  mp_size k;
+  mp_int oddFactor, evenFactor;	/* factors of the modulus */
+  mp_int oddPart, evenPart;	/* parts to combine via CRT. */
+  mp_int C2, tmp1, tmp2;
+
+  static const mp_digit d1 = 1;
+  static const mp_int one = { MP_ZPOS, 1, 1, (mp_digit *)&d1 };
+
+  if ((res = s_mp_ispow2(m)) >= 0) {
+    k = res;
+    return s_mp_invmod_2d(a, k, c);
+  }
+  MP_DIGITS(&oddFactor) = 0;
+  MP_DIGITS(&evenFactor) = 0;
+  MP_DIGITS(&oddPart) = 0;
+  MP_DIGITS(&evenPart) = 0;
+  MP_DIGITS(&C2)     = 0;
+  MP_DIGITS(&tmp1)   = 0;
+  MP_DIGITS(&tmp2)   = 0;
+
+  MP_CHECKOK( mp_init_copy(&oddFactor, m) );    /* oddFactor = m */
+  MP_CHECKOK( mp_init(&evenFactor) );
+  MP_CHECKOK( mp_init(&oddPart) );
+  MP_CHECKOK( mp_init(&evenPart) );
+  MP_CHECKOK( mp_init(&C2)     );
+  MP_CHECKOK( mp_init(&tmp1)   );
+  MP_CHECKOK( mp_init(&tmp2)   );
+
+  k = mp_trailing_zeros(m);
+  s_mp_div_2d(&oddFactor, k);
+  MP_CHECKOK( s_mp_2expt(&evenFactor, k) );
+
+  /* compute a**-1 mod oddFactor. */
+  MP_CHECKOK( s_mp_invmod_odd_m(a, &oddFactor, &oddPart) );
+  /* compute a**-1 mod evenFactor, where evenFactor == 2**k. */
+  MP_CHECKOK( s_mp_invmod_2d(   a,       k,    &evenPart) );
+
+  /* Use Chinese Remainer theorem to compute a**-1 mod m. */
+  /* let m1 = oddFactor,  v1 = oddPart, 
+   * let m2 = evenFactor, v2 = evenPart.
+   */
+
+  /* Compute C2 = m1**-1 mod m2. */
+  MP_CHECKOK( s_mp_invmod_2d(&oddFactor, k,    &C2) );
+
+  /* compute u = (v2 - v1)*C2 mod m2 */
+  MP_CHECKOK( mp_sub(&evenPart, &oddPart,   &tmp1) );
+  MP_CHECKOK( mp_mul(&tmp1,     &C2,        &tmp2) );
+  s_mp_mod_2d(&tmp2, k);
+  while (MP_SIGN(&tmp2) != MP_ZPOS) {
+    MP_CHECKOK( mp_add(&tmp2, &evenFactor, &tmp2) );
+  }
+
+  /* compute answer = v1 + u*m1 */
+  MP_CHECKOK( mp_mul(&tmp2,     &oddFactor, c) );
+  MP_CHECKOK( mp_add(&oddPart,  c,          c) );
+  /* not sure this is necessary, but it's low cost if not. */
+  MP_CHECKOK( mp_mod(c,         m,          c) );
+
+CLEANUP:
+  mp_clear(&oddFactor);
+  mp_clear(&evenFactor);
+  mp_clear(&oddPart);
+  mp_clear(&evenPart);
+  mp_clear(&C2);
+  mp_clear(&tmp1);
+  mp_clear(&tmp2);
+  return res;
+}
+
+
+/* {{{ mp_invmod(a, m, c) */
+
+/*
+  mp_invmod(a, m, c)
+
+  Compute c = a^-1 (mod m), if there is an inverse for a (mod m).
+  This is equivalent to the question of whether (a, m) = 1.  If not,
+  MP_UNDEF is returned, and there is no inverse.
+ */
+
+mp_err mp_invmod(const mp_int *a, const mp_int *m, mp_int *c)
+{
+
+  ARGCHK(a && m && c, MP_BADARG);
+
+  if(mp_cmp_z(a) == 0 || mp_cmp_z(m) == 0)
+    return MP_RANGE;
+
+  if (mp_isodd(m)) {
+    return s_mp_invmod_odd_m(a, m, c);
+  }
+  if (mp_iseven(a))
+    return MP_UNDEF;	/* not invertable */
+
+  return s_mp_invmod_even_m(a, m, c);
 
 } /* end mp_invmod() */
 
@@ -2304,7 +2513,7 @@ mp_err mp_toraw(mp_int *mp, char *str)
   character or the end of the string.
  */
 
-mp_err  mp_read_radix(mp_int *mp, char *str, int radix)
+mp_err  mp_read_radix(mp_int *mp, const char *str, int radix)
 {
   int     ix = 0, val = 0;
   mp_err  res;
@@ -4167,7 +4376,7 @@ int      s_mp_cmp_d(const mp_int *a, mp_digit d)
   Returns -1 if the value is not a power of two; otherwise, it returns
   k such that v = 2^k, i.e. lg(v).
  */
-int      s_mp_ispow2(mp_int *v)
+int      s_mp_ispow2(const mp_int *v)
 {
   mp_digit d;
   int      extra = 0, ix;
