@@ -23,6 +23,7 @@
 
 <!ENTITY     blockSite.label                "Block">
 <!ENTITY     allowSite.label                "Allow">
+<!ENTITY     allowSiteSession.label         "Session">
 <!ENTITY     removepermission.label         "Remove Site">
 <!ENTITY     removeallpermissions.label     "Remove All Sites">
 <!ENTITY     removeimage.label              "Remove Site">

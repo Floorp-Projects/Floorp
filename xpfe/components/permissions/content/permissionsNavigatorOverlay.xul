@@ -38,6 +38,10 @@
     var permissionmanager;
     var popupmanager;
 
+    // XXX this needs to be defined publicly
+    // see bug 225857 comment 7
+    const ALLOW_SESSION_ONLY = 8;
+    
     // Remove the image entries from the task menu
     function HideImage() {
       document.getElementById("image").hidden = true;
@@ -69,6 +73,7 @@
       var uri = getBrowser().currentURI;
       setRadioButton("UseCookiesDefault", uri, nsIPermissionManager.UNKNOWN_ACTION, "cookie");
       setRadioButton("AllowCookies", uri, nsIPermissionManager.ALLOW_ACTION, "cookie");
+      setRadioButton("AllowSessionCookies", uri, ALLOW_SESSION_ONLY, "cookie");
       setRadioButton("BlockCookies", uri, nsIPermissionManager.DENY_ACTION, "cookie");
       setRadioButton("UseImagesDefault", uri, nsIPermissionManager.UNKNOWN_ACTION, "image");
       setRadioButton("AllowImages", uri, nsIPermissionManager.ALLOW_ACTION, "image");
@@ -143,6 +148,12 @@
           permissionmanager.add(uri, "cookie", nsIPermissionManager.ALLOW_ACTION);
           element = document.getElementById("AllowCookies");
           break;
+        case "cookieSession":
+          if (permissionmanager.testPermission(uri, "cookie") == ALLOW_SESSION_ONLY)
+            return;
+          permissionmanager.add(uri, "cookie", ALLOW_SESSION_ONLY);
+          element = document.getElementById("AllowSessionCookies");
+          break;
         case "cookieDefault":
           if (permissionmanager.testPermission(uri, "cookie") == nsIPermissionManager.UNKNOWN_ACTION)
             return;
@@ -214,6 +225,12 @@
                   msg="&cookieCookiesDefaultMsg.label;"
                   type="radio" name="cookies" checked="true"
                   oncommand="CookieImageAction('cookieDefault');"/> 
+        <menuitem id="AllowSessionCookies" label="&cookieAllowSessionCookiesCmd.label;"
+                  title="&cookieMessageTitle.label;"
+                  accesskey="&cookieAllowSessionCookiesCmd.accesskey;" 
+                  msg="&cookieAllowSessionCookiesMsg.label;"
+                  type="radio" name="cookies"
+                  oncommand="CookieImageAction('cookieSession');"/> 
         <menuitem id="AllowCookies" label="&cookieAllowCookiesCmd.label;"
                   title="&cookieMessageTitle.label;"
                   accesskey="&cookieAllowCookiesCmd.accesskey;" 
