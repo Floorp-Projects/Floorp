@@ -160,12 +160,12 @@ void JavaDOMEventsGlobals::Destroy(JNIEnv *env)
 
 //returns true if specified event "type" exists in the given list of types
 // NOTE: it is assumed that "types" list is enden with NULL
-static jboolean isEventOfType(const char* const* types, nsString type) 
+static jboolean isEventOfType(const char* const* types, const char* type) 
 {
     int i=0;
 
-    while (types && types[i]) {
-      if (type == types[i])
+    while (type && types && types[i]) {
+      if (!strcmp(type,types[i]))
 	return JNI_TRUE;
       i++;
     }
@@ -220,23 +220,24 @@ jobject JavaDOMEventsGlobals::CreateEventSubtype(JNIEnv *env,
         return NULL;
     }
 
-    if (isEventOfType(mouseEventTypes, eventType) == JNI_TRUE) {
-        clazz = mouseEventClass;
-    } else if (isEventOfType(uiEventTypes, eventType) == JNI_TRUE) {  
-            clazz = uiEventClass;
+    char* buffer = nsnull;
+    if (eventType.IsUnicode()) {
+      buffer = eventType.ToNewUTF8String();
     } else {
-      char* buffer = nsnull;
-      if (eventType.IsUnicode()) {
-	buffer = eventType.ToNewUTF8String();
-      } else {
-	buffer = eventType.ToNewCString();
-      }
+      buffer = eventType.ToNewCString();
+    }
+
+    if (isEventOfType(mouseEventTypes, buffer) == JNI_TRUE) {
+      clazz = mouseEventClass;
+    } else if (isEventOfType(uiEventTypes, buffer) == JNI_TRUE) {  
+      clazz = uiEventClass;
+    } else {
       PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING,
 	     ("Unknown type of UI event (%s)", buffer));
-      nsString::Recycle(&eventType);
 
       clazz = uiEventClass;
     }
+    nsString::Recycle(&eventType);
 
     event->Release();
     event = (nsIDOMEvent *) target;

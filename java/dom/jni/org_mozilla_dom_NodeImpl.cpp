@@ -822,17 +822,18 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_NodeImpl_setNodeValue
     return;
   }
 
-  jboolean iscopy = JNI_FALSE;
-  const char* value = env->GetStringUTFChars(jvalue, &iscopy);
+  jboolean iscopy;
+  const jchar* value = env->GetStringChars(jvalue, &iscopy);
   if (!value) {
     JavaDOMGlobals::ThrowException(env,
-        "Node.setNodeValue: GetStringUTFChars failed");
+        "Node.setNodeValue: GetStringChars failed");
+    env->ReleaseStringChars(jvalue, value);
     return;
   }
 
-  nsresult rv = node->SetNodeValue(value);
-  if (iscopy == JNI_TRUE)
-    env->ReleaseStringUTFChars(jvalue, value);
+  nsresult rv = node->SetNodeValue((PRUnichar*)value);
+  env->ReleaseStringChars(jvalue, value);
+
   if (NS_FAILED(rv)) {
     JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
     if (rv == NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR) {
@@ -872,12 +873,12 @@ JNIEXPORT jlong JNICALL Java_org_mozilla_dom_NodeImpl_addNativeEventListener
         return 0;
     }
 
-    jboolean iscopy = JNI_FALSE;
-
-    const char* type = env->GetStringUTFChars(jtype, &iscopy);
+    jboolean iscopy;
+    const jchar* type = env->GetStringChars(jtype, &iscopy);
     if (!type) {
         JavaDOMGlobals::ThrowException(env,
-            "EventTarget.addEventListener: GetStringUTFChars failed\n");
+            "EventTarget.addEventListener: GetStringChars failed\n");
+	env->ReleaseStringChars(jtype, type);
         return 0;
     }
 
@@ -885,12 +886,10 @@ JNIEXPORT jlong JNICALL Java_org_mozilla_dom_NodeImpl_addNativeEventListener
 
     listener = new NativeDOMProxyListener(env, jlistener);
     
-    nsresult rv = target->AddEventListener(type, listener, useCapture);
-
+    nsresult rv = target->AddEventListener((PRUnichar*)type, listener, useCapture);
     target->Release();
+    env->ReleaseStringChars(jtype, type);
 
-    if (iscopy == JNI_TRUE)
-        env->ReleaseStringUTFChars(jtype, type);
     if (NS_FAILED(rv)) {
         JavaDOMGlobals::ThrowException(env,
             "EventTarget.addEventListener: error");
@@ -926,23 +925,21 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_NodeImpl_removeNativeEventListener
         return;
     }
 
-    jboolean iscopy = JNI_FALSE;
-    const char* type = env->GetStringUTFChars(jtype, &iscopy);
+    jboolean iscopy;
+    const jchar* type = env->GetStringChars(jtype, &iscopy);
     if (!type) {
         JavaDOMGlobals::ThrowException(env,
-                "NodeImpl.removeEventListener: GetStringUTFChars failed\n");
+                "NodeImpl.removeEventListener: GetStringChars failed\n");
+	env->ReleaseStringChars(jtype, type);
         return;
     }
 
     useCapture = juseCapture == JNI_TRUE ? PR_TRUE : PR_FALSE;
 
-    nsresult rv = target->RemoveEventListener(type, 
+    nsresult rv = target->RemoveEventListener((PRUnichar*)type, 
                               (nsIDOMEventListener*) jlistener, useCapture);
-
     target->Release();
-
-    if (iscopy == JNI_TRUE)
-        env->ReleaseStringUTFChars(jtype, type);
+    env->ReleaseStringChars(jtype, type);
 
     if (NS_FAILED(rv)) {
         JavaDOMGlobals::ThrowException(env,        

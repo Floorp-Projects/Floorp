@@ -110,17 +110,18 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_ProcessingInstructionImpl_setData
     return;
   }
 
-  jboolean iscopy = JNI_FALSE;
-  const char* data = env->GetStringUTFChars(jdata, &iscopy);
+  jboolean iscopy;
+  const jchar* data = env->GetStringChars(jdata, &iscopy);
   if (!data) {
     JavaDOMGlobals::ThrowException(env,
-        "ProcessingInstruction.setData: GetStringUTFChars failed");
+        "ProcessingInstruction.setData: GetStringChars failed");
+    env->ReleaseStringChars(jdata, data);
     return;
   }
 
-  nsresult rv = pi->SetData(data);
-  if (iscopy == JNI_TRUE)
-    env->ReleaseStringUTFChars(jdata, data);
+  nsresult rv = pi->SetData((PRUnichar*)data);
+  env->ReleaseStringChars(jdata, data);
+
   if (NS_FAILED(rv)) {
     JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
     if (rv == NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR) {

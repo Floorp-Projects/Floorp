@@ -148,31 +148,33 @@ JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_DOMImplementationImpl_hasFeature
     return JNI_FALSE;
   }
 
-  jboolean iscopy = JNI_FALSE;
-  const char* feature = env->GetStringUTFChars(jfeature, &iscopy);
+  jboolean iscopy;
+  const jchar* feature = env->GetStringChars(jfeature, &iscopy);
   if (!feature) {
       PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	     ("DOMImplementation.hasFeature: GetStringUTFChars feature failed\n"));
+	     ("DOMImplementation.hasFeature: GetStringChars feature failed\n"));
+      env->ReleaseStringChars(jfeature, feature);
       return JNI_FALSE;
   }
 
-  jboolean iscopy2 = JNI_FALSE;
-  const char* version = NULL;
+  jboolean iscopy2;
+  const jchar* version = NULL;
   if (jversion) {
-      version = env->GetStringUTFChars(jversion, &iscopy2);
+      version = env->GetStringChars(jversion, &iscopy2);
       if (!version) {
 	  PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-		 ("DOMImplementation.hasFeature: GetStringUTFChars version failed\n"));
+		 ("DOMImplementation.hasFeature: GetStringChars version failed\n"));
+	  env->ReleaseStringChars(jversion, version);
+	  env->ReleaseStringChars(jfeature, feature);
 	  return JNI_FALSE;
       }
   }
 
   PRBool ret = PR_FALSE;
-  nsresult rv = dom->HasFeature(feature, version, &ret);
-  if (iscopy2 == JNI_TRUE)
-    env->ReleaseStringUTFChars(jversion, version);
-  if (iscopy == JNI_TRUE)
-    env->ReleaseStringUTFChars(jfeature, feature);
+  nsresult rv = dom->HasFeature((PRUnichar*)feature, (PRUnichar*)version, &ret);
+  env->ReleaseStringChars(jversion, version);
+  env->ReleaseStringChars(jfeature, feature);
+
   if (NS_FAILED(rv)) {
     PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
 	   ("DOMImplementation.hasFeature: failed (%x)\n", rv));

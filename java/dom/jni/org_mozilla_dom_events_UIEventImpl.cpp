@@ -101,11 +101,12 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_events_UIEventImpl_initUIEvent
     return;
   }
 
-  jboolean iscopy = JNI_FALSE;
-  const char* cvalue = env->GetStringUTFChars(jtypeArg, &iscopy);
+  jboolean iscopy;
+  const jchar* cvalue = env->GetStringChars(jtypeArg, &iscopy);
   if (!cvalue) {
     PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("UIEvent.initUIEvent: GetStringUTFChars failed\n"));
+	   ("UIEvent.initUIEvent: GetStringChars failed\n"));
+    env->ReleaseStringChars(jtypeArg, cvalue);
     return;
   }
 
@@ -115,10 +116,9 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_events_UIEventImpl_initUIEvent
 
   // REMIND: need to deal with AbstractView
   // NS_IMETHOD    InitUIEvent(const nsString& aTypeArg, PRBool aCanBubbleArg, PRBool aCancelableArg, nsIDOMAbstractView* aViewArg, PRInt32 aDetailArg)=0;
-  nsresult rv = event->InitUIEvent(cvalue, canBubble, cancelable, NULL, (PRUint32)jdetailArg);
+  nsresult rv = event->InitUIEvent((PRUnichar*)cvalue, canBubble, cancelable, NULL, (PRUint32)jdetailArg);
+  env->ReleaseStringChars(jtypeArg, cvalue);
 
-  if (iscopy == JNI_TRUE)
-    env->ReleaseStringUTFChars(jtypeArg, cvalue);
   if (NS_FAILED(rv)) {
     JavaDOMGlobals::ThrowException(env,
         "UIEvent.initUIEvent: failed", rv);

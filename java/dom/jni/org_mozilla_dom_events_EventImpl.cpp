@@ -213,7 +213,7 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_events_EventImpl_getType
     jstring jret = env->NewString(ret.GetUnicode(), ret.Length());
     if (!jret) {
         JavaDOMGlobals::ThrowException(env,
-            "Event.getType: NewStringUTF failed");
+            "Event.getType: NewString failed");
         return NULL;
     }
 
@@ -305,20 +305,21 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_events_EventImpl_initEvent
     return;
   }
 
-  jboolean iscopy = JNI_FALSE;
-  const char* cvalue = env->GetStringUTFChars(jeventTypeArg, &iscopy);
+  jboolean iscopy;
+  const jchar* cvalue = env->GetStringChars(jeventTypeArg, &iscopy);
   if (!cvalue) {
     PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Event.initEvent: GetStringUTFChars failed\n"));
+	   ("Event.initEvent: GetStringChars failed\n"));
+    env->ReleaseStringChars(jeventTypeArg, cvalue);
     return;
   }
 
   PRBool canBubble = jcanBubbleArg == JNI_TRUE ? PR_TRUE : PR_FALSE;
   PRBool cancelable = jcancelableArg == JNI_TRUE ? PR_TRUE : PR_FALSE;
 
-  nsresult rv = event->InitEvent(cvalue, canBubble, cancelable);
-  if (iscopy == JNI_TRUE)
-    env->ReleaseStringUTFChars(jeventTypeArg, cvalue);
+  nsresult rv = event->InitEvent((PRUnichar*)cvalue, canBubble, cancelable);
+  env->ReleaseStringChars(jeventTypeArg, cvalue);
+
   if (NS_FAILED(rv)) {
     PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
 	   ("Event.initEvent: failed (%x)\n", rv));

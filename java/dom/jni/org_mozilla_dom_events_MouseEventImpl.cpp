@@ -334,11 +334,12 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_events_MouseEventImpl_initMouseEvent
     return;
   }
 
-  jboolean iscopy = JNI_FALSE;
-  const char* cvalue = env->GetStringUTFChars(jtypeArg, &iscopy);
+  jboolean iscopy;
+  const jchar* cvalue = env->GetStringChars(jtypeArg, &iscopy);
   if (!cvalue) {
     PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("UIEvent.initUIEvent: GetStringUTFChars failed"));
+	   ("UIEvent.initUIEvent: GetStringChars failed"));
+    env->ReleaseStringChars(jtypeArg, cvalue);
     return;
   }
 
@@ -349,7 +350,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_events_MouseEventImpl_initMouseEvent
   PRBool shiftKeyArg = jshiftKeyArg   == JNI_TRUE ? PR_TRUE : PR_FALSE;
   PRBool metaKeyArg  = jmetaKeyArg    == JNI_TRUE ? PR_TRUE : PR_FALSE;
 
-  nsresult rv = event->InitMouseEvent(cvalue,
+  nsresult rv = event->InitMouseEvent((PRUnichar*)cvalue,
 				      ctrlKeyArg, 
 				      altKeyArg, 
 				      shiftKeyArg, 
@@ -361,8 +362,8 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_events_MouseEventImpl_initMouseEvent
 				      (PRUint16)jbuttonArg, 
 				      (PRUint16)jdetailArg);
 
-  if (iscopy == JNI_TRUE)
-    env->ReleaseStringUTFChars(jtypeArg, cvalue);
+  env->ReleaseStringChars(jtypeArg, cvalue);
+
   if (NS_FAILED(rv)) {
     JavaDOMGlobals::ThrowException(env,
         "UIEvent.initUIEvent: failed", rv);
