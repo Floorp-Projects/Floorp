@@ -746,3 +746,246 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Busy(VARIANT_BOOL __RPC_FAR *pBoo
 
 	return S_OK;
 }
+
+
+/////////////////////////////////////////////////////////////////////////////
+// IWebBrowserApp
+
+HRESULT STDMETHODCALLTYPE CMozillaBrowser::Quit(void)
+{
+	return E_NOTIMPL;
+}
+
+
+HRESULT STDMETHODCALLTYPE CMozillaBrowser::ClientToWindow(int __RPC_FAR *pcx, int __RPC_FAR *pcy)
+{
+	return E_NOTIMPL;
+}
+
+
+HRESULT STDMETHODCALLTYPE CMozillaBrowser::PutProperty(BSTR Property, VARIANT vtValue)
+{
+	return E_NOTIMPL;
+}
+
+
+HRESULT STDMETHODCALLTYPE CMozillaBrowser::GetProperty(BSTR Property, VARIANT __RPC_FAR *pvtValue)
+{
+	return E_NOTIMPL;
+}
+
+
+HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Name(BSTR __RPC_FAR *Name)
+{
+	return E_NOTIMPL;
+}
+
+
+HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_HWND(long __RPC_FAR *pHWND)
+{
+	return E_NOTIMPL;
+}
+
+
+HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_FullName(BSTR __RPC_FAR *FullName)
+{
+	return E_NOTIMPL;
+}
+
+
+HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Path(BSTR __RPC_FAR *Path)
+{
+	return E_NOTIMPL;
+}
+
+
+HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Visible(VARIANT_BOOL __RPC_FAR *pBool)
+{
+	return E_NOTIMPL;
+}
+
+
+HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_Visible(VARIANT_BOOL Value)
+{
+	return E_NOTIMPL;
+}
+
+
+HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_StatusBar(VARIANT_BOOL __RPC_FAR *pBool)
+{
+	return E_NOTIMPL;
+}
+
+
+HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_StatusBar(VARIANT_BOOL Value)
+{
+	return E_NOTIMPL;
+}
+
+
+HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_StatusText(BSTR __RPC_FAR *StatusText)
+{
+	return E_NOTIMPL;
+}
+
+
+HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_StatusText(BSTR StatusText)
+{
+	return E_NOTIMPL;
+}
+
+
+HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_ToolBar(int __RPC_FAR *Value)
+{
+	return E_NOTIMPL;
+}
+
+
+HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_ToolBar(int Value)
+{
+	return E_NOTIMPL;
+}
+
+
+HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_MenuBar(VARIANT_BOOL __RPC_FAR *Value)
+{
+	return E_NOTIMPL;
+}
+
+
+HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_MenuBar(VARIANT_BOOL Value)
+{
+	return E_NOTIMPL;
+}
+
+
+HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_FullScreen(VARIANT_BOOL __RPC_FAR *pbFullScreen)
+{
+	return E_NOTIMPL;
+}
+
+
+HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_FullScreen(VARIANT_BOOL bFullScreen)
+{
+	return E_NOTIMPL;
+}
+
+
+
+/////////////////////////////////////////////////////////////////////////////
+// IWebBrowser2
+
+HRESULT STDMETHODCALLTYPE CMozillaBrowser::Navigate2(VARIANT __RPC_FAR *URL, VARIANT __RPC_FAR *Flags, VARIANT __RPC_FAR *TargetFrameName, VARIANT __RPC_FAR *PostData, VARIANT __RPC_FAR *Headers)
+{
+	return E_NOTIMPL;
+}
+
+
+HRESULT STDMETHODCALLTYPE CMozillaBrowser::QueryStatusWB(OLECMDID cmdID, OLECMDF __RPC_FAR *pcmdf)
+{
+	return E_NOTIMPL;
+}
+
+
+HRESULT STDMETHODCALLTYPE CMozillaBrowser::ExecWB(OLECMDID cmdID, OLECMDEXECOPT cmdexecopt, VARIANT __RPC_FAR *pvaIn, VARIANT __RPC_FAR *pvaOut)
+{
+	return E_NOTIMPL;
+}
+
+
+HRESULT STDMETHODCALLTYPE CMozillaBrowser::ShowBrowserBar(VARIANT __RPC_FAR *pvaClsid, VARIANT __RPC_FAR *pvarShow, VARIANT __RPC_FAR *pvarSize)
+{
+	return E_NOTIMPL;
+}
+
+
+HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_ReadyState(READYSTATE __RPC_FAR *plReadyState)
+{
+	return E_NOTIMPL;
+}
+
+
+HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Offline(VARIANT_BOOL __RPC_FAR *pbOffline)
+{
+	return E_NOTIMPL;
+}
+
+
+HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_Offline(VARIANT_BOOL bOffline)
+{
+	return E_NOTIMPL;
+}
+
+
+HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Silent(VARIANT_BOOL __RPC_FAR *pbSilent)
+{
+	return E_NOTIMPL;
+}
+
+
+HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_Silent(VARIANT_BOOL bSilent)
+{
+	return E_NOTIMPL;
+}
+
+
+HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_RegisterAsBrowser(VARIANT_BOOL __RPC_FAR *pbRegister)
+{
+	return E_NOTIMPL;
+}
+
+
+HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_RegisterAsBrowser(VARIANT_BOOL bRegister)
+{
+	return E_NOTIMPL;
+}
+
+
+HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_RegisterAsDropTarget(VARIANT_BOOL __RPC_FAR *pbRegister)
+{
+	return E_NOTIMPL;
+}
+
+
+HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_RegisterAsDropTarget(VARIANT_BOOL bRegister)
+{
+	return E_NOTIMPL;
+}
+
+
+HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_TheaterMode(VARIANT_BOOL __RPC_FAR *pbRegister)
+{
+	return E_NOTIMPL;
+}
+
+
+HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_TheaterMode(VARIANT_BOOL bRegister)
+{
+	return E_NOTIMPL;
+}
+
+
+HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_AddressBar(VARIANT_BOOL __RPC_FAR *Value)
+{
+	return E_NOTIMPL;
+}
+
+
+HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_AddressBar(VARIANT_BOOL Value)
+{
+	return E_NOTIMPL;
+}
+
+
+HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Resizable(VARIANT_BOOL __RPC_FAR *Value)
+{
+	return E_NOTIMPL;
+}
+
+
+HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_Resizable(VARIANT_BOOL Value)
+{
+	return E_NOTIMPL;
+}
+
+
