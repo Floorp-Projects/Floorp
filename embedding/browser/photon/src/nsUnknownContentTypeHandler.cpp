@@ -86,9 +86,9 @@ NS_IMETHODIMP nsUnknownContentTypeHandler::Show( nsIHelperAppLauncher *aLauncher
 	mimeInfo->GetMIMEType( &mimeType );
 
 	nsCOMPtr<nsIURI> aSourceUrl;
-	PRInt64 dummy;
 	nsCOMPtr<nsIFile> aFile;
-	aLauncher->GetDownloadInfo( getter_AddRefs(aSourceUrl), &dummy, getter_AddRefs(aFile) );
+	aLauncher->GetSource( getter_AddRefs(aSourceUrl) );
+	aLauncher->GetTargetFile( getter_AddRefs(aFile) );
 
 	char *url;
 	nsCAutoString specString;

@@ -963,23 +963,20 @@ NS_IMETHODIMP nsExternalAppHandler::SetWebProgressListener(nsIWebProgressListene
   return NS_OK;
 }
 
-NS_IMETHODIMP nsExternalAppHandler::GetDownloadInfo(nsIURI ** aSourceUrl, PRInt64 * aTimeDownloadStarted, nsIFile ** aTarget)
+NS_IMETHODIMP nsExternalAppHandler::GetTargetFile(nsIFile** aTarget)
 {
-
-  *aTimeDownloadStarted = mTimeDownloadStarted;
-
   if (mFinalFileDestination)
-  {
     *aTarget = mFinalFileDestination;
-  }
   else
     *aTarget = mTempFile;
 
   NS_IF_ADDREF(*aTarget);
+  return NS_OK;
+}
 
-  *aSourceUrl = mSourceUrl;
-  NS_IF_ADDREF(*aSourceUrl);
-
+NS_IMETHODIMP nsExternalAppHandler::GetTimeDownloadStarted(PRTime* aTime)
+{
+  *aTime = mTimeDownloadStarted;
   return NS_OK;
 }
 
@@ -1366,10 +1363,7 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISuppo
      * happening if we decide to execute
      */
     nsCOMPtr<nsIFile> fileToTest;
-    nsCOMPtr<nsIURI> garbageURI;
-    PRInt64 garbageTimestamp;
-    GetDownloadInfo(getter_AddRefs(garbageURI), &garbageTimestamp,
-                    getter_AddRefs(fileToTest));
+    GetTargetFile(getter_AddRefs(fileToTest));
     if (fileToTest) {
       PRBool isExecutable;
       rv = fileToTest->IsExecutable(&isExecutable);
