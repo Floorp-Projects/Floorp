@@ -145,6 +145,8 @@ nsBlockBandData::ComputeAvailSpaceRect()
     mAvailSpace.y = 0;
     mAvailSpace.width = 0;
     mAvailSpace.height = 0;
+    mLeftFloaters = 0;
+    mRightFloaters = 0;
     return;
   }
 
