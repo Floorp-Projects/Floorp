@@ -28,6 +28,7 @@ EXPORTS = \
 	nsIDateTimeFormat.h 	\
 	nsILocale.h		\
 	nsILocaleFactory.h	\
+	nsIPosixLocale.h	\
 	nsLocaleCID.h		\
 	$(NULL)
 

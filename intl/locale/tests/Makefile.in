@@ -32,7 +32,6 @@ LOCAL_INCLUDES = -I$(srcdir)/../src
 include $(topsrcdir)/config/config.mk
 
 LIBS = \
-	-lnslocale \
 	-lraptorbase \
 	-lxpcom \
 	-lreg \
