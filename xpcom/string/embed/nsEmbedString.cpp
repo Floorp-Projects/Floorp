@@ -490,13 +490,13 @@ Distance_Impl( const nsReadingIterator<CharT>& aStart,
   }
 
 NS_COM
-size_t Distance( const nsAString::const_iterator& aStart, const nsAString::const_iterator& aEnd )
+size_t Distance( const nsReadingIterator<PRUnichar>& aStart, const nsReadingIterator<PRUnichar>& aEnd )
   {
     return Distance_Impl(aStart, aEnd);
   }
 
 NS_COM
-size_t Distance( const nsACString::const_iterator& aStart, const nsACString::const_iterator& aEnd )
+size_t Distance( const nsReadingIterator<char>& aStart, const nsReadingIterator<char>& aEnd )
   {
     return Distance_Impl(aStart, aEnd);
   }
