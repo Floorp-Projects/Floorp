@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+
+<overlay id="dsjlaskjd"
+    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<script language="JavaScript">
+<![CDATA[
+function loadXULEdit()
+{
+  openDialog("chrome://vixen/content/xuledit.xul", "", "chrome,resizable,dialog=no");
+}
+]]>
+</script>
+
+<menupopup id="taskPopup">
+	<menuitem
+        position="7"
+        value="XULEDIT"
+        oncommand="loadXULEdit();"/>
+</menupopup>
+
+</overlay>
