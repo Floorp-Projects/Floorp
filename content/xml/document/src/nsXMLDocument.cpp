@@ -58,6 +58,12 @@
 #include "nsXULAtoms.h"
 #endif
 
+//MathML Mod - DJF
+#ifdef MOZ_MATHML
+#include "nsMathMLAtoms.h"
+#include "nsMathMLOperators.h"
+#endif
+
 static NS_DEFINE_IID(kIDOMDocumentIID, NS_IDOMDOCUMENT_IID);
 static NS_DEFINE_IID(kIDocumentIID, NS_IDOCUMENT_IID);
 static NS_DEFINE_IID(kIXMLDocumentIID, NS_IXMLDOCUMENT_IID);
@@ -96,6 +102,11 @@ nsXMLDocument::nsXMLDocument()
 #ifdef XSL
   mTransformMediator = nsnull;
 #endif
+//MathML Mod - DJF
+#ifdef MOZ_MATHML
+  nsMathMLOperators::AddRefTable();
+  nsMathMLAtoms::AddRefAtoms();
+#endif
 }
 
 nsXMLDocument::~nsXMLDocument()
@@ -115,6 +126,11 @@ nsXMLDocument::~nsXMLDocument()
   }
 #ifdef XSL
   NS_IF_RELEASE(mTransformMediator);
+#endif
+//MathML Mod - DJF
+#ifdef MOZ_MATHML
+  nsMathMLOperators::ReleaseTable();
+  nsMathMLAtoms::ReleaseAtoms();
 #endif
 }
 
