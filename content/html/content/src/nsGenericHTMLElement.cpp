@@ -2481,7 +2481,6 @@ nsGenericHTMLElement::EnumValueToString(const nsHTMLValue& aValue,
       if (aTable->value == v) {
         aResult.Append(NS_ConvertASCIItoUCS2(aTable->tag));
         if (aFoldCase) {
-          nsWritingIterator<PRUnichar> start; aResult.BeginWriting(start);
           nsWritingIterator<PRUnichar> start;
           aResult.BeginWriting(start);
 
@@ -4592,24 +4591,18 @@ nsresult
 nsGenericHTMLElement::GetProtocolFromHrefString(const nsAReadableString& aHref,
                                                 nsAWritableString& aProtocol)
 {
-  aProtocol.Truncate();
-
-  NS_ENSURE_TRUE(nsHTMLUtils::IOService, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), aHref);
+  if (NS_FAILED(rv))
+    return rv;
 
   nsXPIDLCString protocol;
+  rv = uri->GetScheme(getter_Copies(protocol));
+  if (NS_FAILED(rv))
+    return rv;
 
-  nsresult rv =
-    nsHTMLUtils::IOService->ExtractScheme(NS_ConvertUCS2toUTF8(aHref).get(),
-                                          nsnull, nsnull,
-                                          getter_Copies(protocol));
-  if (NS_SUCCEEDED(result)) {
-    // set the protocol to http since it is the mostlikely protocol to
-    // be used.
-    CopyASCIItoUCS2(NS_LITERAL_STRING("http:"), aProtocol);
-  } else {
-    aProtocol.Assign(NS_ConvertASCIItoUCS2(protocol) +
-                     NS_LITERAL_STRING(":"));
-  }
+  aProtocol.Assign(NS_ConvertASCIItoUCS2(protocol));
+  aProtocol.Append(PRUnichar(':'));
 
   return NS_OK;
 }
