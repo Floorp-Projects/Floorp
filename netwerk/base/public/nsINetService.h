@@ -20,6 +20,7 @@
 #define nsINetService_h___
 
 #include "nsISupports.h"
+#include "nsString2.h"
 
 class nsIUrl;
 class nsIProtocolConnection;
@@ -80,6 +81,59 @@ public:
      * @return NS_COMFALSE if there are not.
      */
     NS_IMETHOD HasActiveConnections() = 0;
+
+
+    /**
+     * Get the application name string that will be used as part
+     * of a HTTP request.
+     *
+     * @param aAppCodeName   The application name string.
+     * @return Returns NS_OK if successful, or NS_FALSE if an error occurred.
+     */
+    NS_IMETHOD GetAppCodeName(nsString2& aAppCodeName)=0;
+  
+    /**
+     * Get the application version string that will be used as part
+     * of a HTTP request.
+     *
+     * @param aAppVersion   The application version string.
+     * @return Returns NS_OK if successful, or NS_FALSE if an error occurred.
+     */
+    NS_IMETHOD GetAppVersion(nsString2& aAppVersion)=0;
+
+    /**
+     * Get the application name.
+     *
+     * @param aAppName   The application name.
+     * @return Returns NS_OK if successful, or NS_FALSE if an error occurred.
+     */
+    NS_IMETHOD GetAppName(nsString2& aAppName)=0;
+
+    /**
+     * Get the translation of the application. The value for language
+     * is usually a 2-letter code such as "en" and occasionally a 
+     * five-character code to indicate a language subtype, such as "zh_CN". 
+     *
+     * @param aLanguage  The application language.
+     * @return Returns NS_OK if successful, or NS_FALSE if an error occurred.
+     */
+    NS_IMETHOD GetLanguage(nsString2& aLanguage)=0;
+
+    /**
+     * Get the current platform (machine type).
+     *
+     * @param aPlatform   The current platform.
+     * @return Returns NS_OK if successful, or NS_FALSE if an error occurred.
+     */
+    NS_IMETHOD GetPlatform(nsString2& aPlatform)=0;
+
+    /**
+     * Get the HTTP advertised user agent string.
+     *
+     * @param aUA The current user agent string being sent out in HTTP requests.
+     * @retrun Returns NS_OK if successful, or NS_FALSE if an error occurred.
+     */
+    NS_IMETHOD GetUserAgent(nsString2& aUA)=0;
 
 };
 
