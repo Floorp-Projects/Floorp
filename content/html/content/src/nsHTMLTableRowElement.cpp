@@ -647,7 +647,7 @@ nsHTMLTableRowElement::DeleteCell(PRInt32 aValue)
 NS_IMPL_STRING_ATTR(nsHTMLTableRowElement, Align, align)
 NS_IMPL_STRING_ATTR(nsHTMLTableRowElement, BgColor, bgcolor)
 NS_IMPL_STRING_ATTR(nsHTMLTableRowElement, Ch, ch)
-NS_IMPL_STRING_ATTR(nsHTMLTableRowElement, ChOff, choff)
+NS_IMPL_STRING_ATTR(nsHTMLTableRowElement, ChOff, charoff)
 NS_IMPL_STRING_ATTR(nsHTMLTableRowElement, VAlign, valign)
 
 
@@ -660,7 +660,7 @@ nsHTMLTableRowElement::StringToAttribute(nsIAtom* aAttribute,
      ch
    */
   /* attributes that resolve to integers with default=0*/
-  if (aAttribute == nsHTMLAtoms::choff) {
+  if (aAttribute == nsHTMLAtoms::charoff) {
     if (ParseValue(aValue, 0, aResult, eHTMLUnit_Integer)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
@@ -709,7 +709,7 @@ nsHTMLTableRowElement::AttributeToString(nsIAtom* aAttribute,
      ch
    */
   /* ignore attributes that are of standard types
-     choff, height, width, background, bgcolor
+     charoff, height, width, background, bgcolor
    */
   if (aAttribute == nsHTMLAtoms::align) {
     if (TableCellHAlignValueToString(aValue, aResult)) {
