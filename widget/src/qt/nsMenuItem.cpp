@@ -507,3 +507,17 @@ nsEventStatus nsMenuItem::MenuDestruct(const nsMenuEvent & aMenuEvent)
     PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("nsMenuItem::MenuDestruct()\n"));
     return nsEventStatus_eIgnore;
 }
+
+//-------------------------------------------------------------------------
+NS_METHOD nsMenuItem::SetDOMNode(nsIDOMNode * aDOMNode)
+{
+  return NS_OK;
+}
+  
+//-------------------------------------------------------------------------
+NS_METHOD nsMenuItem::GetDOMNode(nsIDOMNode ** aDOMNode)
+{
+  return NS_OK;
+} 
+
+
