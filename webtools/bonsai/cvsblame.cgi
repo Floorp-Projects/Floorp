@@ -541,6 +541,8 @@ function showMessage(rev,line) {
         r.style.display='none'
     }
     r = document.getElementById('rev_'+rev)
+    if (!r)
+        return
     var l = document.getElementById('line_'+line)
     var t = l.offsetTop
     var p = l.offsetParent

@@ -135,6 +135,8 @@ function showMessage(rev) {
         r.style.display='none'
     }
     r = document.getElementById('rev_'+rev)
+    if (!r)
+        return false
     var l = document.getElementById('link_'+rev)
     var t = l.offsetTop + 20
     r.style.top = t
