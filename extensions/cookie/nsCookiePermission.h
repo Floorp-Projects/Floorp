@@ -42,6 +42,8 @@
 #include "nsIPermissionManager.h"
 #include "nsIObserver.h"
 #include "nsCOMPtr.h"
+#include "nsInt64.h"
+#include "prlong.h"
 
 class nsIPrefBranch;
 
@@ -55,7 +57,12 @@ public:
 
   nsCookiePermission() 
     : mCookiesAskPermission(PR_FALSE)
+    , mCookiesLifetimeEnabled(PR_FALSE)
+#ifndef MOZ_PHOENIX
     , mCookiesDisabledForMailNews(PR_TRUE)
+    , mCookiesLifetimeCurrentSession(PR_FALSE)
+    , mCookiesLifetimeSec(LL_MAXINT)
+#endif
     {}
   virtual ~nsCookiePermission() {}
 
@@ -66,7 +73,14 @@ private:
   nsCOMPtr<nsIPermissionManager> mPermMgr;
 
   PRPackedBool mCookiesAskPermission;
+  PRPackedBool mCookiesLifetimeEnabled;        // cookie lifetime limit enabled
+                                               // (for phoenix, this implies limited to session)
+#ifndef MOZ_PHOENIX
   PRPackedBool mCookiesDisabledForMailNews;
+  PRPackedBool mCookiesLifetimeCurrentSession; // limit cookie lifetime to current session
+  nsInt64      mCookiesLifetimeSec;            // lifetime limit specified in seconds
+#endif
+
 };
 
 // {CE002B28-92B7-4701-8621-CC925866FB87}

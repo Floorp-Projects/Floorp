@@ -139,14 +139,11 @@ class nsCookieService : public nsICookieService
     // unfortunately, we require this #ifdef for now, since Phoenix uses different
     // (more optimized) prefs to Mozilla.
     // the following variables are Phoenix hacks to reduce ifdefs in the code.
-    PRPackedBool                  mCookiesEnabled_temp,               // These two prefs are collapsed
-                                  mCookiesForDomainOnly_temp;         // into mCookiesPermissions.
+    PRPackedBool                  mCookiesEnabled_temp,       // These two prefs are collapsed
+                                  mCookiesForDomainOnly_temp; // into mCookiesPermissions.
 #endif
-    PRPackedBool                  mCookiesLifetimeEnabled,            // Cookie lifetime limit enabled
-                                  mCookiesLifetimeCurrentSession,     // Limit cookie lifetime to current session
-                                  mCookiesStrictDomains; // Optional pref to apply stricter domain checks
-    PRUint8                       mCookiesPermissions;   // BEHAVIOR_{ACCEPT, REJECTFOREIGN, REJECT, P3P}
-    PRInt32                       mCookiesLifetimeSec;                // Lifetime limit specified in seconds
+    PRPackedBool                  mCookiesStrictDomains;      // Optional pref to apply stricter domain checks
+    PRUint8                       mCookiesPermissions;        // BEHAVIOR_{ACCEPT, REJECTFOREIGN, REJECT, P3P}
 
     /* mCookiesP3PString (below) consists of 8 characters having the following interpretation:
      *   [0]: behavior for first-party cookies when site has no privacy policy

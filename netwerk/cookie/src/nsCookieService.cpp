@@ -115,12 +115,8 @@ static const PRUint32 BEHAVIOR_P3P           = 3;
 #ifdef MOZ_PHOENIX
 static const char kCookiesEnabled[] = "network.cookie.enable";
 static const char kCookiesForDomainOnly[] = "network.cookie.enableForOriginatingWebsiteOnly";
-static const char kCookiesLifetimeCurrentSession[] = "network.cookie.enableForCurrentSessionOnly";
 #else
 static const char kCookiesPermissions[] = "network.cookie.cookieBehavior";
-static const char kCookiesLifetimeEnabled[] = "network.cookie.lifetime.enabled";
-static const char kCookiesLifetimeDays[] = "network.cookie.lifetime.days";
-static const char kCookiesLifetimeCurrentSession[] = "network.cookie.lifetime.behavior";
 static const char kCookiesP3PString[] = "network.cookie.p3p";
 static const char kCookiesP3PString_Default[] = "drdraaaa";
 #endif
@@ -411,15 +407,6 @@ nsCookieService::Observe(nsISupports     *aSubject,
       // set flag so we know to update the enumerated permissions
       computePermissions = PR_TRUE;
 
-    } else if (pref.Equals(kCookiesLifetimeCurrentSession)) {
-      rv = mPrefBranch->GetBoolPref(kCookiesLifetimeCurrentSession, &tempPrefValue);
-      if (NS_FAILED(rv)) {
-        tempPrefValue = PR_FALSE;
-      }
-      mCookiesLifetimeCurrentSession = tempPrefValue;
-      // Phoenix hack to reduce ifdefs in code
-      mCookiesLifetimeEnabled = mCookiesLifetimeCurrentSession;
-
 #else
     if (pref.Equals(kCookiesPermissions)) {
       rv = mPrefBranch->GetIntPref(kCookiesPermissions, &tempPrefValue);
@@ -427,29 +414,6 @@ nsCookieService::Observe(nsISupports     *aSubject,
         tempPrefValue = BEHAVIOR_REJECT;
       }
       mCookiesPermissions = tempPrefValue;
-
-    } else if (pref.Equals(kCookiesLifetimeEnabled)) {
-      rv = mPrefBranch->GetBoolPref(kCookiesLifetimeEnabled, &tempPrefValue);
-      if (NS_FAILED(rv)) {
-        tempPrefValue = PR_FALSE;
-      }
-      mCookiesLifetimeEnabled = tempPrefValue;
-
-    } else if (pref.Equals(kCookiesLifetimeDays)) {
-      rv = mPrefBranch->GetIntPref(kCookiesLifetimeDays, &mCookiesLifetimeSec);
-      if (NS_FAILED(rv)) {
-        mCookiesLifetimeEnabled = PR_FALSE; // disable lifetime limit...
-        mCookiesLifetimeSec = 0;
-      }
-      // save cookie lifetime in seconds instead of days
-      mCookiesLifetimeSec *= 24*60*60;
-
-    } else if (pref.Equals(kCookiesLifetimeCurrentSession)) {
-      rv = mPrefBranch->GetIntPref(kCookiesLifetimeCurrentSession, &tempPrefValue);
-      if (NS_FAILED(rv)) {
-        tempPrefValue = 1; // disable currentSession limit
-      }
-      mCookiesLifetimeCurrentSession = (tempPrefValue == 0);
 
     // P3P prefs
     } else if (pref.Equals(kCookiesP3PString)) {
@@ -801,12 +765,8 @@ nsCookieService::InitPrefObservers()
 #ifdef MOZ_PHOENIX
       prefInternal->AddObserver(kCookiesEnabled, this, PR_TRUE);
       prefInternal->AddObserver(kCookiesForDomainOnly, this, PR_TRUE);
-      prefInternal->AddObserver(kCookiesLifetimeCurrentSession, this, PR_TRUE);
 #else
       prefInternal->AddObserver(kCookiesPermissions, this, PR_TRUE);
-      prefInternal->AddObserver(kCookiesLifetimeEnabled, this, PR_TRUE);
-      prefInternal->AddObserver(kCookiesLifetimeDays, this, PR_TRUE);
-      prefInternal->AddObserver(kCookiesLifetimeCurrentSession, this, PR_TRUE);
       prefInternal->AddObserver(kCookiesP3PString, this, PR_TRUE);
 #endif
       prefInternal->AddObserver(kCookiesStrictDomains, this, PR_TRUE);
@@ -824,7 +784,6 @@ nsCookieService::InitPrefObservers()
     mCookiesP3PString = NS_LITERAL_CSTRING(kCookiesP3PString_Default);
 #endif
     mCookiesPermissions = BEHAVIOR_REJECT;
-    mCookiesLifetimeEnabled = PR_FALSE;
     mCookiesStrictDomains = PR_FALSE;
   }
 }
@@ -863,16 +822,6 @@ nsCookieService::ReadPrefs()
     mCookiesPermissions = BEHAVIOR_REJECT;
   }
 
-  rv = mPrefBranch->GetBoolPref(kCookiesLifetimeCurrentSession, &tempPrefValue);
-  if (NS_FAILED(rv)) {
-    tempPrefValue = PR_FALSE;
-    rv2 = rv;
-  }
-  mCookiesLifetimeCurrentSession = tempPrefValue;
-  // Phoenix hacks to reduce ifdefs in code
-  mCookiesLifetimeEnabled = mCookiesLifetimeCurrentSession;
-  mCookiesLifetimeSec = 0;
-
 #else
   rv = mPrefBranch->GetIntPref(kCookiesPermissions, &tempPrefValue);
   if (NS_FAILED(rv)) {
@@ -880,29 +829,6 @@ nsCookieService::ReadPrefs()
     rv2 = rv;
   }
   mCookiesPermissions = tempPrefValue;
-
-  rv = mPrefBranch->GetBoolPref(kCookiesLifetimeEnabled, &tempPrefValue);
-  if (NS_FAILED(rv)) {
-    tempPrefValue = PR_FALSE;
-    rv2 = rv;
-  }
-  mCookiesLifetimeEnabled = tempPrefValue;
-
-  rv = mPrefBranch->GetIntPref(kCookiesLifetimeDays, &mCookiesLifetimeSec);
-  if (NS_FAILED(rv)) {
-    mCookiesLifetimeEnabled = PR_FALSE; // disable lifetime limit...
-    mCookiesLifetimeSec = 0;
-    rv2 = rv;
-  }
-  // save cookie lifetime in seconds instead of days
-  mCookiesLifetimeSec *= 24*60*60;
-
-  rv = mPrefBranch->GetIntPref(kCookiesLifetimeCurrentSession, &tempPrefValue);
-  if (NS_FAILED(rv)) {
-    tempPrefValue = 1; // disable currentSession limit
-    rv2 = rv;
-  }
-  mCookiesLifetimeCurrentSession = (tempPrefValue == 0);
 
   // P3P prefs
   rv = mPrefBranch->GetCharPref(kCookiesP3PString, getter_Copies(mCookiesP3PString));
@@ -1412,7 +1338,6 @@ nsCookieService::SetCookieInternal(nsIURI             *aHostURI,
                  aStatus,
                  aPolicy);
   if (!cookie) {
-    COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, cookieHeader, "unable to allocate memory for new cookie");
     return newCookie;
   }
 
@@ -1425,11 +1350,17 @@ nsCookieService::SetCookieInternal(nsIURI             *aHostURI,
     mPermissionService->CanSetCookie(aHostURI,
                                      aChannel,
                                      NS_STATIC_CAST(nsICookie2*, NS_STATIC_CAST(nsCookie*, cookie)),
+                                     &cookieAttributes.isSession,
+                                     &cookieAttributes.expiryTime.mValue,
                                      &permission);
     if (!permission) {
       COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, cookieHeader, "cookie rejected by permission manager");
       return newCookie;
     }
+
+    // update isSession and expiry attributes, in case they changed
+    cookie->SetIsSession(cookieAttributes.isSession);
+    cookie->SetExpiry(cookieAttributes.expiryTime);
   }
 
   // add the cookie to the list
@@ -1995,16 +1926,18 @@ nsCookieService::CheckPrefs(nsIURI     *aHostURI,
   // default prefs. see bug 184059.
   if (mPermissionService) {
     nsCookieAccess access;
-    mPermissionService->CanAccess(aHostURI, aFirstURI, aChannel, &access);
+    rv = mPermissionService->CanAccess(aHostURI, aFirstURI, aChannel, &access);
 
     // if we found an entry, use it
-    switch (access) {
+    if (NS_SUCCEEDED(rv)) {
+      switch (access) {
       case nsICookiePermission::ACCESS_DENY:
         COOKIE_LOGFAILURE(aCookieHeader ? SET_COOKIE : GET_COOKIE, aHostURI, aCookieHeader, "cookies are blocked for this site");
         return nsICookie::STATUS_REJECTED;
 
       case nsICookiePermission::ACCESS_ALLOW:
         return nsICookie::STATUS_ACCEPTED;
+      }
     }
   }
 
@@ -2212,20 +2145,6 @@ nsCookieService::GetExpiry(nsCookieAttributes &aCookieAttributes,
   // default to session cookie if no attributes found
   } else {
     return PR_TRUE;
-  }
-
-  if (delta > nsInt64(0)) {
-    // check cookie lifetime pref, and limit lifetime if required.
-    // we only want to do this if the cookie isn't going to be expired anyway.
-    if (mCookiesLifetimeEnabled) {
-      if (mCookiesLifetimeCurrentSession) {
-        // limit lifetime to session
-        return PR_TRUE;
-      } else if (delta > nsInt64(mCookiesLifetimeSec)) {
-        // limit lifetime to specified time
-        delta = mCookiesLifetimeSec;
-      }
-    }
   }
 
   // if this addition overflows, expiryTime will be less than currentTime
