@@ -1866,6 +1866,11 @@ void MapDeclarationInto(nsICSSDeclaration* aDeclaration,
           }
         }
 
+        // -moz-border-radius: length, inherit
+        if (! SetCoord(ourMargin->mBorderRadius, spacing->mBorderRadius, 
+                       SETCOORD_LPH, font, aPresContext)) {
+        }
+
         // outline-width: length, enum, inherit
         if (! SetCoord(ourMargin->mOutlineWidth, spacing->mOutlineWidth, 
                        SETCOORD_LE, font, aPresContext)) {
