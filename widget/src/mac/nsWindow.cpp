@@ -317,8 +317,7 @@ void* nsWindow::GetNativeData(PRUint32 aDataType)
     	break;
 
     case NS_NATIVE_REGION:
-//   	retVal = (void*)mWindowRegion;
-    	retVal = (void*)mVisRegion;
+		retVal = (void*)mVisRegion;
     	break;
 
     case NS_NATIVE_COLORMAP:
@@ -648,6 +647,18 @@ NS_IMETHODIMP nsWindow::GetBounds(nsRect &aRect)
   return NS_OK;
 }
 
+
+NS_METHOD nsWindow::SetBounds(const nsRect &aRect)
+{
+printf("\nsetting bounds to x y w h %ld %ld %ld %ld\n\n", aRect.x, aRect.y, aRect.width, aRect.height );
+  nsresult rv = Inherited::SetBounds(aRect);
+  if ( NS_SUCCEEDED(rv) )
+    CalcWindowRegions();
+
+  return rv;
+}
+
+
 //-------------------------------------------------------------------------
 //
 // Move this component
@@ -681,23 +692,32 @@ NS_IMETHODIMP nsWindow::Move(PRInt32 aX, PRInt32 aY)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 {
-	if ((mBounds.width != aWidth) || (mBounds.height != aHeight))
-	{
-	  // Set the bounds
-	  mBounds.width  = aWidth;
-	  mBounds.height = aHeight;
+  if ((mBounds.width != aWidth) || (mBounds.height != aHeight))
+  {
+    // Set the bounds
+    mBounds.width  = aWidth;
+    mBounds.height = aHeight;
 
-		// Recalculate the regions
-		CalcWindowRegions();
+	// Recalculate the regions
+	CalcWindowRegions();
+	
+    // Invalidate the new location
+    if (aRepaint)
+      Invalidate(PR_FALSE);
 
-		// Invalidate the new location
-		if (aRepaint)
-			Invalidate(PR_FALSE);
+    // Report the event
+    ReportSizeEvent();
+  }
+  else {
+    // Recalculate the regions. We always need to do this, our parents may have
+    // changed, hence changing our notion of visibility. We then also should make
+    // sure that we invalidate ourselves correctly. Fixes bug 18240 (pinkerton).
+    CalcWindowRegions();
+    if (aRepaint)
+      Invalidate(PR_FALSE);
+  }
 
-		// Report the event
-		ReportSizeEvent();
-	}
-	return NS_OK;
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
