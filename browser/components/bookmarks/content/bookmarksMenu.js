@@ -337,9 +337,9 @@ var BookmarksMenu = {
     BookmarksController.onCommandUpdate(selection, target);
     if (document.popupNode.id == "bookmarks-ptf") {
       // disabling 'cut' and 'copy' on the empty area of the personal toolbar
-      var commandNode = document.getElementById("cmd_bm_cut");
+      var commandNode = document.getElementById("cmd_cut");
       commandNode.setAttribute("disabled", "true");
-      commandNode = document.getElementById("cmd_bm_copy");
+      commandNode = document.getElementById("cmd_copy");
       commandNode.setAttribute("disabled", "true");
     }
   },
@@ -410,7 +410,7 @@ var BookmarksMenuController = {
   {
     var command = aEvent.target.getAttribute("command");
     var isDisabled = aEvent.target.getAttribute("disabled")
-    if (isDisabled != "true" && (command == "cmd_bm_newfolder" || command == "cmd_bm_paste")) {
+    if (isDisabled != "true" && (command == "cmd_bm_newfolder" || command == "cmd_paste")) {
       BookmarksMenuDNDObserver.onDragSetFeedBack(document.popupNode, BookmarksMenu._orientation);
     } else {
       BookmarksMenuDNDObserver.onDragRemoveFeedBack(document.popupNode);

@@ -411,8 +411,8 @@
 
           switch(aCommand) {
           // [Category 1] - Commands that remove rows
-          case "cmd_bm_cut":
-          case "cmd_bm_delete":
+          case "cmd_cut":
+          case "cmd_delete":
             // Since rows have been removed, the row immediately after the first range 
             // in the original selection now has the index of the first item in the first
             // range. 
@@ -420,7 +420,7 @@
             newRanges.push({min: nextRow, max: nextRow});
             break;
           // [Category 2] - Commands that insert rows
-          case "cmd_bm_paste":
+          case "cmd_paste":
           case "cmd_bm_import":
           case "cmd_bm_movebookmark":
           case "cmd_bm_newbookmark":
@@ -434,7 +434,7 @@
             this.updateTreeSelection();
             break;
           // [Category 3] - Commands that do not alter the row count
-          case "cmd_bm_copy":
+          case "cmd_copy":
           case "cmd_bm_properties":
           case "cmd_bm_rename":
           case "cmd_bm_setpersonaltoolbarfolder":
@@ -594,7 +594,7 @@
           this.mOuter._itemToBeToggled = [];
           
           switch (aCommand) {
-          case "cmd_bm_selectAll":
+          case "cmd_selectAll":
             this.mOuter.treeBoxObject.selection.selectAll();
             break;
           case "cmd_bm_expandfolder":
