@@ -192,15 +192,6 @@ nsXMLContentSink::~nsXMLContentSink()
   NS_IF_RELEASE(mParser);
   NS_IF_RELEASE(mRootElement);
   NS_IF_RELEASE(mDocElement);
-  if (nsnull != mContentStack) {
-    // there shouldn't be anything here except in an error condition
-    PRInt32 index = mContentStack->Count();
-    while (0 < index--) {
-      nsIContent* content = (nsIContent*)mContentStack->ElementAt(index);
-      NS_RELEASE(content);
-    }
-    delete mContentStack;
-  }
   if (nsnull != mNameSpaceStack) {
     // There shouldn't be any here except in an error condition
     PRInt32 index = mNameSpaceStack->Count();
@@ -761,7 +752,7 @@ nsXMLContentSink::OpenContainer(const nsIParserNode& aNode)
 #endif
       }
       else {
-        nsIContent *parent = GetCurrentContent();
+        nsCOMPtr<nsIContent> parent = getter_AddRefs(GetCurrentContent());
 
         parent->AppendChildTo(content, PR_FALSE);
       }
@@ -806,10 +797,10 @@ nsXMLContentSink::CloseContainer(const nsIParserNode& aNode)
     NS_RELEASE(tagAtom);
   }
 
-  nsIContent* content = nsnull;
+  nsCOMPtr<nsIContent> content;
   if (popContent) {
-    content = PopContent();
-    if (nsnull != content) {
+    content = getter_AddRefs(PopContent());
+    if (content) {
       if (mDocElement == content) {
         mState = eXMLContentSinkState_InEpilog;
       }
@@ -821,12 +812,10 @@ nsXMLContentSink::CloseContainer(const nsIParserNode& aNode)
     }
   }
   nsINameSpace* nameSpace = PopNameSpaces();
-  if (nsnull != content) {
-    nsIXMLContent* xmlContent;
-    if (NS_OK == content->QueryInterface(kIXMLContentIID,
-                                         (void **)&xmlContent)) {
+  if (content) {
+    nsCOMPtr<nsIXMLContent> xmlContent = do_QueryInterface(content);
+    if (xmlContent) {
       xmlContent->SetContainingNameSpace(nameSpace);
-      NS_RELEASE(xmlContent);
     }
   }
   NS_IF_RELEASE(nameSpace);
@@ -1016,7 +1005,7 @@ nsXMLContentSink::AddContentAsLeaf(nsIContent *aContent)
     result = mDocument->AppendToEpilog(aContent);
   }
   else {
-    nsIContent *parent = GetCurrentContent();
+    nsCOMPtr<nsIContent> parent = getter_AddRefs(GetCurrentContent());
 
     if (nsnull != parent) {
       result = parent->AppendChildTo(aContent, PR_FALSE);
@@ -1527,8 +1516,12 @@ nsIContent*
 nsXMLContentSink::GetCurrentContent()
 {
   if (nsnull != mContentStack) {
-    PRInt32 index = mContentStack->Count() - 1;
-    return (nsIContent *)mContentStack->ElementAt(index);
+    PRUint32 count;
+    mContentStack->Count(&count);
+    PR_ASSERT(count);
+    if (count) {
+      return (nsIContent *)mContentStack->ElementAt(count-1);
+    }
   }
   return nsnull;
 }
@@ -1536,13 +1529,15 @@ nsXMLContentSink::GetCurrentContent()
 PRInt32
 nsXMLContentSink::PushContent(nsIContent *aContent)
 {
+  PRUint32 count;
   if (nsnull == mContentStack) {
-    mContentStack = new nsVoidArray();
+    NS_NewISupportsArray(getter_AddRefs(mContentStack));
   }
-  NS_IF_ADDREF(aContent);
 
-  mContentStack->AppendElement((void *)aContent);
-  return mContentStack->Count();
+  mContentStack->AppendElement(aContent);
+  mContentStack->Count(&count);
+
+  return count;
 }
 
 nsIContent*
@@ -1550,7 +1545,9 @@ nsXMLContentSink::PopContent()
 {  
   nsIContent* content = nsnull;
   if (nsnull != mContentStack) {
-    PRInt32 index = mContentStack->Count() - 1;
+    PRUint32 index, count;
+    mContentStack->Count(&count);
+    index =  count - 1;
     content = (nsIContent *)mContentStack->ElementAt(index);
     mContentStack->RemoveElementAt(index);
   }
