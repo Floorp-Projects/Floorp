@@ -66,38 +66,44 @@
             <treechildren id="cookielist"/>
           </tree>
         <spring style="height: 5px;"/>
-        <html:fieldset style="border: 2px groove #CCCCDD;">
-          <html:legend>&treehead.infoselected.label;</html:legend>
-            <!-- labels -->
-            <html:div flex="100%">
-              <html:table width="100%" cellpadding="0" cellspacing="0" border="0">
-                <html:tr>
-                  <html:td width="55%">&props.name.label;</html:td>
-                  <html:td><html:input id="ifl_name" readonly="true" type="text" flex="100%" class="scroll-label"/></html:td>
-                </html:tr>
-                <html:tr>
-                  <html:td>&props.value.label;</html:td>
-                  <html:td><html:input id="ifl_value" readonly="true" type="text" flex="100%" class="scroll-label"/></html:td>
-                </html:tr>
-                <html:tr>
-                  <html:td id="ifl_domaintype">&props.domain.label;</html:td>
-                  <html:td><html:input id="ifl_domain" readonly="true" type="text" flex="100%" class="scroll-label"/></html:td>
-                </html:tr>
-                <html:tr>
-                  <html:td>&props.path.label;</html:td>
-                  <html:td><html:input id="ifl_path" readonly="true" type="text" flex="100%" class="scroll-label"/></html:td>
-                </html:tr>
-                <html:tr>
-                  <html:td>&props.secure.label;</html:td>
-                  <html:td><html:input id="ifl_secure" readonly="true" type="text" flex="100%" class="scroll-label"/></html:td>
-                </html:tr>
-                <html:tr>
-                  <html:td>&props.expires.label;</html:td>
-                  <html:td><html:input id="ifl_expires" readonly="true" type="text" flex="100%" class="scroll-label"/></html:td>
-                </html:tr>
-              </html:table>
-            </html:div>
-        </html:fieldset>
+        <fieldset style="border: 2px groove #CCCCDD;">
+          <text class="label" value="&treehead.infoselected.label;"/>
+          <spring style="height: 5px;"/>
+          <!-- labels -->
+          <grid>
+            <columns>
+              <column/>
+              <column flex="1"/>
+              <column/>
+            </columns>
+            <rows>
+              <row>
+                <text value="&props.name.label;"/>
+                <textfield id="ifl_name" readonly="true"/>
+              </row>
+              <row>
+                <text value="&props.value.label;"/>
+                <textfield id="ifl_value" readonly="true"/>
+              </row>
+              <row>
+                <text id="ifl_domaintype" value="&props.domain.label;"/>
+                <textfield id="ifl_domain" readonly="true"/>
+              </row>
+              <row>
+                <text value="&props.path.label;"/>
+                <textfield id="ifl_path" readonly="true"/>
+              </row>
+              <row>
+                <text value="&props.secure.label;"/>
+                <textfield id="ifl_secure" readonly="true"/>
+              </row>
+              <row>
+                <text value="&props.expires.label;"/>
+                <textfield id="ifl_expires" readonly="true"/>
+              </row>
+            </rows>
+          </grid>
+        </fieldset>
         <spring flex="5%"/>
         <box align="horizontal">
           <button id="removeCookies" class="dialog push" disabled="true"

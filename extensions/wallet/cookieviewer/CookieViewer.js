@@ -219,7 +219,8 @@ function ViewCookieSelected( e )
     }
     var field = document.getElementById(rows[i]);
     var content = props[i];
-    field.value = ( !selItemsMax ) ? content : "";  // multiple selections clear fields.
+    var value = ( !selItemsMax ) ? content : "";  // multiple selections clear fields.
+    field.setAttribute("value", value);
     if(rows[i] == "ifl_expires") break;
   }
 }
