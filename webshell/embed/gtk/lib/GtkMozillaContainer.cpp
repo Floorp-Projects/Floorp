@@ -25,6 +25,7 @@
 #include "nsNetUtil.h"
 #include "nsFileSpec.h"
 #include "nsIDocumentLoader.h"
+#include "nsIDocumentLoaderFactory.h"
 #include "nsIContentViewer.h"
 #include "prprf.h"
 
