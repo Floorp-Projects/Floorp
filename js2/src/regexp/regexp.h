@@ -104,5 +104,7 @@ bool parseFlags(JS2Metadata *meta, const jschar *flagStr, uint32 length, uint32 
 // Execute the re against the string, but don't try advancing into the string
 REMatchResult *REMatch(JS2Metadata *meta, JS2RegExp *re, const jschar *str, uint32 length);
 
+void js_DestroyRegExp(JS2RegExp *re);
+
 }
 }
