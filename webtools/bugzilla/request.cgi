@@ -81,7 +81,7 @@ sub queue {
     # should not have access.
     "            COUNT(DISTINCT ugmap.group_id) AS cntuseringroups, 
                 COUNT(DISTINCT bgmap.group_id) AS cntbugingroups, 
-                ((COUNT(DISTINCT ccmap.who) AND cclist_accessible = 1) 
+                ((COUNT(DISTINCT ccmap.who) > 0 AND cclist_accessible = 1) 
                   OR ((bugs.reporter = $::userid) AND bugs.reporter_accessible = 1) 
                   OR bugs.assigned_to = $::userid ) AS canseeanyway 
     " . 
