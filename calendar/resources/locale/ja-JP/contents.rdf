@@ -55,4 +55,5 @@
       </RDF:Seq>
     </chrome:packages>
   </RDF:Description>
+  <RDF:Description about="urn:mozilla:locale:ja-JP:calendar" chrome:localeVersion="1.5"/>
 </RDF:RDF>

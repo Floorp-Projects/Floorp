@@ -35,6 +35,7 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
+
 <RDF:RDF xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
          xmlns:chrome="http://www.mozilla.org/rdf/chrome#">
 
@@ -44,11 +45,14 @@
   </RDF:Seq>
 
   <!-- locale information -->
-  <RDF:Description about="urn:mozilla:es-ES">
+  <RDF:Description about="urn:mozilla:es-ES"
+                   chrome:displayName="Spanish"
+                   chrome:name="es-ES">
     <chrome:packages>
       <RDF:Seq about="urn:mozilla:locale:es-ES:packages">
         <RDF:li resource="urn:mozilla:locale:es-ES:calendar"/>
       </RDF:Seq>
     </chrome:packages>
   </RDF:Description>
+  <RDF:Description about="urn:mozilla:locale:es-ES:calendar" chrome:localeVersion="1.5"/>
 </RDF:RDF>

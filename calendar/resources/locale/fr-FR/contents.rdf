@@ -45,11 +45,14 @@
   </RDF:Seq>
 
   <!-- locale information -->
-  <RDF:Description about="urn:mozilla:fr-FR">
+  <RDF:Description about="urn:mozilla:fr-FR"
+                   chrome:displayName="French"
+                   chrome:name="fr-FR">
     <chrome:packages>
       <RDF:Seq about="urn:mozilla:locale:fr-FR:packages">
         <RDF:li resource="urn:mozilla:locale:fr-FR:calendar"/>
       </RDF:Seq>
     </chrome:packages>
   </RDF:Description>
+  <RDF:Description about="urn:mozilla:locale:fr-FR:calendar" chrome:localeVersion="1.5"/>
 </RDF:RDF>

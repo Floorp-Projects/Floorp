@@ -19,7 +19,7 @@
    - Portions created by the Initial Developer are Copyright (C) 2001
    - the Initial Developer. All Rights Reserved.
    -
-   - Contributor(s): Colin Phillips <colinp@oeone.com> 
+   - Contributor(s): Colin Phillips <colinp@oeone.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -45,11 +45,14 @@
   </RDF:Seq>
 
   <!-- locale information -->
-  <RDF:Description about="urn:mozilla:sl-SI">
+  <RDF:Description about="urn:mozilla:sl-SI"
+                   chrome:displayName="Slovanian"
+                   chrome:name="sl-SI">
     <chrome:packages>
       <RDF:Seq about="urn:mozilla:locale:sl-SI:packages">
         <RDF:li resource="urn:mozilla:locale:sl-SI:calendar"/>
       </RDF:Seq>
     </chrome:packages>
   </RDF:Description>
+  <RDF:Description about="urn:mozilla:locale:sl-SI:calendar" chrome:localeVersion="1.5"/>
 </RDF:RDF>
