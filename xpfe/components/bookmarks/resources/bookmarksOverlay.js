@@ -646,7 +646,7 @@ BookmarksUIElement.prototype = {
   {
     if (aBookmarkItem.getAttribute("type") != NC_NS + "BookmarkSeparator") 
       openDialog("chrome://communicator/content/bookmarks/bm-props.xul",
-                 "BookmarkProperties", "centerscreen,chrome,dialog=no,resizable=no", 
+                 "", "centerscreen,chrome,dialog=no,resizable=no", 
                  NODE_ID(aBookmarkItem));
   },
 
