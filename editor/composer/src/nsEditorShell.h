@@ -153,7 +153,10 @@ class nsEditorShell :   public nsIEditorShell,
 
     // Get the current document title an use it as part of the window title
     // Uses "(Untitled)" for empty title
-    nsresult        UpdateWindowTitle();
+    // Also rebuilds the "Recent Pages" menu.
+    // If aSaveToPrefs is true, then titles and URLs 
+    //  for menu are saved to prefs 
+    nsresult        UpdateWindowTitleAndRecentMenu(PRBool aSaveToPrefs);
 
     // Helper method which is called at the beginning of a new page load
     nsresult        StartPageLoad();
@@ -241,7 +244,6 @@ class nsEditorShell :   public nsIEditorShell,
 
     nsStringArray       mDictionaryList;
     PRInt32             mDictionaryIndex;
-    
 };
 
 #endif // nsEditorShell_h___

@@ -583,7 +583,7 @@ nsEditorShell::PrepareDocumentForEditing(nsIDOMWindow* aDOMWindow, nsIURI *aUrl)
   }
 
   // Set the editor-specific Window caption
-  UpdateWindowTitle();
+  UpdateWindowTitleAndRecentMenu(PR_TRUE);
 
   nsCOMPtr<nsIEditorStyleSheets> styleSheets = do_QueryInterface(mEditor);
   if (!styleSheets)
@@ -878,16 +878,12 @@ nsEditorShell::SetEditorType(const PRUnichar *editorType)
 NS_IMETHODIMP
 nsEditorShell::GetEditorType(PRUnichar **_retval)
 {
-  *_retval = nsnull;
+  if (!_retval)
+    return NS_ERROR_NULL_POINTER;
 
-  nsresult  err = NS_NOINTERFACE;
-  nsCOMPtr<nsIEditor>  editor = do_QueryInterface(mEditor);
+  *_retval = mEditorTypeString.ToNewUnicode();
 
-  if (editor)
-  {
-    *_retval = mEditorTypeString.ToNewUnicode();
-  }
-  return err;
+  return NS_OK;
 }
 
 
@@ -1701,10 +1697,19 @@ nsEditorShell::CheckOpenWindowForURLMatch(const PRUnichar* inFileURL, nsIDOMWind
 }
 
 NS_IMETHODIMP 
-nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
+nsEditorShell::SaveDocument(PRBool aSaveAs, PRBool aSaveCopy, const PRUnichar* aMimeType, PRBool *_retval)
 {
   nsresult  res = NS_NOINTERFACE;
   *_retval = PR_FALSE;
+
+  NS_ENSURE_ARG_POINTER((aMimeType));
+
+  nsAutoString mimeType(aMimeType);
+  PRBool saveAsText = mimeType.EqualsWithConversion("text/plain");
+
+  // Currently, we only understand plain text and html
+  if (!mimeType.EqualsWithConversion("text/html") && !saveAsText)
+    return NS_ERROR_FAILURE;
 
   switch (mEditorType)
   {
@@ -1727,8 +1732,9 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
         // find out if the doc already has a fileSpec associated with it.
         nsCOMPtr<nsIFile>    docFile;
         PRBool noFileSpec = (diskDoc->GetFileSpec(getter_AddRefs(docFile)) == NS_ERROR_NOT_INITIALIZED);
-        PRBool mustShowFileDialog = saveAs || noFileSpec;
-        PRBool replacing = !saveAs;
+        PRBool mustShowFileDialog = aSaveAs || noFileSpec;
+        PRBool replacing = !aSaveAs;
+        PRBool titleChanged = PR_FALSE;
         
         // Get existing document title
         nsAutoString title;
@@ -1739,8 +1745,8 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
         
         if (mustShowFileDialog)
         {
-          // Prompt for title ONLY if existing title is empty
-          if (!mMailCompose && (mEditorType == eHTMLTextEditorType) && (title.Length() == 0))
+          // Prompt for title ONLY if existing title is empty and we are saving to HTML
+          if (!mMailCompose && (!saveAsText && mEditorType == eHTMLTextEditorType) && (title.Length() == 0))
           {
             // Use a "prompt" common dialog to get title string from user
             NS_WITH_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, &res); 
@@ -1770,11 +1776,12 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
                 *_retval = PR_FALSE;
                 return NS_OK;
               }
+              // This sets title in HTML node
+              mEditor->SetDocumentTitle(titleUnicode);
               title = titleUnicode;
               nsCRT::free(titleUnicode);
+              titleChanged = PR_TRUE;
             }
-            // This sets title in HTML node
-            SetDocumentTitle(title.GetUnicode());
           }
 
           nsCOMPtr<nsIFilePicker> filePicker = do_CreateInstance("@mozilla.org/filepicker;1", &res);
@@ -1783,7 +1790,10 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
             nsAutoString fileName;
 
             nsAutoString  promptString;
-            GetBundleString(NS_LITERAL_STRING("SaveDocumentAs"), promptString);
+            if (saveAsText)
+              GetBundleString(NS_LITERAL_STRING("ExportToText"), promptString);
+            else
+              GetBundleString(NS_LITERAL_STRING("SaveDocumentAs"), promptString);
 
             // Initialize nsIFilePicker
             nsCOMPtr<nsIDOMWindowInternal> parentWindow(do_QueryReferent(mContentWindow));
@@ -1791,9 +1801,12 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
             if (NS_FAILED(res))
               return res;
             
-            // append in order so that HTML comes first and is default. test me on windows
-            filePicker->AppendFilters(nsIFilePicker::filterHTML);
-            filePicker->AppendFilters(nsIFilePicker::filterText);
+            // Set filters according to the type of output
+            if (saveAsText)
+              filePicker->AppendFilters(nsIFilePicker::filterText);
+            else
+              filePicker->AppendFilters(nsIFilePicker::filterHTML);
+
             filePicker->AppendFilters(nsIFilePicker::filterAll);
             
             if (noFileSpec)
@@ -1801,10 +1814,6 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
               // check the current url, use that file name if possible
               nsString urlstring;
               res = htmlDoc->GetURL(urlstring);
-
-     //         ?????
-     //         res = htmlDoc->GetSourceDocumentURL(jscx, uri);
-     //         do a QI to get an nsIURL and then call GetFileName()
 
               // if it's not a local file already, grab the current file name
               if ( (urlstring.CompareWithConversion("file", PR_TRUE, 4) != 0 )
@@ -1836,15 +1845,18 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
                     }
                     if (urlstring.Length() > 0)
                     {
-                      fileName.Assign( urlstring );
-                      fileName.AppendWithConversion(".html");
+                      title = urlstring;
                     }
                   }
                 }
               }
               
               // Use page title as suggested name for new document
-              if (fileName.Length() == 0 && title.Length() > 0)
+              if (title.IsEmpty())
+              {
+                title.AppendWithConversion("untitled");
+              }
+              else
               {
                 // Strip out quote character
                 PRUnichar quote = (PRUnichar)'\"';
@@ -1852,9 +1864,13 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
 
                 //Replace "bad" filename characteres with "_"
                 title.ReplaceChar(" .\\/@:", (PRUnichar)'_');
-                fileName = title;
-                fileName.AppendWithConversion(".html");
               }
+
+              fileName = title;
+              if (saveAsText)
+                fileName.AppendWithConversion(".txt");
+              else
+                fileName.AppendWithConversion(".html");
             } 
             else  // have a file spec
             {
@@ -1862,6 +1878,22 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
               docFile->GetUnicodeLeafName(getter_Copies(leafName));
               if (leafName.get() && *leafName)
                 fileName.Assign(leafName);
+
+              if (saveAsText)
+              {
+                // Replace html-related extension with "txt"
+                PRInt32 index = fileName.RFind(".html", PR_TRUE);
+                if (index == -1)
+                  index = fileName.RFind(".htm", PR_TRUE);
+                if (index == -1)
+                  index = fileName.RFind(".shtml", PR_TRUE);
+                if (index > 0)
+                {
+                  // Truncate after "." and append "txt" extension
+                  fileName.SetLength(index+1);
+                  fileName.AppendWithConversion("txt");
+                }
+              }
 
               nsCOMPtr<nsIFile> parentPath;
               if (NS_SUCCEEDED(docFile->GetParent(getter_AddRefs(parentPath))))
@@ -1884,6 +1916,8 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
             if (dialogResult == nsIFilePicker::returnCancel)
             {
               // Note that *_retval = PR_FALSE at this point
+              if (titleChanged)
+                UpdateWindowTitleAndRecentMenu(PR_FALSE);
               return NS_OK;
             }
             replacing = (dialogResult == nsIFilePicker::returnReplace);
@@ -1902,33 +1936,31 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
           }
 
           // Set the new URL for the webshell
-          nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mContentAreaDocShell));
-          if (webShell)
+          if (!aSaveCopy)
           {
-            // would like to use nsIFile::GetURL here, but it is not implemented
-            // on all platforms
-            nsCOMPtr<nsIFileURL> fileURL(do_CreateInstance(kStandardURLCID, &res));
-            if (NS_FAILED(res)) return res;
+            nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mContentAreaDocShell));
+            if (webShell)
+            {
+              // would like to use nsIFile::GetURL here, but it is not implemented
+              // on all platforms
+              nsCOMPtr<nsIFileURL> fileURL(do_CreateInstance(kStandardURLCID, &res));
+              if (NS_FAILED(res)) return res;
             
-            res = fileURL->SetFile(docFile);
-            if (NS_FAILED(res)) return res;
+              res = fileURL->SetFile(docFile);
+              if (NS_FAILED(res)) return res;
             
-            nsXPIDLCString docURLSpec;
-            res = fileURL->GetSpec(getter_Copies(docURLSpec));
-            if (NS_FAILED(res)) return res;
+              nsXPIDLCString docURLSpec;
+              res = fileURL->GetSpec(getter_Copies(docURLSpec));
+              if (NS_FAILED(res)) return res;
             
-            nsAutoString  fileURLUnicode; fileURLUnicode.AssignWithConversion(docURLSpec);      
-            res = webShell->SetURL(fileURLUnicode.GetUnicode());
-            if (NS_FAILED(res)) return res;
+              nsAutoString  fileURLUnicode; fileURLUnicode.AssignWithConversion(docURLSpec);      
+              res = webShell->SetURL(fileURLUnicode.GetUnicode());
+              if (NS_FAILED(res)) return res;
+            }
           }
         } // mustShowFileDialog
 
-        // TODO: Get the file type (from the extension?) the user set for the file
-        // How do we do this in an XP way??? 
-        // For now, just save as HTML type
-        nsString format;
-        format.AssignWithConversion("text/html");
-        res = editor->SaveFile(docFile, replacing, saveCopy, format);
+        res = editor->SaveFile(docFile, replacing, aSaveCopy, mimeType);
         if (NS_FAILED(res))
         {
           nsAutoString saveDocStr, failedStr;
@@ -1938,11 +1970,11 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
         } else {
           // File was saved successfully
           *_retval = PR_TRUE;
-
-          // Update window title to show possibly different filename
-          if (mustShowFileDialog)
-            UpdateWindowTitle();
         }
+        // Update window title to show possibly different filename
+        // This also covers problem that after undoing a title change,
+        //   window title looses the extra [filename] part that this adds
+        UpdateWindowTitleAndRecentMenu(PR_TRUE);
       }
       break;
     }
@@ -1951,6 +1983,7 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
   }
   return res;
 }
+
 
 NS_IMETHODIMP    
 nsEditorShell::CloseWindowWithoutSaving()
@@ -2094,7 +2127,7 @@ nsEditorShell::GetLocalFileURL(nsIDOMWindowInternal *parent, const PRUnichar *fi
 }
 
 nsresult
-nsEditorShell::UpdateWindowTitle()
+nsEditorShell::UpdateWindowTitleAndRecentMenu(PRBool aSaveToPrefs)
 {
   nsresult res = NS_ERROR_NOT_INITIALIZED;
 
@@ -2137,6 +2170,17 @@ nsEditorShell::UpdateWindowTitle()
     NS_ASSERTION(contentAreaAsWin, "This object should implement nsIBaseWindow");
     res = contentAreaAsWin->SetTitle(windowCaption.GetUnicode());
   }
+
+  // Rebuild Recent Pages menu and save any changed URLs or titles to editor prefs
+  // TODO: We need to pass on aSaveToPrefs to command, but must wait for
+  //    new command system before we can do that.
+  // For now, don't update the menu at all if aSaveToPrefs is false
+  if (aSaveToPrefs)
+  {
+    nsAutoString commandName(NS_LITERAL_STRING("cmd_buildRecentPagesMenu"));
+    res = DoControllerCommand(commandName);
+  }
+   
   return res;
 }
 
@@ -2197,106 +2241,13 @@ nsEditorShell::SetDocumentTitle(const PRUnichar *title)
   if (mEditorType != eHTMLTextEditorType)
     return NS_ERROR_NOT_IMPLEMENTED;
 
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
-  if (!editor)
-    return NS_ERROR_FAILURE;
+  res = mEditor->SetDocumentTitle(title);
+  if (NS_FAILED(res)) return res;
 
-  nsAutoString titleStr(title);
-  nsCOMPtr<nsIDOMDocument>  domDoc;
-  res = editor->GetDocument(getter_AddRefs(domDoc));
-  
-  if (domDoc)
-  {
-    // Get existing document title node
-    nsCOMPtr<nsIDOMHTMLDocument> HTMLDoc = do_QueryInterface(domDoc);
-    if (HTMLDoc)
-    {
-      // This sets the window title, and saves the title as a member varialble,
-      //  but does NOT insert the <title> node.
-      HTMLDoc->SetTitle(titleStr);
-      
-      nsCOMPtr<nsIDOMNodeList> titleList;
-      nsCOMPtr<nsIDOMNode>titleNode;
-      nsCOMPtr<nsIDOMNode>headNode;
-      nsCOMPtr<nsIDOMNode> resultNode;
-      res = domDoc->GetElementsByTagName(NS_ConvertASCIItoUCS2("title"), getter_AddRefs(titleList));
-      if (NS_SUCCEEDED(res))
-      {
-        if(titleList)
-        {
-          /* I'm tempted to just get the 1st title element in the list
-             (there should always be just 1). But in case there's > 1,
-             I assume the last one will be used, so this finds that one.
-          */
-          PRUint32 len = 0;
-          titleList->GetLength(&len);
-          if (len >= 1)
-            titleList->Item(len-1, getter_AddRefs(titleNode));
-
-          if (titleNode)
-          {
-            //Delete existing children (text) of title node
-            nsCOMPtr<nsIDOMNodeList> children;
-            res = titleNode->GetChildNodes(getter_AddRefs(children));
-            if(NS_SUCCEEDED(res) && children)
-            {
-              PRUint32 count = 0;
-              children->GetLength(&count);
-              for( PRUint32 i = 0; i < count; i++)
-              {
-                nsCOMPtr<nsIDOMNode> child;
-                res = children->Item(i,getter_AddRefs(child));
-                if(NS_SUCCEEDED(res) && child)
-                  titleNode->RemoveChild(child,getter_AddRefs(resultNode));
-              }
-            }
-          }
-        }
-      }
-      // Get the <HEAD> node, create a <TITLE> and insert it under the HEAD
-      nsCOMPtr<nsIDOMNodeList> headList;
-      res = domDoc->GetElementsByTagName(NS_ConvertASCIItoUCS2("head"),getter_AddRefs(headList));
-      if (NS_FAILED(res)) return res;
-      if (headList) 
-      {
-        headList->Item(0, getter_AddRefs(headNode));
-        if (headNode) 
-        {
-          PRBool newTitleNode = PR_FALSE;
-          if (!titleNode)
-          {
-            // Didn't find one above: Create a new one
-            nsCOMPtr<nsIDOMElement>titleElement;
-            res = domDoc->CreateElement(NS_ConvertASCIItoUCS2("title"), getter_AddRefs(titleElement));
-            if (NS_SUCCEEDED(res) && titleElement)
-            {
-              titleNode = do_QueryInterface(titleElement);
-              newTitleNode = PR_TRUE;
-            }
-            // Note: There should ALWAYS be a <title> in any HTML document,
-            //       so we will insert the node and not make it undoable
-            res = headNode->AppendChild(titleNode, getter_AddRefs(resultNode));
-            if (NS_FAILED(res)) return res;
-          }
-          // Append a text node under the TITLE
-          //  only if the title text isn't empty
-          if (titleNode && titleStr.Length() > 0)
-          {
-            nsCOMPtr<nsIDOMText> textNode;
-            res = domDoc->CreateTextNode(titleStr, getter_AddRefs(textNode));
-            if (NS_FAILED(res)) return res;
-            if (!textNode) return NS_ERROR_FAILURE;
-            // Do NOT use editor transaction -- we don't want this to be undoable
-            res = titleNode->AppendChild(textNode, getter_AddRefs(resultNode));
-            if (NS_FAILED(res)) return res;
-          }
-        }
-      }
-    }
-  }
-
-  return res;
+  // PR_FALSE means don't save menu to prefs
+  return UpdateWindowTitleAndRecentMenu(PR_FALSE);
 }
+
 
 NS_IMETHODIMP
 nsEditorShell::CloneAttributes(nsIDOMNode *destNode, nsIDOMNode *sourceNode)
@@ -4342,7 +4293,7 @@ nsEditorShell::GetCellAt(nsIDOMElement *tableElement, PRInt32 rowIndex, PRInt32 
         nsCOMPtr<nsITableEditor> tableEditor = do_QueryInterface(mEditor);
         if (tableEditor)
         {
-          result = tableEditor->GetCellAt(tableElement, rowIndex, colIndex, *_retval);
+          result = tableEditor->GetCellAt(tableElement, rowIndex, colIndex, _retval);
           // Don't return NS_EDITOR_ELEMENT_NOT_FOUND (passes NS_SUCCEEDED macro)
           //  to JavaScript
           if(NS_SUCCEEDED(result)) return NS_OK;
@@ -4379,7 +4330,7 @@ nsEditorShell::GetCellDataAt(nsIDOMElement *tableElement, PRInt32 rowIndex, PRIn
     {
       nsCOMPtr<nsITableEditor> tableEditor = do_QueryInterface(mEditor);
       if (tableEditor)
-        result = tableEditor->GetCellDataAt(tableElement, rowIndex, colIndex, *_retval,
+        result = tableEditor->GetCellDataAt(tableElement, rowIndex, colIndex, _retval,
                                             *aStartRowIndex, *aStartColIndex, 
                                             *aRowSpan, *aColSpan, 
                                             *aActualRowSpan, *aActualColSpan,
@@ -4397,7 +4348,7 @@ nsEditorShell::GetCellDataAt(nsIDOMElement *tableElement, PRInt32 rowIndex, PRIn
 }
 
 NS_IMETHODIMP
-nsEditorShell::GetFirstRow(nsIDOMElement *aTableElement, nsIDOMElement **_retval)
+nsEditorShell::GetFirstRow(nsIDOMElement *aTableElement, nsIDOMNode **_retval)
 {
   if (!_retval || !aTableElement)
     return NS_ERROR_NULL_POINTER;
@@ -4409,7 +4360,7 @@ nsEditorShell::GetFirstRow(nsIDOMElement *aTableElement, nsIDOMElement **_retval
       {
         nsCOMPtr<nsITableEditor> tableEditor = do_QueryInterface(mEditor);
         if (tableEditor)
-          result = tableEditor->GetFirstRow(aTableElement, *_retval);
+          result = tableEditor->GetFirstRow(aTableElement, _retval);
       }
       break;
     default:
@@ -4419,7 +4370,7 @@ nsEditorShell::GetFirstRow(nsIDOMElement *aTableElement, nsIDOMElement **_retval
 }
 
 NS_IMETHODIMP
-nsEditorShell::GetNextRow(nsIDOMElement *aCurrentRow, nsIDOMElement **_retval)
+nsEditorShell::GetNextRow(nsIDOMNode *aCurrentRow, nsIDOMNode **_retval)
 {
   if (!_retval || !*_retval || !aCurrentRow)
     return NS_ERROR_NULL_POINTER;
@@ -4432,7 +4383,7 @@ nsEditorShell::GetNextRow(nsIDOMElement *aCurrentRow, nsIDOMElement **_retval)
       {
         nsCOMPtr<nsITableEditor> tableEditor = do_QueryInterface(mEditor);
         if (tableEditor)
-          result = tableEditor->GetNextRow(aCurrentRow, *_retval);
+          result = tableEditor->GetNextRow(aCurrentRow, _retval);
       }
       break;
     default:

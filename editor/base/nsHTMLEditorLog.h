@@ -81,6 +81,7 @@ public:
   NS_IMETHOD InsertAsCitedQuotation(const nsString& aQuotedText, const nsString& aCitation, PRBool aInsertHTML, const nsString& aCharset, nsIDOMNode** aNodeInserted);
 
   NS_IMETHOD ApplyStyleSheet(const nsString& aURL, nsICSSStyleSheet **aStyleSheet);
+  NS_IMETHOD SetDocumentTitle(const PRUnichar* aTitle);
 
   NS_IMETHOD SetBackgroundColor(const nsString& aColor);
   NS_IMETHOD SetBodyAttribute(const nsString& aAttr, const nsString& aValue);

@@ -769,6 +769,25 @@ nsHTMLEditorLog::ApplyStyleSheet(const nsString& aURL, nsICSSStyleSheet **aStyle
 }
 
 NS_IMETHODIMP
+nsHTMLEditorLog::SetDocumentTitle(const PRUnichar* aTitle)
+{
+  nsAutoHTMLEditorLogLock logLock(this);
+
+  if (!mLocked && mFileStream)
+  {
+    PrintSelection();
+
+    Write("window.editorShell.SetDocumentTitle(\"");
+    nsAutoString str(aTitle);
+    PrintUnicode(str);
+    Write("\");\n");
+    Flush();
+  }
+
+  return nsHTMLEditor::SetDocumentTitle(aTitle);
+}
+
+NS_IMETHODIMP
 nsHTMLEditorLog::StartLogging(nsIFile *aLogFile)
 {
   nsresult result = NS_ERROR_FAILURE;

@@ -35,6 +35,7 @@
 #include "JoinElementTxn.h"
 #include "nsStyleSheetTxns.h"
 #include "IMETextTxn.h"
+#include "SetDocTitleTxn.h"
 
 TransactionFactory::TransactionFactory()
 {
@@ -75,6 +76,8 @@ TransactionFactory::GetNewTransaction(REFNSIID aTxnType, EditTxn **aResult)
     *aResult = new AddStyleSheetTxn();
   else if (aTxnType.Equals(RemoveStyleSheetTxn::GetCID()))
     *aResult = new RemoveStyleSheetTxn();
+  else if (aTxnType.Equals(SetDocTitleTxn::GetCID()))
+    *aResult = new SetDocTitleTxn();
   else if (aTxnType.Equals(PlaceholderTxn::GetCID()))
     *aResult = new PlaceholderTxn();
   else

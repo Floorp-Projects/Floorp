@@ -143,9 +143,9 @@ public:
   NS_IMETHOD Indent(const nsString& aIndent);
   NS_IMETHOD Align(const nsString& aAlign);
 
-  NS_IMETHOD GetElementOrParentByTagName(const nsString& aTagName, nsIDOMNode *aNode, nsIDOMElement** aReturn);
+  NS_IMETHOD GetElementOrParentByTagName(const nsAReadableString& aTagName, nsIDOMNode *aNode, nsIDOMElement** aReturn);
   NS_IMETHOD GetSelectedElement(const nsString& aTagName, nsIDOMElement** aReturn);
-  NS_IMETHOD CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement** aReturn);
+  NS_IMETHOD CreateElementWithDefaults(const nsAReadableString& aTagName, nsIDOMElement** aReturn);
   NS_IMETHOD GetNextElementByTagName(nsIDOMElement *aCurrentElement, const nsString *aTagName, nsIDOMElement **aReturn);
 
 
@@ -204,14 +204,18 @@ public:
   NS_IMETHOD NormalizeTable(nsIDOMElement *aTable);
   NS_IMETHOD GetCellIndexes(nsIDOMElement *aCell, PRInt32& aRowIndex, PRInt32& aColIndex);
   NS_IMETHOD GetTableSize(nsIDOMElement *aTable, PRInt32& aRowCount, PRInt32& aColCount);
-  NS_IMETHOD GetCellAt(nsIDOMElement* aTable, PRInt32 aRowIndex, PRInt32 aColIndex, nsIDOMElement* &aCell);
-  NS_IMETHOD GetCellDataAt(nsIDOMElement* aTable, PRInt32 aRowIndex, PRInt32 aColIndex, nsIDOMElement* &aCell,
+  NS_IMETHOD GetCellAt(nsIDOMElement* aTable, PRInt32 aRowIndex, PRInt32 aColIndex, nsIDOMElement **aCell);
+  NS_IMETHOD GetCellDataAt(nsIDOMElement* aTable, PRInt32 aRowIndex, PRInt32 aColIndex, nsIDOMElement **aCell,
                            PRInt32& aStartRowIndex, PRInt32& aStartColIndex,
                            PRInt32& aRowSpan, PRInt32& aColSpan, 
                            PRInt32& aActualRowSpan, PRInt32& aActualColSpan, 
                            PRBool& aIsSelected);
-  NS_IMETHOD GetFirstRow(nsIDOMElement* aTableElement, nsIDOMElement* &aRow);
-  NS_IMETHOD GetNextRow(nsIDOMElement* aTableElement, nsIDOMElement* &aRow);
+  NS_IMETHOD GetFirstRow(nsIDOMElement* aTableElement, nsIDOMNode** aRowNode);
+  NS_IMETHOD GetNextRow(nsIDOMNode* aCurrentRowNode, nsIDOMNode** aRowNode);
+  NS_IMETHOD GetFirstCellInRow(nsIDOMNode* aRowNode, nsIDOMNode** aCellNode);
+  NS_IMETHOD GetNextCellInRow(nsIDOMNode* aCurrentCellNode, nsIDOMNode** aRowNode);
+  NS_IMETHOD GetLastCellInRow(nsIDOMNode* aRowNode, nsIDOMNode** aCellNode);
+
   NS_IMETHOD SetSelectionAfterTableEdit(nsIDOMElement* aTable, PRInt32 aRow, PRInt32 aCol, 
                                         PRInt32 aDirection, PRBool aSelected);
   NS_IMETHOD GetSelectedOrParentTableElement(nsIDOMElement* &aTableElement, nsString& aTagName, PRInt32 &aSelectedCount);
@@ -237,6 +241,8 @@ public:
   //   or calls into nsTextEditor to set the page background
   NS_IMETHOD SetBackgroundColor(const nsString& aColor);
   NS_IMETHOD SetBodyAttribute(const nsString& aAttr, const nsString& aValue);
+  // aTitle may be null or empty string to remove child contents of <title>
+  NS_IMETHOD SetDocumentTitle(const PRUnichar *aTitle);
 
   /* ------------ Overrides of nsEditor interface methods -------------- */
 
