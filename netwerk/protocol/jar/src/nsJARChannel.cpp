@@ -126,16 +126,16 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsJARDownloadObserver, nsIStreamObserver)
 #define NS_DEFAULT_JAR_BUFFER_MAX_SIZE          (256*1024)
 
 nsJARChannel::nsJARChannel()
-    : mContentType(nsnull),
-      mContentLength(-1),
-      mLoadAttributes(LOAD_NORMAL),
+    : mLoadAttributes(LOAD_NORMAL),
       mStartPosition(0),
       mReadCount(-1),
+      mContentType(nsnull),
+      mContentLength(-1),
       mJAREntry(nsnull),
-      mMonitor(nsnull),
       mBufferSegmentSize(NS_DEFAULT_JAR_BUFFER_SEGMENT_SIZE),
       mBufferMaxSize(NS_DEFAULT_JAR_BUFFER_MAX_SIZE),
-      mStatus(NS_OK)
+      mStatus(NS_OK),
+      mMonitor(nsnull)
 {
     NS_INIT_REFCNT();
 

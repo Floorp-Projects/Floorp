@@ -136,8 +136,9 @@ nsInputStreamIO::GetName(char* *aName)
 // nsStreamIOChannel methods:
 
 nsStreamIOChannel::nsStreamIOChannel()
-    : mContentType(nsnull), mContentLength(-1), mLoadAttributes(LOAD_NORMAL),
-      mBufferSegmentSize(0), mBufferMaxSize(0), mStatus(NS_OK)
+    : mContentType(nsnull), mContentLength(-1),
+      mBufferSegmentSize(0), mBufferMaxSize(0),
+      mLoadAttributes(LOAD_NORMAL), mStatus(NS_OK)
 {
     NS_INIT_REFCNT(); 
 }
