@@ -17,7 +17,7 @@
 
 DEPTH		= ../../..
 
-LIBRARY_NAME	= gmbaseunix
+LIBRARY_NAME	= gmbasemotif
 
 MODULE		= raptor
 
