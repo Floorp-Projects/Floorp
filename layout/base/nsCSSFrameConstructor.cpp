@@ -6480,10 +6480,11 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresShell* aPresShell,
       if (NS_STYLE_POSITION_ABSOLUTE == position->mPosition) {
         isAbsolutelyPositioned = PR_TRUE;
         geometricParent = aState.mAbsoluteItems.containingBlock;
-      }
-      if (NS_STYLE_POSITION_FIXED == position->mPosition) {
+      } else if (NS_STYLE_POSITION_FIXED == position->mPosition) {
         isFixedPositioned = PR_TRUE;
         geometricParent = aState.mFixedItems.containingBlock;
+      } else if (isFloating) {
+        geometricParent = aState.mFloatedItems.containingBlock;
       }
       nsIFrame* innerTable;
       rv = ConstructTableFrame(aPresShell, aPresContext, aState, aContent, 
