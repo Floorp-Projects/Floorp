@@ -978,4 +978,22 @@ nsContentSink::StartLayout(PRBool aIsFrameset)
       mRef = Substring(start, end);
     }
   }
+
+  if (!mRef.IsEmpty() || aIsFrameset) {
+    // Disable the scroll bars.
+    for (i = 0; i < ns; i++) {
+      nsIPresShell *shell = mDocument->GetShellAt(i);
+
+      nsIViewManager* vm = shell->GetViewManager();
+      if (vm) {
+        nsIView* rootView = nsnull;
+        vm->GetRootView(rootView);
+        nsCOMPtr<nsIScrollableView> sview(do_QueryInterface(rootView));
+
+        if (sview) {
+          sview->SetScrollPreference(nsScrollPreference_kNeverScroll);
+        }
+      }
+    }
+  }
 }

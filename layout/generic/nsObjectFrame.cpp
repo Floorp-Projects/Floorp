@@ -1770,7 +1770,10 @@ nsObjectFrame::Paint(nsIPresContext*      aPresContext,
           // first, lets find out how big the window is, in pixels
           nsIViewManager* vm = aPresContext->GetViewManager();
             if (vm) {
-            nsIWidget* win = vm->RootView()->GetWidget();
+              nsIView* view;
+              vm->GetRootView(view);
+              if (view) {
+                nsIWidget* win = view->GetWidget();
                 if (win) {
                   nsRect visibleRect;
                   win->GetBounds(visibleRect);         
@@ -1803,6 +1806,7 @@ nsObjectFrame::Paint(nsIPresContext*      aPresContext,
                   }
                 }
               }
+            }
 #endif
 
           inst->SetWindow(window);        

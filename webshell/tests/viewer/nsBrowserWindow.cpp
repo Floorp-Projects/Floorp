@@ -1157,7 +1157,11 @@ NS_IMETHODIMP nsBrowserWindow::ForceRefresh()
     nsCOMPtr<nsIViewManager> vm;
     shell->GetViewManager(getter_AddRefs(vm));
     if (vm) {
-      vm->UpdateView(vm->RootView(), NS_VMREFRESH_IMMEDIATE);
+      nsIView* root;
+      vm->GetRootView(root);
+      if (nsnull != root) {
+        vm->UpdateView(root, NS_VMREFRESH_IMMEDIATE);
+      }
     }
     NS_RELEASE(shell);
   }
@@ -2483,7 +2487,11 @@ DumpViewsRecurse(nsIDocShell* aDocShell, FILE* out)
       nsCOMPtr<nsIViewManager> vm;
       shell->GetViewManager(getter_AddRefs(vm));
       if (vm) {
-        vm->RootView()->List(out);
+        nsIView* root;
+        vm->GetRootView(root);
+        if (nsnull != root) {
+          root->List(out);
+        }
       }
       NS_RELEASE(shell);
     }

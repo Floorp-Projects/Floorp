@@ -125,12 +125,27 @@ nsView::~nsView()
   
   if (mViewManager)
   {
+    nsView *rootView = mViewManager->GetRootView();
+    
+    if (rootView)
+    {
       // Root views can have parents!
       if (mParent)
       {
         mViewManager->RemoveChild(this);
       }
 
+      if (rootView == this)
+      {
+        // Inform the view manager that the root view has gone away...
+        mViewManager->SetRootView(nsnull);
+      }
+    }
+    else if (mParent)
+    {
+      mParent->RemoveChild(this);
+    }
+    
     mViewManager = nsnull;
   }
   else if (mParent)
@@ -234,12 +249,7 @@ nsresult nsIView::Init(nsIViewManager* aManager,
 
 void nsIView::Destroy()
 {
-  // We don't want to tear down the root view when the viewport frame
-  // (which has the root view as its view) goes away. The root view will
-  // be deleted when the view manager dies.
-  if (!IsRoot()) {
-    delete this;
-  }
+  delete this;
 }
 
 NS_IMETHODIMP nsView::Paint(nsIRenderingContext& rc, const nsRect& rect,
@@ -739,7 +749,7 @@ nsresult nsView::GetDirtyRegion(nsIRegion*& aRegion)
 PRBool nsIView::IsRoot() const
 {
   NS_ASSERTION(mViewManager != nsnull," View manager is null in nsView::IsRoot()");
-  return mViewManager->RootView() == this;
+  return mViewManager->GetRootView() == this;
 }
 
 PRBool nsIView::ExternalIsRoot() const

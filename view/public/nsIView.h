@@ -183,8 +183,10 @@ public:
    *
    * The view destroys its child views, and destroys and releases its
    * widget (if it has one).
+   *
    * Also informs the view manager that the view is destroyed by calling
-   * RemoveChild() if the view is not the root view.
+   * SetRootView(NULL) if the view is the root view and calling RemoveChild()
+   * otherwise.
    */
   void Destroy();
 

@@ -478,9 +478,17 @@ GeometryTest::GeometryTest(BasicTest *aDoc)
     fprintf(out, "bad view manager");
     NS_ASSERTION(PR_FALSE, "bad view manager");
   }
-  vm->Init(pc, nsnull);
+  vm->Init(pc);
 
-  nsIView * rootView = vm->GetRootView();
+  nsIView * rootView = nsnull;
+
+  // Create a view
+  static NS_DEFINE_IID(kScrollingViewCID, NS_SCROLL_PORT_VIEW_CID);
+
+  status = nsComponentManager::CreateInstance(kScrollingViewCID, 
+                                        nsnull, 
+                                        NS_GET_IID(nsIView), 
+                                        (void **)&rootView);
 
   if ((NS_FAILED(status)) ||  nsnull==rootView)
   {
@@ -488,7 +496,9 @@ GeometryTest::GeometryTest(BasicTest *aDoc)
     NS_ASSERTION(PR_FALSE, "bad view");
   }
   nsRect bounds(0, 0, 10000, 10000);
-  vm->ResizeView(rootView, bounds);
+  rootView->Init(vm, bounds, nsnull);
+
+  vm->SetRootView(rootView);
 
   nsCOMPtr<nsIStyleSet> ss(do_CreateInstance(kStyleSetCID,&status));
   if ((NS_FAILED(status)))
@@ -556,7 +566,7 @@ void GeometryTest::CreateGeometry(BasicTest * aDoc, nsIPresContext *aPC)
       fprintf(out, "bad view manager");
       NS_ASSERTION(PR_FALSE, "");
     }
-    nsIView* rootView = mViewManager->RootView();
+    nsIView* rootView = mViewManager->GetRootView();
     NS_ASSERTION(nsnull!=rootView, "bad root view");
     mRootFrame->SetView(rootView);
     NS_RELEASE(rootView);

@@ -50,7 +50,6 @@ struct nsRect;
 class nsRegion;
 class nsIDeviceContext;
 class nsIViewObserver;
-class nsView;
 
 enum nsRectVisibility { 
   nsRectVisibility_kVisible, 
@@ -71,20 +70,35 @@ class nsIViewManager : public nsISupports
 public:
 
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IVIEWMANAGER_IID)
-
   /**
    * Initialize the ViewManager
    * Note: this instance does not hold a reference to the viewobserver
    * because it holds a reference to this instance.
-   * This constructs the root view with the given parent.
+   * @result The result of the initialization, NS_OK if no errors
    */
-  virtual nsresult Init(nsIDeviceContext* aContext, nsIView *aParent) = 0;
+  NS_IMETHOD  Init(nsIDeviceContext* aContext) = 0;
 
   /**
    * Get the root of the view tree.
    * @result the root view
    */
-  nsIView* RootView() { return mRootView; }
+  NS_IMETHOD  GetRootView(nsIView *&aView) = 0;
+
+  /**
+   * Set the root of the view tree. Does not destroy the current root view.
+   * aView may have a parent view managed by a different view manager.
+   * aView may have a widget (anything but printing) or may not (printing).
+   * @param aView view to set as root
+   */
+  NS_IMETHOD  SetRootView(nsIView *aView) = 0;
+
+  /**
+   * Get the dimensions of the root window. The dimensions are in
+   * twips
+   * @param aWidth out parameter for width of window in twips
+   * @param aHeight out parameter for height of window in twips
+   */
+  NS_IMETHOD  GetWindowDimensions(nscoord *aWidth, nscoord *aHeight) = 0;
 
   /**
    * Set the dimensions of the root window.
@@ -496,8 +510,6 @@ public:
                                PRUint16 aMinTwips, 
                                nsRectVisibility *aRectVisibility)=0;
 
- protected:
-  nsIView* mRootView;
 };
 
 //update view now?
