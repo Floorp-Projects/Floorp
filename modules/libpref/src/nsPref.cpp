@@ -250,6 +250,7 @@ nsPref::nsPref()
 nsPref::~nsPref()
 //----------------------------------------------------------------------------------------
 {
+    ShutDown();
     PR_AtomicDecrement(&g_InstanceCount);
     gInstance = NULL;
 }
