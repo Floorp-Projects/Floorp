@@ -85,5 +85,3 @@ interface nsIProfile : nsISupports {
     void deleteProfile(in wstring name, in boolean canDeleteFiles);
     void cloneProfile(in wstring profileName);
 };
-
-#endif /* nsIProfile_h__ */

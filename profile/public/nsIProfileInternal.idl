@@ -152,5 +152,3 @@ interface nsIProfileInternal : nsIProfile {
     [noscript] void getCurrentProfileDir(out nsIFile profileDir);
 
 };
-
-#endif /* nsIProfileInternal_h__ */

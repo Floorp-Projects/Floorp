@@ -57,5 +57,3 @@ interface nsIProfileStartupListener : nsISupports {
     void onProfileStartup(in wstring profileName);
 
 };
-
-#endif /* nsIProfile_Startup_Listener_h__ */
