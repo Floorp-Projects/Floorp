@@ -15,6 +15,14 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
+##########################################################################
+#
+# Name:			Makefile
+# Description:	Makefile for Xfe widgets test programs.
+# Author:		Ramiro Estrugo <ramiro@netscape.com>
+#
+##########################################################################
+
 DEPTH			= ../../../../..
 
 ifdef XFE_WIDGETS_BUILD_UNUSED

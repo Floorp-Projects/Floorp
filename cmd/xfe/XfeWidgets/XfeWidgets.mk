@@ -176,12 +176,6 @@ else
 endif
 
 ##
-## Initialize the shared and static libs
-##
-XFE_SHARED_LIBS			=
-XFE_STATIC_LIBS			=
-
-##
 ## XfeTest required ?
 ##
 ifeq ($(filter $(REQUIRES),$(XFE_TEST_REQUIRES)),$(XFE_TEST_REQUIRES))
