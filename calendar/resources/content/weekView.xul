@@ -51,13 +51,10 @@
 
 <overlay
    xmlns:html="http://www.w3.org/1999/xhtml"
-   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-   >
+   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
    <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
-	<script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
+   <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
    <script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
-   <script type="application/x-javascript" src="chrome://global/content/nsJSSupportsUtils.js"/>
-   <script type="application/x-javascript" src="chrome://global/content/nsJSComponentManager.js"/>
    <script type="application/x-javascript" src="chrome://calendar/content/weekView.js"/>
    
    <script type="application/x-javascript">
