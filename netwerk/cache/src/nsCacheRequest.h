@@ -53,8 +53,11 @@ private:
         PR_INIT_CLIST(&mListLink);
     }
     
-    virtual ~nsCacheRequest();
-    
+    virtual ~nsCacheRequest()
+    {
+        delete mKey;
+        // XXX need to do anything with mListLink?
+    }
     
 
     PRCList*                GetListNode(void)    { return &mListLink;   }

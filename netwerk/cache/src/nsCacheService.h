@@ -32,8 +32,8 @@
 #include "nsCacheSession.h"
 #include "nsCacheDevice.h"
 #include "nsCacheEntry.h"
-#include "nsCacheRequest.h"
 
+class nsCacheRequest;
 
 class nsCacheDeviceElement {
 private:

@@ -37,7 +37,7 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSICACHESESSION
     
-    nsCacheSession(const char * clientID, PRInt32 storagePolicy, PRBool streamBased);
+    nsCacheSession(const char * clientID, nsCacheStoragePolicy storagePolicy, PRBool streamBased);
     virtual ~nsCacheSession();
     
     nsCString *           ClientID()      { return &mClientID; }
@@ -45,9 +45,9 @@ public:
     PRBool                StreamBased()   { return mStreamBased; }
 
 private:
-    nsCString     mClientID;
-    PRInt32       mStoragePolicy;
-    PRBool        mStreamBased;
+    nsCString               mClientID;
+    nsCacheStoragePolicy    mStoragePolicy;
+    PRBool                  mStreamBased;
 };
 
 #endif // _nsCacheSession_h_
