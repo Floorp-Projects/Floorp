@@ -58,6 +58,7 @@ box.header-part3           { background-color: #CCCCCC; border: none; }
 image.emailDisplayImage
 {
   align: right;
+  display: inline;
 }
 
 text.emailSeparator {
@@ -69,14 +70,15 @@ text.emailDisplayButton {
   text-decoration: underline;
   cursor: pointer;
   max-height: 15px;
+  display: inline;
 }
 
-button.showMoreAddressesButton {
+image.showMoreAddressesButton {
   list-style-image:url("chrome://messenger/skin/more.gif");
   display: inline;
 }
 
-button.showFewerAddressesButton {
+image.showFewerAddressesButton {
   list-style-image:url("chrome://messenger/skin/less.gif");
   display: inline;
 }
