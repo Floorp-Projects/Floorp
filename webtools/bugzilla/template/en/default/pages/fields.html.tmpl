@@ -53,45 +53,58 @@ cycle of [% terms.abug %].
   <tr valign="top">
     <td>
       <dl>
-        <dt><b>UNCONFIRMED</b></dt>
-
-        <dd>This [% terms.bug %] has recently been added to the database. 
-        Nobody has validated that this [% terms.bug %] is true. Users who have
-        the "canconfirm" permission set may confirm this [% terms.bug %], 
-        changing its state to NEW. Or, it may be directly resolved and marked 
-        RESOLVED.</dd>
-
-        <dt><b>NEW</b></dt>
-
-        <dd>This [% terms.bug %] has recently been added to the assignee's list 
-        of [% terms.bugs %] and must be processed. [% terms.Bugs %] in this 
-        state may be accepted, and become <b>ASSIGNED</b>, passed on to someone 
-        else, and remain <b>NEW</b>, or resolved and marked <b>RESOLVED</b>.
+        <dt>
+          <b>UNCONFIRMED</b>
+        </dt>
+        <dd>
+          This [% terms.bug %] has recently been added to the database. 
+          Nobody has validated that this [% terms.bug %] is true. Users
+          who have the "canconfirm" permission set may confirm
+          this [% terms.bug %], changing its state to NEW. Or, it may be
+          directly resolved and marked RESOLVED.
         </dd>
 
-        <dt><b>ASSIGNED</b></dt>
-
-        <dd>This [% terms.bug %] is not yet resolved, but is assigned to the 
-        proper person. From here [% terms.bugs %] can be given to another 
-        person and become <b>NEW</b>, or resolved and become <b>RESOLVED</b>.
+        <dt>
+          <b>NEW</b>
+        </dt>
+        <dd>
+          This [% terms.bug %] has recently been added to the assignee's
+          list of [% terms.bugs %] and must be processed. [% terms.Bugs %] in
+          this state may be accepted, and become <b>ASSIGNED</b>, passed
+          on to someone else, and remain <b>NEW</b>, or resolved and marked
+          <b>RESOLVED</b>.
         </dd>
 
-        <dt><b>REOPENED</b></dt>
+        <dt>
+          <b>ASSIGNED</b>
+        </dt>
+        <dd>
+          This [% terms.bug %] is not yet resolved, but is assigned to the 
+          proper person. From here [% terms.bugs %] can be given to another 
+          person and become <b>NEW</b>, or resolved and become <b>RESOLVED</b>.
+        </dd>
 
-        <dd>This [% terms.bug %] was once resolved, but the resolution was 
-        deemed incorrect. For example, a <b>WORKSFORME</b> [% terms.bug %] is 
-        <b>REOPENED</b> when more information shows up and the [% terms.bug %]
-        is now reproducible. From here [% terms.bugs %] are either marked 
-        <b>ASSIGNED</b> or <b>RESOLVED</b>.</dd>
+        <dt>
+          <b>REOPENED</b>
+        </dt>
+        <dd>
+          This [% terms.bug %] was once resolved, but the resolution was 
+          deemed incorrect. For example, a <b>WORKSFORME</b> [% terms.bug %] is
+          <b>REOPENED</b> when more information shows up and
+          the [% terms.bug %] is now reproducible. From here [% terms.bugs %] are
+          either marked <b>ASSIGNED</b> or <b>RESOLVED</b>.
+        </dd>
       </dl>
     </td>
 
     <td>
       <dl>
-        <dd>No resolution yet. All [% terms.bugs %] which are in one of 
-        these "open" states have the resolution set to blank. All 
-        other [% terms.bugs %] will be marked with one of the following 
-        resolutions.</dd>
+        <dd>
+          No resolution yet. All [% terms.bugs %] which are in one of 
+          these "open" states have the resolution set to blank. All 
+          other [% terms.bugs %] will be marked with one of the following 
+          resolutions.
+        </dd>
       </dl>
     </td>
   </tr>
@@ -99,63 +112,92 @@ cycle of [% terms.abug %].
   <tr valign="top">
     <td>
       <dl>
-        <dt><b>RESOLVED</b></dt>
+        <dt>
+          <b>RESOLVED</b>
+        </dt>
+        <dd>
+          A resolution has been taken, and it is awaiting verification by
+          QA. From here [% terms.bugs %] are either re-opened and become 
+          <b>REOPENED</b>, are marked <b>VERIFIED</b>, or are closed for
+          good and marked <b>CLOSED</b>.
+        </dd>
 
-        <dd>A resolution has been taken, and it is awaiting verification by
-        QA. From here [% terms.bugs %] are either re-opened and become 
-        <b>REOPENED</b>, are marked <b>VERIFIED</b>, or are closed for good 
-        and marked <b>CLOSED</b>.</dd>
+        <dt>
+          <b>VERIFIED</b>
+        </dt>
+        <dd>
+          QA has looked at the [% terms.bug %] and the resolution and 
+          agrees that the appropriate resolution has been taken. [% terms.Bugs %] remain
+          in this state until the product they were reported
+          against actually ships, at which point they become
+          <b>CLOSED</b>.
+        </dd>
 
-        <dt><b>VERIFIED</b></dt>
-
-        <dd>QA has looked at the [% terms.bug %] and the resolution and 
-        agrees that the appropriate resolution has been taken. [% terms.Bugs %]
-        remain in this state until the product they were reported against 
-        actually ships, at which point they become <b>CLOSED</b>.</dd>
-
-        <dt><b>CLOSED</b></dt>
-
-        <dd>The [% terms.bug %] is considered dead, the resolution is correct. 
-        Any zombie [% terms.bugs %] who choose to walk the earth again must 
-        do so by becoming <b>REOPENED</b>.</dd>
+        <dt>
+          <b>CLOSED</b>
+        </dt>
+        <dd>
+          The [% terms.bug %] is considered dead, the resolution is correct. 
+          Any zombie [% terms.bugs %] who choose to walk the earth again must 
+          do so by becoming <b>REOPENED</b>.
+        </dd>
       </dl>
     </td>
 
     <td>
       <dl>
-        <dt><b>FIXED</b></dt>
+        <dt>
+          <b>FIXED</b>
+        </dt>
+        <dd>
+          A fix for this [% terms.bug %] is checked into the tree and 
+          tested.
+        </dd>
 
-        <dd>A fix for this [% terms.bug %] is checked into the tree and 
-        tested.</dd>
+        <dt>
+          <b>INVALID</b>
+        </dt>
+        <dd>
+          The problem described is not [% terms.abug %].
+        </dd>
 
-        <dt><b>INVALID</b></dt>
+        <dt>
+          <b>WONTFIX</b>
+        </dt>
+        <dd>
+          The problem described is [% terms.abug %] which will never be 
+          fixed.
+        </dd>
 
-        <dd>The problem described is not [% terms.abug %]</dd>
+        <dt>
+         <b>DUPLICATE</b>
+        </dt>
+        <dd>
+          The problem is a duplicate of an existing [% terms.bug %].
+          Marking [% terms.abug %] duplicate requires the [% terms.bug %]#
+          of the duplicating [% terms.bug %] and will at least put
+          that [% terms.bug %] number in the description field.
+        </dd>
 
-        <dt><b>WONTFIX</b></dt>
+        <dt>
+          <b>WORKSFORME</b>
+        </dt>
+        <dd>
+          All attempts at reproducing this [% terms.bug %] were futile, 
+          and reading the code produces no clues as to why the described
+          behavior would occur. If more information appears later,
+          the [% terms.bug %] can be reopened.
+        </dd>
 
-        <dd>The problem described is [% terms.abug %] which will never be 
-        fixed.</dd>
-
-        <dt><b>DUPLICATE</b></dt>
-
-        <dd>The problem is a duplicate of an existing [% terms.bug %]. Marking 
-        [% terms.abug %] duplicate requires the [% terms.bug %]# of the 
-        duplicating [% terms.bug %] and will at least put that [% terms.bug %] 
-        number in the description field.</dd>
-
-        <dt><b>WORKSFORME</b></dt>
-
-        <dd>All attempts at reproducing this [% terms.bug %] were futile, 
-        reading the code produces no clues as to why this behavior would occur. 
-        If more information appears later, please re-assign 
-        the [% terms.bug %], for now, file it.</dd>
-
-        <dt><b>MOVED</b></dt>
-
-        <dd>The problem was specific to a related product 
-        whose [% terms.bugs %] are tracked in another [% terms.bug %] database. 
-        The [% terms.bug %] has been moved to that database.</dd>
+        <dt>
+          <b>MOVED</b>
+        </dt>
+        <dd>
+          The problem was specific to a related product 
+          whose [% terms.bugs %] are tracked in
+          another [% terms.bug %] database.
+          The [% terms.bug %] has been moved to that database.
+        </dd>
       </dl>
     </td>
   </tr>
