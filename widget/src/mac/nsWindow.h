@@ -153,6 +153,8 @@ public:
     NS_IMETHOD 				SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight);
     
     NS_IMETHOD  			SetCursor(nsCursor aCursor);
+    
+    NS_IMETHOD         CaptureRollupEvents(nsIRollupListener * aListener, PRBool aDoCapture);
   
     // Mac specific methods
     void 					nsRectToMacRect(const nsRect& aRect, Rect& aMacRect) const;

@@ -29,6 +29,11 @@
 #include <TextServices.h>
 #include <UnicodeConverter.h>
 #include <Script.h>
+#include "nsIRollupListener.h"
+
+extern nsIRollupListener * gRollupListener;
+extern nsIWidget         * gRollupWidget;
+
 
 // from MacHeaders.c
 #ifndef topLeft
@@ -137,10 +142,14 @@ PRBool nsMacEventHandler::HandleOSEvent ( EventRecord& aOSEvent )
 			unsigned char eventType = ((aOSEvent.message >> 24) & 0x00ff);
 			if (eventType == suspendResumeMessage)
 			{
-				if ((aOSEvent.message & 1) == resumeFlag)
+				if ((aOSEvent.message & 1) == resumeFlag) {
 					mInBackground = PR_FALSE;		// resume message
-				else
+				} else {
 					mInBackground = PR_TRUE;		// suspend message
+					if (nsnull != gRollupListener && (nsnull != gRollupWidget) ) {
+						gRollupListener->Rollup();
+					}
+				}
 			}
 			else {
 				if (! mInBackground)
@@ -753,6 +762,11 @@ PRBool nsMacEventHandler::HandleActivateEvent(EventRecord& aOSEvent)
 		}
 		else
 		{
+
+			if (nsnull != gRollupListener && (nsnull != gRollupWidget) ) {
+				if( mTopLevelWidget == gRollupWidget)
+				gRollupListener->Rollup();
+			}
 			//
 			// Deactivate the TSMDocument assoicated with this EventHandler
 			//
@@ -818,6 +832,9 @@ PRBool nsMacEventHandler::HandleMouseDownEvent(
 #endif
 			::LocalToGlobal(&macPoint);
 			mTopLevelWidget->Move(macPoint.h, macPoint.v);
+			if (nsnull != gRollupListener && (nsnull != gRollupWidget) ) {
+				gRollupListener->Rollup();
+			}
 			break;
 		}
 
@@ -832,11 +849,17 @@ PRBool nsMacEventHandler::HandleMouseDownEvent(
 			::LocalToGlobal(&topLeft(macRect));
 			::LocalToGlobal(&botRight(macRect));
 			mTopLevelWidget->Resize(macRect.right - macRect.left + 1, macRect.bottom - macRect.top + 1, PR_FALSE);
+			if (nsnull != gRollupListener && (nsnull != gRollupWidget) ) {
+				gRollupListener->Rollup();
+			}
 			break;
 		}
 
 		case inGoAway:
 		{
+			if (nsnull != gRollupListener && (nsnull != gRollupWidget) ) {
+				gRollupListener->Rollup();
+			}
 			mTopLevelWidget->Destroy();
 			break;
 		}
@@ -846,8 +869,21 @@ PRBool nsMacEventHandler::HandleMouseDownEvent(
 			nsMouseEvent mouseEvent;
 			ConvertOSEventToMouseEvent(aOSEvent, mouseEvent, NS_MOUSE_LEFT_BUTTON_DOWN);
 			nsWindow* widgetHit = (nsWindow*)mouseEvent.widget;
-			if (widgetHit)
-			{
+			if (widgetHit){
+			
+#ifdef NOTNOW
+				if (nsnull != gRollupListener && (nsnull != gRollupWidget) ) {
+					nsRect	widgetRect,newrect;
+					Point macPoint = aOSEvent.where;			
+						
+						widgetHit->GetBounds(widgetRect);
+						widgetHit->WidgetToScreen(widgetRect,newrect);
+						if( macPoint.h < newrect.x ||  macPoint.h > newrect.XMost() ||  
+								macPoint.v < newrect.y ||  macPoint.v > newrect.YMost() ) {
+							gRollupListener->Rollup();
+						}
+				}
+#endif
 				// set the focus on the widget hit, if it accepts it
 				if (widgetHit->AcceptFocusOnClick())
 				{
@@ -858,8 +894,8 @@ PRBool nsMacEventHandler::HandleMouseDownEvent(
 
 				// dispatch the event
 				retVal = widgetHit->DispatchMouseEvent(mouseEvent);
-			}
-
+			} 
+						
 			if (mLastWidgetHit)
 				mLastWidgetHit->RemoveDeleteObserver(this);
 

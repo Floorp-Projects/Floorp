@@ -40,6 +40,13 @@
 #include "nsMacEventHandler.h"
 #include "nsMacResources.h"
 #include "nsRegionMac.h"
+#include "nsIRollupListener.h"
+
+
+////////////////////////////////////////////////////
+nsIRollupListener * gRollupListener = nsnull;
+nsIWidget         * gRollupWidget   = nsnull;
+
 
 #pragma mark -
 
@@ -1798,4 +1805,22 @@ void  nsWindow::ConvertToDeviceCoordinates(nscoord &aX, nscoord &aY)
 
 	aX += offX;
 	aY += offY;
+}
+
+NS_IMETHODIMP nsWindow::CaptureRollupEvents(nsIRollupListener * aListener, PRBool aDoCapture)
+{
+  if (aDoCapture) {
+    NS_IF_RELEASE(gRollupListener);
+    NS_IF_RELEASE(gRollupWidget);
+    gRollupListener = aListener;
+    NS_ADDREF(aListener);
+    gRollupWidget = this;
+    NS_ADDREF(this);
+  } else {
+    NS_IF_RELEASE(gRollupListener);
+    //gRollupListener = nsnull;
+    NS_IF_RELEASE(gRollupWidget);
+  }
+
+  return NS_OK;
 }
