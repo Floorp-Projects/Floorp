@@ -399,7 +399,7 @@ public:
         NS_ADDREF(mDescriptor = descriptor);
     }
     
-    ~nsCacheOutputStream()
+    virtual ~nsCacheOutputStream()
     {
         NS_RELEASE(mDescriptor);
     }
