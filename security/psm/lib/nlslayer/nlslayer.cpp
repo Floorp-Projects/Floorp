@@ -213,10 +213,10 @@ extern "C" PRBool nlsUnicodeToUTF8(unsigned char * inBuf, unsigned int inBufByte
 							unsigned char * outBuf, unsigned int maxOutBufLen,
 							unsigned int * outBufLen)
 {
-	char *utf8;
+	const char *utf8;
 	PRBool ret = PR_TRUE;
 	
-	utf8 = NS_ConvertUCS2toUTF8((PRUnichar*)inBuf, inBufBytes/2);
+	utf8 = NS_ConvertUCS2toUTF8((PRUnichar*)inBuf, inBufBytes/2).get();
 	*outBufLen = PL_strlen(utf8);
 	if (*outBufLen+1 > maxOutBufLen) {
 		ret = PR_FALSE;
