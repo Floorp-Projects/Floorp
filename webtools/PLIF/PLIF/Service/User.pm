@@ -33,6 +33,11 @@ use PLIF::Service::Session;
 @ISA = qw(PLIF::Service::Session);
 1;
 
+# This class implements an object and its associated factory service.
+# Compare this with the UserFieldFactory class which implements a
+# factory service only, and the various UserField descendant classes
+# which implement Service Instances.
+
 # XXX It would be interesting to implement crack detection (time since
 # last incorrect login, number of login attempts performed with time
 # since last incorrect login < a global delta, address changing
@@ -97,7 +102,7 @@ sub objectInit {
     $self->fields({});
     $self->fieldsByID({});
     # don't forget to update the 'hash' function if you add more fields
-    my $fieldFactory = $app->getService('user.field.factory');
+    my $fieldFactory = $app->getService('user.fieldFactory');
     foreach my $fieldID (keys($fields)) {
         $self->insertField($fieldFactory->createFieldByID($app, $self, $fieldID, $fields->{$fieldID}));
     }
@@ -126,9 +131,7 @@ sub getField {
     my($category, $name) = @_;
     my $field = $self->hasField($category, $name);
     if (not defined($field)) {
-        my $field = $fieldFactory->createFieldByName($app, $self, $fieldCategory, $fieldName);
-        $self->fields->{$field->category}->{$field->name} = $field;
-        $self->fieldsByID->{$field->fieldID} = $field;        
+        $field = $self->insertField($fieldFactory->createFieldByName($app, $self, $fieldCategory, $fieldName));
     }
     return $field;
 }
@@ -170,8 +173,7 @@ sub prepareAddressChange {
 sub prepareAddressAddition {
     my $self = shift;
     my($fieldName, $newAddress, $password) = @_;
-    my $field = $self->insertField($self->app->getService('user.field.factory')->createFieldByName($self->app, $self, 'contact', $fieldName, undef));
-
+    my $field = $self->insertField($self->app->getService('user.fieldFactory')->createFieldByName($self->app, $self, 'contact', $fieldName, undef));
     if ($field->validate($newAddress)) {
         $self->newFieldID($field->fieldID);
         $self->newFieldValue($newAddress);
@@ -214,7 +216,19 @@ sub resetAddressChange {
 
 sub hash {
     my $self = shift;
-    return %$self; # XXX should expand fields too
+    my $result = {
+        'userID' => $self->userID,
+        'disabled' => $self->disabled,
+        'adminMessage' => $self->adminMessage,
+        'fields' => {},
+        'groups' => $self->groups,
+        'rights' => keys(%{$self->rights});
+    };
+    foreach my $field (values(%{$self->fieldsByID})) {
+        $result->{'fields'}->{$field->fieldID} = $field->data;
+        $result->{'fields'}->{$field->category.':'.$field->name} = $field->data;
+    }
+    return $result;
 }
 
 sub checkPassword {
@@ -226,7 +240,7 @@ sub checkPassword {
 sub joinGroup {
     my $self = shift;
     my($groupID) = @_;
-    $self->{'groups'}->{$groupID} = XXX;
+    $self->{'groups'}->{$groupID} = $self->app->getService('dataSource.user')->getGroupName($self->app, $groupID);
     $self->invalidateRights();
     $self->{'_DIRTY'}->{'groups'} = 1;
 }
@@ -241,7 +255,13 @@ sub leaveGroup {
 
 sub invalidateRights {
     my $self = shift;
-    # XXX redo all the rights
+    my $rights = $self->app->getService('dataSource.user')->getRights($self->app, keys(%{$self->{'groups'}}));
+    $self->rights(map {$_ => 1} @$rights); # map a list of strings into a hash for easy access
+    # don't set a dirty flag, because rights are merely a convenient
+    # cached expansion of the rights data. Changing this externally
+    # makes no sense -- what rights one has is dependent on what
+    # groups one is in, and changing the rights won't magically change
+    # what groups you are in.
 }
 
 sub propertySet {
@@ -278,11 +298,15 @@ sub DESTROY {
 }
 
 sub writeProperties {
-    # XXX
+    my $self = shift;
+    $self->app->getService('dataSource.user')->setUser($elf->app, $self->userID, $self->disabled, 
+                                                       $self->password, $self->adminMessage, 
+                                                       $self->newFieldID, $self->newFieldValue, $self->newFieldKey);
 }
 
 sub writeGroups {
-    # XXX
+    my $self = shift;
+    $self->app->getService('dataSource.user')->setUserGroups($self->app, $self->userID, keys(%{$self->{'groups'}}));
 }
 
 # fields write themselves out

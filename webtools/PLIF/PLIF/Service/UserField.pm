@@ -33,28 +33,34 @@ use PLIF::Service;
 @ISA = qw(PLIF::Service);
 1;
 
+# This class implements a service instance -- you should never call
+# getService() to obtain a copy of this class or its descendants.
+
 sub provides {
     my $class = shift;
     my($service) = @_;
-    return ($service eq 'user.field.'.$class->category.'.'.$class->type or $class->SUPER::provides($service));
+    return ($service eq 'user.field.'.$class->type or $class->SUPER::provides($service));
 }
+
+# the 'data' field of field descriptions means different things
+# depending on the category. For 'contact' category user fields, it
+# represents a string that is prefixed to the data of the user field
+# to obtain the username that should be used for this user field.
 
 sub init {
     my $self = shift;
-    my($app, $user, $fieldID, $fieldTypeData, $fieldName, $fieldData) = @_;
+    my($app, $user, $fieldID, $fieldTypeData, $fieldCategory, $fieldName, $fieldData) = @_;
     # do not hold on to $user!
+    $self->app($app);
     $self->userID($user->userID); # change this at your peril
     $self->fieldID($fieldID); # change this at your peril
     $self->typeData($fieldTypeData); # change this at your peril
+    $self->category($fieldCategory); # change this at your peril
     $self->name($fieldName); # change this at your peril
     $self->data($fieldData); # this is the only thing you should be changing
     # don't forget to update the user's 'hash' function if you add more fields
+    $self->{'_DELETE'} = 0;
     $self->{'_DIRTY'} = 0;
-}
-
-sub category {
-    my $self = shift;
-    $self->notImplemented();
 }
 
 sub type {
@@ -66,20 +72,20 @@ sub validate {
     return 1;
 }
 
+# contact fields have usernames made of the field type data part
+# followed by the field data itself
+sub username {
+    my $self = shift;
+    $self->assert($self->category eq 'contact', 1, 'Tried to get the username from the non-contact field \''.($self->fieldID).'\'');
+    return $self->typeData.$self->data;
+}
+
 # deletes this field from the database
 sub remove {
     my $self = shift;
     $self->{'_DELETE'} = 1;
     $self->{'_DIRTY'} = 1;
 }
-
-# Contact fields should generate usernames (for their 'username'
-# member function) with the syntax "ServiceName: username" e.g., my
-# AIM username would be "AIM: HixieDaPixie". Services are fully
-# allowed to make an exception to this if they have very
-# distinguishable username syntaxes, for example e-mail addresses
-# should be returned "raw", as in "ian@hixie.ch" and not "E-MAIL:
-# ian@hixie.ch".
 
 sub propertySet {
     my $self = shift;
@@ -97,7 +103,10 @@ sub DESTROY {
 }
 
 sub write {
-    # XXX
-    # check $self->{'_DELETE'} to see if we have to remove it altogether
-    # otherwise, commit the changes
+    my $self = shift;
+    if ($self->{'_DELETE'}) {
+        $self->app->getService('dataSource.user')->removeUserField($elf->app, $self->userID, $self->fieldID);
+    } else {
+        $self->app->getService('dataSource.user')->setUserField($elf->app, $self->userID, $self->fieldID, $self->data);
+    }
 }

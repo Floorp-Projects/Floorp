@@ -26,23 +26,15 @@
 # provisions above, a recipient may use your version of this file
 # under either the MPL or the GPL.
 
-package PLIF::Service::UserField::Generic;
+package PLIF::Service::UserField::String;
 use strict;
 use vars qw(@ISA);
 use PLIF::Service::UserField;
 @ISA = qw(PLIF::Service::UserField);
 1;
 
-sub provides {
-    my $class = shift;
-    my($service) = @_;
-    return ($service =~ /^user\.field\.[^.]+\.[^.]+$/ or $class->SUPER::provides($service));
-}
-
-sub category {
-    return 'generic';
-}
-
 sub type {
-    return 'generic';
+    return 'string';
 }
+
+# XXX anything else required here?

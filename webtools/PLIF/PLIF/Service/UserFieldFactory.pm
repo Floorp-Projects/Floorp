@@ -36,17 +36,30 @@ use PLIF::Service;
 sub provides {
     my $class = shift;
     my($service) = @_;
-    return ($service eq 'user.field.factory' or $class->SUPER::provides($service));
+    return ($service eq 'user.fieldFactory' or $class->SUPER::provides($service));
 }
 
+# Field Factory
+#
+# The factory methods below should return service instances (not
+# objects or pointers to services in the controller's service
+# list!). These service instances should provide the 'user.field.X'
+# service where 'X' is a field type. The field type should be
+# determined from the fieldID or fieldCategory.fieldName identifiers
+# passed to the factory methods.
+
+# typically used when the data comes from the database
 sub createFieldByID {
     my $self = shift;
     my($app, $user, $fieldID, $fieldData) = @_;
     return undef; # XXX
 }
 
+# typically used when the field is being created
 sub createFieldByName {
     my $self = shift;
     my($app, $user, $fieldCategory, $fieldName, $fieldData) = @_;
+    # fieldData is likely to be undefined, as the field is unlikely to
+    # exist for this user.
     return undef; # XXX
 }

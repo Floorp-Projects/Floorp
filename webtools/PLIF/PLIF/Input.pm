@@ -74,7 +74,7 @@ sub peekArgument {
     return undef;
 }
 
-# 'username' and 'password' are two out of bands arguments that may be
+# 'username' and 'password' are two out of band arguments that may be
 # provided as well, they are accessed as properties of the input
 # object (e.g., |if (defined($input->username)) {...}|).  Input
 # services that have their own username syntaxes (e.g. AIM, ICQ)

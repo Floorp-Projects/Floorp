@@ -55,6 +55,11 @@ sub getUserByUsername {
 sub getUserIDByUsername {
     my $self = shift;
     my($app, $username) = @_;
+    # the username for a user field is created by appending the 'data'
+    # of the user field to the type data of the field description. For
+    # example, for the field 'contact.icq', the type data field might
+    # contain the string 'ICQ:' and the user field might be '55378571'
+    # making the username 'ICQ:55378571'.
     $self->notImplemented();
     # return userID
 }
@@ -83,12 +88,19 @@ sub setUserField
     $self->notImplemented();
 }
 
+sub removeUserField
+    my $self = shift;
+    my($app, $userID, $fieldID) = @_;
+    $self->notImplemented();
+}
+
 sub setUserGroups
     my $self = shift;
     my($app, $userID, @groupIDs) = @_;
     $self->notImplemented();
 }
 
+# returns the userDataTypes table, basically...
 sub getFields {
     my $self = shift;
     my($app) = @_;
@@ -96,11 +108,33 @@ sub getFields {
     # return [fieldID, category, name, type, data]*
 }
 
+sub getFieldFromID {
+    my $self = shift;
+    my($app, $fieldID) = @_;
+    $self->notImplemented();
+    # return [fieldID, category, name, type, data]
+}
+
+sub getFieldFromCategoryAndName {
+    my $self = shift;
+    my($app, $category, $name) = @_;
+    $self->notImplemented();
+    # return [fieldID, category, name, type, data]
+}
+
 sub setField {
     my $self = shift;
     my($app, $fieldID, $category, $name, $type, $data) = @_;
     # if fieldID is undefined, then add a new entry and return the
     # fieldID. Typically data will be undefined then too.
+    $self->notImplemented();
+}
+
+sub removeField {
+    my $self = shift;
+    my($app, $fieldID) = @_;
+    # This should handle the case where the field to be removed is
+    # still referenced by some users
     $self->notImplemented();
 }
 
@@ -120,8 +154,12 @@ sub getGroupName {
 
 sub setGroup {
     my $self = shift;
-    my($app, $groupID, @rightNames) = @_;
-    # if groupID is undefined, yada yada.
+    my($app, $groupID, $groupName, @rightNames) = @_;
+    # If groupID is undefined, then add a new entry and return the new
+    # groupID. If groupName is undefined, then leave it as is. If both
+    # groupID and groupName are undefined, there is an error.
+    $self->assert(defined($groupID) or defined($groupName), 1, 
+                  'Invalid arguments to DataSource::User::setGroup: \'groupID\' and \'groupName\' both undefined');
     $self->notImplemented();
 }
 
@@ -148,7 +186,7 @@ __END__
 +-------------------+
 | user              |
 +-------------------+
-| userID            | auto_increment
+| userID         K1 | auto_increment
 | password          |
 | disabled          | boolean
 | adminMessage      | string displayed when user (tries to) log in
@@ -160,45 +198,47 @@ __END__
 +-------------------+
 | userData          |
 +-------------------+
-| userID            | points to entries in the table above
-| fieldID           | points to entries in the table below
+| userID         K1 | points to entries in the table above
+| fieldID        K1 | points to entries in the table below
 | data              | e.g. "ian@hixie.ch" or "1979-12-27" or an index into another table
 +-------------------+
 
 +-------------------+
 | userDataTypes     |
 +-------------------+
-| fieldID           | auto_increment
-| category          | e.g. contact, personal, setting
-| name              | e.g. sms, homepage, notifications
-| type              | e.g. number, string, notifications
-| data              | e.g. "[0-9- ]*", "uri", null
+| fieldID        K1 | auto_increment
+| category       K2 | e.g. contact, personal, setting [1]
+| name           K2 | e.g. sms, homepage, notifications [1]
+| type              | e.g. number, string, notifications [2]
+| data              | e.g. "SMS", "optional", null
 +-------------------+
+ [1] used to find the fieldID for a particular category.name combination
+ [2] used to find the factory for the relevant user field object
 
 +-------------------+
 | userGroupMapping  |
 +-------------------+
-| userID            | 
-| groupID           |
+| userID         K1 | 
+| groupID        K1 |
 +-------------------+
 
 +-------------------+
 | groups            |
 +-------------------+
-| groupID           |
+| groupID        K1 |
 | name              | user defined name (can be changed)
 +-------------------+
 
 +-------------------+
 | groupRightsMapping|
 +-------------------+
-| groupID           |
-| rightID           |
+| groupID        K1 |
+| rightID        K1 |
 +-------------------+
 
 +-------------------+
 | rights            |
 +-------------------+
-| rightID           | implementation detail - not ever passed to other parts of the code
-| name              | the internal name for the right, as used by the code
+| rightID        K1 | implementation detail - not ever passed to other parts of the code
+| name           K2 | the internal name for the right, as used by the code
 +-------------------+
