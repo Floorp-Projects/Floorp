@@ -12,7 +12,17 @@ const dlObserver = {
     var elt = document.getElementById(dl.target.path);
     switch (topic) {
       case "dl-progress":
-        elt.setAttribute("progress", dl.percentComplete);
+        if (dl.percentComplete == -1) {
+          if (!elt.hasAttribute("progressmode"))
+            elt.setAttribute("progressmode", "undetermined");
+          if (elt.hasAttribute("progress"))
+            elt.removeAttribute("progress");
+        }
+        else {
+          elt.setAttribute("progress", dl.percentComplete);
+          if (elt.hasAttribute("progressmode"))
+            elt.removeAttribute("progressmode");
+        }    
         break;
       default:
         elt.onEnd(topic);
