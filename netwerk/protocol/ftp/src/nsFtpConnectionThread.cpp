@@ -978,7 +978,7 @@ nsFtpState::S_user() {
     if (mAnonymous) {
         usernameStr.Append("anonymous");
     } else {
-        if (!mUsername.Length()) {
+        if (mUsername.IsEmpty()) {
             if (!mAuthPrompter) return NS_ERROR_NOT_INITIALIZED;
             PRUnichar *user = nsnull, *passwd = nsnull;
             PRBool retval;
@@ -2160,6 +2160,10 @@ nsFtpState::Init(nsIFTPChannel* aChannel,
         // now unescape it... %xx reduced inline to resulting character
         NS_UnescapeURL(fwdPtr);
         mPath.Assign(fwdPtr);
+
+        // return an error if we find a CR or LF in the path
+        if (mPath.FindCharInSet(CRLF) >= 0)
+            return NS_ERROR_MALFORMED_URI;
     }
 
     // pull any username and/or password out of the uri
@@ -2170,7 +2174,11 @@ nsFtpState::Init(nsIFTPChannel* aChannel,
     } else {
         if (!uname.IsEmpty()) {
             mAnonymous = PR_FALSE;
-            mUsername = NS_ConvertUTF8toUCS2(uname);
+            mUsername = NS_ConvertUTF8toUCS2(NS_UnescapeURL(uname));
+
+            // return an error if we find a CR or LF in the username
+            if (uname.FindCharInSet(CRLF) >= 0)
+                return NS_ERROR_MALFORMED_URI;
         }
     }
 
@@ -2178,9 +2186,13 @@ nsFtpState::Init(nsIFTPChannel* aChannel,
     rv = mURL->GetPassword(password);
     if (NS_FAILED(rv))
         return rv;
-    else
-        mPassword = NS_ConvertUTF8toUCS2(password);
-    
+
+    mPassword = NS_ConvertUTF8toUCS2(NS_UnescapeURL(password));
+
+    // return an error if we find a CR or LF in the password
+    if (mPassword.FindCharInSet(CRLF) >= 0)
+        return NS_ERROR_MALFORMED_URI;
+
     // setup the connection cache key
 
     PRInt32 port;

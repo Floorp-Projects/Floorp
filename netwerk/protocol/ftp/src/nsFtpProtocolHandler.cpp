@@ -173,6 +173,13 @@ nsFtpProtocolHandler::NewURI(const nsACString &aSpec,
                              nsIURI *aBaseURI,
                              nsIURI **result)
 {
+    // FindCharInSet isn't available right now for nsACstrings
+    // so we use FindChar instead
+
+    // ftp urls should not have \r or \n in them
+    if (aSpec.FindChar('\r') >= 0 || aSpec.FindChar('\n') >= 0)
+        return NS_ERROR_MALFORMED_URI;
+
     nsresult rv = NS_OK;
     nsCOMPtr<nsIStandardURL> url;
     rv = nsComponentManager::CreateInstance(kStandardURLCID, 
