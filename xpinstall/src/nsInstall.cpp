@@ -866,6 +866,8 @@ nsInstall::FinalizeInstall(PRInt32* aReturn)
                 err = NR_RegAddKey(reg,ROOTKEY_COMMON,XPI_ROOT_KEY,&xpiRoot);
                 if ( err == REGERR_OK )
                     NR_RegSetEntryString(reg, xpiRoot, XPI_AUTOREG_VAL, "yes");
+
+                NR_RegClose(reg);
             }
         }
         else
