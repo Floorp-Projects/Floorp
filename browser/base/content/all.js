@@ -114,7 +114,7 @@ pref("browser.download.progressDnldDialog.keepAlive", true); // keep the dnload 
 pref("browser.download.progressDnldDialog.enable_launch_reveal_buttons", true);
 
 // various default search settings
-pref("browser.search.defaulturl", "chrome://navigator-region/locale/region.properties");
+pref("browser.search.defaulturl", "chrome://browser-region/locale/region.properties");
 // basic search popup constraint: minimum sherlock plugin version displayed
 // (note: must be a string representation of a float or it'll default to 0.0)
 pref("browser.search.basic.min_ver", "0.0");

@@ -1748,6 +1748,126 @@ var searchButtonObserver = {
     }
 }
 
+function ensureDefaultEnginePrefs(aRDF,aDS) 
+{
+  var mPrefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
+  var defaultName = mPrefs.getComplexValue("browser.search.defaultenginename", Components.interfaces.nsIPrefLocalizedString).data;
+  var kNC_Root = aRDF.GetResource("NC:SearchEngineRoot");
+  var kNC_child = aRDF.GetResource("http://home.netscape.com/NC-rdf#child");
+  var kNC_Name = aRDF.GetResource("http://home.netscape.com/NC-rdf#Name");
+          
+  var arcs = aDS.GetTargets(kNC_Root, kNC_child, true);
+  while (arcs.hasMoreElements()) {
+    var engineRes = arcs.getNext().QueryInterface(Components.interfaces.nsIRDFResource);       
+    var name = readRDFString(aDS, engineRes, kNC_Name);
+    if (name == defaultName)
+      mPrefs.setCharPref("browser.search.defaultengine", engineRes.Value);
+  }
+}
+
+function ensureSearchPref()
+{
+  var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
+  var ds = rdf.GetDataSource("rdf:internetsearch");
+  var mPrefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
+  var kNC_Name = rdf.GetResource("http://home.netscape.com/NC-rdf#Name");
+  var defaultEngine;
+  try {
+    defaultEngine = mPrefs.getCharPref("browser.search.defaultengine");
+  } catch(ex) {
+    ensureDefaultEnginePrefs(rdf, ds);
+    defaultEngine = mPrefs.getCharPref("browser.search.defaultengine");
+  }
+}
+
+function OpenSearch(tabName, forceDialogFlag, searchStr, newWindowFlag)
+{
+  //This function needs to be split up someday.
+
+  var defaultSearchURL = null;
+  var navigatorRegionBundle = document.getElementById("bundle_browser_region");
+  var fallbackDefaultSearchURL = navigatorRegionBundle.getString("fallbackDefaultSearchURL");
+  ensureSearchPref()
+  //Check to see if search string contains "://" or "ftp." or white space.
+  //If it does treat as url and match for pattern
+  
+  var urlmatch= /(:\/\/|^ftp\.)[^ \S]+$/ 
+  var forceAsURL = urlmatch.test(searchStr);
+
+  try {
+    defaultSearchURL = pref.getComplexValue("browser.search.defaulturl",
+                                            Components.interfaces.nsIPrefLocalizedString).data;
+  } catch (ex) {
+  }
+
+  // Fallback to a default url (one that we can get sidebar search results for)
+  if (!defaultSearchURL)
+    defaultSearchURL = fallbackDefaultSearchURL;
+
+  if (!searchStr) {
+    BrowserSearchInternet();
+  } else {
+
+    //Check to see if location bar field is a url
+    //If it is a url go to URL.  A Url is "://" or "." as commented above
+    //Otherwise search on entry
+    if (forceAsURL) {
+       BrowserLoadURL()
+    } else {
+      var searchMode = 0;
+      try {
+        searchMode = pref.getIntPref("browser.search.powermode");
+      } catch(ex) {
+      }
+
+      if (forceDialogFlag || searchMode == 1) {
+        // Use a single search dialog
+        var windowManager = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                                      .getService(Components.interfaces.nsIWindowMediator);
+
+        var searchWindow = windowManager.getMostRecentWindow("search:window");
+        if (!searchWindow) {
+          openDialog("chrome://communicator/content/search/search.xul", "SearchWindow", "dialog=no,close,chrome,resizable", tabName, searchStr);
+        } else {
+          // Already had one, focus it and load the page
+          searchWindow.focus();
+
+          if ("loadPage" in searchWindow)
+            searchWindow.loadPage(tabName, searchStr);
+        }
+      } else {
+        if (searchStr) {
+          var escapedSearchStr = escape(searchStr);
+          defaultSearchURL += escapedSearchStr;
+          var searchDS = Components.classes["@mozilla.org/rdf/datasource;1?name=internetsearch"]
+                                   .getService(Components.interfaces.nsIInternetSearchService);
+
+          searchDS.RememberLastSearchText(escapedSearchStr);
+          try {
+            var searchEngineURI = pref.getCharPref("browser.search.defaultengine");
+            if (searchEngineURI) {          
+              var searchURL = getSearchUrl("actionButton");
+              if (searchURL) {
+                defaultSearchURL = searchURL + escapedSearchStr; 
+              } else {
+                searchURL = searchDS.GetInternetSearchURL(searchEngineURI, escapedSearchStr, 0, 0, {value:0});
+                if (searchURL)
+                  defaultSearchURL = searchURL;
+              }
+            }
+          } catch (ex) {
+          }
+
+          if (!newWindowFlag)
+            loadURI(defaultSearchURL);
+          else
+            window.open(defaultSearchURL, "_blank");
+        }
+      }
+    }
+  }
+}
+
 var personalToolbarDNDObserver = {
 
   ////////////////////
