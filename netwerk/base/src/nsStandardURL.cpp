@@ -93,27 +93,36 @@ EncodeString(nsIUnicodeEncoder *encoder, const nsAFlatString &str, nsACString &r
     PRInt32 maxlen;
 
     rv = encoder->GetMaxLength(str.get(), len, &maxlen);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv))
+        return rv;
 
     char buf[256], *p = buf;
     if (PRUint32(maxlen) > sizeof(buf) - 1) {
         p = (char *) malloc(maxlen + 1);
-        if (!p) return NS_ERROR_OUT_OF_MEMORY;
+        if (!p)
+            return NS_ERROR_OUT_OF_MEMORY;
     }
 
     rv = encoder->Convert(str.get(), &len, p, &maxlen);
-    if (NS_FAILED(rv)) goto end;
+    if (NS_FAILED(rv))
+        goto end;
+    if (rv == NS_ERROR_UENC_NOMAPPING) {
+        NS_WARNING("unicode conversion failed");
+        rv = NS_ERROR_UNEXPECTED;
+        goto end;
+    }
     p[maxlen] = 0;
     result = p;
 
     rv = encoder->Finish(p, &len);
-    if (NS_FAILED(rv)) goto end;
+    if (NS_FAILED(rv))
+        goto end;
     p[len] = 0;
     result += p;
 
-    rv = encoder->Reset();
-
 end:
+    encoder->Reset();
+
     if (p != buf)
         free(p);
     return rv;
@@ -253,6 +262,7 @@ nsSegmentEncoder::EncodeSegmentCount(const char *str,
                 pos = 0;
                 len = encBuf.Length();
             }
+            // else some failure occured... assume UTF-8 is ok.
         }
 
         // escape per RFC2396 unless UTF-8 and allowed by preferences
