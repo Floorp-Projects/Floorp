@@ -1116,6 +1116,8 @@ NS_IMETHODIMP HTMLContentSink::AddLeaf(const nsIParserNode& aNode)
     break;
   }
 
+  PRBool sleazyTextHackXXX = PR_FALSE;
+
   nsresult rv = NS_OK;
   nsIHTMLContent* leaf = nsnull;
   switch (aNode.GetTokenType()) {
@@ -1159,6 +1161,7 @@ NS_IMETHODIMP HTMLContentSink::AddLeaf(const nsIParserNode& aNode)
   case eToken_whitespace:
   case eToken_newline:
     rv = AddText(aNode.GetText(), &leaf);
+    sleazyTextHackXXX = PR_TRUE;
     break;
 
   case eToken_entity:
@@ -1171,6 +1174,7 @@ NS_IMETHODIMP HTMLContentSink::AddLeaf(const nsIParserNode& aNode)
       else {
         rv = AddText(tmp, &leaf);
       }
+      sleazyTextHackXXX = PR_TRUE;
     }
     break;
 
@@ -1184,6 +1188,10 @@ NS_IMETHODIMP HTMLContentSink::AddLeaf(const nsIParserNode& aNode)
         AppendToCorrectParent(parentType, parent,
                               (nsHTMLTag) aNode.GetNodeType(), leaf,
                               PR_FALSE);
+        if (sleazyTextHackXXX) {
+          // XXX Prevent incremental reflows on the text as it pours in
+          leaf->SetDocument(nsnull);
+        }
       } else {
         // XXX drop stuff on the floor that doesn't have a container!
         // Bad parser!
@@ -1319,6 +1327,11 @@ void
 HTMLContentSink::FlushText()
 {
   if (nsnull != mCurrentText) {
+    // XXX sleazyTextHackXXX repair document pointer in text object
+    static NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
+    nsIContent* content = nsnull;
+    mCurrentText->QueryInterface(kIContentIID, (void**) &content);
+    content->SetDocument(mDocument);
     NS_RELEASE(mCurrentText);
   }
 }
