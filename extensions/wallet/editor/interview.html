@@ -37,13 +37,10 @@ your Form Manager Information here</font></font></font></h3></center>
 <script>
 
   function Save() {
-    appCore = Components
-                .classes["@mozilla.org/appshell/component/browser/instance;1"]
-                .createInstance(Components.interfaces.nsIBrowserInstance);
-    if (appCore) {
-      appCore.setWebShellWindow(window);
-      status = appCore.walletRequestToCapture(window._content);
-    }
+    var walletService = Components.classes["@mozilla.org/wallet/wallet-service;1"].
+                                   getService(Components.interfaces.nsIWalletService);
+
+    walletService.WALLET_RequestToCapture(window._content);
   }
 
   function Demo() {
