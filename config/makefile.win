@@ -114,7 +114,9 @@ export:: \
         mangle.exe    \
         mantomak.exe  \
         bin2rc.exe    \
+!ifndef NO_MFC
         makedep.exe   \
+!endif
         build_number  \
         nsBuildID.h   \
 !ifdef MOZ_COVERAGE
