@@ -102,10 +102,15 @@ public:
    *                       content that should be handled
    * @param aFileExtension The extension we need to append to our temp file,
    *                       INCLUDING the ".". e.g. .mp3
+   * @param aFileName      The filename to use
+   * @param aIsAttachment  Whether the request has Content-Disposition: attachment
+   *                       set
    * @param aWindowContext Window context, as passed to DoContent
    */
   nsExternalAppHandler * CreateNewExternalHandler(nsIMIMEInfo * aMIMEInfo,
                                                   const char * aFileExtension,
+                                                  const nsAString& aFileName,
+                                                  PRBool aIsAttachment,
                                                   nsISupports * aWindowContext);
  
   /**
@@ -275,6 +280,8 @@ public:
 
   virtual nsresult Init(nsIMIMEInfo * aMIMEInfo, const char * aFileExtension,
                         nsISupports * aWindowContext,
+                        const nsAString& aFilename,
+                        PRBool aIsAttachment,
                         nsExternalHelperAppService *aHelperAppService);
 
 protected:
@@ -337,11 +344,7 @@ protected:
   nsresult PromptForSaveToFile(nsILocalFile ** aNewFile,
                                const nsAFlatString &aDefaultFile,
                                const nsAFlatString &aDefaultFileExt);
-  /**
-   * If the passed in channel is an nsIHTTPChannel, we'll attempt to extract
-   * a suggested file name from the content disposition header...
-   */
-  void ExtractSuggestedFileNameFromChannel(nsIChannel * aChannel);
+
   /**
    * After we're done prompting the user for any information, if the original
    * channel had a refresh url associated with it (which might point to a

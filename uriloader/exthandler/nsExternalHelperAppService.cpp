@@ -167,10 +167,120 @@ static void GetFilenameFromDisposition(nsAString& aFilename,
     // Try 'name' parameter, instead.
     rv = mimehdrpar->GetParameter(aDisposition, "name", fallbackCharset, PR_TRUE, 
                                   nsnull, aFilename);
-
-  return;
 }
 
+/**
+ * Given a channel, returns the filename and extension the channel has.
+ * This uses the URL and other sources (nsIMultiPartChannel).
+ * Also gives back whether the channel requested external handling (i.e.
+ * whether Content-Disposition: attachment was sent)
+ * @param aChannel The channel to extract the filename/extension from
+ * @param aFileName [out] Reference to the string where the filename should be
+ *        stored. Empty if it could not be retrieved.
+ *        WARNING - this filename may contain characters which the OS does not
+ *        allow as part of filenames!
+ * @param aExtension [out] Reference to the string where the extension should
+ *        be stored. Empty if it could not be retrieved.
+ * @param aAllowURLExtension (optional) Get the extension from the URL if no
+ *        Content-Disposition header is present. Default is true.
+ * @retval true The server sent Content-Disposition:attachment or equivalent
+ * @retval false Content-Disposition: inline or no content-disposition header
+ *         was sent.
+ */
+static PRBool GetFilenameAndExtensionFromChannel(nsIChannel* aChannel,
+                                                 nsAString& aFileName,
+                                                 nsACString& aExtension,
+                                                 PRBool aAllowURLExtension = PR_TRUE)
+{
+  /*
+   * If the channel is an http or part of a multipart channel and we
+   * have a content disposition header set, then use the file name
+   * suggested there as the preferred file name to SUGGEST to the
+   * user.  we shouldn't actually use that without their
+   * permission... otherwise just use our temp file
+   */
+  nsCAutoString disp;
+  ExtractDisposition(aChannel, disp);
+  PRBool handleExternally = PR_FALSE;
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv;
+  aChannel->GetURI(getter_AddRefs(uri));
+  // content-disposition: has format:
+  // disposition-type < ; name=value >* < ; filename=value > < ; name=value >*
+  if (!disp.IsEmpty()) 
+  {
+    nsCOMPtr<nsIMIMEHeaderParam> mimehdrpar = do_GetService(NS_MIMEHEADERPARAM_CONTRACTID, &rv);
+    if (NS_FAILED(rv))
+      return PR_FALSE;
+    nsAutoString dispToken;
+    // Get the disposition type
+    rv = mimehdrpar->GetParameter(disp, "", NS_LITERAL_CSTRING(""), PR_FALSE, 
+                                  nsnull, dispToken);
+    // RFC 2183, section 2.8 says that an unknown disposition
+    // value should be treated as "attachment"
+    if (NS_FAILED(rv) || 
+        (!dispToken.EqualsIgnoreCase("inline") &&
+        // Broken sites just send
+        // Content-Disposition: filename="file"
+        // without a disposition token... screen those out.
+        !dispToken.EqualsIgnoreCase("filename", 8))) 
+    {
+      // We have a content-disposition of "attachment" or unknown
+      handleExternally = PR_TRUE;
+    }
+
+    // We may not have a disposition type listed; some servers suck.
+    // But they could have listed a filename anyway.
+    GetFilenameFromDisposition(aFileName, disp, uri, mimehdrpar);
+
+    // Extract Extension, if we have a filename; otherwise,
+    // truncate the string
+    if (aFileName.IsEmpty())
+    {
+      aExtension.Truncate();
+    }
+    else
+    {
+      // XXX RFindCharInReadable!!
+      nsAutoString fileNameStr(aFileName);
+      PRInt32 idx = fileNameStr.RFindChar(PRUnichar('.'));
+      if (idx != kNotFound)
+        CopyUTF16toUTF8(StringTail(fileNameStr, fileNameStr.Length() - idx - 1), aExtension);
+    }
+
+  } // we had a disp header 
+
+  // If the disposition header didn't work, try the filename from nsIURL
+  nsCOMPtr<nsIURL> url(do_QueryInterface(uri));
+  if (url && aFileName.IsEmpty())
+  {
+    if (aAllowURLExtension)
+      url->GetFileExtension(aExtension);
+
+    // try to extract the file name from the url and use that as a first pass as the
+    // leaf name of our temp file...
+    nsCAutoString leafName; // may be shortened by NS_UnescapeURL
+    url->GetFileName(leafName);
+    if (!leafName.IsEmpty())
+    {
+      nsCOMPtr<nsITextToSubURI> textToSubURI = do_GetService(NS_ITEXTTOSUBURI_CONTRACTID, &rv);
+      if (NS_SUCCEEDED(rv))
+      {
+        nsCAutoString originCharset;
+        url->GetOriginCharset(originCharset);
+        rv = textToSubURI->UnEscapeURIForUI(originCharset, leafName, 
+                                            aFileName);
+      }
+
+      if (NS_FAILED(rv))
+      {
+        CopyUTF8toUTF16(leafName, aFileName); // use escaped name
+      }
+    }
+  }
+
+  return handleExternally;
+}
 
 /**
  * Structure for storing extension->type mappings.
@@ -369,45 +479,32 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const char *aMimeContentType
                                                     nsISupports *aWindowContext,
                                                     nsIStreamListener ** aStreamListener)
 {
+  nsAutoString fileName;
   nsCAutoString fileExtension;
+  PRBool isAttachment = PR_FALSE;
   nsresult rv;
 
-  // Get the file extension that we will need later
+  // Get the file extension and name that we will need later
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
   if (channel) {
-    PRBool methodIsPost = PR_FALSE;
+    // Check if we have a POST request, in which case we don't want to use
+    // the url's extension
+    PRBool allowURLExt = PR_TRUE;
     nsCOMPtr<nsIHttpChannel> httpChan = do_QueryInterface(channel);
     if (httpChan) {
       nsCAutoString requestMethod;
       httpChan->GetRequestMethod(requestMethod);
-      methodIsPost = requestMethod.Equals("POST");
+      allowURLExt = !requestMethod.Equals("POST");
     }
 
     nsCOMPtr<nsIURI> uri;
     channel->GetURI(getter_AddRefs(uri));
 
-    // Firstly, get the content-disposition header
-    nsCAutoString disp;
-    ExtractDisposition(channel, disp);
-    nsAutoString filename;
-    if (!disp.IsEmpty()) {
-      GetFilenameFromDisposition(filename, disp, uri);
-      if (!filename.IsEmpty()) {
-        LOG(("Getting filename from disposition: Disp='%s', filename='%s'\n",
-             disp.get(), NS_ConvertUTF16toUTF8(filename).get()));
-        PRInt32 pointPos = filename.RFindChar('.');
-        if (pointPos != kNotFound) {
-          const nsAString & ext = Substring(filename, pointPos + 1, filename.Length() - pointPos - 1);
-          CopyUTF16toUTF8(ext, fileExtension);
-          LOG(("...found extension '%s'\n", fileExtension.get()));
-        }
-      }
-    }
-
-    // If the method is post, don't bother getting the file extension;
-    // it will belong to a CGI script anyway
-    // Also, if we had a Content-Disposition header, don't bother
-    if (uri && !methodIsPost && filename.IsEmpty()) {
+    // Check if we had a query string - we don't want to check the URL
+    // extension if a query is present in the URI
+    // If we already know we don't want to check the URL extension, don't
+    // bother checking the query
+    if (uri && allowURLExt) {
       nsCOMPtr<nsIURL> url = do_QueryInterface(uri);
 
       if (url) {
@@ -427,10 +524,16 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const char *aMimeContentType
 
         // Only get the extension if the query is empty; if it isn't, then the
         // extension likely belongs to a cgi script and isn't helpful
-        if (query.IsEmpty())
-          url->GetFileExtension(fileExtension);
+        allowURLExt = query.IsEmpty();
       }
     }
+    // Extract name & extension
+    isAttachment = GetFilenameAndExtensionFromChannel(channel, fileName,
+                                                      fileExtension,
+                                                      allowURLExt);
+    LOG(("Found extension '%s' (filename is '%s', handling attachment: %s)",
+         fileExtension.get(), NS_ConvertUTF16toUTF8(fileName).get(),
+         isAttachment ? "true" : "false"));
   }
 
   LOG(("HelperAppService::DoContent: mime '%s', extension '%s'\n",
@@ -464,7 +567,11 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const char *aMimeContentType
   mimeInfo->GetPrimaryExtension(getter_Copies(buf));
 
   // this code is incomplete and just here to get things started..
-  nsExternalAppHandler * handler = CreateNewExternalHandler(mimeInfo, buf.get(), aWindowContext);
+  nsExternalAppHandler * handler = CreateNewExternalHandler(mimeInfo,
+                                                            buf.get(),
+                                                            fileName,
+                                                            isAttachment,
+                                                            aWindowContext);
   if (!handler)
     return NS_ERROR_OUT_OF_MEMORY;
   NS_ADDREF(*aStreamListener = handler);
@@ -496,6 +603,8 @@ NS_IMETHODIMP nsExternalHelperAppService::LaunchAppWithTempFile(nsIMIMEInfo * aM
 
 nsExternalAppHandler * nsExternalHelperAppService::CreateNewExternalHandler(nsIMIMEInfo * aMIMEInfo, 
                                                                             const char * aTempFileExtension,
+                                                                            const nsAString& aFileName,
+                                                                            PRBool aIsAttachment,
                                                                             nsISupports * aWindowContext)
 {
   nsExternalAppHandler* handler = nsnull;
@@ -505,7 +614,7 @@ nsExternalAppHandler * nsExternalHelperAppService::CreateNewExternalHandler(nsIM
   // add any XP intialization code for an external handler that we may need here...
   // right now we don't have any but i bet we will before we are done.
 
-  handler->Init(aMIMEInfo, aTempFileExtension, aWindowContext, this);
+  handler->Init(aMIMEInfo, aTempFileExtension, aWindowContext, aFileName, aIsAttachment, this);
   return handler;
 }
 
@@ -993,56 +1102,6 @@ NS_IMETHODIMP nsExternalAppHandler::CloseProgressWindow()
   return NS_OK;
 }
 
-void nsExternalAppHandler::ExtractSuggestedFileNameFromChannel(nsIChannel* aChannel)
-{
-  /*
-   * If the channel is an http or part of a multipart channel and we
-   * have a content disposition header set, then use the file name
-   * suggested there as the preferred file name to SUGGEST to the
-   * user.  we shouldn't actually use that without their
-   * permission...o.t. just use our temp file
-   */
-  nsCAutoString disp;
-  ExtractDisposition(aChannel, disp);
-  // content-disposition: has format:
-  // disposition-type < ; name=value >* < ; filename=value > < ; name=value >*
-  if (!disp.IsEmpty()) 
-  {
-    nsresult rv;
-    nsCOMPtr<nsIMIMEHeaderParam> mimehdrpar = do_GetService(NS_MIMEHEADERPARAM_CONTRACTID, &rv);
-    if (NS_FAILED(rv))
-      return;
-    nsAutoString dispToken;
-    // Get the disposition type
-    rv = mimehdrpar->GetParameter(disp, "", NS_LITERAL_CSTRING(""), PR_FALSE, 
-                                  nsnull, dispToken);
-    // RFC 2183, section 2.8 says that an unknown disposition
-    // value should be treated as "attachment"
-    if (NS_FAILED(rv) || 
-        (!dispToken.EqualsIgnoreCase("inline") &&
-        // Broken sites just send
-        // Content-Disposition: filename="file"
-        // without a disposition token... screen those out.
-        !dispToken.EqualsIgnoreCase("filename", 8))) 
-    {
-      // We have a content-disposition of "attachment" or unknown
-      mHandlingAttachment = PR_TRUE;
-    }
-
-    // We may not have a disposition type listed; some servers suck.
-    // But they could have listed a filename anyway.
-    GetFilenameFromDisposition(mSuggestedFileName, disp, mSourceUrl, mimehdrpar);
-
-#ifdef XP_WIN
-    // Make sure extension is still correct.
-    EnsureSuggestedFileName();
-#endif
-
-    // replace platform specific path separator and illegal characters to avoid any confusion
-    mSuggestedFileName.ReplaceChar(FILE_PATH_SEPARATOR FILE_ILLEGAL_CHARACTERS, '-');
-  } // we had a disp header 
-}
-
 nsresult nsExternalAppHandler::RetargetLoadNotifications(nsIRequest *request)
 {
   // we are going to run the downloading of the helper app in our own little docloader / load group context. 
@@ -1091,14 +1150,19 @@ const PRUnichar table[] =
     'u','v','w','x','y','z','0','1','2','3',
     '4','5','6','7','8','9'};
 
-// Make sure mSuggestedFileName has the extension indicated by mTempFileExtension.
-// This is required so that the (renamed) temporary file has the correct extension
-// after downloading to make sure the OS will launch the application corresponding
-// to the MIME type (which was used to calculate mTempFileExtension).  This prevents
-// a cgi-script named foobar.exe that returns application/zip from being named
-// foobar.exe.  It also blocks content that a web site might provide with a
-// content-disposition header indicating filename="foobar.exe" from being downloaded
-// to a file with extension .exe.
+/**
+ * Make mTempFileExtension contain an extension exactly when its previous value
+ * is different from mSuggestedFileName's extension, so that it can be appended
+ * to mSuggestedFileName and form a valid, useful leaf name.
+ * This is required so that the (renamed) temporary file has the correct extension
+ * after downloading to make sure the OS will launch the application corresponding
+ * to the MIME type (which was used to calculate mTempFileExtension).  This prevents
+ * a cgi-script named foobar.exe that returns application/zip from being named
+ * foobar.exe and executed as an executable file. It also blocks content that
+ * a web site might provide with a content-disposition header indicating
+ * filename="foobar.exe" from being downloaded to a file with extension .exe
+ * and executed.
+ */
 void nsExternalAppHandler::EnsureSuggestedFileName()
 {
   // Make sure there is a mTempFileExtension (not "" or ".").
@@ -1113,10 +1177,10 @@ void nsExternalAppHandler::EnsureSuggestedFileName()
       mSuggestedFileName.Right(fileExt, mSuggestedFileName.Length() - pos);
 
     // Now, compare fileExt to mTempFileExtension.
-    if (!fileExt.Equals(mTempFileExtension, nsCaseInsensitiveStringComparator()))
+    if (fileExt.Equals(mTempFileExtension, nsCaseInsensitiveStringComparator()))
     {
-      // Doesn't match, so force mSuggestedFileName to have the extension we want.
-      mSuggestedFileName.Append(mTempFileExtension);
+      // Matches -> mTempFileExtension can be empty
+      mTempFileExtension.Truncate();
     }
   }
 }
@@ -1135,50 +1199,9 @@ nsresult nsExternalAppHandler::SetUpTempFile(nsIChannel * aChannel)
   NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(mTempFile));
 #endif
 
-  aChannel->GetURI(getter_AddRefs(mSourceUrl));
-  nsCOMPtr<nsIURL> url = do_QueryInterface(mSourceUrl);
-
-  // We need to do two things here, (1) extract the file name that's part of the url
-  // and store this is as mSuggestedfileName. This way, when we show the user a file picker, 
-  // we can have it pre filled with the suggested file name. 
-  // (2) We need to generate a name for the temp file that we are going to be streaming data to. 
+  // We need to generate a name for the temp file that we are going to be streaming data to. 
   // We don't want this name to be predictable for security reasons so we are going to generate a 
   // "salted" name.....
-
-  if (url)
-  {
-    // try to extract the file name from the url and use that as a first pass as the
-    // leaf name of our temp file...
-    nsCAutoString leafName, query; // may be shortened by NS_UnescapeURL
-    url->GetFileName(leafName);
-    if (!leafName.IsEmpty())
-    {
-      nsCOMPtr<nsITextToSubURI> textToSubURI = do_GetService(NS_ITEXTTOSUBURI_CONTRACTID, &rv);
-      if (NS_SUCCEEDED(rv))
-      {
-        nsCAutoString originCharset;
-        url->GetOriginCharset(originCharset);
-        rv = textToSubURI->UnEscapeURIForUI(originCharset, leafName, 
-                                            mSuggestedFileName);
-      }
-
-      if (NS_FAILED(rv))
-      {
-        mSuggestedFileName = NS_ConvertUTF8toUCS2(leafName); // use escaped name
-        rv = NS_OK;
-      }
-
-#ifdef XP_WIN
-      // Make sure extension is still correct.
-      EnsureSuggestedFileName();
-#endif
-
-      // replace platform specific path separator and illegal characters to avoid any confusion
-      mSuggestedFileName.ReplaceChar(FILE_PATH_SEPARATOR FILE_ILLEGAL_CHARACTERS, '-');
-    }
-  }
-
-  // step (2), generate a salted file name for the temp file....
   nsAutoString saltedTempLeafName;
   // this salting code was ripped directly from the profile manager.
   // turn PR_Now() into milliseconds since epoch
@@ -1193,7 +1216,13 @@ nsresult nsExternalAppHandler::SetUpTempFile(nsIChannel * aChannel)
   }
 
   // now append our extension.
-  saltedTempLeafName.Append(mTempFileExtension);
+  nsXPIDLCString ext;
+  mMimeInfo->GetPrimaryExtension(getter_Copies(ext));
+  if (!ext.IsEmpty()) {
+    if (ext.First() != '.')
+      saltedTempLeafName.Append(PRUnichar('.'));
+    AppendUTF8toUTF16(ext, saltedTempLeafName);
+  }
 
   mTempFile->Append(saltedTempLeafName); // make this file unique!!!
   mTempFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0600);
@@ -1239,7 +1268,7 @@ nsresult nsExternalAppHandler::SetUpTempFile(nsIChannel * aChannel)
 
 NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISupports * aCtxt)
 {
-  NS_ENSURE_ARG(request);
+  NS_ENSURE_ARG_POINTER(request);
 
   // first, check to see if we've been canceled....
   if (mCanceled) // then go cancel our underlying channel too
@@ -1247,13 +1276,14 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISuppo
 
   nsCOMPtr<nsIChannel> aChannel = do_QueryInterface(request);
 
-  nsresult rv = SetUpTempFile(aChannel);
-  
-  // Get content length.
-  if ( aChannel )
+  // Get content length and URI.
+  if (aChannel)
   {
-    aChannel->GetContentLength( &mContentLength );
+    aChannel->GetContentLength(&mContentLength);
+    aChannel->GetURI(getter_AddRefs(mSourceUrl));
   }
+
+  nsresult rv = SetUpTempFile(aChannel);
 
   // Extract mime type for later use below.
   nsXPIDLCString MIMEType;
@@ -1261,8 +1291,6 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISuppo
 
   // retarget all load notifications to our docloader instead of the original window's docloader...
   RetargetLoadNotifications(request);
-  // ignore failure...
-  ExtractSuggestedFileNameFromChannel(aChannel); 
   nsCOMPtr<nsIEncodedChannel> encChannel = do_QueryInterface( aChannel );
   if (encChannel) 
   {
@@ -1658,15 +1686,30 @@ nsresult nsExternalAppHandler::ExecuteDesiredAction()
   return rv;
 }
 
-nsresult nsExternalAppHandler::Init(nsIMIMEInfo * aMIMEInfo, const char * aTempFileExtension, nsISupports * aWindowContext, nsExternalHelperAppService *aHelperAppService)
+nsresult nsExternalAppHandler::Init(nsIMIMEInfo * aMIMEInfo,
+                                    const char * aTempFileExtension,
+                                    nsISupports * aWindowContext,
+                                    const nsAString& aSuggestedFilename,
+                                    PRBool aIsAttachment,
+                                    nsExternalHelperAppService *aHelperAppService)
 {
   mWindowContext = aWindowContext;
   mMimeInfo = aMIMEInfo;
-  
+  mHandlingAttachment = aIsAttachment;
+
   // make sure the extention includes the '.'
   if (aTempFileExtension && *aTempFileExtension != '.')
     mTempFileExtension = PRUnichar('.');
   mTempFileExtension.AppendWithConversion(aTempFileExtension);
+
+  mSuggestedFileName = aSuggestedFilename;
+
+  // replace platform specific path separator and illegal characters to avoid any confusion
+  mSuggestedFileName.ReplaceChar(FILE_PATH_SEPARATOR FILE_ILLEGAL_CHARACTERS, '-');
+  mTempFileExtension.ReplaceChar(FILE_PATH_SEPARATOR FILE_ILLEGAL_CHARACTERS, '-');
+  
+  // Make sure extension is correct.
+  EnsureSuggestedFileName();
 
   mHelperAppService = aHelperAppService;
   NS_IF_ADDREF(mHelperAppService);
@@ -1957,7 +2000,12 @@ NS_IMETHODIMP nsExternalAppHandler::LaunchWithApplication(nsIFile * aApplication
     mTempFile->GetLeafName(mSuggestedFileName);
   }
 
-  fileToUse->Append(mSuggestedFileName);
+#ifdef XP_WIN
+  fileToUse->Append(mSuggestedFileName + mTempFileExtension);
+#else
+  fileToUse->Append(mSuggestedFileName);  
+#endif
+  
   // We'll make sure this results in a unique name later
 
   mFinalFileDestination = do_QueryInterface(fileToUse);
