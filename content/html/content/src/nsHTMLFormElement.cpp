@@ -108,7 +108,9 @@ public:
   NS_IMETHOD ResolveName(const nsAReadableString& aName,
                          nsISupports **aReturn);
   NS_IMETHOD IndexOfControl(nsIFormControl* aControl, PRInt32* aIndex);
+#ifdef DEBUG
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
+#endif
 
   // nsIContent
   NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
@@ -985,7 +987,6 @@ nsFormControlList::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
   *aResult = sizeof(*this) - sizeof(mElements) + asize;
   return NS_OK;
 }
-#endif
 
 NS_IMETHODIMP
 nsHTMLFormElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
@@ -994,3 +995,4 @@ nsHTMLFormElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 
   return NS_OK;
 }
+#endif

@@ -89,7 +89,9 @@ public:
                                      nsIAtom* aMedium, 
                                      nsIContent*     aContent) = 0;
 
+#ifdef DEBUG
   virtual void SizeOf(nsISizeOfHandler *aSizeofHandler, PRUint32 &aSize) = 0;
+#endif
 };
 
 #endif /* nsIStyleRuleProcessor_h___ */

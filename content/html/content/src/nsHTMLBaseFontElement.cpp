@@ -70,7 +70,9 @@ public:
 
   NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
                                       PRInt32& aHint) const;
+#ifdef DEBUG
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
+#endif
 };
 
 nsresult
@@ -170,6 +172,7 @@ nsHTMLBaseFontElement::GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt
   return NS_OK;
 }
 
+#ifdef DEBUG
 NS_IMETHODIMP
 nsHTMLBaseFontElement::SizeOf(nsISizeOfHandler* aSizer,
                               PRUint32* aResult) const
@@ -178,3 +181,4 @@ nsHTMLBaseFontElement::SizeOf(nsISizeOfHandler* aSizer,
 
   return NS_OK;
 }
+#endif

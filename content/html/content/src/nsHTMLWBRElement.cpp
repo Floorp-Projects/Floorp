@@ -65,7 +65,9 @@ public:
   // nsIDOMHTMLElement
   NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLLeafElement::)
 
+#ifdef DEBUG
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
+#endif
 };
 
 nsresult
@@ -144,6 +146,7 @@ nsHTMLWBRElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   return NS_OK;
 }
 
+#ifdef DEBUG
 NS_IMETHODIMP
 nsHTMLWBRElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 {
@@ -151,3 +154,4 @@ nsHTMLWBRElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 
   return NS_OK;
 }
+#endif

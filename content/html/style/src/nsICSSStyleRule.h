@@ -80,7 +80,9 @@ public:
   ~nsAttrSelector(void);
   PRBool Equals(const nsAttrSelector* aOther) const;
 
+#ifdef DEBUG
   void SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize);
+#endif
 
   PRInt32         mNameSpace;
   nsIAtom*        mAttr;
@@ -118,7 +120,9 @@ public:
 
   PRInt32 CalcWeight(void) const;
 
+#ifdef DEBUG
   void SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize);
+#endif
   nsresult ToString( nsAWritableString& aString, nsICSSStyleSheet* aSheet,
                     PRBool aIsPseudoElem, PRInt8 aNegatedIndex ) const;
 

@@ -105,7 +105,9 @@ public:
                             nsIDOMEvent** aDOMEvent,
                             PRUint32 aFlags,
                             nsEventStatus* aEventStatus);
+#ifdef DEBUG
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
+#endif
 
 protected:
   PRInt8 mType;
@@ -525,6 +527,7 @@ nsHTMLButtonElement::GetType(PRInt32* aType)
   }
 }
 
+#ifdef DEBUG
 NS_IMETHODIMP
 nsHTMLButtonElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 {
@@ -532,3 +535,4 @@ nsHTMLButtonElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 
   return NS_OK;
 }
+#endif

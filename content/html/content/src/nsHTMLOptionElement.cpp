@@ -101,7 +101,9 @@ public:
                                nsHTMLValue& aResult);
   NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
                                       PRInt32& aHint) const;
+#ifdef DEBUG
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
+#endif
 
 protected:
   // Get the primary frame associated with this content
@@ -767,6 +769,7 @@ nsHTMLOptionElement::Initialize(JSContext* aContext,
   return result;
 }
 
+#ifdef DEBUG
 NS_IMETHODIMP
 nsHTMLOptionElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 {
@@ -774,3 +777,4 @@ nsHTMLOptionElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 
   return NS_OK;
 }
+#endif

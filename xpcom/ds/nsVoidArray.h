@@ -61,7 +61,9 @@ public:
 
   nsVoidArray& operator=(const nsVoidArray& other);
 
+#ifdef DEBUG
   virtual void  SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
+#endif
 
   inline PRInt32 Count() const {
     return mImpl ? mImpl->mCount : 0;
@@ -184,7 +186,9 @@ public:
 
   nsStringArray& operator=(const nsStringArray& other);
 
+#ifdef DEBUG
   void  SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
+#endif
 
   PRInt32 Count(void) const {
     return nsVoidArray::Count();
@@ -240,7 +244,9 @@ public:
 
   nsCStringArray& operator=(const nsCStringArray& other);
 
+#ifdef DEBUG
   void  SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
+#endif
 
   PRInt32 Count(void) const {
     return nsVoidArray::Count();

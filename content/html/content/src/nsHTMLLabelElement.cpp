@@ -175,7 +175,9 @@ public:
   NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent,
                             nsIDOMEvent** aDOMEvent, PRUint32 aFlags,
                             nsEventStatus* aEventStatus);
+#ifdef DEBUG
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
+#endif
 };
 
 // construction, destruction
@@ -421,6 +423,7 @@ nsHTMLLabelElement::HandleDOMEvent(nsIPresContext* aPresContext,
   return rv;
 }
 
+#ifdef DEBUG
 NS_IMETHODIMP
 nsHTMLLabelElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 {
@@ -428,3 +431,4 @@ nsHTMLLabelElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 
   return NS_OK;
 }
+#endif

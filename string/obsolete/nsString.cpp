@@ -160,11 +160,13 @@ nsCString::nsCString( const nsACString& aReadable ) {
   Assign(aReadable);
 }
 
+#ifdef DEBUG
 void nsCString::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const {
   if (aResult) {
     *aResult = sizeof(*this) + mCapacity * mCharSize;
   }
 }
+#endif
 
 /**
  * This method truncates this string to given length.
@@ -1306,17 +1308,17 @@ NS_COM int fputs(const nsCString& aString, FILE* out)
   return (int) len;
 }
 
+#ifdef DEBUG  
 /**
  * Dumps the contents of the string to stdout
  * @update  gess 11/15/99
  */
 void nsCString::DebugDump(void) const {
-#ifdef DEBUG  
   if(mStr && (eOneByte==mCharSize)) {
     printf("\n%s",mStr);
   }
-#endif
 }
+#endif
        
 //----------------------------------------------------------------------
 
@@ -1542,8 +1544,10 @@ nsCAutoString::nsCAutoString(PRUnichar aChar) : nsCString(){
 nsCAutoString::~nsCAutoString(){
 }
 
+#ifdef DEBUG
 void nsCAutoString::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const {
   if (aResult) {
     *aResult = sizeof(*this) + mCapacity * mCharSize;
   }
 }
+#endif

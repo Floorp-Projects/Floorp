@@ -134,7 +134,9 @@ public:
 
   NS_IMETHOD IndexOfControl(nsIFormControl* aControl, PRInt32* aIndex) = 0;
 
+#ifdef DEBUG // XXX Does this even need to be here?
   NS_IMETHOD  SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const = 0;
+#endif
 };
 
 #endif /* nsIForm_h___ */

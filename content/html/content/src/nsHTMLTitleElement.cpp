@@ -71,7 +71,9 @@ public:
   // nsIDOMHTMLTitleElement
   NS_DECL_NSIDOMHTMLTITLEELEMENT
 
+#ifdef DEBUG
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
+#endif
 };
 
 nsresult
@@ -199,6 +201,7 @@ nsHTMLTitleElement::SetText(const nsAReadableString& aTitle)
   return result;
 }
 
+#ifdef DEBUG
 NS_IMETHODIMP
 nsHTMLTitleElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 {
@@ -206,3 +209,4 @@ nsHTMLTitleElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 
   return NS_OK;
 }
+#endif

@@ -76,7 +76,9 @@ public:
                                       PRInt32& aHint) const;
   NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep,
                          PRBool aCompileEventHandlers);
+#ifdef DEBUG
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
+#endif
 
 protected:
   GenericElementCollection* mAreas;
@@ -225,6 +227,7 @@ nsHTMLMapElement::GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aM
   return NS_OK;
 }
 
+#ifdef DEBUG
 NS_IMETHODIMP
 nsHTMLMapElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 {
@@ -232,3 +235,4 @@ nsHTMLMapElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 
   return NS_OK;
 }
+#endif

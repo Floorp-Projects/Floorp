@@ -267,7 +267,9 @@ class nsParser : public nsIParser,
      */
     virtual nsresult ResumeParse(PRBool allowIteration=PR_TRUE, PRBool aIsFinalChunk=PR_FALSE);
 
+#ifdef DEBUG
     void  DebugDumpSource(nsOutputStream& anOutput);
+#endif
 
      //*********************************************
       // These methods are callback methods used by

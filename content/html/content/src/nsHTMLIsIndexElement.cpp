@@ -69,7 +69,9 @@ public:
   NS_DECL_NSIDOMHTMLISINDEXELEMENT
 
   NS_IMETHOD_(PRBool) IsContentOfType(PRUint32 aFlags);
+#ifdef DEBUG
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
+#endif
 };
 
 nsresult
@@ -164,6 +166,7 @@ nsHTMLIsIndexElement::IsContentOfType(PRUint32 aFlags)
   return !(aFlags & ~(eELEMENT | eHTML | eHTML_FORM_CONTROL));
 }
 
+#ifdef DEBUG
 NS_IMETHODIMP
 nsHTMLIsIndexElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 {
@@ -171,3 +174,4 @@ nsHTMLIsIndexElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 
   return NS_OK;
 }
+#endif

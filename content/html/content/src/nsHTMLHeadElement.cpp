@@ -68,7 +68,9 @@ public:
   // nsIDOMHTMLHeadElement
   NS_DECL_NSIDOMHTMLHEADELEMENT
 
+#ifdef DEBUG
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
+#endif
 };
 
 nsresult
@@ -151,6 +153,7 @@ nsHTMLHeadElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 NS_IMPL_STRING_ATTR(nsHTMLHeadElement, Profile, profile)
 
 
+#ifdef DEBUG
 NS_IMETHODIMP
 nsHTMLHeadElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 {
@@ -158,3 +161,4 @@ nsHTMLHeadElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 
   return NS_OK;
 }
+#endif

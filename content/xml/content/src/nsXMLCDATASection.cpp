@@ -71,9 +71,11 @@ public:
   // nsIContent
   NS_IMPL_ICONTENT_USING_GENERIC_DOM_DATA(mInner)
 
+#ifdef DEBUG
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const {
     return mInner.SizeOf(aSizer, aResult, sizeof(*this));
   }
+#endif
 
   // nsITextContent
   NS_IMPL_ITEXTCONTENT_USING_GENERIC_DOM_DATA(mInner)
@@ -209,6 +211,7 @@ nsXMLCDATASection::CloneContent(PRBool aCloneText, nsITextContent** aReturn)
   return result;
 }
 
+#ifdef DEBUG
 NS_IMETHODIMP
 nsXMLCDATASection::List(FILE* out, PRInt32 aIndent) const
 {
@@ -231,6 +234,7 @@ NS_IMETHODIMP
 nsXMLCDATASection::DumpContent(FILE* out, PRInt32 aIndent,PRBool aDumpAll) const {
   return NS_OK;
 }
+#endif
 
 NS_IMETHODIMP
 nsXMLCDATASection::HandleDOMEvent(nsIPresContext* aPresContext,

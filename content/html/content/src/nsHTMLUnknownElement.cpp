@@ -74,7 +74,9 @@ public:
 
   NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
                           const nsAReadableString& aValue, PRBool aNotify);
+#ifdef DEBUG
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
+#endif
 };
 
 nsresult
@@ -303,6 +305,7 @@ nsHTMLUnknownElement::SetAttribute(PRInt32 aNameSpaceID,
   return result;
 }
 
+#ifdef DEBUG
 NS_IMETHODIMP
 nsHTMLUnknownElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 {
@@ -310,3 +313,4 @@ nsHTMLUnknownElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 
   return NS_OK;
 }
+#endif

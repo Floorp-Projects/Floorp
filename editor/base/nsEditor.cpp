@@ -1807,8 +1807,10 @@ nsEditor::OutputToStream(nsIOutputStream* aOutputStream,
 NS_IMETHODIMP
 nsEditor::DumpContentTree()
 {
+#ifdef DEBUG
   nsCOMPtr<nsIContent> root = do_QueryInterface(mBodyElement);
   if (root)  root->List(stdout);
+#endif
   return NS_OK;
 }
 
@@ -1816,6 +1818,7 @@ nsEditor::DumpContentTree()
 NS_IMETHODIMP
 nsEditor::DebugDumpContent()
 {
+#ifdef DEBUG
   nsCOMPtr<nsIContent>content;
   nsCOMPtr<nsIDOMNodeList>nodeList;
   nsAutoString bodyTag; bodyTag.AssignWithConversion("body");
@@ -1834,6 +1837,7 @@ nsEditor::DebugDumpContent()
     }
   }
   content->List();
+#endif
   return NS_OK;
 }
 
@@ -1841,7 +1845,9 @@ nsEditor::DebugDumpContent()
 NS_IMETHODIMP
 nsEditor::DebugUnitTests(PRInt32 *outNumTests, PRInt32 *outNumTestsFailed)
 {
+#ifdef DEBUG
   NS_NOTREACHED("This should never get called. Overridden by subclasses");
+#endif
   return NS_OK;
 }
 

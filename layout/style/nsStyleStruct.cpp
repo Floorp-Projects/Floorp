@@ -48,7 +48,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsIStyleSet.h"
-#include "nsISizeOfHandler.h"
 #include "nsIPresShell.h"
 #include "nsLayoutAtoms.h"
 #include "prenv.h"

@@ -79,7 +79,9 @@ public:
   NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
                                       PRInt32& aHint) const;
 
+#ifdef DEBUG
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
+#endif
 };
 
 nsresult
@@ -318,6 +320,7 @@ nsHTMLTableColGroupElement::GetAttributeMappingFunction(nsMapRuleToAttributesFun
   return NS_OK;
 }
 
+#ifdef DEBUG
 NS_IMETHODIMP
 nsHTMLTableColGroupElement::SizeOf(nsISizeOfHandler* aSizer,
                                    PRUint32* aResult) const
@@ -326,3 +329,4 @@ nsHTMLTableColGroupElement::SizeOf(nsISizeOfHandler* aSizer,
 
   return NS_OK;
 }
+#endif

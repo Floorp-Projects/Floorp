@@ -731,7 +731,9 @@ public:
                                     nsIAtom* aMedium, 
                                     nsIContent* aContent);
 
+#ifdef DEBUG
   virtual void SizeOf(nsISizeOfHandler *aSizeofHandler, PRUint32 &aSize);
+#endif
 
 protected:
   RuleCascadeData* GetRuleCascade(nsIPresContext* aPresContext, nsIAtom* aMedium);
@@ -759,7 +761,9 @@ public:
 
   virtual void RebuildNameSpaces(void);
 
+#ifdef DEBUG
   virtual void SizeOf(nsISizeOfHandler *aSizeofHandler, PRUint32 &aSize);
+#endif
 
   nsAutoVoidArray       mSheets;
 
@@ -857,9 +861,11 @@ public:
 
   nsresult  EnsureUniqueInner(void);
 
+#ifdef DEBUG
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
   virtual void SizeOf(nsISizeOfHandler *aSizeofHandler, PRUint32 &aSize);
+#endif
 
   // nsIDOMStyleSheet interface
   NS_DECL_NSIDOMSTYLESHEET
@@ -1606,6 +1612,7 @@ CSSStyleSheetInner::RebuildNameSpaces(void)
   }
 }
 
+#ifdef DEBUG
 /******************************************************************************
 * SizeOf method:
 *
@@ -1679,6 +1686,7 @@ void CSSStyleSheetInner::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSiz
     }
   }
 }
+#endif
 
 
 // -------------------------------
@@ -2430,6 +2438,7 @@ CSSStyleSheetImpl::Clone(nsICSSStyleSheet*& aClone) const
   return NS_OK;
 }
 
+#ifdef DEBUG
 static void
 ListRules(nsISupportsArray* aRules, FILE* aOut, PRInt32 aIndent)
 {
@@ -2573,6 +2582,7 @@ void CSSStyleSheetImpl::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize
     mFirstChild->SizeOf(aSizeOfHandler, childSize);
   }
 }
+#endif
 
 static PRBool PR_CALLBACK
 EnumClearRuleCascades(void* aProcessor, void* aData)
@@ -4113,7 +4123,7 @@ CSSRuleProcessor::HasStateDependentStyle(nsIPresContext* aPresContext,
 }
 
 
-// XXXldb WHY IS THIS NOT |#ifdef DEBUG| ???????
+#ifdef DEBUG
 
 struct CascadeSizeEnumData {
 
@@ -4259,6 +4269,7 @@ void CSSRuleProcessor::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
   // now add the size of the RuleProcessor
   aSizeOfHandler->AddSize(tag,aSize);
 }
+#endif
 
 NS_IMETHODIMP
 CSSRuleProcessor::ClearRuleCascades(void)

@@ -152,11 +152,13 @@ nsString::nsString( const nsAString& aReadable ) {
   Assign(aReadable);
 }
 
+#ifdef DEBUG
 void nsString::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const {
   if (aResult) {
     *aResult = sizeof(*this) + mCapacity * mCharSize;
   }
 }
+#endif
 
 /**
  * This method truncates this string to given length.
@@ -1766,9 +1768,11 @@ nsAutoString::nsAutoString(PRUnichar aChar) : nsString(){
 nsAutoString::~nsAutoString(){
 }
 
+#ifdef DEBUG
 void nsAutoString::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const {
   if (aResult) {
     *aResult = sizeof(*this) + mCapacity * mCharSize;
   }
 }
+#endif
 

@@ -66,9 +66,11 @@ public:
   // The new mapping function.
   NS_IMETHOD MapRuleInfoInto(nsRuleData* aRuleData)=0;
 
+#ifdef DEBUG
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const = 0;
 
   virtual void SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize) = 0;
+#endif
 };
 
 

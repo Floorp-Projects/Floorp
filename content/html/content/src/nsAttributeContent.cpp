@@ -154,9 +154,11 @@ public:
 
   NS_IMETHOD GetAttrCount(PRInt32& aResult) const { aResult = 0; return NS_OK; }
 
+#ifdef DEBUG
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const {  return NS_OK;  }
   NS_IMETHOD DumpContent(FILE* out, PRInt32 aIndent,PRBool aDumpAll) const {  return NS_OK;  }
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
+#endif
   NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext,
                           nsEvent* aEvent,
                           nsIDOMEvent** aDOMEvent,
@@ -543,6 +545,7 @@ nsAttributeContent::CloneContent(PRBool aCloneText, nsITextContent** aReturn)
   return result;
 }
 
+#ifdef DEBUG
 NS_IMETHODIMP
 nsAttributeContent::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 {
@@ -550,3 +553,4 @@ nsAttributeContent::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
   *aResult = sizeof(*this);
   return NS_OK;
 }
+#endif

@@ -108,9 +108,11 @@ public:
   NS_IMETHOD Reset(void) = 0;
 #endif
 
+#ifdef DEBUG
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const = 0;
 
   virtual void SizeOf(nsISizeOfHandler* aSizer, PRUint32 &aResult) = 0;
+#endif
 };
 
 class nsIHTMLMappedAttributes : public nsISupports {
@@ -129,7 +131,9 @@ public:
   NS_IMETHOD GetUniqued(PRBool& aUniqued) = 0;
   NS_IMETHOD DropStyleSheetReference(void) = 0;
 
+#ifdef DEBUG
   virtual void SizeOf(nsISizeOfHandler* aSizer, PRUint32 &aResult) = 0;
+#endif
 };
 
 extern NS_HTML nsresult

@@ -92,8 +92,10 @@ class nsCParserNode;
 class nsNodeAllocator;
 
 
+#ifdef DEBUG
 void DebugDumpContainmentRules(nsIDTD& theDTD,const char* aFilename,const char* aTitle);
 void DebugDumpContainmentRules2(nsIDTD& theDTD,const char* aFilename,const char* aTitle);
+#endif
 PRUint32 AccumulateCRC(PRUint32 crc_accum, char *data_blk_ptr, int data_blk_size);
 
 

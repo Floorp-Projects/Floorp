@@ -2203,6 +2203,7 @@ nsGenericHTMLElement::GetBaseTarget(nsAWritableString& aBaseTarget) const
   return result;
 }
 
+#ifdef DEBUG
 void
 nsGenericHTMLElement::ListAttributes(FILE* out) const
 {
@@ -2316,6 +2317,7 @@ nsGenericHTMLElement::DumpContent(FILE* out, PRInt32 aIndent,PRBool aDumpAll) co
 
   return NS_OK;
 }
+#endif
 
 
 NS_IMETHODIMP_(PRBool)
@@ -2324,19 +2326,19 @@ nsGenericHTMLElement::IsContentOfType(PRUint32 aFlags)
   return !(aFlags & ~(eELEMENT | eHTML));
 }
 
+#ifdef DEBUG
 PRUint32
 nsGenericHTMLElement::BaseSizeOf(nsISizeOfHandler* aSizer) const
 {
   PRUint32 sum = 0;
-#ifdef DEBUG
   if (mAttributes) {
     PRUint32 attrs = 0;
     mAttributes->SizeOf(aSizer, attrs);
     sum += attrs;
   }
-#endif
   return sum;
 }
+#endif
 
 
 //----------------------------------------------------------------------

@@ -217,7 +217,9 @@ public:
   NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent,
                             nsIDOMEvent** aDOMEvent, PRUint32 aFlags,
                             nsEventStatus* aEventStatus);
+#ifdef DEBUG
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
+#endif
 
 protected:
   // Helper method
@@ -1482,6 +1484,7 @@ nsHTMLInputElement::GetType(PRInt32* aType)
   }
 }
 
+#ifdef DEBUG
 NS_IMETHODIMP
 nsHTMLInputElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 {
@@ -1489,6 +1492,7 @@ nsHTMLInputElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 
   return NS_OK;
 }
+#endif
 
 
 // Controllers Methods

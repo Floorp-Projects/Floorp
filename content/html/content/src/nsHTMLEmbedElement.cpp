@@ -73,7 +73,9 @@ public:
   NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
                                       PRInt32& aHint) const;
   NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
+#ifdef DEBUG
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
+#endif
 };
 
 nsresult
@@ -224,6 +226,7 @@ nsHTMLEmbedElement::GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapR
   return NS_OK;
 }
 
+#ifdef DEBUG
 NS_IMETHODIMP
 nsHTMLEmbedElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 {
@@ -231,6 +234,7 @@ nsHTMLEmbedElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 
   return NS_OK;
 }
+#endif
 
 /////////////////////////////////////////////
 // Implement nsIDOMHTMLEmbedElement interface

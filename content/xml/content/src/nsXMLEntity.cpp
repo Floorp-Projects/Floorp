@@ -71,7 +71,9 @@ public:
   // nsIContent
   NS_IMPL_ICONTENT_USING_GENERIC_DOM_DATA(mInner)
 
+#ifdef DEBUG
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
+#endif
 
 protected:
   // XXX Processing instructions are currently implemented by using
@@ -199,6 +201,7 @@ nsXMLEntity::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   return it->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) aReturn);
 }
 
+#ifdef DEBUG
 NS_IMETHODIMP
 nsXMLEntity::List(FILE* out, PRInt32 aIndent) const
 {
@@ -238,6 +241,7 @@ nsXMLEntity::DumpContent(FILE* out, PRInt32 aIndent,PRBool aDumpAll) const
 {
   return NS_OK;
 }
+#endif
 
 NS_IMETHODIMP
 nsXMLEntity::HandleDOMEvent(nsIPresContext* aPresContext,
@@ -271,11 +275,11 @@ nsXMLEntity::IsContentOfType(PRUint32 aFlags)
   return PR_FALSE;
 }
 
+#ifdef DEBUG
 NS_IMETHODIMP
 nsXMLEntity::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 {
   if (!aResult) return NS_ERROR_NULL_POINTER;
-#ifdef DEBUG
   PRUint32 sum;
   mInner.SizeOf(aSizer, &sum, sizeof(*this));
   PRUint32 ssize;
@@ -287,6 +291,6 @@ nsXMLEntity::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
   sum = sum - sizeof(mSystemId) + ssize;
   mNotationName.SizeOf(aSizer, &ssize);
   sum = sum - sizeof(mNotationName) + ssize;
-#endif
   return NS_OK;
 }
+#endif

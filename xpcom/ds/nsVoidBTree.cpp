@@ -533,6 +533,7 @@ nsVoidBTree::EnumerateBackwards(EnumFunc aFunc, void* aData) const
 }
 
 
+#ifdef DEBUG
 void
 nsVoidBTree::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
 {
@@ -567,6 +568,7 @@ nsVoidBTree::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
         }
     }
 }
+#endif
 
 //----------------------------------------------------------------------
 

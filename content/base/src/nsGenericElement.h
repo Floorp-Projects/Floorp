@@ -266,8 +266,10 @@ public:
   //                          nsIAtom*& aName,
   //                          nsIAtom*& aPrefix) const;
   // NS_IMETHOD GetAttrCount(PRInt32& aResult) const;
+#ifdef DEBUG
   // NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
   // NS_IMETHOD DumpContent(FILE* out, PRInt32 aIndent,PRBool aDumpAll) const;
+#endif
   NS_IMETHOD RangeAdd(nsIDOMRange& aRange);
   NS_IMETHOD RangeRemove(nsIDOMRange& aRange);
   NS_IMETHOD GetRangeList(nsVoidArray*& aResult) const;
@@ -405,7 +407,9 @@ public:
                                      PRUint32 aType);
 
 protected:
+#ifdef DEBUG
   virtual PRUint32 BaseSizeOf(nsISizeOfHandler *aSizer) const;
+#endif
 
   nsDOMSlots *GetDOMSlots();
   void MaybeClearDOMSlots();
@@ -484,8 +488,10 @@ public:
                            nsIAtom*& aName,
                            nsIAtom*& aPrefix) const;
   NS_IMETHOD GetAttrCount(PRInt32& aResult) const;
+#ifdef DEBUG
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
   NS_IMETHOD DumpContent(FILE* out, PRInt32 aIndent,PRBool aDumpAll) const;
+#endif
   NS_IMETHOD CanContainChildren(PRBool& aResult) const;
   NS_IMETHOD ChildCount(PRInt32& aResult) const;
   NS_IMETHOD ChildAt(PRInt32 aIndex, nsIContent*& aResult) const;
@@ -498,10 +504,14 @@ public:
                            PRBool aDeepSetDocument);
   NS_IMETHOD RemoveChildAt(PRInt32 aIndex, PRBool aNotify);
 
+#ifdef DEBUG
   void ListAttributes(FILE* out) const;
+#endif
 
 protected:
+#ifdef DEBUG
   virtual PRUint32 BaseSizeOf(nsISizeOfHandler *aSizer) const;
+#endif
 
   nsVoidArray* mAttributes;
   nsCheapVoidArray mChildren;

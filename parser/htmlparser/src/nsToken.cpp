@@ -112,6 +112,7 @@ nsresult CToken::Consume(PRUnichar aChar,nsScanner& aScanner,PRInt32 aMode) {
 }
 
 
+#ifdef DEBUG
 /**
  *  This debug method causes the token to dump its content
  *  to the given stream (formated for debugging).
@@ -139,6 +140,7 @@ void CToken::DebugDumpToken(nsOutputStream& anOutputStream) {
 void CToken::DebugDumpSource(nsOutputStream& anOutputStream) {
   anOutputStream << NS_ConvertUCS2toUTF8(GetStringValue()).get();
 }
+#endif
 
 
 /**

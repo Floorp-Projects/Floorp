@@ -2709,6 +2709,7 @@ PRBool nsParser::DidTokenize(PRBool aIsFinalChunk){
   return result;
 }
 
+#ifdef DEBUG
 void nsParser::DebugDumpSource(nsOutputStream& aStream) {
   PRInt32 theIndex=-1;
 
@@ -2721,6 +2722,7 @@ void nsParser::DebugDumpSource(nsOutputStream& aStream) {
     }
   }
 }
+#endif
 
 
 /**

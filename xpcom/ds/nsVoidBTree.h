@@ -74,7 +74,9 @@ public:
     PRBool EnumerateForwards(EnumFunc aFunc, void* aData) const;
     PRBool EnumerateBackwards(EnumFunc aFunc, void* aData) const;
 
+#ifdef DEBUG
     void SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
+#endif
 
 protected:
     // This is as deep as a tree can ever grow, mostly because we use an

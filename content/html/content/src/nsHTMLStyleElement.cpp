@@ -124,7 +124,9 @@ public:
     return rv;
   }
 
+#ifdef DEBUG
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
+#endif
 
 protected:
   virtual void GetStyleSheetInfo(nsAWritableString& aUrl,
@@ -254,6 +256,7 @@ nsHTMLStyleElement::SetDisabled(PRBool aDisabled)
 NS_IMPL_STRING_ATTR(nsHTMLStyleElement, Media, media)
 NS_IMPL_STRING_ATTR(nsHTMLStyleElement, Type, type)
 
+#ifdef DEBUG
 NS_IMETHODIMP
 nsHTMLStyleElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 {
@@ -261,6 +264,7 @@ nsHTMLStyleElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 
   return NS_OK;
 }
+#endif
 
 nsresult
 nsHTMLStyleElement::GetHrefCString(char* &aBuf)

@@ -225,9 +225,11 @@ public:
   NS_IMETHOD SetStyleRuleSupplier(nsIStyleRuleSupplier* aSupplier);
   NS_IMETHOD GetStyleRuleSupplier(nsIStyleRuleSupplier** aSupplier);
 
+#ifdef DEBUG
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0);
 
   virtual void SizeOf(nsISizeOfHandler *aSizeofHandler, PRUint32 &aSize);
+#endif
   virtual void ResetUniqueStyleItems(void);
 
   void AddImportantRules(nsIRuleNode* aRuleNode);
@@ -268,8 +270,10 @@ protected:
                               nsIStyleContext* aParentContext,
                               nsIAtom* aPseudoTag, 
                               PRBool aForceUnique);
+#ifdef DEBUG
   void  List(FILE* out, PRInt32 aIndent, nsISupportsArray* aSheets);
   void  ListContexts(nsIStyleContext* aRootContext, FILE* out, PRInt32 aIndent);
+#endif
 
   nsISupportsArray* mOverrideSheets;  // most significant first
   nsISupportsArray* mDocSheets;       // " "
@@ -1323,6 +1327,7 @@ StyleSetImpl::GetInsertionPoint(nsIPresShell* aPresShell,
                                               aChildContent, aInsertionPoint);
 }
 
+#ifdef DEBUG
 void StyleSetImpl::List(FILE* out, PRInt32 aIndent, nsISupportsArray* aSheets)
 {
   PRUint32 cnt = 0;
@@ -1338,6 +1343,7 @@ void StyleSetImpl::List(FILE* out, PRInt32 aIndent, nsISupportsArray* aSheets)
     NS_RELEASE(sheet);
   }
 }
+#endif
 
 // APIs for registering objects that can supply additional
 // rules during processing.
@@ -1357,6 +1363,7 @@ StyleSetImpl::GetStyleRuleSupplier(nsIStyleRuleSupplier** aSupplier)
 }
 
 
+#ifdef DEBUG
 void StyleSetImpl::List(FILE* out, PRInt32 aIndent)
 {
 //  List(out, aIndent, mOverrideSheets);
@@ -1369,6 +1376,7 @@ void StyleSetImpl::ListContexts(nsIStyleContext* aRootContext, FILE* out, PRInt3
 {
   aRootContext->List(out, aIndent);
 }
+#endif
 
 
 NS_LAYOUT nsresult
@@ -1566,6 +1574,7 @@ StyleSetImpl::AttributeAffectsStyle(nsIAtom *aAttribute, nsIContent *aContent,
   return NS_OK;
 }
 
+#ifdef DEBUG
 /******************************************************************************
 * SizeOf method:
 *
@@ -1724,6 +1733,7 @@ void StyleSetImpl::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
   // now delegate the sizeof to the larger or more complex aggregated objects
   // - none
 }
+#endif
 
 void
 StyleSetImpl::WalkRuleProcessors(nsISupportsArrayEnumFunc aFunc, void* aData,

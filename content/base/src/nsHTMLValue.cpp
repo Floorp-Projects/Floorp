@@ -42,7 +42,6 @@
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsCRT.h"
-#include "nsISizeOfHandler.h"
 
 nsHTMLValue::nsHTMLValue(nsHTMLUnit aUnit)
   : mUnit(aUnit)

@@ -68,7 +68,9 @@ public:
   // nsIDOMHTMLModElement
   NS_DECL_NSIDOMHTMLMODELEMENT
 
+#ifdef DEBUG
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
+#endif
 };
 
 nsresult
@@ -152,6 +154,7 @@ NS_IMPL_STRING_ATTR(nsHTMLDelElement, Cite, cite)
 NS_IMPL_STRING_ATTR(nsHTMLDelElement, DateTime, datetime)
 
 
+#ifdef DEBUG
 NS_IMETHODIMP
 nsHTMLDelElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 {
@@ -159,3 +162,4 @@ nsHTMLDelElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 
   return NS_OK;
 }
+#endif

@@ -123,9 +123,11 @@ inline PRBool TestBits(int aBitset,int aTest) {
  */
 struct nsHTMLElement {
 
+#ifdef DEBUG
   static  void    DebugDumpMembership(const char* aFilename);
   static  void    DebugDumpContainment(const char* aFilename,const char* aTitle);
   static  void    DebugDumpContainType(const char* aFilename);
+#endif
 
   static  PRBool  IsInlineEntity(eHTMLTags aTag);
   static  PRBool  IsFlowEntity(eHTMLTags aTag);

@@ -68,7 +68,9 @@ public:
   // nsIDOMHTMLParamElement
   NS_DECL_NSIDOMHTMLPARAMELEMENT
 
+#ifdef DEBUG
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
+#endif
 };
 
 nsresult
@@ -154,6 +156,7 @@ NS_IMPL_STRING_ATTR(nsHTMLParamElement, Value, value)
 NS_IMPL_STRING_ATTR(nsHTMLParamElement, ValueType, valuetype)
 
 
+#ifdef DEBUG
 NS_IMETHODIMP
 nsHTMLParamElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 {
@@ -161,3 +164,4 @@ nsHTMLParamElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 
   return NS_OK;
 }
+#endif

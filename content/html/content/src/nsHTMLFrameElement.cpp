@@ -92,7 +92,9 @@ public:
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
                                const nsHTMLValue& aValue,
                                nsAWritableString& aResult) const;
+#ifdef DEBUG
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
+#endif
 };
 
 nsresult
@@ -303,6 +305,7 @@ nsHTMLFrameElement::AttributeToString(nsIAtom* aAttribute,
                                                      aResult);
 }
 
+#ifdef DEBUG
 NS_IMETHODIMP
 nsHTMLFrameElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 {
@@ -310,6 +313,7 @@ nsHTMLFrameElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 
   return NS_OK;
 }
+#endif
 
 
 //*****************************************************************************

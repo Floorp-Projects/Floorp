@@ -211,6 +211,7 @@ nsDOMDocumentType::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   return it->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) aReturn);
 }
 
+#ifdef DEBUG
 NS_IMETHODIMP
 nsDOMDocumentType::List(FILE* out, PRInt32 aIndent) const
 {
@@ -228,6 +229,7 @@ NS_IMETHODIMP
 nsDOMDocumentType::DumpContent(FILE* out = stdout, PRInt32 aIndent = 0,PRBool aDumpAll=PR_TRUE) const {
   return NS_OK;
 }
+#endif
 
 NS_IMETHODIMP
 nsDOMDocumentType::HandleDOMEvent(nsIPresContext* aPresContext,
@@ -257,12 +259,12 @@ nsDOMDocumentType::SetContentID(PRUint32 aID)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+#ifdef DEBUG
 NS_IMETHODIMP
 nsDOMDocumentType::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 {
   NS_ENSURE_ARG_POINTER(aResult);
 
-#ifdef DEBUG
   PRUint32 sum;
   mInner.SizeOf(aSizer, &sum, sizeof(*this));
   PRUint32 ssize;
@@ -286,9 +288,9 @@ nsDOMDocumentType::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
       aSizer->AddSize(nsLayoutAtoms::xml_document_notations, size);
     }
   }
-#endif
   return NS_OK;
 }
+#endif
 
 NS_IMETHODIMP_(PRBool)
 nsDOMDocumentType::IsContentOfType(PRUint32 aFlags)

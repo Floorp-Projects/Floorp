@@ -149,8 +149,10 @@ public:
                            nsIAtom*& aName,
                            nsIAtom*& aPrefix) const;
   NS_IMETHOD GetAttrCount(PRInt32& aResult) const;
+#ifdef DEBUG
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
   NS_IMETHOD DumpContent(FILE* out, PRInt32 aIndent,PRBool aDumpAll) const;
+#endif
   NS_IMETHOD_(PRBool) IsContentOfType(PRUint32 aFlags);
 
   nsresult HandleDOMEventForAnchors(nsIContent* aOuter,
@@ -180,9 +182,11 @@ public:
                                       PRInt32& aHint) const;
   NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
 
+#ifdef DEBUG
   void ListAttributes(FILE* out) const;
 
   PRUint32 BaseSizeOf(nsISizeOfHandler* aSizer) const;
+#endif
 
 
 
