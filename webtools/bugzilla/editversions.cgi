@@ -124,6 +124,7 @@ sub EmitFormElements ($$)
 sub PutTrailer (@)
 {
     my (@links) = ("Back to the <A HREF=\"query.cgi\">query page</A>", @_);
+    SendSQL("UNLOCK TABLES");
 
     my $count = $#links;
     my $num = 0;
@@ -444,7 +445,6 @@ if ($action eq 'delete') {
              WHERE product_id = $product_id
                AND value=" . SqlQuote($version));
     print "Version deleted.<P>\n";
-    SendSQL("UNLOCK TABLES");
 
     unlink "$datadir/versioncache";
     PutTrailer($localtrailer);
@@ -509,13 +509,11 @@ if ($action eq 'update') {
         unless ($version) {
             print "Sorry, I can't delete the version text.";
             PutTrailer($localtrailer);
-            SendSQL("UNLOCK TABLES");
             exit;
         }
         if (TestVersion($product,$version)) {
             print "Sorry, version '$version' is already in use.";
             PutTrailer($localtrailer);
-            SendSQL("UNLOCK TABLES");
             exit;
         }
         SendSQL("UPDATE bugs
@@ -530,7 +528,6 @@ if ($action eq 'update') {
         unlink "$datadir/versioncache";
         print "Updated version.<BR>\n";
     }
-    SendSQL("UNLOCK TABLES");
 
     PutTrailer($localtrailer);
     exit;

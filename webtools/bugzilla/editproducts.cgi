@@ -149,6 +149,7 @@ sub EmitFormElements ($$$$$$$$)
 sub PutTrailer (@)
 {
     my (@links) = ("Back to the <A HREF=\"query.cgi\">query page</A>", @_);
+    SendSQL("UNLOCK TABLES");
 
     my $count = $#links;
     my $num = 0;
@@ -685,8 +686,6 @@ if ($action eq 'delete') {
              WHERE id=$product_id");
     print "Product '$product' deleted.<BR>\n";
 
-    SendSQL("UNLOCK TABLES");
-
     unlink "$datadir/versioncache";
     PutTrailer($localtrailer);
     exit;
@@ -1059,7 +1058,6 @@ if ($action eq 'updategroupcontrols') {
         }
         print "added $count bugs<p>\n";
     }
-    SendSQL("UNLOCK TABLES");
     print "Group control updates done<P>\n";
 
     PutTrailer($localtrailer);
@@ -1133,7 +1131,6 @@ if ($action eq 'update') {
     if ($description ne $descriptionold) {
         unless ($description) {
             print "Sorry, I can't delete the description.";
-            SendSQL("UNLOCK TABLES");
             PutTrailer($localtrailer);
             exit;
         }
@@ -1184,7 +1181,6 @@ if ($action eq 'update') {
                 "  AND product_id = $product_id");
         if (!FetchOneColumn()) {
             print "Sorry, the milestone $defaultmilestone must be defined first.";
-            SendSQL("UNLOCK TABLES");
             PutTrailer($localtrailer);
             exit;
         }

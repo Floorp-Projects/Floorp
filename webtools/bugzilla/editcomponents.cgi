@@ -162,6 +162,7 @@ sub EmitFormElements ($$$$$)
 sub PutTrailer (@)
 {
     my (@links) = ("Back to the <A HREF=\"query.cgi\">query page</A>", @_);
+    SendSQL("UNLOCK TABLES");
 
     my $count = $#links;
     my $num = 0;
@@ -675,7 +676,6 @@ if ($action eq 'delete') {
     SendSQL("DELETE FROM components
              WHERE id=$component_id");
     print "Components deleted.<P>\n";
-    SendSQL("UNLOCK TABLES");
 
     unlink "$datadir/versioncache";
     PutTrailer($localtrailer);
@@ -782,7 +782,6 @@ if ($action eq 'update') {
         unless ($description) {
             print "Sorry, I can't delete the description.";
             PutTrailer($localtrailer);
-            SendSQL("UNLOCK TABLES");
             exit;
         }
         SendSQL("UPDATE components
@@ -795,7 +794,6 @@ if ($action eq 'update') {
     if ($initialowner ne $initialownerold) {
         unless ($initialowner) {
             print "Sorry, I can't delete the initial owner.";
-            SendSQL("UNLOCK TABLES");
             PutTrailer($localtrailer);
             exit;
         }
@@ -803,7 +801,6 @@ if ($action eq 'update') {
         my $initialownerid = DBname_to_id($initialowner);
         unless ($initialownerid) {
             print "Sorry, you must use an existing Bugzilla account as initial owner.";
-            SendSQL("UNLOCK TABLES");
             PutTrailer($localtrailer);
             exit;
         }
@@ -818,7 +815,6 @@ if ($action eq 'update') {
         my $initialqacontactid = DBname_to_id($initialqacontact);
         if (!$initialqacontactid && $initialqacontact ne '') {
             print "Sorry, you must use an existing Bugzilla account as initial QA contact.";
-            SendSQL("UNLOCK TABLES");
             PutTrailer($localtrailer);
             exit;
         }
@@ -834,13 +830,11 @@ if ($action eq 'update') {
         unless ($component) {
             print "Sorry, but a component must have a name.";
             PutTrailer($localtrailer);
-            SendSQL("UNLOCK TABLES");
             exit;
         }
         if (TestComponent($product,$component)) {
             print "Sorry, component name '$component' is already in use.";
             PutTrailer($localtrailer);
-            SendSQL("UNLOCK TABLES");
             exit;
         }
 
@@ -850,7 +844,6 @@ if ($action eq 'update') {
         unlink "$datadir/versioncache";
         print "Updated component name.<BR>\n";
     }
-    SendSQL("UNLOCK TABLES");
 
     PutTrailer($localtrailer);
     exit;
