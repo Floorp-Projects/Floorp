@@ -994,7 +994,7 @@ void InitializeElementTable(void) {
       /*requiredAncestor*/                eHTMLTag_unknown, eHTMLTag_unknown,
 	    /*rootnodes,endrootnodes*/          &gInForm,&gInForm,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
-      /*parent,incl,exclgroups*/          kFormControl, kNone, kFlowEntity,	
+      /*parent,incl,exclgroups*/          kFormControl, kNone, kFlowEntity|kDLChild,	
       /*special props, prop-range*/       kNoPropagate|kOmitWS|kNoStyleLeaksIn, kDefaultPropRange,
       /*special parents,kids,skip*/       &gInForm,&gContainsOpts,eHTMLTag_unknown);
 

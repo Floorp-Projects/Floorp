@@ -519,6 +519,13 @@ nsresult CNavDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParse
               result=HandleToken(theEndToken,mParser);
             }
           }
+          if(mDTDState==NS_ERROR_HTMLPARSER_MISPLACEDTABLECONTENT) {
+            // Create an end table token to flush tokens off the misplaced list...
+            CHTMLToken* theTableToken=NS_STATIC_CAST(CHTMLToken*,mTokenAllocator->CreateTokenOfType(eToken_end,eHTMLTag_table));
+            if(theTableToken) {
+              result=HandleToken(theTableToken,mParser);
+            }
+          }
           if(result==NS_OK) {
             eHTMLTags theTarget; 
 
@@ -672,6 +679,31 @@ nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
         mScratch.SetCapacity(0);
       }
     }
+    else if(mDTDState==NS_ERROR_HTMLPARSER_MISPLACEDTABLECONTENT) {
+      // Included TD & TH to fix Bug# 20797
+      static eHTMLTags gLegalElements[]={eHTMLTag_table,eHTMLTag_thead,eHTMLTag_tbody,
+                                         eHTMLTag_tr,eHTMLTag_td,eHTMLTag_th,eHTMLTag_tfoot};
+      if(theToken) {
+        eHTMLTags theParentTag=mBodyContext->Last();
+        theTag=(eHTMLTags)theToken->GetTypeID();
+        if((FindTagInSet(theTag,gLegalElements,sizeof(gLegalElements)/sizeof(theTag))) ||
+           (gHTMLElements[theParentTag].CanContain(theTag))) {
+            
+          mDTDState=NS_OK; // reset the state since all the misplaced tokens are about to get handled.
+          result=HandleSavedTokens(mBodyContext->mContextTopIndex);
+          mBodyContext->mContextTopIndex=-1; 
+
+          if(NS_FAILED(result)) {
+            return result;
+          }
+          //falling through intentionally,i.e., handle the token that is willing to be the child of the current parent.
+        }
+        else {
+          mMisplacedContent.Push(theToken);
+          return result;
+        }
+      }
+    }
   
    
     /* ---------------------------------------------------------------------------------
@@ -727,24 +759,8 @@ nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
     
     if(theToken){
       //Before dealing with the token normally, we need to deal with skip targets
-      if((!execSkipContent) && 
-         (theType!=eToken_end) &&
-         (eHTMLTag_unknown==mSkipTarget) && 
-         (gHTMLElements[theTag].mSkipTarget)){ //create a new target
-        // Ref: Bug# 19977
-        // For optimization, determine if the skipped content is well
-        // placed. This would avoid unnecessary node creation and 
-        // extra string append. BTW, watch out in handling the head
-        // children ( especially the TITLE tag).
-        PRBool theExclusive=PR_FALSE;
-        if(!gHTMLElements[eHTMLTag_head].IsChildOfHead(theTag,theExclusive)) {
-          eHTMLTags theParentTag      = mBodyContext->Last();
-          PRBool    theParentContains = -1;
-          if(CanOmit(theParentTag,theTag,theParentContains)) {
-            result=HandleOmittedTag(theToken,theTag,theParentTag,nsnull);
-            return result;
-          }
-        }
+      if((!execSkipContent) && (theType!=eToken_end) &&
+         (eHTMLTag_unknown==mSkipTarget) && (gHTMLElements[theTag].mSkipTarget)){ //create a new target
         mSkipTarget=gHTMLElements[theTag].mSkipTarget;
         mSkippedContent.Push(theToken);
       }
@@ -1358,27 +1374,22 @@ nsresult CNavDTD::HandleOmittedTag(CToken* aToken,eHTMLTags aChildTag,eHTMLTags 
   PRInt32   theTagCount = mBodyContext->GetCount();
 
   if(aToken) {
-    // Note: The node for a misplaced skipped content is not yet created ( for optimization ) and hence
-    //       it's impossible to collect attributes. So, treat the token as though it doesn't have attibutes.
-    PRInt32   attrCount   = (gHTMLElements[aChildTag].mSkipTarget)? 0:aToken->GetAttributeCount();
+    PRInt32   attrCount = aToken->GetAttributeCount();
     if((gHTMLElements[aParent].HasSpecialProperty(kBadContentWatch)) &&
        (!nsHTMLElement::IsWhitespaceTag(aChildTag))) {
       eHTMLTags theTag=eHTMLTag_unknown;
-      PRInt32   theIndex=kNotFound;
     
+      // Determine the insertion point
       while(theTagCount > 0) {
         theTag = mBodyContext->TagAt(--theTagCount);
         if(!gHTMLElements[theTag].HasSpecialProperty(kBadContentWatch)) {
           if(!gHTMLElements[theTag].CanContain(aChildTag)) break;
-          theIndex = theTagCount;
+          mBodyContext->mContextTopIndex = theTagCount; // This is our insertion point
           break;
         }
       }
 
-      if(theIndex>kNotFound) {
-        // Avoid TD and TH getting into misplaced content stack
-        // because they are legal table elements. -- Ref: Bug# 20797
-        static eHTMLTags gLegalElements[]={eHTMLTag_td,eHTMLTag_th};
+      if(mBodyContext->mContextTopIndex>-1) {
                   
         mMisplacedContent.Push(aToken);  
 
@@ -1387,31 +1398,12 @@ nsresult CNavDTD::HandleOmittedTag(CToken* aToken,eHTMLTags aChildTag,eHTMLTags 
         // If the token is attributed then save those attributes too.    
         if(attrCount > 0) PushMisplacedAttributes(*aNode,mMisplacedContent,attrCount);
 
-        while(1){
-         
-          CToken* theToken=mTokenizer->PeekToken();
-          
-          if(theToken) {
-            theTag=(eHTMLTags)theToken->GetTypeID();
-            if(!nsHTMLElement::IsWhitespaceTag(theTag) && theTag!=eHTMLTag_unknown) {
-              if((gHTMLElements[theTag].mSkipTarget && theToken->GetTokenType() != eToken_end) ||
-                 (FindTagInSet(theTag,gLegalElements,sizeof(gLegalElements)/sizeof(theTag))) ||
-                 (gHTMLElements[theTag].HasSpecialProperty(kBadContentWatch))                ||
-                 (gHTMLElements[aParent].CanContain(theTag))) {
-                  break;
-              }            
+        if(gHTMLElements[aChildTag].mSkipTarget) {
+          mMisplacedContent.Push(mTokenAllocator->CreateTokenOfType(eToken_text,eHTMLTag_text,aNode->GetSkippedContent()));
+          mMisplacedContent.Push(mTokenAllocator->CreateTokenOfType(eToken_end,aChildTag));      
             }
               
-            theToken=mTokenizer->PopToken();
-            mMisplacedContent.Push(theToken);
-
-          }
-          else break;
-        }//while
-        if(result==NS_OK) {
-          result=HandleSavedTokens(mBodyContext->mContextTopIndex=theIndex);
-          mBodyContext->mContextTopIndex=0;
-        }
+        mDTDState=NS_ERROR_HTMLPARSER_MISPLACEDTABLECONTENT; // This state would help us in gathering all the misplaced elements
       }//if
     }//if
 
