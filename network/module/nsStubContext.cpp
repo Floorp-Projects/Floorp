@@ -318,7 +318,7 @@ _stub_PromptUsernameAndPassword(MWContext *context,
 #else
 	caller = new nsDefaultNotification;
 	if ( ! caller )
-		return false;
+		return FALSE;
 #endif
   // build an nsIURL
   rv = NS_NewURL(&base, URL_s->address);
