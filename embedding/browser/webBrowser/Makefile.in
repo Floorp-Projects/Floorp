@@ -91,6 +91,7 @@ SDK_XPIDLSRCS   = \
                 $(NULL)
 
 XPIDLSRCS	= \
+		nsIWebBrowserStream.idl			\
 		nsCWebBrowser.idl			\
 		nsICommandHandler.idl			\
 		nsIEmbeddingSiteWindow2.idl \
@@ -105,6 +106,7 @@ CPPSRCS		= \
 		nsCommandHandler.cpp		\
                 nsWebBrowserContentPolicy.cpp   \
 		nsContextMenuInfo.cpp		\
+		nsEmbedStream.cpp		\
 		$(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a
