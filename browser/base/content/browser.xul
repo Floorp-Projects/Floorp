@@ -321,9 +321,11 @@ Contributor(s):
                 label="&setWallpaperCmd.label;"
                 accesskey="&setWallpaperCmd.accesskey;"
                 oncommand="gContextMenu.setWallpaper();"/>
+
+<!--XXXBlake XUL sucks ass! We need autocheck for menuitems. -->
       <menuitem id="context-blockimage"
-                label="&blockImageCmd.label;" type="checkbox"            
-                oncommand="gContextMenu.toggleImageBlocking(!this.checked);"/>
+                label="&blockImageCmd.label;" class="menuitem-iconic"
+                oncommand="gContextMenu.toggleImageBlocking(this.getAttribute('checked') != 'true');"/>
       <menuitem id="context-back"
                 label="&backCmd.label;"
                 accesskey="&backCmd.accesskey;"
