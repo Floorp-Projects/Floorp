@@ -426,7 +426,6 @@ operator==( const nsReadingIterator<CharT>& lhs, const nsReadingIterator<CharT>&
     return lhs.operator->() == rhs.operator->();
   }
 
-#ifdef HAVE_CPP_UNAMBIGUOUS_STD_NOTEQUAL
 template <class CharT>
 inline
 PRBool
@@ -434,7 +433,6 @@ operator!=( const nsReadingIterator<CharT>& lhs, const nsReadingIterator<CharT>&
   {
     return lhs.operator->() != rhs.operator->();
   }
-#endif
 
 
 #define NS_DEF_1_STRING_PTR_COMPARISON_OPERATOR(comp, _StringT, _CharT)   \
