@@ -312,7 +312,6 @@ real_checkout:
 	cvs_co() { echo "$$@" ; \
 	  ("$$@" || touch $$failed) 2>&1 | tee -a $(CVSCO_LOGFILE) && \
 	  if test -f $$failed; then false; else true; fi; }; \
-        cvs_co $(CVSCO_L10N) && \
 	cvs_co $(CVSCO_NSPR) && \
 	cvs_co $(CVSCO_PSM) && \
         cvs_co $(CVSCO_LDAPCSDK) && \
@@ -377,12 +376,6 @@ $(TOPSRCDIR)/configure: $(TOPSRCDIR)/configure.in $(EXTRA_CONFIG_DEPS)
 	cd $(TOPSRCDIR); $(AUTOCONF)
 endif
 
-ifdef MOZ_LANGPACKS
-CONFIG_STATUS_DEPS_L10N := $(wildcard $(TOPSRCDIR)/l10n/makefiles.all)
-else
-CONFIG_STATUS_DEPS_L10N := $(wildcard $(TOPSRCDIR)/l10n/makefiles)
-endif
-
 CONFIG_STATUS_DEPS := \
 	$(TOPSRCDIR)/configure \
 	$(TOPSRCDIR)/allmakefiles.sh \
@@ -390,7 +383,6 @@ CONFIG_STATUS_DEPS := \
 	$(wildcard $(TOPSRCDIR)/nsprpub/configure) \
 	$(wildcard $(TOPSRCDIR)/directory/c-sdk/ldap/configure) \
 	$(wildcard $(TOPSRCDIR)/mailnews/makefiles) \
-	$(CONFIG_STATUS_DEPS_L10N) \
 	$(wildcard $(TOPSRCDIR)/themes/makefiles) \
 	$(NULL)
 
