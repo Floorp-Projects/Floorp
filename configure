@@ -9619,6 +9619,8 @@ if test "${PNG_DIR}" -a -d "${PNG_DIR}" -a "$SYSTEM_PNG" = 1; then
 fi
 
 
+MOZ_FULLCIRCLE=
+FULLCIRCLE_LIBS=
 # Check whether --enable-fullcircle or --disable-fullcircle was given.
 if test "${enable_fullcircle+set}" = set; then
   enableval="$enable_fullcircle"
@@ -9652,9 +9654,9 @@ CFLAGS="$CFLAGS -I${FULLCIRCLE_DIR}"
 LDFLAGS="$LDFLAGS -L${FULLCIRCLE_DIR}"
 LIBS="-lfullsoft $LIBS"
 echo $ac_n "checking "for FCInitialize in -lfullsoft"""... $ac_c" 1>&6
-echo "configure:9656: checking "for FCInitialize in -lfullsoft"" >&5;
+echo "configure:9658: checking "for FCInitialize in -lfullsoft"" >&5;
 cat > conftest.$ac_ext <<EOF
-#line 9658 "configure"
+#line 9660 "configure"
 #include "confdefs.h"
  #include <stdio.h>
 	      #include "fullsoft.h" 
@@ -9662,7 +9664,7 @@ int main() {
  FCInitialize(); exit(0); 
 ; return 0; }
 EOF
-if { (eval echo configure:9666: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+if { (eval echo configure:9668: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   FULLCIRCLE_LIBS="-I${FULLCIRCLE_DIR} -L${FULLCIRCLE_DIR} -lfullsoft" result="yes"
 else
@@ -9681,6 +9683,8 @@ if test ! -z "$MISSING_FULLCIRCLE"; then
     echo
     echo "Could not find FullCircle library -- ignoring it"
     echo
+    MOZ_FULLCIRCLE=
+    FULLCIRCLE_LIBS=
 else
     cat >> confdefs.h <<\EOF
 #define MOZ_FULLCIRCLE 1
@@ -9691,6 +9695,8 @@ EOF
 fi
 
 fi
+
+
 
 
 
@@ -10234,6 +10240,8 @@ s%@MOZ_POST_PROGRAM_COMMAND@%$MOZ_POST_PROGRAM_COMMAND%g
 s%@ClientWallet@%$ClientWallet%g
 s%@CookieManagement@%$CookieManagement%g
 s%@SingleSignon@%$SingleSignon%g
+s%@MOZ_FULLCIRCLE@%$MOZ_FULLCIRCLE%g
+s%@FULLCIRCLE_LIBS@%$FULLCIRCLE_LIBS%g
 s%@SYSTEM_JPEG@%$SYSTEM_JPEG%g
 s%@SYSTEM_PNG@%$SYSTEM_PNG%g
 s%@SYSTEM_ZLIB@%$SYSTEM_ZLIB%g
