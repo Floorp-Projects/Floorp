@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: secvfy.c,v 1.1 2000/03/31 19:46:10 relyea%netscape.com Exp $
+ * $Id: secvfy.c,v 1.2 2000/06/12 23:43:39 chrisk%netscape.com Exp $
  */
 
 #include <stdio.h>
@@ -290,6 +290,7 @@ VFY_VerifyDigest(SECItem *digest, SECKEYPublicKey *key, SECItem *sig,
 {
     SECStatus rv;
     VFYContext *cx;
+    SECItem dsasig;
 
     rv = SECFailure;
 
@@ -305,7 +306,9 @@ VFY_VerifyDigest(SECItem *digest, SECKEYPublicKey *key, SECItem *sig,
 	    break;
 	case fortezzaKey:
 	case dsaKey:
-	     if (PK11_Verify(cx->key,sig,digest,wincx) != SECSuccess) {
+	    dsasig.data = &cx->digest[0];
+	    dsasig.len = DSA_SIGNATURE_LEN; /* magic size of dsa signature */
+	    if (PK11_Verify(cx->key, &dsasig, digest, cx->wincx) != SECSuccess) {
 		PORT_SetError(SEC_ERROR_BAD_SIGNATURE);
 	    } else {
 		rv = SECSuccess;
@@ -314,7 +317,6 @@ VFY_VerifyDigest(SECItem *digest, SECKEYPublicKey *key, SECItem *sig,
 	default:
 	    break;
 	}
-
 	VFY_DestroyContext(cx, PR_TRUE);
     }
     return rv;
