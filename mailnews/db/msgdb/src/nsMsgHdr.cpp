@@ -240,9 +240,10 @@ NS_IMETHODIMP nsMsgHdr::GetNumReferences(PRUint16 *result)
 NS_IMETHODIMP nsMsgHdr::GetStringReference(PRInt32 refNum, nsCString &resultReference)
 {
 	nsresult err = NS_OK;
-	nsAutoString	allReferences (eOneByte);
+	nsAutoString	allReferences;
 	m_mdb->RowCellColumnTonsString(GetMDBRow(), m_mdb->m_referencesColumnToken, allReferences);
-	const char *startNextRef = allReferences.GetBuffer();
+	nsCAutoString cStr(allReferences);
+	const char *startNextRef = cStr.GetBuffer();
 	PRInt32 refIndex;
 	for (refIndex = 0; refIndex <= refNum && startNextRef; refIndex++)
 	{
@@ -307,7 +308,7 @@ NS_IMETHODIMP nsMsgHdr::SetRecipientsArray(const char *names, const char *addres
 	nsresult ret;
 	const char *curName = names;
 	const char *curAddress = addresses;
-	nsAutoString	allRecipients (eOneByte);
+	nsCAutoString	allRecipients;
 
 	for (PRUint32 i = 0; i < numAddresses; i++)
 	{
@@ -329,7 +330,7 @@ NS_IMETHODIMP nsMsgHdr::SetRecipientsArray(const char *names, const char *addres
 		curName += strlen(curName) + 1;
 		curAddress += strlen(curAddress) + 1;
 	}
-	ret = SetRecipients(allRecipients.GetBuffer(), PR_TRUE);
+	ret = SetRecipients(allRecipients, PR_TRUE);
 	return ret;
 }
 
@@ -344,7 +345,7 @@ NS_IMETHODIMP nsMsgHdr::SetCCListArray(const char *names, const char *addresses,
 	nsresult ret;
 	const char *curName = names;
 	const char *curAddress = addresses;
-	nsAutoString	allRecipients(eOneByte);
+	nsCAutoString	allRecipients;
 
 	for (PRUint32 i = 0; i < numAddresses; i++)
 	{
@@ -369,7 +370,7 @@ NS_IMETHODIMP nsMsgHdr::SetCCListArray(const char *names, const char *addresses,
 		curName += strlen(curName) + 1;
 		curAddress += strlen(curAddress) + 1;
 	}
-	ret = SetCCList(allRecipients.GetBuffer());
+	ret = SetCCList(allRecipients);
 	return ret;
 }
 

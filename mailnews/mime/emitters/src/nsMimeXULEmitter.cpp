@@ -1298,7 +1298,7 @@ nsMimeXULEmitter::BuildListOfStatusProviders()
     return rv;
   
   // go ahead and enumerate through.
-  nsString2 actualProgID("", eOneByte);
+  nsCAutoString actualProgID;
   rv = components->First();
   while (NS_SUCCEEDED(rv) && !components->IsDone()) 
   {

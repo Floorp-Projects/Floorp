@@ -420,14 +420,13 @@ NS_IMETHODIMP nsStreamConverter::Init(nsIURI *aURI, nsIStreamListener * aOutList
 	if ( (newType != nsMimeOutput::nsMimeMessageDraftOrTemplate) && 
              (newType != nsMimeOutput::nsMimeMessageEditorTemplate) )
 	{
-		nsAutoString progID (eOneByte);
-		progID = "component://netscape/messenger/mimeemitter;type=";
+		nsCAutoString progID = "component://netscape/messenger/mimeemitter;type=";
 		if (mOverrideFormat)
 		progID += mOverrideFormat;
 		else
 		progID += mOutputFormat;
 
-		rv = nsComponentManager::CreateInstance(progID.GetBuffer(), nsnull,
+		rv = nsComponentManager::CreateInstance(progID, nsnull,
 										                         nsIMimeEmitter::GetIID(),
 										                         (void **) getter_AddRefs(mEmitter));
 		if ((NS_FAILED(rv)) || (!mEmitter))
