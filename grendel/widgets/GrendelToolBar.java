@@ -38,6 +38,7 @@ import grendel.ui.UIAction;
 
 import grendel.widgets.Animation;
 import grendel.widgets.Spring;
+import grendel.widgets.ToolBarButton;
 
 public class GrendelToolBar extends JToolBar {
     
@@ -58,7 +59,7 @@ public class GrendelToolBar extends JToolBar {
                           String aImageName,
                           String aText,
                           String aToolTip) {
-      JButton b = new JButton();
+      ToolBarButton b = new ToolBarButton();
 
       b.setHorizontalTextPosition(JButton.CENTER);
       b.setVerticalTextPosition(JButton.BOTTOM);
