@@ -126,10 +126,11 @@ protected:
   nsIAppShell* mAppShell;
   nsISupportsArray* mWindowList;
   nsICmdLineService* mCmdLineService;
+  nsIWindowMediator* mWindowMediator;
 };
 
 
-nsAppShellService::nsAppShellService()
+nsAppShellService::nsAppShellService() : mWindowMediator( NULL )
 {
   NS_INIT_REFCNT();
 
@@ -143,6 +144,8 @@ nsAppShellService::~nsAppShellService()
   NS_IF_RELEASE(mAppShell);
   NS_IF_RELEASE(mWindowList);
   NS_IF_RELEASE(mCmdLineService);
+  if ( mWindowMediator )
+		nsServiceManager::ReleaseService(kWindowMediatorCID, mWindowMediator);
 }
 
 
@@ -234,7 +237,12 @@ nsAppShellService::Initialize( nsICmdLineService *aCmdLineService )
 
   // Initialize each registered component.
   EnumerateComponents( &nsAppShellService::InitializeComponent );
-
+	
+// enable window mediation
+	rv = nsServiceManager::GetService(kWindowMediatorCID, kIWindowMediatorIID,
+                                   (nsISupports**) &mWindowMediator);
+	if ( NS_SUCCEEDED( rv) )
+		mWindowMediator->Init("rdf:window-mediator");
 done:
   return rv;
 }
