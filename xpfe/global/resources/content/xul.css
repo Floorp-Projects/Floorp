@@ -13,11 +13,15 @@
 @namespace xbl url("http://www.mozilla.org/xbl"); /* namespace for XBL elements */
 
 * {
-  display: block;
+  display: -moz-xul-box;
 }
 
 *, *[disabled="true"] {
   -moz-user-focus: ignore;
+}
+
+html {
+  display: block;
 }
 
 /**
@@ -94,6 +98,12 @@ window {
  * XUL widgets
  **********************************/
 
+/******** Stack *********/
+
+stack {
+  display: -moz-xul-stack;
+}
+
 /******** Browser, editor, iframe ********/
 
 browser, editor, iframe {
@@ -133,17 +143,29 @@ arrowscrollbox {
 /******** Box *******/
 
 vbox {
-  -moz-box-orient: vertical;
+  -moz-xul-box-orient: vertical;
 }
 
 /******** Grid **********/
 
+grid {
+  display: -moz-xul-grid;
+}
+
+rows,columns {
+  display: -moz-xul-grid-group;
+}
+
+row,column {
+  display: -moz-xul-grid-line;
+}
+
 rows {
-  -moz-box-orient: vertical;
+  -moz-xul-box-orient: vertical;
 }
 
 column {
-  -moz-box-orient: vertical;
+  -moz-xul-box-orient: vertical;
 }
 
 /******** TitledBox *******/
@@ -157,6 +179,7 @@ box.titledbox-body {
 }
 
 titledbox {
+  display: -moz-xul-groupbox;
   -moz-binding: url(chrome://global/content/xulBindings.xml#titledbox);
 }
 
@@ -249,7 +272,8 @@ menuitem.menuitem-non-iconic
 popup, menupopup {
   -moz-binding: url("chrome://global/content/xulBindings.xml#popups");
   display: none;
-  -moz-box-orient: vertical;
+  -moz-xul-box-orient: vertical;
+  z-index: 2147483647; 
 }
 
 popup.tooltip, .popup-infopopup {
@@ -257,18 +281,18 @@ popup.tooltip, .popup-infopopup {
 }
 
 menupopup[menugenerated="true"] {
-  display: block;
+  display: -moz-xul-popup;
 }
 
 popup[menugenerated="true"] {
-  display: block;
+  display: -moz-xul-popup;
 }
 
-menupopup, popup {
-  z-index: 2147483647; 
-}
+/******** Bulletin Board *******/
 
-/******** Titled buttons **********/
+bulletinboard {
+  display: -moz-xul-bulletinboard;
+}
 
 /******** Outliner widget ******/
 
@@ -288,7 +312,7 @@ outlinercol {
 
 outlinercol[hidden="true"] {
  visibility: collapse;
- display: block;
+ display: -moz-xul-box;
 }
 
 outlinercol.outlinercol-image {
@@ -310,6 +334,7 @@ outlinercol.outliner-columnpicker {
 /******** Tree widget **********/
 
 tree {
+ display: -moz-xul-grid;
  width: 200px;
  height: 200px;
  min-width: 0px;
@@ -317,14 +342,22 @@ tree {
  -moz-binding: url("chrome://global/content/treeBindings.xml#tree");
 }
 
+treehead, treerows, treechildren, treeitem, treecolgroup {
+ display: -moz-xul-grid-group;
+}
+
+treecol, treerow {
+ display: -moz-xul-grid-line;
+}
+
 treecol {
   min-width: 16px;
   width: 16px;
-  -moz-box-orient: vertical;
+  -moz-xul-box-orient: vertical;
 }
 
 treehead, treerows, treeitem, treechildren {
-  -moz-box-orient: vertical;
+  -moz-xul-box-orient: vertical;
 }
 
 tree > treechildren {
@@ -392,26 +425,31 @@ treeitem > treechildren {
 }
 
 treeitem[open="true"] > treechildren {
-  display: block;
+  display: -moz-xul-grid-group;
 }
 
 treecol[hidden="true"] {
-  display: block;
+  display: -moz-xul-grid-line;
   visibility: collapse;
 }
 
 treecell[hidden="true"] {
-  display: block;
+  display: -moz-xul-box;
   visibility: collapse;
 }
 
-/********** Tab widget *********/
+/********** Deck & Tab Widgets *********/
+
+deck {
+  display: -moz-xul-deck;
+}
 
 tab {
   -moz-binding: url(chrome://global/content/tabBindings.xml#tab);
 }
 
 tabpanel {
+  display: -moz-xul-deck;
   -moz-binding: url(chrome://global/content/tabBindings.xml#tabpanel);
 }
 
@@ -423,7 +461,7 @@ tabbox {
   -moz-binding: url(chrome://global/content/tabBindings.xml#tabbox);
 }
 
-:-moz-deck-hidden {
+:-moz-xul-deck-hidden {
    visibility: hidden;
 }
 
@@ -586,7 +624,6 @@ slider
 
 scrollbarbutton 
   {
-    display               : inline;
     -moz-user-focus       : ignore;
     -moz-user-select      : none;
   }
