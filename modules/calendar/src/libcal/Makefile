@@ -30,6 +30,7 @@ EXPORTS = \
     ical/vtodo.h \
     ical/vfrbsy.h \
     ical/vjournal.h \
+	ical/icalsrdr.h \
     ical/period.h \
     ical/freebusy.h \
     ical/icalfrdr.h \
