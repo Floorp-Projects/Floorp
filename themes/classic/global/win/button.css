@@ -1,3 +1,5 @@
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
 /* NEW WIDGET ANDING: <button> */
 
 /** Default Button Styles (apply to usage of <button> without 
@@ -44,7 +46,7 @@
   button[disabled="true"][default] > .button-box > .button-box-2,
   button[disabled="true"]:hover:active > .button-box > .button-box-2
     {
-			border              : 1px solid ThreeDFace;	
+			border              : 1px solid ThreeDLightShadow;	
     }
   
   button:hover:active,
@@ -95,7 +97,7 @@
   button[disabled]:focus > .button-box > .button-box-2 > .button-box-text
     {
       padding             : 0px 3px 1px 2px;
-      border              : 1px solid ThreeDFace;
+      border              : 1px solid ThreeDLightShadow;
       margin              : 1px;
     }
 

@@ -30,7 +30,7 @@ textbox[type="autocomplete"]
     border-top          : 1px solid -moz-Dialog;
     border-right        : 1px solid ThreeDDarkShadow;
     border-bottom       : 1px solid ThreeDDarkShadow;
-    border-left         : 1px solid ThreeDFace;
+    border-left         : 1px solid ThreeDLightShadow;
     background-color    : ThreeDFace;
     list-style-image    : url("chrome://global/skin/scroll-down.gif");
   }
@@ -51,7 +51,7 @@ textbox[type="autocomplete"]
 
 .autocomplete-history-button[open="true"] > .autocomplete-history-button-internal-box
   {
-    border              : 1px solid ThreeDFace;
+    border              : 1px solid ThreeDLightShadow;
     padding             : 2px 0px 0px 2px;
   }
 

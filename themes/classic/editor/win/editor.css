@@ -26,6 +26,8 @@
    in order to share with all users of editor
 */
 
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
 /********* image pre-cacheing ********/
 #resource_bundle_editor{
   -moz-binding            : url('chrome://editor/skin/resources.xml#resource_bundle_editor') 
@@ -61,7 +63,7 @@
 #ContentWindowDeck
   {
     border-left           : 1px solid ThreeDDarkShadow;
-    border-right          : 1px solid ThreeDFace;
+    border-right          : 1px solid ThreeDLightShadow;
   }
 
 #status-bar
@@ -74,8 +76,8 @@
 #EditModeToolbar 
   {
     border-left           : 1px solid ThreeDDarkShadow;
-    border-right          : 1px solid ThreeDFace;
-    border-bottom         : 1px solid ThreeDFace !important;
+    border-right          : 1px solid ThreeDLightShadow;
+    border-bottom         : 1px solid ThreeDLightShadow !important;
   }
   
   

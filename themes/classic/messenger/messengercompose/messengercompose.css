@@ -300,8 +300,8 @@ outlinerbody:-moz-outliner-image(remote-err)
   {
     border-left           : 1px solid ThreeDDarkShadow;
     border-top            : 1px solid ThreeDDarkShadow;
-    border-right          : 1px solid ThreeDFace;
-    border-bottom         : 1px solid ThreeDFace;
+    border-right          : 1px solid ThreeDLightShadow;
+    border-bottom         : 1px solid ThreeDLightShadow;
   }
 
 #appcontent

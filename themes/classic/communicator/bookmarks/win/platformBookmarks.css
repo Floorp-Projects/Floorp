@@ -1,3 +1,5 @@
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
 /**
  * Bookmarks tree 
  **/ 
@@ -13,7 +15,7 @@
   .bookmarks-window-tree > .tree-container-treerows
     {
       border-left         : 1px solid ThreeDDarkShadow;
-      border-right        : 1px solid ThreeDFace;
+      border-right        : 1px solid ThreeDLightShadow;
     }  
     
   .bookmarks-panel-tree, .bookmarks-panel-tree > .tree-container-treerows

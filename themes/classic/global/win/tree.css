@@ -1,3 +1,4 @@
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 /******** Tree widget **********/ 
 
@@ -166,7 +167,7 @@ tree:focus > treechildren treeitem[selected="true"][current="true"] > treerow
 .treecell-header-sidebarpanel > .treecell-header-box
   {
     border                : none !important;
-    border-right          : 1px solid ThreeDFace !important;
+    border-right          : 1px solid ThreeDLightShadow !important;
   }
  
 /** class="propertylist" ******************************************
@@ -175,8 +176,8 @@ tree:focus > treechildren treeitem[selected="true"][current="true"] > treerow
  
 treecell.propertylist 
   {
-    border-right          : 1px solid ThreeDFace;
-    border-bottom         : 1px solid ThreeDFace;
+    border-right          : 1px solid ThreeDLightShadow;
+    border-bottom         : 1px solid ThreeDLightShadow;
     padding-left          : 5px;
   }
 

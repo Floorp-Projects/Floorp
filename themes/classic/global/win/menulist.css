@@ -1,4 +1,5 @@
 @namespace html url("http://www.w3.org/1999/xhtml"); /* namespace for HTML elements */
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 /* outer frame */
   menulist 
@@ -54,10 +55,10 @@
 /* drop marker display frame */
   .menulist-dropmarker-box-1
     {
-      border-top          : 1px solid ThreeDFace;
+      border-top          : 1px solid ThreeDLightShadow;
       border-right        : 1px solid ThreeDDarkShadow;
       border-bottom       : 1px solid ThreeDDarkShadow;
-      border-left         : 1px solid ThreeDFace;
+      border-left         : 1px solid ThreeDLightShadow;
       background-color    : -moz-Dialog;
     }
   
@@ -87,7 +88,7 @@
     
   menulist:hover:active > .menulist-internal-box > .menulist-dropmarker-box-1 > .menulist-dropmarker-box-2[open="true"]
     {
-      border              : 1px solid ThreeDFace;
+      border              : 1px solid ThreeDLightShadow;
       padding             : 3px 0px 1px 2px;
     }
 

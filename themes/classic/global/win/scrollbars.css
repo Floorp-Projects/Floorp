@@ -1,4 +1,5 @@
-@namespace url(http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul); /* set default namespace to XUL */
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 /********* XP Scrollbar *********/
 
@@ -63,7 +64,7 @@ scrollbarbutton:hover:active
   
 scrollbarbutton:hover:active > .scrollbarbutton-box
   {
-    border                : 1px solid ThreeDFace;
+    border                : 1px solid ThreeDLightShadow;
     padding               : 2px 0px 0px 2px;
   }   
 

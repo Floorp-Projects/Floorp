@@ -1,4 +1,4 @@
-@namespace url(http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul); 
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 /*============ tabpanels widget =============*/
 
@@ -182,13 +182,13 @@ tabs > tab[selected="true"]  {
 }
 
 tabs > tab[selected="true"] > .tab-box {
-  border-bottom: 1px solid ThreeDFace;
+  border-bottom: 1px solid ThreeDLightShadow;
   padding-left: 5px !important;
   padding-right: 4px !important;
 }
 
 tabs > tab[selected="true"][first-tab="true"] > .tab-box {
-  border-bottom: 1px solid ThreeDFace;
+  border-bottom: 1px solid ThreeDLightShadow;
   padding-left: 5px !important;
   padding-right: 4px !important;
 }
@@ -200,7 +200,7 @@ tabpanels + tabs > tab[selected="true"] {
 }
 
 tabpanels + tabs > tab[selected="true"] > .tab-box {
-  border-top: 1px solid ThreeDFace;
+  border-top: 1px solid ThreeDLightShadow;
   border-bottom: 1px solid ThreeDShadow !important;
 }
 
@@ -211,13 +211,13 @@ tabbox[orient="horizontal"] > tabs[orient="vertical"] > tab[selected="true"]  {
 }
 
 tabbox[orient="horizontal"] > tabs[orient="vertical"] > tab[selected="true"] > .tab-box {
-  border-right: 1px solid ThreeDFace;
+  border-right: 1px solid ThreeDLightShadow;
   padding-top: 3px !important;
   padding-bottom: 2px !important;
 }
 
 tabbox[orient="horizontal"] > tabs[orient="vertical"] > tab[selected="true"][first-tab="true"] > .tab-box {
-  border-right: 1px solid ThreeDFace;
+  border-right: 1px solid ThreeDLightShadow;
   padding-top: 3px !important;
   padding-bottom: 2px !important;
 }
@@ -228,7 +228,7 @@ tabbox[orient="horizontal"] > tabpanels + tabs[orient="vertical"] > tab[selected
 }
 
 tabbox[orient="horizontal"] > tabpanels + tabs[orient="vertical"] > tab[selected="true"] > .tab-box {
-  border-left: 1px solid ThreeDFace !important;
+  border-left: 1px solid ThreeDLightShadow !important;
   border-right: 1px solid ThreeDShadow !important;
 }
 
