@@ -392,7 +392,10 @@ nsHTMLContentSerializer::SerializeAttributes(nsIContent* aContent,
     * then start the attribute from a new line.
     */
 
-    if (mDoFormat && (mColPos >= mMaxColumn || ((mColPos + nameStr.Length() + valueStr.Length() + 4) > mMaxColumn))) {
+    if (mDoFormat
+        && (mColPos >= mMaxColumn
+            || ((PRInt32)(mColPos + nameStr.Length() +
+                          valueStr.Length() + 4) > mMaxColumn))) {
         aStr.Append(mLineBreak);
         mColPos = 0;
     }
@@ -656,6 +659,7 @@ nsHTMLContentSerializer::AppendToStringWrapped(const nsASingleFragmentString& aS
       if (pos == end) {
         return;
       }
+      lastSpace = pos;
     }
     segStart = pos;
     lastChar = pos;
