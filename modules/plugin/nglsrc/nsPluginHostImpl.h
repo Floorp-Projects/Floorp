@@ -90,7 +90,6 @@ struct nsActivePlugin
   void setStopped(PRBool stopped);
 };
 
-#define MAX_NUMBER_OF_STOPPED_PLUGINS 10
 
 class nsActivePluginList
 {
