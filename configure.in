@@ -108,12 +108,13 @@ dnl Note this case statement doesn't seem to handle [] as part of a regexp
 dnl set the defaults first
 dnl ========================================================
 MKSHLIB='$(LD) $(DSO_LDOPTS)'
-DSO_LDOPTS='-shared -soname $(@:$(OBJDIR)/%.so=%.so)'
+DSO_LDOPTS='-shared -h $(@:$(OBJDIR)/%.so=%.so)'
 
 dnl gcc can come with its own linker so its better to use the pass-thru calls
 dnl ========================================================
 if test "$GNU_CC" = 1; then
-    MKSHLIB='$(CC) -shared -Wl,-h -Wl,$(@:$(OBJDIR)/%.so=%.so)'
+    MKSHLIB='$(CC) $(DSO_LDOPTS)'
+    DSO_LDOPTS='-shared -Wl,-h -Wl,$(@:$(OBJDIR)/%.so=%.so)'
 fi
 
 dnl now the exceptions
@@ -127,7 +128,7 @@ alpha-*-linux*)
 	CFLAGS="$CFLAGS -mieee" ;;
 
 *-freebsd*)
-	DSO_LDOPTS='-Bshareable' ;;
+	DSO_LDOPTS="-Bshareable $DSO_LDOPTS" ;;
 
 esac
 
