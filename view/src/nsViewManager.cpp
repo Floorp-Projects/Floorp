@@ -548,6 +548,9 @@ NS_IMETHODIMP nsViewManager :: UpdateView(nsIView *aView, const nsRect &aRect, P
   nscoord xoffset, yoffset;
   GetWindowOffsets(widgetView, &xoffset, &yoffset);
   trect.MoveBy(-xoffset, -yoffset);
+  if (trect.y < 0) {
+    trect.y = 0;
+  }
 
   // Add this rect to the widgetView's dirty region.
   AddRectToDirtyRegion(widgetView, trect);
