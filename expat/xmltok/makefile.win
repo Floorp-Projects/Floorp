@@ -17,6 +17,7 @@
 
 #
 
+DEFINES=-DXML_DTD
 DEPTH= ..\..
 
 OBJS=                                   \
