@@ -328,8 +328,8 @@ var toDoTreeView =
     calendarToDo = gTaskArray[row];
     if( !calendarToDo ) return;
 
-    if( col.id == "unifinder-todo-tree-col-completed")
-	{
+    // Moz1.8 trees require column.id, moz1.7 and earlier trees use column.
+    if( (col.id || col) == "unifinder-todo-tree-col-completed")	{
 	  var completed = calendarToDo.completed.getTime();
 	  
 	  if( completed > 0 )
