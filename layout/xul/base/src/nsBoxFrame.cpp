@@ -98,7 +98,6 @@
 #include "nsITheme.h"
 
 static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
-static NS_DEFINE_IID(kCChildCID, NS_CHILD_CID);
 
 //define DEBUG_REDRAW
 
