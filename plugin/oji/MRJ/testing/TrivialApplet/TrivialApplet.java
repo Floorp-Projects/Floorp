@@ -12,7 +12,7 @@ import netscape.javascript.JSObject;
 
 class AboutBox extends Frame {
 	AboutBox(Menu aboutMenu, ActionListener[] actionListeners) {
-		super("About This Applet");
+		super("About Applet");
 		
 		addWindowListener(
 			new WindowAdapter() {
@@ -38,6 +38,7 @@ class AboutBox extends Frame {
 
 		add(labelPanel, "North");
 		add(buttonPanel, "Center");
+		add(new TextField(), "South");
 		
 		// test menu bar stuff.
 		MenuBar menuBar = new MenuBar();
@@ -81,6 +82,7 @@ public class TrivialApplet extends Applet {
 	public Button goButton;
 	public Button aboutButton;
 	public TextField urlField;
+	public PopupMenu contextMenu;
 	public Menu aboutMenu;
 	public ActionListener[] actionListeners;
 	private static int appletCount;
@@ -126,7 +128,7 @@ public class TrivialApplet extends Applet {
 		add(urlField);
 		
 		// Try a pop-up menu, and a menu in the menubar.
-		PopupMenu contextMenu = new PopupMenu();
+		contextMenu = new PopupMenu();
 		aboutMenu = new Menu("About");
 		
 		contextMenu.add(newItem("About", aboutListener));
@@ -147,6 +149,18 @@ public class TrivialApplet extends Applet {
 		actionListeners = listeners;
 		
 		add(contextMenu);
+
+		// add a mouse listener that causes the pop-up to appear appropriately.
+		MouseListener mouseListener = new MouseAdapter() {
+			public void mousePressed(MouseEvent e) {
+				if (e.isPopupTrigger()) {
+					e.consume();
+					contextMenu.show(TrivialApplet.this, e.getX(), e.getY());
+				}
+			}
+		};
+		
+		addMouseListener(mouseListener);
 	}
 	
 	private MenuItem newItem(String title, ActionListener listener) {
