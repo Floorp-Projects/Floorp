@@ -28,6 +28,7 @@
 #include "msgCore.h"
 #include "nsIMessage.h" /* include the interface we are going to support */
 #include "nsRDFResource.h"
+#include "nsIMsgHdr.h"
 #include "nsCOMPtr.h"
 
 
