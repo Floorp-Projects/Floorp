@@ -53,9 +53,6 @@ NS_NewURI(nsIURI* *result, const char* spec, nsIURI* baseURI = nsnull)
 inline nsresult
 NS_NewURI(nsIURI* *result, const nsString& spec, nsIURI* baseURI = nsnull)
 {
-    // XXX if the string is unicode, GetBuffer() returns null. 
-    // XXX we need a strategy to deal w/ unicode specs (if there should
-    // XXX even be such a thing)
     char* specStr = spec.ToNewUTF8String(); // this forces a single byte char*
     if (specStr == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
