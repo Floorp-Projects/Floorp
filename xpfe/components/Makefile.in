@@ -36,7 +36,6 @@ DIRS	= \
 			sidebar \
 			related \
 			regviewer \
-			xfer \
 			prefwindow \
 			shistory \
 			timebomb \

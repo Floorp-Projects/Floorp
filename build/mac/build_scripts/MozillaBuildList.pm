@@ -1073,7 +1073,7 @@ sub BuildClientDist()
     InstallFromManifest(":mozilla:xpinstall:cleanup:MANIFEST",                      "$distdirectory:xpinstall:");
 
     my $dir = '';
-    for $dir (qw(autocomplete bookmarks download-manager find history related search shistory sidebar urlbarhistory xfer))
+    for $dir (qw(autocomplete bookmarks download-manager find history related search shistory sidebar urlbarhistory))
     {
         InstallFromManifest(":mozilla:xpfe:components:$dir:public:MANIFEST_IDL",       "$distdirectory:idl:");
     }
@@ -2203,7 +2203,6 @@ sub BuildXPAppProjects()
 
     # Components
     BuildOneProject(":mozilla:xpfe:components:find:macbuild:FindComponent.xml", "FindComponent$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:xpfe:components:xfer:macbuild:xfer.xml",  "xfer$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:xpfe:components:regviewer:RegViewer.xml", "RegViewer$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:xpfe:components:shistory:macbuild:shistory.xml", "shistory$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:xpfe:components:macbuild:appcomps.xml", "appcomps$D.$S", 1, $main::ALIAS_SYM_FILES, 1);

@@ -130,8 +130,6 @@ bin/components/liblwbrk.so
 bin/components/libmork.so
 bin/components/libmozbrwsr.so
 bin/components/libmozfind.so
-bin/components/libmozucth.so
-bin/components/libmozxfer.so
 bin/components/libnslocale.so
 bin/components/liboji.so
 bin/components/libpref.so
@@ -170,8 +168,6 @@ bin/components/locale.xpt
 bin/components/mozbrwsr.xpt
 bin/components/mozcomps.xpt
 bin/components/mozfind.xpt
-bin/components/mozucth.xpt
-bin/components/mozxfer.xpt
 bin/components/libnecko.so
 bin/components/libnecko2.so
 bin/components/libnkcache.so

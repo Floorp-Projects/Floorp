@@ -32,7 +32,6 @@ DIRS= \
     sidebar \
     regviewer \
     related \
-    xfer \
     download-manager \
     shistory \
     timebomb \

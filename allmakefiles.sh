@@ -667,12 +667,6 @@ xpfe/components/search/src/Makefile
 xpfe/components/sidebar/Makefile
 xpfe/components/sidebar/public/Makefile
 xpfe/components/sidebar/src/Makefile
-xpfe/components/xfer/Makefile
-xpfe/components/xfer/public/Makefile
-xpfe/components/xfer/src/Makefile
-xpfe/components/ucth/Makefile
-xpfe/components/ucth/public/Makefile
-xpfe/components/ucth/src/Makefile
 xpfe/components/autocomplete/Makefile
 xpfe/components/autocomplete/public/Makefile
 xpfe/components/autocomplete/src/Makefile

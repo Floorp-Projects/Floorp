@@ -165,8 +165,6 @@ bin\components\mozfind.dll
 bin\components\mozfind.xpt
 bin\components\mozucth.dll
 bin\components\mozucth.xpt
-bin\components\mozxfer.dll
-bin\components\mozxfer.xpt
 bin\components\nativapp.dll
 bin\components\necko.dll
 bin\components\nkcache.dll
