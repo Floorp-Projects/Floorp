@@ -855,12 +855,12 @@ gtk_moz_embed_handle_net(GtkMozEmbed *embed, gint32 flags)
   g_return_if_fail (GTK_IS_MOZ_EMBED(embed));
 
   // if we've got the start flag, emit the signal
-  if (flags & gtk_moz_embed_flag_win_start)
+  if (flags & GTK_MOZ_EMBED_FLAG_WIN_START)
     gtk_signal_emit(GTK_OBJECT(embed), moz_embed_signals[NET_START]);
   // for people who know what they are doing
   gtk_signal_emit(GTK_OBJECT(embed), moz_embed_signals[NET_STATUS], flags);
   // and for stop, too
-  if (flags & gtk_moz_embed_flag_win_stop)
+  if (flags & GTK_MOZ_EMBED_FLAG_WIN_STOP)
     gtk_signal_emit(GTK_OBJECT(embed), moz_embed_signals[NET_STOP]);
 
 }

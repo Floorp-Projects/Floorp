@@ -88,50 +88,50 @@ extern guint32      gtk_moz_embed_get_chrome_mask  (GtkMozEmbed *embed);
 
 /* These are straight out of nsIWebProgress.h */
 
-enum { gtk_moz_embed_flag_net_start = 1,
-       gtk_moz_embed_flag_net_stop = 2,
-       gtk_moz_embed_flag_net_dns = 4,
-       gtk_moz_embed_flag_net_connecting = 8,
-       gtk_moz_embed_flag_net_redirecting = 16,
-       gtk_moz_embed_flag_net_negotiating = 32,
-       gtk_moz_embed_flag_net_transferring = 64,
-       gtk_moz_embed_flag_net_failedDNS = 4096,
-       gtk_moz_embed_flag_net_failedConnect = 8192,
-       gtk_moz_embed_flag_net_failedTransfer = 16384,
-       gtk_moz_embed_flag_net_failedTimeout = 32768,
-       gtk_moz_embed_flag_net_userCancelled = 65536,
-       gtk_moz_embed_flag_win_start = 1048576,
-       gtk_moz_embed_flag_win_stop = 2097152 };
+enum { GTK_MOZ_EMBED_FLAG_NET_START = 1,
+       GTK_MOZ_EMBED_FLAG_NET_STOP = 2,
+       GTK_MOZ_EMBED_FLAG_NET_DNS = 4,
+       GTK_MOZ_EMBED_FLAG_NET_CONNECTING = 8,
+       GTK_MOZ_EMBED_FLAG_NET_REDIRECTING = 16,
+       GTK_MOZ_EMBED_FLAG_NET_NEGOTIATING = 32,
+       GTK_MOZ_EMBED_FLAG_NET_TRANSFERRING = 64,
+       GTK_MOZ_EMBED_FLAG_NET_FAILEDDNS = 4096,
+       GTK_MOZ_EMBED_FLAG_NET_FAILEDCONNECT = 8192,
+       GTK_MOZ_EMBED_FLAG_NET_FAILEDTRANSFER = 16384,
+       GTK_MOZ_EMBED_FLAG_NET_FAILEDTIMEOUT = 32768,
+       GTK_MOZ_EMBED_FLAG_NET_USERCANCELLED = 65536,
+       GTK_MOZ_EMBED_FLAG_WIN_START = 1048576,
+       GTK_MOZ_EMBED_FLAG_WIN_STOP = 2097152 };
 
 /* These are straight out of nsIWebNavigation.h */
 
-enum { gtk_moz_embed_flag_reloadNormal = 0,
-       gtk_moz_embed_flag_reloadBypassCache = 1,
-       gtk_moz_embed_flag_reloadBypassProxy = 2,
-       gtk_moz_embed_flag_reloadBypassProxyAndCache = 3 };
+enum { GTK_MOZ_EMBED_FLAG_RELOADNORMAL = 0,
+       GTK_MOZ_EMBED_FLAG_RELOADBYPASSCACHE = 1,
+       GTK_MOZ_EMBED_FLAG_RELOADBYPASSPROXY = 2,
+       GTK_MOZ_EMBED_FLAG_RELOADBYPASSPROXYANDCACHE = 3 };
 
 /* These are straight out of nsIWebBrowserChrome.h */
 
-enum { gtk_moz_embed_flag_defaultChrome = 1U,
-       gtk_moz_embed_flag_windowBordersOn = 2U,
-       gtk_moz_embed_flag_windowCloseOn = 4U,
-       gtk_moz_embed_flag_windowResizeOn = 8U,
-       gtk_moz_embed_flag_menuBarOn = 16U,
-       gtk_moz_embed_flag_toolBarOn = 32U,
-       gtk_moz_embed_flag_locationBarOn = 64U,
-       gtk_moz_embed_flag_statusBarOn = 128U,
-       gtk_moz_embed_flag_personalToolBarOn = 256U,
-       gtk_moz_embed_flag_scrollbarsOn = 512U,
-       gtk_moz_embed_flag_titlebarOn = 1024U,
-       gtk_moz_embed_flag_extraChromeOn = 2048U,
-       gtk_moz_embed_flag_windowRaised = 33554432U,
-       gtk_moz_embed_flag_windowLowered = 67108864U,
-       gtk_moz_embed_flag_centerScreen = 134217728U,
-       gtk_moz_embed_flag_dependent = 268435456U,
-       gtk_moz_embed_flag_modal = 536870912U,
-       gtk_moz_embed_flag_openAsDialog = 1073741824U,
-       gtk_moz_embed_flag_openAsChrome = 2147483648U,
-       gtk_moz_embed_flag_allChrome = 4094U };
+enum { GTK_MOZ_EMBED_FLAG_DEFAULTCHROME = 1U,
+       GTK_MOZ_EMBED_FLAG_WINDOWBORDERSON = 2U,
+       GTK_MOZ_EMBED_FLAG_WINDOWCLOSEON = 4U,
+       GTK_MOZ_EMBED_FLAG_WINDOWRESIZEON = 8U,
+       GTK_MOZ_EMBED_FLAG_MENUBARON = 16U,
+       GTK_MOZ_EMBED_FLAG_TOOLBARON = 32U,
+       GTK_MOZ_EMBED_FLAG_LOCATIONBARON = 64U,
+       GTK_MOZ_EMBED_FLAG_STATUSBARON = 128U,
+       GTK_MOZ_EMBED_FLAG_PERSONALTOOLBARON = 256U,
+       GTK_MOZ_EMBED_FLAG_SCROLLBARSON = 512U,
+       GTK_MOZ_EMBED_FLAG_TITLEBARON = 1024U,
+       GTK_MOZ_EMBED_FLAG_EXTRACHROMEON = 2048U,
+       GTK_MOZ_EMBED_FLAG_WINDOWRAISED = 33554432U,
+       GTK_MOZ_EMBED_FLAG_WINDOWLOWERED = 67108864U,
+       GTK_MOZ_EMBED_FLAG_CENTERSCREEN = 134217728U,
+       GTK_MOZ_EMBED_FLAG_DEPENDENT = 268435456U,
+       GTK_MOZ_EMBED_FLAG_MODAL = 536870912U,
+       GTK_MOZ_EMBED_FLAG_OPENASDIALOG = 1073741824U,
+       GTK_MOZ_EMBED_FLAG_OPENASCHROME = 2147483648U,
+       GTK_MOZ_EMBED_FLAG_ALLCHROME = 4094U };
 
 
 #ifdef __cplusplus
