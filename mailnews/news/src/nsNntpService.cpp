@@ -843,16 +843,18 @@ NS_IMETHODIMP nsNntpService::MakeAbsolute(const char *aRelativeSpec, nsIURI *aBa
 
 NS_IMETHODIMP nsNntpService::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI **_retval)
 {
+    *_retval = nsnull;
 	// i just haven't implemented this yet...I will be though....
 	NS_ASSERTION(0, "unimplemented");
-	return NS_OK;
+	return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP nsNntpService::NewChannel(const char *verb, nsIURI *aURI, nsIEventSinkGetter *eventSinkGetter, nsIEventQueue *eventQueue, nsIChannel **_retval)
 {
+    *_retval = nsnull;
 	// mscott - right now, I don't like the idea of returning channels to the caller. They just want us
 	// to run the url, they don't want a channel back...I'm going to be addressing this issue with
 	// the necko team in more detail later on.
 	NS_ASSERTION(0, "unimplemented");
-	return NS_OK;
+	return NS_ERROR_FAILURE;
 }
