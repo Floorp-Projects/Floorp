@@ -4,7 +4,7 @@
  CREATOR: Damon Chaplin 15 March 2001
 
 
- $Id: icaltimezone.c,v 1.6 2002/12/03 21:12:28 mostafah%oeone.com Exp $
+ $Id: icaltimezone.c,v 1.7 2003/03/04 20:47:57 mostafah%oeone.com Exp $
  $Locker:  $
 
  (C) COPYRIGHT 2001, Damon Chaplin
@@ -58,6 +58,8 @@
 /* The prefix we use to uniquely identify TZIDs. */
 #define TZID_PREFIX		"/softwarestudio.org/"
 #define TZID_PREFIX_LEN		20
+
+char *gDefaultTzidPrefix=TZID_PREFIX;
 
 /* This is the filename of the file containing the city names and coordinates
    of all the builtin timezones. */
@@ -173,7 +175,7 @@ static void  icaltimezone_init			(icaltimezone	*zone);
 /* Gets the TZID, LOCATION/X-LIC-LOCATION, and TZNAME properties from the
    VTIMEZONE component and places them in the icaltimezone. It returns 1 on
    success, or 0 if the TZID can't be found. */
-static int   icaltimezone_get_vtimezone_properties (icaltimezone  *zone,
+int   icaltimezone_get_vtimezone_properties (icaltimezone  *zone,
 						    icalcomponent *component);
 
 
@@ -266,7 +268,7 @@ icaltimezone_init			(icaltimezone	*zone)
    It returns 1 on success, or 0 if the TZID can't be found.
    Note that it expects the zone to be initialized or reset - it doesn't free
    any old values. */
-static int
+int
 icaltimezone_get_vtimezone_properties	(icaltimezone	*zone,
 					 icalcomponent	*component)
 {
@@ -1289,7 +1291,7 @@ icaltimezone_get_builtin_timezone	(const char *location)
 	return &utc_timezone;
 
     if (!builtin_timezones)
-	icaltimezone_init_builtin_timezones ();
+       icaltimezone_init_builtin_timezones ();
 
     /* Do a simple binary search. */
     lower = middle = 0;
@@ -1324,7 +1326,7 @@ icaltimezone_get_builtin_timezone_from_tzid (const char *tzid)
 	return NULL;
 
     /* Check that the TZID starts with our unique prefix. */
-    if (strncmp (tzid, TZID_PREFIX, TZID_PREFIX_LEN))
+    if (strncmp (tzid, gDefaultTzidPrefix, strlen( gDefaultTzidPrefix )) )
 	return NULL;
 
     /* Get the location, which is after the 3rd '/' character. */
