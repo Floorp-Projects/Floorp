@@ -547,7 +547,7 @@ nsresult GetExistingFolder(const char *aFolderURI, nsIMsgFolder **aFolder)
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIRDFResource> resource;
-  rv = rdf->GetResource(aFolderURI, getter_AddRefs(resource));
+  rv = rdf->GetResource(nsDependentCString(aFolderURI), getter_AddRefs(resource));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr <nsIMsgFolder> thisFolder;
@@ -655,7 +655,7 @@ GetOrCreateFolder(const nsACString &aURI, nsIUrlListener *aListener)
   // get the corresponding RDF resource
   // RDF will create the folder resource if it doesn't already exist
   nsCOMPtr<nsIRDFResource> resource;
-  rv = rdf->GetResource(nsCAutoString(aURI).get(), getter_AddRefs(resource));
+  rv = rdf->GetResource(aURI, getter_AddRefs(resource));
   NS_ENSURE_SUCCESS(rv, rv);
   
   nsCOMPtr <nsIMsgFolder> folderResource;

@@ -280,7 +280,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::AddSubfolder(nsAutoString *name,
     return NS_MSG_FOLDER_EXISTS;
 
 	nsCOMPtr<nsIRDFResource> res;
-	rv = rdf->GetResource(uri.get(), getter_AddRefs(res));
+	rv = rdf->GetResource(uri, getter_AddRefs(res));
 	if (NS_FAILED(rv))
 		return rv;
 
@@ -773,7 +773,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::CreateStorageIfMissing(nsIUrlListener* aUrlL
       NS_ENSURE_SUCCESS(rv,rv);
 
       nsCOMPtr<nsIRDFResource> resource;
-      rv = rdf->GetResource(parentName.get(), getter_AddRefs(resource));
+      rv = rdf->GetResource(parentName, getter_AddRefs(resource));
       NS_ENSURE_SUCCESS(rv,rv);
 
       msgParent = do_QueryInterface(resource, &rv);

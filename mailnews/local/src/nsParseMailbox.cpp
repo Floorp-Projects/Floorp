@@ -1679,7 +1679,7 @@ NS_IMETHODIMP nsParseNewMailState::ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWi
 			    if ((const char*)actionTargetFolderUri &&
               nsCRT::strcasecmp(m_inboxUri, actionTargetFolderUri))
           {
-            nsresult err = MoveIncorporatedMessage(msgHdr, m_mailDB, (const char *) actionTargetFolderUri, filter, msgWindow);
+            nsresult err = MoveIncorporatedMessage(msgHdr, m_mailDB, actionTargetFolderUri, filter, msgWindow);
             if (NS_SUCCEEDED(err))
             {
               if (loggingEnabled)
@@ -1739,7 +1739,7 @@ int nsParseNewMailState::MarkFilteredMessageRead(nsIMsgDBHdr *msgHdr)
 
 nsresult nsParseNewMailState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr, 
 											   nsIMsgDatabase *sourceDB, 
-											   const char *destFolderUri,
+											   const nsACString& destFolderUri,
                                                       nsIMsgFilter *filter,
                                                       nsIMsgWindow *msgWindow)
 {

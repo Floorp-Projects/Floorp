@@ -93,9 +93,9 @@ nsMsgFilterDataSource::initGlobalObjects(nsIRDFService *rdf)
     rdf->GetLiteral(NS_LITERAL_STRING("true").get(),
                     getter_AddRefs(kTrueLiteral));
     
-    rdf->GetResource(NC_RDF_CHILD, getter_AddRefs(kNC_Child));
-    rdf->GetResource(NC_RDF_NAME, getter_AddRefs(kNC_Name));
-    rdf->GetResource(NC_RDF_ENABLED, getter_AddRefs(kNC_Enabled));
+    rdf->GetResource(NS_LITERAL_CSTRING(NC_RDF_CHILD), getter_AddRefs(kNC_Child));
+    rdf->GetResource(NS_LITERAL_CSTRING(NC_RDF_NAME), getter_AddRefs(kNC_Name));
+    rdf->GetResource(NS_LITERAL_CSTRING(NC_RDF_ENABLED), getter_AddRefs(kNC_Enabled));
 
     NS_NewISupportsArray(getter_AddRefs(mFilterListArcsOut));
     mFilterListArcsOut->AppendElement(kNC_Child);
@@ -336,7 +336,7 @@ nsMsgFilterDataSource::getFilterListTargets(nsIMsgFilterList *aFilterList,
         Recycle(utf8Name);
         
         nsCOMPtr<nsIRDFResource> filterResource;
-        rv = getRDFService()->GetResource(filterUri.get(),
+        rv = getRDFService()->GetResource(filterUri,
                               getter_AddRefs(filterResource));
         if (NS_SUCCEEDED(rv))
             aResult->AppendElement(filterResource);

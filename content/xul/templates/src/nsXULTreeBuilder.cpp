@@ -331,8 +331,9 @@ nsXULTreeBuilder::Init()
     if (NS_FAILED(rv)) return rv;
 
     if (gRefCnt++ == 0) {
-        gRDFService->GetResource(RDF_NAMESPACE_URI "type", &kRDF_type);
-        gRDFService->GetResource(NC_NAMESPACE_URI "BookmarkSeparator", &kNC_BookmarkSeparator);
+        gRDFService->GetResource(NS_LITERAL_CSTRING(RDF_NAMESPACE_URI "type"), &kRDF_type);
+        gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "BookmarkSeparator"),
+                                 &kNC_BookmarkSeparator);
     }
 
     // Try to acquire a collation object for sorting

@@ -119,7 +119,7 @@ NS_IMETHODIMP nsAbMDBDirFactory::CreateDirectory(nsIAbDirectoryProperties *aProp
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIRDFResource> resource;
-    rv = rdf->GetResource(uri.get(), getter_AddRefs(resource));
+    rv = rdf->GetResource(uri, getter_AddRefs(resource));
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIAbDirectory> directory(do_QueryInterface(resource, &rv));

@@ -60,22 +60,28 @@ nsRDFXMLSerializer::Create(nsISupports* aOuter, REFNSIID aIID, void** aResult)
         nsCOMPtr<nsIRDFService> rdf = do_GetService("@mozilla.org/rdf/rdf-service;1", &rv);
         if (NS_FAILED(rv)) break;
 
-        rv = rdf->GetResource(RDF_NAMESPACE_URI "instanceOf", &kRDF_instanceOf);
+        rv = rdf->GetResource(NS_LITERAL_CSTRING(RDF_NAMESPACE_URI "instanceOf"),
+                              &kRDF_instanceOf);
         if (NS_FAILED(rv)) break;
 
-        rv = rdf->GetResource(RDF_NAMESPACE_URI "type",       &kRDF_type);
+        rv = rdf->GetResource(NS_LITERAL_CSTRING(RDF_NAMESPACE_URI "type"),
+                              &kRDF_type);
         if (NS_FAILED(rv)) break;
 
-        rv = rdf->GetResource(RDF_NAMESPACE_URI "nextVal",    &kRDF_nextVal);
+        rv = rdf->GetResource(NS_LITERAL_CSTRING(RDF_NAMESPACE_URI "nextVal"),
+                              &kRDF_nextVal);
         if (NS_FAILED(rv)) break;
 
-        rv = rdf->GetResource(RDF_NAMESPACE_URI "Bag",        &kRDF_Bag);
+        rv = rdf->GetResource(NS_LITERAL_CSTRING(RDF_NAMESPACE_URI "Bag"),
+                              &kRDF_Bag);
         if (NS_FAILED(rv)) break;
 
-        rv = rdf->GetResource(RDF_NAMESPACE_URI "Seq",        &kRDF_Seq);
+        rv = rdf->GetResource(NS_LITERAL_CSTRING(RDF_NAMESPACE_URI "Seq"),
+                              &kRDF_Seq);
         if (NS_FAILED(rv)) break;
 
-        rv = rdf->GetResource(RDF_NAMESPACE_URI "Alt",        &kRDF_Alt);
+        rv = rdf->GetResource(NS_LITERAL_CSTRING(RDF_NAMESPACE_URI "Alt"),
+                              &kRDF_Alt);
         if (NS_FAILED(rv)) break;
 
         rv = nsServiceManager::GetService("@mozilla.org/rdf/container-utils;1",

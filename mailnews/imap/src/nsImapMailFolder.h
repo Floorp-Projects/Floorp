@@ -344,7 +344,7 @@ public:
   
   nsresult MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr, 
                              nsIMsgDatabase *sourceDB, 
-                             const char *destFolder,
+                             const nsACString& destFolder,
                              nsIMsgFilter *filter,
                              nsIMsgWindow *msgWindow);
   virtual nsresult SpamFilterClassifyMessage(const char *aURI, nsIMsgWindow *aMsgWindow, nsIJunkMailPlugin *aJunkMailPlugin);

@@ -3076,7 +3076,8 @@ nsXULDocument::Persist(nsIContent* aElement, PRInt32 aNameSpaceID,
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIRDFResource> attr;
-    rv = gRDFService->GetResource(NS_LossyConvertUCS2toASCII(attrstr).get(), getter_AddRefs(attr));
+    rv = gRDFService->GetUnicodeResource(nsDependentString(attrstr),
+                                         getter_AddRefs(attr));
     if (NS_FAILED(rv)) return rv;
 
     // Turn the value into a literal
@@ -3124,7 +3125,7 @@ nsXULDocument::Persist(nsIContent* aElement, PRInt32 aNameSpaceID,
         if (NS_FAILED(rv)) return rv;
 
         nsCOMPtr<nsIRDFResource> doc;
-        rv = gRDFService->GetResource(docurl.get(), getter_AddRefs(doc));
+        rv = gRDFService->GetResource(docurl, getter_AddRefs(doc));
         if (NS_FAILED(rv)) return rv;
 
         PRBool hasAssertion;
@@ -4416,9 +4417,12 @@ nsXULDocument::Init()
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF Service");
         if (NS_FAILED(rv)) return rv;
 
-        gRDFService->GetResource(NC_NAMESPACE_URI "persist",   &kNC_persist);
-        gRDFService->GetResource(NC_NAMESPACE_URI "attribute", &kNC_attribute);
-        gRDFService->GetResource(NC_NAMESPACE_URI "value",     &kNC_value);
+        gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "persist"),
+                                 &kNC_persist);
+        gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "attribute"),
+                                 &kNC_attribute);
+        gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "value"),
+                                 &kNC_value);
 
         rv = CallCreateInstance(kHTMLElementFactoryCID, &gHTMLElementFactory);
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get HTML element factory");
@@ -4900,7 +4904,7 @@ nsXULDocument::ApplyPersistentAttributes()
     mDocumentURL->GetSpec(docurl);
 
     nsCOMPtr<nsIRDFResource> doc;
-    gRDFService->GetResource(docurl.get(), getter_AddRefs(doc));
+    gRDFService->GetResource(docurl, getter_AddRefs(doc));
 
     nsCOMPtr<nsISimpleEnumerator> persisted;
     mLocalStore->GetTargets(doc, kNC_persist, PR_TRUE, getter_AddRefs(persisted));

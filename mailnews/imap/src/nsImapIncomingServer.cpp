@@ -1055,7 +1055,7 @@ nsresult nsImapIncomingServer::GetPFCForStringId(PRBool createIfMissing, PRInt32
     NS_ENSURE_SUCCESS(rv,rv);
 
     nsCOMPtr<nsIRDFResource> res;
-	  rv = rdf->GetResource(pfcMailUri.get(), getter_AddRefs(res));
+	  rv = rdf->GetResource(pfcMailUri, getter_AddRefs(res));
 	  NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr <nsIMsgFolder> parentToCreate = do_QueryInterface(res, &rv);
@@ -1572,7 +1572,7 @@ nsresult nsImapIncomingServer::GetFolder(const char* name, nsIMsgFolder** pFolde
           nsCOMPtr<nsIRDFService> rdf(do_GetService(kRDFServiceCID, &rv));
           if (NS_FAILED(rv)) return rv;
           nsCOMPtr<nsIRDFResource> res;
-          rv = rdf->GetResource(uriString.get(), getter_AddRefs(res));
+          rv = rdf->GetResource(uriString, getter_AddRefs(res));
           if (NS_SUCCEEDED(rv))
           {
               nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(res, &rv));

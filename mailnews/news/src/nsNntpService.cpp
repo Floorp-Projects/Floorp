@@ -621,10 +621,10 @@ nsNntpService::GetFolderFromUri(const char *uri, nsIMsgFolder **folder)
     if ((strlen(uri) > kNntpRootURILen) && nsCRT::strncmp(uri, kNntpRootURI, kNntpRootURILen) == 0) {
       nsCAutoString uriStr(kNewsRootURI);
       uriStr.Append(uri+kNntpRootURILen);
-      rv = rdf->GetResource(uriStr.get(), getter_AddRefs(res));
+      rv = rdf->GetResource(uriStr, getter_AddRefs(res));
     }
     else {
-      rv = rdf->GetResource(uri, getter_AddRefs(res));
+      rv = rdf->GetResource(nsDependentCString(uri), getter_AddRefs(res));
     }
     NS_ENSURE_SUCCESS(rv,rv);
 

@@ -289,7 +289,7 @@ NS_IMETHODIMP nsPop3Service::NewURI(const nsACString &aSpec,
 
     nsCOMPtr<nsIRDFService> rdfService(do_GetService(kRDFServiceCID, &rv)); 
     if (NS_FAILED(rv)) return rv;
-    rv = rdfService->GetResource(folderUri.get(),
+    rv = rdfService->GetResource(folderUri,
                                  getter_AddRefs(resource));
     if (NS_FAILED(rv)) return rv;
     nsCOMPtr<nsIMsgFolder> folder = do_QueryInterface(resource, &rv);

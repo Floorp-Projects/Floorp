@@ -129,7 +129,8 @@ NS_IMETHODIMP nsAddressBook::NewAddressBook(nsIAbDirectoryProperties *aPropertie
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIRDFResource> parentResource;
-    rv = rdfService->GetResource(kAllDirectoryRoot, getter_AddRefs(parentResource));
+    rv = rdfService->GetResource(NS_LITERAL_CSTRING(kAllDirectoryRoot),
+                                 getter_AddRefs(parentResource));
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIAbDirectory> parentDir = do_QueryInterface(parentResource, &rv);
@@ -146,11 +147,11 @@ NS_IMETHODIMP nsAddressBook::DeleteAddressBooks
   NS_ENSURE_ARG_POINTER(aParentDir);
   NS_ENSURE_ARG_POINTER(aResourceArray);
   
-  return DoCommand(aDS, NC_RDF_DELETE, aParentDir, aResourceArray);
+  return DoCommand(aDS, NS_LITERAL_CSTRING(NC_RDF_DELETE), aParentDir, aResourceArray);
 }
 
 nsresult nsAddressBook::DoCommand(nsIRDFDataSource* db,
-                                  const char *command,
+                                  const nsACString& command,
                                   nsISupportsArray *srcArray,
                                   nsISupportsArray *argumentArray)
 {
@@ -434,13 +435,11 @@ nsresult AddressBookParser::ParseFile()
     nsCOMPtr<nsIRDFService> rdfService = do_GetService (NS_RDF_CONTRACTID "/rdf-service;1", &rv);
     NS_ENSURE_SUCCESS(rv, rv);
     nsCOMPtr<nsIRDFResource> parentResource;
-    char *parentUri = PR_smprintf("%s", kAllDirectoryRoot);
-    rv = rdfService->GetResource(parentUri, getter_AddRefs(parentResource));
+    rv = rdfService->GetResource(NS_LITERAL_CSTRING(kAllDirectoryRoot),
+                                 getter_AddRefs(parentResource));
     nsCOMPtr<nsIAbDirectory> parentDir = do_QueryInterface(parentResource);
     if (!parentDir)
         return NS_ERROR_NULL_POINTER;
-    if (parentUri)
-        PR_smprintf_free(parentUri);
 
     if (PL_strcmp(fileName, kPersonalAddressbook) == 0)
     {
@@ -1649,7 +1648,7 @@ nsresult nsAddressBook::AppendLDIFForMailList(nsIAbCard *aCard, nsACString &aRes
   NS_ENSURE_SUCCESS(rv,rv);
   
   nsCOMPtr <nsIRDFResource> resource;
-  rv = rdfService->GetResource(mailListURI.get(), getter_AddRefs(resource));
+  rv = rdfService->GetResource(mailListURI, getter_AddRefs(resource));
   NS_ENSURE_SUCCESS(rv,rv);
     
   nsCOMPtr <nsIAbDirectory> mailList = do_QueryInterface(resource, &rv);

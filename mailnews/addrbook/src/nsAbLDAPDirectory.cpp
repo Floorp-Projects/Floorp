@@ -226,7 +226,7 @@ NS_IMETHODIMP nsAbLDAPDirectory::GetChildCards(nsIEnumerator** result)
       localDirectoryURI = NS_LITERAL_CSTRING("moz-abmdbdirectory://") + fileName + NS_LITERAL_CSTRING("?") + mQueryString;
       
       nsCOMPtr <nsIRDFResource> resource;
-      rv = rdfService->GetResource(localDirectoryURI.get(), getter_AddRefs(resource));
+      rv = rdfService->GetResource(localDirectoryURI, getter_AddRefs(resource));
       NS_ENSURE_SUCCESS(rv, rv);
       
       nsCOMPtr <nsIAbDirectory> directory = do_QueryInterface(resource, &rv);

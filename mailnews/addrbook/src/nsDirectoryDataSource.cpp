@@ -132,26 +132,36 @@ nsAbDirectoryDataSource::Init()
   
   rv = rdf->RegisterDataSource(this, PR_FALSE);
   NS_ENSURE_SUCCESS(rv,rv);
-  
-  rv = rdf->GetResource(NC_RDF_CHILD, getter_AddRefs(kNC_Child));
+ 
+  rv = rdf->GetResource(NS_LITERAL_CSTRING(NC_RDF_CHILD),
+                        getter_AddRefs(kNC_Child));
   NS_ENSURE_SUCCESS(rv,rv);
-  rv = rdf->GetResource(NC_RDF_DIRNAME, getter_AddRefs(kNC_DirName));
+  rv = rdf->GetResource(NS_LITERAL_CSTRING(NC_RDF_DIRNAME),
+                        getter_AddRefs(kNC_DirName));
   NS_ENSURE_SUCCESS(rv,rv);
-  rv = rdf->GetResource(NC_RDF_CARDCHILD, getter_AddRefs(kNC_CardChild));
+  rv = rdf->GetResource(NS_LITERAL_CSTRING(NC_RDF_CARDCHILD),
+                        getter_AddRefs(kNC_CardChild));
   NS_ENSURE_SUCCESS(rv,rv);
-  rv = rdf->GetResource(NC_RDF_DIRURI, getter_AddRefs(kNC_DirUri));
+  rv = rdf->GetResource(NS_LITERAL_CSTRING(NC_RDF_DIRURI),
+                        getter_AddRefs(kNC_DirUri));
   NS_ENSURE_SUCCESS(rv,rv);
-  rv = rdf->GetResource(NC_RDF_ISMAILLIST, getter_AddRefs(kNC_IsMailList));
+  rv = rdf->GetResource(NS_LITERAL_CSTRING(NC_RDF_ISMAILLIST),
+                        getter_AddRefs(kNC_IsMailList));
   NS_ENSURE_SUCCESS(rv,rv);
-  rv = rdf->GetResource(NC_RDF_ISREMOTE, getter_AddRefs(kNC_IsRemote));
+  rv = rdf->GetResource(NS_LITERAL_CSTRING(NC_RDF_ISREMOTE),
+                        getter_AddRefs(kNC_IsRemote));
   NS_ENSURE_SUCCESS(rv,rv);
-  rv = rdf->GetResource(NC_RDF_ISSECURE, getter_AddRefs(kNC_IsSecure));
+  rv = rdf->GetResource(NS_LITERAL_CSTRING(NC_RDF_ISSECURE),
+                        getter_AddRefs(kNC_IsSecure));
   NS_ENSURE_SUCCESS(rv,rv);
-  rv = rdf->GetResource(NC_RDF_ISWRITEABLE, getter_AddRefs(kNC_IsWriteable));
+  rv = rdf->GetResource(NS_LITERAL_CSTRING(NC_RDF_ISWRITEABLE),
+                        getter_AddRefs(kNC_IsWriteable));
   NS_ENSURE_SUCCESS(rv,rv);
-  rv = rdf->GetResource(NC_RDF_DELETE, getter_AddRefs(kNC_Delete));  
+  rv = rdf->GetResource(NS_LITERAL_CSTRING(NC_RDF_DELETE),
+                        getter_AddRefs(kNC_Delete));  
   NS_ENSURE_SUCCESS(rv,rv);
-  rv = rdf->GetResource(NC_RDF_DELETECARDS, getter_AddRefs(kNC_DeleteCards));
+  rv = rdf->GetResource(NS_LITERAL_CSTRING(NC_RDF_DELETECARDS),
+                        getter_AddRefs(kNC_DeleteCards));
   NS_ENSURE_SUCCESS(rv,rv);
   rv = createNode(NS_LITERAL_STRING("true").get(), getter_AddRefs(kTrueLiteral));
   NS_ENSURE_SUCCESS(rv,rv);

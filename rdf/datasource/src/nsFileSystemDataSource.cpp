@@ -98,7 +98,6 @@ static NS_DEFINE_CID(kCharsetConverterManagerCID,  NS_ICHARSETCONVERTERMANAGER_C
 
 #define NS_MOZICON_SCHEME           "moz-icon:"
 
-static const char kURINC_FileSystemRoot[] = "NC:FilesRoot";
 static const char kFileProtocol[]         = "file://";
 
 
@@ -294,8 +293,10 @@ FileSystemDataSource::FileSystemDataSource(void)
         {
             ieFavoritesDir = nsCRT::strdup(ieFavoritesURI);
         }
-        gRDFService->GetResource(NC_NAMESPACE_URI "IEFavorite",       &kNC_IEFavoriteObject);
-        gRDFService->GetResource(NC_NAMESPACE_URI "IEFavoriteFolder", &kNC_IEFavoriteFolder);
+        gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "IEFavorite"),
+                                 &kNC_IEFavoriteObject);
+        gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "IEFavoriteFolder"),
+                                 &kNC_IEFavoriteFolder);
 #endif
 
 #ifdef XP_BEOS
@@ -310,22 +311,35 @@ FileSystemDataSource::FileSystemDataSource(void)
         }
 #endif
 
-        gRDFService->GetResource(kURINC_FileSystemRoot,                &kNC_FileSystemRoot);
-        gRDFService->GetResource(NC_NAMESPACE_URI  "child",            &kNC_Child);
-        gRDFService->GetResource(NC_NAMESPACE_URI  "Name",             &kNC_Name);
-        gRDFService->GetResource(NC_NAMESPACE_URI  "URL",              &kNC_URL);
-        gRDFService->GetResource(NC_NAMESPACE_URI  "Icon",             &kNC_Icon);
-        gRDFService->GetResource(NC_NAMESPACE_URI  "Content-Length",   &kNC_Length);
-        gRDFService->GetResource(NC_NAMESPACE_URI  "IsDirectory",      &kNC_IsDirectory);
-        gRDFService->GetResource(WEB_NAMESPACE_URI "LastModifiedDate", &kWEB_LastMod);
-        gRDFService->GetResource(NC_NAMESPACE_URI  "FileSystemObject", &kNC_FileSystemObject);
-        gRDFService->GetResource(NC_NAMESPACE_URI  "pulse",            &kNC_pulse);
+        gRDFService->GetResource(NS_LITERAL_CSTRING("NC:FilesRoot"),
+                                 &kNC_FileSystemRoot);
+        gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI  "child"),
+                                 &kNC_Child);
+        gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI  "Name"),
+                                 &kNC_Name);
+        gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI  "URL"),
+                                 &kNC_URL);
+        gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI  "Icon"),
+                                 &kNC_Icon);
+        gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI  "Content-Length"),
+                                 &kNC_Length);
+        gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI  "IsDirectory"),
+                                 &kNC_IsDirectory);
+        gRDFService->GetResource(NS_LITERAL_CSTRING(WEB_NAMESPACE_URI "LastModifiedDate"),
+                                 &kWEB_LastMod);
+        gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI  "FileSystemObject"),
+                                 &kNC_FileSystemObject);
+        gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI  "pulse"),
+                                 &kNC_pulse);
 
-        gRDFService->GetResource(RDF_NAMESPACE_URI "instanceOf",       &kRDF_InstanceOf);
-        gRDFService->GetResource(RDF_NAMESPACE_URI "type",             &kRDF_type);
+        gRDFService->GetResource(NS_LITERAL_CSTRING(RDF_NAMESPACE_URI "instanceOf"),
+                                 &kRDF_InstanceOf);
+        gRDFService->GetResource(NS_LITERAL_CSTRING(RDF_NAMESPACE_URI "type"),
+                                 &kRDF_type);
 
 #ifdef USE_NC_EXTENSION
-        gRDFService->GetResource(NC_NAMESPACE_URI "extension",         &kNC_extension);
+        gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "extension"),
+                                 &kNC_extension);
 #endif
         gRDFService->GetLiteral(NS_LITERAL_STRING("true").get(),       &kLiteralTrue);
         gRDFService->GetLiteral(NS_LITERAL_STRING("false").get(),      &kLiteralFalse);
@@ -1141,7 +1155,7 @@ FileSystemDataSource::GetVolumeList(nsISimpleEnumerator** aResult)
 #endif
 
 #if defined(XP_UNIX) || defined(XP_BEOS)
-    gRDFService->GetResource("file:///", getter_AddRefs(vol));
+    gRDFService->GetResource(NS_LITERAL_CSTRING("file:///"), getter_AddRefs(vol));
     volumes->AppendElement(vol);
 #endif
 
@@ -1307,13 +1321,8 @@ FileSystemDataSource::GetFolderList(nsIRDFResource *source, PRBool allowHidden,
                 continue;
         }
 
-        // XXX We should use nsIFile::GetUnicodeLeafName().
-        // But currently mozilla's xpcom/io is not unicode normalization.
-        // And URI cannot use UTF-8 (On RFC2396, URI should use UTF-8)
-        // So, we uses nsIFile::GetNativeLeafName() for performance...
- 
-        nsCAutoString leafStr;
-        if (NS_FAILED(rv = aFile->GetNativeLeafName(leafStr)))
+        nsAutoString leafStr;
+        if (NS_FAILED(rv = aFile->GetLeafName(leafStr)))
             break;
         if (leafStr.IsEmpty())
             continue;
@@ -1325,7 +1334,7 @@ FileSystemDataSource::GetFolderList(nsIRDFResource *source, PRBool allowHidden,
             fullURI.Append('/');
         }
 
-        char    *escLeafStr = nsEscape(leafStr.get(), url_Path);
+        char    *escLeafStr = nsEscape(NS_ConvertUCS2toUTF8(leafStr).get(), url_Path);
         leafStr.Truncate();
 
         if (!escLeafStr)
@@ -1354,7 +1363,7 @@ FileSystemDataSource::GetFolderList(nsIRDFResource *source, PRBool allowHidden,
         }
 
         nsCOMPtr<nsIRDFResource>    fileRes;
-        gRDFService->GetResource(fullURI.get(), getter_AddRefs(fileRes));
+        gRDFService->GetResource(fullURI, getter_AddRefs(fileRes));
 
         nameArray->AppendElement(fileRes);
 

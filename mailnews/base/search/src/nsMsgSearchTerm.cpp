@@ -865,7 +865,7 @@ nsresult nsMsgSearchTerm::InitializeAddressBook()
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr <nsIRDFResource> resource;
-    rv = rdfService->GetResource(m_value.string, getter_AddRefs(resource));
+    rv = rdfService->GetResource(nsDependentCString(m_value.string), getter_AddRefs(resource));
     NS_ENSURE_SUCCESS(rv, rv);
 
     mDirectory = do_QueryInterface(resource, &rv);

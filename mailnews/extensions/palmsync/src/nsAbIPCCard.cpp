@@ -421,7 +421,7 @@ PRBool nsAbIPCCard::Equals(nsABCOMCardStruct * card, nsStringArray & differingAt
         differingAttrs.AppendString(NS_LITERAL_STRING(kMailListName));
     if(card->mailListURI) {
         nsCAutoString str(card->mailListURI);
-        if (str.Compare(m_MailListURI, PR_TRUE))
+        if (str.Equals(m_MailListURI, nsCaseInsensitiveCStringComparator()))
             differingAttrs.AppendString(NS_LITERAL_STRING(kMailListDescription));
     }
 
@@ -582,10 +582,9 @@ NS_IMETHODIMP nsAbIPCCard::Equals(nsIAbCard *card, PRBool *_retval)
     if (isMailList != m_IsMailList)
         return NS_OK;
 
-    nsCAutoString tempStr(m_MailListURI);
     nsXPIDLCString str2;
     card->GetMailListURI(getter_Copies(str2));
-    if (tempStr.Compare(str2.get(), PR_TRUE))
+    if (m_MailListURI.Equals(str2, nsCaseInsensitiveCStringComparator()))
         return NS_OK;
 
     *_retval = PR_TRUE;
@@ -744,10 +743,7 @@ nsresult nsAbIPCCard::GetABCOMCardStruct(PRBool isUnicode, nsABCOMCardStruct * c
     card->preferMailFormat = m_PreferMailFormat;
 
     card->isMailList = m_IsMailList;
-    if(m_MailListURI) {
-        card->mailListURI = new char[strlen(m_MailListURI)+1];
-        strcpy(card->mailListURI, m_MailListURI);
-    }
+    card->mailListURI = m_MailListURI;
 
     return NS_OK;
 }

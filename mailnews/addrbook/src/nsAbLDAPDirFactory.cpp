@@ -112,10 +112,10 @@ NS_IMETHODIMP nsAbLDAPDirFactory::CreateDirectory(nsIAbDirectoryProperties *aPro
        */
       nsCAutoString bridgeURI;
       bridgeURI = NS_LITERAL_CSTRING(kLDAPDirectoryRoot) + prefName;
-      rv = rdf->GetResource(bridgeURI.get(), getter_AddRefs(resource));
+      rv = rdf->GetResource(bridgeURI, getter_AddRefs(resource));
     }
     else {
-      rv = rdf->GetResource(uri.get(), getter_AddRefs(resource));
+      rv = rdf->GetResource(uri, getter_AddRefs(resource));
     }
     NS_ENSURE_SUCCESS(rv, rv);
 

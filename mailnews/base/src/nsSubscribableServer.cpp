@@ -77,10 +77,12 @@ nsSubscribableServer::Init()
     rv = EnsureRDFService();
     NS_ENSURE_SUCCESS(rv,rv);
 
-    rv = mRDFService->GetResource(NC_NAMESPACE_URI "child",getter_AddRefs(kNC_Child));
+    rv = mRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "child"),
+                                  getter_AddRefs(kNC_Child));
     NS_ENSURE_SUCCESS(rv,rv);
 
-    rv = mRDFService->GetResource(NC_NAMESPACE_URI "Subscribed",getter_AddRefs(kNC_Subscribed));
+    rv = mRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "Subscribed"),
+                                  getter_AddRefs(kNC_Subscribed));
     NS_ENSURE_SUCCESS(rv,rv);
 
     rv = mRDFService->GetLiteral(NS_LITERAL_STRING("true").get(),getter_AddRefs(kTrueLiteral));
@@ -260,9 +262,9 @@ nsSubscribableServer::NotifyAssert(SubscribeTreeNode *subjectNode, nsIRDFResourc
     rv = EnsureRDFService();
     NS_ENSURE_SUCCESS(rv,rv);
 
-    rv = mRDFService->GetResource(subjectUri.get(), getter_AddRefs(subject));
+    rv = mRDFService->GetResource(subjectUri, getter_AddRefs(subject));
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = mRDFService->GetResource(objectUri.get(), getter_AddRefs(object));
+    rv = mRDFService->GetResource(objectUri, getter_AddRefs(object));
     NS_ENSURE_SUCCESS(rv,rv);
 
     rv = Notify(subject, property, object, PR_TRUE, PR_FALSE);
@@ -306,7 +308,7 @@ nsSubscribableServer::NotifyChange(SubscribeTreeNode *subjectNode, nsIRDFResourc
     rv = EnsureRDFService();
     NS_ENSURE_SUCCESS(rv,rv);
 
-    rv = mRDFService->GetResource(subjectUri.get(), getter_AddRefs(subject));
+    rv = mRDFService->GetResource(subjectUri, getter_AddRefs(subject));
     NS_ENSURE_SUCCESS(rv,rv);
 
     if (value) {
@@ -798,7 +800,7 @@ nsSubscribableServer::GetChildren(const char *path, nsISupportsArray *array)
         NS_ENSURE_SUCCESS(rv,rv);
 
         // todo, is this creating nsMsgFolders?
-        mRDFService->GetResource(uri.get(), getter_AddRefs(res));
+        mRDFService->GetResource(uri, getter_AddRefs(res));
         array->AppendElement(res);
     
         current = current->prevSibling;

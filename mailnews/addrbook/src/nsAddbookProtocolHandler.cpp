@@ -231,7 +231,7 @@ nsAddbookProtocolHandler::GeneratePrintOutput(nsIAddbookUrl *addbookUrl,
   uri.Insert(':', pos);
 
   nsCOMPtr <nsIRDFResource> resource;
-  rv = rdfService->GetResource(uri.get(), getter_AddRefs(resource));
+  rv = rdfService->GetResource(uri, getter_AddRefs(resource));
   NS_ENSURE_SUCCESS(rv,rv);
   
   nsCOMPtr <nsIAbDirectory> directory = do_QueryInterface(resource, &rv);

@@ -444,7 +444,7 @@ LocateMessageFolder(nsIMsgIdentity   *userIdentity,
     // get the corresponding RDF resource
     // RDF will create the folder resource if it doesn't already exist
     nsCOMPtr<nsIRDFResource> resource;
-    rv = rdf->GetResource(aFolderURI, getter_AddRefs(resource));
+    rv = rdf->GetResource(nsDependentCString(aFolderURI), getter_AddRefs(resource));
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr <nsIMsgFolder> folderResource;

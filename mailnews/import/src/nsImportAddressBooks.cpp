@@ -803,7 +803,8 @@ nsIAddrDatabase *GetAddressBook( const PRUnichar *name, PRBool makeNew)
 		NS_WITH_PROXIED_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, NS_UI_THREAD_EVENTQ, &rv);
 		if (NS_SUCCEEDED(rv)) {
 			nsCOMPtr<nsIRDFResource>	parentResource;
-			rv = rdfService->GetResource( kAllDirectoryRoot, getter_AddRefs(parentResource));
+			rv = rdfService->GetResource(NS_LITERAL_CSTRING(kAllDirectoryRoot),
+                                   getter_AddRefs(parentResource));
 			nsCOMPtr<nsIAbDirectory> parentDir;
 			/*
 			 * TODO

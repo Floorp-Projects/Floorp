@@ -100,10 +100,10 @@ nsXULContentUtils::Init()
             return rv;
         }
 
-#define XUL_RESOURCE(ident, uri)            \
-  PR_BEGIN_MACRO                            \
-   rv = gRDF->GetResource((uri), &(ident)); \
-   if (NS_FAILED(rv)) return rv;            \
+#define XUL_RESOURCE(ident, uri)                              \
+  PR_BEGIN_MACRO                                              \
+   rv = gRDF->GetResource(NS_LITERAL_CSTRING(uri), &(ident)); \
+   if (NS_FAILED(rv)) return rv;                              \
   PR_END_MACRO
 
 #define XUL_LITERAL(ident, val)                                   \
@@ -253,7 +253,7 @@ nsXULContentUtils::GetElementRefResource(nsIContent* aElement, nsIRDFResource** 
         // the protocol), uriStr will be untouched.
         NS_MakeAbsoluteURI(uri, uri, url);
 
-        rv = gRDF->GetUnicodeResource(uri.get(), aResult);
+        rv = gRDF->GetUnicodeResource(uri, aResult);
     }
     else {
         rv = GetElementResource(aElement, aResult);
@@ -391,7 +391,7 @@ nsXULContentUtils::MakeElementResource(nsIDocument* aDocument, const nsAString& 
     rv = MakeElementURI(aDocument, aID, uri);
     if (NS_FAILED(rv)) return rv;
 
-    rv = gRDF->GetResource(uri.get(), aResult);
+    rv = gRDF->GetResource(uri, aResult);
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create resource");
     if (NS_FAILED(rv)) return rv;
 
@@ -475,7 +475,7 @@ nsXULContentUtils::GetResource(PRInt32 aNameSpaceID, const nsAString& aAttribute
 
     uri.Append(aAttribute);
 
-    rv = gRDF->GetUnicodeResource(uri.get(), aResult);
+    rv = gRDF->GetUnicodeResource(uri, aResult);
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
     if (NS_FAILED(rv)) return rv;
 

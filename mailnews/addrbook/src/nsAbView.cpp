@@ -219,7 +219,7 @@ NS_IMETHODIMP nsAbView::Init(const char *aURI, nsIAbViewListener *abViewListener
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr <nsIRDFResource> resource;
-  rv = rdfService->GetResource(aURI, getter_AddRefs(resource));
+  rv = rdfService->GetResource(nsDependentCString(aURI), getter_AddRefs(resource));
   NS_ENSURE_SUCCESS(rv, rv);
 
   mDirectory = do_QueryInterface(resource, &rv);

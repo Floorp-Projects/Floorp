@@ -123,7 +123,7 @@ ContainerEnumeratorImpl::Init()
         if (! rdf)
             return NS_ERROR_FAILURE;
 
-        rv = rdf->GetResource(RDF_NAMESPACE_URI "nextVal", &kRDF_nextVal);
+        rv = rdf->GetResource(NS_LITERAL_CSTRING(RDF_NAMESPACE_URI "nextVal"), &kRDF_nextVal);
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
         if (NS_FAILED(rv)) return rv;
 

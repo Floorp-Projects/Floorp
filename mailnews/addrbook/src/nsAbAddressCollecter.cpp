@@ -344,7 +344,7 @@ nsresult nsAbAddressCollecter::SetAbURI(const char *aURI)
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr <nsIRDFResource> resource;
-  rv = rdfService->GetResource(m_abURI.get(), getter_AddRefs(resource));
+  rv = rdfService->GetResource(m_abURI, getter_AddRefs(resource));
   NS_ENSURE_SUCCESS(rv, rv);
 
   m_directory = do_QueryInterface(resource, &rv);

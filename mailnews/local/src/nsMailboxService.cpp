@@ -553,7 +553,7 @@ nsMailboxService::DecomposeMailboxURI(const char * aMessageURI, nsIMsgFolder ** 
   NS_ENSURE_SUCCESS(rv,rv);
 
   nsCOMPtr<nsIRDFResource> res;
-  rv = rdf->GetResource(folderURI.get(), getter_AddRefs(res));
+  rv = rdf->GetResource(folderURI, getter_AddRefs(res));
   NS_ENSURE_SUCCESS(rv,rv);
 
   rv = res->QueryInterface(NS_GET_IID(nsIMsgFolder), (void **) aFolder);

@@ -320,7 +320,7 @@ NS_IMETHODIMP nsAbMDBDirectory::AddDirectory(const char *uriName, nsIAbDirectory
   NS_ENSURE_SUCCESS(rv, rv);
   
   nsCOMPtr<nsIRDFResource> res;
-  rv = rdf->GetResource(uriName, getter_AddRefs(res));
+  rv = rdf->GetResource(nsDependentCString(uriName), getter_AddRefs(res));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIAbDirectory> directory(do_QueryInterface(res, &rv));
@@ -438,7 +438,7 @@ NS_IMETHODIMP nsAbMDBDirectory::DeleteCards(nsISupportsArray *cards)
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIRDFResource> resource;
-    rv = gRDFService->GetResource(mURINoQuery.get(), getter_AddRefs(resource));
+    rv = gRDFService->GetResource(mURINoQuery, getter_AddRefs(resource));
     NS_ENSURE_SUCCESS(rv, rv);
     
     nsCOMPtr<nsIAbDirectory> directory = do_QueryInterface(resource, &rv);
@@ -513,7 +513,8 @@ NS_IMETHODIMP nsAbMDBDirectory::DeleteCards(nsISupportsArray *cards)
               if(NS_SUCCEEDED(rv))
                 {
                 nsCOMPtr<nsIRDFResource> listResource;
-                rv = rdfService->GetResource(listUri, getter_AddRefs(listResource));
+                rv = rdfService->GetResource(nsDependentCString(listUri),
+                                             getter_AddRefs(listResource));
                 nsCOMPtr<nsIAbDirectory> listDir = do_QueryInterface(listResource, &rv);
                 if(NS_SUCCEEDED(rv))
                   {
@@ -932,7 +933,7 @@ NS_IMETHODIMP nsAbMDBDirectory::StartSearch()
 
   // Get the directory without the query
   nsCOMPtr<nsIRDFResource> resource;
-  rv = gRDFService->GetResource (mURINoQuery.get(), getter_AddRefs(resource));
+  rv = gRDFService->GetResource (mURINoQuery, getter_AddRefs(resource));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIAbDirectory> directory(do_QueryInterface(resource, &rv));

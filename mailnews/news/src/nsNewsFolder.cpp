@@ -225,7 +225,7 @@ nsMsgNewsFolder::AddNewsgroup(const char *name, const char *setStr, nsIMsgFolder
   uri.Append(escapedName.get());
   
   nsCOMPtr<nsIRDFResource> res;
-  rv = rdf->GetResource(uri.get(), getter_AddRefs(res));
+  rv = rdf->GetResource(uri, getter_AddRefs(res));
   if (NS_FAILED(rv)) return rv;
   
   nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(res, &rv));

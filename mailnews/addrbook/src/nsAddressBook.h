@@ -147,7 +147,7 @@ public:
   CMDLINEHANDLER_REGISTERPROC_DECLS
     
 protected:
-	nsresult DoCommand(nsIRDFDataSource *db, const char * command,
+	nsresult DoCommand(nsIRDFDataSource *db, const nsACString& command,
                      nsISupportsArray *srcArray, nsISupportsArray *arguments);
 	nsresult GetAbDatabaseFromFile(char* pDbFile, nsIAddrDatabase **db);
 

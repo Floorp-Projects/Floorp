@@ -95,8 +95,9 @@ nsUrlbarHistory::nsUrlbarHistory():mLength(0)
 	   //printf("$$$$ Got RDF SERVICE $$$$\n");
      res = gRDFService->GetDataSource("rdf:localstore", getter_AddRefs(mDataSource));
 
-	 res = gRDFService->GetResource("http://home.netscape.com/NC-rdf#child", &kNC_CHILD);
-	 res = gRDFService->GetResource("nc:urlbar-history", &kNC_URLBARHISTORY);
+	 res = gRDFService->GetResource(NS_LITERAL_CSTRING("http://home.netscape.com/NC-rdf#child"),
+                                  &kNC_CHILD);
+	 res = gRDFService->GetResource(NS_LITERAL_CSTRING("nc:urlbar-history"), &kNC_URLBARHISTORY);
    }
    // Get the pref service
    res = nsServiceManager::GetService(kPrefServiceCID, NS_GET_IID(nsIPref),

@@ -252,7 +252,7 @@ protected:
 	virtual nsresult GetTrashFolder(nsIMsgFolder **pTrashFolder);
 	virtual nsresult	MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr, 
 											   nsIMsgDatabase *sourceDB, 
-                                                const char *destFolder,
+                                                const nsACString& destFolder,
                                             nsIMsgFilter *filter,
                                             nsIMsgWindow *msgWindow);
 	virtual	int			MarkFilteredMessageRead(nsIMsgDBHdr *msgHdr);

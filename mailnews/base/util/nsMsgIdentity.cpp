@@ -535,7 +535,7 @@ nsMsgIdentity::setFolderPref(const char *prefname, const char *value)
     rv = setCharPref(prefname, value);
     if (NS_SUCCEEDED(rv))
     {
-        rv = rdf->GetResource(value, getter_AddRefs(res));
+        rv = rdf->GetResource(nsDependentCString(value), getter_AddRefs(res));
         if (NS_SUCCEEDED(rv) && res)
         {
             folder = do_QueryInterface(res, &rv);

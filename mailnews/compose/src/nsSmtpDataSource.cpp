@@ -88,12 +88,15 @@ nsSmtpDataSource::initGlobalObjects()
     nsCOMPtr<nsIRDFService> rdf = do_GetService(kRDFServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    rdf->GetResource(NC_RDF_CHILD, getter_AddRefs(kNC_Child));
-    rdf->GetResource(NC_RDF_NAME, getter_AddRefs(kNC_Name));
-    rdf->GetResource(NC_RDF_KEY, getter_AddRefs(kNC_Key));
-    rdf->GetResource(NC_RDF_SMTPSERVERS, getter_AddRefs(kNC_SmtpServers));
-    rdf->GetResource(NC_RDF_ISDEFAULT, getter_AddRefs(kNC_IsDefaultServer));
-    rdf->GetResource(NC_RDF_ISSESSIONDEFAULT, getter_AddRefs(kNC_IsSessionDefaultServer));
+    rdf->GetResource(NS_LITERAL_CSTRING(NC_RDF_CHILD), getter_AddRefs(kNC_Child));
+    rdf->GetResource(NS_LITERAL_CSTRING(NC_RDF_NAME), getter_AddRefs(kNC_Name));
+    rdf->GetResource(NS_LITERAL_CSTRING(NC_RDF_KEY), getter_AddRefs(kNC_Key));
+    rdf->GetResource(NS_LITERAL_CSTRING(NC_RDF_SMTPSERVERS),
+                     getter_AddRefs(kNC_SmtpServers));
+    rdf->GetResource(NS_LITERAL_CSTRING(NC_RDF_ISDEFAULT),
+                     getter_AddRefs(kNC_IsDefaultServer));
+    rdf->GetResource(NS_LITERAL_CSTRING(NC_RDF_ISSESSIONDEFAULT),
+                     getter_AddRefs(kNC_IsSessionDefaultServer));
 
     nsAutoString trueStr(NS_LITERAL_STRING("true"));
     rdf->GetLiteral(trueStr.get(), getter_AddRefs(kTrueLiteral));

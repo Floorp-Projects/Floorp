@@ -3647,7 +3647,7 @@ PRBool nsMsgComposeAndSend::CanSaveMessagesToFolder(const char *folderURL)
     return PR_FALSE;
 
   nsCOMPtr<nsIRDFResource> resource;
-  rv = rdf->GetResource(folderURL, getter_AddRefs(resource));
+  rv = rdf->GetResource(nsDependentCString(folderURL), getter_AddRefs(resource));
   if (NS_FAILED(rv))
     return PR_FALSE;
 
@@ -4288,7 +4288,7 @@ nsMsgComposeAndSend::MimeDoFCC(nsFileSpec       *input_file,
     if (rdfService)
     {
       nsCOMPtr<nsIRDFResource> res;
-      rdfService->GetResource(turi, getter_AddRefs(res));
+      rdfService->GetResource(nsDependentCString(turi), getter_AddRefs(res));
       nsCOMPtr<nsIMsgFolder> folder = do_QueryInterface(res);
       if (folder)
         folder->GetName(getter_Copies(folderName));

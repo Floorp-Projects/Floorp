@@ -1317,7 +1317,7 @@ nsXULTemplateBuilder::ComputeContainmentProperties()
         containment.Mid(propertyStr, offset, end - offset);
 
         nsCOMPtr<nsIRDFResource> property;
-        rv = gRDFService->GetUnicodeResource(propertyStr.get(), getter_AddRefs(property));
+        rv = gRDFService->GetUnicodeResource(propertyStr, getter_AddRefs(property));
         if (NS_FAILED(rv)) return rv;
 
         rv = mContainmentProperties.Add(property);
@@ -1797,7 +1797,7 @@ nsXULTemplateBuilder::CompileTripleCondition(nsTemplateRule* aRule,
     if (subject[0] == PRUnichar('?'))
         svar = mRules.LookupSymbol(subject.get(), PR_TRUE);
     else
-        gRDFService->GetUnicodeResource(subject.get(), getter_AddRefs(sres));
+        gRDFService->GetUnicodeResource(subject, getter_AddRefs(sres));
 
     // predicate
     nsAutoString predicate;
@@ -1811,7 +1811,7 @@ nsXULTemplateBuilder::CompileTripleCondition(nsTemplateRule* aRule,
         return NS_OK;
     }
     else {
-        gRDFService->GetUnicodeResource(predicate.get(), getter_AddRefs(pres));
+        gRDFService->GetUnicodeResource(predicate, getter_AddRefs(pres));
     }
 
     // object
@@ -1826,7 +1826,7 @@ nsXULTemplateBuilder::CompileTripleCondition(nsTemplateRule* aRule,
     else if (object.FindChar(':') != -1) { // XXXwaterson evil.
         // treat as resource
         nsCOMPtr<nsIRDFResource> resource;
-        gRDFService->GetUnicodeResource(object.get(), getter_AddRefs(resource));
+        gRDFService->GetUnicodeResource(object, getter_AddRefs(resource));
         onode = do_QueryInterface(resource);
     }
     else {
@@ -2010,7 +2010,7 @@ nsXULTemplateBuilder::CompileBinding(nsTemplateRule* aRule,
         return NS_OK;
     }
     else {
-        gRDFService->GetUnicodeResource(predicate.get(), getter_AddRefs(pred));
+        gRDFService->GetUnicodeResource(predicate, getter_AddRefs(pred));
     }
 
     // object
@@ -2144,7 +2144,7 @@ nsXULTemplateBuilder::CompileSimpleRule(nsIContent* aRuleElement,
             nsCOMPtr<nsIRDFNode> target;
             if (value.FindChar(':') != -1) { // XXXwaterson WRONG WRONG WRONG!
                 nsCOMPtr<nsIRDFResource> resource;
-                rv = gRDFService->GetUnicodeResource(value.get(), getter_AddRefs(resource));
+                rv = gRDFService->GetUnicodeResource(value, getter_AddRefs(resource));
                 if (NS_FAILED(rv)) return rv;
 
                 target = do_QueryInterface(resource);
@@ -2285,7 +2285,7 @@ nsXULTemplateBuilder::AddBindingsFor(nsXULTemplateBuilder* aThis,
     const nsAString& propertyStr = Substring(aVariable, PRUint32(4), aVariable.Length() - 4);
 
     nsCOMPtr<nsIRDFResource> property;
-    gRDFService->GetUnicodeResource(nsAutoString(propertyStr).get(), getter_AddRefs(property));
+    gRDFService->GetUnicodeResource(propertyStr, getter_AddRefs(property));
 
     if (! rule->HasBinding(aThis->mMemberVar, property, var))
         // In the simple syntax, the binding is always from the

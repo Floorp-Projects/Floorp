@@ -570,10 +570,10 @@ nsAbAutoCompleteSession::SearchReplicatedLDAPDirectories(nsIPref *aPref, nsAbAut
   URI = NS_LITERAL_CSTRING("moz-abmdbdirectory://") + fileName;
 
   // and then search the replicated directory
-  return SearchDirectory(URI.get(), searchStr, searchSubDirectory, results);
+  return SearchDirectory(URI, searchStr, searchSubDirectory, results);
 }
 
-nsresult nsAbAutoCompleteSession::SearchDirectory(const char *aURI, nsAbAutoCompleteSearchString* searchStr, PRBool searchSubDirectory, nsIAutoCompleteResults* results)
+nsresult nsAbAutoCompleteSession::SearchDirectory(const nsACString& aURI, nsAbAutoCompleteSearchString* searchStr, PRBool searchSubDirectory, nsIAutoCompleteResults* results)
 {
     nsresult rv = NS_OK;
     nsCOMPtr<nsIRDFService> rdfService(do_GetService("@mozilla.org/rdf/rdf-service;1", &rv));
@@ -598,7 +598,7 @@ nsresult nsAbAutoCompleteSession::SearchDirectory(const char *aURI, nsAbAutoComp
     if (!searchDuringLocalAutocomplete)
       return NS_OK;
 
-    if (nsCRT::strcmp(kAllDirectoryRoot, aURI))
+    if (!aURI.Equals(NS_LITERAL_CSTRING(kAllDirectoryRoot)))
         rv = SearchCards(directory, searchStr, results);
     
     if (!searchSubDirectory)
@@ -622,7 +622,7 @@ nsresult nsAbAutoCompleteSession::SearchDirectory(const char *aURI, nsAbAutoComp
                         {
                             nsXPIDLCString URI;
                             subResource->GetValue(getter_Copies(URI));
-                            rv = SearchDirectory(URI.get(), searchStr, PR_TRUE, results);
+                            rv = SearchDirectory(URI, searchStr, PR_TRUE, results);
                         }
                     }
                 }
@@ -746,7 +746,8 @@ NS_IMETHODIMP nsAbAutoCompleteSession::OnStartLookup(const PRUnichar *uSearchStr
         nsresult rv1,rv2;
 
         if (enableLocalAutocomplete) {
-          rv1 = SearchDirectory(kAllDirectoryRoot, &searchStrings, PR_TRUE, results);
+          rv1 = SearchDirectory(NS_LITERAL_CSTRING(kAllDirectoryRoot), &searchStrings,
+                                PR_TRUE, results);
           NS_ASSERTION(NS_SUCCEEDED(rv1), "searching all local directories failed");
         }
         else 

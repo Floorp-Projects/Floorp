@@ -129,7 +129,7 @@ protected:
 	PRUint32 m_PreferMailFormat;
 
 	PRBool   m_IsMailList;
-	char*    m_MailListURI;
+	nsCString m_MailListURI;
 
 private:
   nsresult AppendData(const char *aAttrName, mozITXTToHTMLConv *aConv, nsString &aResult);

@@ -341,7 +341,7 @@ NS_IMETHODIMP nsImapMailFolder::AddSubfolderWithPath(nsAutoString *name, nsIFile
   }
   
   nsCOMPtr<nsIRDFResource> res;
-  rv = rdf->GetResource(uriStr, getter_AddRefs(res));
+  rv = rdf->GetUnicodeResource(uri, getter_AddRefs(res));
   if (NS_FAILED(rv))
     return rv;
 
@@ -820,7 +820,7 @@ NS_IMETHODIMP nsImapMailFolder::CreateClientSubfolderInfo(const char *folderName
         uri.Append('/');
         uri.AppendWithConversion(parentName);
         
-        rv = rdf->GetResource(uri.get(),
+        rv = rdf->GetResource(uri,
                               getter_AddRefs(res));
         if (NS_FAILED(rv)) return rv;
         parentFolder = do_QueryInterface(res, &rv);
@@ -971,7 +971,7 @@ NS_IMETHODIMP nsImapMailFolder::CreateStorageIfMissing(nsIUrlListener* urlListen
       nsCOMPtr<nsIRDFService> rdf(do_GetService(kRDFServiceCID, &status));
       if (NS_FAILED(status)) return status;
       nsCOMPtr<nsIRDFResource> resource;
-      status = rdf->GetResource(parentName.get(), getter_AddRefs(resource));
+      status = rdf->GetResource(parentName, getter_AddRefs(resource));
       if (NS_FAILED(status)) return status;
 
       msgParent = do_QueryInterface(resource, &status);
@@ -3310,7 +3310,7 @@ NS_IMETHODIMP nsImapMailFolder::FetchCustomMsgAttribute(const char *attribute, c
 
 nsresult nsImapMailFolder::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr, 
                                                    nsIMsgDatabase *sourceDB, 
-                                                   const char *destFolderUri,
+                                                   const nsACString& destFolderUri,
                                                    nsIMsgFilter *filter,
                                                    nsIMsgWindow *msgWindow)
 {

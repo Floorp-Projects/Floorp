@@ -123,12 +123,10 @@ nsAbCardProperty::nsAbCardProperty(void)
 
 	m_PreferMailFormat = nsIAbPreferMailFormat::unknown;
 	m_IsMailList = PR_FALSE;
-	m_MailListURI = nsnull;
 }
 
 nsAbCardProperty::~nsAbCardProperty(void)
 {
-  CRTFREEIF(m_MailListURI);
 }
 
 NS_IMPL_ISUPPORTS1(nsAbCardProperty, nsIAbCard)
@@ -185,12 +183,10 @@ NS_IMETHODIMP nsAbCardProperty::GetMailListURI(char **aMailListURI)
 {
 	if (aMailListURI)
 	{
-		if (m_MailListURI)
-			*aMailListURI = nsCRT::strdup(m_MailListURI);
-		else
-			*aMailListURI = nsCRT::strdup("");
-
-		return NS_OK;
+    *aMailListURI = ToNewCString(m_MailListURI);
+    if (*aMailListURI)
+      return NS_OK;
+    return NS_ERROR_OUT_OF_MEMORY;
 	}
 	else
 		return NS_ERROR_NULL_POINTER;
@@ -200,8 +196,7 @@ NS_IMETHODIMP nsAbCardProperty::SetMailListURI(const char *aMailListURI)
 {
 	if (aMailListURI)
 	{
-		nsCRT::free (m_MailListURI);
-		m_MailListURI = nsCRT::strdup(aMailListURI);
+		m_MailListURI = aMailListURI;
 		return NS_OK;
 	}
 	else

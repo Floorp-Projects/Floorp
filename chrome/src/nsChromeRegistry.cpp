@@ -326,49 +326,64 @@ nsChromeRegistry::Init()
                                     (nsISupports**)&mRDFContainerUtils);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = mRDFService->GetResource(kURICHROME_selectedSkin, getter_AddRefs(mSelectedSkin));
+  rv = mRDFService->GetResource(nsDependentCString(kURICHROME_selectedSkin),
+                                getter_AddRefs(mSelectedSkin));
   NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF resource");
 
-  rv = mRDFService->GetResource(kURICHROME_selectedLocale, getter_AddRefs(mSelectedLocale));
+  rv = mRDFService->GetResource(nsDependentCString(kURICHROME_selectedLocale),
+                                getter_AddRefs(mSelectedLocale));
   NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF resource");
 
-  rv = mRDFService->GetResource(kURICHROME_baseURL, getter_AddRefs(mBaseURL));
+  rv = mRDFService->GetResource(nsDependentCString(kURICHROME_baseURL),
+                                getter_AddRefs(mBaseURL));
   NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF resource");
 
-  rv = mRDFService->GetResource(kURICHROME_packages, getter_AddRefs(mPackages));
+  rv = mRDFService->GetResource(nsDependentCString(kURICHROME_packages),
+                                getter_AddRefs(mPackages));
   NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF resource");
 
-  rv = mRDFService->GetResource(kURICHROME_package, getter_AddRefs(mPackage));
+  rv = mRDFService->GetResource(nsDependentCString(kURICHROME_package),
+                                getter_AddRefs(mPackage));
   NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF resource");
 
-  rv = mRDFService->GetResource(kURICHROME_name, getter_AddRefs(mName));
+  rv = mRDFService->GetResource(nsDependentCString(kURICHROME_name),
+                                getter_AddRefs(mName));
   NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF resource");
 
-  rv = mRDFService->GetResource(kURICHROME_image, getter_AddRefs(mImage));
+  rv = mRDFService->GetResource(nsDependentCString(kURICHROME_image),
+                                getter_AddRefs(mImage));
   NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF resource");
 
-  rv = mRDFService->GetResource(kURICHROME_locType, getter_AddRefs(mLocType));
+  rv = mRDFService->GetResource(nsDependentCString(kURICHROME_locType),
+                                getter_AddRefs(mLocType));
   NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF resource");
 
-  rv = mRDFService->GetResource(kURICHROME_allowScripts, getter_AddRefs(mAllowScripts));
+  rv = mRDFService->GetResource(nsDependentCString(kURICHROME_allowScripts),
+                                getter_AddRefs(mAllowScripts));
   NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF resource");
 
-  rv = mRDFService->GetResource(kURICHROME_hasOverlays, getter_AddRefs(mHasOverlays));
+  rv = mRDFService->GetResource(nsDependentCString(kURICHROME_hasOverlays),
+                                getter_AddRefs(mHasOverlays));
   NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF resource");
 
-  rv = mRDFService->GetResource(kURICHROME_hasStylesheets, getter_AddRefs(mHasStylesheets));
+  rv = mRDFService->GetResource(nsDependentCString(kURICHROME_hasStylesheets),
+                                getter_AddRefs(mHasStylesheets));
   NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF resource");
 
-  rv = mRDFService->GetResource(kURICHROME_skinVersion, getter_AddRefs(mSkinVersion));
+  rv = mRDFService->GetResource(nsDependentCString(kURICHROME_skinVersion),
+                                getter_AddRefs(mSkinVersion));
   NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF resource");
 
-  rv = mRDFService->GetResource(kURICHROME_localeVersion, getter_AddRefs(mLocaleVersion));
+  rv = mRDFService->GetResource(nsDependentCString(kURICHROME_localeVersion),
+                                getter_AddRefs(mLocaleVersion));
   NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF resource");
 
-  rv = mRDFService->GetResource(kURICHROME_packageVersion, getter_AddRefs(mPackageVersion));
+  rv = mRDFService->GetResource(nsDependentCString(kURICHROME_packageVersion),
+                                getter_AddRefs(mPackageVersion));
   NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF resource");
 
-  rv = mRDFService->GetResource(kURICHROME_disabled, getter_AddRefs(mDisabled));
+  rv = mRDFService->GetResource(nsDependentCString(kURICHROME_disabled),
+                                getter_AddRefs(mDisabled));
   NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF resource");
 
   nsCOMPtr<nsIObserverService> observerService =
@@ -1251,11 +1266,11 @@ nsChromeRegistry::LoadDataSource(const nsACString &aFileName,
 ////////////////////////////////////////////////////////////////////////////////
 
 nsresult
-nsChromeRegistry::GetResource(const nsCString& aURL,
+nsChromeRegistry::GetResource(const nsACString& aURL,
                               nsIRDFResource** aResult)
 {
   nsresult rv = NS_OK;
-  if (NS_FAILED(rv = mRDFService->GetResource(aURL.get(), aResult))) {
+  if (NS_FAILED(rv = mRDFService->GetResource(aURL, aResult))) {
     NS_ERROR("Unable to retrieve a resource for this URL.");
     *aResult = nsnull;
     return rv;

@@ -334,12 +334,18 @@ RDFContentSinkImpl::RDFContentSinkImpl()
 
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF service");
         if (NS_SUCCEEDED(rv)) {
-            rv = gRDFService->GetResource(RDF_NAMESPACE_URI "type",       &kRDF_type);
-            rv = gRDFService->GetResource(RDF_NAMESPACE_URI "instanceOf", &kRDF_instanceOf);
-            rv = gRDFService->GetResource(RDF_NAMESPACE_URI "Alt",        &kRDF_Alt);
-            rv = gRDFService->GetResource(RDF_NAMESPACE_URI "Bag",        &kRDF_Bag);
-            rv = gRDFService->GetResource(RDF_NAMESPACE_URI "Seq",        &kRDF_Seq);
-            rv = gRDFService->GetResource(RDF_NAMESPACE_URI "nextVal",    &kRDF_nextVal);
+            rv = gRDFService->GetResource(NS_LITERAL_CSTRING(RDF_NAMESPACE_URI "type"),
+                                          &kRDF_type);
+            rv = gRDFService->GetResource(NS_LITERAL_CSTRING(RDF_NAMESPACE_URI "instanceOf"),
+                                          &kRDF_instanceOf);
+            rv = gRDFService->GetResource(NS_LITERAL_CSTRING(RDF_NAMESPACE_URI "Alt"),
+                                          &kRDF_Alt);
+            rv = gRDFService->GetResource(NS_LITERAL_CSTRING(RDF_NAMESPACE_URI "Bag"),
+                                          &kRDF_Bag);
+            rv = gRDFService->GetResource(NS_LITERAL_CSTRING(RDF_NAMESPACE_URI "Seq"),
+                                          &kRDF_Seq);
+            rv = gRDFService->GetResource(NS_LITERAL_CSTRING(RDF_NAMESPACE_URI "nextVal"),
+                                          &kRDF_nextVal);
         }
 
 
@@ -764,7 +770,7 @@ RDFContentSinkImpl::ParseText(nsIRDFNode **aResult)
     case eRDFContentSinkParseMode_Resource:
         {
             nsIRDFResource *result;
-            gRDFService->GetUnicodeResource(value.get(), &result);
+            gRDFService->GetUnicodeResource(value, &result);
             *aResult = result;
         }
         break;
@@ -958,7 +964,7 @@ RDFContentSinkImpl::GetIdAboutAttribute(const PRUnichar** aAttributes,
 
             rdf_MakeAbsoluteURI(NS_ConvertUTF8toUCS2(docURI), uri);
 
-            return gRDFService->GetUnicodeResource(uri.get(), aResource);
+            return gRDFService->GetUnicodeResource(uri, aResource);
         }
         else if (attr.get() == kIdAtom) {
             if (aIsAnonymous)
@@ -979,7 +985,7 @@ RDFContentSinkImpl::GetIdAboutAttribute(const PRUnichar** aAttributes,
           
             rdf_MakeAbsoluteURI(NS_ConvertUTF8toUCS2(docURI), name);
 
-            return gRDFService->GetUnicodeResource(name.get(), aResource);
+            return gRDFService->GetUnicodeResource(name, aResource);
         }
         else if (attr.get() == kAboutEachAtom) {
             // XXX we don't deal with aboutEach...
@@ -1033,7 +1039,7 @@ RDFContentSinkImpl::GetResourceAttribute(const PRUnichar** aAttributes,
           mDocumentURL->GetSpec(documentURL);
           rdf_MakeAbsoluteURI(NS_ConvertUTF8toUCS2(documentURL), uri);
 
-          return gRDFService->GetUnicodeResource(uri.get(), aResource);
+          return gRDFService->GetUnicodeResource(uri, aResource);
       }
   }
   return NS_ERROR_FAILURE;
@@ -1096,7 +1102,7 @@ RDFContentSinkImpl::AddProperties(const PRUnichar** aAttributes,
 
       // Add the assertion to RDF
       nsCOMPtr<nsIRDFResource> property;
-      gRDFService->GetResource(propertyStr.get(), getter_AddRefs(property));
+      gRDFService->GetResource(propertyStr, getter_AddRefs(property));
 
       nsCOMPtr<nsIRDFLiteral> target;
       gRDFService->GetLiteral(v.get(), getter_AddRefs(target));
@@ -1238,7 +1244,7 @@ RDFContentSinkImpl::OpenObject(const PRUnichar* aName,
         typeStr += NS_ConvertUCS2toUTF8(attrName);
 
         nsCOMPtr<nsIRDFResource> type;
-        rv = gRDFService->GetResource(typeStr.get(), getter_AddRefs(type));
+        rv = gRDFService->GetResource(typeStr, getter_AddRefs(type));
         if (NS_FAILED(rv)) return rv;
 
         rv = mDataSource->Assert(source, kRDF_type, type, PR_TRUE);
@@ -1277,7 +1283,7 @@ RDFContentSinkImpl::OpenProperty(const PRUnichar* aName, const PRUnichar** aAttr
     }
 
     nsCOMPtr<nsIRDFResource> property;
-    rv = gRDFService->GetResource(propertyStr.get(), getter_AddRefs(property));
+    rv = gRDFService->GetResource(propertyStr, getter_AddRefs(property));
     if (NS_FAILED(rv)) return rv;
 
     // See if they've specified a 'resource' attribute, in which case

@@ -164,7 +164,7 @@ nsresult nsMsgPurgeService::AddServer(nsIMsgIncomingServer *server)
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIRDFResource> resource;
-  rv = rdf->GetResource(junkFolderURI.get(), getter_AddRefs(resource));
+  rv = rdf->GetResource(junkFolderURI, getter_AddRefs(resource));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIMsgFolder> junkFolder = do_QueryInterface(resource, &rv);

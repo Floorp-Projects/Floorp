@@ -459,7 +459,8 @@ nsCharsetMenu::nsCharsetMenu()
     res = nsComponentManager::CreateInstance(kRDFInMemoryDataSourceCID, nsnull, 
           NS_GET_IID(nsIRDFDataSource), (void**) &mInner);
 
-    mRDFService->GetResource(kURINC_BrowserCharsetMenuRoot, &kNC_BrowserCharsetMenuRoot);
+    mRDFService->GetResource(NS_LITERAL_CSTRING(kURINC_BrowserCharsetMenuRoot),
+                             &kNC_BrowserCharsetMenuRoot);
   }
 
   //get pref service
@@ -635,22 +636,37 @@ nsresult nsCharsetMenu::Init()
     if (NS_FAILED(res)) return res;
 
     //initialize all remaining RDF template nodes
-    mRDFService->GetResource(kURINC_BrowserAutodetMenuRoot, &kNC_BrowserAutodetMenuRoot);
-    mRDFService->GetResource(kURINC_BrowserMoreCharsetMenuRoot, &kNC_BrowserMoreCharsetMenuRoot);
-    mRDFService->GetResource(kURINC_BrowserMore1CharsetMenuRoot, &kNC_BrowserMore1CharsetMenuRoot);
-    mRDFService->GetResource(kURINC_BrowserMore2CharsetMenuRoot, &kNC_BrowserMore2CharsetMenuRoot);
-    mRDFService->GetResource(kURINC_BrowserMore3CharsetMenuRoot, &kNC_BrowserMore3CharsetMenuRoot);
-    mRDFService->GetResource(kURINC_BrowserMore4CharsetMenuRoot, &kNC_BrowserMore4CharsetMenuRoot);
-    mRDFService->GetResource(kURINC_BrowserMore5CharsetMenuRoot, &kNC_BrowserMore5CharsetMenuRoot);
-    mRDFService->GetResource(kURINC_MaileditCharsetMenuRoot, &kNC_MaileditCharsetMenuRoot);
-    mRDFService->GetResource(kURINC_MailviewCharsetMenuRoot, &kNC_MailviewCharsetMenuRoot);
-    mRDFService->GetResource(kURINC_ComposerCharsetMenuRoot, &kNC_ComposerCharsetMenuRoot);
-    mRDFService->GetResource(kURINC_DecodersRoot, &kNC_DecodersRoot);
-    mRDFService->GetResource(kURINC_Name, &kNC_Name);
-    mRDFService->GetResource(kURINC_Checked, &kNC_Checked);
-    mRDFService->GetResource(kURINC_CharsetDetector, &kNC_CharsetDetector);
-    mRDFService->GetResource(kURINC_BookmarkSeparator, &kNC_BookmarkSeparator);
-    mRDFService->GetResource(kURINC_type, &kRDF_type);
+    mRDFService->GetResource(NS_LITERAL_CSTRING(kURINC_BrowserAutodetMenuRoot),
+                             &kNC_BrowserAutodetMenuRoot);
+    mRDFService->GetResource(NS_LITERAL_CSTRING(kURINC_BrowserMoreCharsetMenuRoot),
+                             &kNC_BrowserMoreCharsetMenuRoot);
+    mRDFService->GetResource(NS_LITERAL_CSTRING(kURINC_BrowserMore1CharsetMenuRoot),
+                             &kNC_BrowserMore1CharsetMenuRoot);
+    mRDFService->GetResource(NS_LITERAL_CSTRING(kURINC_BrowserMore2CharsetMenuRoot),
+                             &kNC_BrowserMore2CharsetMenuRoot);
+    mRDFService->GetResource(NS_LITERAL_CSTRING(kURINC_BrowserMore3CharsetMenuRoot),
+                             &kNC_BrowserMore3CharsetMenuRoot);
+    mRDFService->GetResource(NS_LITERAL_CSTRING(kURINC_BrowserMore4CharsetMenuRoot),
+                             &kNC_BrowserMore4CharsetMenuRoot);
+    mRDFService->GetResource(NS_LITERAL_CSTRING(kURINC_BrowserMore5CharsetMenuRoot),
+                             &kNC_BrowserMore5CharsetMenuRoot);
+    mRDFService->GetResource(NS_LITERAL_CSTRING(kURINC_MaileditCharsetMenuRoot),
+                             &kNC_MaileditCharsetMenuRoot);
+    mRDFService->GetResource(NS_LITERAL_CSTRING(kURINC_MailviewCharsetMenuRoot),
+                             &kNC_MailviewCharsetMenuRoot);
+    mRDFService->GetResource(NS_LITERAL_CSTRING(kURINC_ComposerCharsetMenuRoot),
+                             &kNC_ComposerCharsetMenuRoot);
+    mRDFService->GetResource(NS_LITERAL_CSTRING(kURINC_DecodersRoot),
+                             &kNC_DecodersRoot);
+    mRDFService->GetResource(NS_LITERAL_CSTRING(kURINC_Name),
+                             &kNC_Name);
+    mRDFService->GetResource(NS_LITERAL_CSTRING(kURINC_Checked),
+                             &kNC_Checked);
+    mRDFService->GetResource(NS_LITERAL_CSTRING(kURINC_CharsetDetector),
+                             &kNC_CharsetDetector);
+    mRDFService->GetResource(NS_LITERAL_CSTRING(kURINC_BookmarkSeparator),
+                             &kNC_BookmarkSeparator);
+    mRDFService->GetResource(NS_LITERAL_CSTRING(kURINC_type), &kRDF_type);
 
     nsIRDFContainerUtils * rdfUtil = NULL;
     res = nsServiceManager::GetService(kRDFContainerUtilsCID, 
@@ -728,9 +744,7 @@ nsresult nsCharsetMenu::SetCharsetCheckmark(nsString * aCharset,
   if (NS_FAILED(res)) return res;
 
   // find RDF node for given charset
-  char csID[256];
-  aCharset->ToCString(csID, sizeof(csID));
-  res = mRDFService->GetResource(csID, getter_AddRefs(node));
+  res = mRDFService->GetUnicodeResource(*aCharset, getter_AddRefs(node));
   if (NS_FAILED(res)) return res;
 
   // set checkmark value
@@ -1258,9 +1272,7 @@ nsresult nsCharsetMenu::AddMenuItemToContainer(
   id.Append(cs);
 
   // Make up a unique ID and create the RDF NODE
-  char csID[256];
-  id.ToCString(csID, sizeof(csID));
-  res = mRDFService->GetResource(csID, getter_AddRefs(node));
+  res = mRDFService->GetUnicodeResource(id, getter_AddRefs(node));
   if (NS_FAILED(res)) return res;
 
   const PRUnichar * title = aItem->mTitle.get();

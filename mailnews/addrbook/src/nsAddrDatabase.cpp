@@ -3589,7 +3589,7 @@ NS_IMETHODIMP nsAddrDatabase::AddListDirNode(nsIMdbRow * listRow)
 
         char* file = m_dbName.GetLeafName();
         char *parentUri = PR_smprintf("%s%s", kMDBDirectoryRoot, file);
-        rv = rdfService->GetResource( parentUri, getter_AddRefs(parentResource));
+        rv = rdfService->GetResource(nsDependentCString(parentUri), getter_AddRefs(parentResource));
         nsCOMPtr<nsIAbDirectory> parentDir;
         rv = proxyMgr->GetProxyForObject( NS_UI_THREAD_EVENTQ, NS_GET_IID( nsIAbDirectory),
                                     parentResource, PROXY_SYNC | PROXY_ALWAYS, getter_AddRefs( parentDir));

@@ -83,19 +83,24 @@ nsSubscribeDataSource::Init()
     NS_ENSURE_SUCCESS(rv,rv);
     if (!mRDFService) return NS_ERROR_FAILURE;
 
-    rv = mRDFService->GetResource(NC_NAMESPACE_URI "child",getter_AddRefs(kNC_Child));
+    rv = mRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "child"),
+                                  getter_AddRefs(kNC_Child));
     NS_ENSURE_SUCCESS(rv,rv);
 
-    rv = mRDFService->GetResource(NC_NAMESPACE_URI "Name",getter_AddRefs(kNC_Name));
+    rv = mRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "Name"),
+                                  getter_AddRefs(kNC_Name));
     NS_ENSURE_SUCCESS(rv,rv);
 
-    rv = mRDFService->GetResource(NC_NAMESPACE_URI "LeafName",getter_AddRefs(kNC_LeafName));
+    rv = mRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "LeafName"),
+                                  getter_AddRefs(kNC_LeafName));
     NS_ENSURE_SUCCESS(rv,rv);
 
-    rv = mRDFService->GetResource(NC_NAMESPACE_URI "Subscribed",getter_AddRefs(kNC_Subscribed));
+    rv = mRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "Subscribed"),
+                                  getter_AddRefs(kNC_Subscribed));
     NS_ENSURE_SUCCESS(rv,rv);
 
-    rv = mRDFService->GetResource(NC_NAMESPACE_URI "ServerType",getter_AddRefs(kNC_ServerType));
+    rv = mRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "ServerType"),
+                                  getter_AddRefs(kNC_ServerType));
     NS_ENSURE_SUCCESS(rv,rv);
 
     rv = mRDFService->GetLiteral(NS_LITERAL_STRING("true").get(),getter_AddRefs(kTrueLiteral));
@@ -183,7 +188,7 @@ nsSubscribeDataSource::GetTarget(nsIRDFResource *source,
         if (!(const char *)childUri) return NS_RDF_NO_VALUE;
 
         nsCOMPtr <nsIRDFResource> childResource;
-        rv = mRDFService->GetResource((const char *)childUri, getter_AddRefs(childResource));
+        rv = mRDFService->GetResource(childUri, getter_AddRefs(childResource));
         NS_ENSURE_SUCCESS(rv,rv);
         
         return childResource->QueryInterface(NS_GET_IID(nsIRDFNode), (void**) target);

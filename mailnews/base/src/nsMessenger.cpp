@@ -1059,7 +1059,7 @@ nsMessenger::Alert(const char *stringName)
 }
 
 nsresult
-nsMessenger::DoCommand(nsIRDFCompositeDataSource* db, const char *command,
+nsMessenger::DoCommand(nsIRDFCompositeDataSource* db, const nsACString& command,
                        nsISupportsArray *srcArray, 
                        nsISupportsArray *argumentArray)
 {
@@ -1103,9 +1103,9 @@ nsMessenger::DeleteMessages(nsIRDFCompositeDataSource *database,
 	folderArray->AppendElement(srcFolderResource);
 	
 	if(reallyDelete)
-		rv = DoCommand(database, NC_RDF_REALLY_DELETE, folderArray, resourceArray);
+		rv = DoCommand(database, NS_LITERAL_CSTRING(NC_RDF_REALLY_DELETE), folderArray, resourceArray);
 	else
-		rv = DoCommand(database, NC_RDF_DELETE, folderArray, resourceArray);
+		rv = DoCommand(database, NS_LITERAL_CSTRING(NC_RDF_DELETE), folderArray, resourceArray);
 
 
 	return rv;
@@ -1139,7 +1139,7 @@ NS_IMETHODIMP nsMessenger::DeleteFolders(nsIRDFCompositeDataSource *db,
 	parentArray->AppendElement(parentResource);
 	deletedArray->AppendElement(deletedFolderResource);
 
-	rv = DoCommand(db, NC_RDF_DELETE, parentArray, deletedArray);
+	rv = DoCommand(db, NS_LITERAL_CSTRING(NC_RDF_DELETE), parentArray, deletedArray);
 
 	return NS_OK;
 }
@@ -1172,7 +1172,10 @@ nsMessenger::CopyMessages(nsIRDFCompositeDataSource *database,
   NS_ENSURE_SUCCESS(rv, rv);
   
   folderArray->AppendElement(dstResource);
-  rv = DoCommand(database, isMove ? (char *)NC_RDF_MOVE : (char *)NC_RDF_COPY, folderArray, argumentArray);
+  if (isMove)
+    rv = DoCommand(database, NS_LITERAL_CSTRING(NC_RDF_MOVE), folderArray, argumentArray);
+  else
+    rv = DoCommand(database, NS_LITERAL_CSTRING(NC_RDF_COPY), folderArray, argumentArray);
   return rv;
 
 }
@@ -1208,7 +1211,10 @@ nsMessenger::CopyFolders(nsIRDFCompositeDataSource *database,
 
 	folderArray->AppendElement(dstResource);
 	
-	return DoCommand(database, isMoveFolder ? NC_RDF_MOVEFOLDER : NC_RDF_COPYFOLDER, folderArray, argumentArray);
+  if (isMoveFolder)
+    return DoCommand(database, NS_LITERAL_CSTRING(NC_RDF_MOVEFOLDER), folderArray, argumentArray);
+
+  return DoCommand(database, NS_LITERAL_CSTRING(NC_RDF_COPYFOLDER), folderArray, argumentArray);
 	
 }
 
@@ -1234,7 +1240,7 @@ nsMessenger::RenameFolder(nsIRDFCompositeDataSource* db,
 
     rdfService->GetLiteral(name, getter_AddRefs(nameLiteral));
     argsArray->AppendElement(nameLiteral);
-    rv = DoCommand(db, NC_RDF_RENAME, folderArray, argsArray);
+    rv = DoCommand(db, NS_LITERAL_CSTRING(NC_RDF_RENAME), folderArray, argsArray);
   }
   return rv;
 }
@@ -1251,7 +1257,10 @@ nsMessenger::CompactFolder(nsIRDFCompositeDataSource* db,
   rv = NS_NewISupportsArray(getter_AddRefs(folderArray));
   if (NS_FAILED(rv)) return rv;
   folderArray->AppendElement(folderResource);
-  rv = DoCommand(db, NS_CONST_CAST(char*, forAll ? NC_RDF_COMPACTALL : NC_RDF_COMPACT),  folderArray, nsnull);
+  if (forAll)
+    rv = DoCommand(db, NS_LITERAL_CSTRING(NC_RDF_COMPACTALL),  folderArray, nsnull);
+  else
+    rv = DoCommand(db, NS_LITERAL_CSTRING(NC_RDF_COMPACT),  folderArray, nsnull);
   if (NS_SUCCEEDED(rv) && mTxnMgr)
       mTxnMgr->Clear();
   return rv;
@@ -1269,7 +1278,7 @@ nsMessenger::EmptyTrash(nsIRDFCompositeDataSource* db,
   rv = NS_NewISupportsArray(getter_AddRefs(folderArray));
   if (NS_FAILED(rv)) return rv;
   folderArray->AppendElement(folderResource);
-  rv = DoCommand(db, NC_RDF_EMPTYTRASH, folderArray, nsnull);
+  rv = DoCommand(db, NS_LITERAL_CSTRING(NC_RDF_EMPTYTRASH), folderArray, nsnull);
   if (NS_SUCCEEDED(rv) && mTxnMgr)
       mTxnMgr->Clear();
   return rv;

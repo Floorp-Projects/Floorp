@@ -427,7 +427,7 @@ nsMsgFolder::FindSubFolder(const char *subFolderName, nsIFolder **aFolder)
   uri.Append(subFolderName);
 
   nsCOMPtr<nsIRDFResource> res;
-  rv = rdf->GetResource(uri.get(), getter_AddRefs(res));
+  rv = rdf->GetResource(uri, getter_AddRefs(res));
   if (NS_FAILED(rv))
     return rv;
 
