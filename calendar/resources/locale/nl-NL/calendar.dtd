@@ -255,7 +255,7 @@
 <!ENTITY calendar.weekview.button.label         "Weekoverzicht" >
 <!ENTITY calendar.monthview.button.label        "Maandoverzicht" >
 <!ENTITY calendar.multiweekview.button.label        "Meerder wekenoverzicht" >
-<!ENTITY calendar.onlyworkday.checkbox.label    "Alleen maandag-vrijdag" >
+<!ENTITY calendar.onlyworkday.checkbox.label    "Enkel werkdagen" >
 <!ENTITY calendar.onlyworkday.checkbox.accesskey  "A" >
 <!ENTITY calendar.displaytodos.checkbox.label   "Taken in overzicht" >
 <!ENTITY calendar.displaytodos.checkbox.accesskey "T" >
