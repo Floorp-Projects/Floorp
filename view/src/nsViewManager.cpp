@@ -1888,7 +1888,7 @@ NS_IMETHODIMP nsViewManager::ResizeView(nsIView *aView, nscoord width, nscoord h
 		// resize the view.
 		aView->SetDimensions(width, height);
 
-#if 0
+#if 1
 		// refresh the bounding box of old and new areas.
 		nscoord maxWidth = (oldWidth < width ? width : oldWidth);
 		nscoord maxHeight = (oldHeight < height ? height : oldHeight);
