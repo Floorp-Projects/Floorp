@@ -32,8 +32,8 @@
 # complete rewrite by Ken Estes, Mail.com (kestes@staff.mail.com).
 # Contributor(s): 
 
-# $Revision: 1.12 $
-# $Date: 2001/10/18 16:19:58 $
+# $Revision: 1.13 $
+# $Date: 2001/11/14 21:21:02 $
 # $Author: kestes%walrus.com $
 # $Name:  $
 
@@ -71,7 +71,23 @@ Global Options:
   --noreport             Do not mail status reorts to the tinderbox server.
   --test                 Print the build commands, do not run the build 
 			     commands or mail logs.
-  --build BUILDTYPE      The name of the build type to run
+  --build BUILDTYPE      The name of the build type to run. You may specify
+			 more then one build on the command line by 
+			 separating build types with colons (':') each build 
+			 will be run in the order given. This will result in 
+			 gaps in each of the tinderbox display pages. If you 
+			 wish to have multiple builds run at the same time 
+			 then run several copies of this program.
+
+  --tree TREENAME        Checkout sources with tree (module and branch)
+			 TREENAME. You may specify more then one build on
+			 the command line by separating build types with 
+			 colons (':') each build will be run in the order
+			 given. This will result in gaps in each of the
+			 tinderbox display pages. If you wish to have 
+			 multiple builds run at the same time then run 
+			 several copies of this program.
+
   --buildcf FILENAME     Provide a config file instead of the default: '$BUILDCF'.
   --mailer MAILER        Specify a different binary to use as the mailing 
                              program.  The default is: '$MAILER'.
@@ -86,7 +102,6 @@ Build Options:
   --depend               Build depend (must have this option or clobber).
   --clobber              Build clobber (the oposite of depend).
   --tag TREETAG          Checkout CVS sources by tag (-r TREETAG).
-  --tree TREENAME        Checkout CVS sources with module name TREENAME
 
 Summary:
 
@@ -164,7 +179,7 @@ meaningful and informative for your local environment.
 EXAMPLES
 
 build_shellscript --buildcf $dir/mozilla.unix.buildcf \
-		--build seamonkey --test \
+		--build seamonkey:smoketest --test \
 			-- \
 		--tree treename
 
@@ -342,7 +357,8 @@ sub parse_args {
     %option_linkage = (
 		       "version" => \$version,
 		       "help" => \$help,
-		       "build" => \$BUILD_NAME,
+		       "build" => \$BUILD_TYPE,
+		       "tree" => \$TREE_NAME,
 		       "test" => \$TEST,
 		       "mail-each-phase" => \$MAIL_EACH_PHASE,
 		       "noreport" => \$NO_REPORT,
@@ -356,8 +372,10 @@ sub parse_args {
 
     if( !GetOptions (\%option_linkage,
 		     "version", "help", 
-		     "build=s", "test!", "once", "daemonize",
-		     "mail-each-phase", "noreport!", "mailer=s", "buildcf=s",
+		     "build=s", "tree=s", 
+                     "test!", "once!", "daemonize!",
+		     "mail-each-phase!", "noreport!", 
+                     "mailer=s", "buildcf=s",
 		    ) ) {
 
       print("Illegal options in \@ARGV: '@ARGV'\n");
@@ -384,14 +402,8 @@ sub parse_args {
 
 
 sub set_server_args {
+    my (%args ) = @_;
 
-  %args = (
-	   buildtype => $BUILD_NAME,
-	   hostname => $HOSTNAME,
-	   program =>   $PROGRAM, 
-	   os =>	$OS,
-	   argv => [@ARGV],
-	  );
 
   # need to load UserDef from buildcf
 
@@ -485,11 +497,6 @@ sub mail_tinderbox_cmdlog {
   $TIME = time();
   $LOCAL_TIME = localtime($TIME);
   
-  #    ($SERVER_TREE_NAME && $BUILD_NAME) ||
-  #	die("mail_tinderbox_cmdlog requires both".
-  #	    " TreeName and BuildName.\n");
-
-
   # Do not have blank lines before the mail headers, 
   # postfix will choke.
 
@@ -856,41 +863,59 @@ sub slow_build_speed {
 
   do { # foreach build
 
-    # We need to rerun the user code each iteration so that they can
-    # set file names with embeded dates.  This allows each build to
-    # be saved in a separate tar file like:
-    # binaries.20010814.13:42:16.tar.gz
+      foreach $build_type (split(/:/, $BUILD_TYPE)) {
 
-    set_server_args();
+          foreach $tree_name (split(/:/, $TREE_NAME)) {
 
-    (@CMD_LOG) =();
+              # We need to rerun the user code each iteration so that
+              # they can set file names with embeded dates.  This
+              # allows each build to be saved in a separate tar file
+              # like: binaries.20010814.13:42:16.tar.gz
 
-    $START_TIME = time();
-    $LOCAL_START_TIME = localtime($START_TIME);
-    $SYSTEM3_LOOP_COUNT = 0;
-    
-    my ($status);
-    
-    foreach $phase (@{ $BUILDS->{$BUILD_NAME} }) {
+              %args = (
+                   argv => [@ARGV],
+                   build_type => $build_type,
+                   tree_name => $tree_name,
+                   
+                   hostname => $HOSTNAME,
+                   program =>   $PROGRAM, 
+                   os =>	$OS,
+                   );
+          
+              set_server_args(%args);
+              
+              (@CMD_LOG) =();
+              
+              $START_TIME = time();
+              $LOCAL_START_TIME = localtime($START_TIME);
+              $SYSTEM3_LOOP_COUNT = 0;
+              
+              my ($status);
+              
+              foreach $phase (@{ $BUILDS->{$build_type} }) {
+                  
+                  ($MAIL_EACH_PHASE) && 
+                      mail_tinderbox_cmdlog('building');
+                  
+                  $status = safe_run_shell_commands($phase);
+                  
+                  ($status ne 'success') && 
+                      last;
+                  
+              } # foreach $phase
+              
+              $END_TIME = time();
+              $LOCAL_END_TIME = localtime($END_TIME);
+              
+              mail_tinderbox_cmdlog($status);
+              
+              ($BUILD_ONCE) ||
+                  slow_build_speed();
+              
+          } # foreach buildtype
+          
+      } # foreach tree_name 
       
-      ($MAIL_EACH_PHASE) && 
-	mail_tinderbox_cmdlog('building');
-      
-      $status = safe_run_shell_commands($phase);
-
-      ($status ne 'success') && 
-	last;
-
-    } # foreach $phase
-    
-    $END_TIME = time();
-    $LOCAL_END_TIME = localtime($END_TIME);
-
-    mail_tinderbox_cmdlog($status);
-    
-    ($BUILD_ONCE) ||
-      slow_build_speed();
-    
   } while (!($BUILD_ONCE)); # foreach build
   
   exit 0;
