@@ -254,6 +254,19 @@ NS_METHOD nsBodyFrame::ContentInserted(nsIPresShell*   aShell,
                                       aChild, aIndexInParent);
 }
 
+NS_METHOD nsBodyFrame::ContentDeleted(nsIPresShell*   aShell,
+                                      nsIPresContext* aPresContext,
+                                      nsIContent*     aContainer,
+                                      nsIContent*     aChild,
+                                      PRInt32         aIndexInParent)
+{
+  NS_ASSERTION(mContent == aContainer, "bad content-deleted target");
+
+  // Pass along the notification to our pseudo frame that maps all the content
+  return mFirstChild->ContentDeleted(aShell, aPresContext, aContainer,
+                                     aChild, aIndexInParent);
+}
+
 NS_METHOD
 nsBodyFrame::CreateContinuingFrame(nsIPresContext*  aPresContext,
                                    nsIFrame*        aParent,
