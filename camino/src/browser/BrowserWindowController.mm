@@ -1483,11 +1483,22 @@ static NSArray* sToolbarDefaults = nil;
 
   nsCOMPtr<nsISupports> desc = [[mBrowserView getBrowserView] getPageDescriptor];
   if (desc) {
-    if ([self newTabsAllowed])
-      [self openNewTabWithDescriptor:desc displayType:nsIWebPageDescriptor::DISPLAY_AS_SOURCE loadInBackground:loadInBackground];
-    else
-      [self openNewWindowWithDescriptor:desc displayType:nsIWebPageDescriptor::DISPLAY_AS_SOURCE loadInBackground:loadInBackground];
-    return;
+    // make sure we're not trying to load a subframe by checking |urlStr| against the url in
+    // the desc (which is a history entry). We can only use the desc if it's the toplevel page.
+    nsCOMPtr<nsIHistoryEntry> entry(do_QueryInterface(desc));
+    if (entry) {
+      nsCOMPtr<nsIURI> uri;
+      entry->GetURI(getter_AddRefs(uri));
+      nsCAutoString spec;
+      uri->GetSpec(spec);
+      if ([urlStr isEqualToString:[NSString stringWithUTF8String:spec.get()]]) {
+        if ([self newTabsAllowed])
+          [self openNewTabWithDescriptor:desc displayType:nsIWebPageDescriptor::DISPLAY_AS_SOURCE loadInBackground:loadInBackground];
+        else
+          [self openNewWindowWithDescriptor:desc displayType:nsIWebPageDescriptor::DISPLAY_AS_SOURCE loadInBackground:loadInBackground];
+        return;
+      }
+    }
   }
 
   //otherwise reload it from the server
