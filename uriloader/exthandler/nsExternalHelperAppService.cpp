@@ -214,10 +214,11 @@ static void GetFilenameFromDisposition(nsAString& aFilename,
  *         was sent.
  */
 static PRBool GetFilenameAndExtensionFromChannel(nsIChannel* aChannel,
-                                                 nsAString& aFileName,
-                                                 nsACString& aExtension,
+                                                 nsString& aFileName,
+                                                 nsCString& aExtension,
                                                  PRBool aAllowURLExtension = PR_TRUE)
 {
+  aExtension.Truncate();
   /*
    * If the channel is an http or part of a multipart channel and we
    * have a content disposition header set, then use the file name
@@ -261,29 +262,20 @@ static PRBool GetFilenameAndExtensionFromChannel(nsIChannel* aChannel,
     // But they could have listed a filename anyway.
     GetFilenameFromDisposition(aFileName, disp, uri, mimehdrpar);
 
-    // Extract Extension, if we have a filename; otherwise,
-    // truncate the string
-    if (aFileName.IsEmpty())
-    {
-      aExtension.Truncate();
-    }
-    else
-    {
-      // XXX RFindCharInReadable!!
-      nsAutoString fileNameStr(aFileName);
-      PRInt32 idx = fileNameStr.RFindChar(PRUnichar('.'));
-      if (idx != kNotFound)
-        CopyUTF16toUTF8(StringTail(fileNameStr, fileNameStr.Length() - idx - 1), aExtension);
-    }
-
   } // we had a disp header 
 
   // If the disposition header didn't work, try the filename from nsIURL
   nsCOMPtr<nsIURL> url(do_QueryInterface(uri));
   if (url && aFileName.IsEmpty())
   {
-    if (aAllowURLExtension)
+    if (aAllowURLExtension) {
       url->GetFileExtension(aExtension);
+      // Windows ignores terminating dots. So we have to as well, so
+      // that our security checks do "the right thing"
+      // In case the aExtension consisted only of the dot, the code below will
+      // extract an aExtension from the filename
+      aExtension.Trim(".", PR_FALSE);
+    }
 
     // try to extract the file name from the url and use that as a first pass as the
     // leaf name of our temp file...
@@ -306,6 +298,24 @@ static PRBool GetFilenameAndExtensionFromChannel(nsIChannel* aChannel,
       }
     }
   }
+
+  // Extract Extension, if we have a filename; otherwise,
+  // truncate the string
+  if (aExtension.IsEmpty()) {
+    if (!aFileName.IsEmpty())
+    {
+      // Windows ignores terminating dots. So we have to as well, so
+      // that our security checks do "the right thing"
+      aFileName.Trim(".", PR_FALSE);
+
+      // XXX RFindCharInReadable!!
+      nsAutoString fileNameStr(aFileName);
+      PRInt32 idx = fileNameStr.RFindChar(PRUnichar('.'));
+      if (idx != kNotFound)
+        CopyUTF16toUTF8(StringTail(fileNameStr, fileNameStr.Length() - idx - 1), aExtension);
+    }
+  }
+
 
   return handleExternally;
 }
