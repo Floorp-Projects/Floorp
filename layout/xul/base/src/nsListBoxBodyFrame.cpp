@@ -402,6 +402,15 @@ nsListBoxBodyFrame::PositionChanged(PRInt32 aOldIndex, PRInt32& aNewIndex)
 NS_IMETHODIMP
 nsListBoxBodyFrame::VisibilityChanged(PRBool aVisible)
 {
+  PRInt32 lastPageTopRow = GetRowCount() - (GetAvailableHeight() / mRowHeight);
+  if (lastPageTopRow < 0)
+    lastPageTopRow = 0;
+  PRInt32 delta = mCurrentIndex - lastPageTopRow;
+  if (delta > 0) {
+    mCurrentIndex = lastPageTopRow;
+    InternalPositionChanged(PR_TRUE, delta, PR_FALSE);
+  }
+
   return NS_OK;
 }
 
@@ -495,6 +504,8 @@ nsListBoxBodyFrame::EnsureIndexIsVisible(PRInt32 aRowIndex)
   PRInt32 rows = 0;
   if (mRowHeight)
     rows = GetAvailableHeight()/mRowHeight;
+  if (rows <= 0)
+    rows = 1;
   PRInt32 bottomIndex = mCurrentIndex + rows;
   
   // if row is visible, ignore
