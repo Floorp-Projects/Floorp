@@ -507,7 +507,7 @@ sub pushit {
     }
   } elsif ( $Settings::ReleaseToLatest ) {
     TinderUtils::run_shell_command "ssh $ssh_opts -l $Settings::ssh_user $ssh_server mkdir -p $upload_path";
-    TinderUtils::run_shell_command "scp $scp_opts -r $upload_directory $Settings::ssh_user\@$ssh_server:$upload_path/latest-$Settings::milestone/";
+    TinderUtils::run_shell_command "scp $scp_opts -r $upload_directory/* $Settings::ssh_user\@$ssh_server:$upload_path/latest-$Settings::milestone/";
     TinderUtils::run_shell_command "ssh $ssh_opts -l $Settings::ssh_user $ssh_server chmod -R 775 $upload_path/latest-$Settings::milestone/";
   }
 
