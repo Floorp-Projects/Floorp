@@ -45,6 +45,7 @@ REQUIRES        = xpcom \
                   libical \
                   libicalss \
                   libicalvcal \
+		  timer \
                   $(NULL)
 include <$(DEPTH)/config/config.mak>
 

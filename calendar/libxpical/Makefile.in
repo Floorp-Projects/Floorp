@@ -51,6 +51,7 @@ MODULE_NAME	= oeICalModule
 REQUIRES	= xpcom \
 		  appshell \
 		  string \
+		  timer \
 		  $(NULL)
 
 XPIDLSRCS = oeIICal.idl
