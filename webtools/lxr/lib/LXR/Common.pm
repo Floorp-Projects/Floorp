@@ -1,4 +1,4 @@
-# $Id: Common.pm,v 1.11 1998/07/28 19:17:30 jwz%netscape.com Exp $
+# $Id: Common.pm,v 1.12 1999/01/14 03:52:10 endico%mozilla.org Exp $
 
 package LXR::Common;
 
@@ -170,7 +170,7 @@ sub markupstring {
     # Look for identifiers and create links with identifier search query.
     tie (%xref, "DB_File", $Conf->dbdir."/xref", O_RDONLY, 0664, $DB_HASH)
         || &warning("Cannot open xref database.");
-    $string =~ s#(^|[^a-zA-Z_\#0-9\.])([a-zA-Z_~][a-zA-Z0-9_]*)\b#
+    $string =~ s#(^|\s)([a-zA-Z_~][a-zA-Z0-9_]*)\b#
                 $1.(is_linkworthy($2) ? &idref($2,$2) : $2)#ge;
     untie(%xref);
 
@@ -181,7 +181,7 @@ sub markupstring {
     $string=~ s/\0>/&gt;/g;
 
     # HTMLify email addresses and urls.
-    $string =~ s#((ftp|http|nntp|snews|news)://(\w|\w\.\w|\-|\/|\#)+(?!\.\b))#<a href=\"$1\">$1</a>#g;
+    $string =~ s#((ftp|http|nntp|snews|news)://(\w|\w\.\w|\~|\-|\/|\#)+(?!\.\b))#<a href=\"$1\">$1</a>#g;
     # htmlify certain addresses which aren't surrounded by <>
     $string =~ s/([\w\-\_]*\@netscape.com)(?!&gt;)/<a href=\"mailto:$1\">$1<\/a>/g;
     $string =~ s/([\w\-\_]*\@mozilla.org)(?!&gt;)/<a href=\"mailto:$1\">$1<\/a>/g;
