@@ -46,6 +46,9 @@ endif # MOZ_PKG_FORMAT
 ifndef MOZ_PKG_APPNAME
 MOZ_PKG_APPNAME = mozilla
 endif
+ifndef SDK_PKG_APPNAME
+SDK_PKG_APPNAME = gecko
+endif
 
 MAKE_PACKAGE	= echo "Sorry, don't know how to build a $(MOZ_PKG_FORMAT) file yet...."
 MAKE_SDK	=
@@ -58,7 +61,7 @@ PKG_BASENAME	:= $(MOZ_PKG_APPNAME)-$(TARGET_CPU)-$(TARGET_VENDOR)-$(TARGET_OS)
 PACKAGE		= $(PKG_BASENAME)$(PKG_SUFFIX)
 
 SDK_DIR		= sdk
-SDK		= $(MOZ_PKG_APPNAME)-$(SDK_DIR)-$(TARGET_CPU)-$(TARGET_VENDOR)-$(TARGET_OS)$(PKG_SUFFIX)
+SDK		= $(SDK_PKG_APPNAME)-$(SDK_DIR)-$(TARGET_CPU)-$(TARGET_VENDOR)-$(TARGET_OS)$(PKG_SUFFIX)
 
 TAR_CREATE_FLAGS = -cvhf
 
@@ -69,22 +72,22 @@ endif
 ifeq ($(MOZ_PKG_FORMAT),TAR)
 PKG_SUFFIX	= .tar
 MAKE_PACKAGE 	= tar -cf - $(MOZ_PKG_APPNAME) > $(PACKAGE)
-MAKE_SDK	= tar -cf - $(MOZ_PKG_APPNAME)-$(SDK_DIR) > $(SDK)
+MAKE_SDK	= tar -cf - $(SDK_PKG_APPNAME)-$(SDK_DIR) > $(SDK)
 endif
 ifeq ($(MOZ_PKG_FORMAT),TGZ)
 PKG_SUFFIX	= .tar.gz
 MAKE_PACKAGE 	= tar -cf - $(MOZ_PKG_APPNAME) | gzip -vf9 > $(PACKAGE)
-MAKE_SDK        = tar -cf - $(MOZ_PKG_APPNAME)-$(SDK_DIR) | gzip -vf9 > $(SDK)
+MAKE_SDK        = tar -cf - $(SDK_PKG_APPNAME)-$(SDK_DIR) | gzip -vf9 > $(SDK)
 endif
 ifeq ($(MOZ_PKG_FORMAT),BZ2)
 PKG_SUFFIX	= .tar.bz2
 MAKE_PACKAGE 	= tar -cf - $(MOZ_PKG_APPNAME) | bzip2 -vf > $(PACKAGE)
-MAKE_SDK        = tar -cf - $(MOZ_PKG_APPNAME)-$(SDK_DIR) | bzip2 -vf > $(SDK)
+MAKE_SDK        = tar -cf - $(SDK_PKG_APPNAME)-$(SDK_DIR) | bzip2 -vf > $(SDK)
 endif
 ifeq ($(MOZ_PKG_FORMAT),ZIP)
 PKG_SUFFIX	= .zip
 MAKE_PACKAGE	= $(ZIP) -r9 $(PACKAGE) $(MOZ_PKG_APPNAME)
-MAKE_SDK	= $(ZIP) -r9 $(SDK) $(MOZ_PKG_APPNAME)-$(SDK_DIR)
+MAKE_SDK	= $(ZIP) -r9 $(SDK) $(SDK_PKG_APPNAME)-$(SDK_DIR)
 endif
 ifeq ($(MOZ_PKG_FORMAT),DMG)
 ifndef MOZ_PKG_APPNAME
@@ -153,9 +156,9 @@ endif
 
 $(SDK):
 ifdef MAKE_SDK
-	@rm -rf $(DIST)/$(MOZ_PKG_APPNAME)-$(SDK_DIR) $@
-	@mkdir $(DIST)/$(MOZ_PKG_APPNAME)-$(SDK_DIR)
-	@cd $(DIST)/$(SDK_DIR) && tar $(TAR_CREATE_FLAGS) - * | (cd ../$(MOZ_PKG_APPNAME)-$(SDK_DIR); tar -xf -)
+	@rm -rf $(DIST)/$(SDK_PKG_APPNAME)-$(SDK_DIR) $@
+	@mkdir $(DIST)/$(SDK_PKG_APPNAME)-$(SDK_DIR)
+	@cd $(DIST)/$(SDK_DIR) && tar $(TAR_CREATE_FLAGS) - * | (cd ../$(SDK_PKG_APPNAME)-$(SDK_DIR); tar -xf -)
 	cd $(DIST) && $(MAKE_SDK)
 endif
 
