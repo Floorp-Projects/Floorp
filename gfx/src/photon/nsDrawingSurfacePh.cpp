@@ -324,6 +324,19 @@ NS_IMETHODIMP nsDrawingSurfacePh :: Init( PhGC_t * &aGC, PRUint32 aWidth,
   dim.w       = area.size.w;
   dim.h       = area.size.h;
 
+/* This fixes a PHOTON BUG */
+  /* 
+   *  Fix a problem on Test1 when a font is rendered partially out/off of
+   *  the drawing surface nothing is drawn. Increase the Surface to make sure
+   *  the font is always on the surface so it can be blitted correctly.
+   */	 
+  dim.h += 100;
+
+  /*
+   * Kedl thinks this fixes a bug on test 2
+   */  
+  dim.w ++;
+
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::Init create drawing surface: area=<%d,%d,%d,%d> mPixmap=<%p>\n",
     area.pos.x,area.pos.y,area.size.w,area.size.h,mPixmap));
 
