@@ -2119,9 +2119,9 @@ nsTreeRowGroupFrame :: AttributeChanged ( nsIPresContext* aPresContext, nsIConte
   else if ( aAttribute == nsXULAtoms::ddTriggerRepaintSorted ) {
     // Set a flag so that children won't draw the drop feedback but the parent
     // will.
-    mOuterFrame->mTreeIsSorted = true;
+    mOuterFrame->mTreeIsSorted = PR_TRUE;
     ForceDrawFrame ( aPresContext, mOuterFrame );
-    mOuterFrame->mTreeIsSorted = false;
+    mOuterFrame->mTreeIsSorted = PR_FALSE;
   }
   else if ( aAttribute == nsXULAtoms::ddTriggerRepaintRestore ) {
     // Repaint the entire tree with no special attributes set.
