@@ -855,6 +855,7 @@ nsCSSFrameConstructor::CreateInputFrame(nsIPresContext  *aPresContext,
       rv = ConstructButtonControlFrame(aPresContext, aFrame);
     }
     else if (val.EqualsIgnoreCase("image")) {
+      //rv = NS_NewGfxImageControlFrame(&aFrame);
       rv = NS_NewImageControlFrame(&aFrame);
     }
     else if (val.EqualsIgnoreCase("password")) {
@@ -4520,19 +4521,41 @@ nsCSSFrameConstructor::GetFrameFor(nsIPresShell*    aPresShell,
   aPresShell->GetPrimaryFrameFor(aContent, &frame);
 
   if (nsnull != frame) {
-    // If the primary frame is a scroll frame, then get the scrolled frame.
-    // That's the frame that gets the reflow command
-    const nsStyleDisplay* display;
-    frame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
+    // Check to see if the content is a select and 
+    // then if it has a drop down (thus making it a combobox)
+    // The drop down is a ListControlFrame derived from a 
+    // nsScrollFrame then get the area frame and 
+    // that will be the parent
+    nsCOMPtr<nsIDOMHTMLSelectElement> selectElement;
+    nsresult res = aContent->QueryInterface(nsCOMTypeInfo<nsIDOMHTMLSelectElement>::GetIID(),
+                                                 (void**)getter_AddRefs(selectElement));
+    if (NS_SUCCEEDED(res) && selectElement) {
+      nsIComboboxControlFrame * comboboxFrame;
+      res = frame->QueryInterface(nsCOMTypeInfo<nsIComboboxControlFrame>::GetIID(),
+                                               (void**)&comboboxFrame);
+      if (comboboxFrame) {
+        nsIFrame * listFrame;
+        comboboxFrame->GetDropDown(&listFrame);
+        if (nsnull != listFrame) {
+          listFrame->FirstChild(nsnull, &frame);
+        }
+      }
+    } else {
 
-    if (display->IsBlockLevel() && IsScrollable(aPresContext, display)) {
-      frame->FirstChild(nsnull, &frame);
-    } 
-    // if we get an outer table frame use its 1st child which is a table inner frame
-    // if we get a table cell frame   use its 1st child which is an area frame
-    else if ((NS_STYLE_DISPLAY_TABLE      == display->mDisplay) ||
-             (NS_STYLE_DISPLAY_TABLE_CELL == display->mDisplay)) {
-      frame->FirstChild(nsnull, &frame);                   
+      // If the primary frame is a scroll frame, then get the scrolled frame.
+      // That's the frame that gets the reflow command
+      const nsStyleDisplay* display;
+      frame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
+
+      if (display->IsBlockLevel() && IsScrollable(aPresContext, display)) {
+        frame->FirstChild(nsnull, &frame);
+      } 
+      // if we get an outer table frame use its 1st child which is a table inner frame
+      // if we get a table cell frame   use its 1st child which is an area frame
+      else if ((NS_STYLE_DISPLAY_TABLE      == display->mDisplay) ||
+               (NS_STYLE_DISPLAY_TABLE_CELL == display->mDisplay)) {
+        frame->FirstChild(nsnull, &frame);                   
+      }
     }
   }
 
