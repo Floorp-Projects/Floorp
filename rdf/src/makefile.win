@@ -38,33 +38,10 @@ CPP_OBJS=\
         .\$(OBJDIR)\nsSimpleDataBase.obj          \
 	$(NULL)
 
-# Right now, the RDF parser depends on some of the Raptor support
-# classes to work (e.g., nsDocument). So, we need to reach over
-# and link in a bunch of private stuff from over there. This *will*
-# go away.
-EVIL_RAPTOR_DEPENDENCY=1
-
 LLIBS=\
-!ifdef EVIL_RAPTOR_DEPENDENCY
- $(DIST)\lib\raptorhtml.lib             \
- $(DIST)\lib\raptorlayout_s.lib		\
- $(DIST)\lib\raptorhtmlbase_s.lib	\
- $(DIST)\lib\nglhtmlcon_s.lib		\
- $(DIST)\lib\raptorhtmldoc_s.lib	\
- $(DIST)\lib\raptorhtmlforms_s.lib	\
- $(DIST)\lib\raptorhtmlstyle_s.lib	\
- $(DIST)\lib\raptorhtmltable_s.lib	\
- $(DIST)\lib\raptorxmlcontent_s.lib	\
- $(DIST)\lib\raptorxmldoc_s.lib		\
- $(DIST)\lib\raptorevents_s.lib		\
- $(DIST)\lib\raptorbase.lib		\
- $(DIST)\lib\raptorgfxwin.lib		\
- $(DIST)\lib\raptorhtmlpars.lib		\
- $(DIST)\lib\jsdom.lib		        \
- $(DIST)\lib\js32$(VERSION_NUMBER).lib	\
-!endif
  $(DIST)\lib\xpcom32.lib         \
  $(DIST)\lib\raptorbase.lib      \
+ $(DIST)\lib\raptorgfxwin.lib    \
  $(DIST)\lib\netlib.lib          \
  $(DIST)\lib\libplc21.lib        \
  $(LIBNSPR)  
@@ -75,12 +52,6 @@ LINCS=  -I$(PUBLIC)\rdf          \
         -I$(PUBLIC)\raptor       \
         -I$(PUBLIC)\js           \
         -I$(PUBLIC)\dom          \
-!ifdef EVIL_RAPTOR_DEPENDENCY
-        -I..\..\layout\base\src          \
-        -I..\..\layout\html\base\src     \
-        -I..\..\layout\html\style\src    \
-        -I..\..\layout\html\document\src \
-!endif
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

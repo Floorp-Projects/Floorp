@@ -79,14 +79,14 @@ nsRDFFactory::QueryInterface(const nsIID &aIID,
         return NS_ERROR_NULL_POINTER;
 
     // Always NULL result, in case of failure
-    *aResult = NULL;
+    *aResult = nsnull;
 
     if (aIID.Equals(kISupportsIID)) {
-        *aResult = static_cast<nsISupports*>(this);
+        *aResult = NS_STATIC_CAST(nsISupports*, this);
         AddRef();
         return NS_OK;
     } else if (aIID.Equals(kIFactoryIID)) {
-        *aResult = static_cast<nsIFactory*>(this);
+        *aResult = NS_STATIC_CAST(nsIFactory*, this);
         AddRef();
         return NS_OK;
     }
@@ -108,26 +108,26 @@ nsRDFFactory::CreateInstance(nsISupports *aOuter,
     if (aOuter)
         return NS_ERROR_NO_AGGREGATION;
 
-    *aResult = NULL;
+    *aResult = nsnull;
 
-    nsISupports *inst = NULL;
+    nsISupports *inst = nsnull;
     if (mClassID.Equals(kRDFResourceManagerCID)) {
-        inst = static_cast<nsISupports*>(new nsRDFResourceManager());
+        inst = NS_STATIC_CAST(nsISupports*, new nsRDFResourceManager());
     }
     else if (mClassID.Equals(kRDFMemoryDataSourceCID)) {
-        inst = static_cast<nsISupports*>(new nsMemoryDataSource());
+        inst = NS_STATIC_CAST(nsISupports*, new nsMemoryDataSource());
     }
     else if (mClassID.Equals(kRDFBookmarkDataSourceCID)) {
-        inst = static_cast<nsISupports*>(new nsBookmarkDataSource());
+        inst = NS_STATIC_CAST(nsISupports*, new nsBookmarkDataSource());
     }
     else if (mClassID.Equals(kRDFRegistryCID)) {
-        inst = static_cast<nsISupports*>(new nsRDFRegistryImpl());
+        inst = NS_STATIC_CAST(nsISupports*, new nsRDFRegistryImpl());
     }
     else if (mClassID.Equals(kRDFSimpleDataBaseCID)) {
-        inst = static_cast<nsISupports*>(new nsSimpleDataBase());
+        inst = NS_STATIC_CAST(nsISupports*, new nsSimpleDataBase());
     }
     else if (mClassID.Equals(kRDFDocumentCID)) {
-        inst = static_cast<nsIRDFDocument*>(new nsRDFDocument());
+        inst = NS_STATIC_CAST(nsIRDFDocument*, new nsRDFDocument());
     }
 
     if (! inst)
@@ -152,14 +152,14 @@ nsresult nsRDFFactory::LockFactory(PRBool aLock)
 
 
 // return the proper factory to the caller
-extern "C" PR_EXTERN(nsresult)
+extern "C" PR_IMPLEMENT(nsresult)
 NSGetFactory(const nsCID &aClass, nsIFactory **aFactory)
 {
     if (! aFactory)
         return NS_ERROR_NULL_POINTER;
 
     *aFactory = new nsRDFFactory(aClass);
-    if (aFactory == NULL)
+    if (aFactory == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
 
     return (*aFactory)->QueryInterface(kIFactoryIID, (void**)aFactory);

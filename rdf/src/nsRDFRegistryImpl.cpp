@@ -56,7 +56,7 @@ nsRDFRegistryImpl::Register(const nsString& prefix,
     // Make sure that we don't have duplicates, and that we don't try
     // to replace an existing entry...
     for (PRInt32 i = mDataSources.Count() - 1; i >= 0; --i) {
-        RegistryEntry* e = static_cast<RegistryEntry*>(mDataSources[i]);
+        RegistryEntry* e = NS_STATIC_CAST(RegistryEntry*, mDataSources[i]);
         if (e->mPrefix == prefix)
             return NS_ERROR_FAILURE;
 
@@ -81,7 +81,7 @@ NS_IMETHODIMP
 nsRDFRegistryImpl::Unregister(const nsIRDFDataSource* dataSource)
 {
     for (PRInt32 i = mDataSources.Count() - 1; i >= 0; --i) {
-        RegistryEntry* e = static_cast<RegistryEntry*>(mDataSources[i]);
+        RegistryEntry* e = NS_STATIC_CAST(RegistryEntry*, mDataSources[i]);
         if (e->mDataSource == dataSource) {
             mDataSources.RemoveElementAt(i);
             delete e;
@@ -97,7 +97,7 @@ NS_IMETHODIMP
 nsRDFRegistryImpl::Find(const nsString& uri, nsIRDFDataSource*& result)
 {
     for (PRInt32 i = mDataSources.Count() - 1; i >= 0; --i) {
-        RegistryEntry* e = static_cast<RegistryEntry*>(mDataSources[i]);
+        RegistryEntry* e = NS_STATIC_CAST(RegistryEntry*, mDataSources[i]);
         if (uri.Find(e->mPrefix) == 0) {
             result = e->mDataSource;
             NS_ADDREF(result);

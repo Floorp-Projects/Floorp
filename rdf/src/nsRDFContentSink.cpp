@@ -48,7 +48,6 @@
 */
 
 #include "nsCRT.h"
-#include "nsHTMLEntities.h" // XXX for NS_EntityToUnicode()
 #include "nsIRDFDataSource.h"
 #include "nsIRDFNode.h"
 #include "nsIRDFResourceManager.h"
@@ -209,7 +208,10 @@ rdf_StripAndConvert(nsString& aResult)
                     continue;
                 }
                 *cp = '\0';
-                PRInt32 ch = NS_EntityToUnicode(cbuf);
+                PRInt32 ch;
+#if 0
+                ch = NS_EntityToUnicode(cbuf);
+#endif
                 if (ch < 0) {
                     continue;
                 }
@@ -244,14 +246,14 @@ rdf_FullyQualifyURI(const nsIURL* base, nsString& spec)
 ////////////////////////////////////////////////////////////////////////
 
 nsRDFContentSink::nsRDFContentSink()
-    : mDocumentURL(NULL),
-      mRDFResourceManager(NULL),
-      mDataSource(NULL),
+    : mDocumentURL(nsnull),
+      mRDFResourceManager(nsnull),
+      mDataSource(nsnull),
       mGenSym(0),
-      mNameSpaces(NULL),
+      mNameSpaces(nsnull),
       mNestLevel(0),
-      mContextStack(NULL),
-      mText(NULL),
+      mContextStack(nsnull),
+      mText(nsnull),
       mTextLength(0),
       mTextSize(0),
       mConstrainSize(PR_TRUE)
@@ -336,12 +338,12 @@ nsRDFContentSink::QueryInterface(REFNSIID iid, void** result)
     if (! result)
         return NS_ERROR_NULL_POINTER;
 
-    *result = NULL;
+    *result = nsnull;
     if (iid.Equals(kIRDFContentSinkIID) ||
         iid.Equals(kIXMLContentSinkIID) ||
         iid.Equals(kIContentSinkIID) ||
         iid.Equals(kISupportsIID)) {
-        *result = static_cast<nsIXMLContentSink*>(this);
+        *result = NS_STATIC_CAST(nsIXMLContentSink*, this);
         AddRef();
         return NS_OK;
     }
@@ -812,7 +814,7 @@ nsRDFContentSink::OpenRDF(const nsIParserNode& aNode)
     if (! tag.Equals(kTagRDF_RDF))
         return NS_ERROR_UNEXPECTED;
 
-    PushContext(NULL, mState);
+    PushContext(nsnull, mState);
     mState = eRDFContentSinkState_InDocumentElement;
     return NS_OK;
 }
@@ -1107,7 +1109,7 @@ nsRDFContentSink::GetContextElement(PRInt32 ancestor /* = 0 */)
     }
 
     RDFContextStackElement* e =
-        static_cast<RDFContextStackElement*>(mContextStack->ElementAt(mNestLevel-ancestor-1));
+        NS_STATIC_CAST(RDFContextStackElement*, mContextStack->ElementAt(mNestLevel-ancestor-1));
 
     return e->mResource;
 }
@@ -1129,7 +1131,7 @@ nsRDFContentSink::PushContext(nsIRDFNode *aResource, RDFContentSinkState aState)
     e->mResource = aResource;
     e->mState    = aState;
   
-    mContextStack->AppendElement(static_cast<void*>(e));
+    mContextStack->AppendElement(NS_STATIC_CAST(void*, e));
     return ++mNestLevel;
 }
  
@@ -1143,7 +1145,7 @@ nsRDFContentSink::PopContext(nsIRDFNode*& rResource, RDFContentSinkState& rState
     }
   
     --mNestLevel;
-    e = static_cast<RDFContextStackElement*>(mContextStack->ElementAt(mNestLevel));
+    e = NS_STATIC_CAST(RDFContextStackElement*, mContextStack->ElementAt(mNestLevel));
     mContextStack->RemoveElementAt(mNestLevel);
 
     // don't bother Release()-ing: call it our implicit AddRef().
@@ -1200,7 +1202,7 @@ nsRDFContentSink::FindNameSpaceAttributes(const nsIParserNode& aNode)
 void
 nsRDFContentSink::OpenNameSpace(const nsString& aPrefix, const nsString& aURI)
 {
-    nsIAtom *nameSpaceAtom = NULL;
+    nsIAtom *nameSpaceAtom = nsnull;
     if (0 < aPrefix.Length())
         nameSpaceAtom = NS_NewAtom(aPrefix);
   
@@ -1232,7 +1234,7 @@ nsRDFContentSink::GetNameSpaceURI(const nsString& aPrefix, nsString& rURI)
     if (!mNameSpaces)
         return; // empty
 
-    nsIAtom* nameSpaceAtom = NULL;
+    nsIAtom* nameSpaceAtom = nsnull;
     if (0 < aPrefix.Length())
         nameSpaceAtom = NS_NewAtom(aPrefix);
 

@@ -125,7 +125,7 @@ const char* BookmarkParser::kSeparatorString  = "<HR>";
 
 
 BookmarkParser::BookmarkParser(void)
-    : mResourceMgr(NULL), mDataSource(NULL)
+    : mResourceMgr(nsnull), mDataSource(nsnull)
 {
     nsresult rv;
     rv = nsServiceManager::GetService(kRDFResourceManagerCID,
@@ -158,7 +158,7 @@ BookmarkParser::Parse(PRFileDesc* file, nsIRDFDataSource* dataSource)
     mDataSource = dataSource;
     mState = eBookmarkParserState_Initial;
     mCounter = 0;
-    mLastItem = NULL;
+    mLastItem = nsnull;
     mLine.Truncate();
 
     nsresult rv;
@@ -271,7 +271,7 @@ BookmarkParser::DoStateTransition(void)
 #if 0 // XXX if it doesn't already have a description? Huh?
         if (remoteStoreGetSlotValue(gLocalStore, mLastItem, gWebData->RDF_description, 
                                     RDF_STRING_TYPE, false, true) 
-            == NULL)
+            == nsnull)
 #endif
         mState = eBookmarkParserState_InItemDescription;
     }
@@ -281,7 +281,7 @@ BookmarkParser::DoStateTransition(void)
     else if (mLine.Find(kCloseDLString) == 0) {
         PRInt32 count = mStack.Count();
         if (count) {
-            nsIRDFNode* top = static_cast<nsIRDFNode*>(mStack[--count]);
+            nsIRDFNode* top = NS_STATIC_CAST(nsIRDFNode*, mStack[--count]);
             mStack.RemoveElementAt(count);
             NS_IF_RELEASE(top);
         }
@@ -289,7 +289,7 @@ BookmarkParser::DoStateTransition(void)
     else if (mLine.Find(kSeparatorString) == 0) {
 #if FIXME // separators
         addSlotValue(f, createSeparator(), gCoreVocab->RDF_parent, mStack[mStack.Count() - 1], 
-                     RDF_RESOURCE_TYPE, NULL);
+                     RDF_RESOURCE_TYPE, nsnull);
 #endif
         mState = eBookmarkParserState_Initial;
     }
@@ -510,25 +510,25 @@ HT_WriteOutAsBookmarks1 (RDF rdf, PRFileDesc *fp, RDF_Resource u, RDF_Resource t
     char *date, *name, *url;
     int loop;
 
-    if (c == NULL) return;
+    if (c == nsnull) return;
     if (u == top) {
       name = RDF_GetResourceName(rdf, u);
-      ht_rjcprintf(fp, "<!DOCTYPE NETSCAPE-Bookmark-file-1>\n", NULL);
-      ht_rjcprintf(fp, "<!-- This is an automatically generated file.\n", NULL);
-      ht_rjcprintf(fp, "It will be read and overwritten.\n", NULL);
-      ht_rjcprintf(fp, "Do Not Edit! -->\n", NULL);
+      ht_rjcprintf(fp, "<!DOCTYPE NETSCAPE-Bookmark-file-1>\n", nsnull);
+      ht_rjcprintf(fp, "<!-- This is an automatically generated file.\n", nsnull);
+      ht_rjcprintf(fp, "It will be read and overwritten.\n", nsnull);
+      ht_rjcprintf(fp, "Do Not Edit! -->\n", nsnull);
 
       ht_rjcprintf(fp, "<TITLE>%s</TITLE>\n", (name) ? name:"");
       ht_rjcprintf(fp, "<H1>%s</H1>\n<DL><p>\n", (name) ? name:"");
     }
-    while ((next = RDF_NextValue(c)) != NULL) {
+    while ((next = RDF_NextValue(c)) != nsnull) {
 
       url = resourceID(next);
       if (containerp(next) && (!startsWith("ftp:",url)) && (!startsWith("file:",url))
 	    && (!startsWith("IMAP:", url)) && (!startsWith("nes:", url))
 	    && (!startsWith("mail:", url)) && (!startsWith("cache:", url))
 	    && (!startsWith("ldap:", url))) {
-		for (loop=0; loop<indent; loop++)	ht_rjcprintf(fp, "    ", NULL);
+		for (loop=0; loop<indent; loop++)	ht_rjcprintf(fp, "    ", nsnull);
 
 		date = numericDate(resourceID(next));
 		ht_rjcprintf(fp, "<DT><H3 ADD_DATE=\"%s\">", (date) ? date:"");
@@ -536,24 +536,24 @@ HT_WriteOutAsBookmarks1 (RDF rdf, PRFileDesc *fp, RDF_Resource u, RDF_Resource t
 		name = RDF_GetResourceName(rdf, next);
 		ht_rjcprintf(fp, "%s</H3>\n", name);
 
-		for (loop=0; loop<indent; loop++)	ht_rjcprintf(fp, "    ", NULL);
-		ht_rjcprintf(fp, "<DL><p>\n", NULL);
+		for (loop=0; loop<indent; loop++)	ht_rjcprintf(fp, "    ", nsnull);
+		ht_rjcprintf(fp, "<DL><p>\n", nsnull);
 		HT_WriteOutAsBookmarks1(rdf, fp, next, top, indent+1);
 
-		for (loop=0; loop<indent; loop++)	ht_rjcprintf(fp, "    ", NULL);
+		for (loop=0; loop<indent; loop++)	ht_rjcprintf(fp, "    ", nsnull);
 
-		ht_rjcprintf(fp, "</DL><p>\n", NULL);
+		ht_rjcprintf(fp, "</DL><p>\n", nsnull);
       }
       else if (isSeparator(next)) {
-	for (loop=0; loop<indent; loop++)	ht_rjcprintf(fp, "    ", NULL);
-	ht_rjcprintf(fp, "<HR>\n", NULL);
+	for (loop=0; loop<indent; loop++)	ht_rjcprintf(fp, "    ", nsnull);
+	ht_rjcprintf(fp, "<HR>\n", nsnull);
       }
       else {
 	char* bkAddDate = (char*)RDF_GetSlotValue(rdf, next, 
 						  gNavCenter->RDF_bookmarkAddDate, 
 						  RDF_STRING_TYPE, false, true);
 
-        for (loop=0; loop<indent; loop++)	ht_rjcprintf(fp, "    ", NULL);
+        for (loop=0; loop<indent; loop++)	ht_rjcprintf(fp, "    ", nsnull);
 
 	ht_rjcprintf(fp, "<DT><A HREF=\"%s\" ", resourceID(next));
 	date = numericDate(bkAddDate);
@@ -563,14 +563,14 @@ HT_WriteOutAsBookmarks1 (RDF rdf, PRFileDesc *fp, RDF_Resource u, RDF_Resource t
 	ht_rjcprintf(fp, "LAST_MODIFIED=\"%s\">", resourceLastModifiedDate(rdf, next));
 	ht_rjcprintf(fp, "%s</A>\n", RDF_GetResourceName(rdf, next));
 
-	if (resourceDescription(rdf, next) != NULL) {
+	if (resourceDescription(rdf, next) != nsnull) {
 	  ht_rjcprintf(fp, "<DD>%s\n", resourceDescription(rdf, next));
 	}
       }
     }
     RDF_DisposeCursor(c);
     if (u == top) {
-      ht_rjcprintf(fp, "</DL>\n", NULL);
+      ht_rjcprintf(fp, "</DL>\n", nsnull);
     }
 }
 #endif

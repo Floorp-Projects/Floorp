@@ -89,10 +89,10 @@ public:
 
 
 MultiCursor::MultiCursor(nsVoidArray& dataSources)
-    : mDataSource0(NULL),
-      mDataSources(NULL),
-      mCurrentCursor(NULL),
-      mNextResult(NULL),
+    : mDataSource0(nsnull),
+      mDataSources(nsnull),
+      mCurrentCursor(nsnull),
+      mNextResult(nsnull),
       mCount(0),
       mNextDataSource(0)
 {
@@ -106,7 +106,7 @@ MultiCursor::MultiCursor(nsVoidArray& dataSources)
         return;
 
     for (PRInt32 i = 0; i < mCount; ++i) {
-        mDataSources[i] = static_cast<nsIRDFDataSource*>(dataSources[i]);
+        mDataSources[i] = NS_STATIC_CAST(nsIRDFDataSource*, dataSources[i]);
         NS_ADDREF(mDataSources[i]);
     }
 
@@ -214,7 +214,7 @@ MultiCursor::GetNext(nsIRDFNode*& next, PRBool& tv)
     next = mNextResult; // no need to AddRef() again...
     tv   = mNextTruthValue;
     
-    mNextResult = NULL; // ...because we'll just "transfer ownership".
+    mNextResult = nsnull; // ...because we'll just "transfer ownership".
     return NS_OK;
 }
 
@@ -348,7 +348,7 @@ nsSimpleDataBase::nsSimpleDataBase(void)
     // XXX this is so wrong.
     nsIRDFDataSource* ds;
     if (NS_SUCCEEDED(nsRepository::CreateInstance(kRDFBookmarkDataSourceCID,
-                                                  NULL,
+                                                  nsnull,
                                                   kIRDFDataSourceIID,
                                                   (void**) &ds))) {
         AddDataSource(ds);
@@ -360,7 +360,7 @@ nsSimpleDataBase::nsSimpleDataBase(void)
 nsSimpleDataBase::~nsSimpleDataBase(void)
 {
     for (PRInt32 i = mDataSources.Count() - 1; i >= 0; --i) {
-        nsIRDFDataSource* ds = static_cast<nsIRDFDataSource*>(mDataSources[i]);
+        nsIRDFDataSource* ds = NS_STATIC_CAST(nsIRDFDataSource*, mDataSources[i]);
         NS_IF_RELEASE(ds);
     }
 }
@@ -377,11 +377,11 @@ nsSimpleDataBase::QueryInterface(REFNSIID iid, void** result)
     if (! result)
         return NS_ERROR_NULL_POINTER;
 
-    *result = NULL;
+    *result = nsnull;
     if (iid.Equals(kIRDFDataBaseIID) ||
         iid.Equals(kIRDFDataSourceIID) ||
         iid.Equals(kISupportsIID)) {
-        *result = static_cast<nsIRDFDataBase*>(this);
+        *result = NS_STATIC_CAST(nsIRDFDataBase*, this);
         AddRef();
         return NS_OK;
     }
@@ -408,14 +408,14 @@ nsSimpleDataBase::GetSource(nsIRDFNode* property,
 {
     PRInt32 count = mDataSources.Count();
     for (PRInt32 i = 0; i < count; ++i) {
-        nsIRDFDataSource* ds = static_cast<nsIRDFDataSource*>(mDataSources[i]);
+        nsIRDFDataSource* ds = NS_STATIC_CAST(nsIRDFDataSource*, mDataSources[i]);
 
         if (NS_FAILED(ds->GetSource(property, target, tv, source)))
             continue;
 
         // okay, found it. make sure we don't have the opposite
         // asserted in the "main" data source
-        nsIRDFDataSource* ds0 = static_cast<nsIRDFDataSource*>(mDataSources[0]);
+        nsIRDFDataSource* ds0 = NS_STATIC_CAST(nsIRDFDataSource*, mDataSources[0]);
         nsIRDFNode* tmp;
         if (NS_FAILED(ds->GetSource(property, target, !tv, tmp)))
             return NS_OK;
@@ -446,14 +446,14 @@ nsSimpleDataBase::GetTarget(nsIRDFNode* source,
 {
     PRInt32 count = mDataSources.Count();
     for (PRInt32 i = 0; i < count; ++i) {
-        nsIRDFDataSource* ds = static_cast<nsIRDFDataSource*>(mDataSources[i]);
+        nsIRDFDataSource* ds = NS_STATIC_CAST(nsIRDFDataSource*, mDataSources[i]);
 
         if (NS_FAILED(ds->GetTarget(source, property, tv, target)))
             continue;
 
         // okay, found it. make sure we don't have the opposite
         // asserted in the "main" data source
-        nsIRDFDataSource* ds0 = static_cast<nsIRDFDataSource*>(mDataSources[0]);
+        nsIRDFDataSource* ds0 = NS_STATIC_CAST(nsIRDFDataSource*, mDataSources[0]);
         nsIRDFNode* tmp;
         if (NS_FAILED(ds0->GetTarget(source, property, !tv, tmp)))
             return NS_OK;
@@ -489,7 +489,7 @@ nsSimpleDataBase::Assert(nsIRDFNode* source,
     nsresult rv;
 
     // First see if we just need to remove a negative assertion from ds0. (Sigh)
-    nsIRDFDataSource* ds0 = static_cast<nsIRDFDataSource*>(mDataSources[0]);
+    nsIRDFDataSource* ds0 = NS_STATIC_CAST(nsIRDFDataSource*, mDataSources[0]);
 
     PRBool ds0HasNegation;
     if (NS_FAILED(rv = ds0->HasAssertion(source, property, target, !tv, ds0HasNegation)))
@@ -511,7 +511,7 @@ nsSimpleDataBase::Assert(nsIRDFNode* source,
     // If not, iterate from the "remote-est" data source to the
     // "local-est", trying to make the assertion.
     for (PRInt32 i = mDataSources.Count() - 1; i >= 0; --i) {
-        nsIRDFDataSource* ds = static_cast<nsIRDFDataSource*>(mDataSources[i]);
+        nsIRDFDataSource* ds = NS_STATIC_CAST(nsIRDFDataSource*, mDataSources[i]);
         if (NS_SUCCEEDED(ds->Assert(source, property, target, tv)))
             return NS_OK;
     }
@@ -532,13 +532,13 @@ nsSimpleDataBase::Unassert(nsIRDFNode* source,
     PRInt32 count = mDataSources.Count();
 
     for (PRInt32 i = 0; i < count; ++i) {
-        nsIRDFDataSource* ds = static_cast<nsIRDFDataSource*>(mDataSources[i]);
+        nsIRDFDataSource* ds = NS_STATIC_CAST(nsIRDFDataSource*, mDataSources[i]);
         if (NS_FAILED(rv = ds->Unassert(source, property, target)))
             break;
     }
 
     if (NS_FAILED(rv)) {
-        nsIRDFDataSource* ds0 = static_cast<nsIRDFDataSource*>(mDataSources[0]);
+        nsIRDFDataSource* ds0 = NS_STATIC_CAST(nsIRDFDataSource*, mDataSources[0]);
         rv = ds0->Assert(source, property, target);
     }
     return rv;
@@ -554,7 +554,7 @@ nsSimpleDataBase::HasAssertion(nsIRDFNode* source,
     nsresult rv;
 
     // First check to see if ds0 has the negation...
-    nsIRDFDataSource* ds0 = static_cast<nsIRDFDataSource*>(mDataSources[0]);
+    nsIRDFDataSource* ds0 = NS_STATIC_CAST(nsIRDFDataSource*, mDataSources[0]);
 
     PRBool ds0HasNegation;
     if (NS_FAILED(rv = ds0->HasAssertion(source, property, target, !tv, ds0HasNegation)))
@@ -569,7 +569,7 @@ nsSimpleDataBase::HasAssertion(nsIRDFNode* source,
     // has the positive...
     PRInt32 count = mDataSources.Count();
     for (PRInt32 i = 0; i < count; ++i) {
-        nsIRDFDataSource* ds = static_cast<nsIRDFDataSource*>(mDataSources[i]);
+        nsIRDFDataSource* ds = NS_STATIC_CAST(nsIRDFDataSource*, mDataSources[i]);
         if (NS_FAILED(rv = ds->HasAssertion(source, property, target, tv, hasAssertion)))
             return rv;
 
@@ -619,7 +619,7 @@ NS_IMETHODIMP
 nsSimpleDataBase::Flush()
 {
     for (PRInt32 i = mDataSources.Count() - 1; i >= 0; --i) {
-        nsIRDFDataSource* ds = static_cast<nsIRDFDataSource*>(mDataSources[i]);
+        nsIRDFDataSource* ds = NS_STATIC_CAST(nsIRDFDataSource*, mDataSources[i]);
         ds->Flush();
     }
     return NS_OK;
