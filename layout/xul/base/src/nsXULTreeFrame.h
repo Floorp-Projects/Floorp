@@ -58,6 +58,7 @@ protected:
   nsXULTreeFrame(nsIPresShell* aPresShell, PRBool aIsRoot = nsnull, nsIBoxLayout* aLayoutManager = nsnull, PRBool aDefaultHorizontal = PR_TRUE);
   virtual ~nsXULTreeFrame();
 
+public:
   void GetTreeBody(nsXULTreeOuterGroupFrame** aResult);
 
 protected: // Data Members

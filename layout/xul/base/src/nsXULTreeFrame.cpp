@@ -107,9 +107,6 @@ GetImmediateChild(nsIContent* aParent, nsIAtom* aTag, nsIContent** aResult)
 NS_IMETHODIMP
 nsXULTreeFrame::DoLayout(nsBoxLayoutState& aBoxLayoutState)
 {
-  nsXULTreeOuterGroupFrame* treeOuterGroup = nsnull;
-  GetTreeBody(&treeOuterGroup);
-
   nsresult rv = nsBoxFrame::DoLayout(aBoxLayoutState);
 
   return rv;

@@ -34,7 +34,8 @@
 #include "nsBox.h"
 #include "nsIReflowCallback.h"
 #include "nsBoxLayoutState.h"
-
+#include "nsINameSpaceManager.h"
+#include "nsXULAtoms.h"
 
 // ------ nsTreeLayout ------
 
@@ -102,6 +103,15 @@ nsTreeLayout::GetPrefSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsSiz
       nscoord remainder = m == 0 ? 0 : rowheight - m;
       aSize.height += remainder;
     }
+    nsCOMPtr<nsIContent> content;
+    frame->GetContent(getter_AddRefs(content));
+    nsAutoString sizeMode;
+    content->GetAttribute(kNameSpaceID_None, nsXULAtoms::sizemode, sizeMode);
+    if (!sizeMode.IsEmpty()) {
+      nscoord width = frame->ComputeIntrinsicWidth(aBoxLayoutState);
+      if (width > aSize.width)
+        aSize.width = width;
+    }
   }
   return rv;
 }
@@ -120,6 +130,15 @@ nsTreeLayout::GetMinSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsSize
       nscoord m = (aSize.height-y)%rowheight;
       nscoord remainder = m == 0 ? 0 : rowheight - m;
       aSize.height += remainder;
+    }
+    nsCOMPtr<nsIContent> content;
+    frame->GetContent(getter_AddRefs(content));
+    nsAutoString sizeMode;
+    content->GetAttribute(kNameSpaceID_None, nsXULAtoms::sizemode, sizeMode);
+    if (!sizeMode.IsEmpty()) {
+      nscoord width = frame->ComputeIntrinsicWidth(aBoxLayoutState);
+      if (width > aSize.width)
+        aSize.width = width;
     }
   }
   return rv;
@@ -172,8 +191,17 @@ nsTreeLayout::LayoutInternal(nsIBox* aBox, nsBoxLayoutState& aState)
   nscoord availableHeight = group->GetAvailableHeight();
   nscoord yOffset = group->GetYPosition();
   
-  if (availableHeight <= 0)
-    return NS_OK;
+  if (availableHeight <= 0) {
+    if (outer) {
+      PRBool fixed = (outer->GetFixedRowSize() != -1);
+      if (fixed)
+        availableHeight = 10;
+      else
+        return NS_OK;
+    }
+    else 
+      return NS_OK;
+  }
 
   // run through all our currently created children
   nsIBox* box = nsnull;
@@ -297,8 +325,17 @@ nsTreeLayout::LazyRowCreator(nsBoxLayoutState& aState, nsXULTreeGroupFrame* aGro
   // height.
   nscoord availableHeight = aGroup->GetAvailableHeight();
   
-  if (availableHeight <= 0)
-    return NS_OK;
+  if (availableHeight <= 0) {
+    if (outer) {
+      PRBool fixed = (outer->GetFixedRowSize() != -1);
+      if (fixed)
+        availableHeight = 10;
+      else
+        return NS_OK;
+    }
+    else 
+      return NS_OK;
+  }
   
   nsSize size;
 

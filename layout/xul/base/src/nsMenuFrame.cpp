@@ -1625,13 +1625,6 @@ nsMenuFrame::SetActiveChild(nsIDOMElement* aChild)
 
   nsCOMPtr<nsIContent> child(do_QueryInterface(aChild));
   
-  nsCOMPtr<nsIContent> par;
-  child->GetParent(*getter_AddRefs(par));
-  
-  nsCOMPtr<nsIContent> menuPopupContent;
-  menuPopup->GetContent(getter_AddRefs(menuPopupContent));
-  if (menuPopupContent != par)
-    return NS_ERROR_FAILURE;
   nsCOMPtr<nsIPresShell> shell;
   mPresContext->GetShell(getter_AddRefs(shell));
   nsIFrame* kid;

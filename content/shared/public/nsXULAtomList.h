@@ -70,6 +70,8 @@ XUL_ATOM(treecols, "treecols") // A column group in the tree view
 XUL_ATOM(treefoot, "treefoot") // The footer of the tree view
 XUL_ATOM(scrollbarlist, "scrollbarlist") // An atom for internal use by the tree view
 XUL_ATOM(indent, "indent") // indicates that a cell should be indented
+XUL_ATOM(outer, "outer") // indicates that a treechildren is the outermost rowgroup
+XUL_ATOM(sizemode, "sizemode") // when set, measure strings to determine preferred width
 
 XUL_ATOM(open, "open") // Whether or not a menu, tree, etc. is open
 
@@ -109,6 +111,8 @@ XUL_ATOM(flex, "flex")
 XUL_ATOM(spring, "spring")
 XUL_ATOM(orient, "orient")
 XUL_ATOM(autostretch, "autostretch")
+XUL_ATOM(minwidth, "min-width")
+XUL_ATOM(minheight, "min-height")
 
 XUL_ATOM(autorepeatbutton, "autorepeatbutton")
 
