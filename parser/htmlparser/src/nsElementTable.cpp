@@ -900,8 +900,8 @@ void InitializeElementTable(void) {
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
-      /*parent,incl,exclgroups*/          kBlock, kInlineEntity, kNone,	  //this used to contain FLOW. But it's really an inline container.
-      /*special props, prop-range*/       0,kDefaultPropRange,                      //otherwise it tries to contain things like H1..H6
+      /*parent,incl,exclgroups*/          kBlock, kInlineEntity, kNone,	     //this used to contain FLOW. But it's really an inline container.
+      /*special props, prop-range*/       kHandleStrayTag,kDefaultPropRange, //otherwise it tries to contain things like H1..H6
       /*special parents,kids,skip*/       0,&gInP,eHTMLTag_unknown);
 
     Initialize( 
@@ -1038,7 +1038,7 @@ void InitializeElementTable(void) {
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
-      /*parent,incl,exclgroups*/          kBlockEntity, (kInlineEntity|kSelf|kFlowEntity), kNone,	
+      /*parent,incl,exclgroups*/          kInlineEntity, (kInlineEntity|kSelf|kFlowEntity), kNone,	
       /*special props, prop-range*/       0,kDefaultPropRange,
       /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
 

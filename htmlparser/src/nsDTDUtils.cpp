@@ -341,6 +341,7 @@ nsDTDContext::nsDTDContext() : mStack() {
 
   MOZ_COUNT_CTOR(nsDTDContext);
   mResidualStyleCount=0;
+  mContextTopIndex=0;
 
 #ifdef  NS_DEBUG
   memset(mXTags,0,sizeof(mXTags));

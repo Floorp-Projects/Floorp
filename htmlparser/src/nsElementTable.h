@@ -221,6 +221,7 @@ static const int kNoStyleLeaksOut  = 0x0080;
 static const int kMustCloseSelf    = 0x0100; 
 static const int kSaveMisplaced    = 0x0200; //If set, then children this tag can't contain are pushed onto the misplaced stack
 static const int kNonContainer     = 0x0400; //If set, then this tag is not a container.
+static const int kHandleStrayTag   = 0x0800; //If set, we automatically open a start tag
 
 
 #endif

@@ -796,6 +796,19 @@ nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
          (theType!=eToken_end) &&
          (eHTMLTag_unknown==mSkipTarget) && 
          (gHTMLElements[theTag].mSkipTarget)){ //create a new target
+        // Ref: Bug# 19977
+        // For optimization, determine if the skipped content is well
+        // placed. This would avoid unnecessary node creation and 
+        // extra string append. BTW, watch out in handling the head
+        // children ( especially the TITLE tag).
+        if(!gHTMLElements[eHTMLTag_head].IsChildOfHead(theTag)) {
+          eHTMLTags theParentTag      = mBodyContext->Last();
+          PRBool    theParentContains = -1;
+          if(CanOmit(theParentTag,theTag,theParentContains)) {
+            result=HandleOmittedTag(theToken,theTag,theParentTag,nsnull);
+            return result;
+          }
+        }
         mSkipTarget=gHTMLElements[theTag].mSkipTarget;
         mSkippedContent.Push(theToken);
       }
@@ -1085,7 +1098,7 @@ nsresult CNavDTD::HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsI
           }
 
           if(theChildAgrees && theChildIsContainer) {
-            if (theParentTag!=aChildTag) {
+            if ((theParentTag!=aChildTag) && (nsHTMLElement::IsResidualStyleTag(aChildTag))) { 
               
               PRInt32 theChildIndex=GetIndexOfChildOrSynonym(*mBodyContext,aChildTag);
               
@@ -1110,7 +1123,8 @@ nsresult CNavDTD::HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsI
         if(!(theParentContains && theChildAgrees)) {
           if (!CanPropagate(theParentTag,aChildTag,theParentContains)) { 
             if(theChildIsContainer || (!theParentContains)){ 
-              if((!theChildAgrees) && (!gHTMLElements[aChildTag].CanAutoCloseTag(*mBodyContext,aChildTag))) {
+              if((!theChildAgrees) && (!gHTMLElements[aChildTag].CanAutoCloseTag(*mBodyContext,aChildTag)) ||
+                 (mBodyContext->mContextTopIndex > 0 && theIndex <= mBodyContext->mContextTopIndex)) {
                 // Closing the tags above might cause non-compatible results.
                 // Ex. <TABLE><TR><TD><TBODY>Text</TD></TR></TABLE>. 
                 // In the example above <TBODY> is badly misplaced, but 
@@ -1286,7 +1300,9 @@ nsresult CNavDTD::HandleOmittedTag(CToken* aToken,eHTMLTags aChildTag,eHTMLTags 
   CToken*   theToken    = aToken;
 
   if(aToken) {
-    PRInt32   attrCount   = aToken->GetAttributeCount();
+    // Note: The node for a misplaced skipped content is not yet created ( for optimization ) and hence
+    //       it's impossible to collect attributes. So, treat the token as though it doesn't have attibutes.
+    PRInt32   attrCount   = (gHTMLElements[aChildTag].mSkipTarget)? 0:aToken->GetAttributeCount();
     if((gHTMLElements[aParent].HasSpecialProperty(kBadContentWatch)) &&
        (!nsHTMLElement::IsWhitespaceTag(aChildTag))) {
       eHTMLTags theTag=eHTMLTag_unknown;
@@ -1303,6 +1319,9 @@ nsresult CNavDTD::HandleOmittedTag(CToken* aToken,eHTMLTags aChildTag,eHTMLTags 
 
       PRBool done=PR_FALSE;
       if(theIndex>kNotFound) {
+        // Avoid TD and TH getting into misplaced content stack
+        // because they are legal table elements. -- Ref: Bug# 20797
+        static eHTMLTags gLegalElements[]={eHTMLTag_td,eHTMLTag_th};
         while(!done){
           mMisplacedContent.Push(theToken);  
           theToken->mUseCount++;
@@ -1316,7 +1335,9 @@ nsresult CNavDTD::HandleOmittedTag(CToken* aToken,eHTMLTags aChildTag,eHTMLTags 
             theToken->mUseCount=0;
             theTag=(eHTMLTags)theToken->GetTypeID();
             if(!nsHTMLElement::IsWhitespaceTag(theTag) && theTag!=eHTMLTag_unknown) {
-              if((gHTMLElements[theTag].HasSpecialProperty(kBadContentWatch)) ||
+              if((gHTMLElements[theTag].mSkipTarget && theToken->GetTokenType() != eToken_end) ||
+                 (FindTagInSet(theTag,gLegalElements,sizeof(gLegalElements)/sizeof(theTag))) ||
+                 (gHTMLElements[theTag].HasSpecialProperty(kBadContentWatch))                ||
                  (gHTMLElements[aParent].CanContain(theTag))) {
                   done=PR_TRUE;
               }            
@@ -1326,7 +1347,8 @@ nsresult CNavDTD::HandleOmittedTag(CToken* aToken,eHTMLTags aChildTag,eHTMLTags 
           else done=PR_TRUE;
         }//while
         if(result==NS_OK) {
-          result=HandleSavedTokens(theIndex);
+          result=HandleSavedTokens(mBodyContext->mContextTopIndex=theIndex);
+          mBodyContext->mContextTopIndex=0;
         }
       }//if
     }//if
@@ -1658,9 +1680,12 @@ nsresult CNavDTD::HandleEndToken(CToken* aToken) {
 
             PopStyle(theChildTag);
 
-            if(gHTMLElements[theChildTag].IsMemberOf(kBlockEntity) &&
+            // If the bit kHandleStrayTag is set then we automatically open up a matching
+            // start tag ( compatibility ).  Currently this bit is set on P tag.
+            // This also fixes Bug: 22623
+            if(gHTMLElements[theChildTag].HasSpecialProperty(kHandleStrayTag) &&
                mParseMode!=eParseMode_noquirks) {
-              // Oh boy!! we found a "stray" block entity. Nav4.x and IE introduce line break in
+              // Oh boy!! we found a "stray" tag. Nav4.x and IE introduce line break in
               // such cases. So, let's simulate that effect for compatibility.
               // Ex. <html><body>Hello</P>There</body></html>
               PRBool theParentContains=-1; //set to -1 to force canomit to recompute.
@@ -1735,21 +1760,19 @@ nsresult CNavDTD::HandleSavedTokens(PRInt32 anIndex) {
           theToken=(CToken*)mMisplacedContent.PopFront();
           if(theToken) {
             theTag       = (eHTMLTags)theToken->GetTypeID();
-            if(theTag != eHTMLTag_unknown) {
-              attrCount    = theToken->GetAttributeCount();
-              // Put back attributes, which once got popped out, into the tokenizer
-              for(PRInt32 j=0;j<attrCount; j++){
-                CToken* theAttrToken = (CToken*)mMisplacedContent.PopFront();
-                if(theAttrToken) {
-                  mTokenizer->PushTokenFront(theAttrToken);
-                }
+            attrCount    = (gHTMLElements[theTag].mSkipTarget)? 0:theToken->GetAttributeCount();
+            // Put back attributes, which once got popped out, into the tokenizer
+            for(PRInt32 j=0;j<attrCount; j++){
+              CToken* theAttrToken = (CToken*)mMisplacedContent.PopFront();
+              if(theAttrToken) {
+                mTokenizer->PushTokenFront(theAttrToken);
               }
-              // Make sure that the BeginContext() is ended only by the call to
-              // EndContext(). 
-              if(theTag!=theParentTag || eToken_end!=theToken->GetTokenType())
-                result=HandleToken(theToken,mParser);
-              else mTokenRecycler->RecycleToken(theToken);
             }
+            // Make sure that the BeginContext() is ended only by the call to
+            // EndContext(). 
+            if(theTag!=theParentTag || eToken_end!=theToken->GetTokenType())
+              result=HandleToken(theToken,mParser);
+            else mTokenRecycler->RecycleToken(theToken);
           }
           theBadTokenCount--;
         }//while
