@@ -718,7 +718,7 @@ nsXBLBinding::GenerateAnonymousContent()
   nsCOMPtr<nsIAtom> prefix;
 
   for (PRInt32 i = 0; i < length; ++i) {
-    content->GetAttributeNameAt(0, namespaceID, *getter_AddRefs(name), *getter_AddRefs(prefix));
+    content->GetAttributeNameAt(i, namespaceID, *getter_AddRefs(name), *getter_AddRefs(prefix));
 
     if (name.get() != kIncludesAtom) {
       nsAutoString value;
