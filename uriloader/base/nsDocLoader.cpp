@@ -617,9 +617,9 @@ void nsDocLoaderImpl::FireOnEndDocumentLoad(nsDocLoaderImpl* aLoadInitiator,
     mProgressStatusFlags = nsIWebProgress::flag_net_stop;
 
     if (aLoadInitiator == this)
-      mProgressListener->OnStatusChange(mDocumentChannel, mProgressStatusFlags);
+      mProgressListener->OnStatusChange(aDocChannel, mProgressStatusFlags);
     else // the load must be initiated by a child...mscott: I'm passing the WRONG channel here! I need to add a get channel to the doc loader interface
-      mProgressListener->OnChildStatusChange(mDocumentChannel, mProgressStatusFlags);
+      mProgressListener->OnChildStatusChange(aDocChannel, mProgressStatusFlags);
   }
 
 
