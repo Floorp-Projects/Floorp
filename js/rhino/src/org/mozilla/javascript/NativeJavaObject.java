@@ -503,11 +503,21 @@ public class NativeJavaObject implements Scriptable, Wrapper, Externalizable {
     }
 
     /**
+     * Not intended for public use. Callers should use the
+     * public API Context.toType.
+     * @see org.mozilla.javascript.Context#toType.
+     * @deprecated as of 1.5 Release 4
+     */
+    public static Object coerceType(Class type, Object value) {
+        return coerceType(type, value, true);
+    }
+
+    /**
      * Type-munging for field setting and method invocation.
      * Conforms to LC3 specification
      */
-    public static Object coerceType(Class type, Object value, 
-                                    boolean useErrorHandler) 
+    static Object coerceType(Class type, Object value, 
+                             boolean useErrorHandler) 
     {
         if (value != null && value.getClass() == type) {
             return value;
