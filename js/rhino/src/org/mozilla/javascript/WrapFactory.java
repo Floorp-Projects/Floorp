@@ -65,6 +65,7 @@ public class WrapFactory
      * <LI>org.mozilla.javascript.Scriptable objects</LI>
      * <LI>The value returned by Context.getUndefinedValue()</LI>
      * <LI>null</LI>
+     * </UL>
      * @param cx the current Context for this thread
      * @param scope the scope of the executing script
      * @param obj the object to be wrapped. Note it can be null.
@@ -156,12 +157,12 @@ public class WrapFactory
 
     /**
      * Return <code>false</code> if result of Java method, which is instance of
-     * <code>String<code>, <code>Number<code>, <code>Boolean<code> and
-     * <code>Character<code>, should be used directly as JavaScript primitive
+     * <code>String</code>, <code>Number</code>, <code>Boolean</code> and
+     * <code>Character</code>, should be used directly as JavaScript primitive
      * type.
      * By default the method returns true to indicate that instances of
-     * <code>String<code>, <code>Number<code>, <code>Boolean<code> and
-     * <code>Character<code> should be wrapped as any other Java object and
+     * <code>String</code>, <code>Number</code>, <code>Boolean</code> and
+     * <code>Character</code> should be wrapped as any other Java object and
      * scripts can access any Java method available in these objects.
      * Use {@link #setJavaPrimitiveWrap(boolean)} to change this.
      */
