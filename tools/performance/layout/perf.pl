@@ -39,7 +39,8 @@ $clockTimeArg = $ARGV[2];
 $profID = $ARGV[3];
 $arg=0;
 $cmdLineArg[$arg++] = "-f ";
-$cmdLineArg[$arg++] = "S:\\mozilla\\tools\\performance\\layout\\40-url.txt ";
+$cmdLineArg[$arg++] = "S:\\mozilla\\tools\\performance\\layout\\40-url-dup.txt ";
+#$cmdLineArg[$arg++] = "S:\\mozilla\\tools\\performance\\layout\\40-url.txt ";
 if($UseViewer==0){
   $cmdLineArg[$arg++] = "-ftimeout ";
   $cmdLineArg[$arg++] = "10 ";
