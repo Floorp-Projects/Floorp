@@ -186,24 +186,16 @@ struct JSDHashTable {
 #endif
 };
 
-#ifndef CRT_CALL
-#ifdef XP_OS2_VACPP
-#define CRT_CALL _Optlink
-#else
-#define CRT_CALL
-#endif
-#endif
-
 /*
  * Table space at entryStore is allocated and freed using these callbacks.
  * The allocator should return null on error only (not if called with nbytes
  * equal to 0; but note that jsdhash.c code will never call with 0 nbytes).
  */
 typedef void *
-(* CRT_CALL JSDHashAllocTable)(JSDHashTable *table, uint32 nbytes);
+(* JS_DLL_CALLBACK JSDHashAllocTable)(JSDHashTable *table, uint32 nbytes);
 
 typedef void
-(* CRT_CALL JSDHashFreeTable) (JSDHashTable *table, void *ptr);
+(* JS_DLL_CALLBACK JSDHashFreeTable) (JSDHashTable *table, void *ptr);
 
 /*
  * When a table grows or shrinks, each entry is queried for its key using this
@@ -212,23 +204,23 @@ typedef void
  * moved via moveEntry callbacks.
  */
 typedef const void *
-(* CRT_CALL JSDHashGetKey)    (JSDHashTable *table, JSDHashEntryHdr *entry);
+(* JS_DLL_CALLBACK JSDHashGetKey)    (JSDHashTable *table, JSDHashEntryHdr *entry);
 
 /*
  * Compute the hash code for a given key to be looked up, added, or removed
  * from table.  A hash code may have any JSDHashNumber value.
  */
 typedef JSDHashNumber
-(* CRT_CALL JSDHashHashKey)   (JSDHashTable *table, const void *key);
+(* JS_DLL_CALLBACK JSDHashHashKey)   (JSDHashTable *table, const void *key);
 
 /*
  * Compare the key identifying entry in table with the provided key parameter.
  * Return JS_TRUE if keys match, JS_FALSE otherwise.
  */
 typedef JSBool
-(* CRT_CALL JSDHashMatchEntry)(JSDHashTable *table,
-                               const JSDHashEntryHdr *entry,
-                               const void *key);
+(* JS_DLL_CALLBACK JSDHashMatchEntry)(JSDHashTable *table,
+                                      const JSDHashEntryHdr *entry,
+                                      const void *key);
 
 /*
  * Copy the data starting at from to the new entry storage at to.  Do not add
@@ -237,9 +229,9 @@ typedef JSBool
  * any reference-decrementing callback shortly.
  */
 typedef void
-(* CRT_CALL JSDHashMoveEntry)(JSDHashTable *table,
-                              const JSDHashEntryHdr *from,
-                              JSDHashEntryHdr *to);
+(* JS_DLL_CALLBACK JSDHashMoveEntry)(JSDHashTable *table,
+                                     const JSDHashEntryHdr *from,
+                                     JSDHashEntryHdr *to);
 
 /*
  * Clear the entry and drop any strong references it holds.  This callback is
@@ -247,7 +239,7 @@ typedef void
  * but only if the given key is found in the table.
  */
 typedef void
-(* CRT_CALL JSDHashClearEntry)(JSDHashTable *table, JSDHashEntryHdr *entry);
+(* JS_DLL_CALLBACK JSDHashClearEntry)(JSDHashTable *table, JSDHashEntryHdr *entry);
 
 /*
  * Called when a table (whether allocated dynamically by itself, or nested in
@@ -255,7 +247,7 @@ typedef void
  * allows table->ops-specific code to finalize table->data.
  */
 typedef void
-(* CRT_CALL JSDHashFinalize)  (JSDHashTable *table);
+(* JS_DLL_CALLBACK JSDHashFinalize)  (JSDHashTable *table);
 
 /* Finally, the "vtable" structure for JSDHashTable. */
 struct JSDHashTableOps {
@@ -432,8 +424,8 @@ JS_DHashTableRawRemove(JSDHashTable *table, JSDHashEntryHdr *entry);
  * otherwise undefined behavior results.
  */
 typedef JSDHashOperator
-(* CRT_CALL JSDHashEnumerator)(JSDHashTable *table, JSDHashEntryHdr *hdr,
-                               uint32 number, void *arg);
+(* JS_DLL_CALLBACK JSDHashEnumerator)(JSDHashTable *table, JSDHashEntryHdr *hdr,
+                                      uint32 number, void *arg);
 
 extern JS_PUBLIC_API(uint32)
 JS_DHashTableEnumerate(JSDHashTable *table, JSDHashEnumerator etor, void *arg);

@@ -812,7 +812,7 @@ nsCacheService::ClearActiveEntries()
 }
 
 
-PLDHashOperator CRT_CALL
+PLDHashOperator PR_CALLBACK
 nsCacheService::DeactivateAndClearEntry(PLDHashTable *    table,
                                         PLDHashEntryHdr * hdr,
                                         PRUint32          number,

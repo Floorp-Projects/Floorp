@@ -85,7 +85,7 @@ struct ModulesEntry {
     Node*                  byCount;
 };
 
-BOOL CRT_CALL
+BOOL PR_CALLBACK
 ModuleMatchEntry(PLDHashTable* aTable, 
                  const PLDHashEntryHdr* aEntry, 
                  const void* aKey)
@@ -156,9 +156,9 @@ void _penter()
    win32.order
 */
 
-static PLDHashOperator CRT_CALL
+static PLDHashOperator PR_CALLBACK
 DumpFiles(PLDHashTable* table, PLDHashEntryHdr* hdr,
-           PRUint32 number, void* arg)
+          PRUint32 number, void* arg)
 {
     ModulesEntry* entry = (ModulesEntry*) hdr;    
     Node*         cur = entry->byCount;
@@ -196,7 +196,7 @@ DumpFiles(PLDHashTable* table, PLDHashEntryHdr* hdr,
    function and its call count into the module's sorted list.
 */
 
-static PLDHashOperator CRT_CALL
+static PLDHashOperator PR_CALLBACK
 ListCounts(PLDHashTable* table, PLDHashEntryHdr* hdr,
            PRUint32 number, void* arg)
 {
