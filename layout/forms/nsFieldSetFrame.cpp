@@ -61,8 +61,6 @@
 #include "nsCOMPtr.h"
 #include "nsLayoutAtoms.h"
 
-static NS_DEFINE_IID(kLegendFrameCID, NS_LEGEND_FRAME_CID);
- 
 class nsLegendFrame;
 
 class nsFieldSetFrame : public nsHTMLContainerFrame {
