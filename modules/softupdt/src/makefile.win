@@ -131,14 +131,15 @@ LINCS= $(LINCS) \
 		-I$(PUBLIC)/js		\
 		-I$(PUBLIC)/dbm		\
 		-I$(PUBLIC)/security	\
-		-I$(PUBLIC)/pref/	\
-		-I$(PUBLIC)/libfont/	\
-		-I$(PUBLIC)/jtools/	\
-		-I$(PUBLIC)/winfont/	\
+		-I$(PUBLIC)/pref	\
+		-I$(PUBLIC)/libfont	\
+		-I$(PUBLIC)/jtools	\
+		-I$(PUBLIC)/winfont	\
 		-I$(PUBLIC)/rdf		\
-		-I$(PUBLIC)/java \
-		-I$(PUBLIC)/applet \
-		-I$(PUBLIC)/rdf \
+		-I$(PUBLIC)/java	\
+		-I$(PUBLIC)/applet	\
+		-I$(PUBLIC)/network	\
+		-I$(PUBLIC)/rdf		\
 		$(NULL)
 !endif
 
