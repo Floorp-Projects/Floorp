@@ -53,38 +53,46 @@ import java.lang.reflect.Constructor;
 
 public class Codegen extends Interpreter {
 
-    public Codegen() {
-    }
+    public Codegen() { }
 
-    private Codegen(Codegen parent) {
+    private Codegen(Codegen parent)
+    {
         this.nameHelper = parent.nameHelper;
         this.classNames = parent.classNames;
     }
 
-    public IRFactory createIRFactory(Context cx, TokenStream ts,
-                                     Scriptable scope)
+    public IRFactory createIRFactory(Context cx, TokenStream ts)
     {
         if (nameHelper == null) {
             nameHelper = (OptClassNameHelper)ClassNameHelper.get(cx);
             classNames = new ObjToIntMap();
         }
-        return new OptIRFactory(ts, scope, this);
+        return new IRFactory(this, ts);
     }
 
-    public Node transform(Node tree, TokenStream ts, Scriptable scope) {
-        OptTransformer opt = new OptTransformer(new Hashtable(11));
-        return opt.transform(tree, null, ts, scope);
+    public FunctionNode createFunctionNode(IRFactory irFactory, String name)
+    {
+        String className = getScriptClassName(name, false);
+        return new OptFunctionNode(name, className);
     }
 
-    public Object compile(Context cx, Scriptable scope, Node tree,
-                          Object securityDomain,
-                          SecurityController securityController)
+    public Node transform(Context cx, IRFactory irFactory, Node tree)
+    {
+        int optimizationLevel = cx.getOptimizationLevel();
+        OptTransformer opt = new OptTransformer(irFactory, new Hashtable(11));
+        tree = opt.transform(tree, null);
+        if (optimizationLevel > 0) {
+            (new Optimizer(irFactory)).optimize(tree, optimizationLevel);
+        }
+        return tree;
+    }
+
+    public Object
+    compile(Context cx, Scriptable scope, Node tree,
+            SecurityController securityController, Object securityDomain)
     {
         ObjArray classFiles = new ObjArray();
         ObjArray names = new ObjArray();
-        if (cx.getOptimizationLevel() > 0) {
-            (new Optimizer()).optimize(tree, cx.getOptimizationLevel());
-        }
         generateCode(tree, names, classFiles);
         String generatedName = name;
 

@@ -60,19 +60,25 @@ public class Interpreter {
     // Last icode
         END_ICODE                       = TokenStream.LAST_TOKEN + 6;
 
-    public IRFactory createIRFactory(Context cx, TokenStream ts,
-                                     Scriptable scope)
+    public IRFactory createIRFactory(Context cx, TokenStream ts)
     {
-        return new IRFactory(ts, scope);
+        return new IRFactory(this, ts);
     }
 
-    public Node transform(Node tree, TokenStream ts, Scriptable scope) {
-        return (new NodeTransformer()).transform(tree, null, ts, scope);
+    public FunctionNode createFunctionNode(IRFactory irFactory, String name)
+    {
+        return new FunctionNode(name);
     }
 
-    public Object compile(Context cx, Scriptable scope, Node tree,
-                          Object securityDomain,
-                          SecurityController securityController)
+    public Node transform(Context cx, IRFactory irFactory, Node tree)
+    {
+        tree = (new NodeTransformer(irFactory)).transform(tree, null);
+        return tree;
+    }
+
+    public Object
+    compile(Context cx, Scriptable scope, Node tree,
+            SecurityController securityController, Object securityDomain)
     {
         version = cx.getLanguageVersion();
         itsData = new InterpreterData(securityDomain);

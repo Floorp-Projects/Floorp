@@ -41,9 +41,8 @@ import java.util.*;
 
 class OptFunctionNode extends FunctionNode {
 
-    OptFunctionNode(String name, Node statements, String className)
-    {
-        super(name, statements);
+    OptFunctionNode(String name, String className) {
+        super(name);
         itsClassName = className;
     }
 

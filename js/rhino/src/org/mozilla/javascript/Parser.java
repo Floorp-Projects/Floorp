@@ -65,7 +65,7 @@ class Parser {
     }
 
     private void mustMatchToken(TokenStream ts, int toMatch, String messageId)
-        throws IOException, JavaScriptException
+        throws IOException, ParserException
     {
         int tt;
         if ((tt = ts.getToken()) != toMatch) {
@@ -75,17 +75,14 @@ class Parser {
     }
 
     private void reportError(TokenStream ts, String messageId)
-        throws JavaScriptException
+        throws ParserException
     {
         this.ok = false;
-        ts.reportSyntaxError(messageId, null);
+        ts.reportCurrentLineError(messageId, null);
 
-        /* Throw an exception to unwind the recursive descent parse.
-         * We use JavaScriptException here even though it is really
-         * a different use of the exception than it is usually used
-         * for.
-         */
-        throw new JavaScriptException(messageId);
+        // Throw a ParserException exception to unwind the recursive descent
+        // parse.
+        throw new ParserException();
     }
 
     /*
@@ -129,7 +126,7 @@ class Parser {
             if (tt == ts.FUNCTION) {
                 try {
                     n = function(ts, FunctionNode.FUNCTION_STATEMENT);
-                } catch (JavaScriptException e) {
+                } catch (ParserException e) {
                     this.ok = false;
                     break;
                 }
@@ -179,7 +176,7 @@ class Parser {
                 }
                 nf.addChildToBack(pn, n);
             }
-        } catch (JavaScriptException e) {
+        } catch (ParserException e) {
             this.ok = false;
         } finally {
             // also in finally block:
@@ -192,7 +189,7 @@ class Parser {
     }
 
     private Object function(TokenStream ts, int functionType)
-        throws IOException, JavaScriptException
+        throws IOException, ParserException
     {
         int baseLineno = ts.getLineno();  // line number where source starts
 
@@ -266,7 +263,7 @@ class Parser {
                     String s = ts.getString();
                     if (new_vars.hasVariable(s)) {
                         Object[] msgArgs = { s };
-                        ts.reportSyntaxWarning("msg.dup.parms", msgArgs);
+                        ts.reportCurrentLineWarning("msg.dup.parms", msgArgs);
                     }
                     new_vars.addParameter(s);
                     sourceAddString(ts.NAME, s);
@@ -345,7 +342,7 @@ class Parser {
     }
 
     private Object condition(TokenStream ts)
-        throws IOException, JavaScriptException
+        throws IOException, ParserException
     {
         Object pn;
         mustMatchToken(ts, ts.LP, "msg.no.paren.cond");
@@ -360,7 +357,7 @@ class Parser {
     }
 
     private void checkWellTerminated(TokenStream ts)
-        throws IOException, JavaScriptException
+        throws IOException, ParserException
     {
         int tt = ts.peekTokenSameLine();
         switch (tt) {
@@ -385,7 +382,7 @@ class Parser {
     }
 
     private void checkWellTerminatedFunction(TokenStream ts)
-        throws IOException, JavaScriptException
+        throws IOException, ParserException
     {
         if (languageVersion < Context.VERSION_1_2) {
             // See comments in checkWellTerminated
@@ -396,7 +393,7 @@ class Parser {
 
     // match a NAME; return null if no match.
     private String matchLabel(TokenStream ts)
-        throws IOException, JavaScriptException
+        throws IOException, ParserException
     {
         int lineno = ts.getLineno();
 
@@ -419,7 +416,7 @@ class Parser {
     {
         try {
             return statementHelper(ts);
-        } catch (JavaScriptException e) {
+        } catch (ParserException e) {
             // skip to end of statement
             int lineno = ts.getLineno();
             int t;
@@ -437,7 +434,7 @@ class Parser {
      */
 
     private Object statementHelper(TokenStream ts)
-        throws IOException, JavaScriptException
+        throws IOException, ParserException
     {
         Object pn = null;
 
@@ -868,7 +865,7 @@ class Parser {
     }
 
     private Object variables(TokenStream ts, boolean inForInit)
-        throws IOException, JavaScriptException
+        throws IOException, ParserException
     {
         Object pn = nf.createVariables(ts.getLineno());
         boolean first = true;
@@ -909,7 +906,7 @@ class Parser {
     }
 
     private Object expr(TokenStream ts, boolean inForInit)
-        throws IOException, JavaScriptException
+        throws IOException, ParserException
     {
         Object pn = assignExpr(ts, inForInit);
         while (ts.matchToken(ts.COMMA)) {
@@ -920,7 +917,7 @@ class Parser {
     }
 
     private Object assignExpr(TokenStream ts, boolean inForInit)
-        throws IOException, JavaScriptException
+        throws IOException, ParserException
     {
         Object pn = condExpr(ts, inForInit);
 
@@ -936,7 +933,7 @@ class Parser {
     }
 
     private Object condExpr(TokenStream ts, boolean inForInit)
-        throws IOException, JavaScriptException
+        throws IOException, ParserException
     {
         Object ifTrue;
         Object ifFalse;
@@ -956,7 +953,7 @@ class Parser {
     }
 
     private Object orExpr(TokenStream ts, boolean inForInit)
-        throws IOException, JavaScriptException
+        throws IOException, ParserException
     {
         Object pn = andExpr(ts, inForInit);
         if (ts.matchToken(ts.OR)) {
@@ -968,7 +965,7 @@ class Parser {
     }
 
     private Object andExpr(TokenStream ts, boolean inForInit)
-        throws IOException, JavaScriptException
+        throws IOException, ParserException
     {
         Object pn = bitOrExpr(ts, inForInit);
         if (ts.matchToken(ts.AND)) {
@@ -980,7 +977,7 @@ class Parser {
     }
 
     private Object bitOrExpr(TokenStream ts, boolean inForInit)
-        throws IOException, JavaScriptException
+        throws IOException, ParserException
     {
         Object pn = bitXorExpr(ts, inForInit);
         while (ts.matchToken(ts.BITOR)) {
@@ -991,7 +988,7 @@ class Parser {
     }
 
     private Object bitXorExpr(TokenStream ts, boolean inForInit)
-        throws IOException, JavaScriptException
+        throws IOException, ParserException
     {
         Object pn = bitAndExpr(ts, inForInit);
         while (ts.matchToken(ts.BITXOR)) {
@@ -1002,7 +999,7 @@ class Parser {
     }
 
     private Object bitAndExpr(TokenStream ts, boolean inForInit)
-        throws IOException, JavaScriptException
+        throws IOException, ParserException
     {
         Object pn = eqExpr(ts, inForInit);
         while (ts.matchToken(ts.BITAND)) {
@@ -1013,7 +1010,7 @@ class Parser {
     }
 
     private Object eqExpr(TokenStream ts, boolean inForInit)
-        throws IOException, JavaScriptException
+        throws IOException, ParserException
     {
         Object pn = relExpr(ts, inForInit);
         while (ts.matchToken(ts.EQOP)) {
@@ -1026,7 +1023,7 @@ class Parser {
     }
 
     private Object relExpr(TokenStream ts, boolean inForInit)
-        throws IOException, JavaScriptException
+        throws IOException, ParserException
     {
         Object pn = shiftExpr(ts);
         while (ts.matchToken(ts.RELOP)) {
@@ -1043,7 +1040,7 @@ class Parser {
     }
 
     private Object shiftExpr(TokenStream ts)
-        throws IOException, JavaScriptException
+        throws IOException, ParserException
     {
         Object pn = addExpr(ts);
         while (ts.matchToken(ts.SHOP)) {
@@ -1055,7 +1052,7 @@ class Parser {
     }
 
     private Object addExpr(TokenStream ts)
-        throws IOException, JavaScriptException
+        throws IOException, ParserException
     {
         int tt;
         Object pn = mulExpr(ts);
@@ -1071,7 +1068,7 @@ class Parser {
     }
 
     private Object mulExpr(TokenStream ts)
-        throws IOException, JavaScriptException
+        throws IOException, ParserException
     {
         int tt;
 
@@ -1090,7 +1087,7 @@ class Parser {
     }
 
     private Object unaryExpr(TokenStream ts)
-        throws IOException, JavaScriptException
+        throws IOException, ParserException
     {
         int tt;
 
@@ -1153,7 +1150,7 @@ class Parser {
     }
 
     private Object argumentList(TokenStream ts, Object listNode)
-        throws IOException, JavaScriptException
+        throws IOException, ParserException
     {
         boolean matched;
         ts.flags |= ts.TSF_REGEXP;
@@ -1175,7 +1172,7 @@ class Parser {
     }
 
     private Object memberExpr(TokenStream ts, boolean allowCallSyntax)
-        throws IOException, JavaScriptException
+        throws IOException, ParserException
     {
         int tt;
 
@@ -1222,7 +1219,7 @@ class Parser {
 
     private Object memberExprTail(TokenStream ts, boolean allowCallSyntax,
                                   Object pn)
-        throws IOException, JavaScriptException
+        throws IOException, ParserException
     {
         int tt;
         while ((tt = ts.getToken()) > ts.EOF) {
@@ -1261,7 +1258,7 @@ class Parser {
     }
 
     private Object primaryExpr(TokenStream ts)
-        throws IOException, JavaScriptException
+        throws IOException, ParserException
     {
         int tt;
 
@@ -2297,4 +2294,7 @@ class Parser {
     private static final boolean printSource = false;
 
 }
+
+// Exception to unwind
+class ParserException extends Exception { }
 

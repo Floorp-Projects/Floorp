@@ -44,9 +44,9 @@ package org.mozilla.javascript;
  */
 public class IRFactory {
 
-    public IRFactory(TokenStream ts, Scriptable scope) {
+    public IRFactory(Interpreter compiler, TokenStream ts) {
+        this.compiler = compiler;
         this.ts = ts;
-        this.scope = scope;
     }
 
     /**
@@ -72,7 +72,7 @@ public class IRFactory {
      * Leaf
      */
     public Object createLeaf(int nodeType) {
-            return new Node(nodeType);
+        return new Node(nodeType);
     }
 
     public Object createLeaf(int nodeType, int nodeOp) {
@@ -202,23 +202,19 @@ public class IRFactory {
         return new Node(TokenStream.BLOCK, lineno);
     }
 
-    public Object createFunctionNode(String name, Object statements)
-    {
-        return new FunctionNode(name, (Node) statements);
-    }
-
     public Object createFunction(String name, VariableTable vars,
                                  Object statements,
                                  String sourceName, int baseLineno,
-                                 int endLineno, Object source,
+                                 int endLineno, String source,
                                  int functionType)
     {
         if (name == null) {
             name = "";
         }
-        FunctionNode f = (FunctionNode) createFunctionNode(name, statements);
+        FunctionNode f = compiler.createFunctionNode(this, name);
         f.itsVariableTable = vars;
         f.setFunctionType(functionType);
+        f.addChildToBack((Node)statements);
         f.putProp(Node.SOURCENAME_PROP, sourceName);
         f.putIntProp(Node.BASE_LINENO_PROP, baseLineno);
         f.putIntProp(Node.END_LINENO_PROP, endLineno);
@@ -341,13 +337,13 @@ public class IRFactory {
              */
             Node lastChild = lhsNode.getLastChild();
             if (lhsNode.getFirstChild() != lastChild) {
-                reportError("msg.mult.index");
+                ts.reportCurrentLineError("msg.mult.index", null);
             }
             lvalue = Node.newString(TokenStream.NAME, lastChild.getString());
             break;
 
           default:
-            reportError("msg.bad.for.in.lhs");
+            ts.reportCurrentLineError("msg.bad.for.in.lhs", null);
             return objNode;
         }
 
@@ -845,7 +841,7 @@ public class IRFactory {
           default:
             // TODO: This should be a ReferenceError--but that's a runtime
             //  exception. Should we compile an exception into the code?
-            reportError("msg.bad.lhs.assign");
+            ts.reportCurrentLineError("msg.bad.lhs.assign", null);
             return left;
         }
     }
@@ -1014,28 +1010,12 @@ public class IRFactory {
         return result;
     }
 
-    private void reportError(String msgResource) {
+    private Interpreter compiler;
 
-        if (scope != null)
-            throw NativeGlobal.constructError(
-                        Context.getContext(), "SyntaxError",
-                        ScriptRuntime.getMessage0(msgResource),
-                        scope, ts.getSourceName(), ts.getLineno(),
-                        ts.getOffset(), ts.getLine());
-        else {
-            String message = Context.getMessage0(msgResource);
-            Context.reportError(message, ts.getSourceName(), ts.getLineno(),
-                                ts.getLine(), ts.getOffset());
-        }
-    }
-
-    // Only needed to get file/line information. Could create an interface
+    // Only needed to call reportSyntaxError. Could create an interface
     // that TokenStream implements if we want to make the connection less
     // direct.
-    private TokenStream ts;
-
-    // Only needed to pass to the Erorr exception constructors
-    private Scriptable scope;
+    TokenStream ts;
 
     private static final int LOOP_DO_WHILE = 0;
     private static final int LOOP_WHILE    = 1;

@@ -49,6 +49,10 @@ import java.util.Hashtable;
 
 class Optimizer {
 
+    Optimizer(IRFactory irFactory) {
+        this.irFactory = irFactory;
+    }
+
     void optimize(Node tree, int optLevel)
     {
         itsOptLevel = optLevel;
@@ -74,7 +78,7 @@ class Optimizer {
         inDirectCallFunction = theFunction.isTargetOfDirectCall();
 
         Node[] theStatementNodes = buildStatementList(theFunction);
-        Block[] theBlocks = Block.buildBlocks(theStatementNodes);
+        Block[] theBlocks = Block.buildBlocks(irFactory, theStatementNodes);
         PrintWriter pw = null;
         try {
             if (DEBUG_OPTIMIZER) {
@@ -1040,6 +1044,7 @@ class Optimizer {
     private static final int ALWAYS_TRUE_BOOLEAN = 1;
     private static final int ALWAYS_FALSE_BOOLEAN = -1;
 
+    private IRFactory irFactory;
     private int itsOptLevel;
     private boolean inDirectCallFunction;
     private boolean parameterUsedInNumberContext;

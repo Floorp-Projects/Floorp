@@ -40,9 +40,11 @@ import org.mozilla.javascript.*;
 
 public class FatBlock {
 
-    public FatBlock(int startNodeIndex, int endNodeIndex, Node[] statementNodes)
+    public FatBlock(IRFactory irFactory, int startNodeIndex, int endNodeIndex,
+                    Node[] statementNodes)
     {
-        itsShadowOfFormerSelf = new Block(startNodeIndex, endNodeIndex, statementNodes);
+        itsShadowOfFormerSelf = new Block(irFactory, startNodeIndex,
+                                          endNodeIndex, statementNodes);
     }
 
     public Node getEndNode()

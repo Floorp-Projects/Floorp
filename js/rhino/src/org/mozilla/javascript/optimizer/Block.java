@@ -46,8 +46,10 @@ import java.io.StringWriter;
 
 public class Block {
 
-    public Block(int startNodeIndex, int endNodeIndex, Node[] statementNodes)
+    public Block(IRFactory irFactory, int startNodeIndex, int endNodeIndex,
+                 Node[] statementNodes)
     {
+        itsIRFactory = irFactory;
         itsStartNodeIndex = startNodeIndex;
         itsEndNodeIndex = endNodeIndex;
         itsStatementNodes = statementNodes;
@@ -61,7 +63,8 @@ public class Block {
     public Block[] getPredecessorList() { return itsPredecessors; }
     public Block[] getSuccessorList()   { return itsSuccessors; }
 
-    public static Block[] buildBlocks(Node[] statementNodes)
+    public static Block[]
+    buildBlocks(IRFactory irFactory, Node[] statementNodes)
     {
             // a mapping from each target node to the block it begins
         Hashtable theTargetBlocks = new Hashtable();
@@ -75,8 +78,9 @@ public class Block {
                 case TokenStream.TARGET :
                     {
                         if (i != beginNodeIndex) {
-                            FatBlock fb = new FatBlock(beginNodeIndex,
-                                                        i - 1, statementNodes);
+                            FatBlock fb = new FatBlock(irFactory,
+                                                       beginNodeIndex, i - 1,
+                                                       statementNodes);
                             if (statementNodes[beginNodeIndex].getType()
                                                         == TokenStream.TARGET)
                                 theTargetBlocks.put(statementNodes[beginNodeIndex], fb);
@@ -90,8 +94,9 @@ public class Block {
                 case TokenStream.IFEQ :
                 case TokenStream.GOTO :
                     {
-                        FatBlock fb = new FatBlock(beginNodeIndex,
-                                                            i, statementNodes);
+                        FatBlock fb = new FatBlock(irFactory,
+                                                   beginNodeIndex, i,
+                                                   statementNodes);
                         if (statementNodes[beginNodeIndex].getType()
                                                        == TokenStream.TARGET)
                             theTargetBlocks.put(statementNodes[beginNodeIndex], fb);
@@ -104,9 +109,10 @@ public class Block {
         }
 
         if ((beginNodeIndex != statementNodes.length)) {
-            FatBlock fb = new FatBlock(beginNodeIndex,
-                                            statementNodes.length - 1,
-                                                             statementNodes);
+            FatBlock fb = new FatBlock(irFactory,
+                                       beginNodeIndex,
+                                       statementNodes.length - 1,
+                                       statementNodes);
             if (statementNodes[beginNodeIndex].getType() == TokenStream.TARGET)
                 theTargetBlocks.put(statementNodes[beginNodeIndex], fb);
             theBlocks.add(fb);
@@ -607,11 +613,8 @@ public class Block {
         }
     }
 
-    private IRFactory itsIRFactory;
-
     Hashtable localCSE(Hashtable theCSETable, OptFunctionNode theFunction)
     {
-        itsIRFactory = new IRFactory(null, null);
         if (theCSETable == null) theCSETable = new Hashtable(5);
         for (int i = itsStartNodeIndex; i <= itsEndNodeIndex; i++) {
             Node n = itsStatementNodes[i];
@@ -665,6 +668,8 @@ public class Block {
 
     public void setSuccessorList(Block[] b)    { itsSuccessors = b; }
     public void setPredecessorList(Block[] b)  { itsPredecessors = b; }
+
+    private IRFactory itsIRFactory;
 
         // all the Blocks that come immediately after this
     private Block[] itsSuccessors;

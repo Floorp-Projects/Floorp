@@ -49,27 +49,24 @@ import java.util.Hashtable;
 class OptTransformer extends NodeTransformer {
     private Hashtable theFnClassNameList;
 
-    OptTransformer(Hashtable theFnClassNameList) {
+    OptTransformer(IRFactory irFactory, Hashtable theFnClassNameList) {
+        super(irFactory);
         this.theFnClassNameList = theFnClassNameList;
     }
 
     public NodeTransformer newInstance() {
-        return new OptTransformer((Hashtable) theFnClassNameList.clone());
+        Hashtable listCopy = (Hashtable) theFnClassNameList.clone();
+        return new OptTransformer(irFactory, listCopy);
     }
 
-    public IRFactory createIRFactory(TokenStream ts, Scriptable scope) {
-        return new IRFactory(ts, scope);
-    }
-
-    public Node transform(Node tree, Node enclosing, TokenStream ts,
-                                                     Scriptable scope) {
+    public Node transform(Node tree, Node enclosing) {
 
         // Collect all of the contained functions into a hashtable
         // so that the call optimizer can access the class name & parameter
         // count for any call it encounters
         collectContainedFunctions(tree.getFirstChild());
 
-        return super.transform(tree, enclosing, ts, scope);
+        return super.transform(tree, enclosing);
     }
 
     private int detectDirectCall(Node node, Node tree)

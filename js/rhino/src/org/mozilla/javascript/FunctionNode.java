@@ -40,8 +40,8 @@ import java.util.*;
 
 public class FunctionNode extends Node {
 
-    public FunctionNode(String name, Node statements) {
-        super(TokenStream.FUNCTION, statements);
+    public FunctionNode(String name) {
+        super(TokenStream.FUNCTION);
         functionName = name;
     }
 

@@ -845,9 +845,10 @@ public class Context {
             setErrorReporter(new DefaultErrorReporter());
 
         boolean errorseen = false;
+        Interpreter compiler = new Interpreter();
+        IRFactory irf = compiler.createIRFactory(this, ts);
+        Parser p = createParser(irf);
         try {
-            IRFactory irf = new IRFactory(ts, null);
-            Parser p = createParser(irf);
             p.parse(ts);
         } catch (IOException ioe) {
             errorseen = true;
@@ -1999,13 +2000,13 @@ public class Context {
         Interpreter compiler = createCompiler();
 
         errorCount = 0;
-        IRFactory irf = compiler.createIRFactory(this, ts, scope);
+        IRFactory irf = compiler.createIRFactory(this, ts);
         Parser p = createParser(irf);
         Node tree = (Node) p.parse(ts);
         if (tree == null)
             return null;
 
-        tree = compiler.transform(tree, ts, scope);
+        tree = compiler.transform(this, irf, tree);
 
         if (printTrees) { System.out.println(tree.toStringTree()); }
 
@@ -2024,7 +2025,7 @@ public class Context {
         }
 
         Object result = compiler.compile(this, scope, tree,
-                                         securityDomain, securityController);
+                                         securityController, securityDomain);
 
         return errorCount == 0 ? result : null;
     }

@@ -46,35 +46,28 @@ package org.mozilla.javascript;
 
 public class NodeTransformer {
 
+    public NodeTransformer(IRFactory irFactory) {
+        this.irFactory = irFactory;
+    }
+
     /**
      * Return new instance of this class. So that derived classes
      * can override methods of the transformer.
      */
     public NodeTransformer newInstance() {
-        return new NodeTransformer();
+        return new NodeTransformer(irFactory);
     }
 
-    public IRFactory createIRFactory(TokenStream ts, Scriptable scope) {
-        return new IRFactory(ts, scope);
-    }
-
-    public Node transform(Node tree, Node enclosing, TokenStream ts,
-                          Scriptable scope)
+    public Node transform(Node tree, Node enclosing)
     {
         loops = new ObjArray();
         loopEnds = new ObjArray();
         inFunction = tree.getType() == TokenStream.FUNCTION;
-        VariableTable vars;
-        if (!inFunction) {
-            vars = (VariableTable)tree.getProp(Node.VARS_PROP);
-            checkVariables(tree, vars);
-        } else {
-            FunctionNode fnNode = (FunctionNode)tree;
-            vars = fnNode.getVariableTable();
-            checkVariables(tree, vars);
-            fnNode.markVariableTableReady();
+        VariableTable vars = getVariableTable(tree);
+        checkVariables(tree, vars);
+        if (inFunction) {
+            ((FunctionNode)tree).markVariableTableReady();
         }
-        irFactory = createIRFactory(ts, scope);
 
         // to save against upchecks if no finally blocks are used.
         boolean hasFinally = false;
@@ -112,8 +105,7 @@ public class NodeTransformer {
                         fnNode.setCheckThis(true);
                     }
                     NodeTransformer inner = newInstance();
-                    fnNode = (FunctionNode)
-                            inner.transform(fnNode, tree, ts, scope);
+                    fnNode = (FunctionNode)inner.transform(fnNode, tree);
                     node.putProp(Node.FUNCTION_PROP, fnNode);
                     ObjArray fns = (ObjArray) tree.getProp(Node.FUNCTION_PROP);
                     if (fns == null) {
@@ -136,10 +128,9 @@ public class NodeTransformer {
                     if (n.getType() == TokenStream.LABEL) {
                         String otherId = (String)n.getProp(Node.LABEL_PROP);
                         if (id.equals(otherId)) {
-                            String message = Context.getMessage1(
-                                "msg.dup.label", id);
-                            reportMessage(Context.getContext(), message, node,
-                                          tree, true, scope);
+                            Object[] messageArgs = { id };
+                            reportError("msg.dup.label", messageArgs,
+                                        node, tree);
                             break typeswitch;
                         }
                     }
@@ -336,25 +327,22 @@ public class NodeTransformer {
                               ? null
                               : (Node) loop.getProp(propType);
                 if (loop == null || target == null) {
-                    String message;
+                    String messageId;
+                    Object[] messageArgs = null;
                     if (!labelled) {
                         // didn't find an appropriate target
                         if (type == TokenStream.CONTINUE) {
-                            message = Context.getMessage
-                                ("msg.continue.outside", null);
+                            messageId = "msg.continue.outside";
                         } else {
-                            message = Context.getMessage
-                                ("msg.bad.break", null);
+                            messageId = "msg.bad.break";
                         }
                     } else if (loop != null) {
-                        message = Context.getMessage0("msg.continue.nonloop");
+                        messageId = "msg.continue.nonloop";
                     } else {
-                        Object[] errArgs = { id };
-                        message = Context.getMessage
-                            ("msg.undef.label", errArgs);
+                        messageArgs = new Object[] { id };
+                        messageId = "msg.undef.label";
                     }
-                    reportMessage(Context.getContext(), message, node,
-                                  tree, true, scope);
+                    reportError(messageId, messageArgs, node, tree);
                     node.setType(TokenStream.NOP);
                     break;
                 }
@@ -457,8 +445,7 @@ public class NodeTransformer {
                     Context cx = Context.getCurrentContext();
                     if ((cx != null && cx.isActivationNeeded(name)) ||
                         (name.equals("length") &&
-                         Context.getContext().getLanguageVersion() ==
-                         Context.VERSION_1_2))
+                         cx.getLanguageVersion() == Context.VERSION_1_2))
                     {
                         // Use of "arguments" or "length" in 1.2 requires
                         // an activation object.
@@ -657,24 +644,13 @@ public class NodeTransformer {
         }
     }
 
-    protected void reportMessage(Context cx, String msg, Node stmt,
-                                 Node tree, boolean isError,
-                                 Scriptable scope)
+    private void
+    reportError(String messageId, Object[] messageArgs, Node stmt, Node tree)
     {
         int lineno = stmt.getLineno();
-        Object prop = tree == null
-                      ? null
-                      : tree.getProp(Node.SOURCENAME_PROP);
-        if (isError) {
-            if (scope != null)
-            throw NativeGlobal.constructError(
-                        cx, "SyntaxError", msg, scope,
-                        (String) prop, lineno, 0, null);
-            else
-                cx.reportError(msg, (String) prop, lineno, null, 0);
-        }
-        else
-            cx.reportWarning(msg, (String) prop, lineno, null, 0);
+        String sourceName = (String)tree.getProp(Node.SOURCENAME_PROP);
+        irFactory.ts.reportSyntaxError(true, messageId, messageArgs,
+                                       sourceName, lineno, null, 0);
     }
 
     protected ObjArray loops;
