@@ -2762,23 +2762,22 @@ NS_IMETHODIMP GlobalWindowImpl::SizeOpenedDocShellItem(nsIDocShellTreeItem *aDoc
    nsCOMPtr<nsIBaseWindow> treeOwnerAsWin(do_QueryInterface(treeOwner));
    NS_ENSURE_TRUE(treeOwnerAsWin, NS_ERROR_FAILURE);
 
-   if(sizeChrome)
-      {
+   if(sizeChrome) {
       if(positionSpecified && sizeSpecified)
          treeOwnerAsWin->SetPositionAndSize(chromeX, chromeY, chromeCX, 
             chromeCY, PR_FALSE);
-      else if(sizeSpecified)
-         treeOwnerAsWin->SetSize(chromeCX, chromeCY, PR_FALSE);
-      else if(positionSpecified)
-         treeOwnerAsWin->SetPosition(chromeX, chromeY);
+      else {
+         if(sizeSpecified)
+            treeOwnerAsWin->SetSize(chromeCX, chromeCY, PR_FALSE);
+         if(positionSpecified)
+            treeOwnerAsWin->SetPosition(chromeX, chromeY);
       }
-   else
-      {
+   } else {
       if(positionSpecified)
          treeOwnerAsWin->SetPosition(chromeX, chromeY);
-      else if(sizeSpecified)
+      if(sizeSpecified)
          treeOwner->SizeShellTo(aDocShellItem, contentCX, contentCY);
-      }
+   }
    treeOwnerAsWin->SetVisibility(PR_TRUE);
 
    return NS_OK;
