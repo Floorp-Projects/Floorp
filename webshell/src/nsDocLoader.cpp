@@ -243,6 +243,8 @@ static char* gPluginTypes[] = {
     "audio/x-aiff",
     "audio/basic",
     "application/x-shockwave-flash",
+	"application/pdf",
+	"application/npapi-test",
     0
 };
 
