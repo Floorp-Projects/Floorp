@@ -651,9 +651,9 @@ NS_IMETHODIMP nsHTMLEditor::PrepareTransferable(nsITransferable **transferable)
     // we want to get out of the transferable
     if ((mFlags & eEditorPlaintextMask) == 0)  // This should only happen in html editors, not plaintext
     {
-      (*transferable)->AddDataFlavor(kJPEGImageMime);
       (*transferable)->AddDataFlavor(kHTMLMime);
       (*transferable)->AddDataFlavor(kFileMime);
+      //(*transferable)->AddDataFlavor(kJPEGImageMime);
     }
     (*transferable)->AddDataFlavor(kUnicodeMime);
   }
@@ -1302,7 +1302,7 @@ NS_IMETHODIMP nsHTMLEditor::CanPaste(PRInt32 aSelectionType, PRBool *aCanPaste)
   
   // the flavors that we can deal with
   const char* const textEditorFlavors[] = { kUnicodeMime, nsnull };
-  const char* const htmlEditorFlavors[] = { kJPEGImageMime, kHTMLMime, nsnull };
+  const char* const htmlEditorFlavors[] = { kHTMLMime, kJPEGImageMime, nsnull };
 
   nsCOMPtr<nsISupportsArray> flavorsList;
   rv = nsComponentManager::CreateInstance(NS_SUPPORTSARRAY_CONTRACTID, nsnull, 
