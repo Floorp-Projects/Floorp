@@ -1,0 +1,5 @@
+nsZipArchive.cpp
+nsZipArchive.h
+zipfile.h
+zipstruct.h
+zipstub.h
