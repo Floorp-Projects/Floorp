@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  * Alec Flett <alecf@netscape.com>
+ * Seth Spitzer <sspitzer@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -56,22 +57,23 @@
 #include "nsMsgBaseCID.h"
 #include "nsMsgIncomingServer.h"
 
+#include "nsICategoryManager.h"
+#include "nsISupportsPrimitives.h"
+
 // turn this on to see useful output
 #undef DEBUG_amds
 
-static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
-static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
-static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
-
-#define NC_RDF_PAGETITLE_MAIN     NC_NAMESPACE_URI "PageTitleMain"
-#define NC_RDF_PAGETITLE_SERVER   NC_NAMESPACE_URI "PageTitleServer"
-#define NC_RDF_PAGETITLE_COPIES   NC_NAMESPACE_URI "PageTitleCopies"
-#define NC_RDF_PAGETITLE_ADVANCED NC_NAMESPACE_URI "PageTitleAdvanced"
-#define NC_RDF_PAGETITLE_OFFLINEANDDISKSPACE  NC_NAMESPACE_URI "PageTitleOfflineAndDiskSpace"
-#define NC_RDF_PAGETITLE_DISKSPACE  NC_NAMESPACE_URI "PageTitleDiskSpace"
-#define NC_RDF_PAGETITLE_ADDRESSING  NC_NAMESPACE_URI "PageTitleAddressing"
-#define NC_RDF_PAGETITLE_SMTP     NC_NAMESPACE_URI "PageTitleSMTP"
+#define NC_RDF_PAGETITLE_PREFIX               NC_NAMESPACE_URI "PageTitle"
+#define NC_RDF_PAGETITLE_MAIN                 NC_RDF_PAGETITLE_PREFIX "Main"
+#define NC_RDF_PAGETITLE_SERVER               NC_RDF_PAGETITLE_PREFIX "Server"
+#define NC_RDF_PAGETITLE_COPIES               NC_RDF_PAGETITLE_PREFIX "Copies"
+#define NC_RDF_PAGETITLE_ADVANCED             NC_RDF_PAGETITLE_PREFIX "Advanced"
+#define NC_RDF_PAGETITLE_OFFLINEANDDISKSPACE  NC_RDF_PAGETITLE_PREFIX "OfflineAndDiskSpace"
+#define NC_RDF_PAGETITLE_DISKSPACE            NC_RDF_PAGETITLE_PREFIX "DiskSpace"
+#define NC_RDF_PAGETITLE_ADDRESSING           NC_RDF_PAGETITLE_PREFIX "Addressing"
+#define NC_RDF_PAGETITLE_SMTP                 NC_RDF_PAGETITLE_PREFIX "SMTP"
 #define NC_RDF_PAGETAG NC_NAMESPACE_URI "PageTag"
+
 
 #define NC_RDF_ACCOUNTROOT "msgaccounts:/"
 
@@ -319,15 +321,49 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
                                            getter_Copies(pageTitle));
 
       else {
+          // if it's a server, use the pretty name
           nsCOMPtr<nsIMsgFolder> folder = do_QueryInterface(source, &rv);
-          if (NS_SUCCEEDED(rv)) {
+          if (NS_SUCCEEDED(rv) && folder) {
               PRBool isServer;
               rv = folder->GetIsServer(&isServer);
               if(NS_SUCCEEDED(rv) && isServer)
                   rv = folder->GetPrettyName(getter_Copies(pageTitle));
           }
+          else {
+            // allow for the accountmanager to be dynamically extended.
+
+            nsCOMPtr<nsIStringBundleService> strBundleService =
+                do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
+            NS_ENSURE_SUCCESS(rv,rv);
+
+            const char *sourceValue;
+            rv = source->GetValueConst(&sourceValue);
+            NS_ENSURE_SUCCESS(rv,rv);
+
+            // make sure the pointer math we're about to do is safe.
+            NS_ENSURE_TRUE(sourceValue && (nsCRT::strlen(sourceValue) > nsCRT::strlen(NC_RDF_PAGETITLE_PREFIX)), NS_ERROR_UNEXPECTED);
+
+            nsCAutoString bundleURL;
+            bundleURL = "chrome://messenger/locale/";
+            bundleURL += "am-";
+            // turn NC#PageTitlefoobar into foobar, so we can get the am-foobar.properties bundle
+            bundleURL += (sourceValue + nsCRT::strlen(NC_RDF_PAGETITLE_PREFIX));
+            bundleURL += ".properties";
+
+            nsCOMPtr <nsIStringBundle> bundle;
+            rv = strBundleService->CreateBundle(bundleURL.get(),
+                                        getter_AddRefs(bundle));
+
+            NS_ENSURE_SUCCESS(rv,rv);
+
+            nsAutoString panelTitleName;
+            panelTitleName = NS_LITERAL_STRING("prefPanel-");
+            panelTitleName.AppendWithConversion(sourceValue + nsCRT::strlen(NC_RDF_PAGETITLE_PREFIX));
+            bundle->GetStringFromName(panelTitleName.get(),
+                getter_Copies(pageTitle));
       }
-      str.Assign((const PRUnichar*)pageTitle);
+  }
+      str = pageTitle.get();
   }
   else if (property == kNC_PageTag) {
     // do NOT localize these strings. these are the urls of the XUL files
@@ -344,8 +380,8 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
     else if (source == kNC_PageTitleSMTP) 
       str = NS_LITERAL_STRING("am-smtp.xul");
     else {
-      str = NS_LITERAL_STRING("am-main.xul");
-
+      nsCOMPtr<nsIMsgFolder> folder = do_QueryInterface(source, &rv);
+      if (NS_SUCCEEDED(rv) && folder) {
       /* if this is a server, with no identities, then we show a special panel */
       nsCOMPtr<nsIMsgIncomingServer> server;
       rv = getServerForFolderNode(source, getter_AddRefs(server));
@@ -355,6 +391,27 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
           if (NS_SUCCEEDED(rv) && !hasIdentities) {
             str = NS_LITERAL_STRING("am-serverwithnoidentities.xul");
           }
+          else {
+            str = NS_LITERAL_STRING("am-main.xul");
+          }
+        }
+        else {
+          str = NS_LITERAL_STRING("am-main.xul");
+        }
+      }
+      else {
+        // allow for the accountmanager to be dynamically extended
+        const char *sourceValue;
+        rv = source->GetValueConst(&sourceValue);
+        NS_ENSURE_SUCCESS(rv,rv);
+        
+        // make sure the pointer math we're about to do is safe.
+        NS_ENSURE_TRUE(sourceValue && (nsCRT::strlen(sourceValue) > nsCRT::strlen(NC_RDF_PAGETITLE_PREFIX)), NS_ERROR_UNEXPECTED);
+        
+        // turn NC#PageTitlefoobar into foobar, so we can get the am-foobar.xul file
+        str = NS_LITERAL_STRING("am-");
+        str.AppendWithConversion((sourceValue + nsCRT::strlen(NC_RDF_PAGETITLE_PREFIX)));
+        str += NS_LITERAL_STRING(".xul");
       }
     }
   }
@@ -537,6 +594,77 @@ nsMsgAccountManagerDataSource::createRootResources(nsIRDFResource *property,
     return rv;
 }
 
+nsresult
+nsMsgAccountManagerDataSource::appendGenericSettingsResources(nsIMsgIncomingServer *server, nsISupportsArray *aNodeArray)
+{
+  nsresult rv;
+
+  nsCOMPtr<nsICategoryManager> catman = do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  nsCOMPtr<nsISimpleEnumerator> e;
+  rv = catman->EnumerateCategory(MAILNEWS_ACCOUNTMANAGER_EXTENSIONS, getter_AddRefs(e));
+  if(NS_SUCCEEDED(rv) && e) {
+    while (PR_TRUE) {
+      nsCOMPtr<nsISupportsString> catEntry;
+      rv = e->GetNext(getter_AddRefs(catEntry));
+      if (NS_FAILED(rv) || !catEntry) 
+        break;
+
+      nsXPIDLCString entryString;
+      rv = catEntry->GetData(getter_Copies(entryString));
+      if (NS_FAILED(rv))
+         break;
+
+      nsXPIDLCString contractidString;
+      rv = catman->GetCategoryEntry(MAILNEWS_ACCOUNTMANAGER_EXTENSIONS, entryString.get(), getter_Copies(contractidString));
+      if (NS_FAILED(rv)) 
+        break;
+
+      nsCOMPtr <nsIMsgAccountManagerExtension> extension = do_GetService(contractidString.get(), &rv);
+      if (NS_FAILED(rv) || !extension)
+        break;
+      
+      PRBool showPanel;
+      rv = extension->ShowPanel(server, &showPanel);
+      if (NS_FAILED(rv)) 
+        break;
+
+      if (showPanel) {
+        nsXPIDLCString name;
+        rv = extension->GetName(getter_Copies(name));
+        if (NS_FAILED(rv))
+          break;
+      
+        rv = appendGenericSetting(name.get(), aNodeArray);
+        if (NS_FAILED(rv))
+          break;
+      }
+    }
+  }
+  return NS_OK;
+}
+
+nsresult 
+nsMsgAccountManagerDataSource::appendGenericSetting(const char *name, nsISupportsArray *aNodeArray)
+{
+  NS_ENSURE_ARG_POINTER(name);
+  NS_ENSURE_ARG_POINTER(aNodeArray);
+
+  nsCOMPtr <nsIRDFResource> resource;
+
+  nsCAutoString resourceStr;
+  resourceStr = NC_RDF_PAGETITLE_PREFIX;
+  resourceStr += name;
+
+  nsresult rv = getRDFService()->GetResource(resourceStr.get(), getter_AddRefs(resource));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  // AppendElement will addref.
+  aNodeArray->AppendElement(resource);
+  return NS_OK;
+}
+
 // end of all #Settings arcs
 nsresult
 nsMsgAccountManagerDataSource::createSettingsResources(nsIRDFResource *aSource,
@@ -584,6 +712,10 @@ nsMsgAccountManagerDataSource::createSettingsResources(nsIRDFResource *aSource,
                 else if (supportsDiskSpace) {
                    aNodeArray->AppendElement(kNC_PageTitleDiskSpace);
                 }
+                
+                // extensions come after the default panels
+                rv = appendGenericSettingsResources(server, aNodeArray);
+                NS_ASSERTION(NS_SUCCEEDED(rv), "failed to add generic panels");
             }
         }
     }
@@ -979,7 +1111,7 @@ nsMsgAccountManagerDataSource::getStringBundle()
     nsresult rv;
 
     nsCOMPtr<nsIStringBundleService> strBundleService =
-        do_GetService(kStringBundleServiceCID, &rv);
+        do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
 
     rv = strBundleService->CreateBundle("chrome://messenger/locale/prefs.properties",

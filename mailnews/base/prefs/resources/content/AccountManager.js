@@ -42,6 +42,7 @@
 
 
 var accountArray;
+var gGenericAttributeTypes;
 var accounttree;
 
 var currentServerId;
@@ -101,6 +102,8 @@ function onLoad() {
   }
 
   accountArray = new Array;
+  gGenericAttributeTypes = new Array;
+
   RDF = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
 
   accountManager = Components.classes["@mozilla.org/messenger/account-manager;1"].getService(Components.interfaces.nsIMsgAccountManager);
@@ -453,15 +456,41 @@ function saveAccount(accountValues, account)
       }
       if (dest == undefined) continue;
 
+      if ((type in gGenericAttributeTypes) && (slot in gGenericAttributeTypes[type])) {
+        switch (gGenericAttributeTypes[type][slot]) {
+          case "int":
+            if (dest.getIntAttribute(slot) != typeArray[slot])
+              dest.setIntAttribute(slot, typeArray[slot]);
+            break;
+          case "wstring":
+            if (dest.getUnicharAttribute(slot) != typeArray[slot])
+              dest.setUnicharAttribute(slot, typeArray[slot]);
+            break;
+          case "string":
+            if (dest.getCharAttribute(slot) != typeArray[slot])
+              dest.setCharAttribute(slot, typeArray[slot]);
+            break;
+          case "bool":
+            if (dest.getBoolAttribute(slot) != typeArray[slot])
+              dest.setBoolAttribute(slot, typeArray[slot]);
+            break;
+          default:
+            dump("unexpected preftype: " + preftype + "\n");
+            break;
+         }
+      }
+      else {
       if (dest[slot] != typeArray[slot]) {
         try {
           dest[slot] = typeArray[slot];
-        } catch (ex) {
+          } 
+          catch (ex) {
           // hrm... need to handle special types here
         }
       }
     }
   }
+}
 }
 
 
@@ -662,7 +691,7 @@ function setAccountValue(accountValues, type, slot, value) {
   accountValues[type][slot] = value;
 }
 
-function getAccountValue(account, accountValues, type, slot) {
+function getAccountValue(account, accountValues, type, slot, preftype, isGeneric) {
   if (!accountValues[type])
     accountValues[type] = new Array;
 
@@ -699,8 +728,34 @@ function getAccountValue(account, accountValues, type, slot) {
     }
 
     if (source) {
+      if (isGeneric) {
+        if (!gGenericAttributeTypes[type])
+          gGenericAttributeTypes[type] = new Array;
+
+        // we need the preftype later, for setting when we save.
+        gGenericAttributeTypes[type][slot] = preftype;
+        switch (preftype) {
+          case "int":
+            accountValues[type][slot] = source.getIntAttribute(slot);
+            break;
+          case "wstring":
+            accountValues[type][slot] = source.getUnicharAttribute(slot);
+            break;
+          case "string":
+            accountValues[type][slot] = source.getCharAttribute(slot);
+            break;
+          case "bool":
+            accountValues[type][slot] = source.getBoolAttribute(slot);
+            break;
+          default:
+            dump("unexpected preftype: " + preftype + "\n");
+            break;
+          }
+      }
+      else {
       accountValues[type][slot] = source[slot];
     }
+  }
   }
   var value = accountValues[type][slot];
   //dump("Array->Form: accountValues[" + type + "][" + slot + "] = " + value + "\n");
@@ -730,7 +785,7 @@ function restorePage(pageId, serverId) {
         // buttons are lockable, but don't have any data so we skip that part.
         // elements that do have data, we get the values at poke them in.
         if (pageElements[i].localName != "button") {
-          var value = getAccountValue(account, accountValues, type, slot);
+          var value = getAccountValue(account, accountValues, type, slot, pageElements[i].getAttribute("preftype"), (pageElements[i].getAttribute("genericattr") == "true"));
           setFormElementValue(pageElements[i], value);
         }
         updateElementWithKeys(account,pageElements[i],type);

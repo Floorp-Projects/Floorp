@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ * Seth Spitzer <sspitzer@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -118,6 +119,8 @@ protected:
                                nsISupportsArray* aNodeArray);
   nsresult createSettingsResources(nsIRDFResource *aSource,
                                    nsISupportsArray *aNodeArray);
+  nsresult appendGenericSettingsResources(nsIMsgIncomingServer *server, nsISupportsArray *aNodeArray);
+  nsresult appendGenericSetting(const char *name, nsISupportsArray *aNodeArray);
 
   static nsIRDFResource* kNC_Name;
   static nsIRDFResource* kNC_FolderTreeName;

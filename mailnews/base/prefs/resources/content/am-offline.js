@@ -111,7 +111,7 @@ function initDownloadSettings()
 function onPreInit(account, accountValues)
 {
 
-    gServerType = getAccountValue(account, accountValues, "server", "type");
+    gServerType = getAccountValue(account, accountValues, "server", "type", null, false);
     hideShowControls(gServerType);
     gIncomingServer= account.incomingServer;
     gIncomingServer.type = gServerType;

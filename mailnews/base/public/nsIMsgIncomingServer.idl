@@ -297,6 +297,22 @@ interface nsIMsgIncomingServer : nsISupports {
 
   /* used for setting up the search UI */
   readonly attribute nsMsgSearchScopeValue searchScope;
+
+  /** 
+   * these generic getter / setters, useful for extending mailnews 
+   * note, these attributes persist across sessions
+   */
+  wstring getUnicharAttribute(in string name);
+  void setUnicharAttribute(in string name, in wstring value);
+  
+  string getCharAttribute(in string name);
+  void setCharAttribute(in string name, in string value);
+
+  boolean getBoolAttribute(in string name);
+  void setBoolAttribute(in string name, in boolean value);
+
+  long getIntAttribute(in string name);
+  void setIntAttribute(in string name, in long value);
 };
 
 %{C++

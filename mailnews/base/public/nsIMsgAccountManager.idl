@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ * Seth Spitzer <sspitzer@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -183,5 +184,18 @@ interface nsIMsgAccountManager : nsISupports {
 
   // force account info out to prefs file
   void saveAccountInfo();
+};
+
+
+%{C++
+#define MAILNEWS_ACCOUNTMANAGER_EXTENSIONS "mailnews-accountmanager-extensions"
+%}
+
+
+[scriptable, uuid(9ce9fc76-1dd1-11b2-8da2-bf6b98b4c537)]
+interface nsIMsgAccountManagerExtension : nsISupports
+{
+    readonly attribute string name;
+	boolean showPanel(in nsIMsgIncomingServer server);
 };
 
