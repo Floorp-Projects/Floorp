@@ -85,25 +85,7 @@ NS_IMPL_ISUPPORTS1(nsSound, nsISound);
 nsSound::nsSound()
 {
   NS_INIT_REFCNT();
-
-  /* we don't need to do esd_open_sound if we are only going to play files
-     but we will if we want to do things like streams, etc
-  */
-
-  EsdOpenSoundType EsdOpenSound;
-
-  elib = PR_LoadLibrary("libesd.so");
-
-  if (!elib)
-    return;
-  alib = PR_LoadLibrary("libaudiofile.so.0");
-
-  if (!alib) {
-    printf( "sound: unable to load libaudiofile\n" );
-    return;
-  }
-  EsdOpenSound = (EsdOpenSoundType) PR_FindSymbol(elib, "esd_open_sound");
-  esdref = (*EsdOpenSound)("localhost");
+  mInited = PR_FALSE;
 }
 
 nsSound::~nsSound()
@@ -120,34 +102,69 @@ nsSound::~nsSound()
       PR_Free( mPlayBuf );
   if (mBuffer)
       PR_Free( mBuffer );
+  mInited = PR_FALSE;
+}
+
+nsresult nsSound::Init()
+{
+  /* we don't need to do esd_open_sound if we are only going to play files
+     but we will if we want to do things like streams, etc
+  */
+
+  EsdOpenSoundType EsdOpenSound;
+
+  elib = PR_LoadLibrary("libesd.so");
+
+  if (!elib)
+    return NS_ERROR_FAILURE;
+  alib = PR_LoadLibrary("libaudiofile.so.0");
+
+  if (!alib) 
+    return NS_ERROR_FAILURE;
+  EsdOpenSound = (EsdOpenSoundType) PR_FindSymbol(elib, "esd_open_sound");
+  if ( !EsdOpenSound )
+	return NS_ERROR_FAILURE;
+  esdref = (*EsdOpenSound)("localhost");
+  if ( !esdref )
+	return NS_ERROR_FAILURE;
+  return NS_OK;
 }
 
 nsresult NS_NewSound(nsISound** aSound)
 {
   NS_PRECONDITION(aSound != nsnull, "null ptr");
-  if (! aSound)
+  if (!aSound)
     return NS_ERROR_NULL_POINTER;
-  
-  nsSound** mySound;
 
-  *aSound = new nsSound();
-  if (! *aSound)
+  nsSound* mySound = nsnull;
+  NS_NEWXPCOM(mySound, nsSound);
+  if (!mySound)
     return NS_ERROR_OUT_OF_MEMORY;
-  mySound = (nsSound **) aSound;
-  (*mySound)->mBufferSize = 4098;
-  (*mySound)->mBuffer = (char *) PR_Malloc( (*mySound)->mBufferSize );
-  if ( (*mySound)->mBuffer == (char *) NULL )
-        return NS_ERROR_OUT_OF_MEMORY;
-  (*mySound)->mPlayBuf = (char *) NULL;
+
+  nsresult rv = mySound->Init();
+  if (NS_FAILED(rv)) {
+    delete mySound;
+    return rv;
+  }
   
-  NS_ADDREF(*aSound);
-  return NS_OK;
+  // QI does the addref
+  return mySound->QueryInterface(NS_GET_IID(nsISound), (void**)aSound);
 }
 
-
-NS_METHOD nsSound::Init(void)
+nsresult nsSound::AllocateBuffers( void )
 {
-  return NS_OK;
+  nsresult rv = NS_OK;
+  if ( mInited == PR_TRUE ) 
+	return( rv );
+  mBufferSize = 4098;
+  mBuffer = (char *) PR_Malloc( mBufferSize );
+  if ( mBuffer == (char *) NULL ) {
+        rv = NS_ERROR_OUT_OF_MEMORY;
+	return( rv );
+  }
+  mPlayBuf = (char *) NULL;
+  mInited = PR_TRUE;
+  return rv;
 }
 
 
@@ -162,7 +179,7 @@ NS_METHOD nsSound::Play(nsIURI *aURI)
 {
   nsresult rv;
   char *spec;
-  nsIInputStream *inputStream;
+  nsCOMPtr<nsIInputStream> inputStream;
   int mask, fd, format, width, channels;
   PRUint32 len, totalLen = 0;
   nsXPIDLCString tempPath;
@@ -170,6 +187,9 @@ NS_METHOD nsSound::Play(nsIURI *aURI)
   double rate;
 
   nsCOMPtr<nsIFileLocator> fl;
+
+  if ( !mInited && NS_FAILED((rv=AllocateBuffers())) )
+	return rv;
 
   rv = nsComponentManager::CreateInstance( "component://netscape/filelocator", 
 	nsnull, NS_GET_IID(nsIFileLocator), getter_AddRefs(fl));
@@ -211,7 +231,7 @@ NS_METHOD nsSound::Play(nsIURI *aURI)
           this->mPlayBuf = (char *) NULL;
     }
 
-    rv = NS_OpenURI(&inputStream, aURI);
+    rv = NS_OpenURI(getter_AddRefs(inputStream), aURI);
 
     nsCOMPtr<nsIURL> aUrl = do_QueryInterface(chromeURI, &rv);
     nsFileSpec chromeFile;
@@ -219,7 +239,6 @@ NS_METHOD nsSound::Play(nsIURI *aURI)
     	rv = aUrl->GetFilePath(getter_Copies(tempPath));
     	if ( NS_FAILED(rv) || tempPath == NULL ) {
 		printf( "Sound: unable to get path on URI\n" );
-        	NS_IF_RELEASE( inputStream );
         	return NS_ERROR_FAILURE;
     	}
         if (chromeFileInterface) {
@@ -231,14 +250,12 @@ NS_METHOD nsSound::Play(nsIURI *aURI)
     	printf( "Sound: tempPath '%s' spec '%s' chromeFile '%s'\n", 
 		(const char *) tempPath, spec, (const char *) chromeFile );
     } else {
-        NS_IF_RELEASE( inputStream );
         return NS_ERROR_FAILURE;
     }
     
     afRef = (*afOpenFile)(chromeFile, "r", (char *) NULL );
     if ( afRef == (void *) NULL ) {
 	printf( "Sound: unable to open input stream '%s'\n", (const char *) tempPath );
-        NS_IF_RELEASE( inputStream );
         return NS_ERROR_FAILURE;
     }
     rate = (*afGetRate)( afRef, AF_DEFAULT_TRACK );
@@ -258,7 +275,6 @@ NS_METHOD nsSound::Play(nsIURI *aURI)
 
     fd = (*EsdPlayStreamFallback)(mask, (int) rate, "localhost", "mozillansSound"); 
     if (fd < 0) {
-	NS_IF_RELEASE( inputStream );
 	return NS_ERROR_FAILURE;
     }
     do {
@@ -268,7 +284,6 @@ NS_METHOD nsSound::Play(nsIURI *aURI)
                 if ( this->mPlayBuf == (char *) NULL ) {
                         this->mPlayBuf = (char *) PR_Malloc( len );
                         if ( this->mPlayBuf == (char *) NULL ) {
-                                        NS_IF_RELEASE( inputStream );
                                         return NS_ERROR_OUT_OF_MEMORY;
                         }
                         memcpy( this->mPlayBuf, this->mBuffer, len );
@@ -276,7 +291,6 @@ NS_METHOD nsSound::Play(nsIURI *aURI)
                 else {
                         this->mPlayBuf = (char *) PR_Realloc( this->mPlayBuf, totalLen );
                         if ( this->mPlayBuf == (char *) NULL ) {
-                                        NS_IF_RELEASE( inputStream );
                                         return NS_ERROR_OUT_OF_MEMORY;
                         }
                         memcpy( this->mPlayBuf + (totalLen - len), this->mBuffer, len );
@@ -287,7 +301,6 @@ NS_METHOD nsSound::Play(nsIURI *aURI)
 	write( fd, this->mPlayBuf, totalLen );
     close( fd );
     (*afCloseFile)( afRef );
-    NS_IF_RELEASE( inputStream );
     return NS_OK;
   } else 
 	return NS_ERROR_NOT_IMPLEMENTED;
