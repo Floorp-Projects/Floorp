@@ -213,7 +213,7 @@ nsFontMetricsMac :: GetXHeight(nscoord& aResult)
 {
   float  dev2app;
   mContext->GetDevUnitsToAppUnits(dev2app);
-  aResult = NSToCoordRound(float(mMaxAscent / 2) - dev2app);
+  aResult = NSToCoordRound(float(mMaxAscent * 0.71f) - dev2app);		// 0.71 = 5 / 7
   return NS_OK;
 }
 
