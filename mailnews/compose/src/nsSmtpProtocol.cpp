@@ -477,6 +477,12 @@ PRInt32 nsSmtpProtocol::SmtpResponse(nsIInputStream * inputStream, PRUint32 leng
 		m_nextState = m_nextStateAfterResponse;
 		ClearFlag(SMTP_PAUSE_FOR_READ); /* don't pause */
 	}
+    else
+    {
+        inputStream->Available(&length); // refresh the length as it has changed...
+        if (!length)
+            SetFlag(SMTP_PAUSE_FOR_READ);
+    }
 
     return(0);  /* everything ok */
 }
