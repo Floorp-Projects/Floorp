@@ -563,16 +563,18 @@ void nsFormFrame::ProcessAsURLEncoded(PRBool isPost, nsString& aData, nsIFormCon
 #ifdef SingleSignon
 				PRInt32 type;
 				child->GetType(&type);
-				if (type == NS_FORM_INPUT_PASSWORD) {
-					type_array[submit.value_cnt] = FORM_TYPE_PASSWORD;
-				} else {
-					type_array[submit.value_cnt] = FORM_TYPE_TEXT;
+				if ((type == NS_FORM_INPUT_PASSWORD) || (type == NS_FORM_INPUT_TEXT)) {
+					if (type == NS_FORM_INPUT_PASSWORD) {
+						type_array[submit.value_cnt] = FORM_TYPE_PASSWORD;
+					} else {
+						type_array[submit.value_cnt] = FORM_TYPE_TEXT;
+					}
+					value_array[submit.value_cnt] =
+						values[0].ToNewCString();
+					name_array[submit.value_cnt] =
+						names[0].ToNewCString();
+					submit.value_cnt++;
 				}
-				value_array[submit.value_cnt] =
-					values[0].ToNewCString();
-				name_array[submit.value_cnt] =
-					names[0].ToNewCString();
-				submit.value_cnt++;
 #endif
 				for (int valueX = 0; valueX < numValues; valueX++) {
 				  if (PR_TRUE == firstTime) {
