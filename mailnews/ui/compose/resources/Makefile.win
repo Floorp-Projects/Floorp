@@ -1,4 +1,4 @@
-#!gmake
+#!nmake
 #
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "NPL"); you may not use this file except in
@@ -15,16 +15,20 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-DEPTH = ../../..
-topsrcdir	= @top_srcdir@
-VPATH		= @srcdir@
-srcdir		= @srcdir@
+DEPTH=..\..\..\..
+MODULE=compose
+IGNORE_MANIFEST=1
 
-include $(DEPTH)/config/autoconf.mk
+include <$(DEPTH)\config\rules.mak>
 
-DIRS = public src resources
+install:: $(DLL)
+	$(MAKE_INSTALL) Compose.html $(DIST)\bin\res\samples
+	$(MAKE_INSTALL) ComposeToolbar.xml $(DIST)\bin\res\samples
+	$(MAKE_INSTALL) ComposeFrame.html $(DIST)\bin\res\samples
 
-include $(topsrcdir)/config/config.mk
-
-include $(topsrcdir)/config/rules.mk
+clobber::
+	rm -f $(DIST)\bin\$(DLLNAME)
+	rm -f $(DIST)\bin\res\samples\Compose.html
+	rm -f $(DIST)\bin\res\samples\ComposeToolbar.xml
+	rm -f $(DIST)\bin\res\samples\ComposeFrame.html
 
