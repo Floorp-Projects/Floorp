@@ -597,7 +597,7 @@ listCerts(CERTCertDBHandle *handle, char *name, PK11SlotInfo *slot,
     CERTCertificate *cert;
     SECItem data;
     PRInt32 numBytes;
-    SECStatus rv;
+    SECStatus rv = SECFailure;
 
     /* List certs on a non-internal slot. */
     if (!PK11_IsFriendly(slot) && PK11_NeedLogin(slot))
@@ -636,6 +636,7 @@ listCerts(CERTCertDBHandle *handle, char *name, PK11SlotInfo *slot,
 		SECU_PrintCertNickname(node->cert,stdout);
 	    }
 	    CERT_DestroyCertList(certs);
+	    rv = SECSuccess;
 	}
     }
     if (rv) {
@@ -930,14 +931,19 @@ listKeys(PK11SlotInfo *slot, KeyType keyType, void *pwarg)
 
     list = PK11_ListPrivateKeysInSlot(slot);
     if (list == NULL) {
-	    SECU_PrintError(progName, "problem listing keys");
-	    return SECFailure;
+	SECU_PrintError(progName, "problem listing keys");
+	return SECFailure;
     }
     for (count=0, node=PRIVKEY_LIST_HEAD(list) ; !PRIVKEY_LIST_END(node,list);
 			  node= PRIVKEY_LIST_NEXT(node),count++) {
 	secu_PrintKey(stdout, count, node->key);
     }
     SECKEY_DestroyPrivateKeyList(list);
+
+    if (count == 0) {
+	SECU_PrintError(progName, "no keys found");
+	return SECFailure;
+    }
     return SECSuccess;
 }
 
