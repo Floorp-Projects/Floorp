@@ -59,6 +59,10 @@
 #include "txXSLTProcessor.h"
 #include "nsXPath1Scheme.h"
 
+#ifndef DISABLE_XFORMS_HOOKS
+#include "nsXFormsXPathEvaluator.h"
+#endif
+
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsXPath1SchemeProcessor)
 
 /* 1c1a3c01-14f6-11d6-a7f2-ea502af815dc */
@@ -111,6 +115,9 @@ NS_DOMCI_EXTENSION_END
 // Factory Constructor
 NS_GENERIC_FACTORY_CONSTRUCTOR(txMozillaXSLTProcessor)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsXPathEvaluator)
+#ifndef DISABLE_XFORMS_HOOKS
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsXFormsXPathEvaluator)
+#endif
 
 NS_DECL_DOM_CLASSINFO(XSLTProcessor)
 NS_DECL_DOM_CLASSINFO(XPathEvaluator)
@@ -295,6 +302,12 @@ static const nsModuleComponentInfo gComponents[] = {
       TRANSFORMIIX_XPATH_EVALUATOR_CID,
       NS_XPATH_EVALUATOR_CONTRACTID,
       nsXPathEvaluatorConstructor },
+#ifndef DISABLE_XFORMS_HOOKS
+    { "XFormsXPathEvaluator",
+      TRANSFORMIIX_XFORMS_XPATH_EVALUATOR_CID,
+      NS_XFORMS_XPATH_EVALUATOR_CONTRACTID,
+      nsXFormsXPathEvaluatorConstructor },
+#endif
     { "Transformiix DOMCI Extender",
       TRANSFORMIIX_DOMCI_EXTENSION_CID,
       TRANSFORMIIX_DOMCI_EXTENSION_CONTRACTID,
