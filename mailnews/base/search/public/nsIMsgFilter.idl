@@ -37,13 +37,13 @@ interface nsIMsgFilter : nsISupports {
 
     readonly attribute nsIMsgFilterList filterList; // owning filter list
     
+    readonly attribute long numTerms;
     void AddTerm(in nsMsgSearchAttribValue attrib,
                  in nsMsgSearchOpValue op,
                  in nsIMsgSearchValue value,
                  in boolean BooleanAND,
                  in string arbitraryHeader);
 
-    readonly attribute long numTerms;
     void GetTerm(in long termIndex,
                  out nsMsgSearchAttribValue attrib,
                  out nsMsgSearchOpValue op,
@@ -54,7 +54,11 @@ interface nsIMsgFilter : nsISupports {
     attribute nsIMsgSearchScopeTerm scope;
 
     attribute nsMsgRuleActionType action;
+
+    // target priority.. throws an exception if the action is not priority
     attribute nsMsgPriorityValue actionPriority;
+
+    // target folder.. throws an exception if the action is not move to folder
     attribute string actionTargetFolderUri;
     
     void MatchHdr(in nsIMsgDBHdr msgHdr, in nsIMsgFolder folder,
