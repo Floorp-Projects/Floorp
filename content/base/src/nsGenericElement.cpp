@@ -1218,8 +1218,8 @@ nsGenericElement::TriggerLink(nsIPresContext& aPresContext,
 
 nsresult
 nsGenericElement::AddScriptEventListener(nsIAtom* aAttribute,
-                                             const nsString& aValue,
-                                             REFNSIID aIID)
+                                         const nsString& aValue,
+                                         REFNSIID aIID)
 {
   nsresult ret = NS_OK;
   nsIScriptContext* context;
@@ -1227,41 +1227,43 @@ nsGenericElement::AddScriptEventListener(nsIAtom* aAttribute,
 
   if (nsnull != mDocument) {
     owner = mDocument->GetScriptContextOwner();
-    if (NS_OK == owner->GetScriptContext(&context)) {
-      if (nsHTMLAtoms::body == mTag || nsHTMLAtoms::frameset == mTag) {
-        nsIDOMEventReceiver *receiver;
-        nsIScriptGlobalObject *global = context->GetGlobalObject();
+    if (owner) {
+      if (NS_OK == owner->GetScriptContext(&context)) {
+        if (nsHTMLAtoms::body == mTag || nsHTMLAtoms::frameset == mTag) {
+          nsIDOMEventReceiver *receiver;
+          nsIScriptGlobalObject *global = context->GetGlobalObject();
 
-        if (nsnull != global && NS_OK == global->QueryInterface(kIDOMEventReceiverIID, (void**)&receiver)) {
+          if (nsnull != global && NS_OK == global->QueryInterface(kIDOMEventReceiverIID, (void**)&receiver)) {
+            nsIEventListenerManager *manager;
+            if (NS_OK == receiver->GetListenerManager(&manager)) {
+              nsIScriptObjectOwner *mObjectOwner;
+              if (NS_OK == global->QueryInterface(kIScriptObjectOwnerIID, (void**)&mObjectOwner)) {
+                ret = manager->AddScriptEventListener(context, mObjectOwner, aAttribute, aValue, aIID);
+                NS_RELEASE(mObjectOwner);
+              }
+              NS_RELEASE(manager);
+            }
+            NS_RELEASE(receiver);
+          }
+          NS_IF_RELEASE(global);
+        }
+        else {
           nsIEventListenerManager *manager;
-          if (NS_OK == receiver->GetListenerManager(&manager)) {
-            nsIScriptObjectOwner *mObjectOwner;
-            if (NS_OK == global->QueryInterface(kIScriptObjectOwnerIID, (void**)&mObjectOwner)) {
-              ret = manager->AddScriptEventListener(context, mObjectOwner, aAttribute, aValue, aIID);
-              NS_RELEASE(mObjectOwner);
+          if (NS_OK == GetListenerManager(&manager)) {
+            nsIScriptObjectOwner* owner;
+            if (NS_OK == mContent->QueryInterface(kIScriptObjectOwnerIID,
+                                                  (void**) &owner)) {
+              ret = manager->AddScriptEventListener(context, owner,
+                                                    aAttribute, aValue, aIID);
+              NS_RELEASE(owner);
             }
             NS_RELEASE(manager);
           }
-          NS_RELEASE(receiver);
         }
-        NS_IF_RELEASE(global);
+        NS_RELEASE(context);
       }
-      else {
-        nsIEventListenerManager *manager;
-        if (NS_OK == GetListenerManager(&manager)) {
-          nsIScriptObjectOwner* owner;
-          if (NS_OK == mContent->QueryInterface(kIScriptObjectOwnerIID,
-                                                (void**) &owner)) {
-            ret = manager->AddScriptEventListener(context, owner,
-                                                  aAttribute, aValue, aIID);
-            NS_RELEASE(owner);
-          }
-          NS_RELEASE(manager);
-        }
-      }
-      NS_RELEASE(context);
+      NS_RELEASE(owner);
     }
-    NS_RELEASE(owner);
   }
   return ret;
 }
