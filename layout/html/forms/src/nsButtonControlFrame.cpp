@@ -317,7 +317,8 @@ nsButtonControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
       if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute("SRC", src)) {
         mImageLoader.SetURL(src);
       }
-      mImageLoader.GetDesiredSize(aPresContext, aReflowState, aDesiredLayoutSize);
+      mImageLoader.GetDesiredSize(aPresContext, aReflowState, this, nsnull,
+                                  aDesiredLayoutSize);
     } else {  // there is a widget
       nsSize styleSize;
       GetStyleSize(*aPresContext, aReflowState, styleSize);

@@ -60,6 +60,7 @@ public:
   NS_IMETHOD StartLoadImage(const nsString& aURL,
                             const nscolor* aBackgroundColor,
                             nsIFrame* aTargetFrame,
+                            nsFrameImageLoaderCB aCallBack,
                             PRBool aNeedSizeUpdate,
                             nsIFrameImageLoader*& aLoader);
   NS_IMETHOD StopLoadImage(nsIFrame* aForFrame);

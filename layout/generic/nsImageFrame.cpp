@@ -200,6 +200,7 @@ nsHTMLImageLoader::SetBaseHREF(const nsString& aBaseHREF)
 nsresult
 nsHTMLImageLoader::StartLoadImage(nsIPresContext* aPresContext,
                                   nsIFrame* aForFrame,
+                                  nsFrameImageLoaderCB aCallBack,
                                   PRBool aNeedSizeUpdate,
                                   PRIntn& aLoadStatus)
 {
@@ -237,8 +238,8 @@ nsHTMLImageLoader::StartLoadImage(nsIPresContext* aPresContext,
   if (nsnull == mImageLoader) {
     // Start image loading. Note that we don't specify a background color
     // so transparent images are always rendered using a transparency mask
-    rv = aPresContext->StartLoadImage(src, nsnull, aForFrame, aNeedSizeUpdate,
-                                      mImageLoader);
+    rv = aPresContext->StartLoadImage(src, nsnull, aForFrame, aCallBack,
+                                      aNeedSizeUpdate, mImageLoader);
     if (NS_OK != rv) {
       return rv;
     }
@@ -269,6 +270,8 @@ nsHTMLImageLoader::StartLoadImage(nsIPresContext* aPresContext,
 void
 nsHTMLImageLoader::GetDesiredSize(nsIPresContext* aPresContext,
                                   const nsReflowState& aReflowState,
+                                  nsIFrame* aTargetFrame,
+                                  nsFrameImageLoaderCB aCallBack,
                                   nsReflowMetrics& aDesiredSize)
 {
   nsSize styleSize;
@@ -276,13 +279,15 @@ nsHTMLImageLoader::GetDesiredSize(nsIPresContext* aPresContext,
   PRIntn loadStatus;
   if (0 != ss) {
     if (NS_SIZE_HAS_BOTH == ss) {
-      StartLoadImage(aPresContext, aReflowState.frame, PR_FALSE, loadStatus);
+      StartLoadImage(aPresContext, aTargetFrame, aCallBack,
+                     PR_FALSE, loadStatus);
       aDesiredSize.width = styleSize.width;
       aDesiredSize.height = styleSize.height;
     }
     else {
       // Preserve aspect ratio of image with unbound dimension.
-      StartLoadImage(aPresContext, aReflowState.frame, PR_TRUE, loadStatus);
+      StartLoadImage(aPresContext, aTargetFrame, aCallBack,
+                     PR_TRUE, loadStatus);
       if ((0 == (loadStatus & NS_IMAGE_LOAD_STATUS_SIZE_AVAILABLE)) ||
           (nsnull == mImageLoader)) {
         // Provide a dummy size for now; later on when the image size
@@ -321,7 +326,7 @@ nsHTMLImageLoader::GetDesiredSize(nsIPresContext* aPresContext,
     }
   }
   else {
-    StartLoadImage(aPresContext, aReflowState.frame, PR_TRUE, loadStatus);
+    StartLoadImage(aPresContext, aTargetFrame, aCallBack, PR_TRUE, loadStatus);
     if ((0 == (loadStatus & NS_IMAGE_LOAD_STATUS_SIZE_AVAILABLE)) ||
         (nsnull == mImageLoader)) {
       // Provide a dummy size for now; later on when the image size
@@ -393,6 +398,27 @@ ImageFrame::SizeOfWithoutThis(nsISizeOfHandler* aHandler) const
   }
 }
 
+static nsresult
+UpdateImageFrame(nsIPresContext& aPresContext, nsIFrame* aFrame,
+                 PRIntn aStatus)
+{
+  if (NS_IMAGE_LOAD_STATUS_SIZE_AVAILABLE & aStatus) {
+    // Now that the size is available, trigger a content-changed reflow
+    nsIContent* content = nsnull;
+    aFrame->GetContent(content);
+    if (nsnull != content) {
+      nsIDocument* document = nsnull;
+      content->GetDocument(document);
+      if (nsnull != document) {
+        document->ContentChanged(content, nsnull);
+        NS_RELEASE(document);
+      }
+      NS_RELEASE(content);
+    }
+  }
+  return NS_OK;
+}
+
 void
 ImageFrame::GetDesiredSize(nsIPresContext* aPresContext,
                            const nsReflowState& aReflowState,
@@ -427,7 +453,9 @@ ImageFrame::GetDesiredSize(nsIPresContext* aPresContext,
         mImageLoader.SetBaseHREF(base);
       }
     }
-    mImageLoader.GetDesiredSize(aPresContext, aReflowState, aDesiredSize);
+    mImageLoader.GetDesiredSize(aPresContext, aReflowState,
+                                this, UpdateImageFrame,
+                                aDesiredSize);
   }
 }
 
@@ -901,7 +929,8 @@ ImageFrame::ContentChanged(nsIPresShell*   aShell,
       // Fire up a new image load request
       PRIntn loadStatus;
       mImageLoader.SetURL(newSRC);
-      mImageLoader.StartLoadImage(aPresContext, this, PR_FALSE, loadStatus);
+      mImageLoader.StartLoadImage(aPresContext, this, nsnull,
+                                  PR_FALSE, loadStatus);
 
       NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
          ("ImageFrame::ContentChanged: loadImage status=%x",

@@ -48,6 +48,7 @@ public:
                   const nsString& aURL,
                   const nscolor* aBackgroundColor,
                   nsIFrame* aTargetFrame,
+                  nsFrameImageLoaderCB aCallBack,
                   PRBool aNeedSizeUpdate);
   NS_IMETHOD StopImageLoad();
   NS_IMETHOD AbortImageLoad();
@@ -71,6 +72,7 @@ protected:
   nsSize mSize;
   nsImageError mError;
   nsIFrame* mTargetFrame;
+  nsFrameImageLoaderCB mCallBack;
   nsIPresContext* mPresContext;
   nsIImageRequest* mImageRequest;
   PRUint8 mImageLoadStatus;

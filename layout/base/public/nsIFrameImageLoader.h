@@ -33,6 +33,14 @@ struct nsSize;
 #define NS_IFRAME_IMAGE_LOADER_IID \
  { 0xa9970300,0xe918,0x11d1,{0x89, 0xcc, 0x00, 0x60, 0x08, 0x91, 0x1b, 0x81} }
 
+
+// Type of callback function used during image loading. The frame
+// image loader will invoke this callback as notifications occur from
+// the image library.
+typedef nsresult (*nsFrameImageLoaderCB)(nsIPresContext& aPresContext,
+                                         nsIFrame* aFrame,
+                                         PRIntn aStatus);
+
 /**
  * Abstract interface for frame image loaders. Frame image loaders
  * know how to respond to nsIImageRequestObserver notifications and
@@ -46,6 +54,7 @@ public:
                   const nsString& aURL,
                   const nscolor* aBackgroundColor,
                   nsIFrame* aTargetFrame,
+                  nsFrameImageLoaderCB aCallBack,
                   PRBool aNeedSizeUpdate) = 0;
 
   NS_IMETHOD StopImageLoad() = 0;
