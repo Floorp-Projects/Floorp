@@ -258,7 +258,7 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect,
 
     NS_ASSERTION(!gOldJSGCCallback, "XPCJSRuntime created more than once");
     if(mJSRuntime)
-        gOldJSGCCallback = JS_SetGCCallbackRT(mJSRuntime, GCCallback);
+        gOldJSGCCallback = JS_SetGCCallbackRT(mJSRuntime, (JSGCCallback)GCCallback);
 
     // Install a JavaScript 'debugger' keyword handler in debug builds only
 #ifdef DEBUG
