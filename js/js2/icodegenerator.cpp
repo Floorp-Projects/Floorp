@@ -1198,11 +1198,20 @@ void ICodeGenerator::preprocess(StmtNode *p)
         break;
    case StmtNode::Class:
         {
+            using JSClasses::JSClass;
             ClassStmtNode *classStmt = static_cast<ClassStmtNode *>(p);
             ASSERT(classStmt->name->getKind() == ExprNode::identifier);
             IdentifierExprNode* nameExpr = static_cast<IdentifierExprNode*>(classStmt->name);
-            using JSClasses::JSClass;
-            JSClass* jsclass = new JSClass(nameExpr->name);
+            JSClass* superclass = 0;
+            if (classStmt->superclass) {
+                ASSERT(classStmt->superclass->getKind() == ExprNode::identifier);
+                IdentifierExprNode* superclassExpr = static_cast<IdentifierExprNode*>(classStmt->superclass);
+                JSValue superclassValue = mGlobal->getVariable(superclassExpr->name);
+                ASSERT(superclassValue.isObject() && !superclassValue.isNull());
+                superclass = static_cast<JSClass*>(superclassValue.object);
+            }
+            JSClass* jsclass = new JSClass(nameExpr->name, superclass);
+            mGlobal->defineVariable(nameExpr->name, JSValue(jsclass));
             // put this class into the current defining scope, and as a side-effect(?) make it
             // the current defining scope, for later compilation into?
         }
