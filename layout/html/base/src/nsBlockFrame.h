@@ -255,7 +255,6 @@ protected:
   /** set aState to what it would be if we had done a full reflow to this point. */
   void RecoverStateFrom(nsBlockReflowState& aState,
                         nsLineBox* aLine,
-                        nscoord aDeltaY,
                         nsRect* aDamageRect);
 
   //----------------------------------------
