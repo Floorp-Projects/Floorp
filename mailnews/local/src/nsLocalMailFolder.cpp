@@ -355,7 +355,7 @@ nsMsgLocalMailFolder::GetSubFolders(nsIEnumerator* *result)
       SetFlag(newFlags);
       rv = CreateSubFolders(path);
     }
-    UpdateSummaryTotals();
+    UpdateSummaryTotals(PR_FALSE);
 
     if (NS_FAILED(rv)) return rv;
     mInitialized = PR_TRUE;      // XXX do this on failure too?
@@ -433,7 +433,7 @@ nsresult nsMsgLocalMailFolder::GetDatabase()
 			else
 			{
 				//Otherwise we have a valid database so lets extract necessary info.
-				UpdateSummaryTotals();
+				UpdateSummaryTotals(PR_FALSE);
 			}
 		}
 	}
@@ -835,12 +835,12 @@ nsresult  nsMsgLocalMailFolder::GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInf
     return openErr;
 }
 
-NS_IMETHODIMP nsMsgLocalMailFolder::UpdateSummaryTotals()
+NS_IMETHODIMP nsMsgLocalMailFolder::UpdateSummaryTotals(PRBool force)
 {
 	PRInt32 oldUnreadMessages = mNumUnreadMessages;
 	PRInt32 oldTotalMessages = mNumTotalMessages;
 	//We need to read this info from the database
-	ReadDBFolderInfo(PR_TRUE);
+	ReadDBFolderInfo(force);
 
 	// If we asked, but didn't get any, stop asking
 	if (mNumUnreadMessages == -1)

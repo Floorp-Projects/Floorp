@@ -150,7 +150,7 @@ NS_IMETHODIMP nsMsgImapMailFolder::GetName(PRUnichar** name)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsMsgImapMailFolder::UpdateSummaryTotals()
+NS_IMETHODIMP nsMsgImapMailFolder::UpdateSummaryTotals(PRBool force)
 {
 	//We need to read this info from the database
 

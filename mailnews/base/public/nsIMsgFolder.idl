@@ -83,7 +83,7 @@ interface nsIMsgFolder : nsIFolder {
 
 	attribute unsigned long depth;
 
-	void UpdateSummaryTotals();
+	void UpdateSummaryTotals(in boolean force);
 	void SummaryChanged();
 	long GetNumUnread(in boolean deep);
 	long GetTotalMessages(in boolean deep);
@@ -143,7 +143,7 @@ interface nsIMsgFolder : nsIFolder {
 	nsIMessage CreateMessageFromMsgDBHdr(in nsIMsgDBHdr msgDBHdr);
 	void GetNewMessages();
 
-	void WriteToFolderCache(in nsIMsgFolderCacheElement folderCacheElem);
+	void WriteToFolderCache(in nsIMsgFolderCache folderCache);
 	attribute wstring charset;
 	attribute unsigned long BiffState;
 	attribute long NumNewMessages;

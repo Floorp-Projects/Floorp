@@ -100,42 +100,14 @@ nsMsgIncomingServer::PerformBiff()
 
 NS_IMETHODIMP nsMsgIncomingServer::WriteToFolderCache(nsIMsgFolderCache *folderCache)
 {
+	nsresult rv = NS_OK;
 	if (m_rootFolder)
 	{
-		nsCOMPtr <nsIEnumerator> aEnumerator;
-
-		nsresult rv = m_rootFolder->GetSubFolders(getter_AddRefs(aEnumerator));
-		if(NS_FAILED(rv)) return rv;
-
-		nsCOMPtr<nsISupports> aItem;
-		nsCOMPtr<nsIMsgFolder> trashFolder;
-
-		rv = aEnumerator->First();
-		while(NS_SUCCEEDED(rv))
-		{
-			rv = aEnumerator->CurrentItem(getter_AddRefs(aItem));
-			if (NS_FAILED(rv)) break;
-			nsCOMPtr<nsIMsgFolder> aMsgFolder(do_QueryInterface(aItem, &rv));
-			if (NS_SUCCEEDED(rv))
-			{
-				char *uri = nsnull;
-				rv = aMsgFolder->GetURI(&uri);
-				if (NS_FAILED(rv)) 
-					break;
-
-				if (folderCache)
-				{
-					nsCOMPtr <nsIMsgFolderCacheElement> cacheElement;
-					rv = folderCache->GetCacheElement(uri, PR_TRUE, getter_AddRefs(cacheElement));
-					if (NS_SUCCEEDED(rv) && cacheElement)
-						rv = aMsgFolder->WriteToFolderCache(cacheElement);
-				}
-			    PR_FREEIF(uri);
-			}
-			rv = aEnumerator->Next();
-		}
+		nsCOMPtr <nsIMsgFolder> msgFolder = do_QueryInterface(m_rootFolder, &rv);
+		if (NS_SUCCEEDED(rv) && msgFolder)
+			rv = msgFolder->WriteToFolderCache(folderCache);
 	}
-	return NS_OK;
+	return rv;
 }
 
 char *

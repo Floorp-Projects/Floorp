@@ -364,7 +364,7 @@ NS_IMETHODIMP nsImapMailFolder::GetSubFolders(nsIEnumerator* *result)
         }
         else 
         {
-            UpdateSummaryTotals();
+            UpdateSummaryTotals(PR_FALSE);
             // Look for a directory for this mail folder, and recurse into it.
             // e.g. if the folder is "inbox", look for "inbox.sbd". 
 #if 0
@@ -429,7 +429,7 @@ nsresult nsImapMailFolder::GetDatabase()
 			else
 			{
 				//Otherwise we have a valid database so lets extract necessary info.
-				UpdateSummaryTotals();
+				UpdateSummaryTotals(PR_FALSE);
 			}
 		}
 		else
@@ -679,7 +679,7 @@ NS_IMETHODIMP nsImapMailFolder::BuildFolderURL(char **url)
     return rv;
 }
     
-NS_IMETHODIMP nsImapMailFolder::UpdateSummaryTotals() 
+NS_IMETHODIMP nsImapMailFolder::UpdateSummaryTotals(PRBool force) 
 {
 	// could we move this into nsMsgDBFolder, or do we need to deal
 	// with the pending imap counts?
@@ -688,7 +688,7 @@ NS_IMETHODIMP nsImapMailFolder::UpdateSummaryTotals()
 	PRInt32 oldUnreadMessages = mNumUnreadMessages;
 	PRInt32 oldTotalMessages = mNumTotalMessages;
 	//We need to read this info from the database
-	ReadDBFolderInfo(PR_TRUE);
+	ReadDBFolderInfo(force);
 
 	// If we asked, but didn't get any, stop asking
 	if (mNumUnreadMessages == -1)

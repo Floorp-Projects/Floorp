@@ -97,7 +97,7 @@ public:
 
 	NS_IMETHOD BuildFolderURL(char **url);
 
-	NS_IMETHOD UpdateSummaryTotals() ;
+	NS_IMETHOD UpdateSummaryTotals(PRBool force) ;
 
 	NS_IMETHOD GetExpungedBytesCount(PRUint32 *count);
 	NS_IMETHOD GetDeletable (PRBool *deletable); 

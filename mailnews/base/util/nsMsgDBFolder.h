@@ -57,7 +57,8 @@ public:
 
 	NS_DECL_ISUPPORTS_INHERITED
 
-	NS_IMETHOD WriteToFolderCache(nsIMsgFolderCacheElement *element);
+	NS_IMETHOD WriteToFolderCache(nsIMsgFolderCache *folderCache);
+	NS_IMETHOD WriteToFolderCacheElem(nsIMsgFolderCacheElement *element);
 
 protected:
 	virtual nsresult ReadDBFolderInfo(PRBool force);

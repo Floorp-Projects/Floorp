@@ -280,7 +280,7 @@ NS_IMETHODIMP nsMsgDBFolder::OnKeyChange(nsMsgKey aKeyChanged, PRUint32 aOldFlag
 			{
 				SendFlagNotifications(msgSupports, aOldFlags, aNewFlags);
 			}
-			UpdateSummaryTotals();
+			UpdateSummaryTotals(PR_TRUE);
 		}
 	}
 	return NS_OK;
@@ -302,7 +302,7 @@ NS_IMETHODIMP nsMsgDBFolder::OnKeyDeleted(nsMsgKey aKeyChanged, PRInt32 aFlags,
 			{
 				NotifyItemDeleted(msgSupports);
 			}
-			UpdateSummaryTotals();
+			UpdateSummaryTotals(PR_TRUE);
 		}
 	}
 
@@ -326,7 +326,7 @@ NS_IMETHODIMP nsMsgDBFolder::OnKeyAdded(nsMsgKey aKeyChanged, PRInt32 aFlags,
 			{
 				NotifyItemAdded(msgSupports);
 			}
-		//	UpdateSummaryTotals();
+		//	UpdateSummaryTotals(PR_TRUE);
 		}
 	}
 	return NS_OK;
@@ -361,7 +361,46 @@ nsresult nsMsgDBFolder::ReadFromFolderCache(nsIMsgFolderCacheElement *element)
 	return rv;
 }
 
-NS_IMETHODIMP nsMsgDBFolder::WriteToFolderCache(nsIMsgFolderCacheElement *element)
+NS_IMETHODIMP nsMsgDBFolder::WriteToFolderCache(nsIMsgFolderCache *folderCache)
+{
+	nsCOMPtr <nsIEnumerator> aEnumerator;
+
+	nsresult rv = GetSubFolders(getter_AddRefs(aEnumerator));
+	if(NS_FAILED(rv)) 
+		return rv;
+
+	char *uri = nsnull;
+	rv = GetURI(&uri);
+
+	if (folderCache)
+	{
+		nsCOMPtr <nsIMsgFolderCacheElement> cacheElement;
+		rv = folderCache->GetCacheElement(uri, PR_TRUE, getter_AddRefs(cacheElement));
+		if (NS_SUCCEEDED(rv) && cacheElement)
+			rv = WriteToFolderCacheElem(cacheElement);
+	}
+	PR_FREEIF(uri);
+
+	
+	nsCOMPtr<nsISupports> aItem;
+
+	rv = aEnumerator->First();
+	while(NS_SUCCEEDED(rv))
+	{
+		rv = aEnumerator->CurrentItem(getter_AddRefs(aItem));
+		if (NS_FAILED(rv)) break;
+		nsCOMPtr<nsIMsgFolder> aMsgFolder(do_QueryInterface(aItem, &rv));
+		if (NS_SUCCEEDED(rv))
+		{
+			if (folderCache)
+				rv = aMsgFolder->WriteToFolderCache(folderCache);
+		}
+		rv = aEnumerator->Next();
+	}
+	return rv;
+}
+
+NS_IMETHODIMP nsMsgDBFolder::WriteToFolderCacheElem(nsIMsgFolderCacheElement *element)
 {
 	nsresult rv = NS_OK;
 

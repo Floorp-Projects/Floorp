@@ -557,7 +557,7 @@ nsresult nsMsgNewsFolder::GetDatabase()
 			rv = mDatabase->AddListener(this);
       if (NS_FAILED(rv)) return rv;
        
-      rv = UpdateSummaryTotals();
+      rv = UpdateSummaryTotals(PR_TRUE);
       if (NS_FAILED(rv)) return rv;
 		}
 	}
@@ -1008,7 +1008,7 @@ nsresult  nsMsgNewsFolder::GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, ns
   return openErr;
 }
 
-NS_IMETHODIMP nsMsgNewsFolder::UpdateSummaryTotals()
+NS_IMETHODIMP nsMsgNewsFolder::UpdateSummaryTotals(PRBool force)
 {
 #ifdef DEBUG_NEWS
 	printf("nsMsgNewsFolder::UpdateSummaryTotals(%s)\n",mURI);
@@ -1017,7 +1017,7 @@ NS_IMETHODIMP nsMsgNewsFolder::UpdateSummaryTotals()
 	PRInt32 oldUnreadMessages = mNumUnreadMessages;
 	PRInt32 oldTotalMessages = mNumTotalMessages;
 	//We need to read this info from the database
-	ReadDBFolderInfo(PR_TRUE);
+	ReadDBFolderInfo(force);
 
 	// If we asked, but didn't get any, stop asking
 	if (mNumUnreadMessages == -1)

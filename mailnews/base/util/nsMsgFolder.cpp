@@ -708,7 +708,7 @@ NS_IMETHODIMP nsMsgFolder::SetDepth(PRUint32 depth)
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgFolder::UpdateSummaryTotals()
+NS_IMETHODIMP nsMsgFolder::UpdateSummaryTotals(PRBool /* force */)
 {
 	//We don't support this
 	return NS_OK;
@@ -716,7 +716,7 @@ NS_IMETHODIMP nsMsgFolder::UpdateSummaryTotals()
 
 NS_IMETHODIMP nsMsgFolder::SummaryChanged()
 {
-	UpdateSummaryTotals();
+	UpdateSummaryTotals(PR_FALSE);
 #ifdef HAVE_MASTER
     if (mMaster)
         mMaster->BroadcastFolderChanged(this);

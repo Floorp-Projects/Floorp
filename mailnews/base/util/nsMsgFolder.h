@@ -150,7 +150,7 @@ public:
 
   // updates num messages and num unread - should be pure virtual
   // when I get around to implementing in all subclasses?
-  NS_IMETHOD UpdateSummaryTotals();
+  NS_IMETHOD UpdateSummaryTotals(PRBool force);
   NS_IMETHOD SummaryChanged();
   NS_IMETHOD GetNumUnread(PRBool deep, PRInt32 *numUnread);       // How many unread messages in this folder.
   NS_IMETHOD GetTotalMessages(PRBool deep, PRInt32 *totalMessages);   // Total number of messages in this folder.
