@@ -976,6 +976,7 @@ nsGfxTextControlFrame2::CreateFrameFor(nsIPresContext*   aPresContext,
 }
 
 #define DIV_STRING "user-focus: none; overflow:auto; border: 0px !important; padding: 0px; margin:0px"
+#define DIV_STRING_SINGLELINE "user-focus: none; overflow:auto; border: 0px !important; padding: 0px; margin:0px"
 
 NS_IMETHODIMP
 nsGfxTextControlFrame2::CreateAnonymousContent(nsIPresContext* aPresContext,
