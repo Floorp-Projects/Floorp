@@ -1710,14 +1710,14 @@ SECKEY_ImportDERPublicKey(SECItem *derKey, CK_KEY_TYPE type)
     SECKEYPublicKey *pubk = NULL;
     SECStatus rv = SECFailure;
 
-    pubk = PORT_New(SECKEYPublicKey);
+    pubk = PORT_ZNew(SECKEYPublicKey);
     if(pubk == NULL) {
         goto finish;
     }
     pubk->arena = NULL;
     pubk->pkcs11Slot = NULL;
     pubk->pkcs11ID = CK_INVALID_HANDLE;
-    pubk->keyType = type;
+    pubk->keyType = (type == CKK_RSA) ? rsaKey : dsaKey;
 
     if( type == CKK_RSA) {
         rv = SEC_ASN1DecodeItem(NULL, pubk, SECKEY_RSAPublicKeyTemplate,
