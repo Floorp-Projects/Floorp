@@ -64,6 +64,7 @@ struct _GtkMozEmbedClass
 
 extern GtkType      gtk_moz_embed_get_type         (void);
 extern GtkWidget   *gtk_moz_embed_new              (void);
+extern void         gtk_moz_embed_set_comp_path    (char *aPath);
 extern void         gtk_moz_embed_load_url         (GtkMozEmbed *embed, const char *url);
 extern void         gtk_moz_embed_stop_load        (GtkMozEmbed *embed);
 extern gboolean     gtk_moz_embed_can_go_back      (GtkMozEmbed *embed);

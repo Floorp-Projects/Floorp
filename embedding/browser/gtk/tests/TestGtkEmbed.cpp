@@ -541,6 +541,10 @@ update_status_bar_text(TestGtkBrowser *browser)
     {
       g_snprintf(message, 255, "%s (%d bytes loaded)", browser->statusMessage, browser->bytesLoaded);
     }
+    else if (browser->statusMessage == NULL)
+    {
+      g_snprintf(message, 255, " ");
+    }
     else
     {
       g_snprintf(message, 255, "%s", browser->statusMessage);

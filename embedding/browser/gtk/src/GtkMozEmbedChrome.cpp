@@ -642,7 +642,7 @@ NS_IMETHODIMP GtkMozEmbedChrome::OnProgressChange(nsIWebProgress *progress, nsIR
   // call our callback if it's been registered
   if (mProgressCB)
     mProgressCB(mProgressCBData, curTotalProgress, maxTotalProgress);
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_OK;
 }
 
 NS_IMETHODIMP GtkMozEmbedChrome::OnStateChange(nsIWebProgress *progress, nsIRequest *request,
