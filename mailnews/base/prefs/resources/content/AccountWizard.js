@@ -672,18 +672,64 @@ function checkForInvalidAccounts()
         var identity =
             firstInvalidAccount.identities.QueryElementAt(0, nsIMsgIdentity);
 
-        dump("Invalid account: trying to get ISP data for " + identity.email + "\n");
-        var accountData = getIspDefaultsForEmail(identity.email);
-        dump("Invalid account: Got " + accountData + "\n");
-        
-        // account -> accountData -> pageData
-        accountData = AccountToAccountData(firstInvalidAccount, accountData);
+        var accountData = null;
+        // If there is a email address already provided, try to get to other ISP defaults.
+        // If not, get pre-configured data, if any.
+        if (identity.email) {
+          dump("Invalid account: trying to get ISP data for " + identity.email + "\n");
+          accountData = getIspDefaultsForEmail(identity.email);
+          dump("Invalid account: Got " + accountData + "\n");
+
+          // account -> accountData -> pageData
+          accountData = AccountToAccountData(firstInvalidAccount, accountData);
+        }
+        else {
+          accountData = getPreConfigDataForAccount(firstInvalidAccount);
+        }
         
         AccountDataToPageData(accountData, pageData);
 
         gCurrentAccountData = accountData;
-        
     }
+}
+
+// Transfer all invalid account information to AccountData. Also, get those special 
+// preferences (not associated with any interfaces but preconfigurable via prefs or rdf files) 
+// like whether not the smtp server associated with this account requires 
+// a user name (mail.identity.<id_key>.smtpRequiresUsername) and the choice of skipping 
+// panels (mail.identity.<id_key>.wizardSkipPanels).
+function getPreConfigDataForAccount(account)
+{
+  var accountData = new Object;
+  accountData = new Object;
+  accountData.incomingServer = new Object;
+  accountData.identity = new Object;
+  accountData.smtp = new Object;
+
+  accountData = AccountToAccountData(account, null);
+
+  var identity = account.identities.QueryElementAt(0, nsIMsgIdentity);
+
+  try {
+    var skipPanelsPrefStr = "mail.identity." + identity.key + ".wizardSkipPanels";
+    accountData.wizardSkipPanels = gPrefs.getBoolPref(skipPanelsPrefStr);
+
+    if (identity.smtpServerKey) {
+      var smtpServer = smtpService.getServerByKey(identity.smtpServerKey);
+      accountData.smtp = smtpServer;
+
+      var smtpRequiresUsername = false;
+      var smtpRequiresPrefStr = "mail.identity." + identity.key + ".smtpRequiresUsername";
+      smtpRequiresUsername = gPrefs.getBoolPref(smtpRequiresPrefStr);
+      accountData.smtpRequiresUsername = smtpRequiresUsername;
+    }
+  }
+  catch(ex) {
+    // reached here as special identity pre-configuration prefs 
+    // (wizardSkipPanels, smtpRequiresUsername) are not defined.
+  }
+
+  return accountData;
 }
 
 function AccountToAccountData(account, defaultAccountData)

@@ -56,24 +56,27 @@ function identityPageValidate()
   setPageData(pageData, "identity", "fullName", name);
 
   setNextPage("accounttype","identitypage");
-  var isMailAccount = pageData.accounttype.mailaccount;
-  if (isMailAccount && isMailAccount.value) {
-    if (gCurrentAccountData && gCurrentAccountData.wizardSkipPanels) {
-      setNextPage("identitypage","done");
-    }
-    else {
+
+  // If we need to skip wizardpanels, set the wizard to jump to the
+  // summary page i.e., last page. Otherwise, set the flow based
+  // on type of account (mail or news) user is creating.
+  if (gCurrentAccountData && gCurrentAccountData.wizardSkipPanels) {
+    setNextPage("identitypage","done");
+  }
+  else {
+    var isMailAccount = pageData.accounttype.mailaccount;
+    if (isMailAccount && isMailAccount.value) {
       setNextPage("identitypage","serverpage");
       setNextPage("serverpage","loginpage");
       setNextPage("loginpage","accnamepage");
       setNextPage("accnamepage","done");
+    } 
+    else {
+      setNextPage("identitypage","newsserver");
+      setNextPage("newsserver","accnamepage");
+      setNextPage("accnamepage","done");
     }
-  } 
-  else {
-    setNextPage("identitypage","newsserver");
-    setNextPage("newsserver","accnamepage");
-    setNextPage("accnamepage","done");
   }
-
   return true;
 }
 

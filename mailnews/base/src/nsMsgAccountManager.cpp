@@ -91,6 +91,10 @@
 #define SERVER_PREFIX "server"
 #define ID_PREFIX "id"
 #define ABOUT_TO_GO_OFFLINE_TOPIC "network:offline-about-to-go-offline"
+#define ACCOUNT_DELIMITER ","
+#define APPEND_ACCOUNTS_VERSION_PREF_NAME "append_preconfig_accounts.version"
+#define MAILNEWS_ROOT_PREF "mailnews."
+#define PREF_MAIL_ACCOUNTMANAGER_APPEND_ACCOUNTS "mail.accountmanager.appendaccounts"
 
 static NS_DEFINE_CID(kMsgAccountCID, NS_MSGACCOUNT_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
@@ -1304,9 +1308,84 @@ nsMsgAccountManager::LoadAccounts()
   if (NS_SUCCEEDED(rv)) {
     rv = m_prefs->CopyCharPref(PREF_MAIL_ACCOUNTMANAGER_ACCOUNTS,
                                         getter_Copies(accountList));
+    
+    /** 
+     * Check to see if we need to add pre-configured accounts.
+     * Following prefs are important to note in understanding the procedure here.
+     *
+     * 1. pref("mailnews.append_preconfig_accounts.version", version number);
+     * This pref registers the current version in the user prefs file. A default value 
+     * is stored in mailnews.js file. If a given vendor needs to add more preconfigured 
+     * accounts, the default version number can be increased. Comparing version 
+     * number from user's prefs file and the default one from mailnews.js, we
+     * can add new accounts and any other version level changes that need to be done.
+     *
+     * 2. pref("mail.accountmanager.appendaccounts", <comma separated account list>);
+     * This pref contains the list of pre-configured accounts that ISP/Vendor wants to
+     * to add to the existing accounts list. 
+     */
+    nsCOMPtr<nsIPrefBranch> defaultsPrefBranch;
+    rv = m_prefs->GetDefaultBranch(MAILNEWS_ROOT_PREF, getter_AddRefs(defaultsPrefBranch));
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    nsCOMPtr<nsIPrefBranch> prefBranch;
+    rv = m_prefs->GetBranch(MAILNEWS_ROOT_PREF, getter_AddRefs(prefBranch));
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    PRInt32 appendAccountsCurrentVersion=0;
+    PRInt32 appendAccountsDefaultVersion=0;
+    rv = prefBranch->GetIntPref(APPEND_ACCOUNTS_VERSION_PREF_NAME, &appendAccountsCurrentVersion);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    rv = defaultsPrefBranch->GetIntPref(APPEND_ACCOUNTS_VERSION_PREF_NAME, &appendAccountsDefaultVersion);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    // Update the account list if needed
+    if ((appendAccountsCurrentVersion <= appendAccountsDefaultVersion)) {
+
+      // Get a list of pre-configured accounts
+      nsXPIDLCString appendAccountList;
+      rv = m_prefs->CopyCharPref(PREF_MAIL_ACCOUNTMANAGER_APPEND_ACCOUNTS,
+                                          getter_Copies(appendAccountList));
+
+      // If there are pre-configured accounts, we need to add them to the existing list.
+      if (appendAccountList.Length() > 0) {
+        if (accountList.Length() > 0) {
+          nsCStringArray existingAccountsArray;
+          existingAccountsArray.ParseString(accountList.get(), ACCOUNT_DELIMITER);
+
+          // Tokenize the data and add each account if it is not already there 
+          // in the user's current mailnews account list
+          char *newAccountStr;
+          char *preConfigAccountsStr = ToNewCString(appendAccountList);
+  
+          char *token = nsCRT::strtok(preConfigAccountsStr, ACCOUNT_DELIMITER, &newAccountStr);
+
+          nsCAutoString newAccount;
+          while (token) {
+            if (token && *token) {
+              newAccount.Assign(token);
+              newAccount.StripWhitespace();
+
+              if (existingAccountsArray.IndexOf(newAccount) == -1) {
+                accountList += ",";
+                accountList += newAccount;
+              }
+            }
+            token = nsCRT::strtok(newAccountStr, ACCOUNT_DELIMITER, &newAccountStr);
+          }
+          PR_Free(preConfigAccountsStr);
+        }
+        else {
+          accountList = appendAccountList;
+        }
+        // Increase the version number so that updates will happen as and when needed
+        rv = prefBranch->SetIntPref(APPEND_ACCOUNTS_VERSION_PREF_NAME, appendAccountsCurrentVersion + 1);
+      }
+    }
   }
   
-  if (NS_FAILED(rv) || !accountList || !accountList[0]) {
+  if (!accountList || !accountList[0]) {
 #ifdef DEBUG_ACCOUNTMANAGER
     printf("No accounts.\n");
 #endif
