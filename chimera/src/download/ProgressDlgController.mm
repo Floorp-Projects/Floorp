@@ -148,12 +148,13 @@ NS_IMETHODIMP
 nsDownloadListener::OnStateChange(nsIWebProgress *aWebProgress,  nsIRequest *aRequest,  PRUint32 aStateFlags, 
                                     PRUint32 aStatus)
 {
-  if (aStateFlags & STATE_STOP) {
-  //it appears as if we finished.
+  // when the entire download finishes, stop the progress timer and clean up
+  // the window and controller
+  if ((aStateFlags & STATE_STOP) && (aStateFlags & STATE_IS_NETWORK)) {
     [mController killDownloadTimer];
     [mController setDownloadProgress:nil];
   }
-  return NS_OK;
+  return NS_OK; 
 }
 
 void
