@@ -9,7 +9,6 @@ use vars qw(@ISA);
 1;
 
 # XXX Per-channel configurable notification of stock changes
-# XXX Currency
 # XXX Non-US markets
 
 sub Help {
