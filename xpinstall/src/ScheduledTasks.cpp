@@ -199,16 +199,15 @@ PRInt32 ReplaceFileNow(nsFileSpec& replacementFile, nsFileSpec& doomedFile )
 
     // first try to rename the doomed file out of the way (if it exists)
     char*   leafname;
-    nsFileSpec tmpfile( doomedFile );
-    if ( tmpfile.Exists() )
+    nsFileSpec tmpFile( doomedFile );
+    if ( tmpFile.Exists() )
     {
-        tmpfile.MakeUnique();
-        leafname = tmpfile.GetLeafName();
-        tmpfile = doomedFile;
-        tmpfile.Rename( leafname );
+        tmpFile.MakeUnique();
+        leafname = tmpFile.GetLeafName();
+        tmpFile = doomedFile;
+        tmpFile.Rename( leafname );
         nsCRT::free( leafname );
     }
-
 
 
     // if doomedFile is gone move new file into place
@@ -241,12 +240,12 @@ PRInt32 ReplaceFileNow(nsFileSpec& replacementFile, nsFileSpec& doomedFile )
         {
             // we replaced the old file OK, now we have to
             // get rid of it permanently
-            result = DeleteFileNowOrSchedule( tmpfile );
+            result = DeleteFileNowOrSchedule( tmpFile );
         }
         else
         {
             // couldn't rename file, try to put old file back
-            tmpfile.Rename( leafname );
+            tmpFile.Rename( leafname );
         }
         nsCRT::free( leafname );
     }
