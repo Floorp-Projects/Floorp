@@ -126,7 +126,7 @@ void bcXPCOMStub::DispatchAndSaveThread(bcICall *call, nsIEventQueue *eventQueue
 }
 void bcXPCOMStub::Dispatch(bcICall *call) {
     PRLogModuleInfo *log = bcXPCOMLog::GetLog();
-    if (_mOwningThread == NS_CurrentThread()
+    if (_mOwningThread == PR_CurrentThread()
         || NULL == (void*)owningEventQ) {
         DispatchAndSaveThread(call);
     } else {
