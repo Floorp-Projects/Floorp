@@ -253,12 +253,6 @@ public:
   operator const char*() const {return (const char*)mStr;}
 //#endif
 
-  /**
-   * This method constructs a new nsCString that is a clone
-   * of this string.
-   * 
-   */
-  nsCString* ToNewString() const;
 
   /**
    * Copies data from internal buffer onto given char* buffer

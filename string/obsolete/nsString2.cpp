@@ -201,18 +201,6 @@ nsString::SetCapacity( PRUint32 aNewCapacity )
  *********************************************************************/
 
 
-//static char gChar=0;
-/** 
- * 
- * @update  gess1/4/99
- * @return  ptr to internal buffer (if 1-byte), otherwise NULL
- */
-const char* nsString::GetBuffer(void) const {
-  const char* result=(eOneByte==mCharSize) ? mStr : 0;
-  return result;
-}
-
-
 /**
  * This method returns the internal unicode buffer. 
  * Now that we've factored the string class, this should never
@@ -552,15 +540,6 @@ nsString::CompressWhitespace( PRBool aEliminateLeading,PRBool aEliminateTrailing
 /**********************************************************************
   string conversion methods...
  *********************************************************************/
-
-/**
- * Creates a duplicate clone (ptr) of this string.
- * @update  gess 01/04/99
- * @return  ptr to clone of this string
- */
-nsString* nsString::ToNewString() const {
-  return new nsString(*this);
-}
 
 /**
  * Copies contents of this string into he given buffer
