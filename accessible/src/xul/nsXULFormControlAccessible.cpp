@@ -666,4 +666,40 @@ NS_IMETHODIMP nsXULTextFieldAccessible::GetState(PRUint32 *aState)
   return rv;
 }
 
+/**
+  * Only one actions available
+  */
+NS_IMETHODIMP nsXULTextFieldAccessible::GetNumActions(PRUint8 *_retval)
+{
+  *_retval = eSingle_Action;
+  return NS_OK;;
+}
 
+/**
+  * Return the name of our only action
+  */
+NS_IMETHODIMP nsXULTextFieldAccessible::GetActionName(PRUint8 index, nsAString& _retval)
+{
+  if (index == eAction_Click) {
+    nsAccessible::GetTranslatedString(NS_LITERAL_STRING("activate"), _retval); 
+    return NS_OK;
+  }
+  return NS_ERROR_INVALID_ARG;
+}
+
+/**
+  * Tell the button to do it's action
+  */
+NS_IMETHODIMP nsXULTextFieldAccessible::DoAction(PRUint8 index)
+{
+  if (index == 0) {
+    nsCOMPtr<nsIDOMXULElement> element(do_QueryInterface(mDOMNode));
+    if (element)
+    {
+      element->Focus();
+      return NS_OK;
+    }
+    return NS_ERROR_FAILURE;
+  }
+  return NS_ERROR_INVALID_ARG;
+}
