@@ -618,6 +618,9 @@ nsOutlinerBodyFrame::UpdateScrollbar()
 {
   // Update the scrollbar.
   nsCOMPtr<nsIContent> scrollbarContent;
+  NS_ASSERTION(mScrollbar, "no scroll bar");
+  if (!mScrollbar)
+    return;
   mScrollbar->GetContent(getter_AddRefs(scrollbarContent));
   float t2p;
   mPresContext->GetTwipsToPixels(&t2p);
@@ -630,6 +633,10 @@ nsOutlinerBodyFrame::UpdateScrollbar()
 
 nsresult nsOutlinerBodyFrame::SetVisibleScrollbar(PRBool aSetVisible)
 {
+  NS_ASSERTION(mScrollbar, "no scroll bar");
+  if (!mScrollbar)
+    return NS_OK;
+
   nsCOMPtr<nsIContent> scrollbarContent;
   mScrollbar->GetContent(getter_AddRefs(scrollbarContent));
 
@@ -663,6 +670,7 @@ NS_IMETHODIMP nsOutlinerBodyFrame::InvalidateScrollbar()
       mScrollbar = InitScrollbarFrame(mPresContext, outlinerFrame, this);
   }
 
+  NS_ASSERTION(mScrollbar, "no scroll bar");
   if (!mScrollbar || !mView)
     return NS_OK;
 
