@@ -173,8 +173,9 @@ mozTXTToHTMLConv::CompleteAbbreviatedURL(const PRUnichar * aInString, PRInt32 aI
 }
 
 PRBool
-mozTXTToHTMLConv::FindURLStart(const PRUnichar * aInString, PRInt32 aInLength, const PRUint32 pos,
-            	               const modetype check, PRUint32& start)
+mozTXTToHTMLConv::FindURLStart(const PRUnichar * aInString, PRInt32 aInLength,
+                               const PRUint32 pos, const modetype check,
+                               PRUint32& start)
 {
   switch(check)
   { // no breaks, because end of blocks is never reached
@@ -191,8 +192,9 @@ mozTXTToHTMLConv::FindURLStart(const PRUnichar * aInString, PRInt32 aInLength, c
   case RFC2396E:
   {
     nsString temp (nsSubsumeStr( (PRUnichar *) aInString, PR_FALSE, aInLength));
-    PRInt32 i = temp.RFindCharInSet("<>\"", pos - 1);
-    if (i != kNotFound && (temp[PRUint32(i)] == '<' || temp[PRUint32(i)] == '"'))
+    PRInt32 i = pos <= 0 ? kNotFound : temp.RFindCharInSet("<>\"", pos - 1);
+    if (i != kNotFound && (temp[PRUint32(i)] == '<' ||
+                           temp[PRUint32(i)] == '"'))
     {
       start = PRUint32(++i);
       return PR_TRUE;
@@ -211,7 +213,7 @@ mozTXTToHTMLConv::FindURLStart(const PRUnichar * aInString, PRInt32 aInLength, c
          aInString[PRUint32(i)] == '.'
          ); i--)
       ;
-    if (nsCRT::IsAsciiAlpha(aInString[PRUint32(++i)]))
+    if (++i >= 0 && nsCRT::IsAsciiAlpha(aInString[PRUint32(i)]))
     {
       start = PRUint32(i);
       return PR_TRUE;
@@ -221,7 +223,7 @@ mozTXTToHTMLConv::FindURLStart(const PRUnichar * aInString, PRInt32 aInLength, c
   }
   case abbreviated:
   {
-    PRInt32 i = pos + 1;
+    PRInt32 i = pos - 1;
     for (; i >= 0
              && aInString[PRUint32(i)] != '>' && aInString[PRUint32(i)] != '<'
              && aInString[PRUint32(i)] != '"' && aInString[PRUint32(i)] != '\''
@@ -234,8 +236,12 @@ mozTXTToHTMLConv::FindURLStart(const PRUnichar * aInString, PRInt32 aInLength, c
       ;
     if
       (
-        nsCRT::IsAsciiAlpha(aInString[PRUint32(++i)]) ||
-        nsCRT::IsAsciiDigit(aInString[PRUint32(i)])
+        ++i >= 0
+          &&
+          (
+            nsCRT::IsAsciiAlpha(aInString[PRUint32(i)]) ||
+            nsCRT::IsAsciiDigit(aInString[PRUint32(i)])
+          )
       )
     {
       start = PRUint32(i);
