@@ -253,7 +253,7 @@ protected:
 // composer commands
 
 NS_DECL_COMPOSER_COMMAND(nsCloseCommand)
-NS_DECL_COMPOSER_COMMAND(nsPrintingCommands)
+//NS_DECL_COMPOSER_COMMAND(nsPrintingCommands)
 
 // Generic commands
 
