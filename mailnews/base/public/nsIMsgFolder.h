@@ -11,7 +11,6 @@
 #include "MailNewsTypes.h" /* interface MailNewsTypes */
 #include "nsICollection.h" /* interface nsICollection */
 #include "nsIFolderListener.h" /* interface nsIFolderListener */
-#include "nsrootidl.h" /* interface nsrootidl */
 #include "nsIEnumerator.h" /* interface nsIEnumerator */
 #include "nsIFolder.h" /* interface nsIFolder */
 #include "nsFileSpec.h"
@@ -79,8 +78,11 @@ class nsIMsgFolder : public nsIFolder {
   /* void Delete (); */
   NS_IMETHOD Delete() = 0;
 
-  /* void PropagateDelete (inout nsIMsgFolder folder, in boolean deleteStorage); */
-  NS_IMETHOD PropagateDelete(nsIMsgFolder **folder, PRBool deleteStorage) = 0;
+  /* void DeleteSubFolders (in nsISupportsArray folders); */
+  NS_IMETHOD DeleteSubFolders(nsISupportsArray *folders) = 0;
+
+  /* void PropagateDelete (in nsIMsgFolder folder, in boolean deleteStorage); */
+  NS_IMETHOD PropagateDelete(nsIMsgFolder *folder, PRBool deleteStorage) = 0;
 
   /* void RecursiveDelete (in boolean deleteStorage); */
   NS_IMETHOD RecursiveDelete(PRBool deleteStorage) = 0;
