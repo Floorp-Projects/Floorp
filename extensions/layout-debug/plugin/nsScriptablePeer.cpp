@@ -168,6 +168,30 @@ PRBool    retVal;
  *	@update 9/25/02 dwc
  */
 NS_IMETHODIMP 
+nsScriptablePeer::OutputTextToFile(PRBool aNewFile,const PRUnichar *aFilePath, const PRUnichar *aFileName, 
+                                           const PRUnichar *aOutputString,PRInt32 *aResult)
+{
+nsresult  rv = NS_OK;
+PRBool    retVal;
+
+
+  if(mDebugObj){
+    retVal = mDebugObj->OutputTextToFile(aNewFile,aFilePath,aFileName,aOutputString);
+    if (retVal == NS_OK) {
+      *aResult= 0;
+    } else  {
+      *aResult = 1;     // not really fatal...
+    } 
+  }
+  
+  return rv;
+}
+
+/** ---------------------------------------------------
+ *  See documentation in nsScriptablePeer.h
+ *	@update 9/25/02 dwc
+ */
+NS_IMETHODIMP 
 nsScriptablePeer::CompareLayoutFiles(const PRUnichar *aBasePath, const PRUnichar *aVerPath,
                   const PRUnichar *aBaseFile, const PRUnichar *aVerFile, PRUint32 aFlags, PRInt32 *aResult)
 {

@@ -27,6 +27,7 @@ interface nsIDebugPlugin : nsISupports {
   readonly attribute string version;
   void CreateDirectory(in wstring aDirPath,in unsigned long aFlags,[retval] out long aResult);
   void DumpLayout(in nsISupports aWindow,in wstring aFilePath,in wstring aFileName,in unsigned long aFlags,[retval] out long aResult );
+  void OutputTextToFile(in boolean aNewFile,in wstring aFilePath,in wstring aFileName,in wstring aOutputString,[retval] out long aResult );
   void StartDirectorySearch(in string aFilePath);
   void GetNextFileInDirectory([retval] out string aFileName);
   void CompareLayoutFiles(in wstring aBasePath,in wstring aVerPath,in wstring aBaseFile,in wstring aVerFile,in unsigned long aFlags,[retval] out long aResult);

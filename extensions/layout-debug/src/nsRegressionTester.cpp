@@ -124,6 +124,39 @@ nsDebugObject::CreateDirectory( const PRUnichar *aFilePath, PRUint32 aFlags)
   return result;
 }
 
+/** ---------------------------------------------------
+ *  See documentation in nsDebugObject.h
+ *	@update 5/16/02 dwc
+ */
+NS_IMETHODIMP
+nsDebugObject::OutputTextToFile(PRBool aNewFile, const PRUnichar *aFilePath, const PRUnichar *aFileName, const PRUnichar *aOutputString) 
+{
+  nsresult      result = NS_ERROR_FAILURE;
+  nsCAutoString outputPath;
+  outputPath.AssignWithConversion(aFilePath);
+  outputPath.AppendWithConversion(aFileName);
+  char* filePath = ToNewCString(outputPath);
+  FILE* fp;
+  
+  if ( aNewFile ) {
+    fp = fopen(filePath, "wt");
+  } else {
+    fp = fopen(filePath, "at");
+  }
+
+  if ( fp ) {
+    nsCAutoString outputString;
+    outputString.AssignWithConversion(aOutputString);
+    char* theOutput = ToNewCString(outputString);
+    fprintf(fp,theOutput);
+    fprintf(fp,"\n");
+    fclose(fp);
+    delete filePath;
+  }
+  return result;
+}
+
+
 
 /** ---------------------------------------------------
  *  See documentation in nsDebugObject.h

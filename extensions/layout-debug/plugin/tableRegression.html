@@ -8,7 +8,7 @@
 <BODY>
 
 <center>
-<h2> Example XPConnect Scriptable Debug Plug-in Regression Page</h2>
+<h2> Table XPConnect Scriptable Debug Plug-in Regression Page</h2>
 </center>
 
 <embed type="application/debug-plugin" width=1 height=1 hidden="true"><br>
@@ -29,14 +29,17 @@ var origLeft;
 var origTop;
 var origWidth;
 var origHeight;
-var dirType;
 var curIndex;
 var startIndex;
 var endIndex;
 var dumpStyle;
 
 
-var myArray = new Array(15);
+var myArray = new Array(33);
+
+  statusdirectory = "s:/";
+  statusfilename = "afilewithdump.txt"
+
 
 	// table
   myArray[0] = "file:///S|/mozilla/layout/html/tests/table/dom";
@@ -51,32 +54,40 @@ var myArray = new Array(15);
   myArray[7] = "s:/regressiontests/";
   myArray[8] = "s:/regressiontests/";
 
-  myArray[9] = "file:///S|/mozilla/layout/html/tests/table/dom";
+  myArray[9] = "file:///S|/mozilla/layout/html/tests/table/bugs";
   myArray[10] = "s:/regressiontests/";
   myArray[11] = "s:/regressiontests/";
 
-  myArray[12] = "file:///S|/mozilla/layout/html/tests/table/printing";
+  myArray[12] = "file:///S|/mozilla/layout/html/tests/table/marvin";
   myArray[13] = "s:/regressiontests/";
   myArray[14] = "s:/regressiontests/";
 
-	// block
-  myArray[15] = "file:///S|/mozilla/layout/html/tests/block/base";
+  myArray[15] = "file:///S|/mozilla/layout/html/tests/table/printing";
   myArray[16] = "s:/regressiontests/";
   myArray[17] = "s:/regressiontests/";
 
-	myArray[18] = "file:///S|/mozilla/layout/html/tests/block/bugs";
+	// block
+  myArray[18] = "file:///S|/mozilla/layout/html/tests/block/base";
   myArray[19] = "s:/regressiontests/";
   myArray[20] = "s:/regressiontests/";
 
-	
-	// form controls
-	myArray[21] = "file:///S|/mozilla/layout/html/tests/formctls/base";
+  myArray[21] = "file:///S|/mozilla/layout/html/tests/block/bugs";
   myArray[22] = "s:/regressiontests/";
   myArray[23] = "s:/regressiontests/";
 
-	myArray[24] = "file:///S|/mozilla/layout/html/tests/formctls/bugs";
+  myArray[24] = "file:///S|/mozilla/layout/html/tests/block/printing";
   myArray[25] = "s:/regressiontests/";
   myArray[26] = "s:/regressiontests/";
+
+	
+	// form controls
+  myArray[27] = "file:///S|/mozilla/layout/html/tests/formctls/base";
+  myArray[28] = "s:/regressiontests/";
+  myArray[29] = "s:/regressiontests/";
+
+  myArray[30] = "file:///S|/mozilla/layout/html/tests/formctls/bugs";
+  myArray[31] = "s:/regressiontests/";
+  myArray[32] = "s:/regressiontests/";
 
 
 //=============================================================================
@@ -87,45 +98,45 @@ function CompareFiles(aBaseDir,aVerDir,aBaselineFile,aVerFile)
   var err = embed.CompareLayoutFiles(aBaseDir,aVerDir,aBaselineFile,aVerFile,1);
 
   if(err == 0) {
-    WriteOutput("File \" "+aVerFile + "\" PASSED",false,"success",true,true );
+    WriteOutput("File \" "+aVerFile + "\" PASSED","success");
   } else {
-    WriteOutput("File \" "+aVerFile + "\" FAILED ",false,"failure",true,true );
+    WriteOutput("File \" "+aVerFile + "\" FAILED ","failure");
   }
 }
 
 //=============================================================================
 
-function ClearOutput()
+
+function CompareFiles(aBaseDir,aVerDir,aBaselineFile,aVerFile)
 {
-  var textarea = document.getElementById('output');
-  textarea.innerHTML = "";
+  err = embed.CompareLayoutFiles(aBaseDir,aVerDir,aBaselineFile,aVerFile,1);
+
+  if(err == 0) {
+    WriteOutput("File \" "+aVerFile + "\" PASSED","success");
+  } else {
+    WriteOutput("File \" "+aVerFile + "\" FAILED ","failure");
+  }
 }
 
 //=============================================================================
 
-function WriteOutput( aText, aReplace, aTextColor,aToStatus, aToOutPut )
+function WriteOutput( aText, aTextColor )
 {
 
-  var textarea = document.getElementById('output');
   var statusarea = document.getElementById('status'); 
 
   var thecolor = "<font color=black>";
-  if(aTextColor == "failure")
+  if(aTextColor == "failure") {
     thecolor = "<font color=red>";
-  if(aTextColor == "success")
+  }
+  if(aTextColor == "success") {
     thecolor = "<font color=green>";
-
-  if ( aToStatus ) {
-    statusarea.innerHTML = thecolor + aText +"</font>";
   }
 
-  if (aToOutPut) {
-    if( aReplace ) {
-      textarea.innerHTML = thecolor + aText +"</font>";
-    } else {
-      textarea.innerHTML = thecolor + textarea.innerHTML + "<br>" + aText +"</font>";
-    }
-  }
+  statusarea.innerHTML = thecolor + aText +"</font>";
+
+  embed.OutputTextToFile(0,statusdirectory,statusfilename,aText);
+
 }
 
 //=============================================================================
@@ -173,10 +184,20 @@ function  placeWindows(aOutputWindow,aTestWindow)
   aTestWindow.resizeTo(width,height);
 
   aOutputWindow.focus();
+}
 
-  //aOutputWindow.moveTo(left,top);
-  //aOutputWindow.resizeTo(width,200);
-  //aOutputWindow.scroll(0,1000);
+//=============================================================================
+
+function RestoreWindow(aOutputWindow)
+{
+
+  aOutputWindow.locationbar.visible = lb;
+  aOutputWindow.menubar.visible = mb;
+  aOutputWindow.personalbar.visible = pb;
+  aOutputWindow.scrollbars.visible = sb;
+  aOutputWindow.statusbar.visible = stb;
+  aOutputWindow.toolbar.visible = tb;
+
 }
 
 //=============================================================================
@@ -184,7 +205,7 @@ function  placeWindows(aOutputWindow,aTestWindow)
 function ShowDirectories()
 {
   for(i=0;i<(myArray.length);i+=3){
-    WriteOutput( myArray[i], false, "normal" ,false,true );
+    WriteOutput( myArray[i], "normal" );
   }
 }
 
@@ -192,8 +213,8 @@ function ShowDirectories()
 
 function runTests()
 {
- 
- 	if (document.getElementById('ar').checked ) {
+
+	if (document.getElementById('ar').checked ) {
 		// all
 		startIndex = 0; endIndex = myArray.length;
 	} else if (document.getElementById('tr').checked ) {
@@ -201,10 +222,10 @@ function runTests()
 		startIndex = 0; endIndex = 15;		
 	} else if (document.getElementById('br').checked ) {
 		// base
-		startIndex = 15; endIndex = 21;	
+		startIndex = 18; endIndex = 24;	
 	} else if (document.getElementById('fcr').checked ) {
 		// form controls
-		startIndex = 21; endIndex = 27; 
+		startIndex = 27; endIndex = 33; 
 	}
 	
   // three buttons we use to check the kind of test we run  (rb rv rvc)
@@ -216,10 +237,11 @@ function runTests()
     testType = 2;
   } 
 	
-	ClearOutput();
-	WriteOutput( "Starting Directory Tests",true,"normal",true,false );
+  var now = new Date();
+  embed.OutputTextToFile(1,statusdirectory,statusfilename,"DATE:   "+ now.toLocaleString());
 	curIndex = 0;
 	DumpDirectoryies(testType);
+
 }
 
 //=============================================================================
@@ -228,7 +250,7 @@ function DumpDirectoryies(aTestType)
 {
 
   if ( curIndex == 0) {
-    WriteOutput( "Starting Tests",true,"normal",true,false );
+    WriteOutput( "Starting Tests","normal");
   }
   
   if ( curIndex < endIndex ) {
@@ -251,12 +273,15 @@ function DumpDirectoryies(aTestType)
       err = embed.CreateDirectory(dirURL,0);
     }
 
-    WriteOutput( "New Directory" , false, "normal" ,true, true );
+    WriteOutput( "New Directory: "+fileDirectory , "normal" );
     DumpFrames(true,0,aTestType);
   } else {
     // all completed
+    RestoreWindow(window);
+    WriteOutput( "Finished","normal");
+    var newDate = new Date();
+    embed.OutputTextToFile(0,statusdirectory,statusfilename,"Test Finished at:  "+ newDate.toLocaleString());
     theWindow.close();
-    RestoreWindow();
   }
 }
 
@@ -267,9 +292,6 @@ function DumpFrames(firstTime,lastFile,aTestType)
 var loadingFlag;
 
   if (firstTime == true) {
-    ClearOutput();
-    WriteOutput( "Starting Tests",true,"normal",true,false );
-
     embed.StartDirectorySearch(fileDirectory);
     filename=embed.GetNextFileInDirectory();
     if ( filename != null) {
@@ -296,14 +318,10 @@ var loadingFlag;
       // baseline
       outputfilename = outputfilename.replace (".html",baseExt);
       loading = embed.DumpLayout(theWindow,baseDir,outputfilename,dumpStyle);
-    } else if ((aTestType==2)|| (aTestType==3) ) {
-      // verify
+    } else if ( aTestType==2 ) {
+      // verify and compare
       outputfilename = outputfilename.replace (".html",verExt);
       loading = embed.DumpLayout(theWindow,verDir,outputfilename,dumpStyle);
-    } else if (aTestType==4) {
-      // just compare
-      outputfilename = outputfilename.replace (".html",verExt);
-      loading = 0;
     }
 
     if (loading == 1) {
@@ -313,11 +331,9 @@ var loadingFlag;
       break;
     } else if (loading == 0) {
       // successful in loading the page
-      if ( aTestType<4 ){
-        WriteOutput("Writing File " + "\""+outputfilename+"\"",false,"success",true,true );
-      }
+      WriteOutput("Writing File " + "\""+outputfilename+"\"","success");
 
-      if ( (aTestType==3) || (aTestType==4) ){
+      if ( aTestType==2 ){
         baseline = outputfilename.replace (verExt,baseExt);
         CompareFiles(baseDir,verDir,baseline,outputfilename);
       }
@@ -326,18 +342,12 @@ var loadingFlag;
       if ( filename != null) {
         theWindow.location = filename;
       } else {
-        // all complete
-        if (dirType == 1) {
-          theWindow.close();
-          RestoreWindow();
-        } else {
-          curIndex+=3;
-          DumpDirectoryies(aTestType);
-        }
+        curIndex+=3;
+        DumpDirectoryies(aTestType);
       }
     } else {
       // fatal error.. break
-      WriteOutput("FATAL ERROR" + "\""+outputfilename+"\"",false,"failure",true,true );
+      WriteOutput("FATAL ERROR" + "\""+outputfilename+"\"","failure" );
       break;
     }
   }
@@ -418,7 +428,6 @@ var loadingFlag;
 </center>
 
 <h4 id="status">  OUTPUT IDLE </h4>
-<div id="output" align="left" style="overflow:auto; width:700; height:100; border:solid red">
 </div>
 
 
