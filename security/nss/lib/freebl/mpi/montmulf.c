@@ -30,10 +30,12 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- *  $Id: montmulf.c,v 1.3 2000/12/01 03:58:17 nelsonb%netscape.com Exp $
+ *  $Id: montmulf.c,v 1.4 2000/12/09 03:32:41 nelsonb%netscape.com Exp $
  */
 
-#define RF_INLINE_MACROS
+#ifdef SOLARIS
+#define RF_INLINE_MACROS 1
+#endif
 
 static const double TwoTo16=65536.0;
 static const double TwoToMinus16=1.0/65536.0;
@@ -56,6 +58,11 @@ void i16_to_d16_and_d32x4(const double * /*1/(2^16)*/,
 		          	       converted to float* */);
 
 #else
+#ifdef MP_USE_FLOOR
+#include <math.h>
+#else
+#define floor(d) ((double)((unsigned long long)(d)))
+#endif
 
 static double upper32(double x)
 {
@@ -117,21 +124,20 @@ long long t, t1, a, b, c, d;
  for(i=0; i<ilen-1; i++)
    {
      c=(long long)d16[2*i+2];
-     t1+=a&0xffffffff;
+     t1+=(unsigned int)a;
      t=(a>>32);
      d=(long long)d16[2*i+3];
      t1+=(b&0xffff)<<16;
      t+=(b>>16)+(t1>>32);
-     i32[i]=t1&0xffffffff;
+     i32[i]=(unsigned int)t1;
      t1=t;
      a=c;
      b=d;
    }
-     t1+=a&0xffffffff;
-     t=(a>>32);
-     t1+=(b&0xffff)<<16;
-     i32[i]=t1&0xffffffff;
-
+ t1+=(unsigned int)a;
+ t=(a>>32);
+ t1+=(b&0xffff)<<16;
+ i32[i]=(unsigned int)t1;
 }
 
 void conv_i32_to_d32(double *d32, unsigned int *i32, int len)
@@ -201,7 +207,7 @@ int i;
      for(i=0;i<len;i++)
        {
 	 acc=acc+(unsigned long long)(i32[i])-(unsigned long long)(nint[i]);
-	 i32[i]=acc&0xffffffff;
+	 i32[i]=(unsigned int)acc;
 	 acc=acc>>32;
        }
    }
