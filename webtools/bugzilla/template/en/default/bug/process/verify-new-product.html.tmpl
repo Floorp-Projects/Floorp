@@ -32,8 +32,6 @@
   #   the target milestone field
   #%]
  
-[% USE mycgi = CGI %]
-
 <form action="process_bug.cgi" method="post">
 
 [% PROCESS "global/hidden-fields.html.tmpl" 
@@ -59,16 +57,16 @@
     <tr>
       <td>
         <b>Version:</b><br>
-        [% mycgi.popup_menu(Name => "version" , Values => versions) %]
+        [% PROCESS "global/select-menu.html.tmpl" name="version" options=versions %]
       </td>
       <td>
         <b>Component:</b><br>
-        [% mycgi.popup_menu(Name => "component" , Values => components) %]
+        [% PROCESS "global/select-menu.html.tmpl" name="component" options=components %]
       </td>
       [% IF use_target_milestone %]
         <td>
           <b>Target Milestone:</b><br>
-          [% mycgi.popup_menu(Name => "target_milestone" , Values => milestones) %]
+        [% PROCESS "global/select-menu.html.tmpl" name="target_milestone" options=milestones %]
         </td>
       [% END %]
     </tr>
