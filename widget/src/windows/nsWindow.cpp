@@ -1737,7 +1737,15 @@ void nsWindow::OnDestroy()
         NS_RELEASE(mToolkit);
         mToolkit = NULL;
     }
-    DispatchStandardEvent(NS_DESTROY);
+
+    if (!mIsDestroying) {
+      // Dispatching of the event may cause the reference count to drop to 0
+      // and result in this object being destroyed. To avoid that, add a reference
+      // and then release it after dispatching the event
+      AddRef();
+      DispatchStandardEvent(NS_DESTROY);
+      Release();
+    }
 }
 
 //-------------------------------------------------------------------------
