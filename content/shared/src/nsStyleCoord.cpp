@@ -180,12 +180,6 @@ void nsStyleCoord::SetAutoValue(void)
   mValue.mInt = 0;
 }
 
-void nsStyleCoord::SetInheritValue(void)
-{
-  mUnit = eStyleUnit_Inherit;
-  mValue.mInt = 0;
-}
-
 void nsStyleCoord::SetUnionValue(const nsStyleUnion& aValue, nsStyleUnit aUnit)
 {
   mUnit = aUnit;
@@ -218,7 +212,6 @@ void nsStyleCoord::AppendToString(nsString& aBuffer) const
     case eStyleUnit_Factor:       aBuffer.Append(NS_LITERAL_STRING("f"));        break;
     case eStyleUnit_Normal:       aBuffer.Append(NS_LITERAL_STRING("Normal"));   break;
     case eStyleUnit_Auto:         aBuffer.Append(NS_LITERAL_STRING("Auto"));     break;
-    case eStyleUnit_Inherit:      aBuffer.Append(NS_LITERAL_STRING("Inherit"));  break;
     case eStyleUnit_Proportional: aBuffer.Append(NS_LITERAL_STRING("*"));        break;
     case eStyleUnit_Enumerated:   aBuffer.Append(NS_LITERAL_STRING("enum"));     break;
     case eStyleUnit_Integer:      aBuffer.Append(NS_LITERAL_STRING("int"));      break;

@@ -155,13 +155,7 @@ nsBlockReflowContext::AlignBlockHorizontally(nscoord                 aWidth,
 
   // Get style unit associated with the left and right margins
   nsStyleUnit leftUnit = mStyleMargin->mMargin.GetLeftUnit();
-  if (eStyleUnit_Inherit == leftUnit) {
-    leftUnit = GetRealMarginLeftUnit();
-  }
   nsStyleUnit rightUnit = mStyleMargin->mMargin.GetRightUnit();
-  if (eStyleUnit_Inherit == rightUnit) {
-    rightUnit = GetRealMarginRightUnit();
-  }
 
   // Apply post-reflow horizontal alignment. When a block element
   // doesn't use it all of the available width then we need to
@@ -751,42 +745,4 @@ nsBlockReflowContext::PlaceBlock(const nsHTMLReflowState& aReflowState,
   }
 
   return fits;
-}
-
-// If we have an inherited margin its possible that its auto all the
-// way up to the top of the tree. If that is the case, we need to know
-// it.
-nsStyleUnit
-nsBlockReflowContext::GetRealMarginLeftUnit()
-{
-  nsStyleUnit unit = eStyleUnit_Inherit;
-  nsStyleContext* sc = mFrame->GetStyleContext();
-  while (sc && eStyleUnit_Inherit == unit) {
-    // Get parent style context
-    sc = sc->GetParent();
-    if (sc) {
-      const nsStyleMargin* margin = sc->GetStyleMargin();
-      unit = margin->mMargin.GetLeftUnit();
-    }
-  }
-  return unit;
-}
-
-// If we have an inherited margin its possible that its auto all the
-// way up to the top of the tree. If that is the case, we need to know
-// it.
-nsStyleUnit
-nsBlockReflowContext::GetRealMarginRightUnit()
-{
-  nsStyleUnit unit = eStyleUnit_Inherit;
-  nsStyleContext* sc = mFrame->GetStyleContext();
-  while (sc && eStyleUnit_Inherit == unit) {
-    // Get parent style context
-    sc = sc->GetParent();
-    if (sc) {
-      const nsStyleMargin* margin = sc->GetStyleMargin();
-      unit = margin->mMargin.GetRightUnit();
-    }
-  }
-  return unit;
 }

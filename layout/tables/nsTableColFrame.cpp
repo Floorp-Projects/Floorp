@@ -107,15 +107,9 @@ nsTableColFrame::SetIsAnonymous(PRBool aIsAnonymous)
 // XXX what about other style besides width
 nsStyleCoord nsTableColFrame::GetStyleWidth() const
 {
-  const nsStylePosition* position = GetStylePosition();
-  nsStyleCoord styleWidth = position->mWidth;
-  // the following is necessary because inheritance happens on computed
-  // values, which the style system does not know.
-  if (eStyleUnit_Auto == styleWidth.GetUnit() ||
-      eStyleUnit_Inherit == styleWidth.GetUnit()) {
-    nsIFrame* parent = GetParent();
-    position = parent->GetStylePosition();
-    styleWidth = position->mWidth;
+  nsStyleCoord styleWidth = GetStylePosition()->mWidth;
+  if (eStyleUnit_Auto == styleWidth.GetUnit()) {
+    styleWidth = GetParent()->GetStylePosition()->mWidth;
   }
 
   nsStyleCoord returnWidth;

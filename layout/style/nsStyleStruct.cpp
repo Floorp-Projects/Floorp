@@ -76,45 +76,6 @@ inline nscoord CalcSideFor(const nsIFrame* aFrame, const nsStyleCoord& aCoord,
       // Auto margins are handled by layout
       break;
 
-    case eStyleUnit_Inherit:
-      // XXX may not be direct parent...
-      if (parentFrame) {
-        nsStyleContext* parentContext = parentFrame->GetStyleContext();
-        if (nsnull != parentContext) {
-          nsMargin  parentSpacing;
-          switch (aSpacing) {
-            case NS_SPACING_MARGIN:
-              {
-                const nsStyleMargin* parentMargin = parentContext->GetStyleMargin();
-                parentMargin->CalcMarginFor(parentFrame, parentSpacing);  
-              }
-
-              break;
-            case NS_SPACING_PADDING:
-              {
-                const nsStylePadding* parentPadding = parentContext->GetStylePadding();
-                parentPadding->CalcPaddingFor(parentFrame, parentSpacing);  
-              }
-
-              break;
-            case NS_SPACING_BORDER:
-              {
-                const nsStyleBorder* parentBorder = parentContext->GetStyleBorder();
-                parentBorder->CalcBorderFor(parentFrame, parentSpacing);  
-              }
-
-              break;
-          }
-          switch (aSide) {
-            case NS_SIDE_LEFT:    result = parentSpacing.left;   break;
-            case NS_SIDE_TOP:     result = parentSpacing.top;    break;
-            case NS_SIDE_RIGHT:   result = parentSpacing.right;  break;
-            case NS_SIDE_BOTTOM:  result = parentSpacing.bottom; break;
-          }
-        }
-      }
-      break;
-
     case eStyleUnit_Percent:
       {
         nscoord baseWidth = 0;

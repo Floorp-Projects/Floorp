@@ -106,9 +106,6 @@ public:
                            /* inout */  nsCollapsingMargin& aMargin);
 
 protected:
-  nsStyleUnit GetRealMarginLeftUnit();
-  nsStyleUnit GetRealMarginRightUnit();
-
   nsIPresContext* mPresContext;
   const nsHTMLReflowState& mOuterReflowState;
 
