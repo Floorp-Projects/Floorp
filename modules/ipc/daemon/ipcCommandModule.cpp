@@ -56,14 +56,14 @@ public:
     // message handlers
     //
 
-    void handlePing(ipcClient *client, const ipcMessage *rawMsg)
+    void OnPing(ipcClient *client, const ipcMessage *rawMsg)
     {
         LOG(("got PING\n"));
 
         IPC_SendMsg(client, new ipcmMessagePing());
     }
 
-    void handleClientHello(ipcClient *client, const ipcMessage *rawMsg)
+    void OnClientHello(ipcClient *client, const ipcMessage *rawMsg)
     {
         LOG(("got CLIENT_HELLO\n"));
 
@@ -75,7 +75,23 @@ public:
         IPC_SendMsg(client, new ipcmMessageClientID(client->ID()));
     }
 
-    void handleForward(ipcClient *client, const ipcMessage *rawMsg)
+    void OnQueryClientByName(ipcClient *client, const ipcMessage *rawMsg)
+    {
+        LOG(("got QUERY_CLIENT_BY_NAME\n"));
+
+        ipcMessageCast<ipcmMessageQueryClientByName> msg(rawMsg);
+        ipcClient *result = IPC_GetClientByName(msg->Name());
+        if (result) {
+            LOG(("  client exists w/ ID = %u\n", result->ID()));
+            IPC_SendMsg(client, new ipcmMessageClientID(result->ID()));
+        }
+        else {
+            LOG(("  client does not exist\n"));
+            IPC_SendMsg(client, new ipcmMessageError(IPCM_ERROR_CLIENT_NOT_FOUND));
+        }
+    }
+
+    void OnForward(ipcClient *client, const ipcMessage *rawMsg)
     {
         LOG(("got FORWARD\n"));
 
@@ -106,19 +122,19 @@ public:
     {
         static MsgHandler handlers[] =
         {
-            &ipcCommandModule::handlePing,
+            &ipcCommandModule::OnPing,
             NULL, // ERROR
-            &ipcCommandModule::handleClientHello,
+            &ipcCommandModule::OnClientHello,
             NULL, // CLIENT_ID
             NULL, // CLIENT_INFO
             NULL, // CLIENT_ADD_NAME
             NULL, // CLIENT_DEL_NAME
             NULL, // CLIENT_ADD_TARGET
             NULL, // CLIENT_DEL_TARGET
-            NULL, // QUERY_CLIENT_BY_NAME
+            &ipcCommandModule::OnQueryClientByName,
             NULL, // QUERY_CLIENT_INFO
             NULL, // QUERY_FAILED
-            &ipcCommandModule::handleForward,
+            &ipcCommandModule::OnForward,
         };
 
         int type = IPCM_GetMsgType(rawMsg);

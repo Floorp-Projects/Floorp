@@ -49,10 +49,33 @@
 #include "nsHashtable.h"
 
 //----------------------------------------------------------------------------
+// ipcClientInfo
+//----------------------------------------------------------------------------
+
+class ipcClientInfo : public ipcIClientInfo
+{
+public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_IPCICLIENTINFO
+
+    ipcClientInfo() : mID(0) { NS_INIT_ISUPPORTS(); }
+    virtual ~ipcClientInfo() {}
+
+    void Init(PRUint32 cID, const nsACString &cName)
+    {
+        mID = cID;
+        mName = cName;
+    }
+
+private:
+    PRUint32  mID;
+    nsCString mName;
+};
+
+//----------------------------------------------------------------------------
 // ipcClientQuery
 //----------------------------------------------------------------------------
 
-/*
 class ipcClientQuery
 {
 public:
@@ -62,10 +85,12 @@ public:
         { }
 
     ipcClientQuery              *mNext;
+    nsCString                    mName;
     PRUint32                     mReqToken;
     nsCOMPtr<ipcIClientObserver> mObserver;
 };
-*/
+
+typedef ipcQueue<ipcClientQuery> ipcClientQueryQ;
 
 //----------------------------------------------------------------------------
 // ipcService
@@ -84,16 +109,21 @@ public:
     nsresult Init();
 
 private:
+    nsresult ErrorAccordingToIPCM(PRUint32 err);
+    void     HandleQueryResult(const ipcMessage *, PRBool succeeded); 
+
     // ipcTransportObserver:
     void OnConnectionEstablished(PRUint32 clientID);
     void OnConnectionLost();
     void OnMessageAvailable(const ipcMessage *);
 
+    static PRUint32 gLastReqToken;
+
     nsHashtable     mObserverDB;
     ipcTransport   *mTransport;
     PRUint32        mClientID;
 
-    //ipcClientQuery *mQueryQ;
+    ipcClientQueryQ mQueryQ;
 };
 
 #endif // !ipcService_h__

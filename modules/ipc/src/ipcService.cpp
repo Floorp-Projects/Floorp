@@ -44,7 +44,12 @@
 #include "ipcConfig.h"
 #include "ipcLog.h"
 #include "ipcService.h"
+#include "ipcMessageUtils.h"
 #include "ipcm.h"
+
+//-----------------------------------------------------------------------------
+// helpers
+//-----------------------------------------------------------------------------
 
 static PRBool PR_CALLBACK
 ipcReleaseMessageObserver(nsHashKey *aKey, void *aData, void* aClosure)
@@ -55,8 +60,42 @@ ipcReleaseMessageObserver(nsHashKey *aKey, void *aData, void* aClosure)
 }
 
 //-----------------------------------------------------------------------------
+// ipcClientInfo
+//-----------------------------------------------------------------------------
+
+NS_IMPL_ISUPPORTS1(ipcClientInfo, ipcIClientInfo)
+
+NS_IMETHODIMP
+ipcClientInfo::GetID(PRUint32 *aID)
+{
+    *aID = mID;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+ipcClientInfo::GetName(nsACString &aName)
+{
+    aName = mName;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+ipcClientInfo::GetAliases(nsISimpleEnumerator **aliases)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+ipcClientInfo::GetTargets(nsISimpleEnumerator **targets)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+//-----------------------------------------------------------------------------
 // ipcService
 //-----------------------------------------------------------------------------
+
+PRUint32 ipcService::gLastReqToken = 0;
 
 ipcService::ipcService()
     : mTransport(nsnull)
@@ -114,6 +153,39 @@ ipcService::Init()
     return NS_OK;
 }
 
+void
+ipcService::HandleQueryResult(const ipcMessage *rawMsg, PRBool succeeded)
+{
+    ipcClientQuery *query = mQueryQ.First();
+    if (!query) {
+        NS_ERROR("no pending query; ignoring message.");
+        return;
+    }
+
+    PRUint32 cStatus;
+    ipcClientInfo *info;
+
+    if (succeeded) {
+        cStatus = ipcIClientObserver::CLIENT_UP;
+
+        ipcMessageCast<ipcmMessageClientID> msg(rawMsg);
+        info = new ipcClientInfo();
+        if (info) {
+            NS_ADDREF(info);
+            info->Init(msg->ClientID(), query->mName);
+        }
+    }
+    else {
+        cStatus = ipcIClientObserver::CLIENT_DOWN;
+        info = nsnull;
+    }
+
+    query->mObserver->OnClientStatus(query->mReqToken, info, cStatus);
+
+    NS_IF_RELEASE(info);
+    mQueryQ.DeleteFirst();
+}
+
 //-----------------------------------------------------------------------------
 // interface impl
 //-----------------------------------------------------------------------------
@@ -164,6 +236,11 @@ ipcService::QueryClientByName(const nsACString &name,
     //
     // now queue up the observer and generate a token.
     //
+    ipcClientQuery *query = new ipcClientQuery();
+    query->mName = name;
+    query->mReqToken = *token = ++gLastReqToken;
+    query->mObserver = observer;
+    mQueryQ.Append(query);
     return NS_OK;
 }
 
@@ -240,17 +317,35 @@ ipcService::OnConnectionEstablished(PRUint32 clientID)
 void
 ipcService::OnConnectionLost()
 {
+    //
+    // XXX error out any pending queries
+    //
+ 
     mClientID = 0;
 }
 
 void
 ipcService::OnMessageAvailable(const ipcMessage *msg)
 {
-    nsIDKey key(msg->Target());
-
-    ipcIMessageObserver *observer = (ipcIMessageObserver *) mObserverDB.Get(&key);
-    if (observer)
-        observer->OnMessageAvailable(msg->Target(),
-                                     msg->Data(),
-                                     msg->DataLen());
+    if (msg->Target().Equals(IPCM_TARGET)) {
+        //
+        // all IPCM messages stop here.
+        //
+        switch (IPCM_GetMsgType(msg)) {
+        case IPCM_MSG_TYPE_CLIENT_ID:
+            HandleQueryResult(msg, PR_TRUE);
+            break;
+        case IPCM_MSG_TYPE_ERROR:
+            HandleQueryResult(msg, PR_FALSE);
+            break;
+        }
+    }
+    else {
+        nsIDKey key(msg->Target());
+        ipcIMessageObserver *observer = (ipcIMessageObserver *) mObserverDB.Get(&key);
+        if (observer)
+            observer->OnMessageAvailable(msg->Target(),
+                                         msg->Data(),
+                                         msg->DataLen());
+    }
 }

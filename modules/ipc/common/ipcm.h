@@ -59,7 +59,6 @@ enum {
     IPCM_MSG_TYPE_CLIENT_DEL_TARGET,
     IPCM_MSG_TYPE_QUERY_CLIENT_BY_NAME,
     IPCM_MSG_TYPE_QUERY_CLIENT_INFO,
-    IPCM_MSG_TYPE_QUERY_FAILED,
     IPCM_MSG_TYPE_FORWARD,
     IPCM_MSG_TYPE_UNKNOWN // unknown message type
 };
@@ -123,6 +122,10 @@ public:
         : ipcMessage_DWORD_DWORD(IPCM_TARGET, MSG_TYPE, reason) {}
 
     PRUint32 Reason() const { return Second(); }
+};
+
+enum {
+    IPCM_ERROR_CLIENT_NOT_FOUND = 1
 };
 
 //
