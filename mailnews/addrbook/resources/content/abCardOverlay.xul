@@ -33,9 +33,9 @@ Rights Reserved.
 
 	<tabcontrol align="vertical" style="margin:5px">
 	   <tabbox id="abTabBox" align="horizontal">
-	      <tab selected="true"><text value="&Name.tab;"/></tab>
-	      <tab><text value="&Address.tab;"/></tab>
-	      <tab><text value="&Other.tab;"/></tab>
+	      <tab selected="true" value="&Name.tab;"/>
+	      <tab value="&Address.tab;"/>
+	      <tab value="&Other.tab;"/>
 		  <spring flex="1"/>
 	   </tabbox>
 	   
