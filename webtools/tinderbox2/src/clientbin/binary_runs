@@ -1,0 +1,63 @@
+#!#perl# #perlflags# --
+# -*- Mode: perl; indent-tabs-mode: nil -*-
+#
+
+# binary_runs - exits with a zero exit code if the binary given on the
+# command line runs for several seconds, otherwise exits with a
+# nonzero exit code.  This is a tool to be run in the Makefile,
+# usually by 'make test'.
+
+
+my (@Binary) = @ARGV;
+ 
+my ($waittime) = 30;
+ 
+my ($pid) = fork;
+ 
+# check that the fork worked
+
+( defined($pid) ) ||
+  die("$0: Could not fork");
+ 
+
+
+# child will become the application
+
+($pid) ||
+  exec(@Binary) ||
+  die("$0: Could not exec $Binary");
+
+
+
+# parent - wait $waittime seconds then check on child
+
+sleep $waittime;
+my ($status) = waitpid $pid, WNOHANG();
+($status) &&
+  die("$0: @Binary has crashed or quit. Turn the tree orange now.\n");
+
+
+print "$0: Success! @Binary is still running. Killing.\n";
+
+
+# try to kill 3 times, then try a kill -9
+my ($status);
+for ($i=0 ; $i<3 ; $i++) {
+  kill 'TERM',$pid;
+
+  # give it 3 seconds to actually die
+  sleep 3;
+
+  my ($status) = waitpid $pid, WNOHANG();
+  ($status) && 
+    last;
+}
+
+if ( $status == 0 ) {
+  sleep 3;
+  kill 'KILL',$pid;
+  sleep 3;
+} 
+
+exit 0;
+ 

@@ -1,0 +1,637 @@
+#!#perl# #perlflags# --
+# -*- Mode: perl; indent-tabs-mode: nil -*-
+#
+
+
+# The contents of this file are subject to the Mozilla Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/NPL/
+#
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+#
+# The Original Code is the Tinderbox build tool.
+#
+# The Initial Developer of the Original Code is Netscape Communications
+# Corporation. Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation. All
+# Rights Reserved.
+#
+
+# complete rewrite by Ken Estes, Mail.com (kestes@staff.mail.com).
+# Contributor(s): 
+
+# $Revision: 1.1 $
+# $Date: 2001/02/27 15:43:04 $
+# $Author: kestes%tradinglinx.com $
+# $Name:  $
+
+
+# load standard perl libraries
+
+use File::Basename;
+use Getopt::Long;
+use Sys::Hostname;
+
+
+# Tinderbox libraries
+
+#  The build script does not use the normal tinderbox libraries, it
+#  does need its own local configuration file though.  We find that
+#  file via the normal libarary search path.
+
+use lib '#tinder_libdir#';
+
+
+sub usage {
+
+  my ($usage) = <<"EOF";
+
+	$PROGRAM [options]
+
+Global Options:
+(These options apply to all builds)
+
+  --once                 Do not loop repeadly.
+  --noreport             Do not mail status reorts to the tinderbox server.
+  --test                 Print the build commands, do not run the build 
+			     commands or mail logs.
+  --build BUILDNAME      The name of the build type to run
+  --buildcf FILENAME     Provide a config file instead of the default: '$BUILDCF'.
+  --mailer MAILER        Specify a different binary to use as the mailing 
+                             program.  The default is: '$MAILER'.
+  --version              Print the version number (same as cvs revision).
+  --help                 view this help screen
+
+
+Build Options:
+(These depend on how you configure your builds and may not apply to 
+   your configuration.  They are listed here as a suggestion only.)
+
+  --depend               Build depend (must have this option or clobber).
+  --clobber              Build clobber (the oposite of depend).
+  --tag TREETAG          Checkout CVS sources by tag (-r TREETAG).
+  --tree TREENAME        Checkout CVS sources with module name TREENAME
+
+Summary:
+
+This program is an automated build client for the tinderbox server.
+Builds run continually and the build log file is mailed to tinderbox
+for analysis and display.  This script assumes that the hard work in
+building the application is taken care of by developer supplied
+scripts (shell/Make).  We are assuming that the effort involved in
+performing a build is similar to:
+
+	builddir=/tmp/build
+	rm -rf \$builddir
+	mkdir \$builddir
+	cd \$builddir
+	cvs checkout Project
+	cd \$project
+	./configure
+	make all
+	make test
+
+A 'build' is a list (straight line) of commands run in sequence.
+Different lists of commands will have different names.  Notice that
+there is a clear separation between the commands used to build the
+software and the developer provided scripts which perform the build
+(Makefiles, configuration scripts, developer provided build scripts).
+Developers are responsible for ensuring that they keep their project
+related build scripts up to date so that the build interface does not
+change too rapidly.  The for a given project the build should always
+be performed using the same commands and any complex build processing
+should be performed inside developer maintained scripts (shell, perl
+Makefile).
+
+Different sequences of build instructions have different 'build
+names'.  How you name your builds depends on the type of build testing
+you are performing.  You may have architecture build names:
+(Macintosh, Solaris, NT,) or project/subsystem specific build names
+(Sendmail, SeaMonkey, Apache).
+
+What make this a bit compilcated is that several different parameters
+(clobber/dep, the branch name to checkout from version control,
+optimize/debug compilation flags, other application specific compile
+time flags) will likely be tested by the same build script so our
+notion of build must become flexible and encompass families of builds.
+This build script will preserve any arguments on the command line
+after the string '--' for use by the user supplied program which
+defines the builds.
+
+It is assumed that each line in the build script can be safely
+executed in its own shell and that if any command fails it will exit
+with a non zero exit code.  Failed builds are started again from the
+beginning during the next build cycle.
+
+The build script can be examined by running this program with the
+'--test' argument.  This will ensure that no commands are actually run
+but the list of commands that would be run when the '--test' argument
+is removed is sent to STDOUT for examination.
+
+Before the logs can be mailed to tinderbox there must be information
+discribing how to display this information.  Tinderbox maintains two
+variables for this purpose.  The tinderbox tree name picks which web
+page the information will be displayed on.  The tinderbox build name
+is the name used for the column that the data will be displayed in.
+Typically there is one deamon running continually for each column. It
+may be clearer to have different build names display on the tinderbox
+columns then are used by this build script.
+
+Users should provide functions which prepare the tinderbox tree and
+build name based on both the command line arguments and the
+environment.  These functions will need to return strings which are
+meaningful and informative for your local environment.
+
+
+
+EOF
+  ;
+
+print $usage;
+exit 0;
+
+}
+
+
+sub set_static_vars {
+
+  # This functions sets all the static variables which are often
+  # configuration parameters.  Since it only sets variables to static
+  # quantites it can not fail at run time. Some of these variables are
+  # adjusted by parse_args() but asside from that none of these
+  # variables are ever written to. All global variables are defined here
+  # so we have a list of them and a comment of what they are for.
+  
+  # Maximum length of a mail line imposed by your mailer.
+
+  $MAX_MAIL_LINE_LEN = 1000;
+  
+  # These are useful mailers for testing
+
+  # $MAILER = '/bin/true';
+  # $MAILER = 'cat > /tmp/mail.out';
+
+  # Usually we send mail to the tinderbox webserver but it is possible
+  # to deliver mail directly if the build is running on the same
+  # machine as the server.
+
+  $MAILER = '/usr/lib/sendmail -t';
+  $MAILER = '/export/home/tinderbox2/bin/processmail_builds';
+
+  $ERROR_LOG= "/var/log/tinderbox2/build.log";
+
+  $BUILDCF = "buildcf";
+
+  # minimum time between the start of consecutive builds.  Tinderbox
+  # requires this to be grater then 5 mintues.
+
+  $MINIMUM_BUILD_MINUTES = 8;
+
+  @ORIG_ARGV = @ARGV;
+
+  # accept the path from our environment.
+  
+  #  $ENV{'PATH'}= (
+  #                 '/bin'.
+  #                 ':/usr/bin'.
+  #                 ':/usr/local/bin'.
+  #                 
+  #                 ':/opt/gnu/bin'.
+  #                 ':/usr/ucb'.
+  #                 ':/usr/ccs/bin'.
+  #                 '');
+  
+  # taint perl requires we clean up these bad environmental variables
+  # and it dos not hurt to do it here.
+
+  delete @ENV{'IFS', 'CDPATH', 'ENV', 'BASH_ENV', 'LD_PRELOAD'};
+
+  # the version number of this tinderbox release.
+
+  $VERSION = '#tinder_version#';
+
+  return 1;
+}
+
+
+sub get_env {
+
+# this function sets variables similar to set_static variables.  This
+# function may fail only if the OS is in a very strange state.  after
+# we leave this function we should be all set up to give good error
+# handling, should things fail.
+
+# This function should run as early as possible (directly after
+# set_static_vars) so that the error environment is setup incase of
+# problems.
+
+  $| = 1;
+  $PROGRAM = File::Basename::basename($0);
+  $PID = $$; 
+  $TIME = time();
+  $LOCALTIME = localtime($main::TIME);
+
+  $OS = $^O;
+  $HOSTNAME = Sys::Hostname::hostname();
+
+  open (LOG , ">>$ERROR_LOG") ||
+    die("Could not open logfile: $ERROR_LOG\n");
+
+
+  $SIG{'__DIE__'} = \&fatal_error;
+  $SIG{'__WARN__'} = \&log_warning;
+
+  return 1;
+}
+
+
+
+sub fatal_error {
+  my  @error = @_;
+  foreach $_ (@error) {
+    print LOG "[$LOCALTIME] $_";
+  }
+  print LOG "\n";
+
+  die("\n");
+}
+
+
+sub log_warning {
+  my  @error = @_;
+
+  foreach $_ (@error) {
+    print LOG "[$LOCALTIME] $_";
+  }
+
+  return ;
+}
+
+
+
+sub parse_args {
+
+    %option_linkage = (
+		       "version" => \$version,
+		       "help" => \$help,
+		       "build" => \$BUILD_NAME,
+		       "test" => \$TEST,
+		       "mail-each-phase" => \$MAIL_EACH_PHASE,
+		       "noreport" => \$NO_REPORT,
+		       "mailer" => \$MAILER,
+		       "buildcf" => \$BUILDCF,
+		       "once" => \$BUILD_ONCE,
+		      );
+    
+    Getopt::Long::config('require_order', 'auto_abbrev', 'ignore_case');
+
+    if( !GetOptions (\%option_linkage,
+		     "version", "help", 
+		     "build=s", "test!", "once",
+		     "mail-each-phase", "noreport!", "mailer=s", "buildcf=s",
+		    ) ) {
+
+      print("Illegal options in \@ARGV: '@ARGV'\n");
+      usage();
+      exit 1 ;
+    }
+
+    if($version) {
+      print "Version: $VERSION\n";
+      exit 0;  
+    }
+    
+    if ($help) {
+      usage();
+    }
+    
+    ($TEST) &&
+      ($BUILD_ONCE = 1);
+
+    (@CMD_LOG) =();
+
+
+    return 1;  
+} # parse_args
+
+
+sub set_server_args {
+
+  %args = (
+	   buildname => $BUILD_NAME,
+	   hostname => $HOSTNAME,
+	   program =>   $PROGRAM, 
+	   os =>	$OS,
+	   argv => [@ARGV],
+	  );
+
+  # need to load UserDef from buildcf
+
+  UserDef::build_environment(%args);
+  $BUILDS = UserDef::build_scripts(%args);
+  $SERVER_TREE_NAME = UserDef::tree_name(%args);
+  $SERVER_BUILD_NAME = UserDef::build_name(%args);
+  $SERVER_ERROR_PARSER = UserDef::error_parser_name(%args);
+  
+
+  # person responsible for the build machines.
+  $ADMINISTRATOR = UserDef::build_administrator();
+
+  $MAIL_FROM = UserDef::mail_from();
+  $MAIL_TO = UserDef::mail_to();
+
+  check_builds();
+
+  ($SERVER_TREE_NAME) ||
+    die("Must define a tree name.\n");
+  
+  ($SERVER_BUILD_NAME) ||
+    die("Must define a build name.\n");
+
+  ($SERVER_ERROR_PARSER) ||
+    die("Must define an error parser.\n");
+  
+  ($ADMINISTRATOR) ||
+    die("Must define a build adminstrator.\n");
+
+  ($MAIL_FROM) ||
+    die("Must define a mailing address to send builds to.\n");
+
+  ($MAIL_TO) ||
+    die("Must define an account to have the builds be sent from.\n");
+
+
+  return 1;  
+}
+
+
+# Ensure that user defined build structure has all the manditory
+# parts.
+
+sub check_builds {
+
+  foreach $build_name (sort keys %BUILDS) {
+    foreach $i (0..$#{ $BUILDS{$build_name} }) {
+
+      $phase = $BUILDS{$build_name}[$i];
+      my ($dir) = $phase->{'dir'};
+      my ($error_status) = $phase->{'error_status'};
+      my ($phase_name) = $phase->{'phase_name'};
+      
+      ($phase_name) ||
+	die("phase_name not defined ".
+	    "in build: $build_name, phase: $i\n");
+      
+      ($dir) ||
+	die("dir not defined ".
+	    "in build: $build_name, phase: $phase_name,\n");
+
+      ($dir =~ m!^/!) ||
+	die("dir does not specify an absolute path ".
+	    "in build: $build_name, phase: $phase_name,\n");
+
+      ($error_status) ||
+	die("error_status not defined ".
+	    "in build: $build_name, phase: $phase_name,\n");
+
+      ($error_status eq 'success') ||
+	die("error_status can not be set to 'success' ".
+	    "in build: $build_name, phase: $phase_name,\n");
+
+    }
+  }
+
+  return 1;
+}
+
+# Send mail to the tinderbox server notifying it of a completed build
+# sequence.
+
+sub mail_tinderbox_cmdlog {
+  my ($build_status) = @_;    
+
+  $TIME = time();
+  $LOCAL_TIME = localtime($TIME);
+  
+  #    ($SERVER_TREE_NAME && $BUILD_NAME) ||
+  #	die("mail_tinderbox_cmdlog requires both".
+  #	    " TreeName and BuildName.\n");
+
+
+  my ($message) = <<"EOF";
+
+
+From: $MAIL_FROM
+To: $MAIL_TO
+Subject: Tinderbox Build Update 
+
+
+tinderbox: tree: $SERVER_TREE_NAME
+tinderbox: buildname: $SERVER_BUILD_NAME 
+tinderbox: starttime: $START_TIME
+tinderbox: localstarttime: $LOCAL_START_TIME
+tinderbox: timenow: $TIME
+tinderbox: localtimenow: $LOCAL_TIME
+tinderbox: errorparser: $SERVER_ERROR_PARSER
+tinderbox: status: $build_status
+tinderbox: administrator: $ADMINISTRATOR
+tinderbox: END
+
+
+@CMD_LOG
+
+
+EOF
+  ;
+
+  # Split lines into less than 1000 char/line, many
+  # mail systems (sendmail) require this.
+
+  $message =~ s/([^\n]{$MAX_MAIL_LINE_LEN})/$1\n/g;    
+
+  # If any line is a dot on a line by itself, replace
+  # that with a blank line. This is to prevent cases
+  # where a <cr>.<cr> occurs in the log file.  Sendmail
+  # interprets that as the end of the mail, and
+  # truncates the log before it gets to Tinderbox.
+      
+  $message =~ s/^\.$/\.\./mg;
+
+  # If we are testing then @CMD_LOG contains the list of commands we
+  # would have executed. This is where they get printed. We do not
+  # need to mail the tinderbox server because the log is really
+  # empty.
+
+  if ( ($NO_REPORT) || ($TEST) ){
+    print $message;
+    return 1;
+  }	
+  
+  my ($pid) = open(MAIL, "|-");
+  
+  # did we fork a new process?
+  
+  defined ($pid) || 
+    die("Could not fork for cmd: '$MAILER': $!\n");
+  
+  # If we are the child exec. 
+  # Remember the exec function returns only if there is an error.
+  
+  ($pid) ||
+    exec($MAILER) || 
+      die("Could not exec: '$MAILER': $!\n");
+
+  print MAIL $message;
+
+  close(MAIL) or
+    ($?) or
+      die("Could not close '$MAILER': $!\n");
+    
+  ($?) &&
+    die("Could not close '$MAILER' wait_status: $? : $!\n");
+
+  return 1;
+}
+
+# Run one phase of the build process and report the status, stop if
+# any command fails.
+
+sub run_shell_commands {
+  my ($phase) = @_;
+  
+  my ($dir) = $phase->{'dir'};
+  my ($error_status) = $phase->{'error_status'};
+  my ($phase_name) = $phase->{'phase_name'};
+  
+  my $shell_status;
+  
+  ($TEST) ||
+    chdir($dir) || 
+      die("Could not chdir to $dir): $!\n");
+
+  push @CMD_LOG, ("\n>--- Starting Phase: $phase_name  ".
+		  "(in dir: $dir) ---<\n\n");
+  
+  foreach $shell_command (@{ $phase->{'script'} }) {
+    
+    chomp($shell_command);
+    $shell_command =~ s/\#.*//;
+    
+    $shell_command =~ s/\s+/ /g;
+    $shell_command =~ s/^\s+//;
+    $shell_command =~ s/\s+$//;
+    
+    ($shell_command =~ m/^\s+$/) && 
+      next;
+    
+    push @CMD_LOG, ("> $shell_command\n");
+    
+    # If we are testing do not run the commands, just add them to
+    # the build log.
+    
+    ($TEST) && 
+      next;
+
+    # I should replace this open() with an accept() so that if the
+    # command takes 30 minutes to run we can still send log updates to
+    # the tinderbox server every 10 minutes.
+    
+    open(CMD, "$shell_command 2>&1 |") or 
+      die("Could not run '$shell_command': $!\n");
+    
+    my (@results) = <CMD>;
+    
+    push @CMD_LOG, (@results);
+    
+    close(CMD) or 
+      ($?) or
+	die("Could not close '$shell_command': $!\n");
+    
+    $shell_status = $?;
+
+    ($shell_status) &&
+      return $error_status;
+  }
+  
+  push @CMD_LOG, "\n";
+
+  return 'success';
+}
+
+
+
+# This function ensures that build do not start too frequently.  It
+# will sleep if and only if the last build finished too quickly.
+
+sub slow_build_speed {
+  
+  my ($actual_build_seconds) = $END_TIME - $START_TIME;
+  my ($minimum_build_seconds) = 60 * $MINIMUM_BUILD_MINUTES;
+  
+  my ($sleep_time) = 0;
+
+  if ($actual_build_seconds < $minimum_build_seconds) {
+    $sleep_time = $actual_build_seconds - $minimum_build_seconds;
+  }
+
+  sleep($sleep_time);
+  
+  return 1;
+}
+
+
+
+
+#-------------- 
+# Main function
+#-------------- 
+
+{
+  set_static_vars();
+  get_env();
+  parse_args();
+
+  require $BUILDCF;
+
+  set_server_args();
+
+  do { # foreach build
+    
+    (@CMD_LOG) =();
+
+    $START_TIME = time();
+    $LOCAL_START_TIME = localtime($START_TIME);
+    
+    my ($status);
+    
+    foreach $phase (@{ $BUILDS->{$BUILD_NAME} }) {
+      
+      ($MAIL_EACH_PHASE) && 
+	mail_tinderbox_cmdlog('building');
+      
+      $status = run_shell_commands($phase);
+      
+      ($status ne 'success') && 
+	last;
+
+    } # foreach $phase
+    
+    $END_TIME = time();
+    $LOCAL_END_TIME = localtime($END_TIME);
+
+    mail_tinderbox_cmdlog($status);
+    
+    ($BUILD_ONCE) ||
+      slow_build_speed();
+    
+  } while (!($BUILD_ONCE)); # foreach build
+  
+  exit 0;
+}
+
+
+

@@ -1,0 +1,81 @@
+#!#perl# #perlflags# --
+# -*- Mode: perl; indent-tabs-mode: nil -*-
+#
+
+# test_return - a fancy replacement for /bin/true and /bin/false.
+# This script is for testing how applications handle fatal errors in
+# their children.
+
+
+use Getopt::Long;
+use File::Basename;
+use POSIX;
+
+sub usage {
+
+  my ($usage) = <<"EOF";
+
+	$PROGRAM [options]
+
+Global Options:
+
+
+stdout                print the given string on stdout before exiting.
+stderr                print the given string on stderr before exiting.
+print                 a synonym for stdout.
+sleep                 wait S seconds before exiting.
+quit                  exit with the given return code.
+signal                exit with the given signal number.
+
+
+
+Summary:
+
+A fancy replacement for /bin/true and /bin/false.
+
+This script is for testing how applications handle fatal errors in
+their children.  
+
+
+EOF
+  ;
+
+print $usage;
+exit 0;
+
+}
+
+
+sub parse_args {	
+  GetOptions (qw( stdout=s stderr=s print=s sleep=i quit=i signal=s)) ||
+    die "Illegal options in \@ARGV: '@ARGV',";
+  
+  if ($opt_stderr){	
+    warn "$opt_stderr\n";
+  }
+
+  if ($opt_stdout){	
+    print "$opt_stdout\n";
+  }
+  
+  if ($opt_print){	
+    print "$opt_print\n";
+  }
+
+  if ($opt_sleep){	
+    sleep($opt_sleep);
+  }
+  
+  if ($opt_quit){	
+    exit $opt_quit;	
+  }
+  
+  if ($opt_signal) {
+    $my_pid = $$;
+    kill $opt_signal, $my_pid;
+  }
+  
+  
+}
+
+parse_args();
