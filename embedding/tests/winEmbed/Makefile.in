@@ -42,6 +42,7 @@ REQUIRES	= xpcom \
 		  uriloader \
 		  shistory \
 		  webbrowserpersist \
+		  gfx \
 		  $(NULL)
 
 CPPSRCS		= \
