@@ -33,6 +33,10 @@
 # file under either the MPL or the GPL.
 #
 
+
+MANIFEST="./mozilla/embedding/config/basebrowser-unix"
+
+
 #
 #   A little help for my friends.
 #
@@ -74,6 +78,9 @@ if [ $SHOWHELP ]; then
     echo "  the total size of all code and data, and a delta from the prior."
     echo "  the old results."
     echo "For much more detail on size drifts refer to the summary report."
+    echo ""
+    echo "This tool reports on executables listed in the following file:"
+    echo "$MANIFEST"
     exit
 fi
 
@@ -113,7 +120,7 @@ MYTMPDIR=`mktemp -d ./codesighs.tmp.XXXXXXXX`
 #   Find all relevant files.
 #
 ALLFILES="$MYTMPDIR/allfiles.list"
-grep -v '[\;\[]' < ./mozilla/embedding/config/basebrowser-unix | grep -v '^$' | sed 's/^/\.\/mozilla\/dist\/bin\//' > $ALLFILES
+grep -v '[\;\[]' < $MANIFEST | grep -v '^$' | sed 's/^/\.\/mozilla\/dist\/bin\//' > $ALLFILES
 
 
 #
