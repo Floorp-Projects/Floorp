@@ -30,8 +30,9 @@
 #include "nscore.h"
 #include "nsError.h"
 #include "plhash.h"
+#include "nsIContent.h"
+
 class nsString;
-class nsIContent;
 class nsISupportsArray;
 
 class nsElementMap
@@ -41,11 +42,16 @@ private:
 
     class ContentListItem {
     public:
-        ContentListItem(nsIContent* aContent)
-            : mNext(nsnull), mContent(aContent) {}
+        ContentListItem(nsIContent* aContent) : mNext(nsnull), mContent(aContent) {
+            MOZ_COUNT_CTOR(RDF_nsElementMap_ContentListItem);
+        }
+
+        ~ContentListItem() {
+            MOZ_COUNT_DTOR(RDF_nsElementMap_ContentListItem);
+        }
 
         ContentListItem* mNext;
-        nsIContent*      mContent;
+        nsCOMPtr<nsIContent> mContent;
     };
 
     static PLHashNumber
