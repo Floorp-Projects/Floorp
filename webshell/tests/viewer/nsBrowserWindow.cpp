@@ -16,26 +16,26 @@
  * Corporation.  Portions created by Netscape are Copyright (C) 1998
  * Netscape Communications Corporation.  All Rights Reserved.
  */
-#include "nsIBrowserWindow.h"
+#include "nsBrowserWindow.h"
 #include "nsIStreamListener.h"
 #include "nsIAppShell.h"
-#include "nsIWebShell.h"
 #include "nsIWidget.h"
 #include "nsITextWidget.h"
 #include "nsIButton.h"
 #include "nsIImageGroup.h"
 #include "nsITimer.h"
 #include "nsIThrobber.h"
-#include "nsIScriptContextOwner.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMDocument.h"
 #include "nsIURL.h"
 #include "nsRepository.h"
-#include "nsVoidArray.h"
 #include "nsIFactory.h"
 #include "nsCRT.h"
-
 #include "nsWidgetsCID.h"
+#include "nsViewerApp.h"
+
+#include "resources.h"
+#define SAMPLES_BASE_URL "resource:/res/samples"
 
 // XXX greasy constants
 #define THROBBER_WIDTH 32
@@ -75,101 +75,12 @@ static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 static NS_DEFINE_IID(kIWebShellContainerIID, NS_IWEB_SHELL_CONTAINER_IID);
 static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
 
-static nsVoidArray gBrowsers;
-
-class nsBrowserWindow : public nsIBrowserWindow,
-                        public nsIStreamObserver,
-                        public nsIWebShellContainer,
-                        public nsIScriptContextOwner
-{
-public:
-  nsBrowserWindow();
-  virtual ~nsBrowserWindow();
-
-  void* operator new(size_t sz) {
-    void* rv = new char[sz];
-    nsCRT::zero(rv, sz);
-    return rv;
-  }
-
-  // nsISupports
-  NS_DECL_ISUPPORTS
-
-  // nsIBrowserWindow
-  NS_IMETHOD Init(nsIAppShell* aAppShell,
-                  const nsRect& aBounds,
-                  PRUint32 aChromeMask);
-  NS_IMETHOD MoveTo(PRInt32 aX, PRInt32 aY);
-  NS_IMETHOD SizeTo(PRInt32 aWidth, PRInt32 aHeight);
-  NS_IMETHOD Show();
-  NS_IMETHOD Hide();
-  NS_IMETHOD ChangeChrome(PRUint32 aNewChromeMask);
-  NS_IMETHOD GetChrome(PRUint32& aChromeMaskResult);
-  NS_IMETHOD LoadURL(const nsString& aURL);
-  NS_IMETHOD SetTitle(const nsString& aTitle);
-  NS_IMETHOD GetTitle(nsString& aResult);
-
-  // nsIStreamObserver
-  NS_IMETHOD OnStartBinding(nsIURL* aURL, const char *aContentType);
-  NS_IMETHOD OnProgress(nsIURL* aURL, PRInt32 aProgress, PRInt32 aProgressMax,
-                        const nsString& aMsg);
-  NS_IMETHOD OnStopBinding(nsIURL* aURL, PRInt32 status, const nsString& aMsg);
-
-  // nsIScriptContextOwner
-  NS_IMETHOD GetScriptContext(nsIScriptContext **aContext);
-  NS_IMETHOD ReleaseScriptContext(nsIScriptContext *aContext);
-
-  // nsIWebShellContainer
-  NS_IMETHOD WillLoadURL(nsIWebShell* aShell, const nsString& aURL);
-  NS_IMETHOD BeginLoadURL(nsIWebShell* aShell, const nsString& aURL);
-  NS_IMETHOD EndLoadURL(nsIWebShell* aShell, const nsString& aURL);
-
-  // nsBrowserWindow
-  nsresult CreateToolBar(PRInt32 aWidth);
-  nsresult CreateStatusBar(PRInt32 aWidth);
-  void Layout(PRInt32 aWidth, PRInt32 aHeight);
-  void Destroy();
-  void Back();
-  void Forward();
-  void GoTo(const nsString& aURL);
-  void StartThrobber();
-  void StopThrobber();
-  void LoadThrobberImages();
-  void DestroyThrobberImages();
-  nsEventStatus DispatchMenuItem(nsGUIEvent *aEvent);
-
-  PRUint32 mChromeMask;
-  nsString mTitle;
-
-  nsIWidget* mWindow;
-  nsIWebShell* mWebShell;
-
-  // "Toolbar"
-  nsITextWidget* mLocation;
-  nsIButton* mBack;
-  nsIButton* mForward;
-  nsIThrobber* mThrobber;
-
-  // "Status bar"
-  nsITextWidget* mStatus;
-
-  nsIScriptGlobalObject *mScriptGlobal;
-  nsIScriptContext* mScriptContext;
-};
-
 //----------------------------------------------------------------------
 
-// XXX This is bad; because we can't hang a closure off of the event
-// callback we have no way to store our This pointer; therefore we
-// have to hunt to find the browswer that the event belongs too!!!
+nsVoidArray nsBrowserWindow::gBrowsers;
 
-#define FIND_WINDOW   0
-#define FIND_BACK     1
-#define FIND_FORWARD  2
-#define FIND_LOCATION 3
-
-static nsBrowserWindow*
-FindBrowserFor(nsIWidget* aWidget, PRIntn aWhich)
+nsBrowserWindow*
+nsBrowserWindow::FindBrowserFor(nsIWidget* aWidget, PRIntn aWhich)
 {
   nsIWidget* widget;
 
@@ -200,26 +111,26 @@ FindBrowserFor(nsIWidget* aWidget, PRIntn aWhich)
   return nsnull;
 }
 
-static void
-AddBrowser(nsBrowserWindow* aBrowser)
+void
+nsBrowserWindow::AddBrowser(nsBrowserWindow* aBrowser)
 {
   gBrowsers.AppendElement(aBrowser);
 }
 
-static void
-RemoveBrowser(nsBrowserWindow* aBrowser)
+void
+nsBrowserWindow::RemoveBrowser(nsBrowserWindow* aBrowser)
 {
   gBrowsers.RemoveElement(aBrowser);
   if (0 == gBrowsers.Count()) {
-    printf("I want to exit, how about you?\n");
-    exit(0);
+    aBrowser->mApp->Exit();
   }
 }
 
 static nsEventStatus PR_CALLBACK
 HandleBrowserEvent(nsGUIEvent *aEvent)
 { 
-  nsBrowserWindow* bw = FindBrowserFor(aEvent->widget, FIND_WINDOW);
+  nsBrowserWindow* bw =
+    nsBrowserWindow::FindBrowserFor(aEvent->widget, FIND_WINDOW);
   if (nsnull == bw) {
     return nsEventStatus_eIgnore;
   }
@@ -246,7 +157,8 @@ HandleBrowserEvent(nsGUIEvent *aEvent)
 static nsEventStatus PR_CALLBACK
 HandleBackEvent(nsGUIEvent *aEvent)
 {
-  nsBrowserWindow* bw = FindBrowserFor(aEvent->widget, FIND_BACK);
+  nsBrowserWindow* bw =
+    nsBrowserWindow::FindBrowserFor(aEvent->widget, FIND_BACK);
   if (nsnull == bw) {
     return nsEventStatus_eIgnore;
   }
@@ -262,7 +174,8 @@ HandleBackEvent(nsGUIEvent *aEvent)
 static nsEventStatus PR_CALLBACK
 HandleForwardEvent(nsGUIEvent *aEvent)
 {
-  nsBrowserWindow* bw = FindBrowserFor(aEvent->widget, FIND_FORWARD);
+  nsBrowserWindow* bw =
+    nsBrowserWindow::FindBrowserFor(aEvent->widget, FIND_FORWARD);
   if (nsnull == bw) {
     return nsEventStatus_eIgnore;
   }
@@ -278,7 +191,8 @@ HandleForwardEvent(nsGUIEvent *aEvent)
 static nsEventStatus PR_CALLBACK
 HandleLocationEvent(nsGUIEvent *aEvent)
 {
-  nsBrowserWindow* bw = FindBrowserFor(aEvent->widget, FIND_LOCATION);
+  nsBrowserWindow* bw =
+    nsBrowserWindow::FindBrowserFor(aEvent->widget, FIND_LOCATION);
   if (nsnull == bw) {
     return nsEventStatus_eIgnore;
   }
@@ -299,6 +213,39 @@ HandleLocationEvent(nsGUIEvent *aEvent)
 nsEventStatus
 nsBrowserWindow::DispatchMenuItem(nsGUIEvent* aEvent)
 {
+  nsEventStatus result = nsEventStatus_eIgnore;
+  if (aEvent->message == NS_MENU_SELECTED) {
+    nsMenuEvent* menuEvent = (nsMenuEvent*)aEvent;
+    result = DispatchDebugMenu(menuEvent);
+    if (nsEventStatus_eIgnore != result) {
+      return result;
+    }
+    switch (menuEvent->menuItem) {
+    case VIEWER_EXIT:
+      mApp->Exit();
+      return nsEventStatus_eConsumeNoDefault;
+
+    case VIEWER_DEMO0:
+    case VIEWER_DEMO1:
+    case VIEWER_DEMO2:
+    case VIEWER_DEMO3:
+    case VIEWER_DEMO4:
+    case VIEWER_DEMO5:
+    case VIEWER_DEMO6:
+    case VIEWER_DEMO7:
+    case VIEWER_DEMO8: 
+    case VIEWER_DEMO9: 
+      {
+        PRIntn ix = menuEvent->menuItem - VIEWER_DEMO0;
+        nsAutoString url(SAMPLES_BASE_URL);
+        url.Append("/test");
+        url.Append(ix, 10);
+        url.Append(".html");
+        LoadURL(url);
+      }
+      break;
+    }
+  }
   return nsEventStatus_eIgnore;
 }
 
@@ -380,8 +327,9 @@ nsBrowserWindow::QueryInterface(const nsIID& aIID,
   return NS_NOINTERFACE;
 }
 
-NS_IMETHODIMP
-nsBrowserWindow::Init(nsIAppShell* aAppShell, const nsRect& aBounds,
+nsresult
+nsBrowserWindow::Init(nsIAppShell* aAppShell,
+                      const nsRect& aBounds,
                       PRUint32 aChromeMask)
 {
   mChromeMask = aChromeMask;
@@ -411,19 +359,30 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell, const nsRect& aBounds,
   mWebShell->SetContainer((nsIWebShellContainer*) this);
   mWebShell->Show();
 
-  rv = CreateToolBar(r.width);
-  if (NS_OK != rv) {
-    return rv;
+  if (NS_CHROME_MENU_BAR_ON & aChromeMask) {
+    rv = CreateMenuBar(r.width);
+    if (NS_OK != rv) {
+      return rv;
+    }
+    mWindow->GetBounds(r);
+    r.x = r.y = 0;
   }
 
-  // XXX status bar
-  rv = CreateStatusBar(r.width);
-  if (NS_OK != rv) {
-    return rv;
+  if (NS_CHROME_TOOL_BAR_ON & aChromeMask) {
+    rv = CreateToolBar(r.width);
+    if (NS_OK != rv) {
+      return rv;
+    }
   }
 
-  // XXX now lay it all out
+  if (NS_CHROME_STATUS_BAR_ON & aChromeMask) {
+    rv = CreateStatusBar(r.width);
+    if (NS_OK != rv) {
+      return rv;
+    }
+  }
 
+  // Now lay it all out
   Layout(r.width, r.height);
 
   return NS_OK;
@@ -790,6 +749,357 @@ nsBrowserWindow::DestroyThrobberImages()
 
 //----------------------------------------------------------------------
 
+#ifdef NS_DEBUG
+#include "nsIPresShell.h"
+#include "nsIPresContext.h"
+#include "nsIDocumentViewer.h"
+#include "nsIDocument.h"
+#include "nsIContent.h"
+#include "nsIFrame.h"
+#include "nsIStyleContext.h"
+#include "nsISizeOfHandler.h"
+#include "nsIStyleSet.h"
+
+static NS_DEFINE_IID(kIDocumentViewerIID, NS_IDOCUMENT_VIEWER_IID);
+
+static nsIPresShell*
+GetPresShell(nsIWebShell* aWebShell)
+{
+  nsIPresShell* shell = nsnull;
+  if (nsnull != aWebShell) {
+    nsIContentViewer* cv = nsnull;
+    aWebShell->GetContentViewer(cv);
+    if (nsnull != cv) {
+      nsIDocumentViewer* docv = nsnull;
+      cv->QueryInterface(kIDocumentViewerIID, (void**) &docv);
+      if (nsnull != docv) {
+        nsIPresContext* cx;
+        docv->GetPresContext(cx);
+        if (nsnull != cx) {
+          shell = cx->GetShell();
+          NS_RELEASE(cx);
+        }
+        NS_RELEASE(docv);
+      }
+      NS_RELEASE(cv);
+    }
+  }
+  return shell;
+}
+
+void
+nsBrowserWindow::DumpContent(FILE* out)
+{
+  nsIPresShell* shell = GetPresShell(mWebShell);
+  if (nsnull != shell) {
+    nsIDocument* doc = shell->GetDocument();
+    if (nsnull != doc) {
+      nsIContent* root = doc->GetRootContent();
+      if (nsnull != root) {
+        root->List(out);
+        NS_RELEASE(root);
+      }
+      NS_RELEASE(doc);
+    }
+    NS_RELEASE(shell);
+  }
+  else {
+    fputs("null pres shell\n", out);
+  }
+}
+
+void
+nsBrowserWindow::DumpFrames(FILE* out)
+{
+  nsIPresShell* shell = GetPresShell(mWebShell);
+  if (nsnull != shell) {
+    nsIFrame* root = shell->GetRootFrame();
+    if (nsnull != root) {
+      root->List(out);
+    }
+    NS_RELEASE(shell);
+  }
+  else {
+    fputs("null pres shell\n", out);
+  }
+}
+
+void
+nsBrowserWindow::DumpViews(FILE* out)
+{
+  nsIPresShell* shell = GetPresShell(mWebShell);
+  if (nsnull != shell) {
+    nsIViewManager* vm = shell->GetViewManager();
+    if (nsnull != vm) {
+      nsIView* root = vm->GetRootView();
+      if (nsnull != root) {
+        root->List(out);
+        NS_RELEASE(root);
+      }
+      NS_RELEASE(vm);
+    }
+    NS_RELEASE(shell);
+  }
+  else {
+    fputs("null pres shell\n", out);
+  }
+}
+
+static void DumpAWebShell(nsIWebShell* aShell, FILE* out, PRInt32 aIndent)
+{
+  nsAutoString name;
+  nsIWebShell* parent;
+  PRInt32 i, n;
+
+  for (i = aIndent; --i >= 0; ) fprintf(out, "  ");
+
+  fprintf(out, "%p '", aShell);
+  aShell->GetName(name);
+  aShell->GetParent(parent);
+  fputs(name, out);
+  fprintf(out, "' parent=%p <\n", parent);
+  NS_IF_RELEASE(parent);
+
+  aIndent++;
+  aShell->GetChildCount(n);
+  for (i = 0; i < n; i++) {
+    nsIWebShell* child;
+    aShell->ChildAt(i, child);
+    if (nsnull != child) {
+      DumpAWebShell(child, out, aIndent);
+    }
+  }
+  aIndent--;
+  for (i = aIndent; --i >= 0; ) fprintf(out, "  ");
+  fputs(">\n", out);
+}
+
+void
+nsBrowserWindow::DumpWebShells(FILE* out)
+{
+  DumpAWebShell(mWebShell, out, 0);
+}
+
+void
+nsBrowserWindow::DumpStyleSheets(FILE* out)
+{
+  nsIPresShell* shell = GetPresShell(mWebShell);
+  if (nsnull != shell) {
+    nsIStyleSet* styleSet = shell->GetStyleSet();
+    if (nsnull == styleSet) {
+      fputs("null style set\n", out);
+    } else {
+      styleSet->List(out);
+      NS_RELEASE(styleSet);
+    }
+    NS_RELEASE(shell);
+  }
+  else {
+    fputs("null pres shell\n", out);
+  }
+}
+
+void
+nsBrowserWindow::DumpStyleContexts(FILE* out)
+{
+  nsIPresShell* shell = GetPresShell(mWebShell);
+  if (nsnull != shell) {
+    nsIPresContext* cx = shell->GetPresContext();
+    nsIStyleSet* styleSet = shell->GetStyleSet();
+    if (nsnull == styleSet) {
+      fputs("null style set\n", out);
+    } else {
+      nsIFrame* root = shell->GetRootFrame();
+      if (nsnull == root) {
+        fputs("null root frame\n", out);
+      } else {
+        nsIStyleContext* rootContext;
+        root->GetStyleContext(cx, rootContext);
+        if (nsnull != rootContext) {
+          styleSet->ListContexts(rootContext, out);
+          NS_RELEASE(rootContext);
+        }
+        else {
+          fputs("null root context", out);
+        }
+      }
+      NS_RELEASE(styleSet);
+    }
+    NS_IF_RELEASE(cx);
+    NS_RELEASE(shell);
+  } else {
+    fputs("null pres shell\n", out);
+  }
+}
+
+void
+nsBrowserWindow::ToggleFrameBorders()
+{
+  PRBool showing = nsIFrame::GetShowFrameBorders();
+  nsIFrame::ShowFrameBorders(!showing);
+  ForceRefresh();
+}
+
+void
+nsBrowserWindow::ForceRefresh()
+{
+  nsIPresShell* shell = GetPresShell(mWebShell);
+  if (nsnull != shell) {
+    nsIViewManager* vm = shell->GetViewManager();
+    if (nsnull != vm) {
+      nsIView* root = vm->GetRootView();
+      if (nsnull != root) {
+        vm->UpdateView(root, (nsIRegion*)nsnull, NS_VMREFRESH_IMMEDIATE);
+        NS_RELEASE(root);
+      }
+      NS_RELEASE(vm);
+    }
+    NS_RELEASE(shell);
+  }
+}
+
+void
+nsBrowserWindow::ShowContentSize()
+{
+  nsISizeOfHandler* szh;
+  if (NS_OK != NS_NewSizeOfHandler(&szh)) {
+    return;
+  }
+
+  nsIPresShell* shell = GetPresShell(mWebShell);
+  if (nsnull != shell) {
+    nsIDocument* doc = shell->GetDocument();
+    if (nsnull != doc) {
+      nsIContent* content = doc->GetRootContent();
+      if (nsnull != content) {
+        content->SizeOf(szh);
+        PRUint32 totalSize;
+        szh->GetSize(totalSize);
+        printf("Content model size is approximately %d bytes\n", totalSize);
+        NS_RELEASE(content);
+      }
+      NS_RELEASE(doc);
+    }
+    NS_RELEASE(shell);
+  }
+  NS_RELEASE(szh);
+}
+
+void
+nsBrowserWindow::ShowFrameSize()
+{
+  nsIPresShell* shell0 = GetPresShell(mWebShell);
+  if (nsnull != shell0) {
+    nsIDocument* doc = shell0->GetDocument();
+    if (nsnull != doc) {
+      PRInt32 i, shells = doc->GetNumberOfShells();
+      for (i = 0; i < shells; i++) {
+        nsIPresShell* shell = doc->GetShellAt(i);
+        if (nsnull != shell) {
+          nsISizeOfHandler* szh;
+          if (NS_OK != NS_NewSizeOfHandler(&szh)) {
+            return;
+          }
+          nsIFrame* root;
+          root = shell->GetRootFrame();
+          if (nsnull != root) {
+            root->SizeOf(szh);
+            PRUint32 totalSize;
+            szh->GetSize(totalSize);
+            printf("Frame model for shell=%p size is approximately %d bytes\n",
+                   shell, totalSize);
+          }
+          NS_RELEASE(szh);
+          NS_RELEASE(shell);
+        }
+      }
+      NS_RELEASE(doc);
+    }
+    NS_RELEASE(shell0);
+  }
+}
+
+void
+nsBrowserWindow::ShowStyleSize()
+{
+}
+
+nsEventStatus
+nsBrowserWindow::DispatchDebugMenu(nsMenuEvent* aEvent)
+{
+  nsEventStatus result = nsEventStatus_eIgnore;
+
+  switch(aEvent->menuItem) {
+  case VIEWER_VISUAL_DEBUGGING:
+    ToggleFrameBorders();
+    result = nsEventStatus_eConsumeNoDefault;
+    break;
+
+  case VIEWER_DUMP_CONTENT:
+    DumpContent();
+    DumpWebShells();
+    result = nsEventStatus_eConsumeNoDefault;
+    break;
+
+  case VIEWER_DUMP_FRAMES:
+    DumpFrames();
+    result = nsEventStatus_eConsumeNoDefault;
+    break;
+
+  case VIEWER_DUMP_VIEWS:
+    DumpViews();
+    result = nsEventStatus_eConsumeNoDefault;
+    break;
+
+  case VIEWER_DUMP_STYLE_SHEETS:
+    DumpStyleSheets();
+    result = nsEventStatus_eConsumeNoDefault;
+    break;
+
+  case VIEWER_DUMP_STYLE_CONTEXTS:
+    DumpStyleContexts();
+    result = nsEventStatus_eConsumeNoDefault;
+    break;
+
+  case VIEWER_SHOW_CONTENT_SIZE:
+    ShowContentSize();
+    result = nsEventStatus_eConsumeNoDefault;
+    break;
+
+  case VIEWER_SHOW_FRAME_SIZE:
+    ShowFrameSize();
+    result = nsEventStatus_eConsumeNoDefault;
+    break;
+
+  case VIEWER_SHOW_STYLE_SIZE:
+    ShowStyleSize();
+    result = nsEventStatus_eConsumeNoDefault;
+    break;
+
+  case VIEWER_SHOW_CONTENT_QUALITY:
+#if XXX_fix_me
+    if ((nsnull != wd) && (nsnull != wd->observer)) {
+      nsIPresContext *px = wd->observer->mWebWidget->GetPresContext();
+      nsIPresShell   *ps = px->GetShell();
+      nsIViewManager *vm = ps->GetViewManager();
+
+      vm->ShowQuality(!vm->GetShowQuality());
+
+      NS_RELEASE(vm);
+      NS_RELEASE(ps);
+      NS_RELEASE(px);
+    }
+#endif
+    result = nsEventStatus_eConsumeNoDefault;
+    break;
+  }
+  return(result);
+}
+
+#endif // NS_DEBUG
+
+//----------------------------------------------------------------------
+
 // Factory code for creating nsBrowserWindow's
 
 class nsBrowserWindowFactory : public nsIFactory
@@ -881,7 +1191,7 @@ nsBrowserWindowFactory::CreateInstance(nsISupports *aOuter,
     goto done;
   }
 
-  inst = new nsBrowserWindow();
+  inst = new nsNativeBrowserWindow();
   if (inst == NULL) {
     rv = NS_ERROR_OUT_OF_MEMORY;
     goto done;
