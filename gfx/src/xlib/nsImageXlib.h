@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim:ts=2:et:sw=2
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -149,7 +150,7 @@ private:
   inline void DrawComposited(nsIRenderingContext &aContext,
                              nsDrawingSurface aSurface,
                              PRInt32 aSX, PRInt32 aSY,
-			     PRInt32 aDX, PRInt32 aDY,
+           PRInt32 aDX, PRInt32 aDY,
                              PRInt32 aWidth, PRInt32 aHeight);
 
   inline void TilePixmap(Pixmap src, Pixmap dest, PRInt32 aSXOffset, PRInt32 aSYOffset,
@@ -160,39 +161,41 @@ private:
                                  PRInt32 aWidth, PRInt32 aHeight);
   inline void SetupGCForAlpha(GC aGC, PRInt32 aX, PRInt32 aY);
 
-  PRInt32    mWidth;
-  PRInt32    mHeight;
-  PRInt32    mDepth;       // bits per pixel
-  PRInt32    mRowBytes;
-  PRUint8    *mImageBits;
-  GC         mGC;
+  // image bits
+  PRUint8      *mImageBits;
+  PRUint8      *mAlphaBits;
+  Pixmap        mImagePixmap;
+  Pixmap        mAlphaPixmap;
 
-  //PRUint8    *mConvertedBits;
-  PRInt32    mSizeImage;
-  PRBool     mIsTopToBottom;
+  PRInt32       mWidth;
+  PRInt32       mHeight;
+  PRInt32       mDepth;       // bits per pixel
+  PRInt32       mRowBytes;
+  GC            mGC;
 
-  PRInt8     mNumBytesPixel;
+  PRInt32       mSizeImage;
+  PRPackedBool  mIsTopToBottom;
+  PRInt8        mNumBytesPixel;
 
-  PRInt32		mNaturalWidth;
-  PRInt32		mNaturalHeight;
+  PRInt32       mNaturalWidth;
+  PRInt32       mNaturalHeight;
 
-  PRInt32             mDecodedX1;       //Keeps track of what part of image
-  PRInt32             mDecodedY1;       // has been decoded.
-  PRInt32             mDecodedX2;
-  PRInt32             mDecodedY2;
+  PRInt32       mDecodedX1;       //Keeps track of what part of image
+  PRInt32       mDecodedY1;       // has been decoded.
+  PRInt32       mDecodedX2;
+  PRInt32       mDecodedY2;
+
+  Display      *mDisplay;
 
   // alpha layer members
-  PRUint8    *mAlphaBits;
-  Pixmap     mAlphaPixmap;
-  PRInt8     mAlphaDepth;        // alpha layer depth
-  PRInt16    mAlphaRowBytes;     // alpha bytes per row
-  PRInt16    mAlphaWidth;        // alpha layer width
-  PRInt16    mAlphaHeight;       // alpha layer height
+  PRInt8        mAlphaDepth;        // alpha layer depth
+  PRInt16       mAlphaRowBytes;     // alpha bytes per row
+  PRInt16       mAlphaWidth;        // alpha layer width
+  PRInt16       mAlphaHeight;       // alpha layer height
   PRPackedBool  mAlphaValid;
-  Pixmap     mImagePixmap;
-  Display   *mDisplay;
+  PRPackedBool  mIsSpacer;
 
-  PRUint8    mFlags;             // flags set by ImageUpdated
+  PRUint8       mFlags;             // flags set by ImageUpdated
 };
 
 #endif

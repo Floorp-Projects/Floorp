@@ -62,6 +62,7 @@ nsImageXlib::nsImageXlib()
   mAlphaWidth = 0;
   mAlphaHeight = 0;
   mAlphaValid = PR_FALSE;
+  mIsSpacer = PR_TRUE;
   mDisplay = nsnull;
   mGC = nsnull;
   mNaturalWidth = 0;
@@ -288,27 +289,83 @@ void nsImageXlib::ImageUpdated(nsIDeviceContext *aContext,
                                PRUint8 aFlags,
                                nsRect *aUpdateRect)
 {
-  /* this does not do what I think it should do, so comment out for now */
+  unsigned bottom, left, right;
+  bottom = aUpdateRect->y + aUpdateRect->height;
+  left   = aUpdateRect->x;
+  right  = left + aUpdateRect->width;
   
   // check if the image has an all-opaque 8-bit alpha mask
-  if ((mAlphaDepth==8) && !mAlphaValid) {
-    unsigned bottom, left, right;
-    bottom = aUpdateRect->y + aUpdateRect->height;
-    left   = aUpdateRect->x;
-    right  = left + aUpdateRect->width;
-    for (unsigned y=aUpdateRect->y; (y<bottom) && !mAlphaValid; y++) {
-      unsigned char *alpha = mAlphaBits + mAlphaRowBytes*y + left;
-      for (unsigned x=left; x<right; x++) {
-        if (*(alpha++)!=255) {
-          mAlphaValid=PR_TRUE;
+  if ((mAlphaDepth == 8) && !mAlphaValid) {
+    for (unsigned y = aUpdateRect->y; (y < bottom) && !mAlphaValid; y++) {
+      unsigned char *alpha = mAlphaBits + mAlphaRowBytes * y + left;
+      for (unsigned x = left; x < right; x++) {
+        if (*(alpha++) != 255) {
+          mAlphaValid = PR_TRUE;
           break;
+        }
+      }
     }
+  }
+
+  // check if the image is a spacer
+  if ((mAlphaDepth==1) && mIsSpacer) {
+    // mask of the leading/trailing bits in the update region
+    PRUint8  leftmask   = 0xff  >> (left & 0x7);
+    PRUint8  rightmask  = 0xff  << (7 - ((right-1) & 0x7));
+
+    // byte where the first/last bits of the update region are located
+    PRUint32 leftindex  = left      >> 3;
+    PRUint32 rightindex = (right-1) >> 3;
+
+    // first/last bits in the same byte - combine mask into leftmask
+    // and fill rightmask so we don't try using it
+    if (leftindex == rightindex) {
+      leftmask &= rightmask;
+      rightmask = 0xff;
+    }
+
+    // check the leading bits
+    if (leftmask != 0xff) {
+      PRUint8 *ptr = mAlphaBits + mAlphaRowBytes * aUpdateRect->y + leftindex;
+      for (unsigned y=aUpdateRect->y; y<bottom; y++, ptr+=mAlphaRowBytes) {
+        if (*ptr & leftmask) {
+          mIsSpacer = PR_FALSE;
+          break;
+        }
+      }
+      // move to first full byte
+      leftindex++;
+    }
+
+    // check the trailing bits
+    if (mIsSpacer && (rightmask != 0xff)) {
+      PRUint8 *ptr = mAlphaBits + mAlphaRowBytes * aUpdateRect->y + rightindex;
+      for (unsigned y=aUpdateRect->y; y<bottom; y++, ptr+=mAlphaRowBytes) {
+        if (*ptr & rightmask) {
+          mIsSpacer = PR_FALSE;
+          break;
+        }
+      }
+      // move to last full byte
+      rightindex--;
+    }
+    
+    // check the middle bytes
+    if (mIsSpacer && (leftindex <= rightindex)) {
+      for (unsigned y=aUpdateRect->y; (y<bottom) && mIsSpacer; y++) {
+        unsigned char *alpha = mAlphaBits + mAlphaRowBytes*y + leftindex;
+        for (unsigned x=left; x<right; x++) {
+          if (*(alpha++)!=0) {
+            mIsSpacer = PR_FALSE;
+            break;
+          }
+        }
       }
     }
   }
 
   if (mAlphaValid && mImagePixmap) {
-      XFreePixmap(mDisplay, mImagePixmap);
+    XFreePixmap(mDisplay, mImagePixmap);
     mImagePixmap = 0;
   }
   
@@ -430,6 +487,9 @@ nsImageXlib::Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
   if (aSurface == nsnull)
     return NS_ERROR_FAILURE;
 
+  if ((mAlphaDepth == 1) && mIsSpacer)
+    return NS_OK;
+
   if (aSWidth != aDWidth || aSHeight != aDHeight) {
     return DrawScaled(aContext, aSurface, aSX, aSY, aSWidth, aSHeight,
                       aDX, aDY, aDWidth, aDHeight);
@@ -507,9 +567,10 @@ nsImageXlib::Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
   }
 
   XCopyArea(mDisplay, mImagePixmap, drawing->GetDrawable(),
-        copyGC, aSX, aSY, aSWidth, aDWidth, aDX, aDY);
+        copyGC, aSX, aSY, aSWidth, aSHeight, aDX, aDY);
 
   gc->Release();
+  mFlags = 0;
   return NS_OK;
 }
 
@@ -874,27 +935,31 @@ nsImageXlib::DrawComposited(nsIRenderingContext &aContext,
   PRBool isLSB;
   unsigned int test = 1;
   isLSB = (((char *)&test)[0]) ? 1 : 0;
+  int red_prec = xlib_get_prec_from_mask(visual->red_mask);
+  int green_prec = xlib_get_prec_from_mask(visual->green_mask);
+  int blue_prec = xlib_get_prec_from_mask(visual->blue_mask);
+  
 
   PRBool flipBytes =
     ( isLSB && ximage->byte_order != LSBFirst) ||
     (!isLSB && ximage->byte_order == LSBFirst);
 
   if ((ximage->bits_per_pixel==32) &&
-      (xlib_get_prec_from_mask(visual->red_mask) == 8) &&
-      (xlib_get_prec_from_mask(visual->green_mask) == 8) &&
-      (xlib_get_prec_from_mask(visual->blue_mask) == 8))
+      (red_prec == 8) &&
+      (green_prec == 8) &&
+      (blue_prec == 8))
     DrawComposited32(isLSB, flipBytes, destX, destY, readWidth, readHeight,
                      ximage, readData);
   else if ((ximage->bits_per_pixel==24) &&
-      (xlib_get_prec_from_mask(visual->red_mask) == 8) &&
-      (xlib_get_prec_from_mask(visual->green_mask) == 8) &&
-      (xlib_get_prec_from_mask(visual->blue_mask) == 8))
+      (red_prec == 8) &&
+      (green_prec == 8) &&
+      (blue_prec == 8))
     DrawComposited24(isLSB, flipBytes, destX, destY, readWidth, readHeight,
                      ximage, readData);
   else if ((ximage->bits_per_pixel==16) &&
-           ((xlib_get_prec_from_mask(visual->red_mask) == 5)   || (xlib_get_prec_from_mask(visual->red_mask) == 6)) &&
-           ((xlib_get_prec_from_mask(visual->green_mask) == 5) || (xlib_get_prec_from_mask(visual->green_mask) == 6)) &&
-           ((xlib_get_prec_from_mask(visual->blue_mask) == 5)  || (xlib_get_prec_from_mask(visual->blue_mask) == 6)))
+           ((red_prec == 5)   || (red_prec == 6)) &&
+           ((green_prec == 5) || (green_prec == 6)) &&
+           ((blue_prec == 5)  || (blue_prec == 6)))
     DrawComposited16(isLSB, flipBytes, destX, destY, readWidth, readHeight,
                      ximage, readData);
   else
@@ -959,8 +1024,8 @@ void nsImageXlib::CreateAlphaBitmap(PRInt32 aWidth, PRInt32 aHeight)
 
     /* Copy the XImage to mAlphaPixmap */
     if (!s1bitGC) {
-    memset(&gcv, 0, sizeof(XGCValues));
-    gcv.function = GXcopy;
+      memset(&gcv, 0, sizeof(XGCValues));
+      gcv.function = GXcopy;
       s1bitGC = XCreateGC(mDisplay, mAlphaPixmap, GCFunction, &gcv);
     }
 
@@ -1013,13 +1078,10 @@ void nsImageXlib::SetupGCForAlpha(GC aGC, PRInt32 aX, PRInt32 aY)
     unsigned long xvalues_mask = 0;
     xvalues.clip_x_origin = aX;
     xvalues.clip_y_origin = aY;
-    xvalues_mask = GCClipXOrigin | GCClipYOrigin;
+    xvalues_mask = GCClipXOrigin | GCClipYOrigin | GCClipMask;
     xvalues.function = GXcopy;
+    xvalues.clip_mask = mAlphaPixmap;
 
-    if (IsFlagSet(nsImageUpdateFlags_kBitsChanged, mFlags)) {
-      xvalues.clip_mask = mAlphaPixmap;
-      xvalues_mask |= GCClipMask;
-    }
     XChangeGC(mDisplay, aGC, xvalues_mask, &xvalues);
   }
 }
@@ -1031,6 +1093,9 @@ nsImageXlib::Draw(nsIRenderingContext &aContext,
                   PRInt32 aX, PRInt32 aY,
                   PRInt32 aWidth, PRInt32 aHeight)
 {
+  if ((mAlphaDepth == 1) && mIsSpacer)
+    return NS_OK;
+
   if (aSurface == nsnull)
     return NS_ERROR_FAILURE;
 
@@ -1093,7 +1158,7 @@ nsImageXlib::Draw(nsIRenderingContext &aContext,
       }
       mGC = XCreateGC(mDisplay, drawing->GetDrawable(), xvalues_mask , &xvalues);
       copyGC = mGC;
-  }
+    }
   } else {  /* !mAlphaPixmap */
     copyGC = *gc;
   }
@@ -1144,6 +1209,9 @@ NS_IMETHODIMP nsImageXlib::DrawTile(nsIRenderingContext &aContext,
                                     nsRect &aSrcRect,
                                     nsRect &aTileRect)
 {
+  if ((mAlphaDepth == 1) && mIsSpacer)
+    return NS_OK;
+  
   nsDrawingSurfaceXlib *drawing = (nsDrawingSurfaceXlib*)aSurface;
   PRBool partial = PR_FALSE;
   
@@ -1177,27 +1245,23 @@ NS_IMETHODIMP nsImageXlib::DrawTile(nsIRenderingContext &aContext,
   if (partial || 
       (drawing->GetDepth() == 8) ||
       ((mAlphaDepth == 8) && mAlphaValid)) {
-#ifdef DEBUG_TILING
-    printf("Warning: using slow tiling\n");
-#endif
     PRInt32 aY0 = aTileRect.y,
     aX0 = aTileRect.x,
     aY1 = aTileRect.y + aTileRect.height,
     aX1 = aTileRect.x + aTileRect.width;
 
-  for (PRInt32 y = aY0; y < aY1; y+=aSrcRect.height)
-    for (PRInt32 x = aX0; x < aX1; x+=aSrcRect.width)
-                Draw(aContext,aSurface,x,y,
-                     PR_MIN(aSrcRect.width, aX1-x),
-                     PR_MIN(aSrcRect.height, aY1-y));
+    for (PRInt32 y = aY0; y < aY1; y+=aSrcRect.height)
+      for (PRInt32 x = aX0; x < aX1; x+=aSrcRect.width)
+        Draw(aContext,aSurface,x,y,
+             PR_MIN(aSrcRect.width, aX1-x),
+             PR_MIN(aSrcRect.height, aY1-y));
    
     return NS_OK;
   }
 
   /* draw the tile offscreen */
   CreateOffscreenPixmap(mWidth, mHeight);
-  /* XXX Why? DrawImageOffscreen(0, 0, validWidth, validHeight); */
-                
+
   if (mAlphaDepth == 1) {
     Pixmap tileImg;
     Pixmap tileMask;
@@ -1240,7 +1304,7 @@ NS_IMETHODIMP nsImageXlib::DrawTile(nsIRenderingContext &aContext,
     XFreeGC(mDisplay, fgc);
 
   } else {
-    // In the non-alpha case, ??? can tile for us
+    // In the non-alpha case, xlib can tile for us
 
     nsRect clipRect;
     PRBool isValid;
@@ -1255,6 +1319,9 @@ NS_IMETHODIMP nsImageXlib::DrawTile(nsIRenderingContext &aContext,
                                     PRInt32 aSXOffset, PRInt32 aSYOffset,
                                     const nsRect &aTileRect)
 {
+  if ((mAlphaDepth == 1) && mIsSpacer)
+    return NS_OK;
+  
   nsDrawingSurfaceXlib *drawing = (nsDrawingSurfaceXlib*)aSurface;
   if (mDisplay == nsnull)
     mDisplay = drawing->GetDisplay();
@@ -1268,6 +1335,7 @@ NS_IMETHODIMP nsImageXlib::DrawTile(nsIRenderingContext &aContext,
     validHeight = mHeight;
 
   // limit the image rectangle to the size of the image data which
+  // has been validated.
   if (mDecodedY2 < mHeight) {
     validHeight = mDecodedY2 - mDecodedY1;
     partial = PR_TRUE;
@@ -1299,9 +1367,11 @@ NS_IMETHODIMP nsImageXlib::DrawTile(nsIRenderingContext &aContext,
     aContext.SetClipRect(aTileRect, nsClipCombine_kIntersect,
                          clipState);
 
-    for (PRInt32 y = aY0; y < aY1; y+=validHeight)
-      for (PRInt32 x = aX0; x < aX1; x+=validWidth)
-        Draw(aContext,aSurface,x,y,validWidth,validHeight);
+    for (PRInt32 y = aY0; y < aY1; y += mHeight)
+      for (PRInt32 x = aX0; x < aX1; x += mWidth)
+        Draw(aContext,aSurface, x, y,
+             PR_MIN(validWidth, aX1 - x),
+             PR_MIN(validHeight, aY1 - y));
 
     aContext.PopState(clipState);
 
@@ -1309,10 +1379,8 @@ NS_IMETHODIMP nsImageXlib::DrawTile(nsIRenderingContext &aContext,
   }
 
   CreateOffscreenPixmap(mWidth, mHeight);
-  /* XXX Why? DrawImageOffscreen(validX, validY, validWidth, validHeight); */
 
-  if (mAlphaDepth == 1)
-  {
+  if (mAlphaDepth == 1) {
     Pixmap tileImg;
     Pixmap tileMask;
 
@@ -1353,7 +1421,7 @@ NS_IMETHODIMP nsImageXlib::DrawTile(nsIRenderingContext &aContext,
     XFreeGC(mDisplay, fgc);
 
   } else {
-
+    // In the non-alpha case, xlib can tile for us
     nsRect clipRect;
     PRBool isValid;
 
@@ -1400,16 +1468,6 @@ nsImageXlib::SetDecodedRect(PRInt32 x1, PRInt32 y1, PRInt32 x2, PRInt32 y2)
   mDecodedX2 = x2;
   mDecodedY2 = y2;
 
-  // check if the image has an all-opaque 8-bit alpha mask
-  if ((mAlphaDepth==8) && !mAlphaValid) {
-    for (int y=mDecodedY1; y<mDecodedY2; y++) {
-      unsigned char *alpha = mAlphaBits + mAlphaRowBytes*y + mDecodedX1;
-      for (int x=mDecodedX1; x<mDecodedX2; x++)
-        if (*(alpha++)!=255) {
-          mAlphaValid=PR_TRUE;
-        }
-    }
-  }
   return NS_OK;
 }
 
@@ -1437,7 +1495,7 @@ NS_IMETHODIMP nsImageXlib::DrawToImage(nsIImage* aDstImage,
     CreateAlphaBitmap(mWidth, mHeight);
   
   if (mAlphaPixmap)
-    SetupGCForAlpha(gc, 0, 0);
+    SetupGCForAlpha(gc, aDX, aDY);
 
   XCopyArea(dest->mDisplay, mImagePixmap, dest->mImagePixmap, gc,
             0, 0, mWidth, mHeight, aDX, aDY);
