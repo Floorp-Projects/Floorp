@@ -23,6 +23,10 @@ the nearest future.
 
 0. OVERVIEW
 
+This document describes how to install Bonsai and make it work with LXR.
+If you are only installing Bonsai, you can ignore the mentions about LXR
+and Tinderbox. You will still probably want to get registry.
+
 Some time ago I've seen Linux Source Navigator (LSN) at
 http://sunsite.unc.edu/linux-source. I was impressed. 
 It was and is a wonderful tool to explore Linux kernel source code.
@@ -47,15 +51,15 @@ work.
 
 1. GETTING IT UP
 
-   First of all you have to get all the tools in mozilla's
+First of all you have to get all the tools in mozilla's
 mozilla/webtools CVS repository. This includes lxr,bonsai,registry
 and tinderbox. You're likely will not need neither tinderbox but get
 it just in case.
 
-   To get the sources you have to follow instructions on
+To get the sources you have to follow instructions on
 http://www.mozilla.org/bonsai.html.
 
-   OK, now you've got the sources but don't rush to try it right
+OK, now you've got the sources but don't rush to try it right
 away. It's likely that you will not be able to even start most of
 the scripts. There are more things you will have to get and install.
 The short list of the things you will need:
@@ -69,32 +73,29 @@ The short list of the things you will need:
    3) Some kind of HTTP server so you could use CGI scripts
 
 
-   You could try running the ./configure script to see what tools it
+You could try running the ./configure script to see what tools it
 complains about right now. Mind you, it won't check for the MySQL
 database.
 
 1.1 Getting and setting up MySQL database
 
-   Visit MySQL homepage at http://www.tcx.se and grab the latest
+Visit MySQL homepage at http://www.tcx.se and grab the latest
 stable binary release of the server. Sure, you can get sources and
 compile them yourself, but binaries are the easiest and the fastest
 way to get it up and running. Follow instructions found in
 manual. There is a section about installing binary-only
 distributions. 
 
-   You should create database bonsai. It may be a good idea to make it
-writable by all users on your machine and change access level
-later. This would save you a lot of time trying to guess whether it's
-permissions or a mistake in the script that make things fail.
+You should create database bonsai, and the user and password for it.
 
 1.2 Perl + Mysql
 
-   You will need Perl 5.004 with DB and Mysql extensions. 
+You will need Perl 5.004 with DB and Mysql extensions. 
 
-   DB is required to use LXR browser and crossreferencer for storing
+DB is required to use LXR browser and crossreferencer for storing
 its database. Mysql is used by Bonsai.
 
-   If you have Perl already installed, try to run genxref program from
+If you have Perl already installed, try to run genxref program from
 LXR suite. If it complains that it misses DB terribly then you're
 probably will have to get and install DB 1.86 distribution from one of the
 CPAN (www.cpan.org) mirrors in src/misc directory. I personally got it
@@ -108,12 +109,12 @@ cause troubles, but I think it does not matter in our case as this
 was intended only for DBM compatibility - the feature we don't really
 use. 
 
-   Now you hopefully have Perl + DB compiled installed and working.
+Now you hopefully have Perl + DB compiled installed and working.
 Time to set up Mysql module. This one is easy. Just follow
 instructions in MySQL manual. You have to read manuals sometimes.. 
 I think I'm getting older.. 8-)
 
-   Next step is to get TimeDate module from one of the CPAN mirrors.
+Next step is to get TimeDate module from one of the CPAN mirrors.
 Go to CPAN search page
 (http://theory.uwinnipeg.ca/search/cpan-search.html) and search for
 the "TimeDate" module. Then get it and install.
@@ -129,19 +130,32 @@ you'd better run HTTP daemon on the same machine that you run MySQL
 server on. Make sure that you can access 'bonsai' database with user
 id you're running the daemon with.
 
+Disable web access to the Bonsai data directory and its subdirectories.
+In Apache you would write a <Directory> section in the config file, something
+like:
+
+   <Directory /var/www/docs/bonsai/data>
+      AllowOverride None
+      Options None
+      Order deny,allow
+      Deny from All
+   </Directory>
+
 
 2. TWEAKING THE TOOLS
 
-   Now you should have all necessary tools to be able to run LXR and
+Now you should have all necessary tools to be able to run LXR and
 Bonsai scripts and see why the wouldn't work for you right now.
 
 2.1 LXR
 
-   The first thing to set up is LXR tool. All it needs is the source
+You can skip this section if you are not planning on installing LXR.
+
+The first thing to set up is LXR tool. All it needs is the source
 tree (not CVS tree). It's relatively easy and works almost right of
 the box. Follow instructions in LXR README file. 
 
-   Having set LXR you will see that regardless what your source tree
+Having set LXR you will see that regardless what your source tree
 contains you will see that everything refers to it as Mozilla. Mozilla
 is a great thing and this tool was primarily tailored to mozilla tree
 but you'd like to control your own tree. First step is to edit your
@@ -179,43 +193,78 @@ Here is the short list of changes I had to make
 
 2.2 Bonsai
 
-   This stuff sometimes gets very specific about your CVS repository
+This stuff sometimes gets very specific about your CVS repository
 setup. You have to make a lot of changes until more portable
 configuration mechanism is introduced. 
 
-   These steps should create a basic Bonsai install:
+These steps should create a basic Bonsai install:
 
    ./configure
    make install
 
-   You might want to give the option --prefix=<path> to configure to
+You might want to give the option --prefix=<path> to configure to
 install Bonsai in another place than /usr/local, e.g. /var/www.  It
 will make a new directory named "bonsai" in the prefix directory you specify.
 
-   Ensure that the bonsai cgi programs can write and create files in the 
+Ensure that the bonsai cgi programs can write and create files in the 
 data directory.  Typically this means making the data directory owned by 
 the web cgi id.  Bonsai does not need to change the executable files in the 
 main bonsai directory so these can be owned as root.
 
-   Edit data/treeconfig.pl file as described in README file. Create
-appropriate data/XXX directory for each tree XXX you've configured in
-'treeconfig.pl'. This file maps the names of trees to branch/module
-combinations.  You will need to have at least one module in your CVS
-repository to run Bonsai.  Typically users create a module called All
-which contains all the directories in the CVS repository. All
-repositories must be written as if they were local repositories (eg
-'/cvsroot') without hostnames or ':pserver:'.  The cgi-bin scripts
-will access these directories on the web machine and they must contain
-the ',v' files which match cvsroot as listed in the checkin mail from
-the real CVS machine.
+Test using your web browser that you will not be able to access the data
+directory (you should get "access denied").
 
-   Go to the data directory and run 
+Edit data/treeconfig.pl file:
 
-   trapdoor <admin password here> >data/passwd
+   treeconfig.pl defines @::TreeList, a list of trees you
+   want to track, and %::TreeInfo, information about each of those
+   trees.  A sample treeconfig.pl:
 
-   it will set up admin's password.
+	@::TreeList = ('default', 'other');
 
-   Bonsai should now be accessible via a web browser but not all 
+	%::TreeInfo = (
+	     default => {
+		  branch       => '',
+		  description  => 'My CVS repository',
+		  module       => 'All',
+		  repository   => '/d2/cvsroot',
+		  shortdesc    => 'Mine',
+			},
+	     other => {
+		  branch       => '',
+		  description  => 'Other CVS repository',
+		  module       => 'All',
+		  repository   => '/d2/otherroot',
+		  shortdesc    => 'Other',
+			},
+		
+		       );
+
+	1;
+
+Create data/XXX directory for each tree you defined in treeconfig
+(data/default and data/other using the example above). This file maps the 
+names of trees to branch/module combinations.  You will need to have at 
+least one module in your CVS repository to run Bonsai.  Typically users 
+create a module called All which contains all the directories in the CVS 
+repository. All repositories must be written as if they were local 
+repositories (eg '/cvsroot') without hostnames or ':pserver:'.  
+The cgi-bin scripts will access these directories on the web machine and 
+they must contain the ',v' files which match cvsroot as listed in the 
+checkin mail from the real CVS machine.
+
+Run createlegaldirs.pl to create legaldirs for your module. Using the
+sample treeconfig above you would run createlegaldirs.pl like this:
+
+     perl createlegaldirs.pl default other
+
+Go to the data directory and run 
+
+   trapdoor <admin password here> >passwd
+
+it will set up admin's password.
+
+Bonsai should now be accessible via a web browser but not all 
 functionality is installed yet.  Visit admin.cgi and set all the parameters.
 
 That's basically it. With some luck and persistence you will have 90%
@@ -224,10 +273,15 @@ fixed in near feature. And I hope they will be.
 
 3. Setting up database
 
-   This is quite simple but time consuming operation.
-First create database structure using maketable.sh script. You might
-want to edit it to use the user and password you want for the bonsai
-database.
+This is quite simple but time consuming operation.
+First create database structure by running:
+
+   maketable.sh
+
+Edit it to use the user and password you want for the bonsai database. 
+Set file permissions so that only the Bonsai administrator can run this 
+file (typically owner and group are set to root, and access to all but 
+owner denied).
 
 You must ensure that your web machine can access the CVS repositories
 raw data files (',v' files). If the CVS repository is on another
@@ -246,7 +300,7 @@ file. The more revisions in file the more time it will take. My SUN
 workstation with 2x200Mhz UltraSPARC processors run about an hour to
 process about 4K files with 20K+ revisions. Your mileage may vary.  
 
-If you need to do this more then once you may wish to purge ethe
+If you need to do this more then once you may wish to purge the
 legaldirs file in the data directory.  This is a cache file which
 holds the names of the directories in CVS, if a directory is not
 listed here it will not be loaded into the database.  Changes to the
@@ -257,24 +311,46 @@ I have also found it useful to rerun maketables.sh before reloading the
 CVS information.  If I forget to do this step occasionally the load
 will fail in the middle because of duplicate data in the table.
 
-Copy "dolog.pl" to your CVSROOT directory, and check it in. Add
-"dolog.pl" to CVSROOT/checkoutlist, and check it in. Then, add a line
-to your CVSROOT/loginfo file that says something like:
+Copy "dolog.pl" to your CVSROOT directory, and check it in. 
 
-      ALL      $CVSROOT/CVSROOT/dolog.pl -r /cvsroot bonsai-checkin-daemon@my.bonsai.machine
+Add "dolog.pl" to CVSROOT/checkoutlist, and check it in. 
+
+Then, add a line to your CVSROOT/loginfo file that says something like:
+
+   ALL      $CVSROOT/CVSROOT/dolog.pl -r /cvsroot bonsai-checkin-daemon@my.bonsai.machine
 
 Replace "/cvsroot" with the name of the CVS root directory, and
-"my.bonsai.machine" with the name of the machine Bonsai runs on. Now,
-on my.bonsai.machine, add a mail alias so that mail sent to
-"bonsai-checkin-daemon" will get piped to handleCheckinMail.tcl. The
-first argument to handleCheckinMail.tcl is the directory that bonsai
+"my.bonsai.machine" with the name of the machine Bonsai runs on. 
+
+Now, on my.bonsai.machine, add a mail alias so that mail sent to
+"bonsai-checkin-daemon" will get piped to handleCheckinMail.pl. The
+first argument to handleCheckinMail.pl is the directory that bonsai
 is installed in. E.g. in /etc/aliases, add
 
- bonsai-checkin-daemon: "|/usr/local/bonsai/handleCheckinMail.pl /usr/local/bonsai"
+   bonsai-checkin-daemon: "|/usr/local/bonsai/handleCheckinMail.pl /usr/local/bonsai"
 
-or whatever is appropriate for your mail transport agent.
+or whatever is appropriate for your mail transport agent. Note that if
+you are using smrsh with Sendmail, you will need to list handleCheckinMail.pl 
+in /etc/smrsh. For example:
+
+  cd /etc/smrsh
+  ln -s /usr/local/bonsai/handleCheckinMail.pl handleCheckinMail.pl
+
+and change the bonsai-checkin-daemon in /etc/aliases to point to
+/etc/smrsh/handleCheckinMail.pl
  
-4. Things to do
+
+4. Registry
+
+The Bonsai administrator interface will let you specify where the registry
+tools are located relative to bonsai. The default is ../registry. Copy
+the registry directory into this location.
+
+One of the registry files has a hardcoded netscape.com domain name in it.
+Open who.cgi in your favorite editor and change that as needed.
+
+
+5. Things to do
 
   a) There should be better way to track CVS tree changes. Now it's done
 by making CVS send e-mail about each checkin.  (See the comments at
@@ -295,9 +371,67 @@ it will have on performance though. Incremental database updates would
 be nice. It might also be nice to borrow syntax highlighting from LSN.
 
 
-5. Conclusion.
+6. Conclusion.
 
-   OK. This may or may not work for you. But I hope you had a great
+OK. This may or may not work for you. But I hope you had a great
 time trying. Or just reading.
 
-   Any suggestions/additions are welcome.
+Any suggestions/additions are welcome.
+
+
+7. APPENDIX: Permisions
+
+7.1 mySQL Permissions
+
+If you have trouble with the database, make bonsai database
+writable by all users on your machine and change access level
+later. This could save you a lot of time trying to guess whether it's
+permissions or a mistake in the script that make things fail.
+
+7.2 File System Permissions
+
+Some symptoms that may be caused by wrong file permissions: pages do not 
+show up, or they show up only partially; new checkins do not show up.
+
+The bonsai installation directory needs to be accessible by the web server
+process and mail process that runs handleCheckinMail.pl. These are typically
+"apache" and "mail", respectively. make install will set permissions to allow
+everybody access. Note that maketables.sh should only be available to Bonsai 
+administrator, and you must change this by hand!
+
+Everything in the data directory and its subdirectories needs to be 
+accessible by the web server process. Some of the files will also need to
+be accessible by the mail process. Some files will need to be accessible to
+all. Below is a sample that is known to work:
+
+   drwxrwxrwx    apache   mail         ./
+   -rw-rw-rw-    apache   apache       batch-1.pl
+   -rw-rw----    apache   mail         batchid.pl
+   -rw-rw----    apache   apache       cachedstartdates
+   drwxrwx---    apache   mail         checkinlog/
+   -rw-rw----    apache   mail         cvsgraph.conf
+   drwxrw----    apache   mail         default/
+   -rw-rw----    apache   mail         hidelist
+   -rw-rw-rw-    apache   apache       hooklist
+   -rw-rw----    apache   mail         legaldirs
+   -rw-rw-rw-    apache   apache       lock
+   -rw-rw-rw-    apache   mail         log
+   -rw-rw-rw-    apache   apache       motd.pl
+   -rw-rw-rw-    apache   apache       params
+   -rw-rw-r--    apache   apache       passwd
+   -rwxrw----    apache   apache       trapdoor*
+   -rw-rw----    apache   mail         treeconfig.pl
+   -rw-rw-rw-    apache   apache       whiteboard
+
+7.3 Disable web access to data directory
+
+You should make it so that web users can not browse the data directory,
+or anybody can read data meant only for administrators. In Apache you would 
+typically write the following section in http.conf and restart the server:
+
+   <Directory /var/www/html/bonsai/data>
+      AllowOverride None
+      Options None
+      Order deny,allow
+      Deny from All
+   </Directory>

@@ -32,32 +32,7 @@ yet.
 Some of these files are:
 treeconfig.pl: 	some Perl source that defines @::TreeList, a list of trees you
 		want to track, and %::TreeInfo, information about each of those
-		trees.  A sample treeconfig.pl:
-
-	@::TreeList = ('default', 'other');
-
-	%::TreeInfo = (
-	     default => {
-		  branch       => '',
-		  description  => 'My CVS repository',
-		  module       => 'All',
-		  repository   => '/d2/cvsroot',
-		  shortdesc    => 'Mine',
-			},
-	     other => {
-		  branch       => '',
-		  description  => 'Other CVS repository',
-		  module       => 'All',
-		  repository   => '/d2/otherroot',
-		  shortdesc    => 'Other',
-			},
-		
-
-		       );
-
-	1;
-
-
+		trees. 
 
 params:	This file contains many operating parameters.  This can be 
 	edited using the editparams.cgi webpage; you should probably
@@ -80,7 +55,9 @@ params:	This file contains many operating parameters.  This can be
 
 hidelist:	A list of regexps that define filenames that we don't want
 		to let people see via the bonsai pages.  A common use is to
-		just have one line that says "CVSROOT".
+		just have one line that says "CVSROOT". Note that the files
+		and directories will actually be visible, this just prevents
+		people from looking at their contents.
 
 legaldirs:	A list of directories to traverse when rebuilding the
 		history of the repository.  This file is required to exist
