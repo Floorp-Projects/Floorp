@@ -208,7 +208,7 @@ NS_IMETHODIMP nsDocShellTreeOwner::GetNewWindow(PRInt32 aChromeFlags,
    *aDocShellTreeItem = nsnull;
 
    nsCOMPtr<nsIWebBrowser> webBrowser;
-   NS_ENSURE_STATE(mWebBrowserChrome, NS_ERROR_FAILURE);
+   NS_ENSURE_TRUE(mWebBrowserChrome, NS_ERROR_FAILURE);
    mWebBrowserChrome->GetNewBrowser(aChromeFlags, getter_AddRefs(webBrowser));
    NS_ENSURE_TRUE(webBrowser, NS_ERROR_FAILURE);
 
