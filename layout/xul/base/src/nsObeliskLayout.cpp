@@ -93,10 +93,7 @@ nsObeliskLayout::GetPrefSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize& aSi
   //nscoord totalWidth = 0;
 
   if (node) {
-  // for each info
-  //while(node)
-  //{
-    // if the infos pref width is greater than aSize's use it.
+   // if the infos pref width is greater than aSize's use it.
     // if the infos min width is greater than aSize's use it.
     // if the infos max width is smaller than aSizes then set it.
     nsBoxSize size = node->GetBoxSize(aState);
@@ -107,16 +104,9 @@ nsObeliskLayout::GetPrefSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize& aSi
     if (s > s2)
       s2 = s;
 
-    //totalWidth += size.pref;
-
-    //node = node->GetNext();
   }
 
-  //nscoord& width = GET_WIDTH(aSize, isHorizontal);
-  //if (totalWidth > width)
-//    width = totalWidth;
-
-  return NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -132,9 +122,6 @@ nsObeliskLayout::GetMinSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize& aSiz
   aBox->GetOrientation(isHorizontal);
 
   if (node) {
-  // for each info
-  //while(node)
-  //{
     // if the infos pref width is greater than aSize's use it.
     // if the infos min width is greater than aSize's use it.
     // if the infos max width is smaller than aSizes then set it.
@@ -145,8 +132,6 @@ nsObeliskLayout::GetMinSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize& aSiz
 
     if (s > s2)
       s2 = s;
-
-  //  node = node->GetNext();
   }
 
   return rv;
@@ -165,10 +150,7 @@ nsObeliskLayout::GetMaxSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize& aSiz
   aBox->GetOrientation(isHorizontal);
 
   if (node) {
-  // for each info
- // while(node)
-  //{
-    // if the infos pref width is greater than aSize's use it.
+   // if the infos pref width is greater than aSize's use it.
     // if the infos min width is greater than aSize's use it.
     // if the infos max width is smaller than aSizes then set it.
     nsBoxSize size = node->GetBoxSize(aState);
@@ -179,7 +161,6 @@ nsObeliskLayout::GetMaxSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize& aSiz
     if (s > s2)
       s2 = s;
 
-  //  node = node->GetNext();
   }
 
   return rv;

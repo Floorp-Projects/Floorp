@@ -79,7 +79,7 @@ NS_NewSliderFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 } // NS_NewSliderFrame
 
 nsSliderFrame::nsSliderFrame(nsIPresShell* aPresShell):nsBoxFrame(aPresShell),
- mCurPos(0), mScrollbarListener(nsnull),mChange(0)
+ mCurPos(0), mScrollbarListener(nsnull),mChange(0), mMediator(nsnull)
 {
 }
 
@@ -217,10 +217,10 @@ nsSliderFrame::Paint(nsIPresContext* aPresContext,
   thumb->GetMargin(m);
   thumbRect.Inflate(m);
 
-  nsRect rect;
-  GetClientRect(rect);
+  nsRect crect;
+  GetClientRect(crect);
 
-  if (rect.width < thumbRect.width || rect.height < thumbRect.height)
+  if (crect.width < thumbRect.width || crect.height < thumbRect.height)
   {
     if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
     const nsStyleDisplay* disp = (const nsStyleDisplay*)
@@ -449,7 +449,6 @@ nsSliderFrame::HandleEvent(nsIPresContext* aPresContext,
     } 
     break;
 
-    case NS_MOUSE_RIGHT_BUTTON_UP:
     case NS_MOUSE_LEFT_BUTTON_UP:
        // stop capturing
       //printf("stop capturing\n");
@@ -466,7 +465,10 @@ nsSliderFrame::HandleEvent(nsIPresContext* aPresContext,
   }
 
   // XXX hack until handle release is actually called in nsframe.
-  if (aEvent->message == NS_MOUSE_EXIT_SYNTH || aEvent->message == NS_MOUSE_RIGHT_BUTTON_UP || aEvent->message == NS_MOUSE_LEFT_BUTTON_UP)
+//  if (aEvent->message == NS_MOUSE_EXIT_SYNTH || aEvent->message == NS_MOUSE_RIGHT_BUTTON_UP || aEvent->message == NS_MOUSE_LEFT_BUTTON_UP)
+  //   HandleRelease(aPresContext, aEvent, aEventStatus);
+
+  if (aEvent->message == NS_MOUSE_EXIT_SYNTH || aEvent->message == NS_MOUSE_LEFT_BUTTON_UP)
      HandleRelease(aPresContext, aEvent, aEventStatus);
 
   return nsFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
@@ -664,6 +666,24 @@ nsSliderFrame::SetInitialChildList(nsIPresContext* aPresContext,
 }
 
 nsresult
+nsSliderMediator::MouseDown(nsIDOMEvent* aMouseEvent)
+{
+  if (mSlider) 
+    return mSlider->MouseDown(aMouseEvent); 
+  else 
+    return NS_OK; 
+}
+
+nsresult
+nsSliderMediator::MouseUp(nsIDOMEvent* aMouseEvent)
+{
+  if (mSlider) 
+    return mSlider->MouseUp(aMouseEvent); 
+  else 
+    return NS_OK; 
+}
+
+nsresult
 nsSliderFrame::MouseDown(nsIDOMEvent* aMouseEvent)
 {
   //printf("Begin dragging\n");
@@ -671,6 +691,13 @@ nsSliderFrame::MouseDown(nsIDOMEvent* aMouseEvent)
   PRBool isHorizontal = IsHorizontal();
 
   nsCOMPtr<nsIDOMMouseEvent> mouseEvent(do_QueryInterface(aMouseEvent));
+
+  PRUint16 button = 0;
+  mouseEvent->GetButton(&button);
+
+  // only if left button
+  if (button != 1)
+     return NS_OK;
 
   RemoveListener();
   DragThumb(mPresContext, PR_TRUE);
@@ -752,44 +779,32 @@ nsSliderFrame :: isDraggingThumb(nsIPresContext* aPresContext)
 void
 nsSliderFrame::AddListener()
 {
+  if (!mMediator) {
+    mMediator = new nsSliderMediator(this);
+    NS_ADDREF(mMediator);
+  }
+
   nsIFrame* thumbFrame = mFrames.FirstChild();
   nsCOMPtr<nsIContent> content;
   thumbFrame->GetContent(getter_AddRefs(content));
 
   nsCOMPtr<nsIDOMEventReceiver> reciever(do_QueryInterface(content));
 
-  reciever->AddEventListenerByIID(this,NS_GET_IID(nsIDOMMouseListener));
+  reciever->AddEventListenerByIID(mMediator, NS_GET_IID(nsIDOMMouseListener));
 }
 
 void
 nsSliderFrame::RemoveListener()
 {
+  NS_ASSERTION(mMediator, "No listener was ever added!!");
+
   nsIFrame* thumbFrame = mFrames.FirstChild();
   nsCOMPtr<nsIContent> content;
   thumbFrame->GetContent(getter_AddRefs(content));
 
   nsCOMPtr<nsIDOMEventReceiver> reciever(do_QueryInterface(content));
 
-  reciever->RemoveEventListenerByIID(this,NS_GET_IID(nsIDOMMouseListener));
-}
-
-
-NS_INTERFACE_MAP_BEGIN(nsSliderFrame)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMMouseListener)
-  NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
-NS_INTERFACE_MAP_END_INHERITING(nsBoxFrame)
-
-
-NS_IMETHODIMP_(nsrefcnt) 
-nsSliderFrame::AddRef(void)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP_(nsrefcnt) 
-nsSliderFrame::Release(void)
-{
-    return NS_OK;
+  reciever->RemoveEventListenerByIID(mMediator, NS_GET_IID(nsIDOMMouseListener));
 }
 
 NS_IMETHODIMP
@@ -811,7 +826,8 @@ nsSliderFrame::HandlePress(nsIPresContext* aPresContext,
     mChange = change;
     mClickPoint = aEvent->point;
     PageUpDown(thumbFrame, change);
-    nsRepeatService::GetInstance()->Start(this);
+
+    nsRepeatService::GetInstance()->Start(mMediator);
 
   return NS_OK;
 }
@@ -829,9 +845,16 @@ nsSliderFrame::HandleRelease(nsIPresContext* aPresContext,
 NS_IMETHODIMP
 nsSliderFrame::Destroy(nsIPresContext* aPresContext)
 {
+  // tell our mediator if we have one we are gone.
+  if (mMediator) {
+    mMediator->SetSlider(nsnull);
+    NS_RELEASE(mMediator);
+    mMediator = nsnull;
+  }
+
   // Ensure our repeat service isn't going... it's possible that a scrollbar can disappear out
   // from under you while you're in the process of scrolling.
-  nsRepeatService::GetInstance()->Stop();
+  //nsRepeatService::GetInstance()->Stop();
 
   // XXX: HACK!  WORKAROUND FOR BUG 21571
   /*
@@ -857,7 +880,7 @@ nsSliderFrame::Destroy(nsIPresContext* aPresContext)
     methods, we would have gotten assertions as soon as the first slider was passed
     to any interface that tried to refcount it.
   */
-  RemoveListener();   // remove this line when 21571 is fixed properly
+ // RemoveListener();   // remove this line when 21571 is fixed properly
 
   // call base class Destroy()
   return nsBoxFrame::Destroy(aPresContext);
@@ -911,6 +934,12 @@ nsSliderFrame::SetScrollbarListener(nsIScrollbarListener* aListener)
   mScrollbarListener = aListener;
 }
 
+NS_IMETHODIMP_(void) nsSliderMediator::Notify(nsITimer *timer)
+{ 
+  if (mSlider)
+    mSlider->Notify(timer);  
+}
+
 NS_IMETHODIMP_(void) nsSliderFrame::Notify(nsITimer *timer)
 { 
     PRBool stop = PR_FALSE;
@@ -949,6 +978,7 @@ NS_IMETHODIMP_(void) nsSliderFrame::Notify(nsITimer *timer)
     }
 }
 
+/*
 class nsThumbFrame : public nsTitledButtonFrame
 {
 public:
@@ -990,4 +1020,14 @@ NS_NewThumbFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame)
   return NS_OK;
   
 } // NS_NewSliderFrame
+*/
+
+NS_INTERFACE_MAP_BEGIN(nsSliderMediator)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMMouseListener)
+  NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsITimerCallback)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_ADDREF(nsSliderMediator);
+NS_IMPL_RELEASE(nsSliderMediator);
 

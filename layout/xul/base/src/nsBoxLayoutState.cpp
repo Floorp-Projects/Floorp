@@ -39,8 +39,8 @@
 
 nsBoxLayoutState::nsBoxLayoutState(nsIPresContext* aPresContext):mPresContext(aPresContext), 
                                                                  mReflowState(nsnull), 
-                                                                 mMaxElementSize(nsnull),
                                                                  mType(Dirty),
+                                                                 mMaxElementSize(nsnull),
                                                                  mOverFlowSize(0,0),
                                                                  mIncludeOverFlow(PR_TRUE),
                                                                  mLayoutFlags(0)
@@ -67,11 +67,11 @@ nsBoxLayoutState::nsBoxLayoutState(nsIPresShell* aShell):mReflowState(nsnull),
 
 nsBoxLayoutState::nsBoxLayoutState(nsIPresContext* aPresContext, 
                                    const nsHTMLReflowState& aReflowState, 
-                                   nsHTMLReflowMetrics& aDesiredSize):mReflowState(&aReflowState),
-                                                                      mPresContext(aPresContext),
+                                   nsHTMLReflowMetrics& aDesiredSize):mPresContext(aPresContext),
+                                                                      mReflowState(&aReflowState),                                                                    
                                                                       mType(Dirty),
-                                                                      mIncludeOverFlow(PR_TRUE),
                                                                       mOverFlowSize(0,0),
+                                                                      mIncludeOverFlow(PR_TRUE),
                                                                       mLayoutFlags(0)
 
                                                                                         
@@ -240,7 +240,7 @@ nsBoxLayoutState::UnWind(nsIReflowCommand* aCommand, nsIBox* aBox)
         // the target is deep inside html we will have to honor this one.
         // mark us as dirty so we don't post
         // a dirty reflow
-        nsFrameState state;
+        state = 0;
         nsIFrame* frame;
         aBox->GetFrame(&frame);
         frame->GetFrameState(&state);

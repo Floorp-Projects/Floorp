@@ -56,9 +56,10 @@ void Coelesced()
 
 #endif
 
-nsBox::nsBox(nsIPresShell* aShell):mParentBox(nsnull),
+nsBox::nsBox(nsIPresShell* aShell):mMouseThrough(unset),
                                    mNextChild(nsnull),
-                                   mMouseThrough(unset)
+                                   mParentBox(nsnull)
+                                   
 {
   //mX = 0;
   //mY = 0;
@@ -133,11 +134,11 @@ nsBox::MarkDirty(nsBoxLayoutState& aState)
   if (parent)
      return parent->RelayoutDirtyChild(aState, this);
   else {
-    nsIFrame* parent = nsnull;
-    frame->GetParent(&parent);
+    nsIFrame* parentFrame = nsnull;
+    frame->GetParent(&parentFrame);
     nsCOMPtr<nsIPresShell> shell;
     aState.GetPresShell(getter_AddRefs(shell));
-    return parent->ReflowDirtyChild(shell, frame);
+    return parentFrame->ReflowDirtyChild(shell, frame);
   }
 }
 
@@ -152,7 +153,6 @@ nsBox::MarkStyleChange(nsBoxLayoutState& aState)
 {
   NeedsRecalc();
 
-  PRBool dirty = PR_FALSE;
   if (HasStyleChange())
     return NS_OK;
 
@@ -175,11 +175,11 @@ nsBox::MarkStyleChange(nsBoxLayoutState& aState)
     */
     nsIFrame* frame = nsnull;
     GetFrame(&frame);
-    nsIFrame* parent = nsnull;
-    frame->GetParent(&parent);
+    nsIFrame* parentFrame = nsnull;
+    frame->GetParent(&parentFrame);
     nsCOMPtr<nsIPresShell> shell;
     aState.GetPresShell(getter_AddRefs(shell));
-    return parent->ReflowDirtyChild(shell, frame);
+    return parentFrame->ReflowDirtyChild(shell, frame);
 
   }
 

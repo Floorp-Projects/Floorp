@@ -119,10 +119,10 @@ nsSprocketLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
   nscoord maxAscent = 0;
   aBox->GetAscent(aState, maxAscent);
 
-  nscoord minSize = 0;
-  nscoord maxSize = 0;
+  nscoord min = 0;
+  nscoord max = 0;
   PRInt32 flexes = 0;
-  PopulateBoxSizes(aBox, aState, boxSizes, computedBoxSizes, minSize, maxSize, flexes);
+  PopulateBoxSizes(aBox, aState, boxSizes, computedBoxSizes, min, max, flexes);
   
   nscoord size = clientRect.width;
   if (!IsHorizontal(aBox))
@@ -133,21 +133,21 @@ nsSprocketLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
 
   if (IsHorizontal(aBox)) {
       clientRect.width = size;
-      if (clientRect.height < minSize)
-         clientRect.height = minSize;
+      if (clientRect.height < min)
+         clientRect.height = min;
 
       if (frameState & NS_STATE_AUTO_STRETCH) {
-        if (clientRect.height > maxSize)
-           clientRect.height = maxSize;
+        if (clientRect.height > max)
+           clientRect.height = max;
       }
   } else {
       clientRect.height = size;
-      if (clientRect.width < minSize)
-         clientRect.width = minSize;
+      if (clientRect.width < min)
+         clientRect.width = min;
 
       if (frameState & NS_STATE_AUTO_STRETCH) {
-        if (clientRect.width > maxSize)
-           clientRect.width = maxSize;
+        if (clientRect.width > max)
+           clientRect.width = max;
       }
   }
 
@@ -438,6 +438,7 @@ nsSprocketLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
     }
 
     passes++;
+    NS_ASSERTION(passes < 10, "A Box's child is constantly growing!!!!!");
     if (passes > 10) {
       break;
     }
@@ -574,7 +575,6 @@ nsSprocketLayout::PopulateBoxSizes(nsIBox* aBox, nsBoxLayoutState& aState, nsBox
   nsIBox* child = nsnull;
   aBox->GetChildBox(&child);
 
-  PRInt32 count = 0;
   aFlexes = 0;
   nsBoxSize* currentBox = nsnull;
 
@@ -800,7 +800,7 @@ nsSprocketLayout::ChildResized(nsIBox* aBox,
       nscoord& childActualWidth  = GET_WIDTH(aChildActualRect,isHorizontal);
       nscoord& containingWidth   = GET_WIDTH(aContainingRect,isHorizontal);   
       
-      nscoord childLayoutHeight = GET_HEIGHT(aChildLayoutRect,isHorizontal);
+      //nscoord childLayoutHeight = GET_HEIGHT(aChildLayoutRect,isHorizontal);
       nscoord& childActualHeight = GET_HEIGHT(aChildActualRect,isHorizontal);
       nscoord& containingHeight  = GET_HEIGHT(aContainingRect,isHorizontal);
 
@@ -1254,9 +1254,9 @@ nsSprocketLayout::GetFlex(nsIBox* aBox, nsBoxLayoutState& aState, nscoord& aFlex
 
 
 NS_IMETHODIMP
-nsSprocketLayout::IsCollapsed(nsIBox* aBox, nsBoxLayoutState& aState, PRBool& IsCollapsed)
+nsSprocketLayout::IsCollapsed(nsIBox* aBox, nsBoxLayoutState& aState, PRBool& aIsCollapsed)
 {
-  return aBox->IsCollapsed(aState, IsCollapsed);
+  return aBox->IsCollapsed(aState, aIsCollapsed);
 }
 
 void

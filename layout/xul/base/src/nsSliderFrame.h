@@ -32,14 +32,15 @@
 #include "prtypes.h"
 #include "nsIAtom.h"
 #include "nsCOMPtr.h"
-#include "nsIDOMMouseListener.h"
 #include "nsIAnonymousContentCreator.h"
 #include "nsITimerCallback.h"
+#include "nsIDOMMouseListener.h"
 
 class nsString;
 class nsIScrollbarListener;
 class nsISupportsArray;
 class nsITimer;
+class nsSliderFrame;
 
 #define INITAL_REPEAT_DELAY 500
 #define REPEAT_DELAY        50
@@ -47,9 +48,72 @@ class nsITimer;
 nsresult NS_NewSliderFrame(nsIPresShell* aPresShell, nsIFrame** aResult) ;
 
 
-class nsSliderFrame : public nsBoxFrame, 
-                      public nsIDOMMouseListener, 
-                      public nsITimerCallback
+class nsSliderMediator : public nsIDOMMouseListener, 
+                         public nsITimerCallback
+{
+public:
+
+  NS_DECL_ISUPPORTS
+
+  nsSliderFrame* mSlider;
+
+  nsSliderMediator(nsSliderFrame* aSlider) {  mSlider = aSlider; NS_INIT_ISUPPORTS(); }
+  virtual ~nsSliderMediator() {}
+
+  virtual void SetSlider(nsSliderFrame* aSlider) { mSlider = aSlider; }
+
+ /**
+  * Processes a mouse down event
+  * @param aMouseEvent @see nsIDOMEvent.h 
+  * @returns whether the event was consumed or ignored. @see nsresult
+  */
+  virtual nsresult MouseDown(nsIDOMEvent* aMouseEvent);
+
+  /**
+   * Processes a mouse up event
+   * @param aMouseEvent @see nsIDOMEvent.h 
+   * @returns whether the event was consumed or ignored. @see nsresult
+   */
+  virtual nsresult MouseUp(nsIDOMEvent* aMouseEvent);
+
+  /**
+   * Processes a mouse click event
+   * @param aMouseEvent @see nsIDOMEvent.h 
+   * @returns whether the event was consumed or ignored. @see nsresult
+   *
+   */
+  virtual nsresult MouseClick(nsIDOMEvent* aMouseEvent) { return NS_OK; }
+
+  /**
+   * Processes a mouse click event
+   * @param aMouseEvent @see nsIDOMEvent.h 
+   * @returns whether the event was consumed or ignored. @see nsresult
+   *
+   */
+  virtual nsresult MouseDblClick(nsIDOMEvent* aMouseEvent) { return NS_OK; }
+
+  /**
+   * Processes a mouse enter event
+   * @param aMouseEvent @see nsIDOMEvent.h 
+   * @returns whether the event was consumed or ignored. @see nsresult
+   */
+  virtual nsresult MouseOver(nsIDOMEvent* aMouseEvent) { return NS_OK; }
+
+  /**
+   * Processes a mouse leave event
+   * @param aMouseEvent @see nsIDOMEvent.h 
+   * @returns whether the event was consumed or ignored. @see nsresult
+   */
+  virtual nsresult MouseOut(nsIDOMEvent* aMouseEvent) { return NS_OK; }
+
+  virtual nsresult HandleEvent(nsIDOMEvent* aEvent) { return NS_OK; }
+
+
+  NS_IMETHOD_(void) Notify(nsITimer *timer);
+
+}; // class nsSliderFrame
+
+class nsSliderFrame : public nsBoxFrame
 {
 public:
   nsSliderFrame(nsIPresShell* aShell);
@@ -103,53 +167,8 @@ public:
                                  nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
 
- /**
-  * Processes a mouse down event
-  * @param aMouseEvent @see nsIDOMEvent.h 
-  * @returns whether the event was consumed or ignored. @see nsresult
-  */
   virtual nsresult MouseDown(nsIDOMEvent* aMouseEvent);
-
-  /**
-   * Processes a mouse up event
-   * @param aMouseEvent @see nsIDOMEvent.h 
-   * @returns whether the event was consumed or ignored. @see nsresult
-   */
   virtual nsresult MouseUp(nsIDOMEvent* aMouseEvent);
-
-  /**
-   * Processes a mouse click event
-   * @param aMouseEvent @see nsIDOMEvent.h 
-   * @returns whether the event was consumed or ignored. @see nsresult
-   *
-   */
-  virtual nsresult MouseClick(nsIDOMEvent* aMouseEvent) { return NS_OK; }
-
-  /**
-   * Processes a mouse click event
-   * @param aMouseEvent @see nsIDOMEvent.h 
-   * @returns whether the event was consumed or ignored. @see nsresult
-   *
-   */
-  virtual nsresult MouseDblClick(nsIDOMEvent* aMouseEvent) { return NS_OK; }
-
-  /**
-   * Processes a mouse enter event
-   * @param aMouseEvent @see nsIDOMEvent.h 
-   * @returns whether the event was consumed or ignored. @see nsresult
-   */
-  virtual nsresult MouseOver(nsIDOMEvent* aMouseEvent) { return NS_OK; }
-
-  /**
-   * Processes a mouse leave event
-   * @param aMouseEvent @see nsIDOMEvent.h 
-   * @returns whether the event was consumed or ignored. @see nsresult
-   */
-  virtual nsresult MouseOut(nsIDOMEvent* aMouseEvent) { return NS_OK; }
-
-  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr); 
-  NS_IMETHOD_(nsrefcnt) AddRef(void);
-  NS_IMETHOD_(nsrefcnt) Release(void);
 
   virtual nsresult HandleEvent(nsIDOMEvent* aEvent) { return NS_OK; }
 
@@ -180,6 +199,7 @@ public:
                            nsEventStatus*  aEventStatus);
 
   NS_IMETHOD_(void) Notify(nsITimer *timer);
+  friend nsSliderMediator;
 
 protected:
 
@@ -213,6 +233,7 @@ private:
   nscoord mChange;
   nsPoint mClickPoint;
   PRBool mRedrawImmediate;
+  nsSliderMediator* mMediator;
 
 }; // class nsSliderFrame
 
