@@ -59,6 +59,10 @@
 #include "nsITimelineService.h"
 
 #if (!defined(MOZ_ENABLE_FREETYPE2))
+class nsFT2FontCatalog {
+  static void GetFontNames(const char* aPattern, nsFontNodeArray* aNodes);
+};
+
 // nsFreeType stubs for development systems without a FreeType dev env
 void nsFT2FontCatalog::GetFontNames(const char* aPat, nsFontNodeArray* aNodes) {};
 
