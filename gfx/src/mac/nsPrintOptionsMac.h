@@ -30,12 +30,15 @@
 //*****************************************************************************
 //***    nsPrintOptions
 //*****************************************************************************
+#if !TARGET_CARBON
+
 class nsPrintOptionsMac : public nsPrintOptions
 {
 public:
   nsPrintOptionsMac();
   virtual ~nsPrintOptionsMac();
 
+private:
 	THPrint	GetPrintRecord(void) {return mPrintRecord;}
 
   NS_IMETHOD ShowNativeDialog(void);
@@ -45,6 +48,19 @@ public:
 
 };
 
+#else
 
+class nsPrintOptionsMac : public nsPrintOptions
+{
+public:
+  nsPrintOptionsMac() { };
+  virtual ~nsPrintOptionsMac() { };
+
+private:
+  //XXX FILL IN PRINT OPTIONS HERE FOR CARBON
+  
+};
+
+#endif
 
 #endif /* nsPrintOptionsMac_h__ */

@@ -62,7 +62,7 @@ PRUint32 nsDeviceContextMac::sNumberOfScreens = 0;
  *	@update 12/9/98 dwc
  */
 nsDeviceContextMac :: nsDeviceContextMac()
-  : mSpec(nsnull), mSurface(nsnull), mOldPort(nsnull)
+  : mSurface(nsnull), mOldPort(nsnull)
 {
   NS_INIT_REFCNT();
   
@@ -686,7 +686,6 @@ NS_IMETHODIMP nsDeviceContextMac::GetDeviceContextFor(nsIDeviceContextSpec *aDev
 
 	macDC = (nsDeviceContextMac*)aContext;
 	macDC->mSpec = aDevice;
-	NS_ADDREF(aDevice);
 	
 	::GetPort(&curPort);
 
