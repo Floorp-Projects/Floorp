@@ -15,15 +15,17 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+
+/* created 02/02/98.
+ * nsCacheTrace is a silly little class to extract trace 
+ * related functionality. I created this class to make it easier to
+ * change that at one place. In release mode this shouldn't even be there.
+ * I still have to make some changes on the calls to default to noop
+ * in release. -Gagan Saksena 09/15/98 
+ */
 #ifndef _nsCacheTrace_H_
 #define _nsCacheTrace_H_
-/* 
-* nsCacheTrace
-*
-* Gagan Saksena
-* 02/02/98
-* 
-*/
+
 #ifndef CRLF
 #	define CRLF "\r\n"
 #endif

@@ -16,6 +16,11 @@
  * Reserved.
  */
 
+/* The nsFFObject class represent a single object block that is the smallest 
+ * page unit on the flat file. This class is part of the flat file cache architecture.
+ * It consists of the offset of the block and the size in use. 
+ * -Gagan Saksena 09/15/98 */
+
 #ifndef nsFFObject_h__
 #define nsFFObject_h__
 

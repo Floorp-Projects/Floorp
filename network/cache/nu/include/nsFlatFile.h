@@ -16,6 +16,7 @@
  * Reserved.
  */
 
+/* A class to handle flat file storage mechanism -Gagan Saksena 09/15/98 */
 #ifndef nsFlatFile_h__
 #define nsFlatFile_h__
 
@@ -38,7 +39,6 @@
 #endif
 #endif
 
-/** A class to handle flat file storage mechanism */
 static const PRUint32 kPAGE_SIZE =4096; 
 
 class nsFlatFile //: public nsISupports

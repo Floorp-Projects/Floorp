@@ -16,6 +16,11 @@
  * Reserved.
  */
 
+/* This is the TOC or the Table of Contents for the flat file. This class 
+ * is part of the flat file cache architecture. The first entry in the TOC 
+ * is reserved for the list of free objects.
+ * -Gagan Saksena 09/15/98 
+ */
 #ifndef nsTOC_h__
 #define nsTOC_h__
 
