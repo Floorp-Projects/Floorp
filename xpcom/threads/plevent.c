@@ -497,6 +497,8 @@ PL_ProcessPendingEvents(PLEventQueue* self)
     PR_EnterMonitor(self->monitor);
     
     if (self->processingEvents) {
+      _pl_AcknowledgeNativeNotify(self);
+      self->notified = PR_FALSE;
       PR_ExitMonitor(self->monitor);
       return;
     }
