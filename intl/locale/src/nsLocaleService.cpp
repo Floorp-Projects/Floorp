@@ -102,11 +102,11 @@ const char* LocaleList[LocaleListLength] =
 #if defined(XP_UNIX) || defined(XP_BEOS)
 static int posix_locale_category[LocaleListLength] =
 {
-  LC_TIME,
   LC_COLLATE,
   LC_CTYPE,
   LC_MONETARY,
   LC_NUMERIC,
+  LC_TIME,
 #ifdef HAVE_I18N_LC_MESSAGES
   LC_MESSAGES
 #else
@@ -231,55 +231,48 @@ nsLocaleService::nsLocaleService(void)
 #endif
 #if defined(XP_UNIX) || defined(XP_BEOS)
     nsIPosixLocale* posixConverter;
-    nsString xpLocale;
+    nsAutoString xpLocale;
     nsresult result = nsComponentManager::CreateInstance(kPosixLocaleFactoryCID,
                            NULL,kIPosixLocaleIID,(void**)&posixConverter);
     if (NS_SUCCEEDED(result) && posixConverter!=nsnull) {
-        char* lc_all = setlocale(LC_ALL,"");
-        char* lang = getenv("LANG");
+        nsAutoString category;
+        nsLocale* resultLocale;
+        int i;
 
-        if (lc_all!=nsnull) {
-            result = posixConverter->GetXPLocale(lc_all,&xpLocale);
-            if (NS_FAILED(result)) { posixConverter->Release(); return; }
-            PRUnichar* loc = xpLocale.ToNewUnicode();
-            result = NewLocale(loc, &mSystemLocale);
-            nsCRT::free(loc);
-            if (NS_FAILED(result)) { posixConverter->Release(); return; }
-            mApplicationLocale=mSystemLocale;
-            mApplicationLocale->AddRef();
-            posixConverter->Release();
-        } else {
-            if (lang==nsnull) {
-                xpLocale.AssignWithConversion("en-US");
-                PRUnichar* loc = xpLocale.ToNewUnicode();
-                result = NewLocale(loc, &mSystemLocale);
-                nsCRT::free(loc);
-                if (NS_FAILED(result)) { posixConverter->Release(); return; }
-                mApplicationLocale = mSystemLocale;
-                mApplicationLocale->AddRef();
-                posixConverter->Release();
-            } else {
-                int i;
-                nsString category;
-                nsLocale* resultLocale = new nsLocale();
-				        if (resultLocale==NULL) { posixConverter->Release(); return; }
-                for(i=0;i<LocaleListLength;i++) {
-                    char* lc_temp = setlocale(posix_locale_category[i],"");
-                    category.AssignWithConversion(LocaleList[i]);
-                    if (lc_temp==nsnull) xpLocale.AssignWithConversion("en-US");
-                    else xpLocale.AssignWithConversion(lc_temp);
-                    PRUnichar* loc = xpLocale.ToNewUnicode();
-                    PRUnichar* cat = category.ToNewUnicode();
-                    resultLocale->AddCategory(cat, loc);
-                    nsCRT::free(cat);
-                    nsCRT::free(loc);                    
-                }
-                (void)resultLocale->QueryInterface(kILocaleIID,(void**)&mSystemLocale);
-                (void)resultLocale->QueryInterface(kILocaleIID,(void**)&mApplicationLocale);
-                posixConverter->Release();
-            }
+        resultLocale = new nsLocale();
+        if ( resultLocale == NULL ) { 
+            posixConverter->Release(); 
+            return; 
         }
-    }
+        for( i = 0; i < LocaleListLength; i++ ) {
+            char* lc_temp = nsCRT::strdup(setlocale(posix_locale_category[i],""));
+            category.AssignWithConversion(LocaleList[i]);
+            if (lc_temp != nsnull)
+                result = posixConverter->GetXPLocale(lc_temp,&xpLocale);
+            else {
+                char* lang = getenv("LANG");
+                if ( lang == nsnull ) {
+                    nsCAutoString langcstr = "en-US";
+	            lang = nsCRT::strdup( langcstr.GetBuffer() );
+                    result = posixConverter->GetXPLocale(lang,&xpLocale);
+                    nsCRT::free(lang); 
+	        }
+                else
+                    result = posixConverter->GetXPLocale(lang,&xpLocale); 
+            }
+            if (NS_FAILED(result)) {
+                posixConverter->Release();
+                nsCRT::free(lc_temp);
+                return;
+            }
+            resultLocale->AddCategory(category.GetUnicode(),xpLocale.GetUnicode());
+            nsCRT::free(lc_temp);
+        }
+        (void)resultLocale->QueryInterface(kILocaleIID,(void**)&mSystemLocale);
+        (void)resultLocale->QueryInterface(kILocaleIID,(void**)&mApplicationLocale);
+        posixConverter->Release();
+    }  // if ( NS_SUCCEEDED )...
+       
 #endif // XP_UNIX || XP_BEOS
 #if defined(XP_OS2)
     nsIOS2Locale* os2Converter;
