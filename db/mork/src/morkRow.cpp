@@ -284,7 +284,8 @@ void
 morkRow::OnZeroTableUse(morkEnv* ev)
 // OnZeroTableUse() is called when CutTableUse() returns zero.
 {
-  ev->NewWarning("need to implement OnZeroTableUse");
+	// OK, this is a P1 showstopper bug, so I'll comment it out.
+//  ev->NewWarning("need to implement OnZeroTableUse");
 }
 
 void
