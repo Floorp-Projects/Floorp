@@ -18,15 +18,13 @@
 DEPTH=..\..
 IGNORE_MANIFEST=1
 
-!if ("$(MSSDK)" != "") || defined(NGPREFS)
-DIRS= \
-!if "$(MSSDK)" != ""
-      ActiveX \
+!if defined(MOZ_ACTIVEX_SUPPORT)
+DIRS = $(DIRS) ActiveX
 !endif
+
 !if defined(NGPREFS)
-      ngprefs \
+DIRS = $(DIRS) ngprefs
 !endif
-      $(NULL)
-!endif
+
 
 include <$(DEPTH)\config\rules.mak>
