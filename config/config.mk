@@ -531,8 +531,6 @@ DEFINES		+= -DOSARCH=\"$(OS_ARCH)\"
 #
 # Platform dependent switching off of JAVA
 #
-MOZ_OJI=1
-
 ifdef MOZ_JAVA
 DEFINES		+= -DJAVA
 ifdef MOZ_OJI
