@@ -123,9 +123,6 @@
 	      const int VK_CLOSE_BRACKET  = 0xDD;
 	      const int VK_QUOTE          = 0xDE;
 
-		  readonly    attribute	  wstring		text;
-					  attribute	  TextRangeList inputRange;
-
 		  readonly	  attribute   int		    screenX;
 		  readonly    attribute   int		    screenY;
 
