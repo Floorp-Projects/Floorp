@@ -243,7 +243,7 @@ void TestCaseConversion()
                                 (void**) &t);
            
    cout << "Test 1 - CreateInstance():\n";
-   if(( NS_OK != res) || ( t == NULL ) ) {
+   if(NS_FAILED(res) || ( t == NULL ) ) {
      cout << "\t1st CreateInstance failed\n";
    } else {
      t->Release();
@@ -254,7 +254,7 @@ void TestCaseConversion()
                                 kCaseConversionIID,
                                 (void**) &t);
            
-   if(( NS_OK != res) || ( t == NULL ) ) {
+   if(NS_FAILED(res) || ( t == NULL ) ) {
      cout << "\t2nd CreateInstance failed\n";
    } else {
      int i;
@@ -266,7 +266,7 @@ void TestCaseConversion()
     for(i=0;i < T2LEN ; i++)
     {
          res = t->ToUpper(t2data[i], &ch);
-         if(NS_OK != res) {
+         if(NS_FAILED(res)) {
             cout << "\tFailed!! return value != NS_OK\n";
             break;
          }
@@ -279,7 +279,7 @@ void TestCaseConversion()
     for(i=0;i < T3LEN; i++)
     {
          res = t->ToLower(t3data[i], &ch);
-         if(NS_OK != res) {
+         if(NS_FAILED(res)) {
             cout << "\tFailed!! return value != NS_OK\n";
             break;
          }
@@ -292,7 +292,7 @@ void TestCaseConversion()
     for(i=0;i < T4LEN; i++)
     {
          res = t->ToTitle(t4data[i], &ch);
-         if(NS_OK != res) {
+         if(NS_FAILED(res)) {
             cout << "\tFailed!! return value != NS_OK\n";
             break;
          }
@@ -303,7 +303,7 @@ void TestCaseConversion()
 
     cout << "Test 5 - ToUpper(PRUnichar*, PRUnichar*, PRUint32):\n";
     res = t->ToUpper(t2data, buf, T2LEN);
-    if(NS_OK != res) {
+    if(NS_FAILED(res)) {
        cout << "\tFailed!! return value != NS_OK\n";
     } else {
        for(i = 0; i < T2LEN; i++)
@@ -318,7 +318,7 @@ void TestCaseConversion()
 
     cout << "Test 6 - ToLower(PRUnichar*, PRUnichar*, PRUint32):\n";
     res = t->ToLower(t3data, buf, T3LEN);
-    if(NS_OK != res) {
+    if(NS_FAILED(res)) {
        cout << "\tFailed!! return value != NS_OK\n";
     } else {
        for(i = 0; i < T3LEN; i++)
@@ -349,7 +349,7 @@ void RegisterFactories()
                                  UNICHARUTIL_DLL_NAME,
                                  PR_FALSE,
                                  PR_TRUE);
-   if(NS_OK != res)
+   if(NS_FAILED(res))
      cout << "RegisterFactory failed\n";
 }
  
@@ -366,9 +366,9 @@ int main(int argc, char** argv) {
    // --------------------------------------------
    cout << "Finish All The Test Cases\n";
    nsresult res = NS_OK;
-//   res = nsRepository::FreeLibraries();
+   res = nsRepository::FreeLibraries();
 
-   if(NS_OK != res)
+   if(NS_FAILED(res))
       cout << "nsRepository failed\n";
    else
       cout << "nsRepository FreeLibraries Done\n";

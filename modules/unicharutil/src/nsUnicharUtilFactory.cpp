@@ -75,7 +75,7 @@ nsresult nsUnicharUtilFactory::CreateInstance(nsISupports *aDelegate,
   
   nsresult res = inst->QueryInterface(aIID, aResult);
   
-  if(res != NS_OK) {
+  if(NS_FAILED(res)) {
     delete inst;
   }
   return res;
