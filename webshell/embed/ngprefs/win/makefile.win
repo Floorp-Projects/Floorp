@@ -31,7 +31,7 @@ LINCS = \
 
 LLIBS = \
 	$(LIBNSPR)			\
-	$(DIST)\lib\libplc21.lib	\
+	$(DIST)\lib\plc3.lib	\
 	$(DIST)\lib\xppref32.lib	\
 	OLE32.lib			\
 	UUID.lib			\

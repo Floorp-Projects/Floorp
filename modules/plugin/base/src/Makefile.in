@@ -43,7 +43,7 @@ CPPSRCS =                              \
     nsPluginInstancePeer.cpp  \
     $(NULL)
 
-REQUIRES = raptor plugin java xpcom netlib libplc21 oji
+REQUIRES = raptor plugin java xpcom netlib libplc3 oji
 
 CFLAGS += -D_IMPL_NS_PLUGIN
 

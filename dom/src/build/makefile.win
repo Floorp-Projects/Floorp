@@ -51,8 +51,8 @@ MISCDEP =						\
 	$(DIST)\lib\netlib.lib				\
 	$(DIST)\lib\js32$(VERSION_NUMBER).lib		\
 	$(DIST)\lib\xpcom32.lib				\
-	$(DIST)\lib\libplds21.lib			\
-	$(DIST)\lib\libplc21.lib			\
+	$(DIST)\lib\plds3.lib			\
+	$(DIST)\lib\plc3.lib			\
 	$(LIBNSPR)
 
 LCFLAGS = \
@@ -73,8 +73,8 @@ LLIBS=							\
 	$(DIST)\lib\netlib.lib				\
 	$(DIST)\lib\js32$(VERSION_NUMBER).lib		\
 	$(DIST)\lib\xpcom32.lib				\
-	$(DIST)\lib\libplds21.lib			\
-	$(DIST)\lib\libplc21.lib			\
+	$(DIST)\lib\plds3.lib			\
+	$(DIST)\lib\plc3.lib			\
 	$(LIBNSPR)
 
 include <$(DEPTH)\config\rules.mak>

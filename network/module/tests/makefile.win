@@ -74,7 +74,7 @@ LLIBS=$(LLIBS)				\
                 $(DIST)\lib\xpcom32.lib	\
                 $(DIST)\lib\netlib.lib  \
                 $(DIST)\lib\raptorbase.lib  \
-                $(DIST)\lib\libplc21.lib
+                $(DIST)\lib\plc3.lib
 
 LINCS=$(LINCS)  -I. \
                 -I$(PUBLIC)\raptor   \

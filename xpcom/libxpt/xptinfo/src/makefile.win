@@ -37,7 +37,7 @@ LLIBS	=	\
 		$(DIST)\lib\libxpt$(MOZ_BITS).lib	\
 		$(DIST)\lib\xpcom$(MOZ_BITS).lib	\
 		$(LIBNSPR)		\
-        $(DIST)\lib\libplc21.lib \
+        $(DIST)\lib\plc3.lib \
 		$(NULL)
 
 CSRCS	=	\

@@ -74,7 +74,7 @@ LLIBS=				\
  $(DIST)\lib\raptorhtml.lib	\
  $(DIST)\lib\img32$(VERSION_NUMBER).lib     \
  $(DIST)\lib\util.lib        \
- $(DIST)\lib\libplc21.lib    \
+ $(DIST)\lib\plc3.lib    \
  $(DIST)\lib\jsdom.lib       \
  $(DIST)\lib\netlib.lib       \
  $(LIBNSPR)                   \

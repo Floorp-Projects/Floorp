@@ -153,7 +153,7 @@ ifdef MOZ_WITH_NSPR
 NSPR_INSTALL_DIR := $(MOZ_WITH_NSPR)
 NEED_WITH_NSPR   := 1
 else
-ifneq ("$(wildcard /usr/lib/libnspr21*)","")
+ifneq ("$(wildcard /usr/lib/libnspr3*)","")
 NSPR_INSTALL_DIR := /usr
 else
 NSPR_INSTALL_DIR := $(OBJDIR)/nspr
@@ -300,10 +300,10 @@ build:  nspr $(OBJDIR)/Makefile
 
 # Build & install nspr.  Classic build, no autoconf.
 # Linux/RPM available.
-nspr:	$(NSPR_INSTALL_DIR)/lib/libnspr21.so
+nspr:	$(NSPR_INSTALL_DIR)/lib/libnspr3.so
 	@echo NSPR is installed in $(NSPR_INSTALL_DIR)/lib objdir=$(OBJDIR)
 
-$(NSPR_INSTALL_DIR)/lib/libnspr21.so:
+$(NSPR_INSTALL_DIR)/lib/libnspr3.so:
 	@-$(MKDIR) -p $(NSPR_INSTALL_DIR)
 	($(MAKE) -C $(TOPSRCDIR)/nsprpub $(NSPR_GMAKE_OPTIONS)) 
 

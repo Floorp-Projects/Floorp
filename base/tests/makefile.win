@@ -45,7 +45,7 @@ LLIBS=				\
  $(DIST)\lib\netlib.lib         \
 !endif
  $(LIBNSPR)			\
- $(DIST)\lib\libplc21.lib	\
+ $(DIST)\lib\plc3.lib	\
 !if "$(MOZ_BITS)"=="32" && defined(MOZ_DEBUG) && defined(GLOWCODE)
  $(GLOWDIR)\glowcode.lib	\
 !endif

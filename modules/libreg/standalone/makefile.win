@@ -82,13 +82,12 @@ LINCS= $(LINCS) -I$(PUBLIC)/libreg   \
 #//------------------------------------------------------------------------
 include <$(DEPTH)/config/rules.mak>
 
-reg.c::
+reg.c:
     $(RM) $(DEPTH)\modules\libreg\standalone\reg.h
     $(RM) $(DEPTH)\modules\libreg\standalone\reg.c
     $(RM) $(DEPTH)\modules\libreg\standalone\vr_stubs.h
     $(RM) $(DEPTH)\modules\libreg\standalone\vr_stubs.c
     $(RM) $(DEPTH)\modules\libreg\standalone\VerReg.c
-
     copy $(DEPTH)\modules\libreg\src\reg.h $(DEPTH)\modules\libreg\standalone\reg.h
     copy $(DEPTH)\modules\libreg\src\reg.c $(DEPTH)\modules\libreg\standalone\reg.c
     copy $(DEPTH)\modules\libreg\src\vr_stubs.h $(DEPTH)\modules\libreg\standalone\vr_stubs.h
