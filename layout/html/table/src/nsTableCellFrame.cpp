@@ -180,10 +180,10 @@ NS_METHOD nsTableCellFrame::Paint(nsIPresContext& aPresContext,
                                   const nsRect& aDirtyRect,
                                   nsFramePaintLayer aWhichLayer)
 {
-  if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
-    const nsStyleDisplay* disp =
-      (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
+  const nsStyleDisplay* disp =
+    (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
 
+  if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
     if (disp->mVisible) {
       const nsStyleColor* myColor =
         (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
@@ -239,18 +239,19 @@ NS_METHOD nsTableCellFrame::Paint(nsIPresContext& aPresContext,
     aRenderingContext.DrawRect(0, 0, mRect.width, mRect.height);
   }
 
-
-  // if the cell originates in a row and/or col that is collapsed, the bottom and/or
-  // right portion of the cell is painted by translating the rendering context.
-  // XXX What about content that can leak outside the cell?
+  // if the cell originates in a row and/or col that is collapsed, the
+  // bottom and/or right portion of the cell is painted by translating
+  // the rendering context.
   PRBool clipState;
   aRenderingContext.PushState();
   nsPoint offset = mCollapseOffset;
   if ((0 != offset.x) || (0 != offset.y)) {
     aRenderingContext.Translate(offset.x, offset.y);
   }
-  aRenderingContext.SetClipRect(nsRect(-offset.x, -offset.y, mRect.width, mRect.height),
+  if (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow) {
+    aRenderingContext.SetClipRect(nsRect(-offset.x, -offset.y, mRect.width, mRect.height),
                                 nsClipCombine_kIntersect, clipState);
+  }
   PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
   aRenderingContext.PopState(clipState);
   
@@ -267,7 +268,7 @@ nsTableCellFrame::SetSelected(nsIDOMRange *aRange,PRBool aSelected, nsSpread aSp
   //traverse through children unselect tables
   if ((aSpread == eSpreadDown) && aSelected){
     nsIFrame* kid;
-    nsresult rv = FirstChild(nsnull, &kid);
+    FirstChild(nsnull, &kid);
     while (nsnull != kid) {
       kid->SetSelected(nsnull,PR_FALSE,eSpreadDown);
 
@@ -371,7 +372,7 @@ void  nsTableCellFrame::VerticallyAlignChild()
       (const nsStyleText*)mStyleContext->GetStyleData(eStyleStruct_Text);
   /* XXX: remove tableFrame when border-collapse inherits */
   nsTableFrame* tableFrame=nsnull;
-  nsresult rv = nsTableFrame::GetTableFrame(this, tableFrame);
+  (void) nsTableFrame::GetTableFrame(this, tableFrame);
   nsMargin borderPadding;
   GetCellBorder (borderPadding, tableFrame);
   nsMargin padding;
