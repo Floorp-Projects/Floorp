@@ -24,6 +24,7 @@
  *     Jason Eager <jce2@po.cwru.edu>
  *     Stuart Parmenter <pavlov@netscape.com>
  *     Brendan Eich <brendan@mozilla.org>
+ *     Pete Collins <petejc@mozdev.org>
  */
 
 /*
@@ -931,7 +932,7 @@ nsLocalFile::GetFileSize(PRInt64 *aFileSize)
     /* Only two record formats can report correct file content size */
     if ((mCachedStat.st_fab_rfm != FAB$C_STMLF) &&
         (mCachedStat.st_fab_rfm != FAB$C_STMCR)) {
-	return NS_ERROR_FAILURE;
+        return NS_ERROR_FAILURE;
     }
 #endif
 
@@ -1036,11 +1037,13 @@ nsLocalFile::GetParent(nsIFile **aParent)
 {
     CHECK_mPath();
     NS_ENSURE_ARG_POINTER(aParent);
-    *aParent = nsnull;
+    *aParent     = nsnull;
+    PRBool root  = PR_FALSE;
 
     // <brendan, after jband> I promise to play nice
     char *buffer = NS_CONST_CAST(char *, (const char *)mPath),
-         *slashp = buffer;
+         *slashp = buffer, 
+         *orig   = nsCRT::strdup(buffer);
 
     // find the last significant slash in buffer
     slashp = strrchr(buffer, '/');
@@ -1049,17 +1052,26 @@ nsLocalFile::GetParent(nsIFile **aParent)
         return NS_ERROR_FILE_INVALID_PATH;
 
     // for the case where we are at '/'
-    if (slashp == buffer)
+    if (slashp == buffer) {
         slashp++;
+        root=PR_TRUE;
+    }
 
     // temporarily terminate buffer at the last significant slash
     *slashp = '\0';
     nsCOMPtr<nsILocalFile> localFile;
     nsresult rv = NS_NewLocalFile(buffer, PR_TRUE, getter_AddRefs(localFile));
-    *slashp = '/';
+
+    if(root) {
+        mPath.Adopt(orig);
+    }   else {
+        *slashp = '/';
+        nsMemory::Free(orig);
+    }
 
     if (NS_SUCCEEDED(rv) && localFile)
         rv = localFile->QueryInterface(NS_GET_IID(nsIFile), (void**)aParent);
+
     return rv;
 }
 
