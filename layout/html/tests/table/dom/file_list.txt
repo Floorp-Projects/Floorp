@@ -30,4 +30,5 @@ file:///s:/mozilla/layout/html/tests/table/dom/insertRowsExpand1.html
 file:///s:/mozilla/layout/html/tests/table/dom/insertRowsRebuild1.html
 file:///s:/mozilla/layout/html/tests/table/dom/insertTbodyExpand1.html
 file:///s:/mozilla/layout/html/tests/table/dom/insertTbodyRebuild1.html
+file:///s:/mozilla/layout/html/tests/table/dom/insertTbodyRebuild1.html
 
