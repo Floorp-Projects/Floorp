@@ -194,7 +194,6 @@ nsBoxToBlockAdaptor::~nsBoxToBlockAdaptor()
 NS_IMETHODIMP
 nsBoxToBlockAdaptor::NeedsRecalc()
 {
-  mSizeSet = PR_FALSE;
   mMinWidth = -1;
   mPrefNeedsRecalc = PR_TRUE;
   SizeNeedsRecalc(mMinSize);
@@ -380,11 +379,16 @@ nsBoxToBlockAdaptor::GetAscent(nsBoxLayoutState& aState, nscoord& aAscent)
     return NS_OK;
   }
 
+  aAscent = 0;
+
+  return NS_OK;
+
+  /*
   nsSize size;
   GetPrefSize(aState, size);
 
   aAscent = mAscent;
-
+  */
   return NS_OK;
 }
 
@@ -444,6 +448,9 @@ nsBoxToBlockAdaptor::Layout(nsBoxLayoutState& aState)
        mFrame->SizeTo(presContext, 0, 0);
      } else {
        mAscent = desiredSize.ascent;
+
+       // if our child needs to be bigger. This might happend with wrapping text. There is no way to predict its
+       // height until we reflow it. Now that we know the height reshuffle upward.
        if (desiredSize.width > ourRect.width || desiredSize.height > ourRect.height) {
 
 #ifdef DEBUG_GROW
@@ -456,9 +463,11 @@ nsBoxToBlockAdaptor::Layout(nsBoxLayoutState& aState)
 
          if (desiredSize.height > ourRect.height)
             ourRect.height = desiredSize.height;
-
-         mFrame->SizeTo(presContext, ourRect.width, ourRect.height);
        }
+
+       // ensure our size is what we think is should be. Someone could have
+       // reset the frame to be smaller or something dumb like that. 
+       mFrame->SizeTo(presContext, ourRect.width, ourRect.height);
      }
    }
 
@@ -710,12 +719,13 @@ nsBoxToBlockAdaptor::Reflow(nsBoxLayoutState& aState,
    //       PlaceChild(aPresContext, mFrame, aX + margin.left, aY + margin.top);
    // }
 
+    /*
     // html doesn't like 0 sizes.
     if (reflowState.mComputedWidth == 0)
       reflowState.mComputedWidth = 1;
     if (reflowState.mComputedHeight == 0)
       reflowState.mComputedHeight = 1;
-
+    */
 
     // if we were marked for style change.
     // 1) see if we are just supposed to do a resize if so convert to a style change. Kill 2 birds

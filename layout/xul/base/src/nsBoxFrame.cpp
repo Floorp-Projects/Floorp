@@ -168,11 +168,6 @@ public:
     nsBoxFrame::Valignment mValign;
     nsBoxFrame::Halignment mHalign;
     
-    nsSize mPrefSize;
-    nsSize mMinSize;
-    nsSize mMaxSize;
-    nscoord mFlex;
-    nscoord mAscent;
     nsIPresContext* mPresContext;
 
     static PRBool gDebug;
@@ -688,17 +683,17 @@ nsBoxFrame::Reflow(nsIPresContext*   aPresContext,
 NS_IMETHODIMP
 nsBoxFrame::GetPrefSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)
 {
-  if (!DoesNeedRecalc(mInner->mPrefSize)) {
-     aSize = mInner->mPrefSize;
+  if (!DoesNeedRecalc(mPrefSize)) {
+     aSize = mPrefSize;
      return NS_OK;
   }
 
   PropagateDebug(aBoxLayoutState);
 
   nsresult rv = NS_OK;
-  rv = nsContainerBox::GetPrefSize(aBoxLayoutState, mInner->mPrefSize);
+  rv = nsContainerBox::GetPrefSize(aBoxLayoutState, mPrefSize);
 
-  aSize = mInner->mPrefSize;
+  aSize = mPrefSize;
  
   return rv;
 }
@@ -706,17 +701,17 @@ nsBoxFrame::GetPrefSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)
 NS_IMETHODIMP
 nsBoxFrame::GetAscent(nsBoxLayoutState& aBoxLayoutState, nscoord& aAscent)
 {
-  if (!DoesNeedRecalc(mInner->mAscent)) {
-     aAscent = mInner->mAscent;
+  if (!DoesNeedRecalc(mAscent)) {
+     aAscent = mAscent;
      return NS_OK;
   }
 
   PropagateDebug(aBoxLayoutState);
 
   nsresult rv = NS_OK;
-  rv = nsContainerBox::GetAscent(aBoxLayoutState, mInner->mAscent);
+  rv = nsContainerBox::GetAscent(aBoxLayoutState, mAscent);
 
-  aAscent = mInner->mAscent;
+  aAscent = mAscent;
  
   return rv;
 }
@@ -724,8 +719,8 @@ nsBoxFrame::GetAscent(nsBoxLayoutState& aBoxLayoutState, nscoord& aAscent)
 NS_IMETHODIMP
 nsBoxFrame::GetMinSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)
 {
-  if (!DoesNeedRecalc(mInner->mMinSize)) {
-     aSize = mInner->mMinSize;
+  if (!DoesNeedRecalc(mMinSize)) {
+     aSize = mMinSize;
      return NS_OK;
   }
 
@@ -733,10 +728,10 @@ nsBoxFrame::GetMinSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)
 
   nsresult rv = NS_OK;
 
-  mInner->mMinSize.SizeTo(0,0);
-  rv = nsContainerBox::GetMinSize(aBoxLayoutState, mInner->mMinSize);
+  mMinSize.SizeTo(0,0);
+  rv = nsContainerBox::GetMinSize(aBoxLayoutState, mMinSize);
   
-  aSize = mInner->mMinSize;
+  aSize = mMinSize;
 
   return rv;
 }
@@ -744,8 +739,8 @@ nsBoxFrame::GetMinSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)
 NS_IMETHODIMP
 nsBoxFrame::GetMaxSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)
 {
-  if (!DoesNeedRecalc(mInner->mMaxSize)) {
-     aSize = mInner->mMaxSize;
+  if (!DoesNeedRecalc(mMaxSize)) {
+     aSize = mMaxSize;
      return NS_OK;
   }
 
@@ -753,10 +748,10 @@ nsBoxFrame::GetMaxSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)
 
   nsresult rv = NS_OK;
 
-  mInner->mMaxSize.SizeTo(0,0);
-  nsContainerBox::GetMaxSize(aBoxLayoutState, mInner->mMaxSize);
+  mMaxSize.SizeTo(0,0);
+  nsContainerBox::GetMaxSize(aBoxLayoutState, mMaxSize);
   
-  aSize = mInner->mMaxSize;
+  aSize = mMaxSize;
 
   return rv;
 }
@@ -764,16 +759,16 @@ nsBoxFrame::GetMaxSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)
 NS_IMETHODIMP
 nsBoxFrame::GetFlex(nsBoxLayoutState& aBoxLayoutState, nscoord& aFlex)
 {
-  if (!DoesNeedRecalc(mInner->mFlex)) {
-     aFlex = mInner->mFlex;
+  if (!DoesNeedRecalc(mFlex)) {
+     aFlex = mFlex;
      return NS_OK;
   }
 
   nsresult rv = NS_OK;
 
-  mInner->mFlex = 0;
-  rv = nsContainerBox::GetFlex(aBoxLayoutState, mInner->mFlex);
-  aFlex = mInner->mFlex;
+  mFlex = 0;
+  rv = nsContainerBox::GetFlex(aBoxLayoutState, mFlex);
+  aFlex = mFlex;
 
   return rv;
 }
@@ -862,11 +857,11 @@ NS_IMETHODIMP
 nsBoxFrame::NeedsRecalc()
 {
   if (mInner) {
-    SizeNeedsRecalc(mInner->mPrefSize);
-    SizeNeedsRecalc(mInner->mMinSize);
-    SizeNeedsRecalc(mInner->mMaxSize);
-    CoordNeedsRecalc(mInner->mFlex);
-    CoordNeedsRecalc(mInner->mAscent);
+    SizeNeedsRecalc(mPrefSize);
+    SizeNeedsRecalc(mMinSize);
+    SizeNeedsRecalc(mMaxSize);
+    CoordNeedsRecalc(mFlex);
+    CoordNeedsRecalc(mAscent);
   }
   return NS_OK;
 }

@@ -17,16 +17,11 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
+ * Author: Eric D Vaughan <evaughan@netscape.com>
+ *
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
-
-//
-// Eric Vaughan
-// Netscape Communications
-//
-// See documentation in associated header file
-//
 
 #include "nsBoxLayoutState.h"
 #include "nsBox.h"
@@ -48,7 +43,7 @@
 #include "nsIDOMAttr.h"
 
 
-//#define DEBUG_REFLOW
+//#define DEBUG_LAYOUT
 
 #ifdef DEBUG_COELESCED
 static PRInt32 coelesced = 0;
@@ -57,7 +52,7 @@ static PRInt32 coelesced = 0;
 PRInt32 gIndent = 0;
 PRInt32 gLayout = 0;
 
-#ifdef DEBUG_REFLOW
+#ifdef DEBUG_LAYOUT
 void
 nsBoxAddIndents()
 {
@@ -139,7 +134,7 @@ nsBox::GetBoxName(nsAutoString& aName)
 void
 nsBox::EnterLayout(nsBoxLayoutState& aState)
 {
-  #ifdef DEBUG_REFLOW 
+  #ifdef DEBUG_LAYOUT 
 
       nsBoxAddIndents();
 
@@ -169,7 +164,7 @@ nsBox::EnterLayout(nsBoxLayoutState& aState)
 void
 nsBox::ExitLayout(nsBoxLayoutState& aState)
 {
-  #ifdef DEBUG_REFLOW
+  #ifdef DEBUG_LAYOUT
       --gIndent;
   #endif
 }

@@ -367,6 +367,8 @@ nsSprocketLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
         sizeChanged = (childRect.width != oldRect.width || childRect.height != oldRect.height);
      // }
 
+      PRBool possibleRedraw = PR_FALSE;
+
       if (sizeChanged) {
          nsSize maxSize;
          child->GetMaxSize(aState, maxSize);
@@ -381,12 +383,13 @@ nsSprocketLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
          // set it again
          child->SetBounds(aState, childRect);
 
-         needsRedraw = PR_TRUE;
+         // ok a child changed size so we should redraw the whole box. But it still has the possibility of 
+         // redeeming itself. If it happens to get bigger during layout like
+         // wrapping text might. It may still end up the same size as it was. Then
+         // we don't need to redraw ourselves.
+         possibleRedraw = PR_TRUE;
       }
 
-    //  if (childBoxSize)
-    //    if(!childBoxSize->collapsed) 
-     //      child->UnCollapse(aState);
 
       if (layout || sizeChanged) {
         child->Layout(aState);
@@ -461,6 +464,10 @@ nsSprocketLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
 
             child->SetBounds(aState, newChildRect);
 
+            // if the child resized but was the exact size it was. Don't redraw.
+            if (oldRect.width == newChildRect.width || oldRect.height == newChildRect.height)
+               possibleRedraw = PR_FALSE;
+
               // if we are the first we don't need to do a second pass
               if (count == 0)
                  finished = PR_TRUE;
@@ -469,6 +476,9 @@ nsSprocketLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
         x = nextX;
         y = nextY;
       }
+
+      if (possibleRedraw)
+        needsRedraw = PR_TRUE;
 
       childComputedBoxSize = childComputedBoxSize->next;
       childBoxSize = childBoxSize->next;

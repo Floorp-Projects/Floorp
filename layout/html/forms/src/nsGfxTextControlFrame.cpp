@@ -2062,7 +2062,7 @@ nsGfxTextControlFrame::CalculateSizeNavQuirks (nsIPresContext*       aPresContex
     // If COLS was not set then check to see if CSS has the width set
     //if (NS_CONTENT_ATTR_HAS_VALUE != colStatus) {  // col attr will provide width
       if (CSS_NOTSET != aCSSSize.width) {  // css provides width
-        NS_ASSERTION(aCSSSize.width >= 0, "form control's computed width is < 0"); 
+        //NS_ASSERTION(aCSSSize.width >= 0, "form control's computed width is < 0"); 
         if (NS_INTRINSICSIZE != aCSSSize.width) {
           aDesiredSize.width = aCSSSize.width;
           aWidthExplicit = PR_TRUE;
@@ -2271,7 +2271,7 @@ nsGfxTextControlFrame::CalculateSizeStandard (nsIPresContext*       aPresContext
     charWidth = nsFormControlHelper::GetTextSize(aPresContext, aFrame, aSpec.mColDefaultSize, aDesiredSize, aRendContext); 
     aMinSize.width = aDesiredSize.width;
     if (CSS_NOTSET != aCSSSize.width) {  // css provides width
-      NS_ASSERTION(aCSSSize.width >= 0, "form control's computed width is < 0"); 
+      //NS_ASSERTION(aCSSSize.width >= 0, "form control's computed width is < 0"); 
       if (NS_INTRINSICSIZE != aCSSSize.width) {
         aDesiredSize.width = aCSSSize.width;
         aWidthExplicit = PR_TRUE;
