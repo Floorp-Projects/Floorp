@@ -56,6 +56,11 @@ nsOS2Locale::~nsOS2Locale(void)
 
 }
 
+/* Workaround for GCC problem */
+#ifndef LOCI_sName
+#define LOCI_sName 100
+#endif
+
 NS_IMETHODIMP 
 nsOS2Locale::GetPlatformLocale(PRUnichar* os2Locale, size_t length)
 {
