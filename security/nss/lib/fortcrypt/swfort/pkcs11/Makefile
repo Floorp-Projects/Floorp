@@ -34,6 +34,7 @@
 
 include manifest.mn
 include $(CORE_DEPTH)/coreconf/config.mk
+include config.mk
 
 
 #SWCILIB			= ../$(OBJDIR)/$(LIB_PREFIX)swfci.$(LIB_SUFFIX)

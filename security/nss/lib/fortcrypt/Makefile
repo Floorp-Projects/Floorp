@@ -34,6 +34,7 @@
 
 include manifest.mn
 include $(CORE_DEPTH)/coreconf/config.mk
+include config.mk
 
 CILIB                   = $(OBJDIR)/cilib.$(LIB_SUFFIX)
 ORIG_CILIB              = libci/$(OS_CONFIG).$(LIB_SUFFIX)
