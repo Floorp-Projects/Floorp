@@ -505,22 +505,33 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
         case eSocketState_WaitConnect:
             LOG(("nsSocketTransport: Transport [host=%s:%d this=%x] is in WaitConnect state.\n",
                 mHostName, mPort, this));
+
+            // Send status message
+            OnStatus_Locked(NS_NET_STATUS_CONNECTING_TO);
+
             mStatus = doConnection(aSelectFlags);
 
             // on connection failure, reuse next address if one exists
             if (mStatus == NS_ERROR_CONNECTION_REFUSED) {
                 mNetAddress = mNetAddrList.GetNext(mNetAddress);
                 if (mNetAddress) {
-                    LOG(("connection failed... trying next address\n"));
+#if defined(PR_LOGGING)
+                    char buf[50];
+                    PR_NetAddrToString(mNetAddress, buf, sizeof(buf));
+                    LOG(("connection failed... trying %s\n", buf));
+#endif
                     PR_Close(mSocketFD);
                     mSocketFD = nsnull;
-                    // remain in this state
-                    mStatus = NS_BASE_STREAM_WOULD_BLOCK;
+
+                    // mask error status so we'll return to this state
+                    mStatus = NS_OK;
+
+                    // need to re-enter Process() asynchronously
+                    mService->AddToWorkQ(this);
+                    done = PR_TRUE;
+                    continue;
                 }
             }
-
-            // Send status message
-            OnStatus_Locked(NS_NET_STATUS_CONNECTING_TO);
             break;
 
         case eSocketState_WaitReadWrite:
