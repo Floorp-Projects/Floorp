@@ -21,6 +21,6 @@
 
 DEPTH=..\..
 
-DIRS=base build
+DIRS=base soap build
 
 include <$(DEPTH)\config\rules.mak>

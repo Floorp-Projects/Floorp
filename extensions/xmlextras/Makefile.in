@@ -26,6 +26,6 @@ VPATH           = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS            = base build
+DIRS            = base soap build
 
 include $(topsrcdir)/config/rules.mk

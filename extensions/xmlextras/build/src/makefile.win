@@ -26,7 +26,7 @@ DLL = $(LIBNAME).dll
 ################################################################################
 ## library
 
-LINCS=-I..\..\base\src
+LINCS=-I..\..\base\src -I..\..\soap\src
 
 CPP_OBJS=					    \
 		.\$(OBJDIR)\nsXMLExtrasModule.obj   \
@@ -36,6 +36,7 @@ LLIBS=						      \
 		$(DIST)\lib\xpcom.lib		      \
 		$(DIST)\lib\js3250.lib		      \
                 $(DIST)\lib\xmlextrasbase_s.lib       \
+                $(DIST)\lib\xmlextrassoap_s.lib       \
 		$(LIBNSPR)	 	              \
 		$(NULL)
 

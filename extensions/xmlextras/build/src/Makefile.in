@@ -34,10 +34,12 @@ CPPSRCS		= nsXMLExtrasModule.cpp
 
 SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/libxmlextrasbase_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libxmlextrassoap_s.$(LIB_SUFFIX) \
 		$(NULL)
 
 LOCAL_INCLUDES	= \
 		-I$(srcdir)/../../base/src \
+		-I$(srcdir)/../../soap/src \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \

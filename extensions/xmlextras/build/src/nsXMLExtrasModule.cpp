@@ -24,6 +24,10 @@
 #include "nsDOMSerializer.h"
 #include "nsXMLHttpRequest.h"
 #include "nsDOMParser.h"
+#include "nsSOAPParameter.h"
+#include "nsSOAPCall.h"
+#include "nsDefaultSOAPEncoder.h"
+#include "nsHTTPSOAPTransport.h"
 #include "nsIAppShellComponent.h"
 #include "nsIScriptExternalNameSet.h"
 #include "nsIScriptNameSetRegistry.h"
@@ -44,6 +48,10 @@ static NS_DEFINE_CID(kCScriptNameSetRegistryCID, NS_SCRIPT_NAMESET_REGISTRY_CID)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDOMSerializer)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsXMLHttpRequest)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDOMParser)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsSOAPCall)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsSOAPParameter)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsDefaultSOAPEncoder)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTTPSOAPTransport)
 
 class nsXMLExtrasNameset : public nsIScriptExternalNameSet {
 public:
@@ -81,6 +89,8 @@ nsXMLExtrasNameset::AddNameSet(nsIScriptContext* aScriptContext)
   static NS_DEFINE_CID(kXMLSerializer_CID, NS_XMLSERIALIZER_CID);
   static NS_DEFINE_CID(kXMLHttpRequest_CID, NS_XMLHTTPREQUEST_CID);
   static NS_DEFINE_CID(kDOMParser_CID, NS_DOMPARSER_CID);
+  static NS_DEFINE_CID(kSOAPCall_CID, NS_SOAPCALL_CID);
+  static NS_DEFINE_CID(kSOAPParameter_CID, NS_SOAPPARAMETER_CID);
   nsresult result = NS_OK;
   nsCOMPtr<nsIScriptNameSpaceManager> manager;
   
@@ -101,6 +111,18 @@ nsXMLExtrasNameset::AddNameSet(nsIScriptContext* aScriptContext)
     result = manager->RegisterGlobalName(NS_ConvertASCIItoUCS2("DOMParser"), 
                                          NS_GET_IID(nsIDOMParser),
                                          kDOMParser_CID, 
+                                         PR_TRUE);
+    NS_ENSURE_SUCCESS(result, result);
+
+    result = manager->RegisterGlobalName(NS_ConvertASCIItoUCS2("SOAPCall"), 
+                                         NS_GET_IID(nsISOAPCall),
+                                         kSOAPCall_CID, 
+                                         PR_TRUE);
+    NS_ENSURE_SUCCESS(result, result);
+
+    result = manager->RegisterGlobalName(NS_ConvertASCIItoUCS2("SOAPParameter"), 
+                                         NS_GET_IID(nsISOAPParameter),
+                                         kSOAPParameter_CID, 
                                          PR_TRUE);
     NS_ENSURE_SUCCESS(result, result);
   }
@@ -225,6 +247,10 @@ static nsModuleComponentInfo components[] = {
   { "XML Serializer", NS_XMLSERIALIZER_CID, NS_XMLSERIALIZER_PROGID, nsDOMSerializerConstructor },
   { "XMLHttpRequest", NS_XMLHTTPREQUEST_CID, NS_XMLHTTPREQUEST_PROGID, nsXMLHttpRequestConstructor },
   { "DOM Parser", NS_DOMPARSER_CID, NS_DOMPARSER_PROGID, nsDOMParserConstructor },
+  { "SOAP Call", NS_SOAPCALL_CID, NS_SOAPCALL_PROGID, nsSOAPCallConstructor },
+  { "SOAP Parameter", NS_SOAPPARAMETER_CID, NS_SOAPPARAMETER_PROGID, nsSOAPParameterConstructor },
+  { "Default SOAP Encoder", NS_DEFAULTSOAPENCODER_CID, NS_DEFAULTSOAPENCODER_PROGID, nsDefaultSOAPEncoderConstructor },
+  { "HTTP SOAP Transport", NS_HTTPSOAPTRANSPORT_CID, NS_HTTPSOAPTRANSPORT_PROGID, nsHTTPSOAPTransportConstructor },
 };
 
 static void PR_CALLBACK
