@@ -42,10 +42,6 @@
 
 #include "stdio.h"
 
-#define DBG 0
-
-Widget gFirstTopLevelWindow = 0; //XXX: REMOVE Kludge should not be needed.
-
 static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
 
 NS_IMPL_ADDREF(nsWindow)
@@ -103,7 +99,6 @@ nsWindow::~nsWindow()
 //-------------------------------------------------------------------------
 void nsWindow::ConvertToDeviceCoordinates(nscoord &aX, nscoord &aY)
 {
-  
 }
 
 //-------------------------------------------------------------------------
@@ -179,7 +174,6 @@ void nsWindow::InitToolkit(nsIToolkit *aToolkit,
       }
     }
   }
-
 }
 
 //-------------------------------------------------------------------------
@@ -211,9 +205,7 @@ void nsWindow::InitDeviceContext(nsIDeviceContext *aContext,
       mContext->Init(aParentWidget);
     }
   }
-
 }
-
 
 void nsWindow::CreateGC()
 {
@@ -240,126 +232,6 @@ void nsWindow::CreateGC()
   }
 }
 
-void nsWindow::CreateMainWindow(nsNativeWidget aNativeParent, 
-                      nsIWidget *aWidgetParent,
-                      const nsRect &aRect,
-                      EVENT_CALLBACK aHandleEventFunction,
-                      nsIDeviceContext *aContext,
-                      nsIAppShell *aAppShell,
-                      nsIToolkit *aToolkit,
-                      nsWidgetInitData *aInitData)
-{
-  Widget mainWindow = 0, frame = 0;
-  mBounds = aRect;
-  mAppShell = aAppShell;
-
-  InitToolkit(aToolkit, aWidgetParent);
-  
-  // save the event callback function
-  mEventCallback = aHandleEventFunction;
-
-  InitDeviceContext(aContext, 
-                    (Widget) aAppShell->GetNativeData(NS_NATIVE_SHELL));
-  
-   // XXX: This is a kludge, need to be able to create multiple top 
-   // level windows instead.
-  if (gFirstTopLevelWindow == 0) {
-    mainWindow = ::XtVaCreateManagedWidget("mainWindow",
-        xmMainWindowWidgetClass,
-        (Widget) aAppShell->GetNativeData(NS_NATIVE_SHELL), 
-        nsnull);
-    gFirstTopLevelWindow = mainWindow;
-  }
-  else {
-    Widget shell = ::XtVaCreatePopupShell(" ",
-        xmDialogShellWidgetClass,
-        (Widget) aAppShell->GetNativeData(NS_NATIVE_SHELL), 0);
-    XtVaSetValues(shell, 
-        XmNwidth, aRect.width, XmNheight, aRect.height, nsnull);
-    mainWindow = ::XtVaCreateManagedWidget("mainWindow",
-				 xmMainWindowWidgetClass,
-				 shell, 
-         nsnull);
-    XtVaSetValues(mainWindow, 
-                                 XmNallowShellResize, 1,
-         XmNwidth, aRect.width, XmNheight, aRect.height, nsnull);
-  }
-
-  // Initially used xmDrawingAreaWidgetClass instead of 
-  // newManageClass. Drawing area will spontaneously resize 
-  // to fit it's contents.  
-
-  frame = ::XtVaCreateManagedWidget("drawingArea",
-				    newManageClass,
-				    mainWindow,
-				    XmNwidth, aRect.width,
-				    XmNheight, aRect.height,
-				    XmNmarginHeight, 0,
-				    XmNmarginWidth, 0,
-                                    XmNrecomputeSize, False,
-                                    XmNuserData, this,
-				    nsnull);
-
-  mWidget = frame ;
-
-  if (mainWindow) {
-    XmMainWindowSetAreas(mainWindow, nsnull, nsnull, nsnull, nsnull, frame);
-  }
-    
-  if (aWidgetParent) {
-    aWidgetParent->AddChild(this);
-  }
-
-  InitCallbacks();
-  CreateGC();
-}
-
-
-void nsWindow::CreateChildWindow(nsNativeWidget aNativeParent, 
-                      nsIWidget *aWidgetParent,
-                      const nsRect &aRect,
-                      EVENT_CALLBACK aHandleEventFunction,
-                      nsIDeviceContext *aContext,
-                      nsIAppShell *aAppShell,
-                      nsIToolkit *aToolkit,
-                      nsWidgetInitData *aInitData)
-{
-  mBounds = aRect;
-  mAppShell = aAppShell;
- 
-  InitToolkit(aToolkit, aWidgetParent);
-  
-  // save the event callback function
-  mEventCallback = aHandleEventFunction;
-  
-  InitDeviceContext(aContext, (Widget)aNativeParent);
-
-  // Initially used xmDrawingAreaWidgetClass instead of 
-  // newManageClass. Drawing area will spontaneously resize 
-  // to fit it's contents.  
-
-  mWidget = ::XtVaCreateManagedWidget("drawingArea",
-                                    newManageClass,
-				    (Widget)aNativeParent,
-				    XmNwidth, aRect.width,
-				    XmNheight, aRect.height,
-				    XmNmarginHeight, 0,
-				    XmNmarginWidth, 0,
-                                    XmNrecomputeSize, False,
-                                    XmNuserData, this,
-				    nsnull);
-  if (aWidgetParent) {
-    aWidgetParent->AddChild(this);
-  }
-
-  // Force cursor to default setting
-  mCursor = eCursor_select;
-  SetCursor(eCursor_standard);
-
-  InitCallbacks();
-  CreateGC();
-}
-
 //-------------------------------------------------------------------------
 //
 // Create a window.
@@ -370,42 +242,119 @@ void nsWindow::CreateChildWindow(nsNativeWidget aNativeParent,
 // aNativeParent is equal to aWidgetParent->GetNativeData(NS_NATIVE_WIDGET)
 //-------------------------------------------------------------------------
 
-void nsWindow::CreateWindow(nsNativeWidget aNativeParent, 
-                      nsIWidget *aWidgetParent,
-                      const nsRect &aRect,
-                      EVENT_CALLBACK aHandleEventFunction,
-                      nsIDeviceContext *aContext,
-                      nsIAppShell *aAppShell,
-                      nsIToolkit *aToolkit,
-                      nsWidgetInitData *aInitData)
+void nsWindow::CreateWindow(nsNativeWidget aNativeParent,
+                            nsIWidget *aWidgetParent,
+                            const nsRect &aRect,
+                            EVENT_CALLBACK aHandleEventFunction,
+                            nsIDeviceContext *aContext,
+                            nsIAppShell *aAppShell,
+                            nsIToolkit *aToolkit,
+                            nsWidgetInitData *aInitData)
 {
   mAppContext = nsAppShell::GetAppContext();
 
-      // keep a reference to the device context
-    if (aContext) {
-        mContext = aContext;
-        NS_ADDREF(mContext);
+  // keep a reference to the device context
+  if (aContext) {
+    mContext = aContext;
+    NS_ADDREF(mContext);
+  }
+  else {
+    nsresult res;
+
+    static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
+    static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
+
+    res = nsComponentManager::CreateInstance(kDeviceContextCID, nsnull, kDeviceContextIID, (void **)&mContext);
+
+    if (NS_OK == res) {
+      mContext->Init(nsnull);
     }
-    else {
-      nsresult  res;
+  }
 
-      static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
-      static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
+  mBounds = aRect;
+  mAppShell = aAppShell;
 
-      res = nsComponentManager::CreateInstance(kDeviceContextCID, nsnull, kDeviceContextIID, (void **)&mContext);
+  InitToolkit(aToolkit, aWidgetParent);
 
-      if (NS_OK == res)
-        mContext->Init(nsnull);
+  // save the event callback function
+  mEventCallback = aHandleEventFunction;
+
+  if (nsnull==aNativeParent) {
+    /************************/
+    /* Create a main window */
+    /************************/
+
+    InitDeviceContext(aContext,
+                      (Widget) aAppShell->GetNativeData(NS_NATIVE_SHELL));
+
+    Widget mainWindow = ::XtVaCreateManagedWidget("mainWindow",
+                        xmMainWindowWidgetClass,
+                        (Widget) aAppShell->GetNativeData(NS_NATIVE_SHELL), 
+                        nsnull);
+
+    // Initially used xmDrawingAreaWidgetClass instead of 
+    // newManageClass. Drawing area will spontaneously resize 
+    // to fit it's contents.  
+
+    mWidget = ::XtVaCreateManagedWidget("drawingArea",
+                                        newManageClass,
+                                        mainWindow,
+                                        XmNwidth, aRect.width,
+                                        XmNheight, aRect.height,
+                                        XmNmarginHeight, 0,
+                                        XmNmarginWidth, 0,
+                                        XmNrecomputeSize, False,
+                                        XmNuserData, this,
+                                        nsnull);
+
+    if (mainWindow) {
+      XmMainWindowSetAreas(mainWindow, nsnull, nsnull, nsnull, nsnull, mWidget);
     }
 
-  if (nsnull==aNativeParent)
-    CreateMainWindow(aNativeParent, aWidgetParent, aRect, 
-        aHandleEventFunction, aContext, aAppShell, aToolkit, aInitData);
-  else
-    CreateChildWindow(aNativeParent, aWidgetParent, aRect, 
-        aHandleEventFunction, aContext, aAppShell, aToolkit, aInitData);
+    if (aWidgetParent) {
+      aWidgetParent->AddChild(this);
+    }
+
+    InitCallbacks();
+    CreateGC();
+  }
+  else {
+    /*************************/
+    /* Create a child window */
+    /*************************/
+
+    InitDeviceContext(aContext, (Widget)aNativeParent);
+
+    // Initially used xmDrawingAreaWidgetClass instead of 
+    // newManageClass. Drawing area will spontaneously resize
+    // to fit it's contents.
+
+    mWidget = ::XtVaCreateManagedWidget("drawingArea",
+                                        newManageClass,
+                                        (Widget)aNativeParent,
+                                        XmNwidth, aRect.width,
+                                        XmNheight, aRect.height,
+                                        XmNmarginHeight, 0,
+                                        XmNmarginWidth, 0,
+                                        XmNrecomputeSize, False,
+                                        XmNuserData, this,
+                                        nsnull);
+    if (aWidgetParent) {
+      aWidgetParent->AddChild(this);
+    }
+
+    // Force cursor to default setting
+
+    // Note -- is this really necessary??  Ideally should find out--I suspect
+    // it isn't.  --ZuperDee
+
+    mCursor = eCursor_select;
+    SetCursor(eCursor_standard);
+
+    InitCallbacks();
+    CreateGC();
+  }
 }
-
 
 //-------------------------------------------------------------------------
 //
@@ -674,7 +623,12 @@ NS_METHOD nsWindow::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
 
   mBounds.width  = aWidth;
   mBounds.height = aHeight;
-  XtVaSetValues(mWidget, XmNx, mBounds.x, XmNy, mBounds.y, XmNwidth, aWidth, XmNheight, aHeight, nsnull);
+  XtVaSetValues(mWidget,
+                XmNx, mBounds.x,
+                XmNy, mBounds.y,
+                XmNwidth, aWidth,
+                XmNheight, aHeight,
+                nsnull);
   if (aRepaint)
     Invalidate(PR_FALSE);
   return NS_OK;
@@ -688,14 +642,6 @@ NS_METHOD nsWindow::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
 NS_METHOD nsWindow::Resize(PRUint32 aX, PRUint32 aY, PRUint32 aWidth,
                            PRUint32 aHeight, PRBool aRepaint)
 {
-  /* XXX: This seems like a very ugly routine here.  I think having two
-   * routines of the same name like this that call each other in this
-   * manner makes the code less readable, and I think we should ideally
-   * find a way of doing away with this routine.
-   * --ZuperDee of Penguin Land(tm).
-   */
-
-  printf("EVIL nsWindow::Resize called\n");
   Resize(aWidth,aHeight,aRepaint);
   Move(aX,aY);
   return NS_OK;
@@ -720,8 +666,8 @@ NS_METHOD nsWindow::Enable(PRBool bState)
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::SetFocus(void)
 {
-   // Go get the parent of all widget's to determine which widget 
-   // tree to use to set the focus. 
+  // Go get the parent of all widget's to determine which widget 
+  // tree to use to set the focus. 
   Widget w = mWidget;
   while (NULL != XtParent(w)) {
     w = XtParent(w);
@@ -731,34 +677,24 @@ NS_METHOD nsWindow::SetFocus(void)
   return NS_OK;
 }
 
-    
-//-------------------------------------------------------------------------
-//
-// Get this component dimension
-//
-//-------------------------------------------------------------------------
+/*
+ * Set this component dimension
+ */
 NS_METHOD nsWindow::SetBounds(const nsRect &aRect)
 {
-  mBounds.x      = aRect.x;
-  mBounds.y      = aRect.y;
-  mBounds.width  = aRect.width;
-  mBounds.height = aRect.height;
-  //Resize(mBounds.x, mBounds.y, mBounds.width, mBounds.height, PR_TRUE);
-
+  mBounds = aRect;
   return NS_OK;
 }
 
-//-------------------------------------------------------------------------
-//
-// Get this component dimension
-//
-//-------------------------------------------------------------------------
+/*
+ * Get this component dimension
+ */
 NS_METHOD nsWindow::GetBounds(nsRect &aRect)
 {
   aRect = mBounds;
   return NS_OK;
 }
-    
+
 //-------------------------------------------------------------------------
 //
 // Get the foreground color
@@ -947,7 +883,7 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
 
     if (nsnull != newCursor) {
       mCursor = aCursor;
-      ::XDefineCursor(display, window, newCursor);
+      XDefineCursor(display, window, newCursor);
     }
  }
   return NS_OK;
@@ -1020,8 +956,6 @@ NS_METHOD nsWindow::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
   XSendEvent(display, win, False, ExposureMask, &evt);
   XFlush(display);
   return NS_OK;
-
-  
 }
 
 //-------------------------------------------------------------------------
@@ -1202,7 +1136,6 @@ NS_METHOD nsWindow::SetTitle(const nsString& aTitle)
 
 /**
  * Processes a mouse pressed event
- *
  **/
 NS_METHOD nsWindow::AddMouseListener(nsIMouseListener * aListener)
 {
@@ -1211,7 +1144,6 @@ NS_METHOD nsWindow::AddMouseListener(nsIMouseListener * aListener)
 
 /**
  * Processes a mouse pressed event
- *
  **/
 NS_METHOD nsWindow::AddEventListener(nsIEventListener * aListener)
 {
@@ -1220,7 +1152,7 @@ NS_METHOD nsWindow::AddEventListener(nsIEventListener * aListener)
 
 NS_METHOD nsWindow::AddMenuListener(nsIMenuListener * aListener)
 {
-//XXX:Implement this.
+  //XXX:Implement this.
   return NS_OK;
 }
 
@@ -1253,9 +1185,9 @@ PRBool nsWindow::ConvertStatus(nsEventStatus aStatus)
 //
 //////////////////////////////////////////////////////////////////
 
-#undef TRACE_EVENTS
+#define TRACE_EVENTS
 #undef TRACE_EVENTS_MOTION
-#undef TRACE_EVENTS_PAINT
+#define TRACE_EVENTS_PAINT
 #undef TRACE_EVENTS_CROSSING
 
 #ifdef DEBUG
@@ -1341,7 +1273,7 @@ PRBool nsWindow::DispatchWindowEvent(nsGUIEvent* event)
 
 //-------------------------------------------------------------------------
 //
-// Deal with all sort of mouse event
+// Deals with all sorts of mouse events
 //
 //-------------------------------------------------------------------------
 PRBool nsWindow::DispatchMouseEvent(nsMouseEvent& aEvent)
@@ -1351,30 +1283,16 @@ PRBool nsWindow::DispatchMouseEvent(nsMouseEvent& aEvent)
     return result;
   }
 
-
   // call the event callback 
   if (nsnull != mEventCallback) {
     result = DispatchWindowEvent(&aEvent);
-
     return result;
   }
 
   if (nsnull != mMouseListener) {
     switch (aEvent.message) {
-      case NS_MOUSE_MOVE: {
-        /*result = ConvertStatus(mMouseListener->MouseMoved(event));
-        nsRect rect;
-        GetBounds(rect);
-        if (rect.Contains(event.point.x, event.point.y)) {
-          if (mCurrentWindow == NULL || mCurrentWindow != this) {
-            //printf("Mouse enter");
-            mCurrentWindow = this;
-          }
-        } else {
-          //printf("Mouse exit");
-        }*/
-
-      } break;
+      case NS_MOUSE_MOVE:
+        break;
 
       case NS_MOUSE_LEFT_BUTTON_DOWN:
       case NS_MOUSE_MIDDLE_BUTTON_DOWN:
@@ -1393,10 +1311,8 @@ PRBool nsWindow::DispatchMouseEvent(nsMouseEvent& aEvent)
   return result;
 }
 
-
 /**
  * Processes an Expose Event
- *
  **/
 PRBool nsWindow::OnPaint(nsPaintEvent &event)
 {
@@ -1491,6 +1407,7 @@ PRBool nsWindow::OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos)
 void nsWindow::SetResizeRect(nsRect& aRect) 
 {
   mResizeRect = aRect;
+  printf("SetResizeRect: %i %i\n",mResizeRect.width,mResizeRect.height);
 }
 
 void nsWindow::GetResizeRect(nsRect* aRect)
@@ -1513,7 +1430,7 @@ PRBool nsWindow::GetResized()
 
 void nsWindow::UpdateDisplay()
 {
-    // If not displayed and needs to be displayed
+  // If not displayed and needs to be displayed
   if ((PR_FALSE==mDisplayed) &&
      (PR_TRUE==mShown) && 
      (PR_TRUE==mVisible)) {
@@ -1533,49 +1450,45 @@ void nsWindow::UpdateDisplay()
 PRUint32 nsWindow::GetYCoord(PRUint32 aNewY)
 {
   if (PR_TRUE==mLowerLeft) {
-    return(aNewY - 12 /*KLUDGE fix this later mBounds.height */);
+    return(aNewY - mBounds.height);
   }
   return(aNewY);
 }
 
-
-//
 //-----------------------------------------------------
 // Resize handler code for child and main windows.
-//----------------------------------------------------- 
-//
+//-----------------------------------------------------
 
 void nsWindow_ResetResize_Callback(XtPointer call_data)
 {
-    nsWindow* widgetWindow = (nsWindow*)call_data;
-    widgetWindow->SetResized(PR_FALSE);
+  nsWindow* widgetWindow = (nsWindow*)call_data;
+  widgetWindow->SetResized(PR_FALSE);
 }
 
 void nsWindow_Refresh_Callback(XtPointer call_data)
 {
-    nsWindow* widgetWindow = (nsWindow*)call_data;
-    nsRect bounds;
-    widgetWindow->GetResizeRect(&bounds); 
+  nsWindow* widgetWindow = (nsWindow*)call_data;
+  nsRect bounds;
+  widgetWindow->GetResizeRect(&bounds); 
 
-    nsSizeEvent event;
-    event.message = NS_SIZE;
-    event.widget  = widgetWindow;
-    event.time    = 0; //TBD
-    event.windowSize = &bounds;
+  nsSizeEvent event;
+  event.message = NS_SIZE;
+  event.widget  = widgetWindow;
+  event.time    = 0; //TBD
+  event.windowSize = &bounds;
 
-    widgetWindow->SetBounds(bounds); 
-    widgetWindow->OnResize(event);
-    nsPaintEvent pevent;
-    pevent.message = NS_PAINT;
-    pevent.widget = widgetWindow;
-    pevent.time = 0;
-    pevent.rect = (nsRect *)&bounds;
-    widgetWindow->OnPaint(pevent);
+//  widgetWindow->SetBounds(bounds); 
+//  widgetWindow->OnResize(event);
+  nsPaintEvent pevent;
+  pevent.message = NS_PAINT;
+  pevent.widget = widgetWindow;
+  pevent.time = 0;
+  pevent.rect = (nsRect *)&bounds;
+//  widgetWindow->OnPaint(pevent);
 
-    XtAppAddTimeOut(widgetWindow->mAppContext, 50, (XtTimerCallbackProc)nsWindow_ResetResize_Callback, widgetWindow);
+  XtAppAddTimeOut(widgetWindow->mAppContext, 50, (XtTimerCallbackProc)nsWindow_ResetResize_Callback, widgetWindow);
 }
 
-//
 // Resize a child window widget. All nsManageWidget's use
 // this to resize. The nsManageWidget passes all resize
 // request's directly to this function.
@@ -1586,16 +1499,18 @@ extern "C" void nsWindow_ResizeWidget(Widget w)
   int height = 0;
   nsWindow *win = 0;
 
-   // Get the new size for the window
+  // Get the new size for the window
+  printf("Zuperdee says %-8p\n",(Widget&) w);
   XtVaGetValues(w, XmNuserData, &win, XmNwidth, &width, XmNheight, &height, nsnull);
+  printf("%i %i\n",width,height);
 
-   // Setup the resize rectangle for the window.
+  // Setup the resize rectangle for the window.
   nsRect bounds;
   bounds.width = width;
   bounds.height = height;
   bounds.x = 0;
   bounds.y = 0;
-  win->SetResizeRect(bounds); 
+  win->SetResizeRect(bounds);
 
   if (! win->GetResized()) {
     win->SetResized(PR_TRUE);
@@ -1647,15 +1562,8 @@ NS_METHOD nsWindow::GetClientBounds(nsRect &aRect)
   return GetBounds(aRect);
 }
 
-// FIXME: Needs to be implemented.  --ZuperDee
-NS_METHOD nsWindow::SetVerticalScrollbar(nsIWidget * aScrollbar)
-{
-  return NS_OK;
-}
-
 /**
  * Calculates the border width and height  
- *
  **/
 NS_METHOD nsWindow::GetBorderSize(PRInt32 &aWidth, PRInt32 &aHeight)
 {
@@ -1672,12 +1580,12 @@ NS_METHOD nsWindow::GetBorderSize(PRInt32 &aWidth, PRInt32 &aHeight)
 
 NS_METHOD nsWindow::EnableFileDrop(PRBool aEnable)
 {
-//XXX:Implement this.
+  //XXX:Implement this.
   return NS_OK;
 }
 
 NS_METHOD nsWindow::CaptureMouse(PRBool aCapture)
 {
-//XXX:Implement this.
+  //XXX:Implement this.
   return NS_OK;
 }
