@@ -365,6 +365,13 @@ nsScrollbar::IsEnabled(PRBool *aState)
 
 @implementation ScrollbarView
 
+-(id)initWithFrame:(NSRect)aRect
+{
+  mInMove = NO;
+  [super initWithFrame: aRect];
+  return self;
+}
+
 - (NSWindow*) getNativeWindow
 {
   NSWindow* currWin = [self window];
@@ -416,6 +423,12 @@ nsScrollbar::IsEnabled(PRBool *aState)
 - (void)mouseMoved:(NSEvent*)theEvent
 {
   // do nothing
+  if (mInMove)
+    return;
+
+  mInMove = YES;
+  [super mouseMoved: theEvent];
+  mInMove = NO;
 }
 
 @end

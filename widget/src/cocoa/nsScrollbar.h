@@ -151,6 +151,9 @@ protected:
   
     // tag for our mouse enter/exit tracking rect
   NSTrackingRectTag mMouseEnterExitTag;
+
+  // used to avoid move re-entrancy
+  BOOL mInMove;
 }
 
 - (NSWindow*) getNativeWindow;
