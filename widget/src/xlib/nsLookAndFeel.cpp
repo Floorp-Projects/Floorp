@@ -29,11 +29,12 @@ static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
 
 NS_IMPL_ISUPPORTS(nsLookAndFeel, kILookAndFeelIID)
 
-nsLookAndFeel::nsLookAndFeel() : nsILookAndFeel()
+nsLookAndFeel::nsLookAndFeel()
 {
     NS_INIT_REFCNT();
 
     PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("nsLookAndFeel::nsLookAndFeel()\n"));
+    (void)NS_NewXPLookAndFeel(getter_AddRefs(mXPLookAndFeel));
 }
 
 nsLookAndFeel::~nsLookAndFeel()
