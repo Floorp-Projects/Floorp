@@ -1040,11 +1040,11 @@ VerifyDiskSpace(void)
         sprintf(dsAvailStr, "%d", sDSAvailK);
 
         GetResourcedString(pMessage, rInstList, sSpaceMsg1);
-        pstrcat(pMessage, CToPascal(dsNeededStr));
-        pstrcat(pMessage, CToPascal("KB. \r"));
+        pstrcat(pMessage, CToPascal(dsAvailStr));
+        pstrcat(pMessage, CToPascal("KB \r"));
         GetResourcedString(pStr, rInstList, sSpaceMsg2);
-        pstrcat(pStr, CToPascal(dsAvailStr));
-        pstrcat(pStr, CToPascal("KB. \r\r"));
+        pstrcat(pStr, CToPascal(dsNeededStr));
+        pstrcat(pStr, CToPascal("KB \r\r"));
         pstrcat(pMessage, pStr);
         GetResourcedString(pStr, rInstList, sSpaceMsg3);
         pstrcat(pMessage, pStr);

@@ -211,14 +211,12 @@ if (err) 								\
 
 #define rAboutBox		128
 
-
 #define	rStringList 	140		// common strings
 #define sConfigFName	1
 #define sInstallFName	2		
 #define sTempIDIName	3		
 #define sConfigIDIName	4		
 #define sInstModules	5
-#define eInstRead		6		//install.ini read failed
 
 #define rTitleStrList	170
 #define sNSInstTitle	1
@@ -316,6 +314,7 @@ if (err) 								\
 #define eMenuHdl        11
 #define eCfgRead        12
 #define eDownload       13
+#define eInstRead		6		// installer.ini read failed
 
 #define instErrsNum		13	/* number of the install.ini errors */
 
@@ -365,8 +364,10 @@ if (err) 								\
 #define sSpaceMsg1		43
 #define sSpaceMsg2		44
 #define sSpaceMsg3		45
+#define sPauseBtn       46
+#define sResumeBtn      47
 
-#define instKeysNum		45	/* number of the install.ini keys */
+#define instKeysNum		47	/* number of installer.ini keys */
 
 #define rInstMenuList	146
 #define sMenuGeneral	1
@@ -534,6 +535,7 @@ typedef struct Options {
     char            *proxyPort;
     char            *proxyUsername;
     char            *proxyPassword;
+    
 } Options;
 
 typedef struct LicWin {
@@ -587,6 +589,15 @@ typedef struct TermWin {
 	ControlHandle   proxySettingsBtn;
 } TermWin;
 
+typedef enum {
+    eInstallNotStarted = 0,
+    eDownloading,
+    ePaused,
+    eResuming,
+    eExtracting,
+    eInstalling
+} InstallState;
+
 typedef struct InstWiz {
 	
 	/* config.ini options parsed */
@@ -607,6 +618,10 @@ typedef struct InstWiz {
 	ControlHandle backB;
 	ControlHandle nextB;
 	ControlHandle cancelB;
+	
+	InstallState  state;
+	int           resPos;
+	
 } InstWiz;
 
 typedef struct InstINIRes {
@@ -728,7 +743,7 @@ static OSErr FindAppOnVolume (OSType, short, FSSpec *);
 OSErr 		GetSysVolume (short *);
 OSErr 		GetIndVolume (short, short *);
 OSErr 		GetLastModDateTime(const FSSpec *, unsigned long *);
-void		InitNewMenu();
+void		InitNewMenu(void);
 
 /*-----------------------------------------------------------*
  *   SetupTypeWin
@@ -792,6 +807,7 @@ void		DisableAdditionsWin(void);
  *-----------------------------------------------------------*/
 void		ShowTerminalWin(void);
 short       GetRectFromRes(Rect *, short);
+void        BeginInstall(void);
 void        my_c2pstrcpy(const char *, Str255);
 void		InTerminalContent(EventRecord*, WindowPtr);
 void		UpdateTerminalWin(void);
@@ -801,6 +817,10 @@ void        ClearDownloadSettings(void);
 void        ClearSaveBitsMsg(void);
 void		EnableTerminalWin(void);
 void		DisableTerminalWin(void);
+void        SetupPauseResumeButtons(void);
+void        SetPausedState(void);
+void        SetResumedState(void);
+
 
 /*-----------------------------------------------------------*
  *   InstAction
@@ -808,7 +828,13 @@ void		DisableTerminalWin(void);
 pascal void *Install(void*);
 long        ComputeTotalDLSize(void);
 short       DownloadXPIs(short, long);
-short       DownloadFile(Handle, long, Handle);
+short       DownloadFile(Handle, long, Handle, int);
+OSErr       DLMarkerSetCurrent(char *);
+OSErr       DLMarkerGetCurrent(int *, int*);
+OSErr       DLMarkerDelete(void);
+int         GetResPos(InstComp *);
+OSErr       GetInstallerModules(short *, long *);
+OSErr       GetIndexFromName(char *, int *, int *);
 int         ParseFTPURL(char *, char **, char **);
 void        CompressToFit(char *, char *, int);
 float       ComputeRate(int, time_t, time_t);
@@ -817,6 +843,7 @@ void		IfRemoveOldCore(short, long);
 Boolean 	GenerateIDIFromOpt(Str255, long, short, FSSpec *);
 void		AddKeyToIDI(short, Handle, char *);
 Boolean		ExistArchives(short, long);
+OSErr       ExistsXPI(int);
 void		LaunchApps(short, long);
 void		RunApps(void);
 void		DeleteXPIs(short, long);

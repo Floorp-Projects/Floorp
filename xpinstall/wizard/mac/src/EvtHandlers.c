@@ -104,7 +104,6 @@ void HandleMouseDown(EventRecord* evt)
 void HandleKeyDown(EventRecord* evt)
 {
 	char 			keyPressed;
-	ThreadID		tid;
 	unsigned long 	finalTicks;
 		
 	keyPressed = evt->message & charCodeMask;
@@ -162,10 +161,7 @@ void HandleKeyDown(EventRecord* evt)
 				case kTerminalID:
 					if (!gInstallStarted)
 					{	
-					    DisableNavButtons();
-					    ClearDownloadSettings();
-					    gInstallStarted = true;
-						SpawnSDThread(Install, &tid);
+                        BeginInstall();
 					}
 					return;
 				default:
@@ -393,12 +389,15 @@ DidUserCancel(EventRecord *evt)
 	HUnlock((Handle)gControls->cancelB);
 	if (PtInRect(localPt, &r))
 	{
-		part = TrackControl(gControls->cancelB, evt->where, NULL);
-		if (part)
-		{
-			gDone = true;  
-			bUserCancelled = true;
-	    }
+	    if (gControls->state == eInstallNotStarted)
+	    {
+    		part = TrackControl(gControls->cancelB, evt->where, NULL);
+    		if (part)
+    		{
+    		    gDone = true;  
+                bUserCancelled = true;
+    	    }
+    	}
 	}
 	
     SetPort(oldPort);

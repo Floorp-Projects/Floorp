@@ -201,6 +201,8 @@ InitControlsObject(void)
 		ErrorHandler(eMem);
 	}
 	
+	gControls->state = eInstallNotStarted;
+	
 	return;
 }
 
