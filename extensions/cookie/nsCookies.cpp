@@ -582,9 +582,9 @@ cookie_FindCookiesFromHost(cookie_CookieStruct *aCookie,
     cookieInList = NS_STATIC_CAST(cookie_CookieStruct*, sCookieList->ElementAt(i));
     NS_ASSERTION(cookieInList, "corrupt cookie list");
 
-    // only count non-expired cookies
+    // only count session or non-expired cookies
     if (cookie_IsInDomain(cookieInList->host, host, cookieInList->isDomain) &&
-        !cookieInList->isSession && (nsInt64(cookieInList->expires) > aCurrentTime)) {
+        (cookieInList->isSession || nsInt64(cookieInList->expires) > aCurrentTime)) {
       ++aCountFromHost;
 
       // check if we've found the previous cookie
