@@ -40,6 +40,7 @@ Contributor(s):
 
 <window xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+		xmlns:nc="http://home.netscape.com/NC-rdf#"
         title="&selectAddressWindow.title;"
         class="dialog"
         width="680" height="480"
@@ -56,75 +57,73 @@ Contributor(s):
 
   <keyset id="dialogKeys"/>
 
-  <!-- Main box, 3 pane and majority of buttons -->
-  <hbox flex="1">
-    <!-- 3 Pane box -->
-    <hbox id="3PaneBox" flex="1">
-      
-      <!-- dir tree -->
-      <hbox id="dirTreeBox">
-        <tree id="dirTree" type="dialog" flex="1"/>
-      </hbox>
-        
-      <splitter id="vertical-splitter" collapse="before"  persist="state"/>
-
-      <!-- Box that holds results pane, (to,cc,bcc buttons), and address bucket -->
-      <vbox id="results-bucket-tree-box" flex="1">
-        <!-- Box that holds results pane and (to,cc,bcc buttons) -->
-        <vbox flex="1">
-          <!-- results pane -->
-          <vbox id="results_box" flex="1">
-            <outliner id="abResultsOutliner" flex="1" persist="height" />
-          </vbox>
-          
-          <!-- Box that holds (to,cc,bcc buttons) -->
-          <hbox id="addToBucketButtonBox">
-            <spacer flex="1"/>
-            <button id="toButton" label="&toButton.label;" oncommand="SelectAddressToButton()"/> 
-            <spacer class="middle-button-spacer"/>
-            <button id="ccButton" label="&ccButton.label;" oncommand="SelectAddressCcButton()"/> 
-            <spacer class="middle-button-spacer"/>
-            <button id="bccButton" label="&bccButton.label;" oncommand="SelectAddressBccButton()"/>  
-            <spacer flex="1"/>
-          </hbox>
-        </vbox>
-        
-        <splitter id="bucket-splitter" collapse="before" persist="state"/>
-        
-        <!-- Address bucket -->
-        <vbox id="bucketBox">
-          <tree id="addressBucket" flex="1" seltype="multiple"
-              ondragover="DragOverBucketPane(event);"
-              ondragdrop="DropOnBucketPane(event);"
-              onselect="DialogBucketPaneSelectionChanged();">
-                        <treecolgroup>
-              <treecol flex="1"/>
-                        </treecolgroup>
-            <treechildren id="bucketBody" flex="1"/>
-          </tree>
-        </vbox>
-        
-      </vbox>
+  <vbox flex="1">
+  
+    <hbox id="topBox" align="center">
+      <label value="&lookIn.label;"/>
+      <menulist id="addressbookList" 
+	            ref="moz-abdirectory://" 
+                datasources="rdf:addressdirectory"
+                containment="http://home.netscape.com/NC-rdf#child"
+				oncommand="DirPaneSelectionChangeMenulist(); document.commandDispatcher.updateCommands('addrbook-select');">
+        <template>
+          <rule nc:IsMailList="false">
+            <menupopup>
+              <menuitem label="rdf:http://home.netscape.com/NC-rdf#DirName" uri="..."
+                        IsMailList="rdf:http://home.netscape.com/NC-rdf#IsMailList"
+                        IsRemote="rdf:http://home.netscape.com/NC-rdf#IsRemote"/>
+            </menupopup>
+          </rule>
+        </template>
+      </menulist>  
+	  <label value="&for.label;"/> 
+	  <textbox id="searchInput" flex="1" oninput="onAbSearchInputMenulist(event);"/>    
+	  <button id="clear" label="&clearButton.label;" oncommand="onAbSearchReset(event);"/>
     </hbox>
     
-    <!-- Box with buttons on right edge of window -->
-    <vbox id="rightColumnButtonBox">
-      <vbox flex="1">
-        <spacer class="third-column-spacer"/>
-        <button id="new" label="&newButton.label;" tooltiptext="&addressPickerNewButton.tooltip;" oncommand="AbNewCard('dirTree')"/> 
-        <spacer class="third-column-spacer"/>
-        <button id="edit" label="&editButton.label;" tooltiptext="&addressPickerEditButton.tooltip;" oncommand="AbEditSelectedCard()"/> 
+    <hbox flex="1">    
+
+       <vbox id="resultsBox" flex="4">
+         <outliner id="abResultsOutliner" flex="1" persist="height" />
+       </vbox>
+        
+      <!--<splitter id="vertical-splitter" collapse="before"  persist="state"/>-->
+      
+      <vbox id="addToBucketButtonBox">
+        <spacer flex="1"/>
+        <button id="toButton" label="&toButton.label;" oncommand="SelectAddressToButton()"/> 
+        <spacer class="middle-button-spacer"/>
+        <button id="ccButton" label="&ccButton.label;" oncommand="SelectAddressCcButton()"/> 
+        <spacer class="middle-button-spacer"/>
+        <button id="bccButton" label="&bccButton.label;" oncommand="SelectAddressBccButton()"/>  
+        <spacer class="above-remove-spacer"/>
+        <button id="remove" label="&removeButton.label;" class="dialog" oncommand="RemoveSelectedFromBucket()"/> 
         <spacer flex="1"/>
       </vbox>
-      <vbox flex="1">
-        <spacer flex="1"/>
-        <button id="remove" label="&removeButton.label;" class="dialog" oncommand="RemoveSelectedFromBucket()"/>  
-        <spacer flex="1"/>
+        
+     <!--<splitter id="bucket-splitter" collapse="before" persist="state"/>-->
+        
+      <vbox id="bucketBox" flex="1">
+        <label value="&addressMessageTo.label;"/>
+        <tree id="addressBucket" flex="1" seltype="multiple"
+            ondragover="DragOverBucketPane(event);"
+            ondragdrop="DropOnBucketPane(event);"
+            onselect="DialogBucketPaneSelectionChanged();">
+          <treecolgroup>
+            <treecol flex="1"/>
+          </treecolgroup>
+          <treechildren id="bucketBody" flex="1"/>
+        </tree>
       </vbox>
-    </vbox>
-  </hbox>
+        
+    </hbox>
 
-  <!-- OK & Cancel buttons -->
-  <hbox id="okCancelButtons"/>
+    <hbox id="newEditButtonBox">
+      <button id="new" label="&newButton.label;" tooltiptext="&addressPickerNewButton.tooltip;" oncommand="AbNewCard('dirTree')"/> 
+      <button id="edit" label="&editButton.label;" tooltiptext="&addressPickerEditButton.tooltip;" oncommand="AbEditSelectedCard()"/> 
+    </hbox>
 
+    <hbox id="okCancelButtonsRight"/>
+  </vbox>
+  
 </window>

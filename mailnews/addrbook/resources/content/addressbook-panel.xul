@@ -29,7 +29,14 @@
 <?xml-stylesheet href="chrome://messenger/skin/addressbook/abResultsPane.css" type="text/css"?>
 
 <?xul-overlay href="chrome://messenger/content/addressbook/abDirTreeOverlay.xul"?>
-<!DOCTYPE window SYSTEM "chrome://messenger/locale/addressbook/abResultsPaneOverlay.dtd" >
+
+<!DOCTYPE window [
+<!ENTITY % abSelectAddressesDialogDTD SYSTEM "chrome://messenger/locale/addressbook/abSelectAddressesDialog.dtd" >
+%abSelectAddressesDialogDTD;
+<!ENTITY % abResultsPaneOverlayDTD SYSTEM "chrome://messenger/locale/addressbook/abResultsPaneOverlay.dtd" >
+%abResultsPaneOverlayDTD;
+]>
+
 <page id="addressbook-panel"
       xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="AbPanelLoad();"
@@ -41,6 +48,7 @@
   <script type="application/x-javascript" src="chrome://messenger/content/addressbook/abCommon.js"/>
   <script type="application/x-javascript" src="chrome://messenger/content/addressbook/abResultsPane.js"/>
   <script type="application/x-javascript" src="chrome://messenger/content/addressbook/addressbook-panel.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/addressbook/abSelectAddressesDialog.js"/>
     
   <popup id="composeMail">
     <menuitem label="&composeEmail.label;" accesskey="&composeEmail.accesskey;" oncommand="AbNewMessage();" default="true"/>
@@ -52,8 +60,9 @@
     <menuitem label="&addrBookCardProperties.label;" accesskey="&addrBookCardProperties.accesskey;" oncommand="AbEditSelectedCard();"/>
   </popup>
   <vbox id="results_box" flex="1">
-    <hbox id="panel-bar" class="toolbar">
-      <menulist id="addressbookList" persist="selectedAB" oncommand="AbPanelOnChange(event)" flex="1">
+    <hbox id="panel-bar" class="toolbar" align="center">
+	  <label value="&lookIn.label;"/>
+      <menulist id="addressbookList" oncommand="DirPaneSelectionChangeMenulist(); AbPanelOnChange(event)" flex="1">
         <menupopup id="addressbookList-menupopup" 
           datasources="rdf:addressdirectory" 
           ref="moz-abdirectory://">
@@ -67,6 +76,10 @@
         </menupopup>
       </menulist>
     </hbox>
+	<hbox align="center">
+	  <label value="&for.label;"/> 
+	  <textbox id="searchInput" flex="1" oninput="onAbSearchInputMenulist(event);"/> 
+	</hbox>
 
 <outliner id="abResultsOutliner" flex="1" context="composeMail" onclick="AbResultsPaneOnClick(event);" class="plain">
   <outlinercols>

@@ -20,12 +20,17 @@ Rights Reserved.
 <!-- Title -->
 	<!ENTITY selectAddressWindow.title "Select Addresses">
 <!-- Buttons -->
-	<!ENTITY toButton.label		"To:"> 
-	<!ENTITY ccButton.label		"Cc:"> 
-	<!ENTITY bccButton.label	"Bcc:">  
+	<!ENTITY toButton.label		"To->"> 
+	<!ENTITY ccButton.label		"Cc->"> 
+	<!ENTITY bccButton.label	"Bcc->">  
 	<!ENTITY newButton.label	"New..."> 
 	<!ENTITY editButton.label	"Edit..."> 
 	<!ENTITY removeButton.label	"Remove"> 
+	<!ENTITY lookIn.label	    "Look in:"> 
+	<!ENTITY for.label	        "for:"> 
+	<!ENTITY clearButton.label	"Clear">
+	<!ENTITY stopButton.label	"Stop"> 	
+	<!ENTITY addressMessageTo.label	"Address message to:"> 
 <!-- Tooltips items -->  
 <!ENTITY addressPickerSearchButton.tooltip "Search the selected address book"> 
 <!ENTITY addressPickerNewButton.tooltip "Create a new address book card"> 

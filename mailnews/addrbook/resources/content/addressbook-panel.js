@@ -108,14 +108,14 @@ function AbPanelLoad()
   var addrbookSession = Components.classes["@mozilla.org/addressbook/services/session;1"].getService().QueryInterface(Components.interfaces.nsIAddrBookSession);
   // this listener only cares when a directory is removed
   addrbookSession.addAddressBookListener(gAddressBookPanelAbListener, Components.interfaces.nsIAbListener.directoryRemoved);
+
+  gSearchInput = document.getElementById("searchInput");
 }
 
 
 function AbPanelOnChange(event)
 {
-  ChangeDirectoryByDOMNode(event.target);
-  var abPopup = document.getElementById('addressbookList');
-  abPopup.setAttribute("selectedAB", abPopup.value);
+  abList.setAttribute("selectedAB", abList.value);
 }
 
 function AbPanelUnload()
@@ -128,13 +128,11 @@ function AbPanelUnload()
 
 function AbPanelNewCard() 
 {
-  var abList = document.getElementById('addressbookList');
   goNewCardDialog(abList.selectedItem.getAttribute('id'));
 }
 
 function AbPanelNewList() 
 {
-  var abList = document.getElementById('addressbookList');
   goNewListDialog(abList.selectedItem.getAttribute('id'));
 }
 

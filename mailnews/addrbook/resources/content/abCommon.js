@@ -40,6 +40,7 @@
 
 var gResultsOutliner = 0;
 var dirTree = 0;
+var abList = 0;
 var gAbView = null;
 
 var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
@@ -226,6 +227,7 @@ function AbEditSelectedDirectory()
 function InitCommonJS()
 {
   dirTree = document.getElementById("dirTree");
+  abList = document.getElementById("addressbookList");
   gResultsOutliner = document.getElementById("abResultsOutliner");
 }
 

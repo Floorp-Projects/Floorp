@@ -46,20 +46,8 @@
 
 /* ::::: Select Addresses dialog ::::: */
 
-#3PaneBox {
-  border: 1px solid #000000; 
-}
-
-#dirTreeBox {
-  width: 180px;
-}
-
-#dirTree {
-  min-width: 10px;
-}
-
-#resultsTreeBox {
-  border-bottom: 1px solid #000000;
+#topBox {
+  padding: 0.5em 0 1.0em 0;
 }
 
 #resultsTree, #dirTree
@@ -72,6 +60,10 @@
   min-width: 10px;
 }
 
+#resultsBox {
+  border: 1px solid #000000;
+}
+
 #addToBucketButtonBox {
   min-width: 10px;
   padding: 0.3em; 
@@ -79,22 +71,19 @@
 
 #addressBucket {
   min-width: 10px;
-  height: 100px; 
 }
 
-#bucketBox {
-  height: 170px;
-}
-
-#rightColumnButtonBox {
-  padding: .5em; 
+#newEditButtonBox {
+  padding-top: 0.5em; 
   padding-right: 0px;
-}
-
-.third-column-spacer {
-  height: 10px;
+  margin-left: 0px;
 }
 
 .middle-button-spacer {
   width: 10px;
+}
+
+.above-remove-spacer {
+  width: 10px;
+  height: 15px;
 }

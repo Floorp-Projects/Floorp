@@ -39,7 +39,7 @@ Contributors:
       ref="moz-abdirectory://"
       datasources="rdf:addressdirectory"
       containment="http://home.netscape.com/NC-rdf#child"
-      onselect="DirPaneSelectionChange(); document.commandDispatcher.updateCommands('tree-select');"
+      onselect="DirPaneSelectionChange(); document.commandDispatcher.updateCommands('addrbook-select');"
       onclick="DirPaneClick(event);"
       ondblclick="DirPaneDoubleClick();"
       onblur="goOnEvent(this,'blur')"

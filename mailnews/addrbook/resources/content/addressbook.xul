@@ -69,7 +69,7 @@ Contributor(s):
 <commandset id="addressBook">
   <commandset id="CommandUpdate_AddressBook"
         commandupdater="true"
-        events="focus,tree-select"
+        events="focus,addrbook-select"
         oncommandupdate="CommandUpdate_AddressBook()"/>
   
   <commandset id="globalEditMenuItems"/>

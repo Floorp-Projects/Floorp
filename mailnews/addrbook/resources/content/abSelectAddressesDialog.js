@@ -30,6 +30,10 @@ var editCardCallback = 0;
 
 var gAddressBookBundle;
 
+var gSearchInput;
+var gSearchTimer = null;
+var gQueryURIFormat = null;
+
 // localization strings
 var prefixTo;
 var prefixCc;
@@ -90,9 +94,20 @@ function OnLoadSelectAddress()
     AddAddressFromComposeWindow(bccAddress, prefixBcc);
   }
 
-  SelectFirstAddressBook();
+  gSearchInput = document.getElementById("searchInput");
+  SearchInputChanged();
+
+  SelectFirstAddressBookMenulist();
 
   DialogBucketPaneSelectionChanged();
+  
+  var workPhoneCol = document.getElementById("WorkPhone");
+  workPhoneCol.setAttribute("hidden", "true");
+  
+  var companyCol = document.getElementById("Company");
+  companyCol.setAttribute("hidden", "true");
+
+  document.documentElement.addEventListener("keypress", OnReturnHit, true);
 }
 
 function OnUnloadSelectAddress()
@@ -356,5 +371,88 @@ function DropOnBucketPane(event)
       continue;
 
     AddAddressIntoBucket(prefixTo + address, address);
+  }
+}
+
+function OnReturnHit(event)
+{
+  if (event.keyCode == 13 && (document.commandDispatcher.focusedElement == gSearchInput.inputField))
+	event.preventBubble();
+}
+
+function onEnterInSearchBar()
+{
+  var selectedNode = abList.selectedItem;
+ 
+  if (!selectedNode)
+    return;
+
+  if (!gQueryURIFormat) {
+    gQueryURIFormat = gPrefs.getCharPref("mail.addr_book.quicksearchquery.format");
+  }
+  
+  var sortColumn = selectedNode.getAttribute("sortColumn");
+  var sortDirection = selectedNode.getAttribute("sortDirection");
+  var searchURI = selectedNode.getAttribute("id");
+
+  if (gSearchInput.value != "") {
+    searchURI += gQueryURIFormat.replace(/@V/g, escape(gSearchInput.value));
+  }
+
+  SetAbView(searchURI, sortColumn, sortDirection);
+  
+  SelectFirstCard();
+}
+
+function onAbSearchInputMenulist(event)
+{
+  SearchInputChanged();
+
+  if (gSearchTimer) {
+    clearTimeout(gSearchTimer);
+    gSearchTimer = null;
+  }
+
+  if (event && event.keyCode == 13) {
+    onEnterInSearchBar();
+  }
+  else {
+    gSearchTimer = setTimeout("onEnterInSearchBar();", 800);
+  }
+}
+
+function onAbSearchReset(event) 
+{
+  gSearchInput.value = "";
+  ChangeDirectoryByDOMNode(abList.selectedItem);
+  
+  SearchInputChanged();
+
+  onReset(event);
+}
+
+function SearchInputChanged() {
+  var clearButton = document.getElementById("clear");
+  if (clearButton) {
+    if (gSearchInput.value && (gSearchInput.value != ""))
+      clearButton.removeAttribute("disabled");
+    else
+      clearButton.setAttribute("disabled", "true");
+  }
+}
+
+function SelectFirstAddressBookMenulist()
+{
+  ChangeDirectoryByDOMNode(abList.selectedItem);
+  return;
+}
+
+function DirPaneSelectionChangeMenulist()
+{
+  if (abList && abList.selectedItem) {
+    if (gSearchInput.value && (gSearchInput.value != "")) 
+      onEnterInSearchBar();
+    else
+      ChangeDirectoryByDOMNode(abList.selectedItem);
   }
 }
