@@ -287,119 +287,87 @@ Contributor(s): ______________________________________. -->
         </menupopup>
       </menu>
 
-      <menu value="&dcharMenu.label;">
-        <menupopup>
-          <menuitem value="&dcharIso1Cmd.label;"
-            oncommand="BrowserSetDefaultCharacterSet('ISO-8859-1');" />
-          <menuitem value="&dcharIso2Cmd.label;"
-            oncommand="BrowserSetDefaultCharacterSet('ISO-8859-2');"/>
-          <menuitem value="&dcharIso3Cmd.label;"
-            oncommand="BrowserSetDefaultCharacterSet('ISO-8859-3');"/>
-          <menuitem value="&dcharIso4Cmd.label;"
-            oncommand="BrowserSetDefaultCharacterSet('ISO-8859-4');"/>
-          <menuitem value="&dcharIso9Cmd.label;"
-            oncommand="BrowserSetDefaultCharacterSet('ISO-8859-9');"/>
-          <menuitem value="&dcharIso10Cmd.label;"
-            oncommand="BrowserSetDefaultCharacterSet('ISO-8859-10');"/>
-          <menuitem value="&dcharIso13Cmd.label;"
-            oncommand="BrowserSetDefaultCharacterSet('ISO-8859-13');"/>
-          <menuitem value="&dcharIso14Cmd.label;"
-            oncommand="BrowserSetDefaultCharacterSet('ISO-8859-14');"/>
-          <menuitem value="&dcharIso15Cmd.label;"
-            oncommand="BrowserSetDefaultCharacterSet('ISO-8859-15');"/>
-          <menuitem value="&dcharWinLat2Cmd.label;"
-            oncommand="BrowserSetDefaultCharacterSet('windows-1250');"/>
-          <menuitem value="&dcharWinLat1Cmd.label;"
-            oncommand="BrowserSetDefaultCharacterSet('windows-1252');"/>
-          <menuitem value="&dcharWinLat5Cmd.label;"
-            oncommand="BrowserSetDefaultCharacterSet('windows-1254');"/>
-          <menuitem value="&dcharWinBalRimCmd.label;"
-            oncommand="BrowserSetDefaultCharacterSet('windows-1257');"/>
-          <menuitem value="&dcharMacRomCmd.label;"
-            oncommand="BrowserSetDefaultCharacterSet('x-mac-roman');"/>
-          <menuitem value="&dcharMacCenEuroCmd.label;"
-            oncommand="BrowserSetDefaultCharacterSet('x-mac-ce');"/>
-          <menuitem value="&dcharMacTurCmd.label;"
-            oncommand="BrowserSetDefaultCharacterSet('x-mac-turkish');"/>
-          <menuitem value="&dcharMacCroaCmd.label;"
-            oncommand="BrowserSetDefaultCharacterSet('x-mac-croatian');"/>
-          <menuitem value="&dcharMacRomanianCmd.label;"
-            oncommand="BrowserSetDefaultCharacterSet('x-mac-romanian');"/>
-          <menuitem value="&dcharMacIceCmd.label;"
-            oncommand="BrowserSetDefaultCharacterSet('x-mac-icelandic');"/>
-          <menuseparator />
-          <menuitem value="&dcharJapanCmd.label;"
-            oncommand="BrowserSetDefaultCharacterSet('ISO-2022-JP');"/>
-          <menuitem value="&dcharJapanShiftjsCmd.label;"
-            oncommand="BrowserSetDefaultCharacterSet('Shift_JIS');"/>
-          <menuitem value="&dcharJapanEucCmd.label;"
-            oncommand="BrowserSetDefaultCharacterSet('EUC-JP');"/>
-          <menuseparator />
-          <menuitem value="&dcharTradChiBigCmd.label;"
-            oncommand="BrowserSetDefaultCharacterSet('Big5');"/>
-          <menuitem value="&dcharTriChiEucCmd.label;"
-            oncommand="BrowserSetDefaultCharacterSet('x-euc-tw');"/>
-          <menuitem value="&dcharSimpChiGbCmd.label;"
-            oncommand="BrowserSetDefaultCharacterSet('GB2312');"/>
-          <menuseparator />
-          <menuitem value="&dcharKoreanCmd.label;"
-            oncommand="BrowserSetDefaultCharacterSet('EUC-KR');"/>
-          <menuseparator />
-          <menuitem value="&dcharUtf7Cmd.label;"
-            oncommand="BrowserSetDefaultCharacterSet('UTF-7');"/>
-          <menuitem value="&dcharUtf8Cmd.label;"
-            oncommand="BrowserSetDefaultCharacterSet('UTF-8');"/>
-          <menuseparator />
-          <menuitem value="&dcharIsoCyrCmd.label;"
-            oncommand="BrowserSetDefaultCharacterSet('ISO-8859-5');"/>
-          <menuitem value="&dcharEcmaCyrCmd.label;"
-            oncommand="BrowserSetDefaultCharacterSet('ISO-IR-111');"/>
-          <menuitem value="&dcharWinCyrCmd.label;"
-            oncommand="BrowserSetDefaultCharacterSet('windows-1251');"/>
-          <menuitem value="&dcharDosCyrCmd.label;"
-            oncommand="BrowserSetDefaultCharacterSet('IBM866');"/>
-          <menuitem value="&dcharMacCyrCmd.label;"
-            oncommand="BrowserSetDefaultCharacterSet('x-mac-cyrillic');"/>
-          <menuitem value="&dcharMacUkrCmd.label;"
-            oncommand="BrowserSetDefaultCharacterSet('x-mac-ukrainian');"/>
-          <menuitem value="&dcharRusCmd.label; "
-            oncommand="BrowserSetDefaultCharacterSet('KOI8-R');"/>
-          <menuitem value="&dcharUkrCmd.label;"
-            oncommand="BrowserSetDefaultCharacterSet('KOI8-U');"/>
-          <menuseparator />
-          <menuitem value="&dcharIsoGreekCmd.label;"
-            oncommand="BrowserSetDefaultCharacterSet('ISO-8859-7');"/>
-          <menuitem value="&dcharWinGreekCmd.label;"
-            oncommand="BrowserSetDefaultCharacterSet('windows-1253');"/>
-          <menuitem value="&dcharMacGreekCmd.label;"
-            oncommand="BrowserSetDefaultCharacterSet('x-mac-greek');"/>
-          <menuseparator />
-          <menuitem value="&dcharWinVietCmd.label;"
-            oncommand="BrowserSetDefaultCharacterSet('windows-1258');"/>
-          <menuitem value="&dcharVietTcnCmd.label;"
-            oncommand="BrowserSetDefaultCharacterSet('x-viet-tcvn5712');"/>
-          <menuitem value="&dcharVietViCmd.label;"
-            oncommand="BrowserSetDefaultCharacterSet('VISCII');"/>
-          <menuitem value="&dcharVieVpCmd.label;"
-            oncommand="BrowserSetDefaultCharacterSet('x-viet-vps');"/>
-          <menuseparator />
-          <menuitem value="&dcharThaiCmd.label;"
-            oncommand="BrowserSetDefaultCharacterSet('TIS-620');"/>
-          <menuseparator />
-          <menuitem value="&dcharArmCmd.label;"
-            oncommand="BrowserSetDefaultCharacterSet('ARMSCII-8');"/>
-          <menuseparator />
-          <menuitem value="&dcharIso6Cmd.label;"
-            oncommand="BrowserSetDefaultCharacterSet('ISO-8859-6');"/>
-          <menuitem value="&dcharCp1256Cmd.label;"
-            oncommand="BrowserSetDefaultCharacterSet('windows-1256');"/>
-          <menuseparator />
-          <menuitem value="&dcharIso8Cmd.label;"
-            oncommand="BrowserSetDefaultCharacterSet('ISO-8859-8');"/>
-          <menuitem value="&dcharCp1255Cmd.label;"
-            oncommand="BrowserSetDefaultCharacterSet('windows-1255');"/>
-        </menupopup>
-      </menu>
+                  <menuseparator />
+                <menu value="&dcharMenu.label;">
+                     <menupopup>
+                                 <menuitem value="&dcharIso1Cmd.label;" oncommand="BrowserSetDefaultCharacterSet('ISO-8859-1');"/>
+                                 <menuitem value="&dcharIso15Cmd.label;" oncommand="BrowserSetDefaultCharacterSet('ISO-8859-15');"/>
+                                 <menuitem value="&dcharIso2Cmd.label;" oncommand="BrowserSetDefaultCharacterSet('ISO-8859-2');"/>
+                                 <menuitem value="&dcharIso3Cmd.label;" oncommand="BrowserSetDefaultCharacterSet('ISO-8859-3');"/>
+                                 <menuitem value="&dcharIso4Cmd.label;" oncommand="BrowserSetDefaultCharacterSet('ISO-8859-4');"/>
+                                 <menuitem value="&dcharIsoGreekCmd.label;" oncommand="BrowserSetDefaultCharacterSet('ISO-8859-7');"/>
+                                 <menuitem value="&dcharIso9Cmd.label;" oncommand="BrowserSetDefaultCharacterSet('ISO-8859-9');"/>
+                                 <menuitem value="&dcharIso10Cmd.label;" oncommand="BrowserSetDefaultCharacterSet('ISO-8859-10');"/>
+                                 <menuitem value="&dcharIso13Cmd.label;" oncommand="BrowserSetDefaultCharacterSet('ISO-8859-13');"/>
+                                 <menuitem value="&dcharIso14Cmd.label;" oncommand="BrowserSetDefaultCharacterSet('ISO-8859-14');"/>
+                        </menupopup>
+                 </menu>
+                 <menu value="&dcharMenu1.label;">
+                     <menupopup>
+                                 <menuitem value="&dcharJapanCmd.label;" oncommand="BrowserSetDefaultCharacterSet('ISO-2022-JP');"/>
+                                 <menuitem value="&dcharJapanShiftjsCmd.label;" oncommand="BrowserSetDefaultCharacterSet('Shift_JIS');"/>
+                                 <menuitem value="&dcharJapanEucCmd.label;" oncommand="BrowserSetDefaultCharacterSet('EUC-JP');"/>
+                                         <menuseparator />
+                                 <menuitem value="&dcharTradChiBigCmd.label;" oncommand="BrowserSetDefaultCharacterSet('Big5');"/>
+                                 <menuitem value="&dcharTriChiEucCmd.label;" oncommand="BrowserSetDefaultCharacterSet('x-euc-tw');"/>
+                                 <menuitem value="&dcharSimpChiGbCmd.label;" oncommand="BrowserSetDefaultCharacterSet('GB2312');"/>
+                                         <menuseparator />
+                                 <menuitem value="&dcharKoreanCmd.label;" oncommand="BrowserSetDefaultCharacterSet('EUC-KR');"/>
+                                         <menuseparator />
+                                 <menuitem value="&dcharUtf7Cmd.label;" oncommand="BrowserSetDefaultCharacterSet('UTF-7');"/>
+                                 <menuitem value="&dcharUtf8Cmd.label;" oncommand="BrowserSetDefaultCharacterSet('UTF-8');"/>
+                        </menupopup>
+                 </menu>
+                 <menu value="&dcharMenu2.label;">
+                     <menupopup>
+                                 <menuitem value="&dcharRusCmd.label; " oncommand="BrowserSetDefaultCharacterSet('KOI8-R');"/>
+                                 <menuitem value="&dcharIsoCyrCmd.label;" oncommand="BrowserSetDefaultCharacterSet('ISO-8859-5');"/>
+                                 <menuitem value="&dcharWinCyrCmd.label;" oncommand="BrowserSetDefaultCharacterSet('windows-1251');"/>
+                                 <menuitem value="&dcharEcmaCyrCmd.label;" oncommand="BrowserSetDefaultCharacterSet('ISO-IR-111');"/>
+                                 <menuitem value="&dcharDosCyrCmd.label;" oncommand="BrowserSetDefaultCharacterSet('IBM866');"/>
+                                 <menuitem value="&dcharMacCyrCmd.label;" oncommand="BrowserSetDefaultCharacterSet('x-mac-cyrillic');"/>
+                                 <menuitem value="&dcharUkrCmd.label;" oncommand="BrowserSetDefaultCharacterSet('KOI8-U');"/>
+                                 <menuitem value="&dcharMacUkrCmd.label;" oncommand="BrowserSetDefaultCharacterSet('x-mac-ukrainian');"/>
+                        </menupopup>
+                 </menu>
+                 <menu value="&dcharMenu3.label;">
+                     <menupopup>
+                                 <menuitem value="&dcharWinVietCmd.label;" oncommand="BrowserSetDefaultCharacterSet('windows-1258');"/>
+                                 <menuitem value="&dcharVietTcnCmd.label;" oncommand="BrowserSetDefaultCharacterSet('x-viet-tcvn5712');"/>
+                                 <menuitem value="&dcharVietViCmd.label;" oncommand="BrowserSetDefaultCharacterSet('VISCII');"/>
+                                 <menuitem value="&dcharVieVpCmd.label;" oncommand="BrowserSetDefaultCharacterSet('x-viet-vps');"/>
+                                         <menuseparator />
+                                 <menuitem value="&dcharThaiCmd.label;" oncommand="BrowserSetDefaultCharacterSet('TIS-620');"/>
+                                         <menuseparator />
+                                 <menuitem value="&dcharArmCmd.label;" oncommand="BrowserSetDefaultCharacterSet('ARMSCII-8');"/>
+                                         <menuseparator />
+                                 <menuitem value="&dcharIso6Cmd.label;" oncommand="BrowserSetDefaultCharacterSet('ISO-8859-6');"/>
+                                 <menuitem value="&dcharCp1256Cmd.label;" oncommand="BrowserSetDefaultCharacterSet('windows-1256');"/>
+                                         <menuseparator />
+                                 <menuitem value="&dcharIso8Cmd.label;" oncommand="BrowserSetDefaultCharacterSet('ISO-8859-8');"/>
+                                 <menuitem value="&dcharCp1255Cmd.label;" oncommand="BrowserSetDefaultCharacterSet('windows-1255');"/>
+                        </menupopup>
+                 </menu>
+                 <menu value="&dcharMenu4.label;">
+                     <menupopup>
+                                 <menuitem value="&dcharMacRomCmd.label;" oncommand="BrowserSetDefaultCharacterSet('x-mac-roman');"/>
+                                 <menuitem value="&dcharMacCenEuroCmd.label;" oncommand="BrowserSetDefaultCharacterSet('x-mac-ce');"/>
+                                 <menuitem value="&dcharMacTurCmd.label;" oncommand="BrowserSetDefaultCharacterSet('x-mac-turkish');"/>
+                                 <menuitem value="&dcharMacCroaCmd.label;" oncommand="BrowserSetDefaultCharacterSet('x-mac-croatian');"/>
+                                 <menuitem value="&dcharMacRomanianCmd.label;" oncommand="BrowserSetDefaultCharacterSet('x-mac-romanian');"/>
+                                 <menuitem value="&dcharMacIceCmd.label;" oncommand="BrowserSetDefaultCharacterSet('x-mac-icelandic');"/>
+                                 <menuitem value="&dcharMacGreekCmd.label;" oncommand="BrowserSetDefaultCharacterSet('x-mac-greek');"/>
+                        </menupopup>
+                 </menu>
+                 <menu value="&dcharMenu5.label;">
+                     <menupopup>
+                                 <menuitem value="&dcharWinLat1Cmd.label;" oncommand="BrowserSetDefaultCharacterSet('windows-1252');"/>
+                                 <menuitem value="&dcharWinLat2Cmd.label;" oncommand="BrowserSetDefaultCharacterSet('windows-1250');"/>
+                                 <menuitem value="&dcharWinLat5Cmd.label;" oncommand="BrowserSetDefaultCharacterSet('windows-1254');"/>
+                                 <menuitem value="&dcharWinBalRimCmd.label;" oncommand="BrowserSetDefaultCharacterSet('windows-1257');"/>
+                                 <menuitem value="&dcharWinGreekCmd.label;" oncommand="BrowserSetDefaultCharacterSet('windows-1253');"/>
+                        </menupopup>
+                 </menu>
       <menu id = "charsetMenu" />
       <menu id="CharsetDetectorsMenu" />
    </menupopup>
