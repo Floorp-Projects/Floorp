@@ -20,6 +20,7 @@
 #define nsCalCanvas_h___
 
 #include "nsXPFCCanvas.h"
+#include "nsICalendarUser.h"
 
 class nsCalCanvas : public nsXPFCCanvas
 
@@ -31,8 +32,14 @@ public:
 
   NS_IMETHOD Init();
 
+  NS_IMETHOD GetUser(nsICalendarUser *& aUser);  
+  NS_IMETHOD SetUser(nsICalendarUser * aUser);
+
 protected:
   ~nsCalCanvas();
+
+protected:
+  nsICalendarUser * mUser;
 
 };
 

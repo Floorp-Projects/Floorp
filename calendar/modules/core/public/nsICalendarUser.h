@@ -19,6 +19,7 @@
 #define nsICalendarUser_h___
 
 #include "nsISupports.h"
+#include "nsILayer.h"
 
 //2fa12310-4cd8-11d2-924a-00805f8a7ab6
 #define NS_ICALENDAR_USER_IID   \
@@ -30,6 +31,9 @@ class nsICalendarUser : public nsISupports
 
 public:
   NS_IMETHOD Init() = 0;
+
+  NS_IMETHOD GetLayer(nsILayer *& aLayer) = 0;
+  NS_IMETHOD SetLayer(nsILayer* aLayer) = 0;
 
 };
 

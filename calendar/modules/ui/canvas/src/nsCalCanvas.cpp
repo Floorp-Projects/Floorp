@@ -25,10 +25,12 @@ static NS_DEFINE_IID(kCalCanvasCID, NS_CAL_CANVAS_CID);
 nsCalCanvas :: nsCalCanvas(nsISupports* outer) : nsXPFCCanvas(outer)
 {
   NS_INIT_REFCNT();
+  mUser = nsnull;
 }
 
 nsCalCanvas :: ~nsCalCanvas()
 {
+  NS_IF_RELEASE(mUser);
 }
 
 nsresult nsCalCanvas::QueryInterface(REFNSIID aIID, void** aInstancePtr)      
@@ -56,6 +58,18 @@ NS_IMPL_RELEASE(nsCalCanvas)
 
 nsresult nsCalCanvas :: Init()
 {
+  return NS_OK;    
+}
+
+nsresult nsCalCanvas :: GetUser(nsICalendarUser *& aUser)
+{
+  aUser = mUser;
+  return NS_OK;    
+}
+
+nsresult nsCalCanvas :: SetUser(nsICalendarUser * aUser)
+{
+  mUser = aUser;
   return NS_OK;    
 }
 

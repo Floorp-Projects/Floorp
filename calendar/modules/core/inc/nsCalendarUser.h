@@ -20,6 +20,8 @@
 #define nsCalendarUser_h___
 
 #include "nsICalendarUser.h"
+#include "nsIUser.h"
+#include "nsILayer.h"
 
 class nsCalendarUser : public nsICalendarUser 
 {
@@ -31,6 +33,14 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD Init();
+
+  NS_IMETHOD GetLayer(nsILayer *& aLayer);
+  NS_IMETHOD SetLayer(nsILayer* aLayer);
+
+protected:
+  nsISupports * mUserSupports;
+  nsIUser     * mUser;
+  nsILayer    * mLayer;
 
 };
 

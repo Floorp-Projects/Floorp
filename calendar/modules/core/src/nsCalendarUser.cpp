@@ -18,26 +18,81 @@
 
 #include <stdio.h>
 #include "nsCalendarUser.h"
+#include "nsCoreCIID.h"
+#include "nsxpfcCIID.h"
 
-static NS_DEFINE_IID(kICalendarUserIID,       NS_ICALENDAR_USER_IID);
+static NS_DEFINE_IID(kICalendarUserIID, NS_ICALENDAR_USER_IID);
+static NS_DEFINE_IID(kIUserIID,         NS_IUSER_IID);
+static NS_DEFINE_IID(kISupportsIID,     NS_ISUPPORTS_IID);
+static NS_DEFINE_IID(kCUserCID,         NS_USER_CID);
 
 nsCalendarUser::nsCalendarUser(nsISupports* outer)
 {
   NS_INIT_REFCNT();
+  mUserSupports = nsnull;
+  mUser = nsnull;
 }
 
 NS_IMPL_QUERY_INTERFACE(nsCalendarUser, kICalendarUserIID)
+//  if (nsnull != mWidgetSupports)
+//    return mWidgetSupports->QueryInterface(aIID, aInstancePtr);
+
 NS_IMPL_ADDREF(nsCalendarUser)
 NS_IMPL_RELEASE(nsCalendarUser)
 
 nsCalendarUser::~nsCalendarUser()
 {
+  NS_IF_RELEASE(mUserSupports); 
+  mUser = nsnull; // Do Not Release
 }
 
 nsresult nsCalendarUser::Init()
 {
+  nsresult res;
 
-  return (NS_OK);
+  nsISupports * supports ;
+
+  res = QueryInterface(kISupportsIID, (void **) &supports);
+
+  if (NS_OK != res)
+    return res;
+
+  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+
+  res = nsRepository::CreateInstance(kCUserCID, 
+                                     supports, 
+                                     kISupportsIID, 
+                                     (void**)&mUserSupports);
+
+  if (NS_OK == res) 
+  {
+    res = mUserSupports->QueryInterface(kIUserIID, (void**)&mUser);
+    if (NS_OK != res) 
+    {
+	    mUserSupports->Release();
+	    mUserSupports = NULL;
+    }
+    else 
+    {
+      mUser->Release();
+    }
+  }
+
+
+  return res;
+
 }
 
+
+NS_IMETHODIMP nsCalendarUser :: GetLayer(nsILayer *& aLayer)
+{
+  aLayer = mLayer;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsCalendarUser :: SetLayer(nsILayer* aLayer)
+{
+  mLayer = aLayer;
+  return NS_OK;
+}
 
