@@ -23,8 +23,7 @@
     </box>
     <separator orient="vertical" class="thin"/>
     <box orient="vertical">
-      <html>&startDownload;</html>
-      <text class="label header indent" id="dialog.contentType"/>
+      <html id="dialog.contentType">&startDownload;</html>
       <html>&helpText;</html>
     </box>
     <separator orient="vertical" class="thin"/>

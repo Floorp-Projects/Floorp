@@ -80,7 +80,7 @@ function savePage( url )
     // When Necko lands, we need to receive the real nsIChannel and
     // do SelectFileAndTransferLocation!
     // Use this for now...
-    xfer.SelectFileAndTransferLocationSpec( url, window );
+    xfer.SelectFileAndTransferLocationSpec( url, window, "", "" );
   } 
   catch( exception ) { 
     // suppress NS_ERROR_ABORT exceptions for cancellation 

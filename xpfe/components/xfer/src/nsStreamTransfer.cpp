@@ -24,11 +24,15 @@
 
 #include "nsIAppShellComponentImpl.h"
 #include "nsStreamXferOp.h"
-#include "nsIFileSpecWithUI.h"
+#include "nsIFilePicker.h"
+#include "nsILocalFile.h"
 #include "nsNetUtil.h"
 #include "nsIPref.h"
 #include "nsIURL.h"
 #include "nsEscape.h"
+#include "nsIHTTPChannel.h"
+#include "nsIStringBundle.h"
+#include "nsIAllocator.h"
 
 // {BEBA91C0-070F-11d3-8068-00600811A9C3}
 #define NS_STREAMTRANSFER_CID \
@@ -56,22 +60,69 @@ public:
     // This class implements the nsIStreamTransfer interface functions.
     NS_DECL_NSISTREAMTRANSFER
 
+protected:
+    // Common implementation that takes contentType and suggestedName.
+    NS_IMETHOD SelectFileAndTransferLocation( nsIChannel *aChannel,
+                                              nsIDOMWindow *parent,
+                                              char const *contentType,
+                                              char const *suggestedName );
+
 private:
     // Put up file picker dialog.
-    NS_IMETHOD SelectFile( nsIFileSpec **result, const nsCString &suggested );
-    nsCString  SuggestNameFor( nsIChannel *aChannel );
+    NS_IMETHOD SelectFile( nsIDOMWindow *parent, nsIFileSpec **result, const nsCString &suggested );
+    nsCString  SuggestNameFor( nsIChannel *aChannel, char const *suggestedName );
 
     // Objects of this class are counted to manage library unloading...
     nsInstanceCounter instanceCounter;
 }; // nsStreamTransfer
 
+// Get content type and suggested name from input channel in this case.
 NS_IMETHODIMP
 nsStreamTransfer::SelectFileAndTransferLocation( nsIChannel *aChannel, nsIDOMWindow *parent ) {
+    // Content type comes straight from channel.
+    nsXPIDLCString contentType;
+    aChannel->GetContentType( getter_Copies( contentType ) );
+
+    // Suggested name derived from content-disposition response header.
+    nsCAutoString suggestedName;
+
+    // Try to get HTTP channel.
+    nsCOMPtr<nsIHTTPChannel> httpChannel = do_QueryInterface( aChannel );
+    if ( httpChannel ) {
+        // Get content-disposition response header.
+        nsCOMPtr<nsIAtom> atom = NS_NewAtom( "content-disposition" );
+        if ( atom ) {
+            nsXPIDLCString disp; 
+            nsresult rv = httpChannel->GetResponseHeader( atom, getter_Copies( disp ) );
+            if ( NS_SUCCEEDED( rv ) && disp ) {
+                // Parse out file name.
+                nsCAutoString contentDisp = (const char*)disp;
+                // Remove whitespace.
+                contentDisp.StripWhitespace();
+                // Look for ";filename=".
+                char key[] = ";filename=";
+                PRInt32 i = contentDisp.Find( key );
+                if ( i != kNotFound ) {
+                    // Name comes after that.
+                    suggestedName = contentDisp.GetBuffer() + i + PL_strlen( key ) + 1;
+                }
+            }
+        }
+    }
+    return SelectFileAndTransferLocation( aChannel, parent, contentType, suggestedName );
+}
+
+NS_IMETHODIMP
+nsStreamTransfer::SelectFileAndTransferLocation( nsIChannel *aChannel,
+                                                 nsIDOMWindow *parent,
+                                                 char const *contentType,
+                                                 char const *suggestedName ) {
     // Prompt the user for the destination file.
     nsCOMPtr<nsIFileSpec> outputFile;
     PRBool isValid = PR_FALSE;
-    nsresult rv = SelectFile( getter_AddRefs( outputFile ),
-                              SuggestNameFor( aChannel ).GetBuffer() );
+    nsresult rv = SelectFile( parent, 
+                              getter_AddRefs( outputFile ),
+                              SuggestNameFor( aChannel, suggestedName ).GetBuffer() );
 
     if ( NS_SUCCEEDED( rv )
          &&
@@ -109,7 +160,10 @@ nsStreamTransfer::SelectFileAndTransferLocation( nsIChannel *aChannel, nsIDOMWin
 }
 
 NS_IMETHODIMP
-nsStreamTransfer::SelectFileAndTransferLocationSpec( char const *aURL, nsIDOMWindow *parent ) {
+nsStreamTransfer::SelectFileAndTransferLocationSpec( char const *aURL,
+                                                     nsIDOMWindow *parent,
+                                                     char const *contentType,
+                                                     char const *suggestedName ) {
     nsresult rv = NS_OK;
 
     // Construct URI from spec.
@@ -123,7 +177,7 @@ nsStreamTransfer::SelectFileAndTransferLocationSpec( char const *aURL, nsIDOMWin
 
         if ( NS_SUCCEEDED( rv ) && channel ) {
             // Transfer channel to output file chosen by user.
-            rv = this->SelectFileAndTransferLocation( channel, parent );
+            rv = this->SelectFileAndTransferLocation( channel, parent, contentType, suggestedName );
         } else {
             DEBUG_PRINTF( PR_STDOUT, "Failed to open URI, rv=0x%X\n", (int)rv );
         }
@@ -135,17 +189,16 @@ nsStreamTransfer::SelectFileAndTransferLocationSpec( char const *aURL, nsIDOMWin
 }
 
 NS_IMETHODIMP
-nsStreamTransfer::SelectFile( nsIFileSpec **aResult, const nsCString &suggested ) {
+nsStreamTransfer::SelectFile( nsIDOMWindow *parent, nsIFileSpec **aResult, const nsCString &suggested ) {
     nsresult rv = NS_OK;
 
     if ( aResult ) {
         *aResult = 0;
 
         // Prompt user for file name.
-        nsCOMPtr<nsIFileSpecWithUI> result;
-        result = getter_AddRefs( NS_CreateFileSpecWithUI() );
+        nsCOMPtr<nsIFilePicker> picker = do_CreateInstance( "component://mozilla/filepicker" );
       
-        if ( result ) {
+        if ( picker ) {
             // Prompt for file name.
             nsCOMPtr<nsIFileSpec> startDir;
 
@@ -157,34 +210,83 @@ nsStreamTransfer::SelectFile( nsIFileSpec **aResult, const nsCString &suggested 
                     PRBool isValid = PR_FALSE;
                     startDir->IsValid( &isValid );
                     if ( isValid ) {
-                        // Set result so startDir is used.
-                        result->FromFileSpec( startDir );
+                        // Set file picker so startDir is used.
+                        nsXPIDLCString nativeStartDir;
+                        startDir->GetNativePath( getter_Copies( nativeStartDir ) );
+                        nsCOMPtr<nsILocalFile> startLocalFile;
+                        if ( NS_SUCCEEDED( NS_NewLocalFile( nativeStartDir, getter_AddRefs( startLocalFile ) ) ) ) {
+                            #ifdef DEBUG_law
+                            printf( "\nSetting display directory to %s\n\n", (const char*)nativeStartDir );
+                            #endif
+                            picker->SetDisplayDirectory( startLocalFile );
+                        }
                     }
                 }
             }
 
-            //XXX l10n
-            nsAutoCString title(NS_ConvertASCIItoUCS2("Save File"));
-        
-            rv = result->ChooseOutputFile( title,
-                                           suggested.IsEmpty() ? 0 : suggested.GetBuffer(),
-                                           nsIFileSpecWithUI::eAllFiles );
-
+            nsAutoString title( NS_ConvertASCIItoUCS2( "Save File" ) );
+            nsCID cid = NS_STRINGBUNDLESERVICE_CID;
+            NS_WITH_SERVICE( nsIStringBundleService, bundleService, cid, &rv );
             if ( NS_SUCCEEDED( rv ) ) {
+                nsILocale *locale = 0;
+                nsIStringBundle *bundle;
+                PRUnichar *pString;
+                rv = bundleService->CreateBundle( "chrome://global/locale/downloadProgress.properties",
+                                                  locale, 
+                                                  getter_AddRefs( &bundle ) );
+                if ( NS_SUCCEEDED( rv ) ) {
+                    rv = bundle->GetStringFromName( NS_ConvertASCIItoUCS2( "FilePickerTitle" ).GetUnicode(),
+                                                    &pString );
+                    if ( NS_SUCCEEDED( rv ) && pString ) {
+                        title = pString;
+                        nsAllocator::Free( pString );
+                    }
+                }
+            }
+        
+            rv = picker->Init( parent, title.GetUnicode(), nsIFilePicker::modeSave );
+            PRInt16 rc = nsIFilePicker::returnCancel;
+            if ( NS_SUCCEEDED( rv ) ) {
+                // Set default file name.
+                rv = picker->SetDefaultString( NS_ConvertASCIItoUCS2( suggested.GetBuffer() ).GetUnicode() );
+
+                // Set file filter mask.
+                rv = picker->AppendFilters( nsIFilePicker::filterAll );
+
+                rv = picker->Show( &rc );
+            }
+
+            #ifdef DEBUG_law
+            printf( "\nFile picker result = 0x%04X\n\n", (int)rc );
+            #endif
+            if ( rc != nsIFilePicker::returnCancel ) {
                 // Give result to caller.
-                rv = result->QueryInterface( NS_GET_IID(nsIFileSpec), (void**)aResult );
+                nsCOMPtr<nsILocalFile> selection;
+                if ( NS_SUCCEEDED( picker->GetFile( getter_AddRefs( selection ) ) ) ) {
+                    nsXPIDLCString selectionPath;
+                    if ( NS_SUCCEEDED( selection->GetPath( getter_Copies( selectionPath ) ) ) ) {
+                        rv = NS_NewFileSpec( aResult );
+                        if ( NS_SUCCEEDED( rv ) ) {
+                            rv = (*aResult)->SetNativePath( selectionPath );
+                            printf( "\nresult native path = %s\n\n", (const char *)selectionPath );
+                        }
+                    }
+                }
 
                 if ( NS_SUCCEEDED( rv ) && prefs ) {
                     // Save selected directory for next time.
-                    rv = result->GetParent( getter_AddRefs( startDir ) );
+                    rv = (*aResult)->GetParent( getter_AddRefs( startDir ) );
                     if ( NS_SUCCEEDED( rv ) && startDir ) {
                         prefs->SetFilePref( "browser.download.dir", startDir, PR_FALSE );
+                        #ifdef DEBUG_law
+                        printf( "\nbrowser.download.dir has been reset\n\n" );
+                        #endif
                     }
                 }
+            } else if ( NS_SUCCEEDED( rv ) ) {
+                // User cancelled.
+                rv = NS_ERROR_ABORT;
             }
-        } else {
-            DEBUG_PRINTF( PR_STDOUT, "%s %d: Error creating file widget, rv=0x%X\n",
-                          __FILE__, (int)__LINE__, (int)rv );
         }
     } else {
         rv = NS_ERROR_NULL_POINTER;
@@ -192,9 +294,24 @@ nsStreamTransfer::SelectFile( nsIFileSpec **aResult, const nsCString &suggested 
     return rv;
 }
 
-nsCString nsStreamTransfer::SuggestNameFor( nsIChannel *aChannel ) {
-    nsCString result;
-    if ( aChannel ) {
+// Guess a save-as file name from channel (URL) and/or "suggested name" (which likely
+// came from content-disposition response header).
+nsCString nsStreamTransfer::SuggestNameFor( nsIChannel *aChannel, char const *suggestedName ) {
+    nsCString result = suggestedName;
+    if ( !result.IsEmpty() ) {
+        // Exclude any path information from this!  This is mandatory as
+        // this suggested name comes from a http response header and could
+        // try to overwrite c:\config.sys or something.
+        nsCOMPtr<nsILocalFile> localFile;
+        if ( NS_SUCCEEDED( NS_NewLocalFile( result, getter_AddRefs( localFile ) ) ) ) {
+            // We want base part of name only.
+            nsXPIDLCString baseName;
+            if ( NS_SUCCEEDED( localFile->GetLeafName( getter_Copies( baseName ) ) ) ) {
+                // Unescape this for display in dialog.
+                result = nsUnescape( (char*)(const char*)baseName );
+            }
+        }
+    } else if ( aChannel ) {
         // Get URI from channel and spec from URI.
         nsCOMPtr<nsIURI> uri;
         nsresult rv = aChannel->GetURI( getter_AddRefs( uri ) );

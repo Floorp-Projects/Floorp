@@ -55,9 +55,12 @@ interface nsIStreamTransfer : nsIAppShellComponent {
     /*------------------ SelectFileAndTransferLocationSpec ---------------------
     | Prompt the user for a destination file and then transfer the data, using |
     | the argument URL as source, to that file, while showing a progress       |
-    | dialog.                                                                  |
+    | dialog.  You can provide a content type and/or a suggested file name.    |
     --------------------------------------------------------------------------*/
-    void SelectFileAndTransferLocationSpec( in string aURL, in nsIDOMWindow parent );
+    void SelectFileAndTransferLocationSpec( in string       aURL,
+                                            in nsIDOMWindow parent,
+                                            in string       contentType,
+                                            in string       suggestedName );
 };
 
 
