@@ -3085,7 +3085,7 @@ NET_WriteCacheFAT(char *filename, XP_Bool final_call)
 {
 #ifdef NU_CACHE
     PR_ASSERT(0);
-#endif;
+#endif
 	net_StoreDiskCacheSize();
 
 	if(!cache_database)

@@ -78,7 +78,7 @@ void NET_NTrace(char *msg, int32 length) {
 
 
 /* #define'd in mktrace.h to TRACEMSG */
-void _MK_TraceMsg(char *fmt, ...) {
+void ns_MK_TraceMsg(char *fmt, ...) {
 	va_list ap;
 	char buf[512];
 

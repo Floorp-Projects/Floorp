@@ -272,7 +272,7 @@
   #endif
 #endif
 
-#if defined(IRIX)
+#if defined(IRIX) || defined(AIX)
   #define NSCAP_NO_MEMBER_USING_DECLARATIONS
   #define NSCAP_NO_EXPLICIT
   #define NSCAP_NO_NEW_CASTS
