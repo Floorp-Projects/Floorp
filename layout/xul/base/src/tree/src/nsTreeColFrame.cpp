@@ -221,10 +221,8 @@ nsTreeColFrame::InvalidateColumnCache(nsIPresContext* aPresContext)
     mTree->GetTreeBody(getter_AddRefs(bodyEl));
     nsCOMPtr<nsIContent> bodyContent = do_QueryInterface(bodyEl);
     if (bodyContent) {
-      nsCOMPtr<nsIPresShell> shell;
-      aPresContext->GetShell(getter_AddRefs(shell));
       nsIFrame* frame;
-      shell->GetPrimaryFrameFor(bodyContent, &frame);
+      aPresContext->PresShell()->GetPrimaryFrameFor(bodyContent, &frame);
       if (frame) {
         nsTreeBodyFrame* oframe = NS_STATIC_CAST(nsTreeBodyFrame*, frame);
         oframe->InvalidateColumnCache();

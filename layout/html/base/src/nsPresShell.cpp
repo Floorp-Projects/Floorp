@@ -884,11 +884,8 @@ IncrementalReflow::Dispatch(nsIPresContext      *aPresContext,
     nsReflowPath *path = NS_STATIC_CAST(nsReflowPath *, mRoots[i]);
     nsIFrame *first = path->mFrame;
 
-    nsCOMPtr<nsIPresShell> shell;
-    aPresContext->GetShell(getter_AddRefs(shell));
-
     nsIFrame* root;
-    shell->GetRootFrame(&root);
+    aPresContext->PresShell()->GetRootFrame(&root);
 
     first->WillReflow(aPresContext);
     nsContainerFrame::PositionFrameView(aPresContext, first);
@@ -6879,20 +6876,16 @@ CompareTrees(nsIPresContext* aFirstPresContext, nsIFrame* aFirstFrame,
         // verify that neither frame has a space manager,
         // or they both do and the space managers are equivalent
         nsCOMPtr<nsIFrameManager>fm1;
-        nsCOMPtr<nsIPresShell> ps1;
         nsSpaceManager *sm1;
-        aFirstPresContext->GetShell(getter_AddRefs(ps1));
-        NS_ASSERTION(ps1, "no pres shell for primary tree!");
+        nsIPresShell *ps1 = aFirstPresContext->PresShell();
         ps1->GetFrameManager(getter_AddRefs(fm1));
         NS_ASSERTION(fm1, "no frame manager for primary tree!");
         fm1->GetFrameProperty((nsIFrame*)k1, nsLayoutAtoms::spaceManagerProperty,
                                      0, (void **)&sm1);
         // look at the test frame
         nsCOMPtr<nsIFrameManager>fm2;
-        nsCOMPtr<nsIPresShell> ps2;
         nsSpaceManager *sm2;
-        aSecondPresContext->GetShell(getter_AddRefs(ps2));
-        NS_ASSERTION(ps2, "no pres shell for test tree!");
+        nsIPresShell *ps2 = aSecondPresContext->PresShell();
         ps2->GetFrameManager(getter_AddRefs(fm2));
         NS_ASSERTION(fm2, "no frame manager for test tree!");
         fm2->GetFrameProperty((nsIFrame*)k2, nsLayoutAtoms::spaceManagerProperty,

@@ -505,10 +505,8 @@ GetMathMLAttributeStyleSheet(nsIPresContext* aPresContext,
   *aSheet = nsnull;
 
   // first, look if the attribute stylesheet is already there
-  nsCOMPtr<nsIPresShell> presShell;
-  aPresContext->GetShell(getter_AddRefs(presShell));
   nsCOMPtr<nsIStyleSet> styleSet;
-  presShell->GetStyleSet(getter_AddRefs(styleSet));
+  aPresContext->PresShell()->GetStyleSet(getter_AddRefs(styleSet));
   if (!styleSet)
     return;
   nsAutoString title;
@@ -694,8 +692,7 @@ nsMathMLFrame::MapAttributesIntoCSS(nsIPresContext* aPresContext,
     return 0;
 
   // now, re-resolve the style contexts in our subtree
-  nsCOMPtr<nsIPresShell> presShell;
-  aPresContext->GetShell(getter_AddRefs(presShell));
+  nsIPresShell *presShell = aPresContext->GetPresShell();
   if (presShell) {
     nsCOMPtr<nsIFrameManager> fm;
     presShell->GetFrameManager(getter_AddRefs(fm));

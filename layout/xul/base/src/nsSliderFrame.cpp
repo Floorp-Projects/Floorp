@@ -278,8 +278,6 @@ nsSliderFrame::AttributeChanged(nsIPresContext* aPresContext,
   if (aAttribute == nsXULAtoms::maxpos ||
       aAttribute == nsXULAtoms::pageincrement ||
       aAttribute == nsXULAtoms::increment) {
-      nsCOMPtr<nsIPresShell> shell;
-      aPresContext->GetShell(getter_AddRefs(shell));
 
       nsBoxLayoutState state(aPresContext);
       MarkDirtyChildren(state);

@@ -114,8 +114,7 @@ CreateBidiContinuation(nsIPresContext* aPresContext,
 
   NS_PRECONDITION(aFrame, "null ptr");
 
-  nsCOMPtr<nsIPresShell>   presShell;
-  aPresContext->GetShell(getter_AddRefs(presShell) );
+  nsIPresShell *presShell = aPresContext->PresShell();
 
   NS_ASSERTION(presShell, "PresShell must be set on PresContext before calling nsBidiPresUtils::CreateBidiContinuation");
 
@@ -787,8 +786,7 @@ nsBidiPresUtils::RemoveBidiContinuation(nsIPresContext* aPresContext,
   PRInt32           index;
   nsIFrame*         parent = aFrame->GetParent();
       
-  nsCOMPtr<nsIPresShell> presShell;
-  aPresContext->GetShell(getter_AddRefs(presShell) );
+  nsIPresShell *presShell = aPresContext->PresShell();
 
   aOffset = 0;
 

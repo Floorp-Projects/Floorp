@@ -382,9 +382,7 @@ CanvasFrame::Paint(nsIPresContext*      aPresContext,
   // and frame construction.  If painting is locked down, then we
   // do not paint our children.  
   PRBool paintingSuppressed = PR_FALSE;
-  nsCOMPtr<nsIPresShell> shell;
-  aPresContext->GetShell(getter_AddRefs(shell));
-  shell->IsPaintingSuppressed(&paintingSuppressed);
+  aPresContext->PresShell()->IsPaintingSuppressed(&paintingSuppressed);
   if (paintingSuppressed) {
     if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
       PaintSelf(aPresContext, aRenderingContext, aDirtyRect);

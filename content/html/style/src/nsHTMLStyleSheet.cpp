@@ -737,9 +737,8 @@ HTMLStyleSheetImpl::GetStyleRuleProcessor(nsIStyleRuleProcessor*& aProcessor,
 
 static nsresult GetBodyColor(nsIPresContext* aPresContext, nscolor* aColor)
 {
-  nsCOMPtr<nsIPresShell> shell;
-  aPresContext->GetShell(getter_AddRefs(shell));
   nsCOMPtr<nsIDocument> doc;
+  nsIPresShell *shell = aPresContext->PresShell();
   shell->GetDocument(getter_AddRefs(doc));
   nsCOMPtr<nsIDOMHTMLDocument> domdoc = do_QueryInterface(doc);
   if (!domdoc)

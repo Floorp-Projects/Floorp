@@ -1635,11 +1635,7 @@ nsTextControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
 
   mState |= NS_FRAME_INDEPENDENT_SELECTION;
 
-  nsCOMPtr<nsIPresShell> shell;
-  nsresult rv = aPresContext->GetShell(getter_AddRefs(shell));
-
-  if (NS_FAILED(rv))
-    return rv;
+  nsIPresShell *shell = aPresContext->GetPresShell();
 
   if (!shell)
     return NS_ERROR_FAILURE;
@@ -1647,7 +1643,7 @@ nsTextControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
   // Get the DOM document
 
   nsCOMPtr<nsIDocument> doc;
-  rv = shell->GetDocument(getter_AddRefs(doc));
+  nsresult rv = shell->GetDocument(getter_AddRefs(doc));
   if (NS_FAILED(rv))
     return rv;
   if (!doc)
@@ -2104,8 +2100,7 @@ void    nsTextControlFrame::SetFocus(PRBool aOn , PRBool aRepaint){}
 void    nsTextControlFrame::ScrollIntoView(nsIPresContext* aPresContext)
 {
   if (aPresContext) {
-    nsCOMPtr<nsIPresShell> presShell;
-    aPresContext->GetShell(getter_AddRefs(presShell));
+    nsIPresShell *presShell = aPresContext->GetPresShell();
     if (presShell) {
       presShell->ScrollFrameIntoView(this,
                    NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE,NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE);
@@ -2685,10 +2680,9 @@ nsTextControlFrame::AttributeChanged(nsIPresContext* aPresContext,
   }
   else if (mEditor && nsHTMLAtoms::disabled == aAttribute) 
   {
-    nsCOMPtr<nsIPresShell> shell;
-    rv = aPresContext->GetShell(getter_AddRefs(shell));
-    if (NS_FAILED(rv))
-      return rv;
+    // XXXbryner do we need to check for a null presshell here?
+    //           we don't do anything with it.
+    nsIPresShell *shell = aPresContext->GetPresShell();
     if (!shell)
       return NS_ERROR_FAILURE;
 
@@ -3068,11 +3062,8 @@ nsTextControlFrame::SetInitialChildList(nsIPresContext* aPresContext,
     // register the event listeners with the DOM event reveiver
     rv = erP->AddEventListenerByIID(NS_STATIC_CAST(nsIDOMFocusListener *,mTextListener), NS_GET_IID(nsIDOMFocusListener));
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register focus listener");
-    nsCOMPtr<nsIPresShell> shell;
-    nsresult rv = aPresContext->GetShell(getter_AddRefs(shell));
-    if (NS_FAILED(rv))
-      return rv;
-    if (!shell)
+    // XXXbryner do we need to check for a null presshell here?
+    if (!aPresContext->GetPresShell())
       return NS_ERROR_FAILURE;
   }
 

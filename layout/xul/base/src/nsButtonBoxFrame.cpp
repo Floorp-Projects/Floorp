@@ -160,8 +160,6 @@ nsButtonBoxFrame::MouseClicked (nsIPresContext* aPresContext, nsGUIEvent* aEvent
   if (disabled.Equals(NS_LITERAL_STRING("true")))
     return;
 
-  nsresult rv = NS_OK;
-
   // Execute the oncommand event handler.
   nsEventStatus status = nsEventStatus_eIgnore;
   nsMouseEvent event;
@@ -182,9 +180,9 @@ nsButtonBoxFrame::MouseClicked (nsIPresContext* aPresContext, nsGUIEvent* aEvent
   event.widget = nsnull;
 
   // Have the content handle the event, propagating it according to normal DOM rules.
-  nsCOMPtr<nsIPresShell> shell;
-  rv = aPresContext->GetShell(getter_AddRefs(shell));
-  if (NS_SUCCEEDED(rv) && shell) {
+  nsIPresShell *shell = aPresContext->GetPresShell();
+  if (shell) {
     shell->HandleDOMEventWithTarget(mContent, &event, &status);
+    // shell may no longer be alive, don't use it here unless you keep a ref
   }
 }

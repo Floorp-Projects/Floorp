@@ -1996,8 +1996,7 @@ nsEventListenerManager::FixContextMenuEvent(nsIPresContext* aPresContext,
   nsString empty;
 
   if (aEvent->message == NS_CONTEXTMENU_KEY) {
-    aPresContext->GetShell(getter_AddRefs(shell));
-    shell->GetDocument(getter_AddRefs(doc));
+    aPresContext->PresShell()->GetDocument(getter_AddRefs(doc));
     if (doc) {
       nsCOMPtr<nsPIDOMWindow> privWindow = do_QueryInterface(doc->GetScriptGlobalObject());
       if (privWindow) {

@@ -173,8 +173,7 @@ NS_IMETHODIMP
 nsIsIndexFrame::GetInputFrame(nsIPresContext* aPresContext,
                               nsIFormControlFrame** oFrame)
 {
-  nsCOMPtr<nsIPresShell> presShell;
-  aPresContext->GetShell(getter_AddRefs(presShell));
+  nsIPresShell *presShell = aPresContext->GetPresShell();
   if (!mInputContent) NS_WARNING("null content - cannot restore state");
   if (presShell && mInputContent) {
     nsIFrame *frame;
@@ -315,8 +314,7 @@ void
 nsIsIndexFrame::ScrollIntoView(nsIPresContext* aPresContext)
 {
   if (aPresContext) {
-    nsCOMPtr<nsIPresShell> presShell;
-    aPresContext->GetShell(getter_AddRefs(presShell));
+    nsIPresShell *presShell = aPresContext->GetPresShell();
     if (presShell) {
       presShell->ScrollFrameIntoView(this,
                    NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE,NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE);

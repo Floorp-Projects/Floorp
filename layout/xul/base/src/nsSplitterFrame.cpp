@@ -631,8 +631,7 @@ nsSplitterFrameInner::MouseDrag(nsIPresContext* aPresContext, nsGUIEvent* aEvent
     */
 
     /*
-      nsCOMPtr<nsIPresShell> shell;
-      aPresContext->GetShell(getter_AddRefs(shell));
+      nsIPresShell *shell = aPresContext->PresShell();
 
       nsCOMPtr<nsHTMLReflowCommand> reflowCmd;
       nsresult rv = NS_NewHTMLReflowCommand(getter_AddRefs(reflowCmd), mOuter->mParent,
@@ -640,9 +639,6 @@ nsSplitterFrameInner::MouseDrag(nsIPresContext* aPresContext, nsGUIEvent* aEvent
       if (NS_SUCCEEDED(rv)) 
         shell->AppendReflowCommand(reflowCmd);
      
-      nsCOMPtr<nsIPresShell> shell;
-      aPresContext->GetShell(getter_AddRefs(shell));
-
       mOuter->mState |= NS_FRAME_IS_DIRTY;
       mOuter->mParent->ReflowDirtyChild(shell, mOuter);
     */
@@ -1041,8 +1037,6 @@ nsSplitterFrameInner::AdjustChildren(nsIPresContext* aPresContext)
 
    
   if (realTimeDrag) {
-    nsCOMPtr<nsIPresShell> shell;
-    aPresContext->GetShell(getter_AddRefs(shell));
     nsIFrame* frame = nsnull;
     mParentBox->GetFrame(&frame);
 
@@ -1056,7 +1050,7 @@ nsSplitterFrameInner::AdjustChildren(nsIPresContext* aPresContext)
     nsIViewManager* viewManager = view->GetViewManager();
 
     viewManager->DisableRefresh();
-    shell->FlushPendingNotifications(PR_FALSE);
+    aPresContext->PresShell()->FlushPendingNotifications(PR_FALSE);
     viewManager->EnableRefresh(NS_VMREFRESH_IMMEDIATE);
   }
   else {
@@ -1071,9 +1065,6 @@ nsSplitterFrameInner::AdjustChildren(nsIPresContext* aPresContext, nsSplitterInf
   ///printf("------- AdjustChildren------\n");
 
   nsBoxLayoutState state(aPresContext);
-
-  nsCOMPtr<nsIPresShell> shell;
-  state.GetPresShell(getter_AddRefs(shell));
 
   float p2t;
   aPresContext->GetScaledPixelsToTwips(&p2t);

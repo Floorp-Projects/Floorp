@@ -272,11 +272,8 @@ NS_IMETHODIMP
 nsListBoxBodyFrame::Destroy(nsIPresContext* aPresContext)
 {
   // make sure we cancel any posted callbacks.
-  if (mReflowCallbackPosted) {
-     nsCOMPtr<nsIPresShell> shell;
-     aPresContext->GetShell(getter_AddRefs(shell));
-     shell->CancelReflowCallback(this);
-  }
+  if (mReflowCallbackPosted)
+     aPresContext->PresShell()->CancelReflowCallback(this);
 
   return nsBoxFrame::Destroy(aPresContext);
 }
@@ -380,9 +377,7 @@ nsListBoxBodyFrame::PositionChanged(PRInt32 aOldIndex, PRInt32& aNewIndex)
 
      smoother->Stop();
 
-     nsCOMPtr<nsIPresShell> shell;
-     mPresContext->GetShell(getter_AddRefs(shell));
-     shell->FlushPendingNotifications(PR_FALSE);
+     mPresContext->PresShell()->FlushPendingNotifications(PR_FALSE);
 
      smoother->mDelta = newTwipIndex > oldTwipIndex ? rowDelta : -rowDelta;
 
@@ -791,9 +786,7 @@ nsListBoxBodyFrame::PostReflowCallback()
 {
   if (!mReflowCallbackPosted) {
     mReflowCallbackPosted = PR_TRUE;
-    nsCOMPtr<nsIPresShell> shell;
-    mPresContext->GetShell(getter_AddRefs(shell));
-    shell->PostReflowCallback(this);
+    mPresContext->PresShell()->PostReflowCallback(this);
   }
 }
 
@@ -852,8 +845,7 @@ nsListBoxBodyFrame::InternalPositionChanged(PRBool aUp, PRInt32 aDelta, PRBool a
   // begin timing how long it takes to scroll a row
   PRTime start = PR_Now();
 
-  nsCOMPtr<nsIPresShell> shell;
-  mPresContext->GetShell(getter_AddRefs(shell));
+  nsIPresShell *shell = mPresContext->PresShell();
   shell->FlushPendingNotifications(PR_FALSE);
 
   PRInt32 visibleRows = 0;
@@ -1260,8 +1252,7 @@ nsListBoxBodyFrame::OnContentInserted(nsIPresContext* aPresContext, nsIContent* 
 {
   ++mRowCount;
 
-  nsCOMPtr<nsIPresShell> shell;
-  aPresContext->GetShell(getter_AddRefs(shell));
+  nsIPresShell *shell = aPresContext->PresShell();
   // The RDF content builder will build content nodes such that they are all 
   // ready when OnContentInserted is first called, meaning the first call
   // to CreateRows will create all the frames, but OnContentInserted will
@@ -1333,10 +1324,9 @@ nsListBoxBodyFrame::OnContentRemoved(nsIPresContext* aPresContext, nsIFrame* aCh
     PRUint32 childCount = listBoxContent->GetChildCount();
     if (childCount > 0) {
       nsIContent *lastChild = listBoxContent->GetChildAt(childCount - 1);
-      nsCOMPtr<nsIPresShell> shell;
-      aPresContext->GetShell(getter_AddRefs(shell));
       nsIFrame* lastChildFrame = nsnull;
-      shell->GetPrimaryFrameFor(lastChild, &lastChildFrame);
+      aPresContext->PresShell()->GetPrimaryFrameFor(lastChild,
+                                                    &lastChildFrame);
     
       if (lastChildFrame) {
         mTopFrame = nsnull;
@@ -1362,9 +1352,7 @@ nsListBoxBodyFrame::OnContentRemoved(nsIPresContext* aPresContext, nsIFrame* aCh
   }
 
   MarkDirtyChildren(state);
-  nsCOMPtr<nsIPresShell> shell;
-  aPresContext->GetShell(getter_AddRefs(shell));
-  shell->FlushPendingNotifications(PR_FALSE);
+  aPresContext->PresShell()->FlushPendingNotifications(PR_FALSE);
 }
 
 void

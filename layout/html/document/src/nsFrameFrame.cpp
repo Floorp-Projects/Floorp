@@ -374,8 +374,7 @@ nsHTMLFrameOuterFrame::Init(nsIPresContext*  aPresContext,
     // will have been set by nsCSSFrameConstructor if necessary.
     nsCOMPtr<nsIAtom> contentParentAtom = do_GetAtom("contentParent");
     nsIFrame* contentParent = nsnull;
-    nsCOMPtr<nsIPresShell> presShell;
-    aPresContext->GetShell(getter_AddRefs(presShell));
+    nsIPresShell *presShell = aPresContext->GetPresShell();
 
     if (presShell) {
       nsCOMPtr<nsIFrameManager> frameManager;
@@ -402,9 +401,7 @@ nsHTMLFrameOuterFrame::Init(nsIPresContext*  aPresContext,
     view->CreateWidget(kCChildCID);
   }
 
-  nsCOMPtr<nsIPresShell> shell;
-  aPresContext->GetShell(getter_AddRefs(shell));
-  nsIFrame* firstChild = new (shell.get()) nsHTMLFrameInnerFrame;
+  nsIFrame* firstChild = new (aPresContext->PresShell()) nsHTMLFrameInnerFrame;
   if (firstChild) {
     mFrames.SetFrames(firstChild);
     // Resolve the style context for the inner frame

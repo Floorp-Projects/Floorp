@@ -591,10 +591,8 @@ SyncFrameViewGeometryDependentProperties(nsIPresContext*  aPresContext,
       viewHasTransparentContent = PR_FALSE;
     }
 
-    nsCOMPtr<nsIPresShell> shell;
-    aPresContext->GetShell(getter_AddRefs(shell));
     nsCOMPtr<nsIDocument> doc;
-    shell->GetDocument(getter_AddRefs(doc));
+    aPresContext->PresShell()->GetDocument(getter_AddRefs(doc));
     if (doc) {
       nsIContent *rootElem = doc->GetRootContent();
       if (!doc->GetParentDocument() &&
@@ -1126,8 +1124,7 @@ nsIFrame*
 nsContainerFrame::GetOverflowFrames(nsIPresContext* aPresContext,
                                     PRBool          aRemoveProperty) const
 {
-  nsCOMPtr<nsIPresShell>     presShell;
-  aPresContext->GetShell(getter_AddRefs(presShell));
+  nsIPresShell *presShell = aPresContext->GetPresShell();
 
   if (presShell) {
     nsCOMPtr<nsIFrameManager>  frameManager;
@@ -1167,10 +1164,9 @@ nsresult
 nsContainerFrame::SetOverflowFrames(nsIPresContext* aPresContext,
                                     nsIFrame*       aOverflowFrames)
 {
-  nsCOMPtr<nsIPresShell>     presShell;
   nsresult                   rv = NS_ERROR_FAILURE;
 
-  aPresContext->GetShell(getter_AddRefs(presShell));
+  nsIPresShell *presShell = aPresContext->GetPresShell();
   if (presShell) {
     nsCOMPtr<nsIFrameManager>  frameManager;
     presShell->GetFrameManager(getter_AddRefs(frameManager));

@@ -522,8 +522,7 @@ nsHTMLButtonElement::HandleDOMEvent(nsIPresContext* aPresContext,
               event.originator      = this;
               nsEventStatus status  = nsEventStatus_eIgnore;
 
-              nsCOMPtr<nsIPresShell> presShell;
-              aPresContext->GetShell(getter_AddRefs(presShell));
+              nsIPresShell *presShell = aPresContext->GetPresShell();
               // If |nsIPresShell::Destroy| has been called due to
               // handling the event (base class HandleDOMEvent, above),
               // the pres context will return a null pres shell.  See

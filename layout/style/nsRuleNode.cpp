@@ -1919,8 +1919,7 @@ nsRuleNode::ComputeFontData(nsStyleStruct* aStartStruct,
       // check if the prefs have been disabled for this shell
       // - if prefs are disabled then we use the document fonts anyway (yet another override)
       PRBool prefsEnabled = PR_TRUE;
-      nsCOMPtr<nsIPresShell> shell;
-      mPresContext->GetShell(getter_AddRefs(shell));
+      nsIPresShell *shell = mPresContext->GetPresShell();
       if (shell)
         shell->ArePrefStyleRulesEnabled(prefsEnabled);
       if (!prefsEnabled)
@@ -4332,10 +4331,8 @@ nsRuleNode::GetStyleData(nsStyleStructID aSID,
   // this works fine even if |this| is a rule node that has been
   // destroyed (leftover from a previous rule tree) but is somehow still
   // used.
-  nsCOMPtr<nsIPresShell> shell;
-  mPresContext->GetShell(getter_AddRefs(shell));
   nsCOMPtr<nsIStyleSet> set;
-  shell->GetStyleSet(getter_AddRefs(set));
+  mPresContext->PresShell()->GetStyleSet(getter_AddRefs(set));
   return set->GetDefaultStyleData()->GetStyleData(aSID);
 }
 

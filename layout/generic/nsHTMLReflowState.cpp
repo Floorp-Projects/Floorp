@@ -938,10 +938,8 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsIPresContext* aPresContext,
 
   // Get the placeholder frame
   nsIFrame*     placeholderFrame;
-  nsCOMPtr<nsIPresShell> presShell;
-  aPresContext->GetShell(getter_AddRefs(presShell));
 
-  presShell->GetPlaceholderFrameFor(frame, &placeholderFrame);
+  aPresContext->PresShell()->GetPlaceholderFrameFor(frame, &placeholderFrame);
   NS_ASSERTION(nsnull != placeholderFrame, "no placeholder frame");
 
   // Find the nearest containing block frame to the placeholder frame,

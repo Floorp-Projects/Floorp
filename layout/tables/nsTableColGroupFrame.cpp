@@ -318,7 +318,7 @@ nsTableColGroupFrame::RemoveChild(nsIPresContext&  aPresContext,
   // XXX this could be optimized with much effort
   tableFrame->SetNeedStrategyInit(PR_TRUE);
   // Generate a reflow command so we reflow the table
-  nsTableFrame::AppendDirtyReflowCommand(nsTableFrame::GetPresShellNoAddref(&aPresContext), tableFrame);
+  nsTableFrame::AppendDirtyReflowCommand(aPresContext.PresShell(), tableFrame);
 }
 
 // this removes children form the last col group (eColGroupAnonymousCell) in the 

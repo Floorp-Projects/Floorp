@@ -142,8 +142,6 @@ NS_EXPORT nsresult
 mozXMLTermUtils::GetPresContextScrollableView(nsIPresContext* aPresContext,
                                          nsIScrollableView** aScrollableView)
 {
-  nsresult result;
-
   XMLT_LOG(mozXMLTermUtils::GetPresContextScrollableView,30,("\n"));
 
   if (!aScrollableView)
@@ -151,9 +149,8 @@ mozXMLTermUtils::GetPresContextScrollableView(nsIPresContext* aPresContext,
 
   *aScrollableView = nsnull;
 
-  nsCOMPtr<nsIPresShell> presShell;
-  result = aPresContext->GetShell(getter_AddRefs(presShell));
-  if (NS_FAILED(result) || !presShell)
+  nsIPresShell *presShell = aPresContext->GetPresShell();
+  if (!presShell)
     return NS_ERROR_FAILURE;
 
   nsIViewManager* viewManager = presShell->GetViewManager();

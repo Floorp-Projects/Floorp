@@ -332,12 +332,9 @@ nsTableCellFrame::DecorateForSelection(nsIPresContext* aPresContext,
     PRBool isSelected =
       (GetStateBits() & NS_FRAME_SELECTED_CONTENT) == NS_FRAME_SELECTED_CONTENT;
     if (isSelected) {
-      nsCOMPtr<nsIPresShell> shell;
-      nsresult result = aPresContext->GetShell(getter_AddRefs(shell));
-      if (NS_FAILED(result))
-        return result;
       nsCOMPtr<nsIFrameSelection> frameSelection;
-      result = shell->GetFrameSelection(getter_AddRefs(frameSelection));
+      nsresult result = aPresContext->PresShell()->
+        GetFrameSelection(getter_AddRefs(frameSelection));
       if (NS_SUCCEEDED(result)) {
         PRBool tableCellSelectionMode;
         result = frameSelection->GetTableCellSelection(&tableCellSelectionMode);
@@ -536,12 +533,9 @@ nsTableCellFrame::SetSelected(nsIPresContext* aPresContext,
   //   only this frame is considered
   nsFrame::SetSelected(aPresContext, aRange, aSelected, aSpread);
 
-  nsCOMPtr<nsIPresShell> shell;
-  nsresult result = aPresContext->GetShell(getter_AddRefs(shell));
-  if (NS_FAILED(result))
-    return result;
   nsCOMPtr<nsIFrameSelection> frameSelection;
-  result = shell->GetFrameSelection(getter_AddRefs(frameSelection));
+  nsresult result = aPresContext->PresShell()->
+    GetFrameSelection(getter_AddRefs(frameSelection));
   if (NS_SUCCEEDED(result) && frameSelection) {
     PRBool tableCellSelectionMode;
     result = frameSelection->GetTableCellSelection(&tableCellSelectionMode);

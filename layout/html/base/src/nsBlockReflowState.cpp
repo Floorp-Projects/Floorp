@@ -182,20 +182,14 @@ nsBlockReflowState::NewLineBox(nsIFrame* aFrame,
                                PRInt32 aCount,
                                PRBool aIsBlock)
 {
-  nsCOMPtr<nsIPresShell> shell;
-  mPresContext->GetShell(getter_AddRefs(shell));
-
-  return NS_NewLineBox(shell, aFrame, aCount, aIsBlock);
+  return NS_NewLineBox(mPresContext->PresShell(), aFrame, aCount, aIsBlock);
 }
 
 void
 nsBlockReflowState::FreeLineBox(nsLineBox* aLine)
 {
   if (aLine) {
-    nsCOMPtr<nsIPresShell> presShell;
-    mPresContext->GetShell(getter_AddRefs(presShell));
-    
-    aLine->Destroy(presShell);
+    aLine->Destroy(mPresContext->PresShell());
   }
 }
 
@@ -945,10 +939,8 @@ nsBlockReflowState::FlowAndPlaceFloat(nsFloatCache* aFloatCache,
   if (prevInFlow) {
     prevRect = prevInFlow->GetRect();
 
-    nsCOMPtr<nsIPresShell> presShell;
-    mPresContext->GetShell(getter_AddRefs(presShell));
     nsCOMPtr<nsIFrameManager> frameManager;
-    presShell->GetFrameManager(getter_AddRefs(frameManager));
+    mPresContext->PresShell()->GetFrameManager(getter_AddRefs(frameManager));
 
     nsIFrame *placeParentPrev, *prevPlace;
     // If prevInFlow's placeholder is in a block that wasn't continued, we need to adjust 

@@ -756,12 +756,8 @@ nsNativeThemeMac::ThemeSupportsWidget(nsIPresContext* aPresContext, nsIFrame* aF
     return PR_FALSE;
 #endif
 
-  if (aPresContext) {
-    nsCOMPtr<nsIPresShell> shell;
-    aPresContext->GetShell(getter_AddRefs(shell));
-    if (!shell->IsThemeSupportEnabled())
-      return PR_FALSE;
-  }
+  if (aPresContext && !aPresContext->PresShell()->IsThemeSupportEnabled())
+    return PR_FALSE;
 
   PRBool retVal = PR_FALSE;
   

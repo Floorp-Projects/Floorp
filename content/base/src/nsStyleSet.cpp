@@ -1608,9 +1608,8 @@ NS_IMETHODIMP StyleSetImpl::ConstructRootFrame(nsIPresContext* aPresContext,
                                                nsIContent*     aDocElement,
                                                nsIFrame*&      aFrameSubTree)
 {
-  nsCOMPtr<nsIPresShell> shell;
-  aPresContext->GetShell(getter_AddRefs(shell));
-  return mFrameConstructor->ConstructRootFrame(shell, aPresContext, aDocElement,
+  return mFrameConstructor->ConstructRootFrame(aPresContext->PresShell(),
+                                               aPresContext, aDocElement,
                                                aFrameSubTree);
 }
 
@@ -1693,9 +1692,8 @@ NS_IMETHODIMP
 StyleSetImpl::CantRenderReplacedElement(nsIPresContext* aPresContext,
                                         nsIFrame*       aFrame)
 {
-  nsCOMPtr<nsIPresShell> shell;
-  aPresContext->GetShell(getter_AddRefs(shell));
-  return mFrameConstructor->CantRenderReplacedElement(shell, aPresContext, aFrame);
+  return mFrameConstructor->
+    CantRenderReplacedElement(aPresContext->PresShell(), aPresContext, aFrame);
 }
 
 NS_IMETHODIMP
@@ -1704,9 +1702,9 @@ StyleSetImpl::CreateContinuingFrame(nsIPresContext* aPresContext,
                                     nsIFrame*       aParentFrame,
                                     nsIFrame**      aContinuingFrame)
 {
-  nsCOMPtr<nsIPresShell> shell;
-  aPresContext->GetShell(getter_AddRefs(shell));
-  return mFrameConstructor->CreateContinuingFrame(shell, aPresContext, aFrame, aParentFrame,
+  return mFrameConstructor->CreateContinuingFrame(aPresContext->PresShell(),
+                                                  aPresContext, aFrame,
+                                                  aParentFrame,
                                                   aContinuingFrame);
 }
 

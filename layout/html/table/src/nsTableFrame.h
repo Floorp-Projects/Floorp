@@ -238,7 +238,6 @@ public:
 
   static nsresult AppendDirtyReflowCommand(nsIPresShell* aPresShell,
                                            nsIFrame*     aFrame);
-  static nsIPresShell* GetPresShellNoAddref(nsIPresContext* aPresContext);
 
   static void RePositionViews(nsIPresContext* aPresContext,
                               nsIFrame*       aFrame);

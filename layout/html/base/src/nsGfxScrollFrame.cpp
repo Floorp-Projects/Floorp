@@ -359,8 +359,7 @@ nsGfxScrollFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
     }
   }
 
-  nsCOMPtr<nsIPresShell> shell;
-  aPresContext->GetShell(getter_AddRefs(shell));
+  nsIPresShell *shell = aPresContext->GetPresShell();
   nsCOMPtr<nsIDocument> document;
   if (shell)
     shell->GetDocument(getter_AddRefs(document));
@@ -1053,8 +1052,7 @@ nsGfxScrollFrameInner::CurPosAttributeChanged(nsIPresContext* aPresContext,
           ScrollbarChanged(mOuter->mPresContext, x*mOnePixel, y*mOnePixel, isSmooth ? NS_VMREFRESH_SMOOTHSCROLL : 0);
 
           // Fire the onScroll event now that we have scrolled
-          nsCOMPtr<nsIPresShell> presShell;
-          mOuter->mPresContext->GetShell(getter_AddRefs(presShell));
+          nsIPresShell *presShell = mOuter->mPresContext->GetPresShell();
           if (presShell) {
             nsScrollbarEvent  event;
             event.eventStructType = NS_SCROLLBAR_EVENT;
@@ -1620,11 +1618,10 @@ nsGfxScrollFrameInner::Layout(nsBoxLayoutState& aState)
         nsIFrame* child;
         if (NS_SUCCEEDED(parentFrame->FirstChild(mOuter->mPresContext,
           nsLayoutAtoms::fixedList, &child)) && child) {
-          nsCOMPtr<nsIPresShell> presShell;
-          mOuter->mPresContext->GetShell(getter_AddRefs(presShell));
 
           // force a reflow of the fixed children
-          nsFrame::CreateAndPostReflowCommand(presShell, parentFrame,
+          nsFrame::CreateAndPostReflowCommand(mOuter->mPresContext->PresShell(),
+            parentFrame,
             eReflowType_UserDefined, nsnull, nsnull, nsLayoutAtoms::fixedList);
         }
       }

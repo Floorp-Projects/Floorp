@@ -231,13 +231,10 @@ nsGfxButtonControlFrame::CreateFrameFor(nsIPresContext*   aPresContext,
 
   nsCOMPtr<nsIContent> content(do_QueryInterface(mTextContent));
   if (aContent == content.get()) {
-    nsCOMPtr<nsIPresShell> shell;
-    aPresContext->GetShell(getter_AddRefs(shell));
-
     nsIFrame * parentFrame = mFrames.FirstChild();
     nsStyleContext* styleContext = parentFrame->GetStyleContext();
 
-    rv = NS_NewTextFrame(shell, &newFrame);
+    rv = NS_NewTextFrame(aPresContext->PresShell(), &newFrame);
     if (NS_FAILED(rv)) { return rv; }
     if (!newFrame)   { return NS_ERROR_NULL_POINTER; }
     nsRefPtr<nsStyleContext> textStyleContext;

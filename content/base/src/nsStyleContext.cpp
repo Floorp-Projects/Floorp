@@ -94,10 +94,8 @@ nsStyleContext::~nsStyleContext()
 
   nsIPresContext *presContext = mRuleNode->GetPresContext();
 
-  nsCOMPtr<nsIPresShell> shell;
-  presContext->GetShell(getter_AddRefs(shell));
   nsCOMPtr<nsIStyleSet> set;
-  shell->GetStyleSet(getter_AddRefs(set));
+  presContext->PresShell()->GetStyleSet(getter_AddRefs(set));
   set->NotifyStyleContextDestroyed(presContext, this);
 
   if (mParent) {

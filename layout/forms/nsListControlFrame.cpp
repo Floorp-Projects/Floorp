@@ -472,9 +472,7 @@ nsListControlFrame::Paint(nsIPresContext*      aPresContext,
 
   // Don't allow painting of list controls when painting is suppressed.
   PRBool paintingSuppressed = PR_FALSE;
-  nsCOMPtr<nsIPresShell> shell;
-  aPresContext->GetShell(getter_AddRefs(shell));
-  shell->IsPaintingSuppressed(&paintingSuppressed);
+  aPresContext->PresShell()->IsPaintingSuppressed(&paintingSuppressed);
   if (paintingSuppressed)
     return NS_OK;
 
@@ -492,10 +490,8 @@ nsListControlFrame::Paint(nsIPresContext*      aPresContext,
       // if we aren't selected in the mState we could be a container
       // so check to see if we are in the selection range
       if (!isSelected) {
-        nsCOMPtr<nsIPresShell> shell;
-        aPresContext->GetShell(getter_AddRefs(shell));
         nsCOMPtr<nsISelectionController> selcon;
-        selcon = do_QueryInterface(shell);
+        selcon = do_QueryInterface(aPresContext->PresShell());
         if (selcon) {
           nsCOMPtr<nsISelection> selection;
           selcon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
@@ -551,8 +547,7 @@ void nsListControlFrame::PaintFocus(nsIRenderingContext& aRC, nsFramePaintLayer 
   GetScrollableView(mPresContext, &scrollableView);
   if (!scrollableView) return;
 
-  nsCOMPtr<nsIPresShell> presShell;
-  mPresContext->GetShell(getter_AddRefs(presShell));
+  nsIPresShell *presShell = mPresContext->GetPresShell();
   if (!presShell) return;
 
   nsIFrame* containerFrame;
@@ -1151,9 +1146,8 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
     nsIContent * option = GetOptionContent(0);
     if (option != nsnull) {
       nsIFrame * optFrame;
-      nsCOMPtr<nsIPresShell> presShell;
-      mPresContext->GetShell(getter_AddRefs(presShell));
-      nsresult result = presShell->GetPrimaryFrameFor(option, &optFrame);
+      nsresult result = mPresContext->PresShell()->
+        GetPrimaryFrameFor(option, &optFrame);
       if (NS_SUCCEEDED(result) && optFrame != nsnull) {
         nsStyleContext* optStyle = optFrame->GetStyleContext();
         if (optStyle) {
@@ -2121,8 +2115,7 @@ void
 nsListControlFrame::ScrollIntoView(nsIPresContext* aPresContext)
 {
   if (aPresContext) {
-    nsCOMPtr<nsIPresShell> presShell;
-    aPresContext->GetShell(getter_AddRefs(presShell));
+    nsIPresShell *presShell = aPresContext->GetPresShell();
     if (presShell) {
       presShell->ScrollFrameIntoView(this,
                    NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE,NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE);
@@ -2458,8 +2451,7 @@ nsListControlFrame::FireOnChange()
   event.eventStructType = NS_EVENT;
   event.message = NS_FORM_CHANGE;
 
-  nsCOMPtr<nsIPresShell> presShell;
-  rv = mPresContext->GetShell(getter_AddRefs(presShell));
+  nsIPresShell *presShell = mPresContext->GetPresShell();
   if (presShell) {
     rv = presShell->HandleEventWithTarget(&event, this, nsnull,
                                            NS_EVENT_FLAG_INIT, &status);
@@ -2875,10 +2867,8 @@ nsListControlFrame::GetIndexFromDOMEvent(nsIDOMEvent* aMouseEvent,
   nsCOMPtr<nsIDOMNode> node;
   mouseEvent->GetTarget(getter_AddRefs(node));
   nsCOMPtr<nsIContent> content = do_QueryInterface(node);
-  nsCOMPtr<nsIPresShell> presShell;
-  mPresContext->GetShell(getter_AddRefs(presShell));
   nsIFrame * frame;
-  nsresult result = presShell->GetPrimaryFrameFor(content, &frame);
+  mPresContext->PresShell()->GetPrimaryFrameFor(content, &frame);
   printf("Target Frame: %p  this: %p\n", frame, this);
   printf("-->\n");
 #endif
@@ -3063,8 +3053,7 @@ nsListControlFrame::ScrollToFrame(nsIContent* aOptElement)
     }
   
     // otherwise we find the content's frame and scroll to it
-    nsCOMPtr<nsIPresShell> presShell;
-    mPresContext->GetShell(getter_AddRefs(presShell));
+    nsIPresShell *presShell = mPresContext->PresShell();
     nsIFrame * childframe;
     nsresult result;
     if (aOptElement) {
@@ -3497,9 +3486,7 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
     // Why aren't they getting flushed each time?
     // because this isn't needed for Gfx
     if (IsInDropDownMode() == PR_TRUE) {
-      nsCOMPtr<nsIPresShell> presShell;
-      mPresContext->GetShell(getter_AddRefs(presShell));
-      presShell->FlushPendingNotifications(PR_FALSE);
+      mPresContext->PresShell()->FlushPendingNotifications(PR_FALSE);
     }
     REFLOW_DEBUG_MSG2("  After: %d\n", newIndex);
 

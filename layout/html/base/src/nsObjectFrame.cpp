@@ -644,10 +644,8 @@ nsObjectFrame::Init(nsIPresContext*  aPresContext,
 
     imageLoader->ImageURIChanged(data);
 
-    nsCOMPtr<nsIPresShell> shell;
-    aPresContext->GetShell(getter_AddRefs(shell));
     nsIFrame * aNewFrame = nsnull;
-    rv = NS_NewImageFrame(shell, &aNewFrame);
+    rv = NS_NewImageFrame(aPresContext->PresShell(), &aNewFrame);
     if (NS_FAILED(rv))
       return rv;
 
@@ -677,10 +675,8 @@ nsObjectFrame::Init(nsIPresContext*  aPresContext,
 
   if(bDoc)
   {
-    nsCOMPtr<nsIPresShell> shell;
-    aPresContext->GetShell(getter_AddRefs(shell));
     nsIFrame * aNewFrame = nsnull;
-    rv = NS_NewHTMLFrameOuterFrame(shell, &aNewFrame);
+    rv = NS_NewHTMLFrameOuterFrame(aPresContext->PresShell(), &aNewFrame);
     if(NS_FAILED(rv))
       return rv;
 
@@ -1187,10 +1183,7 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
     text->mVerticalAlign.SetNormalValue();
 
     //check for alternative content with CantRenderReplacedElement()
-    nsIPresShell* presShell;
-    aPresContext->GetShell(&presShell);
-    rv = presShell->CantRenderReplacedElement(this);
-    NS_RELEASE(presShell);
+    rv = aPresContext->PresShell()->CantRenderReplacedElement(this);
   } else {
     NotifyContentObjectWrapper();
   }
@@ -1287,12 +1280,8 @@ nsObjectFrame::InstantiatePlugin(nsIPresContext* aPresContext,
     nsCOMPtr<nsIDOMElement> element = do_QueryInterface(mContent, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsIPresShell> shell;
-    rv = aPresContext->GetShell(getter_AddRefs(shell));
-    if (NS_FAILED(rv)) return rv;
-
     nsCOMPtr<nsIDocument> document;
-    rv = shell->GetDocument(getter_AddRefs(document));
+    rv = aPresContext->PresShell()->GetDocument(getter_AddRefs(document));
     if (NS_FAILED(rv)) return rv;
 
     if (! document)
@@ -1438,9 +1427,9 @@ nsObjectFrame::ContentChanged(nsIPresContext* aPresContext,
                             nsISupports*    aSubContent)
 {
   // Generate a reflow command with this frame as the target frame
-  nsCOMPtr<nsIPresShell> shell;
-  nsresult rv = aPresContext->GetShell(getter_AddRefs(shell));
-  if (NS_SUCCEEDED(rv) && shell) {
+  nsresult rv = NS_OK;
+  nsIPresShell *shell = aPresContext->GetPresShell();
+  if (shell) {
     nsHTMLReflowCommand* reflowCmd;
     rv = NS_NewHTMLReflowCommand(&reflowCmd, this,
                                  eReflowType_ContentChanged);
@@ -2418,8 +2407,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetDocument(nsIDocument* *aDocument)
 {
   nsresult rv = NS_ERROR_FAILURE;
   if (nsnull != mContext) {
-    nsCOMPtr<nsIPresShell> shell;
-    mContext->GetShell(getter_AddRefs(shell));
+    nsIPresShell *shell = mContext->GetPresShell();
     if (shell)
       rv = shell->GetDocument(aDocument);
   }
@@ -2617,11 +2605,8 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetDocumentBase(const char* *result)
       return NS_ERROR_FAILURE;
     }
     
-    nsCOMPtr<nsIPresShell> shell;
-    mContext->GetShell(getter_AddRefs(shell));
-
     nsCOMPtr<nsIDocument> doc;
-    shell->GetDocument(getter_AddRefs(doc));
+    mContext->PresShell()->GetDocument(getter_AddRefs(doc));
 
     rv = doc->GetBaseURL()->GetSpec(mDocumentBase);
   }

@@ -779,7 +779,7 @@ nsFrameConstructorState::nsFrameConstructorState(nsIPresContext*        aPresCon
     mFrameState(aHistoryState),
     mPseudoFrames()
 {
-  aPresContext->GetShell(getter_AddRefs(mPresShell));
+  mPresShell = aPresContext->PresShell();
   mPresShell->GetFrameManager(getter_AddRefs(mFrameManager));
 }
 
@@ -794,7 +794,7 @@ nsFrameConstructorState::nsFrameConstructorState(nsIPresContext*        aPresCon
     mFirstLineStyle(PR_FALSE),
     mPseudoFrames()
 {
-  aPresContext->GetShell(getter_AddRefs(mPresShell));
+  mPresShell = aPresContext->PresShell();
   mPresShell->GetFrameManager(getter_AddRefs(mFrameManager));
   nsCOMPtr<nsISupports> container;
   aPresContext->GetContainer(getter_AddRefs(container));
@@ -1358,8 +1358,7 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIPresContext*       aPresContex
   const nsStyleContentData &data = aStyleContent->ContentAt(aContentIndex);
   nsStyleContentType  type = data.mType;
 
-  nsCOMPtr<nsIPresShell> shell;
-  aPresContext->GetShell(getter_AddRefs(shell));
+  nsIPresShell *shell = aPresContext->PresShell();
 
   if (eStyleContentType_URL == type) {
     // Create an HTML image content object, and set the SRC.
@@ -4343,9 +4342,6 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsIPresShell*            aPresShel
     return rv;
   }
 
-  nsCOMPtr<nsIPresShell> shell;
-  aPresContext->GetShell(getter_AddRefs(shell));
-
   // Initialize it
   nsIFrame* geometricParent = aParentFrame;
     
@@ -4363,7 +4359,8 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsIPresShell*            aPresShel
   nsHTMLContainerFrame::CreateViewForFrame(newFrame, aParentFrame, PR_FALSE);
 
   nsIFrame* areaFrame;
-  NS_NewAreaFrame(shell, &areaFrame, NS_BLOCK_SPACE_MGR | NS_BLOCK_SHRINK_WRAP);
+  NS_NewAreaFrame(aPresContext->PresShell(), &areaFrame,
+                  NS_BLOCK_SPACE_MGR | NS_BLOCK_SHRINK_WRAP);
 
   // Resolve style and initialize the frame
   nsRefPtr<nsStyleContext> styleContext;
@@ -7215,8 +7212,7 @@ nsCSSFrameConstructor::ReconstructDocElementHierarchy(nsIPresContext* aPresConte
 #endif
 
   nsresult rv = NS_OK;
-  nsCOMPtr<nsIPresShell> shell;
-  aPresContext->GetShell(getter_AddRefs(shell));
+  nsIPresShell *shell = aPresContext->GetPresShell();
 
   if (mDocument && shell) {
     nsIContent *rootContent = mDocument->GetRootContent();
@@ -8008,7 +8004,7 @@ static nsresult InsertOutOfFlow(nsIPresContext* aPresContext,
                                            aFrameItems.containingBlock->GetContent()) < 0) {
       // lastChild comes before the new children, so insert after lastChild
       return aFrameItems.containingBlock->
-        AppendFrames(aPresContext, *aPresContext->GetPresShell(),
+        AppendFrames(aPresContext, *(aPresContext->PresShell()),
                      aChildListName, aFrameItems.childList);
     }
   }
@@ -8027,7 +8023,7 @@ static nsresult InsertOutOfFlow(nsIPresContext* aPresContext,
   }
 
   return aFrameItems.containingBlock->
-    InsertFrames(aPresContext, *aPresContext->GetPresShell(),
+    InsertFrames(aPresContext, *(aPresContext->PresShell()),
                  aChildListName, insertionPoint, aFrameItems.childList);
 }
 
@@ -8073,8 +8069,7 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
   }
 #endif
 
-  nsCOMPtr<nsIPresShell> shell;
-  aPresContext->GetShell(getter_AddRefs(shell));
+  nsIPresShell *shell = aPresContext->PresShell();
 
 #ifdef MOZ_XUL
   if (aContainer) {
@@ -8722,8 +8717,7 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext*        aPresContext,
   }
 #endif
 
-  nsCOMPtr<nsIPresShell> shell;
-  aPresContext->GetShell(getter_AddRefs(shell));
+  nsIPresShell *shell = aPresContext->PresShell();
   nsresult rv = NS_OK;
 
 #ifdef MOZ_XUL
@@ -9275,8 +9269,7 @@ nsCSSFrameConstructor::RemoveMappingsForFrameSubtree(nsIPresContext* aPresContex
                                                      nsIFrame* aRemovedFrame, 
                                                      nsILayoutHistoryState* aFrameState)
 {
-  nsCOMPtr<nsIPresShell> presShell;
-  aPresContext->GetShell(getter_AddRefs(presShell));
+  nsIPresShell *presShell = aPresContext->PresShell();
   nsCOMPtr<nsIFrameManager> frameManager;
   presShell->GetFrameManager(getter_AddRefs(frameManager));
   
@@ -9308,8 +9301,7 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
   }
 #endif
 
-  nsCOMPtr<nsIPresShell>    shell;
-  aPresContext->GetShell(getter_AddRefs(shell));
+  nsIPresShell *shell = aPresContext->PresShell();
   nsCOMPtr<nsIFrameManager> frameManager;
   shell->GetFrameManager(getter_AddRefs(frameManager));
   nsresult                  rv = NS_OK;
@@ -9710,8 +9702,7 @@ ApplyRenderingChangeToTree(nsIPresContext* aPresContext,
                            nsIViewManager* aViewManager,
                            nsChangeHint aChange)
 {
-  nsCOMPtr<nsIPresShell> shell;
-  aPresContext->GetShell(getter_AddRefs(shell));
+  nsIPresShell *shell = aPresContext->PresShell();
   PRBool isPaintingSuppressed = PR_FALSE;
   shell->IsPaintingSuppressed(&isPaintingSuppressed);
   if (isPaintingSuppressed) {
@@ -9794,9 +9785,6 @@ nsCSSFrameConstructor::StyleChangeReflow(nsIPresContext* aPresContext,
       aFrame = GetIBContainingBlockFor(aFrame);
 
     // Target a style-change reflow at the frame.
-    nsCOMPtr<nsIPresShell> shell;
-    aPresContext->GetShell(getter_AddRefs(shell));
- 
     nsHTMLReflowCommand *reflowCmd;
     rv = NS_NewHTMLReflowCommand(&reflowCmd, aFrame,
                                  eReflowType_StyleChanged,
@@ -9804,7 +9792,7 @@ nsCSSFrameConstructor::StyleChangeReflow(nsIPresContext* aPresContext,
                                  aAttribute);
   
     if (NS_SUCCEEDED(rv))
-      shell->AppendReflowCommand(reflowCmd);
+      aPresContext->PresShell()->AppendReflowCommand(reflowCmd);
   }
 
   return NS_OK;
@@ -9815,13 +9803,11 @@ nsCSSFrameConstructor::ContentChanged(nsIPresContext* aPresContext,
                                       nsIContent*  aContent,
                                       nsISupports* aSubContent)
 {
-  nsCOMPtr<nsIPresShell> shell;
-  aPresContext->GetShell(getter_AddRefs(shell));
   nsresult      rv = NS_OK;
 
   // Find the child frame
   nsIFrame* frame;
-  shell->GetPrimaryFrameFor(aContent, &frame);
+  aPresContext->PresShell()->GetPrimaryFrameFor(aContent, &frame);
 
   // Notify the first frame that maps the content. It will generate a reflow
   // command
@@ -9888,10 +9874,8 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList,
   if (!count)
     return NS_OK;
 
-  nsCOMPtr<nsIPresShell> presShell;
-  aPresContext->GetShell(getter_AddRefs(presShell));
   nsCOMPtr<nsIFrameManager> frameManager;
-  presShell->GetFrameManager(getter_AddRefs(frameManager));
+  aPresContext->PresShell()->GetFrameManager(getter_AddRefs(frameManager));
 
   // Mark frames so that we skip frames that die along the way, bug 123049.
   // A frame can be in the list multiple times with different hints. Further
@@ -9940,8 +9924,7 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList,
     // reget from content since it may have been regenerated...
     if (content) {
       nsIFrame* frame;
-      nsCOMPtr<nsIPresShell> shell;
-      aPresContext->GetShell(getter_AddRefs(shell));
+      nsIPresShell *shell = aPresContext->PresShell();
       shell->GetPrimaryFrameFor(content, &frame);
       if (frame) {
         nsCOMPtr<nsIFrameManager> frameManager;
@@ -9986,8 +9969,7 @@ nsCSSFrameConstructor::ContentStatesChanged(nsIPresContext* aPresContext,
 {
   nsresult  result = NS_OK;
 
-  nsCOMPtr<nsIPresShell> shell;
-  aPresContext->GetShell(getter_AddRefs(shell));
+  nsIPresShell *shell = aPresContext->GetPresShell();
 
   NS_ASSERTION(shell, "couldn't get pres shell");
   if (shell) {
@@ -10135,8 +10117,7 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
 
   nsCOMPtr<nsIStyleFrameConstruction> kungFuDeathGrip(this);
 
-  nsCOMPtr<nsIPresShell> shell;
-  aPresContext->GetShell(getter_AddRefs(shell));
+  nsIPresShell *shell = aPresContext->PresShell();
 
   // Get the frame associated with the content which is the highest in the frame tree
   nsIFrame* primaryFrame;
@@ -10441,8 +10422,7 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresShell* aPresShell,
 
   // If the frame is out of the flow, then it has a placeholder frame.
   nsPlaceholderFrame* placeholderFrame = nsnull;
-  nsCOMPtr<nsIPresShell> presShell;
-  aPresContext->GetShell(getter_AddRefs(presShell));
+  nsIPresShell *presShell = aPresContext->PresShell();
   if (listName) {
     presShell->GetPlaceholderFrameFor(aFrame, (nsIFrame**)&placeholderFrame);
   }
@@ -11183,10 +11163,6 @@ nsCSSFrameConstructor::FindPrimaryFrameFor(nsIPresContext*  aPresContext,
 
   *aFrame = nsnull;  // initialize OUT parameter 
 
-  // Get the pres shell
-  nsCOMPtr<nsIPresShell> presShell;
-  aPresContext->GetShell(getter_AddRefs(presShell));
-
   // We want to be able to quickly map from a content object to its frame,
   // but we also want to keep the hash table small. Therefore, many frames
   // are not added to the hash table when they're first created:
@@ -11349,11 +11325,10 @@ nsCSSFrameConstructor::CaptureStateForFramesOf(nsIPresContext* aPresContext,
                                                nsIContent* aContent,
                                                nsILayoutHistoryState* aHistoryState)
 {
-  nsCOMPtr<nsIPresShell> presShell;
   nsresult rv = NS_OK;
 
-  rv = aPresContext->GetShell(getter_AddRefs(presShell));
-  if (NS_SUCCEEDED(rv) && presShell) {                    
+  nsIPresShell *presShell = aPresContext->GetPresShell();
+  if (presShell) {
     nsIFrame* frame;
     rv = presShell->GetPrimaryFrameFor(aContent, &frame);
     if (NS_SUCCEEDED(rv) && frame) {
@@ -11372,9 +11347,8 @@ nsCSSFrameConstructor::CaptureStateFor(nsIPresContext* aPresContext,
   nsresult rv = NS_OK;
 
   if (aFrame && aPresContext && aHistoryState) {
-    nsCOMPtr<nsIPresShell> presShell;
-    rv = aPresContext->GetShell(getter_AddRefs(presShell));
-    if (NS_SUCCEEDED(rv) && presShell) {                    
+    nsIPresShell *presShell = aPresContext->GetPresShell();
+    if (presShell) {
       nsCOMPtr<nsIFrameManager> frameManager;
       rv = presShell->GetFrameManager(getter_AddRefs(frameManager));
       if (NS_SUCCEEDED(rv) && frameManager) {
@@ -11390,10 +11364,8 @@ nsCSSFrameConstructor::MaybeRecreateFramesForContent(nsIPresContext* aPresContex
                                                      nsIContent* aContent)
 {
   nsresult result = NS_OK;
-  nsCOMPtr<nsIPresShell> shell;
-  aPresContext->GetShell(getter_AddRefs(shell));
   nsCOMPtr<nsIFrameManager> frameManager;
-  shell->GetFrameManager(getter_AddRefs(frameManager));
+  aPresContext->PresShell()->GetFrameManager(getter_AddRefs(frameManager));
 
   nsStyleContext *oldContext = frameManager->GetUndisplayedContent(aContent);
   if (oldContext) {
@@ -11424,8 +11396,7 @@ nsCSSFrameConstructor::RecreateFramesForContent(nsIPresContext* aPresContext,
   // content (which would otherwise result in *two* nested reframe
   // containing block from ContentRemoved() and ContentInserted(),
   // below!)
-  nsCOMPtr<nsIPresShell> shell;
-  aPresContext->GetShell(getter_AddRefs(shell));
+  nsIPresShell *shell = aPresContext->PresShell();
 
   nsIFrame* frame;
   shell->GetPrimaryFrameFor(aContent, &frame);
@@ -12573,8 +12544,6 @@ nsCSSFrameConstructor::CreateListBoxContent(nsIPresContext* aPresContext,
                                             nsILayoutHistoryState* aFrameState)
 {
 #ifdef MOZ_XUL
-  nsCOMPtr<nsIPresShell> shell;
-  aPresContext->GetShell(getter_AddRefs(shell));
   nsresult rv = NS_OK;
 
   // Construct a new frame
@@ -12600,7 +12569,8 @@ nsCSSFrameConstructor::CreateListBoxContent(nsIPresContext* aPresContext,
     PRInt32 namespaceID;
     aChild->GetNameSpaceID(&namespaceID);
 
-    rv = ConstructFrameInternal(shell, aPresContext, state, aChild,
+    rv = ConstructFrameInternal(aPresContext->PresShell(),
+                                aPresContext, state, aChild,
                                 aParentFrame, aChild->Tag(), namespaceID, 
                                 styleContext, frameItems, PR_FALSE);
     
@@ -13087,8 +13057,7 @@ nsCSSFrameConstructor::WipeContainingBlock(nsIPresContext* aPresContext,
       nsCOMPtr<nsIPresShell>    presShell;
       nsCOMPtr<nsIFrameManager> frameManager;
 
-      aPresContext->GetShell(getter_AddRefs(presShell));
-      presShell->GetFrameManager(getter_AddRefs(frameManager));
+      aPresContext->PresShell()->GetFrameManager(getter_AddRefs(frameManager));
 
       // Destroy the frames. As we do make sure any content to frame mappings
       // or entries in the undisplayed content map are removed
@@ -13243,8 +13212,7 @@ nsCSSFrameConstructor::SplitToContainingBlock(nsIPresContext* aPresContext,
   if (! aBlockChildFrame)
     return NS_ERROR_NULL_POINTER;
 
-  nsCOMPtr<nsIPresShell> shell;
-  aPresContext->GetShell(getter_AddRefs(shell));
+  nsIPresShell *shell = aPresContext->PresShell();
 
   if (IsBlockFrame(aPresContext, aFrame)) {
     // If aFrame is a block frame, then we're done: make
@@ -13415,10 +13383,8 @@ nsCSSFrameConstructor::ReframeContainingBlock(nsIPresContext* aPresContext, nsIF
   }
 #endif
 
-  nsCOMPtr<nsIPresShell> shell;
-  aPresContext->GetShell(getter_AddRefs(shell));
   PRBool isReflowing;
-  shell->IsReflowLocked(&isReflowing);
+  aPresContext->PresShell()->IsReflowLocked(&isReflowing);
   if(isReflowing) {
     // don't ReframeContainingBlock, this will result in a crash
     // if we remove a tree that's in reflow - see bug 121368 for testcase

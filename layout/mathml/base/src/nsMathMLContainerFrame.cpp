@@ -652,8 +652,7 @@ nsMathMLContainerFrame::PropagateScriptStyleFor(nsIPresContext* aPresContext,
     }
 
     // now, re-resolve the style contexts in our subtree
-    nsCOMPtr<nsIPresShell> presShell;
-    aPresContext->GetShell(getter_AddRefs(presShell));
+    nsIPresShell *presShell = aPresContext->GetPresShell();
     if (presShell) {
       nsCOMPtr<nsIFrameManager> fm;
       presShell->GetFrameManager(getter_AddRefs(fm));
@@ -714,10 +713,9 @@ nsMathMLContainerFrame::WrapForeignFrames(nsIPresContext* aPresContext)
     child->QueryInterface(kInlineFrameCID, (void**)&inlineFrame);
     if (inlineFrame) {
       // create a new wrapper frame to wrap this child
-      nsCOMPtr<nsIPresShell> shell;
-      aPresContext->GetShell(getter_AddRefs(shell));
       nsIFrame* wrapper;
-      nsresult rv = NS_NewMathMLForeignFrameWrapper(shell, &wrapper);
+      nsresult rv = NS_NewMathMLForeignFrameWrapper(aPresContext->PresShell(),
+						    &wrapper);
       if (NS_FAILED(rv)) return rv;
       nsRefPtr<nsStyleContext> newStyleContext;
       newStyleContext = aPresContext->ResolvePseudoStyleContextFor(mContent,
@@ -924,9 +922,7 @@ nsMathMLContainerFrame::ReLayoutChildren(nsIPresContext* aPresContext,
   }
 
   // Ask our parent frame to reflow us
-  nsCOMPtr<nsIPresShell> presShell;
-  aPresContext->GetShell(getter_AddRefs(presShell));
-  return frame->ReflowDirtyChild(presShell, nsnull);
+  return frame->ReflowDirtyChild(aPresContext->PresShell(), nsnull);
 }
 
 // There are precise rules governing children of a MathML frame,
@@ -1025,9 +1021,7 @@ nsMathMLContainerFrame::AttributeChanged(nsIPresContext* aPresContext,
     MapAttributesIntoCSS(aPresContext, this);
   }
 
-  nsCOMPtr<nsIPresShell> presShell;
-  aPresContext->GetShell(getter_AddRefs(presShell));
-  return ReflowDirtyChild(presShell, nsnull);
+  return ReflowDirtyChild(aPresContext->PresShell(), nsnull);
 }
 
 // We are an inline frame, so we handle dirty request like nsInlineFrame

@@ -324,8 +324,7 @@ nsMathMLTokenFrame::SetTextStyle(nsIPresContext* aPresContext)
     mContent->SetAttr(kNameSpaceID_None, nsMathMLAtoms::fontstyle, fontstyle, PR_FALSE);
 
   // then, re-resolve the style contexts in our subtree
-  nsCOMPtr<nsIPresShell> presShell;
-  aPresContext->GetShell(getter_AddRefs(presShell));
+  nsIPresShell *presShell = aPresContext->GetPresShell();
   if (presShell) {
     nsCOMPtr<nsIFrameManager> fm;
     presShell->GetFrameManager(getter_AddRefs(fm));

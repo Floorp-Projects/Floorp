@@ -85,10 +85,8 @@ const PRInt32 kMaxZ = 0x7fffffff; //XXX: Shouldn't there be a define somewhere f
 static nsIPopupSetFrame*
 GetPopupSetFrame(nsIPresContext* aPresContext)
 {
-  nsCOMPtr<nsIPresShell> shell;
-  aPresContext->GetShell(getter_AddRefs(shell));
   nsIFrame* rootFrame;
-  shell->GetRootFrame(&rootFrame);
+  aPresContext->PresShell()->GetRootFrame(&rootFrame);
   if (!rootFrame)
     return nsnull;
 
@@ -922,8 +920,7 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
   dx->GetAppUnitsToDevUnits(t2p);
 
   // get the document and the global script object
-  nsCOMPtr<nsIPresShell> presShell;
-  aPresContext->GetShell(getter_AddRefs(presShell));
+  nsIPresShell *presShell = aPresContext->PresShell();
   nsCOMPtr<nsIDocument> document;
   presShell->GetDocument(getter_AddRefs(document));
 
@@ -1245,9 +1242,7 @@ NS_IMETHODIMP
 nsMenuPopupFrame::GetNextMenuItem(nsIMenuFrame* aStart, nsIMenuFrame** aResult)
 {
   nsIFrame* immediateParent = nsnull;
-  nsCOMPtr<nsIPresShell> shell;
-  mPresContext->GetShell(getter_AddRefs(shell));
-  GetInsertionPoint(shell, this, nsnull, &immediateParent);
+  GetInsertionPoint(mPresContext->PresShell(), this, nsnull, &immediateParent);
   if (!immediateParent)
     immediateParent = this;
 
@@ -1303,9 +1298,7 @@ NS_IMETHODIMP
 nsMenuPopupFrame::GetPreviousMenuItem(nsIMenuFrame* aStart, nsIMenuFrame** aResult)
 {
   nsIFrame* immediateParent = nsnull;
-  nsCOMPtr<nsIPresShell> shell;
-  mPresContext->GetShell(getter_AddRefs(shell));
-  GetInsertionPoint(shell, this, nsnull, &immediateParent);
+  GetInsertionPoint(mPresContext->PresShell(), this, nsnull, &immediateParent);
   if (!immediateParent)
     immediateParent = this;
 
@@ -1613,9 +1606,7 @@ nsMenuPopupFrame::FindMenuWithShortcut(nsIDOMKeyEvent* aKeyEvent, PRBool& doActi
 
   // Enumerate over our list of frames.
   nsIFrame* immediateParent = nsnull;
-  nsCOMPtr<nsIPresShell> shell;
-  mPresContext->GetShell(getter_AddRefs(shell));
-  GetInsertionPoint(shell, this, nsnull, &immediateParent);
+  GetInsertionPoint(mPresContext->PresShell(), this, nsnull, &immediateParent);
   if (!immediateParent)
     immediateParent = this;
 

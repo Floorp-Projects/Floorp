@@ -1547,10 +1547,11 @@ nsGenericHTMLElement::HandleDOMEventForAnchors(nsIPresContext* aPresContext,
             event.isAlt = keyEvent->isAlt;
             event.isMeta = keyEvent->isMeta;
 
-            nsCOMPtr<nsIPresShell> presShell;
-            aPresContext->GetShell(getter_AddRefs(presShell));
+            nsIPresShell *presShell = aPresContext->GetPresShell();
             if (presShell) {
               ret = presShell->HandleDOMEventWithTarget(this, &event, &status);
+              // presShell may no longer be alive, don't use it here
+              // unless you keep a reference.
             }
           }
         }
@@ -3528,11 +3529,10 @@ nsGenericHTMLElement::MapBackgroundAttributesInto(const nsIHTMLMappedAttributes*
           // Resolve url to an absolute url
           // XXX this breaks if the HTML element has an xml:base
           // attribute (the xml:base will not be taken into account)
-          nsCOMPtr<nsIPresShell> shell;
-          nsresult rv = aData->mPresContext->GetShell(getter_AddRefs(shell));
-          if (NS_SUCCEEDED(rv) && shell) {
+          nsIPresShell *shell = aData->mPresContext->GetPresShell();
+          if (shell) {
             nsCOMPtr<nsIDocument> doc;
-            rv = shell->GetDocument(getter_AddRefs(doc));
+            nsresult rv = shell->GetDocument(getter_AddRefs(doc));
             if (NS_SUCCEEDED(rv) && doc) {
               nsCOMPtr<nsIURI> docURL;
               nsHTMLValue baseHref;
