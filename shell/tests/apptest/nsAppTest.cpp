@@ -156,12 +156,19 @@ nsEventStatus PR_CALLBACK HandleEventApplication(nsGUIEvent *aEvent)
         case NS_PAINT:
         {
 
+      nsRect aRect(0,0,540, 380) ;
 	  // paint the background
 	  nsString aString("Hello World!\n");
 	  nsIRenderingContext * rndctx = ((nsPaintEvent*)aEvent)->renderingContext;
 	  //rndctx->SetColor(aEvent->widget->GetBackgroundColor());
+
+      //nsDrawingSurface drawingsurface = rndctx->CreateDrawingSurface((((nsPaintEvent*)aEvent)->rect));      
+      nsDrawingSurface drawingsurface = rndctx->CreateDrawingSurface(&aRect);      
+      rndctx->SelectOffScreenDrawingSurface(drawingsurface);
+
 	  rndctx->SetColor(NS_RGB(0, 0, 255));
-	  rndctx->FillRect(*(((nsPaintEvent*)aEvent)->rect));
+	  //rndctx->FillRect(*(((nsPaintEvent*)aEvent)->rect));
+      rndctx->FillRect(aRect);
 	  
 	  nsFont font("Times", NS_FONT_STYLE_NORMAL,
 		      NS_FONT_VARIANT_NORMAL,
@@ -173,7 +180,9 @@ nsEventStatus PR_CALLBACK HandleEventApplication(nsGUIEvent *aEvent)
 	  rndctx->SetColor(NS_RGB(255, 0, 0));
 	  rndctx->DrawString(aString, 50, 50, 100);
 	  
-	  
+      //rndctx->CopyOffScreenBits(*(((nsPaintEvent*)aEvent)->rect));
+      rndctx->CopyOffScreenBits(aRect);
+
 	  return nsEventStatus_eConsumeNoDefault;
 
 
