@@ -379,6 +379,7 @@ nsMsgAccountManagerDataSource::createServerResources(nsISupports *element,
   // RDF will create the server resource if it doesn't already exist
   nsCOMPtr<nsIRDFResource> serverResource;
   rv = rdf->GetResource(serverUri, getter_AddRefs(serverResource));
+  PL_strfree(serverUri);
   if (NS_FAILED(rv)) return PR_TRUE;
 
   // make incoming server know about its root server folder so we 

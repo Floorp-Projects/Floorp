@@ -70,9 +70,11 @@ nsGetNewsRoot(const char *hostname, nsFileSpec &result)
   // now ask the server what it's root is
   char *localPath;
   rv = server->GetLocalPath(&localPath);
-  if (NS_SUCCEEDED(rv)) 
+  if (NS_SUCCEEDED(rv)) {
     result = localPath;
-
+    PL_strfree(localPath);
+  }
+  
   return rv;
 }
 
