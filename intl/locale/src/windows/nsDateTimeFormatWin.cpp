@@ -17,11 +17,16 @@
  */
 
 #include "nsDateTimeFormatWin.h"
+#include "nsRepository.h"
+#include "nsLocaleCID.h"
+#include "nsIWin32Locale.h"
 
 
 #define NSDATETIMEFORMAT_BUFFER_LEN  80
 
-NS_DEFINE_IID(kIDateTimeFormatIID, NS_IDATETIMEFORMAT_IID);
+static NS_DEFINE_CID(kWin32LocaleFactoryCID, NS_WIN32LOCALEFACTORY_CID);
+static NS_DEFINE_IID(kIWin32LocaleIID, NS_IWIN32LOCALE_IID);
+static NS_DEFINE_IID(kIDateTimeFormatIID, NS_IDATETIMEFORMAT_IID);
 
 NS_IMPL_ISUPPORTS(nsDateTimeFormatWin, kIDateTimeFormatIID);
 
@@ -47,6 +52,7 @@ nsresult nsDateTimeFormatWin::FormatTMTime(nsILocale* locale,
   DWORD dwFlags_Date = 0, dwFlags_Time = 0;
   int dateLen, timeLen;
   PRUnichar dateBuffer[NSDATETIMEFORMAT_BUFFER_LEN], timeBuffer[NSDATETIMEFORMAT_BUFFER_LEN];
+  LCID lcid = GetUserDefaultLCID();
 
   // Map tm to SYSTEMTIME
 	system_time.wYear = 1900 + tmTime->tm_year;
@@ -90,21 +96,39 @@ nsresult nsDateTimeFormatWin::FormatTMTime(nsILocale* locale,
     break;
   }
 
+  // Get LCID
+  if (locale != nsnull) {
+    nsString aLocale;
+    nsString aCategory("NSILOCALE_TIME");
+    nsresult res = locale->GetCatagory(&aCategory, &aLocale);
+    if (NS_FAILED(res)) {
+      return res;
+    }
+  	
+	  nsIWin32Locale* win32Locale;
+	  res = nsRepository::CreateInstance(kWin32LocaleFactoryCID, NULL, kIWin32LocaleIID, (void**)&win32Locale);
+    if (NS_FAILED(res)) {
+      return res;
+    }
+  	res = win32Locale->GetPlatformLocale(&aLocale, &lcid);
+	  win32Locale->Release();
+  }
+
   // Call GetDateFormatW
   if (dateFormatSelector == kDateFormatNone) {
     dateLen = 0;
   }
   else {
     if (dateFormatSelector == kDateFormatYearMonth) {
-      dateLen = GetDateFormatW(GetUserDefaultLCID(), 0, &system_time, L"yy/MM", 
+      dateLen = GetDateFormatW(lcid, 0, &system_time, L"yy/MM", 
                                dateBuffer, NSDATETIMEFORMAT_BUFFER_LEN);
     }
     else if (dateFormatSelector == kDateFormatWeekday) {
-      dateLen = GetDateFormatW(GetUserDefaultLCID(), 0, &system_time, L"ddd", 
+      dateLen = GetDateFormatW(lcid, 0, &system_time, L"ddd", 
                                dateBuffer, NSDATETIMEFORMAT_BUFFER_LEN);
     }
     else {
-      dateLen = GetDateFormatW(GetUserDefaultLCID(), dwFlags_Date, &system_time, NULL, 
+      dateLen = GetDateFormatW(lcid, dwFlags_Date, &system_time, NULL, 
                                dateBuffer, NSDATETIMEFORMAT_BUFFER_LEN);
     }
     if (dateLen != 0) {
@@ -117,7 +141,7 @@ nsresult nsDateTimeFormatWin::FormatTMTime(nsILocale* locale,
     timeLen = 0;
   }
   else {
-    timeLen = GetTimeFormatW(GetUserDefaultLCID(), dwFlags_Time, &system_time, NULL, 
+    timeLen = GetTimeFormatW(lcid, dwFlags_Time, &system_time, NULL, 
                         timeBuffer, NSDATETIMEFORMAT_BUFFER_LEN);
     if (timeLen != 0) {
       timeLen--;  // Since the count includes the terminating null.
