@@ -135,6 +135,7 @@ nsMailCore::SetWindow(nsIDOMWindow* aWin)
 {
   mWindow = aWin;
   NS_ADDREF(aWin);
+  mScriptContext = GetScriptContext(aWin);
 	return NS_OK;
 }
 
@@ -142,20 +143,7 @@ NS_IMETHODIMP
 nsMailCore::SendMail(const nsString& aAddrTo, const nsString& aSubject, const nsString& aMsg)
 {
   if (nsnull == mScriptContext) {
-    nsIDOMDocument * domDoc;
-    mWindow->GetDocument(&domDoc);
-    if (nsnull != domDoc) {
-      nsIDocument * doc;
-      if (NS_OK == domDoc->QueryInterface(kIDocumentIID,(void**)&doc)) {
-        nsIScriptContextOwner * owner = doc->GetScriptContextOwner();
-        if (nsnull != owner) {
-          owner->GetScriptContext(&mScriptContext);
-          NS_RELEASE(owner);
-        }
-        NS_RELEASE(doc);
-      }
-      NS_RELEASE(domDoc);
-    }
+    return NS_ERROR_FAILURE;
   }
 
   printf("----------------------------\n");
