@@ -1071,7 +1071,7 @@ const int kReuseWindowOnAE = 2;
   }
   
   if (action == @selector(newTab:))
-    return (browserController);
+    return (browserController != nil);
   
   // check if someone has previously done a find before allowing findAgain to be enabled
   if (action == @selector(findAgain:) || action == @selector(findPrevious:))

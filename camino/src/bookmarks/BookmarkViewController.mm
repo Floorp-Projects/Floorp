@@ -142,7 +142,7 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
     // wait for |-completeSetup| to be called to lazily complete our setup
     mSetupComplete = NO;
     
-    // load our nib
+    // load our nib (maybe we can delay this until we actually need to show UI?)
     [NSBundle loadNibNamed:@"BookmarksEditing" owner:self];
   }
   return self;

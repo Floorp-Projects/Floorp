@@ -348,15 +348,15 @@ enum BWCOpenDest {
 - (BrowserTabViewItem*)openNewTab:(BOOL)aLoadInBG;
 
 - (void)setupToolbar;
-- (void)setupSidebarTabs;
+- (void)ensureBookmarkViewController;
 - (NSString*)getContextMenuNodeDocumentURL;
 - (void)loadSourceOfURL:(NSString*)urlStr;
-- (void) transformFormatString:(NSMutableString*)inFormat domain:(NSString*)inDomain search:(NSString*)inSearch;
--(void)openNewWindowWithDescriptor:(nsISupports*)aDesc displayType:(PRUint32)aDisplayType loadInBackground:(BOOL)aLoadInBG;
--(void)openNewTabWithDescriptor:(nsISupports*)aDesc displayType:(PRUint32)aDisplayType loadInBackground:(BOOL)aLoadInBG;
+- (void)transformFormatString:(NSMutableString*)inFormat domain:(NSString*)inDomain search:(NSString*)inSearch;
+- (void)openNewWindowWithDescriptor:(nsISupports*)aDesc displayType:(PRUint32)aDisplayType loadInBackground:(BOOL)aLoadInBG;
+- (void)openNewTabWithDescriptor:(nsISupports*)aDesc displayType:(PRUint32)aDisplayType loadInBackground:(BOOL)aLoadInBG;
 - (BOOL)isPageTextFieldFocused;
--(void)performSearch:(SearchTextField *)inSearchField inView:(BWCOpenDest)inDest inBackground:(BOOL)inLoadInBG;
--(void)goToLocationFromToolbarURLField:(AutoCompleteTextField *)inURLField inView:(BWCOpenDest)inDest inBackground:(BOOL)inLoadInBG;
+- (void)performSearch:(SearchTextField *)inSearchField inView:(BWCOpenDest)inDest inBackground:(BOOL)inLoadInBG;
+- (void)goToLocationFromToolbarURLField:(AutoCompleteTextField *)inURLField inView:(BWCOpenDest)inDest inBackground:(BOOL)inLoadInBG;
 
 // create back/forward session history menus on toolbar button
 - (IBAction)backMenu:(id)inSender;
@@ -1204,6 +1204,13 @@ enum BWCOpenDest {
     return YES;
 }
 
+- (void)ensureBookmarkViewController
+{
+  if (!mBookmarkViewController) {
+    mBookmarkViewController = [[BookmarkViewController alloc] initWithBrowserWindowController:self];
+  }
+}
+
 #pragma mark -
 
 - (void)loadingStarted
@@ -1695,6 +1702,8 @@ enum BWCOpenDest {
 
 - (void)addBookmarkExtended:(BOOL)aIsFolder URL:(NSString*)aURL title:(NSString*)aTitle
 {
+  // why doesn't this talk to the data source?
+  [self ensureBookmarkViewController];
   [mBookmarkViewController ensureBookmarks];
   [mBookmarkViewController addItem: self isFolder: aIsFolder URL:aURL title:aTitle];
 }
@@ -2440,6 +2449,7 @@ enum BWCOpenDest {
 
 - (void)getInfo:(id)sender
 {
+  [self ensureBookmarkViewController];
   [mBookmarkViewController ensureBookmarks];
   [mBookmarkViewController showBookmarkInfo:sender];
 }
@@ -3040,6 +3050,7 @@ enum BWCOpenDest {
 
 - (BookmarkViewController *)bookmarkViewController
 {
+  [self ensureBookmarkViewController];
   return mBookmarkViewController;
 }
 
@@ -3082,9 +3093,7 @@ enum BWCOpenDest {
 - (void)toggleBookmarkManager:(id)sender
 {
   // lazily init the setup of the view's controller
-  if (!mBookmarkViewController) {
-    mBookmarkViewController = [[BookmarkViewController alloc] initWithBrowserWindowController:self];
-  }
+  [self ensureBookmarkViewController];
   
   // deactivate any gecko view that might think it has focus
   if ([self isResponderGeckoView:[[self window] firstResponder]]) {
