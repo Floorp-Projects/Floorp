@@ -415,7 +415,17 @@ nsEventStatus nsContextMenu::MenuSelected(const nsMenuEvent & aMenuEvent)
   }
   alignFlags |= TPM_RETURNCMD;
 
-/* Commented out. Don't understand how to compile this so that it works.
+/* Commented out. 
+  %&%#&#%&@$ It doesn't look like any of this code was necessary.  It
+  all animates cleverly on its own.  ARGH!  That means I really didn't
+  even need to pass in the anchor alignment at all.
+
+  I suck.  
+  
+    - Dave
+  */
+
+/*
   if (mAnchorAlignment == "topleft") {
     // Fancy animation in this case matters for 
     // bottomleft and topright
