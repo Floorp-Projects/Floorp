@@ -1450,6 +1450,11 @@ NS_METHOD nsFrame::IsTransparent(PRBool& aTransparent) const
   return NS_OK;
 }
 
+NS_METHOD nsFrame::Scrolled(nsIView *aView)
+{
+  return NS_OK;
+}
+
 // Debugging
 NS_METHOD nsFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter *aFilter) const
 {

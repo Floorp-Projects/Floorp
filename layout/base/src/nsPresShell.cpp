@@ -871,9 +871,7 @@ NS_IMETHODIMP PresShell :: Scrolled(nsIView *aView)
   frame = (nsIFrame *)clientData;
 
   if (nsnull != frame)
-  {
-    rv = NS_OK;
-  }
+    rv = frame->Scrolled(aView);
   else
     rv = NS_OK;
 
@@ -1080,7 +1078,6 @@ PresShell::VerifyIncrementalReflow()
   mPresContext->GetPrefs(prefs);
   cx->Init(dc, prefs);
   NS_IF_RELEASE(prefs);
-  NS_RELEASE(dc);
 
   rv = CreateStyleSet(mDocument, &ss);
   NS_ASSERTION(NS_OK == rv, "failed to create style set");
@@ -1104,6 +1101,8 @@ PresShell::VerifyIncrementalReflow()
   if ((NS_OK != rv) || (NS_OK != vm->Init(dc))) {
     NS_ASSERTION(NS_OK == rv, "failed to create view manager");
   }
+
+  NS_RELEASE(dc);
 
   vm->SetViewObserver((nsIViewObserver *)this);
 

@@ -201,6 +201,7 @@ public:
   NS_IMETHOD  GetNextSibling(nsIFrame*& aNextSibling) const;
   NS_IMETHOD  SetNextSibling(nsIFrame* aNextSibling);
   NS_IMETHOD  IsTransparent(PRBool& aTransparent) const;
+  NS_IMETHOD  Scrolled(nsIView *aView);
   NS_IMETHOD  List(FILE* out = stdout, PRInt32 aIndent = 0, nsIListFilter *aFilter = nsnull) const;
   NS_IMETHOD  ListTag(FILE* out = stdout) const;
   NS_IMETHOD  VerifyTree() const;
