@@ -376,14 +376,15 @@ createPixmap(PluginInstance *This)
        GdkWindow *gdk_window = getGdkWindow(This);
        if (gdk_window)
        {
-#ifdef MOZ_ENABLE_GTK
-           style = gtk_widget_get_style((GtkWidget *)gdk_window->user_data);
+           GtkWidget *widget;
+#ifndef MOZ_WIDGET_GTK2
+           widget = (GtkWidget *)gdk_window->user_data;
+#else
+           gpointer user_data = NULL;
+           gdk_window_get_user_data( gdk_window, &user_data);
+           widget = GTK_WIDGET(user_data);
 #endif
-#ifdef MOZ_ENABLE_GTK2
-	   gpoint user_data = nsnull;
-	   gdk_window_get_user_data( gdk_window, user_data);
-	   style = gtk_widget_get_style(GTK_WIDGET(user_data));
-#endif
+           style = gtk_widget_get_style(widget);
            nullPluginGdkPixmap = gdk_pixmap_create_from_xpm_d(gdk_window , &mask,
                                              &style->bg[GTK_STATE_NORMAL], npnul320_xpm);
 	   /* Pixmap is created on original X session but used by new session */
