@@ -363,7 +363,7 @@ function awAppendNewRow(setFocus)
 	
 	if ( body && treeitem1 )
 	{
-		newNode = awCopyNode(treeitem1, body, 0);
+		var newNode = awCopyNode(treeitem1, body, 0);
 		top.MAX_RECIPIENTS++;
 
         var input = newNode.getElementsByTagName(awInputElementName());
@@ -487,7 +487,7 @@ function _awSetFocus()
 	var tree = document.getElementById('addressListTree');
 	try
 	{
-		theNewRow = awGetTreeRow(top.awRow);
+		var theNewRow = awGetTreeRow(top.awRow);
 		//temporary patch for bug 26344
 //		awFinishCopyNode(theNewRow);
 

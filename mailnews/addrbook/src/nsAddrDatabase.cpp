@@ -1794,6 +1794,39 @@ nsresult nsAddrDatabase::AddListCardColumnsToRow
 
 				NotifyCardEntryChange(AB_NotifyInserted, newCard, NULL);
 			}
+			else if (pCardRow)
+			{
+				//existing card, get the card ptr
+				mdbOid cardOid;
+				char* cardURI = nsnull;
+				char* file = nsnull;
+
+				if (NS_SUCCEEDED(pCardRow->GetOid(GetEnv(), &cardOid)))
+				{
+					file = m_dbName.GetLeafName();
+					if (file)
+					{
+						cardURI = PR_smprintf("%s%s/Card%ld", kCardDataSourceRoot, file, cardOid.mOid_Id);
+						NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &err);
+						if (NS_SUCCEEDED(err) && cardURI)
+						{
+							nsCOMPtr<nsIRDFResource> cardResource;
+							err = rdfService->GetResource(cardURI, getter_AddRefs(cardResource));
+							if (NS_SUCCEEDED(err))
+							{
+								nsCOMPtr<nsIAbCard> personCard = do_QueryInterface(cardResource);
+								if (personCard)
+								{
+									*pNewCard = personCard;
+									NS_IF_ADDREF(*pNewCard);
+								}
+							}
+							PR_smprintf_free(cardURI);
+						}
+						nsCRT::free(file);
+					}
+				}
+			}
 			PR_FREEIF(pUTF8Email);
 
 			if (!pCardRow)
