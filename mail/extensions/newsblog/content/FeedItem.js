@@ -71,7 +71,7 @@ const MESSAGE_TEMPLATE = "\n\
 ";
 
 const REMOTE_CONTENT_TEMPLATE = "\n\
-    <iframe src=\"%URL%\">\n\
+    <iframe id =\"_mailrssiframe\" src=\"%URL%\">\n\
       %DESCRIPTION%\n\
     </iframe>\n\
 ";
