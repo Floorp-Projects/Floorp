@@ -219,8 +219,10 @@ HRESULT CMozillaBrowser::OnDraw(ATL_DRAWINFO& di)
 static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 static NS_DEFINE_IID(kWebShellCID, NS_WEB_SHELL_CID);
 
+#ifdef USE_NGPREF
 static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
+#endif /* USE_NGPREF */
 
 HRESULT CMozillaBrowser::CreateWebShell() 
 {
