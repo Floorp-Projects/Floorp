@@ -33,6 +33,7 @@ XPIDLSRCS=						\
 		.\nsIWebBrowserPersist.idl					\
 		.\nsIWebBrowserSiteWindow.idl				\
 		.\nsIWebBrowserFocus.idl					\
+		.\nsIWebBrowserFind.idl                     \
 		$(NULL)
 
 LIBRARY_NAME=nsWebBrowser_s
@@ -44,6 +45,7 @@ CPP_OBJS=							\
 		.\$(OBJDIR)\nsCommandHandler.obj		\
 		.\$(OBJDIR)\nsWebBrowserPersist.obj		\
 		.\$(OBJDIR)\nsDOMWalker.obj			\
+		.\$(OBJDIR)\nsWebBrowserFind.obj			\
 		$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
