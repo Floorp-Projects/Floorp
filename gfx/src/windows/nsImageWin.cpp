@@ -1079,7 +1079,7 @@ PRBool nsImageWin::CanAlphaBlend(void)
 
 
 /** ----------------------------------------------------------------
- * Create an optimized bitmap, -- this routine may need to be deleted, not really used now
+ * Create an optimized bitmap
  * @update dc - 11/20/98
  * @param aContext - The device context to use for the optimization
  */
@@ -1089,11 +1089,15 @@ nsImageWin :: Optimize(nsIDeviceContext* aContext)
   // we used to set a flag because  a valid HDC may not be ready, 
   // like at startup, but now we just roll our own HDC for the given screen.
   
-  // Windows 95/98/Me: DDB size cannot exceed 16MB in size.
-  if ((gPlatform == VER_PLATFORM_WIN32_WINDOWS && mSizeImage >= 0xFF0000) || (mAlphaDepth == 8) || (!CanAlphaBlend()) ){
+  // Windows 95/98/Me: DDB size cannot exceed ~16MB in size.
+  // We also can not optimize empty images, or 8-bit alpha depth images on
+  // Win98 due to a Windows API bug.
+  if ((gPlatform == VER_PLATFORM_WIN32_WINDOWS && mSizeImage >= 0xFF0000) ||
+      (mAlphaDepth == 8 && !CanAlphaBlend()) ||
+      (mSizeImage <= 0)) {
     return NS_OK;
-  }  
-  
+  }
+
   HDC TheHDC = ::CreateCompatibleDC(NULL);
   
   if (TheHDC != NULL){
@@ -1113,17 +1117,17 @@ nsImageWin :: Optimize(nsIDeviceContext* aContext)
     HBITMAP  tBitmap = ::CreateBitmap(1,1,planes,bpp,NULL);
     HBITMAP oldbits = (HBITMAP)::SelectObject(TheHDC,tBitmap);
 
-    if (mSizeImage > 0){
-       if (mAlphaDepth == 8) {
-         CreateImageWithAlphaBits(TheHDC);
-       } else {
-         mHBitmap = ::CreateDIBitmap(TheHDC,mBHead,CBM_INIT,mImageBits,(LPBITMAPINFO)mBHead,
-                  256==mNumPaletteColors?DIB_PAL_COLORS:DIB_RGB_COLORS);
-         mIsOptimized = (mHBitmap != 0);
-       }
-      if (mIsOptimized)
-        CleanUpDIB();
+    if (mAlphaDepth == 8) {
+      CreateImageWithAlphaBits(TheHDC);
+    } else {
+      mHBitmap = ::CreateDIBitmap(TheHDC, mBHead, CBM_INIT, mImageBits,
+                                  (LPBITMAPINFO)mBHead,
+                                  256 == mNumPaletteColors ? DIB_PAL_COLORS
+                                                           : DIB_RGB_COLORS);
+      mIsOptimized = (mHBitmap != 0);
     }
+    if (mIsOptimized)
+      CleanUpDIB();
     ::SelectObject(TheHDC,oldbits);
     ::DeleteObject(tBitmap);
     ::DeleteDC(TheHDC);
