@@ -77,38 +77,39 @@ nsLocalFile::InitWithFile(nsILocalFile *aFile)
 
 #if defined(XP_MAC)
 #define kMaxFilenameLength 31
+#define kMaxExtensionLength 10
 #else
 #define kMaxFilenameLength 255
+#define kMaxExtensionLength 100
 #endif  
+// requirement: kMaxExtensionLength < kMaxFilenameLength - 4
 
 NS_IMETHODIMP
 nsLocalFile::CreateUnique(PRUint32 type, PRUint32 attributes)
 {
     nsresult rv = Create(type, attributes);
-    
-    if (NS_SUCCEEDED(rv)) return NS_OK;
-    if (rv != NS_ERROR_FILE_ALREADY_EXISTS) return rv;
+    if (rv != NS_ERROR_FILE_ALREADY_EXISTS)
+        return rv;
 
     nsCAutoString leafName; 
     rv = GetNativeLeafName(leafName);
-
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv))
+        return rv;
 
     const char* lastDot = strrchr(leafName.get(), '.');
-    char suffix[kMaxFilenameLength + 1] = "";
+    char suffix[kMaxExtensionLength] = "";
     if (lastDot)
     {
-        strncpy(suffix, lastDot, kMaxFilenameLength); // include '.'
-        suffix[kMaxFilenameLength] = 0; // make sure it's null terminated
+        PL_strncpyz(suffix, lastDot, sizeof(suffix)); // include '.'
         leafName.SetLength(lastDot - leafName.get()); // strip suffix and dot.
     }
 
-    const int maxRootLength = (kMaxFilenameLength - 4) - strlen(suffix) - 1;
+    PRUint32 maxRootLength = (kMaxFilenameLength - 4) - strlen(suffix) - 1;
 
-    if ((int)leafName.Length() > (int)maxRootLength)
+    if (leafName.Length() > maxRootLength)
         leafName.SetLength(maxRootLength);
 
-    for (short indx = 1; indx < 10000; indx++)
+    for (int indx = 1; indx < 10000; indx++)
     {
         // start with "Picture-1.jpg" after "Picture.jpg" exists
         SetNativeLeafName(leafName +
@@ -116,11 +117,8 @@ nsLocalFile::CreateUnique(PRUint32 type, PRUint32 attributes)
                           nsDependentCString(suffix));
 
         rv = Create(type, attributes);
-    
         if (NS_SUCCEEDED(rv) || rv != NS_ERROR_FILE_ALREADY_EXISTS) 
-        {
             return rv;
-        }
     }
  
     // The disk is full, sort of
