@@ -321,7 +321,7 @@ class mdbISupports { // msg db base class
 **| but the total ref count for COM objects is the sum of weak & strong refs.
 |*/
 class mdbObject : public mdbISupports { // msg db base class
-
+public:
 // { ===== begin mdbObject methods =====
 
   // { ----- begin attribute methods -----
@@ -636,7 +636,7 @@ public:
 **| an open db, so panic purges only make sense when a db is urgently needed.)
 |*/
 class mdbPort : public mdbObject {
-
+public:
 // { ===== begin mdbPort methods =====
 
   // { ----- begin attribute methods -----
@@ -871,7 +871,7 @@ class mdbPort : public mdbObject {
 **| event notification to any views that depend on old discarded content.
 |*/
 class mdbStore : public mdbPort {
-
+public:
 // { ===== begin mdbStore methods =====
 
   // { ----- begin table methods -----
@@ -1234,7 +1234,7 @@ class mdbCollection : public mdbObject { // sequence of objects
 **|| indexes:
 |*/
 class mdbTable : public mdbCollection { // a collection of rows
-
+public:
 // { ===== begin mdbTable methods =====
 
   // { ----- begin attribute methods -----
@@ -1456,7 +1456,7 @@ class mdbTable : public mdbCollection { // a collection of rows
 **|
 |*/
 class mdbTableRowCursor : public mdbCursor { // table row iterator
-
+public:
 // { ===== begin mdbTableRowCursor methods =====
 
   // { ----- begin attribute methods -----
