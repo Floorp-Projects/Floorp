@@ -93,14 +93,6 @@ Contributor(s): ______________________________________. -->
     </xpmenubar>
   </toolbox>
 
-<html:select size="1">
-      <html:option>item 1</html:option>
-      <html:option>item 2</html:option>
-      <html:option selected="true">item 3</html:option>
-      <html:option>item 4</html:option>
-      <html:option>item 5</html:option>
-</html:select>
-
 <!--  <html:iframe style="height: 300px" src="http://www.mozillazine.org/"/>
 -->
 
