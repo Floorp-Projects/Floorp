@@ -59,6 +59,37 @@ function onUnload(aEvent)
   notifyParentComplete();
 }
 
+function onCancel()
+{
+  // restore the saved toolbarset for each customizeable toolbar
+
+  // Restore the defaultset for fixed toolbars.
+  var toolbar = gToolbox.firstChild;
+  while (toolbar) {
+    if (isCustomizableToolbar(toolbar)) {
+      if (!toolbar.hasAttribute("customindex")) {
+        var previousset = toolbar.getAttribute("previousset");
+        if (previousset)
+        {
+          toolbar.currentSet = previousset;
+        }
+      }
+    }
+    toolbar = toolbar.nextSibling;
+  }
+
+  // Now rebuild the palette.
+  buildPalette();
+
+  // Now re-wrap the items on the toolbar.
+  wrapToolbarItems();
+
+  repositionDialog();
+  gToolboxChanged = true;
+
+  return onAccept(); // we restored the default toolbar, act like a normal accept event now
+}
+
 function onAccept(aEvent)
 {
   document.getElementById("main-box").collapsed = true;
@@ -190,6 +221,9 @@ function wrapToolbarItems()
   for (var i = 0; i < gToolbox.childNodes.length; ++i) {
     var toolbar = getToolbarAt(i);
     if (isCustomizableToolbar(toolbar)) {
+      // save off the current set for each toolbar in case the user hits cancel
+      toolbar.setAttribute('previousset', toolbar.currentSet);
+
       for (var k = 0; k < toolbar.childNodes.length; ++k) {
         var item = toolbar.childNodes[k];
         if (isToolbarItem(item)) {
@@ -214,6 +248,7 @@ function wrapToolbarItems()
   for (var i = 0; i < gToolbox.childNodes.length; ++i) {
     var toolbar = getToolbarAt(i);
     if (isCustomizableToolbar(toolbar)) {
+      toolbar.removeAttribute('previousset'); // remove previous set attribute
       for (var k = 0; k < toolbar.childNodes.length; ++k) {
         var paletteItem = toolbar.childNodes[k];
         var toolbarItem = paletteItem.firstChild;
