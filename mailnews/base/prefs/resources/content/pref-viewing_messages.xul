@@ -92,8 +92,9 @@
         </menupopup>
       </menulist>
       
-      <menu id="citationmenu">
-        <menulist value="&color.label;" class="popup" align="right"/> 
+      <text class="label" value="&color.label;"/>
+      <menu id="citationmenu" allowevents="true" class="colorpicker">
+        <titledbutton class="popup" align="right"/> 
         <html:div style="width:30px; background-color:white"/>
         <menupopup>
           <colorpicker id="citation" palettename="standard" onclick="setColorWell(this.parentNode.parentNode,'mailCitationColor');"/>
