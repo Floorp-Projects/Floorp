@@ -31,11 +31,15 @@ REQUIRES=xpcom js
 DEFINES=-DWIN32_LEAN_AND_MEAN -DEXPORT_XPC_API
 
 OBJS=					\
+	.\$(OBJDIR)\xpcnsid.obj	\
+	.\$(OBJDIR)\xpcstubs.obj	\
 	.\$(OBJDIR)\xpcmaps.obj	\
 	.\$(OBJDIR)\xpccontext.obj	\
 	.\$(OBJDIR)\xpcbogusjs.obj	\
 	.\$(OBJDIR)\xpcbogusii.obj	\
 	.\$(OBJDIR)\xpcinvoke.obj	\
+	.\$(OBJDIR)\xpcwrappedjs.obj	\
+	.\$(OBJDIR)\xpcwrappedjsclass.obj	\
 	.\$(OBJDIR)\xpcwrappednative.obj	\
 	.\$(OBJDIR)\xpcwrappednativeclass.obj	\
 	.\$(OBJDIR)\nsXPConnect.obj	\

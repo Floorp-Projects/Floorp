@@ -50,6 +50,8 @@ XPCContext::newXPCContext(JSContext* aJSContext,
        xpcc->GetWrappedNativeMap()      &&
        xpcc->GetWrappedJSClassMap()     &&
        xpcc->GetWrappedNativeClassMap() &&
+       xpc_InitIDClass(xpcc)            &&
+       nsXPCWrappedJSClass::InitForContext(xpcc) &&
        nsXPCWrappedNativeClass::InitForContext(xpcc))
     {
         return xpcc;

@@ -170,7 +170,7 @@ XPC_NewJSObject(nsIJSContext* aJSContext, JSObject* jsobj);
 
 #ifdef DEBUG
 // XXX temprary forawrd declaration
-class nsXPCVarient;
+struct nsXPCVarient;
 XPC_PUBLIC_API(nsresult)
 XPC_TestInvoke(void* that, PRUint32 index,
                uint32 paramCount, nsXPCVarient* params);

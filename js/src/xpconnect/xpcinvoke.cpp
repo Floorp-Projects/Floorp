@@ -25,12 +25,17 @@
 // Remember that on Win32 these 'words' are 32bit DWORDS
 
 static uint32 __stdcall
-invoke_count_words(uint32 paramCount, nsXPCVarient* src)
+invoke_count_words(uint32 paramCount, nsXPCVarient* s)
 {
     uint32 result = 0;
-    for(uint32 i = 0; i < paramCount; i++, src++)
+    for(uint32 i = 0; i < paramCount; i++, s++)
     {
-        switch(src->type)
+        if(s->IsPtrData())
+        {
+            result++;
+            continue;
+        }
+        switch(s->type)
         {
         case nsXPCType::T_I8     :
         case nsXPCType::T_I16    :
@@ -56,7 +61,7 @@ invoke_count_words(uint32 paramCount, nsXPCVarient* src)
             result++;
             break;
         default:
-            NS_ASSERTION(src->type & nsXPCType::IS_POINTER, "bad type");
+            NS_ASSERTION(s->type & nsXPCType::IS_POINTER, "bad type");
             result++;
             break;
         }
@@ -69,6 +74,11 @@ invoke_copy_to_stack(uint32* d, uint32 paramCount, nsXPCVarient* s)
 {
     for(uint32 i = 0; i < paramCount; i++, d++, s++)
     {
+        if(s->IsPtrData())
+        {
+            *((void**)d) = s->ptr;
+            continue;
+        }
         switch(s->type)
         {
         case nsXPCType::T_I8     : *((int8*)   d) = s->val.i8;          break;

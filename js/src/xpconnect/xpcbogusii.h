@@ -76,40 +76,13 @@ public:
         T_INTERFACE     = 16,   /* SPECIAL_BIT | 0 */
         T_INTERFACE_IS  = 17    /* SPECIAL_BIT | 1 */
     };
-
-    uint8 WordCount() const
-    {
-        static uint8 word_table[] =
-        {
-            1, // T_I8
-            1, // T_I16
-            1, // T_I32
-            2, // T_I64
-            1, // T_U8
-            1, // T_U16
-            1, // T_U32
-            2, // T_U64
-            1, // T_FLOAT
-            2, // T_DOUBLE
-            1, // T_BOOL
-            1, // T_CHAR
-            1  // T_WCHAR
-        };
-        if(t & IS_POINTER)
-            return 1;
-        if(t & SPECIAL_BIT)
-        {
-            NS_ASSERTION(0,"net yet implemented");
-            return 1;
-        }
-        return word_table[t & TYPE_MASK];
-    }
 };
 
-class nsXPCVarient
+// this is used only for WrappedJS stub param repackaging
+struct nsXPCMiniVarient
 {
-public:
-    // val must come first!
+// No ctors or dtors so that we can use arrays of these on the stack
+// with no penalty.
     union
     {
         int8    i8;
@@ -126,9 +99,45 @@ public:
         char    c;
         wchar_t wc;
         void*   p;
-    } val;
+    }         val;
+};
 
+struct nsXPCVarient
+{
+// No ctors or dtors so that we can use arrays of these on the stack
+// with no penalty.
+    union
+    {
+        int8    i8;
+        int16   i16;
+        int32   i32;
+        int64   i64;
+        uint8   u8;
+        uint16  u16;
+        uint32  u32;
+        uint64  u64;
+        float   f;
+        double  d;
+        PRBool  b;
+        char    c;
+        wchar_t wc;
+        void*   p;
+        nsID    id;
+
+    }         val;
+    void*     ptr;
+    void*     ptr2;
     nsXPCType type;
+    uint8     flags;
+
+    enum
+    {
+        PTR_IS_DATA  = 0x1,   // used for OUT params, ptr points to data in val
+        VAL_IS_OWNED = 0x2    // val.p holds an alloced ptr that must be freed
+    };
+
+    JSBool IsPtrData()  const {return (JSBool) (flags & PTR_IS_DATA);}
+    JSBool IsValOwned() const {return (JSBool) (flags & VAL_IS_OWNED);}
 };
 
 
