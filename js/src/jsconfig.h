@@ -285,6 +285,7 @@
 #define JS_HAS_NEW_OBJ_METHODS  0       /* has Object.prototype query methods */
 #define JS_HAS_SPARSE_ARRAYS    0       /* array methods preserve empty elems */
 #define JS_HAS_DFLT_MSG_STRINGS 1       /* provides English error messages */
+#define JS_HAS_NUMBER_FORMATS   0       /* numbers have formatting methods */
 #define JS_HAS_GETTER_SETTER    0       /* has JS2 getter/setter functions */
 
 #elif JS_VERSION == 150
