@@ -93,7 +93,9 @@ NS_IMETHODIMP
 nsMsgAccount::GetIncomingServer(nsIMsgIncomingServer * *aIncomingServer)
 {
   if (!aIncomingServer) return NS_ERROR_NULL_POINTER;
-  nsresult rv;
+  //Need to initialize this otherwise if there's already an m_incomingServer, this
+  //will be unitialized.
+  nsresult rv = NS_OK;
 
   // need to call SetKey() first!
   if (!m_accountKey) return NS_ERROR_NOT_INITIALIZED;
