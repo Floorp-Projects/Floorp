@@ -5117,8 +5117,10 @@ nsresult
 nsEventReceiverSH::RegisterCompileHandler(nsIXPConnectWrappedNative *wrapper,
                                           JSContext *cx, JSObject *obj,
                                           jsval id, PRBool compile,
+                                          PRBool remove,
                                           PRBool *did_compile)
 {
+  NS_PRECONDITION(!compile || !remove, "Can't both compile and remove at the same time");
   *did_compile = PR_FALSE;
 
   if (!IsEventName(id)) {
@@ -5148,6 +5150,8 @@ nsEventReceiverSH::RegisterCompileHandler(nsIXPConnectWrappedNative *wrapper,
   if (compile) {
     rv = manager->CompileScriptEventListener(script_cx, native, atom,
                                              did_compile);
+  } else if (remove) {
+    rv = manager->RemoveScriptEventListener(atom);
   } else {
     rv = manager->RegisterScriptEventListener(script_cx, native, atom);
   }
@@ -5168,7 +5172,7 @@ nsEventReceiverSH::NewResolve(nsIXPConnectWrappedNative *wrapper,
 
   PRBool did_compile = PR_FALSE;
 
-  nsresult rv = RegisterCompileHandler(wrapper, cx, obj, id, PR_TRUE,
+  nsresult rv = RegisterCompileHandler(wrapper, cx, obj, id, PR_TRUE, PR_FALSE,
                                        &did_compile);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -5185,13 +5189,15 @@ nsEventReceiverSH::SetProperty(nsIXPConnectWrappedNative *wrapper,
                                JSContext *cx, JSObject *obj, jsval id,
                                jsval *vp, PRBool *_retval)
 {
-  if (::JS_TypeOfValue(cx, *vp) != JSTYPE_FUNCTION || !JSVAL_IS_STRING(id)) {
+  if ((::JS_TypeOfValue(cx, *vp) != JSTYPE_FUNCTION && !JSVAL_IS_NULL(*vp)) ||
+      !JSVAL_IS_STRING(id)) {
     return NS_OK;
   }
 
   PRBool did_compile; // Ignored here.
 
-  return RegisterCompileHandler(wrapper, cx, obj, id, PR_FALSE, &did_compile);
+  return RegisterCompileHandler(wrapper, cx, obj, id, PR_FALSE,
+                                JSVAL_IS_NULL(*vp), &did_compile);
 }
 
 NS_IMETHODIMP
