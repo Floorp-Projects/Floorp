@@ -186,21 +186,28 @@ morkAtomSpace::MakeBookAtomCopy(morkEnv* ev, const morkBigBookAtom& inAtom)
   morkBookAtom* outAtom = 0;
   if ( ev->Good() )
   {
-    morkPool* pool = this->GetSpaceStorePool();
-    morkBookAtom* atom = pool->NewBookAtomCopy(ev, inAtom);
-    if ( atom )
-    {
-      mork_aid id = this->MakeNewAtomId(ev, atom);
-      if ( id )
-      {
-        outAtom = atom; 
-        atom->mBookAtom_Space = this;
-        mAtomSpace_AtomAids.AddAtom(ev, atom);
-        mAtomSpace_AtomBodies.AddAtom(ev, atom);
-        if ( mSpace_Scope == morkAtomSpace_kColumnScope )
-          outAtom->MakeCellUseForever(ev);
-      }
-    }
+  	if ( mSpace_Store->mStore_CanAutoAssignAtomIdentity )
+  	{
+	    morkPool* pool = this->GetSpaceStorePool();
+	    morkBookAtom* atom = pool->NewBookAtomCopy(ev, inAtom);
+	    if ( atom )
+	    {
+	      mork_aid id = this->MakeNewAtomId(ev, atom);
+	      if ( id )
+	      {
+	        outAtom = atom; 
+	        atom->mBookAtom_Space = this;
+	        mAtomSpace_AtomAids.AddAtom(ev, atom);
+	        mAtomSpace_AtomBodies.AddAtom(ev, atom);
+	        if ( mSpace_Scope == morkAtomSpace_kColumnScope )
+	          outAtom->MakeCellUseForever(ev);
+	      }
+	      else
+	      	pool->ZapAtom(ev, atom);
+	    }
+  	}
+  	else
+  		mSpace_Store->CannotAutoAssignAtomIdentityError(ev);
   }
   return outAtom;
 }
