@@ -156,9 +156,10 @@ char* nsCRT::strtok(char* str, const char* delims, char* *newStr)
   for (i = 0; i < DELIM_TABLE_SIZE; i++)
     delimTable[i] = '\0';
 
-  do {
-    SET_DELIM(delimTable, *delims);
-  } while (*delims++);
+  for (i = 0; i < DELIM_TABLE_SIZE && delims[i]; i++) {
+    SET_DELIM(delimTable, delims[i]);
+  }
+  NS_ASSERTION(delims[i] == '\0', "too many delimiters");
 
   // skip to beginning
   while (*str && IS_DELIM(delimTable, *str)) {
