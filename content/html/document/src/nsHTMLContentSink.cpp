@@ -390,7 +390,7 @@ public:
 
   PRPackedBool mNotifyOnTimer;           // Do we notify based on time?
   PRPackedBool mLayoutStarted;
-  PRPackedBool mIsDemotingContainer;
+  PRPackedBool mIsDemotingForm;
   PRPackedBool mScrolledToRefAlready;
   PRPackedBool mNeedToBlockParser;
 
@@ -616,7 +616,7 @@ public:
   nsresult AddLeaf(const nsIParserNode& aNode);
   nsresult AddLeaf(nsIHTMLContent* aContent);
   nsresult AddComment(const nsIParserNode& aNode);
-  nsresult DemoteContainer(const nsIParserNode& aNode);
+  nsresult DemoteForm(const nsIParserNode& aNode);
   nsresult End();
 
   nsresult GrowStack();
@@ -1733,15 +1733,32 @@ SetDocumentInChildrenOf(nsIContent* aContent,
   }
 }
 
-// This method is called when a container is determined to be
-// non well-formed in the source content. Currently this can only
-// happen for forms, since the parser doesn't do fixup of forms.
-// The method makes the container a leaf and moves all the container's
-// children up a level to the container's parent.
+//
+// DemoteForm
+//
+// This method is called when the source is messed up and we can't figure out
+// where to put the form.  For example, when a content developer puts
+// <div><form><input></div><input></form> into his HTML page, after we hit him
+// repeatedly with a whiffleball bat, we go out of our way to treat him right
+// anyway and get his <input> into the form.  We're just that kind of browser
+// developers.
+//
+// So when we hit that errant </div>, we empty out the <form> by moving all its
+// direct children into the <form>'s parent (in this case the <div>).
+//
+// We only do this "because we don't do fixup of forms."  (The author is now
+// repeating blindly statements made by others.  The author's real opinion is
+// that somebody got mad at these errant forms and decided to punish them by
+// taking away their children.  The author does not condone this, but he is
+// content to stand idly by.  Surely they will not come for me!)
+//
+// Really, there are deep reasons behind this, if you really want to know it's
+// because mumble mumble.
+//
 nsresult
-SinkContext::DemoteContainer(const nsIParserNode& aNode)
+SinkContext::DemoteForm(const nsIParserNode& aNode)
 {
-  nsresult result = NS_OK;
+  nsresult rv = NS_OK;
   nsHTMLTag nodeType = nsHTMLTag(aNode.GetNodeType());
 
   // Search for the nearest container on the stack of the
@@ -1756,114 +1773,104 @@ SinkContext::DemoteContainer(const nsIParserNode& aNode)
     nsIHTMLContent* container = mStack[stackPos].mContent;
     PRBool sync = PR_FALSE;
     
-    // See if it has a parent on the stack. It should for all the
-    // cases for which this is called, but put in a check anyway
-    if (stackPos > 1) {
-      nsIHTMLContent* parent = mStack[stackPos-1].mContent;
-      PRInt32 parentCount;
+    // Get the form element
+    nsCOMPtr<nsIForm> form = do_QueryInterface(container);
+    NS_ASSERTION(form,
+                 "Fie on thee, for calling DemoteForm() without a form!");
+    if (form) {
+      // See if it has a parent on the stack. It should for all the
+      // cases for which this is called, but put in a check anyway
+      if (stackPos > 1) {
+        nsIHTMLContent* parent = mStack[stackPos-1].mContent;
+        PRInt32 parentCount;
 
-      // If we've already flushed the demoted container, flush
-      // what we have and do everything synchronously. If not,
-      // the children that will be promoted will just be dealt
-      // with later.
-      parent->ChildCount(parentCount);
-      if (mStack[stackPos-1].mNumFlushed == parentCount) {
-        FlushTags(PR_TRUE);
-        sync = PR_TRUE;
-      }
-      // Otherwise just append the container to the parent without
-      // notification (if the container hasn't already been appended)
-      else if (!(mStack[stackPos].mFlags & APPENDED)) {
-        mSink->mInNotification++;
-        parent->AppendChildTo(container, PR_FALSE, PR_FALSE);
-        mSink->mInNotification--;
-      }
+        // If we've already flushed the demoted container, flush
+        // what we have and do everything synchronously. If not,
+        // the children that will be promoted will just be dealt
+        // with later.
+        parent->ChildCount(parentCount);
+        if (mStack[stackPos-1].mNumFlushed == parentCount) {
+          FlushTags(PR_TRUE);
+          sync = PR_TRUE;
+        }
+        // Otherwise just append the container to the parent without
+        // notification (if the container hasn't already been appended)
+        else if (!(mStack[stackPos].mFlags & APPENDED)) {
+          mSink->mInNotification++;
+          parent->AppendChildTo(container, PR_FALSE, PR_FALSE);
+          mSink->mInNotification--;
+        }
 
-      // Set mIsDemotingContainer here so that the above FlushTags()
-      // calls really flushes the tags.
-      mSink->mIsDemotingContainer = PR_TRUE;
+        // Set mIsDemotingForm here so that the above FlushTags()
+        // calls really flushes the tags.
+        mSink->mIsDemotingForm = PR_TRUE;
 
-      // Create a temp layoutHistoryState to store the childrens' state
-      nsCOMPtr<nsIPresShell> presShell;
-      nsCOMPtr<nsIPresContext> presContext;
-      nsCOMPtr<nsIFrameManager> frameManager;
-      nsCOMPtr<nsILayoutHistoryState> tempFrameState = do_CreateInstance(kLayoutHistoryStateCID);
-      if (mSink && mSink->mDocument) {
-        PRInt32 ns = mSink->mDocument->GetNumberOfShells();
-        if (ns > 0) {
-          mSink->mDocument->GetShellAt(0, getter_AddRefs(presShell));
-          if (presShell) {
-            presShell->GetFrameManager(getter_AddRefs(frameManager));
-            presShell->GetPresContext(getter_AddRefs(presContext));
+        // Set a flag on the form to let people know it's being demoted.
+        form->SetDemotingForm(PR_TRUE);
+
+        // Create a temp layoutHistoryState to store the childrens' state
+        nsCOMPtr<nsIPresShell> presShell;
+        nsCOMPtr<nsIPresContext> presContext;
+        nsCOMPtr<nsIFrameManager> frameManager;
+        nsCOMPtr<nsILayoutHistoryState> tempFrameState =
+            do_CreateInstance(kLayoutHistoryStateCID);
+        if (mSink && mSink->mDocument) {
+          PRInt32 ns = mSink->mDocument->GetNumberOfShells();
+          if (ns > 0) {
+            mSink->mDocument->GetShellAt(0, getter_AddRefs(presShell));
+            if (presShell) {
+              presShell->GetFrameManager(getter_AddRefs(frameManager));
+              presShell->GetPresContext(getter_AddRefs(presContext));
+            }
           }
         }
-      }
-      NS_ASSERTION(presShell && frameManager && presContext && tempFrameState,
-                  "SinkContext::DemoteContainer() Error storing frame state!");
+        NS_ASSERTION(presShell && frameManager && presContext && tempFrameState,
+                    "SinkContext::DemoteForm() Error storing frame state!");
 
-      // Store children frames state before removing them from old parent
-      nsIFrame* frame = nsnull;
-      if (frameManager && presContext && tempFrameState) {
-        presShell->GetPrimaryFrameFor(container, &frame);
-        if (frame) {
-          frameManager->CaptureFrameState(presContext, frame, tempFrameState);
+        // Store children frames state before removing them from old parent
+        nsIFrame* frame = nsnull;
+        if (frameManager && presContext && tempFrameState) {
+          presShell->GetPrimaryFrameFor(container, &frame);
+          if (frame) {
+            frameManager->CaptureFrameState(presContext, frame, tempFrameState);
+          }
         }
-      }
 
-      // Suspend script processing while we move children around.
-      // We don't want to re-evaluate scripts as a result of the move.
-      nsCOMPtr<nsIScriptLoader> loader;
-      if (mSink && mSink->mDocument) {
-        mSink->mDocument->GetScriptLoader(getter_AddRefs(loader));
-        if (loader) {
-          loader->Suspend();
+        // Suspend script processing while we move children around.
+        // We don't want to re-evaluate scripts as a result of the move.
+        nsCOMPtr<nsIScriptLoader> loader;
+        if (mSink && mSink->mDocument) {
+          mSink->mDocument->GetScriptLoader(getter_AddRefs(loader));
+          if (loader) {
+            loader->Suspend();
+          }
         }
-      }
-      
-      if (NS_SUCCEEDED(result)) {
+     
         // Move all of the demoted containers children to its parent
         PRInt32 i, count;
         container->ChildCount(count);
-        
-        for (i = 0; i < count && NS_SUCCEEDED(result); i++) {
-          nsIContent* child;
-          
+
+        nsCOMPtr<nsIContent> child;
+        for (i = 0; i < count && NS_SUCCEEDED(rv); i++) {
+
           // Since we're removing as we go along, always get the
           // first child
-          result = container->ChildAt(0, child);
-          if (NS_SUCCEEDED(result)) {
+          rv = container->ChildAt(0, *getter_AddRefs(child));
+          if (NS_SUCCEEDED(rv)) {
             // Remove it from its old parent (the demoted container)
-            
-            // If the child is a form control, cache the form that contains it.
-            // After the form control is removed from it's container, restore
-            // it's form.
-            nsIFormControl* childFormControl = nsnull;
-            result = child->QueryInterface(NS_GET_IID(nsIFormControl), (void**)&childFormControl);
-            if (NS_SUCCEEDED(result)) {
-              // It is a form control, so get it's form and cache it.
-              nsIDOMHTMLFormElement* formElem = nsnull;
-              childFormControl->GetForm(&formElem);
-              // Removing the child will set it's form control to nsnull.
-              result = container->RemoveChildAt(0, sync);
-              // Restore the child's form control using the cache'd pointer.
-              childFormControl->SetForm(formElem);
-              
-              NS_RELEASE(childFormControl);
-              NS_IF_RELEASE(formElem);
-            } else {
-              result = container->RemoveChildAt(0, sync);
-            }
-            
-            if (NS_SUCCEEDED(result)) {
+
+            rv = container->RemoveChildAt(0, sync);
+
+            if (NS_SUCCEEDED(rv)) {
               SetDocumentInChildrenOf(child, mSink->mDocument);
+
               // Note that we're doing synchronous notifications here
               // since we already did notifications for all content
               // that's come through with the FlushTags() call so far.
               mSink->mInNotification++;
-              result = parent->AppendChildTo(child, sync, PR_FALSE);
+              rv = parent->AppendChildTo(child, sync, PR_FALSE);
               mSink->mInNotification--;
             }
-            NS_RELEASE(child);
           }
         }
         
@@ -1875,21 +1882,24 @@ SinkContext::DemoteContainer(const nsIParserNode& aNode)
           stackPos++;
         }
         mStackPos--;
-      }
 
-      if (loader) {
-        loader->Resume();
-      }
 
-      // Restore frames state after adding it to new parent
-      if (frameManager && presContext && tempFrameState && frame) {
-        presShell->GetPrimaryFrameFor(parent, &frame);
-        if (frame) {
-          frameManager->RestoreFrameState(presContext, frame, tempFrameState);
+        if (loader) {
+          loader->Resume();
+        }
+
+        // Restore frames state after adding it to new parent
+        if (frameManager && presContext && tempFrameState && frame) {
+          presShell->GetPrimaryFrameFor(parent, &frame);
+          if (frame) {
+            frameManager->RestoreFrameState(presContext, frame, tempFrameState);
+          }
         }
       }
 
+      form->SetDemotingForm(PR_FALSE);
     }
+
     NS_RELEASE(container);
 
     if (sync) {
@@ -1899,9 +1909,9 @@ SinkContext::DemoteContainer(const nsIParserNode& aNode)
     }
   }
 
-  mSink->mIsDemotingContainer = PR_FALSE;
+  mSink->mIsDemotingForm = PR_FALSE;
 
-  return result;
+  return rv;
 }
 
 nsresult
@@ -2167,7 +2177,7 @@ nsresult
 SinkContext::FlushTags(PRBool aNotify)
 {
   // If we're demoting containers right now, don't flush.
-  if (mSink->mIsDemotingContainer) {
+  if (mSink->mIsDemotingForm) {
     return NS_OK;
   }
 
@@ -3341,7 +3351,7 @@ HTMLContentSink::CloseForm(const nsIParserNode& aNode)
       result = mCurrentContext->CloseContainer(aNode);
     }
     else if (mCurrentContext->IsAncestorContainer(eHTMLTag_form)) {
-      result = mCurrentContext->DemoteContainer(aNode);
+      result = mCurrentContext->DemoteForm(aNode);
     }
     NS_RELEASE(mCurrentForm);
   }
@@ -4889,7 +4899,7 @@ HTMLContentSink::BeginUpdate(nsIDocument *aDocument)
   // creation, make sure we've flushed everything before we
   // continue
   if (mInScript && !mInNotification && mCurrentContext &&
-      !mIsDemotingContainer) {
+      !mIsDemotingForm) {
     result = mCurrentContext->FlushTags(PR_TRUE);
   }
 

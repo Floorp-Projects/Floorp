@@ -110,6 +110,9 @@ public:
   NS_IMETHOD ResolveName(const nsAReadableString& aName,
                          nsISupports **aReturn);
   NS_IMETHOD IndexOfControl(nsIFormControl* aControl, PRInt32* aIndex);
+  NS_IMETHOD SetDemotingForm(PRBool aDemotingForm);
+  NS_IMETHOD IsDemotingForm(PRBool* aDemotingForm);
+
 #ifdef DEBUG
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 #endif
@@ -132,9 +135,10 @@ protected:
   NS_IMETHOD OnReset(nsIPresContext* aPresContext);
   nsresult RemoveSelfAsWebProgressListener();
 
-  nsFormControlList*       mControls;
-  PRPackedBool             mGeneratingSubmit;
-  PRPackedBool             mGeneratingReset;
+  nsFormControlList *mControls;
+  PRPackedBool mGeneratingSubmit;
+  PRPackedBool mGeneratingReset;
+  PRPackedBool mDemotingForm;
 };
 
 // nsFormControlList
@@ -266,14 +270,13 @@ NS_NewHTMLFormElement(nsIHTMLContent** aInstancePtrResult,
 
 nsHTMLFormElement::nsHTMLFormElement():
   mGeneratingSubmit(PR_FALSE),
-  mGeneratingReset(PR_FALSE)
+  mGeneratingReset(PR_FALSE),
+  mDemotingForm(PR_FALSE)
 {
   mControls = new nsFormControlList(this);
 
   NS_IF_ADDREF(mControls);
 }
-
-
 
 nsHTMLFormElement::~nsHTMLFormElement()
 {
@@ -283,6 +286,8 @@ nsHTMLFormElement::~nsHTMLFormElement()
 
     NS_RELEASE(mControls);
   }
+
+  NS_ASSERTION(!mDemotingForm, "form deleted while demoting form!");
 }
 
 
@@ -674,11 +679,31 @@ nsHTMLFormElement::GetLength(PRInt32* aLength)
   return NS_OK;
 }
 
-NS_IMETHODIMP    
+NS_IMETHODIMP
 nsHTMLFormElement::IndexOfControl(nsIFormControl* aControl, PRInt32* aIndex)
 {
   NS_ENSURE_TRUE(mControls, NS_ERROR_FAILURE);
+
   return mControls->IndexOfControl(aControl, aIndex);
+}
+
+NS_IMETHODIMP
+nsHTMLFormElement::SetDemotingForm(PRBool aDemotingForm)
+{
+  NS_ASSERTION(mDemotingForm != aDemotingForm,
+               "Bad call to DemotingContainer()!");
+
+  mDemotingForm = aDemotingForm;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLFormElement::IsDemotingForm(PRBool* aDemotingForm)
+{
+  *aDemotingForm = mDemotingForm;
+
+  return NS_OK;
 }
 
 //----------------------------------------------------------------------

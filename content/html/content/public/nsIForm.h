@@ -128,12 +128,32 @@ public:
     *
     * @param aElement the element to remove
     * @param aName the name or id of the element to remove
-    * @return NS_OK if the element was successfully removed.  */
+    * @return NS_OK if the element was successfully removed.
+    */
   NS_IMETHOD ResolveName(const nsAReadableString& aName,
                          nsISupports **aResult) = 0;
 
+  /**
+    * Get the index of the given control within this form.
+    */
   NS_IMETHOD IndexOfControl(nsIFormControl* aControl, PRInt32* aIndex) = 0;
 
+  /**
+    * This is a flag set on the form by nsHTMLContentSink::DemoteForm()
+    * to let form controls know that children of the form are being moved
+    * around needlessly (which is what DemoteForm() does).
+    *
+    * Form controls query this so that they can avoid changing their form when
+    * the inevitable SetParent() occurs.  This prevents problems with indexing
+    * in DemoteForm() itself as well as other problems that arise from form
+    * controls setting their form to null, even temporarily.
+    */
+  NS_IMETHOD SetDemotingForm(PRBool aDemotingForm) = 0;
+
+  /**
+    * Test whether this form is currently being demoted
+    */
+  NS_IMETHOD IsDemotingForm(PRBool* aDemotingForm) = 0;
 };
 
 #endif /* nsIForm_h___ */
