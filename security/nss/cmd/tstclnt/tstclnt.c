@@ -92,6 +92,11 @@ int ssl3CipherSuites[] = {
     TLS_RSA_EXPORT1024_WITH_DES_CBC_SHA,	/* l */
     TLS_RSA_EXPORT1024_WITH_RC4_56_SHA,	        /* m */
     SSL_RSA_WITH_RC4_128_SHA,			/* n */
+    TLS_DHE_DSS_WITH_RC4_128_SHA,		/* o */
+    SSL_DHE_RSA_WITH_3DES_EDE_CBC_SHA,		/* p */
+    SSL_DHE_DSS_WITH_3DES_EDE_CBC_SHA,		/* q */
+    SSL_DHE_RSA_WITH_DES_CBC_SHA,		/* r */
+    SSL_DHE_DSS_WITH_DES_CBC_SHA,		/* s */
     0
 };
 
@@ -190,6 +195,11 @@ static void Usage(const char *progName)
 "l    SSL3 RSA EXPORT WITH DES CBC SHA\t(new)\n"
 "m    SSL3 RSA EXPORT WITH RC4 56 SHA\t(new)\n"
 "n    SSL3 RSA WITH RC4 128 SHA\n"
+"o    TLS  DHE DSS WITH RC4 128 SHA\n"
+"p    SSL3 DHE RSA WITH 3DES EDE CBC SHA\n"
+"q    SSL3 DHE DSS WITH 3DES EDE CBC SHA\n"
+"r    SSL3 DHE RSA WITH DES CBC SHA\n"
+"s    SSL3 DHE DSS WITH DES CBC SHA\n"
 	);
     exit(1);
 }
