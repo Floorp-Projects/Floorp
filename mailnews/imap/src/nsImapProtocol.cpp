@@ -3976,7 +3976,7 @@ nsImapProtocol::AlertUserEvent(const char * message)
   {
     nsCOMPtr<nsIMsgWindow> msgWindow;
     GetMsgWindow(getter_AddRefs(msgWindow));
-    m_imapServerSink->FEAlert(NS_ConvertASCIItoUCS2(message), msgWindow);
+    m_imapServerSink->FEAlert(NS_ConvertASCIItoUCS2(message).get(), msgWindow);
   }
 }
 
