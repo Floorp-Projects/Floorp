@@ -1888,82 +1888,6 @@ PRBool nsWindow::DispatchKeyEvent(PRUint32 aEventType, WORD aCharCode, UINT aVir
 }
 
 
-//-------------------------------------------------------------------------
-//
-// return 
-//   EXTENDED_KEY     for extended keys supported by java
-//   SPECIAL_KEY      for extended keys 
-//   DONT_PROCESS_KEY for extended keys of no interest (never exposed to java)
-//   STANDARD_KEY     for standard keys
-//
-//-------------------------------------------------------------------------
-#define STANDARD_KEY     1
-#define EXTENDED_KEY     2
-#define SPECIAL_KEY      3
-#define DONT_PROCESS_KEY 4
-
-//-------------------------------------------------------------------------
-ULONG nsWindow::IsSpecialChar(UINT aVirtualKeyCode, WORD *aAsciiKey)
-{
-  ULONG keyType = EXTENDED_KEY;
-
-  *aAsciiKey   = 0;
-
-  // Process non-standard Control Keys
-  if (mIsControlDown && !mIsShiftDown && !mIsAltDown &&
-      ((aVirtualKeyCode >= 0x30 && aVirtualKeyCode <= 0x39) ||  // 0-9
-       (aVirtualKeyCode >= 0xBA && aVirtualKeyCode <= 0xC0) ||  // ;=,-./` (semi-colon,equals,comma,dash,period,slash,back tick)
-       (aVirtualKeyCode == 0xDE))) {                            // ' (tick)
-    *aAsciiKey = aVirtualKeyCode;
-    return SPECIAL_KEY;
-  }
-
-  //printf("*********************** 0x%x\n", aVirtualKeyCode);
-  switch (aVirtualKeyCode) {
-    case VK_TAB:
-    case VK_HOME:
-    case VK_END:
-    case VK_PRIOR:
-    case VK_NEXT:
-    case VK_UP:
-    case VK_DOWN:
-    case VK_LEFT:
-    case VK_RIGHT:
-    case VK_F1: 
-    case VK_F2:  
-    case VK_F3:  
-    case VK_F4:  
-    case VK_F5:   
-    case VK_F6:   
-    case VK_F7:   
-    case VK_F8:   
-    case VK_F9:    
-    case VK_F10:   
-    case VK_F11:   
-    case VK_F12: 
-	case VK_RETURN:
-	case VK_BACK:
-		*aAsciiKey = aVirtualKeyCode;
-      break;
-
-    case VK_DELETE:
-      *aAsciiKey = '\177'; 
-      keyType = SPECIAL_KEY;   
-      break;
-
-    case VK_MENU:
-      // Let this through for XP menus.
-      *aAsciiKey = aVirtualKeyCode;
-      break;
-
-    default:        
-      keyType = STANDARD_KEY;
-      break;
-  }
-
-  return keyType;
-}
-
 
 //-------------------------------------------------------------------------
 //
@@ -2016,32 +1940,8 @@ BOOL nsWindow::OnKeyDown( UINT aVirtualKeyCode, UINT aScanCode)
 //-------------------------------------------------------------------------
 BOOL nsWindow::OnKeyUp( UINT aVirtualKeyCode, UINT aScanCode)
 {
-  WORD asciiKey;
-
-  asciiKey = 0;
-
-  switch (IsSpecialChar(aVirtualKeyCode, &asciiKey)) {
-    case EXTENDED_KEY:
-      break;
-
-    case STANDARD_KEY: {
-      BYTE keyState[256];
-      ::GetKeyboardState(keyState);
-      ::ToAsciiEx(aVirtualKeyCode, aScanCode, keyState, &asciiKey, FALSE, gKeyboardLayout);
-      } break;
-
-    case SPECIAL_KEY:
-      break;
-
-  } // switch
-
-  if (asciiKey) {
-    //printf("Dispatching Key Up [%d]\n", asciiKey);
-    DispatchKeyEvent(NS_KEY_UP, asciiKey, aVirtualKeyCode);
-  }
-
-  // always let the def proc process a WM_KEYUP
-  return FALSE;
+  BOOL result = DispatchKeyEvent(NS_KEY_UP, 0, aVirtualKeyCode);
+  return result;
 }
 
 
