@@ -38,7 +38,7 @@
 #include "nsIURI.h"
 #include "nsIXULPrototypeDocument.h"
 #include "nsJSUtils.h"
-#include "nsString2.h"
+#include "nsString.h"
 #include "nsVoidArray.h"
 #include "nsXULElement.h"
 
