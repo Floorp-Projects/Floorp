@@ -476,7 +476,7 @@ PRBool CDTDDebug::Verify(nsIDTD * aDTD,  nsIParser * aParser, int aContextStackP
 
     //ok, now see if we understand this vector
 
-   nsParser* theParser=(nsParser*)aParser;
+   // nsParser* theParser=(nsParser*)aParser;
 
    if(0!=mVerificationDir || mRecordingStatistics) {
 
