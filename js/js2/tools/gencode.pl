@@ -85,6 +85,12 @@ $ops{"LOAD_IMMEDIATE"} =
    rem    => "dest, immediate value (double)",
    params => [ ("Register", "double" ) ]
   };
+$ops{"LOAD_STRING"} =
+  {
+   super  => "Instruction_2",
+   rem    => "dest, immediate value (string)",
+   params => [ ("Register", "String *" ) ]
+  };
 $ops{"LOAD_NAME"} =
   {
    super  => "Instruction_2",
