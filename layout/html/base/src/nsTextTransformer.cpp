@@ -411,6 +411,11 @@ nsTextTransformer::ScanNormalAsciiText_F_ForWordBreak(PRInt32* aWordLen,
   } else {
     bp2 += mBufferPos;
   }
+  PRBool readingAlphaNumeric = PR_TRUE; //only used in sWordSelectStopAtPunctuation
+
+  //we must know if we are starting in alpha numerics.
+  if (sWordSelectStopAtPunctuation && offset < fragLen)
+    readingAlphaNumeric = isalnum((unsigned char)*cp);
   
   for (; offset < fragLen && !breakAfterThis; offset++) {
     unsigned char ch = *cp++;
@@ -425,7 +430,7 @@ nsTextTransformer::ScanNormalAsciiText_F_ForWordBreak(PRInt32* aWordLen,
     else if (XP_IS_SPACE(ch)) {
       break;
     }
-    else if (sWordSelectStopAtPunctuation && !isalnum(ch)) {
+    else if (sWordSelectStopAtPunctuation && ((readingAlphaNumeric && !isalnum(ch)) || (!readingAlphaNumeric && isalnum(ch)) )) {
       // on some platforms, punctuation breaks words too.
       break;
     }
