@@ -1113,6 +1113,10 @@ nsLocalFile::CopyMove(nsIFile *aParentDir, const nsACString &newName, PRBool fol
             return NS_ERROR_OUT_OF_MEMORY;
         
         rv = dirEnum->Init(this);
+        if (NS_FAILED(rv)) {
+            NS_WARNING("dirEnum initalization failed");
+            return rv;
+        }
 
         nsCOMPtr<nsISimpleEnumerator> iterator = do_QueryInterface(dirEnum);
 
@@ -1132,9 +1136,10 @@ nsLocalFile::CopyMove(nsIFile *aParentDir, const nsACString &newName, PRBool fol
             if (move)
             {
                 if (followSymlinks)
-                    rv = NS_ERROR_FAILURE;
-                else
-                    rv = file->MoveToNative(target, nsCString());
+                    return NS_ERROR_FAILURE;
+
+                rv = file->MoveToNative(target, nsCString());
+                NS_ENSURE_SUCCESS(rv,rv);
             }
             else
             {   
@@ -1142,6 +1147,7 @@ nsLocalFile::CopyMove(nsIFile *aParentDir, const nsACString &newName, PRBool fol
                     rv = file->CopyToFollowingLinksNative(target, nsCString());
                 else
                     rv = file->CopyToNative(target, nsCString());
+                NS_ENSURE_SUCCESS(rv,rv);
             }
                     
             iterator->HasMoreElements(&more);
@@ -1153,7 +1159,10 @@ nsLocalFile::CopyMove(nsIFile *aParentDir, const nsACString &newName, PRBool fol
         // we've already moved the children of the current folder 
         // to the new location.  nothing should be left in the folder.
         if (move)
+        {
           rv = Remove(PR_FALSE /* recursive */);
+          NS_ENSURE_SUCCESS(rv,rv);
+        }
     }
     
 

@@ -312,6 +312,45 @@ DeletionTest(const char* creationPath, const char* appendPath, PRBool recursive)
     
 }
 
+void 
+MoveTest(const char *testFile, const char *targetDir)
+{
+  Banner("Move Test");
+
+  printf("start move test\n");
+
+  nsresult rv;
+  nsCOMPtr<nsILocalFile> file(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID));
+     
+  if (!file) 
+  {
+    printf("create nsILocalFile failed\n");
+    return;
+  }
+
+  rv = file->InitWithNativePath(nsDependentCString(testFile));
+  VerifyResult(rv);
+  
+  nsCOMPtr<nsILocalFile> dir(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID));
+ 
+  if (!dir) 
+  {
+    printf("create nsILocalFile failed\n");
+    return;
+  }
+
+  rv = dir->InitWithNativePath(nsDependentCString(targetDir));
+  VerifyResult(rv);
+
+  rv = file->MoveToNative(dir, NS_LITERAL_CSTRING("newtemp"));
+  VerifyResult(rv);
+  if (NS_FAILED(rv))
+  {
+    printf("MoveToNative() test Failed.\n");
+  }
+  printf("end move test\n");
+}
+
 
 
 int main(void)
@@ -328,6 +367,8 @@ int main(void)
 
     CreationTest("c:\\temp\\", "file.txt", nsIFile::NORMAL_FILE_TYPE, 0644);
     DeletionTest("c:\\temp\\", "file.txt", PR_FALSE);
+
+    MoveTest("c:\\newtemp\\", "d:");
 
     CreationTest("c:\\temp\\", "mumble\\a\\b\\c\\d\\e\\f\\g\\h\\i\\j\\k\\", nsIFile::DIRECTORY_TYPE, 0644);
     DeletionTest("c:\\temp\\", "mumble", PR_TRUE);
