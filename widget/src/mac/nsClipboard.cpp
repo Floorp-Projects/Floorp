@@ -122,7 +122,10 @@ nsClipboard :: SetNativeClipboardData()
   // converter knows about) put it on the clipboard. Luckily, GetTransferData() 
   // handles conversions for us, so we really don't need to know if a conversion
   // is required or not.
-  for ( int i = 0; i < flavorList->Count(); ++i ) {
+  PRUint32 cnt = 0;
+  nsresult rv = flavorList->Count(&cnt);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
+  for ( int i = 0; i < cnt; ++i ) {
   	nsCOMPtr<nsISupports> temp = getter_AddRefs(flavorList->ElementAt(i));
     nsCOMPtr<nsIDataFlavor> currentFlavor ( do_QueryInterface(temp) );
     if ( currentFlavor ) {
@@ -181,7 +184,10 @@ nsClipboard :: GetNativeClipboardData(nsITransferable * aTransferable)
   // Now walk down the list of flavors. When we find one that is actually on the
   // clipboard, copy out the data into the transferable in that format. SetTransferData()
   // implicitly handles conversions.
-  for ( int i = 0; i < flavorList->Count(); ++i ) {
+  PRUint32 cnt = 0;
+  nsresult rv = flavorList->Count(&cnt);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
+  for ( int i = 0; i < cnt; ++i ) {
   	nsCOMPtr<nsISupports> temp = getter_AddRefs(flavorList->ElementAt(i));
     nsCOMPtr<nsIDataFlavor> currentFlavor ( do_QueryInterface(temp) );
     if ( currentFlavor ) {
