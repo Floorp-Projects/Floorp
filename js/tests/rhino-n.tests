@@ -24,6 +24,10 @@ lc3/JSObject/ToJSObject-001.js
 # getter and setters are non-ECMA and not implemented in Rhino.
 js1_5/GetSet/getset-001.js
 js1_5/GetSet/getset-002.js
+js1_5/GetSet/getset-003.js
+js1_5/GetSet/getset-004.js
+js1_5/GetSet/getset-005.js
+js1_5/GetSet/getset-006.js
 # the const keyword is non-ECMA and  not currently implemented in Rhino (2000-11-01)
 js1_5/Scope/scope-001.js
 #Rhino implements Date.toLocaleTimeString() differently than SpiderMonkey
