@@ -43,10 +43,6 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 //
 #define     TPATH_LEN   1024
 
-#ifdef WIN32
-#include "windows.h"
-#endif
-
 static char *
 GetTheTempDirectoryOnTheSystem(void)
 {
