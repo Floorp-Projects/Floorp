@@ -1,9 +1,9 @@
-#!#perl# -T --
+#!#perl# #perlflags# --
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 
-# $Revision: 1.3 $ 
-# $Date: 2000/09/18 19:28:32 $ 
+# $Revision: 1.4 $ 
+# $Date: 2000/11/09 19:20:12 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/gunzip.cgi,v $ 
 # $Name:  $ 

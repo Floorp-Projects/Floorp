@@ -1,9 +1,9 @@
-#!#perl# --
+#!#perl# #perlflags# --
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 
-# $Revision: 1.8 $ 
-# $Date: 2000/10/17 23:49:07 $ 
+# $Revision: 1.9 $ 
+# $Date: 2000/11/09 19:21:44 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/tinder.cgi,v $ 
 # $Name:  $ 
@@ -437,7 +437,7 @@ sub daemon_main {
   # If the daemon is still running from last call do not bother
   # running now. This could cause conflicts on the database.
   
-  symlink ($UID, $LOCK_FILE) ||
+  symlink ($UID, $FileStructure::LOCK_FILE) ||
     return ;
   
   my ($summary_data);
@@ -483,8 +483,8 @@ sub daemon_main {
   
   Summaries::create_global_index($summary_data);
 
-  unlink ($LOCK_FILE) ||
-    die ("Could not remove lockfile: $LOCK_FILE\n");
+  unlink ($FileStructure::LOCK_FILE) ||
+    die ("Could not remove lockfile: $FileStructure::LOCK_FILE\n");
   
   return ;
 }

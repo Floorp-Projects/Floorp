@@ -1,9 +1,9 @@
-#!#perl# -T --
+#!#perl# #perlflags# --
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 
-# $Revision: 1.3 $ 
-# $Date: 2000/09/18 19:27:42 $ 
+# $Revision: 1.4 $ 
+# $Date: 2000/11/09 19:19:32 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/addnote.cgi,v $ 
 # $Name:  $ 
@@ -188,6 +188,9 @@ sub save_note {
 
   my ($update_file) = (FileStructure::get_filename($TREE, 'TinderDB_Dir').
                        "/Notice\.Update\.$time\.$MAILADDR"); 
+
+  $update_file =~ s/\@/\./g;
+  $update_file = main::extract_filename_chars($update_file);
   
   Persistence::save_structure( 
                              $record,

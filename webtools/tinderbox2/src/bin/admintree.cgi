@@ -1,9 +1,9 @@
-#!#perl# -T --
+#!#perl# #perlflags# --
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 
-# $Revision: 1.8 $ 
-# $Date: 2000/10/18 20:22:13 $ 
+# $Revision: 1.9 $ 
+# $Date: 2000/11/09 19:19:57 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/admintree.cgi,v $ 
 # $Name:  $ 

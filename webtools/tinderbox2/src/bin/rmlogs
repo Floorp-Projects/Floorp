@@ -1,12 +1,12 @@
-#!#perl# -T --
+#!#perl# #perlflags# --
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 
 # rmlogs - remove the log files which are older then the number of
 #          days set in TinderConfig.  This program should be run from cron.
 
-# $Revision: 1.2 $ 
-# $Date: 2000/11/06 15:39:53 $ 
+# $Revision: 1.3 $ 
+# $Date: 2000/11/09 19:21:27 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/rmlogs,v $ 
 # $Name:  $ 
