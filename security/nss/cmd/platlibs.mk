@@ -189,6 +189,10 @@ ifeq ($(OS_ARCH), BSD_OS)
 EXTRA_SHARED_LIBS += -Wl,-rpath-link,$(DIST)/lib
 endif
 
+ifeq ($(OS_ARCH), FreeBSD)
+EXTRA_SHARED_LIBS += -Wl,-rpath-link,$(DIST)/lib
+endif
+
 ifeq ($(OS_ARCH), Darwin)
 EXTRA_SHARED_LIBS += -dylib_file @executable_path/libsoftokn3.dylib:$(DIST)/lib/libsoftokn3.dylib
 endif
