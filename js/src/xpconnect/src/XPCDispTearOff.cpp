@@ -248,8 +248,7 @@ STDMETHODIMP XPCDispatchTearOff::Invoke(DISPID dispIdMember, REFIID riid,
     }
     // Get the name as a flat string
     // This isn't that efficient, but we have to make the conversion somewhere
-    const nsAString & xname = pTypeInfo->GetNameForDispID(dispIdMember);
-    const nsPromiseFlatCString & name = PromiseFlatCString(NS_LossyConvertUCS2toASCII(xname));
+    NS_LossyConvertUCS2toASCII name(pTypeInfo->GetNameForDispID(dispIdMember));
     if(name.IsEmpty())
         return E_FAIL;
     // Decide if this is a getter or setter

@@ -311,14 +311,24 @@ JSBool XPCDispConvert::JSToCOM(XPCCallContext& ccx,
         case VT_DISPATCH:
         {
             JSObject * obj = JSVAL_TO_OBJECT(src);
-            // We only handle JS Objects that are IDispatch objects
-            if(!XPCConvert::GetNativeInterfaceFromJSObject(
-                ccx, (void**)&varDest->pdispVal, obj, &NSID_IDISPATCH,&err))
+            IUnknown * pUnknown = nsnull;
+            if (!XPCConvert::JSObject2NativeInterface(
+                ccx, 
+                (void**)&pUnknown, 
+                obj, 
+                &NSID_IDISPATCH,
+                nsnull, 
+                &err))
             {
                 // Avoid cleaning up garabage
                 varDest->vt = VT_EMPTY;
                 return JS_FALSE;
             }
+            varDest->vt = VT_DISPATCH;
+            pUnknown->QueryInterface(IID_IDispatch, 
+                                     NS_REINTERPRET_CAST(void**,
+                                                         &varDest->pdispVal));
+            NS_IF_RELEASE(pUnknown);
         }
         break;
         case VT_BOOL:
@@ -541,6 +551,7 @@ JSBool XPCDispConvert::COMToJS(XPCCallContext& ccx, const VARIANT& src,
                 err = NS_ERROR_XPC_BAD_CONVERT_JS;
                 return JS_FALSE;
             }
+            isPtr = FALSE;
         } // Fall through on success
         case VT_BSTR:
         {
