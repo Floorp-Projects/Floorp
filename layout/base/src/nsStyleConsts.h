@@ -24,6 +24,14 @@
 
 // Defines for various style related constants
 
+// Style change hints
+#define NS_STYLE_HINT_UNKNOWN     0
+#define NS_STYLE_HINT_CONTENT     1   // change was contentual (ie: SRC=)
+#define NS_STYLE_HINT_VISUAL      2   // change was visual only (ie: COLOR=)
+#define NS_STYLE_HINT_REFLOW      3   // change requires reflow (ie: WIDTH=)
+#define NS_STYLE_HINT_FRAMECHANGE 4   // change requires frame change (ie: DISPLAY=)
+
+
 // See nsStyleColor
 #define NS_STYLE_BG_ATTACHMENT_FIXED            0x01
 #define NS_STYLE_BG_ATTACHMENT_SCROLL           0x02
