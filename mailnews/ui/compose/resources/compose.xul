@@ -5,41 +5,10 @@
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload="startup()"> 
+        onload="startup()"
+		style="width:100%;height:100%"> 
   
-<html:style>
-	#toolbar {
-		position: fixed;
-		width: 100%;
-		height: 60px;
-		top: 0;
-		right: 0;
-		bottom: auto;
-		left: 0;
-	}
-	#body {
-        position: fixed;
-        width: auto;
-        height: auto;
-        top: 75px;
-        right: 0;
-        bottom: 34px;
-        left: 0;
-        overflow: auto;
-        padding: 2px .5em;
-        border: solid 0px black;
-	}
-	#footer {
-		position: fixed;
-		width: 100%;
-		height: 34px;
-		top: auto;
-		right: 0;
-		bottom: 0;
-		left: 0;
-		margin-top: auto;
-	}
-</html:style>
+<html:script src="resource:/res/mailnews/messenger/widgetglue.js"></html:script>
 
 <html:script>
 	var editorAppCore;
@@ -117,6 +86,17 @@
 		document.getElementById('msgSubject').value = "";
 //		window.parent.frames[0].document.forms["fbody"].elements["body"].value = "";
 	}
+
+	function ComposeExit()
+	{
+		dump("\nExit from XUL\n");
+		composeAppCore = XPAppCoresManager.Find("ComposeAppCore");
+		if (composeAppCore != null) {
+			dump("\nClosing compose app core\n");
+			composeAppCore.SetWindow(window);
+			composeAppCore.exit();
+		}
+	}
 </html:script>
 
 <menubar>
@@ -136,7 +116,7 @@
 		<menuitem name="Print" cmd="nsCmd:BrowserPrint"/>
 		<separator/>
 		<menuitem name="Close" cmd="nsCmd:BrowserClose"/>
-		<menuitem name="Exit" cmd="nsCmd:BrowserExit"/>
+		<menuitem name="Exit" onclick="ComposeExit()"/>
 	</menu>
     <menu name="Edit">
 		<menuitem name="Undo" cmd="nsCmd:ComposeNYI"/>
@@ -171,54 +151,55 @@
     </menu>
 </menubar>
 
-<html:div id="toolbar">
+<box id="toolbar" align="vertical" style="width:100%;height:100%">
 <toolbox>
 	<toolbar>
- 		<titledbutton src="resource:/res/mailnews/compose/send.gif" align="bottom" value="Send" onClick="SendMessage()">	
-		</titledbutton>
-
- 		<titledbutton src="resource:/res/mailnews/compose/quote.gif" align="bottom" value="Quote" onClick="QuoteMessage()">	
-		</titledbutton>
-
- 		<titledbutton src="resource:/res/mailnews/compose/address.gif" align="bottom" value="Address" onClick="SelectAddress()">	
-		</titledbutton>
-
- 		<titledbutton src="resource:/res/mailnews/compose/attach.gif" align="bottom" value="Attach" onClick="AttachFile()">	
-		</titledbutton>
-
- 		<titledbutton src="resource:/res/mailnews/compose/spelling.gif" align="bottom" value="Spelling" onClick="Spelling()">	
-		</titledbutton>
-
- 		<titledbutton src="resource:/res/mailnews/compose/save.gif" align="bottom" value="Save" onClick="SaveMessage()">	
-		</titledbutton>
-
- 		<titledbutton src="resource:/res/mailnews/compose/stop.gif" align="bottom" value="Stop" onClick="Stop()">	
-		</titledbutton>
+ 		<titledbutton src="resource:/res/mailnews/compose/send.gif" align="bottom" value="Send" onClick="SendMessage()"/>
+ 		<titledbutton src="resource:/res/mailnews/compose/quote.gif" align="bottom" value="Quote" onClick="QuoteMessage()"/>
+ 		<titledbutton src="resource:/res/mailnews/compose/address.gif" align="bottom" value="Address" onClick="SelectAddress()"/>
+ 		<titledbutton src="resource:/res/mailnews/compose/attach.gif" align="bottom" value="Attach" onClick="AttachFile()"/>
+ 		<titledbutton src="resource:/res/mailnews/compose/spelling.gif" align="bottom" value="Spelling" onClick="Spelling()"/>
+ 		<titledbutton src="resource:/res/mailnews/compose/save.gif" align="bottom" value="Save" onClick="SaveMessage()"/>
+ 		<titledbutton src="resource:/res/mailnews/compose/stop.gif" align="bottom" value="Stop" onClick="Stop()"/>
+	    <spring flex="100%"/>
+		<titledbutton src="resource:/res/throbber/anims00.gif" align="bottom" onclick="MsgHome('http://home.netscape.com/')"/>
 	</toolbar>
+
 	<toolbar>
-		To:<html:input id="msgTo" style="vertical-align: center" type="text" 
-			style="width:200px;" />   
-		<html:br/>
-		Cc:<html:input id="msgCc" style="vertical-align: center" type="text" 
-			style="width:200px;" />   
-		<html:br/>
-		Bcc:<html:input id="msgBcc" style="vertical-align: center" type="text" 
-			style="width:200px;" />   
+		To:<html:input title="To:" id="msgTo" value="To:" style="vertical-align: center" type="text" style="width:200px;" />
 	</toolbar>
+
 	<toolbar>
-		Subject:<html:input id="msgSubject" style="vertical-align: center" type="text" 
-			style="width:500px;" /> 
+		Cc:<html:input id="msgCc" style="vertical-align: center" type="text" style="width:200px;" />   
+	</toolbar>
+
+	<toolbar>
+		Bcc:<html:input id="msgBcc" style="vertical-align: center" type="text" style="width:200px;" />   
+	</toolbar>
+	
+	<toolbar>
+		Subject:<html:input id="msgSubject" style="vertical-align: center" type="text" style="width:500px;" /> 
 	</toolbar>
 </toolbox>
-</html:div>
 
-<html:div id="body">
-	<html:iframe src="composebody.html" name="browser.message.body" width="100%" height="400"></html:iframe>
-</html:div>
+    <!-- The main mail three pane frame -->
+    <html:iframe src="composebody.html" name="browser.message.body" flex="100%" />
 
-<html:div id="footer">
-	<html:iframe src="resource:/res/samples/status.html" name="browser.status" width="100%" height="34px" > </html:iframe>
-</html:div>
+    <!-- Ripped off from navigator.xul; this should be a XUL fragment! -->
+    <box align="horizontal" id="status-bar">
+ 
+    <titledbutton value="[Notification Component]" onclick="doTests()"/>
+	<box align="vertical" style="width:100px">
+		<spring flex="100%"/>
+		<progressmeter mode="normal" value="0">
+		</progressmeter>
+		<spring flex="100%"/>
+	</box>
 
+	<titledbutton id="statusText" align="right" flex="100%" value="Document: Done" style="font-family:sans-serif;font-size:2.5mm">
+	</titledbutton>
+    </box>
+
+</box>
 </window>
 
