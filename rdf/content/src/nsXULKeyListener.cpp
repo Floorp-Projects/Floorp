@@ -329,7 +329,7 @@ nsresult nsXULKeyListenerImpl::KeyPress(nsIDOMEvent* aKeyEvent)
 				        content->HandleDOMEvent(*aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
 				    }
     
-		          } while (false);
+		          } while (PR_FALSE);
 		        } // end if (theChar == keyName)
 		      } // end if (disabled == "false")
 		    } // end if (keyNodeType.Equals("key"))
