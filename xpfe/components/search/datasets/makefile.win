@@ -24,27 +24,19 @@ DEPTH=..\..\..\..
 include <$(DEPTH)\config\rules.mak>
 
 FILES=\
-	ClassifiedPlus.gif		\
-	ClassifiedPlus.src		\
-	Music_Artist.gif		\
-	Music_Artist.src		\
-	Shareware.gif			\
-	Shareware.src			\
-	Tech_News.gif			\
-	Tech_News.src			\
-	AOLSearch.gif			\
-	AOLSearch.src			\
-	CompuServe.jpg			\
-	CompuServe.src			\
-	ICQ.gif				\
-	ICQ.src				\
-	NetscapeSearch.gif		\
-	NetscapeSearch.src		\
-	ShopNetscape.gif		\
-	ShopNetscape.src		\
-	google.gif			\
-	google.src			\
-        $(NULL)
+	bugzilla.gif        \
+	bugzilla.src        \
+	dmoz.gif            \
+	dmoz.src            \
+	google.gif          \
+	google.src          \
+	lxrmozilla.gif      \
+	lxrmozilla.src      \
+	mozilla.gif         \
+	mozilla.src         \
+	NetscapeSearch.gif  \
+	NetscapeSearch.src  \
+    $(NULL)
 
 install:: $(FILES:/=\)
 	!@$(MAKE_INSTALL) $** $(DIST)\bin\searchplugins
