@@ -767,11 +767,11 @@ int reportContainer(Options* inOptions, MSDump_Container* inContainer)
         {
             for(symbolLoop = 0; 0 == retval && symbolLoop < inContainer->mObjects[objectLoop].mSections[sectionLoop].mSymbolCount; symbolLoop++)
             {
-                printRes = fprintf(inOptions->mOutput, "%s\t%.8X\t%s\t%s\n",
-                    inContainer->mObjects[objectLoop].mObject, 
-                    inContainer->mObjects[objectLoop].mSections[sectionLoop].mSymbols[symbolLoop].mSize,
+                printRes = fprintf(inOptions->mOutput, "%s\t%s\t%s\t%.8X\n",
+                    inContainer->mObjects[objectLoop].mSections[sectionLoop].mSymbols[symbolLoop].mName,
                     inContainer->mObjects[objectLoop].mSections[sectionLoop].mType,
-                    inContainer->mObjects[objectLoop].mSections[sectionLoop].mSymbols[symbolLoop].mName
+                    inContainer->mObjects[objectLoop].mObject,
+                    inContainer->mObjects[objectLoop].mSections[sectionLoop].mSymbols[symbolLoop].mSize
                     );
 
                 if(0 > printRes)
