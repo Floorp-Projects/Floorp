@@ -23,7 +23,6 @@
 #include "nsISpaceManager.h"
 #include "nsIStyleContext.h"
 
-#include "nsCSSLayout.h"
 #include "nsFrameReflowState.h"
 #include "nsHTMLContainerFrame.h"
 #include "nsHTMLIIDs.h"
@@ -33,10 +32,10 @@
 // frames falling outside the parent frame and wrap them in a view
 // when it happens.
 
-// XXX move the nsCSSLayout alignment code here? Will body frame be
-// using it?
-
 // XXX handle DIR=right-to-left
+
+// XXX remove support for block reflow from this and move it into its
+// own class (nsBlockReflow?)
 
 nsInlineReflow::nsInlineReflow(nsLineLayout& aLineLayout,
                                nsFrameReflowState& aOuterReflowState,
@@ -51,12 +50,15 @@ nsInlineReflow::nsInlineReflow(nsLineLayout& aLineLayout,
   mSpaceManager = aLineLayout.mSpaceManager;
   NS_ASSERTION(nsnull != mSpaceManager, "caller must have space manager");
   mOuterFrame = aOuterFrame;
-  mFrameData = mFrameDataBuf;
+  mFrameDataBase = mFrameDataBuf;
   mNumFrameData = sizeof(mFrameDataBuf) / sizeof(mFrameDataBuf[0]);
 }
 
 nsInlineReflow::~nsInlineReflow()
 {
+  if (mFrameDataBase != mFrameDataBuf) {
+    delete [] mFrameDataBase;
+  }
 }
 
 void
@@ -71,7 +73,6 @@ nsInlineReflow::Init(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
     mRightEdge = aX + aWidth;
   }
   mTopEdge = aY;
-  mY = aY;
   if (NS_UNCONSTRAINEDSIZE == aHeight) {
     mBottomEdge = NS_UNCONSTRAINEDSIZE;
   }
@@ -83,7 +84,7 @@ nsInlineReflow::Init(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 
   mIsBlock = PR_FALSE;
   mIsFirstChild = PR_FALSE;
-  mFirstFrame = nsnull;
+  mFrameData = nsnull;
   mFrameNum = 0;
   mMaxElementSize.width = 0;
   mMaxElementSize.height = 0;
@@ -107,7 +108,6 @@ nsInlineReflow::UpdateBand(nscoord aX, nscoord aY,
     mRightEdge = aX + aWidth;
   }
   mTopEdge = aY;
-  mY = aY;
   if (NS_UNCONSTRAINEDSIZE == aHeight) {
     mBottomEdge = NS_UNCONSTRAINEDSIZE;
   }
@@ -123,7 +123,8 @@ nsInlineReflow::UpdateFrames()
 {
   if (NS_STYLE_DIRECTION_LTR == mOuterReflowState.mDirection) {
     if (mPlacedLeftFloater) {
-      nsIFrame* frame = mFirstFrame;
+      // XXX revise loop
+      nsIFrame* frame = mFrameDataBase->mFrame;
       PRInt32 n = mFrameNum;
       while (--n >= 0) {
         nsRect r;
@@ -145,8 +146,8 @@ nsInlineReflow::GetDisplay()
   if (nsnull != mDisplay) {
     return mDisplay;
   }
-  mFrame->GetStyleData(eStyleStruct_Display,
-                       (const nsStyleStruct*&)mDisplay);
+  mFrameData->mFrame->GetStyleData(eStyleStruct_Display,
+                                   (const nsStyleStruct*&)mDisplay);
   return mDisplay;
 }
 
@@ -156,8 +157,8 @@ nsInlineReflow::GetPosition()
   if (nsnull != mPosition) {
     return mPosition;
   }
-  mFrame->GetStyleData(eStyleStruct_Position,
-                       (const nsStyleStruct*&)mPosition);
+  mFrameData->mFrame->GetStyleData(eStyleStruct_Position,
+                                   (const nsStyleStruct*&)mPosition);
   return mPosition;
 }
 
@@ -167,11 +168,12 @@ nsInlineReflow::GetSpacing()
   if (nsnull != mSpacing) {
     return mSpacing;
   }
-  mFrame->GetStyleData(eStyleStruct_Spacing,
-                       (const nsStyleStruct*&)mSpacing);
+  mFrameData->mFrame->GetStyleData(eStyleStruct_Spacing,
+                                   (const nsStyleStruct*&)mSpacing);
   return mSpacing;
 }
 
+// XXX use frameType instead after constructing a reflow state
 PRBool
 nsInlineReflow::TreatFrameAsBlockFrame()
 {
@@ -197,23 +199,37 @@ nsInlineReflow::TreatFrameAsBlockFrame()
   return PR_FALSE;
 }
 
-void
+nsresult
 nsInlineReflow::SetFrame(nsIFrame* aFrame)
 {
-  if (nsnull == mFirstFrame) {
-    mFirstFrame = aFrame;
+  // Make sure we have a PerFrameData for this frame
+  PRInt32 frameNum = mFrameNum;
+  if (frameNum == mNumFrameData) {
+    mNumFrameData *= 2;
+    PerFrameData* newData = new PerFrameData[mNumFrameData];
+    if (nsnull == newData) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    nsCRT::memcpy(newData, mFrameDataBase, sizeof(PerFrameData) * frameNum);
+    if (mFrameDataBase != mFrameDataBuf) {
+      delete [] mFrameDataBase;
+    }
+    mFrameDataBase = newData;
   }
+  mFrameData = mFrameDataBase + mFrameNum;
 
   // We can break before the frame if we placed at least one frame on
   // the line.
   mCanBreakBeforeFrame = mLineLayout.GetPlacedFrames() > 0;
 
-  mFrame = aFrame;
+  mFrameData->mFrame = aFrame;
   mDisplay = nsnull;
   mSpacing = nsnull;
   mPosition = nsnull;
   mTreatFrameAsBlock = TreatFrameAsBlockFrame();
   mIsInlineAware = PR_FALSE;
+
+  return NS_OK;
 }
 
 nsReflowStatus
@@ -226,7 +242,10 @@ nsInlineReflow::ReflowFrame(nsIFrame* aFrame)
                               : nsnull);
 
   // Prepare for reflowing the frame
-  SetFrame(aFrame);
+  nsresult rv = SetFrame(aFrame);
+  if (NS_OK != rv) {
+    return rv;
+  }
 
   // Do a quick check and see if we are trying to place a block on a
   // line that already has a placed frame on it.
@@ -265,18 +284,20 @@ nsInlineReflow::ReflowFrame(nsIFrame* aFrame)
   return result;
 }
 
+// XXX looks more like a method on PerFrameData?
 void
 nsInlineReflow::CalculateMargins()
 {
+  PerFrameData* pfd = mFrameData;
   const nsStyleSpacing* spacing = GetSpacing();
   if (mTreatFrameAsBlock) {
-    mMarginFlags = CalculateBlockMarginsFor(mPresContext, mFrame, spacing,
-                                            mMargin);
+    pfd->mMarginFlags = CalculateBlockMarginsFor(mPresContext, pfd->mFrame,
+                                                 spacing, pfd->mMargin);
   }
   else {
     // Get the margins from the style system
-    spacing->CalcMarginFor(mFrame, mMargin);
-    mMarginFlags = 0;
+    spacing->CalcMarginFor(pfd->mFrame, pfd->mMargin);
+    pfd->mMarginFlags = 0;
   }
 }
 
@@ -323,7 +344,7 @@ void
 nsInlineReflow::ApplyTopLeftMargins()
 {
   mFrameX = mX;
-  mFrameY = mY;
+  mFrameY = mTopEdge;
 
   // Compute left margin
   nscoord leftMargin = 0;
@@ -340,7 +361,7 @@ nsInlineReflow::ApplyTopLeftMargins()
     break;
 
   case NS_STYLE_FLOAT_NONE:
-    leftMargin = mMargin.left;
+    leftMargin = mFrameData->mMargin.left;
     break;
   }
   mFrameX += leftMargin;
@@ -349,18 +370,20 @@ nsInlineReflow::ApplyTopLeftMargins()
 PRBool
 nsInlineReflow::ComputeAvailableSize()
 {
+  PerFrameData* pfd = mFrameData;
+
   // Compute the available size from the outer's perspective
   if (NS_UNCONSTRAINEDSIZE == mRightEdge) {
     mFrameAvailSize.width = NS_UNCONSTRAINEDSIZE;
   }
   else {
-    mFrameAvailSize.width = mRightEdge - mFrameX - mMargin.right;
+    mFrameAvailSize.width = mRightEdge - mFrameX - pfd->mMargin.right;
   }
   if (NS_UNCONSTRAINEDSIZE == mBottomEdge) {
     mFrameAvailSize.height = NS_UNCONSTRAINEDSIZE;
   }
   else {
-    mFrameAvailSize.height = mBottomEdge - mFrameY - mMargin.bottom;
+    mFrameAvailSize.height = mBottomEdge - mFrameY - pfd->mMargin.bottom;
   }
 
   // Give up now if there is no chance. Note that we allow a reflow if
@@ -389,19 +412,20 @@ nsInlineReflow::ReflowFrame(nsHTMLReflowMetrics& aMetrics,
   // line). In this case the reason will be wrong so we need to check
   // the frame state.
   nsReflowReason reason = eReflowReason_Resize;
+  nsIFrame* frame = mFrameData->mFrame;
   nsFrameState state;
-  mFrame->GetFrameState(state);
+  frame->GetFrameState(state);
   if (NS_FRAME_FIRST_REFLOW & state) {
     reason = eReflowReason_Initial;
   }
-  else if (mOuterReflowState.mNextRCFrame == mFrame) {
+  else if (mOuterReflowState.mNextRCFrame == frame) {
     reason = eReflowReason_Incremental;
     // Make sure we only incrementally reflow once
     mOuterReflowState.mNextRCFrame = nsnull;
   }
 
   // Setup reflow state for reflowing the frame
-  nsHTMLReflowState reflowState(mPresContext, mFrame, mOuterReflowState,
+  nsHTMLReflowState reflowState(mPresContext, frame, mOuterReflowState,
                                 mFrameAvailSize);
   if (!mTreatFrameAsBlock) {
     mIsInlineAware = PR_TRUE;
@@ -415,7 +439,7 @@ nsInlineReflow::ReflowFrame(nsHTMLReflowMetrics& aMetrics,
   nscoord y = mFrameY;
   nsIHTMLReflow* htmlReflow;
 
-  mFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow);
+  frame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow);
   htmlReflow->WillReflow(mPresContext);
 
   aBounds.x = x;
@@ -442,8 +466,8 @@ nsInlineReflow::ReflowFrame(nsHTMLReflowMetrics& aMetrics,
   // the NS_FRAME_FIRST_REFLOW bit is cleared so that never give it an
   // initial reflow reason again.
   if (eReflowReason_Initial == reason) {
-    mFrame->GetFrameState(state);
-    mFrame->SetFrameState(state & ~NS_FRAME_FIRST_REFLOW);
+    frame->GetFrameState(state);
+    frame->SetFrameState(state & ~NS_FRAME_FIRST_REFLOW);
   }
 
   if (!NS_INLINE_IS_BREAK_BEFORE(aStatus)) {
@@ -453,21 +477,21 @@ nsInlineReflow::ReflowFrame(nsHTMLReflowMetrics& aMetrics,
     // a next-in-flow where it ends up).
     if (NS_FRAME_IS_COMPLETE(aStatus)) {
       nsIFrame* kidNextInFlow;
-      mFrame->GetNextInFlow(kidNextInFlow);
+      frame->GetNextInFlow(kidNextInFlow);
       if (nsnull != kidNextInFlow) {
         // Remove all of the childs next-in-flows. Make sure that we ask
         // the right parent to do the removal (it's possible that the
         // parent is not this because we are executing pullup code)
         nsHTMLContainerFrame* parent;
-        mFrame->GetGeometricParent((nsIFrame*&) parent);
-        parent->DeleteChildsNextInFlow(mPresContext, mFrame);
+        frame->GetGeometricParent((nsIFrame*&) parent);
+        parent->DeleteChildsNextInFlow(mPresContext, frame);
       }
     }
   }
 
   NS_FRAME_LOG(NS_FRAME_TRACE_CHILD_REFLOW,
      ("nsInlineReflow::ReflowFrame: frame=%p reflowStatus=%x %saware",
-      mFrame, aStatus, mIsInlineAware ? "" :"not "));
+      frame, aStatus, mIsInlineAware ? "" :"not "));
 
   return !NS_INLINE_IS_BREAK_BEFORE(aStatus);
 }
@@ -487,6 +511,8 @@ nsInlineReflow::CanPlaceFrame(nsHTMLReflowMetrics& aMetrics,
                               nsRect& aBounds,
                               nsReflowStatus& aStatus)
 {
+  PerFrameData* pfd = mFrameData;
+
   // Compute right margin to use
   mRightMargin = 0;
   if (0 != aBounds.width) {
@@ -503,7 +529,7 @@ nsInlineReflow::CanPlaceFrame(nsHTMLReflowMetrics& aMetrics,
       break;
 
     case NS_STYLE_FLOAT_NONE:
-      mRightMargin = mMargin.right;
+      mRightMargin = pfd->mMargin.right;
       break;
     }
   }
@@ -553,6 +579,8 @@ nsInlineReflow::CanPlaceFrame(nsHTMLReflowMetrics& aMetrics,
 void
 nsInlineReflow::PlaceFrame(nsHTMLReflowMetrics& aMetrics, nsRect& aBounds)
 {
+  PerFrameData* pfd = mFrameData;
+
   // Remember this for later...
   if (mTreatFrameAsBlock) {
     mIsBlock = PR_TRUE;
@@ -565,10 +593,11 @@ nsInlineReflow::PlaceFrame(nsHTMLReflowMetrics& aMetrics, nsRect& aBounds)
     aBounds.y = 0;
     emptyFrame = PR_TRUE;
   }
-  mFrame->SetRect(aBounds);
+  pfd->mBounds = aBounds;
 
   // Record ascent and update max-ascent and max-descent values
-  SetFrameData(aMetrics);
+  pfd->mAscent = aMetrics.ascent;
+  pfd->mDescent = aMetrics.descent;
   mFrameNum++;
 
   // If the band was updated during the reflow of that frame then we
@@ -598,7 +627,7 @@ nsInlineReflow::PlaceFrame(nsHTMLReflowMetrics& aMetrics, nsRect& aBounds)
   if (!emptyFrame) {
     // Inform line layout that we have placed a non-empty frame
 #ifdef NS_DEBUG
-    mLineLayout.AddPlacedFrame(mFrame);
+    mLineLayout.AddPlacedFrame(mFrameData->mFrame);
 #else
     mLineLayout.AddPlacedFrame();
 #endif
@@ -617,266 +646,263 @@ nsInlineReflow::PlaceFrame(nsHTMLReflowMetrics& aMetrics, nsRect& aBounds)
   }
 }
 
-/**
- * Store away the ascent value associated with the current frame
- */
-nsresult
-nsInlineReflow::SetFrameData(const nsHTMLReflowMetrics& aMetrics)
-{
-  PRInt32 frameNum = mFrameNum;
-  if (frameNum == mNumFrameData) {
-    mNumFrameData *= 2;
-    PerFrameData* newData = new PerFrameData[mNumFrameData];
-    if (nsnull == newData) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    nsCRT::memcpy(newData, mFrameData, sizeof(PerFrameData) * frameNum);
-    if (mFrameData != mFrameDataBuf) {
-      delete [] mFrameData;
-    }
-    mFrameData = newData;
-  }
-  PerFrameData* pfd = &mFrameData[frameNum];
-  pfd->mAscent = aMetrics.ascent;
-  pfd->mDescent = aMetrics.descent;
-  pfd->mMargin = mMargin;
-  return NS_OK;
-}
-
 // XXX what about ebina's center vs. ncsa-center?
+
 void
 nsInlineReflow::VerticalAlignFrames(nsRect& aLineBox,
                                     nscoord& aMaxAscent,
                                     nscoord& aMaxDescent)
 {
-  nscoord x = mLeftEdge;
-  nscoord y0 = mTopEdge;
-  nscoord width = mX - mLeftEdge;
+  PerFrameData* pfd0 = mFrameDataBase;
+  PerFrameData* end = pfd0 + mFrameNum;
 
-  GetScents(aMaxAscent, aMaxDescent);
-  nscoord height = aMaxAscent + aMaxDescent;
-
-  if (mFrameNum > 1) {
-    // Only when we have more than one frame should we do vertical
-    // alignment. Sometimes we will have 2 frames with the second one
-    // being a block; we don't vertically align then either. This
-    // happens when the first frame is nothing but compressed
-    // whitespace.
-    const nsStyleFont* font;
-    mOuterFrame->GetStyleData(eStyleStruct_Font,
-                              (const nsStyleStruct*&)font);
-
-    // Determine minimum and maximum y values for the line and
-    // perform alignment of all children except those requesting bottom
-    // alignment. The second pass will align bottom children (if any)
-    nsIFontMetrics* fm = mPresContext.GetMetricsFor(font->mFont);
-    nsIFrame* kid = mFirstFrame;
-    nsRect kidRect;
-    nscoord minY = y0;
-    nscoord maxY = y0;
-    PRIntn pass2Kids = 0;
-    PRIntn kidCount = mFrameNum;
-    PerFrameData* pfd = mFrameData;
-    for (; --kidCount >= 0; pfd++) {
-      nscoord kidAscent = pfd->mAscent;
-
-      const nsStyleText* textStyle;
-      kid->GetStyleData(eStyleStruct_Text, (const nsStyleStruct*&)textStyle);
-      nsStyleUnit verticalAlignUnit = textStyle->mVerticalAlign.GetUnit();
-      PRUint8 verticalAlignEnum = NS_STYLE_VERTICAL_ALIGN_BASELINE;
-
-      kid->GetRect(kidRect);
-
-      // Vertically align the child
-      nscoord kidYTop = 0;
-
-      PRBool isPass2Kid = PR_FALSE;
-      nscoord fontParam;
-      switch (verticalAlignUnit) {
-      case eStyleUnit_Coord:
-        // According to the spec, a positive value "raises" the box by
-        // the given distance while a negative value "lowers" the box
-        // by the given distance. Since Y coordinates increase towards
-        // the bottom of the screen we reverse the sign. All of the
-        // raising and lowering is done relative to the baseline, so
-        // we start our adjustments there.
-        kidYTop = aMaxAscent - kidAscent;               // get baseline first
-        kidYTop -= textStyle->mVerticalAlign.GetCoordValue();
-        break;
-
-      case eStyleUnit_Percent:
-        pass2Kids++;
-        isPass2Kid = PR_TRUE;
-        break;
-
-      case eStyleUnit_Enumerated:
-        verticalAlignEnum = textStyle->mVerticalAlign.GetIntValue();
-        switch (verticalAlignEnum) {
-        default:
-        case NS_STYLE_VERTICAL_ALIGN_BASELINE:
-          // Align the kid's baseline at the max baseline
-          kidYTop = aMaxAscent - kidAscent;
-          break;
-
-        case NS_STYLE_VERTICAL_ALIGN_TOP:
-          // Align the top of the kid with the top of the line box
-          break;
-
-        case NS_STYLE_VERTICAL_ALIGN_SUB:
-          // Align the child's baseline on the superscript baseline
-          fm->GetSubscriptOffset(fontParam);
-          kidYTop = aMaxAscent + fontParam - kidAscent;
-          break;
-
-        case NS_STYLE_VERTICAL_ALIGN_SUPER:
-          // Align the child's baseline on the subscript baseline
-          fm->GetSuperscriptOffset(fontParam);
-          kidYTop = aMaxAscent - fontParam - kidAscent;
-          break;
-
-        case NS_STYLE_VERTICAL_ALIGN_BOTTOM:
-          pass2Kids++;
-          isPass2Kid = PR_TRUE;
-          break;
-
-        case NS_STYLE_VERTICAL_ALIGN_MIDDLE:
-          // Align the midpoint of the box with 1/2 the parent's x-height
-          fm->GetXHeight(fontParam);
-          kidYTop = aMaxAscent - (fontParam / 2) - (kidRect.height/2);
-          break;
-
-        case NS_STYLE_VERTICAL_ALIGN_TEXT_BOTTOM:
-          fm->GetMaxDescent(fontParam);
-          kidYTop = aMaxAscent + fontParam - kidRect.height;
-          break;
-
-        case NS_STYLE_VERTICAL_ALIGN_TEXT_TOP:
-          fm->GetMaxAscent(fontParam);
-          kidYTop = aMaxAscent - fontParam;
-          break;
-        }
-        break;
-      
-      default:
-        // Align the kid's baseline at the max baseline
-        kidYTop = aMaxAscent - kidAscent;
-        break;
-      }
-
-      /* XXX or grow the box - which is it? */
-      if (kidYTop < 0) {
-        kidYTop = 0;
-      }
-
-      // Place kid and update min and max Y values
-      if (!isPass2Kid) {
-        nscoord y = y0 + kidYTop;
-        if (y < minY) minY = y;
-        kid->MoveTo(kidRect.x, y);
-        y += kidRect.height;
-        if (y > maxY) maxY = y;
-      }
-      else {
-        nscoord y = y0 + kidRect.height;
-        if (y > maxY) maxY = y;
-      }
-
-      kid->GetNextSibling(kid);
-    }
-
-    // Now compute the final line-height
-    nscoord lineHeight = maxY - minY;
-
-    if (0 != pass2Kids) {
-      // Position all of the bottom aligned children
-      kidCount = mFrameNum;
-      kid = mFirstFrame;
-      pfd = mFrameData;
-      for (; --kidCount >= 0; pfd++) {
-        nscoord kidAscent = pfd->mAscent;
-
-        // Get kid's vertical align style data
-        const nsStyleText* textStyle;
-        kid->GetStyleData(eStyleStruct_Text, (const nsStyleStruct*&)textStyle);
-        nsStyleUnit verticalAlignUnit = textStyle->mVerticalAlign.GetUnit();
-
-        if (eStyleUnit_Percent == verticalAlignUnit) {
-          // According to the spec, a positive value "raises" the box by
-          // the given distance while a negative value "lowers" the box
-          // by the given distance. Since Y coordinates increase towards
-          // the bottom of the screen we reverse the sign. All of the
-          // raising and lowering is done relative to the baseline, so
-          // we start our adjustments there.
-          nscoord kidYTop = aMaxAscent - kidAscent;       // get baseline first
-          kidYTop -=
-            nscoord(textStyle->mVerticalAlign.GetPercentValue() * lineHeight);
-          kid->GetRect(kidRect);
-          kid->MoveTo(kidRect.x, y0 + kidYTop);
-          if (--pass2Kids == 0) {
-            // Stop on last pass2 kid
-            break;
-          }
-        }
-        else if (verticalAlignUnit == eStyleUnit_Enumerated) {
-          PRUint8 verticalAlignEnum = textStyle->mVerticalAlign.GetIntValue();
-          // Vertically align the child
-          if (NS_STYLE_VERTICAL_ALIGN_BOTTOM == verticalAlignEnum) {
-            // Place kid along the bottom
-            kid->GetRect(kidRect);
-            kid->MoveTo(kidRect.x, y0 + lineHeight - kidRect.height);
-            if (--pass2Kids == 0) {
-              // Stop on last pass2 kid
-              break;
-            }
-          }
-        }
-
-        kid->GetNextSibling(kid);
-      }
-    }
-
-    NS_RELEASE(fm);
+  // Short circuit 99% of this when this code has reflowed a single
+  // block frame.
+  aLineBox.x = mLeftEdge;
+  aLineBox.y = mTopEdge;
+  aLineBox.width = mX - mLeftEdge;
+  if (mTreatFrameAsBlock) {
+    aLineBox.height = pfd0->mBounds.height;
+    aMaxAscent = pfd0->mAscent;
+    aMaxDescent = pfd0->mDescent;
+    pfd0->mFrame->SetRect(aLineBox);
+    return;
   }
 
-  aLineBox.x = x;
-  aLineBox.y = y0;
-  aLineBox.width = width;
-  aLineBox.height = height;
+  // Get the parent elements font in case we need it
+  const nsStyleFont* font;
+  mOuterFrame->GetStyleData(eStyleStruct_Font,
+                            (const nsStyleStruct*&)font);
+  nsIFontMetrics* fm = mPresContext.GetMetricsFor(font->mFont);
+
+  // Examine each and determine the minYTop, the maxYBottom and the
+  // maximum height. We will use these values to determine the final
+  // height of the line box and then position each frame.
+  nscoord minYTop = 0;
+  nscoord maxYBottom = 0;
+  nscoord maxHeight = 0;
+  PRBool haveTBFrames = PR_FALSE;
+  PerFrameData* pfd;
+  for (pfd = pfd0; pfd < end; pfd++) {
+    PRUint8 verticalAlignEnum;
+    nscoord fontParam;
+
+    nsIFrame* frame = pfd->mFrame;
+
+    // yTop = Y coordinate for the top of frame box <B>relative</B> to
+    // the baseline of the linebox which is assumed to be at Y=0
+    nscoord yTop;
+
+    // Compute the effective height of the box applying the top and
+    // bottom margins
+    nscoord height = pfd->mBounds.height + pfd->mMargin.top +
+      pfd->mMargin.bottom;
+    if (height > maxHeight) {
+      maxHeight = pfd->mBounds.height;
+    }
+    pfd->mAscent += pfd->mMargin.top;
+
+    const nsStyleText* textStyle;
+    frame->GetStyleData(eStyleStruct_Text, (const nsStyleStruct*&)textStyle);
+    nsStyleUnit verticalAlignUnit = textStyle->mVerticalAlign.GetUnit();
+
+    switch (verticalAlignUnit) {
+    case eStyleUnit_Enumerated:
+      verticalAlignEnum = textStyle->mVerticalAlign.GetIntValue();
+      switch (verticalAlignEnum) {
+      default:
+      case NS_STYLE_VERTICAL_ALIGN_BASELINE:
+        yTop = -pfd->mAscent;
+        break;
+      case NS_STYLE_VERTICAL_ALIGN_SUB:
+        // Align the frames baseline on the subscript baseline
+        fm->GetSubscriptOffset(fontParam);
+        yTop = fontParam - pfd->mAscent;
+        break;
+      case NS_STYLE_VERTICAL_ALIGN_SUPER:
+        // Align the frames baseline on the superscript baseline
+        fm->GetSuperscriptOffset(fontParam);
+        yTop = -fontParam - pfd->mAscent;
+        break;
+      case NS_STYLE_VERTICAL_ALIGN_TOP:
+      case NS_STYLE_VERTICAL_ALIGN_BOTTOM:
+        // THESE ARE DONE DURING PASS2
+        haveTBFrames = PR_TRUE;
+        continue;
+      case NS_STYLE_VERTICAL_ALIGN_MIDDLE:
+        // Align the midpoint of the frame with 1/2 the parents x-height
+        fm->GetXHeight(fontParam);
+        yTop = -(fontParam / 2) - (pfd->mBounds.height/2);
+        break;
+      case NS_STYLE_VERTICAL_ALIGN_TEXT_BOTTOM:
+        fm->GetMaxDescent(fontParam);
+        yTop = fontParam - pfd->mBounds.height;
+        break;
+      case NS_STYLE_VERTICAL_ALIGN_TEXT_TOP:
+        fm->GetMaxAscent(fontParam);
+        yTop = -fontParam;
+        break;
+      }
+      break;
+    case eStyleUnit_Coord:
+      // According to the CSS2 spec (10.8.1), a positive value
+      // "raises" the box by the given distance while a negative value
+      // "lowers" the box by the given distance. Since Y coordinates
+      // increase towards the bottom of the screen we reverse the
+      // sign. All of the raising and lowering is done relative to the
+      // baseline, so we start our adjustments there.
+      yTop = -pfd->mAscent - textStyle->mVerticalAlign.GetCoordValue();
+      break;
+    case eStyleUnit_Percent:
+      // The percentage is relative to the line-height of the element
+      // itself. The line-height will be the final height of the
+      // inline element (CSS2 10.8.1 says that the line-height defines
+      // the precise height of inline non-replaced elements).
+      yTop = -pfd->mAscent -
+        nscoord(textStyle->mVerticalAlign.GetPercentValue() * pfd->mBounds.height);
+      break;
+    default:
+      yTop = -pfd->mAscent;
+      break;
+    }
+    pfd->mBounds.y = yTop;
+    if (yTop < minYTop) {
+      minYTop = yTop;
+    }
+    // yBottom = Y coordinate for the bottom of the frame box, again
+    // relative to the baseline where Y=0
+    nscoord yBottom = yTop + height;
+    if (yBottom > maxYBottom) {
+      maxYBottom = yBottom;
+    }
+  }
+
+  // Once we have finished the above abs(minYTop) represents the
+  // maximum ascent of the line box.
+
+  // XXX what about positive minY?
+  nscoord lineHeight = maxYBottom - minYTop;
+  if (lineHeight < maxHeight) {
+    // This ensures that any object aligned top/bottom will update the
+    // line height properly since they don't impact the minY or
+    // maxYBottom values.
+    lineHeight = maxHeight;
+  }
+  aLineBox.height = lineHeight;
+  nscoord maxAscent = -minYTop;
+
+  // Pass2 - position each of the frames
+  for (pfd = pfd0; pfd < end; pfd++) {
+    nsIFrame* frame = pfd->mFrame;
+    const nsStyleText* textStyle;
+    frame->GetStyleData(eStyleStruct_Text, (const nsStyleStruct*&)textStyle);
+    nsStyleUnit verticalAlignUnit = textStyle->mVerticalAlign.GetUnit();
+    if (eStyleUnit_Enumerated == verticalAlignUnit) {
+      PRUint8 verticalAlignEnum = textStyle->mVerticalAlign.GetIntValue();
+      switch (verticalAlignEnum) {
+      case NS_STYLE_VERTICAL_ALIGN_TOP:
+        // XXX negative top margins on these will do weird things, maybe?
+        pfd->mBounds.y = mTopEdge + pfd->mMargin.top;
+        break;
+      case NS_STYLE_VERTICAL_ALIGN_BOTTOM:
+        pfd->mBounds.y = mTopEdge + lineHeight - pfd->mBounds.height;
+        break;
+      default:
+        pfd->mBounds.y = mTopEdge + maxAscent + pfd->mBounds.y -
+          pfd->mMargin.top;
+        break;
+      }
+    }
+    else {
+      pfd->mBounds.y = mTopEdge + maxAscent + pfd->mBounds.y -
+        pfd->mMargin.top;
+    }
+    frame->SetRect(pfd->mBounds);
+  }
+  aMaxAscent = maxAscent;
+  aMaxDescent = lineHeight - maxAscent;
+
+  // XXX Now we can apply 1/2 the line-height...
+  NS_RELEASE(fm);
 }
 
 void
 nsInlineReflow::HorizontalAlignFrames(const nsRect& aLineBox)
 {
   const nsStyleText* styleText = mOuterReflowState.mStyleText;
-  nsCSSLayout::HorizontallyPlaceChildren(&mPresContext,
-                                         mOuterFrame,
-                                         styleText->mTextAlign,
-                                         mOuterReflowState.mDirection,
-                                         mFirstFrame, mFrameNum,
-                                         aLineBox.width,
-                                         mRightEdge - mLeftEdge);
+  nscoord maxWidth = mRightEdge - mLeftEdge;
+  if (aLineBox.width < maxWidth) {
+    nscoord dx = 0;
+    switch (styleText->mTextAlign) {
+    case NS_STYLE_TEXT_ALIGN_DEFAULT:
+      if (NS_STYLE_DIRECTION_LTR == mOuterReflowState.mDirection) {
+        // default alignment for left-to-right is left so do nothing
+        return;
+      }
+      // Fall through to align right case for default alignment
+      // used when the direction is right-to-left.
+
+    case NS_STYLE_TEXT_ALIGN_RIGHT:
+      dx = maxWidth - aLineBox.width;
+      break;
+
+    case NS_STYLE_TEXT_ALIGN_LEFT:
+    case NS_STYLE_TEXT_ALIGN_JUSTIFY:
+      // Default layout has everything aligned left
+      return;
+
+    case NS_STYLE_TEXT_ALIGN_CENTER:
+      dx = (maxWidth - aLineBox.width) / 2;
+      break;
+    }
+
+    // Position children
+    PerFrameData* pfd = mFrameDataBase;
+    PerFrameData* end = pfd + mFrameNum;
+    nsPoint origin;
+    for (; pfd < end; pfd++) {
+      nsIFrame* kid = pfd->mFrame;;
+      kid->GetOrigin(origin);
+      kid->MoveTo(origin.x + dx, origin.y);
+      kid->GetNextSibling(kid);
+    }
+  }
 }
 
 void
 nsInlineReflow::RelativePositionFrames()
 {
-  nsCSSLayout::RelativePositionChildren(&mPresContext,
-                                        mOuterFrame,
-                                        mFirstFrame, mFrameNum);
-}
-
-void
-nsInlineReflow::GetScents(nscoord& aMaxAscent, nscoord& aMaxDescent)
-{
-  PerFrameData* pfd = mFrameData;
+  nsPoint origin;
+  PerFrameData* pfd = mFrameDataBase;
   PerFrameData* end = pfd + mFrameNum;
-  nscoord maxAscent = 0;
-  nscoord maxDescent = 0;
-  while (pfd < end) {
-    if (pfd->mAscent > maxAscent) maxAscent = pfd->mAscent;
-    if (pfd->mDescent > maxDescent) maxDescent = pfd->mDescent;
-    pfd++;
+  for (; pfd < end; pfd++) {
+    nsIFrame* kid = pfd->mFrame;
+    const nsStylePosition* kidPosition;
+    kid->GetStyleData(eStyleStruct_Position,
+                      (const nsStyleStruct*&)kidPosition);
+    if (NS_STYLE_POSITION_RELATIVE == kidPosition->mPosition) {
+      kid->GetOrigin(origin);
+      nscoord dx = 0;
+      switch (kidPosition->mLeftOffset.GetUnit()) {
+      case eStyleUnit_Percent:
+        printf("XXX: not yet implemented: % relative position\n");
+      case eStyleUnit_Auto:
+        break;
+      case eStyleUnit_Coord:
+        dx = kidPosition->mLeftOffset.GetCoordValue();
+        break;
+      }
+      nscoord dy = 0;
+      switch (kidPosition->mTopOffset.GetUnit()) {
+      case eStyleUnit_Percent:
+        printf("XXX: not yet implemented: % relative position\n");
+      case eStyleUnit_Auto:
+        break;
+      case eStyleUnit_Coord:
+        dy = kidPosition->mTopOffset.GetCoordValue();
+        break;
+      }
+      kid->MoveTo(origin.x + dx, origin.y + dy);
+    }
   }
-  aMaxAscent = maxAscent;
-  aMaxDescent = maxDescent;
 }
