@@ -2876,6 +2876,13 @@
                     <FILEKIND>Library</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
+                <FILE>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>CarbResource.r</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                    <FILEKIND>Text</FILEKIND>
+                    <FILEFLAGS>Debug</FILEFLAGS>
+                </FILE>
             </FILELIST>
             <LINKORDER>
                 <FILEREF>
@@ -2956,6 +2963,11 @@
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
                     <PATH>MSL_All_Carbon.Lib</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                </FILEREF>
+                <FILEREF>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>CarbResource.r</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
             </LINKORDER>
@@ -3805,6 +3817,13 @@
                     <FILEKIND>Library</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
+                <FILE>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>CarbResource.r</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                    <FILEKIND>Text</FILEKIND>
+                    <FILEFLAGS>Debug</FILEFLAGS>
+                </FILE>
             </FILELIST>
             <LINKORDER>
                 <FILEREF>
@@ -3885,6 +3904,11 @@
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
                     <PATH>MSL_All_Carbon.Lib</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                </FILEREF>
+                <FILEREF>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>CarbResource.r</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
             </LINKORDER>
@@ -3991,6 +4015,12 @@
         </GROUP>
         <GROUP><NAME>ANSI Libraries</NAME>
         </GROUP>
+        <FILEREF>
+            <TARGETNAME>XPICleanupCarbon</TARGETNAME>
+            <PATHTYPE>Name</PATHTYPE>
+            <PATH>CarbResource.r</PATH>
+            <PATHFORMAT>MacOS</PATHFORMAT>
+        </FILEREF>
         <GROUP><NAME>Mac Libraries</NAME>
             <GROUP><NAME>Carbon</NAME>
                 <FILEREF>
@@ -4007,48 +4037,48 @@
                 </FILEREF>
             </GROUP>
             <GROUP><NAME>Classic</NAME>
-            <FILEREF>
-                <TARGETNAME>XPICleanup</TARGETNAME>
-                <PATHTYPE>Name</PATHTYPE>
-                <PATH>MSL_All_PPC.Lib</PATH>
-                <PATHFORMAT>MacOS</PATHFORMAT>
-            </FILEREF>
-            <FILEREF>
-                <TARGETNAME>XPICleanup</TARGETNAME>
-                <PATHTYPE>Name</PATHTYPE>
-                <PATH>InterfaceLib</PATH>
-                <PATHFORMAT>MacOS</PATHFORMAT>
-            </FILEREF>
-            <FILEREF>
-                <TARGETNAME>XPICleanup</TARGETNAME>
-                <PATHTYPE>Name</PATHTYPE>
-                <PATH>MathLib</PATH>
-                <PATHFORMAT>MacOS</PATHFORMAT>
-            </FILEREF>
-            <FILEREF>
-                <TARGETNAME>XPICleanup</TARGETNAME>
-                <PATHTYPE>Name</PATHTYPE>
-                <PATH>TextEncodingConverter</PATH>
-                <PATHFORMAT>MacOS</PATHFORMAT>
-            </FILEREF>
-            <FILEREF>
-                <TARGETNAME>XPICleanup</TARGETNAME>
-                <PATHTYPE>Name</PATHTYPE>
-                <PATH>TextCommon</PATH>
-                <PATHFORMAT>MacOS</PATHFORMAT>
-            </FILEREF>
-            <FILEREF>
-                <TARGETNAME>XPICleanup</TARGETNAME>
-                <PATHTYPE>Name</PATHTYPE>
-                <PATH>UnicodeConverter</PATH>
-                <PATHFORMAT>MacOS</PATHFORMAT>
-            </FILEREF>
-            <FILEREF>
-                <TARGETNAME>XPICleanup</TARGETNAME>
-                <PATHTYPE>Name</PATHTYPE>
-                <PATH>UTCUtils</PATH>
-                <PATHFORMAT>MacOS</PATHFORMAT>
-            </FILEREF>
+                <FILEREF>
+                    <TARGETNAME>XPICleanup</TARGETNAME>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>MSL_All_PPC.Lib</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                </FILEREF>
+                <FILEREF>
+                    <TARGETNAME>XPICleanup</TARGETNAME>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>InterfaceLib</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                </FILEREF>
+                <FILEREF>
+                    <TARGETNAME>XPICleanup</TARGETNAME>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>MathLib</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                </FILEREF>
+                <FILEREF>
+                    <TARGETNAME>XPICleanup</TARGETNAME>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>TextEncodingConverter</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                </FILEREF>
+                <FILEREF>
+                    <TARGETNAME>XPICleanup</TARGETNAME>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>TextCommon</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                </FILEREF>
+                <FILEREF>
+                    <TARGETNAME>XPICleanup</TARGETNAME>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>UnicodeConverter</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                </FILEREF>
+                <FILEREF>
+                    <TARGETNAME>XPICleanup</TARGETNAME>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>UTCUtils</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                </FILEREF>
             </GROUP>
         </GROUP>
     </GROUPLIST>
