@@ -12,6 +12,9 @@
 
 <!ENTITY toolsMenu.label					"Tools"> 
 <!ENTITY toolsMenu.accesskey				"t">
+<!ENTITY historyCmd.label						"History">  
+<!ENTITY historyCmd.accesskey				"h">
+<!ENTITY history.commandKey				"h">
 <!ENTITY securityInfoCmd.label					".Security Info">  
 <!ENTITY securityInfoCmd.accesskey				"s">
 <!ENTITY importUtilCmd.label					"Import Utility">  

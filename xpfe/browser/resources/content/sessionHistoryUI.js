@@ -43,7 +43,7 @@ var gRDF = null;
 var gRDFC = null;
 var gLocalStore = null;
 
-function FillHistoryMenu(aParent, aMenu, aAdjacentElement)
+function FillHistoryMenu(aParent, aMenu)
   {
     // Remove old entries if any
     deleteHistoryItems(aParent);
@@ -79,16 +79,13 @@ function FillHistoryMenu(aParent, aMenu, aAdjacentElement)
             }
           break;
         case "go":
-          if (count > 0) {
-            if (aAdjacentElement) 
-              aAdjacentElement.removeAttribute( "hidden" );
-          }
+        if (count > 0) aParent.lastChild.removeAttribute( "hidden" );
           end = count > MAX_HISTORY_MENU_ITEMS ? count - MAX_HISTORY_MENU_ITEMS : 0;
           for (j = count - 1; j >= end; j--)
             {
               entry = sessionHistory.getEntryAtIndex(j, false);
               if (entry)
-                createCheckboxMenuItem(aParent, j, entry.title, j == index, aAdjacentElement);
+                createCheckboxMenuItem(aParent, j, entry.title, j==index);
             }
           break;
       }
@@ -261,29 +258,23 @@ function addToUrlbarHistory()
    }  // localstore
 }
 
-function createMenuItem( aParent, aIndex, aLabel, aAdjacentElement)
+function createMenuItem( aParent, aIndex, aLabel)
   {
     var menuitem = document.createElement( "menuitem" );
     menuitem.setAttribute( "label", aLabel );
     menuitem.setAttribute( "index", aIndex );
-    if ( !aAdjacentElement ) 
-      aParent.appendChild( menuitem );
-    else
-      aParent.insertBefore( menuitem, aAdjacentElement );
+    aParent.appendChild( menuitem );
   }
 
-function createCheckboxMenuItem( aParent, aIndex, aLabel, aChecked, aAdjacentElement)
+function createCheckboxMenuItem( aParent, aIndex, aLabel, aChecked)
   {
     var menuitem = document.createElement( "menuitem" );
     menuitem.setAttribute( "type", "checkbox" );
     menuitem.setAttribute( "label", aLabel );
     menuitem.setAttribute( "index", aIndex );
-    if (aChecked)
+    if (aChecked==true)
       menuitem.setAttribute( "checked", "true" );
-    if ( !aAdjacentElement ) 
-      aParent.appendChild( menuitem );
-    else
-      aParent.insertBefore( menuitem, aAdjacentElement );
+    aParent.appendChild( menuitem );
   }
 
 function deleteHistoryItems(aParent)
@@ -299,50 +290,6 @@ function deleteHistoryItems(aParent)
 
 function updateGoMenu(event)
   {
-    var adjacentElement = document.getElementById("after-session-history-separator");
-    FillHistoryMenu(event.target, "go", adjacentElement);
+    FillHistoryMenu(event.target, "go");
   }
 
-function openHistory()
-{
-  // Use a single history dialog
-
-  var cwindowManager = Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator'].getService();
-  var iwindowManager = Components.interfaces.nsIWindowMediator;
-  var windowManager  = cwindowManager.QueryInterface(iwindowManager);
-
-  var historyWindow = windowManager.getMostRecentWindow('history:manager');
-
-  if (historyWindow)
-    historyWindow.focus();
-  else {
-    if (gDisableHistory)
-      return;
-    gDisableHistory = true;
-
-    window.open( "chrome://communicator/content/history/history.xul", "_blank",
-        "chrome,extrachrome,menubar,resizable,scrollbars,status,toolbar" );
-    setTimeout(enableHistory, 2000);
-  }
-
-}
-
-
-function loadHistoryItem(aEvent)
-{
-  var element = aEvent.target;
-
-  var index = element.getAttribute("index");
-  if (index) {
-    try {
-      getWebNavigation().gotoIndex(index);
-    }
-    catch (e) {
-    }
-  }
-  
-  var url = element.getAttribute("url");
-  var isContainer = element.getAttribute("container") == "true";
-  if (url && !isContainer)
-    loadURI(url);
-}
