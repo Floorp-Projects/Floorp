@@ -1706,7 +1706,7 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnDataAvailable(nsIRequest *request,
     }
 
     nsCOMPtr<nsIPluginStreamListener2> PStreamListener2 = do_QueryInterface(mPStreamListener);
-    if (PStreamListener2)
+    if (PStreamListener2 && brr)
       rv =  PStreamListener2->OnDataAvailable((nsIPluginStreamInfo*)mPluginStreamInfo, 
                                             aIStream, 
                                             absoluteOffset+amtForwardToPlugin, 
