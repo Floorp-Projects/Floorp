@@ -377,10 +377,11 @@ function doSearch( )
    {
       searchText = "";
       document.getElementById( "unifinder-search-field" ).value = '';
+      return;
    }
    else
    {
-      var FieldsToSearch = new Array( "title", "description", "location" );
+      var FieldsToSearch = new Array( "title", "description", "location", "categories" );
       eventTable = gEventSource.search( searchText, FieldsToSearch );
    }
    
