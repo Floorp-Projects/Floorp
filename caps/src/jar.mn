@@ -1,2 +1,2 @@
 en-US.jar:
-	locale/en-US/communicator/security/security.properties
+	locale/en-US/communicator/security/caps.properties
