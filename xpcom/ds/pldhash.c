@@ -287,7 +287,7 @@ SearchTable(PLDHashTable *table, const void *key, PLDHashNumber keyHash)
 }
 
 static PRBool
-ChangeTable(PLDHashTable *table, int deltaLog2, PLDHashEntryHdr **findEntry)
+ChangeTable(PLDHashTable *table, int deltaLog2, const void *key, PLDHashEntryHdr **findEntry)
 {
     int oldLog2, newLog2;
     PRUint32 oldCapacity, newCapacity;
@@ -326,7 +326,10 @@ ChangeTable(PLDHashTable *table, int deltaLog2, PLDHashEntryHdr **findEntry)
     for (i = 0; i < oldCapacity; i++) {
         oldEntry = (PLDHashEntryHdr *)oldEntryAddr;
         if (ENTRY_IS_LIVE(oldEntry)) {
-            newEntry = SearchTable(table, getKey(table, oldEntry),
+            newEntry = SearchTable(table,
+                                   (*findEntry == oldEntry)
+                                   ? key
+                                   : getKey(table, oldEntry),
                                    oldEntry->keyHash);
             PR_ASSERT(PL_DHASH_ENTRY_IS_FREE(newEntry));
             moveEntry(table, oldEntry, newEntry);
@@ -416,7 +419,7 @@ PL_DHashTableOperate(PLDHashTable *table, const void *key, PLDHashOperator op)
 
     if (biasedDeltaLog2) {
         /* Grow, compress, or shrink table, keeping entry valid if non-null. */
-        if (!ChangeTable(table, biasedDeltaLog2 - DELTA_LOG2_BIAS, &entry)) {
+        if (!ChangeTable(table, biasedDeltaLog2 - DELTA_LOG2_BIAS, key, &entry)) {
             /* If we just grabbed the last free entry, undo and fail hard. */
             if (op == PL_DHASH_ADD &&
                 table->entryCount + table->removedCount == size) {
@@ -479,7 +482,7 @@ PL_DHashTableEnumerate(PLDHashTable *table, PLDHashEnumerator etor, void *arg)
             capacity = PL_DHASH_MIN_SIZE;
         (void) ChangeTable(table,
                            PR_CeilingLog2(capacity) - table->sizeLog2,
-                           NULL);
+                           NULL, NULL);
     }
     return i;
 }
