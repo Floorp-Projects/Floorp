@@ -451,9 +451,22 @@ function PromptForSaveLocation(aDoSaveAsText, aEditorType, aMIMEType, ahtmlDocum
   try {
     var ioService = GetIOService();
     
-    var fileLocation = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsIFile);
-    ioService.initFileFromURLSpec(fileLocation, aDocumentURLString);
-    var parentLocation = fileLocation.parent;
+    var isLocalFile = true;
+    try {
+      var docURI = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsIURI);
+      docURI.spec = aDocumentURLString;
+      dump("testing scheme for "+docURI.spec+"\n");
+      isLocalFile = docURI.schemeIs("file");
+    }
+    catch (e) {}
+
+    var parentLocation = null;
+    if (isLocalFile)
+    {
+      var fileLocation = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsIFile);
+      ioService.initFileFromURLSpec(fileLocation, aDocumentURLString);  // this asserts if url is not local
+      parentLocation = fileLocation.parent;
+    }
     if (parentLocation)
     {
       // Save current filepicker's default location
@@ -511,6 +524,37 @@ function PromptAndSetTitleIfNone(aHTMLDoc)
   return confirmed;
 }
 
+/******** output functionality (saving, publishing, export, etc.) **********/
+
+// Don't forget to do these things after calling OutputFileWithPersistAPI:
+//    window.editorShell.doAfterSave(doUpdateURLOnDocument, urlstring);  // we need to update the url before notifying listeners
+//    if (!aSaveCopy && success)
+//      window.editorShell.editor.ResetModificationCount();  // this should cause notification to listeners that document has changed
+
+function OutputFileWithPersistAPI(editorDoc, aDestinationLocation, aRelatedFilesParentDir, aMimeType)
+{
+  try {
+    var imeEditor = window.editorShell.editor.QueryInterface(Components.interfaces.nsIEditorIMESupport);
+    if (imeEditor)
+      imeEditor.ForceCompositionEnd();
+    } catch (e) {}
+
+  try {
+    // we should supply a parent directory if/when we turn on functionality to save related documents
+    var persistObj = Components.classes["@mozilla.org/embedding/browser/nsWebBrowserPersist;1"].createInstance(Components.interfaces.nsIWebBrowserPersist);
+    persistObj.progressListener = gEditorOutputProgressListener;
+    
+    var wrapColumn = GetWrapColumn();
+    var outputFlags = GetOutputFlags(aMimeType, wrapColumn);
+
+    persistObj.saveDocument(editorDoc, aDestinationLocation, aRelatedFilesParentDir, 
+                            aMimeType, outputFlags, wrapColumn);
+  }
+  catch(e) { dump("caught an error, bail\n"); return false; }
+
+  return true;
+}
+
 // returns output flags based on mimetype, wrapCol and prefs
 function GetOutputFlags(aMimeType, aWrapColumn)
 {
@@ -524,8 +568,8 @@ function GetOutputFlags(aMimeType, aWrapColumn)
   {
     // Should we prettyprint? Check the pref
     try {
-      var prefService = GetPrefsService();
-      if (prefService.getBoolPref("editor.prettyprint"))
+      var prefs = GetPrefs();
+      if (prefs.getBoolPref("editor.prettyprint"))
         outputFlags |= 2;  // nsIDocumentEncoder.OutputFormatted
     }
     catch (e) {}
@@ -542,44 +586,236 @@ function GetWrapColumn()
 {
   var wrapCol = 72;
   try {
-    wrapCol = window.editorshell.editor.GetWrapWidth();
+    wrapCol = window.editorShell.editor.GetWrapWidth();
   }
   catch (e) {}
 
   return wrapCol;
 }
 
+const gShowDebugOutputStateChange = false;
+const gShowDebugOutputProgress = false;
+const gShowDebugOutputLocationChange = false;
+const gShowDebugOutputStatusChange = false;
+const gShowDebugOutputSecurityChange = false;
 var gEditorOutputProgressListener =
 {
   onStateChange : function(aWebProgress, aRequest, aStateFlags, aStatus)
   {
+    if (gShowDebugOutputStateChange)
+    {
+      try {
+        var channel = aRequest.QueryInterface(Components.interfaces.nsIChannel);
+        dump("***** onStateChange request: " + channel.URI.spec + "\n");
+      } catch (e) { dump("***** onStateChange; NO REQUEST CHANNEL\n"); }
+      if (aStateFlags == 65552)  // STATE_IS_REQUEST + STATE_STOP
+        dump("*****     state flags are isRequest and Stop\n");
+      else if (aStateFlags == 65537)
+        dump("*****     state flags are isRequest and Start\n");
+      else if (aStateFlags == 262145)
+        dump("*****     state flags are isNetwork and Start\n");
+      else if (aStateFlags == 262160)
+        dump("*****     state flags are isNetwork and Stop\n");
+      else if (aStateFlags == 327681)
+        dump("*****     state flags are isRequest and Start and isNetwork\n");
+      else if (aStateFlags == 327696)
+        dump("*****     state flags are isRequest and Stop  and isNetwork\n");
+      else
+        dump("*****     state flags are "+aStateFlags+"\n");
+    }
   },
 
   onProgressChange : function(aWebProgress, aRequest, aCurSelfProgress,
                               aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress)
   {
+    if (gShowDebugOutputProgress)
+    {
+      try {
+      var channel = aRequest.QueryInterface(Components.interfaces.nsIChannel);
+      dump("***** onProgressChange request: " + channel.URI.spec + "\n");
+      }
+      catch (e) {}
+      dump("*****       self:  "+aCurSelfProgress+" / "+aMaxSelfProgress+"\n");
+      dump("*****       total: "+aCurTotalProgress+" / "+aMaxTotalProgress+"\n");
+    }
   },
 
   onLocationChange : function(aWebProgress, aRequest, aLocation)
   {
+    if (gShowDebugOutputLocationChange)
+    {
+      dump("***** onLocationChange: "+aLocation.spec+"\n");
+      var channel = aRequest.QueryInterface(Components.interfaces.nsIChannel);
+      dump("*****          request: " + channel.URI.spec + "\n");
+    }
   },
 
   onStatusChange : function(aWebProgress, aRequest, aStatus, aMessage)
   {
+    if (gShowDebugOutputStatusChange)
+    {
+      dump("***** onStatusChange: "+aMessage+"\n");
+      try {
+        var channel = aRequest.QueryInterface(Components.interfaces.nsIChannel);
+        dump("*****        request: " + channel.URI.spec + "\n");
+      }
+      catch (e) { dump("          couldn't get request\n"); }
+
+      if (aStatus == 2152398852)
+        dump("*****        status is UNKNOWN_TYPE\n");
+      else if (aStatus == 2152398853)
+        dump("*****        status is DESTINATION_NOT_DIR\n");
+      else if (aStatus == 2152398854)
+        dump("*****        status is TARGET_DOES_NOT_EXIST\n");
+      else if (aStatus == 2152398856)
+        dump("*****        status is ALREADY_EXISTS\n");
+      else if (aStatus == 2152398858)
+        dump("*****        status is DISK_FULL\n");
+      else if (aStatus == 2152398860)
+        dump("*****        status is NOT_DIRECTORY\n");
+      else if (aStatus == 2152398861)
+        dump("*****        status is IS_DIRECTORY\n");
+      else if (aStatus == 2152398862)
+        dump("*****        status is IS_LOCKED\n");
+      else if (aStatus == 2152398863)
+        dump("*****        status is TOO_BIG\n");
+      else if (aStatus == 2152398865)
+        dump("*****        status is NAME_TOO_LONG\n");
+      else if (aStatus == 2152398866)
+        dump("*****        status is NOT_FOUND\n");
+      else if (aStatus == 2152398867)
+        dump("*****        status is READ_ONLY\n");
+      else if (aStatus == 2152398868)
+        dump("*****        status is DIR_NOT_EMPTY\n");
+      else if (aStatus == 2152398869)
+        dump("*****        status is ACCESS_DENIED\n");
+      else
+        dump("*****        status is " + aStatus + "\n");
+    }
   },
 
   onSecurityChange : function(aWebProgress, aRequest, state)
   {
+    if (gShowDebugOutputSecurityChange)
+    {
+      var channel = aRequest.QueryInterface(Components.interfaces.nsIChannel);
+      dump("***** onSecurityChange request: " + channel.URI.spec + "\n");
+    }
   },
 
   QueryInterface : function(aIID)
   {
     if (aIID.equals(Components.interfaces.nsIWebProgressListener)
     || aIID.equals(Components.interfaces.nsISupports)
-    || aIID.equals(Components.interfaces.nsISupportsWeakReference))
+    || aIID.equals(Components.interfaces.nsISupportsWeakReference)
+    || aIID.equals(Components.interfaces.nsIPrompt)
+    || aIID.equals(Components.interfaces.nsIAuthPrompt))
       return this;
     throw Components.results.NS_NOINTERFACE;
-  }
+  },
+
+// nsIPrompt
+ alert : function(dlgTitle, text)
+ {
+   AlertWithTitle(dlgTitle, text);
+ },
+ alertCheck : function(dialogTitle, text, checkBoxLabel, checkValue)
+ {
+   AlertWithTitle(dialogTitle, text);
+   dump("***** warning: checkbox not shown to user\n");
+ },
+ confirm : function(dlgTitle, text)
+ {
+   return ConfirmWithTitle(dlgTitle, text, null, null);
+ },
+ confirmCheck : function(dlgTitle, text, checkBoxLabel, checkValue)
+ {
+   var promptServ = GetPromptService();
+   if (!promptServ)
+     return;
+
+   promptServ.confirmEx(window, dlgTitle, text, nsIPromptService.STD_OK_CANCEL_BUTTONS,
+                        "", "", "", checkBoxLabel, checkValue, outButtonPressed);
+ },
+ confirmEx : function(dlgTitle, text, btnFlags, btn0Title, btn1Title, btn2Title, checkBoxLabel, checkVal, outBtnPressed)
+ {
+   var promptServ = GetPromptService();
+   if (!promptServ)
+     return;
+
+   promptServ.confirmEx(window, dlgTitle, text, btnFlags,
+                        btn0Title, btn1Title, btn2Title,
+                        checkBoxLabel, checkVal, outBtnPressed);
+ },
+ prompt : function(dlgTitle, text, inoutText, checkBoxLabel, checkValue)
+ {
+   var promptServ = GetPromptService();
+   if (!promptServ)
+     return false;
+
+   return promptServ.prompt(window, dlgTitle, text, inoutText, checkBoxLabel, checkValue);
+ },
+ promptPassword : function(dlgTitle, text, password, checkBoxLabel, checkValue)
+ {
+   var promptServ = GetPromptService();
+   if (!promptServ)
+     return false;
+
+   return promptServ.promptPassword(window, dlgTitle, text, password, checkBoxLabel, checkValue);
+ },
+ promptUsernameAndPassword : function(dlgTitle, text, login, pw, checkBoxLabel, checkValue)
+ {
+   var promptServ = GetPromptService();
+   if (!promptServ)
+     return false;
+
+   return promptServ.promptUsernameAndPassword(window, dlgTitle, text, login, pw, checkBoxLabel, checkValue);
+ },
+ select : function(dlgTitle, text, count, selectList, outSelection)
+ {
+   var promptServ = GetPromptService();
+   if (!promptServ)
+     return false;
+
+   return promptServ.select(window, dlgTitle, text, count, selectList, outSelection);
+ },
+
+// nsIAuthPrompt
+ prompt : function(dlgTitle, text, pwrealm, savePW, defaultText, result)
+ {
+   dump("authprompt prompt! pwrealm="+pwrealm+"\n");
+   var promptServ = GetPromptService();
+   if (!promptServ)
+     return false;
+
+   var saveCheck = {value:savePW};
+   return promptServ.prompt(window, dlgTitle, text, defaultText, pwrealm, saveCheck);
+ },
+ promptUsernameAndPassword : function(dlgTitle, text, pwrealm, savePW, user, pw)
+ {
+   dump("authprompt promptUsernameAndPassword!  "+dlgTitle+" "+text+", pwrealm="+pwrealm+"\n");
+   var promptServ = GetPromptService();
+   if (!promptServ)
+     return false;
+
+   var saveCheck = {value:savePW};
+   return promptServ.promptUsernameAndPassword(window, dlgTitle, text, user, pw, GetString("SaveUsernamePassword"), saveCheck);
+
+ },
+ promptPassword : function(dlgTitle, text, pwrealm, savePW, pw)
+ {
+   dump("auth promptPassword!  "+dlgTitle+" "+text+", pwrealm="+pwrealm+"\n");
+   var promptServ = GetPromptService();
+   if (!promptServ)
+     return false;
+
+   // XXX Do we have to save the password to password database?
+   // Why do we have to supply the "save passord" checkbox text?
+   // cmanske to investigate these issues
+
+   var saveCheck = {value:savePW};
+   return = promptServ.promptPassword(window, dlgTitle, text, pw, GetString("SavePassword"), saveCheck);
+ }
 }
 
 // throws an error or returns true if user attempted save; false if user canceled save
@@ -641,46 +877,54 @@ function SaveDocument(aSaveAs, aSaveCopy, aMimeType)
    } catch (e) {  return false; }
   } // mustShowFileDialog
 
-  try {
-    var imeEditor = window.editorShell.editor.QueryInterface(Components.interfaces.nsIEditorIMESupport);
-    if (imeEditor)
-      imeEditor.ForceCompositionEnd();
-    } catch (e) {}
-
   var success = true;
   try {
-    var docURI = Components.classes["@mozilla.org/network/standard-url;1"].createInstance(Components.interfaces.nsIURI);
-    docURI.spec = urlstring;
-
+    // if somehow we didn't get a local file but we did get a uri, 
+    // attempt to create the localfile if it's a "file" url
+    var docURI;
     if (!tempLocalFile)
     {
-      tempLocalFile = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile);
-
-      var ioService = GetIOService();
-      ioService.initFileFromURLSpec(tempLocalFile, urlstring);
+      docURI = Components.classes["@mozilla.org/network/standard-url;1"].createInstance(Components.interfaces.nsIURI);
+      docURI.spec = urlstring;
+      
+      if (docURI.schemeIs("file"))
+      {
+        tempLocalFile = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile);
+        var ioService = GetIOService();
+        ioService.initFileFromURLSpec(tempLocalFile, urlstring);
+      }
     }
 
+    // this is the location where the related files will go
     var parentDir;
     try {
-      var lastSlash = urlstring.lastIndexOf("\/");
-      if (lastSlash != -1)
+      if (tempLocalFile)
+        parentDir = tempLocalFile.parent;
+      else
       {
-        var parentDirString = urlstring.slice(0, lastSlash + 1);  // include last slash
-        parentDir = Components.classes["@mozilla.org/network/standard-url;1"].createInstance(Components.interfaces.nsIURI);
-        parentDir.spec = parentDirString;
+        var lastSlash = urlstring.lastIndexOf("\/");
+        if (lastSlash != -1)
+        {
+          var parentDirString = urlstring.slice(0, lastSlash + 1);  // include last slash
+          parentDir = Components.classes["@mozilla.org/network/standard-url;1"].createInstance(Components.interfaces.nsIURI);
+          parentDir.spec = parentDirString;
+        }
+        else
+          parentDir = null;
       }
     } catch(e) { parentDir = null; }
 
-    var wrapColumn = GetWrapColumn();
-    var outputFlags = GetOutputFlags(aMimeType, wrapColumn);
+    var destinationLocation;
+    if (tempLocalFile)
+      destinationLocation = tempLocalFile;
+    else
+      destinationLocation = docURI;
 
-    // we should supply a parent directory if/when we turn on functionality to save related documents
-    var persistAPI = Components.classes["@mozilla.org/embedding/browser/nsWebBrowserPersist;1"].createInstance(Components.interfaces.nsIWebBrowserPersist);
-    persistAPI.progressListener = gEditorOutputProgressListener;
-    persistAPI.saveDocument(editorDoc, tempLocalFile, parentDir, aMimeType, outputFlags, wrapColumn);
+    success = OutputFileWithPersistAPI(editorDoc, destinationLocation, parentDir, aMimeType);
   }
   catch (e)
   {
+    // XXX we need to change these strings if we are publishing!!!
     var saveDocStr = GetString("SaveDocument");
     var failedStr = GetString("SaveFileFailed");
     AlertWithTitle(saveDocStr, failedStr);
@@ -712,14 +956,9 @@ var nsSaveCommand =
     if (window.editorShell)
     {
       FinishHTMLSource(); // In editor.js
-      var doSaveAs = IsUrlAboutBlank(window.editorShell.editorDocument.location);
-//      var scheme = GetScheme(window.editorShell.editorDocument.location.href);
-      var isLocalFile = (0 == window.editorShell.editorDocument.location.href.indexOf("file", 0));
-      doSaveAs = doSaveAs || !isLocalFile;
-//      if (doSaveAs || (GetScheme(window.editorShell.editorDocument.location.href) == "file"))
-        result = SaveDocument(doSaveAs, false, editorShell.contentsMIMEType);
- //     else
- //       result = EditorPublish(window.editorShell.editorDocument.location.href, "", null, null);
+      var isAboutBlank = IsUrlAboutBlank(window.editorShell.editorDocument.location);
+//      var isLocalFile = (0 == window.editorShell.editorDocument.location.href.indexOf("file", 0));
+      result = SaveDocument(isAboutBlank, false, editorShell.contentsMIMEType);
       window._content.focus();
     }
     return result;
@@ -823,9 +1062,8 @@ var nsPublishCommand =
       // If new page, we must use the publish dialog 
       if (IsUrlAboutBlank(window.editorShell.editorDocument.location))
         goDoCommand("cmd_publishAs");
-
-      // TODO: ADD ONE-BUTTON-PUBLISH HERE! 
-      // (Get current location, build URI and go!)
+      else
+        window.ok = SaveDocument(false, false, editorShell.contentsMIMEType);
 
       window._content.focus();
       return true;
