@@ -23,8 +23,18 @@ DEPTH=..\..\..
 MODULE=webBrowser_setup
 
 XPIDLSRCS=						\
+		.\nsCWebBrowserSetup.idl			\
 		.\nsIWebBrowserSetup.idl			\
+		$(NULL)
+
+LIBRARY_NAME=nsWebBrowserSetup_s
+
+CPP_OBJS=											\
+		.\$(OBJDIR)\nsWebBrowserSetup.obj			\
 		$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
 include <$(DEPTH)\config\config.mak>
+
+libs:: $(LIBRARY)
+	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
