@@ -137,7 +137,7 @@ pull_and_build_all: pull_all depend build_all
 
 pull_clobber_and_build_all: pull_all clobber_all build_all
 
-pull_all: pull_nspr pull_psm pull_ldapcsdk pull_seamonkey pull_l10n
+pull_all: pull_nspr pull_psm pull_ldapcsdk pull_seamonkey
 
 pull_nspr: pull_clientmak
       cd $(MOZ_SRC)\.
