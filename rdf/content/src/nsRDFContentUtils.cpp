@@ -405,6 +405,9 @@ nsRDFContentUtils::GetAttributeLogString(nsIContent* aElement, PRInt32 aNameSpac
 nsresult
 nsRDFContentUtils::MakeElementURI(nsIDocument* aDocument, const nsString& aElementID, nsString& aURI)
 {
+    // Convert an element's ID to a URI that can be used to refer to
+    // the element in the XUL graph.
+
     if (aElementID.Find(':') > 0) {
         // Assume it's absolute already. Use as is.
         aURI = aElementID;
@@ -436,6 +439,8 @@ nsRDFContentUtils::MakeElementURI(nsIDocument* aDocument, const nsString& aEleme
 nsresult
 nsRDFContentUtils::MakeElementID(nsIDocument* aDocument, const nsString& aURI, nsString& aElementID)
 {
+    // Convert a URI into an element ID that can be accessed from the
+    // DOM APIs.
     nsresult rv;
 
     nsCOMPtr<nsIURL> docURL;
