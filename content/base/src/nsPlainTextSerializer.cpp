@@ -711,7 +711,11 @@ nsPlainTextSerializer::DoOpenContainer(PRInt32 aTag)
   else if (type == eHTMLTag_dl) {
     EnsureVerticalSpace(1);
   }
+  else if (type == eHTMLTag_dt) {
+    EnsureVerticalSpace(0);
+  }
   else if (type == eHTMLTag_dd) {
+    EnsureVerticalSpace(0);
     mIndent += kIndentSizeDD;
   }
   else if (type == eHTMLTag_span) {
@@ -875,7 +879,12 @@ nsPlainTextSerializer::DoCloseContainer(PRInt32 aTag)
       mLineBreakDue = PR_TRUE;
     }
   }  
+  else if (type == eHTMLTag_dl) {
+    mFloatingLines = 1;
+    mLineBreakDue = PR_TRUE;
+  }
   else if (type == eHTMLTag_dd) {
+    FlushLine();
     mIndent -= kIndentSizeDD;
   }
   else if (type == eHTMLTag_span) {
