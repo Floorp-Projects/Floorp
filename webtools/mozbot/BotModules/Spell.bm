@@ -40,7 +40,7 @@ sub checkSpelling {
     while ($text =~ s/^.*?  # take everything up to the first word to check
                        \b   # look for a word break
                       (\w+) # take the word to spell
-                       \s+  # look for whitespace following it
+                       \s*  # look for whitespace following it
                   \(sp\??\) # followed by (sp) or (sp?)
                   //isox) { # and remove everything up to here so we can do another check in a minute
         my $word = $1;
