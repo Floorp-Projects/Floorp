@@ -58,7 +58,9 @@
 #endif /* 0 */
 
 #ifdef MOZ_MAIL_NEWS
+#ifdef MOZ_SECURITY
 #include "mkcertld.h"
+#endif /* MOZ_SECURITY */
 #include "mkmailbx.h"
 #include "mknews.h"
 #include "mknewsgr.h"
