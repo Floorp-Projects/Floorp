@@ -98,74 +98,87 @@ class BloatEntry {
 public:
   BloatEntry(const char* className, PRUint32 classSize)
     : mClassName(className), mClassSize(classSize) { 
-    Clear();
+    Clear(&mNewStats);
+    Clear(&mAllStats);
   }
 
   ~BloatEntry() {}
 
-  void Clear() {
-    mCurrentStats.mAddRefs = 0;
-    mCurrentStats.mReleases = 0;
-    mCurrentStats.mCreates = 0;
-    mCurrentStats.mDestroys = 0;
-    mPrevStats.mAddRefs = 0;
-    mPrevStats.mReleases = 0;
-    mPrevStats.mCreates = 0;
-    mPrevStats.mDestroys = 0;
-    mRefsOutstandingTotal = 0;
-    mRefsOutstandingVariance = 0;
-    mObjsOutstandingTotal = 0;
-    mObjsOutstandingVariance = 0;
+  static void Clear(nsTraceRefcntStats* stats) {
+    stats->mAddRefs = 0;
+    stats->mReleases = 0;
+    stats->mCreates = 0;
+    stats->mDestroys = 0;
+    stats->mRefsOutstandingTotal = 0;
+    stats->mRefsOutstandingVariance = 0;
+    stats->mObjsOutstandingTotal = 0;
+    stats->mObjsOutstandingVariance = 0;
+  }
+
+  void Accumulate() {
+      mAllStats.mAddRefs += mNewStats.mAddRefs;
+      mAllStats.mReleases += mNewStats.mReleases;
+      mAllStats.mCreates += mNewStats.mCreates;
+      mAllStats.mDestroys += mNewStats.mDestroys;
+      mAllStats.mRefsOutstandingTotal += mNewStats.mRefsOutstandingTotal;
+      mAllStats.mRefsOutstandingVariance += mNewStats.mRefsOutstandingVariance;
+      mAllStats.mObjsOutstandingTotal += mNewStats.mObjsOutstandingTotal;
+      mAllStats.mObjsOutstandingVariance += mNewStats.mObjsOutstandingVariance;
+      Clear(&mNewStats);
   }
 
   void AddRef(nsrefcnt refcnt) {
-    mCurrentStats.mAddRefs++;
+    mNewStats.mAddRefs++;
     if (refcnt == 1) {
-      mCurrentStats.mCreates++;
-      AccountObjs();
+      Ctor();
     }
     AccountRefs();
   }
 
   void Release(nsrefcnt refcnt) {
-    mCurrentStats.mReleases++;
+    mNewStats.mReleases++;
     if (refcnt == 0) {
-      mCurrentStats.mDestroys++;
-      AccountObjs();
+      Dtor();
     }
     AccountRefs();
   }
 
   void Ctor() {
-    mCurrentStats.mCreates++;
+    mNewStats.mCreates++;
+    AccountObjs();
   }
 
   void Dtor() {
-    mCurrentStats.mDestroys++;
-  }
-
-  void Snapshot() {
-    mPrevStats = mCurrentStats;
+    mNewStats.mDestroys++;
+    AccountObjs();
   }
 
   void AccountRefs() {
-    PRInt32 cnt = (mCurrentStats.mAddRefs - mCurrentStats.mReleases);
-    //    NS_ASSERTION(cnt >= 0, "too many releases");
-    mRefsOutstandingTotal += cnt;
-    mRefsOutstandingVariance += cnt * cnt;
+    PRInt32 cnt = (mNewStats.mAddRefs - mNewStats.mReleases);
+    mNewStats.mRefsOutstandingTotal += cnt;
+    mNewStats.mRefsOutstandingVariance += cnt * cnt;
   }
 
   void AccountObjs() {
-    PRInt32 cnt = (mCurrentStats.mCreates - mCurrentStats.mDestroys);
-    //    NS_ASSERTION(cnt >= 0, "too many releases");
-    mObjsOutstandingTotal += cnt;
-    mObjsOutstandingVariance += cnt * cnt;
+    PRInt32 cnt = (mNewStats.mCreates - mNewStats.mDestroys);
+    mNewStats.mObjsOutstandingTotal += cnt;
+    mNewStats.mObjsOutstandingVariance += cnt * cnt;
   }
 
-  static PRIntn DumpEntry(PLHashEntry *he, PRIntn i, void *arg) {
+  static PRIntn DumpNewEntry(PLHashEntry *he, PRIntn i, void *arg) {
     BloatEntry* entry = (BloatEntry*)he->value;
     if (entry) {
-      entry->Dump(i, (FILE*)arg);
+      entry->Dump(i, (FILE*)arg, &entry->mNewStats);
+      entry->Accumulate();
+    }
+    return HT_ENUMERATE_NEXT;
+  }
+
+  static PRIntn DumpAllEntry(PLHashEntry *he, PRIntn i, void *arg) {
+    BloatEntry* entry = (BloatEntry*)he->value;
+    if (entry) {
+      entry->Accumulate();
+      entry->Dump(i, (FILE*)arg, &entry->mAllStats);
     }
     return HT_ENUMERATE_NEXT;
   }
@@ -178,20 +191,12 @@ public:
     return HT_ENUMERATE_REMOVE | HT_ENUMERATE_NEXT;
   }
 
-  static PRIntn SnapshotEntry(PLHashEntry *he, PRIntn i, void *arg) {
-    BloatEntry* entry = (BloatEntry*)he->value;
-    if (entry) {
-      entry->Snapshot();
-    }
-    return HT_ENUMERATE_REMOVE | HT_ENUMERATE_NEXT;
-  }
-
   static PRIntn GatherEntry(PLHashEntry *he, PRIntn i, void *arg) {
     BloatEntry* entry = (BloatEntry*)he->value;
     GatherArgs* ga = (GatherArgs*) arg;
     if (arg && entry && ga->func) {
       PRBool stop = (*ga->func)(entry->mClassName, entry->mClassSize,
-                                &entry->mCurrentStats, &entry->mPrevStats,
+                                &entry->mNewStats, &entry->mAllStats,
                                 ga->closure);
       if (stop) {
         return HT_ENUMERATE_STOP;
@@ -201,56 +206,61 @@ public:
   }
 
   PRBool HaveLeaks() const {
-    return ((mCurrentStats.mAddRefs != mCurrentStats.mReleases) ||
-            (mCurrentStats.mCreates != mCurrentStats.mDestroys));
+    return ((mNewStats.mAddRefs != mNewStats.mReleases) ||
+            (mNewStats.mCreates != mNewStats.mDestroys));
   }
 
-  void Dump(PRIntn i, FILE* fp) {
+  static void PrintDumpHeader(FILE* out, const char* msg) {
+    fprintf(out, "                                 %s -- Bloaty: Refcounting and Memory Bloat Statistics\n", msg);
+    fprintf(out, "     |<------class------>|<--------------References-------------->|<----------------Objects---------------->|<------Size----->|\n");
+    fprintf(out, "                               Rem    Total      Mean       StdDev       Rem    Total      Mean       StdDev Per-Class      Rem\n");
+  }
+
+  void Dump(PRIntn i, FILE* fp, nsTraceRefcntStats* stats) {
     if (gDumpLeaksOnly && !HaveLeaks()) {
       return;
     }
-#if 1
-    double meanRefCnts = mRefsOutstandingTotal /
-      (mCurrentStats.mAddRefs + mCurrentStats.mReleases);
-    double varRefCnts = fabs(mRefsOutstandingVariance /
-                             mRefsOutstandingTotal - meanRefCnts * meanRefCnts);
-    double meanObjs = mObjsOutstandingTotal /
-      (mCurrentStats.mCreates + mCurrentStats.mDestroys);
-    double varObjs = fabs(mObjsOutstandingVariance /
-                             mObjsOutstandingTotal - meanObjs * meanObjs);
-    fprintf(fp, "%4d %-20.20s %8d %8d (%8.2f +/- %8.2f) %8d %8d (%8.2f +/- %8.2f) %8d %8d\n",
-            i, mClassName, 
-            (mCurrentStats.mAddRefs - mCurrentStats.mReleases),
-            mCurrentStats.mAddRefs,
-            meanRefCnts,
-            sqrt(varRefCnts),
-            (mCurrentStats.mCreates - mCurrentStats.mDestroys),
-            mCurrentStats.mCreates,
-            meanObjs,
-            sqrt(varObjs),
-            mClassSize,
-            (mCurrentStats.mCreates - mCurrentStats.mDestroys) * mClassSize);
-#else
-    fprintf(fp, "%4d %-20.20s %8d %8d %8d %8d %8d %8d\n",
-            i, mClassName, 
-            mCurrentStats.mCreates,
-            (mCurrentStats.mCreates - mCurrentStats.mDestroys),
-            mCurrentStats.mAddRefs,
-            (mCurrentStats.mAddRefs - mCurrentStats.mReleases),
-            mClassSize,
-            (mCurrentStats.mCreates - mCurrentStats.mDestroys) * mClassSize);
-#endif
+    double nRefs = stats->mAddRefs + stats->mReleases;
+    double meanRefs = nRefs != 0.0 ? stats->mRefsOutstandingTotal / nRefs : 0.0;
+    double varRefs = fabs(stats->mRefsOutstandingVariance /
+                          stats->mRefsOutstandingTotal - meanRefs * meanRefs);
+    // for some reason, Windows says sqrt(0.0) is "-1.#J" (?!) so do this:
+    double stddevRefs = varRefs != 0.0 ? sqrt(varRefs) : 0.0;
+
+    double nObjs = stats->mCreates + stats->mDestroys;
+    double meanObjs = nObjs != 0.0 ? stats->mObjsOutstandingTotal / nObjs : 0.0;
+    double varObjs = fabs(stats->mObjsOutstandingVariance /
+                          stats->mObjsOutstandingTotal - meanObjs * meanObjs);
+    // for some reason, Windows says sqrt(0.0) is "-1.#J" (?!) so do this:
+    double stddevObjs = varObjs != 0.0 ? sqrt(varObjs) : 0.0;
+    if ((stats->mAddRefs - stats->mReleases) != 0 ||
+        stats->mAddRefs != 0 ||
+        meanRefs != 0 ||
+        stddevRefs != 0 ||
+        (stats->mCreates - stats->mDestroys) != 0 ||
+        stats->mCreates != 0 ||
+        meanObjs != 0 ||
+        stddevObjs != 0) {
+      fprintf(fp, "%4d %-20.20s %8d %8d (%8.2f +/- %8.2f) %8d %8d (%8.2f +/- %8.2f) %8d %8d\n",
+              i, mClassName, 
+              (stats->mAddRefs - stats->mReleases),
+              stats->mAddRefs,
+              meanRefs,
+              stddevRefs,
+              (stats->mCreates - stats->mDestroys),
+              stats->mCreates,
+              meanObjs,
+              stddevObjs,
+              mClassSize,
+              (stats->mCreates - stats->mDestroys) * mClassSize);
+    }
   }
 
 protected:
   const char*   mClassName;
   PRUint32      mClassSize;
-  double        mRefsOutstandingTotal;
-  double        mRefsOutstandingVariance;
-  double        mObjsOutstandingTotal;
-  double        mObjsOutstandingVariance;
-  nsTraceRefcntStats mCurrentStats;
-  nsTraceRefcntStats mPrevStats;
+  nsTraceRefcntStats mNewStats;
+  nsTraceRefcntStats mAllStats;
 };
 
 static void
@@ -283,10 +293,11 @@ GetBloatEntry(const char* aTypeName, PRUint32 aInstanceSize)
   }
   return entry;
 }
+
 #endif /* NS_BUILD_REFCNT_LOGGING */
- 
+
 void
-nsTraceRefcnt::DumpStatistics()
+nsTraceRefcnt::DumpNewStatistics(FILE* out)
 {
 #ifdef NS_BUILD_REFCNT_LOGGING
   if (!gTrackBloat || !gBloatView) {
@@ -298,12 +309,28 @@ nsTraceRefcnt::DumpStatistics()
     printf("Bloaty: Only dumping data about objects that leaked\n");
   }
 
-//  fprintf(stdout, "     Name                  AddRefs    [mean / stddev] Objects    [mean / stddev]    Size TotalSize\n");
-//  fprintf(stdout, "     Name                 Tot-Objs Rem-Objs Tot-Adds Rem-Adds Obj-Size  Mem-Use\n");
-  fprintf(stdout, "                                           Bloaty: Refcounting and Memory Bloat Statistics\n");
-  fprintf(stdout, "     |<-------Name------>|<--------------References-------------->|<----------------Objects---------------->|<------Size----->|\n");
-  fprintf(stdout, "                               Rem    Total      Mean       StdDev       Rem    Total      Mean       StdDev Per-Class      Rem\n");
-  PL_HashTableDump(gBloatView, BloatEntry::DumpEntry, stdout);
+  BloatEntry::PrintDumpHeader(out, "NEW RESULTS");
+  PL_HashTableDump(gBloatView, BloatEntry::DumpNewEntry, out);
+
+  UNLOCK_TRACELOG();
+#endif
+}
+
+void
+nsTraceRefcnt::DumpAllStatistics(FILE* out)
+{
+#ifdef NS_BUILD_REFCNT_LOGGING
+  if (!gTrackBloat || !gBloatView) {
+    return;
+  }
+
+  LOCK_TRACELOG();
+  if (gDumpLeaksOnly) {
+    printf("Bloaty: Only dumping data about objects that leaked\n");
+  }
+
+  BloatEntry::PrintDumpHeader(out, "ALL RESULTS");
+  PL_HashTableDump(gBloatView, BloatEntry::DumpAllEntry, out);
 
   UNLOCK_TRACELOG();
 #endif
@@ -336,20 +363,6 @@ nsTraceRefcnt::GatherStatistics(nsTraceRefcntStatFunc aFunc,
     ga.closure = aClosure;
     PL_HashTableEnumerateEntries(gBloatView, BloatEntry::GatherEntry,
                                  (void*) &ga);
-  }
-
-  UNLOCK_TRACELOG();
-#endif
-}
-
-void
-nsTraceRefcnt::SnapshotStatistics()
-{
-#ifdef NS_BUILD_REFCNT_LOGGING
-  LOCK_TRACELOG();
-
-  if (gBloatView) {
-    PL_HashTableEnumerateEntries(gBloatView, BloatEntry::SnapshotEntry, 0);
   }
 
   UNLOCK_TRACELOG();

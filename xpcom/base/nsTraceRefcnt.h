@@ -108,6 +108,10 @@ struct nsTraceRefcntStats {
   nsrefcnt mReleases;
   nsrefcnt mCreates;
   nsrefcnt mDestroys;
+  double mRefsOutstandingTotal;
+  double mRefsOutstandingVariance;
+  double mObjsOutstandingTotal;
+  double mObjsOutstandingVariance;
 };
 
 // Function type used by GatherStatistics. For each type that data has
@@ -166,11 +170,11 @@ public:
   static NS_COM void LogDtor(void* aPtr, const char* aTypeName,
                              PRUint32 aInstanceSize);
 
-  static NS_COM void DumpStatistics(void);
+  static NS_COM void DumpNewStatistics(FILE* out = stdout);
+
+  static NS_COM void DumpAllStatistics(FILE* out = stdout);
 
   static NS_COM void ResetStatistics(void);
-
-  static NS_COM void SnapshotStatistics(void);
 
   static NS_COM void GatherStatistics(nsTraceRefcntStatFunc aFunc,
                                       void* aClosure);
