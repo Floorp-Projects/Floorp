@@ -35,8 +35,8 @@ const char kFTPProto[8] = "ftp://";
 const int kHTTPPort = 80;
 const int kFTPPort = 21;
 const int kRespBufSize = 1024;
-const int kReqBufSize = 1024;
-const int kHdrBufSize = 256;
+const int kReqBufSize = 4096;
+const int kHdrBufSize = 4096;
 const char kCRLF[3] = "\r\n";
 const char kHdrBodyDelim[5] = "\r\n\r\n";
 const char kDefaultDestFile[11] = "index.html";
@@ -250,7 +250,7 @@ nsHTTPConn::Request(int aResumePos)
     char req[kReqBufSize];
     char hdr[kHdrBufSize];
     int rv;
-    
+
     memset(req, 0, kReqBufSize);
 
     // format header buf:
@@ -259,6 +259,9 @@ nsHTTPConn::Request(int aResumePos)
     memset(hdr, 0, kHdrBufSize);
     if (mProxiedURL)
     {
+#ifdef DEBUG
+        assert(sizeof hdr > (strlen(mProxiedURL) + 15 ));
+#endif
         sprintf(hdr, "GET %s HTTP/1.0%s", mProxiedURL, kCRLF);
         strcpy(req, hdr);
 
@@ -434,8 +437,8 @@ nsHTTPConn::Response(HTTPGetCB aCallback, char *aDestFile, int aResumePos)
         if ( mEventPumpCB )
             mEventPumpCB();
 
-    } while (bytesWritten < expectedSize && (rv == nsSocket::E_READ_MORE || rv == nsSocket::OK));
-
+    } while ( rv == nsSocket::E_READ_MORE || rv == nsSocket::OK);
+    
     if ( bytesWritten == expectedSize )
         rv = nsSocket::E_EOF_FOUND;
         
