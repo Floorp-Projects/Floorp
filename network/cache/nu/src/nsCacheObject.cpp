@@ -277,7 +277,7 @@ void nsCacheObject::Charset(const char* i_Charset)
     if (m_Charset)
         delete[] m_Charset;
     int len = PL_strlen(i_Charset);
-    m_URL = new char[len + 1];
+    m_Charset = new char[len + 1];
     PL_strncpyz(m_Charset, i_Charset, len+1);
 }
 
