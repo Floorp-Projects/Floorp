@@ -133,7 +133,7 @@ interface nsIHelperAppLauncher : nsISupports
    */
   void setWebProgressListener(in nsIWebProgressListener aWebProgressListener);
   /**
-   * when the stand along progress window actually closes, it calls this method
+   * when the stand alone progress window actually closes, it calls this method
    * so we can release any local state...
    */
   void closeProgressWindow();

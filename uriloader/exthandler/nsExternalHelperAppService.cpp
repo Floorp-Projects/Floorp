@@ -172,13 +172,18 @@ static void GetFilenameFromDisposition(nsAString& aFilename,
 }
 
 
-// The following static table lists all of the "default" content type mappings we are going to use
+/**
+ * Structure for storing extension->type mappings.
+ * @see defaultMimeEntries
+ */
 struct nsDefaultMimeTypeEntry {
   const char* mMimeType;
   const char* mFileExtension;
 };
 
-// These extension->mimetype mappings are not overridable.
+/**
+ * Default extension->mimetype mappings. These are not overridable.
+ */
 static nsDefaultMimeTypeEntry defaultMimeEntries [] = 
 {
   // The following are those extensions that we're asked about during startup,
@@ -198,8 +203,10 @@ static nsDefaultMimeTypeEntry defaultMimeEntries [] =
   { "application/xhtml+xml", "xht" }
 };
 
-// this is a small private struct used to help us initialize some
-// default mime types.
+/**
+ * This is a small private struct used to help us initialize some
+ * default mime types.
+ */
 struct nsExtraMimeTypeEntry {
   const char* mMimeType; 
   const char* mFileExtensions;
@@ -214,10 +221,12 @@ struct nsExtraMimeTypeEntry {
 #define MAC_TYPE(x) 0
 #endif
 
-// This table lists all of the 'extra" content types that we can deduce from particular
-// file extensions.  These entries also ensure that we provide a good descriptive name
-// when we encounter files with these content types and/or extensions.  These can be
-// overridden by user helper app prefs.
+/**
+ * This table lists all of the 'extra" content types that we can deduce from particular
+ * file extensions.  These entries also ensure that we provide a good descriptive name
+ * when we encounter files with these content types and/or extensions.  These can be
+ * overridden by user helper app prefs.
+ */
 static nsExtraMimeTypeEntry extraMimeEntries [] =
 {
 #if defined(VMS)
@@ -253,12 +262,18 @@ static nsExtraMimeTypeEntry extraMimeEntries [] =
 
 #undef MAC_TYPE
 
+/**
+ * MIME Types for which decoding should be disabled
+ */
 static const char* const nonDecodableTypes [] = {
   "application/tar",
   "application/x-tar",
   0
 };
 
+/**
+ * File extensions for which decoding should be disabled.
+ */
 static const char* const nonDecodableExtensions [] = {
   "gz",
   "tgz",
