@@ -1990,6 +1990,6 @@ function loadThrobberUrl(urlPref)
     var url;
     try {
         url = gPrefs.getComplexValue(urlPref, Components.interfaces.nsIPrefLocalizedString).data;
-        messenger.loadExternalURL(window, url);  
+        messenger.loadURL(window, url);  
     } catch (ex) {}
 }

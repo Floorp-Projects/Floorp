@@ -60,6 +60,8 @@ var gRightMouseButtonDown = false;
 // This is used to make sure that the row with the currentIndex has the selection
 // after a Delete or Move of a message that has a row index less than currentIndex.
 var gThreadPaneCurrentSelectedIndex = -1;
+var gLoadStartFolder = true;
+var gNewAccountToLoad = null;
 
 // Global var to keep track of if the 'Delete Message' or 'Move To' thread pane
 // context menu item was triggered.  This helps prevent the tree view from
@@ -789,14 +791,15 @@ function loadStartFolder(initialUri)
 
         var startFolder = startFolderResource.QueryInterface(Components.interfaces.nsIFolder);
         SelectFolder(startFolder.URI);
-                
+
         // only do this on startup, when we pass in null
-        if (!initialUri && isLoginAtStartUpEnabled)
+        if (!initialUri && isLoginAtStartUpEnabled && gLoadStartFolder)
         {
             // Perform biff on the server to check for new mail, except for imap
             if (defaultServer.type != "imap")
               defaultServer.PerformBiff();         
-        } 
+        }
+
 
         // because the "open" state persists, we'll call
         // PerformExpand() for all servers that are open at startup.
