@@ -1293,7 +1293,7 @@ $(MDDEPDIR):
 MDDEPEND_FILES		:= $(wildcard $(MDDEPDIR)/*.pp)
 
 ifdef MDDEPEND_FILES
-ifdef PERL
+ifdef SHARED_LIBRARY_LIBS
 # The script mddepend.pl checks the dependencies and writes to stdout
 # one rule to force out-of-date objects. For example,
 #   foo.o boo.o: FORCE
