@@ -31,6 +31,7 @@
 #include "nsIServiceManager.h"
 #include "nsISupportsArray.h"
 #include "nsHashtable.h"
+#include "nsICSSPseudoComparator.h"
 #include "nsICSSStyleRuleProcessor.h"
 #include "nsICSSStyleRule.h"
 #include "nsICSSNameSpaceRule.h"
@@ -403,6 +404,7 @@ public:
                            nsIContent* aParentContent,
                            nsIAtom* aPseudoTag,
                            nsIStyleContext* aParentContext,
+                           nsICSSPseudoComparator* aComparator,
                            nsISupportsArray* aResults);
 
   NS_IMETHOD HasStateDependentStyle(nsIPresContext* aPresContext,
@@ -3299,13 +3301,16 @@ CSSRuleProcessor::RulesMatching(nsIPresContext* aPresContext,
 struct PseudoEnumData : public SelectorMatchesData {
   PseudoEnumData(nsIPresContext* aPresContext, nsIContent* aParentContent,
                  nsIAtom* aPseudoTag, nsIStyleContext* aParentContext, 
+                 nsICSSPseudoComparator* aComparator,
                  nsISupportsArray* aResults)
   : SelectorMatchesData(aPresContext, aParentContent, aParentContext, aResults)
   {
     mPseudoTag = aPseudoTag;
+    mComparator = aComparator;
   }
 
-  nsIAtom*  mPseudoTag;
+  nsIAtom*                 mPseudoTag;
+  nsICSSPseudoComparator*  mComparator;
 };
 
 static void PseudoEnumFunc(nsICSSStyleRule* aRule, void* aData)
@@ -3313,7 +3318,12 @@ static void PseudoEnumFunc(nsICSSStyleRule* aRule, void* aData)
   PseudoEnumData* data = (PseudoEnumData*)aData;
 
   nsCSSSelector* selector = aRule->FirstSelector();
-  if (selector->mTag == data->mPseudoTag) {
+
+  PRBool matches = (selector->mTag == data->mPseudoTag);
+  if (data->mComparator)
+    data->mComparator->PseudoMatches(data->mPseudoTag, selector, &matches);
+
+  if (matches) {
     selector = selector->mNext;
 
     if (selector) { // test next selector specially
@@ -3362,6 +3372,7 @@ CSSRuleProcessor::RulesMatching(nsIPresContext* aPresContext,
                                 nsIContent* aParentContent,
                                 nsIAtom* aPseudoTag,
                                 nsIStyleContext* aParentContext,
+                                nsICSSPseudoComparator* aComparator,
                                 nsISupportsArray* aResults)
 {
   NS_PRECONDITION(nsnull != aPresContext, "null arg");
@@ -3371,7 +3382,7 @@ CSSRuleProcessor::RulesMatching(nsIPresContext* aPresContext,
   RuleCascadeData* cascade = GetRuleCascade(aMedium);
 
   if (cascade) {
-    PseudoEnumData data(aPresContext, aParentContent, aPseudoTag, aParentContext, aResults);
+    PseudoEnumData data(aPresContext, aParentContent, aPseudoTag, aParentContext, aComparator, aResults);
     cascade->mRuleHash.EnumerateTagRules(aPseudoTag, PseudoEnumFunc, &data);
 
 #ifdef DEBUG_RULES
