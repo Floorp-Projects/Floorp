@@ -20,7 +20,7 @@
 #include "nsIRDFDataSource.idl"
 #include "nsIRDFResource.idl"
 #include "nsIRDFNode.idl"
-#include "nsISimpleEnumerator.idl"
+#include "nsIEnumerator.idl"
 
 // A wrapper for manipulating RDF containers
 [scriptable, uuid(D4214E90-FB94-11D2-BDD8-00104BDE6048)]
