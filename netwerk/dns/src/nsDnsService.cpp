@@ -433,7 +433,6 @@ nsDNSService::nsDNSService()
     
     NS_ASSERTION(gService==nsnull,"multiple nsDNSServices allocated!");
     gService    = this;
-    mThread     = nsnull;
     mThreadLock = nsnull;
 
 #if defined(XP_MAC)
@@ -492,7 +491,7 @@ nsDNSService::Init()
 
 #if defined(XP_MAC) || defined(XP_PC)
     // create DNS thread
-    rv = NS_NewThread(&mThread, this, 0, PR_JOINABLE_THREAD);
+    rv = NS_NewThread(getter_AddRefs(mThread), this, 0, PR_JOINABLE_THREAD);
 #endif
 
 
@@ -883,12 +882,19 @@ nsDNSService::Shutdown()
         if (dnsServiceThread)
             PR_Mac_PostAsyncNotify(dnsServiceThread);
         rv = mThread->Join();
+        // Have to break the cycle here, otherwise nsDNSService holds onto the thread
+        // and the thread holds onto the nsDNSService via its mRunnable
+        mThread = nsnull;
     }
 
 #elif defined(XP_PC)
     SendMessage(mDNSWindow, WM_DNS_SHUTDOWN, 0, 0);
-    if (mThread)
+    if (mThread) {
         rv = mThread->Join();
+        // Have to break the cycle here, otherwise nsDNSService holds onto the thread
+        // and the thread holds onto the nsDNSService via its mRunnable
+        mThread = nsnull;
+    }
 
 #elif defined(XP_UNIX)
     // XXXX - ?

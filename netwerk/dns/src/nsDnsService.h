@@ -70,7 +70,7 @@ protected:
     static nsDNSService * gService;
     static PRBool         gNeedLateInitialization;
     
-    nsIThread *           mThread;
+    nsCOMPtr<nsIThread>   mThread;
     PRLock *              mThreadLock;
     nsresult              mState;
 
