@@ -45,13 +45,11 @@ static CWFileSpec gSourceFile;
 static char* gSourcePath = NULL;
 
 extern "C" {
-
 pascal short xpidl_compiler(CWPluginContext context);
 int xpidl_main(int argc, char* argv[]);
 int xptdump_main(int argc, char* argv[]);
 
 FILE * FSp_fopen(ConstFSSpecPtr spec, const char * open_mode);
-
 }
 
 pascal short xpidl_compiler(CWPluginContext context)
@@ -167,8 +165,11 @@ static CWResult	Compile(CWPluginContext context)
 	return (err);
 }
 
+// #define USE_FULL_PATH
+
 static CWResult	Disassemble(CWPluginContext context)
 {
+#if 0
 	CWFileSpec sourceFile;
 	CWResult err = CWGetMainFileSpec(context, &sourceFile);
 	if (!CWSUCCESS(err))
@@ -184,7 +185,12 @@ static CWResult	Disassemble(CWPluginContext context)
 		return (err);
 
 	c2p_strcpy(gSourceFile.name, sourceName);
+
+#ifdef USE_FULL_PATH	
 	gSourcePath = full_path_to(gSourceFile);
+#else
+	gSourcePath = sourceName;
+#endif
 
 	XPIDLSettings settings = { kXPIDLSettingsVersion, kXPIDLModeTypelib, false, false };
 	GetSettings(context, settings);
@@ -216,6 +222,9 @@ static CWResult	Disassemble(CWPluginContext context)
 	}
 
 	return (err);
+#else
+	return noErr;
+#endif
 }
 
 static CWResult	LocateFile(CWPluginContext context, const char* filename, FSSpec& file)
@@ -241,6 +250,13 @@ static CWResult	LocateFile(CWPluginContext context, const char* filename, FSSpec
 	return (err);
 }
 
+/**
+ * Substitute for standard fopen, treats certain filenames specially,
+ * and also considers the mode argument. If a file is being opened
+ * for reading, the file is assumed to be locateable using CodeWarrior's
+ * standard access paths. If it's for writing, the file is opened in
+ * the current project's output directory.
+ */
 FILE* std::fopen(const char* filename, const char *mode)
 {
 	FSSpec filespec;
@@ -268,6 +284,22 @@ FILE* std::fopen(const char* filename, const char *mode)
 	return (err == noErr ? FSp_fopen(&filespec, mode) : NULL);
 }
 
+/**
+ * Returns the length of a file, assuming it is always located in the
+ * project's output directory.
+ */
+size_t mac_get_file_length(const char* filename)
+{
+	long dataSize= 0, rsrcSize = 0;
+	FSSpec filespec;
+	if (CWGetOutputFileDirectory(gPluginContext, &filespec) != noErr)
+		return 0;
+	c2p_strcpy(filespec.name, filename);
+	if (FSpGetFileSize(&filespec, &dataSize, &rsrcSize) != noErr)
+		return 0;
+	return dataSize;
+}
+
 void mac_warning(const char* warning_message)
 {
 	CWReportMessage(gPluginContext, 0, warning_message, 0, messagetypeError, 0);
@@ -290,7 +322,7 @@ CWPLUGIN_ENTRY(CWPlugin_GetDropInFlags)(const DropInFlags** flags, long* flagsSi
 		kCurrentDropInFlagsVersion,
 		CWDROPINCOMPILERTYPE,
 		DROPINCOMPILERLINKERAPIVERSION,
-		(kGeneratescode | kCandisassemble | kCompMultiTargAware | kCompAlwaysReload),
+		(kGeneratescode | /* kCandisassemble | */ kCompMultiTargAware | kCompAlwaysReload),
 		Lang_MISC,
 		DROPINCOMPILERLINKERAPIVERSION
 	};

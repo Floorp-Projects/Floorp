@@ -16,8 +16,7 @@ extern "C" {
 #include <stdio.h>
 #endif
 
-FILE* mac_fopen(const char* filename, const char *mode);
-
+size_t mac_get_file_length(const char* filename);
 void mac_warning(const char* warning_message);
 void mac_error(const char* error_message);
 
