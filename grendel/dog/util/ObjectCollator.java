@@ -33,7 +33,7 @@ import java.util.Locale;
  * A class for comparing objects in a tree.
  *
  * @author dog@dog.net.uk
- * @version 1.0final
+ * @version 0.3
  */
 public class ObjectCollator extends Collator {
 
@@ -73,13 +73,6 @@ public class ObjectCollator extends Collator {
 	 */
 	protected int applyDescending(int comparison) {
 		return (!descending ? comparison : -comparison);
-	}
-	
-	/**
-	 * Utility method to return the opposite of a comparison if descending is true.
-	 */
-	protected int applyDescending(double comparison) {
-		return (!descending ? (int)Math.rint(comparison) : (int)Math.rint(comparison*(-1.0)));
 	}
 	
 	/**
@@ -124,7 +117,7 @@ public class ObjectCollator extends Collator {
 				return applyDescending(collator.compare(source.toString(), (String)target));
 		} else if (source instanceof Double) {
 			if (target instanceof Number)
-				return applyDescending((double)(((Number)target).doubleValue()-((Double)source).doubleValue()));
+				return applyDescending((int)(((Number)target).doubleValue()-((Double)source).doubleValue()));
 			else if (target instanceof String)
 				return applyDescending(collator.compare(source.toString(), (String)target));
 		} else if (source instanceof Long) {
@@ -134,7 +127,7 @@ public class ObjectCollator extends Collator {
 				return applyDescending(collator.compare(source.toString(), (String)target));
 		} else if (source instanceof Float) {
 			if (target instanceof Number)
-				return applyDescending((double)(((Number)target).floatValue()-((Float)source).floatValue()));
+				return applyDescending((int)(((Number)target).floatValue()-((Float)source).floatValue()));
 			else if (target instanceof String)
 				return applyDescending(collator.compare(source.toString(), (String)target));
 		} else if (source instanceof Byte) {

@@ -30,7 +30,7 @@ import java.util.EventObject;
  * A timer event.
  *
  * @author dog@dog.net.uk
- * @version 1.0final
+ * @version 0.3
  */
 public class TimerEvent extends EventObject {
 

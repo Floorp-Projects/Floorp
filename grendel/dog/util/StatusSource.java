@@ -28,7 +28,7 @@ package dog.util;
  * An interface for defining that an object can pass status messages.
  *
  * @author dog@dog.net.uk
- * @version 1.0final
+ * @version 0.1
  */
 public interface StatusSource {
 

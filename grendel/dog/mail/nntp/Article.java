@@ -31,7 +31,7 @@ import javax.mail.internet.*;
  * The message class implementing the NNTP mail protocol.
  *
  * @author dog@dog.net.uk
- * @version 0.3
+ * @version 1.0
  */
 public class Article extends MimeMessage {
 

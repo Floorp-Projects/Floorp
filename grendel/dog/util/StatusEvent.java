@@ -30,7 +30,7 @@ import java.util.*;
  * A status message.
  *
  * @author dog@dog.net.uk
- * @version 1.0final
+ * @version 0.1
  */
 public class StatusEvent extends EventObject {
 

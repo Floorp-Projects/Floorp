@@ -29,7 +29,7 @@ import java.util.EventObject;
  * A tree event.
  *
  * @author dog@dog.net.uk
- * @version 1.0final
+ * @version 2.0alpha
  */
 public class TreeEvent extends ItemEvent {
 

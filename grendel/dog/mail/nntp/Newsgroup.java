@@ -16,7 +16,7 @@
  * The Initial Developer of the Original Code is dog.
  * Portions created by dog are Copyright (C) 1998 dog <dog@dog.net.uk>. All Rights Reserved.
  *
- * Contributors: Edwin Woudt <edwin@woudt.nl>
+ * Contributor(s): n/a.
  */
 
 package dog.mail.nntp;
@@ -30,7 +30,7 @@ import javax.mail.event.*;
  * The folder class implementing the NNTP mail protocol.
  *
  * @author dog@dog.net.uk
- * @version 0.3
+ * @version 1.0
  */
 public class Newsgroup extends Folder {
 
@@ -114,8 +114,8 @@ public class Newsgroup extends Folder {
 	public void open(int mode) throws MessagingException {
 		if (open)
 			throw new MessagingException("Newsgroup is already open");
-		//if (mode!=READ_ONLY)
-		//	throw new MessagingException("Newsgroup is read-only");
+		if (mode!=READ_ONLY)
+			throw new MessagingException("Newsgroup is read-only");
 		((NNTPStore)store).open(this);
 		open = true;
 		notifyConnectionListeners(ConnectionEvent.OPENED);
@@ -174,18 +174,18 @@ public class Newsgroup extends Folder {
 		if (!open)
 			throw new MessagingException("Newsgroup is not open");
         NNTPStore s = (NNTPStore)store;
-		//if (articles==null)
+		if (articles==null)
 			articles = s.getArticles(this);
-		//else { // check for new articles
-		//	Article[] nm = s.getNewArticles(this, checkpoint);
-		//	if (nm.length>0) {
-		//		Article[] m2 = new Article[articles.length+nm.length];
-		//		System.arraycopy(articles, 0, m2, 0, articles.length);
-		//		System.arraycopy(nm, 0, m2, articles.length, nm.length);
-		//		articles = m2;
-		//	}
-		//}
-		//checkpoint = new Date();
+		else { // check for new articles
+			Article[] nm = s.getNewArticles(this, checkpoint);
+			if (nm.length>0) {
+				Article[] m2 = new Article[articles.length+nm.length];
+				System.arraycopy(articles, 0, m2, 0, articles.length);
+				System.arraycopy(nm, 0, m2, articles.length, nm.length);
+				articles = m2;
+			}
+		}
+		checkpoint = new Date();
         return articles;
 	}
 	

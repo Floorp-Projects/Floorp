@@ -28,7 +28,7 @@ package dog.util;
  * A timer class that wakes up listeners after a specified number of milliseconds.
  *
  * @author dog@dog.net.uk
- * @version 1.0final
+ * @version 0.3
  */
 public final class Timer extends Thread {
 

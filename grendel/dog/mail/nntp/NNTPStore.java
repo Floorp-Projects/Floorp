@@ -16,8 +16,7 @@
  * The Initial Developer of the Original Code is dog.
  * Portions created by dog are Copyright (C) 1998 dog <dog@dog.net.uk>. All Rights Reserved.
  *
- * Contributors: Mario Camou <mcamou@workmail.com>.
- *               Edwin Woudt <edwin@woudt.nl>
+ * Contributor(s): n/a.
  */
 
 package dog.mail.nntp;
@@ -35,7 +34,7 @@ import dog.util.*;
  * The storage class implementing the NNTP Usenet news protocol.
  *
  * @author dog@dog.net.uk
- * @version 0.3
+ * @version 1.0
  */
 public class NNTPStore extends Store implements StatusSource {
 
@@ -68,9 +67,7 @@ public class NNTPStore extends Store implements StatusSource {
 	static final int LISTING_ARTICLES = 230; // list of new articles by message-id follows
 	static final int LISTING_NEW = 231; // list of new newsgroups follows
 	static final int ARTICLE_POSTED = 240; // article posted ok
-    static final int PASSWORD_OK = 281; // Authentication OK
 	static final int SEND_ARTICLE = 340; // send article to be posted. End with <CR-LF>.<CR-LF>
-    static final int PASS_REQ = 381; // PASS required (after sending user)
     static final int SERVICE_DISCONTINUED = 400;
 	static final int NO_SUCH_GROUP = 411;
 	static final int NO_GROUP_SELECTED = 412; // no newsgroup has been selected
@@ -135,18 +132,6 @@ public class NNTPStore extends Store implements StatusSource {
 				break;
 			}
 	
-			// -- authentication, added by mario --
-			if (username != null && password != null) {
-				send ("AUTHINFO USER "+username);
-				if (getResponse() == PASS_REQ) {
-					send ("AUTHINFO PASS "+password);
-					if (getResponse() != PASSWORD_OK) {
-						throw new AuthenticationFailedException();
-					}
-				}
-			}
-			// -- end authentication --
-
 			readNewsrc();
 			
 			return true;
@@ -426,20 +411,9 @@ public class NNTPStore extends Store implements StatusSource {
 	// Attempts to discover which newsgroups exist and which articles have been read.
 	void readNewsrc() {
 		try {
-			String osname = System.getProperties().getProperty("os.name");
-			File newsrc;
-			if (osname.startsWith("Windows") ||
-			    osname.startsWith("Win32") ||
-			    osname.startsWith("Win16") ||
-			    osname.startsWith("16-bit Windows")) {
-				newsrc = new File(System.getProperty("user.home")+File.separator+"news-"+getHostName()+".rc");
-				if (!newsrc.exists())
-					newsrc = new File(System.getProperty("user.home")+File.separator+"news.rc");
-			} else {
-				newsrc = new File(System.getProperty("user.home")+File.separator+".newsrc-"+getHostName());
-				if (!newsrc.exists())
-					newsrc = new File(System.getProperty("user.home")+File.separator+".newsrc");
-			}
+			File newsrc = new File(System.getProperty("user.home")+File.separator+".newsrc-"+getHostName());
+			if (!newsrc.exists())
+				newsrc = new File(System.getProperty("user.home")+File.separator+".newsrc");
 
 			BufferedReader reader = new BufferedReader(new FileReader(newsrc));
 			String line;
@@ -742,9 +716,7 @@ public class NNTPStore extends Store implements StatusSource {
 				send(command);
 				switch (getResponse()) {
 				  case LISTING_OVERVIEW:
-                    processStatusEvent(new StatusEvent(this, StatusEvent.OPERATION_START, command));
 					String line;
-					int count = 0;
 					for (line=in.readLine(); line!=null && !".".equals(line); line = in.readLine()) {
 						int tabIndex = line.indexOf('\t');
 						if (tabIndex>-1) {
@@ -752,13 +724,9 @@ public class NNTPStore extends Store implements StatusSource {
                             Article article = new Article(newsgroup, msgnum);
 							article.addXoverHeaders(getOverviewHeaders(format, line, tabIndex));
 							av.addElement(article);
-							count++;
-							if ((count%20)==0)
-								processStatusEvent(new StatusEvent(this, StatusEvent.OPERATION_UPDATE, command, newsgroup.first, newsgroup.last, msgnum));
 						} else
 							throw new ProtocolException("Invalid overview line format");
 					}
-                    processStatusEvent(new StatusEvent(this, StatusEvent.OPERATION_END, command));
 					break;
 				  case NO_ARTICLE_SELECTED:
 				  case PERMISSION_DENIED:

@@ -365,61 +365,43 @@ public final class Tree {
 
 	void removeElement(int e) {
 		int len = 0;
-		boolean removed = false;
+        // does this element have children?
 		for (int p=0; p<nparents; p++) {
 			if (parents[p]==elements[e]) {
 				int nc = nchildren[p];
-				try {
-                    //System.out.println("Removing "+elements[e]);
-					//printArray("parents", parents, nparents);
-					if ((len = nparents-p-1)>0) {
-						System.arraycopy(parents, p+1, parents, p, len);
-						System.arraycopy(children, p+1, children, p, len);
-						System.arraycopy(nchildren, p+1, nchildren, p, len);
-					}
-					nparents--;
-					//printArray("parents", parents, nparents);
-					//printArray("elements", elements, nelements);
-					if ((len = nelements-e-1)>0) {
-						System.arraycopy(elements, e+1+nc, elements, e, len-nc);
-						System.arraycopy(depths, e+1+nc, depths, e, len-nc);
-					}
-					nelements-=(nc+1);
-					//printArray("elements", elements, nelements);
-					removed = true;
-				} catch (ArrayIndexOutOfBoundsException x) {
-					System.out.println("arrayindexoutofboundsexception in tree:");
-					System.out.println("p="+p+": "+parents[p]);
-					System.out.println("e="+e+", nelements="+nelements+", elements.length="+elements.length+", nc="+nc+", len="+len);
+                // remove the children of this parent first
+                Object[] pchildren = new Object[nc];
+				System.arraycopy(children[p], 0, pchildren, 0, nc);
+				for (int c=0; c<nc; c++) {
+					int ce = elementIndex(pchildren[c]);
+					if (ce>-1)
+						removeElement(ce);
 				}
-				break;
-			}
-		}
-		for (int p=0; p<nparents && !removed; p++) {
-			for (int c = 0; c<nchildren[p] && !removed; c++) {
-				if (children[p][c]==elements[e]) {
-					if ((len = nchildren[p]-c-1)>0) {
-						System.arraycopy(children[p], c+1, children[p], c, len);
+                // remove the parent
+				if ((len = nparents-p-1)>0) {
+					System.arraycopy(parents, p+1, parents, p, len);
+					System.arraycopy(children, p+1, children, p, len);
+					System.arraycopy(nchildren, p+1, nchildren, p, len);
+				}
+				nparents--; p--;
+			} else {
+				// is this element a child of another parent?
+				for (int c=0; c<nchildren[p]; c++) {
+					if (children[p][c]==elements[e]) {
+						// remove this element from the children array
+						if ((len = nchildren[p]-c-1)>0) {
+							System.arraycopy(children[p], c+1, children[p], c, len);
+						}
+						nchildren[p]--; c--;
 					}
-					nchildren[p]--;
-					if ((len = nelements-e-1)>0) {
-						System.arraycopy(elements, e+1, elements, e, len);
-						System.arraycopy(depths, e+1, depths, e, len);
-					}
-					nelements--;
-					removed = true;
-					break;
 				}
 			}
 		}
-		if (!removed) {
-			if ((len = nelements-e-1)>0) {
-				System.arraycopy(elements, e+1, elements, e, len);
-				System.arraycopy(depths, e+1, depths, e, len);
-			}
-			nelements--;
+		if ((len = nelements-e-1)>0) {
+			System.arraycopy(elements, e+1, elements, e, len);
+			System.arraycopy(depths, e+1, depths, e, len);
 		}
-		//printElements();
+		nelements--;
 	}
 	
 	/**

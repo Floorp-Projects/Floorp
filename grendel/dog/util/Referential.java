@@ -30,7 +30,7 @@ package dog.util;
  * This reference can be used to tag objects with a datasource id or store a hashtable of associated values.
  *
  * @author dog@dog.net.uk
- * @version 1.0final
+ * @version 0.3
  */
 public interface Referential {
 

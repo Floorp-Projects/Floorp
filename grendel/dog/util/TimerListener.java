@@ -30,7 +30,7 @@ import java.util.EventListener;
  * Interface for classes that wnat to recieve timer events.
  *
  * @author dog@dog.net.uk
- * @version 1.0final
+ * @version 0.3
  */
 public interface TimerListener extends EventListener {
 

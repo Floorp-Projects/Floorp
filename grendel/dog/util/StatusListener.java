@@ -30,7 +30,7 @@ import java.util.*;
  * A callback interface for passing status messages.
  *
  * @author dog@dog.net.uk
- * @version 1.0final
+ * @version 0.1
  */
 public interface StatusListener extends EventListener {
 
