@@ -17,7 +17,6 @@
   Reserved.
 
 -->
-<?xml-stylesheet href="chrome://sidebar/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://sidebar/skin/customize.css" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://sidebar/locale/customize.dtd" >
@@ -28,6 +27,7 @@
   onload="Init();" 
   id="main-box"
   class="dialog"
+  windowtype="sidebar:customize"
   align="vertical">
 
   <!-- Dialog title -->
@@ -51,19 +51,23 @@
       </html:div>
 
       <html:div style="width:15em;height:15em" flex="1*">
-        <tree id="other-panels" size="10" onclick="otherPanelSelected()"
+        <tree id="other-panels" size="10"
           datasources="chrome://sidebar/content/local-panels.rdf
                        chrome://sidebar/content/remote-panels.rdf"
           ref="urn:sidebar:master-panel-list"
+          indent="true"
           style="width:100%;height:100%">
     
           <template>
-            <treechildren>
+            <treechildren onclick="otherPanelSelected(event, event.target.parentNode.parentNode)">
               <treeitem uri="rdf:*"
                 title="rdf:http://home.netscape.com/NC-rdf#title"
-                content="rdf:http://home.netscape.com/NC-rdf#content">
+                content="rdf:http://home.netscape.com/NC-rdf#content"
+                open="rdf:http://home.netscape.com/NC-rdf#open"
+                persist="open">
                 <treerow>
-                  <treecell value="rdf:http://home.netscape.com/NC-rdf#title"/>
+                  <treecell indent="true" 
+                    value="rdf:http://home.netscape.com/NC-rdf#title"/>
                 </treerow>
               </treeitem>
             </treechildren>
@@ -108,7 +112,8 @@
                 <treeitem uri="rdf:*"
                   title="rdf:http://home.netscape.com/NC-rdf#title"
                   customize="rdf:http://home.netscape.com/NC-rdf#customize"
-                  content="rdf:http://home.netscape.com/NC-rdf#content">
+                  content="rdf:http://home.netscape.com/NC-rdf#content"
+                  persist="open">
                   <treerow>
                     <treecell
                       value="rdf:http://home.netscape.com/NC-rdf#title" />
