@@ -152,8 +152,8 @@ mime_convert_charset (const char *input_line, PRInt32 input_length,
   // Now do conversion to UTF-8 for output
   char  *convertedString = NULL;
   PRInt32 convertedStringLen;
-  PRInt32 res = MIME_ConvertCharset(input_charset, "UTF-8", input_line, input_length, &convertedString, &convertedStringLen);
-
+  PRInt32 res = MIME_ConvertCharset(input_charset, "UTF-8", input_line, input_length, 
+                                    &convertedString, &convertedStringLen);
   if (res != 0)
   {
       *output_ret = 0;
@@ -1271,22 +1271,24 @@ mime_bridge_create_stream(MimePluginInstance  *newPluginObj,
   // 
   // Charset overrides takes place here
   //
-  // We have a bool pref (mail.force_charset) to deal with incorrectly labeled mails. 
-  // 1) If false and the part header is specified then use the charset in the header. 
-  // 2) If false and the part header has no charset the use the charset in the pref. 
-  //    We may also apply the charset detection. 
-  // 3) If false then only use the charset in pref and ignore all other information. 
+  // We have a bool pref (mail.force_user_charset) to deal with attachments.
+  // 1) If true - libmime does NO conversion and just passes it through to raptor
+  // 2) If false, then we try to use the charset of the part and if not available, 
+  //    the charset of the root message 
   //
-  PRBool  overrideCharset = FALSE;
+  msd->options->force_user_charset = PR_FALSE;
 
-  msd->prefs->GetBoolPref("mail.force_charset", &overrideCharset);
-  if (overrideCharset)
+  msd->prefs->GetBoolPref("mail.force_user_charset", &(msd->options->force_user_charset));
+  if (msd->options->force_user_charset)
   {
+    /* For now, we are not going to do this, but I am leaving the code here just in case
+       we do want a pref charset override capability.
     char    charset[256];
     int     length = sizeof(charset);
 
     msd->prefs->GetCharPref("mail.charset", charset, &length); 
     msd->options->override_charset = PL_strdup(charset);
+    ****/
   }
 
   /* ### mwelch We want FO_EDT_SAVE_IMAGE to behave like *_SAVE_AS here

@@ -197,6 +197,8 @@ struct MimeDisplayOptions
 							   real world, many messages are mislabelled with
 							   the wrong charset.)
 							 */
+  PRBool  force_user_charset; /* this is the new strategy to deal with incorrectly
+                                 labeled attachments */
 
   /* =======================================================================
 	 Stream-related callbacks; for these functions, the `closure' argument

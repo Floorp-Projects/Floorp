@@ -70,19 +70,19 @@ MimeInlineText_initialize (MimeObject *obj)
     else
     {
       char *ct = MimeHeaders_get (obj->headers, HEADER_CONTENT_TYPE,
-        PR_FALSE, PR_FALSE);
+                                  PR_FALSE, PR_FALSE);
       if (ct)
       {
         text->charset = MimeHeaders_get_parameter (ct, "charset", NULL, NULL);
         PR_Free(ct);
       }
-      
+    
       if (!text->charset)
       {
-      /* If we didn't find "Content-Type: ...; charset=XX" then look
-      for "X-Sun-Charset: XX" instead.  (Maybe this should be done
-      in MimeSunAttachmentClass, but it's harder there than here.)
-        */
+        /* If we didn't find "Content-Type: ...; charset=XX" then look
+           for "X-Sun-Charset: XX" instead.  (Maybe this should be done
+           in MimeSunAttachmentClass, but it's harder there than here.)
+         */
         text->charset = MimeHeaders_get (obj->headers,
                                           HEADER_X_SUN_CHARSET,
                                           PR_FALSE, PR_FALSE);
@@ -270,7 +270,8 @@ MimeInlineText_rotate_convert_and_parse_line(char *line, PRInt32 length,
 
   /* Now convert to the canonical charset, if desired.
    */
-  if (obj->options && obj->options->charset_conversion_fn)
+  if ( (obj->options && obj->options->charset_conversion_fn) &&
+       (!obj->options->force_user_charset) )  /* Only convert if the user prefs is false */
 	{
 	  PRInt32 converted_len = 0;
     const char *input_charset = (obj->options->override_charset
