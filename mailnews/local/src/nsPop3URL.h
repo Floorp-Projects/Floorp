@@ -27,6 +27,7 @@
 #include "nsMsgMailNewsUrl.h"
 #include "nsIMsgIncomingServer.h"
 #include "nsCOMPtr.h"
+#include "nsXPIDLString.h"
 
 class nsPop3URL : public nsIPop3URL, public nsMsgMailNewsUrl
 {
@@ -40,9 +41,9 @@ protected:
 	virtual ~nsPop3URL();
 	// protocol specific code to parse a url...
     virtual nsresult ParseUrl(const nsString& aSpec);
-	virtual const char * GetUserName() { return m_userName.GetBuffer();}
+	virtual const char * GetUserName() { GetUsername(getter_Copies(m_userName)); return m_userName;}
 
-	nsCString m_userName;
+    nsXPIDLCString m_userName;
     nsCString m_messageUri;
 
 	/* Pop3 specific event sinks */

@@ -63,20 +63,6 @@ nsresult nsPop3URL::GetPop3Sink(nsIPop3Sink** aPop3Sink)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsPop3URL::SetUsername(const char *aUserName)
-{
-	nsresult rv = NS_OK;
-	if (aUserName)
-    {
-		m_userName = aUserName;
-        nsMsgMailNewsUrl::SetUsername(aUserName);
-    }
-	else
-		rv = NS_ERROR_NULL_POINTER;
-
-	return rv;
-}
-
 NS_IMETHODIMP
 nsPop3URL::GetMessageUri(char ** aMessageUri)
 {

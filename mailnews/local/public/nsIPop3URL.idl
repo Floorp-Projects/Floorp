@@ -27,6 +27,5 @@
 interface nsIPop3URL : nsISupports {
     attribute nsIPop3Sink pop3Sink;
     attribute string messageUri;
-	void SetUsername(in string aUserName);
 };
 

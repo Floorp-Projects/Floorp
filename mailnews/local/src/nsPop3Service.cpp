@@ -206,7 +206,9 @@ nsresult nsPop3Service::BuildPop3Url(char * urlSpec,
 		msgServer->GetUsername(getter_Copies(userName));
 
 		pop3Url->SetPop3Sink(pop3Sink);
-		pop3Url->SetUsername(userName);
+
+        nsCOMPtr<nsIURI> pop3Uri(do_QueryInterface(pop3Url));
+		pop3Uri->SetUsername(userName);
 
 		if (aUrlListener)
 		{
