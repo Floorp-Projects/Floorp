@@ -182,68 +182,6 @@ nsAreaFrame::FirstChild(nsIAtom* aListName, nsIFrame** aFirstChild) const
   return nsBlockFrame::FirstChild(aListName, aFirstChild);
 }
 
-#ifdef DEBUG
-NS_IMETHODIMP
-nsAreaFrame::Paint(nsIPresContext&      aPresContext,
-                   nsIRenderingContext& aRenderingContext,
-                   const nsRect&        aDirtyRect,
-                   nsFramePaintLayer    aWhichLayer)
-{
-  // Note: all absolutely positioned elements have views so we don't
-  // need to worry about painting them
-  nsresult rv = nsBlockFrame::Paint(aPresContext, aRenderingContext,
-                                    aDirtyRect, aWhichLayer);
-
-#if 0
-  if ((NS_FRAME_PAINT_LAYER_DEBUG == aWhichLayer) && GetShowFrameBorders()) {
-    // Render the bands in the spacemanager
-    nsISpaceManager* sm = mSpaceManager;
-
-    if (nsnull != sm) {
-      nsBlockBandData band;
-      band.Init(sm, nsSize(mRect.width, mRect.height));
-      nscoord y = 0;
-      while (y < mRect.height) {
-        nsRect availArea;
-        band.GetAvailableSpace(y, availArea);
-  
-        // Render a box and a diagonal line through the band
-        aRenderingContext.SetColor(NS_RGB(0,255,0));
-        aRenderingContext.DrawRect(0, availArea.y,
-                                   mRect.width, availArea.height);
-        aRenderingContext.DrawLine(0, availArea.y,
-                                   mRect.width, availArea.YMost());
-  
-        // Render boxes and opposite diagonal lines around the
-        // unavailable parts of the band.
-        PRInt32 i;
-        for (i = 0; i < band.GetTrapezoidCount(); i++) {
-          const nsBandTrapezoid* trapezoid = band.GetTrapezoid(i);
-          if (nsBandTrapezoid::Available != trapezoid->mState) {
-            nsRect r;
-            trapezoid->GetRect(r);
-            if (nsBandTrapezoid::OccupiedMultiple == trapezoid->mState) {
-              aRenderingContext.SetColor(NS_RGB(0,255,128));
-            }
-            else {
-              aRenderingContext.SetColor(NS_RGB(128,255,0));
-            }
-            aRenderingContext.DrawRect(r);
-            aRenderingContext.DrawLine(r.x, r.YMost(), r.XMost(), r.y);
-          }
-        }
-        y = availArea.YMost();
-      }
-    }
-  }
-
-  return rv;
-#else
-  return NS_OK;
-#endif
-}
-#endif
-
 // Return the x-most and y-most for the child absolutely positioned
 // elements
 NS_IMETHODIMP
@@ -341,32 +279,8 @@ nsAreaFrame::Reflow(nsIPresContext&          aPresContext,
     }
   }
 
-#if 0
-#ifdef NOISY_SPACEMANAGER
-  if (eReflowReason_Incremental == aReflowState.reason) {
-    if (mSpaceManager) {
-      ListTag(stdout);
-      printf(": space-manager before reflow\n");
-      mSpaceManager->List(stdout);
-    }
-  }
-#endif
-#endif
-
   // Let the block frame do its reflow first
   rv = nsBlockFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
-
-#if 0
-#ifdef NOISY_SPACEMANAGER
-  if (eReflowReason_Incremental == aReflowState.reason) {
-    if (mSpaceManager) {
-      ListTag(stdout);
-      printf(": space-manager after reflow\n");
-      mSpaceManager->List(stdout);
-    }
-  }
-#endif
-#endif
 
   // Let the absolutely positioned container reflow any absolutely positioned
   // child frames that need to be reflowed, e.g., elements with a percentage

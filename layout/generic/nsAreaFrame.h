@@ -81,13 +81,6 @@ public:
   NS_IMETHOD  DidReflow(nsIPresContext&   aPresContext,
                         nsDidReflowStatus aStatus);
 
-#ifdef DEBUG
-  NS_IMETHOD Paint(nsIPresContext&      aPresContext,
-                   nsIRenderingContext& aRenderingContext,
-                   const nsRect&        aDirtyRect,
-                   nsFramePaintLayer    aWhichLayer);
-#endif
-
   /**
    * Get the "type" of the frame
    *
