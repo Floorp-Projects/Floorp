@@ -1,3 +1,7 @@
+Changes since 1.0b1:
+
+1. Fixed code that was causing recursive painting calls.
+
 Changes since 1.0d8:
 
 1. Unescape file:// URLs when processing them. This allows us to launch local applets when there

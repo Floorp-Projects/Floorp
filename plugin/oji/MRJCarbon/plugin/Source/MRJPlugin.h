@@ -463,7 +463,7 @@ public:
 private:
     void pushInstance(void);
     void popInstance(void);
-    void inspectInstance(void);
+    void inspectInstance(Boolean isUpdateEvt);
 
 private:
     nsIPluginInstancePeer* mPeer;

@@ -786,13 +786,15 @@ NS_METHOD MRJPluginInstance::SetWindow(nsPluginWindow* pluginWindow)
 NS_METHOD MRJPluginInstance::HandleEvent(nsPluginEvent* pluginEvent, PRBool* eventHandled)
 {
     *eventHandled = PR_TRUE;
+    Boolean isUpdate;
 
     if (pluginEvent != NULL) {
         EventRecord* event = pluginEvent->event;
 
         // Check for coordinate/clipping changes.
         // Too bad nsPluginEventType_ClippingChangedEvent events aren't implemented.
-        inspectInstance();
+        isUpdate = (event->what == updateEvt);
+        inspectInstance(isUpdate);
     
         if (event->what == nullEvent) {
             // Give MRJ another quantum of time.
@@ -917,8 +919,8 @@ MRJSession* MRJPluginInstance::getSession()
     return mSession;
 }
 
-void MRJPluginInstance::inspectInstance()
+void MRJPluginInstance::inspectInstance(Boolean isUpdateEvt)
 {
-    if (mContext != NULL && mContext->inspectWindow() && mWindowlessPeer != NULL)
+    if (mContext != NULL && mContext->inspectWindow() && !isUpdateEvt && mWindowlessPeer != NULL)
         mWindowlessPeer->ForceRedraw();
 }
