@@ -361,6 +361,7 @@ MOZ_META_COMPONENTS_mail_comps = \
 	msgdb \
 	msgmdn \
 	mailview \
+  offline-startup \
 	bayesflt \
 	$(NULL)
 
