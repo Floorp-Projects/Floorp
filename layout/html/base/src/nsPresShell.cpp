@@ -293,6 +293,9 @@ public:
   NS_IMETHOD GetPageSequenceFrame(nsIPageSequenceFrame** aResult) const;
   NS_IMETHOD GetPrimaryFrameFor(nsIContent* aContent,
                                 nsIFrame**  aPrimaryFrame) const;
+  NS_IMETHOD SetPrimaryFrameFor(nsIContent* aContent,
+                                nsIFrame*   aPrimaryFrame);
+  NS_IMETHOD ClearPrimaryFrameMap();
   NS_IMETHOD GetStyleContextFor(nsIFrame*         aFrame,
                                 nsIStyleContext** aStyleContext) const;
   NS_IMETHOD GetLayoutObjectFor(nsIContent*   aContent,
@@ -301,6 +304,7 @@ public:
                                     nsIFrame** aPlaceholderFrame) const;
   NS_IMETHOD SetPlaceholderFrameFor(nsIFrame* aFrame,
                                     nsIFrame* aPlaceholderFrame);
+  NS_IMETHOD ClearPlaceholderFrameMap();
   NS_IMETHOD AppendReflowCommand(nsIReflowCommand* aReflowCommand);
   NS_IMETHOD CancelReflowCommand(nsIFrame* aTargetFrame);
   NS_IMETHOD ProcessReflowCommands();
@@ -1853,6 +1857,19 @@ PresShell::GetPrimaryFrameFor(nsIContent* aContent,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+PresShell::SetPrimaryFrameFor(nsIContent* aContent,
+                              nsIFrame*   aPrimaryFrame)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+PresShell::ClearPrimaryFrameMap()
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 NS_IMETHODIMP 
 PresShell::GetStyleContextFor(nsIFrame*         aFrame,
                               nsIStyleContext** aStyleContext) const
@@ -1930,6 +1947,12 @@ PresShell::SetPlaceholderFrameFor(nsIFrame* aFrame,
     mPlaceholderMap->Put(aFrame, (void*)aPlaceholderFrame);
   }
   return NS_OK;
+}
+
+NS_IMETHODIMP
+PresShell::ClearPlaceholderFrameMap()
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 //nsIViewObserver

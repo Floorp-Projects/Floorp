@@ -135,7 +135,7 @@ public:
   NS_IMETHOD GetPageSequenceFrame(nsIPageSequenceFrame** aResult) const = 0;
 
   /**
-   * Returns the primary frame associated with the content object.
+   * Get/set the primary frame associated with the content object.
    *
    * The primary frame is the frame that is most closely associated with the
    * content. A frame is more closely associated with the content that another
@@ -149,6 +149,9 @@ public:
    */
   NS_IMETHOD GetPrimaryFrameFor(nsIContent* aContent,
                                 nsIFrame**  aPrimaryFrame) const = 0;
+  NS_IMETHOD SetPrimaryFrameFor(nsIContent* aContent,
+                                nsIFrame*   aPrimaryFrame) = 0;
+  NS_IMETHOD ClearPrimaryFrameMap() = 0;
 
   /** Returns the style context associated with the frame.
     * Used by code outside of layout that can't use nsIFrame methods to get
@@ -177,6 +180,7 @@ public:
                                     nsIFrame** aPlaceholderFrame) const = 0;
   NS_IMETHOD SetPlaceholderFrameFor(nsIFrame* aFrame,
                                     nsIFrame* aPlaceholderFrame) = 0;
+  NS_IMETHOD ClearPlaceholderFrameMap() = 0;
 
   NS_IMETHOD AppendReflowCommand(nsIReflowCommand* aReflowCommand) = 0;
 
