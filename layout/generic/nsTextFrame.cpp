@@ -788,6 +788,11 @@ protected:
   static PRPackedBool sWordSelectEatSpaceAfter;         // should we include whitespace up to next word?
   
 #ifdef IBMBIDI
+  void AdjustSelectionPointsForBidi(SelectionDetails *sdptr,
+                                    PRInt32 textLength,
+                                    PRBool isRTLChars,
+                                    PRBool isOddLevel,
+                                    PRBool isBidiSystem);
 private:
   NS_IMETHOD_(nsrefcnt) AddRef(void);
   NS_IMETHOD_(nsrefcnt) Release(void);
@@ -2207,16 +2212,15 @@ nsTextFrame::PaintUnicodeText(nsIPresContext* aPresContext,
   {
 #ifdef IBMBIDI
     PRBool isRightToLeftOnBidiPlatform = PR_FALSE;
-    PRBool isBidiSystem;
+    PRBool isBidiSystem = PR_FALSE;
     PRUint32 hints = 0;
     aRenderingContext.GetHints(hints);
-    isBidiSystem = (hints & NS_RENDERING_HINT_BIDI_REORDERING);
     PRBool bidiEnabled;
+    nsCharType charType = eCharType_LeftToRight;
     aPresContext->GetBidiEnabled(&bidiEnabled);
-    //ahmed
-    aPresContext->SetIsBidiSystem(isBidiSystem);
     if (bidiEnabled) {
-      nsCharType charType;
+      isBidiSystem = (hints & NS_RENDERING_HINT_BIDI_REORDERING);
+      aPresContext->SetIsBidiSystem(isBidiSystem);
       GetBidiProperty(aPresContext, nsLayoutAtoms::embeddingLevel, (void**) &level,sizeof(level));
       GetBidiProperty(aPresContext, nsLayoutAtoms::charType, (void**) &charType,sizeof(charType));
 
@@ -2281,29 +2285,8 @@ nsTextFrame::PaintUnicodeText(nsIPresContext* aPresContext,
       while (sdptr){
         sdptr->mStart = ip[sdptr->mStart] - mContentOffset;
         sdptr->mEnd = ip[sdptr->mEnd]  - mContentOffset;
-#ifdef IBMBIDI // Simon - display substrings RTL in RTL frame on non-Bidi platform
-        if ((level & 1) && !(isRightToLeftOnBidiPlatform)) {
-          PRInt32 swap  = sdptr->mStart;
-          sdptr->mStart = textLength - sdptr->mEnd;
-          sdptr->mEnd   = textLength - swap;
- 
-          // temp fix for 75026 crasher untill we fix the bidi code
-          // the above bidi code cause mStart < 0 in some case
-          // the problem is we have whitespace compression code in 
-          // nsTextTransformer which cause mEnd > textLength
-          NS_ASSERTION((sdptr->mStart >= 0) , "mStart >= 0");
-          if(sdptr->mStart < 0 )
-            sdptr->mStart = 0;
-
-          NS_ASSERTION((sdptr->mEnd >= 0) , "mEnd >= 0");
-          if(sdptr->mEnd < 0 )
-            sdptr->mEnd = 0;
-
-          NS_ASSERTION((sdptr->mStart <= sdptr->mEnd), "mStart <= mEnd");
-          if(sdptr->mStart > sdptr->mEnd)
-            sdptr->mEnd = sdptr->mStart;
-           
-        }
+#ifdef IBMBIDI
+        AdjustSelectionPointsForBidi(sdptr, textLength, CHARTYPE_IS_RTL(charType), level & 1, isBidiSystem);
 #endif
         sdptr = sdptr->mNext;
       }
@@ -2879,8 +2862,9 @@ nsTextFrame::PaintTextSlowly(nsIPresContext* aPresContext,
 
   if (0 != textLength) {
 #ifdef IBMBIDI
-    PRBool isRightToLeft = PR_FALSE;
     PRBool bidiEnabled;
+    PRUint8 level = 0;
+    nsCharType charType = eCharType_LeftToRight;
     aPresContext->GetBidiEnabled(&bidiEnabled);
 
     if (bidiEnabled) {
@@ -2888,14 +2872,10 @@ nsTextFrame::PaintTextSlowly(nsIPresContext* aPresContext,
       aPresContext->GetBidiUtils(&bidiUtils);
 
       if (bidiUtils) {
-        nsCharType charType;
-        PRUint8           level;
         GetBidiProperty(aPresContext, nsLayoutAtoms::embeddingLevel,
                         (void**) &level,sizeof(level));
         GetBidiProperty(aPresContext, nsLayoutAtoms::charType, 
                         (void**) &charType,sizeof(charType));
-        if (CHARTYPE_IS_RTL(charType))
-          isRightToLeft = PR_TRUE;
         // Since we paint char by char, handle the text like on non-bidi platform
         bidiUtils->FormatUnicodeText(aPresContext, text, textLength, charType,
                                      level & 1, PR_FALSE);
@@ -2939,12 +2919,8 @@ nsTextFrame::PaintTextSlowly(nsIPresContext* aPresContext,
       while (sdptr){
         sdptr->mStart = ip[sdptr->mStart] - mContentOffset;
         sdptr->mEnd = ip[sdptr->mEnd]  - mContentOffset;
-#ifdef IBMBIDI // Simon - display substrings RTL in RTL frame
-        if (isRightToLeft) {
-          PRInt32 swap  = sdptr->mStart;
-          sdptr->mStart = textLength - sdptr->mEnd;
-          sdptr->mEnd   = textLength - swap;
-        }
+#ifdef IBMBIDI
+        AdjustSelectionPointsForBidi(sdptr, textLength, CHARTYPE_IS_RTL(charType), level & 1, PR_FALSE);
 #endif
         sdptr = sdptr->mNext;
       }
@@ -3382,16 +3358,9 @@ nsTextFrame::GetPosition(nsIPresContext* aCX,
 
 #ifdef IBMBIDI
         PRBool getReversedPos = PR_FALSE;
-        PRUint32 hints = 0;
-        PRBool isVisual;
-        PRInt32 charType;
-        GetBidiProperty(aCX, nsLayoutAtoms::charType, (void**)&charType,sizeof(charType));
-
-        acx->GetHints(hints);
-        aCX->IsVisualMode(isVisual);
-        if (CHARTYPE_IS_RTL(charType) && !isVisual) {
-          getReversedPos = PR_TRUE;
-        }
+        PRUint8 level  = 0;
+        GetBidiProperty(aCX, nsLayoutAtoms::embeddingLevel, (void**)&level,sizeof(level));
+        getReversedPos = level & 1;
         nscoord posX = (getReversedPos) ?
                        (mRect.width + origin.x) - (aPoint.x - origin.x) : aPoint.x;
 
@@ -3795,7 +3764,7 @@ nsTextFrame::GetChildFrameContainingOffset(PRInt32 inContentOffset,
         if (NS_SUCCEEDED(nextBidi->GetOffsets(start, end)) && start > 0)
         {
           return nextBidi->GetChildFrameContainingOffset(inContentOffset, 
-inHint, outFrameContentOffset, outChildFrame);
+            inHint, outFrameContentOffset, outChildFrame);
         }
       }
     }
@@ -5721,6 +5690,59 @@ nsTextFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) cons
 #endif
 
 #ifdef IBMBIDI
+void nsTextFrame::AdjustSelectionPointsForBidi(SelectionDetails *sdptr,
+                                               PRInt32 textLength,
+                                               PRBool isRTLChars,
+                                               PRBool isOddLevel,
+                                               PRBool isBidiSystem)
+{
+  /* This adjustment is required whenever the text has been reversed by
+   * Mozilla before rendering.
+   *
+   * In theory this means any text whose Bidi embedding level has been
+   * set by the Unicode Bidi algorithm to an odd value, but this is
+   * only true in practice on a non-Bidi platform.
+   * 
+   * On a Bidi platform the situation is more complicated because the
+   * platform will automatically reverse right-to-left characters; so
+   * Mozilla reverses text whose natural directionality is the opposite
+   * of its embedding level: right-to-left characters whose Bidi
+   * embedding level is even (e.g. Visual Hebrew) or left-to-right and
+   * neutral characters whose Bidi embedding level is odd (e.g. English
+   * text with <bdo dir="rtl">).
+   *
+   * The following condition is accordingly an optimization of
+   *  if ( (!isBidiSystem && isOddLevel) ||
+   *       (isBidiSystem &&
+   *        ((isRTLChars && !isOddLevel) ||
+   *         (!isRTLChars && isOddLevel))))
+   */
+  if (isOddLevel ^ (isRTLChars && isBidiSystem)) {
+
+    PRInt32 swap  = sdptr->mStart;
+    sdptr->mStart = textLength - sdptr->mEnd;
+    sdptr->mEnd   = textLength - swap;
+
+    // temp fix for 75026 crasher untill we fix the bidi code
+    // the above bidi code cause mStart < 0 in some case
+    // the problem is we have whitespace compression code in 
+    // nsTextTransformer which cause mEnd > textLength
+    NS_ASSERTION((sdptr->mStart >= 0) , "mStart >= 0");
+    if(sdptr->mStart < 0 )
+      sdptr->mStart = 0;
+
+    NS_ASSERTION((sdptr->mEnd >= 0) , "mEnd >= 0");
+    if(sdptr->mEnd < 0 )
+      sdptr->mEnd = 0;
+
+    NS_ASSERTION((sdptr->mStart <= sdptr->mEnd), "mStart <= mEnd");
+    if(sdptr->mStart > sdptr->mEnd)
+      sdptr->mEnd = sdptr->mStart;
+  }
+  
+  return;
+}
+
 NS_IMETHODIMP
 nsTextFrame::SetOffsets(PRInt32 aStart, PRInt32 aEnd)
 {
