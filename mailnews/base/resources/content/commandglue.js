@@ -174,7 +174,7 @@ function ChangeFolderByURI(uri)
   var beforeTime = new Date();
   folder.setAttribute('id', uri);
   var afterTime = new Date();
-  var timeToLoad = (afterTime - beforeTime)/1000;
+  var timeToLoad = (afterTime.getTime() - beforeTime.getTime())/1000;
   if(showPerformance)
 	  dump("Time to load " + uri + " is " +  timeToLoad + " seconds\n");
 }
