@@ -131,6 +131,13 @@ nsresult nsAbView::RemoveCardAt(PRInt32 row)
   PR_FREEIF(abcard->secondaryCollationKey);
   PR_FREEIF(abcard);
 
+  
+  // this needs to happen after we remove the card, as RowCountChanged() will call GetRowCount()
+  if (mTree) {
+    rv = mTree->RowCountChanged(row, -1);
+    NS_ENSURE_SUCCESS(rv,rv);
+  }
+
   if (mAbViewListener && !mSuppressCountChange) {
     rv = mAbViewListener->OnCountChanged(mCards.Count());
     NS_ENSURE_SUCCESS(rv,rv);
@@ -945,12 +952,6 @@ nsresult nsAbView::RemoveCardAndSelectNextCard(nsISupports *item)
 
       rv = RemoveCardAt(index);
       NS_ENSURE_SUCCESS(rv,rv);
-
-      // this needs to happen after we remove the card, as RowCountChanged() will call GetRowCount()
-      if (mTree) {
-        rv = mTree->RowCountChanged(index, -1);
-      NS_ENSURE_SUCCESS(rv,rv);
-      }
 
       if (selectNextCard) {
       PRInt32 count = mCards.Count();
