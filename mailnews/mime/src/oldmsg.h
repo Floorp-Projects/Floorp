@@ -24,7 +24,6 @@
 #include "xp.h"
 #include "msgcom.h"
 #include "msgnet.h"
-#include "msgutils.h"
 #include "xpgetstr.h"
 
 #ifdef XP_CPLUSPLUS

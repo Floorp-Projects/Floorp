@@ -17,9 +17,9 @@
  */
 
 #include "mimeobj.h"
-
 #include "prmem.h"
 #include "plstr.h"
+#include "mimebuf.h"
 
 /* Way to destroy any notions of modularity or class hierarchy, Terry! */
 # include "mimetpla.h"
@@ -205,7 +205,7 @@ MimeObject_parse_buffer (char *buffer, PRInt32 size, MimeObject *obj)
   PR_ASSERT(!obj->closed_p);
   if (obj->closed_p) return -1;
 
-  return msg_LineBuffer (buffer, size,
+  return mime_LineBuffer (buffer, size,
 						 &obj->ibuffer, &obj->ibuffer_size, &obj->ibuffer_fp,
 						 PR_TRUE,
 						 ((int (*) (char *, PRInt32, void *))

@@ -17,7 +17,7 @@
  */
 
 #include "mimetpla.h"
-
+#include "mimebuf.h"
 #include "prmem.h"
 #include "plstr.h"
 

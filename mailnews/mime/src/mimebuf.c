@@ -25,7 +25,7 @@
 extern int MK_OUT_OF_MEMORY;
 
 int
-msg_GrowBuffer (PRUint32 desired_size, PRUint32 element_size, PRUint32 quantum,
+mime_GrowBuffer (PRUint32 desired_size, PRUint32 element_size, PRUint32 quantum,
 				char **buffer, PRUint32 *size)
 {
   if (*size <= desired_size)
@@ -48,14 +48,14 @@ msg_GrowBuffer (PRUint32 desired_size, PRUint32 element_size, PRUint32 quantum,
   return 0;
 }
 
-/* The opposite of msg_LineBuffer(): takes small buffers and packs them
+/* The opposite of mime_LineBuffer(): takes small buffers and packs them
    up into bigger buffers before passing them along.
 
    Pass in a desired_buffer_size 0 to tell it to flush (for example, in
    in the very last call to this function.)
  */
 int
-msg_ReBuffer (const char *net_buffer, PRInt32 net_buffer_size,
+mime_ReBuffer (const char *net_buffer, PRInt32 net_buffer_size,
 			  PRUint32 desired_buffer_size,
 			  char **bufferP, PRUint32 *buffer_sizeP, PRUint32 *buffer_fpP,
 			  PRInt32 (*per_buffer_fn) (char *buffer, PRUint32 buffer_size,
@@ -66,7 +66,7 @@ msg_ReBuffer (const char *net_buffer, PRInt32 net_buffer_size,
 
   if (desired_buffer_size >= (*buffer_sizeP))
 	{
-	  status = msg_GrowBuffer (desired_buffer_size, sizeof(char), 1024,
+	  status = mime_GrowBuffer (desired_buffer_size, sizeof(char), 1024,
 							   bufferP, buffer_sizeP);
 	  if (status < 0) return status;
 	}
@@ -98,7 +98,7 @@ msg_ReBuffer (const char *net_buffer, PRInt32 net_buffer_size,
 }
 
 static int
-msg_convert_and_send_buffer(char* buf, int length, PRBool convert_newlines_p,
+convert_and_send_buffer(char* buf, int length, PRBool convert_newlines_p,
 							PRInt32 (*per_line_fn) (char *line,
 												  PRUint32 line_length,
 												  void *closure),
@@ -147,7 +147,7 @@ msg_convert_and_send_buffer(char* buf, int length, PRBool convert_newlines_p,
 }
 
 int
-msg_LineBuffer (const char *net_buffer, PRInt32 net_buffer_size,
+mime_LineBuffer (const char *net_buffer, PRInt32 net_buffer_size,
 				char **bufferP, PRUint32 *buffer_sizeP, PRUint32 *buffer_fpP,
 				PRBool convert_newlines_p,
 				PRInt32 (*per_line_fn) (char *line, PRUint32 line_length,
@@ -161,7 +161,7 @@ msg_LineBuffer (const char *net_buffer, PRInt32 net_buffer_size,
 	   with a LF.  This old buffer should be shipped out and discarded. */
 	PR_ASSERT(*buffer_sizeP > *buffer_fpP);
 	if (*buffer_sizeP <= *buffer_fpP) return -1;
-	status = msg_convert_and_send_buffer(*bufferP, *buffer_fpP,
+	status = convert_and_send_buffer(*bufferP, *buffer_fpP,
 										 convert_newlines_p,
 										 per_line_fn, closure);
 	if (status < 0) return status;
@@ -211,7 +211,7 @@ msg_LineBuffer (const char *net_buffer, PRInt32 net_buffer_size,
 
 		if (desired_size >= (*buffer_sizeP))
 		  {
-			status = msg_GrowBuffer (desired_size, sizeof(char), 1024,
+			status = mime_GrowBuffer (desired_size, sizeof(char), 1024,
 									 bufferP, buffer_sizeP);
 			if (status < 0) return status;
 		  }
@@ -228,7 +228,7 @@ msg_LineBuffer (const char *net_buffer, PRInt32 net_buffer_size,
 	  if (!newline)
 		return 0;
 
-	  status = msg_convert_and_send_buffer(*bufferP, *buffer_fpP,
+	  status = convert_and_send_buffer(*bufferP, *buffer_fpP,
 										   convert_newlines_p,
 										   per_line_fn, closure);
 	  if (status < 0) return status;

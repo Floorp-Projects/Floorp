@@ -39,6 +39,7 @@
 #include "mimemrel.h"
 #include "mimemalt.h"
 #include "xpgetstr.h"
+#include "mimebuf.h"
 
 #ifdef RICHIE_VCARD
 # include "mimevcrd.h"  /* for MIME_VCardConverter */
@@ -67,7 +68,7 @@ extern int XP_FORWARDED_MESSAGE_ATTACHMENT;
 
 #include "mimei.h"      /* for moved MimeDisplayData struct */
 #include "mimemoz.h"
-#include "msgutils.h"   /* for msg_MakeRebufferingStream() */
+#include "mimebuf.h"
 
 #include "prmem.h"
 #include "plstr.h"
@@ -77,6 +78,14 @@ extern int MK_UNABLE_TO_OPEN_TMP_FILE;
 
 /* Arrgh.  Why isn't this in a reasonable header file somewhere???  ###tw */
 extern char * NET_ExplainErrorDetails (int code, ...);
+
+/*
+ * RICHIE - should this still be here....
+ * For now, I am moving this libmsg type stuff into mimemoz.c
+ */
+extern NET_StreamClass *msg_MakeRebufferingStream (NET_StreamClass *next,
+												   URL_Struct *url,
+												   MWContext *context);
 
 
 /* Interface between netlib and the top-level message/rfc822 parser:
@@ -2066,7 +2075,7 @@ static int
 mime_richtext_write (void *stream, const char* buf, PRInt32 size)
 {
   struct mime_richtext_data *data = (struct mime_richtext_data *) stream;  
-  return msg_LineBuffer (buf, size, &data->ibuffer, &data->ibuffer_size,
+  return mime_LineBuffer (buf, size, &data->ibuffer, &data->ibuffer_size,
                          &data->ibuffer_fp, PR_FALSE, mime_richtext_write_line,
                          data);
 }
@@ -2396,3 +2405,135 @@ MIME_VCardConverter2 ( int format_out,
     return stream;
 }
 #endif /* RICHIE_VCARD */
+
+
+/* RICHIE
+ * HOW WILL THIS BE HANDLED GOING FORWARD????
+ */
+PRBool 
+ValidateDocData(MWContext *window_id) 
+{ 
+  printf("ValidateDocData not implemented, stubbed in webshell/tests/viewer/nsStubs.cpp\n"); 
+  return PR_TRUE; 
+}
+
+struct msg_rebuffering_stream_data
+{
+  PRUint32 desired_size;
+  char *buffer;
+  PRUint32 buffer_size;
+  PRUint32 buffer_fp;
+  NET_StreamClass *next_stream;
+};
+
+
+static PRInt32
+msg_rebuffering_stream_write_next_chunk (char *buffer, PRUint32 buffer_size,
+							 void *closure)
+{
+  struct msg_rebuffering_stream_data *sd =
+	(struct msg_rebuffering_stream_data *) closure;
+  PR_ASSERT (sd);
+  if (!sd) return -1;
+  if (!sd->next_stream) return -1;
+  return (*sd->next_stream->put_block) (sd->next_stream->data_object,
+						buffer, buffer_size);
+}
+
+static int
+msg_rebuffering_stream_write_chunk (void *stream,
+									const char* net_buffer,
+									PRInt32 net_buffer_size)
+{
+  struct msg_rebuffering_stream_data *sd =
+	(struct msg_rebuffering_stream_data *) stream;  
+  PR_ASSERT (sd);
+  if (!sd) return -1;
+  return mime_ReBuffer (net_buffer, net_buffer_size,
+					   sd->desired_size,
+					   &sd->buffer, &sd->buffer_size, &sd->buffer_fp,
+					   msg_rebuffering_stream_write_next_chunk,
+					   sd);
+}
+
+static void
+msg_rebuffering_stream_abort (void *stream, int status)
+{
+  struct msg_rebuffering_stream_data *sd =
+    (struct msg_rebuffering_stream_data *) stream;  
+  if (!sd) return;
+  PR_FREEIF (sd->buffer);
+  if (sd->next_stream)
+  {
+    if (ValidateDocData(sd->next_stream->window_id)) /* otherwise doc_data is gone !  */
+      (*sd->next_stream->abort) (sd->next_stream->data_object, status);
+    PR_Free (sd->next_stream);
+  }
+  PR_Free (sd);
+}
+
+static void
+msg_rebuffering_stream_complete (void *stream)
+{
+  struct msg_rebuffering_stream_data *sd =
+	(struct msg_rebuffering_stream_data *) stream;  
+  if (!sd) return;
+  sd->desired_size = 0;
+  msg_rebuffering_stream_write_chunk (stream, "", 0);
+  PR_FREEIF (sd->buffer);
+  if (sd->next_stream)
+	{
+	  (*sd->next_stream->complete) (sd->next_stream->data_object);
+	  PR_Free (sd->next_stream);
+	}
+  PR_Free (sd);
+}
+
+static unsigned int
+msg_rebuffering_stream_write_ready (void *stream)
+{
+  struct msg_rebuffering_stream_data *sd =
+	(struct msg_rebuffering_stream_data *) stream;  
+  if (sd && sd->next_stream)
+    return ((*sd->next_stream->is_write_ready)
+			(sd->next_stream->data_object));
+  else
+    return (MAX_WRITE_READY);
+}
+
+NET_StreamClass * 
+msg_MakeRebufferingStream (NET_StreamClass *next_stream,
+						   URL_Struct *url,
+						   MWContext *context)
+{
+  NET_StreamClass *stream;
+  struct msg_rebuffering_stream_data *sd;
+
+  PR_ASSERT (next_stream);
+
+  stream = PR_NEW (NET_StreamClass);
+  if (!stream) return 0;
+
+  sd = PR_NEW (struct msg_rebuffering_stream_data);
+  if (! sd)
+	{
+	  PR_Free (stream);
+	  return 0;
+	}
+
+  memset (sd, 0, sizeof(*sd));
+  memset (stream, 0, sizeof(*stream));
+
+  sd->next_stream = next_stream;
+  sd->desired_size = 10240;
+
+  stream->name           = "ReBuffering Stream";
+  stream->complete       = msg_rebuffering_stream_complete;
+  stream->abort          = msg_rebuffering_stream_abort;
+  stream->put_block      = msg_rebuffering_stream_write_chunk;
+  stream->is_write_ready = msg_rebuffering_stream_write_ready;
+  stream->data_object    = sd;
+  stream->window_id      = context;
+
+  return stream;
+}

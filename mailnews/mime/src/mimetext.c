@@ -15,9 +15,9 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-
 #include "mimetext.h"
 #include "libi18n.h"
+#include "mimebuf.h"
 
 #include "prmem.h"
 #include "plstr.h"
@@ -232,7 +232,7 @@ MimeInlineText_parse_decoded_buffer (char *buf, PRInt32 size, MimeObject *obj)
 	 MimeLeaf class, except that we line-buffer to our own wrapper on the
 	 `parse_line' method instead of calling the `parse_line' method directly.
    */
-  return msg_LineBuffer (buf, size,
+  return mime_LineBuffer (buf, size,
 						 &obj->ibuffer, &obj->ibuffer_size, &obj->ibuffer_fp,
 						 PR_TRUE,
 						 ((int (*) (char *, PRInt32, void *))
@@ -244,7 +244,7 @@ MimeInlineText_parse_decoded_buffer (char *buf, PRInt32 size, MimeObject *obj)
 
 #define MimeInlineText_grow_cbuffer(text, desired_size) \
   (((desired_size) >= (text)->cbuffer_size) ? \
-   msg_GrowBuffer ((desired_size), sizeof(char), 100, \
+   mime_GrowBuffer ((desired_size), sizeof(char), 100, \
 				   &(text)->cbuffer, &(text)->cbuffer_size) \
    : 0)
 

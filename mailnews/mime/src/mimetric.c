@@ -15,9 +15,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-
 #include "mimetric.h"
-
+#include "mimebuf.h"
 #include "prmem.h"
 #include "plstr.h"
 
@@ -84,7 +83,7 @@ MimeRichtextConvert (char *line, PRInt32 length,
 
   desired_size = length * 4;
   if (desired_size >= *obuffer_sizeP)
-	status = msg_GrowBuffer (desired_size, sizeof(char), 1024,
+	status = mime_GrowBuffer (desired_size, sizeof(char), 1024,
 							 obufferP, obuffer_sizeP);
   if (status < 0) return status;
 
