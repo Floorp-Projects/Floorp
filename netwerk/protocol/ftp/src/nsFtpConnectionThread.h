@@ -106,7 +106,7 @@ public:
     nsFtpState();
     virtual ~nsFtpState();
 
-    nsresult Init(nsIFTPChannel *aChannel, nsIPrompt *aPrompter, nsIAuthPrompt *aAuthPrompter);
+    nsresult Init(nsIFTPChannel *aChannel, nsIPrompt *aPrompter, nsIAuthPrompt *aAuthPrompter, nsIFTPEventSink *sink);
 
     // use this to provide a stream to be written to the server.
     nsresult SetWriteStream(nsIInputStream* aInStream, PRUint32 aWriteCount);
@@ -211,7 +211,9 @@ private:
     PRBool                 mGenerateHTMLContent;
     PRPackedBool           mIPv6Checked;
     nsCOMPtr<nsIPrompt>    mPrompter;
+    nsCOMPtr<nsIFTPEventSink>       mFTPEventSink;
     nsCOMPtr<nsIAuthPrompt> mAuthPrompter;
+
     char                   *mIPv6ServerAddress; // Server IPv6 address; null if server not IPv6
 
     // ***** control read gvars

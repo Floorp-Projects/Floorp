@@ -273,7 +273,7 @@ nsFTPChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
         if (!mFTPState) return NS_ERROR_OUT_OF_MEMORY;
         NS_ADDREF(mFTPState);
     }
-    rv = mFTPState->Init(this, mPrompter, mAuthPrompter);
+    rv = mFTPState->Init(this, mPrompter, mAuthPrompter, mFTPEventSink);
     if (NS_FAILED(rv)) return rv;
 
     rv = mFTPState->Connect();
@@ -406,6 +406,9 @@ nsFTPChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aNotificationCallb
         (void)mCallbacks->GetInterface(NS_GET_IID(nsIPrompt),
                                        getter_AddRefs(mPrompter));
         NS_ASSERTION ( mPrompter, "Channel doesn't have a prompt!!!" );
+
+        (void)mCallbacks->GetInterface(NS_GET_IID(nsIFTPEventSink),
+                                       getter_AddRefs(mFTPEventSink));
         
         (void)mCallbacks->GetInterface(NS_GET_IID(nsIAuthPrompt),
                                        getter_AddRefs(mAuthPrompter));

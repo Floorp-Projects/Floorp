@@ -32,6 +32,13 @@ interface nsIFTPChannel : nsIChannel
     readonly attribute PRBool UsingTransparentProxy;
 };
 
+[scriptable, uuid(455d4234-0330-43d2-bbfb-99afbecbfeb0)]
+interface nsIFTPEventSink : nsISupports
+{
+    void OnFTPControlLog(in boolean server, in string msg);
+};
+
+
 %{C++
 #include "ftpCore.h"
 %}

@@ -89,8 +89,11 @@ public:
 protected:
     nsCOMPtr<nsIURI>                mOriginalURI;
     nsCOMPtr<nsIURI>                mURL;
+
+    // various callback interfaces
     nsCOMPtr<nsIProgressEventSink>  mEventSink;
     nsCOMPtr<nsIPrompt>             mPrompter;
+    nsCOMPtr<nsIFTPEventSink>       mFTPEventSink;
     nsCOMPtr<nsIAuthPrompt>         mAuthPrompter;
     nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
 
