@@ -2310,7 +2310,7 @@ JS::InvokeExprNode *JS::Parser::parseInvoke(ExprNode *target, uint32 pos, Token:
 	bool hasNamedArgument = false;
 
 #ifdef NEW_PARSER
-    arguments += parseArgumentList();
+    parseArgumentList(arguments);
     match(closingTokenKind);
 #else
     if (!lexer.eat(true, closingTokenKind))
@@ -2822,8 +2822,7 @@ void JS::Parser::parseFunctionSignature(FunctionDefinition &fd)
 #endif
     if (!lexer.eat(true, Token::closeParenthesis)) {
 #ifdef NEW_PARSER
-        NodeQueue<VariableBinding> params;
-        parameters += parseAllParameters(fd,params);
+        parseAllParameters(fd,parameters);
         match(Token::closeParenthesis);
 #else
         while (true) {
@@ -3457,15 +3456,15 @@ JS::ExprNode *JS::Parser::parseFieldName() {
  *     AssignmentExpression[allowIn] ArgumentListPrime
  */
 
-JS::ExprPairList *JS::Parser::parseArgumentList() {
+JS::ExprPairList *JS::Parser::parseArgumentList(NodeQueue<ExprPairList> &args) {
 
-    NodeQueue<ExprPairList> args;
     ExprPairList *$$=NULL;
      
     if( lookahead(Token::closeParenthesis) ) {
     } else {
         ExprNode *$1;
         $1 = parseAssignmentExpression();
+		lexer.redesignate(true); // Safe: looking for non-slash punctuation.
         //if( AssignmentExpressionNode.isFieldName($1) && lookahead(colon_token) ) {
         if( lookahead(Token::colon) ) {
             ExprNode *$2;
@@ -3498,6 +3497,7 @@ JS::ExprPairList *JS::Parser::parseArgumentListPrime(NodeQueue<ExprPairList> &ar
         match(Token::comma);
         ExprNode *$1;
         $1 = parseAssignmentExpression();
+		lexer.redesignate(true); // Safe: looking for non-slash punctuation.
         //if( AssignmentExpressionNode.isFieldName($2) && lookahead(colon_token) ) {
         if( lookahead(Token::colon) ) {
             ExprNode *$2;
@@ -3507,6 +3507,7 @@ JS::ExprPairList *JS::Parser::parseArgumentListPrime(NodeQueue<ExprPairList> &ar
             // Finish parsing the literal field.
             
             $2 = parseAssignmentExpression();
+		    lexer.redesignate(true); // Safe: looking for non-slash punctuation.
             args += NodeFactory::LiteralField($1,$2);
             $$ = parseNamedArgumentListPrime(args);
 
@@ -3577,17 +3578,22 @@ JS::VariableBinding *JS::Parser::parseAllParameters(FunctionDefinition &fd,NodeQ
         VariableBinding *$1;
         $1 = parseParameter();
         if( lookahead(Token::comma) ) {
-           params += $1;
-           match(Token::comma);
+            params += $1;
+            match(Token::comma);
             $$ = parseAllParameters(fd,params);
         } else if( lookahead(Token::assignment) ) {
-            fd.optParameters = parseOptionalParameterPrime($1);
-            params += fd.optParameters;
+            $1 = parseOptionalParameterPrime($1);
+			lexer.redesignate(true); // Safe: neither ',' nor '}' starts with a slash.
+            if (!fd.optParameters) {
+                fd.optParameters = $1;
+            }
+            params += $1;
             if( lookahead(Token::comma) ) {
                 match(Token::comma);
                 $$ = parseOptionalNamedRestParameters(fd,params);
             } 
         } else {
+            params += $1;
             $$ = params.first;
         }
     }
@@ -3622,7 +3628,12 @@ JS::VariableBinding *JS::Parser::parseOptionalNamedRestParameters(FunctionDefini
         match(Token::bitwiseOr);
         $$ = parseNamedRestParameters(fd,params);
     } else {
-        params += parseOptionalParameter();
+        VariableBinding *$1;
+        $1 = parseOptionalParameter();
+        if (!fd.optParameters) {
+            fd.optParameters = $1;
+        }
+        params += $1;
         if( lookahead(Token::comma) ) {
             match(Token::comma);
             $$ = parseOptionalNamedRestParameters(fd,params);
@@ -3646,15 +3657,25 @@ JS::VariableBinding *JS::Parser::parseNamedRestParameters(FunctionDefinition &fd
     VariableBinding *$$;
     
     if( lookahead(Token::tripleDot) ) {
-        params += parseRestParameter();
+        fd.restParameter = parseRestParameter();
+        params += fd.restParameter;
         $$ = params.first;
     } else {
-        NodeQueue<IdentifierList> $1;
-        params += parseNamedParameter($1);
+        NodeQueue<IdentifierList> aliases;
+        VariableBinding *$1;
+        $1 = parseNamedParameter(aliases);
+        if (!fd.optParameters && $1->initializer) {
+            fd.optParameters = $1;
+        }
+        if (fd.optParameters && !$1->initializer) {
+            syntaxError("'=' expected", 0);
+        }
         if( lookahead(Token::comma) ) {
+            params += $1;
             match(Token::comma);
             $$ = parseNamedRestParameters(fd,params);
         } else {
+            params += $1;
             $$ = params.first;
         }
     }
@@ -3670,13 +3691,21 @@ JS::VariableBinding *JS::Parser::parseNamedRestParameters(FunctionDefinition &fd
 
 JS::VariableBinding *JS::Parser::parseNamedParameters(FunctionDefinition &fd,NodeQueue<VariableBinding> &params) {
 
-    VariableBinding *$$;
-    NodeQueue<IdentifierList> $1;   // List of aliases.
-    params += parseNamedParameter($1);
-    if( lookahead(Token::comma) ) {
+    VariableBinding *$$,*$1;
+    NodeQueue<IdentifierList> aliases;   // List of aliases.
+    $1 = parseNamedParameter(aliases);
+    if (!fd.optParameters && $1->initializer) {
+        fd.optParameters = $1;
+    }
+    if (fd.optParameters && !$1->initializer) {
+        syntaxError("'=' expected", 0);
+    }
+    if (lookahead(Token::comma)) {
+        params += $1;
         match(Token::comma);
         $$ = parseNamedParameters(fd,params);
     } else {
+        params += $1;
         $$ = params.first;
     }
 
@@ -3750,6 +3779,7 @@ JS::VariableBinding *JS::Parser::parseOptionalParameterPrime(VariableBinding *$1
     
     match(Token::assignment);
     $1->initializer = parseAssignmentExpression();
+	lexer.redesignate(true); // Safe: neither ',' nor '}' starts with a slash.
     $$ = $1;
 
     return $$;
@@ -3762,20 +3792,20 @@ JS::VariableBinding *JS::Parser::parseOptionalParameterPrime(VariableBinding *$1
  *     String NamedParameter
  */
 
-JS::VariableBinding *JS::Parser::parseNamedParameter(NodeQueue<IdentifierList> &$1) {
+JS::VariableBinding *JS::Parser::parseNamedParameter(NodeQueue<IdentifierList> &aliases) {
 
     VariableBinding *$$;
     
     if( lookahead(Token::string) ) {
         const Token *t = match(Token::string);
-        //$1 += new (arena) IdentifierList(*new StringAtom(*new String(copyTokenChars(*t))));
-        $1 += NodeFactory::ListedIdentifier(copyTokenChars(*t));
-        $$ = parseNamedParameter($1);
+        aliases += NodeFactory::ListedIdentifier(copyTokenChars(*t));
+        $$ = parseNamedParameter(aliases);
     } else {
         $$ = parseParameter();
-        $$->aliases = $1.first;
+        $$->aliases = aliases.first;
         if( lookahead(Token::assignment) ) {
             $$ = parseOptionalParameterPrime($$);
+			//lexer.redesignate(true); // Safe: neither ',' nor '}' starts with a slash.
         } 
     }
     return $$;
