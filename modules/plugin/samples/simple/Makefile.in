@@ -28,7 +28,6 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= npsimple
 LIBRARY_NAME	= npsimple
-EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= SimplePlugin
 REQUIRES	= xpcom \
