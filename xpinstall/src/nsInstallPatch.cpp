@@ -217,6 +217,13 @@ PRInt32 nsInstallPatch::Prepare()
                         *mPatchFile,         // the patch that was extracted from the jarfile
                         &mPatchedFile);     // the new patched file
     
+    // clean up extracted diff data file
+    if ( (mPatchFile != nsnull) && (mPatchFile->Exists()) )
+    {
+        mPatchFile->Delete(PR_FALSE);
+    }
+
+
     if (err != nsInstall::SUCCESS)
     {   
         return err;
