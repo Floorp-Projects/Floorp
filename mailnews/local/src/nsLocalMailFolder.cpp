@@ -2139,6 +2139,20 @@ nsMsgLocalMailFolder::CopyFolderLocal(nsIMsgFolder *srcFolder, PRBool isMoveFold
         if (oldPath.IsDirectory())
           oldPath.Delete(PR_TRUE);   //delete the .sbd directory and it's content. All subfolders have been moved
       }
+
+      nsCOMPtr<nsIFileSpec> parentPathSpec;
+      rv = msgParent->GetPath(getter_AddRefs(parentPathSpec));
+      NS_ENSURE_SUCCESS(rv,rv);
+  
+      nsFileSpec parentPath;
+      rv = parentPathSpec->GetFileSpec(&parentPath);
+      NS_ENSURE_SUCCESS(rv,rv);
+
+      AddDirectorySeparator(parentPath);
+      nsDirectoryIterator i(parentPath, PR_FALSE);
+      // i.Exists() checks if the directory is empty or not 
+      if (parentPath.IsDirectory() && !i.Exists())
+        parentPath.Delete(PR_TRUE);
     }
   }
   return NS_OK;
