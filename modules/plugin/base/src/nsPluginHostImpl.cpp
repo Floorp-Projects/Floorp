@@ -100,8 +100,9 @@
 #include "nsISupportsPrimitives.h"
 // for the dialog
 #include "nsIStringBundle.h"
-#include "nsIPrompt.h"
 #include "nsIWindowWatcher.h"
+#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptGlobalObjectOwner.h"
@@ -258,7 +259,7 @@ PRLogModuleInfo* nsPluginLogging::gPluginLog = nsnull;
 
 #define MAGIC_REQUEST_CONTEXT 0x01020304
 
-void DisplayNoDefaultPluginDialog(const char *mimeType);
+void DisplayNoDefaultPluginDialog(const char *mimeType, nsIPrompt *prompt);
 nsresult PostPluginUnloadEvent(PRLibrary * aLibrary);
 
 /**
@@ -281,9 +282,19 @@ static const char *hashValue = "value";
 
 
 ////////////////////////////////////////////////////////////////////////
-void DisplayNoDefaultPluginDialog(const char *mimeType)
+void DisplayNoDefaultPluginDialog(const char *mimeType, nsIPrompt *prompt)
 {
   nsresult rv;
+  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID));
+
+  if (!prefs || !prompt)
+    return;
+
+  PRBool displayDialogPrefValue = PR_FALSE;
+  rv = prefs->GetBoolPref("plugin.display_plugin_downloader_dialog", &displayDialogPrefValue);
+  // if the pref is false, don't display the dialog
+  if (NS_SUCCEEDED(rv) && !displayDialogPrefValue)
+      return;
 
   if (nsnull == mimeTypesSeen) {
     mimeTypesSeen = new nsHashtable(NS_MIME_TYPES_HASH_NUM);
@@ -300,79 +311,42 @@ void DisplayNoDefaultPluginDialog(const char *mimeType)
     }
   }
 
-  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID));
-  nsCOMPtr<nsIPrompt> prompt;
-  nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
-  if (wwatch)
-    wwatch->GetNewPrompter(0, getter_AddRefs(prompt));
-
-  nsCOMPtr<nsIIOService> io(do_GetService(kIOServiceCID));
-  nsCOMPtr<nsIStringBundleService> strings(do_GetService(kStringBundleServiceCID));
-  nsCOMPtr<nsIStringBundle> bundle;
-  nsCOMPtr<nsIStringBundle> regionalBundle;
-  nsCOMPtr<nsIURI> uri;
-  PRBool displayDialogPrefValue = PR_FALSE, checkboxState = PR_FALSE;
-
-  if (!prefs || !prompt || !io || !strings) {
-    return;
-  }
-
-  rv = prefs->GetBoolPref("plugin.display_plugin_downloader_dialog", 
-                          &displayDialogPrefValue);
+  nsCOMPtr<nsIStringBundleService> strings(do_GetService(kStringBundleServiceCID, &rv));
   if (NS_SUCCEEDED(rv)) {
-    // if the pref is false, don't display the dialog
-    if (!displayDialogPrefValue) {
-      return;
-    }
-  }
-  
-  // Taken from mozilla\extensions\wallet\src\wallet.cpp
-  // WalletLocalize().
-  rv = strings->CreateBundle(PLUGIN_PROPERTIES_URL, getter_AddRefs(bundle));
-  if (NS_FAILED(rv)) {
-    return;
-  }
-  rv = strings->CreateBundle(PLUGIN_REGIONAL_URL, 
-                             getter_AddRefs(regionalBundle));
-  if (NS_FAILED(rv)) {
-    return;
-  }
-
-  PRUnichar *titleUni = nsnull;
-  PRUnichar *messageUni = nsnull;
-  PRUnichar *checkboxMessageUni = nsnull;
-  rv = bundle->GetStringFromName(NS_LITERAL_STRING("noDefaultPluginTitle").get(), 
-                                 &titleUni);
-  if (NS_FAILED(rv)) {
-    goto EXIT_DNDPD;
-  }
-  rv = regionalBundle->GetStringFromName(NS_LITERAL_STRING("noDefaultPluginMessage").get(), 
-                                         &messageUni);
-  if (NS_FAILED(rv)) {
-    goto EXIT_DNDPD;
-  }
-  rv = bundle->GetStringFromName(NS_LITERAL_STRING("noDefaultPluginCheckboxMessage").get(), 
-                                 &checkboxMessageUni);
-  if (NS_FAILED(rv)) {
-    goto EXIT_DNDPD;
-  }
-
-  PRInt32 buttonPressed;
-  rv = prompt->ConfirmEx(titleUni, messageUni,
+    nsCOMPtr<nsIStringBundle> bundle;
+    if (NS_SUCCEEDED(strings->CreateBundle(PLUGIN_PROPERTIES_URL, getter_AddRefs(bundle)))) {
+      nsCOMPtr<nsIStringBundle> regionalBundle;
+      if (NS_SUCCEEDED(strings->CreateBundle(PLUGIN_REGIONAL_URL, getter_AddRefs(regionalBundle)))) {
+        nsXPIDLString titleUni, messageUni, checkboxMessageUni;
+        if (NS_SUCCEEDED(bundle->GetStringFromName(
+              NS_LITERAL_STRING("noDefaultPluginTitle").get(),
+                getter_Copies(titleUni))) &&
+            NS_SUCCEEDED(bundle->GetStringFromName(
+              NS_LITERAL_STRING("noDefaultPluginCheckboxMessage").get(),
+                getter_Copies(checkboxMessageUni))) &&
+            NS_SUCCEEDED(regionalBundle->GetStringFromName(
+              NS_LITERAL_STRING("noDefaultPluginMessage").get(),
+                getter_Copies(messageUni)))
+           ) 
+        {
+          PRBool checkboxState = PR_FALSE;
+          PRInt32 buttonPressed;
+          rv = prompt->ConfirmEx(titleUni, messageUni,
                          nsIPrompt::BUTTON_TITLE_OK * nsIPrompt::BUTTON_POS_0,
                          nsnull, nsnull, nsnull,
                          checkboxMessageUni, &checkboxState, &buttonPressed);
 
-  // if the user checked the checkbox, make it so the dialog doesn't
-  // display again.
-  if (checkboxState) {
-    prefs->SetBoolPref("plugin.display_plugin_downloader_dialog",
+          // if the user checked the checkbox, make it so the dialog doesn't
+          // display again.
+          if (NS_SUCCEEDED(rv) && checkboxState) {
+            prefs->SetBoolPref("plugin.display_plugin_downloader_dialog",
                        !checkboxState);
+          }
+        }
+      }
+    }
   }
- EXIT_DNDPD:
-  nsMemory::Free((void *)titleUni);
-  nsMemory::Free((void *)messageUni);
-  nsMemory::Free((void *)checkboxMessageUni);
+
   return;
 }
 
@@ -1018,7 +992,7 @@ struct nsPluginUnloadEvent: public PLEvent {
  
   void HandleEvent() {
     if (mLibrary)
-      NS_TRY_SAFE_CALL_VOID(PR_UnloadLibrary(mLibrary), nsnull);  // put our unload call in a saftey wrapper
+      NS_TRY_SAFE_CALL_VOID(PR_UnloadLibrary(mLibrary), nsnull, nsnull);  // put our unload call in a saftey wrapper
     else 
       NS_WARNING("missing library from nsPluginUnloadEvent");
   }
@@ -1061,7 +1035,7 @@ nsresult PostPluginUnloadEvent (PRLibrary* aLibrary)
   } else NS_WARNING("couldn't get event queue service");
 
   // failure case
-  NS_TRY_SAFE_CALL_VOID(PR_UnloadLibrary(aLibrary), nsnull);
+  NS_TRY_SAFE_CALL_VOID(PR_UnloadLibrary(aLibrary), nsnull, nsnull);
 
   return NS_ERROR_FAILURE;
 }
@@ -2865,6 +2839,34 @@ nsresult nsPluginHostImpl::UserAgent(const char **retstring)
   return res;
 }
 
+nsresult nsPluginHostImpl:: GetPrompt(nsIPluginInstanceOwner *aOwner, nsIPrompt **aPrompt)
+{
+  nsresult rv;
+  nsCOMPtr<nsIPrompt> prompt;
+  nsCOMPtr<nsIWindowWatcher> wwatch = do_GetService("@mozilla.org/embedcomp/window-watcher;1", &rv);
+  
+  if (wwatch) {
+    nsCOMPtr<nsIDOMWindow> domWindow;
+    if (aOwner) {
+      nsCOMPtr<nsIDocument> document;
+      aOwner->GetDocument(getter_AddRefs(document));
+      if (document) {
+        nsCOMPtr<nsIScriptGlobalObject> globalScript;
+        document->GetScriptGlobalObject(getter_AddRefs(globalScript));
+        if (globalScript)
+          domWindow = do_QueryInterface(globalScript);
+      }
+    }
+
+    if (!domWindow) {
+      wwatch->GetWindowByName(NS_LITERAL_STRING("_content").get(), nsnull, getter_AddRefs(domWindow));
+    }
+    rv = wwatch->GetNewPrompter(domWindow, getter_AddRefs(prompt));
+  }
+
+  NS_IF_ADDREF(*aPrompt = prompt);
+  return rv;
+}
 
 ////////////////////////////////////////////////////////////////////////
 NS_IMETHODIMP nsPluginHostImpl::GetURL(nsISupports* pluginInst, 
@@ -3502,7 +3504,10 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbededPlugin(const char *aMimeType,
       result = aOwner->GetInstance(instance);
 
     if(result != NS_OK) {
-      DisplayNoDefaultPluginDialog(aMimeType);
+      nsCOMPtr<nsIPrompt> prompt;
+      GetPrompt(aOwner, getter_AddRefs(prompt));
+      if(prompt)
+        DisplayNoDefaultPluginDialog(aMimeType, prompt);
       return NS_ERROR_FAILURE;
     }
 
@@ -6120,10 +6125,13 @@ NS_IMETHODIMP nsPluginHostImpl::SetCookie(const char* inCookieURL, const void* i
     return NS_ERROR_FAILURE;
   }
 
+  nsCOMPtr<nsIPrompt> prompt;
+  GetPrompt(nsnull, getter_AddRefs(prompt));
+
   char * cookie = (char *)inCookieBuffer;
   char c = cookie[inCookieSize];
   cookie[inCookieSize] = '\0';
-  rv = cookieService->SetCookieString(uriIn, nsnull, cookie,0); // needs an nsIPrompt parameter
+  rv = cookieService->SetCookieString(uriIn, prompt, cookie,0);
   cookie[inCookieSize] = c;
   
   return rv;
@@ -6147,7 +6155,7 @@ NS_IMETHODIMP nsPluginHostImpl::Observe(nsISupports *aSubject,
 }
 
 ////////////////////////////////////////////////////////////////////////
-NS_IMETHODIMP nsPluginHostImpl::HandleBadPlugin(PRLibrary* aLibrary)
+NS_IMETHODIMP nsPluginHostImpl::HandleBadPlugin(PRLibrary* aLibrary, nsIPluginInstance *instance)
 {
   nsresult rv = NS_OK;
 
@@ -6155,88 +6163,70 @@ NS_IMETHODIMP nsPluginHostImpl::HandleBadPlugin(PRLibrary* aLibrary)
 
   if(mDontShowBadPluginMessage)
     return rv;
+          
+  nsCOMPtr<nsIPluginInstanceOwner> owner;
   
-  nsCOMPtr<nsIPrompt> prompt;
-  nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
-  if (wwatch)
-    wwatch->GetNewPrompter(0, getter_AddRefs(prompt));
-
-  nsCOMPtr<nsIIOService> io(do_GetService(kIOServiceCID));
-  nsCOMPtr<nsIStringBundleService> strings(do_GetService(kStringBundleServiceCID));
-
-  if (!prompt || !io || !strings)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIStringBundle> bundle;
-  nsCOMPtr<nsIURI> uri;
-  nsCAutoString spec;
-
-  PRInt32 buttonPressed;
-  PRBool checkboxState = PR_FALSE;
-  
-  rv = io->NewURI(NS_LITERAL_CSTRING(PLUGIN_PROPERTIES_URL), nsnull, nsnull, getter_AddRefs(uri));
-  if (NS_FAILED(rv))
-    return rv;
-
-  rv = uri->GetSpec(spec);
-  if (NS_FAILED(rv))
-    return rv;
-
-  rv = strings->CreateBundle(spec.get(), getter_AddRefs(bundle));
-  if (NS_FAILED(rv))
-    return rv;
-
-  PRUnichar *title = nsnull;
-  PRUnichar *message = nsnull;
-  PRUnichar *checkboxMessage = nsnull;
-
-  rv = bundle->GetStringFromName(NS_LITERAL_STRING("BadPluginTitle").get(), 
-                                 &title);
-  if (NS_FAILED(rv))
-    return rv;
-
-  rv = bundle->GetStringFromName(NS_LITERAL_STRING("BadPluginMessage").get(), 
-                                 &message);
-  if (NS_FAILED(rv)) {
-    nsMemory::Free((void *)title);
-    return rv;
-  }
-  rv = bundle->GetStringFromName(NS_LITERAL_STRING("BadPluginCheckboxMessage").get(), 
-                                 &checkboxMessage);
-  if (NS_FAILED(rv)) {
-    nsMemory::Free((void *)title);
-    nsMemory::Free((void *)message);
-    return rv;
-  }
-                               
-  // add plugin name to the message
-  char * pluginname = nsnull;
-  for (nsPluginTag * tag = mPlugins; tag; tag = tag->mNext) {
-    if (tag->mLibrary == aLibrary) {
-      if (tag->mName)
-        pluginname = tag->mName;
-      else
-        pluginname = tag->mFileName;
+  if (instance) {
+    nsPluginInstancePeerImpl *peer;
+    rv =instance->GetPeer(NS_REINTERPRET_CAST(nsIPluginInstancePeer **, &peer));            
+    if (NS_SUCCEEDED(rv)) {        
+      peer->GetOwner(*getter_AddRefs(owner));
     }
   }
 
-  nsAutoString msg;
-  msg.AssignWithConversion(pluginname);
-  msg.Append(NS_LITERAL_STRING("\n\n"));
-  msg.Append(message);
+  nsCOMPtr<nsIPrompt> prompt;
+  GetPrompt(owner, getter_AddRefs(prompt));
+  if (prompt) {
+    nsCOMPtr<nsIStringBundleService> strings(do_GetService(kStringBundleServiceCID, &rv));
+    if (NS_FAILED(rv))
+      return rv;
 
-  rv = prompt->ConfirmEx(title, msg.get(),
+    nsCOMPtr<nsIStringBundle> bundle;
+    rv = strings->CreateBundle(PLUGIN_PROPERTIES_URL, getter_AddRefs(bundle));
+    if (NS_FAILED(rv))
+      return rv;
+        
+    nsXPIDLString title, message, checkboxMessage;
+    if (NS_FAILED(rv = bundle->GetStringFromName(NS_LITERAL_STRING("BadPluginTitle").get(),
+                                 getter_Copies(title))))
+      return rv;
+
+    if (NS_FAILED(rv = bundle->GetStringFromName(NS_LITERAL_STRING("BadPluginMessage").get(), 
+                                 getter_Copies(message))))
+      return rv;
+
+    if (NS_FAILED(rv = bundle->GetStringFromName(NS_LITERAL_STRING("BadPluginCheckboxMessage").get(), 
+                                 getter_Copies(checkboxMessage))))
+      return rv;
+                           
+    // add plugin name to the message
+    char * pluginname = nsnull;
+    for (nsPluginTag * tag = mPlugins; tag; tag = tag->mNext) {
+      if (tag->mLibrary == aLibrary) {
+        if (tag->mName)
+          pluginname = tag->mName;
+        else
+          pluginname = tag->mFileName;
+      }
+    }
+
+    nsAutoString msg;
+    msg.AssignWithConversion(pluginname);
+    msg.Append(NS_LITERAL_STRING("\n\n"));
+    msg.Append(message);
+
+    PRInt32 buttonPressed;
+    PRBool checkboxState = PR_FALSE;
+    rv = prompt->ConfirmEx(title, msg.get(),
                          nsIPrompt::BUTTON_TITLE_OK * nsIPrompt::BUTTON_POS_0,
                          nsnull, nsnull, nsnull,
                          checkboxMessage, &checkboxState, &buttonPressed);
 
 
-  if (checkboxState)
-    mDontShowBadPluginMessage = PR_TRUE;
+    if (NS_SUCCEEDED(rv) && checkboxState)
+      mDontShowBadPluginMessage = PR_TRUE;
+  }
 
-  nsMemory::Free((void *)title);
-  nsMemory::Free((void *)message);
-  nsMemory::Free((void *)checkboxMessage);
   return rv;
 }
 

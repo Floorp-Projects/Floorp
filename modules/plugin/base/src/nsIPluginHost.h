@@ -97,7 +97,7 @@ public:
   StopPluginInstance(nsIPluginInstance* aInstance) = 0;
 
   NS_IMETHOD
-  HandleBadPlugin(PRLibrary* aLibrary) = 0;
+  HandleBadPlugin(PRLibrary* aLibrary, nsIPluginInstance *instance) = 0;
 };
 
 

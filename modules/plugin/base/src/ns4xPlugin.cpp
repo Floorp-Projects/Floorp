@@ -280,7 +280,7 @@ ns4xPlugin::ns4xPlugin(NPPluginFuncs* callbacks, PRLibrary* aLibrary, NP_PLUGINS
   NS_TRY_SAFE_CALL_RETURN(error, CallNPP_MainEntryProc(pfnMain, 
                                                        &(ns4xPlugin::CALLBACKS), 
                                                        &fCallbacks, 
-                                                       &fShutdownEntry), aLibrary);
+                                                       &fShutdownEntry), aLibrary, nsnull);
 
   NPP_PLUGIN_LOG(PLUGIN_LOG_NORMAL, ("NPP MainEntryProc called, return=%d\n",error));
 
@@ -562,7 +562,7 @@ ns4xPlugin::CreatePlugin(nsIServiceManagerObsolete* aServiceMgr,
   NS_TRY_SAFE_CALL_RETURN(error, CallNPP_MainEntryProc(pfnMain, 
                                                        &(ns4xPlugin::CALLBACKS), 
                                                        &callbacks, 
-                                                       &pfnShutdown), fLibrary);
+                                                       &pfnShutdown), fLibrary, nsnull);
 
   NPP_PLUGIN_LOG(PLUGIN_LOG_BASIC, ("NPP MainEntryProc called: return=%d\n",error));
 
@@ -702,7 +702,7 @@ ns4xPlugin::Shutdown(void)
     CallNPP_ShutdownProc(fShutdownEntry);
     ::CloseResFile(fPluginRefNum);
 #else
-    NS_TRY_SAFE_CALL_VOID(fShutdownEntry(), fLibrary);
+    NS_TRY_SAFE_CALL_VOID(fShutdownEntry(), fLibrary, nsnull);
 #endif
 
     fShutdownEntry = nsnull;

@@ -52,6 +52,7 @@
 #include "nsVoidArray.h"  // array for holding "active" streams
 #include "nsIDirectoryService.h"
 #include "nsWeakPtr.h"
+#include "nsIPrompt.h"
 
 class ns4xPlugin;
 class nsFileSpec;
@@ -283,7 +284,7 @@ public:
   GetPlugins(PRUint32 aPluginCount, nsIDOMPlugin* aPluginArray[]);
 
   NS_IMETHOD
-  HandleBadPlugin(PRLibrary* aLibrary);
+  HandleBadPlugin(PRLibrary* aLibrary, nsIPluginInstance *instance);
 
   //nsIPluginManager2 interface - secondary methods that nsIPlugin communicates to
 
@@ -464,6 +465,8 @@ private:
   void ClearCachedPluginInfoList();
   
   nsresult EnsurePrivateDirServiceProvider();
+
+  nsresult GetPrompt(nsIPluginInstanceOwner *aOwner, nsIPrompt **aPrompt);
 
   // one-off hack to include nppl3260.dll from the components folder
   nsresult ScanForRealInComponentsFolder(nsIComponentManager * aCompManager, nsIFile * aLayoutPath);
