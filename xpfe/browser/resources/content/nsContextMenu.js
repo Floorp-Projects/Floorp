@@ -311,7 +311,13 @@ nsContextMenu.prototype = {
       try {
         if (pref.GetBoolPref("imageblocker.enabled")) {
           var element = document.getElementById("context-blockimage");
-          element.setAttribute("style","display: inline;" );
+          if (this.imageURL) {
+            element.setAttribute("style","display: inline;" );
+            element.setAttribute("disabled","false" );
+          } else {
+            element.setAttribute("style","display: none;" );
+            element.setAttribute("disabled","true" );
+          }
         }
       } catch(e) {
       }

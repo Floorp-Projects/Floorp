@@ -99,11 +99,6 @@ Contributor(s): ______________________________________. -->
         ondestroy="contextMenu.onDestroy(); contextMenu = null;">
 
         <!-- Open ==================================== -->
-        <menuitem id="context-blockimage"
-                  value="&blockImageCmd.label;"
-                  accesskey=""
-                  style="display: none"
-                  oncommand="contextMenu.blockImage();"/>
         <menuitem id="context-openlink"
                   value="&openLinkCmd.label;"
                   accesskey=""
@@ -156,6 +151,11 @@ Contributor(s): ______________________________________. -->
                   value="&viewImageCmd.label;"
                   accesskey=""
                   oncommand="contextMenu.viewImage();"/>
+        <menuitem id="context-blockimage"
+                  value="&blockImageCmd.label;"
+                  accesskey=""
+                  style="display: none"
+                  oncommand="contextMenu.blockImage();"/>
         <menuseparator/>
         <!-- Misc ==================================== -->
 		<menuitem id="context-bookmarkpage"
