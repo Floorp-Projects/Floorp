@@ -189,6 +189,18 @@ protected:
                              nsIDOMNode *aEndChild,
                              nsCOMPtr<nsIDOMNode> *aLeftNode = 0,
                              nsCOMPtr<nsIDOMNode> *aRightNode = 0);
+  nsresult SplitBlock(nsIDOMNode *aBlock, 
+                      nsIDOMNode *aStartChild, 
+                      nsIDOMNode *aEndChild,
+                      nsCOMPtr<nsIDOMNode> *aLeftNode = 0,
+                      nsCOMPtr<nsIDOMNode> *aRightNode = 0,
+                      nsCOMPtr<nsIDOMNode> *aMiddleNode = 0);
+  nsresult OutdentPartOfBlock(nsIDOMNode *aBlock, 
+                              nsIDOMNode *aStartChild, 
+                              nsIDOMNode *aEndChild,
+                              PRBool aIsBlockIndentedWithCSS,
+                              nsCOMPtr<nsIDOMNode> *aLeftNode = 0,
+                              nsCOMPtr<nsIDOMNode> *aRightNode = 0);
   nsresult ConvertListType(nsIDOMNode *aList, nsCOMPtr<nsIDOMNode> *outList, const nsAString& aListType, const nsAString& aItemType);
   nsresult CreateStyleForInsertText(nsISelection *aSelection, nsIDOMDocument *aDoc);
   nsresult IsEmptyBlock(nsIDOMNode *aNode, 
@@ -275,7 +287,7 @@ protected:
   nsresult MakeSureElemStartsOrEndsOnCR(nsIDOMNode *aNode, PRBool aStarts);
   nsresult MakeSureElemStartsOrEndsOnCR(nsIDOMNode *aNode);
   nsresult AlignBlock(nsIDOMElement * aElement, const nsAString * aAlignType, PRBool aContentsOnly);
-  nsresult RelativeChangeIndentation(nsIDOMNode *aNode, PRInt8 aRelativeChange);
+  nsresult RelativeChangeIndentationOfElementNode(nsIDOMNode *aNode, PRInt8 aRelativeChange);
 
 // data members
 protected:
