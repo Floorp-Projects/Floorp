@@ -122,11 +122,6 @@ nsresult NS_DoEditorTest(PRInt32 aCommandID)
       case VIEWER_EDIT_SET_BGCOLOR_YELLOW:
         gEditor->SetBodyAttribute("bgcolor", "yellow");
         break;
-      case VIEWER_EDIT_INSERT_TABLE:
-        // First param = number, 
-        // 2nd is TRUE to insert after, FALSE for before
-        gEditor->InsertTable();
-        break;    
       case VIEWER_EDIT_INSERT_CELL:  
         gEditor->InsertTableCell(1, PR_FALSE);
         break;    
