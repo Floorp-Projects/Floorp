@@ -28,7 +28,7 @@
 #include "nsAgg.h"
 #include "nsIFactory.h"
 
-class nsAllocator : public nsIAllocator {
+class nsAllocatorImpl : public nsIAllocator {
 public:
     static const nsCID& CID() { static nsCID cid = NS_ALLOCATOR_CID; return cid; }
 
@@ -63,8 +63,8 @@ public:
 
     ////////////////////////////////////////////////////////////////////////////
 
-    nsAllocator(nsISupports* outer);
-    virtual ~nsAllocator(void);
+    nsAllocatorImpl(nsISupports* outer);
+    virtual ~nsAllocatorImpl(void);
 
     NS_DECL_AGGREGATED
 

@@ -82,7 +82,7 @@ public:
 * Public shortcuts to the shared allocator's methods
 */
 
-class NSTaskMem
+class nsAllocator
 {
 public:
     static NS_EXPORT void* Alloc(PRUint32 size);
@@ -91,7 +91,7 @@ public:
     static NS_EXPORT void  HeapMinimize();
     static NS_EXPORT void* Clone(const void* ptr,  PRUint32 size);
 private:
-    NSTaskMem();   // not implemented
+    nsAllocator();   // not implemented
     static PRBool EnsureAllocator() {return mAllocator || FetchAllocator();}
     static PRBool FetchAllocator();
     static nsIAllocator* mAllocator;

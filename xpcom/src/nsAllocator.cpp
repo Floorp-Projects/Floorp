@@ -27,19 +27,19 @@
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIAllocatorIID, NS_IALLOCATOR_IID);
 
-nsAllocator::nsAllocator(nsISupports* outer)
+nsAllocatorImpl::nsAllocatorImpl(nsISupports* outer)
 {
     NS_INIT_AGGREGATED(outer);
 }
 
-nsAllocator::~nsAllocator(void)
+nsAllocatorImpl::~nsAllocatorImpl(void)
 {
 }
 
-NS_IMPL_AGGREGATED(nsAllocator);
+NS_IMPL_AGGREGATED(nsAllocatorImpl);
 
 NS_METHOD
-nsAllocator::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr) 
+nsAllocatorImpl::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr) 
 {
     if (NULL == aInstancePtr) {                                            
         return NS_ERROR_NULL_POINTER;                                        
@@ -54,11 +54,11 @@ nsAllocator::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
 }
 
 NS_METHOD
-nsAllocator::Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr)
+nsAllocatorImpl::Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr)
 {
     if (outer && !aIID.Equals(kISupportsIID))
         return NS_NOINTERFACE;   // XXX right error?
-    nsAllocator* mm = new nsAllocator(outer);
+    nsAllocatorImpl* mm = new nsAllocatorImpl(outer);
     if (mm == NULL)
         return NS_ERROR_OUT_OF_MEMORY;
     mm->AddRef();
@@ -72,26 +72,26 @@ nsAllocator::Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr)
 ////////////////////////////////////////////////////////////////////////////////
 
 NS_METHOD_(void*)
-nsAllocator::Alloc(PRUint32 size)
+nsAllocatorImpl::Alloc(PRUint32 size)
 {
     return PR_Malloc(size);
 }
 
 NS_METHOD_(void*)
-nsAllocator::Realloc(void* ptr, PRUint32 size)
+nsAllocatorImpl::Realloc(void* ptr, PRUint32 size)
 {
     return PR_Realloc(ptr, size);
 }
 
 NS_METHOD
-nsAllocator::Free(void* ptr)
+nsAllocatorImpl::Free(void* ptr)
 {
     PR_Free(ptr);
     return NS_OK;
 }
 
 NS_METHOD
-nsAllocator::HeapMinimize(void)
+nsAllocatorImpl::HeapMinimize(void)
 {
 #ifdef XP_MAC
     // This used to live in the memory allocators no Mac, but does no more
@@ -119,7 +119,7 @@ nsAllocatorFactory::CreateInstance(nsISupports *aOuter,
                                    REFNSIID aIID,
                                    void **aResult)
 {
-    return nsAllocator::Create(aOuter, aIID, aResult);
+    return nsAllocatorImpl::Create(aOuter, aIID, aResult);
 }
 
 NS_METHOD
@@ -136,31 +136,31 @@ nsAllocatorFactory::LockFactory(PRBool aLock)
 */
 
 // public:
-void* NSTaskMem::Alloc(PRUint32 size) 
+void* nsAllocator::Alloc(PRUint32 size) 
 {
     if(!EnsureAllocator()) return NULL;
     return mAllocator->Alloc(size);
 }
 
-void* NSTaskMem::Realloc(void* ptr, PRUint32 size)
+void* nsAllocator::Realloc(void* ptr, PRUint32 size)
 {
     if(!EnsureAllocator()) return NULL;
     return mAllocator->Realloc(ptr, size);
 }
 
-void  NSTaskMem::Free(void* ptr)
+void  nsAllocator::Free(void* ptr)
 {
     if(!EnsureAllocator()) return;
     mAllocator->Free(ptr);
 }
 
-void  NSTaskMem::HeapMinimize()
+void  nsAllocator::HeapMinimize()
 {
     if(!EnsureAllocator()) return;
     mAllocator->HeapMinimize();
 }
 
-void* NSTaskMem::Clone(const void* ptr,  PRUint32 size)
+void* nsAllocator::Clone(const void* ptr,  PRUint32 size)
 {
     if(!ptr || !EnsureAllocator()) return NULL;
     void* p = mAllocator->Alloc(size);
@@ -170,9 +170,9 @@ void* NSTaskMem::Clone(const void* ptr,  PRUint32 size)
 
 // private:
 
-nsIAllocator* NSTaskMem::mAllocator = NULL;
+nsIAllocator* nsAllocator::mAllocator = NULL;
 
-PRBool NSTaskMem::FetchAllocator()
+PRBool nsAllocator::FetchAllocator()
 {
     NS_DEFINE_IID(kAllocatorCID, NS_ALLOCATOR_CID);
     NS_DEFINE_IID(kIAllocatorIID, NS_IALLOCATOR_IID);

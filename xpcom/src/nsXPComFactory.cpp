@@ -54,8 +54,8 @@ NSGetFactory(nsISupports* serviceMgr,
 	} else {
 		// Use generic factories for the rest.
 		nsGenericFactory* factory = NULL;
-		if (aClass.Equals(nsAllocator::CID())) {
-			factory = new nsGenericFactory(&nsAllocator::Create);
+		if (aClass.Equals(nsAllocatorImpl::CID())) {
+			factory = new nsGenericFactory(&nsAllocatorImpl::Create);
 		} else if (aClass.Equals(nsGenericFactory::CID())) {
 			// whoa, create a generic factory that creates generic factories!
 			factory = new nsGenericFactory(&nsGenericFactory::Create);
