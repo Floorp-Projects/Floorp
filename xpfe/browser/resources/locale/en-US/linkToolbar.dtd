@@ -38,11 +38,15 @@
 
 <!-- Link Toolbar Title -->
 <!ENTITY linkToolbar.label "Site Navigation Bar">
+<!ENTITY linkToolbar.accesskey "a">
 
 <!-- Link Toolbar visibility options -->
 <!ENTITY linkToolbarAlways.label "Show Always">
+<!ENTITY linkToolbarAlways.accesskey "S">
 <!ENTITY linkToolbarAsNeeded.label "Show Only As Needed">
+<!ENTITY linkToolbarAsNeeded.accesskey "O">
 <!ENTITY linkToolbarNever.label "Hide Always">
+<!ENTITY linkToolbarNever.accesskey "H">
 
 <!-- Toolbar buttons, menus, and menuitems -->
 <!ENTITY topButton.label "Top">
