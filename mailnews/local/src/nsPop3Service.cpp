@@ -214,59 +214,57 @@ nsresult nsPop3Service::BuildPop3Url(const char * urlSpec,
                                      nsIURI ** aUrl,
 									 nsIMsgWindow *aMsgWindow, PRInt32 popPort)
 {
-	nsPop3Sink * pop3Sink = new nsPop3Sink();
-	if (pop3Sink)
-	{
-		pop3Sink->SetPopServer(server);
-		pop3Sink->SetFolder(inbox);
-	}
-
-	// now create a pop3 url and a protocol instance to run the url....
-	nsCOMPtr<nsIPop3URL> pop3Url;
-	nsresult rv = nsComponentManager::CreateInstance(kPop3UrlCID,
-                                            nsnull,
-                                            NS_GET_IID(nsIPop3URL),
-                                            getter_AddRefs(pop3Url));
-	if (pop3Url)
-	{
-		nsXPIDLCString userName;
-		nsCOMPtr<nsIMsgIncomingServer> msgServer = do_QueryInterface(server);
-		msgServer->GetUsername(getter_Copies(userName));
-
-		pop3Url->SetPop3Sink(pop3Sink);
-
-		// escape the username before we call SetUsername().  we do this because GetUsername()
-		// will unescape the username
-        nsCOMPtr<nsIURI> pop3Uri(do_QueryInterface(pop3Url));
-		nsXPIDLCString escapedUsername;
-		*((char **)getter_Copies(escapedUsername)) = nsEscape((const char *)userName, url_XAlphas);
-		pop3Uri->SetUsername((const char *)escapedUsername);
-
-        nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(pop3Url);
-        if (mailnewsurl)
-        {
-          if (aUrlListener)
-           mailnewsurl->RegisterListener(aUrlListener);
-          if (aMsgWindow)
-           mailnewsurl->SetMsgWindow(aMsgWindow);
-        }
-
-		if (aUrl)
-		{
-			rv = pop3Url->QueryInterface(NS_GET_IID(nsIURI), (void **) aUrl);
-			if (*aUrl)
-			{
-				(*aUrl)->SetSpec(urlSpec);
-				// the following is only a temporary work around hack because necko
-				// is loosing our port when the url is just scheme://host:port.
-				// when they fix this bug I can remove the following code where we
-				// manually set the port.
-				(*aUrl)->SetPort(popPort);
-			}
-		}
-	}
-
-	return rv;
+  nsresult rv;
+  
+  nsPop3Sink * pop3Sink = new nsPop3Sink();
+  if (pop3Sink)
+  {
+    pop3Sink->SetPopServer(server);
+    pop3Sink->SetFolder(inbox);
+  }
+  
+  // now create a pop3 url and a protocol instance to run the url....
+  nsCOMPtr<nsIPop3URL> pop3Url = do_CreateInstance(kPop3UrlCID, &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
+  
+	nsXPIDLCString userName;
+  nsCOMPtr<nsIMsgIncomingServer> msgServer = do_QueryInterface(server);
+  rv = msgServer->GetUsername(getter_Copies(userName));
+  NS_ENSURE_SUCCESS(rv,rv);
+    
+  pop3Url->SetPop3Sink(pop3Sink);
+    
+  rv = pop3Url->QueryInterface(NS_GET_IID(nsIURI), (void **) aUrl);
+  NS_ENSURE_SUCCESS(rv,rv);
+    
+  (*aUrl)->SetSpec(urlSpec);
+  // the following is only a temporary work around hack because necko
+  // is loosing our port when the url is just scheme://host:port.
+  // when they fix this bug I can remove the following code where we
+  // manually set the port.
+  //
+  // XXX is this still necessary?
+  (*aUrl)->SetPort(popPort);
+    
+  // escape the username before we call SetUsername().  we do this because GetUsername()
+  // will unescape the username
+  //
+  // XXX is this still necessary.  before removing, make sure to test on accounts where
+  // the username has changed.
+  nsXPIDLCString escapedUsername;
+  *((char **)getter_Copies(escapedUsername)) = nsEscape((const char *)userName, url_XAlphas);
+  (*aUrl)->SetUsername((const char *)escapedUsername);
+    
+  nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(pop3Url);
+  if (mailnewsurl)
+  {
+    if (aUrlListener)
+      mailnewsurl->RegisterListener(aUrlListener);
+    if (aMsgWindow)
+      mailnewsurl->SetMsgWindow(aMsgWindow);
+  }
+    
+  return rv;
 }
 
 nsresult nsPop3Service::RunPopUrl(nsIMsgIncomingServer * aServer, nsIURI * aUrlToRun)
