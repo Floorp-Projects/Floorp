@@ -129,7 +129,7 @@ print C "};\n\n";
 printf C "static const struct PRErrorTable et = { text, \"%s\", %dL, %d };\n",
     $base, $table_base, $table_item_count;
 print C "\n";
-print C "void ", $table_name, "_InitializePRErrorTable", "() {\n";
+print C "void ", $table_name, "_InitializePRErrorTable", "(void) {\n";
 print C "    PR_ErrorInstallTable(&et);\n";
 print C "}\n";
 

@@ -17,7 +17,7 @@
  * Copyright (C) 1998-2000 Netscape Communications Corporation.  All
  * Rights Reserved.
  * 
- * Contributor(s):
+ * Contributor(s): Steve Streeter (Hewlett-Packard Company)
  * 
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU General Public License Version 2 or later (the
@@ -77,6 +77,13 @@
 #endif
 #ifndef RTLD_LOCAL
 #define RTLD_LOCAL 0
+#endif
+#ifdef AIX
+#include <sys/ldr.h>
+#endif
+#ifdef OSF1
+#include <loader.h>
+#include <rld_interface.h>
 #endif
 #elif defined(USE_HPSHL)
 #include <dl.h>
@@ -451,20 +458,40 @@ PR_GetLibraryName(const char *path, const char *lib)
 #ifdef XP_PC
     if (strstr(lib, PR_DLL_SUFFIX) == NULL)
     {
-        fullname = PR_smprintf("%s\\%s%s", path, lib, PR_DLL_SUFFIX);
+        if (path) {
+            fullname = PR_smprintf("%s\\%s%s", path, lib, PR_DLL_SUFFIX);
+        } else {
+            fullname = PR_smprintf("%s%s", lib, PR_DLL_SUFFIX);
+        }
     } else {
-        fullname = PR_smprintf("%s\\%s", path, lib);
+        if (path) {
+            fullname = PR_smprintf("%s\\%s", path, lib);
+        } else {
+            fullname = PR_smprintf("%s", lib);
+        }
     }
 #endif /* XP_PC */
 #ifdef XP_MAC
-    fullname = PR_smprintf("%s%s", path, lib);
+    if (path) {
+        fullname = PR_smprintf("%s%s", path, lib);
+    } else {
+        fullname = PR_smprintf("%s", lib);
+    }
 #endif
 #if defined(XP_UNIX) || defined(XP_BEOS)
     if (strstr(lib, PR_DLL_SUFFIX) == NULL)
     {
-        fullname = PR_smprintf("%s/lib%s%s", path, lib, PR_DLL_SUFFIX);
+        if (path) {
+            fullname = PR_smprintf("%s/lib%s%s", path, lib, PR_DLL_SUFFIX);
+        } else {
+            fullname = PR_smprintf("lib%s%s", lib, PR_DLL_SUFFIX);
+        }
     } else {
-        fullname = PR_smprintf("%s/%s", path, lib);
+        if (path) {
+            fullname = PR_smprintf("%s/%s", path, lib);
+        } else {
+            fullname = PR_smprintf("%s", lib);
+        }
     }
 #endif /* XP_UNIX || XP_BEOS */
     return fullname;
@@ -1570,4 +1597,220 @@ PR_LoadStaticLibrary(const char *name, const PRStaticLinkTable *slt)
     PR_LOG(_pr_linker_lm, PR_LOG_MIN, ("Loaded library %s (static lib)", lm->name));
     PR_ExitMonitor(pr_linker_lock);
     return result;
+}
+
+PR_IMPLEMENT(char *)
+PR_GetLibraryFilePathname(const char *name, PRFuncPtr addr)
+{
+#if defined(SOLARIS) || defined(LINUX)
+    Dl_info dli;
+    char *result;
+
+    if (dladdr((void *)addr, &dli) == 0) {
+        PR_SetError(PR_LIBRARY_NOT_LOADED_ERROR, _MD_ERRNO());
+        DLLErrorInternal(_MD_ERRNO());
+        return NULL;
+    }
+    result = PR_Malloc(strlen(dli.dli_fname)+1);
+    if (result != NULL) {
+        strcpy(result, dli.dli_fname);
+    }
+    return result;
+#elif defined(USE_MACH_DYLD)
+    char *result;
+    char *image_name;
+    int i, count = _dyld_image_count();
+
+    for (i = 0; i < count; i++) {
+        image_name = _dyld_get_image_name(i);
+        if (strstr(image_name, name) != NULL) {
+            result = PR_Malloc(strlen(image_name)+1);
+            if (result != NULL) {
+                strcpy(result, image_name);
+            }
+            return result;
+        }
+    }
+    PR_SetError(PR_LIBRARY_NOT_LOADED_ERROR, 0);
+    return NULL;
+#elif defined(AIX)
+    char *result;
+#define LD_INFO_INCREMENT 64
+    struct ld_info *info;
+    unsigned int info_length = LD_INFO_INCREMENT * sizeof(struct ld_info);
+    struct ld_info *infop;
+
+    for (;;) {
+        info = PR_Malloc(info_length);
+        if (info == NULL) {
+            return NULL;
+        }
+        /* If buffer is too small, loadquery fails with ENOMEM. */
+        if (loadquery(L_GETINFO, info, info_length) != -1) {
+            break;
+        }
+        PR_Free(info);
+        if (errno != ENOMEM) {
+            /* should not happen */
+            _PR_MD_MAP_DEFAULT_ERROR(_MD_ERRNO());
+            return NULL;
+        }
+        /* retry with a larger buffer */
+        info_length += LD_INFO_INCREMENT * sizeof(struct ld_info);
+    }
+
+    for (infop = info;
+         ;
+         infop = (struct ld_info *)((char *)infop + infop->ldinfo_next)) {
+        if (strstr(infop->ldinfo_filename, name) != NULL) {
+            result = PR_Malloc(strlen(infop->ldinfo_filename)+1);
+            if (result != NULL) {
+                strcpy(result, infop->ldinfo_filename);
+            }
+            break;
+        }
+        if (!infop->ldinfo_next) {
+            PR_SetError(PR_LIBRARY_NOT_LOADED_ERROR, 0);
+            result = NULL;
+            break;
+        }
+    }
+    PR_Free(info);
+    return result;
+#elif defined(OSF1)
+    /* Contributed by Steve Streeter of HP */
+    ldr_process_t process, ldr_my_process();
+    ldr_module_t mod_id;
+    ldr_module_info_t info;
+    ldr_region_t regno;
+    ldr_region_info_t reginfo;
+    size_t retsize;
+    int rv;
+    char *result;
+
+    /* Get process for which dynamic modules will be listed */
+
+    process = ldr_my_process();
+
+    /* Attach to process */
+
+    rv = ldr_xattach(process);
+    if (rv) {
+        /* should not happen */
+        _PR_MD_MAP_DEFAULT_ERROR(_MD_ERRNO());
+        return NULL;
+    }
+
+    /* Print information for list of modules */
+
+    mod_id = LDR_NULL_MODULE;
+
+    for (;;) {
+
+        /* Get information for the next module in the module list. */
+
+        ldr_next_module(process, &mod_id);
+        if (ldr_inq_module(process, mod_id, &info, sizeof(info),
+                           &retsize) != 0) {
+            /* No more modules */
+            break;
+        }
+        if (retsize < sizeof(info)) {
+            continue;
+        }
+
+        /*
+         * Get information for each region in the module and check if any
+         * contain the address of this function.
+         */
+
+        for (regno = 0; ; regno++) {
+            if (ldr_inq_region(process, mod_id, regno, &reginfo,
+                               sizeof(reginfo), &retsize) != 0) {
+                /* No more regions */
+                break;
+            }
+            if (((unsigned long)reginfo.lri_mapaddr <=
+                (unsigned long)addr) &&
+                (((unsigned long)reginfo.lri_mapaddr + reginfo.lri_size) >
+                (unsigned long)addr)) {
+                /* Found it. */
+                result = PR_Malloc(strlen(info.lmi_name)+1);
+                if (result != NULL) {
+                    strcpy(result, info.lmi_name);
+                }
+                return result;
+            }
+        }
+    }
+    PR_SetError(PR_LIBRARY_NOT_LOADED_ERROR, 0);
+    return NULL;
+#elif defined(HPUX) && defined(USE_HPSHL)
+    shl_t handle;
+    struct shl_descriptor desc;
+    char *result;
+
+    handle = shl_load(name, DYNAMIC_PATH, 0L);
+    if (handle == NULL) {
+        PR_SetError(PR_LIBRARY_NOT_LOADED_ERROR, _MD_ERRNO());
+        DLLErrorInternal(_MD_ERRNO());
+        return NULL;
+    }
+    if (shl_gethandle_r(handle, &desc) == -1) {
+        /* should not happen */
+        _PR_MD_MAP_DEFAULT_ERROR(_MD_ERRNO());
+        return NULL;
+    }
+    result = PR_Malloc(strlen(desc.filename)+1);
+    if (result != NULL) {
+        strcpy(result, desc.filename);
+    }
+    return result;
+#elif defined(HPUX) && defined(USE_DLFCN)
+    struct load_module_desc desc;
+    char *result;
+    const char *module_name;
+
+    if (dlmodinfo((unsigned long)addr, &desc, sizeof desc, NULL, 0, 0) == 0) {
+        PR_SetError(PR_LIBRARY_NOT_LOADED_ERROR, _MD_ERRNO());
+        DLLErrorInternal(_MD_ERRNO());
+        return NULL;
+    }
+    module_name = dlgetname(&desc, sizeof desc, NULL, 0, 0);
+    if (module_name == NULL) {
+        /* should not happen */
+        _PR_MD_MAP_DEFAULT_ERROR(_MD_ERRNO());
+        DLLErrorInternal(_MD_ERRNO());
+        return NULL;
+    }
+    result = PR_Malloc(strlen(module_name)+1);
+    if (result != NULL) {
+        strcpy(result, module_name);
+    }
+    return result;
+#elif defined(WIN32)
+    HMODULE handle;
+    char module_name[MAX_PATH];
+    char *result;
+
+    handle = GetModuleHandle(name);
+    if (handle == NULL) {
+        PR_SetError(PR_LIBRARY_NOT_LOADED_ERROR, _MD_ERRNO());
+        DLLErrorInternal(_MD_ERRNO());
+        return NULL;
+    }
+    if (GetModuleFileName(handle, module_name, sizeof module_name) == 0) {
+        /* should not happen */
+        _PR_MD_MAP_DEFAULT_ERROR(_MD_ERRNO());
+        return NULL;
+    }
+    result = PR_Malloc(strlen(module_name)+1);
+    if (result != NULL) {
+        strcpy(result, module_name);
+    }
+    return result;
+#else
+    PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0);
+    return NULL;
+#endif
 }

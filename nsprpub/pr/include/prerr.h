@@ -263,8 +263,11 @@
 /* Host is unreachable */
 #define PR_HOST_UNREACHABLE_ERROR                (-5927L)
 
+/* The library is not loaded */
+#define PR_LIBRARY_NOT_LOADED_ERROR              (-5926L)
+
 /* Placeholder for the end of the list */
-#define PR_MAX_ERROR                             (-5926L)
+#define PR_MAX_ERROR                             (-5925L)
 
 extern void nspr_InitializePRErrorTable(void);
 #define ERROR_TABLE_BASE_nspr (-6000L)

@@ -113,11 +113,12 @@ static const struct PRErrorMessage text[] = {
 	{"PR_SOCKET_SHUTDOWN_ERROR",    "Socket shutdown"},
 	{"PR_CONNECT_ABORTED_ERROR",    "Connection aborted"},
 	{"PR_HOST_UNREACHABLE_ERROR",    "Host is unreachable"},
+	{"PR_LIBRARY_NOT_LOADED_ERROR",    "The library is not loaded"},
 	{"PR_MAX_ERROR",    "Placeholder for the end of the list"},
 	{0, 0}
 };
 
-static const struct PRErrorTable et = { text, "prerr", -6000L, 75 };
+static const struct PRErrorTable et = { text, "prerr", -6000L, 76 };
 
 void nspr_InitializePRErrorTable(void) {
     PR_ErrorInstallTable(&et);
