@@ -525,7 +525,7 @@ if (defined $::FORM{'id'}) {
     CheckFormFieldDefined(\%::FORM, 'longdesclength');
     
     if (trim($::FORM{'short_desc'}) eq "") {
-	ThrowUserError("require_summary");
+        ThrowUserError("require_summary");
     }
 }
 
