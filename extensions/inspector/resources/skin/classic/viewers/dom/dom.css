@@ -61,6 +61,10 @@ treechildren:-moz-tree-cell-text(DOCUMENT_NODE) {
   color: #800080;
 }
 
+treechildren:-moz-tree-cell-text(DOCUMENT_TYPE_NODE) {
+  color: #606000;
+}
+
 treechildren:-moz-tree-cell-text(PROCESSING_INSTRUCTION_NODE) {
   color: #808080;
 }

@@ -112,7 +112,7 @@ DOMViewer.prototype =
   get subject() { return this.mSubject },
   set subject(aObject) {
     this.mSubject = aObject;
-    this.mDOMView.rootNode = aObject.documentElement;
+    this.mDOMView.rootNode = aObject;
     this.mObsMan.dispatchEvent("subjectChange", { subject: aObject });
     this.setInitialSelection(aObject);
   },
@@ -281,7 +281,7 @@ DOMViewer.prototype =
     if (this.mPanel.params)
       this.selectElementInTree(this.mPanel.params);
     else
-      this.selectElementInTree(aObject.documentElement, true);
+      this.selectElementInTree(aObject, true);
   
     if (fireSelected)
       this.onItemSelected();
@@ -745,7 +745,7 @@ DOMViewer.prototype =
   
   getAllDocuments: function()
   {
-    var doc = this.mDOMView.rootNode.ownerDocument;
+    var doc = this.mDOMView.rootNode;
     var results = [doc];
     this.findDocuments(doc, results);
     return results;
