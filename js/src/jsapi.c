@@ -1497,6 +1497,15 @@ JS_AddNamedRoot(JSContext *cx, void *rp, const char *name)
     return js_AddRoot(cx, rp, name);
 }
 
+JS_PUBLIC_API(void)
+JS_ClearNewbornRoots(JSContext *cx)
+{
+    uintN i;
+
+    for (i = 0; i < GCX_NTYPES; i++)
+        cx->newborn[i] = NULL;
+}
+
 #include "jshash.h" /* Added by JSIFY */
 
 #ifdef DEBUG
@@ -1617,7 +1626,7 @@ JS_GC(JSContext *cx)
 {
     if (cx->runtime->gcDisabled)
         return;
-            
+
     if (cx->stackPool.current == &cx->stackPool.first)
         JS_FinishArenaPool(&cx->stackPool);
     JS_FinishArenaPool(&cx->codePool);
@@ -2738,7 +2747,7 @@ JS_PUBLIC_API(JSPrincipalsTranscoder)
 JS_SetPrincipalsTranscoder(JSRuntime *rt, JSPrincipalsTranscoder px)
 {
     JSPrincipalsTranscoder oldpx;
-    
+
     oldpx = rt->principalsTranscoder;
     rt->principalsTranscoder = px;
     return oldpx;
@@ -3037,7 +3046,7 @@ JS_NewScriptObject(JSContext *cx, JSScript *script)
     JSStackFrame dummy;
 
     CHECK_REQUEST(cx);
-    
+
     memset(&dummy, 0, sizeof dummy);
     dummy.down = cx->fp;
     dummy.script = script;

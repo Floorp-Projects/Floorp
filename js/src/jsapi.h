@@ -529,6 +529,24 @@ JS_RemoveRoot(JSContext *cx, void *rp);
 extern JS_PUBLIC_API(JSBool)
 JS_RemoveRootRT(JSRuntime *rt, void *rp);
 
+/*
+ * The last GC thing of each type (object, string, double, external string
+ * types) created on a given context is kept alive until another thing of the
+ * same type is created, using a newborn root in the context.  These newborn
+ * roots help native code protect newly-created GC-things from GC invocations
+ * activated before those things can be rooted using local or global roots.
+ *
+ * However, the newborn roots can also entrain great gobs of garbage, so the
+ * JS_GC entry point clears them for the context on which GC is being forced.
+ * Embeddings may need to do likewise for all contexts.
+ *
+ * XXXbe See bug 40757 (http://bugzilla.mozilla.org/show_bug.cgi?id=40757),
+ * which proposes switching (with an #ifdef, alas, if we want to maintain API
+ * compatibility) to a JNI-like extensible local root frame stack model.
+ */
+extern JS_PUBLIC_API(void)
+JS_ClearNewbornRoots(JSContext *cx);
+
 #ifdef DEBUG
 extern JS_PUBLIC_API(void)
 JS_DumpNamedRoots(JSRuntime *rt,
