@@ -21,11 +21,9 @@
 
 DEPTH=..\..\..\..
 
-DIRS=locale
-
-CHROME_DIR          = sidebar
-CHROME_CONTENT_DIR  = content\default
-CHROME_SKIN_DIR     = skin\default
+CHROME_DIR = sidebar
+CHROME_CONTENT_DIR = content\default
+CHROME_SKIN_DIR = skin\default
 
 CHROME_CONTENT = \
         .\customize-panel.js \
@@ -37,11 +35,9 @@ CHROME_CONTENT = \
 	.\sidebarOverlay.js \
 	.\sidebarOverlay.xul \
         .\local-panels.rdf \
-        .\remote-panels.rdf \
         $(NULL)
 
 CHROME_SKIN = \
-        .\customize-panel.css \
         .\customize.css \
 	.\preview.css \
 	.\sidebar.css \
@@ -56,11 +52,9 @@ CHROME_SKIN = \
         $(NULL)
 
 CHROME_L10N = \
-        .\locale\en-US\customize-panel.dtd \
         .\locale\en-US\customize.dtd \
 	.\locale\en-US\preview.dtd \
-        .\locale\en-US\sidebar-registry-rdf.dtd \
-        .\locale\en-US\sidebar-rdf.dtd \
+        .\locale\en-US\locale-panels.dtd \
         .\locale\en-US\sidebarOverlay.dtd \
         $(NULL)
 
