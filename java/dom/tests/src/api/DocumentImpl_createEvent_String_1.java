@@ -83,18 +83,23 @@ public class DocumentImpl_createEvent_String_1 extends BWBaseTest implements Exe
       if (d != null)
       {
        try {
-             Event e = d.createEvent("CLICK");
-             TestLoader.logErrPrint("DocumentEvent is not a supported method...");
+             Event me = d.createEvent("MouseEvent");
+	     Event ke = d.createEvent("KeyEvent");
+	     Event he = d.createEvent("HTMLEvent");
+             if (me == null || ke == null || he == null) {
+		TestLoader.logErrPrint("DocumentEvent returned null ...");
+		System.out.println("DocumentEvent returned null: me="+me+" ke="+ke+" he="+he);
+	        return BWBaseTest.FAILED;
+	     }
+        } catch (Exception e) {
+		System.out.println("Excpetion was thrown: "+e);
              return BWBaseTest.FAILED;
-        } catch (UnsupportedOperationException ue) {
-             String msg = "UNSUPPORTED METHOD "; 
-             TestLoader.logErrPrint(msg);
-             return BWBaseTest.PASSED;
         }
       } else {
              System.out.println("Document is  NULL..");
              return BWBaseTest.FAILED;
       }
+      return BWBaseTest.PASSED;
 
    }
 
