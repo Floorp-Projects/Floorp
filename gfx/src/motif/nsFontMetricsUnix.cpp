@@ -19,6 +19,9 @@
 #include "nsFontMetricsUnix.h"
 #include "nsDeviceContextUnix.h"
 
+#include "nspr.h"
+#include "nsCRT.h"
+
 static NS_DEFINE_IID(kIFontMetricsIID, NS_IFONT_METRICS_IID);
 
 nsFontMetricsUnix :: nsFontMetricsUnix()
@@ -53,11 +56,7 @@ void nsFontMetricsUnix::RealizeFont()
   //mFontHandle = ::CreateFontIndirect(&logFont);
 
   //mHeight = nscoord(metrics.tmHeight * p2t);
-  //mAscent = nscoord(metrics.tmAscent * p2t);
-  //mDescent = nscoord(metrics.tmDescent * p2t);
   //mLeading = nscoord(metrics.tmInternalLeading * p2t);
-  //mMaxAscent = nscoord(metrics.tmAscent * p2t);
-  //mMaxDescent = nscoord(metrics.tmDescent * p2t);
   //mMaxAdvance = nscoord(metrics.tmMaxCharWidth * p2t);
 
 
@@ -69,6 +68,8 @@ void nsFontMetricsUnix::RealizeFont()
 
   mAscent = fs->ascent ;
   mDescent = fs->descent ;
+  mMaxAscent = fs->ascent ;
+  mMaxDescent = fs->descent ;
 
   ::XSetFont(aRenderingSurface->display, aRenderingSurface->gc, mFontHandle);
 
@@ -79,8 +80,6 @@ void nsFontMetricsUnix::RealizeFont()
   for (i=0;i<256;i++)
     mCharWidths[i] = 9 ;
 
-  mMaxAscent = 12;
-  mMaxDescent = 3;
   mMaxAdvance = 15;
   mLeading = 3;
 }
@@ -106,29 +105,40 @@ nscoord nsFontMetricsUnix :: GetWidth(const nsString& aString)
 
 nscoord nsFontMetricsUnix :: GetWidth(const char *aString)
 {
-  // XXX use native text measurement routine
-  nscoord sum = 0;
-  PRUint8 ch;
-  while ((ch = PRUint8(*aString++)) != 0) {
-    sum += mCharWidths[ch];
-  }
-  return sum;
+
+  nsDrawingSurfaceUnix * aRenderingSurface = (nsDrawingSurfaceUnix *) ((nsDeviceContextUnix *)mContext)->GetDrawingSurface();
+  XFontStruct * fs = ::XQueryFont(aRenderingSurface->display, mFontHandle);
+  
+  return (::XTextWidth(fs, aString, nsCRT::strlen(aString)));
+
 }
 
 nscoord nsFontMetricsUnix :: GetWidth(const PRUnichar *aString, PRUint32 aLength)
 {
-  // XXX use native text measurement routine
-  nscoord sum = 0;
-  while (aLength != 0) {
-    PRUnichar ch = *aString++;
-    if (ch < 256) {
-      sum += mCharWidths[ch];
-    } else {
-      // XXX not yet
-    }
-    --aLength;
+
+  XChar2b * xstring ;
+  XChar2b * thischar ;
+  PRUint16 aunichar;
+  nscoord width ;
+  PRUint32 i ;
+
+  xstring = (XChar2b *) PR_Malloc(sizeof(XChar2b)*aLength);
+
+  for (i=0; i<aLength; i++) {
+    thischar = (xstring+i);
+    aunichar = (PRUint16)(*(aString+i));
+    thischar->byte1 = (aunichar & 0xf);
+    thischar->byte2 = (aunichar & 0xff) >> 8;      
   }
-  return sum;
+
+  nsDrawingSurfaceUnix * aRenderingSurface = (nsDrawingSurfaceUnix *) ((nsDeviceContextUnix *)mContext)->GetDrawingSurface();
+  XFontStruct * fs = ::XQueryFont(aRenderingSurface->display, mFontHandle);
+  
+  width = ::XTextWidth16(fs, xstring, aLength);
+
+  PR_Free(xstring);
+
+  return (width);
 }
 
 nscoord nsFontMetricsUnix :: GetHeight()
