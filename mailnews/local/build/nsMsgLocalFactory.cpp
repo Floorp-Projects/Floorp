@@ -17,7 +17,7 @@
  */
 
 #include "msgCore.h" // for pre-compiled headers...
-
+#include "nsIServiceManager.h"
 #include "nsIFactory.h"
 #include "nsISupports.h"
 #include "nsMsgLocalCID.h"
@@ -29,7 +29,7 @@
 #include "nsMailboxService.h"
 #include "nsLocalMailFolder.h"
 #include "nsParseMailbox.h"
-#include "nsIServiceManager.h"
+#include "nsPop3Service.h"
 #include "nsCOMPtr.h"
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
@@ -38,6 +38,7 @@ static NS_DEFINE_CID(kCMailboxParser, NS_MAILBOXPARSER_CID);
 static NS_DEFINE_CID(kCMailboxService, NS_MAILBOXSERVICE_CID);
 static NS_DEFINE_CID(kMailNewsDatasourceCID, NS_MAILNEWSDATASOURCE_CID);
 static NS_DEFINE_CID(kMailNewsResourceCID, NS_MAILNEWSRESOURCE_CID);
+static NS_DEFINE_CID(kPop3ServiceCID, NS_POP3SERVICE_CID);
 
 ////////////////////////////////////////////////////////////
 //
@@ -117,23 +118,33 @@ nsresult nsMsgLocalFactory::CreateInstance(nsISupports *aOuter, const nsIID &aII
 	// Whenever you add a new class that supports an interface, plug it in here!!!
 	
 	// do they want a local datasource ?
-	if (mClassID.Equals(kCMailboxUrl)) {
+	if (mClassID.Equals(kCMailboxUrl)) 
+	{
 		inst = NS_STATIC_CAST(nsIMailboxUrl*, new nsMailboxUrl(nsnull, nsnull));
 	}
-	else if (mClassID.Equals(kCMailboxParser)) {
+	else if (mClassID.Equals(kCMailboxParser)) 
+	{
 		inst = new nsMsgMailboxParser();
 	}
-	else if (mClassID.Equals(kCMailboxService)) {
+	else if (mClassID.Equals(kCMailboxService)) 
+	{
 		inst = new nsMailboxService();
 	}
-  else if (mClassID.Equals(kMailNewsDatasourceCID)) {
-    inst = NS_STATIC_CAST(nsIRDFMSGFolderDataSource*, new nsMSGFolderDataSource());
-  }
-  else if (mClassID.Equals(kMailNewsResourceCID)) {
-    inst = NS_STATIC_CAST(nsIMsgLocalMailFolder*, new nsMsgLocalMailFolder());
-  }
-  if (inst == nsnull)
-    return NS_ERROR_OUT_OF_MEMORY;
+	else if (mClassID.Equals(kPop3ServiceCID))
+	{
+		inst = new nsPop3Service();
+	}
+	else if (mClassID.Equals(kMailNewsDatasourceCID)) 
+	{
+		inst = NS_STATIC_CAST(nsIRDFMSGFolderDataSource*, new nsMSGFolderDataSource());
+	}
+	else if (mClassID.Equals(kMailNewsResourceCID)) 
+	{
+		inst = NS_STATIC_CAST(nsIMsgLocalMailFolder*, new nsMsgLocalMailFolder());
+	}
+	
+	if (inst == nsnull)
+		return NS_ERROR_OUT_OF_MEMORY;
 
   rv = inst->QueryInterface(aIID, aResult);
   if (NS_FAILED(rv))
@@ -203,6 +214,10 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
                                   path, PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) goto done;
 
+  rv = compMgr->RegisterComponent(kPop3ServiceCID, nsnull, nsnull,
+								  path, PR_TRUE, PR_TRUE);
+  if (NS_FAILED(rv)) goto done;
+
   // register our RDF datasources:
   rv = compMgr->RegisterComponent(kMailNewsDatasourceCID, 
                                   "Mail/News Data Source",
@@ -240,6 +255,9 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* path)
   if (NS_FAILED(rv)) goto done;
 
   rv = compMgr->UnregisterFactory(kCMailboxService, path);
+  if (NS_FAILED(rv)) goto done;
+
+  rv = compMgr->UnregisterFactory(kPop3ServiceCID, path);
   if (NS_FAILED(rv)) goto done;
 
   rv = compMgr->UnregisterFactory(kCMailboxParser, path);
