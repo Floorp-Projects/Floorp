@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "plstr.h"
+#include "prmem.h"
 #include "nsIServiceManager.h"
 #include "nsCookieManager.h"
 #include "nsCRT.h"
@@ -103,7 +105,7 @@ NS_IMPL_ISUPPORTS1(nsCookieEnumerator, nsISimpleEnumerator);
 ////////////////////////////////////////////////////////////////////////////////
 // nsCookieManager Implementation
 
-NS_IMPL_ISUPPORTS2(nsCookieManager, nsICookieManager, nsISupportsWeakReference);
+NS_IMPL_ISUPPORTS3(nsCookieManager, nsICookieManager, nsICookieManager2, nsISupportsWeakReference);
 
 nsCookieManager::nsCookieManager()
 {
@@ -135,6 +137,33 @@ NS_IMETHODIMP nsCookieManager::GetEnumerator(nsISimpleEnumerator * *entries)
     NS_ADDREF(cookieEnum);
     *entries = cookieEnum;
     return NS_OK;
+}
+
+NS_IMETHODIMP nsCookieManager::Add(const nsACString &aDomain,
+                                   const nsACString &aPath,
+                                   const nsACString &aName,
+                                   const nsACString &aValue,
+                                   PRBool aSecure,
+                                   PRInt32 aExpires)
+{
+  // nasty COOKIE method requires caller to hand off ownership of strings.
+  /* nulls aren't allowed (cookie code is full of checks as if they were
+     but see COOKIE_Write) */
+  char *domainCopy = PL_strdup(PromiseFlatCString(aDomain).get()),
+       *pathCopy = PL_strdup(PromiseFlatCString(aPath).get()),
+       *nameCopy = PL_strdup(PromiseFlatCString(aName).get()),
+       *valueCopy = PL_strdup(PromiseFlatCString(aValue).get());
+
+  if (domainCopy && pathCopy && nameCopy && valueCopy)
+    return ::COOKIE_AddCookie(domainCopy, pathCopy, nameCopy, valueCopy,
+                aSecure, PR_TRUE, aExpires,
+                nsICookie::STATUS_UNKNOWN, nsICookie::POLICY_UNKNOWN);
+
+  if (domainCopy) PL_strfree(domainCopy);
+  if (pathCopy) PL_strfree(pathCopy);
+  if (nameCopy) PL_strfree(nameCopy);
+  if (valueCopy) PL_strfree(valueCopy);
+  return NS_ERROR_OUT_OF_MEMORY;
 }
 
 NS_IMETHODIMP nsCookieManager::Remove
