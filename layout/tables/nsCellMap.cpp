@@ -484,7 +484,9 @@ void nsCellMap::SetColCollapsedAt(PRInt32 aCol, PRBool aValue)
 
 PRBool nsCellMap::RowIsSpannedInto(PRInt32 aRowIndex) const
 {
-  NS_PRECONDITION ((0 <= aRowIndex) && (aRowIndex < mRowCount), "bad row index arg");
+  if ((0 > aRowIndex) || (aRowIndex >= mRowCount)) {
+    return PR_FALSE;
+  }
   PRInt32 colCount = mNumCellsInCol.Count();
 	for (PRInt32 colIndex = 0; colIndex < colCount; colIndex++) {
 		CellData* cd = GetCellAt(aRowIndex, colIndex);
@@ -500,7 +502,9 @@ PRBool nsCellMap::RowIsSpannedInto(PRInt32 aRowIndex) const
 
 PRBool nsCellMap::RowHasSpanningCells(PRInt32 aRowIndex) const
 {
-  NS_PRECONDITION ((0 <= aRowIndex) && (aRowIndex < mRowCount), "bad row index arg");
+  if ((0 > aRowIndex) || (aRowIndex >= mRowCount)) {
+    return PR_FALSE;
+  }
   PRInt32 colCount = mNumCellsInCol.Count();
   if (aRowIndex != mRowCount - 1) {
     // aRowIndex is not the last row, so we check the next row after aRowIndex for spanners
@@ -520,7 +524,9 @@ PRBool nsCellMap::RowHasSpanningCells(PRInt32 aRowIndex) const
 
 PRBool nsCellMap::ColIsSpannedInto(PRInt32 aColIndex) const
 {
-  NS_PRECONDITION ((0 <= aColIndex) && (aColIndex < mNumCellsInCol.Count()), "bad col index arg");
+  if ((0 > aColIndex) || (aColIndex >= mNumCellsInCol.Count())) {
+    return PR_FALSE;
+  }
 	for (PRInt32 rowIndex = 0; rowIndex < mRowCount; rowIndex++) {
 		CellData* cd = GetCellAt(rowIndex, aColIndex);
 		if (cd) { // there's really a cell at (aRowIndex, colIndex)
@@ -537,8 +543,9 @@ PRBool nsCellMap::ColHasSpanningCells(PRInt32 aColIndex) const
 {
   NS_PRECONDITION (aColIndex < mNumCellsInCol.Count(), "bad col index arg");
   PRInt32 colCount = mNumCellsInCol.Count();
-  if (aColIndex >= colCount - 1)
+  if ((0 > aColIndex) || (aColIndex >= colCount - 1)) 
     return PR_FALSE;
+ 
   for (PRInt32 rowIndex = 0; rowIndex < mRowCount; rowIndex++) {
     CellData* cd = GetCellAt(rowIndex, aColIndex);
     if (cd && (cd->mOrigCell)) { // cell originates 
