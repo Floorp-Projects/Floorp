@@ -538,9 +538,6 @@ nsAccessibleWrap::TranslateStates(PRUint32 aState, void *aAtkStateSet)
     if (aState & nsIAccessible::STATE_SENSITIVE)
         atk_state_set_add_state (state_set, ATK_STATE_SENSITIVE);
 
-    if (aState & nsIAccessible::STATE_RESIZABLE)
-        atk_state_set_add_state (state_set, ATK_STATE_RESIZABLE);
-
     if (aState & nsIAccessible::STATE_SHOWING)
         atk_state_set_add_state (state_set, ATK_STATE_SHOWING);
 

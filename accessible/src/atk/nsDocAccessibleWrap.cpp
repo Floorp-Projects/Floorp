@@ -489,8 +489,6 @@ TranslateAState(PRUint32 aState)
         return ATK_STATE_MULTI_LINE;
     case nsIAccessible::STATE_SENSITIVE:
         return ATK_STATE_SENSITIVE;
-    case nsIAccessible::STATE_RESIZABLE:
-        return ATK_STATE_RESIZABLE;
     case nsIAccessible::STATE_SHOWING:
         return ATK_STATE_SHOWING;
     case nsIAccessible::STATE_SINGLE_LINE:
