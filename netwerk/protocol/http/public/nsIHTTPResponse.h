@@ -34,9 +34,9 @@ class nsIHTTPResponse : public nsIHTTPCommonHeaders
 public:
 
     NS_IMETHOD              GetContentLength(PRInt32* o_Value) const = 0;
-    NS_IMETHOD              GetStatus(PRInt32* o_Value) const = 0;
-    NS_IMETHOD              GetStatusString(const char* *o_String) const = 0;
-    NS_IMETHOD              GetServer(const char* *o_String) const = 0;
+    NS_IMETHOD              GetStatus(PRUint32* o_Value) const = 0;
+    NS_IMETHOD              GetStatusString(char* *o_String) const = 0;
+    NS_IMETHOD              GetServer(char* *o_String) const = 0;
 
     static const nsIID& GetIID() { 
         // {A4FD6E60-FE7B-11d2-B019-006097BFC036}
