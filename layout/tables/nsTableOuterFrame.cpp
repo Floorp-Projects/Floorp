@@ -961,17 +961,19 @@ void nsTableOuterFrame::CreateChildFrames(nsIPresContext*  aPresContext)
     const PRInt32 contentType = ((nsTableContent *)(nsIContent*)caption)->GetType();
     if (contentType==nsITableContent::kTableCaptionType)
     {
-      nsIFrame *captionFrame=nsnull;
-      frameCreated = nsTableCaptionFrame::NewFrame(&captionFrame, caption, this);
-      if (NS_OK!=frameCreated)
-        return;  // SEC: an error!!!!
       // Resolve style
       nsIStyleContextPtr captionStyleContext =
         aPresContext->ResolveStyleContextFor(caption, this);
       NS_ASSERTION(captionStyleContext.IsNotNull(), "bad style context for caption.");
       nsStyleText* captionStyle = 
         (nsStyleText*)captionStyleContext->GetData(eStyleStruct_Text);
-      captionFrame->SetStyleContext(aPresContext,captionStyleContext);
+      // create the frame
+      nsIFrame *captionFrame=nsnull;
+      frameCreated = ((nsIHTMLContent*)(nsIContent*)caption)->CreateFrame(aPresContext, 
+                      this, captionStyleContext, captionFrame);
+      if (NS_OK!=frameCreated)
+        return;  // SEC: an error!!!!
+
       mChildCount++;
       // Link child frame into the list of children
       if ((eStyleUnit_Enumerated == captionStyle->mVerticalAlign.GetUnit()) && 
