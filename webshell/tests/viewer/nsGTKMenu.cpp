@@ -17,7 +17,11 @@
  */
 
 #include <gtk/gtk.h>
+
+#ifndef GTK_HAVE_FEATURES_1_1_6
 #include "gtklayout.h"
+#endif
+
 #include "resources.h"
 #include "nscore.h"
 
