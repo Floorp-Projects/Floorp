@@ -28,13 +28,18 @@
 ## This script is meant to run a mozilla program from the mozilla
 ## source tree.  This is mostly useful to folks hacking on mozilla.
 ##
-## A mozilla program is currently either viewer or mozilla-bin.  The
-## default is viewer.
-##
 ## The script will setup all the environment voodoo needed to make
 ## mozilla work.
-#
 ##
+## In the absence of a program being specified on the command line, the
+## script determines which program to run in this order of existence.
+##
+##   1. The program named foo-bin where foo is the name of this script,
+##      (e.g. rename this script as TestEmbed and it will look for
+##      TestEmbed-bin).
+##   2. The "viewer" executable.
+##   3. The "mozilla-bin" executable
+#
 ## Standard shell script disclaimer blurb thing:
 ##
 ## This script is a hack.  It's brute force.  It's horrible.  
@@ -60,6 +65,7 @@
 #
 cmdname=`basename $0`
 MOZ_DIST_BIN=`dirname $0`
+MOZ_DEFAULT_NAME="./${cmdname}-bin"
 MOZ_APPRUNNER_NAME="./mozilla-bin"
 MOZ_VIEWER_NAME="./viewer"
 MOZ_PROGRAM=""
@@ -306,21 +312,22 @@ fi
 if [ -z "$MOZ_PROGRAM" ]
 then
 	##
-	## Try viewer
+	## Try this script's name with '-bin' appended
+	##
+	if [ -x "$MOZ_DEFAULT_NAME" ]
+	then
+		MOZ_PROGRAM=$MOZ_DEFAULT_NAME
+	## Try viewer (this should be deprecated)
 	## 
-	moz_test_binary $MOZ_VIEWER_NAME
-	if [ $? -eq 1 ]
+	elif [ -x "$MOZ_VIEWER_NAME" ]
 	then
 		MOZ_PROGRAM=$MOZ_VIEWER_NAME
 	##
 	## Try mozilla-bin
 	## 
-	else
-		moz_test_binary $MOZ_APPRUNNER_NAME
-		if [ $? -eq 1 ]
-		then
-			MOZ_PROGRAM=$MOZ_APPRUNNER_NAME
-		fi
+	elif [ -x "$MOZ_APPRUNNER_NAME" ]
+	then
+		MOZ_PROGRAM=$MOZ_APPRUNNER_NAME
 	fi
 fi
 #
