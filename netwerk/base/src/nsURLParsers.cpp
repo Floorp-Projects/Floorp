@@ -133,7 +133,9 @@ nsBaseURLParser::ParseURL(const char *spec, PRInt32 specLen,
     }
 
     // ignore trailing whitespace and control characters
-    for (p = spec + specLen - 1; (*p > 0) && (*p <= ' '); --p);
+    for (p = spec + specLen - 1; (*p <= ' ') && (p != spec); --p)
+        ;
+
     specLen = p - spec + 1;
 
     if (colon && (colon < slash || !slash)) {
