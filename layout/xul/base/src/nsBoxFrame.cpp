@@ -2598,8 +2598,10 @@ nsBoxFrame::CreateViewForFrame(nsIPresContext* aPresContext,
     PRBool  autoZIndex = PR_FALSE;
     PRBool  fixedBackgroundAttachment = PR_FALSE;
 
-    const nsStyleBackground* bg = (const nsStyleBackground*)
-      aStyleContext->GetStyleData(eStyleStruct_Background);
+    const nsStyleBackground* bg;
+    PRBool isCanvas;
+    PRBool hasBG =
+        nsCSSRendering::FindBackground(aPresContext, aFrame, &bg, &isCanvas);
     const nsStyleVisibility* vis = (const nsStyleVisibility*)
       aStyleContext->GetStyleData(eStyleStruct_Visibility);
 
@@ -2611,7 +2613,7 @@ nsBoxFrame::CreateViewForFrame(nsIPresContext* aPresContext,
     }
 
     // See if the frame has a fixed background attachment
-    if (NS_STYLE_BG_ATTACHMENT_FIXED == bg->mBackgroundAttachment) {
+    if (hasBG && NS_STYLE_BG_ATTACHMENT_FIXED == bg->mBackgroundAttachment) {
       aForce = PR_TRUE;
       fixedBackgroundAttachment = PR_TRUE;
     }
@@ -2675,8 +2677,10 @@ nsBoxFrame::CreateViewForFrame(nsIPresContext* aPresContext,
 
         // See if the view should be hidden
         PRBool  viewIsVisible = PR_TRUE;
-        PRBool  viewHasTransparentContent = (bg->mBackgroundFlags &
-                  NS_STYLE_BG_COLOR_TRANSPARENT) == NS_STYLE_BG_COLOR_TRANSPARENT;
+        PRBool  viewHasTransparentContent =
+            !isCanvas &&
+            (!hasBG ||
+             (bg->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT));
 
         if (NS_STYLE_VISIBILITY_COLLAPSE == vis->mVisible) {
           viewIsVisible = PR_FALSE;
