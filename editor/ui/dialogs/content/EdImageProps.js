@@ -510,7 +510,7 @@ function ValidateData()
 {
   if ( !IsValidImage(dialog.srcInput.value))
   {
-    editorShell.AlertWithTitle(GetString("Alert"), GetString("MissingImageError"));
+    AlertWithTitle(null, GetString("MissingImageError"));
     window.focus();
     return false;
   }
@@ -526,7 +526,7 @@ function ValidateData()
   var alt = dialog.altTextInput.value;
   if (doAltTextError && !alt)
   {
-    ShowInputErrorMessage(GetString("NoAltText"));
+    AlertWithTitle(null, GetString("NoAltText"));
     SetTextboxFocus(dialog.altTextInput);
     doAltTextError = false;
     return false;

@@ -243,8 +243,43 @@ function SetTextboxFocus(textbox)
 
 function ShowInputErrorMessage(message)
 {
-  editorShell.AlertWithTitle(GetString("InputError"), message);
+  AlertWithTitle(GetString("InputError"), message);
   window.focus();
+}
+
+function AlertWithTitle(title, message)
+{
+  var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
+  promptService = promptService.QueryInterface(Components.interfaces.nsIPromptService);
+
+  if (promptService)
+  {
+    if (!title)
+      title = GetString("Alert");
+
+    // "window" is the calling dialog window
+    promptService.alert(window, title, message);
+  }
+}
+
+// Optional: Caller may supply text to substitue for "Ok" and/or "Cancel"
+function ConfirmWithTitle(title, message, okButtonText, cancelButtonText)
+{
+  var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
+  promptService = promptService.QueryInterface(Components.interfaces.nsIPromptService);
+
+  if (promptService)
+  {
+    var result = {value:0};
+    var okFlag = okButtonText ? promptService.BUTTON_TITLE_IS_STRING : promptService.BUTTON_TITLE_OK;
+    var cancelFlag = cancelButtonText ? promptService.BUTTON_TITLE_IS_STRING : promptService.BUTTON_TITLE_CANCEL;
+
+    promptService.confirmEx(window, title, message,
+                            (okFlag * promptService.BUTTON_POS_0) +
+                            (cancelFlag * promptService.BUTTON_POS_1),
+                            okButtonText, cancelButtonText, null, null, {value:0}, result);
+    return (result.value == 0);      
+  }
 }
 
 function GetString(name)
