@@ -332,6 +332,30 @@ public class FunctionObject extends NativeFunction {
         setParentScope(scope);
     }
 
+    static public Object convertArg(Scriptable scope,
+                                        Object arg, Class desired)
+    {
+        if (desired == ScriptRuntime.BooleanClass 
+                                    || desired == Boolean.TYPE)
+            return ScriptRuntime.toBoolean(arg) ? Boolean.TRUE 
+                                               : Boolean.FALSE;
+        else if (desired == ScriptRuntime.StringClass)
+            return ScriptRuntime.toString(arg);
+        else if (desired == ScriptRuntime.IntegerClass
+                                        || desired == Integer.TYPE)
+            return new Integer(ScriptRuntime.toInt32(arg));
+        else if (desired == ScriptRuntime.DoubleClass 
+                                        || desired == Double.TYPE)
+            return new Double(ScriptRuntime.toNumber(arg));
+        else if (desired == ScriptRuntime.ScriptableClass)
+            return ScriptRuntime.toObject(scope, arg);
+        else {
+            Object[] errArgs = { desired.getName() };
+            throw Context.reportRuntimeError(
+                    Context.getMessage("msg.cant.convert", errArgs));
+        }
+    }
+
     /**
      * Performs conversions on argument types if needed and
      * invokes the underlying Java method or constructor.
@@ -374,24 +398,7 @@ public class FunctionObject extends NativeFunction {
                          ? args[i]
                          : Undefined.instance;
             if (types != null) {
-                Class desired = types[i];
-                if (desired == ScriptRuntime.BooleanClass 
-                                            || desired == Boolean.TYPE)
-                    arg = ScriptRuntime.toBoolean(arg) ? Boolean.TRUE 
-                                                       : Boolean.FALSE;
-                else if (desired == ScriptRuntime.StringClass)
-                    arg = ScriptRuntime.toString(arg);
-                else if (desired == ScriptRuntime.IntegerClass || desired == Integer.TYPE)
-                    arg = new Integer(ScriptRuntime.toInt32(arg));
-                else if (desired == ScriptRuntime.DoubleClass || desired == Double.TYPE)
-                    arg = new Double(ScriptRuntime.toNumber(arg));
-                else if (desired == ScriptRuntime.ScriptableClass)
-                    arg = ScriptRuntime.toObject(this, arg);
-                else {
-                    Object[] errArgs = { desired.getName() };
-                    throw Context.reportRuntimeError(
-                            Context.getMessage("msg.cant.convert", errArgs));
-                }
+                arg = convertArg(this, arg, types[i]);
             }
             invokeArgs[i] = arg;
         }
