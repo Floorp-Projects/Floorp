@@ -85,7 +85,8 @@ public class DocumentImpl_getDoctype extends BWBaseTest implements Execution
                 TestLoader.logErrPrint("Document Type for HTML is NULL..");
                 return BWBaseTest.FAILED;
              } else {
-                TestLoader.logErrPrint("Document Type is  " + dt.getName());
+                TestLoader.logErrPrint("Document Type is for HTML is NULL");
+                return BWBaseTest.PASSED;
              }
         } catch (RuntimeException r) {
              String msg = "Caught RuntimeException " + r ; 
@@ -97,7 +98,6 @@ public class DocumentImpl_getDoctype extends BWBaseTest implements Execution
              return BWBaseTest.FAILED;
       }
 
-      return BWBaseTest.PASSED;
    }
 
    /**
