@@ -76,7 +76,9 @@ export::
 	-mkdir $(CCKDIST)\CCKTool\CCKDocs
 
 	-mkdir $(CCKDIST)\CCKTool\NSCPXPI
+	-mkdir $(CCKDIST)\CCKTool\CCKHelp
 
+ 
 #  We populate empty folders so zip will pick them up.
 	$(MAKE_INSTALL) .\build\DeleteThisFile $(CCKDIST)\CCKTool\Configs\Default\Output
 	$(MAKE_INSTALL) .\build\DeleteThisFile $(CCKDIST)\CCKTool\Configs\Default\Workspace\AnimLogo
