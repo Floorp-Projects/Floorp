@@ -990,31 +990,4 @@ nsBodyFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter* aFilter) const
   return rv;
 }
 
-NS_METHOD nsBodyFrame::VerifyTree() const
-{
-#ifdef NS_DEBUG
-  NS_ASSERTION(0 == (mState & NS_FRAME_IN_REFLOW), "frame is in reflow");
-
-  // Check our child count
-  PRInt32 len = LengthOf(mFirstChild);
-  NS_ASSERTION(len == mChildCount, "bad child count");
-  nsIFrame* lastChild = LastFrame(mFirstChild);
-   
-  if (len != 0) {
-    NS_ASSERTION(nsnull != lastChild, "bad last child");
-  }
-  NS_ASSERTION(nsnull == mOverflowList, "bad overflow list");
-
-  // Verify the child's tree is valid
-  nsIFrame* child = mFirstChild;
-  while (nsnull != child) {
-    // Make sure that the child's tree is valid
-    child->VerifyTree();
-    child->GetNextSibling(child);
-  }
-
-#endif
-  return NS_OK;
-}
-
 

@@ -72,8 +72,6 @@ public:
   NS_IMETHOD  AddAbsoluteItem(nsAbsoluteFrame* aAnchorFrame);
   NS_IMETHOD  RemoveAbsoluteItem(nsAbsoluteFrame* aAnchorFrame);
 
-  NS_IMETHOD VerifyTree() const;
-
 protected:
   PRUint32  mFlags;
   static nsIAtom* gAbsoluteAtom;
@@ -106,7 +104,6 @@ private:
   nsSpaceManager* mSpaceManager;
   nsVoidArray     mAbsoluteItems;
   nsIFrame*       mAbsoluteFrames;  // additional named child list
-  PRInt32         mChildCount;
 
 #ifdef NS_DEBUG
   struct BandData : public nsBandData {
