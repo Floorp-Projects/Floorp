@@ -384,7 +384,7 @@ NS_IMETHODIMP nsImageGTK::Draw(nsIRenderingContext &aContext,
     }
   moz_gdk_draw_bgr_image (drawing->drawable,
                           drawing->gc,
-                          aX, aY, aWidth, aHeight,
+                          aX, aY, mWidth, mHeight,
                           GDK_RGB_DITHER_MAX,
                           mImageBits, mRowBytes);
   if (mAlphaBits != nsnull)
