@@ -278,11 +278,11 @@ PK11SDR_Decrypt(SECItem *data, SECItem *result, void *cx)
 
 loser:
   SECITEM_ZfreeItem(&paddedResult, PR_FALSE);
-  PORT_FreeArena(arena, PR_TRUE);
-  PK11_DestroyContext(ctx, PR_TRUE);
-  PK11_FreeSymKey(key);
-  SECITEM_ZfreeItem(params, PR_TRUE);
-  PK11_FreeSlot(slot);
+  if (arena) PORT_FreeArena(arena, PR_TRUE);
+  if (ctx) PK11_DestroyContext(ctx, PR_TRUE);
+  if (key) PK11_FreeSymKey(key);
+  if (params) SECITEM_ZfreeItem(params, PR_TRUE);
+  if (slot) PK11_FreeSlot(slot);
 
   return rv;
 }
