@@ -430,26 +430,6 @@ nsLineBox::FreeFloaters(nsFloaterCacheFreeList& aFreeList)
 }
 
 void
-nsLineBox::RemoveFloatersFromSpaceManager(nsSpaceManager* aSpaceManager)
-{ 
-  if (IsInline()) {
-    if (mInlineData) {
-      nsFloaterCache* floaterCache = mInlineData->mFloaters.Head();
-
-      while (floaterCache) {
-        nsIFrame* floater = floaterCache->mPlaceholder->GetOutOfFlowFrame();
-#ifdef NOISY_SPACEMANAGER
-        nsFrame::ListTag(stdout, floater);
-        printf(": Removing from space manager\n");
-#endif
-        aSpaceManager->RemoveRegion(floater);
-        floaterCache = floaterCache->Next();        
-      }
-    }
-  }
-}
-
-void
 nsLineBox::AppendFloaters(nsFloaterCacheFreeList& aFreeList)
 { 
   NS_ABORT_IF_FALSE(IsInline(), "block line can't have floaters");
