@@ -40,7 +40,7 @@ nsDOMAttributeMap::nsDOMAttributeMap(nsIContent* aContent)
   // we'll be told to drop our reference
 }
 
-PR_CALLBACK PRIntn
+PR_STATIC_CALLBACK (PRIntn)
 RemoveAttributes(PLHashEntry* he, PRIntn i, void* arg)
 {
   nsIDOMAttr* attr = (nsIDOMAttr*)he->value;
@@ -58,7 +58,7 @@ RemoveAttributes(PLHashEntry* he, PRIntn i, void* arg)
   return HT_ENUMERATE_REMOVE;
 }
 
-PR_CALLBACK PRIntn
+PR_STATIC_CALLBACK (PRIntn)
 DropReferencesInAttributes(PLHashEntry* he, PRIntn i, void* arg)
 {
   nsDOMAttribute* attr = (nsDOMAttribute*)he->value;
