@@ -398,13 +398,6 @@ NS_IMETHODIMP mozXMLTerminal::Activate(void)
   if ((mDOMDocument != nsnull) || (mPresShell != nsnull))
     return NS_ERROR_FAILURE;
 
-  // Get reference to DOMDocument
-  nsCOMPtr<nsIDOMDocument> domDocument;
-  result = mDocShell->GetDocument(getter_AddRefs(domDocument));
-
-  if (NS_FAILED(result) || !domDocument)
-    return NS_ERROR_FAILURE;
-
   // Get reference to presentation shell
   if (mPresShell != nsnull)
     return NS_ERROR_FAILURE;
@@ -417,6 +410,14 @@ NS_IMETHODIMP mozXMLTerminal::Activate(void)
   nsCOMPtr<nsIPresShell> presShell;
   result = mDocShell->GetPresShell(getter_AddRefs(presShell));
   if (NS_FAILED(result) || !presShell)
+    return NS_ERROR_FAILURE;
+
+  // Get reference to DOMDocument
+  nsCOMPtr<nsIDocument> document;
+  result = mPresShell->GetDocument(getter_AddRefs(document));
+
+  nsCOMPtr<nsIDOMDocument> domDocument = do_QueryInterface(document);
+  if (NS_FAILED(result) || !domDocument)
     return NS_ERROR_FAILURE;
 
   // Save references to DOMDocument and presentation shell

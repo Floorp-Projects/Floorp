@@ -202,14 +202,18 @@ NS_IMETHODIMP mozSimpleContainer::OnEndDocumentLoad(nsIDocumentLoader *loader,
 
   fprintf(stderr, "mozSimpleContainer::OnEndDocumentLoad\n");
 
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  result = mDocShell->GetDocument(getter_AddRefs(domDoc));
-  if (NS_FAILED(result) || !domDoc)
-    return result;
-
   nsCOMPtr<nsIPresShell> presShell;
   result = mDocShell->GetPresShell(getter_AddRefs(presShell));
   if (NS_FAILED(result) || !presShell)
+    return result;
+
+  nsCOMPtr<nsIDocument> document;
+  result = presShell->GetDocument(getter_AddRefs(document));
+  if (NS_FAILED(result) || !document)
+    return result;
+
+  nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(document, &result);
+  if (NS_FAILED(result) || !domDoc)
     return result;
 
   return NS_OK;
