@@ -722,7 +722,8 @@ nsresult nsMsgSearchTerm::MatchBody (nsMsgSearchScopeTerm *scope, PRUint32 offse
 					}
 #endif
 				}
-				if (*compare != CR && *compare != LF)
+				char startChar = (char) compare.CharAt(0);
+				if (startChar != CR && startChar != LF)
 				{
 					err = MatchString (&compare, nsnull, PR_TRUE, &result);
 					lines++; 
