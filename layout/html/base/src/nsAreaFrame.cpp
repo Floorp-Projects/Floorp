@@ -600,13 +600,13 @@ void nsAreaFrame::ComputeAbsoluteFrameBounds(nsIFrame*                aAnchorFra
   }
 
   // XXX We aren't properly handling 'auto' width and height
-  // XXX The width/height represent the size of the content area only, and not
+  // XXX The width/height represent the size of the padding area only, and not
   // the frame size...
 
   // width
   if (eStyleUnit_Auto == aPosition->mWidth.GetUnit()) {
     // Use the right-edge of the containing block
-    aRect.width = aReflowState.maxSize.width;
+    aRect.width = aReflowState.maxSize.width - aRect.x;
   } else if (eStyleUnit_Coord == aPosition->mWidth.GetUnit()) {
     aRect.width = aPosition->mWidth.GetCoordValue();
   } else {
