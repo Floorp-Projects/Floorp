@@ -58,7 +58,7 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMNode.h"
 #include "nsRange.h"
-#include "nsISupportsArray.h"
+#include "nsCOMArray.h"
 #include "nsGUIEvent.h"
 #include "nsIDOMKeyEvent.h"
 #include "nsITableLayout.h"
@@ -297,18 +297,18 @@ private:
   NS_IMETHOD   FixupSelectionPoints(nsIDOMRange *aRange, nsDirection *aDir, PRBool *aFixupState);
 #endif //OLD_SELECTION
 
-  nsCOMPtr<nsISupportsArray> mRangeArray;
+  nsCOMArray<nsIDOMRange> mRangeArray;
 
   nsCOMPtr<nsIDOMRange> mAnchorFocusRange;
   nsCOMPtr<nsIDOMRange> mOriginalAnchorRange; //used as a point with range gravity for security
-  nsDirection mDirection; //FALSE = focus, anchor;  TRUE = anchor,focus
+  nsDirection mDirection; //FALSE = focus, anchor;  TRUE = anchor, focus
   PRBool mFixupState; //was there a fixup?
 
   nsSelection *mFrameSelection;
   nsWeakPtr mPresShellWeak; //weak reference to presshell.
   SelectionType mType;//type of this nsTypedSelection;
   nsAutoScrollTimer *mAutoScrollTimer; // timer for autoscrolling.
-  nsCOMPtr<nsISupportsArray> mSelectionListeners;
+  nsCOMArray<nsISelectionListener> mSelectionListeners;
 #ifdef IBMBIDI
   PRBool mTrueDirection;
 #endif
@@ -838,10 +838,8 @@ NS_IMETHODIMP
 nsSelectionIterator::Next()
 {
   mIndex++;
-  PRUint32 cnt;
-  nsresult rv = mDomSelection->mRangeArray->Count(&cnt);
-  if (NS_FAILED(rv)) return rv;
-  if (mIndex < (PRInt32)cnt)
+  PRInt32 cnt = mDomSelection->mRangeArray.Count();
+  if (mIndex < cnt)
     return NS_OK;
   return NS_ERROR_FAILURE;
 }
@@ -875,10 +873,7 @@ nsSelectionIterator::Last()
 {
   if (!mDomSelection)
     return NS_ERROR_NULL_POINTER;
-  PRUint32 cnt;
-  nsresult rv = mDomSelection->mRangeArray->Count(&cnt);
-  if (NS_FAILED(rv)) return rv;
-  mIndex = (PRInt32)cnt-1;
+  mIndex = mDomSelection->mRangeArray.Count() - 1;
   return NS_OK;
 }
 
@@ -889,14 +884,13 @@ nsSelectionIterator::CurrentItem(nsISupports **aItem)
 {
   if (!aItem)
     return NS_ERROR_NULL_POINTER;
-  PRUint32 cnt;
-  nsresult rv = mDomSelection->mRangeArray->Count(&cnt);
-  if (NS_FAILED(rv)) return rv;
-  if (mIndex >=0 && mIndex < (PRInt32)cnt){
-    *aItem = mDomSelection->mRangeArray->ElementAt(mIndex);
-    return NS_OK;
+
+  if (mIndex < 0 || mIndex >= mDomSelection->mRangeArray.Count()) {
+    return NS_ERROR_FAILURE;
   }
-  return NS_ERROR_FAILURE;
+
+  return CallQueryInterface(mDomSelection->mRangeArray[mIndex],
+                            aItem);
 }
 
 NS_IMPL_ADDREF(nsSelectionIterator)
@@ -908,14 +902,13 @@ nsSelectionIterator::CurrentItem(nsIDOMRange **aItem)
 {
   if (!aItem)
     return NS_ERROR_NULL_POINTER;
-  PRUint32 cnt;
-  nsresult rv = mDomSelection->mRangeArray->Count(&cnt);
-  if (NS_FAILED(rv)) return rv;
-  if (mIndex >=0 && mIndex < (PRInt32)cnt){
-    nsCOMPtr<nsISupports> indexIsupports = dont_AddRef(mDomSelection->mRangeArray->ElementAt(mIndex));
-    return indexIsupports->QueryInterface(NS_GET_IID(nsIDOMRange),(void **)aItem);
+  if (mIndex < 0 || mIndex >= mDomSelection->mRangeArray.Count()) {
+    return NS_ERROR_FAILURE;
   }
-  return NS_ERROR_FAILURE;
+
+  *aItem = mDomSelection->mRangeArray[mIndex];
+  NS_IF_ADDREF(*aItem);
+  return NS_OK;
 }
 
 
@@ -923,10 +916,8 @@ nsSelectionIterator::CurrentItem(nsIDOMRange **aItem)
 NS_IMETHODIMP
 nsSelectionIterator::IsDone()
 {
-  PRUint32 cnt;
-  nsresult rv = mDomSelection->mRangeArray->Count(&cnt);
-  if (NS_FAILED(rv)) return rv;
-  if (mIndex >= 0 && mIndex < (PRInt32)cnt ) { 
+  PRInt32 cnt = mDomSelection->mRangeArray.Count();
+  if (mIndex >= 0 && mIndex < cnt) {
     return NS_ENUMERATOR_FALSE;
   }
   return NS_OK;
@@ -4282,12 +4273,7 @@ nsTypedSelection::addTableCellRange(nsIDOMRange *aRange, PRBool *aDidAddRange)
   if (!aRange)
     return NS_ERROR_NULL_POINTER;
 
-  if (!mRangeArray)
-    return NS_ERROR_FAILURE;
-
   nsresult result;
-  nsCOMPtr<nsISupports> isupp = do_QueryInterface(aRange, &result);
-  if (NS_FAILED(result)) return result;
 
   // Get if we are adding a cell selection and the row, col of cell if we are
   PRInt32 newRow, newCol, tableMode;
@@ -4307,20 +4293,17 @@ nsTypedSelection::addTableCellRange(nsIDOMRange *aRange, PRBool *aDidAddRange)
   if (mFrameSelection->mSelectingTableCellMode == TABLESELECTION_NONE)
     mFrameSelection->mSelectingTableCellMode = tableMode;
 
-  PRUint32 count;
-  result = mRangeArray->Count(&count);
-  if (NS_FAILED(result)) return result;
+  PRInt32 count = mRangeArray.Count();
 
   if (count > 0)
   {
     // Adding a cell range to existing list of cell ranges
-    PRUint32 index;
+    PRInt32 index;
     PRInt32 row, col;
     // Insert range at appropriate location
     for (index = 0; index < count; index++)
     {
-      nsCOMPtr<nsISupports> element = dont_AddRef(mRangeArray->ElementAt(index));
-	    nsCOMPtr<nsIDOMRange> range = do_QueryInterface(element);
+	    nsIDOMRange* range = mRangeArray[index];
       if (!range) return NS_ERROR_FAILURE;
 
       PRInt32 selectionMode;
@@ -4336,17 +4319,15 @@ nsTypedSelection::addTableCellRange(nsIDOMRange *aRange, PRBool *aDidAddRange)
       {
         // Existing selected cell is after cell to add,
         //  so insert at this index
-        result = mRangeArray->InsertElementAt(isupp, index);
-        *aDidAddRange = NS_SUCCEEDED(result);
-        return result;
+        *aDidAddRange = mRangeArray.InsertObjectAt(aRange, index);
+        return (*aDidAddRange) ? NS_OK : NS_ERROR_FAILURE;
       }
     }          
   }
   // If here, we are adding a selected cell range 
   //   to end of range array or it's the first selected range 
-  result = mRangeArray->AppendElement(isupp);
-  *aDidAddRange = NS_SUCCEEDED(result);
-  return result;
+  *aDidAddRange = mRangeArray.AppendObject(aRange);
+  return (*aDidAddRange) ? NS_OK : NS_ERROR_FAILURE;
 }
 
 //TODO: Figure out TABLESELECTION_COLUMN and TABLESELECTION_ALLCELLS
@@ -4703,9 +4684,7 @@ nsTypedSelection::nsTypedSelection(nsSelection *aList)
   mFrameSelection = aList;
   mFixupState = PR_FALSE;
   mDirection = eDirNext;
-  NS_NewISupportsArray(getter_AddRefs(mRangeArray));
   mAutoScrollTimer = nsnull;
-  NS_NewISupportsArray(getter_AddRefs(mSelectionListeners));
   NS_INIT_ISUPPORTS();
   mScrollEventPosted = PR_FALSE;
 }
@@ -4716,9 +4695,7 @@ nsTypedSelection::nsTypedSelection()
   mFrameSelection = nsnull;
   mFixupState = PR_FALSE;
   mDirection = eDirNext;
-  NS_NewISupportsArray(getter_AddRefs(mRangeArray));
   mAutoScrollTimer = nsnull;
-  NS_NewISupportsArray(getter_AddRefs(mSelectionListeners));
   NS_INIT_ISUPPORTS();
   mScrollEventPosted = PR_FALSE;
 }
@@ -4845,18 +4822,14 @@ NS_IMETHODIMP nsTypedSelection::GetFocusOffset(PRInt32* aFocusOffset)
 
 void nsTypedSelection::setAnchorFocusRange(PRInt32 indx)
 {
-  PRUint32 cnt;
-  nsresult rv = mRangeArray->Count(&cnt);
-  if (NS_FAILED(rv)) return;    // XXX error?
-  if (((PRUint32)indx) >= cnt )
+  if (indx >= mRangeArray.Count())
     return;
   if (indx < 0) //release all
   {
     mAnchorFocusRange = nsnull;
   }
   else{
-    nsCOMPtr<nsISupports> indexIsupports = dont_AddRef(mRangeArray->ElementAt(indx));
-    mAnchorFocusRange = do_QueryInterface(indexIsupports);
+    mAnchorFocusRange = mRangeArray[indx];
   }
 }
 
@@ -4978,16 +4951,9 @@ nsTypedSelection::FetchEndOffset(nsIDOMRange *aRange)
 nsresult
 nsTypedSelection::AddItem(nsIDOMRange *aItem)
 {
-  if (!mRangeArray)
-    return NS_ERROR_FAILURE;
   if (!aItem)
     return NS_ERROR_NULL_POINTER;
-  nsresult result;
-  nsCOMPtr<nsISupports> isupp = do_QueryInterface(aItem, &result);
-  if (NS_SUCCEEDED(result)) {
-    result = mRangeArray->AppendElement(isupp);
-  }
-  return result;
+  return mRangeArray.AppendObject(aItem) ? NS_OK : NS_ERROR_FAILURE;
 }
 
 
@@ -4995,25 +4961,10 @@ nsTypedSelection::AddItem(nsIDOMRange *aItem)
 nsresult
 nsTypedSelection::RemoveItem(nsIDOMRange *aItem)
 {
-  if (!mRangeArray)
-    return NS_ERROR_FAILURE;
-  if (!aItem )
+  if (!aItem)
     return NS_ERROR_NULL_POINTER;
-  PRUint32 cnt;
-  nsresult rv = mRangeArray->Count(&cnt);
-  if (NS_FAILED(rv)) return rv;
-  for (PRUint32 i = 0; i < cnt;i++)
-  {
-    nsCOMPtr<nsISupports> indexIsupports = dont_AddRef(mRangeArray->ElementAt(i));
-    nsCOMPtr<nsISupports> isupp;
-    aItem->QueryInterface(NS_GET_IID(nsISupports),getter_AddRefs(isupp));
-    if (isupp.get() == indexIsupports.get())
-    {
-      mRangeArray->RemoveElementAt(i);
-      return NS_OK;
-    }
-  }
-  return NS_OK;
+  mRangeArray.RemoveObject(aItem);
+  return  NS_OK;
 }
 
 
@@ -5022,21 +4973,15 @@ nsresult
 nsTypedSelection::Clear(nsIPresContext* aPresContext)
 {
   setAnchorFocusRange(-1);
-  if (!mRangeArray)
-    return NS_ERROR_FAILURE;
   // Get an iterator
   while (PR_TRUE)
   {
-    PRUint32 cnt;
-    nsresult rv = mRangeArray->Count(&cnt);
-    if (NS_FAILED(rv)) return rv;
+    PRInt32 cnt = mRangeArray.Count();
     if (cnt == 0)
       break;
-    nsCOMPtr<nsISupports> isupportsindex = dont_AddRef(mRangeArray->ElementAt(0));
-    nsCOMPtr<nsIDOMRange> range = do_QueryInterface(isupportsindex);
-    mRangeArray->RemoveElementAt(0);
+    nsCOMPtr<nsIDOMRange> range = mRangeArray[0];
+    mRangeArray.RemoveObjectAt(0);
     selectFrames(aPresContext, range, 0);
-    // Does RemoveElementAt also delete the elements?
   }
   // Reset direction so for more dependable table selection range handling
   SetDirection(eDirNext);
@@ -5341,9 +5286,7 @@ nsTypedSelection::LookUpSelection(nsIContent *aContent, PRInt32 aContentOffset, 
   SelectionDetails *newDetails = details;
 
   for (i =0; i<cnt; i++){
-    nsCOMPtr<nsIDOMRange> range;
-    nsCOMPtr<nsISupports> isupportsindex = dont_AddRef(mRangeArray->ElementAt(i));
-    range = do_QueryInterface(isupportsindex);
+    nsCOMPtr<nsIDOMRange> range = mRangeArray[i];
     if (range){
       nsCOMPtr<nsIDOMNode> startNode;
       nsCOMPtr<nsIDOMNode> endNode;
@@ -5452,43 +5395,26 @@ nsTypedSelection::LookUpSelection(nsIContent *aContent, PRInt32 aContentOffset, 
 NS_IMETHODIMP
 nsTypedSelection::Repaint(nsIPresContext* aPresContext)
 {
-  PRUint32 arrCount = 0;
-
-  if (!mRangeArray)
-    return NS_ERROR_NULL_POINTER;
-
-  nsCOMPtr<nsISupports> isupp;
-  nsCOMPtr<nsIDOMRange> range;
-
-  nsresult result = mRangeArray->Count(&arrCount);
-
-  if (NS_FAILED(result))
-    return result;
+  PRInt32 arrCount = mRangeArray.Count();
 
   if (arrCount < 1)
     return NS_OK;
 
-  PRUint32 i;
-
+  PRInt32 i;
+  nsIDOMRange* range;
+  
   for (i = 0; i < arrCount; i++)
   {
-    result = mRangeArray->GetElementAt(i, getter_AddRefs(isupp));
-
-    if (NS_FAILED(result))
-      return result;
-
-    if (!isupp)
-      return NS_ERROR_NULL_POINTER;
-
-    range = do_QueryInterface(isupp);
+    range = mRangeArray[i];
 
     if (!range)
-      return NS_ERROR_NULL_POINTER;
+      return NS_ERROR_UNEXPECTED;
 
-    result = selectFrames(aPresContext, range, PR_TRUE);
+    nsresult rv = selectFrames(aPresContext, range, PR_TRUE);
 
-    if (NS_FAILED(result))
-      return result;
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
   }
 
   return NS_OK;
@@ -6115,11 +6041,10 @@ nsTypedSelection::RemoveRange(nsIDOMRange* aRange)
   selectFrames(presContext, aRange, PR_FALSE);        
   if (aRange == mAnchorFocusRange.get())
   {
-		PRUint32 cnt;
-    nsresult rv = mRangeArray->Count(&cnt);
-    if (NS_SUCCEEDED(rv) && cnt > 0 )
+    PRInt32 cnt = mRangeArray.Count();
+    if (cnt > 0)
     {
-      setAnchorFocusRange(cnt -1);//reset anchor to LAST range.
+      setAnchorFocusRange(cnt - 1);//reset anchor to LAST range.
       ScrollIntoView();
     }
   }
@@ -6209,12 +6134,11 @@ nsTypedSelection::CollapseToStart()
 {
   PRInt32 cnt;
   nsresult rv = GetRangeCount(&cnt);
-  if (NS_FAILED(rv) || cnt<=0 || !mRangeArray)
+  if (NS_FAILED(rv) || cnt <= 0)
 		return NS_ERROR_FAILURE;
 
   // Get the first range
-	nsCOMPtr<nsISupports>	element = dont_AddRef(mRangeArray->ElementAt(0));
-	nsCOMPtr<nsIDOMRange>	firstRange = do_QueryInterface(element);
+  nsIDOMRange* firstRange = mRangeArray[0];
   if (!firstRange)
     return NS_ERROR_FAILURE;
 
@@ -6244,12 +6168,11 @@ nsTypedSelection::CollapseToEnd()
 {
   PRInt32 cnt;
   nsresult rv = GetRangeCount(&cnt);
-  if (NS_FAILED(rv) || cnt<=0 || !mRangeArray)
+  if (NS_FAILED(rv) || cnt <= 0)
 		return NS_ERROR_FAILURE;
 
   // Get the last range
-	nsCOMPtr<nsISupports>	element = dont_AddRef(mRangeArray->ElementAt(cnt-1));
-	nsCOMPtr<nsIDOMRange>	lastRange = do_QueryInterface(element);
+  nsIDOMRange* lastRange = mRangeArray[cnt-1];
   if (!lastRange)
     return NS_ERROR_FAILURE;
 
@@ -6279,12 +6202,8 @@ nsTypedSelection::GetIsCollapsed(PRBool* aIsCollapsed)
 	if (!aIsCollapsed)
 		return NS_ERROR_NULL_POINTER;
 		
-  PRUint32 cnt = 0;
-  if (mRangeArray) {
-    nsresult rv = mRangeArray->Count(&cnt);
-    if (NS_FAILED(rv)) return rv;
-  }
-  if (!mRangeArray || (cnt == 0))
+  PRInt32 cnt = mRangeArray.Count();;
+  if (cnt == 0)
   {
     *aIsCollapsed = PR_TRUE;
     return NS_OK;
@@ -6296,16 +6215,7 @@ nsTypedSelection::GetIsCollapsed(PRBool* aIsCollapsed)
     return NS_OK;
   }
   
-  nsCOMPtr<nsISupports> nsisup(dont_AddRef(mRangeArray->ElementAt(0)));
-  nsCOMPtr<nsIDOMRange> range;
-  nsresult rv;
-  range = do_QueryInterface(nsisup,&rv);
-  if (NS_FAILED(rv))
-  {
-    return rv;
-  }
-                             
-  return (range->GetCollapsed(aIsCollapsed));
+  return mRangeArray[0]->GetCollapsed(aIsCollapsed);
 }
 
 NS_IMETHODIMP
@@ -6314,17 +6224,7 @@ nsTypedSelection::GetRangeCount(PRInt32* aRangeCount)
   if (!aRangeCount) 
 		return NS_ERROR_NULL_POINTER;
 
-	if (mRangeArray)
-	{
-		PRUint32 cnt;
-    nsresult rv = mRangeArray->Count(&cnt);
-    if (NS_FAILED(rv)) return rv;
-    *aRangeCount = cnt;
-	}
-	else
-	{
-		*aRangeCount = 0;
-	}
+	*aRangeCount = mRangeArray.Count();
 	
 	return NS_OK;
 }
@@ -6335,25 +6235,12 @@ nsTypedSelection::GetRangeAt(PRInt32 aIndex, nsIDOMRange** aReturn)
 	if (!aReturn)
 		return NS_ERROR_NULL_POINTER;
 
-  if (!mRangeArray)
-		return NS_ERROR_INVALID_ARG;
-		
-	PRUint32 cnt;
-  nsresult rv = mRangeArray->Count(&cnt);
-  if (NS_FAILED(rv)) return rv;
-	if (aIndex < 0 || ((PRUint32)aIndex) >= cnt)
+	PRInt32 cnt = mRangeArray.Count();
+	if (aIndex < 0 || aIndex >= cnt)
 		return NS_ERROR_INVALID_ARG;
 
-	// the result of all this is one additional ref on the item, as
-	// the caller would expect.
-	//
-	// ElementAt addrefs once
-	// do_QueryInterface addrefs once
-	// when the COMPtr goes out of scope, it releases.
-	//
-	nsISupports*	element = mRangeArray->ElementAt((PRUint32)aIndex);
-	nsCOMPtr<nsIDOMRange>	foundRange = do_QueryInterface(element);
-	*aReturn = foundRange;
+	*aReturn = mRangeArray[aIndex];
+  NS_IF_ADDREF(*aReturn);
 	
 	return NS_OK;
 }
@@ -6695,7 +6582,7 @@ nsTypedSelection::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
     return NS_ERROR_INVALID_ARG;
 
   // First, find the range containing the old focus point:
-  if (!mRangeArray || !mAnchorFocusRange)
+  if (!mAnchorFocusRange)
     return NS_ERROR_NOT_INITIALIZED;
 
   nsresult res;
@@ -7068,17 +6955,10 @@ nsTypedSelection::ContainsNode(nsIDOMNode* aNode, PRBool aRecursive, PRBool* aYe
   *aYes = PR_FALSE;
 
   // Iterate over the ranges in the selection checking for the content:
-  if (!mRangeArray)
-    return NS_OK;
-
-  PRUint32 cnt;
-  nsresult rv = mRangeArray->Count(&cnt);
-  if (NS_FAILED(rv))
-    return rv;
-  for (PRUint32 i=0; i < cnt; ++i)
+  PRInt32 cnt = mRangeArray.Count();
+  for (PRInt32 i = 0; i < cnt; ++i)
   {
-    nsCOMPtr<nsISupports> element = dont_AddRef(mRangeArray->ElementAt(i));
-    nsCOMPtr<nsIDOMRange> range = do_QueryInterface(element);
+    nsIDOMRange* range = mRangeArray[i];
     if (!range)
       return NS_ERROR_UNEXPECTED;
 
@@ -7928,15 +7808,9 @@ nsTypedSelection::ScrollIntoView(SelectionRegion aRegion, PRBool aIsSynchronous)
 NS_IMETHODIMP
 nsTypedSelection::AddSelectionListener(nsISelectionListener* aNewListener)
 {
-  if (!mSelectionListeners)
-    return NS_ERROR_FAILURE;
   if (!aNewListener)
     return NS_ERROR_NULL_POINTER;
-  nsresult result;
-  nsCOMPtr<nsISupports> isupports = do_QueryInterface(aNewListener , &result);
-  if (NS_SUCCEEDED(result))
-    result = mSelectionListeners->AppendElement(isupports) ? NS_OK : NS_ERROR_FAILURE;		// addrefs
-  return result;
+  return mSelectionListeners.AppendObject(aNewListener) ? NS_OK : NS_ERROR_FAILURE;		// addrefs
 }
 
 
@@ -7944,20 +7818,15 @@ nsTypedSelection::AddSelectionListener(nsISelectionListener* aNewListener)
 NS_IMETHODIMP
 nsTypedSelection::RemoveSelectionListener(nsISelectionListener* aListenerToRemove)
 {
-  if (!mSelectionListeners)
-    return NS_ERROR_FAILURE;
   if (!aListenerToRemove )
     return NS_ERROR_NULL_POINTER;
-  nsCOMPtr<nsISupports> isupports = do_QueryInterface(aListenerToRemove);
-  return mSelectionListeners->RemoveElement(isupports) ? NS_OK : NS_ERROR_FAILURE;		// releases
+  return mSelectionListeners.RemoveObject(aListenerToRemove) ? NS_OK : NS_ERROR_FAILURE;		// releases
 }
 
 
 nsresult
 nsTypedSelection::NotifySelectionListeners()
 {
-  if (!mSelectionListeners)
-    return NS_ERROR_FAILURE;
   if (!mFrameSelection)
     return NS_OK;//nothing to do
  
@@ -7965,14 +7834,12 @@ nsTypedSelection::NotifySelectionListeners()
     mFrameSelection->SetDirty();
     return NS_OK;
   }
-  PRUint32 cnt;
-  nsresult rv = mSelectionListeners->Count(&cnt);
-  if (NS_FAILED(rv)) return rv;
+  PRInt32 cnt = mSelectionListeners.Count();
   
   nsCOMPtr<nsIDOMDocument> domdoc;
   nsCOMPtr<nsIDocument> doc;
   nsCOMPtr<nsIPresShell> shell;
-  rv = GetPresShell(getter_AddRefs(shell));
+  nsresult rv = GetPresShell(getter_AddRefs(shell));
   if (NS_SUCCEEDED(rv) && shell)
   {
     rv = shell->GetDocument(getter_AddRefs(doc));
@@ -7981,12 +7848,11 @@ nsTypedSelection::NotifySelectionListeners()
     domdoc = do_QueryInterface(doc);
   }
   short reason = mFrameSelection->PopReason();
-  for (PRUint32 i = 0; i < cnt;i++)
+  for (PRInt32 i = 0; i < cnt; i++)
   {
-    nsCOMPtr<nsISupports> isupports(dont_AddRef(mSelectionListeners->ElementAt(i)));
-    nsCOMPtr<nsISelectionListener> thisListener = do_QueryInterface(isupports);
+    nsISelectionListener* thisListener = mSelectionListeners[i];
     if (thisListener)
-    	thisListener->NotifySelectionChanged(domdoc,this, reason);
+    	thisListener->NotifySelectionChanged(domdoc, this, reason);
   }
 	return NS_OK;
 }
