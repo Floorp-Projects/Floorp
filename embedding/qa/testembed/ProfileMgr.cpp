@@ -57,8 +57,13 @@ nsresult CProfileMgr::StartUp()
 {
     nsresult rv;
          
+<<<<<<< ProfileMgr.cpp
+    //NS_WITH_SERVICE(nsIProfile, profileService, NS_PROFILE_CONTRACTID, &rv);
+    nsCOMPtr<nsIProfile> profileService(do_GetService(NS_PROFILE_CONTRACTID,&rv));
+=======
     nsCOMPtr<nsIProfile> profileService = 
              do_GetService(NS_PROFILE_CONTRACTID, &rv);
+>>>>>>> 1.3
     if (NS_FAILED(rv)) return rv;
         
     PRInt32 profileCount;
@@ -76,7 +81,7 @@ nsresult CProfileMgr::StartUp()
     }
     else
     {
-        // Use our flag here to check for whether to show profile mgr UI. If the flag
+        // Use our flag here to chek for whether to show profile mgr UI. Ifc the flag
         // says don't show it, just start with the last used profile.
         
         PRBool showIt;
@@ -116,9 +121,15 @@ nsresult CProfileMgr::DoManageProfilesDialog(PRBool bAtStartUp)
     {
         SetShowDialogOnStart(dialog.m_bAskAtStartUp);
          
+<<<<<<< ProfileMgr.cpp
+        //NS_WITH_SERVICE(nsIProfile, profileService, NS_PROFILE_CONTRACTID, &rv);
+	    nsCOMPtr<nsIProfile> profileService(do_GetService(NS_PROFILE_CONTRACTID,&rv));
+        if (NS_FAILED(rv))
+=======
         nsCOMPtr<nsIProfile> profileService = 
                  do_GetService(NS_PROFILE_CONTRACTID, &rv);
         if (NS_SUCCEEDED(rv))
+>>>>>>> 1.3
                rv = profileService->SetCurrentProfile(dialog.m_SelectedProfile.get());
     }
     return NS_OK;

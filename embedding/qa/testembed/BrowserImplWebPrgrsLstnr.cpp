@@ -58,33 +58,33 @@ NS_IMETHODIMP CBrowserImpl::OnProgressChange(nsIWebProgress *progress, nsIReques
 	if(! m_pBrowserFrameGlue)
 		return NS_ERROR_FAILURE;
 
-	CQaUtils::QAOutput("Entering nsIWebProgLstnr::OnProgressChange().");
+	QAOutput("Entering nsIWebProgLstnr::OnProgressChange().");
 
 	PRInt32 nProgress = curTotalProgress;
 	PRInt32 nProgressMax = maxTotalProgress;
 
-	CQaUtils::RequestName(request, stringMsg);
+	RequestName(request, stringMsg);
 
 	if (nProgressMax == 0)
 		nProgressMax = LONG_MAX;
 
 	if (curSelfProgress > maxSelfProgress)
 	{
-		CQaUtils::QAOutput("nsIWebProgLstnr::OnProgressChange(): Self progress complete!", 1);
+		QAOutput("nsIWebProgLstnr::OnProgressChange(): Self progress complete!", 1);
 
 		// web progress DOMWindow test
-		CQaUtils::WebProgDOMWindowTest(progress, "OnProgressChange()", 1);
+		WebProgDOMWindowTest(progress, "OnProgressChange()", 1);
 	}
 
 	if (nProgress > nProgressMax)
 	{
 		nProgress = nProgressMax; // Progress complete
-		CQaUtils::QAOutput("nsIWebProgLstnr::OnProgressChange(): Progress Update complete!", 1);
+		QAOutput("nsIWebProgLstnr::OnProgressChange(): Progress Update complete!", 1);
 	}
 
 	m_pBrowserFrameGlue->UpdateProgress(nProgress, nProgressMax);
 
-	CQaUtils::QAOutput("Exiting nsIWebProgLstnr::OnProgressChange().\r\n");
+	QAOutput("Exiting nsIWebProgLstnr::OnProgressChange().\r\n");
   
 	return NS_OK;
 }
@@ -102,9 +102,9 @@ NS_IMETHODIMP CBrowserImpl::OnStateChange(nsIWebProgress *progress, nsIRequest *
 	if(! m_pBrowserFrameGlue)
 		return NS_ERROR_FAILURE;
 
-	CQaUtils::QAOutput("Entering nsIWebProgLstnr::OnStateChange().");
+	QAOutput("Entering nsIWebProgLstnr::OnStateChange().");
 
-	CQaUtils::RequestName(request, stringMsg);	// nsIRequest::GetName() test
+	RequestName(request, stringMsg);	// nsIRequest::GetName() test
 
 	if (progressStateFlags & STATE_IS_DOCUMENT)		// DOCUMENT
 	{
@@ -141,7 +141,7 @@ NS_IMETHODIMP CBrowserImpl::OnStateChange(nsIWebProgress *progress, nsIRequest *
 			m_pBrowserFrameGlue->UpdateStatusBarText(nsnull);  // Clear the status bar
 
 		// web progress DOMWindow test
-		CQaUtils::WebProgDOMWindowTest(progress, "OnStateChange()", 1);
+		WebProgDOMWindowTest(progress, "OnStateChange()", 1);
 
 		}
 	}		// end STATE_IS_DOCUMENT
@@ -210,8 +210,8 @@ NS_IMETHODIMP CBrowserImpl::OnStateChange(nsIWebProgress *progress, nsIRequest *
 	totalMsg += ", status = ";
 	totalMsg.AppendInt(status);
 
-	CQaUtils::QAOutput(totalMsg.get(), displayMode);
-	CQaUtils::QAOutput("Exiting nsIWebProgLstnr::OnStateChange().\r\n");
+	QAOutput(totalMsg.get(), displayMode);
+	QAOutput("Exiting nsIWebProgLstnr::OnStateChange().\r\n");
 
     return NS_OK;
 }
@@ -226,19 +226,19 @@ NS_IMETHODIMP CBrowserImpl::OnLocationChange(nsIWebProgress* aWebProgress,
 	if(! m_pBrowserFrameGlue)
 		return NS_ERROR_FAILURE;
 
-	CQaUtils::QAOutput("Entering nsIWebProgLstnr::OnLocationChange().");
+	QAOutput("Entering nsIWebProgLstnr::OnLocationChange().");
 
 	nsresult rv;
 	char *uriSpec;
 	rv = location->GetSpec(&uriSpec);
 	if (NS_FAILED(rv))
-		CQaUtils::QAOutput("Bad result for GetSpec().");
+		QAOutput("Bad result for GetSpec().");
 	else
-		CQaUtils::QAOutput("Good result for GetSpec().");
+		QAOutput("Good result for GetSpec().");
 
-	CQaUtils::FormatAndPrintOutput("The location url = ", uriSpec, 1);
+	FormatAndPrintOutput("The location url = ", uriSpec, 1);
  
-//	CQaUtils::RequestName(aRequest, stringMsg);
+//	RequestName(aRequest, stringMsg);
 
 	PRBool isSubFrameLoad = PR_FALSE; // Is this a subframe load
 	if (aWebProgress) {
@@ -255,7 +255,7 @@ NS_IMETHODIMP CBrowserImpl::OnLocationChange(nsIWebProgress* aWebProgress,
 	if (!isSubFrameLoad) // Update urlbar only if it is not a subframe load
 	  m_pBrowserFrameGlue->UpdateCurrentURI(location);
 
-  	CQaUtils::QAOutput("Exiting nsIWebProgLstnr::OnLocationChange().\r\n");
+  	QAOutput("Exiting nsIWebProgLstnr::OnLocationChange().\r\n");
     return NS_OK;
 }
 
@@ -270,19 +270,19 @@ CBrowserImpl::OnStatusChange(nsIWebProgress* aWebProgress,
 	if(! m_pBrowserFrameGlue)
 		return NS_ERROR_FAILURE;
 
-	CQaUtils::QAOutput("Entering nsIWebProgLstnr::OnStatusChange().");
+	QAOutput("Entering nsIWebProgLstnr::OnStatusChange().");
 
-	CQaUtils::RequestName(aRequest, stringMsg);
+	RequestName(aRequest, stringMsg);
 
 			// status result test
-	CQaUtils::FormatAndPrintOutput("OnStatusChange(): Status = ", aStatus, 1);
+	FormatAndPrintOutput("OnStatusChange(): Status = ", aStatus, 1);
 
 			// web progress DOMWindow test
-	CQaUtils::WebProgDOMWindowTest(aWebProgress, "OnStatusChange(): web prog DOM window test", 1);
+	WebProgDOMWindowTest(aWebProgress, "OnStatusChange(): web prog DOM window test", 1);
 
 	m_pBrowserFrameGlue->UpdateStatusBarText(aMessage);
 
-	CQaUtils::QAOutput("Exiting nsIWebProgLstnr::OnStatusChange().\r\n");
+	QAOutput("Exiting nsIWebProgLstnr::OnStatusChange().\r\n");
 
     return NS_OK;
 }
@@ -295,14 +295,14 @@ CBrowserImpl::OnSecurityChange(nsIWebProgress *aWebProgress,
 {
 	nsCString stringMsg;
 
-	CQaUtils::QAOutput("Entering nsIWebProgLstnr::OnSecurityChange().");
+	QAOutput("Entering nsIWebProgLstnr::OnSecurityChange().");
 
-	CQaUtils::RequestName(aRequest, stringMsg);
+	RequestName(aRequest, stringMsg);
 
 				// web progress DOMWindow test
-	CQaUtils::WebProgDOMWindowTest(aWebProgress, "OnSecurityChange()", 1);
+	WebProgDOMWindowTest(aWebProgress, "OnSecurityChange()", 1);
 
-	CQaUtils::QAOutput("Exiting nsIWebProgLstnr::OnSecurityChange().\r\n");
+	QAOutput("Exiting nsIWebProgLstnr::OnSecurityChange().\r\n");
 
     return NS_OK;
 }

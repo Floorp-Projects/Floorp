@@ -86,11 +86,11 @@
 #include "nsIEmbeddingSiteWindow.h"
 #include "nsIWebBrowserFind.h"
 #include "nsIWebBrowserFocus.h"
+#include "nsIServiceManager.h"
 
 // Printer Includes
 #include "nsIPrintOptions.h"
 #include "nsIWebBrowserPrint.h"
-#include "nsIDOMWindow.h"
 
 // qa additions
 #include "nsIGlobalHistory.h"
@@ -101,7 +101,17 @@
 #include "nsIDOMDocumentType.h"
 #include "nsIURIContentListener.h"
 #include "nsIHelperAppLauncherDialog.h"
+<<<<<<< StdAfx.h
+
+#include "nsIDOMWindow.h"
+#include "nsIDOMRange.h"
+#include "nsIDOMBarProp.h"
+#include "nsIDOMWindowCollection.h"
+#include "nsISelection.h"
+#include "nsITooltipListener.h"
+=======
 //#include "nsIStreamObserver.h"
+>>>>>>> 1.8
 
 //{{AFX_INSERT_LOCATION}}
 // Microsoft Visual C++ will insert additional declarations immediately before the previous line.

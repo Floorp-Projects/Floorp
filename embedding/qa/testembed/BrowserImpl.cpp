@@ -69,6 +69,8 @@
 #include "BrowserImpl.h"
 
 #include "QaUtils.h"
+
+#include "nsirequest.h"
 #include "Tests.h"
 
 CBrowserImpl::CBrowserImpl()
@@ -116,6 +118,8 @@ NS_INTERFACE_MAP_BEGIN(CBrowserImpl)
    NS_INTERFACE_MAP_ENTRY(nsISHistoryListener) // de: added 5/11
    NS_INTERFACE_MAP_ENTRY(nsIStreamListener) // de: added 6/29
    NS_INTERFACE_MAP_ENTRY(nsIRequestObserver) // de: added 6/29
+   NS_INTERFACE_MAP_ENTRY(nsITooltipListener) // de: added 7/25
+//   NS_INTERFACE_MAP_ENTRY(nsITooltipTextProvider) // de: added 7/26
 NS_INTERFACE_MAP_END
 
 //*****************************************************************************
@@ -146,7 +150,7 @@ NS_IMETHODIMP CBrowserImpl::SetStatus(PRUint32 aType, const PRUnichar* aStatus)
 		return NS_ERROR_FAILURE;
 
 	m_pBrowserFrameGlue->UpdateStatusBarText(aStatus);
-//  CQaUtils::QAOutput("nsIWebBrowserChrome::SetStatus().", 1);
+    //QAOutput("nsIWebBrowserChrome::SetStatus().", 1);
 
 	return NS_OK;
 }
@@ -158,7 +162,7 @@ NS_IMETHODIMP CBrowserImpl::GetWebBrowser(nsIWebBrowser** aWebBrowser)
    *aWebBrowser = mWebBrowser;
 
    NS_IF_ADDREF(*aWebBrowser);
-   CQaUtils::QAOutput("nsIWebBrowserChrome::GetWebBrowser().", 1);
+   QAOutput("nsIWebBrowserChrome::GetWebBrowser().", 1);
 
    return NS_OK;
 }
@@ -171,7 +175,7 @@ NS_IMETHODIMP CBrowserImpl::SetWebBrowser(nsIWebBrowser* aWebBrowser)
    NS_ENSURE_ARG_POINTER(aWebBrowser);
 
    mWebBrowser = aWebBrowser;
-   CQaUtils::QAOutput("nsIWebBrowserChrome::SetWebBrowser().", 1);
+   QAOutput("nsIWebBrowserChrome::SetWebBrowser().", 1);
 
    return NS_OK;
 }
@@ -194,19 +198,19 @@ NS_IMETHODIMP CBrowserImpl::CreateBrowserWindow(PRUint32 chromeMask, PRInt32 aX,
 {
 	if(! m_pBrowserFrameGlue)
 	{
-		CQaUtils::QAOutput("nsIWebBrowserChrome::CreateBrowserWindow(). Browser Window not created.", 1);
+		QAOutput("nsIWebBrowserChrome::CreateBrowserWindow(). Browser Window not created.", 1);
 		return NS_ERROR_FAILURE;
 	}
 
 	if(m_pBrowserFrameGlue->CreateNewBrowserFrame(chromeMask, 
 								aX, aY, aCX, aCY, aWebBrowser))
 	{
-		CQaUtils::QAOutput("nsIWebBrowserChrome::CreateBrowserWindow(): Browser Window created.", 1);
+		QAOutput("nsIWebBrowserChrome::CreateBrowserWindow(): Browser Window created.", 1);
 		return NS_OK;
 	}
 	else
 	{
-		CQaUtils::QAOutput("nsIWebBrowserChrome::CreateBrowserWindow(): Browser Window not created.", 1);
+		QAOutput("nsIWebBrowserChrome::CreateBrowserWindow(): Browser Window not created.", 1);
 	    return NS_ERROR_FAILURE;
 	}
 }
@@ -217,12 +221,12 @@ NS_IMETHODIMP CBrowserImpl::DestroyBrowserWindow()
 {
 	if(! m_pBrowserFrameGlue)
 	{
-		CQaUtils::QAOutput("nsIWebBrowserChrome::DestroyBrowserWindow(): Browser Window not destroyed.", 1);
+		QAOutput("nsIWebBrowserChrome::DestroyBrowserWindow(): Browser Window not destroyed.", 1);
 		return NS_ERROR_FAILURE;
 	}
 
 	m_pBrowserFrameGlue->DestroyBrowserFrame();
-	CQaUtils::QAOutput("nsIWebBrowserChrome::DestroyBrowserWindow(): Browser Window destroyed.", 1);
+	QAOutput("nsIWebBrowserChrome::DestroyBrowserWindow(): Browser Window destroyed.", 1);
 
 	return NS_OK;
 }
@@ -242,7 +246,7 @@ NS_IMETHODIMP CBrowserImpl::SizeBrowserTo(PRInt32 aCX, PRInt32 aCY)
 		return NS_ERROR_FAILURE;
 
 	m_pBrowserFrameGlue->SetBrowserFrameSize(aCX, aCY);
-	CQaUtils::QAOutput("nsIWebBrowserChrome::SizeBrowserTo(): Browser sized.", 1);
+	QAOutput("nsIWebBrowserChrome::SizeBrowserTo(): Browser sized.", 1);
 
 	return NS_OK;
 }
@@ -398,18 +402,19 @@ NS_IMETHODIMP CBrowserImpl::OnDataAvailable(nsIRequest *request,
 				nsISupports *ctxt, nsIInputStream *input,
 				PRUint32 offset, PRUint32 count)
 {
-	CQaUtils::QAOutput("***** nsIRequest async tests inside nsIStreamListener::OnDataAvailable(). *****");
-	CTests::IsPendingReqTest(request);
-	CTests::GetStatusReqTest(request);
+	QAOutput("***** nsIRequest async tests inside nsIStreamListener::OnDataAvailable(). *****");
 
-	CTests::SuspendReqTest(request);	
-	CTests::ResumeReqTest(request);	
+	CNsIRequest::IsPendingReqTest(request);
+	CNsIRequest::GetStatusReqTest(request);
+
+	CNsIRequest::SuspendReqTest(request);	
+	CNsIRequest::ResumeReqTest(request);	
 
 //	CTests::CancelReqTest(request);	
 
  	nsCOMPtr<nsILoadGroup> theLoadGroup(do_CreateInstance(NS_LOADGROUP_CONTRACTID));
-	CTests::SetLoadGroupTest(request, theLoadGroup);	
-	CTests::GetLoadGroupTest(request);
+	CNsIRequest::SetLoadGroupTest(request, theLoadGroup);	
+	CNsIRequest::GetLoadGroupTest(request);
 
 	return NS_OK;
 }
@@ -427,3 +432,26 @@ NS_IMETHODIMP CBrowserImpl::OnStopRequest(nsIRequest *request,
 }
 
 //*****************************************************************************   
+//  Tool Tip Listener
+
+NS_IMETHODIMP CBrowserImpl::OnShowTooltip(PRInt32 aXCoords, PRInt32 aYCoords,
+										  const PRUnichar *aTipText)
+{
+	QAOutput("Tool Tip Listened",1);
+	return NS_OK;
+}
+
+NS_IMETHODIMP CBrowserImpl::OnHideTooltip() 
+{
+	QAOutput("Tool Tip Listened",1);
+	return NS_OK;
+}
+
+
+
+/*NS_IMETHODIMP CBrowserImpl::GetNodeText(nsIDOMNode *aNode, const PRUnichar *aTipText)
+{    
+	QAOutput("Tool Tip Listened",1);
+	return NS_OK;
+}
+*/

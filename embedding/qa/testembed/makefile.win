@@ -53,6 +53,13 @@ OBJS =                           \
     .\$(OBJDIR)\UrlDialog.obj       \
     .\$(OBJDIR)\QaUtils.obj \
     .\$(OBJDIR)\Tests.obj \
+    .\$(OBJDIR)\nsirequest.obj \
+    .\$(OBJDIR)\nsihistory.obj \
+    .\$(OBJDIR)\nsiwebnav.obj \
+    .\$(OBJDIR)\nsiDirServ.obj \
+    .\$(OBJDIR)\domwindow.obj \
+    .\$(OBJDIR)\selection.obj \
+    .\$(OBJDIR)\nsProfile.obj \
     $(NULL)
 
 LLIBS=					\

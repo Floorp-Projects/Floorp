@@ -226,9 +226,11 @@ void CTestEmbedApp::ShowDebugConsole()
 //
 BOOL CTestEmbedApp::InitInstance()
 {
-	CQaUtils *myUtils = new CQaUtils();
 
-	myUtils->QAOutput("****************************************************\r\n");
+	// CQaUtils *myUtils = new CQaUtils();
+	// myUtils->QAOutput("****************************************************\r\n");
+	
+	QAOutput("****************************************************\r\n");
 
     ParseCmdLine();
 
@@ -249,12 +251,14 @@ BOOL CTestEmbedApp::InitInstance()
     rv = NS_InitEmbedding(nsnull, provider);
     if(NS_FAILED(rv))
     {
-		myUtils->QAOutput("TestEmbed didn't start up.");
+		//myUtils->QAOutput("TestEmbed didn't start up.");
+		QAOutput("TestEmbed didn't start up.");
         ASSERT(FALSE);
         return FALSE;
     }
 	else
-		myUtils->QAOutput("TestEmbed started up.");
+		//myUtils->QAOutput("TestEmbed started up.");
+		QAOutput("TestEmbed started up.");
 
     rv = OverrideComponents();
     if(NS_FAILED(rv))
@@ -275,18 +279,29 @@ BOOL CTestEmbedApp::InitInstance()
 	{
         ASSERT(FALSE);
         rv = NS_TermEmbedding();
-		myUtils->RvTestResult(rv, "TestEmbed shutdown");
+
+		//myUtils->RvTestResult(rv, "TestEmbed shutdown");
+		RvTestResult(rv, "TestEmbed shutdown");
 		return FALSE;
 	}
 
+	rv = InitializePrefs();
+	if (NS_FAILED(rv))
+	{
+        ASSERT(FALSE);
+        NS_TermEmbedding();
+		return FALSE;
+	}
 
     if(!CreateHiddenWindow())
 	{
         ASSERT(FALSE);
         rv = NS_TermEmbedding();
-		myUtils->RvTestResult(rv, "TestEmbed shutdown");
+		//myUtils->RvTestResult(rv, "TestEmbed shutdown");
+		RvTestResult(rv, "TestEmbed shutdown");
 		return FALSE;
 	}
+
 
 	// Create the first browser frame window
 	OnNewBrowser();
@@ -396,9 +411,9 @@ int CTestEmbedApp::ExitInstance()
 
 	rv = NS_TermEmbedding();
 	if (NS_FAILED(rv))
-		CQaUtils::QAOutput("TestEmbed didn't shut down.");
+		QAOutput("TestEmbed didn't shut down.");
 	else
-		CQaUtils::QAOutput("TestEmbed shut down.");
+		QAOutput("TestEmbed shut down.");
 
 	return 1;
 }
@@ -432,9 +447,17 @@ void CTestEmbedApp::OnEditPreferences()
 
         // Save these changes to disk now
         nsresult rv;
+<<<<<<< TestEmbed.cpp
+
+		//NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
+
+		nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID,&rv));
+
+=======
         nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
+>>>>>>> 1.5
         if (NS_SUCCEEDED(rv)) 
-        {
+        {	
             prefs->SetIntPref("browser.startup.page", m_iStartupPage);
             rv = prefs->SetCharPref("browser.startup.homepage", m_strHomePage);
             if (NS_SUCCEEDED(rv))
@@ -451,12 +474,26 @@ BOOL CTestEmbedApp::InitializeProfiles()
     if (!m_ProfileMgr)
         return FALSE;
 
+<<<<<<< TestEmbed.cpp
+	nsresult rv;
+=======
 	  nsresult rv;
     nsCOMPtr<nsIObserverService> observerService = 
              do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
     observerService->AddObserver(this, NS_LITERAL_STRING("profile-approve-change").get());
     observerService->AddObserver(this, NS_LITERAL_STRING("profile-change-teardown").get());
     observerService->AddObserver(this, NS_LITERAL_STRING("profile-after-change").get());
+>>>>>>> 1.5
+
+    //NS_WITH_SERVICE(nsIObserverService, observerService, NS_OBSERVERSERVICE_CONTRACTID, &rv);
+
+    nsCOMPtr<nsIObserverService>observerService(do_GetService(NS_OBSERVERSERVICE_CONTRACTID,&rv));
+	if (NS_SUCCEEDED(rv)) 
+	{	  
+		observerService->AddObserver(this, NS_LITERAL_STRING("profile-approve-change").get());
+		observerService->AddObserver(this, NS_LITERAL_STRING("profile-change-teardown").get());
+		observerService->AddObserver(this, NS_LITERAL_STRING("profile-after-change").get());
+	}
 
     m_ProfileMgr->StartUp();
 
@@ -484,13 +521,19 @@ BOOL CTestEmbedApp::CreateHiddenWindow()
 nsresult CTestEmbedApp::InitializePrefs()
 {
    nsresult rv;
+<<<<<<< TestEmbed.cpp
+   //NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
+
+   nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID,&rv));
+
+=======
    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
+>>>>>>> 1.5
    if (NS_SUCCEEDED(rv)) {	  
 
 		// We are using the default prefs from mozilla. If you were
 		// disributing your own, this would be done simply by editing
 		// the default pref files.
-		
 		PRBool inited;
 		rv = prefs->GetBoolPref("mfcbrowser.prefs_inited", &inited);
 		if (NS_FAILED(rv) || !inited)
@@ -509,7 +552,6 @@ nsresult CTestEmbedApp::InitializePrefs()
         else
         {
             // The prefs are present, read them in
-
             prefs->GetIntPref("browser.startup.page", &m_iStartupPage);
 
             CString strBuf;

@@ -35,6 +35,9 @@
 #include "BrowserView.h"
 #include "BrowserImpl.h"
 #include "StdAfx.h"
+//#include "nsirequest.h"
+#include "nsihistory.h"
+#include "nsiwebnav.h"
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -43,7 +46,7 @@
 class CBrowserImpl;
 class CBrowserView;
 
-class CTests : public CWnd
+class CTests:public CWnd
 {
 public:
 	CTests(nsIWebBrowser* mWebBrowser,
@@ -52,6 +55,7 @@ public:
 			   CBrowserImpl *mpBrowserImpl);
 	virtual ~CTests();
 
+	
 	// Some helper methods
 
 	// Mozilla interfaces
@@ -59,28 +63,34 @@ public:
 	nsCOMPtr<nsIWebBrowser> qaWebBrowser;
 	nsCOMPtr<nsIBaseWindow> qaBaseWindow;
 	nsCOMPtr<nsIWebNavigation> qaWebNav;	
-
 	CBrowserImpl	*qaBrowserImpl;
+
 
 	// local test methods
 
 	// local test variables
-	nsresult rv;
+	//nsresult rv;
 	CString strMsg;
 	char theUrl[200];
 	char *uriSpec;
 	PRBool exists;
 	PRInt32 numEntries;
 	PRInt32 theIndex;
-
 	nsCOMPtr<nsIURI> theUri;
+	UINT nCommandID ;
 
 	// Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CTests)
-	protected:
+	public:
+	virtual BOOL OnCmdMsg(UINT nID, int nCode, void* pExtra, AFX_CMDHANDLERINFO* pHandlerInfo);
 	//}}AFX_VIRTUAL
 
+private:
+	// Individual interface Objects
+//    CNsIRequest	*nsirequest ;
+    CNsIHistory	*nsihistory ;
+	CNsIWebNav  *nsiwebnav ;
 
 	// Generated message map functions
 protected:
@@ -98,9 +108,6 @@ protected:
 	afx_msg void OnTestsAddWebProgListener();
 	afx_msg void OnTestsAddHistoryListener();
 	afx_msg void OnInterfacesNsifile();
-	afx_msg void OnInterfacesNsishistory();
-	afx_msg void OnInterfacesNsiwebnav();
-	afx_msg void OnInterfacesNsirequest();
 	afx_msg void OnToolsRemoveGHPage();
 	afx_msg void OnToolsRemoveAllGH();
 	afx_msg void OnToolsTestYourMethod();
@@ -115,6 +122,12 @@ protected:
     afx_msg void canCopySelectionTest();
     afx_msg void canCutSelectionTest();
     afx_msg void canPasteTest();
+	afx_msg void OnInterfacesNsirequest();
+	afx_msg void OnInterfacesNsidomwindow();
+	afx_msg void OnInterfacesNsidirectoryservice();
+	afx_msg void OnInterfacesNsiselection();
+	afx_msg void OnVerifybugs90195();
+	afx_msg void OnInterfacesNsiprofile();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 
@@ -125,43 +138,9 @@ protected:
 	void FileExistsTest(nsILocalFile *);
 	void FileCopyTest(nsILocalFile *, nsILocalFile *);
 	void FileMoveTest(nsILocalFile *, nsILocalFile *);
-
-	// individual nsISHistory tests
-	void GetCountTest(nsISHistory *, PRInt32 *);
-	void GetIndexTest(nsISHistory *, PRInt32 *);
-	void GetMaxLengthTest(nsISHistory *, PRInt32 *);
-	void SetMaxLengthTest(nsISHistory *, PRInt32);
-	void GetEntryAtIndexTest(nsISHistory *, nsIHistoryEntry *, PRInt32 theIndex);
-	void GetURIHistTest(nsIHistoryEntry *);
-	void GetTitleHistTest(nsIHistoryEntry *);
-	void GetIsSubFrameTest(nsIHistoryEntry *);
-	void GetSHEnumTest(nsISHistory*, nsISimpleEnumerator *);
-	void SimpleEnumTest(nsISimpleEnumerator *);
-	void PurgeHistoryTest(nsISHistory *, PRInt32);
-
-	// individual nsIWebNavigation tests
-	void CanGoBackTest();
-	void GoBackTest();
-	void CanGoForwardTest();
-	void GoForwardTest();
-	void GoToIndexTest();
-	void LoadUriTest(char *, const unsigned long);
-	void ReloadTest(const unsigned long);
-	void StopUriTest(char *);
-	void GetDocumentTest(void);
-	void GetCurrentURITest(void);
-	void GetSHTest(void);
-
-public:
-	// individual nsIRequest tests
-	void static IsPendingReqTest(nsIRequest *);
-	void static GetStatusReqTest(nsIRequest *);
-	void static SuspendReqTest(nsIRequest *);
-	void static ResumeReqTest(nsIRequest *);
-	void static CancelReqTest(nsIRequest *);
-	void static SetLoadGroupTest(nsIRequest *, nsILoadGroup *);
-	void static GetLoadGroupTest(nsIRequest *);
 };
+<<<<<<< Tests.h
+=======
 
 //	structure for uri table
 typedef struct
@@ -181,5 +160,6 @@ typedef struct
   char			theUri[1024];
   unsigned long theFlag;
 } NavElement;
+>>>>>>> 1.8
 
 #endif //_TESTS_H
