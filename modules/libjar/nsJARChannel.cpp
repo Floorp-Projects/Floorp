@@ -153,7 +153,7 @@ NS_IMETHODIMP
 nsJARChannel::Cancel(nsresult status)
 {
 #ifdef DEBUG
-    NS_ASSERTION(mInitiator == PR_CurrentThread(), "wrong thread");
+    NS_ASSERTION(mInitiator == PR_GetCurrentThread(), "wrong thread");
 #endif
     NS_ASSERTION(NS_FAILED(status), "shouldn't cancel with a success code");
     nsresult rv = NS_OK;
@@ -171,7 +171,7 @@ NS_IMETHODIMP
 nsJARChannel::Suspend()
 {
 #ifdef DEBUG
-    NS_ASSERTION(mInitiator == PR_CurrentThread(), "wrong thread");
+    NS_ASSERTION(mInitiator == PR_GetCurrentThread(), "wrong thread");
 #endif
     nsresult rv = NS_OK;
 
@@ -186,7 +186,7 @@ NS_IMETHODIMP
 nsJARChannel::Resume()
 {
 #ifdef DEBUG
-    NS_ASSERTION(mInitiator == PR_CurrentThread(), "wrong thread");
+    NS_ASSERTION(mInitiator == PR_GetCurrentThread(), "wrong thread");
 #endif
     nsresult rv = NS_OK;
 
@@ -264,7 +264,7 @@ nsJARChannel::AsyncOpen(nsIStreamListener* listener, nsISupports* ctxt)
     nsresult rv;
 
 #ifdef DEBUG
-    mInitiator = PR_CurrentThread();
+    mInitiator = PR_GetCurrentThread();
 #endif
 
     mUserContext = ctxt;
@@ -577,7 +577,7 @@ nsJARChannel::OnStartRequest(nsIRequest* jarExtractionTransport,
                              nsISupports* context)
 {
 #ifdef DEBUG
-    NS_ASSERTION(mInitiator == PR_CurrentThread(), "wrong thread");
+    NS_ASSERTION(mInitiator == PR_GetCurrentThread(), "wrong thread");
 #endif
     return mUserListener->OnStartRequest(this, mUserContext);
 }
@@ -588,7 +588,7 @@ nsJARChannel::OnStopRequest(nsIRequest* jarExtractionTransport, nsISupports* con
 {
     nsresult rv;
 #ifdef DEBUG
-    NS_ASSERTION(mInitiator == PR_CurrentThread(), "wrong thread");
+    NS_ASSERTION(mInitiator == PR_GetCurrentThread(), "wrong thread");
 #endif
 #ifdef PR_LOGGING
     if (PR_LOG_TEST(gJarProtocolLog, PR_LOG_DEBUG)) {
@@ -626,7 +626,7 @@ nsJARChannel::OnDataAvailable(nsIRequest* jarCacheTransport,
                               PRUint32 count)
 {
 #ifdef DEBUG
-    NS_ASSERTION(mInitiator == PR_CurrentThread(), "wrong thread");
+    NS_ASSERTION(mInitiator == PR_GetCurrentThread(), "wrong thread");
 #endif
     return mUserListener->OnDataAvailable(this, mUserContext, 
                                           inStr, sourceOffset, count);

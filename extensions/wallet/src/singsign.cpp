@@ -120,7 +120,7 @@ si_lock_signon_list(void) {
   while(PR_TRUE) {
 
     /* no current owner or owned by this thread */
-    PRThread * t = PR_CurrentThread();
+    PRThread * t = PR_GetCurrentThread();
     if(signon_lock_owner == NULL || signon_lock_owner == t) {
       signon_lock_owner = t;
       signon_lock_count++;
@@ -139,7 +139,7 @@ si_unlock_signon_list(void) {
 
 #ifdef DEBUG
     /* make sure someone doesn't try to free a lock they don't own */
-    PR_ASSERT(signon_lock_owner == PR_CurrentThread());
+    PR_ASSERT(signon_lock_owner == PR_GetCurrentThread());
 #endif
 
     signon_lock_count--;

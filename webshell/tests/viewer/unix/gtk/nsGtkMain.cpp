@@ -146,7 +146,7 @@ static char _progname[1024] = "huh?";
 void
 ah_crap_handler(int signum)
 {
-  PR_CurrentThread();
+  PR_GetCurrentThread();
 
   printf("prog = %s\npid = %d\nsignal = %s\n",
          _progname,

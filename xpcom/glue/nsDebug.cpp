@@ -489,7 +489,7 @@ NS_ErrorAccordingToNSPR()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// This wrapper around PR_CurrentThread is simply here for debug builds so
+// This wrapper around PR_GetCurrentThread is simply here for debug builds so
 // that clients linking with xpcom don't also have to link with nspr explicitly.
 
 #if defined(NS_DEBUG) && defined(NS_MT_SUPPORTED)
@@ -503,7 +503,7 @@ extern "C" NS_COM void NS_CheckThreadSafe(void* owningThread, const char* msg);
 void*
 NS_CurrentThread(void)
 {
-  void* th = PR_CurrentThread();
+  void* th = PR_GetCurrentThread();
   return th;
 }
 

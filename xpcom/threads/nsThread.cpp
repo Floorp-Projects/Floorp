@@ -275,14 +275,14 @@ nsThread::Init(nsIRunnable* runnable,
 NS_IMETHODIMP 
 nsThread::GetCurrentThread(nsIThread * *aCurrentThread)
 {
-    return GetIThread(PR_CurrentThread(), aCurrentThread);
+    return GetIThread(PR_GetCurrentThread(), aCurrentThread);
 }
 
 /* void sleep (in PRUint32 msec); */
 NS_IMETHODIMP 
 nsThread::Sleep(PRUint32 msec)
 {
-    if (PR_CurrentThread() != mThread)
+    if (PR_GetCurrentThread() != mThread)
         return NS_ERROR_FAILURE;
     
     if (PR_Sleep(PR_MillisecondsToInterval(msec)) != PR_SUCCESS)
@@ -361,7 +361,7 @@ nsThread::WaitUntilReadyToStartMain()
 NS_COM nsresult
 nsIThread::GetCurrent(nsIThread* *result)
 {
-    return GetIThread(PR_CurrentThread(), result);
+    return GetIThread(PR_GetCurrentThread(), result);
 }
 
 NS_COM nsresult
@@ -424,7 +424,7 @@ nsIThread::IsMainThread()
     
     PRThread *theMainThread;
     gMainThread->GetPRThread(&theMainThread);
-    return theMainThread == PR_CurrentThread();
+    return theMainThread == PR_GetCurrentThread();
 }
 
 void 

@@ -2877,7 +2877,7 @@ void GetCurrentStackTrace(void **stackCrawl)
 	return;
 #endif
 
-	curThread = PR_CurrentThread();
+	curThread = PR_GetCurrentThread();
 	if ( curThread != NULL && curThread->stack->stackBottom != 0 )
 		{
 		stackMin = curThread->stack->stackBottom;
@@ -3004,7 +3004,7 @@ void GetCurrentNativeStackTrace ( void ** stackCrawl )
 	return;
 #endif
 
-	curThread = PR_CurrentThread();
+	curThread = PR_GetCurrentThread();
 	if ( curThread != NULL && curThread->stack->stackBottom != 0 )
 		{
 		stackMin = curThread->stack->stackBottom;

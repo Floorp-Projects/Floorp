@@ -346,7 +346,7 @@ PL_PostSynchronousEvent(PLEventQueue* self, PLEvent* event)
     PR_ASSERT(event != NULL);
     PR_Lock(event->lock);
 
-    if (PR_CurrentThread() == self->handlerThread) {
+    if (PR_GetCurrentThread() == self->handlerThread) {
       /* Handle the case where the thread requesting the event handling
        is also the thread that's supposed to do the handling. */
       result = event->handler(event);
@@ -693,7 +693,7 @@ PL_DequeueEvent(PLEvent* self, PLEventQueue* queue)
        client has put it in the queue, they have no idea whether it's 
        been processed and destroyed or not. */
 
-    PR_ASSERT(queue->handlerThread == PR_CurrentThread());
+    PR_ASSERT(queue->handlerThread == PR_GetCurrentThread());
 
     PR_EnterMonitor(queue->monitor);
 

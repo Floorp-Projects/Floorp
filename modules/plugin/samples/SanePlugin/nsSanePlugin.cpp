@@ -109,7 +109,7 @@ nsSanePluginInstance::nsSanePluginInstance( void )
     mOnScanCompleteScript = nsnull;
     mOnInitCompleteScript = nsnull;
     mScanThread = nsnull;
-    mUIThread = PR_CurrentThread();
+    mUIThread = PR_GetCurrentThread();
 
     mState = 0; // idle
     mSuccess = 1; // success
@@ -682,7 +682,7 @@ nsSanePluginInstance::IsUIThread()
     if (!mUIThread)
         return PR_FALSE;
 
-    return (mUIThread == PR_CurrentThread());
+    return (mUIThread == PR_GetCurrentThread());
 }
 
 // End of Plugin Instance API Methods.
