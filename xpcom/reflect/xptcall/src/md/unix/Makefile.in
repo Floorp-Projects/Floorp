@@ -240,12 +240,22 @@ endif
 #
 ifeq ($(OS_ARCH),SunOS)
 ifneq (86,$(findstring 86,$(OS_TEST)))
+ifdef HAVE_64BIT_OS
+CPPSRCS		:= xptcinvoke_sparcv9_solaris.cpp xptcstubs_sparcv9_solaris.cpp
+else
 CPPSRCS		:= xptcinvoke_sparc_solaris.cpp xptcstubs_sparc_solaris.cpp
+endif
+
 ifeq ($(GNU_CC),1)
 ASFILES		:= xptcinvoke_asm_sparc_solaris_GCC.s xptcstubs_asm_sparc_solaris.s
 else
+ifdef HAVE_64BIT_OS
+ASFILES		:= xptcinvoke_asm_sparcv9_solaris_SUNW.s xptcstubs_asm_sparcv9_solaris.s
+else
 ASFILES		:= xptcinvoke_asm_sparc_solaris_SUNW.s xptcstubs_asm_sparc_solaris.s
 endif
+endif
+
 endif
 endif
 
