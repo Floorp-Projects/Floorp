@@ -25,8 +25,8 @@
 # complete rewrite by Ken Estes, Mail.com (kestes@staff.mail.com).
 # Contributor(s): 
 
-# $Revision: 1.7 $
-# $Date: 2002/01/04 19:24:48 $
+# $Revision: 1.8 $
+# $Date: 2002/02/11 23:08:44 $
 # $Author: kestes%walrus.com $
 # $Name:  $
 
@@ -484,7 +484,7 @@ sub parse_args {
     
     if( !GetOptions (\%Prog_Args,
 		     "version", "help", 
-		     "min-archive-files", "max-archive-days",
+		     "min-archive-files=s", "max-archive-days=s",
 		     ) ) {
 	print("Illegal options in \@ARGV: '@ARGV'\n");
 	usage();
