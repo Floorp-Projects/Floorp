@@ -23,7 +23,7 @@
       </xul:hbox>
     </content>
     
-    <implementation implements="nsIAccessibleProvider, nsIDOMXULTextboxElement">
+    <implementation implements="nsIAccessibleProvider, nsIDOMXULTextBoxElement">
       <property name="accessible">
         <getter>
           <![CDATA[
