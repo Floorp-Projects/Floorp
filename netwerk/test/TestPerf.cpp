@@ -1,3 +1,4 @@
+#include "TestCommon.h"
 #include <stdio.h>
 #include "nsCRT.h" /* should be "plstr.h"? */
 #include "nsNetUtil.h"
@@ -217,6 +218,9 @@ print_usage()
 int
 main(int argc, char **argv)
 {
+    if (test_common_init(&argc, &argv) != 0)
+        return -1;
+
     nsresult rv;
     PRBool sync;
 

@@ -1,3 +1,4 @@
+#include "TestCommon.h"
 #include <stdlib.h>
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
@@ -85,6 +86,9 @@ static void ref_test()
 
 int main(int argc, char **argv)
 {
+    if (test_common_init(&argc, &argv) != 0)
+        return -1;
+
     if (argc < 2) {
         printf("usage: TestURL url [count]\n");
         return -1;

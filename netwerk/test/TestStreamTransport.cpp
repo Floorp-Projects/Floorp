@@ -35,6 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "TestCommon.h"
 #include "nsIComponentRegistrar.h"
 #include "nsIStreamTransportService.h"
 #include "nsIAsyncInputStream.h"
@@ -335,6 +336,9 @@ RunBlockingTest(nsIFile *srcFile, nsIFile *destFile)
 int
 main(int argc, char* argv[])
 {
+    if (test_common_init(&argc, &argv) != 0)
+        return -1;
+
     nsresult rv;
 
     if (argc < 2) {

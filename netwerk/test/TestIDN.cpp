@@ -37,6 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "TestCommon.h"
 #include <stdio.h>
 #include "nsIIDNService.h"
 #include "nsCOMPtr.h"
@@ -45,6 +46,9 @@
 #include "nsString.h"
 
 int main(int argc, char **argv) {
+    if (test_common_init(&argc, &argv) != 0)
+        return -1;
+
     // Test case from RFC 3492 (7.1 - Simplified Chinese)
     const char plain[] =
          "\xE4\xBB\x96\xE4\xBB\xAC\xE4\xB8\xBA\xE4\xBB\x80\xE4\xB9\x88\xE4\xB8\x8D\xE8\xAF\xB4\xE4\xB8\xAD\xE6\x96\x87";

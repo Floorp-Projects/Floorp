@@ -36,6 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "TestCommon.h"
 #include "nsIServiceManager.h"
 #include "nsICookieService.h"
 #include <stdio.h>
@@ -168,6 +169,9 @@ InitPrefs(nsIPrefBranch *aPrefBranch)
 int
 main(PRInt32 argc, char *argv[])
 {
+    if (test_common_init(&argc, &argv) != 0)
+        return -1;
+
     nsresult rv0 = NS_InitXPCOM2(nsnull, nsnull, nsnull);
     if (NS_FAILED(rv0)) return -1;
 

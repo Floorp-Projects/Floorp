@@ -43,6 +43,7 @@
 
 #include <stdio.h>
 
+#include "TestCommon.h"
 #include "plstr.h"
 #include "nsIServiceManager.h"
 #include "nsIIOService.h"
@@ -410,6 +411,9 @@ void printusage(void)
 
 int main(int argc, char **argv)
 {
+    if (test_common_init(&argc, &argv) != 0)
+        return -1;
+
     int rv = -1;
 
     if (argc < 2) {

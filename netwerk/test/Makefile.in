@@ -84,7 +84,10 @@ LIBS		= $(EXTRA_DSO_LIBS) \
 		  $(MOZ_JS_LIBS) \
 		  $(XPCOM_LIBS) \
 		  $(NSPR_LIBS) \
+		  $(TK_LIBS) \
 		  $(NULL)
+
+DEFINES += $(TK_CFLAGS)
 
 include $(topsrcdir)/config/rules.mk
 

@@ -34,6 +34,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "TestCommon.h"
 #include "nsIServiceManager.h"
 #include "nsIEventTarget.h"
 #include "nsCOMPtr.h"
@@ -77,8 +78,11 @@ static nsresult RunTest()
     return rv;
 }
 
-int main()
+int main(int argc, char **argv)
 {
+    if (test_common_init(&argc, &argv) != 0)
+        return -1;
+
     nsresult rv;
 
 #if defined(PR_LOGGING)

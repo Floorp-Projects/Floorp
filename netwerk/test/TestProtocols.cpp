@@ -44,6 +44,8 @@
     -Gagan Saksena 04/29/99
 */
 
+#include "TestCommon.h"
+
 #define FORCE_PR_LOG
 #include <stdio.h>
 #ifdef WIN32 
@@ -730,6 +732,9 @@ nsresult LoadURLFromConsole()
 int
 main(int argc, char* argv[])
 {
+    if (test_common_init(&argc, &argv) != 0)
+        return -1;
+
     nsresult rv= (nsresult)-1;
     if (argc < 2) {
         printf("usage: %s [-verbose] [-file <name>] [-resume <startoffset> [-entityid <entityid>]] [-proxy <proxy>] [-console] <url> <url> ... \n", argv[0]);
