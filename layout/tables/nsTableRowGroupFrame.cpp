@@ -642,12 +642,12 @@ nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext*          aPresContext,
                   // iterate every row starting at last row spanned and up to the row with
                   // the spanning cell. do this bottom up so that special rows can get a full
                   // allocation before other rows.
-                  startRowIndex = rowIndex + rowSpan - 1;
-                  for (PRInt32 rowX = startRowIndex; (rowX >= rowIndex) && (excessAvail > 0); rowX--) {
+                  PRInt32 beginRowIndex = rowIndex + rowSpan - 1;
+                  for (PRInt32 rowX = beginRowIndex; (rowX >= rowIndex) && (excessAvail > 0); rowX--) {
                     nscoord excessForRow = 0;
                     // special rows gets as much as they can
                     if (rowHeights[rowX] <= 0) {
-                      if ((rowX == startRowIndex) || (!cellsOrigInSpan)) {
+                      if ((rowX == beginRowIndex) || (!cellsOrigInSpan)) {
                         if (0 == rowHeights[rowX]) {
                           // give it all since no cell originates in the row
                           excessForRow = excessBasis;
@@ -682,11 +682,11 @@ nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext*          aPresContext,
                   // allocation involving special rows couldn't allocate everything. 
                   // just give the remainder to the last row spanned.
                   if (excessAvail > 0) {
-                    if (rowHeights[startRowIndex] >= 0) {
-                      rowHeights[startRowIndex] += excessAvail;
+                    if (rowHeights[beginRowIndex] >= 0) {
+                      rowHeights[beginRowIndex] += excessAvail;
                     }
                     else {
-                      rowHeights[startRowIndex] = excessAvail;
+                      rowHeights[beginRowIndex] = excessAvail;
                     }
                   }
                 }
