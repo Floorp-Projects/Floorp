@@ -297,7 +297,8 @@ nsBoxFrame::FlowChildren(nsIPresContext&   aPresContext,
   //-----------------------------------
 
   PRBool resized[100];
-  for (int i=0; i < mSpringCount; i++)
+  int i;
+  for (i=0; i < mSpringCount; i++)
      resized[i] = PR_FALSE;
 
   PRBool finished;
