@@ -80,6 +80,9 @@
 #include "nsIRDFService.h"
 #include "rdf.h"
 
+#include "nsIDOMXULTreeElement.h"
+#include "nsIDOMXULElement.h"
+
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -101,6 +104,9 @@ static NS_DEFINE_IID(kIRDFServiceIID,         NS_IRDFSERVICE_IID);
 static NS_DEFINE_IID(kIRDFResourceIID,        NS_IRDFRESOURCE_IID);
 static NS_DEFINE_IID(kIRDFLiteralIID,         NS_IRDFLITERAL_IID);
 
+static NS_DEFINE_IID(kIDomXulTreeElementIID,  NS_IDOMXULTREEELEMENT_IID);
+static NS_DEFINE_IID(kIDomXulElementIID,      NS_IDOMXULELEMENT_IID);
+
 // XXX This is sure to change. Copied from mozilla/layout/xul/content/src/nsXULAtoms.cpp
 static const char kXULNameSpaceURI[]
     = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
@@ -111,14 +117,21 @@ DEFINE_RDF_VOCAB(RDF_NAMESPACE_URI, RDF, child);
 typedef	struct	_sortStruct	{
     nsIRDFCompositeDataSource	*db;
     nsIRDFResource		*sortProperty;
+    PRInt32			colIndex;
+    nsIAtom			*kNaturalOrderPosAtom;
+    nsIAtom			*kTreeCellAtom;
+    PRInt32			kNameSpaceID_XUL;
     PRBool			descendingSort;
     PRBool			naturalOrderSort;
 } sortStruct, *sortPtr;
 
 
 
-int	openSortCallback(const void *data1, const void *data2, void *sortData);
-int	inplaceSortCallback(const void *data1, const void *data2, void *sortData);
+int		openSortCallback(const void *data1, const void *data2, void *sortData);
+int		inplaceSortCallback(const void *data1, const void *data2, void *sortData);
+nsresult	GetTreeCell(sortPtr sortInfo, nsIContent *node, PRInt32 cellIndex, nsIContent **cell);
+nsresult	GetTreeCellValue(sortPtr sortInfo, nsIContent *node, nsString & val);
+
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -202,6 +215,8 @@ PRInt32  XULSortServiceImpl::kNameSpaceID_RDF;
 
 ////////////////////////////////////////////////////////////////////////
 
+
+
 XULSortServiceImpl::XULSortServiceImpl(void)
 {
 	NS_INIT_REFCNT();
@@ -261,6 +276,7 @@ static const char kRDFNameSpaceURI[]
 }
 
 
+
 XULSortServiceImpl::~XULSortServiceImpl(void)
 {
 	--gRefCnt;
@@ -288,6 +304,7 @@ XULSortServiceImpl::~XULSortServiceImpl(void)
 }
 
 
+
 nsresult
 XULSortServiceImpl::GetSortService(nsIXULSortService** mgr)
 {
@@ -310,6 +327,8 @@ XULSortServiceImpl::AddRef(void)
     return 2;
 }
 
+
+
 NS_IMETHODIMP_(nsrefcnt)
 XULSortServiceImpl::Release(void)
 {
@@ -317,10 +336,14 @@ XULSortServiceImpl::Release(void)
 }
 
 
+
 NS_IMPL_QUERY_INTERFACE(XULSortServiceImpl, kIXULSortServiceIID);
 
 
+
 ////////////////////////////////////////////////////////////////////////
+
+
 
 nsresult
 XULSortServiceImpl::FindTreeElement(nsIContent *aElement, nsIContent **aTreeElement)
@@ -350,6 +373,8 @@ XULSortServiceImpl::FindTreeElement(nsIContent *aElement, nsIContent **aTreeElem
 	return(NS_ERROR_FAILURE);
 }
 
+
+
 nsresult
 XULSortServiceImpl::FindTreeBodyElement(nsIContent *tree, nsIContent **treeBody)
 {
@@ -376,6 +401,8 @@ XULSortServiceImpl::FindTreeBodyElement(nsIContent *tree, nsIContent **treeBody)
 	}
 	return(NS_ERROR_FAILURE);
 }
+
+
 
 nsresult
 XULSortServiceImpl::GetSortColumnIndex(nsIContent *tree, const nsString& sortResource, const nsString& sortDirection, PRInt32 *sortColIndex)
@@ -427,6 +454,8 @@ XULSortServiceImpl::GetSortColumnIndex(nsIContent *tree, const nsString& sortRes
 	return((found == PR_TRUE) ? NS_OK : NS_ERROR_FAILURE);
 }
 
+
+
 nsresult
 XULSortServiceImpl::GetSortColumnInfo(nsIContent *tree, nsString &sortResource, nsString &sortDirection)
 {
@@ -469,8 +498,10 @@ XULSortServiceImpl::GetSortColumnInfo(nsIContent *tree, nsString &sortResource, 
 	return((found == PR_TRUE) ? NS_OK : NS_ERROR_FAILURE);
 }
 
+
+
 nsresult
-XULSortServiceImpl::GetTreeCell(nsIContent *node, PRInt32 cellIndex, nsIContent **cell)
+GetTreeCell(sortPtr sortInfo, nsIContent *node, PRInt32 cellIndex, nsIContent **cell)
 {
 	PRBool			found = PR_FALSE;
 	PRInt32			childIndex = 0, numChildren = 0, nameSpaceID;
@@ -481,13 +512,13 @@ XULSortServiceImpl::GetTreeCell(nsIContent *node, PRInt32 cellIndex, nsIContent 
 
 	for (childIndex=0; childIndex<numChildren; childIndex++)
 	{
-		if (NS_FAILED(rv = node->ChildAt(childIndex, *getter_AddRefs(child))))	break;;
+		if (NS_FAILED(rv = node->ChildAt(childIndex, *getter_AddRefs(child))))	break;
 		if (NS_FAILED(rv = child->GetNameSpaceID(nameSpaceID)))	break;
-		if (nameSpaceID == kNameSpaceID_XUL)
+		if (nameSpaceID == sortInfo->kNameSpaceID_XUL)
 		{
 			nsCOMPtr<nsIAtom> tag;
 			if (NS_FAILED(rv = child->GetTag(*getter_AddRefs(tag))))	return rv;
-			if (tag.get() == kTreeCellAtom)
+			if (tag.get() == sortInfo->kTreeCellAtom)
 			{
 				if (cellIndex == 0)
 				{
@@ -504,8 +535,9 @@ XULSortServiceImpl::GetTreeCell(nsIContent *node, PRInt32 cellIndex, nsIContent 
 }
 
 
+
 nsresult
-XULSortServiceImpl::GetTreeCellValue(nsIContent *node, nsString & val)
+GetTreeCellValue(sortPtr sortInfo, nsIContent *node, nsString & val)
 {
 	PRBool			found = PR_FALSE;
 	PRInt32			childIndex = 0, numChildren = 0, nameSpaceID;
@@ -519,7 +551,7 @@ XULSortServiceImpl::GetTreeCellValue(nsIContent *node, nsString & val)
 		if (NS_FAILED(rv = node->ChildAt(childIndex, *getter_AddRefs(child))))	break;;
 		if (NS_FAILED(rv = child->GetNameSpaceID(nameSpaceID)))	break;
 		// XXX is this the correct way to get text?  Probably not...
-		if (nameSpaceID != kNameSpaceID_XUL)
+		if (nameSpaceID != sortInfo->kNameSpaceID_XUL)
 		{
 			nsITextContent	*text = nsnull;
 			if (NS_SUCCEEDED(rv = child->QueryInterface(kITextContentIID, (void **)&text)))
@@ -539,6 +571,8 @@ XULSortServiceImpl::GetTreeCellValue(nsIContent *node, nsString & val)
 	}
 	return((found == PR_TRUE) ? NS_OK : NS_ERROR_FAILURE);
 }
+
+
 
 nsresult
 XULSortServiceImpl::RemoveAllChildren(nsIContent *container)
@@ -613,7 +647,7 @@ openSortCallback(const void *data1, const void *data2, void *sortData)
 	{
 		sortOrder = -1;
 	}
-	else
+	else if ((uniStr1 == nsnull) && (uniStr2 != nsnull))
 	{
 		sortOrder = 1;
 	}
@@ -621,18 +655,106 @@ openSortCallback(const void *data1, const void *data2, void *sortData)
 }
 
 
+
 int
 inplaceSortCallback(const void *data1, const void *data2, void *sortData)
 {
-	char		*name1, *name2;
-	name1 = *(char **)data1;
-	name2 = *(char **)data2;
-	_sortStruct	*sortPtr = (_sortStruct *)sortData;
+	_sortStruct		*sortPtr = (_sortStruct *)sortData;
+	PRInt32			sortOrder = 0;
+	nsIContent		*node1 = *(nsIContent **)data1;
+	nsIContent		*node2 = *(nsIContent **)data2;
+	nsIDOMXULElement	*dom1 = nsnull, *dom2 = nsnull;
+	nsIRDFResource		*res1 = nsnull, *res2 = nsnull;
+	nsAutoString		cellVal1(""), cellVal2("");
+	nsresult		rv;
 
-	PRInt32		sortOrder=0;
-	nsAutoString	str1(name1), str2(name2);
-
-	sortOrder = str1.Compare(name2, PR_TRUE);
+	if (NS_SUCCEEDED(rv = node1->QueryInterface(kIDomXulElementIID, (void **)&dom1)))
+	{
+		if (NS_SUCCEEDED(rv = dom1->GetResource(&res1)))
+		{
+			if ((sortPtr->naturalOrderSort == PR_FALSE) && (sortPtr->sortProperty))
+			{
+				nsIRDFNode	*target1 = nsnull;
+				if (NS_SUCCEEDED(rv = (sortPtr->db)->GetTarget(res1, sortPtr->sortProperty, PR_TRUE, &target1)))
+				{
+					nsIRDFLiteral *literal1;
+					if (NS_SUCCEEDED(target1->QueryInterface(kIRDFLiteralIID, (void **) &literal1)))
+					{
+						const PRUnichar	*uniStr1 = nsnull;
+						literal1->GetValue(&uniStr1);
+						cellVal1 = uniStr1;
+						NS_RELEASE(literal1);
+					}
+					NS_RELEASE(target1);
+				}
+				else
+				{
+				        nsIContent	*cell1 = nsnull;
+					if (NS_SUCCEEDED(rv = GetTreeCell(sortPtr, node1, sortPtr->colIndex, &cell1)))
+					{
+						if (cell1)
+						{
+							if (NS_SUCCEEDED(rv = GetTreeCellValue(sortPtr, cell1, cellVal1)))
+							{
+							}
+						}
+					}
+				}
+			}
+			else if (sortPtr->naturalOrderSort == PR_TRUE)
+			{
+				if (NS_OK == node1->GetAttribute(kNameSpaceID_None, sortPtr->kNaturalOrderPosAtom, cellVal1))
+				{
+				}
+			}
+			NS_RELEASE(res1);
+		}
+		NS_RELEASE(dom1);
+	}
+	if (NS_SUCCEEDED(rv = node2->QueryInterface(kIDomXulElementIID, (void **)&dom2)))
+	{
+		if (NS_SUCCEEDED(rv = dom2->GetResource(&res2)))
+		{
+			if ((sortPtr->naturalOrderSort == PR_FALSE) && (sortPtr->sortProperty))
+			{
+				nsIRDFNode	*target2 = nsnull;
+				if (NS_SUCCEEDED(rv = (sortPtr->db)->GetTarget(res2, sortPtr->sortProperty, PR_TRUE, &target2)))
+				{
+					nsIRDFLiteral *literal2;
+					if (NS_SUCCEEDED(target2->QueryInterface(kIRDFLiteralIID, (void **) &literal2)))
+					{
+						const PRUnichar	*uniStr2 = nsnull;
+						literal2->GetValue(&uniStr2);
+						cellVal2 = uniStr2;
+						NS_RELEASE(literal2);
+					}
+					NS_RELEASE(target2);
+				}
+				else
+				{
+				        nsIContent	*cell2 = nsnull;
+					if (NS_SUCCEEDED(rv = GetTreeCell(sortPtr, node2, sortPtr->colIndex, &cell2)))
+					{
+						if (cell2)
+						{
+							if (NS_SUCCEEDED(rv = GetTreeCellValue(sortPtr, cell2, cellVal2)))
+							{
+							}
+						}
+					}
+				}
+			}
+			else if (sortPtr->naturalOrderSort == PR_TRUE)
+			{
+				if (NS_OK == node2->GetAttribute(kNameSpaceID_None, sortPtr->kNaturalOrderPosAtom, cellVal2))
+				{
+				}
+			}
+			NS_RELEASE(res2);
+		}
+		NS_RELEASE(dom2);
+	}
+	sortOrder = (int)cellVal1.Compare(cellVal2, PR_TRUE);
 	if (sortPtr->descendingSort == PR_TRUE)
 	{
 		sortOrder = -sortOrder;
@@ -664,71 +786,26 @@ XULSortServiceImpl::SortTreeChildren(nsIContent *container, PRInt32 colIndex, so
 			if (NS_FAILED(rv = child->GetTag(*getter_AddRefs(tag))))	return rv;
 			if (tag.get() == kTreeItemAtom)
 			{
-				PRBool		found = PR_FALSE;
-			        nsIContent	*cell;
-				if ((indentLevel == 0) && (NS_SUCCEEDED(rv = GetTreeCell(child, colIndex, &cell))))
+				childArray->AppendElement(child);
+				
+				// if no pos is specified, set one
+				nsAutoString	pos;
+				if (NS_OK != child->GetAttribute(kNameSpaceID_None, kNaturalOrderPosAtom, pos))
 				{
-					if (cell)
+					nsAutoString	zero("0000");
+					pos = "";
+					pos.Append(childIndex+1, 10);
+					if (pos.Length() < 4)
 					{
-						nsString	val;
-						if (NS_SUCCEEDED(rv = GetTreeCellValue(cell, val)))
-						{
-							// hack:  always append cell value 1st as
-							//        that's what sort callback expects
-
-							if (sortInfo->naturalOrderSort == PR_TRUE)
-							{
-								// ???????????????????
-
-								// XXX: note memory leak!
-								childArray->AppendElement(val.ToNewCString());
-								childArray->AppendElement(child);
-							}
-							else
-							{
-								// XXX: note memory leak!
-								childArray->AppendElement(val.ToNewCString());
-								childArray->AppendElement(child);
-							}
-							found = PR_TRUE;
-						}
+						pos.Insert(zero, 0, 4-pos.Length()); 
 					}
-				}
-				if (found == PR_FALSE)
-				{
-					// hack:  always append cell value 1st as
-					//        that's what sort callback expects
-
-					PRBool	foundValue = PR_FALSE;
-					if (sortInfo->naturalOrderSort == PR_TRUE)
-					{
-						nsString	pos;
-						if (NS_OK == child->GetAttribute(kNameSpaceID_None, kNaturalOrderPosAtom, pos))
-						{
-							// XXX: note memory leak!
-							childArray->AppendElement(pos.ToNewCString());
-							childArray->AppendElement(child);
-							foundValue = PR_TRUE;
-						}
-					}
-					if (foundValue == PR_FALSE)
-					{
-						nsString	name;
-						if (NS_OK == child->GetAttribute(kNameSpaceID_None, kNameAtom, name))
-						{
-							// XXX: note memory leak!
-							childArray->AppendElement(name.ToNewCString());
-							childArray->AppendElement(child);
-							foundValue = PR_TRUE;
-						}
-					}
-					found = PR_TRUE;
+					child->SetAttribute(kNameSpaceID_None, kNaturalOrderPosAtom, pos, PR_FALSE);
 				}
 			}
 		}
 	}
 	unsigned long numElements = childArray->Count();
-	if (numElements > 1)
+	if (numElements > 0)
 	{
 		nsIContent ** flatArray = new nsIContent*[numElements];
 		if (flatArray)
@@ -736,8 +813,11 @@ XULSortServiceImpl::SortTreeChildren(nsIContent *container, PRInt32 colIndex, so
 			// flatten array of resources, sort them, then add as tree elements
 			unsigned long loop;
 		        for (loop=0; loop<numElements; loop++)
+		        {
 				flatArray[loop] = (nsIContent *)childArray->ElementAt(loop);
-			rdf_qsort((void *)flatArray, numElements/2, 2 * sizeof(void *),
+			}
+
+			rdf_qsort((void *)flatArray, numElements, sizeof(nsIContent *),
 				inplaceSortCallback, (void *)sortInfo);
 
 			RemoveAllChildren(container);
@@ -750,21 +830,15 @@ XULSortServiceImpl::SortTreeChildren(nsIContent *container, PRInt32 colIndex, so
 			
 			// insert sorted children			
 			numChildren = 0;
-			for (loop=0; loop<numElements; loop+=2)
+			for (loop=0; loop<numElements; loop++)
 			{
-				container->InsertChildAt((nsIContent *)flatArray[loop+1], numChildren++, PR_TRUE);
+				container->InsertChildAt((nsIContent *)flatArray[loop], numChildren++, PR_TRUE);
 			}
 
 			// recurse on grandchildren
-
-			for (loop=0; loop<numElements; loop+=2)
+			for (loop=0; loop<numElements; loop++)
 			{
-				container =  (nsIContent *)flatArray[loop+1];
-
-				PRBool	canHaveKids = PR_FALSE;
-				if (NS_FAILED(rv = container->CanContainChildren(canHaveKids)))	continue;
-				if (canHaveKids == PR_FALSE)	continue;
-
+				container =  (nsIContent *)flatArray[loop];
 				if (NS_FAILED(rv = container->ChildCount(numChildren)))	continue;
 				for (childIndex=0; childIndex<numChildren; childIndex++)
 				{
@@ -783,6 +857,7 @@ XULSortServiceImpl::SortTreeChildren(nsIContent *container, PRInt32 colIndex, so
 					}
 				}
 			}
+
 			delete [] flatArray;
 			flatArray = nsnull;
 		}
@@ -806,10 +881,19 @@ XULSortServiceImpl::OpenContainer(nsIRDFCompositeDataSource *db, nsIContent *con
 	if (NS_FAILED(rv = FindTreeElement(container, &treeNode)))	return(rv);
 
 	sortInfo.db = db;
+
+	sortInfo.kNaturalOrderPosAtom = kNaturalOrderPosAtom;
+	sortInfo.kTreeCellAtom = kTreeCellAtom;
+	sortInfo.kNameSpaceID_XUL = kNameSpaceID_XUL;
+
 	if (NS_FAILED(rv = GetSortColumnInfo(treeNode, sortResource, sortDirection)))	return(rv);
 	char *uri = sortResource.ToNewCString();
-	if (NS_FAILED(rv = gRDFService->GetResource(uri, &sortInfo.sortProperty)))	return(rv);
-	delete [] uri;
+	if (uri)
+	{
+		rv = gRDFService->GetResource(uri, &sortInfo.sortProperty);
+		delete [] uri;
+		if (NS_FAILED(rv))	return(rv);
+	}
 	if (sortDirection.EqualsIgnoreCase("natural"))
 	{
 		sortInfo.naturalOrderSort = PR_TRUE;
@@ -825,7 +909,6 @@ XULSortServiceImpl::OpenContainer(nsIRDFCompositeDataSource *db, nsIContent *con
 			sortInfo.descendingSort = PR_FALSE;
 		rdf_qsort((void *)flatArray, numElements, elementSize, openSortCallback, (void *)&sortInfo);
 	}
-
 	return(NS_OK);
 }
 
@@ -917,21 +1000,33 @@ XULSortServiceImpl::DoSort(nsIDOMNode* node, const nsString& sortResource,
 	nsresult	rv;
 	_sortStruct	sortInfo;
 
+	// get tree node
 	if (NS_FAILED(rv = node->QueryInterface(kIContentIID, (void**)&contentNode)))	return(rv);
 	if (NS_FAILED(rv = FindTreeElement(contentNode, &treeNode)))	return(rv);
 
-	nsAutoString currentSortDirection;
-	nsAutoString currentSortResource(sortResource);
-
+	// get composite db for tree
+	nsIDOMXULTreeElement	*domXulTree;
 	sortInfo.db = nsnull;
-	sortInfo.sortProperty = nsnull;
-	if (NS_SUCCEEDED(rv = GetSortColumnInfo(treeNode, currentSortResource, currentSortDirection)))
+	if (NS_SUCCEEDED(rv = treeNode->QueryInterface(kIDomXulTreeElementIID, (void**)&domXulTree)))
 	{
-		char *uri = currentSortResource.ToNewCString();
+		if (NS_SUCCEEDED(rv = domXulTree->GetDatabase(&sortInfo.db)))
+		{
+		}
+	}
+
+	sortInfo.kNaturalOrderPosAtom = kNaturalOrderPosAtom;
+	sortInfo.kTreeCellAtom = kTreeCellAtom;
+	sortInfo.kNameSpaceID_XUL = kNameSpaceID_XUL;
+
+	char *uri = sortResource.ToNewCString();
+	if (uri)
+	{
 		rv = gRDFService->GetResource(uri, &sortInfo.sortProperty);
 		delete [] uri;
 		if (NS_FAILED(rv))	return(rv);
 	}
+	
+	// determine new sort resource and direction to use
 	if (sortDirection.EqualsIgnoreCase("natural"))
 	{
 		sortInfo.naturalOrderSort = PR_TRUE;
@@ -939,12 +1034,14 @@ XULSortServiceImpl::DoSort(nsIDOMNode* node, const nsString& sortResource,
 	}
 	else
 	{
-		sortInfo.naturalOrderSort = PR_FALSE;;
+		sortInfo.naturalOrderSort = PR_FALSE;
 		if (sortDirection.EqualsIgnoreCase("ascending"))	sortInfo.descendingSort = PR_FALSE;
 		else if (sortDirection.EqualsIgnoreCase("descending"))	sortInfo.descendingSort = PR_TRUE;
 	}
 
+	// get index of sort column, find tree body, remove tree body from tree, sort, then re-add tree body
 	if (NS_FAILED(rv = GetSortColumnIndex(treeNode, sortResource, sortDirection, &colIndex)))	return(rv);
+	sortInfo.colIndex = colIndex;
 	if (NS_FAILED(rv = FindTreeBodyElement(treeNode, &treeBody)))	return(rv);
 	if (NS_FAILED(rv = treeBody->GetParent(treeParent)))	return(rv);
 	if (NS_FAILED(rv = treeParent->IndexOf(treeBody, treeBodyIndex)))	return(rv);
@@ -977,4 +1074,3 @@ NS_NewXULSortService(nsIXULSortService** mgr)
 {
     return XULSortServiceImpl::GetSortService(mgr);
 }
-
