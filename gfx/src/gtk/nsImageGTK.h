@@ -115,6 +115,8 @@ private:
   PRInt16    mAlphaHeight;       // alpha layer height
   nsPoint    mLocation;          // alpha mask location
   GdkPixmap  *mImagePixmap;
+
+  PRUint8    mFlags;             // flags set by ImageUpdated
 };
 
 #endif
