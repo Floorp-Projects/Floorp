@@ -1644,8 +1644,7 @@ nsBrowserAppCore::InitializeSearch() {
 
     if ( NS_SUCCEEDED( rv ) && !mSearchContext ) {
         // Create the search context for this browser window.
-        nsCOMPtr<nsIDocument> document = getDocument( mContentAreaWebShell );
-        nsresult rv = mFindComponent->CreateContext( document, &mSearchContext );
+        nsresult rv = mFindComponent->CreateContext( mContentAreaWebShell, &mSearchContext );
         if ( NS_FAILED( rv ) ) {
             #ifdef NS_DEBUG
             printf( "%s %d CreateContext failed, rv=0x%X\n",
@@ -1655,13 +1654,13 @@ nsBrowserAppCore::InitializeSearch() {
     }
 }
 
+//Obsolete, to be removed.
 void
 nsBrowserAppCore::ResetSearchContext() {
     // Test if we've created the search context yet.
     if ( mFindComponent && mSearchContext ) {
         // OK, reset it.
-        nsCOMPtr<nsIDocument> document = getDocument( mContentAreaWebShell );
-        nsresult rv = mFindComponent->ResetContext( mSearchContext, document );
+        nsresult rv = mFindComponent->ResetContext( mSearchContext, mContentAreaWebShell );
         if ( NS_FAILED( rv ) ) {
             #ifdef NS_DEBUG
             printf( "%s %d ResetContext failed, rv=0x%X\n",

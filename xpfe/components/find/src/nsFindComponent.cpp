@@ -109,7 +109,7 @@ nsFindComponent::Initialize( nsIAppShellService *appShell,
 }
 
 NS_IMETHODIMP
-nsFindComponent::CreateContext( nsIDocument *aDocument,
+nsFindComponent::CreateContext( nsIWebShell *aWebShell,
                                 nsISupports **aResult )
 {
 
@@ -124,7 +124,7 @@ nsFindComponent::CreateContext( nsIDocument *aDocument,
      // Do the expected AddRef on behalf of caller.
     newContext->AddRef();
 
-    nsresult	rv = newContext->Init( aDocument,
+    nsresult	rv = newContext->Init( aWebShell,
                         mLastSearchString,
                         mLastIgnoreCase,
                         mLastSearchBackwards,
@@ -157,16 +157,14 @@ nsFindComponent::Context::~Context()
 
 }
 
-
 NS_IMETHODIMP
-nsFindComponent::Context::Init( nsIDocument *aDocument,
+nsFindComponent::Context::Init( nsIWebShell *aWebShell,
                  const nsString &lastSearchString,
                  const nsString &lastIgnoreCase,
                  const nsString &lastSearchBackward,
                  const nsString &lastWrapSearch)
 {
-
-	if (!aDocument)
+	if (!aWebShell)
 		return NS_ERROR_INVALID_ARG;
 		
 	mSearchString = lastSearchString;
@@ -175,7 +173,7 @@ nsFindComponent::Context::Init( nsIDocument *aDocument,
 	mWrapSearch = PR_FALSE;	//(lastWrapSearch == "true");
 	
   // Construct nsITextServicesDocument...
-	nsresult	rv = MakeTSDocument(aDocument);
+	nsresult	rv = MakeTSDocument(aWebShell);
 	
 	return rv;
 }
@@ -186,9 +184,9 @@ static NS_DEFINE_IID(kITextServicesDocumentIID, NS_ITEXTSERVICESDOCUMENT_IID);
 
 
 NS_IMETHODIMP
-nsFindComponent::Context::MakeTSDocument(nsIDocument *aDocument)
+nsFindComponent::Context::MakeTSDocument(nsIWebShell *aWebShell)
 {
-	if (!aDocument)
+	if (!aWebShell)
 		return NS_ERROR_INVALID_ARG;
 
 	nsITextServicesDocument		*textSvcDoc;
@@ -201,10 +199,32 @@ nsFindComponent::Context::MakeTSDocument(nsIDocument *aDocument)
 	if (NS_FAILED(rv))
 		return rv;
 	
-	nsIPresShell		*aPresShell = aDocument->GetShellAt(0);		// I have no idea if this is always valid
-	
-	nsCOMPtr<nsIDOMDocument>			domDoc = do_QueryInterface(aDocument);
-	rv = textSvcDoc->InitWithDocument(domDoc, aPresShell);
+    nsCOMPtr<nsIDocument>  document;
+    nsCOMPtr<nsIPresShell> presShell;
+
+    // Get content viewer from the web shell.
+    nsCOMPtr<nsIContentViewer> contentViewer;
+    rv = aWebShell ? aWebShell->GetContentViewer(getter_AddRefs(contentViewer))
+                   : NS_ERROR_NULL_POINTER;
+
+    if ( contentViewer ) {
+        // Up-cast to a document viewer.
+        nsCOMPtr<nsIDocumentViewer> docViewer(do_QueryInterface(contentViewer));
+        if ( docViewer ) {
+            // Get the document and pres shell from the doc viewer.
+            rv = docViewer->GetDocument(*getter_AddRefs(document));
+            if ( document ) {
+                rv = docViewer->GetPresShell(*getter_AddRefs(presShell));
+            }
+        }
+    }
+
+    if ( !document || !presShell ) {
+        return rv;
+    }
+
+	nsCOMPtr<nsIDOMDocument>			domDoc = do_QueryInterface(document);
+	rv = textSvcDoc->InitWithDocument(domDoc, presShell);
 	if (NS_FAILED(rv))
 		return rv;
 	
@@ -433,14 +453,14 @@ nsFindComponent::Context::DoFind()
 
 
 NS_IMETHODIMP
-nsFindComponent::Context::Reset( nsIDocument *aNewDocument )
+nsFindComponent::Context::Reset( nsIWebShell *aNewWebShell )
 {
 
-	if (!aNewDocument)
+	if (!aNewWebShell)
 		return NS_ERROR_INVALID_ARG;
 
   // Reconstruct nsITextServicesDocument?...
-	return MakeTSDocument(aNewDocument);
+	return MakeTSDocument(aNewWebShell);
 }
 
 
@@ -518,12 +538,12 @@ nsFindComponent::FindNext(nsISupports *aContext)
 
 NS_IMETHODIMP
 nsFindComponent::ResetContext( nsISupports *aContext,
-                               nsIDocument *aNewDocument ) {
+                               nsIWebShell *aNewWebShell ) {
     nsresult rv = NS_OK;
-    if ( aContext && aNewDocument ) {
+    if ( aContext && aNewWebShell ) {
         // Pass on the new document to the context.
         Context *context = (Context*)aContext;
-        context->Reset( aNewDocument );
+        context->Reset( aNewWebShell );
     } else {
         rv = NS_ERROR_NULL_POINTER;
     }
