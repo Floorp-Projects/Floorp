@@ -33,7 +33,6 @@ CPPSRCS =				\
 	nsString.cpp			\
 	nsUnicharBuffer.cpp		\
 	nsUnicharInputStream.cpp	\
-	nsURL.cpp			\
 	nsVoidArray.cpp			\
 	$(NULL)
 
@@ -50,7 +49,6 @@ EXPORTS =				\
 	nsITimerCallback.h		\
 	nsIUnicharBuffer.h		\
 	nsIUnicharInputStream.h		\
-	nsIURL.h			\
   nsRBTree.h \
 	nsString.h			\
 	nsVoidArray.h			\
