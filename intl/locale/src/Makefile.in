@@ -21,14 +21,30 @@ srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY = locale_s
+include $(DEPTH)/config/config.mk
+
+DIRS = unix
+
+LIBRARY_NAME = nslocale_s
+
+MODULE = locale
+
+REQUIRES = xpcom unicharutil
 
 CPPSRCS = \
-	nsCollation.cpp \
+	nsCollation.cpp 	\
+	nsLocale.cpp		\
+	nsLocaleFactory.cpp	\
 	$(NULL)
 
 EXPORTS = \
-	nsCollation.h \
+	nsCollation.h		\
+	nsLocaleFactory.h	\
 	$(NULL)
+
+#
+# don't need the shared library
+#
+NO_SHARED_LIB=1
 
 include $(topsrcdir)/config/rules.mk

@@ -22,10 +22,13 @@ srcdir		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 EXPORTS = \
-	nsCollationCID.h \
-	nsDateTimeFormatCID.h \
-	nsICollation.h \
-	nsIDateTimeFormat.h \
+	nsCollationCID.h 	\
+	nsDateTimeFormatCID.h 	\
+	nsICollation.h 		\
+	nsIDateTimeFormat.h 	\
+	nsILocale.h		\
+	nsILocaleFactory.h	\
+	nsLocaleCID.h		\
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
