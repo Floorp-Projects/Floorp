@@ -39,8 +39,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 var gPrintSettings = null;
-var gPrintSettingsAreGlobal;
-var gSavePrintSettings;
+var gPrintSettingsAreGlobal = false;
+var gSavePrintSettings = false;
 
 function setPrinterDefaultsForSelectedPrinter(aPrintService)
 {
@@ -55,10 +55,8 @@ function setPrinterDefaultsForSelectedPrinter(aPrintService)
   aPrintService.initPrintSettingsFromPrefs(gPrintSettings, true, gPrintSettings.kInitSaveAll);
 }
 
-
 function GetPrintSettings()
 {
-  var prevPS = gPrintSettings;
   try {
     if (gPrintSettings == null) {
       var pref = Components.classes["@mozilla.org/preferences-service;1"]
@@ -98,8 +96,9 @@ function goPageSetup(domwin, printSettings)
     var printingPromptService = Components.classes["@mozilla.org/embedcomp/printingprompt-service;1"]
                                              .getService(Components.interfaces.nsIPrintingPromptService);
     printingPromptService.showPageSetup(domwin, printSettings, null);
-    return true;
   } catch(e) {
+    // Note: Pressing Cancel gets here too.
+
     return false; 
   }
   return true;
@@ -113,13 +112,13 @@ function NSPrintSetup()
 
     var webBrowserPrint = null;
     if (_content) {
-      var ifreq = _content.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
-      webBrowserPrint = ifreq.getInterface(Components.interfaces.nsIWebBrowserPrint);
+      webBrowserPrint = _content
+        .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+        .getInterface(Components.interfaces.nsIWebBrowserPrint);
     }
 
-    didOK = goPageSetup(window, gPrintSettings);  // from printing.js
+    didOK = goPageSetup(window, gPrintSettings);
     if (didOK) {
-
       if (webBrowserPrint) {
         if (gPrintSettingsAreGlobal && gSavePrintSettings) {
           var psService = Components.classes["@mozilla.org/gfx/printsettings-service;1"]
@@ -129,7 +128,7 @@ function NSPrintSetup()
       }
     }
   } catch (e) {
-    dump("BrowserPrintSetup "+e);
+    dump("NSPrintSetup() " + e + "\n");
   }
   return didOK;
 }
@@ -137,8 +136,9 @@ function NSPrintSetup()
 function NSPrint()
 {
   try {
-    var ifreq = _content.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
-    var webBrowserPrint = ifreq.getInterface(Components.interfaces.nsIWebBrowserPrint);     
+    var webBrowserPrint = _content
+          .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+          .getInterface(Components.interfaces.nsIWebBrowserPrint);
     if (webBrowserPrint) {
       gPrintSettings = GetPrintSettings();
       webBrowserPrint.print(gPrintSettings, null);
