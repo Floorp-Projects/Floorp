@@ -435,13 +435,10 @@ PRBool nsImapUrl::Equals(const nsIURL* aURL) const
     NS_LOCK_INSTANCE();
 	// are they both imap urls?? if yes...for now just compare the pointers until 
 	// I figure out if we need to check any of the guts for 
-    /*
     if (((nsIURL*)aURL)->QueryInterface(nsIImapUrl::GetIID(), (void**)&other) == NS_OK)
         bIsEqual = other == this; // compare the pointers...
     else
         bIsEqual = PR_FALSE;
-        */
-    bIsEqual = (PRBool) (((void*) aURL) == ((void*) this));
     NS_UNLOCK_INSTANCE();
     return bIsEqual;
 }
