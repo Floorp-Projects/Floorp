@@ -448,6 +448,12 @@ dnl   AC_MSG_RESULT(no)
 dnl fi  
 dnl CFLAGS=$_SAVE_CFLAGS
 
+dnl Make pedantic a flag for now since the builds currently choke on it.
+MOZ_ARG_ENABLE_BOOL(pedantic,
+[  --enable-pedantic       Issue all warnings demanded by strict ANSI C ],
+  WARNINGS_CFLAGS="${WARNINGS_CFLAGS} -pedantic")
+
+
 # Mozilla specific options
 # ========================================================
 dnl The macros used for command line options
