@@ -76,8 +76,6 @@
 #include "nsIServiceManager.h"
 ///////////////////////////////////////
 
-//#define NEW_CLIPBOARD_SUPPORT
-
 #ifdef NEW_CLIPBOARD_SUPPORT
 // Drag & Drop, Clipboard
 #include "nsWidgetsCID.h"
