@@ -113,7 +113,7 @@ interface nsIDocShell : nsISupports
    *                          in nsIWebNavigation.
    * @param aSHEntry        - Active Session History entry (if loading from SH)
    */
-  [noscript]void InternalLoad(in nsIURI aURI,
+  [noscript]void internalLoad(in nsIURI aURI,
                               in nsIURI aReferrer,
                               in nsISupports aOwner,
                               in boolean aInheritOwner,
@@ -135,7 +135,18 @@ interface nsIDocShell : nsISupports
    */
   void prepareForNewContentModel();
 
-  [noscript] void FireUnloadNotification();
+  /**
+   * For editors and suchlike who wish to change the URI associated with the
+   * document. Note if you want to get the current URI, use the read-only
+   * property on nsIWebNavigation.
+   */ 
+  [noscript] void setCurrentURI(in nsIURI aURI);
+
+  /**
+   * Notify the associated content viewer and all child docshells that they are
+   * about to be unloaded.
+   */
+  [noscript] void fireUnloadNotification();
 
   /**
    * Presentation context for the currently loaded document.  This may be null.
@@ -245,15 +256,15 @@ interface nsIDocShell : nsISupports
    */
   attribute long marginHeight;
 
-	/*
-	 * Tells the DocShell that it now has focus or has lost focus
-	*/
-	attribute boolean hasFocus;
+  /*
+   * Tells the DocShell that it now has focus or has lost focus
+   */
+  attribute boolean hasFocus;
 
-	/*
-	 * Tells the docshell whether the canvas should have focus
-	*/
-	attribute boolean canvasHasFocus;
+  /*
+   * Tells the docshell whether the canvas should have focus
+   */
+  attribute boolean canvasHasFocus;
 
   /*
    * Tells the docshell to offer focus to its tree owner.
@@ -280,6 +291,6 @@ interface nsIDocShell : nsISupports
   /*
    * returns true if the docshell is being destroyed, false otherwise
    */
-  boolean IsBeingDestroyed();
+  boolean isBeingDestroyed();
 };
 

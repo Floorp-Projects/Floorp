@@ -61,7 +61,6 @@ typedef unsigned long HMTX;
 #include "nsIStreamListener.h"
 #include "nsIPrompt.h"
 #include "nsNetUtil.h"
-#include "nsIProtocolHandler.h"
 #include "nsIDNSService.h"
 #include "nsISocketProvider.h"
 #include "nsIRefreshURI.h"
@@ -70,7 +69,6 @@ typedef unsigned long HMTX;
 #include "nsIDOMEvent.h"
 #include "nsIPresContext.h"
 #include "nsIComponentManager.h"
-#include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
 #include "nsCRT.h"
 #include "nsVoidArray.h"
@@ -82,11 +80,8 @@ typedef unsigned long HMTX;
 #include "prprf.h"
 #include "nsIPluginHost.h"
 #include "nsplugin.h"
-//#include "nsPluginsCID.h"
 #include "nsIPluginManager.h"
 #include "nsCDefaultURIFixup.h"
-#include "nsITimer.h"
-#include "nsITimerCallback.h"
 #include "nsIContent.h"
 #include "prlog.h"
 #include "nsCOMPtr.h"
@@ -97,8 +92,6 @@ typedef unsigned long HMTX;
 #include "prthread.h"
 #include "nsXPIDLString.h"
 #include "nsDOMError.h"
-#include "nsIDOMHTMLElement.h"
-#include "nsIDOMHTMLDocument.h"
 #include "nsLayoutCID.h"
 #include "nsIDOMRange.h"
 #include "nsIURIContentListener.h"
@@ -120,21 +113,14 @@ typedef unsigned long HMTX;
 #include "nsIController.h"
 #include "nsIFocusController.h"
 #include "nsGUIEvent.h"
-#include "nsISelection.h"
-#include "nsISelectionController.h"
 #include "nsIFileStream.h"
 #include "nsISHistoryInternal.h"
-#include "nsIHistoryEntry.h"
 
 #include "nsIHttpChannel.h" // add this to the ick include list...we need it to QI for post data interface
-#include "nsIUploadChannel.h"
 
 #include "nsILocaleService.h"
 #include "nsIStringBundle.h"
 
-#include "nsIIOService.h"
-#include "nsIURL.h"
-#include "nsIProtocolHandler.h"
 #include "nsICachingChannel.h"
 
 //XXX for nsIPostData; this is wrong; we shouldn't see the nsIDocument type
@@ -165,8 +151,6 @@ static PRLogModuleInfo* gLogModule = PR_NewLogModule("webshell");
 #define WEB_TRACE(_bit,_args)
 #endif
 
-//static NS_DEFINE_CID(kGlobalHistoryCID, NS_GLOBALHISTORY_CID);
-//static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kSimpleURICID, NS_SIMPLEURI_CID);
 
 //----------------------------------------------------------------------
@@ -195,8 +179,6 @@ nsWebShell::nsWebShell() : nsDocShell()
   InitFrameData();
   mItemType = typeContent;
   mCharsetReloadState = eCharsetReloadInit;
-  mHistoryState = nsnull;
-  mBounds.SetRect(0, 0, 0, 0);
 }
 
 nsWebShell::~nsWebShell()
@@ -250,26 +232,11 @@ NS_IMPL_ADDREF_INHERITED(nsWebShell, nsDocShell)
 NS_IMPL_RELEASE_INHERITED(nsWebShell, nsDocShell)
 
 NS_INTERFACE_MAP_BEGIN(nsWebShell)
-#if 0 // inherits from nsDocShell:
-   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWebShell)
-#endif
    NS_INTERFACE_MAP_ENTRY(nsIWebShell)
    NS_INTERFACE_MAP_ENTRY(nsIWebShellServices)
-   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIContentViewerContainer, nsIWebShell)
    NS_INTERFACE_MAP_ENTRY(nsIWebShellContainer)
    NS_INTERFACE_MAP_ENTRY(nsILinkHandler)
    NS_INTERFACE_MAP_ENTRY(nsIClipboardCommands)
-#if 0 // inherits from nsDocShell:
-   NS_INTERFACE_MAP_ENTRY(nsIScriptGlobalObjectOwner)
-   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
-   NS_INTERFACE_MAP_ENTRY(nsIBaseWindow)
-   NS_INTERFACE_MAP_ENTRY(nsIDocShell)
-   NS_INTERFACE_MAP_ENTRY(nsIDocShellTreeItem)
-   NS_INTERFACE_MAP_ENTRY(nsIDocShellTreeNode)
-   NS_INTERFACE_MAP_ENTRY(nsIWebNavigation)
-   NS_INTERFACE_MAP_ENTRY(nsIRefreshURI)
-   NS_INTERFACE_MAP_ENTRY(nsIScrollable)
-#endif
 NS_INTERFACE_MAP_END_INHERITING(nsDocShell)
 
 NS_IMETHODIMP
@@ -315,36 +282,6 @@ nsWebShell::GetInterface(const nsIID &aIID, void** aInstancePtr)
 }
 
 NS_IMETHODIMP
-nsWebShell::SetupNewViewer(nsIContentViewer* aViewer)
-{
-   NS_ENSURE_SUCCESS(nsDocShell::SetupNewViewer(aViewer), NS_ERROR_FAILURE);
-
-    // If the history state has been set by session history,
-    // set it on the pres shell now that we have a content
-    // viewer.
-   if(mContentViewer && mHistoryState)
-      {
-      nsCOMPtr<nsIDocumentViewer> docv(do_QueryInterface(mContentViewer));
-      if(docv)
-         {
-         nsCOMPtr<nsIPresShell> shell;
-         docv->GetPresShell(*getter_AddRefs(shell));
-         if(shell)
-            shell->SetHistoryState((nsILayoutHistoryState*)mHistoryState);
-         }
-      }
-   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWebShell::Embed(nsIContentViewer* aContentViewer,
-                  const char* aCommand,
-                  nsISupports* aExtraInfo)
-{
-	return nsDocShell::Embed(aContentViewer, aCommand, aExtraInfo);
-}
-
-NS_IMETHODIMP
 nsWebShell::SetContainer(nsIWebShellContainer* aContainer)
 {
   NS_IF_RELEASE(mContainer);
@@ -362,98 +299,12 @@ nsWebShell::GetContainer(nsIWebShellContainer*& aResult)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsWebShell::GetTopLevelWindow(nsIWebShellContainer** aTopLevelWindow)
-{
-   NS_ENSURE_ARG_POINTER(aTopLevelWindow);
-   *aTopLevelWindow = nsnull;
-
-   nsCOMPtr<nsIWebShell> rootWebShell;
-
-   GetRootWebShellEvenIfChrome(getter_AddRefs(rootWebShell));
-   if(!rootWebShell)
-      return NS_OK;
-   
-   nsCOMPtr<nsIWebShellContainer> rootContainer;
-   rootWebShell->GetContainer(*aTopLevelWindow);
-
-   return NS_OK;
-}
-
 nsEventStatus PR_CALLBACK
 nsWebShell::HandleEvent(nsGUIEvent *aEvent)
 {
   return nsEventStatus_eIgnore;
 }
 
-NS_IMETHODIMP
-nsWebShell::GetRootWebShell(nsIWebShell*& aResult)
-{
-   nsCOMPtr<nsIDocShellTreeItem> top;
-   GetSameTypeRootTreeItem(getter_AddRefs(top));
-   nsCOMPtr<nsIWebShell> topAsWebShell(do_QueryInterface(top));
-   aResult = topAsWebShell;
-   NS_IF_ADDREF(aResult);
-   return NS_OK;
-}
-
-void
-nsWebShell::GetRootWebShellEvenIfChrome(nsIWebShell** aResult)
-{
-   nsCOMPtr<nsIDocShellTreeItem> top;
-   GetRootTreeItem(getter_AddRefs(top));
-   nsCOMPtr<nsIWebShell> topAsWebShell(do_QueryInterface(top));
-   *aResult = topAsWebShell;
-   NS_IF_ADDREF(*aResult);
-}
-
-/*
-NS_IMETHODIMP
-nsWebShell::SetParent(nsIWebShell* aParent)
-{
-   nsCOMPtr<nsIDocShellTreeItem> parentAsTreeItem(do_QueryInterface(aParent));
-
-   mParent = parentAsTreeItem.get();
-   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWebShell::GetParent(nsIWebShell*& aParent)
-{
-   nsCOMPtr<nsIDocShellTreeItem> parent;
-   NS_ENSURE_SUCCESS(GetSameTypeParent(getter_AddRefs(parent)), NS_ERROR_FAILURE);
-
-   if(parent)
-      parent->QueryInterface(NS_GET_IID(nsIWebShell), (void**)&aParent);
-   else
-      aParent = nsnull;
-   return NS_OK;
-}
-*/
-NS_IMETHODIMP
-nsWebShell::GetReferrer(nsIURI **aReferrer)
-{
-   *aReferrer = mReferrerURI;
-   NS_IF_ADDREF(*aReferrer);
-   return NS_OK;
-}
-
-void
-nsWebShell::SetReferrer(const PRUnichar* aReferrer)
-{
-   NS_NewURI(getter_AddRefs(mReferrerURI), nsDependentString(aReferrer), nsnull);
-}
-
-NS_IMETHODIMP
-nsWebShell::SetURL(const PRUnichar* aURL)
-{
-  nsCOMPtr<nsIURI> uri;
-  NS_ENSURE_SUCCESS(NS_NewURI(getter_AddRefs(uri), nsDependentString(aURL),
-                              nsnull),
-                    NS_ERROR_FAILURE);
-  SetCurrentURI(uri);
-  return NS_OK;
-}
 
 /**
  * Document Load methods
@@ -464,85 +315,6 @@ nsWebShell::GetDocumentLoader(nsIDocumentLoader*& aResult)
   aResult = mDocLoader;
   NS_IF_ADDREF(mDocLoader);
   return (nsnull != mDocLoader) ? NS_OK : NS_ERROR_FAILURE;
-}
-
-//----------------------------------------
-
-// History methods
-
-NS_IMETHODIMP nsWebShell::GoTo(PRInt32 aIndex)
-{
-   NS_ENSURE_STATE(mSessionHistory);
-   NS_ENSURE_TRUE(!IsFrame(), NS_ERROR_FAILURE);
-   nsCOMPtr<nsIHistoryEntry> entry;
-
-   mSessionHistory->GetEntryAtIndex(aIndex, PR_TRUE, getter_AddRefs(entry));
-   NS_ENSURE_TRUE(entry, NS_ERROR_FAILURE);
-    nsCOMPtr<nsISHEntry> shEntry(do_QueryInterface(entry));
-    NS_ENSURE_TRUE(shEntry, NS_ERROR_FAILURE);
-
-   NS_ENSURE_SUCCESS(LoadHistoryEntry(shEntry, LOAD_HISTORY), NS_ERROR_FAILURE);
-
-   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWebShell::GetHistoryLength(PRInt32& aResult)
-{
-   NS_ENSURE_STATE(mSessionHistory);
-   NS_ENSURE_TRUE(!IsFrame(), NS_ERROR_FAILURE);
-   
-   NS_ENSURE_SUCCESS(mSessionHistory->GetCount(&aResult), NS_ERROR_FAILURE);
-   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWebShell::GetHistoryIndex(PRInt32& aResult)
-{
-   NS_ENSURE_STATE(mSessionHistory);
-   NS_ENSURE_TRUE(!IsFrame(), NS_ERROR_FAILURE);
-   
-   NS_ENSURE_SUCCESS(mSessionHistory->GetIndex(&aResult), NS_ERROR_FAILURE);
-   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWebShell::GetURL(PRInt32 aIndex, PRUnichar** aURLResult)
-{
-   NS_ENSURE_STATE(mSessionHistory);
-   NS_ENSURE_TRUE(!IsFrame(), NS_ERROR_FAILURE);
-
-   nsCOMPtr<nsIHistoryEntry> entry;
-
-   NS_ENSURE_SUCCESS(mSessionHistory->GetEntryAtIndex(aIndex, PR_TRUE, 
-      getter_AddRefs(entry)), NS_ERROR_FAILURE);
-   NS_ENSURE_TRUE(entry, NS_ERROR_FAILURE);
-
-   nsCOMPtr<nsIURI> uri;
-
-   entry->GetURI(getter_AddRefs(uri));
-
-   NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);
-
-   nsXPIDLCString spec;
-   uri->GetSpec(getter_Copies(spec));
-
-   *aURLResult = ToNewUnicode(NS_ConvertASCIItoUCS2(spec));
-
-   return NS_OK;
-}
-
-//----------------------------------------
-
-//----------------------------------------------------------------------
-
-// WebShell container implementation
-
-NS_IMETHODIMP
-nsWebShell::SetHistoryState(nsISupports* aLayoutHistoryState)
-{
-  mHistoryState = aLayoutHistoryState;
-  return NS_OK;
 }
 
 //----------------------------------------------------------------------
@@ -1405,13 +1177,6 @@ nsWebShell::SelectNone(void)
 }
 
 
-//----------------------------------------------------
-NS_IMETHODIMP
-nsWebShell::FindNext(const PRUnichar * aSearchStr, PRBool aMatchCase, PRBool aSearchDown, PRBool &aIsFound)
-{
-  return NS_ERROR_FAILURE;
-}
-
 #ifdef XP_MAC
 #pragma mark -
 #endif
@@ -1439,8 +1204,9 @@ NS_IMETHODIMP nsWebShell::Create()
   nsCOMPtr<nsIURILoader> uriLoader = do_GetService(NS_URI_LOADER_CONTRACTID);
   uriLoader->GetDocumentLoaderForContext(NS_STATIC_CAST( nsISupports*, (nsIWebShell *) this), &mDocLoader);
 
+  nsCOMPtr<nsIContentViewerContainer> shellAsContainer = do_QueryInterface(NS_STATIC_CAST(nsIWebShell*, this));
   // Set the webshell as the default IContentViewerContainer for the loader...
-  mDocLoader->SetContainer(NS_STATIC_CAST(nsIContentViewerContainer*, (nsIWebShell*)this));
+  mDocLoader->SetContainer(shellAsContainer);
 
    return nsDocShell::Create();
 }
@@ -1452,28 +1218,6 @@ NS_IMETHODIMP nsWebShell::Destroy()
   SetContainer(nsnull);
 
   return NS_OK;
-}
-
-NS_IMETHODIMP nsWebShell::SetPositionAndSize(PRInt32 x, PRInt32 y, PRInt32 cx,
-   PRInt32 cy, PRBool fRepaint)
-{
-   mBounds.SetRect(x, y, cx, cy);
-   return nsDocShell::SetPositionAndSize(x, y, cx, cy, fRepaint);   
-}
-
-NS_IMETHODIMP nsWebShell::GetPositionAndSize(PRInt32* x, PRInt32* y, 
-   PRInt32* cx, PRInt32* cy)
-{
-   if(x)
-      *x = mBounds.x;
-   if(y)
-      *y = mBounds.y;
-   if(cx)
-      *cx = mBounds.width;
-   if(cy)
-      *cy = mBounds.height;
-      
-   return NS_OK; 
 }
 
 #ifdef DEBUG

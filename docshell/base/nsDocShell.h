@@ -132,20 +132,6 @@ protected:
 };
 
 //*****************************************************************************
-//***    nsDocShellInitInfo
-//*****************************************************************************
-
-class nsDocShellInitInfo
-{
-public:
-    //nsIGenericWindow Stuff
-    PRInt32 x;
-    PRInt32 y;
-    PRInt32 cx;
-    PRInt32 cy;
-};
-
-//*****************************************************************************
 //***    nsDocShell
 //*****************************************************************************
 
@@ -226,7 +212,6 @@ protected:
 
     NS_IMETHOD OnNewURI(nsIURI * aURI, nsIChannel * aChannel, PRUint32 aLoadType);
 
-    virtual void SetCurrentURI(nsIURI * aURI);
     virtual void SetReferrerURI(nsIURI * aURI);
 
     // Session History
@@ -247,7 +232,6 @@ protected:
     NS_IMETHOD UpdateCurrentGlobalHistory();
 
     // Helper Routines
-    nsDocShellInitInfo * InitInfo();
     NS_IMETHOD GetPromptAndStringBundle(nsIPrompt ** aPrompt,
         nsIStringBundle ** aStringBundle);
     NS_IMETHOD GetChildOffset(nsIDOMNode * aChild, nsIDOMNode * aParent,
@@ -289,7 +273,7 @@ protected:
     nsVoidArray                mChildren;
     nsCOMPtr<nsISupportsArray> mRefreshURIList;
     nsDSURIContentListener *   mContentListener;
-    nsDocShellInitInfo *       mInitInfo;
+    nsRect                     mBounds; // Dimensions of the docshell
     nsCOMPtr<nsIContentViewer> mContentViewer;
     nsCOMPtr<nsIDocumentCharsetInfo> mDocumentCharsetInfo;
     nsCOMPtr<nsIDeviceContext> mDeviceContext;

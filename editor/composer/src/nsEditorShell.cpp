@@ -40,7 +40,6 @@
 
 #include "nsEditorShell.h"
 #include "nsIPlaintextEditor.h"
-#include "nsIWebShell.h"
 #include "nsIBaseWindow.h"
 #include "nsIContentViewerFile.h"
 #include "prprf.h"
@@ -2827,10 +2826,13 @@ nsEditorShell::DoAfterSave(PRBool aShouldUpdateURL, const PRUnichar *aURLString)
   if (aShouldUpdateURL)
   {
     NS_ENSURE_ARG_POINTER(aURLString);
-    nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mContentAreaDocShell));
-    if (!webShell) return NS_ERROR_NULL_POINTER;
-
-    nsresult res = webShell->SetURL(aURLString);
+    nsCOMPtr<nsIURI> uri;
+    nsresult rv = NS_NewURI(getter_AddRefs(uri), nsDependentString(aURLString), nsnull);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to create a uri");
+    if (NS_SUCCEEDED(rv))
+    {
+      mContentAreaDocShell->SetCurrentURI(uri);
+    }
   }
 
   // Update window title to show possibly different filename

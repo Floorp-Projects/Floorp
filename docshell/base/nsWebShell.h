@@ -58,35 +58,10 @@ public:
     NS_DECL_NSICLIPBOARDCOMMANDS
     NS_DECL_NSIWEBSHELLSERVICES
 
-    NS_IMETHOD SetupNewViewer(nsIContentViewer* aViewer);
-
-    // nsIContentViewerContainer
-    NS_IMETHOD Embed(nsIContentViewer* aDocViewer,
-                   const char* aCommand,
-                   nsISupports* aExtraInfo);
-
     // nsIWebShell
     NS_IMETHOD SetContainer(nsIWebShellContainer* aContainer);
     NS_IMETHOD GetContainer(nsIWebShellContainer*& aResult);
-    NS_IMETHOD GetTopLevelWindow(nsIWebShellContainer** aWebShellWindow);
-    NS_IMETHOD GetRootWebShell(nsIWebShell*& aResult);
-    /*NS_IMETHOD SetParent(nsIWebShell* aParent);
-    NS_IMETHOD GetParent(nsIWebShell*& aParent);*/
-    NS_IMETHOD GetReferrer(nsIURI **aReferrer);
-
-    // Document load api's
     NS_IMETHOD GetDocumentLoader(nsIDocumentLoader*& aResult);
-
-    void SetReferrer(const PRUnichar* aReferrer);
-
-    // History api's
-    NS_IMETHOD GoTo(PRInt32 aHistoryIndex);
-    NS_IMETHOD GetHistoryLength(PRInt32& aResult);
-    NS_IMETHOD GetHistoryIndex(PRInt32& aResult);
-    NS_IMETHOD GetURL(PRInt32 aHistoryIndex, PRUnichar** aURLResult);
-
-    // nsIWebShellContainer
-    NS_IMETHOD SetHistoryState(nsISupports* aLayoutHistoryState);
 
     // nsILinkHandler
     NS_IMETHOD OnLinkClick(nsIContent* aContent,
@@ -100,14 +75,6 @@ public:
         const PRUnichar* aTargetSpec);
     NS_IMETHOD GetLinkState(const char* aLinkURI, nsLinkState& aState);
 
-    NS_IMETHOD FindNext(const PRUnichar * aSearchStr, PRBool aMatchCase,
-        PRBool aSearchDown, PRBool &aIsFound);
-
-    // nsIBaseWindow 
-    NS_IMETHOD SetPositionAndSize(PRInt32 x, PRInt32 y, PRInt32 cx,
-        PRInt32 cy, PRBool fRepaint);
-    NS_IMETHOD GetPositionAndSize(PRInt32* x, PRInt32* y, 
-        PRInt32* cx, PRInt32* cy);
     NS_IMETHOD Create();
     NS_IMETHOD Destroy();
 
@@ -122,10 +89,10 @@ public:
 
     static nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent);
 
-    NS_IMETHOD SetURL(const PRUnichar* aURL);
+    // NS_IMETHOD SetURL(const PRUnichar* aURL);
 
 protected:
-    void GetRootWebShellEvenIfChrome(nsIWebShell** aResult);
+    // void GetRootWebShellEvenIfChrome(nsIWebShell** aResult);
     void InitFrameData();
 
     // helpers for executing commands
@@ -145,8 +112,6 @@ protected:
 
     nsIWebShellContainer* mContainer;
     nsIDocumentLoader* mDocLoader;
-
-    nsRect   mBounds;
 
     eCharsetReloadState mCharsetReloadState;
 
