@@ -1366,10 +1366,14 @@ nsGenericHTMLElement::HandleDOMEvent(nsIPresContext* aPresContext,
   if (NS_SUCCEEDED(ret) && aPresContext && 
       nsEventStatus_eConsumeNoDefault != *aEventStatus &&
       !(aFlags & (NS_EVENT_FLAG_CAPTURE | NS_EVENT_FLAG_SYSTEM_EVENT)) && 
-      aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN) {
+      aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN &&
+      !IsContentOfType(eHTML_FORM_CONTROL) &&
+      HasAttr(kNameSpaceID_None, nsHTMLAtoms::tabindex)) {
     // Any visible element is focusable if tabindex >= 0
-    if (NS_SUCCEEDED(Focus())) {
-      // Consume event so that element focus isn't lost by doc taking focus
+    PRInt32 tabIndex;
+    GetTabIndex(&tabIndex);
+    if (tabIndex >= 0) {
+      Focus();
       *aEventStatus = nsEventStatus_eConsumeNoDefault;
     }
   }
