@@ -724,6 +724,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     // like this because I think it's really bogus that layout is depending on bookmarks. This is very evil.
     nsXPIDLCString scheme;
     aURL->GetScheme(getter_Copies(scheme));
+
     if (scheme && nsCRT::strcasecmp("about", scheme) && (kCharsetFromBookmarks > charsetSource))
     {
       nsCOMPtr<nsIRDFDataSource>  datasource;
@@ -732,14 +733,14 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
            nsCOMPtr<nsIBookmarksService>   bookmarks = do_QueryInterface(datasource);
            if (bookmarks)
            {
-                 char* urlSpec = nsnull;
-                 aURL->GetSpec(&urlSpec);
+                 nsXPIDLCString urlSpec;
+                 aURL->GetSpec(getter_Copies(urlSpec));
 
                  if (urlSpec)
                  {
-                            PRUnichar *pBookmarkedCharset;
+                            nsXPIDLString pBookmarkedCharset;
 
-                            if (NS_SUCCEEDED(rv = bookmarks->GetLastCharset(urlSpec, &pBookmarkedCharset)) && 
+                            if (NS_SUCCEEDED(rv = bookmarks->GetLastCharset(urlSpec, getter_Copies(pBookmarkedCharset))) && 
                                (rv != NS_RDF_NO_VALUE))
                             {
                               charset = pBookmarkedCharset;
@@ -747,8 +748,6 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
                             }    
 
                   } 
-
-                 nsCRT::free(urlSpec);
            }
        }
     } 
