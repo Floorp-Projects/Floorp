@@ -101,7 +101,7 @@ class nsLDAPConnection : public nsILDAPConnection, nsIRunnable
 
 
     LDAP *mConnectionHandle;            // the LDAP C SDK's connection object
-    nsCString *mBindName;               // who to bind as
+    nsString *mBindName;                // who to bind as
     nsCOMPtr<nsIThread> mThread;        // thread which marshals results
 
     nsSupportsHashtable *mPendingOperations; // keep these around for callbacks

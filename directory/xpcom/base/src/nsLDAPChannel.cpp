@@ -785,7 +785,10 @@ nsLDAPChannel::OnLDAPBind(nsILDAPMessage *aMessage)
     //
     PR_LOG(gLDAPLogModule, PR_LOG_DEBUG, 
            ("bind completed; starting search\n"));
-    rv = mCurrentOperation->SearchExt(baseDn, scope, filter, 0, LDAP_NO_LIMIT);
+    rv = mCurrentOperation->SearchExt(NS_ConvertASCIItoUCS2(baseDn).get(),
+                                      scope,
+                                      NS_ConvertASCIItoUCS2(filter).get(),
+                                      0, LDAP_NO_LIMIT);
     NS_ENSURE_SUCCESS(rv,rv);
     
     return NS_OK;
@@ -860,8 +863,8 @@ nsresult
 nsLDAPChannel::OnLDAPSearchEntry(nsILDAPMessage *aMessage)
 {
     nsresult rv;
-    nsXPIDLCString dn;
-    nsCString entry;
+    nsXPIDLString dn;
+    nsString entry;
 
     PR_LOG(gLDAPLogModule, PR_LOG_DEBUG, ("entry returned!\n"));
 
@@ -872,8 +875,8 @@ nsLDAPChannel::OnLDAPSearchEntry(nsILDAPMessage *aMessage)
     NS_ENSURE_SUCCESS(rv, rv);
 
     entry.SetCapacity(256);
-    entry = NS_LITERAL_CSTRING("dn: ") + nsLiteralCString(dn) 
-        + NS_LITERAL_CSTRING("\n");
+    entry = NS_LITERAL_STRING("dn: ") + nsLiteralString(dn) 
+        + NS_LITERAL_STRING("\n");
 
     char **attrs;
     PRUint32 attrCount;
@@ -894,7 +897,7 @@ nsLDAPChannel::OnLDAPSearchEntry(nsILDAPMessage *aMessage)
     //
     for ( PRUint32 i=0 ; i < attrCount ; i++ ) {
 
-        char **vals;
+        PRUnichar **vals;
         PRUint32 valueCount;
 
         // get the values of this attribute
@@ -911,10 +914,10 @@ nsLDAPChannel::OnLDAPSearchEntry(nsILDAPMessage *aMessage)
         // print all values of this attribute
         //
         for ( PRUint32 j=0 ; j < valueCount; j++ ) {
-            entry.Append(attrs[i]);
-            entry.Append(": ");
+            entry.Append(NS_ConvertASCIItoUCS2(attrs[i]).ToNewUnicode());
+            entry.Append(NS_LITERAL_STRING(": "));
             entry.Append(vals[j]);
-            entry.Append("\n");
+            entry.Append(NS_LITERAL_STRING("\n"));
         }
         NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(valueCount, vals);
 
@@ -931,7 +934,7 @@ nsLDAPChannel::OnLDAPSearchEntry(nsILDAPMessage *aMessage)
 
     // separate this entry from the next
     //
-    entry.Append("\n");
+    entry.Append(NS_LITERAL_STRING("\n"));
 
     // do the write
     // XXX better err handling
@@ -939,7 +942,8 @@ nsLDAPChannel::OnLDAPSearchEntry(nsILDAPMessage *aMessage)
     PRUint32 bytesWritten = 0;
     PRUint32 entryLength = entry.Length();
 
-    rv = mReadPipeOut->Write(entry, entryLength, &bytesWritten);
+    rv = mReadPipeOut->Write(NS_ConvertUCS2toUTF8(entry).get(),
+                             entryLength, &bytesWritten);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // short writes shouldn't happen on blocking pipes!

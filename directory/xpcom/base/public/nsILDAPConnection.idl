@@ -42,14 +42,14 @@ interface nsILDAPConnection : nsISupports
     /**
      * the string version of lderrno
      */
-    readonly attribute string errorString;
+    readonly attribute wstring errorString;
 
     /**
      * DN to bind as.  use the init() method to set this.
      *
      * @exception NS_ERROR_OUT_OF_MEMORY
      */
-    readonly attribute string bindName;
+    readonly attribute wstring bindName;
 
     /** 
      * set up the connection.  
@@ -65,7 +65,7 @@ interface nsILDAPConnection : nsISupports
      * @exception NS_ERROR_FAILURE              
      * @exception NS_ERROR_UNEXPECTED           internal error
      */
-    void init(in string aHost, in short aPort, in string aBindName);
+    void init(in string aHost, in short aPort, in wstring aBindName);
 
     /**
      * Get information about the last error that occured on this connection.
@@ -80,7 +80,6 @@ interface nsILDAPConnection : nsISupports
      * 
      * @return          the error code, as defined in nsILDAPErrors.idl
      */
-    long getLdErrno(out string matched, out string s);
+    long getLdErrno(out wstring matched, out wstring s);
 
 };
-

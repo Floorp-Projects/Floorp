@@ -114,10 +114,10 @@ nsLDAPOperation::GetMessageListener(nsILDAPMessageListener **aMessageListener)
 // wrapper for ldap_simple_bind()
 //
 NS_IMETHODIMP
-nsLDAPOperation::SimpleBind(const char *passwd)
+nsLDAPOperation::SimpleBind(const PRUnichar *passwd)
 {
     nsresult rv;
-    nsXPIDLCString bindName;
+    nsXPIDLString bindName;
 
     NS_PRECONDITION(mMessageListener != 0, "MessageListener not set");
 
@@ -125,7 +125,9 @@ nsLDAPOperation::SimpleBind(const char *passwd)
     if (NS_FAILED(rv))
         return rv;
 
-    mMsgID = ldap_simple_bind(mConnectionHandle, bindName, passwd);
+    mMsgID = ldap_simple_bind(mConnectionHandle,
+                              NS_ConvertUCS2toUTF8(bindName).get(),
+                              NS_ConvertUCS2toUTF8(passwd).get());
 
     if (mMsgID == -1) {
         const int lderrno = ldap_get_lderrno(mConnectionHandle, 0, 0);
@@ -182,9 +184,9 @@ nsLDAPOperation::SimpleBind(const char *passwd)
 // wrappers for ldap_search_ext
 //
 int
-nsLDAPOperation::SearchExt(const char *base, // base DN to search
+nsLDAPOperation::SearchExt(const PRUnichar *base, // base DN to search
                            int scope, // SCOPE_{BASE,ONELEVEL,SUBTREE}
-                           const char* filter, // search filter
+                           const PRUnichar *filter, // search filter
                            char **attrs, // attribute types to be returned
                            int attrsOnly, // attrs only, or values too?
                            LDAPControl **serverctrls, 
@@ -197,10 +199,10 @@ nsLDAPOperation::SearchExt(const char *base, // base DN to search
         return NS_ERROR_NOT_INITIALIZED;
     }
 
-    return ldap_search_ext(mConnectionHandle, base, scope, 
-                           filter, attrs, attrsOnly, serverctrls, 
-                           clientctrls, timeoutp, sizelimit, 
-                           &mMsgID);
+    return ldap_search_ext(mConnectionHandle, NS_ConvertUCS2toUTF8(base).get(),
+                           scope, NS_ConvertUCS2toUTF8(filter).get(), attrs,
+                           attrsOnly, serverctrls, clientctrls, timeoutp,
+                           sizelimit, &mMsgID);
 }
 
 
@@ -220,8 +222,8 @@ nsLDAPOperation::SearchExt(const char *base, // base DN to search
  *                in PRInt32 aSizeLimit);
  */
 NS_IMETHODIMP
-nsLDAPOperation::SearchExt(const char *aBaseDn, PRInt32 aScope, 
-                           const char *aFilter, PRIntervalTime aTimeOut,
+nsLDAPOperation::SearchExt(const PRUnichar *aBaseDn, PRInt32 aScope, 
+                           const PRUnichar *aFilter, PRIntervalTime aTimeOut,
                            PRInt32 aSizeLimit) 
 {
     // XXX deal with timeouts

@@ -46,7 +46,7 @@ interface nsILDAPMessage : nsISupports
      * @exception NS_ERROR_LDAP_DECODING_ERROR  problem during BER-decoding
      * @exception NS_ERROR_UNEXPECTED           bug or memory corruption
      */
-    readonly attribute string dn;
+    readonly attribute wstring dn;
 
     /**
      * Get all the attributes in this message.
@@ -74,7 +74,7 @@ interface nsILDAPMessage : nsISupports
      * @exception NS_ERROR_OUT_OF_MEMORY
      */
     void getValues(in string attr, out unsigned long count, 
-                   [retval, array, size_is(count)] out string values);
+                   [retval, array, size_is(count)] out wstring values);
 
     /**
      * The operation this message originated from

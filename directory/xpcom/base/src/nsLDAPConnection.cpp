@@ -85,7 +85,8 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(nsLDAPConnection, nsILDAPConnection,
                               nsIRunnable);
 
 NS_IMETHODIMP
-nsLDAPConnection::Init(const char *aHost, PRInt16 aPort, const char *aBindName)
+nsLDAPConnection::Init(const char *aHost, PRInt16 aPort,
+                       const PRUnichar *aBindName)
 {
     nsresult rv;
 
@@ -109,7 +110,7 @@ nsLDAPConnection::Init(const char *aHost, PRInt16 aPort, const char *aBindName)
     // need to go through these contortions.
     //
     if (aBindName) {
-        mBindName = new nsCString(aBindName);
+        mBindName = new nsString(aBindName);
         if (!mBindName) {
             return NS_ERROR_OUT_OF_MEMORY;
         }
@@ -168,7 +169,7 @@ nsLDAPConnection::Init(const char *aHost, PRInt16 aPort, const char *aBindName)
 //
 // readonly attribute string bindName
 NS_IMETHODIMP
-nsLDAPConnection::GetBindName(char **_retval)
+nsLDAPConnection::GetBindName(PRUnichar **_retval)
 {
     NS_ENSURE_ARG_POINTER(_retval);
     
@@ -180,7 +181,7 @@ nsLDAPConnection::GetBindName(char **_retval)
 
         // otherwise, hand out a copy of the bind name
         //
-        *_retval = mBindName->ToNewCString();
+        *_retval = mBindName->ToNewUnicode();
         if (!(*_retval)) {
             return NS_ERROR_OUT_OF_MEMORY;
         }
@@ -193,12 +194,16 @@ nsLDAPConnection::GetBindName(char **_retval)
 // XXX should copy before returning
 //
 NS_IMETHODIMP
-nsLDAPConnection::GetLdErrno(char **matched, char **errString, 
+nsLDAPConnection::GetLdErrno(PRUnichar **matched, PRUnichar **errString, 
                              PRInt32 *_retval)
 {
+    char *match, *err;
+
     NS_ENSURE_ARG_POINTER(_retval);
 
-    *_retval = ldap_get_lderrno(mConnectionHandle, matched, errString);
+    *_retval = ldap_get_lderrno(mConnectionHandle, &match, &err);
+    *matched = NS_ConvertUTF8toUCS2(match).ToNewUnicode();
+    *errString = NS_ConvertUTF8toUCS2(err).ToNewUnicode();
 
     return NS_OK;
 }
@@ -209,7 +214,7 @@ nsLDAPConnection::GetLdErrno(char **matched, char **errString,
 // XXX - how does ldap_perror know to look at the global errno?
 //
 NS_IMETHODIMP
-nsLDAPConnection::GetErrorString(char **_retval)
+nsLDAPConnection::GetErrorString(PRUnichar **_retval)
 {
     NS_ENSURE_ARG_POINTER(_retval);
 
@@ -222,7 +227,7 @@ nsLDAPConnection::GetErrorString(char **_retval)
 
     // make a copy using the XPCOM shared allocator
     //
-    *_retval = nsCRT::strdup(rv);
+    *_retval = NS_ConvertUTF8toUCS2(rv).ToNewUnicode();
     if (!*_retval) {
         return NS_ERROR_OUT_OF_MEMORY;
     }

@@ -432,16 +432,16 @@ nsLDAPMessage::IterateAttributes(PRUint32 *aAttrCount, char** *aAttributes,
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsLDAPMessage::GetDn(char* *aDN)
+// readonly attribute wstring dn;
+NS_IMETHODIMP nsLDAPMessage::GetDn(PRUnichar **aDn)
 {
-    if (!aDN) {
+    if (!aDn) {
         return NS_ERROR_ILLEGAL_VALUE;
     }
 
-    char *dn = ldap_get_dn(mConnectionHandle, mMsgHandle);
-    
-    if (!dn) {
+    char *rawDn = ldap_get_dn(mConnectionHandle, mMsgHandle);
+
+    if (!rawDn) {
         PRInt32 lderrno = ldap_get_lderrno(mConnectionHandle, 0, 0);
 
         switch (lderrno) {
@@ -459,10 +459,11 @@ nsLDAPMessage::GetDn(char* *aDN)
 
     // get a copy made with the shared allocator, and dispose of the original
     //
-    *aDN = nsCRT::strdup(dn); 
-    ldap_memfree(dn);
 
-    if (!*aDN) {
+    *aDn = NS_ConvertUTF8toUCS2(rawDn).ToNewUnicode();
+    ldap_memfree(rawDn);
+
+    if (!*aDn) {
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
@@ -473,7 +474,7 @@ nsLDAPMessage::GetDn(char* *aDN)
 //
 NS_IMETHODIMP
 nsLDAPMessage::GetValues(const char *aAttr, PRUint32 *aCount, 
-                         char** *aValues)
+                         PRUnichar ***aValues)
 {
     char **values;
 
@@ -504,8 +505,8 @@ nsLDAPMessage::GetValues(const char *aAttr, PRUint32 *aCount,
 
     // create an array of the appropriate size
     //
-    *aValues = NS_STATIC_CAST(char **, 
-                              nsMemory::Alloc(numVals * sizeof(char *)));
+    *aValues = NS_STATIC_CAST(PRUnichar **, 
+                              nsMemory::Alloc(numVals * sizeof(PRUnichar *)));
     if (!*aValues) {
         return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -515,7 +516,7 @@ nsLDAPMessage::GetValues(const char *aAttr, PRUint32 *aCount,
     //
     PRUint32 i;
     for ( i = 0 ; i < numVals ; i++ ) {
-        (*aValues)[i] = nsCRT::strdup(values[i]);
+        (*aValues)[i] = NS_ConvertUTF8toUCS2(values[i]).ToNewUnicode();
         if ( ! (*aValues)[i] ) {
             NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(i, aValues);
             return NS_ERROR_OUT_OF_MEMORY;

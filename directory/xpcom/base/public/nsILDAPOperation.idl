@@ -98,7 +98,7 @@ interface nsILDAPOperation : nsISupports
      * @exception NS_ERROR_OUT_OF_MEMORY        ran out of memory
      * @exception NS_ERROR_UNEXPECTED           internal error
      */
-    void simpleBind(in string passwd);
+    void simpleBind(in wstring passwd);
 
     /**
      * Kicks off an asynchronous search request.  The "ext" stands for 
@@ -121,8 +121,8 @@ interface nsILDAPOperation : nsISupports
      *
      * XXX doesn't currently handle LDAPControl params
      */
-    void searchExt(in string aBaseDn, in PRInt32 aScope,
-                   in string aFilter, in PRIntervalTime aTimeOut,
+    void searchExt(in wstring aBaseDn, in PRInt32 aScope,
+                   in wstring aFilter, in PRIntervalTime aTimeOut,
                    in PRInt32 aSizeLimit);
 
     /**  
