@@ -94,6 +94,32 @@ nsMenu::~nsMenu()
   NS_IF_RELEASE(mMenuBarParent);
   NS_IF_RELEASE(mMenuParent);
   NS_IF_RELEASE(mListener);
+
+  while(mNumMenuItems)
+  {
+    --mNumMenuItems;
+    
+    // Figure out what we're releasing
+    nsIMenuItem * menuitem = nsnull;
+    ((nsISupports*)mMenuItemVoidArray[mNumMenuItems])->QueryInterface(kIMenuItemIID, (void**) &menuitem);  
+    if(menuitem)
+    {
+      // case menuitem
+      NS_RELEASE(menuitem); // Release our hold
+      NS_RELEASE(menuitem); // Balance QI
+    }
+    else
+    {
+	  nsIMenu * menu = nsnull;
+	  ((nsISupports*)mMenuItemVoidArray[mNumMenuItems])->QueryInterface(kIMenuIID, (void**) &menu);
+	  if(menu)
+	  {
+	    // case menu
+	    NS_RELEASE(menu); // Release our hold 
+	    NS_RELEASE(menu); // Balance QI
+	  }
+	}
+  }
 }
 
 //-------------------------------------------------------------------------
