@@ -301,8 +301,11 @@ if (defined $::FORM{'sql'}) {
 if ($::FORM{'keywords'}) {
     GetVersionTable();
     my @list;
-    foreach my $v (split(',', $::FORM{'keywords'})) {
-        my $id = $::keywordsbyname{trim($v)};
+    foreach my $v (split(/[\s,]+/, $::FORM{'keywords'})) {
+        if ($v eq '') {
+            next;
+        }
+        my $id = $::keywordsbyname{$v};
         if ($id) {
             push(@list, "keywords.keywordid = $id");
         } else {

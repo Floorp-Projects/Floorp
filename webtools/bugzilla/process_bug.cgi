@@ -400,8 +400,10 @@ my @keywordlist;
 my %keywordseen;
 
 if ($::FORM{'keywords'}) {
-    foreach my $keyword (split(/,/, $::FORM{'keywords'})) {
-        $keyword = trim($keyword);
+    foreach my $keyword (split(/[\s,]+/, $::FORM{'keywords'})) {
+        if ($keyword eq '') {
+            next;
+        }
         my $i = $::keywordsbyname{$keyword};
         if (!$i) {
             print "Unknown keyword named <code>$keyword</code>.\n";
