@@ -2212,6 +2212,7 @@ nsGfxListControlFrame::GetSelectedItem(nsString & aStr)
     } else {
       nsCOMPtr<nsIDOMHTMLOptionElement> optionElement = getter_AddRefs(GetOption(*options, mSelectedIndex));
       if (optionElement) {
+#if 0 // This is for turning off labels Bug 4050
         nsAutoString text;
         rv = optionElement->GetLabel(text);
         // the return value is always NS_OK from DOMElements
@@ -2230,6 +2231,9 @@ nsGfxListControlFrame::GetSelectedItem(nsString & aStr)
           optionElement->GetText(text);
         }          
         aStr = text;
+#else
+        optionElement->GetText(aStr);
+#endif
         rv = NS_OK;
       }
     }
