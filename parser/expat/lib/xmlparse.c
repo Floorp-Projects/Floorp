@@ -3043,6 +3043,10 @@ enum XML_Error storeEntityValue(XML_Parser parser,
       if (enc == encoding)
 	eventPtr = next;
       return XML_ERROR_INVALID_TOKEN;
+    case XML_TOK_PERCENT:
+      if (enc == encoding)
+       eventPtr = next;
+      return XML_ERROR_SYNTAX;
     default:
       abort();
     }
