@@ -67,6 +67,7 @@ function ImageStartup()
   gDialog.tabDimensions     = document.getElementById( "imageDimensionsTab" );
   gDialog.tabBorder         = document.getElementById( "imageBorderTab" );
   gDialog.srcInput          = document.getElementById( "srcInput" );
+  gDialog.titleInput        = document.getElementById( "titleInput" );
   gDialog.altTextInput      = document.getElementById( "altTextInput" );
   gDialog.altTextRadioGroup = document.getElementById( "altTextRadioGroup" );
   gDialog.altTextRadio      = document.getElementById( "altTextRadio" );
@@ -103,6 +104,9 @@ function InitImage()
 
   // Force loading of image from its source and show preview image
   LoadPreviewImage();
+
+  if (globalElement.hasAttribute("title"))
+    gDialog.titleInput.value = globalElement.getAttribute("title");
 
   var hasAltText = globalElement.hasAttribute("alt");
   var altText;
@@ -506,6 +510,8 @@ function ValidateImage()
   // We must convert to "file:///" or "http://" format else image doesn't load!
   var src = TrimString(gDialog.srcInput.value);
   globalElement.setAttribute("src", src);
+
+  globalElement.setAttribute("title", TrimString(gDialog.titleInput.value));
 
   // Force user to enter Alt text only if "Alternate text" radio is checked
   // Don't allow just spaces in alt text
