@@ -63,14 +63,14 @@
               onkeypress="if (event.which == 13) return onStart();">
           <treehead>
             <treerow>
-              <treecell>&availprofiles.label;</treecell>
+              <treecell value="&availprofiles.label;"/>
             </treerow>
           </treehead>
           <treechildren id="profilekids">
 <!-- sspitzer roaming not supported yet 10-28-199
             <treeitem id="roamingitem">
               <treerow>
-                <treecell id="roamingcell">Roaming Access profile</treecell>
+                <treecell id="roamingcell" value="Roaming Access Profile"/>
               </treerow>
             </treeitem>
 -->
