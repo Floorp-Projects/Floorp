@@ -33,12 +33,11 @@ PROGRAM		= mozilla$(BIN_SUFFIX)
 else
 PROGRAM		= mozilla-bin
 endif
-EXTRA_DSO_LIBS	= gkgfx
-
+#Ugly OS/2 hack. I'll fix it I swear
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
-SHARED_LIBRARY_LIBS = -llibxpfelocation_s
+EXTRA_DSO_LIBS	= gkgfx xpfelocation_s
 else
-SHARED_LIBRARY_LIBS = -lxpfelocation_s
+EXTRA_DSO_LIBS	= gkgfx
 endif
 
 CPPSRCS		= \
