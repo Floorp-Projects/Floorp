@@ -3,6 +3,10 @@ box#outer-box {
   height: 100%;
 }
 
+window.popup {
+  border: 2px outset;
+}
+
 select.combobox {
   font-family: Sans-Serif;
   font-size: 8pt;
@@ -53,16 +57,18 @@ titledbutton#UnderlineButton {
 
 titledbutton.AlignButton {
   margin: 0px;  
-  min-width: 20em;
+  min-width: 5em;
   border: 1px solid transparent;
 }
 
 titledbutton.AlignButton:hover {
   border: 1px outset white;
+  min-width: 5em;
   text-decoration: none;
 }
 
 titledbutton.AlignButton:active {
+  min-width: 5em;
   border: 1px inset;
 }
 

@@ -23,7 +23,7 @@ var toolbar;
 function EditorStartup(editorType)
 {
   dump("Doing Startup...\n");
-  contentWindow = window.frames[0];
+  contentWindow = window.content;
 
   dump("Trying to make an editor appcore through the component manager...\n");
 
@@ -57,7 +57,9 @@ function EditorStartup(editorType)
   // (A bug currently prevents this from working,
   //  the actual edit window is a child of the webshell window 
   //  designated as the contentWindow)
+  dump("Setting focus to content window\n");
   contentWindow.focus();
+  window.frames[0].focus();
 }
 
 function SetupToolbarElements()
@@ -133,12 +135,14 @@ function EditorSave()
 {
   dump("In EditorSave...\n");
   window.editorShell.Save();
+  contentWindow.focus();
 }
 
 function EditorSaveAs()
 {
   dump("In EditorSave...\n");
   window.editorShell.SaveAs();
+  contentWindow.focus();
 }
 
 
@@ -146,6 +150,7 @@ function EditorPrint()
 {
   dump("In EditorPrint..\n");
   window.editorShell.Print();
+  contentWindow.focus();
 }
 
 function EditorClose()
@@ -160,47 +165,56 @@ function EditorUndo()
 {
   dump("Undoing\n");
   window.editorShell.Undo();
+  contentWindow.focus();
 }
 
 function EditorRedo()
 {
   dump("Redoing\n");
   window.editorShell.Redo();
+  contentWindow.focus();
 }
 
 function EditorCut()
 {
   window.editorShell.Cut();
+  contentWindow.focus();
 }
 
 function EditorCopy()
 {
   window.editorShell.Copy();
+  contentWindow.focus();
 }
 
 function EditorPaste()
 {
   window.editorShell.Paste();
+  contentWindow.focus();
 }
 
 function EditorPasteAsQuotation()
 {
   window.editorShell.PasteAsQuotation();
+  contentWindow.focus();
 }
 
 function EditorPasteAsQuotationCited(citeString)
 {
   window.editorShell.PasteAsCitedQuotation(CiteString);
+  contentWindow.focus();
 }
 
 function EditorSelectAll()
 {
   window.editorShell.SelectAll();
+  contentWindow.focus();
 }
 
 function EditorFind()
 {
   window.editorShell.Find();
+  contentWindow.focus();
 }
 
 function EditorFindNext()
@@ -211,7 +225,6 @@ function EditorFindNext()
 function EditorShowClipboard()
 {
   dump("In EditorShowClipboard...\n");
-  window.editorShell.ShowClipboard(); 
 }
 
 // --------------------------- View menu ---------------------------
@@ -254,11 +267,14 @@ function EditorSetFontSize(size)
 
 function EditorSetFontFace(fontFace)
 {
-  if( fontFace == "tt") {
+  if( fontFace == "" || fontFace == "normal") {
+    window.editorShell.RemoveTextProperty("font", "face");
+  } else if( fontFace == "tt") {
     // The old "teletype" attribute
     window.editorShell.SetTextProperty("tt", "", "");  
     // Clear existing font face
-    fontFace = "";
+    window.editorShell.RemoveTextProperty("font", "face");
+  } else {
     window.editorShell.SetTextProperty("font", "face", fontFace);
   }        
   contentWindow.focus();
@@ -292,6 +308,7 @@ function EditorRemoveStyle(styleName)
 function EditorRemoveLinks()
 {
   dump("NOT IMPLEMENTED YET\n");
+  contentWindow.focus();
 }
 
 // --------------------------- Output ---------------------------
@@ -388,25 +405,27 @@ function EditorInsertList(listType)
 {
   dump("Inserting list\n");
   window.editorShell.InsertList(listType);
+  contentWindow.focus();
 }
 
 function EditorInsertImage()
 {
-  if (window.editorShell) {
-    dump("Image Properties Dialog starting.\n");
-    window.openDialog("chrome://editordlgs/content/EdImageProps.xul", "dlg", "chrome", "");
-  }
+  dump("Image Properties Dialog starting.\n");
+  window.openDialog("chrome://editordlgs/content/EdImageProps.xul", "dlg", "chrome", "");
+  contentWindow.focus();
 }
 
 function EditorAlign(align)
 {
   dump("aligning\n");
   window.editorShell.Align(align);
+  contentWindow.focus();
 }
 
 function EditorPrintPreview()
 {
   window.openDialog("resource:/res/samples/printsetup.html", "PrintPreview", "chrome", "");
+  contentWindow.focus();
 }
 
 function CheckSpelling()
@@ -428,7 +447,9 @@ function CheckSpelling()
       window.openDialog("chrome://editordlgs/content/EdSpellCheck.xul", "SpellDlg", "chrome", "", firstMisspelledWord);
     }
   }
+  contentWindow.focus();
 }
+
 function OnCreateAlignmentPopup()
 {
   dump("Creating Alignment popup window\n");
