@@ -254,6 +254,11 @@ sub gcc_parser {
     $warnings{$file}{$line}->{count}++;
     $total_warnings_count++;
 
+    # Do not re-add this warning if it has been seen before
+    for my $rec (@{ $warnings{$file}{$line}->{list} }) {
+      next PARSE_TOP if $rec->{warning_text} eq $warning_text;
+    }
+
     # Remember where in the build log the warning occured
     push @{ $warnings{$file}{$line}->{list} }, {
          log_file        => $log_file,
