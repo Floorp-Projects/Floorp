@@ -1212,8 +1212,7 @@ nsImapService::CreateStartOfImapUrl(const char * aImapURI, nsIImapUrl ** imapUrl
   
   // now we need to create an imap url to load into the connection. The url
   // needs to represent a select folder action. 
-  rv = nsComponentManager::CreateInstance(kImapUrlCID, nsnull,
-    NS_GET_IID(nsIImapUrl), (void **) imapUrl);
+  rv = CallCreateInstance(kImapUrlCID, imapUrl);
   if (NS_SUCCEEDED(rv) && *imapUrl)
   {
     nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(*imapUrl, &rv);
@@ -2693,8 +2692,8 @@ NS_IMETHODIMP nsImapService::NewURI(const nsACString &aSpec,
                                     nsIURI *aBaseURI,
                                     nsIURI **_retval)
 {
-  nsCOMPtr<nsIImapUrl> aImapUrl;
-  nsresult rv = nsComponentManager::CreateInstance(kImapUrlCID, nsnull, NS_GET_IID(nsIImapUrl), getter_AddRefs(aImapUrl));
+  nsresult rv;
+  nsCOMPtr<nsIImapUrl> aImapUrl = do_CreateInstance(kImapUrlCID, &rv);
   if (NS_SUCCEEDED(rv))
   {
     // now extract lots of fun information...

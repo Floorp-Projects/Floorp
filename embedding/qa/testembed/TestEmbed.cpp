@@ -61,6 +61,7 @@
 #include "ProfileMgr.h"
 #include "BrowserView.h"
 #include "nsIWindowWatcher.h"
+#include "nsIComponentRegistrar.h"
 #include "plstr.h"
 #include "Preferences.h"
 #include <io.h>
@@ -175,12 +176,15 @@ nsresult CTestEmbedApp::OverrideComponents()
 
             nsCOMPtr<nsIFactory> promptFactory;
             rv = MakeFactory(getter_AddRefs(promptFactory));
-            if (NS_SUCCEEDED(rv))
-                nsComponentManager::RegisterFactory(kPromptServiceCID,
-                                                    "Prompt Service",
-                                                    "@mozilla.org/embedcomp/prompt-service;1",
-                                                    promptFactory,
-                                                    PR_TRUE); // replace existing
+            if (NS_SUCCEEDED(rv)) {
+                nsCOMPtr<nsIComponentRegistrar> registrar;
+                NS_GetComponentRegistrar(getter_AddRefs(registrar));
+                if (registrar)
+                    registrar->RegisterFactory(kPromptServiceCID,
+                                               "Prompt Service",
+                                               "@mozilla.org/embedcomp/prompt-service;1",
+                                               promptFactory);
+            }
         } else
           ::FreeLibrary(overlib);
     }

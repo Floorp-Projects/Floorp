@@ -4345,10 +4345,7 @@ SubstituteChars(PRBool              aDisplayUnicode,
 {
   nsresult res;
   if (!gFontSubstituteConverter) {
-    nsComponentManager::
-    CreateInstance(NS_SAVEASCHARSET_CONTRACTID, nsnull,
-                   NS_GET_IID(nsISaveAsCharset),
-                   (void**)&gFontSubstituteConverter);
+    CallCreateInstance(NS_SAVEASCHARSET_CONTRACTID, &gFontSubstituteConverter);
     if (gFontSubstituteConverter) {
       // if aDisplayUnicode is set: transliterate, and then fallback
       //   to literal Unicode points &#xNNNN; for unknown characters

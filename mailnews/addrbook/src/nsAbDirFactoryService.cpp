@@ -61,8 +61,9 @@ nsAbDirFactoryService::~nsAbDirFactoryService()
 }
 
 /* nsIAbDirFactory getDirFactory (in string uri); */
-NS_IMETHODIMP nsAbDirFactoryService::GetDirFactory(const char* aURI,
-        nsIAbDirFactory** aDirFactory)
+NS_IMETHODIMP
+nsAbDirFactoryService::GetDirFactory(const char* aURI,
+                                     nsIAbDirFactory** aDirFactory)
 {
     nsresult rv;
 
@@ -79,119 +80,14 @@ NS_IMETHODIMP nsAbDirFactoryService::GetDirFactory(const char* aURI,
     NS_ENSURE_SUCCESS(rv,rv);
     
     // Extract the scheme
-	nsCAutoString scheme;
+    nsCAutoString scheme;
     rv = nsService->ExtractScheme (nsDependentCString(aURI), scheme);
     NS_ENSURE_SUCCESS(rv,rv);
 
-    // TODO 
-    // Change to use string classes
-
     // Try to find a factory using the component manager.
-    static const char kAbDirFactoryContractIDPrefix[]
-        = NS_AB_DIRECTORY_FACTORY_CONTRACTID_PREFIX;
+    nsCAutoString contractID;
+    contractID.AppendLiteral(NS_AB_DIRECTORY_FACTORY_CONTRACTID_PREFIX);
+    contractID.Append(scheme);
 
-    PRInt32 pos = scheme.Length();
-    PRInt32 len = pos + sizeof(kAbDirFactoryContractIDPrefix) - 1;
-
-    // Safely convert to a C-string for the XPCOM APIs
-    char buf[128];
-    char* contractID = buf;
-    if (len >= PRInt32(sizeof buf))
-        contractID = NS_STATIC_CAST(char *,nsMemory::Alloc(len + 1));
-
-    if (contractID == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    PL_strcpy(contractID, kAbDirFactoryContractIDPrefix);
-    PL_strncpy(contractID + sizeof(kAbDirFactoryContractIDPrefix) - 1, aURI, pos);
-    contractID[len] = '\0';
-
-    nsCID cid;
-    rv = nsComponentManager::ContractIDToClassID(contractID, &cid);
-    NS_ENSURE_SUCCESS(rv,rv);
-
-    if (contractID != buf)
-        nsCRT::free(contractID);
-
-    nsCOMPtr<nsIFactory> factory;
-    rv = nsComponentManager::FindFactory(cid, getter_AddRefs(factory));
-    NS_ASSERTION(NS_SUCCEEDED(rv), "factory registered, but couldn't load");
-    NS_ENSURE_SUCCESS(rv,rv);
-
-    rv = factory->CreateInstance(nsnull, NS_GET_IID(nsIAbDirFactory), NS_REINTERPRET_CAST(void**, aDirFactory));
-    return rv;
+    return CallCreateInstance(contractID.get(), aDirFactory);
 }
-
-/* nsIAbDirFactory getDirFactory (in string uri); */
-/*
-NS_IMETHODIMP nsAbDirFactoryService::GetDirFactory(const char* aURI,
-        nsIAbDirFactory** aDirFactory)
-{
-    NS_PRECONDITION(aURI != nsnull, "null ptr");
-    if (!aURI)
-        return NS_ERROR_NULL_POINTER;
-
-    NS_PRECONDITION(aDirFactory != nsnull, "null ptr");
-    if (!aDirFactory)
-        return NS_ERROR_NULL_POINTER;
-
-    // Compute the scheme of the URI. Scan forward until we either:
-    //
-    // 1. Reach the end of the string
-    // 2. Encounter a non-alpha character
-    // 3. Encouter a colon.
-    //
-    // If we encounter a colon _before_ encountering a non-alpha
-    // character, then assume it's the scheme.
-    //
-    // XXX Although it's really not correct, we'll allow underscore
-    // characters ('_'), too.
-    const char* p = aURI;
-    while (IsLegalSchemeCharacter(*p))
-        ++p;
-    
-    if (*p != ':')
-        return NS_ERROR_FAILURE;
-
-    nsresult rv;
-    nsCOMPtr<nsIFactory> factory;
-    PRUint32 prefixlen = 0;
-
-    prefixlen = (p - aURI);
-
-    // Try to find a factory using the component manager.
-    static const char kAbDirFactoryContractIDPrefix[]
-        = NS_AB_DIRECTORY_FACTORY_CONTRACTID_PREFIX;
-
-    PRInt32 pos = p - aURI;
-    PRInt32 len = pos + sizeof(kAbDirFactoryContractIDPrefix) - 1;
-
-    // Safely convert to a C-string for the XPCOM APIs
-    char buf[128];
-    char* contractID = buf;
-    if (len >= PRInt32(sizeof buf))
-        contractID = NS_STATIC_CAST(char *,nsMemory::Alloc(len + 1));
-
-    if (contractID == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    PL_strcpy(contractID, kAbDirFactoryContractIDPrefix);
-    PL_strncpy(contractID + sizeof(kAbDirFactoryContractIDPrefix) - 1, aURI, pos);
-    contractID[len] = '\0';
-
-    nsCID cid;
-    rv = nsComponentManager::ContractIDToClassID(contractID, &cid);
-    NS_ENSURE_SUCCESS(rv,rv);
-
-    if (contractID != buf)
-        nsCRT::free(contractID);
-
-
-    rv = nsComponentManager::FindFactory(cid, getter_AddRefs(factory));
-    NS_ASSERTION(NS_SUCCEEDED(rv), "factory registered, but couldn't load");
-    NS_ENSURE_SUCCESS(rv,rv);
-
-    rv = factory->CreateInstance(nsnull, NS_GET_IID(nsIAbDirFactory), NS_REINTERPRET_CAST(void**, aDirFactory));
-    return rv;
-}
-*/

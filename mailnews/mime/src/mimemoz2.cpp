@@ -1545,9 +1545,7 @@ mime_bridge_create_display_stream(
   }
 
   // Need the text converter...
-  rv = nsComponentManager::CreateInstance(MOZ_TXTTOHTMLCONV_CONTRACTID,
-                                          NULL, NS_GET_IID(mozITXTToHTMLConv),
-                                          (void **)&(msd->options->conv));
+  rv = CallCreateInstance(MOZ_TXTTOHTMLCONV_CONTRACTID, &(msd->options->conv));
   if (NS_FAILED(rv))
 	{
     nsServiceManager::ReleaseService(kPrefCID, msd->options->prefs);

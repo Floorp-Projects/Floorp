@@ -54,15 +54,11 @@ void main(int argc, char* argv[])
         if (cidStr[0] == '{') {
             nsCID cid;
             cid.Parse(cidStr);
-            rv = nsComponentManager::CreateInstance(cid, nsnull,
-                                                    NS_GET_IID(nsISupports),
-                                                    (void**)&obj);
+            rv = CallCreateInstance(cid, &obj);
         }
         else {
             // contractID case:
-            rv = nsComponentManager::CreateInstance(cidStr, nsnull,
-                                                    NS_GET_IID(nsISupports),
-                                                    (void**)&obj);
+            rv = CallCreateInstance(cidStr, &obj);
         }
         if (NS_SUCCEEDED(rv)) {
             printf("Successfully created %s\n", cidStr);

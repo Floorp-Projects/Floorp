@@ -699,9 +699,7 @@ nsSubDocumentFrame::CreateViewAndWidget(nsContentType aContentType)
 {
   // create, init, set the parent of the view
   nsIView* innerView;
-  nsresult rv = nsComponentManager::CreateInstance(kCViewCID, nsnull,
-                                                   NS_GET_IID(nsIView),
-                                                   (void **)&innerView);
+  nsresult rv = CallCreateInstance(kCViewCID, &innerView);
   if (NS_FAILED(rv)) {
     NS_ERROR("Could not create inner view");
     return rv;

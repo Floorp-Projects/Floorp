@@ -249,9 +249,8 @@ PRInt32 generate_encodedwords(char *pUTF8, const char *charset, char method, cha
       }
       // Do nsITextTransform if needed
       if (conv_kana > 0) {
-        nsCOMPtr <nsITextTransform> textTransform;
-        rv = nsComponentManager::CreateInstance(NS_HANKAKUTOZENKAKU_CONTRACTID, nsnull, 
-                                                NS_GET_IID(nsITextTransform), getter_AddRefs(textTransform));
+        nsCOMPtr <nsITextTransform> textTransform =
+            do_CreateInstance(NS_HANKAKUTOZENKAKU_CONTRACTID, &rv);
         if (NS_SUCCEEDED(rv)) {
           nsString text(pUCS2), result;
           rv = textTransform->Change(pUCS2, nsCRT::strlen(pUCS2), result);

@@ -1109,9 +1109,7 @@ NS_IMETHODIMP nsHTMLEditor::PrepareHTMLTransferable(nsITransferable **aTransfera
                                                     PRBool aHavePrivFlavor)
 {
   // Create generic Transferable for getting the data
-  nsresult rv = nsComponentManager::CreateInstance("@mozilla.org/widget/transferable;1", nsnull, 
-                                          NS_GET_IID(nsITransferable), 
-                                          (void**)aTransferable);
+  nsresult rv = CallCreateInstance("@mozilla.org/widget/transferable;1", aTransferable);
   if (NS_FAILED(rv))
     return rv;
 

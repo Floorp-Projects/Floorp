@@ -1371,7 +1371,11 @@ nsDOMClassInfo::RegisterExternalClasses()
   extern nsScriptNameSpaceManager *gNameSpaceManager;
   NS_ENSURE_TRUE(gNameSpaceManager, NS_ERROR_NOT_INITIALIZED);
 
-  nsresult rv = NS_OK;
+  nsresult rv;
+  nsCOMPtr<nsIComponentRegistrar> registrar;
+  rv = NS_GetComponentRegistrar(getter_AddRefs(registrar));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   nsCOMPtr<nsICategoryManager> cm =
     do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1398,15 +1402,15 @@ nsDOMClassInfo::RegisterExternalClasses()
                          getter_Copies(contractId));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCID cid;
-    rv = nsComponentManager::ContractIDToClassID(contractId, &cid);
-
+    nsCID *cid;
+    rv = registrar->ContractIDToCID(contractId, &cid);
     if (NS_FAILED(rv)) {
       NS_WARNING("Bad contract id registered with the script namespace manager");
       continue;
     }
 
-    rv = gNameSpaceManager->RegisterExternalClassName(categoryEntry.get(), cid);
+    rv = gNameSpaceManager->RegisterExternalClassName(categoryEntry.get(), *cid);
+    nsMemory::Free(cid);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 

@@ -117,11 +117,9 @@ nsGopherHandler::NewURI(const nsACString &aSpec,
                         nsIURI **result) {
     nsresult rv;
 
-    nsCOMPtr<nsIStandardURL> url;
-    rv = nsComponentManager::CreateInstance(kStandardURLCID, nsnull,
-                                            NS_GET_IID(nsIStandardURL),
-                                            getter_AddRefs(url));
+    nsCOMPtr<nsIStandardURL> url = do_CreateInstance(kStandardURLCID, &rv);
     if (NS_FAILED(rv)) return rv;
+
     rv = url->Init(nsIStandardURL::URLTYPE_STANDARD, GOPHER_PORT,
                    aSpec, aCharset, aBaseURI);
     if (NS_FAILED(rv)) return rv;

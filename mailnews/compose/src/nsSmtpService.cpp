@@ -317,11 +317,8 @@ NS_IMETHODIMP nsSmtpService::NewURI(const nsACString &aSpec,
 {
   // get a new smtp url 
 
-  nsresult rv = NS_OK;
-  nsCOMPtr <nsIURI> mailtoUrl;
-
-  rv = nsComponentManager::CreateInstance(kCMailtoUrlCID, NULL, NS_GET_IID(nsIURI), getter_AddRefs(mailtoUrl));
-
+  nsresult rv;
+  nsCOMPtr <nsIURI> mailtoUrl = do_CreateInstance(kCMailtoUrlCID, &rv);
   if (NS_SUCCEEDED(rv))
   {
     nsCAutoString utf8Spec;
@@ -541,13 +538,8 @@ nsSmtpService::createKeyedServer(const char *key, nsISmtpServer** aResult)
 {
     if (!key) return NS_ERROR_NULL_POINTER;
     
-    nsCOMPtr<nsISmtpServer> server;
-    
     nsresult rv;
-    rv = nsComponentManager::CreateInstance(NS_SMTPSERVER_CONTRACTID,
-                                            nsnull,
-                                            NS_GET_IID(nsISmtpServer),
-                                            (void **)getter_AddRefs(server));
+    nsCOMPtr<nsISmtpServer> server = do_CreateInstance(NS_SMTPSERVER_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
     
     server->SetKey(key);

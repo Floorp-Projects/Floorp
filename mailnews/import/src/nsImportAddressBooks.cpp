@@ -295,8 +295,7 @@ NS_IMETHODIMP nsImportGenericAddressBooks::GetData(const char *dataId, nsISuppor
 		}
 		IMPORT_LOG1( "Requesting sample data #: %ld\n", (long)rNum);
 		if (m_pInterface) {
-			nsCOMPtr<nsISupportsString>	data;
-			rv = nsComponentManager::CreateInstance( kSupportsWStringCID, nsnull, NS_GET_IID(nsISupportsString), getter_AddRefs( data));
+			nsCOMPtr<nsISupportsString>	data = do_CreateInstance( kSupportsWStringCID, &rv);
 			if (NS_FAILED( rv))
 				return( rv);
 			PRUnichar *	pData = nsnull;

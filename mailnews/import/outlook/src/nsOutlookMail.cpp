@@ -730,8 +730,7 @@ PRBool nsOutlookMail::WriteAttachment( nsIFileSpec *pDest, CMapiMessage *pMsg)
 	// Now set up the encoder object
 
 	if (bResult) {
-		nsCOMPtr<nsIImportMimeEncode> encoder;
-		rv = nsComponentManager::CreateInstance( kImportMimeEncodeCID, nsnull, NS_GET_IID(nsIImportMimeEncode), getter_AddRefs( encoder));
+		nsCOMPtr<nsIImportMimeEncode> encoder = do_CreateInstance( kImportMimeEncodeCID, &rv);
 		if (NS_FAILED( rv)) {
 			IMPORT_LOG0( "*** Error creating mime encoder\n");
 			return( PR_FALSE);

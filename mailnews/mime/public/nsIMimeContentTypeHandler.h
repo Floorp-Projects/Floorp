@@ -44,7 +44,7 @@
  * Note: These will all register by their content type prefixed by the
  *       following:  mimecth:text/vcard
  * 
- *       libmime will then use nsComponentManager::ContractIDToCLSID() to 
+ *       libmime will then use the XPCOM Component Manager to 
  *       locate the appropriate Content Type handler
  */
 #ifndef nsIMimeContentTypeHandler_h_

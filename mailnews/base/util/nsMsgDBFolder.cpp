@@ -262,9 +262,8 @@ NS_IMETHODIMP nsMsgDBFolder::ForceDBClosed()
     }
     else
     {
-      nsCOMPtr<nsIMsgDatabase> mailDBFactory;
-      nsresult rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, NS_GET_IID(nsIMsgDatabase), (void **) getter_AddRefs(mailDBFactory));
-      if (NS_SUCCEEDED(rv) && mailDBFactory)
+      nsCOMPtr<nsIMsgDatabase> mailDBFactory = do_CreateInstance(kCMailDB);
+      if (mailDBFactory)
         mailDBFactory->ForceFolderDBClosed(this);
     }
     return NS_OK;
@@ -3699,8 +3698,7 @@ NS_IMETHODIMP nsMsgDBFolder::SetFlags(PRUint32 aFlags)
 NS_IMETHODIMP nsMsgDBFolder::GetAllFoldersWithFlag(PRUint32 flag, nsISupportsArray **aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);
-  nsresult rv = nsComponentManager::CreateInstance(NS_SUPPORTSARRAY_CONTRACTID, nsnull, 
-                                           NS_GET_IID(nsISupportsArray), (void **)aResult);
+  nsresult rv = CallCreateInstance(NS_SUPPORTSARRAY_CONTRACTID, aResult);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return ListFoldersWithFlag(flag, *aResult);

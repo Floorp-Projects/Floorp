@@ -278,18 +278,13 @@ main(int argc, char** argv)
     // Create a stream data source and initialize it on argv[1], which
     // is hopefully a "file:" URL. (Actually, we can do _any_ kind of
     // URL, but only a "file:" URL will be written back to disk.)
-    nsCOMPtr<nsIRDFDataSource> ds;
-    rv = nsComponentManager::CreateInstance(kRDFXMLDataSourceCID,
-                                            nsnull,
-                                            NS_GET_IID(nsIRDFDataSource),
-                                            getter_AddRefs(ds));
+    nsCOMPtr<nsIRDFDataSource> ds = do_CreateInstance(kRDFXMLDataSourceCID, &rv);
+    if (NS_FAILED(rv)) {
+        NS_ERROR("unable to create RDF/XML data source");
+        return rv;
+    }
 
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create RDF/XML data source");
-    if (NS_FAILED(rv)) return rv;
-
-    nsCOMPtr<nsIRDFRemoteDataSource> remote
-        = do_QueryInterface(ds);
-
+    nsCOMPtr<nsIRDFRemoteDataSource> remote = do_QueryInterface(ds);
     if (! remote)
         return NS_ERROR_UNEXPECTED;
 

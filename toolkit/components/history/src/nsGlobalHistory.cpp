@@ -2544,11 +2544,8 @@ nsGlobalHistory::OpenDB()
   NS_ENSURE_SUCCESS(rv, rv);
 
   static NS_DEFINE_CID(kMorkCID, NS_MORK_CID);
-  nsCOMPtr<nsIMdbFactoryFactory> factoryfactory;
-  rv = nsComponentManager::CreateInstance(kMorkCID,
-                                          nsnull,
-                                          NS_GET_IID(nsIMdbFactoryFactory),
-                                          getter_AddRefs(factoryfactory));
+  nsCOMPtr<nsIMdbFactoryFactory> factoryfactory =
+      do_CreateInstance(kMorkCID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = factoryfactory->GetMdbFactory(&gMdbFactory);

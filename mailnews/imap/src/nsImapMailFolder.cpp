@@ -2814,31 +2814,22 @@ NS_IMETHODIMP nsImapMailFolder::ParseMsgHdrs(nsIImapProtocol *aProtocol, nsIImap
 nsresult nsImapMailFolder::SetupHeaderParseStream(PRUint32 aSize, 
                                                   const char *content_type, nsIMailboxSpec *boxSpec)
 {
-  nsresult rv = NS_ERROR_FAILURE;
-  
   if (!mDatabase)
     GetDatabase(nsnull);
   
   m_nextMessageByteLength = aSize;
   if (!m_msgParser)
-  {
-    rv = nsComponentManager::CreateInstance(kParseMailMsgStateCID, nsnull, 
-      NS_GET_IID(nsIMsgParseMailMsgState), (void **) getter_AddRefs(m_msgParser));
-  }
+    m_msgParser = do_CreateInstance(kParseMailMsgStateCID);
   else
     m_msgParser->Clear();
   
   if (m_msgParser)
   {
     m_msgParser->SetMailDB(mDatabase);
-    return
-      m_msgParser->SetState(nsIMsgParseMailMsgState::ParseHeadersState);
+    return m_msgParser->SetState(nsIMsgParseMailMsgState::ParseHeadersState);
   }
-  else
-  {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  return rv;
+
+  return NS_ERROR_OUT_OF_MEMORY;
 }
 
 nsresult nsImapMailFolder::ParseAdoptedHeaderLine(const char *aMessageLine, PRUint32 aMsgKey)

@@ -485,16 +485,11 @@ nsresult
 RDFXMLDataSourceImpl::Init()
 {
     nsresult rv;
-    rv = nsComponentManager::CreateInstance(kRDFInMemoryDataSourceCID,
-                                            nsnull,
-                                            NS_GET_IID(nsIRDFDataSource),
-                                            (void**) &mInner);
+    rv = CallCreateInstance(kRDFInMemoryDataSourceCID, &mInner);
     if (NS_FAILED(rv)) return rv;
 
     if (gRefCnt++ == 0) {
-        rv = nsServiceManager::GetService(kRDFServiceCID,
-                                          NS_GET_IID(nsIRDFService),
-                                          NS_REINTERPRET_CAST(nsISupports**, &gRDFService));
+        rv = CallGetService(kRDFServiceCID, &gRDFService);
 
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF service");
         if (NS_FAILED(rv)) return rv;

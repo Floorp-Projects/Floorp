@@ -386,17 +386,13 @@ nsresult nsMsgI18NConvertToEntity(const nsString& inString, nsString* outString)
   nsresult res;
 
   outString->Truncate();
-  nsCOMPtr <nsIEntityConverter> entityConv;
-  res = nsComponentManager::CreateInstance(kEntityConverterCID, NULL, 
-                                           NS_GET_IID(nsIEntityConverter), getter_AddRefs(entityConv));
+  nsCOMPtr <nsIEntityConverter> entityConv = do_CreateInstance(kEntityConverterCID, &res);
   if(NS_SUCCEEDED(res)) {
     PRUnichar *entities = NULL;
     res = entityConv->ConvertToEntities(inString.get(), nsIEntityConverter::html40Latin1, &entities);
-    if (NS_SUCCEEDED(res) && (NULL != entities)) {
-      outString->Assign(entities);
-      nsMemory::Free(entities);
-     }
-   }
+    if (NS_SUCCEEDED(res) && (NULL != entities))
+      outString->Adopt(entities);
+  }
  
   return res;
 }

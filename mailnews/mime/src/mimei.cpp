@@ -225,14 +225,11 @@ mime_locate_external_content_handler(const char *content_type,
   nsCID                         classID = {0};
   char                          lookupID[256];
   nsCOMPtr<nsIMimeContentTypeHandler>     ctHandler;
-  nsresult rv = NS_OK;
+  nsresult rv;
 
   PR_snprintf(lookupID, sizeof(lookupID), "@mozilla.org/mimecth;1?type=%s", content_type);
-	if (nsComponentManager::ContractIDToClassID(lookupID, &classID) != NS_OK)
-    return NULL;
   
-  rv  = nsComponentManager::CreateInstance(classID, (nsISupports *)nsnull, NS_GET_IID(nsIMimeContentTypeHandler), 
-                                     (void **) getter_AddRefs(ctHandler));
+  ctHandler = do_CreateInstance(lookupID, &rv);
   if (NS_FAILED(rv) || !ctHandler)
     return nsnull;
   

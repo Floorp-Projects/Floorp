@@ -164,9 +164,7 @@ NS_IMETHODIMP nsUnicodeToISO2022JP::FillInfo(PRUint32* aInfo)
   nsresult res;
 
   if (mHelper == nsnull) {
-    res = nsComponentManager::CreateInstance(kUnicodeEncodeHelperCID, NULL, 
-        NS_GET_IID(nsIUnicodeEncodeHelper), (void**) & mHelper);
-    
+    res = CallCreateInstance(kUnicodeEncodeHelperCID, &mHelper);
     if (NS_FAILED(res)) return NS_ERROR_UENC_NOHELPER;
   }
   return mHelper->FillInfo(aInfo, 
@@ -183,9 +181,7 @@ NS_IMETHODIMP nsUnicodeToISO2022JP::ConvertNoBuffNoErr(
   nsresult res = NS_OK;
 
   if (mHelper == nsnull) {
-    res = nsComponentManager::CreateInstance(kUnicodeEncodeHelperCID, NULL, 
-        NS_GET_IID(nsIUnicodeEncodeHelper), (void**) & mHelper);
-    
+    res = CallCreateInstance(kUnicodeEncodeHelperCID, &mHelper);
     if (NS_FAILED(res)) return NS_ERROR_UENC_NOHELPER;
   }
 

@@ -472,9 +472,8 @@ NS_IMETHODIMP nsPlaintextEditor::CanPaste(PRInt32 aSelectionType, PRBool *aCanPa
   // add the flavors for text editors
   for (const char* const* flavor = textEditorFlavors; *flavor; flavor++)
   {
-    nsCOMPtr<nsISupportsCString> flavorString;            
-    nsComponentManager::CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID, nsnull, 
-         NS_GET_IID(nsISupportsCString), getter_AddRefs(flavorString));
+    nsCOMPtr<nsISupportsCString> flavorString =
+        do_CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID);
     if (flavorString)
     {
       flavorString->SetData(nsDependentCString(*flavor));

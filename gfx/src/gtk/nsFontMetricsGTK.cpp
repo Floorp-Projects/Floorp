@@ -3012,8 +3012,7 @@ nsFontGTKSubstitute::Convert(const PRUnichar* aSrc, PRUint32 aSrcLen,
 {
   nsresult res;
   if (!gFontSubConverter) {
-    nsComponentManager::CreateInstance(kSaveAsCharsetCID, nsnull,
-      NS_GET_IID(nsISaveAsCharset), (void**) &gFontSubConverter);
+    CallCreateInstance(kSaveAsCharsetCID, &gFontSubConverter);
     if (gFontSubConverter) {
       res = gFontSubConverter->Init("ISO-8859-1",
                              nsISaveAsCharset::attr_FallbackQuestionMark +

@@ -111,11 +111,7 @@ nsMsgFolderCache::QueryInterface(const nsIID& iid, void **result)
 	if (!gMDBFactory)
 	{
 		nsresult rv;
-		nsCOMPtr <nsIMdbFactoryFactory> factoryfactory;
-		rv = nsComponentManager::CreateInstance(kMorkCID,
-												  nsnull,
-												  NS_GET_IID(nsIMdbFactoryFactory),
-												  (void **) getter_AddRefs(factoryfactory));
+		nsCOMPtr <nsIMdbFactoryFactory> factoryfactory = do_CreateInstance(kMorkCID, &rv);
 		if (NS_SUCCEEDED(rv) && factoryfactory)
 		  rv = factoryfactory->GetMdbFactory(&gMDBFactory);
 	}

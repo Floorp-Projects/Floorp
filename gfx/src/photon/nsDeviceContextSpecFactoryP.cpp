@@ -76,7 +76,7 @@ NS_IMETHODIMP nsDeviceContextSpecFactoryPh :: CreateDeviceContextSpec(nsIWidget 
 	nsresult  rv = NS_ERROR_FAILURE;
 	nsIDeviceContextSpec  *devSpec = nsnull;
 
-	nsComponentManager::CreateInstance(kDeviceContextSpecCID, nsnull, kIDeviceContextSpecIID, (void **)&devSpec);
+	CallCreateInstance(kDeviceContextSpecCID, &devSpec);
 
 	if (devSpec != nsnull)
 	{

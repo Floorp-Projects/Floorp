@@ -280,8 +280,7 @@ NS_IMETHODIMP nsImportGenericMail::GetData(const char *dataId, nsISupports **_re
 	if (!nsCRT::strcasecmp( dataId, "currentMailbox")) {
 		// create an nsISupportsString, get the current mailbox
 		// name being imported and put it in the string
-		nsCOMPtr<nsISupportsString>	data;
-		rv = nsComponentManager::CreateInstance( kSupportsWStringCID, nsnull, NS_GET_IID(nsISupportsString), getter_AddRefs( data));
+		nsCOMPtr<nsISupportsString>	data = do_CreateInstance( kSupportsWStringCID, &rv);
 		if (NS_FAILED( rv))
 			return( rv);
 		if (m_pThreadData) {

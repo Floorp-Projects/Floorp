@@ -941,8 +941,7 @@ InternetSearchDataSource::Init()
 {
 	nsresult	rv = NS_ERROR_OUT_OF_MEMORY;
 
-	if (NS_FAILED(rv = nsComponentManager::CreateInstance(kRDFInMemoryDataSourceCID,
-		nsnull, NS_GET_IID(nsIRDFDataSource), (void **)&mInner)))
+	if (NS_FAILED(rv = CallCreateInstance(kRDFInMemoryDataSourceCID, &mInner)))
 		return(rv);
 
 	// get localstore, as we'll be using it
@@ -1386,9 +1385,8 @@ InternetSearchDataSource::GetTargets(nsIRDFResource *source,
 nsresult
 InternetSearchDataSource::GetCategoryList()
 {
-	nsIRDFDataSource	*ds = nsnull;
-	nsresult rv = nsComponentManager::CreateInstance(kRDFXMLDataSourceCID,
-			nsnull, NS_GET_IID(nsIRDFDataSource), (void**) &ds);
+	nsIRDFDataSource	*ds;
+	nsresult rv = CallCreateInstance(kRDFXMLDataSourceCID, &ds);
 	if (NS_FAILED(rv))	return(rv);
 	if (!ds)		return(NS_ERROR_UNEXPECTED);
 
@@ -4265,10 +4263,7 @@ InternetSearchDataSource::SaveEngineInfoIntoGraph(nsIFile *file, nsIFile *icon,
 			nsCOMPtr<nsIRDFContainer> container;
 			if (catRes)
 			{
-				rv = nsComponentManager::CreateInstance(kRDFContainerCID,
-									nsnull,
-									NS_GET_IID(nsIRDFContainer),
-									getter_AddRefs(container));
+				container = do_CreateInstance(kRDFContainerCID, &rv);
 			}
 			if (container)
 			{

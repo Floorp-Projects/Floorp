@@ -78,8 +78,7 @@ nsresult writeoutto(const char* i_pURL, char** o_Result, PRInt32 urlFactory = UR
     switch (urlFactory) {
         case URL_FACTORY_STDURL: {
             nsIURI* url;
-            result = nsComponentManager::CreateInstance(kStdURLCID, nsnull, 
-                    NS_GET_IID(nsIURI), (void**)&url);
+            result = CallCreateInstance(kStdURLCID, &url);
             if (NS_FAILED(result))
             {
                 printf("CreateInstance failed\n");
@@ -244,9 +243,8 @@ nsresult makeAbsTest(const char* i_BaseURI, const char* relativePortion,
         return NS_ERROR_FAILURE;
 
     // build up the base URL
-    nsCOMPtr<nsIURI> baseURL;
-    nsresult status = nsComponentManager::CreateInstance(kStdURLCID, nsnull, 
-        NS_GET_IID(nsIURI), getter_AddRefs(baseURL));
+    nsresult status;
+    nsCOMPtr<nsIURI> baseURL = do_CreateInstance(kStdURLCID, &status);
     if (NS_FAILED(status))
     {
         printf("CreateInstance failed\n");

@@ -109,7 +109,8 @@ nsImapUrl::nsImapUrl()
 
 nsresult nsImapUrl::Initialize()
 {
-  nsresult rv = nsComponentManager::CreateInstance(kCImapMockChannel, nsnull, NS_GET_IID(nsIImapMockChannel), getter_AddRefs(m_mockChannel));      
+  nsresult rv;
+  m_mockChannel = do_CreateInstance(kCImapMockChannel, &rv);
   return rv;
 }
 

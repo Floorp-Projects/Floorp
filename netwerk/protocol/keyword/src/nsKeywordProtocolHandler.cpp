@@ -163,16 +163,16 @@ NS_IMETHODIMP
 nsKeywordProtocolHandler::NewURI(const nsACString &aSpec,
                                  const char *aCharset, // ignore charset info
                                  nsIURI *aBaseURI,
-                                 nsIURI **result) {
-    nsresult rv;
+                                 nsIURI **result)
+{
     nsIURI* uri;
-
-    rv = nsComponentManager::CreateInstance(kSimpleURICID, nsnull, NS_GET_IID(nsIURI), (void**)&uri);
+    nsresult rv = CallCreateInstance(kSimpleURICID, &uri);
     if (NS_FAILED(rv)) return rv;
+
     rv = uri->SetSpec(aSpec);
     if (NS_FAILED(rv)) {
-      NS_RELEASE(uri);
-      return rv;
+        NS_RELEASE(uri);
+        return rv;
     }
 
     *result = uri;

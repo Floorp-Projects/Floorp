@@ -1429,14 +1429,8 @@ nsDocShell::GetDocumentCharsetInfo(nsIDocumentCharsetInfo **
 
     // if the mDocumentCharsetInfo does not exist already, we create it now
     if (!mDocumentCharsetInfo) {
-        nsresult res =
-            nsComponentManager::CreateInstance(kDocumentCharsetInfoCID,
-                                               NULL,
-                                               NS_GET_IID
-                                               (nsIDocumentCharsetInfo),
-                                               getter_AddRefs
-                                               (mDocumentCharsetInfo));
-        if (NS_FAILED(res))
+        mDocumentCharsetInfo = do_CreateInstance(kDocumentCharsetInfoCID);
+        if (!mDocumentCharsetInfo)
             return NS_ERROR_FAILURE;
     }
 

@@ -1604,7 +1604,7 @@ int main(int argc, char** argv)
   
   static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
 
-  nsresult rv = nsComponentManager::CreateInstance(kDeviceContextCID, nsnull, NS_GET_IID(nsIDeviceContext), (void **)&dx);
+  nsresult rv = CallCreateInstance(kDeviceContextCID, &dx);
 
   if (NS_OK == rv) {
     dx->Init(nsull);

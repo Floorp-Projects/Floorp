@@ -102,12 +102,8 @@ static JSBool CreateNativeObject(JSContext *cx, JSObject *obj, nsIDOMInstallTrig
     static NS_DEFINE_CID(kInstallTrigger_CID,
                          NS_SoftwareUpdateInstallTrigger_CID);
 
-    result = nsComponentManager::CreateInstance(kInstallTrigger_CID,
-                                        nsnull,
-                                        NS_GET_IID(nsIDOMInstallTriggerGlobal),
-                                        (void **)&nativeThis);
-
-    if (NS_OK != result) return JS_FALSE;
+    result = CallCreateInstance(kInstallTrigger_CID, &nativeThis);
+    if (NS_FAILED(result)) return JS_FALSE;
 
     result = nativeThis->QueryInterface(NS_GET_IID(nsIScriptObjectOwner),
                                         (void **)&owner);

@@ -304,7 +304,7 @@ NS_IMETHODIMP nsDeviceContextWin :: CreateRenderingContext(nsIRenderingContext *
   nsresult             rv;
   nsDrawingSurfaceWin  *surf;
 
-  rv = nsComponentManager::CreateInstance(kRCCID,nsnull,NS_GET_IID(nsIRenderingContext),(void**)&pContext);
+  rv = CallCreateInstance(kRCCID, &pContext);
 
   if ( (NS_SUCCEEDED(rv)) && (nsnull != pContext))
   {

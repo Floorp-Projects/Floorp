@@ -286,12 +286,8 @@ extern "C" NS_EXPORT int DebugRobot(
     static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
     static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
 
-    rv = nsComponentManager::CreateInstance(kCParserCID, 
-                                      nsnull, 
-                                      kCParserIID, 
-                                      (void **)&parser);
-
-    if (NS_OK != rv) {
+    rv = CallCreateInstance(kCParserCID, &parser);
+    if (NS_FAILED(rv)) {
       printf("can't make parser\n");
       NS_RELEASE(myObserver);
       return -1;

@@ -1085,10 +1085,7 @@ nsChromeRegistry::LoadDataSource(const nsACString &aFileName,
     }
   }
 
-  nsresult rv = nsComponentManager::CreateInstance(kRDFXMLDataSourceCID,
-                                                     nsnull,
-                                                     NS_GET_IID(nsIRDFDataSource),
-                                                     (void**) aResult);
+  nsresult rv = CallCreateInstance(kRDFXMLDataSourceCID, aResult);
   if (NS_FAILED(rv)) return rv;
 
   // Seed the datasource with the ``chrome'' namespace
@@ -1468,10 +1465,7 @@ nsChromeRegistry::WriteInfoToDataSource(const char *aDocURI,
   if (NS_FAILED(rv)) return rv;
   if (!container) {
     // Already exists. Create a container instead.
-    rv = nsComponentManager::CreateInstance("@mozilla.org/rdf/container;1",
-                                      nsnull,
-                                      NS_GET_IID(nsIRDFContainer),
-                                      getter_AddRefs(container));
+    container = do_CreateInstance("@mozilla.org/rdf/container;1", &rv);
     if (NS_FAILED(rv)) return rv;
     rv = container->Init(dataSource, resource);
     if (NS_FAILED(rv)) return rv;
@@ -1510,13 +1504,9 @@ nsChromeRegistry::UpdateDynamicDataSource(nsIRDFDataSource *aDataSource,
                                           PRBool aIsOverlay,
                                           PRBool aUseProfile, PRBool aRemove)
 {
-  nsCOMPtr<nsIRDFContainer> container;
   nsresult rv;
 
-  rv = nsComponentManager::CreateInstance("@mozilla.org/rdf/container;1",
-                                          nsnull,
-                                          NS_GET_IID(nsIRDFContainer),
-                                          getter_AddRefs(container));
+  nsCOMPtr<nsIRDFContainer> container = do_CreateInstance("@mozilla.org/rdf/container;1", &rv);
   if (NS_FAILED(rv)) return rv;
 
   rv = container->Init(aDataSource, aResource);
@@ -1624,11 +1614,8 @@ nsChromeRegistry::InstallProvider(const nsACString& aProviderType,
 #endif
 
   // Load the data source found at the base URL.
-  nsCOMPtr<nsIRDFDataSource> dataSource;
-  nsresult rv = nsComponentManager::CreateInstance(kRDFXMLDataSourceCID,
-                                                   nsnull,
-                                                   NS_GET_IID(nsIRDFDataSource),
-                                                   (void**) getter_AddRefs(dataSource));
+  nsresult rv;
+  nsCOMPtr<nsIRDFDataSource> dataSource = do_CreateInstance(kRDFXMLDataSourceCID, &rv);
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsIRDFRemoteDataSource> remote = do_QueryInterface(dataSource, &rv);
@@ -1773,11 +1760,7 @@ nsChromeRegistry::InstallProvider(const nsACString& aProviderType,
         if (NS_FAILED(rv)) return rv;
       }
 
-      nsCOMPtr<nsIRDFContainer> container;
-      rv = nsComponentManager::CreateInstance("@mozilla.org/rdf/container;1",
-                                            nsnull,
-                                            NS_GET_IID(nsIRDFContainer),
-                                            getter_AddRefs(container));
+      nsCOMPtr<nsIRDFContainer> container = do_CreateInstance("@mozilla.org/rdf/container;1", &rv);
       if (NS_FAILED(rv)) return rv;
       rv = container->Init(dataSource, resource);
       if (NS_SUCCEEDED(rv)) {
@@ -1789,10 +1772,7 @@ nsChromeRegistry::InstallProvider(const nsACString& aProviderType,
         if (NS_FAILED(rv)) return rv;
         if (!installContainer) {
           // Already exists. Create a container instead.
-          rv = nsComponentManager::CreateInstance("@mozilla.org/rdf/container;1",
-                                            nsnull,
-                                            NS_GET_IID(nsIRDFContainer),
-                                            getter_AddRefs(installContainer));
+          installContainer = do_CreateInstance("@mozilla.org/rdf/container;1", &rv);
           if (NS_FAILED(rv)) return rv;
           rv = installContainer->Init(installSource, resource);
           if (NS_FAILED(rv)) return rv;
@@ -2521,11 +2501,8 @@ nsChromeRegistry::GetArcs(nsIRDFDataSource* aDataSource,
                           const nsACString& aType,
                           nsISimpleEnumerator** aResult)
 {
-  nsCOMPtr<nsIRDFContainer> container;
-  nsresult rv = nsComponentManager::CreateInstance("@mozilla.org/rdf/container;1",
-                                          nsnull,
-                                          NS_GET_IID(nsIRDFContainer),
-                                          getter_AddRefs(container));
+  nsresult rv;
+  nsCOMPtr<nsIRDFContainer> container = do_CreateInstance("@mozilla.org/rdf/container;1", &rv);
   if (NS_FAILED(rv))
     return NS_OK;
 
@@ -2556,10 +2533,8 @@ nsChromeRegistry::AddToCompositeDataSource(PRBool aUseProfile)
 {
   nsresult rv = NS_OK;
   if (!mChromeDataSource) {
-    rv = nsComponentManager::CreateInstance("@mozilla.org/rdf/datasource;1?name=composite-datasource",
-                                            nsnull,
-                                            NS_GET_IID(nsIRDFCompositeDataSource),
-                                            getter_AddRefs(mChromeDataSource));
+    mChromeDataSource = do_CreateInstance(
+        "@mozilla.org/rdf/datasource;1?name=composite-datasource", &rv);
     if (NS_FAILED(rv))
       return rv;
 
@@ -2933,11 +2908,8 @@ nsChromeRegistry::GetProviderCount(const nsACString& aProviderType, nsIRDFDataSo
     return 0;
 
   // wrap it in a container
-  nsCOMPtr<nsIRDFContainer> container;
-  rv = nsComponentManager::CreateInstance("@mozilla.org/rdf/container;1",
-                                          nsnull,
-                                          NS_GET_IID(nsIRDFContainer),
-                                          getter_AddRefs(container));
+  nsCOMPtr<nsIRDFContainer> container =
+      do_CreateInstance("@mozilla.org/rdf/container;1", &rv);
   if (NS_FAILED(rv)) return 0;
 
   rv = container->Init(aDataSource, resource);

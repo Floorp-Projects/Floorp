@@ -5096,10 +5096,7 @@ nsEditor::CreateRange(nsIDOMNode *aStartParent, PRInt32 aStartOffset,
                       nsIDOMRange **aRange)
 {
   nsresult result;
-  result = nsComponentManager::CreateInstance("@mozilla.org/content/range;1",
-                                              nsnull,
-                                              NS_GET_IID(nsIDOMRange), 
-                                              (void **)aRange);
+  result = CallCreateInstance("@mozilla.org/content/range;1", aRange);
   if (NS_FAILED(result))
     return result;
 

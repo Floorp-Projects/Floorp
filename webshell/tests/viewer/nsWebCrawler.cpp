@@ -79,7 +79,6 @@
 #include "nsIWebProgress.h"
 
 static NS_DEFINE_IID(kFrameUtilCID, NS_FRAME_UTIL_CID);
-static NS_DEFINE_IID(kIFrameUtilIID, NS_IFRAME_UTIL_IID);
 
 static PLHashNumber
 HashKey(nsIAtom* key)
@@ -951,8 +950,7 @@ nsWebCrawler::PerformRegressionTest(const nsString& aOutputName)
 {
   // First load the trees
   nsIFrameUtil* fu;
-  nsresult rv = nsComponentManager::CreateInstance(kFrameUtilCID, nsnull,
-                                             kIFrameUtilIID, (void **)&fu);
+  nsresult rv = CallCreateInstance(kFrameUtilCID, &fu);
   if (NS_FAILED(rv)) {
     printf("Can't find nsIFrameUtil implementation\n");
     return;

@@ -2031,15 +2031,11 @@ static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
 nsresult
 ConvertBufToPlainText(nsString &aConBuf, PRBool formatflowed /* = PR_FALSE */)
 {
-  nsresult    rv;
-  nsString    convertedText;
-  nsCOMPtr<nsIParser> parser;
-
   if (aConBuf.IsEmpty())
     return NS_OK;
 
-  rv = nsComponentManager::CreateInstance(kCParserCID, nsnull, 
-                                          NS_GET_IID(nsIParser), getter_AddRefs(parser));
+  nsresult rv;
+  nsCOMPtr<nsIParser> parser = do_CreateInstance(kCParserCID, &rv);
   if (NS_SUCCEEDED(rv) && parser)
   {
     PRUint32 converterFlags = 0;
@@ -2060,6 +2056,7 @@ ConvertBufToPlainText(nsString &aConBuf, PRBool formatflowed /* = PR_FALSE */)
     nsCOMPtr<nsIHTMLToTextSink> textSink(do_QueryInterface(sink));
     NS_ENSURE_TRUE(textSink, NS_ERROR_FAILURE);
 
+    nsString convertedText;
     textSink->Initialize(&convertedText, converterFlags, wrapWidth);
 
     parser->SetContentSink(sink);

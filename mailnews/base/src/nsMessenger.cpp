@@ -166,15 +166,11 @@ static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
 static nsresult
 ConvertBufToPlainText(nsString &aConBuf)
 {
-  nsresult    rv;
-  nsAutoString    convertedText;
-  nsCOMPtr<nsIParser> parser;
-
   if (aConBuf.IsEmpty())
     return NS_OK;
 
-  rv = nsComponentManager::CreateInstance(kCParserCID, nsnull, 
-                                          NS_GET_IID(nsIParser), getter_AddRefs(parser));
+  nsresult rv;
+  nsCOMPtr<nsIParser> parser = do_CreateInstance(kCParserCID, &rv);
   if (NS_SUCCEEDED(rv) && parser)
   {
     nsCOMPtr<nsIContentSink> sink;
@@ -185,6 +181,7 @@ ConvertBufToPlainText(nsString &aConBuf)
     nsCOMPtr<nsIHTMLToTextSink> textSink(do_QueryInterface(sink));
     NS_ENSURE_TRUE(textSink, NS_ERROR_FAILURE);
 
+    nsAutoString convertedText;
     textSink->Initialize(&convertedText, 0, 72);
 
     parser->SetContentSink(sink);
@@ -1627,12 +1624,10 @@ SendLaterListener::OnStopSending(nsresult aStatus, const PRUnichar *aMsg, PRUint
 NS_IMETHODIMP
 nsMessenger::SendUnsentMessages(nsIMsgIdentity *aIdentity, nsIMsgWindow *aMsgWindow)
 {
-    nsresult rv;
-    nsCOMPtr<nsIMsgSendLater> pMsgSendLater; 
-    rv = nsComponentManager::CreateInstance(kMsgSendLaterCID, NULL,NS_GET_IID(nsIMsgSendLater),
-																				    (void **)getter_AddRefs(pMsgSendLater)); 
-    if (NS_SUCCEEDED(rv) && pMsgSendLater) 
-    { 
+  nsresult rv;
+  nsCOMPtr<nsIMsgSendLater> pMsgSendLater = do_CreateInstance(kMsgSendLaterCID, &rv);
+  if (NS_SUCCEEDED(rv) && pMsgSendLater)
+  { 
 #ifdef DEBUG
         printf("We succesfully obtained a nsIMsgSendLater interface....\n"); 
 #endif

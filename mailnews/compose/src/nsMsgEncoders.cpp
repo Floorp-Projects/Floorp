@@ -49,8 +49,7 @@ MIME_B64EncoderInit(nsresult (*output_fn) (const char *buf, PRInt32 size, void *
 {
   MimeEncoderData *returnEncoderData = nsnull;
   nsIMimeConverter *converter;
-  nsresult res = nsComponentManager::CreateInstance(NS_MIME_CONVERTER_CONTRACTID, nsnull, 
-                                           NS_GET_IID(nsIMimeConverter), (void **)&converter);
+  nsresult res = CallCreateInstance(NS_MIME_CONVERTER_CONTRACTID, &converter);
   if (NS_SUCCEEDED(res) && nsnull != converter) 
   {
     res = converter->B64EncoderInit(output_fn, closure, &returnEncoderData);
@@ -64,8 +63,7 @@ MIME_QPEncoderInit(nsresult (*output_fn) (const char *buf, PRInt32 size, void *c
 {
   MimeEncoderData *returnEncoderData = nsnull;
   nsIMimeConverter *converter;
-  nsresult res = nsComponentManager::CreateInstance(NS_MIME_CONVERTER_CONTRACTID, nsnull, 
-                                           NS_GET_IID(nsIMimeConverter), (void **)&converter);
+  nsresult res = CallCreateInstance(NS_MIME_CONVERTER_CONTRACTID, &converter);
   if (NS_SUCCEEDED(res) && nsnull != converter) 
   {
     res = converter->QPEncoderInit(output_fn, closure, &returnEncoderData);
@@ -79,8 +77,7 @@ MIME_UUEncoderInit(char *filename, nsresult (*output_fn) (const char *buf, PRInt
 {
   MimeEncoderData *returnEncoderData = nsnull;
   nsIMimeConverter *converter;
-  nsresult res = nsComponentManager::CreateInstance(NS_MIME_CONVERTER_CONTRACTID, nsnull, 
-                                           NS_GET_IID(nsIMimeConverter), (void **)&converter);
+  nsresult res = CallCreateInstance(NS_MIME_CONVERTER_CONTRACTID, &converter);
   if (NS_SUCCEEDED(res) && nsnull != converter) 
   {
     res = converter->UUEncoderInit(filename, output_fn, closure, &returnEncoderData);
@@ -94,8 +91,7 @@ MIME_EncoderDestroy(MimeEncoderData *data, PRBool abort_p)
 {
   //MimeEncoderData *returnEncoderData = nsnull;
   nsIMimeConverter *converter;
-  nsresult res = nsComponentManager::CreateInstance(NS_MIME_CONVERTER_CONTRACTID, nsnull, 
-                                           NS_GET_IID(nsIMimeConverter), (void **)&converter);
+  nsresult res = CallCreateInstance(NS_MIME_CONVERTER_CONTRACTID, &converter);
   if (NS_SUCCEEDED(res) && nsnull != converter) 
   {
     res = converter->EncoderDestroy(data, abort_p);
@@ -111,13 +107,10 @@ MIME_EncoderWrite(MimeEncoderData *data, const char *buffer, PRInt32 size)
   //  MimeEncoderData *returnEncoderData = nsnull;
   nsIMimeConverter *converter;
   PRInt32 written = 0;
-  nsresult res = nsComponentManager::CreateInstance(NS_MIME_CONVERTER_CONTRACTID, nsnull, 
-    NS_GET_IID(nsIMimeConverter), (void **)&converter);
+  nsresult res = CallCreateInstance(NS_MIME_CONVERTER_CONTRACTID, &converter);
   if (NS_SUCCEEDED(res) && nsnull != converter) {
     res = converter->EncoderWrite(data, buffer, size, &written);
     NS_RELEASE(converter);
   }
   return NS_SUCCEEDED(res) ? 0 : -1;
 }
-
-

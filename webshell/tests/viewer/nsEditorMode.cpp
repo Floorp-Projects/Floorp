@@ -74,14 +74,7 @@ nsresult NS_InitEditorMode(nsIDOMDocument *aDOMDocument, nsIPresShell* aPresShel
   if ((nsnull==aDOMDocument) || (nsnull==aPresShell))
     return NS_ERROR_NULL_POINTER;
 
-/*
-  nsISupports *isup = nsnull;
-  result = nsServiceManager::GetService(kTextEditorCID,
-                                        kITextEditorIID, &isup);
-*/
-  result = nsComponentManager::CreateInstance(kHTMLEditorCID,
-                                        nsnull,
-                                        NS_GET_IID(nsIEditor), (void **)&gEditor);
+  result = CallCreateInstance(kHTMLEditorCID, &gEditor);
   if (NS_FAILED(result))
     return result;
   if (!gEditor) {

@@ -287,9 +287,7 @@ nsImageFromClipboard :: GetImage ( nsIImage** outImage )
   *outImage = nsnull;
   
   static NS_DEFINE_IID(kCImageCID, NS_IMAGE_CID);
-  nsresult rv = nsComponentManager::CreateInstance(kCImageCID, nsnull, 
-                                                    NS_GET_IID(nsIImage), 
-                                                    (void**) outImage);
+  nsresult rv = CallCreateInstance(kCImageCID, outImage);
   if ( NS_SUCCEEDED(rv) ) {
     // pull the size informat out of the BITMAPINFO header and
     // initialize the image

@@ -968,11 +968,9 @@ NS_IMETHODIMP nsMsgDatabase::QueryInterface(REFNSIID aIID, void** aResult)
   static nsIMdbFactory *gMDBFactory = nsnull;
   if (!gMDBFactory)
   {
-    nsCOMPtr <nsIMdbFactoryFactory> factoryfactory;
-    nsresult rv = nsComponentManager::CreateInstance(kCMorkFactory,
-          nsnull,NS_GET_IID(nsIMdbFactoryFactory), (void **) getter_AddRefs(factoryfactory));
-    if (NS_SUCCEEDED(rv) && factoryfactory)
-      rv = factoryfactory->GetMdbFactory(&gMDBFactory);
+    nsCOMPtr <nsIMdbFactoryFactory> factoryfactory = do_CreateInstance(kCMorkFactory);
+    if (factoryfactory)
+      factoryfactory->GetMdbFactory(&gMDBFactory);
   }
   return gMDBFactory;
 }
@@ -3135,15 +3133,11 @@ nsresult nsMsgDatabase::GetCollationKeyGenerator()
         // or generate a locale from a stored locale name ("en_US", "fr_FR") 
         //err = localeFactory->NewLocale(&localeName, &locale); 
         
-        nsCOMPtr <nsICollationFactory> f;
-        
-        err = nsComponentManager::CreateInstance(kCollationFactoryCID, NULL,
-          NS_GET_IID(nsICollationFactory), getter_AddRefs(f)); 
+        nsCOMPtr <nsICollationFactory> f = do_CreateInstance(kCollationFactoryCID, &err);
         if (NS_SUCCEEDED(err) && f)
         {
           // get a collation interface instance 
           err = f->CreateCollation(locale, getter_AddRefs(m_collationKeyGenerator));
-          
         }
       }
     }

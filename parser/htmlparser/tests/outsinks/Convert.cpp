@@ -121,8 +121,7 @@ HTML2text(nsString& inString, nsString& inType, nsString& outType,
 
   // Create a parser
   nsIParser* parser;
-   rv = nsComponentManager::CreateInstance(kParserCID, nsnull,
-                                           kIParserIID,(void**)&parser);
+  rv = CallCreateInstance(kParserCID, &parser);
   if (NS_FAILED(rv))
   {
     printf("Unable to create a parser : 0x%x\n", rv);
@@ -173,7 +172,7 @@ HTML2text(nsString& inString, nsString& inType, nsString& outType,
    nsCOMPtr<nsIDTD> dtd;
   if (inType.EqualsLiteral("text/html")) {
     static NS_DEFINE_CID(kNavDTDCID, NS_CNAVDTD_CID);
-    rv=nsComponentManager::CreateInstance(kNavDTDCID,nsnull,NS_GET_IID(nsIDTD),getter_AddRefs(dtd));
+    dtd = do_CreateInstance(kNavDTDCID, &rv);
   }
   else
   {

@@ -421,11 +421,8 @@ nsMsgAccountManager::createKeyedIdentity(const char* key,
                                          nsIMsgIdentity ** aIdentity)
 {
   nsresult rv;
-  nsCOMPtr<nsIMsgIdentity> identity;
-  rv = nsComponentManager::CreateInstance(NS_MSGIDENTITY_CONTRACTID,
-                                          nsnull,
-                                          NS_GET_IID(nsIMsgIdentity),
-                                          getter_AddRefs(identity));
+  nsCOMPtr<nsIMsgIdentity> identity =
+      do_CreateInstance(NS_MSGIDENTITY_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
   
   identity->SetKey(key);
@@ -972,10 +969,7 @@ NS_IMETHODIMP nsMsgAccountManager::GetFolderCache(nsIMsgFolderCache* *aFolderCac
 
   if (!m_msgFolderCache)
   {
-    rv = nsComponentManager::CreateInstance(kMsgFolderCacheCID,
-                                            NULL,
-                                            NS_GET_IID(nsIMsgFolderCache),
-                                            getter_AddRefs(m_msgFolderCache));
+    m_msgFolderCache = do_CreateInstance(kMsgFolderCacheCID, &rv);
     if (NS_FAILED(rv))
         return rv;
 
@@ -1618,14 +1612,10 @@ nsMsgAccountManager::createKeyedAccount(const char* key,
                                         nsIMsgAccount ** aAccount)
 {
     
-  nsCOMPtr<nsIMsgAccount> account;
   nsresult rv;
-  rv = nsComponentManager::CreateInstance(kMsgAccountCID,
-                                          nsnull,
-                                          NS_GET_IID(nsIMsgAccount),
-                                          (void **)getter_AddRefs(account));
-  
+  nsCOMPtr<nsIMsgAccount> account = do_CreateInstance(kMsgAccountCID, &rv);
   if (NS_FAILED(rv)) return rv;
+
   account->SetKey(key);
 
   // add to internal nsISupportsArray

@@ -7018,9 +7018,7 @@ PresShell::VerifyIncrementalReflow()
   void* nativeParentWidget = rootView->GetWidget()->GetNativeData(NS_NATIVE_WIDGET);
 
   // Create a new view manager.
-  rv = nsComponentManager::CreateInstance(kViewManagerCID, nsnull,
-                                          NS_GET_IID(nsIViewManager),
-                                          (void**) &vm);
+  rv = CallCreateInstance(kViewManagerCID, &vm);
   NS_ASSERTION(NS_SUCCEEDED (rv), "failed to create view manager");
   rv = vm->Init(dc);
   NS_ASSERTION(NS_SUCCEEDED (rv), "failed to init view manager");
@@ -7029,9 +7027,7 @@ PresShell::VerifyIncrementalReflow()
   // Create a view
   nsRect tbounds = mPresContext->GetVisibleArea();
   nsIView* view;
-  rv = nsComponentManager::CreateInstance(kViewCID, nsnull,
-                                          NS_GET_IID(nsIView),
-                                          (void **) &view);
+  rv = CallCreateInstance(kViewCID, &view);
   NS_ASSERTION(NS_SUCCEEDED(rv), "failed to create scroll view");
   rv = view->Init(vm, tbounds, nsnull);
   NS_ASSERTION(NS_SUCCEEDED(rv), "failed to init scroll view");

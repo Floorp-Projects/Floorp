@@ -261,7 +261,7 @@ nsresult nsOutlookCompose::CreateComponents( void)
 	
 	NS_IF_RELEASE( m_pMsgFields);
 	if (!m_pMsgSend) {
-		rv = nsComponentManager::CreateInstance( kMsgSendCID, nsnull, NS_GET_IID( nsIMsgSend), (void **) &m_pMsgSend); 
+		rv = CallCreateInstance( kMsgSendCID, &m_pMsgSend); 
 		if (NS_SUCCEEDED( rv) && m_pMsgSend) {
 			nsCOMPtr<nsIProxyObjectManager> proxyMgr = 
 			         do_GetService(kProxyObjectManagerCID, &rv);
@@ -283,7 +283,7 @@ nsresult nsOutlookCompose::CreateComponents( void)
 	}
 
 	if (NS_SUCCEEDED(rv) && m_pMsgSend) { 
-	    rv = nsComponentManager::CreateInstance( kMsgCompFieldsCID, nsnull, nsCOMTypeInfo<nsIMsgCompFields>::GetIID(), (void **) &m_pMsgFields); 
+	    rv = CallCreateInstance( kMsgCompFieldsCID, &m_pMsgFields); 
 		if (NS_SUCCEEDED(rv) && m_pMsgFields) {
 			// IMPORT_LOG0( "nsOutlookCompose - CreateComponents succeeded\n");
 			m_pMsgFields->SetForcePlainText( PR_FALSE);

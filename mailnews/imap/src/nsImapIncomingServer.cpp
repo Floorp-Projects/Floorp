@@ -884,10 +884,8 @@ nsImapIncomingServer::CreateProtocolInstance(nsIEventQueue *aEventQueue,
     nsCOMPtr<nsISignatureVerifier> verifier = do_GetService(SIGNATURE_VERIFIER_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
   }
-  nsIImapProtocol * protocolInstance = nsnull;
-  rv = nsComponentManager::CreateInstance(kImapProtocolCID, nsnull,
-    NS_GET_IID(nsIImapProtocol),
-    (void **) &protocolInstance);
+  nsIImapProtocol * protocolInstance;
+  rv = CallCreateInstance(kImapProtocolCID, &protocolInstance);
   if (NS_SUCCEEDED(rv) && protocolInstance)
   {
     nsCOMPtr<nsIImapHostSessionList> hostSession = 

@@ -755,14 +755,12 @@ nsObjectFrame::CreateWidget(nsPresContext* aPresContext,
                             nscoord aHeight,
                             PRBool aViewOnly)
 {
-  nsIView* view;
+  nsIView *view;
 
   // Create our view and widget
 
-  nsresult result = 
-    nsComponentManager::CreateInstance(kViewCID, nsnull, NS_GET_IID(nsIView),
-                                 (void **)&view);
-  if (NS_OK != result) {
+  nsresult result = CallCreateInstance(kViewCID, &view);
+  if (NS_FAILED(result)) {
     return result;
   }
 

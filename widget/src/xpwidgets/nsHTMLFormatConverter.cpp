@@ -157,9 +157,10 @@ nsHTMLFormatConverter::GetOutputDataFlavors(nsISupportsArray **_retval)
 nsresult
 nsHTMLFormatConverter :: AddFlavorToList ( nsISupportsArray* inList, const char* inFlavor )
 {
-  nsCOMPtr<nsISupportsCString> dataFlavor;
-  nsresult rv = nsComponentManager::CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID, nsnull, 
-                                                    NS_GET_IID(nsISupportsCString), getter_AddRefs(dataFlavor));
+  nsresult rv;
+  
+  nsCOMPtr<nsISupportsCString> dataFlavor =
+      do_CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID, &rv);
   if ( dataFlavor ) {
     dataFlavor->SetData ( nsDependentCString(inFlavor) );
     // add to list as an nsISupports so the correct interface gets the addref
@@ -295,9 +296,8 @@ nsHTMLFormatConverter::ConvertFromHTMLToUnicode(const nsAutoString & aFromStr, n
 {
   // create the parser to do the conversion.
   aToStr.SetLength(0);
-  nsCOMPtr<nsIParser> parser;
-  nsresult rv = nsComponentManager::CreateInstance(kCParserCID, nsnull, NS_GET_IID(nsIParser),
-                                                     getter_AddRefs(parser));
+  nsresult rv;
+  nsCOMPtr<nsIParser> parser = do_CreateInstance(kCParserCID, &rv);
   if ( !parser )
     return rv;
 

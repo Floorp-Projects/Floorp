@@ -218,10 +218,14 @@ int Init_nsUnknownContentTypeHandler_Factory( ) {
 	// create a generic factory for UnkHandler
 	nsCOMPtr<nsIGenericFactory> factory;
 	rv = NS_NewGenericFactory( getter_AddRefs(factory), info );
-	if (rv != NS_OK)
+	if (NS_FAILED(rv))
 		return rv;
 
-	// register this factory with the component manager.
-	rv = nsComponentManager::RegisterFactory( kCID, "nsUnknownContentTypeHandler", NS_IHELPERAPPLAUNCHERDLG_CONTRACTID, factory, PR_TRUE);
+	// register this factory with the component registrar.
+	nsCOMPtr<nsIComponentRegistrar> registrar;
+	rv = NS_GetComponentRegistrar(getter_AddRefs(registrar));
+	if (NS_FAILED(rv))
+		return rv;
+	rv = registrar->RegisterFactory( kCID, "nsUnknownContentTypeHandler", NS_IHELPERAPPLAUNCHERDLG_CONTRACTID, factory);
 	return NS_OK;
 	}

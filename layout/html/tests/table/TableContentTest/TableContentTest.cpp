@@ -445,7 +445,7 @@ GeometryTest::GeometryTest(BasicTest *aDoc)
   
   static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
 
-  nsresult rv = nsComponentManager::CreateInstance(kDeviceContextCID, nsnull, NS_GET_IID(nsIDeviceContext), (void **)&dx);
+  nsresult rv = CallCreateInstance(kDeviceContextCID, &dx);
 
   if (NS_OK == rv) {
     dx->Init(nsnull);
@@ -468,10 +468,7 @@ GeometryTest::GeometryTest(BasicTest *aDoc)
 
   static NS_DEFINE_IID(kViewManagerCID, NS_VIEW_MANAGER_CID);
 
-  status = nsComponentManager::CreateInstance(kViewManagerCID, 
-                                        nsnull, 
-                                        NS_GET_IID(nsIViewManager), 
-                                        (void **)&vm);
+  status = CallCreateInstance(kViewManagerCID, &vm);
 
   if ((NS_FAILED(status)) ||  nsnull==vm)
   {
@@ -485,10 +482,7 @@ GeometryTest::GeometryTest(BasicTest *aDoc)
   // Create a view
   static NS_DEFINE_IID(kScrollingViewCID, NS_SCROLL_PORT_VIEW_CID);
 
-  status = nsComponentManager::CreateInstance(kScrollingViewCID, 
-                                        nsnull, 
-                                        NS_GET_IID(nsIView), 
-                                        (void **)&rootView);
+  status = CallCreateInstance(kScrollingViewCID, &rootView);
 
   if ((NS_FAILED(status)) ||  nsnull==rootView)
   {

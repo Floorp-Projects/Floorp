@@ -5072,13 +5072,11 @@ PRBool nsWindow::OnPaint(HDC aDC)
                            (PRInt32) mWnd);
 #endif // NS_DEBUG
 
-      if (NS_OK == nsComponentManager::CreateInstance(kRenderingContextCID, nsnull,
-                                                      NS_GET_IID(nsIRenderingContext),
-                                                      (void **)&event.renderingContext))
+      if (NS_SUCCEEDED(CallCreateInstance(kRenderingContextCID, &event.renderingContext)))
       {
         nsIRenderingContextWin *winrc;
 
-        if (NS_OK == event.renderingContext->QueryInterface(NS_GET_IID(nsIRenderingContextWin), (void **)&winrc))
+        if (NS_SUCCEEDED(CallQueryInterface(event.renderingContext, &winrc)))
         {
           nsIDrawingSurface* surf;
 

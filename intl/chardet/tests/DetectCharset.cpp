@@ -283,11 +283,7 @@ nsresult GetDetector(const char* key, nsICharsetDetector** det)
   char buf[128];
   strcpy(buf, NS_CHARSET_DETECTOR_CONTRACTID_BASE);
   strcat(buf, key);
-  return nsComponentManager::CreateInstance(
-            buf,
-            nsnull,
-            NS_GET_IID(nsICharsetDetector),
-            (void**)det);
+  return CallCreateInstance(buf, det);
 }
 
 

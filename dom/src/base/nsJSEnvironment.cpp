@@ -1964,10 +1964,7 @@ nsJSContext::FireGCTimer()
     return;
   }
 
-  nsComponentManager::CreateInstance("@mozilla.org/timer;1",
-                                     nsnull,
-                                     NS_GET_IID(nsITimer),
-                                     (void **)&sGCTimer);
+  CallCreateInstance("@mozilla.org/timer;1", &sGCTimer);
 
   if (!sGCTimer) {
     NS_WARNING("Failed to create timer");

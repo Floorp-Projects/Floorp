@@ -76,10 +76,7 @@ public:
         NS_IF_RELEASE(mBlock);
     }
     nsresult Init() {
-      return nsComponentManager::CreateInstance(
-                                   NS_DIALOGPARAMBLOCK_CONTRACTID,
-                                   0, NS_GET_IID(nsIDialogParamBlock),
-                                   (void**) &mBlock);
+      return CallCreateInstance(NS_DIALOGPARAMBLOCK_CONTRACTID, &mBlock);
     }
     nsIDialogParamBlock * operator->() const { return mBlock; }
     operator nsIDialogParamBlock * const ()  { return mBlock; }

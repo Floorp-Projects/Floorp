@@ -81,10 +81,7 @@ mozSqlResult::Init()
                                       (nsISupports**) &gRDFService);
     if (NS_FAILED(rv)) return rv;
 
-    rv = nsComponentManager::CreateInstance(kDateTimeFormatCID,
-                                            nsnull,
-                                            NS_GET_IID(nsIDateTimeFormat),
-                                            (void**) &gFormat);
+    rv = CallCreateInstance(kDateTimeFormatCID, &gFormat);
     if (NS_FAILED(rv)) return rv;
 
     rv = gRDFService->GetResource(NS_LITERAL_CSTRING("SQL:ResultRoot"),

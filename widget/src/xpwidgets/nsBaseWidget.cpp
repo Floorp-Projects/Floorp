@@ -151,8 +151,7 @@ void nsBaseWidget::BaseCreate(nsIWidget *aParent,
         static NS_DEFINE_CID(kToolkitCID, NS_TOOLKIT_CID);
         
         nsresult res;
-        res = nsComponentManager::CreateInstance(kToolkitCID, nsnull,
-                                                 NS_GET_IID(nsIToolkit), (void **)&mToolkit);
+        res = CallCreateInstance(kToolkitCID, &mToolkit);
         NS_ASSERTION(NS_SUCCEEDED(res), "Can not create a toolkit in nsBaseWidget::Create");
         if (mToolkit)
           mToolkit->Init(PR_GetCurrentThread());
@@ -183,8 +182,7 @@ void nsBaseWidget::BaseCreate(nsIWidget *aParent,
     
     static NS_DEFINE_CID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
     
-    res = nsComponentManager::CreateInstance(kDeviceContextCID, nsnull,
-                                             NS_GET_IID(nsIDeviceContext), (void **)&mContext);
+    res = CallCreateInstance(kDeviceContextCID, &mContext);
 
     if (NS_SUCCEEDED(res))
       mContext->Init(nsnull);

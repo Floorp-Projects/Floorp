@@ -512,10 +512,9 @@ nsCharsetMenu::nsCharsetMenu()
   mRDFService = do_GetService(kRDFServiceCID, &res);
 
   if (NS_SUCCEEDED(res))  {
-    res = mRDFService->RegisterDataSource(this, PR_FALSE);
+    mRDFService->RegisterDataSource(this, PR_FALSE);
   
-    res = nsComponentManager::CreateInstance(kRDFInMemoryDataSourceCID, nsnull, 
-          NS_GET_IID(nsIRDFDataSource), (void**) &mInner);
+    CallCreateInstance(kRDFInMemoryDataSourceCID, &mInner);
 
     mRDFService->GetResource(NS_LITERAL_CSTRING(kURINC_BrowserCharsetMenuRoot),
                              &kNC_BrowserCharsetMenuRoot);
@@ -1721,10 +1720,7 @@ nsresult nsCharsetMenu::NewRDFContainer(nsIRDFDataSource * aDataSource,
                                         nsIRDFResource * aResource, 
                                         nsIRDFContainer ** aResult)
 {
-  nsresult res;
-
-  res = nsComponentManager::CreateInstance(kRDFContainerCID, NULL, 
-    NS_GET_IID(nsIRDFContainer), (void**)aResult);
+  nsresult res = CallCreateInstance(kRDFContainerCID, aResult);
   if (NS_FAILED(res)) return res;
 
   res = (*aResult)->Init(aDataSource, aResource);
@@ -1819,8 +1815,7 @@ nsresult nsCharsetMenu::GetCollation(nsICollation ** aCollation)
   res = localeServ->GetApplicationLocale(getter_AddRefs(locale));
   if (NS_FAILED(res)) return res;
 
-  res = nsComponentManager::CreateInstance(kCollationFactoryCID, NULL, 
-      NS_GET_IID(nsICollationFactory), (void**) &collationFactory);
+  res = CallCreateInstance(kCollationFactoryCID, &collationFactory);
   if (NS_FAILED(res)) return res;
 
   res = collationFactory->CreateCollation(locale, aCollation);

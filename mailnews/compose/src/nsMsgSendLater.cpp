@@ -768,19 +768,14 @@ nsresult nsMsgSendLater::SetOrigMsgDisposition()
 nsresult
 nsMsgSendLater::DeleteCurrentMessage()
 {
-  nsCOMPtr<nsISupportsArray>  msgArray;
-
   // Get the composition fields interface
-  nsresult res = nsComponentManager::CreateInstance(kISupportsArrayCID, NULL, NS_GET_IID(nsISupportsArray), 
-                                                    (void **) getter_AddRefs(msgArray)); 
-  if (NS_FAILED(res) || !msgArray)
-  {
+  nsCOMPtr<nsISupportsArray> msgArray = do_CreateInstance(kISupportsArrayCID);
+  if (!msgArray)
     return NS_ERROR_FACTORY_NOT_LOADED;
-  }
 
-  nsCOMPtr<nsISupports> msgSupport = do_QueryInterface(mMessage, &res);
+  nsCOMPtr<nsISupports> msgSupport = do_QueryInterface(mMessage);
   msgArray->InsertElementAt(msgSupport, 0);
-  res = mMessageFolder->DeleteMessages(msgArray, nsnull, PR_TRUE, PR_FALSE, nsnull, PR_FALSE /*allowUndo*/);
+  nsresult res = mMessageFolder->DeleteMessages(msgArray, nsnull, PR_TRUE, PR_FALSE, nsnull, PR_FALSE /*allowUndo*/);
   if (NS_FAILED(res))
     return NS_ERROR_FAILURE;
 

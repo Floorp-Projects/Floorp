@@ -2150,15 +2150,11 @@ nsProfile::MigrateProfileInternal(const PRUnichar* profileName,
 #endif
 
     // Call migration service to do the work.
-    nsCOMPtr <nsIPrefMigration> pPrefMigrator;
 
-
-    nsresult rv = nsComponentManager::CreateInstance(kPrefMigrationCID, 
-                                            nsnull,
-                                            NS_GET_IID(nsIPrefMigration),
-                                            getter_AddRefs(pPrefMigrator));
+    nsresult rv;
+    nsCOMPtr <nsIPrefMigration> pPrefMigrator =
+            do_CreateInstance(kPrefMigrationCID, &rv);
     if (NS_FAILED(rv)) return rv;
-    if (!pPrefMigrator) return NS_ERROR_FAILURE;
         
     nsCOMPtr<nsILocalFile> oldProfDirLocal(do_QueryInterface(oldProfDir, &rv));
     if (NS_FAILED(rv)) return rv;    

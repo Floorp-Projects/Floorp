@@ -85,28 +85,22 @@ nsPrimitiveHelpers :: CreatePrimitiveForData ( const char* aFlavor, void* aDataB
     return;
 
   if ( strcmp(aFlavor,kTextMime) == 0 || strcmp(aFlavor,kNativeHTMLMime) == 0 ) {
-    nsCOMPtr<nsISupportsCString> primitive;
-    nsComponentManager::CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID, nsnull, 
-                                       NS_GET_IID(nsISupportsCString), getter_AddRefs(primitive));
+    nsCOMPtr<nsISupportsCString> primitive =
+        do_CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID);
     if ( primitive ) {
       const char * start = (const char*)aDataBuff;
       primitive->SetData(Substring(start, start + aDataLen));
-      nsCOMPtr<nsISupports> genericPrimitive ( do_QueryInterface(primitive) );
-      *aPrimitive = genericPrimitive;
-      NS_ADDREF(*aPrimitive);
+      NS_ADDREF(*aPrimitive = primitive);
     }
   }
   else {
-    nsCOMPtr<nsISupportsString> primitive;
-    nsresult rv = nsComponentManager::CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, nsnull, 
-                                                      NS_GET_IID(nsISupportsString), getter_AddRefs(primitive));
-    if (NS_SUCCEEDED(rv) && primitive ) {
+    nsCOMPtr<nsISupportsString> primitive =
+        do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID);
+    if (primitive ) {
       // recall that length takes length as characters, not bytes
       const PRUnichar* start = (const PRUnichar*)aDataBuff;
       primitive->SetData(Substring(start, start + (aDataLen / 2)));
-      nsCOMPtr<nsISupports> genericPrimitive ( do_QueryInterface(primitive) );
-      *aPrimitive = genericPrimitive;
-      NS_ADDREF(*aPrimitive);
+      NS_ADDREF(*aPrimitive = primitive);
     }  
   }
 

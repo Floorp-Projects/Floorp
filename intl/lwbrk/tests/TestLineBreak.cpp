@@ -585,13 +585,7 @@ int main(int argc, char** argv) {
 
    // --------------------------------------------
    printf("Finish All The Test Cases\n");
-   nsresult res = NS_OK;
-   res = nsComponentManager::FreeLibraries();
 
-   if(NS_FAILED(res))
-      printf("nsComponentManager failed\n");
-   else
-      printf("nsComponentManager FreeLibraries Done\n");
    if(lbok && wbok)
       printf("Line/Word Break Test\nOK\n");
    else

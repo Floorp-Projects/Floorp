@@ -166,10 +166,7 @@ PR_PUBLIC_API(nsresult) XPI_Init( const char*         aProgramDir,
     // registered with the service manager. We keep a local pointer to it 
     // so it stays alive througout.
     //--------------------------------------------------------------------
-    rv = nsComponentManager::CreateInstance(kSoftwareUpdateCID, 
-                                            nsnull,
-                                            NS_GET_IID(nsISoftwareUpdate),
-                                            (void**) &gXPI);
+    rv = CallCreateInstance(kSoftwareUpdateCID, &gXPI);
     if (NS_FAILED(rv))
         return rv;
 

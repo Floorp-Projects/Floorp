@@ -95,10 +95,7 @@ nsXPINotifierImpl::nsXPINotifierImpl()
 
     static NS_DEFINE_CID(kRDFInMemoryDataSourceCID, NS_RDFINMEMORYDATASOURCE_CID);
     
-    nsComponentManager::CreateInstance(kRDFInMemoryDataSourceCID,
-                                       nsnull,
-                                       NS_GET_IID(nsISupports),
-                                       getter_AddRefs(mNotifications));
+    mNotifications = do_CreateInstance(kRDFInMemoryDataSourceCID);
 }
 
 
@@ -229,11 +226,7 @@ nsXPINotifierImpl::Init()
     rv = OpenRemoteDataSource(BASE_DATASOURCE_URL, PR_TRUE, getter_AddRefs(distributors));
     if (NS_FAILED(rv)) return rv;
 
-    rv = nsComponentManager::CreateInstance(kRDFContainerCID,
-                                            nsnull,
-                                            NS_GET_IID(nsIRDFContainer),
-                                            getter_AddRefs(distributorsContainer));
-
+    distributorsContainer = do_CreateInstance(kRDFContainerCID, &rv);
     if (NS_SUCCEEDED(rv))
     {
         rv = distributorsContainer->Init(distributors, kXPI_NotifierSources);
@@ -408,11 +401,7 @@ nsXPINotifierImpl::OpenRemoteDataSource(const char* aURL, PRBool blocking, nsIRD
     static NS_DEFINE_CID(kRDFXMLDataSourceCID, NS_RDFXMLDATASOURCE_CID);
     nsresult rv;
 
-    nsCOMPtr<nsIRDFRemoteDataSource> remote;
-    rv = nsComponentManager::CreateInstance(kRDFXMLDataSourceCID,
-                                            nsnull,
-                                            NS_GET_IID(nsIRDFRemoteDataSource),
-                                            getter_AddRefs(remote));
+    nsCOMPtr<nsIRDFRemoteDataSource> remote = do_CreateInstance(kRDFXMLDataSourceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
     rv = remote->Init(aURL);
@@ -494,14 +483,11 @@ nsXPINotifierImpl::OnEndLoad(nsIRDFXMLSink *aSink)
     nsCOMPtr<nsIRDFDataSource> distributorDataSource = do_QueryInterface(aSink, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsIRDFContainer> distributorContainer;
     nsCOMPtr <nsISimpleEnumerator> packageEnumerator;
     PRBool moreElements;
 
-    rv = nsComponentManager::CreateInstance(kRDFContainerCID,
-                                            nsnull,
-                                            NS_GET_IID(nsIRDFContainer),
-                                            getter_AddRefs(distributorContainer));
+    nsCOMPtr<nsIRDFContainer> distributorContainer =
+            do_CreateInstance(kRDFContainerCID, &rv);
     if (NS_SUCCEEDED(rv))
     {
         rv = distributorContainer->Init(distributorDataSource, kXPI_NotifierPackages);

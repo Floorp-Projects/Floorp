@@ -56,9 +56,7 @@ static NS_DEFINE_CID(kSimpleURICID, NS_SIMPLEURI_CID);
 nsMailtoUrl::nsMailtoUrl()
 {
   mFormat = nsIMsgCompFormat::Default;
-  nsComponentManager::CreateInstance(kSimpleURICID, nsnull, 
-                                     NS_GET_IID(nsIURI), 
-                                     (void **) getter_AddRefs(m_baseURL));
+  m_baseURL = do_CreateInstance(kSimpleURICID);
 }
 
 nsMailtoUrl::~nsMailtoUrl()

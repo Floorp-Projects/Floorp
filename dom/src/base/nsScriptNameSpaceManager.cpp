@@ -38,6 +38,7 @@
 #include "nsScriptNameSpaceManager.h"
 #include "nsCOMPtr.h"
 #include "nsIComponentManager.h"
+#include "nsIComponentRegistrar.h"
 #include "nsICategoryManager.h"
 #include "nsIServiceManager.h"
 #include "nsXPCOM.h"
@@ -190,9 +191,12 @@ nsScriptNameSpaceManager::FillHash(nsICategoryManager *aCategoryManager,
                                    const char *aCategory,
                                    nsGlobalNameStruct::nametype aType)
 {
+  nsCOMPtr<nsIComponentRegistrar> registrar;
+  nsresult rv = NS_GetComponentRegistrar(getter_AddRefs(registrar));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   nsCOMPtr<nsISimpleEnumerator> e;
-  nsresult rv = aCategoryManager->EnumerateCategory(aCategory,
-                                                    getter_AddRefs(e));
+  rv = aCategoryManager->EnumerateCategory(aCategory, getter_AddRefs(e));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCAutoString categoryEntry;
@@ -215,15 +219,19 @@ nsScriptNameSpaceManager::FillHash(nsICategoryManager *aCategoryManager,
                                             getter_Copies(contractId));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCID cid;
-
-    rv = nsComponentManager::ContractIDToClassID(contractId, &cid);
+    nsCID *cidPtr;
+    rv = registrar->ContractIDToCID(contractId, &cidPtr);
 
     if (NS_FAILED(rv)) {
       NS_WARNING("Bad contract id registed with the script namespace manager");
 
       continue;
     }
+
+    // Copy CID onto the stack, so we can free it right away and avoid having
+    // to add cleanup code at every exit point from this loop/function.
+    nsCID cid = *cidPtr;
+    nsMemory::Free(cidPtr);
 
     if (aType == nsGlobalNameStruct::eTypeExternalConstructor) {
       nsXPIDLCString constructorProto;

@@ -76,13 +76,8 @@ NS_IMPL_ISUPPORTS4(nsMailboxService, nsIMailboxService, nsIMsgMessageService, ns
 nsresult nsMailboxService::ParseMailbox(nsIMsgWindow *aMsgWindow, nsFileSpec& aMailboxPath, nsIStreamListener *aMailboxParser, 
 										nsIUrlListener * aUrlListener, nsIURI ** aURL)
 {
-  nsCOMPtr<nsIMailboxUrl> mailboxurl;
-  nsresult rv = NS_OK;
-  
-  rv = nsComponentManager::CreateInstance(kCMailboxUrl,
-    nsnull,
-    NS_GET_IID(nsIMailboxUrl),
-    (void **) getter_AddRefs(mailboxurl));
+  nsresult rv;
+  nsCOMPtr<nsIMailboxUrl> mailboxurl = do_CreateInstance(kCMailboxUrl, &rv);
   if (NS_SUCCEEDED(rv) && mailboxurl)
   {
     nsCOMPtr<nsIMsgMailNewsUrl> url = do_QueryInterface(mailboxurl);
@@ -372,12 +367,7 @@ nsresult nsMailboxService::PrepareMessageUrl(const char * aSrcMsgMailboxURI, nsI
                                              nsMailboxAction aMailboxAction, nsIMailboxUrl ** aMailboxUrl,
                                              nsIMsgWindow *msgWindow)
 {
-  nsresult rv = NS_OK;
-  rv = nsComponentManager::CreateInstance(kCMailboxUrl,
-    nsnull,
-    NS_GET_IID(nsIMailboxUrl),
-    (void **) aMailboxUrl);
-  
+  nsresult rv = CallCreateInstance(kCMailboxUrl, aMailboxUrl);
   if (NS_SUCCEEDED(rv) && aMailboxUrl && *aMailboxUrl)
   {
     // okay now generate the url string

@@ -920,7 +920,7 @@ RDFServiceImpl::Init()
         mBlobs.ops = nsnull;
         return NS_ERROR_OUT_OF_MEMORY;
     }
-    rv = nsComponentManager::FindFactory(kRDFDefaultResourceCID, getter_AddRefs(mDefaultResourceFactory));
+    mDefaultResourceFactory = do_GetClassObject(kRDFDefaultResourceCID, &rv);
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get default resource factory");
     if (NS_FAILED(rv)) return rv;
 
@@ -1076,14 +1076,8 @@ RDFServiceImpl::GetResource(const nsACString& aURI, nsIRDFResource** aResource)
             contractID = NS_LITERAL_CSTRING(NS_RDF_RESOURCE_FACTORY_CONTRACTID_PREFIX) +
                          Substring(begin, p);
 
-            nsCID cid;
-            rv = nsComponentManager::ContractIDToClassID(contractID.get(), &cid);
-
-            if (NS_SUCCEEDED(rv)) {
-                rv = nsComponentManager::FindFactory(cid, getter_AddRefs(factory));
-                NS_ASSERTION(NS_SUCCEEDED(rv), "factory registered, but couldn't load");
-                if (NS_FAILED(rv)) return rv;
-
+            factory = do_GetClassObject(contractID.get());
+            if (factory) {
                 // Store the factory in our one-element cache.
                 if (p != begin) {
                     mLastFactory = factory;

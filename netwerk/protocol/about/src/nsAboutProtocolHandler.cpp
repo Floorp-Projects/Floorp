@@ -118,10 +118,9 @@ nsAboutProtocolHandler::NewURI(const nsACString &aSpec,
     nsresult rv;
 
     nsIURI* url;
-    rv = nsComponentManager::CreateInstance(kSimpleURICID, nsnull,
-                                            NS_GET_IID(nsIURI),
-                                            (void**)&url);
+    rv = CallCreateInstance(kSimpleURICID, &url);
     if (NS_FAILED(rv)) return rv;
+
     rv = url->SetSpec(aSpec);
     if (NS_FAILED(rv)) {
         NS_RELEASE(url);

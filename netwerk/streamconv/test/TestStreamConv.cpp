@@ -129,7 +129,10 @@ nsresult SendData(const char * aData, nsIStreamListener* aListener, nsIRequest* 
     nsresult rv = NS_NewCharInputStream(getter_AddRefs(dataStream), aData);
     if (NS_FAILED(rv)) return rv;
 
-    return aListener->OnDataAvailable(request, nsnull, dataStream, 0, -1);
+    PRUint32 avail;
+    dataStream->Available(&avail);
+
+    return aListener->OnDataAvailable(request, nsnull, dataStream, 0, avail);
 }
 #define SEND_DATA(x) SendData(x, converterListener, request)
 
@@ -186,11 +189,10 @@ main(int argc, char* argv[])
             // per conversion pair (from - to pair).
             nsCString contractID(NS_ISTREAMCONVERTER_KEY);
             contractID.Append(converterList[count]);
-            rv = nsComponentManager::RegisterFactory(kTestConverterCID,
-                                                     "TestConverter",
-                                                     contractID.get(),
-                                                     convFactSup,
-                                                     PR_TRUE);
+            rv = registrar->RegisterFactory(kTestConverterCID,
+                                            "TestConverter",
+                                            contractID.get(),
+                                            convFactSup);
             if (NS_FAILED(rv)) return rv;
             rv = catman->AddCategoryEntry(NS_ISTREAMCONVERTER_KEY, converterList[count], "x",
                                             PR_TRUE, PR_TRUE, getter_Copies(previous));

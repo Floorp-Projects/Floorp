@@ -1320,9 +1320,8 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
   mAllowPlugins = aAllowPlugins;
 
   // Create top level window
-  nsresult rv = nsComponentManager::CreateInstance(kWindowCID, nsnull,
-                                                   kIWidgetIID,
-                                                   getter_AddRefs(mWindow));
+  nsresult rv;
+  mWindow = do_CreateInstance(kWindowCID, &rv);
   if (NS_OK != rv) {
     return rv;
   }
@@ -1407,13 +1406,9 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
   NS_IF_ADDREF(mAppShell);
   mAllowPlugins = aAllowPlugins;
   // Create top level window
-  nsresult rv = nsComponentManager::CreateInstance(kWindowCID,
-nsnull,
-                                                  
-kIWidgetIID,
-                                                  
-getter_AddRefs(mWindow));
-  if (NS_OK != rv) {
+  nsresult rv;
+  mWindow = do_CreateInstance(kWindowCID, &rv);
+  if (NS_FAILED(rv)) {
     return rv;
   }
   nsWidgetInitData initData;
@@ -1526,8 +1521,7 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
   rv = NS_NewButton(&mBack);
 #else
   // Create and place back button
-  rv = nsComponentManager::CreateInstance(kButtonCID, nsnull, kIButtonIID,
-                                          (void**)&mBack);
+  rv = CallCreateInstance(kButtonCID, &mBack);
 #endif
 
   if (NS_OK != rv) {
@@ -1551,8 +1545,7 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
 #ifdef USE_LOCAL_WIDGETS
   rv = NS_NewButton(&mForward);
 #else
-  rv = nsComponentManager::CreateInstance(kButtonCID, nsnull, kIButtonIID,
-                                          (void**)&mForward);
+  rv = CallCreateInstance(kButtonCID, &mForward);
 #endif
   if (NS_OK != rv) {
     return rv;
@@ -1576,8 +1569,7 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
 #ifdef USE_LOCAL_WIDGETS
   rv = NS_NewTextWidget(&mLocation);
 #else
-  rv = nsComponentManager::CreateInstance(kTextFieldCID, nsnull, kITextWidgetIID,
-                                          (void**)&mLocation);
+  rv = CallCreateInstance(kTextFieldCID, &mLocation);
 #endif
 
   if (NS_OK != rv) {
@@ -1637,8 +1629,7 @@ nsBrowserWindow::CreateStatusBar(PRInt32 aWidth)
 #ifdef USE_LOCAL_WIDGETS
   rv = NS_NewTextWidget(&mStatus);
 #else
-  rv = nsComponentManager::CreateInstance(kTextFieldCID, nsnull, kITextWidgetIID,
-                                          (void**)&mStatus);
+  rv = CallCreateInstance(kTextFieldCID, &mStatus);
 #endif
 
   if (NS_OK != rv) {
@@ -2187,10 +2178,11 @@ void nsBrowserWindow::DoTableInspector()
     nsRect rect(0, 0, 375, 510);
     nsString title(NS_LITERAL_STRING("Table Inspector"));
 
+    nsCOMPtr<nsIComponentManager> compMgr;
+    NS_GetComponentManager(getter_AddRefs(compMgr));
+
     nsXPBaseWindow * xpWin = nsnull;
-    nsresult rv = nsComponentManager::CreateInstance(kXPBaseWindowCID, nsnull,
-                                                     kIXPBaseWindowIID,
-                                                     (void**) &xpWin);
+    nsresult rv = compMgr->CreateInstance(kXPBaseWindowCID, nsnull, kIXPBaseWindowIID, (void **) &xpWin);
     if (rv == NS_OK) {
       xpWin->Init(eXPBaseWindowType_dialog, mAppShell, printHTML, title, rect, PRUint32(~0), PR_FALSE);
       xpWin->SetVisible(PR_TRUE);
@@ -2220,8 +2212,11 @@ void nsBrowserWindow::DoImageInspector()
     nsRect rect(0, 0, 485, 124);
     nsString title(NS_LITERAL_STRING("Image Inspector"));
 
-    nsXPBaseWindow * xpWin = nsnull;
-    nsresult rv = nsComponentManager::CreateInstance(kXPBaseWindowCID, nsnull, kIXPBaseWindowIID, (void**) &xpWin);
+    nsCOMPtr<nsIComponentManager> compMgr;
+    NS_GetComponentManager(getter_AddRefs(compMgr));
+
+    nsXPBaseWindow * xpWin;
+    nsresult rv = compMgr->CreateInstance(kXPBaseWindowCID, nsnull, kIXPBaseWindowIID, (void **) &xpWin);
     if (rv == NS_OK) {
       xpWin->Init(eXPBaseWindowType_dialog, mAppShell, printHTML, title, rect, PRUint32(~0), PR_FALSE);
       xpWin->SetVisible(PR_TRUE);
@@ -2576,10 +2571,7 @@ void
 nsBrowserWindow::ToggleFrameBorders()
 {
   nsILayoutDebugger* ld;
-  nsresult rv = nsComponentManager::CreateInstance(kLayoutDebuggerCID,
-                                                   nsnull,
-                                                   kILayoutDebuggerIID,
-                                                   (void **)&ld);
+  nsresult rv = CallCreateInstance(kLayoutDebuggerCID, &ld);
   if (NS_SUCCEEDED(rv)) {
     PRBool showing;
     ld->GetShowFrameBorders(&showing);
@@ -2593,10 +2585,7 @@ void
 nsBrowserWindow::ToggleVisualEventDebugging()
 {
   nsILayoutDebugger* ld;
-  nsresult rv = nsComponentManager::CreateInstance(kLayoutDebuggerCID,
-                                                   nsnull,
-                                                   kILayoutDebuggerIID,
-                                                   (void **)&ld);
+  nsresult rv = CallCreateInstance(kLayoutDebuggerCID, &ld);
   if (NS_SUCCEEDED(rv)) {
     PRBool showing;
     ld->GetShowEventTargetFrameBorder(&showing);

@@ -69,10 +69,7 @@ void GetPaths(nsILocalFile* file)
 void InitTest(const char* creationPath, const char* appendPath)
 {
     nsILocalFile* file = nsnull;
-    nsresult rv = nsComponentManager::CreateInstance(NS_LOCAL_FILE_CONTRACTID, 
-                                              nsnull, 
-                                              NS_GET_IID(nsILocalFile), 
-                                              (void**)&file);
+    nsresult rv = CallCreateInstance(NS_LOCAL_FILE_CONTRACTID, &file);
     
     if (NS_FAILED(rv) || (!file)) 
     {
@@ -120,12 +117,9 @@ void InitTest(const char* creationPath, const char* appendPath)
 void CreationTest(const char* creationPath, const char* appendPath,
 		  PRInt32 whatToCreate, PRInt32 perm)
 {
-    nsCOMPtr<nsILocalFile> file;
-    nsresult rv = 
-    nsComponentManager::CreateInstance(NS_LOCAL_FILE_CONTRACTID, 
-                                              nsnull, 
-                                              NS_GET_IID(nsILocalFile), 
-                                              (void **)getter_AddRefs(file));
+    nsresult rv;
+    nsCOMPtr<nsILocalFile> file =
+        do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv);
 
     if (NS_FAILED(rv) || (!file)) 
     {
@@ -172,12 +166,9 @@ void CreationTest(const char* creationPath, const char* appendPath,
 void CreateUniqueTest(const char* creationPath, const char* appendPath,
                  PRInt32 whatToCreate, PRInt32 perm)
 {
-    nsCOMPtr<nsILocalFile> file;
-    nsresult rv = 
-    nsComponentManager::CreateInstance(NS_LOCAL_FILE_CONTRACTID, 
-                                              nsnull, 
-                                              NS_GET_IID(nsILocalFile), 
-                                              (void **)getter_AddRefs(file));
+    nsresult rv;
+    nsCOMPtr<nsILocalFile> file =
+        do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv);
 
     if (NS_FAILED(rv) || (!file)) 
     {
@@ -225,15 +216,11 @@ void CreateUniqueTest(const char* creationPath, const char* appendPath,
 void
 CopyTest(const char *testFile, const char *targetDir)
 {
-  nsCOMPtr<nsILocalFile> file;
-  nsCOMPtr<nsILocalFile> dir;
-
   printf("start copy test\n");
 
-  nsresult rv =
-    nsComponentManager::CreateInstance(NS_LOCAL_FILE_CONTRACTID, NULL,
-				       NS_GET_IID(nsILocalFile), 
-				       (void**)getter_AddRefs(file));
+  nsresult rv;
+  nsCOMPtr<nsILocalFile> file =
+      do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv);
     
   if (NS_FAILED(rv) || (!file)) 
   {
@@ -244,9 +231,8 @@ CopyTest(const char *testFile, const char *targetDir)
   rv = file->InitWithNativePath(nsDependentCString(testFile));
   VerifyResult(rv);
   
-  rv = nsComponentManager::CreateInstance(NS_LOCAL_FILE_CONTRACTID, NULL,
-					  NS_GET_IID(nsILocalFile), 
-					  (void**)getter_AddRefs(dir));
+  nsCOMPtr<nsILocalFile> dir =
+      do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv);
 
   if (NS_FAILED(rv) || (!dir)) 
   {
@@ -266,11 +252,9 @@ CopyTest(const char *testFile, const char *targetDir)
 void
 DeletionTest(const char* creationPath, const char* appendPath, PRBool recursive)
 {
-    nsCOMPtr<nsILocalFile> file;
-    nsresult rv = 
-      nsComponentManager::CreateInstance(NS_LOCAL_FILE_CONTRACTID, NULL,
-					 NS_GET_IID(nsILocalFile),
-					 (void**)getter_AddRefs(file));
+    nsresult rv;
+    nsCOMPtr<nsILocalFile> file =
+            do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv);
     
     if (NS_FAILED(rv) || (!file)) 
     {

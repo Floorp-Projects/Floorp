@@ -1814,10 +1814,7 @@ nsTextControlFrame::CreateAnonymousContent(nsPresContext* aPresContext,
 
   // Create an editor
 
-  rv = nsComponentManager::CreateInstance(kTextEditorCID,
-                                          nsnull,
-                                          NS_GET_IID(nsIEditor), 
-                                          getter_AddRefs(mEditor));
+  mEditor = do_CreateInstance(kTextEditorCID, &rv);
   if (NS_FAILED(rv))
     return rv;
   if (!mEditor) 
@@ -1825,10 +1822,7 @@ nsTextControlFrame::CreateAnonymousContent(nsPresContext* aPresContext,
 
   // Create selection
 
-  nsCOMPtr<nsIFrameSelection> frameSel;
-  rv = nsComponentManager::CreateInstance(kFrameSelectionCID, nsnull,
-                                                 NS_GET_IID(nsIFrameSelection),
-                                                 getter_AddRefs(frameSel));
+  nsCOMPtr<nsIFrameSelection> frameSel = do_CreateInstance(kFrameSelectionCID, &rv);
 
   // Create a SelectionController
 

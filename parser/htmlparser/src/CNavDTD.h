@@ -405,10 +405,7 @@ protected:
 inline nsresult NS_NewNavHTMLDTD(nsIDTD** aInstancePtrResult)
 {
   NS_DEFINE_CID(kNavDTDCID, NS_CNAVDTD_CID);
-  return nsComponentManager::CreateInstance(kNavDTDCID,
-                                            nsnull,
-                                            NS_GET_IID(nsIDTD),
-                                            (void**)aInstancePtrResult);
+  return CallCreateInstance(kNavDTDCID, aInstancePtrResult);
 }
 
 #endif 

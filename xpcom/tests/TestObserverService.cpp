@@ -106,10 +106,7 @@ int main(int argc, char *argv[])
     nsCString topicB; topicB.Assign( "topic-B" );
     nsresult rv;
 
-    nsresult res = nsComponentManager::CreateInstance("@mozilla.org/observer-service;1",
-                                                NULL,
-                                                 NS_GET_IID(nsIObserverService),
-                                                (void **) &anObserverService);
+    nsresult res = CallCreateInstance("@mozilla.org/observer-service;1", &anObserverService);
 	
     if (res == NS_OK) {
 

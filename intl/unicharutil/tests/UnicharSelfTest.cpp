@@ -391,10 +391,8 @@ static void TestEntityConversion(PRUint32 version)
   uChar = (PRUnichar) 9830; //
   inString.Append(&uChar, 1);
 
-  nsCOMPtr <nsIEntityConverter> entityConv;
-  res = nsComponentManager::CreateInstance(kEntityConverterCID, NULL, NS_GET_IID(nsIEntityConverter), getter_AddRefs(entityConv));
+  nsCOMPtr <nsIEntityConverter> entityConv = do_CreateInstance(kEntityConverterCID, &res);;
   if (NS_FAILED(res)) {printf("\tFailed!! return value != NS_OK\n"); return;}
-
 
   // convert char by char
   for (i = 0; i < inString.Length(); i++) {
@@ -441,8 +439,7 @@ static void TestSaveAsCharset()
   }
   printf("\n");
 
-  nsCOMPtr <nsISaveAsCharset> saveAsCharset;
-  res = nsComponentManager::CreateInstance(kSaveAsCharsetCID, NULL, NS_GET_IID(nsISaveAsCharset), getter_AddRefs(saveAsCharset));
+  nsCOMPtr <nsISaveAsCharset> saveAsCharset = do_CreateInstance(kSaveAsCharsetCID, &res);
   if (NS_FAILED(res)) {printf("\tFailed!! return value != NS_OK\n");}
   
   printf("ISO-8859-1 attr_plainTextDefault entityNone\n");
@@ -611,13 +608,6 @@ int main(int argc, char** argv) {
 
    // --------------------------------------------
    printf("Finish All The Test Cases\n");
-   nsresult res = NS_OK;
-   res = nsComponentManager::FreeLibraries();
 
-   if(NS_FAILED(res))
-      printf("nsComponentManager failed\n");
-   else
-      printf("nsComponentManager FreeLibraries Done\n");
    return 0;
 }
-
