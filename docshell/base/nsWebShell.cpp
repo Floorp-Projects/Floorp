@@ -534,6 +534,9 @@ protected:
   nsString mHintCharset;
   nsCharsetSource mHintCharsetSource; 
   nsString mForceCharacterSet;
+
+  // if there is no mWindow, this will keep track of the bounds  --dwc0001
+  nsRect  mBounds;
 };
 
 //----------------------------------------------------------------------
@@ -928,15 +931,20 @@ nsWebShell::Embed(nsIContentViewer* aContentViewer,
   mContentViewer = aContentViewer;
   NS_ADDREF(aContentViewer);
 
-  mWindow->GetClientBounds(bounds);
-  bounds.x = bounds.y = 0;
-  rv = mContentViewer->Init(mWindow->GetNativeData(NS_NATIVE_WIDGET), 
-                            mDeviceContext, 
-                            mPrefs,
-                            bounds,
-                            mScrollPref);
-  if (NS_SUCCEEDED(rv)) {
-    mContentViewer->Show();
+  // check to see if we have a window to embed into --dwc0001
+  if(mWindow) {
+    mWindow->GetClientBounds(bounds);
+    bounds.x = bounds.y = 0;
+    rv = mContentViewer->Init(mWindow->GetNativeData(NS_NATIVE_WIDGET), 
+                              mDeviceContext, 
+                              mPrefs,
+                              bounds,
+                              mScrollPref);
+    if (NS_SUCCEEDED(rv)) {
+      mContentViewer->Show();
+    }
+  } else {
+    mContentViewer = nsnull;
   }
 
   // Now that we have switched documents, forget all of our children
@@ -1007,6 +1015,7 @@ nsWebShell::Init(nsNativeWidget aNativeParent,
   //be associated with the nsIContentViewerContainer interfaces,
   //not the nsIWebShell interfaces. this is a hack. MMP
   nsRect aBounds(x,y,w,h);
+  mBounds.SetRect(x,y,w,h);     // initialize the webshells bounds --dwc0001
   nsWidgetInitData  widgetInit;
 
   CreatePluginHost(aAllowPlugins);
@@ -1016,13 +1025,14 @@ nsWebShell::Init(nsNativeWidget aNativeParent,
   WEB_TRACE(WEB_TRACE_CALLS,
             ("nsWebShell::Init: this=%p", this));
 
+/*  it is ok to have a webshell without an aNativeParent (used later to create the mWindow --dwc0001
   // Initial error checking...
   NS_PRECONDITION(nsnull != aNativeParent, "null Parent Window");
   if (nsnull == aNativeParent) {
     rv = NS_ERROR_NULL_POINTER;
     goto done;
   }
-
+*/
   // Create a document loader...
   if (nsnull != mParent) {
     nsIDocumentLoader* parentLoader;
@@ -1055,6 +1065,8 @@ nsWebShell::Init(nsNativeWidget aNativeParent,
   //Register ourselves as an observer for the new doc loader
   mDocLoader->AddObserver((nsIDocumentLoaderObserver*)this);
 
+
+  /* this is the old code, commented out for the new code below while I figure this out -- dwc0001
   // Create device context
   rv = nsComponentManager::CreateInstance(kDeviceContextCID, nsnull,
                                     kIDeviceContextIID,
@@ -1083,6 +1095,56 @@ nsWebShell::Init(nsNativeWidget aNativeParent,
   //widgetInit.mBorderStyle = aIsSunkenBorder ? eBorderStyle_3DChildWindow : eBorderStyle_none;
   mWindow->Create(aNativeParent, aBounds, nsWebShell::HandleEvent,
                   mDeviceContext, nsnull, nsnull, &widgetInit);
+*/
+
+  // Create device context
+  if (nsnull != aNativeParent) {
+    rv = nsComponentManager::CreateInstance(kDeviceContextCID, nsnull,
+                                      kIDeviceContextIID,
+                                      (void **)&mDeviceContext);
+    if (NS_FAILED(rv)) {
+      goto done;
+    }
+    mDeviceContext->Init(aNativeParent);
+    float dev2twip;
+    mDeviceContext->GetDevUnitsToTwips(dev2twip);
+    mDeviceContext->SetDevUnitsToAppUnits(dev2twip);
+    float twip2dev;
+    mDeviceContext->GetTwipsToDevUnits(twip2dev);
+    mDeviceContext->SetAppUnitsToDevUnits(twip2dev);
+  //  mDeviceContext->SetGamma(1.7f);
+    mDeviceContext->SetGamma(1.0f);
+
+    // Create a Native window for the shell container...
+    rv = nsComponentManager::CreateInstance(kChildCID, nsnull, kIWidgetIID, (void**)&mWindow);
+    if (NS_FAILED(rv)) {
+      goto done;
+    }
+
+    widgetInit.clipChildren = PR_FALSE;
+    widgetInit.mWindowType = eWindowType_child;
+    //widgetInit.mBorderStyle = aIsSunkenBorder ? eBorderStyle_3DChildWindow : eBorderStyle_none;
+    mWindow->Create(aNativeParent, aBounds, nsWebShell::HandleEvent,
+                    mDeviceContext, nsnull, nsnull, &widgetInit);
+  } else {
+    // we need a deviceContext
+
+    rv = nsComponentManager::CreateInstance(kDeviceContextCID, nsnull,kIDeviceContextIID,(void **)&mDeviceContext);
+    if (NS_FAILED(rv)) {
+      goto done;
+    }
+    mDeviceContext->Init(aNativeParent);
+    float dev2twip;
+    mDeviceContext->GetDevUnitsToTwips(dev2twip);
+    mDeviceContext->SetDevUnitsToAppUnits(dev2twip);
+    float twip2dev;
+    mDeviceContext->GetTwipsToDevUnits(twip2dev);
+    mDeviceContext->SetAppUnitsToDevUnits(twip2dev);
+    mDeviceContext->SetGamma(1.0f);
+
+    widgetInit.clipChildren = PR_FALSE;
+    widgetInit.mWindowType = eWindowType_child; 
+  }
 
 done:
   return rv;
@@ -1152,12 +1214,22 @@ nsWebShell::Destroy()
 NS_IMETHODIMP
 nsWebShell::GetBounds(PRInt32 &x, PRInt32 &y, PRInt32 &w, PRInt32 &h)
 {
-  nsRect aResult;
+nsRect aResult;
+
+  /* old code path --dwc001
   NS_PRECONDITION(nsnull != mWindow, "null window");
   aResult.SetRect(0, 0, 0, 0);
   if (nsnull != mWindow) {
     mWindow->GetClientBounds(aResult);
   }
+  */
+
+  if (nsnull != mWindow) {
+    mWindow->GetClientBounds(aResult);
+  } else {
+    aResult = mBounds;
+  }
+
   x = aResult.x;
   y = aResult.y;
   w = aResult.width;
@@ -1169,7 +1241,10 @@ nsWebShell::GetBounds(PRInt32 &x, PRInt32 &y, PRInt32 &w, PRInt32 &h)
 NS_IMETHODIMP
 nsWebShell::SetBounds(PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h)
 {
+  /*
+  --dwc0001
   NS_PRECONDITION(nsnull != mWindow, "null window");
+  */
   
   PRInt32 borderWidth  = 0;
   PRInt32 borderHeight = 0;
@@ -1179,6 +1254,8 @@ nsWebShell::SetBounds(PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h)
     // during reflow
     mWindow->Resize(x, y, w, h, PR_FALSE);
   }
+    
+  mBounds.SetRect(x,y,w,h);   // set the webshells bounds --dwc0001
 
   // Set the size of the content area, which is the size of the window
   // minus the borders
@@ -1204,7 +1281,10 @@ nsWebShell::MoveTo(PRInt32 aX, PRInt32 aY)
 NS_IMETHODIMP
 nsWebShell::Show()
 {
+  /*
+  --dwc001
   NS_PRECONDITION(nsnull != mWindow, "null window");
+  */
 
   if (nsnull != mWindow) {
     mWindow->Show(PR_TRUE);
@@ -1219,7 +1299,10 @@ nsWebShell::Show()
 NS_IMETHODIMP
 nsWebShell::Hide()
 {
+  /*
+  --dwc0001
   NS_PRECONDITION(nsnull != mWindow, "null window");
+  */
 
   if (nsnull != mWindow) {
     mWindow->Show(PR_FALSE);
@@ -1234,7 +1317,10 @@ nsWebShell::Hide()
 NS_IMETHODIMP
 nsWebShell::SetFocus()
 {
+  /*
+  --dwc0001
   NS_PRECONDITION(nsnull != mWindow, "null window");
+  */
 
   if (nsnull != mWindow) {
     mWindow->SetFocus();
@@ -1246,7 +1332,10 @@ nsWebShell::SetFocus()
 NS_IMETHODIMP
 nsWebShell::RemoveFocus()
 {
+  /*
+  --dwc0001
   NS_PRECONDITION(nsnull != mWindow, "null window");
+  */
 
   if (nsnull != mWindow) {
     nsIWidget *parentWidget = mWindow->GetParent();
@@ -1262,7 +1351,10 @@ nsWebShell::RemoveFocus()
 NS_IMETHODIMP
 nsWebShell::Repaint(PRBool aForce)
 {
+  /*
+  --dwc0001
   NS_PRECONDITION(nsnull != mWindow, "null window");
+  */
 
   if (nsnull != mWindow) {
     mWindow->Invalidate(aForce);
