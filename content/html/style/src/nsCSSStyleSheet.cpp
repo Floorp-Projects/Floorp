@@ -2882,45 +2882,6 @@ static PRBool ValueIncludes(const nsString& aValueList, const nsString& aValue, 
   return PR_FALSE;
 }
 
-static const PRUnichar kDashCh = PRUnichar('-');
-
-static PRBool ValueDashMatch(const nsString& aValueList, const nsString& aValue, PRBool aCaseSensitive)
-{
-  nsAutoString  valueList(aValueList);
-
-  valueList.Append(kNullCh);  // put an extra null at the end
-
-  PRUnichar* value = (PRUnichar*)(const PRUnichar*)aValue.GetUnicode();
-  PRUnichar* start = (PRUnichar*)(const PRUnichar*)valueList.GetUnicode();
-  PRUnichar* end   = start;
-
-  if (kNullCh != *start) {
-    while ((kNullCh != *start) && nsCRT::IsAsciiSpace(*start)) {  // skip leading space
-      start++;
-    }
-    end = start;
-
-    while ((kNullCh != *end) && (kDashCh != *end)) { // look for dash or end
-      end++;
-    }
-    *end = kNullCh; // end string here
-
-    if (start < end) {
-      if (aCaseSensitive) {
-        if (!nsCRT::strcmp(value, start)) {
-          return PR_TRUE;
-        }
-      }
-      else {
-        if (!nsCRT::strcasecmp(value, start)) {
-          return PR_TRUE;
-        }
-      }
-    }
-  }
-  return PR_FALSE;
-}
-
 static PRBool IsEventPseudo(nsIAtom* aAtom)
 {
   return PRBool ((nsCSSAtoms::activePseudo == aAtom)   || 
@@ -3203,14 +3164,33 @@ static PRBool SelectorMatches(SelectorMatchesData &data,
               result = PRBool(localTrue == ValueIncludes(value, attr->mValue, isCaseSensitive));
               break;
             case NS_ATTR_FUNC_DASHMATCH: 
-              result = PRBool(localTrue == ValueDashMatch(value, attr->mValue, isCaseSensitive));
+              {
+                PRUint32 selLen = attr->mValue.Length();
+                PRUint32 valLen = value.Length();
+                if (selLen > valLen) {
+                  result = localFalse;
+                } else {
+                  if (selLen != valLen &&
+                      value.CharAt(selLen) != PRUnichar('-')) {
+                    // to match, the value must have a dash after the end of
+                    // the selector's text (unless the selector and the value
+                    // have the same text)
+                    result = localFalse;
+                    break;
+                  }
+                  if (isCaseSensitive)
+                    result = PRBool(localTrue == !Compare(Substring(value, 0, selLen), attr->mValue, nsDefaultStringComparator()));
+                  else
+                    result = PRBool(localTrue == !Compare(Substring(value, 0, selLen), attr->mValue, nsCaseInsensitiveStringComparator()));
+                }
+              }
               break;
             case NS_ATTR_FUNC_ENDSMATCH:
               {
                 PRUint32 selLen = attr->mValue.Length();
                 PRUint32 valLen = value.Length();
                 if (selLen > valLen) {
-                  result = PR_FALSE;
+                  result = localFalse;
                 } else {
                   if (isCaseSensitive)
                     result = PRBool(localTrue == !Compare(Substring(value, valLen - selLen, selLen), attr->mValue, nsDefaultStringComparator()));
@@ -3224,7 +3204,7 @@ static PRBool SelectorMatches(SelectorMatchesData &data,
                 PRUint32 selLen = attr->mValue.Length();
                 PRUint32 valLen = value.Length();
                 if (selLen > valLen) {
-                  result = PR_FALSE;
+                  result = localFalse;
                 } else {
                   if (isCaseSensitive)
                     result = PRBool(localTrue == !Compare(Substring(value, 0, selLen), attr->mValue, nsDefaultStringComparator()));
@@ -3251,10 +3231,10 @@ static PRBool SelectorMatches(SelectorMatchesData &data,
         result = PR_TRUE;
       }
       else if (nsnull != data.mContentID) {
-        result = localTrue;
+        result = PR_TRUE;
         while (nsnull != IDList) {
-          if (IDList->mAtom != data.mContentID) {
-            result = localFalse;
+          if (localTrue == (IDList->mAtom != data.mContentID)) {
+            result = PR_FALSE;
             break;
           }
           IDList = IDList->mNext;
@@ -3264,8 +3244,8 @@ static PRBool SelectorMatches(SelectorMatchesData &data,
       if (result) {
         nsAtomList* classList = aSelector->mClassList;
         while (nsnull != classList) {
-          if (NS_COMFALSE == data.mStyledContent->HasClass(classList->mAtom)) {
-            result = localFalse;
+          if (localTrue == (NS_COMFALSE == data.mStyledContent->HasClass(classList->mAtom))) {
+            result = PR_FALSE;
             break;
           }
           classList = classList->mNext;
