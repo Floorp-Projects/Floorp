@@ -303,7 +303,14 @@ nsAccessibilityService::CreateIFrameAccessible(nsIDOMNode* aDOMNode, nsIAccessib
 NS_IMETHODIMP 
 nsAccessibilityService::CreateRootAccessible(nsISupports* aPresContext, nsISupports* aFrame, nsIAccessible **_retval)
 {
+  static PRBool alreadyHere = PR_FALSE;
+
   *_retval = nsnull;
+
+  if (alreadyHere) {
+    NS_WARNING("Infinite loop headed off in CreateRootAccessible");
+    return NS_ERROR_FAILURE;
+  }
 
   nsCOMPtr<nsIPresContext> presContext(do_QueryInterface(aPresContext));
   NS_ASSERTION(presContext,"Error non prescontext passed to accessible factory!!!");
@@ -327,8 +334,11 @@ nsAccessibilityService::CreateRootAccessible(nsISupports* aPresContext, nsISuppo
     nsCOMPtr<nsIContent> rootContent;
     presShell->GetDocument(getter_AddRefs(document));
     nsCOMPtr<nsIDOMNode> rootNode(do_QueryInterface(document));
-    if (rootNode)
+    if (rootNode) {
+      alreadyHere = PR_TRUE;
       GetAccessibleFor(rootNode, _retval);
+      alreadyHere = PR_FALSE;
+    }
   }
   else {
     nsCOMPtr<nsIWeakReference> weakShell(do_GetWeakReference(presShell));

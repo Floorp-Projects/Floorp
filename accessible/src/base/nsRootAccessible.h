@@ -53,7 +53,11 @@
 #include "nsITimer.h"
 #include "nsITimerCallback.h"
 #include "nsIWebProgress.h"
+#include "nsIScrollPositionListener.h"
+#include "nsIScrollableView.h"
+#include "nsHashtable.h"
 
+const PRInt32 SCROLL_HASH_START_SIZE = 6;
 
 class nsDocAccessibleMixin
 {
@@ -78,8 +82,8 @@ class nsRootAccessible : public nsAccessible,
                          public nsIDOMXULListener,
                          public nsIWebProgressListener,
                          public nsITimerCallback, 
+                         public nsIScrollPositionListener,
                          public nsSupportsWeakReference
-
 
 {
   NS_DECL_ISUPPORTS_INHERITED
@@ -124,6 +128,11 @@ class nsRootAccessible : public nsAccessible,
     NS_IMETHOD Broadcast(nsIDOMEvent* aEvent);
     NS_IMETHOD CommandUpdate(nsIDOMEvent* aEvent);
 
+    // ----- nsIScrollPositionListener ---------------------------
+    NS_IMETHOD ScrollPositionWillChange(nsIScrollableView *aView, nscoord aX, nscoord aY);
+    NS_IMETHOD ScrollPositionDidChange(nsIScrollableView *aView, nscoord aX, nscoord aY);
+
+    // ----- nsITimerCallback ------------------------------------
     NS_IMETHOD_(void) Notify(nsITimer *timer);
 
     NS_DECL_NSIACCESSIBLEDOCUMENT
@@ -135,6 +144,9 @@ class nsRootAccessible : public nsAccessible,
     virtual nsIFrame* GetFrame();
     void FireAccessibleFocusEvent(nsIAccessible *focusAccessible, nsIDOMNode *focusNode);
     void StartDocReadyTimer();
+    void AddScrollListener(nsIPresShell *aPresShell);
+    void RemoveScrollListener(nsIPresShell *aPresShell);
+    friend PRBool PR_CALLBACK RemoveScrollListenerEnum(nsHashKey *aKey, void *aData, void* aClosure);
 
     static PRUint32 gInstanceCount;
 
@@ -150,6 +162,11 @@ class nsRootAccessible : public nsAccessible,
     nsCOMPtr<nsIWebProgress> mWebProgress;
     nsCOMPtr<nsIAccessibilityService> mAccService;
     EBusyState mBusy;
+
+    // Used for tracking scroll events
+    PRUint32 mScrollPositionChangedTicks;
+    nsSupportsHashtable *mScrollablePresShells;
+    nsCOMPtr<nsIWeakReference> mLastScrolledPresShell;
 };
 
 

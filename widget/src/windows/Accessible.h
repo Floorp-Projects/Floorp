@@ -253,7 +253,7 @@ public:
     // nsIAccessibleEventListener
     NS_DECL_NSIACCESSIBLEEVENTLISTENER
 
-    virtual PRUint32 GetIdFor(nsIAccessible* aAccessible);
+    PRInt32 GetIdFor(nsIAccessible* aAccessible);
     virtual void GetNSAccessibleFor(VARIANT varChild, nsCOMPtr<nsIAccessible>& aAcc);
 
 private:

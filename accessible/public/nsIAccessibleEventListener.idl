@@ -40,6 +40,7 @@ interface nsIAccessibleEventListener : nsISupports
   const unsigned long EVENT_MENUEND            = 0x0005;
   const unsigned long EVENT_MENUPOPUPSTART     = 0x0006;
   const unsigned long EVENT_MENUPOPUPEND       = 0x0007;
-
+  const unsigned long EVENT_SCROLLINGSTART     = 0x0012;
+  const unsigned long EVENT_SCROLLINGEND       = 0x0013;
   void handleEvent(in unsigned long aEvent, in nsIAccessible aTarget);
 };

@@ -34,6 +34,7 @@ REQUIRES = \
   necko \
   string \
   uriloader \
+  view \
   webshell \
   widget \
   xpcom \

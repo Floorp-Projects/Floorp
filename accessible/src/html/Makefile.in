@@ -31,7 +31,6 @@ LIBRARY_NAME = accessibility_html_s
 REQUIRES = \
   content \
   content_xul \
-  docshell \
   dom \
   gfx \
   gfx2 \

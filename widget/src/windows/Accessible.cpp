@@ -988,7 +988,7 @@ NS_IMETHODIMP RootAccessible::HandleEvent(PRUint32 aEvent, nsIAccessible* aAcces
   return NS_OK;
 }
 
-PRUint32 RootAccessible::GetIdFor(nsIAccessible* aAccessible)
+PRInt32 RootAccessible::GetIdFor(nsIAccessible* aAccessible)
 {
   // A child ID of the window is required, when we use NotifyWinEvent, so that the 3rd party application
   // can call back and get the IAccessible the event occured on.
@@ -996,7 +996,15 @@ PRUint32 RootAccessible::GetIdFor(nsIAccessible* aAccessible)
 
   nsCOMPtr<nsIDOMNode> domNode;
   aAccessible->AccGetDOMNode(getter_AddRefs(domNode));
-  PRUint32 uniqueID = - NS_REINTERPRET_CAST(PRInt32, (domNode.get()));
+  PRInt32 uniqueID = - NS_REINTERPRET_CAST(PRInt32, (domNode.get()));
+
+  for (PRInt32 index = 0; index < mListCount; index++)
+    if (uniqueID == mList[index].mId) {
+      // Change old ID in list to use most recent accessible,
+      // rather than create multiple entries for same accessible
+      mList[index].mAccessible = aAccessible;
+      return uniqueID;
+    }
 
   mList[mNextPos].mId = uniqueID;
   mList[mNextPos].mAccessible = aAccessible;
