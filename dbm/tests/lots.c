@@ -63,9 +63,6 @@ int MsgPriority=5;
 #define uint32 unsigned int
 #endif
 
-/* Hmm, everyone seems to be defining this. */
-#define STDC_HEADERS
-
 typedef enum {
 USE_LARGE_KEY,
 USE_SMALL_KEY
