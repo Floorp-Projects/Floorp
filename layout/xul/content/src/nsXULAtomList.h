@@ -75,6 +75,7 @@ XUL_ATOM(xpmenuitem, "xpmenuitem") // Represents an XP menu item
 XUL_ATOM(xpmenubutton, "xpmenubutton") // A titled button (with improved behavior) inside an XP menu.
 XUL_ATOM(xpmenuchildren, "xpmenuchildren") // The XP menu's children.
 XUL_ATOM(menuactive, "menuactive") // Whether or not a menu is active (without necessarily being open)
+XUL_ATOM(shortcut, "shortcut") // The shortcut key for a menu or menu item
 
 XUL_ATOM(progressmeter, "progressmeter")
 XUL_ATOM(titledbutton, "titledbutton")

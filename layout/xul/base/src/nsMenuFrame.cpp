@@ -201,7 +201,7 @@ nsMenuFrame::HandleEvent(nsIPresContext& aPresContext,
     if (mMenuParent && !mMenuOpen)
       mMenuParent->SetCurrentMenuItem(nsnull);
   }
-  else if (aEvent->message == NS_MOUSE_ENTER) {
+  else if (aEvent->message == NS_MOUSE_MOVE) {
     // Let the menu parent know we're the new item.
     if (mMenuParent)
       mMenuParent->SetCurrentMenuItem(this);
@@ -330,7 +330,11 @@ nsMenuFrame::Reflow(nsIPresContext&   aPresContext,
 void 
 nsMenuFrame::ShortcutNavigation(PRUint32 aLetter, PRBool& aHandledFlag)
 {
-  
+  nsIFrame* frame = mPopupFrames.FirstChild();
+  if (frame) {
+    nsMenuPopupFrame* popup = (nsMenuPopupFrame*)frame;
+    popup->ShortcutNavigation(aLetter, aHandledFlag);
+  } 
 }
 
 void
