@@ -50,6 +50,8 @@ use vars qw(
     $vars
 );
 
+ConnectToDatabase();
+
 if (defined $::FORM{"GoAheadAndLogIn"}) {
     # We got here from a login page, probably from relogin.cgi.  We better
     # make sure the password is legit.
@@ -301,7 +303,6 @@ $vars->{'userid'} = $::userid;
 # Boolean charts
 my @fields;
 push(@fields, { name => "noop", description => "---" });
-ConnectToDatabase();
 SendSQL("SELECT name, description FROM fielddefs ORDER BY sortkey");
 while (MoreSQLData()) {
     my ($name, $description) = FetchSQLData();
