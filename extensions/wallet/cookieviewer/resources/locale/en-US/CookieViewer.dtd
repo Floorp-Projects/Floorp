@@ -31,3 +31,5 @@
 <!ENTITY     cannotSet.label                "cannot set cookies">
 <!ENTITY     canLoad.label                  "can load images">
 <!ENTITY     cannotLoad.label               "cannot load images">
+
+<!ENTITY     checkbox.label                 "Don't allow removed cookies to be reaccepted later">
