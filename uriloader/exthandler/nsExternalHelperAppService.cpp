@@ -2454,7 +2454,7 @@ NS_IMETHODIMP nsExternalHelperAppService::GetTypeFromFile(nsIFile* aFile, nsACSt
     }
   }
   
-  nsDependentCString fileExt( ext );       
+  nsDependentCString fileExt(ext ? ext : "");
   // Handle the mac case
 #if defined(XP_MAC) || defined (XP_MACOSX)
   nsCOMPtr<nsILocalFileMac> macFile;
