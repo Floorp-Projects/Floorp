@@ -755,19 +755,16 @@ NS_IMETHODIMP PresShell :: CreateRenderingContext(nsIFrame *aFrame,
     view->GetParent(view);
   }
 
-  if (nsnull != view)
-  {
-    nsIDeviceContext  *dx;
+  nsIDeviceContext  *dx;
 
-    dx = mPresContext->GetDeviceContext();
+  dx = mPresContext->GetDeviceContext();
+
+  if (nsnull != view)
     rv = dx->CreateRenderingContext(view, aContext);
-    NS_RELEASE(dx);
-  }
   else
-  {
-    rv = NS_ERROR_FAILURE;
-    aContext = nsnull;
-  }
+    rv = dx->CreateRenderingContext(aContext);
+
+  NS_RELEASE(dx);
 
   return rv;
 }

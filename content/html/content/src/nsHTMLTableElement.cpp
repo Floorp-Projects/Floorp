@@ -526,7 +526,8 @@ MapTableBorderInto(nsIHTMLAttributes* aAttributes,
       aContext->GetMutableStyleData(eStyleStruct_Spacing);
     nsStyleTable *tableStyle = (nsStyleTable*)
       aContext->GetMutableStyleData(eStyleStruct_Table);
-    float p2t = aPresContext->GetPixelsToTwips();
+    float p2t;
+    aPresContext->GetScaledPixelsToTwips(p2t);
     nsStyleCoord twips;
     if (borderValue.GetUnit() == eHTMLUnit_Empty) {
       tableStyle->mRules=NS_STYLE_TABLE_RULES_ALL;  // non-0 values of border imply default rules=all
@@ -561,7 +562,8 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
 
   if (nsnull!=aAttributes)
   {
-    float p2t = aPresContext->GetPixelsToTwips();
+    float p2t;
+    aPresContext->GetScaledPixelsToTwips(p2t);
     nsHTMLValue value;
 
     // width

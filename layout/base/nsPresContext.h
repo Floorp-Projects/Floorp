@@ -214,6 +214,13 @@ public:
   virtual float GetPixelsToTwips() const = 0;
   virtual float GetTwipsToPixels() const = 0;
 
+  //XXX this is probably not an ideal name. MMP
+  /** 
+   * Do pixels to twips conversion taking into account
+   * differing size of a "pixel" from device to device.
+   */
+  NS_IMETHOD GetScaledPixelsToTwips(float &aScale) const = 0;
+
   //be sure to Relase() after you are done with the Get()
   virtual nsIDeviceContext * GetDeviceContext() const = 0;
 

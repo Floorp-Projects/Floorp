@@ -387,7 +387,8 @@ nsHTMLButtonControlFrame::ShiftContents(nsIPresContext& aPresContext, PRBool aDo
   nsStyleSpacing* spacing =
     (nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing); // cast deliberate
 
-  float p2t = aPresContext.GetPixelsToTwips();
+  float p2t;
+  aPresContext.GetScaledPixelsToTwips(p2t);
   nscoord shift = (aDown) ? NSIntPixelsToTwips(1, p2t) : -NSIntPixelsToTwips(1, p2t);
   nsStyleCoord styleCoord;
 
@@ -573,7 +574,8 @@ nsHTMLButtonControlFrame::Paint(nsIPresContext& aPresContext,
       nsMargin border;
       spacing->CalcBorderFor(this, border);
 
-      float p2t = aPresContext.GetPixelsToTwips();
+      float p2t;
+      aPresContext.GetScaledPixelsToTwips(p2t);
       nscoord onePixel = NSIntPixelsToTwips(1, p2t);
 
       nsRect outside(0, 0, mRect.width, mRect.height);

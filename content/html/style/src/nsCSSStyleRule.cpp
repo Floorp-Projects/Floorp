@@ -717,7 +717,9 @@ nscoord CalcLength(const nsCSSValue& aValue,
       return NSToCoordRound(aValue.GetFloatValue() * (float)capHeight);
     }
     case eCSSUnit_Pixel:
-      return NSFloatPixelsToTwips(aValue.GetFloatValue(), aPresContext->GetPixelsToTwips());
+      float p2t;
+      aPresContext->GetScaledPixelsToTwips(p2t);
+      return NSFloatPixelsToTwips(aValue.GetFloatValue(), p2t);
   }
   return 0;
 }

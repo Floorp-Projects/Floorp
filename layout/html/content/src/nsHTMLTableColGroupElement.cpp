@@ -212,7 +212,6 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
   NS_PRECONDITION(nsnull!=aPresContext, "bad presentation context arg");
   if (nsnull != aAttributes) {
 
-    float p2t;
     nsHTMLValue value;
     nsStyleText* textStyle = nsnull;
 
@@ -227,7 +226,8 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
         break;
 
       case eHTMLUnit_Pixel:
-        p2t = aPresContext->GetPixelsToTwips();
+        float p2t;
+        aPresContext->GetScaledPixelsToTwips(p2t);
         position->mWidth.SetCoordValue(NSIntPixelsToTwips(value.GetPixelValue(), p2t));
         break;
       }

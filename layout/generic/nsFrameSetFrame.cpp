@@ -190,7 +190,8 @@ void nsHTMLFramesetFrame::CalculateRowCol(nsIPresContext* aPresContext, nscoord 
   PRInt32 free    = 0;
   PRInt32 percent = 0;
   PRInt32 pixel   = 0;
-  float p2t = aPresContext->GetPixelsToTwips();
+  float p2t;
+  aPresContext->GetScaledPixelsToTwips(p2t);
 
   int i; // feeble compiler
   for (i = 0; i < aNumSpecs; i++) {
@@ -323,7 +324,8 @@ void nsHTMLFramesetFrame::CalculateRowCol(nsIPresContext* aPresContext, nscoord 
 
 PRInt32 nsHTMLFramesetFrame::GetBorderWidth(nsIPresContext* aPresContext) 
 {
-  float p2t = aPresContext->GetPixelsToTwips();
+  float p2t;
+  aPresContext->GetScaledPixelsToTwips(p2t);
   nsHTMLValue htmlVal;
   PRInt32 intVal;
   nsIHTMLContent* content = nsnull;

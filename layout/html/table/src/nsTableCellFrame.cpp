@@ -399,7 +399,9 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext& aPresContext,
       grandChild->ChildCount(childCount);
       if (0!=childCount)
       {
-        nscoord one = ((nscoord)(NSIntPixelsToTwips(1, aPresContext.GetPixelsToTwips())));
+        float p2t;
+        aPresContext.GetScaledPixelsToTwips(p2t);
+        nscoord one = ((nscoord)(NSIntPixelsToTwips(1, p2t)));
         cellWidth = 1;
         if (gsDebug) 
           printf ("setting cellWidth=1 because it was 0 but there's some content\n");
@@ -645,7 +647,9 @@ void nsTableCellFrame::MapBorderMarginPadding(nsIPresContext* aPresContext)
   {
     // XXX: need to get border width here
     // in HTML, cell borders are always 1 pixel by default
-    border = NSIntPixelsToTwips(1, aPresContext->GetPixelsToTwips());
+    float p2t;
+    aPresContext->GetScaledPixelsToTwips(p2t);
+    border = NSIntPixelsToTwips(1, p2t);
     MapHTMLBorderStyle(aPresContext, *spacingData, border, tableFrame);
   }
   

@@ -31,6 +31,7 @@
 #include "nsStyleConsts.h"
 #include "nsCSSRendering.h"
 #include "nsIDOMHTMLHRElement.h"
+#include "nsIDeviceContext.h"
 
 static NS_DEFINE_IID(kIDOMHTMLHRElementIID, NS_IDOMHTMLHRELEMENT_IID);
 
@@ -96,7 +97,8 @@ HRuleFrame::Paint(nsIPresContext&      aPresContext,
     return NS_OK;
   }
 
-  float p2t = aPresContext.GetPixelsToTwips();
+  float p2t;
+  aPresContext.GetScaledPixelsToTwips(p2t);
   nscoord thickness = NSIntPixelsToTwips(GetThickness(), p2t);
 
   // Get style data
@@ -222,7 +224,9 @@ HRuleFrame::Reflow(nsIPresContext&          aPresContext,
   // HR's do not impact the max-element-size, unless a width is specified
   // otherwise tables behave badly. This makes sense they are springy.
   if (nsnull != aDesiredSize.maxElementSize) {
-    nscoord onePixel = NSIntPixelsToTwips(1, aPresContext.GetPixelsToTwips());
+    float p2t;
+    aPresContext.GetScaledPixelsToTwips(p2t);
+    nscoord onePixel = NSIntPixelsToTwips(1, p2t);
     if (aReflowState.HaveFixedContentWidth()) {
       aDesiredSize.maxElementSize->width = aReflowState.minWidth;
       aDesiredSize.maxElementSize->height = onePixel;
@@ -242,12 +246,15 @@ HRuleFrame::GetDesiredSize(nsIPresContext* aPresContext,
                            const nsHTMLReflowState& aReflowState,
                            nsHTMLReflowMetrics& aDesiredSize)
 {
+  float p2t;
+  aPresContext->GetScaledPixelsToTwips(p2t);
+
   if (aReflowState.HaveFixedContentWidth()) {
     aDesiredSize.width = aReflowState.minWidth;
   }
   else {
     if (NS_UNCONSTRAINEDSIZE == aReflowState.maxSize.width) {
-      aDesiredSize.width =  nscoord(aPresContext->GetPixelsToTwips());
+      aDesiredSize.width =  nscoord(p2t);
     }
     else {
       aDesiredSize.width = aReflowState.maxSize.width;
@@ -265,7 +272,6 @@ HRuleFrame::GetDesiredSize(nsIPresContext* aPresContext,
   nscoord lineHeight;
 
   // Get the thickness of the rule (this is not css's height property)
-  float p2t = aPresContext->GetPixelsToTwips();
   nscoord thickness = NSIntPixelsToTwips(GetThickness(), p2t);
 
   // Compute height of "line" that hrule will layout within. Use the

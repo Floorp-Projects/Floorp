@@ -3347,7 +3347,7 @@ void nsTableFrame::MapBorderMarginPadding(nsIPresContext& aPresContext)
   {
     PRInt32 intValue = 0;
 
-    if (ConvertToPixelValue(border_value,1,intValue))
+    if (ConvertToPixelValue(border_value,1,intValue)) //XXX this is busted if this code is ever used again. MMP
       border = NSIntPixelsToTwips(intValue, p2t); 
   }
   MapHTMLBorderStyle(*spacingData,border);

@@ -324,7 +324,8 @@ nsObjectFrame::GetDesiredSize(nsIPresContext* aPresContext,
       aMetrics.width = aMetrics.height;
     }
     else {
-      float p2t = aPresContext->GetPixelsToTwips();
+      float p2t;
+      aPresContext->GetScaledPixelsToTwips(p2t);
       aMetrics.width = NSIntPixelsToTwips(EMBED_DEF_DIM, p2t);
     }
   }
@@ -333,7 +334,8 @@ nsObjectFrame::GetDesiredSize(nsIPresContext* aPresContext,
       aMetrics.height = aMetrics.width;
     }
     else {
-      float p2t = aPresContext->GetPixelsToTwips();
+      float p2t;
+      aPresContext->GetScaledPixelsToTwips(p2t);
       aMetrics.height = NSIntPixelsToTwips(EMBED_DEF_DIM, p2t);
     }
   }

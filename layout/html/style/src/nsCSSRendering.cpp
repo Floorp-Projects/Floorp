@@ -873,7 +873,8 @@ nsCSSRendering::PaintBackground(nsIPresContext& aPresContext,
 #endif
 
     // Convert image dimensions into nscoord's
-    float p2t = aPresContext.GetPixelsToTwips();
+    float p2t;
+    aPresContext.GetScaledPixelsToTwips(p2t);
     nscoord tileWidth = NSIntPixelsToTwips(imageSize.width, p2t);
     nscoord tileHeight = NSIntPixelsToTwips(imageSize.height, p2t);
     if ((tileWidth == 0) || (tileHeight == 0)) {
@@ -937,7 +938,7 @@ nsCSSRendering::PaintBackground(nsIPresContext& aPresContext,
       PRIntn x = xstart;
       nscoord xpos = xpostart;
       for (; x <= xCount; ++x, xpos += tileWidth) {
-        aRenderingContext.DrawImage(image, xpos, ypos);
+        aRenderingContext.DrawImage(image, xpos, ypos, tileWidth, tileHeight);
       }
     }
     aRenderingContext.PopState(clipState);

@@ -232,7 +232,8 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
 
     nsHTMLValue value;
 
-    float p2t = aPresContext->GetPixelsToTwips();
+    float p2t;
+    aPresContext->GetScaledPixelsToTwips(p2t);
     nsStylePosition* pos = (nsStylePosition*)
       aContext->GetMutableStyleData(eStyleStruct_Position);
     nsStyleSpacing* spacing = (nsStyleSpacing*)
