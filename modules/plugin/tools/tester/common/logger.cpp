@@ -103,7 +103,7 @@ BOOL CLogger::onNPP_DestroyStream(NPStream * npStream)
   return FALSE;
 }
 
-static void FixUpOutputString(char * aString, int aMaxSize)
+static void FixUpOutputString(char * aString)
 {
   // search for "<html" substring in both lower and 
   // upper cases and replace with "<@tml".
@@ -216,7 +216,7 @@ Frame:
       // If this is the case the browser will display the whole output
       // in HTML format while we still want it to be in plain text.
       // I do not know if this is a bug in the browser or not.
-      FixUpOutputString(szOutput, sizeof(szOutput));
+      FixUpOutputString(szOutput);
 
       NPN_Write(m_pPluginInstance, m_pStream, iLength, (void *)szOutput);
       delete plis;
