@@ -83,6 +83,76 @@
 
 @end
 
+#pragma mark -
+
+@interface NSTruncatingTextCell : NSCell
+{
+  NSMutableString *mTruncLabelString;
+  int             mLabelStringWidth;      // -1 if not known
+}
+
+- (id)initTextCell:(NSString*)aString;
+- (void)drawInteriorWithFrame:(NSRect)cellFrame inView:(NSView*)controlView;
+
+@end
+
+@implementation NSTruncatingTextCell
+
+- (id)initTextCell:(NSString*)aString
+{
+  if ((self = [super initTextCell:aString]))
+  {
+    mTruncLabelString = nil;
+    mLabelStringWidth = -1;
+  }
+  return self;
+}
+
+- (void)dealloc
+{
+  [mTruncLabelString release];
+  [super dealloc];
+}
+
+- (void)drawInteriorWithFrame:(NSRect)cellFrame inView:(NSView*)controlView
+{
+  int          cellWidth       = (int)NSWidth(cellFrame);
+  NSDictionary *cellAttributes = [[self attributedStringValue] attributesAtIndex:0 effectiveRange:nil];
+
+  if (mLabelStringWidth != cellWidth || !mTruncLabelString)
+  {
+    [mTruncLabelString release];
+    mTruncLabelString = [[NSMutableString alloc] initWithString:[self stringValue]];
+    [mTruncLabelString truncateToWidth:cellWidth at:kTruncateAtEnd withAttributes:cellAttributes];
+    mLabelStringWidth = cellWidth;
+  }
+  
+  [mTruncLabelString drawInRect:cellFrame withAttributes:cellAttributes];
+}
+
+- (void)setStringValue:(NSString *)aString
+{
+  if (![aString isEqualToString:[self stringValue]])
+  {
+    [mTruncLabelString release];
+    mTruncLabelString = nil;
+  }
+  [super setStringValue:aString];
+}
+
+- (void)setAttributedStringValue:(NSAttributedString *)attribStr
+{
+  if (![attribStr isEqualToAttributedString:[self attributedStringValue]])
+  {
+    [mTruncLabelString release];
+    mTruncLabelString = nil;
+  }
+  [super setAttributedStringValue:attribStr];
+}
+
+@end
+
+#pragma mark -
 
 // a container view for the items in the tab view item. We use a subclass of
 // NSView to handle drag and drop
@@ -115,7 +185,7 @@
     [mIconCell setImageAlignment:NSImageAlignCenter];
     [mIconCell setImageScaling:NSScaleProportionally];
 
-    mLabelCell = [[NSCell alloc] init];
+    mLabelCell = [[NSTruncatingTextCell alloc] init];
     [mLabelCell setControlSize:NSSmallControlSize];		// doesn't work?
     
     //[mIconCell setCellAttribute:NSChangeBackgroundCell to:(NSChangeGrayCellMask | NSChangeBackgroundCellMask)];
@@ -380,6 +450,11 @@
   [[mTabContentsView labelCell] setAttributedStringValue:labelString];
 
   [super setLabel:label];
+}
+
+- (NSString*)label
+{
+  return [[mTabContentsView labelCell] stringValue];
 }
 
 -(void)setTabIcon:(NSImage *)newIcon
