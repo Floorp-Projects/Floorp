@@ -34,7 +34,6 @@ XPIDLSRCS	= \
 		nsIProgressListener.idl			\
 		nsIWebBrowser.idl			\
 		nsIWebBrowserChrome.idl			\
-		nsIWebBrowserNav.idl			\
 		$(NULL)
 
 CPPSRCS		= \
