@@ -575,8 +575,6 @@ NS_IMETHODIMP nsViewManager::SetRootView(nsIView *aView)
 {
   nsView* view = NS_STATIC_CAST(nsView*, aView);
 
-  NS_ASSERTION(view, "Must have a root view");
-
   // Do NOT destroy the current root view. It's the caller's responsibility
   // to destroy it
   mRootView = view;
