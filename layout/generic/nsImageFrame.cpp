@@ -356,14 +356,14 @@ nsHTMLImageLoader::GetDesiredSize(nsIPresContext* aPresContext,
       // shows up we will reflow to the new size.
       aDesiredSize.width = 1;
       aDesiredSize.height = 1;
-      printf ("in image loader, dummy size of 1 returned\n");
+//      printf ("in image loader, dummy size of 1 returned\n");
     } else {
       float p2t = aPresContext->GetPixelsToTwips();
       nsSize imageSize;
       mImageLoader->GetSize(imageSize);
       aDesiredSize.width = NSIntPixelsToTwips(imageSize.width, p2t);
       aDesiredSize.height = NSIntPixelsToTwips(imageSize.height, p2t);
-      printf ("in image loader, real size of %d returned\n", aDesiredSize.width);
+//      printf ("in image loader, real size of %d returned\n", aDesiredSize.width);
     }
   }
 }
