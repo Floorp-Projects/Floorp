@@ -112,10 +112,11 @@ localDefPref("mail.compose_window_rect",            "-1,-1,-1,-1");
 pref("mail.addr_book.ldap.disabled", false);
 localDefPref("mail.addr_book_window_rect",          "-1,-1,-1,-1");
 pref("mail.wfe.addr_book.show_value", 0);
-pref("mail.addr_book.lastnamefirst", false);
+pref("mail.addr_book.lastnamefirst", 0); //0=displayname, 1=lastname first, 2=firstname first
 pref("mail.addr_book.sortby", 2);
 pref("mail.addr_book.sort_ascending", true);
 pref("mail.addr_book.displayName.autoGeneration", true);
+pref("mail.addr_book.displayName.lastnamefirst", false); // generate display names in last first order
 localDefPref("mail.addr_book.name.width", 0);
 localDefPref("mail.addr_book.email.width", 0);
 localDefPref("mail.addr_book.nickname.width", 0);
