@@ -103,6 +103,10 @@
       </xul:treerows> 
     </content>
     <interface>
+      <property name="selectedIndex"
+                onget="return (this.selectedItems.length > 0 ? this.getIndexOfItem(this.selectedItems[0]) : -1)"
+                onset="if(val>=0){var item=this.getItemAtIndex(val); if(item) this.selectItem(item);} else this.clearItemSelection();"
+                />
       <property name="treeBoxObject"
                 onget="return this.boxObject.QueryInterface(Components.interfaces.nsITreeBoxObject);"
                 readonly="true"/>
