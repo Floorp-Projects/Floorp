@@ -1092,6 +1092,14 @@ NS_IMETHODIMP
 GlobalWindowImpl::Focus()
 {
   nsresult result = NS_OK;
+  
+  nsIBrowserWindow *browser;
+  if (NS_OK == GetBrowserWindowInterface( browser))
+  {
+      browser->Show();
+      NS_RELEASE( browser);
+  }
+  
   if (nsnull != mWebShell) {
     result = mWebShell->SetFocus();
   }
