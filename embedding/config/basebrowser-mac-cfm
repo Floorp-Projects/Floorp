@@ -77,7 +77,7 @@ Components:dom_html.xpt
 Components:dom_range.xpt
 Components:dom_stylesheets.xpt
 Components:dom_traversal.xpt
-Components:dom_views.xpt125766
+Components:dom_views.xpt
 Components:dom_xbl.xpt
 Components:dom_xul.xpt
 
