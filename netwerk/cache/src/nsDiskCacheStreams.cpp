@@ -711,7 +711,7 @@ nsDiskCacheStreamIO::FlushBufferToFile(PRBool  clearBuffer)
     
     // write buffer
     PRInt32 bytesWritten = PR_Write(mFD, mBuffer, mBufEnd);
-    if (bytesWritten != mBufEnd) {
+    if (PRUint32(bytesWritten) != mBufEnd) {
         NS_WARNING("failed to flush all data");
         return NS_ERROR_UNEXPECTED;     // NS_ErrorAccordingToNSPR()
     }
@@ -776,7 +776,7 @@ nsDiskCacheStreamIO::Seek(PRInt32 whence, PRInt32 offset)
     nsAutoLock lock(mDeviceLock->GetPRLock()); // grab device lock
     if (!mBinding)  return NS_ERROR_NOT_AVAILABLE;
 
-    if (offset > mStreamEnd)  return NS_ERROR_FAILURE;
+    if (PRUint32(offset) > mStreamEnd)  return NS_ERROR_FAILURE;
 
     
     if (mFD) {
@@ -848,7 +848,7 @@ nsDiskCacheStreamIO::Seek(PRInt32 whence, PRInt32 offset)
             return NS_ERROR_INVALID_ARG;
     }
     
-    if ((newPos < 0) || (newPos > mBufEnd)) {
+    if ((newPos < 0) || (PRUint32(newPos) > mBufEnd)) {
         NS_WARNING("seek offset out of range");
         return NS_ERROR_INVALID_ARG;
     }
@@ -898,13 +898,12 @@ nsDiskCacheStreamIO::SetEOF()
         }
     }
     
-    PRUint32  oldSizeK = (mStreamEnd + 0x03FF) >> 10;
-    PRUint32  newSizeK = (mStreamPos + 0x03FF) >> 10;
-    
     if (mFD) {
         rv = nsDiskCache::Truncate(mFD, mStreamPos);
+#ifdef DEBUG
+        PRUint32 oldSizeK = (mStreamEnd + 0x03FF) >> 10;
         NS_ASSERTION(mBinding->mRecord.DataFileSize() == oldSizeK, "bad disk cache entry size");
-        
+#endif
     } else {
         // data stored in buffer.
         NS_ASSERTION(mStreamEnd < (16 * 1024), "buffer truncation inadequate");
