@@ -7926,12 +7926,143 @@ nsCSSFrameConstructor::AppendFrames(nsIPresContext*  aPresContext,
 }
 
 static nsIFrame*
+FindPreviousAnonymousSibling(nsIPresShell* aPresShell,
+                             nsIContent* aContainer,
+                             nsIContent* aChild)
+{
+  nsIFrame* prevSibling = nsnull;
+
+  nsCOMPtr<nsIDOMNodeList> nodeList;
+  
+  nsCOMPtr<nsIDocument> doc;
+  aContainer->GetDocument(*getter_AddRefs(doc));
+  nsCOMPtr<nsIDOMDocumentXBL> xblDoc(do_QueryInterface(doc));
+  nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(aContainer));
+  xblDoc->GetAnonymousNodes(elt, getter_AddRefs(nodeList));
+  if (nodeList) {
+    PRUint32 ctr,listLength;
+    nsCOMPtr<nsIDOMNode> node;
+    nodeList->GetLength(&listLength);
+    if (listLength == 0)
+      return nsnull;
+    PRBool found = PR_FALSE;
+    for (ctr = listLength; ctr > 0; ctr--) {
+      nodeList->Item(ctr-1, getter_AddRefs(node));
+      nsCOMPtr<nsIContent> childContent(do_QueryInterface(node));
+      if (childContent.get() == aChild) {
+        found = PR_TRUE;
+        continue;
+      }
+
+      if (found) {
+        aPresShell->GetPrimaryFrameFor(childContent, &prevSibling);
+
+        if (nsnull != prevSibling) {
+          // The frame may have a next-in-flow. Get the last-in-flow
+          nsIFrame* nextInFlow;
+          do {
+            prevSibling->GetNextInFlow(&nextInFlow);
+            if (nsnull != nextInFlow) {
+              prevSibling = nextInFlow;
+            }
+          } while (nsnull != nextInFlow);
+
+          // Did we really get the *right* frame?
+          const nsStyleDisplay* display;
+          prevSibling->GetStyleData(eStyleStruct_Display,
+                                    (const nsStyleStruct*&)display);
+          const nsStylePosition* position;
+          prevSibling->GetStyleData(eStyleStruct_Position,
+                                    (const nsStyleStruct*&)position);
+          if (display->IsFloating() || position->IsPositioned()) {
+            // Nope. Get the place-holder instead
+            nsIFrame* placeholderFrame;
+            aPresShell->GetPlaceholderFrameFor(prevSibling, &placeholderFrame);
+            NS_ASSERTION(nsnull != placeholderFrame, "yikes");
+            prevSibling = placeholderFrame;
+          }
+
+          break;
+        }
+      }
+    }
+  }
+
+  return prevSibling;
+}
+
+static nsIFrame*
+FindNextAnonymousSibling(nsIPresShell* aPresShell,
+                         nsIContent* aContainer,
+                         nsIContent* aChild)
+{
+  nsIFrame* nextSibling = nsnull;
+
+  nsCOMPtr<nsIDOMNodeList> nodeList;
+  
+  nsCOMPtr<nsIDocument> doc;
+  aContainer->GetDocument(*getter_AddRefs(doc));
+  nsCOMPtr<nsIDOMDocumentXBL> xblDoc(do_QueryInterface(doc));
+  nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(aContainer));
+  xblDoc->GetAnonymousNodes(elt, getter_AddRefs(nodeList));
+  if (nodeList) {
+    PRUint32 ctr,listLength;
+    nsCOMPtr<nsIDOMNode> node;
+    nodeList->GetLength(&listLength);
+    PRBool found = PR_FALSE;
+    for (ctr = 0; ctr < listLength; ctr++) {
+      nodeList->Item(ctr, getter_AddRefs(node));
+      nsCOMPtr<nsIContent> childContent(do_QueryInterface(node));
+      if (childContent.get() == aChild) {
+        found = PR_TRUE;
+        continue;
+      }
+
+      if (found) {
+        aPresShell->GetPrimaryFrameFor(childContent, &nextSibling);
+
+        if (nsnull != nextSibling) {
+          // The frame may have a next-in-flow. Get the first-in-flow
+          nsIFrame* prevInFlow;
+          do {
+            nextSibling->GetPrevInFlow(&prevInFlow);
+            if (nsnull != prevInFlow) {
+              nextSibling = prevInFlow;
+            }
+          } while (nsnull != prevInFlow);
+
+          // Did we really get the *right* frame?
+          const nsStyleDisplay* display;
+          nextSibling->GetStyleData(eStyleStruct_Display,
+                                    (const nsStyleStruct*&)display);
+          const nsStylePosition* position;
+          nextSibling->GetStyleData(eStyleStruct_Position,
+                                    (const nsStyleStruct*&)position);
+          if (display->IsFloating() || position->IsPositioned()) {
+            // Nope. Get the place-holder instead
+            nsIFrame* placeholderFrame;
+            aPresShell->GetPlaceholderFrameFor(nextSibling, &placeholderFrame);
+            NS_ASSERTION(nsnull != placeholderFrame, "yikes");
+            nextSibling = placeholderFrame;
+          }
+
+          break;
+        }
+      }
+    }
+  }
+
+  return nextSibling;
+}
+
+static nsIFrame*
 FindPreviousSibling(nsIPresShell* aPresShell,
                     nsIContent*   aContainer,
                     PRInt32       aIndexInContainer)
 {
   nsIFrame* prevSibling = nsnull;
-
+  
+    // Walk the 
   // Note: not all content objects are associated with a frame (e.g., if their
   // 'display' type is 'hidden') so keep looking until we find a previous frame
   for (PRInt32 i = aIndexInContainer - 1; i >= 0; i--) {
@@ -8475,35 +8606,18 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
 
   } else {
     // Find the frame that precedes the insertion point.
-    nsIFrame* prevSibling = FindPreviousSibling(shell, aContainer, aIndexInContainer);
-
-    /*
-    if (prevSibling) {
-      nsIFrame* parent;
-      prevSibling->GetParent(&parent);
-      nsIFrame* first;
-      parent->FirstChild(aPresContext, nsnull, &first);
-      PRBool found = PR_FALSE;
-      while(first)
-      {
-        if (first == prevSibling) {
-          found = PR_TRUE;
-          break;
-        }
-
-        first->GetNextSibling(&first);
-      }
-
-      NS_ASSERTION(found,"Error sibling not in parent!!!!!");
-    }
-    */
+    nsIFrame* prevSibling = (aIndexInContainer == -1) ? 
+                             FindPreviousAnonymousSibling(shell, aContainer, aChild) :
+                             FindPreviousSibling(shell, aContainer, aIndexInContainer);
 
     nsIFrame* nextSibling = nsnull;
     PRBool    isAppend = PR_FALSE;
     
     // If there is no previous sibling, then find the frame that follows
     if (nsnull == prevSibling) {
-      nextSibling = FindNextSibling(shell, aContainer, aIndexInContainer);
+      nextSibling = (aIndexInContainer == -1) ? 
+                    FindNextAnonymousSibling(shell, aContainer, aChild) :
+                    FindNextSibling(shell, aContainer, aIndexInContainer);
     }
 
     // Get the geometric parent. Use the prev sibling if we have it;

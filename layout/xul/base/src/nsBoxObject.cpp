@@ -41,7 +41,7 @@
 // Static member variable initialization
 
 // Implement our nsISupports methods
-NS_IMPL_ISUPPORTS2(nsBoxObject, nsIBoxObject, nsPIBoxObject)
+NS_IMPL_ISUPPORTS3(nsBoxObject, nsIBoxObject, nsPIBoxObject, nsISecurityCheckedComponent)
 
 // Constructors/Destructors
 nsBoxObject::nsBoxObject(void)
@@ -263,6 +263,37 @@ nsBoxObject::GetHeight(PRInt32* aResult)
   return NS_OK;
 }
 
+/* string canCreateWrapper (in nsIIDPtr iid); */
+NS_IMETHODIMP nsBoxObject::CanCreateWrapper(const nsIID * iid, char **_retval)
+{
+  nsCAutoString str("AllAccess");
+  *_retval = str.ToNewCString();
+  return NS_OK;
+}
+
+/* string canCallMethod (in nsIIDPtr iid, in wstring methodName); */
+NS_IMETHODIMP nsBoxObject::CanCallMethod(const nsIID * iid, const PRUnichar *methodName, char **_retval)
+{
+  nsCAutoString str("AllAccess");
+  *_retval = str.ToNewCString();
+  return NS_OK;
+}
+
+/* string canGetProperty (in nsIIDPtr iid, in wstring propertyName); */
+NS_IMETHODIMP nsBoxObject::CanGetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval)
+{
+  nsCAutoString str("AllAccess");
+  *_retval = str.ToNewCString();
+  return NS_OK;
+}
+
+/* string canSetProperty (in nsIIDPtr iid, in wstring propertyName); */
+NS_IMETHODIMP nsBoxObject::CanSetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval)
+{
+  nsCAutoString str("AllAccess");
+  *_retval = str.ToNewCString();
+  return NS_OK;
+}
 // Creation Routine ///////////////////////////////////////////////////////////////////////
 
 nsresult

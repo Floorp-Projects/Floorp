@@ -47,6 +47,7 @@ public:
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSICONTROLLERS
+    NS_DECL_NSISECURITYCHECKEDCOMPONENT
   
 protected:
     nsXULControllers();

@@ -34,6 +34,7 @@ class nsBoxObject : public nsIBoxObject, public nsPIBoxObject
 {
   NS_DECL_ISUPPORTS
   NS_DECL_NSIBOXOBJECT
+  NS_DECL_NSISECURITYCHECKEDCOMPONENT
 
 public:
   nsBoxObject();
