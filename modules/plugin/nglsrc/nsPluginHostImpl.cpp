@@ -2386,6 +2386,22 @@ NS_IMETHODIMP nsPluginHostImpl::Destroy(void)
   while (nsnull != mPlugins)
   {
     nsPluginTag *temp = mPlugins->mNext;
+
+    // while walking through the list of the plugins see if we still have anything to shutdown
+    // some plugins may have never created an instance but still expect a shutdown call
+    // see bugzilla bug 73071
+    if(mPlugins->mEntryPoint != nsnull)
+    {
+      mPlugins->mEntryPoint->Shutdown();
+      mPlugins->mEntryPoint = nsnull;
+    }
+
+    if ((nsnull != mPlugins->mLibrary) && mPlugins->mCanUnloadLibrary)
+    {
+      PR_UnloadLibrary(mPlugins->mLibrary);
+      mPlugins->mLibrary = nsnull;
+    }
+
     delete mPlugins;
     mPlugins = temp;
   }
