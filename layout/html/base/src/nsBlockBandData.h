@@ -60,9 +60,6 @@ public:
   // space manager translation.
   nsresult GetAvailableSpace(nscoord aY, nsRect& aResult);
 
-  // Clear any current floats, returning a new Y coordinate
-  nscoord ClearFloats(nscoord aY, PRUint8 aBreakType);
-
   // Get the raw trapezoid count for this band.
   PRInt32 GetTrapezoidCount() const {
     return mCount;
@@ -120,8 +117,6 @@ protected:
   PRInt32 mLeftFloats, mRightFloats;
 
   void ComputeAvailSpaceRect();
-  PRBool ShouldClearFrame(nsIFrame* aFrame, PRUint8 aBreakType);
-
 };
 
 #endif /* nsBlockBandData_h___ */

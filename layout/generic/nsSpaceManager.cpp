@@ -1185,6 +1185,45 @@ nsSpaceManager::DestroyFrameInfo(FrameInfo* aFrameInfo)
   delete aFrameInfo;
 }
 
+static PRBool
+ShouldClearFrame(nsIFrame* aFrame, PRUint8 aBreakType)
+{
+  PRUint8 floatType = aFrame->GetStyleDisplay()->mFloats;
+  PRBool result;
+  switch (aBreakType) {
+    case NS_STYLE_CLEAR_LEFT_AND_RIGHT:
+      result = PR_TRUE;
+      break;
+    case NS_STYLE_CLEAR_LEFT:
+      result = floatType == NS_STYLE_FLOAT_LEFT;
+      break;
+    case NS_STYLE_CLEAR_RIGHT:
+      result = floatType == NS_STYLE_FLOAT_RIGHT;
+      break;
+    default:
+      result = PR_FALSE;
+  }
+  return result;
+}
+
+nscoord
+nsSpaceManager::ClearFloats(nscoord aY, PRUint8 aBreakType)
+{
+  nscoord bottom = aY + mY;
+
+  for (FrameInfo *frame = mFrameInfoMap; frame; frame = frame->mNext) {
+    if (ShouldClearFrame(frame->mFrame, aBreakType)) {
+      if (frame->mRect.YMost() > bottom) {
+        bottom = frame->mRect.YMost();
+      }
+    }
+  }
+
+  bottom -= mY;
+
+  return bottom;
+}
+
 /////////////////////////////////////////////////////////////////////////////
 // FrameInfo
 
