@@ -83,8 +83,9 @@ public:
 
     
     static nsProxyEventObject* GetNewOrUsedProxy(PLEventQueue *destQueue,
-                                                   nsISupports *aObj,
-                                                   REFNSIID aIID);
+                                                 ProxyType proxyType,
+                                                 nsISupports *aObj,
+                                                 REFNSIID aIID);
 
 
     PLEventQueue*        GetQueue() const { return mProxyObject->GetQueue(); }
@@ -101,6 +102,7 @@ public:
 private:
     nsProxyEventObject();   // not implemented
     nsProxyEventObject(PLEventQueue *destQueue,
+                       ProxyType proxyType,
                        nsISupports* aObj,
     				   nsProxyEventClass* aClass,
                        nsProxyEventObject* root);
@@ -130,13 +132,23 @@ public:
     NS_IMETHOD GetProxyObject(PLEventQueue *destQueue, 
                               REFNSIID aIID, 
                               nsISupports* aObj, 
+                              ProxyType proxyType,
                               void** aProxyObject);
     
     NS_IMETHOD GetProxyObject(PLEventQueue *destQueue, 
                               const nsCID &aClass, 
                               nsISupports *aDelegate, 
                               const nsIID &aIID, 
+                              ProxyType proxyType,
                               void** aProxyObject);
+    
+    
+    
+    // Helpers
+	static NS_METHOD Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
+    
+    
+    
     nsProxyObjectManager();
     virtual ~nsProxyObjectManager();
     
@@ -144,7 +156,8 @@ public:
     
     nsHashtable *GetRealObjectToProxyObjectMap();
     nsHashtable *GetIIDToProxyClassMap();
-        
+    
+    
 private:
     static nsProxyObjectManager* mInstance;
     

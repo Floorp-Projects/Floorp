@@ -23,28 +23,71 @@
 
 #include "nsRepository.h"
 
-nsProxyObject::nsProxyObject()
+        
+static void* EventHandler(PLEvent *self);
+static void DestroyHandler(PLEvent *self);
+
+nsProxyObjectCallInfo::nsProxyObjectCallInfo(nsProxyObject* owner,
+                                             PRUint32 methodIndex, 
+                                             nsXPTCVariant* parameterList, 
+                                             PRUint32 parameterCount, 
+                                             PLEvent *event)
 {
-    mRealObjectOwned = PR_FALSE;
-    mRealObject      = nsnull;
-    mDestQueue       = nsnull;
+    mOwner            = owner;
+    mMethodIndex      = methodIndex;
+    mParameterList    = parameterList;
+    mParameterCount   = parameterCount;
+    mEvent            = event;
 }
 
 
-nsProxyObject::nsProxyObject(PLEventQueue *destQueue, nsISupports *realObject)
+nsProxyObjectCallInfo::~nsProxyObjectCallInfo()
 {
+    PR_FREEIF(mEvent);
+    
+    if (mParameterList)  
+        free( (void*) mParameterList);
+}
+
+
+static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+NS_IMPL_ISUPPORTS(nsProxyObject, kISupportsIID)
+
+
+nsProxyObject::nsProxyObject()
+{
+    NS_INIT_REFCNT();
+    NS_ADDREF_THIS();
+     
+    mRealObjectOwned = PR_FALSE;
+    mRealObject      = nsnull;
+    mDestQueue       = nsnull;
+    mProxyType       = PROXY_SYNC;
+}
+
+
+nsProxyObject::nsProxyObject(PLEventQueue *destQueue, ProxyType proxyType, nsISupports *realObject)
+{
+    NS_INIT_REFCNT();
+    NS_ADDREF_THIS();
+
     mRealObjectOwned = PR_FALSE;
     mRealObject      = realObject;
     mDestQueue       = destQueue;
+    mProxyType       = proxyType;
 
     mRealObject->AddRef();
 }
 
 
-nsProxyObject::nsProxyObject(PLEventQueue *destQueue, const nsCID &aClass,  nsISupports *aDelegate,  const nsIID &aIID)
+nsProxyObject::nsProxyObject(PLEventQueue *destQueue, ProxyType proxyType, const nsCID &aClass,  nsISupports *aDelegate,  const nsIID &aIID)
 {
+    NS_INIT_REFCNT();
+    NS_ADDREF_THIS();
+
     mRealObjectOwned = PR_TRUE;
     mDestQueue       = destQueue;
+    mProxyType       = proxyType;
     
     nsresult rv = nsComponentManager::CreateInstance(aClass, 
                                                      aDelegate,
@@ -57,8 +100,6 @@ nsProxyObject::nsProxyObject(PLEventQueue *destQueue, const nsCID &aClass,  nsIS
         mRealObject      = nsnull;
     }
 }
-
-
 
 nsProxyObject::~nsProxyObject()
 {
@@ -81,66 +122,92 @@ nsProxyObject::Post(  PRUint32        methodIndex,           /* which method to 
                       PRUint32        paramCount,            /* number of params */
                       nsXPTCVariant   *params)
 {
-
+    
     PL_ENTER_EVENT_QUEUE_MONITOR(mDestQueue);
-
+    
+    NS_ASSERTION(mRealObject, "no native object");
+    
+    NS_ADDREF_THIS();  // so that our destructor does not pull out from under us.  This will be released in the DestroyHandler()
+    
     PLEvent *event = PR_NEW(PLEvent);
-    if (event == NULL) 
+    
+    if (event == nsnull) 
     {
         PL_EXIT_EVENT_QUEUE_MONITOR(mDestQueue);
         return NS_ERROR_OUT_OF_MEMORY;   
     }
+
+    nsProxyObjectCallInfo *info = new nsProxyObjectCallInfo(this, methodIndex, params, paramCount, event);
     
-    NS_ASSERTION(mRealObject, "no native object");
 
     PL_InitEvent(event, 
-                 this,
-                 nsProxyObject::EventHandler,
-                 nsProxyObject::DestroyHandler);
-    
-    
-    mMethodIndex       = methodIndex;
-    mParameterCount    = paramCount;
-    mParameterList     = params;
-
-    PL_PostSynchronousEvent(mDestQueue, (PLEvent *)event);
-    
-    PL_EXIT_EVENT_QUEUE_MONITOR(mDestQueue);
-
-    PR_FREEIF(event);
-        
-    return mResult;
-}
-
-
-
-void
-nsProxyObject::InvokeMethod()
-{
-    // invoke the magic of xptc...
-    PL_ENTER_EVENT_QUEUE_MONITOR(mDestQueue);
-
-    mResult = XPTC_InvokeByIndex( mRealObject, 
-                                  mMethodIndex,
-                                  mParameterCount, 
-                                  mParameterList);
-    
-    PL_EXIT_EVENT_QUEUE_MONITOR(mDestQueue);
-}
-
-
-
-void nsProxyObject::DestroyHandler(PLEvent *self) {}
-
-
-void* nsProxyObject::EventHandler(PLEvent *self) 
-{
-    nsProxyObject* proxyObject = (nsProxyObject*)PL_GetEventOwner(self);
-    
-    if (proxyObject != nsnull)
+                 info,
+                 EventHandler,
+                 DestroyHandler);
+   
+    if (mProxyType == PROXY_SYNC)
     {
-        proxyObject->InvokeMethod();
-    }    
+        PL_PostSynchronousEvent(mDestQueue, event);
+        
+        nsresult rv = info->GetResult();
+
+        delete info;
+
+        PL_EXIT_EVENT_QUEUE_MONITOR(mDestQueue);
+
+        return rv;
+
+    }
+    else if (mProxyType == PROXY_ASYNC)
+    {
+        PL_PostEvent(mDestQueue, event);
+        
+        PL_EXIT_EVENT_QUEUE_MONITOR(mDestQueue);
+
+        return NS_OK;
+    }
+    
+    PL_EXIT_EVENT_QUEUE_MONITOR(mDestQueue);
+    return NS_ERROR_UNEXPECTED;
+    
+}
+
+
+void DestroyHandler(PLEvent *self) 
+{
+    nsProxyObjectCallInfo* owner = (nsProxyObjectCallInfo*)PL_GetEventOwner(self);
+    nsProxyObject* proxyObject = owner->GetProxyObject();
+
+    if (proxyObject->GetProxyType() == PROXY_ASYNC)
+    {        
+        delete owner;
+    }
+
+    // decrement once since we increased it during the Post()
+    proxyObject->Release();
+}
+
+void* EventHandler(PLEvent *self) 
+{
+    nsProxyObjectCallInfo *info        = (nsProxyObjectCallInfo*)PL_GetEventOwner(self);
+    nsProxyObject         *proxyObject = info->GetProxyObject();
+    PLEventQueue          *eventQ      = proxyObject->GetQueue();
+
+    if (info != nsnull)
+    {
+       
+       PL_ENTER_EVENT_QUEUE_MONITOR(eventQ);
+
+        // invoke the magic of xptc...
+       nsresult rv = XPTC_InvokeByIndex( proxyObject->GetRealObject(), 
+                                         info->GetMethodIndex(),
+                                         info->GetParameterCount(), 
+                                         info->GetParameterList());
+    
+       info->SetResult(rv);
+
+       PL_EXIT_EVENT_QUEUE_MONITOR(eventQ);
+    }
     return NULL;
 }
 

@@ -26,13 +26,35 @@
 #include "plevent.h"
 #include "xptcall.h"
 
+    
+typedef enum 
+{
+    PROXY_SYNC = 0,  // act just like a function call.
+    PROXY_ASYNC      // fire and forget.  This will return immediately and you will lose all return information.
 
-class NS_EXPORT nsProxyObject
+} ProxyType;
+
+
+
+// Using the ISupports interface just for addrefing.  
+
+#define NS_PROXYOBJECT_CID                       \
+{ 0xeea90d40,                                    \
+  0xb09f,                                        \
+  0x11d2,                                        \
+ {0x91, 0x5e, 0xc1, 0x2b, 0x69, 0x6c, 0x93, 0x33}\
+} 
+
+
+class nsProxyObject : public nsISupports  
 {
     public:
+                            
+        NS_DECL_ISUPPORTS
+
                             nsProxyObject();
-                            nsProxyObject(PLEventQueue *destQueue, nsISupports *realObject);
-                            nsProxyObject(PLEventQueue *destQueue, const nsCID &aClass,  nsISupports *aDelegate,  const nsIID &aIID);
+                            nsProxyObject(PLEventQueue *destQueue, ProxyType proxyType, nsISupports *realObject);
+                            nsProxyObject(PLEventQueue *destQueue, ProxyType proxyType, const nsCID &aClass,  nsISupports *aDelegate,  const nsIID &aIID);
         
         virtual             ~nsProxyObject();
 
@@ -42,32 +64,52 @@ class NS_EXPORT nsProxyObject
                                    nsXPTCVariant   *params);
 
         
-        nsresult            GetLastResult() const { return mResult; }
         nsISupports*        GetRealObject() const { return mRealObject; }
-        PRUint32            GetMethodIndex() const { return mMethodIndex; }
-        PRUint32            GetParameterCount() const { return mParameterCount; }
-        nsXPTCVariant*      GetParameterList() const { return mParameterList; }
         PLEventQueue*       GetQueue() const { return mDestQueue; }
-        
-        
-        
-        // These are called from PLEvent. They must be public.  You should not use them.
+        ProxyType           GetProxyType() const { return mProxyType; }
 
-        static              void* EventHandler(PLEvent *self);
-        static              void DestroyHandler(PLEvent *self);
-                            void InvokeMethod(void);
     private:
         
         PLEventQueue    *mDestQueue;                 /* destination queue */
         nsISupports     *mRealObject;                /* the non-proxy object that this event is referring to */
+        
         PRBool          mRealObjectOwned;
+        ProxyType       mProxyType;
+        
+ };
 
-        PRUint32         mMethodIndex;               /* which method to be called? */
-        nsresult         mResult;                    /* this is the return result of the called function */
-        PRUint32         mParameterCount;            /* number of params */
-        nsXPTCVariant   *mParameterList;             /* marshalled in parameter buffer */
+
+class NS_EXPORT nsProxyObjectCallInfo
+{
+public:
+    
+    nsProxyObjectCallInfo(nsProxyObject* owner,
+                          PRUint32 methodIndex, 
+                          nsXPTCVariant* parameterList, 
+                          PRUint32 parameterCount, 
+                          PLEvent *event);
+
+    virtual ~nsProxyObjectCallInfo();
+    
+    PRUint32            GetMethodIndex() const { return mMethodIndex; }
+    
+    nsXPTCVariant*      GetParameterList() const { return mParameterList; }
+    PRUint32            GetParameterCount() const { return mParameterCount; }
+    PLEvent*            GetPLEvent() const { return mEvent; }
+    nsresult            GetResult() const { return mResult; }
+    nsProxyObject*      GetProxyObject() const { return mOwner; }
+    void                SetResult(nsresult rv) {mResult = rv; }
+
+private:
+    
+    nsProxyObject   *mOwner;
+    nsresult         mResult;                    /* this is the return result of the called function */
+    PRUint32         mMethodIndex;               /* which method to be called? */
+    nsXPTCVariant   *mParameterList;             /* marshalled in parameter buffer */
+    PRUint32         mParameterCount;            /* number of params */
+    PLEvent         *mEvent;                     /* the current plevent */       
+
 };
-
 
 #define NS_DECL_PROXY(_class, _interface) \
 public: \

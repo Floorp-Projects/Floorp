@@ -77,7 +77,7 @@ static NS_DEFINE_IID(kIAllocatorIID, NS_IALLOCATOR_IID);
 static NS_DEFINE_IID(kAllocatorCID, NS_ALLOCATOR_CID);
 
 #ifdef XP_PC
-#define XPCOM_DLL  "xpcom32.dll"
+#define XPCOM_DLL  "xpcom.dll"
 #else
 #ifdef XP_MAC
 #define XPCOM_DLL  "XPCOM_DLL"
@@ -85,18 +85,6 @@ static NS_DEFINE_IID(kAllocatorCID, NS_ALLOCATOR_CID);
 #define XPCOM_DLL  "libxpcom.so"
 #endif
 #endif
-
-
-#ifdef XP_PC
-#define LIBPROXY_DLL  "libproxy.dll"
-#else
-#ifdef XP_MAC
-#define LIBPROXY_DLL  "LIBPROXY_DLL"
-#else
-#define LIBPROXY_DLL  "libproxy.so"
-#endif
-#endif
-
 
 
 /***************************************************************************/
@@ -134,7 +122,7 @@ NS_SetupRegistry()
     nsComponentManager::RegisterComponent(kAllocatorCID, NULL, NULL, XPCOM_DLL,
                                     PR_FALSE, PR_FALSE);
 
-    nsComponentManager::RegisterComponent(kProxyObjectManagerCID, NULL, NULL, LIBPROXY_DLL,
+    nsComponentManager::RegisterComponent(kProxyObjectManagerCID, NULL, NULL, XPCOM_DLL,
                                     PR_FALSE, PR_FALSE);
 
 }
@@ -260,6 +248,8 @@ void TestCase_TwoClassesOneInterface(void *arg)
                                        nsIProxyObjectManager::GetIID(),
                                        (void**)&proxyObjectFactory);
 
+    printf("ProxyObjectManager: %x ", proxyObjectFactory);
+    
     PR_ASSERT(proxyObjectFactory);
 
     nsITestXPCFoo         *proxyObject;
@@ -272,9 +262,9 @@ void TestCase_TwoClassesOneInterface(void *arg)
     PR_ASSERT(foo);
     PR_ASSERT(foo2);
 
-    proxyObjectFactory->GetProxyObject(argsStruct->queue, nsITestXPCFoo::GetIID(), foo, (void**)&proxyObject);
+    proxyObjectFactory->GetProxyObject(argsStruct->queue, nsITestXPCFoo::GetIID(), foo, PROXY_ASYNC, (void**)&proxyObject);
     
-    proxyObjectFactory->GetProxyObject(argsStruct->queue, nsITestXPCFoo::GetIID(), foo2, (void**)&proxyObject2);
+    proxyObjectFactory->GetProxyObject(argsStruct->queue, nsITestXPCFoo::GetIID(), foo2, PROXY_ASYNC, (void**)&proxyObject2);
 
     if (proxyObject && proxyObject2)
     {
@@ -314,6 +304,8 @@ void TestCase_TwoClassesOneInterface(void *arg)
         //printf("Deleting Proxy Object 2 (%ld)\n", threadNumber );
         NS_RELEASE(proxyObject2);
     }    
+
+    PR_Sleep( PR_MillisecondsToInterval(10000) );
 }
 
 
@@ -341,6 +333,7 @@ void TestCase_2(void *arg)
                                        nsITestXPCFoo::GetIID(),  // should be a cid 
                                        nsnull, 
                                        nsITestXPCFoo::GetIID(), 
+                                       PROXY_SYNC, 
                                        (void**)&proxyObject);
     
     if (proxyObject != nsnull)
@@ -364,7 +357,7 @@ void TestCase_2(void *arg)
 static void PR_CALLBACK ProxyTest( void *arg )
 {
     TestCase_TwoClassesOneInterface(arg);
-    TestCase_2(arg);
+   // TestCase_2(arg);
 
     free((void*) arg);
 }
@@ -447,7 +440,8 @@ main(int argc, char **argv)
     printf("All Threads Spawned.\n\n");
     
    
-    printf("Wait for threads.\n");
+    
+   printf("Wait for threads.\n");
     for (PRInt32 i = 0; i < numberOfThreads; i++)
     {
         PRStatus rv;
