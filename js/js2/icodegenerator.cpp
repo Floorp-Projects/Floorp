@@ -906,7 +906,7 @@ TypedRegister ICodeGenerator::handleDot(BinaryExprNode *b, ExprNode::Kind use, I
                         lValueKind = (isConstructor) ? Constructor : Static;
                 }
             }
-            if ((lValueKind == Property) && (base.first == NotARegister))
+            if ((lValueKind == Property) || (base.first == NotARegister))
                 base = loadName(baseName, base.second);
         }
         else {
@@ -998,6 +998,7 @@ TypedRegister ICodeGenerator::handleDot(BinaryExprNode *b, ExprNode::Kind use, I
                 break;
             case Slot:
                 ret = slotXcr(base, slotIndex, xcrementOp);
+                break;
             default:
                 NOT_REACHED("Bad lvalue kind");
             }
