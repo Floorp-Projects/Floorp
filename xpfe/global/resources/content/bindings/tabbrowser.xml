@@ -67,6 +67,10 @@
             <xul:menuitem label="&newTab.label;" accesskey="&newTab.accesskey;"
                           xbl:inherits="oncommand=onnewtab"/>
             <xul:menuseparator/>
+            <xul:menuitem label="&bookmarkGroup.label;" accesskey="&bookmarkGroup.accesskey;"
+                          tbattr="tabbrowser-multiple"
+                          xbl:inherits="oncommand=onbookmarkgroup"/>
+            <xul:menuseparator/>
             <xul:menuitem label="&reloadTab.label;" accesskey="&reloadTab.accesskey;"
                           oncommand="var tabbrowser = this.parentNode.parentNode.parentNode.parentNode;
                                      tabbrowser.reloadTab(tabbrowser.mContextTab);"/>
