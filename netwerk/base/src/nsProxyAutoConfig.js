@@ -35,11 +35,6 @@ const nsIProxyAutoConfig = Components.interfaces.nsIProxyAutoConfig;
 const nsIIOService = Components.interfaces['nsIIOService'];
 const nsIDNSService = Components.interfaces.nsIDNSService;
 
-function debug(msg)
-{
-    dump("\nPAC:" + msg + "\n\n");
-}
-
 // implementor of nsIProxyAutoConfig
 function nsProxyAutoConfig() {};
 
@@ -70,7 +65,6 @@ nsProxyAutoConfig.prototype = {
         var uri = url.QueryInterface(Components.interfaces.nsIURI);
         // Call the original function-
         var proxy = LocalFindProxyForURL(uri.spec, uri.host);
-        debug("Proxy = " + proxy);
         if (proxy == "DIRECT") {
             host.value = null;
             type.value = "direct";
@@ -89,7 +83,6 @@ nsProxyAutoConfig.prototype = {
     },
 
     LoadPACFromURL: function(uri, ioService) {
-        debug("Loading PAC from " + uri.spec);
         this.done = false;
         var channel = ioService.newChannelFromURI(uri);
         pacURL = uri.spec;
@@ -129,7 +122,6 @@ var pacModule = new Object();
 
 pacModule.registerSelf =
     function (compMgr, fileSpec, location, type) {
-        dump("*** Registering Proxy Auto Config (a Javascript module!) \n");
         compMgr.registerComponentWithType(kPAC_CID,
             "Proxy Auto Config",
             kPAC_CONTRACTID,
@@ -150,7 +142,6 @@ function (compMgr, cid, iid) {
 
 pacModule.canUnload =
     function (compMgr) {
-        dump("*** Unloading Proxy Auto Config...\n");
         return true;
     }
 
