@@ -25,6 +25,7 @@ Rights Reserved.
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+	xmlns:nc="http://home.netscape.com/NC-rdf#"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         align="vertical"
         class="dialog"
@@ -46,10 +47,17 @@ Rights Reserved.
 		<html:select id="selectedparentfolder" 
           datasources="rdf:msgaccountmanager rdf:mailnewsfolders"
           ref="msgaccounts:/">
+	<html:div flex="100%"/>
           <template>
-              <html:option uri="..." value="...">
-                <text value="rdf:http://home.netscape.com/NC-rdf#Name"/>
-              </html:option>
+		<rule nc:ServerType="pop3">
+		      <html:option uri="..." value="..." label="rdf:http://home.netscape.com/NC-rdf#Name"/>
+		</rule>
+		<rule nc:ServerType="none">
+		      <html:option uri="..." value="..." label="rdf:http://home.netscape.com/NC-rdf#Name"/>
+		</rule>
+		<rule nc:ServerType="imap">
+		      <html:option uri="..." value="..." label="rdf:http://home.netscape.com/NC-rdf#Name"/>
+		</rule>
           </template>
         </html:select>
 		<spring flex="100%"/>
