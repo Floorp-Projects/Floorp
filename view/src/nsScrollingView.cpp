@@ -901,6 +901,9 @@ NS_IMETHODIMP nsScrollingView :: CreateScrollControls(nsNativeWidget aNative)
     while (win == nsnull) {
       nsIView * parent;
       view->GetParent(parent);
+      if (nsnull == parent) {
+        break;
+      }
       parent->GetWidget(win);
       view = parent;
     }
