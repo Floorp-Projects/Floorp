@@ -39,7 +39,8 @@ public:
                            const nsSize&    aMaxSize,
                            nsSize*          aMaxElementSize,
                            ReflowStatus&    aStatus);
-  NS_IMETHOD  ListTag(FILE* out = stdout) const;
+
+  NS_IMETHOD  List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
 protected:
   nsIFrame* mFrame;  // the actual absolutely positioned frame
@@ -51,6 +52,8 @@ protected:
                 nsIFrame*   aParent);
 
   virtual ~AbsoluteFrame();
+
+  nsIView*  CreateView(const nsRect& aRect);
 };
 
 #endif /* nsAbsoluteFrame_h___ */
