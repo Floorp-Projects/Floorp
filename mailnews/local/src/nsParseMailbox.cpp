@@ -1457,12 +1457,16 @@ nsParseNewMailState::Init(nsIMsgFolder *rootFolder, nsIMsgFolder *downloadFolder
   
   nsCOMPtr<nsIMsgIncomingServer> server;
   rv = rootMsgFolder->GetServer(getter_AddRefs(server));
-  if (NS_SUCCEEDED(rv))
+  if (NS_SUCCEEDED(rv)) 
+  {
     rv = server->GetFilterList(aMsgWindow, getter_AddRefs(m_filterList));
   
-  if (m_filterList)
-    rv = server->ConfigureTemporaryFilters(m_filterList);
-  
+    if (m_filterList) 
+    {
+      rv = server->ConfigureTemporaryFilters(m_filterList);
+      NS_ASSERTION(NS_SUCCEEDED(rv), "failed to configure temp filters");
+    }
+  }
   m_disableFilters = PR_FALSE;
   return NS_OK; 
 }
