@@ -113,6 +113,8 @@
 #endif
 #define MAX_KEY_LEN 256
 
+#define MULTIACCESS "multiaccess:"
+
 /*
  * LOG2_BUCKETS_PER_SESSION_LOCK must be a prime number.
  * With SESSION_HASH_SIZE=1024, LOG2 can be 9, 5, 1, or 0.
@@ -594,10 +596,16 @@ extern PRBool pk11_IsWeakKey(unsigned char *key,CK_KEY_TYPE key_type);
 extern CK_RV secmod_parseParameters(char *param, pk11_parameters *parsed,
 								PRBool isFIPS);
 extern void secmod_freeParams(pk11_parameters *params);
-extern char *secmod_getSecmodName(char *params, PRBool *rw);
-extern char ** secmod_ReadPermDB(char *dbname, char *params, PRBool rw);
-extern SECStatus secmod_DeletePermDB(char *dbname,char *args, PRBool rw);
-extern SECStatus secmod_AddPermDB(char *dbname, char *module, PRBool rw);
+extern char *secmod_getSecmodName(char *params, char **domain, 
+						char **filename, PRBool *rw);
+extern char ** secmod_ReadPermDB(const char *domain, const char *filename, 
+			const char *dbname, char *params, PRBool rw);
+extern SECStatus secmod_DeletePermDB(const char *domain, const char *filename,
+			const char *dbname, char *args, PRBool rw);
+extern SECStatus secmod_AddPermDB(const char *domain, const char *filename,
+			const char *dbname, char *module, PRBool rw);
+extern SECStatus secmod_ReleasePermDBData(const char *domain, 
+	const char *filename, const char *dbname, char **specList, PRBool rw);
 /*
  * OK there are now lots of options here, lets go through them all:
  *
@@ -622,6 +630,8 @@ CK_RV pk11_DBInit(const char *configdir, const char *certPrefix,
 
 void pk11_DBShutdown(NSSLOWCERTCertDBHandle *certHandle, 
 		     NSSLOWKEYDBHandle *keyHandle);
+
+const char *pk11_EvaluateConfigDir(const char *configdir, char **domain);
 
 /*
  * narrow objects

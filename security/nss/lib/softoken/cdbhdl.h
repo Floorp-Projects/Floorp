@@ -34,7 +34,7 @@
  * cdbhdl.h - certificate database handle
  *   private to the certdb module
  *
- * $Id: cdbhdl.h,v 1.2 2001/11/08 00:15:30 relyea%netscape.com Exp $
+ * $Id: cdbhdl.h,v 1.3 2002/04/05 09:17:49 relyea%netscape.com Exp $
  */
 #ifndef _CDBHDL_H_
 #define _CDBHDL_H_
@@ -51,4 +51,19 @@ struct NSSLOWCERTCertDBHandleStr {
     PZMonitor *dbMon;
 };
 
+#ifdef DBM_USING_NSPR
+#define NO_RDONLY	PR_RDONLY
+#define NO_RDWR		PR_RDWR
+#define NO_CREATE	(PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE)
+#else
+#define NO_RDONLY	O_RDONLY
+#define NO_RDWR		O_RDWR
+#define NO_CREATE	(O_RDWR | O_CREAT | O_TRUNC)
+#endif
+
+typedef DB * (*rdbfunc)(const char *appName, const char *prefix, 
+				const char *type, int flags);
+
+DB * rdbopen(const char *appName, const char *prefix, 
+				const char *type, int flags);
 #endif

@@ -40,15 +40,7 @@ LIBRARY_NAME = softokn
 LIBRARY_VERSION = 3
 MAPFILE = $(OBJDIR)/softokn.def
 
-#
-# turn this on to get key4 generation and use.
-#
-# key4.db is properly indexed so we don't have to do db traversals to find keys.
-# turning on key4.db will automatically upgrade to key4 on startup if we open
-# the directory R/W and key4.db doesn't exist. If we open the directory up
-# R/O it opens and used the old key3.db without any update at all.
-#
-#DEFINES += -DNSS_USE_KEY4_DB
+DEFINES += -DSHLIB_SUFFIX=\"${DLL_SUFFIX}\"
 
 
 EXPORTS = \

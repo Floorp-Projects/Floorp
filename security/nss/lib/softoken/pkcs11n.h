@@ -36,7 +36,7 @@
 #define _PKCS11N_H_
 
 #ifdef DEBUG
-static const char CKT_CVS_ID[] = "@(#) $RCSfile: pkcs11n.h,v $ $Revision: 1.3 $ $Date: 2002/03/02 00:52:04 $ $Name:  $";
+static const char CKT_CVS_ID[] = "@(#) $RCSfile: pkcs11n.h,v $ $Revision: 1.4 $ $Date: 2002/04/05 09:17:51 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -213,11 +213,13 @@ typedef CK_ULONG          CK_TRUST;
  * The function 'ADD' takes a PKCS #11 initialization string and stores it.
  * The function 'DEL' takes a 'name= library=' value and deletes the associated
  *  string.
+ * The function 'RELEASE' frees the array returned by 'FIND'
  */
 #define SECMOD_MODULE_DB_FUNCTION_FIND  0
 #define SECMOD_MODULE_DB_FUNCTION_ADD   1
 #define SECMOD_MODULE_DB_FUNCTION_DEL   2
+#define SECMOD_MODULE_DB_FUNCTION_RELEASE 3 
 typedef char ** (PR_CALLBACK *SECMODModuleDBFunc)(unsigned long function,
-                                        char *parameters, char *moduleSpec);
+                                        char *parameters, void *moduleSpec);
 
 #endif /* _PKCS11N_H_ */

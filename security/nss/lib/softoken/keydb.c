@@ -32,7 +32,7 @@
  *
  * Private Key Database code
  *
- * $Id: keydb.c,v 1.14 2002/04/05 03:33:42 nelsonb%netscape.com Exp $
+ * $Id: keydb.c,v 1.15 2002/04/05 09:17:49 relyea%netscape.com Exp $
  */
 
 #include "lowkeyi.h"
@@ -47,6 +47,7 @@
 #include "mcom_db.h"
 #include "lowpbe.h"
 #include "secerr.h"
+#include "cdbhdl.h"
 
 #include "keydbi.h"
 
@@ -531,13 +532,6 @@ keyDBFilenameCallback(void *arg, int dbVersion)
     return(PORT_Strdup((char *)arg));
 }
 
-NSSLOWKEYDBHandle *
-nsslowkey_OpenKeyDBFilename(char *dbname, PRBool readOnly)
-{
-    return(nsslowkey_OpenKeyDB(readOnly, keyDBFilenameCallback,
-			   (void *)dbname));
-}
-
 static SECStatus
 ChangeKeyDBPasswordAlg(NSSLOWKEYDBHandle *handle,
 		       SECItem *oldpwitem, SECItem *newpwitem,
@@ -577,147 +571,11 @@ nsslowkey_version(DB *db)
 	return 255;
     }
 
-    if ( ret == 1 ) {
+    if ( ret >= 1 ) {
 	return 0;
     }
     return *( (unsigned char *)versionData.data);
 }
-
-#ifdef NSS_USE_KEY4_DB
-nsslowkey_UpdateKey3DBPass1(NSSLOWKEYDBHandle *handle)
-{
-    SECStatus rv;
-    DBT checkKey;
-    DBT checkData;
-    DBT saltKey;
-    DBT saltData;
-    DBT key;
-    DBT data;
-    DBT newKey;
-    unsigned char buf[SHA1_LENGTH];
-    unsigned char version;
-    SECItem *rc4key = NULL;
-    NSSLOWKEYDBKey *dbkey = NULL;
-    SECItem *oldSalt = NULL;
-    int ret;
-    SECItem checkitem;
-
-    if ( handle->updatedb == NULL ) {
-	return(SECSuccess);
-    }
-
-    /*
-     * check the version record
-     */
-    version = nsslowkey_version(handle->updatedb);
-    if (version != 3) {
-	goto done;
-    }
-
-    saltKey.data = SALT_STRING;
-    saltKey.size = sizeof(SALT_STRING) - 1;
-
-    ret = (* handle->updatedb->get)(handle->updatedb, &saltKey, &saltData, 0);
-    if ( ret ) {
-	/* no salt in old db, so it is corrupted */
-	goto done;
-    }
-
-    oldSalt = decodeKeyDBGlobalSalt(&saltData);
-    if ( oldSalt == NULL ) {
-	/* bad salt in old db, so it is corrupted */
-	goto done;
-    }
-
-    /*
-     * look for a pw check entry
-     */
-    checkKey.data = KEYDB_PW_CHECK_STRING;
-    checkKey.size = KEYDB_PW_CHECK_LEN;
-    
-    ret = (* handle->updatedb->get)(handle->updatedb, &checkKey,
-				   &checkData, 0 );
-    if (ret) {
-	checkKey.data = KEYDB_FAKE_PW_CHECK_STRING;
-	checkKey.size = KEYDB_FAKE_PW_CHECK_LEN;
-	ret = (* handle->updatedb->get)(handle->updatedb, &checkKey,
-				   &checkData, 0 );
-	if (ret) {
-	    goto done;
-	}
-    } 
-
-    /* put global salt into the new database now */
-    ret = (* handle->db->put)( handle->db, &saltKey, &saltData, 0);
-    if ( ret ) {
-	goto done;
-    }
-
-    if (checkKey.size == KEYDB_PW_CHECK_LEN) {
-	dbkey = decode_dbkey(&checkData, 3);
-	if ( dbkey == NULL ) {
-	    goto done;
-	}
-	rv = put_dbkey(handle, &checkKey, dbkey, PR_FALSE);
-	ret = (rv != SECSuccess);
-    } else {
-	ret = (* handle->db->put)(handle->db, &checkKey, &checkData, 0);
-    }
-    if ( ret ) {
-	goto done;
-    }
-    
-    /* now traverse the database */
-    ret = (* handle->updatedb->seq)(handle->updatedb, &key, &data, R_FIRST);
-    if ( ret ) {
-	goto done;
-    }
-    
-    do {
-
-	/* skip version record */
-	if ( data.size > 1 ) {
-	    /* skip salt */
-	    if ( key.size == ( sizeof(SALT_STRING) - 1 ) ) {
-		if ( PORT_Memcmp(key.data, SALT_STRING, key.size) == 0 ) {
-		    continue;
-		}
-	    }
-	    /* skip pw check entry */
-	    if ( key.size == checkKey.size ) {
-		if ( PORT_Memcmp(key.data, checkKey.data, key.size) == 0 ) {
-		    continue;
-		}
-	    }
-	    dbkey = decode_dbkey(&data, 3);
-	    if ( dbkey == NULL ) {
-		continue;
-	    }
-	    SHA1_HashBuf(buf,key.data,key.size);
-	    newKey.data = buf;
-	    newKey.size = SHA1_LENGTH;
-
-	    rv = put_dbkey(handle, &newKey, dbkey, PR_FALSE);
-
-	    sec_destroy_dbkey(dbkey);
-
-	}
-    } while ( (* handle->updatedb->seq)(handle->updatedb, &key, &data,
-					R_NEXT) == 0 );
-
-done:
-    /* sync the database */
-    ret = (* handle->db->sync)(handle->db, 0);
-
-    (* handle->updatedb->close)(handle->updatedb);
-    handle->updatedb = NULL;
-
-    if ( oldSalt ) {
-	SECITEM_FreeItem(oldSalt, PR_TRUE);
-    }
-    return(SECSuccess);
-}
-#endif
 
 static PRBool
 seckey_HasAServerKey(DB *db)
@@ -958,18 +816,9 @@ done:
     return(SECSuccess);
 }
 
-#ifdef DBM_USING_NSPR
-#define NO_RDONLY	PR_RDONLY
-#define NO_RDWR		PR_RDWR
-#define NO_CREATE	(PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE)
-#else
-#define NO_RDONLY	O_RDONLY
-#define NO_RDWR		O_RDWR
-#define NO_CREATE	(O_RDWR | O_CREAT | O_TRUNC)
-#endif
-
 NSSLOWKEYDBHandle *
-nsslowkey_OpenKeyDB(PRBool readOnly, NSSLOWKEYDBNameFunc namecb, void *cbarg)
+nsslowkey_OpenKeyDB(PRBool readOnly, const char *appName, const char *prefix,
+				NSSLOWKEYDBNameFunc namecb, void *cbarg)
 {
     NSSLOWKEYDBHandle *handle;
     int ret;
@@ -993,8 +842,12 @@ nsslowkey_OpenKeyDB(PRBool readOnly, NSSLOWKEYDBNameFunc namecb, void *cbarg)
 
     handle->dbname = PORT_Strdup(dbname);
     handle->readOnly = readOnly;
-    
-    handle->db = dbopen( dbname, openflags, 0600, DB_HASH, 0 );
+   
+    if (appName) {
+	handle->db = rdbopen( appName, prefix, "key", openflags);
+    } else {
+	handle->db = dbopen( dbname, openflags, 0600, DB_HASH, 0 );
+    }
 
     /* check for correct version number */
     if (handle->db != NULL) {
@@ -1013,39 +866,18 @@ nsslowkey_OpenKeyDB(PRBool readOnly, NSSLOWKEYDBNameFunc namecb, void *cbarg)
     }
 
 newdb:
-	
+
     /* if first open fails, try to create a new DB */
     if ( handle->db == NULL ) {
-#ifdef NSS_USE_KEY4_DB
-	char *dbname3 = (*namecb)(cbarg, 3);
-
-	if ( readOnly ) {
-	    if (dbname3 == NULL) {
-		goto loser;
-	    }
-	    handle->db = dbopen( dbname3, NO_RDONLY, 0600, DB_HASH, 0 );
-	    PORT_Free(handle->dbname);
-    	    handle->dbname = dbname3;
-	    dbname3 = NULL;
-	    if (handle->db == NULL) {
-		goto loser;
-	    }
-	    handle->version = nsslowkey_version(handle->db);
-	    if (handle->version != 3) {
-		/* bogus version number record, reset the database */
-		(* handle->db->close)( handle->db );
-		handle->db = NULL;
-		goto loser;
-	    }
-	    goto done;
-	}
-#else
 	if ( readOnly ) {
 	    goto loser;
 	}
-#endif
 
-	handle->db = dbopen( dbname, NO_CREATE, 0600, DB_HASH, 0 );
+	if (appName) {
+	    handle->db = rdbopen( appName, prefix, "key", NO_CREATE);
+	} else {
+	    handle->db = dbopen( dbname, NO_CREATE, 0600, DB_HASH, 0 );
+	}
 
         PORT_Free( dbname );
         dbname = NULL;
@@ -1059,22 +891,6 @@ newdb:
 	if ( rv != SECSuccess ) {
 	    goto loser;
 	}
-
-#ifdef NSS_USE_KEY4_DB
-	handle->updatedb = dbopen( dbname3, NO_RDONLY, 0600, DB_HASH, 0 );
-	PORT_Free(dbname3);
-	dbname3 = NULL;
-	if (handle->updatedb) {
-	    /*
-	     * copy the key data, all the real work happens in pass2
-	     */
-	    rv = nsslowkey_UpdateKey3DBPass1(handle);
-	    if ( rv == SECSuccess ) {
-		updated = PR_TRUE;
-	    }
-	    goto skip_v2_db;
-	}
-#endif /* NSS_USE_KEY4_DB */
 	/*
 	 * try to update from v2 db
 	 */
@@ -1099,9 +915,6 @@ newdb:
 	    
 	}
 
-#ifdef NSS_USE_KEY4_DB
-skip_v2_db:
-#endif
 	/* we are using the old salt if we updated from an old db */
 	if ( ! updated ) {
 	    rv = makeGlobalSalt(handle);
@@ -1117,9 +930,6 @@ skip_v2_db:
 	}
     }
 
-#ifdef NSS_USE_KEY4_DB
-done:
-#endif
     handle->global_salt = GetKeyDBGlobalSalt(handle);
     if ( dbname )
         PORT_Free( dbname );

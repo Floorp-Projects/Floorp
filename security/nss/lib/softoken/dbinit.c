@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- # $Id: dbinit.c,v 1.8 2001/12/07 01:36:17 relyea%netscape.com Exp $
+ # $Id: dbinit.c,v 1.9 2002/04/05 09:17:49 relyea%netscape.com Exp $
  */
 
 #include <ctype.h>
@@ -102,6 +102,29 @@ pk11_keydb_name_cb(void *arg, int dbVersion)
 #define CKR_CERTDB_FAILED	CKR_DEVICE_ERROR
 #define CKR_KEYDB_FAILED	CKR_DEVICE_ERROR
 
+const char *
+pk11_EvaluateConfigDir(const char *configdir,char **appName)
+{
+    if (PORT_Strncmp(configdir, MULTIACCESS, sizeof(MULTIACCESS)-1) == 0) {
+	char *cdir;
+
+	*appName = PORT_Strdup(configdir+sizeof(MULTIACCESS)-1);
+	if (*appName == NULL) {
+	    return configdir;
+	}
+	cdir = *appName;
+	while (*cdir && *cdir != ':') {
+	    cdir++;
+	}
+	if (*cdir == ':') {
+	   *cdir = 0;
+	   cdir++;
+	}
+	configdir = cdir;
+    }
+    return configdir;
+}
+
 static CK_RV
 pk11_OpenCertDB(const char * configdir, const char *prefix, PRBool readOnly,
     					    NSSLOWCERTCertDBHandle **certdbPtr)
@@ -110,10 +133,13 @@ pk11_OpenCertDB(const char * configdir, const char *prefix, PRBool readOnly,
     CK_RV        crv = CKR_CERTDB_FAILED;
     SECStatus    rv;
     char * name = NULL;
+    char * appName = NULL;
 
     if (prefix == NULL) {
 	prefix = "";
     }
+
+    configdir = pk11_EvaluateConfigDir(configdir, &appName);
 
     name = PR_smprintf("%s" PATH_SEPARATOR "%s",configdir,prefix);
     if (name == NULL) goto loser;
@@ -123,7 +149,7 @@ pk11_OpenCertDB(const char * configdir, const char *prefix, PRBool readOnly,
     	goto loser;
 
 /* fix when we get the DB in */
-    rv = nsslowcert_OpenCertDB(certdb, readOnly, 
+    rv = nsslowcert_OpenCertDB(certdb, readOnly, appName, prefix,
 				pk11_certdb_name_cb, (void *)name, PR_FALSE);
     if (rv == SECSuccess) {
 	crv = CKR_OK;
@@ -133,6 +159,7 @@ pk11_OpenCertDB(const char * configdir, const char *prefix, PRBool readOnly,
 loser: 
     if (certdb) PR_Free(certdb);
     if (name) PORT_Free(name);
+    if (appName) PORT_Free(appName);
     return crv;
 }
 
@@ -142,15 +169,20 @@ pk11_OpenKeyDB(const char * configdir, const char *prefix, PRBool readOnly,
 {
     NSSLOWKEYDBHandle *keydb;
     char * name = NULL;
+    char * appName = NULL;
 
     if (prefix == NULL) {
 	prefix = "";
     }
+    configdir = pk11_EvaluateConfigDir(configdir, &appName);
+
     name = PR_smprintf("%s" PATH_SEPARATOR "%s",configdir,prefix);	
     if (name == NULL) 
 	return SECFailure;
-    keydb = nsslowkey_OpenKeyDB(readOnly, pk11_keydb_name_cb, (void *)name);
+    keydb = nsslowkey_OpenKeyDB(readOnly, appName, prefix, 
+					pk11_keydb_name_cb, (void *)name);
     PORT_Free(name);
+    if (appName) PORT_Free(appName);
     if (keydb == NULL)
 	return CKR_KEYDB_FAILED;
     *keydbPtr = keydb;
@@ -221,4 +253,40 @@ pk11_DBShutdown(NSSLOWCERTCertDBHandle *certHandle,
     	nsslowkey_CloseKeyDB(keyHandle);
 	keyHandle= NULL;
     }
+}
+
+static rdbfunc pk11_rdbfunc;
+
+/* NOTE: SHLIB_SUFFIX is defined on the command line */
+#define RDBLIB "rdb."SHLIB_SUFFIX
+
+DB * rdbopen(const char *appName, const char *prefix, 
+				const char *type, int flags)
+{
+    PRLibrary *lib;
+    DB *db;
+
+    if (pk11_rdbfunc) {
+	db = (*pk11_rdbfunc)(appName,prefix,type,flags);
+	return db;
+    }
+
+    /*
+     * try to open the library.
+     */
+    lib = PR_LoadLibrary(RDBLIB);
+
+    if (!lib) {
+	return NULL;
+    }
+
+    /* get the entry point */
+    pk11_rdbfunc = (rdbfunc) PR_FindSymbol(lib,"rdbopen");
+    if (pk11_rdbfunc) {
+	return (*pk11_rdbfunc)(appName,prefix,type,flags);
+    }
+
+    /* couldn't find the entry point, unload the library and fail */
+    PR_UnloadLibrary(lib);
+    return NULL;
 }
