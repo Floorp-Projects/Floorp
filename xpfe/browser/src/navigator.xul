@@ -304,7 +304,7 @@
       }
     }
     if (toolkitCore) {
-      toolkitCore.ShowWindow("resource:/res/samples/mailshell.xul",
+      toolkitCore.ShowWindow("resource:/res/mailnews/messenger/mailshell.xul",
                              window);
     }
   }
@@ -762,7 +762,7 @@
   	 	<html:td align="right">
   	 	<titledbutton align="left"  src="resource:/res/toolbar/TB_popup.gif" value="Open Windows" />
   	 	<titledbutton align="left"  src="resource:/res/toolbar/TB_MiniNav.gif" value="" />
-  	 	<titledbutton align="left"  src="resource:/res/toolbar/TB_MiniMail.gif" value="" />
+  	 	<titledbutton align="left"  src="resource:/res/toolbar/TB_MiniMail.gif" value="" onclick="OpenMessenger()"/>
   	 	<titledbutton align="left"  src="resource:/res/toolbar/TB_MiniAddr.gif" value="" />
   	 	<titledbutton align="left"  src="resource:/res/toolbar/TB_MiniComp.gif" value="" />
   	 	</html:td>
