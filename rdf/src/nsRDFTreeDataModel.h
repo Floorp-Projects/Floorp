@@ -49,12 +49,12 @@ public:
     // nsITreeDataModel interface
 
     // Column APIs
-    NS_IMETHOD GetVisibleColumnCount(int& count) const;
-    NS_IMETHOD GetNthColumn(nsITreeColumn*& pColumn, int n) const;
+    NS_IMETHOD GetVisibleColumnCount(PRUint32& count) const;
+    NS_IMETHOD GetNthColumn(nsITreeColumn*& pColumn, PRUint32 n) const;
 	
     // TreeItem APIs
-    NS_IMETHOD GetFirstVisibleItemIndex(int& index) const;
-    NS_IMETHOD GetNthTreeItem(nsITreeDMItem*& pItem, int n) const;
+    NS_IMETHOD GetFirstVisibleItemIndex(PRUint32& index) const;
+    NS_IMETHOD GetNthTreeItem(nsITreeDMItem*& pItem, PRUint32 n) const;
     NS_IMETHOD GetItemTextForColumn(nsString& nodeText, nsITreeDMItem* pItem, nsITreeColumn* pColumn) const;
 
 
