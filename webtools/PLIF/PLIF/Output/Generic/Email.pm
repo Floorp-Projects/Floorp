@@ -53,6 +53,7 @@ sub init {
 sub output {
     my $self = shift;
     my($app, $session, $string) = @_;
+    $self->assert(defined($self->handle), 1, 'No SMTP handle, can\'t send mail');
     $self->handle->mail('XXX@spam.hixie.ch');
     $self->handle->to($session->getAddress('email'));
     $self->handle->data($string);
@@ -62,11 +63,15 @@ sub output {
 sub checkAddress {
     my $self = shift;
     my($app, $username) = @_;
+    $self->assert(defined($self->handle), 1, 'No SMTP handle, can\'t check address');
     my $result = $self->handle->verify($username);
     return $result;
 }
 
 sub DESTROY {
     my $self = shift;
-    $self->handle->quit();
+    if (defined($self->handle)) {
+        $self->handle->quit();
+    }
+    $self->SUPER::DESTROY(@_);
 }
