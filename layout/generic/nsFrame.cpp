@@ -3860,7 +3860,6 @@ NS_IMETHODIMP
 nsFrame::ReflowCommandNotify(nsIPresShell*        aShell,
                              nsHTMLReflowCommand* aRC,
                              PRBool               aCommandAdded)
-
 {
   return NS_OK;
 }
@@ -3970,12 +3969,12 @@ nsFrame::GetFirstLeaf(nsIPresContext* aPresContext, nsIFrame **aFrame)
   }
 }
 
-nsresult nsFrame::CreateAndPostReflowCommand(nsIPresShell*                   aPresShell,
-                                             nsIFrame*                       aTargetFrame,
-                                             nsReflowType aReflowType,
-                                             nsIFrame*                       aChildFrame,
-                                             nsIAtom*                        aAttribute,
-                                             nsIAtom*                        aListName)
+nsresult nsFrame::CreateAndPostReflowCommand(nsIPresShell* aPresShell,
+                                             nsIFrame*     aTargetFrame,
+                                             nsReflowType  aReflowType,
+                                             nsIFrame*     aChildFrame,
+                                             nsIAtom*      aAttribute,
+                                             nsIAtom*      aListName)
 {
   nsresult rv;
 
