@@ -57,6 +57,9 @@
           <xul:menupopup>
             <xul:menuitem label="&newTab.label;" accesskey="&newTab.accesskey;" oncommand="var tabbrowser = this.parentNode.parentNode.parentNode.parentNode; tabbrowser.selectedTab = tabbrowser.addTab('about:blank');"/>
             <xul:menuseparator/>
+            <xul:menuitem label="&reloadTab.label;" accesskey="&reloadTab.accesskey;" oncommand="var tabbrowser = this.parentNode.parentNode.parentNode.parentNode; tabbrowser.reloadTab(document.popupNode);"/>
+            <xul:menuitem label="&reloadAllTabs.label;" accesskey="&reloadAllTabs.accesskey;" oncommand="var tabbrowser = this.parentNode.parentNode.parentNode.parentNode; tabbrowser.reloadAllTabs(document.popupNode);"/>
+            <xul:menuseparator/>
             <xul:menuitem label="&closeTab.label;" accesskey="&closeTab.accesskey;" oncommand="var tabbrowser = this.parentNode.parentNode.parentNode.parentNode; tabbrowser.removeTab(document.popupNode);"/>
             <xul:menuitem label="&closeOtherTabs.label;" accesskey="&closeOtherTabs.accesskey;" oncommand="var tabbrowser = this.parentNode.parentNode.parentNode.parentNode; tabbrowser.removeAllTabsBut(document.popupNode);"/>
           </xul:menupopup>
@@ -475,6 +478,28 @@
               // by hand.
               this.updateCurrentBrowser();
             }
+          ]]>
+        </body>
+      </method>
+
+      <method name="reloadAllTabs">
+        <body>
+          <![CDATA[
+            var l = this.mPanelContainer.childNodes.length;
+            for (var i = 0; i < l; i++)
+              this.mPanelContainer.childNodes[i].webNavigation.reload(true);
+          ]]>
+        </body>
+      </method>
+
+      <method name="reloadTab">
+        <parameter name="aTab"/>
+        <body>
+          <![CDATA[
+            var l = this.mPanelContainer.childNodes.length;
+            for (var i = 0; i < l; i++)
+              if (this.mTabContainer.childNodes[i] == aTab)
+                this.mPanelContainer.childNodes[i].webNavigation.reload(true);
           ]]>
         </body>
       </method>
