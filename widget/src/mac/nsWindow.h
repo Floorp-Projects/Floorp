@@ -74,6 +74,21 @@ typedef struct TRectArray
 
 } TRectArray;
 
+class CursorSpinner {
+public:
+    CursorSpinner();
+    ~CursorSpinner();
+    void StartSpinCursor();
+    void StopSpinCursor();    
+
+private:
+    short                mSpinCursorFrame;
+    EventLoopTimerUPP    mTimerUPP;
+    EventLoopTimerRef    mTimerRef;
+    
+    short                GetNextCursorFrame();
+    static pascal void   SpinCursor(EventLoopTimerRef inTimer, void *inUserData);
+};
 
 //-------------------------------------------------------------------------
 //
@@ -180,7 +195,8 @@ public:
     NS_IMETHOD        SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight);
     
     NS_IMETHOD        SetCursor(nsCursor aCursor);
-    
+    static void       SetCursorResource(short aCursorResourceNum);
+
     NS_IMETHOD        CaptureRollupEvents(nsIRollupListener * aListener, PRBool aDoCapture, PRBool aConsumeRollupEvent);
     NS_IMETHOD        SetTitle(const nsString& title);
   
