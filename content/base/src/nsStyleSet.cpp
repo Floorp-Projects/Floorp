@@ -740,23 +740,6 @@ nsStyleSet::ClearStyleData(nsIPresContext* aPresContext)
   }
 }
 
-nsresult
-nsStyleSet::StyleSheetApplicableStateChanged()
-{
-  nsresult rv = NS_OK;
-
-  for (PRInt32 i = 0; i < eSheetTypeCount; ++i) {
-    if (!mBatching) {
-      rv = GatherRuleProcessors(i);
-      NS_ENSURE_SUCCESS(rv, rv);
-    } else {
-      mDirty |= 1 << i;
-    }
-  }
-
-  return rv;
-}
-
 already_AddRefed<nsStyleContext>
 nsStyleSet::ReParentStyleContext(nsIPresContext* aPresContext,
                                  nsStyleContext* aStyleContext, 
