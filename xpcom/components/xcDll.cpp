@@ -152,7 +152,7 @@ nsDll::Init(const char *libPersistentDescriptor)
 
 nsDll::~nsDll(void)
 {
-#if 0
+#if DEBUG_dougt
     // The dll gets deleted when the dllStore is destroyed. This happens on
     // app shutdown. At that point, unloading dlls can cause crashes if we have
     // - dll dependencies

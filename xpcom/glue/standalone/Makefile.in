@@ -45,12 +45,21 @@ include $(srcdir)/../objs.mk
 MODULE		= xpcom
 LIBRARY_NAME	= xpcomglue
 
+REQUIRES	= string \
+		  $(NULL)
+
+
 LOCAL_INCLUDES	= \
 		-I$(srcdir)/../../build \
 		$(NULL)
 
 CPPSRCS		= \
 		$(XPCOM_GLUE_SRC_LCSRCS) \
+		nsXPCOMGlue.cpp \
+		$(NULL)
+
+EXPORTS		= \
+		nsXPCOMGlue.h \
 		$(NULL)
 
 SDK_BINARY     =                        \
@@ -78,7 +87,7 @@ else
 	$(INSTALL) $^ .
 endif
 
-DEFINES		+= -D_IMPL_NS_COM_OFF -DXPCOM_GLUE
+DEFINES		+= -DXPCOM_GLUE
 
 ifeq ($(OS_ARCH),WINNT)
 DEFINES		+= -DWIN32_LEAN_AND_MEAN

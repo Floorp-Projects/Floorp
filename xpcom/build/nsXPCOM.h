@@ -79,6 +79,8 @@ class nsIMemory;
  * @see nsIDirectoryServiceProvider
  *
  * @return NS_OK for success;
+ *         NS_ERROR_NOT_INITIALIZED if static globals were not initialied, which
+ *         can happen if XPCOM is reloaded, but did not completly shutdown.  
  *         other error codes indicate a failure during initialisation.
  *
  */

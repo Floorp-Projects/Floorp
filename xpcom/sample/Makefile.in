@@ -36,7 +36,7 @@ MODULE_NAME	= nsSampleModule
 
 # Ensure that the xpcom classes that we build
 # do not export themselves
-DEFINES		+= -D_IMPL_NS_COM_OFF 
+DEFINES		+= -DXPCOM_GLUE 
 
 
 REQUIRES	= string \

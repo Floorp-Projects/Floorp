@@ -121,6 +121,8 @@
 #define NS_COM NS_EXPORT
 #elif  _IMPL_NS_COM_OFF
 #define NS_COM
+#elif  XPCOM_GLUE
+#define NS_COM
 #else
 #define NS_COM NS_IMPORT
 #endif
