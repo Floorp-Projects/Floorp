@@ -61,6 +61,7 @@ protected:
 	//{{AFX_MSG(CPropSheet)
 		// NOTE - the ClassWizard will add and remove member functions here.
 	//}}AFX_MSG
+	afx_msg void OnCancelButn();
 	DECLARE_MESSAGE_MAP()
 };
 
