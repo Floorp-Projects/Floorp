@@ -776,8 +776,8 @@ nsPlainTextSerializer::DoOpenContainer(const nsIParserNode* aNode, PRInt32 aTag)
     }
     else {
       static char bulletCharArray[] = "*o+#";
-      NS_ASSERTION(mULCount > 0, "mULCount should be greater than 0 here");
-      char bulletChar = bulletCharArray[(mULCount - 1) % 4];
+      PRUint32 index = mULCount > 0 ? (mULCount - 1) : 3;
+      char bulletChar = bulletCharArray[index % 4];
       mInIndentString.Append(PRUnichar(bulletChar));
     }
     
