@@ -137,5 +137,12 @@ extern void
 #endif /* MODULAR_NETLIB */
 NET_RegisterProtocolImplementation(NET_ProtoImpl *impl, int for_url_type);
 
+
+#ifdef TRUST_LABELS
+/* given a URL search the list of URL_s structures for one that matches 
+ * and has a non-empty trust list */
+extern XP_List * NET_GetTrustList( char *TargetURL );
+#endif
+
 PR_END_EXTERN_C
 #endif /* not MKGetURL_H */
