@@ -498,12 +498,7 @@ nsStorageTransport::nsReadRequest::Process()
         mTransport->ReadRequestCompleted(this);
         
         // no need to proxy this callback
-        (void) mListener->OnStopRequest(this, mListenerContext, mStatus);
-
-        //OnStopRequest completed and listeners no longer needed. 
-        mListener=nsnull;
-        mListenerContext=nsnull;
-        mListenerProxy=nsnull;
+        (void) mListenerProxy->OnStopRequest(this, mListenerContext, mStatus);
     }
     else
         mWaitingForWrite = PR_TRUE;
@@ -608,8 +603,12 @@ nsStorageTransport::nsReadRequest::OnStopRequest(nsIRequest *aRequest,
                                                  nsISupports *aContext,
                                                  nsresult aStatus)
 {
-    NS_NOTREACHED("nsStorageTransport::nsReadRequest::OnStopRequest");
-    return NS_ERROR_FAILURE;
+    NS_ASSERTION(mListener, "no listener");
+    (void) mListener->OnStopRequest(aRequest, aContext, aStatus);
+    // OnStopRequest completed, so listeners are no longer needed. 
+    mListener = 0;
+    mListenerContext = 0;
+    mListenerProxy = 0;
 }
 
 NS_IMETHODIMP
