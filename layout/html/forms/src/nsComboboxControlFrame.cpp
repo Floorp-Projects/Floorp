@@ -61,7 +61,7 @@
 #include "nsIScrollableFrame.h"
 #include "nsIScrollableView.h"
 
-static NS_DEFINE_IID(kScrollViewIID, NS_ISCROLLABLEVIEW_IID);
+static NS_DEFINE_IID(kScrollableViewIID, NS_ISCROLLABLEVIEW_IID);
 
 #include "nsIXULDocument.h" // Temporary fix for Bug 36558
 
@@ -77,6 +77,8 @@ static NS_DEFINE_IID(kIFrameIID,                 NS_IFRAME_IID);
 static NS_DEFINE_IID(kIAnonymousContentCreatorIID, NS_IANONYMOUS_CONTENT_CREATOR_IID);
 static NS_DEFINE_IID(kIDOMNodeIID,               NS_IDOMNODE_IID);
 static NS_DEFINE_IID(kIPrivateDOMEventIID,       NS_IPRIVATEDOMEVENT_IID);
+
+#define FIX_FOR_BUG_53259
 
 // Drop down list event management.
 // The combo box uses the following strategy for managing the drop-down list.
@@ -529,7 +531,7 @@ nsComboboxControlFrame::ShowPopup(PRBool aShowPopup)
     mDropdownFrame->GetRect(rect);
     viewManager->ResizeView(view, rect.width, rect.height);
     nsIScrollableView* scrollingView;
-    if (NS_SUCCEEDED(view->QueryInterface(kScrollViewIID, (void**)&scrollingView))) {
+    if (NS_SUCCEEDED(view->QueryInterface(kScrollableViewIID, (void**)&scrollingView))) {
       scrollingView->ComputeScrollOffsets(PR_TRUE);
     }
     viewManager->SetViewVisibility(view, nsViewVisibility_kShow);
@@ -903,12 +905,20 @@ nsComboboxControlFrame::ReflowCombobox(nsIPresContext *         aPresContext,
     }
   }
 
-  ////////////////////////////////////////////////////////////////////////////
-  // XXX - This is really bad, but at the moment I am NOT adding in the left padding
-  // we need to be able to find out what the left padding is on an option
-  // and subtract that out before we can add in our padding.
-  REFLOW_NOISY_MSG2("+++3 Adding: %d\n", dspBorderPadding.right);
-  dispWidth += dspBorderPadding.left + dspBorderPadding.right;
+  // Fix for Bug 58220 (part of it)
+  // make sure we size correctly if the CSS width is set to something really small like 0, 1, or 2 pixels
+  nscoord computedWidth = aReflowState.mComputedWidth + aBorderPadding.left + aBorderPadding.right;
+  if (aReflowState.mComputedWidth != NS_UNCONSTRAINEDSIZE && computedWidth <= 0) {
+    nsRect buttonRect(0,0,0,0);
+    nsRect displayRect(0,0,0,0);
+    aBtnWidth = 0;
+    aDisplayFrame->SetRect(aPresContext, displayRect);
+    aDropDownBtn->SetRect(aPresContext, buttonRect);
+    SetChildFrameSize(aDropDownBtn, aBtnWidth, aDesiredSize.height);
+    aDesiredSize.width = 0;
+    aDesiredSize.height = dispHeight;
+    return;
+  }
 
   REFLOW_NOISY_MSG3("+++2 AdjustCombo DW:%d DH:%d  ", PX(dispWidth), PX(dispHeight));
   REFLOW_NOISY_MSG3(" BW:%d  BH:%d\n", PX(aBtnWidth), PX(dispHeight));
@@ -916,6 +926,23 @@ nsComboboxControlFrame::ReflowCombobox(nsIPresContext *         aPresContext,
   // This sets the button to be a specific size
   // so no matter what it reflows at these values
   SetChildFrameSize(aDropDownBtn, aBtnWidth, dispHeight);
+
+#ifdef FIX_FOR_BUG_53259
+  // Make sure we obey min/max-width and min/max-height
+  if (dispWidth > aReflowState.mComputedMaxWidth) {
+    dispWidth = aReflowState.mComputedMaxWidth - aBorderPadding.left - aBorderPadding.right;
+  }
+  if (dispWidth < aReflowState.mComputedMinWidth) {
+    dispWidth = aReflowState.mComputedMinWidth - aBorderPadding.left - aBorderPadding.right;
+  }
+
+  if (dispHeight > aReflowState.mComputedMaxHeight) {
+    dispHeight = aReflowState.mComputedMaxHeight - aBorderPadding.top - aBorderPadding.bottom;
+  }
+  if (dispHeight < aReflowState.mComputedMinHeight) {
+    dispHeight = aReflowState.mComputedMinHeight - aBorderPadding.top - aBorderPadding.bottom;
+  }
+#endif
 
   // now that we know what the overall display width & height will be
   // set up a new reflow state and reflow the area frame at that size
@@ -971,13 +998,19 @@ nsComboboxControlFrame::ReflowCombobox(nsIPresContext *         aPresContext,
   nsRect displayRect;
   aDisplayFrame->GetRect(displayRect);
   aDropDownBtn->GetRect(buttonRect);
+
+  // If the css width has been set to something very small
+  //i.e. smaller than the dropdown button, set the button's width to zero
+  if (aBtnWidth > dispWidth) {
+    aBtnWidth = 0;
+  }
   // set the display rect to be left justifed and 
   // fills the entire area except the button
   nscoord x          = aBorderPadding.left;
-  displayRect.x      = x;// + dspBorderPadding.left;
-  displayRect.y      = aBorderPadding.top;// + dspBorderPadding.top;
+  displayRect.x      = x;
+  displayRect.y      = aBorderPadding.top;
   displayRect.height = insideHeight;
-  displayRect.width  = dispWidth - aBtnWidth;
+  displayRect.width  = PR_MAX(dispWidth - aBtnWidth, 0); // make sure the width is never negative
   aDisplayFrame->SetRect(aPresContext, displayRect);
   x                 += displayRect.width;
 
@@ -990,9 +1023,15 @@ nsComboboxControlFrame::ReflowCombobox(nsIPresContext *         aPresContext,
 
   // since we have changed the height of the button 
   // make sure it has these new values
-  // XXX this may not be needed anymore
   SetChildFrameSize(aDropDownBtn, aBtnWidth, aDesiredSize.height);
-
+  
+  // This is a last minute adjustment, if the CSS width was set and 
+  // we calculated it to be a little big, then make sure we are no bigger the computed size
+  // this only comes into play when the css width has been set to something smaller than
+  // the dropdown arrow
+  if (aReflowState.mComputedWidth != NS_UNCONSTRAINEDSIZE && aDesiredSize.width > computedWidth) {
+    aDesiredSize.width = computedWidth;
+  }
 
   REFLOW_NOISY_MSG3("**AdjustCombobox - Reflow: WW: %d  HH: %d\n", aDesiredSize.width, aDesiredSize.height);
 
@@ -1472,9 +1511,10 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
 
     REFLOW_DEBUG_MSG2("*  mItemDisplayWidth %d\n", PX(mItemDisplayWidth));
 
-    // subtract off the display's BorderPadding
-    // XXX unclear why I have to mulitple by two?
-    mItemDisplayWidth -= (dspBorderPadding.left + dspBorderPadding.right)*2;
+    // mItemDisplayWidth must be the size of the "display" frame including it's 
+    // border and padding, but NOT including the comboboxes border and padding
+    mItemDisplayWidth += dspBorderPadding.left + dspBorderPadding.right;
+    mItemDisplayWidth -= aReflowState.mComputedBorderPadding.left + aReflowState.mComputedBorderPadding.right;
 
     REFLOW_DEBUG_MSG2("*A mItemDisplayWidth %d\n", PX(mItemDisplayWidth));
 
@@ -1485,7 +1525,9 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
       // mComputedWidth has already excluded border and padding
       // so subtract off the button's size
       REFLOW_DEBUG_MSG3("B mItemDisplayWidth %d    %d\n", PX(mItemDisplayWidth), PX(dspBorderPadding.right));
-      mItemDisplayWidth = firstPassState.mComputedWidth - dspBorderPadding.left - dspBorderPadding.right;
+      // Display Frame's width comes from the mComputedWidth and therefore implies that it
+      // includes the "display" frame's border and padding.
+      mItemDisplayWidth = firstPassState.mComputedWidth;
       REFLOW_DEBUG_MSG2("A mItemDisplayWidth %d\n", PX(mItemDisplayWidth));
       REFLOW_DEBUG_MSG4("firstPassState.mComputedWidth %d -  size.width %d dspBorderPadding.right %d\n", PX(firstPassState.mComputedWidth), PX(size.width), PX(dspBorderPadding.right));
     }
