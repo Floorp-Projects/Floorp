@@ -79,7 +79,7 @@
         if (listbox) {
          var selectedItem = listbox.selectedItems.length ? listbox.selectedItems[0] : null;
           if (selectedItem) {
-             newContentPack = selectedItem.firstChild.firstChild.getAttribute("value");
+             newContentPack = selectedItem.getAttribute("value");
           }
         } else {
           newContentPack = parent.hPrefWindow.wsm.dataManager.getItemData( "chrome://communicator/content/pref/pref-content.xul", "contentPackList" ).prefvalue;
@@ -117,7 +117,7 @@
         if (languageList) {
          var selectedItem = languageList.selectedItems.length ? languageList.selectedItems[0] : null;
           if (selectedItem) {
-             newLanguagePack = selectedItem.firstChild.firstChild.getAttribute("value");
+             newLanguagePack = selectedItem.getAttribute("value");
           }
         } else {
           newLanguagePack = parent.hPrefWindow.wsm.dataManager.getItemData( "chrome://communicator/content/pref/pref-content.xul", "languagePackList" ).prefvalue;
@@ -144,13 +144,13 @@
       var selectedItem = listbox.selectedItems.length ? listbox.selectedItems[0] : null;
 
       if (selectedItem) {
-        var classType = selectedItem.firstChild.firstChild.getAttribute("class");
+        var classType = selectedItem.getAttribute("class");
         if (classType == "outofdate") {
            //Make it so that out of date content packs cannot be selected by the user
            listbox.removeItemFromSelection(selectedItem);
         }
         else {
-           var regionName = selectedItem.firstChild.firstChild.getAttribute("value");
+           var regionName = selectedItem.getAttribute("value");
            listbox.setAttribute("prefvalue", regionName);
         }
       }
@@ -162,13 +162,13 @@
       var selectedItem = listbox.selectedItems.length ? listbox.selectedItems[0] : null;
 
       if (selectedItem) {
-        var classType = selectedItem.firstChild.firstChild.getAttribute("class");
+        var classType = selectedItem.getAttribute("class");
         if (classType == "outofdate") {
            //Make it so that out of date language packs cannot be selected by the user
            listbox.removeItemFromSelection(selectedItem);
         }
         else {
-           var languageName = selectedItem.firstChild.firstChild.getAttribute("value");
+           var languageName = selectedItem.getAttribute("value");
            listbox.setAttribute("prefvalue", languageName);
         }
       }
@@ -260,4 +260,3 @@
             oncommand="DownloadRegionPacks()"/>
   </hbox>
 </page>
-
