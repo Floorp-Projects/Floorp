@@ -287,6 +287,8 @@ protected:
 
 	static nsresult CreateAnonymousResource(nsCOMPtr<nsIRDFResource>* aResult);
 
+	nsresult Unescape(nsString &text);
+
 	nsresult ParseBookmark(const nsString& aLine,
 			       nsCOMPtr<nsIRDFContainer>& aContainer,
 			       nsIRDFResource *nodeType, nsIRDFResource **bookmarkNode);
@@ -459,23 +461,7 @@ BookmarkParser::Parse(nsIRDFResource* aContainer, nsIRDFResource *nodeType)
 				continue;
 			}
 
-			// handle description [convert some HTML-escaped (such as "&lt;") values back]
-			
-			while ((offset = description.Find("&lt;", PR_TRUE)) > 0)
-			{
-				description.Cut(offset, 4);
-				description.Insert(PRUnichar('<'), offset);
-			}
-			while ((offset = description.Find("&gt;", PR_TRUE)) > 0)
-			{
-				description.Cut(offset, 4);
-				description.Insert(PRUnichar('>'), offset);
-			}
-			while ((offset = description.Find("&amp;", PR_TRUE)) > 0)
-			{
-				description.Cut(offset, 5);
-				description.Insert(PRUnichar('&'), offset);
-			}
+			Unescape(description);
 
 			if (bookmarkNode)
 			{
@@ -529,6 +515,33 @@ BookmarkParser::Parse(nsIRDFResource* aContainer, nsIRDFResource *nodeType)
 		}
 	}
 	return(rv);
+}
+
+
+
+nsresult
+BookmarkParser::Unescape(nsString &text)
+{
+	// convert some HTML-escaped (such as "&lt;") values back
+
+	PRInt32		offset;
+
+	while ((offset = text.Find("&lt;", PR_TRUE)) > 0)
+	{
+		text.Cut(offset, 4);
+		text.Insert(PRUnichar('<'), offset);
+	}
+	while ((offset = text.Find("&gt;", PR_TRUE)) > 0)
+	{
+		text.Cut(offset, 4);
+		text.Insert(PRUnichar('>'), offset);
+	}
+	while ((offset = text.Find("&amp;", PR_TRUE)) > 0)
+	{
+		text.Cut(offset, 5);
+		text.Insert(PRUnichar('&'), offset);
+	}
+	return(NS_OK);
 }
 
 
@@ -602,15 +615,14 @@ BookmarkParser::ParseBookmark(const nsString& aLine, nsCOMPtr<nsIRDFContainer>& 
 	
 	nsAutoString name;
 	aLine.Right(name, aLine.Length() - (start + 1));
-
 	end = name.Find(kCloseAnchor, PR_TRUE);
 	if (end < 0)
 	{
 		NS_WARNING("anchor tag not terminated");
 		return NS_ERROR_UNEXPECTED;
 	}
-	
 	name.Truncate(end);
+	Unescape(name);
 
 	// 3. Parse the target
 	nsAutoString target;
@@ -2011,47 +2023,48 @@ nsBookmarksService::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
 				NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv);
 				if (NS_SUCCEEDED(rv))
 				{
-          // get a parent window for the new browser window
-          nsCOMPtr<nsIWebShellWindow> parent;
-          appShell->GetHiddenWindow(getter_AddRefs(parent));
+					// get a parent window for the new browser window
+					nsCOMPtr<nsIWebShellWindow>	parent;
+					appShell->GetHiddenWindow(getter_AddRefs(parent));
 
-          // convert it to a DOMWindow
-          if (parent)
-          {
-            nsCOMPtr<nsIWebShell> webshell;
-            parent->GetWebShell(*getter_AddRefs(webshell));
-            if (webshell)
-            {
-              nsCOMPtr<nsIDOMWindow> domParent;
-              parent->ConvertWebShellToDOMWindow(webshell, getter_AddRefs(domParent));
-              if (domParent)
-              {
-                // extract its JS context and create JS-flavor arguments
-                nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(domParent);
-                if (sgo)
-                {
-                  nsCOMPtr<nsIScriptContext> context;
-                  sgo->GetContext(getter_AddRefs(context));
-                  if (context)
-                  {
-                    JSContext *jsContext = (JSContext*)context->GetNativeContext();
-                    if (jsContext)
-                    {
-                      void *stackPtr;
-                      jsval *argv = JS_PushArguments(jsContext, &stackPtr, "s", uri);
-                      if (argv)
-                      {
-                        // open the window
-                        nsIDOMWindow *newWindow;
-                        domParent->Open(jsContext, argv, 1, &newWindow);
-                        JS_PopArguments(jsContext, stackPtr);
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
+					// convert it to a DOMWindow
+					nsCOMPtr<nsIWebShell>	webshell;
+					if (parent)
+					{
+						parent->GetWebShell(*getter_AddRefs(webshell));
+					}
+					nsCOMPtr<nsIDOMWindow>	domParent;
+					if (webshell)
+					{
+						parent->ConvertWebShellToDOMWindow(webshell, getter_AddRefs(domParent));
+					}
+					nsCOMPtr<nsIScriptGlobalObject>	sgo;
+					if (domParent)
+					{
+						// extract its JS context and create JS-flavor arguments
+						sgo = do_QueryInterface(domParent);
+					}
+					nsCOMPtr<nsIScriptContext>	context;
+					if (sgo)
+					{
+						sgo->GetContext(getter_AddRefs(context));
+					}
+					if (context)
+					{
+						JSContext *jsContext = (JSContext*)context->GetNativeContext();
+						if (jsContext)
+						{
+							void	*stackPtr;
+							jsval	*argv = JS_PushArguments(jsContext, &stackPtr, "s", uri);
+							if (argv)
+							{
+					                        // open the window
+					                        nsIDOMWindow	*newWindow;
+					                        domParent->Open(jsContext, argv, 1, &newWindow);
+					                        JS_PopArguments(jsContext, stackPtr);
+							}
+						}
+					}
 				}
 			}
 		}
@@ -3383,7 +3396,18 @@ nsBookmarksService::WriteBookmarksContainer(nsIRDFDataSource *ds, nsOutputFileSt
 
 							strm << ">";
 							// output title
-							if (name)	strm << name;
+							if (name)
+							{
+								// Note: we escape the title due to security issues;
+								//       see bug # 13197 for details
+								char *escapedAttrib = nsEscapeHTML(name);
+								if (escapedAttrib)
+								{
+									strm << escapedAttrib;
+									nsCRT::free(escapedAttrib);
+									escapedAttrib = nsnull;
+								}
+							}
 							strm << "</A>\n";
 							
 							// output description (if one exists)
@@ -3456,8 +3480,8 @@ nsBookmarksService::GetTextForNode(nsIRDFNode* aNode, nsString& aResult)
         NS_RELEASE(intLiteral);
     }
     else if (NS_SUCCEEDED(rv = aNode->QueryInterface(kIRDFLiteralIID, (void**) &literal))) {
-	nsXPIDLString	p;
-        if (NS_SUCCEEDED(rv = literal->GetValue( getter_Copies(p) ))) {
+	const PRUnichar		*p = nsnull;
+        if (NS_SUCCEEDED(rv = literal->GetValueConst( &p )) && (p)) {
             aResult = p;
         }
         NS_RELEASE(literal);
@@ -3531,14 +3555,14 @@ nsBookmarksService::CanAccept(nsIRDFResource* aSource,
 	// XXX This is really crippled, and needs to be stricter. We want
 	// to exclude any property that isn't talking about a known
 	// bookmark.
-	nsresult rv;
-
-	PRBool isOrdinal;
+	nsresult	rv;
+	PRBool		isOrdinal;
 	rv = gRDFC->IsOrdinalProperty(aProperty, &isOrdinal);
 	if (NS_FAILED(rv))
 		return PR_FALSE;
 
-	if (isOrdinal) {
+	if (isOrdinal)
+	{
 		return PR_TRUE;
 	}
 	else if ((aProperty == kNC_Description) ||
@@ -3548,10 +3572,12 @@ nsBookmarksService::CanAccept(nsIRDFResource* aSource,
 		 (aProperty == kWEB_LastModifiedDate) ||
 		 (aProperty == kWEB_LastVisitDate) ||
 		 (aProperty == kNC_BookmarkAddDate) ||
-		 (aProperty == kWEB_Schedule)) {
+		 (aProperty == kWEB_Schedule))
+	{
 		return PR_TRUE;
 	}
-	else {
+	else
+	{
 		return PR_FALSE;
 	}
 }
