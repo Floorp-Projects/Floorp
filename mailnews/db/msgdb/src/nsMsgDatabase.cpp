@@ -1896,7 +1896,7 @@ PRBool	nsMsgDatabase::ThreadBySubjectWithoutRe()
 
 nsresult nsMsgDatabase::GetBoolPref(const char *prefName, PRBool *result)
 {
-	PRBool prefValue = PR_FALSE;
+	XP_Bool prefValue = PR_FALSE;
 	nsIPref* prefs = nsnull;
 	nsresult rv;
 	rv = nsServiceManager::GetService(kPrefCID, kIPrefIID, (nsISupports**)&prefs);
@@ -1904,7 +1904,8 @@ nsresult nsMsgDatabase::GetBoolPref(const char *prefName, PRBool *result)
 	{
 //		prefs->Startup("prefs.js");
 
-		rv = prefs->GetBoolPref(prefName, result);
+		rv = prefs->GetBoolPref(prefName, &prefValue);
+		*result = (PRBool) prefValue;
 		nsServiceManager::ReleaseService(kPrefCID, prefs);
 	}
 	return rv;
