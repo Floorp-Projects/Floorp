@@ -825,11 +825,14 @@ CERT_GetNextGeneralName;
 CERT_GetNextNameConstraint;
 CERT_GetPrevGeneralName;
 CERT_GetPrevNameConstraint;
+CERT_StartCRLEntryExtensions;
+CERT_StartCRLExtensions;
 CERT_UncacheCRL;
 HASH_Clone;
 HASH_HashBuf;
 HASH_ResultLenByOidTag;
 HASH_ResultLenContext;
+SEC_GetSignatureAlgorithmOidTag;
 SECKEY_CacheStaticFlags;
 SECOID_AddEntry;
 ;+#
