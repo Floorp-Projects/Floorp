@@ -754,7 +754,7 @@ nsresult nsScanner::SkipPast(nsString& aValidSet){
  *  
  *  @update  gess 3/25/98
  *  @param   aString - receives new data from stream
- *  @param   aIgnore - If set ignores ':','-','_'
+ *  @param   aIgnore - If set ignores ':','-','_','.'
  *  @return  error code
  */
 nsresult nsScanner::GetIdentifier(nsString& aString,PRBool allowPunct) {
@@ -780,15 +780,13 @@ nsresult nsScanner::GetIdentifier(nsString& aString,PRBool allowPunct) {
         case ':':
         case '_':
         case '-':
+        case '.':
           found=allowPunct;
           break;
         default:
-          if(('a'<=theChar) && (theChar<='z'))
-            found=PR_TRUE;
-          else if(('A'<=theChar) && (theChar<='Z'))
-            found=PR_TRUE;
-          else if(('0'<=theChar) && (theChar<='9'))
-            found=PR_TRUE;
+          found = ('a'<=theChar && theChar<='z') ||
+                  ('A'<=theChar && theChar<='Z') ||
+                  ('0'<=theChar && theChar<='9');
           break;
       }
 
@@ -818,7 +816,7 @@ nsresult nsScanner::GetIdentifier(nsString& aString,PRBool allowPunct) {
  *  
  *  @update  gess 3/25/98
  *  @param   aString - receives new data from stream
- *  @param   allowPunct - If set ignores ':','-','_'
+ *  @param   allowPunct - If set ignores ':','-','_','.'
  *  @return  error code
  */
 nsresult nsScanner::ReadIdentifier(nsString& aString,PRBool allowPunct) {
@@ -845,15 +843,13 @@ nsresult nsScanner::ReadIdentifier(nsString& aString,PRBool allowPunct) {
         case ':':
         case '_':
         case '-':
+        case '.':
           found=allowPunct;
           break;
         default:
-          if(('a'<=theChar) && (theChar<='z'))
-            found=PR_TRUE;
-          else if(('A'<=theChar) && (theChar<='Z'))
-            found=PR_TRUE;
-          else if(('0'<=theChar) && (theChar<='9'))
-            found=PR_TRUE;
+          found = ('a'<=theChar && theChar<='z') ||
+                  ('A'<=theChar && theChar<='Z') ||
+                  ('0'<=theChar && theChar<='9');
           break;
       }
 

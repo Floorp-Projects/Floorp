@@ -311,9 +311,13 @@ void nsHTMLTokenizer::PrependTokens(nsDeque& aDeque){
 NS_IMETHODIMP
 nsHTMLTokenizer::CopyState(nsITokenizer* aTokenizer)
 {
-  if (aTokenizer)
-     mPreserveTarget =
-       NS_STATIC_CAST(nsHTMLTokenizer*, aTokenizer)->mPreserveTarget;
+  if (aTokenizer) {
+    mFlags &= ~NS_IPARSER_FLAG_PRESERVE_CONTENT;
+    mPreserveTarget =
+      NS_STATIC_CAST(nsHTMLTokenizer*, aTokenizer)->mPreserveTarget;
+    if (mPreserveTarget != eHTMLTag_unknown)
+      mFlags |= NS_IPARSER_FLAG_PRESERVE_CONTENT;
+  }
   return NS_OK;
 }
 
@@ -732,16 +736,19 @@ nsresult nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,CToken*& aToken,nsScan
         CStartToken* theStartToken = NS_STATIC_CAST(CStartToken*,aToken);
         //XXX - Find a better soution to record content
         //Added _plaintext to fix bug 46054.
-        if(mPreserveTarget == eHTMLTag_unknown && 
+        if(!(mFlags & NS_IPARSER_FLAG_PRESERVE_CONTENT) &&
            (theTag == eHTMLTag_textarea  ||
             theTag == eHTMLTag_xmp       || 
             theTag == eHTMLTag_plaintext || 
             theTag == eHTMLTag_noscript  ||
             theTag == eHTMLTag_noframes)) {
+          NS_ASSERTION(mPreserveTarget == eHTMLTag_unknown,
+                       "mPreserveTarget set but not preserving content?");
           mPreserveTarget = theTag;
+          mFlags |= NS_IPARSER_FLAG_PRESERVE_CONTENT;
         }
           
-        if (mPreserveTarget != eHTMLTag_unknown) 
+        if (mFlags & NS_IPARSER_FLAG_PRESERVE_CONTENT) 
           PreserveToken(theStartToken, aScanner, origin);
         
         //if((eHTMLTag_style==theTag) || (eHTMLTag_script==theTag)) {
@@ -756,7 +763,12 @@ nsresult nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,CToken*& aToken,nsScan
           // Fix bug 44186
           // Support XML like syntax, i.e., <script src="external.js"/> == <script src="external.js"></script>
           // Note: if aFlushTokens is TRUE then we have seen an </script>
-          if(!theStartToken->IsEmpty() || aFlushTokens) {
+          // We do NOT want to output the end token if we didn't see a
+          // </script> and have a preserve target.  If that happens, then we'd
+          // be messing up the text inside the <textarea> or <xmp> or whatever
+          // it is.
+          if((!(mFlags & NS_IPARSER_FLAG_PRESERVE_CONTENT) &&
+              !theStartToken->IsEmpty()) || aFlushTokens) {
             theStartToken->SetEmpty(PR_FALSE); // Setting this would make cases like <script/>d.w("text");</script> work.
             CToken* endToken=theAllocator->CreateTokenOfType(eToken_end,theTag,endTagName);
             AddToken(text,result,&mTokenDeque,theAllocator);
@@ -822,6 +834,7 @@ nsresult nsHTMLTokenizer::ConsumeEndTag(PRUnichar aChar,CToken*& aToken,nsScanne
       if (mPreserveTarget == theTag) {
         // Target reached. Stop preserving content.
         mPreserveTarget = eHTMLTag_unknown;
+        mFlags &= ~NS_IPARSER_FLAG_PRESERVE_CONTENT;
       }
     }
   } //if

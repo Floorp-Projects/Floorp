@@ -380,8 +380,9 @@ const PRUnichar kNullCh           = '\0';
 #define NS_IPARSER_FLAG_VIEW_NORMAL          0x00000020
 #define NS_IPARSER_FLAG_VIEW_SOURCE          0x00000040
 #define NS_IPARSER_FLAG_VIEW_ERRORS          0x00000080
-#define NS_IPARSER_FLAG_PLAIN_TEXT           0x00000100
-#define NS_IPARSER_FLAG_XML                  0x00000200
-#define NS_IPARSER_FLAG_HTML                 0x00000400
+#define NS_IPARSER_FLAG_PRESERVE_CONTENT     0x00000100
+#define NS_IPARSER_FLAG_PLAIN_TEXT           0x00000200
+#define NS_IPARSER_FLAG_XML                  0x00000400
+#define NS_IPARSER_FLAG_HTML                 0x00000800
 
 #endif 

@@ -256,19 +256,8 @@ const nsAString& CStartToken::GetStringValue()
  *  @return  nada
  */
 void CStartToken::GetSource(nsString& anOutputString){
-  anOutputString.Append(PRUnichar('<'));
-  /*
-   * Watch out for Bug 15204 
-   */
-  if(mTrailingContent.Length()>0)
-    anOutputString=mTrailingContent;
-  else {
-    if(mTextValue.Length()>0)
-      anOutputString.Append(mTextValue);
-    else
-     anOutputString.Assign(GetTagName(mTypeID));
-    anOutputString.Append(PRUnichar('>'));
-  }
+  anOutputString.Truncate();
+  AppendSourceTo(anOutputString);
 }
 
 /*
@@ -283,11 +272,11 @@ void CStartToken::AppendSourceTo(nsAString& anOutputString){
   /*
    * Watch out for Bug 15204 
    */
-  if(mTrailingContent.Length()>0)
-    anOutputString+=mTrailingContent;
+  if(!mTrailingContent.IsEmpty())
+    anOutputString.Append(mTrailingContent);
   else {
-    if(mTextValue.Length()>0)
-      anOutputString+=mTextValue;
+    if(!mTextValue.IsEmpty())
+      anOutputString.Append(mTextValue);
     else
      anOutputString.Append(GetTagName(mTypeID));
     anOutputString.Append(PRUnichar('>'));
@@ -332,7 +321,8 @@ nsresult CEndToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aFlag)
     mTypeID = (PRInt32)nsHTMLTags::LookupTag(theSubstr);
     // Save the original tag string if this is user-defined or if we
     // are viewing source
-    if(eHTMLTag_userdefined==mTypeID || (aFlag & NS_IPARSER_FLAG_VIEW_SOURCE)) {
+    if(eHTMLTag_userdefined==mTypeID ||
+       (aFlag & (NS_IPARSER_FLAG_VIEW_SOURCE | NS_IPARSER_FLAG_PRESERVE_CONTENT))) {
       mTextValue=theSubstr;
     }
   }
@@ -416,12 +406,8 @@ const nsAString& CEndToken::GetStringValue()
  *  @return  nada
  */
 void CEndToken::GetSource(nsString& anOutputString){
-  anOutputString.Append(NS_LITERAL_STRING("</"));
-  if(mTextValue.Length()>0)
-    anOutputString.Append(mTextValue);
-  else
-    anOutputString.Append(GetTagName(mTypeID));
-  anOutputString.Append(NS_LITERAL_STRING(">"));
+  anOutputString.Truncate();
+  AppendSourceTo(anOutputString);
 }
 
 /*
@@ -433,11 +419,11 @@ void CEndToken::GetSource(nsString& anOutputString){
  */
 void CEndToken::AppendSourceTo(nsAString& anOutputString){
   anOutputString.Append(NS_LITERAL_STRING("</"));
-  if(mTextValue.Length()>0)
+  if(!mTextValue.IsEmpty())
     anOutputString.Append(mTextValue);
   else
     anOutputString.Append(GetTagName(mTypeID));
-  anOutputString.Append(NS_LITERAL_STRING(">"));
+  anOutputString.Append(PRUnichar('>'));
 }
 
 /*
@@ -651,8 +637,8 @@ nsresult CTextToken::ConsumeUntil(PRUnichar aChar,PRBool aIgnoreComments,nsScann
         }
       }
 
-      // Make sure to preserve the end tag's representation in viewsource
-      if(aFlag & NS_IPARSER_FLAG_VIEW_SOURCE) {
+      // Make sure to preserve the end tag's representation if needed
+      if(aFlag & (NS_IPARSER_FLAG_VIEW_SOURCE | NS_IPARSER_FLAG_PRESERVE_CONTENT)) {
         CopyUnicodeTo(ltOffset.advance(2),gtOffset,aEndTagName);
       }
 
