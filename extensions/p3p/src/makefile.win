@@ -21,16 +21,31 @@
 
 DEPTH = ..\..\..
 
-include <$(DEPTH)/config/config.mak>
-
-
 MODULE         = p3p
 LIBRARY_NAME   = p3p
 MODULE_NAME = nsP3PModule
 
-REQUIRES	= p3p \
-		  xpcom \
-		  $(NULL)
+REQUIRES        = xpcom \
+                  string \
+                  docshell \
+                  necko \
+                  dom \
+                  gfx \
+                  layout \
+                  content \
+                  rdf \
+                  widget \
+                  xmlextras \
+                  cookie \
+                  pref \
+                  intl \
+                  uriloader \
+                  htmlparser \
+                  windowwatcher \
+                  $(NULL)
+
+include <$(DEPTH)/config/config.mak>
+
 
 EXPORTS      = $(NULL)
 

@@ -21,6 +21,9 @@ DEPTH=..\..\..\..
 MODULE=vixen
 LIBRARY_NAME=vixen
 MODULE_NAME=nsVixenModule
+REQUIRES	= xpcom \
+		  string \
+		  $(NULL)
 
 ################################################################################
 ## library
