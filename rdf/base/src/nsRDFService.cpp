@@ -74,15 +74,53 @@ static NS_DEFINE_IID(kIRDFNodeIID,            NS_IRDFNODE_IID);
 static NS_DEFINE_IID(kISupportsIID,           NS_ISUPPORTS_IID);
 
 ////////////////////////////////////////////////////////////////////////
+// ServiceImpl
+//
+//   This is the RDF service.
+//
+class ServiceImpl : public nsIRDFService
+{
+protected:
+    PLHashTable* mNamedDataSources;
+    PLHashTable* mResources;
+    PLHashTable* mLiterals;
+
+    ServiceImpl(void);
+    virtual ~ServiceImpl(void);
+
+public:
+
+    static nsresult GetRDFService(nsIRDFService** result);
+
+    // nsISupports
+    NS_DECL_ISUPPORTS
+
+    // nsIRDFService
+    NS_IMETHOD GetResource(const char* uri, nsIRDFResource** resource);
+    NS_IMETHOD GetUnicodeResource(const PRUnichar* uri, nsIRDFResource** resource);
+    NS_IMETHOD GetLiteral(const PRUnichar* value, nsIRDFLiteral** literal);
+    NS_IMETHOD RegisterResource(nsIRDFResource* aResource, PRBool replace = PR_FALSE);
+    NS_IMETHOD UnregisterResource(nsIRDFResource* aResource);
+    NS_IMETHOD RegisterDataSource(nsIRDFDataSource* dataSource, PRBool replace = PR_FALSE);
+    NS_IMETHOD UnregisterDataSource(nsIRDFDataSource* dataSource);
+    NS_IMETHOD GetDataSource(const char* uri, nsIRDFDataSource** dataSource);
+    NS_IMETHOD CreateDatabase(const char** uris, nsIRDFDataBase** dataBase);
+    NS_IMETHOD CreateBrowserDatabase(nsIRDFDataBase** dataBase);
+
+    // Implementation methods
+    nsresult RegisterLiteral(nsIRDFLiteral* aLiteral, PRBool aReplace = PR_FALSE);
+    nsresult UnregisterLiteral(nsIRDFLiteral* aLiteral);
+};
+
+static ServiceImpl* gRDFService; // The one-and-only RDF service
+
+
+////////////////////////////////////////////////////////////////////////
 // LiteralImpl
 //
 //   Currently, all literals are implemented exactly the same way;
 //   i.e., there is are no resource factories to allow you to generate
 //   customer resources. I doubt that makes sense, anyway.
-//
-//   What _may_ make sense is to atomize literals (well, at least
-//   short ones), to reduce in memory overhead at the expense of some
-//   processing time.
 //
 class LiteralImpl : public nsIRDFLiteral {
 public:
@@ -109,10 +147,12 @@ LiteralImpl::LiteralImpl(const PRUnichar* s)
     : mValue(s)
 {
     NS_INIT_REFCNT();
+    gRDFService->RegisterLiteral(this);
 }
 
 LiteralImpl::~LiteralImpl(void)
 {
+    gRDFService->UnregisterLiteral(this);
 }
 
 NS_IMPL_ADDREF(LiteralImpl);
@@ -192,46 +232,18 @@ LiteralImpl::EqualsLiteral(const nsIRDFLiteral* literal, PRBool* result) const
 
 ////////////////////////////////////////////////////////////////////////
 // ServiceImpl
-//
-//   This is the RDF service.
-//
-class ServiceImpl : public nsIRDFService
+
+static PLHashNumber
+rdf_HashWideString(const void* key)
 {
-protected:
-    PLHashTable* mNamedDataSources;
-    PLHashTable* mResources;
-
-    ServiceImpl(void);
-    virtual ~ServiceImpl(void);
-
-    static nsIRDFService* gRDFService; // The one-and-only RDF service
-
-public:
-
-    static nsresult GetRDFService(nsIRDFService** result);
-
-    // nsISupports
-    NS_DECL_ISUPPORTS
-
-    // nsIRDFService
-    NS_IMETHOD GetResource(const char* uri, nsIRDFResource** resource);
-    NS_IMETHOD GetUnicodeResource(const PRUnichar* uri, nsIRDFResource** resource);
-    NS_IMETHOD GetLiteral(const PRUnichar* value, nsIRDFLiteral** literal);
-    NS_IMETHOD RegisterResource(nsIRDFResource* aResource, PRBool replace = PR_FALSE);
-    NS_IMETHOD UnregisterResource(nsIRDFResource* aResource);
-    NS_IMETHOD RegisterDataSource(nsIRDFDataSource* dataSource, PRBool replace = PR_FALSE);
-    NS_IMETHOD UnregisterDataSource(nsIRDFDataSource* dataSource);
-    NS_IMETHOD GetDataSource(const char* uri, nsIRDFDataSource** dataSource);
-    NS_IMETHOD CreateDatabase(const char** uris, nsIRDFDataBase** dataBase);
-    NS_IMETHOD CreateBrowserDatabase(nsIRDFDataBase** dataBase);
-};
-
-nsIRDFService* ServiceImpl::gRDFService = nsnull;
-
-////////////////////////////////////////////////////////////////////////
+    PLHashNumber result = 0;
+    for (PRUnichar* s = (PRUnichar*) key; *s != nsnull; ++s)
+        result = (result >> 28) ^ (result << 4) ^ *s;
+    return result;
+}
 
 ServiceImpl::ServiceImpl(void)
-    : mResources(nsnull), mNamedDataSources(nsnull)
+    :  mNamedDataSources(nsnull), mResources(nsnull), mLiterals(nsnull)
 {
     NS_INIT_REFCNT();
     mResources = PL_NewHashTable(1023,              // nbuckets
@@ -239,6 +251,12 @@ ServiceImpl::ServiceImpl(void)
                                  PL_CompareStrings, // key compare fn
                                  PL_CompareValues,  // value compare fn
                                  nsnull, nsnull);   // alloc ops & priv
+
+    mLiterals = PL_NewHashTable(1023,
+                                rdf_HashWideString,
+                                PL_CompareStrings,
+                                PL_CompareValues,
+                                nsnull, nsnull);
 
     mNamedDataSources = PL_NewHashTable(23,
                                         PL_HashString,
@@ -257,6 +275,10 @@ ServiceImpl::~ServiceImpl(void)
     if (mResources) {
         PL_HashTableDestroy(mResources);
         mResources = nsnull;
+    }
+    if (mLiterals) {
+        PL_HashTableDestroy(mLiterals);
+        mLiterals = nsnull;
     }
     gRDFService = nsnull;
 }
@@ -443,14 +465,33 @@ ServiceImpl::GetUnicodeResource(const PRUnichar* aURI, nsIRDFResource** aResourc
 
 
 NS_IMETHODIMP
-ServiceImpl::GetLiteral(const PRUnichar* uri, nsIRDFLiteral** literal)
+ServiceImpl::GetLiteral(const PRUnichar* aValue, nsIRDFLiteral** aLiteral)
 {
-    LiteralImpl* result = new LiteralImpl(uri);
-    if (! result)
+    NS_PRECONDITION(aValue != nsnull, "null ptr");
+    if (! aValue)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_PRECONDITION(aLiteral != nsnull, "null ptr");
+    if (! aLiteral)
+        return NS_ERROR_NULL_POINTER;
+
+    // See if we have on already cached
+    nsIRDFLiteral* literal =
+        NS_STATIC_CAST(nsIRDFLiteral*, PL_HashTableLookup(mLiterals, aValue));
+
+    if (literal) {
+        NS_ADDREF(literal);
+        *aLiteral = literal;
+        return NS_OK;
+    }
+
+    // Nope. Create a new one
+    literal = new LiteralImpl(aValue);
+    if (! literal)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    *literal = result;
-    NS_ADDREF(result);
+    *aLiteral = literal;
+    NS_ADDREF(literal);
     return NS_OK;
 }
 
@@ -669,6 +710,57 @@ ServiceImpl::CreateBrowserDatabase(nsIRDFDataBase** dataBase)
     NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
+
+////////////////////////////////////////////////////////////////////////
+
+nsresult
+ServiceImpl::RegisterLiteral(nsIRDFLiteral* aLiteral, PRBool aReplace)
+{
+    NS_PRECONDITION(aLiteral != nsnull, "null ptr");
+
+    nsresult rv;
+    const PRUnichar* value;
+    if (NS_FAILED(rv = aLiteral->GetValue(&value))) {
+        NS_ERROR("unable to get literal's value");
+        return rv;
+    }
+
+    nsIRDFLiteral* prevLiteral =
+        NS_STATIC_CAST(nsIRDFLiteral*, PL_HashTableLookup(mLiterals, value));
+
+    if (prevLiteral) {
+        if (aReplace) {
+            NS_RELEASE(prevLiteral);
+        }
+        else {
+            NS_WARNING("literal already registered and replace not specified");
+            return NS_ERROR_FAILURE;
+        }
+    }
+
+    PL_HashTableAdd(mLiterals, value, aLiteral);
+    return NS_OK;
+}
+
+
+nsresult
+ServiceImpl::UnregisterLiteral(nsIRDFLiteral* aLiteral)
+{
+    NS_PRECONDITION(aLiteral != nsnull, "null ptr");
+
+    nsresult rv;
+
+    const PRUnichar* value;
+    if (NS_FAILED(rv = aLiteral->GetValue(&value))) {
+        NS_ERROR("unable to get literal's value");
+        return rv;
+    }
+
+    PL_HashTableRemove(mLiterals, value);
+    return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////
 
 nsresult
 NS_NewRDFService(nsIRDFService** mgr)
