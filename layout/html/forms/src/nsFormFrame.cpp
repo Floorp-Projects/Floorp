@@ -616,7 +616,7 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
                       NS_SCRIPTSECURITYMANAGER_PROGID, &result);
       nsCOMPtr<nsIURI> actionURL;
       if (NS_FAILED(result) ||
-          NS_FAILED(result = NS_NewURI(getter_AddRefs(actionURL), href)) ||
+          NS_FAILED(result = NS_NewURI(getter_AddRefs(actionURL), href, docURL)) ||
           NS_FAILED(result = securityManager->CheckLoadURI(docURL, actionURL))) 
       {
         return result;
