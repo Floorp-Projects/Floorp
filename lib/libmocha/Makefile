@@ -25,6 +25,10 @@ LIBRARY_NAME	= mocha
 REQUIRES	= lay net parse img js style layer applet dbm nspr security \
 		  htmldlgs util jtools pref java libreg softupdt jsdebug
 
+ifndef NO_SECURITY
+REQUIRES       += jar
+endif
+
 CSRCS		= et_mocha.c \
 		  et_moz.c \
 		  lm_applt.c \
@@ -56,10 +60,6 @@ ifdef MOZ_JAVA
 CSRCS +=             \
 		  lm_jsd.c \
 		  $(NULL)
-endif
-
-ifndef NO_SECURITY
-CSRCS		+= lm_crypt.c lm_pk11.c
 endif
 
 include $(DEPTH)/config/rules.mk
