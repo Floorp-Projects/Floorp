@@ -1591,8 +1591,11 @@ gint nsWindow::ConvertBorderStyles(nsBorderStyle bs)
     w |= GDK_DECOR_MINIMIZE;
   if (bs & eBorderStyle_maximize)
     w |= GDK_DECOR_MAXIMIZE;
-  if (bs & eBorderStyle_close)
+  if (bs & eBorderStyle_close) {
+#ifdef DEBUG
     printf("we don't handle eBorderStyle_close yet... please fix me\n");
+#endif /* DEBUG */
+  }
 
   return w;
 }
