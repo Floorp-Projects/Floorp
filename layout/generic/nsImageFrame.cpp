@@ -1966,7 +1966,9 @@ nsImageFrame::RealLoadImage(const nsAString& aSpec, nsIPresContext *aPresContext
   nsCOMPtr<nsIURI> realURI;
 
   /* don't load the image if some security check fails... */
-  GetRealURI(aSpec, getter_AddRefs(realURI));
+  nsCOMPtr<nsIIOService> ioService;
+  aPresContext->GetIOService(getter_AddRefs(ioService));
+  GetRealURI(aSpec, ioService, getter_AddRefs(realURI));
   if (aCheckContentPolicy)
     if (!CanLoadImage(realURI)) return NS_ERROR_FAILURE;
 
@@ -2052,12 +2054,14 @@ nsImageFrame::GetURI(const nsAString& aSpec, nsIURI **aURI)
     newURI.Assign(NS_LITERAL_STRING("resource:/res/html/gopher-") +
                   Substring(aSpec, INTERNAL_GOPHER_LENGTH, aSpec.Length() - INTERNAL_GOPHER_LENGTH) +
                   NS_LITERAL_STRING(".gif"));
-    GetRealURI(newURI, aURI);
+    // XXXldb Using GetRealURI seems silly.
+    GetRealURI(newURI, nsnull, aURI);
   }
 }
 
 void
-nsImageFrame::GetRealURI(const nsAString& aSpec, nsIURI **aURI)
+nsImageFrame::GetRealURI(const nsAString& aSpec, nsIIOService *aIOService,
+                         nsIURI **aURI)
 {
   nsCOMPtr<nsIURI> baseURI;
   GetBaseURI(getter_AddRefs(baseURI));
@@ -2065,7 +2069,7 @@ nsImageFrame::GetRealURI(const nsAString& aSpec, nsIURI **aURI)
   GetDocumentCharacterSet(charset);
   NS_NewURI(aURI, aSpec, 
             charset.IsEmpty() ? nsnull : NS_ConvertUCS2toUTF8(charset).get(), 
-            baseURI);
+            baseURI, aIOService);
 }
 
 void

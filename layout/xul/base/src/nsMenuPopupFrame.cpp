@@ -176,8 +176,7 @@ nsMenuPopupFrame::Init(nsIPresContext*  aPresContext,
   // lookup if we're allowed to overlap the OS bar (menubar/taskbar) from the
   // look&feel object
   nsCOMPtr<nsILookAndFeel> lookAndFeel;
-  nsComponentManager::CreateInstance(kLookAndFeelCID, nsnull, NS_GET_IID(nsILookAndFeel), 
-                                      getter_AddRefs(lookAndFeel));
+  aPresContext->GetLookAndFeel(getter_AddRefs(lookAndFeel));
   if ( lookAndFeel ) {
     PRBool tempBool;
     lookAndFeel->GetMetric(nsILookAndFeel::eMetric_MenusCanOverlapOSBar, tempBool);

@@ -215,7 +215,8 @@ protected:
   inline PRBool CanLoadImage(nsIURI *aURI);
 
   inline void GetURI(const nsAString& aSpec, nsIURI **aURI);
-  inline void GetRealURI(const nsAString& aSpec, nsIURI **aURI);
+  inline void GetRealURI(const nsAString& aSpec, nsIIOService *aIOService,
+                         nsIURI **aURI);
 
   inline void GetBaseURI(nsIURI **uri);
   inline void GetLoadGroup(nsIPresContext *aPresContext, nsILoadGroup **aLoadGroup);
