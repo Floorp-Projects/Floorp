@@ -26,6 +26,9 @@ DEFINES += -D_IMPL_NS_BASE
 
 EXPORTS =		\
     nsISizeOfHandler.h	\
+    nsEscape.h          \
+    nsFileSpec.h        \
+    nsFileStream.h      \
     $(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))

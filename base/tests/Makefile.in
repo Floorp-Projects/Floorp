@@ -23,7 +23,7 @@ include $(DEPTH)/config/autoconf.mk
 
 REQUIRES	= xpcom netlib
 
-CPPSRCS		= TestAtoms.cpp TestCRT.cpp
+CPPSRCS		= TestAtoms.cpp TestCRT.cpp FilesTest.cpp
 
 OBJS		= $(CPPSRCS:.cpp=.o)
 

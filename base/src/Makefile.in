@@ -35,6 +35,9 @@ CPPSRCS =                       \
     nsByteBuffer.cpp            \
     nsCRT.cpp                   \
     nsDeque.cpp                 \
+    nsEscape.cpp                \
+    nsFileSpec.cpp              \
+    nsFileStream.cpp            \
     nsRBTree.cpp                \
     nsSizeOfHandler.cpp		\
     nsString.cpp                \
