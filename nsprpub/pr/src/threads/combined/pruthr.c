@@ -61,6 +61,7 @@ static void _PR_DecrActiveThreadCount(PRThread *thread);
 static PRThread *_PR_AttachThread(PRThreadType, PRThreadPriority, PRThreadStack *);
 static void _PR_InitializeNativeStack(PRThreadStack *ts);
 static void _PR_InitializeRecycledThread(PRThread *thread);
+static void _PR_UserRunThread(void);
 
 void _PR_InitThreads(PRThreadType type, PRThreadPriority priority,
     PRUintn maxPTDs)
@@ -435,7 +436,7 @@ void _PR_NativeRunThread(void *arg)
     }
 }
 
-void _PR_UserRunThread(void)
+static void _PR_UserRunThread(void)
 {
     PRThread *thread = _PR_MD_CURRENT_THREAD();
     PRIntn is;
@@ -722,6 +723,7 @@ static void _PR_Resume(PRThread *thread)
 
 }
 
+#if !defined(_PR_LOCAL_THREADS_ONLY) && defined(XP_UNIX)
 static PRThread *get_thread(_PRCPU *cpu)
 {
     PRThread *thread;
@@ -779,6 +781,7 @@ static PRThread *get_thread(_PRCPU *cpu)
     _PR_RUNQ_UNLOCK(cpu);
     return(thread);
 }
+#endif /* !defined(_PR_LOCAL_THREADS_ONLY) && defined(XP_UNIX) */
 
 /*
 ** Schedule this native thread by finding the highest priority nspr
@@ -1598,7 +1601,6 @@ PR_IMPLEMENT(PRStatus) PR_EnumerateThreads(PREnumerator func, void *arg)
 {
     PRCList *qp, *qp_next;
     PRIntn i = 0;
-    PRThread *me = _PR_MD_CURRENT_THREAD();
     PRStatus rv = PR_SUCCESS;
     PRThread* t;
 
