@@ -20,7 +20,6 @@
  * Contributor(s): 
  */
 
-#include "nscore.h"
 #include "nsIFactory.h"
 #include "nsISupports.h"
 #include "nsGfxCIID.h"
@@ -43,7 +42,6 @@ static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 
 static NS_DEFINE_IID(kCDeviceContextSpec, NS_DEVICE_CONTEXT_SPEC_CID);
 static NS_DEFINE_IID(kCDeviceContextSpecFactory, NS_DEVICE_CONTEXT_SPEC_FACTORY_CID); 
-
 
 class nsGfxFactoryBeOS : public nsIFactory
 {   
