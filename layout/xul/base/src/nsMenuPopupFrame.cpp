@@ -625,8 +625,10 @@ nsMenuPopupFrame::AdjustClientXYForNestedDocuments ( nsIDOMXULDocument* inPopupD
         nsIFrame* targetFrame;
         shell->GetPrimaryFrameFor(targetAsContent, &targetFrame);
         nsIView* parentView = nsnull;
-        GetRootViewForPopup(mPresContext, targetFrame, &parentView);
-        GetWidgetForView(parentView, *getter_AddRefs(targetDocumentWidget));
+        if (targetFrame) {
+          GetRootViewForPopup(mPresContext, targetFrame, &parentView);
+          GetWidgetForView(parentView, *getter_AddRefs(targetDocumentWidget));
+        }
         if (!targetDocumentWidget) {
           // We aren't inside a popup. This means we should use the root view's
           // widget.
