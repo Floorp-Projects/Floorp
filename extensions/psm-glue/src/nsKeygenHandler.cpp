@@ -240,7 +240,7 @@ nsKeygenFormProcessor::ProcessValue(nsIDOMHTMLElement *aElement,
 	keyTypeValue.AssignWithConversion("rsa");
       }
       res = selectElement->GetAttribute(challenge, challengeValue);
-      rv = GetPublicKey(aValue, challenge, keyTypeValue, 
+      rv = GetPublicKey(aValue, challengeValue, keyTypeValue, 
 			publicKey, pqgValue);
       aValue = publicKey;
     }
@@ -253,13 +253,13 @@ NS_METHOD nsKeygenFormProcessor::ProvideContent(const nsString& aFormType,
 						nsVoidArray& aContent, 
 						nsString& aAttribute) 
 { 
-  nsString selectString;
+  nsString selectKey;
   nsresult rv;
   PCMT_CONTROL control;
   PRUint32 i;
 
-  selectString.AssignWithConversion("SELECT");
-  if (aFormType.EqualsIgnoreCase(selectString)) {
+  selectKey.AssignWithConversion("SELECT");
+  if (aFormType.EqualsIgnoreCase(selectKey)) {
     nsString *selectString;
     char **result;
 
