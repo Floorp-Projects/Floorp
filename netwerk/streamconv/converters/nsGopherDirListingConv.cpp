@@ -172,6 +172,7 @@ nsGopherDirListingConv::OnDataAvailable(nsIRequest *request,
     if (NS_FAILED(rv)) return rv;
 
     char *buffer = (char*)nsMemory::Alloc(streamLen + 1);
+    if (!buffer) return NS_ERROR_OUT_OF_MEMORY;
     rv = inStr->Read(buffer, streamLen, &read);
     if (NS_FAILED(rv)) return rv;
 
@@ -206,8 +207,7 @@ nsGopherDirListingConv::OnDataAvailable(nsIRequest *request,
         
         mSentHeading = PR_TRUE;
     }
-    char *line = buffer;
-    line = DigestBufferLines(line, indexFormat);
+    char *line = DigestBufferLines(buffer, indexFormat);
     // if there's any data left over, buffer it.
     if (line && *line) {
         mBuffer.Append(line);
@@ -305,10 +305,15 @@ nsGopherDirListingConv::DigestBufferLines(char* aBuffer, nsCAutoString& aString)
             /* if the description is not empty */
             if (tabPos != line) {
                 char* descStr = PL_strndup(line,tabPos-line);
+                if (!descStr) return nsnull;
                 char* escName = nsEscape(descStr,url_Path);
+                if (!escName) {
+                    PL_strfree(descStr);
+                    return nsnull;
+                }
                 desc = escName;
-                nsMemory::Free(escName);
-                nsMemory::Free(descStr);
+                nsCRT::free(escName);
+                PL_strfree(descStr);
             } else {
                 desc = "%20";
             }
@@ -319,10 +324,15 @@ nsGopherDirListingConv::DigestBufferLines(char* aBuffer, nsCAutoString& aString)
         /* Get selector */
         if (tabPos) {
             char* sel = PL_strndup(line,tabPos-line);
+            if (!sel) return nsnull;
             char* escName = nsEscape(sel,url_Path);
+            if (!escName) {
+                PL_strfree(sel);
+                return nsnull;
+            }
             selector = escName;
-            nsMemory::Free(escName);
-            nsMemory::Free(sel);
+            nsCRT::free(escName);
+            PL_strfree(sel);
             line = tabPos+1;
             tabPos = PL_strchr(line,'\t');
         }
