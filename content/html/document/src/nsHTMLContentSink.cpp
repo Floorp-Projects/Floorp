@@ -423,8 +423,6 @@ AddAttributes(const nsIParserNode& aNode,
               nsIHTMLContent* aContent,
               nsIScriptContextOwner* aScriptContextOwner)
 {
-  nsIContent* content = (nsIContent*) aContent;
-
   // Add tag attributes to the content attributes
   nsAutoString k, v;
   PRInt32 ac = aNode.GetAttributeCount();
@@ -434,12 +432,19 @@ AddAttributes(const nsIParserNode& aNode,
     k.Truncate();
     k.Append(key);
     k.ToUpperCase();
-    
-    // Get value and remove mandatory quotes
-    GetAttributeValueAt(aNode, i, v, aScriptContextOwner);
 
-    // Add attribute to content
-    content->SetAttribute(k, v, PR_FALSE);
+    nsIAtom*  keyAtom = NS_NewAtom(k);
+    nsHTMLValue value;
+    
+    if (NS_CONTENT_ATTR_NOT_THERE == 
+        aContent->GetAttribute(keyAtom, value)) {
+      // Get value and remove mandatory quotes
+      GetAttributeValueAt(aNode, i, v, aScriptContextOwner);
+
+      // Add attribute to content
+      aContent->SetAttribute(keyAtom, v, PR_FALSE);
+    }
+    NS_RELEASE(keyAtom);
   }
   return NS_OK;
 }
