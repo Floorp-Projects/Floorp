@@ -2,7 +2,7 @@
 # Copyright 2002 Sun Microsystems, Inc.  All rights reserved.
 # Use is subject to license terms.
 #
-#ident	"$Id: Makefile.in,v 1.1 2003/02/04 01:45:28 wtc%netscape.com Exp $"
+#ident	"$Id: Makefile.in,v 1.2 2003/02/13 01:57:42 wtc%netscape.com Exp $"
 #
 
 MOD_DEPTH = ../..
@@ -12,35 +12,33 @@ VPATH	    = @srcdir@
 
 NAME        = sun-nspr
 RELEASE     = 1
-VERSION     = $(MOD_MAJOR_VERSION).$(MOD_MINOR_VERSION).$(MOD_REVISION_VERSION)
-SOURCE      = $(NAME)-$(VERSION).tar.gz
-RPM         = $(NAME)-$(VERSION)-$(RELEASE).i386.rpm
-SRPM        = $(NAME)-$(VERSION)-$(RELEASE).src.rpm
 TOPDIR      = /usr/src/redhat
+VERSION     = `grep PR_VERSION $(dist_includedir)/prinit.h \
+                  | sed -e 's/"$$//' -e 's/.*"//' -e 's/ .*//'`
 
 include $(MOD_DEPTH)/config/autoconf.mk
 
-all::
 publish:
 	$(MAKE) clean
 	mkdir -p usr/lib/mps
 	cp -L $(MOD_DEPTH)/dist/lib/* usr/lib/mps
 	mkdir -p usr/include/mps
 	cp -Lr $(MOD_DEPTH)/dist/include/* usr/include/mps
-	tar czvf $(SOURCE) usr
+	tar czvf $(NAME)-$(VERSION).tar.gz usr
 	echo "%define name $(NAME)" >$(NAME).spec
 	echo "%define version $(VERSION)" >>$(NAME).spec
 	echo "%define release $(RELEASE)" >>$(NAME).spec
 
 	cat $(srcdir)/$(NAME).spec >>$(NAME).spec
-	cp $(SOURCE) $(TOPDIR)/SOURCES
+	cp $(NAME)-$(VERSION).tar.gz $(TOPDIR)/SOURCES
 	rpm -ba $(NAME).spec
 	if [ ! -d RPMS ] ; then mkdir -p RPMS ; fi
 	if [ ! -d SRPMS ] ; then mkdir -p SRPMS ; fi
-	cp -v $(TOPDIR)/RPMS/i386/$(NAME)-* RPMS
-	cp -v $(TOPDIR)/SRPMS/$(NAME)-* SRPMS
+	cp -v $(TOPDIR)/RPMS/i386/$(NAME)-$(VERSION)-* RPMS
+	cp -v $(TOPDIR)/RPMS/i386/$(NAME)-devel-$(VERSION)-* RPMS
+	cp -v $(TOPDIR)/SRPMS/$(NAME)-$(VERSION)-* SRPMS
 
 clean:
 	rm -rf $(TOPDIR)/BUILD/$(NAME)
 	rm -rf RPMS SRPMS usr
-	rm -f $(SOURCE)
+	rm -f $(NAME)-$(VERSION).tar.gz
