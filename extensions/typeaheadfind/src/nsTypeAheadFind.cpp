@@ -1014,6 +1014,11 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell,
   nsCOMPtr<nsISupports> currentContainer, startingContainer;
   presContext->GetContainer(getter_AddRefs(startingContainer));
   nsCOMPtr<nsIDocShellTreeItem> treeItem(do_QueryInterface(startingContainer));
+  NS_ASSERTION(treeItem, "Bug 175321 Crashes with Type Ahead Find [@ nsTypeAheadFind::FindItNow]");
+  if (!treeItem) {
+    return NS_ERROR_FAILURE;
+  }
+
   nsCOMPtr<nsIDocShellTreeItem> rootContentTreeItem;
   nsCOMPtr<nsIDocShell> currentDocShell;
   nsCOMPtr<nsIDocShell> startingDocShell(do_QueryInterface(startingContainer));
