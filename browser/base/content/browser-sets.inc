@@ -123,14 +123,18 @@
          command="cmd_newNavigator"
          modifiers="accel"/>
     <key id="key_newNavigatorTab" key="&tabCmd.commandkey;" modifiers="accel" command="cmd_newNavigatorTab"/>
-    <key id="focusURLBar"      key="&openCmd.commandkey;" command="Browser:OpenLocation"
+    <key id="focusURLBar" key="&openCmd.commandkey;" command="Browser:OpenLocation"
          modifiers="accel"/>
-    <key id="focusSearchBar"     key="&searchFocus.commandkey;" oncommand="focusSearchBar();" modifiers="accel"/>
-    <key id="openFileKb"         key="&openFileCmd.commandkey;" command="Browser:OpenFile"  modifiers="accel"/>
-    <key id="key_savePage"       key="&savePageCmd.commandkey;" command="Browser:SavePage" modifiers="accel"/>
-    <key id="printKb"            key="&printCmd.commandkey;" command="cmd_print"  modifiers="accel"/>
-    <key id="key_close"  key="&closeCmd.key;" command="cmd_close" modifiers="accel"/>
-    <key id="key_closeWindow"  key="&closeCmd.key;" command="cmd_closeWindow" modifiers="accel,shift"/>
+#ifdef XP_UNIX
+    <key id="focusSearchBar" key="&searchFocusUnix.commandkey;" oncommand="focusSearchBar();" modifiers="accel"/>
+#else
+    <key id="focusSearchBar" key="&searchFocus.commandkey;" oncommand="focusSearchBar();" modifiers="accel"/>
+#endif
+    <key id="openFileKb" key="&openFileCmd.commandkey;" command="Browser:OpenFile"  modifiers="accel"/>
+    <key id="key_savePage" key="&savePageCmd.commandkey;" command="Browser:SavePage" modifiers="accel"/>
+    <key id="printKb" key="&printCmd.commandkey;" command="cmd_print"  modifiers="accel"/>
+    <key id="key_close" key="&closeCmd.key;" command="cmd_close" modifiers="accel"/>
+    <key id="key_closeWindow" key="&closeCmd.key;" command="cmd_closeWindow" modifiers="accel,shift"/>
     <key id="key_undo"
          key="&undoCmd.key;"
          modifiers="accel"/>
@@ -182,16 +186,20 @@
     <key id="key_reload"  key="&reloadCmd.commandkey;" oncommand="BrowserReload();" modifiers="accel"/>
     <key key="&reloadCmd.commandkey;" oncommand="BrowserReloadSkipCache();" modifiers="accel,shift"/>
     <key id="key_viewSource" key="&pageSourceCmd.commandkey;" command="View:PageSource" modifiers="accel"/>
+#ifdef XP_WIN
+    <key id="key_viewInfo"   key="&pageInfoWinCmd.commandkey;"   command="View:PageInfo"   modifiers="accel"/>
+#else
     <key id="key_viewInfo"   key="&pageInfoCmd.commandkey;"   command="View:PageInfo"   modifiers="accel"/>
+#endif
     <key id="key_find"              key="&findOnCmd.commandkey;" command="Browser:Find" modifiers="accel"/>
     <key id="key_findAgain"         key="&findAgainCmd.commandkey;" command="Browser:FindAgain" modifiers="accel"/>
     <key id="addBookmarkAsKb" key="&addCurPageAsCmd.commandkey;" command="Browser:AddBookmarkAs" modifiers="accel"/>
     <key id="viewBookmarksSidebarKb" key="&manBookmarksCmd.commandkey;" command="viewBookmarksSidebar" modifiers="accel"/>
 
-#ifndef XP_MACOSX
+#ifdef XP_WIN
 # Ctrl+I is conventially mapped to Info on MacOS X, thus it should not be 
 # overridden for other purposes there. 
-    <key id="viewBookmarksSidebarKb" key="&manBookmarksCmd2.commandkey;" command="viewBookmarksSidebar" modifiers="accel"/>
+    <key id="viewBookmarksSidebarKb" key="&manBookmarksWinCmd.commandkey;" command="viewBookmarksSidebar" modifiers="accel"/>
 #endif
 
     <key id="key_stop" keycode="VK_ESCAPE" command="Browser:Stop"/>

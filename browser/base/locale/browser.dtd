@@ -39,11 +39,8 @@
 <!ENTITY pageSourceCmd.commandkey "u">
 <!ENTITY pageInfoCmd.label "Page Info">
 <!ENTITY pageInfoCmd.accesskey "I">
-#ifdef XP_MACOSX
 <!ENTITY pageInfoCmd.commandkey "i">
-#else
-<!ENTITY pageInfoCmd.commandkey "j">
-#endif
+<!ENTITY pageInfoWinCmd.commandkey "j">
 <!ENTITY fullScreenCmd.label "Full Screen">
 <!ENTITY fullScreenCmd.accesskey "F">
 
@@ -65,7 +62,7 @@
 <!ENTITY manBookmarksCmd.label "Manage Bookmarks...">
 <!ENTITY manBookmarksCmd.accesskey "M">
 <!ENTITY manBookmarksCmd.commandkey "b">
-<!ENTITY manBookmarksCmd2.commandkey "i">
+<!ENTITY manBookmarksWinCmd.commandkey "i">
 <!ENTITY emptyItem.label "(Empty)">
 
 <!ENTITY helpMenuCmd.label "Help">
@@ -178,6 +175,7 @@
 <!ENTITY openCmd.commandkey           "l">
 <!ENTITY urlbar.accesskey             "d">
 <!ENTITY searchFocus.commandkey       "k">
+<!ENTITY searchFocusUnix.commandkey   "j">
 
 <!ENTITY openLinkCmd.label            "Open Link in New Window">
 <!ENTITY openLinkCmd.accesskey        "W">
