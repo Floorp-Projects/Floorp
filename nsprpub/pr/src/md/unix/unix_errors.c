@@ -1525,8 +1525,15 @@ void _MD_unix_map_lockf_error(int err)
     }
 }
 
+#ifdef AIX
+void _MD_aix_map_sendfile_error(int oserror)
+#endif
+
 #ifdef HPUX11
 void _MD_hpux_map_sendfile_error(int oserror)
+#endif
+
+#if defined(AIX) || defined(HPUX11)
 {
     PRErrorCode prerror;
 
@@ -1560,4 +1567,4 @@ void _MD_hpux_map_sendfile_error(int oserror)
     }
     PR_SetError(prerror, oserror); 
 }
-#endif /* HPUX11 */
+#endif /* defined(AIX) || defined(HPUX11) */
