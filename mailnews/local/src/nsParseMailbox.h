@@ -75,7 +75,7 @@ public:
 	// nsIMsgParseMailMsgState support
 	NS_IMETHOD SetMailDB(nsIMsgDatabase * aDatabase);
 	NS_IMETHOD Clear();
-	NS_IMETHOD SetState(MBOX_PARSE_STATE aState);
+	NS_IMETHOD SetState(nsMailboxParseState aState);
 	NS_IMETHOD SetEnvelopePos(PRUint32 aEnvelopePos);
 	NS_IMETHOD ParseAFolderLine(const char *line, PRUint32 lineLength);
 	NS_IMETHOD GetNewMsgHdr(nsIMsgDBHdr ** aMsgHeader);
@@ -100,7 +100,7 @@ public:
 	nsCOMPtr<nsIMsgDBHdr>		m_newMsgHdr;		/* current message header we're building */
 	nsCOMPtr<nsIMsgDatabase>	m_mailDB;
 
-	MBOX_PARSE_STATE m_state;
+	nsMailboxParseState m_state;
 	PRUint32			m_position;
 	PRUint32			m_envelope_pos;
 	PRUint32			m_headerstartpos;

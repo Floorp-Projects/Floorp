@@ -1356,7 +1356,7 @@ NS_IMETHODIMP nsImapMailFolder::SetupHeaderParseStream(
 		m_msgParser->Clear();
 	
 	if (m_msgParser)
-		return m_msgParser->SetState(MBOX_PARSE_HEADERS);
+		return m_msgParser->SetState(nsIMsgParseMailMsgState::ParseHeadersState);
 	else
 		return NS_ERROR_OUT_OF_MEMORY;
     return rv;

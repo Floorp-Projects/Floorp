@@ -340,14 +340,15 @@ PRInt32 nsMsgMailboxParser::HandleLine(char *line, PRUint32 lineLength)
 	if (line[0] == 'F' && IsEnvelopeLine(line, lineLength))
 	{
 		// **** This used to be
-		// XP_ASSERT (m_parseMsgState->m_state == MBOX_PARSE_BODY);
+		// XP_ASSERT (m_parseMsgState->m_state == nsMailboxParseBodyState);
 		// **** I am not sure this is a right thing to do. This happens when
 		// going online, downloading a message while playing back append
-		// draft/template offline operation. We are mixing MBOX_PARSE_BODY &&
-		// MBOX_PARSE_HEADERS state. David I need your help here too. **** jt
+		// draft/template offline operation. We are mixing
+        // nsMailboxParseBodyState &&
+		// nsMailboxParseHeadersState. David I need your help here too. **** jt
 
-		NS_ASSERTION (m_state == MBOX_PARSE_BODY ||
-				   m_state == MBOX_PARSE_HEADERS, "invalid parse state"); /* else folder corrupted */
+		NS_ASSERTION (m_state == ParseBodyState ||
+				   m_state == ParseHeadersState, "invalid parse state"); /* else folder corrupted */
 		PublishMsgHeader();
 		Clear();
 		status = StartNewEnvelope(line, lineLength);
@@ -379,7 +380,7 @@ nsParseMailMessageState::nsParseMailMessageState()
 	NS_INIT_REFCNT();
 	m_position = 0;
 	m_IgnoreXMozillaStatus = FALSE;
-	m_state = MBOX_PARSE_BODY;
+	m_state = ParseBodyState;
 	Clear();
 
     NS_DEFINE_CID(kMsgHeaderParserCID, NS_MSGHEADERPARSER_CID);
@@ -398,7 +399,7 @@ nsParseMailMessageState::~nsParseMailMessageState()
 
 void nsParseMailMessageState::Init(PRUint32 fileposition)
 {
-	m_state = MBOX_PARSE_BODY;
+	m_state = ParseBodyState;
 	m_position = fileposition;
 	m_newMsgHdr = null_nsCOMPtr();
 }
@@ -431,7 +432,7 @@ NS_IMETHODIMP nsParseMailMessageState::Clear()
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsParseMailMessageState::SetState(MBOX_PARSE_STATE aState)
+NS_IMETHODIMP nsParseMailMessageState::SetState(nsMailboxParseState aState)
 {
 	m_state = aState;
 	return NS_OK;
@@ -463,7 +464,7 @@ PRInt32 nsParseMailMessageState::ParseFolderLine(const char *line, PRUint32 line
 {
 	int status = 0;
 
-	if (m_state == MBOX_PARSE_HEADERS)
+	if (m_state == ParseHeadersState)
 	{
 		if (EMPTY_MESSAGE_LINE(line))
 		{
@@ -477,7 +478,7 @@ PRInt32 nsParseMailMessageState::ParseFolderLine(const char *line, PRUint32 line
 			 NS_ASSERTION(status >= 0, "error finalizing headers parsing mailbox");
 			if (status < 0)
 				return status;
-			 m_state = MBOX_PARSE_BODY;
+			 m_state = ParseBodyState;
 		}
 		else
 		{
@@ -487,7 +488,7 @@ PRInt32 nsParseMailMessageState::ParseFolderLine(const char *line, PRUint32 line
 			m_headers.AppendBuffer(line, lineLength);
 		}
 	}
-	else if ( m_state == MBOX_PARSE_BODY)
+	else if ( m_state == ParseBodyState)
 	{
 		m_body_lines++;
 	}
@@ -693,7 +694,7 @@ void nsParseMailMessageState::ClearAggregateHeader (nsVoidArray &list)
 int nsParseMailMessageState::StartNewEnvelope(const char *line, PRUint32 lineLength)
 {
 	m_envelope_pos = m_position;
-	m_state = MBOX_PARSE_HEADERS;
+	m_state = ParseHeadersState;
 	m_position += lineLength;
 	m_headerstartpos = m_position;
 	return ParseEnvelope (line, lineLength);
@@ -2183,7 +2184,7 @@ PRInt32	ParseOutgoingMessage::ParseFolderLine(const char *line, PRUint32 lineLen
 		if (!nsCRT::strncmp(line, X_MOZILLA_STATUS, X_MOZILLA_STATUS_LEN)) 
 			m_wroteXMozillaStatus = TRUE;
 
-		m_lastBodyLineEmpty = (m_state == MBOX_PARSE_BODY && (EMPTY_MESSAGE_LINE(line)));
+		m_lastBodyLineEmpty = (m_state == ParseBodyState && (EMPTY_MESSAGE_LINE(line)));
 
 		// make sure we mangle naked From lines
 		if (line[0] == 'F' && !nsCRT::strncmp(line, "From ", 5))
@@ -2193,7 +2194,7 @@ PRInt32	ParseOutgoingMessage::ParseFolderLine(const char *line, PRUint32 lineLen
 				return res;
 			m_position += 1;
 		}
-		if (!m_wroteXMozillaStatus && m_writeMozillaStatus && m_state == MBOX_PARSE_BODY)
+		if (!m_wroteXMozillaStatus && m_writeMozillaStatus && m_state == ParseBodyState)
 		{
 			char buf[50];
 			PRUint32 dbFlags = m_newMsgHdr ? m_newMsgHdr->GetFlags() : 0;
