@@ -1,0 +1,19 @@
+{
+    IBClasses = (
+        {
+            ACTIONS = {find = id; }; 
+            CLASS = FindDlgController; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {
+                mFindButton = id; 
+                mIgnoreCaseBox = id; 
+                mSearchBackwardsBox = id; 
+                mSearchField = id; 
+                mWrapAroundBox = id; 
+            }; 
+            SUPERCLASS = NSWindowController; 
+        }, 
+        {CLASS = FirstResponder; LANGUAGE = ObjC; SUPERCLASS = NSObject; }
+    ); 
+    IBVersion = 1; 
+}
