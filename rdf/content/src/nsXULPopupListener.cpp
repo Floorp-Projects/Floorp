@@ -213,8 +213,6 @@ XULPopupListenerImpl::LaunchPopup(nsIDOMEvent* anEvent)
       // Get the DOM window
       nsCOMPtr<nsIDOMWindow> domWindow = do_QueryInterface(global);
       if (domWindow != nsnull) {
-        printf("Can call createPopup!\n");
- 
         // Find out if we're anchored.
         nsString anchorAlignment;
         element->GetAttribute("popupanchor", anchorAlignment);
