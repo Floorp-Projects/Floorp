@@ -71,22 +71,19 @@ exit(0);
 ########################################################################
 
 package main;
+use File::Spec;
 
 sub include {
     my($stack, $filename) = @_;
-    my $fullFilename = $stack->{'variables'}->{'DIRECTORY'} . $filename;
-    $fullFilename =~ s|^.*//||os; # strip everything up to a double slash
-    if ($fullFilename !~ m|^(.*/)?(.+)$|os) { # extract the directory and file portions
-        die "Not a valid filename: $filename\n";
+    if ($filename ne '-') {
+        $filename = File::Spec->rel2abs($filename, $stack->{'variables'}->{'DIRECTORY'});
+        my($volume, $directory) = File::Spec->splitpath($filename);
+        local $stack->{'variables'}->{'DIRECTORY'} = File::Spec->catpath($volume, $directory, '');
     }
-    local $stack->{'variables'}->{'DIRECTORY'} = $1;
-    if (not defined($stack->{'variables'}->{'DIRECTORY'})) {
-        $stack->{'variables'}->{'DIRECTORY'} = '';
-    }
-    local $stack->{'variables'}->{'FILE'} = $2;
+    local $stack->{'variables'}->{'FILE'} = $filename;
     local $stack->{'variables'}->{'LINE'} = 0;
     local *FILE;
-    open(FILE, nativise($filename)) or die "Couldn't open $filename: $!\n";
+    open(FILE, $filename) or die "Couldn't open $filename: $!\n";
     while (<FILE>) {
         # on cygwin, line endings are screwed up, so normalise them.
         s/[\x0D\x0A]+$/\n/os if $^O eq 'cygwin';
@@ -141,23 +138,6 @@ sub fatal {
     exit(1);
 }
 
-sub nativise {
-    my $filename = shift;
-    if ($^O eq 'linux' or
-        $^O eq 'cygwin') {
-        return $filename;
-    } elsif ($^O eq 'MSWin32') {
-        $filename =~ s|^/(.)/|$1:/|gos;
-        $filename =~ s|/|\\|gos;
-        return $filename;
-    } elsif ($^O eq 'MacOS') {
-        $filename =~ s|/|:|gos;
-        return $filename;
-    } else {
-        die("Platform '$^O' not recognised. Contact ian\@hixie.ch.\n");
-    }
-}
-
 
 ########################################################################
 
@@ -168,7 +148,7 @@ sub new {
         'variables' => {
             # %ENV,
             'LINE' => 0, # the line number in the source file
-            'DIRECTORY' => '', # the directory of the source filename
+            'DIRECTORY' => '', # current directory
             'FILE' => '', # source filename
             '1' => 1, # for convenience
         },
@@ -391,7 +371,7 @@ sub include {
     my $stack = shift;
     return if $stack->disabled;
     die "argument expected\n" unless @_;
-    main::include($stack, @_);
+    main::include($stack, File::Spec->catpath(File::Spec::Unix->splitpath(@_)));
 }
 
 sub filter {
