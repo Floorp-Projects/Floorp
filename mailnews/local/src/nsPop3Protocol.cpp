@@ -35,6 +35,7 @@
 
 #include "msgCore.h"    // precompiled header...
 #include "nspr.h"
+#include "nsCRT.h"
 #include "plbase64.h"
 #include "nsIMsgMailNewsUrl.h"
 #include "nsPop3Protocol.h"
@@ -111,7 +112,9 @@ net_pop3_remove_messages_marked_delete(PLHashEntry* he,
 			  						   PRIntn msgindex, 
 			   						   void *arg)
 {
-	char valueChar = (char) he->value;
+	char valueChar = '\0';
+    if (he->value)
+	  nsCRT::memcpy(&valueChar, he->value, sizeof(char));
 	if (valueChar == DELETE_CHAR)
 	  return HT_ENUMERATE_REMOVE;
     else
