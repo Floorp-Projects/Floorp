@@ -298,13 +298,6 @@ nsObjectFrame::GetDesiredSize(nsIPresContext* aPresContext,
   PRUint32 width = EMBED_DEF_DIM;
   PRUint32 height = EMBED_DEF_DIM;
 
-  // the first time, mInstanceOwner will be null, so we a temporary default
-  if(mInstanceOwner != nsnull)
-  {
-    mInstanceOwner->GetWidth(&width);
-    mInstanceOwner->GetHeight(&height);
-  }
-
   if (aReflowState.HaveFixedContentWidth()) {
     aMetrics.width = aReflowState.computedWidth;
     haveWidth = PR_TRUE;
@@ -313,6 +306,17 @@ nsObjectFrame::GetDesiredSize(nsIPresContext* aPresContext,
     aMetrics.height = aReflowState.computedHeight;
     haveHeight = PR_TRUE;
   }
+
+  // the first time, mInstanceOwner will be null, so we a temporary default
+  if(mInstanceOwner != nsnull)
+  {
+    mInstanceOwner->GetWidth(&width);
+    mInstanceOwner->GetHeight(&height);
+	// XXX this is temporary fix so plugins display until we support padding
+	haveHeight = PR_FALSE;
+	haveWidth = PR_FALSE;
+  }
+
 
   // XXX Temporary auto-sizing logic
   if (!haveWidth) {
