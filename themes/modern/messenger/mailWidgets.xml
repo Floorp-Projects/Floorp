@@ -26,11 +26,9 @@
             var targets = this.targets;
             if (targets) {
               for (var i=0; i< targets.length; i++) {
-                dump("searchScopeSet: targets[" + i + "] = " + targets[i] + "\n")
                 targets[i].searchScope = val;
               }
             }
-            dump("done\n");
           ]]>
         </setter>
         <getter>
@@ -67,16 +65,25 @@
             for (var i=0; i<targetIds.length;i++) {
               var target = document.getElementById(targetIds[i]);
               if (target) targets[j++] = target;
-              if (!target) dump("Bad target " + i + ": " + targetIds[i] + "\n");
             }
             return targets;
           ]]>
         </getter>
       </property>
+
+      <!-- value forwards to the internal menulist's "data" attribute -->
+      <property name="value" onget="return this.anonymousContent[0].selectedItem.data">
+        <setter>
+          <![CDATA[
+            var menulist = this.anonymousContent[0];
+            var dataItems = menulist.getElementsByAttribute("data", val);
+            menulist.selectedItem = dataItems[0];
+          ]]>
+        </setter>
+      </property>
       <method name="refreshList">
         <body>
           <![CDATA[
-            dump("refreshing <" + this.tagName + ">\n");
             var menuItemIds = this.valueIds;
             var menuItemStrings = this.valueStrings;
 
@@ -113,15 +120,12 @@
         <argument name="event"/>
         <body>
           <![CDATA[
-            dump("onSelect!\n");
             var menulist = this.anonymousContent[0];
 
             // notify targets
             var targets = this.targets;
             if (targets) {
-              dump("There are " + targets.length + " targets\n");
               for (var i=0; i< targets.length; i++) {
-                dump("onSelect: targets[" + i + "] = " + targets[i] + "\n");
                 targets[i].parentValue = menulist.data;
               }
             }
@@ -221,7 +225,7 @@
             // we inherit from a deck, so just use it's index attribute
             // to hide/show widgets
             if (val == Components.interfaces.nsMsgSearchAttrib.Priority)
-              this.setAttribute("index", "2");
+              this.setAttribute("index", "1");
             else if (val == Components.interfaces.nsMsgSearchAttrib.MsgStatus)
               this.setAttribute("index", "2");
             else
@@ -229,6 +233,70 @@
           ]]>
         </setter>
       </property>
+      <property name="value">
+        <setter>
+          <![CDATA[
+          this.internalValue = val;
+          var type = val.attrib;
+          if (type == Components.interfaces.nsMsgSearchAttrib.Priority)
+            this.anonymousContent[1].data=val.priority;
+          else if (type == Components.interfaces.nsMsgSearchAttrib.MsgStatus)
+            this.anonymousContent[2].data=val.status;
+          else
+            this.anonymousContent[0].value = val.str;
+          ]]>
+        </setter>
+        <getter>
+          <![CDATA[
+          return this.internalValue;
+          ]]>
+        </getter>
+      </property>
+    </interface>
+  </binding>
+  <binding id="searchterm">
+    <interface>
+      <!-- the three tags that make up a term - to use, set the
+           attribute in the XUL to the ID of the term.
+        -->
+      <property name="searchattribute" readonly="true" onget="return document.getElementById(this.getAttribute('searchattribute'));"/>
+
+      <property name="searchoperator" readonly="true" onget="return document.getElementById(this.getAttribute('searchoperator'));"/>
+
+      <property name="searchvalue" readonly="true" onget="return document.getElementById(this.getAttribute('searchvalue'));"/>
+
+      <!-- takes an nsIMsgSearchValue and initializes the appropriate widget
+           with the right value
+        -->
+      <!-- right now only handles filters - need to abstract termlist -->
+      <method name="initialize">
+        <argument name="filter"/>
+        <argument name="termIndex"/>
+        <body>
+          <![CDATA[
+            var attrib = new Object;
+            var op = new Object;
+            var value = new Object;
+            var booland = new Object;
+            var header = new Object;
+            filter.GetTerm(termIndex, attrib, op, value, booland, header);
+
+            var searchAttribute=this.searchattribute;
+            var searchOperator=this.searchoperator;
+            var searchValue=this.searchvalue;
+
+            dump("searchAttribute=" + searchAttribute + "\n");
+            dump("searchOperator=" + searchOperator + "\n");
+            dump("searchValue=" + searchValue + "\n");
+
+            dump("Setting " + attrib.value + ", " +
+                 op.value + ", " + value.value + "\n");
+            if (searchAttribute) searchAttribute.value = attrib.value;
+            if (searchOperator) searchOperator.value = op.value;
+            if (searchValue) searchValue.value = value.value;
+          ]]>
+        </body>
+      </method>
     </interface>
   </binding>
 </bindings>

@@ -128,6 +128,7 @@ EXPORT_RESOURCE_SAMPLES = \
 	wink.gif \
 	winwide.gif \
 	wizard.css \
+	importDialog.css \
 	$(NULL)
 
 DIRS = addressbook messengercompose

@@ -67,7 +67,7 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
 	  list-style-image      : url("chrome://communicator/skin/bookmarks/bookmark-item.gif"); 
   } 
 
-#sessionhist-popup 
+#ubhist-keyword-popup 
   {
 	  margin                : 0px 4px 0px 0px;
 	  width                 : 10px; 
