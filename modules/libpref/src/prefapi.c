@@ -712,66 +712,57 @@ pref_savePref(PLHashEntry *he, int i, void *arg)
                           pref->userPref, 
                           (PrefType) PREF_TYPE(pref)))
     {
-        char buf[2048];
+        char *prefEntry = nsnull;
 
         if (pref->flags & PREF_STRING)
         {
             char *tmp_str = str_escape(pref->userPref.stringVal);
 
-            /* Error checks to be sure length not too long.
-               18 refers to the number of characters in the "user_pref..."
-               string. */
-            if(((PL_strlen((char *) he->key)+PL_strlen(tmp_str))+18)>2048)
-                return PREF_BAD_PARAMETER;
-
             if (tmp_str)
             {
-                PR_snprintf(buf, 2048, "user_pref(\"%s\", \"%s\");",
-                    (char*) he->key, tmp_str);
+                prefEntry = PR_smprintf("user_pref(\"%s\", \"%s\");",
+                                (char*)he->key, tmp_str);
                 PR_Free(tmp_str);
             }
         }
         else if (pref->flags & PREF_INT)
         {
-            PR_snprintf(buf, 2048, "user_pref(\"%s\", %ld);" ,
-                (char*) he->key, (long) pref->userPref.intVal);
+            prefEntry = PR_smprintf("user_pref(\"%s\", %ld);", (char*)he->key,
+                            (long) pref->userPref.intVal);
         }
         else if (pref->flags & PREF_BOOL)
         {
-            PR_snprintf(buf, 2048, "user_pref(\"%s\", %s);" , (char*) he->key,
-                (pref->userPref.boolVal) ? "true" : "false");
+            prefEntry = PR_smprintf("user_pref(\"%s\", %s);", (char*)he->key,
+                            (pref->userPref.boolVal) ? "true" : "false");
         }
 
-        prefArray[i] = PL_strdup(buf);
+        prefArray[i] = prefEntry;
     }
     else if (pref && PREF_IS_LOCKED(pref))
     {
-        char buf[2048];
+        char *prefEntry = nsnull;
 
         if (pref->flags & PREF_STRING)
         {
             char *tmp_str = str_escape(pref->defaultPref.stringVal);
             if (tmp_str) {
-                PR_snprintf(buf, 2048, "user_pref(\"%s\", \"%s\");" ,
-                    (char*) he->key, tmp_str);
+                prefEntry = PR_smprintf("user_pref(\"%s\", \"%s\");",
+                                (char*)he->key, tmp_str);
                 PR_Free(tmp_str);
             }
         }
         else if (pref->flags & PREF_INT)
         {
-            PR_snprintf(buf, 2048, "user_pref(\"%s\", %ld);" ,
-                (char*) he->key, (long) pref->defaultPref.intVal);
+            prefEntry = PR_smprintf("user_pref(\"%s\", %ld);", (char*)he->key,
+                            (long) pref->defaultPref.intVal);
         }
         else if (pref->flags & PREF_BOOL)
         {
-            PR_snprintf(buf, 2048, "user_pref(\"%s\", %s);" , (char*) he->key,
+            prefEntry = PR_smprintf("user_pref(\"%s\", %s);", (char*)he->key,
                 (pref->defaultPref.boolVal) ? "true" : "false");
         }
-        prefArray[i] = PL_strdup(buf);
+        prefArray[i] = prefEntry;
     }
-    /* LI_STUFF?? may need to write out the lilocal stuff here if it applies - probably won't support in 
-        the prefs.js file. We won't need to worry about the user.js since it is read only.
-    */
     return PREF_NOERROR;
 }
 
