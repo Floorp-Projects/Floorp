@@ -1,8 +1,28 @@
 dnl Process this file with autoconf to produce a configure script.
 AC_INIT
+PERL_VERSION=5.006
 
 dnl Checks for programs.
-AC_PATH_PROG(PERL,perl)
+AC_PATH_PROGS(PERL, $PERL perl5 perl)
+AC_MSG_CHECKING([for minimum required perl version >= $PERL_VERSION])
+_perl_version=`PERL_VERSION=$PERL_VERSION $PERL -e 'print "$]"; if ($] >= $ENV{PERL_VERSION}) { exit(0); } else { exit(1); }' 2>&5`
+_perl_res=$?
+AC_MSG_RESULT([$_perl_version])
+
+if test "$_perl_res" != 0; then
+    AC_MSG_ERROR([Perl $PERL_VERSION or higher is required.])
+fi
+
+AC_MSG_CHECKING([for full perl installation])
+_perl_archlib=`$PERL -e 'use Config; if ( -d $Config{archlib} ) { exit(0); } else { exit(1); }' 2>&5`
+_perl_res=$?
+if test "$_perl_res" != 0; then
+    AC_MSG_RESULT([no])
+    AC_MSG_ERROR([Cannot find Config.pm or \$Config{archlib}.  A full perl installation is required.])
+else
+    AC_MSG_RESULT([yes])    
+fi
+
 AC_PERL_DB
 AC_PERL_DATEPARSE
 

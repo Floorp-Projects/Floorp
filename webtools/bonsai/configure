@@ -521,11 +521,12 @@ else
 fi
 
 
+PERL_VERSION=5.006
 
-# Extract the first word of "perl", so it can be a program name with args.
-set dummy perl; ac_word=$2
+# Extract the first word of "perl perl5", so it can be a program name with args.
+set dummy perl perl5; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:529: checking for $ac_word" >&5
+echo "configure:530: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_PERL'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -557,9 +558,30 @@ else
   echo "$ac_t""no" 1>&6
 fi
 
+echo $ac_n "checking for minimum required perl version >= $PERL_VERSION""... $ac_c" 1>&6
+echo "configure:563: checking for minimum required perl version >= $PERL_VERSION" >&5
+_perl_version=`PERL_VERSION=$PERL_VERSION $PERL -e 'print "$]"; if ($] >= $ENV{PERL_VERSION}) { exit(0); } else { exit(1); }' 2>&5`
+_perl_res=$?
+echo "$ac_t""$_perl_version" 1>&6
+
+if test "$_perl_res" != 0; then
+    { echo "configure: error: Perl $PERL_VERSION or higher is required." 1>&2; exit 1; }
+fi
+
+echo $ac_n "checking for full perl installation""... $ac_c" 1>&6
+echo "configure:573: checking for full perl installation" >&5
+_perl_archlib=`$PERL -e 'use Config; if ( -d $Config{archlib} ) { exit(0); } else { exit(1); }' 2>&5`
+_perl_res=$?
+if test "$_perl_res" != 0; then
+    echo "$ac_t""no" 1>&6
+    { echo "configure: error: Cannot find Config.pm or \$Config{archlib}.  A full perl installation is required." 1>&2; exit 1; }
+else
+    echo "$ac_t""yes" 1>&6    
+fi
+
 
   echo $ac_n "checking for perl DBD::mysql module""... $ac_c" 1>&6
-echo "configure:563: checking for perl DBD::mysql module" >&5
+echo "configure:585: checking for perl DBD::mysql module" >&5
   $PERL -w -c -e 'use DBD::mysql' 2>/dev/null; has_dbd=$?
   if test "x$has_dbd" = "x0" ; then
      echo "$ac_t""yes" 1>&6
@@ -572,7 +594,7 @@ echo "configure:563: checking for perl DBD::mysql module" >&5
 
 
   echo $ac_n "checking for perl Date::Parse module""... $ac_c" 1>&6
-echo "configure:576: checking for perl Date::Parse module" >&5
+echo "configure:598: checking for perl Date::Parse module" >&5
   $PERL -w -c -e 'use Date::Parse' 2>/dev/null; has_dateparse=$?
   if test "x$has_dateparse" = "x0" ; then
      echo "$ac_t""yes" 1>&6
@@ -587,7 +609,7 @@ echo "configure:576: checking for perl Date::Parse module" >&5
 # Extract the first word of "co", so it can be a program name with args.
 set dummy co; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:591: checking for $ac_word" >&5
+echo "configure:613: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_CO'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -622,7 +644,7 @@ fi
 # Extract the first word of "cvs", so it can be a program name with args.
 set dummy cvs; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:626: checking for $ac_word" >&5
+echo "configure:648: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_CVS'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -657,7 +679,7 @@ fi
 # Extract the first word of "rlog", so it can be a program name with args.
 set dummy rlog; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:661: checking for $ac_word" >&5
+echo "configure:683: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_RLOG'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -692,7 +714,7 @@ fi
 # Extract the first word of "rcsdiff", so it can be a program name with args.
 set dummy rcsdiff; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:696: checking for $ac_word" >&5
+echo "configure:718: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_RCSDIFF'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -796,15 +818,34 @@ trap 'rm -f $CONFIG_STATUS conftest*; exit 1' 1 2 15
 # Transform confdefs.h into DEFS.
 # Protect against shell expansion while executing Makefile rules.
 # Protect against Makefile macro expansion.
-cat > conftest.defs <<\EOF
-s%#define \([A-Za-z_][A-Za-z0-9_]*\) *\(.*\)%-D\1=\2%g
-s%[ 	`~#$^&*(){}\\|;'"<>?]%\\&%g
-s%\[%\\&%g
-s%\]%\\&%g
-s%\$%$$%g
-EOF
-DEFS=`sed -f conftest.defs confdefs.h | tr '\012' ' '`
-rm -f conftest.defs
+#
+# If the first sed substitution is executed (which looks for macros that
+# take arguments), then we branch to the quote section.  Otherwise,
+# look for a macro that doesn't take arguments.
+cat >confdef2opt.sed <<\_ACEOF
+t clear
+: clear
+s,^[ 	]*#[ 	]*define[ 	][ 	]*\([^ 	(][^ 	(]*([^)]*)\)[ 	]*\(.*\),-D\1=\2,g
+t quote
+s,^[ 	]*#[ 	]*define[ 	][ 	]*\([^ 	][^ 	]*\)[ 	]*\(.*\),-D\1=\2,g
+t quote
+d
+: quote
+s,[ 	`~#$^&*(){}\\|;'"<>?],\\&,g
+s,\[,\\&,g
+s,\],\\&,g
+s,\$,$$,g
+p
+_ACEOF
+# We use echo to avoid assuming a particular line-breaking character.
+# The extra dot is to prevent the shell from consuming trailing
+# line-breaks from the sub-command output.  A line-break within
+# single-quotes doesn't work because, if this script is created in a
+# platform that uses two characters for line-breaks (e.g., DOS), tr
+# would break.
+ac_LF_and_DOT=`echo; echo .`
+DEFS=`sed -n -f confdef2opt.sed confdefs.h | tr "$ac_LF_and_DOT" ' .'`
+rm -f confdef2opt.sed
 
 
 # Without the "./", some shells look in PATH for config.status.

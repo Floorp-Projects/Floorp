@@ -23,6 +23,7 @@
 
 $::TreeID = "default";
 
+use bytes;
 use strict;
 use DBI;
 use File::Basename;

@@ -37,6 +37,7 @@
 # Now, on my.bonsai.machine, add a mail alias so that mail sent to
 # "bonsai-checkin-daemon" will get piped to handleCheckinMail.pl.
 
+use bytes;
 use Mail::Mailer;
 
 $username = $ENV{"CVS_USER"} || getlogin || (getpwuid($<))[0] || "nobody";
