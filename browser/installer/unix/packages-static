@@ -268,3 +268,7 @@ bin/res/inspector/search-registry.rdf
 ; [Additional Browsing Enhancements]
 [abe]
 
+[talkback]
+bin/components/libqfaservices.so
+bin/components/qfaservices.xpt
+bin/components/talkback/*

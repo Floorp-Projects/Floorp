@@ -240,7 +240,7 @@ C3=Component En US lang pack
 C4=Component US region pack
 ; Make sure Component QFA is LAST so 3rd party developers who might not want
 ; this component can easily remove it.
-; C6=Component QFA
+C5=Component QFA
 
 [Setup Type1]
 ;*** LOCALIZE ME BABY ***
@@ -261,7 +261,7 @@ C5=Component En US lang pack
 C6=Component US region pack
 ; Make sure Component QFA is LAST so 3rd party developers who might not want
 ; this component can easily remove it.
-; C8=Component QFA
+C7=Component QFA
 
 [Dialog Select Components]
 Show Dialog=TRUE
@@ -738,9 +738,9 @@ Description Short=Quality Feedback Agent
 ;*** LOCALIZE ME BABY ***
 Description Long=for reporting $ProductName$ crash information
 Archive=talkback.xpi
-Install Size=870
-Install Size System=1
-Install Size Archive=248
+$InstallSize$:talkback
+$InstallSizeSystem$
+$InstallSizeArchive$:talkback.xpi
 Attributes=SELECTED|FORCE_UPGRADE
 Force Upgrade File0=[SETUP PATH]\components\fullsoft.dll
 FileCount=$FileCount$
