@@ -41,15 +41,12 @@
 
 BUILD         = $(PLATFORM)
 OBJDIR        = $(PLATFORM)
-ifdef MOZILLA_SECURITY_BUILD
+
 DIST          = $(CORE_DEPTH)/../dist/$(PLATFORM)
-else
 ifdef MOZILLA_CLIENT
 DIST          = $(CORE_DEPTH)/../mozilla/dist/$(PLATFORM)
-else
-DIST          = $(CORE_DEPTH)/dist/$(PLATFORM)
 endif
-endif
+
 VPATH         = $(NSINSTALL_DIR)/$(PLATFORM)
 DEPENDENCIES  = $(PLATFORM)/.md
 

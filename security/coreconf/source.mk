@@ -39,15 +39,10 @@
 # <user_source_tree> master import/export directory prefix
 #
 
-SOURCE_PREFIX = $(CORE_DEPTH)/dist
-ifdef MOZILLA_SECURITY_BUILD
 SOURCE_PREFIX = $(CORE_DEPTH)/../dist
-else
 ifdef MOZILLA_CLIENT
 SOURCE_PREFIX = $(CORE_DEPTH)/../mozilla/dist
 endif
-endif
-
 
 #
 # <user_source_tree> cross-platform (xp) master import/export directory
