@@ -235,31 +235,31 @@ function SortFolderPane(column, sortKey)
 function SortColumn(node, sortKey)
 {
 
-	var rdfCore = XPAppCoresManager.Find("RDFCore");
-	if (!rdfCore)
+	var xulSortService = Components.classes["component://netscape/rdf/xul-sort-service"].getService();
+
+	if (xulSortService)
 	{
-		rdfCore = new RDFCore();
-		if (!rdfCore)
+		xulSortService = xulSortService.QueryInterface(Components.interfaces.nsIXULSortService);
+		if (xulSortService)
 		{
-			return(false);
+			// sort!!!
+			sortDirection = "ascending";
+			var currentDirection = node.getAttribute('sortDirection');
+			if (currentDirection == "ascending")
+					sortDirection = "descending";
+			else if (currentDirection == "descending")
+					sortDirection = "ascending";
+			else    sortDirection = "ascending";
+
+			try
+			{
+				xulSortService.Sort(node, sortKey, sortDirection);
+			}
+			catch(e)
+			{
+			}
 		}
-
-		rdfCore.Init("RDFCore");
-
 	}
-
-	// sort!!!
-	sortDirection = "ascending";
-    var currentDirection = node.getAttribute('sortDirection');
-    if (currentDirection == "ascending")
-            sortDirection = "descending";
-    else if (currentDirection == "descending")
-            sortDirection = "ascending";
-    else    sortDirection = "ascending";
-
-    rdfCore.doSort(node, sortKey, sortDirection);
-
-    return(true);
 
 }
 
@@ -411,7 +411,7 @@ function GetNextUnreadMessage(currentMessage)
 		var status = nextMessage.getAttribute('Status');
 		dump('status = ' + status);
 		dump('\n');
-		if(status == '' || status == 'New')
+		if(status == ' ' || status == 'New')
 			break;
 		nextMessage = nextMessage.nextSibling;
 	}
