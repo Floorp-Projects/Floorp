@@ -34,6 +34,7 @@
 #include "CURLEditField.h"
 #include "CURLCaption.h"
 #include "CProxyPane.h"
+#include "URDFUtilities.h"				// for LaunchURL
 
 //#include "CEditView.h"				// need for SetWindowContext, using CEditView::class_ID
 #include "CEditorWindow.h"
@@ -774,14 +775,7 @@ void CBrowserWindow::ListenToMessage(MessageT inMessage, void* ioParam)
 			const char* urlString = (const char*)ioParam;
 			
 			if (urlString && *urlString && mContext)
-			{
-			/*		old way
-				URL_Struct* theURL =
-					NET_CreateURLStruct(*urlString, NET_DONT_RELOAD);
-				mContext->SwitchLoadURL(theURL, FO_CACHE_AND_PRESENT);
-			*/
 				SendAEGetURL(urlString);
-			}
 			break;
 		
 		case cmd_GoForward:
@@ -2208,9 +2202,8 @@ void CBrowserWindow::HandleGetURLEvent(const AppleEvent		&inAppleEvent,
 			ThrowIfNil_(inBrowserWindow->mContext);
 			
 			long windowIndex = inBrowserWindow->mContext->GetContextUniqueID();
-			// StartLoadingURL(request, FO_CACHE_AND_PRESENT);
-			// mContext->SwitchLoadURL(request, FO_CACHE_AND_PRESENT);
-			CURLDispatcher::DispatchURL(request, inBrowserWindow->mContext, true);
+			if ( !URDFUtilities::LaunchURL(url, inBrowserWindow) )
+				CURLDispatcher::DispatchURL(request, inBrowserWindow->mContext, true);
 			
 			if (outAEReply.descriptorType != typeNull)
 				err = ::AEPutParamPtr (&outAEReply, keyAEResult, typeLongInteger, &windowIndex, sizeof(windowIndex));
@@ -2227,7 +2220,8 @@ void CBrowserWindow::HandleGetURLEvent(const AppleEvent		&inAppleEvent,
 				ThrowIfNil_(win->mContext);
 				long windowIndex = win->mContext->GetContextUniqueID();
 				
-				CURLDispatcher::DispatchURL(request, win->mContext, true);
+				if ( !URDFUtilities::LaunchURL(url, win) )
+					CURLDispatcher::DispatchURL(request, win->mContext, true);
 				
 				if (outAEReply.descriptorType != typeNull)
 					err = ::AEPutParamPtr (&outAEReply, keyAEResult, typeLongInteger, &windowIndex, sizeof(windowIndex));
@@ -2241,7 +2235,8 @@ void CBrowserWindow::HandleGetURLEvent(const AppleEvent		&inAppleEvent,
 				// would be too intrusive of a change at this late date. So we just return 0 for the window ID and the
 				// window will be created when the delayed URL is handled.
 			  
-				CURLDispatcher::DispatchURL(request, nil, true);
+				if ( !URDFUtilities::LaunchURL(url) )
+					CURLDispatcher::DispatchURL(request, nil, true);
 
 				long windowIndex = 0;
 				if (outAEReply.descriptorType != typeNull)
@@ -2268,7 +2263,7 @@ void CBrowserWindow::HandleOpenURLEvent(const AppleEvent	&inAppleEvent,
 	//			are not declared with correspondingly volatile parameters.
 	//		(b) do not appear to need to be volatile in the sense given (If they were
 	//			declared as volatile char*, that would be another thing...
-	char * /*volatile*/ url = NULL;
+	CAutoPtrXP<char> /*volatile*/ url;
 	char * /*volatile*/ formData = NULL;	// Do not free this
 	char * /*volatile*/ formHeader = NULL;	// form headers (MIME type)
 	ProcessSerialNumber psn;
@@ -2282,7 +2277,7 @@ void CBrowserWindow::HandleOpenURLEvent(const AppleEvent	&inAppleEvent,
 	DescType realType;
 	
 	// Get the url
-	MoreExtractFromAEDesc::GetCString(inAppleEvent, keyDirectObject, url);
+	MoreExtractFromAEDesc::GetCString(inAppleEvent, keyDirectObject, url.get());
 
 	{	// See if we are doing load-to-disk
 		err = ::AEGetParamPtr(&inAppleEvent, AE_spy_openURL_into,
@@ -2342,7 +2337,7 @@ void CBrowserWindow::HandleOpenURLEvent(const AppleEvent	&inAppleEvent,
 	}
 	
 	// create a Netlib geturl thread
-	URL_Struct * request = NET_CreateURLStruct (url, NET_DONT_RELOAD);
+	URL_Struct * request = NET_CreateURLStruct (url.get(), NET_DONT_RELOAD);
 	ThrowIfNil_(request);
 	
 	if (forceReload)
@@ -2387,7 +2382,8 @@ void CBrowserWindow::HandleOpenURLEvent(const AppleEvent	&inAppleEvent,
 				err = ::AEPutParamDesc(&outAEReply, keyAEResult, &windowIDDesc.mDesc);
 			}
 			
-			CURLDispatcher::DispatchURL(request, inBrowserWindow->mContext, true);
+			if ( !URDFUtilities::LaunchURL(url.get(), inBrowserWindow) )
+				CURLDispatcher::DispatchURL(request, inBrowserWindow->mContext, true);
 		}
 		else
 		{
@@ -2401,7 +2397,8 @@ void CBrowserWindow::HandleOpenURLEvent(const AppleEvent	&inAppleEvent,
 				ThrowIfNil_(win->mContext);
 				long windowIndex = win->mContext->GetContextUniqueID();
 				
-				CURLDispatcher::DispatchURL(request, win->mContext, true);
+				if ( !URDFUtilities::LaunchURL(url.get(), win) )
+					CURLDispatcher::DispatchURL(request, win->mContext, true);
 				
 				if (outAEReply.descriptorType != typeNull)
 					err = ::AEPutParamPtr (&outAEReply, keyAEResult, typeLongInteger, &windowIndex, sizeof(windowIndex));
@@ -2415,7 +2412,8 @@ void CBrowserWindow::HandleOpenURLEvent(const AppleEvent	&inAppleEvent,
 				// would be too intrusive of a change at this late date. So we just return 0 for the window ID and the
 				// window will be created when the delayed URL is handled.
 			  
-				CURLDispatcher::DispatchURL(request, nil, true);
+				if ( !URDFUtilities::LaunchURL(url.get()) )
+					CURLDispatcher::DispatchURL(request, nil, true);
 
 				long windowIndex = 0;
 				if (outAEReply.descriptorType != typeNull)
@@ -2424,8 +2422,6 @@ void CBrowserWindow::HandleOpenURLEvent(const AppleEvent	&inAppleEvent,
 		}
 	}
 
-	if (url)
-		XP_FREE (url);
 }
 
 // override to send javascript move events when the user performs the action

@@ -24,7 +24,7 @@
 
 #include "htrdf.h"
 #include "CNetscapeWindow.h"
-
+#include "URDFUtilities.h"
 #include "net.h"
 #include "resgui.h"
 #include "uapp.h"
@@ -143,8 +143,12 @@ void CBookmarksAttachment::ExecuteSelf( MessageT inMessage, void* ioParam )
 				if ( inMessage >= BOOKMARKS_MENU_BASE && inMessage <= BOOKMARKS_MENU_BASE_LAST )
 				{
 					Uint32 index = inMessage - BOOKMARKS_MENU_BASE;
-					char* url = HT_GetNodeURL( HT_GetNthItem(sQuickfileView, index) );
-					CFrontApp::DoGetURL ( url );
+
+					// load the url
+					HT_Resource itemNode = HT_GetNthItem(sQuickfileView, index);
+					char* url = HT_GetNodeURL( itemNode );
+					if ( !URDFUtilities::LaunchNode(itemNode) && url )
+						CFrontApp::DoGetURL ( url );
 
 					return;
 				}
