@@ -381,7 +381,7 @@ sub InstallFromManifest($;$)
    close (OUTPUT);
 
    system ("perl :mozilla:config:aboutime.pl :mozilla:xpfe:browser:src:navigator.xul :mozilla:config:build_number");
-die;
+
  }
 
 sub SetAgentString
