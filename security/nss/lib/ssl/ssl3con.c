@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: ssl3con.c,v 1.6 2000/05/24 03:35:23 nelsonb%netscape.com Exp $
+ * $Id: ssl3con.c,v 1.7 2000/08/08 22:54:02 nelsonb%netscape.com Exp $
  */
 
 #include "cert.h"
@@ -845,6 +845,7 @@ static SECStatus
 ssl3_SetupPendingCipherSpec(sslSocket *ss, ssl3State *ssl3)
 {
     ssl3CipherSpec *          pwSpec;
+    ssl3CipherSpec *          cwSpec;
     ssl3CipherSuite           suite     = ssl3->hs.cipher_suite;
     sslSecurityInfo *         sec       = ss->sec;
     SSL3MACAlgorithm          mac;
@@ -859,6 +860,13 @@ ssl3_SetupPendingCipherSpec(sslSocket *ss, ssl3State *ssl3)
 
     pwSpec = ssl3->pwSpec;
     PORT_Assert(pwSpec == ssl3->prSpec);
+
+    /* This hack provides maximal interoperability with SSL 3 servers. */
+    cwSpec = ss->ssl3->cwSpec;
+    if (cwSpec->mac_def->mac == mac_null) {
+	/* SSL records are not being MACed. */
+	cwSpec->version = ss->version;
+    }
 
     pwSpec->version  = ss->version;
     isTLS  = (PRBool)(pwSpec->version > SSL_LIBRARY_VERSION_3_0);
