@@ -42,12 +42,23 @@
 	<box align="vertical" flex="50%" style="width: 50%;">
 		<html:fieldset style="width: 50%;">
 					<html:legend align="left"> 
-			<html:div>&color;</html:div> 
-					</html:legend> 
-			<html:div>&text;<spring flex="50%"/>&colorPick;</html:div>
-			<html:div>&background;<spring flex="50%"/>&colorPick;</html:div>
 			<html:div>
-				<html:input  type="checkbox" id="pref:0:bool:browser.wfe.use_windows_colors" val="checked" />
+				&color;
+			</html:div> 
+			</html:legend> 
+			<html:div>
+				&text;
+				<spring flex="50%"/>
+				<titledbutton name="textColorPicker" value="&colorPick;" />
+			</html:div>
+			<html:div>
+				&background;
+				<spring flex="50%"/>
+				<titledbutton name="backgroundColorPicker" value="&colorPick;" />
+			</html:div>
+			<html:div>
+				<html:input  type="checkbox" id="pref:0:bool:browser.wfe.use_windows_colors"
+				val="checked" />
 			<html:label for="pref:0:bool:browser.wfe.use_windows_colors" accesskey="w" tabindex="0">
 				&useWinColorsCheck.label;
 			</html:label>
@@ -60,8 +71,16 @@
 					<html:legend align="left">
 			<html:div>&links;</html:div> 
 					</html:legend>
-			<html:div>&unvisit;<spring flex="50%"/>&colorPick;</html:div>
-			<html:div>&visit;<spring flex="50%"/>&colorPick;</html:div>
+			<html:div>
+				&unvisit;
+				<spring flex="50%"/>
+				<titledbutton name="unvisitedColorPicker" value="&colorPick;" />
+				</html:div>
+			<html:div>
+				&visit;
+				<spring flex="50%"/>
+				<titledbutton name="unvisitedColorPicker" value="&colorPick;" />
+			</html:div>
 			<html:div><html:input  type="checkbox" id="pref:0:bool:browser.underline_anchors" val="checked" />		
 				<html:label for="pref:0:bool:browser.underline_anchors" accesskey="u" tabindex="0">				
 				&underLinksCheck.label;
