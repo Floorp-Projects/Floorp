@@ -1418,7 +1418,7 @@
       (production (:directive :omega_2) ((:statement :omega_2)) directive-statement
         (verify (verify :statement))
         (eval (eval :statement)))
-      (production (:directive :omega_2) ((:definition :omega_2)) directive-definition
+      (production (:directive :omega_2) ((:annotated-definition :omega_2)) directive-annotated-definition
         ((verify (s :unused)) (todo))
         ((eval (e :unused) (d :unused)) (todo)))
       (production (:directive :omega_2) (:annotated-block) directive-annotated-block
@@ -1515,17 +1515,17 @@
     
     
     (%section "Definitions")
-    (production (:definition :omega_2) (:attributes (:annotated-definition :omega_2)) definition-attributes-and-annotated-definition)
-    (production (:definition :omega_2) (:package-definition) definition-package-definition)
+    (production (:annotated-definition :omega_2) (:attributes (:definition :omega_2)) annotated-definition-attributes-and-definition)
+    (production (:annotated-definition :omega_2) (:package-definition) annotated-definition-package-definition)
     
-    (production (:annotated-definition :omega_2) (:import-definition (:semicolon :omega_2)) annotated-definition-import-definition)
-    (production (:annotated-definition :omega_2) (:export-definition (:semicolon :omega_2)) annotated-definition-export-definition)
-    (production (:annotated-definition :omega_2) (:variable-definition (:semicolon :omega_2)) annotated-definition-variable-definition)
-    (production (:annotated-definition :omega_2) ((:function-definition :omega_2)) annotated-definition-function-definition)
-    (production (:annotated-definition :omega_2) ((:class-definition :omega_2)) annotated-definition-class-definition)
-    (production (:annotated-definition :omega_2) (:namespace-definition (:semicolon :omega_2)) annotated-definition-namespace-definition)
+    (production (:definition :omega_2) (:import-definition (:semicolon :omega_2)) definition-import-definition)
+    (production (:definition :omega_2) (:export-definition (:semicolon :omega_2)) definition-export-definition)
+    (production (:definition :omega_2) (:variable-definition (:semicolon :omega_2)) definition-variable-definition)
+    (production (:definition :omega_2) ((:function-definition :omega_2)) definition-function-definition)
+    (production (:definition :omega_2) ((:class-definition :omega_2)) definition-class-definition)
+    (production (:definition :omega_2) (:namespace-definition (:semicolon :omega_2)) definition-namespace-definition)
     (? js2
-      (production (:annotated-definition :omega_2) ((:interface-definition :omega_2)) annotated-definition-interface-definition))
+      (production (:definition :omega_2) ((:interface-definition :omega_2)) definition-interface-definition))
     
     (production :attributes () attributes-none)
     (production :attributes (:attribute :no-line-break :attributes) attributes-more)
