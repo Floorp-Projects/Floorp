@@ -1,3 +1,8 @@
+1998-07-30  Leif Hedstrom  <leif@netscape.com>
+
+	* ldappasswd.pl: Cleaned out some code, and moved it over to the
+	::Utils module.
+
 1998-07-29  Leif Hedstrom  <leif@netscape.com>
 
 	* qsearch.pl: First working version.

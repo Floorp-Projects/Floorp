@@ -1,6 +1,6 @@
 #!/usr/bin/perl5
 #############################################################################
-# $Id: modattr.pl,v 1.2 1998/07/30 06:49:18 leif Exp $
+# $Id: modattr.pl,v 1.3 1998/07/30 09:52:33 leif Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -48,12 +48,12 @@ if (!getopts('adnvWb:h:D:p:s:w:P:'))
   exit;
 }
 %ld = Mozilla::LDAP::Utils::ldapArgs();
-
-#($ld{bind}, $ld{pswd}) = LdapUtils::getAuthInfo() unless $ld{bind};
+Mozilla::LDAP::Utils::userCredentials(\%ld) unless $opt_n;
 
 
 #############################################################################
-# Instantiate an LDAP object, which also binds to the LDAP server.
+# Let's process the changes requested, and commit them unless the "-n"
+# option was given.
 #
 $conn = new Mozilla::LDAP::Conn(\%ld);
 die "Could't connect to LDAP server $ld{host}" unless $conn;
@@ -61,11 +61,6 @@ die "Could't connect to LDAP server $ld{host}" unless $conn;
 #$conn->setDefaultRebindProc($ld{bind}, $ld{pswd}, 128);
 #$conn->setRebindProc(\&LdapUtils::rebindProc);
 
-
-#############################################################################
-# Let's process the changes requested, and commit them unless the "-n"
-# option was given.
-#
 ($change, $search) = @ARGV;
 if (($change eq "") || ($search eq ""))
 {
