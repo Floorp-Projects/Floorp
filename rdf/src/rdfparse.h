@@ -37,9 +37,8 @@
 
 /* rdfparse.c function prototypes */
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+NSPR_BEGIN_EXTERN_C
+
 char		decodeEntityRef (char* string, int32* stringIndexPtr, int32 len);
 char *		copyStringIgnoreWhiteSpace(char* string);
 char *		getHref(char** attlist);
@@ -57,10 +56,6 @@ void		outputRDFTreeInt (RDF rdf, PRFileDesc *fp, RDF_Resource node, uint32 depth
 void		outputRDFTree (RDF rdf, PRFileDesc *fp, RDF_Resource node);
 int parseNextRDFXMLBlobInt(RDFFile f, char* blob, int32 size) ;
 
-
-#ifdef __cplusplus
-};
-#endif
-
+NSPR_END_EXTERN_C
 
 #endif

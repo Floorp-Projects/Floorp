@@ -19,7 +19,7 @@
 
 MODULE = rdf
 
-DEPTH = ..\..\..
+DEPTH = ..\..
 
 EXPORTS	= rdf.h \
 	rdfc.h \

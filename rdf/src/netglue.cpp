@@ -34,7 +34,7 @@ public:
 
   NS_METHOD GetBindInfo(nsIURL* aURL);
 
-  NS_METHOD OnProgress(nsIURL* aURL, PRInt32 Progress, PRInt32 ProgressMax,  const nsString &aMsg);
+  NS_METHOD OnProgress(nsIURL* aURL, PRInt32 Progress, PRInt32 ProgressMax);
 
   NS_METHOD OnStatus(nsIURL* aURL, const nsString& aMsg);
 
@@ -51,23 +51,11 @@ private:
   RDFFile mFile;
 };
 
+NS_IMPL_ISUPPORTS( rdfStreamListener, NS_ISTREAMLISTENER_IID )
+
 rdfStreamListener::rdfStreamListener(RDFFile f) : mFile(f)
 {
 }
-
-
-// ISupports implementation...
-NS_IMPL_ADDREF(rdfStreamListener)
-NS_IMPL_RELEASE(rdfStreamListener)
-
-nsresult rdfStreamListener::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-    if (NULL == aInstancePtr) {
-        return NS_ERROR_NULL_POINTER;
-    }
-    return NS_NOINTERFACE;
-}
-
 
 rdfStreamListener::~rdfStreamListener()
 {
@@ -82,7 +70,7 @@ rdfStreamListener::GetBindInfo(nsIURL* aURL)
 NS_METHOD
 rdfStreamListener::OnProgress(nsIURL* aURL,
 			      PRInt32 Progress,
-			      PRInt32 ProgressMax,  const nsString &aMsg)
+			      PRInt32 ProgressMax)
 {
   return NS_OK;
 }
@@ -101,7 +89,6 @@ rdfStreamListener::OnStartBinding(nsIURL* aURL,
   return NS_OK;
 }
 
-
 NS_METHOD
 rdfStreamListener::OnDataAvailable(nsIURL* aURL, 
 				   nsIInputStream *pIStream, 
@@ -114,9 +101,8 @@ rdfStreamListener::OnDataAvailable(nsIURL* aURL,
   do {
     const PRUint32 buffer_size = 80;
     char buffer[buffer_size];
-    PRInt32 err;
 
-    len = pIStream->Read(&err, buffer, 0, buffer_size);
+    nsresult err = pIStream->Read( buffer, 0, buffer_size, &len );
     if (err == NS_OK) {
       (void) parseNextRDFXMLBlobInt(mFile, buffer, len);
     } // else XXX ?
@@ -135,12 +121,12 @@ rdfStreamListener::OnStopBinding(nsIURL* aURL,
   switch( status ) {
 
   case NS_BINDING_SUCCEEDED:
-    /* finishRDFParse( mFile ); */
+    // XXX finishRDFParse( mFile );
     break;
 
   case NS_BINDING_FAILED:
   case NS_BINDING_ABORTED:
-    //    abortRDFParse( mFile );
+    // XXX    abortRDFParse( mFile );
     // XXX status code?
     break;
 

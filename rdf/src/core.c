@@ -53,6 +53,10 @@ getTranslator (char* url)
     ans = MakeColumnStore (url);
   } else if (startsWith("rdf:ht", url) || startsWith("rdf:scook", url)) {
     ans = MakeSCookDB(url);
+#ifdef XPCOM_XXX
+  } else if (startsWith("rdf:CookieStore", url)) {
+    ans = MakeCookieStore(url);
+#endif
   } else if (startsWith("http://", url)) {
 	  ans = MakeFileDB(url); 
   } else {

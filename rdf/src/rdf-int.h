@@ -101,6 +101,8 @@
 #define stringEquals(x, y) (strcmp(x, y) ==0)
 /*#define stringAppend(x, y)   XP_AppendStr(x,y) */
 
+NSPR_BEGIN_EXTERN_C
+
 struct RDF_ResourceStruct {
   char* url;
   uint8  type;  
@@ -455,6 +457,6 @@ extern RDF_WDVocab gWebData;
 extern RDF_NCVocab gNavCenter;
 extern RDF_CoreVocab gCoreVocab;
 
-
+NSPR_END_EXTERN_C
       
 #endif
