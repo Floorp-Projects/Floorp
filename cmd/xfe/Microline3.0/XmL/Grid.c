@@ -8276,6 +8276,7 @@ _GridColumnNew(Widget grid)
 	column->grid.width = 8;
 	column->grid.userData = 0;
 	column->grid.resizable = True;
+    column->grid.hidden = 0;
 	return column;
 	}
 
@@ -9059,7 +9060,7 @@ _XmLGridCellInsertText(XmLGridCell cell,
 	{
         XmLGridWidget g = (XmLGridWidget)w;
 	char *s;
-	Widget text;
+	Widget text = NULL;
 
 	if ((cell->cell.refValues->type != XmSTRING_CELL &&
          cell->cell.refValues->type != XmICON_CELL)
