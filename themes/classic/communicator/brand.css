@@ -70,6 +70,7 @@
   list-style-image: url("chrome://communicator/skin/brand/throbber-anim.gif");
 }
   
+window[chromehidden~="toolbar"] #navigator-throbber,
 #navigator-throbber[buttonstyle="text"],
 #navigator-throbber[buttonstyle="pictures"],
 #navigator-throbber[toolbarmode="small"] {
@@ -77,6 +78,7 @@
   list-style-image: url("chrome://communicator/skin/brand/throbber16-single.gif");
 }
 
+window[chromehidden~="toolbar"] #navigator-throbber[busy="true"],
 #navigator-throbber[buttonstyle="text"][busy="true"],
 #navigator-throbber[buttonstyle="pictures"][busy="true"],
 #navigator-throbber[toolbarmode="small"][busy="true"] {

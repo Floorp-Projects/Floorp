@@ -72,12 +72,14 @@
   margin: 4px 8px 2px 8px;
 }
 
+window[chromehidden~="toolbar"] #navigator-throbber,
 #navigator-throbber[buttonstyle="text"],
 #navigator-throbber[toolbarmode="small"] {
   margin: 2px 4px 2px 6px;
   list-style-image: url("chrome://communicator/skin/brand/throbber16-single.gif");
 }
 
+window[chromehidden~="toolbar"] #navigator-throbber[busy="true"],
 #navigator-throbber[buttonstyle="text"][busy="true"],
 #navigator-throbber[toolbarmode="small"][busy="true"] {
   list-style-image: url("chrome://communicator/skin/brand/throbber16-anim.gif");
