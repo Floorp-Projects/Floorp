@@ -30,16 +30,14 @@
 
 #include "nsIWebShell.h"  // mscott - this dependency should only be temporary!
 
-#ifdef XP_UNIX
+#if defined(XP_UNIX)
 #define MESSAGE_PATH "/usr/tmp/tempMessage.eml"
-#endif
-
-#ifdef XP_PC
+#elif defined(XP_PC)
 #define MESSAGE_PATH  "c:\\temp\\tempMessage.eml"
-#endif
-
-#ifdef XP_MAC
+#elif defined(XP_MAC)
 #define MESSAGE_PATH  "tempMessage.eml"
+#elif defined(XP_BEOS)
+#define MESSAGE_PATH "/tmp/tempMessage.eml"
 #endif
 
 // State Flags (Note, I use the word state in terms of storing 
