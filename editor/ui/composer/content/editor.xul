@@ -220,7 +220,7 @@
       <box flex="1" style="min-width: 1px">
         <box orient="vertical" style="width:100px">
           <spring flex="1"/>
-          <progressmeter id="statusbar-icon" mode="normal" value="0">
+          <progressmeter class="progressmeter-statusbar" statusbar="true" id="statusbar-icon" mode="normal" value="0">
               <observes element="Editor:Throbber" attribute="busy"/>
           </progressmeter>
           <spring flex="1"/>
