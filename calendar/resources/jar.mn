@@ -48,8 +48,6 @@ calendar.jar:
     content/calendar/serverDialog.js (content/serverDialog.js) 
     content/calendar/serverDialog.xul (content/serverDialog.xul) 
     content/calendar/sound.wav (content/sound.wav)
-    content/calendar/toDoDialog.js (content/toDoDialog.js) 
-*   content/calendar/toDoDialog.xul (content/toDoDialog.xul) 
     content/calendar/unifinder.js (content/unifinder.js)
     content/calendar/unifinderToDo.js (content/unifinderToDo.js)
     content/calendar/weekView.js (content/weekView.js)
