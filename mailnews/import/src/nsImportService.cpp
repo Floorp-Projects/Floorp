@@ -67,7 +67,7 @@ class nsImportService : public nsIImportService
 public:
 
 	nsImportService();
-	~nsImportService();
+	virtual ~nsImportService();
 	
 	NS_DECL_ISUPPORTS
 
