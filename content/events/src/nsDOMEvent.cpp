@@ -221,7 +221,15 @@ NS_METHOD nsDOMEvent::SetMetaKey(PRBool aMetaKey)
 
 NS_METHOD nsDOMEvent::GetCharCode(PRUint32* aCharCode)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  switch (mEvent->message) {
+  case NS_KEY_UP:
+  case NS_KEY_DOWN:
+    *aCharCode = ((nsKeyEvent*)mEvent)->charCode;
+    break;
+  default:
+    return NS_ERROR_FAILURE;
+  }
+  return NS_OK;
 }
 
 NS_METHOD nsDOMEvent::SetCharCode(PRUint32 aCharCode)
