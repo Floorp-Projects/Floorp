@@ -25,6 +25,7 @@
 #include "nsMsgDatabase.h"
 #include "nsDBFolderInfo.h"
 #include "nsISupportsArray.h"
+#include "nsIPref.h"
 
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
 // that doesn't allow you to call ::nsISupports::GetIID() inside of a class
@@ -1330,7 +1331,7 @@ NS_IMETHODIMP nsMsgFolder::GetHostName(char **hostName)
 
 static const char kMsgRootFolderPref[] = "mailnews.rootFolder";
 
-const char* gMailboxRoot = nsnull;
+char* gMailboxRoot = nsnull;
 
 nsresult
 nsGetMailboxRoot(nsFileSpec &result)
@@ -1341,16 +1342,18 @@ nsGetMailboxRoot(nsFileSpec &result)
     // is extremely temporary...I'm waiting for hubie to check in the 
     // new preferences service stuff.
 #if 1
-    nsService<nsIPref> prefs(kPrefCID, &rv);
+    nsIPref* prefs;
+    rv = nsServiceManager::GetService(kPrefCID, nsIPref::GetIID(), (nsISupports**)&prefs);
     if (NS_FAILED(rv)) return rv; 
 
     if (prefs && NS_SUCCEEDED(rv)) {
       rv = prefs->Startup("prefs.js");
-      if (NS_FAILED(rv)) return rv; 
-
-      rv = prefs->CopyPathPref(kMsgRootFolderPref, &gMailboxRoot);
-      if (NS_FAILED(rv)) return rv;
+      if (NS_SUCCEEDED(rv)) {
+        rv = prefs->CopyPathPref(kMsgRootFolderPref, &gMailboxRoot);
+      }
     }
+    (void)nsServiceManager::ReleaseService(kPrefCID, prefs);
+    if (NS_FAILED(rv)) return rv;
 #else
     gMailboxRoot = nsCRT::strdup("d:\\program files\\netscape\\users\\warren\\mail");
 #endif
