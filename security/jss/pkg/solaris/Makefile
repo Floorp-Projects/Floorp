@@ -2,7 +2,7 @@
 # Copyright 2004 Sun Microsystems, Inc.  All rights reserved.
 # Use is subject to license terms.
 #
-#ident	"$Id: Makefile,v 1.6 2004/06/15 03:50:17 christophe.ravel.bugs%sun.com Exp $"
+#ident	"$Id: Makefile,v 1.7 2004/06/15 16:47:00 christophe.ravel.bugs%sun.com Exp $"
 #
 
 CORE_DEPTH = ../../..
@@ -16,17 +16,17 @@ CORE_DEPTH = ../../..
 DIRS = \
 	SUNWjss
 
+include Makefile.com
+
 PROTO = \
 	$(ROOT) \
 	$(ROOT)/usr/share/lib/mps \
 	$(ROOT)/usr/lib/mps
 
-ifeq ($(ARCH),sparc)
+ifeq ($(MACH),sparc)
 	PROTO += $(ROOT)/usr/share/lib/mps/sparcv9 \
 	$(ROOT)/usr/lib/mps/sparcv9
 endif
-
-include Makefile.com
 
 DIST64 = $(shell echo $(DIST) | sed -e "s|_OPT|_64_OPT|g" -e "s|_DBG|_64_DBG|g")
 
