@@ -45,9 +45,6 @@ client.OP1_IMG = client.IMAGEDIR + "is-op.gif"; /* user is op image */
 client.OP0_IMG = client.IMAGEDIR + "isnt-op.gif"; /* user isnt op */
 client.V1_IMG = client.IMAGEDIR + "is-voice.gif"; /* user is voice */
 client.V0_IMG = client.IMAGEDIR + "isnt-voice.gif"; /* user isnt voice */
-client.ACT_IMG = client.IMAGEDIR + "view-activity.gif"; /* view has activity */
-client.NACT_IMG = client.IMAGEDIR + "view-normal.gif"; /* view has no activity */
-client.CUR_IMG = client.IMAGEDIR + "view-current.gif"; /* currently displayed */
 client.PRINT_DIRECTION = 1; /*1 => new messages at bottom, -1 => at top */
                 
 client.name = "*client*";
@@ -110,7 +107,19 @@ function initStatic()
                         "all.js, or your user prefs.",
                         "ERROR");
     window.onkeypress = onWindowKeyPress;
+
+    setMenuCheck ("menu-dmessages", 
+                  client.eventPump.getHook ("event-tracer").enabled);
+    setMenuCheck ("menu-munger", client.munger.enabled);
+    setMenuCheck ("menu-viewicons", client.ICONS_IN_TOOLBAR);
     
+}
+
+function setMenuCheck (id, state)
+{
+    var m = document.getElementById(id);
+    
+    m.setAttribute ("checked", String(Boolean(state)));
 }
 
 function initHost(obj)
@@ -180,7 +189,10 @@ function matchMyNick (text, containerTag, eventDetails)
         var re = new RegExp("(^|[\\W\\s])" + eventDetails.server.me.nick + 
                             "([\\W\\s]|$)", "i");
         if (text.search(re) != -1)
+        {
             containerTag.setAttribute ("directedToMe", "true");
+            notifyAttention(eventDetails.orig);
+        }
     }
 
     return false;
@@ -261,6 +273,8 @@ function getObjectDetails (obj, rv)
 {
     if (!rv)
         rv = new Object();
+    
+    rv.orig = obj;
     
     switch (obj.TYPE)
     {
@@ -344,8 +358,8 @@ function setClientOutput(doc)
     client.output = doc.getElementById("output");
     /* continue processing now: */
     initStatic();
-    if (client.startupNetwork)
-        client.onInputAttach ({inputData: client.startupNetwork});
+    if (client.STARTUP_NETWORK)
+        client.onInputAttach ({inputData: client.STARTUP_NETWORK});
 
 }
 
@@ -524,7 +538,7 @@ function setCurrentObject (obj)
         tb = getTBForObject(client.currentObject);
     
     if (tb)
-        tb.setAttribute ("src", client.NACT_IMG);
+        tb.setAttribute ("state", "normal");
 
     if (client.output.firstChild)
         client.output.removeChild (client.output.firstChild);
@@ -545,7 +559,7 @@ function setCurrentObject (obj)
     client.currentObject = obj;
     tb = getTBForObject(obj);
     if (tb)
-        tb.setAttribute ("src", client.CUR_IMG);
+        tb.setAttribute ("state", "current");
 
     updateNetwork();
     updateChannel();
@@ -618,14 +632,34 @@ function notifyActivity (source)
     var tb = getTBForObject (source, true);
 
     if (client.currentObject != source)
-        if (tb.getAttribute ("src") == client.NACT_IMG)
-            tb.setAttribute ("src", client.ACT_IMG);
-        else /* if act light is already lit, blink it real quick */
+    {
+        if (tb.getAttribute ("state") == "normal")
+        {       
+            tb.setAttribute ("state", "activity");
+        }
+        else if (tb.getAttribute("state") == "activity")
+            /* if act light is already lit, blink it real quick */
         {
-            tb.setAttribute ("src", client.NACT_IMG);
+            tb.setAttribute ("state", "normal");
             setTimeout ("notifyActivity(" +
                         Number(tb.getAttribute("viewKey")) + ");", 200);
         }
+    }
+    
+}
+
+function notifyAttention (source)
+{
+    if (typeof source != "object")
+        source = client.viewsArray[source].source;
+    
+    var tb = getTBForObject (source, true);
+
+    if (client.currentObject != source)
+        tb.setAttribute ("state", "attention");
+
+    if (client.FLASH_WINDOW)
+        window.GetAttention();
     
 }
 
@@ -681,15 +715,21 @@ function getTBForObject (source, create)
         //tbi.setAttribute ("onclick", "onTBIClick('" + id + "')");
         tb = document.createElement ("menubutton");
 	tb.addEventListener("click", onTBIClickTempHandler, false);
-
-        tb.setAttribute ("class", "menubutton-dual");
+        
+        var aclass = (client.ICONS_IN_TOOLBAR) ?
+            "activity-button-image" : "activity-button-text";
+        
+        tb.setAttribute ("class", "menubutton " + aclass);
         tb.setAttribute ("id", id);
+        tb.setAttribute ("state", "normal");
+
         client.viewsArray.push ({source: source, tb: tb});
         tb.setAttribute ("viewKey", client.viewsArray.length - 1);
         if (matches > 1)
             tb.setAttribute ("value", name + "<" + matches + ">");
         else
             tb.setAttribute ("value", name);
+
         //tbi.appendChild (tb);
         views.appendChild (tb);
     }
@@ -704,7 +744,7 @@ function getTBForObject (source, create)
 function onTBIClickTempHandler (e)
 { 
   
-    var id = "tb[" + e.target.value + "]";
+    var id = "tb[" + e.target.getAttribute("value") + "]";
 
     var tb = document.getElementById (id);
     var view = client.viewsArray[tb.getAttribute("viewKey")];
@@ -728,7 +768,8 @@ function deleteToolbutton (tb)
             }
 
             arrayRemoveAt(client.viewsArray, key);
-            document.getElementById("views-tbar").removeChild(tb.parentNode);
+            var tbinner = document.getElementById("views-tbar-inner");
+            tbinner.removeChild(tb);
         }
         else
         {
@@ -863,7 +904,7 @@ function usr_decoratednick()
     if (!this.decoNick)
     {
         var pfx;
-        var el = document.createElement ("html:span");
+        var el = document.createElement ("box");
         el.setAttribute ("align", "horizontal");
         
         if (this.TYPE == "IRCChanUser")
@@ -884,14 +925,20 @@ function usr_decoratednick()
             */
         }
         
+        var text = document.createElement ("text");
+        text.setAttribute ("value", this.properNick);
+        text.setAttribute ("class", "option-text");
+
+        el.appendChild(text);
+        
+        /*
         el.appendChild (newInlineText (this.properNick, "option-text",
-                                       "label"));
+                                       ""));
+        */
 
         this.decoNick = el;
     }
 
-    dd ("** gdn: returning " + this.decoNick);
-    
     return this.decoNick;
 
 }

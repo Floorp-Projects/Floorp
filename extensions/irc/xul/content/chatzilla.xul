@@ -68,11 +68,11 @@
     <menu value="Options">
       <menupopup>
         <menuitem id="menu-dmessages" value="Debug Messages"
-                  oncommand="onToggleTraceHook()"/>
+                  oncommand="onToggleTraceHook()" type="checkbox"/>
         <menuitem id="menu-munger" value="Munger" oncommand="onToggleMunger()"
-                  checked="true"/>
+                  type="checkbox"/>
         <menuitem id="menu-viewicons" value="Icons in View Buttons" 
-                  checked="true" oncommand="onNotImplemented();"/>
+                  type="checkbox" oncommand="onToggleToolbarIcons();"/>
         <menuseparator/>
         <!--
         <menu value="Style">

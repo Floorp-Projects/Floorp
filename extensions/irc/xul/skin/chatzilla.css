@@ -16,18 +16,14 @@
  * Copyright (C) 1999 New Dimenstions Consulting, Inc. All
  * Rights Reserved.
  *
- * Contributor(s): 
- *
- *
  * Contributor(s):
  *  Robert Ginda, rginda@ndcico.com, original author
  * 
- * Styles for UI, See test3-output-default.css for output window styles
+ * Styles for UI, See output-default.css for output window styles
  *
  */
 
 @import url(chrome://communicator/skin/);
-/*@import url(chrome://global/skin/global.css);*/
 
 window {
 
@@ -45,37 +41,66 @@ window {
 #main-splitter {
 }
 
-.activity-button {
+#views-tbar, #views-tbox {
+    height: 0px;
+}
 
-    background: #dddddd;
-    padding-top: 1px;
-    padding-left: 2px;
-    padding-right: 2px;
-    padding-bottom: 0px;
-    margin: 1px;
-    border: groove 2px;
+.activity-button-image {
+
+    color: black;
+    background: lightgrey;
 
 }
 
-.activity-button:hover {
+.activity-button-image[state="normal"] {
 
-    background: #eeeeee;
-    padding-top: 0px;
-    padding-left: 1px;
-    padding-right: 3px;
-    padding-bottom: 1px;
-    border: 2px grey outset;
+    list-style-image: url(chrome://chatzilla/skin/images/view-normal.gif);
 
 }
 
-.activity-button:active {
+.activity-button-image[state="activity"] {
 
-    background: #cccccc;
-    padding-top: 1px;
-    padding-left: 2px;
-    padding-right: 2px;
-    padding-bottom: 0px;
-    border: 2px grey inset;
+    list-style-image: url(chrome://chatzilla/skin/images/view-activity.gif);
+}
+
+.activity-button-image[state="current"] {
+
+    list-style-image: url(chrome://chatzilla/skin/images/view-current.gif);
+
+}
+
+.activity-button-image[state="attention"] {
+
+    list-style-image: url(chrome://chatzilla/skin/images/view-attention.gif);
+
+}
+
+.activity-button-text {
+
+    color: black;
+    background: lightgrey;
+
+}
+
+.activity-button-text[state="normal"] {
+
+}
+
+.activity-button-text[state="activity"] {
+
+    color: darkgreen;
+
+}
+
+.activity-button-text[state="current"] {
+    
+    color: darkcyan;
+
+}
+
+.activity-button-text[state="attention"] {
+
+    color: red;
 
 }
 

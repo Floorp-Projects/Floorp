@@ -95,6 +95,18 @@ function onToggleTraceHook()
     
 }   
 
+function onToggleToolbarIcons()
+{
+    client.ICONS_IN_TOOLBAR = !client.ICONS_IN_TOOLBAR;
+    
+    var newclass = "menubutton " + ((client.ICONS_IN_TOOLBAR) ?
+        "activity-button-image" : "activity-button-text");
+
+    for (var i in client.viewsArray)
+        client.viewsArray[i].tb.setAttribute ("class", newclass);
+
+}
+
 function onDoStyleChange (newStyle)
 {
 

@@ -182,7 +182,7 @@ function ep_routeevent (e)
         switch (typeof destObject[e.destMethod])
         {
             case "function":
-                if (0)
+                if (1)
                     try
                     {
                         destObject[e.destMethod] (e);

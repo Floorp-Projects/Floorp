@@ -79,6 +79,7 @@ IMAGEFILES = \
     .\xul\skin\images\is-voice.gif \
     .\xul\skin\images\isnt-voice.gif \
     .\xul\skin\images\view-activity.gif \
+    .\xul\skin\images\view-attention.gif \
     .\xul\skin\images\view-current.gif \
     .\xul\skin\images\view-normal.gif \
     $(NULL)

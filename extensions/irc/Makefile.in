@@ -82,6 +82,7 @@ IMAGEFILES = \
 		$(srcdir)/xul/skin/images/is-voice.gif \
 		$(srcdir)/xul/skin/images/isnt-voice.gif \
 		$(srcdir)/xul/skin/images/view-activity.gif \
+		$(srcdir)/xul/skin/images/view-attention.gif \
 		$(srcdir)/xul/skin/images/view-current.gif \
 		$(srcdir)/xul/skin/images/view-normal.gif \
 		$(NULL)

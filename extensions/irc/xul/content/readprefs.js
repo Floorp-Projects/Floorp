@@ -27,10 +27,17 @@
 /*
  * currently recognized prefs:
  * + extensions.irc.
- *   +- nickname (String) initial nickname
- *   +- username (String) initial username (ie: username@host.tld)
- *   +- desc     (String) initial description (used in whois info)
- *   +- channel  (String) channel to join after connecting
+ *   +- nickname (String)  initial nickname
+ *   +- username (String)  initial username (ie: username@host.tld)
+ *   +- desc     (String)  initial description (used in whois info)
+ *   +- network  (String)  network to connect to on startup
+ *   +- channel  (String)  channel to join after connecting
+ *   +- munger   (Boolean) send output through text->html munger
+ *   +- toolbar
+ *   |  +- icons (Boolean) display icons in toolbar buttons
+ *   +- notify
+ *      +- aggressive (Boolean) flash trayicon/ bring window to top when
+ *                              your nickname is mentioned.
  *   +- style   
  *   |  +- default (String) default style (relative to chrome://chatzilla/skin)
  *   |  +- user
@@ -74,10 +81,19 @@ function readIRCPrefs (rootNode)
     CIRCNetwork.prototype.INITIAL_CHANNEL =
         getCharPref (pref, rootNode + "channel",
                      CIRCNetwork.prototype.INITIAL_CHANNEL);
-    client.startupNetwork =
-        getCharPref (pref, rootNode + "network",
-                     CIRCNetwork.prototype.INITIAL_CHANNEL);
-    
+
+    client.STARTUP_NETWORK =
+        getCharPref (pref, rootNode + "network", "");
+
+    client.munger.enabled =
+        getBoolPref (pref, rootNode + "munger", client.munger.enabled);
+
+    client.ICONS_IN_TOOLBAR = 
+        getBoolPref (pref, rootNode + "toolbar.icons", true);
+
+    client.FLASH_WINDOW =
+        getBoolPref (pref, rootNode + "notify.aggressive", true);
+
     client.DEFAULT_STYLE =
         getCharPref (pref, rootNode + "style.default", "output-default.css");
 
