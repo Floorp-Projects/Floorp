@@ -51,6 +51,7 @@
 #include "nsMimeTypes.h"
 #include "prtime.h"
 #include "nsReadableUtils.h"
+#include "prprf.h"
 
 // hack: include this to fix opening news attachments.
 #include "nsINntpUrl.h"
@@ -307,6 +308,17 @@ nsMimeHtmlDisplayEmitter::EndHeader()
   {
     UtilityWriteCRLF("<html>");
     UtilityWriteCRLF("<head>");
+
+    char *subject = nsEscapeHTML(GetHeaderValue(HEADER_SUBJECT, mHeaderArray));
+    if (subject)
+    {
+      PRInt32 bufLen = strlen(subject) + 16;
+      char *buf = new char[bufLen];
+      PR_snprintf(buf, bufLen, "<title>%s</title>", subject);
+      UtilityWriteCRLF(buf);
+      delete [] buf;
+      nsMemory::Free(subject);
+    }
 
     // mscott --> we should refer to the style sheet used in msg display...this one is wrong i think.
     // Stylesheet info!
