@@ -140,7 +140,7 @@ NS_IMETHODIMP nsMailboxProtocol::OnStopRequest(nsIChannel * aChannel, nsISupport
 	if (m_nextState == MAILBOX_READ_FOLDER && m_mailboxParser)
 	{
 		// we need to inform our mailbox parser that there is no more incoming data...
-		m_mailboxParser->OnStopRequest(aChannel, ctxt, 0, nsnull);
+		m_mailboxParser->OnStopRequest(aChannel, ctxt, aStatus, nsnull);
 	}
 	else if (m_nextState == MAILBOX_READ_MESSAGE) 
 	{

@@ -161,7 +161,7 @@ public:
 	// message socket libnet callbacks, which come through folder pane
 	virtual int ProcessMailboxInputStream(nsIURI* aURL, nsIInputStream *aIStream, PRUint32 aLength);
 
-	virtual void	DoneParsingFolder();
+	virtual void	DoneParsingFolder(nsresult status);
 	virtual void	AbortNewHeader();
 	virtual PRInt32 HandleLine(char *line, PRUint32 line_length);
 
@@ -211,7 +211,7 @@ public:
 	NS_DECL_ISUPPORTS_INHERITED
     nsresult Init(nsIFolder *rootFolder, nsFileSpec &folder, nsIOFileStream *inboxFileStream);
 
-	virtual void	DoneParsingFolder();
+	virtual void	DoneParsingFolder(nsresult status);
 	virtual void	SetUsingTempDB(PRBool usingTempDB, char *tmpDBName);
 
 	void DisableFilters() {m_disableFilters = PR_TRUE;}
@@ -260,7 +260,7 @@ public:
 	virtual ~ParseIMAPMailboxState();
 	
 	// close the db
-	virtual void			DoneParsingFolder();
+	virtual void			DoneParsingFolder(nsresult status);
 	
 	virtual void			SetPublishUID(PRInt32 uid);
 	virtual void			SetPublishByteLength(PRUint32 byteLength);

@@ -126,7 +126,7 @@ NS_IMETHODIMP nsMsgMailboxParser::OnStartRequest(nsIChannel * /* aChannel */, ns
 // stop binding is a "notification" informing us that the stream associated with aURL is going away. 
 NS_IMETHODIMP nsMsgMailboxParser::OnStopRequest(nsIChannel * /* aChannel */, nsISupports *ctxt, nsresult aStatus, const PRUnichar *aMsg)
 {
-	DoneParsingFolder();
+	DoneParsingFolder(aStatus);
 	// what can we do? we can close the stream?
 	m_urlInProgress = PR_FALSE;  // don't close the connection...we may be re-using it.
 
@@ -259,13 +259,14 @@ int nsMsgMailboxParser::ProcessMailboxInputStream(nsIURI* aURL, nsIInputStream *
 	return (ret);
 }
 
-void nsMsgMailboxParser::DoneParsingFolder()
+void nsMsgMailboxParser::DoneParsingFolder(nsresult status)
 {
 	/* End of file.  Flush out any partial line remaining in the buffer. */
 	FlushLastLine();
 	PublishMsgHeader();
 
-	if (m_mailDB)	// finished parsing, so flush db folder info 
+	// only mark the db valid if we've succeeded.
+	if (NS_SUCCEEDED(status) && m_mailDB)	// finished parsing, so flush db folder info 
 		UpdateDBFolderInfo();
 
 //	if (m_folder != nsnull)
@@ -1503,7 +1504,7 @@ nsParseNewMailState::~nsParseNewMailState()
 
 // This gets called for every message because libnet calls IncorporateBegin,
 // IncorporateWrite (once or more), and IncorporateComplete for every message.
-void nsParseNewMailState::DoneParsingFolder()
+void nsParseNewMailState::DoneParsingFolder(nsresult status)
 {
 	PRBool moved = PR_FALSE;
 /* End of file.  Flush out any partial line remaining in the buffer. */
@@ -1980,9 +1981,9 @@ void ParseIMAPMailboxState::SetPublishByteLength(PRUint32 byteLength)
 	fNextMessageByteLength = byteLength;
 }
 
-void ParseIMAPMailboxState::DoneParsingFolder()
+void ParseIMAPMailboxState::DoneParsingFolder(nsresult status)
 {
-	nsMsgMailboxParser::DoneParsingFolder();
+	nsMsgMailboxParser::DoneParsingFolder(status);
 	if (m_mailDB)
 	{
 		// make sure the highwater mark is correct
