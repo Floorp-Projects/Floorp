@@ -29,6 +29,7 @@
 #include "nsDocShell.h"
 
 class nsIController;
+struct PRThread;
 
 typedef enum {
     eCharsetReloadInit,
@@ -109,7 +110,7 @@ public:
     NS_IMETHOD Destroy();
 
   // nsWebShell
-    nsIEventQueue* GetEventQueue(void);
+    nsresult GetEventQueue(nsIEventQueue **aQueue);
     void HandleLinkClickEvent(nsIContent *aContent,
         nsLinkVerb aVerb,
         const PRUnichar* aURLSpec,
@@ -138,7 +139,7 @@ protected:
         nsIChannel* channel,
         nsresult aStatus);
 
-    nsIEventQueue* mThreadEventQueue;
+    PRThread *mThread;
 
     nsIWebShellContainer* mContainer;
     nsIDocumentLoader* mDocLoader;
