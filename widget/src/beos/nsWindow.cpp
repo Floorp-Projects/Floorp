@@ -1839,16 +1839,16 @@ bool nsWindow::CallMethod(MethodInfo *info)
 		break;
 
 	case nsWindow::ONACTIVATE:
-		NS_ASSERTION(info->nArgs == 4, "Wrong number of arguments to CallMethod");
+		NS_ASSERTION(info->nArgs == 1, "Wrong number of arguments to CallMethod");
 		if (*mEventCallback)
 		{
-			bool active = (bool)info->args[2];
+			bool active = (bool)info->args[0];
 			if(!active) 
 			{
 				gJustGotDeactivate = PR_TRUE;
-            } 
-            else 
-            {
+			} 
+			else 
+			{
 				gJustGotActivate = PR_TRUE;
 				if(mWindowType == eWindowType_dialog) 
 					SetFocus(PR_TRUE);
@@ -3009,29 +3009,24 @@ void nsWindowBeOS::DoFrameResized()
 		NS_RELEASE(t);
 	}
 }
+
 void nsWindowBeOS::WindowActivated(bool active)
 {
 // Calls method ONACTIVATE to handle gJustGotActivated | gJustGotDeactivated
-	uint32 btn, clicks = 0;
-	BPoint point;
 	nsWindow        *w = (nsWindow *)GetMozillaWidget();
 	nsToolkit	*t;
 	t = w->GetToolkit();
 	if(w &&  t!= 0)
 	{
-		{
-		uint32	args[4];
-		args[0] = (uint32)point.x;
-		args[1] = (uint32)point.y;
-		args[2] = (uint32)active;
-		args[3] = (uint32)w;
-	MethodInfo *info = 
-		new MethodInfo(w, w, nsWindow::ONACTIVATE, 3, args);
-	t->CallMethodAsync(info);
-	}
+		uint32	args[1];
+		args[0] = (uint32)active;
+		MethodInfo *info = 
+			new MethodInfo(w, w, nsWindow::ONACTIVATE, 1, args);
+		t->CallMethodAsync(info);
 		NS_RELEASE(t);
 	}
 }
+
 //----------------------------------------------------
 // BeOS Sub-Class View
 //----------------------------------------------------
