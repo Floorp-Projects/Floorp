@@ -59,9 +59,9 @@ CreateNewInterfaceHolder(char *name, char *name_space, char *iid)
     NewInterfaceHolder *holder = calloc(1, sizeof(NewInterfaceHolder));
     if(holder) {
         if(name)
-            holder->name = strdup(name);
+            holder->name = xpidl_strdup(name);
         if(name_space)
-            holder->name_space = strdup(name_space);
+            holder->name_space = xpidl_strdup(name_space);
         if(holder->name && holder->name_space) {
             holder->full_name = calloc(1, strlen(holder->name) +
                                           strlen(holder->name_space) + 2);
@@ -74,7 +74,7 @@ CreateNewInterfaceHolder(char *name, char *name_space, char *iid)
         else
             holder->full_name = holder->name;
         if(iid)
-            holder->iid = strdup(iid);
+            holder->iid = xpidl_strdup(iid);
     }
     return holder;
 }
@@ -398,7 +398,7 @@ pass_1(TreeState *state)
         /* write the typelib */
         time_t now;
         char *annotate_val, *data;
-        uint32 i, len, header_sz;
+        PRUint32 i, len, header_sz;
         XPTState *xstate = XPT_NewXDRState(XPT_ENCODE, NULL, 0);
         XPTCursor curs, *cursor = &curs;
         /* fill in the annotations, listing resolved interfaces in order */
