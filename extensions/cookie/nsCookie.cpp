@@ -2023,9 +2023,16 @@ cookie_LoadCookies() {
 
 
 PUBLIC int
-COOKIE_ReadCookies() {
+COOKIE_ReadCookies()
+{
+  static PRBool sReadCookies = PR_FALSE;
+  
+  if (sReadCookies)
+    NS_WARNING("We are reading the cookies more than once. Probably bad");
+    
   cookie_LoadCookies();
   cookie_LoadPermissions();
+  sReadCookies = PR_TRUE;
   return 0;
 }
 
