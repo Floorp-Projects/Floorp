@@ -616,7 +616,6 @@ nsresult nsURILoader::SetupLoadCookie(nsISupports * aWindowContext, nsISupports 
   nsCOMPtr<nsISupports> loadCookie;
 
   nsCOMPtr<nsIURIContentListener> cntListener (do_GetInterface(aWindowContext));
-  NS_ENSURE_TRUE(cntListener, NS_ERROR_FAILURE);
   if (cntListener)
   {
     rv = cntListener->GetLoadCookie(getter_AddRefs(loadCookie));
@@ -678,22 +677,36 @@ NS_IMETHODIMP nsURILoader::DispatchContent(const char * aContentType,
   NS_ENSURE_ARG(aChannel);
 
   // okay, now we've discovered the content type. We need to do the following:
-  // (1) if aCommand is user click, we need to find the Preferred content handler
-  // for this type...
-  // (2) if aCommand is any other value, we'll use canHandleContent to find any handler
-  // for the content.
-  // We always start with the original content listener (if any) that originated the request
-  // and then move on to registered content listeners.
+  // (1) We always start with the original content listener (if any) that originated the request
+  // and then ask if it can handle the content.
+  // (2) if it can't, we'll move on to the registered content listeners and give 
+  // them a crack at handling the content.
 
-  // if we cannot find a registered content lister to handle the type, then we move on to
+  // (3) if we cannot find a registered content lister to handle the type, then we move on to
   // phase II which is to try to find a content handler in the registry for the content type.
+  // hitting this phase usually means we'll be creating a new window or handing off to an 
+  // external application.
 
   nsresult rv = NS_OK;
 
   nsCOMPtr<nsIURIContentListener> listenerToUse = aContentListener;
+  PRBool skipRetargetingSearch = PR_FALSE;
+  // How do we determine whether we need to ask any registered content listeners if they
+  // want a crack at the content? 
+  // (1) if the window target is blank or new, then we don't want to ask...
+  if (!nsCRT::strcasecmp(aWindowTarget, "_blank") || !nsCRT::strcasecmp(aWindowTarget, "_new"))
+    skipRetargetingSearch = PR_TRUE;
+  else
+  {
+    // (2) if the original content listener is NULL and we have a target name then we
+    // must not be a window open with that target name so skip the content listener search
+    // and skip to the part that brings up the new window.
+    if (aWindowTarget && *aWindowTarget && !aContentListener)
+      skipRetargetingSearch = PR_TRUE;
+  }
   
   // find a content handler that can and will handle the content
-  if (!aWindowTarget || (nsCRT::strcasecmp(aWindowTarget, "_blank") && nsCRT::strcasecmp(aWindowTarget, "_new") ))
+  if (!skipRetargetingSearch)
   {
     PRBool foundContentHandler = PR_FALSE;
     if (listenerToUse)
