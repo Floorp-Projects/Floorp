@@ -1918,6 +1918,7 @@ COOKIE_Write()
   nsCOMPtr<nsIOutputStream> fileOutputStream;
   rv = NS_NewLocalFileOutputStream(getter_AddRefs(fileOutputStream), file);
   if (NS_FAILED(rv)) {
+    NS_ERROR("failed to open cookies.txt for writing");
     return rv;
   }
 
