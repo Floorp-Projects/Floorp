@@ -87,7 +87,8 @@ NS_IMETHODIMP nsDragService::StartDragSession (nsITransferable * aTransferable, 
 }
 
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsDragService::GetData (nsITransferable * aTransferable)
+NS_IMETHODIMP nsDragService::GetData (nsITransferable * aTransferable,
+                                        PRUint32 aItemIndex)
 {
   return NS_ERROR_FAILURE;
 }
