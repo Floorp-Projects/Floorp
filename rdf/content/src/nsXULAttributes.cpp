@@ -454,6 +454,7 @@ nsXULAttributes::~nsXULAttributes()
         nsXULAttribute* attr = NS_REINTERPRET_CAST(nsXULAttribute*, mAttributes.ElementAt(indx));
         NS_RELEASE(attr);
     }
+    delete mClassList;
 }
 
 
@@ -636,7 +637,13 @@ nsXULAttributes::HasClass(nsIAtom* aClass) const
 
 nsresult nsXULAttributes::SetClassList(nsClassList* aClassList)
 {
-    mClassList = aClassList;
+    delete mClassList;
+    if (aClassList) {
+        mClassList = new nsClassList(*aClassList);
+    }
+    else {
+        mClassList = nsnull;
+    }
     return NS_OK;
 }
 
