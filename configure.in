@@ -1640,7 +1640,7 @@ MOZ_ARG_ENABLE_BOOL(brprof,
 dnl Toolkit exorcism - a temporary hack.
 MOZ_ARG_ENABLE_BOOL(toolkit-exorcism,
 [  --enable-toolkit-exorcism  Exorcise toolkit specific link time dependencies.],
-  AC_DEFINE(TOOLKIT_EXORCISM))
+  TOOLKIT_EXORCISM=1 AC_DEFINE(TOOLKIT_EXORCISM))
 
 dnl ========================================================
 dnl =
