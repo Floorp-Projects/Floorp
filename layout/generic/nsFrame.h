@@ -282,8 +282,9 @@ public:
   NS_IMETHOD  GetAccessible(nsIAccessible** aAccessible);
 #endif
 
-  NS_IMETHOD GetStyleContextProvider(nsIPresContext* aPresContext,
-                                     nsIFrame** aProviderFrame);
+  NS_IMETHOD GetParentStyleContextProvider(nsIPresContext* aPresContext,
+                                           nsIFrame** aProviderFrame, 
+                                           nsContextProviderRelationship& aRelationship);
 
   // Check Style Visibility and mState for Selection (when printing)
   NS_IMETHOD IsVisibleForPainting(nsIPresContext *     aPresContext, 
@@ -527,12 +528,4 @@ protected:
 #endif
 // End Display Reflow Debugging
 
-// similar to NS_ENSURE_TRUE but with no return value
-#define ENSURE_TRUE(x)                                        \
-  PR_BEGIN_MACRO                                              \
-    if (!(x)) {                                               \
-       NS_WARNING("ENSURE_TRUE(" #x ") failed");              \
-       return;                                                \
-    }                                                         \
-  PR_END_MACRO
 #endif /* nsFrame_h___ */

@@ -1271,11 +1271,13 @@ VerifyContextParent(nsIPresContext* aPresContext, nsIFrame* aFrame,
     } else {
       // get the parent context from the frame (indirectly)
       nsIFrame* providerFrame = nsnull;
-      aFrame->GetStyleContextProvider(aPresContext, &providerFrame);   ENSURE_TRUE(providerFrame);      
-      nsCOMPtr<nsIStyleContext> providerContext;
-      providerFrame->GetStyleContext(getter_AddRefs(providerContext)); ENSURE_TRUE(providerContext);
-      aParentContext = providerContext->GetParent(); // released later
-      // aParentContext could still be null, since some contexts don't have parents
+      nsContextProviderRelationship relationship;
+      aFrame->GetParentStyleContextProvider(aPresContext,&providerFrame,relationship);
+      if (providerFrame) {
+        providerFrame->GetStyleContext(&aParentContext);
+      } else {
+        // no parent context provider: it is OK, some frames' contexts do not have parents
+      }
     }
     NS_IF_RELEASE(frameType);
   } else {
@@ -1678,7 +1680,7 @@ CaptureChange(nsIStyleContext* aOldContext, nsIStyleContext* aNewContext,
 void
 FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
                                     nsIFrame* aFrame,
-                                    nsIStyleContext* aParentContextIn,
+                                    nsIStyleContext* aParentContext,
                                     nsIContent* aParentContent,
                                     PRInt32 aAttrNameSpaceID,
                                     nsIAtom* aAttribute,
@@ -1686,6 +1688,8 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
                                     PRInt32 aMinChange,
                                     PRInt32& aResultChange)
 {
+  nsIFrame *resolvedDescendant = nsnull;
+
   nsIStyleContext* oldContext = nsnull; 
   nsresult result = aFrame->GetStyleContext(&oldContext);
   if (NS_SUCCEEDED(result) && oldContext) {
@@ -1708,46 +1712,42 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
       }
     }
 
-    nsIStyleContext* parentContext = aParentContextIn;
-    nsIFrame* resolvedDescendant = nsnull;
-    // Get the frame providing the style context. If it differs from aFrame, then
-    // reslove the provider first, since the provider's context is the parent of aFrame's
-    nsIFrame* providerFrame = nsnull;
-    aFrame->GetStyleContextProvider(aPresContext, &providerFrame);     ENSURE_TRUE(providerFrame);
-    if (providerFrame == aFrame) {
-      if (parentContext) {
-        // addref the parent since it gets released later
-        NS_ADDREF(parentContext);
-        NOISY_TRACE_FRAME("non-null parent context provided: using it and assuming already resolved",aFrame);
-      } else {
-        nsCOMPtr<nsIStyleContext> frameContext;
-        aFrame->GetStyleContext(getter_AddRefs(frameContext));          ENSURE_TRUE(frameContext);
-        parentContext = frameContext->GetParent(); /* released later */ ENSURE_TRUE(parentContext);
+    if (aParentContext == nsnull) {
+      NOISY_TRACE_FRAME("null parent context in ReResolveStyle: getting provider frame for",aFrame);
+      // get the parent context from the frame (indirectly)
+      nsIFrame* providerFrame = nsnull;
+      nsContextProviderRelationship relationship;
+      aFrame->GetParentStyleContextProvider(aPresContext,&providerFrame,relationship);
+      if (providerFrame) {
+        NOISY_TRACE("provider frame retrieved in ReResolveStyle: ");
+
+        // see if we need to recurse and resolve the provider frame first
+        if (relationship != eContextProvider_Ancestor) {
+          NOISY_TRACE("non-ancestor provider, recursing.\n");
+          // provider is not an ancestor, so assume we have to reresolve it first
+          ReResolveStyleContext(aPresContext, providerFrame, nsnull, content,
+                                aAttrNameSpaceID, aAttribute,
+                                aChangeList, aMinChange, aResultChange);
+          resolvedDescendant = providerFrame;
+          NOISY_TRACE("returned from recursion, descendant parent context provider resolved.\n");
+        } else {
+          NOISY_TRACE("ancestor provider, assuming already resolved.\n");
+        }
+        providerFrame->GetStyleContext(&aParentContext);
       }
-    }
-    else {
-      nsIFrame* providerFrameParent;
-      providerFrame->GetParent(&providerFrameParent);                   ENSURE_TRUE(providerFrameParent);
-      NS_ASSERTION(providerFrameParent == aFrame, "invalid style context provider");
-      // resolve the provider first
-      nsCOMPtr<nsIStyleContext> providerContext;
-      providerFrame->GetStyleContext(getter_AddRefs(providerContext)); ENSURE_TRUE(providerContext);
-      nsIStyleContext* providerContextParent = providerContext->GetParent(); ENSURE_TRUE(providerContextParent);
-      ReResolveStyleContext(aPresContext, providerFrame, providerContextParent, content, 
-                            aAttrNameSpaceID, aAttribute, aChangeList, aMinChange, aResultChange);
-      NS_RELEASE(providerContextParent);
-      // the provider's new context becomes the parent context of aFrame's context 
-      providerFrame->GetStyleContext(&parentContext); /* released later */ ENSURE_TRUE(parentContext);
-      resolvedDescendant = providerFrame; // don't want to re-resolve the provider again
+    } else {
+      // addref the parent passed in so we can release it at the end
+      NS_ADDREF(aParentContext);
+      NOISY_TRACE_FRAME("non-null parent context provided: using it and assuming already resolved",aFrame);
     }
     
     // do primary context
     nsIStyleContext* newContext = nsnull;
     if (pseudoTag) {
        nsIContent* pseudoContent = (aParentContent ? aParentContent : localContent);
-       aPresContext->ResolvePseudoStyleContextFor(pseudoContent, pseudoTag, parentContext, PR_FALSE,
-                                                  &newContext);
-       NS_RELEASE(pseudoTag);
+       aPresContext->ResolvePseudoStyleContextFor(pseudoContent, pseudoTag, aParentContext, PR_FALSE,
+                                                &newContext);
+      NS_RELEASE(pseudoTag);
     }
     else {
       NS_ASSERTION(localContent,
@@ -1763,10 +1763,10 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
       aFrame->GetFrameType(getter_AddRefs(frameType));
       if (content->IsContentOfType(nsIContent::eELEMENT) &&
           frameType != nsLayoutAtoms::placeholderFrame) {
-        aPresContext->ResolveStyleContextFor(content, parentContext,
+        aPresContext->ResolveStyleContextFor(content, aParentContext,
                                              PR_TRUE, &newContext);
       } else {
-        aPresContext->ResolveStyleContextForNonElement(parentContext,
+        aPresContext->ResolveStyleContextForNonElement(aParentContext,
                                                        PR_TRUE, &newContext);
       }
     }
@@ -1922,7 +1922,7 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
             }
             else {  // regular child frame
               if (child != resolvedDescendant) {
-                ReResolveStyleContext(aPresContext, child, newContext, content,
+                ReResolveStyleContext(aPresContext, child, nsnull, content,
                                       aAttrNameSpaceID, aAttribute,
                                       aChangeList, aMinChange, childChange);
               } else {
@@ -1941,7 +1941,7 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
 
     NS_RELEASE(newContext);
     NS_IF_RELEASE(localContent);
-    NS_IF_RELEASE(parentContext);
+    NS_IF_RELEASE(aParentContext);
   }
 }
 

@@ -414,20 +414,23 @@ NS_IMETHODIMP nsTableOuterFrame::SetSelected(nsIPresContext* aPresContext,
   return result;
 }
 
-// GetStyleContextProvider:
-//  The innerTableFame is the style context provider, which is cached in a data member
+// GetParentStyleContextProvider:
+//  The innerTableFame is he parent style context provider
+//  Fortunately, we cache that as a data member, so just return the cached pointer value
+//
 NS_IMETHODIMP 
-nsTableOuterFrame::GetStyleContextProvider(nsIPresContext* aPresContext,
-                                           nsIFrame**      aProviderFrame)
+nsTableOuterFrame::GetParentStyleContextProvider(nsIPresContext* aPresContext,
+                                                 nsIFrame** aProviderFrame, 
+                                                 nsContextProviderRelationship& aRelationship)
 {
   NS_ASSERTION(aProviderFrame && aPresContext, "null argument: aPresContext and-or aProviderFrame");
   if (aProviderFrame) {
-    if (mInnerTableFrame) 
-      *aProviderFrame = mInnerTableFrame;
-    else 
-      *aProviderFrame = this;
+    // parent context provider is the innerTableFrame
+    NS_ASSERTION(mInnerTableFrame, "innerTableFrame should not be null");
+    *aProviderFrame = mInnerTableFrame;
+    aRelationship = eContextProvider_Descendant;
   }
-  return (aProviderFrame && mInnerTableFrame) ? NS_OK : NS_ERROR_FAILURE;
+  return ((aProviderFrame != nsnull) && (*aProviderFrame != nsnull)) ? NS_OK : NS_ERROR_FAILURE;
 }
 
 // INCREMENTAL REFLOW HELPER FUNCTIONS 
