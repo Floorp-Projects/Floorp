@@ -83,7 +83,7 @@ struct BufioFileStruct
     PRInt32 dirtystart;
     PRInt32 dirtyend;
     PRBool  readOnly;   /* whether the file allows writing or not */
-#ifdef DEBUG_dveditz
+#ifdef DEBUG_dveditzbuf
     PRUint32 reads;
     PRUint32 writes;
 #endif
@@ -103,7 +103,6 @@ BufioFile*  bufio_Open(const char* name, const char* mode)
 {
     FILE        *fd;
     BufioFile   *file = NULL;
-    PRBool      cleanup = PR_FALSE;
 
     fd = fopen( name, mode );
     
@@ -284,7 +283,7 @@ PRUint32 bufio_Read(BufioFile* file, char* dest, PRUint32 count)
         memcpy( dest, file->data + startOffset, bytesCopied );
         retcount = bytesCopied;
         file->fpos += bytesCopied;
-#ifdef DEBUG_dveditz
+#ifdef DEBUG_dveditzbuf
         file->reads++;
 #endif
 
@@ -318,7 +317,7 @@ PRUint32 bufio_Read(BufioFile* file, char* dest, PRUint32 count)
                     memcpy( dest+bytesCopied, file->data+startOffset, bytesRead );
                     file->fpos += bytesRead;
                     retcount += bytesRead;
-#ifdef DEBUG_dveditz
+#ifdef DEBUG_dveditzbuf
                     file->reads++;
 #endif
                 }
@@ -357,7 +356,7 @@ PRUint32 bufio_Read(BufioFile* file, char* dest, PRUint32 count)
             /* the tail end of the range we want is already buffered */
             /* first copy the buffered data to the dest area         */
             memcpy( dest+leftover, file->data, bytesCopied );
-#ifdef DEBUG_dveditz
+#ifdef DEBUG_dveditzbuf
             file->reads++;
 #endif
         }
@@ -380,7 +379,7 @@ PRUint32 bufio_Read(BufioFile* file, char* dest, PRUint32 count)
             if ( bytesRead )
             {
                 memcpy( dest, file->data+startOffset, bytesRead );
-#ifdef DEBUG_dveditz
+#ifdef DEBUG_dveditzbuf
                 file->reads++;
 #endif
             }
@@ -445,7 +444,7 @@ PRUint32 bufio_Write(BufioFile* file, const char* src, PRUint32 count)
         endOffset = startOffset + bytesCopied;
         file->dirtystart = PR_MIN( startOffset, file->dirtystart );
         file->dirtyend   = PR_MAX( endOffset,   file->dirtyend );
-#ifdef DEBUG_dveditz
+#ifdef DEBUG_dveditzbuf
         file->writes++;
 #endif
 
@@ -477,7 +476,7 @@ PRUint32 bufio_Write(BufioFile* file, const char* src, PRUint32 count)
             file->bufdirty      = PR_TRUE;
             file->dirtystart    = 0;
             file->dirtyend      = PR_MAX( endOffset, file->dirtyend );
-#ifdef DEBUG_dveditz
+#ifdef DEBUG_dveditzbuf
             file->writes++;
 #endif
 
@@ -499,7 +498,7 @@ PRUint32 bufio_Write(BufioFile* file, const char* src, PRUint32 count)
             file->bufdirty      = PR_TRUE;
             file->dirtystart    = startOffset;
             file->dirtyend      = endOffset;
-#ifdef DEBUG_dveditz
+#ifdef DEBUG_dveditzbuf
             file->writes++;
 #endif
             if ( endOffset > file->datasize )
@@ -596,7 +595,7 @@ static PRBool _bufio_loadBuf( BufioFile* file, PRUint32 count )
         file->bufdirty   = PR_FALSE;
         file->dirtystart = BUFIO_BUFSIZE;
         file->dirtyend   = 0;
-#ifdef DEBUG_dveditz
+#ifdef DEBUG_dveditzbuf
         printf("REG: buffer read %d (%d) after %d reads\n",startBuf,file->fpos,file->reads);
         file->reads = 0;
         file->writes = 0;
@@ -624,7 +623,7 @@ static int _bufio_flushBuf( BufioFile* file )
         written = fwrite( file->data+file->dirtystart, 1, dirtyamt, file->fd );
         if ( written == dirtyamt )
         {
-#ifdef DEBUG_dveditz
+#ifdef DEBUG_dveditzbuf
             printf("REG: buffer flush %d - %d after %d writes\n",startpos,startpos+written,file->writes);
             file->writes = 0;
 #endif
