@@ -881,10 +881,9 @@ nsPlainTextSerializer::DoAddLeaf(PRInt32 aTag,
     // One exception: at the very beginning of a selection,
     // we want to preserve whitespace.
     if (mFlags & nsIDocumentEncoder::OutputPreformatted ||
+        (mPreFormatted && !mWrapColumn) ||
         ((mFlags & nsIDocumentEncoder::OutputFormatted)
-         && (mTagStackIndex > 0)
-         && (mTagStack[mTagStackIndex-1] == eHTMLTag_pre)) ||
-        (mPreFormatted && !mWrapColumn)) {
+         && IsInPre())) {
       Write(aText); // XXX: spacestuffing (maybe call AddToLine if mCacheLine==true)
     }
     else if(!mInWhitespace ||
@@ -897,9 +896,8 @@ nsPlainTextSerializer::DoAddLeaf(PRInt32 aTag,
   }
   else if (type == eHTMLTag_newline) {
     if (mFlags & nsIDocumentEncoder::OutputPreformatted ||
-        ((mTagStackIndex > 0)
-         && (mTagStack[mTagStackIndex-1] == eHTMLTag_pre)) ||
-        (mPreFormatted && !mWrapColumn)) {
+        (mPreFormatted && !mWrapColumn) ||
+        IsInPre()) {
       EnsureVerticalSpace(mEmptyLines+1);
     }
     else {
@@ -1271,9 +1269,7 @@ nsPlainTextSerializer::Write(const nsString& aString)
   
   PRInt32 totLen = aString.Length();
   
-  if (((mTagStackIndex > 0) &&
-       (mTagStack[mTagStackIndex-1] == eHTMLTag_pre)) ||
-      (mPreFormatted && !mWrapColumn)) {
+  if ((mPreFormatted && !mWrapColumn) || IsInPre()) {
     // No intelligent wrapping. This mustn't be mixed with
     // intelligent wrapping without clearing the mCurrentLine
     // buffer before!!!
@@ -1552,6 +1548,31 @@ nsPlainTextSerializer::IsContainer(PRInt32 aId)
   }
 
   return isContainer;
+}
+
+/**
+ * Returns true if we currently are inside a <pre>. The check is done
+ * by traversing the tag stack looking for <pre> until we hit a block
+ * level tag which is assumed to override any <pre>:s below it in
+ * the stack. To do this correctly to a 100% would require access
+ * to style which we don't support in this converter.
+ */  
+PRBool
+nsPlainTextSerializer::IsInPre()
+{
+  PRInt32 i = mTagStackIndex;
+  while(i > 0) {
+    if(mTagStack[i-1] == eHTMLTag_pre)
+      return PR_TRUE;
+    if(IsBlockLevel(mTagStack[i-1])) {
+      // We assume that every other block overrides a <pre>
+      return PR_FALSE;
+    }
+    --i;
+  }
+
+  // Not a <pre> in the whole stack
+  return PR_FALSE;
 }
 
 /*

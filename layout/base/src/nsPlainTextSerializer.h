@@ -119,6 +119,7 @@ protected:
   PRBool MayWrap(); 
   PRBool IsBlockLevel(PRInt32 aId);
   PRBool IsContainer(PRInt32 aId);
+  PRBool IsInPre();
   PRBool IsCurrentNodeConverted();
   nsresult GetIdForContent(nsIContent* aContent, PRInt32* aID);
   nsresult GetParserService(nsIParserService** aParserService);
