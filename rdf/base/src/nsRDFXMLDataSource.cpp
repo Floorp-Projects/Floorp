@@ -438,13 +438,15 @@ RDFXMLDataSourceImpl::~RDFXMLDataSourceImpl(void)
 
     Flush();
 
-    while (--mNumNamedDataSourceURIs >= 0)
+    while (mNumNamedDataSourceURIs-- > 0) {
         delete mNamedDataSourceURIs[mNumNamedDataSourceURIs];
+	}
 
     delete mNamedDataSourceURIs;
 
-    while (--mNumCSSStyleSheetURLs >= 0)
+    while (mNumCSSStyleSheetURLs-- > 0) {
         NS_RELEASE(mCSSStyleSheetURLs[mNumCSSStyleSheetURLs]);
+	}
 
     delete mCSSStyleSheetURLs;
 
@@ -698,6 +700,8 @@ RDFXMLDataSourceImpl::Flush(void)
     FileOutputStreamImpl* out = new FileOutputStreamImpl(path);
     if (! out)
         return NS_ERROR_OUT_OF_MEMORY;
+
+	NS_ADDREF(out);
 
     if (NS_FAILED(rv = Serialize(out)))
         goto done;
