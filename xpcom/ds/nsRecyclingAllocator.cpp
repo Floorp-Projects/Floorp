@@ -274,7 +274,7 @@ nsRecyclingAllocator::FreeUnusedBuckets()
 #endif
 }
 
-inline nsRecyclingAllocator::Block*
+nsRecyclingAllocator::Block*
 nsRecyclingAllocator::FindFreeBlock(PRUint32 bytes)
 {
     // We dont enter lock for this check. This is intentional.
@@ -329,7 +329,7 @@ nsRecyclingAllocator::FindFreeBlock(PRUint32 bytes)
     return block;
 }
 
-inline PRInt32
+PRInt32
 nsRecyclingAllocator::AddToFreeList(Block* block)
 {
     // Make sure we arent keeping more than mMaxBlocks
