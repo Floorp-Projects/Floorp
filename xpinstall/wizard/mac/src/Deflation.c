@@ -128,30 +128,40 @@ cleanup:
 }
 
 void
-EssentialFiles2Components(char *filename)
+WhackDirectories(char *filename)
 {
-	//  we know that filename has a big enough buffer for this
-	//  process because "essential files" is longer than "components"
-	//  Black Magic at work here.
+	// Level ouot essential files and components to satisfy
+	// lib loading and dependency resolution issues
+	
 	Ptr		componentPathStr 	= 0;
 	Ptr		tempStr				= 0;
 	Ptr		finalStr			= 0;
 	long	prefixLen			= 0;
+	long    skipLen             = 0;
 	
 	componentPathStr = NewPtrClear(strlen(filename) + 1);
 	finalStr		 = NewPtrClear(strlen(filename) + 1);
-	strcpy(componentPathStr, filename);
+	strcpy(componentPathStr, filename);				// e.g. HD:Target:Essential Files:foo.shlb
+													//   or HD:Target:Components:bar.shlb
 	LowercaseText(componentPathStr, strlen(componentPathStr), smSystemScript);
 	if((tempStr = strstr(componentPathStr, "essential files")) != NULL)
 	{
-		*tempStr = '\0';
-		prefixLen = strlen(componentPathStr);
-		*tempStr = 'e';
-		
-		strcpy(finalStr, filename);
-		strcpy(&finalStr[prefixLen], "Components");
-		strcpy(&finalStr[prefixLen + strlen("Components")], &filename[prefixLen + strlen("essential files")]);
+		prefixLen = tempStr - componentPathStr;		// e.g. HD:Target:
+
+		strncpy(finalStr, filename, prefixLen);  	// e.g. HD:Target:
+		skipLen = prefixLen + strlen("essential files") + 1;  // add 1 to skip over extra ':'
+		strcat(finalStr, filename + skipLen);
 		strcpy(filename, finalStr);
+	}
+	else
+	if ((tempStr = strstr(componentPathStr, "components")) != NULL)
+	{
+		prefixLen = tempStr - componentPathStr;		// e.g. HD:Target:
+
+		strncpy(finalStr, filename, prefixLen);  	// e.g. HD:Target:
+		skipLen = prefixLen + strlen("components") + 1;  // add 1 to skip over extra ':'
+		strcat(finalStr, filename + skipLen);
+		strcpy(filename, finalStr);					// e.g. HD:Target:foo.shlb
 	}
 
 	if(componentPathStr)
@@ -210,7 +220,7 @@ InflateFiles(void *hZip, void *hFind, short tgtVRefNum, long tgtDirID)
 		
 		/* create directories if file is nested in new subdirs */
 		SLASHES_2_COLONS(fullPathStr);
-		EssentialFiles2Components(fullPathStr);
+		WhackDirectories(fullPathStr);
 		err = DirCreateRecursive(fullPathStr);			
 		
 		if (err!=noErr)
