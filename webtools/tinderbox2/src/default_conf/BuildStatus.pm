@@ -1,8 +1,8 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 
 
-# $Revision: 1.9 $ 
-# $Date: 2001/12/14 20:19:10 $ 
+# $Revision: 1.10 $ 
+# $Date: 2002/04/25 00:36:46 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/BuildStatus.pm,v $ 
 # $Name:  $ 
@@ -91,8 +91,9 @@ package BuildStatus;
 
            'not_running'=> {
 
-                            # You may want this to be 'aqua' if you
-                            # need to distinguish from 'building'
+                            # You may want not want distinguish from
+                            # 'building', in that case change the
+                            # color to yellow.
 
                             'html_color'=>  'white',
                             'hdml_char'=> '.',
@@ -133,6 +134,22 @@ package BuildStatus;
                          'order' => 4,
                         },
           );
+
+sub get_status_handler {
+    my $buildstatus = @_;
+
+    my $handler = $BuildStatus::STATUS{$buildstatus}{'handler'};
+
+    return $handler;
+}
+
+sub set_status_handler {
+    my ($buildstatus, $handler) = @_;
+
+    $BuildStatus::STATUS{$buildstatus}{'handler'} = $handler;
+
+    return $handler;
+}
 
 # return true if and only if the status indicates that the build is
 # complete.
