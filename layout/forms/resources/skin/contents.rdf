@@ -56,5 +56,5 @@
   <!-- Version Information.  State that we work only with major version 1 of this
        package. -->
   <RDF:Description about="urn:mozilla:skin:classic/1.0:forms"
-    chrome:skinVersion="1.5"/>
+#expand     chrome:skinVersion="__MOZILLA_SKIN_VERSION__"/>
 </RDF:RDF>

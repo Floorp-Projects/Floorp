@@ -5,7 +5,7 @@ classic.jar:
   skin/classic/global/checkbox.css
   skin/classic/global/colorpicker.css
   skin/classic/global/autocomplete.css
-  skin/classic/global/contents.rdf
+* skin/classic/global/contents.rdf
   skin/classic/global/dialog.css
   skin/classic/global/filepicker.css
   skin/classic/global/formatting.css

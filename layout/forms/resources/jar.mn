@@ -1,5 +1,5 @@
 forms.jar:
-    content/forms/contents.rdf                (content/contents.rdf)
+*   content/forms/contents.rdf                (content/contents.rdf)
     content/forms/xbl-forms.css               (content/xbl-forms.css)
     content/forms/select.xml                  (content/select.xml)
     content/forms/checkbox.xml                (content/checkbox.xml)
@@ -7,7 +7,7 @@ forms.jar:
     content/forms/radio.xml                   (content/radio.xml)
     skin/classic/forms/button.css             (skin/button.css)
     skin/classic/forms/checkbox.css           (skin/checkbox.css)
-    skin/classic/forms/contents.rdf           (skin/contents.rdf)
+*   skin/classic/forms/contents.rdf           (skin/contents.rdf)
     skin/classic/forms/forms.css              (skin/forms.css)
     skin/classic/forms/radio.css              (skin/radio.css)
     skin/classic/forms/select.css             (skin/select.css)

@@ -51,7 +51,7 @@
 	chrome:description="Add extension calendar to Mozilla"
 	chrome:extension="true"
 	chrome:settingsURL="chrome://calendar/content/pref/prefBird.xul"
-        chrome:skinVersion="1.5">
+#expand         chrome:skinVersion="__MOZILLA_SKIN_VERSION__">
 </RDF:Description>
 
   <!-- overlay information -->
