@@ -180,8 +180,7 @@ nsTreeLayout::LayoutInternal(nsIBox* aBox, nsBoxLayoutState& aState)
     box->GetFrame(&childFrame);
     nsFrameState state;
     childFrame->GetFrameState(&state);
-    PRBool firstReflow = (state & NS_FRAME_FIRST_REFLOW);
-
+    
     PRBool isRow = PR_TRUE;
     nsXULTreeGroupFrame* childGroup = GetGroupFrame(box);
     if (childGroup) {
@@ -245,10 +244,6 @@ nsTreeLayout::LayoutInternal(nsIBox* aBox, nsBoxLayoutState& aState)
     
     box->SetBounds(aState, childRect);
 
-    nsXULTreeOuterGroupFrame* outer = GetOuterFrame(aBox);
-    if (outer && !isRow && firstReflow)
-      box->Redraw(aState, nsnull, PR_TRUE);
-
     if ((frame->GetOuterFrame()->GetTreeLayoutState() == eTreeLayoutAbort) || 
         (!frame->ContinueReflow(availableHeight)))
       break;
@@ -270,30 +265,19 @@ nsTreeLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
 
   if (isOuterGroup) {
     nsXULTreeOuterGroupFrame* outer = (nsXULTreeOuterGroupFrame*) frame;
-    outer->SetTreeLayoutState(eTreeLayoutNormal);
     nsTreeLayoutState state = outer->GetTreeLayoutState();
 
-#ifdef NS_DEBUG
-    PRInt32 loopCount = 0;
-#endif
-
-    do {
-#ifdef NS_DEBUG
-      NS_ASSERTION(loopCount < 10, "Row height keeps growing!!");
-      loopCount++;
-#endif
-      nsresult rv = LayoutInternal(aBox, aState);
-      if (NS_FAILED(rv)) return rv;
-      state = outer->GetTreeLayoutState();
-      if (state == eTreeLayoutDirtyAll)
-        outer->SetTreeLayoutState(eTreeLayoutNormal);
-      else if (state == eTreeLayoutAbort)
-        outer->SetTreeLayoutState(eTreeLayoutDirtyAll);
-      state = outer->GetTreeLayoutState();
-    } while (state == eTreeLayoutDirtyAll);
-  } else {
-    return LayoutInternal(aBox, aState);
+    nsresult rv = LayoutInternal(aBox, aState);
+    if (NS_FAILED(rv)) return rv;
+    state = outer->GetTreeLayoutState();
+    if (state == eTreeLayoutDirtyAll)
+      outer->SetTreeLayoutState(eTreeLayoutNormal);
+    else if (state == eTreeLayoutAbort)
+      outer->SetTreeLayoutState(eTreeLayoutDirtyAll);
+    state = outer->GetTreeLayoutState();
   }
+  else
+    return LayoutInternal(aBox, aState);
 
   return NS_OK;
 }
