@@ -157,7 +157,7 @@ libs:: fontEncoding.properties
 	$(INSTALL) $^ $(DIST)/bin/res/fonts
  
 install:: fontEncoding.properties
-	$(INSTALL) $^ $(DESTDIR)$(mozappdir)/res/fonts
+	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/res/fonts
 endif
 
 ifdef MOZ_ENABLE_GTK2
