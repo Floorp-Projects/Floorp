@@ -333,7 +333,7 @@ nsresult nsSOAPUtils::GetLocalName(const nsAString & aQName,
   if (i < 0)
     aLocalName = aQName;
   else
-    aQName.Mid(aLocalName, i, aQName.Length() - i);
+    aQName.Mid(aLocalName, i+1, aQName.Length() - i);
   return NS_OK;
 }
 

@@ -1011,7 +1011,7 @@ NS_IMETHODIMP nsDefaultEncoder::Decode(nsISOAPEncoding* aEncoding,
       if (NS_FAILED(rc)) return rc;
       rc = nsSOAPUtils::GetLocalName(explicittype, name);
       if (NS_FAILED(rc)) return rc;
-      rc = collection->GetType(ns, name, getter_AddRefs(type));
+      rc = collection->GetType(name, ns, getter_AddRefs(type));
 //      if (NS_FAILED(rc)) return rc;
     }
     if (!type) {
@@ -1020,7 +1020,7 @@ NS_IMETHODIMP nsDefaultEncoder::Decode(nsISOAPEncoding* aEncoding,
       rc = aSource->GetLocalName(name);
       if (NS_FAILED(rc)) return rc;
       nsCOMPtr<nsISchemaElement> element;
-      rc = collection->GetElement(ns, name, getter_AddRefs(element));
+      rc = collection->GetElement(name, ns, getter_AddRefs(element));
 //      if (NS_FAILED(rc)) return rc;
       if (element) {
         rc = element->GetType(getter_AddRefs(type));
@@ -1028,10 +1028,10 @@ NS_IMETHODIMP nsDefaultEncoder::Decode(nsISOAPEncoding* aEncoding,
       } 
       else if (ns.Equals(*nsSOAPUtils::kSOAPEncURI[mVersion])) {  	//  Last-ditch hack to get undeclared types from SOAP namespace
 	if (name.Equals(kArraySOAPType)) {			//  This should not be needed if schema has these declarations
-          rc = collection->GetType(ns, name, getter_AddRefs(type));
+          rc = collection->GetType(name, ns, getter_AddRefs(type));
 	}
 	else {
-          rc = collection->GetType(*nsSOAPUtils::kXSURI[mVersion], name, getter_AddRefs(type));
+          rc = collection->GetType(name, *nsSOAPUtils::kXSURI[mVersion], getter_AddRefs(type));
 	}
 //        if (NS_FAILED(rc)) return rc;
       }
@@ -1046,14 +1046,25 @@ NS_IMETHODIMP nsDefaultEncoder::Decode(nsISOAPEncoding* aEncoding,
       if (NS_FAILED(rc)) return rc;
       rc = lookupType->GetTargetNamespace(schemaURI);
       if (NS_FAILED(rc)) return rc;
+      PRUint16 typevalue;
+      rc = lookupType->GetSchemaType(&typevalue);
+      if (NS_FAILED(rc)) return rc;
+      // Special case builtin types so that the namespace for the
+      // type is the version that corresponds to our SOAP version.
+      if (typevalue == nsISchemaType::SCHEMA_TYPE_SIMPLE) {
+        nsCOMPtr<nsISchemaSimpleType> simpleType = do_QueryInterface(lookupType);
+        PRUint16 simpleTypeValue;
+        rc = simpleType->GetSimpleType(&simpleTypeValue);
+        if (NS_FAILED(rc)) return rc;
+        if (simpleTypeValue == nsISchemaSimpleType::SIMPLE_TYPE_BUILTIN) {
+          schemaURI.Assign(*nsSOAPUtils::kXSURI[mVersion]);
+        }
+      }
       nsAutoString encodingKey;
       SOAPEncodingKey(schemaURI, schemaType, encodingKey);
       rc = aEncoding->GetDecoder(encodingKey, getter_AddRefs(decoder));
       if (NS_FAILED(rc)) return rc;
       if (decoder) break;
-      PRUint16 typevalue;
-      rc = lookupType->GetSchemaType(&typevalue);
-      if (NS_FAILED(rc)) return rc;
       if (typevalue == nsISchemaType::SCHEMA_TYPE_COMPLEX) {
         nsCOMPtr<nsISchemaComplexType> oldtype = do_QueryInterface(lookupType);
         oldtype->GetBaseType(getter_AddRefs(lookupType));
@@ -1169,7 +1180,7 @@ NS_IMETHODIMP nsArrayEncoder::Decode(nsISOAPEncoding* aEncoding,
     if (NS_FAILED(rc)) return rc;
     rc = nsSOAPUtils::GetLocalName(value, name);
     if (NS_FAILED(rc)) return rc;
-    rc = collection->GetElement(ns, name, getter_AddRefs(element));
+    rc = collection->GetElement(name, ns, getter_AddRefs(element));
 //    if (NS_FAILED(rc)) return rc;
     if (element) {
       rc = element->GetType(getter_AddRefs(subtype));
