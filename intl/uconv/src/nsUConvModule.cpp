@@ -37,6 +37,7 @@
 #include "nsUConvDll.h"
 #include "nsFileSpec.h"
 #include "nsIFile.h"
+#include "nsIScriptableUConv.h"
 
 #include "nsUCvMinSupport.h"
 #include "nsISO88591ToUnicode.h"
@@ -47,6 +48,7 @@
 #include "nsUnicodeToCP1252.h"
 #include "nsUnicodeToMacRoman.h"
 #include "nsUnicodeToUTF8.h"
+#include "nsScriptableUConv.h"
 
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
@@ -56,6 +58,7 @@ static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CI
 static NS_DEFINE_CID(kCharsetMenuCID, NS_CHARSETMENU_CID);
 static NS_DEFINE_CID(kTextToSubURICID, NS_TEXTTOSUBURI_CID);
 static NS_DEFINE_CID(kPlatformCharsetCID, NS_PLATFORMCHARSET_CID);
+static NS_DEFINE_CID(kIScriptableUnicodeConverterCID, NS_ISCRIPTABLEUNICODECONVERTER_CID);
 
 // converters
 NS_DEFINE_CID(kISO88591ToUnicodeCID, NS_ISO88591TOUNICODE_CID);
@@ -66,6 +69,7 @@ NS_DEFINE_CID(kUnicodeToISO88591CID, NS_UNICODETOISO88591_CID);
 NS_DEFINE_CID(kUnicodeToCP1252CID, NS_UNICODETOCP1252_CID);
 NS_DEFINE_CID(kUnicodeToMacRomanCID, NS_UNICODETOMACROMAN_CID);
 NS_DEFINE_CID(kUnicodeToUTF8CID, NS_UNICODETOUTF8_CID);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsScriptableUnicodeConverter);
 
 class nsUConvModule : public nsIModule {
 public:
@@ -184,6 +188,10 @@ static Components gComponents[] = {
   { { "Unicode To UTF-8 Converter", NS_UNICODETOUTF8_CID,
       NS_UNICODETOUTF8_CONTRACTID, NS_NewUnicodeToUTF8 },
     "Unicode", "UTF-8", },
+
+  { { "Unicode Encoder / Decoder for Script", NS_ISCRIPTABLEUNICODECONVERTER_CID,
+      NS_ISCRIPTABLEUNICODECONVERTER_CONTRACTID, nsScriptableUnicodeConverterConstructor },
+    NULL, NULL, },
 };
 #define NUM_COMPONENTS (sizeof(gComponents) / sizeof(gComponents[0]))
 
