@@ -487,9 +487,9 @@ var nsSendPageCommand =
     // Check if we saved again just in case?
 	  if (DocumentHasBeenSaved())
     {
-      // Lauch Messenger Composer window with current page as contents
+      // Launch Messenger Composer window with current page as contents
       var pageTitle = window.editorShell.editorDocument.title;
-      var pageUrl = window.editorShell.editorDocument.location;
+      var pageUrl = window.editorShell.editorDocument.location.href;
       window.openDialog( "chrome://messenger/content/messengercompose/messengercompose.xul", "_blank", 
                          "chrome,all,dialog=no", 
                          "attachment='" + pageUrl.replace(/\,/g, "%2C") + "',body='" + pageUrl +
@@ -757,11 +757,11 @@ var nsInsertBreakCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return false;
+    return (window.editorShell && window.editorShell.documentEditable);
   },
   doCommand: function(aCommand)
   {
-    _EditorNotImplemented();
+    window.editorShell.InsertSource("<br>");
   }
 };
 
@@ -770,11 +770,11 @@ var nsInsertBreakAllCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return false;
+    return (window.editorShell && window.editorShell.documentEditable);
   },
   doCommand: function(aCommand)
   {
-    _EditorNotImplemented();
+    window.editorShell.InsertSource("<br clear='all'>");
   }
 };
 
@@ -1056,7 +1056,10 @@ var nsInsertOrEditTableCommand =
   },
   doCommand: function(aCommand)
   {
-    EditorInsertOrEditTable(true);
+    if (IsInTableCell())
+      EditorTableCellProperties();
+    else
+      EditorInsertOrEditTable(true);
   }
 };
 
