@@ -1,4 +1,5 @@
 libnss3.so
 libsmime3.so
 libsoftokn3.so
+libsoftokn3.chk
 libssl3.so

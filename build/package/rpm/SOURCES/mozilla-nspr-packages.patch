@@ -1,6 +1,6 @@
 --- mozilla/xpinstall/packager/packages-unix.foobar	Thu Feb 28 18:09:39 2002
 +++ mozilla/xpinstall/packager/packages-unix	Thu Feb 28 18:10:08 2002
-@@ -32,6 +32,18 @@
+@@ -32,6 +32,19 @@
  bin/defaults/profile/search.rdf
  bin/defaults/profile/mimeTypes.rdf
  
@@ -14,6 +14,7 @@
 +bin/libnss3.so
 +bin/libsmime3.so
 +bin/libsoftokn3.so
++bin/libsoftokn3.chk
 +bin/libssl3.so
 +
  [xpcom]
