@@ -1075,6 +1075,7 @@ function GetBackgroundElementWithColor()
   gColorObj.TableColor = "";
   gColorObj.CellColor = "";
   gColorObj.BackgroundColor = "";
+  gColorObj.SelectedType = "";
 
   var tagNameObj = new Object();
   var numSelected;
@@ -1105,6 +1106,7 @@ function GetBackgroundElementWithColor()
       gColorObj.Type = "Table";
       gColorObj.TableColor = gColorObj.BackgroundColor;
     }
+    gColorObj.SelectedType = gColorObj.Type;
   }
   else
   {

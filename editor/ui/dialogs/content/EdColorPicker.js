@@ -106,17 +106,17 @@ function Startup()
       TableOrCell = true;
       document.getElementById("TableOrCellGroup").setAttribute("collapsed", "false");
       haveTableRadio = true;
-      if (gColorObj.TableColor)
-      {
-        gColor = gColorObj.TableColor;
-        gDialog.CellOrTableGroup.selectedItem = gDialog.TableRadio;
-        gDialog.TableRadio.focus();
-      }
-      else 
+      if (gColorObj.SelectedType == "Cell")
       {
         gColor = gColorObj.CellColor;
         gDialog.CellOrTableGroup.selectedItem = gDialog.CellRadio;
         gDialog.CellRadio.focus();
+      }
+      else
+      {
+        gColor = gColorObj.TableColor;
+        gDialog.CellOrTableGroup.selectedItem = gDialog.TableRadio;
+        gDialog.TableRadio.focus();
       }
       break;
     case "Highlight":
