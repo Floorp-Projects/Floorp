@@ -170,7 +170,7 @@ var nsBrowserContentHandler = {
 
     try {
       var uriparam;
-      while (uriparam = cmdLine.handleFlagWithParam("new-window", false)) {
+      while ((uriparam = cmdLine.handleFlagWithParam("new-window", false))) {
         var uri = cmdLine.resolveURI(uriparam);
         openWindow(null, this.chromeURL, "_blank",
                    "chrome,dialog=no,all" + this.getFeatures(cmdLine),
@@ -305,7 +305,7 @@ var nsDefaultCommandLineHandler = {
 
     try {
       var ar;
-      while (ar = cmdLine.handleFlagWithParam("url", false)) {
+      while ((ar = cmdLine.handleFlagWithParam("url", false))) {
         urilist.push(cmdLine.resolveURI(ar));
       }
     }
