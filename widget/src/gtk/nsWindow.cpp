@@ -73,12 +73,11 @@ nsWindow::~nsWindow()
 {
   OnDestroy();
   gtk_widget_destroy(mWidget);
-#if 0
   if (nsnull != mGC) {
-    ::XFreeGC((Display *)GetNativeData(NS_NATIVE_DISPLAY),mGC);
+    gdk_gc_destroy(mGC);
     mGC = nsnull;
+//    ::XFreeGC((Display *)GetNativeData(NS_NATIVE_DISPLAY),mGC);
   }
-#endif
 }
 
 //-------------------------------------------------------------------------
@@ -144,7 +143,7 @@ NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
 
     mainWindow = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 // VBox for the menu, etc.
-    mVBox = gtk_vbox_new(FALSE, 3);
+    mVBox = gtk_vbox_new(FALSE, 0);
     gtk_widget_show (mVBox);
     gtk_container_add(GTK_CONTAINER(mainWindow), mVBox);
 
@@ -224,35 +223,12 @@ void nsWindow::InitCallbacks(char * aName)
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::Show(PRBool bState)
 {
-#ifdef DEBUG_pavlov
-  g_print("nsWindow::Show called with %d\n", bState);
-#endif
-  mShown = bState;
   if (bState) {
     if (mVBox) {                  // Toplevel
       gtk_widget_show (mVBox->parent);
     }
-    else if (mWidget) {
-      gtk_widget_show (mWidget);
-    } 
-    else {
-#ifdef DEBUG_shaver
-      g_print("showing a NULL-be-widgeted nsWindow: %p\n", this);
-#endif
-    }
-  } else {
-  // hide it
   }
-
-/*
-  mShown = bState;
-  if (bState) {
-    XtManageChild(mWidget);
-  }
-  else
-    XtUnmanageChild(mWidget);
-*/
-  return NS_OK;
+  return nsWidget::Show(bState);
 }
 
 //-------------------------------------------------------------------------
@@ -766,18 +742,16 @@ PRUint32 nsWindow::GetYCoord(PRUint32 aNewY)
 //-----------------------------------------------------
 //
 
-void nsWindow_ResetResize_Callback(gpointer call_data)
+gint nsWindow_ResetResize_Callback(gpointer p)
 {
-#if 0
-    nsWindow* widgetWindow = (nsWindow*)call_data;
+    nsWindow* widgetWindow = (nsWindow*)p;
     widgetWindow->SetResized(PR_FALSE);
-#endif
+    return FALSE;
 }
 
-void nsWindow_Refresh_Callback(gpointer call_data)
+gint nsWindow_Refresh_Callback(gpointer p)
 {
-#if 0
-    nsWindow* widgetWindow = (nsWindow*)call_data;
+    nsWindow* widgetWindow = (nsWindow*)p;
     nsRect bounds;
     widgetWindow->GetResizeRect(&bounds);
 
@@ -796,8 +770,7 @@ void nsWindow_Refresh_Callback(gpointer call_data)
     pevent.rect = (nsRect *)&bounds;
     widgetWindow->OnPaint(pevent);
 
-    XtAppAddTimeOut(gAppContext, 50, (XtTimerCallbackProc)nsWindow_ResetResize_Callback, widgetWindow);
-#endif
+    gtk_timeout_add (50, (GtkFunction)nsWindow_ResetResize_Callback, widgetWindow);
 }
 
 //
@@ -807,13 +780,15 @@ void nsWindow_Refresh_Callback(gpointer call_data)
 
 extern "C" void nsWindow_ResizeWidget(GtkWidget *w)
 {
-#if 0
   int width = 0;
   int height = 0;
   nsWindow *win = 0;
 
    // Get the new size for the window
-  XtVaGetValues(w, XmNuserData, &win, XmNwidth, &width, XmNheight, &height, nsnull);
+  win = gtk_object_get_user_data(GTK_OBJECT(w));
+  width = w->allocation.width;
+  height = w->allocation.height;
+//  XtVaGetValues(w, XmNuserData, &win, XmNwidth, &width, XmNheight, &height, nsnull);
 
    // Setup the resize rectangle for the window.
   nsRect bounds;
@@ -834,12 +809,11 @@ extern "C" void nsWindow_ResizeWidget(GtkWidget *w)
        // resizing. This is only needed for main (shell)
        // windows. This should be replaced with code that actually
        // Compresses the event queue.
-      XtAppAddTimeOut(gAppContext, 250, (XtTimerCallbackProc)nsWindow_Refresh_Callback, win);
+      gtk_timeout_add (250, (GtkFunction)nsWindow_Refresh_Callback, win);
     }
   }
 
   win->SetResized(PR_TRUE);
-#endif
 }
 
 NS_METHOD nsWindow::SetMenuBar(nsIMenuBar * aMenuBar)
