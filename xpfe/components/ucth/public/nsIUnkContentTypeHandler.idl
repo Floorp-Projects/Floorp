@@ -24,6 +24,8 @@
 #include "domstubs.idl"
 #include "nsIChannel.idl"
 
+interface nsIRequest;
+
 /*----------------------- nsIUnknownContentTypeHandler -------------------------
 | This file describes the interface for Mozilla's "unknown content-type        |
 | handler" component.  This component is notified whenever the browser         |
@@ -43,7 +45,7 @@
 [scriptable, uuid(a6cf90ef-15b3-11d2-932e-00805f8add32)]
 interface nsIUnknownContentTypeHandler : nsIAppShellComponent {
 
-    void HandleUnknownContentType( in nsIChannel aURL,
+    void HandleUnknownContentType( in nsIRequest request,
                                    in string aContentType, 
                                    in nsIDOMWindowInternal aWindow );
 };

@@ -119,9 +119,9 @@ interface nsIHTTPChannel : nsIChannel
 
 	/**
 	 * This is a kludge which tells the channel to create a separate thread with the
-	 * even queue for OpenInputStream or not
+	 * even queue for Open() or not
 	 */
-	attribute boolean openInputStreamHasEventQueue;
+	attribute boolean openHasEventQueue;
     
 };
 

@@ -116,15 +116,19 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
   // print a load error on bad status
   if (NS_FAILED(aStatus)) {
     if (aLoader) {
-      nsCOMPtr<nsIChannel> channel;
-      aLoader->GetChannel(getter_AddRefs(channel));
-      if (channel) {
+      nsCOMPtr<nsIRequest> request;
+      aLoader->GetRequest(getter_AddRefs(request));
+      if (request) {
         nsCOMPtr<nsIURI> uri;
-        channel->GetURI(getter_AddRefs(uri));
-        if (uri) {
-          char* uriSpec;
-          uri->GetSpec(&uriSpec);
-          printf("Failed to load %s\n", uriSpec ? uriSpec : "");
+        nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
+        if (channel) {
+            channel->GetURI(getter_AddRefs(uri));
+            if (uri) {
+                char* uriSpec;
+                uri->GetSpec(&uriSpec);
+                printf("Failed to load %s\n", uriSpec ? uriSpec : "");
+                CRTFREEIF(uriSpec);
+            }
         }
       }
     }

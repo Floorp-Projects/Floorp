@@ -23,6 +23,7 @@
 #include "nsISupports.idl"
 #include "nsIChannel.idl"
 
+interface nsIRequest;
 interface nsIURI;
 interface nsILoadGroup;
 interface nsIStreamObserver;
@@ -47,9 +48,7 @@ interface nsIStreamLoader : nsISupports
               in nsISupports ctxt,
               in nsILoadGroup loadGroup,
               in nsIInterfaceRequestor notificationCallbacks,
-              in nsLoadFlags loadAttributes,
-              in unsigned long bufferSegmentSize,
-              in unsigned long bufferMaxSize);
+              in nsLoadFlags loadAttributes);
 
     /**
      * Gets the number of bytes read so far.
@@ -57,9 +56,9 @@ interface nsIStreamLoader : nsISupports
     readonly attribute unsigned long numBytesRead;
 
     /**
-     * Gets the channel that loaded this file
+     * Gets the request that loaded this file
      */
-    readonly attribute nsIChannel channel;
+    readonly attribute nsIRequest request;
 
 };
 

@@ -64,15 +64,17 @@ PRLogModuleInfo* gDocLoaderLog = nsnull;
 
 
 #if defined(DEBUG)
-void GetURIStringFromChannel(nsIRequest *aRequest, nsXPIDLCString &aStr)
+void GetURIStringFromRequest(nsIRequest* request, nsXPIDLCString &aStr)
 {
-  nsCOMPtr<nsIChannel> channel;
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = NS_OK;
+  nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
 
-  channel = do_QueryInterface(aRequest, &rv);
-  if (NS_SUCCEEDED(rv))
-    rv = channel->GetURI(getter_AddRefs(uri));
+  if (!channel) {
+      aStr = "???";
+      return;
+  }
+
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = channel->GetURI(getter_AddRefs(uri));
 
   if (NS_SUCCEEDED(rv) && uri)
     rv = uri->GetSpec(getter_Copies(aStr));
@@ -439,7 +441,7 @@ nsDocLoaderImpl::Destroy()
 
   ClearChannelInfoList();
 
-  mDocumentChannel = null_nsCOMPtr();
+  mDocumentRequest = 0;
 
   mLoadGroup->SetGroupObserver(nsnull);
 
@@ -447,14 +449,15 @@ nsDocLoaderImpl::Destroy()
 }
 
 NS_IMETHODIMP
-nsDocLoaderImpl::OnStartRequest(nsIChannel *aChannel, nsISupports *aCtxt)
+nsDocLoaderImpl::OnStartRequest(nsIRequest *request, nsISupports *aCtxt)
 {
     // called each time a channel is added to the group.
     nsresult rv;
+    
+    nsCOMPtr<nsIChannel> aChannel = do_QueryInterface(request);
 
     if (!mIsLoadingDocument) {
         PRUint32 loadAttribs = 0;
-
         aChannel->GetLoadAttributes(&loadAttribs);
         if (loadAttribs & nsIChannel::LOAD_DOCUMENT_URI) {
             mIsLoadingDocument = PR_TRUE;
@@ -480,36 +483,38 @@ nsDocLoaderImpl::OnStartRequest(nsIChannel *aChannel, nsISupports *aCtxt)
 
         if (1 == count) {
             // This channel is associated with the entire document...
-            mDocumentChannel = aChannel;
-            mLoadGroup->SetDefaultLoadChannel(mDocumentChannel); 
+            mDocumentRequest = do_QueryInterface(request);
+            mLoadGroup->SetDefaultLoadRequest(mDocumentRequest); 
         
             // Update the progress status state
             mProgressStateFlags = nsIWebProgressListener::STATE_START;
 
             doStartDocumentLoad();
-            FireOnStartDocumentLoad(this, aChannel);
+            FireOnStartDocumentLoad(this, request);
         } 
         else {
-          doStartURLLoad(aChannel);
-          FireOnStartURLLoad(this, aChannel);
+          doStartURLLoad(request);
+          FireOnStartURLLoad(this, request);
         }
     }
     else {
       ClearChannelInfoList();
-      doStartURLLoad(aChannel);
-      FireOnStartURLLoad(this, aChannel);
+      doStartURLLoad(request);
+      FireOnStartURLLoad(this, request);
     }
     
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDocLoaderImpl::OnStopRequest(nsIChannel *aChannel, 
+nsDocLoaderImpl::OnStopRequest(nsIRequest *request, 
                                nsISupports *aCtxt, 
                                nsresult aStatus, 
                                const PRUnichar *aMsg)
 {
   nsresult rv = NS_OK;
+
+  nsCOMPtr<nsIChannel> aChannel = do_QueryInterface(request);
 
   //
   // Only fire the OnEndDocumentLoad(...) if the document loader 
@@ -543,8 +548,8 @@ nsDocLoaderImpl::OnStopRequest(nsIChannel *aChannel,
     //
     // Fire the OnStateChange(...) notification for stop request
     //
-    doStopURLLoad(aChannel, aStatus);
-    FireOnEndURLLoad(this, aChannel, aStatus);
+    doStopURLLoad(request, aStatus);
+    FireOnEndURLLoad(this, request, aStatus);
     
     rv = mLoadGroup->GetActiveCount(&count);
     if (NS_FAILED(rv)) return rv;
@@ -557,8 +562,8 @@ nsDocLoaderImpl::OnStopRequest(nsIChannel *aChannel,
     }
   }
   else {
-    doStopURLLoad(aChannel, aStatus); 
-    FireOnEndURLLoad(this, aChannel, aStatus);
+    doStopURLLoad(request, aStatus); 
+    FireOnEndURLLoad(this, request, aStatus);
   }
   
   return NS_OK;
@@ -577,7 +582,9 @@ nsresult nsDocLoaderImpl::RemoveChildGroup(nsDocLoaderImpl* aLoader)
 
 NS_IMETHODIMP nsDocLoaderImpl::GetDocumentChannel(nsIChannel ** aChannel)
 {
-  *aChannel = mDocumentChannel;
+    nsCOMPtr<nsIChannel> ourChannel = do_QueryInterface(mDocumentRequest);   
+
+  *aChannel = ourChannel.get();
   NS_IF_ADDREF(*aChannel);
   return NS_OK;
 }
@@ -598,9 +605,9 @@ void nsDocLoaderImpl::DocLoaderIsEmpty(nsresult aStatus)
       PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
              ("DocLoader:%p: Is now idle...\n", this));
 
-      nsCOMPtr<nsIChannel> docChannel(mDocumentChannel);
+      nsCOMPtr<nsIRequest> docRequest = mDocumentRequest;
 
-      mDocumentChannel = null_nsCOMPtr();
+      mDocumentRequest = null_nsCOMPtr();
       mIsLoadingDocument = PR_FALSE;
 
       // Update the progress status state - the document is done
@@ -614,15 +621,15 @@ void nsDocLoaderImpl::DocLoaderIsEmpty(nsresult aStatus)
       // New code to break the circular reference between 
       // the load group and the docloader... 
       // 
-      mLoadGroup->SetDefaultLoadChannel(nsnull); 
+      mLoadGroup->SetDefaultLoadRequest(nsnull); 
 
       //
       // Do nothing after firing the OnEndDocumentLoad(...). The document
       // loader may be loading a *new* document - if LoadDocument()
       // was called from a handler!
       //
-      doStopDocumentLoad(docChannel, loadGroupStatus);
-      FireOnEndDocumentLoad(this, docChannel, loadGroupStatus);
+      doStopDocumentLoad(docRequest, loadGroupStatus);
+      FireOnEndDocumentLoad(this, docRequest, loadGroupStatus);
 
       if (mParent) {
         mParent->DocLoaderIsEmpty(loadGroupStatus);
@@ -637,7 +644,7 @@ void nsDocLoaderImpl::doStartDocumentLoad(void)
 #if defined(DEBUG)
   nsXPIDLCString buffer;
 
-  GetURIStringFromChannel(mDocumentChannel, buffer);
+  GetURIStringFromRequest(mDocumentRequest, buffer);
   PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
          ("DocLoader:%p: ++ Firing OnStateChange for start document load (...)."
           "\tURI: %s \n",
@@ -645,10 +652,10 @@ void nsDocLoaderImpl::doStartDocumentLoad(void)
 #endif /* DEBUG */
 
   // Fire an OnStatus(...) notification STATE_START.  This indicates
-  // that the document represented by mDocumentChannel has started to
+  // that the document represented by mDocumentRequest has started to
   // load...
   FireOnStateChange(this,
-                    mDocumentChannel,
+                    mDocumentRequest,
                     nsIWebProgressListener::STATE_START |
                     nsIWebProgressListener::STATE_IS_DOCUMENT |
                     nsIWebProgressListener::STATE_IS_REQUEST |
@@ -656,12 +663,12 @@ void nsDocLoaderImpl::doStartDocumentLoad(void)
                     NS_OK);
 }
 
-void nsDocLoaderImpl::doStartURLLoad(nsIChannel *aChannel)
+void nsDocLoaderImpl::doStartURLLoad(nsIRequest *request)
 {
 #if defined(DEBUG)
   nsXPIDLCString buffer;
 
-  GetURIStringFromChannel(aChannel, buffer);
+  GetURIStringFromRequest(request, buffer);
     PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
           ("DocLoader:%p: ++ Firing OnStateChange start url load (...)."
            "\tURI: %s\n",
@@ -669,18 +676,18 @@ void nsDocLoaderImpl::doStartURLLoad(nsIChannel *aChannel)
 #endif /* DEBUG */
 
   FireOnStateChange(this,
-                    aChannel,
+                    request,
                     nsIWebProgressListener::STATE_START |
                     nsIWebProgressListener::STATE_IS_REQUEST,
                     NS_OK);
 }
 
-void nsDocLoaderImpl::doStopURLLoad(nsIChannel *aChannel, nsresult aStatus)
+void nsDocLoaderImpl::doStopURLLoad(nsIRequest *request, nsresult aStatus)
 {
 #if defined(DEBUG)
   nsXPIDLCString buffer;
 
-  GetURIStringFromChannel(aChannel, buffer);
+  GetURIStringFromRequest(request, buffer);
     PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
           ("DocLoader:%p: ++ Firing OnStateChange for end url load (...)."
            "\tURI: %s status=%x\n",
@@ -688,19 +695,19 @@ void nsDocLoaderImpl::doStopURLLoad(nsIChannel *aChannel, nsresult aStatus)
 #endif /* DEBUG */
 
   FireOnStateChange(this,
-                    aChannel,
+                    request,
                     nsIWebProgressListener::STATE_STOP |
                     nsIWebProgressListener::STATE_IS_REQUEST,
                     aStatus);
 }
 
-void nsDocLoaderImpl::doStopDocumentLoad(nsIChannel* aChannel,
+void nsDocLoaderImpl::doStopDocumentLoad(nsIRequest *request,
                                          nsresult aStatus)
 {
 #if defined(DEBUG)
   nsXPIDLCString buffer;
 
-  GetURIStringFromChannel(aChannel, buffer);
+  GetURIStringFromRequest(request, buffer);
   PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
          ("DocLoader:%p: ++ Firing OnStateChange for end document load (...)."
          "\tURI: %s Status=%x\n",
@@ -712,7 +719,7 @@ void nsDocLoaderImpl::doStopDocumentLoad(nsIChannel* aChannel,
   // current document has finished loading...
   //
   FireOnStateChange(this,
-                    aChannel,
+                    request,
                     nsIWebProgressListener::STATE_STOP |
                     nsIWebProgressListener::STATE_IS_DOCUMENT,
                     aStatus);
@@ -722,7 +729,7 @@ void nsDocLoaderImpl::doStopDocumentLoad(nsIChannel* aChannel,
   // current document has finished loading...
   //
   FireOnStateChange(this,
-                    aChannel,
+                    request,
                     nsIWebProgressListener::STATE_STOP |
                     nsIWebProgressListener::STATE_IS_WINDOW |
                     nsIWebProgressListener::STATE_IS_NETWORK,
@@ -733,18 +740,19 @@ void nsDocLoaderImpl::doStopDocumentLoad(nsIChannel* aChannel,
 
 
 void nsDocLoaderImpl::FireOnStartDocumentLoad(nsDocLoaderImpl* aLoadInitiator,
-                                              nsIChannel *aDocChannel)
+                                              nsIRequest *aDocRequest)
 {
   PRInt32 count;
 
   nsCOMPtr<nsIURI> uri;
+  nsCOMPtr<nsIChannel> aChannel = do_QueryInterface(aDocRequest);
 
-  aDocChannel->GetURI(getter_AddRefs(uri));
+  aChannel->GetURI(getter_AddRefs(uri));
 
 #if defined(DEBUG)
   nsXPIDLCString buffer;
 
-  GetURIStringFromChannel(aDocChannel, buffer);
+  GetURIStringFromRequest(aDocRequest, buffer);
   if (aLoadInitiator == this) {
     PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
            ("DocLoader:%p: ++ Firing OnStartDocumentLoad(...).\tURI: %s\n",
@@ -781,19 +789,19 @@ void nsDocLoaderImpl::FireOnStartDocumentLoad(nsDocLoaderImpl* aLoadInitiator,
    * Finally notify the parent...
    */
   if (mParent) {
-    mParent->FireOnStartDocumentLoad(aLoadInitiator, aDocChannel);
+    mParent->FireOnStartDocumentLoad(aLoadInitiator, aDocRequest);
   }
 }
 
 void nsDocLoaderImpl::FireOnEndDocumentLoad(nsDocLoaderImpl* aLoadInitiator,
-                                            nsIChannel *aDocChannel,
+                                            nsIRequest *aDocRequest,
                                             nsresult aStatus)
 									
 {
 #if defined(DEBUG)
   nsXPIDLCString buffer;
 
-  GetURIStringFromChannel(aDocChannel, buffer);
+  GetURIStringFromRequest(aDocRequest, buffer);
   if (aLoadInitiator == this) {
     PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
            ("DocLoader:%p: ++ Firing OnEndDocumentLoad(...)"
@@ -826,25 +834,25 @@ void nsDocLoaderImpl::FireOnEndDocumentLoad(nsDocLoaderImpl* aLoadInitiator,
       continue;
     }
 
-    observer->OnEndDocumentLoad(aLoadInitiator, aDocChannel, aStatus);
+    observer->OnEndDocumentLoad(aLoadInitiator, aDocRequest, aStatus);
   }
 
   /*
    * Next notify the parent...
    */
   if (mParent) {
-    mParent->FireOnEndDocumentLoad(aLoadInitiator, aDocChannel, aStatus);
+    mParent->FireOnEndDocumentLoad(aLoadInitiator, aDocRequest, aStatus);
   }
 }
 
 
 void nsDocLoaderImpl::FireOnStartURLLoad(nsDocLoaderImpl* aLoadInitiator,
-                                         nsIChannel* aChannel)
+                                         nsIRequest* aRequest)
 {
 #if defined(DEBUG)
   nsXPIDLCString buffer;
 
-  GetURIStringFromChannel(aChannel, buffer);
+  GetURIStringFromRequest(aRequest, buffer);
   if (aLoadInitiator == this) {
     PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
            ("DocLoader:%p: ++ Firing OnStartURLLoad(...)"
@@ -878,25 +886,25 @@ void nsDocLoaderImpl::FireOnStartURLLoad(nsDocLoaderImpl* aLoadInitiator,
       continue;
     }
 
-    observer->OnStartURLLoad(aLoadInitiator, aChannel);
+    observer->OnStartURLLoad(aLoadInitiator, aRequest);
   }
 
   /*
    * Finally notify the parent...
    */
   if (mParent) {
-    mParent->FireOnStartURLLoad(aLoadInitiator, aChannel);
+    mParent->FireOnStartURLLoad(aLoadInitiator, aRequest);
   }
 }
 
 
 void nsDocLoaderImpl::FireOnEndURLLoad(nsDocLoaderImpl* aLoadInitiator,
-                                       nsIChannel* aChannel, nsresult aStatus)
+                                       nsIRequest *request, nsresult aStatus)
 {
 #if defined(DEBUG)
   nsXPIDLCString buffer;
 
-  GetURIStringFromChannel(aChannel, buffer);
+  GetURIStringFromRequest(request, buffer);
   if (aLoadInitiator == this) {
     PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
            ("DocLoader:%p: ++ Firing OnEndURLLoad(...)"
@@ -929,14 +937,14 @@ void nsDocLoaderImpl::FireOnEndURLLoad(nsDocLoaderImpl* aLoadInitiator,
       continue;
     }
 
-    observer->OnEndURLLoad(aLoadInitiator, aChannel, aStatus);
+    observer->OnEndURLLoad(aLoadInitiator, request, aStatus);
   }
 
   /*
    * Finally notify the parent...
    */
   if (mParent) {
-    mParent->FireOnEndURLLoad(aLoadInitiator, aChannel, aStatus);
+    mParent->FireOnEndURLLoad(aLoadInitiator, request, aStatus);
   }
 }
 
@@ -1072,7 +1080,7 @@ nsresult nsDocLoaderImpl::GetMaxTotalProgress(PRInt32 *aMaxTotalProgress)
 // then turns around and makes the right web progress calls based on this information.
 ////////////////////////////////////////////////////////////////////////////////////
 
-NS_IMETHODIMP nsDocLoaderImpl::OnProgress(nsIChannel* aChannel, nsISupports* ctxt, 
+NS_IMETHODIMP nsDocLoaderImpl::OnProgress(nsIRequest *request, nsISupports* ctxt, 
                                           PRUint32 aProgress, PRUint32 aProgressMax)
 {
   nsChannelInfo *info;
@@ -1081,6 +1089,9 @@ NS_IMETHODIMP nsDocLoaderImpl::OnProgress(nsIChannel* aChannel, nsISupports* ctx
   //
   // Update the ChannelInfo entry with the new progress data
   //
+  nsCOMPtr<nsIChannel> aChannel = do_QueryInterface(request);
+
+
   info = GetChannelInfo(aChannel);
   if (info) {
     if ((0 == info->mCurrentProgress) && (0 == info->mMaxProgress)) {
@@ -1113,7 +1124,7 @@ NS_IMETHODIMP nsDocLoaderImpl::OnProgress(nsIChannel* aChannel, nsISupports* ctx
         flags |= nsIWebProgressListener::STATE_IS_DOCUMENT;
       }
 
-      FireOnStateChange(this, aChannel, flags, NS_OK);
+      FireOnStateChange(this, request, flags, NS_OK);
     }
 
     // Update the current progress count...
@@ -1130,7 +1141,7 @@ NS_IMETHODIMP nsDocLoaderImpl::OnProgress(nsIChannel* aChannel, nsISupports* ctx
 #if defined(DEBUG)
     nsXPIDLCString buffer;
 
-    GetURIStringFromChannel(aChannel, buffer);
+    GetURIStringFromRequest(request, buffer);
     PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
            ("DocLoader:%p OOPS - No Channel Info for: %s\n",
             this, (const char *)buffer));
@@ -1142,13 +1153,13 @@ NS_IMETHODIMP nsDocLoaderImpl::OnProgress(nsIChannel* aChannel, nsISupports* ctx
   //
   // Fire progress notifications out to any registered nsIWebProgressListeners
   //
-  FireOnProgressChange(this, aChannel, aProgress, aProgressMax, progressDelta,
+  FireOnProgressChange(this, request, aProgress, aProgressMax, progressDelta,
                        mCurrentTotalProgress, mMaxTotalProgress);
 
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDocLoaderImpl::OnStatus(nsIChannel* aChannel, nsISupports* ctxt, 
+NS_IMETHODIMP nsDocLoaderImpl::OnStatus(nsIRequest* aRequest, nsISupports* ctxt, 
                                         nsresult aStatus, const PRUnichar* aStatusArg)
 {
   //
@@ -1161,7 +1172,7 @@ NS_IMETHODIMP nsDocLoaderImpl::OnStatus(nsIChannel* aChannel, nsISupports* ctxt,
     nsXPIDLString msg;
     rv = sbs->FormatStatusMessage(aStatus, aStatusArg, getter_Copies(msg));
     if (NS_FAILED(rv)) return rv;
-    FireOnStatusChange(this, aChannel, aStatus, msg);
+    FireOnStatusChange(this, aRequest, aStatus, msg);
   }
   return NS_OK;
 }
@@ -1178,7 +1189,7 @@ void nsDocLoaderImpl::ClearInternalProgress()
 
 
 void nsDocLoaderImpl::FireOnProgressChange(nsDocLoaderImpl *aLoadInitiator,
-                                           nsIChannel *aChannel,
+                                           nsIRequest *request,
                                            PRInt32 aProgress,
                                            PRInt32 aProgressMax,
                                            PRInt32 aProgressDelta,
@@ -1198,7 +1209,7 @@ void nsDocLoaderImpl::FireOnProgressChange(nsDocLoaderImpl *aLoadInitiator,
 #if defined(DEBUG)
   nsXPIDLCString buffer;
 
-  GetURIStringFromChannel(aChannel, buffer);
+  GetURIStringFromRequest(request, buffer);
   PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
          ("DocLoader:%p: Progress (%s): curSelf: %d maxSelf: %d curTotal: %d maxTotal %d\n",
           this, (const char *)buffer, aProgress, aProgressMax, aTotalProgress, aMaxTotalProgress));
@@ -1225,7 +1236,7 @@ void nsDocLoaderImpl::FireOnProgressChange(nsDocLoaderImpl *aLoadInitiator,
         continue;
     }
 
-    listener->OnProgressChange(aLoadInitiator,aChannel,
+    listener->OnProgressChange(aLoadInitiator,request,
                                aProgress, aProgressMax,
                                aTotalProgress, aMaxTotalProgress);
   }
@@ -1234,7 +1245,7 @@ void nsDocLoaderImpl::FireOnProgressChange(nsDocLoaderImpl *aLoadInitiator,
 
   // Pass the notification up to the parent...
   if (mParent) {
-    mParent->FireOnProgressChange(aLoadInitiator, aChannel,
+    mParent->FireOnProgressChange(aLoadInitiator, request,
                                   aProgress, aProgressMax,
                                   aProgressDelta,
                                   aTotalProgress, aMaxTotalProgress);
@@ -1266,7 +1277,7 @@ void nsDocLoaderImpl::FireOnStateChange(nsIWebProgress *aProgress,
 #if defined(DEBUG)
   nsXPIDLCString buffer;
 
-  GetURIStringFromChannel(aRequest, buffer);
+  GetURIStringFromRequest(aRequest, buffer);
   PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
          ("DocLoader:%p: Status (%s): code: %x\n",
          this, (const char *)buffer, aStateFlags));
@@ -1470,17 +1481,17 @@ NS_IMETHODIMP nsDocLoaderImpl::OnRedirect(nsISupports * aContext, nsIURI * aNewL
    PRInt32 stateFlags = nsIWebProgressListener::STATE_REDIRECTING |
                         nsIWebProgressListener::STATE_IS_REQUEST |
                         nsIWebProgressListener::STATE_IS_NETWORK;
-   nsCOMPtr<nsIChannel> channel (do_QueryInterface(aContext));
+   nsCOMPtr<nsIRequest> request (do_QueryInterface(aContext));
    // if the current channel == the document channel (then we must be getting a redirect on the
    // actual document and not a part in the document so be sure to set the state is document flag
-   // and to reset mDocumentChannel...
-   if (channel.get() == mDocumentChannel.get())
+   // and to reset mDocumentRequest...
+   if (request.get() == mDocumentRequest.get())
    {
      stateFlags |= nsIWebProgressListener::STATE_IS_DOCUMENT;
-     mDocumentChannel = channel; // reset the document channel
+     mDocumentRequest = request; // reset the document channel
    }
 
-   FireOnStateChange(this, channel, stateFlags, NS_OK);
+   FireOnStateChange(this, request, stateFlags, NS_OK);
  }
 
  return NS_OK;

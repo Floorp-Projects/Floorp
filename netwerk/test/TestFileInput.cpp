@@ -110,7 +110,7 @@ public:
         return NS_OK;
     }
 
-    NS_IMETHOD OnStartRequest(nsIChannel* channel,
+    NS_IMETHOD OnStartRequest(nsIRequest *request,
                               nsISupports* context) {
         PR_EnterMonitor(mMonitor);
         printf("start binding\n"); 
@@ -119,7 +119,7 @@ public:
         return NS_OK;
     }
 
-    NS_IMETHOD OnDataAvailable(nsIChannel* channel, 
+    NS_IMETHOD OnDataAvailable(nsIRequest *request, 
                                nsISupports* context,
                                nsIInputStream *aIStream, 
                                PRUint32 aSourceOffset,
@@ -140,7 +140,7 @@ public:
         return NS_OK;
     }
 
-    NS_IMETHOD OnStopRequest(nsIChannel* channel, nsISupports* context,
+    NS_IMETHOD OnStopRequest(nsIRequest *request, nsISupports* context,
                              nsresult aStatus, const PRUnichar* aStatusArg) {
         nsresult rv;
         PR_EnterMonitor(mMonitor);
@@ -347,11 +347,11 @@ ParallelReadTest(char* dirName, nsIFileTransportService* fts)
         reader->QueryInterface(NS_GET_IID(nsIStreamListener), (void**)&listener);
         NS_ASSERTION(listener, "QI failed");
     
-        nsIChannel* trans;
+        nsITransport* trans;
         rv = fts->CreateTransport(file, PR_RDONLY, 0, &trans);
         NS_ASSERTION(NS_SUCCEEDED(rv), "create failed");
-
-        rv = trans->AsyncRead(nsnull, listener);
+        nsCOMPtr<nsIRequest> request;
+        rv = trans->AsyncRead(nsnull, listener, 0, -1, 0, getter_AddRefs(request));
         NS_ASSERTION(NS_SUCCEEDED(rv), "AsyncRead failed");
 
         // the reader thread will hang on to these objects until it quits

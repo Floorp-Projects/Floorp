@@ -34,8 +34,7 @@
 
 class nsDiskCacheRecord : public nsINetDataCacheRecord
 {
-  public:
-
+public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSINETDATACACHERECORD
 
@@ -46,15 +45,15 @@ class nsDiskCacheRecord : public nsINetDataCacheRecord
   // we need to invalidate the mFile's stat cache.
   NS_IMETHOD WriteComplete();
 
-  protected: 
+protected: 
 
-  nsDiskCacheRecord(nsIDBAccessor* db, nsNetDiskCache* aCache) ;
-  virtual ~nsDiskCacheRecord() ;
+  nsDiskCacheRecord(nsIDBAccessor* db, nsNetDiskCache* aCache);
+  virtual ~nsDiskCacheRecord();
 
-  NS_IMETHOD RetrieveInfo(void* aInfo, PRUint32 aInfoLength) ;
-  NS_IMETHOD Init(const char* key, PRUint32 length, PRInt32 ID) ;
+  NS_IMETHOD RetrieveInfo(void* aInfo, PRUint32 aInfoLength);
+  NS_IMETHOD Init(const char* key, PRUint32 length, PRInt32 ID);
 
-  nsresult GenInfo(void) ;
+  nsresult GenInfo(void);
 
 
   // The mFile we store might be out of date. Atlease
@@ -64,23 +63,23 @@ class nsDiskCacheRecord : public nsINetDataCacheRecord
   // file info.
   NS_IMETHOD UpdateFileInfo();
 
-  private:
+private:
 
-  char*                     mKey ;
-  PRUint32                  mKeyLength ;
-  PRInt32                   mRecordID ;
-  char*                     mMetaData ;
-  PRUint32                  mMetaDataLength ;
-  nsCOMPtr<nsIFile>    		mFile ;
-  nsCOMPtr<nsIDBAccessor>            mDB ; 
-  void*                     mInfo ;
-  PRUint32                  mInfoSize ;
-  PRUint32                  mNumChannels ;
-  nsNetDiskCache*           mDiskCache ;
+  char*                     mKey;
+  PRUint32                  mKeyLength;
+  PRInt32                   mRecordID;
+  char*                     mMetaData;
+  PRUint32                  mMetaDataLength;
+  nsCOMPtr<nsIFile>    		mFile;
+  nsCOMPtr<nsIDBAccessor>   mDB; 
+  void*                     mInfo;
+  PRUint32                  mInfoSize;
+  PRUint32                  mNumTransports;
+  nsNetDiskCache*           mDiskCache;
 
-  friend class nsDiskCacheRecordChannel ;
-  friend class nsDBEnumerator ;
-  friend class nsNetDiskCache ;
-} ;
+  friend class nsDiskCacheRecordTransport;
+  friend class nsDBEnumerator;
+  friend class nsNetDiskCache;
+};
 
 #endif // _NET_CACHEDDISKDATA_H_

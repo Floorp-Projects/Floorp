@@ -53,14 +53,13 @@ public:
   // nsIStreamObserver methods
   NS_DECL_NSISTREAMOBSERVER
 
-
   nsUnknownDecoder();
 
 protected:
   virtual ~nsUnknownDecoder();
 
-  void DetermineContentType(nsIChannel *aChannel);
-  nsresult FireListenerNotifications(nsIChannel *aChannel, nsISupports *aCtxt);
+  void DetermineContentType(nsIRequest* request);
+  nsresult FireListenerNotifications(nsIRequest* request, nsISupports *aCtxt);
 
 protected:
   nsCOMPtr<nsIStreamListener> mNextListener;

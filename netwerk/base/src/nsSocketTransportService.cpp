@@ -283,7 +283,7 @@ nsresult nsSocketTransportService::AddToSelectList(nsSocketTransport* aTransport
     }
     // Initialize/update the info in the entry...
     pfd = &mSelectFDSet[i];
-    pfd->fd        = aTransport->GetSocket();;
+    pfd->fd        = aTransport->GetSocket();
     pfd->in_flags  = aTransport->GetSelectFlags();
     pfd->out_flags = 0;
     // Add the FileDesc to the PRPollDesc list...
@@ -499,7 +499,7 @@ nsSocketTransportService::CreateTransport(const char* aHost,
                                           PRInt32 proxyPort, 
                                           PRUint32 bufferSegmentSize,
                                           PRUint32 bufferMaxSize, 
-                                          nsIChannel** aResult)
+                                          nsITransport** aResult)
 {
     return CreateTransportOfTypes(0, nsnull, aHost, aPort, proxyHost, proxyPort,
 				  bufferSegmentSize, bufferMaxSize, aResult);
@@ -513,7 +513,7 @@ nsSocketTransportService::CreateTransportOfType(const char* aSocketType,
                                                 PRInt32 proxyPort, 
                                                 PRUint32 bufferSegmentSize,
                                                 PRUint32 bufferMaxSize,
-                                                nsIChannel** aResult)
+                                                nsITransport** aResult)
 {
     const char * types[] = { aSocketType };
     return CreateTransportOfTypes(1, types, aHost, aPort, proxyHost, proxyPort,
@@ -529,7 +529,7 @@ nsSocketTransportService::CreateTransportOfTypes(PRUint32 socketTypeCount,
 						 PRInt32 proxyPort,
 						 PRUint32 bufferSegmentSize,
 						 PRUint32 bufferMaxSize,
-						 nsIChannel** aResult)
+						 nsITransport** aResult)
 {
     nsresult rv = NS_OK;
     
@@ -572,7 +572,7 @@ nsSocketTransportService::CreateTransportOfTypes(PRUint32 socketTypeCount,
 }
 
 NS_IMETHODIMP
-nsSocketTransportService::ReuseTransport(nsIChannel* i_Transport, 
+nsSocketTransportService::ReuseTransport(nsITransport* i_Transport, 
         PRBool * o_Reuse)
 {
     nsresult rv = NS_ERROR_FAILURE;
@@ -590,7 +590,7 @@ nsSocketTransportService::ReuseTransport(nsIChannel* i_Transport,
  */
 
 NS_IMETHODIMP
-nsSocketTransportService::Wakeup (nsIChannel* i_Transport)
+nsSocketTransportService::Wakeup (nsITransport* i_Transport)
 {
     nsSocketTransport *transport = NS_STATIC_CAST (nsSocketTransport *, i_Transport);
 

@@ -23,40 +23,35 @@
 #define _nsMemCacheChannel_h_
 
 #include "nsMemCacheRecord.h"
-#include "nsIChannel.h"
+#include "nsITransport.h"
+#include "nsIRequest.h"
 #include "nsIInputStream.h"
 #include "nsCOMPtr.h"
 
 
 class AsyncReadStreamAdaptor;
 
-class nsMemCacheChannel : public nsIChannel
+class nsMemCacheTransport : public nsITransport, public nsITransportRequest
 {
 public:
     // Constructors and Destructor
-    nsMemCacheChannel(nsMemCacheRecord *aRecord, nsILoadGroup *aLoadGroup);
-    virtual ~nsMemCacheChannel();
+    nsMemCacheTransport(nsMemCacheRecord *aRecord, nsILoadGroup *aLoadGroup);
+    virtual ~nsMemCacheTransport();
 
-    // Declare nsISupports methods
     NS_DECL_ISUPPORTS
-
-    // Declare nsIRequest methods
     NS_DECL_NSIREQUEST
-
-    // Declare nsIChannel methods
-    NS_DECL_NSICHANNEL
+    NS_DECL_NSITRANSPORTREQUEST
+    NS_DECL_NSITRANSPORT
 
 protected:
     void NotifyStorageInUse(PRInt32 aBytesUsed);
 
     nsCOMPtr<nsMemCacheRecord>   mRecord;
     nsCOMPtr<nsIInputStream>     mInputStream;
-    nsCOMPtr<nsISupports>        mOwner;
+    nsCOMPtr<nsIRequest>         mCurrentReadRequest;
     AsyncReadStreamAdaptor*      mAsyncReadStream; // non-owning pointer
     PRUint32                     mStartOffset;
     nsresult                     mStatus;
-
-    nsLoadFlags                  mLoadAttributes;
 
     friend class MemCacheWriteStreamWrapper;
     friend class AsyncReadStreamAdaptor;

@@ -264,7 +264,8 @@ NS_IMETHODIMP GtkMozEmbedChrome::OpenStream (const char *aBaseURI, const char *a
     return rv;
 
   // start our request
-  rv = mStreamListener->OnStartRequest(mChannel, NULL);
+  nsCOMPtr<nsIRequest> request = do_QueryInterface(mChannel); 
+  rv = mStreamListener->OnStartRequest(request, NULL);
   if (NS_FAILED(rv))
     return rv;
   
@@ -281,7 +282,8 @@ NS_IMETHODIMP GtkMozEmbedChrome::AppendToStream (const char *aData, gint32 aLen)
   rv = embedStream->Append(aData, aLen);
   if (NS_FAILED(rv))
     return rv;
-  rv = mStreamListener->OnDataAvailable(mChannel,
+  nsCOMPtr<nsIRequest> request = do_QueryInterface(mChannel); 
+  rv = mStreamListener->OnDataAvailable(request,
 					NULL,
 					mStream,
 					mOffset, /* offset */
@@ -297,7 +299,8 @@ NS_IMETHODIMP GtkMozEmbedChrome::CloseStream (void)
   nsresult rv;
   NS_ENSURE_STATE(mDoingStream);
   mDoingStream = PR_FALSE;
-  rv = mStreamListener->OnStopRequest(mChannel,
+  nsCOMPtr<nsIRequest> request = do_QueryInterface(mChannel); 
+  rv = mStreamListener->OnStopRequest(request,
 				      NULL,
 				      NS_OK,
 				      NULL);
@@ -531,7 +534,7 @@ NS_IMETHODIMP GtkMozEmbedChrome::GetProtocolHandler(nsIURI *aURI, nsIProtocolHan
 }
 
 NS_IMETHODIMP GtkMozEmbedChrome::DoContent(const char *aContentType, nsURILoadCommand aCommand,
-					   const char *aWindowTarget, nsIChannel *aOpenedChannel,
+					   const char *aWindowTarget, nsIRequest *request,
 					   nsIStreamListener **aContentHandler, PRBool *aAbortProcess)
 {
   PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::DoContent\n"));

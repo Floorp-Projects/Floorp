@@ -127,7 +127,7 @@ NS_IMETHODIMP
 RemoteHelperContentListener::DoContent(const char *aContentType,
 				       nsURILoadCommand aCommand,
 				       const char *aWindowTarget,
-				       nsIChannel *aOpenedChannel,
+				       nsIRequest *aOpenedRequest,
 				       nsIStreamListener **aContentHandler,
 				       PRBool *aAbortProcess)
 {

@@ -52,7 +52,7 @@ public:
   NS_IMETHOD GetContentType(nsAWritableString& aContentType) const;
 
   NS_IMETHOD StartDocumentLoad(const char* aCommand,
-                               nsIChannel* aChannel,
+                               nsIChannel* channel,
                                nsILoadGroup* aLoadGroup,
                                nsISupports* aContainer,
                                nsIStreamListener **aDocListener,

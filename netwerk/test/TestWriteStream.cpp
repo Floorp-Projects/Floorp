@@ -22,6 +22,7 @@
 
 #include "nsIFileTransportService.h"
 #include "nsIChannel.h"
+#include "nsITransport.h"
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
 #include "nsCOMPtr.h"
@@ -115,14 +116,12 @@ TestSyncWrite(char* filename, PRUint32 startPosition, PRInt32 length)
     rv = NS_NewLocalFile(filename, PR_FALSE, getter_AddRefs(fs));
     if (NS_FAILED(rv)) return rv ;
 
-    nsCOMPtr<nsIChannel> transport;
+    nsCOMPtr<nsITransport> transport;
     rv = fts->CreateTransport(fs, PR_RDWR | PR_CREATE_FILE, 0664,
                               getter_AddRefs(transport)) ;
     if (NS_FAILED(rv)) return rv ;
  
-    rv = transport->SetTransferOffset(startPosition);
-    if (NS_FAILED(rv)) return rv;
-    rv = transport->OpenOutputStream(getter_AddRefs(outStream)) ;
+    rv = transport->OpenOutputStream(startPosition, -1, 0, getter_AddRefs(outStream)) ;
     if (NS_FAILED(rv)) return rv;
     
     PRIntervalTime startTime = PR_IntervalNow();

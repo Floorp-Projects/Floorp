@@ -48,6 +48,7 @@ interface nsILoadGroup;
 interface nsIDocumentLoader;
 interface nsIProgressEventSink;
 interface nsIChannel;
+interface nsIRequest;
 interface nsIStreamListener;
 interface nsIInputStream;
 
@@ -115,7 +116,7 @@ interface nsIURILoader : nsISupports
   void dispatchContent(in string aContentType,
 					   in nsURILoadCommand aCommand,
 					   in string aWindowTarget,
-					   in nsIChannel aChannel, 
+					   in nsIRequest aRequest, 
 					   in nsISupports aCtxt,
 					   in nsIURIContentListener aContentListener,
 					   in nsISupports aSrcWindowContext,

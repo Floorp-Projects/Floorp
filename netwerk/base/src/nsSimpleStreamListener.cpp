@@ -38,21 +38,21 @@ NS_IMPL_ISUPPORTS3(nsSimpleStreamListener,
 //----------------------------------------------------------------------------
 //
 NS_IMETHODIMP
-nsSimpleStreamListener::OnStartRequest(nsIChannel *aChannel,
+nsSimpleStreamListener::OnStartRequest(nsIRequest *aRequest,
                                        nsISupports *aContext)
 {
     return mObserver ?
-        mObserver->OnStartRequest(aChannel, aContext) : NS_OK;
+        mObserver->OnStartRequest(aRequest, aContext) : NS_OK;
 }
 
 NS_IMETHODIMP
-nsSimpleStreamListener::OnStopRequest(nsIChannel *aChannel,
+nsSimpleStreamListener::OnStopRequest(nsIRequest* request,
                                       nsISupports *aContext,
                                       nsresult aStatus,
                                       const PRUnichar *aStatusText)
 {
     return mObserver ?
-        mObserver->OnStopRequest(aChannel, aContext, aStatus, aStatusText) : NS_OK;
+        mObserver->OnStopRequest(request, aContext, aStatus, aStatusText) : NS_OK;
 }
 
 //
@@ -61,7 +61,7 @@ nsSimpleStreamListener::OnStopRequest(nsIChannel *aChannel,
 //----------------------------------------------------------------------------
 //
 NS_IMETHODIMP
-nsSimpleStreamListener::OnDataAvailable(nsIChannel *aChannel,
+nsSimpleStreamListener::OnDataAvailable(nsIRequest* request,
                                         nsISupports *aContext,
                                         nsIInputStream *aSource,
                                         PRUint32 aOffset,

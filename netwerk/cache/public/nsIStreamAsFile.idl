@@ -21,7 +21,7 @@
  * Contributor(s): 
  *   Scott Furman, fur@netscape.com
  */
-#include "nsrootidl.idl"
+
 #include "nsISupports.idl"
 
 interface nsIFile;

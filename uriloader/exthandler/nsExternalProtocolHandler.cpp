@@ -144,28 +144,16 @@ nsresult nsExtProtocolChannel::OpenURL()
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsExtProtocolChannel::OpenInputStream(nsIInputStream **_retval)
+NS_IMETHODIMP nsExtProtocolChannel::Open(nsIInputStream **_retval)
 {
   OpenURL();  // force caller to abort.
   return NS_ERROR_FAILURE; // force caller to abort.
 }
 
-NS_IMETHODIMP nsExtProtocolChannel::OpenOutputStream(nsIOutputStream **_retval)
-{
-  NS_NOTREACHED("OpenOutputStream");
-	return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP nsExtProtocolChannel::AsyncRead(nsIStreamListener *listener, nsISupports *ctxt)
+NS_IMETHODIMP nsExtProtocolChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
 {
   OpenURL();
   return NS_ERROR_FAILURE; // force caller to abort.
-}
-
-NS_IMETHODIMP nsExtProtocolChannel::AsyncWrite(nsIStreamProvider *provider, nsISupports *ctxt)
-{
-  NS_NOTREACHED("AsyncWrite");
-	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsExtProtocolChannel::GetLoadAttributes(nsLoadFlags *aLoadAttributes)
@@ -199,83 +187,6 @@ NS_IMETHODIMP
 nsExtProtocolChannel::SetContentLength(PRInt32 aContentLength)
 {
   NS_NOTREACHED("SetContentLength");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsExtProtocolChannel::GetTransferOffset(PRUint32 *aTransferOffset)
-{
-  NS_NOTREACHED("GetTransferOffset");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsExtProtocolChannel::SetTransferOffset(PRUint32 aTransferOffset)
-{
-  NS_NOTREACHED("SetTransferOffset");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsExtProtocolChannel::GetTransferCount(PRInt32 *aTransferCount)
-{
-  NS_NOTREACHED("GetTransferCount");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsExtProtocolChannel::SetTransferCount(PRInt32 aTransferCount)
-{
-  NS_NOTREACHED("SetTransferCount");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsExtProtocolChannel::GetBufferSegmentSize(PRUint32 *aBufferSegmentSize)
-{
-  NS_NOTREACHED("GetBufferSegmentSize");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsExtProtocolChannel::SetBufferSegmentSize(PRUint32 aBufferSegmentSize)
-{
-  NS_NOTREACHED("SetBufferSegmentSize");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsExtProtocolChannel::GetBufferMaxSize(PRUint32 *aBufferMaxSize)
-{
-  NS_NOTREACHED("GetBufferMaxSize");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsExtProtocolChannel::SetBufferMaxSize(PRUint32 aBufferMaxSize)
-{
-  NS_NOTREACHED("SetBufferMaxSize");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsExtProtocolChannel::GetLocalFile(nsIFile* *file)
-{
-  NS_NOTREACHED("GetLocalFile");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsExtProtocolChannel::GetPipeliningAllowed(PRBool *aPipeliningAllowed)
-{
-  *aPipeliningAllowed = PR_FALSE;
-  return NS_OK;
-}
- 
-NS_IMETHODIMP
-nsExtProtocolChannel::SetPipeliningAllowed(PRBool aPipeliningAllowed)
-{
-  NS_NOTREACHED("SetPipeliningAllowed");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 

@@ -36,35 +36,24 @@ interface nsIStreamIO;
 typedef unsigned long nsLoadFlags;
 
 /**
- * The nsIChannel interface allows the user to construct I/O requests for
+ * The nsIChannel interface allows the user to construct get requests for
  * specific protocols, and manage them in a uniform way. Once a channel
  * is created (via nsIIOService::NewChannel), parameters for that request
  * may be set by using the channel attributes, or by QueryInterfacing to a
  * subclass of nsIChannel for protocol-specific parameters. Then the actual
  * request can be issued in one of several ways:
  *
- *      - AsyncRead and AsyncWrite allow for asynchronous requests, calling
- *        back the user's stream listener or provider,
- *      - OpenInputStream and OpenOutputStream allow for synchronous reads
- *        and writes on the underlying channel.
+ *      - AsyncOpen is used for asynchronous reading, calling back the
+ *        user's stream listener.
+ *      - Open is used for synchronous read on the underlying channel.
  *
  * After a request has been completed, the channel is still valid for
  * accessing protocol-specific results. For example, QueryInterfacing to 
  * nsIHTTPChannel allows response headers to be retrieved that result from
  * http transactions. 
  *
- * Note that a channel is really only valid for one request. Reusing a channel
- * after a request has completed for a subsequent request may have undefined
- * results, depending on the channel implementation.
- *
- * Also of note are a special kind of channel called "transports." Transports
- * also implement the nsIChannel interface, but operate at a lower level from
- * protocol channels. The socket and file transports are notable implementations
- * of transports and allow higher level channels to be implemented. The cache
- * may also behave as a transport, and possibly things like sound playing services
- * etc. Transports usually operate in a separate thread and often multiplex
- * multiple requests for the same kind of service or resources. 
  */
+
 [scriptable, uuid(1788e79e-f947-11d3-8cda-0060b0fc14a3)]
 interface nsIChannel : nsIRequest
 {
@@ -92,52 +81,6 @@ interface nsIChannel : nsIRequest
     attribute nsIURI URI;
 
     /**
-     * Accesses the start offset from the beginning of the data from/to which
-     * reads/writes will occur. Users may set the transferOffset before making
-     * any of the following requests: asyncOpen, asyncRead, asyncWrite,
-     * openInputStream, openOutputstream.
-     */
-    attribute unsigned long transferOffset;
-
-    /**
-     * Accesses the count of bytes to be transfered. For openInputStream and
-     * asyncRead, this specifies the amount to read, for asyncWrite, this
-     * specifies the amount to write (note that for openOutputStream, the
-     * end of the data can be signified simply by closing the stream). 
-     * If the transferCount is set after reading has been initiated, the
-     * amount specified will become the current remaining amount to read
-     * before the channel is closed (this can be useful if the content
-     * length is encoded at the start of the stream).
-     *
-     * A transferCount value of -1 means the amount is unspecified, i.e. 
-     * read or write all the data that is available.
-     */
-    attribute long transferCount;
-
-    /**
-     * Accesses the load attributes for the channel. E.g. setting the load 
-     * attributes with the LOAD_QUIET bit set causes the loading process to
-     * not deliver status notifications to the program performing the load,
-     * and to not contribute to keeping any nsILoadGroup it may be contained
-     * in from firing its OnLoadComplete notification.
-     */
-    attribute nsLoadFlags loadAttributes;
-
-    /**
-     * Returns the content MIME type of the channel if available. Note that the 
-     * content type can often be wrongly specified (wrong file extension, wrong
-     * MIME type, wrong document type stored on a server, etc.) and the caller
-     * most likely wants to verify with the actual data. 
-     */
-    attribute string contentType;
-
-    /**
-     * Returns the length of the data associated with the channel if available.
-     * If the length is unknown then -1 is returned.
-     */
-    attribute long contentLength;
-
-    /**
      * Accesses the owner corresponding to the entity that is 
      * responsible for this channel. Used by security code to grant
      * or deny privileges to mobile code loaded from this channel. 
@@ -154,49 +97,52 @@ interface nsIChannel : nsIRequest
     attribute nsILoadGroup loadGroup;
 
     /**
+     * Accesses the load attributes for the channel. E.g. setting the load 
+     * attributes with the LOAD_QUIET bit set causes the loading process to
+     * not deliver status notifications to the program performing the load,
+     * and to not contribute to keeping any nsILoadGroup it may be contained
+     * in from firing its OnLoadComplete notification.
+     */
+    attribute nsLoadFlags loadAttributes;
+
+    /**
      * Accesses the capabilities callbacks of the channel. This is set by clients
      * who wish to provide a means to receive progress, status and protocol-specific 
      * notifications.
      */
     attribute nsIInterfaceRequestor notificationCallbacks;
 
-    /** 
+    /**
      * Any security information about this channel.  This can be null.
      */
     readonly attribute nsISupports securityInfo;
 
     /**
-     * Accesses the buffer segment size. The buffer segment size is used as
-     * the initial size for any transfer buffers, and the increment size for
-     * whenever the buffer space needs to be grown.
-     * (Note this parameter is passed along to any underlying nsIPipe objects.)
-     * If unspecified, the channel implementation picks a default.
+     * Returns the content MIME type of the channel if available. Note that the 
+     * content type can often be wrongly specified (wrong file extension, wrong
+     * MIME type, wrong document type stored on a server, etc.) and the caller
+     * most likely wants to verify with the actual data. 
      */
-    attribute unsigned long bufferSegmentSize;
+    attribute string contentType;
 
     /**
-     * Accesses the buffer maximum size. The buffer maximum size is the limit
-     * size that buffer will be grown to before suspending the channel.
-     * (Note this parameter is passed along to any underlying nsIPipe objects.)
-     * If unspecified, the channel implementation picks a default.
+     * Returns the length of the data associated with the channel if available.
+     * If the length is unknown then -1 is returned.
      */
-    attribute unsigned long bufferMaxSize;
+    attribute long contentLength;
 
     /**
-     * Returns a local file to the channel's data if one exists, null otherwise.
-     */
-    readonly attribute nsIFile localFile;
+     * Open is used for synchronous read on the channel.
+     **/
+    nsIInputStream open();
 
-    /**
-     * Setting pipeliningAllowed causes the load of a URL (issued via
-     * asyncRead or asyncWrite) to be deferred in order to allow the request to
-     * be pipelined for greater throughput efficiency. Pipelined requests will
-     * be forced to load when the first non-pipelined request is issued.
-     */
-    attribute boolean pipeliningAllowed;
+    /** AsyncOpen is used for asynchronous reading, calling back the
+     *  user's stream listener.
+     **/
+    void asyncOpen(in nsIStreamListener listener, in nsISupports ctxt);
 
     ////////////////////////////////////////////////////////////////////////////
-    // Load attribute flags. These may be or'd together.
+    // Below are Load attribute flags which may be or'd together.
     ////////////////////////////////////////////////////////////////////////////
     /**
      * Note that more will follow for each protocol's implementation of a channel, 
@@ -287,41 +233,7 @@ interface nsIChannel : nsIRequest
 	 */
 	const unsigned long LOAD_REPLACE			   = 1 << 16;
 
-    ////////////////////////////////////////////////////////////////////////////
-    // nsIChannel operations
-    ////////////////////////////////////////////////////////////////////////////
-    
-    /**
-     * Opens a blocking input stream to the URI's specified source. This
-     * call may block until the input stream is available.
-     */
-    nsIInputStream openInputStream();
 
-    /**
-     * Opens a blocking output stream to the URI's specified destination. This
-     * call may block until the output stream is available.
-     */
-    nsIOutputStream openOutputStream();
-
-    /**
-     * Reads asynchronously from the URI's specified source. Notifications
-     * are provided to the stream listener on the calling thread.
-     *
-     * @param listener - notification handler.
-     * @param ctxt - application context passed to methods invoked on listener.
-     */
-    void asyncRead(in nsIStreamListener listener,
-                   in nsISupports ctxt);
-
-    /**
-     * Writes asynchronously to the URI's specified destination. Notifications
-     * are provided to the stream provider on the calling thread.
-     *
-     * @param provider - notification handler.
-     * @param ctxt - application context passed to methods invoked on provider.
-     */
-    void asyncWrite(in nsIStreamProvider provider,
-                    in nsISupports ctxt);
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -334,8 +246,7 @@ interface nsIChannel : nsIRequest
 [scriptable, uuid(308362ce-0d06-11d4-986e-00c04fa0cf4a)]
 interface nsIStreamIOChannel : nsIChannel
 {
-    void init(in nsIURI uri,
-              in nsIStreamIO io);
+    void init(in nsIURI uri, in nsIStreamIO io);
 };
 
 %{C++
