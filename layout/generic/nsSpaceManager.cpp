@@ -387,9 +387,9 @@ PRBool SpaceManager::CanJoinBands(BandRect* aBand, BandRect* aPrevBand)
 PRBool SpaceManager::JoinBands(BandRect* aBand, BandRect* aPrevBand)
 {
   if (CanJoinBands(aBand, aPrevBand)) {
-    nscoord topOfPrevBand = aPrevBand->top;
+    BandRect* startOfNextBand = aBand;
 
-    while (topOfPrevBand == aPrevBand->top) {
+    while (aPrevBand != startOfNextBand) {
       // Adjust the top of the band we're keeping, and then move to the next
       // rect within the band
       aBand->top = aPrevBand->top;
@@ -777,8 +777,8 @@ PRBool SpaceManager::RemoveRegion(nsIFrame* aFrame)
   }
 
   if (!frameInfo->rect.IsEmpty()) {
+    NS_ASSERTION(!mBandList.IsEmpty(), "no bands");
     BandRect* band = mBandList.Head();
-    NS_ASSERTION(band != &mBandList, "no band rects");
     BandRect* prevBand = nsnull;
     PRBool    prevFoundMatchingRect = PR_FALSE;
 
@@ -795,6 +795,9 @@ PRBool SpaceManager::RemoveRegion(nsIFrame* aFrame)
         PRBool  isSharedRect = PR_FALSE;
 
         if (rect->IsOccupiedBy(aFrame)) {
+          // Remember that we found a matching rect in this band
+          foundMatchingRect = PR_TRUE;
+
           if (rect->numFrames > 1) {
             // The band rect is occupied by more than one frame
             rect->RemoveFrame(aFrame);
@@ -804,23 +807,38 @@ PRBool SpaceManager::RemoveRegion(nsIFrame* aFrame)
             isSharedRect = PR_TRUE;
           } else {
             // The rect isn't shared so just delete it
+            BandRect* next = rect->Next();
             rect->Remove();
-          }
+            if (rect == band) {
+              // The rect we're deleting is the start of the band
+              if (topOfBand == next->top) {
+                band = next;
+              } else {
+                band = nsnull;
+              }
+            }
+            delete rect;
+            rect = next;
 
-          // Remember that we found a matching rect in this band
-          foundMatchingRect = PR_TRUE;
+            // We don't need to try and coalesce adjacent rects in this case
+            prevRect = nsnull;
+            prevIsSharedRect = PR_FALSE;
+            continue;
+          }
         }
            
-        // We need to try and coalesce adjacent rects iff we find a shared rect
-        // occupied by aFrame. If either this rect or the previous rect was
-        // shared and occupied by aFrame, then try and coalesce this rect and
-        // the previous rect
+        // If we found a shared rect occupied by aFrame, then we need to try
+        // and coalesce adjacent rects
         if (prevIsSharedRect || (isSharedRect && (nsnull != prevRect))) {
           NS_ASSERTION(nsnull != prevRect, "no previous rect");
           if ((prevRect->right == rect->left) && (prevRect->HasSameFrameList(rect))) {
             // Modify the current rect's left edge, and delete the previous rect
             rect->left = prevRect->left;
             prevRect->Remove();
+            if (prevRect == band) {
+              // the rect we're deleting is the start of the band
+              band = rect;
+            }
             delete prevRect;
           }
         }
@@ -829,25 +847,22 @@ PRBool SpaceManager::RemoveRegion(nsIFrame* aFrame)
         prevRect = rect;
         prevIsSharedRect = isSharedRect;
         rect = rect->Next();
-
-        if (rect == &mBandList) {
-          // No bands left
-          rect = nsnull;
-          break;
-        }
       } while (rect->top == topOfBand);
 
-      // If we found a matching rect in this band or the previous band then try
-      // join the two bands
-      if (prevFoundMatchingRect || (foundMatchingRect && (nsnull != prevBand))) {
-        // Try and join this band with the previous band
-        NS_ASSERTION(nsnull != prevBand, "no previous band");
-        JoinBands(band, prevBand);
+      if (nsnull != band) {
+        // If we found a rect occupied by aFrame in this band or the previous band
+        // then try to join the two bands
+        if (prevFoundMatchingRect || (foundMatchingRect && (nsnull != prevBand))) {
+          // Try and join this band with the previous band
+          NS_ASSERTION(nsnull != prevBand, "no previous band");
+          JoinBands(band, prevBand);
+        }
       }
 
       // Move to the next band
       prevFoundMatchingRect = foundMatchingRect;
-      band = rect;
+      prevBand = band;
+      band = (rect == &mBandList) ? nsnull : rect;
     }
   }
 
@@ -888,7 +903,7 @@ SpaceManager::FrameInfo* SpaceManager::CreateFrameInfo(nsIFrame*     aFrame,
 
 void SpaceManager::DestroyFrameInfo(FrameInfo* aFrameInfo)
 {
-  PL_HashTableRemove(mFrameInfoMap, (const void*)aFrameInfo);
+  PL_HashTableRemove(mFrameInfoMap, (const void*)aFrameInfo->frame);
   delete aFrameInfo;
 }
 
