@@ -24,6 +24,10 @@
 #ifndef nsHttp_h__
 #define nsHttp_h__
 
+#if defined(MOZ_LOGGING)
+#define FORCE_PR_LOG
+#endif
+
 #include "plstr.h"
 #include "prlog.h"
 #include "prtime.h"
@@ -50,6 +54,12 @@ extern PRLogModuleInfo *gHttpLog;
 #define LOG3(args) PR_LOG(gHttpLog, 3, args)
 #define LOG4(args) PR_LOG(gHttpLog, 4, args)
 #define LOG(args) LOG4(args)
+
+#define LOG1_ENABLED() PR_LOG_TEST(gHttpLog, 1)
+#define LOG2_ENABLED() PR_LOG_TEST(gHttpLog, 2)
+#define LOG3_ENABLED() PR_LOG_TEST(gHttpLog, 3)
+#define LOG4_ENABLED() PR_LOG_TEST(gHttpLog, 4)
+#define LOG_ENABLED() LOG4_ENABLED()
 
 // http default buffer geometry
 #define NS_HTTP_SEGMENT_SIZE 4096

@@ -107,7 +107,7 @@ nsHttpChannel::Init(nsIURI *uri,
 {
     nsresult rv;
 
-    LOG(("nsHttpChannel::Init [this=%x]\n"));
+    LOG(("nsHttpChannel::Init [this=%x]\n", this));
 
     NS_PRECONDITION(uri, "null uri");
 
@@ -1292,8 +1292,6 @@ nsHttpChannel::GetCredentials(const char *challenges,
                                    getter_Copies(result));
     if (NS_FAILED(rv)) return rv;
 
-    LOG(("generated creds: %s\n", result.get()));
-
     creds.Assign(result);
 
     // store these credentials in the cache.  we do this even though we don't
@@ -1511,7 +1509,7 @@ nsHttpChannel::AddAuthorizationHeaders()
                                                   mConnectionInfo->ProxyPort(),
                                                   nsnull, realm, creds);
             if (NS_SUCCEEDED(rv)) {
-                LOG(("adding Proxy_Authorization [creds=%s]\n", creds.get()));
+                LOG(("adding Proxy-Authorization request header\n"));
                 mRequestHead.SetHeader(nsHttp::Proxy_Authorization, creds.get());
             }
         }
@@ -1527,7 +1525,7 @@ nsHttpChannel::AddAuthorizationHeaders()
                                               realm,
                                               creds);
         if (NS_SUCCEEDED(rv)) {
-            LOG(("adding Authorization [creds=%s]\n", creds.get()));
+            LOG(("adding Authorization request header\n"));
             mRequestHead.SetHeader(nsHttp::Authorization, creds.get());
         }
     }
