@@ -447,9 +447,9 @@ void InitializeElementTable(void) {
     Initialize( 
       /*tag*/                             eHTMLTag_dir,
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-      /*autoclose starttags and endtags*/ 0,0,0,0,
-      /*parent,incl,exclgroups*/          kList, (kSelf|kFlowEntity), kNone,	
+	    /*rootnodes,endrootnodes*/          &gOLRootTags,&gOLRootTags,	
+      /*autoclose starttags and endtags*/ &gOLAutoClose, &gULCloseTags, 0,0,
+      /*parent,incl,exclgroups*/          kList, (kFlowEntity|kSelf), kNone,	
       /*special props, prop-range*/       0,kDefaultPropRange,
       /*special parents,kids,skip*/       0,&gULKids,eHTMLTag_unknown);
 
@@ -937,7 +937,7 @@ void InitializeElementTable(void) {
 	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
       /*parent,incl,exclgroups*/          kPreformatted, kFlowEntity, kNone,	//I'm allowing WAY too much in here. Spec says inline.
-      /*special props, prop-range*/       kNoStyleLeaksIn, kDefaultPropRange,
+      /*special props, prop-range*/       0, kDefaultPropRange,
       /*special parents,kids,skip*/       0,&gPreKids,eHTMLTag_unknown);
 
     Initialize( 
@@ -1387,9 +1387,12 @@ PRBool nsHTMLElement::IsBlockCloser(eHTMLTags aTag){
             (kHeading==gHTMLElements[aTag].mParentBits));
     if(!result) {
       // NOBR is a block closure - Ref. Bug# 24462
+      // DIR is a block closure -- Ref. Bug# 25845
+
       static eHTMLTags gClosers[]={ eHTMLTag_table,eHTMLTag_tbody,eHTMLTag_caption,eHTMLTag_dd,eHTMLTag_dt,
                                     /* eHTMLTag_td,eHTMLTag_tfoot,eHTMLTag_th,eHTMLTag_thead,eHTMLTag_tr, */
-                                    eHTMLTag_nobr,eHTMLTag_optgroup,eHTMLTag_ol,eHTMLTag_ul};
+                                    eHTMLTag_nobr,eHTMLTag_optgroup,eHTMLTag_ol,eHTMLTag_ul,eHTMLTag_dir};
+
       result=FindTagInSet(aTag,gClosers,sizeof(gClosers)/sizeof(eHTMLTag_body));
     }
   }

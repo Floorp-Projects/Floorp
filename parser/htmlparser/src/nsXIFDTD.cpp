@@ -313,25 +313,33 @@ eAutoDetectResult nsXIFDTD::CanParse(nsString& aContentType, nsString& aCommand,
     }
   }
   
-  nsString charset ="ISO-8859-1";
+  nsString charset("ISO-8859-1");
   PRInt32 offset;
   offset = aBuffer.Find(kXIFDocInfo);
-  if(kNotFound!=offset)
-  {
+
+  if(kNotFound!=offset) {
+
     offset = aBuffer.Find(kXIFCharset);
-    if (kNotFound!=offset)
-    {
+    if (kNotFound!=offset) {
+    
+        //begin by finding the start and end quotes in the string...
       PRInt32 start = aBuffer.FindChar('"',PR_FALSE,offset);
       PRInt32 end = aBuffer.FindChar('"',PR_FALSE,start+1);
 
-      if ((start != kNotFound) && (end != kNotFound))
-      {
-        charset = "";
-        for (PRInt32 i = start+1; i < end; i++)
-        {
+      if ((start != kNotFound) && (end != kNotFound)) {
+#if 0
+          //This is faster than using character iteration (used below)...
+          //(Why call 1 function when 30 single-character appends will do? :)
+        aBuffer.Mid(charset,start+1,(end-start)-1);
+
+#else
+          //I removed this old (SLOW) version in favor of calling the Mid() function 
+        charset.Truncate();
+        for (PRInt32 i = start+1; i < end; i++) {
           PRUnichar ch = aBuffer[i];
           charset.Append(ch);
         }
+#endif
       }
     }
   }
@@ -472,30 +480,6 @@ nsresult nsXIFDTD::HandleToken(CToken* aToken,nsIParser* aParser) {
   return result;
 }
 
-/**
- *  This method causes all tokens to be dispatched to the given tag handler.
- *
- *  @update  gess 3/25/98
- *  @param   aHandler -- object to receive subsequent tokens...
- *  @return	 error code (usually 0)
- */
-nsresult nsXIFDTD::CaptureTokenPump(nsITagHandler* aHandler) {
-  nsresult result=NS_OK;
-  return result;
-}
-
-/**
- *  This method releases the token-pump capture obtained in CaptureTokenPump()
- *
- *  @update  gess 3/25/98
- *  @param   aHandler -- object that received tokens...
- *  @return	 error code (usually 0)
- */
-nsresult nsXIFDTD::ReleaseTokenPump(nsITagHandler* aHandler){
-  nsresult result=NS_OK;
-  return result;
-}
-
 
 /**
  *  This method gets called when a start token has been 
@@ -543,12 +527,9 @@ nsresult nsXIFDTD::HandleTextToken(CToken* aToken) {
 
   nsresult result = NS_OK;
 
-  if (type == eXIFTag_text)
-  {
+  if (type == eXIFTag_text) {
     nsString& temp = aToken->GetStringValueXXX();
-
-    if (temp != "<xml version=\"1.0\"?>")
-    {
+    if (temp != "<xml version=\"1.0\"?>") {
       result= AddLeaf(node);
     }
   }
@@ -839,15 +820,13 @@ PRBool nsXIFDTD::IsHTMLContainer(eHTMLTags aTag) const {
   *
   */
 
-PRBool nsXIFDTD::GetAttribute(const nsIParserNode& aNode, const nsString& aKey, nsString& aValue)
-{
+PRBool nsXIFDTD::GetAttribute(const nsIParserNode& aNode, const nsString& aKey, nsString& aValue) {
   PRInt32   i;
   PRInt32   count = aNode.GetAttributeCount();
   for (i = 0; i < count; i++)
   {
     const nsString& key = aNode.GetKeyAt(i);
-    if (key.Equals(aKey))
-    {
+    if (key.Equals(aKey)) {
       const nsString& value = aNode.GetValueAt(i);
       aValue = value;
       aValue.StripChars("\"");
@@ -894,53 +873,6 @@ PRBool nsXIFDTD::GetAttributePair(nsIParserNode& aNode, nsString& aKey, nsString
     }
   }
   return hasValue;
-}
-
-
-
-/**
- * 
- * @update	gess12/28/98
- * @param 
- * @return
- */
-eHTMLTags nsXIFDTD::GetHTMLTag(const nsString& aName)
-{
-  eHTMLTags  tag = nsHTMLTags::LookupTag(aName);
-  return tag;
-}
-
-
-
-
-/**
- * 
- * @update	gess12/28/98
- * @param 
- * @return
- */
-eHTMLTags nsXIFDTD::GetStartTag(const nsIParserNode& aNode, nsString& aName)
-{
-  eXIFTags  type = (eXIFTags)aNode.GetNodeType();  
-  eHTMLTags tag = eHTMLTag_unknown;
-
-  switch (type)
-  {
-    case eXIFTag_container:
-    case eXIFTag_leaf:
-      if (GetAttribute(aNode,nsString("isa"),aName))
-        tag = GetHTMLTag(aName);
-    break;
-
-    case eXIFTag_css_stylesheet:
-      aName = "style";
-      tag = GetHTMLTag(aName);
-    break;  
-
-    default:
-    break;  
-  }
-  return tag;
 }
 
 
@@ -1083,27 +1015,29 @@ PRBool nsXIFDTD::StartTopOfStack()
 
 /**
  * 
- * @update	gess12/28/98
+ * @update	gess 02/07/00
  * @param 
  * @return
  */
 void nsXIFDTD::BeginStartTag(const nsIParserNode& aNode)
 {
   eXIFTags  type = (eXIFTags)aNode.GetNodeType();
-  eHTMLTags tag;
-  nsString  tagName;
+  eHTMLTags tag = eHTMLTag_unknown;
 
   switch (type)
   {
     case eXIFTag_container:
     case eXIFTag_leaf:
-        tag = GetStartTag(aNode,tagName);
+      {
+        nsAutoString tagName;
+        if (GetAttribute(aNode,nsString("isa"),tagName))
+          tag = nsHTMLTags::LookupTag(tagName);
+
         if (type == eXIFTag_container)
           PushHTMLTag(tag,tagName);  
  
-//        CToken*         token = new CStartToken(tagName);
-//        nsCParserNode*  node = new nsCParserNode(token);
         PushNodeAndToken(tagName);
+      }
       break;
     default:
       break;
@@ -1120,7 +1054,7 @@ void nsXIFDTD::AddEndTag(const nsIParserNode& aNode)
   PopHTMLTag(tag,name);
    
   // Create a parse node for form this token
-  CEndToken     token(*name);
+  CEndToken     token(tag);
   nsCParserNode node(&token);
 
   // close the container 
@@ -1505,17 +1439,11 @@ void nsXIFDTD::BeginCSSStyleSheet(const nsIParserNode& aNode)
       mMaxCSSSelectorWidth = temp;
   }
   
-  //const char* name = nsHTMLTags::GetStringValue(eHTMLTag_html);
 }
 
 void nsXIFDTD::EndCSSStyleSheet(const nsIParserNode& aNode)
 {
-  nsString tagName(nsHTMLTags::GetStringValue(eHTMLTag_style));
-
-  if (mLowerCaseTags == PR_TRUE)
-    tagName.ToLowerCase();
-  else
-    tagName.ToUpperCase();
+  nsAutoString tagName("style");
 
   CStartToken   startToken(tagName);
   nsCParserNode startNode((CToken*)&startToken);

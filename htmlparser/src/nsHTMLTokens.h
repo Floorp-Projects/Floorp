@@ -101,6 +101,7 @@ public:
                         CHTMLToken(eHTMLTags aTag);
                         CHTMLToken(const nsString& aString,eHTMLTags aTag=eHTMLTag_unknown);
     virtual void        SetStringValue(const char* name);
+    virtual nsString&   GetStringValueXXX(void);
 
 protected:
 };
@@ -113,8 +114,10 @@ protected:
  */
 class CStartToken: public CHTMLToken {
   public:
-                          CStartToken(eHTMLTags aTag);
-                          CStartToken(nsString& aName,eHTMLTags aTag=eHTMLTag_unknown);
+                          CStartToken(eHTMLTags aTag=eHTMLTag_unknown);
+                          CStartToken(const nsString& aString);
+                          CStartToken(const nsString& aName,eHTMLTags aTag);
+
     virtual nsresult      Consume(PRUnichar aChar,nsScanner& aScanner,PRInt32 aMode);
     virtual PRInt32       GetTypeID(void);
     virtual const char*   GetClassName(void);

@@ -77,6 +77,22 @@ void CHTMLToken::SetStringValue(const char* name){
   }
 }
 
+
+/**
+ *  This method retrieves the value of this internal string. 
+ *  
+ *  @update gess 3/25/98
+ *  @return nsString reference to internal string value
+ */
+nsString& CHTMLToken::GetStringValueXXX(void) {
+  if((eHTMLTag_unknown<mTypeID) && (eHTMLTag_userdefined!=mTypeID)) {
+    if(!mTextValue.Length()) {
+      mTextValue = nsHTMLTags::GetStringValue((nsHTMLTag) mTypeID);
+    }
+  }
+  return mTextValue;
+}
+
 /*
  *  constructor from tag id
  *  
@@ -97,12 +113,15 @@ CStartToken::CStartToken(eHTMLTags aTag) : CHTMLToken(aTag) {
  *  @param   
  *  @return  
  */
-CStartToken::CStartToken(nsString& aString,eHTMLTags aTag) : CHTMLToken(aString,aTag) {
+CStartToken::CStartToken(const nsString& aString) : CHTMLToken(aString) {
   mAttributed=PR_FALSE;
   mEmpty=PR_FALSE;
   mOrigin=-1;
 }
 
+CStartToken::CStartToken(const nsString& aName,eHTMLTags aTag) : CHTMLToken(aName,aTag) {
+  mTypeID=aTag;
+}
 
 /**
  * 
@@ -206,6 +225,7 @@ PRBool CStartToken::IsEmpty(void) {
  *  @update  gess 3/25/98
  *  @param   aChar -- last char consumed from stream
  *  @param   aScanner -- controller of underlying input source
+ *  @param   aMode -- 0=HTML; 1=text;
  *  @return  error result
  */
 nsresult CStartToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aMode) {
@@ -215,9 +235,20 @@ nsresult CStartToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aMode
    //Stop consuming as soon as you see a space or a '>'.
    //NOTE: We don't Consume the tag attributes here, nor do we eat the ">"
 
-  mTextValue=aChar;
-  nsresult result=aScanner.ReadIdentifier(mTextValue);
-  mTypeID = nsHTMLTags::LookupTag(mTextValue);
+  nsresult result=NS_OK;
+  if(0==aMode) {
+    nsSubsumeStr theSubstr;
+    result=aScanner.GetIdentifier(theSubstr);
+    mTypeID = (PRInt32)nsHTMLTags::LookupTag(theSubstr);
+    if(eHTMLTag_userdefined==mTypeID) {
+      mTextValue=theSubstr;
+    }
+  }
+  else {
+    mTextValue=aChar;
+    nsresult result=aScanner.ReadIdentifier(mTextValue);
+    mTypeID = nsHTMLTags::LookupTag(mTextValue);
+  }
 
    //Good. Now, let's skip whitespace after the identifier,
    //and see if the next char is ">". If so, we have a complete

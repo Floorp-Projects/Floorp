@@ -490,7 +490,7 @@ nsresult nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,CToken*& aToken,nsScan
   aToken=theRecycler->CreateTokenOfType(eToken_start,eHTMLTag_unknown);
   
   if(aToken) {
-    result= aToken->Consume(aChar,aScanner,mParseMode);  //tell new token to finish consuming text...    
+    result= aToken->Consume(aChar,aScanner,mPlainText);  //tell new token to finish consuming text...    
     if(NS_SUCCEEDED(result)) {
      
       AddToken(aToken,result,&mTokenDeque,theRecycler);

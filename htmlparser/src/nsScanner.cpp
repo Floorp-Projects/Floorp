@@ -646,6 +646,47 @@ nsresult nsScanner::SkipPast(nsString& aValidSet){
   return NS_OK;
 }
 
+/**
+ *  Consume characters until you did not find the terminal char
+ *  
+ *  @update  gess 3/25/98
+ *  @param   aString - receives new data from stream
+ *  @param   aIgnore - If set ignores ':','-','_'
+ *  @return  error code
+ */
+nsresult nsScanner::GetIdentifier(nsSubsumeStr& aString) {
+
+  PRUnichar         theChar=0;
+  nsresult          result=Peek(theChar);
+  const PRUnichar*  theBuf=mBuffer.GetUnicode();
+  PRInt32           theOrigin=mOffset;
+  PRBool            found=PR_FALSE;  
+
+  while(NS_OK==result) {
+ 
+    theChar=theBuf[mOffset++];
+    if(theChar) {
+      found=PR_FALSE;
+      if(('a'<=theChar) && (theChar<='z'))
+        found=PR_TRUE;
+      else if(('A'<=theChar) && (theChar<='Z'))
+        found=PR_TRUE;
+      else if(('0'<=theChar) && (theChar<='9'))
+        found=PR_TRUE;
+
+      if(!found) {
+        mOffset-=1;
+        PRUnichar* thePtr=(PRUnichar*)&theBuf[theOrigin-1];
+        aString.Subsume(thePtr,PR_FALSE,mOffset-theOrigin+1);
+        break;
+      }
+    }
+  }
+
+  //DoErrTest(aString);
+
+  return result;
+}
 
 /**
  *  Consume characters until you did not find the terminal char

@@ -41,6 +41,7 @@
 #include "nsIChannel.h"
 #include "nsIProgressEventSink.h"
 #include "nsIBufferInputStream.h"
+#include "CRTFDTD.h"
 
 //#define rickgdebug 
 
@@ -98,7 +99,7 @@ public:
     mDTDDeque.Push(theDTD);
 
     mHasViewSourceDTD=PR_FALSE;
-    mHasXMLDTD=PR_FALSE;
+    mHasRTFDTD=mHasXMLDTD=PR_FALSE;
   }
 
   ~CSharedParserObjects() {
@@ -122,6 +123,7 @@ public:
   nsDeque mDTDDeque;
   PRBool  mHasViewSourceDTD;  //this allows us to defer construction of this object.
   PRBool  mHasXMLDTD;         //also defer XML dtd construction
+  PRBool  mHasRTFDTD;         //also defer RTF dtd construction
 };
 
 static CSharedParserObjects* gSharedParserObjects=0;
@@ -415,6 +417,10 @@ PRBool FindSuitableDTD( CParserContext& aParserContext,nsString& aCommand,nsStri
 
   CSharedParserObjects& gSharedObjects=GetSharedObjects();
 
+#if 0
+  aParserContext.mSourceType="text/rtf";
+#endif
+
   aParserContext.mAutoDetectStatus=eUnknownDetect;
   PRInt32 theDTDIndex=0;
   nsIDTD* theBestDTD=0;
@@ -444,6 +450,11 @@ PRBool FindSuitableDTD( CParserContext& aParserContext,nsString& aCommand,nsStri
         gSharedObjects.mDTDDeque.Push(theDTD);
         gSharedObjects.mHasViewSourceDTD=PR_TRUE;
       }
+      else if(!gSharedObjects.mHasRTFDTD) {
+        NS_NewRTF_DTD(&theDTD);  //do this so all non-html files can be viewed...
+        gSharedObjects.mDTDDeque.Push(theDTD);
+        gSharedObjects.mHasRTFDTD=PR_TRUE;
+      }
     }
   }
 
@@ -471,54 +482,48 @@ eParseMode DetermineParseMode(nsParser& aParser) {
   eParseMode result=eParseMode_unknown;
   nsScanner* theScanner=aParser.GetScanner();
   if(theScanner){
-    nsAutoString theBufCopy;
     nsString& theBuffer=theScanner->GetBuffer();
-    theBuffer.Left(theBufCopy,125);
-    PRInt32 theIndex=theBufCopy.Find("<!");
-    theIndex=(theIndex!=kNotFound)? theIndex=theBufCopy.Find("DOCTYPE",PR_TRUE,2):kNotFound;
+
+    PRInt32 theIndex=theBuffer.Find("<!",PR_FALSE,-1);
+    if(kNotFound<theIndex)
+      theIndex=theBuffer.Find("DOCTYPE",PR_TRUE,theIndex+1,10);
 
     if(kNotFound<theIndex) {
       //good, we found "DOCTYPE" -- now go find it's end delimiter '>'
-      theBufCopy.StripWhitespace();
-      PRInt32 theSubIndex=theBufCopy.FindChar(kGreaterThan,theIndex+1);
-      theBufCopy.Truncate(theSubIndex);
-      theSubIndex=theBufCopy.Find("-//W3C//DTD",PR_TRUE,theIndex+8);
+      PRInt32 theEnd=theBuffer.FindChar(kGreaterThan,theIndex+1);
+      PRInt32 theSubIndex=theBuffer.Find("-//W3C//DTD",PR_TRUE,theIndex+8,theEnd-(theIndex+8));
       if(kNotFound<theSubIndex) {
-        if(kNotFound<(theSubIndex=theBufCopy.Find("HTML4.0",PR_TRUE,theSubIndex+11))) {
-          PRUnichar num=theBufCopy.CharAt(theSubIndex+7);
-          if(num > '0' && num < '9') {
-            result=eParseMode_noquirks; // XXX - investigate this more.
-          }
-          else if((theBufCopy.Find("TRANSITIONAL",PR_TRUE,theSubIndex+7)>kNotFound)||
-             (theBufCopy.Find("FRAMESET",PR_TRUE,theSubIndex+7)>kNotFound)    ||
-             (theBufCopy.Find("LATIN1", PR_TRUE,theSubIndex+7) >kNotFound)    ||
-             (theBufCopy.Find("SYMBOLS",PR_TRUE,theSubIndex+7) >kNotFound)    ||
-             (theBufCopy.Find("SPECIAL",PR_TRUE,theSubIndex+7) >kNotFound))
+        if(kNotFound<(theSubIndex=theBuffer.Find("HTML 4",PR_TRUE,theSubIndex+11,theEnd-(theSubIndex+11)))) {
+          if((theBuffer.Find("TRANSITIONAL",PR_TRUE,theSubIndex+7)>kNotFound)||
+             (theBuffer.Find("FRAMESET",PR_TRUE,theSubIndex+7)>kNotFound)    ||
+             (theBuffer.Find("LATIN1", PR_TRUE,theSubIndex+7) >kNotFound)    ||
+             (theBuffer.Find("SYMBOLS",PR_TRUE,theSubIndex+7) >kNotFound)    ||
+             (theBuffer.Find("SPECIAL",PR_TRUE,theSubIndex+7) >kNotFound))
             result=eParseMode_quirks; // XXX -HACK- Set the appropriate mode.
           else
             result=eParseMode_noquirks;
         }
-        else if(kNotFound<(theSubIndex=theBufCopy.Find("XHTML",PR_TRUE,theSubIndex+11))) {
-          if((theBufCopy.Find("TRANSITIONAL",PR_TRUE,theSubIndex)>kNotFound)||
-             (theBufCopy.Find("STRICT",PR_TRUE,theSubIndex)   >kNotFound)   ||
-             (theBufCopy.Find("FRAMESET",PR_TRUE,theSubIndex) >kNotFound))
+        else if(kNotFound<(theSubIndex=theBuffer.Find("XHTML",PR_TRUE,theSubIndex+11))) {
+          if((theBuffer.Find("TRANSITIONAL",PR_TRUE,theSubIndex)>kNotFound)||
+             (theBuffer.Find("STRICT",PR_TRUE,theSubIndex)   >kNotFound)   ||
+             (theBuffer.Find("FRAMESET",PR_TRUE,theSubIndex) >kNotFound))
             result=eParseMode_noquirks;
           else
             result=eParseMode_quirks;
         }
       }
-      else if(kNotFound<(theSubIndex=theBufCopy.Find("ISO/IEC15445:1999",PR_TRUE,theIndex+8))) {
-        theSubIndex=theBufCopy.Find("HTML",PR_TRUE,theSubIndex+18);
+      else if(kNotFound<(theSubIndex=theBuffer.Find("ISO/IEC15445:1999",PR_TRUE,theIndex+8))) {
+        theSubIndex=theBuffer.Find("HTML",PR_TRUE,theSubIndex+18);
         if(kNotFound==theSubIndex)
-          theSubIndex=theBufCopy.Find("HYPERTEXTMARKUPLANGUAGE",PR_TRUE,theSubIndex+18);
+          theSubIndex=theBuffer.Find("HYPERTEXTMARKUPLANGUAGE",PR_TRUE,theSubIndex+18);
         result=eParseMode_noquirks;
       }
     }
-    else if(kNotFound<(theIndex=theBufCopy.Find("?XML",PR_TRUE))) {
+    else if(kNotFound<(theIndex=theBuffer.Find("?XML",PR_TRUE))) {
         result=eParseMode_noquirks;
     }
     else {
-      theIndex=theBufCopy.Find("NOQUIRKS",PR_TRUE);
+      theIndex=theBuffer.Find("NOQUIRKS",PR_TRUE);
       if(kNotFound<theIndex) {
         result=eParseMode_noquirks;
       }
@@ -935,7 +940,7 @@ nsresult nsParser::ParseFragment(const nsString& aSourceBuffer,void* aKey,nsITag
     theBuffer.Append("<title>title</title><a href=\"one\">link</a>");
 #else
       //this is the normal code path for paste...
-    theBuffer.Append(aSourceBuffer);  
+    theBuffer.Append(aSourceBuffer); 
 #endif
 
   if(theBuffer.Length()){
@@ -1389,10 +1394,11 @@ nsresult nsParser::OnStopRequest(nsIChannel* channel, nsISupports* aContext,
   nsresult result=NS_OK;
   
   if(eOnStart==mParserContext->mStreamListenerState) {
+
     //If you're here, then OnDataAvailable() never got called. 
     //Prior to necko, we never dealt with this case, but the problem may have existed.
-    //What we'll do (for now at least) is construct the worlds smallest HTML document.
-    nsAutoString  temp("<BODY></BODY>");
+    //What we'll do (for now at least) is construct a blank HTML document.
+    nsAutoString  temp("<html><body></body></html>");
     mParserContext->mScanner->Append(temp);
     result=ResumeParse(nsnull, PR_TRUE);    
   }
@@ -1484,7 +1490,8 @@ nsresult nsParser::Tokenize(PRBool aIsFinalChunk){
         else if(NS_ERROR_HTMLPARSER_STOPPARSING==result)
           return Terminate();
       }
-      else if(flushTokens) {
+      else if(flushTokens && mObserversEnabled) {
+        // I added the extra test of mObserversEnabled to fix Bug# 23931.
         // Flush tokens on seeing </SCRIPT> -- Ref: Bug# 22485 --
         // Also remember to update the marked position.
         mParserContext->mScanner->Mark();

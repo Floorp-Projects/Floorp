@@ -57,6 +57,7 @@ public:
 
   static nsHTMLTag LookupTag(const nsStr& aTag);
   static const nsCString& GetStringValue(nsHTMLTag aEnum);
+  static const char* GetCStringValue(nsHTMLTag aEnum);
 };
 
 #endif /* nsHTMLTags_h___ */

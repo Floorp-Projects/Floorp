@@ -64,7 +64,6 @@ class CToken;
 class nsIDTDDebug;
 class nsIURI;
 class nsString;
-class nsITagHandler;
 class nsIContentSink;
 
 
@@ -150,24 +149,6 @@ class nsIDTD : public nsISupports {
 
 
     virtual  nsITokenRecycler* GetTokenRecycler(void)=0;
-
-    /**
-     *  This method causes all tokens to be dispatched to the given tag handler.
-     *
-     *  @update  gess 3/25/98
-  	 *  @param   aHandler -- object to receive subsequent tokens...
-	   *  @return	 error code (usually 0)
-     */
-    NS_IMETHOD CaptureTokenPump(nsITagHandler* aHandler)=0;
-
-    /**
-     *  This method releases the token-pump capture obtained in CaptureTokenPump()
-     *
-     *  @update  gess 3/25/98
-  	 *  @param   aHandler -- object that received tokens...
-	   *  @return	 error code (usually 0)
-     */
-    NS_IMETHOD ReleaseTokenPump(nsITagHandler* aHandler)=0;
 
     /**
      * If the parse process gets interrupted midway, this method is called by the

@@ -189,25 +189,6 @@ class nsXIFDTD : public nsIDTD {
     NS_IMETHOD HandleToken(CToken* aToken,nsIParser* aParser);
 
     /**
-     *  This method causes all tokens to be dispatched to the given tag handler.
-     *
-     *  @update  gess 3/25/98
-  	 *  @param   aHandler -- object to receive subsequent tokens...
-	   *  @return	 error code (usually 0)
-     */
-    NS_IMETHOD CaptureTokenPump(nsITagHandler* aHandler);
-
-    /**
-     *  This method releases the token-pump capture obtained in CaptureTokenPump()
-     *
-     *  @update  gess 3/25/98
-  	 *  @param   aHandler -- object that received tokens...
-	   *  @return	 error code (usually 0)
-     */
-    NS_IMETHOD ReleaseTokenPump(nsITagHandler* aHandler);
-
-
-    /**
      * 
      * @update	gpk 06/18/98
      * @param 
@@ -450,14 +431,12 @@ private:
 
     
     void      AddAttribute(nsIParserNode& aNode);
-    eHTMLTags GetHTMLTag(const nsString& aName);    
     void      PushHTMLTag(const eHTMLTags aTag, const nsString& aName);
     void      PopHTMLTag(eHTMLTags& aTag, nsString*& aName);
 
     PRBool    GetAttributePair(nsIParserNode& aNode, nsString& aKey, nsString& aValue);
     PRBool    GetAttribute(const nsIParserNode& aNode, const nsString& aKey, nsString& aValue);
     void      BeginStartTag(const nsIParserNode& aNode);
-    eHTMLTags GetStartTag(const nsIParserNode& aNode, nsString& aName);
     void      AddEndTag(const nsIParserNode& aNode);
     void      AddEndCommentTag(const nsIParserNode& aNode);
 
