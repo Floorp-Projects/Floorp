@@ -511,7 +511,7 @@ xt_client_create ( XtClient* xtclient ,
                    int width ) 
 {
   int           n;
-  Arg           args[5];
+  Arg           args[6];
   Widget        child_widget;
   Widget        top_widget;
 
@@ -540,6 +540,7 @@ xt_client_create ( XtClient* xtclient ,
   XtSetArg(args[n], XtNvisual,   xtclient->xtvisual ); n++;
   XtSetArg(args[n], XtNdepth,    xtclient->xtdepth ); n++;
   XtSetArg(args[n], XtNcolormap, xtclient->xtcolormap ); n++;
+  XtSetArg(args[n], XtNborderWidth, 0); n++;
   XtSetValues(child_widget, args, n);
 
   XSync(xtclient->xtdisplay, FALSE);
