@@ -4,7 +4,6 @@
 <!-- DO NOT LOCALIZE: this file is source documentation; not part of the build -->
 <!-- Sample interface for bringing up and passing parameters to a dialog -->
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        xmlns:html="http://www.w3.org/1999/xhtml"
         orient="horizontal"
         title = "Chrome Features Test">
 

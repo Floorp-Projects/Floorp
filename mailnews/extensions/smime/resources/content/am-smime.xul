@@ -28,7 +28,6 @@ Contributors:
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/am-smime.dtd">
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        xmlns:html="http://www.w3.org/1999/xhtml"
         class="color-dialog"
         onload="parent.onPanelLoaded('am-smime.xul');"
         orient="vertical">

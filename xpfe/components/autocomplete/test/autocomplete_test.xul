@@ -6,7 +6,6 @@
                    
 <window id="actest"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns:nc="http://home.netscape.com/NC-rdf#"
     		orient="vertical"
         width="750"

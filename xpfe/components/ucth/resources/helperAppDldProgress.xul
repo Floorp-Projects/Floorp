@@ -31,7 +31,7 @@ Contributor(s):
 
 <!DOCTYPE window SYSTEM "chrome://global/locale/downloadProgress.dtd">
 
-<window xmlns:html="http://www.w3.org/1999/xhtml"
+<window 
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="dialog"
         title="&downloadWindow.title;"

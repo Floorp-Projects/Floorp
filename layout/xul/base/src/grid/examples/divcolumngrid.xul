@@ -6,7 +6,6 @@
 
 
 <window orient="vertical" style="border: 2px solid green"
-xmlns:html="http://www.w3.org/TR/REC-html40"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"> 
   <hbox>
     <grid style="border: 2px solid red;">
