@@ -61,7 +61,7 @@ class nsNativeDragSource : public IDropSource
 		STDMETHODIMP_(ULONG) AddRef        ();
 		STDMETHODIMP_(ULONG) Release       ();
 
-	public: // IDropSource methods
+	public: // IDropSource methods - see idropsrc.h for documentation
 
 		// Return DRAGDROP_S_USEDEFAULTCURSORS if this object lets OLE provide
 		// default cursors, otherwise return NOERROR. This method gets called in
@@ -69,9 +69,9 @@ class nsNativeDragSource : public IDropSource
 		// DragOver).
 		STDMETHODIMP GiveFeedback (DWORD dEffect);
 
-		// If fESC is TRUE return DRAGDROP_S_CANCEL. If the left mouse button
-		// is released return DRAGDROP_S_DROP. Otherwise return NOERROR. This
-      // method gets called if there is any change in the mouse or key state.
+		// This method gets called if there is any change in the mouse or key
+		// state.  Return DRAGDROP_S_CANCEL to stop the drag, DRAGDROP_S_DROP
+		// to execute the drop, otherwise NOERROR. 
 		STDMETHODIMP QueryContinueDrag (BOOL fESC, DWORD grfKeyState);
 
 	protected:
