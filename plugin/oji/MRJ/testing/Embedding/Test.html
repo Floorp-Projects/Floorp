@@ -15,59 +15,27 @@ Makes a Java applet run with an embed tag.<P>
 <HR>
 
 <SCRIPT LANGUAGE="JavaScript">
-function emit(text)
+
+function codebase()
 {
-	document.write(text, "<P>");
+	var url = window.location;
+	var href = url.href;
+	return href.substring(0, href.lastIndexOf("/") + 1);
 }
 
-function embed(props)
-{
-	document.write("<EMBED ");
-	document.write(props);
-	document.write(">");
-}
+/* <!--	CODEBASE = "&{codebase();};" --> */
 
-function prop(name, value)
-{
-	return (' ' + name + '=' + '"' + value + '"');
-}
-
-var url = window.location;
-var path = url.pathname;
-var href = url.href;
-var codebase = href.substring(0, href.lastIndexOf("/") + 1);
-
-emit("My URL is: " + url);
-emit("My path is: " + path);
-emit("My codebase is: " + codebase);
-
-embed(	prop("TYPE", "application/x-java-vm") +
-		prop("NAME", "TrivialApplet") +
-		prop("BORDER", "5") +
-		prop("WIDTH", "200") +
-		prop("HEIGHT", "200") +
-		prop("CODEBASE", codebase) +
-		prop("ARCHIVE", "AppletClasses.jar") +
-		prop("CODE", "TrivialApplet.class") +
-		prop("URL", "http://home.netscape.com")
-	 );
 </SCRIPT>
 
-<BR>
-
-<!--
-You can use these buttons to communicate with the LivePict plugin, to change the picture.<P>
-<CENTER>
-<form>
-<input	type=button
-		onclick="document.javaPlug.SetLocation('light.pict');"
-		value="Light Bulb">
-<input	type=button
-		onclick="document.javaPlug.SetLocation('moon.pict');"
-		value="Moon">
-</form>
-</CENTER>
--->
+<EMBED
+	TYPE = "application/x-java-vm"
+	NAME = "TrivialApplet"
+	BORDER = "5"
+	WIDTH = "200"
+	HEIGHT = "200"
+	ARCHIVE = "AppletClasses.jar"
+	CODE = "TrivialApplet.class"
+	URL = "http://home.netscape.com">
 
 </BODY>
 </HTML>
