@@ -3910,7 +3910,7 @@ PRInt32 nsNNTPProtocol::CheckForArticle()
   }
 }
 
-#define NEWS_GROUP_DISPLAY_FREQ 5
+#define NEWS_GROUP_DISPLAY_FREQ 1
 
 nsresult
 nsNNTPProtocol::SetCheckingForNewNewsStatus(PRInt32 current, PRInt32 total)
@@ -3925,17 +3925,30 @@ nsNNTPProtocol::SetCheckingForNewNewsStatus(PRInt32 current, PRInt32 total)
     rv = bundleService->CreateBundle(NEWS_MSGS_URL, getter_AddRefs(bundle));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsAutoString thisGroupStr; thisGroupStr.AppendInt(current);
-    nsAutoString totalGroupStr; totalGroupStr.AppendInt(total);
+    nsCOMPtr<nsIMsgIncomingServer> server = do_QueryInterface(m_nntpServer, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+ 
+    nsXPIDLCString hostName;
+    rv = server->GetHostName(getter_Copies(hostName));
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    const PRUnichar *formatStrings[] = { thisGroupStr.get(),totalGroupStr.get() };
+    nsAutoString thisGroupStr; 
+    thisGroupStr.AppendInt(current);
+
+    nsAutoString totalGroupStr; 
+    totalGroupStr.AppendInt(total);
+
+    nsAutoString hostNameStr;
+    hostNameStr.AssignWithConversion(hostName.get());
+    
+    const PRUnichar *formatStrings[] = { thisGroupStr.get(), totalGroupStr.get(), hostNameStr.get() };
 
     rv = bundle->FormatStringFromName(NS_LITERAL_STRING("checkingForNewNews").get(),
-                                                  formatStrings, 2,
+                                                  formatStrings, 3,
                                                   getter_Copies(statusString));
     NS_ENSURE_SUCCESS(rv, rv);
 
-	rv = SetProgressStatus(statusString);
+    rv = SetProgressStatus(statusString);
     NS_ENSURE_SUCCESS(rv, rv);
 
     SetProgressBarPercent(current, total);
@@ -3964,11 +3977,8 @@ PRInt32 nsNNTPProtocol::DisplayNewsRC()
         m_nextState = NEWS_DONE;
 
 		if (m_newsRCListCount) {
-            rv = SetCheckingForNewNewsStatus(m_newsRCListCount, m_newsRCListCount);
-            NS_ENSURE_SUCCESS(rv, rv);
-
-            // clear the status text.
-            // rv = SetProgressStatus(NS_LITERAL_STRING(""));
+             // clear the status text.
+            rv = SetProgressStatus(NS_LITERAL_STRING("").get());
             NS_ENSURE_SUCCESS(rv, rv);
 
 			SetProgressBarPercent(0, -1);
@@ -4015,8 +4025,8 @@ PRInt32 nsNNTPProtocol::DisplayNewsRC()
     }
 
 	/* only update every NEWS_GROUP_DISPLAY_FREQ groups for speed */
-	if ((m_newsRCListCount >= NEWS_GROUP_DISPLAY_FREQ) && ((m_newsRCListIndex % NEWS_GROUP_DISPLAY_FREQ) == 0 || (m_newsRCListIndex == m_newsRCListCount))) {
-        rv = SetCheckingForNewNewsStatus(m_newsRCListIndex, m_newsRCListCount);
+	if ((m_newsRCListCount >= NEWS_GROUP_DISPLAY_FREQ) && ((m_newsRCListIndex % NEWS_GROUP_DISPLAY_FREQ) == 0 || ((m_newsRCListIndex+1) == m_newsRCListCount))) {
+        rv = SetCheckingForNewNewsStatus(m_newsRCListIndex+1, m_newsRCListCount);
         if (NS_FAILED(rv)) return -1;
     }
 		
