@@ -46,7 +46,11 @@ AR          += -NOLOGO -OUT:"$@"
 RANLIB       = echo
 BSDECHO      = echo
 
+ifdef BUILD_TREE
+NSINSTALL_DIR  = $(BUILD_TREE)/nss
+else
 NSINSTALL_DIR  = $(CORE_DEPTH)/coreconf/nsinstall
+endif
 NSINSTALL      = nsinstall
 
 MKDEPEND_DIR    = $(CORE_DEPTH)/coreconf/mkdepend

@@ -42,12 +42,21 @@ PLSRCS		= nfspwd.pl
 
 PROGRAM		= nsinstall
 
+
 include $(DEPTH)/coreconf/config.mk
 
 ifeq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
 PROGRAM		=
 else
 TARGETS		= $(PROGRAM) $(PLSRCS:.pl=)
+endif
+
+ifdef NATIVE_CC
+CC=$(NATIVE_CC)
+endif
+
+ifdef NATIVE_FLAGS
+OS_CFLAGS=$(NATIVE_FLAGS)
 endif
 
 include $(DEPTH)/coreconf/rules.mk
