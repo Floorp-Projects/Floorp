@@ -84,7 +84,7 @@
 	<key>CFBundleShortVersionString</key>
 	<string>@BROWSER_VERSION@</string>
 	<key>CFBundleSignature</key>
-	<string>MOZZ</string>
+	<string>MOZB</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
