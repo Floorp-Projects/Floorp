@@ -70,7 +70,6 @@
 #include "nsLocalUtils.h"
 #include "nsIPop3IncomingServer.h"
 #include "nsILocalMailIncomingServer.h"
-#include "nsIPop3Service.h"
 #include "nsIMsgIncomingServer.h"
 #include "nsMsgBaseCID.h"
 #include "nsMsgLocalCID.h"
@@ -97,11 +96,11 @@
 #include "nsNetCID.h"
 #include "nsEscape.h"
 #include "nsLocalStringBundle.h"
+#include "nsIMsgMailNewsUrl.h"
 
 static NS_DEFINE_CID(kRDFServiceCID,							NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kMailboxServiceCID,					NS_MAILBOXSERVICE_CID);
 static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
-static NS_DEFINE_CID(kCPop3ServiceCID, NS_POP3SERVICE_CID);
 static NS_DEFINE_CID(kCopyMessageStreamListenerCID, NS_COPYMESSAGESTREAMLISTENER_CID);
 static NS_DEFINE_CID(kMsgCopyServiceCID,		NS_MSGCOPYSERVICE_CID);
 static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
@@ -3138,6 +3137,7 @@ nsMsgLocalMailFolder::OnStopRunningUrl(nsIURI * aUrl, nsresult aExitCode)
     rv = mailSession->GetTopmostMsgWindow(getter_AddRefs(msgWindow));
     nsXPIDLCString aSpec;
     aUrl->GetSpec(getter_Copies(aSpec));
+    
     if (PL_strstr(aSpec, "uidl="))
     {
       nsCOMPtr<nsIPop3URL> popurl = do_QueryInterface(aUrl, &rv);
@@ -3171,18 +3171,37 @@ nsMsgLocalMailFolder::OnStopRunningUrl(nsIURI * aUrl, nsresult aExitCode)
         }
       }
     }
-    if (mDatabase && (mFlags & MSG_FOLDER_FLAG_INBOX))
+    
+    if (mFlags & MSG_FOLDER_FLAG_INBOX)
     {
-      PRBool valid;
-      mDatabase->GetSummaryValid(&valid);
-      if (valid && mCheckForNewMessagesAfterParsing)
+      // if we are the inbox, 
+      nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(aUrl);
+      if (mailnewsUrl)
       {
-        if (msgWindow)
+        nsCOMPtr<nsIMsgWindow> msgWindow;
+        mailnewsUrl->GetMsgWindow(getter_AddRefs(msgWindow));
+        if (!msgWindow) // if we don't have a message window, we are probably performing biff
+        {
+          nsCOMPtr<nsIMsgIncomingServer> server;
+          GetServer(getter_AddRefs(server));
+          if (server)
+           server->SetPerformingBiff(PR_FALSE);
+        }     
+      }
+      if (mDatabase)
+      {
+        PRBool valid;
+        mDatabase->GetSummaryValid(&valid);
+        if (valid && mCheckForNewMessagesAfterParsing)
+        {
+          if (msgWindow)
            rv = GetNewMessages(msgWindow, nsnull);
-        mCheckForNewMessagesAfterParsing = PR_FALSE;
+          mCheckForNewMessagesAfterParsing = PR_FALSE;
+        }
       }
     }
   }
+
   return nsMsgDBFolder::OnStopRunningUrl(aUrl, aExitCode);
 }
 

@@ -182,6 +182,7 @@ NS_IMETHODIMP nsPop3IncomingServer::PerformBiff()
   
   nsCOMPtr<nsIMsgFolder> inbox;
   nsCOMPtr<nsIMsgFolder> rootMsgFolder;
+  nsCOMPtr<nsIUrlListener> urlListener;
   rv = GetRootMsgFolder(getter_AddRefs(rootMsgFolder));
   if(NS_SUCCEEDED(rv) && rootMsgFolder)
   {
@@ -201,6 +202,9 @@ NS_IMETHODIMP nsPop3IncomingServer::PerformBiff()
   rv = mailSession->GetTopmostMsgWindow(getter_AddRefs(msgWindow));
   if(NS_SUCCEEDED(rv))
   {
+    SetPerformingBiff(PR_TRUE);
+    urlListener = do_QueryInterface(inbox);
+
     PRBool downloadOnBiff = PR_FALSE;
     rv = GetDownloadOnBiff(&downloadOnBiff);
     if (downloadOnBiff)
@@ -213,15 +217,16 @@ NS_IMETHODIMP nsPop3IncomingServer::PerformBiff()
         rv = inbox->GetMsgDatabase(msgWindow, getter_AddRefs(db));
         if (NS_SUCCEEDED(rv) && db)
           rv = db->GetSummaryValid(&valid);
+        // it's important to pass in null for the msg window if we are performing biff
+        // this makes sure that we don't show any kind of UI during biff.
         if (NS_SUCCEEDED(rv) && valid)
-          rv = pop3Service->GetNewMail(msgWindow, nsnull, inbox, this, nsnull);
+          rv = pop3Service->GetNewMail(nsnull, urlListener, inbox, this, nsnull);
         else
           rv = localInbox->SetCheckForNewMessagesAfterParsing(PR_TRUE);
       }
     }
     else
-      rv = pop3Service->CheckForNewMail(msgWindow, nsnull, inbox, this,
-                                        nsnull);
+      rv = pop3Service->CheckForNewMail(nsnull, urlListener, inbox, this, nsnull);
   }
   return NS_OK;
 }
