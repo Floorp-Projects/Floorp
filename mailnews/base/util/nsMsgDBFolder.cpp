@@ -774,12 +774,15 @@ NS_IMETHODIMP nsMsgDBFolder::ManyHeadersToDownload(PRBool *retval)
 
 	if (!retval)
 		return NS_ERROR_NULL_POINTER;
-	if (!mDatabase)
-		*retval = PR_TRUE;
-	else if (NS_SUCCEEDED(GetTotalMessages(PR_FALSE, &numTotalMessages)) && numTotalMessages <= 0)
-		*retval = PR_TRUE;
-	else
-		*retval = PR_FALSE;
+  *retval = PR_TRUE;
+
+  // is there any reason to return false?
+//	if (!mDatabase)
+//		*retval = PR_TRUE;
+//	else if (NS_SUCCEEDED(GetTotalMessages(PR_FALSE, &numTotalMessages)) && numTotalMessages <= 0)
+//		*retval = PR_TRUE;
+//	else
+//		*retval = PR_FALSE;
 	return NS_OK;
 }
 
