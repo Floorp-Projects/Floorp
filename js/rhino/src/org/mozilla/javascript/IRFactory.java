@@ -648,9 +648,21 @@ public class IRFactory {
     /**
      * If statement
      */
-    public Object createIf(Object cond, Object ifTrue, Object ifFalse,
+    public Object createIf(Object condObj, Object ifTrue, Object ifFalse,
                            int lineno)
     {
+        Node cond = (Node)condObj;
+        int condStatus = isAlwaysDefinedBoolean(cond);
+        if (condStatus == ALWAYS_TRUE_BOOLEAN) {
+            return ifTrue;
+        } else if (condStatus == ALWAYS_FALSE_BOOLEAN) {
+            if (ifFalse != null) {
+                return ifFalse;
+            }
+            // Replace if (false) xxx by empty block
+            return new Node(Token.BLOCK, lineno);
+        }
+
         Node result = new Node(Token.BLOCK, lineno);
         Node.Target ifNotTarget = new Node.Target();
         Node.Jump IFNE = new Node.Jump(Token.IFNE, (Node) cond);
@@ -785,16 +797,18 @@ public class IRFactory {
                     break;
                 }
                 String s1 = left.getString();
-                return  Node.newString(s1.concat(s2));
+                left.setString(s1.concat(s2));
+                return left;
             } else if (left.type == Token.NUMBER) {
                 if (right.type == Token.NUMBER) {
-                    double x = left.getDouble() + right.getDouble();
-                    return Node.newNumber(x);
+                    left.setDouble(left.getDouble() + right.getDouble());
+                    return left;
                 } else if (right.type == Token.STRING) {
                     String s1, s2;
                     s1 = ScriptRuntime.numberToString(left.getDouble(), 10);
                     s2 = right.getString();
-                    return  Node.newString(s1.concat(s2));
+                    right.setString(s1.concat(s2));
+                    return right;
                 }
             }
             // can't do anything if we don't know  both types - since
@@ -808,7 +822,8 @@ public class IRFactory {
                 double ld = left.getDouble();
                 if (right.type == Token.NUMBER) {
                     //both numbers
-                    return Node.newNumber(ld - right.getDouble());
+                    left.setDouble(ld - right.getDouble());
+                    return left;
                 } else if (ld == 0.0) {
                     // first 0: 0-x -> -x
                     return new Node(Token.NEG, right);
@@ -828,7 +843,8 @@ public class IRFactory {
                 double ld = left.getDouble();
                 if (right.type == Token.NUMBER) {
                     //both numbers
-                    return Node.newNumber(ld * right.getDouble());
+                    left.setDouble(ld * right.getDouble());
+                    return left;
                 } else if (ld == 1.0) {
                     // first 1: 1 *  x -> +x
                     return new Node(Token.POS, right);
@@ -849,14 +865,59 @@ public class IRFactory {
                 double rd = right.getDouble();
                 if (left.type == Token.NUMBER) {
                     // both constants -- just divide, trust Java to handle x/0
-                    return Node.newNumber(left.getDouble() / rd);
-                } else if (rd == 1.0) {
+                    left.setDouble(left.getDouble() / rd);
+                    return left;
+               } else if (rd == 1.0) {
                     // second 1: x/1 -> +x
                     // not simply x to force number convertion
                     return new Node(Token.POS, left);
                 }
             }
             break;
+
+          case Token.AND: {
+            int leftStatus = isAlwaysDefinedBoolean(left);
+            if (leftStatus == ALWAYS_FALSE_BOOLEAN) {
+                // if the first one is false, replace with FALSE
+                return new Node(Token.FALSE);
+            } else if (leftStatus == ALWAYS_TRUE_BOOLEAN) {
+                // if first is true, set to second
+                return right;
+            }
+            int rightStatus = isAlwaysDefinedBoolean(right);
+            if (rightStatus == ALWAYS_FALSE_BOOLEAN) {
+                // if the second one is false, replace with FALSE
+                if (!hasSideEffects(left)) {
+                    return new Node(Token.FALSE);
+                }
+            } else if (rightStatus == ALWAYS_TRUE_BOOLEAN) {
+                // if second is true, set to first
+                return left;
+            }
+            break;
+          }
+
+          case Token.OR: {
+            int leftStatus = isAlwaysDefinedBoolean(left);
+            if (leftStatus == ALWAYS_TRUE_BOOLEAN) {
+                // if the first one is true, replace with TRUE
+                return new Node(Token.TRUE);
+            } else if (leftStatus == ALWAYS_FALSE_BOOLEAN) {
+                // if first is false, set to second
+                return right;
+            }
+            int rightStatus = isAlwaysDefinedBoolean(right);
+            if (rightStatus == ALWAYS_TRUE_BOOLEAN) {
+                // if the second one is true, replace with TRUE
+                if (!hasSideEffects(left)) {
+                    return new Node(Token.TRUE);
+                }
+            } else if (rightStatus == ALWAYS_FALSE_BOOLEAN) {
+                // if second is false, set to first
+                return left;
+            }
+            break;
+          }
         }
 
         return new Node(nodeType, left, right);
@@ -972,7 +1033,32 @@ public class IRFactory {
         return result;
     }
 
-    public static boolean hasSideEffects(Node exprTree) {
+    // Check if Node always mean true or false in boolean context
+    private static int isAlwaysDefinedBoolean(Node node)
+    {
+        switch (node.getType()) {
+          case Token.FALSE:
+          case Token.NULL:
+          case Token.UNDEFINED:
+            return ALWAYS_FALSE_BOOLEAN;
+          case Token.TRUE:
+            return ALWAYS_TRUE_BOOLEAN;
+          case Token.NUMBER:
+            double num = node.getDouble();
+            if (num == 0) {
+                // Is it neccessary to check for -0.0 here?
+                if (1 / num > 0) {
+                    return ALWAYS_FALSE_BOOLEAN;
+                }
+            }
+            else {
+                return ALWAYS_TRUE_BOOLEAN;
+            }
+        }
+        return 0;
+    }
+
+    private static boolean hasSideEffects(Node exprTree) {
         switch (exprTree.getType()) {
             case Token.INC:
             case Token.DEC:
@@ -1065,5 +1151,8 @@ public class IRFactory {
     private static final int LOOP_DO_WHILE = 0;
     private static final int LOOP_WHILE    = 1;
     private static final int LOOP_FOR      = 2;
+
+    private static final int ALWAYS_TRUE_BOOLEAN = 1;
+    private static final int ALWAYS_FALSE_BOOLEAN = -1;
 }
 
