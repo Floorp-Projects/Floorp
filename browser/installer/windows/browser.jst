@@ -381,6 +381,11 @@ function updateWinReg()
       winreg.createKey(subkey,"");
       err     = winreg.setValueString(subkey, "", fProgram + "$MainExeFile$");
       err     = winreg.setValueString(subkey, "Path", fProgram);
+
+      // XPInstall content type mappings. 
+      subkey = "SOFTWARE\\Classes\\MIME\\Database\\Content Type\\application/x-xpinstall;app=firefox"
+      winreg.createKey(subkey, "");
+      winreg.setValueString(subkey, "Extension", ".xpi");
     }
 
     winreg.setRootKey(winreg.HKEY_CURRENT_USER);
