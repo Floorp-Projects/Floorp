@@ -2757,11 +2757,33 @@ var attachmentBucketObserver = {
           }
           else 
           {
-            attachment = Components.classes["@mozilla.org/messengercompose/attachment;1"]
-                         .createInstance(Components.interfaces.nsIMsgAttachment);
-            attachment.url = rawData;
-            attachment.name = prettyName;
-            AddAttachment(attachment);
+            var isValid = true;
+            if (item.flavour.contentType == "text/x-moz-url") {
+              // if this is a url (or selected text)
+              // see if it's a valid url by checking 
+              // if we can extract a scheme
+              // using the ioservice
+              //
+              // also skip mailto:, since it doesn't make sense
+              // to attach and send mailto urls
+              try {
+                var scheme = gIOService.extractScheme(rawData);
+                // don't attach mailto: urls
+                if (scheme == "mailto")
+                  isValid = false;
+              }
+              catch (ex) {
+                isValid = false;
+              }
+            }
+
+            if (isValid) {
+              attachment = Components.classes["@mozilla.org/messengercompose/attachment;1"]
+                           .createInstance(Components.interfaces.nsIMsgAttachment);
+              attachment.url = rawData;
+              attachment.name = prettyName;
+              AddAttachment(attachment);
+            }
           }
         }
       }
