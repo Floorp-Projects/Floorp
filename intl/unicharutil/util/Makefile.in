@@ -32,14 +32,18 @@ include $(DEPTH)/config/autoconf.mk
 
 EXPORTS = \
 	nsUnicharUtils.h \
+	nsCompressedCharMap.h \
 	$(NULL)
 
 LIBRARY_NAME=unicharutil_s
 REQUIRES=xpcom \
 		string \
+		uconv \
 		$(NULL)
 
-CPPSRCS	= nsUnicharUtils.cpp
+CPPSRCS	= nsUnicharUtils.cpp \
+	  nsCompressedCharMap.cpp \
+	  $(NULL)
 
 FORCE_STATIC_LIB = 1
 FORCE_USE_PIC = 1
