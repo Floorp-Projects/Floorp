@@ -780,7 +780,6 @@ int main(int argc, char **argv)
 
 	/* now dump the certs into the temparary data base */
 	for (i=0; i < caCert.count; i++) {
-	    int trusted = 0;
     	    SECItem derCert;
 
 	    cirv = CI_Select(caCert.card);
