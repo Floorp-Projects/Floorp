@@ -270,8 +270,12 @@ char*
 nsGREDirServiceProvider::GetXPCOMPath()
 {
   char* grePath = GetGREDirectoryPath();
-  if (!grePath)
-    return nsnull;
+  if (!grePath) {
+    grePath = PR_GetEnv(MOZILLA_FIVE_HOME);
+    if (!grePath) {
+      return nsnull;
+    }
+  }
 
   int len = strlen(grePath);
   char* xpcomPath = (char*) malloc(len + sizeof(XPCOM_DLL) + sizeof(XPCOM_FILE_PATH_SEPARATOR) + 1);
