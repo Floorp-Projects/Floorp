@@ -314,11 +314,16 @@ nsToolboxFrame :: Reflow(nsIPresContext&          aPresContext,
     // true if we should advance to the next frame. Will be false if the frame doesn't match the content node
     PRBool canAdvanceFrame = PR_FALSE;
     
-    // first determine if the current content node matches the current frame
+    // first determine if the current content node matches the current frame. Make sure we don't
+    // walk off the end of the frame list when we still have content nodes.     
     nsCOMPtr<nsIContent> currentFrameContent;
-    childFrame->GetContent(getter_AddRefs(currentFrameContent));
-    if ( childContent == currentFrameContent ) {
+    if ( childFrame )
+      childFrame->GetContent(getter_AddRefs(currentFrameContent));
+    if ( childFrame && currentFrameContent && childContent == currentFrameContent ) {
+      //
       // they are the same, so find the width/height desired by the toolbar frame.
+      //
+      
       nsSize maxSize(aReflowState.availableWidth, aReflowState.availableHeight);
 		
       nsHTMLReflowState reflowState(aPresContext, aReflowState, childFrame, maxSize);
@@ -327,7 +332,7 @@ nsToolboxFrame :: Reflow(nsIPresContext&          aPresContext,
         htmlReflow->WillReflow(aPresContext);
         nsresult result = htmlReflow->Reflow(aPresContext, aDesiredSize, reflowState, aStatus);
         NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");       
-        htmlReflow->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);  // XXX Should we be sending the DidReflow?
+        htmlReflow->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
       }
     
       // set toolbar to desired width/height
@@ -342,7 +347,11 @@ nsToolboxFrame :: Reflow(nsIPresContext&          aPresContext,
       canAdvanceFrame = PR_TRUE;
     }
     else {
-      // they are not the same, so we probably have a collapsed or hidden toolbar.
+      //
+      // they are not the same (or we're out of frames), so we probably have a
+      // collapsed or hidden toolbar.
+      //
+      
       printf("Found a collapsed toolbar\n");
       
       //*** check for collapsed or hidden tag. What do we do if neither? ignore it i guess.
@@ -526,7 +535,7 @@ nsToolboxFrame :: CollapseToolbar ( TabInfo & inTab )
   const nsCOMPtr<nsIAtom> kSelectedAtom ( dont_AddRef( NS_NewAtom("collapsed")) );
    
   if ( inTab.mToolbar ) {
-//    inTab.mToolbar->SetAttribute ( kNameSpaceID_None, kSelectedAtom, "true", PR_TRUE );
+    printf("CollapseToolbar:: collapsing\n");
     inTab.mToolbar->SetAttribute ( kNameSpaceID_None, kSelectedAtom, "true", PR_TRUE );
   }
    
