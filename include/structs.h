@@ -115,6 +115,9 @@ typedef struct FEstruct_ {
 #endif
 
 #endif
+#ifdef MOZILLA_CLIENT
+  void*  webWidget; /* Really a nsIWebWidget */
+#endif
 } FEstruct;
 
 #define FEUNITS_X(x,context)   ((int32) ((MWContext *)context)->convertPixX * (x))

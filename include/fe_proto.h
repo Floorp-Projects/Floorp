@@ -519,10 +519,13 @@ BOOL   FE_FileType(char * path,
 #define FE_GetTextFrame(context, element, start, end, frame) \
 			(*context->funcs->GetTextFrame)(context, element, start, end, frame)
 #endif
+#ifndef MOZ_NGLAYOUT
 #define FE_GetEmbedSize(context, embed_struct, force_reload) \
 			(*context->funcs->GetEmbedSize)(context, embed_struct, force_reload)
+#endif
 #define FE_GetJavaAppSize(context, java_struct, force_reload) \
 			(*context->funcs->GetJavaAppSize)(context, java_struct, force_reload)
+#ifndef MOZ_NGLAYOUT
 #define FE_GetFormElementInfo(context, form_element) \
 			(*context->funcs->GetFormElementInfo)(context, form_element)
 #define FE_GetFormElementValue(context, form_element,hide) \
@@ -537,6 +540,7 @@ BOOL   FE_FileType(char * path,
 #define FE_FreeBuiltinElement(context, data) \
                         (*context->funcs->FreeBuiltinElement)(context, data)
 #endif
+#endif /* MOZ_NGLAYOUT */
 #define FE_CreateEmbedWindow(context, data) \
             (*context->funcs->CreateEmbedWindow)(context, data)
 #define FE_SaveEmbedWindow(context, data) \
@@ -549,10 +553,12 @@ BOOL   FE_FileType(char * path,
 			(*context->funcs->FreeJavaAppElement)(context, data)
 #define FE_HideJavaAppElement(context, data) \
 			(*context->funcs->HideJavaAppElement)(context, data)
+#ifndef MOZ_NGLAYOUT
 #define FE_FreeEdgeElement(context, data) \
 			(*context->funcs->FreeEdgeElement)(context, data)
 #define FE_FormTextIsSubmit(context, form_element) \
 			(*context->funcs->FormTextIsSubmit)(context, form_element)
+#endif
 
 
 /* ---------------------------------------------------------------------------
@@ -568,16 +574,20 @@ BOOL   FE_FileType(char * path,
 			(*context->funcs->DisplaySubtext)(context, iLocation, text, start_pos, end_pos, need_bg)
 #define FE_DisplayText(context, iLocation, text, need_bg) \
 			(*context->funcs->DisplayText)(context, iLocation, text, need_bg)
+#ifndef MOZ_NGLAYOUT
 #define FE_DisplayEmbed(context, iLocation , embed_struct) \
 			(*context->funcs->DisplayEmbed)(context, iLocation ,embed_struct)
 #ifdef SHACK
 #define FE_DisplayBuiltin(context, iLocation , builtin_struct) \
                         (*context->funcs->DisplayBuiltin)(context, iLocation ,builtin_struct)
 #endif
+#endif /* MOZ_NGLAYOUT */
 #define FE_DisplayJavaApp(context, iLocation , java_struct) \
 			(*context->funcs->DisplayJavaApp)(context, iLocation ,java_struct)
+#ifndef MOZ_NGLAYOUT
 #define FE_DisplayEdge(context, iLocation ,edge_struct) \
 			(*context->funcs->DisplayEdge)(context, iLocation ,edge_struct)
+#endif /* MOZ_NGLAYOUT */
 #define FE_DisplayTable(context, iLocation ,table_struct) \
 			(*context->funcs->DisplayTable)(context, iLocation ,table_struct)
 #define FE_DisplayCell(context, iLocation ,cell_struct) \
@@ -602,8 +612,10 @@ BOOL   FE_FileType(char * path,
 			(*context->funcs->DisplayHR)(context, iLocation , HR_struct)
 #define FE_DisplayBullet(context, iLocation, bullet) \
 			(*context->funcs->DisplayBullet)(context, iLocation, bullet)
+#ifndef MOZ_NGLAYOUT
 #define FE_DisplayFormElement(context, iLocation, form_element) \
 			(*context->funcs->DisplayFormElement)(context, iLocation, form_element)
+#endif
 #define FE_DisplayBorder(context, iLocation, x, y, width, height, bw, color, style) \
             (*context->funcs->DisplayBorder)(context, iLocation, x, y, width, height, bw, color, style)
 #define FE_DisplayFeedback(context, iLocation, element) \
@@ -711,20 +723,26 @@ extern int      FE_GetMaxWidth(MWContext *pContext, LO_TextStruct *pText); /* pe
 #ifdef LAYERS
 void		FE_GetTextFrame(MWContext * context, LO_TextStruct *text, int32 start, int32 end, XP_Rect *frame);
 #endif
+#ifndef MOZ_NGLAYOUT
 void            FE_GetEmbedSize(MWContext * context, LO_EmbedStruct *embed_struct, NET_ReloadMethod force_reload);
+#endif
 void            FE_GetJavaAppSize(MWContext * context, LO_JavaAppStruct *java_struct, NET_ReloadMethod force_reload);
 void            FE_GetFormElementInfo(MWContext * context, LO_FormElementStruct * form_element);
 void            FE_GetFormElementValue(MWContext * context, LO_FormElementStruct * form_element, Bool hide);
 void            FE_ResetFormElement(MWContext * context, LO_FormElementStruct * form_element);
 void            FE_SetFormElementToggle(MWContext * context, LO_FormElementStruct * form_element, Bool toggle);
+#ifndef MOZ_NGLAYOUT
 void            FE_FreeEmbedElement(MWContext *context, LO_EmbedStruct *);
 #ifdef SHACK
 void            FE_FreeBuiltinElement(MWContext *context, LO_BuiltinStruct *);
 #endif
+#endif /* MOZ_NGLAYOUT */
 void            FE_FreeJavaAppElement(MWContext *context, struct LJAppletData *appletData);
 void            FE_HideJavaAppElement(MWContext *context, void*);
+#ifndef MOZ_NGLAYOUT
 void            FE_FreeEdgeElement(MWContext *context, LO_EdgeStruct *);
 void            FE_FormTextIsSubmit(MWContext * context, LO_FormElementStruct * form_element);
+#endif /* MOZ_NGLAYOUT */
 void            FE_SetProgressBarPercent(MWContext *context, int32 percent);
 void            FE_SetBackgroundColor(MWContext *context, uint8 red, uint8 green, uint8 blue);
 
@@ -740,12 +758,16 @@ void            FE_SetBackgroundColor(MWContext *context, uint8 red, uint8 green
 
 extern void FE_DisplaySubtext(MWContext * context, int iLocation, LO_TextStruct *text, int32 start_pos, int32 end_pos, Bool need_bg);
 extern void FE_DisplayText(MWContext * context, int iLocation, LO_TextStruct *text, Bool need_bg);
+#ifndef MOZ_NGLAYOUT
 void        FE_DisplayEmbed(MWContext * context, int iLocation ,LO_EmbedStruct *embed_struct);
 #ifdef SHACK
 void        FE_DisplayBuiltin(MWContext * context, int iLocation ,LO_BuiltinStruct *builtin_struct);
 #endif
+#endif /* MOZ_NGLAYOUT */
 void        FE_DisplayJavaApp(MWContext * context, int iLocation ,LO_JavaAppStruct *java_struct);
+#ifndef MOZ_NGLAYOUT
 void        FE_DisplayEdge(MWContext * context, int iLocation ,LO_EdgeStruct *edge_struct);
+#endif /* MOZ_NGLAYOUT */
 void        FE_DisplayTable(MWContext * context, int iLocation ,LO_TableStruct *table_struct);
 void        FE_DisplayCell(MWContext * context, int iLocation ,LO_CellStruct *cell_struct);
 void        FE_DisplaySubDoc(MWContext * context, int iLocation ,LO_SubDocStruct *subdoc_struct);
@@ -791,10 +813,12 @@ extern void FE_AllConnectionsComplete(MWContext * context);
  */
 extern void     FE_ReleaseTextAttrFeData(MWContext * context, LO_TextAttr *attr);
 
+#ifndef MOZ_NGLAYOUT
 /*
  * Liberated from context function table
  */
 void            FE_FreeFormElement(MWContext * context, LO_FormElementData *);
+#endif
 
 /* --------------------------------------------------------------------------
  * Front end history stuff
@@ -819,6 +843,7 @@ extern void FE_SaveAs(MWContext * context, char * source);
  */
 extern void FE_UpdateStopState(MWContext * context);
 
+#ifndef MOZ_NGLAYOUT
 /* -------------------------------------------------------------------------
  * Grid stuff (where should this go?)
  */
@@ -842,6 +867,7 @@ extern void FE_GetEdgeMinSize(MWContext *context, int32 *size
 			      );
 extern void FE_LoadGridCellFromHistory(MWContext *context, void *hist,
 			NET_ReloadMethod force_reload);
+#endif /* MOZ_NGLAYOUT */
 
 /*
  * Ugh for scrolling chat window.  And now for JavaScript

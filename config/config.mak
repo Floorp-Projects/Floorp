@@ -71,10 +71,15 @@ PUBLIC=$(XPDIST)\public
 #// has the same name no matter what
 #//-----------------------------------------------------------------------
 
+
+!ifdef NGLAYOUT_BUILD_PREFIX
+DIST_PREFIX=NGL
+!else
 !ifdef MOZ_NAV_BUILD_PREFIX
 DIST_PREFIX=NAV
 !else
 DIST_PREFIX=WIN
+!endif
 !endif
 
 !ifndef MOZ_DEBUG
@@ -100,6 +105,16 @@ DIST=$(XPDIST)\$(DIST_PREFIX)$(MOZ_BITS)_O.OBJ
 !else
 DIST=$(XPDIST)\$(DIST_PREFIX)$(MOZ_BITS)_D.OBJ
 !endif
+
+# This will always give the location of NGLayout's dist, even if "NGLAYOUT_BUILD_PREFIX" is not defined.
+!if defined(MOZ_NGLAYOUT)
+!ifndef MOZ_DEBUG
+NGLAYOUT_DIST=$(XPDIST)\NGL$(MOZ_BITS)_O.OBJ
+!else
+NGLAYOUT_DIST=$(XPDIST)\NGL$(MOZ_BITS)_D.OBJ
+!endif
+!endif
+
 
 CFGFILE=$(OBJDIR)\cmd.cfg
 

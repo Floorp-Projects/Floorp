@@ -28,18 +28,9 @@ MOZ_TOP=mozilla
 #//------------------------------------------------------------------------
 !if defined(MOZ_NGLAYOUT)
 NGLAYOUT_MAKEFILE=nglayout.mak
-
+NGLAYOUT_ENV_VARS=STANDALONE_IMAGE_LIB=1 MODULAR_NETLIB=1 NGLAYOUT_BUILD_PREFIX=1
+MOZNGLAYOUT_BRANCH=RAPTOR_INTEGRATION0_BRANCH
 CVSCO = cvs -q co -P
-
-# Branch tags we use
-NETLIB_BRANCH = MODULAR_NETLIB_BRANCH
-MOZNGLAYOUT_BRANCH = RAPTOR_INTEGRATION0_BRANCH
-
-# CVS commands to pull the appropriate branch versions
-CVSCO_NETLIB = $(CVSCO) -r $(NETLIB_BRANCH)
-
-# If MOZ_BRANCH is set from the user's environment, it will be ignored.
-MOZ_BRANCH=$(MOZNGLAYOUT_BRANCH)
 !endif
 
 
@@ -89,25 +80,42 @@ clobber_build_all:: 	clobber_all \
 			build_all
 
 !if defined(MOZ_NGLAYOUT)
-# Not very efficient, pull_raptor and pull_netlib will repull 
-pull_all:: pull_client_source_product pull_raptor pull_netlib
+# The MOZ_NGLAYOUT pull is complicated, be very careful choosing which files are on 
+# the tip and which are on the branches.
+pull_all:: pull_client_source_product pull_nglayout pull_netlib repull_ngl_integration pull_imglib repull_include
 !else
 pull_all:: pull_client_source_product 
 !endif
 
 !if defined(MOZ_NGLAYOUT)
-pull_raptor:
+pull_nglayout:
 	@cd $(MOZ_SRC)
-	$(CVSCO) $(MOZ_TOP)/raptor.mak
+	$(CVSCO) $(MOZ_TOP)/$(NGLAYOUT_MAKEFILE)
 	@cd $(MOZ_SRC)/$(MOZ_TOP)
-	$(NMAKE) -f $(NGLAYOUT_MAKEFILE) pull_xpcom pull_imglib pull_raptor
+	$(NMAKE) -f $(NGLAYOUT_MAKEFILE) pull_nglayout $(NGLAYOUT_ENV_VARS)
 
 pull_netlib:
-	@cd $(MOZ_SRC)\.
-	$(CVSCO_NETLIB) $(MOZ_TOP)/lib/xp
-	$(CVSCO_NETLIB) $(MOZ_TOP)/lib/libnet
-	$(CVSCO_NETLIB) $(MOZ_TOP)/include/net.h $(MOZ_TOP)/include/npapi.h
+	@cd $(MOZ_SRC)/$(MOZ_TOP)
+	$(NMAKE) -f $(NGLAYOUT_MAKEFILE) pull_netlib $(NGLAYOUT_ENV_VARS)
+
+# Here is where we pull everything on the layout integration branch
+repull_ngl_integration:
+	@cd $(MOZ_SRC)
+	$(CVSCO) -r $(MOZNGLAYOUT_BRANCH) $(MOZ_TOP)/include $(MOZ_TOP)/cmd $(MOZ_TOP)/lib $(MOZ_TOP)/modules
+	@cd $(MOZ_SRC)/$(MOZ_TOP)
+
+# Careful to put this after repull_ngl_integration, want modules/libutil and 
+# modules/libimg to be on imglib branch
+pull_imglib:
+	@cd $(MOZ_SRC)/$(MOZ_TOP)
+	$(NMAKE) -f $(NGLAYOUT_MAKEFILE) pull_imglib $(NGLAYOUT_ENV_VARS)
+
+# Want certain files in the include directory to be on the tip
+repull_include:
+	@cd $(MOZ_SRC)
+	$(CVSCO) -A $(MOZ_TOP)/include/net.h
 !endif
+
 
 pull_client_source_product:
     @echo +++ client.mak: checking out the client with "$(CVS_BRANCH)"
@@ -116,8 +124,8 @@ pull_client_source_product:
 
 
 !if defined(MOZ_NGLAYOUT)
-# Build Raptor first.
-build_all:  build_raptor \
+# Build NGLayout first.
+build_all:  build_nglayout \
 			build_dist  \
 			build_client
 !else
@@ -126,9 +134,9 @@ build_all:  build_dist  \
 !endif
 
 !if defined(MOZ_NGLAYOUT)
-build_raptor: 
+build_nglayout: 
 	cd $(MOZ_SRC)\$(MOZ_TOP)
-	$(NMAKE) -f $(NGLAYOUT_MAKEFILE) STANDALONE_IMAGE_LIB=1 MODULAR_NETLIB=1 NGLAYOUT_BUILD_PREFIX=1
+	$(NMAKE) -f $(NGLAYOUT_MAKEFILE) $(NGLAYOUT_ENV_VARS)
 !endif
 
 build_dist:
@@ -151,7 +159,7 @@ build_client:
 # remove all source files from the tree and print a report of what was missed
 #
 !if defined(MOZ_NGLAYOUT)
-clobber_all:: clobber_moz clobber_raptor
+clobber_all:: clobber_moz clobber_nglayout
 !else
 clobber_all:: clobber_moz
 !endif
@@ -167,9 +175,9 @@ clobber_moz:
 !endif
 
 !if defined(MOZ_NGLAYOUT)
-clobber_raptor:
+clobber_nglayout:
 	cd $(MOZ_SRC)\$(MOZ_TOP)
-	$(NMAKE) -f $(NGLAYOUT_MAKEFILE) STANDALONE_IMAGE_LIB=1 NGLAYOUT=1 clobber	
+	$(NMAKE) -f $(NGLAYOUT_MAKEFILE) clobber $(NGLAYOUT_ENV_VARS)
 !endif
 
 depend:
