@@ -5059,9 +5059,6 @@ nsresult nsNNTPProtocol::CleanupAfterRunningUrl()
   
   nsresult rv = NS_OK;
 
-	if (m_channelListener)
-		rv = m_channelListener->OnStopRequest(this, m_channelContext, NS_OK, nsnull);
-
 	if (m_loadGroup)
 		m_loadGroup->RemoveChannel(NS_STATIC_CAST(nsIChannel *, this), nsnull, NS_OK, nsnull);
 
@@ -5094,8 +5091,6 @@ nsresult nsNNTPProtocol::CleanupAfterRunningUrl()
     
   mDisplayInputStream = nsnull;
   mDisplayOutputStream = nsnull;
-  m_channelListener = nsnull;
-  m_channelContext = nsnull;
   m_loadGroup = nsnull;
   mProgressEventSink = nsnull;
   SetOwner(nsnull);
@@ -5104,6 +5099,16 @@ nsresult nsNNTPProtocol::CleanupAfterRunningUrl()
   m_url = null_nsCOMPtr();
   m_originalUrl = null_nsCOMPtr();
 
+  nsCOMPtr <nsISupports> saveChannelContext = m_channelContext;
+  nsCOMPtr<nsIStreamListener> saveChannelListener = m_channelListener;
+  m_channelContext = nsnull;
+  m_channelListener = nsnull;
+  // send StopRequest notification after we've cleaned up the protocol
+  // because it can synchronously causes a new url to get run in the
+  // protocol - truly evil, but we're stuck at the moment.
+	if (saveChannelListener)
+		rv = saveChannelListener->OnStopRequest(this, saveChannelContext, NS_OK, nsnull);
+  
   m_connectionBusy = PR_FALSE;
   return NS_OK;
 }
