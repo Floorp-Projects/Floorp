@@ -36,104 +36,8 @@
     
 */
 
-
-#include "quickder.h"
 #include "secerr.h"
 #include "secasn1.h" /* for SEC_ASN1GetSubtemplate */
-
-struct QuickAllocStr
-{
-    char* buffer;
-    PRUint32 left;
-    PRArenaPool* arena;
-    /* the granularity field controls how quickly the buffer grows */
-    /* make it grow too fast and you will waste memory */
-    /* make it grow too slowly and you will end up calling inefficient
-       arena allocs too frequently */
-    PRUint32 granularity;
-    /* fields below are for statistics only */
-    PRUint32 totalAllocated;
-    PRUint32 numCalls;
-    PRUint32 totalWasted;
-    PRUint32 numWasted;
-    PRUint32 largestWasted;
-};
-
-typedef struct QuickAllocStr QuickAlloc;
-
-static SECStatus NewQuickAlloc(QuickAlloc* pool, PRArenaPool* arena, PRUint32 granularity)
-{
-    if (!pool || !arena)
-    {
-        PORT_SetError(SEC_ERROR_INVALID_ARGS);
-        return SECFailure;
-    }
-    pool->arena = arena;
-    pool->buffer = NULL;
-    pool->left = 0;
-    pool->granularity = granularity;
-    pool->totalAllocated = 0;
-    pool->numCalls = 0;
-    pool->totalWasted = 0;
-    pool->numWasted = 0;
-    pool->largestWasted = 0;
-    return SECSuccess;
-}
-
-static void* QuickMalloc(QuickAlloc* pool, PRUint32 sz)
-{
-    void* newbuffer = NULL;
-    PRUint32 newlen = 0;
-    if (!pool)
-    {
-        return NULL;
-    }
-    pool->numCalls ++;
-    if (sz <= pool->left)
-    {
-        void* newbuf = (void*)pool->buffer;
-        pool->buffer += sz;
-        pool->left -= sz;
-        pool->totalAllocated += sz;
-        return newbuf;
-    }
-
-    if (pool->left)
-    {
-        /* this buffer is too small, therefore wasted */
-        pool->totalWasted += pool->left;
-        pool->numWasted++;
-        if (pool->left > pool->largestWasted)
-        {
-            pool->largestWasted = pool->left;
-        }
-        /* XXX should we try to reuse those blocks ? */
-        /* let's see how bad this gets */    
-    }
-
-    /* XXX add some adaptive code for changing granularity based on
-       statistics */
-    newlen = sz + pool->granularity;
-    newbuffer = PORT_ArenaAlloc(pool->arena, newlen);
-    if (!newbuffer)
-    {
-        return NULL;
-    }
-    pool->buffer = newbuffer;
-    pool->left = newlen;
-    return QuickMalloc(pool, sz); /* recursion avoids duplicating pointer
-                                                            fixup code */
-}
-
-static void* QuickZAlloc(QuickAlloc* pool, PRUint32 sz)
-{
-    void* buf = QuickMalloc(pool, sz);
-    if (buf)
-    {
-        memset(buf, 0, sz);
-    }
-    return buf;
-}
 
 /*
  * simple definite-length ASN.1 decoder
@@ -367,7 +271,9 @@ static SECStatus MatchComponentType(const SEC_ASN1Template* templateEntry,
         {
         case SEC_ASN1_SEQUENCE:
         case SEC_ASN1_SET:
+        case SEC_ASN1_EMBEDDED_PDV:
             /* this component must be a constructed type */
+            /* XXX add any new universal constructed type here */
             if (tag & SEC_ASN1_CONSTRUCTED)
             {
                 *match = PR_TRUE;
@@ -402,6 +308,8 @@ static SECStatus MatchComponentType(const SEC_ASN1Template* templateEntry,
     return SECSuccess;
 }
 
+#ifdef DEBUG
+
 static SECStatus CheckSequenceTemplate(const SEC_ASN1Template* sequenceTemplate)
 {
     SECStatus rv = SECSuccess;
@@ -418,6 +326,8 @@ static SECStatus CheckSequenceTemplate(const SEC_ASN1Template* sequenceTemplate)
         {
             /* ensure that we don't have an optional component of SEC_ASN1_ANY
                in the middle of the sequence, since we could not handle it */
+            /* XXX this function needs to dig into the subtemplates to find
+               the next tag */
             if ( (PR_FALSE == foundAmbiguity) &&
                  (sequenceEntry->kind & SEC_ASN1_OPTIONAL) &&
                  (sequenceEntry->kind & SEC_ASN1_ANY) )
@@ -446,13 +356,15 @@ static SECStatus CheckSequenceTemplate(const SEC_ASN1Template* sequenceTemplate)
     return rv;
 }
 
+#endif
+
 static SECStatus DecodeItem(void* dest,
                      const SEC_ASN1Template* templateEntry,
-                     SECItem* src, QuickAlloc* pool, PRBool checkTag);
+                     SECItem* src, PRArenaPool* arena, PRBool checkTag);
 
 static SECStatus DecodeSequence(void* dest,
                      const SEC_ASN1Template* templateEntry,
-                     SECItem* src, QuickAlloc* pool)
+                     SECItem* src, PRArenaPool* arena)
 {
     SECStatus rv = SECSuccess;
     SECItem source;
@@ -461,8 +373,10 @@ static SECStatus DecodeSequence(void* dest,
     const SEC_ASN1Template* sequenceEntry = NULL;
     unsigned long seqindex = 0;
 
+#ifdef DEBUG
     /* for a sequence, we need to validate the template. */
     rv = CheckSequenceTemplate(sequenceTemplate);
+#endif
 
     source = *src;
 
@@ -480,7 +394,7 @@ static SECStatus DecodeSequence(void* dest,
         if ( (sequenceEntry && sequenceEntry->kind) &&
              (sequenceEntry->kind != SEC_ASN1_SKIP_REST) )
         {
-            rv = DecodeItem(dest, sequenceEntry, &sequence, pool, PR_TRUE);
+            rv = DecodeItem(dest, sequenceEntry, &sequence, arena, PR_TRUE);
         }
     } while ( (SECSuccess == rv) &&
               (sequenceEntry->kind &&
@@ -502,25 +416,25 @@ static SECStatus DecodeSequence(void* dest,
 
 static SECStatus DecodeInline(void* dest,
                      const SEC_ASN1Template* templateEntry,
-                     SECItem* src, QuickAlloc* pool)
+                     SECItem* src, PRArenaPool* arena, PRBool checkTag)
 {
     const SEC_ASN1Template* inlineTemplate = 
         SEC_ASN1GetSubtemplate (templateEntry, dest, PR_FALSE);
     return DecodeItem((void*)((char*)dest + templateEntry->offset),
-                            inlineTemplate, src, pool, PR_TRUE);
+                            inlineTemplate, src, arena, checkTag);
 }
 
 static SECStatus DecodePointer(void* dest,
                      const SEC_ASN1Template* templateEntry,
-                     SECItem* src, QuickAlloc* pool, PRBool checkTag)
+                     SECItem* src, PRArenaPool* arena, PRBool checkTag)
 {
     const SEC_ASN1Template* ptrTemplate = 
         SEC_ASN1GetSubtemplate (templateEntry, dest, PR_FALSE);
-    void* subdata = QuickZAlloc(pool, ptrTemplate->size);
+    void* subdata = PORT_ArenaZAlloc(arena, ptrTemplate->size);
     *(void**)((char*)dest + templateEntry->offset) = subdata;
     if (subdata)
     {
-        return DecodeItem(subdata, ptrTemplate, src, pool, checkTag);
+        return DecodeItem(subdata, ptrTemplate, src, arena, checkTag);
     }
     else
     {
@@ -531,26 +445,23 @@ static SECStatus DecodePointer(void* dest,
 
 static SECStatus DecodeImplicit(void* dest,
                      const SEC_ASN1Template* templateEntry,
-                     SECItem* src, QuickAlloc* pool)
+                     SECItem* src, PRArenaPool* arena)
 {
     if (templateEntry->kind & SEC_ASN1_POINTER)
     {
         return DecodePointer((void*)((char*)dest ),
-                             templateEntry, src, pool, PR_FALSE);
+                             templateEntry, src, arena, PR_FALSE);
     }
     else
     {
-        const SEC_ASN1Template* implicitTemplate =
-            SEC_ASN1GetSubtemplate (templateEntry, dest, PR_FALSE);
-
-        return DecodeItem((void*)((char*)dest + templateEntry->offset),
-                          implicitTemplate, src, pool, PR_FALSE);
+        return DecodeInline((void*)((char*)dest ),
+                             templateEntry, src, arena, PR_FALSE);
     }
 }
 
 static SECStatus DecodeChoice(void* dest,
                      const SEC_ASN1Template* templateEntry,
-                     SECItem* src, QuickAlloc* pool)
+                     SECItem* src, PRArenaPool* arena)
 {
     SECStatus rv = SECSuccess;
     SECItem choice;
@@ -570,7 +481,7 @@ static SECStatus DecodeChoice(void* dest,
         choiceEntry = &choiceTemplate[choiceindex++];
         if (choiceEntry->kind)
         {
-            rv = DecodeItem(dest, choiceEntry, &choice, pool, PR_TRUE);
+            rv = DecodeItem(dest, choiceEntry, &choice, arena, PR_TRUE);
         }
     } while ( (SECFailure == rv) && (choiceEntry->kind));
 
@@ -599,7 +510,7 @@ static SECStatus DecodeChoice(void* dest,
 
 static SECStatus DecodeGroup(void* dest,
                      const SEC_ASN1Template* templateEntry,
-                     SECItem* src, QuickAlloc* pool)
+                     SECItem* src, PRArenaPool* arena)
 {
     SECStatus rv = SECSuccess;
     SECItem source;
@@ -631,16 +542,17 @@ static SECStatus DecodeGroup(void* dest,
         {
             SECItem anitem;
             rv = GetItem(&counter, &anitem, PR_FALSE);
-            if ((SECSuccess == rv) && anitem.len)
+            if (SECSuccess == rv)
             {
                 totalEntries++;
             }
         }  while ( (SECSuccess == rv) && (counter.len) );
 
-        if (SECSuccess == rv && totalEntries)
+        if (SECSuccess == rv)
         {
             /* allocate room for pointer array and entries */
-            entries = (void**)QuickZAlloc(pool, sizeof(void*)*
+            /* we want to allocate the array even if there is 0 entry */
+            entries = (void**)PORT_ArenaZAlloc(arena, sizeof(void*)*
                                           (totalEntries + 1 ) + /* the extra one is for NULL termination */
                                           subTemplate->size*totalEntries); 
 
@@ -671,7 +583,7 @@ static SECStatus DecodeGroup(void* dest,
     do
     {
         PR_ASSERT(entryIndex<totalEntries);
-        rv = DecodeItem(entries[entryIndex++], subTemplate, &group, pool, PR_TRUE);
+        rv = DecodeItem(entries[entryIndex++], subTemplate, &group, arena, PR_TRUE);
     } while ( (SECSuccess == rv) && (group.len) );
     /* we should be at the end of the set by now */    
     /* save the entries where requested */
@@ -680,9 +592,9 @@ static SECStatus DecodeGroup(void* dest,
     return rv;
 }
 
-static SECStatus DecodeConstructed(void* dest,
+static SECStatus DecodeExplicit(void* dest,
                      const SEC_ASN1Template* templateEntry,
-                     SECItem* src, QuickAlloc* pool)
+                     SECItem* src, PRArenaPool* arena)
 {
     SECStatus rv = SECSuccess;
     SECItem subItem;
@@ -694,11 +606,11 @@ static SECStatus DecodeConstructed(void* dest,
     {
         if (templateEntry->kind & SEC_ASN1_POINTER)
         {
-            rv = DecodePointer(dest, templateEntry, &subItem, pool, PR_TRUE);
+            rv = DecodePointer(dest, templateEntry, &subItem, arena, PR_TRUE);
         }
         else
         {
-            rv = DecodeInline(dest, templateEntry, &subItem, pool);
+            rv = DecodeInline(dest, templateEntry, &subItem, arena, PR_TRUE);
         }
     }
 
@@ -709,7 +621,7 @@ static SECStatus DecodeConstructed(void* dest,
 
 static SECStatus DecodeItem(void* dest,
                      const SEC_ASN1Template* templateEntry,
-                     SECItem* src, QuickAlloc* pool, PRBool checkTag)
+                     SECItem* src, PRArenaPool* arena, PRBool checkTag)
 {
     SECStatus rv = SECSuccess;
     SECItem temp;
@@ -721,9 +633,9 @@ static SECStatus DecodeItem(void* dest,
     PRBool match = PR_TRUE;
     PRBool optional = PR_FALSE;
 
-    PR_ASSERT(src && dest && templateEntry && pool);
+    PR_ASSERT(src && dest && templateEntry && arena);
 #if 0
-    if (!src || !dest || !templateEntry || !pool)
+    if (!src || !dest || !templateEntry || !arena)
     {
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
         rv = SECFailure;
@@ -827,35 +739,32 @@ static SECStatus DecodeItem(void* dest,
         if (kind & SEC_ASN1_INLINE)
         {
             /* decode inline template */
-            rv = DecodeInline(dest, templateEntry, &temp , pool);
+            rv = DecodeInline(dest, templateEntry, &temp , arena, PR_TRUE);
         }
 
         else
-
+        if (kind & SEC_ASN1_EXPLICIT)
+        {
+            rv = DecodeExplicit(dest, templateEntry, &temp, arena);
+        }
+        else
         if ( (SEC_ASN1_UNIVERSAL != (kind & SEC_ASN1_CLASS_MASK)) &&
 
               (!(kind & SEC_ASN1_EXPLICIT)))
         {
 
             /* decode implicitly tagged components */
-            rv = DecodeImplicit(dest, templateEntry, &temp , pool);
-        }
-
-        else
-
-        if (kind & SEC_ASN1_CONSTRUCTED)
-        {
-            rv = DecodeConstructed(dest, templateEntry, &temp, pool);
+            rv = DecodeImplicit(dest, templateEntry, &temp , arena);
         }
         else
         if (kind & SEC_ASN1_POINTER)
         {
-            rv = DecodePointer(dest, templateEntry, &temp, pool, PR_TRUE);
+            rv = DecodePointer(dest, templateEntry, &temp, arena, PR_TRUE);
         }
         else
         if (kind & SEC_ASN1_CHOICE)
         {
-            rv = DecodeChoice(dest, templateEntry, &temp, pool);
+            rv = DecodeChoice(dest, templateEntry, &temp, arena);
         }
         else
         if (kind & SEC_ASN1_ANY)
@@ -875,7 +784,7 @@ static SECStatus DecodeItem(void* dest,
             if ( (SEC_ASN1_SEQUENCE == (kind & SEC_ASN1_TAGNUM_MASK)) ||
                  (SEC_ASN1_SET == (kind & SEC_ASN1_TAGNUM_MASK)) )
             {
-                rv = DecodeGroup(dest, templateEntry, &temp , pool);
+                rv = DecodeGroup(dest, templateEntry, &temp , arena);
             }
             else
             {
@@ -888,7 +797,7 @@ static SECStatus DecodeItem(void* dest,
         if (SEC_ASN1_SEQUENCE == (kind & SEC_ASN1_TAGNUM_MASK))
         {
             /* plain SEQUENCE */
-            rv = DecodeSequence(dest, templateEntry, &temp , pool);
+            rv = DecodeSequence(dest, templateEntry, &temp , arena);
         }
         else
         {
@@ -966,7 +875,6 @@ SECStatus SEC_QuickDERDecodeItem(PRArenaPool* arena, void* dest,
 {
     SECStatus rv = SECSuccess;
     SECItem newsrc;
-    QuickAlloc myAlloc;
 
     if (!arena || !templateEntry || !src)
     {
@@ -974,18 +882,11 @@ SECStatus SEC_QuickDERDecodeItem(PRArenaPool* arena, void* dest,
         rv = SECFailure;
     }
 
-    if (SECSuccess == rv)
-    {
-        /* make a copy so that the source SECItem structure doesn't get
-           modified. The data isn't getting copied, however */
-        newsrc = *src;
-        /* XXX we should choose a granularity based on DER input size */
-        rv = NewQuickAlloc(&myAlloc, arena, 0);
-    }
+    newsrc = *src;
 
     if (SECSuccess == rv)
     {
-        rv = DecodeItem(dest, templateEntry, &newsrc, &myAlloc, PR_TRUE);
+        rv = DecodeItem(dest, templateEntry, &newsrc, arena, PR_TRUE);
     }
 
     return rv;

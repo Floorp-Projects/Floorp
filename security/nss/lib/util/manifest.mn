@@ -33,7 +33,6 @@
 CORE_DEPTH = ../../..
 
 EXPORTS = \
-	quickder.h \
 	base64.h \
 	ciferfam.h \
 	nssb64.h \
