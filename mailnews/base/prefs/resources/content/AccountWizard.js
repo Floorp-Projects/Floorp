@@ -64,6 +64,14 @@ function onNext(event) {
     nextPage(contentWindow);
 }
 
+function onCancel(event) {
+    window.close();
+}
+
+function onLoadPage(event) {
+    contentWindow.location = getUrlFromTag(document.getElementById("newPage").value);
+}
+
 function onBack(event) {
     previousPage(contentWindow);
 }
