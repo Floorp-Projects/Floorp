@@ -274,6 +274,9 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
 
       case nsIDOMKeyEvent::DOM_VK_RETURN:
       case nsIDOMKeyEvent::DOM_VK_ENTER:
+        if (isAnyModifierKeyButShift)
+          return NS_OK;
+
         if (!(flags & nsIPlaintextEditor::eEditorSingleLineMask))
         {
           textEditor->HandleKeyPress(keyEvent);
