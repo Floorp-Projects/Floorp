@@ -19,10 +19,13 @@
 #include "plhash.h"
 #include "jsapi.h"
 #include "nsIComponentLoader.h"
+#include "nsIJSRuntimeService.h"
+#include "nsIJSContextStack.h"
 #include "nsIRegistry.h"
 #include "nsISupports.h"
 #include "nsIXPConnect.h"
 #include "nsIModule.h"
+#include "nsSupportsArray.h"
 
 extern const char mozJSComponentLoaderProgID[];
 extern const char jsComponentTypeName[];
@@ -44,6 +47,7 @@ public:
 
  protected:
     nsresult ReallyInit();
+    nsresult AttemptRegistration(nsIFileSpec *component, PRBool deferred);
     nsresult RegisterComponentsInDir(PRInt32 when, nsIFileSpec *dir);
     JSObject *GlobalForLocation(const char *aLocation, nsIFileSpec *component);
     nsIModule *ModuleForLocation(const char *aLocation,
@@ -52,9 +56,14 @@ public:
     nsresult SetRegistryInfo(const char *registryLocation,
                              nsIFileSpec *component);
 
-    nsIComponentManager* mCompMgr; // XXX weak ref
+    nsIComponentManager* mCompMgr; // weak ref, should make it strong?
     nsCOMPtr<nsIRegistry> mRegistry;
-    nsCOMPtr<nsIXPConnect> mXPC;
+    nsIXPConnect* mXPC;
+    /* XXXshaver nsCOMPtr<nsIXPConnect> mXPC; */
+    nsIJSRuntimeService* mRuntimeService;
+    /* XXXshaver nsCOMPtr<nsIJSRuntimeService> mRuntimeService; */
+    nsIJSContextStack* mContextStack;
+    /* XXXshaver nsCOMPtr<nsIJSContextStack> mContextStack; */
 
     JSObject  *mSuperGlobal;
     JSRuntime *mRuntime;
@@ -66,4 +75,5 @@ public:
     nsRegistryKey mXPCOMKey;
 
     PRBool mInitialized;
+    nsSupportsArray mDeferredComponents;
 };

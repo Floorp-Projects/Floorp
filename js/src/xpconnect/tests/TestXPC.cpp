@@ -1235,6 +1235,11 @@ sm_test_done:
 
 //    xpc->DebugDump(3);
 //    printf("-----------------------\n");
+    JSContext *cx;
+    if (NS_SUCCEEDED(cxstack->Pop(&cx))) {
+        NS_ASSERTION(cx == mContext, "JS context stack push/pop mismatch");
+    }
+    
     xpc->AbandonJSContext(jscontext);
     JS_DestroyContext(jscontext);
     NS_RELEASE(xpc);

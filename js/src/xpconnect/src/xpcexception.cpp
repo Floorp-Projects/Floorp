@@ -323,30 +323,35 @@ nsXPCException::NewException(const char *aMessage,
             }
             rv = xpc->GetCurrentJSStack(&location);
             NS_RELEASE(xpc);
-            if(NS_FAILED(rv) || !location)
+            if(NS_FAILED(rv))
             {
                 NS_RELEASE(e);
                 return nsnull;
             }
+            // it is legal for there to be no active JS stack, if C++ code
+            // is operating on a JS-implemented interface pointer without
+            // having been called in turn by JS.  This happens in the JS
+            // component loader, and will become more common as additional
+            // components are implemented in JS.
         }
-        // at this point we have non-null location with one extra addref
         // We want to trim off any leading native 'dataless' frames
-        while(1)
-        {
-            PRBool  isJSFrame;
-            PRInt32 lineNumber;
-            if(NS_FAILED(location->GetIsJSFrame(&isJSFrame)) || isJSFrame ||
-               NS_FAILED(location->GetLineNumber(&lineNumber)) || lineNumber)
-                break;
-            nsIJSStackFrameLocation* caller;
-            if(NS_FAILED(location->GetCaller(&caller)) || !caller)
-                break;
-            NS_RELEASE(location);
-            location = caller;
-        }
-        // at this point we have non-null location with one extra addref
+        if (location)
+            while(1) {
+                PRBool  isJSFrame;
+                PRInt32 lineNumber;
+                if(NS_FAILED(location->GetIsJSFrame(&isJSFrame)) || isJSFrame ||
+                   NS_FAILED(location->GetLineNumber(&lineNumber)) || lineNumber)
+                    break;
+                nsIJSStackFrameLocation* caller;
+                if(NS_FAILED(location->GetCaller(&caller)) || !caller)
+                    break;
+                NS_RELEASE(location);
+                location = caller;
+            }
+        // at this point we have non-null location with one extra addref,
+        // or no location at all
         rv = e->Initialize(aMessage, aResult, nsnull, location, aData);
-        NS_RELEASE(location);
+        NS_IF_RELEASE(location);
         if(NS_FAILED(rv))
             NS_RELEASE(e);
     }
