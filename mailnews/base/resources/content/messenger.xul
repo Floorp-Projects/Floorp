@@ -20,8 +20,10 @@ Rights Reserved.
 -->
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?> 
+<?xml-stylesheet href="chrome://navigator/skin/contentframe.css" type="text/css"?> 
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 <?xul-overlay href="chrome://global/content/tasksOverlay.xul"?>
+<?xul-overlay href="chrome://messenger/content/threadPane.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/messenger.dtd">
                      
@@ -40,6 +42,8 @@ Rights Reserved.
 <html:script src="chrome://messenger/content/commandglue.js"/>
 <html:script src="chrome://messenger/content/shareglue.js"/>
 <html:script src="chrome://messenger/content/msgViewNavigation.js"/>
+<html:script src="chrome://messenger/content/msgMail3PaneWindow.js"/>
+<html:script src="chrome://navigator/content/contentframe.js" />
 
   <broadcaster id="Messenger:Throbber" busy="false"/>
   <broadcaster id="Messenger:Status"/>
@@ -402,8 +406,23 @@ Rights Reserved.
     </toolbox>
 
     <!-- The main mail three pane frame -->
-    <html:iframe id="content-frame" src="contentframe.xul" flex="100%" />
+    <box align="horizontal" style="height:100px" flex="1">
+	  <box align="horizontal"
+	    style="background-color:white; border-right:solid black 1px">
+	    <html:iframe id="sidebarframe" class="sidebarframe" src="about:blank" />
+	  </box>
+      <titledbutton id="grippy" class="grippy" onclick="toggle_open_close();"/>
+      <box align="vertical"  flex="1"  style="border-left:solid black 1px">
+		<html:div style="width:100px;height:0px" flex="2" >
+		  <tree id="threadTree"/>
+		 </html:div>
 
+	    <splitter collapse="after" style="border-top:solid black 1px; border-bottom:solid black 1px;" />
+			
+    	<!-- message view -->
+		  <html:iframe flex="3" style="height:0px" name="messagepane" src="about:blank"/>
+      </box>
+    </box>
     <!-- Ripped off from navigator.xul; this should be a XUL fragment! -->
     <box align="horizontal" id="status-bar">
  
