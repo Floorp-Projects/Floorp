@@ -91,7 +91,9 @@ sub ConnectToDatabase {
             $::dbwritesallowed = 0;
         }
 	$::db = DBI->connect("DBI:mysql:host=$::db_host;database=$name", $::db_user, $::db_pass)
-	    || die $DBI::errstr;
+	    || die "Bugzilla is currently broken. Please try again later. " . 
+      "If the problem persists, please contact " . Param("maintainer") .
+      ". The error you should quote is: " . $DBI::errstr;
     }
 }
 
