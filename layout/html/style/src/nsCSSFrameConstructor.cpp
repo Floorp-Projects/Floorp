@@ -4861,6 +4861,15 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsIPresShell*            aPresShell,
     }
     if (allowSubframes) {
       rv = NS_NewHTMLFrameOuterFrame(aPresShell, &newFrame);
+      if (newFrame) {
+        // the nsFrameOuterFrame needs to know about its content parent during ::Init.
+        // there is no reasonable way to get the value there.
+        // so we store it as a frame property.
+        nsCOMPtr<nsIAtom> contentParentAtom = do_GetAtom("contentParent");
+        aState.mFrameManager->SetFrameProperty(newFrame,
+                                               contentParentAtom, 
+                                               aParentFrame, nsnull);
+      }
     }
   }
   else if (nsHTMLAtoms::noframes == aTag) {

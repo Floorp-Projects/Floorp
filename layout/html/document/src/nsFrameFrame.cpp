@@ -53,6 +53,7 @@
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
 #include "nsIComponentManager.h"
+#include "nsIFrameManager.h"
 #include "nsIStreamListener.h"
 #include "nsIURL.h"
 #include "nsNetUtil.h"
@@ -363,7 +364,34 @@ nsHTMLFrameOuterFrame::Init(nsIPresContext*  aPresContext,
   nsIView* view = nsnull;
   GetView(aPresContext, &view);
   if (!view) {
-    nsHTMLContainerFrame::CreateViewForFrame(aPresContext,this,mStyleContext,nsnull,PR_TRUE); 
+    // To properly initialize the view we need to know the frame for the content
+    // that is the parent of content for this frame. This might not be our actual
+    // frame parent if we are out of flow (e.g., positioned) so our parent frame
+    // may have been set to some other ancestor.
+    // We look for a content parent frame in the frame property list, where it
+    // will have been set by nsCSSFrameConstructor if necessary.
+    nsCOMPtr<nsIAtom> contentParentAtom = do_GetAtom("contentParent");
+    nsIFrame* contentParent = nsnull;
+    nsCOMPtr<nsIPresShell> presShell;
+    aPresContext->GetShell(getter_AddRefs(presShell));
+
+    if (presShell) {
+      nsCOMPtr<nsIFrameManager> frameManager;
+      presShell->GetFrameManager(getter_AddRefs(frameManager));
+
+      if (frameManager) {
+        void* value;
+        rv = frameManager->GetFrameProperty(this,
+                                           contentParentAtom, 
+                                           NS_IFRAME_MGR_REMOVE_PROP,
+                                           &value);
+        if (NS_SUCCEEDED(rv)) {
+          contentParent = (nsIFrame*)value;
+        }
+      }
+    }
+  
+    nsHTMLContainerFrame::CreateViewForFrame(aPresContext,this,mStyleContext,contentParent,PR_TRUE); 
     GetView(aPresContext, &view);
   }
 
