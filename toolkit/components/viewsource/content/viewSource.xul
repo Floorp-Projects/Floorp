@@ -57,7 +57,6 @@
         screenX="10" screenY="10"
         persist="screenX screenY width height sizemode">
 
-
   <commandset id="commands"/>
   <keyset id="viewSourceKeys"/>
   <stringbundleset id="viewSource-stringbundleset"/>

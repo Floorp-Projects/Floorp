@@ -53,9 +53,8 @@
   <script type="application/x-javascript" src="chrome://global/content/nsJSComponentManager.js"/>
   <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/contentAreaDD.js"/>
-  <script type="application/x-javascript" src="chrome://navigator/content/browser.js"/>
   <script type="application/x-javascript" src="chrome://global/content/viewSource.js"/>
-  <script type="application/x-javascript" src="chrome://communicator/content/findUtils.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/findUtils.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/contentAreaUtils.js"/>
 
   <commandset id="commands">
@@ -144,9 +143,9 @@
       <menu label="&viewMenu.label;" accesskey="&viewMenu.accesskey;">
         <menupopup>
           <menu id="charsetMenu"/>
-          <menuitem id="menu_wrapLongLines" type="checkbox" command="cmd_wrapLongLines"
+          <menuitem id="menu_wrapLongLines" type="checkbox" oncommand="wrapLongLines()"
                     label="&menu_wrapLongLines.title;" accesskey="&menu_wrapLongLines.accesskey;"/>
-          <menuitem type="checkbox" command="cmd_highlightSyntax"
+          <menuitem type="checkbox" id="menu_highlightSyntax" oncommand="highlightSyntax();"
                     label="&menu_highlightSyntax.label;" accesskey="&menu_highlightSyntax.accesskey;"/>
         </menupopup>
       </menu>

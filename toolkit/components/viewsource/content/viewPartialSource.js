@@ -56,7 +56,8 @@ const MARK_SELECTION_START = '\u200B\u200B\u200B\u200B\u200B';
 const MARK_SELECTION_END = '\u200B\u200B\u200B\u200B\u200B';
 
 function onLoadViewPartialSource()
-{
+{  
+  gBrowser = document.getElementById("content");
   // check the view_source.wrap_long_lines pref and set the menuitem's checked attribute accordingly
   if (gPrefs) {
     try {
@@ -66,6 +67,12 @@ function onLoadViewPartialSource()
         gWrapLongLines = true;
       }
     } catch (e) { }
+    try {
+      document.getElementById("menu_highlightSyntax").setAttribute("checked", gPrefs.getBoolPref("view_source.syntax_highlight"));
+    } catch (e) {
+    }
+  } else {
+    document.getElementById("menu_highlightSyntax").setAttribute("hidden", "true");
   }
 
   // disable menu items that don't work since the selection is munged and
@@ -101,12 +108,20 @@ function viewPartialSourceForSelection(selection)
       ancestorContainer.nodeType == Node.CDATA_SECTION_NODE)
     ancestorContainer = ancestorContainer.parentNode;
 
+  // for selectAll, let's use the entire document, including <html>...</html>
+  // @see DocumentViewerImpl::SelectAll() for how selectAll is implemented
+  try {
+    if (ancestorContainer == doc.body)
+      ancestorContainer = doc.documentElement;
+  } catch (e) { }
+
   // each path is a "child sequence" (a.k.a. "tumbler") that
   // descends from the ancestor down to the boundary point
   var startPath = getPath(ancestorContainer, startContainer);
   var endPath = getPath(ancestorContainer, endContainer);
 
   // clone the fragment of interest and reset everything to be relative to it
+  // note: it is with the clone that we operate from now on
   ancestorContainer = ancestorContainer.cloneNode(true);
   startContainer = ancestorContainer;
   endContainer = ancestorContainer;
@@ -130,7 +145,7 @@ function viewPartialSourceForSelection(selection)
     // To get a neat output, the idea here is to remap the end point from:
     // 1. ...<tag>]...   to   ...]<tag>...
     // 2. ...]</tag>...  to   ...</tag>]...
-    if ((endOffset > 0 && endOffset < endContainer.data.length-1) ||
+    if ((endOffset > 0 && endOffset < endContainer.data.length) ||
         !endContainer.parentNode || !endContainer.parentNode.parentNode)
       endContainer.insertData(endOffset, MARK_SELECTION_END);
     else {
@@ -154,8 +169,9 @@ function viewPartialSourceForSelection(selection)
     // To get a neat output, the idea here is to remap the start point from:
     // 1. ...<tag>[...   to   ...[<tag>...
     // 2. ...[</tag>...  to   ...</tag>[...
-    if ((startOffset > 0 && startOffset < startContainer.data.length-1) ||
-        !startContainer.parentNode || !startContainer.parentNode.parentNode)
+    if ((startOffset > 0 && startOffset < startContainer.data.length) ||
+        !startContainer.parentNode || !startContainer.parentNode.parentNode ||
+        startContainer != startContainer.parentNode.lastChild)
       startContainer.insertData(startOffset, MARK_SELECTION_START);
     else {
       tmpNode = doc.createTextNode(MARK_SELECTION_START);
@@ -181,8 +197,8 @@ function viewPartialSourceForSelection(selection)
 
   // all our content is held by the data:URI and URIs are internally stored as utf-8 (see nsIURI.idl)
   var loadFlags = Components.interfaces.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE;
-  getBrowser().webNavigation
-              .loadURI("view-source:data:text/html;charset=utf-8," + escape(tmpNode.innerHTML),
+  gBrowser.webNavigation
+          .loadURI("view-source:data:text/html;charset=utf-8," + escape(tmpNode.innerHTML),
                        loadFlags, null, null, null);
 }
 
@@ -213,7 +229,7 @@ function getPath(ancestor, node)
 
 ////////////////////////////////////////////////////////////////////////////////
 // using special markers left in the serialized source, this helper makes the
-// underlying markup of the selected fragement to automatically appear as selected
+// underlying markup of the selected fragment to automatically appear as selected
 // on the inflated view-source DOM
 function drawSelection()
 {
@@ -237,10 +253,10 @@ function drawSelection()
   var replaceString = findService.replaceString;
 
   // setup our find instance
-  var findInst = getBrowser().webBrowserFind;
+  var findInst = gBrowser.webBrowserFind;
   findInst.matchCase = true;
   findInst.entireWord = false;
-  findInst.wrapFind = false;
+  findInst.wrapFind = true;
   findInst.findBackwards = false;
 
   // ...lookup the start mark
@@ -248,7 +264,7 @@ function drawSelection()
   var startLength = MARK_SELECTION_START.length;
   findInst.findNext();
 
-  var contentWindow = getBrowser().contentDocument.defaultView;
+  var contentWindow = gBrowser.contentDocument.defaultView;
   var selection = contentWindow.getSelection();
   var range = selection.getRangeAt(0);
 
@@ -279,11 +295,11 @@ function drawSelection()
   // the selection, whereas in this situation, it is more user-friendly
   // to scroll at the beginning. So we override the default behavior here
   try {
-    getBrowser().docShell
-                .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                .getInterface(Components.interfaces.nsISelectionDisplay)
-                .QueryInterface(Components.interfaces.nsISelectionController)
-                .scrollSelectionIntoView(Components.interfaces.nsISelectionController.SELECTION_NORMAL,
+    gBrowser.docShell
+            .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+            .getInterface(Components.interfaces.nsISelectionDisplay)
+            .QueryInterface(Components.interfaces.nsISelectionController)
+            .scrollSelectionIntoView(Components.interfaces.nsISelectionController.SELECTION_NORMAL,
                                          Components.interfaces.nsISelectionController.SELECTION_ANCHOR_REGION,
                                          true);
   }
@@ -343,7 +359,7 @@ function viewPartialSourceForFragment(node, context)
   ; // end
 
   // display
-  var doc = getBrowser().contentDocument;
+  var doc = gBrowser.contentDocument;
   doc.open("text/html", "replace");
   doc.write(source);
   doc.close();
@@ -442,39 +458,44 @@ function getOuterMarkup(node, indent) {
 ////////////////////////////////////////////////////////////////////////////////
 function unicodeTOentity(text)
 {
+  const charTable = {
+    '&': '&amp;<span class="entity">amp;</span>',
+    '<': '&amp;<span class="entity">lt;</span>',
+    '>': '&amp;<span class="entity">gt;</span>',
+    '"': '&amp;<span class="entity">quot;</span>'
+  };
+
+  function charTableLookup(letter) {
+    return charTable[letter];
+  }
+
+  function convertEntity(letter) {
+    try {
+      var unichar = gEntityConverter.ConvertToEntity(letter, entityVersion);
+      var entity = unichar.substring(1); // extract '&'
+      return '&amp;<span class="entity">' + entity + '</span>';
+    } catch (ex) {
+      return letter;
+    }
+  }
+
   if (!gEntityConverter) {
     try {
-      gEntityConverter = Components.classes["@mozilla.org/intl/entityconverter;1"]
-                                   .createInstance(Components.interfaces.nsIEntityConverter);
+      gEntityConverter =
+        Components.classes["@mozilla.org/intl/entityconverter;1"]
+                  .createInstance(Components.interfaces.nsIEntityConverter);
     } catch(e) { }
   }
-  var entityVersion = Components.interfaces.nsIEntityConverter.html40
-                    + Components.interfaces.nsIEntityConverter.mathml20;
 
-  var str = '';
-  for (var i = 0; i < text.length; i++) {
-    var c = text.charCodeAt(i);
-    if ((c <= 0x7F) || !gEntityConverter) {
-      if (text[i] == '<')
-        str += '&amp;<span class="entity">lt;</span>';
-      else if (text[i] == '>')
-        str += '&amp;<span class="entity">gt;</span>';
-      else if (text[i] == '&')
-        str += '&amp;<span class="entity">amp;</span>';
-      else
-        str += text[i];
-    }
-    else {
-      try {
-        var unichar = gEntityConverter.ConvertToEntity(text[i], entityVersion);
-        str += '&amp;<span class="entity">'
-            +  unichar.substring(1, unichar.length) // extract '&'
-            +  '</span>';
-      }
-      catch(e) {
-        str += text[i];
-      }
-    }
-  }
+  const entityVersion = Components.interfaces.nsIEntityConverter.entityW3C;
+
+  var str = text;
+
+  // replace chars in our charTable
+  str = str.replace(/[<>&"]/g, charTableLookup);
+
+  // replace chars > 0x7f via nsIEntityConverter
+  str = str.replace(/[^\0-\u007f]/g, convertEntity);
+
   return str;
 }
