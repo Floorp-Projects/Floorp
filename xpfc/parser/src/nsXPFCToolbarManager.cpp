@@ -33,8 +33,23 @@ nsXPFCToolbarManager :: nsXPFCToolbarManager()
 
 nsXPFCToolbarManager :: ~nsXPFCToolbarManager()
 {
-  if (mToolbars != nsnull) 
-  {
+  if (mToolbars != nsnull) {
+
+	  nsIIterator * iterator;
+
+	  mToolbars->CreateIterator(&iterator);
+	  iterator->Init();
+
+    nsIXPFCToolbar * item;
+
+	  while(!(iterator->IsDone()))
+	  {
+		  item = (nsIXPFCToolbar *) iterator->CurrentItem();
+		  NS_RELEASE(item);
+		  iterator->Next();
+	  }
+	  NS_RELEASE(iterator);
+
     mToolbars->RemoveAll();
     NS_RELEASE(mToolbars);
   }
@@ -64,6 +79,7 @@ nsresult nsXPFCToolbarManager :: Init()
 nsresult nsXPFCToolbarManager :: AddToolbar(nsIXPFCToolbar * aToolbar)
 {
   mToolbars->Append(aToolbar);
+  NS_ADDREF(aToolbar);
   return NS_OK ;
 }
 

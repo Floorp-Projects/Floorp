@@ -357,7 +357,7 @@ NS_IMETHODIMP nsXPFCXMLContentSink::OpenContainer(const nsIParserNode& aNode)
   }
 
   // XXX: Really need this for all states
-  if (mState == XPFC_PARSING_STATE_MENUBAR)
+  if (mState == XPFC_PARSING_STATE_MENUBAR || mState == XPFC_PARSING_STATE_TOOLBAR)
     NS_RELEASE(object);
 
   return NS_OK;
@@ -454,7 +454,7 @@ NS_IMETHODIMP nsXPFCXMLContentSink::AddLeaf(const nsIParserNode& aNode)
   }
 
   // XXX: Really need this for all states
-  if (mState == XPFC_PARSING_STATE_MENUBAR)
+  if (mState == XPFC_PARSING_STATE_MENUBAR || mState == XPFC_PARSING_STATE_TOOLBAR)
     NS_RELEASE(object);
 
   return NS_OK;
@@ -817,6 +817,7 @@ NS_IMETHODIMP nsXPFCXMLContentSink::AddToHierarchy(nsIXMLParserObject& aObject, 
       mXPFCStack->Push(child_canvas);
 
     NS_IF_RELEASE(child_canvas);
+    NS_IF_RELEASE(container);
 
     return NS_OK;
 
