@@ -13,10 +13,10 @@
 <!ENTITY cmd.update.tooltip               "Checks for Updates to your Extensions">
 <!ENTITY cmd.useTheme.label               " Use Theme">
 <!ENTITY cmd.useTheme.accesskey           "U">
-<!ENTITY cmd.useTheme.tooltip             "Changes &brandShortName;'s theme.">
+<!ENTITY cmd.useTheme.tooltip             "Changes &brandShortName;'s Theme.">
 <!-- the following command bar items are used by thunderbird only -->
 <!ENTITY cmd.install.label              "Install">
-<!ENTITY cmd.install.tooltip            "Install an extension">
+<!ENTITY cmd.install.tooltip            "Install an Extension">
 <!ENTITY cmd.install.accesskey          "n">
 
 <!-- Context Menu Options: Extension -->

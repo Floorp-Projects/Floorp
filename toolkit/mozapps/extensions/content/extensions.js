@@ -156,6 +156,16 @@ function Startup()
     }
     catch (e) { }
   }
+  
+  // Set the tooltips
+  if (!isExtensions) {
+    var extensionsStrings = document.getElementById("extensionsStrings");
+#ifdef MOZ_THUNDERBIRD
+    document.getElementById("installButton").setAttribute("tooltiptext", extensionsStrings.getString("cmdInstallTooltipTheme"));
+#endif
+    document.getElementById("uninstallButton").setAttribute("tooltiptext", extensionsStrings.getString("cmdUninstallTooltipTheme"));
+    document.getElementById("updateButton").setAttribute("tooltiptext", extensionsStrings.getString("cmdUpdateTooltipTheme"));
+  }
 }
 
 function Shutdown() 
