@@ -648,6 +648,33 @@ HRESULT Initialize(HINSTANCE hInstance)
   AppendBackSlash(szTempDir, MAX_BUF);
   lstrcat(szTempDir, WIZ_TEMP_DIR);
 
+  /*  if multiple installer instances are allowed; 
+      each instance requires a unique temp directory
+   */
+  if(gbAllowMultipleInstalls)
+  {
+    DWORD dwLen = lstrlen(szTempDir);
+
+    if (strncmp(szSetupDir, szTempDir, dwLen) == 0)
+    {
+      lstrcpy(szTempDir, szSetupDir);
+    }
+    else
+    {
+      int i;
+      for(i = 1; i <= 100 && (FileExists(szTempDir) != FALSE); i++)
+      {
+        itoa(i, (szTempDir + dwLen), 10);
+      }
+    
+      if (FileExists(szTempDir) != FALSE)
+      {
+        MessageBox(hWndMain, "Cannot create temp directory", NULL, MB_OK | MB_ICONEXCLAMATION);
+        exit(1);
+      }
+    }
+  }
+
   if(!FileExists(szTempDir))
   {
     AppendBackSlash(szTempDir, MAX_BUF);
@@ -4972,7 +4999,7 @@ void PrintUsage(void)
    *        the Start Menu shortcut folder at the end of installation.
    */
 
-  if(*sgProduct.szParentProcessFilename != '\0')
+  if(sgProduct.szParentProcessFilename && *sgProduct.szParentProcessFilename != '\0')
     lstrcpy(szProcessFilename, sgProduct.szParentProcessFilename);
   else
   {
@@ -4981,9 +5008,11 @@ void PrintUsage(void)
   }
 
   GetPrivateProfileString("Strings", "UsageMsg Usage", "", szBuf, sizeof(szBuf), szFileIniConfig);
+  if (lstrlen(szBuf) > 0)
+  {
   wsprintf(szUsageMsg, szBuf, szProcessFilename, "\n", "\n", "\n", "\n", "\n", "\n", "\n", "\n", "\n");
-
   PrintError(szUsageMsg, ERROR_CODE_HIDE);
+}
 }
 
 DWORD ParseCommandLine(LPSTR lpszCmdLine)
@@ -5062,6 +5091,10 @@ DWORD ParseCommandLine(LPSTR lpszCmdLine)
       ++i;
       GetArgV(lpszCmdLine, i, szArgVBuf, sizeof(szArgVBuf));
       lstrcpy(sgProduct.szRegPath, szArgVBuf);
+    }
+    else if(!lstrcmpi(szArgVBuf, "-mmi") || !lstrcmpi(szArgVBuf, "/mmi"))
+    {
+      gbAllowMultipleInstalls = TRUE;    
     }
 
 #ifdef XXX_DEBUG
