@@ -412,11 +412,11 @@ public class ClassFileWriter {
         if (DEBUGCODE)
             System.out.println("Add " + Integer.toHexString(theOpCode & 0xFF));
         if (DEBUG) {
-            if (ByteCode.opcodeCount[theOpCode & 0xFF] != 0)
-                throw new RuntimeException("Expected operands");
+            if (ByteCode.opcodeCount(theOpCode) != 0)
+                throw new RuntimeException("Unexpected operands");
         }
         addToCodeBuffer(theOpCode);
-        itsStackTop += ByteCode.stackChange[theOpCode & 0xFF];
+        itsStackTop += ByteCode.stackChange(theOpCode);
         if (DEBUGSTACK) {
             System.out.println("After " + Integer.toHexString(theOpCode & 0xFF) + " stack = " + itsStackTop);
         }
@@ -436,7 +436,7 @@ public class ClassFileWriter {
     public void add(byte theOpCode, int theOperand) {
         if (DEBUGCODE)
             System.out.println("Add " + Integer.toHexString(theOpCode & 0xFF) + ", " + Integer.toHexString(theOperand) );
-        itsStackTop += ByteCode.stackChange[theOpCode & 0xFF];
+        itsStackTop += ByteCode.stackChange(theOpCode);
         if (DEBUGSTACK) {
             System.out.println("After " + Integer.toHexString(theOpCode & 0xFF) + " stack = " + itsStackTop);
         }
@@ -652,7 +652,7 @@ public class ClassFileWriter {
             System.out.println("Add " + Integer.toHexString(theOpCode & 0xFF)
                                     + ", " + Integer.toHexString(theOperand1)
                                      + ", " + Integer.toHexString(theOperand2));
-        itsStackTop += ByteCode.stackChange[theOpCode & 0xFF];
+        itsStackTop += ByteCode.stackChange(theOpCode);
         if (DEBUGSTACK) {
             System.out.println("After " + Integer.toHexString(theOpCode & 0xFF) + " stack = " + itsStackTop);
         }
@@ -708,7 +708,7 @@ public class ClassFileWriter {
         if (DEBUGCODE)
             System.out.println("Add " + Integer.toHexString(theOpCode & 0xFF)
                                     + ", " + className);
-        itsStackTop += ByteCode.stackChange[theOpCode & 0xFF];
+        itsStackTop += ByteCode.stackChange(theOpCode);
         if (DEBUGSTACK) {
             System.out.println("After " + Integer.toHexString(theOpCode & 0xFF) + " stack = " + itsStackTop);
         }
@@ -741,7 +741,7 @@ public class ClassFileWriter {
         if (DEBUGCODE)
             System.out.println("Add " + Integer.toHexString(theOpCode & 0xFF)
                                     + ", " + className + ", " + fieldName + ", " + fieldType);
-        itsStackTop += ByteCode.stackChange[theOpCode & 0xFF];
+        itsStackTop += ByteCode.stackChange(theOpCode);
         if (DEBUG) {
             if (itsStackTop < 0)
                 throw new RuntimeException("After " + Integer.toHexString(theOpCode & 0xFF) + " Stack underflow");
@@ -781,7 +781,7 @@ public class ClassFileWriter {
                                     + ", " + className + ", " + methodName + ", " + parametersType + ", " + returnType);
         int parameterInfo = sizeOfParameters(parametersType);
         itsStackTop -= (parameterInfo & 0xFFFF);
-        itsStackTop += ByteCode.stackChange[theOpCode & 0xFF];     // adjusts for 'this'
+        itsStackTop += ByteCode.stackChange(theOpCode);     // adjusts for 'this'
         if (DEBUG) {
             if (itsStackTop < 0)
                 throw new RuntimeException("After " + Integer.toHexString(theOpCode & 0xFF) + " Stack underflow");

@@ -234,7 +234,6 @@ public class ByteCode {
         INVOKESPECIAL = (byte)0xB7,
         INVOKESTATIC = (byte)0xB8,
         INVOKEINTERFACE = (byte)0xB9,
-        XXXUNUSEDXXX = (byte)0xBA,
         NEW = (byte)0xBB,
         NEWARRAY = (byte)0xBC,
         ANEWARRAY = (byte)0xBD,
@@ -251,35 +250,9 @@ public class ByteCode {
         GOTO_W = (byte)0xC8,
         JSR_W = (byte)0xC9,
         BREAKPOINT = (byte)0xCA,
-        LDC_QUICK = (byte)0xCB,
-        LDC_W_QUICK = (byte)0xCC,
-        LDC2_W_QUICK = (byte)0xCD,
-        GETFIELD_QUICK = (byte)0xCE,
-        PUTFIELD_QUICK = (byte)0xCF,
-        GETFIELD2_QUICK = (byte)0xD0,
-        PUTFIELD2_QUICK = (byte)0xD1,
-        GETSTATIC_QUICK = (byte)0xD2,
-        PUTSTATIC_QUICK = (byte)0xD3,
-        GETSTATIC2_QUICK = (byte)0xD4,
-        PUTSTATIC2_QUICK = (byte)0xD5,
-        INVOKEVIRTUAL_QUICK = (byte)0xD6,
-        INVOKENONVIRTUAL_QUICK = (byte)0xD7,
-        INVOKESUPER_QUICK = (byte)0xD8,
-        INVOKESTATIC_QUICK = (byte)0xD9,
-        INVOKEINTERFACE_QUICK = (byte)0xDA,
-        INVOKEVIRTUALOBJECT_QUICK = (byte)0xDB,
 
-        NEW_QUICK = (byte)0xDD,
-        ANEWARRAY_QUICK = (byte)0xDE,
-        MULTIANEWARRAY_QUICK = (byte)0xDF,
-        CHECKCAST_QUICK = (byte)0xE0,
-        INSTANCEOF_QUICK = (byte)0xE1,
-        INVOKEVIRTUAL_QUICK_W = (byte)0xE2,
-        GETFIELD_QUICK_W = (byte)0xE3,
-        PUTFIELD_QUICK_W = (byte)0xE4,
         IMPDEP1 = (byte)0xFE,
         IMPDEP2 = (byte)0xFF;
-
 
         /**
          * Types for the NEWARRAY opcode.
@@ -294,789 +267,677 @@ public class ByteCode {
             T_INT = 10,
             T_LONG = 11;
 
-        /**
-         *  Number of bytes of operands generated after the opcode.
+        /*
+         * Number of bytes of operands generated after the opcode.
+         * Not in use currently.
          */
-        static final byte[] extra = {
-        /* NOP */ 0,
-        /* ACONST_NULL */ 0,
-        /* ICONST_M1 */ 0,
-        /* ICONST_0 */ 0,
-        /* ICONST_1 */ 0,
-        /* ICONST_2 */ 0,
-        /* ICONST_3 */ 0,
-        /* ICONST_4 */ 0,
-        /* ICONST_5 */ 0,
-        /* LCONST_0 */ 0,
-        /* LCONST_1 */ 0,
-        /* FCONST_0 */ 0,
-        /* FCONST_1 */ 0,
-        /* FCONST_2 */ 0,
-        /* DCONST_0 */ 0,
-        /* DCONST_1 */ 0,
-        /* BIPUSH */ 1,
-        /* SIPUSH */ 2,
-        /* LDC */ 1,
-        /* LDC_W */ 2,
-        /* LDC2_W */ 2,
-        /* ILOAD */ 1,
-        /* LLOAD */ 1,
-        /* FLOAD */ 1,
-        /* DLOAD */ 1,
-        /* ALOAD */ 1,
-        /* ILOAD_0 */ 0,
-        /* ILOAD_1 */ 0,
-        /* ILOAD_2 */ 0,
-        /* ILOAD_3 */ 0,
-        /* LLOAD_0 */ 0,
-        /* LLOAD_1 */ 0,
-        /* LLOAD_2 */ 0,
-        /* LLOAD_3 */ 0,
-        /* FLOAD_0 */ 0,
-        /* FLOAD_1 */ 0,
-        /* FLOAD_2 */ 0,
-        /* FLOAD_3 */ 0,
-        /* DLOAD_0 */ 0,
-        /* DLOAD_1 */ 0,
-        /* DLOAD_2 */ 0,
-        /* DLOAD_3 */ 0,
-        /* ALOAD_0 */ 0,
-        /* ALOAD_1 */ 0,
-        /* ALOAD_2 */ 0,
-        /* ALOAD_3 */ 0,
-        /* IALOAD */ 0,
-        /* LALOAD */ 0,
-        /* FALOAD */ 0,
-        /* DALOAD */ 0,
-        /* AALOAD */ 0,
-        /* BALOAD */ 0,
-        /* CALOAD */ 0,
-        /* SALOAD */ 0,
-        /* ISTORE */ 1,
-        /* LSTORE */ 1,
-        /* FSTORE */ 1,
-        /* DSTORE */ 1,
-        /* ASTORE */ 1,
-        /* ISTORE_0 */ 0,
-        /* ISTORE_1 */ 0,
-        /* ISTORE_2 */ 0,
-        /* ISTORE_3 */ 0,
-        /* LSTORE_0 */ 0,
-        /* LSTORE_1 */ 0,
-        /* LSTORE_2 */ 0,
-        /* LSTORE_3 */ 0,
-        /* FSTORE_0 */ 0,
-        /* FSTORE_1 */ 0,
-        /* FSTORE_2 */ 0,
-        /* FSTORE_3 */ 0,
-        /* DSTORE_0 */ 0,
-        /* DSTORE_1 */ 0,
-        /* DSTORE_2 */ 0,
-        /* DSTORE_3 */ 0,
-        /* ASTORE_0 */ 0,
-        /* ASTORE_1 */ 0,
-        /* ASTORE_2 */ 0,
-        /* ASTORE_3 */ 0,
-        /* IASTORE */ 0,
-        /* LASTORE */ 0,
-        /* FASTORE */ 0,
-        /* DASTORE */ 0,
-        /* AASTORE */ 0,
-        /* BASTORE */ 0,
-        /* CASTORE */ 0,
-        /* SASTORE */ 0,
-        /* POP */ 0,
-        /* POP2 */ 0,
-        /* DUP */ 0,
-        /* DUP_X1 */ 0,
-        /* DUP_X2 */ 0,
-        /* DUP2 */ 0,
-        /* DUP2_X1 */ 0,
-        /* DUP2_X2 */ 0,
-        /* SWAP */ 0,
-        /* IADD */ 0,
-        /* LADD */ 0,
-        /* FADD */ 0,
-        /* DADD */ 0,
-        /* ISUB */ 0,
-        /* LSUB */ 0,
-        /* FSUB */ 0,
-        /* DSUB */ 0,
-        /* IMUL */ 0,
-        /* LMUL */ 0,
-        /* FMUL */ 0,
-        /* DMUL */ 0,
-        /* IDIV */ 0,
-        /* LDIV */ 0,
-        /* FDIV */ 0,
-        /* DDIV */ 0,
-        /* IREM */ 0,
-        /* LREM */ 0,
-        /* FREM */ 0,
-        /* DREM */ 0,
-        /* INEG */ 0,
-        /* LNEG */ 0,
-        /* FNEG */ 0,
-        /* DNEG */ 0,
-        /* ISHL */ 0,
-        /* LSHL */ 0,
-        /* ISHR */ 0,
-        /* LSHR */ 0,
-        /* IUSHR */ 0,
-        /* LUSHR */ 0,
-        /* IAND */ 0,
-        /* LAND */ 0,
-        /* IOR */ 0,
-        /* LOR */ 0,
-        /* IXOR */ 0,
-        /* LXOR */ 0,
-        /* IINC */ 2,
-        /* I2L */ 0,
-        /* I2F */ 0,
-        /* I2D */ 0,
-        /* L2I */ 0,
-        /* L2F */ 0,
-        /* L2D */ 0,
-        /* F2I */ 0,
-        /* F2L */ 0,
-        /* F2D */ 0,
-        /* D2I */ 0,
-        /* D2L */ 0,
-        /* D2F */ 0,
-        /* I2B */ 0,
-        /* I2C */ 0,
-        /* I2S */ 0,
-        /* LCMP */ 0,
-        /* FCMPL */ 0,
-        /* FCMPG */ 0,
-        /* DCMPL */ 0,
-        /* DCMPG */ 0,
-        /* IFEQ */ 2,
-        /* IFNE */ 2,
-        /* IFLT */ 2,
-        /* IFGE */ 2,
-        /* IFGT */ 2,
-        /* IFLE */ 2,
-        /* IF_ICMPEQ */ 2,
-        /* IF_ICMPNE */ 2,
-        /* IF_ICMPLT */ 2,
-        /* IF_ICMPGE */ 2,
-        /* IF_ICMPGT */ 2,
-        /* IF_ICMPLE */ 2,
-        /* IF_ACMPEQ */ 2,
-        /* IF_ACMPNE */ 2,
-        /* GOTO */ 2,
-        /* JSR */ 2,
-        /* RET */ 1,
-        /* TABLESWITCH */ -1,       // depends on alignment
-        /* LOOKUPSWITCH */ -1,      // depends on alignment
-        /* IRETURN */ 0,
-        /* LRETURN */ 0,
-        /* FRETURN */ 0,
-        /* DRETURN */ 0,
-        /* ARETURN */ 0,
-        /* RETURN */ 0,
-        /* GETSTATIC */ 2,
-        /* PUTSTATIC */ 2,
-        /* GETFIELD */ 2,
-        /* PUTFIELD */ 2,
-        /* INVOKEVIRTUAL */ 2,
-        /* INVOKESPECIAL */ 2,
-        /* INVOKESTATIC */ 2,
-        /* INVOKEINTERFACE */ 2,
-        /* XXXUNUSEDXXX */ 0,
-        /* NEW */ 2,
-        /* NEWARRAY */ 1,
-        /* ANEWARRAY */ 2,
-        /* ARRAYLENGTH */ 0,
-        /* ATHROW */ 0,
-        /* CHECKCAST */ 2,
-        /* INSTANCEOF */ 2,
-        /* MONITORENTER */ 0,
-        /* MONITOREXIT */ 0,
-        /* WIDE */ 0,
-        /* MULTIANEWARRAY */ 3,
-        /* IFNULL */ 2,
-        /* IFNONNULL */ 2,
-        /* GOTO_W */ 4,
-        /* JSR_W */ 4,
-        /* BREAKPOINT */ 0,
-        /* LDC_QUICK */ 1,
-        /* LDC_W_QUICK */ 2,
-        /* LDC2_W_QUICK */ 2,
-        /* GETFIELD_QUICK */ 2,
-        /* PUTFIELD_QUICK */ 2,
-        /* GETFIELD2_QUICK */ 2,
-        /* PUTFIELD2_QUICK */ 2,
-        /* GETSTATIC_QUICK */ 2,
-        /* PUTSTATIC_QUICK */ 2,
-        /* GETSTATIC2_QUICK */ 2,
-        /* PUTSTATIC2_QUICK */ 2,
-        /* INVOKEVIRTUAL_QUICK */ 2,
-        /* INVOKENONVIRTUAL_QUICK */ 2,
-        /* INVOKESUPER_QUICK */ 2,
-        /* INVOKESTATIC_QUICK */ 2,
-        /* INVOKEINTERFACE_QUICK */ 2,
-        /* INVOKEVIRTUALOBJECT_QUICK */ 2,
-        /* XXXUNUSEDXXX */ 0,
-        /* NEW_QUICK */ 2,
-        /* ANEWARRAY_QUICK */ 2,
-        /* MULTIANEWARRAY_QUICK */ 3,
-        /* CHECKCAST_QUICK */ 2,
-        /* INSTANCEOF_QUICK */ 2,
-        /* INVOKEVIRTUAL_QUICK_W */ 0,
-        /* GETFIELD_QUICK_W */ 2,
-        /* PUTFIELD_QUICK_W */ 2,
-        /* XXXUNUSEDXXX */ 0,
-         /* XXXUNUSEDXXX */ 0,
-        /* XXXUNUSEDXXX */ 0,
-        /* XXXUNUSEDXXX */ 0,
-        /* XXXUNUSEDXXX */ 0,
-        /* XXXUNUSEDXXX */ 0,
-        /* XXXUNUSEDXXX */ 0,
-        /* XXXUNUSEDXXX */ 0,
-        /* XXXUNUSEDXXX */ 0,
-        /* XXXUNUSEDXXX */ 0,
-        /* XXXUNUSEDXXX */ 0,
-        /* XXXUNUSEDXXX */ 0,
-        /* XXXUNUSEDXXX */ 0,
-        /* XXXUNUSEDXXX */ 0,
-        /* XXXUNUSEDXXX */ 0,
-        /* XXXUNUSEDXXX */ 0,
-        /* XXXUNUSEDXXX */ 0,
-        /* XXXUNUSEDXXX */ 0,
-        /* XXXUNUSEDXXX */ 0,
-        /* XXXUNUSEDXXX */ 0,
-        /* XXXUNUSEDXXX */ 0,
-        /* XXXUNUSEDXXX */ 0,
-        /* XXXUNUSEDXXX */ 0,
-        /* XXXUNUSEDXXX */ 0,
-        /* XXXUNUSEDXXX */ 0,
-        /* IMPDEP1 */ 0,
-        /* IMPDEP2 */ 0
-        };
+/*
+    int extra(int opcode) {
+        switch (opcode) {
+            case AALOAD:
+            case AASTORE:
+            case ACONST_NULL:
+            case ALOAD_0:
+            case ALOAD_1:
+            case ALOAD_2:
+            case ALOAD_3:
+            case ARETURN:
+            case ARRAYLENGTH:
+            case ASTORE_0:
+            case ASTORE_1:
+            case ASTORE_2:
+            case ASTORE_3:
+            case ATHROW:
+            case BALOAD:
+            case BASTORE:
+            case BREAKPOINT:
+            case CALOAD:
+            case CASTORE:
+            case D2F:
+            case D2I:
+            case D2L:
+            case DADD:
+            case DALOAD:
+            case DASTORE:
+            case DCMPG:
+            case DCMPL:
+            case DCONST_0:
+            case DCONST_1:
+            case DDIV:
+            case DLOAD_0:
+            case DLOAD_1:
+            case DLOAD_2:
+            case DLOAD_3:
+            case DMUL:
+            case DNEG:
+            case DREM:
+            case DRETURN:
+            case DSTORE_0:
+            case DSTORE_1:
+            case DSTORE_2:
+            case DSTORE_3:
+            case DSUB:
+            case DUP2:
+            case DUP2_X1:
+            case DUP2_X2:
+            case DUP:
+            case DUP_X1:
+            case DUP_X2:
+            case F2D:
+            case F2I:
+            case F2L:
+            case FADD:
+            case FALOAD:
+            case FASTORE:
+            case FCMPG:
+            case FCMPL:
+            case FCONST_0:
+            case FCONST_1:
+            case FCONST_2:
+            case FDIV:
+            case FLOAD_0:
+            case FLOAD_1:
+            case FLOAD_2:
+            case FLOAD_3:
+            case FMUL:
+            case FNEG:
+            case FREM:
+            case FRETURN:
+            case FSTORE_0:
+            case FSTORE_1:
+            case FSTORE_2:
+            case FSTORE_3:
+            case FSUB:
+            case I2B:
+            case I2C:
+            case I2D:
+            case I2F:
+            case I2L:
+            case I2S:
+            case IADD:
+            case IALOAD:
+            case IAND:
+            case IASTORE:
+            case ICONST_0:
+            case ICONST_1:
+            case ICONST_2:
+            case ICONST_3:
+            case ICONST_4:
+            case ICONST_5:
+            case ICONST_M1:
+            case IDIV:
+            case ILOAD_0:
+            case ILOAD_1:
+            case ILOAD_2:
+            case ILOAD_3:
+            case IMPDEP1:
+            case IMPDEP2:
+            case IMUL:
+            case INEG:
+            case IOR:
+            case IREM:
+            case IRETURN:
+            case ISHL:
+            case ISHR:
+            case ISTORE_0:
+            case ISTORE_1:
+            case ISTORE_2:
+            case ISTORE_3:
+            case ISUB:
+            case IUSHR:
+            case IXOR:
+            case L2D:
+            case L2F:
+            case L2I:
+            case LADD:
+            case LALOAD:
+            case LAND:
+            case LASTORE:
+            case LCMP:
+            case LCONST_0:
+            case LCONST_1:
+            case LDIV:
+            case LLOAD_0:
+            case LLOAD_1:
+            case LLOAD_2:
+            case LLOAD_3:
+            case LMUL:
+            case LNEG:
+            case LOR:
+            case LREM:
+            case LRETURN:
+            case LSHL:
+            case LSHR:
+            case LSTORE_0:
+            case LSTORE_1:
+            case LSTORE_2:
+            case LSTORE_3:
+            case LSUB:
+            case LUSHR:
+            case LXOR:
+            case MONITORENTER:
+            case MONITOREXIT:
+            case NOP:
+            case POP2:
+            case POP:
+            case RETURN:
+            case SALOAD:
+            case SASTORE:
+            case SWAP:
+            case WIDE:
+                return 0;
 
-        /**
-         * Number of operands accompanying the opcode.
-         */
-        static final byte[] opcodeCount = {
-        /* NOP */ 0,
-        /* ACONST_NULL */ 0,
-        /* ICONST_M1 */ 0,
-        /* ICONST_0 */ 0,
-        /* ICONST_1 */ 0,
-        /* ICONST_2 */ 0,
-        /* ICONST_3 */ 0,
-        /* ICONST_4 */ 0,
-        /* ICONST_5 */ 0,
-        /* LCONST_0 */ 0,
-        /* LCONST_1 */ 0,
-        /* FCONST_0 */ 0,
-        /* FCONST_1 */ 0,
-        /* FCONST_2 */ 0,
-        /* DCONST_0 */ 0,
-        /* DCONST_1 */ 0,
-        /* BIPUSH */ 1,
-        /* SIPUSH */ 1,
-        /* LDC */ 1,
-        /* LDC_W */ 1,
-        /* LDC2_W */ 1,
-        /* ILOAD */ 1,
-        /* LLOAD */ 1,
-        /* FLOAD */ 1,
-        /* DLOAD */ 1,
-        /* ALOAD */ 1,
-        /* ILOAD_0 */ 0,
-        /* ILOAD_1 */ 0,
-        /* ILOAD_2 */ 0,
-        /* ILOAD_3 */ 0,
-        /* LLOAD_0 */ 0,
-        /* LLOAD_1 */ 0,
-        /* LLOAD_2 */ 0,
-        /* LLOAD_3 */ 0,
-        /* FLOAD_0 */ 0,
-        /* FLOAD_1 */ 0,
-        /* FLOAD_2 */ 0,
-        /* FLOAD_3 */ 0,
-        /* DLOAD_0 */ 0,
-        /* DLOAD_1 */ 0,
-        /* DLOAD_2 */ 0,
-        /* DLOAD_3 */ 0,
-        /* ALOAD_0 */ 0,
-        /* ALOAD_1 */ 0,
-        /* ALOAD_2 */ 0,
-        /* ALOAD_3 */ 0,
-        /* IALOAD */ 0,
-        /* LALOAD */ 0,
-        /* FALOAD */ 0,
-        /* DALOAD */ 0,
-        /* AALOAD */ 0,
-        /* BALOAD */ 0,
-        /* CALOAD */ 0,
-        /* SALOAD */ 0,
-        /* ISTORE */ 1,
-        /* LSTORE */ 1,
-        /* FSTORE */ 1,
-        /* DSTORE */ 1,
-        /* ASTORE */ 1,
-        /* ISTORE_0 */ 0,
-        /* ISTORE_1 */ 0,
-        /* ISTORE_2 */ 0,
-        /* ISTORE_3 */ 0,
-        /* LSTORE_0 */ 0,
-        /* LSTORE_1 */ 0,
-        /* LSTORE_2 */ 0,
-        /* LSTORE_3 */ 0,
-        /* FSTORE_0 */ 0,
-        /* FSTORE_1 */ 0,
-        /* FSTORE_2 */ 0,
-        /* FSTORE_3 */ 0,
-        /* DSTORE_0 */ 0,
-        /* DSTORE_1 */ 0,
-        /* DSTORE_2 */ 0,
-        /* DSTORE_3 */ 0,
-        /* ASTORE_0 */ 0,
-        /* ASTORE_1 */ 0,
-        /* ASTORE_2 */ 0,
-        /* ASTORE_3 */ 0,
-        /* IASTORE */ 0,
-        /* LASTORE */ 0,
-        /* FASTORE */ 0,
-        /* DASTORE */ 0,
-        /* AASTORE */ 0,
-        /* BASTORE */ 0,
-        /* CASTORE */ 0,
-        /* SASTORE */ 0,
-        /* POP */ 0,
-        /* POP2 */ 0,
-        /* DUP */ 0,
-        /* DUP_X1 */ 0,
-        /* DUP_X2 */ 0,
-        /* DUP2 */ 0,
-        /* DUP2_X1 */ 0,
-        /* DUP2_X2 */ 0,
-        /* SWAP */ 0,
-        /* IADD */ 0,
-        /* LADD */ 0,
-        /* FADD */ 0,
-        /* DADD */ 0,
-        /* ISUB */ 0,
-        /* LSUB */ 0,
-        /* FSUB */ 0,
-        /* DSUB */ 0,
-        /* IMUL */ 0,
-        /* LMUL */ 0,
-        /* FMUL */ 0,
-        /* DMUL */ 0,
-        /* IDIV */ 0,
-        /* LDIV */ 0,
-        /* FDIV */ 0,
-        /* DDIV */ 0,
-        /* IREM */ 0,
-        /* LREM */ 0,
-        /* FREM */ 0,
-        /* DREM */ 0,
-        /* INEG */ 0,
-        /* LNEG */ 0,
-        /* FNEG */ 0,
-        /* DNEG */ 0,
-        /* ISHL */ 0,
-        /* LSHL */ 0,
-        /* ISHR */ 0,
-        /* LSHR */ 0,
-        /* IUSHR */ 0,
-        /* LUSHR */ 0,
-        /* IAND */ 0,
-        /* LAND */ 0,
-        /* IOR */ 0,
-        /* LOR */ 0,
-        /* IXOR */ 0,
-        /* LXOR */ 0,
-        /* IINC */ 2,
-        /* I2L */ 0,
-        /* I2F */ 0,
-        /* I2D */ 0,
-        /* L2I */ 0,
-        /* L2F */ 0,
-        /* L2D */ 0,
-        /* F2I */ 0,
-        /* F2L */ 0,
-        /* F2D */ 0,
-        /* D2I */ 0,
-        /* D2L */ 0,
-        /* D2F */ 0,
-        /* I2B */ 0,
-        /* I2C */ 0,
-        /* I2S */ 0,
-        /* LCMP */ 0,
-        /* FCMPL */ 0,
-        /* FCMPG */ 0,
-        /* DCMPL */ 0,
-        /* DCMPG */ 0,
-        /* IFEQ */ 1,
-        /* IFNE */ 1,
-        /* IFLT */ 1,
-        /* IFGE */ 1,
-        /* IFGT */ 1,
-        /* IFLE */ 1,
-        /* IF_ICMPEQ */ 1,
-        /* IF_ICMPNE */ 1,
-        /* IF_ICMPLT */ 1,
-        /* IF_ICMPGE */ 1,
-        /* IF_ICMPGT */ 1,
-        /* IF_ICMPLE */ 1,
-        /* IF_ACMPEQ */ 1,
-        /* IF_ACMPNE */ 1,
-        /* GOTO */ 1,
-        /* JSR */ 1,
-        /* RET */ 1,
-        /* TABLESWITCH */ -1,
-        /* LOOKUPSWITCH */ -1,
-        /* IRETURN */ 0,
-        /* LRETURN */ 0,
-        /* FRETURN */ 0,
-        /* DRETURN */ 0,
-        /* ARETURN */ 0,
-        /* RETURN */ 0,
-        /* GETSTATIC */ 1,
-        /* PUTSTATIC */ 1,
-        /* GETFIELD */ 1,
-        /* PUTFIELD */ 1,
-        /* INVOKEVIRTUAL */ 1,
-        /* INVOKESPECIAL */ 1,
-        /* INVOKESTATIC */ 1,
-        /* INVOKEINTERFACE */ 1,
-        /* XXXUNUSEDXXX */ 0,
-        /* NEW */ 1,
-        /* NEWARRAY */ 1,
-        /* ANEWARRAY */ 1,
-        /* ARRAYLENGTH */ 0,
-        /* ATHROW */ 0,
-        /* CHECKCAST */ 1,
-        /* INSTANCEOF */ 1,
-        /* MONITORENTER */ 0,
-        /* MONITOREXIT */ 0,
-        /* WIDE */ 0,
-        /* MULTIANEWARRAY */ 2,
-        /* IFNULL */ 1,
-        /* IFNONNULL */ 1,
-        /* GOTO_W */ 1,
-        /* JSR_W */ 1,
-        /* BREAKPOINT */ 0,
-        /* LDC_QUICK */ -1,
-        /* LDC_W_QUICK */ -1,
-        /* LDC2_W_QUICK */ -1,
-        /* GETFIELD_QUICK */ -1,
-        /* PUTFIELD_QUICK */ -1,
-        /* GETFIELD2_QUICK */ -1,
-        /* PUTFIELD2_QUICK */ -1,
-        /* GETSTATIC_QUICK */ -1,
-        /* PUTSTATIC_QUICK */ -1,
-        /* GETSTATIC2_QUICK */ -1,
-        /* PUTSTATIC2_QUICK */ -1,
-        /* INVOKEVIRTUAL_QUICK */ -1,
-        /* INVOKENONVIRTUAL_QUICK */ -1,
-        /* INVOKESUPER_QUICK */ -1,
-        /* INVOKESTATIC_QUICK */ -1,
-        /* INVOKEINTERFACE_QUICK */ -1,
-        /* INVOKEVIRTUALOBJECT_QUICK */ -1,
-        /* XXXUNUSEDXXX */ -1,
-        /* NEW_QUICK */ -1,
-        /* ANEWARRAY_QUICK */ -1,
-        /* MULTIANEWARRAY_QUICK */ -1,
-        /* CHECKCAST_QUICK */ -1,
-        /* INSTANCEOF_QUICK */ -1,
-        /* INVOKEVIRTUAL_QUICK_W */ -1,
-        /* GETFIELD_QUICK_W */ -1,
-        /* PUTFIELD_QUICK_W */ -1,
-        /* XXXUNUSEDXXX */ 0,
-         /* XXXUNUSEDXXX */ 0,
-        /* XXXUNUSEDXXX */ 0,
-        /* XXXUNUSEDXXX */ 0,
-        /* XXXUNUSEDXXX */ 0,
-        /* XXXUNUSEDXXX */ 0,
-        /* XXXUNUSEDXXX */ 0,
-        /* XXXUNUSEDXXX */ 0,
-        /* XXXUNUSEDXXX */ 0,
-        /* XXXUNUSEDXXX */ 0,
-        /* XXXUNUSEDXXX */ 0,
-        /* XXXUNUSEDXXX */ 0,
-        /* XXXUNUSEDXXX */ 0,
-        /* XXXUNUSEDXXX */ 0,
-        /* XXXUNUSEDXXX */ 0,
-        /* XXXUNUSEDXXX */ 0,
-        /* XXXUNUSEDXXX */ 0,
-        /* XXXUNUSEDXXX */ 0,
-        /* XXXUNUSEDXXX */ 0,
-        /* XXXUNUSEDXXX */ 0,
-        /* XXXUNUSEDXXX */ 0,
-        /* XXXUNUSEDXXX */ 0,
-        /* XXXUNUSEDXXX */ 0,
-        /* XXXUNUSEDXXX */ 0,
-        /* XXXUNUSEDXXX */ 0,
-        /* IMPDEP1 */ 0,
-        /* IMPDEP2 */ 0
-        };
+            case ALOAD:
+            case ASTORE:
+            case BIPUSH:
+            case DLOAD:
+            case DSTORE:
+            case FLOAD:
+            case FSTORE:
+            case ILOAD:
+            case ISTORE:
+            case LDC:
+            case LLOAD:
+            case LSTORE:
+            case NEWARRAY:
+            case RET:
+                return 1;
 
-        /**
-         *  The effect on the operand stack of a given opcode.
-         */
-        static final byte[] stackChange = {
-        /* NOP */ 0,
-        /* ACONST_NULL */ 1,
-        /* ICONST_M1 */ 1,
-        /* ICONST_0 */ 1,
-        /* ICONST_1 */ 1,
-        /* ICONST_2 */ 1,
-        /* ICONST_3 */ 1,
-        /* ICONST_4 */ 1,
-        /* ICONST_5 */ 1,
-        /* LCONST_0 */ 2,
-        /* LCONST_1 */ 2,
-        /* FCONST_0 */ 1,
-        /* FCONST_1 */ 1,
-        /* FCONST_2 */ 1,
-        /* DCONST_0 */ 2,
-        /* DCONST_1 */ 2,
-        /* BIPUSH */ 1,
-        /* SIPUSH */ 1,
-        /* LDC */ 1,
-        /* LDC_W */ 1,
-        /* LDC2_W */ 2,
-        /* ILOAD */ 1,
-        /* LLOAD */ 2,
-        /* FLOAD */ 1,
-        /* DLOAD */ 2,
-        /* ALOAD */ 1,
-        /* ILOAD_0 */ 1,
-        /* ILOAD_1 */ 1,
-        /* ILOAD_2 */ 1,
-        /* ILOAD_3 */ 1,
-        /* LLOAD_0 */ 2,
-        /* LLOAD_1 */ 2,
-        /* LLOAD_2 */ 2,
-        /* LLOAD_3 */ 2,
-        /* FLOAD_0 */ 1,
-        /* FLOAD_1 */ 1,
-        /* FLOAD_2 */ 1,
-        /* FLOAD_3 */ 1,
-        /* DLOAD_0 */ 2,
-        /* DLOAD_1 */ 2,
-        /* DLOAD_2 */ 2,
-        /* DLOAD_3 */ 2,
-        /* ALOAD_0 */ 1,
-        /* ALOAD_1 */ 1,
-        /* ALOAD_2 */ 1,
-        /* ALOAD_3 */ 1,
-        /* IALOAD */ -1,
-        /* LALOAD */ 0,
-        /* FALOAD */ -1,
-        /* DALOAD */ 0,
-        /* AALOAD */ -1,
-        /* BALOAD */ -1,
-        /* CALOAD */ -1,
-        /* SALOAD */ -1,
-        /* ISTORE */ -1,
-        /* LSTORE */ -2,
-        /* FSTORE */ -1,
-        /* DSTORE */ -2,
-        /* ASTORE */ -1,
-        /* ISTORE_0 */ -1,
-        /* ISTORE_1 */ -1,
-        /* ISTORE_2 */ -1,
-        /* ISTORE_3 */ -1,
-        /* LSTORE_0 */ -2,
-        /* LSTORE_1 */ -2,
-        /* LSTORE_2 */ -2,
-        /* LSTORE_3 */ -2,
-        /* FSTORE_0 */ -1,
-        /* FSTORE_1 */ -1,
-        /* FSTORE_2 */ -1,
-        /* FSTORE_3 */ -1,
-        /* DSTORE_0 */ -2,
-        /* DSTORE_1 */ -2,
-        /* DSTORE_2 */ -2,
-        /* DSTORE_3 */ -2,
-        /* ASTORE_0 */ -1,
-        /* ASTORE_1 */ -1,
-        /* ASTORE_2 */ -1,
-        /* ASTORE_3 */ -1,
-        /* IASTORE */ -3,
-        /* LASTORE */ -4,
-        /* FASTORE */ -3,
-        /* DASTORE */ -4,
-        /* AASTORE */ -3,
-        /* BASTORE */ -3,
-        /* CASTORE */ -3,
-        /* SASTORE */ -3,
-        /* POP */ -1,
-        /* POP2 */ -2,
-        /* DUP */ 1,
-        /* DUP_X1 */ 1,
-        /* DUP_X2 */ 1,
-        /* DUP2 */ 2,
-        /* DUP2_X1 */ 2,
-        /* DUP2_X2 */ 2,
-        /* SWAP */ 0,
-        /* IADD */ -1,
-        /* LADD */ -2,
-        /* FADD */ -1,
-        /* DADD */ -2,
-        /* ISUB */ -1,
-        /* LSUB */ -2,
-        /* FSUB */ -1,
-        /* DSUB */ -2,
-        /* IMUL */ -1,
-        /* LMUL */ -2,
-        /* FMUL */ -1,
-        /* DMUL */ -2,
-        /* IDIV */ -1,
-        /* LDIV */ -2,
-        /* FDIV */ -1,
-        /* DDIV */ -2,
-        /* IREM */ -1,
-        /* LREM */ -2,
-        /* FREM */ -1,
-        /* DREM */ -2,
-        /* INEG */ 0,
-        /* LNEG */ 0,
-        /* FNEG */ 0,
-        /* DNEG */ 0,
-        /* ISHL */ -1,
-        /* LSHL */ -1,
-        /* ISHR */ -1,
-        /* LSHR */ -1,
-        /* IUSHR */ -1,
-        /* LUSHR */ -1,
-        /* IAND */ -1,
-        /* LAND */ -2,
-        /* IOR */ -1,
-        /* LOR */ -2,
-        /* IXOR */ -1,
-        /* LXOR */ -2,
-        /* IINC */ 0,
-        /* I2L */ 1,
-        /* I2F */ 0,
-        /* I2D */ 1,
-        /* L2I */ -1,
-        /* L2F */ -1,
-        /* L2D */ 0,
-        /* F2I */ 0,
-        /* F2L */ 1,
-        /* F2D */ 1,
-        /* D2I */ -1,
-        /* D2L */ 0,
-        /* D2F */ -1,
-        /* I2B */ 0,
-        /* I2C */ 0,
-        /* I2S */ 0,
-        /* LCMP */ -3,
-        /* FCMPL */ -1,
-        /* FCMPG */ -1,
-        /* DCMPL */ -3,
-        /* DCMPG */ -3,
-        /* IFEQ */ -1,
-        /* IFNE */ -1,
-        /* IFLT */ -1,
-        /* IFGE */ -1,
-        /* IFGT */ -1,
-        /* IFLE */ -1,
-        /* IF_ICMPEQ */ -2,
-        /* IF_ICMPNE */ -2,
-        /* IF_ICMPLT */ -2,
-        /* IF_ICMPGE */ -2,
-        /* IF_ICMPGT */ -2,
-        /* IF_ICMPLE */ -2,
-        /* IF_ACMPEQ */ -2,
-        /* IF_ACMPNE */ -2,
-        /* GOTO */ 0,
-        /* JSR */ 1,
-        /* RET */ 0,
-        /* TABLESWITCH */ -1,
-        /* LOOKUPSWITCH */ -1,
-        /* IRETURN */ -1,
-        /* LRETURN */ -2,
-        /* FRETURN */ -1,
-        /* DRETURN */ -2,
-        /* ARETURN */ -1,
-        /* RETURN */ 0,
-        /* GETSTATIC */ 0,
-        /* PUTSTATIC */ 0,
-        /* GETFIELD */ -1,
-        /* PUTFIELD */ -1,
-        /* INVOKEVIRTUAL */ -1,         // pops 'this' (unless static)
-        /* INVOKESPECIAL */ -1,         // but needs to account for
-        /* INVOKESTATIC */ 0,           // parameters and return type
-        /* INVOKEINTERFACE */ -1,       //
-        /* XXXUNUSEDXXX */ 0,
-        /* NEW */ 1,
-        /* NEWARRAY */ 0,
-        /* ANEWARRAY */ 0,
-        /* ARRAYLENGTH */ 0,
-        /* ATHROW */ -1,
-        /* CHECKCAST */ 0,
-        /* INSTANCEOF */ 0,
-        /* MONITORENTER */ -1,
-        /* MONITOREXIT */ -1,
-        /* WIDE */ 0,
-        /* MULTIANEWARRAY */ 1,
-        /* IFNULL */ -1,
-        /* IFNONNULL */ -1,
-        /* GOTO_W */ 0,
-        /* JSR_W */ 1,
-        /* BREAKPOINT */ 0,
-        /* LDC_QUICK */ 1,
-        /* LDC_W_QUICK */ 1,
-        /* LDC2_W_QUICK */ 2,
-        /* GETFIELD_QUICK */ 0,
-        /* PUTFIELD_QUICK */ 0,
-        /* GETFIELD2_QUICK */ 0,
-        /* PUTFIELD2_QUICK */ 0,
-        /* GETSTATIC_QUICK */ 0,
-        /* PUTSTATIC_QUICK */ 0,
-        /* GETSTATIC2_QUICK */ 0,
-        /* PUTSTATIC2_QUICK */ 0,
-        /* INVOKEVIRTUAL_QUICK */ 0,
-        /* INVOKENONVIRTUAL_QUICK */ 0,
-        /* INVOKESUPER_QUICK */ 0,
-        /* INVOKESTATIC_QUICK */ 0,
-        /* INVOKEINTERFACE_QUICK */ 0,
-        /* INVOKEVIRTUALOBJECT_QUICK */ 0,
-        /* XXXUNUSEDXXX */ 0,
-        /* NEW_QUICK */ 1,
-        /* ANEWARRAY_QUICK */ 1,
-        /* MULTIANEWARRAY_QUICK */ 1,
-        /* CHECKCAST_QUICK */ -1,
-        /* INSTANCEOF_QUICK */ 0,
-        /* INVOKEVIRTUAL_QUICK_W */ 0,
-        /* GETFIELD_QUICK_W */ 0,
-        /* PUTFIELD_QUICK_W */ 0,
-        /* XXXUNUSEDXXX */ 0,
-        /* XXXUNUSEDXXX */ 0,
-        /* XXXUNUSEDXXX */ 0,
-        /* XXXUNUSEDXXX */ 0,
-        /* XXXUNUSEDXXX */ 0,
-        /* XXXUNUSEDXXX */ 0,
-        /* XXXUNUSEDXXX */ 0,
-        /* XXXUNUSEDXXX */ 0,
-        /* XXXUNUSEDXXX */ 0,
-        /* XXXUNUSEDXXX */ 0,
-        /* XXXUNUSEDXXX */ 0,
-        /* XXXUNUSEDXXX */ 0,
-        /* XXXUNUSEDXXX */ 0,
-        /* XXXUNUSEDXXX */ 0,
-        /* XXXUNUSEDXXX */ 0,
-        /* XXXUNUSEDXXX */ 0,
-        /* XXXUNUSEDXXX */ 0,
-        /* XXXUNUSEDXXX */ 0,
-        /* XXXUNUSEDXXX */ 0,
-        /* XXXUNUSEDXXX */ 0,
-        /* XXXUNUSEDXXX */ 0,
-        /* XXXUNUSEDXXX */ 0,
-        /* XXXUNUSEDXXX */ 0,
-        /* XXXUNUSEDXXX */ 0,
-        /* XXXUNUSEDXXX */ 0,
-        /* IMPDEP1 */ 0,
-        /* IMPDEP2 */ 0
-        };
+            case ANEWARRAY:
+            case CHECKCAST:
+            case GETFIELD:
+            case GETSTATIC:
+            case GOTO:
+            case IFEQ:
+            case IFGE:
+            case IFGT:
+            case IFLE:
+            case IFLT:
+            case IFNE:
+            case IFNONNULL:
+            case IFNULL:
+            case IF_ACMPEQ:
+            case IF_ACMPNE:
+            case IF_ICMPEQ:
+            case IF_ICMPGE:
+            case IF_ICMPGT:
+            case IF_ICMPLE:
+            case IF_ICMPLT:
+            case IF_ICMPNE:
+            case IINC:
+            case INSTANCEOF:
+            case INVOKEINTERFACE:
+            case INVOKESPECIAL:
+            case INVOKESTATIC:
+            case INVOKEVIRTUAL:
+            case JSR:
+            case LDC2_W:
+            case LDC_W:
+            case NEW:
+            case PUTFIELD:
+            case PUTSTATIC:
+            case SIPUSH:
+                return 2;
+
+            case MULTIANEWARRAY:
+                return 3;
+
+            case GOTO_W:
+            case JSR_W:
+                return 4;
+
+            case LOOKUPSWITCH:    // depends on alignment
+            case TABLESWITCH: // depends on alignment
+                return -1;
+        }
+        throw new IllegalArgumentException("Bad opcode: "+opcode);
+    }
+*/
+
+    /**
+     * Number of operands accompanying the opcode.
+     */
+    static int opcodeCount(int opcode) {
+        switch (opcode) {
+            case AALOAD:
+            case AASTORE:
+            case ACONST_NULL:
+            case ALOAD_0:
+            case ALOAD_1:
+            case ALOAD_2:
+            case ALOAD_3:
+            case ARETURN:
+            case ARRAYLENGTH:
+            case ASTORE_0:
+            case ASTORE_1:
+            case ASTORE_2:
+            case ASTORE_3:
+            case ATHROW:
+            case BALOAD:
+            case BASTORE:
+            case BREAKPOINT:
+            case CALOAD:
+            case CASTORE:
+            case D2F:
+            case D2I:
+            case D2L:
+            case DADD:
+            case DALOAD:
+            case DASTORE:
+            case DCMPG:
+            case DCMPL:
+            case DCONST_0:
+            case DCONST_1:
+            case DDIV:
+            case DLOAD_0:
+            case DLOAD_1:
+            case DLOAD_2:
+            case DLOAD_3:
+            case DMUL:
+            case DNEG:
+            case DREM:
+            case DRETURN:
+            case DSTORE_0:
+            case DSTORE_1:
+            case DSTORE_2:
+            case DSTORE_3:
+            case DSUB:
+            case DUP:
+            case DUP2:
+            case DUP2_X1:
+            case DUP2_X2:
+            case DUP_X1:
+            case DUP_X2:
+            case F2D:
+            case F2I:
+            case F2L:
+            case FADD:
+            case FALOAD:
+            case FASTORE:
+            case FCMPG:
+            case FCMPL:
+            case FCONST_0:
+            case FCONST_1:
+            case FCONST_2:
+            case FDIV:
+            case FLOAD_0:
+            case FLOAD_1:
+            case FLOAD_2:
+            case FLOAD_3:
+            case FMUL:
+            case FNEG:
+            case FREM:
+            case FRETURN:
+            case FSTORE_0:
+            case FSTORE_1:
+            case FSTORE_2:
+            case FSTORE_3:
+            case FSUB:
+            case I2B:
+            case I2C:
+            case I2D:
+            case I2F:
+            case I2L:
+            case I2S:
+            case IADD:
+            case IALOAD:
+            case IAND:
+            case IASTORE:
+            case ICONST_0:
+            case ICONST_1:
+            case ICONST_2:
+            case ICONST_3:
+            case ICONST_4:
+            case ICONST_5:
+            case ICONST_M1:
+            case IDIV:
+            case ILOAD_0:
+            case ILOAD_1:
+            case ILOAD_2:
+            case ILOAD_3:
+            case IMPDEP1:
+            case IMPDEP2:
+            case IMUL:
+            case INEG:
+            case IOR:
+            case IREM:
+            case IRETURN:
+            case ISHL:
+            case ISHR:
+            case ISTORE_0:
+            case ISTORE_1:
+            case ISTORE_2:
+            case ISTORE_3:
+            case ISUB:
+            case IUSHR:
+            case IXOR:
+            case L2D:
+            case L2F:
+            case L2I:
+            case LADD:
+            case LALOAD:
+            case LAND:
+            case LASTORE:
+            case LCMP:
+            case LCONST_0:
+            case LCONST_1:
+            case LDIV:
+            case LLOAD_0:
+            case LLOAD_1:
+            case LLOAD_2:
+            case LLOAD_3:
+            case LMUL:
+            case LNEG:
+            case LOR:
+            case LREM:
+            case LRETURN:
+            case LSHL:
+            case LSHR:
+            case LSTORE_0:
+            case LSTORE_1:
+            case LSTORE_2:
+            case LSTORE_3:
+            case LSUB:
+            case LUSHR:
+            case LXOR:
+            case MONITORENTER:
+            case MONITOREXIT:
+            case NOP:
+            case POP:
+            case POP2:
+            case RETURN:
+            case SALOAD:
+            case SASTORE:
+            case SWAP:
+            case WIDE:
+                return 0;
+            case ALOAD:
+            case ANEWARRAY:
+            case ASTORE:
+            case BIPUSH:
+            case CHECKCAST:
+            case DLOAD:
+            case DSTORE:
+            case FLOAD:
+            case FSTORE:
+            case GETFIELD:
+            case GETSTATIC:
+            case GOTO:
+            case GOTO_W:
+            case IFEQ:
+            case IFGE:
+            case IFGT:
+            case IFLE:
+            case IFLT:
+            case IFNE:
+            case IFNONNULL:
+            case IFNULL:
+            case IF_ACMPEQ:
+            case IF_ACMPNE:
+            case IF_ICMPEQ:
+            case IF_ICMPGE:
+            case IF_ICMPGT:
+            case IF_ICMPLE:
+            case IF_ICMPLT:
+            case IF_ICMPNE:
+            case ILOAD:
+            case INSTANCEOF:
+            case INVOKEINTERFACE:
+            case INVOKESPECIAL:
+            case INVOKESTATIC:
+            case INVOKEVIRTUAL:
+            case ISTORE:
+            case JSR:
+            case JSR_W:
+            case LDC:
+            case LDC2_W:
+            case LDC_W:
+            case LLOAD:
+            case LSTORE:
+            case NEW:
+            case NEWARRAY:
+            case PUTFIELD:
+            case PUTSTATIC:
+            case RET:
+            case SIPUSH:
+                return 1;
+
+            case IINC:
+            case MULTIANEWARRAY:
+                return 2;
+
+            case LOOKUPSWITCH:
+            case TABLESWITCH:
+                return -1;
+        }
+        throw new IllegalArgumentException("Bad opcode: "+opcode);
+    }
+
+    /**
+     *  The effect on the operand stack of a given opcode.
+     */
+    static int stackChange(int opcode) {
+        // For INVOKE... accounts only for popping this (unless static),
+        // ignoring parameters and return type
+        switch (opcode) {
+            case DASTORE:
+            case LASTORE:
+                return -4;
+
+            case AASTORE:
+            case BASTORE:
+            case CASTORE:
+            case DCMPG:
+            case DCMPL:
+            case FASTORE:
+            case IASTORE:
+            case LCMP:
+            case SASTORE:
+                return -3;
+
+            case DADD:
+            case DDIV:
+            case DMUL:
+            case DREM:
+            case DRETURN:
+            case DSTORE:
+            case DSTORE_0:
+            case DSTORE_1:
+            case DSTORE_2:
+            case DSTORE_3:
+            case DSUB:
+            case IF_ACMPEQ:
+            case IF_ACMPNE:
+            case IF_ICMPEQ:
+            case IF_ICMPGE:
+            case IF_ICMPGT:
+            case IF_ICMPLE:
+            case IF_ICMPLT:
+            case IF_ICMPNE:
+            case LADD:
+            case LAND:
+            case LDIV:
+            case LMUL:
+            case LOR:
+            case LREM:
+            case LRETURN:
+            case LSTORE:
+            case LSTORE_0:
+            case LSTORE_1:
+            case LSTORE_2:
+            case LSTORE_3:
+            case LSUB:
+            case LXOR:
+            case POP2:
+                return -2;
+
+            case AALOAD:
+            case ARETURN:
+            case ASTORE:
+            case ASTORE_0:
+            case ASTORE_1:
+            case ASTORE_2:
+            case ASTORE_3:
+            case ATHROW:
+            case BALOAD:
+            case CALOAD:
+            case D2F:
+            case D2I:
+            case FADD:
+            case FALOAD:
+            case FCMPG:
+            case FCMPL:
+            case FDIV:
+            case FMUL:
+            case FREM:
+            case FRETURN:
+            case FSTORE:
+            case FSTORE_0:
+            case FSTORE_1:
+            case FSTORE_2:
+            case FSTORE_3:
+            case FSUB:
+            case GETFIELD:
+            case IADD:
+            case IALOAD:
+            case IAND:
+            case IDIV:
+            case IFEQ:
+            case IFGE:
+            case IFGT:
+            case IFLE:
+            case IFLT:
+            case IFNE:
+            case IFNONNULL:
+            case IFNULL:
+            case IMUL:
+            case INVOKEINTERFACE:       //
+            case INVOKESPECIAL:         // but needs to account for
+            case INVOKEVIRTUAL:         // pops 'this' (unless static)
+            case IOR:
+            case IREM:
+            case IRETURN:
+            case ISHL:
+            case ISHR:
+            case ISTORE:
+            case ISTORE_0:
+            case ISTORE_1:
+            case ISTORE_2:
+            case ISTORE_3:
+            case ISUB:
+            case IUSHR:
+            case IXOR:
+            case L2F:
+            case L2I:
+            case LOOKUPSWITCH:
+            case LSHL:
+            case LSHR:
+            case LUSHR:
+            case MONITORENTER:
+            case MONITOREXIT:
+            case POP:
+            case PUTFIELD:
+            case SALOAD:
+            case TABLESWITCH:
+                return -1;
+
+            case ANEWARRAY:
+            case ARRAYLENGTH:
+            case BREAKPOINT:
+            case CHECKCAST:
+            case D2L:
+            case DALOAD:
+            case DNEG:
+            case F2I:
+            case FNEG:
+            case GETSTATIC:
+            case GOTO:
+            case GOTO_W:
+            case I2B:
+            case I2C:
+            case I2F:
+            case I2S:
+            case IINC:
+            case IMPDEP1:
+            case IMPDEP2:
+            case INEG:
+            case INSTANCEOF:
+            case INVOKESTATIC:
+            case L2D:
+            case LALOAD:
+            case LNEG:
+            case NEWARRAY:
+            case NOP:
+            case PUTSTATIC:
+            case RET:
+            case RETURN:
+            case SWAP:
+            case WIDE:
+                return 0;
+
+            case ACONST_NULL:
+            case ALOAD:
+            case ALOAD_0:
+            case ALOAD_1:
+            case ALOAD_2:
+            case ALOAD_3:
+            case BIPUSH:
+            case DUP:
+            case DUP_X1:
+            case DUP_X2:
+            case F2D:
+            case F2L:
+            case FCONST_0:
+            case FCONST_1:
+            case FCONST_2:
+            case FLOAD:
+            case FLOAD_0:
+            case FLOAD_1:
+            case FLOAD_2:
+            case FLOAD_3:
+            case I2D:
+            case I2L:
+            case ICONST_0:
+            case ICONST_1:
+            case ICONST_2:
+            case ICONST_3:
+            case ICONST_4:
+            case ICONST_5:
+            case ICONST_M1:
+            case ILOAD:
+            case ILOAD_0:
+            case ILOAD_1:
+            case ILOAD_2:
+            case ILOAD_3:
+            case JSR:
+            case JSR_W:
+            case LDC:
+            case LDC_W:
+            case MULTIANEWARRAY:
+            case NEW:
+            case SIPUSH:
+                return 1;
+
+            case DCONST_0:
+            case DCONST_1:
+            case DLOAD:
+            case DLOAD_0:
+            case DLOAD_1:
+            case DLOAD_2:
+            case DLOAD_3:
+            case DUP2:
+            case DUP2_X1:
+            case DUP2_X2:
+            case LCONST_0:
+            case LCONST_1:
+            case LDC2_W:
+            case LLOAD:
+            case LLOAD_0:
+            case LLOAD_1:
+            case LLOAD_2:
+            case LLOAD_3:
+                return 2;
+        }
+        throw new IllegalArgumentException("Bad opcode: "+opcode);
+    }
 }
