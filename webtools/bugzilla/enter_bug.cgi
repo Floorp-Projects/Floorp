@@ -53,6 +53,7 @@ use vars qw(
   @legal_keywords
   $userid
   %versions
+  %target_milestone
   $proddesc
   $classdesc
 );
@@ -436,6 +437,19 @@ if ( ($cloned_bug_id) &&
 } else {
     $default{'version'} = $vars->{'version'}->[$#{$vars->{'version'}}];
 }
+
+# Get list of milestones.
+if ( Param('usetargetmilestone') ) {
+    $vars->{'target_milestone'} = $::target_milestone{$product};
+    if (formvalue('target_milestone')) {
+       $default{'target_milestone'} = formvalue('target_milestone');
+    } else {
+       SendSQL("SELECT defaultmilestone FROM products WHERE " .
+               "name = " . SqlQuote($product));
+       $default{'target_milestone'} = FetchOneColumn();
+    }
+}
+
 
 # List of status values for drop-down.
 my @status;

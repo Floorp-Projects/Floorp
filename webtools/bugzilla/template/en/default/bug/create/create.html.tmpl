@@ -159,6 +159,14 @@ function set_assign_to() {
   [% INCLUDE select %]
   </tr>
 
+  [% IF Param('usetargetmilestone') && Param('letsubmitterchoosemilestone') %]
+    <tr>
+    [% sel = { description => 'Target Milestone', name => 'target_milestone' } %]
+    [% INCLUDE select %]
+    <td colspan="2"></td>
+    </tr>
+  [% END %]
+
   <tr>
     <td>&nbsp;</td>
     <td colspan="3"></td>

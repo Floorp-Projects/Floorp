@@ -888,6 +888,15 @@ You will get this message once a day until you\'ve dealt with these bugs!
   },
 
   {
+   name => 'letsubmitterchoosemilestone',
+   desc => 'If this is on, then people submitting bugs can choose the ' .
+           'Target Milestone for that bug.  If off, then all bugs initially ' .
+           'have the default milestone for the product being filed in.',
+   type => 'b',
+   default => 1
+  },
+
+  {
    name => 'musthavemilestoneonaccept',
    desc => 'If you are using Target Milestone, do you want to require that ' .
            'the milestone be set in order for a user to ACCEPT a bug?',
