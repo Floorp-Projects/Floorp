@@ -35,21 +35,22 @@
  * ----- END LICENSE BLOCK ----- */
 
 /*
-	MRJPlugin.h
-	
-	MRJPlugin encapsulates the global state of the MRJ plugin as a single COM object.
-	MRJPluginInstance represents an instance of the MRJ plugin.
-	
-	by Patrick C. Beard.
+    MRJPlugin.h
+    
+    MRJPlugin encapsulates the global state of the MRJ plugin as a single COM object.
+    MRJPluginInstance represents an instance of the MRJ plugin.
+    
+    by Patrick C. Beard.
  */
 
 #pragma once
 
 #include "nsIPlugin.h"
-#include "nsIJVMPlugin.h"
-#include "nsIThreadManager.h"
 #include "nsIPluginInstance.h"
+#include "nsIJVMPlugin.h"
+#include "nsIJVMConsole.h"
 #include "nsIJVMPluginInstance.h"
+#include "nsIThreadManager.h"
 #include "nsIEventHandler.h"
 #include "nsIPluginStreamListener.h"
 #include "SupportsMixin.h"
@@ -62,45 +63,50 @@ class MRJConsole;
 
 class nsIJVMManager;
 
-class MRJPlugin :	public nsIPlugin, public nsIJVMPlugin,
-					public nsIRunnable, public SupportsMixin {
+class MRJPlugin :   public nsIPlugin, public nsIJVMPlugin,
+                    public nsIJVMConsole, public nsIRunnable,
+                    public SupportsMixin {
 public:
-	MRJPlugin();
-	virtual ~MRJPlugin();
+    MRJPlugin();
+    virtual ~MRJPlugin();
 
     static nsresult GetService(const nsCID &aCID, const nsIID& aIID, void* *aService);
     static nsresult GetService(const char* aContractID, const nsIID& aIID, void* *aService);
-	
-	// NS_DECL_ISUPPORTS
-	NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
-	NS_IMETHOD_(nsrefcnt) AddRef(void) { return addRef(); }
-	NS_IMETHOD_(nsrefcnt) Release(void) { return release(); }
-	
-	// The Release method on NPIPlugin corresponds to NPP_Shutdown.
+    
+    // NS_DECL_ISUPPORTS
+#if USE_SYSTEM_CONSOLE
+    DECL_SUPPORTS_MIXIN
+#else
+    NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
+    NS_IMETHOD_(nsrefcnt) AddRef(void) { return addRef(); }
+    NS_IMETHOD_(nsrefcnt) Release(void) { return release(); }
+#endif
 
-	// The old NPP_New call has been factored into two plugin instance methods:
-	//
-	// NewInstance -- called once, after the plugin instance is created. This 
-	// method is used to initialize the new plugin instance (although the actual
-	// plugin instance object will be created by the plugin manager).
-	//
-	// NPIPluginInstance::Start -- called when the plugin instance is to be
-	// started. This happens in two circumstances: (1) after the plugin instance
-	// is first initialized, and (2) after a plugin instance is returned to
-	// (e.g. by going back in the window history) after previously being stopped
-	// by the Stop method. 
+    // The Release method on NPIPlugin corresponds to NPP_Shutdown.
 
-	// nsIFactory Methods.
-	
-	NS_IMETHOD
-	CreateInstance(nsISupports *aOuter, const nsIID& aIID, void **aResult);
+    // The old NPP_New call has been factored into two plugin instance methods:
+    //
+    // NewInstance -- called once, after the plugin instance is created. This 
+    // method is used to initialize the new plugin instance (although the actual
+    // plugin instance object will be created by the plugin manager).
+    //
+    // NPIPluginInstance::Start -- called when the plugin instance is to be
+    // started. This happens in two circumstances: (1) after the plugin instance
+    // is first initialized, and (2) after a plugin instance is returned to
+    // (e.g. by going back in the window history) after previously being stopped
+    // by the Stop method. 
 
-	NS_IMETHOD
-	LockFactory(PRBool aLock) { return NS_ERROR_NOT_IMPLEMENTED; }
+    // nsIFactory Methods.
+    
+    NS_IMETHOD
+    CreateInstance(nsISupports *aOuter, const nsIID& aIID, void **aResult);
 
-	// nsIPlugin Methods.
-	
-	/**
+    NS_IMETHOD
+    LockFactory(PRBool aLock) { return NS_ERROR_NOT_IMPLEMENTED; }
+
+    // nsIPlugin Methods.
+    
+    /**
      * Creates a new plugin instance, based on the MIME type. This
      * allows different impelementations to be created depending on
      * the specified MIME type.
@@ -157,14 +163,14 @@ public:
     NS_IMETHOD
     GetValue(nsPluginVariable variable, void *value);
 
-	// JVM Plugin Methods.
+    // nsIJVMPlugin Methods.
 
     // This method us used to start the Java virtual machine.
     // It sets up any global state necessary to host Java programs.
     // Note that calling this method is distinctly separate from 
     // initializing the nsIJVMPlugin object (done by the Initialize
     // method).
-    NS_IMETHOD
+    nsresult
     StartupJVM(void);
 
     // Causes the JVM to append a new directory to its classpath.
@@ -177,7 +183,7 @@ public:
     NS_IMETHOD
     RemoveFromClassPath(const char* dirPath)
     {
-    	return NS_ERROR_NOT_IMPLEMENTED;
+        return NS_ERROR_NOT_IMPLEMENTED;
     }
 
     // Returns the current classpath in use by the JVM.
@@ -187,65 +193,82 @@ public:
     NS_IMETHOD
     GetJavaWrapper(JNIEnv* env, jint jsobj, jobject *jobj);
 
-	/**
-	 * This creates a new secure communication channel with Java. The second parameter,
-	 * nativeEnv, if non-NULL, will be the actual thread for Java communication.
-	 * Otherwise, a new thread should be created.
-	 * @param	proxyEnv		the env to be used by all clients on the browser side
-	 * @return	outSecureEnv	the secure environment used by the proxyEnv
-	 */
-	NS_IMETHOD
-	CreateSecureEnv(JNIEnv* proxyEnv, nsISecureEnv* *outSecureEnv);
+    /**
+     * This creates a new secure communication channel with Java. The second parameter,
+     * nativeEnv, if non-NULL, will be the actual thread for Java communication.
+     * Otherwise, a new thread should be created.
+     * @param   proxyEnv        the env to be used by all clients on the browser side
+     * @return  outSecureEnv    the secure environment used by the proxyEnv
+     */
+    NS_IMETHOD
+    CreateSecureEnv(JNIEnv* proxyEnv, nsISecureEnv* *outSecureEnv);
 
-	/**
-	 * Gives time to the JVM from the main event loop of the browser. This is
-	 * necessary when there aren't any plugin instances around, but Java threads exist.
-	 */
-	NS_IMETHOD
-	SpendTime(PRUint32 timeMillis);
-	
-	NS_IMETHOD
-	UnwrapJavaWrapper(JNIEnv* jenv, jobject jobj, jint* obj);
+    /**
+     * Gives time to the JVM from the main event loop of the browser. This is
+     * necessary when there aren't any plugin instances around, but Java threads exist.
+     */
+    NS_IMETHOD
+    SpendTime(PRUint32 timeMillis);
+    
+    NS_IMETHOD
+    UnwrapJavaWrapper(JNIEnv* jenv, jobject jobj, jint* obj);
 
-	/**
-	 * The Run method gives time to the JVM periodically. This makes SpendTIme() obsolete.
-	 */
-	NS_IMETHOD
-	Run();
-	
-	// NON-INTERFACE methods, for internal use only.
 
-	MRJSession* getSession();
-	nsIJVMManager* getManager();
-	nsIThreadManager* getThreadManager();
+    // nsIJVMConsole methods
 
-	MRJPluginInstance* getPluginInstance(jobject applet);
+    NS_IMETHOD
+    Show(void);
+
+    NS_IMETHOD
+    Hide(void);
+
+    NS_IMETHOD
+    IsVisible(PRBool *result);
+    
+    NS_IMETHOD
+    Print(const char* msg, const char* encodingName = NULL);
+
+    // nsIRunnable methods
+
+    /**
+     * The Run method gives time to the JVM periodically. This makes SpendTIme() obsolete.
+     */
+    NS_IMETHOD
+    Run();
+    
+    // NON-INTERFACE methods, for internal use only.
+
+    MRJSession* getSession();
+    nsIJVMManager* getManager();
+    nsIThreadManager* getThreadManager();
+
+    MRJPluginInstance* getPluginInstance(jobject applet);
     MRJPluginInstance* getPluginInstance(JNIEnv* jenv);
     
     Boolean inPluginThread();
-	
+    
 private:
-	nsIJVMManager* mManager;
-	nsIThreadManager* mThreadManager;
-	MRJSession* mSession;
+    nsIJVMManager* mManager;
+    nsIThreadManager* mThreadManager;
+    MRJSession* mSession;
     MRJConsole* mConsole;
     nsPluginThread *mPluginThreadID;
-	Boolean mIsEnabled;
-	
-	// support for SupportsMixin.
-	static const InterfaceInfo sInterfaces[];
-	static const UInt32 kInterfaceCount;
+    Boolean mIsEnabled;
+    
+    // support for SupportsMixin.
+    static const InterfaceInfo sInterfaces[];
+    static const UInt32 kInterfaceCount;
 };
 
-class MRJPluginInstance :	public nsIPluginInstance, public nsIJVMPluginInstance,
-							public nsIEventHandler, public nsIPluginStreamListener,
-							private SupportsMixin {
+class MRJPluginInstance :   public nsIPluginInstance, public nsIJVMPluginInstance,
+                            public nsIEventHandler, public nsIPluginStreamListener,
+                            private SupportsMixin {
 public:
-	MRJPluginInstance(MRJPlugin* plugin);
-	virtual ~MRJPluginInstance();
+    MRJPluginInstance(MRJPlugin* plugin);
+    virtual ~MRJPluginInstance();
 
-	// NS_DECL_ISUPPORTS
-	DECL_SUPPORTS_MIXIN
+    // NS_DECL_ISUPPORTS
+    DECL_SUPPORTS_MIXIN
 
     // (Corresponds to NPP_HandleEvent.)
     NS_IMETHOD
@@ -292,8 +315,8 @@ public:
      *
      * @result - NS_OK if this operation was successful
      */
-	NS_IMETHOD
-	Stop(void);
+    NS_IMETHOD
+    Stop(void);
 
     /**
      * Called to instruct the plugin instance to destroy itself. This is called when
@@ -303,8 +326,8 @@ public:
      *
      * @result - NS_OK if this operation was successful
      */
-	NS_IMETHOD
-	Destroy(void);
+    NS_IMETHOD
+    Destroy(void);
 
     /**
      * Called when the window containing the plugin instance changes.
@@ -314,12 +337,12 @@ public:
      * @param window - the plugin window structure
      * @result - NS_OK if this operation was successful
      */
-	NS_IMETHOD
-	SetWindow(nsPluginWindow* window);
+    NS_IMETHOD
+    SetWindow(nsPluginWindow* window);
 
     /**
      * Called to tell the plugin that the initial src/data stream is
-	 * ready.  Expects the plugin to return a nsIPluginStreamListener.
+     * ready.  Expects the plugin to return a nsIPluginStreamListener.
      *
      * (Corresponds to NPP_NewStream.)
      *
@@ -328,11 +351,11 @@ public:
      */
     NS_IMETHOD
     NewStream(nsIPluginStreamListener** listener)
-	{
-		*listener = this;
-		AddRef();
-		return NS_OK;
-	}
+    {
+        *listener = this;
+        AddRef();
+        return NS_OK;
+    }
 
     /**
      * Called to instruct the plugin instance to print itself to a printer.
@@ -355,7 +378,7 @@ public:
     NS_IMETHOD
     GetValue(nsPluginInstanceVariable variable, void *value);
 
-	// nsIJVMPluginInstance methods.
+    // nsIJVMPluginInstance methods.
 
     // This method is called when LiveConnect wants to find the Java object
     // associated with this plugin instance, e.g. the Applet or JavaBean object.
@@ -366,11 +389,11 @@ public:
     GetText(const char* *result)
     {
         *result = NULL;
-    	return NS_OK;
+        return NS_OK;
     }
 
-	// nsIPluginStreamListener implementation.
-	
+    // nsIPluginStreamListener implementation.
+    
     /**
      * Notify the observer that the URL has started to load.  This method is
      * called only once, at the beginning of a URL load.<BR><BR>
@@ -381,7 +404,7 @@ public:
     NS_IMETHOD
     OnStartBinding(nsIPluginStreamInfo* pluginInfo)
     {
-    	return NS_OK;
+        return NS_OK;
     }
 
     /**
@@ -400,9 +423,9 @@ public:
     NS_IMETHOD
     OnFileAvailable(nsIPluginStreamInfo* pluginInfo, const char* fileName)
     {
-		return NS_ERROR_NOT_IMPLEMENTED;
-	}
-	
+        return NS_ERROR_NOT_IMPLEMENTED;
+    }
+    
     /**
      * Notify the observer that the URL has finished loading.  This method is 
      * called once when the networking library has finished processing the 
@@ -417,17 +440,17 @@ public:
     NS_IMETHOD
     OnStopBinding(nsIPluginStreamInfo* pluginInfo, nsresult status)
     {
-    	return NS_OK;
+        return NS_OK;
     }
 
-	/**
-	 * What is this method supposed to do?
-	 */
+    /**
+     * What is this method supposed to do?
+     */
     NS_IMETHOD
     GetStreamType(nsPluginStreamType *result)
     {
-    	*result = nsPluginStreamType_Normal;
-    	return NS_OK;
+        *result = nsPluginStreamType_Normal;
+        return NS_OK;
     }
 
     // Accessing the list of instances.
@@ -438,9 +461,9 @@ public:
     MRJSession* getSession(void);
 
 private:
-	void pushInstance(void);
-	void popInstance(void);
-	void inspectInstance(void);
+    void pushInstance(void);
+    void popInstance(void);
+    void inspectInstance(void);
 
 private:
     nsIPluginInstancePeer* mPeer;
@@ -454,7 +477,7 @@ private:
     // maintain a list of instances.
     MRJPluginInstance* mNext;
 
-	// support for SupportsMixin.
-	static const InterfaceInfo sInterfaces[];
-	static const UInt32 kInterfaceCount;
+    // support for SupportsMixin.
+    static const InterfaceInfo sInterfaces[];
+    static const UInt32 kInterfaceCount;
 };
