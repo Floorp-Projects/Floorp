@@ -59,6 +59,7 @@
 #include "nsDragService.h"
 //#include "nsContextMenu.h"
 #include "nsIRollupListener.h"
+#include "nsIMenuRollup.h"
 #include "nsIRegion.h"
 
 //~~~ windowless plugin support
@@ -525,16 +526,34 @@ MRESULT EXPENTRY fnwpNSWindow( HWND hwnd, ULONG msg, MPARAM mp1, MPARAM mp2)
    if( nsnull != gRollupListener && nsnull != gRollupWidget) {
       if( msg == WM_ACTIVATE || msg == WM_BUTTON1DOWN ||
           msg == WM_BUTTON2DOWN || msg == WM_BUTTON3DOWN) {
-         // Rollup if the event is outside the popup
-         if( PR_FALSE == nsWindow::EventIsInsideWindow( (nsWindow*)gRollupWidget)) {
-            gRollupListener->Rollup();
-
-            // if we are supposed to be consuming events and it is
-            // a Mouse Button down, let it go through
-//            if( gRollupConsumeRollupEvent && msg != WM_BUTTON1DOWN) {
-//               return FALSE;
-//            }
-         } 
+      // Rollup if the event is outside the popup.
+      PRBool rollup = !nsWindow::EventIsInsideWindow((nsWindow*)gRollupWidget);
+      
+      // If we're dealing with menus, we probably have submenus and we don't
+      // want to rollup if the click is in a parent menu of the current submenu.
+      if (rollup) {
+        nsCOMPtr<nsIMenuRollup> menuRollup ( do_QueryInterface(gRollupListener) );
+        if ( menuRollup ) {
+          nsCOMPtr<nsISupportsArray> widgetChain;
+          menuRollup->GetSubmenuWidgetChain ( getter_AddRefs(widgetChain) );
+          if ( widgetChain ) {
+            PRUint32 count = 0;
+            widgetChain->Count(&count);
+            for ( PRUint32 i = 0; i < count; ++i ) {
+              nsCOMPtr<nsISupports> genericWidget;
+              widgetChain->GetElementAt ( i, getter_AddRefs(genericWidget) );
+              nsCOMPtr<nsIWidget> widget ( do_QueryInterface(genericWidget) );
+              if ( widget ) {
+                nsIWidget* temp = widget.get();
+                if ( nsWindow::EventIsInsideWindow((nsWindow*)temp) ) {
+                  rollup = PR_FALSE;
+                  break;
+                }
+              }
+            } // foreach parent menu widget
+          }
+        } // if rollup listener knows about menus
+      }
       }
       else if( msg == WM_SETFOCUS) {
          if( !mp2 && 
