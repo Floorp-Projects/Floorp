@@ -270,6 +270,7 @@ nsStdURL::Equals(nsIURI *i_OtherURI, PRBool *o_Equals)
                 }
             }
         }
+        NS_RELEASE(url);
     }
     *o_Equals = eq;
     return NS_OK;
