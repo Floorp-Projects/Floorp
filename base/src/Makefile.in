@@ -30,7 +30,7 @@ else
 ifeq ($(USE_NGLAYOUT_GTK),1)
 DIRS = gtk
 else
-DIRS = unix
+DIRS = motif
 endif
 endif
 

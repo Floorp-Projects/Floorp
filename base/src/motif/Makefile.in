@@ -22,7 +22,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME	= gmbaseunix
+LIBRARY_NAME	= gmbasemotif
 
 MODULE		= raptor
 
