@@ -2441,15 +2441,10 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
   }
    
   nsCOMPtr<nsLocalMoveCopyMsgTxn> localUndoTxn;
-  nsCOMPtr<nsIMsgWindow> msgWindow;
   PRBool multipleCopiesFinished = (mCopyState->m_curCopyIndex >= mCopyState->m_totalMsgCount);
 
   if (mCopyState->m_undoMsgTxn)
-  {
-		localUndoTxn = do_QueryInterface(mCopyState->m_undoMsgTxn, &rv);
-    if (NS_SUCCEEDED(rv))
-      localUndoTxn->GetMsgWindow(getter_AddRefs(msgWindow));
-  }
+		localUndoTxn = do_QueryInterface(mCopyState->m_undoMsgTxn);
 
   if (mCopyState)
   {
@@ -2475,7 +2470,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
     {
       nsCOMPtr<nsIMsgDatabase> msgDatabase;
       if(NS_SUCCEEDED(rv))
-        rv = GetMsgDatabase(msgWindow, getter_AddRefs(msgDatabase));
+        rv = GetMsgDatabase(mCopyState->m_msgWindow, getter_AddRefs(msgDatabase));
       
       if(NS_SUCCEEDED(rv))
       {
@@ -2519,7 +2514,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
 
     mCopyState->m_parseMsgState->FinishHeader();
 
-    result = GetMsgDatabase(msgWindow, getter_AddRefs(msgDb));
+    result = GetMsgDatabase(mCopyState->m_msgWindow, getter_AddRefs(msgDb));
     if (NS_SUCCEEDED(result) && msgDb)
   	{
 		  result = mCopyState->m_parseMsgState->GetNewMsgHdr(getter_AddRefs(newHdr));
@@ -2549,7 +2544,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
     nsCOMPtr<nsISupports> aSupport =
       getter_AddRefs(mCopyState->m_messages->ElementAt
                      (mCopyState->m_curCopyIndex));
-    rv = CopyMessageTo(aSupport, this, msgWindow, mCopyState->m_isMove);
+    rv = CopyMessageTo(aSupport, this, mCopyState->m_msgWindow, mCopyState->m_isMove);
   }
   else
   { // both CopyMessages() & CopyFileMessage() go here if they have
