@@ -1360,7 +1360,8 @@ nsFontMetricsOS2::GetVectorSubstitute(HPS aPS, const char* aFamilyname,
     return PR_TRUE;
   }
 
-  if( stricmp( aFamilyname, "Helv" ) == 0 )
+  if( stricmp( aFamilyname, "Helv" ) == 0 ||
+      stricmp( aFamilyname, "WarpSans" ) == 0 )
   {
     if( !isBold && !isItalic )
       strcpy( alias, "Helvetica" );
