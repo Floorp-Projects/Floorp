@@ -29,7 +29,6 @@
 #include "nsEventListenerManager.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptContextOwner.h"
-#include "nsIParser.h"
 #include "nsDOMEvent.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsIEventStateManager.h"
@@ -146,7 +145,6 @@ nsDocument::nsDocument()
   mScriptObject = nsnull;
   mScriptContextOwner = nsnull;
   mListenerManager = nsnull;
-  mParser = nsnull;
   mInDestructor = PR_FALSE;
 
   if (NS_OK != NS_NewSelection(&mSelection)) {
@@ -196,7 +194,6 @@ nsDocument::~nsDocument()
   NS_IF_RELEASE(mArena);
   NS_IF_RELEASE(mSelection);
   NS_IF_RELEASE(mScriptContextOwner);
-  NS_IF_RELEASE(mParser);
   NS_IF_RELEASE(mListenerManager);
 }
 
@@ -441,22 +438,6 @@ void nsDocument::SetScriptContextOwner(nsIScriptContextOwner *aScriptContextOwne
   if (nsnull != mScriptContextOwner) {
     NS_ADDREF(mScriptContextOwner);
   }
-}
-
-nsIParser *nsDocument::GetParser()
-{
-  NS_IF_ADDREF(mParser);
-  
-  return mParser;
-}
-
-void nsDocument::SetParser(nsIParser *aParser)
-{
-  NS_IF_RELEASE(mParser);
-
-  mParser = aParser;
-  
-  NS_IF_ADDREF(mParser);
 }
 
 // Note: We don't hold a reference to the document observer; we assume

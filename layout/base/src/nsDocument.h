@@ -28,7 +28,6 @@
 
 class nsISelection;
 class nsIEventListenerManager;
-class  nsIParser;
 
 class nsPostData : public nsIPostData {
 public:
@@ -116,14 +115,6 @@ public:
    */
   virtual nsIScriptContextOwner *GetScriptContextOwner();
   virtual void SetScriptContextOwner(nsIScriptContextOwner *aScriptContextOwner);
-
-  /**
-   * Pass the document a reference to its parser. The assumption is 
-   * that the parser will only be set while document loading is 
-   * being carried out.
-   */
-  virtual nsIParser *GetParser();
-  virtual void SetParser(nsIParser *aParser);
 
   /**
    * Add a new observer of document change notifications. Whenever
@@ -283,7 +274,6 @@ protected:
   nsVoidArray mObservers;
   void* mScriptObject;
   nsIScriptContextOwner *mScriptContextOwner;
-  nsIParser *mParser;
   nsIEventListenerManager* mListenerManager;
   PRBool mInDestructor;
 };

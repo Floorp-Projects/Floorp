@@ -26,6 +26,7 @@
 class nsIHTMLStyleSheet;
 class nsContentList;
 class nsIContentViewerContainer;
+class nsIParser;
 
 class nsHTMLDocument : public nsMarkupDocument, public nsIHTMLDocument, public nsIDOMHTMLDocument {
 public:
@@ -40,6 +41,8 @@ public:
   NS_IMETHOD StartDocumentLoad(nsIURL* aUrl, 
                                nsIContentViewerContainer* aContainer,
                                nsIStreamListener** aDocListener);
+
+  NS_IMETHOD EndLoad();
 
   NS_IMETHOD SetTitle(const nsString& aTitle);
 
@@ -149,6 +152,8 @@ protected:
   nsContentList *mEmbeds;
   nsContentList *mLinks;
   nsContentList *mAnchors;
+
+  nsIParser *mParser;
 };
 
 #endif /* nsHTMLDocument_h___ */
