@@ -25,7 +25,10 @@
 #include <nsIDOMKeyListener.h>
 #include <nsIDOMMouseListener.h>
 
+#include "jni_util.h"
+
 class NativeBrowserControl;
+
 
 class EmbedEventListener : public nsIDOMKeyListener,
                            public nsIDOMMouseListener
@@ -58,9 +61,41 @@ class EmbedEventListener : public nsIDOMKeyListener,
   NS_IMETHOD MouseOver(nsIDOMEvent* aDOMEvent);
   NS_IMETHOD MouseOut(nsIDOMEvent* aDOMEvent);
 
+    nsresult SetEventRegistration(jobject eventRegistration);
+
  private:
 
+    nsresult PopulatePropertiesFromEvent(nsIDOMEvent *aMouseEvent);
+    nsresult addMouseEventDataToProperties(nsIDOMEvent *aMouseEvent);
+    static  nsresult JNICALL takeActionOnNode(nsCOMPtr<nsIDOMNode> curNode,
+					      void *yourObject);
+
+
     NativeBrowserControl *mOwner;
+
+    jobject mEventRegistration;
+
+    /**
+     * The properties table, created during a mouseEvent handler
+     */
+    
+    jobject mProperties;
+
+//
+// The following ivars are used in the takeActionOnNode method.
+//
+    
+/**
+ * 0 is the leaf depth.  That's why we call it the inverse depth.
+ */
+
+    PRInt32 mInverseDepth;
+
+//
+// End of ivars used in takeActionOnNode
+//
+
+
 };
 
 #endif /* __EmbedEventListener_h */

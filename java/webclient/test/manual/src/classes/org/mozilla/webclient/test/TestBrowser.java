@@ -268,6 +268,46 @@ public class TestBrowser extends JPanel {
 		    }
 		}
 	    });	
+
+	eventRegistration.addMouseListener(new MouseListener() {
+		public void mouseClicked(MouseEvent e) {
+		}
+		public void mouseEntered(MouseEvent e) {
+		    if (e instanceof WCMouseEvent) {
+			WCMouseEvent wcMouseEvent = (WCMouseEvent) e;
+			Map eventProps =
+			    (Map) wcMouseEvent.getWebclientEvent().getEventData();
+			if (null == eventProps) {
+			    return;
+			}
+			if (e.isAltDown()) {
+			    System.out.println("Alt ");
+			}
+			if (e.isControlDown()) {
+			    System.out.println("Ctrl ");
+			}
+			if (e.isShiftDown()) {
+			    System.out.println("Shift ");
+			}
+			if (e.isMetaDown()) {
+			    // PENDING(edburns): this is always sent for some reason
+			    //System.out.println("Meta ");
+			}
+			String href = (String) eventProps.get("href");
+			if (null != href) {
+			    // PENDING(edburns): take care of relative URL
+			    updateStatusInfo(href);
+			}
+		    }
+		}
+		public void mouseExited(MouseEvent e) {
+		    updateStatusInfo("                      ");
+		}
+		public void mousePressed(MouseEvent e) {
+		}
+		public void mouseReleased(MouseEvent e) {
+		}
+	    });
 	
         jBrowserPanel.setLayout(new BorderLayout());
         jBrowserPanel.add(browserControlCanvas, BorderLayout.CENTER);

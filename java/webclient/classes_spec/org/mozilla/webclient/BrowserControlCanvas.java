@@ -32,6 +32,7 @@ import org.mozilla.util.Log;
 import org.mozilla.util.ParameterCheck;
 
 import java.awt.*;
+import java.awt.event.*;
 
 /**
  *
@@ -52,7 +53,7 @@ import java.awt.*;
 
  * See concrete subclasses for scope info.
 
- * @version $Id: BrowserControlCanvas.java,v 1.7 2004/04/20 16:17:41 edburns%acm.org Exp $
+ * @version $Id: BrowserControlCanvas.java,v 1.8 2004/10/27 01:33:56 edburns%acm.org Exp $
 
  * @see	org.mozilla.webclient.win32.Win32BrowserControlCanvas
 
@@ -271,6 +272,34 @@ public void setVisible(boolean b) {
     }
     super.setVisible(b);
 }
+
+public void addMouseListener(MouseListener listener) {
+    try {
+        EventRegistration er = (EventRegistration)
+            webShell.queryInterface(BrowserControl.EVENT_REGISTRATION_NAME);
+        er.addMouseListener(listener);
+    }
+    catch(Exception ex) {
+        System.out.println("Can't addMouseListener(" + listener + ") " + 
+                           ex.getMessage());
+        
+    }
+}
+
+public void removeMouseListener(MouseListener listener) {
+    try {
+        EventRegistration er = (EventRegistration)
+            webShell.queryInterface(BrowserControl.EVENT_REGISTRATION_NAME);
+        er.removeMouseListener(listener);
+    }
+    catch(Exception ex) {
+        System.out.println("Can't removeMouseListener(" + listener + ") " + 
+                           ex.getMessage());
+        
+    }
+}
+
+        
 
 } // class BrowserControlCanvas
 

@@ -33,6 +33,12 @@ import java.util.Map;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.Collection;
+import java.util.Properties;
+import java.util.EventObject;
+
+import java.awt.event.InputEvent;
+import java.awt.event.MouseEvent;
+import java.awt.Component;
 
 import org.mozilla.webclient.BrowserControl;
 import org.mozilla.webclient.BrowserControlCanvas;
@@ -45,6 +51,7 @@ import org.mozilla.webclient.NewWindowEvent;
 import org.mozilla.webclient.NewWindowListener;
 import java.awt.event.MouseListener;
 import org.mozilla.webclient.WebclientEvent;
+import org.mozilla.webclient.WCMouseEvent;
 import org.mozilla.webclient.WebclientEventListener;
 import org.mozilla.webclient.UnimplementedException;
 
@@ -70,6 +77,8 @@ public class EventRegistrationImpl extends ImplObjectNative implements EventRegi
 
     private List documentLoadListeners;
 
+    private List mouseListeners;
+
     private BrowserToJavaEventPump eventPump = null;
 
     private static int instanceCount = 0;
@@ -92,12 +101,17 @@ public EventRegistrationImpl(WrapperFactory yourFactory,
     }
     
     documentLoadListeners = new ArrayList();
+    mouseListeners = new ArrayList();
     eventPump = new BrowserToJavaEventPump(instanceCount++);
     eventPump.start();
 }
 
 public void delete()
 {
+    documentLoadListeners.clear();
+    documentLoadListeners = null;
+    mouseListeners.clear();
+    mouseListeners = null;
     super.delete();
     eventPump.stopRunning();
 }
@@ -159,31 +173,9 @@ public void addMouseListener(MouseListener listener)
 {
     ParameterCheck.nonNull(listener);
     getWrapperFactory().verifyInitialized();
-    Assert.assert_it(-1 != getNativeBrowserControl());
-    ParameterCheck.nonNull(listener);
-
-    // We have to wrap the user provided java.awt.event.MouseListener
-    // instance in a custom WebclientEventListener subclass that also
-    // implements java.awt.event.MouseListener.  See WCMouseListener for
-    // more information.
-
-    WCMouseListenerImpl mouseListenerWrapper =
-        new WCMouseListenerImpl(listener);
-
-    if (null == mouseListenerWrapper) {
-        throw new NullPointerException("Can't instantiate WCMouseListenerImpl, out of memory.");
-    }
-
-    WCEventListenerWrapper listenerWrapper =
-        new WCEventListenerWrapper(mouseListenerWrapper,
-                                   MouseListener.class.getName());
-
-    if (null == listenerWrapper) {
-        throw new NullPointerException("Can't instantiate WCEventListenerWrapper, out of memory.");
-    }
-
-    synchronized(getBrowserControl()) {
-        // PENDING nativeEventThread.addListener(listenerWrapper);
+    
+    synchronized(mouseListeners) {
+	mouseListeners.add(listener);
     }
 }
 
@@ -191,26 +183,9 @@ public void removeMouseListener(MouseListener listener)
 {
     ParameterCheck.nonNull(listener);
     getWrapperFactory().verifyInitialized();
-    Assert.assert_it(-1 != getNativeBrowserControl());
-    ParameterCheck.nonNull(listener);
-
-    WCMouseListenerImpl mouseListenerWrapper =
-        new WCMouseListenerImpl(listener);
-
-    if (null == mouseListenerWrapper) {
-        throw new NullPointerException("Can't instantiate WCMouseListenerImpl, out of memory.");
-    }
-
-    WCEventListenerWrapper listenerWrapper =
-        new WCEventListenerWrapper(mouseListenerWrapper,
-                                   MouseListener.class.getName());
-
-    if (null == listenerWrapper) {
-        throw new NullPointerException("Can't instantiate WCEventListenerWrapper, out of memory.");
-    }
-
-    synchronized(getBrowserControl()) {
-        // PENDING nativeEventThread.removeListener(listenerWrapper);
+    
+    synchronized(mouseListeners) {
+	mouseListeners.remove(listener);
     }
 }
 
@@ -266,7 +241,7 @@ void nativeEventOccurred(String targetClassName, long eventType,
 {
     ParameterCheck.nonNull(targetClassName);
 
-    WebclientEvent event = null;
+    EventObject event = null;
 
     if (DocumentLoadListener.class.getName().equals(targetClassName)) {
         event = new DocumentLoadEvent(this, eventType, 
@@ -274,14 +249,7 @@ void nativeEventOccurred(String targetClassName, long eventType,
 				      eventData);
     }
     else if (MouseListener.class.getName().equals(targetClassName)) {
-        // We create a plain vanilla WebclientEvent, which the
-        // WCMouseListenerImpl target knows how to deal with.
-
-        // Also, the source happens to be the browserControlCanvas
-        // to satisfy the java.awt.event.MouseEvent's requirement
-        // that the source be a java.awt.Component subclass.
-
-        event = new WebclientEvent(browserControlCanvas, eventType, eventData);
+        event = createMouseEvent(eventType, eventData);
     }
     else if (NewWindowListener.class.getName().equals(targetClassName)) {
         event = new NewWindowEvent(this, eventType, eventData);
@@ -290,6 +258,97 @@ void nativeEventOccurred(String targetClassName, long eventType,
 
     eventPump.queueEvent(event);
     eventPump.V();
+}
+
+private EventObject createMouseEvent(long eventType, Object eventData) {
+    WCMouseEvent mouseEvent = null;
+    Properties props = (Properties) eventData;
+    int modifiers = 0, x = -1, y = -1, clickCount = 0;
+    String str;
+    boolean bool;
+    if (null != props) { 
+	if (null != (str = props.getProperty("ClientX"))) {
+	    x = Integer.valueOf(str).intValue();
+	}
+	if (null != (str = props.getProperty("ClientY"))) {
+	    y = Integer.valueOf(str).intValue();
+	}
+	if (null != (str = props.getProperty("ClickCount"))) {
+	    clickCount = Integer.valueOf(str).intValue();
+	}
+	if (null != (str = props.getProperty("Button"))) {
+	    int button = Integer.valueOf(str).intValue();
+	    if (1 == button) {
+		modifiers += InputEvent.BUTTON1_MASK;
+	    }
+	    if (2 == button) {
+		modifiers += InputEvent.BUTTON2_MASK;
+	    }
+	    if (3 == button) {
+		modifiers += InputEvent.BUTTON3_MASK;
+	    }
+	}
+	if (null != (str = props.getProperty("Alt"))) {
+	    bool = Boolean.valueOf(str).booleanValue();
+	    if (bool) {
+		modifiers += InputEvent.ALT_MASK;
+	    }
+	}
+	if (null != (str = props.getProperty("Ctrl"))) {
+	    bool = Boolean.valueOf(str).booleanValue();
+	    if (bool) {
+		modifiers += InputEvent.CTRL_MASK;
+	    }
+	}
+	if (null != (str = props.getProperty("Meta"))) {
+	    bool = Boolean.valueOf(str).booleanValue();
+	    if (bool) {
+		modifiers += InputEvent.META_MASK;
+	    }
+	}
+	if (null != (str = props.getProperty("Shift"))) {
+	    bool = Boolean.valueOf(str).booleanValue();
+	    if (bool) {
+		modifiers += InputEvent.SHIFT_MASK;
+	    }
+	}
+    }
+    WebclientEvent event = new WebclientEvent(browserControlCanvas, eventType,
+					      eventData);
+    switch ((int) eventType) {
+    case (int) WCMouseEvent.MOUSE_DOWN_EVENT_MASK:
+        mouseEvent = 
+            new WCMouseEvent((Component) browserControlCanvas,
+                             MouseEvent.MOUSE_PRESSED, -1,
+                             modifiers, x, y, clickCount, false, event);
+        break;
+    case (int) WCMouseEvent.MOUSE_UP_EVENT_MASK:
+        mouseEvent = 
+            new WCMouseEvent((Component) browserControlCanvas,
+                             MouseEvent.MOUSE_RELEASED, -1,
+                             modifiers, x, y, clickCount, false, event);
+        break;
+    case (int) WCMouseEvent.MOUSE_CLICK_EVENT_MASK:
+    case (int) WCMouseEvent.MOUSE_DOUBLE_CLICK_EVENT_MASK:
+        mouseEvent = 
+            new WCMouseEvent((Component) browserControlCanvas,
+                             MouseEvent.MOUSE_CLICKED, -1,
+                             modifiers, x, y, clickCount, false, event);
+        break;
+    case (int) WCMouseEvent.MOUSE_OVER_EVENT_MASK:
+        mouseEvent = 
+            new WCMouseEvent((Component) browserControlCanvas,
+                             MouseEvent.MOUSE_ENTERED, -1,
+                             modifiers, x, y, clickCount, false, event);
+        break;
+    case (int) WCMouseEvent.MOUSE_OUT_EVENT_MASK:
+        mouseEvent = 
+            new WCMouseEvent((Component) browserControlCanvas,
+                             MouseEvent.MOUSE_EXITED, -1,
+                             modifiers, x, y, clickCount, false, event);
+        break;
+    }
+    return mouseEvent;
 }
 
 private native void nativeSetCapturePageInfo(int webShellPtr, 
@@ -324,7 +383,7 @@ public class BrowserToJavaEventPump extends Thread {
 	notifyAll();
     }
     
-    public void queueEvent(WebclientEvent toQueue) {
+    public void queueEvent(EventObject toQueue) {
 	synchronized (eventsToJava) {
 	    eventsToJava.add(toQueue);
 	}
@@ -335,8 +394,9 @@ public class BrowserToJavaEventPump extends Thread {
     }
     
     public void run() {
-	WebclientEvent curEvent = null;
+	EventObject curEvent = null;
 	WebclientEventListener curListener = null;
+	Object cur = null;
 	List listeners = null;
 
 	while (keepRunning) {
@@ -344,7 +404,7 @@ public class BrowserToJavaEventPump extends Thread {
 
 	    synchronized(eventsToJava) {
 		if (!eventsToJava.isEmpty()) {
-		    curEvent = (WebclientEvent) eventsToJava.remove(0);
+		    curEvent = (EventObject) eventsToJava.remove(0);
 		}
 	    }
 	    
@@ -355,15 +415,26 @@ public class BrowserToJavaEventPump extends Thread {
 	    if (curEvent instanceof DocumentLoadEvent) {
 		listeners = EventRegistrationImpl.this.documentLoadListeners;
 	    }
+	    else if (curEvent instanceof MouseEvent) {
+		listeners = EventRegistrationImpl.this.mouseListeners;
+	    }
 	    // else...
 
 	    if (null != curEvent && null != listeners) {
 		synchronized (listeners) {
 		    Iterator iter = listeners.iterator();
 		    while (iter.hasNext()) {
-			curListener = (WebclientEventListener) iter.next();
+			cur = iter.next();
 			try {
-			    curListener.eventDispatched(curEvent);
+			    if (cur instanceof WebclientEventListener) {
+				curListener = (WebclientEventListener) cur;
+				curListener.eventDispatched((WebclientEvent) curEvent);
+			    }
+			    else if (cur instanceof MouseListener) {
+				dispatchMouseEvent((MouseListener) cur, 
+						   (WCMouseEvent) curEvent);
+			    }
+			    // else ...
 			}
 			catch (Throwable e) {
 			    System.out.println("Caught Execption calling listener: " + curListener + ". Exception: " + e + " " + e.getMessage());
@@ -375,6 +446,28 @@ public class BrowserToJavaEventPump extends Thread {
 	}
 
 	System.out.println(this.getName() + " exiting");
+    }
+
+    private void dispatchMouseEvent(MouseListener listener, 
+				    WCMouseEvent event) {
+	switch ((int) event.getWebclientEvent().getType()) {
+	case (int) WCMouseEvent.MOUSE_DOWN_EVENT_MASK:
+	    listener.mousePressed(event);
+	    break;
+	case (int) WCMouseEvent.MOUSE_UP_EVENT_MASK:
+	    listener.mouseReleased(event);
+	    break;
+	case (int) WCMouseEvent.MOUSE_CLICK_EVENT_MASK:
+	case (int) WCMouseEvent.MOUSE_DOUBLE_CLICK_EVENT_MASK:
+	    listener.mouseClicked(event);
+	    break;
+	case (int) WCMouseEvent.MOUSE_OVER_EVENT_MASK:
+	    listener.mouseEntered(event);
+	    break;
+	case (int) WCMouseEvent.MOUSE_OUT_EVENT_MASK:
+	    listener.mouseExited(event);
+	    break;
+	}
     }
 
 } // end of class BrowserToJavaEventPump

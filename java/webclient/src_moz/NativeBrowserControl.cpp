@@ -162,6 +162,7 @@ NativeBrowserControl::Realize(jobject javaBrowserControl,
         this->QueryInterfaceJava(EVENT_REGISTRATION_INDEX);
     if (nsnull != eventRegistration) {
         mProgress->SetEventRegistration(eventRegistration);
+        mEventListener->SetEventRegistration(eventRegistration);
     }
     else {
         JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION);
@@ -252,6 +253,7 @@ NativeBrowserControl::Destroy(void)
     // object
     mProgressGuard = nsnull;
     mProgress = nsnull;
+    fflush(stdout);
     
     parentHWnd = nsnull;
 }
