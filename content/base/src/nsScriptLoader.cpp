@@ -61,6 +61,9 @@
 #include "nsContentUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsAutoPtr.h"
+#include "nsIConsoleService.h"
+#include "nsIScriptError.h"
+#include "nsIStringBundle.h"
 
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
@@ -519,6 +522,8 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement,
       request->mWasPending = PR_TRUE;
       request->mLoading = PR_TRUE;
 
+      request->mLineNo = aElement->GetScriptLineNumber();
+
       // Add the request to our pending requests list
       mPendingRequests.AppendObject(request);
 
@@ -782,6 +787,98 @@ DetectByteOrderMark(const unsigned char* aBytes, PRInt32 aLen, nsCString& oChars
   return !oCharset.IsEmpty();
 }
 
+/**
+ * Report an error to the error console.
+ *  @param aErrorName     The name of a string in css.properties.
+ *  @param aParams        The parameters for that string in css.properties.
+ *  @param aParamsLength  The length of aParams.
+ *  @param aErrorFlags    Error/warning flag to pass to nsIScriptError::Init.
+ *
+ */
+static nsresult
+ReportToConsole2(const PRUnichar* aMessageName, const PRUnichar **aParams, 
+                PRUint32 aParamsLength, PRUint32 aErrorFlags, PRInt32* aLineNum,
+                const PRUnichar* aSrcFileName)
+{
+  nsresult rv;
+  nsCOMPtr<nsIConsoleService> consoleService =
+    do_GetService(NS_CONSOLESERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIScriptError> errorObject =
+    do_CreateInstance(NS_SCRIPTERROR_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIStringBundleService> stringBundleService =
+    do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIStringBundle> bundle;
+  rv = stringBundleService->CreateBundle(
+           "chrome://global/locale/layout/MediaDocument.properties", getter_AddRefs(bundle));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsXPIDLString errorText;
+  rv = bundle->FormatStringFromName(aMessageName, aParams, aParamsLength,
+                                    getter_Copies(errorText));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = errorObject->Init(errorText.get(),
+                         aSrcFileName, /* file name */
+                         EmptyString().get(), /* source line */
+                         *aLineNum, /* line number */
+                         0, /* column number */
+                         aErrorFlags,
+                         "CSS Loader");
+  NS_ENSURE_SUCCESS(rv, rv);
+  consoleService->LogMessage(errorObject);
+
+  return NS_OK;
+}
+
+static nsresult
+ReportToConsole(nsIURI* aScriptURI, nsIURI* aDocumentURI, PRInt32* aLineNum)
+{
+  nsresult rv;
+  nsCOMPtr<nsIConsoleService> consoleService =
+    do_GetService(NS_CONSOLESERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIScriptError> errorObject =
+    do_CreateInstance(NS_SCRIPTERROR_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIStringBundleService> stringBundleService =
+    do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIStringBundle> bundle;
+  rv = stringBundleService->CreateBundle(
+           "chrome://global/locale/content/content.properties", getter_AddRefs(bundle));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsXPIDLString errorText;
+
+  nsCAutoString url;
+  rv = aScriptURI->GetSpec(url);
+  NS_ConvertUTF8toUTF16 ucsString(url);
+
+  const PRUnichar *strings[] = { ucsString.get() };
+
+  rv = bundle->FormatStringFromName(NS_LITERAL_STRING("InvalidScriptSrc").get(),
+                                    strings, 1,
+                                    getter_Copies(errorText));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCAutoString documentUrl;
+  aDocumentURI->GetSpec(documentUrl);
+  NS_ConvertUTF8toUTF16 srcDocumentUrl(documentUrl);
+
+  rv = errorObject->Init(errorText.get(),
+                         srcDocumentUrl.get(), /* file name */
+                         EmptyString().get(), /* source line */
+                         *aLineNum, /* line number */
+                         0, /* column number */
+                         nsIScriptError::warningFlag,
+                         "Script Loader");
+  NS_ENSURE_SUCCESS(rv, rv);
+  consoleService->LogMessage(errorObject);
+
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 nsScriptLoader::OnStreamComplete(nsIStreamLoader* aLoader,
@@ -798,6 +895,14 @@ nsScriptLoader::OnStreamComplete(nsIStreamLoader* aLoader,
   }
 
   if (NS_FAILED(aStatus)) {
+    
+    if (mDocument){
+      // since aStatus shows we failed, a script file failed to load.
+      // Report this to the JavaScript console.
+
+      ReportToConsole(request->mURI, mDocument->GetDocumentURI(), &request->mLineNo);
+    }
+
     mPendingRequests.RemoveObject(request);
     FireScriptAvailable(aStatus, request, EmptyString());
     ProcessPendingReqests();
@@ -824,6 +929,14 @@ nsScriptLoader::OnStreamComplete(nsIStreamLoader* aLoader,
     PRBool requestSucceeded;
     rv = httpChannel->GetRequestSucceeded(&requestSucceeded);
     if (NS_SUCCEEDED(rv) && !requestSucceeded) {
+
+      if (mDocument){
+        // since requestSucceeded is false, it means that the file couldn't be loaded.
+        // report this to the JavaScript console.
+
+        ReportToConsole(request->mURI, mDocument->GetDocumentURI(), &request->mLineNo);
+      }
+
       mPendingRequests.RemoveObject(request);
       FireScriptAvailable(NS_ERROR_NOT_AVAILABLE, request,
                           EmptyString());

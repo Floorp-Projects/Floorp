@@ -467,6 +467,28 @@ NS_NewXULDocument(nsIXULDocument** result)
 }
 
 
+nsresult
+NS_NewXULDocument(nsIDocument** result)
+{
+    NS_PRECONDITION(result != nsnull, "null ptr");
+    if (! result)
+        return NS_ERROR_NULL_POINTER;
+
+    nsXULDocument* doc = new nsXULDocument();
+    if (! doc)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    NS_ADDREF(doc);
+
+    nsresult rv;
+    if (NS_FAILED(rv = doc->Init())) {
+        NS_RELEASE(doc);
+        return rv;
+    }
+
+    *result = doc;
+    return NS_OK;
+}
 //----------------------------------------------------------------------
 //
 // nsISupports interface
