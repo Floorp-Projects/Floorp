@@ -511,6 +511,8 @@ sub StringSearch {
     }
     foreach my $i (["substring", "case-insensitive substring"],
                    ["casesubstring", "case-sensitive substring"],
+                   ["allwords", "all words"],
+                   ["anywords", "any words"],
                    ["regexp", "regular expression"],
                    ["notregexp", "not ( regular expression )"]) {
         my ($n, $d) = (@$i);

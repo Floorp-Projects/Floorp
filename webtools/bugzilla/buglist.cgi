@@ -475,13 +475,36 @@ if (defined $ref && 0 < @$ref) {
     }
 }
 
+sub GetByWordList {
+    my ($field, $strs, $verb) = (@_);
+    my @list;
+
+    foreach my $w (split(/[\s,]+/, $strs)) {
+        my $word = $w;
+        if ($word ne "") {
+            $word =~ tr/A-Z/a-z/;
+            $word = SqlQuote(quotemeta($word));
+            $word =~ s/^'//;
+            $word =~ s/'$//;
+            $word = '(^|[^a-z0-9])' . $word . '($|[^a-z0-9])';
+            push(@list, "lower($field) regexp '$word'");
+        }
+    }
+
+    if (0 == @list) {
+        return "";
+    }
+
+    return "and (" . join(" $verb ", @list) . ")\n";
+}
+
 foreach my $f ("short_desc", "long_desc", "bug_file_loc",
                "status_whiteboard") {
     if (defined $::FORM{$f}) {
         my $s = trim($::FORM{$f});
         if ($s ne "") {
             my $n = $f;
-            $s = SqlQuote($s);
+            my $q = SqlQuote($s);
             my $type = $::FORM{$f . "_type"};
             if ($f eq "long_desc") {
                 # Patch in the longdescs table.
@@ -490,13 +513,17 @@ foreach my $f ("short_desc", "long_desc", "bug_file_loc",
                 $n = "longdescs.thetext";
             }
             if ($type eq "regexp") {
-                $query .= "and $n regexp $s\n";
+                $query .= "and $n regexp $q\n";
             } elsif ($type eq "notregexp") {
-                $query .= "and $n not regexp $s\n";
+                $query .= "and $n not regexp $q\n";
             } elsif ($type eq "casesubstring") {
-                $query .= "and instr($n, $s)\n";
+                $query .= "and instr($n, $q)\n";
+            } elsif ($type eq "allwords") {
+                $query .= GetByWordList($f, $s, "and");
+            } elsif ($type eq "anywords") {
+                $query .= GetByWordList($f, $s, "or");
             } else {
-                $query .= "and instr(lower($n), lower($s))\n";
+                $query .= "and instr(lower($n), lower($q))\n";
             }
         }
     }
