@@ -847,10 +847,7 @@ namespace MetaData {
         JS2Object *obj = JS2VAL_TO_OBJECT(thisValue);
         ASSERT(obj->kind == ClassKind);
         JS2Class *c = checked_cast<JS2Class *>(obj);
-        if (c->prototype)
-            return OBJECT_TO_JS2VAL(new PrototypeInstance(meta, c->prototype, c));
-        else
-            return OBJECT_TO_JS2VAL(new SimpleInstance(c));
+        return OBJECT_TO_JS2VAL(new SimpleInstance(meta, c->prototype, c));
     }
 
     // Save current engine state (pc, environment top) and
@@ -991,17 +988,15 @@ namespace MetaData {
                 case MethodClosureKind:
                     a = STRING_TO_JS2VAL(Function_StringAtom); 
                     break;
-                case PrototypeInstanceKind:
-                    if (checked_cast<PrototypeInstance *>(obj)->type == meta->functionClass)
+                case SimpleInstanceKind:
+                    if (checked_cast<SimpleInstance *>(obj)->type == meta->functionClass)
                         a = STRING_TO_JS2VAL(Function_StringAtom);
                     else
                         a = STRING_TO_JS2VAL(object_StringAtom);
+//                    a = STRING_TO_JS2VAL(checked_cast<SimpleInstance *>(obj)->type->getName());
                     break;
                 case PackageKind:
                     a = STRING_TO_JS2VAL(object_StringAtom);
-                    break;
-                case SimpleInstanceKind:
-                    a = STRING_TO_JS2VAL(checked_cast<SimpleInstance *>(obj)->type->getName());
                     break;
                 default:
                     ASSERT(false);
@@ -1025,9 +1020,7 @@ namespace MetaData {
         return buildNameList();
     }
 
-    // XXX need help from spec. Here we iterate over dynamic properties only
-    // unless the object is a Class, in which case we iterate the static
-    // members.
+    // Iterate over LocalBindings
     bool ForIteratorObject::buildNameList()
     {
         if (obj->kind == ClassKind) {
@@ -1040,23 +1033,22 @@ namespace MetaData {
             }
         }
         else {
-            DynamicPropertyMap *dMap = NULL;
+            LocalBindingMap *lMap = NULL;
             if (obj->kind == SimpleInstanceKind)
-                dMap = (checked_cast<SimpleInstance *>(obj))->dynamicProperties;
+                lMap = &(checked_cast<SimpleInstance *>(obj))->localBindings;
             else
             if (obj->kind == PackageKind)
-                dMap = &(checked_cast<Package *>(obj))->dynamicProperties;
+                lMap = &(checked_cast<Package *>(obj))->localBindings;
             else
-            if (obj->kind == PrototypeInstanceKind)
-                dMap = &(checked_cast<PrototypeInstance *>(obj))->dynamicProperties;
+            if (obj->kind == ClassKind)
+                lMap = &(checked_cast<JS2Class *>(obj))->localBindings;
 
-            if (dMap) {
-                nameList = new const String *[dMap->size()];
+            if (lMap) {
+                nameList = new const String *[lMap->size()];
                 length = 0;
-                for (DynamicPropertyIterator dpi = dMap->begin(), dpend = dMap->end(); (dpi != dpend); dpi++) {
-                    DynamicPropertyBinding *dpb = *dpi;
-                    if (dpb->v.flags & DynamicPropertyValue::ENUMERATE)
-                        nameList[length++] = &dpb->name;
+                for (LocalBindingIterator bi = lMap->begin(), bend = lMap->end(); (bi != bend); bi++) {
+                    LocalBindingEntry *lbe = *bi;
+                    nameList[length++] = &lbe->name;
                 }
                 it = 0;
                 return (length != 0);
@@ -1087,8 +1079,8 @@ namespace MetaData {
                             break;
                 }
                 if (it == length) {
-                    if (obj->kind == PrototypeInstanceKind) {
-                        obj = (checked_cast<PrototypeInstance *>(obj))->parent;
+                    if (obj->kind == SimpleInstanceKind) {
+                        obj = (checked_cast<SimpleInstance *>(obj))->super;
                         if (obj)
                             return buildNameList();
                     }

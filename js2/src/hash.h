@@ -298,8 +298,6 @@ namespace JavaScript {
             Value value = data.value();
             return insert(key, value);
         }
-
-
 #endif
     };
 
@@ -365,6 +363,7 @@ namespace JavaScript {
         return e->data;
     }
 
+
     // Insert the given key/value pair into the hash table.  If an entry with a
     // matching key already exists, replace that entry's value.
     // Return a reference to the new entry's value.
@@ -387,6 +386,7 @@ namespace JavaScript {
         Value value = data.value();
         return insert(key, value);
     }
+
 #endif      // !_WIN32
 
     template<class Data, class Key, class H>
@@ -413,7 +413,6 @@ namespace JavaScript {
         else
             return insert(r, key);
     }
-
 
 
     // Reference r must point to an existing entry.  Delete that entry.

@@ -79,8 +79,8 @@ namespace MetaData {
     static js2val Boolean_toString(JS2Metadata *meta, const js2val thisValue, js2val * /*argv*/, uint32 /*argc*/)
     {
         if (!JS2VAL_IS_OBJECT(thisValue) 
-                || (JS2VAL_TO_OBJECT(thisValue)->kind != PrototypeInstanceKind)
-                || ((checked_cast<PrototypeInstance *>(JS2VAL_TO_OBJECT(thisValue)))->type != meta->booleanClass))
+                || (JS2VAL_TO_OBJECT(thisValue)->kind != SimpleInstanceKind)
+                || ((checked_cast<SimpleInstance *>(JS2VAL_TO_OBJECT(thisValue)))->type != meta->booleanClass))
             meta->reportError(Exception::typeError, "Boolean.toString called on something other than a boolean thing", meta->engine->errorPos());
         BooleanInstance *boolInst = checked_cast<BooleanInstance *>(JS2VAL_TO_OBJECT(thisValue));
         return (boolInst->mValue) ? meta->engine->allocString(meta->engine->true_StringAtom) : meta->engine->allocString(meta->engine->false_StringAtom);
@@ -89,8 +89,8 @@ namespace MetaData {
     static js2val Boolean_valueOf(JS2Metadata *meta, const js2val thisValue, js2val * /*argv*/, uint32 /*argc*/)
     {
         if (!JS2VAL_IS_OBJECT(thisValue) 
-                || (JS2VAL_TO_OBJECT(thisValue)->kind != PrototypeInstanceKind)
-                || ((checked_cast<PrototypeInstance *>(JS2VAL_TO_OBJECT(thisValue)))->type != meta->booleanClass))
+                || (JS2VAL_TO_OBJECT(thisValue)->kind != SimpleInstanceKind)
+                || ((checked_cast<SimpleInstance *>(JS2VAL_TO_OBJECT(thisValue)))->type != meta->booleanClass))
             meta->reportError(Exception::typeError, "Boolean.valueOf called on something other than a boolean thing", meta->engine->errorPos());
         BooleanInstance *boolInst = checked_cast<BooleanInstance *>(JS2VAL_TO_OBJECT(thisValue));
         return (boolInst->mValue) ? JS2VAL_TRUE : JS2VAL_FALSE;

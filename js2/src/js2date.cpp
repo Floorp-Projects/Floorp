@@ -296,8 +296,8 @@ static int32 WeekDay(float64 t)
 static float64 *Date_getProlog(JS2Metadata *meta, const js2val thisValue)
 {
     if (!JS2VAL_IS_OBJECT(thisValue) 
-            || (JS2VAL_TO_OBJECT(thisValue)->kind != PrototypeInstanceKind)
-            || ((checked_cast<PrototypeInstance *>(JS2VAL_TO_OBJECT(thisValue)))->type != meta->dateClass))
+            || (JS2VAL_TO_OBJECT(thisValue)->kind != SimpleInstanceKind)
+            || ((checked_cast<SimpleInstance *>(JS2VAL_TO_OBJECT(thisValue)))->type != meta->dateClass))
         meta->reportError(Exception::typeError, "You really need a date", meta->engine->errorPos());
     DateInstance *dateInst = checked_cast<DateInstance *>(JS2VAL_TO_OBJECT(thisValue));
     return &dateInst->ms;

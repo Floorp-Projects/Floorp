@@ -58,6 +58,8 @@ typedef js2val (Callor)(JS2Metadata *meta, const js2val thisValue, js2val *argv,
 typedef js2val (Constructor)(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc);
 typedef js2val (NativeCode)(JS2Metadata *meta, const js2val thisValue, js2val argv[], uint32 argc);
 
+typedef bool (Read)(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, LookupKind *lookupKind, Phase phase, js2val *rval);
+typedef bool (Write)(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, LookupKind *lookupKind, js2val rval);
 
 extern void initDateObject(JS2Metadata *meta);
 extern void initStringObject(JS2Metadata *meta);
@@ -94,7 +96,7 @@ extern js2val setLength(JS2Metadata *meta, JS2Object *obj, uint32 length);
 
 // OBJECT is the semantic domain of all possible objects and is defined as:
 // OBJECT = UNDEFINED | NULL | BOOLEAN | FLOAT64 | LONG | ULONG | CHARACTER | STRING | NAMESPACE |
-// COMPOUNDATTRIBUTE | CLASS | METHODCLOSURE | PROTOTYPE | INSTANCE | PACKAGE
+// COMPOUNDATTRIBUTE | CLASS | METHODCLOSURE | INSTANCE | PACKAGE
 //
 //  In this implementation, the primitive types are distinguished by the tag value
 // of a JS2Value (see js2value.h). Non-primitive types are distinguished by calling
@@ -107,7 +109,6 @@ enum ObjectKind {
     ParameterKind, 
     ClassKind, 
     BlockFrameKind, 
-    PrototypeInstanceKind,
     SimpleInstanceKind,
     MultinameKind,
     MethodClosureKind,
@@ -168,7 +169,7 @@ public:
 class JS2Object {
 // Every object is either undefined, null, a Boolean,
 // a number, a string, a namespace, a compound attribute, a class, a method closure, 
-// a prototype instance, a class instance, a package object, or the global object.
+// a class instance, a package object, or the global object.
 public:
 
     JS2Object(ObjectKind kind) : kind(kind) { }
@@ -384,30 +385,6 @@ public:
 };
 
 
-// A DYNAMICPROPERTY record describes one dynamic property of one (prototype or class) instance.
-class DynamicPropertyValue {
-public:
-    enum Flags { ENUMERATE = 0x1, READONLY = 0x2, PERMANENT = 0x4 };
-
-    DynamicPropertyValue(js2val v) : value(v), flags(ENUMERATE) { }
-    DynamicPropertyValue(js2val v, uint32 f) : value(v), flags(f) { }
-
-    js2val value;
-    uint32 flags;
-};
-
-class DynamicPropertyBinding {
-public:
-    DynamicPropertyBinding(const String name) : name(name), v(JS2VAL_VOID) { }
-    DynamicPropertyBinding(const String name, DynamicPropertyValue v) : name(name), v(v) { }
-
-    const String name;
-    DynamicPropertyValue v;
-};
-
-typedef HashTable<DynamicPropertyBinding *, const String> DynamicPropertyMap;
-typedef TableIterator<DynamicPropertyBinding *, const String> DynamicPropertyIterator;
-
 
 // A LOCALBINDING describes the member to which one qualified name is bound in a frame. Multiple 
 // qualified names may be bound to the same member in a frame, but a qualified name may not be 
@@ -599,7 +576,7 @@ public:
     void removeTopFrame()                   { frameList.pop_front(); }
 
     js2val findThis(bool allowPrototypeThis);
-    js2val lexicalRead(JS2Metadata *meta, Multiname *multiname, Phase phase);
+    void lexicalRead(JS2Metadata *meta, Multiname *multiname, Phase phase, js2val *rval);
     void lexicalWrite(JS2Metadata *meta, Multiname *multiname, js2val newValue, bool createIfMissing, Phase phase);
     void lexicalInit(JS2Metadata *meta, Multiname *multiname, js2val newValue);
     bool lexicalDelete(JS2Metadata *meta, Multiname *multiname, Phase phase);
@@ -619,36 +596,36 @@ class JS2Class : public NonWithFrame {
 public:
     JS2Class(JS2Class *super, JS2Object *proto, Namespace *privateNamespace, bool dynamic, bool allowNull, bool final, const String *name);
 
-    const String *getName()                 { return name; }
+    const String *getName()                     { return typeofString; }
         
-    InstanceBindingMap instanceBindings;        // Map of qualified names to instance members defined in this class    
-
-    InstanceVariable **instanceInitOrder;       // List of instance variables defined in this class in the order in which they are initialised
-
-    bool complete;                              // true after all members of this class have been added to this CLASS record
-
     JS2Class    *super;                         // This class's immediate superclass or null if none
+    InstanceBindingMap instanceBindings;        // Map of qualified names to instance members defined in this class    
+    InstanceVariable **instanceInitOrder;       // List of instance variables defined in this class in the order in which they are initialised
+    bool complete;                              // true after all members of this class have been added to this CLASS record
     JS2Object   *prototype;                     // An object that serves as this class's prototype for compatibility with ECMAScript 3; may be null
-
+    const String *typeofString;
     Namespace *privateNamespace;                // This class's private namespace
-
     bool dynamic;                               // true if this class or any of its ancestors was defined with the dynamic attribute
-    bool allowNull;                             // true if null is considered to be an instance of this class
     bool final;                                 // true if this class cannot be subclassed
+    js2val  defaultValue;                       // An instance of this class assigned when a variable is not explicitly initialized
 
     Callor *call;                               // A procedure to call when this class is used in a call expression
     Constructor *construct;                     // A procedure to call when this class is used in a new expression
     js2val implicitCoerce(JS2Metadata *meta, js2val newValue);
                                                 // A procedure to call when a value is assigned whose type is this class
+
     void emitDefaultValue(BytecodeContainer *bCon, size_t pos);
+
+
+    Read *read;    
+    Write *write;    
+
 
     bool isAncestor(JS2Class *heir);
 
-    js2val  defaultValue;                       // An instance of this class assigned when a variable is not explicitly initialized
 
     uint32 slotCount;
 
-    const String *name;
 
     virtual void instantiate(Environment * /* env */)  { }      // nothing to do
     virtual void markChildren();
@@ -658,10 +635,9 @@ public:
 
 class Package : public NonWithFrame {
 public:
-    Package(Namespace *internal) : NonWithFrame(PackageKind), internalNamespace(internal) { }
-
+    Package(Namespace *internal) : NonWithFrame(PackageKind), super(JS2VAL_VOID), internalNamespace(internal) { }
+    js2val super;
     Namespace *internalNamespace;               // This Package's internal namespace
-    DynamicPropertyMap dynamicProperties;       // A set of this Package's dynamic properties
     virtual void markChildren();
     virtual ~Package()            { }
 };
@@ -693,16 +669,16 @@ public:
 
 
 // Instances which do not respond to the function call or new operators are represented as SIMPLEINSTANCE records
-// XXX SimpleInstance dynamic properties don't need the ECMA3 property attributes
 class SimpleInstance : public JS2Object {
 public:
-    SimpleInstance(JS2Class *type);
+    SimpleInstance(JS2Metadata *meta, JS2Object *parent, JS2Class *type);
 
-    JS2Class    *type;                      // This instance's type
-// Implemented as type->getName()
-//    const String  *typeofString;            // A string to return if typeof is invoked on this instance
-    Slot        *slots;                     // A set of slots that hold this instance's fixed property values
-    DynamicPropertyMap *dynamicProperties;  // A set of this instance's dynamic properties, or NULL if this is a fixed instance
+    LocalBindingMap     localBindings;
+    js2val              super;
+    bool sealed;
+    JS2Class            *type;              // This instance's type
+    Slot                *slots;             // A set of slots that hold this instance's fixed property values
+
     FunctionWrapper *fWrap;
 
     virtual void markChildren();
@@ -712,69 +688,50 @@ public:
 
 };
 
-
-// Prototype instances are represented as PROTOTYPE records. Prototype instances
-// contain no fixed properties.
-class PrototypeInstance : public JS2Object {
-public:
-    PrototypeInstance(JS2Metadata *meta, JS2Object *parent, JS2Class *type);
-
-    JS2Object   *parent;        // If this instance was created by calling new on a prototype function,
-                                // the value of the function’s prototype property at the time of the call;
-                                // none otherwise. (aka [[prototype]], aka __prototype__)
-    JS2Class    *type;          // XXX used to determine [[class]] value 
-    DynamicPropertyMap dynamicProperties; // A set of this instance's dynamic properties
-    virtual void markChildren();
-    virtual ~PrototypeInstance()            { }
-
-    virtual void writeProperty(JS2Metadata *meta, const String *name, js2val newValue, uint32 flags);
-
-};
-
 // Date instances are simple instances created by the Date class, they have an extra field 
 // that contains the millisecond count
-class DateInstance : public PrototypeInstance {
+class DateInstance : public SimpleInstance {
 public:
-    DateInstance(JS2Metadata *meta, JS2Object *parent, JS2Class *type) : PrototypeInstance(meta, parent, type) { }
+    DateInstance(JS2Metadata *meta, JS2Object *parent, JS2Class *type) : SimpleInstance(meta, parent, type) { }
 
     float64     ms;
 };
 
 // String instances are simple instances created by the String class, they have an extra field 
 // that contains the string data
-class StringInstance : public PrototypeInstance {
+class StringInstance : public SimpleInstance {
 public:
-    StringInstance(JS2Metadata *meta, JS2Object *parent, JS2Class *type) : PrototypeInstance(meta, parent, type), mValue(NULL) { }
+    StringInstance(JS2Metadata *meta, JS2Object *parent, JS2Class *type) : SimpleInstance(meta, parent, type), mValue(NULL) { }
 
     String     *mValue;             // has been allocated by engine in the GC'able Pond
 
-    virtual void markChildren()     { PrototypeInstance::markChildren(); if (mValue) JS2Object::mark(mValue); }
+    virtual void markChildren()     { SimpleInstance::markChildren(); if (mValue) JS2Object::mark(mValue); }
     virtual ~StringInstance()            { }
 };
 
 // Number instances are simple instances created by the Number class, they have an extra field 
 // that contains the float64 data
-class NumberInstance : public PrototypeInstance {
+class NumberInstance : public SimpleInstance {
 public:
-    NumberInstance(JS2Metadata *meta, JS2Object *parent, JS2Class *type) : PrototypeInstance(meta, parent, type), mValue(0.0) { }
+    NumberInstance(JS2Metadata *meta, JS2Object *parent, JS2Class *type) : SimpleInstance(meta, parent, type), mValue(0.0) { }
 
     float64     mValue;
     virtual ~NumberInstance()            { }
 };
 
-// Boolean instances are PrototypeInstances created by the Boolean class, they have an extra field 
+// Boolean instances are simple instances created by the Boolean class, they have an extra field 
 // that contains the bool data
-class BooleanInstance : public PrototypeInstance {
+class BooleanInstance : public SimpleInstance {
 public:
-    BooleanInstance(JS2Metadata *meta, JS2Object *parent, JS2Class *type) : PrototypeInstance(meta, parent, type), mValue(false) { }
+    BooleanInstance(JS2Metadata *meta, JS2Object *parent, JS2Class *type) : SimpleInstance(meta, parent, type), mValue(false) { }
 
     bool     mValue;
     virtual ~BooleanInstance()           { }
 };
 
-// Function instances are PrototypeInstances created by the Function class, they have an extra field 
+// Function instances are SimpleInstances created by the Function class, they have an extra field 
 // that contains a pointer to the function implementation
-class FunctionInstance : public PrototypeInstance {
+class FunctionInstance : public SimpleInstance {
 public:
     FunctionInstance(JS2Metadata *meta, JS2Object *parent, JS2Class *type);
 
@@ -784,12 +741,12 @@ public:
     virtual ~FunctionInstance()          { }
 };
 
-// Array instances are PrototypeInstances created by the Array class, they 
+// Array instances are SimpleInstances created by the Array class, they 
 // maintain the value of the 'length' property when 'indexable' elements
 // are added.
-class ArrayInstance : public PrototypeInstance {
+class ArrayInstance : public SimpleInstance {
 public:
-    ArrayInstance(JS2Metadata *meta, JS2Object *parent, JS2Class *type) : PrototypeInstance(meta, parent, type) { setLength(meta, this, 0); }
+    ArrayInstance(JS2Metadata *meta, JS2Object *parent, JS2Class *type) : SimpleInstance(meta, parent, type) { setLength(meta, this, 0); }
 
     virtual void writeProperty(JS2Metadata *meta, const String *name, js2val newValue, uint32 flags);
     virtual ~ArrayInstance()             { }
@@ -799,7 +756,7 @@ public:
 // that contains the RegExp object
 class RegExpInstance : public SimpleInstance {
 public:
-    RegExpInstance(JS2Class *type) : SimpleInstance(type) { }
+    RegExpInstance(JS2Metadata *meta, JS2Object *parent, JS2Class *type) : SimpleInstance(meta, parent, type) { }
 
     void setLastIndex(JS2Metadata *meta, js2val a);
     void setGlobal(JS2Metadata *meta, js2val a);
@@ -1261,7 +1218,6 @@ public:
     JS2Class *attributeClass;
     JS2Class *classClass;
     JS2Class *functionClass;
-    JS2Class *prototypeClass;
     JS2Class *packageClass;
     JS2Class *dateClass;
     JS2Class *regexpClass;
@@ -1305,9 +1261,6 @@ inline bool operator!=(MetaData::LocalBindingEntry *s1, const String &s2) { retu
 
 inline bool operator==(MetaData::InstanceBindingEntry *s1, const String &s2) { return s1->name == s2;}
 inline bool operator!=(MetaData::InstanceBindingEntry *s1, const String &s2) { return s1->name != s2;}
-
-inline bool operator==(MetaData::DynamicPropertyBinding *s1, const String &s2) { return s1->name == s2;}
-inline bool operator!=(MetaData::DynamicPropertyBinding *s1, const String &s2) { return s1->name != s2;}
 
 
 }; // namespace Javascript

@@ -85,25 +85,15 @@ namespace MetaData {
         }
     }
      
-    JS2Object *JS2Metadata::validateStaticFunction(FunctionDefinition *fnDef, js2val compileThis, bool prototype, bool unchecked, Context *cxt, Environment *env)
+    FunctionInstance *JS2Metadata::validateStaticFunction(FunctionDefinition *fnDef, js2val compileThis, bool prototype, bool unchecked, Context *cxt, Environment *env)
     {
         ParameterFrame *compileFrame = new ParameterFrame(compileThis, prototype);
         RootKeeper rk1(&compileFrame);
-        JS2Object *result = NULL;
-        RootKeeper rk2(&result);
         
-        if (prototype) {
-            FunctionInstance *fInst = new FunctionInstance(this, functionClass->prototype, functionClass);
-            result = fInst;
-            fInst->fWrap = new FunctionWrapper(unchecked, compileFrame, env);
-            fnDef->fWrap = fInst->fWrap;
-        }
-        else {
-            SimpleInstance *sInst = new SimpleInstance(functionClass);
-            result = sInst;
-            sInst->fWrap = new FunctionWrapper(unchecked, compileFrame, env);
-            fnDef->fWrap = sInst->fWrap;
-        }
+        FunctionInstance *result = new FunctionInstance(this, functionClass->prototype, functionClass);
+        RootKeeper rk2(&result);
+        result->fWrap = new FunctionWrapper(unchecked, compileFrame, env);
+        fnDef->fWrap = result->fWrap;
 
         Frame *curTopFrame = env->getTopFrame();
         CompilationData *oldData = startCompilationUnit(fnDef->fWrap->bCon, bCon->mSource, bCon->mSourceLocation);
@@ -119,7 +109,7 @@ namespace MetaData {
                     pb = pb->next;
                 }
                 if (prototype)
-                    checked_cast<PrototypeInstance *>(result)->writeProperty(this, engine->length_StringAtom, INT_TO_JS2VAL(pCount), DynamicPropertyValue::READONLY);
+                    result->writeProperty(this, engine->length_StringAtom, INT_TO_JS2VAL(pCount), DynamicPropertyValue::READONLY);
                 pb = fnDef->parameters;
                 compileFrame->positional = new Variable *[pCount];
                 compileFrame->positionalCount = pCount;
@@ -2426,18 +2416,43 @@ doUnary:
     // Attempt the read in each frame in the current environment, stopping at the
     // first succesful effort. If the property can't be found in any frame, it's 
     // an error.
-    js2val Environment::lexicalRead(JS2Metadata *meta, Multiname *multiname, Phase phase)
+    void Environment::lexicalRead(Multiname *multiname, Phase phase, js2val *rval)
     {
         LookupKind lookup(true, findThis(false));
         FrameListIterator fi = getBegin();
+        bool result = false;
         while (fi != getEnd()) {
-            js2val rval;    // XXX gc?
-            if (meta->readProperty(*fi, multiname, &lookup, phase, &rval))
-                return rval;
+            switch ((*fi)->kind) {
+            case ClassKind:
+            case PackageKind:
+                {
+                    JS2Class *limit = objectType(OBJECT_TO_JS2VAL(*fi));
+                    result = limit->read(*fi, limit, multiname, lookup, phase, rval);
+                }
+                break;
+            case SystemKind:
+            case ParameterKind:
+            case BlockFrameKind:
+                {
+                    LocalMember *m = findLocalMember(*fi, multiname, ReadAccess);
+                    if (m)
+                        result = readLocalMember(m, Phase, rval);
+                }
+                break;
+            case WithFrameKind:
+                {
+                    WithFrame *wf = checked_cast<WithFrame *>(*fi);
+                    // XXX uninitialized 'with' object?
+                    JS2Class *limit = objectType(OBJECT_TO_JS2VAL(wf->obj));
+                    result = limit->read(wf, limit, multiname, lookup, phase, rval);
+                }
+                break;
+            }
+            if (result)
+                return;
             fi++;
         }
         meta->reportError(Exception::referenceError, "{0} is undefined", meta->engine->errorPos(), multiname->name);
-        return JS2VAL_VOID;
     }
 
     // Attempt the write in the top frame in the current environment - if the property
@@ -2446,18 +2461,41 @@ doUnary:
     {
         LookupKind lookup(true, findThis(false));
         FrameListIterator fi = getBegin();
+        bool result = false;
         while (fi != getEnd()) {
-            if (meta->writeProperty(*fi, multiname, &lookup, false, newValue, phase, false))
+            switch ((*fi)->kind) {
+            case ClassKind:
+            case PackageKind:
+                {
+                    JS2Class *limit = objectType(OBJECT_TO_JS2VAL(*fi));
+                    result = limit->write(*fi, limit, multiname, lookup, rval);
+                }
+                break;
+            case SystemKind:
+            case ParameterKind:
+            case BlockFrameKind:
+                {
+                    LocalMember *m = findLocalMember(*fi, multiname, ReadAccess);
+                    if (m)
+                        result = readLocalMember(m, Phase, rval);
+                }
+                break;
+            case WithFrameKind:
+                {
+                    WithFrame *wf = checked_cast<WithFrame *>(*fi);
+                    // XXX uninitialized 'with' object?
+                    JS2Class *limit = objectType(OBJECT_TO_JS2VAL(wf->obj));
+                    result = limit->write(wf, limit, multiname, lookup, phase, rval);
+                }
+                break;
+            }
+            if (result)
                 return;
             fi++;
         }
-        if (createIfMissing) {
-            Frame *pf = getPackageFrame();
-            if (meta->writeProperty(pf, multiname, &lookup, true, newValue, phase, false))
-                return;
-        }
         meta->reportError(Exception::referenceError, "{0} is undefined", meta->engine->errorPos(), multiname->name);
     }
+
 
     // Initialize a variable - it might not be in the immediate frame, because of hoisting
     // but it had darn well better be in the environment somewhere.
@@ -2854,82 +2892,61 @@ doUnary:
     
     DynamicVariable *JS2Metadata::defineHoistedVar(Environment *env, const String *id, StmtNode *p, bool isVar)
     {
+        DynamicVariable *result;
         FrameListIterator regionalFrameEnd = env->getRegionalEnvironment();
         NonWithFrame *regionalFrame = checked_cast<NonWithFrame *>(*regionalFrameMark);
         ASSERT((regionalFrame->kind == PackageKind) || (regionalFrame->kind == ParameterKind));
           
+rescan:
         // run through all the existing bindings, to see if this variable already exists.
-        DynamicVariable *result = NULL;
+        LocalBinding *bindingResult = NULL;
         bool foundMultiple = false;
         LocalBindingEntry **lbeP = regionalFrame->localBindings[*id];
         if (lbeP) {
             for (LocalBindingEntry::NS_Iterator i = (*lbeP)->begin(), end = (*lbeP)->end(); (i != end); i++) {
                 LocalBindingEntry::NamespaceBinding &ns = *i;
                 if (ns.first == publicNamespace) {
-                    if (result) {
+                    if (bindingResult) {
                         foundMultiple = true;
-                        break;  // it's not important to find more than one duplicate (is that even possible?)
+                        break;  // it's not important to find more than one duplicate
                     }
                     else
-                        result = checked_cast<DynamicVariable *>(ns.second->content);
+                        bindingResult = ns.second;
                 }
             }
         }
-
-        if (((result == NULL) || !isVar) 
+        if (((bindingResult == NULL) || !isVar) 
                 && (regionalFrame->kind == ParameterKind)
-                && (regionalFrameEnd != env->getBegin()))
+                && (regionalFrameEnd != env->getBegin())) {
+            // re-scan in the frame above the parameter frame
+            regionalFrame = regionalFrameEnd - 1;
+            goto rescan;
+        }
         
-
-                    if (ns.second->content->kind != LocalMember::DynamicVariableKind)
-                        reportError(Exception::definitionError, "Duplicate definition {0}", p->pos, id);
-                    else {
-                        if (result)
-                            reportError(Exception::definitionError, "Duplicate definition {0}", p->pos, id);
-                        else
-                            result = checked_cast<DynamicVariable *>(ns.second->content);
-                    }
-
-        if (result == NULL) {
-            if (regionalFrame->kind == PackageKind) {
-                Package *gObj = checked_cast<Package *>(regionalFrame);
-                DynamicPropertyBinding **dpbP = gObj->dynamicProperties[*id];
-                if (dpbP)
-                    reportError(Exception::definitionError, "Duplicate definition {0}", p->pos, id);
+        if (bindingResult == NULL) {
+            LocalBindingEntry *lbe;
+            if (lbeP == NULL) {
+                lbe = new LocalBindingEntry(*id);
+                regionalFrame->localBindings.insert(*id, lbe);
             }
-            else { // ParameterFrame didn't have any bindings, scan the preceding 
-                   // frame (should be the outermost function local block)
-                regionalFrame = checked_cast<NonWithFrame *>(*(regionalFrameMark - 1));
-                LocalBindingEntry **rbeP = regionalFrame->localBindings[*id];
-                if (rbeP) {
-                    for (LocalBindingEntry::NS_Iterator i = (*rbeP)->begin(), end = (*rbeP)->end(); (i != end); i++) {
-                        LocalBindingEntry::NamespaceBinding &ns = *i;
-                        if (ns.first == publicNamespace) {
-                            if (ns.second->content->kind != LocalMember::DynamicVariableKind)
-                                reportError(Exception::definitionError, "Duplicate definition {0}", p->pos, id);
-                            else {
-                                if (result)
-                                    reportError(Exception::definitionError, "Duplicate definition {0}", p->pos, id);
-                                else
-                                    result = checked_cast<DynamicVariable *>(ns.second->content);
-                            }
-                        }
-                    }
-                }
-            }
-            if (result == NULL) {
-                LocalBindingEntry *lbe;
-                if (lbeP == NULL) {
-                    lbe = new LocalBindingEntry(*id);
-                    regionalFrame->localBindings.insert(*id, lbe);
-                }
-                else
-                    lbe = *lbeP;
-                result = new DynamicVariable();
-                LocalBinding *sb = new LocalBinding(ReadWriteAccess, result);
-                lbe->bindingList.push_back(LocalBindingEntry::NamespaceBinding(publicNamespace, sb));
+            else
+                lbe = *lbeP;
+            result = new DynamicVariable();
+            LocalBinding *sb = new LocalBinding(ReadWriteAccess, result);
+            lbe->bindingList.push_back(LocalBindingEntry::NamespaceBinding(publicNamespace, sb));
+        }
+        else {
+            if (foundMultiple)
+                reportError(Exception::definitionError, "Duplicate definition {0}", p->pos, id);
+            else {
+                if ((bindingResult->accesses != ReadWriteAccess)
+                    || (bindingResult->content->kind != LocalMember::DynamicVariableKind)
+                    || !bindingResult->content->sealed)
+                // XXX
+
             }
         }
+
         //... A hoisted binding of the same var already exists, so there is no need to create another one
         //    The initial value of function variables will be set by the caller to the 'most recent' value.
         return result;
@@ -3137,14 +3154,7 @@ static const uint8 urlCharType[256] =
             return GlobalObject_toString(meta, thisValue, NULL, 0);
         }
         else {
-            // XXX insist on Prototype instances, but is toString going to be more
-            // generic - a member of the class Object? and hence available to all
-            // instances?
-            JS2Class *type = (checked_cast<PrototypeInstance *>(obj))->type;
-        
-            // XXX objectType returns the ECMA4 type, not the [[class]] value, so returns class 'Prototype' for ECMA3 objects
-            //        JS2Class *type = meta->objectType(thisValue);
-
+            JS2Class *type = (checked_cast<SimpleInstance *>(obj))->type;
             String s = "[object " + *type->getName() + "]";
             return STRING_TO_JS2VAL(meta->engine->allocString(s));
         }
@@ -3184,7 +3194,6 @@ static const uint8 urlCharType[256] =
         MAKEBUILTINCLASS(attributeClass, objectClass, false, true, true, engine->allocStringPtr(&world.identifiers["attribute"]), JS2VAL_NULL);
         MAKEBUILTINCLASS(classClass, objectClass, false, true, true, engine->allocStringPtr(&world.identifiers["Class"]), JS2VAL_NULL);
         MAKEBUILTINCLASS(functionClass, objectClass, true, true, true, engine->Function_StringAtom, JS2VAL_NULL);
-        MAKEBUILTINCLASS(prototypeClass, objectClass, true, true, true, engine->allocStringPtr(&world.identifiers["prototype"]), JS2VAL_NULL);
         MAKEBUILTINCLASS(packageClass, objectClass, true, true, true, engine->allocStringPtr(&world.identifiers["Package"]), JS2VAL_NULL);
 
         
@@ -3231,7 +3240,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         v = new Variable(classClass, OBJECT_TO_JS2VAL(objectClass), true);
         defineLocalMember(env, &world.identifiers["Object"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
         // Function properties of the Object prototype object
-        objectClass->prototype = new PrototypeInstance(this, NULL, objectClass);
+        objectClass->prototype = new SimpleInstance(this, NULL, objectClass);
         // Adding "prototype" as a static member of the class - not a dynamic property
         env->addFrame(objectClass);
             v = new Variable(objectClass, OBJECT_TO_JS2VAL(objectClass->prototype), true);
@@ -3254,7 +3263,6 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         MAKEBUILTINCLASS(dateClass, objectClass, true, true, true, engine->allocStringPtr(&world.identifiers["Date"]), JS2VAL_NULL);
         v = new Variable(classClass, OBJECT_TO_JS2VAL(dateClass), true);
         defineLocalMember(env, &world.identifiers["Date"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
- //       dateClass->prototype = new PrototypeInstance(NULL, dateClass);
         initDateObject(this);
 
 /*** ECMA 3  RegExp Class ***/
@@ -3344,8 +3352,6 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
             return namespaceClass;
         case ClassKind:
             return classClass;
-        case PrototypeInstanceKind: 
-            return prototypeClass;
 
         case SimpleInstanceKind: 
             return checked_cast<SimpleInstance *>(obj)->type;
@@ -3382,110 +3388,9 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
     }
 
 
-    // Scan this object and, if appropriate, it's prototype chain
-    // looking for the given name. Return the containing object.
-    JS2Object *JS2Metadata::lookupDynamicProperty(JS2Object *obj, const String *name)
-    {
-        ASSERT(obj);
-        DynamicPropertyMap *dMap = NULL;
-        bool isPrototypeInstance = false;
-        if (obj->kind == SimpleInstanceKind)
-            dMap = (checked_cast<SimpleInstance *>(obj))->dynamicProperties;
-        else
-        if (obj->kind == PackageKind)
-            dMap = &(checked_cast<Package *>(obj))->dynamicProperties;
-        else {
-            ASSERT(obj->kind == PrototypeInstanceKind);
-            isPrototypeInstance = true;
-            dMap = &(checked_cast<PrototypeInstance *>(obj))->dynamicProperties;
-        }
-        DynamicPropertyBinding **dpbP = (*dMap)[*name];
-        if (dpbP)
-            return obj;
-        if (isPrototypeInstance) {
-            PrototypeInstance *pInst = checked_cast<PrototypeInstance *>(obj);
-            if (pInst->parent)
-                return lookupDynamicProperty(pInst->parent, name);
-        }
-        return NULL;
-    }
-
-    // Return true if the object contains the property, but don't
-    // scan the prototype chain. Only scan dynamic properties. XXX
-    bool JS2Metadata::hasOwnProperty(JS2Object *obj, const String *name)
-    {
-        ASSERT(obj);
-        DynamicPropertyMap *dMap = NULL;
-        bool isPrototypeInstance = false;
-        if (obj->kind == SimpleInstanceKind)
-            dMap = (checked_cast<SimpleInstance *>(obj))->dynamicProperties;
-        else
-        if (obj->kind == PackageKind)
-            dMap = &(checked_cast<Package *>(obj))->dynamicProperties;
-        else {
-            ASSERT(obj->kind == PrototypeInstanceKind);
-            isPrototypeInstance = true;
-            dMap = &(checked_cast<PrototypeInstance *>(obj))->dynamicProperties;
-        }
-        DynamicPropertyBinding **dpbP = (*dMap)[*name];
-        if (dpbP)
-            return true;
-        return false;
-    }
-
-    // Read the property from the container given by the public id in multiname - if that exists
-    // 
-    bool JS2Metadata::readDynamicProperty(JS2Object *container, Multiname *multiname, LookupKind *lookupKind, Phase phase, js2val *rval)
-    {
-        ASSERT(container && ((container->kind == SimpleInstanceKind) 
-                                || (container->kind == PackageKind)
-                                || (container->kind == PrototypeInstanceKind)));
-        if (!multiname->listContains(publicNamespace))
-            return false;
-        const String *name = multiname->name;
-        if (phase == CompilePhase) 
-            reportError(Exception::compileExpressionError, "Inappropriate compile time expression", engine->errorPos());
-        DynamicPropertyMap *dMap = NULL;
-        bool isPrototypeInstance = false;
-        if (container->kind == SimpleInstanceKind)
-            dMap = (checked_cast<SimpleInstance *>(container))->dynamicProperties;
-        else
-        if (container->kind == PackageKind)
-            dMap = &(checked_cast<Package *>(container))->dynamicProperties;
-        else {
-            isPrototypeInstance = true;
-            dMap = &(checked_cast<PrototypeInstance *>(container))->dynamicProperties;
-        }
-        if (dMap == NULL)
-            return false; // 'None'
-        DynamicPropertyBinding **dpbP = (*dMap)[*name];
-        if (dpbP) {
-            *rval = (*dpbP)->v.value;
-            return true;
-        }
-        if (isPrototypeInstance) {
-            PrototypeInstance *pInst = checked_cast<PrototypeInstance *>(container);
-            if (pInst->parent)
-                return readDynamicProperty(pInst->parent, multiname, lookupKind, phase, rval);
-        }
-        if (lookupKind->isPropertyLookup()) {
-            *rval = JS2VAL_UNDEFINED;
-            return true;
-        }
-        return false;   // 'None'
-    }
-
     void SimpleInstance::writeProperty(JS2Metadata * /* meta */, const String *name, js2val newValue, uint32 flags)
     {
-        ASSERT(dynamicProperties);
-        DynamicPropertyBinding *dpb = new DynamicPropertyBinding(*name, DynamicPropertyValue(newValue, flags));
-        dynamicProperties->insert(dpb->name, dpb); 
-    }
-
-    void PrototypeInstance::writeProperty(JS2Metadata * /* meta */, const String *name, js2val newValue, uint32 flags)
-    {
-        DynamicPropertyBinding *dpb = new DynamicPropertyBinding(*name, DynamicPropertyValue(newValue, flags));
-        dynamicProperties.insert(dpb->name, dpb); 
+        ASSERT(false);
     }
 
     void ArrayInstance::writeProperty(JS2Metadata *meta, const String *name, js2val newValue, uint32 flags)
@@ -3501,9 +3406,6 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         // (which it more typically is) rather than converted to string
         // and back.
 
-        DynamicPropertyBinding *dpb = new DynamicPropertyBinding(*name, DynamicPropertyValue(newValue, flags));
-        dynamicProperties.insert(dpb->name, dpb); 
-
         const char16 *numEnd;        
         float64 f = stringToDouble(name->data(), name->data() + name->length(), numEnd);
         uint32 index = JS2Engine::float64toUInt32(f);
@@ -3518,196 +3420,188 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         }
     }
 
-    // Write a value to a dynamic container - inserting into the map if not already there (if createIfMissing)
-    bool JS2Metadata::writeDynamicProperty(JS2Object *container, Multiname *multiname, bool createIfMissing, js2val newValue, Phase phase)
+
+    InstanceBinding *JS2Metadata::findLocalInstanceMember(JS2Class *limit, Multiname *multiname, Access access, Namespace **found)
     {
-        ASSERT(container && ((container->kind == SimpleInstanceKind) 
-                                || (container->kind == PackageKind)
-                                || (container->kind == PrototypeInstanceKind)));
-        if (!multiname->listContains(publicNamespace))
-            return false;
-        const String *name = multiname->name;
-        DynamicPropertyMap *dMap = NULL;
-        if (container->kind == SimpleInstanceKind)
-            dMap = (checked_cast<SimpleInstance *>(container))->dynamicProperties;
-        else
-        if (container->kind == PackageKind)
-            dMap = &(checked_cast<Package *>(container))->dynamicProperties;
-        else 
-            dMap = &(checked_cast<PrototypeInstance *>(container))->dynamicProperties;
-        if (dMap == NULL)
-            return false; // 'None'
-        DynamicPropertyBinding **dpbP = (*dMap)[*name];
-        if (dpbP) {
-            // special case handling for setting 'length' property of ArrayInstances
-            // XXX should handle this with dispatch to 'writeProperty' of each of
-            // the different dynamic map containing objects, and change current
-            // 'writeProperty' functions to 'addProperty'.
-            if ((container->kind == PrototypeInstanceKind)
-                    && ((checked_cast<PrototypeInstance *>(container))->type == arrayClass)
-                    && (*name == *engine->length_StringAtom)) {
-                float64 f = toFloat64(newValue);
-                uint32 newLength = (uint32)f;
-                if (f != newLength)
-                    reportError(Exception::rangeError, "Invalid length value", engine->errorPos());
-                setLength(this, container, newLength);
+        InstanceBinding *result = NULL;
+        InstanceBindingEntry **ibeP = c->instanceBindings[*multiname->name];
+        if (ibeP) {
+            for (InstanceBindingEntry::NS_Iterator i = (*ibeP)->begin(), end = (*ibeP)->end(); (i != end); i++) {
+                InstanceBindingEntry::NamespaceBinding &ns = *i;
+                if ((ns.second->accesses & access) && multiname->listContains(ns.first)) {
+                    if (result && (ns.second->content != result->content))
+                        reportError(Exception::propertyAccessError, "Ambiguous reference to {0}", engine->errorPos(), multiname->name);
+                    else {
+                        result = ns.second;
+                        if (found) *found = ns.first;
+                    }
+                }
             }
-            else
-                if (((*dpbP)->v.flags & DynamicPropertyValue::READONLY) == 0)
-                    (*dpbP)->v.value = newValue;
-            return true;
         }
-        if (!createIfMissing)
-            return false;
-        if (container->kind == SimpleInstanceKind) {
-            SimpleInstance *dynInst = checked_cast<SimpleInstance *>(container);
-            QualifiedName qname;
-            InstanceBinding *ib = resolveInstanceMemberName(dynInst->type, multiname, ReadAccess, phase, &qname);
-            if (ib == NULL) {
-                dynInst->writeProperty(this, name, newValue, 0);
+        return result;
+    }        
+
+    InstanceMember* JS2Metadata::findBaseInstanceMember(JS2Class *limit, Multiname *multiname, Access access, Namespace **found)
+    {
+        InstanceMember *result = NULL;
+        if (limit->super) {
+            result = findBaseInstanceMember(limit->super, multiname, access, found);
+            if (result) return result;
+        }
+        return findLocalInstanceMember(limit, multiname, access, found);
+    }
+
+    InstanceMember *getDerivedInstanceMember(JS2Class *c, InstanceMember *mBase, Multiname *multiname, Access access, Namespace *found)
+    {
+        InstanceBindingEntry **ibeP = c->instanceBindings[*multiname->name];
+        if (ibeP) {
+            for (InstanceBindingEntry::NS_Iterator i = (*ibeP)->begin(), end = (*ibeP)->end(); (i != end); i++) {
+                InstanceBindingEntry::NamespaceBinding &ns = *i;
+                if ((ns.second->accesses & access) && multiname->listContains(ns.first))
+                    return ns.second->content;
+            }
+        }
+        ASSERT(c->super);
+        return getDerivedInstanceMember(c->super, mBase, multiname, access, found);
+    }
+
+    LocalMember *JS2Metadata::findLocalMember(JS2Object *container, Multiname *multiname, Access access)
+    {
+        LocalMember *found = NULL;
+        LocalBindingMap *lMap;
+        if (container->kind == NonWithFrameKind)
+            lMap = &checked_cast<NonWithFrame *>(container)->localBindings;
+        else
+            if (container->kind == SimpleInstanceKind)
+                lMap = &checked_cast<SimpleInstance *>(container)->localBindings;
+            else
+                ASSERT(false);
+        
+        LocalBindingEntry **lbeP = (*lMap)[*multiname->name];
+        if (lbeP) {
+            for (LocalBindingEntry::NS_Iterator i = (*lbeP)->begin(), end = (*lbeP)->end(); (i != end); i++) {
+                LocalBindingEntry::NamespaceBinding &ns = *i;
+                if ((ns.second->accesses & access) && multiname->listContains(ns.first)) {
+                    if (found && (ns.second->content != found))
+                        reportError(Exception::propertyAccessError, "Ambiguous reference to {0}", engine->errorPos(), multiname->name);
+                    else
+                        found = ns.second->content;
+                }
+            }
+        }
+        return found;
+    }
+
+    js2val JS2Metadata::getSuperObject(JS2Object *obj)
+    {
+        switch (obj->kind) {
+        case SimpleInstanceKind:
+            return checked_cast<SimpleInstance *>(obj)->super;
+            break;
+        case PackageKind:
+            return checked_cast<Package *>(obj)->super;
+            break;
+        case ClassKind:
+            return OBJECT_TO_JS2VAL(checked_cast<JS2Class *>(obj)->super);
+        default:
+            return JS2VAL_NULL;
+        }
+    }
+
+    Member *JS2Metadata::findCommonMember(js2val base, Multiname *multiname, Access access, bool flat)
+    {
+        Member *m = NULL;
+        if (JS2VAL_IS_PRIMITIVE(base))
+            return NULL;
+        JS2Object *baseObj = JS2VAL_TO_OBJECT(base);
+        switch (baseObj->kind) {
+        case SimpleInstanceKind:
+            m = findLocalMember(baseObj, multiname, access);
+            break;
+        case PackageKind:
+            m = findLocalMember(baseObj, multiname, access);
+            break;
+        case ClassKind:
+            m = findLocalMember(baseObj, multiname, access);
+            if (m == NULL)
+                m = findLocalInstanceMember(checked_cast<JS2Class *>baseObj, multiname, access, NULL);
+            break;
+        default:
+            return NULL;    // non-primitive, but not one of the above
+        }
+        if (m)
+            return m;
+        js2val superVal = getSuperObject(baseObj);
+        if (!JS2VAL_IS_NULL(superVal)) {
+            m = findCommonMember(superVal, multiname, access, flat);
+            if (flat && (m->kind == Member::DynamicVariableKind))
+                m = NULL;
+        }
+        return m;
+    }
+
+    bool JS2Metadata::readInstanceMember(js2val base, JS2Class *c, InstanceMember *mBase, Phase phase, js2val *rval, Namespace *found_ns)
+    {
+        InstanceMember *m = getDerivedInstanceMember(c, mBase, ReadAccess, found_ns);
+        switch (m->kind) {
+        case Member::InstanceVariableKind:
+            {
+                InstanceVariable *mv = checked_cast<InstanceVariable *>(m);
+                if ((phase == CompilePhase) && !mv->immutable)
+                    reportError(Exception::compileExpressionError, "Inappropriate compile time expression", engine->errorPos());
+                Slot *s = findSlot(containerVal, mv);
+                if (JS2VAL_IS_UNINITIALIZED(s->value))
+                    reportError(Exception::uninitializedError, "Reference to uninitialized instance variable", engine->errorPos());
+                *rval = s->value;
                 return true;
             }
+        default:
+            ASSERT(false);
         }
-        else {
-            if (container->kind == PackageKind) {
-                Package *glob = checked_cast<Package *>(container);
-                LocalMember *m = findFlatMember(glob, multiname, ReadAccess, phase);
-                if (m == NULL) {
-                    DynamicPropertyBinding *dpb = new DynamicPropertyBinding(*name, DynamicPropertyValue(newValue, DynamicPropertyValue::ENUMERATE));
-                    glob->dynamicProperties.insert(dpb->name, dpb); 
+        return false;
+    }
+
+    bool defaultReadProperty(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, LookupKind *lookupKind, Phase phase, js2val *rval)
+    {
+        Namespace *found_ns;
+        InstanceMember *mBase = meta->findBaseInstanceMember(limit, multiname, ReadAccess, &found_ns);
+        if (mBase)
+            return meta->readInstanceMember(base, limit, mBase, phase, rval, found_ns);
+        if (limit != objectType(base))
+            return false;
+
+        Member *m = meta->findCommonMember(base, multiname, ReadAccess, false);
+        if (m == NULL) {
+            if (lookupKind->isPropertyLookup() && JS2VAL_IS_OBJECT(base) 
+                        && ((JS2VAL_TO_OBJECT(base)->kind == SimpleInstanceKind)
+                                || (JS2VAL_TO_OBJECT(base)->kind == PackageKind))
+                                && !JS2VAL_TO_OBJECT(base)->sealed) {
+                if (phase == CompilePhase)
+                    meta->reportError(Exception::compileExpressionError, "Inappropriate compile time expression", meta->engine->errorPos());
+                else {
+                    *rval = JS2VAL_UNDEFINED;
                     return true;
                 }
             }
-            else {
-                PrototypeInstance *pInst = checked_cast<PrototypeInstance *>(container);
-                pInst->writeProperty(this, name, newValue, 0);
-                return true;
-            }
+            else
+                return false;
         }
-        return false;   // 'None'
+        if (m->kind == Member::LocalMemberKind)
+            return meta->readLocalMember(m, phase, *rval);
+        ASSERT(m->kind == Member::InstanceMemberKind);
+        if ( (JS2VAL_IS_OBJECT(base) && (JS2VAL_TO_OBJECT(base)->kind != ClassKind))
+                || (lookupKind->isPropertyLookup())
+            meta->reportError(Exception::propertyAccessError, "Illegal access to instance member", meta->engine->errorPos());
+        if (JS2VAL_IS_VOID(lookupKind->thisObject))
+            meta->reportError(Exception::propertyAccessError, "Illegal access to instance member", meta->engine->errorPos());
+        if (JS2VAL_IS_UNINITIALIZED(lookupKind->thisObject))
+            meta->reportError(Exception::compileExpressionError, "Inappropriate compile time expression", meta->engine->errorPos());
+        return meta->readInstanceMember(lookupKind->thisObject, objectType(lookupKind->thisObject), m, phase, rval);
     }
 
-    // Read a value from the local member
-    bool JS2Metadata::readLocalMember(LocalMember *m, Phase phase, js2val *rval)
-    {
-        if (m == NULL)
-            return false;   // 'None'
-        switch (m->kind) {
-        case LocalMember::Forbidden:
-            reportError(Exception::propertyAccessError, "Forbidden access", engine->errorPos());
-            break;
-        case LocalMember::Variable:
-            {
-                Variable *v = checked_cast<Variable *>(m); 
-                if ((phase == CompilePhase) && !v->immutable)
-                    reportError(Exception::compileExpressionError, "Inappropriate compile time expression", engine->errorPos());
-                *rval = v->value;
-                return true;
-            }
-        case LocalMember::DynamicVariableKind:
-            if (phase == CompilePhase) 
-                reportError(Exception::compileExpressionError, "Inappropriate compile time expression", engine->errorPos());
-            *rval = (checked_cast<DynamicVariable *>(m))->value;
-            return true;
-        case LocalMember::ConstructorMethod:
-            {
-                if (phase == CompilePhase)
-                    reportError(Exception::compileExpressionError, "Inappropriate compile time expression", engine->errorPos());
-                *rval = (checked_cast<ConstructorMethod *>(m))->value;
-                return true;
-            }
-        case LocalMember::Getter:
-        case LocalMember::Setter:
-            break;
-        }
-        NOT_REACHED("Bad member kind");
-        return false;
-    }
 
-    // Write a value to the local member
-    bool JS2Metadata::writeLocalMember(LocalMember *m, js2val newValue, Phase /* phase */, bool initFlag) // phase not used?
-    {
-        if (m == NULL)
-            return false;   // 'None'
-        switch (m->kind) {
-        case LocalMember::Forbidden:
-        case LocalMember::ConstructorMethod:
-            reportError(Exception::propertyAccessError, "Forbidden access", engine->errorPos());
-            break;
-        case LocalMember::Variable:
-            {
-                Variable *v = checked_cast<Variable *>(m);
-                if (!initFlag
-                        && (JS2VAL_IS_INACCESSIBLE(v->value) 
-                                || (v->immutable && !JS2VAL_IS_UNINITIALIZED(v->value))))
-                    if (flags == JS2)
-                        reportError(Exception::propertyAccessError, "Forbidden access", engine->errorPos());
-                    else    // quietly ignore the write for JS1 compatibility
-                        return true;
-                v->value = v->type->implicitCoerce(this, newValue);
-            }
-            return true;
-        case LocalMember::DynamicVariableKind:
-            (checked_cast<DynamicVariable *>(m))->value = newValue;
-            return true;
-        case LocalMember::Getter:
-        case LocalMember::Setter:
-            break;
-        }
-        NOT_REACHED("Bad member kind");
-        return false;
-    }
 
-    // Read the value of a property in the container. Return true/false if that container has
-    // the property or not. If it does, return it's value
-    bool JS2Metadata::readProperty(js2val *containerVal, Multiname *multiname, LookupKind *lookupKind, Phase phase, js2val *rval)
-    {
-        bool isSimpleInstance = false;
-        JS2Object *container;
-        if (JS2VAL_IS_PRIMITIVE(*containerVal)) {
-readClassProperty:
-            JS2Class *c = objectType(*containerVal);
-            QualifiedName qname;
-            InstanceBinding *ib = resolveInstanceMemberName(c, multiname, ReadAccess, phase, &qname);
-            if ((ib == NULL) && isSimpleInstance) 
-                return readDynamicProperty(JS2VAL_TO_OBJECT(*containerVal), multiname, lookupKind, phase, rval);
-            else {
-                // XXX Spec. would have us passing a primitive here since ES4 is 'not addressing' the issue
-                // of so-called wrapper objects.
-                if (!JS2VAL_IS_OBJECT(*containerVal))
-                    *containerVal = toObject(*containerVal);
-                else
-                    return readInstanceMember(*containerVal, c, (ib) ? &qname : NULL, phase, rval);
-            }
-        }
-        container = JS2VAL_TO_OBJECT(*containerVal);
-        switch (container->kind) {
-        case AttributeObjectKind:
-        case MultinameKind:
-        case MethodClosureKind:
-            goto readClassProperty;
-        case SimpleInstanceKind:
-            isSimpleInstance = true;
-            goto readClassProperty;
 
-        case SystemKind:
-        case PackageKind:
-        case ParameterKind: 
-        case BlockFrameKind: 
-        case ClassKind:
-            return readProperty(checked_cast<Frame *>(container), multiname, lookupKind, phase, rval);
-
-        case PrototypeInstanceKind: 
-            return readDynamicProperty(container, multiname, lookupKind, phase, rval);
-
-        case AlienInstanceKind:
-            return (checked_cast<AlienInstance *>(container))->readProperty(multiname, rval);
-
-        default:
-            ASSERT(false);
-            return false;
-        }
-    }
 
     // Use the slotIndex from the instanceVariable to access the slot
     Slot *JS2Metadata::findSlot(js2val thisObjVal, InstanceVariable *id)
@@ -3751,395 +3645,6 @@ readClassProperty:
         return false;
     }
 
-    // Read the value of a property in the frame. Return true/false if that frame has
-    // the property or not. If it does, return it's value
-    bool JS2Metadata::readProperty(Frame *container, Multiname *multiname, LookupKind *lookupKind, Phase phase, js2val *rval)
-    {
-        if (container->kind != ClassKind) {
-            if (container->kind == WithFrameKind) {
-                return readDynamicProperty(checked_cast<WithFrame *>(container)->obj, multiname, lookupKind, phase, rval);
-            }
-            else {
-                // Must be System, Global, Package, Parameter or Block
-                LocalMember *m = findFlatMember(checked_cast<NonWithFrame *>(container), multiname, ReadAccess, phase);
-                if (!m && (container->kind == PackageKind))
-                    return readDynamicProperty(container, multiname, lookupKind, phase, rval);
-                else
-                    return readLocalMember(m, phase, rval);
-            }
-        }
-        else {
-            // XXX using JS2VAL_UNINITIALIZED to signal generic 'this'
-            js2val thisObject;
-            if (lookupKind->isPropertyLookup()) 
-                thisObject = JS2VAL_UNINITIALIZED;
-            else
-                thisObject = lookupKind->thisObject;
-            MemberDescriptor m2;
-            if (!findLocalMember(checked_cast<JS2Class *>(container), multiname, ReadAccess, phase, &m2) 
-                        || m2.localMember)
-                return readLocalMember(m2.localMember, phase, rval);
-            else {
-                if (JS2VAL_IS_NULL(thisObject))
-                    reportError(Exception::propertyAccessError, "Null 'this' object", engine->errorPos());
-                if (JS2VAL_IS_INACCESSIBLE(thisObject))
-                    reportError(Exception::compileExpressionError, "Inaccesible 'this' object", engine->errorPos());
-                if (JS2VAL_IS_UNINITIALIZED(thisObject)) {
-                    // 'this' is {generic}
-                    // XXX is ??? in spec.
-                }
-                QualifiedName qname(m2.ns, multiname->name);
-                return readInstanceMember(thisObject, objectType(thisObject), &qname, phase, rval);
-            }
-        }
-    }
-
-    // Write the value of a property in the container. Return true/false if that container has
-    // the property or not.
-    bool JS2Metadata::writeProperty(js2val containerVal, Multiname *multiname, LookupKind *lookupKind, bool createIfMissing, js2val newValue, Phase phase)
-    {
-        if (JS2VAL_IS_PRIMITIVE(containerVal))
-            return false;
-        JS2Object *container = JS2VAL_TO_OBJECT(containerVal);
-        switch (container->kind) {
-        case AttributeObjectKind:
-        case MultinameKind:
-        case MethodClosureKind:
-            return false;
-
-        case SimpleInstanceKind:
-            {
-                JS2Class *c = checked_cast<SimpleInstance *>(container)->type;
-                QualifiedName qname;
-                InstanceBinding *ib = resolveInstanceMemberName(c, multiname, WriteAccess, phase, &qname);
-                if (ib == NULL)
-                    return writeDynamicProperty(container, multiname, createIfMissing, newValue, phase);
-                else
-                    return writeInstanceMember(containerVal, c, (ib) ? &qname : NULL, newValue, phase); 
-            }
-
-        case SystemKind:
-        case PackageKind:
-        case ParameterKind: 
-        case BlockFrameKind: 
-        case ClassKind:
-            return writeProperty(checked_cast<Frame *>(container), multiname, lookupKind, createIfMissing, newValue, phase, false);
-
-        case PrototypeInstanceKind: 
-            return writeDynamicProperty(container, multiname, createIfMissing, newValue, phase);
-
-        default:
-            ASSERT(false);
-            return false;
-        }
-
-    }
-    
-    // Write the value of an instance member into a container instance.
-    // Only instanceVariables are writable.
-    bool JS2Metadata::writeInstanceMember(js2val containerVal, JS2Class *c, QualifiedName *qname, js2val newValue, Phase phase)
-    {
-        if (phase == CompilePhase)
-            reportError(Exception::compileExpressionError, "Inappropriate compile time expression", engine->errorPos());
-        InstanceMember *m = findInstanceMember(c, qname, WriteAccess);
-        if (m == NULL) return false;
-        switch (m->kind) {
-        case InstanceMember::InstanceVariableKind:
-            {
-                InstanceVariable *mv = checked_cast<InstanceVariable *>(m);
-                Slot *s = findSlot(containerVal, mv);
-                if (mv->immutable && JS2VAL_IS_INITIALIZED(s->value))
-                    reportError(Exception::propertyAccessError, "Reinitialization of constant", engine->errorPos());
-                s->value = mv->type->implicitCoerce(this, newValue);
-                return true;
-            }
-        
-        case InstanceMember::InstanceMethodKind:
-        case InstanceMember::InstanceAccessorKind:
-            reportError(Exception::propertyAccessError, "Attempt to write to a method", engine->errorPos());
-            break;
-        }
-        ASSERT(false);
-        return false;
-
-    }
-
-    // Write the value of a property in the frame. Return true/false if that frame has
-    // the property or not.
-    bool JS2Metadata::writeProperty(Frame *container, Multiname *multiname, LookupKind *lookupKind, bool createIfMissing, js2val newValue, Phase phase, bool initFlag)
-    {
-        if (container->kind != ClassKind) {
-            if (container->kind == WithFrameKind) {
-                return writeDynamicProperty(checked_cast<WithFrame *>(container)->obj, multiname, createIfMissing, newValue, phase);
-            }
-            else {
-                // Must be System, Global, Package, Parameter or Block
-                LocalMember *m = findFlatMember(checked_cast<NonWithFrame *>(container), multiname, WriteAccess, phase);
-                if (!m && (container->kind == PackageKind))
-                    return writeDynamicProperty(container, multiname, createIfMissing, newValue, phase);
-                else
-                    return writeLocalMember(m, newValue, phase, initFlag);
-            }
-        }
-        else {
-            // XXX using JS2VAL_UNINITIALIZED to signal generic 'this'
-            js2val thisObject;
-            if (lookupKind->isPropertyLookup()) 
-                thisObject = JS2VAL_UNINITIALIZED;
-            else
-                thisObject = lookupKind->thisObject;
-            MemberDescriptor m2;
-            if (!findLocalMember(checked_cast<JS2Class *>(container), multiname, WriteAccess, phase, &m2) 
-                            || m2.localMember)
-                return writeLocalMember(m2.localMember, newValue, phase, initFlag);
-            else {
-                if (JS2VAL_IS_NULL(thisObject))
-                    reportError(Exception::propertyAccessError, "Null 'this' object", engine->errorPos());
-                if (JS2VAL_IS_VOID(thisObject))
-                    reportError(Exception::compileExpressionError, "Undefined 'this' object", engine->errorPos());
-                if (JS2VAL_IS_UNINITIALIZED(thisObject)) {
-                    // 'this' is {generic}
-                    // XXX is ??? in spec.
-                }
-                QualifiedName qname(m2.ns, multiname->name);
-                return writeInstanceMember(thisObject, objectType(thisObject), &qname, newValue, phase);
-            }
-        }
-    }
-
-    bool JS2Metadata::deleteProperty(js2val containerVal, Multiname *multiname, LookupKind *lookupKind, Phase phase, bool *result)
-    {
-        ASSERT(phase == RunPhase);
-        bool isSimpleInstance = false;
-        if (JS2VAL_IS_PRIMITIVE(containerVal)) {
-deleteClassProperty:
-            JS2Class *c = objectType(containerVal);
-            QualifiedName qname;
-            InstanceBinding *ib = resolveInstanceMemberName(c, multiname, ReadAccess, phase, &qname);
-            if ((ib == NULL) && isSimpleInstance) 
-                return deleteDynamicProperty(JS2VAL_TO_OBJECT(containerVal), multiname, lookupKind, result);
-            else 
-                return deleteInstanceMember(c, (ib) ? &qname : NULL, result);
-        }
-        JS2Object *container = JS2VAL_TO_OBJECT(containerVal);
-        switch (container->kind) {
-        case AttributeObjectKind:
-        case MultinameKind:
-        case MethodClosureKind:
-            goto deleteClassProperty;
-        case SimpleInstanceKind:
-            isSimpleInstance = true;
-            goto deleteClassProperty;
-
-        case SystemKind:
-        case PackageKind:
-        case ParameterKind: 
-        case BlockFrameKind: 
-        case ClassKind:
-            return deleteProperty(checked_cast<Frame *>(container), multiname, lookupKind, phase, result);
-
-        case PrototypeInstanceKind: 
-            return deleteDynamicProperty(container, multiname, lookupKind, result);
-
-        default:
-            ASSERT(false);
-            return false;
-        }
-    }
-
-    bool JS2Metadata::deleteProperty(Frame *container, Multiname *multiname, LookupKind *lookupKind, Phase phase, bool *result)
-    {
-        ASSERT(phase == RunPhase);
-        if (container->kind != ClassKind) {
-            if (container->kind == WithFrameKind) {                
-                return deleteDynamicProperty(checked_cast<WithFrame *>(container)->obj, multiname, lookupKind, result);
-            }
-            else {
-                // Must be System, Global, Package, Parameter or Block
-                LocalMember *m = findFlatMember(checked_cast<NonWithFrame *>(container), multiname, ReadAccess, phase);
-                if (!m && (container->kind == PackageKind))
-                    return deleteDynamicProperty(container, multiname, lookupKind, result);
-                else
-                    return deleteLocalMember(m, result);
-            }
-        }
-        else {
-            // XXX using JS2VAL_UNINITIALIZED to signal generic 'this'
-            js2val thisObject;
-            if (lookupKind->isPropertyLookup()) 
-                thisObject = JS2VAL_UNINITIALIZED;
-            else
-                thisObject = lookupKind->thisObject;
-            MemberDescriptor m2;
-            if (findLocalMember(checked_cast<JS2Class *>(container), multiname, ReadAccess, phase, &m2) && m2.localMember)
-                return deleteLocalMember(m2.localMember, result);
-            else {
-                if (JS2VAL_IS_NULL(thisObject))
-                    reportError(Exception::propertyAccessError, "Null 'this' object", engine->errorPos());
-                if (JS2VAL_IS_UNINITIALIZED(thisObject)) {
-                    *result = false;
-                    return true;
-                }
-                QualifiedName qname(m2.ns, multiname->name);
-                return deleteInstanceMember(objectType(thisObject), &qname, result);
-            }
-        }
-    }
-
-    bool JS2Metadata::deleteDynamicProperty(JS2Object *container, Multiname *multiname, LookupKind * /* lookupKind */, bool *result)
-    {
-        ASSERT(container && ((container->kind == SimpleInstanceKind) 
-                                || (container->kind == PackageKind)
-                                || (container->kind == PrototypeInstanceKind)));
-        if (!multiname->listContains(publicNamespace))
-            return false;
-        const String *name = multiname->name;
-        DynamicPropertyMap *dMap = NULL;
-        if (container->kind == SimpleInstanceKind)
-            dMap = (checked_cast<SimpleInstance *>(container))->dynamicProperties;
-        else
-        if (container->kind == PackageKind)
-            dMap = &(checked_cast<Package *>(container))->dynamicProperties;
-        else {
-            dMap = &(checked_cast<PrototypeInstance *>(container))->dynamicProperties;
-        }
-        DynamicPropertyBinding **dpbP = (*dMap)[*name];
-        if (dpbP) {
-            if (((*dpbP)->v.flags & DynamicPropertyValue::PERMANENT) == 0) {
-                dMap->erase(*name);         // XXX more efficient scheme?
-                *result = true;
-                return true;
-            }
-        }
-        return false;
-    }
-
-    bool JS2Metadata::deleteLocalMember(LocalMember *m, bool *result)
-    {
-        if (m == NULL)
-            return false;   // 'None'
-        switch (m->kind) {
-        case LocalMember::Forbidden:
-            reportError(Exception::propertyAccessError, "Forbidden access", engine->errorPos());
-            break;
-        case LocalMember::Variable:
-        case LocalMember::DynamicVariableKind:
-        case LocalMember::ConstructorMethod:
-        case LocalMember::Getter:
-        case LocalMember::Setter:
-            *result = false;
-            return true;
-        }
-        NOT_REACHED("Bad member kind");
-        return false;
-    }
-
-    bool JS2Metadata::deleteInstanceMember(JS2Class *c, QualifiedName *qname, bool *result)
-    {
-        InstanceMember *m = findInstanceMember(c, qname, ReadAccess);
-        if (m == NULL) return false;
-        *result = false;
-        return true;
-    }
-
-
-    // Find a binding that matches the multiname and access.
-    // It's an error if more than one such binding exists.
-    LocalMember *JS2Metadata::findFlatMember(NonWithFrame *container, Multiname *multiname, Access access, Phase /* phase */)
-    {
-        LocalMember *found = NULL;
-        
-        LocalBindingEntry **lbeP = container->localBindings[*multiname->name];
-        if (lbeP) {
-            for (LocalBindingEntry::NS_Iterator i = (*lbeP)->begin(), end = (*lbeP)->end(); (i != end); i++) {
-                LocalBindingEntry::NamespaceBinding &ns = *i;
-                if ((ns.second->accesses & access) && multiname->listContains(ns.first)) {
-                    if (found && (ns.second->content != found))
-                        reportError(Exception::propertyAccessError, "Ambiguous reference to {0}", engine->errorPos(), multiname->name);
-                    else
-                        found = ns.second->content;
-                }
-            }
-        }
-        return found;
-    }
-
-    // Find the multiname in the class - either in the local bindings (first) or
-    // in the instance bindings. If not there, look in the super class.
-    bool JS2Metadata::findLocalMember(JS2Class *c, Multiname *multiname, Access access, Phase /* phase */, MemberDescriptor *result)
-    {
-        result->localMember = NULL;
-        result->ns = NULL;
-        JS2Class *s = c;
-        while (s) {
-            LocalMember *found = NULL;
-            LocalBindingEntry **lbeP = s->localBindings[*multiname->name];
-            if (lbeP) {
-                for (LocalBindingEntry::NS_Iterator i = (*lbeP)->begin(), end = (*lbeP)->end(); (i != end); i++) {
-                    LocalBindingEntry::NamespaceBinding &ns = *i;
-                    if ((ns.second->accesses & access) && multiname->listContains(ns.first)) {
-                        if (found && (ns.second->content != found))
-                            reportError(Exception::propertyAccessError, "Ambiguous reference to {0}", engine->errorPos(), multiname->name);
-                        else {
-                            found = ns.second->content;
-                            result->localMember = found;
-                        }
-                    }
-                }
-            }
-            if (found)
-                return true;
-
-            InstanceBinding *iFound = NULL;
-            InstanceBindingEntry **ibeP = s->instanceBindings[*multiname->name];
-            if (ibeP) {
-                for (InstanceBindingEntry::NS_Iterator i = (*ibeP)->begin(), end = (*ibeP)->end(); (i != end); i++) {
-                    InstanceBindingEntry::NamespaceBinding &ns = *i;
-                    if ((ns.second->accesses & access) && multiname->listContains(ns.first))
-                        if (iFound && (ns.second->content != iFound->content))
-                            reportError(Exception::propertyAccessError, "Ambiguous reference to {0}", engine->errorPos(), multiname->name);
-                        else {
-                            iFound = ns.second;
-                            result->ns = ns.first;
-                        }
-                    }
-            }
-            
-            if (iFound)
-                return true;
-            s = s->super;
-        }
-        return false;
-    }
-
-    /*
-    * Start from the root class (Object) and proceed through more specific classes that are ancestors of c.
-    * Find the binding that matches the given access and multiname, it's an error if more than one such exists.
-    *
-    */
-    InstanceBinding *JS2Metadata::resolveInstanceMemberName(JS2Class *c, Multiname *multiname, Access access, Phase phase, QualifiedName *qname)
-    {
-        InstanceBinding *result = NULL;
-        if (c->super) {
-            result = resolveInstanceMemberName(c->super, multiname, access, phase, qname);
-            if (result) return result;
-        }
-        InstanceBindingEntry **ibeP = c->instanceBindings[*multiname->name];
-        if (ibeP) {
-            for (InstanceBindingEntry::NS_Iterator i = (*ibeP)->begin(), end = (*ibeP)->end(); (i != end); i++) {
-                InstanceBindingEntry::NamespaceBinding &ns = *i;
-                if ((ns.second->accesses & access) && multiname->listContains(ns.first))
-                    if (result && (ns.second->content != result->content))
-                        reportError(Exception::propertyAccessError, "Ambiguous reference to {0}", engine->errorPos(), multiname->name);
-                    else {
-                        result = ns.second;
-                        qname->id = multiname->name;
-                        qname->nameSpace = ns.first;
-                    }
-            }
-        }
-        return result;
-    }
 
     // gc-mark all contained JS2Objects and their children 
     // and then invoke mark on all other structures that contain JS2Objects
@@ -4305,19 +3810,20 @@ deleteClassProperty:
 
     JS2Class::JS2Class(JS2Class *super, JS2Object *proto, Namespace *privateNamespace, bool dynamic, bool allowNull, bool final, const String *name) 
         : NonWithFrame(ClassKind), 
+            super(super), 
             instanceInitOrder(NULL), 
             complete(false), 
-            super(super), 
             prototype(proto), 
+            typeofString(name),
             privateNamespace(privateNamespace), 
             dynamic(dynamic),
             allowNull(allowNull),
             final(final),
+            defaultValue(JS2VAL_NULL),
             call(NULL),
             construct(JS2Engine::defaultConstructor),
-            defaultValue(JS2VAL_NULL),
-            slotCount(super ? super->slotCount : 0),
-            name(name)
+            read(defaultReadProperty),
+            slotCount(super ? super->slotCount : 0)
     {
 
     }
@@ -4423,11 +3929,12 @@ deleteClassProperty:
     
     // Construct a Simple instance of a class. Set the
     // initial value of all slots to uninitialized.
-    SimpleInstance::SimpleInstance(JS2Class *type) 
-        : JS2Object(SimpleInstanceKind), 
+    SimpleInstance::SimpleInstance(JS2Metadata *meta, JS2Object *parent, JS2Class *type) 
+        : JS2Object(SimpleInstanceKind),
+            sealed(false),
+            super(parent),
             type(type), 
             slots(new Slot[type->slotCount]),
-            dynamicProperties(type->dynamic ? new DynamicPropertyMap() : NULL),
             fWrap(NULL)
     {
         for (uint32 i = 0; i < type->slotCount; i++) {
@@ -4451,12 +3958,13 @@ deleteClassProperty:
                 GCMARKVALUE(slots[i].value);
             }
         }
-        if (dynamicProperties) {
-            for (DynamicPropertyIterator dpi = dynamicProperties->begin(), dpend = dynamicProperties->end(); (dpi != dpend); dpi++) {
-                DynamicPropertyBinding *dpb = *dpi;
-                GCMARKVALUE(dpb->v.value);
-            }        
-        }
+        for (LocalBindingIterator bi = localBindings.begin(), bend = localBindings.end(); (bi != bend); bi++) {
+            LocalBindingEntry *lbe = *bi;
+            for (LocalBindingEntry::NS_Iterator i = lbe->begin(), end = lbe->end(); (i != end); i++) {
+                LocalBindingEntry::NamespaceBinding ns = *i;
+                ns.second->content->mark();
+            }
+        }            
     }
 
  /************************************************************************************
@@ -4496,29 +4004,6 @@ deleteClassProperty:
         GCMARKOBJECT(type); 
     }
 
- /************************************************************************************
- *
- *  PrototypeInstance
- *
- ************************************************************************************/
-
-    PrototypeInstance::PrototypeInstance(JS2Metadata *meta, JS2Object *parent, JS2Class *type) 
-        : JS2Object(PrototypeInstanceKind), parent(parent), type(type) 
-    {
-        // XXX add '__proto__' property for Monkey compatibility
-    }
-
-
-    // gc-mark all contained JS2Objects and visit contained structures to do likewise
-    void PrototypeInstance::markChildren()
-    {
-        GCMARKOBJECT(parent)
-        for (DynamicPropertyIterator dpi = dynamicProperties.begin(), dpend = dynamicProperties.end(); (dpi != dpend); dpi++) {
-            DynamicPropertyBinding *dpb = *dpi;
-            GCMARKVALUE(dpb->v.value);
-        }        
-    }
-
 
  /************************************************************************************
  *
@@ -4527,7 +4012,7 @@ deleteClassProperty:
  ************************************************************************************/
 
     FunctionInstance::FunctionInstance(JS2Metadata *meta, JS2Object *parent, JS2Class *type)
-     : PrototypeInstance(meta, parent, type), fWrap(NULL) 
+     : SimpleInstance(meta, parent, type), fWrap(NULL) 
     {
         // Add prototype property
         writeProperty(meta, meta->engine->prototype_StringAtom, OBJECT_TO_JS2VAL(parent), 0);
@@ -4537,7 +4022,7 @@ deleteClassProperty:
     // gc-mark all contained JS2Objects and visit contained structures to do likewise
     void FunctionInstance::markChildren()
     {
-        PrototypeInstance::markChildren();
+        SimpleInstance::markChildren();
         if (fWrap) {
             GCMARKOBJECT(fWrap->env);
             GCMARKOBJECT(fWrap->compileFrame);
@@ -4607,10 +4092,13 @@ deleteClassProperty:
     {
         NonWithFrame::markChildren();
         GCMARKOBJECT(internalNamespace)
-        for (DynamicPropertyIterator dpi = dynamicProperties.begin(), dpend = dynamicProperties.end(); (dpi != dpend); dpi++) {
-            DynamicPropertyBinding *dpb = *dpi;
-            GCMARKVALUE(dpb->v.value);
-        }        
+        for (LocalBindingIterator bi = localBindings.begin(), bend = localBindings.end(); (bi != bend); bi++) {
+            LocalBindingEntry *lbe = *bi;
+            for (LocalBindingEntry::NS_Iterator i = lbe->begin(), end = lbe->end(); (i != end); i++) {
+                LocalBindingEntry::NamespaceBinding ns = *i;
+                ns.second->content->mark();
+            }
+        }            
     }
 
 
@@ -4636,9 +4124,8 @@ deleteClassProperty:
         ParameterFrame *plural = checked_cast<ParameterFrame *>(pluralFrame);
         ASSERT((plural->positionalCount == 0) || (plural->positional != NULL));
         
-        PrototypeInstance *argsObj = NULL;
+        SimpleInstance *argsObj = new SimpleInstance(meta, meta->objectClass->prototype, meta->objectClass);;
         RootKeeper rk(&argsObj);
-        argsObj = new PrototypeInstance(meta, meta->objectClass->prototype, meta->objectClass);
 
         // Add the 'arguments' property
         String *name = &meta->world.identifiers["arguments"];

@@ -70,8 +70,8 @@ js2val setLength(JS2Metadata *meta, JS2Object *obj, uint32 newLength)
 {
     js2val result = meta->engine->allocNumber(newLength);
 
-    if ((obj->kind == PrototypeInstanceKind)
-            || (checked_cast<PrototypeInstance *>(obj)->type == meta->arrayClass)) {
+    if ((obj->kind == SimpleInstanceKind)
+            || (checked_cast<SimpleInstance *>(obj)->type == meta->arrayClass)) {
         uint32 length = getLength(meta, obj);
         if (newLength < length) {
             // need to delete all the elements above the new length
@@ -85,17 +85,17 @@ js2val setLength(JS2Metadata *meta, JS2Object *obj, uint32 newLength)
         }
     }
 
-    if (obj->kind == PrototypeInstanceKind) {
+    if (obj->kind == SimpleInstanceKind) {
         // Can't call 'writeDynamicProperty' as that'll just cycle back here for
         // ArrayInstances.
-        DynamicPropertyMap *dMap = &checked_cast<PrototypeInstance *>(obj)->dynamicProperties;
+        DynamicPropertyMap *dMap = &checked_cast<SimpleInstance *>(obj)->dynamicProperties;
         DynamicPropertyBinding **dpbP = (*dMap)[*meta->engine->length_StringAtom];
         if (dpbP) {
             (*dpbP)->v.value = result;
             return result;
         }
         DynamicPropertyBinding *dpb = new DynamicPropertyBinding(*meta->engine->length_StringAtom, DynamicPropertyValue(result, DynamicPropertyValue::PERMANENT));
-        checked_cast<PrototypeInstance *>(obj)->dynamicProperties.insert(dpb->name, dpb); 
+        checked_cast<SimpleInstance *>(obj)->dynamicProperties.insert(dpb->name, dpb); 
     }
     else {
         meta->writeDynamicProperty(obj, meta->engine->length_StringAtom, true, result, RunPhase);
@@ -138,8 +138,8 @@ js2val Array_Constructor(JS2Metadata *meta, const js2val /*thisValue*/, js2val *
 static js2val Array_toString(JS2Metadata *meta, const js2val thisValue, js2val * /*argv*/, uint32 /*argc*/)
 {
     if (!JS2VAL_IS_OBJECT(thisValue) 
-            || (JS2VAL_TO_OBJECT(thisValue)->kind != PrototypeInstanceKind)
-            || ((checked_cast<PrototypeInstance *>(JS2VAL_TO_OBJECT(thisValue)))->type != meta->arrayClass))
+            || (JS2VAL_TO_OBJECT(thisValue)->kind != SimpleInstanceKind)
+            || ((checked_cast<SimpleInstance *>(JS2VAL_TO_OBJECT(thisValue)))->type != meta->arrayClass))
         meta->reportError(Exception::typeError, "Array.prototype.toString called on a non Array", meta->engine->errorPos());
 
     ArrayInstance *arrInst = checked_cast<ArrayInstance *>(JS2VAL_TO_OBJECT(thisValue));
@@ -170,8 +170,8 @@ static js2val Array_toString(JS2Metadata *meta, const js2val thisValue, js2val *
 static js2val Array_toSource(JS2Metadata *meta, const js2val thisValue, js2val * /*argv*/, uint32 /*argc*/)
 {
     if (!JS2VAL_IS_OBJECT(thisValue) 
-            || (JS2VAL_TO_OBJECT(thisValue)->kind != PrototypeInstanceKind)
-            || ((checked_cast<PrototypeInstance *>(JS2VAL_TO_OBJECT(thisValue)))->type != meta->arrayClass))
+            || (JS2VAL_TO_OBJECT(thisValue)->kind != SimpleInstanceKind)
+            || ((checked_cast<SimpleInstance *>(JS2VAL_TO_OBJECT(thisValue)))->type != meta->arrayClass))
         meta->reportError(Exception::typeError, "Array.prototype.toString called on a non Array", meta->engine->errorPos());
 
     ArrayInstance *arrInst = checked_cast<ArrayInstance *>(JS2VAL_TO_OBJECT(thisValue));
@@ -566,8 +566,8 @@ static js2val Array_sort(JS2Metadata *meta, const js2val thisValue, js2val *argv
 
     if (argc > 0) {
         if (!JS2VAL_IS_UNDEFINED(argv[0])) {
-                if ((JS2VAL_TO_OBJECT(argv[0])->kind != PrototypeInstanceKind)
-                        || ((checked_cast<PrototypeInstance *>(JS2VAL_TO_OBJECT(argv[0])))->type != meta->functionClass))
+                if ((JS2VAL_TO_OBJECT(argv[0])->kind != SimpleInstanceKind)
+                        || ((checked_cast<SimpleInstance *>(JS2VAL_TO_OBJECT(argv[0])))->type != meta->functionClass))
                 meta->reportError(Exception::typeError, "sort needs a compare function", meta->engine->errorPos());
             ca.target = JS2VAL_TO_OBJECT(argv[0]);
         }

@@ -38,7 +38,9 @@
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
             b = pop();
-            if (!meta->readProperty(&b, mn, &lookup, RunPhase, &a))
+            
+            JS2Class *limit = objectType(b);
+            if (!limit->read(meta, b, limit, mn, lookup, RunPhase, &a))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn->name);
             push(a);
         }
@@ -91,7 +93,8 @@
         {
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
-            push(meta->env->lexicalRead(meta, mn, phase));
+            meta->env->lexicalRead(meta, mn, phase, &a);
+            push(a);
         }
         break;
 
