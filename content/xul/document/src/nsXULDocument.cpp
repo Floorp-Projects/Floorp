@@ -2069,6 +2069,9 @@ nsXULDocument::ContentAppended(nsIContent* aContainer,
 
     // Now notify external observers
     PRInt32 count = mObservers.Count();
+    // XXXdwh There is a hacky ordering dependency between the binding manager 
+    // and the frame constructor that forces us to walk the observer list 
+    // in a forward order
     for (PRInt32 i = 0; i < count; i++) {
         nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
         observer->ContentAppended(this, aContainer, aNewIndexInContainer);
@@ -2089,6 +2092,9 @@ nsXULDocument::ContentInserted(nsIContent* aContainer,
 
     // Now notify external observers
     PRInt32 count = mObservers.Count();
+    // XXXdwh There is a hacky ordering dependency between the binding manager 
+    // and the frame constructor that forces us to walk the observer list 
+    // in a forward order
     for (PRInt32 i = 0; i < count; i++) {
         nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
         observer->ContentInserted(this, aContainer, aChild, aIndexInContainer);
@@ -2113,19 +2119,14 @@ nsXULDocument::ContentReplaced(nsIContent* aContainer,
 
     // Now notify external observers
     PRInt32 count = mObservers.Count();
-    for (PRInt32 i = 0; i < count; i++) {
+    // XXXdwh There is a hacky ordering dependency between the binding manager 
+    // and the frame constructor that forces us to walk the observer list 
+    // in a reverse order
+    for (PRInt32 i = count-1; i >=0; i--) {
         nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
         observer->ContentReplaced(this, aContainer, aOldChild, aNewChild,
                                   aIndexInContainer);
 
-        // XXXdwh hack to avoid crash, since an observer removes itself
-        // during ContentReplaced.
-        PRInt32 newCount = mObservers.Count();
-        if (newCount < count) {
-          PRInt32 diff = (count - newCount);
-          count -= diff;
-          i -= diff;
-        }
     }
     return NS_OK;
 }
@@ -2143,19 +2144,13 @@ nsXULDocument::ContentRemoved(nsIContent* aContainer,
 
     // Now notify external observers
     PRInt32 count = mObservers.Count();
-    for (PRInt32 i = 0; i < count; i++) {
+    // XXXdwh There is a hacky ordering dependency between the binding manager 
+    // and the frame constructor that forces us to walk the observer list 
+    // in a reverse order
+    for (PRInt32 i = count-1; i >=0; i--) {
         nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
         observer->ContentRemoved(this, aContainer,
                                  aChild, aIndexInContainer);
-
-        // XXXdwh hack to avoid crash, since an observer removes itself
-        // during ContentRemoved.
-        PRInt32 newCount = mObservers.Count();
-        if (newCount < count) {
-          PRInt32 diff = (count - newCount);
-          count -= diff;
-          i -= diff;
-        }
     }
     return NS_OK;
 }
