@@ -553,7 +553,7 @@ nsClipboard::SelectionReceiver (GtkWidget *aWidget,
     g_print("        len is %d\n", len);
 #endif
 
-    prop.value = data;
+    prop.value = (unsigned char *)data;
     prop.nitems = len;
     prop.encoding = XInternAtom(GDK_DISPLAY(), "COMPOUND_TEXT", FALSE);
     prop.format = 8;
@@ -894,7 +894,7 @@ void nsClipboard::SelectionGetCB(GtkWidget        *widget,
                   prop.nitems);
 #endif
           nsAllocator::Free(platformText);
-          platformText = prop.value;
+          platformText = (char *)prop.value;
           platformLen = prop.nitems;
         }
       }
