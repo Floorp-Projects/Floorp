@@ -229,7 +229,7 @@ NS_IMETHODIMP nsMsgMessageDataSource::GetTargets(nsIRDFResource* source,
 		}
 		NS_IF_RELEASE(message);
 	}
-	else {
+	if(rv != NS_OK) {
 	  //create empty cursor
 	  nsISupportsArray *assertions;
 	  NS_NewISupportsArray(&assertions);
