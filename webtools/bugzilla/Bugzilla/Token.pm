@@ -30,8 +30,17 @@ use strict;
 # Bundle the functions in this file together into the "Token" package.
 package Token;
 
+use Date::Format;
+
 # This module requires that its caller have said "require CGI.pl" to import
 # relevant functions from that script and its companion globals.pl.
+
+################################################################################
+# Constants
+################################################################################
+
+# The maximum number of days a token will remain valid.
+my $maxtokenage = 3;
 
 ################################################################################
 # Functions
@@ -39,6 +48,9 @@ package Token;
 
 sub IssueEmailChangeToken {
     my ($userid, $old_email, $new_email) = @_;
+
+    my $token_ts = time();
+    my $issuedate = time2str("%Y-%m-%d %H:%M", $token_ts);
 
     # Generate a unique token and insert it into the tokens table.
     # We have to lock the tokens table before generating the token, 
@@ -49,13 +61,13 @@ sub IssueEmailChangeToken {
     my $quoted_emails = &::SqlQuote($old_email . ":" . $new_email);
     &::SendSQL("INSERT INTO tokens ( userid , issuedate , token , 
                                      tokentype , eventdata )
-                VALUES             ( $userid , NOW() , $quotedtoken , 
+                VALUES             ( $userid , '$issuedate' , $quotedtoken , 
                                      'emailold' , $quoted_emails )");
     my $newtoken = GenerateUniqueToken();
     $quotedtoken = &::SqlQuote($newtoken);
     &::SendSQL("INSERT INTO tokens ( userid , issuedate , token , 
                                      tokentype , eventdata )
-                VALUES             ( $userid , NOW() , $quotedtoken , 
+                VALUES             ( $userid , '$issuedate' , $quotedtoken , 
                                      'emailnew' , $quoted_emails )");
     &::SendSQL("UNLOCK TABLES");
 
@@ -66,6 +78,9 @@ sub IssueEmailChangeToken {
 
     $vars->{'oldemailaddress'} = $old_email . &::Param('emailsuffix');
     $vars->{'newemailaddress'} = $new_email . &::Param('emailsuffix');
+    
+    $vars->{'max_token_age'} = $maxtokenage;
+    $vars->{'token_ts'} = $token_ts;
 
     $vars->{'token'} = $token;
     $vars->{'emailaddress'} = $old_email . &::Param('emailsuffix');
@@ -102,6 +117,9 @@ sub IssuePasswordToken {
     &::SendSQL("SELECT userid FROM profiles WHERE login_name = $quotedloginname");
     my ($userid) = &::FetchSQLData();
 
+    my $token_ts = time();
+    my $issuedate = time2str("%Y-%m-%d %H:%M", $token_ts);
+
     # Generate a unique token and insert it into the tokens table.
     # We have to lock the tokens table before generating the token, 
     # since the database must be queried for token uniqueness.
@@ -110,7 +128,7 @@ sub IssuePasswordToken {
     my $quotedtoken = &::SqlQuote($token);
     my $quotedipaddr = &::SqlQuote($::ENV{'REMOTE_ADDR'});
     &::SendSQL("INSERT INTO tokens ( userid , issuedate , token , tokentype , eventdata )
-                VALUES      ( $userid , NOW() , $quotedtoken , 'password' , $quotedipaddr )");
+                VALUES      ( $userid , '$issuedate' , $quotedtoken , 'password' , $quotedipaddr )");
     &::SendSQL("UNLOCK TABLES");
 
     # Mail the user the token along with instructions for using it.
@@ -120,6 +138,9 @@ sub IssuePasswordToken {
 
     $vars->{'token'} = $token;
     $vars->{'emailaddress'} = $loginname . &::Param('emailsuffix');
+
+    $vars->{'max_token_age'} = $maxtokenage;
+    $vars->{'token_ts'} = $token_ts;
 
     my $message = "";
     $template->process("account/password/forgotten-password.txt.tmpl", 
@@ -136,7 +157,7 @@ sub IssuePasswordToken {
 sub CleanTokenTable {
     &::SendSQL("LOCK TABLES tokens WRITE");
     &::SendSQL("DELETE FROM tokens 
-                WHERE TO_DAYS(NOW()) - TO_DAYS(issuedate) >= 3");
+                WHERE TO_DAYS(NOW()) - TO_DAYS(issuedate) >= " . $maxtokenage);
     &::SendSQL("UNLOCK TABLES");
 }
 
