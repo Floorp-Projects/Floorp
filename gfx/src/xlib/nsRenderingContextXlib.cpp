@@ -1334,15 +1334,9 @@ nsRenderingContextXlib::GetWidth(const char* aString, PRUint32 aLength,
     nsXFont *xFont = mCurrentFont->GetXFont();
 #ifdef USE_FREETYPE
     if (mCurrentFont->IsFreeTypeFont()) {
-      PRUnichar unichars[WIDEN_8_TO_16_BUF_SIZE];
-      // need to fix this for long strings
-      PRUint32 len = PR_MIN(aLength, WIDEN_8_TO_16_BUF_SIZE);
-      // convert 7 bit data to unicode
       // this function is only supposed to be called for ascii data
-      for (PRUint32 i=0; i<len; i++) {
-        unichars[i] = (PRUnichar)((unsigned char)aString[i]);
-      }
-      rawWidth = mCurrentFont->GetWidth(unichars, len);
+      rawWidth = mCurrentFont->
+        GetWidth(NS_ConvertASCIItoUTF16(aString, aLength).get(), aLength);
     }
     else
 #endif /* USE_FREETYPE */
@@ -2066,16 +2060,10 @@ nsRenderingContextXlib::DrawString(const char *aString, PRUint32 aLength,
         mTranMatrix->TransformCoord(&xx, &yy);
 #ifdef USE_FREETYPE
         if (mCurrentFont->IsFreeTypeFont()) {
-          PRUnichar unichars[WIDEN_8_TO_16_BUF_SIZE];
-          // need to fix this for long strings
-          PRUint32 len = PR_MIN(aLength, WIDEN_8_TO_16_BUF_SIZE);
-          // convert 7 bit data to unicode
           // this function is only supposed to be called for ascii data
-          for (PRUint32 i=0; i<len; i++) {
-            unichars[i] = (PRUnichar)((unsigned char)aString[i]);
-          }
-          res = mCurrentFont->DrawString(this, mSurface, xx, yy,
-                                         unichars, len);
+          res = mCurrentFont->DrawString(this, mSurface, xx, yy, 
+                            NS_ConvertASCIItoUTF16(aString, aLength).get(),
+                            aLength);
         }
         else
 #endif /* USE_FREETYPE */
@@ -2097,16 +2085,10 @@ nsRenderingContextXlib::DrawString(const char *aString, PRUint32 aLength,
       mTranMatrix->TransformCoord(&x, &y);
 #ifdef USE_FREETYPE
       if (mCurrentFont->IsFreeTypeFont()) {
-        PRUnichar unichars[WIDEN_8_TO_16_BUF_SIZE];
-        // need to fix this for long strings
-        PRUint32 len = PR_MIN(aLength, WIDEN_8_TO_16_BUF_SIZE);
-        // convert 7 bit data to unicode
         // this function is only supposed to be called for ascii data
-        for (PRUint32 i=0; i<len; i++) {
-          unichars[i] = (PRUnichar)((unsigned char)aString[i]);
-        }
-        res = mCurrentFont->DrawString(this, mSurface, x, y,
-                                       unichars, len);
+        res = mCurrentFont->DrawString(this, mSurface, x, y, 
+                          NS_ConvertASCIItoUTF16(aString, aLength).get(),
+                          aLength);
       }
       else
 #endif /* USE_FREETYPE */
@@ -2379,16 +2361,10 @@ nsRenderingContextXlib::GetBoundingMetrics(const char*        aString,
     nsXFont *xFont = mCurrentFont->GetXFont();
 #ifdef USE_FREETYPE
     if (mCurrentFont->IsFreeTypeFont()) {
-      PRUnichar unichars[WIDEN_8_TO_16_BUF_SIZE];
-      // need to fix this for long strings
-      PRUint32 len = PR_MIN(aLength, WIDEN_8_TO_16_BUF_SIZE);
-      // convert 7 bit data to unicode
       // this function is only supposed to be called for ascii data
-      for (PRUint32 i=0; i<len; i++) {
-        unichars[i] = (PRUnichar)((unsigned char)aString[i]);
-      }
-      res = mCurrentFont->GetBoundingMetrics(unichars, len,
-                                            aBoundingMetrics);
+      res = mCurrentFont->GetBoundingMetrics(
+                        NS_ConvertASCIItoUTF16(aString, aLength).get(),
+                        aLength, aBoundingMetrics);
     }
     else
 #endif /* USE_FREETYPE */
