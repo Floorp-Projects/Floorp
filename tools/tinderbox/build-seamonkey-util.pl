@@ -21,7 +21,7 @@ use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
 
 
-$::UtilsVersion = '$Revision: 1.134 $ ';
+$::UtilsVersion = '$Revision: 1.135 $ ';
 
 package TinderUtils;
 
@@ -1050,7 +1050,7 @@ sub run_all_tests {
 
 			print_log "TinderboxPrint:" .
 			  "<a title=\"Best nav open time of 9 runs\" href=\"http://$Settings::results_server/graph/query.cgi?testname=xulwinopen&tbox=" .
-				::hostname() . "&autoscale=1&days=7\">Txul:$open_time" . "ms</a>\n";
+				::hostname() . "&autoscale=1&days=7&avg=1\">Txul:$open_time" . "ms</a>\n";
 
             # Pull out samples data from log.
             my $raw_data = extract_token_from_file($binary_log, "openingTimes", "=");
@@ -1150,7 +1150,7 @@ sub run_all_tests {
 		# print_log "\n\n  __avg_startuptime,$min_startuptime\n\n";
 		
 		my $print_string = "\n\nTinderboxPrint:<a title=\"Best startup time out of 10 startups\"href=\"http://$Settings::results_server/graph/query.cgi?testname=startup&tbox=" 
-		  . ::hostname() . "&autoscale=1&days=7\">Ts:" . $min_startuptime . "ms</a>\n\n";
+		  . ::hostname() . "&autoscale=1&days=7&avg=1\">Ts:" . $min_startuptime . "ms</a>\n\n";
 		print_log "$print_string";
 
 		# Report data back to server
@@ -1745,10 +1745,10 @@ sub BloatTest {
 
     if($Settings::TestsPhoneHome) {
       # Generate and print tbox output strings for leak, bloat.
-      my $leaks_string = "\n\nTinderboxPrint:<a title=\"" . $leaks_testname_label . "\"href=\"http://$Settings::results_server/graph/query.cgi?testname=" . $leaks_testname . "&units=bytes&tbox=" . ::hostname() . "&autoscale=1&days=7\">" . $label_prefix . "Lk:" . PrintSize($leaks) . "B</a>\n\n";
+      my $leaks_string = "\n\nTinderboxPrint:<a title=\"" . $leaks_testname_label . "\"href=\"http://$Settings::results_server/graph/query.cgi?testname=" . $leaks_testname . "&units=bytes&tbox=" . ::hostname() . "&autoscale=1&days=7&avg=1\">" . $label_prefix . "Lk:" . PrintSize($leaks) . "B</a>\n\n";
       print_log $leaks_string;
       
-      my $bloat_string = "\n\nTinderboxPrint:<a title=\"" . $bloat_testname_label . "\"href=\"http://$Settings::results_server/graph/query.cgi?testname=" . $bloat_testname . "&units=bytes&tbox=" . ::hostname() . "&autoscale=1&days=7\">" . $label_prefix . "Bl:" . PrintSize($bloat) . "B</a>\n\n";
+      my $bloat_string = "\n\nTinderboxPrint:<a title=\"" . $bloat_testname_label . "\"href=\"http://$Settings::results_server/graph/query.cgi?testname=" . $bloat_testname . "&units=bytes&tbox=" . ::hostname() . "&autoscale=1&days=7&avg=1\">" . $label_prefix . "Bl:" . PrintSize($bloat) . "B</a>\n\n";
       print_log $bloat_string;
       
       # Report numbers to server.
