@@ -15,23 +15,30 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-DEPTH=..\..\..
+DEPTH=..\..\..\..
 IGNORE_MANIFEST=1
 
-DIRS=coreDom
 MODULE=raptor 
 
 IDLSRCS =  \
-        Navigator.idl
+	Attribute.idl  \
+	AttributeList.idl \
+	Comment.idl \
+	DOM.idl \
+	Document.idl \
+	DocumentContext.idl \
+	DocumentFragment.idl \
+	Element.idl \
+	Node.idl \
+	NodeIterator.idl \
+	PI.idl \
+	Text.idl \
+        TreeIterator.idl
 
-GLOBAL_IDLSRC = Window.idl
-
-XPCOM_DESTDIR=$(DEPTH)\dom\public
 JSSTUB_DESTDIR=$(DEPTH)\dom\src
+
 GENXDIR=genx
 GENJSDIR=genjs
-
-IIDDIRS=$(DIRS: =/genx )/$(GENXDIR) $(GENXDIR) 
 
 !include <$(DEPTH)\config\rules.mak>
 
@@ -47,17 +54,8 @@ GENIID=$(DIST)\bin\geniid.pl
 export:: $(GENXDIR) $(GENJSDIR) $(IDLSRCS)
 	@echo +++ make: generating xpcom headers
 	$(IDLC) -d $(GENXDIR) -x $(IDLSRCS)
-	$(IDLC) -d $(GENXDIR) -g -x $(GLOBAL_IDLSRC)
 	@echo +++ make: generating JavaScript stubs
 	$(IDLC) -d $(GENJSDIR) -j $(IDLSRCS)
-	$(IDLC) -d $(GENJSDIR) -g -j $(GLOBAL_IDLSRC)
-	@echo +++ make: generating interface ids
-	@echo +++ make: directories $(IIDDIRS)
-  	$(PERL) $(GENIID) $(IIDDIRS) 
-	
-install::
-	for %g in ($(DIRS)) do $(MAKE_INSTALL:/=\) %g\$(GENXDIR)\*.h $(XPCOM_DESTDIR)\%g
-	$(MAKE_INSTALL:/=\) $(GENXDIR)\*.h $(XPCOM_DESTDIR)
-	for %g in ($(IDLSRCS:.idl=.cpp)) do $(MAKE_INSTALL:/=\) $(GENJSDIR)\nsJS%g $(JSSTUB_DESTDIR)
-	$(MAKE_INSTALL:/=\) $(GENJSDIR)\nsJS$(GLOBAL_IDLSRC:.idl=.cpp) $(JSSTUB_DESTDIR)
 
+install::
+	for %g in ($(IDLSRCS:.idl=.cpp)) do $(MAKE_INSTALL:/=\) $(GENJSDIR)\nsJS%g $(JSSTUB_DESTDIR)
