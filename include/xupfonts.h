@@ -21,6 +21,7 @@
 #ifndef XUPFONTS_H
 #define XUPFONTS_H
 
+#include "xp.h"
 #define UNICODE_PSEUDO_FONT_TAG   0xabadbeef
 #define UNICODE_PLACEHOLDER_WIDTH 10
 typedef struct fe_UnicodePseudoFont
@@ -45,6 +46,8 @@ typedef struct fe_UnicodePseudoFont
 	int ascent;
 	int descent;
 } fe_UnicodePseudoFont;
+
+XP_BEGIN_PROTOS
 
 XFontStruct *fe_UnicodeGetXfont(fe_UnicodePseudoFont *ufont, uint16 encoding);
 
@@ -72,5 +75,7 @@ XmFontList XUPF_GetXmFontSet(fe_Font font);
 XmString   XUPF_UCS2ToXmString(uint16 *uniChars, int32 length, 
 						fe_Font ufont, XmFontList *fontList);
 int XUPF_JavaPointToPixelSize(Display *dpy, int pointSize);
+
+XP_END_PROTOS
 
 #endif /* XUPFONTS_H */
