@@ -84,9 +84,8 @@ nsStaticCaseInsensitiveNameTable::Init(const char* Names[], PRInt32 Count)
        NS_ASSERTION(temp1.Equals(temp2), "upper case char in table");
        }
 #endif
-       // use placement-new to initialize the string object
-       nsDependentCString *str =
-         new (&mNameArray[index]) nsDependentCString(raw);
+        // use placement-new to initialize the string object
+        new (&mNameArray[index]) nsDependentCString(raw);
         nsCStringKey key(raw, len, nsCStringKey::NEVER_OWN);
         mNameTable->Put(&key, (void*)(index+1)); // to make 0 != nsnull
     }
