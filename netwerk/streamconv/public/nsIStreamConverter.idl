@@ -101,7 +101,7 @@ interface nsIStreamConverter : nsIStreamListener {
      *                      implementation will converter data on demand rather than
      *                      buffering the converted data until it is used.
      */
-    nsIInputStream Convert(in nsIInputStream aFromStream,
+    nsIInputStream convert(in nsIInputStream aFromStream,
                            in wstring aFromType,
                            in wstring aToType,
                            in nsISupports aCtxt);
@@ -121,7 +121,7 @@ interface nsIStreamConverter : nsIStreamListener {
      * @param aCtxt         Either an opaque context, or a converter specific context
      *                      (implementation specific).
      */
-    void AsyncConvertData(in wstring aFromType,
+    void asyncConvertData(in wstring aFromType,
                           in wstring aToType,
                           in nsIStreamListener aListener,
                           in nsISupports aCtxt);
