@@ -1,11 +1,11 @@
 /* -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
- * Version: NPL 1.1/GPL 2.0/LGPL 2.1
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
- * The contents of this file are subject to the Netscape Public License
- * Version 1.1 (the "License"); you may not use this file except in
- * compliance with the License. You may obtain a copy of the License at
- * http://www.mozilla.org/NPL/
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
  *
  * Software distributed under the License is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
@@ -14,30 +14,38 @@
  *
  * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is 
+ * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998-2000
+ * Portions created by the Initial Developer are Copyright (C) 1998-2002
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ * Benjamin Smedberg <bsmedberg@covad.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or 
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
  * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the NPL, indicate your
+ * use your version of this file under the terms of the MPL, indicate your
  * decision by deleting the provisions above and replace them with the notice
  * and other provisions required by the GPL or the LGPL. If you do not delete
  * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the NPL, the GPL or the LGPL.
+ * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
 
+/**
+ * Default preferences for seamonkey composer. This file
+ * was copied from mozilla/modules/libpref/src/init/editor.js
+ *
+ * If you're looking for the default prefs of standalone
+ * composer, see mozilla/composer/app/profile/all.js
+ */
+
 pref("editor.author",                       "");
 
-pref("editor.use_custom_colors",            false);
 pref("editor.text_color",                   "#000000");
 pref("editor.link_color",                   "#0000FF");
 pref("editor.active_link_color",            "#000088");
@@ -56,8 +64,6 @@ pref("editor.hrule.align",                  1); // center
 pref("editor.table.maintain_structure", true);
 
 pref("editor.prettyprint", true);
-
-pref("editor.htmlWrapColumn", 72);
 
 pref("editor.throbber.url","chrome://editor-region/locale/region.properties");
 
@@ -98,17 +104,11 @@ pref("editor.html_editor",                  "");
 pref("editor.use_image_editor",             0);
 pref("editor.image_editor",                 "");
 
-pref("editor.singleLine.pasteNewlines",     1);
-
 pref("editor.history.url_maximum", 10);
-
-pref("editor.quotesPreformatted",            false);
 
 pref("editor.publish.",                      "");
 pref("editor.lastFileLocation.image",        "");
 pref("editor.lastFileLocation.html",         "");
-pref("editor.use_css",                       true);
-pref("editor.css.default_length_unit",       "px");
 pref("editor.save_associated_files",         true);
 pref("editor.always_show_publish_dialog",    false);
 
@@ -128,5 +128,3 @@ pref("editor.always_show_publish_dialog",    false);
  */
 //pref("editor.encode_entity",                 "html");
 
-pref("editor.resizing.preserve_ratio",       true);
-pref("editor.positioning.offset",            0);

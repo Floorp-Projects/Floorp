@@ -558,3 +558,25 @@ pref("mail.password_protect_local_cache", false);
 pref("mail.standalone", false);
 
 pref("mailnews.view.last",0); // 0 == "all" view
+
+#if OS_ARCH==WINNT
+// Unread mail count timer. Value to be specified in seconds
+// default is 5 minutes, i.e., 5 * 60 seconds = 300
+pref("mail.windows_xp_integration.unread_count_interval", 300);
+#endif
+
+#if MOZ_WIDGET_TOOLKIT==cocoa
+#define MAC_PREFS 1
+#else
+#if MOZ_WIDGET_TOOLKIT==mac
+#define MAC_PREFS 1
+#endif
+#endif
+
+#ifdef MAC_PREFS
+pref("mail.notification.sound",             "");
+pref("mail.close_message_window.on_delete", true);
+pref("mail.close_message_window.on_file", true);
+
+pref("mail.server_type_on_restart",         -1);
+#endif

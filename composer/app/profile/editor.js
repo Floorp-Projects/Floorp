@@ -37,7 +37,6 @@
 
 pref("editor.author",                       "");
 
-pref("editor.use_custom_colors",            false);
 pref("editor.text_color",                   "#000000");
 pref("editor.link_color",                   "#0000FF");
 pref("editor.active_link_color",            "#000088");
@@ -56,8 +55,6 @@ pref("editor.hrule.align",                  1); // center
 pref("editor.table.maintain_structure", true);
 
 pref("editor.prettyprint", true);
-
-pref("editor.htmlWrapColumn", 72);
 
 pref("editor.throbber.url","chrome://editor-region/locale/region.properties");
 
@@ -95,17 +92,11 @@ pref("editor.html_editor",                  "");
 pref("editor.use_image_editor",             0);
 pref("editor.image_editor",                 "");
 
-pref("editor.singleLine.pasteNewlines",     1);
-
 pref("editor.history.url_maximum", 10);
-
-pref("editor.quotesPreformatted",            false);
 
 pref("editor.publish.",                      "");
 pref("editor.lastFileLocation.image",        "");
 pref("editor.lastFileLocation.html",         "");
-pref("editor.use_css",                       true);
-pref("editor.css.default_length_unit",       "px");
 pref("editor.save_associated_files",         true);
 pref("editor.always_show_publish_dialog",    false);
 

@@ -120,7 +120,7 @@ components\windowwatcher.xpt
 components\jar.xpt
 
 ; prefs
-components\pref.xpt                     
+components\pref.xpt
 components\xppref32.dll
 
 ; profile

@@ -202,10 +202,9 @@ res/charsetalias.properties
 res/maccharset.properties
 ; res/strres.properties 
 
-
 ; required prefs files
-defaults/pref/all.js
-defaults/pref/macprefs.js
+greprefs/*
+
 
 ; uriloader
 components/uriloader.xpt

@@ -12,10 +12,6 @@
 chrome\pipnss.jar
 defaults\pref\security-prefs.js
 
-; required prefs files
-defaults\pref\all.js
-defaults\pref\winpref.js
-
 ; 
 ; Widget-Toolkit and Res (consult hyatt@netscape.com before modifying):
 ; 

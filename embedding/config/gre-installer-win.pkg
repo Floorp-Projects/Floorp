@@ -16,6 +16,9 @@
 
 [gre]
 
+; required prefs files
+greprefs\*
+
 ;
 ; oji/LiveConnect support
 ;
