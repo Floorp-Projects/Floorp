@@ -33,6 +33,7 @@ XPIDLSRCS = \
 		nsIMsgSend.idl	\
 		nsIMsgSendLater.idl	\
 		nsIMsgDraft.idl	\
+		nsISmtpServer.idl	\
 		$(NULL)
 
 EXPORTS = \
