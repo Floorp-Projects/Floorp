@@ -451,6 +451,8 @@ nsMsgComposeAndSend::GatherMimeAttachments()
   char *buffer_tail = 0;
   nsXPIDLString msg; 
   PRBool tonews;
+  PRBool body_is_us_ascii = PR_TRUE;
+
   nsMsgSendPart   *mpartcontainer = nsnull;
   nsMsgSendPart* toppart = nsnull;      // The very top most container of the message
                       // that we are going to send.
@@ -711,14 +713,16 @@ nsMsgComposeAndSend::GatherMimeAttachments()
     just before writing it out, but that will require a fix that is less safe
     and takes more memory. */
   PR_FREEIF(m_attachment1_encoding);
+  if (m_attachment1_body)
+  {
+    // Check if the part contains 7 bit only. Re-label charset if necessary.
+    if (nsMsgI18Nstateful_charset(mCompFields->GetCharacterSet())) {
+      body_is_us_ascii = nsMsgI18N7bit_data_part(mCompFields->GetCharacterSet(), m_attachment1_body, m_attachment1_body_length); 
+    }
+    else {
+      body_is_us_ascii = mime_7bit_data_p (m_attachment1_body, m_attachment1_body_length);
+    }
 
-  // Check if the part contains 7 bit only. Re-label charset if necessary.
-  PRBool body_is_us_ascii;
-  if (nsMsgI18Nstateful_charset(mCompFields->GetCharacterSet())) {
-    body_is_us_ascii = nsMsgI18N7bit_data_part(mCompFields->GetCharacterSet(), m_attachment1_body, m_attachment1_body_length); 
-  }
-  else {
-    body_is_us_ascii = mime_7bit_data_p (m_attachment1_body, m_attachment1_body_length);
   }
 
   if (nsMsgI18Nstateful_charset(mCompFields->GetCharacterSet()) ||
