@@ -110,7 +110,7 @@ NSGetSharedLibrary(Str255 inLibName, CFragConnectionID* outID, Ptr* outMainAddr)
 	filterData.outAddress = NULL;
 	filterData.inName = inLibName;
 		
-	freeCurLibPath = curLibPath = strdup(PR_GetLibraryPath());
+	freeCurLibPath = curLibPath = PR_GetLibraryPath();
 	
 	if (curLibPath == NULL)
 		return (fragLibNotFound);
