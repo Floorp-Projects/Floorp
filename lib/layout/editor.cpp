@@ -1787,6 +1787,23 @@ EDT_ClipboardResult EDT_PasteText( MWContext *pContext, char *pText ) {
     return result;
 }
 
+#ifdef ENDER
+EDT_ClipboardResult EDT_SetDefaultText(  MWContext *pContext, char *pText ) {
+	CEditBuffer* pEditBuffer = LO_GetEDBuffer( pContext );
+	if (pEditBuffer && pText)
+	{
+		if (!CEditBuffer::IsAlive(pEditBuffer) || !pEditBuffer->IsReady() || !pEditBuffer->IsWritable() )
+		{ //set up the default data for finishedload2
+			pEditBuffer->m_pImportedStream=XP_STRDUP(pText);
+			return EDT_COP_OK;
+		}
+		else
+			return EDT_PasteText(pContext,pText);
+	}
+	return EDT_COP_DOCUMENT_BUSY;
+}
+#endif //ENDER
+
 EDT_ClipboardResult EDT_PasteQuoteBegin( MWContext *pContext, XP_Bool bHTML ) {
     GET_WRITABLE_EDIT_BUF_OR_RETURN(pContext, pEditBuffer) EDT_COP_DOCUMENT_BUSY;
     EDT_ClipboardResult result = pEditBuffer->PasteQuoteBegin( bHTML );

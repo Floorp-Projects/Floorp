@@ -3033,6 +3033,9 @@ public:
     TXP_GrowableArray_XP_Bool m_FontDefNoSave;
     char *m_pBaseTarget;
     char *m_pBodyExtra;
+#ifdef ENDER
+	char *m_pImportedStream; //dont forget to XP_FREE this memory //ENDER
+#endif //ENDER
     CEditImageLoader *m_pLoadingImage;
     CFileSaveObject *m_pSaveObject;
     XP_Bool m_bMultiSpaceMode;
