@@ -1,0 +1,15 @@
+; MozillaControl.def : Declares the module parameters.
+
+LIBRARY      "npmozctl.DLL"
+
+EXPORTS
+	; Plugin exports
+	NP_GetEntryPoints   @1
+	NP_Initialize       @2
+	NP_Shutdown         @3
+	NSGetFactory		@10
+	; ActiveX exports
+	DllCanUnloadNow     @100 PRIVATE
+	DllGetClassObject   @101 PRIVATE
+	DllRegisterServer   @102 PRIVATE
+	DllUnregisterServer	@103 PRIVATE
