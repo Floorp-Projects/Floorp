@@ -111,5 +111,5 @@ nsresult
 void
   NS_NameSpaceManagerShutdown();
 
-
+ 
 #endif // nsINameSpaceManager_h___
