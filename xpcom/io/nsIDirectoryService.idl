@@ -34,6 +34,7 @@ interface nsIDirectoryService: nsISupports
 {
   void init(in string productName);
   void registerProvider(in nsIDirectoryServiceProvider prov);
+  void unregisterProvider(in nsIDirectoryServiceProvider prov);
 };
 
 %{C++
