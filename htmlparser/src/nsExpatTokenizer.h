@@ -105,16 +105,15 @@ protected:
       const XML_Char *base,
       const XML_Char *systemId,
       const XML_Char *publicId);
-//#define EXTERNAL_ENTITY_SUPPORT
-#ifdef EXTERNAL_ENTITY_SUPPORT
-    static int LoadExternalDTD(const XML_Char * base, 
-      const XML_Char * systemId, 
-      char ** data);
-#endif
     static int HandleUnknownEncoding(void *encodingHandlerData,
       const XML_Char *name,
       XML_Encoding *info);
-  
+
+    static nsresult OpenInputStream(nsString2& aURLStr, 
+                                    nsIInputStream*& in);
+    static nsresult LoadStream(nsIInputStream* in, 
+                               PRUnichar* &uniBuf, PRUint32 &retLen);
+
     XML_Parser mExpatParser;
 	PRUint32 mBytesParsed;
   PRBool mSeenError;
