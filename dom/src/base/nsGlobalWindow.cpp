@@ -392,7 +392,7 @@ NS_IMETHODIMP
 GlobalWindowImpl::GetScreen(nsIDOMScreen** aScreen)
 {
   if (nsnull == mScreen) {
-    mScreen = new ScreenImpl();
+    mScreen = new ScreenImpl( mWebShell );
     NS_IF_ADDREF(mScreen);
   }
 
@@ -948,7 +948,7 @@ GlobalWindowImpl::Alert(const nsString& aStr)
   nsresult ret;
   
   nsIWebShell *rootWebShell;
-  ret = mWebShell->GetRootWebShell(rootWebShell);
+  ret = mWebShell->GetRootWebShellEvenIfChrome(rootWebShell);
   if (nsnull != rootWebShell) {
     nsIWebShellContainer *rootContainer;
     ret = rootWebShell->GetContainer(rootContainer);

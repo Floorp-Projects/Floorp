@@ -23,11 +23,13 @@
 #include "nsISupports.h"
 #include "nscore.h"
 #include "nsIScriptContext.h"
+class nsIWebShell;
+class nsIDeviceContext;
 
 // Script "screen" object
 class ScreenImpl : public nsIScriptObjectOwner, public nsIDOMScreen {
 public:
-  ScreenImpl();
+  ScreenImpl( nsIWebShell* aWebShell );
   virtual ~ScreenImpl();
 
   NS_DECL_ISUPPORTS
@@ -45,7 +47,10 @@ public:
   NS_IMETHOD GetAvailTop(PRInt32* aAvailTop);
 
 protected:
+	nsIDeviceContext* GetDeviceContext();
+	
   void *mScriptObject;
+  nsIWebShell* mWebShell;
 };
 
 #endif /* nsScreen_h___ */
