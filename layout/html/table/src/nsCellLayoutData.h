@@ -25,7 +25,8 @@
 
 class nsColLayoutData;
 class nsTableFrame;
-
+class nsIStyleContext;
+struct nsStyleSpacing;
 
 
 /** Simple data class that represents in-process reflow information about a cell.
@@ -76,56 +77,56 @@ public:
   /** debug method outputs data about this cell to FILE *out */
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
-  /** returns the style molecule associated with this cell */
-  nsStyleMolecule* GetStyleMolecule();
+  /** returns the style context associated with this cell */
+  nsIStyleContext* GetStyleContext();
   
 private:  
 
   // All these methods are support methods for RecalcLayoutData
-  nsStyleMolecule* GetStyleMoleculeAt(nsVoidArray* aList,  PRInt32 aIndex);
+  nsIStyleContext* GetStyleContextAt(nsVoidArray* aList,  PRInt32 aIndex);
 
-  nscoord GetMargin(nsStyleMolecule* aStyle,PRUint8 aEdge);
+  nscoord GetMargin(nsIStyleContext* aStyle,PRUint8 aEdge);
 
-  nscoord GetBorderWidth(nsStyleMolecule* aStyle,PRUint8 aEdge);
+  nscoord GetBorderWidth(nsIStyleContext* aStyle,PRUint8 aEdge);
 
-  nscoord GetPadding(nsStyleMolecule* aStyle,PRUint8 aEdge);
+  nscoord GetPadding(nsIStyleContext* aStyle,PRUint8 aEdge);
 
   PRUint8 GetOpposingEdge(PRUint8 aEdge);
 
-  nsStyleMolecule* CompareCellBorders(nsStyleMolecule* aStyle1,
+  nsIStyleContext* CompareCellBorders(nsIStyleContext* aStyle1,
                                       PRUint8 aEdge1,
-                                      nsStyleMolecule* aStyle2,
+                                      nsIStyleContext* aStyle2,
                                       PRUint8 aEdge2);
 
   
-  nsStyleMolecule* FindHighestPrecedentBorder(nsVoidArray* aList,
+  nsIStyleContext* FindHighestPrecedentBorder(nsVoidArray* aList,
                                               PRUint8 aEdge);
           
   
 
-  nsStyleMolecule* FindInnerBorder( nsStyleMolecule* aStyle,
-                                    nsVoidArray*  aList,
-                                    PRUint8 aEdge);
+  nsStyleSpacing* FindInnerBorder( nsIStyleContext* aStyle,
+                                   nsVoidArray*  aList,
+                                   PRUint8 aEdge);
 
-  nsStyleMolecule* FindOuterBorder( nsTableFrame* aTableFrame,
-                                    nsIFrame* aFrame, 
-                                    nsStyleMolecule* aStyle,
-                                    PRUint8 aEdge);
+  nsStyleSpacing* FindOuterBorder( nsTableFrame* aTableFrame,
+                                   nsIFrame* aFrame, 
+                                   nsIStyleContext* aStyle,
+                                   PRUint8 aEdge);
   
-  nsStyleMolecule* FindBorderStyle(nsTableFrame*    aTableFrame,
-                                   nsStyleMolecule* aCellStyle,
-                                   nsVoidArray*     aCellList,
-                                   PRUint8          aEdge);
+  nsStyleSpacing* FindBorderStyle(nsTableFrame*    aTableFrame,
+                                  nsIStyleContext* aCellStyle,
+                                  nsVoidArray*     aCellList,
+                                  PRUint8          aEdge);
 
   void CalculateBorders(nsTableFrame* aTableFrame,
-                        nsStyleMolecule*  aCellStyle,
+                        nsIStyleContext*  aCellStyle,
                         nsVoidArray*  aBoundaryCells[4]);
 
   nscoord FindLargestMargin(nsVoidArray* aList,PRUint8 aEdge);
 
 
   void CalculateMargins(nsTableFrame* aTableFrame,
-                        nsStyleMolecule*  aCellStyle,
+                        nsIStyleContext*  aCellStyle,
                         nsVoidArray*  aBoundaryCells[4]);
 
 public:
@@ -148,7 +149,7 @@ private:
   nsSize                    mMaxElementSize;
 
   nsMargin                  mMargin;
-  nsStyleMolecule*          mBorderStyle[4];
+  nsStyleSpacing*           mBorderStyle[4];
 };
 
 #endif

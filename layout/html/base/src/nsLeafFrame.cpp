@@ -19,7 +19,8 @@
 #include "nsIStyleContext.h"
 #include "nsCSSRendering.h"
 
-static NS_DEFINE_IID(kStyleMoleculeSID, NS_STYLEMOLECULE_SID);
+static NS_DEFINE_IID(kStyleSpacingSID, NS_STYLESPACING_SID);
+static NS_DEFINE_IID(kStyleBorderSID, NS_STYLEBORDER_SID);
 static NS_DEFINE_IID(kStyleColorSID, NS_STYLECOLOR_SID);
 
 nsLeafFrame::nsLeafFrame(nsIContent* aContent,
@@ -39,12 +40,12 @@ NS_METHOD nsLeafFrame::Paint(nsIPresContext& aPresContext,
 {
   nsStyleColor* myColor =
     (nsStyleColor*)mStyleContext->GetData(kStyleColorSID);
-  nsStyleMolecule* myMol =
-    (nsStyleMolecule*)mStyleContext->GetData(kStyleMoleculeSID);
+  nsStyleBorder* myBorder =
+    (nsStyleBorder*)mStyleContext->GetData(kStyleBorderSID);
   nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
                                   aDirtyRect, mRect, *myColor);
   nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                              aDirtyRect, mRect, *myMol, 0);
+                              aDirtyRect, mRect, *myBorder, 0);
   return NS_OK;
 }
 
@@ -91,10 +92,10 @@ NS_METHOD nsLeafFrame::IncrementalReflow(nsIPresContext* aPresContext,
 void nsLeafFrame::AddBordersAndPadding(nsIPresContext* aPresContext,
                                        nsReflowMetrics& aDesiredSize)
 {
-  nsStyleMolecule* mol =
-    (nsStyleMolecule*)mStyleContext->GetData(kStyleMoleculeSID);
-  aDesiredSize.width += mol->borderPadding.left + mol->borderPadding.right;
-  aDesiredSize.height += mol->borderPadding.top + mol->borderPadding.bottom;
+  nsStyleSpacing* space =
+    (nsStyleSpacing*)mStyleContext->GetData(kStyleSpacingSID);
+  aDesiredSize.width += space->mBorderPadding.left + space->mBorderPadding.right;
+  aDesiredSize.height += space->mBorderPadding.top + space->mBorderPadding.bottom;
   aDesiredSize.ascent = aDesiredSize.height;
   aDesiredSize.descent = 0;
 }
@@ -102,14 +103,14 @@ void nsLeafFrame::AddBordersAndPadding(nsIPresContext* aPresContext,
 void nsLeafFrame::GetInnerArea(nsIPresContext* aPresContext,
                                nsRect& aInnerArea) const
 {
-  nsStyleMolecule* mol =
-    (nsStyleMolecule*)mStyleContext->GetData(kStyleMoleculeSID);
-  aInnerArea.x = mol->borderPadding.left;
-  aInnerArea.y = mol->borderPadding.top;
+  nsStyleSpacing* space =
+    (nsStyleSpacing*)mStyleContext->GetData(kStyleSpacingSID);
+  aInnerArea.x = space->mBorderPadding.left;
+  aInnerArea.y = space->mBorderPadding.top;
   aInnerArea.width = mRect.width -
-    (mol->borderPadding.left + mol->borderPadding.right);
+    (space->mBorderPadding.left + space->mBorderPadding.right);
   aInnerArea.height = mRect.height -
-    (mol->borderPadding.top + mol->borderPadding.bottom);
+    (space->mBorderPadding.top + space->mBorderPadding.bottom);
 }
 
 NS_METHOD nsLeafFrame::CreateContinuingFrame(nsIPresContext* aPresContext,

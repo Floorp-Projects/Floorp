@@ -25,6 +25,7 @@
 #include "nsIContent.h"
 #include "nsIContentDelegate.h"
 #include "nsIView.h"
+#include "nsIPtr.h"
 
 #ifdef NS_DEBUG
 static PRBool gsDebug1 = PR_FALSE;
@@ -37,6 +38,9 @@ static const PRBool gsDebug2 = PR_FALSE;
 #endif
 
 static NS_DEFINE_IID(kStyleMoleculeSID, NS_STYLEMOLECULE_SID);
+
+NS_DEF_PTR(nsIStyleContext);
+NS_DEF_PTR(nsIContent);
 
 /* ----------- RowGroupReflowState ---------- */
 
@@ -264,17 +268,15 @@ PRBool nsTableRowGroupFrame::ReflowMappedChildren( nsIPresContext*      aPresCon
     nsIFrame::ReflowStatus  status;
 
     // Get top margin for this kid
-    nsIContent* kid;
+    nsIContentPtr kid;
      
-    kidFrame->GetContent(kid);
-    nsIStyleContext* kidSC;
+    kidFrame->GetContent(kid.AssignRef());
+    nsIStyleContextPtr kidSC;
      
-    kidFrame->GetStyleContext(aPresContext, kidSC);
+    kidFrame->GetStyleContext(aPresContext, kidSC.AssignRef());
     nsStyleMolecule* kidMol = (nsStyleMolecule*)kidSC->GetData(kStyleMoleculeSID);
     nscoord topMargin = GetTopMarginFor(aPresContext, aState, kidMol);
     nscoord bottomMargin = kidMol->margin.bottom;
-    NS_RELEASE(kid);
-    NS_RELEASE(kidSC);
 
     // Figure out the amount of available size for the child (subtract
     // off the top margin we are going to apply to it)
@@ -698,7 +700,7 @@ nsTableRowGroupFrame::ReflowUnmappedChildren(nsIPresContext*      aPresContext,
 
   for (;;) {
     // Get the next content object
-    nsIContent* kid = mContent->ChildAt(kidIndex);
+    nsIContentPtr kid = mContent->ChildAt(kidIndex);
     if (nsnull == kid) {
       result = frComplete;
       break;
@@ -707,12 +709,11 @@ nsTableRowGroupFrame::ReflowUnmappedChildren(nsIPresContext*      aPresContext,
     // Make sure we still have room left
     if (aState.availSize.height <= 0) {
       // Note: return status was set to frNotComplete above...
-      NS_RELEASE(kid);
       break;
     }
 
     // Resolve style
-    nsIStyleContext* kidStyleContext =
+    nsIStyleContextPtr kidStyleContext =
       aPresContext->ResolveStyleContextFor(kid, this);
     nsStyleMolecule* kidMol =
       (nsStyleMolecule*)kidStyleContext->GetData(kStyleMoleculeSID);
@@ -731,8 +732,6 @@ nsTableRowGroupFrame::ReflowUnmappedChildren(nsIPresContext*      aPresContext,
     } else {
       kidPrevInFlow->CreateContinuingFrame(aPresContext, this, kidFrame);
     }
-		NS_RELEASE(kid);
-    NS_RELEASE(kidStyleContext);
 
     // Try to reflow the child into the available space. It might not
     // fit or might need continuing.

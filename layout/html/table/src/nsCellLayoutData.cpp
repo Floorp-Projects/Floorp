@@ -21,11 +21,15 @@
 #include "nsIFrame.h"
 #include "nsTableCell.h"
 #include "nsIStyleContext.h"
+#include "nsIPtr.h"
 
 #include <stdio.h>/* XXX */ // for printf
 
 
-static NS_DEFINE_IID(kStyleMoleculeSID, NS_STYLEMOLECULE_SID);
+static NS_DEFINE_IID(kStyleSpacingSID, NS_STYLESPACING_SID);
+static NS_DEFINE_IID(kStyleBorderSID, NS_STYLEBORDER_SID);
+
+NS_DEF_PTR(nsIStyleContext);
 
 nsCellLayoutData::nsCellLayoutData(nsTableCellFrame *aCellFrame, 
                                    nsReflowMetrics * aDesiredSize, nsSize * aMaxElementSize)
@@ -77,16 +81,16 @@ void nsCellLayoutData::SetMaxElementSize(nsSize * aMaxElementSize)
 }
 
 /**
-  * Get the style molecue for this object (determined, by
+  * Get the style context for this object (determined, by
   * asking for the frame
   *
   **/
-nsStyleMolecule* nsCellLayoutData::GetStyleMolecule()
+nsIStyleContext* nsCellLayoutData::GetStyleContext()
 {
   if (mCellFrame != nsnull) {
-    nsStyleMolecule*  styleMol;
-    mCellFrame->GetStyleData(kStyleMoleculeSID, (nsStyleStruct*&)styleMol);
-    return styleMol;
+    nsIStyleContext*  styleContext;
+    mCellFrame->GetStyleContext(nsnull, styleContext);
+    return styleContext;
   }
   return nsnull;
 }
@@ -96,51 +100,52 @@ nsStyleMolecule* nsCellLayoutData::GetStyleMolecule()
 
 
 /**
-  * Given a list of nsCellLayoutData and a index, get the style molecule for
+  * Given a list of nsCellLayoutData and a index, get the style context for
   * that element in the list 
   *
   **/
-nsStyleMolecule* nsCellLayoutData::GetStyleMoleculeAt(nsVoidArray* aList,  PRInt32 aIndex)
+nsIStyleContext* nsCellLayoutData::GetStyleContextAt(nsVoidArray* aList,  PRInt32 aIndex)
 {
-  nsStyleMolecule*  result = nsnull;
+  nsIStyleContext*  result = nsnull;
 
   if (aList != nsnull)
   {
     nsCellLayoutData* data = (nsCellLayoutData*)aList->ElementAt(aIndex);
     if (data != nsnull)
-      result = data->GetStyleMolecule();
+      result = data->GetStyleContext();
   }
   return result;
 }
 
 /**
-  * Given a style molecule and an edge, find the margin
+  * Given a style context and an edge, find the margin
   *
   **/
-nscoord nsCellLayoutData::GetMargin(nsStyleMolecule* aStyle,PRUint8 aEdge)
+nscoord nsCellLayoutData::GetMargin(nsIStyleContext* aStyle,PRUint8 aEdge)
 {
   nscoord result = 0;
 
   if (aStyle)
   {
+    nsStyleSpacing* spacing = (nsStyleSpacing*)aStyle->GetData(kStyleSpacingSID);
     switch (aEdge)
     {
 
       case NS_SIDE_TOP:
-        result = aStyle->margin.top;
+        result = spacing->mMargin.top;
       break;
 
       case NS_SIDE_RIGHT:
-        result = aStyle->margin.right;
+        result = spacing->mMargin.right;
       break;
 
 
       case NS_SIDE_BOTTOM:
-        result = aStyle->margin.bottom;
+        result = spacing->mMargin.bottom;
       break;
 
       case NS_SIDE_LEFT:
-        result = aStyle->margin.left;
+        result = spacing->mMargin.left;
       break;
 
     }
@@ -150,32 +155,33 @@ nscoord nsCellLayoutData::GetMargin(nsStyleMolecule* aStyle,PRUint8 aEdge)
 
 
 /**
-  * Given a style molecule and an edge, find the border width
+  * Given a style context and an edge, find the border width
   *
   **/
-nscoord nsCellLayoutData::GetBorderWidth(nsStyleMolecule* aStyle,PRUint8 aEdge)
+nscoord nsCellLayoutData::GetBorderWidth(nsIStyleContext* aStyle,PRUint8 aEdge)
 {
   nscoord result = 0;
 
   if (aStyle)
   {
+    nsStyleSpacing* spacing = (nsStyleSpacing*)aStyle->GetData(kStyleSpacingSID);
     switch (aEdge)
     {
       case NS_SIDE_TOP:
-        result = aStyle->border.top;
+        result = spacing->mBorder.top;
       break;
 
       case NS_SIDE_RIGHT:
-        result = aStyle->border.right;
+        result = spacing->mBorder.right;
       break;
 
 
       case NS_SIDE_BOTTOM:
-        result = aStyle->border.bottom;
+        result = spacing->mBorder.bottom;
       break;
 
       case NS_SIDE_LEFT:
-        result = aStyle->border.left;
+        result = spacing->mBorder.left;
       break;
 
     }
@@ -185,31 +191,32 @@ nscoord nsCellLayoutData::GetBorderWidth(nsStyleMolecule* aStyle,PRUint8 aEdge)
 
 
 /**
-  * Given a style molecule and an edge, find the padding
+  * Given a style context and an edge, find the padding
   *
   **/
-nscoord nsCellLayoutData::GetPadding(nsStyleMolecule* aStyle,PRUint8 aEdge)
+nscoord nsCellLayoutData::GetPadding(nsIStyleContext* aStyle,PRUint8 aEdge)
 {
   nscoord result = 0;
 
   if (aStyle)
   {
+    nsStyleSpacing* spacing = (nsStyleSpacing*)aStyle->GetData(kStyleSpacingSID);
     switch (aEdge)
     {
       case NS_SIDE_TOP:
-        result = aStyle->padding.top;
+        result = spacing->mPadding.top;
       break;
 
       case NS_SIDE_RIGHT:
-        result = aStyle->padding.right;
+        result = spacing->mPadding.right;
       break;
 
       case NS_SIDE_BOTTOM:
-        result = aStyle->padding.bottom;
+        result = spacing->mPadding.bottom;
       break;
 
       case NS_SIDE_LEFT:
-        result = aStyle->padding.left;
+        result = spacing->mPadding.left;
       break;
 
     }
@@ -275,15 +282,15 @@ PRUint8 nsCellLayoutData::GetOpposingEdge(PRUint8 aEdge)
 */
 
 
-nsStyleMolecule* nsCellLayoutData::CompareCellBorders(nsStyleMolecule* aStyle1,
-                                                       PRUint8 aEdge1,
-                                                       nsStyleMolecule* aStyle2,
-                                                       PRUint8 aEdge2)
+nsIStyleContext* nsCellLayoutData::CompareCellBorders(nsIStyleContext* aStyle1,
+                                                      PRUint8 aEdge1,
+                                                      nsIStyleContext* aStyle2,
+                                                      PRUint8 aEdge2)
 {
   PRInt32 width1 = GetBorderWidth(aStyle1,aEdge1);
   PRInt32 width2 = GetBorderWidth(aStyle2,aEdge2);
 
-  nsStyleMolecule* result = nsnull;
+  nsIStyleContext* result = nsnull;
   
   if (width1 > width2)
     result =  aStyle1;
@@ -291,7 +298,9 @@ nsStyleMolecule* nsCellLayoutData::CompareCellBorders(nsStyleMolecule* aStyle1,
     result = aStyle2;
   else // width1 == width2
   {
-    if (aStyle1->borderStyle[aEdge1] >= aStyle2->borderStyle[aEdge2])
+    nsStyleBorder*  border1 = (nsStyleBorder*)aStyle1->GetData(kStyleBorderSID);
+    nsStyleBorder*  border2 = (nsStyleBorder*)aStyle2->GetData(kStyleBorderSID);
+    if (border1->mStyle[aEdge1] >= border2->mStyle[aEdge2])
       result = aStyle1;
     else
       result = aStyle2;
@@ -306,10 +315,10 @@ nsStyleMolecule* nsCellLayoutData::CompareCellBorders(nsStyleMolecule* aStyle1,
   *
   **/
 
-nsStyleMolecule* nsCellLayoutData::FindHighestPrecedentBorder(nsVoidArray* aList,
+nsIStyleContext* nsCellLayoutData::FindHighestPrecedentBorder(nsVoidArray* aList,
                                                               PRUint8 aEdge)
 {
-  nsStyleMolecule* result = nsnull;
+  nsIStyleContext* result = nsnull;
   PRInt32 index = 0;
   PRInt32 count = 0;
 
@@ -318,18 +327,19 @@ nsStyleMolecule* nsCellLayoutData::FindHighestPrecedentBorder(nsVoidArray* aList
   count = aList->Count();
   if (count)
   {
-    nsStyleMolecule* style = nsnull;
-    nsStyleMolecule* style2 = nsnull;
+    nsIStyleContextPtr style;
+    nsIStyleContextPtr style2;
     
-    style = GetStyleMoleculeAt(aList,index++);
+    style = GetStyleContextAt(aList,index++);
     while (index < count)
     {
-      style2 = GetStyleMoleculeAt(aList,index++);
-      if (GetMargin(style2,aEdge) == 0)
-        style = CompareCellBorders(style,aEdge, style2,aEdge);
+      style2 = GetStyleContextAt(aList,index++);
+      if (GetMargin(style2,aEdge) == 0) {
+        style.SetAddRef(CompareCellBorders(style,aEdge, style2,aEdge));
+      }
     }
-    if (style && GetMargin(style,aEdge) != 0)
-      result = style;
+    if (style && (GetMargin(style,aEdge) != 0))
+      result = style.AddRef();
   }
   return result;
 }
@@ -337,22 +347,22 @@ nsStyleMolecule* nsCellLayoutData::FindHighestPrecedentBorder(nsVoidArray* aList
 
 
 
-nsStyleMolecule* nsCellLayoutData::FindInnerBorder( nsStyleMolecule* aStyle,
-                                                    nsVoidArray*  aList,
-                                                    PRUint8 aEdge)
+nsStyleSpacing* nsCellLayoutData::FindInnerBorder( nsIStyleContext* aStyle,
+                                                   nsVoidArray*  aList,
+                                                   PRUint8 aEdge)
 {
-  nsStyleMolecule*  result = nsnull;
-  nsStyleMolecule*  altStyle = nsnull;
-  PRUint8           opposite = GetOpposingEdge(aEdge);
+  nsStyleSpacing* result = nsnull;
+  PRUint8         opposite = GetOpposingEdge(aEdge);
 
   if (GetMargin(aStyle,aEdge) == 0)
   {
-
-    nsStyleMolecule* altStyle = FindHighestPrecedentBorder(aList,opposite);
+    nsIStyleContextPtr style;
+    nsIStyleContextPtr altStyle = FindHighestPrecedentBorder(aList,opposite);
     if (altStyle != nsnull)
-      result = CompareCellBorders(aStyle,aEdge,altStyle,opposite);
+      style.SetAddRef(CompareCellBorders(aStyle,aEdge,altStyle,opposite));
     else
-      result = aStyle;
+      style.SetAddRef(aStyle);
+    result = (nsStyleSpacing*)style->GetData(kStyleSpacingSID);
   }
 
   return result;
@@ -379,16 +389,17 @@ nsStyleMolecule* nsCellLayoutData::FindInnerBorder( nsStyleMolecule* aStyle,
 * 
 *
 */
-nsStyleMolecule* nsCellLayoutData::FindOuterBorder( nsTableFrame* aTableFrame,
-                                                    nsIFrame* aFrame, 
-                                                    nsStyleMolecule* aStyle,
-                                                    PRUint8 aEdge)
+nsStyleSpacing* nsCellLayoutData::FindOuterBorder( nsTableFrame* aTableFrame,
+                                                   nsIFrame* aFrame, 
+                                                   nsIStyleContext* aStyle,
+                                                   PRUint8 aEdge)
 {
-  // By default, return the passed in style
-  nsStyleMolecule* style = aStyle;
-  nsIFrame*        frame = aFrame;
-  PRBool           done = PR_FALSE;
+  nsIStyleContextPtr  style;
+  nsIFrame*           frame = aFrame;
+  PRBool              done = PR_FALSE;
     
+  // By default, return the passed in style
+  style.SetAddRef(aStyle);
   // The table frame is the outer most frame we test against
   while (done == PR_FALSE)
   {
@@ -401,16 +412,16 @@ nsStyleMolecule* nsCellLayoutData::FindOuterBorder( nsTableFrame* aTableFrame,
     // for the parent frame is also zero
     if (margin == 0)
     { 
-      nsIFrame*         parentFrame;
-      nsStyleMolecule*  parentStyle;
+      nsIFrame*           parentFrame;
+      nsIStyleContextPtr  parentStyle;
 
       aFrame->GetGeometricParent(parentFrame);
-      aFrame->GetStyleData(kStyleMoleculeSID, (nsStyleStruct*&)parentStyle);
+      aFrame->GetStyleContext(nsnull, parentStyle.AssignRef());
 
       // if the padding for the parent style is zero just
       // recursively call this routine
       PRInt32 padding = GetPadding(parentStyle,aEdge);
-      if (parentStyle && padding == 0)
+      if (parentStyle && (padding == 0))
       {
         style = parentStyle;
         frame = parentFrame;
@@ -422,7 +433,8 @@ nsStyleMolecule* nsCellLayoutData::FindOuterBorder( nsTableFrame* aTableFrame,
 
     }
   }
-  return style;
+  nsStyleSpacing* result = (nsStyleSpacing*)style->GetData(kStyleSpacingSID);
+  return result;
 }
 
 
@@ -456,27 +468,27 @@ nsStyleMolecule* nsCellLayoutData::FindOuterBorder( nsTableFrame* aTableFrame,
 * @param aIsBottom  -- TRUE if this is the last cell in the column
 */
 
-nsStyleMolecule* nsCellLayoutData::FindBorderStyle(nsTableFrame*    aTableFrame,
-                                                   nsStyleMolecule* aCellStyle,
-                                                   nsVoidArray*     aList,
-                                                   PRUint8          aEdge)
+nsStyleSpacing* nsCellLayoutData::FindBorderStyle(nsTableFrame*    aTableFrame,
+                                                  nsIStyleContext* aCellStyle,
+                                                  nsVoidArray*     aList,
+                                                  PRUint8          aEdge)
 {
-  nsStyleMolecule*  style = nsnull;
+  nsStyleSpacing*  style = nsnull;
 
   if (aList && aList->Count() == 0)
     style = FindOuterBorder(aTableFrame,mCellFrame,aCellStyle,aEdge);
   else
     style = FindInnerBorder(aCellStyle,aList, aEdge);
 
-  if (!style)
-    style = aCellStyle;
+  if (!style) 
+    style = (nsStyleSpacing*)aCellStyle->GetData(kStyleSpacingSID);
 
   return style;
 }
 
 
 void nsCellLayoutData::CalculateBorders(nsTableFrame*     aTableFrame,
-                                        nsStyleMolecule*  aCellStyle,
+                                        nsIStyleContext*  aCellStyle,
                                         nsVoidArray*      aBoundaryCells[4])
 { 
 
@@ -502,12 +514,12 @@ nscoord nsCellLayoutData::FindLargestMargin(nsVoidArray* aList,PRUint8 aEdge)
   count = aList->Count();
   if (count)
   {
-    nsStyleMolecule* style = nsnull;
+    nsIStyleContextPtr style;
     
     nscoord value = 0;
     while (index < count)
     {
-      style = GetStyleMoleculeAt(aList,index++);
+      style = GetStyleContextAt(aList,index++);
       value = GetMargin(style,aEdge);
       if (value > result)
         result = value;
@@ -520,12 +532,13 @@ nscoord nsCellLayoutData::FindLargestMargin(nsVoidArray* aList,PRUint8 aEdge)
 
 
 void nsCellLayoutData::CalculateMargins(nsTableFrame*     aTableFrame,
-                                        nsStyleMolecule*  aCellStyle,
+                                        nsIStyleContext*  aCellStyle,
                                         nsVoidArray*      aBoundaryCells[4])
 { 
   // By default the margin is just the margin found in the 
   // table cells style 
-  mMargin = aCellStyle->margin;
+  nsStyleSpacing* spacing = (nsStyleSpacing*)aCellStyle->GetData(kStyleSpacingSID);
+  mMargin = spacing->mMargin;
 
   // Left and Top Margins are collapsed with their neightbors
   // Right and Bottom Margins are simple left as they are
@@ -553,9 +566,9 @@ void nsCellLayoutData::RecalcLayoutData(nsTableFrame* aTableFrame,
                                         nsVoidArray* aBoundaryCells[4])
 
 {
-  nsStyleMolecule* cellStyle;
+  nsIStyleContextPtr cellStyle;
 
-  mCellFrame->GetStyleData(kStyleMoleculeSID, (nsStyleStruct*&)cellStyle);
+  mCellFrame->GetStyleContext(nsnull, cellStyle.AssignRef());
   
   CalculateBorders(aTableFrame,cellStyle,aBoundaryCells);
   CalculateMargins(aTableFrame,cellStyle,aBoundaryCells);
@@ -586,10 +599,10 @@ void nsCellLayoutData::List(FILE* out, PRInt32 aIndent) const
 
     nscoord top,left,bottom,right;
     
-    top = (mBorderStyle[NS_SIDE_TOP] ? mBorderStyle[NS_SIDE_TOP]->border.top : 0);
-    left = (mBorderStyle[NS_SIDE_LEFT] ? mBorderStyle[NS_SIDE_LEFT]->border.left : 0);
-    bottom = (mBorderStyle[NS_SIDE_BOTTOM] ? mBorderStyle[NS_SIDE_BOTTOM]->border.bottom : 0);
-    right = (mBorderStyle[NS_SIDE_RIGHT] ? mBorderStyle[NS_SIDE_RIGHT]->border.right : 0);
+    top = (mBorderStyle[NS_SIDE_TOP] ? mBorderStyle[NS_SIDE_TOP]->mBorder.top : 0);
+    left = (mBorderStyle[NS_SIDE_LEFT] ? mBorderStyle[NS_SIDE_LEFT]->mBorder.left : 0);
+    bottom = (mBorderStyle[NS_SIDE_BOTTOM] ? mBorderStyle[NS_SIDE_BOTTOM]->mBorder.bottom : 0);
+    right = (mBorderStyle[NS_SIDE_RIGHT] ? mBorderStyle[NS_SIDE_RIGHT]->mBorder.right : 0);
 
 
     fprintf(out,"Border -- Top: %d Left: %d Bottom: %d Right: %d \n",  

@@ -27,6 +27,7 @@
 #include "nsIViewManager.h"
 #include "nsIDeviceContext.h"
 #include "nsISpaceManager.h"
+#include "nsIPtr.h"
 
 #ifdef NS_DEBUG
 #undef NOISY
@@ -38,6 +39,9 @@
 
 static NS_DEFINE_IID(kIRunaroundIID, NS_IRUNAROUND_IID);
 static NS_DEFINE_IID(kStyleMoleculeSID, NS_STYLEMOLECULE_SID);
+
+NS_DEF_PTR(nsIStyleContext);
+NS_DEF_PTR(nsIContent);
 
 struct ColumnReflowState {
   // The space manager to use
@@ -240,14 +244,13 @@ PRBool ColumnFrame::ReflowMappedChildren(nsIPresContext*    aPresContext,
     nsIFrame::ReflowStatus  status;
 
     // Get top margin for this kid
-    nsIStyleContext* kidSC;
+    nsIStyleContextPtr kidSC;
 
-    kidFrame->GetStyleContext(aPresContext, kidSC);
+    kidFrame->GetStyleContext(aPresContext, kidSC.AssignRef());
     nsStyleMolecule* kidMol = (nsStyleMolecule*)kidSC->GetData(kStyleMoleculeSID);
     nscoord topMargin = GetTopMarginFor(aPresContext, aState, kidFrame, kidMol);
     // XXX Style system should do this...
     nscoord bottomMargin = ChildIsPseudoFrame(kidFrame) ? 0 : kidMol->margin.bottom;
-    NS_RELEASE(kidSC);
 
     // Figure out the amount of available size for the child (subtract
     // off the top margin we are going to apply to it)
@@ -440,9 +443,9 @@ PRBool ColumnFrame::PullUpChildren(nsIPresContext*    aPresContext,
     }
 
     // Get top margin for this kid
-    nsIStyleContext* kidSC;
+    nsIStyleContextPtr kidSC;
      
-    kidFrame->GetStyleContext(aPresContext, kidSC);
+    kidFrame->GetStyleContext(aPresContext, kidSC.AssignRef());
     nsStyleMolecule* kidMol = (nsStyleMolecule*)kidSC->GetData(kStyleMoleculeSID);
     nscoord topMargin = GetTopMarginFor(aPresContext, aState, kidFrame, kidMol);
     // XXX Style system should do this...
@@ -486,7 +489,6 @@ PRBool ColumnFrame::PullUpChildren(nsIPresContext*    aPresContext,
         mLastContentIsComplete = prevLastContentIsComplete;
         mChildCount--;
         result = PR_FALSE;
-        NS_RELEASE(kidSC);
         goto push_done;
       }
 
@@ -544,7 +546,6 @@ PRBool ColumnFrame::PullUpChildren(nsIPresContext*    aPresContext,
         }
       }
     } while (frNotComplete == status);
-    NS_RELEASE(kidSC);
 
     prevKidFrame = kidFrame;
     prevLastContentIsComplete = mLastContentIsComplete;
@@ -651,7 +652,7 @@ ColumnFrame::ReflowUnmappedChildren(nsIPresContext*    aPresContext,
 
   for (;;) {
     // Get the next content object
-    nsIContent* kid = mContent->ChildAt(kidIndex);
+    nsIContentPtr kid = mContent->ChildAt(kidIndex);
     if (nsnull == kid) {
       result = frComplete;
       break;
@@ -660,12 +661,11 @@ ColumnFrame::ReflowUnmappedChildren(nsIPresContext*    aPresContext,
     // Make sure we still have room left
     if (aState.availSize.height <= 0) {
       // Note: return status was set to frNotComplete above...
-      NS_RELEASE(kid);
       break;
     }
 
     // Resolve style
-    nsIStyleContext* kidStyleContext =
+    nsIStyleContextPtr kidStyleContext =
       aPresContext->ResolveStyleContextFor(kid, this);
     nsStyleMolecule* kidMol =
       (nsStyleMolecule*)kidStyleContext->GetData(kStyleMoleculeSID);
@@ -786,8 +786,6 @@ ColumnFrame::ReflowUnmappedChildren(nsIPresContext*    aPresContext,
           f->GetNextSibling(f);
         }
         mChildCount -= overflowKids;
-        NS_RELEASE(kidStyleContext);
-        NS_RELEASE(kid);
         goto done;
       }
 
@@ -833,8 +831,6 @@ ColumnFrame::ReflowUnmappedChildren(nsIPresContext*    aPresContext,
         }
       }
     } while (frNotComplete == status);
-    NS_RELEASE(kidStyleContext);
-    NS_RELEASE(kid);
 
     prevKidFrame = kidFrame;
     kidPrevInFlow = nsnull;
@@ -1032,14 +1028,13 @@ NS_METHOD ColumnFrame::IncrementalReflow(nsIPresContext*  aPresContext,
       prevKidFrame->GetRect(startKidRect);
 
       // Get style info
-      nsIStyleContext* kidSC;
+      nsIStyleContextPtr kidSC;
 
-      prevKidFrame->GetStyleContext(aPresContext, kidSC);
+      prevKidFrame->GetStyleContext(aPresContext, kidSC.AssignRef());
       nsStyleMolecule* kidMol =
         (nsStyleMolecule*)kidSC->GetData(kStyleMoleculeSID);
       // XXX Style system should do this...
       nscoord bottomMargin = ChildIsPseudoFrame(prevKidFrame) ? 0 : kidMol->margin.bottom;
-      NS_RELEASE(kidSC);
 
       state.y = startKidRect.YMost();
       if (bottomMargin < 0) {
@@ -1066,9 +1061,9 @@ NS_METHOD ColumnFrame::IncrementalReflow(nsIPresContext*  aPresContext,
 
     // Now ResizeReflow the appended frames
     while (nsnull != kidFrame) {
-      nsIStyleContext* kidSC;
+      nsIStyleContextPtr kidSC;
 
-      kidFrame->GetStyleContext(aPresContext, kidSC);
+      kidFrame->GetStyleContext(aPresContext, kidSC.AssignRef());
       nsStyleMolecule* kidMol =
         (nsStyleMolecule*)kidSC->GetData(kStyleMoleculeSID);
       nscoord topMargin = GetTopMarginFor(aPresContext, state, kidFrame, kidMol);
@@ -1113,7 +1108,6 @@ NS_METHOD ColumnFrame::IncrementalReflow(nsIPresContext*  aPresContext,
       } else {
         state.prevMaxPosBottomMargin = bottomMargin;
       }
-      NS_RELEASE(kidSC);
 
       // Is the child complete?
       if (frNotComplete == aStatus) {
@@ -1192,13 +1186,13 @@ NS_METHOD ColumnFrame::ContentAppended(nsIPresShell* aShell,
   // Create frames for each new child
   for (;;) {
     // Get the next content object
-    nsIContent* kid = content->ChildAt(kidIndex);
+    nsIContentPtr kid = content->ChildAt(kidIndex);
     if (nsnull == kid) {
       break;
     }
 
     // Get style context for the kid
-    nsIStyleContext* kidStyleContext =
+    nsIStyleContextPtr kidStyleContext =
       aPresContext->ResolveStyleContextFor(kid, this);
     nsStyleMolecule* kidMol =
       (nsStyleMolecule*)kidStyleContext->GetData(kStyleMoleculeSID);
@@ -1256,7 +1250,6 @@ NS_METHOD ColumnFrame::ContentAppended(nsIPresShell* aShell,
         nsBlockFrame::NewFrame(&kidFrame, mContent, mIndexInParent, this);
 
         // Resolve style for the pseudo-frame (kid's style won't do)
-        NS_RELEASE(kidStyleContext);
         kidStyleContext = aPresContext->ResolveStyleContextFor(mContent, this);
         kidFrame->SetStyleContext(kidStyleContext);
 
@@ -1297,8 +1290,6 @@ NS_METHOD ColumnFrame::ContentAppended(nsIPresShell* aShell,
       kidIndex = NextChildOffset();
       break;
     }
-    NS_RELEASE(kid);
-    NS_RELEASE(kidStyleContext);
   }
   SetLastContentOffset(prevKidFrame);
   // Note: Column frames *never* directly generate reflow commands
