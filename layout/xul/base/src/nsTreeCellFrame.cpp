@@ -160,25 +160,16 @@ nsTreeCellFrame::HandleEvent(nsIPresContext& aPresContext,
                              nsGUIEvent*     aEvent,
                              nsEventStatus&  aEventStatus)
 {
-  if (nsEventStatus_eConsumeNoDefault == aEventStatus) {
-    return NS_OK;
-  }
+  aEventStatus = nsEventStatus_eConsumeDoDefault;
+	if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN)
+		HandleMouseDownEvent(aPresContext, aEvent, aEventStatus);
+  else if (aEvent->message == NS_MOUSE_ENTER)
+    HandleMouseEnterEvent(aPresContext, aEvent, aEventStatus);
+  else if (aEvent->message == NS_MOUSE_EXIT)
+    HandleMouseExitEvent(aPresContext, aEvent, aEventStatus);
+  else if (aEvent->message == NS_MOUSE_LEFT_DOUBLECLICK)
+		HandleDoubleClickEvent(aPresContext, aEvent, aEventStatus);
 
-  const nsStyleDisplay* disp = (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
-  if (!disp->mVisible) {
-    return NS_OK;
-  }
-
-  if(nsEventStatus_eConsumeNoDefault != aEventStatus) {
-
-    aEventStatus = nsEventStatus_eConsumeDoDefault;
-	  if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN)
-		  HandleMouseDownEvent(aPresContext, aEvent, aEventStatus);
-    else if (aEvent->message == NS_MOUSE_LEFT_CLICK)
-      HandleClickEvent(aPresContext, aEvent, aEventStatus);
-	  else if (aEvent->message == NS_MOUSE_LEFT_DOUBLECLICK)
-		  HandleDoubleClickEvent(aPresContext, aEvent, aEventStatus);
-  }
 
   return NS_OK;
 }
@@ -205,9 +196,9 @@ nsTreeCellFrame::HandleMouseDownEvent(nsIPresContext& aPresContext,
 }
 
 nsresult
-nsTreeCellFrame::HandleClickEvent(nsIPresContext& aPresContext, 
-									                nsGUIEvent*     aEvent,
-									                nsEventStatus&  aEventStatus)
+nsTreeCellFrame::HandleMouseEnterEvent(nsIPresContext& aPresContext, 
+									                    nsGUIEvent*     aEvent,
+									                    nsEventStatus&  aEventStatus)
 {
   if (mIsHeader)
   {
@@ -215,19 +206,28 @@ nsTreeCellFrame::HandleClickEvent(nsIPresContext& aPresContext,
   }
   else
   {
-    // Need to look for an "onItemClick" handler in the tree tag (our great-grandparent). 
-    // If one exists, then we should execute the JavaScript code in the context of the
-    // treeitem (our parent).
-    // Create a DOM event from the nsGUIEvent that occurred.
-    nsIDOMEvent* aDOMEvent;
-    NS_NewDOMEvent(&aDOMEvent, aPresContext, aEvent);
-    ExecuteDefaultJSEventHandler("onitemclick", aDOMEvent);
-    // Release the DOM event. We don't care about it any more.
-    NS_IF_RELEASE(aDOMEvent);
+    // Set our hover to true
+    Hover(aPresContext, PR_TRUE);
   }
   return NS_OK;
 }
 
+nsresult
+nsTreeCellFrame::HandleMouseExitEvent(nsIPresContext& aPresContext, 
+									                    nsGUIEvent*     aEvent,
+									                    nsEventStatus&  aEventStatus)
+{
+  if (mIsHeader)
+  {
+	  // Nothing to do?
+  }
+  else
+  {
+    // Set our hover to false
+    Hover(aPresContext, PR_FALSE);
+  }
+  return NS_OK;
+}
 
 nsresult
 nsTreeCellFrame::HandleDoubleClickEvent(nsIPresContext& aPresContext, 
@@ -314,13 +314,64 @@ void nsTreeCellFrame::Select(nsIPresContext& aPresContext, PRBool isSelected, PR
   NS_IF_RELEASE(pParentContent);
 }
 
+void nsTreeCellFrame::Hover(nsIPresContext& aPresContext, PRBool isHover, PRBool notifyForReflow)
+{
+	nsCOMPtr<nsIAtom> kHoverCellAtom(dont_AddRef(NS_NewAtom("hovercell")));
+  nsCOMPtr<nsIAtom> kHoverAtom(dont_AddRef(NS_NewAtom("hover")));
+
+  nsIContent* pParentContent;
+  mContent->GetParent(pParentContent);
+
+  if (isHover)
+	{
+		// We're hovering over the node.
+		mContent->SetAttribute(nsXULAtoms::nameSpaceID, kHoverCellAtom, "true", notifyForReflow);
+    pParentContent->SetAttribute(nsXULAtoms::nameSpaceID, kHoverAtom, "true", notifyForReflow);
+	}
+	else
+	{
+		// We're deselecting the node.
+		mContent->UnsetAttribute(nsXULAtoms::nameSpaceID, kHoverCellAtom, notifyForReflow);
+    pParentContent->UnsetAttribute(nsXULAtoms::nameSpaceID, kHoverAtom, notifyForReflow);
+	}
+
+  NS_IF_RELEASE(pParentContent);
+}
+
+
+
+/* All backed out for now.
+nsresult
+nsTreeCellFrame::HandleClickEvent(nsIPresContext& aPresContext, 
+									                nsGUIEvent*     aEvent,
+									                nsEventStatus&  aEventStatus)
+{
+  if (mIsHeader)
+  {
+	  // Nothing to do?
+  }
+  else
+  {
+    // Need to look for an "onItemClick" handler in the tree tag (our great-grandparent). 
+    // If one exists, then we should execute the JavaScript code in the context of the
+    // treeitem (our parent).
+    // Create a DOM event from the nsGUIEvent that occurred.
+    nsIDOMEvent* aDOMEvent;
+    NS_NewDOMEvent(&aDOMEvent, aPresContext, aEvent);
+    ExecuteDefaultJSEventHandler("onitemclick", aDOMEvent);
+    // Release the DOM event. We don't care about it any more.
+    NS_IF_RELEASE(aDOMEvent);
+  }
+  return NS_OK;
+}
+
 const char* cEvent[] = {"event"};
 
 void nsTreeCellFrame::ExecuteDefaultJSEventHandler(const nsString& eventName,
                                                    nsIDOMEvent* aDOMEvent)
 {
   /* BACKING THIS OUT, SINCE I THINK EVENT BUBBLING ACCOMPLISHED WHAT
-      I WANTED.
+  I WANTED.
 
   // Get our parent, grandparent, and great-grandparent nodes
   nsCOMPtr<nsIContent> treeitem;
@@ -418,5 +469,4 @@ void nsTreeCellFrame::ExecuteDefaultJSEventHandler(const nsString& eventName,
       }
     }
   } // XXX: Am I missing out on some necessary cleanup?
-  */
-}
+}*/

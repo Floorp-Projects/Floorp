@@ -46,6 +46,5 @@ protected:
   virtual ~nsTreeFrame();
 
 protected: // Data Members
-	nsVoidArray mSelectedItems; // The selected cell frames.
-    
+	nsVoidArray mSelectedItems; // The selected cell frames. 
 }; // class nsTableFrame

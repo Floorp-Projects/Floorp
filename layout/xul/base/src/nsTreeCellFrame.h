@@ -45,6 +45,8 @@ public:
                     nsReflowStatus& aStatus);
 
   void Select(nsIPresContext& presContext, PRBool isSelected, PRBool notifyForReflow = PR_TRUE);
+  void Hover(nsIPresContext& presContext, PRBool isHover, PRBool notifyForReflow = PR_TRUE);
+
   nsTableFrame* GetTreeFrame();
 
   void SetAllowEvents(PRBool allowEvents) { mAllowEvents = allowEvents; };
@@ -56,16 +58,18 @@ protected:
   nsresult HandleMouseDownEvent(nsIPresContext& aPresContext, 
 								                nsGUIEvent*     aEvent,
 							                  nsEventStatus&  aEventStatus);
+  
+  nsresult HandleMouseEnterEvent(nsIPresContext& aPresContext, 
+								                nsGUIEvent*     aEvent,
+							                  nsEventStatus&  aEventStatus);
+  
+  nsresult HandleMouseExitEvent(nsIPresContext& aPresContext, 
+								                nsGUIEvent*     aEvent,
+							                  nsEventStatus&  aEventStatus);
 
   nsresult HandleDoubleClickEvent(nsIPresContext& aPresContext, 
 								                  nsGUIEvent*     aEvent,
 							                    nsEventStatus&  aEventStatus);
-
-  nsresult HandleClickEvent(nsIPresContext& aPresContext, 
-								            nsGUIEvent*     aEvent,
-							              nsEventStatus&  aEventStatus);
-
-  void ExecuteDefaultJSEventHandler(const nsString& eventName, nsIDOMEvent* aDOMEvent);
 
 protected:
   // Data members
