@@ -50,7 +50,6 @@
 #define NS_IUNICODEDECODER_IID	\
 	{ 0xb2f178e1, 0x832a, 0x11d2,	\
 		{ 0x8a, 0x8e, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36 }}
-static NS_DEFINE_IID(kIUnicodeDecoderIID, NS_IUNICODEDECODER_IID);
 
 // XXX deprecated
 /*---------- BEGIN DEPRECATED */ 

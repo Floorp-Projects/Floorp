@@ -98,7 +98,10 @@
 // XXX The XML world depends on the html atoms
 #include "nsHTMLAtoms.h"
 
-static const char* kLoadAsData = "loadAsData";
+static const char kLoadAsData[] = "loadAsData";
+
+static NS_DEFINE_CID(kCharsetAliasCID, NS_CHARSETALIAS_CID);
+
 
 // ==================================================================
 // =

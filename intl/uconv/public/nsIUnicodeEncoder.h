@@ -48,14 +48,12 @@
 #define NS_IUNICODEENCODER_IID \
 	{ 0x2b2ca3d0, 0xa4c9, 0x11d2, \
 		{ 0x8a, 0xa1, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36 }}  
-static NS_DEFINE_IID(kIUnicodeEncoderIID, NS_IUNICODEENCODER_IID);
 
 // Interface ID for our Unicode Character Encoder interface
 // {299BCCD0-C6DF-11d2-8AA8-00600811A836}
 #define NS_IUNICHARENCODER_IID	\
 	{ 0x299bccd0, 0xc6df, 0x11d2, \
 		{0x8a, 0xa8, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36 }}
-static NS_DEFINE_IID(kIUnicharEncoderIID, NS_IUNICHARENCODER_IID);
 
 #define NS_OK_UENC_EXACTLENGTH      \
   NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_UCONV, 0x21)
