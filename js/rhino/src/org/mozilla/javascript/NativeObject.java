@@ -142,48 +142,51 @@ public class NativeObject extends IdScriptable {
 
     private static String toSource(Context cx, Scriptable thisObj)
     {
-        Scriptable m = thisObj;
+        StringBuffer result = new StringBuffer(256);
+        result.append('{');
 
-        if (cx.iterating == null)
-            cx.iterating = new Hashtable(31);
+        boolean toplevel, iterating;
+        if (cx.iterating == null) {
+            toplevel = true;
+            iterating = false;
+            cx.iterating = new ObjToIntMap(31);
+        }else {
+            toplevel = false;
+            iterating = cx.iterating.has(thisObj);
+        }
 
-        if (cx.iterating.get(m) == Boolean.TRUE) {
-            return "{}";  // stop recursion
-        } else {
-            StringBuffer result = new StringBuffer("{");
-            Object[] ids = m.getIds();
-
-            for(int i=0; i < ids.length; i++) {
-                if (i > 0)
-                    result.append(", ");
-
-                Object id = ids[i];
-                String idString = ScriptRuntime.toString(id);
-                Object p = (id instanceof String)
-                    ? m.get((String) id, m)
-                    : m.get(((Number) id).intValue(), m);
-                if (p instanceof String) {
-                    result.append(idString + ":\""
-                        + ScriptRuntime
-                          .escapeString(ScriptRuntime.toString(p))
-                        + "\"");
-                } else {
-                    /* wrap changes to cx.iterating in a try/finally
-                     * so that the reference always gets removed, and
-                     * we don't leak memory.  Good place for weak
-                     * references, if we had them.
-                     */
-                    try {
-                        cx.iterating.put(m, Boolean.TRUE); // stop recursion.
-                        result.append(idString + ":" + ScriptRuntime.toString(p));
-                    } finally {
-                        cx.iterating.remove(m);
+        // Make sure cx.iterating is set to null when done
+        // so we don't leak memory
+        try {
+            if (!iterating) {
+                cx.iterating.put(thisObj, 0); // stop recursion.
+                Object[] ids = thisObj.getIds();
+                for(int i=0; i < ids.length; i++) {
+                    if (i > 0)
+                        result.append(", ");
+                    Object id = ids[i];
+                    result.append(id);
+                    result.append(':');
+                    Object p = (id instanceof String)
+                        ? thisObj.get((String) id, thisObj)
+                        : thisObj.get(((Integer) id).intValue(), thisObj);
+                    if (p instanceof String) {
+                        result.append('\"');
+                        result.append(ScriptRuntime.escapeString((String)p));
+                        result.append('\"');
+                    }else {
+                        result.append(ScriptRuntime.toString(p));
                     }
                 }
             }
-            result.append('}');
-            return result.toString();
+        }finally {
+            if (toplevel) {
+                cx.iterating = null;
+            }
         }
+
+        result.append('}');
+        return result.toString();
     }
 
     private static Object jsFunction_valueOf(Scriptable thisObj) {

@@ -461,11 +461,7 @@ public class NativeArray extends IdScriptable {
 
         long length = (long)getLengthProperty(thisObj);
 
-        StringBuffer result = new StringBuffer();
-
-        if (cx.iterating == null)
-            cx.iterating = new Hashtable(31);
-        boolean iterating = cx.iterating.get(thisObj) == Boolean.TRUE;
+        StringBuffer result = new StringBuffer(256);
 
         // whether to return '4,unquoted,5' or '[4, "quoted", 5]'
         String separator;
@@ -480,33 +476,40 @@ public class NativeArray extends IdScriptable {
         boolean haslast = false;
         long i = 0;
 
-        if (!iterating) {
-            for (i = 0; i < length; i++) {
-                if (i > 0) result.append(separator);
-                Object elem = getElem(thisObj, i);
-                if (elem == null || elem == Undefined.instance) {
-                    haslast = false;
-                    continue;
-                }
-                haslast = true;
+        boolean toplevel, iterating;
+        if (cx.iterating == null) {
+            toplevel = true;
+            iterating = false;
+            cx.iterating = new ObjToIntMap(31);
+        }else {
+            toplevel = false;
+            iterating = cx.iterating.has(thisObj);
+        }
 
-                if (elem instanceof String) {
-                    String s = (String)elem;
-                    if (toSource) {
-                        result.append('\"');
-                        result.append(ScriptRuntime.escapeString(s));
-                        result.append('\"');
-                    } else {
-                        result.append(s);
+        // Make sure cx.iterating is set to null when done
+        // so we don't leak memory
+        try {
+            if (!iterating) {
+                cx.iterating.put(thisObj, 0); // stop recursion.
+                for (i = 0; i < length; i++) {
+                    if (i > 0) result.append(separator);
+                    Object elem = getElem(thisObj, i);
+                    if (elem == null || elem == Undefined.instance) {
+                        haslast = false;
+                        continue;
                     }
-                } else {
-                    /* wrap changes to cx.iterating in a try/finally
-                     * so that the reference always gets removed, and
-                     * we don't leak memory.  Good place for weak
-                     * references, if we had them.  */
-                    try {
-                        // stop recursion.
-                        cx.iterating.put(thisObj, Boolean.TRUE);
+                    haslast = true;
+
+                    if (elem instanceof String) {
+                        String s = (String)elem;
+                        if (toSource) {
+                            result.append('\"');
+                            result.append(ScriptRuntime.escapeString(s));
+                            result.append('\"');
+                        } else {
+                            result.append(s);
+                        }
+                    } else {
                         if (toLocale && elem != Undefined.instance &&
                             elem != null)
                         {
@@ -518,10 +521,12 @@ public class NativeArray extends IdScriptable {
                                                       ScriptRuntime.emptyArgs);
                         }
                         result.append(ScriptRuntime.toString(elem));
-                    } finally {
-                        cx.iterating.remove(thisObj);
                     }
                 }
+            }
+        }finally {
+            if (toplevel) {
+                cx.iterating = null;
             }
         }
 
