@@ -6,7 +6,7 @@ use Sys::Hostname;
 use POSIX "sys_wait_h";
 use Cwd;
 
-$Version = '$Revision: 1.15 $ ';
+$Version = '$Revision: 1.16 $ ';
 
 
 sub PrintUsage {
@@ -621,8 +621,6 @@ sub PrintEnv {
   }
 }
 
-local $pid;
-
 sub killer {
   &killproc($pid);
 }
@@ -683,7 +681,7 @@ sub RunSmokeTest {
   $status = waitpid($pid, WNOHANG());
 
   if ($status != 0) {
-    print LOG "$Binary has crashed or quit.  Turn the tree orange now.\n";
+    print LOG "$Binary has crashed or quit on the AliveTest.  Turn the tree orange now.\n";
     print LOG "----------- failure output from apprunner for smoke tests --------------- \n";
     open READRUNLOG, "$BinaryLog";
     while (<READRUNLOG>) {
@@ -697,7 +695,7 @@ sub RunSmokeTest {
   
   print LOG "Success! $Binary is still running.\n";
 
-  $status = &killproc($pid);
+  &killproc($pid);
 
   print LOG "----------- success output from apprunner for smoke tests --------------- \n";
   open READRUNLOG, "$BinaryLog";
@@ -763,9 +761,13 @@ sub RunBloatTest {
   alarm 30;
 
   $status = waitpid($pid, 0);
+
+  # Clear the alarm so we don't kill the next test!
+  alarm 0;
+
   print LOG "Client quit with status $status\n";
   if ($status == 0) {
-    print LOG "$Binary has crashed or quit.  Turn the tree orange now.\n";
+    print LOG "$Binary has crashed or quit on the BloatTest.  Turn the tree orange now.\n";
     print LOG "----------- failure Output from apprunner for bloat stats --------------- \n";
     open READRUNLOG, "$BinaryLog";
     while (<READRUNLOG>) {
