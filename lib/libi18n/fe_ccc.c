@@ -94,6 +94,7 @@ PRIVATE XP_Bool haveBig5 = FALSE;
 PRIVATE XP_Bool have88595 = FALSE;
 PRIVATE XP_Bool have1251 = FALSE;
 PRIVATE XP_Bool haveKOI8R = FALSE;
+PRIVATE XP_Bool haveKOI8U = FALSE;
 #endif
 
 PRIVATE int16 *availableFontCharSets = NULL;
@@ -947,6 +948,7 @@ PUBLIC int16 INTL_DocToWinCharSetID(int16 csid)
 			if (((cscvtp->to_csid == CS_CNS_8BIT) && (TRUE == haveBig5)) ||
 			    ((cscvtp->to_csid == CS_8859_5)   && (FALSE == have88595)) || 
 			    ((cscvtp->to_csid == CS_KOI8_R)   && (FALSE == haveKOI8R)) || 
+			    ((cscvtp->to_csid == CS_KOI8_U)   && (FALSE == haveKOI8U)) || 
 			    ((cscvtp->to_csid == CS_CP_1251)  && (FALSE == have1251)) )   
 			{
 				cscvtp++;
@@ -991,6 +993,45 @@ INTL_DefaultTextAttributeCharSetID(iDocumentContext context)
 	return INTL_DefaultWinCharSetID(context);
 }
 
+#ifdef XP_UNIX
+int16 *intl_RearrangeUnicodeFontCSIDList(uint16 len, int16* inlist)
+{
+   int i; 
+   int outidx, mbidx,miscidx;
+   int16 *outlist = XP_ALLOC(sizeof(int16) * len);
+   int16 *mblist = XP_ALLOC(sizeof(int16) * len);
+   int16 *misclist = XP_ALLOC(sizeof(int16) * len);
+   XP_ASSERT(NULL != outlist);
+   XP_ASSERT(NULL != mblist);
+   XP_ASSERT(NULL != misclist);
+   /* pick up single byte charset first, multibyte charset second, and
+      finally, symbol and dingbat 
+    */
+   outidx = mbidx = miscidx = 0;
+   for(i=0;i<len;i++)
+   { 
+      if((CS_SYMBOL == inlist[i]) ||
+         (CS_DINGBATS == inlist[i]) ||
+         (CS_USER_DEFINED_ENCODING == inlist[i]) ||
+         (CS_USRDEF2 == inlist[i]) 
+      )
+      {
+        misclist[miscidx++] = inlist[i];
+      } else if ( MULTIBYTE == ( CODESET_MASK & inlist[i] )) {
+        mblist[mbidx++] = inlist[i];
+      } else {
+        outlist[outidx++] = inlist[i];
+      }
+   }
+   for(i = 0; i < mbidx; i++)
+        outlist[outidx++] = mblist[i];
+   for(i = 0; i < miscidx; i++)
+        outlist[outidx++] = misclist[i];
+   XP_FREE(mblist); 
+   XP_FREE(misclist); 
+   return outlist;
+}
+#endif
 void
 INTL_ReportFontCharSets(int16 *charsets)
 {
@@ -1025,6 +1066,9 @@ INTL_ReportFontCharSets(int16 *charsets)
 			case CS_KOI8_R:
 				haveKOI8R = TRUE;
 				break;
+			case CS_KOI8_U:
+				haveKOI8U = TRUE;
+				break;
 		}
 #endif
 		charsets++;
@@ -1032,8 +1076,12 @@ INTL_ReportFontCharSets(int16 *charsets)
 	len = (charsets - availableFontCharSets);
 
 #ifdef XP_UNIX
-	INTL_SetUnicodeCSIDList(len, availableFontCharSets);
-
+        {
+            int16 *fontcsidlist = intl_RearrangeUnicodeFontCSIDList(len, availableFontCharSets);
+            XP_ASSERT(NULL != fontcsidlist);
+	    INTL_SetUnicodeCSIDList(len, fontcsidlist);
+            XP_FREE(fontcsidlist);
+        }
 #endif
 
 }
