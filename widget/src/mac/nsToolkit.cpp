@@ -31,135 +31,125 @@ static NS_DEFINE_IID(kEventQueueServiceCID,  NS_EVENTQUEUESERVICE_CID);
 // Interface IDs...
 static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
 
-nsWindow* nsToolkit::mFocusedWidget = nsnull;
 
-//=================================================================
-/*  Constructor
- *  @update  dc 08/31/98
- *  @param   NONE
- *  @return  NONE
- */
-nsToolkit::nsToolkit(): Repeater()
+static nsMacNSPREventQueueHandler*	gEventQueueHandler = nsnull;
+
+//-------------------------------------------------------------------------
+//
+//-------------------------------------------------------------------------
+nsMacNSPREventQueueHandler::nsMacNSPREventQueueHandler(): Repeater()
 {
-	NS_INIT_REFCNT();
+	mRefCnt = 0;
+	mEventQService = nsnull;
 }
 
-
-//=================================================================
-/*  Destructor.
- *  @update  dc 08/31/98
- *  @param   NONE
- *  @return  NONE
- */
-nsToolkit::~nsToolkit()
+//-------------------------------------------------------------------------
+//
+//-------------------------------------------------------------------------
+nsMacNSPREventQueueHandler::~nsMacNSPREventQueueHandler()
 {
-	if (mFocusedWidget)
-	{
-	  mFocusedWidget->RemoveDeleteObserver(this);
-	  mFocusedWidget = nsnull;
-	}
+	if (mEventQService == nsnull)
+		return;
 
 	StopRepeating();
+	nsServiceManager::ReleaseService(kEventQueueServiceCID, mEventQService);
+	mEventQService = nsnull;
 }
 
-//=================================================================
-/*  Set the focus to a widget, send out the appropriate focus/defocus events
- *  @update  dc 08/31/98
- *  @param   aMouseInside -- A boolean indicating if the mouse is inside the control
- *  @return  NONE
- */
-void nsToolkit::SetFocus(nsWindow *aFocusWidget)
-{ 
-	if (aFocusWidget == mFocusedWidget)
-		return;
-		
-	nsGUIEvent guiEvent;
-	guiEvent.eventStructType = NS_GUI_EVENT;
-	guiEvent.point.x = 0, guiEvent.point.y = 0;
-	guiEvent.time = PR_IntervalNow();
-	guiEvent.widget = nsnull;
-	guiEvent.nativeMsg = nsnull;
-
-	// tell the old widget, it is not focused
-	if (mFocusedWidget)
+//-------------------------------------------------------------------------
+//
+//-------------------------------------------------------------------------
+void nsMacNSPREventQueueHandler::StartPumping()
+{
+	if (mRefCnt == 0)
 	{
-		mFocusedWidget->RemoveDeleteObserver(this);
-
-		guiEvent.message = NS_LOSTFOCUS;
-		guiEvent.widget = mFocusedWidget;
-		mFocusedWidget->DispatchWindowEvent(guiEvent);
-		mFocusedWidget = nsnull;
+		nsServiceManager::GetService(kEventQueueServiceCID,
+																				kIEventQueueServiceIID,
+	                                      (nsISupports **)&mEventQService);
+		if (mEventQService == nsnull)
+		{
+			NS_WARNING("GetService(kEventQueueServiceCID) failed");
+			return;
+		}
 	}
-	
-	// let the new one know
-	if (aFocusWidget)
-	{
-		mFocusedWidget = aFocusWidget;
-		mFocusedWidget->AddDeleteObserver(this);
 
-		guiEvent.message = NS_GOTFOCUS;
-		guiEvent.widget = mFocusedWidget;		
-		mFocusedWidget->DispatchWindowEvent(guiEvent);
-	}
+	++mRefCnt;
+	StartRepeating();
 }
 
-//=================================================================
-/*  nsISupports implementation macro's
- *  @update  dc 08/31/98
- *  @param   NONE
- *  @return  NONE
- */
+//-------------------------------------------------------------------------
+//
+//-------------------------------------------------------------------------
+PRBool nsMacNSPREventQueueHandler::StopPumping()
+{
+	if (mEventQService == nsnull)
+		return PR_TRUE;
+
+	if (mRefCnt > 0) {
+		if (--mRefCnt == 0) {
+			StopRepeating();
+		 	nsServiceManager::ReleaseService(kEventQueueServiceCID, mEventQService);
+		 	mEventQService = nsnull;
+			return PR_TRUE;
+		}
+	}
+
+	return PR_FALSE;
+}
+
+//-------------------------------------------------------------------------
+//
+//-------------------------------------------------------------------------
+void nsMacNSPREventQueueHandler::RepeatAction(const EventRecord& inMacEvent)
+{
+	// Handle pending NSPR events
+	if (mEventQService)
+	  mEventQService->ProcessEvents();
+}
+
+
+#pragma mark -
+
 NS_DEFINE_IID(kIToolkitIID, NS_ITOOLKIT_IID);
 NS_IMPL_ISUPPORTS(nsToolkit,kIToolkitIID);
 
-//=================================================================
-/*  Initialize the Toolbox
- *  @update  dc 08/31/98
- *  @param   aThread -- A pointer to a PRThread, not really sure of its use for the Mac yet
- *  @return  NONE
- */
-NS_IMETHODIMP nsToolkit::Init(PRThread *aThread)
+//-------------------------------------------------------------------------
+//
+//-------------------------------------------------------------------------
+nsToolkit::nsToolkit()
 {
- 	StartRepeating();
-	
+	NS_INIT_REFCNT();
+	if (gEventQueueHandler == nsnull)
+		gEventQueueHandler = new nsMacNSPREventQueueHandler;
+}
+
+//-------------------------------------------------------------------------
+//
+//-------------------------------------------------------------------------
+nsToolkit::~nsToolkit()
+{
+	if (gEventQueueHandler) {
+		if (gEventQueueHandler->StopPumping()) {
+			delete gEventQueueHandler;
+			gEventQueueHandler = nsnull;
+		}
+	}
+}
+
+
+//-------------------------------------------------------------------------
+//
+//-------------------------------------------------------------------------
+NS_IMETHODIMP nsToolkit::Init(PRThread */*aThread*/)
+{
+	if (gEventQueueHandler)
+		gEventQueueHandler->StartPumping();
 	return NS_OK;
 }
 
-
-
-//=================================================================
-/*  Process the NSPR event queue. 
- *  @update  dc 08/31/98
- *  @param   inMacEvent -- A mac os event, Not used
- *  @return  NONE
- */
-void	nsToolkit::RepeatAction(const EventRecord& /*inMacEvent*/)
-{
-	// Handle pending NSPR events
-	nsIEventQueueService* eventQService = NULL;
-	if ( NS_SUCCEEDED( nsServiceManager::GetService(kEventQueueServiceCID,
-                                      kIEventQueueServiceIID,
-                                      (nsISupports **)&eventQService) ) )
-    {
-    	eventQService->ProcessEvents();
-    	nsServiceManager::ReleaseService(kEventQueueServiceCID, eventQService);
-    }
-}
-
-
-//=================================================================
-/*   
- */
-void	nsToolkit::NotifyDelete(void* aDeletedObject)
-{
-	if (mFocusedWidget == aDeletedObject)
-		mFocusedWidget = nsnull;
-}
-
-
-//=================================================================
-/*   
- */
+//-------------------------------------------------------------------------
+//
+//-------------------------------------------------------------------------
 bool nsToolkit::HasAppearanceManager()
 {
 
