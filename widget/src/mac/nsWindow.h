@@ -35,6 +35,8 @@
             RGB(NS_GET_R(color),NS_GET_G(color),NS_GET_B(color))
 
 
+// =============================================================================
+
 /**
  * Native Motif window wrapper. 
  */
@@ -132,12 +134,15 @@ public:
     virtual PRBool          IgnoreResize();
 
     virtual PRUint32        GetYCoord(PRUint32 aNewY);
+    
 
      // Resize event management
     void SetResizeRect(nsRect& aRect);
     void SetResized(PRBool aResized);
     void GetResizeRect(nsRect* aRect);
     PRBool GetResized();
+    
+    nsIWidget* FindWidgetHit(Point);
 
     char gInstanceClassName[256];
 protected:
@@ -170,37 +175,35 @@ protected:
   void InitToolkit(nsIToolkit *aToolkit, nsIWidget * aWidgetParent);
 
 
-  virtual void            UpdateVisibilityFlag();
-  virtual void            UpdateDisplay();
+  virtual void      UpdateVisibilityFlag();
+  virtual void      UpdateDisplay();
 
-  //Widget mWidget;
-  EVENT_CALLBACK mEventCallback;
-  nsIDeviceContext *mContext;
-  nsIFontMetrics *mFontMetrics;
-  nsToolkit   *mToolkit;
-  nsIAppShell *mAppShell;
+  EVENT_CALLBACK 		mEventCallback;
+  nsIDeviceContext 	*mContext;
+  nsIFontMetrics 		*mFontMetrics;
+  nsToolkit   			*mToolkit;
+  nsIAppShell 			*mAppShell;
 
-  nsIMouseListener * mMouseListener;
-  nsIEventListener * mEventListener;
+  nsIMouseListener 	*mMouseListener;
+  nsIEventListener 	*mEventListener;
 
-  nscolor     mBackground;
-  nscolor     mForeground;
-  nsCursor    mCursor;
-  nsBorderStyle mBorderStyle;
-  nsRect      mBounds;
+  nscolor     			mBackground;
+  nscolor     			mForeground;
+  nsCursor    			mCursor;
+  nsBorderStyle 		mBorderStyle;
+  nsRect      			mBounds;
 
-  PRBool      mIgnoreResize;
-  PRBool      mShown;
-  PRBool      mVisible;
-  PRBool      mDisplayed;
-  void*       mClientData;
+  PRBool      			mIgnoreResize;
+  PRBool      			mShown;
+  PRBool     	 			mVisible;
+  PRBool      			mDisplayed;
 
   // Resize event management
-  nsRect mResizeRect;
-  int mResized;
-  PRBool mLowerLeft;
+  nsRect 						mResizeRect;
+  PRUint32 					mResized;
+  PRBool 						mLowerLeft;
 
-  nsISupports* mOuter;
+  nsISupports* 			mOuter;
 
   class InnerSupport : public nsISupports {
   public:
@@ -219,10 +222,15 @@ protected:
   friend InnerSupport;
 
 private:
-	WindowPtr	mWindowPtr;
+	// parent window -- this is only used for the main window widget
+	WindowRecord	mWindowRecord;
+	WindowPtr			mWindowPtr;					
+	//LinkedList		mWidgetList;				// list of widgets attached to this main window
 	
-  //GC mGC;
+	
 };
+
+// ============================================================================
 
 //
 // A child window is a window with different style
@@ -233,6 +241,11 @@ public:
                             ChildWindow(nsISupports *aOuter) : nsWindow(aOuter) {}
 
 };
+
+// =============================================================================
+
+
+// =============================================================================
 
 #define AGGREGATE_METHOD_DEF \
 public:                                                                     \
