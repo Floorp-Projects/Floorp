@@ -43,8 +43,8 @@ class NS_MSG_BASE nsMsgIncomingServer : public nsIMsgIncomingServer {
   NS_IMETHOD SetKey(char * aKey);
   
    /* attribute string prettyName; */
-  NS_IMETHOD GetPrettyName(char * *aPrettyName);
-  NS_IMETHOD SetPrettyName(char * aPrettyName);
+  NS_IMETHOD GetPrettyName(PRUnichar * *aPrettyName);
+  NS_IMETHOD SetPrettyName(PRUnichar * aPrettyName);
 
   /* attribute string hostName; */
   NS_IMETHOD GetHostName(char * *aHostName);
@@ -96,7 +96,7 @@ protected:
   nsCOMPtr <nsIFolder> m_rootFolder;
   nsresult getCharPref(const char *pref, char **);
   nsresult getDefaultCharPref(const char *pref, char **);
-  nsresult setCharPref(const char *pref, char *);
+  nsresult setCharPref(const char *pref, const char *);
   
   nsresult getBoolPref(const char *pref, PRBool *);
   nsresult getDefaultBoolPref(const char *pref, PRBool *);

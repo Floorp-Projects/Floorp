@@ -29,6 +29,7 @@
 #include "nsIMsgFolder.h"
 #include "nsIMsgFolderCache.h"
 #include "nsIMsgFolderCacheElement.h"
+#include "nsXPIDLString.h"
 
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
@@ -257,7 +258,7 @@ nsMsgIncomingServer::getDefaultCharPref(const char *prefname,
 
 nsresult
 nsMsgIncomingServer::setCharPref(const char *prefname,
-                                 char * val)
+                                 const char * val)
 {
   nsresult rv;
   char *fullPrefName = getPrefName(m_serverKey, prefname);
@@ -278,22 +279,46 @@ nsMsgIncomingServer::setCharPref(const char *prefname,
 
 // pretty name is the display name to show to the user
 NS_IMETHODIMP
-nsMsgIncomingServer::GetPrettyName(char **retval) {
+nsMsgIncomingServer::GetPrettyName(PRUnichar **retval) {
 
-  char *val;
+  char *val=nsnull;
   nsresult rv = getCharPref("name", &val);
   if (NS_FAILED(rv)) return rv;
 
-  // if there's no pretty name, then just return the hostname
-  if (!val)
-    return GetHostName(retval);
+  nsString prettyName;
+  
+  // if there's no name, then just return the hostname
+  if (val) {
+    prettyName = val;
+  } else {
+    
+    nsXPIDLCString username;
+    rv = GetUsername(getter_Copies(username));
+    if (NS_FAILED(rv)) return rv;
+    if ((const char*)username &&
+        PL_strcmp((const char*)username, "")!=0) {
+      prettyName = username;
+      prettyName += " on ";
+    }
+    
+    nsXPIDLCString hostname;
+    rv = GetHostName(getter_Copies(hostname));
+    if (NS_FAILED(rv)) return rv;
+
+
+    prettyName += hostname;
+  }
+
+  *retval = prettyName.ToNewUnicode();
   
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsMsgIncomingServer::SetPrettyName(char *value) {
-  return setCharPref("name", value);
+nsMsgIncomingServer::SetPrettyName(PRUnichar *value) {
+  // this is lossy. Not sure what to do.
+  nsCString str(value);
+  return setCharPref("name", str.GetBuffer());
 }
 
 // use the convenience macros to implement the accessors

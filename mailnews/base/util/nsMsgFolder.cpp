@@ -1399,36 +1399,27 @@ NS_IMETHODIMP nsMsgFolder::GetNewMessagesNotificationDescription(PRUnichar * *aD
 	nsString description("");
 	nsCOMPtr<nsIMsgIncomingServer> server;
 	rv = GetServer(getter_AddRefs(server));
+  
 	if(NS_SUCCEEDED(rv))
 	{
 		if (!(mFlags & MSG_FOLDER_FLAG_INBOX))
 		{
-			PRUnichar *folderName = nsnull;
-			rv = GetPrettyName(&folderName);
+			nsXPIDLString folderName;
+			rv = GetPrettyName(getter_Copies(folderName));
 			if (NS_SUCCEEDED(rv) && folderName)
-			{
 				description = folderName;
-				description += " on ";
-				PR_Free(folderName);
-			}
-
-
 		}
-		char *serverName = nsnull;
-		rv = server->GetPrettyName(&serverName);
-		if(NS_SUCCEEDED(rv) && PL_strcmp(serverName, ""))
+
+    // append the server name
+    nsXPIDLString serverName;
+		rv = server->GetPrettyName(getter_Copies(serverName));
+		if(NS_SUCCEEDED(rv)) {
+      // put this test here because we don't want to just put "folder name on"
+      // in case the above failed
+      if (!(mFlags & MSG_FOLDER_FLAG_INBOX))
+        description += " on ";
 			description += serverName;
-		else
-		{
-			if(serverName)
-				PR_Free(serverName);
-			rv = server->GetHostName(&serverName);
-			if(NS_SUCCEEDED(rv))
-				description += serverName;
-		}
-		if(serverName)
-		  PR_Free(serverName);
-
+    }
 	}
 	*aDescription = description.ToNewUnicode();
 	return NS_OK;

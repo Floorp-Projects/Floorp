@@ -34,7 +34,7 @@ interface nsIMsgIncomingServer : nsISupports {
   attribute string key;
 
   /* pretty name - should be "userid on hostname" if this pref is not set */
-  attribute string prettyName;
+  attribute wstring prettyName;
 
   /* hostname of the server */
   attribute string hostName;

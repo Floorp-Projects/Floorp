@@ -329,8 +329,10 @@ nsresult nsPop3TestDriver::OnIdentityCheck()
 		if (NS_SUCCEEDED(result) && incomingServer)
 		{
 			char * value = nsnull;
-			incomingServer->GetPrettyName(&value);
-			printf("Server pretty name: %s\n", value ? value : "");
+            PRUnichar* uvalue;
+			incomingServer->GetPrettyName(&uvalue);
+            nsString val(uvalue);
+			printf("Server pretty name: %s\n", val.ToNewCString());
 			incomingServer->GetUsername(&value);
 			printf("User Name: %s\n", value ? value : "");
 			incomingServer->GetHostName(&value);

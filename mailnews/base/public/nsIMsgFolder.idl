@@ -54,7 +54,6 @@ interface nsIMsgFolder : nsIFolder {
 	nsIMsgThread GetThreadForMessage(in nsIMessage message);
 	boolean HasMessage(in nsIMessage message);
   nsIEnumerator GetVisibleSubFolders();
-	attribute wstring prettyName;
 	readonly attribute wstring prettiestName;
 	string BuildFolderURL();
 
