@@ -23,6 +23,7 @@
 #include "nsIIOService.h"
 #include "nsIURL.h"
 #include "nsIServiceManager.h"
+#include "nsNeckoUtil.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #endif // NECKO
 #include "plstr.h"
@@ -127,33 +128,30 @@ NS_IMETHODIMP
 LocationImpl::GetHash(nsString& aHash)
 {
   nsAutoString href;
-  nsIURI *url;
+  nsIURI *uri;
   nsresult result = NS_OK;
   
   result = GetHref(href);
   if (NS_OK == result) {
 #ifndef NECKO
-    result = NS_NewURL(&url, href);
+    result = NS_NewURL(&uri, href);
 #else
-    NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &result);
-    if (NS_FAILED(result)) return result;
-
-    nsIURI *uri = nsnull;
-    const char *uriStr = href.GetBuffer();
-    result = service->NewURI(uriStr, nsnull, &uri);
-    if (NS_FAILED(result)) return result;
-
-    result = uri->QueryInterface(nsIURI::GetIID(), (void**)&url);
-    NS_RELEASE(uri);
+    result = NS_NewURI(&uri, href);
 #endif // NECKO
 
     if (NS_OK == result) {
 #ifdef NECKO
       char *ref;
+      nsIURL* url;
+      result = uri->QueryInterface(nsIURL::GetIID(), (void**)&url);
+      if (NS_SUCCEEDED(result)) {
+        result = url->GetRef(&ref);
+        NS_RELEASE(url);
+      }
 #else
       const char *ref;
+      result = uri->GetRef(&ref);
 #endif
-      result = url->GetRef(&ref);
       if (result == NS_OK && (nsnull != ref) && ('\0' != *ref)) {
         aHash.SetString("#");
         aHash.Append(ref);
@@ -164,7 +162,7 @@ LocationImpl::GetHash(nsString& aHash)
       else {
         aHash.SetLength(0);
       }
-      NS_IF_RELEASE(url);
+      NS_RELEASE(uri);
     }
   }
 
@@ -175,32 +173,34 @@ NS_IMETHODIMP
 LocationImpl::SetHash(const nsString& aHash)
 {
   nsAutoString href;
-  nsIURI *url;
+  nsIURI *uri;
   nsresult result = NS_OK;
 
   result = GetHref(href);
   if (NS_OK == result) {
 #ifndef NECKO
-    result = NS_NewURL(&url, href);
+    result = NS_NewURL(&uri, href);
+    if (NS_OK == result) {
+      char *buf = aHash.ToNewCString();
+      uri->SetRef(buf);
+      SetURL(uri);
+      delete[] buf;
+      NS_RELEASE(uri);      
+    }
 #else
-    NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &result);
+    result = NS_NewURI(&uri, href);
     if (NS_FAILED(result)) return result;
-
-    nsIURI *uri = nsnull;
-    const char *uriStr = href.GetBuffer();
-    result = service->NewURI(uriStr, nsnull, &uri);
-    if (NS_FAILED(result)) return result;
-
+    nsIURL* url;
     result = uri->QueryInterface(nsIURI::GetIID(), (void**)&url);
     NS_RELEASE(uri);
-#endif // NECKO
     if (NS_OK == result) {
       char *buf = aHash.ToNewCString();
       url->SetRef(buf);
       SetURL(url);
       delete[] buf;
-      NS_IF_RELEASE(url);      
+      NS_RELEASE(url);      
     }
+#endif // NECKO
   }
 
   return result;
@@ -218,16 +218,7 @@ LocationImpl::GetHost(nsString& aHost)
 #ifndef NECKO
     result = NS_NewURL(&url, href);
 #else
-    NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &result);
-    if (NS_FAILED(result)) return result;
-
-    nsIURI *uri = nsnull;
-    const char *uriStr = href.GetBuffer();
-    result = service->NewURI(uriStr, nsnull, &uri);
-    if (NS_FAILED(result)) return result;
-
-    result = uri->QueryInterface(nsIURI::GetIID(), (void**)&url);
-    NS_RELEASE(uri);
+    result = NS_NewURI(&url, href);
 #endif // NECKO
     if (NS_OK == result) {
 #ifdef NECKO
@@ -240,8 +231,6 @@ LocationImpl::GetHost(nsString& aHost)
         aHost.SetString(host);
 #ifdef NECKO
         nsCRT::free(host);
-#endif
-#ifdef NECKO
         PRInt32 port;
         (void)url->GetPort(&port);
 #else
@@ -253,7 +242,7 @@ LocationImpl::GetHost(nsString& aHost)
           aHost.Append(port, 10);
         }
       }
-      NS_IF_RELEASE(url);
+      NS_RELEASE(url);
     }
   }
 
@@ -272,23 +261,14 @@ LocationImpl::SetHost(const nsString& aHost)
 #ifndef NECKO
     result = NS_NewURL(&url, href);
 #else
-    NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &result);
-    if (NS_FAILED(result)) return result;
-
-    nsIURI *uri = nsnull;
-    const char *uriStr = href.GetBuffer();
-    result = service->NewURI(uriStr, nsnull, &uri);
-    if (NS_FAILED(result)) return result;
-
-    result = uri->QueryInterface(nsIURI::GetIID(), (void**)&url);
-    NS_RELEASE(uri);
+    result = NS_NewURI(&url, href);
 #endif // NECKO
     if (NS_OK == result) {
       char *buf = aHost.ToNewCString();
       url->SetHost(buf);
       SetURL(url);
       delete[] buf;
-      NS_IF_RELEASE(url);      
+      NS_RELEASE(url);      
     }
   }
 
@@ -307,16 +287,7 @@ LocationImpl::GetHostname(nsString& aHostname)
 #ifndef NECKO
     result = NS_NewURL(&url, href);
 #else
-    NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &result);
-    if (NS_FAILED(result)) return result;
-
-    nsIURI *uri = nsnull;
-    const char *uriStr = href.GetBuffer();
-    result = service->NewURI(uriStr, nsnull, &uri);
-    if (NS_FAILED(result)) return result;
-
-    result = uri->QueryInterface(nsIURI::GetIID(), (void**)&url);
-    NS_RELEASE(uri);
+    result = NS_NewURI(&url, href);
 #endif // NECKO
     if (NS_OK == result) {
 #ifdef NECKO
@@ -331,7 +302,7 @@ LocationImpl::GetHostname(nsString& aHostname)
         nsCRT::free(host);
 #endif
       }
-      NS_IF_RELEASE(url);
+      NS_RELEASE(url);
     }
   }
 
@@ -350,23 +321,14 @@ LocationImpl::SetHostname(const nsString& aHostname)
 #ifndef NECKO
     result = NS_NewURL(&url, href);
 #else
-    NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &result);
-    if (NS_FAILED(result)) return result;
-
-    nsIURI *uri = nsnull;
-    const char *uriStr = href.GetBuffer();
-    result = service->NewURI(uriStr, nsnull, &uri);
-    if (NS_FAILED(result)) return result;
-
-    result = uri->QueryInterface(nsIURI::GetIID(), (void**)&url);
-    NS_RELEASE(uri);
+    result = NS_NewURI(&url, href);
 #endif // NECKO
     if (NS_OK == result) {
       char *buf = aHostname.ToNewCString();
       url->SetHost(buf);
       SetURL(url);
       delete[] buf;
-      NS_IF_RELEASE(url);      
+      NS_RELEASE(url);      
     }
   }
 
@@ -401,35 +363,13 @@ LocationImpl::SetHref(const nsString& aHref)
 #ifndef NECKO
     result = NS_NewURL(&oldUrl, oldHref);
 #else
-    NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &result);
-    if (NS_FAILED(result)) return result;
-
-    nsIURI *uri = nsnull;
-    const char *uriStr = oldHref.GetBuffer();
-    result = service->NewURI(uriStr, nsnull, &uri);
-    if (NS_FAILED(result)) return result;
-
-    result = uri->QueryInterface(nsIURI::GetIID(), (void**)&oldUrl);
-    NS_RELEASE(uri);
+    result = NS_NewURI(&oldUrl, oldHref);
 #endif // NECKO
     if (NS_OK == result) {
 #ifndef NECKO
-        result = NS_NewURL(&newUrl, aHref, oldUrl);
+      result = NS_NewURL(&newUrl, aHref, oldUrl);
 #else
-        NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &result);
-        if (NS_FAILED(result)) return result;
-
-        nsIURI *uri = nsnull, *baseUri = nsnull;
-        result = oldUrl->QueryInterface(nsIURI::GetIID(), (void**)&baseUri);
-        if (NS_FAILED(result)) return result;
-
-        const char *uriStr = aHref.GetBuffer();
-        result = service->NewURI(uriStr, baseUri, &uri);
-        if (NS_FAILED(result)) return result;
-
-        result = uri->QueryInterface(nsIURI::GetIID(), (void**)&newUrl);
-        NS_RELEASE(baseUri);
-        NS_RELEASE(uri);
+      result = NS_NewURI(&newUrl, aHref, oldUrl);
 #endif // NECKO
       if (NS_OK == result) {
 #ifdef NECKO
@@ -469,16 +409,7 @@ LocationImpl::GetPathname(nsString& aPathname)
 #ifndef NECKO
     result = NS_NewURL(&url, href);
 #else
-    NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &result);
-    if (NS_FAILED(result)) return result;
-
-    nsIURI *uri = nsnull;
-    const char *uriStr = href.GetBuffer();
-    result = service->NewURI(uriStr, nsnull, &uri);
-    if (NS_FAILED(result)) return result;
-
-    result = uri->QueryInterface(nsIURI::GetIID(), (void**)&url);
-    NS_RELEASE(uri);
+    result = NS_NewURI(&url, href);
 #endif // NECKO
     if (NS_OK == result) {
 #ifdef NECKO
@@ -513,16 +444,7 @@ LocationImpl::SetPathname(const nsString& aPathname)
 #ifndef NECKO
     result = NS_NewURL(&url, href);
 #else
-    NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &result);
-    if (NS_FAILED(result)) return result;
-
-    nsIURI *uri = nsnull;
-    const char *uriStr = href.GetBuffer();
-    result = service->NewURI(uriStr, nsnull, &uri);
-    if (NS_FAILED(result)) return result;
-
-    result = uri->QueryInterface(nsIURI::GetIID(), (void**)&url);
-    NS_RELEASE(uri);
+    result = NS_NewURI(&url, href);
 #endif // NECKO
     if (NS_OK == result) {
       char *buf = aPathname.ToNewCString();
@@ -552,16 +474,7 @@ LocationImpl::GetPort(nsString& aPort)
 #ifndef NECKO
     result = NS_NewURL(&url, href);
 #else
-    NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &result);
-    if (NS_FAILED(result)) return result;
-
-    nsIURI *uri = nsnull;
-    const char *uriStr = href.GetBuffer();
-    result = service->NewURI(uriStr, nsnull, &uri);
-    if (NS_FAILED(result)) return result;
-
-    result = uri->QueryInterface(nsIURI::GetIID(), (void**)&url);
-    NS_RELEASE(uri);
+    result = NS_NewURI(&url, href);
 #endif // NECKO
     if (NS_OK == result) {
       aPort.SetLength(0);
@@ -575,7 +488,7 @@ LocationImpl::GetPort(nsString& aPort)
       if (-1 != port) {
         aPort.Append(port, 10);
       }
-      NS_IF_RELEASE(url);
+      NS_RELEASE(url);
     }
   }
 
@@ -594,16 +507,7 @@ LocationImpl::SetPort(const nsString& aPort)
 #ifndef NECKO
     result = NS_NewURL(&url, href);
 #else
-    NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &result);
-    if (NS_FAILED(result)) return result;
-
-    nsIURI *uri = nsnull;
-    const char *uriStr = href.GetBuffer();
-    result = service->NewURI(uriStr, nsnull, &uri);
-    if (NS_FAILED(result)) return result;
-
-    result = uri->QueryInterface(nsIURI::GetIID(), (void**)&url);
-    NS_RELEASE(uri);
+    result = NS_NewURI(&url, href);
 #endif // NECKO
     if (NS_OK == result) {
       char *buf = aPort.ToNewCString();
@@ -624,7 +528,7 @@ LocationImpl::SetPort(const nsString& aPort)
 #endif
       SetURL(url);
       delete[] buf;
-      NS_IF_RELEASE(url);      
+      NS_RELEASE(url);      
     }
   }
 
@@ -643,16 +547,7 @@ LocationImpl::GetProtocol(nsString& aProtocol)
 #ifndef NECKO
     result = NS_NewURL(&url, href);
 #else
-    NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &result);
-    if (NS_FAILED(result)) return result;
-
-    nsIURI *uri = nsnull;
-    const char *uriStr = href.GetBuffer();
-    result = service->NewURI(uriStr, nsnull, &uri);
-    if (NS_FAILED(result)) return result;
-
-    result = uri->QueryInterface(nsIURI::GetIID(), (void**)&url);
-    NS_RELEASE(uri);
+    result = NS_NewURI(&url, href);
 #endif // NECKO
     if (NS_OK == result) {
 #ifdef NECKO
@@ -669,7 +564,7 @@ LocationImpl::GetProtocol(nsString& aProtocol)
         nsCRT::free(protocol);
 #endif
       }
-      NS_IF_RELEASE(url);
+      NS_RELEASE(url);
     }
   }
 
@@ -688,16 +583,7 @@ LocationImpl::SetProtocol(const nsString& aProtocol)
 #ifndef NECKO
     result = NS_NewURL(&url, href);
 #else
-    NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &result);
-    if (NS_FAILED(result)) return result;
-
-    nsIURI *uri = nsnull;
-    const char *uriStr = href.GetBuffer();
-    result = service->NewURI(uriStr, nsnull, &uri);
-    if (NS_FAILED(result)) return result;
-
-    result = uri->QueryInterface(nsIURI::GetIID(), (void**)&url);
-    NS_RELEASE(uri);
+    result = NS_NewURI(&url, href);
 #endif // NECKO
     if (NS_OK == result) {
       char *buf = aProtocol.ToNewCString();
@@ -719,32 +605,28 @@ NS_IMETHODIMP
 LocationImpl::GetSearch(nsString& aSearch)
 {
   nsAutoString href;
-  nsIURI *url;
+  nsIURI *uri;
   nsresult result = NS_OK;
 
   result = GetHref(href);
   if (NS_OK == result) {
 #ifndef NECKO
-    result = NS_NewURL(&url, href);
+    result = NS_NewURL(&uri, href);
 #else
-    NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &result);
-    if (NS_FAILED(result)) return result;
-
-    nsIURI *uri = nsnull;
-    const char *uriStr = href.GetBuffer();
-    result = service->NewURI(uriStr, nsnull, &uri);
-    if (NS_FAILED(result)) return result;
-
-    result = uri->QueryInterface(nsIURI::GetIID(), (void**)&url);
-    NS_RELEASE(uri);
+    result = NS_NewURI(&uri, href);
 #endif // NECKO
     if (NS_OK == result) {
 #ifdef NECKO
       char *search;
-      result = url->GetQuery(&search);
+      nsIURL* url;
+      result = uri->QueryInterface(nsIURL::GetIID(), (void**)&url);
+      if (NS_SUCCEEDED(result)) {
+        result = url->GetQuery(&search);
+        NS_RELEASE(url);
+      }
 #else
       const char *search;
-      result = url->GetSearch(&search);
+      result = uri->GetSearch(&search);
 #endif
       if (result == NS_OK && (nsnull != search) && ('\0' != *search)) {
         aSearch.SetString("?");
@@ -756,7 +638,7 @@ LocationImpl::GetSearch(nsString& aSearch)
       else {
         aSearch.SetLength(0);
       }
-      NS_IF_RELEASE(url);
+      NS_RELEASE(uri);
     }
   }
 
@@ -767,35 +649,31 @@ NS_IMETHODIMP
 LocationImpl::SetSearch(const nsString& aSearch)
 {
   nsAutoString href;
-  nsIURI *url;
+  nsIURI *uri;
   nsresult result = NS_OK;
 
   result = GetHref(href);
   if (NS_OK == result) {
 #ifndef NECKO
-    result = NS_NewURL(&url, href);
+    result = NS_NewURL(&uri, href);
 #else
-    NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &result);
-    if (NS_FAILED(result)) return result;
-
-    nsIURI *uri = nsnull;
-    const char *uriStr = href.GetBuffer();
-    result = service->NewURI(uriStr, nsnull, &uri);
-    if (NS_FAILED(result)) return result;
-
-    result = uri->QueryInterface(nsIURI::GetIID(), (void**)&url);
-    NS_RELEASE(uri);
+    result = NS_NewURI(&uri, href);
 #endif // NECKO
     if (NS_OK == result) {
       char *buf = aSearch.ToNewCString();
 #ifdef NECKO
-      url->SetQuery(buf);
+      nsIURL* url;
+      result = uri->QueryInterface(nsIURL::GetIID(), (void**)&url);
+      if (NS_SUCCEEDED(result)) {
+        result = url->SetQuery(buf);
+        NS_RELEASE(url);
+      }
 #else
-      url->SetSearch(buf);
+      result = uri->SetSearch(buf);
 #endif
-      SetURL(url);
+      SetURL(uri);
       delete[] buf;
-      NS_IF_RELEASE(url);      
+      NS_RELEASE(uri);      
     }
   }
 
