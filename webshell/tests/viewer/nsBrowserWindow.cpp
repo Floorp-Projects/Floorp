@@ -115,7 +115,7 @@ static NS_DEFINE_IID(kWalletServiceCID, NS_WALLETSERVICE_CID);
 #define THROBBER_WIDTH 32
 #define THROBBER_HEIGHT 32
 #define THROBBER_AT "resource:/res/throbber/anims%02d.gif"
-#define THROB_NUM 14
+#define THROB_NUM 29
 #else
 #define THROBBER_WIDTH 42
 #define THROBBER_HEIGHT 42
