@@ -156,7 +156,9 @@ static NS_DEFINE_IID(kSoundCID,                   NS_SOUND_CID);
 static NS_DEFINE_CID(kStringBundleServiceCID,     NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_CID(kPlatformCharsetCID,         NS_PLATFORMCHARSET_CID);
 
-static const char kURINC_BookmarksRoot[]          = "NC:BookmarksRoot"; // XXX?
+#define URINC_BOOKMARKS_ROOT_STRING               "NC:BookmarksRoot"
+
+static const char kURINC_BookmarksRoot[]          = URINC_BOOKMARKS_ROOT_STRING; // XXX?
 static const char kURINC_IEFavoritesRoot[]        = "NC:IEFavoritesRoot"; // XXX?
 static const char kURINC_NewBookmarkFolder[]      = "NC:NewBookmarkFolder"; // XXX?
 static const char kURINC_PersonalToolbarFolder[]  = "NC:PersonalToolbarFolder"; // XXX?
@@ -316,6 +318,69 @@ bm_ReleaseGlobals()
 	}
 }
 
+
+class nsSpillableStackBuffer
+{
+protected:
+
+  enum {
+      kStackBufferSize		= 256
+
+  };
+
+public:
+
+  nsSpillableStackBuffer()
+  :	mBufferPtr(mBuffer)
+  , mCurCapacity(kStackBufferSize)
+  {
+  }
+
+  ~nsSpillableStackBuffer()
+  {
+    DeleteBuffer();
+  }
+
+
+  PRBool EnsureCapacity(PRInt32 inCharsCapacity)
+  {
+    if (inCharsCapacity < mCurCapacity)
+      return PR_TRUE;
+    
+    if (inCharsCapacity > kStackBufferSize)
+    {
+      DeleteBuffer();
+      mBufferPtr = (PRUnichar*)nsMemory::Alloc(inCharsCapacity * sizeof(PRUnichar));
+      mCurCapacity = inCharsCapacity;
+      return (mBufferPtr != NULL);
+    }
+    
+    mCurCapacity = kStackBufferSize;
+    return PR_TRUE;
+  }
+                
+  PRUnichar*  GetBuffer()     { return mBufferPtr;    }
+  
+  PRInt32     GetCapacity()   { return mCurCapacity;  }
+
+protected:
+
+  void DeleteBuffer()
+  {
+    if (mBufferPtr != mBuffer)
+    {
+      nsMemory::Free(mBufferPtr);
+      mBufferPtr = mBuffer;
+    }                
+  }
+  
+protected:
+
+  PRUnichar	    *mBufferPtr;
+  PRUnichar	    mBuffer[kStackBufferSize];
+  PRInt32       mCurCapacity;
+
+};
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -615,12 +680,18 @@ BookmarkParser::DecodeBuffer(nsString &line, char *buf, PRUint32 aLength)
 		char		*aBuffer = buf;
 		PRInt32		unicharBufLen = 0;
 		mUnicodeDecoder->GetMaxLength(aBuffer, aLength, &unicharBufLen);
-		PRUnichar	*unichars = new PRUnichar [ unicharBufLen+1 ];
+		
+		nsSpillableStackBuffer    stackBuffer;
+		if (!stackBuffer.EnsureCapacity(unicharBufLen + 1))
+		  return NS_ERROR_OUT_OF_MEMORY;
+		
 		do
 		{
 			PRInt32		srcLength = aLength;
 			PRInt32		unicharLength = unicharBufLen;
-			rv = mUnicodeDecoder->Convert(aBuffer, &srcLength, unichars, &unicharLength);
+			PRUnichar *unichars = stackBuffer.GetBuffer();
+			
+			rv = mUnicodeDecoder->Convert(aBuffer, &srcLength, stackBuffer.GetBuffer(), &unicharLength);
 			unichars[unicharLength]=0;  //add this since the unicode converters can't be trusted to do so.
 
 			// Move the nsParser.cpp 00 -> space hack to here so it won't break UCS2 file
@@ -645,8 +716,7 @@ BookmarkParser::DecodeBuffer(nsString &line, char *buf, PRUint32 aLength)
 				aLength -= srcLength;
 			}
 		} while (NS_FAILED(rv) && (aLength > 0));
-		delete [] unichars;
-		unichars = nsnull;
+
 	}
 	else
 	{
@@ -672,7 +742,7 @@ BookmarkParser::ProcessLine(nsIRDFContainer *container, nsIRDFResource *nodeType
 		{
 			if (description.Length() > 0)
 			{
-				description.AppendWithConversion("\n");
+				description.Append(PRUnichar('\n'));
 			}
 			description += line;
 			return(NS_OK);
@@ -892,12 +962,10 @@ BookmarkParser::CreateAnonymousResource(nsIRDFResource** aResult)
 	if (! gNext) {
 		LL_L2I(gNext, PR_Now());
 	}
-	nsAutoString    uri;
-	uri.AssignWithConversion(kURINC_BookmarksRoot);
-	uri.AppendWithConversion("#$");
+  nsCAutoString    uri(URINC_BOOKMARKS_ROOT_STRING "#$");   // let the compiler concat literals
 	uri.AppendInt(++gNext, 16);
 
-	return gRDF->GetUnicodeResource(uri.get(), aResult);
+	return gRDF->GetResource(uri.get(), aResult);
 }
 
 
@@ -1391,19 +1459,16 @@ BookmarkParser::AddBookmark(nsCOMPtr<nsIRDFContainer> aContainer,
                             PRInt32          aIndex)
 {
 	nsresult	rv;
-	nsAutoString	fullURL;
-	fullURL.AssignWithConversion(aURL);
+	nsCAutoString fullurlC(aURL);
 
 	// hack fix for bug # 21175:
 	// if we don't have a protocol scheme, add "http://" as a default scheme
-	if (fullURL.FindChar(PRUnichar(':')) < 0)
+	if (fullurlC.FindChar(':') < 0)
 	{
-		fullURL.InsertWithConversion("http://", 0);
+		fullurlC.Insert(NS_LITERAL_CSTRING("http://"), 0);
 	}
 
 	nsCOMPtr<nsIRDFResource> bookmark;
-	nsCAutoString fullurlC;
-	fullurlC.AssignWithConversion(fullURL);
 	if (NS_FAILED(rv = gRDF->GetResource(fullurlC.get(), getter_AddRefs(bookmark) )))
 	{
 		NS_ERROR("unable to get bookmark resource");
@@ -1504,11 +1569,8 @@ BookmarkParser::ParseBookmarkSeparator(const nsString &aLine, const nsCOMPtr<nsI
 
 	if (NS_SUCCEEDED(rv = CreateAnonymousResource(getter_AddRefs(separator))))
 	{
-		nsAutoString		defaultSeparatorName;
-		defaultSeparatorName.AssignWithConversion("-----");
-
 		nsCOMPtr<nsIRDFLiteral> nameLiteral;
-		if (NS_SUCCEEDED(rv = gRDF->GetLiteral(defaultSeparatorName.get(), getter_AddRefs(nameLiteral))))
+		if (NS_SUCCEEDED(rv = gRDF->GetLiteral(NS_LITERAL_STRING("-----").get(), getter_AddRefs(nameLiteral))))
 		{
 			if (NS_SUCCEEDED(rv = mDataSource->Assert(separator, kNC_Name, nameLiteral, PR_TRUE)))
 			{
@@ -2289,11 +2351,8 @@ nsBookmarksService::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
 			// update icon?
 			if (schedule.Find(NS_LITERAL_STRING("icon").get(), PR_TRUE, 0) >= 0)
 			{
-				nsAutoString		statusStr;
-				statusStr.AssignWithConversion("new");
-
 				nsCOMPtr<nsIRDFLiteral>	statusLiteral;
-				if (NS_SUCCEEDED(rv = gRDF->GetLiteral(statusStr.get(), getter_AddRefs(statusLiteral))))
+				if (NS_SUCCEEDED(rv = gRDF->GetLiteral(NS_LITERAL_STRING("new").get(), getter_AddRefs(statusLiteral))))
 				{
 					nsCOMPtr<nsIRDFNode>	currentStatusNode;
 					if (NS_SUCCEEDED(rv = mInner->GetTarget(busyResource, kWEB_Status, PR_TRUE,
@@ -2902,13 +2961,13 @@ nsBookmarksService::GetTarget(nsIRDFResource* aSource,
 			}
 
 			nsIRDFLiteral* literal;
-			if (NS_FAILED(rv = gRDF->GetLiteral(NS_ConvertASCIItoUCS2(uri).get(), &literal)))
+			if (NS_FAILED(rv = gRDF->GetLiteral(ncURI.get(), &literal)))
 			{
 				NS_ERROR("unable to construct literal for URL");
 				return rv;
 			}
 
-			*aTarget = (nsIRDFNode*)literal;
+			*aTarget = NS_REINTERPRET_CAST(nsIRDFNode*, literal);    // it was AddReffed by GetLiteral()
 			return NS_OK;
 		}
 	}
@@ -4350,13 +4409,12 @@ nsBookmarksService::WriteBookmarksContainer(nsIRDFDataSource *ds, nsOutputFileSt
 		NS_GET_IID(nsIRDFContainer), getter_AddRefs(container));
 	if (NS_FAILED(rv)) return rv;
 
-	nsAutoString	indentationString;
+	nsCAutoString	indentation;
 	  // STRING USE WARNING: converting in a loop.  Probably not a good idea
-	for (PRInt32 loop=0; loop<level; loop++)	indentationString.AppendWithConversion("    ");
-	char		*indentation = ToNewCString(indentationString);
-	if (nsnull == indentation)	return(NS_ERROR_OUT_OF_MEMORY);
+	for (PRInt32 loop=0; loop<level; loop++)
+		indentation.Append(NS_LITERAL_CSTRING("    "));
 
-	strm << indentation;
+	strm << indentation.get();
 	strm << "<DL><p>\n";
 
 	rv = container->Init(ds, parent);
@@ -4390,7 +4448,7 @@ nsBookmarksService::WriteBookmarksContainer(nsIRDFDataSource *ds, nsOutputFileSt
 
 				nsCOMPtr<nsIRDFNode>	nameNode;
 				nsAutoString		nameString;
-				char			*name = nsnull;
+				nsCAutoString		name;
 				rv = ds->GetTarget(child, kNC_Name, PR_TRUE, getter_AddRefs(nameNode));
 				if (NS_SUCCEEDED(rv) && nameNode)
 				{
@@ -4401,12 +4459,12 @@ nsBookmarksService::WriteBookmarksContainer(nsIRDFDataSource *ds, nsOutputFileSt
 						if (NS_SUCCEEDED(rv = nameLiteral->GetValueConst(&title)))
 						{
 							nameString = title;
-							name = ToNewUTF8String(nameString);
+							name = NS_ConvertUCS2toUTF8(nameString);
 						}
 					}
 				}
         
-				strm << indentation;
+				strm << indentation.get();
 				strm << "    ";
 				if (isContainer == PR_TRUE)
 				{
@@ -4446,7 +4504,8 @@ nsBookmarksService::WriteBookmarksContainer(nsIRDFDataSource *ds, nsOutputFileSt
 					strm << ">";
 
 					// output title
-					if (name)	strm << name;
+					if (!name.IsEmpty())
+						strm << name.get();
 					strm << "</H3>\n";
 
 					// output description (if one exists)
@@ -4521,11 +4580,11 @@ nsBookmarksService::WriteBookmarksContainer(nsIRDFDataSource *ds, nsOutputFileSt
 
 							strm << ">";
 							// output title
-							if (name)
+							if (!name.IsEmpty())
 							{
 								// Note: we escape the title due to security issues;
 								//       see bug # 13197 for details
-								char *escapedAttrib = nsEscapeHTML(name);
+								char *escapedAttrib = nsEscapeHTML(name.get());
 								if (escapedAttrib)
 								{
 									strm << escapedAttrib;
@@ -4541,12 +4600,6 @@ nsBookmarksService::WriteBookmarksContainer(nsIRDFDataSource *ds, nsOutputFileSt
 					}
 				}
 
-				if (nsnull != name)
-				{
-					nsCRT::free(name);
-					name = nsnull;
-				}
-					
 				if (NS_FAILED(rv))	break;
 			}
 		}
@@ -4555,10 +4608,9 @@ nsBookmarksService::WriteBookmarksContainer(nsIRDFDataSource *ds, nsOutputFileSt
 		parentArray->RemoveElementAt(0);
 	}
 
-	strm << indentation;
+	strm << indentation.get();
 	strm << "</DL><p>\n";
 
-	nsCRT::free(indentation);
 	return(rv);
 }
 
