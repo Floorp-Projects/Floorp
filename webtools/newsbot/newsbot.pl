@@ -217,17 +217,18 @@ sub printarticle() {
 my ($artref) = @_;
 my %article = %{$artref};
       
+print "\n<P>\n";
 print "<A NAME=\"" . %article->{'Message-ID'} . "\"></A>\n";
 print "<TABLE border=0 width=100%><TR><TD><B><FONT SIZE=+1>\n";
 print %article->{'Subject'} ."\n";
 print "</B></FONT>\n";
 print "</TD></TR><TR><TD>\n";
 print %article->{'Summary'};
-print "</TD></TR><TR ALIGN=RIGHT><TD>\n";
+print "</TD></TR><TR><TD ALIGN="right">\n";
 print "<FONT SIZE=-1>\nPosted: " . %article->{'Date'} ."\n</FONT>";
 print "<BR>";
 print %article->{'Newsgroups'} . "\n";
-print "<BR>";
+print "<BR>\n";
 print "<A HREF=\"http://www.deja.com/[LB=http://www.mozilla.org/]/msgid.xp?MID=&lt;" . %article->{'Message-ID'} . "&gt;\">\n";
 print "View Article</A> -\n";
 print "<A HREF=\"http://www.deja.com/[LB=http://www.mozilla.org/]/thread/%3c" . %article->{'Message-ID'} ."%3e%231/1\">\n";
