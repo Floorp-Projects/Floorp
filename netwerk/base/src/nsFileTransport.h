@@ -22,6 +22,7 @@
 #include "nsITransport.h"
 #include "nsIThread.h"
 #include "plevent.h"
+#include "prmon.h"
 
 class nsFileTransportService;
 class nsIBaseStream;
@@ -87,6 +88,9 @@ protected:
     nsIInputStream*             mBufferStream;
     nsresult                    mStatus;
     PRUint32                    mSourceOffset;
+
+private:
+    PRMonitor*                  mMonitor;
 };
 
 #define NS_FILE_TRANSPORT_BUFFER_SIZE   (4*1024)
