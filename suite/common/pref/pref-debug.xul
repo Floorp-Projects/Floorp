@@ -66,6 +66,15 @@
 				</html:label>
 			</html:div>  
           </box> 
+
+			<html:div>
+				<html:input type="checkbox" id="pref:0:bool:nglayout.widget.gfxscrollbars" />
+				<html:label for="pref:0:bool:nglayout.widget.gfxscrollbars" accesskey="n" tabindex="0">
+				&gfxScrollbars.label;
+				</html:label>
+			</html:div>
+
+
 		</html:fieldset>
 	</box>
 </html:form> 
