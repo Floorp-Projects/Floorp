@@ -21,6 +21,10 @@
  * Alec Flett <alecf@netscape.com>
  */
 
+var elements = [];
+var numItems;
+var list;
+
 function selectDialogOnLoad() {
   dump("selectDialogOnLoad \n");
   doSetOKCancel( commonDialogOnOK, commonDialogOnCancel );
@@ -64,19 +68,15 @@ function selectDialogOnLoad() {
   dump("title: "+ windowTitle +"\n");
   window.title = windowTitle;
 
-  listBox = document.getElementById("list");
-  var numItems = param.GetInt( 2 )
-  var firstItem, nextItem;
+  list = document.getElementById("list");
+  numItems = param.GetInt( 2 )
 
   for ( i = 2; i <= numItems+1; i++ ) {
     var newString = param.GetString( i );
     dump("setting string "+newString+"\n");
-    nextItem = AppendStringToTreelist(listBox, newString);
-    if (i == 2) {
-      firstItem = nextItem;
-    }
+    elements[i-2] = AppendStringToTreelist(list, newString);
   }
-  listBox.selectItem(firstItem);
+  list.selectItem(elements[0]);
 
   // resize the window to the content
   window.sizeToContent();
@@ -89,14 +89,24 @@ function selectDialogOnLoad() {
 
 function commonDialogOnOK() {
   dump("commonDialogOnOK \n");
-  param.SetInt(2, listBox.selectedIndex );
+  for (var i=0; i<numItems; i++) {
+    if (elements[i] == list.selectedItems[0]) {
+      param.SetInt(2, i );
+      break;
+    }
+  }
   param.SetInt(0, 0 );
   return true;
 }
 
 function commonDialogOnCancel() {
   dump("commonDialogOnCancel \n");
-  param.SetInt(2, listBox.selectedIndex );
+  for (var i=0; i<numItems; i++) {
+    if (elements[i]) {
+      param.SetInt(2, i );
+      break;
+    }
+  }
   param.SetInt(0, 1 );
   return true;
 }
