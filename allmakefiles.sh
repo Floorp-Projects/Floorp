@@ -617,6 +617,8 @@ xpcom/tests/dynamic/Makefile
 xpcom/tests/services/Makefile
 "
 
+MAKEFILES_string="$MAKEFILES_xpcom"
+
 MAKEFILES_xpinstall="
 xpinstall/Makefile
 xpinstall/packager/Makefile
@@ -1057,6 +1059,8 @@ else
 		;;
 	    psm) add_makefiles "$MAKEFILES_dbm $MAKEFILES_xpcom $MAKEFILES_security $MAKEFILES_js $MAKEFILES_psm_glue"
 		;;
+            string) add_makefiles "$MAKEFILES_string"
+                ;;
 	    transformiix) add_makefiles "$MAKEFILES_transformiix"
 		;;
 	    access-builtin) add_makefiles "$MAKEFILES_access_builtin"
