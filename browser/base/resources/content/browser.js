@@ -1494,28 +1494,11 @@ function PageProxyDragGesture(aEvent)
   return false;
 }
 
-function updateComponentBarBroadcaster()
-{ 
-  var compBarBroadcaster = document.getElementById('cmd_viewcomponentbar');
-  var taskBarBroadcaster = document.getElementById('cmd_viewtaskbar');
-  var compBar = document.getElementById('component-bar');
-  if (taskBarBroadcaster.getAttribute('checked') == 'true') {
-    compBarBroadcaster.removeAttribute('disabled');
-    if (compBar.getAttribute('hidden') != 'true')
-      compBarBroadcaster.setAttribute('checked', 'true');
-  }
-  else {
-    compBarBroadcaster.setAttribute('disabled', 'true');
-    compBarBroadcaster.removeAttribute('checked');
-  }
-}
-
 function updateToolbarStates(toolbarMenuElt)
 {
-  if (gHaveUpdatedToolbarState) {
-    updateComponentBarBroadcaster();
+  if (gHaveUpdatedToolbarState)
     return;
-  }
+
   var mainWindow = document.getElementById("main-window");
   if (mainWindow.hasAttribute("chromehidden")) {
     gHaveUpdatedToolbarState = true;
@@ -1534,7 +1517,6 @@ function updateToolbarStates(toolbarMenuElt)
     }
     mainWindow.removeAttribute("chromehidden");
   }
-  updateComponentBarBroadcaster();
 }
 
 // Fill in tooltips for personal toolbar
@@ -1577,5 +1559,11 @@ function BrowserFullScreen()
 function onFullScreen()
 {
   FullScreen.toggle();
+}
+
+function displayPageInfo()
+{
+  window.openDialog("chrome://navigator/content/pageInfo.xul", "_blank",
+                    "dialog=no", null, "securityTab");
 }
 
