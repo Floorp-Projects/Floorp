@@ -695,8 +695,10 @@ safe_popen(char *cmd)
 	if (p[1] != 1) dup2(p[1], 1);
 	if (p[1] != 2) dup2(p[1], 2);
 	close(0);
-	for (fd = PR_MIN(65536,getdtablesize()); --fd > 2; close(fd))
-	    ;
+        {
+            int ndesc = getdtablesize();
+            for (fd = PR_MIN(65536, ndesc); --fd > 2; close(fd));
+        }
 
 	/* clean up environment in the child process */
 	putenv("PATH=/bin:/usr/bin:/sbin:/usr/sbin:/etc:/usr/etc");
