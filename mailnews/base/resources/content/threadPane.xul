@@ -121,7 +121,7 @@ Rights Reserved.
 		<treecell class="treecell-header treecell-inset-header" value="&orderReceivedColumn.label;" onclick="return top.MsgSortByOrderReceived();"/>
 		<treecell class="treecell-header treecell-inset-header" allowevents="true" id="popupCell" tooltip="aTooltip" tooltiptext="&columnChooser.tooltip;">
 		  <menu>
-		    <button src="chrome://global/skin/opentwisty.gif"/>
+		    <button class="plain" src="chrome://global/skin/opentwisty.gif"/>
 			<menupopup popupanchor="bottomright" 
 			           popupalign="topright"
 					   oncreate="BuildTreePopup(document.getElementById('theThreadColumns'), document.getElementById('headRow'), this,
