@@ -21,20 +21,22 @@
 
   Contributor(s):
   Peter Van der Beken, peter.vanderbeken@pandora.be
-     -- original author.
+     - original author.
 
 -->
 
 <!DOCTYPE window>
 
+<!--
 <?xml-stylesheet href="chrome://Transformiix/skin" type="text/css"?>
+-->
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 
-<window xmlns:html="http://www.w3.org/TR/REC-html40"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         align="vertical" onload="onLoadTransformiix();">
 
-<html:script src="chrome://Transformiix/content/transformiix.js"/>
+<script language="javascript" src="chrome://Transformiix/content/transformiix.js"/>
+<script language="javascript" src="resource:/res/samples/DumpDOM.js"/>
 
 <box id="tool-box" flex="1" align="horizontal">
 </box>
@@ -43,7 +45,7 @@
      <iframe id="xml-source" class="doc-container" align="horizontal" src="about:blank" flex="1"/>
     <iframe id="xsl-source" class="doc-container" align="horizontal" src="about:blank" flex="1"/>
   </box>
-  <html:iframe id="result-doc" class="doc-container" align="vertical" src="about:blank" flex="50"/>
+  <iframe id="result-doc" class="doc-container" align="vertical" src="about:blank" flex="50"/>
 </box>
 
 </window>

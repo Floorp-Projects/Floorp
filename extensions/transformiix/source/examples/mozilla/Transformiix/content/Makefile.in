@@ -19,13 +19,21 @@
 #	Axel Hecht <axel@pike.org>
 # 
 
-DEPTH           = ..
+DEPTH           = ../../../../../../..
 topsrcdir       = @top_srcdir@
 srcdir          = @srcdir@
 VPATH           = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS            = junksss
+CHROME_DIR=packages/transformiix
+CHROME_CONTENT_DIR=transformiix/content
+
+CHROME_CONTENT = \
+                transformiix.xul \
+                transformiix.js \
+		simple.xml \
+		simplexsl.xml \
+                $(NULL)
 
 include $(topsrcdir)/config/rules.mk
