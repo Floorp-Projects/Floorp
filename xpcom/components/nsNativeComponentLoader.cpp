@@ -302,35 +302,25 @@ nsNativeComponentLoader::RegisterComponentsInDir(PRInt32 when,
     while (more == PR_TRUE)
     {
         rv = dirIterator->GetCurrentSpec(&dirEntry);
-        if (NS_FAILED(rv)) return rv;
-
-        rv = dirEntry->IsDirectory(&isDir);
-        if (NS_FAILED(rv)) return rv;
-        if (isDir == PR_TRUE)
+        if (NS_SUCCEEDED(rv))
         {
-            // This is a directory. Grovel for components into the directory.
-            rv = RegisterComponentsInDir(when, dirEntry);
+            rv = dirEntry->IsDirectory(&isDir);
+            if (NS_SUCCEEDED(rv))
+            {
+                if (isDir == PR_TRUE)
+                {
+                    // This is a directory. Grovel for components into the directory.
+                    rv = RegisterComponentsInDir(when, dirEntry);
+                }
+                else
+                {
+                    PRBool registered;
+                    // This is a file. Try to register it.
+                    rv = AutoRegisterComponent(when, dirEntry, &registered);
+                }
+            }
+            NS_RELEASE(dirEntry);
         }
-        else
-        {
-            PRBool registered;
-            // This is a file. Try to register it.
-            rv = AutoRegisterComponent(when, dirEntry, &registered);
-        }
-        if (NS_FAILED(rv))
-        {
-            // This means either of AutoRegisterComponent or
-            // SyncComponentsInDir failed. It could be because
-            // the file isn't a component like initpref.js
-            // So dont break on these errors.
-                
-            // Update: actually, we return NS_OK for the wrong file
-            // types, but we should never fail hard because just one
-            // component didn't work.
-        }
-                    
-        NS_RELEASE(dirEntry);
-        
         rv = dirIterator->Next();
         if (NS_FAILED(rv)) return rv;
         rv = dirIterator->Exists(&more);
