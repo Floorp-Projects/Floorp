@@ -463,17 +463,6 @@ P12U_InitSlot(PK11SlotInfo *slot, secuPWData *slotPw)
     return SECSuccess;
 }
 
-/* !!! "kinda gross," said Tori. */
-static void
-p12u_EnableAllCiphers()
-{
-    SEC_PKCS12EnableCipher(PKCS12_RC4_40, 1);
-    SEC_PKCS12EnableCipher(PKCS12_RC4_128, 1);
-    SEC_PKCS12EnableCipher(PKCS12_RC2_CBC_40, 1);
-    SEC_PKCS12EnableCipher(PKCS12_RC2_CBC_128, 1);
-    SEC_PKCS12EnableCipher(PKCS12_DES_56, 1);
-    SEC_PKCS12EnableCipher(PKCS12_DES_EDE3_168, 1);
-}
 /*
  * given a filename for pkcs12 file, imports certs and keys
  *
@@ -721,7 +710,7 @@ P12U_ExportPKCS12Object(char *nn, char *outfile,
     }
 
     keySafe = SEC_PKCS12CreateUnencryptedSafe(p12ecx);
-    if(!SEC_PKCS12IsEncryptionAllowed() || PK11_IsFIPS()) {
+    if(/*!SEC_PKCS12IsEncryptionAllowed() || */ PK11_IsFIPS()) {
 	certSafe = keySafe;
     } else {
 	certSafe = SEC_PKCS12CreatePasswordPrivSafe(p12ecx, pwitem,
@@ -800,38 +789,12 @@ P12U_Init(char *dir)
     PR_Init(PR_SYSTEM_THREAD, PR_PRIORITY_NORMAL, 1);
     NSS_InitReadWrite(dir);
 
-    /* enable all ciphers */
-    p12u_EnableAllCiphers();
-
     /* setup unicode callback functions */
     PORT_SetUCS2_ASCIIConversionFunction(p12u_ucs2_ascii_conversion_function);
     PORT_SetUCS4_UTF8ConversionFunction(sec_port_ucs4_utf8_conversion_function);
     PORT_SetUCS2_UTF8ConversionFunction(sec_port_ucs2_utf8_conversion_function);
 
     return 0;
-}
-
-/*
- * Shutdown the security library.
- *
- * Currently closes the certificate and key databases.
- * XXX this should be handled elsewhere (NSS_Shutdown?)
- */
-void
-P12U_Shutdown(void)
-{
-    CERTCertDBHandle *cdb_handle;
-    SECKEYKeyDBHandle *kdb_handle;
-
-    cdb_handle = CERT_GetDefaultCertDB();
-    if (cdb_handle != NULL) {
-	CERT_ClosePermCertDB(cdb_handle);
-    }
-
-    kdb_handle = SECKEY_GetDefaultKeyDB();
-    if (kdb_handle != NULL) {
-	SECKEY_CloseKeyDB(kdb_handle);
-    }
 }
 
 enum {
