@@ -42,6 +42,7 @@
 #include <MacWindows.h>
 #include <ToolUtils.h>
 #include <LowMem.h>
+#include <PP_Types.h>
 
 #if DEBUG
 #include <SIOUX.h>
@@ -61,6 +62,33 @@ bool IsUserWindow(WindowPtr);
 inline bool IsUserWindow(WindowPtr wp)
 {
 	return wp && ((::GetWindowKind(wp) & kRaptorWindowKindBit) != 0);
+}
+
+//=================================================================
+
+static long ConvertOSMenuResultToPPMenuResult(long menuResult);
+static long ConvertOSMenuResultToPPMenuResult(long menuResult)
+{
+	// Convert MacOS menu item to PowerPlant menu item because
+	// in our sample app, we use Constructor for resource editing
+	long menuID = HiWord(menuResult);
+	long menuItem = LoWord(menuResult);
+	Int16**	theMcmdH = (Int16**) ::GetResource('Mcmd', menuID);
+	if (theMcmdH != nil)
+	{
+		if (::GetHandleSize((Handle)theMcmdH) > 0)
+		{
+			Int16 numCommands = (*theMcmdH)[0];
+			if (numCommands >= menuItem)
+			{
+				CommandT* theCommandNums = (CommandT*)(&(*theMcmdH)[1]);
+				menuItem = theCommandNums[menuItem-1];
+			}
+		}
+		::ReleaseResource((Handle) theMcmdH);
+	}
+	menuResult = (menuID << 16) + menuItem;
+	return (menuResult);
 }
 
 
@@ -218,7 +246,10 @@ void nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
 			{
 			  long menuResult = ::MenuSelect(anEvent.where);
 			  if (HiWord(menuResult) != 0)
+			  {
+				    menuResult = ConvertOSMenuResultToPPMenuResult(menuResult);
 			      DoMenu(anEvent, menuResult);
+			  }
 				break;
 			}
 
@@ -376,7 +407,10 @@ void  nsMacMessagePump::DoKey(EventRecord &anEvent)
 		// do a menu key command
 		long menuResult = ::MenuKey(theChar);
 		if (HiWord(menuResult) != 0)
+		{
+	    menuResult = ConvertOSMenuResultToPPMenuResult(menuResult);
 			DoMenu(anEvent, menuResult);
+		}
 	}
 	else
 	{
