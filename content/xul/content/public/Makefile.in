@@ -44,10 +44,12 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xul
 
+ifdef MOZ_XUL
 EXPORTS		= \
                 nsIXULPopupListener.h \
 		nsIXULContent.h \
 		$(NULL)
+endif
 
 include $(topsrcdir)/config/rules.mk
 
