@@ -44,6 +44,13 @@
 
 #ifdef MOZ_ACTIVEX_PLUGIN_LIVECONNECT
 #include "_gen/java_lang_String.h"
+#include "_gen/java_lang_Boolean.h"
+#include "_gen/java_lang_Number.h"
+#include "_gen/java_lang_Integer.h"
+#include "_gen/java_lang_Long.h"
+//#include "_gen/java_lang_Double.h"
+//#include "_gen/java_lang_Float.h"
+#include "_gen/java_lang_Character.h"
 #include "_gen/netscape_plugin_Plugin.h"
 #include "_gen/MozAxPlugin.h"
 #endif
@@ -100,6 +107,13 @@ void NPP_Shutdown(void)
         unuse_MozAxPlugin(env);
         unuse_netscape_plugin_Plugin(env);
 //        unuse_java_lang_String(env);
+        unuse_java_lang_Number(env);
+        unuse_java_lang_Boolean(env);
+        unuse_java_lang_Integer(env);
+        unuse_java_lang_Long(env);
+//        unuse_java_lang_Float(env);
+//        unuse_java_lang_Double(env);
+        unuse_java_lang_Character(env);
 	}
 #endif
 
@@ -117,9 +131,19 @@ jref NPP_GetJavaClass(void)
 #ifdef MOZ_ACTIVEX_PLUGIN_LIVECONNECT
     JRIEnv* env = NPN_GetJavaEnv();
     if (env) {
-//        use_java_lang_String(env);
+        // Note: The order of these is important (for some unknown reason)
+        //       and was determined through trial and error. Do not rearrange
+        //       without testing the new order!
         use_netscape_plugin_Plugin(env);
         jref myClass = (jref) use_MozAxPlugin(env);
+//        use_java_lang_String(env);
+        use_java_lang_Number(env);
+        use_java_lang_Boolean(env);
+        use_java_lang_Integer(env);
+        use_java_lang_Long(env);
+//        use_java_lang_Float(env);
+//        use_java_lang_Double(env);
+        use_java_lang_Character(env);
 	    return myClass;
     }
 #endif
@@ -1123,11 +1147,71 @@ _GetIDispatchFromJRI(JRIEnv *env, struct MozAxPlugin* self, IDispatch **pdisp)
     return S_OK;
 }
 
+HRESULT
+_VariantToJRIObject(JRIEnv *env, VARIANT *v, jref **o)
+{
+    // TODO make a JRI object from a variant
+    return E_NOTIMPL;
+}
 
 HRESULT
-_JRIObjectToVariant(java_lang_Object *o, VARIANT *v)
+_JRIObjectToVariant(JRIEnv *env, java_lang_Object *o, VARIANT *v)
 {
-    // TODO
+    VariantInit(v);
+    if (JRI_IsInstanceOf(env, (jref) o, class_java_lang_String(env)))
+    {
+        USES_CONVERSION;
+        const char *value = JRI_GetStringUTFChars(env, reinterpret_cast<java_lang_String *>(o));
+        v->vt = VT_BSTR;
+        v->bstrVal = SysAllocString(A2COLE(value));
+    }
+    else if (JRI_IsInstanceOf(env, (jref) o, class_java_lang_Boolean(env)))
+    {
+        jbool value = java_lang_Boolean_booleanValue(env, reinterpret_cast<java_lang_Boolean *>(o));
+        v->vt = VT_BOOL;
+        v->boolVal = value == JRITrue ? VARIANT_TRUE : VARIANT_FALSE;
+    }
+    else if (JRI_IsInstanceOf(env, o, class_java_lang_Integer(env)))
+    {
+        jint value = java_lang_Integer_intValue(env, reinterpret_cast<java_lang_Integer *>(o));
+        v->vt = VT_I4;
+        v->lVal = value;
+    }
+    else if (JRI_IsInstanceOf(env, o, class_java_lang_Long(env)))
+    {
+        jlong value = java_lang_Long_longValue(env, reinterpret_cast<java_lang_Long *>(o));
+        v->vt = VT_I4;
+        v->lVal = value;
+    }
+/*    else if (JRI_IsInstanceOf(env, o, class_java_lang_Double(env)))
+    {
+        jdouble  value = java_lang_Double_doubleValue(env, reinterpret_cast<java_lang_Double *>(o));
+        v->vt = VT_R8;
+        v->dblVal = value;
+    }
+    else if (JRI_IsInstanceOf(env, o, class_java_lang_Float(env)))
+    {
+        jfloat value = java_lang_Float_floatValue(env, reinterpret_cast<java_lang_Float *>(o));
+        v->vt = VT_UI1;
+        v->fltVal = value;
+    } */
+    else if (JRI_IsInstanceOf(env, o, class_java_lang_Character(env)))
+    {
+        jchar value = java_lang_Character_charValue(env, reinterpret_cast<java_lang_Character *>(o));
+        v->vt = VT_UI1;
+        v->bVal = value;
+    }
+    else if (JRI_IsInstanceOf(env, o, class_java_lang_Number(env)))
+    {
+        jlong value = java_lang_Number_longValue(env, reinterpret_cast<java_lang_Number *>(o));
+        v->vt = VT_I4;
+        v->lVal = value;
+    }
+    else
+    {
+        // TODO dump diagnostic error here
+        return E_FAIL;
+    }
     return S_OK;
 }
 
@@ -1146,25 +1230,40 @@ _InvokeFromJRI(JRIEnv *env, struct MozAxPlugin* self, struct java_lang_String *f
         return NULL;
     }
 
+    _variant_t *vargs = new _variant_t[nargs];
+    for (int i = 0; i < nargs; i++)
+    {
+        if (FAILED(_JRIObjectToVariant(env, args[i], &vargs[i])))
+        {
+            delete []vargs;
+            // TODO throw JRI exception
+            return NULL;
+        }
+    }
+
     USES_CONVERSION;
     OLECHAR FAR* szMember = A2OLE(funcName);
 	hr = disp->GetIDsOfNames(IID_NULL, &szMember, 1, LOCALE_USER_DEFAULT, &dispid);
     if (FAILED(hr))
     { 
+        // TODO throw JRI exception
         return NULL; 
     }
 
-    DISPPARAMS dispparamsNoArgs = {NULL, NULL, 0, 0};
+    DISPPARAMS dispparams = {NULL, NULL, 0, 0};
+    dispparams.rgvarg = vargs;
+    dispparams.cArgs = nargs;
 
     hr = disp->Invoke(
         dispid,
         IID_NULL,
         LOCALE_USER_DEFAULT,
         DISPATCH_METHOD,
-        &dispparamsNoArgs, NULL, NULL, NULL);
+        &dispparams, NULL, NULL, NULL);
     
     if (FAILED(hr))
     { 
+        // TODO throw JRI exception
         return NULL; 
     }
 
@@ -1297,13 +1396,6 @@ extern "C" JRI_PUBLIC_API(void)
 native_MozAxPlugin_xsetProperty2(JRIEnv* env, struct MozAxPlugin* self, struct java_lang_String *a, struct java_lang_Object *b)
 
 {
-    // TODO
-}
-
-/*** private native xsetProperty1 (Ljava/lang/String;Ljava/lang/String;)V ***/
-extern "C" JRI_PUBLIC_API(void)
-native_MozAxPlugin_xsetProperty1(JRIEnv* env, struct MozAxPlugin* self, struct java_lang_String *a, struct java_lang_String *b)
-{
     HRESULT hr;
     DISPID dispid;
     VARIANT VarResult;
@@ -1322,10 +1414,13 @@ native_MozAxPlugin_xsetProperty1(JRIEnv* env, struct MozAxPlugin* self, struct j
         return;
     }
 
-    VARIANT *pvars = new VARIANT[1];
-    VariantInit(&pvars[0]);
-    pvars->vt = VT_BSTR;
-    pvars->bstrVal = A2OLE(JRI_GetStringUTFChars(env, b));
+    _variant_t *pvars = new _variant_t[1];
+    if (FAILED(_JRIObjectToVariant(env, b, &pvars[0])))
+    {
+        delete []pvars;
+        // TODO throw JRI exception
+        return;
+    }
 
     DISPID dispIdPut = DISPID_PROPERTYPUT;
 
@@ -1346,8 +1441,18 @@ native_MozAxPlugin_xsetProperty1(JRIEnv* env, struct MozAxPlugin* self, struct j
     
     if (FAILED(hr))
     {
+        // TODO throw JRI exception
         return;
     }
 }
+
+/*** private native xsetProperty1 (Ljava/lang/String;Ljava/lang/String;)V ***/
+extern "C" JRI_PUBLIC_API(void)
+native_MozAxPlugin_xsetProperty1(JRIEnv* env, struct MozAxPlugin* self, struct java_lang_String *a, struct java_lang_String *b)
+{
+    native_MozAxPlugin_xsetProperty2(env, self, a, reinterpret_cast<java_lang_Object *>(b));
+}
+
+
 
 #endif

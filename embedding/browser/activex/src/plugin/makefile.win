@@ -49,17 +49,20 @@ MOZ_ACTIVEX_PLUGIN_SUPPORT = 1
 
 # MOZ_ACTIVEX_PLUGIN_LIVECONNECT = 1
 
-# Specify where the PluginSDK, Java compiler, header file
-# generator and classes live.
+# Settings that specify where the PluginSDK, Java compiler (javac or oldjavac),
+# Java header file generator (javah) and classes live.
 #
 # You need the Netscape PluginSDK:
 #
 #   http://home.netscape.com/comprod/development_partners/plugin_api/index.html
 #
-# You also need a JDK with an oldstyle java compiler. Anything from 1.3 downwards
-# should do. See here for various JDK releases:
+# You also need a JDK with the old java compiler. Anything from 1.3
+# downwards should do. See here for various JDK releases:
 #
 #   http://java.sun.com/products/archive/index.html
+#
+# You should use the javah found in the plugin SDK because this generates
+# the JRI stubs.
 
 !ifdef MOZ_ACTIVEX_PLUGIN_LIVECONNECT
 MOZ_PLUGINSDK = C:\m\PluginSDK3
@@ -70,14 +73,18 @@ JAVACLASSES = $(MOZ_PLUGINSDK)\classes\java_30.zip
 CLASSPATH = $(JAVACLASSES);.
 !endif
 
+
 ############
 # XPConnect settings
 
 # MOZ_ACTIVEX_PLUGIN_XPCONNECT = 1
 
-
 # Uncomment these if you wish the plugin to support LiveConnect (Netscape4.x)
 # or XPConnect (Netscape 6.x/Mozilla) for scripting purposes.
+
+
+############
+# Other settings
 
 # Path to the Mozilla ActiveX control (some files are copied from there)
 MOZCTLSRC=../control
@@ -175,22 +182,64 @@ $(DEFFILE) : mkctldef.bat
     $(JAVAH) -classpath $(CLASSPATH) -jri -d _gen MozAxPlugin
     $(JAVAH) -classpath $(CLASSPATH) -jri -stubs -d _stubs MozAxPlugin
 
-.\_gen\java_lang_Object.h : $(JAVACLASSES)
-    $(JAVAH) -classpath $(CLASSPATH) -jri -d _gen java.lang.Object
-
+.\_gen\java_lang_Object.h \
 .\_stubs\java_lang_Object.c : $(JAVACLASSES)
+    $(JAVAH) -classpath $(CLASSPATH) -jri -d _gen java.lang.Object
     $(JAVAH) -classpath $(CLASSPATH) -jri -stubs -d _stubs java.lang.Object
 
-.\_gen\java_lang_String.h : $(JAVACLASSES)
-    $(JAVAH) -classpath $(CLASSPATH) -jri -d _gen java.lang.String
-
+.\_gen\java_lang_String.h \
 .\_stubs\java_lang_String.c : $(JAVACLASSES)
+    $(JAVAH) -classpath $(CLASSPATH) -jri -d _gen java.lang.String
     $(JAVAH) -classpath $(CLASSPATH) -jri -stubs -d _stubs java.lang.String
 
-.\_gen\netscape_plugin_Plugin.h : $(JAVACLASSES)
-    $(JAVAH) -classpath $(CLASSPATH) -jri -d _gen netscape.plugin.Plugin
+.\_gen\java_lang_Boolean.h \
+.\_stubs\java_lang_Boolean.c : $(JAVACLASSES)
+    $(JAVAH) -classpath $(CLASSPATH) -jri -d _gen java.lang.Boolean
+    $(JAVAH) -classpath $(CLASSPATH) -jri -stubs -d _stubs java.lang.Boolean
 
+.\_gen\java_lang_Number.h \
+.\_stubs\java_lang_Number.c : $(JAVACLASSES)
+    $(JAVAH) -classpath $(CLASSPATH) -jri -d _gen java.lang.Number
+    $(JAVAH) -classpath $(CLASSPATH) -jri -stubs -d _stubs java.lang.Number
+
+.\_gen\java_lang_Integer.h \
+.\_stubs\java_lang_Integer.c : $(JAVACLASSES)
+    $(JAVAH) -classpath $(CLASSPATH) -jri -d _gen java.lang.Integer
+    $(JAVAH) -classpath $(CLASSPATH) -jri -stubs -d _stubs java.lang.Integer
+
+.\_gen\java_lang_Short.h \
+.\_stubs\java_lang_Short.c : $(JAVACLASSES)
+    $(JAVAH) -classpath $(CLASSPATH) -jri -d _gen java.lang.Short
+    $(JAVAH) -classpath $(CLASSPATH) -jri -stubs -d _stubs java.lang.Short
+
+.\_gen\java_lang_Long.h \
+.\_stubs\java_lang_Long.c : $(JAVACLASSES)
+    $(JAVAH) -classpath $(CLASSPATH) -jri -d _gen java.lang.Long
+    $(JAVAH) -classpath $(CLASSPATH) -jri -stubs -d _stubs java.lang.Long
+
+.\_gen\java_lang_Double.h \
+.\_stubs\java_lang_Double.c : $(JAVACLASSES)
+    $(JAVAH) -classpath $(CLASSPATH) -jri -d _gen java.lang.Double
+    $(JAVAH) -classpath $(CLASSPATH) -jri -stubs -d _stubs java.lang.Double
+
+.\_gen\java_lang_Float.h \
+.\_stubs\java_lang_Float.c : $(JAVACLASSES)
+    $(JAVAH) -classpath $(CLASSPATH) -jri -d _gen java.lang.Float
+    $(JAVAH) -classpath $(CLASSPATH) -jri -stubs -d _stubs java.lang.Float
+
+.\_gen\java_lang_Byte.h \
+.\_stubs\java_lang_Byte.c : $(JAVACLASSES)
+    $(JAVAH) -classpath $(CLASSPATH) -jri -d _gen java.lang.Byte
+    $(JAVAH) -classpath $(CLASSPATH) -jri -stubs -d _stubs java.lang.Byte
+
+.\_gen\java_lang_Character.h \
+.\_stubs\java_lang_Character.c : $(JAVACLASSES)
+    $(JAVAH) -classpath $(CLASSPATH) -jri -d _gen java.lang.Character
+    $(JAVAH) -classpath $(CLASSPATH) -jri -stubs -d _stubs java.lang.Character
+
+.\_gen\netscape_plugin_Plugin.h \
 .\_stubs\netscape_plugin_Plugin.c : $(JAVACLASSES)
+    $(JAVAH) -classpath $(CLASSPATH) -jri -d _gen netscape.plugin.Plugin
     $(JAVAH) -classpath $(CLASSPATH) -jri -stubs -d _stubs netscape.plugin.Plugin
 
 !endif
@@ -213,6 +262,13 @@ javastubs.c : \
     .\_stubs\netscape_plugin_Plugin.c \
     .\_stubs\java_lang_Object.c     \
     .\_stubs\java_lang_String.c     \
+    .\_stubs\java_lang_Boolean.c    \
+    .\_stubs\java_lang_Number.c     \
+    .\_stubs\java_lang_Integer.c    \
+    .\_stubs\java_lang_Long.c       \
+    .\_stubs\java_lang_Double.c     \
+    .\_stubs\java_lang_Float.c      \
+    .\_stubs\java_lang_Character.c  \
     $(NULL)
 !endif
 
@@ -225,6 +281,13 @@ LegacyPlugin.cpp: StdAfx.h \
     .\_gen\netscape_plugin_Plugin.h \
     .\_gen\java_lang_Object.h       \
     .\_gen\java_lang_String.h       \
+    .\_gen\java_lang_Boolean.h      \
+    .\_gen\java_lang_Number.h       \
+    .\_gen\java_lang_Integer.h      \
+    .\_gen\java_lang_Long.h         \
+    .\_gen\java_lang_Double.h       \
+    .\_gen\java_lang_Float.h        \
+    .\_gen\java_lang_Character.h    \
 !endif
     $(NULL)
 
