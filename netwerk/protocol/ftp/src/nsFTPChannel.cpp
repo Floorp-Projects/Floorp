@@ -357,43 +357,24 @@ NS_IMETHODIMP
 nsFTPChannel::GetContentType(char* *aContentType) {
     nsresult rv = NS_OK;
 
-    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("nsFTPChannel::GetContentType()\n"));
-
-    // Parameter validation...
-    if (!aContentType) {
-        return NS_ERROR_NULL_POINTER;
-    }
-    *aContentType = nsnull;
+    if (!aContentType) return NS_ERROR_NULL_POINTER;
 
     if (mContentType.Length()) {
         *aContentType = mContentType.ToNewCString();
-        if (!*aContentType) {
-            rv = NS_ERROR_OUT_OF_MEMORY;
-        }
-        PR_LOG(gFTPLog, PR_LOG_DEBUG, ("nsFTPChannel::GetContentType() returned %s\n", *aContentType));
-        return rv;
-    }
-
-    NS_WITH_SERVICE(nsIMIMEService, MIMEService, kMIMEServiceCID, &rv);
-    if (NS_SUCCEEDED(rv)) {
+    } else {
+        NS_WITH_SERVICE(nsIMIMEService, MIMEService, kMIMEServiceCID, &rv);
+        if (NS_FAILED(rv)) return rv;
         rv = MIMEService->GetTypeFromURI(mURL, aContentType);
         if (NS_SUCCEEDED(rv)) {
             mContentType = *aContentType;
-            PR_LOG(gFTPLog, PR_LOG_DEBUG, ("nsFTPChannel::GetContentType() returned %s\n", *aContentType));
-            return rv;
+        } else {
+            rv = NS_OK;
+	        *aContentType = nsCRT::strdup(UNKNOWN_MIME);
         }
     }
 
-	if (!*aContentType) 
-		*aContentType = nsCRT::strdup(UNKNOWN_MIME);
-    if (!*aContentType) {
-        rv = NS_ERROR_OUT_OF_MEMORY;
-    } else {
-        rv = NS_OK;
-    }
-
+    if (!*aContentType) return NS_ERROR_OUT_OF_MEMORY;
     PR_LOG(gFTPLog, PR_LOG_DEBUG, ("nsFTPChannel::GetContentType() returned %s\n", *aContentType));
-
     return rv;
 }
 

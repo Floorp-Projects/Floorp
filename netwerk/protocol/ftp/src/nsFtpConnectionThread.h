@@ -60,6 +60,7 @@
 typedef enum _FTP_STATE {
 ///////////////////////
 //// Internal states
+    FTP_COMMAND_CONNECT,
     FTP_READ_BUF,
     FTP_ERROR,
     FTP_COMPLETE,
@@ -151,7 +152,6 @@ private:
     FTP_STATE   FindGetState(void);
     nsresult    MapResultCodeToString(nsresult aResultCode, PRUnichar* *aOutMsg);
     void        SetDirMIMEType(nsString& aString);
-    nsresult    DigestServerGreeting();
     nsresult    Process();
 
     ///////////////////////////////////
