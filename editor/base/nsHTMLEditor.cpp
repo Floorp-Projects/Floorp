@@ -102,7 +102,7 @@ static NS_DEFINE_CID(kCClipboardCID,    NS_CLIPBOARD_CID);
 static NS_DEFINE_CID(kCTransferableCID, NS_TRANSFERABLE_CID);
 
 #ifdef NS_DEBUG
-static PRBool gNoisy = PR_TRUE;
+static PRBool gNoisy = PR_FALSE;
 #else
 static const PRBool gNoisy = PR_FALSE;
 #endif
@@ -5642,11 +5642,13 @@ nsHTMLEditor::RemoveTextPropertiesForNodeWithDifferentParents(nsIDOMNode  *aStar
   return result;
 }
 
-/* this method scans the selection for adjacent text nodes and collapses them into a single text node
- * "adjacent" means literally adjacent siblings of the same parent
+/* this method scans the selection for adjacent text nodes
+ * and collapses them into a single text node.
+ * "adjacent" means literally adjacent siblings of the same parent.
  * In all cases, the content of the right text node is moved into 
  * the left node, and the right node is deleted.
- * Uses nsEditor::JoinNodes so action is undoable. Should be called within the context of a batch transaction
+ * Uses nsEditor::JoinNodes so action is undoable. 
+ * Should be called within the context of a batch transaction.
  */
  /*
  XXX:  TODO: use a helper function of next/prev sibling that only deals with editable content
