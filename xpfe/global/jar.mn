@@ -41,12 +41,6 @@ packages/widget-toolkit.jar:
 	global/content/nsUserSettings.js            (resources/content/nsUserSettings.js) 
 	global/content/xul.css                      (resources/content/xul.css) 
 	global/content/toolbarBindings.xml          (resources/content/toolbarBindings.xml) 
-	global/content/htmlBindings.xml             (resources/skin/htmlBindings.xml)
-	global/content/xulBindings.xml              (resources/skin/xulBindings.xml)
-	global/content/radioBindings.xml            (resources/skin/radioBindings.xml)
-	global/content/treeBindings.xml             (resources/skin/treeBindings.xml)
-	global/content/menulistBindings.xml         (resources/skin/menulistBindings.xml)
-	global/content/xul.css                      (resources/skin/xul.css)
 
 locales/en-US.jar:
     global/locale/intl.css                    (resources/locale/en-US/intl.css) 
