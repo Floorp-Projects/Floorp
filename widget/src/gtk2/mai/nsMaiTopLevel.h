@@ -65,6 +65,7 @@ public:
 
 private:
     MaiObject *CreateMaiObjectFor(nsIAccessible* aAccessible);
+    static AtkStateType TranslateAState(PRUint32 aAccState);
 };
 
 #endif   /* __MAI_TOP_LEVEL_H__ */
