@@ -15,6 +15,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+#ifndef CPMOZILLACONTROL_H
+#define CPMOZILLACONTROL_H
 
 //////////////////////////////////////////////////////////////////////////////
 // CProxyDWebBrowserEvents
@@ -924,3 +926,5 @@ public:
 
 };
 
+
+#endif

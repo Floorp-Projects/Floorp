@@ -29,13 +29,16 @@
 #include "MozillaControl.h"
 
 #include "MozillaControl_i.c"
+#ifdef USE_CONTROL
 #include "MozillaBrowser.h"
-
+#endif
 
 CComModule _Module;
 
 BEGIN_OBJECT_MAP(ObjectMap)
+#ifdef USE_CONTROL
 	OBJECT_ENTRY(CLSID_MozillaBrowser, CMozillaBrowser)
+#endif
 END_OBJECT_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
