@@ -36,7 +36,9 @@ public:
 	// Inspectors
 	NS_IMETHOD GetIconImage(nsIImage*& pImage, nsIImageGroup* pGroup) = 0;
 	NS_IMETHOD GetOpenState(PRBool& answer) = 0;
-	
+	NS_IMETHOD GetChildCount(PRUint32& count) = 0;
+	NS_IMETHOD GetNthChild(nsIDMItem*& pItem, PRUint32 item) = 0;
+
 	// Setters
 
 	// Methods to query the data model for a specific item displayed within the widget.
