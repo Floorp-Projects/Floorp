@@ -176,7 +176,7 @@ function DeleteAllFromTree
 
 
   // disable buttons
-  permissionsExist = false;
+  persissionsExist = false;
   togglePermissionEnabling();
 }
 
