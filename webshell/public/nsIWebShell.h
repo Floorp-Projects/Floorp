@@ -347,11 +347,7 @@ public:
   NS_IMETHOD LoadURL(const PRUnichar *aURLSpec,
                      nsIInputStream* aPostDataStream=nsnull,
                      PRBool aModifyHistory=PR_TRUE,
-#ifdef NECKO
                      nsLoadFlags aType = nsIChannel::LOAD_NORMAL,
-#else
-                     nsURLReloadType aType=nsURLReload,
-#endif
                      const PRUint32 aLocalIP=0,
 					 nsISupports * aHistoryState=nsnull) = 0;
 
@@ -362,13 +358,21 @@ public:
                      const char* aCommand, 
                      nsIInputStream* aPostDataStream=nsnull,
                      PRBool aModifyHistory=PR_TRUE,
-#ifdef NECKO
                      nsLoadFlags aType = nsIChannel::LOAD_NORMAL,
-#else
-                     nsURLReloadType aType=nsURLReload,
-#endif
                      const PRUint32 aLocalIP=0,
 					 nsISupports * aHistoryState=nsnull) = 0;
+
+  /**
+   * Load the document with the specified URI into the WebShell. Assuming you have
+   * an nsIURI instead of a PRUnichar string, this is the preferred way to load a url.
+   */
+   NS_IMETHOD LoadURI(nsIURI * aUri,
+                      const char * aCommand,
+                      nsIInputStream* aPostDataStream=nsnull,
+                      PRBool aModifyHistory=PR_TRUE,
+                      nsLoadFlags aType = nsIChannel::LOAD_NORMAL,
+                      const PRUint32 aLocalIP=0,
+					  nsISupports * aHistoryState=nsnull) = 0;
 
 
   /**
@@ -379,11 +383,7 @@ public:
   /**
    * Reload the current document.
    */
-#ifdef NECKO
   NS_IMETHOD Reload(nsLoadFlags aType) = 0;
-#else
-  NS_IMETHOD Reload(nsURLReloadType aType) = 0;
-#endif
 
   //
   // History api's

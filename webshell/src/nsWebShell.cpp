@@ -238,32 +238,28 @@ public:
   NS_IMETHOD LoadURL(const PRUnichar *aURLSpec,
                      nsIInputStream* aPostDataStream=nsnull,
                      PRBool aModifyHistory=PR_TRUE,
-#ifdef NECKO
                      nsLoadFlags aType = nsIChannel::LOAD_NORMAL,
-#else
-                     nsURLReloadType aType = nsURLReload,
-#endif
                      const PRUint32 localIP = 0,
                      nsISupports * aHistoryState = nsnull);
   NS_IMETHOD LoadURL(const PRUnichar *aURLSpec,
                      const char* aCommand,
                      nsIInputStream* aPostDataStream=nsnull,
                      PRBool aModifyHistory=PR_TRUE,
-#ifdef NECKO
                      nsLoadFlags aType = nsIChannel::LOAD_NORMAL,
-#else
-                     nsURLReloadType aType = nsURLReload,
-#endif
                      const PRUint32 localIP = 0,
                      nsISupports * aHistoryState=nsnull);
 
+  NS_IMETHOD LoadURI(nsIURI * aUri,
+                     const char * aCommand,
+                     nsIInputStream* aPostDataStream=nsnull,
+                     PRBool aModifyHistory=PR_TRUE,
+                     nsLoadFlags aType = nsIChannel::LOAD_NORMAL,
+                     const PRUint32 aLocalIP=0,
+					           nsISupports * aHistoryState=nsnull);
+
   NS_IMETHOD Stop(void);
 
-#ifdef NECKO
   NS_IMETHOD Reload(nsLoadFlags aType);
-#else
-  NS_IMETHOD Reload(nsURLReloadType aType);
-#endif
 
   // History api's
   NS_IMETHOD Back(void);
@@ -524,7 +520,7 @@ protected:
   void ReleaseChildren();
   void DestroyChildren();
   nsresult CreateScriptEnvironment();
-  nsresult DoLoadURL(const nsString& aUrlSpec,
+  nsresult DoLoadURL(nsIURI * aUri, 
                      const char* aCommand,
                      nsIInputStream* aPostDataStream,
 #ifdef NECKO
@@ -2044,11 +2040,7 @@ NS_IMETHODIMP
 nsWebShell::LoadURL(const PRUnichar *aURLSpec,
                     nsIInputStream* aPostDataStream,
                     PRBool aModifyHistory,
-#ifdef NECKO
                     nsLoadFlags aType,
-#else
-                    nsURLReloadType aType,
-#endif
                     const PRUint32 aLocalIP,
                     nsISupports * aHistoryState)
 {
@@ -2113,43 +2105,41 @@ static PRBool EqualBaseURLs(nsIURI* url1, nsIURI* url2)
 }
 
 nsresult
-nsWebShell::DoLoadURL(const nsString& aUrlSpec,
+nsWebShell::DoLoadURL(nsIURI * aUri,
                       const char* aCommand,
                       nsIInputStream* aPostDataStream,
-#ifdef NECKO
                       nsLoadFlags aType,
-#else
-                      nsURLReloadType aType,
-#endif
                       const PRUint32 aLocalIP)
 
 
 {
+  if (!aUri)
+    return NS_ERROR_NULL_POINTER;
+
   // Ugh. It sucks that we have to hack webshell like this. Forgive me, Father.
   do {
     nsresult rv;
     NS_WITH_SERVICE(nsIGlobalHistory, history, "component://netscape/browser/global-history", &rv);
     if (NS_FAILED(rv)) break;
 
-    rv = history->AddPage(nsCAutoString(aUrlSpec), nsnull /* referrer */, PR_Now());
+    rv = history->AddPage(nsCAutoString(mURL), nsnull /* referrer */, PR_Now());
     if (NS_FAILED(rv)) break;
   } while (0);
+
+  nsXPIDLCString urlSpec;
+  nsresult rv = NS_OK;
+  rv = aUri->GetSpec(getter_Copies(urlSpec));
+  if (NS_FAILED(rv)) return rv;
 
 
   // If it's a normal reload that uses the cache, look at the destination anchor
   // and see if it's an element within the current document
-#ifdef NECKO
   // We don't have a reload loadtype yet in necko. So, check for just history
   // loadtype
   if ((aType == LOAD_HISTORY || aType == nsIChannel::LOAD_NORMAL) && (nsnull != mContentViewer) &&
       (nsnull == aPostDataStream))
-#else
-  if ((aType == nsURLReload || aType == nsURLReloadFromHistory) &&
-    (nsnull != mContentViewer) && (nsnull == aPostDataStream))
-#endif
   {
     nsCOMPtr<nsIDocumentViewer> docViewer;
-    nsresult rv;
     if (NS_SUCCEEDED(mContentViewer->QueryInterface(kIDocumentViewerIID,
                                                     getter_AddRefs(docViewer)))) {
       // Get the document object
@@ -2159,50 +2149,25 @@ nsWebShell::DoLoadURL(const nsString& aUrlSpec,
       // Get the URL for the document
       nsCOMPtr<nsIURI>  docURL = nsDontAddRef<nsIURI>(doc->GetDocumentURL());
 
-      // See if they're the same
-      nsCOMPtr<nsIURI>  url;
-#ifndef NECKO
-      rv = NS_NewURL(getter_AddRefs(url), aUrlSpec);
-#else
-      rv = NS_NewURI(getter_AddRefs(url), aUrlSpec);
-#ifdef DEBUG
-      char* urlStr = aUrlSpec.ToNewCString();
-      if (rv == NS_ERROR_UNKNOWN_PROTOCOL)
-        printf("Error: Unknown protocol: %s\n", urlStr);
-      else if (rv == NS_ERROR_UNKNOWN_HOST)
-        printf("Error: Unknown host: %s\n", urlStr);
-      else if (rv == NS_ERROR_MALFORMED_URI)
-        printf("Error: Malformed URI: %s\n", urlStr);
-      else if (NS_FAILED(rv))
-        printf("Error: Can't load: %s (%x)\n", urlStr, rv);
-      nsCRT::free(urlStr);
-#endif
-#endif // NECKO
-      if (NS_FAILED(rv)) return rv;
-      if (url && docURL && EqualBaseURLs(docURL, url)) {
+      if (aUri && docURL && EqualBaseURLs(docURL, aUri)) {
         // See if there's a destination anchor
-#ifdef NECKO
-        char* ref = nsnull;
-        nsCOMPtr<nsIURL> url2 = do_QueryInterface(url);
-        if (url2) {
-          rv = url2->GetRef(&ref);
-        }
-#else
-        const char* ref;
-        url->GetRef(&ref);
-#endif
+        nsXPIDLCString ref;
+        nsCOMPtr<nsIURL> aUrl = do_QueryInterface(aUri);
+        if (aUrl)
+          rv = aUrl->GetRef(getter_Copies(ref));
+
         nsCOMPtr<nsIPresShell> presShell;
         rv = docViewer->GetPresShell(*getter_AddRefs(presShell));
 
         if (NS_SUCCEEDED(rv) && presShell) {
-          if (nsnull != ref) {
+          if (nsnull != (const char *) ref) {
             // Go to the anchor in the current document
             rv = presShell->GoToAnchor(nsAutoString(ref));
 
             // Pass notifications to BrowserAppCore just to be consistent with
             // regular page loads thro' necko
             nsCOMPtr<nsIChannel> dummyChannel;
-            rv = NS_OpenURI(getter_AddRefs(dummyChannel), url, nsnull);
+            rv = NS_OpenURI(getter_AddRefs(dummyChannel), aUri, nsnull);
             if (NS_FAILED(rv)) return rv;
 
             mProcessedEndDocumentLoad = PR_FALSE;
@@ -2210,11 +2175,7 @@ nsWebShell::DoLoadURL(const nsString& aUrlSpec,
 
             return rv;
           }
-#ifdef NECKO
           else if (aType == LOAD_HISTORY)
-#else
-          else if (aType == nsURLReloadFromHistory)
-#endif
           {
             // Go to the top of the current document
             nsCOMPtr<nsIViewManager> viewMgr;
@@ -2230,7 +2191,7 @@ nsWebShell::DoLoadURL(const nsString& aUrlSpec,
               // Pass notifications to BrowserAppCore just to be consistent with
               // regular necko loads.
               nsCOMPtr<nsIChannel> dummyChannel;
-              rv = NS_OpenURI(getter_AddRefs(dummyChannel), url, nsnull);
+              rv = NS_OpenURI(getter_AddRefs(dummyChannel), aUri, nsnull);
               if (NS_FAILED(rv)) return rv;
               mProcessedEndDocumentLoad = PR_FALSE;
 
@@ -2253,7 +2214,8 @@ nsWebShell::DoLoadURL(const nsString& aUrlSpec,
 
   // Tell web-shell-container we are loading a new url
   if (nsnull != mContainer) {
-    nsresult rv = mContainer->BeginLoadURL(this, aUrlSpec.GetUnicode());
+    nsAutoString uniSpec (urlSpec);
+    nsresult rv = mContainer->BeginLoadURL(this, uniSpec.GetUnicode());
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -2266,7 +2228,7 @@ nsWebShell::DoLoadURL(const nsString& aUrlSpec,
   *  - Radha
   */
 
-  return mDocLoader->LoadDocument(aUrlSpec,        // URL string
+  return mDocLoader->LoadDocument(aUri,        // URL string
                                   aCommand,        // Command
                                   this,            // Container
                                   aPostDataStream, // Post Data
@@ -2276,88 +2238,30 @@ nsWebShell::DoLoadURL(const nsString& aUrlSpec,
                                   aLocalIP);       // load attributes.
 }
 
-NS_IMETHODIMP
-nsWebShell::LoadURL(const PRUnichar *aURLSpec,
-                    const char* aCommand,
+NS_IMETHODIMP 
+nsWebShell::LoadURI(nsIURI * aUri,
+                    const char * aCommand,
                     nsIInputStream* aPostDataStream,
                     PRBool aModifyHistory,
-#ifdef NECKO
                     nsLoadFlags aType,
-#else
-                    nsURLReloadType aType,
-#endif
                     const PRUint32 aLocalIP,
-                    nsISupports * aHistoryState)
+					          nsISupports * aHistoryState)
 {
   nsresult rv;
-
-  nsAutoString urlStr(aURLSpec);
-
-#ifdef NECKO
   CancelRefreshURITimers();
-#endif // NECKO
+  nsXPIDLCString scheme, CUriSpec;
 
-  // first things first. try to create a uri out of the string.
-  nsIURI *uri = nsnull;
-  rv = NS_NewURI(&uri, urlStr, nsnull);
-  if (NS_FAILED(rv)) {
-    // no dice.
-    nsAutoString urlSpec;
-    urlStr.Trim(" ", PR_TRUE, PR_TRUE);
-
-    // see if we've got a file url.
-    convertFileToURL(urlStr, urlSpec);
-    rv = NS_NewURI(&uri, urlSpec, nsnull);
-    if (NS_FAILED(rv)) {
-      // no dice, try more tricks
-
-      PRInt32 colon, fSlash = urlSpec.FindChar('/');
-      PRUnichar port;
-      // if no scheme (protocol) is found, assume http.
-      if ( ((colon=urlSpec.FindChar(':')) == -1) // no colon at all
-           || ( (fSlash > -1) && (colon > fSlash) ) // the only colon comes after the first slash
-           || ( (colon < urlSpec.Length()-1) // the first char after the first colon is a digit (i.e. a port)
-                && ((port=urlSpec.CharAt(colon+1)) <= '9')
-                && (port > '0') )) {
-        // find host name
-        PRInt32 hostPos = urlSpec.FindCharInSet("./:");
-        if (hostPos == -1) {
-          hostPos = urlSpec.Length();
-        }
-
-        // extract host name
-        nsAutoString hostSpec;
-        urlSpec.Left(hostSpec, hostPos);
-
-        // insert url spec corresponding to host name
-        if (hostSpec.EqualsIgnoreCase("ftp")) {
-          urlSpec.Insert("ftp://", 0, 6);
-        } else {
-          urlSpec.Insert("http://", 0, 7);
-        }
-      } // end if colon
-      rv = NS_NewURI(&uri, urlSpec, nsnull);
-      if (NS_FAILED(rv)) {
-        // no dice, even more tricks?
-        return rv;
-      }
-    }
-
-  }
-
-
-  char *scheme = nsnull, *CUriSpec = nsnull;
-
-  rv = uri->GetScheme(&scheme);
+  rv = aUri->GetScheme(getter_Copies(scheme));
   if (NS_FAILED(rv)) return rv;
-  rv = uri->GetSpec(&CUriSpec);
-  NS_RELEASE(uri);
+  rv = aUri->GetSpec(getter_Copies(CUriSpec));
   if (NS_FAILED(rv)) return rv;
 
   nsAutoString uriSpec(CUriSpec);
-  nsAllocator::Free(CUriSpec);
 
-  mURL = uriSpec;
+  nsXPIDLCString spec;
+  rv = aUri->GetSpec(getter_Copies(spec));
+  if (NS_FAILED(rv)) return rv;
+  mURL = spec;
 
 
   //Take care of mailto: url
@@ -2367,7 +2271,6 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
   if (mailTo.Equals(scheme, PR_TRUE)) {
      isMail = PR_TRUE;
   }
-  nsAllocator::Free(scheme);
 
   nsIWebShell * root= nsnull;
   rv = GetRootWebShell(root);
@@ -2390,7 +2293,7 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
     //Ask the container to load the appropriate component for the URL.
 
     if (root) {
-       nsCOMPtr<nsIUrlDispatcher>  urlDispatcher = nsnull;
+       nsCOMPtr<nsIUrlDispatcher>  urlDispatcher;
        rv = GetUrlDispatcher(*getter_AddRefs(urlDispatcher));
        if (NS_SUCCEEDED(rv) && urlDispatcher) {
           printf("calling HandleUrl\n");
@@ -2488,8 +2391,71 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
   }
 
 
-  return DoLoadURL(uriSpec, aCommand, aPostDataStream, aType, aLocalIP);
-//#endif
+  return DoLoadURL(aUri, aCommand, aPostDataStream, aType, aLocalIP);
+}
+
+NS_IMETHODIMP
+nsWebShell::LoadURL(const PRUnichar *aURLSpec,
+                    const char* aCommand,
+                    nsIInputStream* aPostDataStream,
+                    PRBool aModifyHistory,
+                    nsLoadFlags aType,
+                    const PRUint32 aLocalIP,
+                    nsISupports * aHistoryState)
+{
+  nsresult rv;
+
+  nsAutoString urlStr(aURLSpec);
+  // first things first. try to create a uri out of the string.
+  nsCOMPtr<nsIURI> uri;
+  rv = NS_NewURI(getter_AddRefs(uri), urlStr, nsnull);
+  if (NS_FAILED(rv)) {
+    // no dice.
+    nsAutoString urlSpec;
+    urlStr.Trim(" ", PR_TRUE, PR_TRUE);
+
+    // see if we've got a file url.
+    convertFileToURL(urlStr, urlSpec);
+    rv = NS_NewURI(getter_AddRefs(uri), urlSpec, nsnull);
+    if (NS_FAILED(rv)) {
+      // no dice, try more tricks
+
+      PRInt32 colon, fSlash = urlSpec.FindChar('/');
+      PRUnichar port;
+      // if no scheme (protocol) is found, assume http.
+      if ( ((colon=urlSpec.FindChar(':')) == -1) // no colon at all
+           || ( (fSlash > -1) && (colon > fSlash) ) // the only colon comes after the first slash
+           || ( (colon < urlSpec.Length()-1) // the first char after the first colon is a digit (i.e. a port)
+                && ((port=urlSpec.CharAt(colon+1)) <= '9')
+                && (port > '0') )) {
+        // find host name
+        PRInt32 hostPos = urlSpec.FindCharInSet("./:");
+        if (hostPos == -1) {
+          hostPos = urlSpec.Length();
+        }
+
+        // extract host name
+        nsAutoString hostSpec;
+        urlSpec.Left(hostSpec, hostPos);
+
+        // insert url spec corresponding to host name
+        if (hostSpec.EqualsIgnoreCase("ftp")) {
+          urlSpec.Insert("ftp://", 0, 6);
+        } else {
+          urlSpec.Insert("http://", 0, 7);
+        }
+      } // end if colon
+      rv = NS_NewURI(getter_AddRefs(uri), urlSpec, nsnull);
+      if (NS_FAILED(rv)) {
+        // no dice, even more tricks?
+        return rv;
+      }
+    }
+
+  }
+
+  // now that we have a uri, call the REAL LoadURI method which requires a nsIURI.
+  return LoadURI(uri, aCommand, aPostDataStream, aModifyHistory, aType, aLocalIP, aHistoryState);
 }
 
 
@@ -2674,14 +2640,15 @@ nsWebShell::GoTo(PRInt32 aHistoryIndex)
     mHistoryIndex = aHistoryIndex;
     ShowHistory();
 
-    rv = DoLoadURL(urlSpec,       // URL string
+    // convert the uri spec into a url and then pass it to DoLoadURL
+    nsCOMPtr<nsIURI> uri;
+    rv = NS_NewURI(getter_AddRefs(uri), urlSpec, nsnull);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = DoLoadURL(uri,       // URL string
                    "view",        // Command
                    nsnull,        // Post Data
-#ifdef NECKO
                    nsIChannel::LOAD_NORMAL,   // the reload type
-#else
-                   nsURLReload,   // the reload type
-#endif
                    0);            // load attributes
   }
   return rv;
