@@ -13,6 +13,7 @@
       font                  : 11px arial;
       max-width             : 10em;
       min-width             : 0px;
+      -moz-user-focus       : ignore !important;
     }
     
   .button-toolbar:hover
@@ -93,6 +94,7 @@
       -moz-border-radius  : 0px;
       min-width           : 0px;
       text-align		  : center;
+      -moz-user-focus       : ignore !important;
     }
     
   .button-toolbar-1:hover 
@@ -155,6 +157,7 @@
       padding			  : 0px;
       min-width           : 0px;
       text-align		  : center;
+      -moz-user-focus       : ignore !important;
     }
     
   .button-toolbar-2:hover 
@@ -234,6 +237,7 @@
       border				: 0px;
       margin				: 3px 7px 2px 0px;
       font-family   : Arial, sans-serif;
+      -moz-user-focus       : ignore !important;
     }
 
   .button-toolbar-3 > box > box > .button-text-box {
@@ -296,6 +300,7 @@
     margin                : 0px;
     min-width			  : 0px;
     border				  : 0px;
+    -moz-user-focus       : ignore !important;
   }
 
 .button-toolbar-4:hover 
