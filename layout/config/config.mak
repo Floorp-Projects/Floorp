@@ -28,3 +28,12 @@ PDBFILE=$(LIBRARY_NAME)
 OS_LFLAGS=/DEBUG /DEBUGTYPE:CV /PDB:$(PDBFILE)
 !endif
 !endif
+
+# Replace optimizer and pdb related flags to use our own conventions
+!ifdef DLLNAME
+!ifdef MOZ_DEBUG
+OPTIMIZER=-Zi -DDEBUG -UNDEBUG -D_DEBUG
+PDBFILE=$(DLLNAME)
+OS_LFLAGS=/DEBUG /DEBUGTYPE:CV /PDB:$(PDBFILE)
+!endif
+!endif
