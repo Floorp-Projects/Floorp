@@ -92,4 +92,18 @@ interface nsIDocShellTreeOwner : nsISupports
 	a need for a new JS window, etc.	
 	*/
 	nsIDocShellTreeItem getNewWindow(in long aChromeFlags);
+
+	/*
+	Sets the persistence of different attributes of the window.
+	*/
+	void setPersistence(in boolean aPersistPosition,
+                            in boolean aPersistSize,
+                            in boolean aPersistSizeMode);
+
+	/*
+	Gets the current persistence states of the window.
+	*/
+	void getPersistence(out boolean aPersistPosition,
+                            out boolean aPersistSize,
+                            out boolean aPersistSizeMode);
 };

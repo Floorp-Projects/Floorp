@@ -421,6 +421,21 @@ NS_IMETHODIMP nsDocShellTreeOwner::GetNewWindow(PRInt32 aChromeFlags,
   return rv;
 }
 
+NS_IMETHODIMP
+nsDocShellTreeOwner::SetPersistence(PRBool aPersistPosition,
+                                    PRBool aPersistSize,
+                                    PRBool aPersistSizeMode)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsDocShellTreeOwner::GetPersistence(PRBool* aPersistPosition,
+                                    PRBool* aPersistSize,
+                                    PRBool* aPersistSizeMode)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
 
 //*****************************************************************************
 // nsDocShellTreeOwner::nsIBaseWindow

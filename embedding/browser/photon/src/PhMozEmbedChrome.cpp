@@ -637,6 +637,22 @@ NS_IMETHODIMP PhMozEmbedChrome::GetNewWindow(PRInt32 aChromeFlags,
     return NS_ERROR_FAILURE;
 }
 
+NS_IMETHODIMP
+PhMozEmbedChrome::SetPersistence(PRBool aPersistPosition,
+                                 PRBool aPersistSize,
+                                 PRBool aPersistSizeMode)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsContentTreeOwner::GetPersistence(PRBool* aPersistPosition,
+                                 PRBool* aPersistSize,
+                                 PRBool* aPersistSizeMode)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 // nsIBaseWindow interface
 
 NS_IMETHODIMP PhMozEmbedChrome::InitWindow(nativeWindow parentNativeWindow,
@@ -814,20 +830,4 @@ NS_IMETHODIMP PhMozEmbedChrome::SetTitle(const PRUnichar * aTitle)
   if (mChromeListener)
     mChromeListener->Message(PhEmbedListener::MessageTitle, mTitle);
   return NS_OK;
-}
-
-NS_IMETHODIMP
-PhMozEmbedChrome::SetPersistence(PRBool aPersistX, PRBool aPersistY,
-                                  PRBool aPersistCX, PRBool aPersistCY,
-                                  PRBool aPersistSizeMode)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-PhMozEmbedChrome::GetPersistence(PRBool* aPersistX, PRBool* aPersistY,
-                                  PRBool* aPersistCX, PRBool* aPersistCY,
-                                  PRBool* aPersistSizeMode)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
 }

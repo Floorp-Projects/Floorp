@@ -199,6 +199,22 @@ NS_IMETHODIMP nsChromeTreeOwner::GetNewWindow(PRInt32 aChromeFlags,
    return mXULWindow->GetNewWindow(aChromeFlags, aDocShellTreeItem);
 }
 
+NS_IMETHODIMP
+nsChromeTreeOwner::SetPersistence(PRBool aPersistPosition,
+                                  PRBool aPersistSize,
+                                  PRBool aPersistSizeMode)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsChromeTreeOwner::GetPersistence(PRBool* aPersistPosition,
+                                  PRBool* aPersistSize,
+                                  PRBool* aPersistSizeMode)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 //*****************************************************************************
 // nsChromeTreeOwner::nsIBaseWindow
 //*****************************************************************************   

@@ -535,6 +535,22 @@ NS_IMETHODIMP CWebBrowserContainer::GetNewWindow(PRInt32 aChromeFlags,
 }
 
 
+NS_IMETHODIMP
+CWebBrowserContainer::SetPersistence(PRBool aPersistPosition,
+                                     PRBool aPersistSize,
+                                     PRBool aPersistSizeMode)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+CWebBrowserContainer::GetPersistence(PRBool* aPersistPosition,
+                                     PRBool* aPersistSize,
+                                     PRBool* aPersistSizeMode)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // nsIWebBrowserSiteWindow
 
@@ -690,23 +706,6 @@ CWebBrowserContainer::ExitModalEventLoop(nsresult aStatus)
 {
 	// Ignore request to exit modal loop
 	return NS_OK;
-}
-
-
-NS_IMETHODIMP
-CWebBrowserContainer::SetPersistence(PRBool aPersistX, PRBool aPersistY,
-                                     PRBool aPersistCX, PRBool aPersistCY,
-                                     PRBool aPersistSizeMode)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-CWebBrowserContainer::GetPersistence(PRBool* aPersistX, PRBool* aPersistY,
-                                     PRBool* aPersistCX, PRBool* aPersistCY,
-                                     PRBool* aPersistSizeMode)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -202,22 +202,6 @@ NS_IMETHODIMP WebBrowserChrome::ExitModalEventLoop(nsresult aStatus)
 }
 
 
-NS_IMETHODIMP
-WebBrowserChrome::SetPersistence(PRBool aPersistX, PRBool aPersistY,
-                                  PRBool aPersistCX, PRBool aPersistCY,
-                                  PRBool aPersistSizeMode)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-WebBrowserChrome::GetPersistence(PRBool* aPersistX, PRBool* aPersistY,
-                                  PRBool* aPersistCX, PRBool* aPersistCY,
-                                  PRBool* aPersistSizeMode)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 //*****************************************************************************
 // WebBrowserChrome::nsIWebProgressListener
 //*****************************************************************************   
