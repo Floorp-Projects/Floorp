@@ -314,10 +314,10 @@ for (my $k=1 ; $k <= $bugqty ; $k++) {
     $values .= SqlQuote($product[0]) . ",\n";
   } else {
     $query .= "product,\n";
-    $values .= "\'Browser\',\n";
-    $product[0] = "Browser";
+    $values .= "\'From Bugzilla\',\n";
+    $product[0] = "From Bugzilla";
     $err .= "Unknown product $bug_fields{'product'}. ";
-    $err .= "Moving to default product \"Browser\".\n";
+    $err .= "Moving to default product \"From Bugzilla\".\n";
   }
 
   if (defined  ($::versions{$product[0]} ) &&
@@ -544,6 +544,6 @@ for (my $k=1 ; $k <= $bugqty ; $k++) {
   $log .= "Bug $bug_fields{'bug_id'}\@$urlbase imported as bug $id.\n";
 }
 
-my $subject = "Bug import error: no maintainer";
+my $subject = "$bugqty bug(s) imported from $urlbase";
 my @to = ($exporter);
 MailMessage ($subject, $log, @to);
