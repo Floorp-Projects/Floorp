@@ -1034,14 +1034,17 @@ loser:
     PRArenaPool *arena;
     NSSUsage nssUsage;
     int i, len;
+    NSSTrustDomain *td   = STAN_GetDefaultTrustDomain();
+    NSSCryptoContext *cc = STAN_GetDefaultCryptoContext();
 
     stanCert = STAN_GetNSSCertificate(cert);
     nssUsage.anyUsage = PR_FALSE;
     nssUsage.nss3usage = usage;
     nssUsage.nss3lookingForCA = PR_FALSE;
     stanChain = NSSCertificate_BuildChain(stanCert, NULL, &nssUsage, NULL,
-                                                    NULL, 0, NULL, NULL);
+					  NULL, 0, NULL, NULL, td, cc);
     if (!stanChain) {
+	PORT_SetError(SEC_ERROR_UNKNOWN_ISSUER);
 	return NULL;
     }
 
