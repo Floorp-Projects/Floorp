@@ -41,7 +41,7 @@ char * WH_FileName (const char *name, XP_FileType type)
 {
 	if (type != xpURL)
 	{
-		PR_ASSERT(FALSE);
+		//PR_ASSERT(FALSE);
 		return NULL;
 	}
 	else
@@ -65,7 +65,7 @@ XP_File XP_FileOpen( const char* name, XP_FileType type,
 {
 	if (type != xpURL)
 	{
-		PR_ASSERT(FALSE);
+		//PR_ASSERT(FALSE);
 		return NULL;
 	}
 
