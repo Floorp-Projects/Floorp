@@ -263,6 +263,8 @@ for (my $i = 0; $i < @products; ++$i) {
     );
     
     if (Param('usetargetmilestone')) {
+        # Sorting here is required for ordering multiple selections 
+        # correctly; see bug 97736 for discussion on how to fix this
         $product{'milestones'} =  
                       [ sort { lc($a) cmp lc($b) } @{$::target_milestone{$p}} ];
     }
