@@ -1430,7 +1430,9 @@ void nsDocLoaderImpl::LoadURLComplete(nsIURL* aURL, nsISupports* aBindInfo, PRIn
   /*
    * Fire the OnEndDocumentLoad notification to any observers...
    */
-  if ((PR_FALSE != bIsForegroundURL) && (0 == mForegroundURLs)) {
+   IsBusy(bIsBusy);
+
+  if ((PR_FALSE != bIsForegroundURL) && (!bIsBusy)) {
 #if defined(DEBUG)
     const char* buffer;
 
