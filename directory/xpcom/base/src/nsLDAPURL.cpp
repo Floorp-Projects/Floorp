@@ -232,6 +232,14 @@ NS_IMETHODIMP nsLDAPURL::Equals(nsIURI *other, PRBool *_retval)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+/* boolean schemeIs(in PRUint32 scheme); */
+NS_IMETHODIMP nsLDAPURL::SchemeIs(PRUint32 i_Scheme, PRBool *o_Equals)
+{
+    *o_Equals = (i_Scheme == nsIURI::LDAP);
+
+    return NS_OK;
+}
+
 /* nsIURI clone (); */
 NS_IMETHODIMP nsLDAPURL::Clone(nsIURI **_retval)
 {

@@ -38,7 +38,6 @@
 #include "nsIComponentManager.h"
 #include "nsLDAPConnection.h"
 #include "nsLDAPMessage.h"
-#include "nsIEventQueueService.h"
 #include "nsIConsoleService.h"
 
 const char kConsoleServiceContractId[] = "@mozilla.org/consoleservice;1";
@@ -51,6 +50,8 @@ extern "C" int nsLDAPThreadFuncsInit(LDAP *aLDAP);
 nsLDAPConnection::nsLDAPConnection()
 {
   NS_INIT_ISUPPORTS();
+
+  mThreadInitCompleted = 0;
 }
 
 // destructor
@@ -167,7 +168,9 @@ nsLDAPConnection::Init(const char *aHost, PRInt16 aPort, const char *aBindName)
 NS_IMETHODIMP
 nsLDAPConnection::GetBindName(char **_retval)
 {
-    NS_ENSURE_ARG_POINTER(_retval);
+    if (!_retval) {
+        return NS_ERROR_ILLEGAL_VALUE;
+    }
     
     // check for NULL (meaning bind anonymously)
     //
@@ -193,7 +196,9 @@ NS_IMETHODIMP
 nsLDAPConnection::GetLdErrno(char **matched, char **errString, 
                              PRInt32 *_retval)
 {
-    NS_ENSURE_ARG_POINTER(_retval);
+    if (!_retval) {
+        return NS_ERROR_ILLEGAL_VALUE;
+    }
 
     *_retval = ldap_get_lderrno(this->mConnectionHandle, matched, errString);
 
@@ -209,7 +214,9 @@ nsLDAPConnection::GetLdErrno(char **matched, char **errString,
 NS_IMETHODIMP
 nsLDAPConnection::GetErrorString(char **_retval)
 {
-    NS_ENSURE_ARG_POINTER(_retval);
+    if (!_retval) {
+        return NS_ERROR_ILLEGAL_VALUE;
+    }
 
     *_retval = ldap_err2string(ldap_get_lderrno(this->mConnectionHandle, 
                                                 NULL, NULL));
@@ -280,29 +287,22 @@ nsLDAPConnection::AddPendingOperation(nsILDAPOperation *aOperation)
     return NS_OK;
 }
 
-/**
- * Remove an nsILDAPOperation from the list of operations pending on this
- * connection.  Mainly intended for use by the nsLDAPOperation code.
- *
- * @param aOperation    operation to add
- * @exception NS_ERROR_INVALID_POINTER  aOperation was NULL
- * @exception NS_ERROR_OUT_OF_MEMORY    out of memory
- * @exception NS_ERROR_FAILURE      could not delete the operation 
- *
- * void removePendingOperation(in nsILDAPOperation aOperation);
- */
 NS_IMETHODIMP
 nsLDAPConnection::RemovePendingOperation(nsILDAPOperation *aOperation)
 {
     nsresult rv;
     PRInt32 msgId;
 
-    NS_ENSURE_ARG_POINTER(aOperation);
+    if ( !aOperation ) {
+        return NS_ERROR_ILLEGAL_VALUE;
+    }
 
     // find the message id
     //
     rv = aOperation->GetMessageId(&msgId);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (!rv) {
+        return NS_ERROR_UNEXPECTED;
+    }
 
     // turn it into an nsVoidKey.  note that this is another spot that
     // assumes that sizeof(void*) >= sizeof(PRInt32).  
@@ -345,6 +345,17 @@ nsLDAPConnection::RemovePendingOperation(nsILDAPOperation *aOperation)
 NS_IMETHODIMP
 nsLDAPConnection::Run(void)
 {
+    // XXXdmose all these return NS_ERROR_FAILUREs aren't really very useful
+    // need to marshal this back to the main thread somehow for error handling
+    
+    // XXXdmose right now we timeout of ldap_result on all platforms 
+    // after 5ms (that value was chosen because that's what 
+    // nsSocketTransportService on mac uses.  What we'd really like to do, at
+    // least on platforms that support it, is to use a PR_PollableEvent with 
+    // NSPR under the LDAP C SDK 4.1 or later, and cause it to pop out
+    // of ldap_result whenever we've got something to handle.
+    //
+    struct timeval pollTimeout = {0, 5000};   // 5 milliseconds
     int lderrno;
     nsresult rv;
     PRInt32 returnCode;
@@ -353,13 +364,38 @@ nsLDAPConnection::Run(void)
 
     PR_LOG(gLDAPLogModule, PR_LOG_DEBUG, 
            ("nsLDAPConnection::Run() entered\n"));
+    NS_ASSERTION(!mThreadInitCompleted, "nsLDAPConnection::Run(): thread "
+                 "already initialized");
+    if (mThreadInitCompleted)
+        return NS_OK;
 
     // get the console service so we can log messages
     //
-    nsCOMPtr<nsIConsoleService> consoleSvc = 
-        do_GetService(kConsoleServiceContractId, &rv);
+    nsCOMPtr<nsIConsoleService> 
+        consoleSvc(do_GetService(kConsoleServiceContractId, &rv));
     if (NS_FAILED(rv)) {
         NS_ERROR("nsLDAPConnection::Run() couldn't get console service");
+        return NS_ERROR_FAILURE;
+    }
+
+    // setup a monitored event queue for this thread
+    //
+    nsCOMPtr<nsIEventQueueService> 
+        eventQSvc(do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID, &rv));
+    if (NS_FAILED(rv)) {
+        NS_ERROR("nsLDAPConnection::Run() couldn't get event queue service");
+        return NS_ERROR_FAILURE;
+    }
+    rv = eventQSvc->CreateMonitoredThreadEventQueue();
+    if (NS_FAILED(rv)) {
+        NS_ERROR("nsLDAPConnection::Run() couldn't create event queue");
+        return NS_ERROR_FAILURE;
+    }
+    rv = eventQSvc->GetThreadEventQueue(NS_CURRENT_THREAD, 
+                                        getter_AddRefs(mEventQ));
+    if (NS_FAILED(rv)) {
+        NS_ERROR("nsLDAPConnection::Run() couldn't get current event queue");
+        eventQSvc->DestroyThreadEventQueue();
         return NS_ERROR_FAILURE;
     }
 
@@ -370,6 +406,10 @@ nsLDAPConnection::Run(void)
                    "thread-specific data");
         return NS_ERROR_FAILURE;
     }
+
+    // so that UI thread can ensure that we're ready to go
+    //
+    mThreadInitCompleted = 1;
 
     // wait for results
     //
@@ -386,7 +426,7 @@ nsLDAPConnection::Run(void)
         // XXX deal with timeouts better
         //
         returnCode = ldap_result(mConnectionHandle, LDAP_RES_ANY,
-                                 LDAP_MSG_ONE, LDAP_NO_LIMIT, &msgHandle);
+                                 LDAP_MSG_ONE, &pollTimeout, &msgHandle);
 
         // if we didn't error or timeout, create an nsILDAPMessage
         //      
@@ -394,12 +434,24 @@ nsLDAPConnection::Run(void)
 
         case 0: // timeout
 
-            // the connection may not exist yet.  sleep for a while
-            // and try again
+            // either the connection doesn't exist, or it's time to check for 
+            // any events (currently just shutdown flag), eventually perhaps
+            // the innards of an event queue loop will be here.
             //
-            PR_LOG(gLDAPLogModule, PR_LOG_WARNING, 
+            PR_LOG(gLDAPLogModule, PR_LOG_DEBUG, 
                    ("ldap_result() timed out.\n"));
-            PR_Sleep(2000); // XXXdmose - reasonable timeslice?
+
+            // handle any pending events
+            //
+            rv = mEventQ->ProcessPendingEvents();
+            if ( NS_FAILED(rv) ) {
+                NS_ERROR("Error processing pending events.");
+            }
+
+            // XXXdmose check for shutdown or timeout of entire operation
+
+            // next loop iteration
+            //
             continue;
 
             break;
@@ -526,7 +578,21 @@ nsLDAPConnection::Run(void)
     // XXX figure out how to break out of the while() loop and get here to
     // so we can expire (though not if DEBUG is defined, since gdb gets ill
     // if threads exit
+
+    // XXXdmose call StopAcceptingEvents() and then ProcessPendingEvents() 
+    // here?
+
+    // make the event queue service release its hold on this queue
     //
+    rv = eventQSvc->DestroyThreadEventQueue();
+    if (NS_FAILED(rv)) {
+        NS_ERROR("Error destroying thread event queue.");
+    }
+
+    // and make nsCOMPtr release our hold on the queue
+    //
+    mEventQ = 0;
+    
     return NS_OK;
 }
 
