@@ -830,28 +830,6 @@ static PLHashTable* gCharSets = nsnull;
 
 static nsFontCharSetInfo Ignore = { nsnull };
 
-static void
-SetUpFontCharSetInfo(nsFontCharSetInfo* aSelf)
-{
-  nsresult result;
-  NS_WITH_SERVICE(nsICharsetConverterManager, manager,
-                  NS_CHARSETCONVERTERMANAGER_PROGID, &result);
-  if (manager && NS_SUCCEEDED(result)) {
-    nsAutoString charset(aSelf->mCharSet);
-    nsIUnicodeEncoder* converter = nsnull;
-    result = manager->GetUnicodeEncoder(&charset, &converter);
-    if (converter && NS_SUCCEEDED(result)) {
-      aSelf->mConverter = converter;
-      result = converter->SetOutputErrorBehavior(converter->kOnError_Replace,
-                                                 nsnull, '?');
-      nsCOMPtr<nsICharRepresentable> mapper = do_QueryInterface(converter);
-      if (mapper) {
-        result = mapper->FillInfo(aSelf->mMap);
-      }
-    }
-  }
-}
-
 static int
 SingleByteConvert(nsFontCharSetInfo* aSelf, const PRUnichar* aSrcBuf,
                   PRInt32 aSrcLen, char* aDestBuf, PRInt32 aDestLen)
@@ -876,6 +854,64 @@ DoubleByteConvert(nsFontCharSetInfo* aSelf, const PRUnichar* aSrcBuf,
   // XXX do high-bit if font requires it
   return count;
 }
+
+static int
+ISO10646Convert(nsFontCharSetInfo* aSelf, const PRUnichar* aSrcBuf,
+  PRInt32 aSrcLen, char* aDestBuf, PRInt32 aDestLen)
+{
+  aDestLen /= 2;
+  if (aSrcLen > aDestLen) {
+    aSrcLen = aDestLen;
+  }
+  if (aSrcLen < 0) {
+    aSrcLen = 0;
+  }
+  XChar2b* dest = (XChar2b*) aDestBuf;
+  for (PRInt32 i = 0; i < aSrcLen; i++) {
+    dest[i].byte1 = (aSrcBuf[i] >> 8);
+    dest[i].byte2 = (aSrcBuf[i] & 0xFF);
+  }
+
+  return (int) aSrcLen * 2;
+}
+
+static void
+SetUpFontCharSetInfo(nsFontCharSetInfo* aSelf)
+{
+  nsresult result;
+  NS_WITH_SERVICE(nsICharsetConverterManager, manager,
+                  NS_CHARSETCONVERTERMANAGER_PROGID, &result);
+  if (manager && NS_SUCCEEDED(result)) {
+    nsAutoString charset(aSelf->mCharSet);
+    nsIUnicodeEncoder* converter = nsnull;
+    result = manager->GetUnicodeEncoder(&charset, &converter);
+    if (converter && NS_SUCCEEDED(result)) {
+      aSelf->mConverter = converter;
+      result = converter->SetOutputErrorBehavior(converter->kOnError_Replace,
+        nsnull, '?');
+      nsCOMPtr<nsICharRepresentable> mapper = do_QueryInterface(converter);
+      if (mapper) {
+        result = mapper->FillInfo(aSelf->mMap);
+
+        /*
+         * XXX This is a bit of a hack. Documents containing the CP1252
+         * extensions of Latin-1 (e.g. smart quotes) will display with those
+         * special characters way too large. This is because they happen to
+         * be in these large double byte fonts. So, we disable those
+         * characters here. Revisit this decision later.
+         */
+        if (aSelf->Convert == DoubleByteConvert) {
+          PRUint32* map = aSelf->mMap;
+          for (PRUint16 i = 0; i < (0x3000 >> 5); i++) {
+            map[i] = 0;
+          }
+        }
+      }
+    }
+  }
+}
+
+
 static nsFontCharSetInfo CP1251 =
 { "windows-1251", SingleByteConvert, 0 };
 static nsFontCharSetInfo ISO88591 =
@@ -916,6 +952,8 @@ static nsFontCharSetInfo JISX0212 =
 { "jis_0212-1990", DoubleByteConvert, 1 };
 static nsFontCharSetInfo KSC5601 =
 { "ks_c_5601-1987", DoubleByteConvert, 1 };
+static nsFontCharSetInfo ISO106461 =
+{ nsnull, ISO10646Convert, 1 };
 
 
 /*
@@ -995,7 +1033,7 @@ static nsFontCharSetMap gCharSetMap[] =
   { "iso8859-7",          &ISO88597      },
   { "iso8859-8",          &ISO88598      },
   { "iso8859-9",          &ISO88599      },
-  { "iso10646-1",         &Ignore        },
+  { "iso10646-1",         &ISO106461     },
   { "jisx0201.1976-0",    &JISX0201      },
   { "jisx0201.1976-1",    &JISX0201      },
   { "jisx0208.1983-0",    &JISX0208      },
@@ -1126,13 +1164,54 @@ GetUnderlineInfo(XFontStruct* aFont, unsigned long* aPositionX2,
   }
 }
 
+static PRUint32*
+GetMapFor10646Font(XFontStruct* aFont)
+{
+  PRUint32* map = (PRUint32*) PR_Calloc(2048, 4);
+  if (map) {
+    if (aFont->per_char) {
+      PRInt32 minByte1 = aFont->min_byte1;
+      PRInt32 maxByte1 = aFont->max_byte1;
+      PRInt32 minByte2 = aFont->min_char_or_byte2;
+      PRInt32 maxByte2 = aFont->max_char_or_byte2;
+      PRInt32 charsPerRow = maxByte2 - minByte2 + 1;
+      for (PRInt32 row = minByte1; row <= maxByte1; row++) {
+        PRInt32 offset = (((row - minByte1) * charsPerRow) - minByte2);
+        for (PRInt32 cell = minByte2; cell <= maxByte2; cell++) {
+          XCharStruct* bounds = &aFont->per_char[offset + cell];
+          if ((!bounds->ascent) && (!bounds->descent)) {
+            SET_REPRESENTABLE(map, (row << 8) | cell);
+          }
+        }
+      }
+    }
+    else {
+      // XXX look at glyph ranges property, if any
+      PR_Free(map);
+      map = nsnull;
+    }
+  }
+
+  return map;
+}
+
+
 void
 nsFontXlib::LoadFont(nsFontCharSet* aCharSet, nsFontMetricsXlib* aMetrics)
 {
   XFontStruct *xlibFont = XLoadQueryFont(aMetrics->mDisplay, mName);
   if (xlibFont) {
+    if (aCharSet->mInfo->mCharSet) {
+      mMap = aCharSet->mInfo->mMap;
+    }
+    else {
+      mMap = GetMapFor10646Font(xlibFont);
+      if (!mMap) {
+        XFreeFont(aMetrics->mDisplay, xlibFont);
+        return;
+      }
+    }
     mFont = xlibFont;
-    mMap = aCharSet->mInfo->mMap;
     mActualSize = xlibFont->max_bounds.ascent + xlibFont->max_bounds.descent;
     if (aCharSet->mInfo->mSpecialUnderline) {
       XFontStruct* asciiXFont = aMetrics->mFontHandle;
@@ -1286,6 +1365,12 @@ PickASizeAndLoad(nsFontSearch* aSearch, nsFontStretch* aStretch,
     }
     else {
       s = *p;
+    }
+  }
+
+  if (!aCharSet->mInfo->mCharSet) {
+    if (!IS_REPRESENTABLE(s->mMap, aSearch->mChar)) {
+      return;
     }
   }
 
@@ -1596,16 +1681,18 @@ SearchCharSet(PLHashEntry* he, PRIntn i, void* arg)
   PRUint32* map = charSetInfo->mMap;
   nsFontSearch* search = (nsFontSearch*) arg;
   PRUnichar c = search->mChar;
-  if (!map) {
-    map = (PRUint32*) PR_Calloc(2048, 4);
+  if (charSetInfo->mCharSet) {
     if (!map) {
+      map = (PRUint32*) PR_Calloc(2048, 4);
+      if (!map) {
+        return HT_ENUMERATE_NEXT;
+      }
+      charSetInfo->mMap = map;
+      SetUpFontCharSetInfo(charSetInfo);
+    }
+    if (!IS_REPRESENTABLE(map, c)) {
       return HT_ENUMERATE_NEXT;
     }
-    charSetInfo->mMap = map;
-    SetUpFontCharSetInfo(charSetInfo);
-  }
-  if (!IS_REPRESENTABLE(map, c)) {
-    return HT_ENUMERATE_NEXT;
   }
 
   TryCharSet(search, charSet);
