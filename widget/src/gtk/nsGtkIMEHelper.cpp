@@ -1142,21 +1142,11 @@ nsIMEGtkIC::ResetIC(PRUnichar **aUnichar, PRInt32 *aUnisize)
   mPreedit->Reset();
 
   /* restore conversion state after resetting ic later */
-#if XlibSpecificationRelease >= 6
-  XVaNestedList preedit_attr;
   XIMPreeditState preedit_state = XIMPreeditUnKnown;
   PRBool is_preedit_state = PR_FALSE;
-
-  preedit_attr = XVaCreateNestedList(0,
-                                     XNPreeditState, preedit_state,
-                                     0);
-  if (!XGetICValues(mIC->xic,
-                    XNPreeditAttributes, preedit_attr,
-                    NULL)) {
+  if (!XGetICValues(mIC->xic, XNPreeditState, &preedit_state, NULL)) {
     is_preedit_state = PR_TRUE;
   }
-  XFree(preedit_attr);
-#endif
 
   PRInt32 uniCharSize = 0;
   char *uncommitted_text = XmbResetIC(mIC->xic);
@@ -1170,17 +1160,11 @@ nsIMEGtkIC::ResetIC(PRUnichar **aUnichar, PRInt32 *aUnisize)
       aUnichar[uniCharSize] = 0;
     }
   }
-#if XlibSpecificationRelease >= 6
-  preedit_attr = XVaCreateNestedList(0,
-                                     XNPreeditState, preedit_state,
-                                     0);
   if (is_preedit_state) {
     XSetICValues(mIC->xic,
-                 XNPreeditAttributes, preedit_attr,
+                 XNPreeditState, preedit_state,
                  NULL);
   }
-  XFree(preedit_attr);
-#endif
   return uniCharSize;
 }
 
@@ -1191,32 +1175,18 @@ nsIMEGtkIC::IsPreeditComposing()
     if (mPreedit && mPreedit->GetPreeditLength()) {
       return PR_TRUE;
     }
-#if XlibSpecificationRelease >= 6
   } else {
-    PRBool ret_flag = PR_FALSE;
     int preedit_state;
-    XVaNestedList preedit_attr;
-    preedit_attr = XVaCreateNestedList(0,
-                                       XNPreeditState, preedit_state,
-                                       0);
-    if (!XGetICValues(mIC->xic,
-                      XNPreeditAttributes, preedit_attr,
-                      NULL)) {
+    if (!XGetICValues(mIC->xic, XNPreeditState, &preedit_state, NULL)) {
       if (preedit_state == XIMPreeditEnable) {
-        ret_flag = PR_TRUE;
+        return PR_TRUE;
       }
     } else {
       // kinput2 does not support XGetICValues(XNPreeditState)
-      ret_flag = PR_TRUE;
+      return PR_TRUE;
     }
-    XFree(preedit_attr);
-    return ret_flag;
   }
   return PR_FALSE;
-#else
-  }
-  return PR_TRUE;
-#endif
 }
 
 GdkFont*
