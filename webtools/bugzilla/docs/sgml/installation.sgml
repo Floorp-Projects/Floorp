@@ -606,6 +606,12 @@
         </member>
       </simplelist>
       </para>
+
+      <note>
+        <para>If you are using MySQL 4, the bugs user also needs to be granted
+        the LOCK TABLES and CREATE TEMPORARY TABLES permissions.
+        </para>
+      </note>
     </section>
 
     <section>
