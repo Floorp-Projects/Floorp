@@ -30,9 +30,9 @@
 static NS_DEFINE_IID(kIDOMHTMLAreaElementIID, NS_IDOMHTMLAREAELEMENT_IID);
 
 class nsHTMLAreaElement : public nsIDOMHTMLAreaElement,
-		   public nsIScriptObjectOwner,
-		   public nsIDOMEventReceiver,
-		   public nsIHTMLContent
+                          public nsIScriptObjectOwner,
+                          public nsIDOMEventReceiver,
+                          public nsIHTMLContent
 {
 public:
   nsHTMLAreaElement(nsIAtom* aTag);
