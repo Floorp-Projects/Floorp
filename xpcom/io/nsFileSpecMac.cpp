@@ -626,6 +626,7 @@ Clean:
 nsFileSpec::nsFileSpec()
 //----------------------------------------------------------------------------------------
 {
+//    NS_ASSERTION(0, "nsFileSpec is unsupported - use nsIFile!");
 	Clear();
 }
 #endif
@@ -636,6 +637,7 @@ nsFileSpec::nsFileSpec(const FSSpec& inSpec, PRBool resolveAlias)
 : mSpec(inSpec)
 , mError(NS_OK)
 {
+//    NS_ASSERTION(0, "nsFileSpec is unsupported - use nsIFile!");
 	if (resolveAlias)
 	{
 		PRBool dummy;
@@ -658,13 +660,15 @@ nsFileSpec::nsFileSpec(const nsFileSpec& inSpec)
 :	 mSpec(inSpec.mSpec)
 ,	 mError(inSpec.Error())
 {
+//    NS_ASSERTION(0, "nsFileSpec is unsupported - use nsIFile!");
 }
 
 //----------------------------------------------------------------------------------------
 nsFileSpec::nsFileSpec(const char* inNativePathString, PRBool inCreateDirs)
 //----------------------------------------------------------------------------------------
 {
-	Clear();		// this sets mError to NS_ERROR_NOT_INITIALIZED
+	NS_ASSERTION(0, "nsFileSpec is unsupported - use nsIFile!");
+    Clear();		// this sets mError to NS_ERROR_NOT_INITIALIZED
 
 	if (inNativePathString)
 	{
@@ -680,6 +684,7 @@ nsFileSpec::nsFileSpec(const char* inNativePathString, PRBool inCreateDirs)
 nsFileSpec::nsFileSpec(const nsString& inNativePathString, PRBool inCreateDirs)
 //----------------------------------------------------------------------------------------
 {
+//    NS_ASSERTION(0, "nsFileSpec is unsupported - use nsIFile!");
 	Clear();		// this sets mError to NS_ERROR_NOT_INITIALIZED
 
 	mError = NS_FILE_RESULT(
@@ -695,6 +700,7 @@ nsFileSpec::nsFileSpec(const nsString& inNativePathString, PRBool inCreateDirs)
 nsFileSpec::nsFileSpec(short vRefNum, long parID, ConstStr255Param fileName,  PRBool resolveAlias)
 //----------------------------------------------------------------------------------------
 {
+//    NS_ASSERTION(0, "nsFileSpec is unsupported - use nsIFile!");
 	mError = NS_FILE_RESULT(::FSMakeFSSpec(vRefNum, parID, fileName, &mSpec));
 	if (mError == NS_FILE_RESULT(fnfErr))
 		mError = NS_OK;
@@ -710,6 +716,7 @@ nsFileSpec::nsFileSpec(short vRefNum, long parID, ConstStr255Param fileName,  PR
 nsFileSpec::nsFileSpec(const nsFilePath& inPath)
 //----------------------------------------------------------------------------------------
 {
+//    NS_ASSERTION(0, "nsFileSpec is unsupported - use nsIFile!");
 	*this = inPath.GetFileSpec();
 }
 

@@ -825,6 +825,7 @@ nsFileSpec::nsFileSpec()
 //----------------------------------------------------------------------------------------
 :    mError(NS_OK)		// XXX shouldn't this be NS_ERROR_NOT_INITIALIZED?
 {
+//    NS_ASSERTION(0, "nsFileSpec is unsupported - use nsIFile!");
 }
 
 //----------------------------------------------------------------------------------------
@@ -948,6 +949,7 @@ nsFileSpec::nsFileSpec(const nsFilePath& inPath)
 :    mPath((const char*)inPath)
 ,    mError(NS_OK)
 {
+//    NS_ASSERTION(0, "nsFileSpec is unsupported - use nsIFile!");
 }
 
 //----------------------------------------------------------------------------------------
@@ -966,6 +968,7 @@ nsFileSpec::nsFileSpec(const nsFileSpec& inSpec)
 :    mPath(inSpec.mPath)
 ,    mError(NS_OK)
 {
+//    NS_ASSERTION(0, "nsFileSpec is unsupported - use nsIFile!");
 }
 
 //----------------------------------------------------------------------------------------
@@ -974,6 +977,7 @@ nsFileSpec::nsFileSpec(const char* inString, PRBool inCreateDirs)
 :    mPath(inString)
 ,    mError(NS_OK)
 {
+//    NS_ASSERTION(0, "nsFileSpec is unsupported - use nsIFile!");
     // Make canonical and absolute.
     nsFileSpecHelpers::Canonify(mPath, inCreateDirs);
 }
@@ -984,6 +988,7 @@ nsFileSpec::nsFileSpec(const nsString& inString, PRBool inCreateDirs)
 :    mPath(inString)
 ,    mError(NS_OK)
 {
+//    NS_ASSERTION(0, "nsFileSpec is unsupported - use nsIFile!");
     // Make canonical and absolute.
     nsFileSpecHelpers::Canonify(mPath, inCreateDirs);
 }

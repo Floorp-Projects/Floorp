@@ -162,6 +162,7 @@ void nsFileSpecHelpers::NativeToUnix(nsSimpleCharString& ioPath)
 nsFileSpec::nsFileSpec(const nsFilePath& inPath)
 //----------------------------------------------------------------------------------------
 {
+//    NS_ASSERTION(0, "nsFileSpec is unsupported - use nsIFile!");
 	*this = inPath;
 }
 
