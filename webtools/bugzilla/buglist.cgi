@@ -502,9 +502,12 @@ sub GenerateSQL {
          },
 
          "^cc," => sub {
-            push(@supptables,                                                  
-              ("LEFT JOIN cc cc_$chartid ON bugs.bug_id = cc_$chartid.bug_id LEFT JOIN profiles map_cc_$chartid ON cc_$chartid.who = map_cc_$chartid.userid"));
-            $f = "map_cc_$chartid.login_name";  
+            push(@supptables, "cc cc_$chartid");
+            push(@wherepart, "bugs.bug_id = cc_$chartid.bug_id");
+
+            push(@supptables, "profiles map_cc_$chartid");
+            push(@wherepart, "cc_$chartid.who = map_cc_$chartid.userid");
+            $f = "map_cc_$chartid.login_name";
          },
 
          "^long_?desc,changedby" => sub {
@@ -616,7 +619,7 @@ sub GenerateSQL {
 
              my $attachtable = "attachments_$chartid";
              my $statustable = "attachstatuses_${chartid}_$statusid";
-             
+
              push(@supptables, "attachments $attachtable");
              my $join = "LEFT JOIN attachstatuses $statustable ON ".
                "($attachtable.attach_id = $statustable.attach_id AND " .
