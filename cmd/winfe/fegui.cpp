@@ -2381,12 +2381,13 @@ PUBLIC void *FE_AboutData (const char *which, char **data_ret, int32 *length_ret
 
             char *pSp = szLoadString(IDS_ABOUT_0);
             /* Null pointer check */
-            if (pSp && pSSLString ) 
+            if (pSp && pSSLString) 
 			{
 				a = (char *)malloc(strlen(pSp) + strlen(pSSLString) + strlen(csVersion) * 2 + 48);
                 sprintf(a, pSp, (const char *)csVersion, (const char *)csVersion, pSSLString);
-            }
-        
+            } else
+				a = strdup(pSp);
+
             /* Free string space if allocated */
 			if (pSSLString) free(pSSLString);
 			if (pSSLVersion) free(pSSLVersion);
