@@ -405,7 +405,8 @@ nsCrypto::GetScriptPrincipal(JSContext *cx)
              NS_REINTERPRET_CAST(nsIScriptContext*,JS_GetContextPrivate(cx));
     if (scriptContext)
     {
-      nsCOMPtr<nsIScriptGlobalObject> global(dont_AddRef(scriptContext->GetGlobalObject()));
+      nsCOMPtr<nsIScriptGlobalObject> global;
+      scriptContext->GetGlobalObject(getter_AddRefs(global));
       NS_ENSURE_TRUE(global, nsnull);
       nsCOMPtr<nsIScriptObjectPrincipal> globalData = do_QueryInterface(global);
       NS_ENSURE_TRUE(globalData, nsnull);
