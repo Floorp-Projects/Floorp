@@ -43,6 +43,15 @@ extern "C" int XFE_EDITOR_NEWTABLE_COLS;
 extern "C" void fe_mailto_cb(Widget , XtPointer, XtPointer);
 #endif
 
+XP_Bool AlwaysEnabledCommand::isEnabled(XFE_View* v, XFE_CommandInfo*)
+{
+  return (v->getContext() != NULL
+          && !(v->getContext()->waitingMode)
+          && (!EDT_IS_EDITOR(v->getContext())
+              || (EDT_HaveEditBuffer(v->getContext()) &&
+                  !EDT_IsBlocked(v->getContext()))));
+}
+
 #define FE_SYNTAX_ERROR() doSyntaxErrorAlert(view, info)
 
 class UndoCommand : public XFE_EditorViewCommand

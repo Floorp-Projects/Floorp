@@ -111,15 +111,28 @@ public:
 	}; 
 };
 
-class AlwaysEnabledCommand : public XFE_EditorViewCommand
+class ReallyAlwaysEnabledCommand : public XFE_EditorViewCommand
 {
 public:
-	AlwaysEnabledCommand(char* name, XFE_EditorView *v)
+	ReallyAlwaysEnabledCommand(char* name, XFE_EditorView *v)
       : XFE_EditorViewCommand(name, v) {};
 
 	XP_Bool isEnabled(XFE_View*, XFE_CommandInfo*) {
 		return True;
 	};
+};
+
+// AlwaysEnabledCommand isn't really always enabled;
+// it's turned off if we're blocked, e.g. if a plugin is running.
+// If you really want something on all the time,
+// use ReallyAlwaysEnabledCommand.
+class AlwaysEnabledCommand : public ReallyAlwaysEnabledCommand
+{
+public:
+	AlwaysEnabledCommand(char* name, XFE_EditorView *v)
+      : ReallyAlwaysEnabledCommand(name, v) {};
+
+	XP_Bool isEnabled(XFE_View* v, XFE_CommandInfo*);
 };
 
 class SetFontColorCommand : public AlwaysEnabledCommand
