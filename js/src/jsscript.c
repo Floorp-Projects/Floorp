@@ -859,8 +859,9 @@ typedef struct ScriptFilenameEntry {
 JS_STATIC_DLL_CALLBACK(JSHashEntry *)
 js_alloc_entry(void *priv, const void *key)
 {
-    return (JSHashEntry *)
-           malloc(offsetof(ScriptFilenameEntry, filename) + strlen(key) + 1);
+    size_t nbytes = offsetof(ScriptFilenameEntry, filename) + strlen(key) + 1;
+
+    return (JSHashEntry *) malloc(JS_MAX(nbytes, sizeof(JSHashEntry)));
 }
 
 JS_STATIC_DLL_CALLBACK(void)
