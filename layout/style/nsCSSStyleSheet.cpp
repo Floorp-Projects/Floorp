@@ -70,7 +70,7 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsINameSpace.h"
 #include "nsITextContent.h"
 #include "prlog.h"
-
+#include "nsIXMLContent.h"
 #include "nsCOMPtr.h"
 #include "nsIStyleSet.h"
 #include "nsISizeOfHandler.h"
@@ -85,6 +85,8 @@ static NS_DEFINE_IID(kIDOMStyleSheetIID, NS_IDOMSTYLESHEET_IID);
 static NS_DEFINE_IID(kIDOMCSSStyleSheetIID, NS_IDOMCSSSTYLESHEET_IID);
 static NS_DEFINE_IID(kIDOMCSSStyleRuleIID, NS_IDOMCSSSTYLERULE_IID);
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
+
+static PRBool IsSimpleXlink(nsIContent *aContent, nsString &aHREF);
 
 // ----------------------
 // Rule hash key
@@ -2953,24 +2955,32 @@ static PRBool SelectorMatches(nsIPresContext* aPresContext,
           } 
         }
         else if (IsLinkPseudo(pseudoClass->mAtom)) {
-          // XXX xml link too
+
+          PRBool bIsXLink = PR_FALSE;
+          nsAutoString base, href;
+          nsresult attrState = 0;
+
 	        if(!tagset) {
 	          tagset=PR_TRUE;
 	          aContent->GetTag(contentTag);
 	        }
-          if (nsHTMLAtoms::a == contentTag) {
-            // make sure this anchor has a link even if we are not testing state
-            // if there is no link, then this anchor is not really a linkpseudo.
-            // bug=23209
-            nsAutoString base, href;
-            nsresult attrState = aContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::href, href);
-            if (!(NS_CONTENT_ATTR_HAS_VALUE == attrState)) {
-              result = PR_FALSE;
-            } else if (aTestState) {
+          if ((nsHTMLAtoms::a == contentTag) ||
+              (bIsXLink = IsSimpleXlink(aContent,href)) ) {
+            
+            if (bIsXLink != PR_TRUE) {
+              // make sure this anchor has a link even if we are not testing state
+              // if there is no link, then this anchor is not really a linkpseudo.
+              // bug=23209
+              attrState = aContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::href, href);
+              if (!(NS_CONTENT_ATTR_HAS_VALUE == attrState)) {
+                result = PR_FALSE;
+              }
+            } 
+            if (aTestState) {
               if (! linkHandler) {
                 aPresContext->GetLinkHandler(&linkHandler);
                 if (linkHandler) {
-                  if (NS_CONTENT_ATTR_HAS_VALUE == attrState) {
+                  if (NS_CONTENT_ATTR_HAS_VALUE == attrState || bIsXLink) {
                     nsCOMPtr<nsIURI> baseURI = nsnull;
                     nsCOMPtr<nsIHTMLContent> htmlContent = do_QueryInterface(aContent);
                     if (htmlContent) {
@@ -3682,3 +3692,35 @@ CSSRuleProcessor::GetRuleCascade(nsIAtom* aMedium)
 }
 
 
+/*static*/ 
+PRBool IsSimpleXlink(nsIContent *aContent, nsString &aHREF)
+{
+  NS_ASSERTION(aContent, "invalid call to IsXlink with null content");
+
+  PRBool rv = PR_FALSE;
+
+  // set the out-param to default / empty
+  aHREF.Truncate(0);
+
+  if (aContent) {
+    // first see if we have an XML element
+    nsCOMPtr<nsIXMLContent> xml(do_QueryInterface(aContent));
+    if (xml) {
+      static nsCOMPtr<nsIAtom> kTypeAtom = getter_AddRefs(NS_NewAtom("type"));  // NOTE: this should be in an atom table but isn't
+      nsAutoString strSimple;
+      strSimple.AssignWithConversion("simple");
+
+      // see if there is an xlink namespace'd href attribute
+      nsresult attrState = aContent->GetAttribute(kNameSpaceID_XLink, nsHTMLAtoms::href, aHREF);
+      if (NS_CONTENT_ATTR_HAS_VALUE == attrState) {
+        // see if it is type=simple (we don't deal with other types)
+        nsAutoString val;
+        attrState = aContent->GetAttribute(kNameSpaceID_XLink, kTypeAtom, val);
+        if (val == strSimple) {
+          rv = PR_TRUE;
+        }
+      }
+    }
+  }
+  return rv;
+}
