@@ -53,9 +53,14 @@
 #include "prtypes.h"
 #include "nsIMimeContentTypeHandler.h"
 
+typedef MimeObjectClass  *
+(* PR_CALLBACK MCTHCreateCTHClass)(const char *content_type, 
+                                   contentTypeHandlerInitStruct *initStruct);
+
 class nsMimeContentTypeHandler : public nsIMimeContentTypeHandler {
 public: 
-    nsMimeContentTypeHandler ();
+    nsMimeContentTypeHandler (const char *aMimeType, 
+                              MCTHCreateCTHClass callback);
     virtual       ~nsMimeContentTypeHandler (void);
 
     /* this macro defines QueryInterface, AddRef and Release for this class */
@@ -66,10 +71,9 @@ public:
     NS_IMETHOD    CreateContentTypeHandlerClass(const char *content_type, 
                                                 contentTypeHandlerInitStruct *initStruct, 
                                                 MimeObjectClass **objClass);
+ private:
+    char *mimeType;
+    MCTHCreateCTHClass realCreateContentTypeHandlerClass;
 }; 
-
-/* this function will be used by the factory to generate an class access object....*/
-extern nsresult NS_NewMimeContentTypeHandler(nsIMimeContentTypeHandler **aInstancePtrResult);
-
 
 #endif /* nsMimeContentTypeHandler_h_ */

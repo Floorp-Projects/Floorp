@@ -43,28 +43,6 @@
 #include "nsMimeContentTypeHandler.h"
 
 /* 
- * This function will be used by the factory to generate an 
- * mime object class object....
- */
-nsresult NS_NewMimeContentTypeHandler(nsIMimeContentTypeHandler ** aInstancePtrResult)
-{
-	/* note this new macro for assertions...they can take 
-     a string describing the assertion */
-  //nsresult result = NS_OK;
-	NS_PRECONDITION(nsnull != aInstancePtrResult, "nsnull ptr");
-	if (nsnull != aInstancePtrResult)
-	{
-		nsMimeContentTypeHandler *obj = new nsMimeContentTypeHandler();
-		if (obj)
-			return obj->QueryInterface(NS_GET_IID(nsIMimeContentTypeHandler), (void**) aInstancePtrResult);
-		else
-			return NS_ERROR_OUT_OF_MEMORY; /* we couldn't allocate the object */
-	}
-	else
-		return NS_ERROR_NULL_POINTER; /* aInstancePtrResult was NULL....*/
-}
-
-/* 
  * The following macros actually implement addref, release and 
  * query interface for our component. 
  */
@@ -73,26 +51,31 @@ NS_IMPL_ISUPPORTS1(nsMimeContentTypeHandler, nsIMimeContentTypeHandler)
 /*
  * nsIMimeEmitter definitions....
  */
-nsMimeContentTypeHandler::nsMimeContentTypeHandler()
+nsMimeContentTypeHandler::nsMimeContentTypeHandler(const char *aMimeType,
+                                                   MCTHCreateCTHClass callback)
 {
   /* the following macro is used to initialize the ref counting data */
   NS_INIT_REFCNT();
-
+  NS_ASSERTION(aMimeType, "nsMimeContentTypeHandler should be initialized with non-null mime type")
+  NS_ASSERTION(callback, "nsMimeContentTypeHandler should be initialized with non-null callback")
+  mimeType = PL_strdup(aMimeType);
+  realCreateContentTypeHandlerClass = callback;
 }
 
 nsMimeContentTypeHandler::~nsMimeContentTypeHandler(void)
 {
+  if (mimeType) {
+    free(mimeType);
+    mimeType = 0;
+  }
+  realCreateContentTypeHandlerClass = 0;
 }
-
-extern "C" char             *MIME_GetContentType(void);
-extern "C" MimeObjectClass  *MIME_CreateContentTypeHandlerClass(const char *content_type, 
-                                                                contentTypeHandlerInitStruct *initStruct);
 
 // Get the content type if necessary
 nsresult
 nsMimeContentTypeHandler::GetContentType(char **contentType)
 {
-  *contentType = MIME_GetContentType();
+  *contentType = PL_strdup(mimeType);
   return NS_OK;
 }
 
@@ -102,9 +85,12 @@ nsMimeContentTypeHandler::CreateContentTypeHandlerClass(const char *content_type
                                                 contentTypeHandlerInitStruct *initStruct, 
                                                 MimeObjectClass **objClass)
 {
-  *objClass = MIME_CreateContentTypeHandlerClass(content_type, initStruct);
-	if (!*objClass)
+  *objClass = realCreateContentTypeHandlerClass(content_type, initStruct);
+  if (!*objClass)
     return NS_ERROR_OUT_OF_MEMORY; /* we couldn't allocate the object */
   else
     return NS_OK;
 }
+
+
+
