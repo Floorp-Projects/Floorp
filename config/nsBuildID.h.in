@@ -17,7 +17,7 @@
  * GRE_BUILD_ID will just contain <milestone>. 
  *
  */
-#define GRE_BUILD_ID 00000000000
+#define GRE_BUILD_ID "00000000000"
 
 #endif /* _NSBUILDID_H_ */
 
