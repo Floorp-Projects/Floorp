@@ -176,10 +176,12 @@ NS_METHOD
 nsTableRowFrame::DidReflow(nsIPresContext& aPresContext,
                            nsDidReflowStatus aStatus)
 {
-  if (gsDebug) printf("Row DidReflow: begin\n");
+  if (gsDebug) printf("Row %p DidReflow: begin mRect.h=%d, mCellMTM=%d, mCellMBM=%d\n",
+                      this, mRect.height, mCellMaxTopMargin, mCellMaxBottomMargin);
   if (NS_FRAME_REFLOW_FINISHED == aStatus) {
     // Resize and re-align the cell frames based on our row height
-    nscoord           cellHeight = mRect.height - mCellMaxTopMargin - mCellMaxBottomMargin;
+    nscoord cellHeight = mRect.height - mCellMaxTopMargin - mCellMaxBottomMargin;
+    if (gsDebug) printf("Row DidReflow: cellHeight=%d\n", cellHeight);
     nsIFrame *cellFrame = mFirstChild;
     nsTableFrame* tableFrame;
     nsTableFrame::GetTableFrame(this, tableFrame);
@@ -190,16 +192,25 @@ nsTableRowFrame::DidReflow(nsIPresContext& aPresContext,
       if (NS_STYLE_DISPLAY_TABLE_CELL == kidDisplay->mDisplay)
       {
         PRInt32 rowSpan = tableFrame->GetEffectiveRowSpan(mRowIndex, (nsTableCellFrame *)cellFrame);
-        if (gsDebug) printf("Row DidReflow: cellFrame %p\n", cellFrame);
+        if (gsDebug) printf("Row DidReflow: cellFrame %p ", cellFrame);
         if (1==rowSpan)
         {
           // resize the cell's height
           nsSize  cellFrameSize;
           cellFrame->GetSize(cellFrameSize);
           cellFrame->SizeTo(cellFrameSize.width, cellHeight);
-          if (gsDebug) printf("Row DidReflow: cellFrame %p given height %d\n", cellFrame, cellHeight);
+          if (gsDebug) printf("given height %d\n", cellHeight);
           // realign cell content based on the new height
           ((nsTableCellFrame *)cellFrame)->VerticallyAlignChild(&aPresContext);
+        }
+        else
+        {
+          if (gsDebug)
+          {
+            nsSize  cellFrameSize;
+            cellFrame->GetSize(cellFrameSize);
+            printf("has rowspan %d and height %d, unchanged.\n", rowSpan, cellFrameSize.height);
+          }
         }
       }
         // Get the next cell
@@ -208,8 +219,8 @@ nsTableRowFrame::DidReflow(nsIPresContext& aPresContext,
   }
 
   // Let our base class do the usual work
+  if (gsDebug) printf("Row DidReflow: returning superclass DidReflow.\n");
   return nsContainerFrame::DidReflow(aPresContext, aStatus);
-  if (gsDebug) printf("Row DidReflow: end\n");
 }
 
 void nsTableRowFrame::ResetMaxChildHeight()
