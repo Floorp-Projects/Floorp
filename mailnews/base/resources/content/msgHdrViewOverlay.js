@@ -32,8 +32,6 @@
 //
 ////////////////////////////////////////////////////////////////////////////////////
 
-//NOTE: gMessengerBundle must be defined and set or this Overlay won't work
-
 var msgHeaderParserContractID		   = "@mozilla.org/messenger/headerparser;1";
 var abAddressCollectorContractID	 = "@mozilla.org/addressbook/services/addressCollecter;1";
 
@@ -49,6 +47,8 @@ var gCollectNewsgroup = false;
 var gCollapsedHeaderViewMode = false;
 var gBuildAttachmentsForCurrentMsg = false;
 var gBuildAttachmentPopupForCurrentMsg = true;
+var gOpenLabel;
+var gSaveLabel;
 
 var msgHeaderParser = Components.classes[msgHeaderParserContractID].getService(Components.interfaces.nsIMsgHeaderParser);
 var abAddressCollector = Components.classes[abAddressCollectorContractID].getService(Components.interfaces.nsIAbAddressCollecter);
@@ -904,7 +904,14 @@ function addAttachmentToPopup(popup, attachment)
 
       var menuitementry = document.createElement('menuitem');     
       menuitementry.setAttribute('oncommand', 'openAttachment' + oncommandPrefix); 
-      menuitementry.setAttribute('label', "Open"); 
+
+      if (!gSaveLabel || !gOpenLabel) {
+        var messengerBundle = document.getElementById("bundle_messenger");
+        gSaveLabel = messengerBundle.getString("saveLabel");
+        gOpenLabel = messengerBundle.getString("openLabel");
+      }
+
+      menuitementry.setAttribute('label', gOpenLabel); 
       menuitementry = openpopup.appendChild(menuitementry);
 
       var menuseparator = document.createElement('menuseparator');
@@ -912,7 +919,7 @@ function addAttachmentToPopup(popup, attachment)
       
       menuitementry = document.createElement('menuitem');
       menuitementry.setAttribute('oncommand', 'saveAttachment' + oncommandPrefix); 
-      menuitementry.setAttribute('label', "Save"); 
+      menuitementry.setAttribute('label', gSaveLabel); 
       menuitementry = openpopup.appendChild(menuitementry);
     }  // if we created a menu item for this attachment...
   } // if we have a popup
