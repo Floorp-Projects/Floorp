@@ -1172,6 +1172,20 @@ nsTitledButtonFrame :: CheckStateToString ( CheckState inState, nsString& outSta
 } // CheckStateToString
 
 
+NS_IMETHODIMP
+nsTitledButtonFrame::GetAdditionalStyleContext(PRInt32 aIndex, 
+                                               nsIStyleContext** aStyleContext) const
+{
+  return mRenderer.GetStyleContext(aIndex, aStyleContext);
+}
+
+NS_IMETHODIMP
+nsTitledButtonFrame::SetAdditionalStyleContext(PRInt32 aIndex, 
+                                               nsIStyleContext* aStyleContext)
+{
+  return mRenderer.SetStyleContext(aIndex, aStyleContext);
+}
+
 //
 // ReResolveStyleContext
 //

@@ -47,6 +47,8 @@
 #include "nsCOMPtr.h"
 #include "nsBoxFrame.h"
 
+#define NS_TOOLBOX_GRIPPY_NORMAL_CONTEXT_INDEX    0
+#define NS_TOOLBOX_GRIPPY_ROLLOVER_CONTEXT_INDEX  1
 
 class nsToolboxFrame : public nsBoxFrame
 {
@@ -75,6 +77,10 @@ public:
                   nsIStyleContext* aContext,
                   nsIFrame*        aPrevInFlow); 
 
+  NS_IMETHOD  GetAdditionalStyleContext(PRInt32 aIndex, 
+                                        nsIStyleContext** aStyleContext) const;
+  NS_IMETHOD  SetAdditionalStyleContext(PRInt32 aIndex, 
+                                        nsIStyleContext* aStyleContext);
   NS_IMETHOD  ReResolveStyleContext ( nsIPresContext* aPresContext, 
                                       nsIStyleContext* aParentContext,
                                       PRInt32 aParentChange,
