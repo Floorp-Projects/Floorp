@@ -852,6 +852,17 @@ nsGfxScrollFrame::Reflow(nsIPresContext*      aPresContext,
   return rv;
 }
 
+nsGfxScrollFrame*
+nsGfxScrollFrame::GetScrollFrameForPort(nsIFrame* aPort) {
+  NS_ASSERTION(aPort, "no port");
+  nsIFrame* parent = aPort->GetParent();
+  if (!parent)
+    return nsnull;
+  nsIScrollableFrame* scFrame =
+    (nsCOMPtr<nsIScrollableFrame>(do_QueryInterface(parent)));
+  return NS_STATIC_CAST(nsGfxScrollFrame*, scFrame);
+}
+
 NS_IMETHODIMP_(nsrefcnt) 
 nsGfxScrollFrame::AddRef(void)
 {

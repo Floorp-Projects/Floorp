@@ -182,13 +182,7 @@ public:
 
   virtual nsresult GetContentOf(nsIContent** aContent);
 
-protected:
-  nsGfxScrollFrame(nsIPresShell* aShell, nsIDocument* aDocument, PRBool aIsRoot);
-  virtual PRIntn GetSkipSides() const;
-
-  // If a child frame was added or removed, reload our child frame list
-  // We need this if a scrollbar frame is recreated
-  void ReloadChildFrames(nsIPresContext* aPresContext);
+  static nsGfxScrollFrame* GetScrollFrameForPort(nsIFrame* aPort);
 
   struct ScrollbarStyles {
     // one of NS_STYLE_OVERFLOW_SCROLL, NS_STYLE_OVERFLOW_HIDDEN,
@@ -198,6 +192,14 @@ protected:
     ScrollbarStyles(PRInt32 h, PRInt32 v) : mHorizontal(h), mVertical(v) {}
   };
   virtual ScrollbarStyles GetScrollbarStyles() const;
+
+protected:
+  nsGfxScrollFrame(nsIPresShell* aShell, nsIDocument* aDocument, PRBool aIsRoot);
+  virtual PRIntn GetSkipSides() const;
+
+  // If a child frame was added or removed, reload our child frame list
+  // We need this if a scrollbar frame is recreated
+  void ReloadChildFrames(nsIPresContext* aPresContext);
 
 private:
   friend class nsGfxScrollFrameInner;
