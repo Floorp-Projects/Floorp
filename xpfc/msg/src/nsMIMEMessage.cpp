@@ -61,3 +61,33 @@ nsresult nsMIMEMessage::Init()
   return (nsMessage::Init());
 }
 
+nsresult nsMIMEMessage::AddHeader(nsString& aHeaderName, nsString& aHeaderValue)
+{
+  return (NS_OK);
+}
+
+nsresult nsMIMEMessage::RemoveHeader(nsString& aHeaderName)
+{
+  return (NS_OK);
+}
+
+nsresult nsMIMEMessage::GetHeader(nsString& aHeaderName, nsString& aHeaderValue)
+{
+  return (NS_OK);
+}
+
+nsresult nsMIMEMessage::AddAttachment(nsString& aAttachment, nsMIMEEncoding aMIMEEncoding)
+{
+  return (NS_OK);
+}
+
+nsresult nsMIMEMessage::AddText(nsString& aText, nsMIMEEncoding aMIMEEncoding)
+{
+  return (NS_OK);
+}
+
+nsresult nsMIMEMessage::AddBodyPart(nsIMIMEBodyPart& aBodyPart)
+{
+  return (NS_OK);
+}
+

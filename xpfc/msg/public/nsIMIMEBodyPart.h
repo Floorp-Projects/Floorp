@@ -16,34 +16,33 @@
  * Reserved.
  */
 
-#ifndef nsMIMEMessage_h___
-#define nsMIMEMessage_h___
+#ifndef nsIMIMEBodyPart_h___
+#define nsIMIMEBodyPart_h___
 
-#include "nsMessage.h"
-#include "nsIMIMEMessage.h"
+#include "nsISupports.h"
+#include "nsString.h"
 
-class nsMIMEMessage : public nsMessage,
-                      public nsIMIMEMessage
+//4804d230-703a-11d2-8dbc-00805f8a7ab6
+#define NS_IMIME_BODY_PART_IID   \
+{ 0x4804d230, 0x703a, 0x11d2,    \
+{ 0x8d, 0xbc, 0x00, 0x80, 0x5f, 0x8a, 0x7a, 0xb6 } }
+
+typedef enum
 {
+  nsMIMEEncoding_default = 0,
+  nsMIMEEncoding_quoted_printable = 1,
+  nsMIMEEncoding_base_64 = 2,
+  nsMIMEEncoding_none = 3
+} nsMIMEEncoding;
+
+
+class nsIMIMEBodyPart : public nsISupports
+{
+
 public:
-  nsMIMEMessage();
 
-  NS_DECL_ISUPPORTS
-
-  NS_IMETHOD Init() ;
-
-  NS_IMETHOD AddHeader(nsString& aHeaderName, nsString& aHeaderValue);
-  NS_IMETHOD RemoveHeader(nsString& aHeaderName);
-  NS_IMETHOD GetHeader(nsString& aHeaderName, nsString& aHeaderValue);
-
-  NS_IMETHOD AddAttachment(nsString& aAttachment, nsMIMEEncoding aMIMEEncoding = nsMIMEEncoding_default);
-  NS_IMETHOD AddText(nsString& aText, nsMIMEEncoding aMIMEEncoding = nsMIMEEncoding_default);
-
-  NS_IMETHOD AddBodyPart(nsIMIMEBodyPart& aBodyPart);
-
-protected:
-  ~nsMIMEMessage();
+  NS_IMETHOD Init() = 0;
 
 };
 
-#endif /* nsMIMEMessage_h___ */
+#endif /* nsIMIMEBodyPart_h___ */
