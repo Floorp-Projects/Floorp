@@ -954,8 +954,8 @@ nsFontMetricsOS2::InitializeGlobalFonts(HPS aPS)
     lRemFonts = GpiQueryFonts(aPS, QF_PUBLIC, NULL, &lNumFonts, sizeof(FONTMETRICS), pFontMetrics);
     for (int i=0; i < lNumFonts; i++) {
       BOOL fAlreadyFound = FALSE;
-      for (int j = 0; j < nsFontMetricsOS2::gGlobalFontsCount && !fAlreadyFound; j++) {
-        if (!strcmp(nsFontMetricsOS2::gGlobalFonts[j].fontMetrics.szFamilyname,
+      for (int j = 0; j < gGlobalFontsCount && !fAlreadyFound; j++) {
+        if (!strcmp(gGlobalFonts[j].fontMetrics.szFamilyname,
                  pFontMetrics[i].szFamilyname)) {
               fAlreadyFound = TRUE;
          }
@@ -978,14 +978,14 @@ nsFontMetricsOS2::InitializeGlobalFonts(HPS aPS)
 
 #ifdef OLDCODE
       for (int j = 0; j < nsFontMetricsOS2::gGlobalFontsCount; j++) {
-        if (!strcmp(nsFontMetricsOS2::gGlobalFonts[i].logFont.szFamilyname,
+        if (!strcmp(gGlobalFonts[i].logFont.szFamilyname,
                  logFont->lfFaceName)) {
 
           //work-around for Win95/98 problem 
           int   charSetSigBit = charSetToBit[gCharSetToIndex[logFont->lfCharSet]];
           if 	(charSetSigBit >= 0) {
             DWORD  charsetSigAdd = 1 << charSetSigBit;
-            nsFontMetricsOS2::gGlobalFonts[i].signature.fsCsb[0] |= charsetSigAdd;
+            gGlobalFonts[i].signature.fsCsb[0] |= charsetSigAdd;
           }
 
           return 1;
@@ -995,33 +995,33 @@ nsFontMetricsOS2::InitializeGlobalFonts(HPS aPS)
 
       // XXX make this smarter: don't add font to list if we already have a font
       // with the same font signature -- erik
-      if (nsFontMetricsOS2::gGlobalFontsCount == gGlobalFontsAlloc) {
+      if (gGlobalFontsCount == gGlobalFontsAlloc) {
         int newSize = 2 * (gGlobalFontsAlloc ? gGlobalFontsAlloc : 1);
         nsGlobalFont* newPointer = (nsGlobalFont*)
-        PR_Realloc(nsFontMetricsOS2::gGlobalFonts, newSize*sizeof(nsGlobalFont));
+        PR_Realloc(gGlobalFonts, newSize*sizeof(nsGlobalFont));
         if (newPointer) {
-          nsFontMetricsOS2::gGlobalFonts = newPointer;
+          gGlobalFonts = newPointer;
           gGlobalFontsAlloc = newSize;
         }
       }
 
-      nsGlobalFont* font = &nsFontMetricsOS2::gGlobalFonts[nsFontMetricsOS2::gGlobalFontsCount];
-      nsFontMetricsOS2::gGlobalFontsCount++;
+      nsGlobalFont* font = &gGlobalFonts[gGlobalFontsCount];
+      gGlobalFontsCount++;
 
 //      PRUnichar name[FACESIZE*2];
 //      name[0] = 0;
 //      strcpy(name, pFontMetrics[i].szFamilyname);
       font->name = new nsString();
-      font->name->AssignWithConversion(pFontMetrics[i].szFamilyname);
       if (!font->name) {
-        nsFontMetricsOS2::gGlobalFontsCount--;
+        gGlobalFontsCount--;
         continue;
       }
+      font->name->AssignWithConversion(pFontMetrics[i].szFamilyname);
       font->map = nsnull;
       font->fontMetrics = pFontMetrics[i];
       font->skip = 0;
 
-      nsFontMetricsOS2::gGlobalFonts[i].signature  = pFontMetrics[i].fsDefn;
+      gGlobalFonts[gGlobalFontsCount].signature  = pFontMetrics[i].fsDefn;
     } /* endwhile */
     gInitializedGlobalFonts = 1;
     nsMemory::Free(pFontMetrics);
@@ -1073,32 +1073,6 @@ CompareFontNames(const void* aArg1, const void* aArg2, void* aClosure)
 NS_IMETHODIMP
 nsFontEnumeratorOS2::EnumerateAllFonts(PRUint32* aCount, PRUnichar*** aResult)
 {
-#ifndef XP_OS2
-  *aCount = 18;
-  PRUnichar** newarray = (PRUnichar**)
-    nsMemory::Alloc(18 * sizeof(PRUnichar*));
-  newarray[0] = nsString(NS_ConvertASCIItoUCS2("Tms Rmn")).ToNewUnicode();
-  newarray[1] = nsString(NS_ConvertASCIItoUCS2("Tms Rmn")).ToNewUnicode();
-  newarray[2] = nsString(NS_ConvertASCIItoUCS2("Tms Rmn")).ToNewUnicode();
-  newarray[3] = nsString(NS_ConvertASCIItoUCS2("Tms Rmn")).ToNewUnicode();
-  newarray[4] = nsString(NS_ConvertASCIItoUCS2("Tms Rmn")).ToNewUnicode();
-  newarray[5] = nsString(NS_ConvertASCIItoUCS2("Tms Rmn")).ToNewUnicode();
-  newarray[6] = nsString(NS_ConvertASCIItoUCS2("Tms Rmn")).ToNewUnicode();
-  newarray[7] = nsString(NS_ConvertASCIItoUCS2("Tms Rmn")).ToNewUnicode();
-  newarray[8] = nsString(NS_ConvertASCIItoUCS2("Tms Rmn")).ToNewUnicode();
-  newarray[9] = nsString(NS_ConvertASCIItoUCS2("Tms Rmn")).ToNewUnicode();
-  newarray[10] = nsString(NS_ConvertASCIItoUCS2("Tms Rmn")).ToNewUnicode();
-  newarray[11] = nsString(NS_ConvertASCIItoUCS2("Tms Rmn")).ToNewUnicode();
-  newarray[12] = nsString(NS_ConvertASCIItoUCS2("Tms Rmn")).ToNewUnicode();
-  newarray[13] = nsString(NS_ConvertASCIItoUCS2("Tms Rmn")).ToNewUnicode();
-  newarray[14] = nsString(NS_ConvertASCIItoUCS2("Tms Rmn")).ToNewUnicode();
-  newarray[15] = nsString(NS_ConvertASCIItoUCS2("Tms Rmn")).ToNewUnicode();
-  newarray[16] = nsString(NS_ConvertASCIItoUCS2("Tms Rmn")).ToNewUnicode();
-  newarray[17] = nsString(NS_ConvertASCIItoUCS2("Tms Rmn")).ToNewUnicode();
-  *aResult = newarray;
-  return NS_OK;
-#endif
-
   if (aCount) {
     *aCount = 0;
   }
@@ -1232,33 +1206,6 @@ NS_IMETHODIMP
 nsFontEnumeratorOS2::EnumerateFonts(const char* aLangGroup,
   const char* aGeneric, PRUint32* aCount, PRUnichar*** aResult)
 {
-#ifndef XP_OS2
-  *aCount = 18;
-  PRUnichar** newarray = (PRUnichar**)
-    nsMemory::Alloc(18 * sizeof(PRUnichar*));
-  newarray[0] = nsString(NS_ConvertASCIItoUCS2("Tms Rmn")).ToNewUnicode();
-  newarray[1] = nsString(NS_ConvertASCIItoUCS2("Tms Rmn")).ToNewUnicode();
-  newarray[2] = nsString(NS_ConvertASCIItoUCS2("Tms Rmn")).ToNewUnicode();
-  newarray[3] = nsString(NS_ConvertASCIItoUCS2("Tms Rmn")).ToNewUnicode();
-  newarray[4] = nsString(NS_ConvertASCIItoUCS2("Tms Rmn")).ToNewUnicode();
-  newarray[5] = nsString(NS_ConvertASCIItoUCS2("Tms Rmn")).ToNewUnicode();
-  newarray[6] = nsString(NS_ConvertASCIItoUCS2("Tms Rmn")).ToNewUnicode();
-  newarray[7] = nsString(NS_ConvertASCIItoUCS2("Tms Rmn")).ToNewUnicode();
-  newarray[8] = nsString(NS_ConvertASCIItoUCS2("Tms Rmn")).ToNewUnicode();
-  newarray[9] = nsString(NS_ConvertASCIItoUCS2("Tms Rmn")).ToNewUnicode();
-  newarray[10] = nsString(NS_ConvertASCIItoUCS2("Tms Rmn")).ToNewUnicode();
-  newarray[11] = nsString(NS_ConvertASCIItoUCS2("Tms Rmn")).ToNewUnicode();
-  newarray[12] = nsString(NS_ConvertASCIItoUCS2("Tms Rmn")).ToNewUnicode();
-  newarray[13] = nsString(NS_ConvertASCIItoUCS2("Tms Rmn")).ToNewUnicode();
-  newarray[14] = nsString(NS_ConvertASCIItoUCS2("Tms Rmn")).ToNewUnicode();
-  newarray[15] = nsString(NS_ConvertASCIItoUCS2("Tms Rmn")).ToNewUnicode();
-  newarray[16] = nsString(NS_ConvertASCIItoUCS2("Tms Rmn")).ToNewUnicode();
-  newarray[17] = nsString(NS_ConvertASCIItoUCS2("Tms Rmn")).ToNewUnicode();
-  *aResult = newarray;
-  return NS_OK;
-#endif
-
-
   if ((!aLangGroup) || (!aGeneric)) {
     return NS_ERROR_NULL_POINTER;
   }

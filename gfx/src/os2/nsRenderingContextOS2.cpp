@@ -1267,16 +1267,17 @@ nsresult nsRenderingContextOS2::DrawString( const char *aString,
    GpiMove( mSurface->mPS, &ptl);
 
    PRUint32 lLength = aLength;
+   const char *aStringTemp = aString;
    // GpiCharString has a max length of 512 chars at a time...
    while( lLength)
    {
       ULONG thislen = min( lLength, 512);
       GpiCharStringPos( mSurface->mPS, nsnull,
                         aSpacing == nsnull ? 0 : CHS_VECTOR,
-                        thislen, (PCH)aString,
+                        thislen, (PCH)aStringTemp,
                         aSpacing == nsnull ? nsnull : (PLONG) dx0);
       lLength -= thislen;
-      aString += thislen;
+      aStringTemp += thislen;
       dx0 += thislen;
    }
 
@@ -1357,13 +1358,15 @@ NS_IMETHODIMP nsRenderingContextOS2::GetWidth( const char* aString,
 
    POINTL ptls[ 4];
 
+   const char* aStringTemp = aString;
+
    while( lLength) // max data to gpi function is 512 chars.
    {
       ULONG thislen = min( lLength, 512);
-      GpiQueryTextBox( mSurface->mPS, thislen, (PCH) aString, 4, ptls);
+      GpiQueryTextBox( mSurface->mPS, thislen, (PCH) aStringTemp, 4, ptls);
       sum += ptls[ TXTBOX_TOPRIGHT].x;
       lLength -= thislen;
-      aString += thislen;
+      aStringTemp += thislen;
    }
 
    aWidth = NSToCoordRound(float(sum) * mP2T);
