@@ -160,9 +160,12 @@ class nsEditorShell :   public nsIEditorShell,
 		NS_IMETHOD			CreateWindowWithURL(const char* urlStr);
 		NS_IMETHOD  	  PrepareDocumentForEditing(nsIURI *aUrl);
 		NS_IMETHOD      DoFind(PRBool aFindNext);
+
+    void    Alert(const nsString& aMsg, const nsString& aTitle);
     // Bring up a Yes/No dialog WE REALLY NEED A Yes/No/Cancel dialog and would like to set our own caption as well!
-    PRBool          Confirm(const nsString& aQuestion);
-    void            Alert(const nsString& aMsg);
+    PRBool  Confirm(const nsString& aQuestion, const nsString& aTitle);
+    // Return value: No=0, Yes=1, Cancel=2
+    PRInt32 ConfirmWithCancel(const nsString& aQuestion, const nsString& aTitle);
 
 		// this returns an AddReffed nsIScriptContext. You must relase it.
 		nsIScriptContext*  GetScriptContext(nsIDOMWindow * aWin);

@@ -62,6 +62,8 @@
 #include "nsIDOMToolkitCore.h"
 #include "nsIFindComponent.h"
 #include "nsIPrompt.h"
+#include "nsICommonDialogs.h"
+//#include "nsIDialogParamBlock.h"
 
 ///////////////////////////////////////
 // Editor Includes
@@ -106,7 +108,8 @@ static NS_DEFINE_CID(kCSpellCheckerCID,         NS_SPELLCHECKER_CID);
 static NS_DEFINE_IID(kCFileWidgetCID,           NS_FILEWIDGET_CID);
 static NS_DEFINE_CID(kCStringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_CID(kCNetSupportDialogCID,     NS_NETSUPPORTDIALOG_CID);
-
+static NS_DEFINE_CID(kCommonDialogsCID,         NS_CommonDialog_CID );
+static NS_DEFINE_CID(kDialogParamBlockCID,      NS_DialogParamBlock_CID);
 /* Define Interface IDs */
 #ifdef NECKO
 #else
@@ -1024,9 +1027,9 @@ nsEditorShell::CheckAndSaveDocument(PRBool *_retval)
       if (modCount > 0)
       {
         // Ask user if they want to save current changes
-        nsString saveFileQuestion = GetString("SaveFilePrompt");
+        //nsString saveFileQuestion = GetString("SaveFilePrompt");
         // TODO: THIS DIALOG SHOULD HAVE A CANCEL BUTTON AS WELL
-        if (Confirm(saveFileQuestion))
+        if (Confirm(GetString("SaveFilePrompt"),GetString("SaveDocument")))
         {
           // Either save to existing file or prompt for name (as for SaveAs)
           rv = SaveDocument(PR_FALSE, PR_FALSE, _retval);
@@ -1077,8 +1080,7 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
             {
               if (title->Length() == 0)
               {
-                nsString message = GetString("NeedDocTitle");
-                Alert(message);
+                Alert(GetString("NeedDocTitle"),GetString("DocumentTitle"));
                 // TODO: Popup a simple dialog and set the title
                 // Note that this involves inserting a <title> tag 
                 //  with a text nodechild in the <head> area of the document.
@@ -1151,8 +1153,7 @@ SkipFilters:
         res = editor->SaveFile(&docFileSpec, replacing, saveCopy, nsIEditor::eSaveFileHTML);
         if (NS_FAILED(res))
         {
-          nsString message = GetString("SaveFileFailed");
-          Alert(message);
+          Alert(GetString("SaveFileFailed"), GetString("SaveDocument"));
         } else {
           // File was saved successfully
           *_retval = PR_TRUE;
@@ -1301,6 +1302,30 @@ nsEditorShell::GetLocalFileURL(nsIDOMWindow *parent, const PRUnichar *filterType
   }
 
   return res;
+}
+
+NS_IMETHODIMP
+nsEditorShell::IsNodeBlock(nsIDOMNode *node, PRBool *_retval)
+{
+  if (!node || !_retval) { return NS_ERROR_NULL_POINTER; }
+  nsresult  rv = NS_NOINTERFACE;
+  
+  switch (mEditorType)
+  {
+    case ePlainTextEditorType:
+    case eHTMLTextEditorType:
+      {
+        nsCOMPtr<nsIEditor>  editor = do_QueryInterface(mEditor);
+        if (editor)
+          rv = editor->IsNodeBlock(node, _retval);
+      }
+      break;
+
+    default:
+      rv = NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  return rv;
 }
 
 NS_IMETHODIMP    
@@ -1728,9 +1753,45 @@ nsEditorShell::GetString(const nsString& name)
   return *ptmpString;
 }
 
-// Utility to bring up a Yes/No dialog. TODO: WE NEED A CANCEL BUTTON FOR FILE SAVE PROMPT!!!
+// Utility to bring up a Yes/No/Cancel dialog.
+PRInt32
+nsEditorShell::ConfirmWithCancel(const nsString& aQuestion, const nsString& aTitle)
+{
+  nsresult rv; 
+  PRInt32 buttonPressed = 0; 
+  nsIDialogParamBlock* block = NULL; 
+  rv = nsComponentManager::CreateInstance(kDialogParamBlockCID, 
+                                          0, 
+                                          nsIDialogParamBlock::GetIID(), 
+                                          (void**)&block ); 
+
+  if ( NS_FAILED( rv ) ) 
+      return rv; 
+  // Stuff in Parameters 
+  block->SetInt( nsICommonDialogs::eNumberButtons,2 ); 
+  block->SetString( nsICommonDialogs::eMsg, aQuestion.GetUnicode()); 
+  nsString url( "chrome://global/skin/question-icon.gif"  ); 
+  block->SetString( nsICommonDialogs::eIconURL, url.GetUnicode()); 
+
+  nsString yes("yes"); 
+  nsString no("no"); 
+  block->SetString( nsICommonDialogs::eButton0Text, yes.GetUnicode() ); 
+  block->SetString( nsICommonDialogs::eButton1Text, no.GetUnicode() ); 
+
+  NS_WITH_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, &rv); 
+  if ( NS_SUCCEEDED( rv ) ) 
+  { 
+    nsCOMPtr<nsIDOMWindow> parent = do_QueryInterface(mWebShellWin);
+    rv = dialog->DoDialog( parent, block, "chrome://global/content/commonDialog.xul" ); 
+    block->GetInt( nsICommonDialogs::eButtonPressed, &buttonPressed ); 
+  } 
+  NS_IF_RELEASE( block );
+  return buttonPressed; 
+} 
+
+// Utility to bring up a Yes/No dialog.
 PRBool    
-nsEditorShell::Confirm(const nsString& aQuestion)
+nsEditorShell::Confirm(const nsString& aQuestion, const nsString& aTitle)
 {
   nsresult res;
   PRBool   result = PR_FALSE;
@@ -1747,7 +1808,7 @@ nsEditorShell::Confirm(const nsString& aQuestion)
 }
 
 void    
-nsEditorShell::Alert(const nsString& aMsg)
+nsEditorShell::Alert(const nsString& aMsg, const nsString& aTitle)
 {
   nsresult res;
   NS_WITH_SERVICE(nsIPrompt, dialog, kCNetSupportDialogCID, &res);  

@@ -2093,8 +2093,16 @@ nsEditor::GetLengthOfDOMNode(nsIDOMNode *aNode, PRUint32 &aCount)
   return result;
 }
 
+// Non-static version for the nsIEditor interface and JavaScript
+NS_IMETHODIMP 
+nsEditor::IsNodeBlock(nsIDOMNode *aNode, PRBool *aIsBlock)
+{
+  if (!aNode || !aIsBlock) { return NS_ERROR_NULL_POINTER; }
+  return IsNodeBlock(aNode, *aIsBlock);
+}
+
 // The list of block nodes is shorter, so do the real work here...
-nsresult 
+nsresult
 nsEditor::IsNodeBlock(nsIDOMNode *aNode, PRBool &aIsBlock)
 {
   // this is a content-based implementation

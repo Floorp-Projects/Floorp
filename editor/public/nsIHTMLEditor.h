@@ -263,7 +263,7 @@ public:
     *
     * @param aTagName  The HTML tagname
     *    Special input values for Links and Named anchors:
-    *    Use "link" or "href" to get a link node 
+    *    Use "href" to get a link node 
     *      (an "A" tag with the "href" attribute set)
     *    Use "anchor" or "namedanchor" to get a named anchor node
     *      (an "A" tag with the "name" attribute set)
@@ -276,13 +276,14 @@ public:
   /** Return an element only if it is the only node selected,
     *    such as an image, horizontal rule, etc.
     * The exception is a link, which is more like a text attribute:
-    *    The Ancho tag is returned if the selection is within the textnode(s)
+    *    The Anchor tag is returned if the selection is within the textnode(s)
     *    that are children of the "A" node.
     *    This could be a collapsed selection, i.e., a caret within the link text.
     *
-    * @param aTagName  The HTML tagname
+    * @param aTagName  The HTML tagname or and empty string 
+    *       to get any element (but only if it is the only element selected)
     *    Special input values for Links and Named anchors:
-    *    Use "link" or "href" to get a link node
+    *    Use "href" to get a link node
     *      (an "A" tag with the "href" attribute set)
     *    Use "anchor" or "namedanchor" to get a named anchor node
     *      (an "A" tag with the "name" attribute set)
@@ -299,7 +300,7 @@ public:
     *
     * @param aTagName  The HTML tagname
     *    Special input values for Links and Named anchors:
-    *    Use "link" or "href" to get a link node
+    *    Use "href" to get a link node
     *      (an "A" tag with the "href" attribute set)
     *    Use "anchor" or "namedanchor" to get a named anchor node
     *      (an "A" tag with the "name" attribute set)
@@ -307,7 +308,6 @@ public:
   NS_IMETHOD CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement** aReturn)=0;
 
   /** Insert an link element as the parent of the current selection
-    *   be useful for other elements.
     *
     * @param aElement   An "A" element with a non-empty "href" attribute
     */

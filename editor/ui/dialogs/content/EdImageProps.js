@@ -539,7 +539,7 @@ function onOK()
     imageElement.setAttribute( "border", dialog.imageborderInput.value );
   else
     imageElement.removeAttribute( "border" );
-
+/*
   alignpopup = document.getElementById("image.alignType");
   if ( alignpopup )
   {
@@ -550,7 +550,7 @@ function onOK()
     else
       imageElement.setAttribute("align", alignvalue );
   }
-
+*/
   // handle insertion of new image
 
   if (insertNew)
