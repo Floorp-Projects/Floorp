@@ -202,6 +202,7 @@
 #define IDC_LANGUAGE_HEADING            1051
 #define IDC_DESCRIPTION                 1052
 #define IDC_USEASDEFAULT                1053
+#define IDC_CHECK9			1054
 #define IDC_MIME_TYPE                   1254
 #define IDC_HANDLED_BY                  1256
 #define IDC_BUTTON_MORE                 1395

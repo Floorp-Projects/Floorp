@@ -282,6 +282,8 @@ class CAdvancedPrefs : public CBrowserPropertyPage {
 		BOOL	m_bEnableStyleSheets;
 		BOOL	m_bSendEmailAddressForFTPPassword;
 		int		m_nCookieAcceptance;
+		BOOL	m_bRememberSignons;
+		BOOL	m_bPrivacyPolicy;
 		BOOL	m_bWarnAboutCookies;
 };
 
@@ -362,4 +364,3 @@ class CSmartUpdatePrefs : public CBrowserPropertyPage {
 #endif /* MOZ_SMARTUPDATE */
 
 #endif /* __PAGES_H_ */
-

@@ -152,7 +152,7 @@ IDD_ADVANCED DIALOG DISCARDABLE  0, 0, 256, 190
 STYLE WS_CHILD | WS_CLIPSIBLINGS
 FONT 8, "MS Sans Serif"
 BEGIN
-    GROUPBOX        "",-1,7,7,242,81,WS_GROUP
+    GROUPBOX        "",-1,7,7,242,106,WS_GROUP
     CONTROL         "Automatically load &images",IDC_CHECK1,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,17,18,97,10
     CONTROL         "Enable &Java",IDC_CHECK2,"Button",BS_AUTOCHECKBOX | 
@@ -162,17 +162,21 @@ BEGIN
     CONTROL         "Enable &style sheets",IDC_CHECK4,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,17,57,147,10
     CONTROL         "Send &email address as anonymous FTP password",
-                    IDC_CHECK6,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,71,
+                    IDC_CHECK6,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,70,
                     172,10
-    GROUPBOX        "Cookies",-1,7,98,242,80
+    CONTROL         "Save Logins and Passwords",IDC_CHECK7,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,17,83,150,10
+    CONTROL         "Warn me if server has no privacy policy",IDC_CHECK8,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,17,96,150,10
+    GROUPBOX        "Cookies",-1,7,119,242,72
     CONTROL         "&Accept all cookies",IDC_RADIO1,"Button",
-                    BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,17,117,74,10
+                    BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,17,130,74,10
     CONTROL         "Accept &only cookies that get sent back to the originating server",
-                    IDC_RADIO2,"Button",BS_AUTORADIOBUTTON,17,130,215,10
+                    IDC_RADIO2,"Button",BS_AUTORADIOBUTTON,17,143,215,10
     CONTROL         "&Disable cookies",IDC_RADIO3,"Button",
-                    BS_AUTORADIOBUTTON,17,143,66,10
-    CONTROL         "&Warn me before accepting a cookie",IDC_CHECK7,"Button",
-                    BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,18,161,139,10
+                    BS_AUTORADIOBUTTON,17,156,66,10
+    CONTROL         "&Warn me before accepting a cookie",IDC_CHECK9,"Button",
+                    BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,18,174,139,10
 END
 
 IDD_CACHE DIALOG DISCARDABLE  0, 0, 256, 190
