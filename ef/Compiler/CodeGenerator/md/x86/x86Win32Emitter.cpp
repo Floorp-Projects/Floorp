@@ -695,15 +695,15 @@ emit_Logic_L(Primitive& inPrimitive, x86DoubleOpDirCode insnType)
 }
 
 #if defined(WIN32)
-extern void x86Mul64Bit();
-extern void x86Div64Bit();
-extern void x86Mod64Bit();
-extern void x86Shl64Bit();
-extern void x86Shr64Bit();
-extern void x86Sar64Bit();
-extern void x86ThreeWayCMP_L();
-extern void x86ThreeWayCMPC_L();
-extern void x86Extract64Bit();
+extern int64 __stdcall x86Mul64Bit(int64 a, int64 b);
+extern int64 __stdcall x86Div64Bit(int64 a, int64 b);
+extern int64 __stdcall x86Mod64Bit(int64 a, int64 b);
+extern int64 __stdcall x86Shl64Bit(int64 a, int b);
+extern uint64 __stdcall x86Shr64Bit(uint64 a, int b);
+extern int64 __stdcall x86Sar64Bit(int64 a, int b);
+extern int64 __stdcall x86ThreeWayCMP_L(int64 a, int64 b);
+extern int64 __stdcall x86ThreeWayCMPC_L(int64 a, int64 b);
+extern int64 __stdcall x86Extract64Bit(int64 a, int b);
 #elif defined(LINUX) || defined(FREEBSD)
 extern "C" {
 extern void x86Mul64Bit(void);
@@ -733,55 +733,55 @@ static void x86Extract64Bit()	{trespass("Not implemented");}
 void x86Win32Emitter::
 emit_Mul_L(Primitive& inPrimitive)
 {
-	new(mPool) CallS_C(&inPrimitive, mPool, 2, true, *this, &x86Mul64Bit);
+	new(mPool) CallS_C(&inPrimitive, mPool, 2, true, *this, (void (*)())&x86Mul64Bit);
 }
 
 void x86Win32Emitter::
 emit_Div_L(Primitive& inPrimitive)
 {
-	new(mPool) CallS_C(&inPrimitive, mPool, 2, true, *this, &x86Div64Bit);
+	new(mPool) CallS_C(&inPrimitive, mPool, 2, true, *this, (void (*)())&x86Div64Bit);
 }
 
 void x86Win32Emitter::
 emit_Mod_L(Primitive& inPrimitive)
 {
-	new(mPool) CallS_C(&inPrimitive, mPool, 2, true, *this, &x86Mod64Bit);
+	new(mPool) CallS_C(&inPrimitive, mPool, 2, true, *this, (void (*)())&x86Mod64Bit);
 }
 
 void x86Win32Emitter::
 emit_3wayCmpL_L(Primitive& inPrimitive)
 {
-	new(mPool) CallS_C(&inPrimitive, mPool, 2, true, *this, &x86ThreeWayCMP_L, &(inPrimitive.nthInputVariable(0)));
+	new(mPool) CallS_C(&inPrimitive, mPool, 2, true, *this, (void (*)())&x86ThreeWayCMP_L, &(inPrimitive.nthInputVariable(0)));
 }
 
 void x86Win32Emitter::
 emit_3wayCmpCL_L(Primitive& inPrimitive)
 {
-	new(mPool) CallS_C(&inPrimitive, mPool, 2, true, *this, &x86ThreeWayCMP_L, &(inPrimitive.nthInputVariable(0)));
+	new(mPool) CallS_C(&inPrimitive, mPool, 2, true, *this, (void (*)())&x86ThreeWayCMP_L, &(inPrimitive.nthInputVariable(0)));
 }
 
 void x86Win32Emitter::
 emit_Shl_L(Primitive& inPrimitive)
 {
-	new(mPool) CallS_C(&inPrimitive, mPool, 2, true, *this, &x86Shl64Bit);
+	new(mPool) CallS_C(&inPrimitive, mPool, 2, true, *this, (void (*)())&x86Shl64Bit);
 }
 
 void x86Win32Emitter::
 emit_Shr_L(Primitive& inPrimitive)
 {
-	new(mPool) CallS_C(&inPrimitive, mPool, 2, true, *this, &x86Shr64Bit);
+	new(mPool) CallS_C(&inPrimitive, mPool, 2, true, *this, (void (*)())&x86Shr64Bit);
 }
  
 void x86Win32Emitter::
 emit_Sar_L(Primitive& inPrimitive)
 {
-	new(mPool) CallS_C(&inPrimitive, mPool, 2, true, *this, &x86Sar64Bit);
+	new(mPool) CallS_C(&inPrimitive, mPool, 2, true, *this, (void (*)())&x86Sar64Bit);
 }
 
 void x86Win32Emitter::
 emit_Ext_L(Primitive& inPrimitive)
 {
-	new(mPool) CallS_C(&inPrimitive, mPool, 2, true, *this, &x86Extract64Bit);
+	new(mPool) CallS_C(&inPrimitive, mPool, 2, true, *this, (void (*)())&x86Extract64Bit);
 }
 
 void x86Win32Emitter::			
