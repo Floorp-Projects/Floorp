@@ -452,3 +452,69 @@ DateFormater.prototype.parseTimeOfDay = function( timeString )
     return new Date(0, 0, 0, hours, minutes, seconds, 0);
   } else return null; // did not match regex, not valid time
 }
+
+/** Formats start/end dates and times, omitting end if same as start, 
+    omitting time if allDay, omitting end date if same day.
+    Calls getFormatedDate and getFormatedTime, so user preference will be used.
+
+    startDateTime: beginning of time interval.
+    endDateTime: exclusive end of timeInterval.
+        If isAllDay for one day, endDateTime is midnight next day, so displayed
+        end date will be one day earlier.
+
+    Examples (with user date format yyyy-MM-dd, time format HH:mm)
+      1999-12-31 00:00, 2000-01-01 00:00, true  --> "1999-12-31"
+      1999-12-31 00:00, 2000-01-02 00:00, true  --> "1999-12-31--2001-01-01"
+      1999-12-31 20:00, 1999-12-31 20:00, false --> "1999-12-31 20:00"
+      1999-12-31 20:00, 1999-12-31 22:00, false --> "1999-12-31 20:00--22:00"
+      1999-12-31 00:00, 2000-01-01 00:00, false --> "1999-12-31 00:00 -- 2001-01-01 00:00"
+ **/
+DateFormater.prototype.formatInterval = function( startDateTime, endDateTime, isAllDay ) {
+  if (isAllDay) { 
+    endDateTime = new Date(endDateTime); // don't modify parameter
+    endDateTime.setDate(endDateTime.getDate() - 1);
+  }
+  var sameDay = (startDateTime.getFullYear() == endDateTime.getFullYear() &&
+                 startDateTime.getMonth() == endDateTime.getMonth() &&
+                 startDateTime.getDay() == endDateTime.getDay());
+  var sameTime = (startDateTime.getHours() == endDateTime.getHours() &&
+                  startDateTime.getMinutes() == endDateTime.getMinutes());
+  return (isAllDay
+          ? (sameDay
+             // just one day
+             ? this.getFormatedDate(startDateTime)
+             // range of days
+             : this.makeRange(this.getFormatedDate(startDateTime),
+                              this.getFormatedDate(endDateTime)))
+          : (sameDay
+             ? (sameTime
+                // just one date time
+                ? (this.getFormatedDate(startDateTime) +
+                   " "+ this.getFormatedTime(startDateTime))
+                // range of times on same day
+                : (this.getFormatedDate(startDateTime)+
+                   " " + this.makeRange(this.getFormatedTime(startDateTime),
+                                        this.getFormatedTime(endDateTime))))
+             // range across different days
+             : this.makeRange(this.getFormatedDate(startDateTime) +
+                              " "+ this.getFormatedTime(startDateTime),
+                              this.getFormatedDate(endDateTime) +
+                              " "+ this.getFormatedTime(endDateTime))));
+}
+
+/** PRIVATE makeRange takes two strings and concatenates them with
+    "--" in the middle if they have no spaces, or " -- " if they do. 
+
+    Range dash should look different from hyphen used in dates like 1999-12-31.
+    Western typeset text uses an &ndash;.  (Far eastern text uses no spaces.)
+    Plain text convention is to use - for hyphen and minus, -- for ndash,
+    and --- for mdash.  For now use -- so works with plain text email.
+    Add spaces around it only if fromDateTime or toDateTime includes space,
+    e.g., "1999-12-31--2000-01-01", "1999-12-31 23:55 -- 2000.01.01 00:05".
+**/
+DateFormater.prototype.makeRange = function makeRange(fromString, toString) {
+  if (fromString.indexOf(" ") == -1 && toString.indexOf(" ") == -1)
+    return fromString + "--" + toString;
+  else
+    return fromString + " -- "+ toString;
+}

@@ -37,9 +37,14 @@
  *
  * ***** END LICENSE BLOCK ***** */
  
+
+ 
 /**** calendarImportExport
  * Unit with functions to convert calendar events to and from different formats.
  *
+ Requires dateUtils.js
+    <script type="application/x-javascript"
+     src="chrome://calendar/content/dateUtils.js"/>
  ****/
 
 // XSL stylesheet directory
@@ -843,10 +848,20 @@ function patchICalStringForExport( sTextiCalendar )
 * Converts a array of events to a block of HTML code
 * Sample:
 *    Summary: Phone Conference
-*    Description: annual report
-*    When: Thursday, November 09, 2000 11:00 PM-11:30 PM (GMT-08:00) Pacific Time (US & Canada); Tijuana.
+*    When: Thursday, November 09, 2000 11:00 PM -- 11:30 PM
 *    Where: San Francisco
 *    Organizer: foo1@example.com
+*
+*    Agenda [Description]
+*    1. Progress
+*      a. marketing
+*      b. engineering
+*    2. Competition
+*
+* Description may be preformatted text with line breaks.
+* If contains no indentation, then HTML <br> used for line breaks.
+* otherwise description is enclosed in HTML <pre>...</pre>
+* In When, plain text N-dash (--) converted to HTML &ndash;.
 */
 
 function eventArrayToHTML( calendarEventArray )
@@ -859,17 +874,37 @@ function eventArrayToHTML( calendarEventArray )
       "\n</body>\n</html>\n";
 
    var sHTMLText = sHTMLHeader;
+   var dateFormat = new DateFormater();
 
    for( var eventArrayIndex = 0;  eventArrayIndex < calendarEventArray.length; ++eventArrayIndex )
    {
       var calendarEvent = calendarEventArray[ eventArrayIndex ];
-      sHTMLText += "<p>";
+      var start = new Date(calendarEvent.start.getTime());
+      var end = new Date(calendarEvent.end.getTime());
+      var when = dateFormat.formatInterval(start, end, calendarEvent.allDay);
+      var desc = calendarEvent.description;
+      if (desc == null)
+        desc = "";
+      if (desc.length > 0) { 
+        if (desc.indexOf("\n ") >= 0 || desc.indexOf("\n\t") >= 0 ||
+            desc.indexOf(" ") == 0 || desc.indexOf("\t") == 0)
+          // (RegExp /^[ \t]/ doesn't work.)
+          // contains indented preformatted text after beginning or newline
+          // so preserve indentation with PRE.
+          desc = "<PRE>"+desc+"</PRE>\n";
+        else
+          // no indentation, so preserve text line breaks in html with BR
+          desc = "<P>"+desc.replace(/\n/g, "<BR>\n")+"</P>\n";
+      }
+      // use div around each event so events are navigable via DOM.
+      sHTMLText += "<div><p>";
       sHTMLText += "<B>"+gCalendarBundle.getString( "eventTitle" )+"</B>\t" + calendarEvent.title + "<BR>\n";
-      sHTMLText += "<B>"+gCalendarBundle.getString( "eventDescription" )+"</B>\t" + calendarEvent.description + "<BR>\n";
-      sHTMLText += "<B>"+gCalendarBundle.getString( "eventWhen" )+"</B>" + formatDateTimeInterval(calendarEvent.start, calendarEvent.end) + "<BR>\n";
-      sHTMLText += "<B>"+gCalendarBundle.getString( "eventWhere" )+"</B>" + calendarEvent.location + "<BR>\n";
+      sHTMLText += "<B>"+gCalendarBundle.getString( "eventWhen" )+"</B>\t" + when.replace("--", "&ndash;") + "<BR>\n";
+      sHTMLText += "<B>"+gCalendarBundle.getString( "eventWhere" )+"</B>\t" + calendarEvent.location + "<BR>\n";
       // sHTMLText += "<B>Organiser: </B>\t" + Event.???
-      sHTMLText += "</p>";
+      sHTMLText += "</p>\n";
+      sHTMLText += desc; // may be empty
+      sHTMLText += "</div>\n";
    }
    sHTMLText += sHTMLFooter;
    return sHTMLText;
@@ -878,6 +913,20 @@ function eventArrayToHTML( calendarEventArray )
 
 /**** eventArrayToRTF
 * Converts a array of events to a block of text in Rich Text Format
+* Sample:
+*    Summary: Phone Conference
+*    When: Thursday, November 09, 2000 11:00 PM -- 11:30 PM
+*    Where: San Francisco
+*    Organizer: foo1@example.com
+*
+*    Agenda [Description]
+*    1. Progress
+*      a. marketing
+*      b. engineering
+*    2. Competition
+*
+* Description may be preformatted text with line breaks.
+* In when, plain text N-dash (--) converted to RTF \endash.
 */
 
 function eventArrayToRTF( calendarEventArray )
@@ -890,17 +939,27 @@ function eventArrayToRTF( calendarEventArray )
       "\\pard\\fi-1800\\li1800\\tx1800\\cf1\\f0\\par}";
 
    var sRTFText = sRTFHeader;
+   var dateFormat = new DateFormater();
 
    for( var eventArrayIndex = 0;  eventArrayIndex < calendarEventArray.length; ++eventArrayIndex )
    {
       var calendarEvent = calendarEventArray[ eventArrayIndex ];
+      var start = new Date(calendarEvent.start.getTime());
+      var end = new Date(calendarEvent.end.getTime());
+      var when = dateFormat.formatInterval(start, end, calendarEvent.allDay);
+      var desc = calendarEvent.description;
+      if (desc == null)
+        desc = "";
+      if (desc.length > 0) {
+        if (desc.charAt(desc.length - 1) != "\n") 
+          desc = desc+"\n"; // add final newline if doesn't end with newline
+        desc += "\n"; // add blank line after non-empty description
+      }
       sRTFText += "\\b\\f0\\fs20 " + gCalendarBundle.getString( "eventTitle" ) + "\\b0\\tab " + calendarEvent.title + "\\par\n";
-      sRTFText += "\\b\\f0\\fs20 " + gCalendarBundle.getString( "eventDescription" ) + "\\b0\\tab " + calendarEvent.description + "\\par\n";
-
-      sRTFText += "\\b When:\\b0\\tab " + formatDateTimeInterval(calendarEvent.start, calendarEvent.end) + "\\par\n";
-
-      sRTFText += "\\b Where:\\b0\\tab " + calendarEvent.location + "\\par\n";
+      sRTFText += "\\b " + gCalendarBundle.getString( "eventWhen" ) + "\\b0\\tab " + when.replace("--", "\\endash ") + "\\par\n";
+      sRTFText += "\\b " + gCalendarBundle.getString( "eventWhere" ) + "\\b0\\tab " + calendarEvent.location + "\\par\n";
       sRTFText += "\\par\n";
+      sRTFText += desc.replace(/\n/g, "\\par\n"); // preserve text line breaks in rtf with \\par
    }
    sRTFText += sRTFFooter;
    return sRTFText;

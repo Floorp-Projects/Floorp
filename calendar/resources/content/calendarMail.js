@@ -189,6 +189,7 @@ function sendEvent()
   var CalendarText = "";
   var EmailBody = "";
   var Separator = "";
+  var dateFormat = new DateFormater();
 
   for( var i = 0; i < gCalendarWindow.EventSelection.selectedEvents.length; i++ ) {
     var event = gCalendarWindow.EventSelection.selectedEvents[i].clone();
@@ -199,39 +200,10 @@ function sendEvent()
 	event.method = event.ICAL_METHOD_PUBLISH;
 
       CalendarText += event.getIcalString();
-      var dateFormat = new DateFormater();
       var eventDuration  = event.end.getTime() - event.start.getTime();
-      var displayStartDate = getNextOrPreviousOccurrence(event);
-      var displayEndDate   = new Date(displayStartDate.getTime() + eventDuration);
-      if (event.allDay)
-	displayEndDate.setDate(displayEndDate.getDate() - 1);
-      var sameDay = (displayStartDate.getFullYear() == displayEndDate.getFullYear() &&
-		     displayStartDate.getMonth() == displayEndDate.getMonth() &&
-		     displayStartDate.getDay() == displayEndDate.getDay());
-      var sameTime = (displayStartDate.getHours() == displayEndDate.getHours() &&
-		      displayStartDate.getMinutes() == displayEndDate.getMinutes());
-      var when = (event.allDay
-		  ? (sameDay
-		     // just one day
-		     ? dateFormat.getFormatedDate(displayStartDate)
-		     // range of days
-		     : makeRange(dateFormat.getFormatedDate(displayStartDate),
-				 dateFormat.getFormatedDate(displayEndDate)))
-		  : (sameDay
-		     ? (sameTime
-			// just one date time
-			? (dateFormat.getFormatedDate(displayStartDate) +
-			   " "+ dateFormat.getFormatedTime(displayStartDate))
-			// range of times on same day
-			: (dateFormat.getFormatedDate(displayStartDate)+
-			   " " + makeRange(dateFormat.getFormatedTime(displayStartDate),
-					   dateFormat.getFormatedTime(displayEndDate))))
-		     // range across different days
-		     : makeRange(dateFormat.getFormatedDate(displayStartDate) +
-				 " "+ dateFormat.getFormatedTime(displayStartDate),
-				 dateFormat.getFormatedDate(displayEndDate) +
-				 " "+ dateFormat.getFormatedTime(displayEndDate))));
-
+      var nextStartDate = getNextOrPreviousOccurrence(event);
+      var nextEndDate   = new Date(nextStartDate.getTime() + eventDuration);
+      var when = dateFormat.formatInterval(nextStartDate, nextEndDate, event.allDay);
       EmailBody += Separator;
       Separator = "\n\n";
       EmailBody += (emailStringBundle.GetStringFromName( "Summary" )+" " + nullToEmpty(event.title) +"\n"+
@@ -315,28 +287,10 @@ function getNextOrPreviousOccurrence( calendarEvent )
   return null;
 }
 
-/** PRIVATE makeRange takes two strings and concatenates them with
-    "--" in the middle if they have no spaces, or " -- " if they do. 
-
-    Range dash should look different from hyphen used in dates like 1999-12-31.
-    Western typeset text uses an &ndash;.  (Far eastern text uses no spaces.)
-    Plain text convention is to use - for hyphen and minus, -- for ndash,
-    and --- for mdash.  For now use -- so works with plain text email.
-    Add spaces around it only if fromDateTime or toDateTime includes space,
-    e.g., "1999-12-31--2000-01-01", "1999-12-31 23:55 -- 2000.01.01 00:05".
-**/
-function makeRange(fromDateTime, toDateTime) {
-  if (fromDateTime.indexOf(" ") == -1 && toDateTime.indexOf(" ") == -1)
-    return fromDateTime + "--" + toDateTime;
-  else
-    return fromDateTime + " -- "+ toDateTime;
-}
-
 /** PRIVATE Return string unless string is null, in which case return "" **/
 function nullToEmpty(string) {
   return string == null? "" : string;
 }
-
 
 
 /**** getCalendarDataFilePath

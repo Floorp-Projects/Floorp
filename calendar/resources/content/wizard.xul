@@ -66,6 +66,7 @@
  
    <script type="application/x-javascript" src="chrome://calendar/content/calendar.js"/>
    <script type="application/x-javascript" src="chrome://calendar/content/wizard.js"/>
+   <script type="application/x-javascript" src="chrome://calendar/content/dateUtils.js"/>
    <script type="application/x-javascript" src="chrome://calendar/content/importExport.js"/>
 
    <wizardpage pageid="initialPage" description="Choose An Action" onpagehide="checkInitialPage()" next="import">
