@@ -42,9 +42,8 @@
 	by Patrick C. Beard.
  */
 
-#include <new.h>
+#include <new>
 
-#include "jni.h"
 #include "nsIMemory.h"
 
 // Warning:  this forces all C++ allocation to go through Navigator's memory allocation
@@ -55,13 +54,26 @@ extern nsIMemory* theMemoryAllocator;
 
 void* operator new(size_t size)
 {
-	if (theMemoryAllocator != NULL)
+	if (theMemoryAllocator)
 		return theMemoryAllocator->Alloc(size);
 	return NULL;
 }
 
 void operator delete(void* ptr)
 {
-	if (ptr != NULL && theMemoryAllocator != NULL)
+	if (ptr && theMemoryAllocator)
+		theMemoryAllocator->Free(ptr);
+}
+
+void* operator new[](size_t size)
+{
+	if (theMemoryAllocator)
+		return theMemoryAllocator->Alloc(size);
+	return NULL;
+}
+
+void operator delete[](void* ptr)
+{
+	if (ptr && theMemoryAllocator)
 		theMemoryAllocator->Free(ptr);
 }
