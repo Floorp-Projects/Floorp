@@ -330,6 +330,10 @@ function (force_reload)
         }
 
         load_state = content.getAttribute('loadstate');
+        if (load_state == 'stopped') {
+          load_state = 'never loaded';
+          toggleLoadarea(content);
+        }
         if (load_state == 'never loaded') {
           iframe.removeAttribute('hidden');
           iframe.setAttribute('loadstate', 'loading');
@@ -491,6 +495,49 @@ function ()
     iframe.removeEventListener("load", panel_loader, true);
     content.setAttribute("loadstate", "stopped");
     iframe.setAttribute('src', 'about:blank');
+    toggleLoadarea(content);
+  }
+}
+
+function toggleLoadarea(content)
+{
+  // toggle between "loading" and "load stopped" in the UI
+  var widgetBox = content.firstChild.firstChild;
+  var widgetBoxKids = widgetBox.childNodes;
+  var stopButton = widgetBoxKids.item(3);
+  var reloadButton = widgetBoxKids.item(4);
+  var loadingImage = widgetBox.firstChild;
+  var loadingText = loadingImage.nextSibling;
+  var loadStoppedText = loadingText.nextSibling;
+
+  // sanity check
+  if (stopButton.getAttribute("type") != "stop")
+  {
+    debug("Error: Expected button of type=\"stop\" but didn't get one!");
+    return;
+  }
+
+  if (!stopButton.hidden)
+  {
+    // change button from "stop" to "reload"
+    stopButton.hidden = "true";
+    reloadButton.removeAttribute("hidden");
+
+    // hide the loading image and set text to "load stopped"
+    loadingImage.hidden = "true";
+    loadingText.hidden = "true";
+    loadStoppedText.removeAttribute("hidden");
+  }
+  else
+  {
+    // change button from "reload" to "stop"
+    stopButton.removeAttribute("hidden");
+    reloadButton.hidden = "true";
+
+    // show the loading image and set text to "loading"
+    loadingImage.removeAttribute("hidden");
+    loadingText.removeAttribute("hidden");
+    loadStoppedText.hidden = "true";
   }
 }
 

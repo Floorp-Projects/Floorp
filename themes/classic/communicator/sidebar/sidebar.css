@@ -85,6 +85,10 @@
   margin: 5px 0px;
 }
 
+.text-panel-loading[loading="false"] {
+  margin-left: 11px;
+}
+
 .image-panel-loading {
   margin: 5px;
   list-style-image: url("chrome://communicator/skin/icons/loading.gif");
