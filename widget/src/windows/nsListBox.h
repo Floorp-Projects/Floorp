@@ -46,7 +46,7 @@ public:
     // nsIWidget interface
     BASE_IWIDGET_IMPL
 
-    // nsIListBox part
+    // nsIListBox interface
     void      SetMultipleSelection(PRBool aMultipleSelections);
     void      AddItemAt(nsString &aItem, PRInt32 aPosition);
     PRInt32   FindItem(nsString &aItem, PRInt32 aStartPos);
@@ -61,6 +61,9 @@ public:
     void      SelectItem(PRInt32 aPosition);
     void      Deselect() ;
     virtual   void      PreCreateWidget(void *aInitData);
+
+     // nsWindow interface
+    virtual   PRBool AutoErase();
 protected:
     PRBool  mMultiSelect;
     virtual LPCTSTR WindowClass();

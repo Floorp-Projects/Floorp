@@ -168,4 +168,15 @@ DWORD nsTextHelper::WindowExStyle()
     return 0;
 }
 
+//-------------------------------------------------------------------------
+//
+// Clear window before paint
+//
+//-------------------------------------------------------------------------
+
+PRBool nsTextHelper::AutoErase()
+{
+  return(PR_TRUE);
+}
+
 

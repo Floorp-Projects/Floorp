@@ -77,7 +77,7 @@ char * gFailedMsg = NULL;
 #define WIDGET_DLL "raptorwidget.dll"
 #define GFXWIN_DLL "raptorgfxwin.dll"
 
-#define DEBUG_MOUSE 1
+#define DEBUG_MOUSE 0
 
 #define NUM_COMBOBOX_ITEMS 8
 #define kSetCaret        "Set Caret"

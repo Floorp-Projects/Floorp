@@ -1078,10 +1078,13 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             result = OnKey(NS_KEY_DOWN, wParam);
             break;
 
-        // say we've dealt with erase background
-        case WM_ERASEBKGND:
-            *aRetValue = 1;
-            result = PR_TRUE;
+        // say we've dealt with erase background if widget does
+        // not need auto-erasing
+        case WM_ERASEBKGND:   
+              if (! AutoErase()) {
+              *aRetValue = 1;
+              result = PR_TRUE;
+            }
             break;
 
         case WM_MOUSEMOVE:
@@ -1707,6 +1710,11 @@ void nsWindow::AddEventListener(nsIEventListener * aListener)
 {
   NS_PRECONDITION(mEventListener == nsnull, "Null mouse listener");
   mEventListener = aListener;
+}
+
+PRBool nsWindow::AutoErase()
+{
+  return(PR_FALSE);
 }
 
 
