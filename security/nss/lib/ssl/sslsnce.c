@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslsnce.c,v 1.6 2001/01/04 00:44:30 wtc%netscape.com Exp $
+ * $Id: sslsnce.c,v 1.7 2001/01/30 21:02:25 wtc%netscape.com Exp $
  */
 
 /* Note: ssl_FreeSID() in sslnonce.c gets used for both client and server 
@@ -74,6 +74,7 @@
  * Now that NSPR offers portable cross-process locking (semaphores) on Unix
  * and Win32, semaphores should be used here for all platforms.
  */
+#include "nssrenam.h"
 #include "seccomon.h"
 
 #if defined(XP_UNIX) || defined(XP_WIN32)

@@ -32,6 +32,10 @@
 #
 CORE_DEPTH = ../../..
 
+PRIVATE_EXPORTS = \
+	nssrenam.h \
+	$(NULL)
+
 EXPORTS = \
 	nss.h \
 	$(NULL)

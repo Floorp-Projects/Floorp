@@ -32,9 +32,10 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: ssl3con.c,v 1.14 2001/01/13 02:32:39 nelsonb%netscape.com Exp $
+ * $Id: ssl3con.c,v 1.15 2001/01/30 21:02:23 wtc%netscape.com Exp $
  */
 
+#include "nssrenam.h"
 #include "cert.h"
 #include "ssl.h"
 #include "cryptohi.h"	/* for DSAU_ stuff */

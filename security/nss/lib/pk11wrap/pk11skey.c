@@ -621,9 +621,15 @@ PK11_ExtractKeyValue(PK11SymKey *symKey)
 }
 
 SECItem *
-PK11_GetKeyData(PK11SymKey *symKey)
+__PK11_GetKeyData(PK11SymKey *symKey)
 {
     return &symKey->data;
+}
+
+SECItem *
+PK11_GetKeyData(PK11SymKey *symKey)
+{
+    return __PK11_GetKeyData(symKey);
 }
 
 /*
@@ -3378,7 +3384,7 @@ static PK11Context *pk11_CreateNewContextInSlot(CK_MECHANISM_TYPE type,
  * parts of libsec.
  */
 PK11Context *
-PK11_CreateContextByRawKey(PK11SlotInfo *slot, CK_MECHANISM_TYPE type,
+__PK11_CreateContextByRawKey(PK11SlotInfo *slot, CK_MECHANISM_TYPE type,
      PK11Origin origin, CK_ATTRIBUTE_TYPE operation, SECItem *key, 
 						SECItem *param, void *wincx)
 {
@@ -3406,6 +3412,15 @@ PK11_CreateContextByRawKey(PK11SlotInfo *slot, CK_MECHANISM_TYPE type,
     PK11_FreeSlot(slot);
 
     return context;
+}
+
+PK11Context *
+PK11_CreateContextByRawKey(PK11SlotInfo *slot, CK_MECHANISM_TYPE type,
+     PK11Origin origin, CK_ATTRIBUTE_TYPE operation, SECItem *key, 
+						SECItem *param, void *wincx)
+{
+    return __PK11_CreateContextByRawKey(slot, type, origin, operation,
+                                        key, param, wincx);
 }
 
 

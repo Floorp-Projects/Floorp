@@ -36,7 +36,7 @@
  *
  * NOTE - These are not public interfaces
  *
- * $Id: nsslocks.c,v 1.2 2001/01/03 19:51:02 larryh%netscape.com Exp $
+ * $Id: nsslocks.c,v 1.3 2001/01/30 21:02:28 wtc%netscape.com Exp $
  */
 
 #include "seccomon.h"
@@ -50,7 +50,7 @@
  */
 
 SECStatus 
-nss_InitLock(   PZLock    **ppLock, nssILockType ltype )
+__nss_InitLock(   PZLock    **ppLock, nssILockType ltype )
 {
     static PRInt32  initializers;
 
@@ -69,6 +69,12 @@ nss_InitLock(   PZLock    **ppLock, nssILockType ltype )
     }
 
     return (*ppLock != NULL) ? SECSuccess : SECFailure;
+}
+
+SECStatus 
+nss_InitLock(   PZLock    **ppLock, nssILockType ltype )
+{
+    return __nss_InitLock(ppLock, ltype);
 }
 
 /* Given the address of a (global) pointer to a PZMonitor, 

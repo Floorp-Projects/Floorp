@@ -34,8 +34,10 @@
 /*
  * PKCS7 decoding, verification.
  *
- * $Id: p7decode.c,v 1.3 2001/01/07 08:13:04 nelsonb%netscape.com Exp $
+ * $Id: p7decode.c,v 1.4 2001/01/30 21:02:13 wtc%netscape.com Exp $
  */
+
+#include "nssrenam.h"
 
 #include "p7local.h"
 
