@@ -474,6 +474,8 @@ pref("mailnews.ui.junk.firstuse", true);
 // 4 -> 5 is for the attachment column
 pref("mailnews.ui.threadpane.version", 1);
 
+pref("mail.showFolderPaneColumns", false); // setting to true will allow total/unread/size columns
+
 //If set to a number greater than 0, msg compose windows will be recycled in order to open them quickly
 pref("mail.compose.max_recycled_windows", 1); 
 

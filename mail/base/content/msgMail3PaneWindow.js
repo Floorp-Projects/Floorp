@@ -961,6 +961,36 @@ function OnFolderUnreadColAttrModified(event)
 
 function OnLoadFolderPane()
 {
+    var folderNameCol = document.getElementById("folderNameCol");
+    var showColumns = pref.getBoolPref("mail.showFolderPaneColumns");
+    var folderUnreadCol = document.getElementById("folderUnreadCol");
+    if (!showColumns)
+    {
+      var folderTotalCol = document.getElementById("folderTotalCol");
+      var folderSizeCol = document.getElementById("folderSizeCol");
+      folderUnreadCol.setAttribute("hidden", "true");
+      folderTotalCol.setAttribute("hidden", "true");
+      folderSizeCol.setAttribute("hidden", "true");
+    }
+    else
+    {
+      var folderColumnLabel = document.getElementById("folderColumnLabel");
+      folderNameCol.setAttribute("label", folderColumnLabel.value);
+    }
+    folderNameCol.setAttribute("hideheader", showColumns ? "false" : "true");
+    var folderPaneHeader = document.getElementById("folderPaneHeader");
+    folderPaneHeader.setAttribute("hidden", showColumns ? "true" : "false");
+    var folderTree = document.getElementById("folderTree");
+    folderTree.setAttribute("hidecolumnpicker", showColumns ? "false" : "true");
+    var hidden = folderUnreadCol.getAttribute("hidden");
+    if (hidden != "true")
+    {
+        var folderNameCell = document.getElementById("folderNameCell");
+        folderNameCell.setAttribute("label", "?folderTreeSimpleName");
+    }
+
+    folderUnreadCol.addEventListener("DOMAttrModified", OnFolderUnreadColAttrModified, false);
+
     //Add folderDataSource and accountManagerDataSource to folderPane
     accountManagerDataSource = accountManagerDataSource.QueryInterface(Components.interfaces.nsIRDFDataSource);
     folderDataSource = folderDataSource.QueryInterface(Components.interfaces.nsIRDFDataSource);

@@ -182,6 +182,12 @@ treechildren::-moz-tree-cell-text(folderNameCol, noSelect-true) {
   list-style-image: none;
 }
 
+#folderUnreadCol,
+#folderTotalCol,
+#folderSizeCol {
+  text-align: right;
+}
+
 #folderNameCol [sortDirection="ascending"],
 #folderNameCol [sortDirection="descending"] {
   list-style-image: none;

@@ -148,6 +148,8 @@
     
     <vbox id="folderPaneBox" minwidth="100" width="200" persist="collapsed width">
     
+      <label id="folderColumnLabel" hidden="true" value="&folderColumn.label;"/>
+
 	  <hbox id="folderPaneHeaderContainer">
       <sidebarheader id="folderPaneHeader" align="center" flex="1">
         <label id="folderpane-title" value="&folderPaneHeader.label;"/>
@@ -158,7 +160,6 @@
             context="folderPaneContext"
             disableKeyNavigation="true"
             datasources="rdf:null"
-            hidecolumnpicker="true"
             statedatasource="rdf:mailnewsfolders"
             flags="dont-build-content"
             ondraggesture="BeginDragFolderTree(event);"
@@ -213,7 +214,16 @@
               <binding subject="?member"
                        predicate="http://home.netscape.com/NC-rdf#ImapShared"
                        object="?imapShared" />
-            </bindings>
+              <binding subject="?member"
+                 predicate="http://home.netscape.com/NC-rdf#TotalUnreadMessages"
+                 object="?unreadCount" />
+              <binding subject="?member"
+                       predicate="http://home.netscape.com/NC-rdf#TotalMessages"
+                       object="?totalCount" />
+              <binding subject="?member"
+                     predicate="http://home.netscape.com/NC-rdf#FolderSize"
+                     object="?folderSize" />
+     </bindings>
 
             <action>
               <treechildren>
@@ -222,6 +232,11 @@
                     <treecell id="folderNameCell"
                               label="?folderTreeName"
                               properties="specialFolder-?specialFolder biffState-?biffState isServer-?isServer newMessages-?newMessages hasUnreadMessages-?hasUnreadMessages subfoldersHaveUnreadMessages-?subfoldersHaveUnreadMessages isSecure-?isSecure serverType-?serverType redirectorType-?redirectorType noSelect-?noSelect imapShared-?imapShared"/>
+                    <treecell label="?unreadCount"
+                                  properties="hasUnreadMessages-?hasUnreadMessages subfoldersHaveUnreadMessages-?subfoldersHaveUnreadMessages"/>
+                    <treecell label="?totalCount"
+                                  properties="hasUnreadMessages-?hasUnreadMessages subfoldersHaveUnreadMessages-?subfoldersHaveUnreadMessages"/>
+                    <treecell label="?folderSize"/>
                   </treerow>
                 </treeitem>
               </treechildren>
@@ -239,6 +254,21 @@
                    sort="?folderTreeNameSort"
                    sortActive="true"
                    sortDirection="ascending"/>
+                  <splitter class="tree-splitter"/>
+          <treecol id="folderUnreadCol"
+                       persist="hidden width"
+                       flex="1"
+                       label="&unreadColumn.label;"/>
+          <splitter class="tree-splitter"/>
+          <treecol id="folderTotalCol"
+                       persist="hidden width"
+                       flex="1"
+                       label="&totalColumn.label;"/>
+          <splitter class="tree-splitter"/>
+          <treecol id="folderSizeCol"
+                       persist="hidden width"
+                       flex="1"
+                       label="&folderSizeColumn.label;"/>
         </treecols>
       </tree>
     </vbox>
