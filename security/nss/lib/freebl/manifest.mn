@@ -70,11 +70,11 @@ CSRCS = \
 	arcfour.c \
 	desblapi.c \
 	des.c \
-	$(MPI_SRCS) \
 	dh.c \
 	pqg.c \
 	dsa.c \
 	rsa.c \
+	$(MPI_SRCS) \
 	$(NULL)
 endif
 

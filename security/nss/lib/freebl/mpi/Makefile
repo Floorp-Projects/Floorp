@@ -36,7 +36,7 @@
 ## GPL.
 ## 
 ##
-## $Id: Makefile,v 1.10 2000/09/19 02:24:31 wtc%netscape.com Exp $
+## $Id: Makefile,v 1.11 2000/09/30 01:46:30 nelsonb%netscape.com Exp $
 ##
 
 ## Define CC to be the C compiler you wish to use.  The GNU cc
@@ -84,15 +84,26 @@ CFLAGS= -O $(MPICMN)
 #CFLAGS= -O -Olimit 4000 -ieee_with_inexact -std1 -DOSF1 -D_REENTRANT \
  -DMP_NO_MP_WORD $(MPICMN)
 
-#Solaris
+#Solaris 64
+#SOLARIS_ASM_FLAGS = -fast -xO5 -xrestrict=%all -xdepend -xchip=ultra -xarch=v9a -KPIC -mt
+#AS_OBJS = mpi_sparc.o mpv_sparc.o
+#MPICMN += -DMP_USE_UINT_DIGIT -DMP_NO_MP_WORD -DMP_ASSEMBLY_MULTIPLY 
 #CFLAGS= -O -KPIC -DSVR4 -DSYSV -D__svr4 -D__svr4__ -DSOLARIS -D_REENTRANT \
  -DSOLARIS2_8 -D_SVID_GETTOD -xarch=v9 -DXP_UNIX -DNSS_USE_64 $(MPICMN)
 #CFLAGS= -g -KPIC -DSVR4 -DSYSV -D__svr4 -D__svr4__ -DSOLARIS -D_REENTRANT \
  -DSOLARIS2_8 -D_SVID_GETTOD -xarch=v9 -DXP_UNIX -DNSS_USE_64 $(MPICMN)
+
+#Solaris 32
 #CFLAGS=-O -KPIC -DSVR4 -DSYSV -D__svr4 -D__svr4__ -DSOLARIS -D_REENTRANT \
  -DSOLARIS2_6 -D_SVID_GETTOD -xarch=v8 -DXP_UNIX -DMP_NO_MP_WORD $(MPICMN)
 #CFLAGS=-O -KPIC -DSVR4 -DSYSV -D__svr4 -D__svr4__ -DSOLARIS -D_REENTRANT \
  -DSOLARIS2_6 -D_SVID_GETTOD -xarch=v8 -DXP_UNIX $(MPICMN)
+#SOLARIS_ASM_FLAGS = -xchip=ultra -xarch=v8plusa -KPIC -mt 
+#AS_OBJS = mpi_sparc.o mpv_sparc32.o
+#MPICMN += -DMP_ASSEMBLY_MULTIPLY 
+#CFLAGS=-O -KPIC -DSVR4 -DSYSV -D__svr4 -D__svr4__ -DSOLARIS -D_REENTRANT \
+ -DSOLARIS2_6 -D_SVID_GETTOD -xarch=v8 -DXP_UNIX -DMP_NO_MP_WORD \
+ -DMP_ASSEMBLY_MULTIPLY $(MPICMN)
 
 #HPUX
 #CFLAGS= -O -DHPUX10 -D_POSIX_C_SOURCE=199506L -Ae +Z -DHPUX -Dhppa \
@@ -209,6 +220,12 @@ mpprime.o: mpprime.c mpi-priv.h mpprime.h mplogic.h primes.c $(LIBHDRS)
 
 mpi_mips.o: mpi_mips.s
 	$(CC) -o $@ $(ASFLAGS) -c mpi_mips.s
+
+mpv_sparc32.o: mpv_sparc32.S
+	$(CC) -o $@ $(SOLARIS_ASM_FLAGS) -c mpv_sparc32.S
+
+mpv_sparc.o: vis_64.il mpv_sparc.c
+	$(CC) -o $@ $(SOLARIS_ASM_FLAGS) -c vis_64.il mpv_sparc.c
 
 libmpi.a: $(LIBOBJS)
 	ar -cvr libmpi.a $(LIBOBJS)
