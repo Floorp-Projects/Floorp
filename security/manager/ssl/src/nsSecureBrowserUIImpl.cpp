@@ -239,6 +239,9 @@ nsSecureBrowserUIImpl::Notify(nsIContent* formNode,
   nsCOMPtr<nsIDocument> document;
   formNode->GetDocument(*getter_AddRefs(document));
   if (!document) return NS_OK;
+
+  nsCOMPtr<nsIURI> formURL;
+  document->GetBaseURL(*getter_AddRefs(formURL));
   
   nsCOMPtr<nsIScriptGlobalObject> globalObject;
   document->GetScriptGlobalObject(getter_AddRefs(globalObject));
@@ -252,7 +255,7 @@ nsSecureBrowserUIImpl::Notify(nsIContent* formNode,
     return NS_OK;
   
   PRBool okayToPost;
-  nsresult res = CheckPost(actionURL, &okayToPost);
+  nsresult res = CheckPost(formURL, actionURL, &okayToPost);
   
   if (NS_SUCCEEDED(res) && !okayToPost)
     *cancelSubmit = PR_TRUE;
@@ -583,26 +586,26 @@ nsSecureBrowserUIImpl::CheckMixedContext(nsISecurityEventSink *eventSink,
 }
 
 nsresult
-nsSecureBrowserUIImpl::CheckPost(nsIURI *actionURL, PRBool *okayToPost)
+nsSecureBrowserUIImpl::CheckPost(nsIURI *formURL, nsIURI *actionURL, PRBool *okayToPost)
 {
-  PRBool secure;
+  PRBool formSecure,actionSecure;
   *okayToPost = PR_TRUE;
 
-  nsresult rv = IsURLHTTPS(actionURL, &secure);
+  nsresult rv = IsURLHTTPS(formURL, &formSecure);
+  if (NS_FAILED(rv))
+    return rv;
+
+  rv = IsURLHTTPS(actionURL, &actionSecure);
   if (NS_FAILED(rv))
     return rv;
   
   // if we are posting to a secure link from a secure page, all is okay.
-  if (secure &&
-      (IS_SECURE(mSecurityState) ||
-       mSecurityState == STATE_IS_BROKEN)) {
+  if (actionSecure && formSecure) {
     return NS_OK;
   }
     
   // posting to insecure webpage from a secure webpage.
-  if (!secure && 
-      (IS_SECURE(mSecurityState) ||
-       mSecurityState == STATE_IS_BROKEN)) {
+  if (!actionSecure && formSecure) {
     *okayToPost = ConfirmPostToInsecureFromSecure();
   } else {
     *okayToPost = ConfirmPostToInsecure();
