@@ -185,27 +185,41 @@ NS_IMETHODIMP
 nsAggregatePrincipal::SetCodebase(nsIPrincipal* aCodebase)
 {
     nsresult rv;
-    //-- Make sure this really is a codebase principal
-    if (aCodebase)
+    nsCOMPtr<nsIPrincipal> newCodebase(aCodebase);
+
+    //-- If newCodebase is an aggregate, get its underlying codebase
+    nsCOMPtr<nsIAggregatePrincipal> agg = 
+        do_QueryInterface(newCodebase, &rv);
+    if (NS_SUCCEEDED(rv))
     {
+        rv = agg->GetCodebase(getter_AddRefs(newCodebase));
+        if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+    }
+    else
+    { //-- Make sure this really is a codebase principal
         nsCOMPtr<nsICodebasePrincipal> tempCodebase = 
-            do_QueryInterface(aCodebase, &rv);
+            do_QueryInterface(newCodebase, &rv);
         if (NS_FAILED(rv))
             return NS_ERROR_FAILURE;
     }
 
-    //-- If aCodebase is an aggregate, get its underlying codebase
-    nsCOMPtr<nsIAggregatePrincipal> agg = 
-        do_QueryInterface(aCodebase, &rv);
-    if (NS_SUCCEEDED(rv))
-    {
-        nsCOMPtr<nsIPrincipal> underlying;
-        rv = agg->GetCodebase(getter_AddRefs(underlying));
-        if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-        mCodebase = underlying.get();
-    }
-    else
-        mCodebase = aCodebase;
+    mCodebase = newCodebase;
+
+    //-- If this is the first codebase set, remember it
+    if (!mOriginalCodebase)
+        mOriginalCodebase = newCodebase;
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsAggregatePrincipal::GetOriginalCodebase(nsIPrincipal** aOriginalCodebase)
+{
+    NS_ENSURE_ARG_POINTER(aOriginalCodebase);
+
+    *aOriginalCodebase = mOriginalCodebase;
+    NS_IF_ADDREF(*aOriginalCodebase);
+
     return NS_OK;
 }
 

@@ -108,6 +108,7 @@ public:
 protected:
     nsCOMPtr<nsIPrincipal> mCertificate;
     nsCOMPtr<nsIPrincipal> mCodebase;
+    nsCOMPtr<nsIPrincipal> mOriginalCodebase;
 };
 
 #endif // _NS_AGGREGATE_PRINCIPAL_H_
