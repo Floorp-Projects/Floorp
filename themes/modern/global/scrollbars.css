@@ -72,6 +72,10 @@ scrollbarbutton {
   background: #B1BBC5 50% 50% no-repeat;
 }
 
+thumb:active {
+  background-color: #C2CCD6;
+}
+
 /* ::::: thumb (horizontal) ::::: */
 
 thumb {
