@@ -38,12 +38,14 @@
 #import <AppKit/AppKit.h>
 #import <Carbon/Carbon.h>
 
+class nsProfileDirServiceProvider;
 class nsIPref;
 
 @interface PreferenceManager : NSObject
 {
     NSUserDefaults*	mDefaults;
     ICInstance 			mInternetConfig;
+    nsProfileDirServiceProvider* mProfileProvider;
     nsIPref*        mPrefs;
     
     // proxies notification stuff

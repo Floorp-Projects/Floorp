@@ -97,7 +97,6 @@
 				F6BD640E01B3156701A962F7,
 				F5D3F1CE0209235A014E447F,
 				F6BD641201B3156701A962F7,
-				F6BD641301B3156701A962F7,
 				F6BD641401B3156701A962F7,
 				F5F59320020F4CD201ACA690,
 				F6BD641701B3156701A962F7,
@@ -159,7 +158,6 @@
 				F6BD63F001B313EE01A962F7,
 				F6BD63F101B313EE01A962F7,
 				F6BD641D01B3156701A962F7,
-				F6BD641E01B3156701A962F7,
 				F6BD641F01B3156701A962F7,
 				F6BD642001B3156701A962F7,
 				F6BD642101B3156701A962F7,
@@ -187,7 +185,7 @@
 		};
 		0FA8EFCA0423EAAD00A80166 = {
 			isa = PBXFileReference;
-			lastKnownFileType = file;
+			lastKnownFileType = archive.ar;
 			name = libxpcom_compat_c.a;
 			path = ../xpcom/obsolete/component/libxpcom_compat_c.a;
 			refType = 2;
@@ -677,10 +675,10 @@
 				GCC_OPTIMIZATION_LEVEL = 2;
 				GCC_PREFIX_HEADER = src/includes/ChimeraPrefix.h;
 				GCC_PREPROCESSOR_DEFINITIONS = "OSTYPE=Darwin1.4 OSARCH=Darwin";
-				HEADER_SEARCH_PATHS = "../dist/include/exthandler ../dist/include/helperAppDlg ../dist/include/intl ../dist/include/pipboot ../dist/include/pipnss ../dist/include/webbrwsr ../dist/include/dom ../dist/include/nspr ../dist/include/string ../dist/include/rdf ../dist/include/necko ../dist/include/find ../dist/include/embed_base ../dist/include/commandhandler ../dist/include/windowwatcher ../dist/include/webshell ../dist/include/widget ../dist/include/uriloader ../dist/include/nkcache ../dist/include/docshell ../dist/include/profile ../dist/include/layout ../dist/include/content ../dist/include/webbrowserpersist ../dist/include/pref ../dist/include/mimetype ../dist/include/shistory ../dist/include/history ../dist/include/view ../dist/include/gfx ../dist/include/xultmpl ../dist/include/xmlextras ../dist/include/htmlparser ../dist/include/locale ../dist/include/chardet ../dist/include/unicharutil ../dist/include/appcomps ../dist/include/chrome ../dist/include/xpcom ../dist/include/cookie ../dist/include/ ../ $(SYSTEM_DEVELOPER_DIR)/Headers/FlatCarbon $(LOCAL_LIBRARY_DIR)/Frameworks/SharedMenusCocoa.framework/Headers";
+				HEADER_SEARCH_PATHS = "../dist/include/exthandler ../dist/include/helperAppDlg ../dist/include/intl ../dist/include/pipboot ../dist/include/pipnss ../dist/include/webbrwsr ../dist/include/dom ../dist/include/nspr ../dist/include/string ../dist/include/rdf ../dist/include/necko ../dist/include/find ../dist/include/embed_base ../dist/include/commandhandler ../dist/include/windowwatcher ../dist/include/webshell ../dist/include/widget ../dist/include/uriloader ../dist/include/nkcache ../dist/include/docshell ../dist/include/profdirserviceprovider ../dist/include/layout ../dist/include/content ../dist/include/webbrowserpersist ../dist/include/pref ../dist/include/mimetype ../dist/include/shistory ../dist/include/history ../dist/include/view ../dist/include/gfx ../dist/include/xultmpl ../dist/include/xmlextras ../dist/include/htmlparser ../dist/include/locale ../dist/include/chardet ../dist/include/unicharutil ../dist/include/appcomps ../dist/include/chrome ../dist/include/xpcom ../dist/include/xpcom_obsolete ../dist/include/cookie ../dist/include/ ../ $(SYSTEM_DEVELOPER_DIR)/Headers/FlatCarbon $(LOCAL_LIBRARY_DIR)/Frameworks/SharedMenusCocoa.framework/Headers";
 				INFOPLIST_FILE = "Info-Camino__Upgraded_.plist";
 				INSTALL_PATH = "$(HOME)/Applications";
-				LIBRARY_SEARCH_PATHS = "../dist/bin ../dist/lib ../dist/Embed/components ../intl/unicharutil/util";
+				LIBRARY_SEARCH_PATHS = "../dist/bin ../dist/lib ../dist/Embed/components ../intl/unicharutil/util /Users/pink/src/chimera/mozilla/profile/dirserviceprovider/src";
 				OTHER_CFLAGS = "-fshort-wchar";
 				OTHER_LDFLAGS = "-lxpcom -lplds4 -lplc4 -lnspr4 -lpthread -lm";
 				PREBINDING = NO;
@@ -2506,14 +2504,12 @@
 				3F44AD0A05BDFB9F00CB4B08,
 				3F44AD0B05BDFB9F00CB4B08,
 				3F44AD0C05BDFB9F00CB4B08,
-				3F44AD0D05BDFB9F00CB4B08,
 				3F44AD0E05BDFB9F00CB4B08,
 				3F44AD0F05BDFB9F00CB4B08,
 				3F44AD1005BDFB9F00CB4B08,
 				3F44AD1105BDFB9F00CB4B08,
 				3F44AD1205BDFB9F00CB4B08,
 				3F44AD1305BDFB9F00CB4B08,
-				3F44AD1405BDFB9F00CB4B08,
 				3F44AD1505BDFB9F00CB4B08,
 				3F44AD1605BDFB9F00CB4B08,
 				3F44AD1705BDFB9F00CB4B08,
@@ -2908,12 +2904,6 @@
 			settings = {
 			};
 		};
-		3F44AD0D05BDFB9F00CB4B08 = {
-			fileRef = F6BD641301B3156701A962F7;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
 		3F44AD0E05BDFB9F00CB4B08 = {
 			fileRef = F6BD641401B3156701A962F7;
 			isa = PBXBuildFile;
@@ -2946,12 +2936,6 @@
 		};
 		3F44AD1305BDFB9F00CB4B08 = {
 			fileRef = F6BD641D01B3156701A962F7;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		3F44AD1405BDFB9F00CB4B08 = {
-			fileRef = F6BD641E01B3156701A962F7;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -3669,6 +3653,7 @@
 				3F44AD8305BDFB9F00CB4B08,
 				3F44AD8405BDFB9F00CB4B08,
 				3F44AD8505BDFB9F00CB4B08,
+				3FECC8E605D1FE800068E7ED,
 			);
 			isa = PBXFrameworksBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -4699,10 +4684,10 @@
 				GCC_OPTIMIZATION_LEVEL = 2;
 				GCC_PREFIX_HEADER = src/includes/ChimeraPrefix.h;
 				GCC_PREPROCESSOR_DEFINITIONS = "OSTYPE=Darwin1.4 OSARCH=Darwin _BUILD_STATIC_BIN";
-				HEADER_SEARCH_PATHS = "../dist/include/helperAppDlg ../dist/include/exthandler ../dist/include/intl ../dist/include/pipboot ../dist/include/pipnss ../dist/include/webbrwsr ../dist/include/dom ../dist/include/nspr ../dist/include/string ../dist/include/rdf ../dist/include/necko ../dist/include/find ../dist/include/embed_base ../dist/include/commandhandler ../dist/include/windowwatcher ../dist/include/webshell ../dist/include/widget ../dist/include/uriloader ../dist/include/nkcache ../dist/include/docshell ../dist/include/profile ../dist/include/layout ../dist/include/content ../dist/include/webbrowserpersist ../dist/include/pref ../dist/include/mimetype ../dist/include/shistory ../dist/include/history ../dist/include/view ../dist/include/gfx ../dist/include/xultmpl ../dist/include/xmlextras ../dist/include/htmlparser ../dist/include/locale ../dist/include/chardet ../dist/include/unicharutil ../dist/include/appcomps ../dist/include/chrome ../dist/include/xpcom ../dist/include/cookie ../dist/include/ $(SYSTEM_DEVELOPER_DIR)/Headers/FlatCarbon $(LOCAL_LIBRARY_DIR)/Frameworks/SharedMenusCocoa.framework/Headers";
+				HEADER_SEARCH_PATHS = "../dist/include/helperAppDlg ../dist/include/exthandler ../dist/include/intl ../dist/include/pipboot ../dist/include/pipnss ../dist/include/webbrwsr ../dist/include/dom ../dist/include/nspr ../dist/include/string ../dist/include/rdf ../dist/include/necko ../dist/include/find ../dist/include/embed_base ../dist/include/commandhandler ../dist/include/windowwatcher ../dist/include/webshell ../dist/include/widget ../dist/include/uriloader ../dist/include/nkcache ../dist/include/docshell ../dist/include/profdirserviceprovider ../dist/include/layout ../dist/include/content ../dist/include/webbrowserpersist ../dist/include/pref ../dist/include/mimetype ../dist/include/shistory ../dist/include/history ../dist/include/view ../dist/include/gfx ../dist/include/xultmpl ../dist/include/xmlextras ../dist/include/htmlparser ../dist/include/locale ../dist/include/chardet ../dist/include/unicharutil ../dist/include/appcomps ../dist/include/chrome ../dist/include/xpcom ../dist/include/xpcom_obsolete ../dist/include/cookie ../dist/include/ $(SYSTEM_DEVELOPER_DIR)/Headers/FlatCarbon $(LOCAL_LIBRARY_DIR)/Frameworks/SharedMenusCocoa.framework/Headers";
 				INFOPLIST_FILE = "Info-CaminoStatic__Upgraded_.plist";
 				INSTALL_PATH = "$(HOME)/Applications";
-				LIBRARY_SEARCH_PATHS = "../dist/bin ../dist/lib ../dist/lib/components ../intl/unicharutil/src ../gfx/src ../js/src/liveconnect ../intl/unicharutil/util ../js/src/xpconnect/loader";
+				LIBRARY_SEARCH_PATHS = "../dist/bin ../dist/lib ../dist/lib/components ../intl/unicharutil/src ../gfx/src ../js/src/liveconnect ../intl/unicharutil/util ../js/src/xpconnect/loader /Users/pink/src/chimera/mozilla/profile/dirserviceprovider/src";
 				OTHER_CFLAGS = "-fshort-wchar";
 				OTHER_LDFLAGS = "-lxpcom -lplds4 -lplc4 -lnspr4 -lsmime3 -lssl3 -lnss3 -lsoftokn3 -lxpcom_compat -lmozjs -lmozjpeg -ljsj -lmozpng -lpthread -lz -lm";
 				PRODUCT_NAME = Camino;
@@ -6513,7 +6498,6 @@
 				3F44AF3105BDFBA000CB4B08,
 				3F44AF3205BDFBA000CB4B08,
 				3F44AF3305BDFBA000CB4B08,
-				3F44AF3405BDFBA000CB4B08,
 				3F44AF3505BDFBA000CB4B08,
 				3F44AF3605BDFBA000CB4B08,
 				3F44AF3705BDFBA000CB4B08,
@@ -6785,12 +6769,6 @@
 		};
 		3F44AF3305BDFBA000CB4B08 = {
 			fileRef = F6BD641D01B3156701A962F7;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		3F44AF3405BDFBA000CB4B08 = {
-			fileRef = F6BD641E01B3156701A962F7;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -7468,7 +7446,6 @@
 				3F44AFA605BDFBA000CB4B08,
 				3F44AFA705BDFBA000CB4B08,
 				3F44AFA805BDFBA000CB4B08,
-				3F44AFA905BDFBA000CB4B08,
 				3F44AFAA05BDFBA000CB4B08,
 				3F44AFAB05BDFBA000CB4B08,
 				3F44AFAC05BDFBA000CB4B08,
@@ -7495,6 +7472,7 @@
 				3F44AFC105BDFBA000CB4B08,
 				3F44AFC205BDFBA000CB4B08,
 				3F44AFC305BDFBA000CB4B08,
+				3FECC8E705D1FE800068E7ED,
 			);
 			isa = PBXFrameworksBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -7615,12 +7593,6 @@
 		};
 		3F44AFA805BDFBA000CB4B08 = {
 			fileRef = F56F246B02AC723001A967F3;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		3F44AFA905BDFBA000CB4B08 = {
-			fileRef = F56F246F02AC723001A967F3;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -8671,6 +8643,26 @@
 			refType = 4;
 			sourceTree = "<group>";
 		};
+		3FECC8E505D1FE800068E7ED = {
+			isa = PBXFileReference;
+			lastKnownFileType = archive.ar;
+			name = libprofdirserviceprovider_s.a;
+			path = ../profile/dirserviceprovider/src/libprofdirserviceprovider_s.a;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		3FECC8E605D1FE800068E7ED = {
+			fileRef = 3FECC8E505D1FE800068E7ED;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		3FECC8E705D1FE800068E7ED = {
+			fileRef = 3FECC8E505D1FE800068E7ED;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 //3F0
 //3F1
 //3F2
@@ -8772,7 +8764,7 @@
 		};
 		A7C1276F0495618300A967F8 = {
 			isa = PBXFileReference;
-			lastKnownFileType = file;
+			lastKnownFileType = archive.ar;
 			name = libjar50.a;
 			path = ../modules/libjar/libjar50.a;
 			refType = 2;
@@ -8804,7 +8796,7 @@
 		};
 		A7E5D960041A07C900A967F8 = {
 			isa = PBXFileReference;
-			lastKnownFileType = file;
+			lastKnownFileType = archive.ar;
 			name = libi18n.a;
 			path = ../intl/build/libi18n.a;
 			refType = 2;
@@ -8812,7 +8804,7 @@
 		};
 		A7FD31C90466004E00A80196 = {
 			isa = PBXFileReference;
-			lastKnownFileType = file;
+			lastKnownFileType = archive.ar;
 			name = libtypeaheadfind.a;
 			path = ../extensions/typeaheadfind/src/libtypeaheadfind.a;
 			refType = 2;
@@ -9640,7 +9632,7 @@
 		};
 		F524EF6702AD8B9301A967F3 = {
 			isa = PBXFileReference;
-			lastKnownFileType = file;
+			lastKnownFileType = archive.ar;
 			name = libgkgfx.a;
 			path = ../gfx/src/libgkgfx.a;
 			refType = 2;
@@ -10251,7 +10243,7 @@
 		};
 		F54AD84402C115D901A967F3 = {
 			isa = PBXFileReference;
-			lastKnownFileType = file;
+			lastKnownFileType = archive.ar;
 			name = liboji.a;
 			path = ../modules/oji/src/liboji.a;
 			refType = 2;
@@ -10681,7 +10673,6 @@
 				F56F246502AC723001A967F3,
 				F56F246902AC723001A967F3,
 				F56F246B02AC723001A967F3,
-				F56F246F02AC723001A967F3,
 				F56F247002AC723001A967F3,
 				F56F247302AC723001A967F3,
 				F56F247402AC723001A967F3,
@@ -10699,6 +10690,7 @@
 				0FEBFCA1044F989900A96652,
 				A7FD31C90466004E00A80196,
 				A7C1276F0495618300A967F8,
+				3FECC8E505D1FE800068E7ED,
 			);
 			isa = PBXGroup;
 			name = "Gecko Static Components";
@@ -10707,7 +10699,7 @@
 		};
 		F56F242602AC706801A967F3 = {
 			isa = PBXFileReference;
-			lastKnownFileType = file;
+			lastKnownFileType = archive.ar;
 			name = libnecko.a;
 			path = ../netwerk/build/libnecko.a;
 			refType = 2;
@@ -10715,7 +10707,7 @@
 		};
 		F56F242702AC706801A967F3 = {
 			isa = PBXFileReference;
-			lastKnownFileType = file;
+			lastKnownFileType = archive.ar;
 			name = libnecko2.a;
 			path = ../netwerk/build2/libnecko2.a;
 			refType = 2;
@@ -10723,7 +10715,7 @@
 		};
 		F56F242B02AC706801A967F3 = {
 			isa = PBXFileReference;
-			lastKnownFileType = file;
+			lastKnownFileType = archive.ar;
 			name = libuconv.a;
 			path = ../intl/uconv/src/libuconv.a;
 			refType = 2;
@@ -10731,7 +10723,7 @@
 		};
 		F56F243302AC706801A967F3 = {
 			isa = PBXFileReference;
-			lastKnownFileType = file;
+			lastKnownFileType = archive.ar;
 			name = libxpconnect.a;
 			path = ../js/src/xpconnect/src/libxpconnect.a;
 			refType = 2;
@@ -10739,7 +10731,7 @@
 		};
 		F56F244502AC714601A967F3 = {
 			isa = PBXFileReference;
-			lastKnownFileType = file;
+			lastKnownFileType = archive.ar;
 			name = libcaps.a;
 			path = ../caps/src/libcaps.a;
 			refType = 2;
@@ -10747,7 +10739,7 @@
 		};
 		F56F244602AC714601A967F3 = {
 			isa = PBXFileReference;
-			lastKnownFileType = file;
+			lastKnownFileType = archive.ar;
 			name = libchrome.a;
 			path = ../rdf/chrome/build/libchrome.a;
 			refType = 2;
@@ -10755,7 +10747,7 @@
 		};
 		F56F244702AC714601A967F3 = {
 			isa = PBXFileReference;
-			lastKnownFileType = file;
+			lastKnownFileType = archive.ar;
 			name = libgfx_mac.a;
 			path = ../gfx/src/mac/libgfx_mac.a;
 			refType = 2;
@@ -10763,7 +10755,7 @@
 		};
 		F56F244902AC714601A967F3 = {
 			isa = PBXFileReference;
-			lastKnownFileType = file;
+			lastKnownFileType = archive.ar;
 			name = libhtmlpars.a;
 			path = ../htmlparser/src/libhtmlpars.a;
 			refType = 2;
@@ -10771,7 +10763,7 @@
 		};
 		F56F244D02AC714601A967F3 = {
 			isa = PBXFileReference;
-			lastKnownFileType = file;
+			lastKnownFileType = archive.ar;
 			name = libimglib2.a;
 			path = ../modules/libpr0n/build/libimglib2.a;
 			refType = 2;
@@ -10779,7 +10771,7 @@
 		};
 		F56F245002AC714601A967F3 = {
 			isa = PBXFileReference;
-			lastKnownFileType = file;
+			lastKnownFileType = archive.ar;
 			name = libpref.a;
 			path = ../modules/libpref/src/libpref.a;
 			refType = 2;
@@ -10787,7 +10779,7 @@
 		};
 		F56F245102AC714601A967F3 = {
 			isa = PBXFileReference;
-			lastKnownFileType = file;
+			lastKnownFileType = archive.ar;
 			name = librdf.a;
 			path = ../rdf/build/librdf.a;
 			refType = 2;
@@ -10795,7 +10787,7 @@
 		};
 		F56F246002AC723001A967F3 = {
 			isa = PBXFileReference;
-			lastKnownFileType = file;
+			lastKnownFileType = archive.ar;
 			name = libdocshell.a;
 			path = ../docshell/build/libdocshell.a;
 			refType = 2;
@@ -10803,7 +10795,7 @@
 		};
 		F56F246102AC723001A967F3 = {
 			isa = PBXFileReference;
-			lastKnownFileType = file;
+			lastKnownFileType = archive.ar;
 			name = libeditor.a;
 			path = ../editor/libeditor/build/libeditor.a;
 			refType = 2;
@@ -10811,7 +10803,7 @@
 		};
 		F56F246202AC723001A967F3 = {
 			isa = PBXFileReference;
-			lastKnownFileType = file;
+			lastKnownFileType = archive.ar;
 			name = libembedcomponents.a;
 			path = ../embedding/components/build/libembedcomponents.a;
 			refType = 2;
@@ -10819,7 +10811,7 @@
 		};
 		F56F246402AC723001A967F3 = {
 			isa = PBXFileReference;
-			lastKnownFileType = file;
+			lastKnownFileType = archive.ar;
 			name = libgklayout.a;
 			path = ../layout/build/libgklayout.a;
 			refType = 2;
@@ -10827,7 +10819,7 @@
 		};
 		F56F246502AC723001A967F3 = {
 			isa = PBXFileReference;
-			lastKnownFileType = file;
+			lastKnownFileType = archive.ar;
 			name = libgkplugin.a;
 			path = ../modules/plugin/base/src/libgkplugin.a;
 			refType = 2;
@@ -10835,7 +10827,7 @@
 		};
 		F56F246902AC723001A967F3 = {
 			isa = PBXFileReference;
-			lastKnownFileType = file;
+			lastKnownFileType = archive.ar;
 			name = libjsdom.a;
 			path = ../dom/src/build/libjsdom.a;
 			refType = 2;
@@ -10843,23 +10835,15 @@
 		};
 		F56F246B02AC723001A967F3 = {
 			isa = PBXFileReference;
-			lastKnownFileType = file;
+			lastKnownFileType = archive.ar;
 			name = libmork.a;
 			path = ../db/mork/build/libmork.a;
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};
-		F56F246F02AC723001A967F3 = {
-			isa = PBXFileReference;
-			lastKnownFileType = file;
-			name = libprofile.a;
-			path = ../profile/build/libprofile.a;
-			refType = 2;
-			sourceTree = SOURCE_ROOT;
-		};
 		F56F247002AC723001A967F3 = {
 			isa = PBXFileReference;
-			lastKnownFileType = file;
+			lastKnownFileType = archive.ar;
 			name = libtxmgr.a;
 			path = ../editor/txmgr/src/libtxmgr.a;
 			refType = 2;
@@ -10867,7 +10851,7 @@
 		};
 		F56F247302AC723001A967F3 = {
 			isa = PBXFileReference;
-			lastKnownFileType = file;
+			lastKnownFileType = archive.ar;
 			name = libwebbrwsr.a;
 			path = ../embedding/browser/build/libwebbrwsr.a;
 			refType = 2;
@@ -10875,7 +10859,7 @@
 		};
 		F56F247402AC723001A967F3 = {
 			isa = PBXFileReference;
-			lastKnownFileType = file;
+			lastKnownFileType = archive.ar;
 			name = libwidget_mac.a;
 			path = ../widget/src/cocoa/libwidget_mac.a;
 			refType = 2;
@@ -10883,7 +10867,7 @@
 		};
 		F56F248B02AC729901A967F3 = {
 			isa = PBXFileReference;
-			lastKnownFileType = file;
+			lastKnownFileType = archive.ar;
 			name = libappcomps.a;
 			path = ../xpfe/components/build/libappcomps.a;
 			refType = 2;
@@ -10891,7 +10875,7 @@
 		};
 		F56F248C02AC729901A967F3 = {
 			isa = PBXFileReference;
-			lastKnownFileType = file;
+			lastKnownFileType = archive.ar;
 			name = libcookie.a;
 			path = ../extensions/cookie/libcookie.a;
 			refType = 2;
@@ -10899,7 +10883,7 @@
 		};
 		F56F248F02AC729901A967F3 = {
 			isa = PBXFileReference;
-			lastKnownFileType = file;
+			lastKnownFileType = archive.ar;
 			name = libpipboot.a;
 			path = ../security/manager/boot/src/libpipboot.a;
 			refType = 2;
@@ -10907,7 +10891,7 @@
 		};
 		F56F249002AC729901A967F3 = {
 			isa = PBXFileReference;
-			lastKnownFileType = file;
+			lastKnownFileType = archive.ar;
 			name = libpipnss.a;
 			path = ../security/manager/ssl/src/libpipnss.a;
 			refType = 2;
@@ -10915,7 +10899,7 @@
 		};
 		F56F249402AC729901A967F3 = {
 			isa = PBXFileReference;
-			lastKnownFileType = file;
+			lastKnownFileType = archive.ar;
 			name = libxmlextras.a;
 			path = ../extensions/xmlextras/build/src/libxmlextras.a;
 			refType = 2;
@@ -11849,7 +11833,7 @@
 		};
 		F5E47654030C5FD501A967F3 = {
 			isa = PBXFileReference;
-			lastKnownFileType = file;
+			lastKnownFileType = archive.ar;
 			name = libuniversalchardet.a;
 			path = ../extensions/universalchardet/src/libuniversalchardet.a;
 			refType = 2;
@@ -12585,14 +12569,6 @@
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};
-		F6BD641301B3156701A962F7 = {
-			isa = PBXFileReference;
-			lastKnownFileType = "compiled.mach-o.bundle";
-			name = libprofile.dylib;
-			path = ../dist/Embed/components/libprofile.dylib;
-			refType = 2;
-			sourceTree = SOURCE_ROOT;
-		};
 		F6BD641401B3156701A962F7 = {
 			isa = PBXFileReference;
 			lastKnownFileType = "compiled.mach-o.bundle";
@@ -12630,14 +12606,6 @@
 			lastKnownFileType = file;
 			name = pref.xpt;
 			path = ../dist/Embed/components/pref.xpt;
-			refType = 2;
-			sourceTree = SOURCE_ROOT;
-		};
-		F6BD641E01B3156701A962F7 = {
-			isa = PBXFileReference;
-			lastKnownFileType = file;
-			name = profile.xpt;
-			path = ../dist/Embed/components/profile.xpt;
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};

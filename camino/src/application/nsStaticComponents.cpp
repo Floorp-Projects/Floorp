@@ -72,7 +72,6 @@ DECL_NSGETMODULE(embedcomponents)
 DECL_NSGETMODULE(Browser_Embedding_Module)
 DECL_NSGETMODULE(nsEditorModule)
 DECL_NSGETMODULE(nsTransactionManagerModule)
-DECL_NSGETMODULE(nsProfileModule)
 DECL_NSGETMODULE(application)
 DECL_NSGETMODULE(nsCookieModule)
 DECL_NSGETMODULE(nsXMLExtrasModule)
@@ -112,7 +111,6 @@ MODULE(embedcomponents),
 MODULE(Browser_Embedding_Module),
 MODULE(nsEditorModule),
 MODULE(nsTransactionManagerModule),
-MODULE(nsProfileModule),
 MODULE(application),
 MODULE(nsCookieModule),
 MODULE(nsXMLExtrasModule),

@@ -45,7 +45,6 @@
 // Defines
 
 #define APP_REGISTRY_NAME   NS_LITERAL_CSTRING("Application.regs")
-#define PROFILES_ROOT_NAME  NS_LITERAL_CSTRING("Profiles")
 
 //*****************************************************************************
 // AppDirServiceProvider::Constructor/Destructor
@@ -80,7 +79,7 @@ AppDirServiceProvider::GetFile(const char *prop, PRBool *persistant, nsIFile **_
   *_retval = nsnull;
   *persistant = PR_TRUE;
   
-  if (strcmp(prop, NS_APP_USER_PROFILE_50_DIR) == 0)
+  if (strcmp(prop, NS_APP_APPLICATION_REGISTRY_DIR) == 0)
   {
     rv = GetProductDirectory(getter_AddRefs(localFile));
   }
@@ -93,18 +92,6 @@ AppDirServiceProvider::GetFile(const char *prop, PRBool *persistant, nsIFile **_
   else if (strcmp(prop, NS_APP_USER_PROFILES_ROOT_DIR) == 0)
   {
     rv = GetProductDirectory(getter_AddRefs(localFile));
-    if (NS_FAILED(rv))
-      return rv;
-    rv = localFile->AppendNative(PROFILES_ROOT_NAME);
-    if (NS_FAILED(rv))
-      return rv;
-      
-    PRBool exists;
-    rv = localFile->Exists(&exists);
-    if (NS_SUCCEEDED(rv) && !exists)
-      rv = localFile->Create(nsIFile::DIRECTORY_TYPE, 0775);
-    if (NS_FAILED(rv))
-      return rv;
   }
     
   if (localFile && NS_SUCCEEDED(rv))
