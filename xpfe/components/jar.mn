@@ -159,8 +159,10 @@ locales/en-US.jar:
     global/locale/helperAppLauncher.properties            (ucth/resources/locale/en-US/helperAppLauncher.properties)
     global/locale/downloadProgress.dtd                    (xfer/resources/locale/en-US/downloadProgress.dtd)
     global/locale/downloadProgress.properties             (xfer/resources/locale/en-US/downloadProgress.properties)
+    global/locale/filepicker.dtd                          (filepicker/res/locale/en-US/filepicker.dtd)
     global/locale/filepicker.properties                   (filepicker/res/locale/en-US/filepicker.properties)
     global/locale/console.dtd                             (console/resources/locale/en-US/console.dtd)
+    global/locale/console.properties                      (console/resources/locale/en-US/console.properties)
     global/locale/finddialog.dtd                          (find/resources/locale/en-US/finddialog.dtd)
 
 packages/widget-toolkit.jar:
