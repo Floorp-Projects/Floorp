@@ -40,6 +40,8 @@
 
 interface nsIArray;
 interface nsIMutableArray;
+interface nsISimpleEnumerator;
+interface nsIVariant;
 
 interface nsIPropertyBag;
 interface nsIWritablePropertyBag;
@@ -155,7 +157,13 @@ interface calIItemBase : nsISupports
   // nsIWritablePropertyBag also)
 
   // if this item is mutable, the returned bag will be a nsIWritablePropertyBag
-  readonly attribute nsIPropertyBag properties;
+  //readonly attribute nsIPropertyBag properties;
+  // these forward to an internal property bag; implemented here, so we can
+  // do access control on set/delete.
+  readonly attribute nsISimpleEnumerator propertyEnumerator;
+  nsIVariant getProperty(in AString name);
+  void setProperty(in AString name, in nsIVariant value);
+  void deleteProperty(in AString name);
 };
 
 //

@@ -110,7 +110,8 @@ calItemBase.prototype = {
         // these need fixing
         m.mAttachments = this.mAttachments;
         m.mContacts = this.mContacts;
-        m.mProperties = this.mProperties;
+
+        // m.mProperties = this.mProperties;
 
         return m;
     },
@@ -136,9 +137,24 @@ calItemBase.prototype = {
     MEMBER_ATTR(mRecurrenceInfo, null, recurrenceInfo),
     MEMBER_ATTR(mAttachments, null, attachments),
     MEMBER_ATTR(mContacts, null, contacts),
-    MEMBER_ATTR(mProperties, null, properties)
+    MEMBER_ATTR(mProperties, null, properties),
 
 #undef MEMBER_ATTR
+
+    get propertyEnumerator() { return this.mProperties.enumerator; },
+    getProperty: function (aName) {
+        return this.mProperties.getProperty(aName);
+    },
+    setProperty: function (aName, aValue) {
+        if (this.mImmutable)
+            throw Components.results.NS_ERROR_FAILURE;
+        this.mProperties.setProperty(aName, aValue);
+    },
+    deleteProperty: function (aName) {
+        if (this.mImmutable)
+            throw Components.results.NS_ERROR_FAILURE;
+        this.mProperties.deleteProperty(aName);
+    }
 };
 
 function calItemOccurrence () {

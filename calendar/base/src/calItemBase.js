@@ -68,7 +68,8 @@ calItemBase.prototype = {
 
         m.mAttachments = this.mAttachments;
         m.mContacts = this.mContacts;
-        m.mProperties = this.mProperties;
+
+
 
         return m;
     },
@@ -94,9 +95,24 @@ calItemBase.prototype = {
     mRecurrenceInfo: null, get recurrenceInfo() { return this.mRecurrenceInfo; }, set recurrenceInfo(v) { if (this.mImmutable) throw Components.results.NS_ERROR_FAILURE; else this.mRecurrenceInfo = v; },
     mAttachments: null, get attachments() { return this.mAttachments; }, set attachments(v) { if (this.mImmutable) throw Components.results.NS_ERROR_FAILURE; else this.mAttachments = v; },
     mContacts: null, get contacts() { return this.mContacts; }, set contacts(v) { if (this.mImmutable) throw Components.results.NS_ERROR_FAILURE; else this.mContacts = v; },
-    mProperties: null, get properties() { return this.mProperties; }, set properties(v) { if (this.mImmutable) throw Components.results.NS_ERROR_FAILURE; else this.mProperties = v; }
+    mProperties: null, get properties() { return this.mProperties; }, set properties(v) { if (this.mImmutable) throw Components.results.NS_ERROR_FAILURE; else this.mProperties = v; },
 
 
+
+    get propertyEnumerator() { return this.mProperties.enumerator; },
+    getProperty: function (aName) {
+        return this.mProperties.getProperty(aName);
+    },
+    setProperty: function (aName, aValue) {
+        if (this.mImmutable)
+            throw Components.results.NS_ERROR_FAILURE;
+        this.mProperties.setProperty(aName, aValue);
+    },
+    deleteProperty: function (aName) {
+        if (this.mImmutable)
+            throw Components.results.NS_ERROR_FAILURE;
+        this.mProperties.deleteProperty(aName);
+    }
 };
 
 function calItemOccurrence () {
