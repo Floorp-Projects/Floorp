@@ -547,7 +547,8 @@ nsresult nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,CToken*& aToken,nsScan
         if(mRecordTrailingContent) 
           RecordTrailingContent((CStartToken*)aToken,aScanner);
         
-        if((eHTMLTag_style==theTag) || (eHTMLTag_script==theTag)) {
+        //if((eHTMLTag_style==theTag) || (eHTMLTag_script==theTag)) {
+        if(gHTMLElements[theTag].CanContainType(kCDATA)) {
           nsAutoString endTag; endTag.AssignWithConversion(nsHTMLTags::GetStringValue(theTag));
           endTag.InsertWithConversion("</",0,2);
           CToken* textToken=theRecycler->CreateTokenOfType(eToken_text,eHTMLTag_text);

@@ -59,11 +59,12 @@ static const int kBlockMisc     = 0x0400; //  OBJECT, SCRIPT
 static const int kBlock         = 0x0800; //  ADDRESS, BLOCKQUOTE, CENTER, DIV, DL, FIELDSET, FORM, 
                                           //  ISINDEX, HR, NOSCRIPT, NOFRAMES, P, TABLE
 static const int kList          = 0x1000; //  UL, OL, DIR, MENU
-static const int kPCDATA        = 0x2000; //  just plain text...
+static const int kPCDATA        = 0x2000; //  plain text and entities...
 static const int kSelf          = 0x4000; //  whatever THIS tag is...
 static const int kExtensions    = 0x8000; //  BGSOUND, WBR, NOBR
 static const int kTable         = 0x10000;//  TR,TD,THEAD,TBODY,TFOOT,CAPTION,TH
 static const int kDLChild       = 0x20000;//  DL, DT
+static const int kCDATA         = 0x40000;//  just plain text...
 
 static const int kInlineEntity  = (kPCDATA|kFontStyle|kPhrase|kSpecial|kFormControl|kExtensions);  //  #PCDATA, %fontstyle, %phrase, %special, %formctrl
 static const int kBlockEntity   = (kHeading|kList|kPreformatted|kBlock); //  %heading, %list, %preformatted, %block

@@ -713,10 +713,8 @@ nsresult COtherDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsCParserNo
 
     CObserverService* theService=mParser->GetObserverService();
     if(theService) {
-      CParserContext*   pc=mParser->PeekContext();
-      void*             theDocID=(pc)? pc->mKey:0;
-    
-      result=theService->Notify(aTag,aNode,theDocID, NS_ConvertToString(kHTMLTextContentType), mParser);
+      const nsISupportsParserBundle*  bundle=mParser->GetParserBundle();
+      result=theService->Notify(aTag,aNode,(void*)bundle, NS_ConvertToString(kHTMLTextContentType), mParser);
     }
   }
 

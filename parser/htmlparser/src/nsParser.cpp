@@ -651,9 +651,13 @@ void DetermineParseMode(nsString& aBuffer,nsDTDMode& aParseMode,eParserDocType& 
       aDocType=eHTML4Text;
       aParseMode=eDTDMode_strict;
     }
-    else aDocType=eXMLText;
-    return;
-
+    else {
+      if(!aMimeType.EqualsWithConversion(kPlainTextContentType)) {
+        aDocType=eXMLText;
+      }
+      else aDocType=ePlainText;
+      return;
+    }
   }
   else if(aMimeType.EqualsWithConversion(kPlainTextContentType)) {
     aDocType=ePlainText;
