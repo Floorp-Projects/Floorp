@@ -152,6 +152,7 @@ nsTextEditor::nsTextEditor()
 //  NS_INIT_REFCNT();
   mRules = nsnull;
   mMaxTextLength = -1;
+  mWrapColumn = 72;
 }
 
 nsTextEditor::~nsTextEditor()
@@ -1566,7 +1567,8 @@ NS_IMETHODIMP nsTextEditor::OutputTextToString(nsString& aOutputString, PRBool a
         wc = 0;
       else
         wc = (PRUint32)mWrapColumn;
-      (void)encoder->SetWrapColumn(wc);
+      if (mWrapColumn > 0)
+        (void)encoder->SetWrapColumn(wc);
     }
 
     rv = encoder->EncodeToString(aOutputString);

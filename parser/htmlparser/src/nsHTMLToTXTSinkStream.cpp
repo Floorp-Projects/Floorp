@@ -224,8 +224,7 @@ nsHTMLToTXTSinkStream::nsHTMLToTXTSinkStream(nsIOutputStream* aStream,
   mStream = aStream;
   mString = aString;
   mPrettyPrint = PR_FALSE;
-  mPreformatted = PR_FALSE;
-  mWrapColumn = 72;     // XXX magic number, obviously needs to be settable
+  mWrapColumn = 72;     // XXX magic number, we expect someone to reset this
 
   // initialize the tag stack to zero:
   mTagStack = new nsHTMLTag[TagStackSize];
@@ -677,7 +676,6 @@ nsHTMLToTXTSinkStream::OpenContainer(const nsIParserNode& aNode)
     mIndent += gTabSize;
   else if (type == eHTMLTag_pre)
   {
-    mPreformatted = PR_TRUE;
     nsString temp(NS_LINEBREAK);
     Write(temp);
     mColPos = 0;
@@ -732,9 +730,6 @@ nsHTMLToTXTSinkStream::CloseContainer(const nsIParserNode& aNode)
 
   if (mTagStackIndex > 0)
     --mTagStackIndex;
-
-  if (type == eHTMLTag_pre)
-    mPreformatted = PR_FALSE;
 
   else if (type == eHTMLTag_ol)
     --mOLStackIndex;
@@ -819,20 +814,22 @@ nsHTMLToTXTSinkStream::AddLeaf(const nsIParserNode& aNode)
   // Otherwise, either we're collapsing to minimal text, or we're
   // prettyprinting to mimic the html format, and in neither case
   // does the formatting of the html source help us.
-  else if (mPrettyPrint && mPreformatted && type == eHTMLTag_whitespace)
+  else if (mPrettyPrint
+           && (mTagStackIndex > 0)
+           && (mTagStack[mTagStackIndex-1] == eHTMLTag_pre))
   {
-    if (mPrettyPrint)
+    if (type == eHTMLTag_whitespace)
     {
       text = aNode.GetText();
       Write(text);
       mColPos += text.Length();
     }
-  }
-  else if (mPrettyPrint && mPreformatted && type == eHTMLTag_newline)
-  {
-    nsString temp(NS_LINEBREAK);
-    Write(temp);
-    mColPos = 0;
+    else if (type == eHTMLTag_newline)
+    {
+      nsString temp(NS_LINEBREAK);
+      Write(temp);
+      mColPos = 0;
+    }
   }
 
   return NS_OK;
