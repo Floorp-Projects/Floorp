@@ -2276,7 +2276,7 @@ void nsWebShellWindow::ShowAppropriateChrome()
     if (chromeMask & NS_CHROME_OPEN_AS_DIALOG)
       chromeMask &= ~(NS_CHROME_MENU_BAR_ON | NS_CHROME_TOOL_BAR_ON |
                       NS_CHROME_LOCATION_BAR_ON | NS_CHROME_STATUS_BAR_ON |
-                      NS_CHROME_PERSONAL_TOOLBAR_ON | NS_CHROME_SCROLLBARS_ON);
+                      NS_CHROME_PERSONAL_TOOLBAR_ON | NS_CHROME_SCROLLBARS_ON |NS_CHROME_EXTRACHROME_ON);
     else
       // theoretically, this won't happen (only dialogs can have defaults)
       // but, we cover this case anyway
@@ -2320,6 +2320,9 @@ void nsWebShellWindow::ShowAppropriateChrome()
           } else if (chromeClass == "status") {
             makeChange = PR_TRUE;
             flag = mChromeMask & NS_CHROME_STATUS_BAR_ON;
+          }else if (chromeClass == "extrachrome") {
+            makeChange = PR_TRUE;
+            flag = mChromeMask & NS_CHROME_EXTRACHROME_ON;
           }
           if (makeChange)
             if (flag)
