@@ -493,9 +493,14 @@ protected:
 
   //return the line number of the aFrame
   static PRInt32 GetLineNumber(nsIFrame *aFrame);
+
+public:
   //given a frame five me the first/last leaf available
+  //XXX Robert O'Callahan wants to move these elsewhere
   static void GetLastLeaf(nsPresContext* aPresContext, nsIFrame **aFrame);
   static void GetFirstLeaf(nsPresContext* aPresContext, nsIFrame **aFrame);
+  
+protected:
 
   // Test if we are selecting a table object:
   //  Most table/cell selection requires that Ctrl (Cmd on Mac) key is down 

@@ -3239,47 +3239,13 @@ PresShell::CompleteMove(PRBool aForward, PRBool aExtend)
   if (!frame)
     return NS_ERROR_FAILURE; //could not find an area frame.
 
-  PRInt8  outsideLimit = -1;//search from beginning
-  nsPeekOffsetStruct pos;
-  pos.mAmount = eSelectLine;
-  pos.mShell = this;
-  pos.mContentOffset = 0;
-  pos.mContentOffsetEnd = 0;
-  pos.mScrollViewStop = PR_FALSE;//dont stop on scrolled views.
-  pos.mIsKeyboardSelect = PR_TRUE;
-  if (aForward)
-  {
-    outsideLimit = 1;//search from end
-    pos.mDesiredX = frame->GetRect().width * 2;//search way off to right of line
-    pos.mDirection = eDirPrevious; //seach backwards from the end
-  }
-  else
-  {
-    pos.mDesiredX = -1; //start before line
-    pos.mDirection = eDirNext; //search forwards from before beginning
-  }
+  nsPeekOffsetStruct pos = frame->GetExtremeCaretPosition(!aForward);
+
+  // we 'prefer left' (i.e. prefer the beginning of the next line)
+  // iff we're moving to the end of the content
+  pos.mPreferLeft = aForward;
   
-  do
-  {
-    result = nsFrame::GetNextPrevLineFromeBlockFrame(mPresContext,
-                                &pos,
-                                frame, 
-                                0, //irrelavent since we set outsidelimit 
-                                outsideLimit
-                                );
-    if (NS_POSITION_BEFORE_TABLE == result) //NS_POSITION_BEFORE_TABLE should ALSO break
-      break;
-    if (NS_FAILED (result) || !pos.mResultFrame ) 
-      return result?result:NS_ERROR_FAILURE;
-    nsCOMPtr<nsILineIteratorNavigator> newIt; 
-    //check to see if this is ANOTHER blockframe inside the other one if so then call into its lines
-    result = pos.mResultFrame->QueryInterface(NS_GET_IID(nsILineIteratorNavigator),getter_AddRefs(newIt));
-    if (NS_SUCCEEDED(result) && newIt)
-      frame = pos.mResultFrame;
-  }
-  while (NS_SUCCEEDED(result));//end 'do'
-  
-  mSelection->HandleClick(pos.mResultContent ,pos.mContentOffset ,pos.mContentOffsetEnd ,aExtend, PR_FALSE, pos.mPreferLeft);
+  mSelection->HandleClick(pos.mResultContent ,pos.mContentOffset ,pos.mContentOffset/*End*/ ,aExtend, PR_FALSE, pos.mPreferLeft);
   return ScrollSelectionIntoView(nsISelectionController::SELECTION_NORMAL, nsISelectionController::SELECTION_FOCUS_REGION, PR_TRUE);
 }
 

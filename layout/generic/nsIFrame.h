@@ -1423,6 +1423,19 @@ NS_PTR_TO_INT32(frame->GetProperty(nsLayoutAtoms::embeddingLevel))
   // The above methods have been migrated from nsIBox and are in the process of
   // being refactored. DO NOT USE OUTSIDE OF XUL.
 
+  /**
+   * gets the first or last possible caret position within the frame
+   *
+   * @param  [in] aStart
+   *         true  for getting the first possible caret position
+   *         false for getting the last possible caret position
+   * @return The caret position in an nsPeekOffsetStruct (the
+   *         fields set are mResultContent and mContentOffset;
+   *         the returned value is a 'best effort' in case errors
+   *         are encountered rummaging through the frame.
+   */
+  nsPeekOffsetStruct GetExtremeCaretPosition(PRBool aStart);
+
 protected:
   // Members
   nsRect           mRect;
