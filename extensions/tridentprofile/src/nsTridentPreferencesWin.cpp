@@ -557,7 +557,9 @@ nsTridentPreferencesWin::CopyCookiesFromBuffer(
   int      flagsValue;
   time_t   expirationDate,
            creationDate;
-  char     hostCopy[sHostnameLengthLimit+1];
+  char     hostCopy[sHostnameLengthLimit+1],
+          *hostCopyConstructor,
+          *hostCopyEnd = hostCopy + sHostnameLengthLimit;
 
   do { // for each cookie in the buffer
     DelimitField(&aBuffer, bufferEnd, &name);
@@ -574,30 +576,48 @@ nsTridentPreferencesWin::CopyCookiesFromBuffer(
     if (terminator >= bufferEnd)
       break;
 
+    // IE stores deleted cookies with a zero-length value
+    if (*value == '\0')
+      continue;
+
     // convert flags to an int, date numbers to useable dates
     ::sscanf(flags, "%d", &flagsValue);
     expirationDate = FileTimeToTimeT(expirationDate1, expirationDate2);
     creationDate = FileTimeToTimeT(creationDate1, creationDate2);
 
-    // separate host from path
+    // munge host, and separate host from path
+
+    hostCopyConstructor = hostCopy;
+
+    // first, with a non-null domain, assume it's what Mozilla considers
+    // a domain cookie. see bug 222343.
+    if (*host && *host != '.' && *host != '/')
+      *hostCopyConstructor++ = '.';
+
+    // copy the host part and leave path pointing to the path part
     for (path = host; *path && *path != '/'; ++path)
       ;
-    if (*path == '/') {
-      // to separate them, point host to a null-terminated copy
-      int hostLength = path - host;
-      if (hostLength > sHostnameLengthLimit)
-        hostLength = sHostnameLengthLimit;
-      *path = '\0';
-      PL_strncpy(hostCopy, host, hostLength);
-      hostCopy[hostLength] = '\0';
-      host = hostCopy;
-      *path = '/';
-    }
+    int hostLength = path - host;
+    if (hostLength > hostCopyEnd - hostCopyConstructor)
+      hostLength = hostCopyEnd - hostCopyConstructor;
+    PL_strncpy(hostCopyConstructor, host, hostLength);
+    hostCopyConstructor += hostLength;
+
+    *hostCopyConstructor = '\0';
+
+    nsDependentCString stringName(name),
+                       stringPath(path);
+
+    // delete any possible extant matching host cookie
+    if (hostCopy[0] == '.')
+      aCookieManager->Remove(nsDependentCString(hostCopy+1),
+                             stringName, stringPath, PR_FALSE);
 
     nsresult onerv;
-    onerv = aCookieManager->Add(nsDependentCString(host),
-                                nsDependentCString(path),
-                                nsDependentCString(name),
+    // Add() makes a new domain cookie
+    onerv = aCookieManager->Add(nsDependentCString(hostCopy),
+                                stringPath,
+                                stringName,
                                 nsDependentCString(value),
                                 flagsValue & 0x1,
                                 PR_FALSE,
@@ -629,14 +649,19 @@ nsTridentPreferencesWin::DelimitField(char **aBuffer,
                                       char **aField) {
 
   char *scan = *aBuffer;
-  while (scan < aBufferEnd && (*scan == '\r' || *scan == '\n'))
-    ++scan;
   *aField = scan;
   while (scan < aBufferEnd && (*scan != '\r' && *scan != '\n'))
     ++scan;
-  if (scan <= aBufferEnd)
+  if (scan+1 < aBufferEnd && (*(scan+1) == '\r' || *(scan+1) == '\n') &&
+                             *scan != *(scan+1)) {
     *scan = '\0';
-  *aBuffer = scan+1;
+    scan += 2;
+  } else {
+    if (scan <= aBufferEnd) // (1 byte past bufferEnd is guaranteed allocated)
+      *scan = '\0';
+    ++scan;
+  }
+  *aBuffer = scan;
 }
 
 // conversion routine. returns 0 (epoch date) if the input is out of range
