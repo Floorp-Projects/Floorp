@@ -1418,7 +1418,7 @@ void nsWindow::RawDrawFunc( PtWidget_t * pWidget, PhTile_t * damage )
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc Damage Tiles List:\n"));
   do {
     PhRect_t   rect = top->rect;    
-    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc photon damage %d rect=<%d,%d,%d,%d> next=<%p>\n", index++,rect.ul.x,rect.ul.y,rect.lr.x,rect.lr.y, top->next));
+    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc photon damage %d rect=<%d,%d,%d,%d> next=<%p>\n", index++,rect.ul.x,rect.ul.y,rect.lr.x,rect.lr.y, to*WÔ  ));
 //    printf("nsWindow::%p RawDrawFunc photon damage %d rect=<%d,%d,%d,%d> next=<%p>\n", pWidget,index++,rect.ul.x,rect.ul.y,rect.lr.x,rect.lr.y, top->next);
     top=top->next;
   } while (top);
@@ -1540,15 +1540,13 @@ void nsWindow::RawDrawFunc( PtWidget_t * pWidget, PhTile_t * damage )
     PhTile_t *tiles2 = PhCopyTiles(damage->next);
     PhTile_t *tile3 = PhRectsToTiles(&damage->rect, 1);
     tiles2 = PhIntersectTilings(tiles2, tile3, NULL);
-    //df
-//	new_damage = PhClipTilings(PhCopyTiles(damage->next), PhCopyTiles(clip_tiles), NULL);
-//  new_damage = PhCoalesceTiles( PhMergeTiles (PhSortTiles( new_damage )));
 
 /* Change from Window  releative to widget realtive coordinates */
     PhDeTranslateTiles(tiles2,&offset);
 
     /* new_damage is the same as tiles2... I need to release it later */
     new_damage = PhClipTilings(tiles2, PhCopyTiles(clip_tiles), NULL);
+
 #if 0
 /* There is a bug in merge or coalesce that causes rips when you move a window */
 /* down and to the right over Mozilla, these should be readded in when its fixed. */
@@ -1843,7 +1841,7 @@ NS_METHOD nsWindow::GetSiblingClippedRegion( PhTile_t **btiles, PhTile_t **ctile
       if( PtGetResources( mWidget, 1, &arg ) == 0 )
       {
         nsRect rect( area->pos.x, area->pos.x, area->size.w, area->size.h );
-        GetParentClippedArea( rect );
+        *WÕ  ntClippedArea( rect );
 
         PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::GetSiblingClippedRegion 2\n"));
 
@@ -2401,7 +2399,7 @@ void nsWindow::RemoveResizeWidget()
 
 //        NS_RELEASE( dqe->inst );
 
-        PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWindow::RemoveResizeWidget this=(%p) dqe=<%p>\n", this, dqe));
+        PR_LOG(PhWidLog, PR_LOG_DEBUG,("ns*WÖ  :RemoveResizeWidget this=(%p) dqe=<%p>\n", this, dqe));
 
         delete dqe;
         mIsResizing = PR_FALSE;
@@ -2643,25 +2641,28 @@ NS_METHOD nsWindow::Move(PRInt32 aX, PRInt32 aY)
 
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Move this=(%p) to (%ld,%ld) \n", this, aX, aY ));
 
-#if 1
  /* Offset to the current virtual console */
   if ( (mWindowType == eWindowType_dialog)
 	   || (mWindowType == eWindowType_toplevel)
-//	   || (mWindowType == eWindowType_popup)
 	 )
   {
-    PhRect_t console;
-	
-      /* 1 is a magic number and should be $PHIG */
-      PhWindowQueryVisible( Ph_QUERY_GRAPHICS, 0, 1, &console );
-	  aX += console.ul.x;
-	  aY += console.ul.y;
-
-      //printf("nsWindow::Move toplevel console=(%d,%d) total=(%d,%d)\n", console.ul.x, console.ul.y, aX, aY);
-      PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Move toplevel console=(%d,%d) total=(%d,%d)\n", console.ul.x, console.ul.y, aX, aY));
-  }
-#endif
+  PhPoint_t offset = nsToolkit::GetConsoleOffset();
   
+      PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Move toplevel console offset=(%d,%d)\n", offset.x, offset.y));
+     aX += offset.x;
+     aY += offset.y;
+  }
+
+  /* Subtract off the console offset that got added earlier in this method */
+  if (mWindowType == eWindowType_popup)
+  {
+    PhPoint_t offset = nsToolkit::GetConsoleOffset();
+  
+      PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Move toplevel console offset=(%d,%d)\n", offset.x, offset.y));
+     aX -= offset.x;
+     aY -= offset.y;  
+  
+  }
 
   /* Call my base class */
   nsresult res = nsWidget::Move(aX, aY);
@@ -2669,22 +2670,13 @@ NS_METHOD nsWindow::Move(PRInt32 aX, PRInt32 aY)
   /* If I am a top-level window my origin should always be 0,0 */
 
   if ( (mWindowType == eWindowType_dialog) ||
-	   (mWindowType == eWindowType_toplevel) )
+	   (mWindowType == eWindowType_toplevel) ||
+       (mWindowType == eWindowType_popup) )
   {
-    //printf("HACK HACK: forcing bounds to 0,0 for toplevel window\n");
 	mBounds.x = origX;
 	mBounds.y = origY;
   }
-  else if (mWindowType == eWindowType_popup)
-  {
-#if 1
-	mBounds.x = origX;
-	mBounds.y = origY;
-#else
-    mBounds.x = 0;
-	mBounds.y = 0;
-#endif
-  }  
+
   return res;
 }
 

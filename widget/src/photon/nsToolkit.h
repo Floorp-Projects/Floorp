@@ -38,7 +38,8 @@ public:
   NS_IMETHOD   Init( PRThread *aThread );
 
   static PhDrawContext_t *GetDefaultPhotonDrawContext();
-
+  static PhPoint_t GetConsoleOffset();
+  
 private:
   static PRBool                     mPtInited;                   
   static PhDrawContext_t  *mDefaultPhotonDrawContext;
