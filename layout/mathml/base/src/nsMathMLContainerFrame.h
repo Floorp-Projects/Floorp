@@ -18,6 +18,7 @@
  * Contributor(s): 
  *   Roger B. Sidje <rbs@maths.uq.edu.au>
  *   David J. Fiddes <D.J.Fiddes@hw.ac.uk>
+ *   Shyjan Mahamud <mahamud@cs.cmu.edu> (added TeX rendering rules)
  */
 
 #ifndef nsMathMLContainerFrame_h___
@@ -75,13 +76,13 @@ public:
 
   NS_IMETHOD
   SetBoundingMetrics(const nsBoundingMetrics& aBoundingMetrics);
-/*
+
   NS_IMETHOD
   GetReference(nsPoint& aReference);
 
   NS_IMETHOD
   SetReference(const nsPoint& aReference);
-*/
+
   NS_IMETHOD
   Stretch(nsIPresContext*      aPresContext,
           nsIRenderingContext& aRenderingContext,
@@ -104,10 +105,10 @@ public:
   EmbellishOperator();
 
   NS_IMETHOD
-  GetEmbellishState(nsEmbellishState& aEmbellishState);
+  GetEmbellishData(nsEmbellishData& aEmbellishData);
 
   NS_IMETHOD
-  SetEmbellishState(const nsEmbellishState& aEmbellishState);
+  SetEmbellishData(const nsEmbellishData& aEmbellishData);
 
   NS_IMETHOD
   GetPresentationData(PRInt32* aScriptLevel, 
@@ -147,9 +148,25 @@ public:
             nsDidReflowStatus aStatus)
 
   {
-    mEmbellish.flags &= ~NS_MATHML_STRETCH_DONE;
+    mEmbellishData.flags &= ~NS_MATHML_STRETCH_DONE;
     return nsHTMLContainerFrame::DidReflow(aPresContext, aStatus);
   }
+
+  // helper function to reflow token elements
+  static nsresult
+  ReflowTokenFor(nsIFrame*                aFrame,
+                 nsIPresContext*          aPresContext,
+                 nsHTMLReflowMetrics&     aDesiredSize,
+                 const nsHTMLReflowState& aReflowState,
+                 nsReflowStatus&          aStatus);
+
+  // helper function to palce token elements
+  static nsresult
+  PlaceTokenFor(nsIFrame*            aFrame,
+                nsIPresContext*      aPresContext,
+                nsIRenderingContext& aRenderingContext,
+                PRBool               aPlaceOrigin,  
+                nsHTMLReflowMetrics& aDesiredSize);
 
   // helper method to reflow a child frame. We are inline frames, and we don't
   // know our positions until reflow is finished. That's why we ask the
@@ -190,7 +207,7 @@ public:
                   nsStretchDirection   aStretchDirection,
                   nsStretchMetrics&    aContainerSize);
 
-  // helper method to complete the post-reflow hook and ensure that embellish
+  // helper method to complete the post-reflow hook and ensure that embellished
   // operators don't terminate their Reflow without receiving a Stretch command.
   NS_IMETHOD
   FinalizeReflow(PRInt32              aDirection,
@@ -216,6 +233,107 @@ public:
   ReflowEmptyChild(nsIPresContext* aPresContext,
                    nsIFrame*       aFrame);
 
+  // helper methods to facilitate getting/setting the bounding metrics
+  static nsresult
+  GetBoundingMetricsFor(nsIFrame*          aFrame, 
+                        nsBoundingMetrics& aBoundingMetrics)
+  {
+    aBoundingMetrics.Clear();
+    nsIMathMLFrame* aMathMLFrame = nsnull;
+    nsresult rv = aFrame->QueryInterface(nsIMathMLFrame::GetIID(), (void**)&aMathMLFrame);
+    if (NS_SUCCEEDED(rv) && aMathMLFrame) {   
+      aMathMLFrame->GetBoundingMetrics(aBoundingMetrics);
+      return NS_OK;
+    }
+    // if we reach here, aFrame is not a MathML frame, let the caller know that
+    printf("GetBoundingMetrics() failed!! ...\n"); /* getchar(); */
+    return NS_ERROR_FAILURE;
+  }
+
+  static nsresult
+  SetBoundingMetricsFor(nsIFrame*          aFrame, 
+                        nsBoundingMetrics& aBoundingMetrics)
+  {
+    nsIMathMLFrame* aMathMLFrame = nsnull;
+    nsresult rv = aFrame->QueryInterface(nsIMathMLFrame::GetIID(), (void**)&aMathMLFrame);
+    if (NS_SUCCEEDED(rv) && aMathMLFrame) {   
+      aMathMLFrame->SetBoundingMetrics(aBoundingMetrics);
+      return NS_OK;
+    }
+    // if we reach here, aFrame is not a MathML frame, let the caller know that
+    printf("SetBoundingMetrics() failed!! ...\n"); /* getchar(); */
+    return NS_ERROR_FAILURE;
+  }
+
+  // helper methods for getting sup/subdrop's from a child
+  static void 
+    GetSubDropFromChild (nsIPresContext* aPresContext,
+                         nsIFrame*       aChild, 
+                         nscoord&        aSubDrop) 
+    {
+      const nsStyleFont *font;
+      aChild->GetStyleData(eStyleStruct_Font, (const nsStyleStruct *&)font);
+      nsCOMPtr<nsIFontMetrics> fm;
+      aPresContext->GetMetricsFor(font->mFont, getter_AddRefs(fm));
+
+      GetSubDrop (fm, aSubDrop);
+    }
+
+  static void 
+    GetSupDropFromChild (nsIPresContext* aPresContext,
+                         nsIFrame*       aChild, 
+                         nscoord&        aSupDrop) 
+    {
+      const nsStyleFont *font;
+      aChild->GetStyleData(eStyleStruct_Font, (const nsStyleStruct *&)font);
+      nsCOMPtr<nsIFontMetrics> fm;
+      aPresContext->GetMetricsFor(font->mFont, getter_AddRefs(fm));
+
+      GetSupDrop (fm, aSupDrop);
+    }
+
+  // 2 levels of subscript shifts
+  static void
+    GetSubScriptShifts (nsIFontMetrics *fm, 
+                        nscoord& aSubScriptShift1, 
+                        nscoord& aSubScriptShift2)
+    {
+      // XXX for now an alias for GetSubscriptOffset
+      fm->GetSubscriptOffset (aSubScriptShift1);
+      aSubScriptShift2 = aSubScriptShift1 
+        = NSToCoordRound(0.5f * aSubScriptShift1);
+    }
+
+  // 3 levels of superscript shifts
+  static void
+    GetSupScriptShifts (nsIFontMetrics *fm, 
+                        nscoord& aSupScriptShift1, 
+                        nscoord& aSupScriptShift2, 
+                        nscoord& aSupScriptShift3)
+    {
+      // XXX for now an alias for GetSupscriptOffset
+      fm->GetSuperscriptOffset (aSupScriptShift1);
+      aSupScriptShift2 = aSupScriptShift3 = aSupScriptShift1
+        = NSToCoordRound(0.75f * aSupScriptShift1); 
+    }
+
+  // these are TeX specific params not found in ordinary fonts
+  static void
+    GetSubDrop (nsIFontMetrics *fm, nscoord& aSubDrop)
+    {
+      nscoord xHeight;
+      fm->GetXHeight (xHeight);
+      aSubDrop = NSToCoordRound(0.3f * xHeight);
+    }
+
+  static void
+    GetSupDrop (nsIFontMetrics *fm, nscoord& aSupDrop)
+    {
+      nscoord xHeight;
+      fm->GetXHeight (xHeight);
+      aSupDrop = NSToCoordRound(0.3f * xHeight);
+    }
+
 protected:
 
   PRInt32 mScriptLevel;  // Relevant to nested frames within: msub, msup, msubsup, munder,
@@ -223,13 +341,18 @@ protected:
 
   PRBool mDisplayStyle;  // displaystyle="false" is intended to slightly alter how the
                          // rendering is done in inline mode.
+  
+  PRBool mCompressed;    // for compatibility with TeX rendering 
+                         //  for internal use only, cannot be set by the user.
+  nscoord mScriptSpace;  // scriptspace from TeX for extra spacing after sup/subscript
+                         // = 0.5pt in plain TeX
 
-  nsEmbellishState mEmbellish; // information about a container that is an embellished operator
+  nsEmbellishData mEmbellishData; // information about a container that is an embellished operator
 
   nsBoundingMetrics mBoundingMetrics; // Metrics that _exactly_ enclose the text of the frame
-/*
-  nsPoint mReference; // Reference point of the frame: mReference.x is the baseline
-*/
+
+  nsPoint mReference; // Reference point of the frame: mReference.y is the baseline
+
   virtual PRIntn GetSkipSides() const { return 0; }
 };
 

@@ -75,7 +75,7 @@ nsMathMLmunderFrame::Init(nsIPresContext*  aPresContext,
 {
   nsresult rv = nsMathMLContainerFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 
-  mEmbellish.flags = NS_MATHML_STRETCH_ALL_CHILDREN;
+  mEmbellishData.flags = NS_MATHML_STRETCH_ALL_CHILDREN;
 
   return rv;
 }
@@ -168,5 +168,10 @@ nsMathMLmunderFrame::Place(nsIPresContext*      aPresContext,
     aDesiredSize.maxElementSize->width = aDesiredSize.width;
     aDesiredSize.maxElementSize->height = aDesiredSize.height;
   }
+
+  // XXX Fix me!
+  mBoundingMetrics.ascent  =  aDesiredSize.ascent;
+  mBoundingMetrics.descent = -aDesiredSize.descent;
+  mBoundingMetrics.width   =  aDesiredSize.width;
   return NS_OK;
 }

@@ -42,6 +42,7 @@
 #include "nsITextContent.h"
 
 #include "nsMathMLmiFrame.h"
+#include "nsMathMLTextFrame.h"
 
 //
 // <mi> -- identifier - implementation
@@ -70,7 +71,6 @@ nsMathMLmiFrame::~nsMathMLmiFrame()
 {
 }
 
-
 NS_IMETHODIMP
 nsMathMLmiFrame::Init(nsIPresContext*  aPresContext,
                       nsIContent*      aContent,
@@ -97,14 +97,13 @@ nsMathMLmiFrame::SetInitialChildList(nsIPresContext* aPresContext,
   // First, let the base class do its work
   rv = nsMathMLContainerFrame::SetInitialChildList(aPresContext, aListName, aChildList);
 
-
   // Get the length of the text content that we enclose  
   // our content can include comment-nodes, attribute-nodes, text-nodes...
   // we use the DOM to make sure that we are only looking at text-nodes...
   PRInt32 aLength = 0;
   PRInt32 numKids;
   mContent->ChildCount(numKids);
-  // nsAutoString aData;
+  nsAutoString aData;
   for (PRInt32 kid=0; kid<numKids; kid++) {
     nsCOMPtr<nsIContent> kidContent;
     mContent->ChildAt(kid, *getter_AddRefs(kidContent));
@@ -114,9 +113,9 @@ nsMathMLmiFrame::SetInitialChildList(nsIPresContext* aPresContext,
       	PRUint32 kidLength;
         kidText->GetLength(&kidLength);
         aLength += kidLength;        
-      	// nsAutoString kidData;
-        // kidText->GetData(kidData);
-        // aData += kidData;
+      	nsAutoString kidData;
+        kidText->GetData(kidData);
+        aData += kidData;
       }
     }
   }
@@ -143,21 +142,40 @@ nsMathMLmiFrame::SetInitialChildList(nsIPresContext* aPresContext,
       nsIFrame* newFrame = nsnull;
       NS_NewMathMLWrapperFrame(shell, &newFrame);
       NS_ASSERTION(newFrame, "Failed to create new frame");
-    
-      newFrame->Init(aPresContext, mContent, this, newStyleContext, nsnull);
-    
-      // our children become children of the new frame
-      nsIFrame* childFrame = firstChild;
-      while (childFrame) {
-        childFrame->SetParent(newFrame);
-        aPresContext->ReParentStyleContext(childFrame, newStyleContext);
-        childFrame->GetNextSibling(&childFrame);
+      if (newFrame) {
+        newFrame->Init(aPresContext, mContent, this, newStyleContext, nsnull);
+        // our children become children of the new frame
+        nsIFrame* childFrame = firstChild;
+        while (childFrame) {
+          childFrame->SetParent(newFrame);
+          aPresContext->ReParentStyleContext(childFrame, newStyleContext);
+          childFrame->GetNextSibling(&childFrame);
+        }
+        newFrame->SetInitialChildList(aPresContext, nsnull, firstChild);
+        // the new frame becomes our sole child
+        mFrames.SetFrames(newFrame);
       }
-      newFrame->SetInitialChildList(aPresContext, nsnull, firstChild);
-    
-      // the new frame becomes our sole child
-      mFrames.SetFrames(newFrame);
     }
   }
   return rv;
+}
+
+NS_IMETHODIMP
+nsMathMLmiFrame::Reflow(nsIPresContext*          aPresContext,
+                        nsHTMLReflowMetrics&     aDesiredSize,
+                        const nsHTMLReflowState& aReflowState,
+                        nsReflowStatus&          aStatus)
+{
+  return ReflowTokenFor(this, aPresContext, aDesiredSize,
+                        aReflowState, aStatus);
+}
+
+NS_IMETHODIMP
+nsMathMLmiFrame::Place(nsIPresContext*      aPresContext,
+                       nsIRenderingContext& aRenderingContext,
+                       PRBool               aPlaceOrigin,
+                       nsHTMLReflowMetrics& aDesiredSize)
+{
+  return PlaceTokenFor(this, aPresContext, aRenderingContext,
+                       aPlaceOrigin, aDesiredSize);
 }

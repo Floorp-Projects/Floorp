@@ -28,6 +28,7 @@
 // Factory methods for creating MathML objects
 extern nsresult NS_NewMathMLmrowFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
 extern nsresult NS_NewMathMLmiFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
+extern nsresult NS_NewMathMLmnFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
 extern nsresult NS_NewMathMLmoFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
 extern nsresult NS_NewMathMLmphantomFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
 extern nsresult NS_NewMathMLmpaddedFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );

@@ -63,8 +63,8 @@ nsMathMLmrootFrame::nsMathMLmrootFrame() :
   mSqrChar(),
   mBarChar()
 {
-  mSqrChar.SetEnum(eMathMLChar_Radical);
-  mBarChar.SetEnum(eMathMLChar_RadicalBar);
+  mSqrChar.SetEnum(eMathMLChar_Sqrt);
+  mBarChar.SetEnum(eMathMLChar_OverBar);
 }
 
 nsMathMLmrootFrame::~nsMathMLmrootFrame()
@@ -113,7 +113,9 @@ nsMathMLmrootFrame::Reflow(nsIPresContext*          aPresContext,
 {
   nsresult rv = NS_OK;
   nsReflowStatus childStatus;
-  nsHTMLReflowMetrics childDesiredSize(aDesiredSize.maxElementSize);
+  // ask our children to compute their bounding metrics 
+  nsHTMLReflowMetrics childDesiredSize(aDesiredSize.maxElementSize,
+                      aDesiredSize.mFlags | NS_REFLOW_CALC_BOUNDING_METRICS);
   nsSize availSize(aReflowState.mComputedWidth, aReflowState.mComputedHeight);
 
   //////////////////
@@ -264,5 +266,11 @@ nsMathMLmrootFrame::Reflow(nsIPresContext*          aPresContext,
     aDesiredSize.maxElementSize->height = aDesiredSize.height;
   }
   aStatus = NS_FRAME_COMPLETE;
+
+  // XXX Fix me!
+  mBoundingMetrics.ascent  =  aDesiredSize.ascent;
+  mBoundingMetrics.descent = -aDesiredSize.descent;
+  mBoundingMetrics.width   =  aDesiredSize.width;
+
   return NS_OK;
 }

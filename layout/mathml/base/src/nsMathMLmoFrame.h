@@ -52,6 +52,18 @@ public:
         const nsRect&        aDirtyRect,
         nsFramePaintLayer    aWhichLayer);
 
+  NS_IMETHOD
+  Reflow(nsIPresContext*          aPresContext,
+         nsHTMLReflowMetrics&     aDesiredSize,
+         const nsHTMLReflowState& aReflowState,
+         nsReflowStatus&          aStatus);
+
+  NS_IMETHOD
+  Place(nsIPresContext*      aPresContext,
+        nsIRenderingContext& aRenderingContext,
+        PRBool               aPlaceOrigin,
+        nsHTMLReflowMetrics& aDesiredSize);
+
   // This method is called by the parent frame to ask <mo> 
   // to stretch itself.
   NS_IMETHOD

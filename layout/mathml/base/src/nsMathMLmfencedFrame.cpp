@@ -75,12 +75,13 @@ nsMathMLmfencedFrame::Init(nsIPresContext*  aPresContext,
                            nsIFrame*        aPrevInFlow)
 {
   nsresult rv = nsMathMLContainerFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
-  return rv;
 
   mOpenChar = nsnull;
   mCloseChar = nsnull;
   mSeparatorsChar = nsnull;
   mSeparatorsCount = 0;
+
+  return rv;
 }
 
 

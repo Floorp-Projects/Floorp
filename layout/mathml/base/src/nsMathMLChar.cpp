@@ -61,8 +61,8 @@
 
    Three steps are needed to extend the table:
    ---------------------------------------=---
-   1. Append your new section in gMathMLCharGlyph[].
-   2. Append your new enum in nsMathMLCharEnum, and  kMathMLChar
+   1. Append your new enum in nsMathMLCharList.h
+   2. Append your new section in gMathMLCharGlyph[].
    3. Append a new pointer in gMathMLCharIndex[], so that 
       gMathMLCharIndex[your_enum] points to the begining of
       your new section in gMathMLCharGlyph[]. That is, 
@@ -263,38 +263,18 @@ static PRInt32 gMathMLCharIndex[] = {
   48,  // eMathMLChar_UpArrow, 
   54,  // eMathMLChar_LeftArrow, 
   60,  // eMathMLChar_RightArrow, 
-  66,  // eMathMLChar_RadicalBar, 
-  72,  // eMathMLChar_Radical,  -- placeholder for now
+  66,  // eMathMLChar_OverBar, 
   72,  // eMathMLChar_VerticalBar, 
+  78,  // eMathMLChar_Sqrt,  -- placeholder for now
   78,  // safeguard, *must* always point at the *end* of gMathMLCharGlyph[]  
 };
 
-// data to enable a clean architecture and extensibility
-
-#define STRETCH_UNSUPPORTED NS_STRETCH_DIRECTION_UNSUPPORTED
-#define STRETCH_HORIZONTAL  NS_STRETCH_DIRECTION_HORIZONTAL
-#define STRETCH_VERTICAL    NS_STRETCH_DIRECTION_VERTICAL
-
 static const PRInt32 kMathMLChar[] = {
-  eMathMLChar_LeftParenthesis  ,  '(',   STRETCH_VERTICAL,
-  eMathMLChar_RightParenthesis ,  ')',   STRETCH_VERTICAL,
-  eMathMLChar_Integral         , 0x222B, STRETCH_VERTICAL,
-  eMathMLChar_LeftSquareBracket,  '[',   STRETCH_VERTICAL,
-  eMathMLChar_RightSquareBracket, ']',   STRETCH_VERTICAL,
-  eMathMLChar_LeftCurlyBracket,   '{',   STRETCH_VERTICAL,
-  eMathMLChar_RightCurlyBracket,  '}',   STRETCH_VERTICAL,
-  eMathMLChar_DownArrow,         0x2193, STRETCH_VERTICAL,
-  eMathMLChar_UpArrow,           0x2191, STRETCH_VERTICAL,
-  eMathMLChar_LeftArrow,         0x2190, STRETCH_HORIZONTAL,
-  eMathMLChar_RightArrow,        0x2192, STRETCH_HORIZONTAL,
-  eMathMLChar_RadicalBar,        0x00AF, STRETCH_HORIZONTAL,
-  eMathMLChar_Radical,           0x221A, STRETCH_UNSUPPORTED,
-  eMathMLChar_VerticalBar,        '|',   STRETCH_VERTICAL,
+#define MATHML_CHAR(_name, _value, _direction) eMathMLChar_##_name, _value, _direction,
+#include "nsMathMLCharList.h"
+#undef MATHML_CHAR
 };
 
-#undef STRETCH_UNSUPPORTED
-#undef STRETCH_HORIZONTAL
-#undef STRETCH_VERTICAL
 
 //---------------------------------------------
 
@@ -306,6 +286,7 @@ nsMathMLChar::SetData(nsString& aData) {
   // some assumptions until proven otherwise!
   mEnum = eMathMLChar_DONT_STRETCH;
   mDirection = NS_STRETCH_DIRECTION_UNSUPPORTED;
+  mBoundingMetrics.Clear();
   // lookup the enum ...
   if (1 == mData.Length()) {
     PRUnichar ch = mData[0];
@@ -328,6 +309,7 @@ nsMathMLChar::SetEnum(nsMathMLCharEnum aEnum) {
   // some assumptions until proven otherwise!
   mData = "";
   mDirection = NS_STRETCH_DIRECTION_UNSUPPORTED;
+  mBoundingMetrics.Clear();
   // lookup the data ...
   if (mEnum != eMathMLChar_DONT_STRETCH) {
     PRInt32 count = sizeof(kMathMLChar) / sizeof(kMathMLChar[0]);
@@ -388,8 +370,18 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
     aDirection = mDirection;
   }
 
-  // quick return if there is nothing special about this char
+  // Set font
+  nsStyleFont font;
+  aStyleContext->GetStyle(eStyleStruct_Font, font);
+  aRenderingContext.SetFont(font.mFont);
+
+  // cache our bounding metrics and quickly return if there is nothing
+  // special about this char
   if (eMathMLChar_DONT_STRETCH == mEnum || aDirection != mDirection) {
+    rv = aRenderingContext.GetBoundingMetrics(mData.GetUnicode(), 
+                                              PRUint32(mData.Length()), 
+                                              mBoundingMetrics);
+    if (NS_FAILED(rv)) { printf("GetBoundingMetrics failed for %04X:%c\n", mData[0], mData[0]&0x00FF); /*getchar();*/ return rv; }
     return NS_OK;
   }
 
@@ -398,12 +390,20 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
   if (aDirection == NS_STRETCH_DIRECTION_VERTICAL) {
     if (aContainerSize.height <= aDesiredStretchSize.height) {
       mEnum = eMathMLChar_DONT_STRETCH; // ensure that the char later behaves like a normal char
+      rv = aRenderingContext.GetBoundingMetrics(mData.GetUnicode(), 
+                                              PRUint32(mData.Length()), 
+                                              mBoundingMetrics);
+      if (NS_FAILED(rv)) { printf("GetBoundingMetrics failed for %04X:%c\n", mData[0], mData[0]&0x00FF); /*getchar();*/ return rv; }
       return NS_OK;
     }
   }
   else if (aDirection == NS_STRETCH_DIRECTION_HORIZONTAL) {
     if (aContainerSize.width <= aDesiredStretchSize.width) {
       mEnum = eMathMLChar_DONT_STRETCH; // ensure that the char later behaves like a normal char
+      rv = aRenderingContext.GetBoundingMetrics(mData.GetUnicode(), 
+                                                PRUint32(mData.Length()), 
+                                                mBoundingMetrics);
+      if (NS_FAILED(rv)) { printf("GetBoundingMetrics failed for %04X:%c\n", mData[0], mData[0]&0x00FF); /*getchar();*/ return rv; }
       return NS_OK;
     }
   }
@@ -415,11 +415,6 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
 
   // XXX Note: there are other symbols that just need to slightly
   //           increase their size, like \Sum
-
-  // Set font
-  nsStyleFont font;
-  aStyleContext->GetStyle(eStyleStruct_Font, font);
-  aRenderingContext.SetFont(font.mFont);
 
   nscoord height = aDesiredStretchSize.height;
   nscoord width = aDesiredStretchSize.width;
@@ -433,12 +428,16 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
   // try first to see if there is a glyph of appropriate size ...
   PRBool sizeOK = PR_FALSE; 
   PRUnichar ch = gMathMLCharGlyph[index++];
-  nsBoundingMetrics bm;
+  nsBoundingMetrics bm, bm0;
 
+  PRInt32 index0 = index;
   while (ch && index <= limit) {
     // printf("Checking size of:%c  index:%d\n", ch & 0x00FF, index);
     rv = aRenderingContext.GetBoundingMetrics(&ch, PRUint32(1), bm);
     if (NS_FAILED(rv)) { printf("GetBoundingMetrics failed for %04X:%c\n", ch, ch&0x00FF); /*getchar();*/ return rv; }
+    // keep track of the default bounding metrics
+    if (index0 == index) bm0 = bm;
+    
     h = bm.ascent - bm.descent;
     w = bm.rightBearing - bm.leftBearing;
  
@@ -453,7 +452,10 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
       ascent = bm.ascent;
       height = bm.ascent - bm.descent;
       width = bm.rightBearing - bm.leftBearing;
+
+      // cache all this information
       mGlyph = ch;
+      mBoundingMetrics = bm;
       break;
     }
     ch = gMathMLCharGlyph[index++];
@@ -477,12 +479,23 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
         rv = aRenderingContext.GetBoundingMetrics(&ch, PRUint32(1), bm);
         if (NS_FAILED(rv)) { printf("GetBoundingMetrics failed for %04X:%c\n", ch, ch&0x00FF); /*getchar();*/ return rv; }
         if (w < bm.width) w = bm.width;
-        if (i < 3) h += nscoord(flex[i]*(bm.ascent-bm.descent)); // sum heights of the parts...
+        if (i < 3) {
+          h += nscoord(flex[i]*(bm.ascent-bm.descent)); // sum heights of the parts...
+          // compute and cache our bounding metrics (vertical stacking!)
+          if (mBoundingMetrics.leftBearing > bm.leftBearing)
+            mBoundingMetrics.leftBearing = bm.leftBearing;
+          if (mBoundingMetrics.rightBearing < bm.rightBearing)
+            mBoundingMetrics.rightBearing = bm.rightBearing;
+        }
       }
       if (h <= aContainerSize.height) { // can nicely fit in the available space...
         width = w;
+        mBoundingMetrics.width = w;
+        mBoundingMetrics.ascent = aContainerSize.ascent;
+        mBoundingMetrics.descent = -aContainerSize.descent;
       } else { // sum of parts doesn't fit in the space... will use a single glyph
         mEnum = eMathMLChar_DONT_STRETCH; // ensure that the char behaves like a normal char
+        mBoundingMetrics = bm0;
         return NS_OK;
       }
     }
@@ -497,16 +510,26 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
         ch = gMathMLCharGlyph[index+i];
         rv = aRenderingContext.GetBoundingMetrics(&ch, PRUint32(1), bm);
         if (NS_FAILED(rv)) { printf("GetBoundingMetrics failed for %04X:%c\n", ch, ch&0x00FF); /*getchar();*/ return rv; }
+        if (0 == i) bm0 = bm;
         if (a < bm.ascent) a = bm.ascent;
         if (d > bm.descent) d = bm.descent;
-        if (i < 3) w += nscoord(flex[i]*(bm.rightBearing-bm.leftBearing)); // sum widths of the parts...
+        if (i < 3) {
+          w += nscoord(flex[i]*(bm.rightBearing-bm.leftBearing)); // sum widths of the parts...
+          // compute and cache our bounding metrics (horizontal stacking)
+          if (0 == i)
+            mBoundingMetrics  = bm;
+          else
+            mBoundingMetrics += bm;
+        }
       }
       if (w <= aContainerSize.width) { // can nicely fit in the available space...
 //printf("%04X can nicely fit in the available space...\n", ch);
 //        ascent = a;
 //        height = a - d;
+        mBoundingMetrics.width = aContainerSize.width;
       } else { // sum of parts doesn't fit in the space... will use a single glyph
         mEnum = eMathMLChar_DONT_STRETCH; // ensure that the char behaves like a normal char
+        mBoundingMetrics = bm0;
         return NS_OK;
       }
     }

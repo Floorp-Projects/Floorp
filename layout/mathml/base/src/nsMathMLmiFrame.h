@@ -45,6 +45,19 @@ public:
   SetInitialChildList(nsIPresContext* aPresContext,
                       nsIAtom*        aListName,
                       nsIFrame*       aChildList);
+
+  NS_IMETHOD
+  Reflow(nsIPresContext*          aPresContext,
+         nsHTMLReflowMetrics&     aDesiredSize,
+         const nsHTMLReflowState& aReflowState,
+         nsReflowStatus&          aStatus);
+
+  NS_IMETHOD
+  Place(nsIPresContext*      aPresContext,
+        nsIRenderingContext& aRenderingContext,
+        PRBool               aPlaceOrigin,
+        nsHTMLReflowMetrics& aDesiredSize);
+
 protected:
   nsMathMLmiFrame();
   virtual ~nsMathMLmiFrame();
