@@ -48,15 +48,15 @@
 #include "nsIEditor.h"
 #include "nsISelectionController.h"
 #include "nsITextControlFrame.h"
+#include "nsTextAccessibleWrap.h"
 #include "nsTextAccessible.h"
 
 enum EGetTextType { eGetBefore=-1, eGetAt=0, eGetAfter=1 };
 
-class nsTextAccessibleWrap : public nsTextAccessible,
-                             public nsIAccessibleText
+class nsAccessibleText : public nsIAccessibleText
 {
 public:
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_ISUPPORTS
   NS_DECL_NSIACCESSIBLETEXT
 
   nsAccessibleText(nsIDOMNode *aNode);
@@ -65,6 +65,8 @@ public:
   static PRBool gSuppressedNotifySelectionChanged;
 
 protected:
+  nsCOMPtr<nsIDOMNode> mTextNode;
+
   nsresult GetSelections(nsISelectionController **aSelCon, nsISelection **aDomSel);
   nsresult GetTextHelperCore(EGetTextType aType, nsAccessibleTextBoundary aBoundaryType,
                              PRInt32 aOffset, PRInt32 *aStartOffset, PRInt32 *aEndOffset,
