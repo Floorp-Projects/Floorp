@@ -1,4 +1,4 @@
-<!-- 1.0@bugzilla.org -->
+[%# 1.0@bugzilla.org %]
 [%# The contents of this file are subject to the Mozilla Public
   # License Version 1.1 (the "License"); you may not use this file
   # except in compliance with the License. You may obtain a copy of
@@ -525,7 +525,8 @@
     Sorry; there needs to be at least one component for this product in order
     to create a new [% terms.bug %].
     [% IF UserInGroup("editcomponents") %]
-      <a href="editcomponents.cgi">Create a new component</a>.
+      <a href="editcomponents.cgi?product=[% product FILTER url_quote %]">
+        Create a new component</a>.
     [% ELSE %]
        Please contact [% Param("maintainer") %], giving the name of
        the product in which you tried to create a new [% terms.bug %].
