@@ -87,6 +87,9 @@ myconfig_ac_options=
 myconfig_mk_options=
 
 find_myconfig
-. $MOZ_MYCONFIG
 
-ac_echo_options
+if [ "$MOZ_MYCONFIG" ]
+then
+  . $MOZ_MYCONFIG
+  ac_echo_options
+fi
