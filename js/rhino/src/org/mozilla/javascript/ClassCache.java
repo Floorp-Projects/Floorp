@@ -69,7 +69,7 @@ public class ClassCache
     /**
      * Search for ClassCache object in the given scope.
      * The method first calls
-     * {@link ScriptableObject.getTopLevelScope(Scriptable scope)}
+     * {@link ScriptableObject#getTopLevelScope(Scriptable scope)}
      * to get the top most scope and then tries to locate associated
      * ClassCache object in the prototype chain of the top scope.
      *

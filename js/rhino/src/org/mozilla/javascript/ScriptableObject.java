@@ -367,7 +367,7 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
     }
 
     /**
-     * @deprecated Use {@link getAttributes(String name)}. The engine always
+     * @deprecated Use {@link #getAttributes(String name)}. The engine always
      * ignored the start argument.
      */
     public final int getAttributes(String name, Scriptable start)
@@ -377,7 +377,7 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
     }
 
     /**
-     * @deprecated Use {@link getAttributes(int index)}. The engine always
+     * @deprecated Use {@link #getAttributes(int index)}. The engine always
      * ignored the start argument.
      */
     public final int getAttributes(int index, Scriptable start)
@@ -387,7 +387,7 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
     }
 
     /**
-     * @deprecated Use {@link setAttributes(String name, int attributes)}.
+     * @deprecated Use {@link #setAttributes(String name, int attributes)}.
      * The engine always ignored the start argument.
      */
     public final void setAttributes(String name, Scriptable start,
@@ -398,7 +398,7 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
     }
 
     /**
-     * @deprecated Use {@link setAttributes(int index, int attributes)}.
+     * @deprecated Use {@link #setAttributes(int index, int attributes)}.
      * The engine always ignored the start argument.
      */
     public void setAttributes(int index, Scriptable start,
