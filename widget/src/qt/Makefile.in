@@ -34,6 +34,7 @@ CPPSRCS		= \
 		$(MOCSRCS) \
 		nsQApplication.cpp \
 		nsAppShell.cpp \
+		nsBidiKeyboard.cpp \
 		nsComboBox.cpp \
 		nsLabel.cpp \
 		nsScrollbar.cpp \

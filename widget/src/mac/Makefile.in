@@ -28,6 +28,7 @@ IS_COMPONENT	= 1
 
 
 CPPSRCS         = nsAppShell.cpp \
+		nsBidiKeyboard.cpp \
 		nsButton.cpp \
 		nsChildWindow.cpp \
 		nsClipboard.cpp \

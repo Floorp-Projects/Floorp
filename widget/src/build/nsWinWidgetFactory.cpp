@@ -37,6 +37,10 @@
 #include "nsFontRetrieverService.h"
 #include "nsSound.h"
 
+#ifdef IBMBIDI
+#include "nsBidiKeyboard.h"
+#endif
+
 #include "nsWindowsTimer.h"
 #include "nsTimerManager.h"
 
@@ -75,6 +79,9 @@ static NS_DEFINE_IID(kIFactoryIID,    NS_IFACTORY_IID);
 static NS_DEFINE_CID(kCSound,   NS_SOUND_CID);
 static NS_DEFINE_CID(kCFileSpecWithUI,   NS_FILESPECWITHUI_CID);
 
+#ifdef IBMBIDI
+static NS_DEFINE_IID(kCBidiKeyboard,   NS_BIDIKEYBOARD_CID);
+#endif
 
 class nsWidgetFactory : public nsIFactory
 {   
@@ -207,6 +214,11 @@ nsresult nsWidgetFactory::CreateInstance( nsISupports* aOuter,
     else if (mClassID.Equals(kCTimerManager)) {
         inst = (nsISupports*)(nsITimerQueue*) new nsTimerManager();
     }
+#ifdef IBMBIDI
+    else if (mClassID.Equals(kCBidiKeyboard)) {
+        inst = (nsISupports*)(nsIBidiKeyboard*) new nsBidiKeyboard();
+    }
+#endif // IBMBIDI
     if (inst == NULL) {  
         return NS_ERROR_OUT_OF_MEMORY;  
     }  

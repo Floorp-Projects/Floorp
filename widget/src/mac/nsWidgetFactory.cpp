@@ -74,6 +74,10 @@
 #include "nsSound.h"
 #include "nsTimerMac.h"
 
+#ifdef IBMBIDI
+#include "nsBidiKeyboard.h"
+#endif
+
 // NOTE the following does not match MAC_STATIC actually used below in this file!
 #define MACSTATIC
 
@@ -112,6 +116,9 @@ static NS_DEFINE_CID(kCDragService,   NS_DRAGSERVICE_CID);
 static NS_DEFINE_CID(kCSound,   NS_SOUND_CID);
 static NS_DEFINE_CID(kCFileSpecWithUI,   NS_FILESPECWITHUI_CID);
 
+#ifdef IBMBIDI
+static NS_DEFINE_CID(kCBidiKeyboard,   NS_BIDIKEYBOARD_CID);
+#endif
 //-------------------------------------------------------------------------
 //
 //-------------------------------------------------------------------------
@@ -264,6 +271,10 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
         inst = (nsISupports*)new nsClipboard();
     else if (mClassID.Equals(kCDragService))
         inst = (nsISupports*)NS_STATIC_CAST(nsIDragService*, new nsDragService());
+#ifdef IBMBIDI
+    else if (mClassID.Equals(kCBidiKeyboard))
+        inst = (nsISupports*)(nsIBidiKeyboard*) new nsBidiKeyboard();
+#endif // IBMBIDI
 
     if (inst == NULL) {
         return NS_ERROR_OUT_OF_MEMORY;

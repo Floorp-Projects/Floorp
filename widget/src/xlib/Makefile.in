@@ -35,6 +35,7 @@ DIRS		= window_service
 
 CPPSRCS		= \
 		nsAppShell.cpp \
+		nsBidiKeyboard.cpp \
 		nsButton.cpp \
 		nsCheckButton.cpp \
 		nsClipboard.cpp \
