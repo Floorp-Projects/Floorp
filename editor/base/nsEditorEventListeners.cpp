@@ -1139,7 +1139,6 @@ nsTextEditorDragListener::HandleEvent(nsIDOMEvent* aEvent)
 nsresult
 nsTextEditorDragListener::DragEnter(nsIDOMEvent* aDragEvent)
 {
-#ifdef NEW_DRAG_AND_DROP
   nsIDragService* dragService;
   nsresult rv = nsServiceManager::GetService(kCDragServiceCID,
                                              nsIDragService::GetIID(),
@@ -1155,7 +1154,7 @@ nsTextEditorDragListener::DragEnter(nsIDOMEvent* aDragEvent)
     
     nsServiceManager::ReleaseService(kCDragServiceCID, dragService);
   }
-#endif
+
   return NS_OK;
 }
 
@@ -1163,7 +1162,6 @@ nsTextEditorDragListener::DragEnter(nsIDOMEvent* aDragEvent)
 nsresult
 nsTextEditorDragListener::DragOver(nsIDOMEvent* aDragEvent)
 {
-#ifdef NEW_DRAG_AND_DROP
   nsIDragService* dragService;
   nsresult rv = nsServiceManager::GetService(kCDragServiceCID,
                                            nsIDragService::GetIID(),
@@ -1177,7 +1175,7 @@ nsTextEditorDragListener::DragOver(nsIDOMEvent* aDragEvent)
     
     nsServiceManager::ReleaseService(kCDragServiceCID, dragService);
   }
-#endif
+
   return NS_OK;
 }
 
@@ -1193,8 +1191,6 @@ nsTextEditorDragListener::DragExit(nsIDOMEvent* aDragEvent)
 nsresult
 nsTextEditorDragListener::DragDrop(nsIDOMEvent* aMouseEvent)
 {
-
-#ifdef NEW_DRAG_AND_DROP
   // String for doing paste
   nsString stuffToPaste;
 
@@ -1255,8 +1251,6 @@ nsTextEditorDragListener::DragDrop(nsIDOMEvent* aMouseEvent)
     nsServiceManager::ReleaseService(kCDragServiceCID, dragService);
   } // if valid drag service
 
-#endif  
-  
   return NS_OK;
 }
 
