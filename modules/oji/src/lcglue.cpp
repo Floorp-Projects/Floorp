@@ -109,8 +109,9 @@ PR_BEGIN_EXTERN_C
 #include "jscntxt.h"
 
 static JSContext* PR_CALLBACK
-map_jsj_thread_to_js_context_impl(JSJavaThreadState *jsj_env, JNIEnv *env, char **errp)
+map_jsj_thread_to_js_context_impl(JSJavaThreadState *jsj_env, void* java_applet_obj, JNIEnv *env, char **errp)
 {
+#if 0
 	JVMContext* context = GetJVMContext();
 	JSContext *cx = context->js_context;
 
@@ -125,6 +126,25 @@ map_jsj_thread_to_js_context_impl(JSJavaThreadState *jsj_env, JNIEnv *env, char 
 
     *errp = NULL;
     return cx;
+#else
+	// Guess what? This design is totally invalid under Gecko, because there isn't a 1 to 1 mapping
+	// between NSPR threads and JSContexts. We have to ask the plugin instance peer what JSContext
+	// it lives in to make any sense of all this.
+	JSContext* context = NULL;
+	if (java_applet_obj != NULL) {
+		nsIPluginInstance* pluginInstance = (nsIPluginInstance*) java_applet_obj;
+		nsIPluginInstancePeer* pluginPeer = NULL;
+		if (pluginInstance->GetPeer(&pluginPeer) == NS_OK) {
+			nsIPluginInstancePeer2* pluginPeer2 = NULL;
+			if (pluginPeer->QueryInterface(nsIPluginInstancePeer2::GetIID(), (void**) &pluginPeer2) == NS_OK) {
+				pluginPeer2->GetJSContext(&context);
+				NS_RELEASE(pluginPeer2);
+			}
+			NS_RELEASE(pluginPeer);
+		}
+	}
+	return context;
+#endif
 }
 
 static void PR_CALLBACK detach_jsjava_thread_state(void* env)
