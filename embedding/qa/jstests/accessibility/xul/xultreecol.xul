@@ -80,6 +80,7 @@
     var numActions = getNumActions();
     var actionName = getActionName();
     var action = doAction();
+    var keyboardShortcut = getAccKeyboardShortcut();
  
     var expectedName          = "Sender";
     var expectedRole          = "25";
@@ -88,6 +89,7 @@
     var expectednumActions    = "1";
     var expectedactionName    = "Click";
     var expectednodeClick     = "Header Clicked";
+    var expectedkeyboardShortcut = "Alt+c";
 
     var row0 = new Array("Property/Method", "Expected Values", "Actual Values", "Result");
     var row1 = new Array("Name->", expectedName, name);
@@ -97,8 +99,9 @@
     var row5 = new Array("accNumActions->", expectednumActions, numActions);
     var row6 = new Array("getAccActionName()->", expectedactionName, actionName);
     var row7 = new Array("accDoAction()->", expectednodeClick, nodeClick);
+    var row8 = new Array("accKeyboardShortcut->", expectedkeyboardShortcut, keyboardShortcut);
 
-    row = new Array(row0, row1, row2, row3, row4, row5, row6, row7);
+    row = new Array(row0, row1, row2, row3, row4, row5, row6, row7, row8);
     
     if (name == expectedName)                 row1[3] = "PASS"; else row1[3] = "FAIL";
     if (role == expectedRole)                 row2[3] = "PASS"; else row2[3] = "FAIL";
@@ -107,6 +110,8 @@
     if (numActions == expectednumActions)     row5[3] = "PASS"; else row5[3] = "FAIL";
     if (actionName == expectedactionName)     row6[3] = "PASS"; else row6[3] = "FAIL";
     if (nodeClick == expectednodeClick)       row7[3] = "PASS"; else row7[3] = "FAIL";
+    if (keyboardShortcut == expectedkeyboardShortcut)
+                                              row8[3] = "PASS"; else row8[3] = "FAIL";
 
     appendTableRes();
     WriteResults(res);    
@@ -125,7 +130,7 @@
   
   <tree seltype="single" flex="1">
     <treecols>
-      <treecol id="sender" label="Sender" flex="1" onclick="nodeClicked();"/>
+      <treecol id="sender" label="Sender" flex="1" onclick="nodeClicked();" accesskey="c"/>
       <treecol id="subject" label="Subject" flex="2"/>
     </treecols>
     

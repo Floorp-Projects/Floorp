@@ -71,24 +71,29 @@
     var state = getState();
     var value = getValue();
     var newvalue = value.toString();
+    var keyboardShortcut = getAccKeyboardShortcut();
 
     var expectedName          = "Determinate Progress Meter:";
     var expectedRole          = "48";
     var expectedState         = "0";
     var expectedValue         = "50%";
+    var expectedkeyboardShortcut = "Alt+p";
 
     var row0 = new Array("Property/Method", "Expected Values", "Actual Values", "Result");
     var row1 = new Array("Name->", expectedName, name);
     var row2 = new Array("Role->", expectedRole, role);
     var row3 = new Array("State->", expectedState, state);
     var row4 = new Array("Value->", expectedValue, value);
+    var row5 = new Array("accKeyboardShortcut->", expectedkeyboardShortcut, keyboardShortcut);
 
-    row = new Array(row0, row1, row2, row3, row4);
+    row = new Array(row0, row1, row2, row3, row4, row5);
 
     if (name == expectedName)                 row1[3] = "PASS"; else row1[3] = "FAIL";
     if (role == expectedRole)                 row2[3] = "PASS"; else row2[3] = "FAIL";
     if (state == expectedState)               row3[3] = "PASS"; else row3[3] = "FAIL";
     if (newvalue ==expectedValue)             row4[3] = "PASS"; else row4[3] = "FAIL";
+    if (keyboardShortcut == expectedkeyboardShortcut)
+                                              row5[3] = "PASS"; else row5[3] = "FAIL";
 
     appendTableRes();
     WriteResults(res);    
@@ -112,7 +117,7 @@
   an operation. -->
   <!-- Determined Progress Meter -->
   <label control="det_progress" value="Determinate Progress Meter:"/>
-  <progressmeter id="det_progress" mode="determined" value="50%"/>
+  <progressmeter id="det_progress" mode="determined" value="50%" accesskey="p"/>
     
   <html:script>
   <![CDATA[
