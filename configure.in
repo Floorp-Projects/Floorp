@@ -3830,6 +3830,15 @@ MOZ_ARG_DISABLE_BOOL(jsd,
 
 
 dnl ========================================================
+dnl = Disable plugin support
+dnl ========================================================
+MOZ_PLUGINS=1
+MOZ_ARG_DISABLE_BOOL(plugins,
+[  --disable-plugins       Disable plugins support],
+    MOZ_PLUGINS=,
+    MOZ_PLUGINS=1)
+
+dnl ========================================================
 dnl = Open JVM Interface (OJI) support
 dnl ========================================================
 MOZ_OJI=1
@@ -5726,6 +5735,7 @@ AC_SUBST(MOZ_EXTENSIONS)
 AC_SUBST(MOZ_IMG_DECODERS)
 AC_SUBST(MOZ_JSDEBUGGER)
 AC_SUBST(MOZ_OJI)
+AC_SUBST(MOZ_PLUGINS)
 AC_SUBST(ENABLE_EAZEL_PROFILER)
 AC_SUBST(EAZEL_PROFILER_CFLAGS)
 AC_SUBST(EAZEL_PROFILER_LIBS)

@@ -44,7 +44,10 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= plugin
 
-DIRS		= base/public base/src 
+DIRS		= base/public 
+
+ifdef MOZ_PLUGINS
+DIRS		+= base/src 
 
 ifneq (,$(filter gtk gtk2 xlib ,$(MOZ_WIDGET_TOOLKIT)))
 DIRS		+= samples/unixprinting
@@ -87,10 +90,14 @@ DIRS		+= tools/sdk
 endif
 endif
 
+endif # MOZ_PLUGINS
+
 include $(topsrcdir)/config/rules.mk
 
+ifdef MOZ_PLUGINS
 $(DIST)/bin/plugins:
 	$(NSINSTALL) -D $@
 
 export:: $(DIST)/bin/plugins
 
+endif
