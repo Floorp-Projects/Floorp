@@ -414,7 +414,7 @@ function encodeChar(ch)
 
 function escapeFileName(fileName)
 {
-    return fileName.replace(/[^\w\d.,#-_]/g, encodeChar);
+    return fileName.replace(/[^\w\d.,#\-_]/g, encodeChar);
 }
 
 function getCommonPfx (list)
