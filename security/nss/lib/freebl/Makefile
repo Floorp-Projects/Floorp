@@ -180,6 +180,11 @@ endif
 
 # Note: -xarch=v8 or v9 is now done in coreconf
 ifeq ($(OS_TARGET),SunOS)
+
+# The -R '$ORIGIN' linker option instructs this library to search for its
+# dependencies in the same directory where it resides.
+MKSHLIB += -R '$$ORIGIN'
+
 ifeq ($(CPU_ARCH),sparc)
 ifndef NS_USE_GCC
 ifdef USE_HYBRID

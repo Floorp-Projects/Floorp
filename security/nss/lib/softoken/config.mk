@@ -88,13 +88,9 @@ EXTRA_SHARED_LIBS += \
 endif
 
 ifeq ($(OS_TARGET),SunOS)
-ifndef USE_64
-ifeq ($(CPU_ARCH),sparc)
-# The -R '$ORIGIN' linker option instructs libsoftokn3.so to search for its
-# dependencies (libfreebl_*.so) in the same directory where it resides.
+# The -R '$ORIGIN' linker option instructs this library to search for its
+# dependencies in the same directory where it resides.
 MKSHLIB += -R '$$ORIGIN'
-endif
-endif
 endif
 
 ifeq ($(OS_TARGET),WINCE)

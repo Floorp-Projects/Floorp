@@ -34,7 +34,7 @@
 # the terms of any one of the MPL, the GPL or the LGPL.
 #
 # ***** END LICENSE BLOCK *****
-CONFIG_CVS_ID = "@(#) $RCSfile: config.mk,v $ $Revision: 1.8 $ $Date: 2004/04/25 15:03:04 $ $Name:  $"
+CONFIG_CVS_ID = "@(#) $RCSfile: config.mk,v $ $Revision: 1.9 $ $Date: 2004/05/25 00:13:07 $ $Name:  $"
 
 #
 #  Override TARGETS variable so that only shared libraries
@@ -60,3 +60,10 @@ endif
 ifeq ($(OS_TARGET),Darwin)
 DSO_LDOPTS = -bundle
 endif
+
+ifeq ($(OS_TARGET),SunOS)
+# The -R '$ORIGIN' linker option instructs this library to search for its
+# dependencies in the same directory where it resides.
+MKSHLIB += -R '$$ORIGIN'
+endif
+
