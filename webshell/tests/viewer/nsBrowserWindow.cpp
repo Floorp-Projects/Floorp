@@ -397,6 +397,18 @@ NS_IMETHODIMP nsBrowserWindow::SetEnabled(PRBool aEnabled)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsBrowserWindow::GetBlurSuppression(PRBool *aBlurSuppression)
+{
+  NS_ENSURE_ARG_POINTER(aBlurSuppression);
+  *aBlurSuppression = PR_FALSE;
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsBrowserWindow::SetBlurSuppression(PRBool aBlurSuppression)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 NS_IMETHODIMP nsBrowserWindow::GetMainWidget(nsIWidget** aMainWidget)
 {
    NS_ENSURE_ARG_POINTER(aMainWidget);

@@ -103,7 +103,8 @@ nsXULWindow::nsXULWindow() : mChromeTreeOwner(nsnull),
    mDebuting(PR_FALSE), mChromeLoaded(PR_FALSE), 
    mShowAfterLoad(PR_FALSE), mIntrinsicallySized(PR_FALSE),
    mCenterAfterLoad(PR_FALSE), mIsHiddenWindow(PR_FALSE),
-   mZlevel(nsIXULWindow::normalZ), mContextFlags(0)
+   mZlevel(nsIXULWindow::normalZ), mContextFlags(0),
+   mBlurSuppressionLevel(0)
 {
 }
 
@@ -690,6 +691,30 @@ NS_IMETHODIMP nsXULWindow::SetEnabled(PRBool aEnable)
     return NS_OK;
   }
   return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsXULWindow::GetBlurSuppression(PRBool *aBlurSuppression)
+{
+  NS_ENSURE_ARG_POINTER(aBlurSuppression);
+  *aBlurSuppression = mBlurSuppressionLevel > 0;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsXULWindow::SetBlurSuppression(PRBool aBlurSuppression)
+{
+  if (aBlurSuppression)
+    ++mBlurSuppressionLevel;
+  else {
+    NS_ASSERTION(mBlurSuppressionLevel > 0, "blur over-allowed");
+    if (mBlurSuppressionLevel > 0)
+      --mBlurSuppressionLevel;
+  }
+  return NS_OK;
+
+  /* XXX propagate this information to the widget? It has its own
+     independent concept of blur suppression. Each is used on
+     a different platform, so at time of writing it's not necessary
+     to keep them in sync. (And there's no interface for doing so.) */
 }
 
 NS_IMETHODIMP nsXULWindow::GetMainWidget(nsIWidget** aMainWidget)
