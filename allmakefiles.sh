@@ -456,6 +456,10 @@ xpfe/appshell/public/Makefile
 xpfe/bootstrap/Makefile
 xpfe/browser/Makefile
 xpfe/browser/src/Makefile
+xpfe/browser/resources/Makefile
+xpfe/browser/resources/content/Makefile
+xpfe/browser/resources/skin/Makefile
+
 # xpfe/browser/public/Makefile
 END_NGMAKEFILES
 
