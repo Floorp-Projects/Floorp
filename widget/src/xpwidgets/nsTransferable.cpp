@@ -21,37 +21,24 @@
 #include "nsDataFlavor.h"
 #include "nsWidgetsCID.h"
 #include "nsISupportsArray.h"
-#include "nsRepository.h"
-
-#if defined(XP_UNIX) || defined(XP_MAC)
-#include <strstream.h>
-#endif
-
-#ifdef XP_PC
-#include <strstrea.h>
-#endif
-
-//#include "nsDataObj.h"
-//#include "DDCOMM.h"
-
-// XIF convertor stuff
-#include "nsIParser.h"
-#include "nsParserCIID.h"
-#include "nsHTMLContentSinkStream.h"
-#include "nsHTMLToTXTSinkStream.h"
-#include "nsXIFDTD.h"
+#include "nsIFormatConverter.h"
+#include "nsVoidArray.h"
+#include "nsIComponentManager.h"
 
 
 static NS_DEFINE_IID(kITransferableIID,  NS_ITRANSFERABLE_IID);
 static NS_DEFINE_IID(kIDataFlavorIID,    NS_IDATAFLAVOR_IID);
 static NS_DEFINE_IID(kCDataFlavorCID,    NS_DATAFLAVOR_CID);
 
-static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
-static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
-
 
 NS_IMPL_ADDREF(nsTransferable)
 NS_IMPL_RELEASE(nsTransferable)
+
+typedef struct {
+  nsIDataFlavor * mFlavor;
+  void *   mData;
+  PRUint32 mDataLen;
+} DataStruct;
 
 //-------------------------------------------------------------------------
 //
@@ -61,17 +48,8 @@ NS_IMPL_RELEASE(nsTransferable)
 nsTransferable::nsTransferable()
 {
   NS_INIT_REFCNT();
-  mDataObj  = nsnull;
-  mStrCache = nsnull;
-  mDataPtr  = nsnull;
-
-  nsresult rv = NS_NewISupportsArray(&mDFList);
-  if (NS_OK == rv) {
-    AddDataFlavor(kTextMime, "Text Format");
-    AddDataFlavor(kXIFMime,  "XIF Format");
-    AddDataFlavor(kHTMLMime, "HTML Format");
-  }
-
+  mDataArray  = new nsVoidArray();
+  mFormatConv = nsnull;
 }
 
 //-------------------------------------------------------------------------
@@ -81,13 +59,17 @@ nsTransferable::nsTransferable()
 //-------------------------------------------------------------------------
 nsTransferable::~nsTransferable()
 {
-  if (mStrCache) {
-    delete mStrCache;
+  NS_IF_RELEASE(mFormatConv);
+
+  PRInt32 i;
+  for (i=0;i<mDataArray->Count();i++) {
+    DataStruct * data = (DataStruct *)mDataArray->ElementAt(i);
+    NS_RELEASE(data->mFlavor);
+    if (data->mData) {
+      delete[] data->mData;
+    }
   }
-  if (mDataPtr) {
-    delete[] mDataPtr;
-  }
-  
+  delete mDataArray;
 }
 
 /**
@@ -121,8 +103,17 @@ nsresult nsTransferable::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   */
 NS_IMETHODIMP nsTransferable::GetTransferDataFlavors(nsISupportsArray ** aDataFlavorList)
 {
-  *aDataFlavorList = mDFList;
-  NS_ADDREF(mDFList);
+  nsISupportsArray * array;
+  nsresult rv = NS_NewISupportsArray(&array);
+  if (NS_OK == rv) {
+    PRInt32 i;
+    for (i=0;i<mDataArray->Count();i++) {
+      DataStruct * data = (DataStruct *)mDataArray->ElementAt(i);
+      NS_ADDREF(data->mFlavor);
+      array->AppendElement(data->mFlavor);
+    }
+    *aDataFlavorList = array;
+  }
   return NS_OK;
 }
 
@@ -135,19 +126,14 @@ NS_IMETHODIMP nsTransferable::IsDataFlavorSupported(nsIDataFlavor * aDataFlavor)
   nsAutoString  mimeInQuestion;
   aDataFlavor->GetMimeType(mimeInQuestion);
 
-  PRUint32 i;
-  for (i=0;i<mDFList->Count();i++) {
-    nsIDataFlavor * df;
-    nsISupports * supports = mDFList->ElementAt(i);
-    if (NS_OK == supports->QueryInterface(kIDataFlavorIID, (void **)&df)) {
-      nsAutoString mime;
-      df->GetMimeType(mime);
-      if (mimeInQuestion.Equals(mime)) {
-        return NS_OK;
-      }
-      NS_RELEASE(df);
+  PRInt32 i;
+  for (i=0;i<mDataArray->Count();i++) {
+    DataStruct * data = (DataStruct *)mDataArray->ElementAt(i);
+    nsAutoString mime;
+    data->mFlavor->GetMimeType(mime);
+    if (mimeInQuestion.Equals(mime)) {
+      return NS_OK;
     }
-    NS_RELEASE(supports);
   }
   return NS_ERROR_FAILURE;
 }
@@ -158,41 +144,31 @@ NS_IMETHODIMP nsTransferable::IsDataFlavorSupported(nsIDataFlavor * aDataFlavor)
   */
 NS_IMETHODIMP nsTransferable::GetTransferData(nsIDataFlavor * aDataFlavor, void ** aData, PRUint32 * aDataLen)
 {
-  if (mDataPtr) {
-    delete[] mDataPtr;
-  }
-
   nsAutoString  mimeInQuestion;
   aDataFlavor->GetMimeType(mimeInQuestion);
 
-  if (mimeInQuestion.Equals(kTextMime)) {
-    //char * str = mStrCache->ToNewCString();
-    //*aDataLen = mStrCache->Length()+1;
-    //mDataPtr = (void *)str;
-    //*aData = mDataPtr; 
-    nsAutoString text;
-    if (NS_OK == ConvertToText(text)) {
-      char * str = text.ToNewCString();
-      *aDataLen = text.Length()+1;
-      mDataPtr = (void *)str;
-      *aData = mDataPtr; 
+  PRInt32 i;
+  for (i=0;i<mDataArray->Count();i++) {
+    DataStruct * data = (DataStruct *)mDataArray->ElementAt(i);
+    nsAutoString mime;
+    data->mFlavor->GetMimeType(mime);
+    if (mimeInQuestion.Equals(mime)) {
+       *aData    = data->mData;
+       *aDataLen = data->mDataLen;
+       return NS_OK;
     }
-  } else if (mimeInQuestion.Equals(kHTMLMime)) {
-    nsAutoString html;
-    if (NS_OK == ConvertToHTML(html)) {
-      char * str = html.ToNewCString();
-      *aDataLen = html.Length()+1;
-      mDataPtr = (void *)str;
-      *aData = mDataPtr; 
-    }
-  } else if (mimeInQuestion.Equals(kXIFMime)) {
-    char * str = mStrCache->ToNewCString();
-    *aDataLen = mStrCache->Length()+1;
-    mDataPtr = (void *)str;
-    *aData = mDataPtr; 
   }
 
-  return NS_OK;
+  if (nsnull != mFormatConv) {
+    for (i=0;i<mDataArray->Count();i++) {
+      DataStruct * data = (DataStruct *)mDataArray->ElementAt(i);
+      if (NS_OK == mFormatConv->CanConvert(data->mFlavor, aDataFlavor)) {
+        mFormatConv->Convert(data->mFlavor, data->mData, data->mDataLen, aDataFlavor, aData, aDataLen);
+        return NS_OK;
+      }
+    }
+  }
+  return NS_ERROR_FAILURE;
 }
 
 /**
@@ -202,19 +178,25 @@ NS_IMETHODIMP nsTransferable::GetTransferData(nsIDataFlavor * aDataFlavor, void 
 NS_IMETHODIMP nsTransferable::SetTransferData(nsIDataFlavor * aDataFlavor, void * aData, PRUint32 aDataLen)
 {
   if (aData == nsnull) {
-    return NS_OK;
+    return NS_ERROR_FAILURE;
   }
 
   nsAutoString  mimeInQuestion;
   aDataFlavor->GetMimeType(mimeInQuestion);
 
-  if (mimeInQuestion.Equals(kTextMime)) {
-    if (nsnull == mStrCache) {
-      mStrCache = new nsString();
+  PRInt32 i;
+  for (i=0;i<mDataArray->Count();i++) {
+    DataStruct * data = (DataStruct *)mDataArray->ElementAt(i);
+    nsAutoString mime;
+    data->mFlavor->GetMimeType(mime);
+    if (mimeInQuestion.Equals(mime)) {
+      if (nsnull != data->mData) {
+        delete data->mData;
+      }
+      data->mData     = aData;
+      data->mDataLen  = aDataLen;
+      return NS_OK;
     }
-    mStrCache->SetString((char *)aData, aDataLen-1);
-  } else if (mimeInQuestion.Equals(kHTMLMime)) {
-
   }
 
   return NS_OK;
@@ -224,47 +206,36 @@ NS_IMETHODIMP nsTransferable::SetTransferData(nsIDataFlavor * aDataFlavor, void 
   * 
   *
   */
-NS_IMETHODIMP nsTransferable::SetTransferString(const nsString & aStr)
+NS_IMETHODIMP nsTransferable::AddDataFlavor(nsIDataFlavor * aDataFlavor)
 {
-  if (!mStrCache) {
-    mStrCache = new nsString(aStr);
-  } else {
-    *mStrCache = aStr;
+  if (nsnull == aDataFlavor) {
+    return NS_ERROR_FAILURE;
   }
+
+  nsAutoString  mimeInQuestion;
+  aDataFlavor->GetMimeType(mimeInQuestion);
+
+  PRInt32 i;
+  for (i=0;i<mDataArray->Count();i++) {
+    DataStruct * data = (DataStruct *)mDataArray->ElementAt(i);
+    nsAutoString mime;
+    data->mFlavor->GetMimeType(mime);
+    if (mimeInQuestion.Equals(mime)) {
+      return NS_ERROR_FAILURE;
+    }
+  }
+
+  // Create a new "slot" for the data
+  DataStruct * data = new DataStruct;
+  data->mFlavor     = aDataFlavor;
+  data->mData       = nsnull;
+  data->mDataLen    = 0;
+
+  NS_ADDREF(aDataFlavor);
+
+  mDataArray->AppendElement((void *)data);
 
   return NS_OK;
-}
-
-/**
-  * 
-  *
-  */
-NS_IMETHODIMP nsTransferable::GetTransferString(nsString & aStr)
-{
-  if (!mStrCache) {
-    mStrCache = new nsString();
-  }
-  aStr = *mStrCache;
-
-  return NS_OK;
-}
-
-/**
-  * 
-  *
-  */
-NS_IMETHODIMP nsTransferable::AddDataFlavor(const nsString & aMimeType, const nsString & aHumanPresentableName)
-{
-  nsIDataFlavor * df;
-  nsresult rv = nsComponentManager::CreateInstance(kCDataFlavorCID, nsnull, kIDataFlavorIID, (void**) &df);
-  if (nsnull == df) {
-    return rv;
-  }
-
-  df->Init(aMimeType, aHumanPresentableName);
-  mDFList->AppendElement(df);
-  
-  return rv;
 }
 
 /**
@@ -273,10 +244,6 @@ NS_IMETHODIMP nsTransferable::AddDataFlavor(const nsString & aMimeType, const ns
   */
 NS_IMETHODIMP nsTransferable::IsLargeDataSet()
 {
-  if (mStrCache) {
-    return (mStrCache->Length() > 1024?NS_OK:NS_ERROR_FAILURE);
-  }
-
   return NS_ERROR_FAILURE;
 }
 
@@ -284,104 +251,15 @@ NS_IMETHODIMP nsTransferable::IsLargeDataSet()
   * 
   *
   */
-NS_IMETHODIMP nsTransferable::ConvertToText(nsString & aStr)
+NS_IMETHODIMP nsTransferable::SetConverter(nsIFormatConverter * aConverter)
 {
-  aStr = "";
-  nsIParser* parser;
-  nsresult rv = nsComponentManager::CreateInstance(kCParserCID, 
-                                             nsnull, 
-                                             kCParserIID, 
-                                             (void **)&parser);
-  if (NS_OK != rv)
-    return rv;
-
-  nsIHTMLContentSink* sink = nsnull;
-
-//  rv = NS_New_HTML_ContentSinkStream(&sink,PR_FALSE,PR_FALSE);
-//  Changed to do plain text only for Dogfood -- gpk 3/14/99
-  rv = NS_New_HTMLToTXT_SinkStream(&sink);
-
-  if (NS_OK == rv) {
-    parser->SetContentSink(sink);
-	
-    nsIDTD* dtd = nsnull;
-    rv = NS_NewXIFDTD(&dtd);
-    if (NS_OK == rv) 
-    {
-      parser->RegisterDTD(dtd);
-      //dtd->SetContentSink(sink);
-      //dtd->SetParser(parser);
-      parser->Parse(*mStrCache, 0, "text/xif",PR_FALSE,PR_TRUE);           
-    }
-    NS_IF_RELEASE(dtd);
-
-    ((nsHTMLToTXTSinkStream*)sink)->GetStringBuffer(aStr);
-  }
-  NS_IF_RELEASE(sink);
-  NS_RELEASE(parser);
-
-  return NS_OK;
-}
-
-/**
-  * 
-  *
-  */
-NS_IMETHODIMP nsTransferable::ConvertToHTML(nsString & aStr)
-{
-  aStr = "";
-  nsIParser* parser;
-
-  nsresult rv = nsComponentManager::CreateInstance(kCParserCID, 
-                                             nsnull, 
-                                             kCParserIID, 
-                                             (void **)&parser);
-  if (NS_OK != rv)
-    return rv;
-
-  nsIHTMLContentSink* sink = nsnull;
-
-  rv = NS_New_HTML_ContentSinkStream(&sink,PR_FALSE,PR_FALSE);
-
-  ostrstream* copyStream = new ostrstream;
-
-  ((nsHTMLContentSinkStream*)sink)->SetOutputStream(*copyStream);
-  if (NS_OK == rv) {
-    parser->SetContentSink(sink);
-	
-    nsIDTD* dtd = nsnull;
-    rv = NS_NewXIFDTD(&dtd);
-    if (NS_OK == rv) {
-      parser->RegisterDTD(dtd);
-      parser->Parse(*mStrCache, 0, "text/xif",PR_FALSE,PR_TRUE);           
-    }
-    NS_IF_RELEASE(dtd);
-  }
-  NS_IF_RELEASE(sink);
-  NS_RELEASE(parser);
-
-  PRInt32 len = copyStream->pcount();
-  char* str = (char*)copyStream->str();
-
-  if (str) {
-    aStr.SetString(str, len);
-    delete[] str;
+  if (nsnull != mFormatConv) {
+    NS_RELEASE(mFormatConv);
   }
 
-  return NS_OK;
-}
-
-/**
-  * 
-  *
-  */
-NS_IMETHODIMP nsTransferable::ConvertToAOLMail(nsString & aStr)
-{
-  nsAutoString html;
-  if (NS_OK == ConvertToHTML(html)) {
-    aStr = "<HTML>";
-    aStr.Append(html);
-    aStr.Append("</HTML>");
+  mFormatConv = aConverter;
+  if (nsnull != mFormatConv) {
+    NS_ADDREF(mFormatConv);
   }
   return NS_OK;
 }
@@ -390,8 +268,12 @@ NS_IMETHODIMP nsTransferable::ConvertToAOLMail(nsString & aStr)
   * 
   *
   */
-NS_IMETHODIMP nsTransferable::ConvertToXIF(nsString & aStr)
+NS_IMETHODIMP nsTransferable::GetConverter(nsIFormatConverter ** aConverter)
 {
-  aStr = *mStrCache;
+  if (nsnull != mFormatConv) {
+    *aConverter = mFormatConv;
+    NS_ADDREF(mFormatConv);
+  }
   return NS_OK;
 }
+
