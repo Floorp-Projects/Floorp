@@ -268,6 +268,17 @@ JS_SetThrowHook(JSRuntime *rt, JSTrapHandler hook, void *closure);
 extern JS_PUBLIC_API(JSBool)
 JS_SetDebugErrorHook(JSRuntime *rt, JSDebugErrorHook hook, void *closure);
 
+/************************************************************************/
+
+extern JS_PUBLIC_API(size_t)
+JS_GetObjectTotalSize(JSContext *cx, JSObject *obj);
+
+extern JS_PUBLIC_API(size_t)
+JS_GetFunctionTotalSize(JSContext *cx, JSFunction *fun);
+
+extern JS_PUBLIC_API(size_t)
+JS_GetScriptTotalSize(JSContext *cx, JSScript *script);
+
 JS_END_EXTERN_C
 
 #endif /* jsdbgapi_h___ */

@@ -79,7 +79,8 @@ ProfilerFile::~ProfilerFile()
 ProfilerFunction* 
 ProfilerFile::FindOrAddFunction(const char* aName,
                                 uintN aBaseLineNumber,
-                                uintN aLineExtent)
+                                uintN aLineExtent,
+                                size_t aTotalSize)
 {
     if(!mFunctionTable)
         return nsnull;
@@ -87,7 +88,8 @@ ProfilerFile::FindOrAddFunction(const char* aName,
     ProfilerFunction* fun = (ProfilerFunction*) mFunctionTable->Get(&key);
     if(!fun)
     {
-        fun = new ProfilerFunction(aName, aBaseLineNumber, aLineExtent, this);
+        fun = new ProfilerFunction(aName, aBaseLineNumber, aLineExtent,
+                                   aTotalSize, this);
         if(fun)
             mFunctionTable->Put(&key, fun);
     }
@@ -104,11 +106,12 @@ void ProfilerFile::EnumerateFunctions(nsHashtableEnumFunc aEnumFunc, void* closu
 /***************************************************************************/
 
 ProfilerFunction::ProfilerFunction(const char* name, 
-                                   uintN lineno, uintn extent,
+                                   uintN lineno, uintn extent, size_t totalsize,
                                    ProfilerFile* file)
     :   mName(name ? nsCRT::strdup(name) : nsnull),
         mBaseLineNumber(lineno),
         mLineExtent(extent),
+        mTotalSize(totalsize),
         mFile(file),
         mCallCount(0),
         mCompileCount(0),
@@ -207,7 +210,10 @@ xpctools_JSNewScriptHook(JSContext  *cx,
             ProfilerFunction* function = 
                 file->FindOrAddFunction(fun ? JS_GetFunctionName(fun) : nsnull, 
                                         JS_GetScriptBaseLineNumber(cx, script),
-                                        JS_GetScriptLineExtent(cx, script));
+                                        JS_GetScriptLineExtent(cx, script),
+                                        fun
+                                        ? JS_GetFunctionTotalSize(cx, fun)
+                                        : JS_GetScriptTotalSize(cx, script));
             if(function)
             {
                 function->IncrementCompileCount();
@@ -316,7 +322,7 @@ NS_IMETHODIMP nsXPCToolsProfiler::Clear()
 
 
 JS_STATIC_DLL_CALLBACK(PRBool)
-xpctools_FuncionNamePrinter(nsHashKey *aKey, void *aData, void* closure)
+xpctools_FunctionNamePrinter(nsHashKey *aKey, void *aData, void* closure)
 {
     ProfilerFunction* fun = (ProfilerFunction*) aData;
     FILE* out = (FILE*) closure;
@@ -330,12 +336,13 @@ xpctools_FuncionNamePrinter(nsHashKey *aKey, void *aData, void* closure)
     if(!name)
         name = "<top level>"; 
     fprintf(out,
-        "    [%lu,%lu] %s() {%d-%d} ",
+        "    [%lu,%lu] %s() {%d-%d} %lu ",
         (unsigned long) fun->GetCompileCount(),
         (unsigned long) fun->GetCallCount(),
         name,
         (int) fun->GetBaseLineNumber(),
-        (int)(fun->GetBaseLineNumber()+fun->GetLineExtent()-1));
+        (int)(fun->GetBaseLineNumber()+fun->GetLineExtent()-1),
+        (unsigned long) fun->GetTotalSize());
     if(count != 0)
         fprintf(out,
             "{min %lu, max %lu avg %lu}\n",
@@ -353,7 +360,7 @@ xpctools_FilenamePrinter(nsHashKey *aKey, void *aData, void* closure)
     ProfilerFile* file = (ProfilerFile*) aData;
     FILE* out = (FILE*) closure;
     fprintf(out, "%s\n", file->GetName());
-    file->EnumerateFunctions(xpctools_FuncionNamePrinter, closure);
+    file->EnumerateFunctions(xpctools_FunctionNamePrinter, closure);
     return PR_TRUE;        
 }        
 

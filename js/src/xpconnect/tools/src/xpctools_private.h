@@ -91,7 +91,8 @@ public:
     
     ProfilerFunction* FindOrAddFunction(const char* aName,
                                         uintN aBaseLineNumber,
-                                        uintN aLineExtent);
+                                        uintN aLineExtent,
+                                        size_t aTotalSize);
     void EnumerateFunctions(nsHashtableEnumFunc aEnumFunc, void* closure);
     const char* GetName() const {return mName;}
 
@@ -105,14 +106,15 @@ class ProfilerFunction
 {
 public:
     ProfilerFunction(const char* name, 
-                     uintN lineno, uintn extent,
+                     uintN lineno, uintn extent, size_t totalsize,
                      ProfilerFile* file);
     ~ProfilerFunction();
 
-    const char* GetName() const {return mName;}
+    const char*   GetName() const {return mName;}
     ProfilerFile* GetFile() const {return mFile;}
     uintN         GetBaseLineNumber() const {return mBaseLineNumber;}
     uintN         GetLineExtent() const {return mLineExtent;}
+    size_t        GetTotalSize() const { return mTotalSize; }
     void          IncrementCallCount() {++mCallCount;}
     PRUint32      GetCallCount() {return mCallCount;}
     PRUint32      GetSum() {return mSum;}
@@ -142,6 +144,7 @@ private:
     char*           mName;
     uintN           mBaseLineNumber;
     uintN           mLineExtent;
+    size_t          mTotalSize;     // JSFunction, JSScript, bytecode, &c, size
     ProfilerFile*   mFile;
     PRUint32        mCallCount;
     PRUint32        mCompileCount;
