@@ -34,7 +34,7 @@
 /*
  * Permanent Certificate database handling code 
  *
- * $Id: pcertdb.c,v 1.6 2001/12/07 01:36:18 relyea%netscape.com Exp $
+ * $Id: pcertdb.c,v 1.7 2001/12/17 13:43:10 ian.mcgreer%sun.com Exp $
  */
 #include "prtime.h"
 
@@ -3080,6 +3080,8 @@ AddCertToPermDB(NSSLOWCERTCertDBHandle *handle, NSSLOWCERTCertificate *cert,
     }
     
     state = 2;
+
+    cert->dbhandle = handle;
     
     /* add to or create new subject entry */
     if ( subjectEntry ) {
