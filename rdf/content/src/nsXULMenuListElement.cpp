@@ -38,6 +38,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsIServiceManager.h"
 #include "nsString.h"
+#include "nsXULAtoms.h"
 
 
 NS_IMPL_ADDREF_INHERITED(nsXULMenuListElement, nsXULAggregateElement);
@@ -155,8 +156,20 @@ GetMenuChildrenElement(nsIContent* aParent, nsIContent** aResult)
   if (count == 0)
     return;
   
-  aParent->ChildAt(0, *aResult);
-  return;
+  nsCOMPtr<nsIContent> child;
+  aParent->ChildAt(0, *getter_AddRefs(child));
+  
+  // make sure we're not working with a template, if we are, get the 1st item instead.
+  nsCOMPtr<nsIAtom> tag;
+  child->GetTag ( *getter_AddRefs(tag) );
+  if ( tag.get() == nsXULAtoms::Template ) {
+    if ( count == 1 )
+      return;
+    aParent->ChildAt(1, *getter_AddRefs(child));
+  }
+  
+  *aResult = child;
+  NS_IF_ADDREF(*aResult);
 }
 
 NS_IMETHODIMP
