@@ -653,6 +653,52 @@ nsresult nsHTTPChannel::Redirect(const char *aNewLocation,
   rv = serv->NewURI(aNewLocation, mURI, getter_AddRefs(newURI));
   if (NS_FAILED(rv)) return rv;
 
+  //
+  // Move Param, Query and Reference of the old location to the new one 
+  // if the new one has none
+  //
+
+  char* newref = nsnull; 
+  char* newparam = nsnull; 
+  char* newquery = nsnull; 
+  char* baseref = nsnull; 
+  char* baseparam = nsnull; 
+  char* basequery = nsnull; 
+  nsIURL* newurl;
+  nsIURL* baseurl;
+  rv = newURI->QueryInterface(nsIURL::GetIID(), (void**)&newurl);
+  if (NS_SUCCEEDED(rv)) {
+    rv = newurl->GetRef(&newref);
+    rv = newurl->GetQuery(&newquery);
+    rv = newurl->GetParam(&newparam);
+    rv = mURI->QueryInterface(nsIURL::GetIID(), (void**)&baseurl);
+    if (NS_SUCCEEDED(rv)) {
+      rv = baseurl->GetRef(&baseref);
+      rv = baseurl->GetQuery(&basequery);
+      rv = baseurl->GetParam(&baseparam);
+      if ((newref == nsnull) && (baseref != nsnull)) {
+        // if there was a Reference then move it to the new URL
+        newurl->SetRef(baseref);                
+      }
+      if ((newquery == nsnull) && (basequery != nsnull)) {
+        // if there was a Query then move it to the new URL
+        newurl->SetQuery(basequery);                
+      }
+      if ((newparam == nsnull) && (baseparam != nsnull)) {
+        // if there was a Param then move it to the new URL
+        newurl->SetParam(baseparam);                
+      }
+      NS_RELEASE(baseurl);
+    }
+    NS_RELEASE(newurl);
+  }
+  CRTFREEIF(newref);     
+  CRTFREEIF(newquery);     
+  CRTFREEIF(newparam);     
+  CRTFREEIF(baseref);
+  CRTFREEIF(basequery);
+  CRTFREEIF(baseparam);
+
 #if defined(PR_LOGGING)
   char *newURLSpec;
 
