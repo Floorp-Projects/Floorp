@@ -92,15 +92,15 @@ function getFolder( window )
 			bar = path.indexOf( '|' );
 		
 			if ( slash < bar )
-				drive = path.substring( slash, bar );
+				drive = path.substring( slash + 1, bar );
 			else
 				drive = path.substring( bar - 1, bar );
-				
+			
 			path = path.substring( bar + 1, path.lastIndexOf( '/' ) + 1 );
 		}
 
 		var pathArray = path.split( "/" );
-		path = pathArray.join( "\\" );
+		path = pathArray.join( "\\" ) + "\\";
 
 		//debug( "drive: " + drive + " path: " + path );
 
