@@ -35,7 +35,7 @@
               try {
                 var stringBundleService = Components.classes["@mozilla.org/intl/stringbundle;1"]
                                                     .getService(Components.interfaces.nsIStringBundleService);
-                this._bundle = stringBundleService.CreateBundle(this.src, this.appLocale);
+                this._bundle = stringBundleService.createBundle(this.src, this.appLocale);
               }
               catch (e) {
                 dump("Failed to get stringbundle:\n");
