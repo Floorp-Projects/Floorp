@@ -591,8 +591,8 @@ nsXPConnect::GetWrappedNativeOfNativeObject(JSContext * aJSContext,
     if(!scope)
         return UnexpectedFailure(NS_ERROR_FAILURE);
 
-    XPCNativeInterface* iface =
-        XPCNativeInterface::GetNewOrUsed(ccx, &aIID);
+    AutoMarkingNativeInterfacePtr iface(ccx);
+    iface = XPCNativeInterface::GetNewOrUsed(ccx, &aIID);
     if(!iface)
         return NS_ERROR_FAILURE;
 
@@ -899,9 +899,9 @@ nsXPConnect::GetWrappedNativePrototype(JSContext * aJSContext,
     XPCNativeScriptableCreateInfo sciProto;
     XPCWrappedNative::GatherProtoScriptableCreateInfo(aClassInfo, &sciProto);
 
-    XPCWrappedNativeProto* proto =
-        XPCWrappedNativeProto::GetNewOrUsed(ccx, scope, aClassInfo, 
-                                            &sciProto, JS_FALSE);
+    AutoMarkingWrappedNativeProtoPtr proto(ccx);
+    proto = XPCWrappedNativeProto::GetNewOrUsed(ccx, scope, aClassInfo, 
+                                                &sciProto, JS_FALSE);
     if(!proto)
         return UnexpectedFailure(NS_ERROR_FAILURE);
 

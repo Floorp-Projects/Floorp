@@ -171,8 +171,8 @@ XPCNativeMember::Resolve(XPCCallContext& ccx, XPCNativeInterface* iface)
 XPCNativeInterface*
 XPCNativeInterface::GetNewOrUsed(XPCCallContext& ccx, const nsIID* iid)
 {
+    AutoMarkingNativeInterfacePtr iface(ccx);
     XPCJSRuntime* rt = ccx.GetRuntime();
-    XPCNativeInterface* iface;
 
     IID2NativeInterfaceMap* map = rt->GetIID2NativeInterfaceMap();
     if(!map)
@@ -222,7 +222,7 @@ XPCNativeInterface::GetNewOrUsed(XPCCallContext& ccx, const nsIID* iid)
 XPCNativeInterface*
 XPCNativeInterface::GetNewOrUsed(XPCCallContext& ccx, nsIInterfaceInfo* info)
 {
-    XPCNativeInterface* iface;
+    AutoMarkingNativeInterfacePtr iface(ccx);
 
     const nsIID* iid;
     if(NS_FAILED(info->GetIIDShared(&iid)) || !iid)
@@ -502,9 +502,10 @@ XPCNativeInterface::DebugDump(PRInt16 depth)
 XPCNativeSet*
 XPCNativeSet::GetNewOrUsed(XPCCallContext& ccx, const nsIID* iid)
 {
-    XPCNativeSet* set;
+    AutoMarkingNativeSetPtr set(ccx);
 
-    XPCNativeInterface* iface = XPCNativeInterface::GetNewOrUsed(ccx, iid);
+    AutoMarkingNativeInterfacePtr iface(ccx);
+    iface = XPCNativeInterface::GetNewOrUsed(ccx, iid);
     if(!iface)
         return nsnull;
 
@@ -523,7 +524,9 @@ XPCNativeSet::GetNewOrUsed(XPCCallContext& ccx, const nsIID* iid)
     if(set)
         return set;
 
-    set = NewInstance(ccx, &iface, 1);
+    // hacky way to get a XPCNativeInterface** using the AutoPtr
+    XPCNativeInterface* temp[] = {iface}; 
+    set = NewInstance(ccx, temp, 1);
     if(!set)
         return nsnull;
 
@@ -550,7 +553,7 @@ XPCNativeSet::GetNewOrUsed(XPCCallContext& ccx, const nsIID* iid)
 XPCNativeSet*
 XPCNativeSet::GetNewOrUsed(XPCCallContext& ccx, nsIClassInfo* classInfo)
 {
-    XPCNativeSet* set;
+    AutoMarkingNativeSetPtr set(ccx);
     XPCJSRuntime* rt = ccx.GetRuntime();
 
     ClassInfo2NativeSetMap* map = rt->GetClassInfo2NativeSetMap();
@@ -598,8 +601,8 @@ XPCNativeSet::GetNewOrUsed(XPCCallContext& ccx, nsIClassInfo* classInfo)
         {
             nsIID* iid = *(currentIID++);
 
-            XPCNativeInterface* iface =
-                XPCNativeInterface::GetNewOrUsed(ccx, iid);
+            AutoMarkingNativeInterfacePtr iface(ccx);
+            iface = XPCNativeInterface::GetNewOrUsed(ccx, iid);
 
             if(!iface)
             {
@@ -670,7 +673,7 @@ XPCNativeSet::GetNewOrUsed(XPCCallContext& ccx,
                            XPCNativeInterface* newInterface,
                            PRUint16 position)
 {
-    XPCNativeSet* set;
+    AutoMarkingNativeSetPtr set(ccx);
     XPCJSRuntime* rt = ccx.GetRuntime();
     NativeSetMap* map = rt->GetNativeSetMap();
     if(!map)

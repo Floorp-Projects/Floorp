@@ -85,4 +85,6 @@ class nsXPCComponents_Exception;
 class nsXPCComponents_Constructor;
 class nsXPCConstructor;
 
+class AutoMarkingPtr;
+
 #endif /* xpcforwards_h___ */

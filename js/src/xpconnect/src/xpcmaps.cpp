@@ -598,7 +598,7 @@ XPCNativeScriptableSharedMap::GetNewOrUsed(JSUint32 flags,
             return JS_FALSE;
         shared->PopulateJSClass();
     }
-    si->GetScriptableShared(shared);
+    si->SetScriptableShared(shared);
     return JS_TRUE;
 }
 

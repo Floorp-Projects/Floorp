@@ -675,7 +675,6 @@ private:
     LangType mCallingLangType;
 };
 
-
 /***************************************************************************/
 
 #define NATIVE_CALLER  XPCContext::LANG_NATIVE
@@ -741,6 +740,7 @@ public:
     inline XPCNativeScriptableInfo*     GetScriptableInfo() const ;
     inline JSBool                       CanGetSet() const ;
     inline XPCNativeSet*                GetSet() const ;
+    inline JSBool                       CanGetInterface() const ;
     inline XPCNativeInterface*          GetInterface() const ;
     inline XPCNativeMember*             GetMember() const ;
     inline JSBool                       HasInterfaceAndMember() const ;
@@ -810,6 +810,9 @@ private:
     JSBool                          mContextPopRequired;
 
     XPCContext::LangType            mCallerLanguage;
+
+    // ctor does not necessarily init the following. BEWARE!
+
     XPCContext::LangType            mPrevCallerLanguage;
 
     XPCCallContext*                 mPrevCallContext;
@@ -1088,6 +1091,9 @@ public:
     JSBool IsMarked() const
                     {return 0 != (mMemberCount & XPC_NATIVE_IFACE_MARK_FLAG);}
 
+    // NOP. This is just here to make the AutoMarkingPtr code compile.
+    inline void MarkBeforeJSFinalize(JSContext*) {};
+
     static void DestroyInstance(JSContext* cx, XPCJSRuntime* rt,
                                 XPCNativeInterface* inst);
 
@@ -1210,6 +1216,10 @@ public:
 #define XPC_NATIVE_SET_MARK_FLAG ((PRUint16)JS_BIT(15)) // only high bit of 16 is set
 
     inline void Mark();
+
+    // NOP. This is just here to make the AutoMarkingPtr code compile.
+    inline void MarkBeforeJSFinalize(JSContext*) {};
+
 private:
     void MarkSelfOnly() {mInterfaceCount |= XPC_NATIVE_SET_MARK_FLAG;}
 public:
@@ -1378,7 +1388,9 @@ public:
     SetCallback(nsIXPCScriptable* s) {mCallback = s;}
 
     void
-    GetScriptableShared(XPCNativeScriptableShared* shared) {mShared = shared;}
+    SetScriptableShared(XPCNativeScriptableShared* shared) {mShared = shared;}
+
+    void Mark() {if(mShared) mShared->Mark();}
 
 protected:
     XPCNativeScriptableInfo(nsIXPCScriptable* scriptable = nsnull,
@@ -1499,9 +1511,16 @@ public:
 
     void DebugDump(PRInt16 depth);
 
+    // This is called in the 'early' phase by AutoMarkingWrappedNativeProtoPtr.
+    // 'early' meaning after JSGC_MARK_END and before JSGC_FINALIZE_END.
+    // At this point in time we can still mark JSObjects in the JS gc heap.
+    void MarkBeforeJSFinalize(JSContext* cx)
+        {if(mJSProtoObject)
+            JS_MarkGCThing(cx, mJSProtoObject, 
+                           "XPCWrappedNativeProto::mJSProtoObject", nsnull);}
     void Mark() const
-        {mSet->Mark();
-         if(mScriptableInfo) mScriptableInfo->GetScriptableShared()->Mark();}
+        {mSet->Mark(); 
+         if(mScriptableInfo) mScriptableInfo->Mark();}
 
 #ifdef DEBUG
     void ASSERT_SetNotMarked() const {mSet->ASSERT_NotMarked();}
@@ -1641,7 +1660,7 @@ public:
     GetProto() const {return HasProto() ? mMaybeProto : nsnull;}
 
     XPCWrappedNativeScope*
-    GetScope() const { return HasProto() ?
+    GetScope() const {return HasProto() ?
                            mMaybeProto->GetScope() : UnTagScope(mMaybeScope);}
 
     nsISupports*
@@ -1764,8 +1783,11 @@ public:
     void
     Mark() const
         {mSet->Mark();
-         if(mScriptableInfo) mScriptableInfo->GetScriptableShared()->Mark();
+         if(mScriptableInfo) mScriptableInfo->Mark();
          if(HasProto()) mMaybeProto->Mark();}
+
+    // NOP. This is just here to make the AutoMarkingPtr code compile.
+    inline void MarkBeforeJSFinalize(JSContext*) {};
 
 #ifdef DEBUG
     void ASSERT_SetsNotMarked() const
@@ -2530,6 +2552,11 @@ public:
     void ClearRecentContext()
         {mMostRecentJSContext = nsnull; mMostRecentXPCContext = nsnull;}
 
+    AutoMarkingPtr**  GetAutoRootsAdr() {return &mAutoRoots;}
+
+    void MarkAutoRootsBeforeJSFinalize(JSContext* cx);
+    void MarkAutoRootsAfterJSFinalize();
+
 #ifdef XPC_CHECK_WRAPPER_THREADSAFETY
     JSUint32  IncrementWrappedNativeThreadsafetyReportDepth()
         {return ++mWrappedNativeThreadsafetyReportDepth;}
@@ -2553,6 +2580,8 @@ private:
     nsIExceptionManager* mExceptionManager;
     nsIException*        mException;
     JSBool               mExceptionManagerNotAvailable;
+    AutoMarkingPtr*      mAutoRoots;
+
 #ifdef XPC_CHECK_WRAPPER_THREADSAFETY
     JSUint32             mWrappedNativeThreadsafetyReportDepth;
 #endif
@@ -2822,6 +2851,88 @@ private:
     jsval mOld;
     jsval mCheck;
 };
+
+
+/***************************************************************************/
+// AutoMarkingPtr is the base class for the various AutoMarking pointer types 
+// below. This system allows us to temporarily protect instances of our garbage 
+// collected types after they are constructed but before they are safely 
+// attached to other rooted objects.
+// This base class has pure virtual support for marking. 
+
+class AutoMarkingPtr
+{
+public:
+    AutoMarkingPtr(XPCCallContext& ccx)
+        : mNext(nsnull), mTLS(ccx.GetThreadData()) {Link();}
+
+    virtual ~AutoMarkingPtr() {Unlink();}
+    
+    void Link() 
+        {if(!mTLS) return;
+         AutoMarkingPtr** list = mTLS->GetAutoRootsAdr(); 
+         mNext = *list; *list = this;}
+
+    void Unlink() 
+        {if(!mTLS) return;
+         AutoMarkingPtr** cur = mTLS->GetAutoRootsAdr(); 
+         while(*cur != this) {
+            NS_ASSERTION(*cur, "This object not in list!");
+            cur = &(*cur)->mNext;
+         }
+         *cur = mNext;
+         mTLS = nsnull;
+        }
+
+    virtual void MarkBeforeJSFinalize(JSContext* cx) = 0;
+    virtual void MarkAfterJSFinalize() = 0;
+
+protected:
+    AutoMarkingPtr* mNext;
+    XPCPerThreadData* mTLS;
+};
+
+// More joy of macros...
+
+#define DEFINE_AUTO_MARKING_PTR_TYPE(class_, type_)                          \
+class class_ : public AutoMarkingPtr                                         \
+{                                                                            \
+public:                                                                      \
+    class_ (XPCCallContext& ccx, type_ * ptr = nsnull)                       \
+        : AutoMarkingPtr(ccx), mPtr(ptr) {}                                  \
+    virtual ~ class_ () {}                                                   \
+                                                                             \
+    virtual void MarkBeforeJSFinalize(JSContext* cx)                         \
+        {if(mPtr) mPtr->MarkBeforeJSFinalize(cx);                            \
+         if(mNext) mNext->MarkBeforeJSFinalize(cx);}                         \
+                                                                             \
+    virtual void MarkAfterJSFinalize()                                       \
+        {if(mPtr) mPtr->Mark();                                              \
+         if(mNext) mNext->MarkAfterJSFinalize();}                            \
+                                                                             \
+    type_ * get()        const  {return mPtr;}                               \
+    operator type_ *()   const  {return mPtr;}                               \
+    type_ * operator->() const  {return mPtr;}                               \
+                                                                             \
+    class_ & operator =(type_ * p)                                           \
+        {mPtr = p; return *this;}                                            \
+                                                                             \
+protected:                                                                   \
+    type_ * mPtr;                                                            \
+};
+
+// Use the macro above to define our AutoMarking types...
+
+DEFINE_AUTO_MARKING_PTR_TYPE(AutoMarkingNativeInterfacePtr, XPCNativeInterface)
+DEFINE_AUTO_MARKING_PTR_TYPE(AutoMarkingNativeSetPtr, XPCNativeSet)
+DEFINE_AUTO_MARKING_PTR_TYPE(AutoMarkingWrappedNativePtr, XPCWrappedNative)
+DEFINE_AUTO_MARKING_PTR_TYPE(AutoMarkingWrappedNativeProtoPtr, XPCWrappedNativeProto)
+                                    
+// Note: It looked like I would need one of these AutoMarkingPtr types for
+// XPCNativeScriptableInfo in order to manage marking its 
+// XPCNativeScriptableShared member during construction. But AFAICT we build
+// these and bind them to rooted things so immediately that this just is not
+// needed.
 
 /***************************************************************************/
 // Inlines use the above - include last.

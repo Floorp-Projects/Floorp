@@ -74,6 +74,8 @@ static void DEBUG_TrackNewWrapper(XPCWrappedNative* wrapper)
 #ifdef XPC_CHECK_WRAPPERS_AT_SHUTDOWN
     if(wrapper->GetRuntime())
         wrapper->GetRuntime()->DEBUG_AddWrappedNative(wrapper);
+    else
+        NS_ERROR("failed to add wrapper");
 #endif
 #ifdef XPC_TRACK_WRAPPER_STATS
     DEBUG_TotalWrappedNativeCount++;
@@ -103,6 +105,8 @@ static void DEBUG_TrackDeleteWrapper(XPCWrappedNative* wrapper)
 #ifdef XPC_CHECK_WRAPPERS_AT_SHUTDOWN
     if(wrapper->GetRuntime())
         wrapper->GetRuntime()->DEBUG_RemoveWrappedNative(wrapper);
+    else
+        NS_ERROR("failed to remove wrapper");
 #endif
 #ifdef XPC_TRACK_WRAPPER_STATS
     DEBUG_TotalLiveWrappedNativeCount--;
@@ -210,13 +214,19 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
     }
 
     XPCLock* mapLock = Scope->GetRuntime()->GetMapLock();
-    XPCWrappedNative* wrapper;
+    
+    // We use an AutoMarkingPtr here because it is possible for JS gc to happen
+    // after we have Init'd the wrapper but *before* we add it to the hashtable.
+    // This would cause the mSet to get collected and we'd later crash. I've
+    // *seen* this happen.
+    AutoMarkingWrappedNativePtr wrapper(ccx);
 
     Native2WrappedNativeMap* map = Scope->GetWrappedNativeMap();
     {   // scoped lock
         XPCAutoLock lock(mapLock);
         wrapper = map->Find(identity);
-        NS_IF_ADDREF(wrapper);
+        if(wrapper)
+            wrapper->AddRef();
     }
 
     if(wrapper)
@@ -282,7 +292,8 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
         {   // scoped lock
             XPCAutoLock lock(mapLock);
             wrapper = map->Find(identity);
-            NS_IF_ADDREF(wrapper);
+            if(wrapper)
+                wrapper->AddRef();
         }
 
         if(wrapper)
@@ -299,7 +310,7 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
         }
     }
 
-    XPCWrappedNativeProto* proto = nsnull;
+    AutoMarkingWrappedNativeProtoPtr proto(ccx);
 
     // If there is nsIClassInfo then we use a wrapper that needs a prototype.
 
@@ -319,8 +330,8 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
     }
     else
     {
-        XPCNativeSet* set =
-            XPCNativeSet::GetNewOrUsed(ccx, nsnull, Interface, 0);
+        AutoMarkingNativeSetPtr set(ccx);
+        set = XPCNativeSet::GetNewOrUsed(ccx, nsnull, Interface, 0);
 
         if(!set)
             return NS_ERROR_FAILURE;
@@ -979,8 +990,8 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCCallContext& ccx,
     {
         // Oh, so now we need to move the wrapper to a different scope.
 
-        XPCWrappedNativeProto* oldProto = nsnull;
-        XPCWrappedNativeProto* newProto = nsnull;
+        AutoMarkingWrappedNativeProtoPtr oldProto(ccx);
+        AutoMarkingWrappedNativeProtoPtr newProto(ccx);
 
         if(wrapper->HasProto())
         {
@@ -1175,9 +1186,9 @@ XPCWrappedNative::ExtendSet(XPCCallContext& ccx, XPCNativeInterface* aInterface)
 
     if(!mSet->HasInterface(aInterface))
     {
-        XPCNativeSet* newSet =
-            XPCNativeSet::GetNewOrUsed(ccx, mSet, aInterface,
-                                       mSet->GetInterfaceCount());
+        AutoMarkingNativeSetPtr newSet(ccx);
+        newSet = XPCNativeSet::GetNewOrUsed(ccx, mSet, aInterface,
+                                            mSet->GetInterfaceCount());
         if(!newSet)
             return JS_FALSE;
 

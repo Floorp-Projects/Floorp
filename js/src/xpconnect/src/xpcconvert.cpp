@@ -785,8 +785,8 @@ XPCConvert::NativeInterface2JSObject(XPCCallContext& ccx,
         if(!xpcscope)
             return JS_FALSE;
 
-        XPCNativeInterface* iface =
-            XPCNativeInterface::GetNewOrUsed(ccx, iid);
+        AutoMarkingNativeInterfacePtr iface(ccx);
+        iface = XPCNativeInterface::GetNewOrUsed(ccx, iid);
         if(!iface)
             return JS_FALSE;
 
@@ -826,7 +826,6 @@ XPCConvert::JSObject2NativeInterface(XPCCallContext& ccx,
         *pErr = NS_ERROR_XPC_BAD_CONVERT_JS;
 
     nsISupports* iface;
-
 
     if(!aOuter)
     {

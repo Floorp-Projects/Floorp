@@ -200,8 +200,9 @@ XPC_WN_DoubleWrappedGetter(JSContext *cx, JSObject *obj,
                     nsIXPCSecurityManager::HOOK_GET_PROPERTY);
     if(sm)
     {
-        XPCNativeInterface* iface = XPCNativeInterface::
-            GetNewOrUsed(ccx, &NS_GET_IID(nsIXPCWrappedJSObjectGetter));
+        AutoMarkingNativeInterfacePtr iface(ccx);
+        iface = XPCNativeInterface::
+                    GetNewOrUsed(ccx, &NS_GET_IID(nsIXPCWrappedJSObjectGetter));
 
         if(iface)
         {
@@ -315,14 +316,15 @@ DefinePropertyIfFound(XPCCallContext& ccx,
 
         if(wrapperToReflectInterfaceNames)
         {
+            AutoMarkingNativeInterfacePtr iface2(ccx);
             XPCWrappedNativeTearOff* to;
             JSObject* jso;
 
             if(JSVAL_IS_STRING(idval) &&
                nsnull != (name = JS_GetStringBytes(JSVAL_TO_STRING(idval))) &&
-               nsnull != (iface = XPCNativeInterface::GetNewOrUsed(ccx, name)) &&
+               (iface2 = XPCNativeInterface::GetNewOrUsed(ccx, name), iface2) &&
                nsnull != (to = wrapperToReflectInterfaceNames->
-                                    FindTearOff(ccx, iface, JS_TRUE)) &&
+                                    FindTearOff(ccx, iface2, JS_TRUE)) &&
                nsnull != (jso = to->GetJSObject()))
 
             {
@@ -641,6 +643,15 @@ MarkScopeJSObjects(JSContext *cx, XPCWrappedNativeScope* scope, void *arg)
 static void
 MarkForValidWrapper(JSContext *cx, XPCWrappedNative* wrapper, void *arg)
 {
+    // NOTE: It might be nice to also do the wrapper->Mark() call here too.
+    // That call marks the wrapper's and wrapper's proto's interface sets.
+    // We currently do that in the GC callback code. The reason we don't do that
+    // here is because the bits used in that marking do unpleasant things to the
+    // member counts in the interface and interface set objects. Those counts
+    // are used in the DealWithDyingGCThings calls that are part of this JS GC
+    // marking phase. By doing these calls later during our GC callback we 
+    // avoid that problem. Arguably this could be changed. But it ain't broke.
+     
     if(wrapper->HasProto())
     {
         JSObject* obj = wrapper->GetProto()->GetJSProtoObject();
