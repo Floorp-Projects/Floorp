@@ -33,6 +33,8 @@
  */
 
 #include "jsapi.h"      // for JS_AddNamedRoot and JS_RemoveRootRT
+#include "jsobj.h"      
+#include "jscntxt.h"     
 #include "nsCOMPtr.h"
 #include "nsDOMCID.h"
 #include "nsDOMEvent.h"
