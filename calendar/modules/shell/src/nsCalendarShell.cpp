@@ -814,8 +814,6 @@ nsresult nsCalendarShell::LoadUI()
   res = mDocumentContainer->LoadURL(pUI,nsnull);
   mShellInstance->GetPreferences()->GetCharPref(CAL_STRING_PREF_JULIAN_UI_XML_CALENDAR,pUI,&i);
   res = mDocumentContainer->LoadURL(pUI,nsnull);
-  mShellInstance->GetPreferences()->GetCharPref(CAL_STRING_PREF_JULIAN_UI_XML_TOOLBAR,pUI,&i);
-  res = mDocumentContainer->LoadURL(pUI,nsnull);
 #endif
 
   mShellInstance->ShowApplicationWindow(PR_TRUE) ;

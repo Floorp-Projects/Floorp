@@ -9,6 +9,8 @@
 #
 GDEPTH = ../../../..
 
+DIRS_LIBS = demo
+
 MODULE = trex
 
 REQUIRES = raptor

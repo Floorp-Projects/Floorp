@@ -43,6 +43,9 @@ public:
   NS_IMETHOD GetRootCanvas(nsIXPFCCanvas ** aCanvas);
   NS_IMETHOD_(EVENT_CALLBACK) GetShellEventCallback() ;
 
+  NS_IMETHOD SetApplicationShell(nsIApplicationShell * aApplicationShell) ;
+  NS_IMETHOD_(nsIApplicationShell *) GetApplicationShell() ;
+
 protected:
   ~nsXPFCToolkit();
 

@@ -25,6 +25,7 @@
 #define XPFC_STRING_BOTTOM                         "bottom"
 #define XPFC_STRING_CENTER                         "center"
 #define XPFC_STRING_CLASS                          "class"
+#define XPFC_STRING_COMMAND                        "command"
 #define XPFC_STRING_CONTAINER                      "container"
 #define XPFC_STRING_ENABLE                         "enable"
 #define XPFC_STRING_FOLDER_CANVAS                  "foldercanvas"

@@ -40,6 +40,8 @@ static const char* kToolbarXMLTextContentType = "ui/toolbar";
 static const char* kToolbarXMLDocHeader= "<!DOCTYPE toolbar";
 static const char* kDialogXMLTextContentType = "ui/dialog";
 static const char* kDialogXMLDocHeader= "<!DOCTYPE dialog";
+static const char* kApplicationXMLTextContentType = "ui/application";
+static const char* kApplicationXMLDocHeader= "<!DOCTYPE application";
 
 struct nsXPFCXMLTagEntry {
   char      mName[32];
@@ -51,6 +53,7 @@ nsXPFCXMLTagEntry gXPFCXMLTagTable[] =
   {"!!UNKNOWN",             eXPFCXMLTag_unknown},
   {"!DOCTYPE",              eXPFCXMLTag_doctype},
   {"?XML",                  eXPFCXMLTag_xml},
+  {"application",           eXPFCXMLTag_application},
   {"button",                eXPFCXMLTag_button},
   {"canvas",                eXPFCXMLTag_canvas},
   {"dialog",                eXPFCXMLTag_dialog},
@@ -163,7 +166,7 @@ nsXPFCXMLDTD::~nsXPFCXMLDTD()
 
 PRBool nsXPFCXMLDTD::CanParse(nsString& aContentType, PRInt32 aVersion)
 {
-  if (aContentType == kMenuXMLTextContentType || aContentType == kToolbarXMLTextContentType || aContentType == kDialogXMLTextContentType)
+  if (aContentType == kMenuXMLTextContentType || aContentType == kToolbarXMLTextContentType || aContentType == kDialogXMLTextContentType || aContentType == kApplicationXMLTextContentType)
     return PR_TRUE;
 
   return PR_FALSE;
@@ -186,6 +189,12 @@ eAutoDetectResult nsXPFCXMLDTD::AutoDetectContentType(nsString& aBuffer,nsString
   if ((aType == kDialogXMLTextContentType) || (aBuffer.Find(kDialogXMLDocHeader) != -1))
   {
     aType = kDialogXMLTextContentType;
+    return eValidDetect;
+  }
+
+  if ((aType == kApplicationXMLTextContentType) || (aBuffer.Find(kApplicationXMLDocHeader) != -1))
+  {
+    aType = kApplicationXMLTextContentType;
     return eValidDetect;
   }
 
@@ -267,6 +276,7 @@ nsresult nsXPFCXMLDTD::HandleStartToken(CToken* aToken)
         case eXPFCXMLTag_menucontainer:
         case eXPFCXMLTag_toolbar:
         case eXPFCXMLTag_canvas:
+        case eXPFCXMLTag_application:
         case eXPFCXMLTag_dialog:
         {
           mSink->OpenContainer(*attrNode);
@@ -337,6 +347,7 @@ nsresult nsXPFCXMLDTD::HandleEndToken(CToken* aToken)
     case eXPFCXMLTag_toolbar:
     case eXPFCXMLTag_canvas:
     case eXPFCXMLTag_dialog:
+    case eXPFCXMLTag_application:
     {
       mSink->CloseContainer(*attrNode);
     }

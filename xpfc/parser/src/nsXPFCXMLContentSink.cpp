@@ -56,10 +56,11 @@ static NS_DEFINE_IID(kCXPFCTabWidgetCID,    NS_XPFC_TABWIDGET_CID);
 static NS_DEFINE_IID(kCXPFCTextWidgetCID,   NS_XPFC_TEXTWIDGET_CID);
 static NS_DEFINE_IID(kIXPFCXMLContentSinkIID,  NS_IXPFC_XML_CONTENT_SINK_IID); 
 
-#define XPFC_PARSING_STATE_UNKNOWN 0
-#define XPFC_PARSING_STATE_TOOLBAR 1
-#define XPFC_PARSING_STATE_MENUBAR 2
-#define XPFC_PARSING_STATE_DIALOG  3
+#define XPFC_PARSING_STATE_UNKNOWN      0
+#define XPFC_PARSING_STATE_TOOLBAR      1
+#define XPFC_PARSING_STATE_MENUBAR      2
+#define XPFC_PARSING_STATE_DIALOG       3
+#define XPFC_PARSING_STATE_APPLICATION  4
 
 class ContainerListEntry {
 public:
@@ -195,6 +196,37 @@ NS_IMETHODIMP nsXPFCXMLContentSink::OpenContainer(const nsIParserNode& aNode)
     mState = XPFC_PARSING_STATE_TOOLBAR;
   else if (eXPFCXMLTag_dialog == tag)
     mState = XPFC_PARSING_STATE_DIALOG;
+  else if (eXPFCXMLTag_application == tag)
+    mState = XPFC_PARSING_STATE_APPLICATION;
+
+  if (mState == XPFC_PARSING_STATE_APPLICATION)
+  {
+    if (eXPFCXMLTag_canvas == tag)
+    {
+      PRInt32 i = 0;
+      nsString key,value;
+
+      for (i = 0; i < aNode.GetAttributeCount(); i++) 
+      {
+
+       key   = aNode.GetKeyAt(i);
+       value = aNode.GetValueAt(i);
+
+       key.StripChars("\"");
+       value.StripChars("\"");
+
+       if (key.EqualsIgnoreCase("src"))
+       {
+        // Load the url!
+        mViewerContainer->LoadURL(value,nsnull);
+        break;
+       }
+
+      }
+
+    }
+    return NS_OK;    
+  }
 
   nsString text = aNode.GetText();
 
@@ -578,6 +610,7 @@ NS_IMETHODIMP nsXPFCXMLContentSink::CIDFromTag(eXPFCXMLTags tag, nsCID &aClass)
       aClass = kCXPFCDialogCID;
       break;
 
+    case eXPFCXMLTag_application:
     case eXPFCXMLTag_canvas:
     case eXPFCXMLTag_separator:
       aClass = kCXPFCCanvasCID;
