@@ -9,7 +9,7 @@
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
  * for the specific language governing rights and limitations under the
  * NPL.
- *  
+ *   
  * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
@@ -321,7 +321,7 @@ CNavDTD::CNavDTD() : nsIDTD(){
   mLineNumber=1;  
   nsCRT::zero(mTokenHandlers,sizeof(mTokenHandlers));
   mHasOpenBody=PR_FALSE;
-  mHasOpenHead=PR_FALSE;
+  mHasOpenHead=0;
   mHasOpenForm=PR_FALSE;
   mHasOpenMap=PR_FALSE;
   mAllowUnknownTags=PR_FALSE;
@@ -464,29 +464,31 @@ nsresult CNavDTD::WillBuildModel(nsString& aFilename,PRBool aNotifySink,nsIParse
   * @param	aParser is the parser object that's driving this process
   * @return	error code (almost always 0)
   */
-nsresult CNavDTD::BuildModel(nsIParser* aParser) {
+nsresult CNavDTD::BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer) {
   nsresult result=NS_OK;
 
-  nsHTMLTokenizer*  theTokenizer=(nsHTMLTokenizer*)GetTokenizer();
-  nsITokenRecycler* theRecycler=GetTokenRecycler();
+  if(aTokenizer) {
+    nsITokenizer*  oldTokenizer=mTokenizer;
+    mTokenizer=aTokenizer;
+    nsITokenRecycler* theRecycler=aTokenizer->GetTokenRecycler();
 
-  //nsresult result2=NS_ERROR_HTMLPARSER_BLOCK;
-  if(theTokenizer) {
     while(NS_OK==result){
-      CToken* theToken=theTokenizer->PopToken();
+      CToken* theToken=mTokenizer->PopToken();
       if(theToken) {
         result=HandleToken(theToken,aParser);
         if(NS_SUCCEEDED(result)) {
           theRecycler->RecycleToken(theToken);
         }
         else if(NS_ERROR_HTMLPARSER_BLOCK!=result){
-          theTokenizer->PushTokenFront(theToken);
+          mTokenizer->PushTokenFront(theToken);
         }
         // theRootDTD->Verify(kEmptyString,aParser);
       }
       else break;
-    }
+    }//while
+    mTokenizer=oldTokenizer;
   }
+  else result=NS_ERROR_HTMLPARSER_BADTOKENIZER;
   return result;
 }
 
@@ -723,9 +725,9 @@ nsresult CNavDTD::HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsI
     //Sick as it sounds, I have to make sure the body has been
     //opened before other tags can be added to the content sink...
  
-  static eHTMLTags gBodyBlockers[]={eHTMLTag_body,eHTMLTag_frameset,eHTMLTag_head,eHTMLTag_map};
+  static eHTMLTags gBodyBlockers[]={eHTMLTag_body,eHTMLTag_frameset,eHTMLTag_map};
   PRInt32 theBodyBlocker=GetTopmostIndexOf(gBodyBlockers,sizeof(gBodyBlockers)/sizeof(eHTMLTag_unknown));
-  if(kNotFound==theBodyBlocker) {
+  if((kNotFound==theBodyBlocker) && (!mHasOpenHead)){
     if(CanPropagate(eHTMLTag_body,aChildTag)) {
       mHasOpenBody=PR_TRUE;
       CStartToken theToken(eHTMLTag_body);  //open the body container...
@@ -736,11 +738,17 @@ nsresult CNavDTD::HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsI
   eHTMLTags theParentTag=mBodyContext->Last();
   PRBool theCanContainResult=CanContain(theParentTag,aChildTag);
 
-  eHTMLTags theTarget=FindAutoCloseTargetForStartTag(aChildTag,mBodyContext->mTags);
-  if(eHTMLTag_unknown!=theTarget){
-    result=CloseContainersTo(theTarget,PR_TRUE);
-    theParentTag=mBodyContext->Last();
-    theCanContainResult=CanContain(theParentTag,aChildTag);
+  //  Ok Genius answer this:  
+  //  If the parent can contain the child, why would it be necessary
+  //  to find an autoclose target?          
+
+  if(!theCanContainResult) {
+    eHTMLTags theTarget=FindAutoCloseTargetForStartTag(aChildTag,mBodyContext->mTags);
+    if(eHTMLTag_unknown!=theTarget){
+      result=CloseContainersTo(theTarget,PR_TRUE);
+      theParentTag=mBodyContext->Last();
+      theCanContainResult=CanContain(theParentTag,aChildTag);
+    }
   }
 
   if(PR_FALSE==theCanContainResult){
@@ -769,7 +777,7 @@ nsresult CNavDTD::HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsI
       if(mBodyContext->mOpenStyles) {
         CloseTransientStyles(aChildTag);
       }
-    }
+    } 
     result=OpenContainer(aNode,PR_TRUE);
   }
   else {  //we're writing a leaf...
@@ -813,13 +821,11 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
 
       case eHTMLTag_title:
         {
-          PRBool headOpen=mHasOpenHead;
-          if(!headOpen)
-            result=OpenHead(attrNode);
+          result=OpenHead(attrNode);
           if(NS_OK==result) {
             result=CollectSkippedContent(attrNode,theAttrCount);
             mSink->SetTitle(attrNode.GetSkippedContent());
-            if((NS_OK==result) && (!headOpen))
+            if(NS_OK==result)
               result=CloseHead(attrNode);
           }
         }
@@ -833,9 +839,7 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
 
       case eHTMLTag_style:
         {
-          PRBool headOpen=mHasOpenHead;
-          if(!headOpen)
-            result=OpenHead(attrNode);
+          result=OpenHead(attrNode);
           if(NS_OK==result) {
             PRInt32 theCount;
             CollectSkippedContent(attrNode,theCount);
@@ -1046,6 +1050,7 @@ nsresult CNavDTD::HandleScriptToken(nsCParserNode& aNode) {
     // We're in the HEAD, but don't bother to open it.
     if(NS_OK==result) {
       CollectSkippedContent(aNode,attrCount);
+      CloseHead(aNode);
       result=AddLeaf(aNode);
     }//if
   }//if
@@ -1255,22 +1260,25 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
  */
 PRBool CNavDTD::CanPropagate(eHTMLTags aParentTag,eHTMLTags aChildTag) const {
   PRBool result=PR_FALSE;
+  PRBool parentCanContain=CanContain(aParentTag,aChildTag);
 
   if(IsContainer(aChildTag)){
     if(nsHTMLElement::IsBlockParent(aParentTag) || (gHTMLElements[aParentTag].GetSpecialChildren())) {
       while(eHTMLTag_unknown!=aChildTag) {
-        if(CanContain(aParentTag,aChildTag)){
+        if(parentCanContain){
           result=PR_TRUE;
           break;
         }//if
         CTagList* theTagList=gHTMLElements[aChildTag].GetRootTags();
         aChildTag=theTagList->mTags[0];
+        parentCanContain=CanContain(aParentTag,aChildTag);
       }//while
     }//if
   }//if
   else if(nsHTMLElement::IsTextTag(aChildTag)){
     result=PR_TRUE;
   }
+  else result=parentCanContain;
   return result;
 }
 
@@ -1322,7 +1330,7 @@ PRBool CNavDTD::CanOmit(eHTMLTags aParent,eHTMLTags aChild) const {
         default:
           if(FindTagInSet(aChild,gFormElementTags,sizeof(gFormElementTags)/sizeof(eHTMLTag_unknown)))
             result=!HasOpenContainer(eHTMLTag_form);
-          result=PR_TRUE;
+          else result=FindTagInSet(aChild,gWhitespaceTags,sizeof(gWhitespaceTags)/sizeof(eHTMLTag_unknown));
       }
       break;
 
@@ -1880,10 +1888,12 @@ nsresult CNavDTD::CloseHTML(const nsIParserNode& aNode){
  * @return  TRUE if ok, FALSE if error
  */
 nsresult CNavDTD::OpenHead(const nsIParserNode& aNode){
-  mBodyContext->Push(eHTMLTag_head);
-  nsresult result=mSink->OpenHead(aNode); 
-  mHasOpenHead=PR_TRUE;
-  return result;
+  //mBodyContext->Push(eHTMLTag_head);
+  if(!mHasOpenHead++) {
+    nsresult result=mSink->OpenHead(aNode); 
+  }
+
+  return NS_OK;
 }
 
 /**
@@ -1895,10 +1905,11 @@ nsresult CNavDTD::OpenHead(const nsIParserNode& aNode){
  * @return  TRUE if ok, FALSE if error
  */
 nsresult CNavDTD::CloseHead(const nsIParserNode& aNode){
-  nsresult result=mSink->CloseHead(aNode); 
-  mBodyContext->Pop();
-  mHasOpenHead=PR_FALSE;
-  return result;
+  if(0==--mHasOpenHead){
+    nsresult result=mSink->CloseHead(aNode); 
+  }
+  //mBodyContext->Pop();
+  return NS_OK;
 }
 
 /**
@@ -2117,7 +2128,7 @@ CNavDTD::OpenContainer(const nsIParserNode& aNode,PRBool aUpdateStyleStack){
       break;
 
     case eHTMLTag_head:
-      result=OpenHead(aNode); //open the head...
+     // result=OpenHead(aNode); //open the head...
       break;
 
     default:
@@ -2160,7 +2171,7 @@ CNavDTD::CloseContainer(const nsIParserNode& aNode,eHTMLTags aTag,
       break;
 
     case eHTMLTag_head:
-      result=CloseHead(aNode); 
+      //result=CloseHead(aNode); 
       break;
 
     case eHTMLTag_body:
@@ -2310,24 +2321,13 @@ nsresult CNavDTD::AddHeadLeaf(const nsIParserNode& aNode){
       return result;
     }
 
-  PRBool headOpen=mHasOpenHead;
-  if(!headOpen)
-    result=OpenHead(aNode);
+  result=OpenHead(aNode);
   if(NS_OK==result) {
     result=AddLeaf(aNode);
     // XXX If the return value tells us to block, go
     // ahead and close the tag out anyway, since its
     // contents will be consumed.
-    if (NS_SUCCEEDED(result)) {
-      nsresult rv = CloseHead(aNode);
-      // XXX Only send along a failure. If the close 
-      // succeeded we still may need to indicate that the
-      // parser has blocked (i.e. return the result of
-      // the AddLeaf.
-      if (rv != NS_OK) {
-        result = rv;
-      }
-    }
+    CloseHead(aNode);
   }
   return result;
 }

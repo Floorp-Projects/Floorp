@@ -281,7 +281,7 @@ NS_IMETHODIMP CRtfDTD::WillBuildModel(nsString& aFilename,PRInt32 aLevel,nsIPars
   * @param	aFilename is the name of the file being parsed.
   * @return	error code (almost always 0)
   */
-NS_IMETHODIMP CRtfDTD::BuildModel(nsIParser* aParser) {
+NS_IMETHODIMP CRtfDTD::BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer) {
   nsresult result=NS_OK;
   return result;
 }

@@ -212,7 +212,7 @@ class CRtfDTD : public nsIDTD {
       * @param	aFilename is the name of the file being parsed.
       * @return	error code (almost always 0)
       */
-    NS_IMETHOD BuildModel(nsIParser* aParser);
+    NS_IMETHOD BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer);
 
    /**
      * The parser uses a code sandwich to wrap the parsing process. Before

@@ -226,7 +226,7 @@ NS_IMETHODIMP CValidDTD::WillBuildModel(nsString& aFilename,PRBool aNotifySink,n
   * @param	aFilename is the name of the file being parsed.
   * @return	error code (almost always 0)
   */
-NS_IMETHODIMP CValidDTD::BuildModel(nsIParser* aParser) {
+NS_IMETHODIMP CValidDTD::BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer) {
   nsresult result=NS_OK;
   return result;
 }

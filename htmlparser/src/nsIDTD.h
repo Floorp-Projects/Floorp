@@ -115,7 +115,7 @@ class nsIDTD : public nsISupports {
      * @param	anErrorCode - contains error code resulting from parse process
      * @return
      */
-    NS_IMETHOD BuildModel(nsIParser* aParser)=0;
+    NS_IMETHOD BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer)=0;
     
     /**
      *	Called during model building phase of parse process. Each token created during
@@ -137,6 +137,7 @@ class nsIDTD : public nsISupports {
 	   *  @return	 error code (usually 0)
      */
     virtual nsITokenizer* GetTokenizer(void)=0;
+
 
     virtual  nsITokenRecycler* GetTokenRecycler(void)=0;
 

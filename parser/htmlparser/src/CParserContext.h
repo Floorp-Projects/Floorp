@@ -67,6 +67,7 @@ public:
     PRUint32            mTransferBufferSize;
     PRBool              mParserEnabled;
     eStreamState        mStreamListenerState; //this is really only here for debug purposes.
+    PRBool              mMultipart;
 
     // nsDeque          mTokenDeque;
 };

@@ -164,7 +164,7 @@ nsParser::~nsParser() {
   }
 
   NS_IF_RELEASE(mObserver);
-  NS_RELEASE(mSink);
+  NS_IF_RELEASE(mSink);
 
   //don't forget to add code here to delete 
   //what may be several contexts...
@@ -565,15 +565,15 @@ nsresult nsParser::Parse(nsIURL* aURL,nsIStreamObserver* aListener,PRBool aVerif
 
   nsresult result=kBadURL;
   mDTDVerification=aVerifyEnabled;
-  mMultipart=PR_TRUE; 
   if(aURL) {
     const char* spec;
     nsresult rv = aURL->GetSpec(&spec);
     if (rv != NS_OK) return rv;
     nsAutoString theName(spec);
-    CParserContext* cp=new CParserContext(new nsScanner(theName,PR_FALSE),aURL,aListener);
-    if(cp) {
-      PushContext(*cp);
+    CParserContext* pc=new CParserContext(new nsScanner(theName,PR_FALSE),aURL,aListener);
+    if(pc) {
+      pc->mMultipart=PR_TRUE;
+      PushContext(*pc);
       result=NS_OK;
     }
   }
@@ -598,8 +598,8 @@ nsresult nsParser::Parse(fstream& aStream,PRBool aVerifyEnabled){
     PushContext(*pc);
     pc->mSourceType="text/html";
     pc->mStreamListenerState=eOnStart;  
+    pc->mMultipart=PR_FALSE;
     mParserContext->mScanner->Eof();
-    mMultipart=PR_FALSE;
     result=ResumeParse();
     pc=PopContext();
     delete pc;
@@ -634,12 +634,11 @@ nsresult nsParser::Parse(nsString& aSourceBuffer,PRBool anHTMLString,PRBool aVer
 
     CParserContext* pc=new CParserContext(new nsScanner(aSourceBuffer),&aSourceBuffer,0);
     if(pc) {
-      nsIDTD* thePrevDTD=(mParserContext) ? mParserContext->mDTD: 0;  
       PushContext(*pc);
       pc->mStreamListenerState=eOnStart;  
+      pc->mMultipart=PR_FALSE;
       if(PR_TRUE==anHTMLString)
         pc->mSourceType="text/html";
-      mMultipart=PR_FALSE;
       result=ResumeParse();
       // mParserContext->mDTD=0; 
       pc=PopContext();
@@ -672,7 +671,7 @@ nsresult nsParser::ResumeParse(nsIDTD* aDefaultDTD) {
       result=Tokenize();
       result=BuildModel();
 
-      if((!mMultipart) || ((eOnStop==mParserContext->mStreamListenerState) && (NS_OK==result))){
+      if((!mParserContext->mMultipart) || ((eOnStop==mParserContext->mStreamListenerState) && (NS_OK==result))){
         DidBuildModel(mStreamStatus);
       }
       else {
@@ -707,6 +706,7 @@ nsresult nsParser::BuildModel() {
 
     //Get the root DTD for use in model building...
   CParserContext* theRootContext=mParserContext;
+  nsITokenizer* theTokenizer=mParserContext->mDTD->GetTokenizer();
   while(theRootContext->mPrevContext) {
     theRootContext=theRootContext->mPrevContext;
   }
@@ -714,7 +714,7 @@ nsresult nsParser::BuildModel() {
   nsIDTD* theRootDTD=theRootContext->mDTD;
   nsresult result=NS_OK;
   if(theRootDTD) {
-    result=theRootDTD->BuildModel(this);
+    result=theRootDTD->BuildModel(this,theTokenizer);
   }
 
   return result;
@@ -958,52 +958,23 @@ nsresult nsParser::Tokenize(){
  */
 PRBool nsParser::DidTokenize(){
   PRBool result=PR_TRUE;
+
+  {
+    fstream out("c:/temp/tokens.out",ios::trunc);
+    DebugDumpSource(out);
+  }
+
   return result;
 }
 
-/**
- *  This debug routine is used to cause the tokenizer to
- *  iterate its token list, asking each token to dump its
- *  contents to the given output stream.
- *  
- *  @update  gess 3/25/98
- *  @param   
- *  @return  
- */
-void nsParser::DebugDumpTokens(ostream& out) {
-/*
-  nsDequeIterator b=mParserContext->mTokenDeque.Begin();
-  nsDequeIterator e=mParserContext->mTokenDeque.End();
-
+void nsParser::DebugDumpSource(ostream& aStream) {
+  PRInt32 theIndex=-1;
+  nsITokenizer* theTokenizer=mParserContext->mDTD->GetTokenizer();
   CToken* theToken;
-  while(b!=e) {
-    theToken=(CToken*)(b++);
-    theToken->DebugDumpToken(out);
+  while(theToken=theTokenizer->GetTokenAt(++theIndex)) {
+    // theToken->DebugDumpToken(out);
+    theToken->DebugDumpSource(aStream);
   }
-*/
-}
-
-
-/**
- *  This debug routine is used to cause the tokenizer to
- *  iterate its token list, asking each token to dump its
- *  contents to the given output stream.
- *  
- *  @update  gess 3/25/98
- *  @param   
- *  @return  
- */
-void nsParser::DebugDumpSource(ostream& out) {
-/*
-  nsDequeIterator b=mParserContext->mTokenDeque.Begin();
-  nsDequeIterator e=mParserContext->mTokenDeque.End();
-
-  CToken* theToken;
-  while(b!=e) {
-    theToken=(CToken*)(b++);
-    theToken->DebugDumpSource(out);
-  }
-*/
 }
 
 

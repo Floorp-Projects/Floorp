@@ -9,7 +9,7 @@
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
  * for the specific language governing rights and limitations under the
  * NPL.
- * 
+ *  
  * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
@@ -58,6 +58,7 @@ CParserContext::CParserContext(nsScanner* aScanner,void* aKey,nsIStreamObserver*
   mTransferBufferSize=eTransferBufferSize;
   mParserEnabled=PR_TRUE;
   mStreamListenerState=eNone;
+  mMultipart=PR_TRUE;
 }
 
 
