@@ -143,7 +143,7 @@
 <!ENTITY newtodo.startdate.label "Kezdő dátum">
 <!ENTITY newtodo.priority.label "Prioritás">
 <!ENTITY newtodo.percentcomplete.label "&#37;-ban kész">
-<!ENTITY newtodo.categories.label "Kategóriák">
+<!ENTITY newtodo.categories.label "Kategória">
 <!ENTITY newtodo.starttime.warning "A kezdő időpont a határidő utánra esik.">
 <!ENTITY newtodo.cancelled.label "Törölve">
 <!ENTITY newtodo.status.label "Állapot">
