@@ -3087,7 +3087,6 @@ CK_RV NSC_GenerateKey(CK_SESSION_HANDLE hSession,
     case CKM_DES2_KEY_GEN:
     case CKM_DES3_KEY_GEN:
 	checkWeak = PR_TRUE;
-	break;
     case CKM_RC2_KEY_GEN:
     case CKM_RC4_KEY_GEN:
     case CKM_GENERIC_SECRET_KEY_GEN:
