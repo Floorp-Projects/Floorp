@@ -40,14 +40,16 @@
 #include "nsIPipe.h"
 #include "nsXPIDLString.h"
 #include "nsILDAPURL.h"
+#include "nsIProxyObjectManager.h"
+#include "nsIServiceManager.h"
 
-// for NS_NewAsyncStreamListener
-//
+#if !INVOKE_LDAP_CALLBACKS_ON_MAIN_THREAD
 #include "nsNetUtil.h"
-
-// for defintion of NS_UI_THREAD_EVENTQ for use with NS_NewAsyncStreamListener
-//
 #include "nsIEventQueueService.h"
+#endif
+
+static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
+static NS_DEFINE_IID(kILDAPMessageListenerIID, NS_ILDAPMESSAGELISTENER_IID);
 
 
 NS_IMPL_THREADSAFE_ISUPPORTS3(nsLDAPChannel, nsIChannel, nsIRequest,	
@@ -73,11 +75,40 @@ nsLDAPChannel::Init(nsIURI *uri)
     mStatus = NS_OK;
     mReadPipeOffset = 0;
     mReadPipeClosed = PR_FALSE;
+    mLoadAttributes = LOAD_NORMAL;
 
     // create an LDAP connection
     //
     mConnection = do_CreateInstance("mozilla.network.ldapconnection", &rv);
     NS_ENSURE_SUCCESS(rv, rv);
+
+    // i think that in the general case, it will be worthwhile to leave the
+    // callbacks for this channel be invoked on the LDAP connection thread.
+    // however, for the moment, I want to leave the code that invokes it on
+    // the main thread here (though turned off), because it provides a 
+    // useful demonstration of why PLEvents' lack of priorities hurts us 
+    // (in this case in ldap: searches that return a lot of results).
+    //
+#if INVOKE_LDAP_CALLBACKS_ON_MAIN_THREAD
+
+    // get the proxy object manager
+    //
+    nsCOMPtr<nsIProxyObjectManager> proxyObjMgr = 
+	do_GetService(kProxyObjectManagerCID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv); 
+
+    // and use it to get a proxy for this callback, saving it off in mCallback
+    //
+    rv = proxyObjMgr->GetProxyForObject(NS_UI_THREAD_EVENTQ,
+					kILDAPMessageListenerIID,
+					NS_STATIC_CAST(nsILDAPMessageListener *
+						       , this),
+					PROXY_ASYNC|PROXY_ALWAYS,
+					getter_AddRefs(mCallback));
+    NS_ENSURE_SUCCESS(rv, rv);
+#else 	
+    mCallback = this;
+#endif
     
     return NS_OK;
 }
@@ -531,9 +562,8 @@ nsLDAPChannel::AsyncRead(nsIStreamListener* aListener,
     nsXPIDLCString host;
     PRInt32 port;
 
-    // deal with the input args
+    // save off the context
     //
-    mListener = aListener;
     mResponseContext = aCtxt;
 
     // add ourselves to the appropriate loadgroup
@@ -580,9 +610,21 @@ nsLDAPChannel::AsyncRead(nsIStreamListener* aListener,
 			  NS_ERROR_UNEXPECTED);
     } 
 
-    // we already know the content type, so we can fire this now
+    // we already know the content type, so we can fire this now (aListener
+    // will always be on the main thread, so we use it here).
     //
-    mListener->OnStartRequest(this, mResponseContext);
+    aListener->OnStartRequest(this, mResponseContext);
+
+    // set mListener to the appropriate thing, depending on how we're
+    // compiled
+    //
+#if INVOKE_LDAP_CALLBACKS_ON_MAIN_THREAD
+    mListener = aListener;
+#else
+    rv = NS_NewAsyncStreamListener(getter_AddRefs(mListener), aListener, 
+				   NS_UI_THREAD_EVENTQ);
+    NS_ENSURE_SUCCESS(rv, rv);
+#endif
 
     // initialize it with the defaults
     // XXXdmose - need to deal with bind name
@@ -598,7 +640,7 @@ nsLDAPChannel::AsyncRead(nsIStreamListener* aListener,
 
     // our OnLDAPMessage accepts all result callbacks
     //
-    rv = mCurrentOperation->Init(mConnection, this);
+    rv = mCurrentOperation->Init(mConnection, mCallback);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // kick off a bind operation 
@@ -649,10 +691,9 @@ nsLDAPChannel::pipeWrite(char *str)
   NS_ENSURE_SUCCESS(rv, rv);
 
   // XXXdmose deal more gracefully with an error here
-  // XXX use of strlen() ok?
   //
   rv = mListener->OnDataAvailable(this, mResponseContext, mReadPipeIn, 
-				  mReadPipeOffset, strlen(str));
+				  mReadPipeOffset, nsCRT::strlen(str));
   NS_ENSURE_SUCCESS(rv, rv);
 
   mReadPipeOffset += bytesWritten;
@@ -722,7 +763,7 @@ nsLDAPChannel::OnLDAPBind(nsILDAPMessage *aMessage)
 					  &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = mCurrentOperation->Init(mConnection, this);
+    rv = mCurrentOperation->Init(mConnection, mCallback);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // QI() the URI to an nsILDAPURL so we get can the LDAP specific portions

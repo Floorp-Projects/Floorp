@@ -11,9 +11,6 @@ housecleaning
 
 * sort out nsldap.h vs. nsLDAP.h.  can the former go away?
 
-* why do searches that return lots of entries to the nsLDAPChannel
-  (eg (sn=Smith) at netcenter) mostly stall out the UI?
-
 * I have a sneaking suspicion that the thread might be getting killed
   but not cleaned up when the last nsILDAPConnection::Release is
   called.  But I don't know if that's really the case.  Need to check
@@ -89,6 +86,16 @@ housecleaning
   chance to change.
 
 * get rid of inappropriate use of nsVoidKey by implementing an nsPRInt32Key
+
+
+items blocked waiting for other work
+------------------------------------
+* searches that return lots of entries to the nsLDAPChannel
+  (eg (sn=Smith) at netcenter) mostly stall out the UI.  moving most of the 
+  callback work off the UI thread to the LDAP connection thread didn't 
+  help; so this would appear to be lossage in the event system itself.  
+  blocked waiting for more event love from blizzard and dougt.
+
 
 misc
 ----

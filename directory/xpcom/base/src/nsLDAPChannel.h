@@ -46,6 +46,11 @@
 #include "nsIBufferOutputStream.h"
 #include "nsILDAPMessageListener.h"
 
+// if the code related to the following #define ever gets removed, also
+// be sure to remove mCallback and any references to it.
+//
+#define INVOKE_LDAP_CALLBACKS_ON_MAIN_THREAD 0
+
 /* Header file */
 class nsLDAPChannel : public nsIChannel, public nsILDAPMessageListener
 {
@@ -80,6 +85,7 @@ protected:
   
   // instance vars for read/write nsIChannel attributes
   //
+  nsresult mStatus;
   nsCOMPtr<nsIURI> mURI; // the URI we're processing
   nsCOMPtr<nsILoadGroup> mLoadGroup; // the LoadGroup that we belong to
   nsCOMPtr<nsIInterfaceRequestor> mCallbacks; 
@@ -100,8 +106,7 @@ protected:
   nsCOMPtr<nsILDAPOperation> mCurrentOperation; // current ldap operation
   PRUint32 mReadPipeOffset; // how many bytes written so far?
   PRBool mReadPipeClosed; // has the pipe already been closed?
-  nsresult mStatus;
-
+  nsCOMPtr<nsILDAPMessageListener> mCallback; // callback
 };
 
 #endif // nsLDAPChannel_h__

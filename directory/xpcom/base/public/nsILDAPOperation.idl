@@ -63,11 +63,13 @@ interface nsILDAPOperation : nsISupports
 
     /**
      * Initializes this operation.  Must be called prior to initiating
-     * any actual operations.
+     * any actual operations.  Note that by default, the aMessageListener
+     * callbacks happen on the LDAP connection thread.  If you need them
+     * to happen on the main thread (or any other thread), then you should
+     * created an nsISupports proxy object and pass that in.
      *
      * @param aConnection       connection this operation should use
-     * @param aMessageListener  (unproxied) interface used to call back
-     *                          the results
+     * @param aMessageListener  interface used to call back the results.
      */
     void init(in nsILDAPConnection aConnection, 
               in nsILDAPMessageListener aMessageListener);

@@ -37,11 +37,6 @@
 #include "nsIComponentManager.h"
 #include "nsXPIDLString.h"
 #include "nspr.h"
-#include "nsIProxyObjectManager.h"
-#include "nsIServiceManager.h"
-
-static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
-static NS_DEFINE_IID(kILDAPMessageListenerIID, NS_ILDAPMESSAGELISTENER_IID);
 
 // constructor
 nsLDAPOperation::nsLDAPOperation()
@@ -66,35 +61,21 @@ NS_IMETHODIMP
 nsLDAPOperation::Init(nsILDAPConnection *aConnection,
 		      nsILDAPMessageListener *aMessageListener)
 {
-
-    // so we know that the operation is not yet running
+    // so we know that the operation is not yet running (and therefore don't
+    // try and call ldap_abandon_ext() on it) or remove it from the queue.
     //
     mMsgId = 0;
 
-    // set the connection 
+    // set the member vars
     //
     mConnection = aConnection;
+    mMessageListener = aMessageListener;
 
     // get and cache the connection handle
     //	
-    nsresult rv = mConnection->GetConnectionHandle(&this->mConnectionHandle);
+    nsresult rv = mConnection->GetConnectionHandle(&mConnectionHandle);
     if (NS_FAILED(rv)) 
 	return rv;
-
-    // get the proxy object manager
-    //
-    nsCOMPtr<nsIProxyObjectManager> proxyObjMgr = 
-	do_GetService(kProxyObjectManagerCID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv); 
-
-    // and use it to get a proxy for this callback, saving it off in mListener
-    //
-    rv = proxyObjMgr->GetProxyForObject(NS_UI_THREAD_EVENTQ,
-					kILDAPMessageListenerIID,
-					aMessageListener,
-					PROXY_ASYNC|PROXY_ALWAYS,
-					getter_AddRefs(mMessageListener));
-    NS_ENSURE_SUCCESS(rv, rv);     
 
     return NS_OK;
 }
