@@ -39,7 +39,7 @@
 <!ENTITY downloadsDescription.label        "The Download Manager keeps track of recently downloaded files.">
 <!ENTITY downloadsRetentionPolicy.label    "Remove files from the Download Manager:">
 <!ENTITY downloadsRemoveImmediately.label  "Upon successful download">
-<!ENTITY downloadsRemoveExit.label         "When Firebird exits">
+<!ENTITY downloadsRemoveExit.label         "When &brandShortName; exits">
 <!ENTITY downloadsRemoveManually.label     "Manually">
 <!ENTITY clearDownloads.label              "Clear">
 

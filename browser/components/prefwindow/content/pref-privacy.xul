@@ -40,7 +40,13 @@
 <?xml-stylesheet href="chrome://mozapps/skin/pref/pref.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/pref/pref.css" type="text/css"?>
 
-<!DOCTYPE window SYSTEM "chrome://browser/locale/pref/pref-privacy.dtd" >
+<!DOCTYPE window [
+<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
+%brandDTD;
+<!ENTITY % prefPrivacyDTD SYSTEM "chrome://browser/locale/pref/pref-privacy.dtd" >
+%prefPrivacyDTD;
+]>
+
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="parent.initPanel('chrome://browser/content/pref/pref-privacy.xul');"
       onunload="unload();" headertitle="&lHeader;">
