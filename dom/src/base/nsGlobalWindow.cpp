@@ -2767,10 +2767,19 @@ GlobalWindowImpl::GetOrigin(nsString* aOrigin)
   if (mDocument && NS_OK == mDocument->QueryInterface(kIDocumentIID, (void**)&doc)) {
     nsIURI* docURL = doc->GetDocumentURL();
     if (docURL) {
+#ifdef NECKO
+      char* str;
+      docURL->GetSpec(&str);
+#else
       PRUnichar* str;
       docURL->ToString(&str);
+#endif
       *aOrigin = str;
+#ifdef NECKO
+      nsCRT::free(str);
+#else
       delete str;
+#endif
       NS_RELEASE(docURL);
     }
     NS_RELEASE(doc);
