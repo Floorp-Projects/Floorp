@@ -1508,6 +1508,27 @@ NS_IMETHODIMP nsFrame::GetWindow(nsIPresContext* aPresContext,
       }
     }
   }
+
+  if (nsnull == window) {
+    // Ask the view manager for the widget
+
+    // First we have to get to a frame with a view
+    nsIView* view;
+    GetView(aPresContext, &view);
+    if (nsnull == view) {
+      GetParentWithView(aPresContext, &frame);
+      if (nsnull != frame) {
+        GetView(aPresContext, &view);
+      }
+    }
+     // From the view get the view manager
+    if (nsnull != view) {
+      nsCOMPtr<nsIViewManager> vm;
+      view->GetViewManager(*getter_AddRefs(vm));
+      vm->GetWidget(&window);
+    }    
+  }
+
   NS_POSTCONDITION(nsnull != window, "no window in frame tree");
   *aWindow = window;
   return NS_OK;

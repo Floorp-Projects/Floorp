@@ -1392,6 +1392,7 @@ NS_IMETHODIMP nsView :: GetViewFlags(PRUint32 *aFlags) const
 NS_IMETHODIMP nsView :: GetOffsetFromWidget(nscoord *aDx, nscoord *aDy, nsIWidget *&aWidget)
 {
   nsIView   *ancestor;
+  aWidget = nsnull;
   
   // XXX aDx and aDy are OUT parameters and so we should initialize them
   // to 0 rather than relying on the caller to do so...
@@ -1415,7 +1416,15 @@ NS_IMETHODIMP nsView :: GetOffsetFromWidget(nscoord *aDx, nscoord *aDy, nsIWidge
 	  ancestor->GetParent(ancestor);
   }
 
-  aWidget = nsnull;
+  
+  if (nsnull == aWidget) {
+       // The root view doesn't have a widget
+       // but maybe the view manager does.
+    nsCOMPtr<nsIViewManager> vm;
+    GetViewManager(*getter_AddRefs(vm));
+    vm->GetWidget(&aWidget);
+  }
+
   return NS_OK;
 }
 

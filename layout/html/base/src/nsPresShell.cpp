@@ -1446,15 +1446,7 @@ PresShell::ScrollLine(PRBool aForward)
 
     // I'd use Composite here, but it doesn't always work.
       // vm->Composite();
-      nsIView* rootView = nsnull;
-      if (NS_OK == viewManager->GetRootView(rootView) && nsnull != rootView) 
-      {
-        nsCOMPtr<nsIWidget> rootWidget;
-        if (NS_OK == rootView->GetWidget(*getter_AddRefs(rootWidget)) && rootWidget!= nsnull) 
-        {
-          rootWidget->Update();
-        }
-      }
+      viewManager->ForceUpdate();
     }
   }
 
@@ -2048,7 +2040,6 @@ PresShell::CreateRenderingContext(nsIFrame *aFrame,
     return NS_ERROR_NULL_POINTER;
   }
 
-  nsIWidget *widget = nsnull;
   nsIView   *view = nsnull;
   nsPoint   pt;
   nsresult  rv;
@@ -2058,17 +2049,11 @@ PresShell::CreateRenderingContext(nsIFrame *aFrame,
   if (nsnull == view)
     aFrame->GetOffsetFromView(mPresContext, pt, &view);
 
-  while (nsnull != view)
-  {
-    view->GetWidget(widget);
-
-    if (nsnull != widget)
-    {
-      NS_RELEASE(widget);
-      break;
-    }
-
-    view->GetParent(view);
+  nsCOMPtr<nsIWidget> widget;
+  if (nsnull != view) {
+    nsCOMPtr<nsIViewManager> vm;
+    view->GetViewManager(*getter_AddRefs(vm));
+    vm->GetWidgetForView(view, getter_AddRefs(widget));
   }
 
   nsCOMPtr<nsIDeviceContext> dx;
@@ -2076,8 +2061,8 @@ PresShell::CreateRenderingContext(nsIFrame *aFrame,
   nsIRenderingContext* result = nsnull;
   rv = mPresContext->GetDeviceContext(getter_AddRefs(dx));
   if (NS_SUCCEEDED(rv) && dx) {
-    if (nsnull != view) {
-      rv = dx->CreateRenderingContext(view, result);
+    if (nsnull != widget) {
+      rv = dx->CreateRenderingContext(widget, result);
     }
     else {
       rv = dx->CreateRenderingContext(result);

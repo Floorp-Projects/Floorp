@@ -1325,15 +1325,10 @@ GlobalWindowImpl::Focus()
           nsIViewManager  *vm = nsnull;
           shell->GetViewManager(&vm);
           if (nsnull != vm) {
-            nsIView *rootview = nsnull;
-            vm->GetRootView(rootview);
-            if (rootview) {
-              nsIWidget* widget;
-              rootview->GetWidget(widget);
-              if (widget) {
-                result = widget->SetFocus();
-                NS_RELEASE(widget);
-              }
+            nsCOMPtr<nsIWidget> widget;
+            vm->GetWidget(getter_AddRefs(widget));
+            if (widget) {
+              result = widget->SetFocus();
             }
             NS_RELEASE(vm);
           }

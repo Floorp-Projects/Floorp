@@ -336,11 +336,7 @@ NS_METHOD nsDOMEvent::GetClientX(PRInt32* aClientX)
     nsIViewManager* vm;
     shell->GetViewManager(&vm);
     if (vm) {
-      nsIView* rootView = nsnull;
-      vm->GetRootView(rootView);
-      if (rootView) {
-        rootView->GetWidget(rootWidget);
-      }
+      vm->GetWidget(&rootWidget);
       NS_RELEASE(vm);
     }
     NS_RELEASE(shell);
@@ -385,11 +381,7 @@ NS_METHOD nsDOMEvent::GetClientY(PRInt32* aClientY)
     nsIViewManager* vm;
     shell->GetViewManager(&vm);
     if (vm) {
-      nsIView* rootView = nsnull;
-      vm->GetRootView(rootView);
-      if (rootView) {
-        rootView->GetWidget(rootWidget);
-      }
+      vm->GetWidget(&rootWidget);
       NS_RELEASE(vm);
     }
     NS_RELEASE(shell);
