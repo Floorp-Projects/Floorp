@@ -200,6 +200,7 @@ NS_NewHTMLFrameset(nsIHTMLContent** aInstancePtrResult,
 
 // New content objects
 nsresult NS_NewHTMLAnchor(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag);
+nsresult NS_NewHTMLBR(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag);
 nsresult NS_NewHTMLHR(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag);
 
 #endif /* nsHTMLParts_h___ */
