@@ -786,18 +786,18 @@ nsIEProfileMigrator::GetSignonsListFromPStore(IPStore* aPStore, nsVoidArray* aSi
 
   NS_ENSURE_ARG_POINTER(aPStore);
 
-  IEnumPStoreItemsPtr enumItems;
+  IEnumPStoreItemsPtr enumItems = NULL;
   hr = aPStore->EnumItems(0, &IEPStoreGUID, &IEPStoreGUID, 0, &enumItems);
-  if (SUCCEEDED(hr)) {
-    LPWSTR itemName;
-    while (enumItems->raw_Next(1, &itemName, 0) == S_OK) {
+  if (SUCCEEDED(hr) && enumItems != NULL) {
+    LPWSTR itemName = NULL;
+    while ((enumItems->raw_Next(1, &itemName, 0) == S_OK) && itemName) {
       unsigned long count = 0;
       unsigned char* data = NULL;
 
       // We are responsible for freeing |data| using |CoTaskMemFree|!!
       // But we don't do it here... 
       hr = aPStore->ReadItem(0, &IEPStoreGUID, &IEPStoreGUID, itemName, &count, &data, NULL, 0);
-      if (SUCCEEDED(hr)) {
+      if (SUCCEEDED(hr) && data) {
         nsAutoString itemNameString(itemName);
         nsAutoString suffix;
         itemNameString.Right(suffix, 11);
@@ -818,6 +818,8 @@ nsIEProfileMigrator::GetSignonsListFromPStore(IPStore* aPStore, nsVoidArray* aSi
               // it after the password harvesting stage to locate the username field. Only after the second
               // phase is complete do we free the buffer. 
               SignonData* d = new SignonData;
+              if (!d)
+                return NS_ERROR_OUT_OF_MEMORY;
               d->user = (PRUnichar*)username;
               d->pass = (PRUnichar*)pass;
               d->realm = realm; // freed in ResolveAndMigrateSignons
@@ -837,6 +839,8 @@ nsIEProfileMigrator::KeyIsURI(const nsAString& aKey, char** aRealm)
   *aRealm = nsnull;
 
   nsCOMPtr<nsIURI> uri(do_CreateInstance("@mozilla.org/network/standard-url;1"));
+  if (!uri)
+    return PR_FALSE;
   nsCAutoString keyCStr; keyCStr.AssignWithConversion(aKey);
   uri->SetSpec(keyCStr);
 
@@ -865,16 +869,16 @@ nsIEProfileMigrator::ResolveAndMigrateSignons(IPStore* aPStore, nsVoidArray* aSi
 {
   HRESULT hr;
 
-  IEnumPStoreItemsPtr enumItems;
+  IEnumPStoreItemsPtr enumItems = NULL;
   hr = aPStore->EnumItems(0, &IEPStoreGUID, &IEPStoreGUID, 0, &enumItems);
-  if (SUCCEEDED(hr)) {
-    LPWSTR itemName;
-    while (enumItems->raw_Next(1, &itemName, 0) == S_OK) {
+  if (SUCCEEDED(hr) && enumItems != NULL) {
+    LPWSTR itemName = NULL;
+    while ((enumItems->raw_Next(1, &itemName, 0) == S_OK) && itemName) {
       unsigned long count = 0;
       unsigned char* data = NULL;
 
       hr = aPStore->ReadItem(0, &IEPStoreGUID, &IEPStoreGUID, itemName, &count, &data, NULL, 0);
-      if (SUCCEEDED(hr)) {
+      if (SUCCEEDED(hr) && data) {
         nsAutoString itemNameString(itemName);
         nsAutoString suffix;
         itemNameString.Right(suffix, 11);
@@ -992,17 +996,17 @@ nsIEProfileMigrator::CopyFormData(PRBool aReplace)
   if (FAILED(hr) || PStore == NULL)
     return NS_OK;
 
-  IEnumPStoreItemsPtr enumItems;
+  IEnumPStoreItemsPtr enumItems = NULL;
   hr = PStore->EnumItems(0, &IEPStoreGUID, &IEPStoreGUID, 0, &enumItems);
-  if (SUCCEEDED(hr)) {
-    LPWSTR itemName;
-    while (enumItems->raw_Next(1, &itemName, 0) == S_OK) {
+  if (SUCCEEDED(hr) && enumItems != NULL) {
+    LPWSTR itemName = NULL;
+    while ((enumItems->raw_Next(1, &itemName, 0) == S_OK) && itemName) {
       unsigned long count = 0;
       unsigned char* data = NULL;
 
       // We are responsible for freeing |data| using |CoTaskMemFree|!!
       hr = PStore->ReadItem(0, &IEPStoreGUID, &IEPStoreGUID, itemName, &count, &data, NULL, 0);
-      if (SUCCEEDED(hr)) {
+      if (SUCCEEDED(hr) && data) {
         nsAutoString itemNameString(itemName);
         nsAutoString suffix;
         itemNameString.Right(suffix, 11);
@@ -1010,8 +1014,10 @@ nsIEProfileMigrator::CopyFormData(PRBool aReplace)
           // :StringData contains the saved data
           const nsAString& key = Substring(itemNameString, 0, itemNameString.Length() - 11);
           nsXPIDLCString realm;
-          if (!KeyIsURI(key, getter_Copies(realm)))
-            AddDataToFormHistory(key, (PRUnichar*)data, (count/sizeof(PRUnichar)));
+          if (!KeyIsURI(key, getter_Copies(realm))) {
+            nsresult rv = AddDataToFormHistory(key, (PRUnichar*)data, (count/sizeof(PRUnichar)));
+            if (NS_FAILED(rv)) return rv;
+          }
         }
       }
     }
@@ -1023,6 +1029,8 @@ nsresult
 nsIEProfileMigrator::AddDataToFormHistory(const nsAString& aKey, PRUnichar* aData, unsigned long aCount)
 {
   nsCOMPtr<nsIFormHistory> formHistory(do_GetService("@mozilla.org/satchel/form-history;1"));
+  if (!formHistory)
+    return NS_ERROR_OUT_OF_MEMORY;
 
   PRUnichar* cursor = aData;
   PRInt32 offset = 0;
