@@ -56,11 +56,11 @@ nsSharableString::SetCapacity( size_type aNewCapacity )
         // therefore *unconditionally* truncate the current length of
         // the string to the requested capacity.
 
-        if ( mBuffer->IsShared() )
+        if ( !mBuffer->IsMutable() )
           {
-            if ( aNewCapacity > Length() )
+            if ( aNewCapacity > mBuffer->DataLength() )
               mBuffer = NS_AllocateContiguousHandleWithData(mBuffer.get(),
-                            *this, PRUint32(aNewCapacity - Length() + 1));
+                    *this, PRUint32(aNewCapacity - mBuffer->DataLength() + 1));
             else
               mBuffer = NS_AllocateContiguousHandleWithData(mBuffer.get(),
                             Substring(*this, 0, aNewCapacity), PRUint32(1));
@@ -78,10 +78,10 @@ nsSharableString::SetCapacity( size_type aNewCapacity )
                   aNewCapacity = doubledCapacity;
 
                 // XXX We should be able to use |realloc| under certain
-                // conditions (contiguous buffer handle, kIsShared
-                // (,etc.)?)
+                // conditions (contiguous buffer handle, not
+                // kIsImmutable (,etc.)?)
                 mBuffer = NS_AllocateContiguousHandleWithData(mBuffer.get(),
-                                 *this, PRUint32(aNewCapacity - Length() + 1));
+                    *this, PRUint32(aNewCapacity - mBuffer->DataLength() + 1));
               }
             else if ( aNewCapacity < mBuffer->DataLength() )
               {
@@ -100,7 +100,7 @@ nsSharableString::SetCapacity( size_type aNewCapacity )
 void
 nsSharableString::SetLength( size_type aNewLength )
   {
-    if ( aNewLength > mBuffer->DataLength() )
+    if ( !mBuffer->IsMutable() || aNewLength > mBuffer->DataLength() )
       {
         SetCapacity(aNewLength);
         mBuffer->DataEnd( mBuffer->DataStart() + aNewLength );
@@ -128,7 +128,7 @@ nsSharableString::do_AssignFromReadable( const abstract_string_type& aReadable )
       {
         // null-check |mBuffer.get()| here only for the constructor
         // taking |const abstract_string_type&|
-        if ( mBuffer.get() && !mBuffer->IsShared() &&
+        if ( mBuffer.get() && mBuffer->IsMutable() &&
              mBuffer->StorageLength() > aReadable.Length() &&
              !aReadable.IsDependentOn(*this) )
           {
@@ -175,6 +175,22 @@ nsSharableString::GetSharedEmptyBufferHandle()
     return sBufferHandle;
   }
 
+// The need to override GetWritableFragment may be temporary, depending
+// on the protocol we choose for callers who want to mutate strings
+// using iterators.  See
+// <URL: http://bugzilla.mozilla.org/show_bug.cgi?id=114140 >
+nsSharableString::char_type*
+nsSharableString::GetWritableFragment( fragment_type& aFragment, nsFragmentRequest aRequest, PRUint32 aOffset )
+  {
+    // This makes writing iterators safe to use, but it imposes a
+    // double-malloc performance penalty on users who intend to modify
+    // the length of the string but call |BeginWriting| before they call
+    // |SetLength|.
+    if ( mBuffer->IsMutable() )
+      SetCapacity( mBuffer->DataLength() );
+    return nsAFlatString::GetWritableFragment( aFragment, aRequest, aOffset );
+  }
+
 
 void
 nsSharableCString::SetCapacity( size_type aNewCapacity )
@@ -205,11 +221,11 @@ nsSharableCString::SetCapacity( size_type aNewCapacity )
         // therefore *unconditionally* truncate the current length of
         // the string to the requested capacity.
 
-        if ( mBuffer->IsShared() )
+        if ( !mBuffer->IsMutable() )
           {
-            if ( aNewCapacity > Length() )
+            if ( aNewCapacity > mBuffer->DataLength() )
               mBuffer = NS_AllocateContiguousHandleWithData(mBuffer.get(),
-                            *this, PRUint32(aNewCapacity - Length() + 1));
+                    *this, PRUint32(aNewCapacity - mBuffer->DataLength() + 1));
             else
               mBuffer = NS_AllocateContiguousHandleWithData(mBuffer.get(),
                             Substring(*this, 0, aNewCapacity), PRUint32(1));
@@ -227,10 +243,10 @@ nsSharableCString::SetCapacity( size_type aNewCapacity )
                   aNewCapacity = doubledCapacity;
 
                 // XXX We should be able to use |realloc| under certain
-                // conditions (contiguous buffer handle, kIsShared
-                // (,etc.)?)
+                // conditions (contiguous buffer handle, not
+                // kIsImmutable (,etc.)?)
                 mBuffer = NS_AllocateContiguousHandleWithData(mBuffer.get(),
-                                 *this, PRUint32(aNewCapacity - Length() + 1));
+                    *this, PRUint32(aNewCapacity - mBuffer->DataLength() + 1));
               }
             else if ( aNewCapacity < mBuffer->DataLength() )
               {
@@ -249,7 +265,7 @@ nsSharableCString::SetCapacity( size_type aNewCapacity )
 void
 nsSharableCString::SetLength( size_type aNewLength )
   {
-    if ( aNewLength > mBuffer->DataLength() )
+    if ( !mBuffer->IsMutable() || aNewLength > mBuffer->DataLength() )
       {
         SetCapacity(aNewLength);
         mBuffer->DataEnd( mBuffer->DataStart() + aNewLength );
@@ -261,7 +277,7 @@ nsSharableCString::SetLength( size_type aNewLength )
     // This is needed for |Truncate| callers and also for some callers
     // (such as nsACString::do_AppendFromReadable) that are manipulating
     // the internals of the string.  It also makes sense to do this
-    // since this class implements |nsAFlatString|, so the buffer must
+    // since this class implements |nsAFlatCString|, so the buffer must
     // always be null-terminated at its length.  Callers using writing
     // iterators can't be expected to null-terminate themselves since
     // they don't know if they're dealing with a string that has a
@@ -277,7 +293,7 @@ nsSharableCString::do_AssignFromReadable( const abstract_string_type& aReadable 
       {
         // null-check |mBuffer.get()| here only for the constructor
         // taking |const abstract_string_type&|
-        if ( mBuffer.get() && !mBuffer->IsShared() &&
+        if ( mBuffer.get() && mBuffer->IsMutable() &&
              mBuffer->StorageLength() > aReadable.Length() &&
              !aReadable.IsDependentOn(*this) )
           {
@@ -322,5 +338,21 @@ nsSharableCString::GetSharedEmptyBufferHandle()
       sBufferHandle->AcquireReference();
     }
     return sBufferHandle;
+  }
+
+// The need to override GetWritableFragment may be temporary, depending
+// on the protocol we choose for callers who want to mutate strings
+// using iterators.  See
+// <URL: http://bugzilla.mozilla.org/show_bug.cgi?id=114140 >
+nsSharableCString::char_type*
+nsSharableCString::GetWritableFragment( fragment_type& aFragment, nsFragmentRequest aRequest, PRUint32 aOffset )
+  {
+    // This makes writing iterators safe to use, but it imposes a
+    // double-malloc performance penalty on users who intend to modify
+    // the length of the string but call |BeginWriting| before they call
+    // |SetLength|.
+    if ( mBuffer->IsMutable() )
+      SetCapacity( mBuffer->DataLength() );
+    return nsAFlatCString::GetWritableFragment( aFragment, aRequest, aOffset );
   }
 

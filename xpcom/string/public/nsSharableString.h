@@ -94,6 +94,9 @@ class NS_COM nsSharableString
     protected:
       virtual void do_AssignFromReadable( const abstract_string_type& aReadable );
       virtual const shared_buffer_handle_type*  GetSharedBufferHandle() const;
+//  protected:  // can't hide these (yet), since I call them from forwarding routines in |nsPromiseFlatString|
+    public:
+      virtual char_type* GetWritableFragment( fragment_type&, nsFragmentRequest, PRUint32 );
 
     protected:
       static shared_buffer_handle_type* GetSharedEmptyBufferHandle();
@@ -153,6 +156,9 @@ class NS_COM nsSharableCString
     protected:
       virtual void do_AssignFromReadable( const abstract_string_type& aReadable );
       virtual const shared_buffer_handle_type*  GetSharedBufferHandle() const;
+//  protected:  // can't hide these (yet), since I call them from forwarding routines in |nsPromiseFlatString|
+    public:
+      virtual char_type* GetWritableFragment( fragment_type&, nsFragmentRequest, PRUint32 );
 
     protected:
       static shared_buffer_handle_type* GetSharedEmptyBufferHandle();
