@@ -30,7 +30,7 @@ DIRS	= \
 			bookmarks \
 			directory \
 			filepicker \
-			find history \
+			find \
 			search \
 			sidebar \
 			related \
@@ -39,9 +39,7 @@ DIRS	= \
 			shistory \
 			timebomb \
 			console \
-			autocomplete \
 			updates \
-			urlbarhistory \
 			intl \
 			resetPref \
 			killAll \
@@ -49,7 +47,7 @@ DIRS	= \
 			$(NULL)
 
 ifndef MOZ_PHOENIX
-DIRS		+= download-manager
+DIRS += autocomplete history urlbarhistory download-manager
 endif
 
 ifdef MOZ_ENABLE_XREMOTE
