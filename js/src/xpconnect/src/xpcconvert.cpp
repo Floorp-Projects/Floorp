@@ -928,6 +928,16 @@ XPCConvert::JSErrorToXPCException(JSContext* cx,
 
 /***************************************************************************/
 
+/*
+** Note: on some platforms va_list is defined as an array,
+** and requires array notation.
+*/
+#if (defined(linux) && defined(__powerpc__)) || (defined(__QNX__) && !defined(NTO)) || defined(WIN16)
+#define VARARGS_ASSIGN(foo, bar)	foo[0] = bar[0]
+#else
+#define VARARGS_ASSIGN(foo, bar)	(foo) = (bar)
+#endif
+
 const char XPC_ARG_FORMATTER_FORMAT_STR[] = "%ip";
 
 JSBool JS_DLL_CALLBACK
@@ -940,7 +950,7 @@ XPC_JSArgumentFormatter(JSContext *cx, const char *format,
     va_list ap;
 
     vp = *vpp;
-    ap = *app;
+    VARARGS_ASSIGN(ap, *app);
 
     nsXPTType type = nsXPTType((uint8)(TD_INTERFACE_TYPE | XPT_TDP_POINTER));
     nsISupports* iface;
@@ -963,7 +973,7 @@ XPC_JSArgumentFormatter(JSContext *cx, const char *format,
             return JS_FALSE;
     }
     *vpp = vp + 1;
-    *app = ap;
+    VARARGS_ASSIGN(*app, ap);
     return JS_TRUE;
 }
 
