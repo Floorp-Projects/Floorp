@@ -340,4 +340,6 @@ function removeCalendar( event )
    refreshEventTree( eventTable );
 
    gCalendarWindow.currentView.refreshEvents();
+
+   toDoUnifinderRefesh();
 }
