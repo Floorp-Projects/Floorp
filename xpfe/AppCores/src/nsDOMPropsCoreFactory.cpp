@@ -63,23 +63,10 @@ nsDOMPropsCoreFactory::QueryInterface(REFNSIID aIID, void** aInstancePtr) {
 
 
 
-NS_IMETHODIMP
-nsDOMPropsCoreFactory::AddRef(void) {
+NS_IMPL_ADDREF(nsDOMPropsCoreFactory)
 
-    return ++mRefCnt;
-}
+NS_IMPL_RELEASE(nsDOMPropsCoreFactory)
 
-
-NS_IMETHODIMP
-nsDOMPropsCoreFactory::Release(void) {
-
-    if (--mRefCnt == 0) {
-        delete this;
-        return 0;
-    }
-
-    return mRefCnt;
-}
 
 NS_IMETHODIMP
 nsDOMPropsCoreFactory::CreateInstance(nsISupports *aOuter, REFNSIID aIID, void **aResult) {

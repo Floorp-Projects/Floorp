@@ -73,24 +73,9 @@ nsBrowserAppCoreFactory::QueryInterface(REFNSIID aIID,void** aInstancePtr)
 
 
 
-NS_IMETHODIMP
-nsBrowserAppCoreFactory::AddRef(void)
-{
-    return ++mRefCnt;
-}
+NS_IMPL_ADDREF(nsBrowserAppCoreFactory)
+NS_IMPL_RELEASE(nsBrowserAppCoreFactory)
 
-
-NS_IMETHODIMP
-nsBrowserAppCoreFactory::Release(void)
-{
-    if (--mRefCnt ==0)
-    {
-        delete this;
-        return 0; // Don't access mRefCnt after deleting!
-    }
-
-    return mRefCnt;
-}
 
 NS_IMETHODIMP
 nsBrowserAppCoreFactory::CreateInstance(nsISupports *aOuter, REFNSIID aIID, void **aResult)

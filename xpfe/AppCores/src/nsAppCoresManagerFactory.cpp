@@ -73,24 +73,9 @@ nsAppCoresManagerFactory::QueryInterface(REFNSIID aIID,void** aInstancePtr)
 
 
 
-NS_IMETHODIMP
-nsAppCoresManagerFactory::AddRef(void)
-{
-    return ++mRefCnt;
-}
+NS_IMPL_ADDREF(nsAppCoresManagerFactory)
+NS_IMPL_RELEASE(nsAppCoresManagerFactory)
 
-
-NS_IMETHODIMP
-nsAppCoresManagerFactory::Release(void)
-{
-    if (--mRefCnt ==0)
-    {
-        delete this;
-        return 0; // Don't access mRefCnt after deleting!
-    }
-
-    return mRefCnt;
-}
 
 NS_IMETHODIMP
 nsAppCoresManagerFactory::CreateInstance(nsISupports *aOuter, REFNSIID aIID, void **aResult)

@@ -73,14 +73,9 @@ nsRDFCoreFactory::QueryInterface(REFNSIID aIID,void** aInstancePtr)
 
 
 
-NS_IMETHODIMP
-nsRDFCoreFactory::AddRef(void)
-{
-    return ++mRefCnt;
-}
+NS_IMPL_ADDREF(nsRDFCoreFactory)
 
-
-NS_IMETHODIMP
+NS_IMETHODIMP_(nsrefcnt)
 nsRDFCoreFactory::Release(void)
 {
     if (--mRefCnt ==0)
