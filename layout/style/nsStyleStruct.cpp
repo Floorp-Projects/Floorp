@@ -679,7 +679,8 @@ nsStyleList::~nsStyleList()
 nsStyleList::nsStyleList(const nsStyleList& aSource)
   : mListStyleType(aSource.mListStyleType),
     mListStylePosition(aSource.mListStylePosition),
-    mListStyleImage(aSource.mListStyleImage)
+    mListStyleImage(aSource.mListStyleImage),
+    mImageRegion(aSource.mImageRegion)
 {
 }
 
