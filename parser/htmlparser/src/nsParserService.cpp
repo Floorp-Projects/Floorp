@@ -19,6 +19,7 @@
  *
  */
 
+#include "nsDOMError.h"
 #include "nsIAtom.h"
 #include "nsParserService.h"
 #include "nsHTMLEntities.h"
@@ -180,6 +181,32 @@ nsParserService::GetTopicObservers(const nsAString& aTopic,
   NS_ADDREF(*aEntry = entry);
 
   return result;
+}
+
+nsresult
+nsParserService::CheckQName(const nsASingleFragmentString& aQName,
+                            PRBool aNamespaceAware,
+                            const PRUnichar** aColon)
+{
+  const char* colon;
+  const PRUnichar *begin, *end;
+  aQName.BeginReading(begin);
+  aQName.EndReading(end);
+  int result = MOZ_XMLCheckQName(NS_REINTERPRET_CAST(const char*, begin),
+                                 NS_REINTERPRET_CAST(const char*, end),
+                                 aNamespaceAware, &colon);
+  *aColon = NS_REINTERPRET_CAST(const PRUnichar*, colon);
+
+  if (result == 0) {
+    return NS_OK;
+  }
+
+  // MOZ_EXPAT_INVALID_CHARACTER
+  if (result & (1 << 1)) {
+    return NS_ERROR_DOM_INVALID_CHARACTER_ERR;
+  }
+
+  return NS_ERROR_DOM_NAMESPACE_ERR;
 }
 
 class nsMatchesTopic : public nsDequeFunctor{

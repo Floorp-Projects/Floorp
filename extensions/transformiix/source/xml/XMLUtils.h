@@ -102,8 +102,8 @@ public:
 };
 
 #ifdef TX_EXE
-extern "C" int MOZ_XMLIsValidQName(const char* ptr, const char* end,
-                                   int ns_aware, const char** colon);
+extern "C" int MOZ_XMLCheckQName(const char* ptr, const char* end,
+                                 int ns_aware, const char** colon);
 extern "C" int MOZ_XMLIsLetter(const char* ptr);
 extern "C" int MOZ_XMLIsNCNameChar(const char* ptr);
 #else
@@ -148,15 +148,15 @@ public:
         aQName.EndReading(end);
 
         const char *colonPtr;
-        PRBool valid = MOZ_XMLIsValidQName(NS_REINTERPRET_CAST(const char*,
-                                                               aQName.get()),
-                                           NS_REINTERPRET_CAST(const char*,
-                                                               end),
-                                           PR_TRUE, &colonPtr);
+        int result = MOZ_XMLCheckQName(NS_REINTERPRET_CAST(const char*,
+                                                           aQName.get()),
+                                       NS_REINTERPRET_CAST(const char*,
+                                                           end),
+                                       PR_TRUE, &colonPtr);
         *aColon = NS_REINTERPRET_CAST(const PRUnichar*, colonPtr);
-        return valid;
+        return result == 0;
 #else
-        return gTxParserService->IsValidQName(aQName, PR_TRUE, aColon);
+        return NS_SUCCEEDED(gTxParserService->CheckQName(aQName, PR_TRUE, aColon));
 #endif
     }
 

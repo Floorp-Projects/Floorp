@@ -25,8 +25,8 @@
 #include "nsDTDUtils.h"
 #include "nsVoidArray.h"
 
-extern "C" int MOZ_XMLIsValidQName(const char* ptr, const char* end,
-                                   int ns_aware, const char** colon);
+extern "C" int MOZ_XMLCheckQName(const char* ptr, const char* end,
+                                 int ns_aware, const char** colon);
 extern "C" int MOZ_XMLIsLetter(const char* ptr);
 extern "C" int MOZ_XMLIsNCNameChar(const char* ptr);
 
@@ -63,20 +63,9 @@ public:
   NS_IMETHOD GetTopicObservers(const nsAString& aTopic,
                                nsIObserverEntry** aEntry);
 
-  PRBool IsValidQName(const nsASingleFragmentString& aQName,
-                      PRBool aNamespaceAware,
-                      const PRUnichar** aColon)
-  {
-    const char* colon;
-    const PRUnichar *begin, *end;
-    aQName.BeginReading(begin);
-    aQName.EndReading(end);
-    int result = MOZ_XMLIsValidQName(NS_REINTERPRET_CAST(const char*, begin),
-                                     NS_REINTERPRET_CAST(const char*, end),
-                                     aNamespaceAware, &colon);
-    *aColon = NS_REINTERPRET_CAST(const PRUnichar*, colon);
-    return !!result;
-  }
+  nsresult CheckQName(const nsASingleFragmentString& aQName,
+                      PRBool aNamespaceAware, const PRUnichar** aColon);
+
   PRBool IsXMLLetter(PRUnichar aChar)
   {
     return MOZ_XMLIsLetter(NS_REINTERPRET_CAST(const char*, &aChar));

@@ -77,6 +77,7 @@
 #include "nsIForm.h"
 #include "nsIFormControl.h"
 #include "nsHTMLAtoms.h"
+#include "nsLayoutAtoms.h"
 
 static const char kJSStackContractID[] = "@mozilla.org/js/xpc/ContextStack;1";
 static NS_DEFINE_IID(kParserServiceCID, NS_PARSERSERVICE_CID);
@@ -1597,9 +1598,8 @@ nsContentUtils::CheckQName(const nsAString& aQualifiedName,
   NS_ENSURE_TRUE(parserService, NS_ERROR_FAILURE);
 
   const PRUnichar *colon;
-  return parserService->IsValidQName(PromiseFlatString(aQualifiedName),
-                                     aNamespaceAware, &colon) ?
-         NS_OK : NS_ERROR_DOM_INVALID_CHARACTER_ERR;
+  return parserService->CheckQName(PromiseFlatString(aQualifiedName),
+                                   aNamespaceAware, &colon);
 }
 
 // static
@@ -1614,11 +1614,9 @@ nsContentUtils::GetNodeInfoFromQName(const nsAString& aNamespaceURI,
 
   const nsAFlatString& qName = PromiseFlatString(aQualifiedName);
   const PRUnichar* colon;
-  if (!parserService->IsValidQName(qName, PR_TRUE, &colon)) {
-    return NS_ERROR_DOM_INVALID_CHARACTER_ERR;
-  }
+  nsresult rv = parserService->CheckQName(qName, PR_TRUE, &colon);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  nsresult rv;
   if (colon) {
     const PRUnichar* end;
     qName.EndReading(end);
@@ -1632,8 +1630,29 @@ nsContentUtils::GetNodeInfoFromQName(const nsAString& aNamespaceURI,
     rv = aNodeInfoManager->GetNodeInfo(aQualifiedName, nsnull, aNamespaceURI,
                                        aNodeInfo);
   }
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  return rv;
+  nsIAtom* prefix = (*aNodeInfo)->GetPrefixAtom();
+  PRInt32 nsID = (*aNodeInfo)->NamespaceID();
+  nsIAtom* nil = nsnull;
+
+  // NAMESPACE_ERR: Raised if the qualifiedName is a malformed qualified name,
+  // if the qualifiedName has a prefix and the namespaceURI is null, if the
+  // qualifiedName has a prefix that is "xml" and the namespaceURI is different
+  // from "http://www.w3.org/XML/1998/namespace", if the qualifiedName or its
+  // prefix is "xmlns" and the namespaceURI is different from
+  // "http://www.w3.org/2000/xmlns/", or if the namespaceURI is
+  // "http://www.w3.org/2000/xmlns/" and neither the qualifiedName nor its
+  // prefix is "xmlns".
+  PRBool xmlPrefix = prefix == nsLayoutAtoms::xmlNameSpace;
+  PRBool xmlns = (*aNodeInfo)->Equals(nsLayoutAtoms::xmlnsNameSpace, nil) ||
+                 prefix == nsLayoutAtoms::xmlnsNameSpace;
+
+  return (prefix && DOMStringIsNull(aNamespaceURI)) ||
+         (xmlPrefix && nsID != kNameSpaceID_XML) ||
+         (xmlns && nsID != kNameSpaceID_XMLNS) ||
+         (nsID == kNameSpaceID_XMLNS && !xmlns) ?
+         NS_ERROR_DOM_NAMESPACE_ERR : NS_OK;
 }
 
 void

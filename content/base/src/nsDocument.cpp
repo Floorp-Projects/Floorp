@@ -121,6 +121,7 @@ static NS_DEFINE_CID(kDOMEventGroupCID, NS_DOMEVENTGROUP_CID);
 #include "nsScriptEventManager.h"
 #include "nsIXPathEvaluatorInternal.h"
 #include "nsIElementFactory.h"
+#include "nsIParserService.h"
 
 #ifdef DEBUG
 #include "nsICharsetAlias.h"
@@ -362,8 +363,25 @@ nsDOMImplementation::CreateDocument(const nsAString& aNamespaceURI,
 
   nsresult rv;
   if (!aQualifiedName.IsEmpty()) {
-    rv = nsContentUtils::CheckQName(aQualifiedName);
+    nsIParserService *parserService =
+      nsContentUtils::GetParserServiceWeakRef();
+    NS_ENSURE_TRUE(parserService, NS_ERROR_FAILURE);
+
+    const nsAFlatString& qName = PromiseFlatString(aQualifiedName);
+    const PRUnichar *colon;
+    rv = parserService->CheckQName(qName, PR_TRUE, &colon);
     NS_ENSURE_SUCCESS(rv, rv);
+
+    if (colon &&
+        (DOMStringIsNull(aNamespaceURI) ||
+         (Substring(qName.get(), colon).Equals(NS_LITERAL_STRING("xml")) &&
+          !aNamespaceURI.Equals(NS_LITERAL_STRING("http://www.w3.org/XML/1998/namespace"))))) {
+      return NS_ERROR_DOM_NAMESPACE_ERR;
+    }
+  }
+  else if (DOMStringIsNull(aQualifiedName) &&
+           !DOMStringIsNull(aNamespaceURI)) {
+    return NS_ERROR_DOM_NAMESPACE_ERR;
   }
 
   if (aDoctype) {
