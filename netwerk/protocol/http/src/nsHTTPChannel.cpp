@@ -53,28 +53,10 @@ nsHTTPChannel::nsHTTPChannel(nsIURI* i_URL,
     m_pResponse(nsnull),
     m_pEventQ(dont_QueryInterface(i_EQ)),
     m_pResponseDataListener(nsnull),
-    mLoadAttributes(LOAD_NORMAL)
+    mLoadAttributes(LOAD_NORMAL),
+    mResponseContext(nsnull)
 {
     NS_INIT_REFCNT();
-}
-
-nsresult
-nsHTTPChannel::Init()
-{
-    //TODO think if we need to make a copy of the URL and keep it here
-    //since it might get deleted off the creators thread. And the
-    //stream listener could be elsewhere...
-
-    /* 
-        Set up a request object - later set to a clone of a default 
-        request from the handler
-    */
-    m_pRequest = new nsHTTPRequest(m_URI);
-    if (m_pRequest == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(m_pRequest);
-    m_pRequest->SetConnection(this);
-    return NS_OK;
 }
 
 nsHTTPChannel::~nsHTTPChannel()
@@ -180,7 +162,7 @@ nsHTTPChannel::OpenOutputStream(PRUint32 startPosition, nsIOutputStream **_retva
 
 NS_IMETHODIMP
 nsHTTPChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
-                         nsISupports *ctxt,
+                         nsISupports *aContext,
                          nsIEventQueue *eventQueue,
                          nsIStreamListener *listener)
 {
@@ -198,6 +180,8 @@ nsHTTPChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
     if (NS_SUCCEEDED(rv)) {
         m_pResponseDataListener = listener;
         NS_ADDREF(m_pResponseDataListener);
+
+        mResponseContext = aContext;
 
         rv = Open();
     }
@@ -251,16 +235,6 @@ nsHTTPChannel::SetRequestHeader(const char* i_Header, const char* i_Value)
 {
     NS_ASSERTION(m_pRequest, "The request object vanished from underneath the connection!");
     return m_pRequest->SetHeader(i_Header, i_Value);
-}
-
-nsresult
-nsHTTPChannel::SetResponse(nsHTTPResponse* i_pResp)
-{ 
-  NS_IF_RELEASE(m_pResponse);
-  m_pResponse = i_pResp;
-  NS_IF_ADDREF(m_pResponse);
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -339,6 +313,25 @@ static NS_DEFINE_CID(kCookieTestCID, NS_COOKIEMODTEST_CID);
 #endif
 ////////////////////////////////////////////////////////////////////////////////
 // nsHTTPChannel methods:
+
+nsresult
+nsHTTPChannel::Init()
+{
+    //TODO think if we need to make a copy of the URL and keep it here
+    //since it might get deleted off the creators thread. And the
+    //stream listener could be elsewhere...
+
+    /* 
+        Set up a request object - later set to a clone of a default 
+        request from the handler
+    */
+    m_pRequest = new nsHTTPRequest(m_URI);
+    if (m_pRequest == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(m_pRequest);
+    m_pRequest->SetConnection(this);
+    return NS_OK;
+}
 
 nsresult
 nsHTTPChannel::Open(void)
@@ -496,6 +489,28 @@ nsHTTPChannel::Open(void)
         NS_ERROR("Failed to create/get a transport!");
 
     return rv;
+}
+
+nsresult
+nsHTTPChannel::SetResponse(nsHTTPResponse* i_pResp)
+{ 
+  NS_IF_RELEASE(m_pResponse);
+  m_pResponse = i_pResp;
+  NS_IF_ADDREF(m_pResponse);
+
+  return NS_OK;
+}
+
+nsresult
+nsHTTPChannel::GetResponseContext(nsISupports** aContext)
+{
+  if (aContext) {
+    *aContext = mResponseContext;
+    NS_IF_ADDREF(*aContext);
+    return NS_OK;
+  }
+
+  return NS_ERROR_NULL_POINTER;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

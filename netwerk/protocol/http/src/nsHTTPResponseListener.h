@@ -21,6 +21,7 @@
 
 #include "nsIStreamListener.h"
 #include "nsString.h"
+#include "nsCOMPtr.h"
 
 class nsIBuffer;
 class nsIChannel;
@@ -89,6 +90,8 @@ protected:
     PRUint32            m_ReadLength; // Already read
 
     nsString            m_HeaderBuffer;
+
+    nsCOMPtr<nsISupports> m_ResponseContext;
 };
 
 #endif /* _nsHTTPResponseListener_h_ */
