@@ -38,6 +38,7 @@ class nsIPresShell;
 class InsertTableCellTxn : public EditTxn
 {
 public:
+  virtual ~InsertTableCellTxn();
 
   /** used to name aggregate transactions that consist only of a single InsertTableCellTxn,
     * or a DeleteSelection followed by an InsertTableCellTxn.

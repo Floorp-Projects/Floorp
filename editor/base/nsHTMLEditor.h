@@ -20,6 +20,7 @@
 #define nsHTMLEditor_h__
 
 #include "nsITextEditor.h"
+#include "nsTextEditor.h"
 #include "nsIHTMLEditor.h"
 #include "nsCOMPtr.h"
 #include "nsIDOMEventListener.h"
@@ -29,20 +30,25 @@
  * The HTML editor implementation.<br>
  * Use to edit HTML document represented as a DOM tree. 
  */
-class nsHTMLEditor  : public nsIHTMLEditor
+class nsHTMLEditor  : public nsTextEditor, public nsIHTMLEditor
 {
+private:
+  // So we can use "Inherited::foo()" instead of "nsTextEditor::foo()"
+  typedef nsTextEditor Inherited;
+
 public:
   // see nsIHTMLEditor for documentation
 
 //Interfaces for addref and release and queryinterface
-  NS_DECL_ISUPPORTS
+//NOTE macro used is for classes that inherit from 
+// another class. Only the base class should use NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
+
+  nsHTMLEditor();
+  virtual ~nsHTMLEditor();
 
 //Initialization
-  nsHTMLEditor();
-  NS_IMETHOD InitHTMLEditor(nsIDOMDocument *aDoc, 
-                            nsIPresShell   *aPresShell,
-                            nsIEditorCallback *aCallback=nsnull);
-  virtual ~nsHTMLEditor();
+  NS_IMETHOD Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell);
 
 //============================================================================
 // Methods that are duplicates of nsTextEditor -- exposed here for convenience
@@ -103,8 +109,6 @@ public:
 
 // Data members
 protected:
-  nsCOMPtr<nsIEditor> mEditor;
-  nsCOMPtr<nsITextEditor> mTextEditor;
 
 // EVENT LISTENERS AND COMMAND ROUTING NEEDS WORK
 // For now, the listners are tied to the nsTextEditor class

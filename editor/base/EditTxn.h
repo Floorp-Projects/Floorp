@@ -39,6 +39,8 @@ public:
   NS_DECL_ISUPPORTS
 
   EditTxn();
+  virtual ~EditTxn();
+
 
   NS_IMETHOD Do(void);
 

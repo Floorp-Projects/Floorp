@@ -47,366 +47,180 @@ static NS_DEFINE_CID(kHTMLEditorCID,  NS_HTMLEDITOR_CID);
 
 nsHTMLEditor::nsHTMLEditor()
 {
-  NS_INIT_REFCNT();
+// Done in nsEditor
+// NS_INIT_REFCNT();
 }
 
 nsHTMLEditor::~nsHTMLEditor()
 {
   //the autopointers will clear themselves up. 
-#if 0
-// NO EVENT LISTERNERS YET
-  //but we need to also remove the listeners or we have a leak
-  //(This is identical to nsTextEditor code
-  if (mEditor)
-  {
-    nsCOMPtr<nsIDOMDocument> doc;
-    mEditor->GetDocument(getter_AddRefs(doc));
-    if (doc)
-    {
-      nsCOMPtr<nsIDOMEventReceiver> erP;
-      nsresult result = doc->QueryInterface(kIDOMEventReceiverIID, getter_AddRefs(erP));
-      if (NS_SUCCEEDED(result) && erP) 
-      {
-        if (mKeyListenerP) {
-          erP->RemoveEventListener(mKeyListenerP, kIDOMKeyListenerIID);
-        }
-        if (mMouseListenerP) {
-          erP->RemoveEventListener(mMouseListenerP, kIDOMMouseListenerIID);
-        }
-      }
-      else
-        NS_NOTREACHED("~nsHTMLEditor");
-    }
-  }
-#endif
 }
 
-NS_IMETHODIMP nsHTMLEditor::InitHTMLEditor(nsIDOMDocument *aDoc, 
-                            nsIPresShell   *aPresShell,
-                            nsIEditorCallback *aCallback)
+// Adds appropriate AddRef, Release, and QueryInterface methods for derived class
+//NS_IMPL_ISUPPORTS_INHERITED(nsHTMLEditor, nsTextEditor, nsIHTMLEditor)
+
+//NS_IMPL_ADDREF_INHERITED(Class, Super)
+NS_IMETHODIMP_(nsrefcnt) nsHTMLEditor::AddRef(void)
+{
+  return Inherited::AddRef();
+}
+
+//NS_IMPL_RELEASE_INHERITED(Class, Super)
+NS_IMETHODIMP_(nsrefcnt) nsHTMLEditor::Release(void)
+{
+  return Inherited::Release();
+}
+
+//NS_IMPL_QUERY_INTERFACE_INHERITED(Class, Super, AdditionalInterface)
+NS_IMETHODIMP nsHTMLEditor::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+{
+  if (!aInstancePtr) return NS_ERROR_NULL_POINTER;
+ 
+  if (aIID.Equals(nsIHTMLEditor::GetIID())) {
+    *aInstancePtr = NS_STATIC_CAST(nsIHTMLEditor*, this);
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  return Inherited::QueryInterface(aIID, aInstancePtr);
+}
+
+
+NS_IMETHODIMP nsHTMLEditor::Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell)
 {
   NS_PRECONDITION(nsnull!=aDoc && nsnull!=aPresShell, "bad arg");
   nsresult result=NS_ERROR_NULL_POINTER;
   if ((nsnull!=aDoc) && (nsnull!=aPresShell))
   {
-    nsITextEditor *aTextEditor = nsnull;
-    result = nsRepository::CreateInstance(kTextEditorCID, nsnull,
-                                          kITextEditorIID, (void **)&aTextEditor);
-
-    if (NS_FAILED(result) || !aTextEditor) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    mTextEditor = do_QueryInterface(aTextEditor); // CreateInstance did our addRef
-
-    // Initialize nsTextEditor -- this will create and initialize the base nsEditor
-    // Note: nsTextEditor adds its own key, mouse, and DOM listners -- is that OK?
-    result = mTextEditor->InitTextEditor(aDoc, aPresShell);
-    if (NS_OK != result) {
-      return result;
-    }
-    mTextEditor->EnableUndo(PR_TRUE);
-
-    // Get the pointer to the base editor for easier access
-    result = mTextEditor->QueryInterface(kIEditorIID, getter_AddRefs(mEditor));
-    if (NS_OK != result) {
-      return result;
-    }
-    result = NS_OK;
+    return Inherited::Init(aDoc, aPresShell);
   }
   return result;
 }
 
 NS_IMETHODIMP nsHTMLEditor::SetTextProperty(nsIAtom *aProperty)
 {
-  nsresult result=NS_ERROR_NOT_INITIALIZED;
-  if (mEditor)
-  {
-    result = mTextEditor->SetTextProperty(aProperty);
-  }
-  return result;
+  return Inherited::SetTextProperty(aProperty);
 }
 
 NS_IMETHODIMP nsHTMLEditor::GetTextProperty(nsIAtom *aProperty, PRBool &aAny, PRBool &aAll)
 {
-  nsresult result=NS_ERROR_NOT_INITIALIZED;
-  if (mEditor)
-  {
-    result = mTextEditor->GetTextProperty(aProperty, aAny, aAll);
-  }
-  return result;
+  return Inherited::GetTextProperty(aProperty, aAny, aAll);
 }
 
 NS_IMETHODIMP nsHTMLEditor::RemoveTextProperty(nsIAtom *aProperty)
 {
-  nsresult result=NS_ERROR_NOT_INITIALIZED;
-  if (mEditor)
-  {
-    result = mTextEditor->RemoveTextProperty(aProperty);
-  }
-  return result;
+  return Inherited::RemoveTextProperty(aProperty);
 }
 
 NS_IMETHODIMP nsHTMLEditor::DeleteSelection(nsIEditor::Direction aDir)
 {
-  nsresult result=NS_ERROR_NOT_INITIALIZED;
-  if (mEditor)
-  {
-    result = mEditor->DeleteSelection(aDir);
-  }
-  return result;
+  return Inherited::DeleteSelection(aDir);
 }
 
 NS_IMETHODIMP nsHTMLEditor::InsertText(const nsString& aStringToInsert)
 {
-  nsresult result=NS_ERROR_NOT_INITIALIZED;
-  if (mEditor)
-  {
-    result = mEditor->InsertText(aStringToInsert);
-  }
-  return result;
+  return Inherited::InsertText(aStringToInsert);
 }
 
 NS_IMETHODIMP nsHTMLEditor::InsertBreak(PRBool aCtrlKey)
 {
-  nsresult result=NS_ERROR_NOT_INITIALIZED;
-  if (mEditor)
-  {
-    result = mTextEditor->InsertBreak(aCtrlKey);
-  }
-  return result;
+  return Inherited::InsertBreak(aCtrlKey);
 }
 
 // Methods shared with the base editor.
 // Note: We could call each of these via nsTextEditor -- is that better?
 NS_IMETHODIMP nsHTMLEditor::EnableUndo(PRBool aEnable)
 {
-  nsresult result=NS_ERROR_NOT_INITIALIZED;
-  if (mEditor)
-  {
-    result = mEditor->EnableUndo(aEnable);
-  }
-  return result;
+  return Inherited::EnableUndo(aEnable);
 }
 
 NS_IMETHODIMP nsHTMLEditor::Undo(PRUint32 aCount)
 {
-  nsresult result=NS_ERROR_NOT_INITIALIZED;
-  if (mEditor)
-  {
-    result = mEditor->Undo(aCount);
-  }
-  return result;
+  return Inherited::Undo(aCount);
 }
 
 NS_IMETHODIMP nsHTMLEditor::CanUndo(PRBool &aIsEnabled, PRBool &aCanUndo)
 {
-  nsresult result=NS_ERROR_NOT_INITIALIZED;
-  if (mEditor)
-  {
-    result = mEditor->CanUndo(aIsEnabled, aCanUndo);
-  }
-  return result;
+  return Inherited::CanUndo(aIsEnabled, aCanUndo);
 }
 
 NS_IMETHODIMP nsHTMLEditor::Redo(PRUint32 aCount)
 {
-  nsresult result=NS_ERROR_NOT_INITIALIZED;
-  if (mEditor)
-  {
-    result = mEditor->Redo(aCount);
-  }
-  return result;
+  return Inherited::Redo(aCount);
 }
 
 NS_IMETHODIMP nsHTMLEditor::CanRedo(PRBool &aIsEnabled, PRBool &aCanRedo)
 {
-  nsresult result=NS_ERROR_NOT_INITIALIZED;
-  if (mEditor)
-  {
-    result = mEditor->CanRedo(aIsEnabled, aCanRedo);
-  }
-  return result;
+  return Inherited::CanRedo(aIsEnabled, aCanRedo);
 }
 
 NS_IMETHODIMP nsHTMLEditor::BeginTransaction()
 {
-  nsresult result=NS_ERROR_NOT_INITIALIZED;
-  if (mEditor)
-  {
-    result = mEditor->BeginTransaction();
-  }
-  return result;
+  return Inherited::BeginTransaction();
 }
 
 NS_IMETHODIMP nsHTMLEditor::EndTransaction()
 {
-  nsresult result=NS_ERROR_NOT_INITIALIZED;
-  if (mEditor)
-  {
-    result = mEditor->EndTransaction();
-  }
-  return result;
+  return Inherited::EndTransaction();
 }
 
 NS_IMETHODIMP nsHTMLEditor::MoveSelectionUp(nsIAtom *aIncrement, PRBool aExtendSelection)
 {
-  nsresult result=NS_ERROR_NOT_INITIALIZED;
-  if (mEditor)
-  {
-    result = mTextEditor->MoveSelectionUp(aIncrement, aExtendSelection);
-  }
-  return result;
+  return Inherited::MoveSelectionUp(aIncrement, aExtendSelection);
 }
 
 NS_IMETHODIMP nsHTMLEditor::MoveSelectionDown(nsIAtom *aIncrement, PRBool aExtendSelection)
 {
-  nsresult result=NS_ERROR_NOT_INITIALIZED;
-  if (mEditor)
-  {
-    result = mTextEditor->MoveSelectionDown(aIncrement, aExtendSelection);
-  }
-  return result;
+  return Inherited::MoveSelectionDown(aIncrement, aExtendSelection);
 }
 
 NS_IMETHODIMP nsHTMLEditor::MoveSelectionNext(nsIAtom *aIncrement, PRBool aExtendSelection)
 {
-  nsresult result=NS_ERROR_NOT_INITIALIZED;
-  if (mEditor)
-  {
-    result = mTextEditor->MoveSelectionNext(aIncrement, aExtendSelection);
-  }
-  return result;
+  return Inherited::MoveSelectionNext(aIncrement, aExtendSelection);
 }
 
 NS_IMETHODIMP nsHTMLEditor::MoveSelectionPrevious(nsIAtom *aIncrement, PRBool aExtendSelection)
 {
-  nsresult result=NS_ERROR_NOT_INITIALIZED;
-  if (mEditor)
-  {
-    result = mTextEditor->MoveSelectionPrevious(aIncrement, aExtendSelection);
-  }
-  return result;
+  return Inherited::MoveSelectionPrevious(aIncrement, aExtendSelection);
 }
 
 NS_IMETHODIMP nsHTMLEditor::SelectNext(nsIAtom *aIncrement, PRBool aExtendSelection) 
 {
-  nsresult result=NS_ERROR_NOT_INITIALIZED;
-  if (mEditor)
-  {
-    result = mTextEditor->SelectNext(aIncrement, aExtendSelection);
-  }
-  return result;
+  return Inherited::SelectNext(aIncrement, aExtendSelection);
 }
 
 NS_IMETHODIMP nsHTMLEditor::SelectPrevious(nsIAtom *aIncrement, PRBool aExtendSelection)
 {
-  nsresult result=NS_ERROR_NOT_INITIALIZED;
-  if (mEditor)
-  {
-    result = mTextEditor->SelectPrevious(aIncrement, aExtendSelection);
-  }
-  return result;
+  return Inherited::SelectPrevious(aIncrement, aExtendSelection);
 }
 
 NS_IMETHODIMP nsHTMLEditor::ScrollUp(nsIAtom *aIncrement)
 {
-  nsresult result=NS_ERROR_NOT_INITIALIZED;
-  if (mEditor)
-  {
-    result = mTextEditor->ScrollUp(aIncrement);
-  }
-  return result;
+  return Inherited::ScrollUp(aIncrement);
 }
 
 NS_IMETHODIMP nsHTMLEditor::ScrollDown(nsIAtom *aIncrement)
 {
-  nsresult result=NS_ERROR_NOT_INITIALIZED;
-  if (mEditor)
-  {
-    result = mTextEditor->ScrollDown(aIncrement);
-  }
-  return result;
+  return Inherited::ScrollDown(aIncrement);
 }
 
 NS_IMETHODIMP nsHTMLEditor::ScrollIntoView(PRBool aScrollToBegin)
 {
-  nsresult result=NS_ERROR_NOT_INITIALIZED;
-  if (mEditor)
-  {
-    result = mTextEditor->ScrollIntoView(aScrollToBegin);
-  }
-  return result;
+  return Inherited::ScrollIntoView(aScrollToBegin);
 }
 
 NS_IMETHODIMP nsHTMLEditor::Insert(nsIInputStream *aInputStream)
 {
-  nsresult result=NS_ERROR_NOT_INITIALIZED;
-  if (mEditor)
-  {
-    result = mTextEditor->Insert(aInputStream);
-  }
-  return result;
+  return Inherited::Insert(aInputStream);
 }
 
 NS_IMETHODIMP nsHTMLEditor::OutputText(nsIOutputStream *aOutputStream)
 {
-  nsresult result=NS_ERROR_NOT_INITIALIZED;
-  if (mEditor)
-  {
-    result = mTextEditor->OutputText(aOutputStream);
-  }
-  return result;
+  return Inherited::OutputText(aOutputStream);
 }
 
 NS_IMETHODIMP nsHTMLEditor::OutputHTML(nsIOutputStream *aOutputStream)
 {
-  nsresult result=NS_ERROR_NOT_INITIALIZED;
-  if (mEditor)
-  {
-    result = mTextEditor->OutputHTML(aOutputStream);
-  }
-  return result;
-}
-
-
-NS_IMPL_ADDREF(nsHTMLEditor)
-
-NS_IMPL_RELEASE(nsHTMLEditor)
-
-NS_IMETHODIMP
-nsHTMLEditor::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if (nsnull == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(kISupportsIID)) {
-    *aInstancePtr = (void*)(nsISupports*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kIHTMLEditorIID)) {
-    *aInstancePtr = (void*)(nsIHTMLEditor*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  // If our pointer to nsTextEditor is null, don't bother querying?
-  if (aIID.Equals(kITextEditorIID) && (mTextEditor)) {
-      nsCOMPtr<nsIEditor> editor;
-      nsresult result = mTextEditor->QueryInterface(kITextEditorIID, getter_AddRefs(editor));
-      if (NS_SUCCEEDED(result) && editor) {
-        *aInstancePtr = (void*)editor;
-        return NS_OK;
-      }
-  }
-  if (aIID.Equals(kIEditorIID) && (mEditor)) {
-      nsCOMPtr<nsIEditor> editor;
-      nsresult result = mEditor->QueryInterface(kIEditorIID, getter_AddRefs(editor));
-      if (NS_SUCCEEDED(result) && editor) {
-        *aInstancePtr = (void*)editor;
-        return NS_OK;
-      }
-  }
-  return NS_NOINTERFACE;
+  return Inherited::OutputHTML(aOutputStream);
 }
 
 //================================================================

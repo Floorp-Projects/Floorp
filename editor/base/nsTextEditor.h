@@ -22,6 +22,7 @@
 #include "nsITextEditor.h"
 #include "nsCOMPtr.h"
 #include "nsIDOMEventListener.h"
+#include "nsEditor.h"
 
 class nsIStyleContext;
 class nsIDOMRange;
@@ -31,20 +32,25 @@ class nsIDOMRange;
  * Use to edit text represented as a DOM tree. 
  * This class is used for editing both plain text and rich text (attributed text).
  */
-class nsTextEditor  : public nsITextEditor
+class nsTextEditor  : public nsEditor, public nsITextEditor
 {
+private:
+  // So we can use "Inherited::foo()" instead of "nsEditor::foo()"
+  typedef nsEditor Inherited;
+
 public:
   // see nsITextEditor for documentation
 
 //Interfaces for addref and release and queryinterface
-  NS_DECL_ISUPPORTS
+//NOTE macro used is for classes that inherit from 
+// another class. Only the base class should use NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
+
+  nsTextEditor();
+  virtual ~nsTextEditor();
 
 //Initialization
-  nsTextEditor();
-  NS_IMETHOD InitTextEditor(nsIDOMDocument *aDoc, 
-                            nsIPresShell   *aPresShell,
-                            nsIEditorCallback *aCallback=nsnull);
-  virtual ~nsTextEditor();
+  NS_IMETHOD Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell);
 
 // Editing Operations
   NS_IMETHOD SetTextProperty(nsIAtom *aProperty);
@@ -112,7 +118,6 @@ protected:
 
 // Data members
 protected:
-  nsCOMPtr<nsIEditor> mEditor;
   nsCOMPtr<nsIDOMEventListener> mKeyListenerP;
   nsCOMPtr<nsIDOMEventListener> mMouseListenerP;
 

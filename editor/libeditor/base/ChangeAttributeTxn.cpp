@@ -25,6 +25,10 @@ ChangeAttributeTxn::ChangeAttributeTxn()
 {
 }
 
+ChangeAttributeTxn::~ChangeAttributeTxn()
+{
+}
+
 NS_IMETHODIMP ChangeAttributeTxn::Init(nsIEditor      *aEditor,
                                   nsIDOMElement  *aElement,
                                   const nsString& aAttribute,

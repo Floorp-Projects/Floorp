@@ -58,6 +58,7 @@ private:
 	DeleteTableColumnTxn();
 
 public:
+  virtual ~DeleteTableColumnTxn();
 	
   NS_IMETHOD Do(void);
 

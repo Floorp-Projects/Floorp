@@ -53,9 +53,7 @@ public:
   /** Initialize the text editor 
     *
     */
-  NS_IMETHOD InitTextEditor(nsIDOMDocument *aDoc, 
-                            nsIPresShell   *aPresShell,
-                            nsIEditorCallback *aCallback=nsnull)=0;
+  NS_IMETHOD Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell)=0;
 
   /**
    * SetTextProperties() sets the aggregate properties on the current selection

@@ -33,6 +33,10 @@ EditTxn::EditTxn()
   NS_INIT_REFCNT();
 }
 
+EditTxn::~EditTxn()
+{
+}
+
 NS_IMETHODIMP EditTxn::Do(void)
 {
   return NS_OK;

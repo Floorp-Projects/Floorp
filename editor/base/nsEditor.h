@@ -79,10 +79,11 @@ public:
 
 /*BEGIN nsIEdieditor for more details*/
   
-  /*interfaces for addref and release and queryinterface*/
+//Interfaces for addref and release and queryinterface
+//NOTE: Use   NS_DECL_ISUPPORTS_INHERITED in any class inherited from nsText
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell);
+  NS_IMETHOD Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell);
 
   NS_IMETHOD GetDocument(nsIDOMDocument **aDoc);
 
@@ -243,8 +244,6 @@ protected:
                            nsIDOMNode * aParent,
                            PRBool       aNodeToKeepIsFirst);
 
-  NS_IMETHOD CreateAggregateTxnForDeleteSelection(nsIAtom *aTxnName, nsISupports **aAggTxn);
-
 #if 0
   NS_IMETHOD CreateTxnToHandleEnterKey(EditAggregateTxn **aTxn);
 #endif
@@ -257,6 +256,17 @@ protected:
 
   NS_IMETHOD GetLeftmostChild(nsIDOMNode *aCurrentNode, nsIDOMNode **aResultNode);
 
+//Methods not exposed in nsIEditor
+
+  /** Create an aggregate transaction for deleting current selection
+   *  Used by all methods that need to delete current selection,
+   *    then insert something new to replace it
+   *  @param nsString& aTxnName is the name of the aggregated transaction
+   *  @param EditTxn **aAggTxn is the return location of the aggregate TXN,
+   *    with the DeleteSelectionTxn as the first child ONLY
+   *    if there was a selection to delete.
+   */
+  NS_IMETHOD CreateAggregateTxnForDeleteSelection(nsIAtom *aTxnName, EditAggregateTxn **aAggTxn);
 
 };
 

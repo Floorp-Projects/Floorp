@@ -46,9 +46,7 @@ public:
   /** Initialize the text editor 
     *
     */
-  NS_IMETHOD InitHTMLEditor(nsIDOMDocument *aDoc, 
-                            nsIPresShell   *aPresShell,
-                            nsIEditorCallback *aCallback=nsnull)=0;
+  NS_IMETHOD Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell )=0;
 
 // Methods shared with nsITextEditor (see nsITextEditor.h for details)
   NS_IMETHOD SetTextProperty(nsIAtom *aProperty)=0;

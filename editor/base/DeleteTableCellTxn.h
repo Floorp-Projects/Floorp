@@ -58,7 +58,8 @@ private:
 	DeleteTableCellTxn();
 
 public:
-	
+	virtual ~DeleteTableCellTxn();
+
   NS_IMETHOD Do(void);
 
   NS_IMETHOD Undo(void);

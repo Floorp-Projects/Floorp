@@ -40,6 +40,10 @@ InsertTableTxn::InsertTableTxn()
 {
 }
 
+InsertTableTxn::~InsertTableTxn()
+{
+}
+
 NS_IMETHODIMP InsertTableTxn::Init(nsIDOMCharacterData *aElement,
                              PRUint32 aOffset,
                              nsIDOMNode *aNode,
