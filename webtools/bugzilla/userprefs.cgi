@@ -171,7 +171,7 @@ sub ShowFooter {
     if (!$found) {
         print qq{
 <TR><TD COLSPAN="2">
-If you go create name queries in the <A HREF="query.cgi">query page</A>,
+If you go create remembered queries in the <A HREF="query.cgi">query page</A>,
 you can then come to this page and choose to have some of them appear in the 
 footer of each Bugzilla page.
 </TD></TR>};
