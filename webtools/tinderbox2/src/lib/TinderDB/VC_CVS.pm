@@ -32,13 +32,6 @@
 # complete rewrite by Ken Estes, Mail.com (kestes@staff.mail.com).
 # Contributor(s): 
 
-# We need this empty package namespace for our dependency analysis, it
-# gets confused if there is not a package name which matches the file
-# name and in this case the file is one of several possible
-# implementations.
-
-package TinderDB::VC_CVS;
-
 package TinderDB::VC;
 
 # the raw CVS implemenation of the Version Control DB for Tinderbox.
@@ -133,7 +126,7 @@ use TreeData;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.3 $ )[1];
+$VERSION = ( qw $Revision: 1.4 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
