@@ -114,7 +114,7 @@ net_remove_select(SelectType stType, PRFileDesc *prFD)
 
 				fd_set_size--;
 				if(count < fd_set_size)
-					memcpy(&poll_desc_array[count], &poll_desc_array[count+1], (fd_set_size - count) * sizeof(PRPollDesc));
+					memmove(&poll_desc_array[count], &poll_desc_array[count+1], (fd_set_size - count) * sizeof(PRPollDesc));
 
 				return;
 			}
