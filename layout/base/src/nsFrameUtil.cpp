@@ -21,7 +21,7 @@
 #include "nsHTMLEntities.h" 
 #include "nsString.h"
 #include "nsRect.h"
-#include "stdlib.h"
+#include <stdlib.h>
 #include "plstr.h"
 
 static NS_DEFINE_IID(kIFrameUtilIID, NS_IFRAME_UTIL_IID);
