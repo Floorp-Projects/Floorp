@@ -189,6 +189,7 @@ nsXIContext::LoadResources()
         "DL_STATUS_STR",
         "CRC_FAILED",
         "CRC_CHECK",
+        "USAGE_MSG",
         "UNKNOWN",
 
         __EOT__
