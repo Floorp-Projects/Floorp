@@ -128,6 +128,8 @@ LOCALES_browser :=                              \
   mozilla/browser/locales                       \
   $(NULL)
 
+BOOTSTRAP_browser := mozilla/browser/config/mozconfig
+
 MODULES_mail :=                                 \
   $(MODULES_toolkit)                            \
   mozilla/mail                                  \
@@ -140,6 +142,8 @@ LOCALES_mail :=                                 \
   mozilla/mail/locales                          \
   $(NULL)
 
+BOOTSTRAP_mail := mozilla/mail/config/mozconfig
+
 MODULES_composer :=                             \
   $(MODULES_toolkit)                            \
   mozilla/composer                              \
@@ -151,15 +155,21 @@ MODULES_calendar :=                             \
   mozilla/other-licenses/libical                \
   $(NULL)
 
+BOOTSTRAP_calendar := mozilla/calendar/sunbird/config/mozconfig
+
 MODULES_xulrunner :=                            \
   $(MODULES_toolkit)                            \
   mozilla/xulrunner                             \
   $(NULL)
 
+BOOTSTRAP_xulrunner := mozilla/xulrunner/config/mozconfig
+
 MODULES_macbrowser :=                           \
   $(MODULES_suite)                              \
   mozilla/camino                                \
   $(NULL)
+
+BOOTSTRAP_macbrowser := mozilla/camino/config/mozconfig
 
 #######################################################################
 # Checkout Tags
@@ -274,7 +284,9 @@ $(error MOZ_CO_PROJECT contains an unrecognized project.)
 endif
 
 MOZ_MODULE_LIST := $(subst $(comma), ,$(MOZ_CO_MODULE)) $(foreach project,$(MOZ_PROJECT_LIST),$(MODULES_$(project)))
-LOCALE_DIRS := $(MOZ_LOCALE_DIRS) $(foreach project,$(MOZ_CO_PROJECT),$(LOCALES_$(project)))
+LOCALE_DIRS := $(MOZ_LOCALE_DIRS) $(foreach project,$(MOZ_PROJECT_LIST),$(LOCALES_$(project)))
+
+MOZCONFIG_MODULES += $(foreach project,$(MOZ_PROJECT_LIST),$(BOOTSTRAP_$(project)))
 
 # Change CVS flags if anonymous root is requested
 ifdef MOZ_CO_USE_MIRROR
