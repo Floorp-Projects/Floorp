@@ -73,7 +73,7 @@ protected:
   nsJSObjWrapper(NPP npp);
   ~nsJSObjWrapper();
 
-  static NPObject * NP_Allocate(NPP npp);
+  static NPObject * NP_Allocate(NPP npp, NPClass *aClass);
   static void NP_Deallocate(NPObject *obj);
   static void NP_Invalidate(NPObject *obj);
   static bool NP_HasMethod(NPObject *, NPIdentifier identifier);

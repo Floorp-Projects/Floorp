@@ -1466,7 +1466,7 @@ _createobject(NPP npp, NPClass* aClass)
   NPObject *npobj;
 
   if (aClass->allocate) {
-    npobj = aClass->allocate(npp);
+    npobj = aClass->allocate(npp, aClass);
   } else {
     npobj = (NPObject *)PR_Malloc(sizeof(NPObject));
   }

@@ -388,8 +388,11 @@ nsJSObjWrapper::~nsJSObjWrapper()
 
 // static
 NPObject *
-nsJSObjWrapper::NP_Allocate(NPP npp)
+nsJSObjWrapper::NP_Allocate(NPP npp, NPClass *aClass)
 {
+  NS_ASSERTION(aClass == &sJSObjWrapperNPClass,
+               "Huh, wrong class passed to NP_Allocate()!!!");
+
   return new nsJSObjWrapper(npp);
 }
 
