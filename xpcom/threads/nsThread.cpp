@@ -63,16 +63,16 @@ nsThread::nsThread()
     }
 #endif /* PR_LOGGING */
 
-// enforce matching of constants to enums in prthread.h
-NS_ASSERTION(nsIThread::PRIORITY_LOW    == PR_PRIORITY_LOW &&
-             nsIThread::PRIORITY_NORMAL == PRIORITY_NORMAL &&
-             nsIThread::PRIORITY_HIGH   == PRIORITY_HIGH &&
-             nsIThread::PRIORITY_URGENT == PRIORITY_URGENT &&
-             nsIThread::SCOPE_LOCAL  == PR_LOCAL_THREAD &&
-             nsIThread::SCOPE_GLOBAL == PR_GLOBAL_THREAD &&
-             nsIThread::STATE_JOINABLE   == PR_JOINABLE_THREAD &&
-             nsIThread::STATE_UNJOINABLE == PR_UNJOINABLE_THREAD,
-             "Bad constant in nsIThread!");
+    // enforce matching of constants to enums in prthread.h
+    NS_ASSERTION(int(nsIThread::PRIORITY_LOW)     == int(PR_PRIORITY_LOW) &&
+                 int(nsIThread::PRIORITY_NORMAL)  == int(PRIORITY_NORMAL) &&
+                 int(nsIThread::PRIORITY_HIGH)    == int(PRIORITY_HIGH) &&
+                 int(nsIThread::PRIORITY_URGENT)  == int(PRIORITY_URGENT) &&
+                 int(nsIThread::SCOPE_LOCAL)      == int(PR_LOCAL_THREAD) &&
+                 int(nsIThread::SCOPE_GLOBAL)     == int(PR_GLOBAL_THREAD) &&
+                 int(nsIThread::STATE_JOINABLE)   == int(PR_JOINABLE_THREAD) &&
+                 int(nsIThread::STATE_UNJOINABLE) == int(PR_UNJOINABLE_THREAD),
+                 "Bad constant in nsIThread!");
 }
 
 nsThread::~nsThread()
