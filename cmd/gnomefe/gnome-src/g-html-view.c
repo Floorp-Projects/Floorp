@@ -107,7 +107,7 @@ html_view_realize_handler(GtkWidget *widget,
   }
   /* add the callback after the widget has been realized and the compositor
      has been created above */
-  printf("connecting size_realloc to context %x\n", context);
+  /*printf("connecting size_realloc to context %x\n", context); */
   gtk_signal_connect(GTK_OBJECT(MOZ_VIEW(view)->subview_parent), "size_allocate",
                      GTK_SIGNAL_FUNC(html_view_size_allocate), context);
   gtk_signal_connect(GTK_OBJECT(MOZ_VIEW(view)->subview_parent), "draw",
@@ -435,7 +435,7 @@ html_view_size_allocate(GtkWidget *widget,
 
   window_context = (MWContext *)data;
   
-  printf("size_allocate called with %x as context.\n", data);
+  /*printf("size_allocate called with %x as context.\n", data); */
   view = find_html_view(window_context);
   if (view->sw_width  != MOZ_VIEW(view)->subview_parent->allocation.width ||
       view->sw_height != MOZ_VIEW(view)->subview_parent->allocation.height )
