@@ -10450,7 +10450,7 @@ nsCSSFrameConstructor::ContentStatesChanged(nsIPresContext* aPresContext,
           nsCOMPtr<nsITheme> theme;
           aPresContext->GetTheme(getter_AddRefs(theme));
           PRBool repaint = PR_FALSE;
-          if (theme)
+          if (theme && theme->ThemeSupportsWidget(aPresContext, primaryFrame1, app1))
             theme->WidgetStateChanged(primaryFrame1, app1, nsnull, &repaint);
           if (repaint)
             ApplyRenderingChangeToTree(aPresContext, primaryFrame1, nsnull);
@@ -10464,8 +10464,8 @@ nsCSSFrameConstructor::ContentStatesChanged(nsIPresContext* aPresContext,
             nsCOMPtr<nsITheme> theme;
             aPresContext->GetTheme(getter_AddRefs(theme));
             PRBool repaint = PR_FALSE;
-            if (theme)
-              theme->WidgetStateChanged(primaryFrame1, app2, nsnull, &repaint);
+            if (theme && theme->ThemeSupportsWidget(aPresContext, primaryFrame2, app2))
+              theme->WidgetStateChanged(primaryFrame2, app2, nsnull, &repaint);
             if (repaint) 
               ApplyRenderingChangeToTree(aPresContext, primaryFrame2, nsnull);
           }
