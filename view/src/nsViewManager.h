@@ -127,6 +127,7 @@ protected:
 
 private:
   nsIRenderingContext *CreateRenderingContext(nsIView &aView);
+  void AddRegionToDirtyRegion(nsIView* aView, const nsIRegion *aRegion) const;
   void AddRectToDirtyRegion(nsIView* aView, const nsRect &aRect) const;
   void UpdateDirtyViews(nsIView *aView, nsRect *aParentRect) const;
   void UpdateTransCnt(nsIView *oldview, nsIView *newview);

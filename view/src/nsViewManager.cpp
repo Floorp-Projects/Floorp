@@ -978,7 +978,7 @@ void nsViewManager :: RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, 
         // permanently remove any painted opaque views.
         mOffScreenCX->SetClipRegion(*paintedRgn, nsClipCombine_kSubtract, clipstate);
         mRedCX->SetClipRegion(*paintedRgn, nsClipCombine_kSubtract, clipstate);
-        mRedCX->SetClipRegion(*paintedRgn, nsClipCombine_kSubtract, clipstate);
+        mBlueCX->SetClipRegion(*paintedRgn, nsClipCombine_kSubtract, clipstate);
       } else {
         aRC.PopState(clipstate);
         
@@ -2227,6 +2227,30 @@ nsIRenderingContext * nsViewManager :: CreateRenderingContext(nsIView &aView)
   }
 
   return cx;
+}
+
+void nsViewManager::AddRegionToDirtyRegion(nsIView* aView, const nsIRegion *aRegion) const
+{
+	// Get the dirty region associated with the view
+	nsIRegion *dirtyRegion;
+
+	aView->GetDirtyRegion(dirtyRegion);
+
+	if (nsnull == dirtyRegion) {
+		// The view doesn't have a dirty region so create one
+		nsresult rv = nsComponentManager::CreateInstance(kRegionCID, 
+		                               nsnull, 
+		                               NS_GET_IID(nsIRegion), 
+		                               (void **)&dirtyRegion);
+
+		if (NS_FAILED(rv)) return;
+		dirtyRegion->Init();
+		aView->SetDirtyRegion(dirtyRegion);
+	}
+
+	// since this is only used to buffer update requests, keep them in app units.
+	dirtyRegion->Union(*aRegion);
+	NS_RELEASE(dirtyRegion);
 }
 
 void nsViewManager::AddRectToDirtyRegion(nsIView* aView, const nsRect &aRect) const
