@@ -37,10 +37,11 @@
 #include "nsAbBaseCID.h"
 #include "nsCOMPtr.h"
 #include "nsIMsgMailNewsUrl.h"
+#include "nsXPIDLString.h"
 
 static NS_DEFINE_CID(kMsgHeaderParserCID,		NS_MSGHEADERPARSER_CID); 
 static NS_DEFINE_CID(kCAddressCollecter, NS_ABADDRESSCOLLECTER_CID);
-
+static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 
 nsresult NS_NewMimeXULEmitter(const nsIID& iid, void **result)
 {
@@ -246,20 +247,11 @@ nsMimeXULEmitter::EndBody()
   nsOutputFileStream tempOutfile(*mBodyFileSpec);
   if (! tempOutfile.is_open())
     return NS_ERROR_UNEXPECTED;
-
-  char  *tmpBody = mBody.ToNewCString();
-  if (tmpBody)
-    tempOutfile.write(tmpBody, mBody.Length());
+  
+  tempOutfile.write((const char *) mBody, mBody.Length());
   tempOutfile.close();
-
-  nsAllocator::Free(tmpBody);
   return NS_OK;
 }
-
-
-
-
-
 
 nsresult
 nsMimeXULEmitter::AddHeaderFieldHTML(const char *field, const char *value)
@@ -288,12 +280,11 @@ nsMimeXULEmitter::AddHeaderFieldHTML(const char *field, const char *value)
   // get a field name next to an emitted header value. Note: Default will always
   // be the name of the header itself.
   //
-  nsString  newTagName(field);
+  nsCAutoString  newTagName(field);
   newTagName.CompressWhitespace(PR_TRUE, PR_TRUE);
   newTagName.ToUpperCase();
-  char *upCaseField = newTagName.ToNewCString();
 
-  char *l10nTagName = LocalizeHeaderName(upCaseField, field);
+  char *l10nTagName = LocalizeHeaderName((const char *) newTagName, field);
   if ( (!l10nTagName) || (!*l10nTagName) )
     UtilityWrite(field);
   else
@@ -316,7 +307,6 @@ nsMimeXULEmitter::AddHeaderFieldHTML(const char *field, const char *value)
   UtilityWrite("</TR>");
 
   nsCRT::free(newValue);
-  nsCRT::free(upCaseField);
   return NS_OK;
 }
 
@@ -608,7 +598,6 @@ nsMimeXULEmitter::DumpAddBookIcon(char *fromLine)
 	char	      *names;
 	char	      *addresses;
   nsresult    rv;
-  char        *newName;
 
   if (!fromLine)
 	  return NS_OK;
@@ -630,20 +619,18 @@ nsMimeXULEmitter::DumpAddBookIcon(char *fromLine)
   }
 
   // Strip off extra quotes...
-  nsString  workString(name);
-  workString.Trim("\"");
-  newName = workString.ToNewCString();    
+  nsCAutoString  newName(name);
+  newName.Trim("\"");
 
   UtilityWrite("<titledbutton src=\"chrome://messenger/skin/addcard.gif\" ");
   UtilityWrite("onclick=\"AddToAddressBook('");
   UtilityWrite(email);
   UtilityWrite("', '");
-  UtilityWrite(newName);
+  UtilityWrite((const char *) newName);
   UtilityWriteCRLF("');\"/>");
 
   UtilityWriteCRLF("</box>");
 
-  PR_FREEIF(newName);
   PR_FREEIF(names);
   PR_FREEIF(addresses);
   return NS_OK;
@@ -823,16 +810,13 @@ nsMimeXULEmitter::WriteXULTag(const char *tagName, const char *value)
 nsresult
 nsMimeXULEmitter::WriteXULTagPrefix(const char *tagName, const char *value)
 {
-  char  *upCaseTag = NULL;
-
-  nsString  newTagName(tagName);
+  nsCAutoString  newTagName(tagName);
   newTagName.CompressWhitespace(PR_TRUE, PR_TRUE);
 
   newTagName.ToUpperCase();
-  upCaseTag = newTagName.ToNewCString();
 
   UtilityWrite("<header field=\"");
-  UtilityWrite(upCaseTag);
+  UtilityWrite(newTagName);
   UtilityWrite("\">");
 
   // Here is where we are going to try to L10N the tagName so we will always
@@ -844,7 +828,7 @@ nsMimeXULEmitter::WriteXULTagPrefix(const char *tagName, const char *value)
   UtilityWriteCRLF("<html:td>");
 
   UtilityWrite("<headerdisplayname>");
-  char *l10nTagName = LocalizeHeaderName(upCaseTag, tagName);
+  char *l10nTagName = LocalizeHeaderName((const char *) newTagName, tagName);
   if ( (!l10nTagName) || (!*l10nTagName) )
     UtilityWrite(tagName);
   else
@@ -857,8 +841,6 @@ nsMimeXULEmitter::WriteXULTagPrefix(const char *tagName, const char *value)
   UtilityWriteCRLF("</headerdisplayname>");
 
   UtilityWriteCRLF("</html:td>");
-  
-  nsAllocator::Free(upCaseTag);
   return NS_OK;
 }
 
@@ -881,15 +863,12 @@ nsMimeXULEmitter::WriteXULTagPostfix(const char *tagName, const char *value)
 nsresult
 nsMimeXULEmitter::WriteEmailAddrXULTag(const char *tagName, const char *value)
 {
-char  *upCaseTag = NULL;
-
   if ( (!value) || (!*value) )
     return NS_OK;
 
-  nsString  newTagName(tagName);
+  nsCAutoString  newTagName(tagName);
   newTagName.CompressWhitespace(PR_TRUE, PR_TRUE);
   newTagName.ToUpperCase();
-  upCaseTag = newTagName.ToNewCString();
 
   WriteXULTagPrefix(tagName, value);
 
@@ -897,10 +876,9 @@ char  *upCaseTag = NULL;
   // do interesting things with the contents.
   //
   UtilityWriteCRLF("<html:td>"); 
-  OutputEmailAddresses(upCaseTag, value);
+  OutputEmailAddresses((const char *) newTagName, value);
   UtilityWriteCRLF("</html:td>");
 
-  PR_FREEIF(upCaseTag);
   WriteXULTagPostfix(tagName, value);
   return NS_OK;
 }
@@ -1087,40 +1065,25 @@ nsMimeXULEmitter::OutputEmailAddresses(const char *aHeader, const char *aEmailAd
 nsresult
 nsMimeXULEmitter::ProcessSingleEmailEntry(const char *curHeader, char *curName, char *curAddress)
 {
-char      *link = nsnull;
-char      *tLink = nsnull;
-char      *workName = nsnull;
-char      *workAddr = nsnull;
+  char      *link = nsnull;
+  char      *tLink = nsnull;
+  nsCAutoString  workName (curName);
+  nsCAutoString  workAddr(curAddress);
+  nsCAutoString  workString(curName); 
 
-  if ( (curName) && (*curName) )
+  workName.Trim("\"");   
+  char * htmlString = nsEscapeHTML(workName);
+  if (htmlString)
   {
-    nsString  workString(curName);
-    char      *tName;
-    
-    workString.Trim("\"");
-    tName = workString.ToNewCString();    
-    workName = nsEscapeHTML(tName);
-    if (workName)
-    {
-      PR_FREEIF(tName);
-    }
-    else
-    {
-      workName = tName;
-    }
+    workName = htmlString;
+    nsCRT::free(htmlString);
   }
 
-  if ( (curAddress) && (*curAddress) )
-  {
-    nsString  workString2(curAddress);
-    
-    workString2.Trim("\"");
-    workAddr = workString2.ToNewCString();    
-  }
+  workAddr.Trim("\"");
 
   // tLink = PR_smprintf("addbook:add?vcard=begin%%3Avcard%%0Afn%%3A%s%%0Aemail%%3Binternet%%3A%s%%0Aend%%3Avcard%%0A", 
   //                    (workName ? workName : workAddr), workAddr);
-  tLink = PR_smprintf("mailto:%s", workAddr); 
+  tLink = PR_smprintf("mailto:%s", (const char *) workAddr); 
   if (tLink)
     link = nsEscapeHTML(tLink);
   if (link)
@@ -1130,8 +1093,8 @@ char      *workAddr = nsnull;
     UtilityWrite("\">");
   }
 
-  if (workName)
-    UtilityWrite(workName);
+  if (!workName.IsEmpty())
+    UtilityWrite((const char *) workName);
   else
     UtilityWrite(curName);
 
@@ -1167,8 +1130,6 @@ char      *workAddr = nsnull;
     }
   }
 
-  PR_FREEIF(workName);
-  PR_FREEIF(workAddr);
   return NS_OK;  
 }
 
@@ -1178,14 +1139,11 @@ nsMimeXULEmitter::BuildListOfStatusProviders()
   nsresult rv;
 
   // enumerate the registry subkeys
-  nsIRegistry           *registry = nsnull;
   nsRegistryKey      key;
-  nsIEnumerator         *components = nsnull;
+  nsCOMPtr<nsIEnumerator> components;
   miscStatusType        *newInfo = nsnull;
 
-  rv = nsServiceManager::GetService(NS_REGISTRY_PROGID,
-                                    nsCOMTypeInfo<nsIRegistry>::GetIID(),
-                                    (nsISupports**)&registry);
+  NS_WITH_SERVICE(nsIRegistry, registry, NS_REGISTRY_PROGID, &rv); 
   if (NS_FAILED(rv)) 
     return rv;
   
@@ -1197,7 +1155,7 @@ nsMimeXULEmitter::BuildListOfStatusProviders()
   if (NS_FAILED(rv)) 
     return rv;
   
-  rv = registry->EnumerateSubtrees(key, &components);
+  rv = registry->EnumerateSubtrees(key, getter_AddRefs(components));
   if (NS_FAILED(rv)) 
     return rv;
   
@@ -1206,20 +1164,20 @@ nsMimeXULEmitter::BuildListOfStatusProviders()
   rv = components->First();
   while (NS_SUCCEEDED(rv) && (NS_OK != components->IsDone()))
   {
-    nsISupports *base = nsnull;
+    nsCOMPtr<nsISupports> base;
     
-    rv = components->CurrentItem(&base);
+    rv = components->CurrentItem(getter_AddRefs(base));
     if (NS_FAILED(rv)) 
       return rv;
     
-    nsIRegistryNode *node = nsnull;
+    nsCOMPtr<nsIRegistryNode> node;
     nsIID nodeIID = NS_IREGISTRYNODE_IID;
-    rv = base->QueryInterface(nodeIID, (void**)&node);
+    node = do_QueryInterface(base, &rv);
     if (NS_FAILED(rv)) 
       return rv;
     
-    char *name = nsnull;
-    rv = node->GetName(&name);
+    nsXPIDLCString name;
+    rv = node->GetName(getter_Copies(name));
     if (NS_FAILED(rv)) 
       return rv;
     
@@ -1237,30 +1195,23 @@ nsMimeXULEmitter::BuildListOfStatusProviders()
         mMiscStatusArray->AppendElement(newInfo);
       }
     }
-    
-    // cleanup
-    nsCRT::free(name);
-    NS_RELEASE(node);
-    NS_RELEASE(base);
+
     rv = components->Next();
   }
   
   registry->Close();
-  NS_IF_RELEASE( components );
-  nsServiceManager::ReleaseService( NS_REGISTRY_PROGID, registry );
-  
+ 
   return NS_OK;
 }
 
 nsIMimeMiscStatus *
 nsMimeXULEmitter::GetStatusObjForProgID(nsCString aProgID)
 {
-  nsresult            rv;
-  nsIComponentManager *comMgr;
+  nsresult            rv = NS_OK;
   nsIMimeMiscStatus   *returnObj = nsnull;
   nsISupports         *obj = nsnull;
 
-  rv = NS_GetGlobalComponentManager(&comMgr);
+  NS_WITH_SERVICE(nsIComponentManager, comMgr, kComponentManagerCID, &rv);
   if (NS_FAILED(rv)) 
     return nsnull;
   
@@ -1269,13 +1220,8 @@ nsMimeXULEmitter::GetStatusObjForProgID(nsCString aProgID)
   if (NS_FAILED(rv))
     return nsnull;
 
-  rv = comMgr->CreateInstance(cid, nsnull, nsCOMTypeInfo<nsIMimeMiscStatus>::GetIID(), (void**)&obj);  
+  rv = comMgr->CreateInstance(cid, nsnull, NS_GET_IID(nsIMimeMiscStatus), (void**)&obj);  
   if (NS_FAILED(rv))
-    return nsnull;
-
-  rv = obj->QueryInterface(nsCOMTypeInfo<nsIMimeMiscStatus>::GetIID(), (void**)&returnObj);
-  NS_RELEASE(obj);
-  if (NS_FAILED(rv)) 
     return nsnull;
   else
     return returnObj;
@@ -1301,7 +1247,7 @@ nsMimeXULEmitter::Write(const char *buf, PRUint32 size, PRUint32 *amountWritten)
   if (needToWrite > 0)
   {
     rc += mOutStream->Write(mBufferMgr->GetBuffer(), 
-                            mBufferMgr->GetSize(), &written);
+                            needToWrite, &written);
     mTotalWritten += written;
     mBufferMgr->ReduceBuffer(written);
 //    mOutListener->OnDataAvailable(mChannel, mURL, mInputStream, 0, written);

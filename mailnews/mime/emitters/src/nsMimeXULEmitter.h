@@ -118,7 +118,7 @@ protected:
 
     // For body caching...
     PRBool              mBodyStarted;
-    nsString            mBody;
+    nsCString            mBody;
     nsFileSpec          *mBodyFileSpec;
 
     // For header caching...
