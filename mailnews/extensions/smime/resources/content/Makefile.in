@@ -27,6 +27,6 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 install::
-	$(INSTALL) smime.js $(DIST)/bin/defaults/pref
+	$(INSTALL) $(srcdir)/smime.js $(DIST)/bin/defaults/pref
 
 include $(topsrcdir)/config/rules.mk
