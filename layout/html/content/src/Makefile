@@ -25,6 +25,7 @@ CPPSRCS=				\
 	nsGenericDOMDataNode.cpp	\
 	nsGenericElement.cpp		\
 	nsGenericHTMLElement.cpp	\
+	nsGenericDOMHTMLCollection.cpp	\
 	nsHTMLAnchorElement.cpp		\
 	nsHTMLAppletElement.cpp		\
 	nsHTMLAreaElement.cpp		\
