@@ -634,6 +634,7 @@ struct StyleSpacingImpl: public nsStyleSpacing {
   void ResetFrom(const nsStyleSpacing* aParent, nsIPresContext* aPresContext);
   void SetFrom(const nsStyleSpacing& aSource);
   void CopyTo(nsStyleSpacing& aDest) const;
+  PRBool IsBorderSideVisible(PRUint8 aSide) const;
   void RecalcData(nsIPresContext* aPresContext, nscolor color);
   PRInt32 CalcDifference(const StyleSpacingImpl& aOther) const;
   PRUint32 ComputeCRC32(PRUint32 aCrc) const;
@@ -732,6 +733,13 @@ static nscoord CalcCoord(const nsStyleCoord& aCoord,
   return 0;
 }
 
+PRBool StyleSpacingImpl::IsBorderSideVisible(PRUint8 aSide) const
+{
+	PRUint8 borderStyle = GetBorderStyle(aSide);
+	return ((borderStyle != NS_STYLE_BORDER_STYLE_NONE)
+       && (borderStyle != NS_STYLE_BORDER_STYLE_HIDDEN));
+}
+
 void StyleSpacingImpl::RecalcData(nsIPresContext* aPresContext, nscolor aColor)
 {
   nscoord borderWidths[3];
@@ -769,40 +777,39 @@ void StyleSpacingImpl::RecalcData(nsIPresContext* aPresContext, nscolor aColor)
     mHasCachedPadding = PR_FALSE;
   }
 
-  if (((NS_STYLE_BORDER_STYLE_NONE == GetBorderStyle(NS_SIDE_LEFT))|| 
+  if (((!IsBorderSideVisible(NS_SIDE_LEFT))|| 
        IsFixedUnit(mBorder.GetLeftUnit(), PR_TRUE)) &&
-      ((NS_STYLE_BORDER_STYLE_NONE == GetBorderStyle(NS_SIDE_TOP)) || 
+      ((!IsBorderSideVisible(NS_SIDE_TOP)) || 
        IsFixedUnit(mBorder.GetTopUnit(), PR_TRUE)) &&
-      ((NS_STYLE_BORDER_STYLE_NONE == GetBorderStyle(NS_SIDE_RIGHT)) || 
+      ((!IsBorderSideVisible(NS_SIDE_RIGHT)) || 
        IsFixedUnit(mBorder.GetRightUnit(), PR_TRUE)) &&
-      ((NS_STYLE_BORDER_STYLE_NONE == GetBorderStyle(NS_SIDE_BOTTOM)) || 
+      ((!IsBorderSideVisible(NS_SIDE_BOTTOM)) || 
        IsFixedUnit(mBorder.GetBottomUnit(), PR_TRUE))) {
     nsStyleCoord  coord;
-    if (NS_STYLE_BORDER_STYLE_NONE == GetBorderStyle(NS_SIDE_LEFT)) {
+    if (!IsBorderSideVisible(NS_SIDE_LEFT)) {
       mCachedBorder.left = 0;
     }
     else {
       mCachedBorder.left = CalcCoord(mBorder.GetLeft(coord), borderWidths, 3);
     }
-    if (NS_STYLE_BORDER_STYLE_NONE == GetBorderStyle(NS_SIDE_TOP)) {
+    if (!IsBorderSideVisible(NS_SIDE_TOP)) {
       mCachedBorder.top = 0;
     }
     else {
       mCachedBorder.top = CalcCoord(mBorder.GetTop(coord), borderWidths, 3);
     }
-    if (NS_STYLE_BORDER_STYLE_NONE == GetBorderStyle(NS_SIDE_RIGHT)) {
+    if (!IsBorderSideVisible(NS_SIDE_RIGHT)) {
       mCachedBorder.right = 0;
     }
     else {
       mCachedBorder.right = CalcCoord(mBorder.GetRight(coord), borderWidths, 3);
     }
-    if (NS_STYLE_BORDER_STYLE_NONE == GetBorderStyle(NS_SIDE_BOTTOM)) {
+    if (!IsBorderSideVisible(NS_SIDE_BOTTOM)) {
       mCachedBorder.bottom = 0;
     }
     else {
       mCachedBorder.bottom = CalcCoord(mBorder.GetBottom(coord), borderWidths, 3);
     }
-
     mHasCachedBorder = PR_TRUE;
   }
   else {
