@@ -324,6 +324,9 @@ nsSVGGlyphFrame::Paint(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectTwip
 #ifdef DEBUG
   //printf("nsSVGGlyphFrame(%p)::Paint\n", this);
 #endif
+  if (!GetStyleVisibility()->IsVisible())
+    return NS_OK;
+
   mGeometry->Render(canvas);
   return NS_OK;
 }
