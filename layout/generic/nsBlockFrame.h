@@ -299,6 +299,7 @@ protected:
   PRBool IsChild(nsIFrame* aFrame);
   void VerifyFrameCount(nsLineBox* line);
   void VerifyOverflowSituation();
+  PRInt32 GetDepth() const;
 #endif
 
   nsLineBox* mLines;
