@@ -57,6 +57,10 @@ public:
 
   static NS_COM void WalkTheStack(char* aBuffer, int aBufLen);
 
+  static NS_COM void DemangleSymbol(const char * aSymbol, 
+                                    char * aBuffer,
+                                    int aBufLen);
+
   static NS_COM void LogAddRef(void* aPtr,
                                nsrefcnt aRefCnt,
                                const char* aFile,
