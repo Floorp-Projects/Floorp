@@ -46,8 +46,9 @@
 #include <varargs.h>
 #endif
 
-
+#ifdef HAVE_MEMORY_H
 #include <memory.h>
+#endif
 #include <string.h>
 #include <assert.h>
 #include "mcom_db.h"
