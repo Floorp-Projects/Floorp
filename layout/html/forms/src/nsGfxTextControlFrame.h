@@ -43,7 +43,7 @@
 #include "nsIDOMKeyEvent.h"
 #include "nsITextContent.h"
 #include "nsHTMLValue.h"
-#include "nsIWebShell.h"
+#include "nsIDocShell.h"
 #include "nsIViewManager.h"
 
 #include "nsIStatefulFrame.h"
@@ -79,28 +79,7 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIDocumentLoaderObserver
-  NS_IMETHOD OnStartDocumentLoad(nsIDocumentLoader* loader, 
-                                 nsIURI* aURL, 
-                                 const char* aCommand);
-  NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader,
-                               nsIChannel* channel,
-                               nsresult aStatus);
-  NS_IMETHOD OnStartURLLoad(nsIDocumentLoader* loader,
-                            nsIChannel* channel);
-  NS_IMETHOD OnProgressURLLoad(nsIDocumentLoader* loader,
-                               nsIChannel* channel,
-                               PRUint32 aProgress, 
-                               PRUint32 aProgressMax);
-  NS_IMETHOD OnStatusURLLoad(nsIDocumentLoader* loader,
-                             nsIChannel* channel,
-                             nsString& aMsg);
-  NS_IMETHOD OnEndURLLoad(nsIDocumentLoader* loader,
-                          nsIChannel* channel,
-                          nsresult aStatus);
-  NS_IMETHOD HandleUnknownContentType( nsIDocumentLoader* loader,
-                                       nsIChannel* channel,
-                                       const char *aContentType,
-                                       const char *aCommand );
+  NS_DECL_NSIDOCUMENTLOADEROBSERVER
 
 protected:
   nsGfxTextControlFrame *mFrame; // not ref counted
@@ -208,7 +187,7 @@ public:
 
 /******************************************************************************
  * nsEnderEventListener
- * This class is responsible for propogating events from the embedded webshell
+ * This class is responsible for propogating events from the embedded docshell
  * of nsGfxTextControlFrame to the parent environment.  This enables DOM
  * event listeners on text controls.
  ******************************************************************************/
@@ -399,7 +378,7 @@ protected:
  * frame that represents an HTML text input element
  * handles both <input type=text> and <textarea>
  * For performance, nsGfxTextControl displays text with a simple block frame
- * until it first recieves focus.  At that point, it builds a subdocument (mWebShell)
+ * until it first recieves focus.  At that point, it builds a subdocument (mDocShell)
  * and attaches an editor to the subdocument.
  ******************************************************************************/
 
@@ -466,7 +445,7 @@ public:
                               PRInt32         aHint);
 
 
-  /** fire up the webshell and editor 
+  /** fire up the docshell and editor 
     * @param aSizeOfSubdocContainer  if null, the size of this frame is used (normally null)
     *                                if not null, the size from which the subdoc size is calculated.
     */
@@ -490,7 +469,7 @@ public:
                                 nsString* aValues, nsString* aNames);
   virtual void Reset(nsIPresContext* aPresContext);
 
-  // override to interact with webshell
+  // override to interact with docshell
   NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
@@ -550,7 +529,7 @@ public:
 
   /* ============= nsIGfxTextControlFrame ================= */
   NS_IMETHOD GetEditor(nsIEditor **aEditor);
-  NS_IMETHOD GetWebShell(nsIWebShell **aWebShell);
+  NS_IMETHOD GetDocShell(nsIDocShell **aDocShell);
   NS_IMETHOD SetInnerFocus();
 
   //nsIStatefulFrame
@@ -602,20 +581,20 @@ protected:
                              nsHTMLValue & aRowSize,
                              nsresult &    aRowStatus);
  
-  NS_IMETHOD CreateWebShell(nsIPresContext* aPresContext,
+  NS_IMETHOD CreateDocShell(nsIPresContext* aPresContext,
                             const nsSize& aSize);
 
   NS_IMETHOD InitializeTextControl(nsIPresShell *aPresShell, nsIDOMDocument *aDoc);
 
   NS_IMETHOD InstallEventListeners();
 
-  NS_IMETHOD GetPresShellFor(nsIWebShell* aWebShell, nsIPresShell** aPresShell);
+  NS_IMETHOD GetPresShellFor(nsIDocShell* aDocShell, nsIPresShell** aPresShell);
   
   NS_IMETHOD GetFirstNodeOfType(const nsString& aTag, nsIDOMDocument *aDOMDoc, nsIDOMNode **aBodyNode);
 
   NS_IMETHOD GetFirstFrameForType(const nsString& aTag, nsIPresShell *aPresShell, nsIDOMDocument *aDOMDoc, nsIFrame **aResult);
 
-  /** create an event based on aEvent and pass it to the sub document mWebShell
+  /** create an event based on aEvent and pass it to the sub document mDocShell
     * via the sub document's view manager.
     */
   NS_IMETHOD RedispatchMouseEventToSubDoc(nsIPresContext* aPresContext, 
@@ -666,7 +645,7 @@ public:
   nsresult GetFirstFrameWithIID(nsIPresContext *aPresContext, const nsIID& aIID, nsIFrame *aRootFrame, void **aResultFrame);
 
 protected:
-  nsCOMPtr<nsIWebShell>     mWebShell;
+  nsCOMPtr<nsIDocShell>     mDocShell;
   EnderTempObserver*        mTempObserver;
   nsEnderDocumentObserver*  mDocObserver;
 
