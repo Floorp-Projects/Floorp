@@ -16,8 +16,8 @@
  * Reserved.
  */
 
-#ifndef nsEditorInterfaces_h__
-#define nsEditorInterfaces_h__
+#ifndef editorInterfaces_h__
+#define editorInterfaces_h__
 
 #include "nsIDOMEvent.h"
 #include "nsIDOMKeyListener.h"
@@ -27,20 +27,20 @@
 class Editor;
 
 //nsIDOMKeyListener interface
-/** The nsEditorKeyListener public nsIDOMKeyListener
+/** The editorKeyListener public nsIDOMKeyListener
  *  This class will delegate events to its editor according to the translation
  *  it is responsible for.  i.e. 'c' becomes a keydown, but 'ESC' becomes nothing.
  *  This should be done through contexts that are loaded from URLs
  */
-class nsEditorKeyListener : public nsIDOMKeyListener {
+class editorKeyListener : public nsIDOMKeyListener {
   Editor *mEditorP;
 public:
   /** the default constructor
    */
-  nsEditorKeyListener();
+  editorKeyListener();
   /** the default destructor. virtual due to the possibility of derivation.
    */
-  virtual ~nsEditorKeyListener();
+  virtual ~editorKeyListener();
 
   /** SetEditor gives an address to the editor that will be accessed
    *  @param Editor *aEditor simple
@@ -72,16 +72,16 @@ private:
 /** editor Implementation of the MouseListener interface
  * nsIDOMMouseListener interface
  */
-class nsEditorMouseListener : public nsIDOMMouseListener 
+class editorMouseListener : public nsIDOMMouseListener 
 {
   Editor *mEditorP;
 public:
   /** default constructor
    */
-  nsEditorMouseListener();
+  editorMouseListener();
   /** default destructor
    */
-  virtual ~nsEditorMouseListener();
+  virtual ~editorMouseListener();
 
   /** SetEditor gives an address to the editor that will be accessed
    *  @param Editor *aEditor simple
@@ -116,5 +116,5 @@ extern nsresult NS_NewEditorKeyListener(nsIDOMEventListener ** aInstancePtrResul
  */
 extern nsresult NS_NewEditorMouseListener(nsIDOMEventListener ** aInstancePtrResult, Editor *aEditorP);
 
-#endif //nsEditorInterfaces_h__
+#endif //editorInterfaces_h__
 

@@ -15,23 +15,22 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-#include "nsEditorInterfaces.h"
-#include "nsEditorMode.h"
+#include "editorInterfaces.h"
 #include "nsString.h"
 
 /*
- * nsEditorKeyListener implementation
+ * editorKeyListener implementation
  */
 
-nsEditorKeyListener::nsEditorKeyListener() 
+editorKeyListener::editorKeyListener() 
 {
 }
 
-nsEditorKeyListener::~nsEditorKeyListener() 
+editorKeyListener::~editorKeyListener() 
 {
 }
 
-nsresult nsEditorKeyListener::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+nsresult editorKeyListener::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   if (NULL == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
@@ -57,16 +56,16 @@ nsresult nsEditorKeyListener::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   return NS_NOINTERFACE;
 }
 
-NS_IMPL_ADDREF(nsEditorKeyListener)
+NS_IMPL_ADDREF(editorKeyListener)
 
-NS_IMPL_RELEASE(nsEditorKeyListener)
+NS_IMPL_RELEASE(editorKeyListener)
 
-nsresult nsEditorKeyListener::ProcessEvent(nsIDOMEvent* aEvent)
+nsresult editorKeyListener::ProcessEvent(nsIDOMEvent* aEvent)
 {
   return NS_OK;
 }
 
-nsresult nsEditorKeyListener::GetCharFromKeyCode(PRUint32 aKeyCode, PRBool aIsShift, char *aChar)
+nsresult editorKeyListener::GetCharFromKeyCode(PRUint32 aKeyCode, PRBool aIsShift, char *aChar)
 {
   /* This is completely temporary to get this working while I check out Unicode conversion code. */
   if (aKeyCode >= 0x41 && aKeyCode <= 0x5A) {
@@ -85,7 +84,7 @@ nsresult nsEditorKeyListener::GetCharFromKeyCode(PRUint32 aKeyCode, PRBool aIsSh
   return NS_ERROR_FAILURE;
 }
 
-nsresult nsEditorKeyListener::KeyDown(nsIDOMEvent* aKeyEvent)
+nsresult editorKeyListener::KeyDown(nsIDOMEvent* aKeyEvent)
 {
   PRUint32 mKeyCode;
   PRBool mIsShift;
@@ -117,29 +116,29 @@ nsresult nsEditorKeyListener::KeyDown(nsIDOMEvent* aKeyEvent)
   return NS_ERROR_BASE;
 }
 
-nsresult nsEditorKeyListener::KeyUp(nsIDOMEvent* aKeyEvent)
+nsresult editorKeyListener::KeyUp(nsIDOMEvent* aKeyEvent)
 {
   return NS_OK;
 }
 
-nsresult nsEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
+nsresult editorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
 {
   return NS_OK;
 }
 
 /*
- * nsEditorMouseListener implementation
+ * editorMouseListener implementation
  */
 
-nsEditorMouseListener::nsEditorMouseListener() 
+editorMouseListener::editorMouseListener() 
 {
 }
 
-nsEditorMouseListener::~nsEditorMouseListener() 
+editorMouseListener::~editorMouseListener() 
 {
 }
 
-nsresult nsEditorMouseListener::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+nsresult editorMouseListener::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   if (NULL == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
@@ -165,16 +164,16 @@ nsresult nsEditorMouseListener::QueryInterface(REFNSIID aIID, void** aInstancePt
   return NS_NOINTERFACE;
 }
 
-NS_IMPL_ADDREF(nsEditorMouseListener)
+NS_IMPL_ADDREF(editorMouseListener)
 
-NS_IMPL_RELEASE(nsEditorMouseListener)
+NS_IMPL_RELEASE(editorMouseListener)
 
-nsresult nsEditorMouseListener::ProcessEvent(nsIDOMEvent* aEvent)
+nsresult editorMouseListener::ProcessEvent(nsIDOMEvent* aEvent)
 {
   return NS_OK;
 }
 
-nsresult nsEditorMouseListener::MouseDown(nsIDOMEvent* aMouseEvent)
+nsresult editorMouseListener::MouseDown(nsIDOMEvent* aMouseEvent)
 {
   nsIDOMNode *aTarget;
   if (NS_OK == aMouseEvent->GetTarget(&aTarget)) {
@@ -185,27 +184,27 @@ nsresult nsEditorMouseListener::MouseDown(nsIDOMEvent* aMouseEvent)
   return NS_ERROR_BASE;
 }
 
-nsresult nsEditorMouseListener::MouseUp(nsIDOMEvent* aMouseEvent)
+nsresult editorMouseListener::MouseUp(nsIDOMEvent* aMouseEvent)
 {
   return NS_OK;
 }
 
-nsresult nsEditorMouseListener::MouseClick(nsIDOMEvent* aMouseEvent)
+nsresult editorMouseListener::MouseClick(nsIDOMEvent* aMouseEvent)
 {
   return NS_OK;
 }
 
-nsresult nsEditorMouseListener::MouseDblClick(nsIDOMEvent* aMouseEvent)
+nsresult editorMouseListener::MouseDblClick(nsIDOMEvent* aMouseEvent)
 {
   return NS_OK;
 }
 
-nsresult nsEditorMouseListener::MouseOver(nsIDOMEvent* aMouseEvent)
+nsresult editorMouseListener::MouseOver(nsIDOMEvent* aMouseEvent)
 {
   return NS_OK;
 }
 
-nsresult nsEditorMouseListener::MouseOut(nsIDOMEvent* aMouseEvent)
+nsresult editorMouseListener::MouseOut(nsIDOMEvent* aMouseEvent)
 {
   return NS_OK;
 }
@@ -216,7 +215,7 @@ nsresult nsEditorMouseListener::MouseOut(nsIDOMEvent* aMouseEvent)
 
 nsresult NS_NewEditorKeyListener(nsIDOMEventListener ** aInstancePtrResult)
 {
-  nsEditorKeyListener* it = new nsEditorKeyListener();
+  editorKeyListener* it = new editorKeyListener();
   if (NULL == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -228,7 +227,7 @@ nsresult NS_NewEditorKeyListener(nsIDOMEventListener ** aInstancePtrResult)
 
 nsresult NS_NewEditorMouseListener(nsIDOMEventListener ** aInstancePtrResult)
 {
-  nsEditorMouseListener* it = new nsEditorMouseListener();
+  editorMouseListener* it = new editorMouseListener();
   if (NULL == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
