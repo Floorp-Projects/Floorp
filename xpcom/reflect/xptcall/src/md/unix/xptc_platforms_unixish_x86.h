@@ -56,13 +56,24 @@
 #define THUNK_BASED_THIS_ADJUST
 
 #elif defined(__FreeBSD__) 
-#include <osreldate.h>
-#if __FreeBSD_version >= 400015
-#define CFRONT_STYLE_THIS_ADJUST
-#elif (__FreeBSD_version == 340000) && (__GNUC__ == 2) && (__GNUC_MINOR__ == 7)
-/* "FreeBSD 3.4 ships with gcc version 2.7.2.3" -- 
- *     Joerg Brunsmann <joerg.brunsmann@FernUni-Hagen.de>
+/* System versions of gcc on FreeBSD don't use thunks.  On 3.x, the system
+ * compiler is gcc 2.7.2.3, which doesn't use thunks by default.  On 4.x and
+ * 5.x, /usr/src/contrib/gcc/config/freebsd.h explicitly undef's
+ * DEFAULT_VTABLE_THUNKS.  (The one exception is a brief period (September
+ * 1999 - Jan 2000) during 4.0-CURRENT, after egcs was merged --
+ * this was changed before 4.0-RELEASE, but we can handle it anyway.)
+ *
+ * Versions of gcc from the ports collection (/usr/ports/lang/egcs),
+ * however, have DEFAULT_VTABLE_THUNKS #defined to 1, at least
+ * in all ports collections since the 2.95 merge.  (Supporting optional
+ * compilers from FreeBSD 3.2 or earlier seems unnecessary).
+ *
+ * The easiest way to distinguish the ports collection gcc from the system
+ * gcc is that the system gcc defines __FreeBSD_cc_version.  This variable
+ * can also identify the period of time that 4.0-CURRENT used thunks.
  */
+#if defined(__FreeBSD_cc_version) && \
+    (__FreeBSD_cc_version < 400002 || __FreeBSD_cc_version > 400003)
 #define CFRONT_STYLE_THIS_ADJUST
 #else
 #define THUNK_BASED_THIS_ADJUST
