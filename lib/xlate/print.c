@@ -448,9 +448,10 @@ ps_measure_text(MWContext *cx, LO_TextStruct *text,
     if (cx->prSetup->otherFontName[text->text_attr->fontmask]
         && win_csid & MULTIBYTE ) {
         /* other font is specified, but it is multi-byte non-latin1 */
-        return measure_asian_text(cx, f,
-                                  PSFE_MaskToFI[text->text_attr->fontmask],
-                                  cp, start, last, sf, text_info);
+        measure_asian_text(cx, f,
+						   PSFE_MaskToFI[text->text_attr->fontmask],
+						   cp, start, last, sf, text_info);
+		return;
     }
     for (i = start; i <= last; cp++, i++) {
 	PS_CharInfo *temp;
