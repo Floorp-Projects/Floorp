@@ -17,7 +17,7 @@
  */
 <!--  to hide script contents from old browsers
 
-
+var debugFlag = false;
 
 function loadData()
 {
