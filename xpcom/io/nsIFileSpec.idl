@@ -136,7 +136,7 @@ interface nsIFileSpec : nsISupports
 [scriptable, uuid(d8c0a083-0868-11d3-915f-d9d889d48e3c)]
 interface nsIDirectoryIterator : nsISupports
 {
-	void Init(in nsIFileSpec parent);
+	void Init(in nsIFileSpec parent, in boolean resolveSymlink);
 	boolean exists();
 	void next();
 	readonly attribute nsIFileSpec currentSpec;

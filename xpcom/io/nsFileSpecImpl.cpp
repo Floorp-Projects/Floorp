@@ -659,11 +659,11 @@ nsDirectoryIteratorImpl::~nsDirectoryIteratorImpl()
 }
 
 //----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsDirectoryIteratorImpl::Init(nsIFileSpec *parent)
+NS_IMETHODIMP nsDirectoryIteratorImpl::Init(nsIFileSpec *parent, PRBool resolveSymlink)
 //----------------------------------------------------------------------------------------
 {
 	delete mDirectoryIterator;
-	mDirectoryIterator = new nsDirectoryIterator(FILESPEC(parent), PR_FALSE);
+	mDirectoryIterator = new nsDirectoryIterator(FILESPEC(parent), resolveSymlink);
 	if (!mDirectoryIterator)
 		return NS_ERROR_OUT_OF_MEMORY;
 	return NS_OK;

@@ -1351,7 +1351,7 @@ extern "C" JSBool pref_InitInitialObjects()
         	(const nsID&)nsIDirectoryIterator::GetIID(),
         	(void**)&i);
     NS_ASSERTION(NS_SUCCEEDED(rv), "ERROR: Could not make a directory iterator.");
-    if (!i || NS_FAILED(i->Init(componentsDir)))
+    if (!i || NS_FAILED(i->Init(componentsDir, PR_TRUE)))
     	return JS_FALSE;
 
 	// Get any old child of the components directory. Warning: aliases get resolved, so

@@ -212,7 +212,7 @@ public:
 
 	NS_DECL_ISUPPORTS
 
-	NS_IMETHOD Init(nsIFileSpec *parent);
+	NS_IMETHOD Init(nsIFileSpec *parent, PRBool resolveSymlink);
 
 	NS_IMETHOD exists(PRBool *_retval);
 
