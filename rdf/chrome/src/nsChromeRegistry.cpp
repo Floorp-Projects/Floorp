@@ -757,19 +757,16 @@ nsChromeRegistry::VerifyCompatibleProvider(nsIRDFResource* aPackageResource,
   else // Locale arc
     versionArc = mLocaleVersion;
 
-  nsCAutoString packageVersion;
-  nsChromeRegistry::FollowArc(mChromeDataSource, packageVersion,
-                              aPackageResource, versionArc);
-  if (!packageVersion.IsEmpty()) {
+  nsCOMPtr<nsIRDFNode> packageVersionNode;
+  mChromeDataSource->GetTarget(aPackageResource, versionArc, PR_TRUE,
+                               getter_AddRefs(packageVersionNode));
+  if (packageVersionNode) {
     // The package only wants providers (skins) that say they can work
     // with it.  Let's find out if our provider (skin) can work with it.
-    nsCAutoString providerVersion;
-    nsChromeRegistry::FollowArc(mChromeDataSource, providerVersion,
-                                aProviderResource, versionArc);
-    if (!providerVersion.Equals(packageVersion)) {
-      *aAcceptable = PR_FALSE;
+    mChromeDataSource->HasAssertion(aProviderResource, versionArc,
+                                    packageVersionNode, PR_TRUE, aAcceptable);
+    if (!*aAcceptable)
       return NS_OK;
-    }
   }
   
   // Ensure that the provider actually exists.
@@ -987,22 +984,15 @@ nsChromeRegistry::GetDynamicDataSource(nsIURI *aChromeURL,
     
     // Follow the dynamic data arc to see if we should continue.
     // Only if it claims to have dynamic data do we even bother.
-    nsCAutoString hasDynamicDS;
-    nsChromeRegistry::FollowArc(mainDataSource, hasDynamicDS, 
-                                packageResource, hasDynamicDataArc);
-    if (hasDynamicDS.IsEmpty())
+    nsCOMPtr<nsIRDFNode> hasDynamicDSNode;
+    mainDataSource->GetTarget(packageResource, hasDynamicDataArc, PR_TRUE,
+                              getter_AddRefs(hasDynamicDSNode));
+    if (!hasDynamicDSNode)
       return NS_OK; // No data source exists.
   }
 
   // Retrieve the mInner data source.
-  nsCAutoString overlayFile( "overlayinfo/" );
-  overlayFile += package;
-  overlayFile += "/";
-
-  if (aIsOverlay)
-    overlayFile += "content/overlays.rdf";
-  else overlayFile += "skin/stylesheets.rdf";
-
+  nsCAutoString overlayFile( aIsOverlay ? "overlays.rdf" : "stylesheets.rdf" );
   return LoadDataSource(overlayFile, aResult, aUseProfile, nsnull);
 }
 
@@ -2519,30 +2509,60 @@ nsChromeRegistry::InstallProvider(const nsACString& aProviderType,
             if (NS_FAILED(rv)) return rv;
           }
 
-          nsCOMPtr<nsIRDFNode> newTarget;
-          rv = dataSource->GetTarget(resource, arc, PR_TRUE, getter_AddRefs(newTarget));
+          nsCOMPtr<nsISimpleEnumerator> targets;
+          rv = installSource->GetTargets(resource, arc, PR_TRUE, getter_AddRefs(targets));
           if (NS_FAILED(rv)) return rv;
 
-          if (arc == mImage) {
-            // We are an image URL.  Check to see if we're a relative URL.
-            nsCOMPtr<nsIRDFLiteral> literal(do_QueryInterface(newTarget));
-            if (literal) {
-              const PRUnichar* valueStr;
-              literal->GetValueConst(&valueStr);
-              nsAutoString imageURL(valueStr);
-              if (imageURL.FindChar(':') == -1) {
-                // We're relative. Prepend the base URL of the
-                // package.
-                NS_ConvertUTF8toUCS2 fullURL(aBaseURL);
-                fullURL += imageURL;
-                mRDFService->GetLiteral(fullURL.get(), getter_AddRefs(literal));
-                newTarget = do_QueryInterface(literal);
-              }
-            }
+          PRBool moreTargets;
+          rv = targets->HasMoreElements(&moreTargets);
+          if (NS_FAILED(rv)) return rv;
+
+          while (moreTargets) {
+            targets->GetNext(getter_AddRefs(supp));
+            nsCOMPtr<nsIRDFNode> node(do_QueryInterface(supp));
+            installSource->Unassert(resource, arc, node);
+
+            rv = targets->HasMoreElements(&moreTargets);
+            if (NS_FAILED(rv)) return rv;
           }
 
-          rv = nsChromeRegistry::UpdateArc(installSource, resource, arc, newTarget, aRemove);
-          if (NS_FAILED(rv)) return rv;
+          if (!aRemove) {
+            rv = dataSource->GetTargets(resource, arc, PR_TRUE, getter_AddRefs(targets));
+            if (NS_FAILED(rv)) return rv;
+
+            rv = targets->HasMoreElements(&moreTargets);
+            if (NS_FAILED(rv)) return rv;
+
+            while (moreTargets) {
+              nsresult rv = targets->GetNext(getter_AddRefs(supp));
+              if (NS_FAILED(rv)) return rv;
+              nsCOMPtr<nsIRDFNode> newTarget(do_QueryInterface(supp));
+
+              if (arc == mImage) {
+                // We are an image URL.  Check to see if we're a relative URL.
+                nsCOMPtr<nsIRDFLiteral> literal(do_QueryInterface(newTarget));
+                if (literal) {
+                  const PRUnichar* valueStr;
+                  literal->GetValueConst(&valueStr);
+                  nsAutoString imageURL(valueStr);
+                  if (imageURL.FindChar(':') == -1) {
+                    // We're relative. Prepend the base URL of the
+                    // package.
+                    NS_ConvertUTF8toUCS2 fullURL(aBaseURL);
+                    fullURL += imageURL;
+                    mRDFService->GetLiteral(fullURL.get(), getter_AddRefs(literal));
+                    newTarget = do_QueryInterface(literal);
+                  }
+                }
+              }
+
+              rv = installSource->Assert(resource, arc, newTarget, PR_TRUE);
+              if (NS_FAILED(rv)) return rv;
+
+              rv = targets->HasMoreElements(&moreTargets);
+              if (NS_FAILED(rv)) return rv;
+            }
+          }
 
           rv = arcs->HasMoreElements(&moreArcs);
           if (NS_FAILED(rv)) return rv;
@@ -2616,9 +2636,10 @@ PRBool nsChromeRegistry::IsOverlayAllowed(nsIURI *aChromeURL)
   }
 
   // See if the disabled arc is set for the package.
-  nsCAutoString disabled;
-  nsChromeRegistry::FollowArc(mChromeDataSource, disabled, packageResource, mDisabled);
-  return disabled.IsEmpty();
+  nsCOMPtr<nsIRDFNode> disabledNode;
+  mChromeDataSource->GetTarget(packageResource, mDisabled, PR_TRUE,
+                               getter_AddRefs(disabledNode));
+  return !disabledNode;
 }
 
 NS_IMETHODIMP nsChromeRegistry::InstallSkin(const char* aBaseURL, PRBool aUseProfile, PRBool aAllowScripts)
@@ -3000,14 +3021,10 @@ nsChromeRegistry::AllowScriptsForPackage(nsIURI* aChromeURI, PRBool *aResult)
   resource = do_QueryInterface(selectedProvider, &rv);
   if (NS_SUCCEEDED(rv)) {
     // get its script access
-    nsCAutoString scriptAccess;
-    rv = nsChromeRegistry::FollowArc(mChromeDataSource,
-                                     scriptAccess,
-                                     resource,
-                                     mAllowScripts);
-    if (NS_FAILED(rv)) return rv;
-
-    if (!scriptAccess.IsEmpty())
+    nsCOMPtr<nsIRDFNode> scriptAccessNode;
+    mChromeDataSource->GetTarget(resource, mAllowScripts, PR_TRUE,
+                                 getter_AddRefs(scriptAccessNode));
+    if (scriptAccessNode)
       *aResult = PR_FALSE;
   }
   return NS_OK;
@@ -3354,10 +3371,6 @@ nsChromeRegistry::CheckProviderVersion (const nsACString& aProviderType,
     if (NS_SUCCEEDED(rv) && packageSkinEntry) {
       nsCOMPtr<nsIRDFResource> entry = do_QueryInterface(packageSkinEntry);
       if (entry) {
-
-        nsCAutoString themePackageVersion;
-        nsChromeRegistry::FollowArc(mChromeDataSource, themePackageVersion, entry, aSelectionArc);
-
         // Obtain the real package resource.
         nsCOMPtr<nsIRDFNode> packageNode;
         rv = mChromeDataSource->GetTarget(entry, mPackage, PR_TRUE, getter_AddRefs(packageNode));
@@ -3368,32 +3381,25 @@ nsChromeRegistry::CheckProviderVersion (const nsACString& aProviderType,
 
         nsCOMPtr<nsIRDFResource> packageResource(do_QueryInterface(packageNode));
         if (packageResource) {
+          nsCOMPtr<nsIRDFNode> packageNameNode;
+          mChromeDataSource->GetTarget(packageResource, mName, PR_TRUE,
+                                       getter_AddRefs(packageNameNode));
 
-          nsCAutoString packageVersion;
-          nsChromeRegistry::FollowArc(mChromeDataSource, packageVersion, packageResource, aSelectionArc);
+          if (packageNameNode) {
+            nsCOMPtr<nsIRDFNode> packageVersionNode;
+            mChromeDataSource->GetTarget(packageResource, aSelectionArc, PR_TRUE,
+                                         getter_AddRefs(packageVersionNode));
 
-          nsCAutoString packageName;
-          nsChromeRegistry::FollowArc(mChromeDataSource, packageName, packageResource, mName);
-
-          if (packageName.IsEmpty())
-            // the package is not represented for current version, so ignore it
-            *aCompatible = PR_TRUE;
-          else {
-            if (packageVersion.IsEmpty() && themePackageVersion.IsEmpty())
-              *aCompatible = PR_TRUE;
-            else {
-              if (!packageVersion.IsEmpty() && !themePackageVersion.IsEmpty())
-                *aCompatible = ( themePackageVersion.Equals(packageVersion));
-              else
-                *aCompatible = PR_FALSE;
+            if (packageVersionNode) {
+              mChromeDataSource->HasAssertion(entry, aSelectionArc,
+                                              packageVersionNode, PR_TRUE,
+                                              aCompatible);
+              // if just one theme package is NOT compatible, the theme will be disabled
+              if (!*aCompatible)
+                return NS_OK;
             }
           }
-
-           // if just one theme package is NOT compatible, the theme will be disabled
-           if (!(*aCompatible))
-             return NS_OK;
-
-         }
+        }
       }
     }
     rv = arcs->HasMoreElements(&more);
