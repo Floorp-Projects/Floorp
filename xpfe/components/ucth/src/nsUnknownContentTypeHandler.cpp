@@ -194,7 +194,7 @@ nsUnknownContentDialog::QueryInterface(REFNSIID aIID,void** aInstancePtr)
 
 // HandleUnknownContentType (from nsIUnknownContentTypeHandler) implementation.
 NS_IMETHODIMP
-nsUnknownContentTypeHandler::HandleUnknownContentType( nsIURI *aURL,
+nsUnknownContentTypeHandler::HandleUnknownContentType( nsIChannel *aURL,
                                                        const char *aContentType,
                                                        nsIDocumentLoader *aDocLoader ) {
     nsresult rv = NS_OK;
@@ -223,7 +223,13 @@ nsUnknownContentTypeHandler::HandleUnknownContentType( nsIURI *aURL,
     
         if ( NS_SUCCEEDED(rv) ) {
             // Create "save to disk" nsIXULCallbacks...
+#ifndef NECKO
             nsUnknownContentDialog *dialog = new nsUnknownContentDialog( aURL, aContentType, aDocLoader );
+#else
+            nsCOMPtr<nsIURI>channelUri = nsnull;
+            rv = aURL->GetURI(getter_AddRefs(channelUri));
+            nsUnknownContentDialog *dialog = new nsUnknownContentDialog( channelUri, aContentType, aDocLoader );
+#endif // NECKO
     
             rv = mAppShell->CreateTopLevelWindow( nsnull,
                                                   url,
