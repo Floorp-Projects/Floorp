@@ -326,7 +326,7 @@ function EditorGetText()
 {
   if (editorShell) {
     dump("Getting text\n");
-    var  outputText = editorShell.contentsAsText;
+    var  outputText = editorShell.GetContentsAs("text/plain", 2);
     dump(outputText + "\n");
   }
 }
@@ -335,8 +335,26 @@ function EditorGetHTML()
 {
   if (editorShell) {
     dump("Getting HTML\n");
-    var  outputText = editorShell.contentsAsHTML;
-    dump(outputText + "\n");
+    var  outputHTML = editorShell.GetContentsAs("text/html", 2);
+    dump(outputHTML + "\n");
+  }
+}
+
+function EditorGetXIF()
+{
+  if (window.editorShell) {
+    dump("Getting XIF\n");
+    var  outputHTML = editorShell.GetContentsAs("text/xif", 2);
+    dump(outputHTML + "\n");
+  }
+}
+
+function EditorDumpContent()
+{
+  if (window.editorShell) {
+    dump("==============  Content Tree: ================\n");
+    window.editorShell.DumpContentTree();
+    dump(outputHTML + "\n");
   }
 }
 
@@ -597,12 +615,24 @@ function EditorTestSelection()
       dump(firstRange.toString() + "\"\n");
     }
   }
-  
-  dump("Selection as text\n");
-  dump(editorShell.selectionAsText + "\n\n");
 
-  dump("Selection as HTML\n");
-  dump(editorShell.selectionAsHTML + "\n\n");
+  var output;
+
+  dump("\n====== Selection as XIF =======================\n");
+  output = editorShell.GetContentsAs("text/xif", 1);
+  dump(output + "\n\n");
+
+  dump("====== Selection as unformatted text ==========\n");
+  output = editorShell.GetContentsAs("text/plain", 1);
+  dump(output + "\n\n");
+
+  dump("====== Selection as formatted text ============\n");
+  output = editorShell.GetContentsAs("text/plain", 3);
+  dump(output + "\n\n");
+
+  dump("====== Selection as HTML ======================\n");
+  output = editorShell.GetContentsAs("text/html", 1);
+  dump(output + "\n\n");
 }
 
 function EditorUnitTests()

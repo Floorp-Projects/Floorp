@@ -338,11 +338,17 @@ public:
   NS_IMETHOD ScrollIntoView(PRBool aScrollToBegin)=0;
 
 // Input/Output
-  NS_IMETHOD OutputTextToString(nsString& aOutputString, PRBool aSelectionOnly)=0;
-  NS_IMETHOD OutputHTMLToString(nsString& aOutputString, PRBool aSelectionOnly)=0;
-  
-  NS_IMETHOD OutputTextToStream(nsIOutputStream* aOutputStream, nsString* aCharsetOverride, PRBool aSelectionOnly)=0;
-  NS_IMETHOD OutputHTMLToStream(nsIOutputStream* aOutputStream, nsString* aCharsetOverride, PRBool aSelectionOnly)=0;
+  /**
+   * Output methods:
+   * aFormatType is a mime type, like text/plain.
+   */
+  NS_IMETHOD OutputToString(nsString& aOutputString,
+                            const nsString& aFormatType,
+                            PRUint32 aFlags) = 0;
+  NS_IMETHOD OutputToStream(nsIOutputStream* aOutputStream,
+                            const nsString& aFormatType,
+                            const nsString* aCharsetOverride,
+                            PRUint32 aFlags) = 0;
 
   /** Get and set the body wrap width
     * @param aWrapColumn - the column to wrap at. This is set as a COLS attribute

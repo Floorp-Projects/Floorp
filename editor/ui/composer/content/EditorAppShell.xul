@@ -187,8 +187,10 @@
 <!ENTITY debugMenu.label "Debug">
 <!ENTITY outputTextCmd.label "Output Text">
 <!ENTITY outputHTMLCmd.label "Output HTML">
+<!ENTITY outputXIFCmd.label "Output XIF">
 <!ENTITY insertTextCmd.label "Insert Text">
 <!ENTITY testSelectionCmd.label "Test Selection">
+<!ENTITY dumpContentCmd.label "Dump Content Tree">
 <!ENTITY testDocumentCmd.label "Test Document">
 <!ENTITY runUnitTestsCmd.label "Run Unit Tests">
 <!ENTITY startLogCmd.label "Start Log">
@@ -470,10 +472,12 @@
     <menu name="&debugMenu.label;">
       <menuitem name="&outputTextCmd.label;" onclick="EditorGetText()"/>
       <menuitem name="&outputHTMLCmd.label;" onclick="EditorGetHTML()"/>
+      <menuitem name="&outputXIFCmd.label;" onclick="EditorGetXIF()"/>
       <separator />
       <menuitem name="&insertTextCmd.label;" onclick="EditorInsertText('All good things come to those who wait. ')"/>
       <separator />
       <menuitem name="&testSelectionCmd.label;" onclick="EditorTestSelection()"/>
+      <menuitem name="&dumpContentCmd.label;" onclick="EditorDumpContent()"/>
       <menuitem name="&testDocumentCmd.label;" onclick="EditorTestDocument()"/>
       <menuitem name="&runUnitTestsCmd.label;" onclick="EditorUnitTests()"/>
       <separator />

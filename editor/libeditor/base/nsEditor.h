@@ -180,6 +180,15 @@ public:
 
   NS_IMETHOD EndComposition(void);
   
+  NS_IMETHOD OutputToString(nsString& aOutputString,
+                            const nsString& aFormatType,
+                            PRUint32 aFlags);
+  NS_IMETHOD OutputToStream(nsIOutputStream* aOutputStream,
+                            const nsString& aFormatType,
+                            const nsString* aCharsetOverride,
+                            PRUint32 aFlags);
+  NS_IMETHOD DumpContentTree();
+
   NS_IMETHOD DeleteNode(nsIDOMNode * aChild);
 
   NS_IMETHOD DeleteSelection(nsIEditor::ECollapsedSelectionAction aAction);

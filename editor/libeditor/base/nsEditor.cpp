@@ -1491,6 +1491,41 @@ NS_IMETHODIMP nsEditor::ApplyStyleSheet(const nsString& aURL)
   return rv;
 }
 
+NS_IMETHODIMP nsEditor::OutputToString(nsString& aOutputString,
+                                       const nsString& aFormatType,
+                                       PRUint32 aFlags)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsEditor::OutputToStream(nsIOutputStream* aOutputStream,
+                                       const nsString& aFormatType,
+                                       const nsString* aCharsetOverride,
+                                       PRUint32 aFlags)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsEditor::DumpContentTree()
+{
+  nsCOMPtr<nsIDocument> thedoc;
+  nsCOMPtr<nsIPresShell> presShell;
+  if (NS_SUCCEEDED(GetPresShell(getter_AddRefs(presShell))))
+  {
+    presShell->GetDocument(getter_AddRefs(thedoc));
+    if (thedoc) {
+      nsIContent* root = thedoc->GetRootContent();
+      if (nsnull != root) {
+        root->List(stdout);
+        NS_RELEASE(root);
+      }
+    }
+  }
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsEditor::AddEditActionListener(nsIEditActionListener *aListener)
 {

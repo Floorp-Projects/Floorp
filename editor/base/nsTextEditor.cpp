@@ -72,10 +72,6 @@ static NS_DEFINE_CID(kCClipboardCID,           NS_CLIPBOARD_CID);
 static NS_DEFINE_CID(kCTransferableCID,        NS_TRANSFERABLE_CID);
 //static NS_DEFINE_IID(kCXIFFormatConverterCID,  NS_XIFFORMATCONVERTER_CID);
 
-// Document encoders
-static NS_DEFINE_CID(kHTMLEncoderCID, NS_HTML_ENCODER_CID);
-static NS_DEFINE_CID(kTextEncoderCID, NS_TEXT_ENCODER_CID);
-
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 
@@ -266,9 +262,6 @@ NS_IMETHODIMP nsTextEditor::Init(nsIDOMDocument *aDoc,
     // get a mouse listener
     result = NS_NewEditorMouseListener(getter_AddRefs(mMouseListenerP), this);
     if (NS_OK != result) {
-#ifdef DEBUG_akkana
-      printf("Couldn't get mouse listener\n");
-#endif
       HandleEventListenerError();
       return result;
     }
@@ -1322,10 +1315,6 @@ NS_IMETHODIMP nsTextEditor::PasteAsQuotation()
     mJSEditorLog->PasteAsQuotation();
 #endif // ENABLE_JS_EDITOR_LOG
 
-#ifdef DEBUG_akkana
-  printf("nsTextEditor::PasteAsQuotation\n");
-#endif
-
   nsString stuffToPaste;
 
   // Get Clipboard Service
@@ -1431,12 +1420,7 @@ NS_IMETHODIMP nsTextEditor::GetBodyWrapWidth(PRInt32 *aWrapColumn)
   PRBool isSet;
   res = GetAttributeValue(preElement, colsStr, numCols, isSet);
   if (!NS_SUCCEEDED(res))
-  {
-#ifdef DEBUG_akkana
-    printf("GetAttributeValue(cols) failed\n");
-#endif
     return NS_ERROR_UNEXPECTED;
-  }
 
   if (isSet)
   {
@@ -1451,12 +1435,7 @@ NS_IMETHODIMP nsTextEditor::GetBodyWrapWidth(PRInt32 *aWrapColumn)
   nsString wrapStr ("wrap");
   res = GetAttributeValue(preElement, colsStr, numCols, isSet);
   if (!NS_SUCCEEDED(res))
-  {
-#ifdef DEBUG_akkana
-    printf("GetAttributeValue(cols) failed\n");
-#endif
     return NS_ERROR_UNEXPECTED;
-  }
 
   if (isSet)
     *aWrapColumn = 0;   // wrap to window width
@@ -1518,7 +1497,9 @@ NS_IMETHODIMP nsTextEditor::ApplyStyleSheet(const nsString& aURL)
   return nsEditor::ApplyStyleSheet(aURL);
 }
 
-NS_IMETHODIMP nsTextEditor::OutputTextToString(nsString& aOutputString, PRBool aSelectionOnly)
+NS_IMETHODIMP nsTextEditor::OutputToString(nsString& aOutputString,
+                                           const nsString& aFormatType,
+                                           PRUint32 aFlags)
 {
   PRBool cancel;
   nsString resultString;
@@ -1532,38 +1513,50 @@ NS_IMETHODIMP nsTextEditor::OutputTextToString(nsString& aOutputString, PRBool a
   else
   { // default processing
     nsCOMPtr<nsITextEncoder> encoder;
-    rv = nsComponentManager::CreateInstance(kTextEncoderCID,
+    char progid[strlen(NS_DOC_ENCODER_PROGID_BASE) + aFormatType.Length() + 1];
+    strcpy(progid, NS_DOC_ENCODER_PROGID_BASE);
+    char* type = aFormatType.ToNewCString();
+    strcat(progid, type);
+    delete[] type;
+    rv = nsComponentManager::CreateInstance(progid,
                                             nsnull,
                                             nsIDocumentEncoder::GetIID(),
                                             getter_AddRefs(encoder));
     if (NS_FAILED(rv))
+    {
+      printf("Couldn't get progid %s\n", progid);
       return rv;
+    }
 
     nsCOMPtr<nsIDOMDocument> domdoc;
     rv = GetDocument(getter_AddRefs(domdoc));
     if (NS_FAILED(rv))
       return rv;
     nsCOMPtr<nsIDocument> doc = do_QueryInterface(domdoc);
-    nsString mimetype ("text/plain");
 
     nsCOMPtr<nsIPresShell> shell;
 
  	  rv = GetPresShell(getter_AddRefs(shell));
     if (NS_FAILED(rv))
       return rv;
-    rv = encoder->Init(shell, doc, mimetype);
+    rv = encoder->Init(shell, doc, aFormatType);
     if (NS_FAILED(rv))
       return rv;
 
-	  if (aSelectionOnly) {
-	    nsCOMPtr<nsIDOMSelection>  selection;
+	  if (aFlags & EditorOutputSelectionOnly)
+    {
+	    nsCOMPtr<nsIDOMSelection> selection;
 	    rv = GetSelection(getter_AddRefs(selection));
 	    if (NS_SUCCEEDED(rv) && selection)
 	      encoder->SetSelection(selection);
 	  }
 	  
-    // Try to turn on pretty printing, but don't panic if it doesn't work:
-    (void)encoder->PrettyPrint(PR_TRUE);
+    // Try to set pretty printing, but don't panic if it doesn't work:
+    (void)encoder->PrettyPrint((aFlags & EditorOutputFormatted)
+                               ? PR_TRUE : PR_FALSE);
+    // Indicate whether we want the comment and doctype headers prepended:
+    (void)encoder->AddHeader((aFlags & EditorOutputNoDoctype)
+                             ? PR_FALSE : PR_TRUE);
     // Set the wrap column.  If our wrap column is 0,
     // i.e. wrap to body width, then don't set it, let the
     // document encoder use its own default.
@@ -1583,76 +1576,33 @@ NS_IMETHODIMP nsTextEditor::OutputTextToString(nsString& aOutputString, PRBool a
   return rv;
 }
 
-NS_IMETHODIMP nsTextEditor::OutputHTMLToString(nsString& aOutputString, PRBool aSelectionOnly)
+NS_IMETHODIMP nsTextEditor::OutputToStream(nsIOutputStream* aOutputStream,
+                                           const nsString& aFormatType,
+                                           const nsString* aCharset,
+                                           PRUint32 aFlags)
 {
-#if defined(DEBUG_akkana)
-  printf("============Content dump:===========\n");
-
-  nsCOMPtr<nsIDocument> thedoc;
-  nsCOMPtr<nsIPresShell> presShell;
-  if (NS_SUCCEEDED(GetPresShell(getter_AddRefs(presShell))))
-  {
-    presShell->GetDocument(getter_AddRefs(thedoc));
-    if (thedoc) {
-      nsIContent* root = thedoc->GetRootContent();
-      if (nsnull != root) {
-        root->List(stdout);
-        NS_RELEASE(root);
-      }
-    }
-  }
-#endif
-
-  nsCOMPtr<nsIHTMLEncoder> encoder;
-  nsresult rv = nsComponentManager::CreateInstance(kHTMLEncoderCID,
-                                                   nsnull,
-                                                   nsIDocumentEncoder::GetIID(),
-                                                   getter_AddRefs(encoder));
-  if (NS_FAILED(rv))
-    return rv;
- 
-  nsCOMPtr<nsIDOMDocument> domdoc;
-  rv = GetDocument(getter_AddRefs(domdoc));
-  if (NS_FAILED(rv))
-    return rv;
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domdoc);
-  nsString mimetype ("text/html");
-
-  nsCOMPtr<nsIPresShell> shell;
-
- 	rv = GetPresShell(getter_AddRefs(shell));
-  if (NS_SUCCEEDED(rv)) {
-    rv = encoder->Init(shell,doc, mimetype);
-    if (NS_FAILED(rv))
-      return rv;
-  }
-
-  if (aSelectionOnly) {
-    nsCOMPtr<nsIDOMSelection>  selection;
-    rv = GetSelection(getter_AddRefs(selection));
-    if (NS_SUCCEEDED(rv) && selection)
-      encoder->SetSelection(selection);
-  }
-  
-  return encoder->EncodeToString(aOutputString);
-}
-
-NS_IMETHODIMP nsTextEditor::OutputTextToStream(nsIOutputStream* aOutputStream, nsString* aCharset, PRBool aSelectionOnly)
-{
+  nsresult rv;
   nsCOMPtr<nsITextEncoder> encoder;
-  nsresult rv = nsComponentManager::CreateInstance(kTextEncoderCID,
-                                                   nsnull,
-                                                   nsIDocumentEncoder::GetIID(),
-                                                   getter_AddRefs(encoder));
+  char progid[strlen(NS_DOC_ENCODER_PROGID_BASE) + aFormatType.Length() + 1];
+  strcpy(progid, NS_DOC_ENCODER_PROGID_BASE);
+  char* type = aFormatType.ToNewCString();
+  strcat(progid, type);
+  delete[] type;
+  rv = nsComponentManager::CreateInstance(progid,
+                                          nsnull,
+                                          nsIDocumentEncoder::GetIID(),
+                                          getter_AddRefs(encoder));
   if (NS_FAILED(rv))
+  {
+    printf("Couldn't get progid %s\n", progid);
     return rv;
+  }
 
   nsCOMPtr<nsIDOMDocument> domdoc;
   rv = GetDocument(getter_AddRefs(domdoc));
   if (NS_FAILED(rv))
     return rv;
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(domdoc);
-  nsString mimetype ("text/plain");
 
   if (aCharset && aCharset->Length() != 0 && aCharset->Equals("null")==PR_FALSE)
     encoder->SetCharset(*aCharset);
@@ -1661,59 +1611,37 @@ NS_IMETHODIMP nsTextEditor::OutputTextToStream(nsIOutputStream* aOutputStream, n
 
  	rv = GetPresShell(getter_AddRefs(shell));
   if (NS_SUCCEEDED(rv)) {
-    rv = encoder->Init(shell,doc, mimetype);
+    rv = encoder->Init(shell,doc, aFormatType);
     if (NS_FAILED(rv))
       return rv;
   }
 
-  if (aSelectionOnly) {
+  if (aFlags & EditorOutputSelectionOnly)
+  {
     nsCOMPtr<nsIDOMSelection>  selection;
     rv = GetSelection(getter_AddRefs(selection));
     if (NS_SUCCEEDED(rv) && selection)
       encoder->SetSelection(selection);
   }
 
-  // Try to turn on pretty printing, but don't panic if it doesn't work:
-  (void)encoder->PrettyPrint(PR_TRUE);
-  (void)encoder->SetWrapColumn(mWrapColumn);
-
-  return encoder->EncodeToStream(aOutputStream);
-}
-
-NS_IMETHODIMP nsTextEditor::OutputHTMLToStream(nsIOutputStream* aOutputStream,nsString* aCharset, PRBool aSelectionOnly)
-{
-  nsCOMPtr<nsIHTMLEncoder> encoder;
-  nsresult rv = nsComponentManager::CreateInstance(kHTMLEncoderCID,
-                                                   nsnull,
-                                                   nsIDocumentEncoder::GetIID(),
-                                                   getter_AddRefs(encoder));
-  if (NS_FAILED(rv))
-    return rv;
-
-  nsCOMPtr<nsIDOMDocument> domdoc;
-  rv = GetDocument(getter_AddRefs(domdoc));
-  if (NS_FAILED(rv))
-    return rv;
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domdoc);
-  nsString mimetype ("text/html");
-
-  nsCOMPtr<nsIPresShell> shell;
-
-  if (aCharset && aCharset->Length() != 0 && aCharset->Equals("null")==PR_FALSE)
-    encoder->SetCharset(*aCharset);
-
- 	rv = GetPresShell(getter_AddRefs(shell));
-  if (NS_SUCCEEDED(rv)) {
-    rv = encoder->Init(shell,doc, mimetype);
-    if (NS_FAILED(rv))
-      return rv;
-  }
-
-  if (aSelectionOnly) {
-    nsCOMPtr<nsIDOMSelection>  selection;
-    rv = GetSelection(getter_AddRefs(selection));
-    if (NS_SUCCEEDED(rv) && selection)
-      encoder->SetSelection(selection);
+  // Try to set pretty printing, but don't panic if it doesn't work:
+  (void)encoder->PrettyPrint((aFlags & EditorOutputFormatted)
+                             ? PR_TRUE : PR_FALSE);
+  // Indicate whether we want the comment and doc type headers prepended:
+  (void)encoder->AddHeader((aFlags & EditorOutputNoDoctype)
+                           ? PR_FALSE : PR_TRUE);
+  // Set the wrap column.  If our wrap column is 0,
+  // i.e. wrap to body width, then don't set it, let the
+  // document encoder use its own default.
+  if (mWrapColumn != 0)
+  {
+    PRUint32 wc;
+    if (mWrapColumn < 0)
+      wc = 0;
+    else
+      wc = (PRUint32)mWrapColumn;
+    if (mWrapColumn > 0)
+      (void)encoder->SetWrapColumn(wc);
   }
 
   return encoder->EncodeToStream(aOutputStream);
@@ -1743,12 +1671,8 @@ nsTextEditor::FindPreElement()
   nsCOMPtr<nsIDOMNode> preNode;
   if (!NS_SUCCEEDED(nsEditor::GetFirstNodeOfType(rootNode, prestr,
                                                  getter_AddRefs(preNode))))
-  {
-#ifdef DEBUG_akkana
-    printf("No PRE tag\n");
-#endif
     return 0;
-  }
+
   return do_QueryInterface(preNode);
 }
 

@@ -108,10 +108,14 @@ public:
   NS_IMETHOD BeginComposition(void);
   NS_IMETHOD SetCompositionString(const nsString& aCompositionString, nsIDOMTextRangeList* aTextRange);
   NS_IMETHOD EndComposition(void);
-  NS_IMETHOD OutputTextToString(nsString& aOutputString, PRBool aSelectionOnly);
-  NS_IMETHOD OutputHTMLToString(nsString& aOutputString, PRBool aSelectionOnly);
-  NS_IMETHOD OutputTextToStream(nsIOutputStream* aOutputStream,nsString* aCharsetOverride, PRBool aSelectionOnly);
-  NS_IMETHOD OutputHTMLToStream(nsIOutputStream* aOutputStream,nsString* aCharsetOverride, PRBool aSelectionOnly);
+
+  NS_IMETHOD OutputToString(nsString& aOutputString,
+                            const nsString& aFormatType,
+                            PRUint32 aFlags);
+  NS_IMETHOD OutputToStream(nsIOutputStream* aOutputStream,
+                            const nsString& aFormatType,
+                            const nsString* aCharsetOverride,
+                            PRUint32 aFlags);
 
 // Miscellaneous
   NS_IMETHOD ApplyStyleSheet(const nsString& aURL);

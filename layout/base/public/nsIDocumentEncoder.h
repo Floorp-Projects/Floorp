@@ -37,14 +37,6 @@ class nsIPresShell;
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32} \
   }
 
-#define NS_HTML_ENCODER_CID                          \
-{ /* a6cf9104-15b3-11d2-932e-00805f8add32 */         \
-    0xa6cf9104,                                      \
-    0x15b3,                                          \
-    0x11d2,                                          \
-    {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32} \
-  }
-
 #define NS_TEXT_ENCODER_CID                          \
 { /* e7ba1480-1dea-11d3-830f-00104bed045e */         \
     0xe7ba1480,                                      \
@@ -53,6 +45,7 @@ class nsIPresShell;
     {0x83, 0x0f, 0x00, 0x10, 0x4b, 0xed, 0x04, 0x5e} \
 }
 
+#define NS_DOC_ENCODER_PROGID_BASE "component://netscape/layout/documentEncoder?type="
 
 class nsIDocumentEncoder : public nsISupports
 {
@@ -64,7 +57,7 @@ public:
    *  Initialize with a pointer to the document and the mime type.
    *  
    */
-  NS_IMETHOD Init(nsIPresShell* aPresShell, nsIDocument* aDocument, nsString& aMimeType) = 0;
+  NS_IMETHOD Init(nsIPresShell* aPresShell, nsIDocument* aDocument, const nsString& aMimeType) = 0;
 
   /**
    *  If the selection is set to a non-null value, then the
@@ -98,24 +91,8 @@ public:
   NS_IMETHOD EncodeToString(nsString& aOutputString) = 0;
 };
 
-// Example of a output service for a particular encoder
-class nsIHTMLEncoder : public nsIDocumentEncoder
-{
-public:
-  static const nsIID& GetIID() { static nsIID iid = NS_HTML_ENCODER_CID; return iid; }
-
-  // Get embedded objects -- images, links, etc.
-  // NOTE: we may want to use an enumerator
-  NS_IMETHOD GetEmbeddedObjects(nsISupportsArray* aObjects) = 0;
-  NS_IMETHOD SubstituteURL(const nsString& aOriginal,
-                           const nsString& aReplacement) = 0;
-  NS_IMETHOD PrettyPrint(PRBool aYes) = 0;
-  NS_IMETHOD SetWrapColumn(PRUint32 aWC) = 0;
-};
-
-
-
-// Example of a output service for a particular encoder
+// Example of a output service for a particular encoder.
+// The text encoder handles XIF, HTML, and plaintext.
 class nsITextEncoder : public nsIDocumentEncoder
 {
 public:
@@ -125,6 +102,7 @@ public:
   // NOTE: we may want to use an enumerator
   NS_IMETHOD PrettyPrint(PRBool aYes) = 0;
   NS_IMETHOD SetWrapColumn(PRUint32 aWC) = 0;
+  NS_IMETHOD AddHeader(PRBool aYes) = 0;
 };
 
 

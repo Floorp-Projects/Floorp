@@ -82,10 +82,6 @@ class nsEditorShell :   public nsIEditorShell,
 
 
     /* nsIEditorShell interface */
-	  NS_IMETHOD GetContentsAsText(PRUnichar * *aContentsAsText);
-	  NS_IMETHOD GetContentsAsHTML(PRUnichar * *aContentsAsHTML);
-    NS_IMETHOD GetSelectionAsHTML(PRUnichar * *aSelectionAsHTML);
-    NS_IMETHOD GetSelectionAsText(PRUnichar * *aSelectionAsText);
 
 	  NS_IMETHOD GetEditorDocument(nsIDOMDocument * *aEditorDocument);
 	  NS_IMETHOD GetEditorSelection(nsIDOMSelection * *aEditorSelection);
@@ -162,6 +158,12 @@ class nsEditorShell :   public nsIEditorShell,
 	  NS_IMETHOD SetBackgroundColor(const PRUnichar *color);
 
 	  NS_IMETHOD ApplyStyleSheet(const PRUnichar *url);
+
+    /* Get the contents, for output or other uses */
+    NS_IMETHOD GetContentsAs(const PRUnichar *format, PRUint32 flags, PRUnichar **contentsAs);
+
+    /* Debugging: dump content tree to stdout */
+    NS_IMETHOD DumpContentTree();
 
 	  /* string GetLocalFileURL (in nsIDOMWindow parent, in string filterType); */
 	  NS_IMETHOD GetLocalFileURL(nsIDOMWindow *parent, const PRUnichar *filterType, PRUnichar **_retval);
@@ -283,6 +285,8 @@ class nsEditorShell :   public nsIEditorShell,
     nsCOMPtr<nsISupports>	 	mEditor;						// this can be either an HTML or plain text (or other?) editor
 
     nsCOMPtr<nsISupports>   mSearchContext;		// context used for search and replace. Owned by the appshell.
+
+    PRInt32 mWrapColumn;      // can't actually set this 'til the editor is created, so we may have to hold on to it for a while
 };
 
 #endif // nsEditorAppCore_h___

@@ -307,23 +307,25 @@ void nsXIFConverter::AddContent(const nsString& aContent)
   AddEndTag(tag,PR_FALSE);
 }
 
+//
+// AddComment is used to add a XIF comment,
+// not something that was a comment in the html;
+// that would be a content comment.
+//
 void nsXIFConverter::AddComment(const nsString& aContent)
 {
-  // For actual comments, don't want to include the begin and
-  // end tags; but commenting them out caused bug
-  // http://bugzilla.mozilla.org/show_bug.cgi?id=7720
-  // so we'll have to look into this more deeply later.
   mBuffer.Append(mBeginComment);
   mBuffer.Append(aContent);
   mBuffer.Append(mEndComment);
 }
 
+//
+// AddContentComment is used to add an HTML comment,
+// which will be mapped back into the right thing
+// in the content sink on the other end when this is parsed.
+//
 void nsXIFConverter::AddContentComment(const nsString& aContent)
 {
-  // For actual comments, don't want to include the begin and
-  // end tags; but commenting them out caused bug
-  // http://bugzilla.mozilla.org/show_bug.cgi?id=7720
-  // so we'll have to look into this more deeply later.
   nsString tag(mComment);
   AddStartTag(tag, PR_FALSE);
   nsAutoString content;
