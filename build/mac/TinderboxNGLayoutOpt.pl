@@ -27,37 +27,39 @@ use Moz;
 
 # configuration variables
 
-$DEBUG = 0;
-$ALIAS_SYM_FILES = 0;
-$CLOBBER_LIBS = 1;
-$MOZ_FULLCIRCLE = 0;
+$DEBUG 					= 0;
+$ALIAS_SYM_FILES 		= 0;
+$CLOBBER_LIBS 			= 1;
+$MOZ_FULLCIRCLE 		= 0;
 
 # The following two options will delete all files, but leave the directory structure intact.
-$CLOBBER_DIST_ALL = 0;      # turn on to clobber all files inside dist (headers, xsym and libs)
-$CLOBBER_DIST_LIBS = 0;     # turn on to clobber the aliases to libraries and sym files in dist
-$USE_XPIDL = 1;             # turn on to use the XPIDL plugin to generate files.
+$CLOBBER_DIST_ALL 		= 0;	# turn on to clobber all files inside dist (headers, xsym and libs)
+$CLOBBER_DIST_LIBS 		= 0;	# turn on to clobber the aliases to libraries and sym files in dist
+$USE_XPIDL 				= 1;	# turn on to use the XPIDL plugin to generate files.
 
-$pull{all} = 1;
-$pull{lizard} = 0;
-$pull{xpcom} = 0;
-$pull{imglib} = 0;
-$pull{netlib} = 0;
-$pull{nglayout} = 0;
-$pull{mac} = 0;
+$pull{all} 				= 1;
+$pull{lizard} 			= 0;
+$pull{xpcom} 			= 0;
+$pull{imglib} 			= 0;
+$pull{netlib} 			= 0;
+$pull{nglayout} 		= 0;
+$pull{mac} 				= 0;
 
-$build{all} = 1;
-$build{dist} = 0;
-$build{runtime}		= 0;
-$build{stubs} = 0;
-$build{common} = 0;
-$build{intl} = 0;
-$build{nglayout} = 0;
-$build{resources} = 0;
-$build{editor} = 0;
-$build{mailnews} = 0;
-$build{viewer} = 0;
-$build{xpapp} = 0;
-
+$build{all} 			= 1;	# turn off to do individual builds, or to do "most"
+$build{most} 			= 0;	# turn off to do individual builds
+$build{dist} 			= 0;
+$build{dist_runtime}	= 0;	# implied by $build{dist}
+$build{idl}             = 0;
+$build{resources} 		= 0;
+$build{stubs} 			= 0;
+$build{runtime}			= 0;
+$build{common} 			= 0;
+$build{intl} 			= 0;
+$build{nglayout} 		= 0;
+$build{editor} 			= 0;
+$build{mailnews} 		= 0;
+$build{viewer} 			= 0;
+$build{xpapp} 			= 0;
 
 # script
 

@@ -21,7 +21,7 @@ use Moz;
 use MacCVS;
 use MANIFESTO;
 
-@ISA			= qw(Exporter);
+@ISA		= qw(Exporter);
 @EXPORT		= qw(Checkout BuildDist BuildProjects BuildCommonProjects BuildLayoutProjects);
 
 # NGLayoutBuildList builds the nglayout project
@@ -294,8 +294,6 @@ sub BuildClientDist()
 	InstallFromManifest(":mozilla:xpcom:io:MANIFEST_IDL",							"$distdirectory:idl:");
 	InstallFromManifest(":mozilla:xpcom:ds:MANIFEST_IDL",							"$distdirectory:idl:");
 
-	BuildIDLProject(":mozilla:xpcom:macbuild:XPCOMIDL.mcp", 						"xpcom");
-
 	InstallFromManifest(":mozilla:xpcom:base:MANIFEST",								"$distdirectory:xpcom:");
 	InstallFromManifest(":mozilla:xpcom:components:MANIFEST",						"$distdirectory:xpcom:");
 	InstallFromManifest(":mozilla:xpcom:ds:MANIFEST",								"$distdirectory:xpcom:");
@@ -306,11 +304,10 @@ sub BuildClientDist()
 	InstallFromManifest(":mozilla:xpcom:reflect:xptinfo:public:MANIFEST",			"$distdirectory:xpcom:");
 	InstallFromManifest(":mozilla:xpcom:reflect:xptcall:public:MANIFEST",			"$distdirectory:xpcom:");
 
-	InstallFromManifest(":mozilla:xpcom:typelib:xpt:public:MANIFEST",					"$distdirectory:xpcom:");
+	InstallFromManifest(":mozilla:xpcom:typelib:xpt:public:MANIFEST",				"$distdirectory:xpcom:");
 	
 	#PREFS
 	InstallFromManifest(":mozilla:modules:libpref:src:MANIFEST_PREFS",				$dist_dir."Components:", 1);
-	BuildIDLProject(":mozilla:modules:libpref:macbuild:libprefIDL.mcp",				"libpref");
 
 	#ZLIB
     InstallFromManifest(":mozilla:modules:zlib:src:MANIFEST",						"$distdirectory:zlib:");
@@ -337,7 +334,6 @@ sub BuildClientDist()
 	
 	#XPCONNECT	
 	InstallFromManifest(":mozilla:js:src:xpconnect:idl:MANIFEST",					"$distdirectory:idl:");
-	BuildIDLProject(":mozilla:js:macbuild:XPConnectIDL.mcp", 						"xpconnect");
 	InstallFromManifest(":mozilla:js:src:xpconnect:public:MANIFEST",				"$distdirectory:xpconnect:");
 
 	#CAPS
@@ -357,7 +353,7 @@ sub BuildClientDist()
     InstallFromManifest(":mozilla:modules:libimg:png:MANIFEST",						"$distdirectory:libimg:");
     InstallFromManifest(":mozilla:modules:libimg:src:MANIFEST",						"$distdirectory:libimg:");
     InstallFromManifest(":mozilla:modules:libimg:public:MANIFEST",					"$distdirectory:libimg:");
-    InstallFromManifest(":mozilla:modules:libimg:public_com:MANIFEST",					"$distdirectory:libimg:");
+    InstallFromManifest(":mozilla:modules:libimg:public_com:MANIFEST",				"$distdirectory:libimg:");
 
 	#PLUGIN
     InstallFromManifest(":mozilla:modules:plugin:nglsrc:MANIFEST",					"$distdirectory:plugin:");
@@ -440,19 +436,17 @@ sub BuildClientDist()
    InstallFromManifest(":mozilla:dom:public:css:MANIFEST",							"$distdirectory:dom:");
    InstallFromManifest(":mozilla:dom:src:jsurl:MANIFEST",							"$distdirectory:dom:");
    InstallFromManifest(":mozilla:dom:src:base:MANIFEST",							"$distdirectory:dom:");
-   BuildIDLProject(":mozilla:dom:macbuild:domIDL.mcp", 								"dom");
 
 	#HTMLPARSER
-   InstallFromManifest(":mozilla:htmlparser:src:MANIFEST",							"$distdirectory:htmlparser:");
+	InstallFromManifest(":mozilla:htmlparser:src:MANIFEST",							"$distdirectory:htmlparser:");
 
-   #EXPAT
-   InstallFromManifest(":mozilla:expat:xmlparse:MANIFEST",							"$distdirectory:expat:");
+	#EXPAT
+	InstallFromManifest(":mozilla:expat:xmlparse:MANIFEST",							"$distdirectory:expat:");
       
 	#WIDGET
     InstallFromManifest(":mozilla:widget:public:MANIFEST",							"$distdirectory:widget:");
     InstallFromManifest(":mozilla:widget:public:MANIFEST_IDL",						"$distdirectory:idl:");
     InstallFromManifest(":mozilla:widget:src:mac:MANIFEST",							"$distdirectory:widget:");
-	BuildIDLProject(":mozilla:widget:macbuild:widgetIDL.mcp", 						"widget");
 
     #RDF
     InstallFromManifest(":mozilla:rdf:base:idl:MANIFEST",							"$distdirectory:idl:");
@@ -461,19 +455,18 @@ sub BuildClientDist()
     InstallFromManifest(":mozilla:rdf:content:public:MANIFEST",						"$distdirectory:rdf:");
     InstallFromManifest(":mozilla:rdf:datasource:public:MANIFEST",					"$distdirectory:rdf:");
     InstallFromManifest(":mozilla:rdf:build:MANIFEST",								"$distdirectory:rdf:");
-	BuildIDLProject(":mozilla:rdf:macbuild:RDFIDL.mcp",								"rdf");
     
     #BRPROF
-    InstallFromManifest(":mozilla:rdf:brprof:public:MANIFEST",						"$distdirectory:brprof:");
+	InstallFromManifest(":mozilla:rdf:brprof:public:MANIFEST",						"$distdirectory:brprof:");
     
     #CHROME
-    InstallFromManifest(":mozilla:rdf:chrome:public:MANIFEST",                      "$distdirectory:chrome:");
+	InstallFromManifest(":mozilla:rdf:chrome:public:MANIFEST",                      "$distdirectory:chrome:");
     
-
 	#EDITOR
-   InstallFromManifest(":mozilla:editor:public:MANIFEST",							"$distdirectory:editor:");
-   InstallFromManifest(":mozilla:editor:txmgr:public:MANIFEST",						"$distdirectory:editor:txmgr");
-   InstallFromManifest(":mozilla:editor:txtsvc:public:MANIFEST",					"$distdirectory:editor:txtsvc");
+	InstallFromManifest(":mozilla:editor:idl:MANIFEST",								"$distdirectory:idl:");
+	InstallFromManifest(":mozilla:editor:public:MANIFEST",							"$distdirectory:editor:");
+	InstallFromManifest(":mozilla:editor:txmgr:public:MANIFEST",					"$distdirectory:editor:txmgr");
+	InstallFromManifest(":mozilla:editor:txtsvc:public:MANIFEST",					"$distdirectory:editor:txtsvc");
   
     #SILENTDL
     InstallFromManifest(":mozilla:silentdl:MANIFEST",								"$distdirectory:silentdl:");
@@ -481,11 +474,10 @@ sub BuildClientDist()
     #XPINSTALL (the one and only!)
     InstallFromManifest(":mozilla:xpinstall:public:MANIFEST",                       "$distdirectory:xpinstall:");
     InstallFromManifest(":mozilla:xpinstall:public:MANIFEST_PREFS",				    $dist_dir."Components:", 1);
-    BuildIDLProject(":mozilla:xpinstall:macbuild:xpinstallIDL.mcp",                 "xpinstall");
-  
-   #FULL CIRCLE    
-   if ($main::MOZ_FULLCIRCLE)
-   {
+
+	#FULL CIRCLE    
+	if ($main::MOZ_FULLCIRCLE)
+	{
 		InstallFromManifest(":ns:fullsoft:public:MANIFEST",							"$distdirectory");
 	
 		if ($main::DEBUG)
@@ -501,25 +493,20 @@ sub BuildClientDist()
 
 
 	# XPFE COMPONENTS
-
    InstallFromManifest(":mozilla:xpfe:components:public:MANIFEST",					"$distdirectory:xpfe:components");
    InstallFromManifest(":mozilla:xpfe:components:public:MANIFEST_IDL",				"$distdirectory:idl:");
-   BuildIDLProject(":mozilla:xpfe:components:macbuild:mozcompsIDL.mcp",				"mozcomps");
 
    # find
    InstallFromManifest(":mozilla:xpfe:components:find:public:MANIFEST",				"$distdirectory:xpfe:components");
 
    # history
    InstallFromManifest(":mozilla:xpfe:components:history:public:MANIFEST_IDL",		"$distdirectory:idl:");
-   BuildIDLProject(":mozilla:xpfe:components:history:macbuild:historyIDL.mcp",		"history");
    
    # related
    InstallFromManifest(":mozilla:xpfe:components:related:public:MANIFEST_IDL",		"$distdirectory:idl:");
-   BuildIDLProject(":mozilla:xpfe:components:related:macbuild:RelatedIDL.mcp",		"related");
 
    # prefwindow
    InstallFromManifest(":mozilla:xpfe:components:prefwindow:public:MANIFEST_IDL",	"$distdirectory:idl:");
-   BuildIDLProject(":mozilla:xpfe:components:prefwindow:macbuild:prefwindowIDL.mcp","prefwindow");
 
    # sample
    InstallFromManifest(":mozilla:xpfe:components:sample:public:MANIFEST",			"$distdirectory:xpfe:components");
@@ -536,27 +523,22 @@ sub BuildClientDist()
    InstallFromManifest(":mozilla:mailnews:public:MANIFEST",							"$distdirectory:mailnews:");
    InstallFromManifest(":mozilla:mailnews:base:public:MANIFEST",					"$distdirectory:mailnews:");
    InstallFromManifest(":mozilla:mailnews:base:public:MANIFEST_IDL",				"$distdirectory:idl:");
-   BuildIDLProject(":mozilla:mailnews:base:macbuild:msgCoreIDL.mcp",				"mailnews");
    InstallFromManifest(":mozilla:mailnews:base:build:MANIFEST",						"$distdirectory:mailnews:");
    InstallFromManifest(":mozilla:mailnews:base:src:MANIFEST",						"$distdirectory:mailnews:");
    InstallFromManifest(":mozilla:mailnews:base:util:MANIFEST",						"$distdirectory:mailnews:");
    InstallFromManifest(":mozilla:mailnews:compose:public:MANIFEST",					"$distdirectory:mailnews:");
-   BuildIDLProject(":mozilla:mailnews:compose:macbuild:msgComposeIDL.mcp",			"MsgCompose");
    InstallFromManifest(":mozilla:mailnews:compose:build:MANIFEST",					"$distdirectory:mailnews:");
    InstallFromManifest(":mozilla:mailnews:db:mdb:public:MANIFEST",					"$distdirectory:mailnews:");
    InstallFromManifest(":mozilla:mailnews:db:msgdb:public:MANIFEST",				"$distdirectory:mailnews:");
    InstallFromManifest(":mozilla:mailnews:db:msgdb:build:MANIFEST",					"$distdirectory:mailnews:");
    InstallFromManifest(":mozilla:mailnews:local:public:MANIFEST",					"$distdirectory:mailnews:");
-   BuildIDLProject(":mozilla:mailnews:local:macbuild:msglocalIDL.mcp",				"MsgLocal");
    InstallFromManifest(":mozilla:mailnews:local:build:MANIFEST",					"$distdirectory:mailnews:");
    InstallFromManifest(":mozilla:mailnews:local:src:MANIFEST",						"$distdirectory:mailnews:");
    InstallFromManifest(":mozilla:mailnews:imap:public:MANIFEST",					"$distdirectory:mailnews:");
    InstallFromManifest(":mozilla:mailnews:mime:public:MANIFEST",					"$distdirectory:mailnews:");
    InstallFromManifest(":mozilla:mailnews:news:public:MANIFEST",					"$distdirectory:mailnews:");
-   BuildIDLProject(":mozilla:mailnews:news:macbuild:msgnewsIDL.mcp",				"MsgNews");
    InstallFromManifest(":mozilla:mailnews:news:build:MANIFEST",						"$distdirectory:mailnews:");
    InstallFromManifest(":mozilla:mailnews:addrbook:public:MANIFEST",				"$distdirectory:mailnews:");
-   BuildIDLProject(":mozilla:mailnews:addrbook:macbuild:msgAddrbookIDL.mcp",		"MsgAddrbook");
    InstallFromManifest(":mozilla:mailnews:addrbook:build:MANIFEST",					"$distdirectory:mailnews:");
    
    print("--- Client Dist export complete ----\n")
@@ -665,6 +647,36 @@ sub BuildOneProject($$$$$$)
 	$alias_xSYM ? MakeAlias("$project_dir$target_name.xSYM", "$dist_dir$component_dir") : 0;
 }
 
+
+#//--------------------------------------------------------------------------------------------------
+#// Build IDL projects
+#//--------------------------------------------------------------------------------------------------
+
+sub BuildIDLProjects()
+{
+	unless( $main::build{idl} ) { return; }
+	_assertRightDirectory();
+
+	BuildIDLProject(":mozilla:xpcom:macbuild:XPCOMIDL.mcp", 						"xpcom");
+	BuildIDLProject(":mozilla:modules:libpref:macbuild:libprefIDL.mcp",				"libpref");
+	BuildIDLProject(":mozilla:js:macbuild:XPConnectIDL.mcp", 						"xpconnect");
+	BuildIDLProject(":mozilla:dom:macbuild:domIDL.mcp", 							"dom");
+	BuildIDLProject(":mozilla:widget:macbuild:widgetIDL.mcp", 						"widget");
+	# BuildIDLProject(":mozilla:editor:macbuild:EditorIDL.mcp", 						"editor");
+		
+	BuildIDLProject(":mozilla:rdf:macbuild:RDFIDL.mcp",								"rdf");
+    BuildIDLProject(":mozilla:xpinstall:macbuild:xpinstallIDL.mcp",                 "xpinstall");
+	BuildIDLProject(":mozilla:xpfe:components:history:macbuild:historyIDL.mcp",		"history");
+	BuildIDLProject(":mozilla:xpfe:components:related:macbuild:RelatedIDL.mcp",		"related");
+	BuildIDLProject(":mozilla:xpfe:components:prefwindow:macbuild:prefwindowIDL.mcp","prefwindow");
+	BuildIDLProject(":mozilla:xpfe:components:macbuild:mozcompsIDL.mcp",			"mozcomps");
+
+	BuildIDLProject(":mozilla:mailnews:base:macbuild:msgCoreIDL.mcp",				"mailnews");
+	BuildIDLProject(":mozilla:mailnews:compose:macbuild:msgComposeIDL.mcp",			"MsgCompose");
+	BuildIDLProject(":mozilla:mailnews:local:macbuild:msglocalIDL.mcp",				"MsgLocal");
+	BuildIDLProject(":mozilla:mailnews:news:macbuild:msgnewsIDL.mcp",				"MsgNews");
+	BuildIDLProject(":mozilla:mailnews:addrbook:macbuild:msgAddrbookIDL.mcp",		"MsgAddrbook");
+}
 
 #//--------------------------------------------------------------------------------------------------
 #// Build runtime projects
@@ -1220,11 +1232,13 @@ sub BuildAppRunner()
 
 sub BuildProjects()
 {
-	# activate CodeWarrior
-	ActivateApplication('CWIE');
-
 	MakeResourceAliases();
 	MakeLibAliases();
+
+ 	# activate CodeWarrior
+	ActivateApplication('CWIE');
+
+	BuildIDLProjects();
 	BuildStubs();
 	BuildRuntimeProjects();
 	BuildCommonProjects();
