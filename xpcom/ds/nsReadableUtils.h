@@ -28,12 +28,64 @@
 
 #include "nsAReadableString.h"
 
-char* ToNewCString( const nsAReadableString& );
-char* ToNewCString( const nsAReadableCString& );
 
-PRUnichar* ToNewUnicode( const nsAReadableString& );
-PRUnichar* ToNewUnicode( const nsAReadableCString& );
+  /**
+   * Returns a new |char| buffer containing a zero-terminated copy of |aSource|.
+   *
+   * Allocates and returns a new |char| buffer which you must free with |nsMemory::Free|.
+   * Performs a lossy encoding conversion by chopping 16-bit wide characters down to 8-bits wide while copying |aSource| to your new buffer.
+   * This conversion is not well defined; but it reproduces legacy string behavior.
+   * The new buffer is zero-terminated, but that may not help you if |aSource| contains embedded nulls.
+   *
+   * @param aSource a 16-bit wide string
+   * @return a new |char| buffer you must free with |nsMemory::Free|.
+   */
+char* ToNewCString( const nsAReadableString& aSource );
 
-PRBool IsASCII( const nsAReadableString& );
+
+  /**
+   * Returns a new |char| buffer containing a zero-terminated copy of |aSource|.
+   *
+   * Allocates and returns a new |char| buffer which you must free with |nsMemory::Free|.
+   * The new buffer is zero-terminated, but that may not help you if |aSource| contains embedded nulls.
+   *
+   * @param aSource an 8-bit wide string
+   * @return a new |char| buffer you must free with |nsMemory::Free|.
+   */
+char* ToNewCString( const nsAReadableCString& aSource );
+
+
+  /**
+   * Returns a new |PRUnichar| buffer containing a zero-terminated copy of |aSource|.
+   *
+   * Allocates and returns a new |char| buffer which you must free with |nsMemory::Free|.
+   * The new buffer is zero-terminated, but that may not help you if |aSource| contains embedded nulls.
+   *
+   * @param aSource a 16-bit wide string
+   * @return a new |PRUnichar| buffer you must free with |nsMemory::Free|.
+   */
+PRUnichar* ToNewUnicode( const nsAReadableString& aSource );
+
+
+  /**
+   * Returns a new |PRUnichar| buffer containing a zero-terminated copy of |aSource|.
+   *
+   * Allocates and returns a new |char| buffer which you must free with |nsMemory::Free|.
+   * Performs an encoding conversion by 0-padding 8-bit wide characters up to 16-bits wide while copying |aSource| to your new buffer.
+   * This conversion is not well defined; but it reproduces legacy string behavior.
+   * The new buffer is zero-terminated, but that may not help you if |aSource| contains embedded nulls.
+   *
+   * @param aSource an 8-bit wide string
+   * @return a new |PRUnichar| buffer you must free with |nsMemory::Free|.
+   */
+PRUnichar* ToNewUnicode( const nsAReadableCString& aSource );
+
+
+  /**
+   * Returns |PR_TRUE| if |aString| contains only ASCII characters, that is, characters in the range (0x00, 0x7F).
+   *
+   * @param aString a 16-bit wide string to scan
+   */
+PRBool IsASCII( const nsAReadableString& aString );
 
 #endif // !defined(nsReadableUtils_h___)
