@@ -186,7 +186,8 @@ nsDocShell::SetDocument(nsIDOMDocument *aDOMDoc, nsIDOMElement *aRootNode)
                     NS_ERROR_FAILURE); 
 
    // (2) Feed the docshell to the content viewer
-   NS_ENSURE_SUCCESS(documentViewer->SetContainer(this), NS_ERROR_FAILURE);
+   NS_ENSURE_SUCCESS(documentViewer->SetContainer((nsIDocShell*)this), 
+      NS_ERROR_FAILURE);
 
    // (3) Tell the content viewer container to embed the content viewer.
    //     (This step causes everything to be set up for an initial flow.)
@@ -1541,11 +1542,6 @@ NS_IMETHODIMP nsDocShell::SizeToContent()
 //*****************************************************************************
 // nsDocShell::nsIContentViewerContainer
 //*****************************************************************************   
-NS_IMETHODIMP nsDocShell::QueryCapability(const nsIID &aIID, void** aResult)
-{
-  NS_ENSURE_SUCCESS(PR_FALSE, NS_ERROR_NOT_IMPLEMENTED);
-  return NS_OK;
-};
 
 NS_IMETHODIMP nsDocShell::Embed(nsIContentViewer* aContentViewer, 
                                     const char      * aCommand,
