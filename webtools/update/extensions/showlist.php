@@ -97,6 +97,8 @@ echo"<link rel=\"alternate\" type=\"application/rss+xml\" title=\"RSS\" href=\"h
 
 <LINK REL="STYLESHEET" TYPE="text/css" HREF="/core/update.css">
 <?php
+installtrigger("extensions");
+
 include"$page_header";
 
 // -----------------------------------------------
@@ -391,9 +393,9 @@ echo"<BR>";
 echo"<DIV style=\"margin-top: 30px; height: 34px\">";
 echo"<DIV class=\"iconbar\">";
 if ($appname=="Thunderbird") {
-echo"<A HREF=\"moreinfo.php?".uriparams()."&id=$id\"><IMG SRC=\"/images/download.png\" BORDER=0 HEIGHT=34 WIDTH=34 TITLE=\"More Info about $name\" ALT=\"\">More Info</A>";
+    echo"<A HREF=\"moreinfo.php?".uriparams()."&id=$id\"><IMG SRC=\"/images/download.png\" BORDER=0 HEIGHT=34 WIDTH=34 TITLE=\"More Info about $name\" ALT=\"\">More Info</A>";
 } else {
-echo"<A HREF=\"install.php/$filename?id=$id&vid=$vid\"><IMG SRC=\"/images/download.png\" BORDER=0 HEIGHT=34 WIDTH=34 TITLE=\"Install $name\" ALT=\"\">Install</A>";
+    echo"<a href=\"$uri\" onclick=\"return install(event,'$name $version', '/images/default.png');\"><IMG SRC=\"/images/download.png\" BORDER=0 HEIGHT=34 WIDTH=34 TITLE=\"Install $name\" ALT=\"\">Install</A>";
 }
 echo"<BR><SPAN class=\"filesize\">&nbsp;&nbsp;$filesize kb</SPAN></DIV>";
 echo"<DIV class=\"iconbar\"><IMG SRC=\"/images/".strtolower($appname)."_icon.png\" BORDER=0 HEIGHT=34 WIDTH=34 ALT=\"\">&nbsp;For $appname:<BR>&nbsp;&nbsp;$minappver - $maxappver</DIV>";

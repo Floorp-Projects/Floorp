@@ -67,6 +67,8 @@ $pagetitle = $pagetitles[$_GET["page"]];
 <LINK REL="STYLESHEET" TYPE="text/css" HREF="/core/update.css">
 
 <?php
+installtrigger("themes");
+
 include"$page_header";
 $type = "T";
 $category=$_GET["category"];
@@ -322,9 +324,9 @@ echo"
 <SPAN style=\"itemdescription\">Released on $verdateadded</SPAN><BR>
 <DIV class=\"moreinfoinstall\">";
 if ($appname=="Thunderbird") { 
-echo"<A HREF=\"install.php?id=$id&vid=$vid\" TITLE=\"Download $name $version\"><IMG SRC=\"/images/download.png\" BORDER=0 HEIGHT=34 WIDTH=34 STYLE=\"float:left;\" ALT=\"\">&nbsp;( Download Now )</A><BR>";
+echo"<A HREF=\"/core/install.php?passthrough=yes&uri=$uri\" onclick=\"return installTheme(event,'$name $version for Thunderbird');\"  TITLE=\"Right-Click to Download $name $version\"><IMG SRC=\"/images/download.png\" BORDER=0 HEIGHT=34 WIDTH=34 STYLE=\"float:left;\" ALT=\"\">&nbsp;( Download Now )</A><BR>";
 } else {
-echo"<A HREF=\"javascript:void(InstallTrigger.installChrome(InstallTrigger.SKIN,'$uri','$name'))\" TITLE=\"Install $name $version (Right-Click to Download)\"><IMG SRC=\"/images/download.png\" BORDER=0 HEIGHT=34 WIDTH=34 STYLE=\"float:left;\" ALT=\"\">&nbsp;( Install Now )</A><BR>";
+echo"<a href=\"$uri\" onclick=\"return installTheme(event,'$name $version');\" TITLE=\"Install $name $version (Right-Click to Download)\"><IMG SRC=\"/images/download.png\" BORDER=0 HEIGHT=34 WIDTH=34 STYLE=\"float:left;\" ALT=\"\">&nbsp;( Install Now )</A><BR>";
 }
 echo"
 <SPAN class=\"filesize\">&nbsp;&nbsp;$filesize KB, ($time @ $speed"."k)</SPAN></DIV>
@@ -345,7 +347,7 @@ echo"<BR>";
 
 if ($application=="thunderbird") {
 echo"<SPAN style=\"font-size: 10pt; color: #00F\">Theme Install Instructions for Thunderbird Users:</SPAN><BR>
-<SPAN style=\"font-size: 8pt;\">(1) Click the link above to Download and save the file to your hard disk.<BR>
+<SPAN style=\"font-size: 8pt;\">(1) Right-Click the link above to Download and save the file to your hard disk.<BR>
 (2) In Mozilla Thunderbird, open the theme manager (Tools Menu/Themes)<BR>
 (3) Click the Install button, and locate/select the file you downloaded and click \"OK\"</SPAN><BR>
 ";
@@ -469,7 +471,12 @@ if ($notes) {echo"$notes<br><br>\n"; }
 //Icon Bar Modules
 echo"<DIV style=\"height: 34px\">";
 echo"<DIV class=\"iconbar\">";
-echo"<A HREF=\"javascript:void(InstallTrigger.installChrome(InstallTrigger.SKIN,'$uri','$name'))\"><IMG SRC=\"/images/download.png\" BORDER=0 HEIGHT=34 WIDTH=34 TITLE=\"Install $name\" ALT=\"\">Install</A><BR><SPAN class=\"filesize\">Size: $filesize kb</SPAN></DIV>";
+if ($appname=="Thunderbird") {
+    echo"<A HREF=\"/core/install.php?passthrough=yes&uri=$uri\" onclick=\"return installTheme(event,'$name $version for Thunderbird');\"  TITLE=\"Download $name $version (Right-Click to Download)\">";
+} else {
+    echo"<a href=\"$uri\" onclick=\"return installTheme(event,'$name $version');\">";
+}
+echo"<IMG SRC=\"/images/download.png\" BORDER=0 HEIGHT=34 WIDTH=34 TITLE=\"Install $name\" ALT=\"\">Install</A><BR><SPAN class=\"filesize\">Size: $filesize kb</SPAN></DIV>";
 echo"<DIV class=\"iconbar\"><IMG SRC=\"/images/".strtolower($appname)."_icon.png\" BORDER=0 HEIGHT=34 WIDTH=34 ALT=\"\">&nbsp;For $appname:<BR>&nbsp;&nbsp;$minappver - $maxappver</DIV>";
 if($osname !=="ALL") { echo"<DIV class=\"iconbar\"><IMG SRC=\"/images/".strtolower($osname)."_icon.png\" BORDER=0 HEIGHT=34 WIDTH=34 ALT=\"\">For&nbsp;$osname<BR>only</DIV>"; }
 echo"</DIV><BR>\n";

@@ -157,5 +157,53 @@ function uriparams() {
     return $uriparams;
 }
 
+// -----------------------------
+// function installtrigger() -- print installtrigger function for extension/theme installation on page.
+// Usage null uriparams(string functionname) 
+// -----------------------------
+
+function installtrigger($functionname) {
+    if ($functionname=="extensions") {
+    echo'
+        <script type="text/javascript">
+        <!--
+
+        function install( aEvent, extName, iconURL)  {   
+            var p = new XMLHttpRequest();
+            p.open("GET", "'.$sitehostname.'/core/install.php?uri="+aEvent.target.href, false);
+            p.send(null);
+
+            var params = new Array();
+            params[extName] = {
+                URL: aEvent.target.href,
+                IconURL: iconURL,
+                toString: function () { return this.URL; }
+            };
+            InstallTrigger.install(params);
+            return false;
+        }
+
+        -->
+        </script>
+    ';
+
+
+    } else if ($functionname=="themes") {
+    echo'
+        <script type="text/javascript">
+        <!--
+            function installTheme( aEvent, extName) {
+                var p = new XMLHttpRequest();
+                p.open("GET", "/core/install.php?uri="+aEvent.target.href, false);
+                p.send(null);
+
+                InstallTrigger.installChrome(InstallTrigger.SKIN,aEvent.target.href,extName);
+                return false;
+            }
+        -->
+        </script>
+    ';
+    }
+}
 
 ?>
