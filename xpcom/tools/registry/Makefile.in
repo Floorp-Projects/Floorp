@@ -32,10 +32,6 @@ REQUIRES	= string
 
 SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
 
-ifdef NO_LD_ARCHIVE_FLAGS
-LOST_SYM_LIBS	= -lxpcomds_s -lmozreg_s
-endif
-
 LIBS		= \
 		$(LOST_SYM_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
