@@ -34,6 +34,7 @@
 #include "nsIPresContext.h"
 #include "nsIContent.h"
 #include "nsIDOMUIEvent.h"
+#include "nsHTMLValue.h"
 
 class nsIFrame;
 class nsIWebShell;
@@ -345,6 +346,17 @@ public:
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
 
+  NS_IMETHOD ReflowNavQuirks(nsIPresContext&          aPresContext,
+                              nsHTMLReflowMetrics&     aDesiredSize,
+                              const nsHTMLReflowState& aReflowState,
+                              nsReflowStatus&          aStatus,
+                              nsMargin&                aBorderPadding);
+  NS_IMETHOD ReflowStandard(nsIPresContext&          aPresContext,
+                            nsHTMLReflowMetrics&     aDesiredSize,
+                            const nsHTMLReflowState& aReflowState,
+                            nsReflowStatus&          aStatus,
+                            nsMargin&                aBorderPadding);
+
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect,
@@ -381,7 +393,37 @@ public:
     { return &mWeakReferent; }
 
 protected:
+  PRInt32 CalculateSizeNavQuirks (nsIPresContext*       aPresContext, 
+                                  nsIRenderingContext*  aRendContext,
+                                  nsIFormControlFrame*  aFrame,
+                                  const nsSize&         aCSSSize, 
+                                  nsInputDimensionSpec& aSpec, 
+                                  nsSize&               aDesiredSize, 
+                                  nsSize&               aMinSize, 
+                                  PRBool&               aWidthExplicit, 
+                                  PRBool&               aHeightExplicit, 
+                                  nscoord&              aRowHeight,
+                                  nsMargin&             aBorderPadding);
 
+  PRInt32 CalculateSizeStandard (nsIPresContext*       aPresContext, 
+                                  nsIRenderingContext*  aRendContext,
+                                  nsIFormControlFrame*  aFrame,
+                                  const nsSize&         aCSSSize, 
+                                  nsInputDimensionSpec& aSpec, 
+                                  nsSize&               aDesiredSize, 
+                                  nsSize&               aMinSize, 
+                                  PRBool&               aWidthExplicit, 
+                                  PRBool&               aHeightExplicit, 
+                                  nscoord&              aRowHeight,
+                                  nsMargin&             aBorderPadding);
+
+  nsresult GetColRowSizeAttr(nsIFormControlFrame*  aFrame,
+                             nsIAtom *     aColSizeAttr,
+                             nsHTMLValue & aColSize,
+                             nsresult &    aColStatus,
+                             nsIAtom *     aRowSizeAttr,
+                             nsHTMLValue & aRowSize,
+                             nsresult &    aRowStatus);
  
   NS_IMETHOD CreateWebShell(nsIPresContext& aPresContext,
                             const nsSize& aSize);
