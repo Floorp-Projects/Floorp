@@ -38,30 +38,37 @@
 //-----------------------------------------------------------------------------
 var bug = 280769;
 var summary = 'Do not crash on regular expression class count overflow';
-var actual = 'Crash';
+var actual = 'No Crash';
 var expect = 'No Crash';
 
-enterFunc ('test');
 printBugNumber (bug);
 printStatus (summary);
 
-var N = 100*1000;
+function crash(N)
+{
+  var N = 100*1000;
 
-var a = new Array(N);
+  var a = new Array(N);
 
-for (var i = 0; i != N; ++i) {
+  for (var i = 0; i != N; ++i) {
     a[i] = i;
+  }
+
+  var str = '['+a.join('][')+']'; // str is [0][1][2]...[<PRINTED N-1>]
+
+  var re = new RegExp(str);
+
+  re.exec("");
 }
 
-var str = '['+a.join('][')+']'; // str is [0][1][2]...[<PRINTED N-1>]
+status = summary + ' ' + inSection(1) + ' N = 20000 ';
+crash(20000);
+reportCompare(expect, actual, status);
 
-var re = new RegExp(str);
+status = summary + ' ' + inSection(2) + ' N = 0xFFFF ';
+crash(0xFFFF);
+reportCompare(expect, actual, status);
 
-re.exec("");
-
-actual = 'No Crash';
-  
-reportCompare(expect, actual, summary);
-
-exitFunc ('test');
-
+status = summary + ' ' + inSection(3) + ' N = 100000 ';
+crash(100000);
+reportCompare(expect, actual, status);
