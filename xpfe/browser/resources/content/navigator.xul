@@ -217,7 +217,7 @@ Contributor(s): ______________________________________. -->
               ondragexit="nsDragAndDrop.dragExit(event, homeButtonObserver);"
               oncommand="BrowserHome(); event.preventBubble();"/>
   
-      <toolbarseparator/>
+      <toolbarseparator id="home-bm-separator" persist="hidden"/>
  
       <!-- "Bookmarks" button on personal toolbar -->                           
       <menubutton class="button-toolbar bookmark-item" id="bookmarks-button"   
