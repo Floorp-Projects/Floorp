@@ -30,8 +30,6 @@ LIBRARY_NAME	= MyService
 
 CPPSRCS		= MyService.cpp
 
-EXPORTS = MyService.h
-
 LOCAL_INCLUDES	= -I$(srcdir)/..
 
 EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_XPCOM_LIBS)
