@@ -325,7 +325,15 @@
         
         this.value = aDay.date;
 
-        if (this.onchange) this.onchange();
+// For an unknown reason the bug http://bugzilla.mozilla.org/show_bug.cgi?id=223505 is corrected
+// by direct call of the attribute. This bug occurs on Moz1.5 and Moz1.6a and related applications
+// like Thunderbird. It has been observe on Windows in a NON reproduicible way.
+// This correction could be also a temporary one.
+// Original code :
+//        if (this.onchange) this.onchange();
+// New code :
+        if (this.onchange) eval( this.getAttribute("onchange") );
+
         
         if (this.parentNode.parentNode.parentNode.parentNode.callback) 
             this.parentNode.parentNode.parentNode.parentNode.callback();
