@@ -434,11 +434,11 @@ private:
 
   PRBool IsRunningPlugin(nsPluginTag * plugin);
 
-  // Loads all cached plugins info into mCachedPlugins
-  nsresult LoadCachedPluginsInfo(nsIRegistry* registry);
-
   // Stores all plugins info into the registry
-  nsresult CachePluginsInfo(nsIRegistry* registry);
+  nsresult WritePluginInfo();
+
+  // Loads all cached plugins info into mCachedPlugins
+  nsresult ReadPluginInfo();
 
   // Given a filename, returns the plugins info from our cache
   // and removes it from the cache.
@@ -473,6 +473,7 @@ private:
   nsActivePluginList mActivePluginList;
   nsVoidArray mUnusedLibraries;
 
+  nsCOMPtr<nsIFile> mPluginsDir;
   nsCOMPtr<nsIDirectoryServiceProvider> mPrivateDirServiceProvider;  
   nsWeakPtr mCurrentDocument; // weak reference, we use it to id document only
 
