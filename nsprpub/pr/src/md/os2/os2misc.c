@@ -426,7 +426,8 @@ PRProcess * _PR_CreateOS2Process(
         rc = DosStartSession(&startData, &ulAppType, &pid);
 
         if ((rc != NO_ERROR) && (rc != ERROR_SMG_START_IN_BACKGROUND)) {
-            PR_SetError(PR_UNKNOWN_ERROR, 0);
+            PR_SetError(PR_UNKNOWN_ERROR, rc);
+            goto errorExit;
         }
  
         proc->md.pid = pid;
