@@ -603,8 +603,13 @@ nsImageFrame::Paint(nsIPresContext* aPresContext,
         if (mImageLoader.GetLoadImageFailed()) {
           float p2t;
           aPresContext->GetScaledPixelsToTwips(&p2t);
-          inner.width  = NSIntPixelsToTwips(image->GetWidth(), p2t);
-          inner.height = NSIntPixelsToTwips(image->GetHeight(), p2t);
+          if (image != nsnull) {
+            inner.width  = NSIntPixelsToTwips(image->GetWidth(), p2t);
+            inner.height = NSIntPixelsToTwips(image->GetHeight(), p2t);
+          } else if (lowImage != nsnull) {
+            inner.width  = NSIntPixelsToTwips(lowImage->GetWidth(), p2t);
+            inner.height = NSIntPixelsToTwips(lowImage->GetHeight(), p2t);
+          }
         }
 
         if (lowImage != nsnull && lowSrcLinesLoaded > 0) {
