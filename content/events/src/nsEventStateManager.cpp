@@ -1218,7 +1218,9 @@ nsEventStateManager::DoWheelScroll(nsIPresContext* aPresContext,
 {
   nsCOMPtr<nsIContent> targetContent;
   aTargetFrame->GetContent(getter_AddRefs(targetContent));
-
+  if (!targetContent)
+    GetFocusedContent(getter_AddRefs(targetContent));
+  if (!targetContent) return NS_OK;
   nsCOMPtr<nsIDocument> targetDoc;
   targetContent->GetDocument(*getter_AddRefs(targetDoc));
   if (!targetDoc) return NS_OK;
