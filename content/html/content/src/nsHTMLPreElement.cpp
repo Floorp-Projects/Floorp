@@ -197,22 +197,16 @@ static void
 MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
                       nsRuleData* aData)
 {
-  if (!aData)
-    return;
+  if (aData->mSID == eStyleStruct_Font) {
+    nsHTMLValue value;
 
-  if (aData->mFontData) {
-    nsRuleDataFont& font = *(aData->mFontData);
-
-    if (nsnull != aAttributes) {
-      nsHTMLValue value;
-
-      // variable: empty
-      aAttributes->GetAttribute(nsHTMLAtoms::variable, value);
-      if (value.GetUnit() == eHTMLUnit_Empty)
-        font.mFamily.SetStringValue(NS_LITERAL_STRING("serif"), eCSSUnit_String);
-    }
+    // variable: empty
+    aAttributes->GetAttribute(nsHTMLAtoms::variable, value);
+    if (value.GetUnit() == eHTMLUnit_Empty)
+      aData->mFontData->mFamily.SetStringValue(NS_LITERAL_STRING("serif"),
+                                               eCSSUnit_String);
   }
-  else if (aData->mPositionData) {
+  else if (aData->mSID == eStyleStruct_Position) {
     // cols: int (nav4 attribute)
     nsHTMLValue value;
     if (aData->mPositionData->mWidth.GetUnit() == eCSSUnit_Null) {
@@ -226,7 +220,7 @@ MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
         aData->mPositionData->mWidth.SetFloatValue((float)value.GetIntValue(), eCSSUnit_Char);
     }
   }
-  else if (aData->mTextData && aData->mSID == eStyleStruct_Text) {
+  else if (aData->mSID == eStyleStruct_Text) {
     if (aData->mTextData->mWhiteSpace.GetUnit() == eCSSUnit_Null) {
       nsHTMLValue value;
       // wrap: empty

@@ -354,10 +354,7 @@ nsHTMLTableSectionElement::AttributeToString(nsIAtom* aAttribute,
 static 
 void MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes, nsRuleData* aData)
 {
-  if (!aAttributes || !aData)
-    return;
-
-  if (aData->mPositionData) {
+  if (aData->mSID == eStyleStruct_Position) {
     // height: value
     nsHTMLValue value;
     if (aData->mPositionData->mHeight.GetUnit() == eCSSUnit_Null) {
@@ -366,24 +363,22 @@ void MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes, nsRuleDat
         aData->mPositionData->mHeight.SetFloatValue((float)value.GetPixelValue(), eCSSUnit_Pixel);   
     }
   }
-  else if (aData->mTextData) {
-    if (aData->mSID == eStyleStruct_Text) {
-      if (aData->mTextData->mTextAlign.GetUnit() == eCSSUnit_Null) {
-        // align: enum
-        nsHTMLValue value;
-        aAttributes->GetAttribute(nsHTMLAtoms::align, value);
-        if (value.GetUnit() == eHTMLUnit_Enumerated)
-          aData->mTextData->mTextAlign.SetIntValue(value.GetIntValue(), eCSSUnit_Enumerated);
-      }
+  else if (aData->mSID == eStyleStruct_Text) {
+    if (aData->mTextData->mTextAlign.GetUnit() == eCSSUnit_Null) {
+      // align: enum
+      nsHTMLValue value;
+      aAttributes->GetAttribute(nsHTMLAtoms::align, value);
+      if (value.GetUnit() == eHTMLUnit_Enumerated)
+        aData->mTextData->mTextAlign.SetIntValue(value.GetIntValue(), eCSSUnit_Enumerated);
     }
-    else {
-      if (aData->mTextData->mVerticalAlign.GetUnit() == eCSSUnit_Null) {
-        // valign: enum
-        nsHTMLValue value;
-        aAttributes->GetAttribute(nsHTMLAtoms::valign, value);
-        if (value.GetUnit() == eHTMLUnit_Enumerated) 
-          aData->mTextData->mVerticalAlign.SetIntValue(value.GetIntValue(), eCSSUnit_Enumerated);
-      }
+  }
+  else if (aData->mSID == eStyleStruct_TextReset) {
+    if (aData->mTextData->mVerticalAlign.GetUnit() == eCSSUnit_Null) {
+      // valign: enum
+      nsHTMLValue value;
+      aAttributes->GetAttribute(nsHTMLAtoms::valign, value);
+      if (value.GetUnit() == eHTMLUnit_Enumerated) 
+        aData->mTextData->mVerticalAlign.SetIntValue(value.GetIntValue(), eCSSUnit_Enumerated);
     }
   }
 

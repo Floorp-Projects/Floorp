@@ -218,10 +218,7 @@ static void
 MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
                       nsRuleData* aData)
 {
-  if (!aAttributes || !aData)
-    return;
-
-  if (aData->mListData) {
+  if (aData->mSID == eStyleStruct_List) {
     if (aData->mListData->mType.GetUnit() == eCSSUnit_Null) {
       nsHTMLValue value;
     

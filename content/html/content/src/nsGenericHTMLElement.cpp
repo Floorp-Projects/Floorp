@@ -3257,13 +3257,13 @@ nsGenericHTMLElement::MapImageAlignAttributeInto(const nsIHTMLMappedAttributes* 
     aAttributes->GetAttribute(nsHTMLAtoms::align, value);
     if (value.GetUnit() == eHTMLUnit_Enumerated) {
       PRUint8 align = (PRUint8)(value.GetIntValue());
-      if (aRuleData->mDisplayData && aRuleData->mDisplayData->mFloat.GetUnit() == eCSSUnit_Null) {
+      if (aRuleData->mSID == eStyleStruct_Display && aRuleData->mDisplayData->mFloat.GetUnit() == eCSSUnit_Null) {
         if (align == NS_STYLE_TEXT_ALIGN_LEFT)
           aRuleData->mDisplayData->mFloat.SetIntValue(NS_STYLE_FLOAT_LEFT, eCSSUnit_Enumerated);
         else if (align == NS_STYLE_TEXT_ALIGN_RIGHT)
           aRuleData->mDisplayData->mFloat.SetIntValue(NS_STYLE_FLOAT_RIGHT, eCSSUnit_Enumerated);
       }
-      else if (aRuleData->mTextData && aRuleData->mTextData->mVerticalAlign.GetUnit() == eCSSUnit_Null) {
+      else if (aRuleData->mSID == eStyleStruct_TextReset && aRuleData->mTextData->mVerticalAlign.GetUnit() == eCSSUnit_Null) {
         switch (align) {
         case NS_STYLE_TEXT_ALIGN_LEFT:
         case NS_STYLE_TEXT_ALIGN_RIGHT:
@@ -3281,7 +3281,7 @@ void
 nsGenericHTMLElement::MapDivAlignAttributeInto(const nsIHTMLMappedAttributes* aAttributes,
                                                nsRuleData* aRuleData)
 {
-  if (aRuleData->mSID == eStyleStruct_Text && aRuleData->mTextData) {
+  if (aRuleData->mSID == eStyleStruct_Text) {
     if (aRuleData->mTextData->mTextAlign.GetUnit() == eCSSUnit_Null) {
       // align: enum
       nsHTMLValue value;
@@ -3297,7 +3297,7 @@ void
 nsGenericHTMLElement::MapImageMarginAttributeInto(const nsIHTMLMappedAttributes* aAttributes,
                                                   nsRuleData* aData)
 {
-  if (aData->mSID != eStyleStruct_Margin || !aData->mMarginData)
+  if (aData->mSID != eStyleStruct_Margin)
     return;
 
   nsHTMLValue value;
@@ -3339,7 +3339,7 @@ void
 nsGenericHTMLElement::MapImageSizeAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
                                                  nsRuleData* aData)
 {
-  if (!aAttributes || aData->mSID != eStyleStruct_Position || !aData->mPositionData)
+  if (aData->mSID != eStyleStruct_Position)
     return;
 
   nsHTMLValue value;
@@ -3367,7 +3367,7 @@ void
 nsGenericHTMLElement::MapImageBorderAttributeInto(const nsIHTMLMappedAttributes* aAttributes,
                                                   nsRuleData* aData)
 {
-  if (aData->mSID != eStyleStruct_Border || !aData->mMarginData)
+  if (aData->mSID != eStyleStruct_Border)
     return;
 
   nsHTMLValue value;
@@ -3417,7 +3417,7 @@ void
 nsGenericHTMLElement::MapBackgroundAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
                                                   nsRuleData* aData)
 {
-  if (!aData || !aData->mColorData || aData->mSID != eStyleStruct_Background)
+  if (aData->mSID != eStyleStruct_Background)
     return;
 
   if (aData->mColorData->mBackImage.GetUnit() == eCSSUnit_Null) {

@@ -227,10 +227,7 @@ static void
 MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
                       nsRuleData* aData)
 {
-  if (!aData)
-    return;
-
-  if (aData->mFontData) {
+  if (aData->mSID == eStyleStruct_Font) {
     nsRuleDataFont& font = *(aData->mFontData);
     nsHTMLValue value;
     
@@ -279,7 +276,7 @@ MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
         font.mWeight.SetIntValue(value.GetIntValue(), eCSSUnit_Enumerated);
     }
   }
-  else if (aData->mColorData && aData->mSID == eStyleStruct_Color) {
+  else if (aData->mSID == eStyleStruct_Color) {
     if (aData->mColorData->mColor.GetUnit() == eCSSUnit_Null) {
       // color: color
       nsHTMLValue value;
@@ -291,7 +288,7 @@ MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
       }
     }
   }
-  else if (aData->mTextData && aData->mSID == eStyleStruct_TextReset) {
+  else if (aData->mSID == eStyleStruct_TextReset) {
     // Make <a><font color="red">text</font></a> give the text a red underline
     // in quirks mode.  The NS_STYLE_TEXT_DECORATION_OVERRIDE_ALL flag only
     // affects quirks mode rendering.

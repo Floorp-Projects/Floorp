@@ -227,9 +227,6 @@ static void
 MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
                       nsRuleData* aData)
 {
-  if (!aAttributes || !aData)
-    return;
-
   nsHTMLValue value;
   PRBool noshade = PR_FALSE;
 

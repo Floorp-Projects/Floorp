@@ -1983,9 +1983,6 @@ static void
 MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
                       nsRuleData* aData)
 {
-  if (!aData)
-    return;
-
   nsHTMLValue value;
   aAttributes->GetAttribute(nsHTMLAtoms::type, value);
   if (value.GetUnit() == eHTMLUnit_Enumerated &&

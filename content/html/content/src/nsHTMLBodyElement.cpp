@@ -522,10 +522,7 @@ nsHTMLBodyElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
 static 
 void MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes, nsRuleData* aData)
 {
-  if (!aAttributes || !aData)
-    return;
-  
-  if (aData->mDisplayData && aData->mSID == eStyleStruct_Display) {
+  if (aData->mSID == eStyleStruct_Display) {
     // When display if first asked for, go ahead and get our colors set up.
     nsHTMLValue value;
     
@@ -564,7 +561,7 @@ void MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes, nsRuleDat
     }
   }
 
-  if (aData->mColorData && aData->mSID == eStyleStruct_Color) {
+  if (aData->mSID == eStyleStruct_Color) {
     if (aData->mColorData->mColor.GetUnit() == eCSSUnit_Null) {
       // color: color
       nsHTMLValue value;

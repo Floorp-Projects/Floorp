@@ -438,10 +438,7 @@ static void
 MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
                       nsRuleData* aData)
 {
-  if (!aData || !aAttributes)
-    return;
-
-  if (aData->mSID == eStyleStruct_Border && aData->mMarginData) {
+  if (aData->mSID == eStyleStruct_Border) {
     // frameborder: 0 | 1 (| NO | YES in quirks mode)
     // If frameborder is 0 or No, set border to 0
     // else leave it as the value set in html.css
