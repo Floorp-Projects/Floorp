@@ -136,6 +136,9 @@ class mozXMLTerminal : public mozIXMLTerminal,
   /** owning reference to LineTermAux object created by us */
   nsCOMPtr<mozILineTermAux> mLineTermAux;
 
+  /** terminal needs resizing flag */
+  PRBool                    mNeedsResizing;
+
   /** owning referencing to key listener object created by us */
   nsCOMPtr<nsIDOMEventListener> mKeyListener;
 

@@ -109,6 +109,7 @@ mozXMLTerminal::mozXMLTerminal() :
   mXMLTermSession(nsnull),
 
   mLineTermAux(nsnull),
+  mNeedsResizing(false),
 
   mKeyListener(nsnull),
   mTextListener(nsnull),
@@ -507,11 +508,6 @@ NS_IMETHODIMP mozXMLTerminal::Activate(void)
   // Save cookie
   mCookie = cookie;
 
-  // Resize XMLterm (before displaying any output)
-  result = Resize();
-  if (NS_FAILED(result))
-    return result;
-
   // Get the DOM event receiver for document
   nsCOMPtr<nsIDOMEventReceiver> eventReceiver;
   result = mDOMDocument->QueryInterface(NS_GET_IID(nsIDOMEventReceiver),
@@ -642,12 +638,12 @@ NS_IMETHODIMP mozXMLTerminal::ScreenSize(PRInt32& rows, PRInt32& cols,
   xdel = pixelScale * fontWidth;
   ydel = pixelScale * fontHeight + 2;
 
-  xPixels = (int) (pixelScale * shellArea.height);
-  yPixels = (int) (pixelScale * shellArea.width);
+  xPixels = (int) (pixelScale * shellArea.width);
+  yPixels = (int) (pixelScale * shellArea.height);
 
   // Determine number of rows/columns
-  rows = (int) ((xPixels-44) / ydel);
-  cols = (int) ((yPixels-20) / xdel);
+  rows = (int) ((yPixels-16) / ydel);
+  cols = (int) ((xPixels-20) / xdel);
 
   if (rows < 1) rows = 1;
   if (cols < 1) cols = 1;
@@ -679,8 +675,17 @@ NS_IMETHODIMP mozXMLTerminal::SendText(const nsString& aString,
   nsAutoString sendStr = aString;
 
   // Preprocess string and check if it is to be consumed
-  PRBool consumed = false;
-  result = mXMLTermSession->Preprocess(sendStr, consumed);
+  PRBool consumed, checkSize;
+  result = mXMLTermSession->Preprocess(sendStr, consumed, checkSize);
+
+  PRBool screenMode;
+  GetScreenMode(&screenMode);
+
+  if (!screenMode && (checkSize || mNeedsResizing)) {
+    // Resize terminal, if need be
+    mXMLTermSession->Resize(mLineTermAux);
+    mNeedsResizing = false;
+  }
 
   if (!consumed) {
     result = mLineTermAux->Write(sendStr.GetUnicode(), aCookie);
@@ -907,10 +912,18 @@ NS_IMETHODIMP mozXMLTerminal::Resize(void)
   if (!mXMLTermSession)
     return NS_ERROR_FAILURE;
 
-  // Delay resizing until next command output display
-  result = mXMLTermSession->NeedsResizing();
-  if (NS_FAILED(result))
-    return result;
+  PRBool screenMode;
+  GetScreenMode(&screenMode);
+
+  if (screenMode) {
+    // Delay resizing until next input processing
+    mNeedsResizing = true;
+  } else {
+    // Resize session
+    result = mXMLTermSession->Resize(mLineTermAux);
+    if (NS_FAILED(result))
+      return result;
+  }
 
   return NS_OK;
 }

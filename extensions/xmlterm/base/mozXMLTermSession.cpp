@@ -155,7 +155,6 @@ mozXMLTermSession::mozXMLTermSession() :
   mBotScrollRow(0),
 
   mRestoreInputEcho(false),
-  mNeedsResizing(false),
 
   mShellPrompt(""),
   mPromptHTML(""),
@@ -285,17 +284,6 @@ NS_IMETHODIMP mozXMLTermSession::Finalize(void)
 }
 
 
-/** Sets XMLTerm flag to indicate XMLTerm needs to be resized
- */
-NS_IMETHODIMP mozXMLTermSession::NeedsResizing(void)
-{
-  XMLT_LOG(mozXMLTermSession::NeedsResizing,0,("\n"));
-
-  mNeedsResizing = true;
-
-  return NS_OK;
-}
-
 /** Resizes XMLterm to match a resized window.
  * @param lineTermAux LineTermAux object to be resized (may be null)
  */
@@ -338,14 +326,17 @@ NS_IMETHODIMP mozXMLTermSession::Resize(mozILineTermAux* lineTermAux)
 /** Preprocesses user input before it is transmitted to LineTerm
  * @param aString (inout) input data to be preprocessed
  * @param consumed (output) true if input data has been consumed
+ * @param checkSize (output) true if terminal size needs to be checked
  */
 NS_IMETHODIMP mozXMLTermSession::Preprocess(const nsString& aString,
-                                            PRBool& consumed)
+                                            PRBool& consumed,
+                                            PRBool& checkSize)
 {
 
   XMLT_LOG(mozXMLTermSession::Preprocess,70,("\n"));
 
   consumed = false;
+  checkSize = false;
 
   if (mMetaCommandType == TREE_META_COMMAND) {
     if (aString.Length() == 1) {
@@ -399,6 +390,15 @@ NS_IMETHODIMP mozXMLTermSession::Preprocess(const nsString& aString,
       default:
         break;
       }
+    }
+  } else {
+
+    if ((mScreenNode == nsnull) &&
+        (aString.FindCharInSet("\r\n\017") >= 0)) {
+      // C-Return or Newline or Control-O found in string; not screen mode;
+      // resize terminal, if need be
+      checkSize = true;
+      XMLT_LOG(mozXMLTermSession::Preprocess,72,("checkSize\n"));
     }
   }
 
@@ -719,6 +719,8 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
 
       result = PositionScreenCursor(cursorRow, cursorCol);
 
+      flushOutput = false;
+
     } else {
       // Process line data
       PRBool promptLine, inputLine, metaCommand, completionRequested;
@@ -990,14 +992,13 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
           result = NewEntry(promptStr);
           if (NS_FAILED(result))
             break;
-        }
 
-        // Resize XMLTerm before command output, if request has been made
-        if (mNeedsResizing) {
-          mNeedsResizing = false;
-          result = Resize(lineTermAux);
-          if (NS_FAILED(result))
-            break;
+          if (mCurrentEntryNumber == mStartEntryNumber) {
+            // First entry; resize terminal
+            result = Resize(lineTermAux);
+            if (NS_FAILED(result))
+              break;
+          }
         }
 
         // Display input and position cursor
