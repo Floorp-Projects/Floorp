@@ -77,13 +77,6 @@
 #include <Resources.h>
 #include <ToolUtils.h>
 
-// A4Stuff.h contains the definition of EnterCodeResource and 
-// EnterCodeResource, used for setting up the code resource¹s
-// globals for 68K (analagous to the function SetCurrentA5
-// defined by the toolbox).
-//
-#include <A4Stuff.h>
-
 #include "jri.h"
 
 #define HIBYTE(i) (i >> 8)
