@@ -130,11 +130,11 @@
       </menupopup>
    </menu>
    
-   <menu id="menu_Go" label="Go" accesskey="g">
+   <menu id="menu_Go" label="&goMenu.label;" accesskey="&goMenu.accesskey;">
       <menupopup id="mppView">
-         <menuitem id="calendar-view-menu-today"    key="go_to_today_key" label="Go To Today"   accesskey="t" observes="go_today_command"/>
-         <menuitem id="calendar-view-menu-previous" key="go_backward_key" label="Previous" accesskey="p" observes="previous_command"/>
-         <menuitem id="calendar-view-menu-next"     key="go_forward_key" label="Next"     accesskey="n" observes="next_command"/>
+         <menuitem id="calendar-view-menu-today"    key="go_to_today_key" label="&goTodayCmd.label;"   accesskey="&goTodayCmd.accesskey;" observes="go_today_command"/>
+         <menuitem id="calendar-view-menu-previous" key="go_backward_key" label="&goPreviousCmd.label;" accesskey="&goPreviousCmd.accesskey;" observes="previous_command"/>
+         <menuitem id="calendar-view-menu-next"     key="go_forward_key" label="&goNextCmd.label;"     accesskey="&goNextCmd.accesskey;" observes="next_command"/>
       </menupopup>
    </menu>
    

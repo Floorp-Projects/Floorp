@@ -78,3 +78,15 @@
 
 <!ENTITY calendar.preferences.label	"Preferences...">
 <!ENTITY calendar.preferences.accesskey	"p">
+
+<!ENTITY goMenu.label                   "Go">
+<!ENTITY goMenu.accesskey               "g">
+
+<!ENTITY goTodayCmd.label               "Go To Today">
+<!ENTITY goTodayCmd.accesskey           "t">
+
+<!ENTITY goPreviousCmd.label            "Previous">
+<!ENTITY goPreviousCmd.accesskey        "p">
+
+<!ENTITY goNextCmd.label                "Next">
+<!ENTITY goNextCmd.accesskey            "n">
