@@ -58,10 +58,15 @@ public:
   /* from a request? */
   virtual ~nsNSSCertificate();
   CERTCertificate *GetCert();
+  nsresult MarkForPermDeletion();
+  nsresult SetCertType(PRUint32 aCertType);
+  nsresult GetCertType(PRUint32 *aCertType);
 
 private:
   CERTCertificate *mCert;
   nsString         mIssuerOrg;
+  PRBool           mPermDelete;
+  PRUint32         mCertType;
   nsCOMPtr<nsIASN1Object> mASN1Structure;
   nsresult CreateASN1Struct();
   nsresult CreateTBSCertificateASN1Struct(nsIASN1Sequence **retSequence,
