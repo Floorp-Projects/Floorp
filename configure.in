@@ -997,13 +997,13 @@ case "$target" in
         fi
         MOZ_TOOLS_DIR=`cygpath -w $MOZ_TOOLS_DIR | sed -e 's|\\\\|/|g'`
         if test -n "$GLIB_PREFIX"; then
-            if test -d "$GLIB_PREFIX"; then
-                _foo=`cygpath -u ${GLIB_PREFIX}`
-                if test `echo ${PATH} | grep -c "$_foo/bin:"` = 0; then
+            _GLIB_PREFIX_DIR=`cd $GLIB_PREFIX && pwd`
+            if test "$?" = "0"; then
+                if test `echo ${PATH} | grep -c "$_GLIB_PREFIX_DIR/bin:"` = 0; then
                     AC_MSG_ERROR([GLIB_PREFIX must be in your \$PATH.])
                 fi
-                GLIB_CFLAGS="-I${GLIB_PREFIX}/include"
-                GLIB_LIBS="${GLIB_PREFIX}/lib/glib-1.2.lib"
+                GLIB_CFLAGS="-I${_GLIB_PREFIX_DIR}/include"
+                GLIB_LIBS="${_GLIB_PREFIX_DIR}/lib/glib-1.2.lib"
             else
                 AC_MSG_ERROR([GLIB_PREFIX is set but "${GLIB_PREFIX}" is not a directory.])
             fi
@@ -1012,13 +1012,13 @@ case "$target" in
             GLIB_LIBS='$(MOZ_TOOLS_DIR)/lib/glib-1.2.lib'
         fi
         if  test -n "$LIBIDL_PREFIX"; then
-            if test -d "$LIBIDL_PREFIX"; then
-                _foo=`cygpath -u ${LIBIDL_PREFIX}`
-                if test `echo ${PATH} | grep -c "$_foo/bin:"` = 0; then
+            _LIBIDL_PREFIX_DIR=`cd $LIBIDL_PREFIX && pwd`
+            if test "$?" = "0"; then
+                if test `echo ${PATH} | grep -c "$_LIBIDL_PREFIX_DIR/bin:"` = 0; then
                     AC_MSG_ERROR([LIBIDL_PREFIX must be in your \$PATH.])
                 fi
-                LIBIDL_CFLAGS="-I${LIBIDL_PREFIX}/include"
-                LIBIDL_LIBS="${LIBIDL_PREFIX}/lib/libidl-0.6.lib ${LIBIDL_PREFIX}/lib/glib-1.2.lib"
+                LIBIDL_CFLAGS="-I${_LIBIDL_PREFIX_DIR}/include"
+                LIBIDL_LIBS="${_LIBIDL_PREFIX_DIR}/lib/libidl-0.6.lib ${_LIBIDL_PREFIX_DIR}/lib/glib-1.2.lib"
             else
                 AC_MSG_ERROR([LIBIDL_PREFIX is set but "${LIBIDL_PREFIX}" is not a directory.])
             fi
