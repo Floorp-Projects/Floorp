@@ -143,7 +143,7 @@ static NS_DEFINE_IID(kIScrollableFrameIID, NS_ISCROLLABLE_FRAME_IID);
 // This data member is initialized from the layout.reflow.timeslice pref.
 // It is used only when asynchronous reflow is enabled by setting gDoAsyncReflow to PR_TRUE.
 #define NS_MAX_REFLOW_TIME    1000000
-static PRTime gMaxRCProcessingTime = (PRTime) -1;
+static PRInt32 gMaxRCProcessingTime = -1;
 
 // Largest chunk size we recycle
 static const int  gMaxRecycledSize = 200;
@@ -496,7 +496,7 @@ protected:
   PRBool                        mPendingReflowEvent;
   nsCOMPtr<nsIEventQueue>       mEventQueue;
   FrameArena                    mFrameArena;
-  PRTime                        mAccumulatedReflowTime;  // Time spent in reflow command processing so far
+  PRInt32                       mAccumulatedReflowTime;  // Time spent in reflow command processing so far
 
   MOZ_TIMER_DECLARE(mReflowWatch)  // Used for measuring time spent in reflow
   MOZ_TIMER_DECLARE(mFrameCreationWatch)  // Used for measuring time spent in frame creation    
@@ -810,9 +810,9 @@ PresShell::Init(nsIDocument* aDocument,
     result = eventService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(mEventQueue));
   
 
-  if (gMaxRCProcessingTime == (PRTime) -1) {
+  if (gMaxRCProcessingTime == -1) {
     // First, set the defaults
-    gMaxRCProcessingTime = (PRTime) NS_MAX_REFLOW_TIME;
+    gMaxRCProcessingTime = NS_MAX_REFLOW_TIME;
     gDoAsyncReflow = PR_FALSE;
 
     // Get the prefs service
@@ -820,7 +820,8 @@ PresShell::Init(nsIDocument* aDocument,
     if (NS_SUCCEEDED(result)) {
       PRInt32 timeSlice;
       prefs->GetIntPref("layout.reflow.timeslice", &timeSlice);
-      LL_I2L(gMaxRCProcessingTime, timeSlice);
+      // Enable after fixing the Mac build
+      // LL_I2L(gMaxRCProcessingTime, timeSlice);
       prefs->GetBoolPref("layout.reflow.async", &gDoAsyncReflow);
     }
   }
@@ -1928,9 +1929,10 @@ PresShell::ProcessReflowCommands()
       VERIFY_STYLE_TREE;
 
       if (gDoAsyncReflow) {
-        LL_SUB(diff, afterReflow, beforeReflow);      
-        LL_ADD(mAccumulatedReflowTime, mAccumulatedReflowTime, diff);
-        if (LL_CMP(mAccumulatedReflowTime, >, gMaxRCProcessingTime))
+        // Enable after fixing the Mac build
+        // LL_SUB(diff, afterReflow, beforeReflow);      
+        // LL_ADD(mAccumulatedReflowTime, mAccumulatedReflowTime, diff);
+        // if (LL_CMP(mAccumulatedReflowTime, >, gMaxRCProcessingTime))
           break;
       }
     }
@@ -1945,11 +1947,12 @@ PresShell::ProcessReflowCommands()
 #ifdef DEBUG
       if (VERIFY_REFLOW_DUMP_COMMANDS & gVerifyReflowFlags) {
         PRInt32 reflowTime;
-        LL_L2I(reflowTime, mAccumulatedReflowTime);
+        // Enable after fixing the Mac build
+        // LL_L2I(reflowTime, mAccumulatedReflowTime);
         printf("Time spent in PresShell::ProcessReflowCommands(), this=%p, time=%d micro seconds\n", this, reflowTime);
       }
 #endif            
-      mAccumulatedReflowTime = (PRTime) 0;
+      mAccumulatedReflowTime = 0;
     }
     
 #ifdef DEBUG
