@@ -136,6 +136,7 @@ ownPasswd(PK11SlotInfo *info, PRBool retry, void *arg)
 
 #define PRINTF  if (verbose)  printf
 #define FPRINTF if (verbose) fprintf
+#define FLUSH	if (verbose) { fflush(stdout); fflush(stderr); }
 
 static void
 Usage(const char *progName)
@@ -306,6 +307,7 @@ mySSLAuthCertificate(void *arg, PRFileDesc *fd, PRBool checkSig,
 	FPRINTF(stderr, "-- SSL3: Certificate Invalid, err %d.\n%s\n", 
                 err, SECU_Strerror(err));
     }
+    FLUSH;
     return rv;  
 }
 
@@ -347,6 +349,7 @@ extern long ssl3_hch_sid_cache_not_ok;
     PRINTF("%ld cache hits; %ld cache misses, %ld cache not reusable\n",
     	ssl3_hch_sid_cache_hits, ssl3_hch_sid_cache_misses,
 	ssl3_hch_sid_cache_not_ok);
+    FLUSH;
 
 }
 
@@ -457,6 +460,7 @@ launch_thread(
     ++numRunning;
     PR_Unlock(threadLock);
     PRINTF("Launched thread in slot %d \n", i);
+    FLUSH;
 
     return SECSuccess;
 }
@@ -498,6 +502,7 @@ reap_threads(void)
     	}
     }
     PR_Unlock(threadLock);
+    FLUSH;
     return 0;
 }
 
@@ -614,6 +619,7 @@ do_writes(
 
     /* notify the reader that we're done. */
     lockedVars_AddToCount(lv, -1);
+    FLUSH;
     return (sent < bigBuf.len) ? SECFailure : SECSuccess;
 }
 
@@ -677,6 +683,7 @@ handle_fdx_connection(
     /* Wait for writer to finish */
     lockedVars_WaitForDone(&lv);
     lockedVars_Destroy(&lv);
+    FLUSH;
 
 cleanup:
     if (ssl_sock)
@@ -986,6 +993,10 @@ server_main(
     opt.value.non_blocking = PR_FALSE;
     PR_SetSocketOption(listen_sock, &opt);
 
+    opt.option=PR_SockOpt_Reuseaddr;
+    opt.value.reuse_addr = PR_TRUE;
+    PR_SetSocketOption(listen_sock, &opt);
+
     if (useModelSocket) {
     	model_sock = PR_NewTCPSocket();
 	if (model_sock == NULL) {
@@ -1071,6 +1082,7 @@ server_main(
 	}
     }
     /* end of ssl configuration. */
+
 
     rv = PR_Bind(listen_sock, &addr);
     if (rv < 0) {
