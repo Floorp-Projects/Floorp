@@ -1,0 +1,14 @@
+<?xml version="1.0"?> <!-- -*- Mode: HTML -*- --> 
+
+<!DOCTYPE window>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="openWindows(10);">
+    <script type="application/x-javascript">
+        <![CDATA[
+            function openWindows(n) {
+                window.openDialog("chrome://navigator/content/miniXul.xul","_blank","chrome,all", n);
+            }
+        ]]>
+    </script>
+</window>

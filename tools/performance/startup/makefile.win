@@ -28,6 +28,7 @@ INSTALL_FILE_LIST =  \
     bigNav.bat  \
     compareNav.bat \
     compareNavStats.bat \
+    newWindowStats.bat \
     $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
