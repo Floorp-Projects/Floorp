@@ -1651,7 +1651,7 @@ TextFrame::Reflow(nsIPresContext& aPresContext,
   // Set whitespace skip flag
   PRBool skipWhitespace = PR_FALSE;
   if (NS_STYLE_WHITESPACE_PRE != ts.mText->mWhiteSpace) {
-    if (lineLayout.GetSkipLeadingWhiteSpace()) {
+    if (lineLayout.GetEndsInWhiteSpace()) {
       skipWhitespace = PR_TRUE;
     }
   }
@@ -1689,6 +1689,7 @@ TextFrame::Reflow(nsIPresContext& aPresContext,
   PRInt32 column = lineLayout.GetColumn();
   PRInt32 prevColumn = column;
   mColumn = column;
+  PRBool breakable = 0 != lineLayout.GetPlacedFrames();
   for (;;) {
     // Get next word/whitespace from the text
     PRBool isWhitespace;
@@ -1726,6 +1727,7 @@ TextFrame::Reflow(nsIPresContext& aPresContext,
       else {
         width = ts.mSpaceWidth + ts.mWordSpacing;/* XXX simplistic */
       }
+      breakable = PR_TRUE;
     } else {
       if (ts.mSmallCaps) {
         MeasureSmallCapsText(aReflowState, ts, bp, wordLen, width);
@@ -1781,28 +1783,34 @@ TextFrame::Reflow(nsIPresContext& aPresContext,
       lineLayout.ForgetWordFrames();
     }
     else if ((offset == contentLength) && (prevOffset >= 0)) {
+      // Force breakable to false when we aren't wrapping (this
+      // guarantees that the combined word will stay together)
+      if (!wrapping) {
+        breakable = PR_FALSE;
+      }
+
       // This frame does start a word. However, there is no point
-      // messing around with it if we are already out of room.
-      if ((0 == lineLayout.GetPlacedFrames()) || (x <= maxWidth)) {
+      // messing around with it if we are already out of room. We
+      // always have room if we are not breakable.
+      if (!breakable || (x <= maxWidth)) {
         // There is room for this word fragment. It's possible that
         // this word fragment is the end of the text-run. If it's not
         // then we continue with the look-ahead processing.
         nsIFrame* next = lineLayout.FindNextText(this);
         if (nsnull != next) {
 #ifdef DEBUG_WORD_WRAPPING
-          nsAutoString tmp(tx.GetTextAt(prevOffset), offset-prevOffset);
+          nsAutoString tmp(tx.GetTextAt(0), offset-prevOffset);
           ListTag(stdout);
           printf(": start='");
           fputs(tmp, stdout);
-          printf("' baseWidth=%d\n", lastWordWidth);
+          printf("' baseWidth=%d [%d,%d]\n", lastWordWidth, prevOffset, offset);
 #endif
           // Look ahead in the text-run and compute the final word
           // width, taking into account any style changes and stopping
           // at the first breakable point.
           nscoord wordWidth = ComputeTotalWordWidth(lineLayout, aReflowState,
                                                     next, lastWordWidth);
-          if ((0 == lineLayout.GetPlacedFrames()) ||
-              (x - lastWordWidth + wordWidth <= maxWidth)) {
+          if (!breakable || (x - lastWordWidth + wordWidth <= maxWidth)) {
             // The fully joined word has fit. Account for the joined
             // word's affect on the max-element-size here (since the
             // joined word is large than it's pieces, the right effect
@@ -1821,7 +1829,7 @@ TextFrame::Reflow(nsIPresContext& aPresContext,
             column = prevColumn;
 #ifdef DEBUG_WORD_WRAPPING
             printf("  x=%d maxWordWidth=%d len=%d\n", x, maxWordWidth,
-                   offset - aStartingOffset);
+                   offset - startingOffset);
 #endif
             lineLayout.ForgetWordFrames();
           }
@@ -1831,17 +1839,17 @@ TextFrame::Reflow(nsIPresContext& aPresContext,
   }
   lineLayout.SetColumn(column);
 
-  if (0 == x) {
-    // Since we collapsed into nothingness (all our whitespace is
-    // ignored) leave the skip-leading-whitespace flag alone so that
-    // whitespace that immediately follows this frame can be properly
-    // skipped.
-  }
-  else {
-    lineLayout.SetSkipLeadingWhiteSpace(endsInWhitespace);
+  // Inform line layout of how this piece of text ends in whitespace
+  // (only text objects do this). Note that if x is zero then this
+  // text object collapsed into nothingness which means it shouldn't
+  // effect the current setting of the ends-in-whitespace flag.
+  lineLayout.SetUnderstandsWhiteSpace(PR_TRUE);
+  if (0 != x) {
+    lineLayout.SetEndsInWhiteSpace(endsInWhitespace);
   }
 
   // Setup metrics for caller; store final max-element-size information
+NS_ASSERTION(x >= 0, "whoops");
   aMetrics.width = x;
   mComputedWidth = x;
   if (0 == x) {
@@ -1882,8 +1890,8 @@ TextFrame::Reflow(nsIPresContext& aPresContext,
   aStatus = rs;
 
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
-     ("exit TextFrame::Reflow: status=%x width=%d",
-      aStatus, aMetrics.width));
+                 ("exit TextFrame::Reflow: status=%x width=%d",
+                  aStatus, aMetrics.width));
   return NS_OK;
 }
 
@@ -2006,7 +2014,13 @@ TextFrame::TrimTrailingWhiteSpace(nsIPresContext& aPresContext,
         frag++;
       }
     }
-    mRect.width -= dw;
+    if (mRect.width > dw) {
+      mRect.width -= dw;
+    }
+    else {
+      dw = mRect.width;
+      mRect.width = 0;
+    }
     mComputedWidth -= dw;
   }
   if (0 != dw) {
