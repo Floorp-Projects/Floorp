@@ -44,6 +44,7 @@
 #include "nsIFileLocator.h"
 
 #include "nsNewsUtils.h"
+#include "nsCOMPtr.h"
 
 #ifdef XP_PC
 #define NETLIB_DLL "netlib.dll"
@@ -76,12 +77,12 @@ public:
     nsresult AddNewHeader(const char *subject, const char *author, const char *id, PRUint32 key);
 
 protected:
-    nsIMsgDatabase   *m_newsDB;
+    nsCOMPtr <nsIMsgDatabase> m_newsDB;
 };
 
 newsTestDriver::newsTestDriver()
 {
-#ifdef DEBUG
+#ifdef DEBUG_sspitzer
     printf("in newsTestDriver::newsTestDriver()\n");
 #endif
     m_newsDB = nsnull;
@@ -89,7 +90,7 @@ newsTestDriver::newsTestDriver()
 
 newsTestDriver::~newsTestDriver()
 {
-#ifdef DEBUG
+#ifdef DEBUG_sspitzer
     printf("in newsTestDriver::~newsTestDriver()\n");
 #endif
 }
@@ -129,11 +130,11 @@ nsresult newsTestDriver::AddNewHeader(const char *subject, const char *author, c
 {
     nsresult rv = NS_OK;
 
-    nsIMsgDBHdr		*newMsgHdr = nsnull;
+    nsCOMPtr <nsIMsgDBHdr> newMsgHdr;
     
-    m_newsDB->CreateNewHdr(key, &newMsgHdr);
+    m_newsDB->CreateNewHdr(key, getter_AddRefs(newMsgHdr));
     if (NS_FAILED(rv)) {
-#ifdef DEBUG
+#ifdef DEBUG_sspitzer
         printf("m_newsDB->CreateNewHdr() failed\n");
 #endif
         return rv;
@@ -146,14 +147,12 @@ nsresult newsTestDriver::AddNewHeader(const char *subject, const char *author, c
     
     rv = m_newsDB->AddNewHdrToDB(newMsgHdr, PR_TRUE);
     if (NS_FAILED(rv)) {
-#ifdef DEBUG
+#ifdef DEBUG_sspitzer
         printf("m_newsDB->AddNewHdrToDB() failed\n");
 #endif
         return rv;           
     }
     
-    NS_IF_RELEASE(newMsgHdr);
-    newMsgHdr = nsnull;
     return NS_OK;
 }
 
@@ -178,12 +177,12 @@ nsresult newsTestDriver::GetDatabase(const char *uri)
 		if (NS_FAILED(rv)) return rv;
 
         nsresult newsDBOpen = NS_OK;
-        nsIMsgDatabase *newsDBFactory = nsnull;
-
-        rv = nsComponentManager::CreateInstance(kCNewsDB, nsnull, nsIMsgDatabase::GetIID(), (void **) &newsDBFactory);
+        nsCOMPtr<nsIMsgDatabase> newsDBFactory;
+        
+        rv = nsComponentManager::CreateInstance(kCNewsDB, nsnull, nsIMsgDatabase::GetIID(), getter_AddRefs(newsDBFactory));
         if (NS_SUCCEEDED(rv) && newsDBFactory) {
-                newsDBOpen = newsDBFactory->Open(path, PR_TRUE, (nsIMsgDatabase **) &m_newsDB, PR_FALSE);
-#ifdef DEBUG
+                newsDBOpen = newsDBFactory->Open(path, PR_TRUE, getter_AddRefs(m_newsDB), PR_FALSE);
+#ifdef DEBUG_sspitzer
                 if (NS_SUCCEEDED(newsDBOpen)) {
                     printf ("newsDBFactory->Open() succeeded\n");
                 }
@@ -191,11 +190,9 @@ nsresult newsTestDriver::GetDatabase(const char *uri)
                     printf ("newsDBFactory->Open() failed\n");
                 }
 #endif
-                NS_RELEASE(newsDBFactory);
-                newsDBFactory = nsnull;
                 return rv;
         }
-#ifdef DEBUG
+#ifdef DEBUG_sspitzer
         else {
             printf("nsComponentManager::CreateInstance(kCNewsDB,...) failed\n");
         }
