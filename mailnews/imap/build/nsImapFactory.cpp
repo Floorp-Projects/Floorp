@@ -31,6 +31,7 @@
 // include files for components this factory creates...
 #include "nsImapUrl.h"
 #include "nsImapProtocol.h"
+#include "nsMsgImapCID.h"
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kCImapUrl, NS_IMAPURL_CID);

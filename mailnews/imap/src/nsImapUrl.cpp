@@ -17,6 +17,7 @@
  */
 
 #include "msgCore.h"    // precompiled header...
+#include "nsMsgImapCID.h"
 
 #ifdef XP_PC
 #include <windows.h>    // for InterlockedIncrement

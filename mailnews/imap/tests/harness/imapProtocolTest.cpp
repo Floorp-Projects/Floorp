@@ -56,6 +56,7 @@
 #include "nsIEventQueue.h"
 #include "nsFileSpec.h"
 #include "nsMsgDBCID.h"
+#include "nsMsgImapCID.h"
 
 #include "nsMsgDatabase.h"
 #include "nsLocalFolderSummarySpec.h"

@@ -16,7 +16,10 @@
  * Reserved.
  */
 
+#include "msgCore.h" // for precompiled headers
+#include "nsMsgImapCID.h"
 #include "nsImapUndoTxn.h"
+
 
 static NS_DEFINE_CID(kCImapService, NS_IMAPSERVICE_CID);
 

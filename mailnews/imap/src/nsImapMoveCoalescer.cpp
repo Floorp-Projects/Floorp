@@ -17,6 +17,7 @@
  */
 
 #include "msgCore.h"
+#include "nsMsgImapCID.h"
 #include "nsImapMailFolder.h"
 #include "nsImapMoveCoalescer.h"
 #include "nsMsgKeySet.h"
