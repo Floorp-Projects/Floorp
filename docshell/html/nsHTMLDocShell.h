@@ -56,9 +56,6 @@ protected:
    PRInt32  mMarginWidth;
    PRInt32  mMarginHeight;
    PRBool   mIsFrame;
-   // XXX: mDocument is going away RSN!  we shouldn't hold onto it at this level.  
-   //      the content viewer owns it
-   nsCOMPtr<nsIDOMDocument> mDocument;
 };
 
 #endif /* nsHTMLDocShell_h__ */
