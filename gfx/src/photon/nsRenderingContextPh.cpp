@@ -1596,6 +1596,10 @@ if (aSrcSurf==destsurf)
 
 NS_IMETHODIMP nsRenderingContextPh::RetrieveCurrentNativeGraphicData(PRUint32 * ngd)
 {
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::RetrieveCurrentNativeGraphicData - Not implemented.\n"));
+  if (ngd != nsnull)
+    *ngd = nsnull;
+	
   return NS_OK;
 }
 
