@@ -1068,6 +1068,7 @@ operator+( const basic_nsLiteralString<CharT>& lhs, const basic_nsLiteralString<
 
 
 
+#if 0
 #ifdef SCC_TESTS
 template <class CharT, class TraitsT>
 basic_ostream<CharT, TraitsT>&
@@ -1076,6 +1077,7 @@ operator<<( basic_ostream<CharT, TraitsT>& os, const basic_nsAReadableString<Cha
     copy(s.BeginReading(), s.EndReading(), ostream_iterator<CharT, CharT, TraitsT>(os));
     return os;
   }
+#endif
 #endif
 
 typedef basic_nsAReadableString<PRUnichar>  nsAReadableString;
