@@ -52,6 +52,8 @@
 
 #include "nsIMessage.h"
 
+#include "nsINetSupportDialogService.h"
+
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
 // that doesn't allow you to call ::nsISupports::GetIID() inside of a class
 // that multiply inherits from nsISupports
@@ -63,6 +65,7 @@ static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 static NS_DEFINE_CID(kCNewsDB, NS_NEWSDB_CID);
 static NS_DEFINE_CID(kNNTPNewsgroupCID, NS_NNTPNEWSGROUP_CID);
 static NS_DEFINE_CID(kNNTPNewsgroupPostCID, NS_NNTPNEWSGROUPPOST_CID);
+static NS_DEFINE_IID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);   
 
 nsNntpService::nsNntpService()
 {
@@ -513,10 +516,17 @@ NS_IMETHODIMP nsNntpService::CancelMessages(nsISupportsArray *messages, nsIUrlLi
 {
   nsresult rv = NS_OK;
   PRUint32 count = 0;
+
+  NS_WITH_SERVICE(nsINetSupportDialogService,dialog,kNetSupportDialogCID,&rv);
+  if (NS_FAILED(rv))
+    return NS_ERROR_FAILURE;
   
   if (!messages) {
-    // nothing to cancel.
-    return NS_ERROR_NULL_POINTER;
+     nsAutoString alertText("No articles are selected.");
+     if (dialog)
+      rv = dialog->Alert(alertText);
+     
+     return NS_ERROR_NULL_POINTER;
   }
 
   rv = messages->Count(&count);
@@ -525,6 +535,30 @@ NS_IMETHODIMP nsNntpService::CancelMessages(nsISupportsArray *messages, nsIUrlLi
     printf("Count failed\n");
 #endif
     return rv;
+  }
+
+  if (count != 1) {
+    nsAutoString alertText("You can only cancel one article at a time.");
+    if (dialog)
+      rv = dialog->Alert(alertText);
+    return NS_ERROR_FAILURE;
+  }
+
+  // we've got an article.  check that the we are the poster.
+  // nsAutoString alertText("This message does not appear to be from you.  You may only cancel your own posts, not those made by others.");
+
+  // we're the sender, give them one last chance to cancel the cancel
+  PRInt32 result;
+
+  nsAutoString confirmText("Are you sure you want to cancel this message?");
+  rv = dialog->Confirm(confirmText, &result);
+#ifdef DEBUG_sspitzer
+  printf("OK or CANCEL? %d\n",result);
+#endif
+
+  if (result != 1) {
+    // they canceled the cancel
+    return NS_ERROR_FAILURE;
   }
   
   nsString2 messageIds("", eOneByte);
@@ -545,10 +579,16 @@ NS_IMETHODIMP nsNntpService::CancelMessages(nsISupportsArray *messages, nsIUrlLi
   
 #ifdef DEBUG_sspitzer
   printf("attempt to cancel the following IDs: %s\n", messageIds.GetBuffer());
-#endif
+#endif  
 
-  if (0) {
+  rv = NS_OK;
+  
+  if (NS_SUCCEEDED(rv)) {
     // the CANCEL succeeded.
+
+    nsAutoString alertText("Message cancelled.");
+    rv = dialog->Alert(alertText);
+    
     return NS_OK;
   }
   else {
