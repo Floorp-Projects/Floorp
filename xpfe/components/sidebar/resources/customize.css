@@ -66,6 +66,11 @@ treeitem > treerow > treecell > .tree-icon
  list-style-image: url("chrome://bookmarks/skin/bookmark-item.gif");
 }
 
+treeitem[haslink="true"] > treerow > treecell > .tree-icon
+{
+ list-style-image: url("chrome://bookmarks/skin/bookmark-folder-closed.gif");
+}
+
 treeitem[container="true"] > treerow > treecell > .tree-icon
 {
  list-style-image: url("chrome://bookmarks/skin/bookmark-folder-closed.gif");
