@@ -153,7 +153,7 @@ PR_PUBLIC_API(PRInt32) ZIP_FindNext( void* hZip, char * outbuf, PRUint16 bufsize
 PRInt32 nsZipArchive::OpenArchive( const char * aArchiveName )
 {
   //-- validate arguments
-  if ( aArchiveName == NULL || *aArchiveName == NULL )
+  if ( aArchiveName == NULL || *aArchiveName == '\0') 
     return ZIP_ERR_PARAM;
 
   //-- not allowed to do two opens on the same object!
