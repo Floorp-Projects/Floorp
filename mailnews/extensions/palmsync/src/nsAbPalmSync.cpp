@@ -823,11 +823,17 @@ nsresult nsAbPalmHotSync::UpdateMozABWithPalmRecords()
                                              PR_FALSE, getter_AddRefs(existingCard));
         if (!existingCard)
         {
-          rv = mABDB->GetCardFromAttribute(nsnull, CARD_ATTRIB_DISPLAY, NS_ConvertUCS2toUTF8(palmRec->displayName).get(),
+          rv = mABDB->GetCardFromAttribute(nsnull, CARD_ATTRIB_DISPLAY, (const char *) palmRec->displayName,
                                              PR_FALSE, getter_AddRefs(existingCard));
-          // if card with this display name exists, just continue;
+          // if card with this display name exists, just continue; But, we should make sure
+          // it's associated with the palm card going forward, so set the palmid.
           if (NS_SUCCEEDED(rv) && existingCard)
+          {
+            nsCOMPtr<nsIAbMDBCard> dbCard = do_QueryInterface(existingCard);
+
+            dbCard->SetStringAttribute(CARD_ATTRIB_PALMID, NS_ConvertASCIItoUCS2(recordIDBuf).get());
             continue;
+          }
 
         }
         if(NS_SUCCEEDED(rv) && existingCard) 
