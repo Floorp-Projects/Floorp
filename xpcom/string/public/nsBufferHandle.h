@@ -22,6 +22,8 @@
  *
  */
 
+/* nsBufferHandle.h --- the collection of classes that describe the atomic hunks of strings */
+
 #ifndef nsBufferHandle_h___
 #define nsBufferHandle_h___
 
@@ -35,7 +37,37 @@
   // for |NS_ASSERTION|
 
 #include "nscore.h"
-  // for |PRUnichar|
+  // for |PRUnichar|, |NS_REINTERPRET_CAST|
+
+
+  /**
+   The classes in this file are collectively called `buffer handles'.
+   All buffer handles begin with a pointer-tuple that delimits the useful content of a
+   hunk of string.  A buffer handle that points to a sharable hunk of string data
+   additionally has a field which multiplexes some flags and a reference count.
+
+
+      ns[Const]BufferHandle       nsSharedBufferHandle        mFlexBufferHandle
+      +-----+-----+-----+-----+   +-----+-----+-----+-----+   +-----+-----+-----+-----+
+      | mDataStart            |   | mDataStart            |   | mDataStart            |
+      +-----+-----+-----+-----+   +-----+-----+-----+-----+   +-----+-----+-----+-----+
+      | mDataEnd              |   | mDataEnd              |   | mDataEnd              |
+      +-----+-----+-----+-----+   +-----+-----+-----+-----+   +-----+-----+-----+-----+
+                                  | mFlags                |   | mFlags                |
+                                  +-----+-----+-----+-----+   +-----+-----+-----+-----+
+                                  . mAllocator            .   | mStorageStart         |
+                                  .........................   +-----+-----+-----+-----+
+                                                              | mStorageEnd           |
+                                                              +-----+-----+-----+-----+
+                                                              . mAllocator            .
+                                                              .........................
+
+    Given only a |ns[Const]BufferHandle|, there is no legal way to tell if it is sharable.
+    In all cases, the data might immediately follow the handle in the same allocated block.
+    From the |mFlags| field, you can tell exactly what configuration of a handle you
+    actually have.
+   */
+
 
   /**
    *
@@ -54,12 +86,26 @@ class nsBufferHandle
       CharT*        DataEnd()                               { return mDataEnd; }
       const CharT*  DataEnd() const                         { return mDataEnd; }
 
-//    void          DataLength( ptrdiff_t aNewDataLength )  { mDataEnd = mDataStart+aNewDataLength; }
       ptrdiff_t     DataLength() const                      { return mDataEnd - mDataStart; }
 
     protected:
       CharT*  mDataStart;
       CharT*  mDataEnd;
+  };
+
+template <class CharT>
+class nsConstBufferHandle
+  {
+    public:
+      nsConstBufferHandle( const CharT* aDataStart, const CharT* aDataEnd ) : mDataStart(aDataStart), mDataEnd(aDataEnd) { }
+
+      const CharT*  DataStart() const                       { return mDataStart; }
+      const CharT*  DataEnd() const                         { return mDataEnd; }
+      ptrdiff_t     DataLength() const                      { return mDataEnd - mDataStart; }
+
+    protected:
+      const CharT*  mDataStart;
+      const CharT*  mDataEnd;
   };
 
 
@@ -102,6 +148,8 @@ struct nsStringAllocatorTraits<PRUnichar>
   {
     static nsStringAllocator<PRUnichar>& global_string_allocator() { return StringAllocator_wchar_t(); }
   };
+
+// end of string allocator stuff that needs to move
 
 
 
@@ -146,6 +194,7 @@ class nsSharedBufferHandle
           nsSharedBufferHandle<CharT>* mutable_this = NS_CONST_CAST(nsSharedBufferHandle<CharT>*, this);
           if ( !mutable_this->set_refcount( get_refcount()-1 ) )
             delete mutable_this;
+              // hmm, what if |kIsUserAllocator| and |kIsSingleAllocationWithBuffer|?
         }
 
       PRBool
@@ -176,7 +225,6 @@ class nsSharedBufferHandle
   };
 
 
-  // need a name for this
 template <class CharT>
 class nsFlexBufferHandle
     : public nsSharedBufferHandle<CharT>
@@ -198,7 +246,6 @@ class nsFlexBufferHandle
       CharT*        StorageEnd()                                  { return mStorageEnd; }
       const CharT*  StorageEnd() const                            { return mStorageEnd; }
 
-//    void          StorageLength( ptrdiff_t aNewStorageLength )  { mStorageEnd = mStorageStart+aNewStorageLength; }
       ptrdiff_t     StorageLength() const                         { return mStorageEnd - mStorageStart; }
 
     protected:
@@ -215,7 +262,7 @@ class nsSharedBufferHandleWithAllocator
           : nsSharedBufferHandle<CharT>(aDataStart, aDataEnd),
             mAllocator(aAllocator)
         {
-          mFlags |= kIsUserAllocator;
+          this->mFlags |= this->kIsUserAllocator;
         }
 
       nsStringAllocator<CharT>& get_allocator() const { return mAllocator; }
@@ -235,7 +282,7 @@ class nsFlexBufferHandleWithAllocator
           : nsFlexBufferHandle<CharT>(aDataStart, aDataEnd, aStorageStart, aStorageEnd),
             mAllocator(aAllocator)
         {
-          mFlags |= kIsUserAllocator;
+          this->mFlags |= this->kIsUserAllocator;
         }
 
       nsStringAllocator<CharT>& get_allocator() const { return mAllocator; }
@@ -248,6 +295,7 @@ class nsFlexBufferHandleWithAllocator
 template <class CharT>
 nsStringAllocator<CharT>&
 nsSharedBufferHandle<CharT>::get_allocator() const
+    // really don't want this to be |inline|
   {
     if ( mFlags & kIsUserAllocator )
       {
@@ -274,7 +322,6 @@ nsSharedBufferHandle<CharT>::~nsSharedBufferHandle()
           string_storage = NS_REINTERPRET_CAST(nsFlexBufferHandle<CharT>*, this)->StorageStart();
 
         get_allocator().Deallocate(string_storage);
-        // nsMemory::Free(string_storage);
       }
   }
 
