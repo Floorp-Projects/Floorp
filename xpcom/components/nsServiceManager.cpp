@@ -22,6 +22,8 @@
  */
 
 #include "nsIServiceManager.h"
+#include "nsICategoryManager.h"
+#include "nsXPIDLString.h"
 #include "nsVoidArray.h"
 #include "nsHashtable.h"
 #include "prcmon.h"
@@ -73,6 +75,53 @@ nsGetServiceByProgID::operator()( const nsIID& aIID, void** aInstancePtr ) const
       *mErrorPtr = status;
     return status;
   }
+
+nsresult
+nsGetServiceFromCategory::operator()( const nsIID& aIID, void** aInstancePtr)
+  const
+{
+  nsresult status;
+  nsXPIDLCString value;
+  nsCOMPtr<nsICategoryManager> catman = 
+    do_GetService(NS_CATEGORYMANAGER_PROGID, &status);
+  
+  if (NS_FAILED(status)) goto error;
+  
+  if (!mCategory || !mEntry) {
+    // when categories have defaults, use that for null mEntry
+    status = NS_ERROR_NULL_POINTER;
+    goto error;
+  }
+  
+  /* find the progID for category.entry */
+  status = catman->GetCategoryEntry(mCategory, mEntry,
+                                    getter_Copies(value));
+  if (NS_FAILED(status)) goto error;
+  if (!value) {
+    status = NS_ERROR_SERVICE_NOT_FOUND;
+    goto error;
+  }
+  
+  // Too bad |nsServiceManager| isn't an |nsIServiceManager|, then
+  // this could have been one call.
+  if ( mServiceManager )
+    status =
+      mServiceManager->GetService(value, aIID,
+                                  NS_REINTERPRET_CAST(nsISupports**,
+                                                      aInstancePtr), 0);
+  else
+    status =
+      nsServiceManager::GetService(value, aIID,
+                                   NS_REINTERPRET_CAST(nsISupports**,
+                                                       aInstancePtr), 0);
+  if (NS_FAILED(status)) {
+  error:
+    *aInstancePtr = 0;
+  }
+
+  *mErrorPtr = status;
+  return status;
+}
 
 class nsServiceEntry {
 public:
