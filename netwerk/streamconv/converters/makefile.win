@@ -27,7 +27,8 @@ REQUIRES	= xpcom \
 		  util \
 		  pref \
 		  exthandler \
-                  uconv \
+		  uconv \
+		  unicharutil \
 		  zlib \
 		  $(NULL)
 include <$(DEPTH)/config/config.mak>
