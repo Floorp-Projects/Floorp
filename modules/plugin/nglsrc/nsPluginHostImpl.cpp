@@ -1070,6 +1070,8 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnDataAvailable(nsIURI* aURL, nsIInput
   if(mStreamType != nsPluginStreamType_AsFileOnly)
   {
     aURL->GetSpec(&url);
+	// Where is this url being used?
+	nsCRT::free(url); 
     rv =  mPStreamListener->OnDataAvailable((nsIPluginStreamInfo*)mPluginStreamInfo, aIStream, aLength);
   }
   else
