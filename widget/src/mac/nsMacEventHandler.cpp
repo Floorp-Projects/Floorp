@@ -45,6 +45,8 @@ nsMacEventHandler::nsMacEventHandler(nsWindow* aTopLevelWidget)
 
 nsMacEventHandler::~nsMacEventHandler()
 {
+	NS_IF_RELEASE(mLastWidgetPointed);
+	NS_IF_RELEASE(mLastWidgetHit);
 }
 
 
@@ -301,7 +303,9 @@ PRBool nsMacEventHandler::HandleMouseDownEvent(
 				// dispatch the event
 				retVal = widgetHit->DispatchMouseEvent(mouseEvent);
 			}
+			NS_IF_RELEASE(mLastWidgetHit);
 			mLastWidgetHit = widgetHit;
+			NS_ADDREF(widgetHit);
 			break;
 		}
 	}
@@ -329,6 +333,7 @@ PRBool nsMacEventHandler::HandleMouseUpEvent(
 	if (mLastWidgetHit != nsnull)
 	{
 		retVal |= mLastWidgetHit->DispatchMouseEvent(mouseEvent);
+		NS_RELEASE(mLastWidgetHit);
 		mLastWidgetHit = nsnull;
 	}
 
@@ -357,6 +362,7 @@ PRBool nsMacEventHandler::HandleMouseMoveEvent(
 			mouseEvent.widget = mLastWidgetPointed;
 				mouseEvent.message = NS_MOUSE_EXIT;
 				retVal |= mLastWidgetPointed->DispatchMouseEvent(mouseEvent);
+				NS_IF_RELEASE(mLastWidgetPointed);
 				mLastWidgetPointed = nsnull;
 			mouseEvent.widget = widgetPointed;
 		}
@@ -364,7 +370,9 @@ PRBool nsMacEventHandler::HandleMouseMoveEvent(
 		{
 			mouseEvent.message = NS_MOUSE_ENTER;
 			retVal |= widgetPointed->DispatchMouseEvent(mouseEvent);
+			NS_IF_RELEASE(mLastWidgetPointed);
 			mLastWidgetPointed = widgetPointed;
+			NS_ADDREF(widgetPointed);
 		}
 	}
 	else
