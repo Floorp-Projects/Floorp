@@ -340,7 +340,7 @@ nsImapProtocol::~nsImapProtocol()
 const char*
 nsImapProtocol::GetImapHostName()
 {
-	if (!m_userName && m_runningUrl)
+	if (m_runningUrl && !m_hostName)
 	{
 		nsCOMPtr<nsIURI> url = do_QueryInterface(m_runningUrl);
 		url->GetHost(&m_hostName);
@@ -448,18 +448,6 @@ nsImapProtocol::SetupSinkProxy()
 														 aImapServerSink,
 														 PROXY_SYNC | PROXY_ALWAYS,
 														 getter_AddRefs(m_imapServerSink));
-//                 nsImapMiscellaneousSinkProxy * miscSink = new
-  //                  nsImapMiscellaneousSinkProxy(aImapMiscellaneousSink,
-    //                                         this,
-      //                                       m_sinkEventQueue,
-        //                                     m_thread);
-		//		m_imapServerSink = do_QueryInterface(miscSink);
-//				GetProxyObject(nsIEventQueue *destQueue, 
-  //                                                 REFNSIID aIID, 
-    //                                               nsISupports* aObj, 
-      //                                             ProxyType proxyType,
-        //                                           void** aProxyObject) = 0;
-                       
             }
 		}
     }
@@ -483,6 +471,11 @@ nsresult nsImapProtocol::SetupWithUrl(nsIURI * aURL, nsISupports* aConsumer)
 			nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(m_runningUrl);
             rv = mailnewsUrl->GetServer(getter_AddRefs(m_server));
 		}
+
+		PRUint32 capability = kCapabilityUndefined;
+
+		m_hostSessionList->GetCapabilityForHost(GetImapHostName(), GetImapUserName(), capability);
+		GetServerStateParser().SetCapabilityFlag(capability);
 
 		if ( m_runningUrl && !m_channel /* and we don't have a transport yet */)
 		{
@@ -3355,12 +3348,11 @@ void nsImapProtocol::CommitNamespacesForHostEvent()
 }
 
 // notifies libmsg that we have new capability data for the current host
-void nsImapProtocol::CommitCapabilityForHostEvent()
+void nsImapProtocol::CommitCapability()
 {
-    if (m_imapMiscellaneousSink)
+    if (m_imapServerSink)
     {
-        m_imapMiscellaneousSink->CommitCapabilityForHost(this, GetImapHostName());
-        WaitForFEEventCompletion();
+        m_imapServerSink->SetCapability(GetServerStateParser().GetCapabilityFlag());
     }
 }
 
@@ -3637,7 +3629,7 @@ nsImapProtocol::DiscoverMailboxSpec(mailbox_spec * adoptedBoxSpec)
 						if (m_hierarchyNameState ==
                             kListingForInfoAndDiscovery &&
                             boxNameCopy.Length() && 
-                            !adoptedBoxSpec->folderIsNamespace)
+                            !(adoptedBoxSpec->box_flags & kNameSpace))
 						{
 							// remember the info here also
 							nsIMAPMailboxInfo *mb = new
@@ -5079,7 +5071,7 @@ void nsImapProtocol::DiscoverMailboxList()
                             ns->GetPrefix(), ns->GetDelimiter(), 
                             &boxSpec->allocatedPathName);  
 						boxSpec->namespaceForFolder = ns;
-						boxSpec->folderIsNamespace = PR_TRUE;
+						boxSpec->box_flags |= kNameSpace;
 
 						switch (ns->GetType())
 						{

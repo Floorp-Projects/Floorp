@@ -29,7 +29,7 @@ class nsImapFlagAndUidState;
 /* imap message flags */
 typedef PRUint16 imapMessageFlagsType;
 
-/* used for communication between libmsg and libnet */
+/* used for communication between imap thread and event sinks */
 #define kNoFlags     0x00	/* RFC flags */
 #define kMarked      0x01
 #define kUnmarked    0x02
@@ -40,6 +40,7 @@ typedef PRUint16 imapMessageFlagsType;
 #define kPersonalMailbox	0x40	/* this mailbox is in the personal namespace */
 #define kPublicMailbox		0x80	/* this mailbox is in the public namespace */
 #define kOtherUsersMailbox	0x100	/* this mailbox is in the other users' namespace */
+#define kNameSpace			0x200	/* this mailbox IS a namespace */
 
 /* flags for individual messages */
 /* currently the ui only offers \Seen and \Flagged */
@@ -166,7 +167,6 @@ struct mailbox_spec {
 	PRBool			onlineVerified;
 
 	nsIMAPNamespace	*namespaceForFolder;
-	PRBool			folderIsNamespace;
 };
 
 typedef struct mailbox_spec mailbox_spec;

@@ -1568,36 +1568,6 @@ nsImapMiscellaneousSinkProxy::CommitNamespaces(nsIImapProtocol* aProtocol,
 }
 
 NS_IMETHODIMP
-nsImapMiscellaneousSinkProxy::CommitCapabilityForHost(nsIImapProtocol* aProtocol,
-                                                  const char* hostName)
-{
-    nsresult res = NS_OK;
-    NS_PRECONDITION (hostName, "Oops... null hostName");
-    if(!hostName)
-        return NS_ERROR_NULL_POINTER;
-    NS_ASSERTION (m_protocol == aProtocol, "Ooh ooh, wrong protocol");
-
-    if (PR_GetCurrentThread() == m_thread)
-    {
-        CommitCapabilityForHostProxyEvent *ev =
-            new CommitCapabilityForHostProxyEvent(this, hostName);
-        if(nsnull == ev)
-            res = NS_ERROR_OUT_OF_MEMORY;
-        else
-        {
-            ev->SetNotifyCompletion(PR_TRUE);
-            ev->PostEvent(m_eventQueue);
-        }
-    }
-    else
-    {
-        res = m_realImapMiscellaneousSink->CommitCapabilityForHost(aProtocol, hostName);
-        aProtocol->NotifyFEEventCompletion();
-    }
-    return res;
-}
-
-NS_IMETHODIMP
 nsImapMiscellaneousSinkProxy::TunnelOutStream(nsIImapProtocol* aProtocol,
                                           msg_line_info* aInfo)
 {
@@ -3239,33 +3209,6 @@ NS_IMETHODIMP
 CommitNamespacesProxyEvent::HandleEvent()
 {
     nsresult res = m_proxy->m_realImapMiscellaneousSink->CommitNamespaces(
-        m_proxy->m_protocol, m_hostName);
-    if (m_notifyCompletion)
-        m_proxy->m_protocol->NotifyFEEventCompletion();
-    return res;
-}
-
-CommitCapabilityForHostProxyEvent::CommitCapabilityForHostProxyEvent(
-    nsImapMiscellaneousSinkProxy* aProxy, const char* hostName) :
-    nsImapMiscellaneousSinkProxyEvent(aProxy)
-{
-    NS_ASSERTION (hostName, "Oops... a null host name");
-    if (hostName)
-        m_hostName = PL_strdup(hostName);
-    else
-        m_hostName = nsnull;
-}
-
-CommitCapabilityForHostProxyEvent::~CommitCapabilityForHostProxyEvent()
-{
-    if (m_hostName)
-        PL_strfree(m_hostName);
-}
-
-NS_IMETHODIMP
-CommitCapabilityForHostProxyEvent::HandleEvent()
-{
-    nsresult res = m_proxy->m_realImapMiscellaneousSink->CommitCapabilityForHost(
         m_proxy->m_protocol, m_hostName);
     if (m_notifyCompletion)
         m_proxy->m_protocol->NotifyFEEventCompletion();

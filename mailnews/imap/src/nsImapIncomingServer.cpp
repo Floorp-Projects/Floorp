@@ -100,21 +100,20 @@ public:
 	NS_IMETHOD GetUsingSubscription(PRBool *usingSubscription);
 	NS_IMETHOD SetUsingSubscription(PRBool usingSubscription);
 
+	// attribute unsigned long capability
+	NS_IMETHOD GetCapabilityPref(PRInt32 *aResult);
+	NS_IMETHOD SetCapabilityPref(PRInt32 aCapability);
+
 	NS_IMETHOD PerformBiff();
 
 
 	// nsIImapServerSink impl
-	NS_IMETHOD PossibleImapMailbox(const char *folderPath);
-	NS_IMETHOD DiscoveryDone();
-
-	NS_IMETHOD PromptForPassword(char ** aPassword);
-	NS_IMETHOD  FEAlert(const PRUnichar *aString);
-	NS_IMETHOD  FEAlertFromServer(const char *aString);
+	NS_DECL_NSIIMAPSERVERSINK
 protected:
 	nsresult GetUnverifiedSubFolders(nsIFolder *parentFolder, nsISupportsArray *aFoldersArray, PRInt32 *aNumUnverifiedFolders);
 	nsresult GetUnverifiedFolders(nsISupportsArray *aFolderArray, PRInt32 *aNumUnverifiedFolders);
 
-	nsresult DeleteNonVerifiedFolders();
+	nsresult DeleteNonVerifiedFolders(nsIFolder *parentFolder);
 	PRBool NoDescendentsAreVerified(nsIFolder *parentFolder);
 	PRBool AllDescendentsAreNoSelect(nsIFolder *parentFolder);
 private:
@@ -125,7 +124,8 @@ private:
 	char *m_rootFolderPath;
     nsCOMPtr<nsISupportsArray> m_connectionCache;
     nsCOMPtr<nsISupportsArray> m_urlQueue;
-    nsVoidArray m_urlConsumers;
+    nsVoidArray					m_urlConsumers;
+	PRUint32					m_capability;
 };
 
 
@@ -161,6 +161,7 @@ nsImapIncomingServer::nsImapIncomingServer() : m_rootFolderPath(nsnull)
     nsresult rv;
 	rv = NS_NewISupportsArray(getter_AddRefs(m_connectionCache));
     rv = NS_NewISupportsArray(getter_AddRefs(m_urlQueue));
+	m_capability = kCapabilityUndefined;
 }
 
 nsImapIncomingServer::~nsImapIncomingServer()
@@ -248,6 +249,9 @@ NS_IMPL_SERVERPREF_INT(nsImapIncomingServer, MaximumConnectionsNumber,
 
 NS_IMPL_SERVERPREF_INT(nsImapIncomingServer, TimeOutLimits,
                        "timeout");
+
+NS_IMPL_SERVERPREF_INT(nsImapIncomingServer, CapabilityPref,
+                       "capability");
 
 NS_IMPL_SERVERPREF_STR(nsImapIncomingServer, PersonalNamespace, "namespace.personal");
 
@@ -607,6 +611,12 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath)
     {
         hostFolder->CreateClientSubfolderInfo(folderPath);
     }
+	else
+	{
+		nsCOMPtr <nsIMsgImapMailFolder> imapFolder = do_QueryInterface(child);
+		if (imapFolder)
+			imapFolder->SetVerifiedAsOnlineFolder(PR_TRUE);
+	}
     
 	return NS_OK;
 }
@@ -662,6 +672,10 @@ NS_IMETHODIMP nsImapIncomingServer::DiscoveryDone()
 					XP_FREE(url);
 				}
 #endif
+			}
+			else
+			{
+				DeleteNonVerifiedFolders(currentFolder);
 			}
 		}
 	}
@@ -740,7 +754,7 @@ NS_IMETHODIMP nsImapIncomingServer::DiscoveryDone()
 	return rv;
 }
 
-nsresult nsImapIncomingServer::DeleteNonVerifiedFolders()
+nsresult nsImapIncomingServer::DeleteNonVerifiedFolders(nsIFolder *curFolder)
 {
 	PRBool autoUnsubscribeFromNoSelectFolders = TRUE;
 	nsresult rv;
@@ -749,15 +763,59 @@ nsresult nsImapIncomingServer::DeleteNonVerifiedFolders()
 	{
 		rv = prefs->GetBoolPref("mail.imap.auto_unsubscribe_from_noselect_folders", &autoUnsubscribeFromNoSelectFolders);
 	}
-	return rv;
-}
+//	return rv;
+	nsCOMPtr<nsIEnumerator> subFolders;
+
+	rv = curFolder->GetSubFolders(getter_AddRefs(subFolders));
+	if(NS_SUCCEEDED(rv))
+	{
+		nsAdapterEnumerator *simpleEnumerator =	new nsAdapterEnumerator(subFolders);
+		if (simpleEnumerator == nsnull)
+			return NS_ERROR_OUT_OF_MEMORY;
+		PRBool moreFolders;
+
+		while (NS_SUCCEEDED(simpleEnumerator->HasMoreElements(&moreFolders)) && moreFolders)
+		{
+			nsCOMPtr<nsISupports> child;
+			rv = simpleEnumerator->GetNext(getter_AddRefs(child));
+			if (NS_SUCCEEDED(rv) && child) 
+			{
+				PRBool childVerified = PR_FALSE;
+				nsCOMPtr <nsIMsgImapMailFolder> childImapFolder = do_QueryInterface(child, &rv);
+				if (NS_SUCCEEDED(rv) && childImapFolder)
+				{
+					PRUint32 flags;
+
+					nsCOMPtr <nsIMsgFolder> childFolder = do_QueryInterface(child, &rv);
+					rv = childImapFolder->GetVerifiedAsOnlineFolder(&childVerified);
+
+					rv = childFolder->GetFlags(&flags);
+					PRBool folderIsNoSelectFolder = NS_SUCCEEDED(rv) && ((flags & MSG_FOLDER_FLAG_IMAP_NOSELECT) != 0);
+
+		           	PRBool usingSubscription = PR_TRUE;
+					GetUsingSubscription(&usingSubscription);
+					if (usingSubscription)
+					{
+						PRBool folderIsNameSpace = PR_FALSE;
+						PRBool noDescendentsAreVerified = NoDescendentsAreVerified(childFolder);
+						PRBool shouldDieBecauseNoSelect = (folderIsNoSelectFolder ? 
+							((noDescendentsAreVerified || AllDescendentsAreNoSelect(childFolder)) && !folderIsNameSpace)
+							: FALSE);
+						if (!childVerified && (noDescendentsAreVerified || shouldDieBecauseNoSelect))
+						{
+						}
+
+					}
+					else
+					{
+					}
+				}
+			}
+		}
+		delete simpleEnumerator;
+	}
+
 #if 0
-    for (int folderIndex = 0; folderIndex < numberOfSubFolders; )
-    {
-        MSG_FolderInfo* currentFolder = parentFolder->GetSubFolder(folderIndex);
-        if (currentFolder && (currentFolder->GetType() == FOLDER_IMAPMAIL))
-        {
-            MSG_IMAPFolderInfoMail *currentImapFolder = (MSG_IMAPFolderInfoMail *) currentFolder;
             
             MSG_IMAPFolderInfoMail *parentImapFolder = (parentFolder->GetType() == FOLDER_IMAPMAIL) ? 
             												(MSG_IMAPFolderInfoMail *) parentFolder :
@@ -856,9 +914,23 @@ nsresult nsImapIncomingServer::DeleteNonVerifiedFolders()
         }
         folderIndex++;  // not in for statement because we modify it
     }
-}
 
 #endif // 0
+
+    nsCOMPtr<nsIFolder> parent;
+	nsCOMPtr<nsIMsgFolder> msgFolder = do_QueryInterface(curFolder);
+    rv = curFolder->GetParent(getter_AddRefs(parent));
+
+
+    if (NS_SUCCEEDED(rv) && parent)
+	{
+		nsCOMPtr<nsIMsgImapMailFolder> imapParent = do_QueryInterface(parent);
+		if (imapParent)
+			imapParent->RemoveSubFolder(msgFolder);
+	}
+
+	return rv;
+}
 
 PRBool nsImapIncomingServer::NoDescendentsAreVerified(nsIFolder *parentFolder)
 {
@@ -1069,5 +1141,12 @@ nsresult nsImapIncomingServer::GetUnverifiedSubFolders(nsIFolder *parentFolder, 
 NS_IMETHODIMP nsImapIncomingServer::PromptForPassword(char ** aPassword)
 {
 	return GetPassword(PR_TRUE, aPassword);
+}
+
+NS_IMETHODIMP  nsImapIncomingServer::SetCapability(PRUint32 capability)
+{
+	m_capability = capability;
+	SetCapabilityPref(capability);
+	return NS_OK;
 }
 

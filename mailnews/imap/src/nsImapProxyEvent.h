@@ -228,8 +228,6 @@ public:
     NS_IMETHOD PastPasswordCheck(nsIImapProtocol* aProtocol);
     NS_IMETHOD CommitNamespaces(nsIImapProtocol* aProtocol,
                                 const char* hostName);
-    NS_IMETHOD CommitCapabilityForHost(nsIImapProtocol* aProtocol,
-                                       const char* hostName);
     NS_IMETHOD TunnelOutStream(nsIImapProtocol* aProtocol,
 														 msg_line_info* aInfo);
     NS_IMETHOD ProcessTunnel(nsIImapProtocol* aProtocol,
@@ -732,15 +730,6 @@ struct CommitNamespacesProxyEvent : public nsImapMiscellaneousSinkProxyEvent
     CommitNamespacesProxyEvent(nsImapMiscellaneousSinkProxy* aProxy,
                                const char* hostName);
     virtual ~CommitNamespacesProxyEvent();
-    NS_IMETHOD HandleEvent();
-    char* m_hostName;
-};
-
-struct CommitCapabilityForHostProxyEvent : public nsImapMiscellaneousSinkProxyEvent
-{
-    CommitCapabilityForHostProxyEvent(nsImapMiscellaneousSinkProxy* aProxy,
-                                      const char* hostName);
-    virtual ~CommitCapabilityForHostProxyEvent();
     NS_IMETHOD HandleEvent();
     char* m_hostName;
 };

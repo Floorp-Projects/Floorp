@@ -753,7 +753,7 @@ void nsImapServerResponseParser::mailbox_list(PRBool discoveredFromLsub)
 		boxSpec->flagState = nsnull;
 		boxSpec->discoveredFromLsub = discoveredFromLsub;
 		boxSpec->onlineVerified = PR_TRUE;
-		boxSpec->folderIsNamespace = PR_FALSE;
+		boxSpec->box_flags &= ~kNameSpace;
 		
 		PRBool endOfFlags = PR_FALSE;
 		fNextToken++;	// eat the first "("
@@ -1714,7 +1714,7 @@ void nsImapServerResponseParser::capability_data()
 	nsImapProtocol *navCon = &fServerConnection;
 	NS_ASSERTION(navCon, "null imap protocol connection while parsing capability response");	// we should always have this
 	if (navCon)
-		navCon->CommitCapabilityForHostEvent();
+		navCon->CommitCapability();
 	skip_to_CRLF();
 }
 

@@ -491,6 +491,11 @@ NS_IMETHODIMP nsImapMailFolder::CreateClientSubfolderInfo(const char *folderName
 	rv = pathSpec->GetFileSpec(&path);
 	if (NS_FAILED(rv)) return rv;
 
+	if (!path.Exists())
+	{
+		path.CreateDir();
+	}
+
 	rv = CreateDirectoryForFolder(path);
 	if(NS_FAILED(rv))
 		return rv;
@@ -549,6 +554,11 @@ NS_IMETHODIMP nsImapMailFolder::CreateClientSubfolderInfo(const char *folderName
 
 			//Now let's create the actual new folder
 			rv = AddSubfolder(folderNameStr, getter_AddRefs(child));
+
+			nsCOMPtr <nsIMsgImapMailFolder> imapFolder = do_QueryInterface(child);
+			if (imapFolder)
+				imapFolder->SetVerifiedAsOnlineFolder(PR_TRUE);
+
             unusedDB->SetSummaryValid(PR_TRUE);
 			unusedDB->Commit(nsMsgDBCommitType::kLargeCommit);
             unusedDB->Close(PR_TRUE);
@@ -2990,13 +3000,6 @@ nsImapMailFolder::PastPasswordCheck(nsIImapProtocol* aProtocol)
 NS_IMETHODIMP
 nsImapMailFolder::CommitNamespaces(nsIImapProtocol* aProtocol,
                                    const char* hostName)
-{
-    return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsImapMailFolder::CommitCapabilityForHost(nsIImapProtocol* aProtocol,
-                                          const char* hostName)
 {
     return NS_ERROR_FAILURE;
 }

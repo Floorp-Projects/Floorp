@@ -68,8 +68,6 @@ public:
 	NS_IMETHOD PastPasswordCheck(nsIImapProtocol* aProtocol) = 0;
 	NS_IMETHOD CommitNamespaces(nsIImapProtocol* aProtocol,
 															const char* hostName) = 0;
-	NS_IMETHOD CommitCapabilityForHost(nsIImapProtocol* aProtocol,
-																		 const char* hostName) = 0;
 	NS_IMETHOD TunnelOutStream(nsIImapProtocol* aProtocol,
 														 msg_line_info* aInfo) = 0;
 	NS_IMETHOD ProcessTunnel(nsIImapProtocol* aProtocol,

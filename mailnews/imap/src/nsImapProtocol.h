@@ -241,7 +241,7 @@ public:
 	// notifies libmsg that we have a new personal/default namespace that we're using
 	void CommitNamespacesForHostEvent();
 	// notifies libmsg that we have new capability data for the current host
-	void CommitCapabilityForHostEvent();
+	void CommitCapability();
 
 	// Adds a set of rights for a given user on a given mailbox on the current host.
 	// if userName is NULL, it means "me," or MYRIGHTS.
