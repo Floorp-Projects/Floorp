@@ -1295,7 +1295,7 @@ InstallFileOpFileMacAlias(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     else
     {
     	aliasLeaf = sourceLeaf;
-        aliasLeaf.AppendWithConversion(" alias");   // XXX use GetResourcedString(id)
+        aliasLeaf.Append(NS_LITERAL_STRING(" alias"));   // XXX use GetResourcedString(id)
     }
     
     rv2 = iFileAlias->Append(NS_LossyConvertUCS2toASCII(aliasLeaf).get());

@@ -379,8 +379,8 @@ nsKeygenFormProcessor::GetPublicKey(nsString& aValue, nsString& aChallenge,
     }
 
     // Set the keygen mechanism
-    rsaStr.AssignWithConversion("rsa");
-    dsaStr.AssignWithConversion("dsa");
+    rsaStr.Assign(NS_LITERAL_STRING("rsa"));
+    dsaStr.Assign(NS_LITERAL_STRING("dsa"));
     if (aKeyType.IsEmpty() || aKeyType.Equals(rsaStr)) {
         type = rsaKey;
         keyGenMechanism = CKM_RSA_PKCS_KEY_PAIR_GEN;
@@ -573,7 +573,7 @@ nsKeygenFormProcessor::ProcessValue(nsIDOMHTMLElement *aElement,
       res = selectElement->GetAttribute(NS_LITERAL_STRING("keytype"), keyTypeValue);
       if (NS_FAILED(res) || keyTypeValue.IsEmpty()) {
         // If this field is not present, we default to rsa.
-  	    keyTypeValue.AssignWithConversion("rsa");
+  	    keyTypeValue.Assign(NS_LITERAL_STRING("rsa"));
       }
       res = selectElement->GetAttribute(NS_LITERAL_STRING("challenge"), challengeValue);
       rv = GetPublicKey(aValue, challengeValue, keyTypeValue, 
@@ -592,7 +592,7 @@ NS_METHOD nsKeygenFormProcessor::ProvideContent(const nsString& aFormType,
   nsString selectKey;
   SECKeySizeChoiceInfo *choice = SECKeySizeChoiceList;
 
-  selectKey.AssignWithConversion("SELECT");
+  selectKey.Assign(NS_LITERAL_STRING("SELECT"));
   if (Compare(aFormType, NS_LITERAL_STRING("SELECT"), 
     nsCaseInsensitiveStringComparator()) == 0) {
     for (SECKeySizeChoiceInfo* choice = SECKeySizeChoiceList; choice && choice->name; ++choice) {

@@ -43,7 +43,7 @@ NS_IMPL_RELEASE(nsTextWidget)
 nsTextWidget::nsTextWidget() : nsTextHelper()
 {
   NS_INIT_REFCNT();
-  mName.AssignWithConversion("nsTextWidget");
+  mName.Assign(NS_LITERAL_STRING("nsTextWidget"));
 }
 
 nsTextWidget::~nsTextWidget()

@@ -204,13 +204,13 @@ nsHTMLButtonControlFrame::GetDefaultLabel(nsString& aString)
   PRInt32 type;
   GetType(&type);
   if (NS_FORM_BUTTON_BUTTON == type) {
-    aString.AssignWithConversion("Button");
+    aString.Assign(NS_LITERAL_STRING("Button"));
   } 
   else if (NS_FORM_BUTTON_RESET == type) {
-    aString.AssignWithConversion("Reset");
+    aString.Assign(NS_LITERAL_STRING("Reset"));
   } 
   else if (NS_FORM_BUTTON_SUBMIT == type) {
-    aString.AssignWithConversion("Submit");
+    aString.Assign(NS_LITERAL_STRING("Submit"));
   } 
 }
 

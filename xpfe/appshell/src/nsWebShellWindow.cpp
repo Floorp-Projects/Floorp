@@ -633,7 +633,7 @@ NS_IMETHODIMP nsWebShellWindow::CreateMenu(nsIMenuBar * aMenuBar,
       if (menuPopupElement) {
         nsString menuPopupNodeType;
         menuPopupElement->GetNodeName(menuPopupNodeType);
-        if (menuPopupNodeType.EqualsWithConversion("menupopup"))
+        if (menuPopupNodeType.Equals(NS_LITERAL_STRING("menupopup")))
           break;
       }
       nsCOMPtr<nsIDOMNode> oldMenuPopupNode(menuPopupNode);
@@ -652,12 +652,12 @@ NS_IMETHODIMP nsWebShellWindow::CreateMenu(nsIMenuBar * aMenuBar,
         nsString menuitemNodeType;
         nsString menuitemName;
         menuitemElement->GetNodeName(menuitemNodeType);
-        if (menuitemNodeType.EqualsWithConversion("menuitem")) {
+        if (menuitemNodeType.Equals(NS_LITERAL_STRING("menuitem"))) {
           // LoadMenuItem
           LoadMenuItem(pnsMenu, menuitemElement, menuitemNode);
-        } else if (menuitemNodeType.EqualsWithConversion("menuseparator")) {
+        } else if (menuitemNodeType.Equals(NS_LITERAL_STRING("menuseparator"))) {
           pnsMenu->AddSeparator();
-        } else if (menuitemNodeType.EqualsWithConversion("menu")) {
+        } else if (menuitemNodeType.Equals(NS_LITERAL_STRING("menu"))) {
           // Load a submenu
           LoadSubMenu(pnsMenu, menuitemElement, menuitemNode);
         }
@@ -701,7 +701,7 @@ NS_IMETHODIMP nsWebShellWindow::LoadMenuItem(
     //pnsMenuItem->SetLabel(menuitemName);
     
     // Set key shortcut and modifiers
-    nsAutoString keyAtom; keyAtom.AssignWithConversion("key");
+    nsAutoString keyAtom(NS_LITERAL_STRING("key"));
     nsString keyValue;
     domElement->GetAttribute(keyAtom, keyValue);
     
@@ -725,29 +725,29 @@ NS_IMETHODIMP nsWebShellWindow::LoadMenuItem(
     
     if(keyElement){
         PRUint8 modifiers = knsMenuItemNoModifier;
-	    nsAutoString shiftAtom; shiftAtom.AssignWithConversion("shift");
-	    nsAutoString altAtom; altAtom.AssignWithConversion("alt");
-	    nsAutoString commandAtom; commandAtom.AssignWithConversion("command");
+	    nsAutoString shiftAtom(NS_LITERAL_STRING("shift"));
+	    nsAutoString altAtom(NS_LITERAL_STRING("alt"));
+	    nsAutoString commandAtom(NS_LITERAL_STRING("command"));
 	    nsString shiftValue;
 	    nsString altValue;
 	    nsString commandValue;
-	    nsString keyChar; keyChar.AssignWithConversion(" ");
+	    nsString keyChar(NS_LITERAL_STRING(" "));
 	    
 	    keyElement->GetAttribute(keyAtom, keyChar);
 	    keyElement->GetAttribute(shiftAtom, shiftValue);
 	    keyElement->GetAttribute(altAtom, altValue);
 	    keyElement->GetAttribute(commandAtom, commandValue);
 	    
-	    if(!keyChar.EqualsWithConversion(" "))
+	    if(!keyChar.Equals(NS_LITERAL_STRING(" ")))
 	      pnsMenuItem->SetShortcutChar(keyChar);
 	      
-	    if(shiftValue.EqualsWithConversion("true"))
+	    if(shiftValue.Equals(NS_LITERAL_STRING("true")))
 	      modifiers |= knsMenuItemShiftModifier;
 	    
-	    if(altValue.EqualsWithConversion("true"))
+	    if(altValue.Equals(NS_LITERAL_STRING("true")))
 	      modifiers |= knsMenuItemAltModifier;
 	    
-	    if(commandValue.EqualsWithConversion("false"))
+	    if(commandValue.Equals(NS_LITERAL_STRING("false")))
 	     modifiers |= knsMenuItemCommandModifier;
 	      
         pnsMenuItem->SetModifiers(modifiers);
@@ -761,7 +761,7 @@ NS_IMETHODIMP nsWebShellWindow::LoadMenuItem(
           
 
 
-    nsAutoString cmdAtom; cmdAtom.AssignWithConversion("onaction");
+    nsAutoString cmdAtom(NS_LITERAL_STRING("onaction"));
     nsString cmdName;
 
     domElement->GetAttribute(cmdAtom, cmdName);
@@ -846,7 +846,7 @@ void nsWebShellWindow::LoadSubMenu(
       if (menuPopupElement) {
         nsString menuPopupNodeType;
         menuPopupElement->GetNodeName(menuPopupNodeType);
-        if (menuPopupNodeType.EqualsWithConversion("menupopup"))
+        if (menuPopupNodeType.Equals(NS_LITERAL_STRING("menupopup")))
           break;
       }
       nsCOMPtr<nsIDOMNode> oldMenuPopupNode(menuPopupNode);
@@ -869,12 +869,12 @@ void nsWebShellWindow::LoadSubMenu(
         printf("Type [%s] %d\n", NS_LossyConvertUCS2toASCII(menuitemNodeType).get(), menuitemNodeType.Equals("menuseparator"));
 #endif
 
-        if (menuitemNodeType.EqualsWithConversion("menuitem")) {
+        if (menuitemNodeType.Equals(NS_LITERAL_STRING("menuitem"))) {
           // Load a menuitem
           LoadMenuItem(pnsMenu, menuitemElement, menuitemNode);
-        } else if (menuitemNodeType.EqualsWithConversion("menuseparator")) {
+        } else if (menuitemNodeType.Equals(NS_LITERAL_STRING("menuseparator"))) {
           pnsMenu->AddSeparator();
-        } else if (menuitemNodeType.EqualsWithConversion("menu")) {
+        } else if (menuitemNodeType.Equals(NS_LITERAL_STRING("menu"))) {
           // Add a submenu
           LoadSubMenu(pnsMenu, menuitemElement, menuitemNode);
         }
@@ -1009,7 +1009,7 @@ void nsWebShellWindow::LoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aParentWi
             nsString menuNodeType;
             nsString menuName;
             menuElement->GetNodeName(menuNodeType);
-            if (menuNodeType.EqualsWithConversion("menu")) {
+            if (menuNodeType.Equals(NS_LITERAL_STRING("menu"))) {
               menuElement->GetAttribute(NS_LITERAL_STRING("label"), menuName);
 
 #ifdef DEBUG_rods

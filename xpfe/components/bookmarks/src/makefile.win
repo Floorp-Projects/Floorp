@@ -35,6 +35,7 @@ REQUIRES	= xpcom \
 		  intl \
 		  webshell \
 		  windowwatcher \
+		  unicharutil \
 		  $(NULL)
 
 CPP_OBJS=                               \

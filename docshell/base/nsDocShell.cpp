@@ -847,7 +847,7 @@ nsresult nsDocShell::FindTarget(const PRUnichar *aWindowTarget,
     else if (name.EqualsIgnoreCase("_blank") || name.EqualsIgnoreCase("_new"))
     {
         mustMakeNewWindow = PR_TRUE;
-        name.AssignWithConversion("");
+        name.Assign(NS_LITERAL_STRING(""));
     }
     else if(name.EqualsIgnoreCase("_parent"))
     {
@@ -918,7 +918,7 @@ nsresult nsDocShell::FindTarget(const PRUnichar *aWindowTarget,
 
                         // Neither is from the origin domain, send load to a new window (_blank)
                         mustMakeNewWindow = PR_TRUE;
-                        name.AssignWithConversion("");
+                        name.Assign(NS_LITERAL_STRING(""));
                     } // else (target's parent from origin domain) allow this load
                 } // else (no parent) allow this load since shell is a toplevel window
             } // else (target from origin domain) allow this load
@@ -3968,7 +3968,7 @@ nsDocShell::InternalLoad(nsIURI * aURI,
             if (!bIsChromeOrResource) {
                 if (name.EqualsIgnoreCase("_blank") ||
                     name.EqualsIgnoreCase("_new")) {
-                    name.AssignWithConversion("_top");
+                    name.Assign(NS_LITERAL_STRING("_top"));
                 }
                 else {
                     nsCOMPtr<nsIDocShellTreeItem> targetTreeItem;
@@ -3978,7 +3978,7 @@ nsDocShell::InternalLoad(nsIURI * aURI,
                     if (targetTreeItem)
                         targetDocShell = do_QueryInterface(targetTreeItem);
                     else
-                        name.AssignWithConversion("_top");
+                        name.Assign(NS_LITERAL_STRING("_top"));
                 }
             }
         }

@@ -71,11 +71,11 @@ nsTXTToHTMLConv::AsyncConvertData(const PRUnichar *aFromType,
 // nsIRequestObserver methods
 NS_IMETHODIMP
 nsTXTToHTMLConv::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
-    mBuffer.AssignWithConversion("<html>\n<head><title>");
+    mBuffer.Assign(NS_LITERAL_STRING("<html>\n<head><title>"));
     mBuffer.Append(mPageTitle);
-    mBuffer.AppendWithConversion("</title></head>\n<body>\n");
+    mBuffer.Append(NS_LITERAL_STRING("</title></head>\n<body>\n"));
     if (mPreFormatHTML) {     // Use <pre> tags
-      mBuffer.AppendWithConversion("<pre>\n");
+      mBuffer.Append(NS_LITERAL_STRING("<pre>\n"));
     }
 
     // Push mBuffer to the listener now, so the initial HTML will not
@@ -93,7 +93,7 @@ nsTXTToHTMLConv::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
     rv = mListener->OnDataAvailable(request, aContext,
                                     inputData, 0, mBuffer.Length());
     if (NS_FAILED(rv)) return rv;
-    mBuffer.AssignWithConversion("");
+    mBuffer.Assign(NS_LITERAL_STRING(""));
     return rv;
 }
 
@@ -108,9 +108,9 @@ nsTXTToHTMLConv::OnStopRequest(nsIRequest* request, nsISupports *aContext,
         (void)CatHTML(0, mBuffer.Length());
     }
     if (mPreFormatHTML) {
-      mBuffer.AppendWithConversion("</pre>\n");
+      mBuffer.Append(NS_LITERAL_STRING("</pre>\n"));
     }
-    mBuffer.AppendWithConversion("\n</body></html>");    
+    mBuffer.Append(NS_LITERAL_STRING("\n</body></html>"));    
     
     nsCOMPtr<nsIInputStream> inputData;
     nsCOMPtr<nsISupports>    inputDataSup;
@@ -231,14 +231,14 @@ nsTXTToHTMLConv::Init() {
     convToken *token = new convToken;
     if (!token) return NS_ERROR_OUT_OF_MEMORY;
     token->prepend = PR_TRUE;
-    token->token.AssignWithConversion("http://"); // XXX need to iterate through all protos
+    token->token.Assign(NS_LITERAL_STRING("http://")); // XXX need to iterate through all protos
     mTokens.AppendElement(token);
 
     token = new convToken;
     if (!token) return NS_ERROR_OUT_OF_MEMORY;
     token->prepend = PR_TRUE;
-    token->token.AssignWithConversion('@');
-    token->modText.AssignWithConversion("mailto:");
+    token->token.Assign(PRUnichar('@'));
+    token->modText.Assign(NS_LITERAL_STRING("mailto:"));
     mTokens.AppendElement(token);
   
     return rv;
@@ -276,16 +276,16 @@ nsTXTToHTMLConv::CatHTML(PRInt32 front, PRInt32 back) {
         // href is implied
         PRInt32 modLen = mToken->modText.Length();
         mBuffer.Mid(linkText, front, back-front);
-        mBuffer.InsertWithConversion("<a href=\"", front);
+        mBuffer.Insert(NS_LITERAL_STRING("<a href=\""), front);
         cursor += front+9;
         if (modLen)
             mBuffer.Insert(mToken->modText, cursor);
         cursor += modLen-front+back;
-        mBuffer.InsertWithConversion("\">", cursor);
+        mBuffer.Insert(NS_LITERAL_STRING("\">"), cursor);
         cursor += 2;
         mBuffer.Insert(linkText, cursor);
         cursor += linkText.Length();
-        mBuffer.InsertWithConversion("</a>", cursor);
+        mBuffer.Insert(NS_LITERAL_STRING("</a>"), cursor);
         cursor += 4;
     }
     mToken = nsnull; // indicates completeness

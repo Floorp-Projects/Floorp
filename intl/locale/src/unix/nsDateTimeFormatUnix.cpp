@@ -75,7 +75,7 @@ nsresult nsDateTimeFormatUnix::Initialize(nsILocale* locale)
     }
   }
 
-  mCharset.AssignWithConversion("ISO-8859-1");
+  mCharset.Assign(NS_LITERAL_STRING("ISO-8859-1"));
   PL_strncpy(mPlatformLocale, "en_US", kPlatformLocaleLength+1);
 
   // get locale name string, use app default if no locale specified

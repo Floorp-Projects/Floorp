@@ -60,7 +60,7 @@ void testAttributes(nsIHTMLContent* content) {
   nsIAtom* sSRC = NS_NewAtom("src");
   nsIAtom* sBAD = NS_NewAtom("badattribute");
   nsString sempty;
-  nsString sfoo_gif; sfoo_gif.AssignWithConversion("foo.gif");
+  nsString sfoo_gif(NS_LITERAL_STRING("foo.gif"));
 
   content->SetHTMLAttribute(sBORDER, nullValue, PR_FALSE);
   content->SetHTMLAttribute(sWIDTH, nsHTMLValue(5, eHTMLUnit_Pixel), PR_FALSE);
@@ -135,19 +135,19 @@ void testStrings(nsIDocument* aDoc) {
 
   PRBool val;
   // regular Equals
-  val = (NS_ConvertASCIItoUCS2("mrString")).EqualsWithConversion("mrString");
+  val = (NS_ConvertASCIItoUCS2("mrString")).Equals(NS_LITERAL_STRING("mrString")); // XXXjag
   if (PR_TRUE != val) {
     printf("test 0 failed\n");
   }
-  val = (NS_ConvertASCIItoUCS2("mrString")).EqualsWithConversion("MRString");
+  val = (NS_ConvertASCIItoUCS2("mrString")).Equals(NS_LITERAL_STRING("MRString")); // XXXjag
   if (PR_FALSE != val) {
     printf("test 1 failed\n");
   }
-  val = (NS_ConvertASCIItoUCS2("mrString")).EqualsWithConversion("mrStri");
+  val = (NS_ConvertASCIItoUCS2("mrString")).Equals(NS_LITERAL_STRING("mrStri")); // XXXjag
   if (PR_FALSE != val) {
     printf("test 2 failed\n");
   }
-  val = (NS_ConvertASCIItoUCS2("mrStri")).EqualsWithConversion("mrString");
+  val = (NS_ConvertASCIItoUCS2("mrStri")).Equals(NS_LITERAL_STRING("mrString")); // XXXjag
   if (PR_FALSE != val) {
     printf("test 3 failed\n");
   }

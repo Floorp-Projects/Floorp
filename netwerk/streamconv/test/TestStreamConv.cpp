@@ -207,9 +207,9 @@ main(int argc, char* argv[])
 
     // Define the *from* content type and *to* content-type for conversion.
     nsString fromStr;
-    fromStr.AssignWithConversion("a/foo");
+    fromStr.Assign(NS_LITERAL_STRING("a/foo"));
     nsString toStr;
-    toStr.AssignWithConversion("c/foo");
+    toStr.Assign(NS_LITERAL_STRING("c/foo"));
     
 #ifdef ASYNC_TEST
     // ASYNCRONOUS conversion

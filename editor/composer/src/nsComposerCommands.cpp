@@ -735,7 +735,7 @@ nsFontFaceStateCommand::SetState(nsIEditorShell *aEditorShell, nsString& newStat
     // Remove any existing TT nodes
     rv = htmlEditor->RemoveInlineProperty(ttAtom, NS_LITERAL_STRING(""));  
 
-    if (!newState.Length() || newState.Equals(NS_LITERAL_STRING("normal"))) {
+    if (newState.IsEmpty() || newState.Equals(NS_LITERAL_STRING("normal"))) {
       rv = htmlEditor->RemoveInlineProperty(fontAtom, NS_LITERAL_STRING("face"));
     } else {
       rv = htmlEditor->SetInlineProperty(fontAtom, NS_LITERAL_STRING("face"), newState);
@@ -783,7 +783,7 @@ nsFontColorStateCommand::SetState(nsIEditorShell *aEditorShell, nsString& newSta
   
   nsCOMPtr<nsIAtom> fontAtom = getter_AddRefs(NS_NewAtom("font"));
 
-  if (!newState.Length() || newState.Equals(NS_LITERAL_STRING("normal"))) {
+  if (newState.IsEmpty() || newState.Equals(NS_LITERAL_STRING("normal"))) {
     rv = htmlEditor->RemoveInlineProperty(fontAtom, NS_LITERAL_STRING("color"));
   } else {
     rv = htmlEditor->SetInlineProperty(fontAtom, NS_LITERAL_STRING("color"), newState);

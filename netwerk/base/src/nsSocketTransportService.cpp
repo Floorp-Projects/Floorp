@@ -810,9 +810,9 @@ nsSocketTransportService::GetNeckoStringByName (const char *aName, PRUnichar **a
 
 		if (NS_FAILED(res)) 
 		{
-			resultString.AssignWithConversion("[StringName");
+			resultString.Assign(NS_LITERAL_STRING("[StringName"));
 			resultString.AppendWithConversion(aName);
-			resultString.AppendWithConversion("?]");
+			resultString.Append(NS_LITERAL_STRING("?]"));
 			*aString = ToNewUnicode(resultString);
 		}
 		else

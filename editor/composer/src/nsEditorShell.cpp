@@ -1842,13 +1842,11 @@ nsEditorShell::UpdateWindowTitleAndRecentMenu(PRBool aSaveToPrefs)
       nsCOMPtr<nsIURL> url = do_QueryInterface(docFileSpec);
       if (url)
       {
-        char *fileNameChar = nsnull;
-        url->GetFileName(&fileNameChar);
-        windowCaption.Append(NS_LITERAL_STRING(" ["));
-        windowCaption.AppendWithConversion(fileNameChar);
-        windowCaption.Append(NS_LITERAL_STRING("]"));
-        if (fileNameChar)
-          nsCRT::free(fileNameChar);
+        nsXPIDLCString fileNameChar;
+        url->GetFileName(getter_Copies(fileNameChar));
+        windowCaption += NS_LITERAL_STRING(" [") +
+                         NS_ConvertASCIItoUCS2(fileNameChar) +
+                         NS_LITERAL_STRING("]");
       }
     }
     nsCOMPtr<nsIBaseWindow> contentAreaAsWin(do_QueryInterface(mContentAreaDocShell));

@@ -265,7 +265,7 @@ nsBulletFrame::Paint(nsIPresContext*      aPresContext,
 
         if (NS_STYLE_DIRECTION_RTL == vis->mDirection) {
           nsStr::Delete(text, 0, 1);
-          text.AppendWithConversion(".");
+          text.Append(NS_LITERAL_STRING("."));
         }
         break;
       }
@@ -935,7 +935,7 @@ nsBulletFrame::GetListItemText(nsIPresContext* aCX,
   GetStyleData(eStyleStruct_Visibility, (const nsStyleStruct*&)vis);
 
   if (NS_STYLE_DIRECTION_RTL == vis->mDirection) {
-    result.AppendWithConversion(".");
+    result.Append(NS_LITERAL_STRING("."));
   }
 #endif // IBMBIDI
 
@@ -1107,7 +1107,7 @@ nsBulletFrame::GetListItemText(nsIPresContext* aCX,
 #ifdef IBMBIDI
   if (NS_STYLE_DIRECTION_RTL != vis->mDirection)
 #endif // IBMBIDI
-  result.AppendWithConversion(".");
+  result.Append(NS_LITERAL_STRING("."));
 }
 
 #define MIN_BULLET_SIZE 5               // from laytext.c

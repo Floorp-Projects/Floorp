@@ -742,7 +742,7 @@ nsSimplePageSequenceFrame::StartPrint(nsIPresContext*  aPresContext,
   nsAutoString fontName;
   rv = nsFormControlHelper::GetLocalizedString(PRINTING_PROPERTIES, NS_LITERAL_STRING("fontname").get(), fontName);
   if (NS_FAILED(rv)) {
-    fontName.AssignWithConversion("serif");
+    fontName.Assign(NS_LITERAL_STRING("serif"));
   }
 
   nsAutoString fontSizeStr;

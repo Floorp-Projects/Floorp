@@ -59,6 +59,7 @@
 #include "nsVoidArray.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
+#include "nsUnicharUtils.h"
 #include "nscore.h"
 #include "plhash.h"
 #include "plstr.h"
@@ -223,7 +224,7 @@ RelatedLinksStreamListener::Init()
 				(nsISupports**)&charsetConv);
 		if (NS_SUCCEEDED(rv) && (charsetConv))
 		{
-			nsString	utf8; utf8.AssignWithConversion("UTF-8");
+			nsString	utf8(NS_LITERAL_STRING("UTF-8"));
 			rv = charsetConv->GetUnicodeDecoder(&utf8,
 				getter_AddRefs(mUnicodeDecoder));
 			NS_RELEASE(charsetConv);
@@ -257,10 +258,9 @@ NS_IMPL_ISUPPORTS1(RelatedLinksStreamListener, nsIStreamListener)
 NS_IMETHODIMP
 RelatedLinksStreamListener::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 {
-	 nsAutoString		trueStr; trueStr.AssignWithConversion("true");
 	 nsIRDFLiteral		*literal = nsnull;
 	 nsresult		rv;
-	 if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(trueStr.get(), &literal)))
+	 if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(NS_LITERAL_STRING("true").get(), &literal)))
 	 {
 		 mDataSource->Assert(kNC_RelatedLinksRoot, kNC_loading, literal, PR_TRUE);
 		 NS_RELEASE(literal);
@@ -274,10 +274,9 @@ NS_IMETHODIMP
 RelatedLinksStreamListener::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
                                           nsresult status)
 {
-	 nsAutoString		trueStr; trueStr.AssignWithConversion("true");
 	 nsIRDFLiteral		*literal = nsnull;
 	 nsresult		rv;
-	if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(trueStr.get(), &literal)))
+	if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(NS_LITERAL_STRING("true").get(), &literal)))
 	{
 		mDataSource->Unassert(kNC_RelatedLinksRoot, kNC_loading, literal);
 		NS_RELEASE(literal);
@@ -562,22 +561,22 @@ RelatedLinksStreamListener::Unescape(nsString &text)
 		nsAutoString	temp;
 		text.Mid(temp, offset, 6);
 
-		if (temp.CompareWithConversion("&lt;", PR_TRUE, 4) == 0)
+		if (Compare(Substring(temp, 0, 4), NS_LITERAL_STRING("&lt;"), nsCaseInsensitiveStringComparator()) == 0)
 		{
 			text.Cut(offset, 4);
 			text.Insert(PRUnichar('<'), offset);
 		}
-		else if (temp.CompareWithConversion("&gt;", PR_TRUE, 4) == 0)
+		if (Compare(Substring(temp, 0, 4), NS_LITERAL_STRING("&gt;"), nsCaseInsensitiveStringComparator()) == 0)
 		{
 			text.Cut(offset, 4);
 			text.Insert(PRUnichar('>'), offset);
 		}
-		else if (temp.CompareWithConversion("&amp;", PR_TRUE, 5) == 0)
+		if (Compare(Substring(temp, 0, 5), NS_LITERAL_STRING("&amp;"), nsCaseInsensitiveStringComparator()) == 0)
 		{
 			text.Cut(offset, 5);
 			text.Insert(PRUnichar('&'), offset);
 		}
-		else if (temp.CompareWithConversion("&quot;", PR_TRUE, 6) == 0)
+		if (Compare(Substring(temp, 0, 6), NS_LITERAL_STRING("&quot;"), nsCaseInsensitiveStringComparator()) == 0)
 		{
 			text.Cut(offset, 6);
 			text.Insert(PRUnichar('\"'), offset);

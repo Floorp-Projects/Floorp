@@ -3617,7 +3617,7 @@ HTMLContentSink::AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode)
                      docTypeStr.Length() - systemStart);
 
       // Strip off 'SYSTEM' if we have it.
-      if (systemId.EqualsWithConversion("SYSTEM", PR_TRUE, 6))
+      if (Substring(systemId, 0, 6).Equals(NS_LITERAL_STRING("SYSTEM")))
         systemId.Cut(0, 6);
 
       systemId.Trim(" \t\n\r");
@@ -3657,9 +3657,9 @@ HTMLContentSink::AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode)
   /*
    * Cut out "DOCTYPE" or "<!DOCTYPE" from the name.
    */
-  if (name.EqualsWithConversion("<!DOCTYPE", PR_TRUE, 9))
+  if (Substring(name, 0, 9).Equals(NS_LITERAL_STRING("<!DOCTYPE")))
     name.Cut(0, 9);
-  else if (name.EqualsWithConversion("DOCTYPE", PR_TRUE, 7))
+  else if (Substring(name, 0, 7).Equals(NS_LITERAL_STRING("DOCTYPE")))
     name.Cut(0, 7);
 
   name.Trim(" \t\n\r");
@@ -3728,7 +3728,7 @@ HTMLContentSink::AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode)
     }
 
     if (!name.Length()) {
-      name.AssignWithConversion("HTML");
+      name.Assign(NS_LITERAL_STRING("HTML"));
     }
 
     rv = domImpl->CreateDocumentType(name, publicId, systemId,

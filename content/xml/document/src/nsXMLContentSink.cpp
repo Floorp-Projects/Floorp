@@ -531,8 +531,7 @@ nsXMLContentSink::AddAttributes(const nsIParserNode& aNode,
       // Ooh, what a nice little hack we have here :-)
       nsAutoString name;
       nameAtom->ToString(name);
-      name.InsertWithConversion("xmlns:", 0);
-      nameAtom = dont_AddRef(NS_NewAtom(name));
+      nameAtom = dont_AddRef(NS_NewAtom(NS_LITERAL_STRING("xmlns:") + name));
       nameSpaceID = kNameSpaceID_HTML;  // XXX this is wrong, but necessary until HTML can store other namespaces for attrs
     }
 
@@ -1406,7 +1405,7 @@ nsXMLContentSink::AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode)
   nsAutoString docTypeStr(aNode.GetText()); 
   nsAutoString str, name, publicId, systemId;
 
-  if (docTypeStr.EqualsWithConversion("<!DOCTYPE", PR_FALSE, 9)) {
+  if (Substring(docTypeStr, 0, 9).Equals(NS_LITERAL_STRING("<!DOCTYPE"))) {
     docTypeStr.Right(str, docTypeStr.Length()-9);
   }
 

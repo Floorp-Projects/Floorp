@@ -121,7 +121,7 @@ nsUnicodeFontMappingMac* nsFontMetricsMac::GetUnicodeFontMapping()
   	if (mLangGroup)
   		mLangGroup->ToString(langGroup);
     else
-      langGroup.AssignWithConversion("ja");
+      langGroup.Assign(NS_LITERAL_STRING("ja"));
       
   	nsString lang;
   	mFontMapping = nsUnicodeFontMappingMac::GetCachedInstance(mFont, mContext, langGroup, lang);
@@ -148,33 +148,33 @@ static void MapGenericFamilyToFont(const nsString& aGenericFamily, nsString& aFo
   }
   
   NS_ASSERTION(0, "Failed to find a font");
-  aFontFace.AssignWithConversion("Times");
+  aFontFace.Assign(NS_LITERAL_STRING("Times"));
 	
   /*
   // fall back onto hard-coded font names
   if (aGenericFamily.EqualsIgnoreCase("serif"))
   {
-    aFontFace.AssignWithConversion("Times");
+    aFontFace.Assign(NS_LITERAL_STRING("Times"));
   }
   else if (aGenericFamily.EqualsIgnoreCase("sans-serif"))
   {
-    aFontFace.AssignWithConversion("Helvetica");
+    aFontFace.Assign(NS_LITERAL_STRING("Helvetica"));
   }
   else if (aGenericFamily.EqualsIgnoreCase("cursive"))
   {
-     aFontFace.AssignWithConversion("Apple Chancery");
+     aFontFace.Assign(NS_LITERAL_STRING("Apple Chancery"));
   }
   else if (aGenericFamily.EqualsIgnoreCase("fantasy"))
   {
-    aFontFace.AssignWithConversion("Gadget");
+    aFontFace.Assign(NS_LITERAL_STRING("Gadget"));
   }
   else if (aGenericFamily.EqualsIgnoreCase("monospace"))
   {
-    aFontFace.AssignWithConversion("Courier");
+    aFontFace.Assign(NS_LITERAL_STRING("Courier"));
   }
   else if (aGenericFamily.EqualsIgnoreCase("-moz-fixed"))
   {
-    aFontFace.AssignWithConversion("Courier");
+    aFontFace.Assign(NS_LITERAL_STRING("Courier"));
   }
   */
 }
@@ -226,7 +226,7 @@ void nsFontMetricsMac::RealizeFont()
 		if (mLangGroup)
 			mLangGroup->ToString(theLangGroupString);
 		else
-			theLangGroupString.AssignWithConversion("ja");
+			theLangGroupString.Assign(NS_LITERAL_STRING("ja"));
 
 		theScriptCode = unicodeMappingUtil->MapLangGroupToScriptCode(
 		    NS_ConvertUCS2toUTF8(theLangGroupString).get());

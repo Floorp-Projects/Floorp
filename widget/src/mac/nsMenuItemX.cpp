@@ -71,7 +71,7 @@ nsMenuItemX::nsMenuItemX()
   NS_INIT_REFCNT();
   mMenuParent         = nsnull;
   mIsSeparator        = PR_FALSE;
-  mKeyEquivalent.AssignWithConversion(" ");
+  mKeyEquivalent.Assign(NS_LITERAL_STRING(" "));
   mEnabled            = PR_TRUE;
   mIsChecked          = PR_FALSE;
   mMenuType           = eRegular;

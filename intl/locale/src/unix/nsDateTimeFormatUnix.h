@@ -66,7 +66,7 @@ public:
 
 
   nsDateTimeFormatUnix() {NS_INIT_REFCNT();
-                          mLocale.AssignWithConversion("");mAppLocale.AssignWithConversion("");}
+                          mLocale.Truncate();mAppLocale.Truncate();}
 
   virtual ~nsDateTimeFormatUnix() {}
 

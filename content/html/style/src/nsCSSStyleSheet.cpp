@@ -1936,7 +1936,7 @@ CSSStyleSheetImpl::SetTitle(const nsString& aTitle)
 NS_IMETHODIMP
 CSSStyleSheetImpl::GetType(nsString& aType) const
 {
-  aType.AssignWithConversion("text/css");
+  aType.Assign(NS_LITERAL_STRING("text/css"));
   return NS_OK;
 }
 

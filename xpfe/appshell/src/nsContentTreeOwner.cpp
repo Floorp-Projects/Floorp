@@ -235,7 +235,7 @@ nsContentTreeOwner::SetPersistence(PRBool aPersistPosition,
     persistString.Cut(index, 7);
     saveString = PR_TRUE;
   } else if (aPersistPosition && index < 0) {
-    persistString.AppendWithConversion(" screenX");
+    persistString.Append(NS_LITERAL_STRING(" screenX"));
     saveString = PR_TRUE;
   }
   // Set Y
@@ -244,7 +244,7 @@ nsContentTreeOwner::SetPersistence(PRBool aPersistPosition,
     persistString.Cut(index, 7);
     saveString = PR_TRUE;
   } else if (aPersistPosition && index < 0) {
-    persistString.AppendWithConversion(" screenY");
+    persistString.Append(NS_LITERAL_STRING(" screenY"));
     saveString = PR_TRUE;
   }
   // Set CX
@@ -253,7 +253,7 @@ nsContentTreeOwner::SetPersistence(PRBool aPersistPosition,
     persistString.Cut(index, 5);
     saveString = PR_TRUE;
   } else if (aPersistSize && index < 0) {
-    persistString.AppendWithConversion(" width");
+    persistString.Append(NS_LITERAL_STRING(" width"));
     saveString = PR_TRUE;
   }
   // Set CY
@@ -262,7 +262,7 @@ nsContentTreeOwner::SetPersistence(PRBool aPersistPosition,
     persistString.Cut(index, 6);
     saveString = PR_TRUE;
   } else if (aPersistSize && index < 0) {
-    persistString.AppendWithConversion(" height");
+    persistString.Append(NS_LITERAL_STRING(" height"));
     saveString = PR_TRUE;
   }
   // Set SizeMode
@@ -271,7 +271,7 @@ nsContentTreeOwner::SetPersistence(PRBool aPersistPosition,
     persistString.Cut(index, 8);
     saveString = PR_TRUE;
   } else if (aPersistSizeMode && (index < 0)) {
-    persistString.AppendWithConversion(" sizemode");
+    persistString.Append(NS_LITERAL_STRING(" sizemode"));
     saveString = PR_TRUE;
   }
 
@@ -319,7 +319,7 @@ NS_IMETHODIMP nsContentTreeOwner::SetStatus(PRUint32 aStatusType, const PRUnicha
       return NS_OK;
 
    nsCOMPtr<nsISupports> xpConnectObj;
-   nsAutoString xulBrowserWinId; xulBrowserWinId.AssignWithConversion("XULBrowserWindow");
+   nsAutoString xulBrowserWinId(NS_LITERAL_STRING("XULBrowserWindow"));
    piDOMWindow->GetObjectProperty(xulBrowserWinId.get(), getter_AddRefs(xpConnectObj));
    nsCOMPtr<nsIXULBrowserWindow> xulBrowserWindow(do_QueryInterface(xpConnectObj));
 
@@ -646,7 +646,7 @@ void nsContentTreeOwner::XULWindow(nsXULWindow* aXULWindow)
       if(docShellElement)  
          {
          docShellElement->GetAttribute(NS_LITERAL_STRING("contenttitlesetting"), contentTitleSetting);
-         if(contentTitleSetting.EqualsWithConversion("true"))
+         if(contentTitleSetting.Equals(NS_LITERAL_STRING("true")))
             {
             mContentTitleSetting = PR_TRUE;
             docShellElement->GetAttribute(NS_LITERAL_STRING("titlemodifier"), mWindowTitleModifier);

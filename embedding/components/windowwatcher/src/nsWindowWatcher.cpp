@@ -1067,7 +1067,7 @@ void nsWindowWatcher::CheckWindowName(nsString& aName)
       // Don't use js_ReportError as this will cause the application
       // to shut down (JS_ASSERT calls abort())  See bug 32898
       nsAutoString warn;
-      warn.AssignWithConversion("Illegal character in window name ");
+      warn.Assign(NS_LITERAL_STRING("Illegal character in window name "));
       warn.Append(aName);
       char *cp = ToNewCString(warn);
       NS_WARNING(cp);

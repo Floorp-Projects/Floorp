@@ -2161,7 +2161,7 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnStopRequest(nsIRequest *request,
 
   PLUGIN_LOG(PLUGIN_LOG_NOISY,
   ("nsPluginStreamListenerPeer::OnStopAvailable request=%p, cachefile=%s\n",
-  request, pathAndFilename));
+  request, pathAndFilename.get()));
 
   // If we are writting the stream to disk ourselves, lets close it
   nsCOMPtr<nsIOutputStream> outStream;
@@ -4237,7 +4237,7 @@ nsPluginHostImpl::PostStartupMessageForType(const char* aMimeType,
   msg = messageUni;
   nsMemory::Free((void *)messageUni);
 
-  msg.AppendWithConversion(" ", 1);
+  msg.Append(PRUnichar(' '));
   msg.AppendWithConversion(aMimeType, PL_strlen(aMimeType));
 #ifdef PLUGIN_LOGGING
   PR_LOG(nsPluginLogging::gPluginLog, PLUGIN_LOG_ALWAYS,

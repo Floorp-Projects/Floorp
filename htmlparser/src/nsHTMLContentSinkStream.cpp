@@ -154,11 +154,11 @@ nsHTMLContentSinkStream::Initialize(nsIOutputStream* aOutStream,
   // Set the line break character:
   if ((mFlags & nsIDocumentEncoder::OutputCRLineBreak)
       && (mFlags & nsIDocumentEncoder::OutputLFLineBreak)) // Windows/mail
-    mLineBreak.AssignWithConversion("\r\n");
+    mLineBreak.Assign(NS_LITERAL_STRING("\r\n"));
   else if (mFlags & nsIDocumentEncoder::OutputCRLineBreak) // Mac
-    mLineBreak.AssignWithConversion("\r");
+    mLineBreak.Assign(NS_LITERAL_STRING("\r"));
   else if (mFlags & nsIDocumentEncoder::OutputLFLineBreak) // Unix/DOM
-    mLineBreak.AssignWithConversion("\n");
+    mLineBreak.Assign(NS_LITERAL_STRING("\n"));
   else
     mLineBreak.AssignWithConversion(NS_LINEBREAK);         // Platform/default
 
@@ -246,7 +246,7 @@ nsHTMLContentSinkStream::InitEncoders()
     if (NS_FAILED(res))
     {
       // failed - unknown alias , fallback to ISO-8859-1
-      charsetName.AssignWithConversion("ISO-8859-1");
+      charsetName.Assign(NS_LITERAL_STRING("ISO-8859-1"));
     }
 
     res = nsComponentManager::CreateInstance(kSaveAsCharsetCID, NULL, 
@@ -423,7 +423,7 @@ void nsHTMLContentSinkStream::WriteAttributes(const nsIParserNode& aNode)
       value.Trim("\"", PR_TRUE, PR_TRUE);
 
       // Filter out any attribute starting with _moz
-      if (key.EqualsWithConversion("_moz", PR_TRUE, 4))
+      if (!Compare(key, NS_LITERAL_STRING("_moz"), nsCaseInsensitiveStringComparator())
         continue;
 
       // 
@@ -437,8 +437,8 @@ void nsHTMLContentSinkStream::WriteAttributes(const nsIParserNode& aNode)
       // used by the editor.  Bug 16988.  Yuck.
       //
       if ((eHTMLTags)aNode.GetNodeType() == eHTMLTag_br
-          && ((key.EqualsWithConversion("type", PR_TRUE)
-               && value.EqualsWithConversion("_moz"))))
+          && (!Compare((key, NS_LITERAL_STRING("type"), nsCaseInsensitiveStringComparator())
+               && value.Equals(NS_LITERAL_STRING("_moz")))))
         continue;
 
       if (mLowerCaseTags == PR_TRUE)
@@ -456,8 +456,8 @@ void nsHTMLContentSinkStream::WriteAttributes(const nsIParserNode& aNode)
 
       // Make all links absolute when converting only the selection:
       if ((mFlags & nsIDocumentEncoder::OutputAbsoluteLinks)
-          && (key.EqualsWithConversion("href", PR_TRUE)
-              || key.EqualsWithConversion("src", PR_TRUE)
+          && (!Compare(key, NS_LITERAL_STRING("href"), nsCaseInsensitiveStringComparator())
+              || !Compare(key, NS_LITERAL_STRING("src"), nsCaseInsensitiveStringComparator())
               // Would be nice to handle OBJECT and APPLET tags,
               // but that gets more complicated since we have to
               // search the tag list for CODEBASE as well.
@@ -613,7 +613,7 @@ PRBool nsHTMLContentSinkStream::IsDirty(const nsIParserNode& aNode)
 
 void nsHTMLContentSinkStream::AddIndent()
 {
-  nsAutoString padding; padding.AssignWithConversion("  ");
+  nsAutoString padding(NS_LITERAL_STRING("  "));
   for (PRInt32 i = mIndent; --i >= 0; ) 
   {
     Write(padding);
@@ -752,7 +752,7 @@ void nsHTMLContentSinkStream::AddEndTag(const nsIParserNode& aNode)
   }
   else if (tag == eHTMLTag_comment)
   {
-    tagName.AssignWithConversion("--");
+    tagName.Assign(NS_LITERAL_STRING("--"));
   }
   else if (tag == eHTMLTag_doctypeDecl || tag == eHTMLTag_markupDecl)
   {
@@ -1057,7 +1057,7 @@ nsHTMLContentSinkStream::OpenContainer(const nsIParserNode& aNode)
   if (tag == eHTMLTag_userdefined)
   {
     nsAutoString name; name.Assign(aNode.GetText());
-    if (name.EqualsWithConversion("document_info"))
+    if (name.Equals(NS_LITERAL_STRING("document_info")))
     {
       PRInt32 count=aNode.GetAttributeCount();
       for(PRInt32 i=0;i<count;i++)

@@ -851,9 +851,9 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
     {
       PRIntn ix = aID - VIEWER_DEMO0;
       nsAutoString url; url.AssignWithConversion(SAMPLES_BASE_URL);
-      url.AppendWithConversion("/test");
+      url.Append(NS_LITERAL_STRING("/test"));
       url.AppendInt(ix, 10);
-      url.AppendWithConversion(".html");
+      url.Append(NS_LITERAL_STRING(".html"));
       nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mWebBrowser));
       webNav->LoadURI(url.get(), nsIWebNavigation::LOAD_FLAGS_NONE, nsnull, nsnull, nsnull);
     }
@@ -862,7 +862,7 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
   case VIEWER_XPTOOLKITTOOLBAR1:
     {
       nsAutoString url; url.AssignWithConversion(SAMPLES_BASE_URL);
-      url.AppendWithConversion("/toolbarTest1.xul");
+      url.Append(NS_LITERAL_STRING("/toolbarTest1.xul"));
       nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mWebBrowser));
       webNav->LoadURI(url.get(), nsIWebNavigation::LOAD_FLAGS_NONE, nsnull, nsnull, nsnull);
       break;
@@ -870,7 +870,7 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
   case VIEWER_XPTOOLKITTREE1:
     {
       nsAutoString url; url.AssignWithConversion(SAMPLES_BASE_URL);
-      url.AppendWithConversion("/treeTest1.xul");
+      url.Append(NS_LITERAL_STRING("/treeTest1.xul"));
       nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mWebBrowser));
       webNav->LoadURI(url.get(), nsIWebNavigation::LOAD_FLAGS_NONE, nsnull, nsnull, nsnull);
       break;
@@ -991,7 +991,7 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
 
 #ifndef HTMLDialogs 
   if (aID == PRVCY_PREFILL) {
-    nsAutoString url; url.AssignWithConversion("file:///y|/htmldlgs.htm");
+    nsAutoString url(NS_LITERAL_STRING("file:///y|/htmldlgs.htm"));
     nsBrowserWindow* bw = nsnull;
     mApp->OpenWindow(PRUint32(~0), bw);
     bw->SetVisibility(PR_TRUE);
@@ -1320,7 +1320,7 @@ nsBrowserWindow::nsBrowserWindow()
     gTitleSuffix = GetTitleSuffix();
 #endif
     if ( (gTitleSuffix = new nsString) != 0 )
-      gTitleSuffix->AssignWithConversion(" - Raptor");
+      gTitleSuffix->Assign(NS_LITERAL_STRING(" - Raptor"));
   }
   AddBrowser(this);
 }
@@ -1602,7 +1602,7 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
   NS_CreateButton(mWindow,mBack,r,HandleBackEvent,&font);
   if (NS_OK == mBack->QueryInterface(kIWidgetIID,(void**)&widget))
   {
-    nsAutoString back; back.AssignWithConversion("Back");
+    nsAutoString back(NS_LITERAL_STRING("Back"));
     mBack->SetLabel(back);
     NS_RELEASE(widget);
   }
@@ -1625,7 +1625,7 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
     widget->Create(mWindow.get(), r, HandleForwardEvent, NULL);
     widget->SetFont(font);
     widget->Show(PR_TRUE);
-    nsAutoString forward; forward.AssignWithConversion("Forward");
+    nsAutoString forward(NS_LITERAL_STRING("Forward"));
     mForward->SetLabel(forward);
     NS_RELEASE(widget);
   }
@@ -2098,12 +2098,12 @@ nsBrowserWindow::OnProgress(nsIRequest* request, nsISupports *ctxt,
       url.AssignWithConversion(str);
       nsCRT::free(str);
     }
-    url.AppendWithConversion(": progress ");
+    url.Append(NS_LITERAL_STRING(": progress "));
     url.AppendInt(aProgress, 10);
     if (0 != aProgressMax) {
-      url.AppendWithConversion(" (out of ");
+      url.Append(NS_LITERAL_STRING(" (out of "));
       url.AppendInt(aProgressMax, 10);
-      url.AppendWithConversion(")");
+      url.Append(NS_LITERAL_STRING(")"));
     }
     PRUint32 size;
     mStatus->SetText(url,size);
@@ -2224,9 +2224,9 @@ void nsBrowserWindow::DoPrintSetup()
     //return;
   }
 
-  nsString printHTML; printHTML.AssignWithConversion("resource:/res/samples/printsetup.html");
+  nsString printHTML(NS_LITERAL_STRING("resource:/res/samples/printsetup.html"));
   nsRect rect(0, 0, 375, 510);
-  nsString title; title.AssignWithConversion("Print Setup");
+  nsString title(NS_LITERAL_STRING("Print Setup"));
 
   nsXPBaseWindow * dialog = nsnull;
   nsresult rv = nsComponentManager::CreateInstance(kXPBaseWindowCID, nsnull,
@@ -2254,8 +2254,8 @@ void nsBrowserWindow::DoPrintSetup()
   mPrintSetupInfo.mDocTitle         = PR_TRUE;
   mPrintSetupInfo.mDocLocation      = PR_TRUE;
 
-  mPrintSetupInfo.mHeaderText.AssignWithConversion("Header Text");
-  mPrintSetupInfo.mFooterText.AssignWithConversion("Footer Text");
+  mPrintSetupInfo.mHeaderText.Assign(NS_LITERAL_STRING("Header Text"));
+  mPrintSetupInfo.mFooterText.Assign(NS_LITERAL_STRING("Footer Text"));
 
   mPrintSetupInfo.mPageNum          = PR_TRUE;
   mPrintSetupInfo.mPageTotal        = PR_TRUE;
@@ -2307,9 +2307,9 @@ void nsBrowserWindow::DoTableInspector()
   nsIDOMDocument* domDoc = GetDOMDocument(mDocShell);
 
   if (nsnull != domDoc) {
-    nsString printHTML; printHTML.AssignWithConversion("resource:/res/samples/printsetup.html");
+    nsString printHTML(NS_LITERAL_STRING("resource:/res/samples/printsetup.html"));
     nsRect rect(0, 0, 375, 510);
-    nsString title; title.AssignWithConversion("Table Inspector");
+    nsString title(NS_LITERAL_STRING("Table Inspector"));
 
     nsXPBaseWindow * xpWin = nsnull;
     nsresult rv = nsComponentManager::CreateInstance(kXPBaseWindowCID, nsnull,
@@ -2340,9 +2340,9 @@ void nsBrowserWindow::DoImageInspector()
   nsIDOMDocument* domDoc = GetDOMDocument(mDocShell);
 
   if (nsnull != domDoc) {
-    nsString printHTML; printHTML.AssignWithConversion("resource:/res/samples/image_props.html");
+    nsString printHTML(NS_LITERAL_STRING("resource:/res/samples/image_props.html"));
     nsRect rect(0, 0, 485, 124);
-    nsString title; title.AssignWithConversion("Image Inspector");
+    nsString title(NS_LITERAL_STRING("Image Inspector"));
 
     nsXPBaseWindow * xpWin = nsnull;
     nsresult rv = nsComponentManager::CreateInstance(kXPBaseWindowCID, nsnull, kIXPBaseWindowIID, (void**) &xpWin);

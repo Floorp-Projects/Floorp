@@ -640,22 +640,22 @@ nsMenuPopupFrame::AdjustPositionForAnchorAlign ( PRInt32* ioXPos, PRInt32* ioYPo
   const nsStyleVisibility* vis = (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
   if (vis->mDirection == NS_STYLE_DIRECTION_RTL) {
     if (popupAnchor == NS_LITERAL_STRING("topright"))
-      popupAnchor.AssignWithConversion("topleft");
+      popupAnchor.Assign(NS_LITERAL_STRING("topleft"));
     else if (popupAnchor == NS_LITERAL_STRING("topleft"))
-      popupAnchor.AssignWithConversion("topright");
+      popupAnchor.Assign(NS_LITERAL_STRING("topright"));
     else if (popupAnchor == NS_LITERAL_STRING("bottomleft"))
-      popupAnchor.AssignWithConversion("bottomright");
+      popupAnchor.Assign(NS_LITERAL_STRING("bottomright"));
     else if (popupAnchor == NS_LITERAL_STRING("bottomright"))
-      popupAnchor.AssignWithConversion("bottomleft");
+      popupAnchor.Assign(NS_LITERAL_STRING("bottomleft"));
 
     if (popupAlign == NS_LITERAL_STRING("topright"))
-      popupAlign.AssignWithConversion("topleft");
+      popupAlign.Assign(NS_LITERAL_STRING("topleft"));
     else if (popupAlign == NS_LITERAL_STRING("topleft"))
-      popupAlign.AssignWithConversion("topright");
+      popupAlign.Assign(NS_LITERAL_STRING("topright"));
     else if (popupAlign == NS_LITERAL_STRING("bottomleft"))
-      popupAlign.AssignWithConversion("bottomright");
+      popupAlign.Assign(NS_LITERAL_STRING("bottomright"));
     else if (popupAnchor == NS_LITERAL_STRING("bottomright"))
-      popupAlign.AssignWithConversion("bottomleft");
+      popupAlign.Assign(NS_LITERAL_STRING("bottomleft"));
   }
 
   // Adjust position for margins at the aligned corner

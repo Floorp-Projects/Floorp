@@ -408,7 +408,7 @@ nsInstall::AddDirectory(const nsString& aRegName,
 
     if (!subdirectory.IsEmpty())
     {
-        subdirectory.AppendWithConversion("/");
+        subdirectory.Append(NS_LITERAL_STRING("/"));
     }
 
     
@@ -440,11 +440,11 @@ nsInstall::AddDirectory(const nsString& aRegName,
         nsString *thisPath = (nsString *)paths->ElementAt(i);
 
         nsString newJarSource = aJarSource;
-        newJarSource.AppendWithConversion("/");
+        newJarSource.Append(NS_LITERAL_STRING("/"));
         newJarSource += *thisPath;
         
         nsString fullRegName = qualifiedRegName;
-        fullRegName.AppendWithConversion("/");
+        fullRegName.Append(NS_LITERAL_STRING("/"));
         fullRegName += *thisPath;
         
 
@@ -584,7 +584,7 @@ nsInstall::AddSubcomponent(const nsString& aRegName,
     }
     
     if (qualifiedVersion.IsEmpty())
-        qualifiedVersion.AssignWithConversion("0.0.0.0");   	
+        qualifiedVersion.Assign(NS_LITERAL_STRING("0.0.0.0"));   	
 
 
     if ( aRegName.IsEmpty() ) 
@@ -2324,7 +2324,7 @@ nsInstall::GetQualifiedPackageName( const nsString& name, nsString& qualifiedNam
     nsString startOfName;
     name.Left(startOfName, 7);
 
-    if ( startOfName.EqualsWithConversion( "=USER=/") )
+    if ( startOfName.Equals(NS_LITERAL_STRING("=USER=/")) )
     {
         CurrentUserNode(qualifiedName);
         qualifiedName += name;
@@ -2366,7 +2366,7 @@ nsInstall::GetQualifiedRegName(const nsString& name, nsString& qualifiedRegName 
 
     nsString usr ();
 
-    if ( startOfName.EqualsWithConversion("=COMM=/") || startOfName.EqualsWithConversion("=USER=/")) 
+    if ( startOfName.Equals(NS_LITERAL_STRING("=COMM=/")) || startOfName.Equals(NS_LITERAL_STRING("=USER=/"))) 
     {
         qualifiedRegName = name;
         qualifiedRegName.Cut( 0, 7 );
@@ -2376,7 +2376,7 @@ nsInstall::GetQualifiedRegName(const nsString& name, nsString& qualifiedRegName 
         if (!mRegistryPackageName.IsEmpty())
         {
             qualifiedRegName = mRegistryPackageName;
-            qualifiedRegName.AppendWithConversion("/");
+            qualifiedRegName.Append(NS_LITERAL_STRING("/"));
             qualifiedRegName += name;
         }
         else
@@ -2429,11 +2429,11 @@ nsInstall::CurrentUserNode(nsString& userRegNode)
         profname = NULL;
     }
     
-    userRegNode.AssignWithConversion("/Netscape/Users/");
+    userRegNode.Assign(NS_LITERAL_STRING("/Netscape/Users/"));
     if (profname != nsnull)
     {
         userRegNode.AppendWithConversion(profname);
-        userRegNode.AppendWithConversion("/");
+        userRegNode.Append(NS_LITERAL_STRING("/"));
         PR_FREEIF(profname);
     }
 }
@@ -2616,7 +2616,7 @@ nsInstall::ExtractFileFromJar(const nsString& aJarfile, nsIFile* aSuggestedName,
 
         directoryService->Get(NS_OS_TEMP_DIR, NS_GET_IID(nsIFile), getter_AddRefs(tempFile));
   
-        nsString tempFileName; tempFileName.AssignWithConversion("xpinstall");
+        nsString tempFileName(NS_LITERAL_STRING("xpinstall"));
 
         // Get the extension of the file in the JAR
         extpos = aJarfile.RFindChar('.');

@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nsNSSCertificate.cpp,v 1.57 2001/12/13 01:17:49 javi%netscape.com Exp $
+ * $Id: nsNSSCertificate.cpp,v 1.58 2001/12/16 11:41:09 jaggernaut%netscape.com Exp $
  */
 
 #include "prmem.h"
@@ -1997,7 +1997,7 @@ nsNSSCertificate::GetPurposes(PRUint32   *_verified,
   rv = GetUsageArray(suffix, _verified, &tmpCount, tmpUsages);
   nsAutoString porpoises;
   for (PRUint32 i=0; i<tmpCount; i++) {
-    if (i>0) porpoises.AppendWithConversion(",");
+    if (i>0) porpoises.Append(NS_LITERAL_STRING(","));
     porpoises.Append(tmpUsages[i]);
     nsMemory::Free(tmpUsages[i]);
   }

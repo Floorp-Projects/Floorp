@@ -218,19 +218,21 @@ NS_ScriptErrorReporter(JSContext *cx,
   // Print it to stderr as well, for the benefit of those invoking
   // mozilla with -console.
   nsAutoString error;
-  error.AssignWithConversion("JavaScript ");
+  error.Assign(NS_LITERAL_STRING("JavaScript "));
   if (JSREPORT_IS_STRICT(report->flags))
-    error.AppendWithConversion("strict ");
-  error.AppendWithConversion(JSREPORT_IS_WARNING(report->flags) ? "warning: " : "error: ");
-  error.AppendWithConversion("\n");
+    error.Append(NS_LITERAL_STRING("strict "));
+  if (JSREPORT_IS_WARNING(report->flags))
+    error.Append(NS_LITERAL_STRING("warning: \n"));
+  else
+    error.Append(NS_LITERAL_STRING("error: \n"));
   error.AppendWithConversion(report->filename);
-  error.AppendWithConversion(" line ");
+  error.Append(NS_LITERAL_STRING(" line "));
   error.AppendInt(report->lineno, 10);
-  error.AppendWithConversion(": ");
+  error.Append(NS_LITERAL_STRING(": "));
   error.Append(NS_REINTERPRET_CAST(const PRUnichar*, report->ucmessage));
-  error.AppendWithConversion("\n");
+  error.Append(NS_LITERAL_STRING("\n"));
   if (status != nsEventStatus_eIgnore && !JSREPORT_IS_WARNING(report->flags))
-    error.AppendWithConversion("Error was suppressed by event handler\n");
+    error.Append(NS_LITERAL_STRING("Error was suppressed by event handler\n"));
 
 #ifdef DEBUG  
   char *errorStr = ToNewCString(error);
@@ -305,12 +307,12 @@ nsJSContext::DOMBranchCallback(JSContext *cx, JSScript *script)
   ireq->GetInterface(NS_GET_IID(nsIPrompt), getter_AddRefs(prompt));
   NS_ENSURE_TRUE(prompt, JS_TRUE);
 
-  nsAutoString title, msg;
-  title.AssignWithConversion("Script warning");
-  msg.AssignWithConversion("A script on this page is causing mozilla to "
-                           "run slowly. If it continues to run, your "
-                           "computer may become unresponsive.\n\nDo you "
-                           "want to abort the script?");
+  NS_NAMED_LITERAL_STRING(title, "Script warning");
+  NS_NAMED_MULTILINE_LITERAL_STRING(msg,
+      NS_L("A script on this page is causing mozilla to ")
+      NS_L("run slowly. If it continues to run, your ")
+      NS_L("computer may become unresponsive.\n\nDo you ")
+      NS_L("want to abort the script?"));
 
   JSBool ret = JS_TRUE;
 

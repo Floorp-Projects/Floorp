@@ -161,13 +161,13 @@ nsPersistentProperties::Load(nsIInputStream *aIn)
                  uchar=0;
                  break;
                case 't':
-                 value.AppendWithConversion('\t');
+                 value.Append(PRUnichar('\t'));
                  break;
                case 'n':
-                 value.AppendWithConversion('\n');
+                 value.Append(PRUnichar('\n'));
                  break;
                case 'r':
-                 value.AppendWithConversion('\r');
+                 value.Append(PRUnichar('\r'));
                  break;
                default:
                  value.Append((PRUnichar) c);

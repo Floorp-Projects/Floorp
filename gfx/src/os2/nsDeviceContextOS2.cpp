@@ -860,17 +860,17 @@ nsresult nsDeviceContextOS2::CreateFontAliasTable()
    {
       mFontAliasTable = new nsHashtable;
 
-      nsAutoString  times;              times.AssignWithConversion("Times");
-      nsAutoString  timesNewRoman;      timesNewRoman.AssignWithConversion("Times New Roman");
-      nsAutoString  timesRoman;         timesRoman.AssignWithConversion("Tms Rmn");
-      nsAutoString  arial;              arial.AssignWithConversion("Arial");
-      nsAutoString  helv;               helv.AssignWithConversion("Helv");
-      nsAutoString  helvetica;          helvetica.AssignWithConversion("Helvetica");
-      nsAutoString  courier;            courier.AssignWithConversion("Courier");
-      nsAutoString  courierNew;         courierNew.AssignWithConversion("Courier New");
-      nsAutoString  sans;               sans.AssignWithConversion("Sans");
-      nsAutoString  unicode;            unicode.AssignWithConversion("Unicode");
-      nsAutoString  timesNewRomanMT30;  timesNewRomanMT30.AssignWithConversion("Times New Roman MT 30");
+      nsAutoString  times;              times.Assign(NS_LITERAL_STRING("Times"));
+      nsAutoString  timesNewRoman;      timesNewRoman.Assign(NS_LITERAL_STRING("Times New Roman"));
+      nsAutoString  timesRoman;         timesRoman.Assign(NS_LITERAL_STRING("Tms Rmn"));
+      nsAutoString  arial;              arial.Assign(NS_LITERAL_STRING("Arial"));
+      nsAutoString  helv;               helv.Assign(NS_LITERAL_STRING("Helv"));
+      nsAutoString  helvetica;          helvetica.Assign(NS_LITERAL_STRING("Helvetica"));
+      nsAutoString  courier;            courier.Assign(NS_LITERAL_STRING("Courier"));
+      nsAutoString  courierNew;         courierNew.Assign(NS_LITERAL_STRING("Courier New"));
+      nsAutoString  sans;               sans.Assign(NS_LITERAL_STRING("Sans"));
+      nsAutoString  unicode;            unicode.Assign(NS_LITERAL_STRING("Unicode"));
+      nsAutoString  timesNewRomanMT30;  timesNewRomanMT30.Assign(NS_LITERAL_STRING("Times New Roman MT 30"));
       nsAutoString  nullStr;
 
       AliasFont(times, timesNewRoman, timesRoman, PR_FALSE);

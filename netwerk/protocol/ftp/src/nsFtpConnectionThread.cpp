@@ -2139,7 +2139,7 @@ nsFtpState::SendFTPCommand(nsCString& command)
     
     // we don't want to log the password:
     nsCAutoString logcmd(command);
-    if (command.CompareWithConversion("PASS ", PR_FALSE, 5) == 0) 
+    if (Compare(Substring(command, 0, 5), NS_LITERAL_CSTRING("PASS ")) == 0) 
         logcmd = "PASS xxxxx";
     
     PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x)(dwait=%d) Writing \"%s\"\n", this, mWaitingForDConn, logcmd.get()));

@@ -148,7 +148,7 @@ nsPrimitiveHelpers :: ConvertUnicodeToPlatformPlainText ( PRUnichar* inUnicode, 
   if (NS_SUCCEEDED(rv))
     rv = platformCharsetService->GetCharset(kPlatformCharsetSel_PlainTextInClipboard, platformCharset);
   if (NS_FAILED(rv))
-    platformCharset.AssignWithConversion("ISO-8859-1");
+    platformCharset.Assign(NS_LITERAL_STRING("ISO-8859-1"));
 
   // use transliterate to convert things like smart quotes to normal quotes for plain text
   nsCAutoString cPlatformCharset;
@@ -195,7 +195,7 @@ nsPrimitiveHelpers :: ConvertPlatformPlainTextToUnicode ( const char* inText, PR
     if (NS_SUCCEEDED(rv))
       rv = platformCharsetService->GetCharset(kPlatformCharsetSel_PlainTextInClipboard, platformCharset);
     if (NS_FAILED(rv))
-      platformCharset.AssignWithConversion("ISO-8859-1");
+      platformCharset.Assign(NS_LITERAL_STRING("ISO-8859-1"));
       
     // get the decoder
     nsCOMPtr<nsICharsetConverterManager> ccm = 

@@ -161,7 +161,7 @@ HTML2text(nsString& inString, nsString& inType, nsString& outType,
 
   parser->SetContentSink(sink);
    nsCOMPtr<nsIDTD> dtd;
-  if (inType.EqualsWithConversion("text/html")) {
+  if (inType.Equals(NS_LITERAL_STRING("text/html"))) {
     static NS_DEFINE_CID(kNavDTDCID, NS_CNAVDTD_CID);
     rv=nsComponentManager::CreateInstance(kNavDTDCID,nsnull,NS_GET_IID(nsIDTD),getter_AddRefs(dtd));
   }
@@ -203,8 +203,8 @@ HTML2text(nsString& inString, nsString& inType, nsString& outType,
 
 int main(int argc, char** argv)
 {
-  nsString inType; inType.AssignWithConversion("text/html");
-  nsString outType; outType.AssignWithConversion("text/plain");
+  nsString inType(NS_LITERAL_STRING("text/html"));
+  nsString outType(NS_LITERAL_STRING("text/plain"));
   int wrapCol = 72;
   int flags = 0;
   nsString compareAgainst;

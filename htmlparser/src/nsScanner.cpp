@@ -205,7 +205,7 @@ nsresult nsScanner::SetDocumentCharset(const nsString& aCharset , nsCharsetSourc
     if(NS_FAILED(res) && (kCharsetUninitialized == mCharsetSource) )
     {
        // failed - unknown alias , fallback to ISO-8859-1
-      charsetName.AssignWithConversion("ISO-8859-1");
+      charsetName.Assign(NS_LITERAL_STRING("ISO-8859-1"));
     }
     mCharset = charsetName;
     mCharsetSource = aSource;

@@ -756,11 +756,8 @@ nsEventListenerManager::AddEventListenerByType(nsIDOMEventListener *aListener,
 {
   PRInt32 subType;
   EventArrayType arrayType;
-  nsAutoString str; str.AssignWithConversion("on");
-  nsIAtom* atom;
-
-  str.Append(aType);
-  atom = NS_NewAtom(str);
+  nsCOMPtr<nsIAtom> atom =
+           dont_AddRef(NS_NewAtom(NS_LITERAL_STRING("on") + aType));
 
   if (NS_OK == GetIdentifiersForType(atom, &arrayType, &subType)) {
     AddEventListener(aListener, arrayType, subType, nsnull, aFlags);
@@ -769,9 +766,6 @@ nsEventListenerManager::AddEventListenerByType(nsIDOMEventListener *aListener,
     nsStringKey key(aType);
     AddEventListener(aListener, eEventArrayType_Hash, NS_EVENT_BITS_NONE, &key, aFlags);
   }
-
-
-  NS_IF_RELEASE(atom);
 
   return NS_OK;
 }
@@ -783,11 +777,8 @@ nsEventListenerManager::RemoveEventListenerByType(nsIDOMEventListener *aListener
 {
   PRInt32 subType;
   EventArrayType arrayType;
-  nsAutoString str; str.AssignWithConversion("on");
-  nsIAtom* atom;
-
-  str.Append(aType);
-  atom = NS_NewAtom(str);
+  nsCOMPtr<nsIAtom> atom =
+           dont_AddRef(NS_NewAtom(NS_LITERAL_STRING("on") + aType));
 
   if (NS_OK == GetIdentifiersForType(atom, &arrayType, &subType)) {
     RemoveEventListener(aListener, arrayType, subType, nsnull, aFlags);
@@ -796,8 +787,6 @@ nsEventListenerManager::RemoveEventListenerByType(nsIDOMEventListener *aListener
     nsStringKey key(aType);
     RemoveEventListener(aListener, eEventArrayType_Hash, NS_EVENT_BITS_NONE, &key, aFlags);
   }
-
-  NS_IF_RELEASE(atom);
 
   return NS_OK;
 }
@@ -1155,8 +1144,7 @@ nsEventListenerManager::HandleEventSubType(nsListenerStruct* aListenerStruct,
         if (NS_SUCCEEDED(result)) {
           nsAutoString eventString;
           if (NS_SUCCEEDED(aDOMEvent->GetType(eventString))) {
-            eventString.InsertWithConversion("on", 0, 2);
-            nsCOMPtr<nsIAtom> atom = getter_AddRefs(NS_NewAtom(eventString));
+            nsCOMPtr<nsIAtom> atom = dont_AddRef(NS_NewAtom(NS_LITERAL_STRING("on") + eventString));
 
             result = CompileEventHandlerInternal(scriptCX, target, atom,
                                                  aListenerStruct, aSubType);

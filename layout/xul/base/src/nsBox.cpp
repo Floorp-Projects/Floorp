@@ -81,9 +81,9 @@ void
 nsBox::AppendAttribute(const nsAutoString& aAttribute, const nsAutoString& aValue, nsAutoString& aResult)
 {
    aResult.Append(aAttribute);
-   aResult.AppendWithConversion("='");
+   aResult.Append(NS_LITERAL_STRING("='"));
    aResult.Append(aValue);
-   aResult.AppendWithConversion("' ");
+   aResult.Append(NS_LITERAL_STRING("' "));
 }
 
 void
@@ -99,7 +99,7 @@ nsBox::ListBox(nsAutoString& aResult)
 
     aResult.AppendWithConversion(addr);
     aResult.Append(name);
-    aResult.AppendWithConversion(" ");
+    aResult.Append(NS_LITERAL_STRING(" "));
 
     nsCOMPtr<nsIContent> content;
     frame->GetContent(getter_AddRefs(content));
@@ -148,7 +148,7 @@ nsBox::ChildrenMustHaveWidgets(PRBool& aMust)
 void
 nsBox::GetBoxName(nsAutoString& aName)
 {
-  aName.AssignWithConversion("Box");
+  aName.Assign(NS_LITERAL_STRING("Box"));
 }
 
 NS_IMETHODIMP
@@ -162,13 +162,13 @@ nsBox::BeginLayout(nsBoxLayoutState& aState)
       switch(aState.GetLayoutReason())
       {
         case nsBoxLayoutState::Dirty:
-           reason.AssignWithConversion("Dirty");
+           reason.Assign(NS_LITERAL_STRING("Dirty"));
         break;
         case nsBoxLayoutState::Initial:
-           reason.AssignWithConversion("Initial");
+           reason.Assign(NS_LITERAL_STRING("Initial"));
         break;
         case nsBoxLayoutState::Resize:
-           reason.AssignWithConversion("Resize");
+           reason.Assign(NS_LITERAL_STRING("Resize"));
         break;
       }
 

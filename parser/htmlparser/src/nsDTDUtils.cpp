@@ -44,6 +44,7 @@
 #include "nsParserNode.h" 
 #include "nsIChannel.h"
 #include "nsIServiceManager.h"
+#include "nsUnicharUtils.h"
 
 MOZ_DECL_CTOR_COUNTER(nsEntryStack)
 MOZ_DECL_CTOR_COUNTER(nsDTDContext)
@@ -576,7 +577,7 @@ public:
 
     aString.Truncate();
     if(aValue<0)
-      aString.AppendWithConversion('-');
+      aString.Append(PRUnichar('-'));
 
 	  aValue=abs(aValue);	  // must be positive here...
     while(next<=aValue)	{	// scale up in baseN; exceed current value.
@@ -610,7 +611,7 @@ public:
 
     aString.Truncate();
     if(aValue<0)
-      aString.AppendWithConversion('-');
+      aString.Append(PRUnichar('-'));
 
 	  PRInt32	root=1000000000;
 	  PRInt32	expn=4;
@@ -708,7 +709,7 @@ public:
 
     aString.Truncate();
     if(aValue<0)
-      aString.AppendWithConversion('-');
+      aString.Append(PRUnichar('-'));
 
     aValue=abs(aValue);
 	  char	decStr[20];
@@ -842,7 +843,7 @@ PRInt32 nsDTDContext::IncrementCounter(eHTMLTags aTag,nsIParserNode& aNode,nsStr
     nsAutoString theKey(aNode.GetKeyAt(theIndex));
     const nsString& theValue=aNode.GetValueAt(theIndex);
 
-    if(theKey.EqualsWithConversion("name",PR_TRUE)){
+    if(!Compare(theKey, NS_LITERAL_STRING("name"), nsCaseInsensitiveStringComparator())){
       theEntity=GetEntity(theValue);
       if(!theEntity) {
         theEntity=RegisterEntity(theValue,theValue);
@@ -850,10 +851,10 @@ PRInt32 nsDTDContext::IncrementCounter(eHTMLTags aTag,nsIParserNode& aNode,nsStr
       }
       aTag=eHTMLTag_userdefined;
     }
-    else if(theKey.EqualsWithConversion("noincr",PR_TRUE)){
+    else if(!Compare(theKey, NS_LITERAL_STRING("noincr"), nsCaseInsensitiveStringComparator())){
       theIncrValue=0;
     }
-    else if(theKey.EqualsWithConversion("format",PR_TRUE)){
+    else if(!Compare(theKey, NS_LITERAL_STRING("format"), nsCaseInsensitiveStringComparator())){
       PRUnichar theChar=theValue.CharAt(0);
       if('"'==theChar)
         theChar=theValue.CharAt(1);
@@ -870,7 +871,7 @@ PRInt32 nsDTDContext::IncrementCounter(eHTMLTags aTag,nsIParserNode& aNode,nsStr
       }
       //determine numbering style
     }
-    else if(theKey.EqualsWithConversion("value",PR_TRUE)){
+    else if(!Compare(theKey, NS_LITERAL_STRING("value"), nsCaseInsensitiveStringComparator())){
       PRInt32 err=0;
       theNewValue=theValue.ToInteger(&err);
       if(!err) {

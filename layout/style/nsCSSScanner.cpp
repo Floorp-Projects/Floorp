@@ -162,12 +162,10 @@ nsCSSToken::AppendToString(nsString& aBuffer)
       aBuffer.Append(mIdent);
       break;
     case eCSSToken_Includes:
-      aBuffer.Append(PRUnichar('~'));
-      aBuffer.Append(PRUnichar('='));
+      aBuffer.Append(NS_LITERAL_STRING("~="));
       break;
     case eCSSToken_Dashmatch:
-      aBuffer.Append(PRUnichar('|'));
-      aBuffer.Append(PRUnichar('='));
+      aBuffer.Append(NS_LITERAL_STRING("|="));
       break;
 
     default:
@@ -236,9 +234,7 @@ void nsCSSScanner::AddToError(const nsAReadableString& aErrorText)
     mErrorColNumber = mColNumber;
     mError = aErrorText;
   } else {
-    //mError.Append(NS_LITERAL_STRING("  ") + aErrorText);
-    mError.AppendWithConversion("  ");
-    mError.Append(aErrorText);
+    mError.Append(NS_LITERAL_STRING("  ") + aErrorText);
   }
 }
 
@@ -494,8 +490,7 @@ PRBool nsCSSScanner::Next(PRInt32& aErrorCode, nsCSSToken& aToken)
     // WS
     if ((lexTable[ch] & IS_WHITESPACE) != 0) {
       aToken.mType = eCSSToken_WhiteSpace;
-      aToken.mIdent.SetLength(0);
-      aToken.mIdent.Append(PRUnichar(ch));
+      aToken.mIdent.Assign(PRUnichar(ch));
       (void) EatWhiteSpace(aErrorCode);
       return PR_TRUE;
     }
@@ -503,8 +498,8 @@ PRBool nsCSSScanner::Next(PRInt32& aErrorCode, nsCSSToken& aToken)
       PRInt32 nextChar = Peek(aErrorCode);
       if (nextChar == '*') {
         (void) Read(aErrorCode);
-        aToken.mIdent.SetLength(0);
-        aToken.mIdent.Append(PRUnichar(ch));
+        aToken.mIdent.SetCapacity(2);
+        aToken.mIdent.Assign(PRUnichar(ch));
         aToken.mIdent.Append(PRUnichar(nextChar));
         return ParseCComment(aErrorCode, aToken);
       }
@@ -514,11 +509,7 @@ PRBool nsCSSScanner::Next(PRInt32& aErrorCode, nsCSSToken& aToken)
         if (LookAhead(aErrorCode, '-')) {
           if (LookAhead(aErrorCode, '-')) {
             aToken.mType = eCSSToken_HTMLComment;
-            aToken.mIdent.SetLength(0);
-            aToken.mIdent.Append(PRUnichar('<'));
-            aToken.mIdent.Append(PRUnichar('!'));
-            aToken.mIdent.Append(PRUnichar('-'));
-            aToken.mIdent.Append(PRUnichar('-'));
+            aToken.mIdent.Assign(NS_LITERAL_STRING("<!--"));
             return PR_TRUE;
           }
           Pushback('-');
@@ -530,10 +521,7 @@ PRBool nsCSSScanner::Next(PRInt32& aErrorCode, nsCSSToken& aToken)
       if (LookAhead(aErrorCode, '-')) {
         if (LookAhead(aErrorCode, '>')) {
           aToken.mType = eCSSToken_HTMLComment;
-          aToken.mIdent.SetLength(0);
-          aToken.mIdent.AppendWithConversion('-');
-          aToken.mIdent.AppendWithConversion('-');
-          aToken.mIdent.AppendWithConversion('>');
+          aToken.mIdent.Assign(NS_LITERAL_STRING("-->"));
           return PR_TRUE;
         }
         Pushback('-');
@@ -590,8 +578,7 @@ PRBool nsCSSScanner::NextURL(PRInt32& aErrorCode, nsCSSToken& aToken)
     // WS
     if ((lexTable[ch] & IS_WHITESPACE) != 0) {
       aToken.mType = eCSSToken_WhiteSpace;
-      aToken.mIdent.SetLength(0);
-      aToken.mIdent.Append(PRUnichar(ch));
+      aToken.mIdent.Assign(PRUnichar(ch));
       (void) EatWhiteSpace(aErrorCode);
       return PR_TRUE;
     }
@@ -599,8 +586,8 @@ PRBool nsCSSScanner::NextURL(PRInt32& aErrorCode, nsCSSToken& aToken)
       PRInt32 nextChar = Peek(aErrorCode);
       if (nextChar == '*') {
         (void) Read(aErrorCode);
-        aToken.mIdent.SetLength(0);
-        aToken.mIdent.Append(PRUnichar(ch));
+        aToken.mIdent.SetCapacity(2);
+        aToken.mIdent.Assign(PRUnichar(ch));
         aToken.mIdent.Append(PRUnichar(nextChar));
         return ParseCComment(aErrorCode, aToken);
       }
@@ -880,8 +867,8 @@ PRBool nsCSSScanner::ParseCComment(PRInt32& aErrorCode, nsCSSToken& aToken)
     if (ch < 0) break;
     if (ch == '*') {
       if (LookAhead(aErrorCode, '/')) {
-        ident.Append(PRUnichar(ch));  // STRING USE WARNING: technically, this should be |AppendWithConversion|
-        ident.AppendWithConversion('/');
+        ident.Append(PRUnichar(ch));
+        ident.Append(PRUnichar('/'));
         break;
       }
     }

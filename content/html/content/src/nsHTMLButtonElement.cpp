@@ -58,6 +58,7 @@
 #include "nsISizeOfHandler.h"
 #include "nsIDocument.h"
 #include "nsGUIEvent.h"
+#include "nsUnicharUtils.h"
 
 
 class nsHTMLButtonElement : public nsGenericHTMLContainerFormElement,
@@ -211,7 +212,7 @@ nsHTMLButtonElement::SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
   nsAutoString value(aValue);
 
   if (aName == nsHTMLAtoms::disabled &&
-      value.EqualsWithConversion("false", PR_TRUE)) {
+      !Compare(value, NS_LITERAL_STRING("false"), nsCaseInsensitiveStringComparator())) {
     return UnsetAttr(aNameSpaceID, aName, aNotify);
   }
 

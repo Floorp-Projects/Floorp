@@ -293,8 +293,8 @@ void nsUnknownDecoder::DetermineContentType(nsIRequest* request)
   // This false match happened all the time...  For example, CGI scripts
   // written in sh or perl that emit HTML.
   //
-  else if (str.EqualsWithConversion("#!", PR_FALSE, 2) || 
-           str.EqualsWithConversion("%!", PR_FALSE, 2)) {
+  else if (Substring(str, 0, 2).Equals(NS_LITERAL_CSTRING("#!")) || 
+           Substring(str, 0, 2).Equals(NS_LITERAL_CSTRING("%!"))) {
     for (i=0; i<mBufferLen && mBuffer[i]; i++);
     if (i == mBufferLen) {
       mContentType = TEXT_PLAIN;
@@ -305,8 +305,8 @@ void nsUnknownDecoder::DetermineContentType(nsIRequest* request)
   //
   // If the buffer begins with a mailbox delimiter then it is not HTML
   //
-  else if (str.EqualsWithConversion("From ", PR_TRUE, 5) || 
-           str.EqualsWithConversion(">From ", PR_TRUE, 6)) {
+  else if (!Compare(Substring(str, 0, 5), NS_LITERAL_CSTRING("From "), nsCaseInsensitiveCStringComparator()) || 
+           !Compare(Substring(str, 0, 6), NS_LITERAL_CSTRING(">From "), nsCaseInsensitiveCStringComparator())) {
     mContentType = TEXT_PLAIN;
   }
   //

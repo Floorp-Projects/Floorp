@@ -5866,7 +5866,7 @@ DocumentViewerImpl::GetPopupLinkNode(nsIDOMNode** aNode)
         }
       }
     }
-    if (anchor || area || link || xlinkType.EqualsWithConversion("simple")) {
+    if (anchor || area || link || xlinkType.Equals(NS_LITERAL_STRING("simple"))) {
       *aNode = node;
       NS_IF_ADDREF(*aNode); // addref
       return NS_OK;

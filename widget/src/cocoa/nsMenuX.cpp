@@ -889,7 +889,7 @@ void nsMenuX::LoadMenuItem( nsIMenu* inParentMenu, nsIContent* inMenuItemContent
       xulDocument->GetElementById(keyValue, getter_AddRefs(keyElement));
     if ( keyElement ) {
       nsCOMPtr<nsIContent> keyContent ( do_QueryInterface(keyElement) );
-      nsAutoString keyChar; keyChar.AssignWithConversion(" ");
+      nsAutoString keyChar(NS_LITERAL_STRING(" "));
       keyContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::key, keyChar);
 	    if(keyChar != NS_LITERAL_STRING(" ")) 
         pnsMenuItem->SetShortcutChar(keyChar);

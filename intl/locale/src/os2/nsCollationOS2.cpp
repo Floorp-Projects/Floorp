@@ -76,14 +76,14 @@ nsresult nsCollationOS2::Initialize(nsILocale *locale)
   }
 
   // default local charset name
-  mCharset.AssignWithConversion("ISO-8859-1");
+  mCharset.Assign(NS_LITERAL_STRING("ISO-8859-1"));
 
   // default platform locale
-  mLocale.AssignWithConversion("C");
+  mLocale.Assign(NS_LITERAL_STRING("C"));
 
   PRUnichar *aLocaleUnichar = NULL;
   nsString aCategory;
-  aCategory.AssignWithConversion("NSILOCALE_COLLATE");
+  aCategory.Assign(NS_LITERAL_STRING("NSILOCALE_COLLATE"));
 
   // get locale string, use app default if no locale specified
   if (locale == nsnull) {
@@ -112,7 +112,7 @@ nsresult nsCollationOS2::Initialize(nsILocale *locale)
 
     // keep the same behavior as 4.x as well as avoiding Linux collation key problem
     if (aLocale.EqualsIgnoreCase("en-US")) {
-      aLocale.AssignWithConversion("C");
+      aLocale.Assign(NS_LITERAL_STRING("C"));
     }
 
     nsCOMPtr <nsIOS2Locale> os2Locale = do_GetService(NS_OS2LOCALE_CONTRACTID, &res);

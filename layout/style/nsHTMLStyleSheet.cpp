@@ -894,7 +894,7 @@ HTMLStyleSheetImpl::GetTitle(nsString& aTitle) const
 NS_IMETHODIMP
 HTMLStyleSheetImpl::GetType(nsString& aType) const
 {
-  aType.AssignWithConversion("text/html");
+  aType.Assign(NS_LITERAL_STRING("text/html"));
   return NS_OK;
 }
 

@@ -58,11 +58,11 @@ nsPK11Token::nsPK11Token(PK11SlotInfo *slot)
     mTokenManID.Trim(" ", PR_FALSE, PR_TRUE);
     // Set the Hardware Version field
     mTokenHWVersion.AppendInt(tok_info.hardwareVersion.major);
-    mTokenHWVersion.AppendWithConversion(".");
+    mTokenHWVersion.Append(NS_LITERAL_STRING("."));
     mTokenHWVersion.AppendInt(tok_info.hardwareVersion.minor);
     // Set the Firmware Version field
     mTokenFWVersion.AppendInt(tok_info.firmwareVersion.major);
-    mTokenFWVersion.AppendWithConversion(".");
+    mTokenFWVersion.Append(NS_LITERAL_STRING("."));
     mTokenFWVersion.AppendInt(tok_info.firmwareVersion.minor);
     // Set the Serial Number field
     mTokenSerialNum.AssignWithConversion((char *)tok_info.serialNumber, 

@@ -830,7 +830,7 @@ nsSystemFontsGTK::GetSystemFontInfo(GdkFont* iFont, nsFont* aFont, float aPixels
       --numFonts;
       if (numFonts == 0)
         break;
-      fontName.AppendWithConversion(",");
+      fontName.Append(NS_LITERAL_STRING(","));
     }
   }
   return NS_OK;

@@ -281,7 +281,7 @@ nsresult NS_AutoregisterComponents()
 int getStrLine(const char *src, char *str, int ind, int max) {
   char c = src[ind];
   int i=0;
-  globalStream.AssignWithConversion("\0");
+  globalStream.Assign(NS_LITERAL_STRING("\0"));
   while(c!='\n' && c!='\0' && i<max) {
     str[i] = src[ind];
     i++; ind++;

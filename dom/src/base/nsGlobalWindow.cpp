@@ -2604,7 +2604,7 @@ GlobalWindowImpl::Escape(const nsAReadableString& aStr,
   NS_ENSURE_TRUE(ccm, NS_ERROR_FAILURE);
 
   // Get the document character set
-  charset.AssignWithConversion("UTF-8");        // default to utf-8
+  charset.Assign(NS_LITERAL_STRING("UTF-8"));        // default to utf-8
   if (mDocument) {
     nsCOMPtr<nsIDocument> doc(do_QueryInterface(mDocument));
 
@@ -2677,7 +2677,7 @@ NS_IMETHODIMP GlobalWindowImpl::Unescape(const nsAReadableString& aStr,
   NS_ENSURE_TRUE(ccm, NS_ERROR_FAILURE);
 
   // Get the document character set
-  charset.AssignWithConversion("UTF-8");        // default to utf-8
+  charset.Assign(NS_LITERAL_STRING("UTF-8"));        // default to utf-8
   if (mDocument) {
     nsCOMPtr<nsIDocument> doc(do_QueryInterface(mDocument));
 

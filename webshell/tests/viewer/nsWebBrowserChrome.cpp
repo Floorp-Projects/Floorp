@@ -354,7 +354,7 @@ NS_IMETHODIMP nsWebBrowserChrome::SetTitle(const PRUnichar* aTitle)
 
    nsAutoString newTitle(aTitle);
 
-   newTitle.AppendWithConversion(" - Raptor");
+   newTitle.Append(NS_LITERAL_STRING(" - Raptor"));
    
    mBrowserWindow->SetTitle(newTitle.get());
    return NS_OK;
@@ -378,15 +378,15 @@ nsWebBrowserChrome::OnProgressChange(nsIWebProgress* aProgress,
     nsAutoString buf;
     PRUint32 size;
 
-    buf.AppendWithConversion("Loaded ");
+    buf.Append(NS_LITERAL_STRING("Loaded "));
     buf.AppendInt(mCurrent);
-    buf.AppendWithConversion(" of ");
+    buf.Append(NS_LITERAL_STRING(" of "));
     buf.AppendInt(mTotal);
-    buf.AppendWithConversion(" items.  (");
+    buf.Append(NS_LITERAL_STRING(" items.  ("));
     buf.AppendInt(mProgress);
-    buf.AppendWithConversion(" bytes of ");
+    buf.Append(NS_LITERAL_STRING(" bytes of "));
     buf.AppendInt(mMaxProgress);
-    buf.AppendWithConversion(" bytes)");
+    buf.Append(NS_LITERAL_STRING(" bytes)"));
 
     mBrowserWindow->mStatus->SetText(buf,size);
   }
@@ -417,15 +417,15 @@ nsWebBrowserChrome::OnStateChange(nsIWebProgress* aProgress,
         nsAutoString buf;
         PRUint32 size;
 
-        buf.AppendWithConversion("Loaded ");
+        buf.Append(NS_LITERAL_STRING("Loaded "));
         buf.AppendInt(mCurrent);
-        buf.AppendWithConversion(" of ");
+        buf.Append(NS_LITERAL_STRING(" of "));
         buf.AppendInt(mTotal);
-        buf.AppendWithConversion(" items.  (");
+        buf.Append(NS_LITERAL_STRING(" items.  ("));
         buf.AppendInt(mProgress);
-        buf.AppendWithConversion(" bytes of ");
+        buf.Append(NS_LITERAL_STRING(" bytes of "));
         buf.AppendInt(mMaxProgress);
-        buf.AppendWithConversion(" bytes)");
+        buf.Append(NS_LITERAL_STRING(" bytes)"));
 
         mBrowserWindow->mStatus->SetText(buf,size);
       }
@@ -556,7 +556,7 @@ mCurrent=mTotal=mProgress=mMaxProgress=0;
         uri->GetSpec(getter_Copies(uriString));
 
         nsAutoString url; url.AssignWithConversion(uriString);
-        url.AppendWithConversion(": start");
+        url.Append(NS_LITERAL_STRING(": start"));
         PRUint32 size;
         mBrowserWindow->mStatus->SetText(url,size);
       }
@@ -608,7 +608,7 @@ void nsWebBrowserChrome::OnLoadFinished(nsIRequest* aRequest,
      {
 //     PRUint32 size;
 
-     msg.AppendWithConversion(" done.");
+     msg.Append(NS_LITERAL_STRING(" done."));
 
 ///      mBrowserWindow->mStatus->SetText(msg, size);
       }
@@ -629,7 +629,7 @@ void nsWebBrowserChrome::OnStatusConnecting(nsIChannel* aChannel)
       uri->GetSpec(getter_Copies(uriString));
       }
    
-   nsAutoString msg; msg.AssignWithConversion("Connecting to ");
+   nsAutoString msg(NS_LITERAL_STRING("Connecting to "));
    msg.AppendWithConversion(uriString);
       
    PRUint32 size;

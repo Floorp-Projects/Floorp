@@ -225,7 +225,7 @@ nsGfxButtonControlFrame::DoNavQuirksReflow(nsIPresContext*          aPresContext
     if (!textStyle->WhiteSpaceIsSignificant()) {
       value.CompressWhitespace();
       if (value.Length() == 0) {
-        value.AssignWithConversion("  ");
+        value.Assign(NS_LITERAL_STRING("  "));
       }
     }
 
@@ -381,7 +381,7 @@ nsGfxButtonControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
   if (!textStyle->WhiteSpaceIsSignificant()) {
     value.CompressWhitespace();
     if (value.Length() == 0) {
-      value.AssignWithConversion("  ");
+      value.Assign(NS_LITERAL_STRING("  "));
     }
   }
 

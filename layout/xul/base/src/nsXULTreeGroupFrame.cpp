@@ -763,7 +763,7 @@ nsXULTreeGroupFrame::AttributeChanged(nsIPresContext* aPresContext, nsIContent* 
     nsAutoString attribute;
     aChild->GetAttr ( kNameSpaceID_None, aAttribute, attribute );
     attribute.ToLowerCase();
-    mDropOnContainer = attribute.EqualsWithConversion("true");
+    mDropOnContainer = attribute.Equals(NS_LITERAL_STRING("true"));
   }
   else
     rv = nsBoxFrame::AttributeChanged ( aPresContext, aChild, aNameSpaceID, aAttribute, aModType, aHint );

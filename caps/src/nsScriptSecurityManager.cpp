@@ -969,9 +969,9 @@ nsScriptSecurityManager::ReportErrorToConsole(nsIURI* aTarget)
     if (NS_FAILED(rv)) return rv;
 
     nsAutoString msg;
-    msg.AssignWithConversion("The link to ");
+    msg.Assign(NS_LITERAL_STRING("The link to "));
     msg.AppendWithConversion(spec);
-    msg.AppendWithConversion(" was blocked by the security manager.\nRemote content may not link to local content.");
+    msg.Append(NS_LITERAL_STRING(" was blocked by the security manager.\nRemote content may not link to local content."));
     // Report error in JS console
     nsCOMPtr<nsIConsoleService> console(do_GetService("@mozilla.org/consoleservice;1"));
     if (console)

@@ -118,13 +118,13 @@ nsHTMLContentSerializer::Init(PRUint32 aFlags, PRUint32 aWrapColumn,
   // Set the line break character:
   if ((mFlags & nsIDocumentEncoder::OutputCRLineBreak)
       && (mFlags & nsIDocumentEncoder::OutputLFLineBreak)) { // Windows
-    mLineBreak.AssignWithConversion("\r\n");
+    mLineBreak.Assign(NS_LITERAL_STRING("\r\n"));
   }
   else if (mFlags & nsIDocumentEncoder::OutputCRLineBreak) { // Mac
-    mLineBreak.AssignWithConversion("\r");
+    mLineBreak.Assign(NS_LITERAL_STRING("\r"));
   }
   else if (mFlags & nsIDocumentEncoder::OutputLFLineBreak) { // Unix/DOM
-    mLineBreak.AssignWithConversion("\n");
+    mLineBreak.Assign(NS_LITERAL_STRING("\n"));
   }
   else {
     mLineBreak.AssignWithConversion(NS_LINEBREAK);         // Platform/default

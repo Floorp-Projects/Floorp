@@ -1698,9 +1698,9 @@ Fix4xCookies(nsIFileSpec * profilePath) {
 
     /* generate the output buffer and write it to file */
     outBuffer = prefix;
-    outBuffer.AppendWithConversion('\t');
+    outBuffer.Append(PRUnichar('\t'));
     outBuffer.AppendWithConversion(dateString);
-    outBuffer.AppendWithConversion('\t');
+    outBuffer.Append(PRUnichar('\t'));
     outBuffer.Append(suffix);
     PutCookieLine(outStream, outBuffer);
   }
@@ -2281,7 +2281,7 @@ nsPrefConverter::GetPlatformCharset(nsAutoString& aCharset)
    rv = platformCharset->GetCharset(kPlatformCharsetSel_FileName, aCharset);
   }
   if (NS_FAILED(rv)) {
-   aCharset.AssignWithConversion("ISO-8859-1");  // use ISO-8859-1 in case of any error
+   aCharset.Assign(NS_LITERAL_STRING("ISO-8859-1"));  // use ISO-8859-1 in case of any error
   }
  
   return rv;

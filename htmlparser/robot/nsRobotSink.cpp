@@ -244,7 +244,7 @@ NS_IMETHODIMP RobotSink::OpenContainer(const nsIParserNode& aNode)
 {
   nsAutoString tmp; tmp.Assign(aNode.GetText());
   tmp.ToLowerCase();
-  if (tmp.EqualsWithConversion("a")) {
+  if (tmp.Equals(NS_LITERAL_STRING("a"))) {
     nsAutoString k, v;
     PRInt32 ac = aNode.GetAttributeCount();
     for (PRInt32 i = 0; i < ac; i++) {
@@ -252,7 +252,7 @@ NS_IMETHODIMP RobotSink::OpenContainer(const nsIParserNode& aNode)
       const nsAReadableString& key = aNode.GetKeyAt(i);
       k.Assign(key);
       k.ToLowerCase();
-      if (k.EqualsWithConversion("href")) {
+      if (k.Equals(NS_LITERAL_STRING("href"))) {
         // Get value and remove mandatory quotes
         v.Truncate();
         v.Append(aNode.GetValueAt(i));

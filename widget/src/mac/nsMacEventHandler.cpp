@@ -2319,7 +2319,7 @@ nsresult nsMacEventHandler::UnicodeHandleUpdateInputArea(PRUnichar* text, long c
     // This is needed when we input some uncommitted text, and then delete all of them
     // When the last delete come, we will got a text_size = 0 and fixedLength = 0
     // In that case, we need to send a text event to clean up the input hole....
-    mIMECompositionStr->AssignWithConversion("");      
+    mIMECompositionStr->Assign(NS_LITERAL_STRING(""));      
 #ifdef DEBUG_TSM
       printf("3.====================================\n");
 #endif

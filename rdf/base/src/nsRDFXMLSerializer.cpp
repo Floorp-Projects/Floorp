@@ -311,7 +311,7 @@ nsRDFXMLSerializer::SerializeInlineAssertion(nsIOutputStream* aStream,
 
     if (nameSpacePrefix.Length()) {
         attr.Append(nameSpacePrefix);
-        attr.AppendWithConversion(':');
+        attr.Append(PRUnichar(':'));
     }
     attr.Append(property);
 
@@ -353,7 +353,7 @@ nsRDFXMLSerializer::SerializeChildAssertion(nsIOutputStream* aStream,
 
     if (nameSpacePrefix.Length()) {
         tag.Append(nameSpacePrefix);
-        tag.AppendWithConversion(':');
+        tag.Append(PRUnichar(':'));
     }
     tag.Append(property);
 

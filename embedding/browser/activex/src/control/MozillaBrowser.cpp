@@ -736,7 +736,7 @@ LRESULT CMozillaBrowser::OnViewSource(WORD wNotifyCode, WORD wID, HWND hWndCtl, 
     mWebBrowserContainer->m_pCurrentURI->GetSpec(getter_Copies(aURI));
 
     nsAutoString strURI;
-    strURI.AssignWithConversion("view-source:");
+    strURI.Assign(NS_LITERAL_STRING("view-source:"));
     strURI.AppendWithConversion(aURI);
 
     CIPtr(IDispatch) spDispNew;
@@ -998,7 +998,7 @@ HRESULT CMozillaBrowser::Initialize()
     }
 
     // Make a new default profile
-    nsAutoString newProfileName; newProfileName.AssignWithConversion("MozillaControl");
+    nsAutoString newProfileName(NS_LITERAL_STRING("MozillaControl"));
     PRBool profileExists = PR_FALSE;
     rv = profileService->ProfileExists(newProfileName.get(), &profileExists);
     if (NS_FAILED(rv))
@@ -1709,7 +1709,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::GoHome(void)
     }
 
     nsAutoString sUrl;
-    sUrl.AssignWithConversion("http://home.netscape.com");
+    sUrl.Assign(NS_LITERAL_STRING("http://home.netscape.com"));
 
     // Find the home page stored in prefs
     if (mPrefs)

@@ -27,6 +27,7 @@ REQUIRES	= xpcom \
 		  necko \
 		  uconv \
 		  pref \
+		  unicharutil \
 		  $(NULL)
 include <$(DEPTH)/config/config.mak>
 

@@ -235,7 +235,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsDateTimeFormatMac, nsIDateTimeFormat);
 nsresult nsDateTimeFormatMac::Initialize(nsILocale* locale)
 {
   PRUnichar *aLocaleUnichar = NULL;
-  nsString aCategory; aCategory.AssignWithConversion("NSILOCALE_TIME");
+  nsString aCategory(NS_LITERAL_STRING("NSILOCALE_TIME"));
   nsresult res;
 
   // use cached info if match with stored locale
@@ -258,7 +258,7 @@ nsresult nsDateTimeFormatMac::Initialize(nsILocale* locale)
   mScriptcode = smSystemScript;
   mLangcode = langEnglish;
   mRegioncode = verUS;
-  mCharset.AssignWithConversion("x-mac-roman");
+  mCharset.Assign(NS_LITERAL_STRING("x-mac-roman"));
   
 
   // get application locale

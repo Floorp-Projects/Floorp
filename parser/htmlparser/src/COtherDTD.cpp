@@ -61,6 +61,7 @@
 #include "nsParserNode.h"
 #include "nsHTMLEntities.h"
 #include "nsLinebreakConverter.h"
+#include "nsUnicharUtils.h"
 
 #include "prmem.h" 
 
@@ -579,11 +580,11 @@ nsresult COtherDTD::DidHandleStartTag(nsIParserNode& aNode,eHTMLTags aChildTag){
           PRInt32 theIndex=0;
           for(theIndex=0;theIndex<theCount;theIndex++){
             nsAutoString theKey(aNode.GetKeyAt(theIndex));
-            if(theKey.EqualsWithConversion("ENTITY",PR_TRUE)) {
+            if(!Compare(theKey, NS_LITERAL_STRING("ENTITY"), nsCaseInsensitiveStringComparator())) {
               const nsString& theName=aNode.GetValueAt(theIndex);
               theNamePtr=&theName;
             }
-            else if(theKey.EqualsWithConversion("VALUE",PR_TRUE)) {
+            else if(!Compare(theKey, NS_LITERAL_STRING("VALUE"), nsCaseInsensitiveStringComparator())) {
               //store the named enity with the context...
               const nsString& theValue=aNode.GetValueAt(theIndex);
               theValuePtr=&theValue;
@@ -842,7 +843,7 @@ nsresult COtherDTD::HandleEntityToken(CToken* aToken) {
       //if you're here we have a bogus entity.
       //convert it into a text token.
       nsAutoString entityName;
-      entityName.AssignWithConversion("&");
+      entityName.Assign(NS_LITERAL_STRING("&"));
       entityName.Append(theStr); //should append the entity name; fix bug 51161.
       theToken=(CTextToken*)mTokenAllocator->CreateTokenOfType(eToken_text,eHTMLTag_text,entityName);
     }

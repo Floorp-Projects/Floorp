@@ -105,14 +105,14 @@ nsresult nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
       return NS_OK;
     }
     //if (mReturnResult == nsReturnResult_eNotSet) {
-      if (eventString.EqualsWithConversion("error") || eventString.EqualsWithConversion("mouseover")) {
+      if (eventString.Equals(NS_LITERAL_STRING("error")) || eventString.Equals(NS_LITERAL_STRING("mouseover"))) {
         mReturnResult = nsReturnResult_eReverseReturnResult;
       }
       else {
         mReturnResult = nsReturnResult_eDoNotReverseReturnResult;
       }
     //}
-    eventString.InsertWithConversion("on", 0, 2);
+    eventString.Assign(NS_LITERAL_STRING("on") + eventString);
   }
   else {
     mEventName->ToString(eventString);

@@ -147,9 +147,9 @@ nsDefaultURIFixup::CreateFixupURI(const PRUnichar *aStringURI, PRUint32 aFixupFl
 
         // insert url spec corresponding to host name
         if (hostSpec.EqualsIgnoreCase("ftp")) 
-            uriString.InsertWithConversion("ftp://", 0, 6);
+            uriString.Assign(NS_LITERAL_STRING("ftp://") + uriString);
         else 
-            uriString.InsertWithConversion("http://", 0, 7);
+            uriString.Assign(NS_LITERAL_STRING("http://") + uriString);
     } // end if checkprotocol
 
     return NS_NewURI(aURI, uriString, nsnull);
@@ -273,7 +273,7 @@ nsresult nsDefaultURIFixup::ConvertStringURIToFileCharset(nsString& aIn,
     // find out the file system charset first
     if(0 == fsCharset.Length())
     {
-        fsCharset.AssignWithConversion("ISO-8859-1"); // set the fallback first.
+        fsCharset.Assign(NS_LITERAL_STRING("ISO-8859-1")); // set the fallback first.
         nsCOMPtr<nsIPlatformCharset> plat(do_GetService(kPlatformCharsetCID));
         NS_ENSURE_TRUE(plat, NS_ERROR_FAILURE);
         NS_ENSURE_SUCCESS(plat->GetCharset(kPlatformCharsetSel_FileName, fsCharset),

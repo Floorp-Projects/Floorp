@@ -36,6 +36,7 @@
 #include "nsIServiceManager.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
+#include "nsUnicharUtils.h"
 
 // Interfaces needed to be included
 #include "nsIContextMenuListener.h"
@@ -1466,27 +1467,27 @@ ChromeContextMenuListener :: ContextMenu ( nsIDOMEvent* aMouseEvent )
       element->GetTagName(tag);
 
       // Test what kind of element we're dealing with here
-      if (tag.EqualsWithConversion("img", PR_TRUE))
+      if (!Compare(tag, NS_LITERAL_STRING("img"), nsCaseInsensitiveStringComparator()))
       {
         flags |= nsIContextMenuListener::CONTEXT_IMAGE;
         targetDOMnode = node;
         // if we see an image, keep searching for a possible anchor
       }
-      else if (tag.EqualsWithConversion("input", PR_TRUE))
+      else if (!Compare(tag, NS_LITERAL_STRING("input"), nsCaseInsensitiveStringComparator()))
       {
         // INPUT element - button, combo, checkbox, text etc.
         flags |= nsIContextMenuListener::CONTEXT_INPUT;
         targetDOMnode = node;
         break; // exit do-while
       }
-      else if (tag.EqualsWithConversion("textarea", PR_TRUE))
+      else if (!Compare(tag, NS_LITERAL_STRING("textarea"), nsCaseInsensitiveStringComparator()))
       {
         // text area
         flags |= nsIContextMenuListener::CONTEXT_TEXT;
         targetDOMnode = node;
         break; // exit do-while
       }
-      else if (tag.EqualsWithConversion("html", PR_TRUE))
+      else if (!Compare(tag, NS_LITERAL_STRING("html"), nsCaseInsensitiveStringComparator()))
       {
         // only care about this if no other context was found.
         if (!flags) {
@@ -1502,7 +1503,7 @@ ChromeContextMenuListener :: ContextMenu ( nsIDOMEvent* aMouseEvent )
       if (attributes)
       {
         nsCOMPtr<nsIDOMNode> hrefNode;
-        nsAutoString href; href.AssignWithConversion("href");
+        nsAutoString href(NS_LITERAL_STRING("href"));
         attributes->GetNamedItem(href, getter_AddRefs(hrefNode));
         if (hrefNode)
         {

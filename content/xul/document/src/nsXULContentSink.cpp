@@ -423,7 +423,7 @@ XULContentSinkImpl::~XULContentSinkImpl()
                     }
                 else
                     {
-                        prefix.AssignWithConversion("<default>");
+                        prefix.Assign(NS_LITERAL_STRING("<default>"));
                     }
 
                 char* prefixStr = ToNewCString(prefix);
@@ -966,7 +966,7 @@ XULContentSinkImpl::AddProcessingInstruction(const nsIParserNode& aNode)
         nsParserUtils::GetQuotedAttributeValue(text, NS_LITERAL_STRING("alternate"), alternate);
 
         nsresult rv = ProcessStyleLink(nsnull /* XXX need a node here */,
-                         href, alternate.EqualsWithConversion("yes"),  /* XXX ignore case? */
+                         href, alternate.Equals(NS_LITERAL_STRING("yes")),  /* XXX ignore case? */
                          title, type, media);
         if (NS_FAILED(rv))
           return rv; // Important! A failure can indicate that the parser should block!

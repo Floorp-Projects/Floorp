@@ -330,9 +330,9 @@ nsUnicodeFontMappingMac* nsUnicodeFontMappingMac::GetCachedInstance(
   
 	nsUnicodeFontMappingMac* obj = nsnull;
 	nsAutoString key(aFont->name);
-	key.AppendWithConversion(":");
+	key.Append(NS_LITERAL_STRING(":"));
 	key.Append(aLangGroup);
-	key.AppendWithConversion(":");
+	key.Append(NS_LITERAL_STRING(":"));
 	key.Append(aLANG);
 	if(! fontMappingCache->Get ( key, &obj )){
 		obj = new nsUnicodeFontMappingMac(aFont, aDeviceContext, aLangGroup, aLANG);

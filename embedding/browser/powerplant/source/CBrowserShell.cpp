@@ -751,7 +751,7 @@ Boolean CBrowserShell::DoSaveFileDialog(FSSpec& outSpec, Boolean& outIsReplacing
     // For now, we'll assume that we're saving HTML
     NS_NAMED_LITERAL_STRING(htmlSuffix, ".html");
     if (docTitle.IsEmpty())
-        docTitle.AssignWithConversion("untitled");
+        docTitle.Assign(NS_LITERAL_STRING("untitled"));
     else {
         if (docTitle.Length() > 31 - htmlSuffix.Length())
             docTitle.Truncate(31 - htmlSuffix.Length());

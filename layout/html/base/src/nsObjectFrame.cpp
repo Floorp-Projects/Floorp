@@ -1000,7 +1000,7 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
       else { // otherwise, we're either an ActiveX control or an internal widget
         // These are some builtin types that we know about for now.
         // (Eventually this will move somewhere else.)
-        if (classid.EqualsWithConversion("browser")) {
+        if (classid.Equals(NS_LITERAL_STRING("browser"))) {
           rv = InstantiateWidget(aPresContext, aMetrics,
                                  aReflowState, kCAppShellCID);
         }

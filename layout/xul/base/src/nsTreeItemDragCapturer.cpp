@@ -142,7 +142,7 @@ nsTreeItemDragCapturer :: ComputeDropPosition ( nsIDOMEvent* aDragEvent, nscoord
   if ( treeItemNode ) {
     nsAutoString value;
     treeItemNode->GetAttribute(NS_LITERAL_STRING("container"), value);  // can't use an atom here =(
-    isContainer = value.EqualsWithConversion("true");
+    isContainer = value.Equals(NS_LITERAL_STRING("true"));
   }
   else
     NS_WARNING("Not a DOM element");

@@ -616,7 +616,7 @@ nsClipboard::SelectionReceiver (GtkWidget *aWidget,
     if (NS_SUCCEEDED(rv))
       rv = platformCharsetService->GetCharset(kPlatformCharsetSel_Menu, platformCharset);
     if (NS_FAILED(rv))
-      platformCharset.AssignWithConversion("ISO-8859-1");
+      platformCharset.Assign(NS_LITERAL_STRING("ISO-8859-1"));
       
     // get the decoder
     nsCOMPtr<nsICharsetConverterManager> ccm = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
@@ -660,7 +660,7 @@ nsClipboard::SelectionReceiver (GtkWidget *aWidget,
     nsCOMPtr<nsIUnicodeDecoder> decoder;
     // get the charset
     nsAutoString platformCharset;
-    platformCharset.AssignWithConversion("UTF-8");
+    platformCharset.Assign(NS_LITERAL_STRING("UTF-8"));
 
     // get the decoder
     nsCOMPtr<nsICharsetConverterManager> ccm = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
@@ -937,7 +937,7 @@ void nsClipboard::SelectionGetCB(GtkWidget        *widget,
       if (NS_SUCCEEDED(rv))
         rv = platformCharsetService->GetCharset(kPlatformCharsetSel_Menu, platformCharset);
       if (NS_FAILED(rv))
-        platformCharset.AssignWithConversion("ISO-8859-1");
+        platformCharset.Assign(NS_LITERAL_STRING("ISO-8859-1"));
       
       // get the encoder
       nsCOMPtr<nsICharsetConverterManager> ccm = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);

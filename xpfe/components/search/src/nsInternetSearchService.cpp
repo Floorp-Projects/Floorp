@@ -2469,8 +2469,7 @@ InternetSearchDataSource::GetInternetSearchURL(const char *searchEngineURI,
 	// we can only handle HTTP GET
 	if (!method.EqualsIgnoreCase("get"))	return(NS_ERROR_UNEXPECTED);
 	// HTTP Get method support
-	action.AppendWithConversion("?");
-	action += input;
+	action += NS_LITERAL_STRING("?") + input;
 
 	// return a copy of the resulting search URL
 	*resultURL = ToNewCString(action);
@@ -2599,16 +2598,16 @@ InternetSearchDataSource::FindInternetSearchResults(const char *url, PRBool *sea
 		if (userVar.Length() < 1)	return(NS_RDF_NO_VALUE);
 
 		nsAutoString	queryStr;
-		queryStr.AssignWithConversion("?");
-		queryStr += userVar;
-		queryStr.AppendWithConversion("=");
+		queryStr = NS_LITERAL_STRING("?") +
+		           userVar +
+		           NS_LITERAL_STRING("=");
 
 		PRInt32		queryOffset;
 		if ((queryOffset = searchURL.Find(queryStr, PR_TRUE )) < 0)
 		{
-			queryStr.AssignWithConversion("&");
-			queryStr += userVar;
-			queryStr.AppendWithConversion("=");
+			queryStr = NS_LITERAL_STRING("&") +
+			           userVar +
+			           NS_LITERAL_STRING("=");
 			queryOffset = searchURL.Find(queryStr, PR_TRUE);
 		}
 
@@ -2664,9 +2663,8 @@ InternetSearchDataSource::FindInternetSearchResults(const char *url, PRBool *sea
 			RememberLastSearchText(searchText.get());
 
 			// construct the search query uri
-			engineURI.InsertWithConversion("internetsearch:engine=", 0);
-			engineURI.AppendWithConversion("&text=");
-			engineURI += searchText;
+			engineURI.Assign(NS_LITERAL_STRING("internetsearch:engine=") + engineURI +
+			                 NS_LITERAL_STRING("&text=") + searchText);
 
 #ifdef	DEBUG_SEARCH_OUTPUT
 			char	*engineMatch = ToNewCString(searchText);
@@ -3499,7 +3497,7 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
 	if (fullURL.Length() > 0)
 	{
 		action.Assign(fullURL);
-		methodStr.AssignWithConversion("get");
+		methodStr.Assign(NS_LITERAL_STRING("get"));
 	}
 	else
 	{
@@ -3579,8 +3577,7 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
 		if (input.Length() < 1)				return(NS_ERROR_UNEXPECTED);
 
 		// HTTP Get method support
-		action.AppendWithConversion("?");
-		action += input;
+		action += NS_LITERAL_STRING("?") + input;
 	}
 
 	nsCOMPtr<nsIInternetSearchContext>	context;
@@ -3725,7 +3722,7 @@ InternetSearchDataSource::SaveEngineInfoIntoGraph(nsIFile *file, nsIFile *icon,
 	if ((extensionOffset = basename.RFindChar(PRUnichar('.'))) > 0)
 	{
 		basename.Truncate(extensionOffset);
-		basename.AppendWithConversion(".src");
+		basename.Append(NS_LITERAL_STRING(".src"));
 	}
 
   nsXPIDLCString filePath;
@@ -3743,7 +3740,7 @@ InternetSearchDataSource::SaveEngineInfoIntoGraph(nsIFile *file, nsIFile *icon,
 	if ((extensionOffset = searchURL.RFindChar(PRUnichar('.'))) > 0)
 	{
 		searchURL.Truncate(extensionOffset);
-		searchURL.AppendWithConversion(".src");
+		searchURL.Append(NS_LITERAL_STRING(".src"));
 	}
 
 	if (NS_FAILED(rv = gRDFService->GetUnicodeResource(searchURL.get(),
@@ -3970,7 +3967,7 @@ InternetSearchDataSource::GetSearchEngineList(nsIFile *searchDir, PRBool checkMa
 		nsCOMPtr<nsILocalFile> iconFile;
 
 		uri.Left(temp, uri.Length()-4);
-		temp.AppendWithConversion(".gif");
+		temp.Append(NS_LITERAL_STRING(".gif"));
 		const	nsFileSpec	gifIconFile(temp);
 		if (gifIconFile.IsFile())
 		{
@@ -3980,7 +3977,7 @@ InternetSearchDataSource::GetSearchEngineList(nsIFile *searchDir, PRBool checkMa
 		if (foundIconFlag == PR_FALSE)
 		{
 			uri.Left(temp, uri.Length()-4);
-			temp.AppendWithConversion(".jpg");
+			temp.Append(NS_LITERAL_STRING(".jpg"));
 			const	nsFileSpec	jpgIconFile(temp);
 			if (jpgIconFile.IsFile())
 			{
@@ -3991,7 +3988,7 @@ InternetSearchDataSource::GetSearchEngineList(nsIFile *searchDir, PRBool checkMa
 		if (foundIconFlag == PR_FALSE)
 		{
 			uri.Left(temp, uri.Length()-4);
-			temp.AppendWithConversion(".jpeg");
+			temp.Append(NS_LITERAL_STRING(".jpeg"));
 			const	nsFileSpec	jpegIconFile(temp);
 			if (jpegIconFile.IsFile())
 			{
@@ -4002,7 +3999,7 @@ InternetSearchDataSource::GetSearchEngineList(nsIFile *searchDir, PRBool checkMa
 		if (foundIconFlag == PR_FALSE)
 		{
 			uri.Left(temp, uri.Length()-4);
-			temp.AppendWithConversion(".png");
+			temp.Append(NS_LITERAL_STRING(".png"));
 			const	nsFileSpec	pngIconFile(temp);
 			if (pngIconFile.IsFile())
 			{
@@ -4064,7 +4061,7 @@ InternetSearchDataSource::GetNumInterpretSections(const PRUnichar *dataUni, PRUi
 	nsString	buffer(dataUni);
 
 	nsAutoString	section;
-	section.AssignWithConversion("<interpret");
+	section.Assign(NS_LITERAL_STRING("<interpret"));
 	PRBool		inSection = PR_FALSE;
 
 	while(buffer.Length() > 0)
@@ -4113,7 +4110,7 @@ InternetSearchDataSource::GetData(const PRUnichar *dataUni, const char *sectionT
 	PRBool		inSection = PR_FALSE;
 
 	nsAutoString	section;
-	section.AssignWithConversion("<");
+	section.Assign(NS_LITERAL_STRING("<"));
 	section.AppendWithConversion(sectionToFind);
 
 	while(buffer.Length() > 0)
@@ -4334,10 +4331,10 @@ InternetSearchDataSource::GetInputs(const PRUnichar *dataUni, nsString &userVar,
 			{
 				if (input.Length() > 0)
 				{
-					input.AppendWithConversion("&");
+					input.Append(NS_LITERAL_STRING("&"));
 				}
 				input += nameAttrib;
-				input.AppendWithConversion("=");
+				input.Append(NS_LITERAL_STRING("="));
 				input += valueAttrib;
 			}
 		}
@@ -4839,7 +4836,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 		nsAutoString	nameStartStr, nameEndStr;
 		nsAutoString	emailStartStr, emailEndStr;
 		nsAutoString	browserResultTypeStr;
-		browserResultTypeStr.AssignWithConversion("result");		// default to "result"
+		browserResultTypeStr.Assign(NS_LITERAL_STRING("result"));		// default to "result"
 
 		// need an original copy of the HTML every time through the loop
 		nsAutoString	htmlResults(htmlPage);
@@ -4877,7 +4874,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 			GetData(dataUni, "interpret", interpretSectionNum, "browserResultType", browserResultTypeStr);
 			if (browserResultTypeStr.Length() < 1)
 			{
-				browserResultTypeStr.AssignWithConversion("result");	// default to "result"
+				browserResultTypeStr.Assign(NS_LITERAL_STRING("result"));	// default to "result"
 			}
 		}
 
@@ -4935,7 +4932,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 		// if resultItemStartStr is not specified, try making it just be "HREF="
 		if (resultItemStartStr.Length() < 1)
 		{
-			resultItemStartStr.AssignWithConversion("HREF=");
+			resultItemStartStr.Assign(NS_LITERAL_STRING("HREF="));
 			trimItemStart = PR_FALSE;
 		}
 
@@ -5418,7 +5415,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 				}
 				if (relItem.Length() < 1)
 				{
-					relItem.AssignWithConversion("-");
+					relItem.Assign(NS_LITERAL_STRING("-"));
 				}
 
 				const PRUnichar *relItemUni = relItem.get();
@@ -5431,7 +5428,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 					}
 				}
 
-				if ((relItem.Length() > 0) && (!relItem.EqualsWithConversion("-")))
+				if ((!relItem.IsEmpty()) && (!relItem.Equals(NS_LITERAL_STRING("-"))))
 				{
 					// If its a percentage, remove "%"
 					if (relItem[relItem.Length()-1] == PRUnichar('%'))
@@ -5441,7 +5438,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 
 					// left-pad with "0"s and set special sorting value
 					nsAutoString	zero;
-					zero.AssignWithConversion("000");
+					zero.Assign(NS_LITERAL_STRING("000"));
 					if (relItem.Length() < 3)
 					{
 						relItem.Insert(zero.get(), 0, zero.Length() - relItem.Length()); 
@@ -5449,7 +5446,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 				}
 				else
 				{
-					relItem.AssignWithConversion("000");
+					relItem.Assign(NS_LITERAL_STRING("000"));
 				}
 
 				const PRUnichar	*relSortUni = relItem.get();
@@ -5495,9 +5492,9 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 			nsAutoString	iconChromeDefault;
 
 			if (browserResultTypeStr.EqualsIgnoreCase("category"))
-				iconChromeDefault.AssignWithConversion("chrome://communicator/skin/search/category.gif");
+				iconChromeDefault.Assign(NS_LITERAL_STRING("chrome://communicator/skin/search/category.gif"));
 			else if ((browserResultTypeStr.EqualsIgnoreCase("result")) && (!engineIconNode))
-				iconChromeDefault.AssignWithConversion("chrome://communicator/skin/search/result.gif");
+				iconChromeDefault.Assign(NS_LITERAL_STRING("chrome://communicator/skin/search/result.gif"));
 
 			if (iconChromeDefault.Length() > 0)
 			{

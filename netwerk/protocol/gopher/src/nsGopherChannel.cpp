@@ -148,7 +148,7 @@ nsGopherChannel::GetName(PRUnichar* *result)
 {
     nsString name;
     name.AppendWithConversion(mHost);
-    name.AppendWithConversion(":");
+    name.Append(NS_LITERAL_STRING(":"));
     name.AppendInt(mPort);
     *result = ToNewUnicode(name);
     return *result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;

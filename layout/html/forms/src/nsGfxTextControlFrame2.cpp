@@ -1667,7 +1667,7 @@ nsGfxTextControlFrame2::CalculateSizeStandard (nsIPresContext*       aPresContex
 #else
   // XP implementation of AveCharWidth
   nsAutoString aveStr; 
-  aveStr.AssignWithConversion(" ABCDEFGHIJKLMNOPQRSTUVWXYabcdefghijklmnopqrstuvwxyz!@#$%^&*()_+=-0987654321~`';\":[]}{?><,./\\|");
+  aveStr.Assign(NS_LITERAL_STRING(" ABCDEFGHIJKLMNOPQRSTUVWXYabcdefghijklmnopqrstuvwxyz!@#$%^&*()_+=-0987654321~`';\":[]}{?><,./\\|"));
   aRendContext->GetWidth(aveStr, charWidth);
   charWidth /= aveStr.Length();
   // Round to the nearest twip

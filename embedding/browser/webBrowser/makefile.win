@@ -39,6 +39,7 @@ REQUIRES	= xpcom \
 		  content \
 		  history \
 		  webbrowserpersist \
+		  unicharutil \
 		  $(NULL)
 
 EXPORTS =                  \

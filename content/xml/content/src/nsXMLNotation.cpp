@@ -182,15 +182,15 @@ nsXMLNotation::List(FILE* out, PRInt32 aIndent) const
 
   nsAutoString tmp(mName);
   if (mPublicId.Length()) {
-    tmp.AppendWithConversion(" PUBLIC \"");
+    tmp.Append(NS_LITERAL_STRING(" PUBLIC \""));
     tmp.Append(mPublicId);
-    tmp.AppendWithConversion("\"");
+    tmp.Append(NS_LITERAL_STRING("\""));
   }
 
   if (mSystemId.Length()) {
-    tmp.AppendWithConversion(" SYSTEM \"");
+    tmp.Append(NS_LITERAL_STRING(" SYSTEM \""));
     tmp.Append(mSystemId);
-    tmp.AppendWithConversion("\"");
+    tmp.Append(NS_LITERAL_STRING("\""));
   }
 
   fputs(NS_LossyConvertUCS2toASCII(tmp).get(), out);

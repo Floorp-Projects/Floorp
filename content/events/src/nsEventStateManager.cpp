@@ -3004,7 +3004,7 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* 
           PRInt32 errorCode;
           tabIndex = tabStr.ToInteger(&errorCode);
         }
-        if (!value.EqualsWithConversion("true"))
+        if (!value.Equals(NS_LITERAL_STRING("true")))
           disabled = PR_FALSE;
       }
       

@@ -351,7 +351,7 @@ char* nsInstallFile::toString()
         nsString interimStr;
 
         if(mMode & nsInstall::DO_NOT_UNINSTALL)
-          interimStr.AssignWithConversion("(*dnu*) ");
+          interimStr.Assign(NS_LITERAL_STRING("(*dnu*) "));
 
         interimStr.AppendWithConversion(rsrcVal);
         interimCStr = ToNewCString(interimStr);

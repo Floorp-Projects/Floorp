@@ -108,10 +108,10 @@ nsresult nsCollationUnix::Initialize(nsILocale* locale)
   }
 
   // default local charset name
-  mCharset.AssignWithConversion("ISO-8859-1");
+  mCharset.Assign(NS_LITERAL_STRING("ISO-8859-1"));
 
   // default platform locale
-  mLocale.AssignWithConversion("C");
+  mLocale.Assign(NS_LITERAL_STRING("C"));
 
   PRUnichar *aLocaleUnichar = NULL;
   nsString aCategory;
@@ -146,7 +146,7 @@ nsresult nsCollationUnix::Initialize(nsILocale* locale)
 
     // keep the same behavior as 4.x as well as avoiding Linux collation key problem
     if (aLocale.EqualsIgnoreCase("en_US")) { // note: locale is in platform format
-      aLocale.AssignWithConversion("C");
+      aLocale.Assign(NS_LITERAL_STRING("C"));
     }
 
     nsCOMPtr <nsIPosixLocale> posixLocale = do_GetService(NS_POSIXLOCALE_CONTRACTID, &res);

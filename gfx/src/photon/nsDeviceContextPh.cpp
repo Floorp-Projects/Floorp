@@ -286,16 +286,16 @@ NS_IMETHODIMP nsDeviceContextPh :: GetSystemFont( nsSystemFontID aID, nsFont *aF
 	  aFont->weight      = NS_FONT_WEIGHT_NORMAL;
 	  aFont->decorations = NS_FONT_DECORATION_NONE;
 	  aFont->size = NSIntPointsToTwips(8);
-	  aFont->name.AssignWithConversion("TextFont");
+	  aFont->name.Assign(NS_LITERAL_STRING("TextFont"));
 	  switch(aID) {
 		  case eSystemFont_MessageBox:
-		     aFont->name.AssignWithConversion("MessageFont");
+		     aFont->name.Assign(NS_LITERAL_STRING("MessageFont"));
 			 break;
 		  case eSystemFont_Tooltips:
-		     aFont->name.AssignWithConversion("BalloonFont");
+		     aFont->name.Assign(NS_LITERAL_STRING("BalloonFont"));
 		     break;
 		  case eSystemFont_Menu:
-		     aFont->name.AssignWithConversion("MenuFont");
+		     aFont->name.Assign(NS_LITERAL_STRING("MenuFont"));
 		     break;
 	  }
 	  break;

@@ -44,6 +44,7 @@ REQUIRES	= xpcom \
 		  wallet \
 		  appcomps \
 		  webbrowserpersist \
+		  unicharutil \
 		  $(NULL)
 
 include $(DEPTH)/config/autoconf.mk
