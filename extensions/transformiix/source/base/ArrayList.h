@@ -19,7 +19,7 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: ArrayList.h,v 1.1 2000/03/02 09:19:38 kvisco%ziplink.net Exp $
+ * $Id: ArrayList.h,v 1.2 2000/09/06 07:05:32 kvisco%ziplink.net Exp $
  */
 
 /**
@@ -75,6 +75,13 @@ public:
      * Removes all elements from the list
     **/
     void clear();
+
+    /**
+     * Removes all elements from the list
+     * @param deleteObjects allows specifying whether or not to delete the TxObjects
+     * that are currently in the list
+    **/
+    void clear(MBool deleteObjects);
 
     /**
      * Returns true if the specified TxObject is contained in the list.
