@@ -33,6 +33,7 @@ extern nsresult NS_NewMathMLmoFrame ( nsIPresShell* aPresShell, nsIFrame** aNewF
 extern nsresult NS_NewMathMLmphantomFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
 extern nsresult NS_NewMathMLmpaddedFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
 extern nsresult NS_NewMathMLmspaceFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
+extern nsresult NS_NewMathMLmsFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
 extern nsresult NS_NewMathMLmfencedFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
 extern nsresult NS_NewMathMLmfracFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
 extern nsresult NS_NewMathMLmsubFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
