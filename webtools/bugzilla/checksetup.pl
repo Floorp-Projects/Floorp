@@ -2530,11 +2530,6 @@ if (GetFieldDef('bugs_activity', 'field')) {
     DropField('bugs_activity', 'field');
 }
 
-# 2002-05-10 - enhanchment bug 143826
-# Add private comments and private attachments on less-private bugs
-AddField('longdescs', 'isprivate', 'tinyint not null default 0');
-AddField('attachments', 'isprivate', 'tinyint not null default 0');
-
         
 
 # 2000-01-18 New email-notification scheme uses a new field in the bug to 
@@ -3063,6 +3058,12 @@ if (GetFieldDef("logincookies", "hostname")) {
     DropField("logincookies", "hostname");
     AddField("logincookies", "ipaddr", "varchar(40) NOT NULL");
 }
+
+# 2002-05-10 - enhanchment bug 143826
+# Add private comments and private attachments on less-private bugs
+AddField('longdescs', 'isprivate', 'tinyint not null default 0');
+AddField('attachments', 'isprivate', 'tinyint not null default 0');
+
 
 # 2002-07-03 myk@mozilla.org bug99203:
 # Add a bug alias field to the bugs table so bugs can be referenced by alias
