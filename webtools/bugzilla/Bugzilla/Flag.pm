@@ -596,11 +596,13 @@ sub notify {
             next if $flag->{'target'}->{'attachment'}->{'isprivate'}
               && Param("insidergroup")
               && !$ccuser->in_group(Param("insidergroup"));
-            push(@new_cc_list, $cc);
+            push(@new_cc_list, $cc.Param('emailsuffix'));
         }
         $flag->{'type'}->{'cc_list'} = join(", ", @new_cc_list);
     }
 
+    $flag->{'requestee'}->{'email'} .= Param('emailsuffix');
+    $flag->{'setter'}->{'email'} .= Param('emailsuffix');
     $::vars->{'flag'} = $flag;
     
     my $message;
