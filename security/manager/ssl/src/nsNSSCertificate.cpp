@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nsNSSCertificate.cpp,v 1.51 2001/08/30 05:21:59 kaie%netscape.com Exp $
+ * $Id: nsNSSCertificate.cpp,v 1.52 2001/09/25 00:08:48 ddrinan%netscape.com Exp $
  */
 
 #include "prmem.h"
@@ -3198,6 +3198,13 @@ PRBool nsOCSPResponder::IncludeCert(CERTCertificate *aCert)
 
   trust = aCert->trust;
   nickname = aCert->nickname;
+
+  PR_ASSERT(trust != nsnull);
+
+  // Check that trust is non-null //
+  if (trust == nsnull) {
+    return PR_FALSE;
+  }
 
   if ( ( ( trust->sslFlags & CERTDB_INVISIBLE_CA ) ||
          (trust->emailFlags & CERTDB_INVISIBLE_CA ) ||
