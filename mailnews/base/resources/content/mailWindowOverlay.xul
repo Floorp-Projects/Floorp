@@ -39,10 +39,9 @@ Rights Reserved.
   xmlns:nc="http://home.netscape.com/NC-rdf#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-<script src="chrome://messenger/content/mailCommands.js"/>
-<script src="chrome://messenger/content/mailWindowOverlay.js"/>
-<script src="chrome://messenger/content/commandglue.js"/>
-<script src="chrome://messenger/content/mail-offline.js"/>
+<script type="application/x-javascript" src="chrome://messenger/content/mailCommands.js"/>
+<script type="application/x-javascript" src="chrome://messenger/content/mailWindowOverlay.js"/>
+<script type="application/x-javascript" src="chrome://messenger/content/mail-offline.js"/>
 <script type="application/x-javascript" src="chrome://communicator/content/findUtils.js"/>
 <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bookmarks.js"/>
 <script type="application/x-javascript" src="chrome://communicator/content/printing.js"/>
