@@ -26,7 +26,9 @@
 #include <Script.h>
 #include "prmem.h"
 #include "prmon.h"
+#include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
+#include "nsILocaleService.h"
 #include "nsLocaleCID.h"
 #include "nsIPlatformCharset.h"
 #include "nsIMacLocale.h"
@@ -35,6 +37,7 @@
 static NS_DEFINE_IID(kICollationIID, NS_ICOLLATION_IID);
 static NS_DEFINE_IID(kMacLocaleFactoryCID, NS_MACLOCALEFACTORY_CID);
 static NS_DEFINE_IID(kIMacLocaleIID, NS_IMACLOCALE_IID);
+static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID); 
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -128,6 +131,7 @@ nsCollationMac::~nsCollationMac()
 nsresult nsCollationMac::Initialize(nsILocale* locale) 
 {
   NS_ASSERTION(mCollation == NULL, "Should only be initialized once.");
+  nsresult res;
   mCollation = new nsCollation;
   if (mCollation == NULL) {
     NS_ASSERTION(0, "mCollation creation failed");
@@ -137,39 +141,53 @@ nsresult nsCollationMac::Initialize(nsILocale* locale)
   // locale -> script code + charset name
   m_scriptcode = smRoman;
   mCharset.SetString("ISO-8859-1");
-  if (locale != nsnull) {
-    PRUnichar *aLocaleUnichar; 
-    nsString aLocale;
-    nsString aCategory("NSILOCALE_COLLATE");
-    nsresult res = locale->GetCategory(aCategory.GetUnicode(), &aLocaleUnichar);
+
+  PRUnichar *aLocaleUnichar; 
+  nsAutoString aCategory("NSILOCALE_COLLATE");
+
+  // get locale string, use app default if no locale specified
+  if (locale == nsnull) {
+    NS_WITH_SERVICE(nsILocaleService, localeService, kLocaleServiceCID, &res);
     if (NS_SUCCEEDED(res)) {
-      aLocale.SetString(aLocaleUnichar);
-      nsAllocator::Free(aLocaleUnichar);
-
-      short scriptcode, langcode, regioncode;
-      nsCOMPtr <nsIMacLocale> macLocale;
-      res = nsComponentManager::CreateInstance(kMacLocaleFactoryCID, NULL, 
-                                               nsIMacLocale::GetIID(), getter_AddRefs(macLocale));
+      nsILocale *appLocale;
+      res = localeService->GetApplicationLocale(&appLocale);
       if (NS_SUCCEEDED(res)) {
-        if (NS_SUCCEEDED(res = macLocale->GetPlatformLocale(&aLocale, &scriptcode, &langcode, &regioncode))) {
-          m_scriptcode = scriptcode;
-        }
+        res = appLocale->GetCategory(aCategory.GetUnicode(), &aLocaleUnichar);
+        appLocale->Release();
       }
+    }
+  }
+  else {
+    res = locale->GetCategory(aCategory.GetUnicode(), &aLocaleUnichar);
+  }
 
-      nsCOMPtr <nsIPlatformCharset> platformCharset;
-      res = nsComponentManager::CreateInstance(kPlatformCharsetCID, NULL, 
-                                               nsIPlatformCharset::GetIID(), getter_AddRefs(platformCharset));
-      if (NS_SUCCEEDED(res)) {
-        PRUnichar* mappedCharset = NULL;
-        res = platformCharset->GetDefaultCharsetForLocale(aLocale.GetUnicode(), &mappedCharset);
-        if (NS_SUCCEEDED(res) && mappedCharset) {
-          mCharset.SetString(mappedCharset);
-          nsAllocator::Free(mappedCharset);
-        }
+  if (NS_SUCCEEDED(res)) {
+    nsAutoString aLocale(aLocaleUnichar);
+    nsAllocator::Free(aLocaleUnichar);
+
+    short scriptcode, langcode, regioncode;
+    nsCOMPtr <nsIMacLocale> macLocale;
+    res = nsComponentManager::CreateInstance(kMacLocaleFactoryCID, NULL, 
+                                             nsIMacLocale::GetIID(), getter_AddRefs(macLocale));
+    if (NS_SUCCEEDED(res)) {
+      if (NS_SUCCEEDED(res = macLocale->GetPlatformLocale(&aLocale, &scriptcode, &langcode, &regioncode))) {
+        m_scriptcode = scriptcode;
       }
     }
 
+    nsCOMPtr <nsIPlatformCharset> platformCharset;
+    res = nsComponentManager::CreateInstance(kPlatformCharsetCID, NULL, 
+                                             nsIPlatformCharset::GetIID(), getter_AddRefs(platformCharset));
+    if (NS_SUCCEEDED(res)) {
+      PRUnichar* mappedCharset = NULL;
+      res = platformCharset->GetDefaultCharsetForLocale(aLocale.GetUnicode(), &mappedCharset);
+      if (NS_SUCCEEDED(res) && mappedCharset) {
+        mCharset.SetString(mappedCharset);
+        nsAllocator::Free(mappedCharset);
+      }
+    }
   }
+  NS_ASSERTION(NS_SUCCEEDED(res), "initialization failed, use default values");
 
   // Initialize a mapping table for the script code.
   if (mac_sort_tbl_init(m_scriptcode, m_mac_sort_tbl) == -1) {
