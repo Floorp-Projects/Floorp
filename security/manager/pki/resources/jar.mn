@@ -46,6 +46,8 @@ pippki.jar:
     content/pippki/pref-validation.js        (content/pref-validation.js)
     content/pippki/crlManager.xul            (content/crlManager.xul)
     content/pippki/crlManager.js             (content/crlManager.js)
+
+en-US.jar:
     locale/en-US/pippki/contents.rdf         (locale/en-US/contents.rdf)
     locale/en-US/pippki/pippki.dtd           (locale/en-US/pippki.dtd)
     locale/en-US/pippki/pref-ssl.dtd         (locale/en-US/pref-ssl.dtd)
