@@ -48,6 +48,8 @@ class nsIDOMWindow;
 class nsIDOMNSHTMLOptionCollection;
 class nsIPluginInstance;
 class nsIForm;
+class nsIDOMNodeList;
+class nsIDOMDocument;
 
 struct nsDOMClassInfoData;
 
@@ -254,6 +256,7 @@ protected:
   static jsval sScrollMaxY_id;
   static jsval sOpen_id;
   static jsval sItem_id;
+  static jsval sNamedItem_id;
   static jsval sEnumerate_id;
   static jsval sNavigator_id;
   static jsval sDocument_id;
@@ -677,6 +680,9 @@ protected:
   static JSBool JS_DLL_CALLBACK DocumentOpen(JSContext *cx, JSObject *obj,
                                              uintN argc, jsval *argv,
                                              jsval *rval);
+  static JSBool GetDocumentAllNodeList(JSContext *cx, JSObject *obj,
+                                       nsIDOMDocument *doc,
+                                       nsIDOMNodeList **nodeList);
 
 public:
   static JSBool JS_DLL_CALLBACK DocumentAllGetProperty(JSContext *cx,

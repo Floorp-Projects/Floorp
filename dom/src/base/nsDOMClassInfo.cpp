@@ -984,6 +984,7 @@ jsval nsDOMClassInfo::sScrollMaxX_id      = JSVAL_VOID;
 jsval nsDOMClassInfo::sScrollMaxY_id      = JSVAL_VOID;
 jsval nsDOMClassInfo::sOpen_id            = JSVAL_VOID;
 jsval nsDOMClassInfo::sItem_id            = JSVAL_VOID;
+jsval nsDOMClassInfo::sNamedItem_id       = JSVAL_VOID;
 jsval nsDOMClassInfo::sEnumerate_id       = JSVAL_VOID;
 jsval nsDOMClassInfo::sNavigator_id       = JSVAL_VOID;
 jsval nsDOMClassInfo::sDocument_id        = JSVAL_VOID;
@@ -1091,6 +1092,7 @@ nsDOMClassInfo::DefineStaticJSVals(JSContext *cx)
   SET_JSVAL_TO_STRING(sScrollMaxY_id,      cx, "scrollMaxY");
   SET_JSVAL_TO_STRING(sOpen_id,            cx, "open");
   SET_JSVAL_TO_STRING(sItem_id,            cx, "item");
+  SET_JSVAL_TO_STRING(sNamedItem_id,       cx, "namedItem");
   SET_JSVAL_TO_STRING(sEnumerate_id,       cx, "enumerateProperties");
   SET_JSVAL_TO_STRING(sNavigator_id,       cx, "navigator");
   SET_JSVAL_TO_STRING(sDocument_id,        cx, "document");
@@ -5577,7 +5579,8 @@ nsHTMLDocumentSH::DocumentOpen(JSContext *cx, JSObject *obj, uintN argc,
 
 static JSClass sHTMLDocumentAllClass = {
   "HTML document.all class",
-  JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE | JSCLASS_PRIVATE_IS_NSISUPPORTS,
+  JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE | JSCLASS_PRIVATE_IS_NSISUPPORTS |
+  JSCLASS_HAS_RESERVED_SLOTS(1),
   JS_PropertyStub, JS_PropertyStub, nsHTMLDocumentSH::DocumentAllGetProperty,
   JS_PropertyStub, JS_EnumerateStub,
   (JSResolveOp)nsHTMLDocumentSH::DocumentAllNewResolve, JS_ConvertStub,
@@ -5605,38 +5608,169 @@ static JSClass sHTMLDocumentAllTagsClass = {
   nsHTMLDocumentSH::CallToGetPropMapper
 };
 
+// static
+JSBool
+nsHTMLDocumentSH::GetDocumentAllNodeList(JSContext *cx, JSObject *obj,
+                                         nsIDOMDocument *domdoc,
+                                         nsIDOMNodeList **nodeList)
+{
+  // The document.all object is a mix of the node list returned by
+  // document.getElementsByTagName("*") and a map of elements in the
+  // document exposed by their id and/or name. To make access to the
+  // node list part (i.e. access to elements by index) not walk the
+  // document each time, we create a nsContentList and hold on to it
+  // in a reserved slot (0) on the document.all JSObject.
+  jsval collection;
+  nsresult rv = NS_OK;
+
+  if (!JS_GetReservedSlot(cx, obj, 0, &collection)) {
+    return JS_FALSE;
+  }
+
+  if (!JSVAL_IS_PRIMITIVE(collection)) {
+    // We already have a node list in our reserved slot, use it.
+
+    nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
+    rv |=
+      sXPConnect->GetWrappedNativeOfJSObject(cx, JSVAL_TO_OBJECT(collection),
+                                             getter_AddRefs(wrapper));
+
+    if (wrapper) {
+      nsCOMPtr<nsISupports> native;
+      rv |= wrapper->GetNative(getter_AddRefs(native));
+
+      if (native) {
+        CallQueryInterface(native, nodeList);
+      }
+    }
+  } else {
+    // No node list for this document.all yet, create one...
+
+    rv |= domdoc->GetElementsByTagName(NS_LITERAL_STRING("*"), nodeList);
+
+    rv |= nsDOMClassInfo::WrapNative(cx, obj, *nodeList,
+                                     NS_GET_IID(nsISupports), &collection);
+
+    // ... and store it in our reserved slot.
+    if (!JS_SetReservedSlot(cx, obj, 0, collection)) {
+      return JS_FALSE;
+    }
+  }
+
+  if (NS_FAILED(rv)) {
+    nsDOMClassInfo::ThrowJSException(cx, rv);
+
+    return JS_FALSE;
+  }
+
+  return *nodeList != nsnull;
+}
 
 JSBool JS_DLL_CALLBACK
 nsHTMLDocumentSH::DocumentAllGetProperty(JSContext *cx, JSObject *obj,
                                          jsval id, jsval *vp)
 {
+  // document.all.item and .namedItem get their value in the
+  // newResolve hook, so nothing to do for those properties here. And
+  // we need to return early to prevent <div id="item"> from shadowing
+  // document.all.item(), etc.
+  if (id == sItem_id || id == sNamedItem_id) {
+    return JS_TRUE;
+  }
+
   nsIHTMLDocument *doc = (nsIHTMLDocument *)::JS_GetPrivate(cx, obj);
+  nsCOMPtr<nsIDOMHTMLDocument> domdoc(do_QueryInterface(doc));
+  nsCOMPtr<nsISupports> result;
+  nsresult rv = NS_OK;
 
   if (JSVAL_IS_STRING(id)) {
-    nsDependentJSString str(id);
+    if (id == sLength_id) {
+      // Map document.all.length to the length of the collection
+      // document.getElementsByTagName("*"), and make sure <div
+      // id="length"> doesn't shadow document.all.length.
 
-    nsCOMPtr<nsIDOMDocument> domdoc(do_QueryInterface(doc));
-    nsCOMPtr<nsISupports> result;
+      nsCOMPtr<nsIDOMNodeList> nodeList;
+      if (!GetDocumentAllNodeList(cx, obj, domdoc, getter_AddRefs(nodeList))) {
+        return JS_FALSE;
+      }
 
-    {
-      nsCOMPtr<nsIDOMElement> element;
-      domdoc->GetElementById(str, getter_AddRefs(element));
+      PRUint32 length;
+      rv = nodeList->GetLength(&length);
 
-      result = element;
-    }
-
-    if (!result) {
-      doc->ResolveName(str, nsnull, getter_AddRefs(result));
-    }
-
-    if (result) {
-      nsresult rv = nsDOMClassInfo::WrapNative(cx, obj, result,
-                                               NS_GET_IID(nsISupports), vp);
       if (NS_FAILED(rv)) {
         nsDOMClassInfo::ThrowJSException(cx, rv);
 
         return JS_FALSE;
       }
+
+      *vp = INT_TO_JSVAL(length);
+    } else if (id != sTags_id) {
+      // For all other strings, look for an element by id or name.
+
+      nsDependentJSString str(id);
+
+      nsCOMPtr<nsIDOMElement> element;
+      domdoc->GetElementById(str, getter_AddRefs(element));
+
+      result = element;
+
+      if (!result) {
+        doc->ResolveName(str, nsnull, getter_AddRefs(result));
+      }
+
+      if (!result) {
+        nsCOMPtr<nsIDOMNodeList> nodeList;
+        rv = domdoc->GetElementsByName(str, getter_AddRefs(nodeList));
+
+        if (nodeList) {
+          // Get the second node in the list, if found, we know
+          // there's more than one node (this is cheaper than getting
+          // the length of the collection since that requires walking
+          // the whole DOM tree in all cases, all we care about is if
+          // there's more than one item in the collection, or if
+          // there's only one, or no items at all).
+
+          nsCOMPtr<nsIDOMNode> node;
+          rv |= nodeList->Item(1, getter_AddRefs(node));
+
+          if (node) {
+            result = nodeList;
+          } else {
+            rv |= nodeList->Item(0, getter_AddRefs(node));
+
+            result = node;
+          }
+        }
+
+        if (NS_FAILED(rv)) {
+          nsDOMClassInfo::ThrowJSException(cx, rv);
+
+          return JS_FALSE;
+        }
+      }
+    }
+  } else if (JSVAL_TO_INT(id) >= 0) {
+    // Map document.all[n] (where n is a number) to the n:th item in
+    // the document.all node list.
+
+    nsCOMPtr<nsIDOMNodeList> nodeList;
+    if (!GetDocumentAllNodeList(cx, obj, domdoc, getter_AddRefs(nodeList))) {
+      return JS_FALSE;
+    }
+
+    nsCOMPtr<nsIDOMNode> node;
+    nodeList->Item(JSVAL_TO_INT(id), getter_AddRefs(node));
+
+    result = node;
+  }
+
+  if (result) {
+    rv = nsDOMClassInfo::WrapNative(cx, obj, result, NS_GET_IID(nsISupports),
+                                    vp);
+    if (NS_FAILED(rv)) {
+      nsDOMClassInfo::ThrowJSException(cx, rv);
+
+      return JS_FALSE;
     }
   }
 
@@ -5647,9 +5781,34 @@ JSBool JS_DLL_CALLBACK
 nsHTMLDocumentSH::DocumentAllNewResolve(JSContext *cx, JSObject *obj,
                                         jsval id, uintN flags, JSObject **objp)
 {
+  if (flags & JSRESOLVE_ASSIGNING) {
+    // Nothing to do here if we're assigning
+
+    return JS_TRUE;
+  }
+
   jsval v = JSVAL_VOID;
 
-  if (id == sTags_id) {
+  if (id == sItem_id || id == sNamedItem_id) {
+    // Define the item() or namedItem() method.
+
+    JSFunction *fnc =
+      ::JS_DefineFunction(cx, obj, ::JS_GetStringBytes(JSVAL_TO_STRING(id)),
+                          CallToGetPropMapper, 0, JSPROP_ENUMERATE);
+
+    *objp = obj;
+
+    return fnc != nsnull;
+  }
+
+  if (id == sLength_id) {
+    // document.all.length. Any jsval other than undefined would do
+    // here, all we need is to get into the code below that defines
+    // this propery on obj, the rest happens in
+    // DocumentAllGetProperty().
+
+    v = JSVAL_ONE;
+  } else if (id == sTags_id) {
     nsIHTMLDocument *doc = (nsIHTMLDocument *)::JS_GetPrivate(cx, obj);
 
     JSObject *tags = ::JS_NewObject(cx, &sHTMLDocumentAllTagsClass, nsnull,
@@ -5672,20 +5831,23 @@ nsHTMLDocumentSH::DocumentAllNewResolve(JSContext *cx, JSObject *obj,
     }
   }
 
-  if (v != JSVAL_VOID) {
-    // Only support resolving strings (including "tags") for now
-    JSString *str = JSVAL_TO_STRING(id);
+  JSBool ok = JS_TRUE;
 
-    if (!::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),
-                               ::JS_GetStringLength(str), v, nsnull, nsnull,
-                               0)) {
-      return JS_FALSE;
+  if (v != JSVAL_VOID) {
+    if (JSVAL_IS_STRING(id)) {
+      JSString *str = JSVAL_TO_STRING(id);
+
+      ok = ::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),
+                                 ::JS_GetStringLength(str), v, nsnull, nsnull,
+                                 0);
+    } else {
+      ok = ::JS_DefineElement(cx, obj, JSVAL_TO_INT(id), v, nsnull, nsnull, 0);
     }
 
     *objp = obj;
   }
 
-  return JS_TRUE;
+  return ok;
 }
 
 void JS_DLL_CALLBACK
@@ -5717,8 +5879,22 @@ nsHTMLDocumentSH::CallToGetPropMapper(JSContext *cx, JSObject *obj, uintN argc,
     return JS_FALSE;
   }
 
-  return ::JS_GetUCProperty(cx, JSVAL_TO_OBJECT(argv[-2]),
-                            ::JS_GetStringChars(str),
+  JSObject *self;
+
+  if (JS_GET_CLASS(cx, obj) == &sHTMLDocumentAllClass) {
+    // If obj is our document.all object, we're called through
+    // document.all.item(), or something similar. In such a case, self
+    // is passed as obj.
+
+    self = obj;
+  } else {
+    // In other cases (i.e. document.all("foo")), self is passed as
+    // argv[-2].
+
+    self = JSVAL_TO_OBJECT(argv[-2]);
+  }
+
+  return ::JS_GetUCProperty(cx, self, ::JS_GetStringChars(str),
                             ::JS_GetStringLength(str), rval);
 }
 
