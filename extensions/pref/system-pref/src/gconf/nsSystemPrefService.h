@@ -46,7 +46,7 @@
 #include "nsVoidArray.h"
 #include "nsWeakPtr.h"
 #include "nsIPrefBranch.h"
-#include "nsIPrefBranchInternal.h"
+#include "nsIPrefBranch2.h"
 
 class GConfProxy;
 
@@ -56,12 +56,12 @@ class GConfProxy;
 // on the gconf platform.
 ////////////////////////////////////////////////////////////////////////////
 
-class nsSystemPrefService : public nsIPrefBranchInternal
+class nsSystemPrefService : public nsIPrefBranch2
 {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIPREFBRANCH
-    NS_DECL_NSIPREFBRANCHINTERNAL
+    NS_DECL_NSIPREFBRANCH2
 
     nsSystemPrefService();
     virtual ~nsSystemPrefService();
