@@ -2268,11 +2268,14 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
   // Get hold of Root webshell
   nsCOMPtr<nsIWebShell>  root;
   nsCOMPtr<nsISessionHistory> shist;
+  PRBool  isLoadingHistory=PR_FALSE; // Is SH currently loading an entry from history?
   rv = GetRootWebShell(*getter_AddRefs(root));
   // Get hold of session History
   if (NS_SUCCEEDED(rv) && root) {    
     root->GetSessionHistory(*getter_AddRefs(shist));
   }
+  if (shist)
+	  shist->GetLoadingFlag(&isLoadingHistory);
 
   /* Ask the URL dispatcher to take care of this URL only if it is a
    * mailto: link clicked inside a browser. Note this mechanism s'd go 
@@ -2312,32 +2315,39 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
    * session History.
    */
    SetHistoryState(aHistoryState);
- 
-  /*
-   * Set mURL to spec so that session history can get 
-   * hold of the url and change it if it has to.
-   * See comments below.
-   */
-
-  mURL = spec;
 
   /* Add the page to session history */
   if (aModifyHistory && shist)  {
         PRInt32  ret;
-        ret = shist->Add(this);
+        ret = shist->Add(spec, this);
   }
 
+  
+  nsCOMPtr<nsIWebShell> parent;
+  nsresult res = GetParent(*getter_AddRefs(parent));
+  nsAutoString urlstr;
 
-  /* If  we are going "Back" from a non-frame page to a frame page,
-   * session history  will change the mURL to the right value
-   * for smoother redraw. So, create a new nsIURI based on mURL,
-   * so that it will work right in such situations.
-   */
-  nsAutoString urlstr(mURL);
+  if ((isLoadingHistory)) {
+	/* if LoadURL() got called from SH, AND If we are going "Back/Forward" 
+	 * to a frame page,SH  will change the mURL to the right value
+     * for smoother redraw. So, create a new nsIURI based on mURL,
+     * so that it will work right in such situations.
+	 */
+     urlstr = mURL;
+  }
+  else{
+	/* If the call is not from SH, use the url passed by the caller
+	 * so that things like JS will work right. This is for bug # 1646.
+	 * May regress in other situations.
+	 * What a hack
+	 */
+     urlstr=spec;
+  }
+  
   nsCOMPtr<nsIURI>   newURI;
-  rv = NS_NewURI(getter_AddRefs(newURI), urlstr, nsnull);
+  res = NS_NewURI(getter_AddRefs(newURI), urlstr, nsnull);
 
-  if (NS_SUCCEEDED(rv)) {
+  if (NS_SUCCEEDED(res)) {
     // now that we have a uri, call the REAL LoadURI method which requires a nsIURI.
     return LoadURI(newURI, aCommand, aPostDataStream, aModifyHistory, aType, aLocalIP, aHistoryState, aReferrer);
   }

@@ -1772,14 +1772,9 @@ nsBrowserAppCore::Reload(nsIWebShell * aPrev, nsLoadFlags aType)
 }
 
 NS_IMETHODIMP
-nsBrowserAppCore::Add(nsIWebShell * aWebShell)
+nsBrowserAppCore::Add(const char * aURL, nsIWebShell * aWebShell)
 {
-   nsresult rv=NS_OK;
-   if (mSHistory)  {
-	   //mSHistory checks for null pointers
-     rv = mSHistory->Add(aWebShell);
-   }
-   return rv;
+ return NS_OK;
 }
 
 NS_IMETHODIMP

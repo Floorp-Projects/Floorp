@@ -47,7 +47,7 @@ static NS_DEFINE_IID(kIHistoryEntryIID,       NS_IHISTORY_ENTRY_IID);
 // Advance declarations
 class nsHistoryEntry;
 
-static nsHistoryEntry *  GenerateTree(nsIWebShell * aWebShell,nsHistoryEntry *aparent, nsISessionHistory * aSHist);
+static nsHistoryEntry *  GenerateTree(const char * aStickyURL, nsIWebShell * aStickyContainer, nsIWebShell * aContainer,nsHistoryEntry *aParent, nsISessionHistory * aSHist);
 
 #define APP_DEBUG 0
 
@@ -67,7 +67,7 @@ public:
    * Create the History data structures for the current URL. This method
    * will also generate the history tree for the URL if it contains frames
    */
-  nsresult Create(nsIWebShell * aWebShell, nsHistoryEntry * aParent, nsISessionHistory * aSHist);
+  nsresult Create(const char * aURL, nsIWebShell * aWebShell, nsHistoryEntry * aParent, nsISessionHistory * aSHist);
 
   /**
    * Load the entry in the content Area
@@ -378,14 +378,11 @@ nsHistoryEntry::AddChild(nsHistoryEntry* aChild)
  */
 
 nsresult 
-nsHistoryEntry::Create(nsIWebShell * aWebShell, nsHistoryEntry * aParent, nsISessionHistory * aSHist) {
-
-   const PRUnichar * url = nsnull;
-
+nsHistoryEntry::Create(const char * aURL, nsIWebShell * aWebShell, nsHistoryEntry * aParent, nsISessionHistory * aSHist) {
 
    // Get the  webshell's url.
-   aWebShell->GetURL(&url);
-   nsAutoString urlstr(url);
+ //  aWebShell->GetURL(&url);
+   nsAutoString urlstr(aURL);
 
    // save the webshell's URL in the history entry
    char * urlcstr = urlstr.ToNewCString();
@@ -407,9 +404,12 @@ nsHistoryEntry::Create(nsIWebShell * aWebShell, nsHistoryEntry * aParent, nsISes
 }
 
 static nsHistoryEntry *  
-GenerateTree(nsIWebShell * aWebShell, nsHistoryEntry * aParent, nsISessionHistory * aSHist) {
+GenerateTree(const char * aStickyUrl, nsIWebShell * aStickyContainer, nsIWebShell * aContainer, nsHistoryEntry * aParent, nsISessionHistory * aSHist) {
 
    nsHistoryEntry * hEntry = nsnull;
+   const PRUnichar * url = nsnull;
+   const char * aCStr = nsnull;
+   nsAutoString urlAStr;
 
    hEntry = new nsHistoryEntry;
 
@@ -418,21 +418,30 @@ GenerateTree(nsIWebShell * aWebShell, nsHistoryEntry * aParent, nsISessionHistor
       return (nsHistoryEntry *)nsnull; 
    }
 
-   hEntry->Create(aWebShell, aParent, aSHist);
-
+   if (aStickyContainer == aContainer) {
+	   hEntry->Create(aStickyUrl, aContainer, aParent, aSHist);
+   }
+   else {
+      // Get the  webshell's url.
+      aContainer->GetURL(&url);
+      urlAStr = (url);
+	  aCStr = urlAStr.ToNewCString();      
+	  hEntry->Create(aCStr, aContainer, aParent, aSHist);
+	  Recycle((char *) aCStr);
+   }
+   
   // If the webshell has children, go thro' the child list and create 
   // the history tree for the children recursively.
 
   PRInt32  cnt = 0;
-  aWebShell->GetChildCount(cnt);
+  aContainer->GetChildCount(cnt);
   if (cnt > 0) {
     for (int i=0; i<cnt; i++) {
-      nsIWebShell * childWS = nsnull;
+      nsCOMPtr<nsIWebShell> childWS;
       //nsHistoryEntry * hChild = nsnull;
-
-      aWebShell->ChildAt(i, childWS); 
+      aContainer->ChildAt(i, (*getter_AddRefs(childWS))); 
       if (childWS) {
-        GenerateTree(childWS, hEntry, aSHist);
+        GenerateTree(aStickyUrl, aStickyContainer, childWS, hEntry, aSHist);
       }
     }
   }
@@ -534,6 +543,7 @@ nsHistoryEntry::Load(nsIWebShell * aPrevEntry, PRBool aIsReload) {
             if (!aIsReload)
               loadType = (nsLoadType) nsISessionHistory::LOAD_HISTORY;
 			PRUnichar * uniURL = cSURL.ToNewUnicode();
+			prev->SetURL(uniURL);
 	    	prev->LoadURL(uniURL, nsnull, PR_FALSE,  loadType, 0, historyObject);
 			Recycle(uniURL);
 
@@ -585,9 +595,9 @@ nsHistoryEntry::Load(nsIWebShell * aPrevEntry, PRBool aIsReload) {
     
    for (i=0; i<cnt; i++){
       nsHistoryEntry *cChild=nsnull;
-      nsIWebShell *  pChild=nsnull;
+      nsCOMPtr<nsIWebShell> pChild;
       cur->GetChildAt(i, cChild);    // historyentry
-      prev->ChildAt(i, pChild);   //webshell
+      prev->ChildAt(i, (*getter_AddRefs(pChild)));   //webshell
       result = cChild->Load(pChild, PR_FALSE);
       if (result)
          break;
@@ -672,9 +682,9 @@ nsHistoryEntry::Compare(nsIWebShell * aPrevEntry, PRBool aIsReload) {
     
    for (i=0; i<cnt; i++){
       nsHistoryEntry *cChild=nsnull;
-      nsIWebShell *  pChild=nsnull;
+      nsCOMPtr<nsIWebShell> pChild;
       cur->GetChildAt(i, cChild);    // historyentry
-      prev->ChildAt(i, pChild);   //webshell
+      prev->ChildAt(i, (*getter_AddRefs(pChild)));   //webshell
       result = cChild->Compare(pChild, PR_FALSE);
       if (result)
          break;
@@ -787,7 +797,7 @@ NS_IMPL_ISUPPORTS(nsSessionHistory, kISessionHistoryIID);
   * by typing in the urlbar.
   */
 NS_IMETHODIMP
-nsSessionHistory::Add(nsIWebShell * aWebShell)
+nsSessionHistory::Add(const char * aURL, nsIWebShell * aWebShell)
 {
   //nsresult  rv = NS_OK;
    nsHistoryEntry * hEntry = nsnull;
@@ -823,7 +833,7 @@ nsSessionHistory::Add(nsIWebShell * aWebShell)
          NS_ASSERTION(PR_FALSE, "nsSessionHistory::add Low memory");
          return NS_ERROR_OUT_OF_MEMORY;
       }
-      hEntry->Create(aWebShell, nsnull, this);
+      hEntry->Create(aURL, aWebShell, nsnull, this);
 
       /* Set the flag in webshell that indicates that it has been
        * added to session History 
@@ -887,7 +897,7 @@ nsSessionHistory::Add(nsIWebShell * aWebShell)
              NS_ASSERTION(PR_FALSE, "nsSessionHistory::add Low memory");
              return NS_ERROR_OUT_OF_MEMORY;
            }
-           newEntry->Create(aWebShell, parentEntry, this);
+           newEntry->Create(aURL, aWebShell, parentEntry, this);
            aWebShell->SetIsInSHist(PR_TRUE);
 
 		       if (parentWS)
@@ -932,7 +942,7 @@ nsSessionHistory::Add(nsIWebShell * aWebShell)
              aWebShell->GetRootWebShell(root);
   
              if (root)   
-                newEntry = GenerateTree(root, nsnull, this);
+                newEntry = GenerateTree(aURL, aWebShell, root, nsnull, this);
              if (newEntry) {
                 if ((mHistoryLength - (mHistoryCurrentIndex+1)) > 0) {
                 /* We are somewhere in the middle of the history and a
@@ -1112,7 +1122,6 @@ nsSessionHistory::Goto(PRInt32 aGotoIndex, nsIWebShell * prev, PRBool aIsReload)
    // Save the history state for the current index before loading the next one
    int indix = 0;
    GetCurrentIndex(&indix);
-   PRBool isInHist=PR_FALSE;
    if (indix >= 0) {
      nsCOMPtr<nsISupports>  historyState;
      nsresult rv = prev->GetHistoryState(getter_AddRefs(historyState));

@@ -60,7 +60,7 @@ interface nsISessionHistory: nsISupports
   /**
    * Add a new URL to the History List
    */
-   [noscript] void  add(in nsIWebShell aContainer);
+   [noscript] void  add(in string url, in nsIWebShell aContainer);
 
   /**
    * Goto to a particular point in history 
