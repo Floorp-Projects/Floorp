@@ -179,27 +179,19 @@ NS_IMETHODIMP nsRenderingContextGTK::GetClipRegion(nsIRegion **aRegion)
 
 NS_IMETHODIMP nsRenderingContextGTK::SetColor(nscolor aColor)
 {
-#if 0
   GraphicsState * state = ((GraphicsState *)mStates->data);
-  GdkColor color;
   state->mCurrentColor = aColor;
 
-  color.red = NS_GET_R(aColor);
-  color.blue = NS_GET_B(aColor);
-  color.green = NS_GET_G(aColor);
-  gdk_color_alloc(&color);
-  gdk_gc_set_foreground(state->gc, &color);
-  /* no need to set background? */
-#endif
+  ::gdk_rgb_gc_set_foreground(state->gc, (guint32)aColor);
+
   return NS_OK;
 }
 
 NS_IMETHODIMP nsRenderingContextGTK::GetColor(nscolor &aColor) const
 {
-#if 0
-  GraphicsState state = ((GraphicsState *)mStates->data);
-  return state->mCurrentColor;
-#endif
+  GraphicsState * state = ((GraphicsState *)mStates->data);
+  aColor = state->mCurrentColor;
+
   return NS_OK;
 }
 
