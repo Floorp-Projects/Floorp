@@ -31,10 +31,8 @@ EXPORTS = \
 	$(NULL)
 
 CPPSRCS = \
-	MsgCompGlue.cpp \
-	nsMsgCompose.cpp \
-	nsMsgCompFields.cpp \
 	nsSmtpUrl.cpp \
+	nsSmtpProtocol.cpp \
 	$(NULL)
 
 include $(topsrcdir)/config/config.mk

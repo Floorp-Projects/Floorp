@@ -450,7 +450,6 @@ PRInt32 nsSmtpProtocol::SmtpResponse(nsIInputStream * inputStream, PRUint32 leng
 	char * line = nsnull;
 	char cont_char;
 	PRInt32 status = 0;
-	int err = 0;
 
     status = ReadLine(inputStream, length, &line);
 
@@ -667,7 +666,7 @@ PRInt32 nsSmtpProtocol::SendEhloResponse(nsIInputStream * inputStream, PRUint32 
   else 
   {
 	char *ptr = NULL;
-	PRBool auth_login_enabled = FALSE;
+	PRBool auth_login_enabled = PR_FALSE;
 
 	ptr = PL_strcasestr(m_responseText, "DSN");
 	if (ptr && nsCRT::ToUpper(*(ptr-1)) != 'X')
@@ -750,7 +749,7 @@ PRInt32 nsSmtpProtocol::AuthLoginResponse(nsIInputStream * stream, PRUint32 leng
                         NULL, &tmp_name, &net_smtp_password)) {
             m_nextState = SMTP_SEND_AUTH_LOGIN_USERNAME;
 			if (tmp_name && net_smtp_name && 
-				XP_STRCMP(tmp_name, net_smtp_name) != 0)
+				PL_strcmp(tmp_name, net_smtp_name) != 0)
 				PREF_SetCharPref("mail.smtp_name", tmp_name);
         }
         else 
@@ -774,12 +773,12 @@ PRInt32 nsSmtpProtocol::AuthLoginResponse(nsIInputStream * stream, PRUint32 leng
 
 PRInt32 nsSmtpProtocol::AuthLoginUsername()
 {
-  PRInt32 status = 0;
-  char buffer[512];
-  char *net_smtp_name = 0;
-  char *base64Str = 0;
 
 #ifdef UNREADY_CODE
+  char buffer[512];
+  PRInt32 status = 0;
+  char *net_smtp_name = 0;
+  char *base64Str = 0;
   PREF_CopyCharPref("mail.smtp_name", &net_smtp_name);
   if (!net_smtp_name || !*net_smtp_name)
   {
@@ -797,7 +796,7 @@ PRInt32 nsSmtpProtocol::AuthLoginUsername()
 	  int len = 1; /* first <NUL> char */
 	  if (!net_smtp_password || !*net_smtp_password)
 	  {
-		  FREEIF(net_smtp_password);
+		  PR_FREEIF(net_smtp_password);
 		  net_smtp_password =  MSG_GetPasswordForMailHost(cd->master,  m_hostName);
 		  if (!net_smtp_password)
 			net_smtp_password = net_smtp_prompt_for_password(cur_entry);
@@ -837,7 +836,6 @@ PRInt32 nsSmtpProtocol::AuthLoginUsername()
 
 PRInt32 nsSmtpProtocol::AuthLoginPassword()
 {
- PRInt32 status = 0;
 
   /* use cached smtp password first
    * if not then use cached pop password
@@ -845,6 +843,7 @@ PRInt32 nsSmtpProtocol::AuthLoginPassword()
    * sync with smtp password
    */
 #ifdef UNREADY_CODE  
+  PRInt32 status = 0;
   if (!net_smtp_password || !*net_smtp_password)
   {
 	  PR_FREEIF(net_smtp_password); /* in case its an empty string */
@@ -854,7 +853,7 @@ PRInt32 nsSmtpProtocol::AuthLoginPassword()
   }
 
   if (!net_smtp_password || !*net_smtp_password) {
-	  FREEIF(net_smtp_password);
+	  PR_FREEIF(net_smtp_password);
 	  net_smtp_password = net_smtp_prompt_for_password(cur_entry);
 	  if (!net_smtp_password)
 		  return MK_POP3_PASSWORD_UNDEFINED;
@@ -896,7 +895,7 @@ PRInt32 nsSmtpProtocol::SendVerifyResponse()
 	else
 		return(MK_USER_NOT_VERIFIED_BY_SMTP);
 #else	
-	XP_ASSERT(0);
+	PR_ASSERT(0);
 	return(-1);
 #endif
 }
@@ -1002,7 +1001,7 @@ PRInt32 nsSmtpProtocol::SendDataResponse()
 	  const char * FE_UsersRealMailAddress(void); /* definition */
 	  const char *real_name;
 	  char *s = 0;
-	  XP_Bool suppress_sender_header = FALSE;
+	  PRBool suppress_sender_header = PR_FALSE;
 
 	  PREF_GetBoolPref ("mail.suppress_sender_header", &suppress_sender_header);
 	  if (!suppress_sender_header)
@@ -1079,8 +1078,6 @@ PRInt32 nsSmtpProtocol::SendMessageInFile()
 		nsInputFileStream * fileStream = new nsInputFileStream(*filePath, PR_RDONLY, 00700);
 		if (fileStream)
 		{
-			PRInt32 amtToWrite = 0;
-		    PRInt32 amtWritten = 0 ;
 			PRInt32 amtInBuffer = 0; 
 			PRBool lastLineWasComplete = PR_TRUE;
 
@@ -1186,7 +1183,6 @@ PRInt32 nsSmtpProtocol::SendPostData()
 	// doing it in chunks...
 
     PRInt32 status = 0;
-	unsigned long curtime;
 
 	/* returns 0 on done and negative on error
 	 * positive if it needs to continue.
@@ -1208,6 +1204,7 @@ PRInt32 nsSmtpProtocol::SendPostData()
 	   the way of that.  See bug #23414. */
 
 #ifdef UNREADY_CODE
+	unsigned long curtime;
 	curtime = XP_TIME();
 	if (curtime != m_LastTime) {
 		FE_Progress(CE_WINDOW_ID, XP_ProgressText(m_totalMessageSize,
@@ -1228,7 +1225,6 @@ PRInt32 nsSmtpProtocol::SendPostData()
 
 PRInt32 nsSmtpProtocol::SendMessageResponse()
 {
-    PRInt32 status = 0;
 
     if(m_responseCode != 250)
 	{
@@ -1249,7 +1245,6 @@ PRInt32 nsSmtpProtocol::LoadURL(nsIURL * aURL)
 {
 	nsresult rv = NS_OK;
     PRInt32 status = 0; 
-	int32 pref = 0;
 	m_continuationResponse = -1;  /* init */
 	nsISmtpUrl * smtpUrl = nsnull;
 	HG77067
@@ -1344,8 +1339,6 @@ PRInt32 nsSmtpProtocol::LoadURL(nsIURL * aURL)
  PRInt32 nsSmtpProtocol::ProcessSmtpState(nsIURL * url, nsIInputStream * inputStream, PRUint32 length)
 {
     PRInt32 status = 0;
-	char	*mail_relay_host;
-
     ClearFlag(SMTP_PAUSE_FOR_READ); /* already paused; reset */
 
     while(!TestFlag(SMTP_PAUSE_FOR_READ))
@@ -1527,8 +1520,8 @@ NET_SendMessageUnattended(MWContext* context, char* to, char* subject,
 
     win_csid = INTL_DefaultWinCharSetID(context);
     csid = INTL_DefaultMailCharSetID(win_csid);
-    convto = IntlEncodeMimePartIIStr(to, csid, TRUE);
-    convsub = IntlEncodeMimePartIIStr(subject, csid, TRUE);
+    convto = IntlEncodeMimePartIIStr(to, csid, PR_TRUE);
+    convsub = IntlEncodeMimePartIIStr(subject, csid, PR_TRUE);
 
     urlstring = PR_smprintf("mailto:%s", convto ? convto : to);
 
@@ -1551,9 +1544,9 @@ Subject: %s\n\
 	url->post_data = PL_strdup(body);
 	if (!url->post_data) return MK_OUT_OF_MEMORY;
     url->post_data_size = PL_strlen(url->post_data);
-    url->post_data_is_file = FALSE;
+    url->post_data_is_file = PR_FALSE;
     url->method = URL_POST_METHOD;
-    url->internal_url = TRUE;
+    url->internal_url = PR_TRUE;
     return NET_GetURL(url, FO_PRESENT, context, MessageSendingDone);
     
 }
