@@ -121,7 +121,7 @@
            (((undefined-value null-value)) false)
            ((boolean-value b boolean) b)
            ((double-value d double) (not (or (double-is-zero d) (double-is-nan d))))
-           ((string-value s string) (!= (length s) 0))
+           ((string-value s string) (/= (length s) 0))
            (object-value true)))
        
        (define (coerce-boolean-to-double (b boolean)) double
@@ -772,7 +772,7 @@
        (%print-actions)
        
        (define (binary-double-compound-operator (operator (-> (double double) double))) (-> (value value) value-or-exception)
-         (lambda ((left-value value) (right-value value))
+         (function ((left-value value) (right-value value))
            (letexc (left-number double (coerce-to-double left-value))
              (letexc (right-number double (coerce-to-double right-value))
                (oneof normal (oneof double-value (operator left-number right-number)))))))
