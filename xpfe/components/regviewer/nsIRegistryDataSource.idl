@@ -42,6 +42,11 @@ interface nsIRegistryDataSource : nsISupports
      * Open a stock registry
      */
     void openWellKnownRegistry(in long aID);
+
+    /**
+     * Open the profile registry
+     */
+    void openDefaultRegistry();
 };
 
 %{C++
