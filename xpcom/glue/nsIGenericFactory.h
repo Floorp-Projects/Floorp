@@ -319,8 +319,12 @@ NS_NewGenericModule(const char* moduleName,
 #if defined(XPCOM_TRANSLATE_NSGM_ENTRY_POINT)
 #  define NSMODULEINFO(_name)             _name##_gModuleInfo
 #  define NSGETMODULE_ENTRY_POINT(_info)
+#  define NSDEPENDENT_LIBS(_name)         const char* _name##_gDependlibs[]={DEPENDENT_LIBS, "\0"};
+#  define NSDEPENDENT_LIBS_NAME(_name)    _name##_gDependlibs
 #else
 #  define NSMODULEINFO(_name)             gModuleInfo
+#  define NSDEPENDENT_LIBS(_name)         const char* gDependlibs[]={DEPENDENT_LIBS, "\0"};
+#  define NSDEPENDENT_LIBS_NAME(_name)    gDependlibs
 #  define NSGETMODULE_ENTRY_POINT(_info)                                      \
 extern "C" NS_EXPORT nsresult                                                 \
 NSGetModule(nsIComponentManager *servMgr,                                     \
@@ -346,6 +350,8 @@ NSGetModule(nsIComponentManager *servMgr,                                     \
 #define NS_IMPL_NSGETMODULE_WITH_DTOR(_name, _components, _dtor)              \
     NS_IMPL_NSGETMODULE_WITH_CTOR_DTOR(_name, _components, nsnull, _dtor)
 
+#ifndef DEPENDENT_LIBS
+
 #define NS_IMPL_NSGETMODULE_WITH_CTOR_DTOR(_name, _components, _ctor, _dtor)  \
 nsModuleInfo NSMODULEINFO(_name) = {                                          \
     NS_MODULEINFO_VERSION,                                                    \
@@ -357,6 +363,23 @@ nsModuleInfo NSMODULEINFO(_name) = {                                          \
     (nsnull)                                                                  \
 };                                                                            \
 NSGETMODULE_ENTRY_POINT(NSMODULEINFO(_name))
+
+#else // DEPENDENT_LIBS
+
+#define NS_IMPL_NSGETMODULE_WITH_CTOR_DTOR(_name, _components, _ctor, _dtor)  \
+const char* gDependlibs[]={DEPENDENT_LIBS, "\0"};                             \
+nsModuleInfo NSMODULEINFO(_name) = {                                          \
+    NS_MODULEINFO_VERSION,                                                    \
+    (#_name),                                                                 \
+    (_components),                                                            \
+    (sizeof(_components) / sizeof(_components[0])),                           \
+    (_ctor),                                                                  \
+    (_dtor),                                                                  \
+    (NSDEPENDENT_LIBS_NAME(_name))                                            \
+};                                                                            \
+NSGETMODULE_ENTRY_POINT(NSMODULEINFO(_name))
+
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
