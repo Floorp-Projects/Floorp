@@ -642,7 +642,9 @@ nsCOMPtr<nsIDOMNode> nsRange::CommonParent(nsCOMPtr<nsIDOMNode> aNode1, nsCOMPtr
   if (!array1 || !array2)
   {
     NS_NOTREACHED("nsRange::CommonParent");
-      goto errorLabel;
+    delete array1;
+    delete array2;
+    return nsCOMPtr<nsIDOMNode>();
   }
   
   // get ancestors of each node
@@ -653,7 +655,9 @@ nsCOMPtr<nsIDOMNode> nsRange::CommonParent(nsCOMPtr<nsIDOMNode> aNode1, nsCOMPtr
   if ((i==-1) || (j==-1))
   {
     NS_NOTREACHED("nsRange::CommonParent");
-      goto errorLabel;
+    delete array1;
+    delete array2;
+    return nsCOMPtr<nsIDOMNode>();
   }
   
   // sanity test (for now) - the end of each array
@@ -661,7 +665,9 @@ nsCOMPtr<nsIDOMNode> nsRange::CommonParent(nsCOMPtr<nsIDOMNode> aNode1, nsCOMPtr
   if (array1->ElementAt(i) != array2->ElementAt(j))
   {
     NS_NOTREACHED("nsRange::CommonParent");
-      goto errorLabel;
+    delete array1;
+    delete array2;
+    return nsCOMPtr<nsIDOMNode>();
   }
   
   // back through the ancestors, starting from the root, until
@@ -681,11 +687,6 @@ nsCOMPtr<nsIDOMNode> nsRange::CommonParent(nsCOMPtr<nsIDOMNode> aNode1, nsCOMPtr
   nsIDOMNode *node = NS_STATIC_CAST(nsIDOMNode*, array1->ElementAt(i));
   node->QueryInterface(nsIDOMNode::IID(), getter_AddRefs(theParent));
   return theParent;  
-  
-errorLabel:
-  delete array1;
-  delete array2;
-  return nsCOMPtr<nsIDOMNode>();
 }
 
 nsresult nsRange::GetDOMNodeFromContent(nsCOMPtr<nsIContent> inContentNode, nsCOMPtr<nsIDOMNode>* outDomNode)
