@@ -66,7 +66,7 @@ static char *progName;
 
 char *dbDir  =  NULL;
 
-static char *dbName[]={"secmod.db", "cert7.db", "key3.db"}; 
+static char *dbName[]={"secmod.db", "cert8.db", "key3.db"}; 
 static char* dbprefix = "";
 static char* secmodName = "secmod.db";
 PRBool verbose;
