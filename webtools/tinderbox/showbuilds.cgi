@@ -773,7 +773,7 @@ sub do_panel {
     my @keys = sort keys %build;
     my $keycount = @keys;
 
-    my (undef,$minute,$hour,$mday,$mon,undef) = localtime(time());
+    my ($minute,$hour,$mday,$mon) = (localtime)[1..4];
     my $tm = sprintf("%d/%d&nbsp;%d:%02d",$mon+1,$mday,$hour,$minute);
 
     print q(<body BGCOLOR="#FFFFFF" TEXT="#000000" 
