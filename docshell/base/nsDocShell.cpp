@@ -210,58 +210,55 @@ NS_IMETHODIMP nsDocShell::GetInterface(const nsIID& aIID, void** aSink)
 // nsDocShell::nsIDocShell
 //*****************************************************************************   
 
-NS_IMETHODIMP nsDocShell::LoadURI(nsIURI* aURI, nsIDocShellLoadInfo* aLoadInfo)
+NS_IMETHODIMP
+nsDocShell::LoadURI(nsIURI* aURI, nsIDocShellLoadInfo* aLoadInfo)
 {
-   NS_ENSURE_ARG(aURI);
+  nsresult rv;
+  nsCOMPtr<nsIURI> referrer;
+  nsCOMPtr<nsISupports> owner;
+  nsCOMPtr<nsISHEntry> shEntry;
+  nsDocShellInfoLoadType loadType = nsIDocShellLoadInfo::loadNormal;
 
-   nsCOMPtr<nsIURI> referrer;
-   nsCOMPtr<nsISupports> owner;
+  NS_ENSURE_ARG(aURI);
 
-   nsDocShellInfoLoadType loadType = nsIDocShellLoadInfo::loadNormal;
+  // Extract the info from the DocShellLoadInfo struct...
+  if(aLoadInfo) {
+    aLoadInfo->GetReferrer(getter_AddRefs(referrer));
+    aLoadInfo->GetLoadType(&loadType);
+    aLoadInfo->GetOwner(getter_AddRefs(owner));
+    aLoadInfo->GetSHEntry(getter_AddRefs(shEntry));
+  }
 
-#ifdef SH_IN_FRAMES
-   nsCOMPtr<nsISHEntry>  loadInfoSHEntry;
-#endif /* SH_IN_FRAMES */
+  if (!shEntry) {
+    /* Check if we are in the middle of loading a subframe whose parent
+     * was originally loaded thro' Session History. ie., you were in a frameset
+     * page, went somewhere else and clicked 'back'. The loading of the root page
+     * is done and we are currently loading one of its children or sub-children.
+     */
+    nsCOMPtr<nsIDocShellTreeItem> parentAsItem;
+    GetSameTypeParent(getter_AddRefs(parentAsItem));
 
-   if(aLoadInfo)
-   {
-      aLoadInfo->GetReferrer(getter_AddRefs(referrer));
-      aLoadInfo->GetLoadType(&loadType);
-      aLoadInfo->GetOwner(getter_AddRefs(owner));
-#ifdef SH_IN_FRAMES
-	  aLoadInfo->GetSHEntry(getter_AddRefs(loadInfoSHEntry));
-#endif
-   }
-	/* Check if we are in the middle of loading a subframe whose parent
-	 * was originally loaded thro' Session History. ie., you were in a frameset
-	 * page, went somewhere else and clicked 'back'. The loading of the root page
-	 * is done and we are currently loading one of its children or sub-children.
-	 */
-   	   nsCOMPtr<nsIDocShellTreeItem> parentAsItem;
-       GetSameTypeParent(getter_AddRefs(parentAsItem));
-       nsCOMPtr<nsISHEntry> entry;
-	   nsCOMPtr<nsIDocShellHistory> parent;
-	   // Get your SHEntry from your parent
-	   if (parentAsItem) {
-	      parent = do_QueryInterface(parentAsItem);
-	      if (!parent)
-		     return NS_ERROR_FAILURE;
-          parent->GetChildSHEntry(mChildOffset, getter_AddRefs(entry));
-          // XXX: should loadType be set to loadHistory ?
-	   }
-	   
-#ifdef SH_IN_FRAMES
-   if (loadInfoSHEntry)
-      NS_ENSURE_SUCCESS(LoadHistoryEntry(loadInfoSHEntry, loadType), NS_ERROR_FAILURE);
-   else if (entry)
-      NS_ENSURE_SUCCESS(LoadHistoryEntry(entry, loadType), NS_ERROR_FAILURE);
-   else
-      NS_ENSURE_SUCCESS(InternalLoad(aURI, referrer, owner, nsnull, nsnull, loadType, loadInfoSHEntry), NS_ERROR_FAILURE);
-#else
-      NS_ENSURE_SUCCESS(InternalLoad(aURI, referrer, owner, nsnull, nsnull, loadType), NS_ERROR_FAILURE);
-#endif 
+    // Try to get your SHEntry from your parent
+    if (parentAsItem) {
+      nsCOMPtr<nsIDocShellHistory> parent(do_QueryInterface(parentAsItem));
 
-   return NS_OK;
+      // XXX: Should we care if this QI fails?
+      if (parent) {
+        parent->GetChildSHEntry(mChildOffset, getter_AddRefs(shEntry));
+        if (shEntry) {
+          loadType = nsIDocShellLoadInfo::loadHistory;
+        }
+      }
+    }
+  }
+
+  if (shEntry) {
+    rv = LoadHistoryEntry(shEntry, loadType);
+  } else {
+    rv = InternalLoad(aURI, referrer, owner, nsnull, nsnull, loadType, nsnull);
+  }
+
+  return rv;
 }
 
 NS_IMETHODIMP nsDocShell::LoadStream(nsIInputStream *aStream, nsIURI *aURI, 
@@ -3124,93 +3121,23 @@ nsDocShell::OnNewURI(nsIURI *aURI, nsIChannel *aChannel, nsDocShellInfoLoadType 
         break;
     } 
 
-
-#ifdef SH_IN_FRAMES
-	   if (!LSHE && updateHistory && (mItemType == typeContent)) {
-		   /* This is  a fresh page getting loaded for the first time
-		    *. Create a Entry for it and add it to SH, if this is the
-			* rootDocShell
-			*/
-            nsresult rv;
-            nsCOMPtr<nsISHEntry> entry;
-		    PRBool shouldPersist = PR_FALSE;
-            ShouldPersistInSessionHistory(aURI, &shouldPersist);
-
-           
-            if(nsIDocShellLoadInfo::loadNormalReplace == mLoadType && mSessionHistory)
-			{
-              PRInt32 index = 0;
-              mSessionHistory->GetIndex(&index);
-              mSessionHistory->GetEntryAtIndex(index, PR_FALSE, getter_AddRefs(entry));
-			}
-
-            if(!entry)
-              entry = do_CreateInstance(NS_SHENTRY_PROGID);
-            NS_ENSURE_TRUE(entry, NS_ERROR_FAILURE);
-
-            // Get the post data
-            nsCOMPtr<nsIInputStream> inputStream;
-            if (aChannel)
-			{
-               nsCOMPtr<nsIHTTPChannel> httpChannel(do_QueryInterface(aChannel));
-               if(httpChannel)
-			   {
-                 httpChannel->GetUploadStream(getter_AddRefs(inputStream));
-			   }
-			}
-
-
-			nsXPIDLCString uriSpec;
-			aURI->GetSpec(getter_Copies(uriSpec));
-			printf("Adding url %s to SH\n", (const char *) uriSpec);
-            //Title is set in nsDocShell::SetTitle()
-            NS_ENSURE_SUCCESS(entry->Create(aURI, nsnull, nsnull, 
-                              inputStream, nsnull), NS_ERROR_FAILURE);
-
-            if (mSessionHistory) {
-              rv = mSessionHistory->AddEntry(entry, shouldPersist);
-            }
-            else {
-              rv = AddChildSHEntry(nsnull, entry, mChildOffset);
-            }
-            // Update LSHE if the entry was added...
-            if (NS_SUCCEEDED(rv)) {
-              LSHE = entry;
-            }
-   } //!LSHE
-
-
-#else
-
-    if(updateHistory)
-    {
-		UpdateCurrentSessionHistory();
-        PRBool shouldAdd = PR_FALSE;
-
-        ShouldAddToSessionHistory(aURI, &shouldAdd);
-        if(shouldAdd)
-        {
-            AddToSessionHistory(aURI, aChannel);
-        }
-
-        shouldAdd = PR_FALSE;
-        ShouldAddToGlobalHistory(aURI, &shouldAdd);
-        if(shouldAdd)
-        {
-            AddToGlobalHistory(aURI);
-        }
+  if (updateHistory) { // Page load not from SH
+    // Update session history if necessary...
+    if (!LSHE && (mItemType == typeContent)) {
+      /* This is  a fresh page getting loaded for the first time
+       *.Create a Entry for it and add it to SH, if this is the
+       * rootDocShell
+       */
+      (void) AddToSessionHistory(aURI, aChannel, getter_AddRefs(LSHE));
     }
-#endif /* SH_IN_FRAMES */
 
-    if(updateHistory)
-    {
-        PRBool shouldAdd = PR_FALSE;
-        ShouldAddToGlobalHistory(aURI, &shouldAdd);
-        if(shouldAdd)
-        {
-            AddToGlobalHistory(aURI);
-        }
+    // Update Global history if necessary...
+    updateHistory = PR_FALSE;
+    ShouldAddToGlobalHistory(aURI, &updateHistory);
+    if(updateHistory) {
+      AddToGlobalHistory(aURI);
     }
+  }
 
    SetCurrentURI(aURI);
    nsCOMPtr<nsIHTTPChannel> httpChannel(do_QueryInterface(aChannel));
@@ -3329,91 +3256,96 @@ void nsDocShell::SetReferrerURI(nsIURI* aURI)
 //*****************************************************************************
 // nsDocShell: Session History
 //*****************************************************************************   
-
-NS_IMETHODIMP nsDocShell::ShouldAddToSessionHistory(nsIURI* aURI, 
-   PRBool* aShouldAdd)
+PRBool nsDocShell::ShouldAddToSessionHistory(nsIURI* aURI)
 {
-   *aShouldAdd = PR_FALSE;
+  nsresult rv;
+  nsXPIDLCString buffer;
+  nsCAutoString schemeStr;
 
-   if((!mSessionHistory) || (IsFrame() && mInitialPageLoad))
-      return NS_OK;
+  rv = aURI->GetScheme(getter_Copies(buffer));
+  if (NS_FAILED(rv)) return PR_FALSE;
 
-   if(mCurrentURI)
-      {
-      PRBool equals = PR_TRUE;
-      mCurrentURI->Equals(aURI, &equals);
-      if(equals)
-         return NS_OK;
-      }
-      
-   *aShouldAdd = PR_TRUE;
- 
-   return NS_OK;
+  schemeStr = buffer;
+  if(schemeStr.Equals("about")) {
+    rv = aURI->GetPath(getter_Copies(buffer));
+    if (NS_FAILED(rv)) return PR_FALSE;
+
+    schemeStr = buffer;
+    if(schemeStr.Equals("blank")) {
+      return PR_FALSE;
+    }
+  }
+  return PR_TRUE;
 }
 
-NS_IMETHODIMP nsDocShell::ShouldPersistInSessionHistory(nsIURI* aURI,
-   PRBool* aShouldAdd)
+nsresult nsDocShell::AddToSessionHistory(nsIURI *aURI,
+                                         nsIChannel *aChannel,
+                                         nsISHEntry **aNewEntry)
 {
-   *aShouldAdd = PR_FALSE;
-   if(!aURI)
-      return NS_OK;
+  nsresult rv;
+  nsCOMPtr<nsISHEntry> entry;
+  PRBool shouldPersist;
 
-   nsXPIDLCString scheme;
-   NS_ENSURE_SUCCESS(aURI->GetScheme(getter_Copies(scheme)), NS_ERROR_FAILURE);
-   
-   nsAutoString schemeStr; schemeStr.AssignWithConversion(scheme);
+  shouldPersist = ShouldAddToSessionHistory(aURI);
 
-   if(schemeStr.EqualsWithConversion("about"))
-      {
-      nsXPIDLCString path;
-      NS_ENSURE_SUCCESS(aURI->GetPath(getter_Copies(path)), NS_ERROR_FAILURE);
-      if(nsCAutoString(path).Equals("blank"))
-         return NS_OK;
-      }
+  //
+  // If the entry is being replaced in SH, then just use the
+  // current entry...
+  //
+  if(mSessionHistory && nsIDocShellLoadInfo::loadNormalReplace == mLoadType) {
+    PRInt32 index = 0;
+    mSessionHistory->GetIndex(&index);
+    mSessionHistory->GetEntryAtIndex(index, PR_FALSE, getter_AddRefs(entry));
+  }
 
-   *aShouldAdd = PR_TRUE;
+  // Create a new entry if necessary.
+  if(!entry) {
+    entry = do_CreateInstance(NS_SHENTRY_PROGID);
 
-   return NS_OK;
-}
-
-NS_IMETHODIMP nsDocShell::AddToSessionHistory(nsIURI *aURI, nsIChannel *aChannel)
-{
-    PRBool shouldPersist = PR_FALSE;
-    ShouldPersistInSessionHistory(aURI, &shouldPersist);
-
-    nsCOMPtr<nsISHEntry> entry;
-    if(nsIDocShellLoadInfo::loadNormalReplace == mLoadType)
-    {
-        PRInt32 index = 0;
-        mSessionHistory->GetIndex(&index);
-        mSessionHistory->GetEntryAtIndex(index, PR_FALSE, getter_AddRefs(entry));
+    if (!entry) {
+      return NS_ERROR_OUT_OF_MEMORY;
     }
+  }
 
-    if(!entry)
-        entry = do_CreateInstance(NS_SHENTRY_PROGID);
-    NS_ENSURE_TRUE(entry, NS_ERROR_FAILURE);
+  // Get the post data
+  nsCOMPtr<nsIInputStream> inputStream;
+  if (aChannel) {
+    nsCOMPtr<nsIHTTPChannel> httpChannel(do_QueryInterface(aChannel));
 
-    // Get the post data
-    nsCOMPtr<nsIInputStream> inputStream;
-    if (aChannel)
-    {
-        nsCOMPtr<nsIHTTPChannel> httpChannel(do_QueryInterface(aChannel));
-        if(httpChannel)
-        {
-            httpChannel->GetUploadStream(getter_AddRefs(inputStream));
-        }
+    if(httpChannel) {
+      httpChannel->GetUploadStream(getter_AddRefs(inputStream));
     }
+  }
 
-    nsCOMPtr<nsILayoutHistoryState> layoutState; // XXX Need to get this from somewhere
+  //Title is set in nsDocShell::SetTitle()
+  entry->Create(aURI,           // uri
+                nsnull,         // Title
+                nsnull,         // DOMDocument
+                inputStream,    // Post data stream
+                nsnull);        // LayoutHistory state
+  //
+  // Add the new entry to session history.
+  //
+  // If no Session History component is available in the parent DocShell
+  // heirarchy, then AddChildSHEntry(...) will fail and the new entry
+  // will be deleted when it loses scope...
+  //
+  if (mSessionHistory) {
+    rv = mSessionHistory->AddEntry(entry, shouldPersist);
+  } else {
+    rv = AddChildSHEntry(nsnull, entry, mChildOffset);
+  }
 
-    //Title is set in nsDocShell::SetTitle()
-    NS_ENSURE_SUCCESS(entry->Create(aURI, nsnull, nsnull, 
-            inputStream, nsnull), NS_ERROR_FAILURE);
+  // Return the new SH entry...
+  if (aNewEntry) {
+    *aNewEntry = nsnull;
+    if (NS_SUCCEEDED(rv)) {
+      *aNewEntry = entry;
+      NS_ADDREF(*aNewEntry);
+    }
+  }
 
-    NS_ENSURE_SUCCESS(mSessionHistory->AddEntry(entry, shouldPersist),
-            NS_ERROR_FAILURE);
-
-    return NS_OK;
+  return rv;
 }
 
  /* 

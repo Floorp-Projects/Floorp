@@ -207,9 +207,11 @@ protected:
    virtual void SetReferrerURI(nsIURI* aURI);
 
    // Session History
-   NS_IMETHOD ShouldAddToSessionHistory(nsIURI* aURI, PRBool* aShouldAdd);
-   NS_IMETHOD ShouldPersistInSessionHistory(nsIURI* aURI, PRBool* aShouldPersist);
-   NS_IMETHOD AddToSessionHistory(nsIURI* aURI, nsIChannel *aChannel);
+   virtual PRBool ShouldAddToSessionHistory(nsIURI* aURI);
+
+   virtual nsresult AddToSessionHistory(nsIURI* aURI, nsIChannel *aChannel,
+                                        nsISHEntry **aNewEntry);
+
    NS_IMETHOD UpdateCurrentSessionHistory();
 #ifdef SH_IN_FRAMES
    NS_IMETHOD LoadHistoryEntry(nsISHEntry* aEntry, nsDocShellInfoLoadType aLoadType);
