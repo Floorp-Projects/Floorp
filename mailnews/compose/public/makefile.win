@@ -40,7 +40,7 @@ EXPORTS =										\
 				nsMsgCompFieldsFact.h			\
 				nsMsgSendFact.h					\
 				nsMsgSendLaterFact.h			\
-				nsISmtpUrl.h					\
+				nsISmtpService.h				\
 				$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
