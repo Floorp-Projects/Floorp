@@ -49,6 +49,7 @@ class nsHTMLInfo;
 
 
 // flags from box
+#define NS_STATE_STACK_NOT_POSITIONED    0x00200000
 #define NS_STATE_IS_HORIZONTAL           0x00400000
 #define NS_STATE_AUTO_STRETCH            0x00800000
 #define NS_STATE_IS_ROOT                 0x01000000

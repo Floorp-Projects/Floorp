@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   David Hyatt (hyatt@netscape.com)
  */
 
 /**
@@ -49,6 +50,9 @@ public:
   NS_IMETHOD GetMinSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
   NS_IMETHOD GetMaxSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
   NS_IMETHOD GetAscent(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nscoord& aAscent);
+
+protected:
+  nsresult AddOffset(nsBoxLayoutState& aState, nsIBox* aChild, nsSize& aSize);
 
 private:
   static nsIBoxLayout* gInstance;

@@ -1325,6 +1325,9 @@ nsBoxFrame::AttributeChanged(nsIPresContext* aPresContext,
                 mState &= ~NS_STATE_AUTO_STRETCH;
         }
 
+        if (aAttribute == nsHTMLAtoms::left || aAttribute == nsHTMLAtoms::top)
+          mState &= ~NS_STATE_STACK_NOT_POSITIONED;
+      
         nsCOMPtr<nsIPresShell> shell;
         aPresContext->GetShell(getter_AddRefs(shell));
         nsBoxLayoutState state(aPresContext);

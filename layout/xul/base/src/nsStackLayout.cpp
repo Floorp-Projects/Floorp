@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   David Hyatt (hyatt@netscape.com)
  */
 
 //
@@ -32,6 +33,11 @@
 #include "nsCOMPtr.h"
 #include "nsBoxLayoutState.h"
 #include "nsBox.h"
+#include "nsBoxFrame.h"
+#include "nsHTMLAtoms.h"
+#include "nsXULAtoms.h"
+#include "nsIContent.h"
+#include "nsINameSpaceManager.h"
 
 nsIBoxLayout* nsStackLayout::gInstance = nsnull;
 
@@ -57,226 +63,292 @@ nsStackLayout::nsStackLayout()
 {
 }
 
-
 NS_IMETHODIMP
-nsStackLayout::GetPrefSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)
+nsStackLayout::GetPrefSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize& aSize)
 {
-   aSize.width = 0;
-   aSize.height = 0;
+  aSize.width = 0;
+  aSize.height = 0;
 
-   // run through all the children and get there min, max, and preferred sizes
-   // return us the size of the box
+  // we are as wide as the widest child plus its left offset
+  // we are tall as the tallest child plus its top offset
+  nsIBox* child = nsnull;
+  aBox->GetChildBox(&child);
+ 
+  while (child) {  
+    nsSize pref(0,0);
+    child->GetPrefSize(aState, pref);
 
-   nsIBox* child = nsnull;
-   aBox->GetChildBox(&child);
-   
-   while (child) 
-   {  
-      // ignore collapsed children
-     // PRBool isCollapsed = PR_FALSE;
-     // child->IsCollapsed(aBoxLayoutState, isCollapsed);
+    AddMargin(child, pref);
+    AddOffset(aState, child, pref);
+    AddLargestSize(aSize, pref);
 
-     // if (!isCollapsed)
-     // {
-        nsSize pref(0,0);
-        child->GetPrefSize(aBoxLayoutState, pref);
-        AddMargin(child, pref);
-        AddLargestSize(aSize, pref);
-     // }
+    child->GetNextBox(&child);
+  }
 
-      child->GetNextBox(&child);
-   }
-
-   // now add our border and padding and insets
-   AddBorderAndPadding(aBox, aSize);
-   AddInset(aBox, aSize);
+  // now add our border and padding and insets
+  AddBorderAndPadding(aBox, aSize);
+  AddInset(aBox, aSize);
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsStackLayout::GetMinSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)
+nsStackLayout::GetMinSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize& aSize)
 {
-   aSize.width = 0;
-   aSize.height = 0;
+  aSize.width = 0;
+  aSize.height = 0;
 
-   // run through all the children and get there min, max, and preferred sizes
-   // return us the size of the box
-
-   nsIBox* child = nsnull;
-   aBox->GetChildBox(&child);
+  // run through all the children and get their min, max, and preferred sizes
+  
+  nsIBox* child = nsnull;
+  aBox->GetChildBox(&child);
    
-   while (child) 
-   {  
-       // ignore collapsed children
-      //PRBool isCollapsed = PR_FALSE;
-      //aBox->IsCollapsed(aBoxLayoutState, isCollapsed);
+  while (child) {  
+    nsSize min(0,0);
+    child->GetMinSize(aState, min);        
+    AddMargin(child, min);
+    AddOffset(aState, child, min);
+    AddLargestSize(aSize, min);
 
-      //if (!isCollapsed)
-      //{
-        nsSize min(0,0);
-        child->GetMinSize(aBoxLayoutState, min);        
-        AddMargin(child, min);
-        AddLargestSize(aSize, min);
-      //}
+    child->GetNextBox(&child);
+  }
 
-      child->GetNextBox(&child);
-   }
-
-// now add our border and padding and insets
-   AddBorderAndPadding(aBox, aSize);
-   AddInset(aBox,aSize);
+  // now add our border and padding and insets
+  AddBorderAndPadding(aBox, aSize);
+  AddInset(aBox,aSize);
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsStackLayout::GetMaxSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)
+nsStackLayout::GetMaxSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize& aSize)
 {
+  aSize.width = NS_INTRINSICSIZE;
+  aSize.height = NS_INTRINSICSIZE;
 
-   aSize.width = NS_INTRINSICSIZE;
-   aSize.height = NS_INTRINSICSIZE;
-
-   // run through all the children and get there min, max, and preferred sizes
-   // return us the size of the box
-
-
-   nsIBox* child = nsnull;
-   aBox->GetChildBox(&child);
+  // run through all the children and get their min, max, and preferred sizes
+ 
+  nsIBox* child = nsnull;
+  aBox->GetChildBox(&child);
    
-   while (child) 
-   {  
-      // ignore collapsed children
-      //PRBool isCollapsed = PR_FALSE;
-      //aBox->IsCollapsed(aBoxLayoutState, isCollapsed);
+  while (child) {  
+    nsSize max(NS_INTRINSICSIZE, NS_INTRINSICSIZE);
+    child->GetMaxSize(aState, max);
 
-      //if (!isCollapsed)
-      //{
-        // if completely redefined don't even ask our child for its size.
-        nsSize max(NS_INTRINSICSIZE, NS_INTRINSICSIZE);
-        child->GetMaxSize(aBoxLayoutState, max);
+    AddMargin(child, max);
+    AddOffset(aState, child, max);
+    AddSmallestSize(aSize, max);
 
-        AddMargin(child, max);
-        AddSmallestSize(aSize, max);
-      //}
+    child->GetNextBox(&child);
+  }
 
-      child->GetNextBox(&child);
-      
-   }
-
-   // now add our border and padding and insets
-   AddBorderAndPadding(aBox, aSize);
-   AddInset(aBox, aSize);
+  // now add our border and padding and insets
+  AddBorderAndPadding(aBox, aSize);
+  AddInset(aBox, aSize);
 
   return NS_OK;
 }
 
 
 NS_IMETHODIMP
-nsStackLayout::GetAscent(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nscoord& aAscent)
+nsStackLayout::GetAscent(nsIBox* aBox, nsBoxLayoutState& aState, nscoord& aAscent)
 {
-   aAscent = 0;
-
-   // run through all the children and get there min, max, and preferred sizes
-   // return us the size of the box
+  aAscent = 0;
+  nsIBox* child = nsnull;
+  aBox->GetChildBox(&child);
    
-   nsIBox* child = nsnull;
-   aBox->GetChildBox(&child);
-   
-   while (child) 
-   {  
-      // ignore collapsed children
-      //PRBool isCollapsed = PR_FALSE;
-      //aBox->IsCollapsed(aBoxLayoutState, isCollapsed);
-
-      //if (!isCollapsed)
-      //{
-        // if completely redefined don't even ask our child for its size.
-        nscoord ascent = 0;
-        child->GetAscent(aBoxLayoutState, ascent);
-        nsMargin margin;
-        child->GetMargin(margin);
-        ascent += margin.top + margin.bottom;
-
-        if (ascent > aAscent)
-            aAscent = ascent;
-      //}
-
-      child->GetNextBox(&child);
-
-   }
+  while (child) {  
+    nscoord ascent = 0;
+    child->GetAscent(aState, ascent);
+    nsMargin margin;
+    child->GetMargin(margin);
+    ascent += margin.top + margin.bottom;
+    if (ascent > aAscent)
+      aAscent = ascent;
+    child->GetNextBox(&child);
+  }
 
   return NS_OK;
 }
+
+nsresult
+nsStackLayout::AddOffset(nsBoxLayoutState& aState, nsIBox* aChild, nsSize& aSize)
+{
+  nsSize offset(0,0);
+  
+  // get the left and top offsets
+  const nsStylePosition* pos;
+  nsIFrame* frame;
+  aChild->GetFrame(&frame);
+  
+  nsFrameState  state;
+  frame->GetFrameState(&state);
+  
+  // As an optimization, we cache the fact that we are not positioned to avoid
+  // wasting time fetching attributes and checking style data.
+  if (state & NS_STATE_STACK_NOT_POSITIONED)
+    return NS_OK;
+  
+  PRBool offsetSpecified = PR_FALSE;
+  frame->GetStyleData(eStyleStruct_Position,(const nsStyleStruct*&) pos);
+  if (eStyleUnit_Coord == pos->mOffset.GetLeftUnit()) {
+     nsStyleCoord left = 0;
+     pos->mOffset.GetLeft(left);
+     offset.width = left.GetCoordValue();
+     offsetSpecified = PR_TRUE;
+  }
+
+  if (eStyleUnit_Coord == pos->mOffset.GetTopUnit()) {
+     nsStyleCoord top = 0;
+     pos->mOffset.GetTop(top);
+     offset.height = top.GetCoordValue();
+     offsetSpecified = PR_TRUE;
+  }
+
+  nsCOMPtr<nsIContent> content;
+  frame->GetContent(getter_AddRefs(content));
+
+  if (content) {
+    nsIPresContext* presContext = aState.GetPresContext();
+    nsAutoString value;
+    PRInt32 error;
+
+    if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::left, value)) {
+      float p2t;
+      presContext->GetScaledPixelsToTwips(&p2t);
+      value.Trim("%");
+      offset.width = NSIntPixelsToTwips(value.ToInteger(&error), p2t);
+      offsetSpecified = PR_TRUE;
+    }
+
+    if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::top, value)) {
+      float p2t;
+      presContext->GetScaledPixelsToTwips(&p2t);
+      value.Trim("%");
+      offset.height = NSIntPixelsToTwips(value.ToInteger(&error), p2t);
+      offsetSpecified = PR_TRUE;
+    }
+  }
+
+  aSize += offset;
+
+  if (!offsetSpecified) {
+    // If no offset was specified at all, then we cache this fact to avoid requerying
+    // CSS or the content model.
+    state |= NS_STATE_STACK_NOT_POSITIONED;
+    frame->SetFrameState(state);
+  }
+    
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP
 nsStackLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
 {
-   nsRect clientRect;
-   aBox->GetClientRect(clientRect);
-   
-   nsIBox* child = nsnull;
-   PRBool grow;
+  nsRect clientRect;
+  aBox->GetClientRect(clientRect);
 
-   PRInt32 passes = 0;
+  nsRect childRect;
 
-   do {
-     aBox->GetChildBox(&child);
-     grow = PR_FALSE;
-     while (child) 
-     {  
-        nsMargin margin;
-        child->GetMargin(margin);
-        nsRect childRect(clientRect);
-        childRect.Deflate(margin);
+  PRBool grow;
 
-        if (childRect.width < 0)
-          childRect.width = 0;
+  do {
+    nsIBox* child = nsnull;
+    aBox->GetChildBox(&child);
+    grow = PR_FALSE;
 
-        if (childRect.height < 0)
-          childRect.height = 0;
+    while (child) 
+    {  
+      nsMargin margin;
+      child->GetMargin(margin);
+      nsRect childRect(clientRect);
+      childRect.Deflate(margin);
 
+      if (childRect.width < 0)
+        childRect.width = 0;
 
-        nsRect oldRect;
-        child->GetBounds(oldRect);
+      if (childRect.height < 0)
+        childRect.height = 0;
 
-        PRBool sizeChanged = (oldRect != childRect);
+      nsRect oldRect;
+      child->GetBounds(oldRect);
 
-        // only layout dirty children
-        PRBool isDirty = PR_FALSE;
-        PRBool hasDirtyChildren = PR_FALSE;
+      PRBool sizeChanged = (oldRect != childRect);
 
-        child->IsDirty(isDirty);
-        child->HasDirtyChildren(hasDirtyChildren);
+      // only lay out dirty children or children whose sizes have changed
+      PRBool isDirty = PR_FALSE;
+      PRBool hasDirtyChildren = PR_FALSE;
 
-        if (sizeChanged || isDirty || hasDirtyChildren) {
- 
+      child->IsDirty(isDirty);
+      child->HasDirtyChildren(hasDirtyChildren);
+
+      if (sizeChanged || isDirty || hasDirtyChildren) {
+          // add in the child's margin
+          nsMargin margin;
+          child->GetMargin(margin);
+
+          // obtain our offset from the top left border of the stack's content box.
+          nsSize offset(0,0);
+          AddOffset(aState, child, offset);
+
+          // Correct the child's x/y position by adding in both the margins
+          // and the left/top offset.
+          childRect.x = clientRect.x + offset.width + margin.left;
+          childRect.y = clientRect.y + offset.height + margin.top;
+          
+          // If we have an offset, we don't stretch the child.  Just use
+          // its preferred size.
+          if (offset.width != 0 || offset.height != 0) {
+            nsSize pref(0,0);
+            child->GetPrefSize(aState, pref);
+            childRect.width = pref.width;
+            childRect.height = pref.height;
+          }
+
+          // Now place the child.
           child->SetBounds(aState, childRect);
+
+          // Flow the child.
           child->Layout(aState);
+
+          // Get the child's new rect.
           child->GetBounds(childRect);
           childRect.Inflate(margin);
 
-          // did the child push back on us and get bigger?
-          if (childRect.width > clientRect.width) {
-             clientRect.width = childRect.width;
-             grow = PR_TRUE;
+          // Did the child push back on us and get bigger?
+          if (offset.width + childRect.width > clientRect.width) {
+            clientRect.width = childRect.width + offset.width;
+            grow = PR_TRUE;
           }
 
-          if (childRect.height > clientRect.height) {
-             clientRect.height = childRect.height;
-             grow = PR_TRUE;
+          if (offset.height + childRect.height > clientRect.height) {
+            clientRect.height = childRect.height + offset.height;
+            grow = PR_TRUE;
           }
-        }
 
-        child->GetNextBox(&child);
+          if (childRect.x != oldRect.x || childRect.y != oldRect.y)
+          {
+            // redraw the new and old positions if the 
+            // child moved.
+            // if the new and old rect intersect meaning we just moved a little
+            // then just redraw the intersection. If they don't intersect (meaning
+            // we moved a good distance) redraw both separately.
+            if (childRect.Intersects(oldRect)) {
+              nsRect u;
+              u.UnionRect(oldRect, childRect);
+              aBox->Redraw(aState, &u);
+            } else {
+              aBox->Redraw(aState, &oldRect);
+              aBox->Redraw(aState, &childRect);
+            }
+          }
+       }
+
+       child->GetNextBox(&child);
      }
-     NS_BOX_ASSERTION(aBox, passes < 10,"Infinite loop! Someone won't stop growing!!");
-     //if (passes > 3)
-     //   printf("Growing!!!\n");
-
-     passes++;
-   } while(grow);
-
+   } while (grow);
+   
    // if some HTML inside us got bigger we need to force ourselves to
    // get bigger
    nsRect bounds;
@@ -289,15 +361,14 @@ nsStackLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
 
    if (clientRect.width > bounds.width || clientRect.height > bounds.height)
    {
-      if (clientRect.width > bounds.width)
-         bounds.width = clientRect.width;
-      if (clientRect.height > bounds.height)
-         bounds.height = clientRect.height;
+     if (clientRect.width > bounds.width)
+       bounds.width = clientRect.width;
+     if (clientRect.height > bounds.height)
+       bounds.height = clientRect.height;
 
-      aBox->SetBounds(aState, bounds);
+     aBox->SetBounds(aState, bounds);
    }
 
    return NS_OK;
 }
-
 
