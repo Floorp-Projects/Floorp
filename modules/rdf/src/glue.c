@@ -36,7 +36,9 @@
 #include "nlcstore.h"
 #include "autoupdt.h"
 #include "ht.h"
-
+#ifdef NU_CACHE
+#include "CacheStubs.h"
+#endif
 
 /* external routines */
 extern	MWContext	*FE_GetRDFContext(void);
@@ -244,7 +246,11 @@ rdf_GetURL (MWContext *cx,  int method, Net_GetUrlExitFunc *exit_routine, RDFFil
 {
 	URL_Struct      *urls = NULL;
         char* url  ;
-	if (cx == NULL)  return 0;
+#ifdef DEBUG_gagan
+        return 0;
+#endif
+
+    if (cx == NULL)  return 0;
         if (rdfFile->refreshingp && rdfFile->updateURL) {
           url = rdfFile->updateURL;
         } else {
@@ -252,8 +258,12 @@ rdf_GetURL (MWContext *cx,  int method, Net_GetUrlExitFunc *exit_routine, RDFFil
         }
         if (strcmp(url, gNavCntrUrl) == 0) {
           urls = NET_CreateURLStruct(url,  NET_CACHE_ONLY_RELOAD);
+#ifdef NU_CACHE
+          if (!CacheManager_Contains(url)) {
+#else
           if (NET_IsURLInDiskCache(urls) || NET_IsURLInMemCache(urls)) {
           } else {
+#endif
             NET_FreeURLStruct(urls);
             urls = NULL;
           }
