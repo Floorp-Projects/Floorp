@@ -161,20 +161,20 @@ void ICodeGenerator::setLabel(InstructionStream *stream, int32 label)
 
 /***********************************************************************************************/
 
-void MultiPathICodeState::mergeStream(InstructionStream *sideStream, InstructionStream *mainStream, LabelList &labels)
+void ICodeGenerator::mergeStream(InstructionStream *sideStream)
 {
     // change InstructionStream to be a class that also remembers
     // if it contains any labels (maybe even remembers the labels
     // themselves?) in order to avoid running this loop unnecessarily.
     for (LabelList::iterator i = labels.begin(); i != labels.end(); i++) {
         if ((*i)->itsBase == sideStream) {
-            (*i)->itsBase = mainStream;
-            (*i)->itsOffset += mainStream->size();
+            (*i)->itsBase = iCode;
+            (*i)->itsOffset += iCode->size();
         }
     }
 
     for (InstructionIterator ii = sideStream->begin(); ii != sideStream->end(); ii++)
-        mainStream->push_back(*ii);
+        iCode->push_back(*ii);
 
 }
 
@@ -217,10 +217,11 @@ void ICodeGenerator::endWhileStatement()
     stitcher.pop_back();
 
     // mark the start of the condition code
-    // and re-attach it to the main stream
-    setLabel(ics->whileCondition);
+    setLabel(ics->whileCondition);              // which is where continues will target
 
-    ics->mergeStream(iCode, labels);
+    // and re-attach it to the main stream
+    mergeStream(ics->whileExpressionStream);
+
     if (ics->breakLabel != -1)
         setLabel(ics->breakLabel);
 
@@ -236,13 +237,12 @@ void ICodeGenerator::beginForStatement(const SourcePosition &pos)
     int32 forCondition = getLabel();
 
     ForCodeState *ics = new ForCodeState(forCondition, getLabel(), this);
-    ics->continueLabel = getLabel();
 
     branch(forCondition);
 
     stitcher.push_back(ics);
 
-    iCode = new InstructionStream();        // begin the stream for collecting the test expression
+    iCode = new InstructionStream();        // begin the stream for collecting the condition expression
     setLabel(forCondition);
 
     resetTopRegister();
@@ -259,7 +259,10 @@ void ICodeGenerator::forCondition(Register condition)
     iCode = ics->swapStream(iCode);     // switch back to main stream
     iCode = new InstructionStream();    //  begin the stream for collecting the increment expression
 
-    setLabel(ics->continueLabel);   // which is where continues will target
+    ics->continueLabel = getLabel();
+    setLabel(ics->continueLabel);       // can't lazily insert this since we haven't seen the body yet
+                                        // ??? could just remember the offset
+
     resetTopRegister();
 }
 
@@ -279,9 +282,10 @@ void ICodeGenerator::endForStatement()
 {
     ForCodeState *ics = static_cast<ForCodeState *>(stitcher.back());
     ASSERT(ics->stateKind == For_state);
+    stitcher.pop_back();
 
-    ics->mergeStream2(iCode, labels);        // merges the increment sequence
-    ics->mergeStream(iCode, labels);        // merges the test sequence
+    mergeStream(ics->forIncrementStream);
+    mergeStream(ics->forConditionStream);
 
     if (ics->breakLabel != -1)
         setLabel(ics->breakLabel);
@@ -313,6 +317,8 @@ void ICodeGenerator::endDoStatement()
 
     // mark the start of the do conditional
     setLabel(ics->doCondition);
+    if (ics->continueLabel != -1)
+        setLabel(ics->continueLabel);
 
     resetTopRegister();
 }
@@ -358,7 +364,7 @@ void ICodeGenerator::endCaseCondition(Register expression)
     Register r = op(COMPARE, expression, ics->controlExpression);
     branchConditional(caseLabel, r);
 
-    setLabel(ics->its_iCode, caseLabel);                // mark the case in the Case Statement stream 
+    setLabel(ics->caseStatementsStream, caseLabel);     // mark the case in the Case Statement stream 
     resetTopRegister();
 }
 
@@ -383,7 +389,7 @@ void ICodeGenerator::beginDefaultStatement()
     ASSERT(ics->stateKind == Switch_state);
     ASSERT(ics->defaultLabel == -1);
     ics->defaultLabel = getLabel();
-    setLabel(ics->its_iCode, ics->defaultLabel);
+    setLabel(ics->caseStatementsStream, ics->defaultLabel);
     iCode = ics->swapStream(iCode);                    // switch to Case Statement stream
 }
 
@@ -413,7 +419,7 @@ void ICodeGenerator::endSwitchStatement()
     }
     
     // dump all the case statements into the main stream
-    ics->mergeStream(iCode, labels);
+    mergeStream(ics->caseStatementsStream);
 
     if (ics->breakLabel != -1)
         setLabel(ics->breakLabel);
@@ -469,20 +475,38 @@ void ICodeGenerator::endIfStatement()
 void ICodeGenerator::breakStatement()
 {
     for (std::vector<ICodeState *>::reverse_iterator p = stitcher.rbegin(); p != stitcher.rend(); p++) {
-        
-// this is NOT going to stay this way
-        
+        if ((*p)->breakLabel != -1) {
+            branch((*p)->breakLabel);
+            return;
+        }
         if (((*p)->stateKind == While_state)
                 || ((*p)->stateKind == Do_state)
                 || ((*p)->stateKind == For_state)
                 || ((*p)->stateKind == Switch_state)) {
-            if ((*p)->breakLabel == -1)
-                (*p)->breakLabel = getLabel();
+            (*p)->breakLabel = getLabel();
             branch((*p)->breakLabel);
             return;
         }
     }
     NOT_REACHED("no break target available");
+}
+
+void ICodeGenerator::continueStatement()
+{
+    for (std::vector<ICodeState *>::reverse_iterator p = stitcher.rbegin(); p != stitcher.rend(); p++) {
+        if ((*p)->continueLabel != -1) {
+            branch((*p)->continueLabel);
+            return;
+        }
+        if (((*p)->stateKind == While_state)
+                || ((*p)->stateKind == Do_state)
+                || ((*p)->stateKind == For_state)) {
+            (*p)->continueLabel = getLabel();
+            branch((*p)->continueLabel);
+            return;
+        }
+    }
+    NOT_REACHED("no continue target available");
 }
 
 /***********************************************************************************************/

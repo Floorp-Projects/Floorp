@@ -114,44 +114,43 @@ namespace JavaScript {
     class ICodeState {
     public :
         ICodeState(StateKind kind, ICodeGenerator *icg);        // inline below
+        virtual ~ICodeState()   { }
+
+        virtual int32 getBreakLabel(ICodeGenerator *icg)    { ASSERT(false); }
+        virtual int32 getContinueLabel(ICodeGenerator *icg) { ASSERT(false); }
+
         StateKind stateKind;
+        int32 registerBase;
         int32 breakLabel;
         int32 continueLabel;
-        int32 registerBase;
     };
 
-    // an ICodeState that handles switching to a new InstructionStream 
-    // and then re-combining the streams later
-    class MultiPathICodeState : public ICodeState {
+    class WhileCodeState : public ICodeState {
     public:
-        MultiPathICodeState(StateKind kind, ICodeGenerator *icg);        // inline below
-        virtual ~MultiPathICodeState()  { delete its_iCode; }
+        WhileCodeState(int32 conditionLabel, int32 bodyLabel, ICodeGenerator *icg);         // inline below
+        InstructionStream *swapStream(InstructionStream *iCode) { InstructionStream *t = whileExpressionStream; whileExpressionStream = iCode; return t; }
 
-        InstructionStream *swapStream(InstructionStream *iCode) { InstructionStream *t = its_iCode; its_iCode = iCode; return t; }
+        virtual int32 getBreakLabel(ICodeGenerator *icg)    { if (breakLabel == -1) breakLabel = icg->getLabel(); return breakLabel; }
+        virtual int32 getContinueLabel(ICodeGenerator *icg) { return whileCondition; }
 
-        InstructionStream *its_iCode;
-
-        static void mergeStream(InstructionStream *sideStream, InstructionStream *mainStream, LabelList &labels);
-
-        void mergeStream(InstructionStream *mainStream, LabelList &labels) { mergeStream(its_iCode, mainStream, labels); }
-    };
-
-    class WhileCodeState : public MultiPathICodeState {
-    public:
-        WhileCodeState(int32 conditionLabel, int32 bodyLabel, ICodeGenerator *icg) 
-                    : MultiPathICodeState(While_state, icg), whileCondition(conditionLabel), whileBody(bodyLabel) { }
         int32 whileCondition;
         int32 whileBody;
+        InstructionStream *whileExpressionStream;
     };
 
-    class ForCodeState : public MultiPathICodeState {
+    class ForCodeState : public ICodeState {
     public:
         ForCodeState(int32 conditionLabel, int32 bodyLabel, ICodeGenerator *icg);        // inline below
-        InstructionStream *swapStream2(InstructionStream *iCode) { InstructionStream *t = its_iCode_2; its_iCode_2 = iCode; return t; }
-        void mergeStream2(InstructionStream *mainStream, LabelList &labels) { mergeStream(its_iCode_2, mainStream, labels); }
+        InstructionStream *swapStream(InstructionStream *iCode) { InstructionStream *t = forConditionStream; forConditionStream = iCode; return t; }
+        InstructionStream *swapStream2(InstructionStream *iCode) { InstructionStream *t = forIncrementStream; forIncrementStream = iCode; return t; }
+        
+        virtual int32 getBreakLabel(ICodeGenerator *icg)    { if (breakLabel == -1) breakLabel = icg->getLabel(); return breakLabel; }
+        virtual int32 getContinueLabel(ICodeGenerator *icg) { if (continueLabel == -1) continueLabel = icg->getLabel(); return whileCondition; }
+
         int32 forCondition;
         int32 forBody;
-        InstructionStream *its_iCode_2;
+        InstructionStream *forConditionStream;
+        InstructionStream *forIncrementStream;
     };
 
     class IfCodeState : public ICodeState {
@@ -166,16 +165,23 @@ namespace JavaScript {
     public:
         DoCodeState(int32 bodyLabel, int32 conditionLabel, ICodeGenerator *icg) 
                     : ICodeState(Do_state, icg), doBody(bodyLabel), doCondition(conditionLabel) { }
+
+        virtual int32 getBreakLabel(ICodeGenerator *icg)    { if (breakLabel == -1) breakLabel = icg->getLabel(); return breakLabel; }
+        virtual int32 getContinueLabel(ICodeGenerator *icg) { return doCondition; }
+
         int32 doBody;
         int32 doCondition;
     };
 
-    class SwitchCodeState : public MultiPathICodeState {
+    class SwitchCodeState : public ICodeState {
     public:
-        SwitchCodeState(Register control, ICodeGenerator *icg) 
-                    : MultiPathICodeState(Switch_state, icg), controlExpression(control), defaultLabel(-1) { }
+        SwitchCodeState(Register control, ICodeGenerator *icg);        // inline below
+        InstructionStream *swapStream(InstructionStream *iCode) { InstructionStream *t = caseStatementsStream; caseStatementsStream = iCode; return t; }
         
+        virtual int32 getBreakLabel(ICodeGenerator *icg)    { if (breakLabel == -1) breakLabel = icg->getLabel(); return breakLabel; }
+
         Register controlExpression;
+        InstructionStream *caseStatementsStream;
         int32 defaultLabel;
     };
 
@@ -208,6 +214,8 @@ namespace JavaScript {
     public:
         ICodeGenerator() : topRegister(0) { iCode = new InstructionStream(); }
 
+        void mergeStream(InstructionStream *sideStream);
+        
         InstructionStream *complete();
 
         ostream &print(ostream &s);
@@ -300,10 +308,15 @@ namespace JavaScript {
     inline ICodeState::ICodeState(StateKind kind, ICodeGenerator *icg) 
                     : stateKind(kind), breakLabel(-1), continueLabel(-1), registerBase(icg->getRegisterBase()) { }
 
-    inline MultiPathICodeState::MultiPathICodeState(StateKind kind, ICodeGenerator *icg)
-                    : ICodeState(kind, icg), its_iCode(icg->get_iCode()) {}
+    inline SwitchCodeState::SwitchCodeState(Register control, ICodeGenerator *icg)
+                    : ICodeState(Switch_state, icg), controlExpression(control), defaultLabel(-1), caseStatementsStream(icg->get_iCode()) {}
+
+    inline WhileCodeState::WhileCodeState(int32 conditionLabel, int32 bodyLabel, ICodeGenerator *icg) 
+                    : ICodeState(While_state, icg), whileCondition(conditionLabel), whileBody(bodyLabel),
+                            whileExpressionStream(icg->get_iCode()) { }
 
     inline ForCodeState::ForCodeState(int32 conditionLabel, int32 bodyLabel, ICodeGenerator *icg) 
-                    : MultiPathICodeState(For_state, icg), forCondition(conditionLabel), forBody(bodyLabel), its_iCode_2(icg->get_iCode()) { }
+                    : ICodeState(For_state, icg), forCondition(conditionLabel), forBody(bodyLabel), 
+                            forConditionStream(icg->get_iCode()), forIncrementStream(icg->get_iCode()) { }
 }
 #endif
