@@ -404,6 +404,14 @@ nsScrollingView::~nsScrollingView()
     mListeners->Clear();
     NS_RELEASE(mListeners);
   }
+
+  if (nsnull != mViewManager) {
+    nsIScrollableView* scrollingView;
+    mViewManager->GetRootScrollableView(&scrollingView);
+    if ((nsnull != scrollingView) && (this == scrollingView)) {
+      mViewManager->SetRootScrollableView(nsnull);
+    }
+  }
 }
 
 nsresult nsScrollingView::QueryInterface(const nsIID& aIID, void** aInstancePtr)

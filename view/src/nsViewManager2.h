@@ -193,6 +193,35 @@ private:
 	void ViewToWidget(nsIView *aView, nsIView* aWidgetView, nsRect &aRect) const;
 	// void WidgetToView(nsIView* aView, nsRect &aWidgetRect);
 
+  /**
+	 * Transforms a rectangle from specified view's coordinate system to
+	 * an absolute coordinate rectangle which can be compared against the
+   * rectangle returned by GetVisibleRect to determine visibility.
+   * @param aView view that aRect coordinates are specified relative to
+   * @param aRect rectangle in twips to convert to absolute coordinates
+   * @param aAbsRect rectangle in absolute coorindates.
+   * @returns NS_OK if successful otherwise, NS_ERROR_FAILURE 
+	 */
+
+  nsresult GetAbsoluteRect(nsIView *aView, const nsRect &aRect, 
+                           nsRect& aAbsRect);
+  /**
+	 * Determine the visible rect 
+   * @param aVisibleRect visible rectangle in twips
+   * @returns NS_OK if successful, otherwise NS_ERROR_FAILURE.
+   */
+
+  nsresult GetVisibleRect(nsRect& aVisibleRect);
+
+  /**
+	 * Determine if a rectangle specified in the view's coordinate system 
+	 * is completely, or partially visible.
+   * @param aView view that aRect coordinates are specified relative to
+   * @param aRect rectangle in twips to test for visibility 
+   * @returns PR_TRUE if the rect is visible, PR_FALSE otherwise.
+	 */
+  PRBool IsRectVisible(nsIView *aView, const nsRect &aRect);
+
 private:
   nsIDeviceContext  *mContext;
   float				mTwipsToPixels;
