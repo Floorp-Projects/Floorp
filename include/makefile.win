@@ -54,7 +54,6 @@ EXPORTS = \
 		libi18n.h \
 		merrors.h \
 		minicom.h \
-		msgcom.h \
 		msgtypes.h \
 		net.h \
 		npapi.h \
