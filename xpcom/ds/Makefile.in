@@ -103,7 +103,7 @@ EXPORTS = \
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 
-DEFINES = -D_IMPL_NS_COM -D_IMPL_NS_BASE
+DEFINES += -D_IMPL_NS_COM -D_IMPL_NS_BASE
 
 REQUIRES = xpcom uconv unicharutil
 
