@@ -266,6 +266,10 @@ protected:
 
   nsresult VisitGroup(nsIRadioVisitor* aVisitor);
 
+  /**
+   * Actually set checked and notify the frame of the change.
+   * @param aValue the value of checked to set
+   */
   nsresult SetCheckedInternal(PRBool aValue);
 
   static nsresult GetContentType(const char* aPathName, char** aContentType);
@@ -855,42 +859,58 @@ nsHTMLInputElement::SetCheckedInternal(PRBool aChecked)
   //
   // Notify the frame
   //
-  // No need to flush here since if there's no frame for this input at
-  // this point we don't care about creating one, once it's created
-  // the frame will do the right thing.
-  //
+  // If the document or parent is not there, don't even bother looking
+  // for the frame.  It won't (shouldn't) be there.
+  if (!mDocument || !mParent) {
+    return NS_OK;
+  }
+
+  // Get presentation shell 0
+  nsCOMPtr<nsIPresShell> presShell;
+  mDocument->GetShellAt(0, getter_AddRefs(presShell));
+  if (!presShell) {
+    return NS_OK;
+  }
+
+  nsIFrame *frame = nsnull;
+  presShell->GetPrimaryFrameFor(this, &frame);
+  if (!frame) {
+    return NS_OK;
+  }
+
   PRInt32 type;
   GetType(&type);
 
-  nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_FALSE);
-  if (formControlFrame) {
-    nsCOMPtr<nsIPresContext> presContext;
-    GetPresContext(this, getter_AddRefs(presContext));
+  nsCOMPtr<nsIPresContext> presContext;
+  GetPresContext(this, getter_AddRefs(presContext));
 
-    if (type == NS_FORM_INPUT_CHECKBOX) {
-      nsICheckboxControlFrame* checkboxFrame = nsnull;
-      CallQueryInterface(formControlFrame, &checkboxFrame);
-      if (checkboxFrame) {
-        checkboxFrame->OnChecked(presContext, aChecked);
-      }
-      // These are frames.  You don't refcount frames.  Silly wabbit.
-    } else if (type == NS_FORM_INPUT_RADIO) {
-      nsIRadioControlFrame* radioFrame = nsnull;
-      CallQueryInterface(formControlFrame, &radioFrame);
-      if (radioFrame) {
-        radioFrame->OnChecked(presContext, aChecked);
-      }
-      // You don't refcount frames.
+  if (type == NS_FORM_INPUT_CHECKBOX) {
+    nsICheckboxControlFrame* checkboxFrame = nsnull;
+    CallQueryInterface(frame, &checkboxFrame);
+    if (checkboxFrame) {
+      checkboxFrame->OnChecked(presContext, aChecked);
+    }
+  } else if (type == NS_FORM_INPUT_RADIO) {
+    nsIRadioControlFrame* radioFrame = nsnull;
+    CallQueryInterface(frame, &radioFrame);
+    if (radioFrame) {
+      radioFrame->OnChecked(presContext, aChecked);
     }
   }
 
   // Notify the document that the CSS :checked pseudoclass for this element
   // has changed state.
-  if (mDocument)
+  // XXX HACK Only do this if there is a frame.  Otherwise for some reason
+  // ContentStatesChanged() is creating an extra bogus frame at this point.
+  // Probably ContentStatesChanged() needs to be told not to worry if there is
+  // no frame in some cases.  Bug 134560.
+  if (mDocument && frame) {
     mDocument->ContentStatesChanged(this, nsnull, nsCSSAtoms::checkedPseudo);
+  }
 
   return NS_OK;
 }
+
 
 void
 nsHTMLInputElement::FireOnChange()
