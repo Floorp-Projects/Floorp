@@ -927,6 +927,10 @@ nsIFontMetrics* nsWindow::GetFont(void)
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::SetFont(const nsFont &aFont)
 {
+    if (nsnull == mContext) {
+      return NS_ERROR_FAILURE;
+    }
+
     nsIFontMetrics* metrics;
     mContext->GetMetricsFor(aFont, metrics);
     nsFontHandle  fontHandle;
