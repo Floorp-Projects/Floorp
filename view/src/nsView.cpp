@@ -622,6 +622,12 @@ NS_IMETHODIMP nsView::GetParent(nsIView *&aParent) const
   return NS_OK;
 }
 
+NS_IMETHODIMP nsView::GetFirstChild(nsIView *&aChild) const
+{
+  aChild = mFirstChild;
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsView::GetNextSibling(nsIView *&aNextSibling) const
 {
   aNextSibling = mNextSibling;

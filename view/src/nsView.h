@@ -122,6 +122,7 @@ public:
   PRBool      GetZIndexIsAuto() const { return (mVFlags & NS_VIEW_FLAG_AUTO_ZINDEX) != 0; }
   NS_IMETHOD  GetFloating(PRBool &aFloatingView) const;
   NS_IMETHOD  GetParent(nsIView *&aParent) const;
+  NS_IMETHOD  GetFirstChild(nsIView* &aChild) const;
   NS_IMETHOD  GetNextSibling(nsIView *&aNextSibling) const;
   NS_IMETHOD  GetOpacity(float &aOpacity) const;
   NS_IMETHOD  HasTransparency(PRBool &aTransparent) const;

@@ -2170,18 +2170,10 @@ PresShell::SetPreferenceStyleRules(PRBool aForceReflow)
 #endif    
 
     if (aForceReflow){
-#ifdef NS_DEBUG
-      printf( "*** Forcing reframe! ***\n");
-#endif
-      // this is harsh, but without it the new colors don't appear on the current page
-      // Fortunately, it only happens when the prefs change, a rare event.
-      // XXX - determine why the normal PresContext::RemapStyleAndReflow doesn't cut it
-      // XXXldb FIX THIS!
-      ReconstructFrames();
+      mPresContext->ClearStyleDataAndReflow();
     }
 
     return result;
-
   }
 
   return NS_ERROR_NULL_POINTER;
@@ -3412,6 +3404,28 @@ PresShell::CheckVisibility(nsIDOMNode *node, PRInt16 startOffset, PRInt16 EndOff
 //end implementations nsISelectionController
 
 
+static void UpdateViewProperties(nsIPresContext* aPresContext, nsIViewManager* aVM,
+                                 nsIView* aView) {
+  nsCOMPtr<nsIViewManager> thisVM;
+  aView->GetViewManager(*getter_AddRefs(thisVM));
+  if (thisVM != aVM) {
+    return;
+  }
+
+  void* clientData;
+  aView->GetClientData(clientData);
+  nsIFrame* frame = NS_STATIC_CAST(nsIFrame*, clientData);
+  if (frame) {
+    nsContainerFrame::SyncFrameViewProperties(aPresContext, frame, nsnull, aView);
+  }
+
+  nsIView* child;
+  aView->GetFirstChild(child);
+  while (child) {
+    UpdateViewProperties(aPresContext, aVM, child);
+    child->GetNextSibling(child);
+  }
+}
 
 NS_IMETHODIMP
 PresShell::StyleChangeReflow()
@@ -3477,6 +3491,15 @@ PresShell::StyleChangeReflow()
     VERIFY_STYLE_TREE;
     NS_IF_RELEASE(rcx);
     NS_FRAME_LOG(NS_FRAME_TRACE_CALLS, ("exit nsPresShell::StyleChangeReflow"));
+    
+    // The following two calls are needed to make sure we reacquire any needed
+    // style structs that were cleared by the caller
+
+    // Update properties of all views to reflect style changes
+    UpdateViewProperties(mPresContext, mViewManager, view);
+
+    // Repaint everything just to be sure
+    mViewManager->UpdateAllViews(NS_VMREFRESH_NO_SYNC);
   }
 
   DidCauseReflow();

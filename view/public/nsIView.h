@@ -170,6 +170,12 @@ public:
   NS_IMETHOD  GetParent(nsIView *&aParent) const = 0;
 
   /**
+   * The view's first child is the child which is earliest in document order.
+   * @result first child
+   */
+  NS_IMETHOD  GetFirstChild(nsIView* &aChild) const = 0;
+
+  /**
    * Called to query the next sibling of the view.
    * @result view's next sibling
    */
