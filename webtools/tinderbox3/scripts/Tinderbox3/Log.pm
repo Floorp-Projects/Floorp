@@ -50,6 +50,8 @@ sub ensure_uncompressed {
 
 sub create_logfile_name {
   my ($machine_id) = @_;
+  # This string is detainted in showlog.pl; if you change the format
+  # be sure to change the detaint expression as well.
   return time2str("%Y%m%d%H%M%S.log", time);
 }
 
