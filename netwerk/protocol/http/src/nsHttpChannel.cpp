@@ -2505,117 +2505,140 @@ nsHttpChannel::GetReferrer(nsIURI **referrer)
 }
 
 NS_IMETHODIMP
-nsHttpChannel::SetReferrer(nsIURI *referrerIn)
+nsHttpChannel::SetReferrer(nsIURI *referrer)
 {
     NS_ENSURE_TRUE(!mIsPending, NS_ERROR_IN_PROGRESS);
 
+    // clear existing referrer, if any
+    mReferrer = nsnull;
+    mRequestHead.SetHeader(nsHttp::Referer, NS_LITERAL_CSTRING(""));
+
+    if (!referrer)
+        return NS_OK;
+
+    // check referrer blocking pref
     PRUint32 referrerLevel;
     if (mLoadFlags & LOAD_INITIAL_DOCUMENT_URI)
         referrerLevel = 1; // user action
     else
         referrerLevel = 2; // inline content
-
     if (nsHttpHandler::get()->ReferrerLevel() < referrerLevel)
         return NS_OK;
 
-    nsCOMPtr<nsIURI> referrer = referrerIn;
+    nsCOMPtr<nsIURI> referrerGrip;
+    nsresult rv;
+    PRBool match;
 
-    if (referrer) {
-        // Strip off "wyciwyg://123/" from wyciwyg referrers.
-        // XXX this really belongs elsewhere since wyciwyg URLs aren't part of necko.
-        PRBool isWyciwyg = PR_FALSE;
-        referrer->SchemeIs("wyciwyg", &isWyciwyg);
-        if (isWyciwyg) {
-            nsCAutoString path;
-            nsresult rv = referrer->GetPath(path);
-            if (NS_FAILED(rv)) return rv;
+    //
+    // Strip off "wyciwyg://123/" from wyciwyg referrers.
+    //
+    // XXX this really belongs elsewhere since wyciwyg URLs aren't part of necko.
+    //     perhaps some sort of generic nsINestedURI could be used.  then, if an URI
+    //     fails the whitelist test, then we could check for an inner URI and try
+    //     that instead.  though, that might be too automatic.
+    // 
+    rv = referrer->SchemeIs("wyciwyg", &match);
+    if (NS_FAILED(rv)) return rv;
+    if (match) {
+        nsCAutoString path;
+        rv = referrer->GetPath(path);
+        if (NS_FAILED(rv)) return rv;
 
-            PRUint32 pathLength = path.Length();
-            if (pathLength <= 2) return NS_ERROR_FAILURE;
+        PRUint32 pathLength = path.Length();
+        if (pathLength <= 2) return NS_ERROR_FAILURE;
 
-            // Path is of the form "//123/http://foo/bar", with a variable number of digits.
-            // To figure out where the "real" URL starts, search path for a '/', starting at 
-            // the third character.
-            PRInt32 slashIndex = path.FindChar('/', 2);
-            if (slashIndex == kNotFound) return NS_ERROR_FAILURE;
+        // Path is of the form "//123/http://foo/bar", with a variable number of digits.
+        // To figure out where the "real" URL starts, search path for a '/', starting at 
+        // the third character.
+        PRInt32 slashIndex = path.FindChar('/', 2);
+        if (slashIndex == kNotFound) return NS_ERROR_FAILURE;
 
-            // Get the charset of the original URI so we can pass it to our fixed up URI.
-            nsCAutoString charset;
-            referrer->GetOriginCharset(charset);
+        // Get the charset of the original URI so we can pass it to our fixed up URI.
+        nsCAutoString charset;
+        referrer->GetOriginCharset(charset);
 
-            // Replace |referrer| with a URI without wyciwyg://123/.
-            rv = NS_NewURI(getter_AddRefs(referrer),
-                           Substring(path, slashIndex + 1, pathLength - slashIndex - 1),
-                           charset.get());
-            if (NS_FAILED(rv)) return rv;
-        }
+        // Replace |referrer| with a URI without wyciwyg://123/.
+        rv = NS_NewURI(getter_AddRefs(referrerGrip),
+                       Substring(path, slashIndex + 1, pathLength - slashIndex - 1),
+                       charset.get());
+        if (NS_FAILED(rv)) return rv;
 
-        // don't remember this referrer if it's not on our white list....
-        static const char *const referrerWhiteList[] = {
-            "http",
-            "https",
-            "ftp",
-            "gopher",
-            nsnull
-        };
-        PRBool match = PR_FALSE;
-        const char *const *scheme = referrerWhiteList;
-        for (; *scheme && !match; ++scheme)
-            referrer->SchemeIs(*scheme, &match);
+        referrer = referrerGrip.get();
+    }
+
+    //
+    // block referrer if not on our white list...
+    //
+    static const char *const referrerWhiteList[] = {
+        "http",
+        "https",
+        "ftp",
+        "gopher",
+        nsnull
+    };
+    match = PR_FALSE;
+    const char *const *scheme = referrerWhiteList;
+    for (; *scheme && !match; ++scheme) {
+        rv = referrer->SchemeIs(*scheme, &match);
+        if (NS_FAILED(rv)) return rv;
+    }
+    if (!match)
+        return NS_OK; // kick out....
+
+    //
+    // Handle secure referrals.
+    //
+    // Support referrals from a secure server if this is a secure site
+    // and (optionally) if the host names are the same.
+    //
+    rv = referrer->SchemeIs("https", &match);
+    if (NS_FAILED(rv)) return rv;
+    if (match) {
+        rv = mURI->SchemeIs("https", &match);
+        if (NS_FAILED(rv)) return rv;
         if (!match)
-            return NS_OK; // kick out....
+            return NS_OK;
 
-        // Handle secure referrals.
-        // Support referrals from a secure server if this is a secure site
-        // and the host names are the same.
-        PRBool isHTTPS = PR_FALSE;
-        referrer->SchemeIs("https", &isHTTPS);
-        if (isHTTPS) {
+        if (!nsHttpHandler::get()->SendSecureXSiteReferrer()) {
             nsCAutoString referrerHost;
             nsCAutoString host;
 
-            referrer->GetAsciiHost(referrerHost);
-            mURI->GetAsciiHost(host);
-            mURI->SchemeIs("https", &isHTTPS);
+            rv = referrer->GetAsciiHost(referrerHost);
+            if (NS_FAILED(rv)) return rv;
 
-            if (!isHTTPS)
-                return NS_OK;
+            rv = mURI->GetAsciiHost(host);
+            if (NS_FAILED(rv)) return rv;
 
-            if ((!nsHttpHandler::get()->SendSecureXSiteReferrer()) &&
-                (nsCRT::strcasecmp(referrerHost.get(), host.get()) != 0))
+            // GetAsciiHost returns lowercase hostname.
+            if (!referrerHost.Equals(host))
                 return NS_OK;
         }
     }
 
-    // save a copy of the referrer so we can return it if requested
-    mReferrer = referrer;
+    nsCOMPtr<nsIURI> clone;
+    //
+    // we need to clone the referrer, so we can:
+    //  (1) modify it
+    //  (2) keep a reference to it after returning from this function
+    //
+    rv = referrer->Clone(getter_AddRefs(clone));
+    if (NS_FAILED(rv)) return rv;
 
-    // clear the old referer first
-    mRequestHead.SetHeader(nsHttp::Referer, NS_LITERAL_CSTRING(""));
+    // strip away any userpass; we don't want to be giving out passwords ;-)
+    clone->SetUserPass(NS_LITERAL_CSTRING(""));
 
-    if (referrer) {
-        nsCAutoString spec;
-        referrer->GetAsciiSpec(spec);
-        if (!spec.IsEmpty()) {
-            // strip away any userpass; we don't want to be giving out passwords ;-)
-            nsCAutoString userpass;
-            referrer->GetUserPass(userpass);
-            if (!userpass.IsEmpty()) {
-                // userpass is UTF8 encoded and spec is ASCII, so we might not find
-                // userpass as a substring of spec.
-                nsCOMPtr<nsIURI> clone;
-                nsresult rv = referrer->Clone(getter_AddRefs(clone));
-                if (NS_FAILED(rv)) return rv;
+    // strip away any fragment per RFC 2616 section 14.36
+    nsCOMPtr<nsIURL> url = do_QueryInterface(clone);
+    if (url)
+        url->SetRef(NS_LITERAL_CSTRING(""));
 
-                rv = clone->SetUserPass(NS_LITERAL_CSTRING(""));
-                if (NS_FAILED(rv)) return rv;
+    nsCAutoString spec;
+    rv = clone->GetAsciiSpec(spec);
+    if (NS_FAILED(rv)) return rv;
 
-                rv = clone->GetAsciiSpec(spec);
-                if (NS_FAILED(rv)) return rv;
-            }
-            mRequestHead.SetHeader(nsHttp::Referer, spec);
-        }
-    }
+    // finally, remember the referrer URI and set the Referer header.
+    mReferrer = clone;
+    mRequestHead.SetHeader(nsHttp::Referer, spec);
     return NS_OK;
 }
 
