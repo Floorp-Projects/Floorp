@@ -1311,7 +1311,7 @@ nsBrowserWindow::nsBrowserWindow()
 #if XXX
     gTitleSuffix = GetTitleSuffix();
 #endif
-    if ( gTitleSuffix = new nsString )
+    if ( (gTitleSuffix = new nsString) != 0 )
       gTitleSuffix->AssignWithConversion(" - Raptor");
   }
   AddBrowser(this);
@@ -2058,7 +2058,7 @@ nsBrowserWindow::FindWebShellWithName(const PRUnichar* aName, nsIWebShell*& aRes
       nsXPIDLString name;
       nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mDocShell));
       if (NS_OK == docShellAsItem->GetName(getter_Copies(name))) {
-        if (aNameStr.Equals(name)) {
+        if (aNameStr.EqualsWithConversion(name)) {
           aResult = webShell;
           NS_ADDREF(aResult);
           return NS_OK;

@@ -391,7 +391,7 @@ nsHTTPIndexParser::OnStartRequest(nsIChannel* aChannel, nsISupports* aContext)
 
   // we know that this is a directory (due to being a HTTP-INDEX response)
   // so ensure it ends with a slash if its a FTP URL
-  nsAutoString	fullURI(uristr);
+  nsAutoString	fullURI; fullURI.AssignWithConversion(uristr);
   if ((fullURI.Find("ftp://", PR_TRUE) == 0) && (fullURI.Last() != (PRUnichar('/'))))
   {
   	fullURI.AppendWithConversion('/');
