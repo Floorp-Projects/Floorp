@@ -18,6 +18,7 @@
 
 #include "nsMIMEMessage.h"
 #include "nsxpfcCIID.h"
+#include "nsMIMEBasicBodyPart.h"
 
 static NS_DEFINE_IID(kISupportsIID,      NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIMessageIID,       NS_IMESSAGE_IID);
@@ -27,10 +28,14 @@ nsMIMEMessage :: nsMIMEMessage() : nsMessage()
 {
   NS_INIT_REFCNT();
   mBodyType = nsMIMEBodyType_empty;
+  mBodyPart = nsnull;
+  mMimeMessageT = nsnull;
 }
 
 nsMIMEMessage :: ~nsMIMEMessage()  
 {
+  NS_IF_RELEASE(mBodyPart);
+  mime_message_free_all(mMimeMessageT); 
 }
 
 NS_IMPL_ADDREF(nsMIMEMessage)
@@ -59,6 +64,10 @@ nsresult nsMIMEMessage::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
 nsresult nsMIMEMessage::Init()
 {
+  mMimeMessageT = (mime_message_t *) mime_malloc (sizeof (mime_message_t));
+
+  memset (mMimeMessageT, 0, sizeof (mime_message_t));
+
   return (nsMessage::Init());
 }
 
@@ -78,10 +87,48 @@ nsresult nsMIMEMessage::GetHeader(nsString& aHeaderName, nsString& aHeaderValue)
 }
 
 
-
 nsresult nsMIMEMessage::AddAttachment(nsString& aAttachment, nsMIMEEncoding aMIMEEncoding)
 {
   return (NS_OK);
+}
+
+nsresult nsMIMEMessage::SetBody(nsString& aBody)
+{
+
+  nsMIMEBasicBodyPart * basic = nsnull;
+
+  /*
+   * By default (for now) lets just create a MIMEBasicPart for the Body.
+   *
+   * This method overrides that in nsMessage since the consumer has
+   * explicitly asked for a MIME message
+   */
+  
+  NS_IF_RELEASE(mBodyPart);
+
+  nsresult res = NS_OK;
+
+  static NS_DEFINE_IID(kIMIMEBodyPartCID,           NS_IMIME_BODY_PART_IID);
+  static NS_DEFINE_IID(kCMIMEBasicBodyPartCID,      NS_MIME_BASIC_BODY_PART_CID);
+
+  res = nsRepository::CreateInstance(kCMIMEBasicBodyPartCID, nsnull, kIMIMEBodyPartCID, (void**)&mBodyPart);
+
+  if (NS_OK != res)
+    return res;
+  
+  basic = (nsMIMEBasicBodyPart *) mBodyPart;
+
+  basic->Init();
+
+  //mime_message_create(body, nsnull, MIME_ENCODING_UNINITIALIZED, &mMimeMessageT);
+
+  mMimeMessageT = (mime_message_t *) mime_malloc (sizeof (mime_message_t));
+
+  basic->SetBody(aBody);
+
+  mime_message_addBasicPart(mMimeMessageT, basic->mMimeBasicPart, FALSE);
+
+  return res;
 }
 
 nsresult nsMIMEMessage::AddText(nsString& aText, nsMIMEEncoding aMIMEEncoding)

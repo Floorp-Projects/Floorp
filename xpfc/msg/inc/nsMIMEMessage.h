@@ -21,6 +21,8 @@
 
 #include "nsMessage.h"
 #include "nsIMIMEMessage.h"
+#include "nsIMIMEBodyPart.h"
+#include "mime.h"
 
 class nsMIMEMessage : public nsMessage,
                       public nsIMIMEMessage
@@ -38,6 +40,7 @@ public:
 
   NS_IMETHOD AddAttachment(nsString& aAttachment, nsMIMEEncoding aMIMEEncoding = nsMIMEEncoding_default);
   NS_IMETHOD AddText(nsString& aText, nsMIMEEncoding aMIMEEncoding = nsMIMEEncoding_default);
+  NS_IMETHOD SetBody(nsString& aBody);
 
   NS_IMETHOD AddBodyPart(nsIMIMEBodyPart& aBodyPart);
 
@@ -48,6 +51,10 @@ protected:
 
 private:
   nsMIMEBodyType mBodyType;
+  nsIMIMEBodyPart * mBodyPart;
+
+public:
+  mime_message_t * mMimeMessageT;
 
 };
 

@@ -20,6 +20,8 @@
 #define nsMIMEBasicBodyPart_h___
 
 #include "nsMIMEBodyPart.h"
+#include "nsString.h"
+#include "mime.h"
 
 class nsMIMEBasicBodyPart : public nsMIMEBodyPart
 {
@@ -29,9 +31,13 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD Init() ;
+  NS_IMETHOD SetBody(nsString& aBody) ;
 
 protected:
   ~nsMIMEBasicBodyPart();
+
+public:
+  mime_basicPart_t * mMimeBasicPart ;
 
 };
 
