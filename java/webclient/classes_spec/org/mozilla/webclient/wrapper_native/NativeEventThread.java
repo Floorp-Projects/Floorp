@@ -137,6 +137,7 @@ public void delete()
 {
     // setting this to null causes the run thread to exit
     synchronized(this.browserControlCanvas.getTreeLock()) {
+        // this has to be inside the synchronized block!
         browserControlCanvas = null;
     }
     // PENDING(ashuk): do any necessary cleanup.
@@ -189,15 +190,19 @@ public void run()
         }
     }
 
-    while (null != this.browserControlCanvas) {
+    while (true) {
         synchronized (this.browserControlCanvas.getTreeLock()) {
+            // this has to be inside the synchronized block!
+            if (null == this.browserControlCanvas) {
+                return;
+            }
             nativeProcessEvents(nativeWebShell);
-
+            
             if (null != listenersToAdd && !listenersToAdd.isEmpty()) {
                 tempEnum = listenersToAdd.elements();
                 while (tempEnum.hasMoreElements()) {
                     nativeAddListener(nativeWebShell,
-                                      (WebclientEventListener)
+                                          (WebclientEventListener)
                                       tempEnum.nextElement());
                 }
                 listenersToAdd.clear();
