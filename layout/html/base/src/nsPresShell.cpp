@@ -1367,13 +1367,13 @@ PresShell::ProcessReflowCommands()
       if (VERIFY_REFLOW_ALL & gVerifyReflowFlags) {
         printf("ProcessReflowCommands: begin incremental reflow\n");
       }
-      if (VERIFY_REFLOW_DUMP_COMMANDS & gVerifyReflowFlags) {
-        PRInt32 i, n = mReflowCommands.Count();
-        for (i = 0; i < n; i++) {
-          nsIReflowCommand* rc = (nsIReflowCommand*)
-            mReflowCommands.ElementAt(i);
-          rc->List(stdout);
-        }
+    }
+    if (VERIFY_REFLOW_DUMP_COMMANDS & gVerifyReflowFlags) {
+      PRInt32 i, n = mReflowCommands.Count();
+      for (i = 0; i < n; i++) {
+        nsIReflowCommand* rc = (nsIReflowCommand*)
+          mReflowCommands.ElementAt(i);
+        rc->List(stdout);
       }
     }
 #endif
