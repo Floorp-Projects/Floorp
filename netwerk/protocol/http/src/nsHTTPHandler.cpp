@@ -33,7 +33,7 @@
 #include "nsISocketTransportService.h"
 #include "nsIServiceManager.h"
 #include "nsIInterfaceRequestor.h"
-#include "nsIHttpEventSink.h"
+#include "nsIHTTPEventSink.h"
 #include "nsIFileStreams.h" 
 #include "nsIStringStream.h" 
 #include "nsHTTPEncodeStream.h" 
@@ -42,9 +42,6 @@
 #include "nsIPref.h"
 #include "nsIProtocolProxyService.h"
 
-#ifdef DEBUG_gagan
-#include "nsUnixColorPrintf.h"
-#endif
 #include "nsILocalFile.h"
 #include "nsNetUtil.h"
 #include "nsICategoryManager.h"
@@ -791,19 +788,10 @@ nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri,
                             if (idleport == -1)
                                 GetDefaultPort(&idleport);
 
-#ifdef DEBUG_gagan
-                            printf(STARTYELLOW "%s:%d\n", 
-                                    (const char*)idlehost, idleport);
-#endif
-
                             if (idleport == port)
                             {
                                 // Addref it before removing it!
                                 NS_ADDREF(trans);
-#ifdef DEBUG_gagan
-                                PRINTF_BLUE;
-                                printf("Found a match in idle list!\n");
-#endif
                                 // Remove it from the idle
                                 mIdleTransports->RemoveElement(trans);
                                 //break;// break out of the for loop 
@@ -1063,10 +1051,6 @@ nsHTTPHandler::PrefsChanged(const char* pref)
         rv = mPrefs->GetIntPref("network.sendRefererHeader",&referrerLevel);
         if (NS_SUCCEEDED(rv) && referrerLevel>0) 
            mReferrerLevel = referrerLevel; 
-#ifdef DEBUG_gagan
-        PRINTF_CYAN;
-        printf("network.sendRefererHeader = %d\n", mReferrerLevel);
-#endif
     }
 
     // Things read only during initialization...

@@ -31,7 +31,6 @@
 #include "nsIEventQueue.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIProgressEventSink.h"
-#include "nsIHttpEventSink.h"
 #include "nsILoadGroup.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
@@ -41,6 +40,7 @@
 #include "nsIStreamObserver.h"
 #include "nsICachedNetData.h"
 #include "nsIProxy.h"
+#include "nsIPrompt.h"
 
 class nsHTTPRequest;
 class nsHTTPResponse;
@@ -135,6 +135,7 @@ protected:
     HTTPState                           mState;
     nsCString                           mVerb;
     nsCOMPtr<nsIHTTPEventSink>          mEventSink;
+    nsCOMPtr<nsIPrompt>                 mPrompter;
     nsCOMPtr<nsIProgressEventSink>      mProgressEventSink;
     nsCOMPtr<nsIInterfaceRequestor>     mCallbacks;
 

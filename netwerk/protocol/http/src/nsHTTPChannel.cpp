@@ -26,7 +26,7 @@
 #include "prlong.h"
 #include "nsHTTPChannel.h"
 #include "netCore.h"
-#include "nsIHttpEventSink.h"
+#include "nsIHTTPEventSink.h"
 #include "nsIHTTPProtocolHandler.h"
 #include "nsHTTPRequest.h"
 #include "nsHTTPResponse.h"
@@ -52,10 +52,7 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsIProxy.h"
 #include "nsMimeTypes.h"
-
-#ifdef DEBUG_gagan
-#include "nsUnixColorPrintf.h"
-#endif
+#include "nsIPrompt.h"
 
 // FIXME - Temporary include.  Delete this when cache is enabled on all platforms
 #include "nsIPref.h"
@@ -139,6 +136,7 @@ nsHTTPChannel::~nsHTTPChannel()
 
     mHandler         = null_nsCOMPtr();
     mEventSink       = null_nsCOMPtr();
+    mPrompter        = null_nsCOMPtr();
     mResponseContext = null_nsCOMPtr();
     mLoadGroup       = null_nsCOMPtr();
     CRTFREEIF(mProxy);
@@ -430,7 +428,8 @@ nsHTTPChannel::GetNotificationCallbacks(nsIInterfaceRequestor* *aNotificationCal
 }
 
 NS_IMETHODIMP
-nsHTTPChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aNotificationCallbacks)
+nsHTTPChannel::SetNotificationCallbacks(nsIInterfaceRequestor* 
+        aNotificationCallbacks)
 {
     nsresult rv = NS_OK;
     mCallbacks = aNotificationCallbacks;
@@ -441,6 +440,9 @@ nsHTTPChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aNotificationCall
         // to proceed
         (void)mCallbacks->GetInterface(NS_GET_IID(nsIHTTPEventSink),
                                        getter_AddRefs(mEventSink));
+
+        (void)mCallbacks->GetInterface(NS_GET_IID(nsIPrompt),
+                                       getter_AddRefs(mPrompter));
 
         (void)mCallbacks->GetInterface(NS_GET_IID(nsIProgressEventSink),
                                        getter_AddRefs(mProgressEventSink));
@@ -798,7 +800,8 @@ nsHTTPChannel::CheckCache()
     if (!mCachedResponse)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(mCachedResponse);
-    nsSubsumeCStr cachedHeadersCStr(NS_CONST_CAST(char*, NS_STATIC_CAST(const char*, cachedHeaders)),
+    nsSubsumeCStr cachedHeadersCStr(NS_CONST_CAST(char*, 
+                NS_STATIC_CAST(const char*, cachedHeaders)),
                                     PR_FALSE);
     rv = mCachedResponse->ParseHeaders(cachedHeadersCStr);
     if (NS_FAILED(rv)) return rv;
@@ -882,7 +885,6 @@ nsHTTPChannel::CheckCache()
 
     return NS_OK;
 }
-
 
 // If the data in the cache hasn't expired, then there's no need to
 // talk with the server, not even to do an if-modified-since.  This
@@ -1183,7 +1185,44 @@ nsHTTPChannel::Open(void)
 
     mRequest->SetTransport(transport);
 
-    rv = mRequest->WriteRequest((mProxy && *mProxy));
+    // if using proxy...
+    nsXPIDLCString requestSpec;
+    rv = mRequest->GetOverrideRequestSpec(getter_Copies(requestSpec));
+    // no one has overwritten this value as yet...
+    if (!requestSpec && mProxy && *mProxy)
+    {
+        nsXPIDLCString strurl;
+        if(NS_SUCCEEDED(mURI->GetSpec(getter_Copies(strurl))))
+            mRequest->SetOverrideRequestSpec(strurl);
+    }
+
+    // Check to see if an authentication header is required
+    nsAuthEngine* pAuthEngine = nsnull; 
+    if (NS_SUCCEEDED(mHandler->GetAuthEngine(&pAuthEngine)) && pAuthEngine)
+    {
+        nsXPIDLCString authStr;
+        if (NS_SUCCEEDED(pAuthEngine->GetAuthString(mURI, 
+                getter_Copies(authStr))))
+        {
+            if (authStr && *authStr)
+                rv = mRequest->SetHeader(nsHTTPAtoms::Authorization, authStr);
+        }
+
+        if (mProxy && *mProxy)
+        {
+            nsXPIDLCString proxyAuthStr;
+            if (NS_SUCCEEDED(pAuthEngine->GetProxyAuthString(mProxy, 
+                            mProxyPort,
+                            getter_Copies(proxyAuthStr))))
+            {
+                if (proxyAuthStr && *proxyAuthStr)
+                    rv = mRequest->SetHeader(nsHTTPAtoms::Proxy_Authorization, 
+                            proxyAuthStr);
+            }
+        }
+    }
+
+    rv = mRequest->WriteRequest();
     if (NS_FAILED(rv)) return rv;
     
     mState = HS_WAITING_FOR_RESPONSE;
@@ -1485,6 +1524,7 @@ nsHTTPChannel::Authenticate(const char *iChallenge, PRBool iProxyAuth)
             This is dependent on the completion of the new 
             design of the webshell. 
         */
+#if 0
       nsCOMPtr<nsIAppShellService> appShellService(do_GetService(kAppShellServiceCID));
       NS_ENSURE_TRUE(appShellService, NS_ERROR_FAILURE);
 
@@ -1501,9 +1541,12 @@ nsHTTPChannel::Authenticate(const char *iChallenge, PRBool iProxyAuth)
               NS_GET_IID(nsINetPrompt), 
               prompter, PROXY_SYNC,
               (void**)&proxyprompter);
+#endif
 
+        if (!mPrompter)
+            return rv;
         PRUnichar *user=nsnull, *passwd=nsnull;
-        PRBool retval;
+        PRBool retval = PR_FALSE;
 
         //TODO localize it!
         nsAutoString message = "Enter username for "; 
@@ -1514,6 +1557,7 @@ nsHTTPChannel::Authenticate(const char *iChallenge, PRBool iProxyAuth)
          nsXPIDLCString urlCString; 
         mURI->GetHost(getter_Copies(urlCString));
         
+        /*
         rv = proxyprompter->PromptUsernameAndPassword(urlCString, 
                 PR_TRUE,
                 NULL, 
@@ -1524,8 +1568,14 @@ nsHTTPChannel::Authenticate(const char *iChallenge, PRBool iProxyAuth)
 
         // Must be done as not managed for you.
         proxyprompter->Release();  
+        */
+        rv = mPrompter->PromptUsernameAndPassword(
+                message.GetUnicode(),
+                &user,
+                &passwd,
+                &retval);
        
-        if (retval)
+        if (NS_SUCCEEDED(rv) && (retval))
         {
             nsAutoString temp(user);
             if (passwd) {
@@ -1956,19 +2006,7 @@ nsHTTPChannel::SetReferrer(nsIURI *referrer, PRUint32 referrerLevel)
     {
         if ((referrerLevel == nsIHTTPChannel::REFERRER_NON_HTTP) || 
             (0 == PL_strncasecmp((const char*)spec, "http",4)))
-#ifdef DEBUG_gagan
-        {
-            PRINTF_CYAN;
-            nsXPIDLCString thisURL;
-            mURI->GetSpec(getter_Copies(thisURL));
-            printf("For: %s\nUsing Referrer: %s\n", 
-                    (const char*)thisURL,
-                    (const char*)spec);
-#endif
             return SetRequestHeader(nsHTTPAtoms::Referer, spec);
-#ifdef DEBUG_gagan
-        }
-#endif
     }
     return NS_OK; 
 }
