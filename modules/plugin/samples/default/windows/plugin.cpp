@@ -118,6 +118,8 @@ CPlugin::CPlugin(HINSTANCE hInst,
   m_bSmartUpdate(TRUE),
   m_szURLString(NULL),
   m_szCommandMessage(NULL),
+  m_bWaitingStreamFromPFS(FALSE),
+  m_PFSStream(NULL),
   m_bHidden(bHidden)
 {
   dbgOut1("CPlugin::CPlugin()");
@@ -434,7 +436,8 @@ void CPlugin::getPluginRegular()
 
   dbgOut3("CPlugin::getPluginRegular(), %#08x '%s'", m_pNPInstance, szURL);
 
-  NPN_GetURL(m_pNPInstance, szURL, "_blank");
+  NPN_GetURL(m_pNPInstance, szURL, NULL);
+  m_bWaitingStreamFromPFS = TRUE;
 }
 
 void CPlugin::getPluginSmart()
@@ -552,6 +555,32 @@ void CPlugin::URLNotify(const char * szURL)
   int32 iBytes = NPN_Write(m_pNPInstance, pStream, lstrlen(buf), buf);
 
   NPN_DestroyStream(m_pNPInstance, pStream, NPRES_DONE);
+}
+
+NPError CPlugin::newStream(NPMIMEType type, NPStream *stream, NPBool seekable, uint16 *stype)
+{
+  if (!m_bWaitingStreamFromPFS)
+    return NPERR_NO_ERROR;
+
+  m_bWaitingStreamFromPFS = FALSE;
+  m_PFSStream = stream;
+
+  if (stream) {
+    if (type && !strcmp(type, "application/x-xpinstall"))
+      NPN_GetURL(m_pNPInstance, stream->url, "_self");
+    else
+      NPN_GetURL(m_pNPInstance, stream->url, "_blank");
+  }
+
+  return NPERR_NO_ERROR;
+}
+
+NPError CPlugin::destroyStream(NPStream *stream, NPError reason)
+{
+  if (stream == m_PFSStream)
+    m_PFSStream = NULL;
+
+  return NPERR_NO_ERROR;
 }
 
 BOOL CPlugin::readyToRefresh()

@@ -44,22 +44,24 @@ class CPlugin
 {
 private:
   HINSTANCE m_hInst;
-  NPP m_pNPInstance;
-  WORD m_wMode;
-  HWND m_hWnd;
-  HWND m_hWndParent;
-  HICON m_hIcon;
-  char * m_szURLString;
+  NPP       m_pNPInstance;
+  WORD      m_wMode;
+  HWND      m_hWnd;
+  HWND      m_hWndParent;
+  HICON     m_hIcon;
+  char*     m_szURLString;
 
-  char * m_szCommandMessage;
+  char*     m_szCommandMessage;
+  BOOL      m_bWaitingStreamFromPFS;
+  NPStream* m_PFSStream;
 
 public:
-  BOOL m_bHidden;
+  BOOL       m_bHidden;
   NPMIMEType m_pNPMIMEType;
-  LPSTR m_szPageURL;       // Location of plug-in HTML page
-  LPSTR m_szFileURL;       // Location of plug-in JAR file 
-  LPSTR m_szFileExtension; // File extension associated with the of the unknown mimetype
-  HWND m_hWndDialog;
+  LPSTR      m_szPageURL;       // Location of plug-in HTML page
+  LPSTR      m_szFileURL;       // Location of plug-in JAR file 
+  LPSTR      m_szFileExtension; // File extension associated with the of the unknown mimetype
+  HWND       m_hWndDialog;
 
   // environment
   BOOL m_bOnline;
@@ -93,15 +95,18 @@ public:
   BOOL readyToRefresh();
 
   // NP API handlers
-  void resize();
   void print(NPPrint * pNPPrint);
   void URLNotify(const char * szURL);
+  NPError newStream(NPMIMEType type, NPStream *stream, NPBool seekable, uint16 *stype);
+  NPError destroyStream(NPStream *stream, NPError reason);
 
   // Windows message handlers
   void onCreate(HWND hWnd);
   void onLButtonUp(HWND hWnd, int x, int y, UINT keyFlags);
   void onRButtonUp(HWND hWnd, int x, int y, UINT keyFlags);
   void onPaint(HWND hWnd);
+
+  void resize();
 };
 
 

@@ -231,7 +231,10 @@ NPP_NewStream(NPP pInstance,
   CPlugin * pPlugin = (CPlugin *)pInstance->pdata;
   assert(pPlugin != NULL);
 
-  return NPERR_NO_ERROR;
+  if (!pPlugin)
+    return NPERR_GENERIC_ERROR;
+
+  return pPlugin->newStream(type, stream, seekable, stype);
 }
 
 //------------------------------------------------------------------------------------
@@ -263,7 +266,7 @@ NPP_Write(NPP pInstance, NPStream *stream, int32 offset, int32 len, void *buffer
   CPlugin * pPlugin = (CPlugin *)pInstance->pdata;
   assert(pPlugin != NULL);
 
-  return -1;   // tell Nav to abort the stream, don't need it
+  return -1;   // tell the browser to abort the stream, don't need it
 }
 
 //------------------------------------------------------------------------------------
@@ -279,7 +282,10 @@ NPP_DestroyStream(NPP pInstance, NPStream *stream, NPError reason)
   CPlugin * pPlugin = (CPlugin *)pInstance->pdata;
   assert(pPlugin != NULL);
 
-  return NPERR_NO_ERROR;
+  if (!pPlugin)
+    return NPERR_GENERIC_ERROR;
+
+  return pPlugin->destroyStream(stream, reason);
 }
 
 //------------------------------------------------------------------------------------
