@@ -124,6 +124,7 @@ nsSoftwareUpdate::nsSoftwareUpdate()
   mReg(0)
 {
     NS_INIT_ISUPPORTS();
+    mMasterListener.AddRef(); // inflate refcount so it doesn't go away early
 
     mLock = PR_NewLock();
 
@@ -271,6 +272,7 @@ nsSoftwareUpdate::GetMasterListener(nsIXPIListener **aListener)
     if (!aListener)
         return NS_ERROR_NULL_POINTER;
 
+    NS_ADDREF(&mMasterListener);
     *aListener = &mMasterListener;
     return NS_OK;
 }

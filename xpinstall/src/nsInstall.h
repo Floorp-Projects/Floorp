@@ -75,13 +75,13 @@ class nsInstallInfo
 
     virtual ~nsInstallInfo();
 
-    nsIFile*            GetFile()               { return mFile; }
+    nsIFile*            GetFile()               { return mFile.get(); }
     const PRUnichar*    GetURL()                { return mURL.GetUnicode(); }
     const PRUnichar*    GetArguments()          { return mArgs.GetUnicode(); }
     PRUint32            GetFlags()              { return mFlags; }
     PRUint32            GetType()               { return mType; }
-    nsIXPIListener*     GetListener()           { return mListener; }
-    nsIChromeRegistry*  GetChromeRegistry()     { return mChromeReg; }
+    nsIXPIListener*     GetListener()           { return mListener.get(); }
+    nsIChromeRegistry*  GetChromeRegistry()     { return mChromeReg.get(); }
 
   private:
 
@@ -221,6 +221,7 @@ class nsInstall
         PRInt32	   LoadResources(JSContext* cx, const nsString& aBaseName, jsval* aReturn);
         PRInt32    Patch(const nsString& aRegName, const nsString& aVersion, const nsString& aJarSource, nsInstallFolder* aFolder, const nsString& aTargetName, PRInt32* aReturn);
         PRInt32    Patch(const nsString& aRegName, const nsString& aJarSource, nsInstallFolder* aFolder, const nsString& aTargetName, PRInt32* aReturn);
+        PRInt32    RegisterChrome(nsIFile* chrome, PRUint32 chromeType);
         PRInt32    ResetError();
         PRInt32    SetPackageFolder(nsInstallFolder& aFolder);
         PRInt32    StartInstall(const nsString& aUserPackageName, const nsString& aPackageName, const nsString& aVersion, PRInt32* aReturn);
@@ -266,6 +267,10 @@ class nsInstall
         PRUint32   GetInstallFlags()  { return mInstallFlags; }
         void       SetInstallFlags(PRUint32 aFlags) { mInstallFlags = aFlags; }
 
+        nsIChromeRegistry*  GetChromeRegistry() { return mChromeRegistry; }
+        void                SetChromeRegistry(nsIChromeRegistry* reg)
+                                { mChromeRegistry = reg; }
+
         PRBool     GetStatusSent() { return mStatusSent; }
         PRBool     InInstallTransaction(void) { return mInstalledFiles != nsnull; }
 
@@ -273,7 +278,7 @@ class nsInstall
         PRInt32    Confirm(nsString& string, PRBool* aReturn);
         void       InternalAbort(PRInt32 errcode);
 
-        PRInt32     ScheduleForInstall(nsInstallObject* ob);
+        PRInt32    ScheduleForInstall(nsInstallObject* ob);
 
         PRInt32    SaveError(PRInt32 errcode);
 
@@ -290,6 +295,7 @@ class nsInstall
         nsString            mInstallArguments;
         nsString            mInstallURL;
         PRUint32            mInstallFlags;
+        nsIChromeRegistry*  mChromeRegistry; // we don't own it, it outlives us
         nsInstallFolder*    mPackageFolder;
 
         PRBool              mUserCancelled;
@@ -307,7 +313,7 @@ class nsInstall
         //nsCOMPtr<nsISupportsArray>   mInstalledFiles;
         nsHashtable*        mPatchList;
 
-        nsIXPIListener      *mListener;
+        nsCOMPtr<nsIXPIListener>    mListener;
 
         nsCOMPtr<nsIStringBundle>   mStringBundle;
 

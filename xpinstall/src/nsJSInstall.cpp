@@ -29,6 +29,7 @@
 #include "nsString.h"
 #include "nsInstall.h"
 #include "nsInstallFile.h"
+#include "nsInstallTrigger.h"
 
 #include "nsIDOMInstallVersion.h"
 
@@ -55,13 +56,14 @@ enum Install_slots
   INSTALL_USERPACKAGENAME = -1,
   INSTALL_REGPACKAGENAME  = -2,
   INSTALL_JARFILE         = -3,
-  INSTALL_ARGUMENTS       = -4,
-  INSTALL_URL             = -5,
-  INSTALL_FLAGS           = -6,
-  INSTALL_STATUSSENT      = -7,
-  INSTALL_INSTALL         = -8,
-  INSTALL_FILEOP          = -9,
-  INSTALL_INSTALLED_FILES = -10
+  INSTALL_ARCHIVE         = -4,
+  INSTALL_ARGUMENTS       = -5,
+  INSTALL_URL             = -6,
+  INSTALL_FLAGS           = -7,
+  INSTALL_STATUSSENT      = -8,
+  INSTALL_INSTALL         = -9,
+  INSTALL_FILEOP          = -10,
+  INSTALL_INSTALLED_FILES = -11
 };
 
 // prototype for fileOp object
@@ -117,6 +119,7 @@ GetInstallProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         break;
       }
 
+      case INSTALL_ARCHIVE:
       case INSTALL_JARFILE:
       {
         nsInstallFolder* folder = new nsInstallFolder();
@@ -1453,16 +1456,36 @@ InstallPatch(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 PR_STATIC_CALLBACK(JSBool)
 InstallRegisterChrome(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  *rval = INT_TO_JSVAL(nsInstall::UNEXPECTED_ERROR);
-
   // If there's no private data, this must be the prototype, so ignore
   nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
   if (nsnull == nativeThis) {
+    *rval = INT_TO_JSVAL(nsInstall::UNEXPECTED_ERROR);
     return JS_TRUE;
   }
 
-  PRUint32 installType = 0;
+  // Now validate the arguments
+  *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
+  uint32 chromeType = CHROME_ALL;
   nsIFile* chrome = nsnull;
+  if ( argc >=1 )
+  {
+    if (argv[0] == JSVAL_NULL || !JSVAL_IS_OBJECT(argv[0]))
+      return JS_TRUE;
+
+    JSObject* jsObj = JSVAL_TO_OBJECT(argv[0]);
+    if (!JS_InstanceOf(cx, jsObj, &FileSpecObjectClass, nsnull))
+      return JS_TRUE;
+
+    nsInstallFolder* folder = (nsInstallFolder*)JS_GetPrivate(cx,jsObj);
+    if (folder)
+        chrome = folder->GetFileSpec();
+
+    if (argc >= 2)
+      JS_ValueToECMAUint32(cx,argv[1],&chromeType);
+  }
+
+  *rval = INT_TO_JSVAL(nativeThis->RegisterChrome(chrome, chromeType));
+
   return JS_TRUE;
 }
 
@@ -1780,6 +1803,7 @@ static JSPropertySpec InstallProperties[] =
   {"userPackageName",   INSTALL_USERPACKAGENAME,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"regPackageName",    INSTALL_REGPACKAGENAME,     JSPROP_ENUMERATE | JSPROP_READONLY},
   {"jarfile",           INSTALL_JARFILE,            JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"archive",           INSTALL_ARCHIVE,            JSPROP_ENUMERATE | JSPROP_READONLY},
   {"arguments",         INSTALL_ARGUMENTS,          JSPROP_ENUMERATE | JSPROP_READONLY},
   {"url",               INSTALL_URL,                JSPROP_ENUMERATE | JSPROP_READONLY},
   {"flags",             INSTALL_FLAGS,              JSPROP_ENUMERATE | JSPROP_READONLY},
@@ -1841,6 +1865,12 @@ static JSConstDoubleSpec install_constants[] =
     { nsInstall::FULL_INSTALL,               "FULL_INSTALL"                 },
     { nsInstall::NO_STATUS_DLG ,             "NO_STATUS_DLG"                },
     { nsInstall::NO_FINALIZE_DLG,            "NO_FINALIZE_DLG"              },
+
+    { CHROME_SKIN,                           "SKIN"                         },
+    { CHROME_LOCALE,                         "LOCALE"                       },
+    { CHROME_CONTENT,                        "CONTENT"                      },
+    { CHROME_ALL,                            "PACKAGE"                      },
+
     {0}
 };
 
@@ -1915,6 +1945,7 @@ JSObject * InitXPInstallObjects(JSContext *jscontext,
                              const PRUnichar* url,
                              const PRUnichar* args,
                              PRUint32 flags,
+                             nsIChromeRegistry* reg,
                              nsIZipReader * theJARFile)
 {
   JSObject *installObject  = nsnull;
@@ -1952,6 +1983,7 @@ JSObject * InitXPInstallObjects(JSContext *jscontext,
   nativeInstallObject->SetInstallArguments(args);
   nativeInstallObject->SetInstallURL(url);
   nativeInstallObject->SetInstallFlags(flags);
+  nativeInstallObject->SetChromeRegistry(reg);
 
   JS_SetPrivate(jscontext, installObject, nativeInstallObject);
   nativeInstallObject->SetScriptObject(installObject);
