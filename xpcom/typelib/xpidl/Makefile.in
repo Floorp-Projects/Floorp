@@ -51,9 +51,7 @@ $(PROGS): $(OBJS)
 	@$(MAKE_OBJDIR)
 	$(CC) -o $@ $(OBJS) $(LD_FLAGS) $(EX_LIBS) $(OS_LIBS)
 
-export::
-
-install:: $(TARGETS)
+export:: $(TARGETS)
 	$(INSTALL) $(PROGS) $(DIST)/bin
 
 clobber::
