@@ -70,8 +70,6 @@ public:
   NS_IMETHOD  GetScrollPreference(nsScrollPreference &aScrollPreference) const;
   NS_IMETHOD  GetScrollPosition(nscoord &aX, nscoord &aY) const;
   NS_IMETHOD  ScrollTo(nscoord aX, nscoord aY, PRUint32 aUpdateFlags);
-  NS_IMETHOD  SetControlInsets(const nsMargin &aInsets);
-  NS_IMETHOD  GetControlInsets(nsMargin &aInsets) const;
   NS_IMETHOD  GetScrollbarVisibility(PRBool *aVerticalVisible,
                                      PRBool *aHorizontalVisible) const;
   NS_IMETHOD  SetScrollProperties(PRUint32 aProperties);

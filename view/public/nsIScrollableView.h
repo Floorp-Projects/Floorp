@@ -146,16 +146,6 @@ public:
   NS_IMETHOD ScrollTo(nscoord aX, nscoord aY, PRUint32 aUpdateFlags) = 0;
 
   /**
-   * Set the amount to inset when positioning the scrollbars and clip view
-   */
-  NS_IMETHOD SetControlInsets(const nsMargin &aInsets) = 0;
-
-  /**
-   * Get the amount to inset when positioning the scrollbars and clip view
-   */
-  NS_IMETHOD GetControlInsets(nsMargin &aInsets) const = 0;
-
-  /**
    * Get information about whether the vertical and horizontal scrollbars
    * are currently visible
    */

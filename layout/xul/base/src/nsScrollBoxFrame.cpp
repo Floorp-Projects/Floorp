@@ -252,14 +252,6 @@ nsScrollBoxFrame::CreateScrollingView(nsIPresContext* aPresContext)
       scrollingView->CreateScrollControls(); 
     }
 
-    // Set the scrolling view's insets to whatever our border is
-    nsMargin border;
-    if (!GetStyleBorder()->GetBorder(border)) {
-      NS_NOTYETIMPLEMENTED("percentage border");
-      border.SizeTo(0, 0, 0, 0);
-    }
-    scrollingView->SetControlInsets(border);
-
     // Remember our view
     SetView(view);
   }
