@@ -607,7 +607,9 @@ nsresult nsHTMLTokenizer::ConsumeTag(PRUnichar aChar,CToken*& aToken,nsScanner& 
  *  @param   aLeadingWS: contains ws chars that preceeded the first attribute
  *  @return  
  */
-nsresult nsHTMLTokenizer::ConsumeAttributes(PRUnichar aChar,CStartToken* aToken,nsScanner& aScanner) {
+nsresult nsHTMLTokenizer::ConsumeAttributes(PRUnichar aChar,
+                                            CToken* aToken,
+                                            nsScanner& aScanner) {
   PRBool done=PR_FALSE;
   nsresult result=NS_OK;
   PRInt16 theAttrCount=0;
@@ -649,20 +651,24 @@ nsresult nsHTMLTokenizer::ConsumeAttributes(PRUnichar aChar,CStartToken* aToken,
       }
     }//if
     
+#ifdef DEBUG
     if(NS_SUCCEEDED(result)){
-      result=aScanner.SkipWhitespace();
-      if(NS_SUCCEEDED(result)) {
-        result=aScanner.Peek(aChar);
-        if(NS_SUCCEEDED(result)) {
-          if(aChar==kGreaterThan) { //you just ate the '>'
-            aScanner.GetChar(aChar); //skip the '>'
-            done=PR_TRUE;
-          }
-          else if(aChar==kLessThan) {
-            done=PR_TRUE;
-          }
-        }//if
-      }
+      PRInt32 newline = 0;
+      result = aScanner.SkipWhitespace(newline);
+      NS_ASSERTION(newline == 0, "CAttribute::Consume() failed to collect all the newlines!");
+    }
+#endif
+    if (NS_SUCCEEDED(result)) {
+      result = aScanner.Peek(aChar);
+      if (NS_SUCCEEDED(result)) {
+        if (aChar == kGreaterThan) { //you just ate the '>'
+          aScanner.GetChar(aChar); //skip the '>'
+          done = PR_TRUE;
+        }
+        else if(aChar == kLessThan) {
+          done = PR_TRUE;
+        }
+      }//if
     }//if
   }//while
 
@@ -706,51 +712,28 @@ nsresult nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,CToken*& aToken,nsScan
     if(NS_SUCCEEDED(result)) {
      
       AddToken(aToken,result,&mTokenDeque,theAllocator);
+      NS_ENSURE_SUCCESS(result, result);
+
       eHTMLTags theTag=(eHTMLTags)aToken->GetTypeID();
 
-       //Good. Now, let's see if the next char is ">". 
-       //If so, we have a complete tag, otherwise, we have attributes.
-      PRBool theTagHasAttributes=PR_FALSE;
-      nsReadingIterator<PRUnichar> start, end;
-      if(NS_OK==result) { 
-        if (mFlags & NS_IPARSER_FLAG_VIEW_SOURCE) {
-          result = aScanner.ReadWhitespace(start, end);
-        }
-        else {
-          result = aScanner.SkipWhitespace();
-        }
-        aToken->mNewlineCount += aScanner.GetNewlinesSkipped();
-        if(NS_OK==result) {
-          result=aScanner.Peek(aChar);
-          if(NS_OK==result) {
-            if(kGreaterThan!=aChar) { //look for '>' 
-             //push that char back, since we apparently have attributes...
-              theTagHasAttributes=PR_TRUE;
-            } //if
-            else {
-              aScanner.GetChar(aChar);
-            }
-          } //if
-        }//if
-      }
-      
-      CStartToken* theStartToken=NS_STATIC_CAST(CStartToken*,aToken);
-      if(theTagHasAttributes) {
-        if (mFlags & NS_IPARSER_FLAG_VIEW_SOURCE) {
-          // Since we conserve whitespace in view-source mode,
-          // go back to the beginning of the whitespace section
-          // and let the first attribute grab it.
-          aScanner.SetPosition(start, PR_FALSE, PR_TRUE);
-        }
-        result=ConsumeAttributes(aChar,theStartToken,aScanner);
-      }
+      //Good. Now, let's see if the next char is ">". 
+      //If so, we have a complete tag, otherwise, we have attributes.
+      result = aScanner.Peek(aChar);
+      NS_ENSURE_SUCCESS(result, result);
+
+      if(kGreaterThan != aChar) { //look for '>' 
+        result = ConsumeAttributes(aChar, aToken, aScanner);
+      } //if
+      else {
+        aScanner.GetChar(aChar);
+      }        
 
       /*  Now that that's over with, we have one more problem to solve.
           In the case that we just read a <SCRIPT> or <STYLE> tags, we should go and
           consume all the content itself.
        */
       if(NS_SUCCEEDED(result)) {
-        
+        CStartToken* theStartToken = NS_STATIC_CAST(CStartToken*,aToken);
         //XXX - Find a better soution to record content
         //Added _plaintext to fix bug 46054.
         if((theTag == eHTMLTag_textarea  ||
@@ -825,7 +808,19 @@ nsresult nsHTMLTokenizer::ConsumeEndTag(PRUnichar aChar,CToken*& aToken,nsScanne
   if(aToken) {
     result= aToken->Consume(aChar,aScanner,mFlags);  //tell new token to finish consuming text...    
     AddToken(aToken,result,&mTokenDeque,theAllocator);
-    
+    NS_ENSURE_SUCCESS(result, result);
+      
+    result = aScanner.Peek(aChar);
+    NS_ENSURE_SUCCESS(result, result);
+
+    if(kGreaterThan != aChar) {
+      result = ConsumeAttributes(aChar, aToken, aScanner);
+      NS_ENSURE_SUCCESS(result, result);
+    }
+    else {
+      aScanner.GetChar(aChar);
+    }        
+
     if(NS_SUCCEEDED(result)) {
       eHTMLTags theTag=(eHTMLTags)aToken->GetTypeID();
       if((theTag == eHTMLTag_textarea  || 

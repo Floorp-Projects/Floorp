@@ -855,13 +855,19 @@ HTMLContentSink::CreateContentObject(const nsIParserNode& aNode,
   if (NS_SUCCEEDED(rv)) {
     // XXX if the parser treated the text in a textarea like a normal textnode
     //     we wouldn't need to do this.
-    const nsAString* skippedContent = nsnull;
+    nsAutoString skippedContent;
     if (aNodeType == eHTMLTag_textarea) {
-      skippedContent = &aNode.GetSkippedContent();
+      nsCOMPtr<nsIDTD> dtd;
+      mParser->GetDTD(getter_AddRefs(dtd));
+      NS_ENSURE_TRUE(dtd, NS_ERROR_FAILURE);
+
+      PRInt32 lineNo = 0;
+
+      dtd->CollectSkippedContent(eHTMLTag_textarea, skippedContent, lineNo);
     }
     // Make the content object
     rv = MakeContentObject(aNodeType, nodeInfo, aForm, aWebShell,
-                           aResult, skippedContent, !!mInsideNoXXXTag,
+                           aResult, &skippedContent, !!mInsideNoXXXTag,
                            PR_TRUE);
 
     PRInt32 id;
@@ -5099,15 +5105,22 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
     return rv;
   }
 
+  nsCOMPtr<nsIDTD> dtd;
+  mParser->GetDTD(getter_AddRefs(dtd));
+  NS_ENSURE_TRUE(dtd, NS_ERROR_FAILURE);
+
+  nsAutoString script;
+  PRInt32 lineNo = 0;
+
+  dtd->CollectSkippedContent(eHTMLTag_script, script, lineNo);
+  
   nsCOMPtr<nsIScriptElement> sele(do_QueryInterface(element));
   if (sele) {
-    sele->SetLineNumber((PRUint32)aNode.GetSourceLineNumber());
+    sele->SetLineNumber((PRUint32)lineNo);
   }
 
   // Create a text node holding the content
   // First, get the text content of the script tag
-  nsAutoString script;
-  script.Assign(aNode.GetSkippedContent());
 
   if (!script.IsEmpty()) {
     nsCOMPtr<nsIContent> text;
@@ -5226,7 +5239,14 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
       }
 
       // The skipped content contains the inline style data
-      const nsString& content = aNode.GetSkippedContent();
+      nsCOMPtr<nsIDTD> dtd;
+      mParser->GetDTD(getter_AddRefs(dtd));
+      NS_ENSURE_TRUE(dtd, NS_ERROR_FAILURE);
+
+      nsAutoString content;
+      PRInt32 lineNo = 0;
+
+      dtd->CollectSkippedContent(eHTMLTag_style, content, lineNo);
 
       if (!content.IsEmpty()) {
         // Create a text node holding the content
