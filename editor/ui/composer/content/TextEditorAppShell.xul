@@ -49,7 +49,6 @@
         titlemodifier="&textEditorWindow.titlemodifier;"
         titlemenuseparator="&editorWindow.titlemodifiermenuseparator;"
         windowtype="composer:text"
-        orient="vertical"
         width="640" height="480"
         screenX="10" screenY="10"
         persist="screenX screenY width height sizemode"
