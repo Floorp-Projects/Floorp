@@ -459,6 +459,10 @@ NS_IMETHODIMP nsWindow::CaptureRollupEvents(nsIRollupListener * aListener,
                                             PRBool aConsumeRollupEvent)
 {
   if (aDoCapture) {
+    /* we haven't bothered carrying a weak reference to gRollupWidget because
+       we believe lifespan is properly scoped. this next assertion helps
+       assure that remains true. */
+    NS_ASSERTION(!gRollupWidget, "rollup widget reassigned before release");
     gRollupConsumeRollupEvent = aConsumeRollupEvent;
     NS_IF_RELEASE(gRollupListener);
     NS_IF_RELEASE(gRollupWidget);
@@ -932,6 +936,72 @@ NS_METHOD nsWindow::Show(PRBool bState)
 NS_METHOD nsWindow::IsVisible(PRBool & bState)
 {
   bState = mIsVisible;
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+// Return PR_TRUE in aForWindow if the given event should be processed
+// assuming this is a modal window.
+//-------------------------------------------------------------------------
+NS_METHOD nsWindow::ModalEventFilter(PRBool aRealEvent, void *aEvent,
+                                     PRBool *aForWindow)
+{
+  PRBool isInWindow,
+         isMouseEvent;
+  MSG    *msg = (MSG *) aEvent;
+
+  if (!aRealEvent) {
+     *aForWindow = PR_FALSE;
+     return NS_OK;
+   }
+
+   isInWindow = PR_FALSE;
+
+   // Get native window
+   HWND win;
+   win = (HWND)GetNativeData(NS_NATIVE_WINDOW);
+
+   // Find top most window of event window
+   HWND eWin = msg->hwnd;
+   if (NULL != eWin) {
+     /*HWND parent = ::GetParent(eWin);
+     while (parent != NULL) {
+       eWin = parent;
+       parent = ::GetParent(eWin);
+     }
+     */
+     if (win == eWin)
+       isInWindow = PR_TRUE;
+     else {
+       RECT r;
+       ::GetWindowRect(win, &r);
+       if (msg->pt.x >= r.left && msg->pt.x <= r.right && msg->pt.y >= r.top && msg->pt.y <= r.bottom)
+         isInWindow = PR_TRUE;
+     }
+   }
+
+   // include for consideration any popup menu which may be active at the moment
+   if (!isInWindow && gRollupWidget &&
+       EventIsInsideWindow((nsWindow*)gRollupWidget))
+     isInWindow = PR_TRUE;
+
+  isMouseEvent = PR_FALSE;
+  switch (msg->message) {
+     case WM_MOUSEMOVE:
+     case WM_LBUTTONDOWN:
+     case WM_LBUTTONUP:
+     case WM_LBUTTONDBLCLK:
+     case WM_MBUTTONDOWN:
+     case WM_MBUTTONUP:
+     case WM_MBUTTONDBLCLK:
+     case WM_RBUTTONDOWN:
+     case WM_RBUTTONUP:
+     case WM_RBUTTONDBLCLK:
+       isMouseEvent = PR_TRUE;
+  }
+
+  *aForWindow = isInWindow || !isMouseEvent ? PR_TRUE : PR_FALSE;
+
   return NS_OK;
 }
 
