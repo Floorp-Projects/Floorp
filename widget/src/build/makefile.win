@@ -33,7 +33,9 @@ REQUIRES	= xpcom \
 		  gfx \
 		  dom \
 		  timer \
+		  accessibility \
 		  $(NULL)
+
 RESFILE = widget.res
 
 CPPSRCS  = nsWinWidgetFactory.cpp
