@@ -1302,12 +1302,25 @@ nsTableRowFrame::IR_TargetIsChild(nsIPresContext*          aPresContext,
         Invalidate(aPresContext, dirtyRect);
       }
     }
+    else { // we dont realign vertical but we need to update the overflow area
+      nsIFrame* cellKidFrame = cellFrame->GetFirstChild(nsnull);
+      if (cellKidFrame) {
+        cellFrame->ConsiderChildOverflow(aPresContext, cellMet.mOverflowArea, cellKidFrame);
+        cellFrame->StoreOverflow(aPresContext, cellMet);
+       }
+    }
   }
   else
   { // pass reflow to unknown frame child
     // aDesiredSize does not change
   }
-
+  
+  // recover the overflow area
+  aDesiredSize.mOverflowArea = nsRect(0, 0, mRect.width, mRect.height);
+  for (nsIFrame* cell = mFrames.FirstChild(); cell; cell = cell->GetNextSibling()) {
+    ConsiderChildOverflow(aPresContext, aDesiredSize.mOverflowArea, cell);
+  }
+  StoreOverflow(aPresContext, aDesiredSize);
   // When returning whether we're complete we need to look at each of our cell
   // frames. If any of them has a continuing frame, then we're not complete. We
   // can't just return the status of the cell frame we just reflowed...

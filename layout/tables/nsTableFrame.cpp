@@ -2084,6 +2084,12 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext*          aPresContext,
       damage.UnionRect(damage, *oldOverflowArea);
     }
     Invalidate(aPresContext, damage);
+  } else {
+    // use the old overflow area
+     nsRect* oldOverflowArea = GetOverflowAreaProperty(aPresContext);
+     if (oldOverflowArea) {
+       aDesiredSize.mOverflowArea.UnionRect(aDesiredSize.mOverflowArea, *oldOverflowArea);
+     }
   }
 
   StoreOverflow(aPresContext, aDesiredSize);
@@ -2940,6 +2946,7 @@ nsTableFrame::IR_TargetIsChild(nsIPresContext*      aPresContext,
 
   // Pass along the reflow command, don't request a max element size, rows will do that
   nsHTMLReflowMetrics desiredSize(PR_FALSE);
+
   nsSize kidAvailSize(aReflowState.availSize);
   nsHTMLReflowState kidReflowState(aPresContext, aReflowState.reflowState, aNextFrame, 
                                    kidAvailSize, aReflowState.reason);
@@ -2981,6 +2988,12 @@ nsTableFrame::IR_TargetIsChild(nsIPresContext*      aPresContext,
     AdjustSiblingsAfterReflow(aPresContext, aReflowState, aNextFrame, 
                               desiredSize.height - oldKidRect.height);
 
+    // recover the overflow area from all children
+    desiredSize.mOverflowArea = nsRect(0, 0, mRect.width, mRect.height);
+    for (nsIFrame* kidFrame = mFrames.FirstChild(); kidFrame; kidFrame = kidFrame->GetNextSibling()) {
+      ConsiderChildOverflow(aPresContext, desiredSize.mOverflowArea, kidFrame);
+    }  
+    StoreOverflow(aPresContext, desiredSize);
     // XXX Is this needed?
 #if 0
     AdjustForCollapsingRows(aPresContext, aDesiredSize.height);

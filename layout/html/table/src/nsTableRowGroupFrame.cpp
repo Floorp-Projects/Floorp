@@ -1698,7 +1698,6 @@ nsTableRowGroupFrame::IR_TargetIsChild(nsIPresContext*        aPresContext,
         // Inform the row of its new height.
         ((nsTableRowFrame*)aNextFrame)->DidResize(aPresContext, aReflowState.reflowState);
         // the overflow area may have changed inflate the overflow area
-        ConsiderChildOverflow(aPresContext, aDesiredSize.mOverflowArea, aNextFrame);
         if (aReflowState.tableFrame->IsAutoHeight()) {
           // Because other cells in the row may need to be be aligned differently,
           // repaint the entire row
@@ -1746,6 +1745,13 @@ nsTableRowGroupFrame::IR_TargetIsChild(nsIPresContext*        aPresContext,
       // rect of what changed. Or whether anything moved or changed size...
       nsRect  dirtyRect(0, 0, mRect.width, mRect.height);
       Invalidate(aPresContext, dirtyRect);
+    }
+    else {
+      // need to recover the  OverflowArea
+      for (nsTableRowFrame* rowFrame = GetFirstRow(); rowFrame; rowFrame = rowFrame->GetNextRow()) {
+        ConsiderChildOverflow(aPresContext, aDesiredSize.mOverflowArea, rowFrame);
+      }
+      StoreOverflow(aPresContext, aDesiredSize);
     }
   }
   
