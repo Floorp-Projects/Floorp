@@ -48,7 +48,7 @@ REQUIRES = \
 	layout \
 	webbrowserpersist \
 	composer \
-	command_handler \
+	commandhandler \
 	$(NULL)
 
 CPPSRCS		= \
