@@ -49,6 +49,8 @@ interface nsISmtpService : nsISupports {
 					   in nsIUrlListener aUrlListener, in nsISmtpServer aServer,
                        out nsIURI aURL);
 
-  void GetSmtpServers(out nsISupportsArray aResult);
+  readonly attribute nsISupportsArray smtpServers;
   attribute nsISmtpServer DefaultSmtpServer;
+  nsISmtpServer createSmtpServer();
+  void deleteSmtpServer(in nsISmtpServer server);
 };

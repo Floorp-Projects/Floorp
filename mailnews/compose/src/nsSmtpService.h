@@ -57,6 +57,7 @@ protected:
 
     
 private:
+    static PRBool findServerByKey (nsISupports *element, void *aData);
     nsCOMPtr<nsISupportsArray> mSmtpServers;
     nsCOMPtr<nsISmtpServer> mDefaultSmtpServer;
 };

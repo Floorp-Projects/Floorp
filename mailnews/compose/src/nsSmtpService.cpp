@@ -31,6 +31,13 @@
 #include "nsIFileSpec.h"
 #include "nsCOMPtr.h"
 
+
+typedef struct _findServerByKeyEntry {
+    const char *key;
+    nsISmtpServer *server;
+} findServerByKeyEntry;
+
+
 static NS_DEFINE_CID(kCSmtpUrlCID, NS_SMTPURL_CID);
 
 // foward declarations...
@@ -322,3 +329,77 @@ nsSmtpService::SetDefaultSmtpServer(nsISmtpServer *aServer)
   return NS_OK;
 }
 
+PRBool
+nsSmtpService::findServerByKey (nsISupports *element, void *aData)
+{
+    nsresult rv;
+    nsCOMPtr<nsISmtpServer> server = do_QueryInterface(element, &rv);
+    if (NS_FAILED(rv)) return PR_TRUE;
+    
+    findServerByKeyEntry *entry = (findServerByKeyEntry*) aData;
+
+    nsXPIDLCString key;
+    rv = server->GetKey(getter_Copies(key));
+    if (NS_FAILED(rv)) return PR_TRUE;
+
+    if (nsCRT::strcmp(key, entry->key)==0) {
+        entry->server = server;
+        return PR_FALSE;
+    }
+    
+    return PR_TRUE;
+}
+
+
+NS_IMETHODIMP
+nsSmtpService::CreateSmtpServer(nsISmtpServer **aResult)
+{
+    if (!aResult) return NS_ERROR_NULL_POINTER;
+
+    nsresult rv;
+    
+    PRInt32 i=1;
+    PRBool unique = PR_FALSE;
+
+    findServerByKeyEntry entry;
+    nsCAutoString key;
+    
+    do {
+        key = "server";
+        key.Append(i);
+        
+        entry.key = key;
+        entry.server = nsnull;
+        
+        mSmtpServers->EnumerateForwards(findServerByKey, (void *)&entry);
+        if (!entry.server) unique=PR_TRUE;
+        
+    } while (!unique);
+
+    rv = nsComponentManager::CreateInstance(NS_SMTPSERVER_PROGID,
+                                            nsnull,
+                                            NS_GET_IID(nsISmtpServer),
+                                            (void **)aResult);
+    if (NS_SUCCEEDED(rv))
+        (*aResult)->SetKey(key);
+            
+    return rv;
+}
+
+NS_IMETHODIMP
+nsSmtpService::DeleteSmtpServer(nsISmtpServer *aServer)
+{
+    if (!aServer) return NS_OK;
+
+    nsresult rv;
+
+    PRInt32 idx = 0;
+    rv = mSmtpServers->GetIndexOf(aServer, &idx);
+    if (NS_FAILED(rv) || idx==0)
+        return NS_OK;
+
+    rv = mSmtpServers->DeleteElementAt(idx);
+
+    return rv;
+
+}
