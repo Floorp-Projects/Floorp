@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: ckhelper.c,v $ $Revision: 1.30 $ $Date: 2004/04/25 15:03:06 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: ckhelper.c,v $ $Revision: 1.31 $ $Date: 2004/05/17 20:08:37 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSCKEPV_H
@@ -543,16 +543,17 @@ nssCryptokiTrust_GetAttributes (
   nssTrustLevel *serverAuth,
   nssTrustLevel *clientAuth,
   nssTrustLevel *codeSigning,
-  nssTrustLevel *emailProtection
+  nssTrustLevel *emailProtection,
+  PRBool *stepUpApproved
 )
 {
     PRStatus status;
     NSSSlot *slot;
     nssSession *session;
-    CK_BBOOL isToken;
+    CK_BBOOL isToken, stepUp;
     CK_TRUST saTrust, caTrust, epTrust, csTrust;
     CK_ATTRIBUTE_PTR attr;
-    CK_ATTRIBUTE trust_template[6];
+    CK_ATTRIBUTE trust_template[7];
     CK_ULONG trust_size;
 
     /* Use the trust object to find the trust settings */
@@ -562,6 +563,7 @@ nssCryptokiTrust_GetAttributes (
     NSS_CK_SET_ATTRIBUTE_VAR(attr, CKA_TRUST_CLIENT_AUTH,      caTrust);
     NSS_CK_SET_ATTRIBUTE_VAR(attr, CKA_TRUST_EMAIL_PROTECTION, epTrust);
     NSS_CK_SET_ATTRIBUTE_VAR(attr, CKA_TRUST_CODE_SIGNING,     csTrust);
+    NSS_CK_SET_ATTRIBUTE_VAR(attr, CKA_TRUST_STEP_UP_APPROVED, stepUp);
     NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_CERT_SHA1_HASH,     sha1_hash);
     NSS_CK_TEMPLATE_FINISH(trust_template, attr, trust_size);
 
@@ -588,6 +590,7 @@ nssCryptokiTrust_GetAttributes (
     *clientAuth = get_nss_trust(caTrust);
     *emailProtection = get_nss_trust(epTrust);
     *codeSigning = get_nss_trust(csTrust);
+    *stepUpApproved = stepUp;
     return PR_SUCCESS;
 }
 

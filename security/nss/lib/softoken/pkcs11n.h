@@ -39,7 +39,7 @@
 #define _PKCS11N_H_
 
 #ifdef DEBUG
-static const char CKT_CVS_ID[] = "@(#) $RCSfile: pkcs11n.h,v $ $Revision: 1.9 $ $Date: 2004/04/25 15:03:16 $ $Name:  $";
+static const char CKT_CVS_ID[] = "@(#) $RCSfile: pkcs11n.h,v $ $Revision: 1.10 $ $Date: 2004/05/17 20:08:38 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -134,6 +134,8 @@ static const char CKT_CVS_ID[] = "@(#) $RCSfile: pkcs11n.h,v $ $Revision: 1.9 $ 
 #define CKA_TRUST_IPSEC_TUNNEL          (CKA_TRUST + 13)
 #define CKA_TRUST_IPSEC_USER            (CKA_TRUST + 14)
 #define CKA_TRUST_TIME_STAMPING         (CKA_TRUST + 15)
+#define CKA_TRUST_STEP_UP_APPROVED      (CKA_TRUST + 16)
+
 #define CKA_CERT_SHA1_HASH	        (CKA_TRUST + 100)
 #define CKA_CERT_MD5_HASH		(CKA_TRUST + 101)
 

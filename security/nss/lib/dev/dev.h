@@ -44,7 +44,7 @@
  */
 
 #ifdef DEBUG
-static const char DEV_CVS_ID[] = "@(#) $RCSfile: dev.h,v $ $Revision: 1.34 $ $Date: 2004/04/25 15:03:06 $ $Name:  $";
+static const char DEV_CVS_ID[] = "@(#) $RCSfile: dev.h,v $ $Revision: 1.35 $ $Date: 2004/05/17 20:08:37 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSCKT_H
@@ -465,6 +465,7 @@ nssToken_ImportTrust
   nssTrustLevel clientAuth,
   nssTrustLevel codeSigning,
   nssTrustLevel emailProtection,
+  PRBool stepUpApproved,
   PRBool asTokenObject
 );
 
@@ -759,7 +760,8 @@ nssCryptokiTrust_GetAttributes
   nssTrustLevel *serverAuth,
   nssTrustLevel *clientAuth,
   nssTrustLevel *codeSigning,
-  nssTrustLevel *emailProtection
+  nssTrustLevel *emailProtection,
+  PRBool *stepUpApproved
 );
 
 NSS_EXTERN PRStatus

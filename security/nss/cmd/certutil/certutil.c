@@ -1039,9 +1039,7 @@ static void LongUsage(char *progName)
     FPS "%-25s C \t trusted CA to issue server certs (implies c)\n", "");
     FPS "%-25s u \t user cert\n", "");
     FPS "%-25s w \t send warning\n", "");
-#ifdef DEBUG_NSSTEAM_ONLY
     FPS "%-25s g \t make step-up cert\n", "");
-#endif /* DEBUG_NSSTEAM_ONLY */
     FPS "%-20s Specify the password file\n",
 	"   -f pwfile");
     FPS "%-20s Cert database directory (default is ~/.netscape)\n",
@@ -1591,9 +1589,7 @@ AddExtKeyUsage (void *extHandle)
     fprintf(stdout, "%-25s 3 - Email Protection\n", "");
     fprintf(stdout, "%-25s 4 - Timestamp\n", "");
     fprintf(stdout, "%-25s 5 - OCSP Responder\n", "");
-#ifdef DEBUG_NSSTEAM_ONLY
     fprintf(stdout, "%-25s 6 - Step-up\n", "");
-#endif /* DEBUG_NSSTEAM_ONLY */
     fprintf(stdout, "%-25s Other to finish\n", "");
 
     gets(buffer);
@@ -1618,11 +1614,9 @@ AddExtKeyUsage (void *extHandle)
     case 5:
       rv = AddOidToSequence(os, SEC_OID_OCSP_RESPONDER);
       break;
-#ifdef DEBUG_NSSTEAM_ONLY
     case 6:
       rv = AddOidToSequence(os, SEC_OID_NS_KEY_USAGE_GOVT_APPROVED);
       break;
-#endif /* DEBUG_NSSTEAM_ONLY */
     default:
       goto endloop;
     }

@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devtoken.c,v $ $Revision: 1.37 $ $Date: 2004/04/25 15:03:06 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: devtoken.c,v $ $Revision: 1.38 $ $Date: 2004/05/17 20:08:37 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSCKEPV_H
@@ -1163,6 +1163,7 @@ nssToken_ImportTrust (
   nssTrustLevel clientAuth,
   nssTrustLevel codeSigning,
   nssTrustLevel emailProtection,
+  PRBool stepUpApproved,
   PRBool asTokenObject
 )
 {
@@ -1170,7 +1171,7 @@ nssToken_ImportTrust (
     CK_OBJECT_CLASS tobjc = CKO_NETSCAPE_TRUST;
     CK_TRUST ckSA, ckCA, ckCS, ckEP;
     CK_ATTRIBUTE_PTR attr;
-    CK_ATTRIBUTE trust_tmpl[10];
+    CK_ATTRIBUTE trust_tmpl[11];
     CK_ULONG tsize;
     PRUint8 sha1[20]; /* this is cheating... */
     PRUint8 md5[16];
@@ -1199,6 +1200,13 @@ nssToken_ImportTrust (
     NSS_CK_SET_ATTRIBUTE_VAR(attr, CKA_TRUST_CLIENT_AUTH,      ckCA);
     NSS_CK_SET_ATTRIBUTE_VAR(attr, CKA_TRUST_CODE_SIGNING,     ckCS);
     NSS_CK_SET_ATTRIBUTE_VAR(attr, CKA_TRUST_EMAIL_PROTECTION, ckEP);
+    if (stepUpApproved) {
+	NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_TRUST_STEP_UP_APPROVED, 
+	                          &g_ck_true);
+    } else {
+	NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_TRUST_STEP_UP_APPROVED, 
+	                          &g_ck_false);
+    }
     NSS_CK_TEMPLATE_FINISH(trust_tmpl, attr, tsize);
     /* import the trust object onto the token */
     object = import_object(tok, sessionOpt, trust_tmpl, tsize);

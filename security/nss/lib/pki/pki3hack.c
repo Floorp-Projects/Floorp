@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.80 $ $Date: 2004/04/25 15:03:14 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.81 $ $Date: 2004/05/17 20:08:37 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -541,6 +541,10 @@ cert_trust_from_stan_trust(NSSTrust *t, PRArenaPool *arena)
     rvTrust->sslFlags |= client;
     rvTrust->emailFlags = get_nss3trust_from_nss4trust(t->emailProtection);
     rvTrust->objectSigningFlags = get_nss3trust_from_nss4trust(t->codeSigning);
+    /* The cert is a valid step-up cert (in addition to/lieu of trust above */
+    if (t->stepUpApproved) {
+	rvTrust->sslFlags |= CERTDB_GOVT_APPROVED_CA;
+    }
     return rvTrust;
 }
 
@@ -976,6 +980,8 @@ STAN_ChangeCertTrust(CERTCertificate *cc, CERTCertTrust *trust)
     nssTrust->clientAuth = get_stan_trust(trust->sslFlags, PR_TRUE);
     nssTrust->emailProtection = get_stan_trust(trust->emailFlags, PR_FALSE);
     nssTrust->codeSigning = get_stan_trust(trust->objectSigningFlags, PR_FALSE);
+    nssTrust->stepUpApproved = 
+                    (PRBool)(trust->sslFlags & CERTDB_GOVT_APPROVED_CA);
     if (c->object.cryptoContext != NULL) {
 	/* The cert is in a context, set the trust there */
 	NSSCryptoContext *cc = c->object.cryptoContext;
@@ -1039,7 +1045,8 @@ STAN_ChangeCertTrust(CERTCertificate *cc, CERTCertTrust *trust)
 	                                   nssTrust->serverAuth,
 	                                   nssTrust->clientAuth,
 	                                   nssTrust->codeSigning,
-	                                   nssTrust->emailProtection, PR_TRUE);
+	                                   nssTrust->emailProtection,
+	                                   nssTrust->stepUpApproved, PR_TRUE);
 	/* If the selected token can't handle trust, dump the trust on 
 	 * the internal token */
 	if (!newInstance && !PK11_IsInternal(tok->pk11slot)) {
@@ -1069,7 +1076,8 @@ STAN_ChangeCertTrust(CERTCertificate *cc, CERTCertTrust *trust)
 	                                   nssTrust->serverAuth,
 	                                   nssTrust->clientAuth,
 	                                   nssTrust->codeSigning,
-	                                   nssTrust->emailProtection, PR_TRUE);
+	                                   nssTrust->emailProtection,
+	                                   nssTrust->stepUpApproved, PR_TRUE);
 	}
 	if (newInstance) {
 	    nssCryptokiObject_Destroy(newInstance);
