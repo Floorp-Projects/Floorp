@@ -28,6 +28,7 @@
 #include <Errors.h>
 #include <TextUtils.h>
 #include <Processes.h>
+#include <limits.h>		// ULONG_MAX
 
 const unsigned char* kAliasHavenFolderName = "\pnsAliasHaven";
 
