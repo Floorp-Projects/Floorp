@@ -342,3 +342,5 @@ nsresult nsMsgNotificationManager::RemoveOldValues(nsIRDFResource *notificationR
 	return NS_OK;
 
 }
+
+
