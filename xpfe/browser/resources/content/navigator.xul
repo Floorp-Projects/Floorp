@@ -705,7 +705,8 @@ Contributor(s): ______________________________________. -->
         <menuitem value="&strresCmd.label;" onaction="window.content.location.href='resource:/res/strres-test.xul'"/>
 		<menu value="&languages.label;">
 	    	<menupopup>
-        		<menuitem value="&da-DK.label;" onaction="localeTo('da-DK');" />
+        		<menuitem value="&da-DK.label;" 
+			          onaction="localeTo('', 'da-DK');" />
 			</menupopup>
 
 		</menu>
