@@ -1866,7 +1866,7 @@ nsDocShell::FindChildWithName(const PRUnichar * aName,
             continue;
 
         child->GetName(getter_Copies(childName));
-        if (name.EqualsWithConversion(childName)) {
+        if (name.Equals(childName)) {
             *_retval = child;
             NS_ADDREF(*_retval);
             break;
