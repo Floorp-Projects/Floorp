@@ -19,6 +19,7 @@
 /*
  * JS number type and wrapper class.
  */
+#include "jsstddef.h"
 #include <errno.h>
 #ifdef XP_PC
 #include <float.h>
@@ -751,4 +752,3 @@ js_strtol(const jschar *s, jschar **ep, jsint base, jsdouble *dp)
     *dp = (jsdouble)l;
     return JS_TRUE;
 }
-                      
