@@ -63,11 +63,15 @@ include <$(DEPTH)\config\rules.mak>
 
 install:: $(DLL)
 	$(MAKE_INSTALL) $(DLL) $(DIST)\bin
-  $(MAKE_INSTALL) appshell.html $(DIST)\bin\res\samples
-  $(MAKE_INSTALL) status.html $(DIST)\bin\res\samples
-  $(MAKE_INSTALL) toolbar.xml $(DIST)\bin\res\samples
-  $(MAKE_INSTALL) xul.css $(DIST)\bin\res\samples
+	$(MAKE_INSTALL) appshell.html $(DIST)\bin\res\samples
+	$(MAKE_INSTALL) status.html $(DIST)\bin\res\samples
+	$(MAKE_INSTALL) toolbar.xml $(DIST)\bin\res\samples
+	$(MAKE_INSTALL) BrowserInitPage.html $(DIST)\bin\res\samples
+	$(MAKE_INSTALL) xul.css $(DIST)\bin\res\samples
 
 clobber::
 	rm -f $(DIST)\bin\$(DLLNAME).dll
-  rm -f $(DIST)\res\samples\browser.html
+	rm -f $(DIST)\res\samples\appshell.html
+	rm -f $(DIST)\res\samples\status.html
+	rm -f $(DIST)\res\samples\BrowserInitPage.html
+	rm -f $(DIST)\res\samples\xul.css

@@ -28,6 +28,7 @@ EXPORT_RESOURCE_SAMPLES = \
 	$(srcdir)/appshell.html \
 	$(srcdir)/status.html \
 	$(srcdir)/toolbar.xml \
+	$(srcdir)/BrowserInitPage.html \
 	$(srcdir)/xul.css \
 	$(NULL)
 

@@ -4,12 +4,63 @@
 <?xml-stylesheet href="xul.css" type="text/css"?> 
 <!DOCTYPE window> 
 
+<html:script>
+function StartUp()
+{
+  appCore = AppCoresManager.Find("BrowserAppCore");  
+  if (appCore==null) {
+    appCore = new BrowserAppCore();
+    if (appCore != null) {
+      appCore.Init("BrowserAppCore");
+	    appCore.setToolbarWindow(window);
+	    appCore.setContentWindow(window.parent.frames[1]);
+	    appCore.setWebShellWindow(window.parent);
+        appCore.setDisableCallback("DoDisableButtons();");
+        appCore.setEnableCallback("DoEnableButtons();");
+    }
+  }
+}
+
+function DoDisableButtons()
+{
+  // Find buttons in the UI and disable them
+  dump("Browser disabling buttons\n");
+}
+
+function DoEnableButtons()
+{
+  // Find buttons in the UI and enable them
+  dump("Browser enabling buttons\n");
+}
+
+function BrowserBack()
+{
+  appCore = AppCoresManager.Find("BrowserAppCore");  
+  if (appCore != null) {
+    appCore.back();
+  } else {
+    dump("BrowserAppCore has not ben created!\n");
+  }
+}
+
+function BrowserForward()
+{
+  appCore = AppCoresManager.Find("BrowserAppCore");  
+  if (appCore != null) {
+    appCore.forward();
+  } else {
+    dump("BrowserAppCore has not ben created!\n");
+  }
+}
+
+</html:script>
 
 
 <window>
   <xul:commands>
-    <xul:command name="nsCmd:BrowserBack" onCommand="window.back();"/>
-    <xul:command name="nsCmd:BrowserForward" onCommand="window.forward();"/>
+    <xul:command name="nsCmd:StartUp" onCommand="StartUp();"/>
+    <xul:command name="nsCmd:BrowserBack" onCommand="BrowserBack();"/>
+    <xul:command name="nsCmd:BrowserForward" onCommand="BrowserForward();"/>
     <xul:command name="nsCmd:BrowserReload" onCommand="window.reload();"/>
     <xul:command name="nsCmd:BrowserStop" onCommand="window.stop();"/>
     <xul:command name="nsCmd:BrowserHome" onCommand="window.home();"/>
