@@ -8,8 +8,8 @@
 # VCDisplay module for CVSWeb.
 
 
-# $Revision: 1.6 $ 
-# $Date: 2001/07/20 19:05:01 $ 
+# $Revision: 1.7 $ 
+# $Date: 2002/12/10 19:35:50 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/VCDisplay.pm,v $ 
 # $Name:  $ 
@@ -66,6 +66,36 @@ $IMPLS = ( ($TinderConfig::VCDisplayImpl) ||
 
 main::require_modules($IMPLS);
 
+
+@ISA=($IMPLS);
+
+$VCDisplay = VCDisplay->new();
+
 $DEBUG = 1;
+
+sub new {
+
+  my $type = shift;
+  my %params = @_;
+  my $self = {};
+  bless $self, $type;
+}
+
+# call the implemenation defined functions, OO notionation looks
+# peculiar for this package so we do this instead.
+
+sub source {
+    return $VCDisplay->SUPER::source(@_);
+}
+
+sub guess {
+    return $VCDisplay->SUPER::guess(@_);
+}
+
+sub query {
+    return $VCDisplay->SUPER::query(@_);
+}
+
+
 
 1;
