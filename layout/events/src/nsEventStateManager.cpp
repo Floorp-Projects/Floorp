@@ -453,7 +453,7 @@ nsEventStateManager::PostHandleEvent(nsIPresContext& aPresContext,
             nsIScrollableView* sv = GetNearestScrollingView(aView);
             if (sv) {
               nsKeyEvent * keyEvent = (nsKeyEvent *)aEvent;
-              sv->ScrollByWhole((keyEvent->keyCode != NS_VK_HOME) ? PR_TRUE : PR_FALSE);
+              sv->ScrollByWhole((keyEvent->keyCode != NS_VK_HOME) ? PR_FALSE : PR_TRUE);
             }
           }
           break;
