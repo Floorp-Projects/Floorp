@@ -1208,6 +1208,27 @@ operator+( const basic_nsAReadableString<CharT>& lhs, const basic_nsAReadableStr
     return nsPromiseConcatenation<CharT>(lhs, rhs);
   }
 
+#ifdef NEED_CPP_DERIVED_TEMPLATE_OPERATORS
+  #define NS_DEF_DERIVED_STRING_STRING_OPERATOR_PLUS(_String1T, _String2T, _CharT) \
+    inline                                                  \
+    nsPromiseConcatenation<_CharT>                          \
+    operator+( const _String1T& lhs, const _String2T& rhs ) \
+      {                                                     \
+        return nsPromiseConcatenation<_CharT>(lhs, rhs);    \
+      }
+
+  #define NS_DEF_DERIVED_STRING_OPERATOR_PLUS(_StringT, _CharT) \
+    NS_DEF_DERIVED_STRING_STRING_OPERATOR_PLUS(_StringT, _StringT, _CharT)
+
+  #define NS_DEF_2_STRING_STRING_OPERATOR_PLUS(_String1T, _String2T, _CharT)  \
+    NS_DEF_DERIVED_STRING_STRING_OPERATOR_PLUS(_String1T, _String2T, _CharT)  \
+    NS_DEF_DERIVED_STRING_STRING_OPERATOR_PLUS(_String2T, _String1T, _CharT)
+
+#else
+  #define NS_DEF_DERIVED_STRING_OPERATOR_PLUS(_StringT, _CharT)
+  #define NS_DEF_2_STRING_STRING_OPERATOR_PLUS(_String1T, _String2T, _CharT)
+#endif
+
 template <class CharT>
 inline
 nsPromiseConcatenation<CharT>

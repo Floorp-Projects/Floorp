@@ -58,6 +58,9 @@
   #define NS_LITERAL_STRING(s)  (s)
   #define NS_LITERAL_CSTRING(s) (s)
 
+  #define NS_DEF_DERIVED_STRING_OPERATOR_PLUS(_StringT, _CharT)
+  #define NS_DEF_2_STRING_STRING_OPERATOR_PLUS(_String1T, _String2T, _CharT)
+
   inline
   char
   nsLiteralChar( char c )
@@ -795,6 +798,7 @@ private:
 
 #ifdef NEW_STRING_APIS
 NS_DEF_STRING_COMPARISON_OPERATORS(nsCString, char)
+NS_DEF_DERIVED_STRING_OPERATOR_PLUS(nsCString, char);
 #endif
 
 extern NS_COM int fputs(const nsCString& aString, FILE* out);
@@ -861,7 +865,7 @@ public:
 #if 0//def NEW_STRING_APIS
 NS_DEF_STRING_COMPARISON_OPERATORS(nsCAutoString, char)
 #endif
-
+NS_DEF_DERIVED_STRING_OPERATOR_PLUS(nsCAutoString, char)
 
 /***************************************************************
   The subsumestr class is very unusual. 

@@ -889,6 +889,7 @@ private:
 
 #ifdef NEW_STRING_APIS
 NS_DEF_STRING_COMPARISON_OPERATORS(nsString, PRUnichar)
+NS_DEF_DERIVED_STRING_OPERATOR_PLUS(nsAutoString, PRUnichar)
 #endif
 
 extern NS_COM int fputs(const nsString& aString, FILE* out);
@@ -951,6 +952,7 @@ public:
     char mBuffer[kDefaultStringSize<<eTwoByte];
 };
 
+NS_DEF_DERIVED_STRING_OPERATOR_PLUS(nsAutoString, PRUnichar)
 
 class NS_COM NS_ConvertASCIItoUCS2
       : public nsAutoString
