@@ -9,7 +9,8 @@
 ;
 
 [core]
-bin/apprunner
+bin/mozilla
+bin/mozilla-bin
 bin/libappcores.so
 bin/libgfx_gtk.so
 bin/libjsdom.so
@@ -25,7 +26,6 @@ bin/libraptorwebwidget.so
 bin/libsecfree.so
 bin/libwidget_gtk.so
 bin/libxpcom.so
-bin/mozilla-apprunner.sh
 bin/netscape.cfg
 bin/run-mozilla.sh
 

@@ -1,35 +1,32 @@
 #!/bin/sh
 #
-# The contents of this file are subject to the Netscape Public
-# License Version 1.1 (the "License"); you may not use this file
-# except in compliance with the License. You may obtain a copy of
-# the License at http://www.mozilla.org/NPL/
+# The contents of this file are subject to the Netscape Public License
+# Version 1.0 (the "NPL"); you may not use this file except in
+# compliance with the NPL.  You may obtain a copy of the NPL at
+# http://www.mozilla.org/NPL/
 #
-# Software distributed under the License is distributed on an "AS
-# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
-# implied. See the License for the specific language governing
-# rights and limitations under the License.
+# Software distributed under the NPL is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+# for the specific language governing rights and limitations under the
+# NPL.
 #
-# The Original Code is mozilla.org code.
-#
-# The Initial Developer of the Original Code is Netscape
+# The Initial Developer of this code under the NPL is Netscape
 # Communications Corporation.  Portions created by Netscape are
-# Copyright (C) 1998 Netscape Communications Corporation. All
-# Rights Reserved.
-#
-# Contributor(s): 
+# Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+# Reserved.
 #
 
+## $Id: mozilla,v 1.1 1999/11/09 02:03:36 leaf%mozilla.org Exp $
 ## 
 ## Usage:
 ##
-## $ mozilla-apprunner.sh [apprunner args]
+## $ mozilla [args]
 ##
-## This script is meant to run the gecko apprunner from either 
+## This script is meant to run the mozilla-bin binary from either 
 ## mozilla/xpfe/bootstrap or mozilla/dist/bin.
 ##
 ## The script will setup all the environment voodoo needed to make
-## the mozilla-bin binary work.
+## the mozilla-bin binary to work.
 ##
 
 #uncomment for debugging
@@ -97,7 +94,7 @@ do
 done
 
 # if you are debugging, you can't have moreargs
-# for example, "./mozilla-apprunner.sh -g -mail" makes no sense.
+# for example, "./mozilla -g -mail" makes no sense.
 if [ $debugging -eq 1 -a "x$moreargs" != "x" ]
 then
 	echo "You can't have -g and $moreargs at the same time"
