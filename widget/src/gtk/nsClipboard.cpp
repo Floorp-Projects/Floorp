@@ -447,7 +447,7 @@ nsClipboard::GetNativeClipboardData(nsITransferable * aTransferable,
       nsXPIDLCString flavorStr;
       currentFlavor->ToString ( getter_Copies(flavorStr) );
       if (DoConvert(flavorStr, selectionAtom)) {
-        foundFlavor = nsCAutoString(flavorStr);
+        foundFlavor = flavorStr;
         foundData = PR_TRUE;
         break;
       }

@@ -37,33 +37,17 @@
 
 #include "nsCheckButton.h"
 
-NS_IMPL_ADDREF(nsCheckButton)
-NS_IMPL_RELEASE(nsCheckButton)
-
-nsCheckButton::nsCheckButton() : nsWidget() , nsICheckButton(),
-  mState(PR_FALSE)
+nsCheckButton::nsCheckButton()
+  : nsWidget(),
+    mState(PR_FALSE)
 {
-  NS_INIT_REFCNT();
 }
 
 nsCheckButton::~nsCheckButton()
 {
 }
 
-nsresult nsCheckButton::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-    if (NULL == aInstancePtr) {
-        return NS_ERROR_NULL_POINTER;
-    }
-
-    static NS_DEFINE_IID(kICheckButtonIID, NS_ICHECKBUTTON_IID);
-    if (aIID.Equals(kICheckButtonIID)) {
-        *aInstancePtr = (void*) ((nsICheckButton*)this);
-        NS_ADDREF_THIS();
-        return NS_OK;
-    }
-    return nsWidget::QueryInterface(aIID,aInstancePtr);
-}
+NS_IMPL_ISUPPORTS_INHERITED1(nsCheckButton, nsWidget, nsICheckButton)
 
 NS_METHOD nsCheckButton::SetState(const PRBool aState)
 {

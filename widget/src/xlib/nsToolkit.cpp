@@ -47,7 +47,7 @@ static PRUintn gToolkitTLSIndex = 0;
 
 nsToolkit::nsToolkit()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   mGC = nsnull;
   mDisplay = xxlib_rgb_get_display(nsAppShell::GetXlibRgbHandle());
 }

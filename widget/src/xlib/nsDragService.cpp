@@ -37,6 +37,10 @@
 
 #include "xlibrgb.h"
 
+NS_IMPL_ISUPPORTS_INHERITED1(nsDragService,
+                             nsBaseDragService,
+                             nsIDragSessionXlib)
+
 /* drag bitmaps */
 static const unsigned char drag_bitmap[] = {
    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x00,
@@ -63,10 +67,6 @@ static const unsigned char drag_mask[] = {
    0x00, 0xff, 0x07, 0x00, 0x00, 0xff, 0x03, 0x00, 0x00, 0xfe, 0x01, 0x00,
    0x00, 0x7c, 0x00, 0x00, 0x00, 0x38, 0x00, 0x00, 0x00, 0x18, 0x00, 0x00,
    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-
-NS_IMPL_ADDREF_INHERITED(nsDragService, nsBaseDragService)
-NS_IMPL_RELEASE_INHERITED(nsDragService, nsBaseDragService)
-NS_IMPL_QUERY_INTERFACE3(nsDragService, nsIDragService, nsIDragSession, nsIDragSessionXlib)
 
 nsWidget *nsDragService::sWidget = nsnull;
 Window    nsDragService::sWindow;

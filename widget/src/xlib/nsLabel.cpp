@@ -37,12 +37,8 @@
 
 #include "nsLabel.h"
 
-NS_IMPL_ADDREF(nsLabel)
-NS_IMPL_RELEASE(nsLabel)
-
-nsLabel::nsLabel() : nsWidget(), nsILabel()
+nsLabel::nsLabel() : nsWidget()
 {
-  NS_INIT_REFCNT();
 }
 
 NS_METHOD nsLabel::PreCreateWidget(nsWidgetInitData *aInitData)
@@ -54,19 +50,7 @@ nsLabel::~nsLabel()
 {
 }
 
-nsresult nsLabel::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-  nsresult result = nsWidget::QueryInterface(aIID, aInstancePtr);
-
-  static NS_DEFINE_IID(kILabelIID, NS_ILABEL_IID);
-  if (result == NS_NOINTERFACE && aIID.Equals(kILabelIID)) {
-    *aInstancePtr = (void*) ((nsILabel*)this);
-    NS_ADDREF_THIS();
-    result = NS_OK;
-  }
-  
-  return result;
-}
+NS_IMPL_ISUPPORTS_INHERITED1(nsLabel, nsWidget, nsILabel)
 
 NS_METHOD nsLabel::SetAlignment(nsLabelAlignment aAlignment)
 {

@@ -45,13 +45,13 @@
 
 NS_IMPL_ADDREF_INHERITED(nsScrollbar, nsWidget)
 NS_IMPL_RELEASE_INHERITED(nsScrollbar, nsWidget)
+  // XXX not INHERITED?
 NS_IMPL_QUERY_INTERFACE2(nsScrollbar, nsIScrollbar, nsIWidget)
 
 PRLogModuleInfo *XlibScrollbarLM = PR_NewLogModule("XlibScrollbar");
 
-nsScrollbar::nsScrollbar(PRBool aIsVertical) : nsWidget(), nsIScrollbar()
+nsScrollbar::nsScrollbar(PRBool aIsVertical) : nsWidget()
 {
-  NS_INIT_REFCNT();
   mMaxRange = 0;
   mPosition = 0;
   mThumbSize = 0;
