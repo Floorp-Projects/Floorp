@@ -223,7 +223,9 @@ ifdef MOZ_MAPINFO
 tier_9_dirs	+= tools/codesighs
 endif
 
+ifneq (,$(MOZ_L10N_LANG)$(MOZ_L10N_TOOLS))
 tier_9_dirs	+= l10n
+endif
 
 ifdef MOZ_PHOENIX
 tier_9_dirs	+= toolkit
