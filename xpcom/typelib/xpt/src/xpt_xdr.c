@@ -23,9 +23,8 @@
 #include <string.h>             /* strchr */
 
 static PRBool
-CheckForRepeat(XPTCursor *cursor, void **addrp, XPTPool pool, int len,
+CheckForRepeat(XPTCursor *cursor, void **addrp, XPTPool pool, PRUint32 len,
                    XPTCursor *new_cursor, PRBool *already);
-
 
 #define ENCODING(cursor)                                                      \
   ((cursor)->state->mode == XPT_ENCODE)
@@ -275,7 +274,7 @@ XPT_NewString(PRUint16 length, char *bytes)
         return NULL;
     str->length = length;
     /* Alloc one extra to store the trailing nul. */
-    str->bytes = malloc(length + 1);
+    str->bytes = XPT_MALLOC(length + 1u);
     if (!str->bytes) {
         XPT_DELETE(str);
         return NULL;
@@ -313,7 +312,7 @@ XPT_DoStringInline(XPTCursor *cursor, XPTString **strp)
         goto error;
 
     if (mode == XPT_DECODE)
-        if (!(str->bytes = malloc(str->length + 1)))
+        if (!(str->bytes = XPT_MALLOC(str->length + 1u)))
             goto error;
 
     for (i = 0; i < str->length; i++)
@@ -376,12 +375,13 @@ XPT_DoCString(XPTCursor *cursor, char **identp)
             return PR_FALSE;
         }
         len = end - start;
+        assert(len > 0);
 
-        ident = XPT_MALLOC(len + 1);
+        ident = XPT_MALLOC(len + 1u);
         if (!ident)
             return PR_FALSE;
 
-        memcpy(ident, start, len);
+        memcpy(ident, start, (size_t)len);
         ident[len] = 0;
         *identp = ident;
 
@@ -413,7 +413,6 @@ XPT_PUBLIC_API(PRUint32)
 XPT_GetOffsetForAddr(XPTCursor *cursor, void *addr)
 {
     return (PRUint32)XPT_HashTableLookup(cursor->state->pool->offset_map, addr);
-/*      return (PRUint32)PL_HashTableLookup(cursor->state->pool->offset_map, addr); */
 }
 
 XPT_PUBLIC_API(PRBool)
@@ -421,8 +420,6 @@ XPT_SetOffsetForAddr(XPTCursor *cursor, void *addr, PRUint32 offset)
 {
     return XPT_HashTableAdd(cursor->state->pool->offset_map,
                             addr, (void *)offset) != NULL;
-/*      return PL_HashTableAdd(cursor->state->pool->offset_map, */
-/*                             addr, (void *)offset) != NULL; */
 }
 
 XPT_PUBLIC_API(PRBool)
@@ -430,20 +427,18 @@ XPT_SetAddrForOffset(XPTCursor *cursor, PRUint32 offset, void *addr)
 {
     return XPT_HashTableAdd(cursor->state->pool->offset_map,
                             (void *)offset, addr) != NULL;
-/*      return PL_HashTableAdd(cursor->state->pool->offset_map, */
-/*                             addr, (void *)offset) != NULL; */
 }
 
 XPT_PUBLIC_API(void *)
 XPT_GetAddrForOffset(XPTCursor *cursor, PRUint32 offset)
 {
     return XPT_HashTableLookup(cursor->state->pool->offset_map, (void *)offset);
-/*      return PL_HashTableLookup(cursor->state->pool->offset_map, (void *)offset); */
 }
 
+/* Used by XPT_PREAMBLE_NO_ALLOC. */
 static PRBool
-CheckForRepeat(XPTCursor *cursor, void **addrp, XPTPool pool, int len,
-                   XPTCursor *new_cursor, PRBool *already)
+CheckForRepeat(XPTCursor *cursor, void **addrp, XPTPool pool, PRUint32 len,
+               XPTCursor *new_cursor, PRBool *already)
 {
     void *last = *addrp;
 
@@ -476,7 +471,6 @@ CheckForRepeat(XPTCursor *cursor, void **addrp, XPTPool pool, int len,
     }
     return PR_TRUE;
 }
-
 
 /*
  * IIDs are written in struct order, in the usual big-endian way.  From the

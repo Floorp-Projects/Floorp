@@ -26,7 +26,7 @@
 #ifdef XP_MAC
 static char *strdup(const char *c)
 {
-	char	*newStr = malloc(strlen(c) + 1);
+	char	*newStr = XPT_MALLOC(strlen(c) + 1);
 	if (newStr)
 	{
 		strcpy(newStr, c);
@@ -37,7 +37,7 @@ static char *strdup(const char *c)
 
 static PRBool
 DoInterfaceDirectoryEntry(XPTCursor *cursor,
-                          XPTInterfaceDirectoryEntry *ide, PRUint16 index);
+                          XPTInterfaceDirectoryEntry *ide, PRUint16 entry_index);
 
 #if 0
 /* currently unused */
@@ -228,8 +228,8 @@ XPT_FillInterfaceDirectoryEntry(XPTInterfaceDirectoryEntry *ide,
 /* InterfaceDirectoryEntry records go in the header */
 PRBool
 DoInterfaceDirectoryEntry(XPTCursor *cursor,
-                              XPTInterfaceDirectoryEntry *ide, PRUint16 index)
-{    
+                          XPTInterfaceDirectoryEntry *ide, PRUint16 entry_index)
+{
     XPTMode mode = cursor->state->mode;
     
     /* write the IID in our cursor space */
@@ -249,7 +249,7 @@ DoInterfaceDirectoryEntry(XPTCursor *cursor,
     }
     
     if (mode == XPT_DECODE)
-        XPT_SetOffsetForAddr(cursor, ide, index);
+        XPT_SetOffsetForAddr(cursor, ide, entry_index);
 
 #if 0 /* not yet -- we eagerly load for now */
     /* write the InterfaceDescriptor in the data pool, and the offset
