@@ -1005,8 +1005,95 @@ nsXULElement::HasChildNodes(PRBool* aReturn)
 NS_IMETHODIMP
 nsXULElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-    NS_NOTYETIMPLEMENTED("write me!");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsresult rv;
+
+    nsCOMPtr<nsIContent> result;
+
+    if (mPrototype) {
+        // We haven't "faulted" and become a heavyweight node yet, so
+        // we can go ahead and just make another lightweight from our
+        // prototype.
+        rv = nsXULElement::Create(mPrototype, mDocument, PR_TRUE, getter_AddRefs(result));
+        if (NS_FAILED(rv)) return rv;
+    }
+    else if (mSlots) {
+        // We've faulted: create another heavyweight, and then copy
+        // stuff by hand.
+        rv = nsXULElement::Create(mSlots->mNameSpaceID, mSlots->mTag, getter_AddRefs(result));
+        if (NS_FAILED(rv)) return rv;
+
+        // Copy namespace stuff.
+        nsCOMPtr<nsIXMLContent> xmlcontent = do_QueryInterface(result);
+        if (xmlcontent) {
+            rv = xmlcontent->SetNameSpacePrefix(mSlots->mNameSpacePrefix);
+            if (NS_FAILED(rv)) return rv;
+
+            rv = xmlcontent->SetContainingNameSpace(mSlots->mNameSpace);
+            if (NS_FAILED(rv)) return rv;
+        }
+
+        // Copy attributes, if there are any.
+        if (mSlots->mAttributes) {
+            PRInt32 count = mSlots->mAttributes->Count();
+            for (PRInt32 i = 0; i < count; ++i) {
+                nsXULAttribute* attr = mSlots->mAttributes->ElementAt(i);
+                NS_ASSERTION(attr != nsnull, "null ptr");
+                if (! attr)
+                    return NS_ERROR_UNEXPECTED;
+
+                nsAutoString value;
+                rv = attr->GetValue(value);
+                if (NS_FAILED(rv)) return rv;
+
+                rv = result->SetAttribute(attr->GetNameSpaceID(), attr->GetName(), value, PR_FALSE);
+                if (NS_FAILED(rv)) return rv;
+            }
+        }
+
+        // XXX TODO: set up RDF generic builder n' stuff if there is a
+        // 'datasources' attribute? This is really kind of tricky,
+        // because then we'd need to -selectively- copy children that
+        // -weren't- generated from RDF. Ugh. Forget it.
+    }
+    else {
+        NS_ERROR("ack! no prototype and no slots!");
+        return NS_ERROR_UNEXPECTED;
+    }
+
+    if (aDeep && mChildren) {
+        // Copy cloned children!
+        PRUint32 count;
+        rv = mChildren->Count(&count);
+        if (NS_FAILED(rv)) return rv;
+
+        for (PRInt32 i = 0; i < PRInt32(count); ++i) {
+            nsCOMPtr<nsIContent> child =
+                dont_AddRef(NS_STATIC_CAST(nsIContent*, mChildren->ElementAt(i)));
+
+            NS_ASSERTION(child != nsnull, "null ptr");
+            if (! child)
+                return NS_ERROR_UNEXPECTED;
+
+            nsCOMPtr<nsIDOMNode> domchild = do_QueryInterface(child);
+            NS_ASSERTION(domchild != nsnull, "child is not a DOM node");
+            if (! domchild)
+                return NS_ERROR_UNEXPECTED;
+            
+            nsCOMPtr<nsIDOMNode> newdomchild;
+            rv = domchild->CloneNode(PR_TRUE, getter_AddRefs(newdomchild));
+            if (NS_FAILED(rv)) return rv;
+
+            nsCOMPtr<nsIContent> newchild = do_QueryInterface(newdomchild);
+            NS_ASSERTION(newchild != nsnull, "newdomchild is not an nsIContent");
+            if (! newchild)
+                return NS_ERROR_UNEXPECTED;
+
+            rv = result->AppendChildTo(newchild, PR_FALSE);
+            if (NS_FAILED(rv)) return rv;
+        }
+    }
+
+    return CallQueryInterface(result, aReturn);
 }
 
 
