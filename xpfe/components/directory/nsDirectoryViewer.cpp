@@ -116,9 +116,14 @@ protected:
   static nsIRDFResource* kHTTPIndex_Comment;
   static nsIRDFResource* kHTTPIndex_Filename;
 
+  static nsresult ParseLiteral(const nsString& aValue, nsIRDFNode** aResult);
+  static nsresult ParseDate(const nsString& aValue, nsIRDFNode** aResult);
+  static nsresult ParseInt(const nsString& aValue, nsIRDFNode** aResult);
+
   struct Field {
     const char*     mName;
-    nsIRDFResource* mResource;
+    nsresult        (*mParse)(const nsString& aValue, nsIRDFNode** aResult);
+    nsIRDFResource* mProperty;
   };
 
   static Field gFieldTable[];
@@ -184,13 +189,13 @@ nsIRDFResource* nsHTTPIndexParser::kHTTPIndex_Filename;
 
 nsHTTPIndexParser::Field
 nsHTTPIndexParser::gFieldTable[] = {
-  { "Filename",       nsnull },
-  { "Content-Length", nsnull },
-  { "Last-Modified",  nsnull },
-  { "Content-Type",   nsnull },
-  { "File-Type",      nsnull },
-  { "Permissions",    nsnull },
-  { nsnull,           nsnull },
+  { "Filename",       nsHTTPIndexParser::ParseLiteral, nsnull },
+  { "Content-Length", nsHTTPIndexParser::ParseInt,     nsnull },
+  { "Last-Modified",  nsHTTPIndexParser::ParseDate,    nsnull },
+  { "Content-Type",   nsHTTPIndexParser::ParseLiteral, nsnull },
+  { "File-Type",      nsHTTPIndexParser::ParseLiteral, nsnull },
+  { "Permissions",    nsHTTPIndexParser::ParseLiteral, nsnull },
+  { nsnull,           nsHTTPIndexParser::ParseLiteral, nsnull },
 };
 
 nsHTTPIndexParser::nsHTTPIndexParser(nsHTTPIndex* aHTTPIndex, nsIContentViewerContainer* aContainer)
@@ -229,7 +234,7 @@ nsHTTPIndexParser::Init()
       str += HTTPINDEX_NAMESPACE_URI;
       str += field->mName;
 
-      rv = gRDF->GetResource(str, &field->mResource);
+      rv = gRDF->GetResource(str, &field->mProperty);
       if (NS_FAILED(rv)) return rv;
     }
   }
@@ -243,7 +248,7 @@ nsHTTPIndexParser::~nsHTTPIndexParser()
     NS_IF_RELEASE(kHTTPIndex_Filename);
 
     for (Field* field = gFieldTable; field->mName; ++field) {
-      NS_IF_RELEASE(field->mResource);
+      NS_IF_RELEASE(field->mProperty);
     }
 
     nsServiceManager::ReleaseService("component://netscape/rdf/rdf-service", gRDF);
@@ -511,15 +516,15 @@ nsHTTPIndexParser::ParseFormat(const char* aFormatStr)
     // Okay, we're gonna monkey with the nsStr. Bold!
     name.mLength = nsUnescapeCount(name.mStr);
 
-    nsIRDFResource* resource = nsnull;
-    for (Field* field = gFieldTable; field->mName; ++field) {
-      if (name.EqualsIgnoreCase(field->mName)) {
-        resource = field->mResource;
+    Field* field = nsnull;
+    for (Field* i = gFieldTable; i->mName; ++i) {
+      if (name.EqualsIgnoreCase(i->mName)) {
+        field = i;
         break;
       }
     }
 
-    mFormat.AppendElement(resource);
+    mFormat.AppendElement(field);
   } while (*aFormatStr);
 
   return NS_OK;
@@ -575,7 +580,7 @@ nsHTTPIndexParser::ParseData(const char* aDataStr)
   rv = NS_OK;
   nsCOMPtr<nsIRDFResource> entry;
 
-  for (PRInt32 field = 0; field < mFormat.Count(); ++field) {
+  for (PRInt32 i = 0; i < mFormat.Count(); ++i) {
     // If we've exhausted the data before we run out of fields, just
     // bail.
     if (! *aDataStr)
@@ -605,9 +610,10 @@ nsHTTPIndexParser::ParseData(const char* aDataStr)
     // Monkey with the nsStr, because we're bold.
     value.mLength = nsUnescapeCount(value.mStr);
 
-    values[field] = value;
+    values[i] = value;
 
-    if (mFormat.ElementAt(field) == kHTTPIndex_Filename) {
+    Field* field = NS_STATIC_CAST(Field*, mFormat.ElementAt(i));
+    if (field && field->mProperty == kHTTPIndex_Filename) {
       // we found the filename; construct a resource for its entry
       nsAutoString entryuri;
       rv = NS_MakeAbsoluteURI(value, realbase, entryuri);
@@ -624,15 +630,15 @@ nsHTTPIndexParser::ParseData(const char* aDataStr)
   // datasource.
   if (entry && NS_SUCCEEDED(rv)) {
     for (PRInt32 indx = 0; indx < mFormat.Count(); ++indx) {
-      nsIRDFResource* property = NS_REINTERPRET_CAST(nsIRDFResource*, mFormat.ElementAt(indx));
-      if (! property)
+      Field* field = NS_REINTERPRET_CAST(Field*, mFormat.ElementAt(indx));
+      if (! field)
         continue;
 
-      nsCOMPtr<nsIRDFLiteral> value;
-      rv = gRDF->GetLiteral(values[indx].GetUnicode(), getter_AddRefs(value));
+      nsCOMPtr<nsIRDFNode> value;
+      rv = (*field->mParse)(values[indx], getter_AddRefs(value));
       if (NS_FAILED(rv)) break;
 
-      rv = mDataSource->Assert(entry, property, value, PR_TRUE);
+      rv = mDataSource->Assert(entry, field->mProperty, value, PR_TRUE);
       if (NS_FAILED(rv)) break;
     }
 
@@ -647,6 +653,52 @@ nsHTTPIndexParser::ParseData(const char* aDataStr)
   return rv;
 }
 
+
+nsresult
+nsHTTPIndexParser::ParseLiteral(const nsString& aValue, nsIRDFNode** aResult)
+{
+  nsresult rv;
+
+  nsCOMPtr<nsIRDFLiteral> result;
+  rv = gRDF->GetLiteral(aValue.GetUnicode(), getter_AddRefs(result));
+  if (NS_FAILED(rv)) return rv;
+
+  return CallQueryInterface(result, aResult);
+}
+
+
+nsresult
+nsHTTPIndexParser::ParseDate(const nsString& aValue, nsIRDFNode** aResult)
+{
+  PRTime tm;
+  PRStatus err = PR_ParseTimeString(nsCAutoString(aValue), PR_TRUE, &tm);
+  if (err != PR_SUCCESS)
+    return NS_ERROR_FAILURE;
+
+  nsresult rv;
+  nsCOMPtr<nsIRDFDate> result;
+  rv = gRDF->GetDateLiteral(tm, getter_AddRefs(result));
+  if (NS_FAILED(rv)) return rv;
+
+  return CallQueryInterface(result, aResult);
+}
+
+
+nsresult
+nsHTTPIndexParser::ParseInt(const nsString& aValue, nsIRDFNode** aResult)
+{
+  PRInt32 err;
+  PRInt32 i = aValue.ToInteger(&err);
+  if (nsresult(err) != NS_OK)
+    return NS_ERROR_FAILURE;
+
+  nsresult rv;
+  nsCOMPtr<nsIRDFInt> result;
+  rv = gRDF->GetIntLiteral(i, getter_AddRefs(result));
+  if (NS_FAILED(rv)) return rv;
+
+  return CallQueryInterface(result, aResult);
+}
 
 ////////////////////////////////////////////////////////////////////////
 // nsHTTPIndex implementation
