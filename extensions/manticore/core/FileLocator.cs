@@ -88,7 +88,7 @@ namespace Silverstone.Manticore.Core
       ssfSYSTEM = 0x25,
       ssfPROGRAMFILES = 0x26,
       ssfMYPICTURES = 0x27,
-      ssfPROFILE = 0x28,
+      ssfPROFILE = 0x28
     }
 
     public static String GetFolderPath(SpecialFolders aFolder)

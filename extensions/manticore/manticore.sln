@@ -1,8 +1,6 @@
 Microsoft Visual Studio Solution File, Format Version 7.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Manticore", "Manticore.csproj", "{B40F4C31-96AF-4E5F-A088-546389BC78C4}"
 EndProject
-Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "Manticore Setup", "setup\setup.vdproj", "{4DF4B4EB-82EE-42E9-AB29-564908D0745A}"
-EndProject
 Global
 	GlobalSection(SolutionConfiguration) = preSolution
 		ConfigName.0 = Debug
@@ -15,10 +13,6 @@ Global
 		{B40F4C31-96AF-4E5F-A088-546389BC78C4}.Debug.Build.0 = Debug|.NET
 		{B40F4C31-96AF-4E5F-A088-546389BC78C4}.Release.ActiveCfg = Release|.NET
 		{B40F4C31-96AF-4E5F-A088-546389BC78C4}.Release.Build.0 = Release|.NET
-		{4DF4B4EB-82EE-42E9-AB29-564908D0745A}.Debug.ActiveCfg = Debug
-		{4DF4B4EB-82EE-42E9-AB29-564908D0745A}.Debug.Build.0 = Debug
-		{4DF4B4EB-82EE-42E9-AB29-564908D0745A}.Release.ActiveCfg = Release
-		{4DF4B4EB-82EE-42E9-AB29-564908D0745A}.Release.Build.0 = Release
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 	EndGlobalSection

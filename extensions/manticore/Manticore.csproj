@@ -346,6 +346,26 @@
                     BuildAction = "Compile"
                 />
                 <File
+                    RelPath = "toolkit\StripBar.cs"
+                    SubType = "UserControl"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "toolkit\TestForm.cs"
+                    SubType = "Form"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "toolkit\TestForm.resx"
+                    DependentUpon = "TestForm.cs"
+                    BuildAction = "EmbeddedResource"
+                />
+                <File
+                    RelPath = "toolkit\ThemeStuff.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
                     RelPath = "toolkit\toolkit.menus.cs"
                     SubType = "Component"
                     BuildAction = "Compile"

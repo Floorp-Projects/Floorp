@@ -315,6 +315,10 @@ namespace Silverstone.Manticore.Browser
         case "file-save-as":
           SavePageAs();
           break;
+        case "file-save-form":
+          TestForm frm = new TestForm();
+          frm.Show();
+          break;
         case "file-exit":
           Quit();
           break;

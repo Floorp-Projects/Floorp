@@ -72,7 +72,6 @@ namespace Silverstone.Manticore.Toolkit
         return mRoot;
       }
       set {
-        Console.WriteLine(value);
         mRoot = value;
       }
     }
