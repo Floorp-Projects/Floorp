@@ -89,7 +89,6 @@ static bool promptLine(LineReader &inReader, string &s, const char *prompt)
 }
 
 World world;
-JSScope global;
 
 /* "filename" of the console */
 const String ConsoleName = widenCString("<console>");
@@ -184,6 +183,7 @@ static JSValue time(Context *cx, const JSValues &argv)
 
 static void readEvalPrint(FILE *in, World &world)
 {
+    JSScope global;
     Context cx(world, &global);
 #ifdef DEBUGGER_FOO
     jsd.attachToContext (&cx);

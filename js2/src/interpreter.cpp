@@ -34,6 +34,7 @@
 #include "interpreter.h"
 #include "jsclasses.h"
 #include "world.h"
+#include "jsmath.h"
 
 #include <assert.h>
 
@@ -58,6 +59,7 @@ namespace Interpreter {
 using namespace ICG;
 using namespace JSTypes;
 using namespace JSClasses;
+using namespace JSMathClass;
     
 // These classes are private to the JS interpreter.
 
@@ -495,6 +497,22 @@ void Context::initContext()
     for (int i = 0; i < sizeof(PDTs) / sizeof(struct PDT); i++)
         mGlobal->defineVariable(widenCString(PDTs[i].name), &Type_Type, JSValue(PDTs[i].type));
 
+    // set up the correct [[Class]] for the global object (matching SpiderMonkey)
+    mGlobal->setClass(new JSString("global"));
+
+    // add (XXX some) of the global object properties
+    mGlobal->setProperty(widenCString("NaN"), kNaNValue);
+    mGlobal->setProperty(widenCString("undefined"), kUndefinedValue);
+
+    // 'Object', 'Date', 'RegExp', 'Array' etc are all (constructor) properties of the global object
+
+    mGlobal->setProperty(widenCString("Math"), JSValue(new JSMath()));
+
+
+    // This initializes the state of the binary operator overload mechanism.
+    // One could argue that it is unneccessary to do this until the 'Operators'
+    // package is loaded and that all (un-typed) binary operators should use a 
+    // form of icode that performed the inline operation instead.
     JSBinaryOperator::JSBinaryCode defaultFunction[] = {
         add_Default,
         subtract_Default,
@@ -548,8 +566,12 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
     
     JSValue rv;
     
+    // when invoked with empty args, make sure that 'this' is 
+    // going to be the global object.
+
     mActivation = new Activation(iCode, args);
     JSValues* registers = &mActivation->mRegisters;
+    if (args.size() == 0) (*registers)[0] = mGlobal;
 
     mPC = mActivation->mICode->its_iCode->begin();
     InstructionIterator endPC = mActivation->mICode->its_iCode->end();
@@ -689,6 +711,7 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
             case NEW_OBJECT:
                 {
                     NewObject* no = static_cast<NewObject*>(instruction);
+                    JSObject *obj = new JSObject();
                     (*registers)[dst(no).first] = new JSObject();
                 }
                 break;

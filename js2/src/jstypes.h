@@ -138,6 +138,10 @@ namespace JSTypes {
         bool isUndefined() const                        { return (tag == undefined_tag); }
         bool isNull() const                             { return ((tag == object_tag) && (this->object == NULL)); }
         bool isNaN() const;
+        bool isNegativeInfinity() const;
+        bool isPositiveInfinity() const;
+        bool isNegativeZero() const;
+        bool isPositiveZero() const;
         bool isType() const                             { return (tag == type_tag); }
 
         JSValue toString() const                        { return (isString() ? *this : valueToString(*this)); }
@@ -189,6 +193,10 @@ namespace JSTypes {
     extern const JSValue kTrueValue;
     extern const JSValue kFalseValue;
     extern const JSValue kNullValue;
+    extern const JSValue kNegativeZero;
+    extern const JSValue kPositiveZero;
+    extern const JSValue kNegativeInfinity;
+    extern const JSValue kPositiveInfinity;
 
     extern JSType Any_Type;
     extern JSType Integer_Type;
@@ -214,9 +222,15 @@ namespace JSTypes {
         JSProperties mProperties;
         JSObject* mPrototype;
         JSType* mType;
+        JSString* mClass;       // this is the internal [[Class]] property
+
     public:
-        JSObject() : mPrototype(0), mType(&Any_Type) {}
+        JSObject() : mPrototype(objectPrototypeObject), mType(&Any_Type), mClass(ObjectString) {}
     
+        static JSObject *objectPrototypeObject;
+        static JSObject *initJSObject();
+        static JSString *ObjectString;
+
         bool hasProperty(const String& name)
         {
             return (mProperties.count(name) != 0);
@@ -276,6 +290,16 @@ namespace JSTypes {
         JSType* getType()
         {
             return mType;
+        }
+
+        JSString* getClass()
+        {
+            return mClass;
+        }
+
+        void setClass(JSString* s)
+        {
+            mClass = s;
         }
 
         virtual void printProperties(Formatter& f);
@@ -394,6 +418,9 @@ namespace JSTypes {
         explicit JSString(const char* str);
 
         operator String();
+
+        void append(const char* str);
+        void append(const JSStringBase* str);
     };
 
     class JSException : public gc_base {
