@@ -161,8 +161,6 @@ MatchElementId(nsIContent *aContent, const nsACString& aUTF8Id, const nsAString&
 
 static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
 
-nsIRDFService* nsHTMLDocument::gRDF;
-nsrefcnt       nsHTMLDocument::gRefCntRDFService = 0;
 PRUint32       nsHTMLDocument::gWyciwygSessionCnt = 0;
 
 static int PR_CALLBACK
@@ -288,20 +286,11 @@ nsHTMLDocument::nsHTMLDocument()
   // NOTE! nsDocument::operator new() zeroes out all members, so don't
   // bother initializing members to 0.
 
-  if (gRefCntRDFService++ == 0)
-  {
-    CallGetService(kRDFServiceCID, &gRDF);
-  }
-
   mDefaultElementType = kNameSpaceID_XHTML;
 }
 
 nsHTMLDocument::~nsHTMLDocument()
 {
-  if (--gRefCntRDFService == 0) {
-    NS_IF_RELEASE(gRDF);
-  }
-
   if (mIdAndNameHashTable.ops) {
     PL_DHashTableFinish(&mIdAndNameHashTable);
   }
@@ -516,35 +505,29 @@ nsHTMLDocument::TryBookmarkCharset(nsIDocShell* aDocShell,
     return PR_TRUE;
   }
 
-  if (!gRDF) {
-    return PR_FALSE;
-  }
-
-  nsCOMPtr<nsIRDFDataSource>  datasource;
-  nsresult rv = gRDF->GetDataSource("rdf:bookmarks",
-                                    getter_AddRefs(datasource));
-
-  if (NS_FAILED(rv)) {
+  if (!aChannel) {
     return PR_FALSE;
   }
 
   nsCOMPtr<nsICharsetResolver> bookmarksResolver =
-    do_QueryInterface(datasource);
-  
-  if (bookmarksResolver && aDocShell && aChannel) {
+    do_GetService("@mozilla.org/embeddor.implemented/bookmark-charset-resolver;1");
 
-    PRBool wantCharset;         // ignored for now
-    nsCAutoString charset;
-    rv = bookmarksResolver->RequestCharset(aDocShell,
-                                           aChannel,
-                                           &aCharsetSource,
-                                           &wantCharset,
-                                           nsnull,
-                                           charset);
-    if (NS_SUCCEEDED(rv) && !charset.IsEmpty()) {
-      aCharset = charset;
-      return PR_TRUE;
-    }
+  if (!bookmarksResolver) {
+    return PR_FALSE;
+  }
+
+  PRBool wantCharset;         // ignored for now
+  nsCAutoString charset;
+  nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(aDocShell));
+  nsresult rv = bookmarksResolver->RequestCharset(webNav,
+                                                  aChannel,
+                                                  &wantCharset,
+                                                  nsnull,
+                                                  charset);
+  if (NS_SUCCEEDED(rv) && !charset.IsEmpty()) {
+    aCharset = charset;
+    aCharsetSource = kCharsetFromBookmarks;
+    return PR_TRUE;
   }
 
   return PR_FALSE;

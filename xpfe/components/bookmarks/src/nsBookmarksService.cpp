@@ -87,7 +87,7 @@
 #include "nsIPrefBranch.h"
 #include "nsIPrefBranch2.h"
 
-#include "nsIParser.h"          // for kCharsetFromBookmarks
+#include "nsIWebNavigation.h"
 
 // for sorting
 #include "nsCollationCID.h"
@@ -96,9 +96,6 @@
 #include "nsVoidArray.h"
 #include "nsUnicharUtils.h"
 #include "nsAutoBuffer.h"
-
-
-#include "nsIParser.h"          // for kCharsetFromBookmarks
 
 
 #ifdef XP_WIN
@@ -3352,9 +3349,8 @@ nsBookmarksService::IsBookmarked(const char* aURL, PRBool* aIsBookmarked)
 }
 
 NS_IMETHODIMP
-nsBookmarksService::RequestCharset(nsIDocShell* aDocShell,
+nsBookmarksService::RequestCharset(nsIWebNavigation* aWebNavigation,
                                    nsIChannel* aChannel,
-                                   PRInt32* aCharsetSource,
                                    PRBool* aWantCharset,
                                    nsISupports** aClosure,
                                    nsACString& aResult)
@@ -3402,7 +3398,6 @@ nsBookmarksService::RequestCharset(nsIDocShell* aDocShell,
                     const PRUnichar* charset;
                     charsetLiteral->GetValueConst(&charset);
                     LossyCopyUTF16toASCII(charset, aResult);
-                    *aCharsetSource = kCharsetFromBookmarks;
                     
                     return NS_OK;
                 }
@@ -3418,6 +3413,7 @@ NS_IMETHODIMP
 nsBookmarksService::NotifyResolvedCharset(const nsACString& aCharset,
                                           nsISupports* aClosure)
 {
+    NS_ERROR("Unexpected call to NotifyResolvedCharset -- we never set aWantCharset to true!");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
