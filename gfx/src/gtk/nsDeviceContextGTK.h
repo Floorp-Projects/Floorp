@@ -78,7 +78,9 @@ public:
   NS_IMETHOD GetDepth(PRUint32& aDepth);
 
   static int prefChanged(const char *aPref, void *aClosure);
-  nsresult   SetDPI(PRInt32 dpi);
+
+protected:
+  nsresult   SetDPI(PRInt32 aPrefDPI);
   
 private:
   PRUint32      mDepth;

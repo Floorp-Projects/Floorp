@@ -134,6 +134,7 @@ NS_IMETHODIMP nsDeviceContextGTK::Init(nsNativeWidget aNativeWidget)
   }
     
   static int initialized = 0;
+  PRInt32 prefVal = -1;
   if (!initialized) {
     initialized = 1;
 
@@ -144,40 +145,21 @@ NS_IMETHODIMP nsDeviceContextGTK::Init(nsNativeWidget aNativeWidget)
     // If it's 0, it means force use of the operating system's logical
     // resolution.
     // If it's positive, we use it as the logical resolution
-    PRInt32 prefVal = -1;
     nsresult res;
 
     NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &res);
     if (NS_SUCCEEDED(res) && prefs) {
       res = prefs->GetIntPref("browser.display.screen_resolution", &prefVal);
-      if (! NS_SUCCEEDED(res)) {
+      if (NS_FAILED(res)) {
         prefVal = -1;
       }
       prefs->RegisterCallback("browser.display.screen_resolution", prefChanged,
                               (void *)this);
     }
-
-    // Set OSVal to what the operating system thinks the logical resolution is.
-    float screenWidthIn = float(::gdk_screen_width_mm()) / 25.4f;
-    PRInt32 OSVal = nscoord(mWidthFloat / screenWidthIn);
-
-    if (prefVal > 0) {
-      // If there's a valid pref value for the logical resolution,
-      // use it.
-      mDpi = prefVal;
-    } else if ((prefVal == 0) || (OSVal > 96)) {
-      // Either if the pref is 0 (force use of OS value) or the OS
-      // value is bigger than 96, use the OS value.
-      mDpi = OSVal;
-    } else {
-      // if we couldn't get the pref or it's negative, and the OS
-      // value is under 96ppi, then use 96.
-      mDpi = 96;
-    }
   }
 
-  SetDPI(mDpi);
-  
+  SetDPI(prefVal);
+
   sb = gtk_vscrollbar_new(NULL);
   gtk_widget_ref(sb);
   gtk_object_sink(GTK_OBJECT(sb));
@@ -538,14 +520,30 @@ NS_IMETHODIMP nsDeviceContextGTK::GetDepth(PRUint32& aDepth)
 }
 
 nsresult
-nsDeviceContextGTK::SetDPI(PRInt32 aDpi)
+nsDeviceContextGTK::SetDPI(PRInt32 aPrefDPI)
 {
-  mDpi = aDpi;
+  // Set OSVal to what the operating system thinks the logical resolution is.
+  float screenWidthIn = float(::gdk_screen_width_mm()) / 25.4f;
+  PRInt32 OSVal = nscoord(mWidthFloat / screenWidthIn);
+
+  if (aPrefDPI > 0) {
+    // If there's a valid pref value for the logical resolution,
+    // use it.
+    mDpi = aPrefDPI;
+  } else if ((aPrefDPI == 0) || (OSVal > 96)) {
+    // Either if the pref is 0 (force use of OS value) or the OS
+    // value is bigger than 96, use the OS value.
+    mDpi = OSVal;
+  } else {
+    // if we couldn't get the pref or it's negative, and the OS
+    // value is under 96ppi, then use 96.
+    mDpi = 96;
+  }
   
   int pt2t = 72;
 
   // make p2t a nice round number - this prevents rounding problems
-  mPixelsToTwips = float(NSToIntRound(float(NSIntPointsToTwips(pt2t)) / float(aDpi)));
+  mPixelsToTwips = float(NSToIntRound(float(NSIntPointsToTwips(pt2t)) / float(mDpi)));
   mTwipsToPixels = 1.0f / mPixelsToTwips;
 
   // XXX need to reflow all documents
