@@ -187,6 +187,11 @@ function searchOnLoad()
   onMore(null);
   document.commandDispatcher.updateCommands('mail-search');
   moveToAlertPosition();
+
+  // hide the thread related columns.  you can't thread search results
+  var threadCol = document.getElementById("threadCol");
+  threadCol.setAttribute("hidden","true");
+  SetHiddenAttributeOnThreadOnlyColumns("true");
 }
 
 
@@ -592,4 +597,10 @@ function MoveMessageInSearch(destFolder)
     catch (ex) {
         dump("MsgMoveMessage failed: " + ex + "\n");
     }   
+}
+
+function BeginDragThreadPane(event)
+{
+    // no search pane dnd yet
+    return false;
 }
