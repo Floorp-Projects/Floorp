@@ -36,12 +36,11 @@
 #include "pk11func.h"
 #endif
 
-extern "C" {
-int XFE_EDITOR_NEWTABLE_COLS;
+extern "C" int XFE_EDITOR_NEWTABLE_COLS;
+
 #if defined(MOZ_MAIL_NEWS) || defined(MOZ_MAIL_COMPOSE)
-void fe_mailto_cb(Widget , XtPointer, XtPointer);
+extern "C" void fe_mailto_cb(Widget , XtPointer, XtPointer);
 #endif
-}
 
 #define FE_SYNTAX_ERROR() doSyntaxErrorAlert(view, info)
 
