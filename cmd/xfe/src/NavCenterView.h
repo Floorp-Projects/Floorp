@@ -30,10 +30,7 @@
 #include "RDFBase.h"
 #include "RDFImage.h"
 
-class XFE_HTMLView;
 class XFE_RDFChromeTreeView;
-
-
 
 class XFE_NavCenterView : public XFE_View,
                           public XFE_RDFBase
@@ -68,8 +65,8 @@ protected:
     virtual void          deletePane            ();
 
 private:
-  XFE_HTMLView *             _htmlview;
   XFE_RDFChromeTreeView *    _rdftree;
+
 #ifdef MOZ_SELECTOR_BAR
   Widget                     _selector;
 #else
@@ -84,7 +81,6 @@ private:
   void            createSelectorBar        ();
 #endif
   void            createTree               ();
-  void            createHTMLArea           ();
   void            doAttachments            ();
 };
 

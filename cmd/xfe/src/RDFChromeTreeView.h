@@ -30,6 +30,7 @@
 #include "htrdf.h"
 #include "NavCenterView.h"
 #include "RDFTreeView.h"
+#include "HTMLView.h"
 
 class XFE_RDFChromeTreeView : public XFE_RDFTreeView
 {
@@ -58,7 +59,11 @@ public:
   // RDF Specific calls
   void setHTTitlebarProperties(HT_View view, Widget titleBar);
 
+  // Set the HTML pane height (as a percentage of the view)
+  void setHtmlPaneHeight(PRUint32 height);
+
 protected:
+
     // Override RDFBase methods
 	virtual void	updateRoot      		();
 
@@ -79,11 +84,21 @@ private:
 	// Toggle tree operating mode
 	Widget				_modeControl;
 
+	// The HTML pane form
+	Widget				_htmlPaneForm;
+
+	// The HTML pane
+	XFE_HTMLView *		_htmlPane;
+
+	// The height of the HTML pane as a percentage of the view
+	PRUint32			_htmlPaneHeight;
+
 	static void closeRdfView_cb(Widget, XtPointer, XtPointer);
 
     // Create widgets
     void createControlToolbar();
     void createViewLabel();
+    void createHtmlPane();
     void doAttachments();
 
 };

@@ -52,22 +52,26 @@ typedef struct _closeRdfViewCBStruct {
 
 //////////////////////////////////////////////////////////////////////////
 XFE_RDFChromeTreeView::XFE_RDFChromeTreeView(XFE_Component *	toplevel, 
-						 Widget				parent,
-                         XFE_View *			parent_view, 
-						 MWContext *		context) :
+											 Widget				parent,
+											 XFE_View *			parent_view, 
+											 MWContext *		context) :
 	XFE_RDFTreeView(toplevel, parent, parent_view, context),
 	_viewLabel(NULL),
 	_controlToolBar(NULL),
 	_addBookmarkControl(NULL),
 	_closeControl(NULL),
-	_modeControl(NULL)
+	_modeControl(NULL),
+	_htmlPaneForm(NULL),
+	_htmlPane(NULL),
+	_htmlPaneHeight(0)
 {
     createControlToolbar();
+
     createViewLabel();
 
     doAttachments();
 
-	show();
+    XtManageChild(_tree);
 }
 //////////////////////////////////////////////////////////////////////////
 XFE_RDFChromeTreeView::~XFE_RDFChromeTreeView()
@@ -134,6 +138,36 @@ XFE_RDFChromeTreeView::createViewLabel()
 }
 //////////////////////////////////////////////////////////////////////////
 void
+XFE_RDFChromeTreeView::createHtmlPane()
+{
+	_htmlPaneForm = XtVaCreateWidget("htmlPaneForm",
+									 xmFormWidgetClass,
+									 getBaseWidget(),
+									 XmNshadowThickness,		0,
+									 NULL);
+#if 0
+	_htmlPane = new XFE_HTMLView(this,
+								 _htmlPaneForm,
+								 NULL,
+								 getContext());
+
+	addView(_htmlPane);
+
+    XtVaSetValues(_htmlPane->getBaseWidget(),
+                  XmNtopAttachment,			XmATTACH_FORM,
+                  XmNrightAttachment,		XmATTACH_FORM,
+                  XmNleftAttachment,		XmATTACH_FORM,
+                  XmNbottomAttachment,		XmATTACH_FORM,
+                  NULL);
+	
+	_htmlPane->show();
+
+	// HACK HACK HACK
+	_htmlPane->getURL(NET_CreateURLStruct("http://dunk",NET_DONT_RELOAD));
+#endif
+}
+//////////////////////////////////////////////////////////////////////////
+void
 XFE_RDFChromeTreeView::doAttachments()
 {
     XtVaSetValues(_controlToolBar,
@@ -150,13 +184,67 @@ XFE_RDFChromeTreeView::doAttachments()
                   XmNleftAttachment,	XmATTACH_FORM,
                   XmNbottomAttachment,	XmATTACH_NONE,
                   NULL);
-	XtVaSetValues(_tree,
-				  XmNtopAttachment,		XmATTACH_WIDGET,
-				  XmNtopWidget,			_viewLabel,
-				  XmNrightAttachment,	XmATTACH_FORM,
-				  XmNleftAttachment,	XmATTACH_FORM,
-				  XmNbottomAttachment,	XmATTACH_FORM,
-				  NULL);
+
+	// 0%
+	if (_htmlPaneHeight == 0)
+	{
+		XtVaSetValues(_tree,
+					  XmNtopAttachment,		XmATTACH_WIDGET,
+					  XmNtopWidget,			_viewLabel,
+					  XmNrightAttachment,	XmATTACH_FORM,
+					  XmNleftAttachment,	XmATTACH_FORM,
+					  XmNbottomAttachment,	XmATTACH_FORM,
+					  NULL);
+	}
+	// 100%
+	else if (_htmlPaneHeight == 100)
+	{
+		XtVaSetValues(_htmlPaneForm,
+					  XmNtopAttachment,		XmATTACH_WIDGET,
+					  XmNtopWidget,			_viewLabel,
+					  XmNrightAttachment,	XmATTACH_FORM,
+					  XmNleftAttachment,	XmATTACH_FORM,
+					  XmNbottomAttachment,	XmATTACH_FORM,
+					  NULL);
+		
+	}
+	// 0% < height < 100%
+	else
+	{
+		int max_html_pane_height = 
+			XfeHeight(getBaseWidget()) -
+			XfeHeight(_controlToolBar) -
+			XfeHeight(_viewLabel);
+
+		XP_ASSERT( max_html_pane_height > 0 );
+		
+		int html_pane_height = max_html_pane_height * _htmlPaneHeight / 100;
+		
+		XP_ASSERT( _htmlPane != NULL );
+		
+		XtVaSetValues(_htmlPaneForm,
+//					  XmNheight,		50,
+					  XmNheight,		html_pane_height,
+					  NULL);
+
+		XtVaSetValues(_htmlPaneForm,
+					  XmNtopAttachment,		XmATTACH_NONE,
+					  XmNrightAttachment,	XmATTACH_FORM,
+					  XmNleftAttachment,	XmATTACH_FORM,
+					  XmNbottomAttachment,	XmATTACH_FORM,
+					  NULL);
+
+		XtVaSetValues(_tree,
+					  XmNtopAttachment,		XmATTACH_WIDGET,
+					  XmNtopWidget,			_viewLabel,
+					  XmNrightAttachment,	XmATTACH_FORM,
+					  XmNleftAttachment,	XmATTACH_FORM,
+					  XmNbottomAttachment,	XmATTACH_WIDGET,
+					  XmNbottomWidget,		_htmlPaneForm,
+					  NULL);
+
+//		_htmlPane->show();
+	}
 }
 //////////////////////////////////////////////////////////////////////////
 void
@@ -176,7 +264,7 @@ XFE_RDFChromeTreeView::updateRoot()
 
     XFE_RDFTreeView::updateRoot();
 }
-
+//////////////////////////////////////////////////////////////////////////
 void
 XFE_RDFChromeTreeView::notify(HT_Resource			n, 
                     HT_Event			whatHappened)
@@ -224,7 +312,13 @@ XFE_RDFChromeTreeView::closeRdfView_cb(Widget /* w */, XtPointer clientData, XtP
 
 #endif /*MOZ_SELECTOR_BAR*/
 }
+//////////////////////////////////////////////////////////////////////////
 
+//////////////////////////////////////////////////////////////////////////
+//
+// XFE_RDFChromeTreeView public methods.
+//
+//////////////////////////////////////////////////////////////////////////
 void
 XFE_RDFChromeTreeView::setHTTitlebarProperties(HT_View view, Widget  titleBar)
 {
@@ -247,8 +341,6 @@ XFE_RDFChromeTreeView::setHTTitlebarProperties(HT_View view, Widget  titleBar)
          XtSetArg(av[ac], XmNforeground, pixel); ac++;
    }
 
-
-
    /* titleBarBGColor */
    HT_GetTemplateData(HT_TopNode(view),  gNavCenter->titleBarBGColor, HT_COLUMN_STRING, &data);
    if (data)
@@ -266,10 +358,46 @@ XFE_RDFChromeTreeView::setHTTitlebarProperties(HT_View view, Widget  titleBar)
 
     }
 
-
     XtSetValues(titleBar, av, ac);
-
-
 }
+//////////////////////////////////////////////////////////////////////////
+//
+// Set the HTML pane height (as a percentage of the view)
+//
+//////////////////////////////////////////////////////////////////////////
+void
+XFE_RDFChromeTreeView::setHtmlPaneHeight(PRUint32 height)
+{
+	// Make sure it actually changed
+	if (_htmlPaneHeight == height)
+	{
+		return;
+	}
 
+	// Make sure its not more than 100%
+	if (_htmlPaneHeight > 100)
+	{
+		_htmlPaneHeight = 100;
+	}
 
+	// Create the html pane if needed (for the first time)
+	if ((height > 0) && (_htmlPane == NULL))
+	{
+		createHtmlPane();
+	}
+
+	_htmlPaneHeight = height;
+
+	XP_ASSERT( _htmlPaneForm != NULL );
+	XP_ASSERT( _htmlPane != NULL );
+
+	// Show the html pane form if needed
+	XfeSetManagedState(_htmlPaneForm,_htmlPaneHeight != 0);
+
+	// Show the tree if needed
+	XfeSetManagedState(_tree,_htmlPaneHeight != 100);
+	
+	// Redo attachments
+    doAttachments();
+}
+//////////////////////////////////////////////////////////////////////////

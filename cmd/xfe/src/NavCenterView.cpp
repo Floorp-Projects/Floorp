@@ -28,7 +28,13 @@
 #include "IconGroup.h"
 #include "xp_ncent.h"
 
-#include <Xfe/XfeAll.h>
+//#include <Xfe/XfeAll.h>
+
+#include <Xm/Form.h>
+
+#ifdef MOZ_SELECTOR_BAR
+#include <Xfe/ToolScroll.h>
+#endif
 
 #if DEBUG_slamm
 #define D(x) x
@@ -63,10 +69,9 @@ XFE_NavCenterView::XFE_NavCenterView(XFE_Component *toplevel_component,
 #ifdef MOZ_SELECTOR_BAR
   createSelectorBar();
 #endif
+
   createTree();
-#ifdef HTML_PANE
-  createHTMLArea();
-#endif
+
   doAttachments();
 
 #ifdef MOZ_SELECTOR_BAR
@@ -74,21 +79,12 @@ XFE_NavCenterView::XFE_NavCenterView(XFE_Component *toplevel_component,
 #endif
 
   addView(_rdftree);
-#ifdef HTML_PANE
-  addView(_htmlview);
-#endif 
 
 #ifdef MOZ_SELECTOR_BAR
   XtManageChild(_selector);
 #endif /*MOZ_SELECTOR_BAR*/
 
   _rdftree->show();
-
-#ifdef HTML_PANE
-  _htmlview->show();
-  _htmlview->getURL(NET_CreateURLStruct("http://home.netscape.com/",NET_DONT_RELOAD));
-#endif
-
 }
 
 
@@ -305,7 +301,7 @@ XFE_NavCenterView::addHTView(HT_View htview)
 //////////////////////////////////////////////////////////////////////
 void
 XFE_NavCenterView::selector_activate_cb(Widget		/* w */,
-                                        XtPointer	clientData, 
+                                        XtPointer	/* clientData */, 
                                         XtPointer	/* callData */)
 {	
 //   HT_View htView = (HT_View)clientData;
@@ -426,13 +422,8 @@ XFE_NavCenterView::createTree()
   _rdftree = new XFE_RDFChromeTreeView(this, getBaseWidget(),
                                        this, m_contextData);
   _rdftree->setStandAloneState(_isStandalone);
-}
-//////////////////////////////////////////////////////////////////////////
-void
-XFE_NavCenterView::createHTMLArea()
-{
-  _htmlview = new XFE_HTMLView(this, getBaseWidget(),
-                               NULL, m_contextData);
+
+//  _rdftree->setHtmlPaneHeight(50);
 }
 //////////////////////////////////////////////////////////////////////////
 void
@@ -449,11 +440,7 @@ XFE_NavCenterView::doAttachments()
 
     XtVaSetValues(_rdftree->getBaseWidget(),
                   XmNtopAttachment,    XmATTACH_FORM,
-#ifdef HTML_PANE
-                  XmNbottomAttachment, XmATTACH_NONE,
-#else
                   XmNbottomAttachment, XmATTACH_FORM,
-#endif
 #ifdef MOZ_SELECTOR_BAR
                   XmNleftAttachment,   XmATTACH_WIDGET,
                   XmNleftWidget,       _selector,
@@ -462,23 +449,5 @@ XFE_NavCenterView::doAttachments()
 #endif /*MOZ_SELECTOR_BAR*/
                   XmNrightAttachment,  XmATTACH_FORM,
                   NULL);
-
-#ifdef HTML_PANE
-    Widget html_base = _htmlview->getBaseWidget();
-    XtVaSetValues(html_base,
-                  XmNtopAttachment,    XmATTACH_WIDGET,
-                  XmNtopWidget,        _rdftree->getBaseWidget(),
-                  XmNbottomAttachment, XmATTACH_FORM,
-                  XmNleftAttachment,   XmATTACH_WIDGET,
-#ifdef MOZ_SELECTOR_BAR
-                  XmNleftAttachment,   XmATTACH_WIDGET,
-                  XmNleftWidget,       _selector,
-#else
-                  XmNleftAttachment,   XmATTACH_FORM,
-#endif /*MOZ_SELECTOR_BAR*/
-                  XmNrightAttachment,  XmATTACH_FORM,
-                  NULL);
-#endif
-
 }
 //////////////////////////////////////////////////////////////////////////
