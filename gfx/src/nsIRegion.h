@@ -119,6 +119,19 @@ public:
   **/
 
   virtual void Subtract(const nsIRegion &aRegion) = 0;
+
+  /**
+  * destructively subtract a rect from this region
+  *
+  * @param      aX xoffset of rect to subtract with region
+  * @param      aY yoffset of rect to subtract with region
+  * @param      aWidth width of rect to subtract with region
+  * @param      aHeight height of rect to subtract with region
+  * @return     void
+  *
+  **/
+
+  virtual void Subtract(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight) = 0;
   
   /**
   * is this region empty? i.e. does it contain any pixels

@@ -475,12 +475,33 @@ void nsRenderingContextWin :: SetClipRegion(const nsIRegion& aRegion, nsClipComb
 {
   nsRegionWin *pRegion = (nsRegionWin *)&aRegion;
   HRGN hrgn = pRegion->GetHRGN();
+  int cmode;
+
+  switch (aCombine)
+  {
+    case nsClipCombine_kIntersect:
+      cmode = RGN_AND;
+      break;
+
+    case nsClipCombine_kUnion:
+      cmode = RGN_OR;
+      break;
+
+    case nsClipCombine_kSubtract:
+      cmode = RGN_DIFF;
+      break;
+
+    default:
+    case nsClipCombine_kReplace:
+      cmode = RGN_COPY;
+      break;
+  }
 
   if (NULL != hrgn)
   {
     mStates->mFlags &= ~FLAG_LOCAL_CLIP_VALID;
     PushClipState();
-    ::SelectClipRgn(mDC, hrgn);
+    ::ExtSelectClipRgn(mDC, hrgn, cmode);
   }
 }
 

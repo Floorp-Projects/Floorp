@@ -134,8 +134,8 @@ public:
    * @param region nsIRegion to be updated
    * @param aUpdateFlags see bottom of nsIViewManager.h for description
    */
-  virtual void Refresh(nsIRenderingContext *aContext, nsIRegion *region,
-                       PRUint32 aUpdateFlags) = 0;
+  virtual void Refresh(nsIView *aView, nsIRenderingContext *aContext,
+                       nsIRegion *region, PRUint32 aUpdateFlags) = 0;
 
   /**
    * Called to refresh an area of the root window. Often called in
@@ -352,5 +352,7 @@ public:
 #define NS_VMREFRESH_SCREEN_RECT    0x0002
 //update view now?
 #define NS_VMREFRESH_IMMEDIATE      0x0004
+//prevent "sync painting"
+#define NS_VMREFRESH_NO_SYNC        0x0008
 
 #endif  // nsIViewManager_h___

@@ -73,8 +73,8 @@ public:
   // the region or rectangle passed in should be in the window's
   // coordinate space. Often called in response to a paint/redraw event
   // from the native windowing system.
-  virtual void Refresh(nsIRenderingContext *aContext, nsIRegion *region,
-                       PRUint32 aUpdateFlags);
+  virtual void Refresh(nsIView *aView, nsIRenderingContext *aContext,
+                       nsIRegion *region, PRUint32 aUpdateFlags);
   virtual void Refresh(nsIView* aView, nsIRenderingContext *aContext,
                        nsRect *rect, PRUint32 aUpdateFlags);
 
@@ -170,12 +170,14 @@ public:
 private:
   ~nsViewManager();
   nsIRenderingContext *CreateRenderingContext(nsIView &aView);
+  void AddRectToDirtyRegion(nsRect &aRect);
 
   nsIPresContext    *mContext;
   nsIWidget         *mRootWindow;
   nsRect            mDSBounds;
   nsDrawingSurface  mDrawingSurface;
   PRTime            mLastRefresh;
+  nsIRegion         *mDirtyRegion;
                             
 public:
   //these are public so that our timer callback can poke them.
