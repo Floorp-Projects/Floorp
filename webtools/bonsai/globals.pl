@@ -106,15 +106,15 @@ sub Param {
 ##  Routines to handle the mechanics of connecting to the database
 ##
 sub ConnectToDatabase {
-    my ($driver, $dsn);
+    my ($dsn);
 
     if (!defined $::db) {
-        $driver = "mysql";
-        $dsn = "DBI:$driver:database=bonsai;";
+        $dsn = Param('dbiparam');
 
 #        DBI->trace(1, "/tmp/dbi.out");
 
-	$::db = DBI->connect($dsn, Param('mysqluser'), Param('mysqlpassword'))
+	$::db = DBI->connect($dsn, Param('mysqluser'), Param('mysqlpassword'),
+                             "mysql")
             || die "Can't connect to database server.";
     }
 }

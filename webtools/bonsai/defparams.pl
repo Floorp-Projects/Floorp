@@ -135,6 +135,11 @@ DefParam("mysqlpassword",
          "t",
          "");
 
+DefParam("dbiparam",
+         "The first parameter to pass to the DBI->connect() method.  This may need to be changed to be simply 'bonsai' for older versions of the perl MySQL libraries.",
+         "t",
+         "DBI:mysql:database=bonsai;");
+
 DefParam("readonly",
          "Are the hook files readonly.  (This value gets changed on the fly,
 so it is ok to leave the way it is.)",
