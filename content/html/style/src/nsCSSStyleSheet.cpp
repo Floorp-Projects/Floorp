@@ -2937,39 +2937,38 @@ static PRBool SelectorMatches(SelectorMatchesData &data,
   // if we are dealing with negations, reverse the values of PR_TRUE and PR_FALSE
   PRBool  localFalse = PRBool(0 < aNegationIndex);
   PRBool  localTrue = PRBool(0 == aNegationIndex);
-  PRBool  checkType = (0 == aNegationIndex) || (1 < aNegationIndex);
-  PRBool  result = localFalse;
+  PRBool  checkType = (1 != aNegationIndex);
+  PRBool  result = localTrue;
 
-  // Bail out early if we can. Do not perform the test if aNegationIndex==1
+  // Do not perform the test if aNegationIndex==1
   // because it then contains only negated IDs, classes, attributes and pseudo-
   // classes
   if (checkType) {
     if (kNameSpaceID_Unknown != aSelector->mNameSpace) {
       if (data.mNameSpaceID != aSelector->mNameSpace) {
-        return result;
+        result = localFalse;
       }
     }
-  }  
-  if (checkType) {
-    if ((nsnull != aSelector->mTag) && (aSelector->mTag != data.mContentTag))  {
-      return result;
-    }
-    if (1 < aNegationIndex) {
-      // optimization : no other selector to test on negated type or
-      // universal selector
-      return localTrue;
+    if (localTrue == result) {
+      if ((nsnull != aSelector->mTag) && (aSelector->mTag != data.mContentTag)) {
+        result = localFalse;
+      }
     }
   }
 
-  result = localTrue;
-  
-  if ((localTrue == result) &&
-      (nsnull != aSelector->mPseudoClassList)) {  // test for pseudo class match
+  // optimization : bail out early if we can
+  if (checkType && !result) {
+    return result;
+  }
+
+  result = PR_TRUE;
+
+  if (nsnull != aSelector->mPseudoClassList) {  // test for pseudo class match
     // first-child, root, lang, active, focus, hover, link, visited...
     // XXX disabled, enabled, selected, selection
     nsAtomList* pseudoClass = aSelector->mPseudoClassList;
 
-    while ((localTrue == result) && (nsnull != pseudoClass)) {
+    while (result && (nsnull != pseudoClass)) {
       if ((nsCSSAtoms::firstChildPseudo == pseudoClass->mAtom) ||
           (nsCSSAtoms::firstNodePseudo == pseudoClass->mAtom) ) {
         nsIContent* firstChild = nsnull;
@@ -3039,7 +3038,7 @@ static PRBool SelectorMatches(SelectorMatchesData &data,
       }
       else if (nsCSSAtoms::langPseudo == pseudoClass->mAtom) {
         // XXX not yet implemented
-        result = localFalse;
+        result = PR_FALSE;
       }
       else if (IsEventPseudo(pseudoClass->mAtom)) {
         // check if the element is event-sensitive
@@ -3069,7 +3068,7 @@ static PRBool SelectorMatches(SelectorMatchesData &data,
       }
       else if (IsLinkPseudo(pseudoClass->mAtom)) {
         if (data.mIsHTMLLink || data.mIsSimpleXLink) {
-          if ((localFalse != result) && (aTestState)) {
+          if (result && aTestState) {
             if (nsCSSAtoms::linkPseudo == pseudoClass->mAtom) {
               result = PRBool(localTrue == (eLinkState_Unvisited == data.mLinkState));
             }
@@ -3090,11 +3089,12 @@ static PRBool SelectorMatches(SelectorMatchesData &data,
   }
 
   // namespace/tag match
-  if (result == localTrue && aSelector->mAttrList) { // test for attribute match
+  if (result && aSelector->mAttrList) { // test for attribute match
     // if no attributes on the content, no match
     if(!data.mHasAttributes) {
       result = localFalse;
     } else {
+      result = localTrue;
       nsAttrSelector* attr = aSelector->mAttrList;
       do {
         nsAutoString  value, partValue;
@@ -3144,16 +3144,16 @@ static PRBool SelectorMatches(SelectorMatchesData &data,
           }
         }
         attr = attr->mNext;
-      } while ((localTrue == result) && (nsnull != attr));
+      } while (result && (nsnull != attr));
     }
   }
-  if ((localTrue == result) &&
+  if (result &&
       ((nsnull != aSelector->mIDList) || (nsnull != aSelector->mClassList))) {  // test for ID & class match
     result = localFalse;
     if (data.mStyledContent) {
       nsAtomList* IDList = aSelector->mIDList;
       if (nsnull == IDList) {
-        result = localTrue;
+        result = PR_TRUE;
       }
       else if (nsnull != data.mContentID) {
         result = localTrue;
@@ -3166,7 +3166,7 @@ static PRBool SelectorMatches(SelectorMatchesData &data,
         }
       }
       
-      if (localTrue == result) {
+      if (result) {
         nsAtomList* classList = aSelector->mClassList;
         while (nsnull != classList) {
           if (NS_COMFALSE == data.mStyledContent->HasClass(classList->mAtom)) {
@@ -3180,7 +3180,7 @@ static PRBool SelectorMatches(SelectorMatchesData &data,
   }
   
   // apply SelectorMatches to the negated selectors in the chain
-  if ((localTrue == result) && (nsnull != aSelector->mNegations)) {
+  if (result && (nsnull != aSelector->mNegations)) {
     result = SelectorMatches(data, aSelector->mNegations, aTestState, aNegationIndex+1);
   }
   return result;
