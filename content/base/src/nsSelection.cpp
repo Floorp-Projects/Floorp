@@ -2325,8 +2325,10 @@ printf("HandleTableSelection: Dragged into a new cell\n");
             mStartSelectedCell = nsnull;
             mDomSelections[index]->RemoveAllRanges();
 
-            mSelectingTableCellMode = 
-              (startRowIndex == curRowIndex) ? nsISelectionPrivate::TABLESELECTION_ROW : nsISelectionPrivate::TABLESELECTION_COLUMN;
+            if (startRowIndex == curRowIndex)
+              mSelectingTableCellMode = nsISelectionPrivate::TABLESELECTION_ROW;
+            else
+              mSelectingTableCellMode = nsISelectionPrivate::TABLESELECTION_COLUMN;
 
             return SelectRowOrColumn(childContent, mSelectingTableCellMode);
           }
