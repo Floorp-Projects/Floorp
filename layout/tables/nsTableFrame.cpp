@@ -2554,8 +2554,6 @@ NS_METHOD nsTableFrame::ResizeReflowPass2(nsIPresContext&          aPresContext,
   // Did we successfully reflow our mapped children?
   if (NS_FRAME_COMPLETE == aStatus) {
     // Any space left?
-    PRInt32 numKids;
-    mContent->ChildCount(numKids);
     if (state.availSize.height > 0) {
       // Try and pull-up some children from a next-in-flow
       rv = PullUpChildren(aPresContext, aDesiredSize, state, aStatus);
