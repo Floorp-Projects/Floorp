@@ -419,8 +419,9 @@ int MultiByteToWideChar( int CodePage, const char*pText, ULONG ulLength, PRUnich
 
   PRUnichar *tmp = szBuffer; // function alters the out pointer
 
-   int unirc = UniUconvToUcs( *pConverter, (void**)&ucsString, &ucsLen,
-                                &tmp, &cplen, &cSubs);
+  int unirc = UniUconvToUcs( *pConverter, (void**)&ucsString, &ucsLen,
+                             NS_REINTERPRET_CAST(UniChar**, &tmp),
+                             &cplen, &cSubs);
 
   if( unirc == UCONV_E2BIG) // k3w1
   {
