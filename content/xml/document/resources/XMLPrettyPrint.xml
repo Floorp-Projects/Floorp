@@ -61,7 +61,7 @@
       <handler event="click" button="0">
       <![CDATA[
         try {
-          var par = event.originalTarget.parentNode;
+          var par = event.originalTarget;
           if (par.nodeName == 'td' && par.className == 'expander') {
             if (par.parentNode.className == 'expander-closed') {
               par.parentNode.className = '';
