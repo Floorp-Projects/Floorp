@@ -119,7 +119,7 @@ function EditorNewPlaintext()
 
 function EditorNewBrowser()
 {
-  dump("In EditorNewPlaintext..\n");
+  dump("In EditorNewBrowser..\n");
  
   core = XPAppCoresManager.Find("toolkitCore");
   if ( !core ) {
@@ -129,7 +129,7 @@ function EditorNewBrowser()
     }
   }
   if ( core ) {
-    core.ShowWindowWithArgs( "chrome://navigator/", window, "" );
+    core.ShowWindowWithArgs( "chrome://navigator/content/navigator.xul", window, "" );
   } else {
     dump("Error; can't create toolkitCore\n");
   }
