@@ -339,6 +339,8 @@ char *SECU_ErrorString(int16 err);
 /* Return informative error string. Does not call XP_GetString */
 char *SECU_ErrorStringRaw(int16 err);
 
+void printflags(char *trusts, unsigned int flags);
+
 #ifndef XP_UNIX
 extern int ffs(unsigned int i);
 #endif
