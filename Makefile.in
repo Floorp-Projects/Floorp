@@ -397,7 +397,10 @@ endif
 endif
 
 ifeq ($(MOZ_BUILD_APP),macbrowser)
-tier_99_dirs += camino
+tier_99_dirs += \
+	embedding/config \
+	camino \
+	$(NULL)
 endif
 
 else
