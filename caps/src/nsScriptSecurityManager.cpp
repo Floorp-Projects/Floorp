@@ -107,11 +107,12 @@ nsScriptSecurityManager::CheckURI(nsIScriptContext *aContext,
                                   PRBool *aResult)
 {
     // Temporary: only enforce if security.checkuri pref is enabled
-    nsIPref *mPrefs;
-    nsServiceManager::GetService(kPrefServiceCID, NS_GET_IID(nsIPref), 
-                                 (nsISupports**) &mPrefs);
-    PRBool enabled;
-    if (NS_FAILED(mPrefs->GetBoolPref("security.checkuri", &enabled)) ||
+	nsresult rv;
+	NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+	if (NS_FAILED(rv))
+		return NS_ERROR_FAILURE;
+	PRBool enabled;
+    if (NS_FAILED(prefs->GetBoolPref("security.checkuri", &enabled)) ||
         !enabled) 
     {
         *aResult = PR_TRUE;
@@ -233,10 +234,11 @@ NS_IMETHODIMP
 nsScriptSecurityManager::CanExecuteScripts(nsIPrincipal *principal,
                                            PRBool *result)
 {
-    nsIPref *mPrefs;
-    nsServiceManager::GetService(kPrefServiceCID, NS_GET_IID(nsIPref), 
-                                 (nsISupports**) &mPrefs);
-    if (NS_FAILED(mPrefs->GetBoolPref("javascript.enabled", result))) {
+	nsresult rv;
+	NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+	if (NS_FAILED(rv))
+		return NS_ERROR_FAILURE;
+    if (NS_FAILED(prefs->GetBoolPref("javascript.enabled", result))) {
         // Default to enabled.
         *result = PR_TRUE;
         return NS_OK;
@@ -252,10 +254,11 @@ NS_IMETHODIMP
 nsScriptSecurityManager::CanExecuteFunction(void *jsFunc,
                                             PRBool *result)
 {
-    nsIPref *mPrefs;
-    nsServiceManager::GetService(kPrefServiceCID, NS_GET_IID(nsIPref), 
-                                 (nsISupports**) &mPrefs);
-    if (NS_FAILED(mPrefs->GetBoolPref("javascript.enabled", result))) {
+	nsresult rv;
+	NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+	if (NS_FAILED(rv))
+		return NS_ERROR_FAILURE;
+    if (NS_FAILED(prefs->GetBoolPref("javascript.enabled", result))) {
         // Default to enabled.
         *result = PR_TRUE;
         return NS_OK;
@@ -385,7 +388,6 @@ nsScriptSecurityManager::nsScriptSecurityManager(void)
 
 nsScriptSecurityManager::~nsScriptSecurityManager(void)
 {
-//  nsServiceManager::ReleaseService(kPrefServiceCID, mPrefs);  
 } 
 
 nsScriptSecurityManager *
@@ -505,11 +507,12 @@ nsScriptSecurityManager::CheckPermissions(JSContext *aCx, JSObject *aObj,
                                           PRBool* aResult)
 {
     // Temporary: only enforce if security.checkdomprops pref is enabled
-    nsIPref *mPrefs;
-    nsServiceManager::GetService(kPrefServiceCID, NS_GET_IID(nsIPref), 
-                                 (nsISupports**) &mPrefs);
-    PRBool enabled;
-    if (NS_FAILED(mPrefs->GetBoolPref("security.checkdomprops", &enabled)) ||
+	nsresult rv;
+	NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+	if (NS_FAILED(rv))
+		return NS_ERROR_FAILURE;
+	PRBool enabled;
+    if (NS_FAILED(prefs->GetBoolPref("security.checkdomprops", &enabled)) ||
         !enabled) 
     {
         *aResult = PR_TRUE;
@@ -581,9 +584,11 @@ nsScriptSecurityManager::GetSecurityLevel(JSContext *cx, char *prop_name,
     PRInt32 secLevel;
     char *secLevelString;
     nsIPref *mPrefs;
-    nsServiceManager::GetService(kPrefServiceCID, NS_GET_IID(nsIPref), 
-                                 (nsISupports**) &mPrefs);
-    if (NS_SUCCEEDED(mPrefs->CopyCharPref(tmp_prop_name, &secLevelString)) &&
+	nsresult rv;
+	NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+	if (NS_FAILED(rv))
+		return NS_ERROR_FAILURE;
+    if (NS_SUCCEEDED(prefs->CopyCharPref(tmp_prop_name, &secLevelString)) &&
         secLevelString) 
     {
         PR_FREEIF(tmp_prop_name);
@@ -616,10 +621,13 @@ nsScriptSecurityManager::AddSecPolicyPrefix(JSContext *cx, char *pref_str)
     char *policy_str, *retval = 0;
     if ((policy_str = GetSitePolicy(subjectOrigin)) == 0) {
         /* No site-specific policy.  Get global policy name. */
-        nsIPref * mPrefs;
-        nsServiceManager::GetService(kPrefServiceCID,NS_GET_IID(nsIPref), (nsISupports**)&mPrefs);
-        if (NS_OK != mPrefs->CopyCharPref("javascript.security_policy", &policy_str))
+		nsresult rv;
+		NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+		if (NS_FAILED(rv) ||
+            NS_FAILED(prefs->CopyCharPref("javascript.security_policy", &policy_str)))
+		{
             policy_str = PL_strdup("default");
+		}
     }
     if (policy_str) { //why can't this be default? && PL_strcasecmp(policy_str, "default") != 0) {
         retval = PR_sprintf_append(NULL, "security.policy.%s.%s", policy_str, pref_str);
@@ -641,11 +649,12 @@ NS_IMETHODIMP
 nsScriptSecurityManager::CheckXPCPermissions(JSContext *aJSContext)
 {
     // Temporary: only enforce if security.checkxpconnect pref is enabled
-    nsIPref *mPrefs;
-    nsServiceManager::GetService(kPrefServiceCID, NS_GET_IID(nsIPref), 
-                                 (nsISupports**) &mPrefs);
+	nsresult rv;
+	NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+	if (NS_FAILED(rv))
+		return NS_ERROR_FAILURE;
     PRBool enabled;
-    if (NS_FAILED(mPrefs->GetBoolPref("security.checkxpconnect", &enabled)) ||
+    if (NS_FAILED(prefs->GetBoolPref("security.checkxpconnect", &enabled)) ||
         !enabled) 
     {
         return NS_OK;
