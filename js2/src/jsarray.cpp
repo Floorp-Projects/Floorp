@@ -68,7 +68,7 @@ JSValue Array_Constructor(Context *cx, const JSValue& thisValue, JSValue *argv, 
         else {
             arrInst->mLength = argc;
             for (uint32 i = 0; i < argc; i++) {
-                String *id = numberToString(i);
+                const String *id = numberToString(i);
                 arrInst->defineVariable(cx, *id, (NamespaceList *)(NULL), Object_Type, argv[i]);
                 delete id;
             }
@@ -92,7 +92,7 @@ static JSValue Array_toString(Context *cx, const JSValue& thisValue, JSValue * /
     else {
         String *s = new String();
         for (uint32 i = 0; i < arrInst->mLength; i++) {
-            String *id = numberToString(i);
+            const String *id = numberToString(i);
             arrInst->getProperty(cx, *id, NULL);
             JSValue result = cx->popValue();
             s->append(*result.toString(cx).string);
@@ -118,7 +118,7 @@ static JSValue Array_toSource(Context *cx, const JSValue& thisValue, JSValue * /
     else {
         String *s = new String(widenCString("["));
         for (uint32 i = 0; i < arrInst->mLength; i++) {
-            String *id = numberToString(i);
+            const String *id = numberToString(i);
             arrInst->getProperty(cx, *id, NULL);
             JSValue result = cx->popValue();
             if (!result.isUndefined())
@@ -140,7 +140,7 @@ static JSValue Array_push(Context *cx, const JSValue& thisValue, JSValue *argv, 
     JSArrayInstance *arrInst = (JSArrayInstance *)thisObj;
 
     for (uint32 i = 0; i < argc; i++) {
-        String *id = numberToString(i + arrInst->mLength);
+        const String *id = numberToString(i + arrInst->mLength);
         arrInst->defineVariable(cx, *id, (NamespaceList *)(NULL), Object_Type, argv[i]);
         delete id;
     }
@@ -158,7 +158,7 @@ static JSValue Array_pop(Context *cx, const JSValue& thisValue, JSValue * /*argv
     ContextStackReplacement csr(cx);
 
     if (arrInst->mLength > 0) {
-        String *id = numberToString(arrInst->mLength - 1);
+        const String *id = numberToString(arrInst->mLength - 1);
         arrInst->getProperty(cx, *id, NULL);
         JSValue result = cx->popValue();
         arrInst->deleteProperty(*id, NULL);
@@ -182,14 +182,14 @@ JSValue Array_concat(Context *cx, const JSValue& thisValue, JSValue *argv, uint3
 
     do {
         if (E.getType() != Array_Type) {
-            String *id = numberToString(n++);
+            const String *id = numberToString(n++);
             A->setProperty(cx, *id, CURRENT_ATTR, E);            
         }
         else {
             ASSERT(E.isObject() && dynamic_cast<JSArrayInstance *>(E.object));
             JSArrayInstance *arrInst = (JSArrayInstance *)(E.object);
             for (uint32 k = 0; k < arrInst->mLength; k++) {
-                String *id = numberToString(k);
+                const String *id = numberToString(k);
                 arrInst->getProperty(cx, *id, NULL);
                 JSValue result = cx->popValue();
                 id = numberToString(n++);
@@ -251,8 +251,8 @@ static JSValue Array_reverse(Context *cx, const JSValue& thisValue, JSValue * /*
     uint32 halfway = length / 2;
 
     for (uint32 k = 0; k < halfway; k++) {    
-        String *id1 = numberToString(k);
-        String *id2 = numberToString(length - k - 1);
+        const String *id1 = numberToString(k);
+        const String *id2 = numberToString(length - k - 1);
 
         PropertyIterator it;
         if (thisObj->hasOwnProperty(*id1, CURRENT_ATTR, Read, &it)) {
@@ -304,8 +304,8 @@ static JSValue Array_shift(Context *cx, const JSValue& thisValue, JSValue * /*ar
     result = cx->popValue();
 
     for (uint32 k = 1; k < length; k++) {
-        String *id1 = numberToString(k);
-        String *id2 = numberToString(k - 1);
+        const String *id1 = numberToString(k);
+        const String *id2 = numberToString(k - 1);
 
         PropertyIterator it;
         if (thisObj->hasOwnProperty(*id1, CURRENT_ATTR, Read, &it)) {
@@ -376,10 +376,10 @@ static JSValue Array_slice(Context *cx, const JSValue& thisValue, JSValue *argv,
     
     uint32 n = 0;
     while (start < end) {
-        String *id1 = numberToString(start);
+        const String *id1 = numberToString(start);
         PropertyIterator it;
         if (thisObj->hasOwnProperty(*id1, CURRENT_ATTR, Read, &it)) {
-            String *id2 = numberToString(n);
+            const String *id2 = numberToString(n);
             thisObj->getProperty(cx, *id1, CURRENT_ATTR);
             A->setProperty(cx, *id2, CURRENT_ATTR, cx->popValue());
         }
@@ -436,10 +436,10 @@ static JSValue Array_splice(Context *cx, const JSValue& thisValue, JSValue *argv
                 deleteCount = toUInt32(arg1);
         
         for (k = 0; k < deleteCount; k++) {
-            String *id1 = numberToString(start + k);
+            const String *id1 = numberToString(start + k);
             PropertyIterator it;
             if (thisObj->hasOwnProperty(*id1, CURRENT_ATTR, Read, &it)) {
-                String *id2 = numberToString(k);
+                const String *id2 = numberToString(k);
                 thisObj->getProperty(cx, *id1, CURRENT_ATTR);
                 A->setProperty(cx, *id2, CURRENT_ATTR, cx->popValue());
             }
@@ -449,8 +449,8 @@ static JSValue Array_splice(Context *cx, const JSValue& thisValue, JSValue *argv
         uint32 newItemCount = argc - 2;
         if (newItemCount < deleteCount) {
             for (k = start; k < (length - deleteCount); k++) {
-                String *id1 = numberToString(k + deleteCount);
-                String *id2 = numberToString(k + newItemCount);
+                const String *id1 = numberToString(k + deleteCount);
+                const String *id2 = numberToString(k + newItemCount);
                 PropertyIterator it;
                 if (thisObj->hasOwnProperty(*id1, CURRENT_ATTR, Read, &it)) {
                     thisObj->getProperty(cx, *id1, CURRENT_ATTR);
@@ -460,15 +460,15 @@ static JSValue Array_splice(Context *cx, const JSValue& thisValue, JSValue *argv
                     thisObj->deleteProperty(*id2, CURRENT_ATTR);
             }
             for (k = length; k > (length - deleteCount + newItemCount); k--) {
-                String *id1 = numberToString(k - 1);
+                const String *id1 = numberToString(k - 1);
                 thisObj->deleteProperty(*id1, CURRENT_ATTR);
             }
         }
         else {
             if (newItemCount > deleteCount) {
                 for (k = length - deleteCount; k > start; k--) {
-                    String *id1 = numberToString(k + deleteCount - 1);
-                    String *id2 = numberToString(k + newItemCount - 1);
+                    const String *id1 = numberToString(k + deleteCount - 1);
+                    const String *id2 = numberToString(k + newItemCount - 1);
                     PropertyIterator it;
                     if (thisObj->hasOwnProperty(*id1, CURRENT_ATTR, Read, &it)) {
                         thisObj->getProperty(cx, *id1, CURRENT_ATTR);
@@ -481,7 +481,7 @@ static JSValue Array_splice(Context *cx, const JSValue& thisValue, JSValue *argv
         }
         k = start;
         for (uint32 i = 2; i < argc; i++) {
-            String *id1 = numberToString(k++);
+            const String *id1 = numberToString(k++);
             thisObj->setProperty(cx, *id1, CURRENT_ATTR, argv[i]);
         }
         thisObj->setProperty(cx, widenCString("length"), CURRENT_ATTR, JSValue((float64)(length - deleteCount + newItemCount)) );
@@ -503,8 +503,8 @@ static JSValue Array_unshift(Context *cx, const JSValue& thisValue, JSValue *arg
     uint32 k;
 
     for (k = length; k > 0; k--) {
-        String *id1 = numberToString(k - 1);
-        String *id2 = numberToString(k + argc - 1);
+        const String *id1 = numberToString(k - 1);
+        const String *id2 = numberToString(k + argc - 1);
         PropertyIterator it;
         if (thisObj->hasOwnProperty(*id1, CURRENT_ATTR, Read, &it)) {
             thisObj->getProperty(cx, *id1, CURRENT_ATTR);
@@ -515,7 +515,7 @@ static JSValue Array_unshift(Context *cx, const JSValue& thisValue, JSValue *arg
     }
 
     for (k = 0; k < argc; k++) {
-        String *id1 = numberToString(k);
+        const String *id1 = numberToString(k);
         thisObj->setProperty(cx, *id1, CURRENT_ATTR, argv[k]);
     }
     thisObj->setProperty(cx, widenCString("length"), CURRENT_ATTR, JSValue((float64)(length + argc)) );

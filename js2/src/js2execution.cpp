@@ -315,7 +315,7 @@ JSValue *Context::buildArgumentBlock(JSFunction *target, uint32 &argCount)
             else {
                 if (target->hasRestParameter()) {
                     if (!restArgument.isUndefined()) {
-                        String *id = numberToString(posArgIndex++);
+                        const String *id = numberToString(posArgIndex++);
                         restArgument.object->setProperty(this, *id, (NamespaceList *)(NULL), v);
                     }
                 }
@@ -1899,7 +1899,7 @@ JSValue JSValue::valueToNumber(Context *cx, const JSValue& value)
     }
 }
 
-String *numberToString(float64 number)
+const String *numberToString(float64 number)
 {
     char buf[dtosStandardBufferSize];
     const char *chrp = doubleToStr(buf, dtosStandardBufferSize, number, dtosStandard, 0);
@@ -2078,6 +2078,20 @@ int JSValue::operator==(const JSValue& value) const
     return 0;
 }
 
+float64 JSValue::float64ToInteger(float64 d)
+{
+    if (JSDOUBLE_IS_NaN(d))
+        return 0.0;
+    else
+        return (d >= 0.0) ? fd::floor(d) : -fd::floor(d);
+}
+
+JSValue JSValue::valueToInteger(Context *cx, const JSValue& value)
+{
+    JSValue v = valueToNumber(cx, value);
+    v.f64 = float64ToInteger(v.f64);
+    return v;
+}
 
 JSValue JSValue::valueToInt32(Context *, const JSValue& value)
 {

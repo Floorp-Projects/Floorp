@@ -41,7 +41,7 @@ RSC=rc.exe
 # PROP Intermediate_Dir "Release"
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_MBCS" /D "_LIB" /YX /FD /c
-# ADD CPP /nologo /GX /O2 /Ob2 /D "_LIB" /D "NDEBUG" /D "WIN32" /D "_MBCS" /YX /FD /c
+# ADD CPP /nologo /GX /O2 /Ob2 /D "_LIB" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "XP_PC" /YX /FD /c
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
 # ADD RSC /l 0x409 /d "NDEBUG"
 BSC32=bscmake.exe
@@ -64,7 +64,7 @@ LIB32=link.exe -lib
 # PROP Intermediate_Dir "DikDik___Win32_Debug"
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "_LIB" /YX /FD /GZ /c
-# ADD CPP /nologo /W3 /Gm /GR /GX /ZI /Od /I "../../../js/src/fdlibm" /D "_LIB" /D "DEBUG" /D "_DEBUG" /D "WIN32" /D "_MBCS" /FR /YX /FD /GZ /c
+# ADD CPP /nologo /W3 /Gm /GR /GX /ZI /Od /I "../../../js/src/fdlibm" /D "_LIB" /D "DEBUG" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "XP_PC" /FR /YX /FD /GZ /c
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
 # ADD RSC /l 0x409 /d "_DEBUG"
 BSC32=bscmake.exe
@@ -180,6 +180,10 @@ SOURCE=..\jsarray.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\jsdate.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\jsmath.cpp
 
 !IF  "$(CFG)" == "DikDik - Win32 Release"
@@ -255,6 +259,10 @@ SOURCE=..\parser.cpp
 
 !ENDIF 
 
+# End Source File
+# Begin Source File
+
+SOURCE=..\prmjtime.cpp
 # End Source File
 # Begin Source File
 
@@ -367,6 +375,10 @@ SOURCE=..\jsarray.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\jsdate.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\jsmath.h
 # End Source File
 # Begin Source File
@@ -388,6 +400,10 @@ SOURCE=..\numerics.h
 # Begin Source File
 
 SOURCE=..\parser.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\prmjtime.h
 # End Source File
 # Begin Source File
 

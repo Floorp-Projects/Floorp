@@ -138,3 +138,7 @@ namespace fd {
 }
 
 #endif
+
+#if defined(_WIN32) && !defined(__MWERKS__)
+#undef __STDC__
+#endif

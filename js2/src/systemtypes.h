@@ -43,6 +43,7 @@
 
 #define MAX_UINT16 (65535)
 
+
 // Define int8, int16, int32, int64, uint8, uint16, uint32, uint64, and uint.
 typedef unsigned int uint;
 typedef unsigned char uchar;
@@ -67,6 +68,7 @@ typedef unsigned short uint16;
 
 // Define this if the machine natively supports 64-bit integers
 #define NATIVE_INT64
+#define JS_HAVE_LONG_LONG
 
 // Define float32 and float64.
 typedef double float64;

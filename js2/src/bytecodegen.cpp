@@ -840,109 +840,115 @@ bool ByteCodeGen::genCodeForStatement(StmtNode *p, ByteCodeGen *static_cg, uint3
     case StmtNode::ForIn:
         {
             ForStmtNode *f = checked_cast<ForStmtNode *>(p);
+            Reference *value = NULL;
+
             if (f->initializer->getKind() == StmtNode::Var) {
                 VariableStmtNode *vs = checked_cast<VariableStmtNode *>(f->initializer);
                 VariableBinding *v = vs->bindings;
-                Reference *value = mScopeChain->getName(*v->name, CURRENT_ATTR, Write);
-                
-                uint32 breakLabel = getLabel(Label::BreakLabel);
-                uint32 labelAtTopOfBlock = getLabel();
-                uint32 labelAtIncrement = getLabel(Label::ContinueLabel); 
-                uint32 labelAtTestCondition = getLabel(); 
-                uint32 labelAtEnd = getLabel(); 
+                value = mScopeChain->getName(*v->name, CURRENT_ATTR, Write);
+            }
+            else {
+                if (f->initializer->getKind() == StmtNode::expression) {
+                    ExprStmtNode *e = checked_cast<ExprStmtNode *>(f->initializer);
+                    value = genReference(e->expr, Write);
+                }
+                else
+                    NOT_REACHED("what else??");
+            }            
+            uint32 breakLabel = getLabel(Label::BreakLabel);
+            uint32 labelAtTopOfBlock = getLabel();
+            uint32 labelAtIncrement = getLabel(Label::ContinueLabel); 
+            uint32 labelAtTestCondition = getLabel(); 
+            uint32 labelAtEnd = getLabel(); 
 /*
-                iterator = object.forin()
-                goto test
-                top:
-                    v = iterator.value
-                    <statement body>
-                continue:
-                    iterator = object.next(iterator)
-                test:
-                    if (iterator == null)
-                        goto end
-                    goto top                    
-                break:
-                    object.done(iterator)
-                end:
+            iterator = object.forin()
+            goto test
+            top:
+                v = iterator.value
+                <statement body>
+            continue:
+                iterator = object.next(iterator)
+            test:
+                if (iterator == null)
+                    goto end
+                goto top                    
+            break:
+                object.done(iterator)
+            end:
 */
 
-                // acquire a local from the scopechain, and copy the target object
-                // into it.
-                Reference *objectReadRef, *objectWriteRef;
-                Reference *iteratorReadRef, *iteratorWriteRef;
-                mScopeChain->defineTempVariable(objectReadRef, objectWriteRef, Object_Type);
-                mScopeChain->defineTempVariable(iteratorReadRef, iteratorWriteRef, Object_Type);
+            // acquire a local from the scopechain, and copy the target object
+            // into it.
+            Reference *objectReadRef, *objectWriteRef;
+            Reference *iteratorReadRef, *iteratorWriteRef;
+            mScopeChain->defineTempVariable(m_cx, objectReadRef, objectWriteRef, Object_Type);
+            mScopeChain->defineTempVariable(m_cx, iteratorReadRef, iteratorWriteRef, Object_Type);
 
 
-                    genExpr(f->expr2);
-                    objectWriteRef->emitCodeSequence(this);
-                    addOp(DupOp);
-                    addOp(GetInvokePropertyOp);
-//                    addIdentifierRef(widenCString("Iterator"), widenCString("forin"));
-                    addStringRef(widenCString("forin"));
-                    addOpAdjustDepth(InvokeOp, -1);
-                    addLong(0);
-                    addByte(Explicit);
-                    iteratorWriteRef->emitCodeSequence(this);
-                
-                    addOp(JumpOp);
-                    addFixup(labelAtTestCondition);
+                genExpr(f->expr2);
+                objectWriteRef->emitCodeSequence(this);
+                addOp(GetInvokePropertyOp);
+//              addIdentifierRef(widenCString("Iterator"), widenCString("forin"));
+                addStringRef(widenCString("forin"));
+                addOpAdjustDepth(InvokeOp, -1);
+                addLong(0);
+                addByte(Explicit);
+                iteratorWriteRef->emitCodeSequence(this);
+                addOp(PopOp);
+            
+                addOp(JumpOp);
+                addFixup(labelAtTestCondition);
 
-                setLabel(labelAtTopOfBlock);
-                    iteratorReadRef->emitCodeSequence(this);
-                    addOp(GetPropertyOp);
-                    addStringRef(widenCString("value"));
-                    value->emitCodeSequence(this);
+            setLabel(labelAtTopOfBlock);
+                iteratorReadRef->emitCodeSequence(this);
+                addOp(GetPropertyOp);
+                addStringRef(widenCString("value"));
+                value->emitCodeSequence(this);
+                addOp(PopOp);
 
-                    mLabelStack.push_back(breakLabel);
-                    mLabelStack.push_back(labelAtIncrement);
-                    genCodeForStatement(f->stmt, static_cg, finallyLabel);
-                    mLabelStack.pop_back();
-                    mLabelStack.pop_back();
+                mLabelStack.push_back(breakLabel);
+                mLabelStack.push_back(labelAtIncrement);
+                genCodeForStatement(f->stmt, static_cg, finallyLabel);
+                mLabelStack.pop_back();
+                mLabelStack.pop_back();
 
-                setLabel(labelAtIncrement);
-                    objectReadRef->emitCodeSequence(this);
-                    addOp(DupOp);
-                    addOp(GetInvokePropertyOp);
-                    addStringRef(widenCString("next"));
-                    iteratorReadRef->emitCodeSequence(this);
-                    addOpAdjustDepth(InvokeOp, -1);
-                    addLong(1);
-                    addByte(Explicit);
-                    iteratorWriteRef->emitCodeSequence(this);
-                    addOp(PopOp);
+            setLabel(labelAtIncrement);
+                objectReadRef->emitCodeSequence(this);
+                addOp(GetInvokePropertyOp);
+                addStringRef(widenCString("next"));
+                iteratorReadRef->emitCodeSequence(this);
+                addOpAdjustDepth(InvokeOp, -2);
+                addLong(1);
+                addByte(Explicit);
+                iteratorWriteRef->emitCodeSequence(this);
+                addOp(PopOp);
 
-                setLabel(labelAtTestCondition);
-                    iteratorReadRef->emitCodeSequence(this);
-                    addOp(LoadConstantNullOp);
-                    addOp(DoOperatorOp);
-                    addByte(Equal);
-                    addOp(JumpTrueOp);
-                    addFixup(labelAtEnd);
-                    addOp(JumpOp);
-                    addFixup(labelAtTopOfBlock);
+            setLabel(labelAtTestCondition);
+                iteratorReadRef->emitCodeSequence(this);
+                addOp(LoadConstantNullOp);
+                addOp(DoOperatorOp);
+                addByte(Equal);
+                addOp(JumpTrueOp);
+                addFixup(labelAtEnd);
+                addOp(JumpOp);
+                addFixup(labelAtTopOfBlock);
 
-                setLabel(breakLabel);
-                    objectReadRef->emitCodeSequence(this);
-                    addOp(DupOp);
-                    addOp(GetInvokePropertyOp);
-                    addStringRef(widenCString("done"));
-                    iteratorReadRef->emitCodeSequence(this);
-                    addOpAdjustDepth(InvokeOp, -2);
-                    addLong(1);
-                    addByte(Explicit);
-                    addOp(PopOp);
+            setLabel(breakLabel);
+                objectReadRef->emitCodeSequence(this);
+                addOp(GetInvokePropertyOp);
+                addStringRef(widenCString("done"));
+                iteratorReadRef->emitCodeSequence(this);
+                addOpAdjustDepth(InvokeOp, -2);
+                addLong(1);
+                addByte(Explicit);
+                addOp(PopOp);
 
-                setLabel(labelAtEnd);
+            setLabel(labelAtEnd);
 
-                delete objectReadRef;
-                delete objectWriteRef;
-                delete iteratorReadRef;
-                delete iteratorWriteRef;
-            }
-            else
-                NOT_REACHED("implement me");
+            delete objectReadRef;
+            delete objectWriteRef;
+            delete iteratorReadRef;
+            delete iteratorWriteRef;
         }
         break;
     case StmtNode::For:
@@ -1052,7 +1058,7 @@ bool ByteCodeGen::genCodeForStatement(StmtNode *p, ByteCodeGen *static_cg, uint3
             uint32 defaultLabel = toUInt32(-1);
 
             Reference *switchTempReadRef, *switchTempWriteRef;
-            mScopeChain->defineTempVariable(switchTempReadRef, switchTempWriteRef, Object_Type);
+            mScopeChain->defineTempVariable(m_cx, switchTempReadRef, switchTempWriteRef, Object_Type);
 
             SwitchStmtNode *sw = checked_cast<SwitchStmtNode *>(p);
             genExpr(sw->expr);

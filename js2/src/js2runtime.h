@@ -118,8 +118,10 @@ static const double two31 = 2147483648.0;
     extern JSType *Attribute_Type;      // used to define 'prototype' 'static' etc & Namespace values
     extern JSType *NamedArgument_Type;
 
+    extern JSType *Date_Type;
 
-    String *numberToString(float64 number);
+
+    const String *numberToString(float64 number);
     float64 stringToNumber(const String *string);
 
 
@@ -142,7 +144,7 @@ static const double two31 = 2147483648.0;
             type_tag,
             boolean_tag,
             string_tag,
-            null_tag
+            null_tag,
         } Tag;
         Tag tag;
         
@@ -188,6 +190,7 @@ static const double two31 = 2147483648.0;
 
         JSValue toString(Context *cx) const             { return (isString() ? *this : valueToString(cx, *this)); }
         JSValue toNumber(Context *cx) const             { return (isNumber() ? *this : valueToNumber(cx, *this)); }
+        JSValue toInteger(Context *cx) const            { return valueToInteger(cx, *this); }
         JSValue toUInt32(Context *cx) const             { return valueToUInt32(cx, *this); }
         JSValue toUInt16(Context *cx) const             { return valueToUInt16(cx, *this); }
         JSValue toInt32(Context *cx) const              { return valueToInt32(cx, *this); }
@@ -202,6 +205,7 @@ static const double two31 = 2147483648.0;
         JSValue toPrimitive(Context *cx, Hint hint = NoHint) const;
         
         static JSValue valueToNumber(Context *cx, const JSValue& value);
+        static JSValue valueToInteger(Context *cx, const JSValue& value);
         static JSValue valueToString(Context *cx, const JSValue& value);
         static JSValue valueToObject(Context *cx, const JSValue& value);
         static JSValue valueToUInt32(Context *cx, const JSValue& value);
@@ -209,6 +213,9 @@ static const double two31 = 2147483648.0;
         static JSValue valueToInt32(Context *cx, const JSValue& value);
         static JSValue valueToBoolean(Context *cx, const JSValue& value);
         
+
+        static float64 float64ToInteger(float64 d);
+
         int operator==(const JSValue& value) const;
 
     };
@@ -581,6 +588,8 @@ XXX ...couldn't get this to work...
         virtual bool hasLocalVars()     { return false; }
         virtual uint32 localVarCount()  { return 0; }
 
+        virtual void defineTempVariable(Context *cx, Reference *&readRef, Reference *&writeRef, JSType *type);
+
         // debug only        
         void printProperties(Formatter &f) const
         {
@@ -590,7 +599,7 @@ XXX ...couldn't get this to work...
             }
         }
 
-
+        static uint32 tempVarCount;
     };
 
     Formatter& operator<<(Formatter& f, const JSObject& obj);
@@ -958,7 +967,7 @@ XXX ...couldn't get this to work...
         bool hasLocalVars()             { return true; }
         virtual uint32 localVarCount()  { return mVariableCount; }
 
-        void defineTempVariable(Reference *&readRef, Reference *&writeRef, JSType *type);
+        void defineTempVariable(Context *cx, Reference *&readRef, Reference *&writeRef, JSType *type);
 
         Reference *genReference(bool hasBase, const String& name, NamespaceList *names, Access acc, uint32 depth);
 
@@ -1097,12 +1106,11 @@ XXX ...couldn't get this to work...
             return obj->isNestedFunction();
         }
 
-		bool isPossibleUncheckedFunction(FunctionDefinition *f);
+	bool isPossibleUncheckedFunction(FunctionDefinition *f);
 
-        void defineTempVariable(Reference *&readRef, Reference *&writeRef, JSType *type)
+        void defineTempVariable(Context *cx, Reference *&readRef, Reference *&writeRef, JSType *type)
         {
-            ASSERT(dynamic_cast<Activation *>(mScopeStack.back()));
-            ((Activation *)(mScopeStack.back()))->defineTempVariable(readRef, writeRef, type);
+            mScopeStack.back()->defineTempVariable(cx, readRef, writeRef, type);
         }
 
         // a compile time request to get the value for a name

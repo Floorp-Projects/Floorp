@@ -52,6 +52,7 @@
 #include "jsstring.h"
 #include "jsarray.h"
 #include "jsmath.h"
+#include "jsdate.h"
 
 #include "fdlibm_ns.h"
 
@@ -78,6 +79,7 @@ JSType *Unit_Type;
 JSType *Attribute_Type;
 JSType *NamedArgument_Type;
 JSArrayType *Array_Type;
+JSType *Date_Type;
 
 
 Attribute *Context::executeAttributes(ExprNode *attr)
@@ -210,6 +212,19 @@ void JSObject::defineSetterMethod(Context * /*cx*/, const String &name, Attribut
     }
 }
 
+uint32 JSObject::tempVarCount = 0;
+
+void JSObject::defineTempVariable(Context *cx, Reference *&readRef, Reference *&writeRef, JSType *type)
+{
+    char buf[32];
+    sprintf(buf, "%%tempvar%%_%d", tempVarCount++);
+    const String &name = cx->mWorld.identifiers[buf];
+    /* Property *prop = */defineVariable(cx, name, (NamespaceList *)NULL, Object_Type);
+    readRef = new NameReference(name, Read, Object_Type, 0);
+    writeRef = new NameReference(name, Write, Object_Type, 0);
+}
+
+
 // add a property
 Property *JSObject::defineVariable(Context *cx, const String &name, AttributeStmtNode *attr, JSType *type)
 {
@@ -217,10 +232,14 @@ Property *JSObject::defineVariable(Context *cx, const String &name, AttributeStm
     PropertyAttribute attrFlags = (attr) ? attr->attributeValue->mTrueFlags : 0;
     PropertyIterator it;
     if (hasOwnProperty(name, names, Read, &it)) {
-        if (attr)
-            cx->reportError(Exception::typeError, "Duplicate definition '{0}'", attr->pos, name);
-        else
-            cx->reportError(Exception::typeError, "Duplicate definition '{0}'", name);
+        // not a problem if neither are consts
+        if ((attrFlags & Property::Const)
+               || (PROPERTY_ATTR(it) & Property::Const)) {
+            if (attr)
+                cx->reportError(Exception::typeError, "Duplicate definition '{0}'", attr->pos, name);
+            else
+                cx->reportError(Exception::typeError, "Duplicate definition '{0}'", name);
+        }
     }
 
     Property *prop = new Property(new JSValue(), type, attrFlags);
@@ -231,8 +250,12 @@ Property *JSObject::defineVariable(Context *cx, const String &name, AttributeStm
 Property *JSObject::defineVariable(Context *cx, const String &name, NamespaceList *names, JSType *type)
 {
     PropertyIterator it;
-    if (hasOwnProperty(name, names, Read, &it))
-        cx->reportError(Exception::typeError, "Duplicate definition '{0}'", name);
+    if (hasOwnProperty(name, names, Read, &it)) {
+        // not a problem if neither are consts
+        if (PROPERTY_ATTR(it) & Property::Const) {
+            cx->reportError(Exception::typeError, "Duplicate definition '{0}'", name);
+        }
+    }
 
     Property *prop = new Property(new JSValue(), type, 0);
     const PropertyMap::value_type e(name, new NamespacedProperty(prop, names));
@@ -244,15 +267,19 @@ Property *JSObject::defineVariable(Context *cx, const String &name, NamespaceLis
 Property *JSObject::defineVariable(Context *cx, const String &name, AttributeStmtNode *attr, JSType *type, JSValue v)
 {
     NamespaceList *names = (attr) ? attr->attributeValue->mNamespaceList : NULL;
+    PropertyAttribute attrFlags = (attr) ? attr->attributeValue->mTrueFlags : 0;
     PropertyIterator it;
     if (hasOwnProperty(name, names, Read, &it)) {
-        if (attr)
-            cx->reportError(Exception::typeError, "Duplicate definition '{0}'", attr->pos, name);
-        else
-            cx->reportError(Exception::typeError, "Duplicate definition '{0}'", name);
+        // not a problem if neither are consts
+        if ((attrFlags & Property::Const)
+               || (PROPERTY_ATTR(it) & Property::Const)) {
+            if (attr)
+                cx->reportError(Exception::typeError, "Duplicate definition '{0}'", attr->pos, name);
+            else
+                cx->reportError(Exception::typeError, "Duplicate definition '{0}'", name);
+        }
     }
 
-    PropertyAttribute attrFlags = (attr) ? attr->attributeValue->mTrueFlags : 0;
     Property *prop = new Property(new JSValue(v), type, attrFlags);
     const PropertyMap::value_type e(name, new NamespacedProperty(prop, names));
     mProperties.insert(e);
@@ -261,8 +288,11 @@ Property *JSObject::defineVariable(Context *cx, const String &name, AttributeStm
 Property *JSObject::defineVariable(Context *cx, const String &name, NamespaceList *names, JSType *type, JSValue v)
 {
     PropertyIterator it;
-    if (hasOwnProperty(name, names, Read, &it))
-        cx->reportError(Exception::typeError, "Duplicate definition '{0}'", name);
+    if (hasOwnProperty(name, names, Read, &it)) {
+        if (PROPERTY_ATTR(it) & Property::Const) {
+            cx->reportError(Exception::typeError, "Duplicate definition '{0}'", name);
+        }
+    }
 
     Property *prop = new Property(new JSValue(v), type, 0);
     const PropertyMap::value_type e(name, new NamespacedProperty(prop, names));
@@ -467,7 +497,7 @@ void JSArrayInstance::setProperty(Context *cx, const String &name, NamespaceList
             cx->reportError(Exception::rangeError, "out of range value for length"); 
         
         for (uint32 i = newLength; i < mLength; i++) {
-            String *id = numberToString(i);
+            const String *id = numberToString(i);
             if (findNamespacedProperty(*id, NULL) != mProperties.end())
                 deleteProperty(*id, NULL);
             delete id;
@@ -1354,7 +1384,7 @@ void JSType::setSuperType(JSType *super)
 
 
 
-void Activation::defineTempVariable(Reference *&readRef, Reference *&writeRef, JSType *type)
+void Activation::defineTempVariable(Context * /*cx*/, Reference *&readRef, Reference *&writeRef, JSType *type)
 {
     readRef = new LocalVarReference(mVariableCount, Read, type, Property::NoAttribute);
     writeRef = new LocalVarReference(mVariableCount, Write, type, Property::NoAttribute);
@@ -1619,6 +1649,53 @@ static JSValue Object_toString(Context *, const JSValue& thisValue, JSValue * /*
         }
 }
 
+struct IteratorDongle {
+    JSObject *obj;
+    PropertyIterator it;
+};
+
+static JSValue Object_forin(Context *cx, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/)
+{
+    ASSERT(thisValue.isObject());
+    JSObject *iteratorObject = Object_Type->newInstance(cx);
+    
+    IteratorDongle *itDude = new IteratorDongle();
+    itDude->obj = thisValue.object;
+    itDude->it = thisValue.object->mProperties.begin();
+
+    JSValue v(&PROPERTY_NAME(itDude->it));
+    iteratorObject->setProperty(cx, cx->mWorld.identifiers["value"], 0, v);
+    iteratorObject->mPrivate = itDude;
+    return JSValue(iteratorObject);
+}
+
+static JSValue Object_next(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 /*argc*/)
+{
+    JSValue iteratorValue = argv[0];
+    ASSERT(iteratorValue.isObject());
+    JSObject *iteratorObject = iteratorValue.object;
+
+    IteratorDongle *itDude = (IteratorDongle *)(iteratorObject->mPrivate);
+    itDude->it++;
+
+    if (itDude->it == itDude->obj->mProperties.end())
+        return kNullValue;
+    else {
+        JSValue v(&PROPERTY_NAME(itDude->it));
+        iteratorObject->setProperty(cx, cx->mWorld.identifiers["value"], 0, v);
+        return iteratorValue;
+    }
+
+}
+
+static JSValue Object_done(Context *, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/)
+{
+    return kUndefinedValue;
+}
+
+
+
+
 static JSValue Function_Constructor(Context *cx, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/)
 {
     JSValue v = thisValue;
@@ -1853,6 +1930,7 @@ void Context::initBuiltins()
         { "Unit",           NULL,                  &kNullValue    },
         { "Attribute",      NULL,                  &kNullValue    },
         { "NamedArgument",  NULL,                  &kNullValue    },
+        { "Date",           Date_Constructor,      &kPositiveZero },
     };
 
     Object_Type  = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[0].name)], NULL);
@@ -1870,6 +1948,7 @@ void Context::initBuiltins()
     Unit_Type           = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[9].name)], Object_Type);
     Attribute_Type      = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[10].name)], Object_Type);
     NamedArgument_Type  = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[11].name)], Object_Type);
+    Date_Type           = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[12].name)], Object_Type);
 
 
     String_Type->defineVariable(this, widenCString("fromCharCode"), NULL, String_Type, JSValue(new JSFunction(String_fromCharCode, String_Type)));
@@ -1879,6 +1958,9 @@ void Context::initBuiltins()
     {
         { "toString", String_Type, 0, Object_toString },
         { "toSource", String_Type, 0, Object_toString },
+        { "forin",    Object_Type, 0, Object_forin    },
+        { "next",     Object_Type, 0, Object_next     },
+        { "done",     Object_Type, 0, Object_done     },
         { NULL }
     };
     ProtoFunDef functionProtos[] = 
@@ -1922,6 +2004,7 @@ void Context::initBuiltins()
     initClass(Unit_Type,            &builtInClasses[9],  NULL);
     initClass(Attribute_Type,       &builtInClasses[10], NULL);
     initClass(NamedArgument_Type,   &builtInClasses[11], NULL);
+    initClass(Date_Type,            &builtInClasses[12], getDateProtos() );
 
     Type_Type->defineUnaryOperator(Index, new JSFunction(arrayMaker, Type_Type));
 
@@ -2029,6 +2112,7 @@ Context::Context(JSObject **global, World &world, Arena &a, Pragma::Flags flags)
         getGlobalObject()->defineVariable(this, widenCString("undefined"), (NamespaceList *)(NULL), Void_Type, kUndefinedValue);
         getGlobalObject()->defineVariable(this, widenCString("NaN"), (NamespaceList *)(NULL), Void_Type, kNaNValue);
         getGlobalObject()->defineVariable(this, widenCString("Infinity"), (NamespaceList *)(NULL), Void_Type, kPositiveInfinity);                
+        initDateObject(this);
     }
     initOperators();
     

@@ -180,13 +180,13 @@ step11:
 
 }
 
-static JSValue String_valueOf(Context * /*cx*/, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/)
+static JSValue String_valueOf(Context *cx, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/)
 {
     ASSERT(thisValue.isObject());
     if (thisValue.isString())
         return thisValue;
     else
-        throw Exception(Exception::typeError, "String.valueOf called on");
+        cx->reportError(Exception::typeError, "String.valueOf called on something other than a string thing");
     return kUndefinedValue;
 }
 

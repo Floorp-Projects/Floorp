@@ -133,6 +133,12 @@ namespace JavaScript
 
     void insertChars(String &str, String::size_type pos, const char *cstr);
 
+    // Compare a region of string 1, starting at offset 1 with string 2, offset 2
+    // for a maximum of count characters and return true or false if the regions match
+    bool regionMatches(const String &str1, uint32 offset1, const String &str2, uint32 offset2, uint32 count, bool ignoreCase);
+    // ditto, only string 1 is a char* and offset 1 is zero
+    bool regionMatches(const char *str1, const String &str2, uint32 offset2, uint32 count, bool ignoreCase);
+
 
     String &operator+=(String &str, const char *cstr);
     String operator+(const String &str, const char *cstr);
