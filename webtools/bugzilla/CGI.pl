@@ -224,7 +224,11 @@ sub PasswordForLogin {
     my ($login) = (@_);
     SendSQL("select cryptpassword from profiles where login_name = " .
 	    SqlQuote($login));
-    return FetchOneColumn();
+    my $result = FetchOneColumn();
+    if (!defined $result) {
+        $result = "";
+    }
+    return $result;
 }
 
 sub confirm_login {
@@ -253,7 +257,6 @@ sub confirm_login {
             exit;
         }
         my $realcryptpwd  = PasswordForLogin($::FORM{"Bugzilla_login"});
-	my $enteredcryptpwd = crypt($enteredpwd, substr($realcryptpwd, 0, 2));
         
         if (defined $::FORM{"PleaseMailAPassword"}) {
 	    my $realpwd;
@@ -264,6 +267,7 @@ sub confirm_login {
 			SqlQuote($enteredlogin));
 		$realpwd = FetchOneColumn();
             }
+            my $urlbase = Param("urlbase");
             my $template = "From: bugzilla-daemon
 To: %s
 Subject: Your bugzilla password.
@@ -274,7 +278,7 @@ To use the wonders of bugzilla, you can use the following:
        Password: %s
 
  To change your password, go to:
- [Param urlbase]changepassword.cgi
+ ${urlbase}changepassword.cgi
 
  (Your bugzilla and CVS password, if any, are not currently synchronized.
  Top hackers are working around the clock to fix this, as you read this.)
@@ -294,7 +298,8 @@ To use the wonders of bugzilla, you can use the following:
             print "and enter your password in the form there.\n";
             exit;
         }
-                
+
+	my $enteredcryptpwd = crypt($enteredpwd, substr($realcryptpwd, 0, 2));
         if ($realcryptpwd eq "" || $enteredcryptpwd ne $realcryptpwd) {
             print "Content-type: text/html\n\n";
             print "<H1>Login failed.</H1>\n";
