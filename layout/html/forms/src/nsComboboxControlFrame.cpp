@@ -46,9 +46,9 @@
 #include "nsHTMLIIDs.h"
 #include "nsHTMLAtoms.h"
 #include "nsHTMLParts.h"
+#include "nsLayoutAtoms.h"
 #include "nsIFormControl.h"
 #include "nsINameSpaceManager.h"
-#include "nsLayoutAtoms.h"
 #include "nsIDOMElement.h"
 #include "nsIListControlFrame.h"
 #include "nsIDOMHTMLCollection.h" 
@@ -1792,7 +1792,14 @@ nsComboboxControlFrame::GetFrameName(nsAString& aResult) const
 }
 #endif
 
-
+NS_IMETHODIMP
+nsComboboxControlFrame::GetFrameType(nsIAtom** aType) const
+{
+  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
+  *aType = nsLayoutAtoms::comboBoxFrame;
+  NS_ADDREF(*aType);
+  return NS_OK;
+}
 //----------------------------------------------------------------------
 // nsIComboboxControlFrame
 //----------------------------------------------------------------------

@@ -45,6 +45,7 @@
 #include "nsIStatefulFrame.h"
 #include "nsCOMPtr.h"
 #include "nsIHTMLContent.h"
+#include "nsLayoutAtoms.h"
 
 #include "nsGfxTextControlFrame2.h"
 #include "nsFormControlHelper.h"
@@ -99,6 +100,7 @@ public:
 #ifdef NS_DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
+  NS_IMETHOD GetFrameType(nsIAtom** aResult) const;
   NS_IMETHOD SetSuggestedSize(nscoord aWidth, nscoord aHeight) { return NS_OK; };
   NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext, const nsPoint& aPoint, nsFramePaintLayer aWhichLayer, nsIFrame** aFrame);
   NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,

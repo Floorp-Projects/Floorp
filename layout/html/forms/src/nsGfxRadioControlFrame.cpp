@@ -54,6 +54,7 @@
 #endif
 #include "nsIServiceManager.h"
 #include "nsIDOMNode.h"
+#include "nsLayoutAtoms.h"
 
 
 nsresult
@@ -81,6 +82,15 @@ nsGfxRadioControlFrame::nsGfxRadioControlFrame()
 nsGfxRadioControlFrame::~nsGfxRadioControlFrame()
 {
   NS_IF_RELEASE(mRadioButtonFaceStyle);
+}
+
+NS_IMETHODIMP
+nsGfxRadioControlFrame::GetFrameType(nsIAtom** aType) const
+{
+  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
+  *aType = nsLayoutAtoms::gfxRadioControlFrame; 
+  NS_ADDREF(*aType);
+  return NS_OK;
 }
 
 // Frames are not refcounted, no need to AddRef

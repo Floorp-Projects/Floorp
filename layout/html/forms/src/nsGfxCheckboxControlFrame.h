@@ -92,6 +92,7 @@ public:
   NS_IMETHOD GetAccessible(nsIAccessible** aAccessible);
 #endif
 
+  NS_IMETHOD GetFrameType(nsIAtom** aResult) const;
 
    //nsICheckboxControlFrame methods
   NS_IMETHOD SetCheckboxFaceStyleContext(nsIStyleContext *aCheckboxFaceStyleContext);

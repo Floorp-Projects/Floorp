@@ -56,6 +56,7 @@
 #include "nsIFormControl.h"
 #include "nsIDeviceContext.h"
 #include "nsHTMLAtoms.h"
+#include "nsLayoutAtoms.h"
 #include "nsIButton.h"  // remove this when GetCID is pure virtual
 #include "nsICheckButton.h"  //remove this
 #include "nsITextWidget.h"  //remove this
@@ -779,6 +780,14 @@ nsFormControlFrame::GetValue(nsAString* aResult)
   return result;
 }
 
+NS_IMETHODIMP
+nsFormControlFrame::GetFrameType(nsIAtom** aType) const
+{
+  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
+  *aType = nsLayoutAtoms::formControlFrame;
+  NS_ADDREF(*aType);
+  return NS_OK;
+}
 
 NS_METHOD
 nsFormControlFrame::HandleEvent(nsIPresContext* aPresContext, 
