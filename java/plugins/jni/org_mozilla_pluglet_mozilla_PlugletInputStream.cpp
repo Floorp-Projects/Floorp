@@ -67,6 +67,14 @@ JNIEXPORT jint JNICALL Java_org_mozilla_pluglet_mozilla_PlugletInputStream_nativ
     if (env->ExceptionOccurred()) {
 	return retval;
     }
+    if (!input) {
+        jclass ex = env->FindClass("java/io/IOException");
+	if (!ex) {
+  	    return retval;
+	}
+	env->ThrowNew(ex,"Stream was closed");
+	return retval;
+    }
     jbyte * bufElems = (jbyte*) malloc(sizeof(jbyte)*len);
     if (!bufElems) {
 	return retval;
