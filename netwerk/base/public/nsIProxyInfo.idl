@@ -52,7 +52,7 @@
  */
 native constCharPtr(const char*);
 
-[scriptable, uuid(b65d22b0-1dd1-11b2-8f95-920e5b7b56f0)]
+[scriptable, uuid(d49f429c-7c8e-4f7a-90a3-ea6122bd3887)]
 interface nsIProxyInfo : nsISupports
 {
     [noscript, notxpcom] constCharPtr Host();
