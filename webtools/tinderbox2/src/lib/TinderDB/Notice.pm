@@ -30,8 +30,8 @@
 #	 kestes@walrus.com Home.
 # Contributor(s): 
 
-# $Revision: 1.25 $ 
-# $Date: 2003/04/13 22:01:17 $ 
+# $Revision: 1.26 $ 
+# $Date: 2003/05/26 13:47:36 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/Notice.pm,v $ 
 # $Name:  $ 
@@ -85,7 +85,7 @@ use VCDisplay;
 use HTMLPopUp;
 use TinderDB::BasicTxtDB;
 
-$VERSION = ( qw $Revision: 1.25 $ )[1];
+$VERSION = ( qw $Revision: 1.26 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -250,7 +250,7 @@ sub cell_data {
     
     my %authors = ();
     
-    my ($first_notice_time) = $DB_TIMES[$NEXT_DB{$tree}{$association}];
+    my $first_notice_time;
     
     while (1) {
         my ($time) = $DB_TIMES[$db_index];
@@ -270,6 +270,9 @@ sub cell_data {
                 next;
             }
             $authors{$author} = $rec;
+            if (!($first_notice_time)) {
+                $first_notice_time = $time;
+            }
         }
         
     } # while (1)
@@ -476,13 +479,17 @@ sub render_empty_cell {
     my ($tree, $till_time, $rowspan) = @_;
 
     my $local_till_time = localtime($till_time);
-    return ("\t<!-- Notice: empty data. ".
-            "tree: $tree, ".
-            "filling till: '$local_till_time', ".
-            "-->\n".
-            
+    my $out;
+    $out .= ("\t<!-- Notice: empty data. ".
+             "tree: $tree, ".
+             "filling till: '$local_till_time', ".
+             "-->\n");
+    $out .=(
             "\t\t<td align=center rowspan=$rowspan>".
-            "$HTMLPopUp::EMPTY_TABLE_CELL</td>\n");
+            "$HTMLPopUp::EMPTY_TABLE_CELL</td>\n"
+            );
+
+    return $out;
 }
 
 
