@@ -2613,25 +2613,29 @@ nsTextFrame::RenderString(nsIRenderingContext& aRenderingContext,
 {
   PRUnichar buf[TEXT_BUF_SIZE];
   PRUnichar* bp0 = buf;
+
+  nscoord spacingMem[TEXT_BUF_SIZE];
+  nscoord* sp0 = spacingMem; 
   
+  PRBool spacing = (0 != aTextStyle.mLetterSpacing) ||
+    (0 != aTextStyle.mWordSpacing) || aTextStyle.mJustifying;
+
   //German 0x00df might expand to "SS", but no need to count it for speed reason
   if (aTextStyle.mSmallCaps) {
-     if (aLength*2 > TEXT_BUF_SIZE)
+     if (aLength*2 > TEXT_BUF_SIZE) {
        bp0 = new PRUnichar[aLength*2];
+       if (spacing)
+         sp0 = new nscoord[aLength*2];
+     }
   }
   else if (aLength > TEXT_BUF_SIZE) {
     bp0 = new PRUnichar[aLength];
+    if (spacing)
+      sp0 = new nscoord[aLength];
   }
-  PRUnichar* bp = bp0;
 
-  PRBool spacing = (0 != aTextStyle.mLetterSpacing) ||
-    (0 != aTextStyle.mWordSpacing) || aTextStyle.mJustifying;
-  nscoord spacingMem[TEXT_BUF_SIZE];
-  PRIntn* sp0 = spacingMem; 
-  if (spacing && (aLength > TEXT_BUF_SIZE)) {
-    sp0 = new nscoord[aLength];
-  }
-  PRIntn* sp = sp0;
+  PRUnichar* bp = bp0;
+  nscoord* sp = sp0;
 
   nsIFontMetrics* lastFont = aTextStyle.mLastFont;
   PRInt32 pendingCount;
@@ -2663,7 +2667,8 @@ nsTextFrame::RenderString(nsIRenderingContext& aRenderingContext,
       if (ch == kSZLIG)   //add an additional 'S' here.
       {
         *bp++ = upper_ch;
-        *sp++ = glyphWidth;
+        if (spacing)
+          *sp++ = glyphWidth;
         width += glyphWidth;
       }
       ch = upper_ch;
@@ -2733,7 +2738,8 @@ nsTextFrame::RenderString(nsIRenderingContext& aRenderingContext,
       lastFont = nextFont;
     }
     *bp++ = ch;
-    *sp++ = glyphWidth;
+    if (spacing)
+      *sp++ = glyphWidth;
     width += glyphWidth;
   }
   pendingCount = bp - runStart;
