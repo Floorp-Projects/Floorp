@@ -200,7 +200,7 @@ XFE_RDFImage::isImageLoaded(void)
 Pixmap
 XFE_RDFImage::getPixmap(void)
 {
-   if (m_image)
+   if (m_image && m_image->client_data)
      return (Pixmap)(((fe_PixmapClientData *)(m_image->client_data))->pixmap);
    return (Pixmap)NULL;
 }
@@ -209,7 +209,7 @@ XFE_RDFImage::getPixmap(void)
 Pixmap
 XFE_RDFImage::getMask(void)
 {
-    if (m_mask)
+    if (m_mask && m_mask->client_data)
        return (Pixmap)(((fe_PixmapClientData *)(m_mask->client_data))->pixmap);
     return (Pixmap)NULL;
 
