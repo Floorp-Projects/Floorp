@@ -28,7 +28,6 @@
 #include "nsIIOService.h"
 #include "nsIURL.h"
 #include "nsIChannel.h"
-//#include "nsNeckoUtil2.h"
 #endif // NECKO
 
 #include "nsIServiceManager.h"
@@ -41,7 +40,6 @@
 #include "nsIDOMHTMLOptionElement.h"
 #include "nsIURL.h"
 
-#include "xp_list.h"
 #include "nsFileStream.h"
 #include "nsSpecialSystemDirectory.h"
 
@@ -51,11 +49,11 @@
 #include "nsIFileLocator.h"
 #include "nsIFileSpec.h"
 #include "nsFileLocations.h"
-#include "xp_mem.h"
 #include "prmem.h"
 #include "prprf.h"  
 #include "nsIProfile.h"
 #include "nsIContent.h"
+#include "nsVoidArray.h"
 
 static NS_DEFINE_IID(kIDOMHTMLDocumentIID, NS_IDOMHTMLDOCUMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLFormElementIID, NS_IDOMHTMLFORMELEMENT_IID);
@@ -308,19 +306,21 @@ enum PlacementType {DUP_IGNORE, DUP_OVERWRITE, DUP_BEFORE, DUP_AFTER, AT_END};
 typedef struct _wallet_MapElement {
   nsAutoString * item1;
   nsAutoString * item2;
-  XP_List * itemList;
+  nsVoidArray * itemList;
 } wallet_MapElement;
 
 typedef struct _wallet_Sublist {
   nsAutoString * item;
 } wallet_Sublist;
 
-PRIVATE XP_List * wallet_URLFieldToSchema_list=0;
-PRIVATE XP_List * wallet_specificURLFieldToSchema_list=0;
-PRIVATE XP_List * wallet_FieldToSchema_list=0;
-PRIVATE XP_List * wallet_SchemaToValue_list=0;
-PRIVATE XP_List * wallet_SchemaConcat_list=0;
-PRIVATE XP_List * wallet_URL_list = 0;
+PRIVATE nsVoidArray * wallet_URLFieldToSchema_list=0;
+PRIVATE nsVoidArray * wallet_specificURLFieldToSchema_list=0;
+PRIVATE nsVoidArray * wallet_FieldToSchema_list=0;
+PRIVATE nsVoidArray * wallet_SchemaToValue_list=0;
+PRIVATE nsVoidArray * wallet_SchemaConcat_list=0;
+PRIVATE nsVoidArray * wallet_URL_list = 0;
+
+#define LIST_COUNT(list) (list ? list->Count() : 0)
 
 #define NO_CAPTURE 0
 #define NO_PREVIEW 1
@@ -332,7 +332,6 @@ typedef struct _wallet_PrefillElement {
   nsAutoString * value;
   PRInt32 selectIndex;
   PRUint32 count;
-  XP_List * resume;
 } wallet_PrefillElement;
 
 /***********************************************************/
@@ -365,22 +364,21 @@ wallet_DumpAutoString(nsAutoString as){
 }
 
 void
-wallet_Dump(XP_List * list) {
-  XP_List * list_ptr;
+wallet_Dump(nsVoidArray * list) {
   wallet_MapElement * ptr;
-
   char item1[100];
   char item2[100];
   char item[100];
-  list_ptr = list;
-  while((ptr = (wallet_MapElement *) XP_ListNextObject(list_ptr))!=0) {
+  PRInt32 count = LIST_COUNT(list);
+  for (PRInt32 i=0; i<count; i++) {
+    ptr = NS_STATIC_CAST(wallet_MapElement*, list->ElementAt(i));
     ptr->item1->ToCString(item1, 100);
     ptr->item2->ToCString(item2, 100);
     fprintf(stdout, "%s %s \n", item1, item2);
-    XP_List * list_ptr1;
     wallet_Sublist * ptr1;
-    list_ptr1 = ptr->itemList;
-    while((ptr1=(wallet_Sublist *) XP_ListNextObject(list_ptr1))!=0) {
+    PRInt32 count = LIST_COUNT(ptr->itemList);
+    for (PRInt32 i=0; i<count; i++) {
+      ptr1 = NS_STATIC_CAST(wallet_Sublist*, ptr->itemList->ElementAt(i));
       ptr1->item->ToCString(item, 100);
       fprintf(stdout, "     %s \n", item);
     }
@@ -927,24 +925,21 @@ wallet_unlock(void) {
  * clear out the designated list
  */
 void
-wallet_Clear(XP_List ** list) {
-  XP_List * list_ptr;
+wallet_Clear(nsVoidArray ** list) {
   wallet_MapElement * ptr;
-
-  list_ptr = *list;
-  while((ptr = (wallet_MapElement *) XP_ListNextObject(list_ptr))!=0) {
+  PRInt32 count = LIST_COUNT((*list));
+  for (PRInt32 i=count-1; i>=0; i--) {
+    ptr = NS_STATIC_CAST(wallet_MapElement*, (*list)->ElementAt(i));
     delete ptr->item1;
     delete ptr->item2;
-
-    XP_List * list_ptr1;
     wallet_Sublist * ptr1;
-    list_ptr1 = ptr->itemList;
-    while((ptr1=(wallet_Sublist *) XP_ListNextObject(list_ptr1))!=0) {
+    PRInt32 count = LIST_COUNT(ptr->itemList);
+    for (PRInt32 i=0; i<count; i++) {
+      ptr1 = NS_STATIC_CAST(wallet_Sublist*, ptr->itemList->ElementAt(i));
       delete ptr1->item;
     }
     delete ptr->itemList;
-    XP_ListRemoveObject(*list, ptr);
-    list_ptr = *list;
+    (*list)->RemoveElement(ptr);
     delete ptr;
   }
   *list = 0;
@@ -957,16 +952,15 @@ void
 wallet_WriteToList(
     nsAutoString& item1,
     nsAutoString& item2,
-    XP_List* itemList,
-    XP_List*& list,
+    nsVoidArray* itemList,
+    nsVoidArray*& list,
     PlacementType placement = DUP_BEFORE) {
 
-  XP_List * list_ptr;
   wallet_MapElement * ptr;
   PRBool added_to_list = PR_FALSE;
 
   wallet_MapElement * mapElement;
-  mapElement = XP_NEW(wallet_MapElement);
+  mapElement = PR_NEW(wallet_MapElement);
 
   mapElement->item1 = &item1;
   mapElement->item2 = &item2;
@@ -974,7 +968,7 @@ wallet_WriteToList(
 
   /* make sure the list exists */
   if(!list) {
-      list = XP_ListNew();
+      list = new nsVoidArray();
       if(!list) {
           return;
       }
@@ -985,13 +979,14 @@ wallet_WriteToList(
    * If identical value of item1 exists, use "placement" parameter to 
    * determine what to do
    */
-  list_ptr = list;
   item1.ToLowerCase();
   if (AT_END==placement) {
-    XP_ListAddObjectToEnd (list, mapElement);
+    list->AppendElement(mapElement);
     return;
   }
-  while((ptr = (wallet_MapElement *) XP_ListNextObject(list_ptr))!=0) {
+  PRInt32 count = LIST_COUNT(list);
+  for (PRInt32 i=0; i<count; i++) {
+    ptr = NS_STATIC_CAST(wallet_MapElement*, list->ElementAt(i));
     if((ptr->item1->Compare(item1))==0) {
       if (DUP_OVERWRITE==placement) {
         delete ptr->item1;
@@ -1000,20 +995,20 @@ wallet_WriteToList(
         ptr->item1 = &item1;
         ptr->item2 = &item2;
       } else if (DUP_BEFORE==placement) {
-        XP_ListInsertObject(list, ptr, mapElement);
+        list->InsertElementAt(mapElement, i);
       }
       if (DUP_AFTER!=placement) {
         added_to_list = PR_TRUE;
         break;
       }
     } else if((ptr->item1->Compare(item1))>=0) {
-      XP_ListInsertObject(list, ptr, mapElement);
+      list->InsertElementAt(mapElement, i);
       added_to_list = PR_TRUE;
       break;
     }
   }
   if (!added_to_list) {
-    XP_ListAddObjectToEnd (list, mapElement);
+    list->AppendElement(mapElement);
   }
 }
 
@@ -1024,43 +1019,43 @@ PRBool
 wallet_ReadFromList(
   nsAutoString item1,
   nsAutoString& item2,
-  XP_List*& itemList,
-  XP_List*& list_ptr)
+  nsVoidArray*& itemList,
+  nsVoidArray*& list,
+  PRInt32& index)
 {
-  wallet_MapElement * ptr;
-
-  wallet_MapElement * mapElement;
-  mapElement = XP_NEW(wallet_MapElement);
-
-  /* make sure the list exists */
-  if(!list_ptr) {
+  if (!list || (index == -1)) {
     return PR_FALSE;
   }
 
   /* find item1 in the list */
+  wallet_MapElement * ptr;
   item1.ToLowerCase();
-  while((ptr = (wallet_MapElement *) XP_ListNextObject(list_ptr))!=0) {
+  PRInt32 count = LIST_COUNT(list);
+  for (PRInt32 i=index; i<count; i++) {
+    ptr = NS_STATIC_CAST(wallet_MapElement*, list->ElementAt(i));
     if((ptr->item1->Compare(item1))==0) {
       item2 = nsAutoString(*ptr->item2);
       itemList = ptr->itemList;
+      index = i+1;
+      if (index == count) {
+        index = -1;
+      }
       return PR_TRUE;
     }
   }
+  index = 0;
   return PR_FALSE;
 }
 
-/*
- * given a sublist element, advance to the next sublist element and get its value
- */
-PRInt32
-wallet_ReadFromSublist(nsAutoString& value, XP_List*& resume)
+PRBool
+wallet_ReadFromList(
+  nsAutoString item1,
+  nsAutoString& item2,
+  nsVoidArray*& itemList,
+  nsVoidArray*& list)
 {
-  wallet_Sublist * ptr;
-  if((ptr=(wallet_Sublist *) XP_ListNextObject(resume))!=0) {
-    value = *ptr->item;
-    return 0;
-  }
-  return -1;
+  PRInt32 index = 0;
+  return wallet_ReadFromList(item1, item2, itemList, list, index);
 }
 
 /************************************************************/
@@ -1332,8 +1327,7 @@ wallet_PutLine(nsOutputFileStream strm, const nsString& aLine, PRBool obscure)
  * write contents of designated list into designated file
  */
 void
-wallet_WriteToFile(char* filename, XP_List* list, PRBool obscure) {
-  XP_List * list_ptr;
+wallet_WriteToFile(char* filename, nsVoidArray* list, PRBool obscure) {
   wallet_MapElement * ptr;
 
   if (obscure && !Wallet_KeySet()) {
@@ -1359,8 +1353,9 @@ wallet_WriteToFile(char* filename, XP_List* list, PRBool obscure) {
   Wallet_RestartKey();
 
   /* traverse the list */
-  list_ptr = list;
-  while((ptr = (wallet_MapElement *) XP_ListNextObject(list_ptr))!=0) {
+  PRInt32 count = LIST_COUNT(list);
+  for (PRInt32 i=0; i<count; i++) {
+    ptr = NS_STATIC_CAST(wallet_MapElement*, list->ElementAt(i));
     if (NS_FAILED(wallet_PutLine(strm, *ptr->item1, obscure))) {
       break;
     }
@@ -1369,10 +1364,10 @@ wallet_WriteToFile(char* filename, XP_List* list, PRBool obscure) {
         break;
       }
     } else {
-      XP_List * list_ptr1;
       wallet_Sublist * ptr1;
-      list_ptr1 = ptr->itemList;
-      while((ptr1=(wallet_Sublist *) XP_ListNextObject(list_ptr1))!=0) {
+      PRInt32 count = LIST_COUNT(ptr->itemList);
+      for (PRInt32 i=0; i<count; i++) {
+        ptr1 = NS_STATIC_CAST(wallet_Sublist*, ptr->itemList->ElementAt(i));
         if (NS_FAILED(wallet_PutLine(strm, *ptr->item1, obscure))) {
           break;
         }
@@ -1391,10 +1386,9 @@ wallet_WriteToFile(char* filename, XP_List* list, PRBool obscure) {
 /*
  * Read contents of designated file into designated list
  */
-
 void
 wallet_ReadFromFile
-    (char* filename, XP_List*& list, PRBool obscure, PRBool localFile, PlacementType placement = DUP_AFTER) {
+    (char* filename, nsVoidArray*& list, PRBool obscure, PRBool localFile, PlacementType placement = DUP_AFTER) {
 
   /* open input stream */
   nsFileSpec dirSpec;
@@ -1407,7 +1401,6 @@ wallet_ReadFromFile
   if (NS_FAILED(rv)) {
     return;
   }
-
   nsInputFileStream strm(dirSpec + filename);
   if (!strm.is_open()) {
     /* file doesn't exist -- that's not an error */
@@ -1434,7 +1427,7 @@ wallet_ReadFromFile
     nsAutoString * aItem3;
     if (NS_FAILED(wallet_GetLine(strm, aItem3, obscure))) {
       /* end of file reached */
-      XP_List* dummy = NULL;
+      nsVoidArray* dummy = NULL;
       wallet_WriteToList(*aItem1, *aItem2, dummy, list, placement);
       strm.close();
       return;
@@ -1442,19 +1435,19 @@ wallet_ReadFromFile
 
     if (aItem3->Length()==0) {
       /* just a pair of values, no need for a sublist */
-      XP_List* dummy = NULL;
+      nsVoidArray* dummy = NULL;
       wallet_WriteToList(*aItem1, *aItem2, dummy, list, placement);
     } else {
       /* need to create a sublist and put item2 and item3 onto it */
-      XP_List * itemList = XP_ListNew();
+      nsVoidArray * itemList = new nsVoidArray();
       wallet_Sublist * sublist;
-      sublist = XP_NEW(wallet_Sublist);
+      sublist = PR_NEW(wallet_Sublist);
       sublist->item = new nsAutoString (*aItem2);
-      XP_ListAddObjectToEnd (itemList, sublist);
+      itemList->AppendElement(sublist);
       delete aItem2;
-      sublist = XP_NEW(wallet_Sublist);
+      sublist = PR_NEW(wallet_Sublist);
       sublist->item = new nsAutoString (*aItem3);
-      XP_ListAddObjectToEnd (itemList, sublist);
+      itemList->AppendElement(sublist);
       delete aItem3;
       /* add any following items to sublist up to next blank line */
       nsAutoString * dummy2 = new nsAutoString("");
@@ -1476,9 +1469,9 @@ wallet_ReadFromFile
           break;
         }
         /* add item to sublist */
-        sublist = XP_NEW(wallet_Sublist);
+        sublist = PR_NEW(wallet_Sublist);
         sublist->item = new nsAutoString (*aItem3);
-        XP_ListAddObjectToEnd (itemList, sublist);
+        itemList->AppendElement(sublist);
         delete aItem3;
       }
     }
@@ -1490,7 +1483,7 @@ wallet_ReadFromFile
  */
 void
 wallet_ReadFromURLFieldToSchemaFile
-    (char* filename, XP_List*& list, PlacementType placement = DUP_AFTER) {
+    (char* filename, nsVoidArray*& list, PlacementType placement = DUP_AFTER) {
 
   /* open input stream */
   nsFileSpec dirSpec;
@@ -1507,7 +1500,7 @@ wallet_ReadFromURLFieldToSchemaFile
 
   /* make sure the list exists */
   if(!list) {
-    list = XP_ListNew();
+    list = new nsVoidArray();
     if(!list) {
       strm.close();
       return;
@@ -1523,7 +1516,7 @@ wallet_ReadFromURLFieldToSchemaFile
       return;
     }
 
-    XP_List * itemList = XP_ListNew();
+    nsVoidArray * itemList = new nsVoidArray();
     nsAutoString * dummy = new nsAutoString("");
     if (!dummy) {
       strm.close();
@@ -1552,7 +1545,7 @@ wallet_ReadFromURLFieldToSchemaFile
         return;
       }
 
-      XP_List* dummy = NULL;
+      nsVoidArray* dummy = NULL;
       wallet_WriteToList(*aItem1, *aItem2, dummy, itemList, placement);
 
       nsAutoString * aItem3;
@@ -1584,8 +1577,8 @@ PRInt32 FieldToValue(
     nsAutoString field,
     nsAutoString& schema,
     nsAutoString& value,
-    XP_List*& itemList,
-    XP_List*& resume)
+    nsVoidArray*& itemList,
+    PRInt32& index)
 {
   /* return if no SchemaToValue list exists */
   if (!wallet_SchemaToValue_list) {
@@ -1593,45 +1586,40 @@ PRInt32 FieldToValue(
   }
 
   /* if no schema name is given, fetch schema name from field/schema tables */
-  XP_List* FieldToSchema_list = wallet_FieldToSchema_list;
-  XP_List* URLFieldToSchema_list = wallet_specificURLFieldToSchema_list;
-  XP_List* SchemaToValue_list;
-  XP_List* dummy;
-  if (nsnull == resume) {
-    resume = wallet_SchemaToValue_list;
+  nsVoidArray* dummy;
+  if (index == -1) {
+    index = 0;
   }
   if ((schema.Length() > 0) ||
-      wallet_ReadFromList(field, schema, dummy, URLFieldToSchema_list) ||
-      wallet_ReadFromList(field, schema, dummy, FieldToSchema_list)) {
+      wallet_ReadFromList(field, schema, dummy, wallet_specificURLFieldToSchema_list) ||
+      wallet_ReadFromList(field, schema, dummy, wallet_FieldToSchema_list)) {
     /* schema name found, now fetch value from schema/value table */ 
-    SchemaToValue_list = resume;
-    if (wallet_ReadFromList(schema, value, itemList, SchemaToValue_list)) {
+    PRInt32 index2 = index;
+    if (wallet_ReadFromList(schema, value, itemList, wallet_SchemaToValue_list, index2)) {
       /* value found, prefill it into form */
-      resume = SchemaToValue_list;
+      index = index2;
       return 0;
     } else {
       /* value not found, see if concatenation rule exists */
-      XP_List * itemList2;
+      nsVoidArray * itemList2;
 
-      XP_List * SchemaConcat_list = wallet_SchemaConcat_list;
       nsAutoString dummy2;
-      if (wallet_ReadFromList(schema, dummy2, itemList2, SchemaConcat_list)) {
+      if (wallet_ReadFromList(schema, dummy2, itemList2, wallet_SchemaConcat_list)) {
         /* concatenation rules exist, generate value as a concatenation */
-        XP_List * list_ptr1;
         wallet_Sublist * ptr1;
-        list_ptr1 = itemList2;
         value = nsAutoString("");
         nsAutoString value2;
-        while((ptr1=(wallet_Sublist *) XP_ListNextObject(list_ptr1))!=0) {
-          SchemaToValue_list = wallet_SchemaToValue_list;
-          if (wallet_ReadFromList(*(ptr1->item), value2, dummy, SchemaToValue_list)) {
+        PRInt32 count = LIST_COUNT(itemList2);
+        for (PRInt32 i=0; i<count; i++) {
+          ptr1 = NS_STATIC_CAST(wallet_Sublist*, itemList2->ElementAt(i));
+          if (wallet_ReadFromList(*(ptr1->item), value2, dummy, wallet_SchemaToValue_list)) {
             if (value.Length()>0) {
               value += " ";
             }
             value += value2;
           }
         }
-        resume = nsnull;
+        index = -1;
         itemList = nsnull;
         if (value.Length()>0) {
           return 0;
@@ -1640,15 +1628,15 @@ PRInt32 FieldToValue(
     }
   } else {
     /* schema name not found, use field name as schema name and fetch value */
-    SchemaToValue_list = resume;
-    if (wallet_ReadFromList(field, value, itemList, SchemaToValue_list)) {
+    PRInt32 index2 = index;
+    if (wallet_ReadFromList(field, value, itemList, wallet_SchemaToValue_list, index2)) {
       /* value found, prefill it into form */
       schema = nsAutoString(field);
-      resume = SchemaToValue_list;
+      index = index2;
       return 0;
     }
   }
-  resume = nsnull;
+  index = -1;
   return -1;
 }
 
@@ -1699,7 +1687,7 @@ wallet_GetPrefills(
   nsAutoString*& schemaPtr,
   nsAutoString*& valuePtr,
   PRInt32& selectIndex,
-  XP_List*& resume)
+  PRInt32& index)
 {
   nsresult result;
 
@@ -1714,7 +1702,7 @@ wallet_GetPrefills(
       if (NS_SUCCEEDED(result)) {
         nsAutoString schema("");
         nsAutoString value;
-        XP_List* itemList;
+        nsVoidArray* itemList;
 
         /* get schema name from vcard attribute if it exists */
         nsIDOMElement * element;
@@ -1729,10 +1717,10 @@ wallet_GetPrefills(
          * if schema name was specified in vcard attribute then get value from schema name,
          * otherwise get value from field name by using mapping tables to get schema name
          */
-        if (FieldToValue(field, schema, value, itemList, resume) == 0) {
+        if (FieldToValue(field, schema, value, itemList, index) == 0) {
           if (value == "" && nsnull != itemList) {
             /* pick first of a set of synonymous values */
-            wallet_ReadFromSublist(value, itemList);
+            value = *(((wallet_Sublist *)itemList->ElementAt(0))->item);
           }
           valuePtr = new nsAutoString(value);
           schemaPtr = new nsAutoString(schema);
@@ -1754,8 +1742,8 @@ wallet_GetPrefills(
     if (NS_SUCCEEDED(result)) {
       nsAutoString schema("");
       nsAutoString value;
-      XP_List* itemList;
-      if (FieldToValue(field, schema, value, itemList, resume) == 0) {
+      nsVoidArray* itemList;
+      if (FieldToValue(field, schema, value, itemList, index) == 0) {
         if (value != "") {
           /* no synonym list, just one value to try */
           result = wallet_GetSelectIndex(selectElement, value, selectIndex);
@@ -1768,7 +1756,8 @@ wallet_GetPrefills(
           }
         } else {
           /* synonym list exists, try each value */
-          while (wallet_ReadFromSublist(value, itemList) == 0) {
+          for (PRInt32 i=0; i<LIST_COUNT(itemList); i++) {
+            value = *(((wallet_Sublist *)itemList->ElementAt(i))->item);
             result = wallet_GetSelectIndex(selectElement, value, selectIndex);
             if (NS_SUCCEEDED(result)) {
               /* value matched one of the values in the drop-down list */
@@ -1822,11 +1811,11 @@ wallet_Initialize() {
 //    wallet_Dump(wallet_SchemaConcat_list);
 
 //    fprintf(stdout,"URL Field to Schema table \n");
-//    XP_List * list_ptr;
 //    char item1[100];
 //    wallet_MapElement * ptr;
-//    list_ptr = wallet_URLFieldToSchema_list;
-//    while((ptr = (wallet_MapElement *) XP_ListNextObject(list_ptr))!=0) {
+//    PRInt32 count = LIST_COUNT(wallet_URLFieldToSchema_list);
+//    for (PRInt32 i=0; i<count; i++) {
+//      ptr = NS_STATIC_CAST(wallet_MapElement*, wallet_URLFieldToSchema_list->ElementAt(i));
 //      ptr->item1->ToCString(item1, 100);
 //      fprintf(stdout, item1);
 //      fprintf(stdout,"\n");
@@ -1927,10 +1916,10 @@ wallet_InitializeCurrentURL(nsIDocument * doc) {
   NS_RELEASE(url);
 
   /* get field/schema mapping specific to current url */
-  XP_List * list_ptr;
   wallet_MapElement * ptr;
-  list_ptr = wallet_URLFieldToSchema_list;
-  while((ptr = (wallet_MapElement *) XP_ListNextObject(list_ptr))!=0) {
+  PRInt32 count = LIST_COUNT(wallet_URLFieldToSchema_list);
+  for (PRInt32 i=0; i<count; i++) {
+    ptr = NS_STATIC_CAST(wallet_MapElement*, wallet_URLFieldToSchema_list->ElementAt(i));
     if (*(ptr->item1) == urlName) {
       wallet_specificURLFieldToSchema_list = ptr->itemList;
       break;
@@ -1960,11 +1949,12 @@ wallet_GetNextInString(char*& ptr) {
 }
 
 void
-wallet_ReleasePrefillElementList(XP_List * wallet_PrefillElement_list) {
+wallet_ReleasePrefillElementList(nsVoidArray * wallet_PrefillElement_list) {
   if (wallet_PrefillElement_list) {
     wallet_PrefillElement * ptr;
-    XP_List * list_ptr = wallet_PrefillElement_list;
-    while((ptr = (wallet_PrefillElement *) XP_ListNextObject(list_ptr))!=0) {
+    PRInt32 count = LIST_COUNT(wallet_PrefillElement_list);
+    for (PRInt32 i=count-1; i>=0; i--) {
+      ptr = NS_STATIC_CAST(wallet_PrefillElement*, wallet_PrefillElement_list->ElementAt(i));
       if (ptr->inputElement) {
         NS_RELEASE(ptr->inputElement);
       } else {
@@ -1972,8 +1962,7 @@ wallet_ReleasePrefillElementList(XP_List * wallet_PrefillElement_list) {
       }
       delete ptr->schema;
       delete ptr->value;
-      XP_ListRemoveObject(wallet_PrefillElement_list, ptr);
-      list_ptr = wallet_PrefillElement_list;
+      wallet_PrefillElement_list->RemoveElement(ptr);
       delete ptr;
     }
   }
@@ -1982,21 +1971,21 @@ wallet_ReleasePrefillElementList(XP_List * wallet_PrefillElement_list) {
 #define BUFLEN3 5000
 #define BREAK '\001'
 
-XP_List * wallet_list;
+nsVoidArray * wallet_list;
 nsString wallet_url;
 
 PUBLIC void
 WLLT_GetPrefillListForViewer(nsString& aPrefillList)
 {
-  char *buffer = (char*)XP_ALLOC(BUFLEN3);
+  char *buffer = (char*)PR_Malloc(BUFLEN3);
   int g = 0, prefillNum = 0;
-  XP_List *list_ptr = wallet_list;
   wallet_PrefillElement * ptr;
   buffer[0] = '\0';
   char * schema;
   char * value;
-
-  while((ptr = (wallet_PrefillElement *) XP_ListNextObject(list_ptr))!=0) {
+  PRInt32 count = LIST_COUNT(wallet_list);
+  for (PRInt32 i=0; i<count; i++) {
+    ptr = NS_STATIC_CAST(wallet_PrefillElement*, wallet_list->ElementAt(i));
     schema = ptr->schema->ToNewCString();
     value = ptr->value->ToNewCString();
     g += PR_snprintf(buffer+g, BUFLEN3-g,
@@ -2027,7 +2016,7 @@ wallet_FreeURL(wallet_MapElement *url) {
     if(!url) {
         return;
     }
-    XP_ListRemoveObject(wallet_URL_list, url);
+    wallet_URL_list->RemoveElement(url);
     PR_FREEIF(url->item1);
     PR_FREEIF(url->item2);
     PR_Free(url);
@@ -2035,67 +2024,38 @@ wallet_FreeURL(wallet_MapElement *url) {
 
 PUBLIC void
 Wallet_SignonViewerReturn (nsAutoString results) {
-    XP_List *url_ptr;
     wallet_MapElement *url;
-    wallet_MapElement *URLToDelete;
-    int urlNumber;
     char * gone;
 
-    /*
-     * step through all nopreviews and delete those that are in the sequence
-     * Note: we can't delete nopreview while "url_ptr" is pointing to it because
-     * that would destroy "url_ptr". So we do a lazy deletion
-     */
-    URLToDelete = 0;
+    /* step through all nopreviews and delete those that are in the sequence */
     gone = SI_FindValueInArgs(results, "|goneP|");
-    urlNumber = 0;
-    url_ptr = wallet_URL_list;
-    while ((url = (wallet_MapElement *) XP_ListNextObject(url_ptr))) {
-      if (url->item2->CharAt(NO_PREVIEW) == 'y') {
-        if (SI_InSequence(gone, urlNumber)) {
-          url->item2->SetCharAt('n', NO_PREVIEW);
-          if (url->item2->CharAt(NO_CAPTURE) == 'n') {
-            if (URLToDelete) {
-                wallet_FreeURL(URLToDelete);
-            }
-            URLToDelete = url;
-          }
+    PRInt32 count = LIST_COUNT(wallet_URL_list);
+    while (count>0) {
+      count--;
+      url = NS_STATIC_CAST(wallet_MapElement*, wallet_URL_list->ElementAt(count));
+      if (url && SI_InSequence(gone, count)) {
+        url->item2->SetCharAt('n', NO_PREVIEW);
+        if (url->item2->CharAt(NO_CAPTURE) == 'n') {
+          wallet_FreeURL(url);
+          wallet_WriteToFile("URL.tbl", wallet_URL_list, PR_FALSE);
         }
-        urlNumber++;
       }
-    }
-    if (URLToDelete) {
-        wallet_FreeURL(URLToDelete);
-        wallet_WriteToFile("URL.tbl", wallet_URL_list, PR_FALSE);
     }
     delete[] gone;
 
-    /*
-     * step through all nocaptures and delete those that are in the sequence
-     * Note: we can't delete nocapture while "url_ptr" is pointing to it because
-     * that would destroy "url_ptr". So we do a lazy deletion
-     */
-    URLToDelete = 0;
+    /* step through all nocaptures and delete those that are in the sequence */
     gone = SI_FindValueInArgs(results, "|goneC|");
-    urlNumber = 0;
-    url_ptr = wallet_URL_list;
-    while ((url = (wallet_MapElement *) XP_ListNextObject(url_ptr))) {
-      if (url->item2->CharAt(NO_CAPTURE) == 'y') {
-        if (SI_InSequence(gone, urlNumber)) {
-          url->item2->SetCharAt('n', NO_CAPTURE);
-          if (url->item2->CharAt(NO_PREVIEW) == 'n') {
-            if (URLToDelete) {
-                wallet_FreeURL(URLToDelete);
-            }
-            URLToDelete = url;
-          }
+    PRInt32 count2 = LIST_COUNT(wallet_URL_list);
+    while (count2>0) {
+      count2--;
+      url = NS_STATIC_CAST(wallet_MapElement*, wallet_URL_list->ElementAt(count2));
+      if (url && SI_InSequence(gone, count)) {
+        url->item2->SetCharAt('n', NO_CAPTURE);
+        if (url->item2->CharAt(NO_PREVIEW) == 'n') {
+          wallet_FreeURL(url);
+          wallet_WriteToFile("URL.tbl", wallet_URL_list, PR_FALSE);
         }
-        urlNumber++;
       }
-    }
-    if (URLToDelete) {
-        wallet_FreeURL(URLToDelete);
-        wallet_WriteToFile("URL.tbl", wallet_URL_list, PR_FALSE);
     }
     delete[] gone;
 }
@@ -2110,13 +2070,12 @@ wallet_OKToCapture(char* urlName) {
 
   /* see if this url is already on list of url's for which we don't want to capture */
   wallet_InitializeURLList();
-  XP_List* URL_list = wallet_URL_list;
-  XP_List* dummy;
+  nsVoidArray* dummy;
   nsAutoString * value = new nsAutoString("nn");
   if (!url || !value) {
     return PR_FALSE;
   }
-  if (wallet_ReadFromList(*url, *value, dummy, URL_list)) {
+  if (wallet_ReadFromList(*url, *value, dummy, wallet_URL_list)) {
     if (value->CharAt(NO_CAPTURE) == 'y') {
       return PR_FALSE;
     }
@@ -2166,43 +2125,80 @@ wallet_Capture(nsIDocument* doc, nsString field, nsString value, nsString vcard)
 
   /* is there a mapping from this field name to a schema name */
   nsAutoString schema(vcard);
-  XP_List* FieldToSchema_list = wallet_FieldToSchema_list;
-  XP_List* URLFieldToSchema_list = wallet_specificURLFieldToSchema_list;
-  XP_List* SchemaToValue_list = wallet_SchemaToValue_list;
-  XP_List* dummy;
-
+  nsVoidArray* dummy;
   if (schema.Length() ||
-      (wallet_ReadFromList(field, schema, dummy, URLFieldToSchema_list)) ||
-      (wallet_ReadFromList(field, schema, dummy, FieldToSchema_list))) {
+      (wallet_ReadFromList(field, schema, dummy, wallet_specificURLFieldToSchema_list)) ||
+      (wallet_ReadFromList(field, schema, dummy, wallet_FieldToSchema_list))) {
 
     /* field to schema mapping already exists */
 
     /* is this a new value for the schema */
-    if (!(wallet_ReadFromList(schema, oldValue, dummy, SchemaToValue_list)) || 
-        (oldValue != value)) {
-
-      /* this is a new value so store it */
-      nsAutoString * aValue = new nsAutoString(value);
-      nsAutoString * aSchema = new nsAutoString(schema);
-      dummy = 0;
-      wallet_WriteToList(*aSchema, *aValue, dummy, wallet_SchemaToValue_list);
-      wallet_WriteToFile("SchemaValue.tbl", wallet_SchemaToValue_list, PR_TRUE);
+    PRInt32 index = 0;
+    PRInt32 lastIndex = index;
+    while(wallet_ReadFromList(schema, oldValue, dummy, wallet_SchemaToValue_list, index)) {
+      if (oldValue == value) {
+        /*
+         * Remove entry from wallet_SchemaToValue_list and then reinsert.  This will
+         * keep multiple values in that list for the same field ordered with
+         * most-recently-used first.  That's useful since the first such entry
+         * is the default value used for pre-filling.
+         */
+        wallet_MapElement * mapElement =
+          (wallet_MapElement *) (wallet_SchemaToValue_list->ElementAt(lastIndex));
+        wallet_SchemaToValue_list->RemoveElementAt(lastIndex);
+        wallet_WriteToList(
+          *(mapElement->item1),
+          *(mapElement->item2),
+          mapElement->itemList, 
+          wallet_SchemaToValue_list);
+        delete mapElement;
+        return;
+      }
+      lastIndex = index;
     }
+
+    /* this is a new value so store it */
+    nsAutoString * aValue = new nsAutoString(value);
+    nsAutoString * aSchema = new nsAutoString(schema);
+    dummy = 0;
+    wallet_WriteToList(*aSchema, *aValue, dummy, wallet_SchemaToValue_list);
+    wallet_WriteToFile("SchemaValue.tbl", wallet_SchemaToValue_list, PR_TRUE);
+
   } else {
 
     /* no field to schema mapping so assume schema name is same as field name */
 
     /* is this a new value for the schema */
-    if (!(wallet_ReadFromList(field, oldValue, dummy, SchemaToValue_list)) ||
-        (oldValue != value)) {
-
-      /* this is a new value so store it */
-      nsAutoString * aField = new nsAutoString(field);
-      nsAutoString * aValue = new nsAutoString(value);
-      dummy = 0;
-      wallet_WriteToList(*aField, *aValue, dummy, wallet_SchemaToValue_list);
-      wallet_WriteToFile("SchemaValue.tbl", wallet_SchemaToValue_list, PR_TRUE);
+    PRInt32 index = 0;
+    PRInt32 lastIndex = index;
+    while(wallet_ReadFromList(field, oldValue, dummy, wallet_SchemaToValue_list, index)) {
+      if (oldValue == value) {
+        /*
+         * Remove entry from wallet_SchemaToValue_list and then reinsert.  This will
+         * keep multiple values in that list for the same field ordered with
+         * most-recently-used first.  That's useful since the first such entry
+         * is the default value used for pre-filling.
+         */
+        wallet_MapElement * mapElement =
+          (wallet_MapElement *) (wallet_SchemaToValue_list->ElementAt(lastIndex));
+        wallet_SchemaToValue_list->RemoveElementAt(lastIndex);
+        wallet_WriteToList(
+          *(mapElement->item1),
+          *(mapElement->item2),
+          mapElement->itemList, 
+          wallet_SchemaToValue_list);
+        delete mapElement;
+        return;
+      }
+      lastIndex = index;
     }
+
+    /* this is a new value so store it */
+    nsAutoString * aField = new nsAutoString(field);
+    nsAutoString * aValue = new nsAutoString(value);
+    dummy = 0;
+    wallet_WriteToList(*aField, *aValue, dummy, wallet_SchemaToValue_list);
+    wallet_WriteToFile("SchemaValue.tbl", wallet_SchemaToValue_list, PR_TRUE);
   }
 }
 
@@ -2216,17 +2212,17 @@ wallet_Capture(nsIDocument* doc, nsString field, nsString value, nsString vcard)
 PUBLIC void
 WLLT_GetNopreviewListForViewer(nsString& aNopreviewList)
 {
-  char *buffer = (char*)XP_ALLOC(BUFLEN2);
+  char *buffer = (char*)PR_Malloc(BUFLEN2);
   int g = 0, nopreviewNum;
-  XP_List *url_ptr;
   wallet_MapElement *url;
   char* urlCString;
 
   wallet_InitializeURLList();
   buffer[0] = '\0';
-  url_ptr = wallet_URL_list;
   nopreviewNum = 0;
-  while ( (url=(wallet_MapElement *) XP_ListNextObject(url_ptr)) ) {
+  PRInt32 count = LIST_COUNT(wallet_URL_list);
+  for (PRInt32 i=0; i<count; i++) {
+    url = NS_STATIC_CAST(wallet_MapElement*, wallet_URL_list->ElementAt(i));
     if (url->item2->CharAt(NO_PREVIEW) == 'y') {
       urlCString = url->item1->ToNewCString();
       g += PR_snprintf(buffer+g, BUFLEN2-g,
@@ -2246,17 +2242,17 @@ WLLT_GetNopreviewListForViewer(nsString& aNopreviewList)
 PUBLIC void
 WLLT_GetNocaptureListForViewer(nsString& aNocaptureList)
 {
-  char *buffer = (char*)XP_ALLOC(BUFLEN2);
+  char *buffer = (char*)PR_Malloc(BUFLEN2);
   int g = 0, nocaptureNum;
-  XP_List *url_ptr;
   wallet_MapElement *url;
   char* urlCString;
 
   wallet_InitializeURLList();
   buffer[0] = '\0';
-  url_ptr = wallet_URL_list;
   nocaptureNum = 0;
-  while ( (url=(wallet_MapElement *) XP_ListNextObject(url_ptr)) ) {
+  PRInt32 count = LIST_COUNT(wallet_URL_list);
+  for (PRInt32 i=0; i<count; i++) {
+    url = NS_STATIC_CAST(wallet_MapElement*, wallet_URL_list->ElementAt(i));
     if (url->item2->CharAt(NO_CAPTURE) == 'y') {
       urlCString = url->item1->ToNewCString();
       g += PR_snprintf(buffer+g, BUFLEN2-g,
@@ -2345,19 +2341,19 @@ WLLT_PreEdit(nsAutoString& walletList) {
     return;
   }
   walletList = BREAK;
-  XP_List * list_ptr;
   wallet_MapElement * ptr;
-  list_ptr = wallet_SchemaToValue_list;
+  PRInt32 count = LIST_COUNT(wallet_SchemaToValue_list);
+  for (PRInt32 i=0; i<count; i++) {
+    ptr = NS_STATIC_CAST(wallet_MapElement*, wallet_SchemaToValue_list->ElementAt(i));
 
-  while((ptr = (wallet_MapElement *) XP_ListNextObject(list_ptr))!=0) {
     walletList += *(ptr->item1) + BREAK;
     if (*ptr->item2 != "") {
       walletList += *(ptr->item2) + BREAK;
     } else {
-      XP_List * list_ptr1;
       wallet_Sublist * ptr1;
-      list_ptr1 = ptr->itemList;
-      while((ptr1=(wallet_Sublist *) XP_ListNextObject(list_ptr1))!=0) {
+      PRInt32 count = LIST_COUNT(ptr->itemList);
+      for (PRInt32 i=0; i<count; i++) {
+        ptr1 = NS_STATIC_CAST(wallet_Sublist*, ptr->itemList->ElementAt(i));
         walletList += *(ptr1->item) + BREAK;
       }
     }
@@ -2385,11 +2381,10 @@ WLLT_PrefillReturn(nsAutoString results) {
   /* add url to url list if user doesn't want to preview this page in the future */
   if (!PL_strcmp(skip, "true")) {
     nsAutoString * url = new nsAutoString(urlName);
-    XP_List* URL_list = wallet_URL_list;
-    XP_List* dummy;
+    nsVoidArray* dummy;
     nsAutoString * value = new nsAutoString("nn");
     if (!url || !value) {
-      wallet_ReadFromList(*url, *value, dummy, URL_list);
+      wallet_ReadFromList(*url, *value, dummy, wallet_URL_list);
       value->SetCharAt('y', NO_PREVIEW);
       wallet_WriteToList(*url, *value, dummy, wallet_URL_list, DUP_OVERWRITE);
       wallet_WriteToFile("URL.tbl", wallet_URL_list, PR_FALSE);
@@ -2397,7 +2392,7 @@ WLLT_PrefillReturn(nsAutoString results) {
   }
 
   /* process the list, doing the fillins */
-  XP_List * list;
+  nsVoidArray * list;
   sscanf(listAsAscii, "%ld", &list);
   if (fillins[0] == '\0') { /* user pressed CANCEL */
     wallet_ReleasePrefillElementList(list);
@@ -2416,13 +2411,15 @@ WLLT_PrefillReturn(nsAutoString results) {
    * particular value that should be prefilled for that item.
    */
 
-  XP_List * list_ptr = list;
   wallet_PrefillElement * ptr;
   char * ptr2;
   ptr2 = fillins;
   /* step through pre-fill list */
   PRBool first = PR_TRUE;
-  while((ptr = (wallet_PrefillElement *) XP_ListNextObject(list_ptr))!=0) {
+  PRInt32 count = LIST_COUNT(list);
+  for (PRInt32 i=0; i<count; i++) {
+    ptr = NS_STATIC_CAST(wallet_PrefillElement*, list->ElementAt(i));
+
     /* advance in fillins list each time a new schema name in pre-fill list is encountered */
     if (ptr->count != 0) {
       /* count != 0 indicates a new schema name */
@@ -2441,7 +2438,7 @@ WLLT_PrefillReturn(nsAutoString results) {
       delete next;
       next = wallet_GetNextInString(ptr2);
     }
-     if (*next == *ptr->value) {
+    if (*next == *ptr->value) {
       /*
        * Remove entry from wallet_SchemaToValue_list and then reinsert.  This will
        * keep multiple values in that list for the same field ordered with
@@ -2452,14 +2449,26 @@ WLLT_PrefillReturn(nsAutoString results) {
        * Test for ptr->count being zero is an optimization that avoids us from doing a
        * reordering if the current entry already was first
        */
-      if (ptr->resume && (ptr->count == 0)) {
-        wallet_MapElement * mapElement = (wallet_MapElement *) (ptr->resume->object);
-        XP_ListRemoveObject(wallet_SchemaToValue_list, mapElement);
-        wallet_WriteToList(
-          *(mapElement->item1),
-          *(mapElement->item2),
-          mapElement->itemList, 
-          wallet_SchemaToValue_list);
+      if (ptr->count == 0) {
+        nsAutoString oldValue;
+        PRInt32 index = 0;
+        PRInt32 lastIndex = index;
+        nsVoidArray* dummy;
+        while(wallet_ReadFromList(*ptr->schema, oldValue, dummy, wallet_SchemaToValue_list, index)) {
+          if (oldValue == *ptr->value) {
+            wallet_MapElement * mapElement =
+              (wallet_MapElement *) (wallet_SchemaToValue_list->ElementAt(lastIndex));
+            wallet_SchemaToValue_list->RemoveElementAt(lastIndex);
+            wallet_WriteToList(
+              *(mapElement->item1),
+              *(mapElement->item2),
+              mapElement->itemList,
+              wallet_SchemaToValue_list);
+            delete mapElement;
+            break;
+          }
+          lastIndex = index;
+        }
       }
     }
 
@@ -2493,7 +2502,7 @@ PUBLIC nsresult
 WLLT_Prefill(nsIPresShell* shell, nsString url, PRBool quick) {
 
   /* create list of elements that can be prefilled */
-  XP_List *wallet_PrefillElement_list=XP_ListNew();
+  nsVoidArray *wallet_PrefillElement_list=new nsVoidArray();
   if (!wallet_PrefillElement_list) {
     return NS_ERROR_FAILURE;
   }
@@ -2532,7 +2541,7 @@ WLLT_Prefill(nsIPresShell* shell, nsString url, PRBool quick) {
                     elements->Item(elementX, &elementNode);
                     if (nsnull != elementNode) {
                       wallet_PrefillElement * prefillElement;
-                      XP_List * resume = nsnull;
+                      PRInt32 index = 0;
                       wallet_PrefillElement * firstElement = nsnull;
                       PRUint32 numberOfElements = 0;
                       for (;;) {
@@ -2541,7 +2550,7 @@ WLLT_Prefill(nsIPresShell* shell, nsString url, PRBool quick) {
                          * field set to the number of elements in group.  All other
                          * elements in group will have count field set to 0
                          */
-                        prefillElement = XP_NEW(wallet_PrefillElement);
+                        prefillElement = PR_NEW(wallet_PrefillElement);
                         if (wallet_GetPrefills
                             (elementNode,
                             prefillElement->inputElement,
@@ -2549,16 +2558,15 @@ WLLT_Prefill(nsIPresShell* shell, nsString url, PRBool quick) {
                             prefillElement->schema,
                             prefillElement->value,
                             prefillElement->selectIndex,
-                            resume) != -1) {
+                            index) != -1) {
                           /* another value found */
-                          prefillElement->resume = resume;
                           if (nsnull == firstElement) {
                             firstElement = prefillElement;
                           }
                           numberOfElements++;
                           prefillElement->count = 0;
-                          XP_ListAddObjectToEnd(wallet_PrefillElement_list, prefillElement);
-                          if (nsnull == resume) {
+                          wallet_PrefillElement_list->AppendElement(prefillElement);
+                          if (index == -1) {
                             /* value was found from concat rules, can't resume from here */
                             break;
                           }
@@ -2591,7 +2599,7 @@ WLLT_Prefill(nsIPresShell* shell, nsString url, PRBool quick) {
   }
 
   /* return if no elements were put into the list */
-  if (!wallet_PrefillElement_list || !XP_ListCount(wallet_PrefillElement_list)) {
+  if (LIST_COUNT(wallet_PrefillElement_list) == 0) {
     if (Wallet_KeySet()) {
       char * message = Wallet_Localize("noPrefills");
       Wallet_Alert(message);
@@ -2606,12 +2614,11 @@ WLLT_Prefill(nsIPresShell* shell, nsString url, PRBool quick) {
   PRBool noPreview = PR_FALSE;
   if (!quick) {
     wallet_InitializeURLList();
-    XP_List* URL_list = wallet_URL_list;
-    XP_List* dummy;
+    nsVoidArray* dummy;
     nsAutoString * value = new nsAutoString("nn");
     nsAutoString * urlPtr = new nsAutoString(url);
     if (!value || !urlPtr) {
-      wallet_ReadFromList(*urlPtr, *value, dummy, URL_list);
+      wallet_ReadFromList(*urlPtr, *value, dummy, wallet_URL_list);
       noPreview = (value->CharAt(NO_PREVIEW) == 'y');
       delete value;
       delete urlPtr;
@@ -2621,9 +2628,10 @@ WLLT_Prefill(nsIPresShell* shell, nsString url, PRBool quick) {
   /* determine if preview is necessary */
   if (noPreview || quick) {
     /* prefill each element without any preview for user verification */
-    XP_List * list_ptr = wallet_PrefillElement_list;
     wallet_PrefillElement * ptr;
-    while((ptr = (wallet_PrefillElement *) XP_ListNextObject(list_ptr))!=0) {
+    PRInt32 count = LIST_COUNT(wallet_PrefillElement_list);
+    for (PRInt32 i=0; i<count; i++) {
+      ptr = NS_STATIC_CAST(wallet_PrefillElement*, wallet_PrefillElement_list->ElementAt(i));
       if (ptr->count) {
         if (ptr->inputElement) {
           ptr->inputElement->SetValue(*(ptr->value));
