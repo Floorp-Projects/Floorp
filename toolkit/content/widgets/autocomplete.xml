@@ -682,7 +682,7 @@
     </implementation>
     
     <handlers>
-      <handler event="mousedown"><![CDATA[
+      <handler event="mousedown" button="0"><![CDATA[
         this.showPopup();
       ]]></handler>
     </handlers>
