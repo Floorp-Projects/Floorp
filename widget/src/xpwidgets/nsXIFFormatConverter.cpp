@@ -192,8 +192,13 @@ nsXIFFormatConverter::CanConvert(const char *aFromDataFlavor, const char *aToDat
       *_retval = PR_TRUE;
     else if ( toFlavor.Equals(kUnicodeMime) )
       *_retval = PR_TRUE;
+#if NOT_NOW
+// pinkerton
+// no one uses this flavor right now, so it's just slowing things down. If anyone cares I
+// can put it back in.
     else if ( toFlavor.Equals(kAOLMailMime) )
       *_retval = PR_TRUE;
+#endif
   }
   return NS_OK;
 
@@ -235,30 +240,29 @@ nsXIFFormatConverter::Convert(const char *aFromDataFlavor, nsISupports *aFromDat
       if ( data ) {
         PRUnichar* castedData = NS_CONST_CAST(PRUnichar*, NS_STATIC_CAST(const PRUnichar*, data));
         nsAutoString dataStr ( CBufDescriptor(castedData, PR_TRUE, aDataLen) );  //еее try not to copy the data
-        nsAutoString outStr;
 
         if ( toFlavor.Equals(kTextMime) ) {
-          if ( NS_SUCCEEDED(ConvertFromXIFToText(dataStr, outStr)) ) {  //еее shouldn't copy
+          nsCAutoString outStr;
+          if ( NS_SUCCEEDED(ConvertFromXIFToText(dataStr, outStr)) ) {
             nsCOMPtr<nsISupportsString> dataWrapper;
             nsComponentManager::CreateInstance(NS_SUPPORTS_STRING_PROGID, nsnull, 
                                                 NS_GET_IID(nsISupportsString), getter_AddRefs(dataWrapper) );
             if ( dataWrapper ) {
-              char* holderBecauseNSStringIsLame = outStr.ToNewCString();  //еее COPY #2
-              dataWrapper->SetData ( holderBecauseNSStringIsLame );       //еее COPY #3
+              dataWrapper->SetData ( outStr.GetBuffer() );
               nsCOMPtr<nsISupports> genericDataWrapper ( do_QueryInterface(dataWrapper) );
               *aToData = genericDataWrapper;
               NS_ADDREF(*aToData);
               *aDataToLen = outStr.Length();
-              nsCRT::free(holderBecauseNSStringIsLame);
             }
           }
         } // if plain text
         else if ( toFlavor.Equals(kHTMLMime) || toFlavor.Equals(kUnicodeMime) ) {
+          nsAutoString outStr;
           nsresult res;
           if (toFlavor.Equals(kHTMLMime))
             res = ConvertFromXIFToHTML(dataStr, outStr);
           else
-            res = ConvertFromXIFToText(dataStr, outStr);
+            res = ConvertFromXIFToUnicode(dataStr, outStr);
           if ( NS_SUCCEEDED(res) ) {
             nsCOMPtr<nsISupportsWString> dataWrapper;
             nsComponentManager::CreateInstance(NS_SUPPORTS_WSTRING_PROGID, nsnull, 
@@ -273,6 +277,7 @@ nsXIFFormatConverter::Convert(const char *aFromDataFlavor, nsISupports *aFromDat
           }
         } // else if HTML
         else if ( toFlavor.Equals(kAOLMailMime) ) {
+          nsAutoString outStr;
           if ( NS_SUCCEEDED(ConvertFromXIFToAOLMail(dataStr, outStr)) ) {  //еее COPY #2
             nsCOMPtr<nsISupportsWString> dataWrapper;
             nsComponentManager::CreateInstance(NS_SUPPORTS_WSTRING_PROGID, nsnull, 
@@ -303,14 +308,13 @@ nsXIFFormatConverter::Convert(const char *aFromDataFlavor, nsISupports *aFromDat
 } // Convert
 
 
-
 //
 // ConvertFromXIFToText
 //
 // Takes XIF and converts it to plain text using the correct charset for the platform/OS/language.
 //
 NS_IMETHODIMP
-nsXIFFormatConverter::ConvertFromXIFToText(const nsAutoString & aFromStr, nsAutoString & aToStr)
+nsXIFFormatConverter::ConvertFromXIFToText(const nsAutoString & aFromStr, nsCAutoString & aToStr)
 {
   // Figure out the correct charset we need to use. We are guaranteed that this does not change
   // so we cache it.
@@ -364,7 +368,43 @@ nsXIFFormatConverter::ConvertFromXIFToText(const nsAutoString & aFromStr, nsAuto
   aToStr = buffer;
 
   return NS_OK;
-}
+} // ConvertFromXIFToText
+
+
+//
+// ConvertFromXIFToUnicode
+//
+// Takes XIF and converts it to plain text but in unicode. We can't just use the xif->text
+// routine as it also does a charset conversion which isn't what we want.
+//
+NS_IMETHODIMP
+nsXIFFormatConverter::ConvertFromXIFToUnicode(const nsAutoString & aFromStr, nsAutoString & aToStr)
+{
+  // create the parser to do the conversion.
+  aToStr = "";
+  nsCOMPtr<nsIParser> parser;
+  nsresult rv = nsComponentManager::CreateInstance(kCParserCID, nsnull, NS_GET_IID(nsIParser),
+                                                     getter_AddRefs(parser));
+  if ( !parser )
+    return rv;
+
+  // convert it!
+  nsCOMPtr<nsIHTMLContentSink> sink;
+  rv = NS_New_HTMLToTXT_SinkStream(getter_AddRefs(sink),&aToStr);
+  if ( sink ) {
+    parser->SetContentSink(sink);
+	
+    nsCOMPtr<nsIDTD> dtd;
+    rv = NS_NewXIFDTD(getter_AddRefs(dtd));
+    if ( dtd ) {
+      parser->RegisterDTD(dtd);
+      parser->Parse(aFromStr, 0, "text/xif",PR_FALSE,PR_TRUE);           
+    }
+  }
+  
+  return NS_OK;
+} // ConvertFromXIFToUnicode
+
 
 /**
   * 
