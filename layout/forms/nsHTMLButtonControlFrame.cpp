@@ -54,6 +54,7 @@
 #include "nsIDocument.h"
 #include "nsButtonFrameRenderer.h"
 #include "nsFormControlFrame.h"
+#include "nsIFrameManager.h"
 
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
 static NS_DEFINE_IID(kIFormControlFrameIID, NS_IFORMCONTROLFRAME_IID);
@@ -427,10 +428,28 @@ nsHTMLButtonControlFrame::SetInitialChildList(nsIPresContext* aPresContext,
   // add ourself as an nsIFormControlFrame
   nsFormFrame::AddFormControlFrame(aPresContext, *NS_STATIC_CAST(nsIFrame*, this));
 
- 
+  // get the frame manager and the style context of the new parent frame
+  // this is used whent he children are reparented below
+  // NOTE: the whole reparenting should not need to happen: see bugzilla bug 51767
+  //
+  nsCOMPtr<nsIPresShell> shell;
+  nsCOMPtr<nsIFrameManager> frameManager;
+  nsCOMPtr<nsIStyleContext> newParentContext;
+  aPresContext->GetShell(getter_AddRefs(shell));
+  if (shell) {
+    shell->GetFrameManager(getter_AddRefs(frameManager));
+  }
+  // get the new parent context from the first child: that is the frame that the
+  // subsequent children will be made children of
+  mFrames.FirstChild()->GetStyleContext(getter_AddRefs(newParentContext));
+
   // Set the parent for each of the child frames
   for (nsIFrame* frame = aChildList; nsnull != frame; frame->GetNextSibling(&frame)) {
     frame->SetParent(mFrames.FirstChild());
+    // now reparent the contexts for the reparented frame too
+    if (frameManager) {
+      frameManager->ReParentStyleContext(aPresContext,frame,newParentContext);
+    }
   }
 
   // Queue up the frames for the inline frame
