@@ -752,7 +752,7 @@ NS_IMETHODIMP mozXMLTerminal::Paste()
   trans->AddDataFlavor(kUnicodeMime);
 
   // Get data from clipboard
-  result = clipboard->GetData(trans);
+  result = clipboard->GetData(trans, nsIClipboard::kGlobalClipboard);
   if (NS_FAILED(result))
     return result;
 
