@@ -20,7 +20,7 @@
 
 #include "nscore.h"
 #include "nsCOMPtr.h"
-
+#include "nsWeakPtr.h"
 #include "rdf.h"
 #include "nsRDFResource.h"
 #include "nsRDFDOMResourceFactory.h"
@@ -28,7 +28,8 @@
 #include "nsIDOMNode.h"
 
 class nsRDFDOMViewerElement : nsRDFResource,
-                              nsIDOMViewerElement {
+                              nsIDOMViewerElement
+{
 public:
   nsRDFDOMViewerElement();
   virtual ~nsRDFDOMViewerElement();
@@ -38,21 +39,17 @@ public:
   NS_DECL_NSIDOMVIEWERELEMENT
 
 private:
-  
-  nsIDOMNode *mNode;
-
-
+      // weak reference to DOM node
+    nsWeakPtr mNode;
 };
 
-nsRDFDOMViewerElement::nsRDFDOMViewerElement() :
-  mNode(nsnull)
+nsRDFDOMViewerElement::nsRDFDOMViewerElement()
 {
 
 }
 
 nsRDFDOMViewerElement::~nsRDFDOMViewerElement()
 {
-  if (mNode) NS_RELEASE(mNode);
 }
 
 NS_IMPL_ISUPPORTS_INHERITED(nsRDFDOMViewerElement, nsRDFResource, nsIDOMViewerElement)
@@ -60,9 +57,7 @@ NS_IMPL_ISUPPORTS_INHERITED(nsRDFDOMViewerElement, nsRDFResource, nsIDOMViewerEl
 NS_IMETHODIMP
 nsRDFDOMViewerElement::SetNode(nsIDOMNode* node)
 {
-  if (mNode) NS_RELEASE(mNode);
-  mNode = node;
-  NS_ADDREF(mNode);
+  mNode = getter_AddRefs(NS_GetWeakReference(node));
   return NS_OK;
 }
 
@@ -70,10 +65,10 @@ NS_IMETHODIMP
 nsRDFDOMViewerElement::GetNode(nsIDOMNode** node)
 {
   if (!node) return NS_ERROR_NULL_POINTER;
-
-  *node = mNode;
-  NS_ADDREF(*node);
-  return NS_OK;
+  
+  nsresult rv =
+      mNode->QueryReferent(NS_GET_IID(nsIDOMNode), (void **)node);
+  return rv;
 }
   
 nsresult
@@ -83,6 +78,9 @@ NS_NewRDFDOMResourceFactory(nsISupports* aOuter,
   
   nsRDFDOMViewerElement* ve = new nsRDFDOMViewerElement();
   if (!ve) return NS_ERROR_NULL_POINTER;
-  return ve->QueryInterface(iid, result);
+  NS_ADDREF(ve);
+  nsresult rv = ve->QueryInterface(iid, result);
+  NS_RELEASE(ve);
+  return rv;
 }
 

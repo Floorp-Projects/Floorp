@@ -67,7 +67,7 @@ NSRegisterSelf(nsISupports* aServMgr, const char* aPath)
                    &rv);
   
   if (NS_FAILED(rv)) return rv;
-
+  printf("Registering DOM Viewer\n");
   rv = compMgr->RegisterComponent(kRDFDOMDataSourceCID,
                                   "Generic DataSource DataSource",
                                   NS_RDF_DATASOURCE_PROGID_PREFIX "domds",
