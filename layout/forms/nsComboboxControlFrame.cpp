@@ -722,30 +722,18 @@ NS_IMETHODIMP nsComboboxControlFrame::HandleEvent(nsIPresContext& aPresContext,
 
   if (nsEventStatus_eConsumeNoDefault == aEventStatus) {
     return NS_OK;
-
   }
 
-  if(nsEventStatus_eConsumeNoDefault != aEventStatus) {
-    if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN) {
-    } else if (aEvent->message == NS_MOUSE_MOVE && mDoingSelection ||
-               aEvent->message == NS_MOUSE_LEFT_BUTTON_UP) {
-      // no-op
-    } else {
-      return NS_OK;
-    }
+  aEventStatus = nsEventStatus_eConsumeNoDefault;
 
-    aEventStatus = nsEventStatus_eConsumeNoDefault;
-
-    if (aEvent->message == NS_MOUSE_LEFT_BUTTON_UP) {
-      mArrowStyle = mBtnOutStyleContext;
-      nsFormControlHelper::ForceDrawFrame(this);
-    } else if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN) {
-      mArrowStyle = mBtnPressedStyleContext;
-      nsFormControlHelper::ForceDrawFrame(this);
-      MouseClicked(&aPresContext);
-    }
+  if (aEvent->message == NS_MOUSE_LEFT_BUTTON_UP) {
+    mArrowStyle = mBtnOutStyleContext;
+    nsFormControlHelper::ForceDrawFrame(this);
+  } else if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN) {
+    mArrowStyle = mBtnPressedStyleContext;
+    nsFormControlHelper::ForceDrawFrame(this);
+    MouseClicked(&aPresContext);
   }
-
   return NS_OK;
 }
 

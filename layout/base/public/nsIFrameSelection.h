@@ -98,6 +98,19 @@ public:
    */
   NS_IMETHOD LookUpSelection(nsIContent *aContent, PRInt32 aContentOffset, PRInt32 aContentLength,
                              PRInt32 *aStart, PRInt32 *aEnd, PRBool *aDrawSelected, PRUint32 aFlag/*not used*/) = 0;
+
+  /** SetMouseDownState(PRBool);
+   *  sets the mouse state to aState for resons of drag state.
+   * @param aState is the new state of mousedown
+   */
+  NS_IMETHOD SetMouseDownState(PRBool aState)=0;
+
+  /** GetMouseDownState(PRBool *);
+   *  gets the mouse state to aState for resons of drag state.
+   * @param aState will hold the state of mousedown
+   */
+  NS_IMETHOD GetMouseDownState(PRBool *aState)=0;
+
 };
 
 

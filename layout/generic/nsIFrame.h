@@ -590,6 +590,9 @@ public:
 
   NS_IMETHOD  GetSelected(PRBool *aSelected) const = 0;
 
+  /** EndSelection related calls
+   */
+
   /**
    *  called to find the previous/next character, word, or line  returns the actual 
    *  nsIFrame and the frame offset.  THIS DOES NOT CHANGE SELECTION STATE
@@ -598,13 +601,12 @@ public:
    *  @param aAmount eWord, eCharacter, eLine
    *  @param aDirection enum defined in this file to be eForward or eBackward
    *  @param aStartOffset start offset to start the peek. 0 == beginning -1 = end
-   *  @param aResultFrame frame that actually is the next/previous
-   *  @param aFrameOffset offset from frame of the frame results
-   *  @param aContentOffset offset from content of the frame results
+   *  @param aResultContent content that actually is the next/previous
+   *  @param aResultOffset offset for result content
    *  @param aEatingWS boolean to tell us the state of our search for Next/Prev
    */
   NS_IMETHOD  PeekOffset(nsSelectionAmount aAmount, nsDirection aDirection,  PRInt32 aStartOffset, 
-                         nsIFrame **aResultFrame, PRInt32 *aFrameOffset, PRInt32 *aContentOffset, PRBool aEatingWS) const = 0;
+                         nsIContent **aResultContent, PRInt32 *aResultOffset, PRBool aEatingWS) const = 0;
 
   /**
    * See if tree verification is enabled. To enable tree verification add
