@@ -184,7 +184,6 @@ empowered user, may make that change to the $f field.
 <TR><TH ALIGN="right">Old value:</TH><TD>$oldvalue</TD></TR>
 <TR><TH ALIGN="right">New value:</TH><TD>$newvalue</TD></TR>
 </TABLE>
-<pre>($reporterid eq $whoid || $ownerid eq $whoid || $qacontactid eq $whoid)</PRE>
 
 <P>Click <B>Back</B> and try again.
 };
