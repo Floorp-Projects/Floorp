@@ -21,7 +21,7 @@
 
 DEPTH = ../..
 
-DIRS = x86
+DIRS = $(wildcard $(CPU_ARCH))
 
 #######################################################################
 # (2) Include "component" configuration information.                  #
