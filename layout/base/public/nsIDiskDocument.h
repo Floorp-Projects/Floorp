@@ -16,8 +16,8 @@
  * Reserved.
  */
 
-#ifndef nsIDocumentOutput_h__
-#define nsIDocumentOutput_h__
+#ifndef nsIDiskDocument_h__
+#define nsIDiskDocument_h__
 
 
 #include "nsIDOMDocument.h"
@@ -106,6 +106,6 @@ public:
 };
 
 
-#endif // nsIDocumentOutput_h__
+#endif // nsIDiskDocument_h__
 
 
