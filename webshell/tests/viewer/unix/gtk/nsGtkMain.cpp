@@ -182,7 +182,7 @@ int main(int argc, char **argv)
     gTheApp->Run();
     delete gTheApp;
 
-    NS_FreeImageManager();
+    //NS_FreeImageManager();
 
     // Shutdown XPCOM
     rv = NS_ShutdownXPCOM(nsnull);
