@@ -262,8 +262,7 @@ nsImageBoxFrame::Init(nsIPresContext*  aPresContext,
     mHasImage = PR_TRUE;
   }
 
-  if (mHasImage)
-    mImageLoader.Init(this, UpdateImageFrame, nsnull, baseURL, src);
+  mImageLoader.Init(this, UpdateImageFrame, nsnull, baseURL, src);
 #endif
 
   PRBool a,b;
