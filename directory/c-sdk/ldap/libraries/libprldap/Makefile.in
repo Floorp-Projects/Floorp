@@ -235,7 +235,18 @@ $(OBJDEST):
 # the $(dist_bindir) line is for the mozilla client, which for reasons
 # unknown wants shared libraries in /bin also
 #
-export:: $(LIBPRLDAP) $(DLLPRLDAP)	
+# Set the default sources for the export target
+EXPDEPS2 = $(LIBPRLDAP) $(DLLPRLDAP)	
+# Remove the LIB source if on win32 and using MSVC
+# This avoids problems with -jX builds where 'link' will make both the
+# .dll and .lib files in one pass
+ifeq ($(OS_ARCH), WINNT)
+ifeq ($(LD),link)
+EXPDEPS2 = $(DLLPRLDAP)	
+endif
+endif
+
+export::	$(EXPDEPS2)
 ifeq ($(OS_ARCH), WINNT)
 	$(INSTALL) -m 555 $(LIBPRLDAP) $(dist_libdir)
 	$(INSTALL) -m 555 $(DLLPRLDAP) $(dist_libdir)

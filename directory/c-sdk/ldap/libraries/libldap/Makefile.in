@@ -278,7 +278,18 @@ versiont.c:	Makefile.client Version.c
 	-e "s|%VERSION%|$${v}|" \
 	< Version.c > $@)
 
-export::    $(OBJDIR_NAME) $(LIBDIR) $(OBJS) $(LIBLDAP) $(DLLLDAP)
+# Set the default sources for the export target
+EXPDEPS = $(OBJDIR_NAME) $(LIBDIR) $(OBJS) $(LIBLDAP) $(DLLLDAP)
+# Remove the LIB source if on win32 and using MSVC
+# This avoids problems with -jX builds where 'link' will make both the
+# .dll and .lib files in one pass
+ifeq ($(OS_ARCH), WINNT)
+ifeq ($(LD),link)
+EXPDEPS = $(OBJDIR_NAME) $(LIBDIR) $(OBJS) $(DLLLDAP)
+endif
+endif
+
+export::	$(EXPDEPS)
 
 ltest::	$(LIBLDAP) test.o
 		$(LINK_EXE) test.o
@@ -315,7 +326,18 @@ veryclean:: clean
 # the $(dist_bindir) line is for the mozilla client, which for reasons
 # unknown wants shared libraries in /bin also
 #
-export::	$(LIBLDAP) $(DLLLDAP)
+# Set the default sources for the export target
+EXPDEPS2 = $(LIBLDAP) $(DLLLDAP)
+# Remove the LIB source if on win32 and using MSVC
+# This avoids problems with -jX builds where 'link' will make both the
+# .dll and .lib files in one pass
+ifeq ($(OS_ARCH), WINNT)
+ifeq ($(LD),link)
+EXPDEPS2 = $(DLLLDAP)
+endif
+endif
+
+export::	$(EXPDEPS2)
 ifdef MKSHLIB
 	$(INSTALL) -m 444 $(LIBLDAP) $(dist_libdir)
 	$(INSTALL) -m 444 $(DLLLDAP) $(dist_libdir)
