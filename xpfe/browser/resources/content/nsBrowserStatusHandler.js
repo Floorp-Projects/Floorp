@@ -22,6 +22,11 @@
  *   Peter Annema <disttsc@bart.nl>
  */
 
+const NS_ERROR_MODULE_NETWORK = 2152398848;
+const NS_NET_STATUS_READ_FROM = NS_ERROR_MODULE_NETWORK + 8;
+const NS_NET_STATUS_WROTE_TO  = NS_ERROR_MODULE_NETWORK + 9;
+
+
 function nsBrowserStatusHandler()
 {
   this.init();
@@ -145,6 +150,10 @@ nsBrowserStatusHandler.prototype =
   {
     if (!aRequest)
       return;
+      
+    //ignore local/resource:/chrome: files
+    if (aStatus == NS_NET_STATUS_READ_FROM || aStatus == NS_NET_STATUS_WROTE_TO)
+      return;
 
     const nsIWebProgressListener = Components.interfaces.nsIWebProgressListener;
     const nsIChannel = Components.interfaces.nsIChannel;
@@ -164,8 +173,8 @@ nsBrowserStatusHandler.prototype =
 
         // XXX: These need to be based on window activity...
         this.stopButton.disabled = false;
-        this.stopMenu.disabled = false;
-        this.stopContext.disabled = false;
+        this.stopMenu.removeAttribute('disabled');
+        this.stopContext.removeAttribute('disabled');
 
         // Initialize the progress stuff...
         this.useRealProgressFlag = false;
@@ -207,8 +216,8 @@ nsBrowserStatusHandler.prototype =
         // XXX: These need to be based on window activity...
         // XXXjag: <command id="cmd_stop"/> ?
         this.stopButton.disabled = true;
-        this.stopMenu.disabled = true;
-        this.stopContext.disabled = true;
+        this.stopMenu.setAttribute('disabled', 'true');
+        this.stopContext.setAttribute('disabled', 'true');
 
       }
     }
@@ -253,6 +262,10 @@ nsBrowserStatusHandler.prototype =
 
   onStatusChange : function(aWebProgress, aRequest, aStatus, aMessage)
   {
+    //ignore local/resource:/chrome: files
+    if (aStatus == NS_NET_STATUS_READ_FROM || aStatus == NS_NET_STATUS_WROTE_TO)
+      return;
+
     if (!this.statusTimeoutInEffect) {
       this.statusTimeoutInEffect = true;
       this.status = aMessage;
