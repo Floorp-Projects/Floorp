@@ -49,6 +49,10 @@
 #include "nsICategoryManager.h"
 #include "nsISupportsPrimitives.h"
 
+#ifdef XP_UNIX
+#include <sys/utsname.h>
+#endif /* XP_UNIX */
+
 #ifdef XP_PC
 #include <windows.h>
 #endif
