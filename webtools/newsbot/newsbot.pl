@@ -181,7 +181,11 @@ xmlns="http://my.netscape.com/rdf/simple/0.9/"
 RDFHEAD
 print $header;
 
-for (my $i=@articles-1; $i > 0 ; $i--) {
+my $index =  @articles - 1;
+if ( $index > 15) {
+    $index = 15;
+    }
+for (my $i=$index; $i > 0 ; $i--) {
     print ("  <item>\n");
     print ("    <title>" . $articles[$i]->{'Subject'} . "</title>\n");
     print ("    <link>http://www.dejanews.com/[LB=http://www.mozilla.org/]/msgid.xp?MID=<" . $articles[$i]->{'Message-ID'} . "></link>\n");
