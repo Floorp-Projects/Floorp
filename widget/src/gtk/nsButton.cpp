@@ -46,8 +46,10 @@ NS_METHOD nsButton::Create(nsIWidget        *aParent,
                       nsIDeviceContext *aContext,
                       nsIAppShell      *aAppShell,
                       nsIToolkit       *aToolkit,
-                      nsWidgetInitData *aInitData) 
+                      nsWidgetInitData *aInitData)
 {
+  GtkRequisition size;
+
   aParent->AddChild(this);
   GtkWidget *parentWidget = nsnull;
 
@@ -61,20 +63,13 @@ NS_METHOD nsButton::Create(nsIWidget        *aParent,
   InitDeviceContext(aContext, parentWidget);
 
   mWidget = gtk_button_new_with_label("");
+  size.width = aRect.width;
+  size.height = aRect.height;
+
+  gtk_widget_set_usize(GTK_WIDGET(mWidget), aRect.width, aRect.height);
   gtk_widget_show(mWidget);
   gtk_layout_put(GTK_LAYOUT(parentWidget), mWidget, aRect.x, aRect.y);
-  /*
-  mWidget = ::XtVaCreateManagedWidget("button",
-                                    xmPushButtonWidgetClass, 
-                                    parentWidget,
-                                    XmNwidth, aRect.width,
-                                    XmNheight, aRect.height,
-                                    XmNrecomputeSize, False,
-                                    XmNhighlightOnEnter, False,
-		                    XmNx, aRect.x,
-		                    XmNy, aRect.y, 
-                                    nsnull);
-*/
+
   // save the event callback function
   mEventCallback = aHandleEventFunction;
 
@@ -111,8 +106,8 @@ nsButton::~nsButton()
  * @param aIID The name of the class implementing the method
  * @param _classiiddef The name of the #define symbol that defines the IID
  * for the class (e.g. NS_ISUPPORTS_IID)
- * 
-*/ 
+ *
+*/
 nsresult nsButton::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
     if (NULL == aInstancePtr) {
@@ -153,7 +148,7 @@ NS_METHOD nsButton::SetLabel(const nsString& aText)
 NS_METHOD nsButton::GetLabel(nsString& aBuffer)
 {
   char * text;
-  
+
   gtk_label_get(GTK_LABEL(GTK_BIN (mWidget)->child), &text);
   aBuffer.SetLength(0);
   aBuffer.Append(text);
@@ -181,5 +176,3 @@ PRBool nsButton::OnResize(nsSizeEvent &aEvent)
 {
   return PR_FALSE;
 }
-
-
