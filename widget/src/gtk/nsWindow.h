@@ -221,6 +221,8 @@ protected:
   static nsWindow  *mLastDragMotionWindow;
   static nsWindow  *mLastLeaveWindow;
 
+  void   InitDragEvent(nsMouseEvent &aEvent);
+
   // DragBegin not needed ?
   // always returns TRUE
   static gint DragMotionSignal (GtkWidget *      aWidget,
