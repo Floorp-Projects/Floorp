@@ -42,12 +42,7 @@ nsDeviceContextSpecX::nsDeviceContextSpecX()
  */
 nsDeviceContextSpecX::~nsDeviceContextSpecX()
 {
-    if (mPrintSettings != kPMNoPrintSettings)
-        PMRelease(&mPrintSettings);
-    if (mPageFormat != kPMNoPageFormat)
-        PMRelease(&mPageFormat);
-    if (mPrintSession)
-        ::PMRelease(&mPrintSession);
+  ClosePrintManager();
 }
 
 NS_IMPL_ISUPPORTS2(nsDeviceContextSpecX, nsIDeviceContextSpec, nsIPrintingContext)
@@ -96,12 +91,12 @@ NS_IMETHODIMP nsDeviceContextSpecX::PrintManagerOpen(PRBool* aIsOpen)
  */
 NS_IMETHODIMP nsDeviceContextSpecX::ClosePrintManager()
 {
-    if (mPrintSettings != kPMNoPrintSettings)
-        ::PMRelease(&mPrintSettings);
-    if (mPageFormat != kPMNoPageFormat)
-        ::PMRelease(&mPageFormat);
-    if (mPrintSession)
-        ::PMRelease(&mPrintSession);
+  if (mPrintSettings != kPMNoPrintSettings)
+    ::PMRelease(mPrintSettings);
+  if (mPageFormat != kPMNoPageFormat)
+    ::PMRelease(mPageFormat);
+  if (mPrintSession)
+    ::PMRelease(mPrintSession);
 	return NS_OK;
 }  
 

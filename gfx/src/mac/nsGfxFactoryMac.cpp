@@ -42,9 +42,7 @@
 #include "nsScreenManagerMac.h"
 #include "nsBlender.h"
 #include "nsCOMPtr.h"
-#if !TARGET_CARBON
 #include "nsPrintOptionsMac.h"
-#endif
 
 static NS_DEFINE_IID(kCFontMetrics, NS_FONT_METRICS_CID);
 static NS_DEFINE_IID(kCFontEnumerator, NS_FONT_ENUMERATOR_CID);
@@ -141,11 +139,9 @@ nsresult nsGfxFactoryMac::CreateInstance(nsISupports *aOuter,
 #endif
         inst = dcSpec;
 	}
-#if !TARGET_CARBON
   else if (mClassID.Equals(kCPrintOptions)) {
     NS_NEWXPCOM(inst, nsPrintOptionsMac);
   }
-#endif
  	else if (mClassID.Equals(kCDeviceContextSpecFactory)) {
 		NS_NEWXPCOM(inst, nsDeviceContextSpecFactoryMac);
 	}
