@@ -825,7 +825,7 @@ nsFtpConnectionThread::S_user() {
             nsAutoString realm = NS_ConvertToString(host);                   // XXX i18n 
             rv = proxyprompter->PromptUsernameAndPassword(nsnull,
                                                           message.GetUnicode(),
-                                                          realm.GetUnicode(), PR_FALSE,
+                                                          realm.GetUnicode(), nsIPrompt::SAVE_PASSWORD_PERMANENTLY,
                                                           &user, &passwd, &retval);
 
             // if the user canceled or didn't supply a username we want to fail
@@ -910,7 +910,8 @@ nsFtpConnectionThread::S_pass() {
             rv = proxyprompter->PromptPassword(title.GetUnicode(),
                                                message.GetUnicode(),
                                                NS_ConvertASCIItoUCS2(prePath).GetUnicode(), 
-                                               PR_FALSE, &passwd, &retval);
+                                               nsIPrompt::SAVE_PASSWORD_PERMANENTLY,
+                                               &passwd, &retval);
 
             // we want to fail if the user canceled or didn't enter a password.
             if (!retval || (passwd && !*passwd) )
