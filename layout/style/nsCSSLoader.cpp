@@ -1619,17 +1619,17 @@ nsresult CSSLoaderImpl::SetCharset(/*in*/ const nsString &aHTTPHeader,
   if (aHTTPHeader.Length() > 0) {
     // check if it has the charset= parameter
     PRInt32 charsetOffset;
-    static const char* charsetStr = "charset=";
+    static const char charsetStr[] = "charset=";
     if ((charsetOffset = aHTTPHeader.Find(charsetStr,PR_TRUE)) > 0) {
-      aHTTPHeader.Mid(str, charsetOffset + sizeof(charsetStr), -1);
+      aHTTPHeader.Mid(str, charsetOffset + sizeof(charsetStr)-1, -1);
       setCharset = PR_TRUE;
     }
   } else if (aStyleSheetData.Length() > 0) {
-    static const char* atCharsetStr = "@charset";
+    static const char atCharsetStr[] = "@charset";
     if (aStyleSheetData.Find(atCharsetStr) > -1) {
       nsString strValue;
       // skip past the ident
-      aStyleSheetData.Mid(str,sizeof(atCharsetStr),-1);
+      aStyleSheetData.Mid(str,sizeof(atCharsetStr)-1,-1);
       // strip any whitespace
       str.StripWhitespace();
       // truncate everything past the delimiter (semicolon)
