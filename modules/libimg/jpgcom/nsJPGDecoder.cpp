@@ -50,7 +50,7 @@ class JPGDecoder : public nsIImgDecoder
 {
 public:
   JPGDecoder(il_container* aContainer);
-  ~JPGDecoder();
+  virtual ~JPGDecoder();
  
   NS_DECL_ISUPPORTS
 
@@ -159,7 +159,7 @@ public:
   NS_DECL_ISUPPORTS
 
   nsJPGDecFactory(const nsCID &aClass);
-  ~nsJPGDecFactory();
+  virtual ~nsJPGDecFactory();
 
   NS_IMETHOD CreateInstance(nsISupports *aOuter,
                             REFNSIID aIID,

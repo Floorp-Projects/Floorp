@@ -47,7 +47,7 @@ public:
   il_container *SetContainer(il_container *ic) {mContainer=ic; return ic;};
 
   JPGCallbk(il_container *aContainer){mContainer=aContainer;};
-  ~JPGCallbk() {};	// XXX Pam needs to fix this
+  virtual ~JPGCallbk() {};	// XXX Pam needs to fix this
 
 private:
   il_container* mContainer;

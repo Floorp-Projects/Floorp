@@ -50,7 +50,7 @@ class PNGDecoder : public nsIImgDecoder
 {
 public:
   PNGDecoder(il_container* aContainer);
-  ~PNGDecoder();
+  virtual ~PNGDecoder();
  
   NS_DECL_ISUPPORTS
 
@@ -111,7 +111,7 @@ public:
   NS_DECL_ISUPPORTS
 
   nsPNGDecFactory(const nsCID &aClass);
-  ~nsPNGDecFactory();
+  virtual ~nsPNGDecFactory();
 
   NS_IMETHOD CreateInstance(nsISupports *aOuter,
                             REFNSIID aIID,
