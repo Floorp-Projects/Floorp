@@ -31,6 +31,8 @@
 
 */
 
+#include "nsString.h"
+
 #include "nsIControllers.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMXULCommandDispatcher.h"
@@ -39,12 +41,28 @@
 //----------------------------------------------------------------------
 
 nsXULControllers::nsXULControllers()
+: mCurControllerID(0)
 {
 	NS_INIT_REFCNT();
 }
 
 nsXULControllers::~nsXULControllers(void)
 {
+  DeleteControllers();
+}
+
+void
+nsXULControllers::DeleteControllers()
+{
+  PRUint32 count = mControllers.Count();
+  for (PRUint32 i = 0; i < count; i++)
+  {
+    nsXULControllerData*  controllerData = NS_STATIC_CAST(nsXULControllerData*, mControllers.ElementAt(i));
+    if (controllerData)
+      delete controllerData;    // releases the nsIController
+  }
+  
+  mControllers.Clear();
 }
 
 
@@ -87,53 +105,59 @@ nsXULControllers::SetCommandDispatcher(nsIDOMXULCommandDispatcher* aCommandDispa
 }
 
 NS_IMETHODIMP
-nsXULControllers::GetControllerForCommand(const PRUnichar *command, nsIController** _retval)
+nsXULControllers::GetControllerForCommand(const PRUnichar *aCommand, nsIController** _retval)
 {
+  NS_ENSURE_ARG_POINTER(_retval);
     *_retval = nsnull;
-    if(!mControllers) 
-        return NS_OK;
 
-    PRUint32 count;
-    mControllers->Count(&count);
-    for(PRUint32 i=0; i < count; i++) {
+  PRUint32 count = mControllers.Count();
+  for (PRUint32 i=0; i < count; i++)
+  {
+    nsXULControllerData*  controllerData = NS_STATIC_CAST(nsXULControllerData*, mControllers.ElementAt(i));
+    if (controllerData)
+    {
         nsCOMPtr<nsIController> controller;
-        mControllers->QueryElementAt(i, NS_GET_IID(nsIController), getter_AddRefs(controller));
-        if( controller ) {
+      controllerData->GetController(getter_AddRefs(controller));
+      if (controller)
+      {
             PRBool supportsCommand;
-            controller->SupportsCommand(command, &supportsCommand);
-            if(supportsCommand) {
+        controller->SupportsCommand(aCommand, &supportsCommand);
+        if (supportsCommand) {
                 *_retval = controller;
                 NS_ADDREF(*_retval);
                 return NS_OK;
             }
         }
     }
+  }
+  
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsXULControllers::InsertControllerAt(PRUint32 index, nsIController *controller)
 {
-    if(! mControllers ) {
-        nsresult rv;
-        rv = NS_NewISupportsArray(getter_AddRefs(mControllers));
-        if (NS_FAILED(rv)) return rv;
-    }
-
-    mControllers->InsertElementAt(controller, index);
+  nsXULControllerData*  controllerData = new nsXULControllerData(mCurControllerID++, controller);
+  if (!controllerData) return NS_ERROR_OUT_OF_MEMORY;
+  PRBool  inserted = mControllers.InsertElementAt((void *)controllerData, index);
+  NS_ASSERTION(inserted, "Insertion of controller failed");
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsXULControllers::RemoveControllerAt(PRUint32 index, nsIController **_retval)
 {
-    if(mControllers) {
-        nsresult rv = mControllers->QueryElementAt(index, NS_GET_IID(nsIController), (void**)_retval);
-        if (NS_SUCCEEDED(rv) && *_retval)
-           mControllers->RemoveElementAt(index);  
-    } else
+  NS_ENSURE_ARG_POINTER(_retval);
         *_retval = nsnull;
+  nsXULControllerData*  controllerData = NS_STATIC_CAST(nsXULControllerData*, mControllers.ElementAt(index));
+  if (!controllerData) return NS_ERROR_FAILURE;
+  
+  PRBool removed = mControllers.RemoveElementAt(index);
+  NS_ASSERTION(removed, "Removal of controller failed");
     
+  controllerData->GetController(getter_AddRefs(_retval));
+  delete controllerData;
+  
     return NS_OK;
 }
 
@@ -141,44 +165,95 @@ nsXULControllers::RemoveControllerAt(PRUint32 index, nsIController **_retval)
 NS_IMETHODIMP
 nsXULControllers::GetControllerAt(PRUint32 index, nsIController **_retval)
 {
-    if(mControllers)
-        mControllers->QueryElementAt(index, NS_GET_IID(nsIController), (void**)_retval);
-    else 
+  NS_ENSURE_ARG_POINTER(_retval);
         *_retval = nsnull;
-    return NS_OK;
+
+  nsXULControllerData*  controllerData = NS_STATIC_CAST(nsXULControllerData*, mControllers.ElementAt(index));
+  if (!controllerData) return NS_ERROR_FAILURE;
+
+  return controllerData->GetController(_retval);   // does the addref  
 }
 
 NS_IMETHODIMP
 nsXULControllers::AppendController(nsIController *controller)
 {
-    if(! mControllers ) {
-        nsresult rv;
-        rv = NS_NewISupportsArray(getter_AddRefs(mControllers));
-        if (NS_FAILED(rv)) return rv;
-    }
-     
-    mControllers->AppendElement(controller);
+  nsXULControllerData*  controllerData = new nsXULControllerData(mCurControllerID++, controller);
+  if (!controllerData) return NS_ERROR_OUT_OF_MEMORY;
+  PRBool  appended = mControllers.AppendElement((void *)controllerData);
+  NS_ASSERTION(appended, "Appending controller failed");
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsXULControllers::RemoveController(nsIController *controller)
 {
-    if(mControllers) {
-        nsCOMPtr<nsISupports> supports = do_QueryInterface(controller);
-        mControllers->RemoveElement(supports);  
+  // first find it
+  PRUint32 count = mControllers.Count();
+  for (PRUint32 i = 0; i < count; i++)
+  {
+    nsXULControllerData*  controllerData = NS_STATIC_CAST(nsXULControllerData*, mControllers.ElementAt(i));
+    if (controllerData)
+    {
+      nsCOMPtr<nsIController> thisController;
+      controllerData->GetController(getter_AddRefs(thisController));
+      if (thisController.get() == controller)
+      {
+        mControllers.RemoveElementAt(i);
+        delete controllerData;
+        return NS_OK;
+      }
     }
+  }
+  return NS_ERROR_FAILURE;      // right thing to return if no controller found?
+}
     
+/* unsigned long getControllerId (in nsIController controller); */
+NS_IMETHODIMP
+nsXULControllers::GetControllerId(nsIController *controller, PRUint32 *_retval)
+{
+  NS_ENSURE_ARG_POINTER(_retval);
+
+  PRUint32 count = mControllers.Count();
+  for (PRUint32 i = 0; i < count; i++)
+  {
+    nsXULControllerData*  controllerData = NS_STATIC_CAST(nsXULControllerData*, mControllers.ElementAt(i));
+    if (controllerData)
+    {
+      nsCOMPtr<nsIController> thisController;
+      controllerData->GetController(getter_AddRefs(thisController));
+      if (thisController.get() == controller)
+      {
+        *_retval = controllerData->GetControllerID();
     return NS_OK;
+      }
+    }
+  }
+  return NS_ERROR_FAILURE;  // none found
+}
+
+/* nsIController getControlleryById (in unsigned long controllerID); */
+NS_IMETHODIMP
+nsXULControllers::GetControlleryById(PRUint32 controllerID, nsIController **_retval)
+{
+  NS_ENSURE_ARG_POINTER(_retval);
+    
+  PRUint32 count = mControllers.Count();
+  for (PRUint32 i = 0; i < count; i++)
+  {
+    nsXULControllerData*  controllerData = NS_STATIC_CAST(nsXULControllerData*, mControllers.ElementAt(i));
+    if (controllerData && controllerData->GetControllerID() == controllerID)
+    {
+      return controllerData->GetController(_retval);
+    }
+  }
+  return NS_ERROR_FAILURE;  // none found
 }
 
 NS_IMETHODIMP
 nsXULControllers::GetControllerCount(PRUint32 *_retval)
 {
-    *_retval = 0;
-    if(mControllers) 
-        mControllers->Count(_retval);
-    
+  NS_ENSURE_ARG_POINTER(_retval);
+  *_retval = mControllers.Count();
     return NS_OK;
 }
 

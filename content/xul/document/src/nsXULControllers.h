@@ -33,11 +33,40 @@
 #define nsXULControllers_h__
 
 #include "nsCOMPtr.h"
+#include "nsVoidArray.h"
 #include "nsWeakPtr.h"
 #include "nsIControllers.h"
 #include "nsISupportsArray.h"
 
 class nsIDOMXULCommandDispatcher;
+
+
+/* non-XPCOM class for holding controllers and their IDs */
+class nsXULControllerData
+{
+public:
+                            nsXULControllerData(PRUint32 inControllerID, nsIController* inController)
+                            : mControllerID(inControllerID)
+                            , mController(inController)
+                            {                            
+                            }
+
+                            ~nsXULControllerData() {}
+
+    PRUint32                GetControllerID()   { return mControllerID; }
+
+    nsresult                GetController(nsIController **outController)
+                            {
+                              NS_IF_ADDREF(*outController = mController);
+                              return NS_OK;
+                            }
+    
+protected:
+
+    PRUint32                mControllerID;
+    nsCOMPtr<nsIController> mController;
+};
+
 
 class nsXULControllers : public nsIControllers
 {
@@ -53,8 +82,11 @@ protected:
     nsXULControllers();
     virtual ~nsXULControllers(void);
 
-    nsCOMPtr<nsISupportsArray> mControllers;
+    void        DeleteControllers();
+
+    nsVoidArray mControllers;
     nsWeakPtr mCommandDispatcher;
+    PRUint32    mCurControllerID;
 };
 
 
