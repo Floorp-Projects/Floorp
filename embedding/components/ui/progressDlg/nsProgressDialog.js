@@ -586,8 +586,7 @@ nsProgressDialog.prototype = {
                 }
 
                 // Disable the Pause/Resume buttons.
-                this.dialogElement( "pause" ).disabled = true;
-                this.dialogElement( "resume" ).disabled = true;
+                this.dialogElement( "pauseResume" ).disabled = true;
 
                 // Fix up dialog layout (which gets messed up sometimes).
                 this.dialog.sizeToContent();
@@ -611,10 +610,8 @@ nsProgressDialog.prototype = {
     setPaused: function( pausing ) {
         // If state changing, then update stuff.
         if ( this.paused != pausing ) {
-            // Set selected index:
-            //   Going from active state to paused: 2 -> "resume"
-            //   Going from initial or paused state to active:  1 -> "pause"
-            this.dialogElement( "pauseResume" ).selectedIndex = pausing ? 2 : 1;
+            var string = pausing ? "resume" : "pause";
+            this.dialogElement( "pauseResume" ).label = this.getString(string);
 
             // If we have a request, suspend/resume it.
             if ( this.request ) {
@@ -642,7 +639,7 @@ nsProgressDialog.prototype = {
             try {
                 ftpChannel = aRequest.QueryInterface( Components.interfaces.nsIFTPChannel );
                 if ( ftpChannel ) {
-                    this.dialogElement("pauseResume").selectedIndex = 1;
+                    this.dialogElement("pauseResume").label = this.getString("pause");
                     this.paused = false;
                 }
             } catch ( e ) {
