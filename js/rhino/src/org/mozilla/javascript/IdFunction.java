@@ -39,20 +39,14 @@ package org.mozilla.javascript;
 
 public class IdFunction extends BaseFunction
 {
-    public IdFunction(IdFunctionMaster master, String name, int id)
+    public IdFunction(IdFunctionMaster master, Object tag, int id,
+                      String name, int arity)
     {
         this.functionName = name;
-        this.tag = null;
         this.master = master;
-        this.methodId = id;
-    }
-
-    public IdFunction(Object tag, IdFunctionMaster master, String name, int id)
-    {
         this.tag = tag;
-        this.functionName = name;
-        this.master = master;
         this.methodId = id;
+        this.arity = arity;
     }
 
     public final boolean hasTag(Object tag)
@@ -138,7 +132,7 @@ public class IdFunction extends BaseFunction
 
     public int getArity()
     {
-        return master.methodArity(this);
+        return arity;
     }
 
     public int getLength() { return getArity(); }
@@ -161,8 +155,9 @@ public class IdFunction extends BaseFunction
         return new RuntimeException("BAD FUNCTION ID="+methodId+" MASTER="+master);
     }
 
-    private final Object tag;
     private final IdFunctionMaster master;
+    private final Object tag;
     public final int methodId;
+    private int arity;
     private boolean useCallAsConstructor;
 }

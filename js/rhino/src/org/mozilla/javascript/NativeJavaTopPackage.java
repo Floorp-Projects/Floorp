@@ -117,8 +117,8 @@ public class NativeJavaTopPackage
         }
 
         // getClass implementation
-        IdFunction
-            getClass = new IdFunction(FTAG, top, "getClass", Id_getClass);
+        IdFunction getClass = new IdFunction(top, FTAG, Id_getClass,
+                                             "getClass", 1);
 
         // We want to get a real alias, and not a distinct JavaPackage
         // with the same packageName, so that we share classes and top
@@ -140,16 +140,6 @@ public class NativeJavaTopPackage
         if (f.hasTag(FTAG)) {
             if (f.methodId == Id_getClass) {
                 return js_getClass(cx, scope, args);
-            }
-        }
-        throw f.unknown();
-    }
-
-    public int methodArity(IdFunction f)
-    {
-        if (f.hasTag(FTAG)) {
-            if (f.methodId == Id_getClass) {
-                return 1;
             }
         }
         throw f.unknown();

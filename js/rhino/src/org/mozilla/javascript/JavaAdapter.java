@@ -168,7 +168,8 @@ public final class JavaAdapter implements IdFunctionMaster
     public static void init(Context cx, Scriptable scope, boolean sealed)
     {
         JavaAdapter obj = new JavaAdapter();
-        IdFunction f = new IdFunction(FTAG, obj, "JavaAdapter", Id_JavaAdapter);
+        IdFunction f = new IdFunction(obj, FTAG, Id_JavaAdapter,
+                                      "JavaAdapter", 1);
         f.enableConstructorUsage();
         f.defineAsScopeProperty(scope, sealed);
     }
@@ -179,16 +180,6 @@ public final class JavaAdapter implements IdFunctionMaster
         if (f.hasTag(FTAG)) {
             if (f.methodId == Id_JavaAdapter) {
                 return js_createAdpter(cx, scope, args);
-            }
-        }
-        throw f.unknown();
-    }
-
-    public int methodArity(IdFunction f)
-    {
-        if (f.hasTag(FTAG)) {
-            if (f.methodId == Id_JavaAdapter) {
-                return 1;
             }
         }
         throw f.unknown();

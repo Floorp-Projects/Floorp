@@ -147,12 +147,6 @@ final class NativeCallPrototype extends IdScriptable
         return "Call";
     }
 
-    public int methodArity(IdFunction f)
-    {
-        if (f.methodId == Id_constructor) return 1;
-        return super.methodArity(f);
-    }
-
     public Object execMethod(IdFunction f, Context cx, Scriptable scope,
                              Scriptable thisObj, Object[] args)
     {
@@ -172,6 +166,12 @@ final class NativeCallPrototype extends IdScriptable
     {
         if (id == Id_constructor) return "constructor";
         return null;
+    }
+
+    protected int methodArity(int methodId)
+    {
+        if (methodId == Id_constructor) return 1;
+        return super.methodArity(methodId);
     }
 
     protected int mapNameToId(String s)

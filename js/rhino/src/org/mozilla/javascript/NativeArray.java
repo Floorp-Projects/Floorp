@@ -125,29 +125,6 @@ public class NativeArray extends IdScriptable {
         super.setIdValue(id, value);
     }
 
-    public int methodArity(IdFunction f)
-    {
-        if (prototypeFlag) {
-            switch (f.methodId) {
-                case Id_constructor:     return 1;
-                case Id_toString:        return 0;
-                case Id_toLocaleString:  return 1;
-                case Id_toSource:        return 0;
-                case Id_join:            return 1;
-                case Id_reverse:         return 0;
-                case Id_sort:            return 1;
-                case Id_push:            return 1;
-                case Id_pop:             return 1;
-                case Id_shift:           return 1;
-                case Id_unshift:         return 1;
-                case Id_splice:          return 1;
-                case Id_concat:          return 1;
-                case Id_slice:           return 1;
-            }
-        }
-        return super.methodArity(f);
-    }
-
     public Object execMethod(IdFunction f, Context cx, Scriptable scope,
                              Scriptable thisObj, Object[] args)
     {
@@ -1134,6 +1111,29 @@ public class NativeArray extends IdScriptable {
             }
         }
         return null;
+    }
+
+    protected int methodArity(int methodId)
+    {
+        if (prototypeFlag) {
+            switch (methodId) {
+                case Id_constructor:     return 1;
+                case Id_toString:        return 0;
+                case Id_toLocaleString:  return 1;
+                case Id_toSource:        return 0;
+                case Id_join:            return 1;
+                case Id_reverse:         return 0;
+                case Id_sort:            return 1;
+                case Id_push:            return 1;
+                case Id_pop:             return 1;
+                case Id_shift:           return 1;
+                case Id_unshift:         return 1;
+                case Id_splice:          return 1;
+                case Id_concat:          return 1;
+                case Id_slice:           return 1;
+            }
+        }
+        return super.methodArity(methodId);
     }
 
     private static final int

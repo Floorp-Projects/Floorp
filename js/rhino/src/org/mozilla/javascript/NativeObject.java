@@ -72,21 +72,6 @@ final class NativeObjectPrototype extends NativeObject
         addAsPrototype(MAX_PROTOTYPE_ID, cx, scope, sealed);
     }
 
-    public int methodArity(IdFunction f)
-    {
-        switch (f.methodId) {
-            case Id_constructor:           return 1;
-            case Id_toString:              return 0;
-            case Id_toLocaleString:        return 0;
-            case Id_valueOf:               return 0;
-            case Id_hasOwnProperty:        return 1;
-            case Id_propertyIsEnumerable:  return 1;
-            case Id_isPrototypeOf:         return 1;
-            case Id_toSource:              return 0;
-        }
-        return super.methodArity(f);
-    }
-
     public Object execMethod(IdFunction f, Context cx, Scriptable scope,
                              Scriptable thisObj, Object[] args)
     {
@@ -242,6 +227,21 @@ final class NativeObjectPrototype extends NativeObject
             case Id_toSource:             return "toSource";
         }
         return null;
+    }
+
+    protected int methodArity(int methodId)
+    {
+        switch (methodId) {
+            case Id_constructor:           return 1;
+            case Id_toString:              return 0;
+            case Id_toLocaleString:        return 0;
+            case Id_valueOf:               return 0;
+            case Id_hasOwnProperty:        return 1;
+            case Id_propertyIsEnumerable:  return 1;
+            case Id_isPrototypeOf:         return 1;
+            case Id_toSource:              return 0;
+        }
+        return super.methodArity(methodId);
     }
 
 // #string_id_map#

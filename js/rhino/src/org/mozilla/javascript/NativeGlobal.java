@@ -57,23 +57,49 @@ public class NativeGlobal implements Serializable, IdFunctionMaster
 
         for (int id = 1; id <= LAST_SCOPE_FUNCTION_ID; ++id) {
             String name;
+            int arity = 1;
             switch (id) {
-                case Id_decodeURI:          name = "decodeURI";          break;
-                case Id_decodeURIComponent: name = "decodeURIComponent"; break;
-                case Id_encodeURI:          name = "encodeURI";          break;
-                case Id_encodeURIComponent: name = "encodeURIComponent"; break;
-                case Id_escape:             name = "escape";             break;
-                case Id_eval:               name = "eval";               break;
-                case Id_isFinite:           name = "isFinite";           break;
-                case Id_isNaN:              name = "isNaN";              break;
-                case Id_parseFloat:         name = "parseFloat";         break;
-                case Id_parseInt:           name = "parseInt";           break;
-                case Id_unescape:           name = "unescape";           break;
-                case Id_uneval:             name = "uneval";             break;
-                default:
-                    Kit.codeBug(); name = null;
+              case Id_decodeURI:
+                name = "decodeURI";
+                break;
+              case Id_decodeURIComponent:
+                name = "decodeURIComponent";
+                break;
+              case Id_encodeURI:
+                name = "encodeURI";
+                break;
+              case Id_encodeURIComponent:
+                name = "encodeURIComponent";
+                break;
+              case Id_escape:
+                name = "escape";
+                break;
+              case Id_eval:
+                name = "eval";
+                break;
+              case Id_isFinite:
+                name = "isFinite";
+                break;
+              case Id_isNaN:
+                name = "isNaN";
+                break;
+              case Id_parseFloat:
+                name = "parseFloat";
+                break;
+              case Id_parseInt:
+                name = "parseInt";
+                arity = 2;
+                break;
+              case Id_unescape:
+                name = "unescape";
+                break;
+              case Id_uneval:
+                name = "uneval";
+                break;
+              default:
+                  throw Kit.codeBug();
             }
-            IdFunction f = new IdFunction(FTAG, obj, name, id);
+            IdFunction f = new IdFunction(obj, FTAG, id, name, arity);
             f.defineAsScopeProperty(scope, sealed);
         }
 
@@ -109,8 +135,8 @@ public class NativeGlobal implements Serializable, IdFunctionMaster
                                         newObject(cx, scope, "Error",
                                                   ScriptRuntime.emptyArgs);
             errorProto.put("name", errorProto, name);
-            IdFunction ctor = new IdFunction(FTAG, obj, name,
-                                             Id_new_CommonError);
+            IdFunction ctor = new IdFunction(obj, FTAG, Id_new_CommonError,
+                                             name, 1);
             ctor.initAsConstructor(scope, errorProto);
             if (sealed) {
                 ctor.sealObject();
@@ -184,29 +210,6 @@ public class NativeGlobal implements Serializable, IdFunctionMaster
                     // The implementation of all the ECMA error constructors
                     // (SyntaxError, TypeError, etc.)
                     return NativeError.make(cx, scope, f, args);
-            }
-        }
-        throw f.unknown();
-    }
-
-    public int methodArity(IdFunction f)
-    {
-        if (f.hasTag(FTAG)) {
-            switch (f.methodId) {
-                case Id_decodeURI:           return 1;
-                case Id_decodeURIComponent:  return 1;
-                case Id_encodeURI:           return 1;
-                case Id_encodeURIComponent:  return 1;
-                case Id_escape:              return 1;
-                case Id_eval:                return 1;
-                case Id_isFinite:            return 1;
-                case Id_isNaN:               return 1;
-                case Id_parseFloat:          return 1;
-                case Id_parseInt:            return 2;
-                case Id_unescape:            return 1;
-                case Id_uneval:              return 1;
-
-                case Id_new_CommonError:     return 1;
             }
         }
         throw f.unknown();

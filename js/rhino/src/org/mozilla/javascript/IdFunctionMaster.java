@@ -48,10 +48,5 @@ public interface IdFunctionMaster
     public Object execMethod(IdFunction f, Context cx, Scriptable scope,
                              Scriptable thisObj, Object[] args);
 
-    /**
-     * Get arity or defined argument count for the given {@link IdFunction}
-     * instance.
-     */
-    public int methodArity(IdFunction f);
 }
 

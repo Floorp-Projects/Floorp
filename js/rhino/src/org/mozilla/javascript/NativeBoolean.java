@@ -66,19 +66,6 @@ final class NativeBoolean extends IdScriptable {
         return super.getDefaultValue(typeHint);
     }
 
-    public int methodArity(IdFunction f)
-    {
-        if (prototypeFlag) {
-            switch (f.methodId) {
-              case Id_constructor: return 1;
-              case Id_toString:    return 0;
-              case Id_toSource:    return 0;
-              case Id_valueOf:     return 0;
-            }
-        }
-        return super.methodArity(f);
-    }
-
     public Object execMethod(IdFunction f, Context cx, Scriptable scope,
                              Scriptable thisObj, Object[] args)
     {
@@ -128,6 +115,19 @@ final class NativeBoolean extends IdScriptable {
             }
         }
         return null;
+    }
+
+    protected int methodArity(int methodId)
+    {
+        if (prototypeFlag) {
+            switch (methodId) {
+              case Id_constructor: return 1;
+              case Id_toString:    return 0;
+              case Id_toSource:    return 0;
+              case Id_valueOf:     return 0;
+            }
+        }
+        return super.methodArity(methodId);
     }
 
 // #string_id_map#

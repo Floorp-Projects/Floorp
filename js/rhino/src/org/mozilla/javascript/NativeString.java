@@ -88,10 +88,10 @@ final class NativeString extends IdScriptable {
         return super.getIdValue(id);
     }
 
-    public int methodArity(IdFunction f)
+    protected int methodArity(int methodId)
     {
         if (prototypeFlag) {
-            switch (f.methodId) {
+            switch (methodId) {
                 case ConstructorId_fromCharCode:   return 1;
 
                 case Id_constructor:               return 1;
@@ -129,7 +129,7 @@ final class NativeString extends IdScriptable {
                 case Id_replace:                   return 1;
             }
         }
-        return super.methodArity(f);
+        return super.methodArity(methodId);
     }
 
     public Object execMethod(IdFunction f, Context cx, Scriptable scope,

@@ -378,14 +378,13 @@ public abstract class IdScriptable extends ScriptableObject
     }
 
     /**
-     * Get arity or defined argument count for the given {@link IdFunction}
-     * instance.
+     * Get arity or defined argument count for the given function id.
      * If subclass overrides ths method, it should always calls
-     * <tt>super.methodArity(f)</tt> for unknown functions.
+     * <tt>super.methodArity(id)</tt> for unknown functions.
      */
-    public int methodArity(IdFunction f)
+    protected int methodArity(int methodId)
     {
-        throw f.unknown();
+        throw new IllegalArgumentException(String.valueOf(methodId));
     }
 
     /** Get maximum id mapNameToId can generate */
@@ -489,7 +488,7 @@ public abstract class IdScriptable extends ScriptableObject
 
     protected IdFunction newIdFunction(String name, int id)
     {
-        IdFunction f = new IdFunction(this, name, id);
+        IdFunction f = new IdFunction(this, null, id, name, methodArity(id));
         if (isSealed()) { f.sealObject(); }
         return f;
     }

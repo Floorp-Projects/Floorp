@@ -97,63 +97,6 @@ final class NativeDate extends IdScriptable
         super.fillConstructorProperties(cx, ctor, sealed);
     }
 
-    public int methodArity(IdFunction f)
-    {
-        if (prototypeFlag) {
-            switch (f.methodId) {
-                case ConstructorId_now:     return 0;
-                case ConstructorId_parse:   return 1;
-                case ConstructorId_UTC:     return 1;
-                case Id_constructor:        return 1;
-                case Id_toString:           return 0;
-                case Id_toTimeString:       return 0;
-                case Id_toDateString:       return 0;
-                case Id_toLocaleString:     return 0;
-                case Id_toLocaleTimeString: return 0;
-                case Id_toLocaleDateString: return 0;
-                case Id_toUTCString:        return 0;
-                case Id_toSource:           return 0;
-                case Id_valueOf:            return 0;
-                case Id_getTime:            return 0;
-                case Id_getYear:            return 0;
-                case Id_getFullYear:        return 0;
-                case Id_getUTCFullYear:     return 0;
-                case Id_getMonth:           return 0;
-                case Id_getUTCMonth:        return 0;
-                case Id_getDate:            return 0;
-                case Id_getUTCDate:         return 0;
-                case Id_getDay:             return 0;
-                case Id_getUTCDay:          return 0;
-                case Id_getHours:           return 0;
-                case Id_getUTCHours:        return 0;
-                case Id_getMinutes:         return 0;
-                case Id_getUTCMinutes:      return 0;
-                case Id_getSeconds:         return 0;
-                case Id_getUTCSeconds:      return 0;
-                case Id_getMilliseconds:    return 0;
-                case Id_getUTCMilliseconds: return 0;
-                case Id_getTimezoneOffset:  return 0;
-                case Id_setTime:            return 1;
-                case Id_setMilliseconds:    return 1;
-                case Id_setUTCMilliseconds: return 1;
-                case Id_setSeconds:         return 2;
-                case Id_setUTCSeconds:      return 2;
-                case Id_setMinutes:         return 3;
-                case Id_setUTCMinutes:      return 3;
-                case Id_setHours:           return 4;
-                case Id_setUTCHours:        return 4;
-                case Id_setDate:            return 1;
-                case Id_setUTCDate:         return 1;
-                case Id_setMonth:           return 2;
-                case Id_setUTCMonth:        return 2;
-                case Id_setFullYear:        return 3;
-                case Id_setUTCFullYear:     return 3;
-                case Id_setYear:            return 1;
-            }
-        }
-        return super.methodArity(f);
-    }
-
     public Object execMethod(IdFunction f, Context cx, Scriptable scope,
                              Scriptable thisObj, Object[] args)
     {
@@ -1531,6 +1474,63 @@ final class NativeDate extends IdScriptable
             }
         }
         return null;
+    }
+
+    protected int methodArity(int methodId)
+    {
+        if (prototypeFlag) {
+            switch (methodId) {
+                case ConstructorId_now:     return 0;
+                case ConstructorId_parse:   return 1;
+                case ConstructorId_UTC:     return 1;
+                case Id_constructor:        return 1;
+                case Id_toString:           return 0;
+                case Id_toTimeString:       return 0;
+                case Id_toDateString:       return 0;
+                case Id_toLocaleString:     return 0;
+                case Id_toLocaleTimeString: return 0;
+                case Id_toLocaleDateString: return 0;
+                case Id_toUTCString:        return 0;
+                case Id_toSource:           return 0;
+                case Id_valueOf:            return 0;
+                case Id_getTime:            return 0;
+                case Id_getYear:            return 0;
+                case Id_getFullYear:        return 0;
+                case Id_getUTCFullYear:     return 0;
+                case Id_getMonth:           return 0;
+                case Id_getUTCMonth:        return 0;
+                case Id_getDate:            return 0;
+                case Id_getUTCDate:         return 0;
+                case Id_getDay:             return 0;
+                case Id_getUTCDay:          return 0;
+                case Id_getHours:           return 0;
+                case Id_getUTCHours:        return 0;
+                case Id_getMinutes:         return 0;
+                case Id_getUTCMinutes:      return 0;
+                case Id_getSeconds:         return 0;
+                case Id_getUTCSeconds:      return 0;
+                case Id_getMilliseconds:    return 0;
+                case Id_getUTCMilliseconds: return 0;
+                case Id_getTimezoneOffset:  return 0;
+                case Id_setTime:            return 1;
+                case Id_setMilliseconds:    return 1;
+                case Id_setUTCMilliseconds: return 1;
+                case Id_setSeconds:         return 2;
+                case Id_setUTCSeconds:      return 2;
+                case Id_setMinutes:         return 3;
+                case Id_setUTCMinutes:      return 3;
+                case Id_setHours:           return 4;
+                case Id_setUTCHours:        return 4;
+                case Id_setDate:            return 1;
+                case Id_setUTCDate:         return 1;
+                case Id_setMonth:           return 2;
+                case Id_setUTCMonth:        return 2;
+                case Id_setFullYear:        return 3;
+                case Id_setUTCFullYear:     return 3;
+                case Id_setYear:            return 1;
+            }
+        }
+        return super.methodArity(methodId);
     }
 
 // #string_id_map#

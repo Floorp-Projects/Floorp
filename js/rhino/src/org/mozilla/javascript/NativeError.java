@@ -81,18 +81,6 @@ final class NativeError extends IdScriptable
         return obj;
     }
 
-    public int methodArity(IdFunction f)
-    {
-        if (prototypeFlag) {
-            switch (f.methodId) {
-              case Id_constructor: return 1;
-              case Id_toString: return 0;
-              case Id_toSource: return 0;
-            }
-        }
-        return super.methodArity(f);
-    }
-
     public Object execMethod(IdFunction f, Context cx, Scriptable scope,
                              Scriptable thisObj, Object[] args)
     {
@@ -180,11 +168,25 @@ final class NativeError extends IdScriptable
     protected String getIdName(int id)
     {
         if (prototypeFlag) {
-            if (id == Id_constructor) return "constructor";
-            if (id == Id_toString) return "toString";
-            if (id == Id_toSource) return "toSource";
+            switch (id) {
+              case Id_constructor: return "constructor";
+              case Id_toString:    return "toString";
+              case Id_toSource:    return "toSource";
+            }
         }
         return null;
+    }
+
+    protected int methodArity(int methodId)
+    {
+        if (prototypeFlag) {
+            switch (methodId) {
+              case Id_constructor: return 1;
+              case Id_toString:    return 0;
+              case Id_toSource:    return 0;
+            }
+        }
+        return super.methodArity(methodId);
     }
 
     protected int mapNameToId(String s)

@@ -2621,21 +2621,6 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
         lastIndex = value;
     }
 
-    public int methodArity(IdFunction f)
-    {
-        if (prototypeFlag) {
-            switch (f.methodId) {
-                case Id_compile:  return 1;
-                case Id_toString: return 0;
-                case Id_toSource: return 0;
-                case Id_exec:     return 1;
-                case Id_test:     return 1;
-                case Id_prefix:   return 1;
-            }
-        }
-        return super.methodArity(f);
-    }
-
     public Object execMethod(IdFunction f, Context cx, Scriptable scope,
                              Scriptable thisObj, Object[] args)
     {
@@ -2691,6 +2676,21 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
             }
         }
         return null;
+    }
+
+    protected int methodArity(int methodId)
+    {
+        if (prototypeFlag) {
+            switch (methodId) {
+                case Id_compile:  return 1;
+                case Id_toString: return 0;
+                case Id_toSource: return 0;
+                case Id_exec:     return 1;
+                case Id_test:     return 1;
+                case Id_prefix:   return 1;
+            }
+        }
+        return super.methodArity(methodId);
     }
 
 // #string_id_map#

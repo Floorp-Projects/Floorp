@@ -84,32 +84,6 @@ final class NativeMath extends IdScriptable
         return super.getIdValue(id);
     }
 
-    public int methodArity(IdFunction f)
-    {
-        switch (f.methodId) {
-            case Id_toSource: return 0;
-            case Id_abs:      return 1;
-            case Id_acos:     return 1;
-            case Id_asin:     return 1;
-            case Id_atan:     return 1;
-            case Id_atan2:    return 2;
-            case Id_ceil:     return 1;
-            case Id_cos:      return 1;
-            case Id_exp:      return 1;
-            case Id_floor:    return 1;
-            case Id_log:      return 1;
-            case Id_max:      return 2;
-            case Id_min:      return 2;
-            case Id_pow:      return 2;
-            case Id_random:   return 0;
-            case Id_round:    return 1;
-            case Id_sin:      return 1;
-            case Id_sqrt:     return 1;
-            case Id_tan:      return 1;
-        }
-        return super.methodArity(f);
-    }
-
     public Object execMethod(IdFunction f, Context cx, Scriptable scope,
                              Scriptable thisObj, Object[] args)
     {
@@ -333,6 +307,32 @@ final class NativeMath extends IdScriptable
             case Id_SQRT2:    return "SQRT2";
         }
         return null;
+    }
+
+    protected int methodArity(int methodId)
+    {
+        switch (methodId) {
+            case Id_toSource: return 0;
+            case Id_abs:      return 1;
+            case Id_acos:     return 1;
+            case Id_asin:     return 1;
+            case Id_atan:     return 1;
+            case Id_atan2:    return 2;
+            case Id_ceil:     return 1;
+            case Id_cos:      return 1;
+            case Id_exp:      return 1;
+            case Id_floor:    return 1;
+            case Id_log:      return 1;
+            case Id_max:      return 2;
+            case Id_min:      return 2;
+            case Id_pow:      return 2;
+            case Id_random:   return 0;
+            case Id_round:    return 1;
+            case Id_sin:      return 1;
+            case Id_sqrt:     return 1;
+            case Id_tan:      return 1;
+        }
+        return super.methodArity(methodId);
     }
 
 // #string_id_map#

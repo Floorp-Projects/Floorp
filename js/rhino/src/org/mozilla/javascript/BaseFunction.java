@@ -155,20 +155,6 @@ public class BaseFunction extends IdScriptable implements Function {
         super.deleteIdValue(id);
     }
 
-    public int methodArity(IdFunction f)
-    {
-        if (prototypeFlag) {
-            switch (f.methodId) {
-                case Id_constructor: return 1;
-                case Id_toString:    return 1;
-                case Id_toSource:    return 1;
-                case Id_apply:       return 2;
-                case Id_call:        return 1;
-            }
-        }
-        return super.methodArity(f);
-    }
-
     public Object execMethod(IdFunction f, Context cx, Scriptable scope,
                              Scriptable thisObj, Object[] args)
     {
@@ -528,6 +514,20 @@ public class BaseFunction extends IdScriptable implements Function {
             }
         }
         return null;
+    }
+
+    protected int methodArity(int methodId)
+    {
+        if (prototypeFlag) {
+            switch (methodId) {
+                case Id_constructor: return 1;
+                case Id_toString:    return 1;
+                case Id_toSource:    return 1;
+                case Id_apply:       return 2;
+                case Id_call:        return 1;
+            }
+        }
+        return super.methodArity(methodId);
     }
 
 // #string_id_map#

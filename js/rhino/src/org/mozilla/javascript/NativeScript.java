@@ -126,19 +126,6 @@ class NativeScript extends NativeFunction implements Script
         return script == null ? Undefined.instance : script.exec(cx, scope);
     }
 
-    public int methodArity(IdFunction f)
-    {
-        if (0 <= prototypeIdShift) {
-            switch (f.methodId - prototypeIdShift) {
-                case Id_constructor: return 1;
-                case Id_toString:    return 0;
-                case Id_exec:        return 0;
-                case Id_compile:     return 1;
-            }
-        }
-        return super.methodArity(f);
-    }
-
     public Object execMethod(IdFunction f, Context cx, Scriptable scope,
                              Scriptable thisObj, Object[] args)
     {
@@ -206,6 +193,19 @@ class NativeScript extends NativeFunction implements Script
             }
         }
         return super.getIdName(id);
+    }
+
+    protected int methodArity(int methodId)
+    {
+        if (0 <= prototypeIdShift) {
+            switch (methodId - prototypeIdShift) {
+                case Id_constructor: return 1;
+                case Id_toString:    return 0;
+                case Id_exec:        return 0;
+                case Id_compile:     return 1;
+            }
+        }
+        return super.methodArity(methodId);
     }
 
     protected int mapNameToId(String s)
