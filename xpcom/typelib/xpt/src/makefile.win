@@ -21,12 +21,27 @@ MAKE_OBJ_TYPE	= DLL
 
 DEPTH=..\..\..
 
+LIBNAME = .\$(OBJDIR)\libxpt$(MOZ_BITS)
+DLL = $(LIBNAME).dll
+
+LCFLAGS = -DEXPORT_XPT_API -DWIN32_LEAN_AND_MEAN
+
+LINCS = \
+	-I$(PUBLIC)\libxpt	\
+	$(NULL)
+
 LLIBS	=	$(LIBNSPR)	\
 		$(NULL)
 
-CSRCS	=	xpt_struct.c	\
+CSRCS	=	\
+        xpt_struct.c	\
 		xpt_xdr.c	\
 		$(NULL)
+
+C_OBJS = \
+	.\$(OBJDIR)\xpt_struct.obj		\
+	.\$(OBJDIR)\xpt_xdr.obj		\
+	$(NULL)
 
 MODULE	= 	libxpt
 

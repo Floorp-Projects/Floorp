@@ -20,13 +20,13 @@
  * Basic APIs for streaming typelib structures to/from disk.
  */
 
+#ifndef __xpt_xdr_h__
+#define __xpt_xdr_h__
+
 #include <nspr.h>
 #include <plhash.h>
 #include <prmem.h>
 #include "xpt_struct.h"
-
-#ifndef __xpt_xdr_h__
-#define __xpt_xdr_h__
 
 PR_BEGIN_EXTERN_C
 
@@ -34,31 +34,31 @@ typedef struct XPTState         XPTState;
 typedef struct XPTDatapool      XPTDatapool;
 typedef struct XPTCursor        XPTCursor;
 
-PRBool
+extern XPT_PUBLIC_API(PRBool)
 XPT_DoString(XPTCursor *cursor, XPTString **strp);
 
-PRBool
+extern XPT_PUBLIC_API(PRBool)
 XPT_DoStringInline(XPTCursor *cursor, XPTString **strp);
 
-PRBool
+extern XPT_PUBLIC_API(PRBool)
 XPT_DoCString(XPTCursor *cursor, char **strp);
 
-PRBool
+extern XPT_PUBLIC_API(PRBool)
 XPT_DoIdentifier(XPTCursor *cursor, char **identp);
 
-PRBool
+extern XPT_PUBLIC_API(PRBool)
 XPT_DoIID(XPTCursor *cursor, nsID *iidp);
 
-PRBool
+extern XPT_PUBLIC_API(PRBool)
 XPT_Do64(XPTCursor *cursor, PRInt64 *u64p);
 
-PRBool
+extern XPT_PUBLIC_API(PRBool)
 XPT_Do32(XPTCursor *cursor, uint32 *u32p);
 
-PRBool
+extern XPT_PUBLIC_API(PRBool)
 XPT_Do16(XPTCursor *cursor, uint16 *u16p);
 
-PRBool
+extern XPT_PUBLIC_API(PRBool)
 XPT_Do8(XPTCursor *cursor, uint8 *u8p);
 
 /*
@@ -71,16 +71,16 @@ XPT_Do8(XPTCursor *cursor, uint8 *u8p);
  * anyway, and zeroing out the bits you don't use, but just to be sure...)
  */
 
-PRBool
+extern XPT_PUBLIC_API(PRBool)
 XPT_DoBits(XPTCursor *cursor, uint8 *u8p, int nbits);
 
 #define XPT_DO_BITS(curs, field, width, scr) (PR_TRUE)
 
 /* returns the number of bits skipped, which should be 0-7 */
-int
+extern XPT_PUBLIC_API(int)
 XPT_FlushBits(XPTCursor *cursor);
 
-PRBool
+extern XPT_PUBLIC_API(PRBool)
 XPT_DoHeader(XPTCursor *cursor, XPTHeader **headerp);
 
 typedef enum {
@@ -114,42 +114,42 @@ struct XPTCursor {
     uint8       bits;
 };
 
-XPTState *
+extern XPT_PUBLIC_API(XPTState *)
 XPT_NewXDRState(XPTMode mode, char *data, uint32 len);
 
-PRBool
+extern XPT_PUBLIC_API(PRBool)
 XPT_MakeCursor(XPTState *state, XPTPool pool, uint32 len, XPTCursor *cursor);
 
-PRBool
+extern XPT_PUBLIC_API(PRBool)
 XPT_SeekTo(XPTCursor *cursor, uint32 offset);
 
-void
+extern XPT_PUBLIC_API(void)
 XPT_DestroyXDRState(XPTState *state);
 
 /* Set file_length based on the data used in the state.  (Only ENCODE.) */
-PRBool
+extern XPT_PUBLIC_API(PRBool)
 XPT_UpdateFileLength(XPTState *state);
 
-void
+extern XPT_PUBLIC_API(void)
 XPT_GetXDRData(XPTState *state, XPTPool pool, char **data, uint32 *len);
 
 /* set or get the data offset for the state, depending on mode */
-void
+extern XPT_PUBLIC_API(void)
 XPT_DataOffset(XPTState *state, uint32 *data_offsetp);
 
-void
+extern XPT_PUBLIC_API(void)
 XPT_SetDataOffset(XPTState *state, uint32 data_offset);
 
-uint32
+extern XPT_PUBLIC_API(uint32)
 XPT_GetOffsetForAddr(XPTCursor *cursor, void *addr);
 
-PRBool
+extern XPT_PUBLIC_API(PRBool)
 XPT_SetOffsetForAddr(XPTCursor *cursor, void *addr, uint32 offset);
 
-PRBool
+extern XPT_PUBLIC_API(PRBool)
 XPT_SetAddrForOffset(XPTCursor *cursor, uint32 offset, void *addr);
 
-void *
+extern XPT_PUBLIC_API(void *)
 XPT_GetAddrForOffset(XPTCursor *cursor, uint32 offset);
 
 /* all data structures are big-endian */
@@ -182,9 +182,9 @@ XPT_GetAddrForOffset(XPTCursor *cursor, uint32 offset);
 #define XPT_PREAMBLE_(cursor, addrp, pool, size, new_curs, already)           \
     XPTMode mode = cursor->state->mode;                                       \
     if (!(mode == XPT_ENCODE || XPT_Do32(cursor, &new_curs.offset)) ||        \
-        !XPT_CheckForRepeat(cursor, (void **)addrp, pool,                     \
-                            mode == XPT_ENCODE ? size : 0, &new_curs,         \
-                            &already) ||                                      \
+        !CheckForRepeat(cursor, (void **)addrp, pool,                     \
+                        mode == XPT_ENCODE ? size : 0, &new_curs,         \
+                        &already) ||                                      \
         !(mode == XPT_DECODE || XPT_Do32(cursor, &new_curs.offset)))          \
         return PR_FALSE;                                                      \
     if (already)                                                              \

@@ -22,6 +22,11 @@
 #include <nspr.h>
 #include <string.h>             /* strchr */
 
+static PRBool
+CheckForRepeat(XPTCursor *cursor, void **addrp, XPTPool pool, int len,
+                   XPTCursor *new_cursor, PRBool *already);
+
+
 #define ENCODING(cursor)                                                      \
   ((cursor)->state->mode == XPT_ENCODE)
 
@@ -57,7 +62,7 @@
  /* if we're in the data area and we're about to exceed the allocation */     \
  (CURS_POOL_OFFSET(cursor) + (space) > (cursor)->state->pool->allocated ?     \
   /* then grow if we're in ENCODE mode */                                     \
-  (ENCODING(cursor) ? XPT_GrowPool((cursor)->state->pool)                     \
+  (ENCODING(cursor) ? GrowPool((cursor)->state->pool)                     \
    /* and fail if we're in DECODE mode */                                     \
    : (DBG(("can't extend in DECODE")), PR_FALSE))                             \
   /* otherwise we're OK */                                                    \
@@ -79,7 +84,7 @@ null_hash(const void *key)
     return (PLHashNumber)key;
 }
      
-XPTState *
+XPT_PUBLIC_API(XPTState *)
 XPT_NewXDRState(XPTMode mode, char *data, uint32 len)
 {
     XPTState *state;
@@ -122,7 +127,7 @@ XPT_NewXDRState(XPTMode mode, char *data, uint32 len)
     return NULL;
 }
 
-void
+XPT_PUBLIC_API(void)
 XPT_DestroyXDRState(XPTState *state)
 {
     if (state->mode == XPT_ENCODE)
@@ -131,7 +136,7 @@ XPT_DestroyXDRState(XPTState *state)
     PR_DELETE(state);
 }
 
-void
+XPT_PUBLIC_API(void)
 XPT_GetXDRData(XPTState *state, XPTPool pool, char **data, uint32 *len)
 {
     if (pool == XPT_HEADER) {
@@ -143,7 +148,7 @@ XPT_GetXDRData(XPTState *state, XPTPool pool, char **data, uint32 *len)
 }
 
 /* All offsets are 1-based */
-void
+XPT_PUBLIC_API(void)
 XPT_DataOffset(XPTState *state, uint32 *data_offsetp)
 {
     if (state->mode == XPT_DECODE)
@@ -152,14 +157,14 @@ XPT_DataOffset(XPTState *state, uint32 *data_offsetp)
         *data_offsetp = state->data_offset;
 }
 
-void
+XPT_PUBLIC_API(void)
 XPT_SetDataOffset(XPTState *state, uint32 data_offset)
 {
    state->data_offset = data_offset;
 }
 
 static PRBool
-XPT_GrowPool(XPTDatapool *pool)
+GrowPool(XPTDatapool *pool)
 {
     char *newdata = realloc(pool->data, pool->allocated + XPT_GROW_CHUNK);
     if (!newdata)
@@ -169,7 +174,7 @@ XPT_GrowPool(XPTDatapool *pool)
     return PR_TRUE;
 }
 
-PRBool
+XPT_PUBLIC_API(PRBool)
 XPT_MakeCursor(XPTState *state, XPTPool pool, uint32 len, XPTCursor *cursor)
 {
     cursor->state = state;
@@ -191,7 +196,7 @@ XPT_MakeCursor(XPTState *state, XPTPool pool, uint32 len, XPTCursor *cursor)
     return PR_TRUE;
 }
 
-PRBool
+XPT_PUBLIC_API(PRBool)
 XPT_SeekTo(XPTCursor *cursor, uint32 offset)
 {
     /* XXX do some real checking and update len and stuff */
@@ -199,7 +204,7 @@ XPT_SeekTo(XPTCursor *cursor, uint32 offset)
     return PR_TRUE;
 }
 
-XPTString *
+XPT_PUBLIC_API(XPTString *)
 XPT_NewString(uint16 length, char *bytes)
 {
     XPTString *str = PR_NEW(XPTString);
@@ -215,7 +220,7 @@ XPT_NewString(uint16 length, char *bytes)
     return str;
 }
 
-XPTString *
+XPT_PUBLIC_API(XPTString *)
 XPT_NewStringZ(char *bytes)
 {
     uint32 length = strlen(bytes);
@@ -224,7 +229,7 @@ XPT_NewStringZ(char *bytes)
     return XPT_NewString((uint16)length, bytes);
 }
 
-PRBool
+XPT_PUBLIC_API(PRBool)
 XPT_DoStringInline(XPTCursor *cursor, XPTString **strp)
 {
     XPTString *str = *strp;
@@ -260,7 +265,7 @@ XPT_DoStringInline(XPTCursor *cursor, XPTString **strp)
     return PR_FALSE;
 }
 
-PRBool
+XPT_PUBLIC_API(PRBool)
 XPT_DoString(XPTCursor *cursor, XPTString **strp)
 {
     XPTCursor my_cursor;
@@ -273,7 +278,7 @@ XPT_DoString(XPTCursor *cursor, XPTString **strp)
     return XPT_DoStringInline(&my_cursor, strp);
 }
 
-PRBool
+XPT_PUBLIC_API(PRBool)
 XPT_DoCString(XPTCursor *cursor, char **identp)
 {
     XPTCursor my_cursor;
@@ -338,34 +343,34 @@ XPT_DoCString(XPTCursor *cursor, char **identp)
     return PR_TRUE;
 }
 
-uint32
+XPT_PUBLIC_API(uint32)
 XPT_GetOffsetForAddr(XPTCursor *cursor, void *addr)
 {
     return (uint32)PL_HashTableLookup(cursor->state->pool->offset_map, addr);
 }
 
-PRBool
+XPT_PUBLIC_API(PRBool)
 XPT_SetOffsetForAddr(XPTCursor *cursor, void *addr, uint32 offset)
 {
     return PL_HashTableAdd(cursor->state->pool->offset_map,
                            addr, (void *)offset) != NULL;
 }
 
-PRBool
+XPT_PUBLIC_API(PRBool)
 XPT_SetAddrForOffset(XPTCursor *cursor, uint32 offset, void *addr)
 {
     return PL_HashTableAdd(cursor->state->pool->offset_map,
                            (void *)offset, addr) != NULL;
 }
 
-void *
+XPT_PUBLIC_API(void *)
 XPT_GetAddrForOffset(XPTCursor *cursor, uint32 offset)
 {
     return PL_HashTableLookup(cursor->state->pool->offset_map, (void *)offset);
 }
 
-PRBool
-XPT_CheckForRepeat(XPTCursor *cursor, void **addrp, XPTPool pool, int len,
+static PRBool
+CheckForRepeat(XPTCursor *cursor, void **addrp, XPTPool pool, int len,
                    XPTCursor *new_cursor, PRBool *already)
 {
     void *last = *addrp;
@@ -414,7 +419,7 @@ XPT_CheckForRepeat(XPTCursor *cursor, void **addrp, XPTPool pool, int len,
  *
  * (http://www.mozilla.org/scriptable/typelib_file.html#iid)
  */
-PRBool
+XPT_PUBLIC_API(PRBool)
 XPT_DoIID(XPTCursor *cursor, nsID *iidp)
 {
     int i;
@@ -431,7 +436,7 @@ XPT_DoIID(XPTCursor *cursor, nsID *iidp)
     return PR_TRUE;
 }
 
-PRBool
+XPT_PUBLIC_API(PRBool)
 XPT_Do64(XPTCursor *cursor, PRInt64 *u64p)
 {
     return XPT_Do32(cursor, (uint32 *)u64p) &&
@@ -444,7 +449,7 @@ XPT_Do64(XPTCursor *cursor, PRInt64 *u64p)
  * well-aligned cases and do a single store, if they cared.  I might care
  * later.
  */
-PRBool
+XPT_PUBLIC_API(PRBool)
 XPT_Do32(XPTCursor *cursor, uint32 *u32p)
 {
     union {
@@ -478,7 +483,7 @@ XPT_Do32(XPTCursor *cursor, uint32 *u32p)
     return PR_TRUE;
 }
 
-PRBool
+XPT_PUBLIC_API(PRBool)
 XPT_Do16(XPTCursor *cursor, uint16 *u16p)
 {
     union {
@@ -505,7 +510,7 @@ XPT_Do16(XPTCursor *cursor, uint16 *u16p)
     return PR_TRUE;
 }
 
-PRBool
+XPT_PUBLIC_API(PRBool)
 XPT_Do8(XPTCursor *cursor, uint8 *u8p)
 {
     if (!CHECK_COUNT(cursor, 1))
@@ -548,7 +553,7 @@ do_bit(XPTCursor *cursor, uint8 *u8p, int bitno)
 #endif
 }
 
-PRBool
+XPT_PUBLIC_API(PRBool)
 XPT_DoBits(XPTCursor *cursor, uint8 *u8p, int nbits)
 {
 
@@ -579,7 +584,7 @@ XPT_DoBits(XPTCursor *cursor, uint8 *u8p, int nbits)
     return PR_TRUE;
 }
 
-int
+XPT_PUBLIC_API(int)
 XPT_FlushBits(XPTCursor *cursor)
 {
     return 0;
