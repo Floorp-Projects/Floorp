@@ -349,8 +349,8 @@ public:
   virtual nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify,
                                  PRBool aDeepSetDocument);
 
-  NS_IMETHOD GetInnerHTML(nsAString& aInnerHTML);
-  NS_IMETHOD SetInnerHTML(const nsAString& aInnerHTML);
+  virtual nsresult GetInnerHTML(nsAString& aInnerHTML);
+  virtual nsresult SetInnerHTML(const nsAString& aInnerHTML);
 
 protected:
   PRBool IsOnloadEventForWindow();
@@ -543,13 +543,13 @@ NS_IMPL_STRING_ATTR(nsHTMLScriptElement, Type, type)
 NS_IMPL_STRING_ATTR(nsHTMLScriptElement, HtmlFor, _for)
 NS_IMPL_STRING_ATTR(nsHTMLScriptElement, Event, _event)
 
-NS_IMETHODIMP
+nsresult
 nsHTMLScriptElement::GetInnerHTML(nsAString& aInnerHTML)
 {
   return GetContentsAsText(aInnerHTML);
 }
 
-NS_IMETHODIMP
+nsresult
 nsHTMLScriptElement::SetInnerHTML(const nsAString& aInnerHTML)
 {
   return ReplaceContentsWithText(aInnerHTML, PR_TRUE);

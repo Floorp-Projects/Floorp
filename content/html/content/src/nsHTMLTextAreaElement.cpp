@@ -140,8 +140,8 @@ public:
   virtual void SetFocus(nsIPresContext* aPresContext);
   virtual void RemoveFocus(nsIPresContext* aPresContext);
 
-  NS_IMETHOD GetInnerHTML(nsAString& aInnerHTML);
-  NS_IMETHOD SetInnerHTML(const nsAString& aInnerHTML);
+  virtual nsresult GetInnerHTML(nsAString& aInnerHTML);
+  virtual nsresult SetInnerHTML(const nsAString& aInnerHTML);
 
 protected:
   nsCOMPtr<nsIControllers> mControllers;
@@ -733,13 +733,13 @@ nsHTMLTextAreaElement::DoneAddingChildren()
 }
 
 
-NS_IMETHODIMP
+nsresult
 nsHTMLTextAreaElement::GetInnerHTML(nsAString& aInnerHTML)
 {
   return GetContentsAsText(aInnerHTML);
 }
 
-NS_IMETHODIMP
+nsresult
 nsHTMLTextAreaElement::SetInnerHTML(const nsAString& aInnerHTML)
 {
   return ReplaceContentsWithText(aInnerHTML, PR_TRUE);

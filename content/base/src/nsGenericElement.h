@@ -350,7 +350,7 @@ public:
    * Initialize this element given a NodeInfo object
    * @param aNodeInfo information about this type of node
    */
-  virtual nsresult Init(nsINodeInfo *aNodeInfo);
+  nsresult Init(nsINodeInfo *aNodeInfo);
 
   /**
    * Called during QueryInterface to give the binding manager a chance to
@@ -369,7 +369,7 @@ public:
   virtual void SetNativeAnonymous(PRBool aAnonymous);
   virtual void GetNameSpaceID(PRInt32* aNameSpaceID) const;
   virtual nsIAtom *Tag() const;
-  virtual  nsINodeInfo *GetNodeInfo() const;
+  virtual nsINodeInfo *GetNodeInfo() const;
   virtual nsIAtom *GetIDAttributeName() const;
   virtual nsIAtom *GetClassAttributeName() const;
   virtual nsresult RangeAdd(nsIDOMRange* aRange);

@@ -92,8 +92,8 @@ public:
   virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                              PRBool aNotify);
 
-  NS_IMETHOD GetInnerHTML(nsAString& aInnerHTML);
-  NS_IMETHOD SetInnerHTML(const nsAString& aInnerHTML);
+  virtual nsresult GetInnerHTML(nsAString& aInnerHTML);
+  virtual nsresult SetInnerHTML(const nsAString& aInnerHTML);
 
 protected:
   void GetStyleSheetURL(PRBool* aIsInline,
@@ -334,13 +334,13 @@ nsHTMLStyleElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
   return rv;
 }
 
-NS_IMETHODIMP
+nsresult
 nsHTMLStyleElement::GetInnerHTML(nsAString& aInnerHTML)
 {
   return GetContentsAsText(aInnerHTML);
 }
 
-NS_IMETHODIMP
+nsresult
 nsHTMLStyleElement::SetInnerHTML(const nsAString& aInnerHTML)
 {
   SetEnableUpdates(PR_FALSE);
