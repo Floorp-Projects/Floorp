@@ -191,7 +191,7 @@ nsDocLoaderImpl::Init()
   PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
          ("DocLoader:%p: load group %x.\n", this, mLoadGroup.get()));
 
-  return NS_NewISupportsArray(getter_AddRefs(mChildList));
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsDocLoaderImpl::ClearParentDocLoader()
@@ -218,22 +218,20 @@ nsDocLoaderImpl::~nsDocLoaderImpl()
   PR_LOG(gDocLoaderLog, PR_LOG_DEBUG,
          ("DocLoader:%p: deleted.\n", this));
 
-  PRUint32 count=0;
-  mChildList->Count(&count);
+  PRInt32 count = mChildList.Count();
   // if the doc loader still has children...we need to enumerate the
   // children and make them null out their back ptr to the parent doc
   // loader
   if (count > 0)
   {
-    for (PRUint32 i=0; i<count; i++)
+    for (PRInt32 i=0; i < count; i++)
     {
-      nsCOMPtr<nsIDocumentLoader> loader;
-      loader = getter_AddRefs(NS_STATIC_CAST(nsIDocumentLoader*, mChildList->ElementAt(i)));
+      nsCOMPtr<nsIDocumentLoader> loader = mChildList.ObjectAt(i);
 
       if (loader)
         loader->ClearParentDocLoader();
     }
-    mChildList->Clear();
+    mChildList.Clear();
   }
 
   if (mRequestInfoHash.ops) {
@@ -289,23 +287,29 @@ nsDocLoaderImpl::CreateDocumentLoader(nsIDocumentLoader** anInstance)
 {
 
   nsresult rv = NS_OK;
+  *anInstance = nsnull;
+  
   nsDocLoaderImpl * newLoader = new nsDocLoaderImpl();
   NS_ENSURE_TRUE(newLoader, NS_ERROR_OUT_OF_MEMORY);
   
   NS_ADDREF(newLoader);
-  newLoader->Init();
 
   // Initialize now that we have a reference
-  rv = newLoader->SetDocLoaderParent(this);
+  rv = newLoader->Init();
+
   if (NS_SUCCEEDED(rv)) {
-    //
-    // XXX this method incorrectly returns a bool    
-    //
-    rv = mChildList->AppendElement((nsIDocumentLoader*)newLoader) 
+    rv = newLoader->SetDocLoaderParent(this);
+  }
+  
+  if (NS_SUCCEEDED(rv)) {
+    rv = mChildList.AppendObject((nsIDocumentLoader*)newLoader) 
        ? NS_OK : NS_ERROR_FAILURE;
   }
   
-  rv = newLoader->QueryInterface(NS_GET_IID(nsIDocumentLoader), (void **) anInstance);
+  if (NS_SUCCEEDED(rv)) {
+    rv = CallQueryInterface(newLoader, anInstance);
+  }
+  
   NS_RELEASE(newLoader);
   return rv;
 }
@@ -314,22 +318,19 @@ NS_IMETHODIMP
 nsDocLoaderImpl::Stop(void)
 {
   nsresult rv = NS_OK;
-  PRUint32 count, i;
+  PRInt32 count, i;
 
   PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
          ("DocLoader:%p: Stop() called\n", this));
 
-  rv = mChildList->Count(&count);
-  if (NS_FAILED(rv)) return rv;
+  count = mChildList.Count();
 
-  for (i=0; i<count; i++) {
-    nsIDocumentLoader* loader;
-
-    loader = NS_STATIC_CAST(nsIDocumentLoader*, mChildList->ElementAt(i));
+  nsCOMPtr<nsIDocumentLoader> loader;
+  for (i=0; i < count; i++) {
+    loader = mChildList.ObjectAt(i);
 
     if (loader) {
       (void) loader->Stop();
-      NS_RELEASE(loader);
     }
   }
 
@@ -360,19 +361,16 @@ nsDocLoaderImpl::IsBusy(PRBool * aResult)
 
   /* Otherwise, check its child document loaders... */
   if (!*aResult) {
-    PRUint32 count, i;
+    PRInt32 count, i;
 
-    rv = mChildList->Count(&count);
-    if (NS_FAILED(rv)) return rv;
+    count = mChildList.Count();
 
-    for (i=0; i<count; i++) {
-      nsIDocumentLoader* loader;
-
-      loader = NS_STATIC_CAST(nsIDocumentLoader*, mChildList->ElementAt(i));
+    nsCOMPtr<nsIDocumentLoader> loader;
+    for (i=0; i < count; i++) {
+      loader = mChildList.ObjectAt(i);
 
       if (loader) {
         (void) loader->IsBusy(aResult);
-        NS_RELEASE(loader);
 
         if (*aResult) break;
       }
@@ -709,18 +707,19 @@ nsresult nsDocLoaderImpl::RemoveChildGroup(nsDocLoaderImpl* aLoader)
   nsresult rv = NS_OK;
 
   if (NS_SUCCEEDED(rv)) {
-    mChildList->RemoveElement((nsIDocumentLoader*)aLoader);
+    mChildList.RemoveObject((nsIDocumentLoader*)aLoader);
   }
   return rv;
 }
 
 NS_IMETHODIMP nsDocLoaderImpl::GetDocumentChannel(nsIChannel ** aChannel)
 {
-    nsCOMPtr<nsIChannel> ourChannel = do_QueryInterface(mDocumentRequest);   
-
-  *aChannel = ourChannel.get();
-  NS_IF_ADDREF(*aChannel);
-  return NS_OK;
+  if (!mDocumentRequest) {
+    *aChannel = nsnull;
+    return NS_OK;
+  }
+  
+  return CallQueryInterface(mDocumentRequest, aChannel);
 }
 
 
@@ -906,7 +905,6 @@ nsDocLoaderImpl::AddProgressListener(nsIWebProgressListener *aListener,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  // XXX this method incorrectly returns a bool    
   rv = mListenerInfoList.AppendElement(info) ? NS_OK : NS_ERROR_FAILURE;
   return rv;
 }
@@ -963,20 +961,19 @@ nsDocLoaderImpl::GetIsLoadingDocument(PRBool *aIsLoadingDocument)
 
 nsresult nsDocLoaderImpl::GetMaxTotalProgress(PRInt32 *aMaxTotalProgress)
 {
-  PRUint32 count = 0;
+  PRInt32 count = 0;
   nsresult rv = NS_OK;
   PRInt32 invididualProgress, newMaxTotal;
 
   newMaxTotal = 0;
 
-  rv = mChildList->Count(&count);
-  if (NS_FAILED(rv)) return rv;
+  count = mChildList.Count();
   nsCOMPtr<nsIWebProgress> webProgress;
-  nsCOMPtr<nsISupports> docloader;
-  for (PRUint32 i=0; i<count; i++) 
+  nsCOMPtr<nsIDocumentLoader> docloader;
+  for (PRInt32 i=0; i < count; i++) 
   {
     invididualProgress = 0;
-    docloader = getter_AddRefs(mChildList->ElementAt(i));
+    docloader = mChildList.ObjectAt(i);
     if (docloader)
     {
       // Cast is safe since all children are nsDocLoaderImpl too

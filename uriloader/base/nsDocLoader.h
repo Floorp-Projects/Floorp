@@ -47,7 +47,7 @@
 #include "nsIRequestObserver.h"
 #include "nsWeakReference.h"
 #include "nsILoadGroup.h"
-#include "nsISupportsArray.h"
+#include "nsCOMArray.h"
 #include "nsVoidArray.h"
 #include "nsString.h"
 #include "nsIChannel.h"
@@ -151,8 +151,8 @@ protected:
      */
     PRBool mIsLoadingDocument;
 
-    nsCOMPtr<nsILoadGroup>      mLoadGroup;
-    nsCOMPtr<nsISupportsArray>  mChildList;
+    nsCOMPtr<nsILoadGroup>        mLoadGroup;
+    nsCOMArray<nsIDocumentLoader> mChildList;
 
     // The following member variables are related to the new nsIWebProgress 
     // feedback interfaces that travis cooked up.

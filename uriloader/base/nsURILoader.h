@@ -40,11 +40,12 @@
 
 #include "nsCURILoader.h"
 #include "nsISupportsUtils.h"
-#include "nsISupportsArray.h"
+#include "nsCOMArray.h"
 #include "nsCOMPtr.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsString.h"
+#include "nsIWeakReference.h"
 
 class nsURILoader : public nsIURILoader
 {
@@ -59,7 +60,7 @@ protected:
   // we shouldn't need to have an owning ref count on registered
   // content listeners because they are supposed to unregister themselves
   // when they go away. This array stores weak references
-  nsCOMPtr<nsISupportsArray> m_listeners;
+  nsCOMArray<nsIWeakReference> m_listeners;
 
   // prepare the load cookie for the window context
   nsresult SetupLoadCookie(nsISupports * aWindowContext, nsIInterfaceRequestor ** aLoadCookie);
