@@ -104,8 +104,9 @@ void nsInstallExecute::Abort()
 char* nsInstallExecute::toString()
 {
     char* buffer = new char[1024];
-    
-    if (buffer == nsnull)
+    char* rsrcVal = nsnull;
+
+    if (buffer == nsnull || !mInstall)
         return nsnull;
 
     // if the FileSpec is NULL, just us the in jar file name.
@@ -113,15 +114,26 @@ char* nsInstallExecute::toString()
     if (mExecutableFile == nsnull)
     {
         char *tempString = mJarLocation.ToNewCString();
+        rsrcVal = mInstall->GetResourcedString("Execute");
 
-        sprintf( buffer, nsInstallResources::GetExecuteString(), tempString);
+        if (rsrcVal)
+        {
+            sprintf( buffer, rsrcVal, tempString);
+            nsCRT::free(rsrcVal);
+        }
         
         if (tempString)
             delete [] tempString;
     }
     else
     {
-        sprintf( buffer, nsInstallResources::GetExecuteString(), mExecutableFile->GetCString());
+        rsrcVal = mInstall->GetResourcedString("Execute");
+
+        if (rsrcVal)
+        {
+            sprintf( buffer, rsrcVal, mExecutableFile->GetCString());
+            nsCRT::free(rsrcVal);
+        }
     }
     return buffer;
 }

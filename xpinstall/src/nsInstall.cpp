@@ -95,6 +95,7 @@ static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_IID(kIStringBundleServiceIID, NS_ISTRINGBUNDLESERVICE_IID);
 	
+#define XPINSTALL_BUNDLE_URL "chrome://xpinstall/locale/xpinstall.properties"
 
 nsInstallInfo::nsInstallInfo(nsIFileSpec*     aFile, 
                              const PRUnichar* aURL,
@@ -162,6 +163,20 @@ nsInstall::nsInstall()
     }
 
     su->Release();
+
+    // get the resourced xpinstall string bundle
+    mStringBundle = nsnull;
+    nsIStringBundleService *service;
+    rv = nsServiceManager::GetService( kStringBundleServiceCID, 
+                                       nsIStringBundleService::GetIID(),
+                                       (nsISupports**) &service );
+    if (NS_SUCCEEDED(rv) && service)
+    {
+        nsILocale* locale = nsnull;
+        rv = service->CreateBundle( XPINSTALL_BUNDLE_URL, locale,
+                                    getter_AddRefs(mStringBundle) );
+        nsServiceManager::ReleaseService( kStringBundleServiceCID, service );
+    }
 }
 
 nsInstall::~nsInstall()
@@ -2206,6 +2221,32 @@ nsInstall::ExtractFileFromJar(const nsString& aJarfile, nsFileSpec* aSuggestedNa
             delete extractHereSpec;
     }
     return result;
+}
+
+/**
+ * GetResourcedString
+ * 
+ * Obtains the string resource for actions and messages that are displayed
+ * in user interface confirmation and progress dialogs.
+ *
+ * @param   aResName         - property name/identifier of string resource
+ * @return  rscdStr          - corresponding resourced value in the string bundle
+ */
+char*
+nsInstall::GetResourcedString(const nsString& aResName)
+{
+    nsString rscdStr = "";
+
+    if (mStringBundle)
+    {   
+        const PRUnichar *ucResName = aResName.GetUnicode();
+        PRUnichar *ucRscdStr = nsnull;
+        nsresult rv = mStringBundle->GetStringFromName(ucResName, &ucRscdStr);
+        if (NS_SUCCEEDED(rv))
+            rscdStr = ucRscdStr;
+    }
+
+    return rscdStr.ToNewCString();
 }
 
 

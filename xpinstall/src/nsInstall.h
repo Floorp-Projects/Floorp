@@ -224,6 +224,7 @@ class nsInstall
         void       LogComment(nsString& aComment);
 
         PRInt32    ExtractFileFromJar(const nsString& aJarfile, nsFileSpec* aSuggestedName, nsFileSpec** aRealName);
+        char*      GetResourcedString(const nsString& aResName);
         void       AddPatch(nsHashKey *aKey, nsFileSpec* fileName);
         void       GetPatch(nsHashKey *aKey, nsFileSpec** fileName);
         
@@ -268,7 +269,9 @@ class nsInstall
         nsHashtable*        mPatchList;
         
         nsIXPINotifier      *mNotifier;
-        
+
+        nsCOMPtr<nsIStringBundle>   mStringBundle;
+
         PRInt32             mLastError;
 
         void        ParseFlags(int flags);
