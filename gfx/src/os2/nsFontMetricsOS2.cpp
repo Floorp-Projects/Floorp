@@ -604,9 +604,9 @@ nsFontMetricsOS2::SetFontHandle( HPS aPS, nsFontOS2* aFont )
   nsCAutoString name(NS_LossyConvertUCS2toASCII(langGroup).get());
   for (int j=0; j < eCharset_COUNT; j++ )
   {
-    if (langGroup[0] == gCharsetInfo[j].mLangGroup[0])
+    if (name.get()[0] == gCharsetInfo[j].mLangGroup[0])
     {
-      if (strcmp(langGroup, gCharsetInfo[j].mLangGroup) == 0)
+      if (!strcmp(name.get(), gCharsetInfo[j].mLangGroup))
       {
         mConvertCodePage = gCharsetInfo[j].mCodePage;
         break;
