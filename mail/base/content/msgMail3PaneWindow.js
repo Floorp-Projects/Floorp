@@ -869,7 +869,7 @@ function loadStartFolder(initialUri)
         }
 
         var startFolder = startFolderResource.QueryInterface(Components.interfaces.nsIMsgFolder);
-        SelectFolder(startFolder.URI);
+        SelectFolder(startFolder.URI);        
 
         // only do this on startup, when we pass in null
         if (!initialUri && isLoginAtStartUpEnabled && gLoadStartFolder)
@@ -1397,7 +1397,7 @@ function EnsureFolderIndex(builder, msgFolder)
   var index = builder.getIndexOfResource(msgFolder);
   if (index == -1) {
     // if we couldn't find the folder, open the parent
-    builder.toggleOpenState(EnsureFolderindex(builder, msgFolder.parent));
+    builder.toggleOpenState(EnsureFolderIndex(builder, msgFolder.parent));
     index = builder.getIndexOfResource(msgFolder);
   }
   return index;
