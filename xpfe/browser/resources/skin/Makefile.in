@@ -27,24 +27,26 @@ srcdir		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
-EXPORT_RESOURCE_CONTENT = \
-	$(srcdir)/alertl.gif \
-	$(srcdir)/errorl.gif \
-	$(srcdir)/messagel.gif \
-	$(srcdir)/navigator.css \
-	$(srcdir)/questionl.gif \
-	$(srcdir)/back.gif \
-	$(srcdir)/forward.gif \
-	$(srcdir)/home.gif \
-	$(srcdir)/location.gif \
-	$(srcdir)/location-hover.gif \
-	$(srcdir)/mynetscape.gif \
-	$(srcdir)/print.gif \
-	$(srcdir)/reload.gif \
-	$(srcdir)/search.gif \
-	$(srcdir)/stop.gif \
-	$(srcdir)/n-box-persbar.gif \
+EXPORT_RESOURCE_CONTENT := \
+	alertl.gif \
+	errorl.gif \
+	messagel.gif \
+	navigator.css \
+	questionl.gif \
+	back.gif \
+	forward.gif \
+	home.gif \
+	location.gif \
+	location-hover.gif \
+	mynetscape.gif \
+	print.gif \
+	reload.gif \
+	search.gif \
+	stop.gif \
+	n-box-persbar.gif \
 	$(NULL)
+
+EXPORT_RESOURCE_CONTENT := $(addprefix $(srcdir)/, $(EXPORT_RESOURCE_CONTENT))
 
 install:: 
 	$(INSTALL) $(EXPORT_RESOURCE_CONTENT) $(DIST)/bin/chrome/navigator/skin/default

@@ -26,20 +26,22 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-EXPORT_RESOURCE_CONTENT = \
-		$(srcdir)/nsContextMenu.js \
-		$(srcdir)/tooltip.js \
-		$(srcdir)/openLocation.js \
-		$(srcdir)/viewsource.js \
-		$(srcdir)/navigator.xul \
-		$(srcdir)/navigatorOverlay.xul \
-		$(srcdir)/navigator.js \
-		$(srcdir)/navigatorDD.js \
-		$(srcdir)/openLocation.xul \
-		$(srcdir)/viewSource.xul \
-		$(srcdir)/NetSupportConfirmYN.xul \
-		$(srcdir)/NetSupportConfirmCheckYN.xul \
-		$(NULL)
+EXPORT_RESOURCE_CONTENT := \
+	nsContextMenu.js \
+	tooltip.js \
+	openLocation.js \
+	viewsource.js \
+	navigator.xul \
+	navigatorOverlay.xul \
+	navigator.js \
+	navigatorDD.js \
+	openLocation.xul \
+	viewSource.xul \
+	NetSupportConfirmYN.xul \
+	NetSupportConfirmCheckYN.xul \
+	$(NULL)
+
+EXPORT_RESOURCE_CONTENT := $(addprefix $(srcdir)/, $(EXPORT_RESOURCE_CONTENT))
 
 include $(topsrcdir)/config/rules.mk
 
