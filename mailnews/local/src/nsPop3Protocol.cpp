@@ -551,7 +551,11 @@ nsresult nsPop3Protocol::LoadUrl(nsIURI* aURL, nsISupports * /* aConsumer */)
 		// limit, for now do the following
 		
 		m_pop3ConData->leave_on_server = PR_TRUE;
-		m_pop3ConData->size_limit = 50 * 1024;
+    // ** jefft - bug 16338 -- POP3- large file attachment do not download
+    // with the msg
+		// m_pop3ConData->size_limit = 50 * 1024;
+    m_pop3ConData->size_limit = -1;  // for now; **** come back later ****
+                                     // no limits set here
 	}
 
 	// UIDL stuff
@@ -1948,7 +1952,7 @@ nsPop3Protocol::RetrResponse(nsIInputStream* inputStream,
 #if 0
     PRInt32 old_bytes_received = m_totalBytesReceived;
 #endif
-    PRBool fix = PR_FALSE;
+    PRBool fix = PR_TRUE;
     PRUint32 status = 0;
 	
     if(m_pop3ConData->cur_msg_size == -1)
@@ -1972,7 +1976,10 @@ nsPop3Protocol::RetrResponse(nsIInputStream* inputStream,
 			char * oldStr = PL_strdup(m_commandResponse);
 	        m_pop3ConData->cur_msg_size =
                 atol(nsCRT::strtok(oldStr, " ", &newStr));
-			m_commandResponse = newStr;
+          // *** jefft - the following sounds like wrong to me; we shouldn't
+          // try to assign the newString from nsCRT::strtok to
+          // m_commandResponse we have no idea when it will go away
+          // m_commandResponse = newStr;
 			PR_FREEIF(oldStr);
 		}
         /* RETR complete message */
