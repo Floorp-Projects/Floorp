@@ -2169,8 +2169,13 @@ UnaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 	pn2 = UnaryExpr(cx, ts, tc);
 	if (!pn2)
 	    return NULL;
-	if (!SetLvalKid(cx, ts, pn, pn2, js_delete_str))
-	    return NULL;
+        /* 
+        *   Under ECMA3, deleting any unary expr is valid - it simply
+        *   returns true. Here we strip off any parentheses. 
+        */
+        while (pn2->pn_type == TOK_RP)
+	    pn2 = pn2->pn_kid;
+        pn->pn_kid = pn2;
 	pn->pn_pos.end = pn2->pn_pos.end;
 	break;
 
