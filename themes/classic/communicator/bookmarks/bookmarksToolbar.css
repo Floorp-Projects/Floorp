@@ -38,11 +38,6 @@ toolbarbutton.bookmark-item {
 
 toolbarbutton.bookmark-item:hover {
   text-decoration: underline;
-  color: #0000FF;
-}
-
-toolbarbutton.bookmark-item:not([container="true"]):hover:active {
-  color: #0000FF !important;
 }
 
 toolbarbutton.bookmark-item[container="true"],
