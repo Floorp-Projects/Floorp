@@ -17,8 +17,12 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Original Owner:
+ *    Michael F. Judge mjudge@netscape.com
+ *
+ * Contributors:
  */
+
 #ifndef nsIFocusTracker_h___
 #define nsIFocusTracker_h___
 
