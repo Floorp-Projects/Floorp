@@ -22,7 +22,9 @@
 // For xp to ns file translation
 #include "oldnsINetFile.h"
 #include "nsVoidArray.h"
+#ifndef XP_UNIX
 #include "direct.h"
+#endif
 
 // The nsINetfile
 static nsINetFile *fileMgr = nsnull;

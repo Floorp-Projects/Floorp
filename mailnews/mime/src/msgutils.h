@@ -25,20 +25,20 @@ extern int msg_GrowBuffer (PRUint32 desired_size,
 						   PRUint32 element_size, PRUint32 quantum,
 						   char **buffer, PRUint32 *size);
 
-extern int msg_LineBuffer (const char *net_buffer, int32 net_buffer_size,
-						   char **bufferP, uint32 *buffer_sizeP,
-						   uint32 *buffer_fpP,
-						   XP_Bool convert_newlines_p,
+extern int msg_LineBuffer (const char *net_buffer, PRInt32 net_buffer_size,
+						   char **bufferP, PRUint32 *buffer_sizeP,
+						   PRUint32 *buffer_fpP,
+						   PRBool convert_newlines_p,
 						   PRInt32 (*per_line_fn) (char *line, PRUint32
 												 line_length, void *closure),
 						   void *closure);
 						   
-extern int msg_ReBuffer (const char *net_buffer, int32 net_buffer_size,
-						 uint32 desired_buffer_size,
-						 char **bufferP, uint32 *buffer_sizeP,
-						 uint32 *buffer_fpP,
-						 int32 (*per_buffer_fn) (char *buffer,
-												 uint32 buffer_size,
+extern int msg_ReBuffer (const char *net_buffer, PRInt32 net_buffer_size,
+						 PRUint32 desired_buffer_size,
+						 char **bufferP, PRUint32 *buffer_sizeP,
+						 PRUint32 *buffer_fpP,
+						 PRInt32 (*per_buffer_fn) (char *buffer,
+												 PRUint32 buffer_size,
 												 void *closure),
 						 void *closure);
 
@@ -47,15 +47,15 @@ extern NET_StreamClass *msg_MakeRebufferingStream (NET_StreamClass *next,
 												   MWContext *context);
 
 /* Given a string and a length, removes any "Re:" strings from the front.
-   (If the length is not given, then XP_STRLEN() is used on the string.)
+   (If the length is not given, then PL_strlen() is used on the string.)
    It also deals with that "Re[2]:" thing that some mailers do.
 
-   Returns TRUE if it made a change, FALSE otherwise.
+   Returns PR_TRUE if it made a change, PR_FALSE otherwise.
 
    The string is not altered: the pointer to its head is merely advanced,
    and the length correspondingly decreased.
  */
-extern XP_Bool msg_StripRE(const char **stringP, uint32 *lengthP);
+extern PRBool msg_StripRE(const char **stringP, PRUint32 *lengthP);
 
 /* 
  * Does in-place modification of input param to conform with son-of-1036 rules

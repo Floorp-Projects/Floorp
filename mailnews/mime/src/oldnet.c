@@ -103,7 +103,7 @@ NET_ScanForURLs(
 #ifndef MOZILLA_30
 				MSG_Pane* pane,
 #endif /* !MOZILLA_30 */
-				const char *input, int32 input_size,
+				const char *input, PRInt32 input_size,
 				char *output, int output_size, XP_Bool urls_only)
 {
   int col = 0;
@@ -111,7 +111,7 @@ NET_ScanForURLs(
   const char *end = input + input_size;
   char *output_ptr = output;
   char *end_of_buffer = output + output_size - 40; /* add safty zone :( */
-  Bool line_is_citation = FALSE;
+  Bool line_is_citation = PR_FALSE;
   const char *cite_open1, *cite_close1;
   const char *cite_open2, *cite_close2;
 #ifndef MOZILLA_30
@@ -206,7 +206,7 @@ NET_ScanForURLs(
 		;
 	  else if (*s == '>' || *s == ']')
 		{
-		  line_is_citation = TRUE;
+		  line_is_citation = PR_TRUE;
 		  PL_strcpy(output_ptr, cite_open1);
 		  output_ptr += PL_strlen(cite_open1);
 		  PL_strcpy(output_ptr, cite_open2);
@@ -264,7 +264,7 @@ NET_ScanForURLs(
 				 "foo.html?300,400".)
 			   */
 			  else if (*cp2 == '?')
-				commas_ok = TRUE;
+				commas_ok = PR_TRUE;
 			  else if (*cp2 == ',' && !commas_ok)
 				break;
 #endif
@@ -1099,7 +1099,7 @@ escape_unescaped_percents(const char *incomingURL)
 {
 	const char *inC;
 	char *outC;
-	char *result = (char *) XP_ALLOC(XP_STRLEN(incomingURL)*3+1);
+	char *result = (char *) PR_Malloc(PL_strlen(incomingURL)*3+1);
 
 	if (result)
 	{
@@ -1138,7 +1138,7 @@ escape_unescaped_percents(const char *incomingURL)
 PUBLIC URL_Struct * 
 NET_CreateURLStruct (CONST char *url, NET_ReloadMethod force_reload)
 {
-    uint32 all_headers_size;
+    PRUint32 all_headers_size;
     URL_Struct * URL_s  = PR_NEW(URL_Struct);
 
     if(!URL_s)
@@ -1158,7 +1158,7 @@ NET_CreateURLStruct (CONST char *url, NET_ReloadMethod force_reload)
 
     URL_s->force_reload = force_reload;
 
-	URL_s->load_background = FALSE;
+	URL_s->load_background = PR_FALSE;
 
     URL_s->ref_count = 1;
 
@@ -1215,7 +1215,7 @@ NET_CreateURLStruct (CONST char *url, NET_ReloadMethod force_reload)
 PRIVATE void
 net_FreeURLAllHeaders (URL_Struct * URL_s)
 {
-    uint32 i=0;
+    PRUint32 i=0;
 
     /* Free all memory associated with header information */
     for (i = 0; i < URL_s->all_headers.empty_index; i++) {

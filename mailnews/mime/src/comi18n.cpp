@@ -22,27 +22,19 @@
 
 #include "prtypes.h"
 #include "prmem.h"
+#include "prlog.h"
 #include "plstr.h"
 
 
 // BEGIN EXTERNAL DEPENDANCY
-#define XP_ASSERT assert
-#define XP_ALLOC malloc
-#define PR_Realloc realloc
-#define PR_Free free
-#define XP_STRLEN strlen
-#define XP_STRCPY strcpy
-#define XP_STRCAT strcat
-#define XP_STRSTR strstr
-#define XP_STRCHR strchr
 #define XP_MEMCPY memcpy
 
 #define INTL_NextChar(a,b) ((b)+1)
 #define INTL_DefaultMailCharSetID(a) (a)
 #define XP_WordWrapWithPrefix(a,b,c,d,e,f) strdup((const char *) (b))
-#define INTL_CreateCharCodeConverter NULL
+#define INTL_CreateCharCodeConverter() NULL
 #define INTL_GetCharCodeConverter(wincsid, mail_csid, obj)
-#define INTL_GetSendHankakuKana 0
+#define INTL_GetSendHankakuKana() 0
 #define INTL_SetCCCCvtflag_SendHankakuKana(a,b)
 #define INTL_GetCCCCvtfunc(a) NULL
 #define MSG_UnquotePhraseOrAddr_Intl(a,b,c) (*c = strdup(b))
@@ -65,17 +57,9 @@ extern "C" char   *INTL_CsidToCharsetNamePt(PRInt16 id) { return "iso-8859-1"; }
 extern "C" PRInt16 INTL_CharSetNameToID(char *charset) { return 0; }
 
 
-enum
-{
-        FALSE=0,
-        TRUE=1
-};
-typedef int XP_Bool;
-typedef short int16;
-typedef long int32;
 typedef void* CCCDataObject;
 typedef unsigned char *(*CCCFunc)(CCCDataObject, const unsigned char
-*,int32);
+*,PRInt32);
 
 /*	Very similar to strdup except it free's too
  */
@@ -119,7 +103,7 @@ NET_SACopy (char **destination, const char *source)
         Prototype for Private Function
 */
 static void    intlmime_init_csidmap();
-static XP_Bool  intlmime_only_ascii_str(const char *s);
+static PRBool  intlmime_only_ascii_str(const char *s);
 static char *   intlmime_encode_mail_address(int wincsid, const char *src,
 CCCDataObject obj,
 
@@ -141,13 +125,13 @@ static char *   intlmime_encode_base64_buf(char *subject, size_t size);
 static char *   intlmime_encode_qp_buf(char *subject);
 
 
-static XP_Bool intlmime_is_hz(const char *header);
-static XP_Bool intlmime_is_mime_part2_header(const char *header);
-static XP_Bool intlmime_is_iso_2022_xxx(const char *, int16 );
-static  char *  intl_decode_mime_part2_str(const char *, int , XP_Bool );
-static  char *  intl_DecodeMimePartIIStr(const char *, int16 , XP_Bool );
+static PRBool intlmime_is_hz(const char *header);
+static PRBool intlmime_is_mime_part2_header(const char *header);
+static PRBool intlmime_is_iso_2022_xxx(const char *, int16 );
+static  char *  intl_decode_mime_part2_str(const char *, int , PRBool );
+static  char *  intl_DecodeMimePartIIStr(const char *, int16 , PRBool );
 static char *   intl_EncodeMimePartIIStr(char *subject, int16 wincsid,
-XP_Bool bUseMime, int maxLineLen);
+PRBool bUseMime, int maxLineLen);
 
 
 /*      We probably should change these into private instead of PUBLIC */
@@ -198,7 +182,7 @@ static char *intlmime_encode_base64_buf(char *subject, size_t size)
         char *pSrc, *pDest ;
         int i ;
 
-        output = (char *)XP_ALLOC(size * 4 / 3 + 4);
+        output = (char *)PR_Malloc(size * 4 / 3 + 4);
         if (output == NULL)
                 return NULL;
 
@@ -275,7 +259,7 @@ less than source text */
 
         pSrc = subject;
         pDest = output ;
-        for (i = strlen(subject); i > 3; i -= 4)
+        for (i = PL_strlen(subject); i > 3; i -= 4)
         {
                 if (intlmime_decode_base64(pSrc, pDest) == 0)
                 {
@@ -301,8 +285,8 @@ static char *intlmime_encode_qp_buf(char *subject)
 
         if (subject == NULL || *subject == '\0')
                 return NULL;
-        len = strlen(subject);
-        output = (char *) XP_ALLOC(len * 3 + 1);
+        len = PL_strlen(subject);
+        output = (char *) PR_Malloc(len * 3 + 1);
         if (output == NULL)
                 return NULL;
 
@@ -346,7 +330,7 @@ static char *intlmime_encode_qp_buf(char *subject)
 static char *intlmime_encode_next8bitword(int wincsid, char *src)
 {
         char *p;
-        XP_Bool non_ascii = FALSE;
+        PRBool non_ascii = PR_FALSE;
         if (src == NULL)
                 return NULL;
         p = src;
@@ -355,7 +339,7 @@ static char *intlmime_encode_next8bitword(int wincsid, char *src)
         while ( *p )
         {
                 if ((unsigned char) *p > 0x7F)
-                        non_ascii = TRUE;
+                        non_ascii = PR_TRUE;
                 if ( IS_MAIL_SEPARATOR(p) )
                 {
                         break;
@@ -370,12 +354,12 @@ static char *intlmime_encode_next8bitword(int wincsid, char *src)
 }
 
 /*      some utility function used by this file */
-static XP_Bool intlmime_only_ascii_str(const char *s)
+static PRBool intlmime_only_ascii_str(const char *s)
 {
         for(; *s; s++)
                 if(*s & 0x80)
-                        return FALSE;
-        return TRUE;
+                        return PR_FALSE;
+        return PR_TRUE;
 }
 
 /*
@@ -387,8 +371,8 @@ static int ResetLen( int iThreshold, const char* buffer, int16 wincsid )
         const char *begin, *end, *tmp;
 
         tmp = begin = end = buffer;
-        XP_ASSERT( iThreshold > 1 );
-        XP_ASSERT( buffer != NULL );
+        PR_ASSERT( iThreshold > 1 );
+        PR_ASSERT( buffer != NULL );
         while( ( end - begin ) <= iThreshold ){
                 tmp = end;
                 if (!(*end))
@@ -396,7 +380,7 @@ static int ResetLen( int iThreshold, const char* buffer, int16 wincsid )
                 end = INTL_NextChar( wincsid, (char*)end );
         }
 
-        XP_ASSERT( tmp > begin );
+        PR_ASSERT( tmp > begin );
         return tmp - begin;
 }
 
@@ -420,8 +404,8 @@ int maxLineLen)
 src */
         int iEffectLen;         /* the maximum length we can convert from
 the src */
-        XP_Bool bChop = FALSE;
-        XP_Bool is_being_used_in_email_summary_file = (maxLineLen > 120);
+        PRBool bChop = PR_FALSE;
+        PRBool is_being_used_in_email_summary_file = (maxLineLen > 120);
         CCCFunc cvtfunc = NULL;
 
         if (obj)
@@ -438,7 +422,7 @@ the src */
         name = (char
 *)INTL_CsidToCharsetNamePt(intlmime_get_outgoing_mime_csid
 ((int16)wincsid));
-        default_iThreshold = iEffectLen = ( maxLineLen - XP_STRLEN( name )
+        default_iThreshold = iEffectLen = ( maxLineLen - PL_strlen( name )
 - 7 ) * 3 / 4;
         iThreshold = default_iThreshold;
 
@@ -447,8 +431,8 @@ the src */
            do another memory allocation which is expensive
          */
 
-        retbufsize = XP_STRLEN(srcbuf) * 3 + MAX_CSNAME + 8;
-        retbuf =  (char *) XP_ALLOC(retbufsize);
+        retbufsize = PL_strlen(srcbuf) * 3 + MAX_CSNAME + 8;
+        retbuf =  (char *) PR_Malloc(retbufsize);
         if (retbuf == NULL)  /* Give up if not enough memory */
         {
                 PR_Free(srcbuf);
@@ -457,15 +441,15 @@ the src */
 
         *retbuf = '\0';
 
-        srclen = XP_STRLEN(srcbuf);
+        srclen = PL_strlen(srcbuf);
         while (begin < (srcbuf + srclen))
         {       /* get block of data between commas */
                 char *p, *q;
                 char *buf1, *buf2;
                 int len, newsize, convlen, retbuflen;
-                XP_Bool non_ascii;
+                PRBool non_ascii;
 
-                retbuflen = XP_STRLEN(retbuf);
+                retbuflen = PL_strlen(retbuf);
                 end = NULL;
                 if (is_being_used_in_email_summary_file) {
                 } else {
@@ -486,15 +470,15 @@ the src */
                 {
                         sep = '\0';
                         /* scan for next separator */
-                        non_ascii = FALSE;
+                        non_ascii = PR_FALSE;
                         for (q = begin; *q;)
                         {
                                 if ((unsigned char) *q > 0x7F)
-                                        non_ascii = TRUE;
+                                        non_ascii = PR_TRUE;
                                 if ( IS_MAIL_SEPARATOR(q) )
                                 {
                                         if ((*q == ' ') && (non_ascii ==
-TRUE))
+PR_TRUE))
                                         {
                                                 while ((p =
 intlmime_encode_next8bitword(wincsid, q)) != NULL)
@@ -518,7 +502,7 @@ intlmime_encode_next8bitword(wincsid, q)) != NULL)
                 }
 
                 /* get the to_be_converted_buffer's len */
-                len = XP_STRLEN(begin);
+                len = PL_strlen(begin);
 
                 if ( !intlmime_only_ascii_str(begin) )
                 {
@@ -550,7 +534,7 @@ bChop ) {
                                         line_len = 0;
                                         retbuflen += 3;
                                         *buf1 = '\0';
-                                        bChop = FALSE;
+                                        bChop = PR_FALSE;
                                         iThreshold = default_iThreshold;
                                 }
                                 /*      iEffectLen - the max byte-string
@@ -559,8 +543,8 @@ length of JIS ( converted form S-JIS )
 encoding name, MUST be shorter than 23 bytes
                                         7    - is the "=?:?:?=" */
                                 iEffectLen = ( maxLineLen - line_len -
-XP_STRLEN( name ) - 7 ) * 3 / 4;
-                                while ( TRUE ) {
+PL_strlen( name ) - 7 ) * 3 / 4;
+                                while ( PR_TRUE ) {
                                         int iBufLen;    /* converted
 buffer's length, not BASE64 */
                                         if ( len > iThreshold )
@@ -595,8 +579,8 @@ oldie but goodie.
                                         }
                                         buf1 = (char *) cvtfunc(obj,
 (unsigned char *)begin, len);
-                                        iBufLen = XP_STRLEN( buf1 );
-                                        XP_ASSERT( iBufLen > 0 );
+                                        iBufLen = PL_strlen( buf1 );
+                                        PR_ASSERT( iBufLen > 0 );
 
                                         /* recal iThreshold each time
 based on last experience */
@@ -610,7 +594,7 @@ buffer;
                                                         2. redo again
 based on the new iThreshold
                                                 */
-                                                bChop = TRUE;           /*
+                                                bChop = PR_TRUE;           /*
 append CRLFTAB */
                                                 if (buf1 && (buf1 !=
 begin)){
@@ -639,7 +623,7 @@ artifical terminator. So, restore the original character */
                         }
                         else
                         {
-                                buf1 = (char *) XP_ALLOC(len + 1);
+                                buf1 = (char *) PR_Malloc(len + 1);
                                 if (!buf1)
                                 {
                                         PR_Free(srcbuf);
@@ -654,7 +638,7 @@ artifical terminator. So, restore the original character */
                         {
                                 /* converts to Base64 Encoding */
                                 buf2 = (char
-*)intlmime_encode_base64_buf(buf1, strlen(buf1));
+*)intlmime_encode_base64_buf(buf1, PL_strlen(buf1));
                         }
                         else
                         {
@@ -677,7 +661,7 @@ failed */
 
                         /* realloc memory for retbuff if necessary,
                            7: =?...?B?..?=, 3: CR LF TAB */
-                        convlen = XP_STRLEN(buf2) + XP_STRLEN(name) + 7;
+                        convlen = PL_strlen(buf2) + PL_strlen(name) + 7;
                         newsize = convlen + retbuflen + 3 + 2;  /* 2:SEP
 '\0', 3:CRLFTAB */
 
@@ -712,14 +696,14 @@ enough memory left */
                         *buf1 = '\0';
 
                         /* Add encoding tag for base62 and QP */
-                        XP_STRCAT(buf1, "=?");
-                        XP_STRCAT(buf1, name );
+                        PL_strcat(buf1, "=?");
+                        PL_strcat(buf1, name );
                         if(wincsid & MULTIBYTE)
-                                XP_STRCAT(buf1, "?B?");
+                                PL_strcat(buf1, "?B?");
                         else
-                                XP_STRCAT(buf1, "?Q?");
-                        XP_STRCAT(buf1, buf2);
-                        XP_STRCAT(buf1, "?=");
+                                PL_strcat(buf1, "?Q?");
+                        PL_strcat(buf1, buf2);
+                        PL_strcat(buf1, "?=");
 
                         line_len += convlen + 1;  /* 1: SEP */
 
@@ -767,7 +751,7 @@ CRLFTAB */
                         line_len += len + 1;  /* 1: SEP */
                 }
 
-                buf1 = buf1 + XP_STRLEN(buf1);
+                buf1 = buf1 + PL_strlen(buf1);
                 if (sep == CR || sep == LF || sep == TAB) /* strip
 CR,LF,TAB */
                         *buf1 = '\0';
@@ -800,7 +784,7 @@ CR,LF,TAB */
 */
 
 static
-char *intl_EncodeMimePartIIStr(char *subject, int16 wincsid, XP_Bool
+char *intl_EncodeMimePartIIStr(char *subject, int16 wincsid, PRBool
 bUseMime, int maxLineLen)
 {
         int iSrcLen;
@@ -814,7 +798,7 @@ bUseMime, int maxLineLen)
                 return NULL;
 
 
-        iSrcLen = XP_STRLEN(subject);
+        iSrcLen = PL_strlen(subject);
         if (wincsid == 0)
                 wincsid = INTL_DefaultWinCharSetID(0) ;
 
@@ -845,7 +829,7 @@ and sjis2jis.
                  */
                 if (CS_JIS == mail_csid && INTL_GetSendHankakuKana())
                 {
-                        INTL_SetCCCCvtflag_SendHankakuKana(obj, TRUE);
+                        INTL_SetCCCCvtflag_SendHankakuKana(obj, PR_TRUE);
                 }
                 cvtfunc = INTL_GetCCCCvtfunc(obj);
         }
@@ -916,11 +900,11 @@ static char *intlmime_decode_qp(char *in)
         char token[3];
         char *out, *dest = 0;
 
-        out = dest = (char *)XP_ALLOC(strlen(in)+1);
+        out = dest = (char *)PR_Malloc(PL_strlen(in)+1);
         if (dest == NULL)
                 return NULL;
-        memset(out, 0, strlen(in)+1);
-        length = strlen(in);
+        memset(out, 0, PL_strlen(in)+1);
+        length = PL_strlen(in);
         while (length > 0 || i != 0)
         {
                 while (i < 3 && length > 0)
@@ -1026,33 +1010,33 @@ don't have
 /*
         intlmime_is_hz: it is CS_HZ
 */
-static XP_Bool intlmime_is_hz(const char *header)
+static PRBool intlmime_is_hz(const char *header)
 {
-        return (XP_STRSTR(header, "~{") ? TRUE : FALSE);
+        return (PL_strstr(header, "~{") ? PR_TRUE : PR_FALSE);
 }
 /*
         intlmime_is_iso_2022_xxx: it is statefule encoding with esc
 */
-static XP_Bool intlmime_is_iso_2022_xxx(const char *header, int16
+static PRBool intlmime_is_iso_2022_xxx(const char *header, int16
 mailcsid)
 {
-        return (((mailcsid & STATEFUL) && (XP_STRCHR(header, '\033'))) ?
-TRUE : FALSE);
+        return (((mailcsid & STATEFUL) && (PL_strchr(header, '\033'))) ?
+PR_TRUE : PR_FALSE);
 }
 /*
         intlmime_is_mime_part2_header:
 */
-static XP_Bool intlmime_is_mime_part2_header(const char *header)
+static PRBool intlmime_is_mime_part2_header(const char *header)
 {
         return ((
-                         XP_STRSTR(header, "=?") &&
+                         PL_strstr(header, "=?") &&
                          (
-                          XP_STRSTR(header, "?q?")  ||
-                          XP_STRSTR(header, "?Q?")  ||
-                          XP_STRSTR(header, "?b?")  ||
-                          XP_STRSTR(header, "?B?")
+                          PL_strstr(header, "?q?")  ||
+                          PL_strstr(header, "?Q?")  ||
+                          PL_strstr(header, "?b?")  ||
+                          PL_strstr(header, "?B?")
                          )
-                    ) ? TRUE : FALSE );
+                    ) ? PR_TRUE : PR_FALSE );
 }
 
 
@@ -1078,7 +1062,7 @@ overwrite the origional buffer and  */
         cvtfunc = INTL_GetCCCCvtfunc(obj);
         if (cvtfunc)
                 convbuf = (char*)cvtfunc(obj, (unsigned char*)tmpbuf,
-(int32)XP_STRLEN((char*)tmpbuf));
+(PRInt32)PL_strlen((char*)tmpbuf));
         PR_Free(obj);
 
         /*      if the conversion which use the origional buffer
@@ -1094,7 +1078,7 @@ overwrite the origional buffer and  */
 }
 
 static
-char *intl_decode_mime_part2_str(const char *header, int wincsid, XP_Bool
+char *intl_decode_mime_part2_str(const char *header, int wincsid, PRBool
 dontConvert)
 {
         char *work_buf = NULL;
@@ -1165,7 +1149,7 @@ intlmime_decode_base64_buf(q+2);
                         break;                          /* exit the loop
 because we don't know the encoding method */
 
-                begin = (p != NULL) ? p + 2 : (q + strlen(q));
+                begin = (p != NULL) ? p + 2 : (q + PL_strlen(q));
 
                 if (decoded_text == NULL)
                         break;                          /* exit the loop
@@ -1178,15 +1162,15 @@ because we have problem to decode */
                 else
                         output_text = (char *)decoded_text;
 
-                XP_ASSERT(output_text != NULL);
-                XP_STRCPY(output_p, (char *)output_text);
-                output_p += strlen(output_text);
+                PR_ASSERT(output_text != NULL);
+                PL_strcpy(output_p, (char *)output_text);
+                output_p += PL_strlen(output_text);
 
                 if (output_text != decoded_text)
                         PR_Free(output_text);
                 PR_Free(decoded_text);
         }
-        XP_STRCPY(output_p, (char *)begin);     /* put the tail back  */
+        PL_strcpy(output_p, (char *)begin);     /* put the tail back  */
 
         if (work_buf)
                 PR_Free(work_buf);
@@ -1210,11 +1194,11 @@ routine */
 
 
 static
-char *intl_DecodeMimePartIIStr(const char *header, int16 wincsid, XP_Bool
+char *intl_DecodeMimePartIIStr(const char *header, int16 wincsid, PRBool
 dontConvert)
 {
         int16 mailcsid = INTL_DefaultMailCharSetID(wincsid);
-        XP_Bool no8bitdata = TRUE;
+        PRBool no8bitdata = PR_TRUE;
 
         if (header == 0 || *header == '\0')
                 return NULL;
@@ -1284,12 +1268,12 @@ wincsid, dontConvert));
 extern "C" {
 #define PUBLIC
 PUBLIC char *INTL_DecodeMimePartIIStr(const char *header, int16 wincsid,
-XP_Bool dontConvert)
+PRBool dontConvert)
 {
         return intl_DecodeMimePartIIStr(header, wincsid, dontConvert);
 }
 PUBLIC char *INTL_EncodeMimePartIIStr(char *subject, int16 wincsid,
-XP_Bool bUseMime)
+PRBool bUseMime)
 {
         return intl_EncodeMimePartIIStr(subject, wincsid, bUseMime,
 MAXLINELEN);
@@ -1302,21 +1286,21 @@ are not encoding
 much content
         into the subject string as possible. */
 PUBLIC char *INTL_EncodeMimePartIIStr_VarLen(char *subject, int16 wincsid,
-XP_Bool bUseMime, int encodedWordSize)
+PRBool bUseMime, int encodedWordSize)
 {
         return intl_EncodeMimePartIIStr(subject, wincsid, bUseMime,
 encodedWordSize);
 }
 
 PUBLIC char *IntlDecodeMimePartIIStr(const char *header, int wincsid,
-XP_Bool dontConvert)
+PRBool dontConvert)
 {
         /*      We change IntlDecodeMimePartIIStr to
 INTL_DecodeMimePartIIStr   */
         return intl_DecodeMimePartIIStr(header, (int16)wincsid,
 dontConvert);
 }
-PUBLIC char *IntlEncodeMimePartIIStr(char *subject, int wincsid, XP_Bool
+PUBLIC char *IntlEncodeMimePartIIStr(char *subject, int wincsid, PRBool
 bUseMime)
 {
         /*      We change IntlEncodeMimePartIIStr to
@@ -1332,11 +1316,11 @@ main()
 {
         char *encoded, *decoded;
         printf("mime\n");
-        encoded = intl_EncodeMimePartIIStr("hello world…", 0, TRUE,
+        encoded = intl_EncodeMimePartIIStr("hello world…", 0, PR_TRUE,
 MAXLINELEN);
         printf("%s\n", encoded);
         decoded = intl_DecodeMimePartIIStr((const char *) encoded,
-strlen(encoded), TRUE);
+PL_strlen(encoded), PR_TRUE);
 
         return 0;
 }

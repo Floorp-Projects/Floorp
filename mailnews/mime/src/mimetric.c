@@ -326,7 +326,7 @@ MimeInlineTextRichtext_parse_begin (MimeObject *obj)
   int status = ((MimeObjectClass*)&MIME_SUPERCLASS)->parse_begin(obj);
   char s[] = "";
   if (status < 0) return status;
-  return MimeObject_write(obj, s, 0, TRUE); /* force out any separators... */
+  return MimeObject_write(obj, s, 0, PR_TRUE); /* force out any separators... */
 }
 
 
@@ -349,8 +349,8 @@ MimeInlineTextRichtext_parse_eof (MimeObject *obj, PRBool abort_p)
 	  obj->options->set_html_state_fn)
 	{
 	  return obj->options->set_html_state_fn(obj->options->stream_closure,
-                                                 FALSE, /* layer_encapulate_p */
-                                                 FALSE, /* start_p */
+                                                 PR_FALSE, /* layer_encapulate_p */
+                                                 PR_FALSE, /* start_p */
                                                  abort_p);
 	}
   return 0;

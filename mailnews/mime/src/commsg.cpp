@@ -31,13 +31,13 @@ extern "C" MSG_Pane * MSG_FindPane(MWContext* context, MSG_PaneType type)
 {
   return NULL;
 
-  /* return MSG_Pane::FindPane(context, type, FALSE); */
+  /* return MSG_Pane::FindPane(context, type, PR_FALSE); */
 }
 
 extern "C" XP_Bool
 MSG_ShouldRot13Message(MSG_Pane* messagepane)
 {
-  return FALSE;
+  return PR_FALSE;
   /*  return CastMessagePane(messagepane)->ShouldRot13Message(); */
 }
 
@@ -57,13 +57,13 @@ const char* MSG_FormatDateFromContext(MWContext *context, time_t date)
   static char result[40];	/* 30 probably not enough */
   time_t now = time ((time_t *) 0);
 
-  int32 offset = XP_LocalZoneOffset() * 60L; /* Number of seconds between
+  PRInt32 offset = XP_LocalZoneOffset() * 60L; /* Number of seconds between
 											 local and GMT. */
 
-  int32 secsperday = 24L * 60L * 60L;
+  PRInt32 secsperday = 24L * 60L * 60L;
 
-  int32 nowday = (now + offset) / secsperday;
-  int32 day = (date + offset) / secsperday;
+  PRInt32 nowday = (now + offset) / secsperday;
+  PRInt32 day = (date + offset) / secsperday;
 
   if (day == nowday) {
 	XP_StrfTime(context, result, sizeof(result), XP_TIME_FORMAT,

@@ -58,12 +58,12 @@ MimeInlineTextHTML_parse_begin (MimeObject *obj)
 	  obj->options->output_fn)
 	{
 	  char *base_hdr = MimeHeaders_get (obj->headers, HEADER_CONTENT_BASE,
-										FALSE, FALSE);
+										PR_FALSE, PR_FALSE);
 
     /* rhp - for MHTML Spec changes!!! */
     if (!base_hdr)
     {
-      base_hdr = MimeHeaders_get (obj->headers, "Content-Location", FALSE, FALSE);
+      base_hdr = MimeHeaders_get (obj->headers, "Content-Location", PR_FALSE, PR_FALSE);
     }
     /* rhp - for MHTML Spec changes!!! */
 
@@ -74,9 +74,9 @@ MimeInlineTextHTML_parse_begin (MimeObject *obj)
 	  if (obj->options->set_html_state_fn)
         {
           status = obj->options->set_html_state_fn(obj->options->stream_closure,
-                                                   TRUE,   /* layer_encapulate_p */
-                                                   TRUE,   /* start_p */
-                                                   FALSE); /* abort_p */
+                                                   PR_TRUE,   /* layer_encapulate_p */
+                                                   PR_TRUE,   /* start_p */
+                                                   PR_FALSE); /* abort_p */
           if (status < 0) return status;
         }
 
@@ -110,7 +110,7 @@ MimeInlineTextHTML_parse_begin (MimeObject *obj)
 
 		  PR_Free(base_hdr);
 
-		  status = MimeObject_write(obj, buf, PL_strlen(buf), FALSE);
+		  status = MimeObject_write(obj, buf, PL_strlen(buf), PR_FALSE);
 		  PR_Free(buf);
 		  if (status < 0) return status;
 		}
@@ -126,7 +126,7 @@ MimeInlineTextHTML_parse_line (char *line, PRInt32 length, MimeObject *obj)
   if (!obj->output_p) return 0;
 
   if (obj->options && obj->options->output_fn)
-	return MimeObject_write(obj, line, length, TRUE);
+	return MimeObject_write(obj, line, length, PR_TRUE);
   else
 	return 0;
 }
@@ -152,8 +152,8 @@ MimeInlineTextHTML_parse_eof (MimeObject *obj, PRBool abort_p)
 	  obj->options->set_html_state_fn)
 	{
       return obj->options->set_html_state_fn(obj->options->stream_closure,
-                                             TRUE,  /* layer_encapulate_p */
-                                             FALSE, /* start_p */
+                                             PR_TRUE,  /* layer_encapulate_p */
+                                             PR_FALSE, /* start_p */
                                              abort_p);
 	}
   return 0;

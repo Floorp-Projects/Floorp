@@ -71,7 +71,7 @@ MimeMultipartAppleDouble_parse_begin (MimeObject *obj)
 #if !defined(XP_MAC) && !defined(MOZILLA_30)
   if (obj->options && obj->options->state) 
   {
-	obj->options->state->separator_suppressed_p = TRUE;
+	obj->options->state->separator_suppressed_p = PR_TRUE;
 	goto done;
   }
   /*
@@ -112,7 +112,7 @@ MimeMultipartAppleDouble_parse_begin (MimeObject *obj)
 		  else
 		  {
 			/* This is just a normal MIME part as usual. */
-			id_url = mime_set_url_part(url, id, TRUE);
+			id_url = mime_set_url_part(url, id, PR_TRUE);
 		  }
 		  if (!id_url)
 			{
@@ -148,14 +148,14 @@ MimeMultipartAppleDouble_parse_begin (MimeObject *obj)
 			 headers. */
 		  obj->options->state &&
 		  obj->options->state->root == obj->parent)
-		all_headers_p = FALSE;
+		all_headers_p = PR_FALSE;
 
-	  newopt.fancy_headers_p = TRUE;
+	  newopt.fancy_headers_p = PR_TRUE;
 	  newopt.headers = (all_headers_p ? MimeHeadersAll : MimeHeadersSome);
 
 	  {
 		char p[] = "<P>";
-		status = MimeObject_write(obj, p, 3, FALSE);
+		status = MimeObject_write(obj, p, 3, PR_FALSE);
 		if (status < 0) goto FAIL;
 	  }
 
@@ -169,8 +169,8 @@ MimeMultipartAppleDouble_parse_begin (MimeObject *obj)
 		 them closer together. */
 
 	FAIL:
-	  FREEIF(id);
-	  FREEIF(id_url);
+	  PR_FREEIF(id);
+	  PR_FREEIF(id_url);
 	  if (status < 0) return status;
 	}
 
@@ -198,7 +198,7 @@ MimeMultipartAppleDouble_output_child_p(MimeObject *obj, MimeObject *child)
 	  cont->children[0] == child &&
 	  child->content_type &&
 	  !PL_strcasecmp(child->content_type, APPLICATION_APPLEFILE))
-	return FALSE;
+	return PR_FALSE;
   else
-	return TRUE;
+	return PR_TRUE;
 }

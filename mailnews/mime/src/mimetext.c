@@ -70,7 +70,7 @@ MimeInlineText_initialize (MimeObject *obj)
 	  else
 		{
 		  char *ct = MimeHeaders_get (obj->headers, HEADER_CONTENT_TYPE,
-									  FALSE, FALSE);
+									  PR_FALSE, PR_FALSE);
 		  if (ct)
 			{
 			  text->charset = MimeHeaders_get_parameter (ct, "charset", NULL, NULL);
@@ -85,7 +85,7 @@ MimeInlineText_initialize (MimeObject *obj)
 			   */
 			  text->charset = MimeHeaders_get (obj->headers,
 											   HEADER_X_SUN_CHARSET,
-											   FALSE, FALSE);
+											   PR_FALSE, PR_FALSE);
 			}
 
 		  if (!text->charset)
@@ -112,14 +112,14 @@ MimeInlineText_finalize (MimeObject *obj)
 {
   MimeInlineText *text = (MimeInlineText *) obj;
 
-  obj->class->parse_eof (obj, FALSE);
-  obj->class->parse_end (obj, FALSE);
+  obj->class->parse_eof (obj, PR_FALSE);
+  obj->class->parse_end (obj, PR_FALSE);
 
-  FREEIF(text->charset);
+  PR_FREEIF(text->charset);
 
   /* Should have been freed by parse_eof, but just in case... */
   PR_ASSERT(!text->cbuffer);
-  FREEIF (text->cbuffer);
+  PR_FREEIF (text->cbuffer);
 
   ((MimeObjectClass*)&MIME_SUPERCLASS)->finalize (obj);
 }
@@ -149,7 +149,7 @@ MimeInlineText_parse_eof (MimeObject *obj, PRBool abort_p)
 	  obj->ibuffer_fp = 0;
 	  if (status < 0)
 		{
-		  obj->closed_p = TRUE;
+		  obj->closed_p = PR_TRUE;
 		  return status;
 		}
 	}
@@ -168,7 +168,7 @@ MimeInlineText_parse_end (MimeObject *obj, PRBool abort_p)
 	}
 
   /* We won't be needing this buffer any more; nuke it. */
-  FREEIF(text->cbuffer);
+  PR_FREEIF(text->cbuffer);
   text->cbuffer_size = 0;
 
   return ((MimeObjectClass*)&MIME_SUPERCLASS)->parse_end (obj, abort_p);
@@ -226,7 +226,7 @@ MimeInlineText_parse_decoded_buffer (char *buf, PRInt32 size, MimeObject *obj)
   /* If we're supposed to write this object, but aren't supposed to convert
 	 it to HTML, simply pass it through unaltered. */
   if (!obj->options->write_html_p)
-	return MimeObject_write(obj, buf, size, TRUE);
+	return MimeObject_write(obj, buf, size, PR_TRUE);
 
   /* This is just like the parse_decoded_buffer method we inherit from the
 	 MimeLeaf class, except that we line-buffer to our own wrapper on the
@@ -234,7 +234,7 @@ MimeInlineText_parse_decoded_buffer (char *buf, PRInt32 size, MimeObject *obj)
    */
   return msg_LineBuffer (buf, size,
 						 &obj->ibuffer, &obj->ibuffer_size, &obj->ibuffer_fp,
-						 TRUE,
+						 PR_TRUE,
 						 ((int (*) (char *, PRInt32, void *))
 						  /* This cast is to turn void into MimeObject */
 						  MimeInlineText_rotate_convert_and_parse_line),
@@ -286,7 +286,7 @@ MimeInlineText_rotate_convert_and_parse_line(char *line, PRInt32 length,
 												 obj->options->stream_closure);
 	  if (status < 0)
 		{
-		  FREEIF(converted);
+		  PR_FREEIF(converted);
 		  return status;
 		}
 
@@ -300,6 +300,6 @@ MimeInlineText_rotate_convert_and_parse_line(char *line, PRInt32 length,
   /* Now that the line has been converted, call the subclass's parse_line
 	 method with the decoded data. */
   status = obj->class->parse_line(line, length, obj);
-  FREEIF(converted);
+  PR_FREEIF(converted);
   return status;
 }

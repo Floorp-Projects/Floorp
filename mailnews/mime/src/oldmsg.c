@@ -59,10 +59,10 @@ msg_GrowBuffer (PRUint32 desired_size, PRUint32 element_size, PRUint32 quantum,
    in the very last call to this function.)
  */
 int
-msg_ReBuffer (const char *net_buffer, int32 net_buffer_size,
-			  uint32 desired_buffer_size,
-			  char **bufferP, uint32 *buffer_sizeP, uint32 *buffer_fpP,
-			  int32 (*per_buffer_fn) (char *buffer, uint32 buffer_size,
+msg_ReBuffer (const char *net_buffer, PRInt32 net_buffer_size,
+			  PRUint32 desired_buffer_size,
+			  char **bufferP, PRUint32 *buffer_sizeP, PRUint32 *buffer_fpP,
+			  PRInt32 (*per_buffer_fn) (char *buffer, PRUint32 buffer_size,
 									  void *closure),
 			  void *closure)
 {
@@ -77,7 +77,7 @@ msg_ReBuffer (const char *net_buffer, int32 net_buffer_size,
 
   do
 	{
-	  int32 size = *buffer_sizeP - *buffer_fpP;
+	  PRInt32 size = *buffer_sizeP - *buffer_fpP;
 	  if (size > net_buffer_size)
 		size = net_buffer_size;
 	  if (size > 0)
@@ -249,21 +249,21 @@ msg_LineBuffer (const char *net_buffer, PRInt32 net_buffer_size,
 
 struct msg_rebuffering_stream_data
 {
-  uint32 desired_size;
+  PRUint32 desired_size;
   char *buffer;
-  uint32 buffer_size;
-  uint32 buffer_fp;
+  PRUint32 buffer_size;
+  PRUint32 buffer_fp;
   NET_StreamClass *next_stream;
 };
 
 
-static int32
-msg_rebuffering_stream_write_next_chunk (char *buffer, uint32 buffer_size,
+static PRInt32
+msg_rebuffering_stream_write_next_chunk (char *buffer, PRUint32 buffer_size,
 							 void *closure)
 {
   struct msg_rebuffering_stream_data *sd =
 	(struct msg_rebuffering_stream_data *) closure;
-  XP_ASSERT (sd);
+  PR_ASSERT (sd);
   if (!sd) return -1;
   if (!sd->next_stream) return -1;
   return (*sd->next_stream->put_block) (sd->next_stream->data_object,
@@ -273,11 +273,11 @@ msg_rebuffering_stream_write_next_chunk (char *buffer, uint32 buffer_size,
 static int
 msg_rebuffering_stream_write_chunk (void *stream,
 									const char* net_buffer,
-									int32 net_buffer_size)
+									PRInt32 net_buffer_size)
 {
   struct msg_rebuffering_stream_data *sd =
 	(struct msg_rebuffering_stream_data *) stream;  
-  XP_ASSERT (sd);
+  PR_ASSERT (sd);
   if (!sd) return -1;
   return msg_ReBuffer (net_buffer, net_buffer_size,
 					   sd->desired_size,
@@ -286,7 +286,7 @@ msg_rebuffering_stream_write_chunk (void *stream,
 					   sd);
 }
 
-XP_Bool ValidateDocData(MWContext *window_id) 
+PRBool ValidateDocData(MWContext *window_id) 
 { 
   printf("ValidateDocData not implemented, stubbed in webshell/tests/viewer/nsStubs.cpp\n"); 
   return PR_TRUE; 
@@ -345,20 +345,20 @@ msg_MakeRebufferingStream (NET_StreamClass *next_stream,
   NET_StreamClass *stream;
   struct msg_rebuffering_stream_data *sd;
 
-  XP_ASSERT (next_stream);
+  PR_ASSERT (next_stream);
 
-  stream = XP_NEW (NET_StreamClass);
+  stream = PR_NEW (NET_StreamClass);
   if (!stream) return 0;
 
-  sd = XP_NEW (struct msg_rebuffering_stream_data);
+  sd = PR_NEW (struct msg_rebuffering_stream_data);
   if (! sd)
 	{
 	  PR_Free (stream);
 	  return 0;
 	}
 
-  XP_MEMSET (sd, 0, sizeof(*sd));
-  XP_MEMSET (stream, 0, sizeof(*stream));
+  memset (sd, 0, sizeof(*sd));
+  memset (stream, 0, sizeof(*stream));
 
   sd->next_stream = next_stream;
   sd->desired_size = 10240;

@@ -52,15 +52,11 @@ class MSG_SendPart;
 /* any additional ones.  Thanks.  - Terry */
 
 #ifdef DEBUG
-#define PRINTF(msg) XP_Trace msg
+#define PRINTF(msg) PR_LogPrint msg
 #else
 #define PRINTF(msg)
 #endif
 
-#ifdef FREEIF
-#undef FREEIF
-#endif
-#define FREEIF(obj) do { if (obj) { XP_FREE (obj); obj = 0; }} while (0)
 
 /* The Netscape-specific header fields that we use for storing our
    various bits of state in mail folders.
@@ -88,7 +84,7 @@ class MSG_SendPart;
 /* Provide a common means of detecting empty lines in a message. i.e. to detect the end of headers among other things...*/
 #define EMPTY_MESSAGE_LINE(buf) (buf[0] == CR || buf[0] == LF || buf[0] == '\0')
 
-typedef int32 MsgChangeCookie;	/* used to unregister change notification */
+typedef PRInt32 MsgChangeCookie;	/* used to unregister change notification */
 
 /* The three ways the list of newsgroups can be pruned.
  */
@@ -142,7 +138,7 @@ typedef MSG_CommandType MSG_REPLY_TYPE;
 typedef struct message_header
 {
   const char *value; /* The contents of a header (after ": ") */
-  int32 length;      /* The length of the data (it is not NULL-terminated.) */
+  PRInt32 length;      /* The length of the data (it is not NULL-terminated.) */
 } message_header;
 
 

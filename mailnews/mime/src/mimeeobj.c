@@ -132,7 +132,7 @@ MimeExternalObject_parse_begin (MimeObject *obj)
 		  else
 		  {
 			/* This is just a normal MIME part as usual. */
-			id_url = mime_set_url_part(url, id, TRUE);
+			id_url = mime_set_url_part(url, id, PR_TRUE);
 		  }
 		  if (!id_url)
 			{
@@ -171,14 +171,14 @@ MimeExternalObject_parse_begin (MimeObject *obj)
 			 headers. */
 		  obj->options->state &&
 		  obj->options->state->root == obj->parent)
-		all_headers_p = FALSE;
+		all_headers_p = PR_FALSE;
 
-	  newopt.fancy_headers_p = TRUE;
+	  newopt.fancy_headers_p = PR_TRUE;
 	  newopt.headers = (all_headers_p ? MimeHeadersAll : MimeHeadersSome);
 
 	  {
 		char p[] = "<P>";
-		status = MimeObject_write(obj, p, 3, FALSE);
+		status = MimeObject_write(obj, p, 3, PR_FALSE);
 		if (status < 0) goto FAIL;
 	  }
 
@@ -186,19 +186,19 @@ MimeExternalObject_parse_begin (MimeObject *obj)
 												 obj->content_type,
 												 obj->encoding,
 												 id_name? id_name : id, id_url, 0);
-	  FREEIF(id_name);
+	  PR_FREEIF(id_name);
 	  if (status < 0) goto FAIL;
 
 	  {
 		char p[] = "<P>";
-		status = MimeObject_write(obj, p, 3, FALSE);
+		status = MimeObject_write(obj, p, 3, PR_FALSE);
 		if (status < 0) goto FAIL;
 	  }
 
 	FAIL:
-	  FREEIF(id);
-	  FREEIF(id_url);
-  	  FREEIF(id_name);
+	  PR_FREEIF(id);
+	  PR_FREEIF(id_url);
+  	  PR_FREEIF(id_name);
 	  if (status < 0) return status;
 	}
 
@@ -254,7 +254,7 @@ MimeExternalObject_parse_decoded_buffer (char *buf, PRInt32 size,
 	  return -1;
 	}
 
-  return MimeObject_write(obj, buf, size, TRUE);
+  return MimeObject_write(obj, buf, size, PR_TRUE);
 }
 
 
@@ -271,5 +271,5 @@ static PRBool
 MimeExternalObject_displayable_inline_p (MimeObjectClass *class,
 										 MimeHeaders *hdrs)
 {
-  return FALSE;
+  return PR_FALSE;
 }

@@ -100,7 +100,7 @@ MimeUntypedText_parse_line (char *line, PRInt32 length, MimeObject *obj)
   MimeUntypedText *uty = (MimeUntypedText *) obj;
   int status = 0;
   char *name = 0, *type = 0;
-  PRBool begin_line_p = FALSE;
+  PRBool begin_line_p = PR_FALSE;
 
   PR_ASSERT(line && *line);
   if (!line || !*line) return -1;
@@ -111,7 +111,7 @@ MimeUntypedText_parse_line (char *line, PRInt32 length, MimeObject *obj)
 	  obj->options &&
 	  !obj->options->write_html_p &&
 	  obj->options->output_fn)
-	return MimeObject_write(obj, line, length, TRUE);
+	return MimeObject_write(obj, line, length, PR_TRUE);
 
 
   /* Open a new sub-part if this line demands it.
@@ -125,10 +125,10 @@ MimeUntypedText_parse_line (char *line, PRInt32 length, MimeObject *obj)
 											 MimeUntypedTextSubpartTypeUUE,
 											 type, ENCODING_UUENCODE,
 											 name, NULL);
-	  FREEIF(name);
-	  FREEIF(type);
+	  PR_FREEIF(name);
+	  PR_FREEIF(type);
 	  if (status < 0) return status;
-	  begin_line_p = TRUE;
+	  begin_line_p = PR_TRUE;
 	}
 
   else if (line[0] == '(' && line[1] == 'T' &&
@@ -140,7 +140,7 @@ MimeUntypedText_parse_line (char *line, PRInt32 length, MimeObject *obj)
 											 APPLICATION_BINHEX, NULL,
 											 NULL, NULL);
 	  if (status < 0) return status;
-	  begin_line_p = TRUE;
+	  begin_line_p = PR_TRUE;
 	}
 
   /* Open a text/plain sub-part if there is no sub-part open.
@@ -194,7 +194,7 @@ MimeUntypedText_close_subpart (MimeObject *obj)
 
   if (uty->open_subpart)
 	{
-	  status = uty->open_subpart->class->parse_eof(uty->open_subpart, FALSE);
+	  status = uty->open_subpart->class->parse_eof(uty->open_subpart, PR_FALSE);
 	  uty->open_subpart = 0;
 
 	  PR_ASSERT(uty->open_hdrs);
@@ -211,7 +211,7 @@ MimeUntypedText_close_subpart (MimeObject *obj)
 		 have separators before and after them.)
 		 */
 	  if (obj->options && obj->options->state)
-		obj->options->state->separator_suppressed_p = TRUE;
+		obj->options->state->separator_suppressed_p = PR_TRUE;
 	}
 
   PR_ASSERT(!uty->open_hdrs);
@@ -311,12 +311,12 @@ MimeUntypedText_open_subpart (MimeObject *obj,
 	PRBool horrid_kludge = (obj->options && obj->options->state &&
 							 obj->options->state->first_part_written_p);
 	if (horrid_kludge)
-	  obj->options->state->first_part_written_p = FALSE;
+	  obj->options->state->first_part_written_p = PR_FALSE;
 
 	uty->open_subpart = mime_create(type, uty->open_hdrs, obj->options);
 
 	if (horrid_kludge)
-	  obj->options->state->first_part_written_p = TRUE;
+	  obj->options->state->first_part_written_p = PR_TRUE;
 
 	if (!uty->open_subpart)
 	  {
@@ -347,7 +347,7 @@ MimeUntypedText_open_subpart (MimeObject *obj,
   uty->type = ttype;
 
  FAIL:
-  FREEIF(h);
+  PR_FREEIF(h);
 
   if (status < 0 && uty->open_hdrs)
 	{
@@ -370,29 +370,29 @@ MimeUntypedText_uu_begin_line_p(const char *line, PRInt32 length,
   if (type_ret) *type_ret = 0;
   if (name_ret) *name_ret = 0;
 
-  if (PL_strncmp (line, "begin ", 6)) return FALSE;
+  if (PL_strncmp (line, "begin ", 6)) return PR_FALSE;
   /* ...then three or four octal digits. */
   s = line + 6;
-  if (*s < '0' || *s > '7') return FALSE;
+  if (*s < '0' || *s > '7') return PR_FALSE;
   s++;
-  if (*s < '0' || *s > '7') return FALSE;
+  if (*s < '0' || *s > '7') return PR_FALSE;
   s++;
-  if (*s < '0' || *s > '7') return FALSE;
+  if (*s < '0' || *s > '7') return PR_FALSE;
   s++;
   if (*s == ' ')
 	s++;
   else
 	{
-	  if (*s < '0' || *s > '7') return FALSE;
+	  if (*s < '0' || *s > '7') return PR_FALSE;
 	  s++;
-	  if (*s != ' ') return FALSE;
+	  if (*s != ' ') return PR_FALSE;
 	}
 
   while (XP_IS_SPACE(*s))
 	s++;
 
   name = (char *) PR_MALLOC(((line+length)-s) + 1);
-  if (!name) return FALSE; /* grr... */
+  if (!name) return PR_FALSE; /* grr... */
   XP_MEMCPY(name, s, (line+length)-s);
   name[(line+length)-s] = 0;
 
@@ -410,14 +410,14 @@ MimeUntypedText_uu_begin_line_p(const char *line, PRInt32 length,
   if (name_ret)
 	*name_ret = name;
   else
-	FREEIF(name);
+	PR_FREEIF(name);
 
   if (type_ret)
 	*type_ret = type;
   else
-	FREEIF(type);
+	PR_FREEIF(type);
 
-  return TRUE;
+  return PR_TRUE;
 }
 
 static PRBool
@@ -461,18 +461,18 @@ MimeUntypedText_binhex_begin_line_p(const char *line, PRInt32 length,
 									MimeDisplayOptions *opt)
 {
   if (length <= BINHEX_MAGIC_LEN)
-	return FALSE;
+	return PR_FALSE;
 
   while(length > 0 && XP_IS_SPACE(line[length-1]))
 	length--;
 
   if (length != BINHEX_MAGIC_LEN)
-	return FALSE;
+	return PR_FALSE;
 
   if (!PL_strncmp(line, BINHEX_MAGIC, BINHEX_MAGIC_LEN))
-	return TRUE;
+	return PR_TRUE;
   else
-	return FALSE;
+	return PR_FALSE;
 }
 
 static PRBool
@@ -482,7 +482,7 @@ MimeUntypedText_binhex_end_line_p(const char *line, PRInt32 length)
   if (length > 0 && line[length-1] == CR) length--;
 
   if (length != 0 && length != 64)
-	return TRUE;
+	return PR_TRUE;
   else
-	return FALSE;
+	return PR_FALSE;
 }

@@ -193,7 +193,7 @@ static PRBool
 MimeMultipartAlternative_display_part_p(MimeObject *self,
 										MimeHeaders *sub_hdrs)
 {
-  char *ct = MimeHeaders_get (sub_hdrs, HEADER_CONTENT_TYPE, TRUE, FALSE);
+  char *ct = MimeHeaders_get (sub_hdrs, HEADER_CONTENT_TYPE, PR_TRUE, PR_FALSE);
 
   /* RFC 1521 says:
 	   Receiving user agents should pick and display the last format
@@ -207,11 +207,11 @@ MimeMultipartAlternative_display_part_p(MimeObject *self,
 	 are themselves unknown.
    */
 
-  MimeObjectClass *class = mime_find_class (ct, sub_hdrs, self->options, TRUE);
+  MimeObjectClass *class = mime_find_class (ct, sub_hdrs, self->options, PR_TRUE);
   PRBool result = (class
 					? class->displayable_inline_p(class, sub_hdrs)
-					: FALSE);
-  FREEIF(ct);
+					: PR_FALSE);
+  PR_FREEIF(ct);
   return result;
 }
 
@@ -239,7 +239,7 @@ MimeMultipartAlternative_display_cached_part(MimeObject *obj)
 
   char *ct = (malt->buffered_hdrs
 			  ? MimeHeaders_get (malt->buffered_hdrs, HEADER_CONTENT_TYPE,
-								 TRUE, FALSE)
+								 PR_TRUE, PR_FALSE)
 			  : 0);
   const char *dct = (((MimeMultipartClass *) obj->class)->default_part_type);
   MimeObject *body;
@@ -252,7 +252,7 @@ MimeMultipartAlternative_display_cached_part(MimeObject *obj)
   body = mime_create(((ct && *ct) ? ct : (dct ? dct: TEXT_PLAIN)),
 					 malt->buffered_hdrs, obj->options);
 
-  FREEIF(ct);
+  PR_FREEIF(ct);
   if (!body) return MK_OUT_OF_MEMORY;
 
   multipart_p = mime_typep(body, (MimeObjectClass *) &mimeMultipartClass);
@@ -306,9 +306,9 @@ MimeMultipartAlternative_display_cached_part(MimeObject *obj)
   MimeMultipartAlternative_cleanup(obj);
 
   /* Done parsing. */
-  status = body->class->parse_eof(body, FALSE);
+  status = body->class->parse_eof(body, PR_FALSE);
   if (status < 0) return status;
-  status = body->class->parse_end(body, FALSE);
+  status = body->class->parse_end(body, PR_FALSE);
   if (status < 0) return status;
 
 #ifdef MIME_DRAFTS

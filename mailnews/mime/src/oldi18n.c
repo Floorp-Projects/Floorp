@@ -63,7 +63,7 @@ unsigned char *INTL_ConvertLineWithoutAutoDetect(
     int16 fromcsid,
     int16 tocsid,
     unsigned char *pSrc,
-    uint32 block_size)
+    PRUint32 block_size)
 {
 	return NULL;
 }
@@ -88,7 +88,7 @@ INTL_DefaultDocCharSetID(iDocumentContext context)
 unsigned char *INTL_ConvMailToWinCharCode(
     iDocumentContext context,
     unsigned char *bit7buff,
-    uint32 block_size
+    PRUint32 block_size
 )
 {
 	return NULL;

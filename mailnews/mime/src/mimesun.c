@@ -112,7 +112,7 @@ MimeSunAttachment_create_child(MimeObject *obj)
 
   sun_data_type = (mult->hdrs
 				   ? MimeHeaders_get (mult->hdrs, HEADER_X_SUN_DATA_TYPE,
-									  TRUE, FALSE)
+									  PR_TRUE, PR_FALSE)
 				   : 0);
   if (sun_data_type)
 	{
@@ -193,7 +193,7 @@ MimeSunAttachment_create_child(MimeObject *obj)
 		  PR_Free(name);
 		  if (!mime_ct2 || !PL_strcasecmp (mime_ct2, UNKNOWN_CONTENT_TYPE))
 			{
-			  FREEIF(mime_ct2);
+			  PR_FREEIF(mime_ct2);
 			  mime_ct = APPLICATION_OCTET_STREAM;
 			}
 		}
@@ -201,7 +201,7 @@ MimeSunAttachment_create_child(MimeObject *obj)
   if (!mime_ct)
 	mime_ct = APPLICATION_OCTET_STREAM;
 
-  FREEIF(sun_data_type);
+  PR_FREEIF(sun_data_type);
 
 
   /* Convert recognised Sun encodings to the corresponding MIME encodings.
@@ -224,7 +224,7 @@ MimeSunAttachment_create_child(MimeObject *obj)
 
   sun_data_type = (mult->hdrs
 				   ? MimeHeaders_get (mult->hdrs, HEADER_X_SUN_ENCODING_INFO,
-									  FALSE,FALSE)
+									  PR_FALSE,PR_FALSE)
 				   : 0);
   sun_enc_info = sun_data_type;
 
@@ -282,7 +282,7 @@ MimeSunAttachment_create_child(MimeObject *obj)
   else if (!PL_strcasecmp(sun_enc_info,"gzip"))	  mime_cte = ENCODING_GZIP;
   else										mime_ct = APPLICATION_OCTET_STREAM;
 
-  FREEIF(sun_data_type);
+  PR_FREEIF(sun_data_type);
 
 
   /* Now that we know its type and encoding, create a MimeObject to represent
@@ -299,8 +299,8 @@ MimeSunAttachment_create_child(MimeObject *obj)
 	 one right now, because the X-Sun- headers aren't generally recognised by
 	 the rest of this library.)
    */
-  FREEIF(child->content_type);
-  FREEIF(child->encoding);
+  PR_FREEIF(child->content_type);
+  PR_FREEIF(child->encoding);
   PR_ASSERT(mime_ct);
   child->content_type = (mime_ct  ? PL_strdup(mime_ct)  : 0);
   child->encoding     = (mime_cte ? PL_strdup(mime_cte) : 0);
@@ -323,8 +323,8 @@ MimeSunAttachment_create_child(MimeObject *obj)
   if (status < 0) goto FAIL;
 
  FAIL:
-  FREEIF(mime_ct2);
-  FREEIF(sun_data_type);
+  PR_FREEIF(mime_ct2);
+  PR_FREEIF(sun_data_type);
   return status;
 }
 

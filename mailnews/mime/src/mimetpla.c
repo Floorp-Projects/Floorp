@@ -63,7 +63,7 @@ MimeInlineTextPlain_parse_begin (MimeObject *obj)
 	  s = PL_strdup(strs[(obj->options->variable_width_plaintext_p ? 1 : 0) +
 						(obj->options->wrap_long_lines_p ? 2 : 0)]);
 	  if (!s) return MK_OUT_OF_MEMORY;
-	  status = MimeObject_write(obj, s, PL_strlen(s), FALSE);
+	  status = MimeObject_write(obj, s, PL_strlen(s), PR_FALSE);
 	  PR_Free(s);
 	  if (status < 0) return status;
 
@@ -94,7 +94,7 @@ MimeInlineTextPlain_parse_eof (MimeObject *obj, PRBool abort_p)
 	  !abort_p)
 	{
 	  char s[] = "</PRE>";
-	  status = MimeObject_write(obj, s, PL_strlen(s), FALSE);
+	  status = MimeObject_write(obj, s, PL_strlen(s), PR_FALSE);
 	  if (status < 0) return status;
 
 	  /* text/plain objects always have separators before and after them.
@@ -130,8 +130,8 @@ MimeInlineTextPlain_parse_line (char *line, PRInt32 length, MimeObject *obj)
 #endif /* !MOZILLA_30 */
 							line, length, obj->obuffer, obj->obuffer_size - 10,
 							(obj->options ?
-							 obj->options->dont_touch_citations_p : FALSE));
+							 obj->options->dont_touch_citations_p : PR_FALSE));
   if (status < 0) return status;
   PR_ASSERT(*line == 0 || *obj->obuffer);
-  return MimeObject_write(obj, obj->obuffer, PL_strlen(obj->obuffer), TRUE);
+  return MimeObject_write(obj, obj->obuffer, PL_strlen(obj->obuffer), PR_TRUE);
 }

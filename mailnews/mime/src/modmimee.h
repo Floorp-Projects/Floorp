@@ -76,7 +76,7 @@ int MimeDecoderWrite (MimeDecoderData *data, const char *buffer, PRInt32 size);
 int MimeEncoderWrite (MimeEncoderData *data, const char *buffer, PRInt32 size);
 
 /* When you're done encoding/decoding, call this to free the data.  If
-   abort_p is FALSE, then calling this may cause the write_fn to be called
+   abort_p is PR_FALSE, then calling this may cause the write_fn to be called
    one last time (as the last buffered data is flushed out.)
  */
 int MimeDecoderDestroy(MimeDecoderData *data, PRBool abort_p);

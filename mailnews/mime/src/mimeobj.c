@@ -73,11 +73,11 @@ MimeObject_initialize (MimeObject *obj)
   /* Set up the content-type and encoding. */
   if (!obj->content_type && obj->headers)
 	obj->content_type = MimeHeaders_get (obj->headers, HEADER_CONTENT_TYPE,
-										 TRUE, FALSE);
+										 PR_TRUE, PR_FALSE);
   if (!obj->encoding && obj->headers)
 	obj->encoding = MimeHeaders_get (obj->headers,
 									 HEADER_CONTENT_TRANSFER_ENCODING,
-									 TRUE, FALSE);
+									 PR_TRUE, PR_FALSE);
 
 
   /* Special case to normalize some types and encodings to a canonical form.
@@ -129,8 +129,8 @@ MimeObject_initialize (MimeObject *obj)
 static void
 MimeObject_finalize (MimeObject *obj)
 {
-  obj->class->parse_eof (obj, FALSE);
-  obj->class->parse_end (obj, FALSE);
+  obj->class->parse_eof (obj, PR_FALSE);
+  obj->class->parse_end (obj, PR_FALSE);
 
   if (obj->headers)
 	{
@@ -141,11 +141,11 @@ MimeObject_finalize (MimeObject *obj)
   /* Should have been freed by parse_eof, but just in case... */
   PR_ASSERT(!obj->ibuffer);
   PR_ASSERT(!obj->obuffer);
-  FREEIF (obj->ibuffer);
-  FREEIF (obj->obuffer);
+  PR_FREEIF (obj->ibuffer);
+  PR_FREEIF (obj->obuffer);
 
-  FREEIF(obj->content_type);
-  FREEIF(obj->encoding);
+  PR_FREEIF(obj->content_type);
+  PR_FREEIF(obj->encoding);
 
   if (obj->options && obj->options->state)
 	{
@@ -168,16 +168,16 @@ MimeObject_parse_begin (MimeObject *obj)
 
 	  obj->options->state = PR_NEW(MimeParseStateObject);
 	  if (!obj->options->state) return MK_OUT_OF_MEMORY;
-	  XP_MEMSET(obj->options->state, 0, sizeof(*obj->options->state));
+	  memset(obj->options->state, 0, sizeof(*obj->options->state));
 	  obj->options->state->root = obj;
-	  obj->options->state->separator_suppressed_p = TRUE; /* no first sep */
+	  obj->options->state->separator_suppressed_p = PR_TRUE; /* no first sep */
 	}
 
   /* Decide whether this object should be output or not... */
   if (!obj->options || !obj->options->output_fn)
-	obj->output_p = FALSE;
+	obj->output_p = PR_FALSE;
   else if (!obj->options->part_to_load)
-	obj->output_p = TRUE;
+	obj->output_p = PR_TRUE;
   else
 	{
 	  char *id = mime_part_address(obj);
@@ -195,7 +195,7 @@ MimeObject_parse_begin (MimeObject *obj)
 						   (MimeObjectClass*) &mimeInlineTextPlainClass) &&
 		  !mime_subclass_p(obj->class,
 						   (MimeObjectClass*) &mimeContainerClass)) {
-		  obj->output_p = FALSE;
+		  obj->output_p = PR_FALSE;
 	  }
   }
 #endif /* !MOZILLA_30 */
@@ -211,7 +211,7 @@ MimeObject_parse_buffer (char *buffer, PRInt32 size, MimeObject *obj)
 
   return msg_LineBuffer (buffer, size,
 						 &obj->ibuffer, &obj->ibuffer_size, &obj->ibuffer_fp,
-						 TRUE,
+						 PR_TRUE,
 						 ((int (*) (char *, PRInt32, void *))
 						  /* This cast is to turn void into MimeObject */
 						  obj->class->parse_line),
@@ -245,12 +245,12 @@ MimeObject_parse_eof (MimeObject *obj, PRBool abort_p)
 	  obj->ibuffer_fp = 0;
 	  if (status < 0)
 		{
-		  obj->closed_p = TRUE;
+		  obj->closed_p = PR_TRUE;
 		  return status;
 		}
 	}
 
-  obj->closed_p = TRUE;
+  obj->closed_p = PR_TRUE;
   return 0;
 }
 
@@ -265,14 +265,14 @@ MimeObject_parse_end (MimeObject *obj, PRBool abort_p)
 	}
 
   /* We won't be needing these buffers any more; nuke 'em. */
-  FREEIF(obj->ibuffer);
+  PR_FREEIF(obj->ibuffer);
   obj->ibuffer_fp = 0;
   obj->ibuffer_size = 0;
-  FREEIF(obj->obuffer);
+  PR_FREEIF(obj->obuffer);
   obj->obuffer_fp = 0;
   obj->obuffer_size = 0;
 
-  obj->parsed_p = TRUE;
+  obj->parsed_p = PR_TRUE;
   return 0;
 }
 
@@ -281,7 +281,7 @@ static PRBool
 MimeObject_displayable_inline_p (MimeObjectClass *class, MimeHeaders *hdrs)
 {
   PR_ASSERT(0);  /* This method should never be called. */
-  return FALSE;
+  return PR_FALSE;
 }
 
 
@@ -297,7 +297,7 @@ MimeObject_debug_print (MimeObject *obj, FILE *stream, PRInt32 depth)
   fprintf(stream, "<%s %s 0x%08X>\n", obj->class->class_name,
 		  addr ? addr : "???",
 		  (PRUint32) obj);
-  FREEIF(addr);
+  PR_FREEIF(addr);
   return 0;
 }
 #endif

@@ -224,9 +224,9 @@ test_passwd_prompt (PK11SlotInfo *slot, void *wincx)
   fprintf(stdout, "#### Password required: ");
   s = fgets(buf, sizeof(buf)-1, stdin);
   if (!s) return s;
-  if (s[strlen(s)-1] == '\r' ||
-	  s[strlen(s)-1] == '\n')
-	s[strlen(s)-1] = '\0';
+  if (s[PL_strlen(s)-1] == '\r' ||
+	  s[PL_strlen(s)-1] == '\n')
+	s[PL_strlen(s)-1] = '\0';
   return s;
 }
 
@@ -243,14 +243,14 @@ test(FILE *in, FILE *out,
   int status = 0;
   MimeObject *obj = 0;
   MimeDisplayOptions *opt = PR_NEW(MimeDisplayOptions);
-  XP_MEMSET(opt, 0, sizeof(*opt));
+  memset(opt, 0, sizeof(*opt));
 
-  if (dexlate_p) html_p = FALSE;
+  if (dexlate_p) html_p = PR_FALSE;
 
   opt->fancy_headers_p = fancy_headers_p;
   opt->headers = MimeHeadersSome;
-  opt->no_inline_p = FALSE;
-  opt->rot13_p = FALSE;
+  opt->no_inline_p = PR_FALSE;
+  opt->rot13_p = PR_FALSE;
 
   status = mime_parse_url_options(url, opt);
   if (status < 0)
@@ -314,9 +314,9 @@ test(FILE *in, FILE *out,
 		}
 	}
 
-  status = obj->class->parse_eof(obj, FALSE);
+  status = obj->class->parse_eof(obj, PR_FALSE);
   if (status >= 0)
-	status = obj->class->parse_end(obj, FALSE);
+	status = obj->class->parse_end(obj, PR_FALSE);
   if (status < 0)
 	{
 	  mime_free(obj);
@@ -368,10 +368,10 @@ main (int argc, char **argv)
 {
   PRInt32 i = 1;
   char *url = "";
-  PRBool fancy_p = TRUE;
-  PRBool html_p = TRUE;
-  PRBool outline_p = FALSE;
-  PRBool dexlate_p = FALSE;
+  PRBool fancy_p = PR_TRUE;
+  PRBool html_p = PR_TRUE;
+  PRBool outline_p = PR_FALSE;
+  PRBool dexlate_p = PR_FALSE;
   char filename[1000];
   CERTCertDBHandle *cdb_handle;
   SECKEYKeyDBHandle *kdb_handle;
@@ -381,7 +381,7 @@ main (int argc, char **argv)
   cdb_handle = (CERTCertDBHandle *)  malloc(sizeof(*cdb_handle));
   memset(cdb_handle, 0, sizeof(*cdb_handle));
 
-  if (SECSuccess != CERT_OpenCertDB(cdb_handle, FALSE, test_cdb_name_cb, NULL))
+  if (SECSuccess != CERT_OpenCertDB(cdb_handle, PR_FALSE, test_cdb_name_cb, NULL))
 	CERT_OpenVolatileCertDB(cdb_handle);
   CERT_SetDefaultCertDB(cdb_handle);
 
@@ -409,22 +409,22 @@ main (int argc, char **argv)
   if (url &&
 	  (PL_strstr(url, "?part=") ||
 	   PL_strstr(url, "&part=")))
-	html_p = FALSE;
+	html_p = PR_FALSE;
 
   while (i < argc)
 	{
 	  if (!PL_strcmp(argv[i], "-fancy"))
-		fancy_p = TRUE;
+		fancy_p = PR_TRUE;
 	  else if (!PL_strcmp(argv[i], "-no-fancy"))
-		fancy_p = FALSE;
+		fancy_p = PR_FALSE;
 	  else if (!PL_strcmp(argv[i], "-html"))
-		html_p = TRUE;
+		html_p = PR_TRUE;
 	  else if (!PL_strcmp(argv[i], "-raw"))
-		html_p = FALSE;
+		html_p = PR_FALSE;
 	  else if (!PL_strcmp(argv[i], "-outline"))
-		outline_p = TRUE;
+		outline_p = PR_TRUE;
 	  else if (!PL_strcmp(argv[i], "-dexlate"))
-		dexlate_p = TRUE;
+		dexlate_p = PR_TRUE;
 	  else
 		{
 		  fprintf(stderr,
@@ -439,7 +439,7 @@ main (int argc, char **argv)
 	  i++;
 	}
 
-  i = test(stdin, stdout, url, fancy_p, html_p, outline_p, dexlate_p, TRUE);
+  i = test(stdin, stdout, url, fancy_p, html_p, outline_p, dexlate_p, PR_TRUE);
   fprintf(stdout, "\n");
   fflush(stdout);
 

@@ -33,6 +33,6 @@ MimeInlineTextEnrichedClassInitialize(MimeInlineTextEnrichedClass *class)
   MimeObjectClass *oclass = (MimeObjectClass *) class;
   MimeInlineTextRichtextClass *rclass = (MimeInlineTextRichtextClass *) class;
   PR_ASSERT(!oclass->class_initialized);
-  rclass->enriched_p = TRUE;
+  rclass->enriched_p = PR_TRUE;
   return 0;
 }

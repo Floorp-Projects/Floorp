@@ -73,7 +73,7 @@ MimePartBufferCreate (void)
 {
   MimePartBufferData *data = PR_NEW(MimePartBufferData);
   if (!data) return 0;
-  XP_MEMSET(data, 0, sizeof(*data));
+  memset(data, 0, sizeof(*data));
   return data;
 }
 
@@ -98,7 +98,7 @@ MimePartBufferReset (MimePartBufferData *data)
   PR_ASSERT(data);
   if (!data) return;
 
-  FREEIF(data->part_buffer);
+  PR_FREEIF(data->part_buffer);
   data->part_buffer_fp = 0;
 
   if (data->file_stream)
@@ -208,7 +208,7 @@ MimePartBufferWrite (MimePartBufferData *data,
 			  if (status < 0) return status;
 			}
 
-		  FREEIF(data->part_buffer);
+		  PR_FREEIF(data->part_buffer);
 		  data->part_buffer_fp = 0;
 		  data->part_buffer_size = 0;
 		}

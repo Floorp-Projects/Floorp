@@ -281,7 +281,7 @@ mime_decode_base64_buffer (MimeDecoderData *data,
 		  buffer = in;
 		  out = (char *) buffer;
 
-		  leftover = FALSE;
+		  leftover = PR_FALSE;
 		}
 	  else
 		{
@@ -553,7 +553,7 @@ mime_decoder_init (enum mime_encoding which,
 {
   MimeDecoderData *data = PR_NEW(MimeDecoderData);
   if (!data) return 0;
-  XP_MEMSET(data, 0, sizeof(*data));
+  memset(data, 0, sizeof(*data));
   data->encoding = which;
   data->write_buffer = output_fn;
   data->closure = closure;
@@ -692,8 +692,8 @@ mime_uuencode_buffer(MimeEncoderData *data,
 	{
 		char firstLine[256];
 		XP_SPRINTF(firstLine, "begin 644 %s\015\012", data->filename ? data->filename : "");
-		data->write_buffer(firstLine, strlen(firstLine), data->closure);
-		data->uue_wrote_begin = TRUE;
+		data->write_buffer(firstLine, PL_strlen(firstLine), data->closure);
+		data->uue_wrote_begin = PR_TRUE;
 		data->current_column = 1; /* initialization unique to uuencode */
 	}
 
@@ -745,7 +745,7 @@ mime_uuencode_finish(MimeEncoderData *data)
 	}
 
 	/* Write 'end' on a line by itself. */
-	return data->write_buffer(endStr, strlen(endStr), data->closure);
+	return data->write_buffer(endStr, PL_strlen(endStr), data->closure);
 }
 
 #undef ENC
@@ -865,8 +865,8 @@ mime_encode_qp_buffer (MimeEncoderData *data, const char *buffer, PRInt32 size)
   char out_buffer[80];
   char *out = out_buffer;
   PRUint32 i = 0, n = 0;
-  PRBool white = FALSE;
-  PRBool mb_p = FALSE;
+  PRBool white = PR_FALSE;
+  PRBool mb_p = PR_FALSE;
 
 /*
   #### I don't know how to hook this back up:
@@ -896,7 +896,7 @@ mime_encode_qp_buffer (MimeEncoderData *data, const char *buffer, PRInt32 size)
 		  /* Now write out the newline. */
 		  *out++ = CR;
 		  *out++ = LF;
-		  white = FALSE;
+		  white = PR_FALSE;
 
 		  status = data->write_buffer (out_buffer, (out - out_buffer),
 									   data->closure);
@@ -908,7 +908,7 @@ mime_encode_qp_buffer (MimeEncoderData *data, const char *buffer, PRInt32 size)
 			in++;
 
 		  out = out_buffer;
-		  white = FALSE;
+		  white = PR_FALSE;
 		  data->current_column = 0;
 		}
 	  else if (data->current_column == 0 && *in == '.')
@@ -940,20 +940,20 @@ mime_encode_qp_buffer (MimeEncoderData *data, const char *buffer, PRInt32 size)
 			   (*in >= 62 && *in <= 126) ||
 			   (mb_p && (*in == 61 || *in == 127 || *in == 0x1B)))
 		{
-		  white = FALSE;
+		  white = PR_FALSE;
 		  *out++ = *in;
 		  data->current_column++;
 		}
 	  else if (*in == ' ' || *in == '\t')		/* whitespace */
 		{
-		  white = TRUE;
+		  white = PR_TRUE;
 		  *out++ = *in;
 		  data->current_column++;
 		}
 	  else										/* print as =FF */
 		{
 		HEX:
-		  white = FALSE;
+		  white = PR_FALSE;
 		  *out++ = '=';
 		  *out++ = hexdigits[*in >> 4];
 		  *out++ = hexdigits[*in & 0xF];
@@ -972,7 +972,7 @@ mime_encode_qp_buffer (MimeEncoderData *data, const char *buffer, PRInt32 size)
 									   data->closure);
 		  if (status < 0) return status;
 		  out = out_buffer;
-		  white = FALSE;
+		  white = PR_FALSE;
 		  data->current_column = 0;
 		}
 	}
@@ -1060,7 +1060,7 @@ mime_encoder_init (enum mime_encoding which,
 {
   MimeEncoderData *data = PR_NEW(MimeEncoderData);
   if (!data) return 0;
-  XP_MEMSET(data, 0, sizeof(*data));
+  memset(data, 0, sizeof(*data));
   data->encoding = which;
   data->write_buffer = output_fn;
   data->closure = closure;

@@ -187,7 +187,7 @@ MimeInlineTextVCard_parse_line (char *line, PRInt32 length, MimeObject *obj)
     if (!obj->output_p) return 0;
     if (!obj->options || !obj->options->output_fn) return 0;
     if (!obj->options->write_html_p) {
-		return MimeObject_write(obj, line, length, TRUE);
+		return MimeObject_write(obj, line, length, PR_TRUE);
     }
 
 	linestring = (char *) PR_MALLOC (length + 1);
@@ -256,7 +256,7 @@ static int WriteEachLineToStream (MimeObject *obj, const char *line)
 	{
 		htmlLine[0] = '\0';
 		PL_strcat (htmlLine, line);
-	    status = MimeObject_write(obj, htmlLine, PL_strlen(htmlLine), TRUE);
+	    status = MimeObject_write(obj, htmlLine, PL_strlen(htmlLine), PR_TRUE);
 		PR_Free ((void*) htmlLine);
 	}
 	else
@@ -316,7 +316,7 @@ static int OutputTable (MimeObject *obj, PRBool endTable, PRBool border, char *c
 
 			PL_strcat (htmlLine, ">");
 
-			status = MimeObject_write(obj, htmlLine, PL_strlen(htmlLine), TRUE);
+			status = MimeObject_write(obj, htmlLine, PL_strlen(htmlLine), PR_TRUE);
 			PR_Free ((void*) htmlLine);
 		}
 		else
@@ -385,7 +385,7 @@ static int OutputTableRowOrData(MimeObject *obj, PRBool outputRow,
 
 			PL_strcat (htmlLine, ">");
 
-			status = MimeObject_write(obj, htmlLine, PL_strlen(htmlLine), TRUE);
+			status = MimeObject_write(obj, htmlLine, PL_strlen(htmlLine), PR_TRUE);
 			PR_Free ((void*) htmlLine);
 		}
 		else
@@ -433,7 +433,7 @@ static int OutputFont(MimeObject *obj, PRBool endFont, char * size, char* color)
 
 			PL_strcat (htmlLine, ">");
 
-			status = MimeObject_write(obj, htmlLine, PL_strlen(htmlLine), TRUE);
+			status = MimeObject_write(obj, htmlLine, PL_strlen(htmlLine), PR_TRUE);
 			PR_Free ((void*) htmlLine);
 		}
 		else
@@ -462,7 +462,7 @@ static int OutputVcardAttribute(MimeObject *obj, VObject *v, const char* id)
 					PL_strcpy(string, (char *) vObjectAnyValue(prop));
 			}
 			if (string) {
-				status = OutputFont(obj, FALSE, "-1", NULL);
+				status = OutputFont(obj, PR_FALSE, "-1", NULL);
 				if (status < 0) {
 					PR_FREEIF (string);
 					return status;
@@ -470,7 +470,7 @@ static int OutputVcardAttribute(MimeObject *obj, VObject *v, const char* id)
 				status = WriteLineToStream (obj, string);
 				PR_FREEIF (string);
 				if (status < 0) return status;
-				status = OutputFont(obj, TRUE, NULL, NULL);
+				status = OutputFont(obj, PR_TRUE, NULL, NULL);
 				if (status < 0) return status;
 			}
 		}
@@ -556,19 +556,19 @@ static int OutputBasicVcard(MimeObject *obj, VObject *v)
 		}
 	}
 
-	status = OutputTable (obj, FALSE, FALSE, "0", "0", NULL);
+	status = OutputTable (obj, PR_FALSE, PR_FALSE, "0", "0", NULL);
 	if (status < 0) {
 		PR_FREEIF (htmlLine); 
 		return status;
 	}
 	if (htmlLine)
 	{
-		status = OutputTableRowOrData(obj, TRUE, FALSE, "LEFT", "TOP", NULL, NULL);
+		status = OutputTableRowOrData(obj, PR_TRUE, PR_FALSE, "LEFT", "TOP", NULL, NULL);
 		if (status < 0) {
 			PR_Free (htmlLine);
 			return status;
 		}
-		status = OutputTableRowOrData (obj, FALSE, FALSE, NULL, NULL, NULL, NULL);
+		status = OutputTableRowOrData (obj, PR_FALSE, PR_FALSE, NULL, NULL, NULL, NULL);
 		if (status < 0) {
 			PR_Free (htmlLine);
 			return status;
@@ -577,17 +577,17 @@ static int OutputBasicVcard(MimeObject *obj, VObject *v)
 		status = WriteLineToStream (obj, htmlLine);
 		PR_Free (htmlLine); 
 		if (status < 0) return status;
-		status = OutputTableRowOrData (obj, FALSE, TRUE, NULL, NULL, NULL, NULL);
+		status = OutputTableRowOrData (obj, PR_FALSE, PR_TRUE, NULL, NULL, NULL, NULL);
 		if (status < 0) return status;
-		status = OutputTableRowOrData(obj, TRUE, TRUE, NULL, NULL, NULL, NULL);
+		status = OutputTableRowOrData(obj, PR_TRUE, PR_TRUE, NULL, NULL, NULL, NULL);
 		if (status < 0) return status;
 	}
 	else
 		status = MK_OUT_OF_MEMORY;
 
-	status = OutputTableRowOrData(obj, TRUE, FALSE, NULL, NULL, NULL, NULL);
+	status = OutputTableRowOrData(obj, PR_TRUE, PR_FALSE, NULL, NULL, NULL, NULL);
 	if (status < 0) return status;
-	status = OutputTableRowOrData (obj, FALSE, FALSE, NULL, NULL, NULL, NULL);
+	status = OutputTableRowOrData (obj, PR_FALSE, PR_FALSE, NULL, NULL, NULL, NULL);
 	if (status < 0) return status;
 	/* output the title */
 	status = OutputVcardAttribute (obj, v, VCTitleProp);
@@ -605,11 +605,11 @@ static int OutputBasicVcard(MimeObject *obj, VObject *v)
 		status = OutputVcardAttribute (obj, prop, VCOrgUnit3Prop);
 		if (status < 0) return status;
 	}
-	status = OutputTableRowOrData (obj, FALSE, TRUE, NULL, NULL, NULL, NULL);
+	status = OutputTableRowOrData (obj, PR_FALSE, PR_TRUE, NULL, NULL, NULL, NULL);
 	if (status < 0) return status;
-	status = OutputTableRowOrData (obj, TRUE, TRUE, NULL, NULL, NULL, NULL);
+	status = OutputTableRowOrData (obj, PR_TRUE, PR_TRUE, NULL, NULL, NULL, NULL);
 	if (status < 0) return status;
-	status = OutputTable (obj, TRUE, FALSE, NULL, NULL, NULL);
+	status = OutputTable (obj, PR_TRUE, PR_FALSE, NULL, NULL, NULL);
 	if (status < 0) return status;
 
 	return 0;
@@ -627,12 +627,12 @@ static int OutputAdvancedVcard(MimeObject *obj, VObject *v)
 	char * emailstring = NULL;
 	int numEmail = 0;
 
-	status = OutputTable (obj, FALSE, FALSE, "0", "0", NULL);
+	status = OutputTable (obj, PR_FALSE, PR_FALSE, "0", "0", NULL);
 	if (status < 0) return status;
 	/* beginning of first row */
-	status = OutputTableRowOrData(obj, TRUE, FALSE, "LEFT", "TOP", NULL, NULL);
+	status = OutputTableRowOrData(obj, PR_TRUE, PR_FALSE, "LEFT", "TOP", NULL, NULL);
 	if (status < 0) return status;
-	status = OutputTableRowOrData (obj, FALSE, FALSE, "LEFT", "TOP", "3", NULL);
+	status = OutputTableRowOrData (obj, PR_FALSE, PR_FALSE, "LEFT", "TOP", "3", NULL);
 	if (status < 0) return status;
 
 	/* get the name and email */
@@ -680,15 +680,15 @@ static int OutputAdvancedVcard(MimeObject *obj, VObject *v)
 		if (status < 0) return status;
 	}
 
-	status = OutputTableRowOrData (obj, FALSE, TRUE, NULL, NULL, NULL, NULL);
+	status = OutputTableRowOrData (obj, PR_FALSE, PR_TRUE, NULL, NULL, NULL, NULL);
 	if (status < 0) return status;
-	status = OutputTableRowOrData(obj, TRUE, TRUE, NULL, NULL, NULL, NULL);
+	status = OutputTableRowOrData(obj, PR_TRUE, PR_TRUE, NULL, NULL, NULL, NULL);
 	if (status < 0) return status;
 	
 	/* beginning of second row */
-	status = OutputTableRowOrData(obj, TRUE, FALSE, "LEFT", "TOP", NULL, NULL);
+	status = OutputTableRowOrData(obj, PR_TRUE, PR_FALSE, "LEFT", "TOP", NULL, NULL);
 	if (status < 0) return status;
-	status = OutputTableRowOrData (obj, FALSE, FALSE, "LEFT", "TOP", NULL, NULL);
+	status = OutputTableRowOrData (obj, PR_FALSE, PR_FALSE, "LEFT", "TOP", NULL, NULL);
 	if (status < 0) return status;
 	/* output the title */
 	status = OutputVcardAttribute (obj, v, VCTitleProp);
@@ -706,15 +706,15 @@ static int OutputAdvancedVcard(MimeObject *obj, VObject *v)
 		status = OutputVcardAttribute (obj, prop, VCOrgUnit3Prop);
 		if (status < 0) return status;
 	}
-	status = OutputTableRowOrData (obj, FALSE, TRUE, NULL, NULL, NULL, NULL);
+	status = OutputTableRowOrData (obj, PR_FALSE, PR_TRUE, NULL, NULL, NULL, NULL);
 	if (status < 0) return status;
 
-	status = OutputTableRowOrData (obj, FALSE, FALSE , "LEFT", "TOP", NULL, "\"10\"");
+	status = OutputTableRowOrData (obj, PR_FALSE, PR_FALSE , "LEFT", "TOP", NULL, "\"10\"");
 	if (status < 0) return status;
-	status = OutputTableRowOrData (obj, FALSE, TRUE, NULL, NULL, NULL, NULL);
+	status = OutputTableRowOrData (obj, PR_FALSE, PR_TRUE, NULL, NULL, NULL, NULL);
 	if (status < 0) return status;
 
-	status = OutputTableRowOrData (obj, FALSE, FALSE, "LEFT", "TOP", NULL, NULL);
+	status = OutputTableRowOrData (obj, PR_FALSE, PR_FALSE, "LEFT", "TOP", NULL, NULL);
 	if (status < 0) return status;
 
 	/* get the email address */
@@ -742,7 +742,7 @@ static int OutputAdvancedVcard(MimeObject *obj, VObject *v)
 	/* output email address */
 	if (htmlLine2)
 	{
-		status = OutputFont(obj, FALSE, "-1", NULL);
+		status = OutputFont(obj, PR_FALSE, "-1", NULL);
 		if (status < 0) {
 			PR_FREEIF (htmlLine2);
 			return status;
@@ -750,7 +750,7 @@ static int OutputAdvancedVcard(MimeObject *obj, VObject *v)
 		status = WriteLineToStream (obj, htmlLine2);
 		PR_FREEIF (htmlLine2);
 		if (status < 0) return status;
-		status = OutputFont(obj, TRUE, NULL, NULL);
+		status = OutputFont(obj, PR_TRUE, NULL, NULL);
 		if (status < 0) return status;
 		/* output html mail setting only if its true */
 		prop = isAPropertyOf(v, VCUseHTML);
@@ -760,14 +760,14 @@ static int OutputAdvancedVcard(MimeObject *obj, VObject *v)
 			{
 				namestring  = fakeCString (vObjectUStringZValue(prop));
 				if (namestring)
-					if (PL_strcasecmp (namestring, "TRUE") == 0)
+					if (PL_strcasecmp (namestring, "PR_TRUE") == 0)
 					{
 						PR_FREEIF (namestring);
-						status = OutputFont(obj, FALSE, "-1", NULL);
+						status = OutputFont(obj, PR_FALSE, "-1", NULL);
 						if (status < 0) return status;
 						status = WriteLineToStream (obj, XP_GetString (MK_LDAP_USEHTML));
 						if (status < 0) return status;
-						status = OutputFont(obj, TRUE, NULL, NULL);
+						status = OutputFont(obj, PR_TRUE, NULL, NULL);
 						if (status < 0) return status;
 					}
 					else
@@ -775,17 +775,17 @@ static int OutputAdvancedVcard(MimeObject *obj, VObject *v)
 			}
 		}
 	}
-	status = OutputTableRowOrData (obj, FALSE, TRUE, NULL, NULL, NULL, NULL);
+	status = OutputTableRowOrData (obj, PR_FALSE, PR_TRUE, NULL, NULL, NULL, NULL);
 	if (status < 0) return status;
-	status = OutputTableRowOrData(obj, TRUE, TRUE, NULL, NULL, NULL, NULL);
+	status = OutputTableRowOrData(obj, PR_TRUE, PR_TRUE, NULL, NULL, NULL, NULL);
 	if (status < 0) return status;
 
 	/* beginning of third row */
 	/* write out address information if we have any */
-	status = OutputTableRowOrData(obj, TRUE, FALSE, "LEFT", "TOP", NULL, NULL);
+	status = OutputTableRowOrData(obj, PR_TRUE, PR_FALSE, "LEFT", "TOP", NULL, NULL);
 	if (status < 0) return status;
 	/* first column */
-	status = OutputTableRowOrData (obj, FALSE, FALSE, "LEFT", "TOP", NULL, NULL);
+	status = OutputTableRowOrData (obj, PR_FALSE, PR_FALSE, "LEFT", "TOP", NULL, NULL);
 	if (status < 0) return status;
 	prop = isAPropertyOf(v, VCAdrProp);
 	if (prop)
@@ -805,23 +805,23 @@ static int OutputAdvancedVcard(MimeObject *obj, VObject *v)
 		status = OutputVcardAttribute (obj, prop, VCCountryNameProp);
 		if (status < 0) return status;
 	}
-	status = OutputTableRowOrData (obj, FALSE, TRUE, NULL, NULL, NULL, NULL);
+	status = OutputTableRowOrData (obj, PR_FALSE, PR_TRUE, NULL, NULL, NULL, NULL);
 	if (status < 0) return status;
 
 	/* second column */
-	status = OutputTableRowOrData (obj, FALSE, FALSE , NULL, NULL, NULL, NULL);
+	status = OutputTableRowOrData (obj, PR_FALSE, PR_FALSE , NULL, NULL, NULL, NULL);
 	if (status < 0) return status;
-	status = OutputTableRowOrData (obj, FALSE, TRUE, NULL, NULL, NULL, NULL);
+	status = OutputTableRowOrData (obj, PR_FALSE, PR_TRUE, NULL, NULL, NULL, NULL);
 	if (status < 0) return status;
 
 	/* third column */
-	status = OutputTableRowOrData (obj, FALSE, FALSE, "LEFT", "TOP", NULL, NULL);
+	status = OutputTableRowOrData (obj, PR_FALSE, PR_FALSE, "LEFT", "TOP", NULL, NULL);
 	if (status < 0) return status;
 	/* output telephone fields */
 	status = WriteOutVCardPhoneProperties (obj, v);
 	if (status < 0) return status;
 	/* output conference fields */
-	status = OutputFont(obj, FALSE, "-1", NULL);
+	status = OutputFont(obj, PR_FALSE, "-1", NULL);
 	if (status < 0) return status;
 	prop = isAPropertyOf(v, VCCooltalk);
 	if (prop)
@@ -850,12 +850,12 @@ static int OutputAdvancedVcard(MimeObject *obj, VObject *v)
 		if (status < 0) return status;
 	}
 
-	status = OutputFont(obj, TRUE, NULL, NULL);
+	status = OutputFont(obj, PR_TRUE, NULL, NULL);
 	if (status < 0) return status;
-	status = OutputTableRowOrData (obj, FALSE, TRUE, NULL, NULL, NULL, NULL);
+	status = OutputTableRowOrData (obj, PR_FALSE, PR_TRUE, NULL, NULL, NULL, NULL);
 	if (status < 0) return status;
 
-	status = OutputTableRowOrData(obj, TRUE, TRUE, NULL, NULL, NULL, NULL);
+	status = OutputTableRowOrData(obj, PR_TRUE, PR_TRUE, NULL, NULL, NULL, NULL);
 	if (status < 0) return status;
 
 	/* beginning of last row */
@@ -863,46 +863,46 @@ static int OutputAdvancedVcard(MimeObject *obj, VObject *v)
 	prop = isAPropertyOf(v, VCCommentProp);
 	if (prop)
 	{
-		status = OutputTableRowOrData(obj, TRUE, FALSE, "LEFT", "TOP", NULL, NULL);
+		status = OutputTableRowOrData(obj, PR_TRUE, PR_FALSE, "LEFT", "TOP", NULL, NULL);
 		if (status < 0) return status;
-		status = OutputTableRowOrData (obj, FALSE, FALSE, "LEFT", "TOP", "3", NULL);
+		status = OutputTableRowOrData (obj, PR_FALSE, PR_FALSE, "LEFT", "TOP", "3", NULL);
 		if (status < 0) return status;
 		status = OutputVcardAttribute (obj, v, VCCommentProp);
 		if (status < 0) return status;
-		status = OutputTableRowOrData (obj, FALSE, TRUE, NULL, NULL, NULL, NULL);
+		status = OutputTableRowOrData (obj, PR_FALSE, PR_TRUE, NULL, NULL, NULL, NULL);
 		if (status < 0) return status;
-		status = OutputTableRowOrData(obj, TRUE, TRUE, NULL, NULL, NULL, NULL);
+		status = OutputTableRowOrData(obj, PR_TRUE, PR_TRUE, NULL, NULL, NULL, NULL);
 		if (status < 0) return status;
 	}
 
-	status = OutputTable (obj, TRUE, FALSE, NULL, NULL, NULL);
+	status = OutputTable (obj, PR_TRUE, PR_FALSE, NULL, NULL, NULL);
 	if (status < 0) return status;
 
 	/* output second table containing all the additional info */
-	status = OutputTable (obj, FALSE, FALSE, "0", "0", NULL);
+	status = OutputTable (obj, PR_FALSE, PR_FALSE, "0", "0", NULL);
 	if (status < 0) return status;
 	/* beginning of first row */
-	status = OutputTableRowOrData(obj, TRUE, FALSE, "LEFT", "TOP", NULL, NULL);
+	status = OutputTableRowOrData(obj, PR_TRUE, PR_FALSE, "LEFT", "TOP", NULL, NULL);
 	if (status < 0) return status;
-	status = OutputTableRowOrData (obj, FALSE, FALSE, "LEFT", "TOP", "2", NULL);
+	status = OutputTableRowOrData (obj, PR_FALSE, PR_FALSE, "LEFT", "TOP", "2", NULL);
 	if (status < 0) return status;
 	/* output the additional info header */
-	status = OutputFont(obj, FALSE, "-1", NULL);
+	status = OutputFont(obj, PR_FALSE, "-1", NULL);
 	if (status < 0) return status;
 	status = WriteLineToStream (obj, XP_GetString (MK_ADDR_ADDINFO));
 	if (status < 0) return status;
-	status = OutputFont(obj, TRUE, NULL, NULL);
+	status = OutputFont(obj, PR_TRUE, NULL, NULL);
 	if (status < 0) return status;
-	status = OutputTableRowOrData (obj, FALSE, TRUE, NULL, NULL, NULL, NULL);
+	status = OutputTableRowOrData (obj, PR_FALSE, PR_TRUE, NULL, NULL, NULL, NULL);
 	if (status < 0) return status;
-	status = OutputTableRowOrData(obj, TRUE, TRUE, NULL, NULL, NULL, NULL);
+	status = OutputTableRowOrData(obj, PR_TRUE, PR_TRUE, NULL, NULL, NULL, NULL);
 	if (status < 0) return status;
 	
 	/* beginning of remaining rows */
 	status = WriteOutVCardProperties (obj, v, &numEmail);
 	if (status < 0) return status;
 
-	status = OutputTable (obj, TRUE, FALSE, NULL, NULL, NULL);
+	status = OutputTable (obj, PR_TRUE, PR_FALSE, NULL, NULL, NULL);
 	if (status < 0) return status;
 
 	return 0;
@@ -991,7 +991,7 @@ static int OutputButtons(MimeObject *obj, PRBool basic, VObject *v)
 		return MK_OUT_OF_MEMORY;
 	}
 	
-	status = OutputTableRowOrData (obj, FALSE, FALSE, "LEFT", "TOP", NULL, NULL);
+	status = OutputTableRowOrData (obj, PR_FALSE, PR_FALSE, "LEFT", "TOP", NULL, NULL);
 	if (status < 0) goto FAIL;
 
 	/*
@@ -1013,7 +1013,7 @@ static int OutputButtons(MimeObject *obj, PRBool basic, VObject *v)
 
 	status = WriteLineToStream (obj, htmlLine2);
 	if (status < 0) goto FAIL;
-	status = OutputTableRowOrData (obj, FALSE, TRUE, NULL, NULL, NULL, NULL);
+	status = OutputTableRowOrData (obj, PR_FALSE, PR_TRUE, NULL, NULL, NULL, NULL);
 	if (status < 0) goto FAIL;
 
 	FAIL:
@@ -1045,34 +1045,34 @@ static int BeginLayer(MimeObject *obj, PRBool basic)
 		status = WriteEachLineToStream (obj, captionLine);
 		PR_Free(captionLine);
 		if (status < 0) return status;
-		status = OutputTable (obj, FALSE, FALSE, NULL, NULL, NULL);
+		status = OutputTable (obj, PR_FALSE, PR_FALSE, NULL, NULL, NULL);
 		if (status < 0) return status;
-		status = OutputTableRowOrData (obj, TRUE, FALSE, NULL, NULL, NULL, NULL);
+		status = OutputTableRowOrData (obj, PR_TRUE, PR_FALSE, NULL, NULL, NULL, NULL);
 		if (status < 0) return status;
-		status = OutputTableRowOrData (obj, FALSE, FALSE, NULL, "TOP", NULL, NULL);
+		status = OutputTableRowOrData (obj, PR_FALSE, PR_FALSE, NULL, "TOP", NULL, NULL);
 		if (status < 0) return status;
-		status = OutputTable (obj, FALSE, TRUE, "0", "0", "#FFFFFF");
+		status = OutputTable (obj, PR_FALSE, PR_TRUE, "0", "0", "#FFFFFF");
 		if (status < 0) return status;
 		if (basic)
 		{
-			status = OutputTableRowOrData(obj, TRUE, FALSE, "LEFT", "TOP", NULL, NULL);
+			status = OutputTableRowOrData(obj, PR_TRUE, PR_FALSE, "LEFT", "TOP", NULL, NULL);
 			if (status < 0) return status;
-			status = OutputTableRowOrData(obj, FALSE, FALSE, "LEFT", "TOP", NULL, NULL);
+			status = OutputTableRowOrData(obj, PR_FALSE, PR_FALSE, "LEFT", "TOP", NULL, NULL);
 			if (status < 0) return status;
 		}
 		else
 		{
-			status = OutputTableRowOrData(obj, TRUE, FALSE, NULL, NULL, NULL, NULL);
+			status = OutputTableRowOrData(obj, PR_TRUE, PR_FALSE, NULL, NULL, NULL, NULL);
 			if (status < 0) return status;
-			status = OutputTableRowOrData(obj, FALSE, FALSE, NULL, NULL, NULL, NULL);
+			status = OutputTableRowOrData(obj, PR_FALSE, PR_FALSE, NULL, NULL, NULL, NULL);
 			if (status < 0) return status;
 		}
 
-		status = OutputTable (obj, FALSE, FALSE, "4", NULL, NULL);
+		status = OutputTable (obj, PR_FALSE, PR_FALSE, "4", NULL, NULL);
 		if (status < 0) return status;
-		status = OutputTableRowOrData (obj, TRUE, FALSE, NULL, NULL, NULL, NULL);
+		status = OutputTableRowOrData (obj, PR_TRUE, PR_FALSE, NULL, NULL, NULL, NULL);
 		if (status < 0) return status;
-		status = OutputTableRowOrData (obj, FALSE, FALSE, NULL, NULL, NULL, NULL);
+		status = OutputTableRowOrData (obj, PR_FALSE, PR_FALSE, NULL, NULL, NULL, NULL);
 		if (status < 0) return status;
 	}
 	else
@@ -1086,28 +1086,28 @@ static int EndLayer(MimeObject *obj, PRBool basic, VObject* v)
 	int status = 0;
 	char * captionLine = NULL;
 
-	status = OutputTableRowOrData (obj, FALSE, TRUE, NULL, NULL, NULL, NULL);
+	status = OutputTableRowOrData (obj, PR_FALSE, PR_TRUE, NULL, NULL, NULL, NULL);
 	if (status < 0) return status;
-	status = OutputTableRowOrData (obj, TRUE, TRUE, NULL, NULL, NULL, NULL);
+	status = OutputTableRowOrData (obj, PR_TRUE, PR_TRUE, NULL, NULL, NULL, NULL);
 	if (status < 0) return status;
-	status = OutputTable (obj, TRUE, FALSE, NULL, NULL, NULL);
+	status = OutputTable (obj, PR_TRUE, PR_FALSE, NULL, NULL, NULL);
 	if (status < 0) return status;
 
-	status = OutputTableRowOrData (obj, FALSE, TRUE, NULL, NULL, NULL, NULL);
+	status = OutputTableRowOrData (obj, PR_FALSE, PR_TRUE, NULL, NULL, NULL, NULL);
 	if (status < 0) return status;
-	status = OutputTableRowOrData (obj, TRUE, TRUE, NULL, NULL, NULL, NULL);
+	status = OutputTableRowOrData (obj, PR_TRUE, PR_TRUE, NULL, NULL, NULL, NULL);
 	if (status < 0) return status;
-	status = OutputTable (obj, TRUE, FALSE, NULL, NULL, NULL);
+	status = OutputTable (obj, PR_TRUE, PR_FALSE, NULL, NULL, NULL);
 	if (status < 0) return status;
-	status = OutputTableRowOrData (obj, FALSE, TRUE, NULL, NULL, NULL, NULL);
+	status = OutputTableRowOrData (obj, PR_FALSE, PR_TRUE, NULL, NULL, NULL, NULL);
 	if (status < 0) return status;
 
 	status = OutputButtons(obj, basic, v);
 	if (status < 0) return status;
 
-	status = OutputTableRowOrData (obj, TRUE, TRUE, NULL, NULL, NULL, NULL);
+	status = OutputTableRowOrData (obj, PR_TRUE, PR_TRUE, NULL, NULL, NULL, NULL);
 	if (status < 0) return status;
-	status = OutputTable (obj, TRUE, FALSE, NULL, NULL, NULL);
+	status = OutputTable (obj, PR_TRUE, PR_FALSE, NULL, NULL, NULL);
 	if (status < 0) return status;
 
 	if (!basic) 
@@ -1174,15 +1174,15 @@ static int EndVCard (MimeObject *obj)
 	/* Scribble HTML-ending stuff into the stream */
 	char htmlFooters[32];
 	PR_snprintf (htmlFooters, sizeof(htmlFooters), "</BODY>%s</HTML>%s", LINEBREAK, LINEBREAK);
-	status = MimeObject_write(obj, htmlFooters, PL_strlen(htmlFooters), FALSE);
+	status = MimeObject_write(obj, htmlFooters, PL_strlen(htmlFooters), PR_FALSE);
 
 	if (status < 0) return status;
 
     if (obj->options && obj->options->set_html_state_fn) {
         status = obj->options->set_html_state_fn(obj->options->stream_closure,
-                                                 TRUE,   /* layer_encapulate_p */
-                                                 FALSE,  /* start_p */
-                                                 FALSE); /* abort_p */
+                                                 PR_TRUE,   /* layer_encapulate_p */
+                                                 PR_FALSE,  /* start_p */
+                                                 PR_FALSE); /* abort_p */
         if (status < 0) return status;
     }
     
@@ -1198,15 +1198,15 @@ static int BeginVCard (MimeObject *obj)
 
     if (obj->options && obj->options->set_html_state_fn) {
         status = obj->options->set_html_state_fn(obj->options->stream_closure,
-                                                 TRUE,   /* layer_encapulate_p */
-                                                 TRUE,   /* start_p */
-                                                 FALSE); /* abort_p */
+                                                 PR_TRUE,   /* layer_encapulate_p */
+                                                 PR_TRUE,   /* start_p */
+                                                 PR_FALSE); /* abort_p */
         if (status < 0) return status;
     }
     
 	unique++;
 	PR_snprintf (htmlHeaders, sizeof(htmlHeaders), "<HTML>%s<BODY>%s", LINEBREAK, LINEBREAK);
-    status = MimeObject_write(obj, htmlHeaders, PL_strlen(htmlHeaders), TRUE);
+    status = MimeObject_write(obj, htmlHeaders, PL_strlen(htmlHeaders), PR_TRUE);
 
 	if (status < 0) return status;
 
@@ -1221,19 +1221,19 @@ static int WriteOutVCard (MimeObject *obj, VObject* v)
 	if (status < 0) return status;
 	
 	/* write out basic layer */
-	status = BeginLayer(obj, TRUE);
+	status = BeginLayer(obj, PR_TRUE);
 	if (status < 0) return status;
 	status = OutputBasicVcard(obj, v);
 	if (status < 0) return status;
-	status = EndLayer(obj, TRUE, v);
+	status = EndLayer(obj, PR_TRUE, v);
 	if (status < 0) return status;
 
 	/* write out advanced layer */
-	status = BeginLayer(obj, FALSE);
+	status = BeginLayer(obj, PR_FALSE);
 	if (status < 0) return status;
 	status = OutputAdvancedVcard(obj, v);
 	if (status < 0) return status;
-	status = EndLayer(obj, FALSE, v);
+	status = EndLayer(obj, PR_FALSE, v);
 	if (status < 0) return status;
 
 	status = EndVCard (obj);
@@ -1430,7 +1430,7 @@ static int WriteOutEachVCardPhoneProperty (MimeObject *obj, VObject* o)
 					PR_FREEIF (value);
 					if (attribName)
 					{
-						status = OutputFont(obj, FALSE, "-1", NULL);
+						status = OutputFont(obj, PR_FALSE, "-1", NULL);
 						if (status < 0) {
 							PR_FREEIF (attribName);
 							return status;
@@ -1440,7 +1440,7 @@ static int WriteOutEachVCardPhoneProperty (MimeObject *obj, VObject* o)
 							PR_FREEIF (attribName);
 							return status;
 						}
-						status = OutputFont(obj, TRUE, NULL, NULL);
+						status = OutputFont(obj, PR_TRUE, NULL, NULL);
 						if (status < 0) {
 							PR_FREEIF (attribName);
 							return status;
@@ -1644,29 +1644,29 @@ static int WriteOutEachVCardProperty (MimeObject *obj, VObject* o, int* numEmail
 			return 0;
 	
 	DOWRITE:
-		OutputTableRowOrData(obj, TRUE, FALSE, "LEFT", "TOP", NULL, NULL);
-		OutputTableRowOrData (obj, FALSE, FALSE, "LEFT", "TOP", NULL, NULL);
+		OutputTableRowOrData(obj, PR_TRUE, PR_FALSE, "LEFT", "TOP", NULL, NULL);
+		OutputTableRowOrData (obj, PR_FALSE, PR_FALSE, "LEFT", "TOP", NULL, NULL);
 		if (attribName) { 
-			OutputTableRowOrData (obj, FALSE, FALSE, "LEFT", "TOP", NULL, NULL);
+			OutputTableRowOrData (obj, PR_FALSE, PR_FALSE, "LEFT", "TOP", NULL, NULL);
 			status = WriteAttribute (obj, attribName);
 			PR_Free (attribName);
-			OutputTableRowOrData (obj, FALSE, TRUE, NULL, NULL, NULL, NULL);
+			OutputTableRowOrData (obj, PR_FALSE, PR_TRUE, NULL, NULL, NULL, NULL);
 		}
 
 		if (value) {
-			OutputTableRowOrData (obj, FALSE, FALSE, "LEFT", "TOP", NULL, NULL);
+			OutputTableRowOrData (obj, PR_FALSE, PR_FALSE, "LEFT", "TOP", NULL, NULL);
 			status = WriteValue (obj, value);
 			PR_Free (value);
-			OutputTableRowOrData (obj, FALSE, TRUE, NULL, NULL, NULL, NULL);
+			OutputTableRowOrData (obj, PR_FALSE, PR_TRUE, NULL, NULL, NULL, NULL);
 		}
 
 		if (url) {
-			OutputTableRowOrData (obj, FALSE, FALSE, "LEFT", "TOP", NULL, NULL);
+			OutputTableRowOrData (obj, PR_FALSE, PR_FALSE, "LEFT", "TOP", NULL, NULL);
 			status = WriteValue (obj, url);
 			PR_Free (url);
-			OutputTableRowOrData (obj, FALSE, TRUE, NULL, NULL, NULL, NULL);
+			OutputTableRowOrData (obj, PR_FALSE, PR_TRUE, NULL, NULL, NULL, NULL);
 		}
-		OutputTableRowOrData(obj, TRUE, TRUE, NULL, NULL, NULL, NULL);
+		OutputTableRowOrData(obj, PR_TRUE, PR_TRUE, NULL, NULL, NULL, NULL);
 	}
 
 	if (status < 0) return status;
@@ -1709,7 +1709,7 @@ static int WriteLineToStream (MimeObject *obj, const char *line)
 		PL_strcat (htmlLine, line);
 // RICHIECSS - TEMPORARY FIX FOR A LAYOUT PROBLEM
 //              PL_strcat (htmlLine, "</DT>");
-	    status = MimeObject_write(obj, htmlLine, PL_strlen(htmlLine), TRUE);
+	    status = MimeObject_write(obj, htmlLine, PL_strlen(htmlLine), PR_TRUE);
 		PR_Free ((void*) htmlLine);
 	}
 	else
@@ -1721,9 +1721,9 @@ static int WriteLineToStream (MimeObject *obj, const char *line)
 static int WriteAttribute (MimeObject *obj, const char *attrib)
 {
 	int status = 0;
-	OutputFont(obj, FALSE, "-1", NULL);
+	OutputFont(obj, PR_FALSE, "-1", NULL);
 	status  = WriteLineToStream (obj, attrib);
-	OutputFont(obj, TRUE, NULL, NULL);
+	OutputFont(obj, PR_TRUE, NULL, NULL);
 	return status;
 }
 
@@ -1731,9 +1731,9 @@ static int WriteAttribute (MimeObject *obj, const char *attrib)
 static int WriteValue (MimeObject *obj, const char *value)
 {
 	int status = 0;
-	OutputFont(obj, FALSE, "-1", NULL);
+	OutputFont(obj, PR_FALSE, "-1", NULL);
 	status  = WriteLineToStream (obj, value);
-	OutputFont(obj, TRUE, NULL, NULL);
+	OutputFont(obj, PR_TRUE, NULL, NULL);
 	return status;
 }
 

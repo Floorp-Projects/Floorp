@@ -24,13 +24,17 @@
 #include "plstr.h"
 
 void * 
-FE_SetTimeout(TimeoutCallbackFunction func, void * closure, uint32 msecs)
+FE_SetTimeout(TimeoutCallbackFunction func, void * closure, PRUint32 msecs)
 {
 	return NULL;
 }
 
 /* RICHIE - THIS HACK MUST GO!!! - INCLUDING FILE TO TRY TO KEEP DIRECTORY CLEAN */
+#ifdef XP_UNIX
+#define PUBLIC
+#else
 #include "..\..\..\lib\xp\xp_time.c"
+#endif
 
 
 char 
@@ -90,7 +94,7 @@ WH_FileName (const char *NetName, XP_FileType type)
          * This is the body of XP_NetToDosFileName(...) which is implemented 
          * for Windows only in fegui.cpp
          */
-        XP_Bool bChopSlash = FALSE;
+        PRBool bChopSlash = PR_FALSE;
         char *p, *newName;
 
         if(!NetName)
@@ -100,15 +104,15 @@ WH_FileName (const char *NetName, XP_FileType type)
         //    whole name else strip the leading '/'
 
         if(NetName[0] == '/')
-            bChopSlash = TRUE;
+            bChopSlash = PR_TRUE;
 
         // save just / as a path
         if(NetName[0] == '/' && NetName[1] == '\0')
-            bChopSlash = FALSE;
+            bChopSlash = PR_FALSE;
 
         // spanky Win9X path name
         if(NetName[0] == '/' && NetName[1] == '/')
-            bChopSlash = FALSE;
+            bChopSlash = PR_FALSE;
 
         if(bChopSlash)
             newName = PL_strdup(&(NetName[1]));

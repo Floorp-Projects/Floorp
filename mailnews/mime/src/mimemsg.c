@@ -268,7 +268,7 @@ HG09091
 													   msg->hdrs);
 		  if (html)
 			{
-			  status = MimeObject_write(obj, html, PL_strlen(html), FALSE);
+			  status = MimeObject_write(obj, html, PL_strlen(html), PR_FALSE);
 			  PR_Free(html);
 			  if (status < 0) return status;
 			}
@@ -278,9 +278,9 @@ HG09091
 	  /* Find the content-type of the body of this message.
 	   */
 	  {
-		PRBool ok = TRUE;
+		PRBool ok = PR_TRUE;
 		char *mv = MimeHeaders_get (msg->hdrs, HEADER_MIME_VERSION,
-									TRUE, FALSE);
+									PR_TRUE, PR_FALSE);
 
 #ifdef REQUIRE_MIME_VERSION_HEADER
 		/* If this is the outermost message, it must have a MIME-Version
@@ -294,12 +294,12 @@ HG09091
 		   it now could cause some compatibility nonsense, so for now, let's
 		   just believe any Content-Type header we see.
 		 */
-		ok = TRUE;
+		ok = PR_TRUE;
 #endif
 
 		if (ok)
 		  {
-			ct = MimeHeaders_get (msg->hdrs, HEADER_CONTENT_TYPE, TRUE, FALSE);
+			ct = MimeHeaders_get (msg->hdrs, HEADER_CONTENT_TYPE, PR_TRUE, PR_FALSE);
 
 			/* If there is no Content-Type header, but there is a MIME-Version
 			   header, then assume that this *is* in fact a MIME message.
@@ -315,7 +315,7 @@ HG09091
 			  ct = PL_strdup(TEXT_PLAIN);
 		  }
 
-		FREEIF(mv);  /* done with this now. */
+		PR_FREEIF(mv);  /* done with this now. */
 	  }
 
 #ifdef MOZ_SECURITY
@@ -341,7 +341,7 @@ HG09091
 	  else if (obj->output_p)
 		{
 		  /* Dump the headers, raw. */
-		  status = MimeObject_write(obj, "", 0, FALSE);  /* initialize */
+		  status = MimeObject_write(obj, "", 0, PR_FALSE);  /* initialize */
 		  if (status < 0) return status;
 		  status = MimeHeaders_write_raw_headers(msg->hdrs, obj->options,
 												 obj->options->dexlate_p);
@@ -357,7 +357,7 @@ HG09091
 
   /* Never put out a separator after a message header block. */
   if (obj->options && obj->options->state)
-	obj->options->state->separator_suppressed_p = TRUE;
+	obj->options->state->separator_suppressed_p = PR_TRUE;
 
 #ifdef MIME_DRAFTS
   if ( !obj->headers &&    /* outer most message header */
@@ -370,7 +370,7 @@ HG09091
 
   body = mime_create(ct, msg->hdrs, obj->options);
 
-  FREEIF(ct);
+  PR_FREEIF(ct);
   if (!body) return MK_OUT_OF_MEMORY;
   status = ((MimeContainerClass *) obj->class)->add_child (obj, body);
   if (status < 0)
@@ -413,7 +413,7 @@ MimeMessage_parse_eof (MimeObject *obj, PRBool abort_p)
 											   msg->hdrs);
 	  if (html)
 		{
-		  int status = MimeObject_write(obj, html, PL_strlen(html), FALSE);
+		  int status = MimeObject_write(obj, html, PL_strlen(html), PR_FALSE);
 		  PR_Free(html);
 		  if (status < 0) return status;
 		}
@@ -530,10 +530,10 @@ MimeMessage_write_headers_html (MimeObject *obj)
 		  html = obj->options->generate_post_header_html_fn(NULL,
 													obj->options->html_closure,
 															msg->hdrs);
-		  obj->options->state->post_header_html_run_p = TRUE;
+		  obj->options->state->post_header_html_run_p = PR_TRUE;
 		  if (html)
 			{
-			  status = MimeObject_write(obj, html, PL_strlen(html), FALSE);
+			  status = MimeObject_write(obj, html, PL_strlen(html), PR_FALSE);
 			  PR_Free(html);
 			  if (status < 0) return status;
 			}
@@ -542,7 +542,7 @@ MimeMessage_write_headers_html (MimeObject *obj)
 	  /* Write out a paragraph break between the headers and body. */
 	  {
 		char s[] = "<P>";
-		status = MimeObject_write(obj, s, PL_strlen(s), FALSE);
+		status = MimeObject_write(obj, s, PL_strlen(s), PR_FALSE);
 		if (status < 0) return status;
 	  }
 	}
@@ -565,7 +565,7 @@ MimeMessage_debug_print (MimeObject *obj, FILE *stream, PRInt32 depth)
 		  addr ? addr : "???",
 		  (msg->container.nchildren == 0 ? " (no body)" : ""),
 		  (PRUint32) msg);
-  FREEIF(addr);
+  PR_FREEIF(addr);
 
 #if 0
   if (msg->hdrs)
@@ -577,9 +577,9 @@ MimeMessage_debug_print (MimeObject *obj, FILE *stream, PRInt32 depth)
 # define DUMP(HEADER) \
 	  for (i=0; i < depth; i++)												\
         fprintf(stream, "  ");												\
-	  s = MimeHeaders_get (msg->hdrs, HEADER, FALSE, TRUE);					\
+	  s = MimeHeaders_get (msg->hdrs, HEADER, PR_FALSE, PR_TRUE);					\
 	  fprintf(stream, HEADER ": %s\n", s ? s : "");							\
-	  FREEIF(s)
+	  PR_FREEIF(s)
 
       DUMP(HEADER_SUBJECT);
       DUMP(HEADER_DATE);

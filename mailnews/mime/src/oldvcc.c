@@ -70,7 +70,7 @@ char yysccsid[] = "@(#)yaccpar	1.4 (Berkeley) 02/25/90";
 
 /* debugging utilities */
 #ifdef DEBUG_mwatkins
-#define DBG_(x) /* XP_Trace x */
+#define DBG_(x) /* PR_LogPrint x */
 #else
 #define DBG_(x)
 #endif
@@ -121,11 +121,11 @@ char yysccsid[] = "@(#)yaccpar	1.4 (Berkeley) 02/25/90";
 #include "plstr.h"
 #include "prmem.h"
 
-#ifndef FALSE
-#define FALSE 0
+#ifndef PR_FALSE
+#define PR_FALSE 0
 #endif
-#ifndef TRUE
-#define TRUE 1
+#ifndef PR_TRUE
+#define PR_TRUE 1
 #endif
 
 /****  Types, Constants  ****/
@@ -424,7 +424,7 @@ static int pushVObject(const char *prop)
     {
     VObject *newObj;
     if (ObjStackTop == MAXLEVEL)
-	return FALSE;
+	return PR_FALSE;
 
     ObjStack[++ObjStackTop] = curObj;
 
@@ -435,7 +435,7 @@ static int pushVObject(const char *prop)
     else
 	curObj = newVObject(prop);
 
-    return TRUE;
+    return PR_TRUE;
     }
 
 
@@ -662,7 +662,7 @@ static char* lexGetWord() {
     lexSkipWhite();
     lexClearToken();
     c = lexLookahead();
-    while (c != EOF && !XP_STRCHR("\t\n ;:=",c)) {
+    while (c != EOF && !PL_strchr("\t\n ;:=",c)) {
 	lexAppendc(c);
 	lexSkipLookahead();
 	c = lexLookahead();
@@ -674,7 +674,7 @@ static char* lexGetWord() {
 #if 0
 static void lexPushLookahead(char *s, int len) {
     int putptr;
-    if (len == 0) len = XP_STRLEN(s);
+    if (len == 0) len = PL_strlen(s);
     putptr = lexBuf.getPtr - len;
     /* this function assumes that length of word to push back
      /  is not greater than MAX_LEX_LOOKAHEAD.
@@ -714,7 +714,7 @@ static char* lexLookaheadWord() {
     while (len < (MAX_LEX_LOOKAHEAD_0)) {
 	c = lexGetc();
 	len++;
-	if (c == EOF || XP_STRCHR("\t\n ;:=", c)) {
+	if (c == EOF || PL_strchr("\t\n ;:=", c)) {
 	    lexAppendc(0);
 	    /* restore lookahead buf. */
 	    lexBuf.len += len;
@@ -802,7 +802,7 @@ static char* lexGet1Value() {
 static char* lexGetStrUntil(char *termset) {
     int c = lexLookahead();
     lexClearToken();
-    while (c != EOF && !XP_STRCHR(termset,c)) {
+    while (c != EOF && !PL_strchr(termset,c)) {
 	lexAppendc(c);
 	lexSkipLookahead();
 	c = lexLookahead();
@@ -845,7 +845,7 @@ void initLex(const char *inputstring, unsigned long inputlen, XP_File inputfile)
     lexBuf.getPtr = 0;
 
     lexBuf.maxToken = MAXTOKEN;
-    lexBuf.strs = (char*)XP_ALLOC(MAXTOKEN);
+    lexBuf.strs = (char*)PR_Malloc(MAXTOKEN);
     lexBuf.strsLen = 0;
 
     }
@@ -926,7 +926,7 @@ static char * lexGetDataFromBase64()
 		if (bytesLen + numOut > bytesMax) {
 		    if (!bytes) {
 			bytesMax = 1024;
-			bytes = (unsigned char*)XP_ALLOC(bytesMax);
+			bytes = (unsigned char*)PR_Malloc(bytesMax);
 			}
 		    else {
 			bytesMax <<= 2;
@@ -1063,11 +1063,11 @@ static int yylex() {
 #endif
 	    return SEMICOLON;
 	    }
-	else if (XP_STRCHR("\n",c)) {
+	else if (PL_strchr("\n",c)) {
 	    ++mime_lineNum;
 	    /* consume all line separator(s) adjacent to each other */
 	    c = lexLookahead();
-	    while (XP_STRCHR("\n",c)) {
+	    while (PL_strchr("\n",c)) {
 		lexSkipLookahead();
 		c = lexLookahead();
 		++mime_lineNum;
@@ -1111,7 +1111,7 @@ static int yylex() {
 		    /* consume all line separator(s) adjacent to each other */
 		    /* ignoring linesep immediately after colon. */
 		    c = lexLookahead();
-		    while (XP_STRCHR("\n",c)) {
+		    while (PL_strchr("\n",c)) {
 			lexSkipLookahead();
 			c = lexLookahead();
 			++mime_lineNum;
@@ -1219,7 +1219,7 @@ VObject* Parse_MIME_FromFileName(char *fname)
 	return 0;
 	}
 #else
-	XP_ASSERT (FALSE);
+	PR_ASSERT (PR_FALSE);
 	return 0;
 #endif
     }
@@ -1228,7 +1228,7 @@ VObject* Parse_MIME_FromFileName(char *fname)
 #if 0
 static void YYDebug(const char *s)
 {
-/*	XP_Trace("%s\n", s); */
+/*	PR_LogPrint("%s\n", s); */
 }
 #endif
 

@@ -69,7 +69,7 @@ DFARS 252.227-7013 or 48 CFR 52.227-19, as applicable.
 
 /* debugging utilities */
 #if DEBUG_mwatkins
-#define DBG_(x) XP_Trace x 
+#define DBG_(x) PR_LogPrint x 
 #else
 #define DBG_(x)
 #endif
@@ -90,27 +90,27 @@ static void initVObjectIterator(VObjectIterator *i, VObject *o);
 	deleteStrItem
    ----------------------------------------------------------------------*/
 
-static XP_Bool needsQuotedPrintable (const char *s)
+static PRBool needsQuotedPrintable (const char *s)
 {
     const unsigned char *p = (const unsigned char *)s;
 
-	if (XP_STRSTR (s, LINEBREAK))
-		return TRUE;
+	if (PL_strstr (s, LINEBREAK))
+		return PR_TRUE;
 
 	while (*p) {
 		if (*p & 0x80)
-			return TRUE;
+			return PR_TRUE;
 		else
-			return FALSE;
+			return PR_FALSE;
 		p++;
 	}
 
-	return FALSE;
+	return PR_FALSE;
 }
 
 VObject* newVObject_(const char *id)
 {
-    VObject *p = (VObject*)XP_NEW(VObject);
+    VObject *p = (VObject*)PR_NEW(VObject);
     p->next = 0;
     p->id = id;
     p->prop = 0;
@@ -134,9 +134,9 @@ char* dupStr(const char *s, unsigned int size)
 {
     char *t;
     if  (size == 0) {
-	size = XP_STRLEN(s);
+	size = PL_strlen(s);
 	}
-    t = (char*)XP_ALLOC(size+1);
+    t = (char*)PR_Malloc(size+1);
 	if (t) {
 	XP_MEMCPY(t,s,size);
 	t[size] = 0;
@@ -154,7 +154,7 @@ void deleteStr(const char *p)
 
 static StrItem* newStrItem(const char *s, StrItem *next)
 {
-    StrItem *p = (StrItem*)XP_ALLOC(sizeof(StrItem));
+    StrItem *p = (StrItem*)PR_Malloc(sizeof(StrItem));
     p->next = next;
     p->s = s;
     p->refCnt = 1;
@@ -403,16 +403,16 @@ VObject* addGroup(VObject *o, const char *g)
 	    prop(VCGrouping=b)
 		prop(VCGrouping=a)
      */
-    char *dot = XP_STRRCHR(g,'.');
+    char *dot = PL_strrchr(g,'.');
     if (dot) {
 	VObject *p, *t;
 	char *gs, *n = dot+1;
 	gs = dupStr(g,0);	/* so we can write to it. */
 	t = p = addProp_(o,lookupProp(n));
-	dot = XP_STRRCHR(gs,'.');
+	dot = PL_strrchr(gs,'.');
 	*dot = 0;
 	do {
-	    dot = XP_STRRCHR(gs,'.');
+	    dot = PL_strrchr(gs,'.');
 	    if (dot) {
 		n = dot+1;
 		*dot=0;
@@ -571,7 +571,7 @@ void printVObjectToFile(char *fname,VObject *o)
 	XP_FileClose(fp);
 	}
 #else
-	XP_ASSERT (FALSE);
+	PR_ASSERT (PR_FALSE);
 #endif
 }
 
@@ -587,7 +587,7 @@ void printVObjectsToFile(char *fname,VObject *list)
 	XP_FileClose(fp);
 	}
 #else
-	XP_ASSERT (FALSE);
+	PR_ASSERT (PR_FALSE);
 #endif
 }
 
@@ -1008,7 +1008,7 @@ static void appendsOFile(OFile *fp, const char *s)
 {
     int slen;
     if (fp->fail) return;
-    slen  = XP_STRLEN(s);
+    slen  = PL_strlen(s);
     if (fp->fp) {
 	XP_FileWrite(s,slen,fp->fp);
 	}
@@ -1100,7 +1100,7 @@ static void appendcOFile(OFile *fp, char c)
 static void appendsOFile(OFile *fp, const char *s)
 {
     int i, slen;
-    slen  = XP_STRLEN (s);
+    slen  = PL_strlen (s);
     for (i=0; i<slen; i++) {
 	appendcOFile(fp,s[i]);
 	}
@@ -1176,9 +1176,9 @@ static void writeQPString(OFile *fp, const char *s)
     const unsigned char *p = (const unsigned char *)s;
 	int current_column = 0;
 	static const char hexdigits[] = "0123456789ABCDEF";
-	XP_Bool white = FALSE;
-	XP_Bool contWhite = FALSE;
-	XP_Bool mb_p = FALSE;
+	PRBool white = PR_FALSE;
+	PRBool contWhite = PR_FALSE;
+	PRBool mb_p = PR_FALSE;
 
 	if (needsQuotedPrintable (s)) 
 	{
@@ -1208,13 +1208,13 @@ static void writeQPString(OFile *fp, const char *s)
 					appendcOFile(fp,'=');
 					appendcOFile(fp,'\n');
 					appendcOFile(fp,'\t');
-					contWhite = FALSE;
+					contWhite = PR_FALSE;
 				}
 
 				/* If its CRLF, swallow two chars instead of one. */
 				if (*p == CR && *(p+1) == LF)
 					p++;
-				white = FALSE;
+				white = PR_FALSE;
 				current_column = 0;
 			}
 			else
@@ -1225,8 +1225,8 @@ static void writeQPString(OFile *fp, const char *s)
 				{
 					appendcOFile(fp,*p);
 					current_column++;
-					white = FALSE;
-					contWhite = FALSE;
+					white = PR_FALSE;
+					contWhite = PR_FALSE;
 				}
 				else if (*p == ' ' || *p == '\t')		/* whitespace */
 				{
@@ -1236,14 +1236,14 @@ static void writeQPString(OFile *fp, const char *s)
 						appendcOFile(fp,hexdigits[*p >> 4]);
 						appendcOFile(fp,hexdigits[*p & 0xF]);
 						current_column += 3;
-						contWhite = FALSE;
+						contWhite = PR_FALSE;
 					}
 					else
 					{
 						appendcOFile(fp,*p);
 						current_column++;
 					}
-					white = TRUE;
+					white = PR_TRUE;
 				}
 				else										/* print as =FF */
 				{
@@ -1251,11 +1251,11 @@ static void writeQPString(OFile *fp, const char *s)
 					appendcOFile(fp,hexdigits[*p >> 4]);
 					appendcOFile(fp,hexdigits[*p & 0xF]);
 					current_column += 3;
-					white = FALSE;
-					contWhite = FALSE;
+					white = PR_FALSE;
+					contWhite = PR_FALSE;
 				}
 
-				XP_ASSERT (current_column <= 76); /* Hard limit required by spec */
+				PR_ASSERT (current_column <= 76); /* Hard limit required by spec */
 
 				if (current_column >= 73 || ((*(p+1) == ' ') && (current_column + 3 >= 73)))		/* soft line break: "=\r\n" */
 				{
@@ -1264,10 +1264,10 @@ static void writeQPString(OFile *fp, const char *s)
 					appendcOFile(fp,'\t');
 					current_column = 0;
 					if (white)
-						contWhite = TRUE;
+						contWhite = PR_TRUE;
 					else 
-						contWhite = FALSE;
-					white = FALSE;
+						contWhite = PR_FALSE;
+					white = PR_FALSE;
 				}
 			}	
 			p++;
@@ -1335,7 +1335,7 @@ static void writeAttrValue(OFile *fp, VObject *o, int* length)
 		(*length)++;
 	appendsOFile(fp,NAME_OF(o));
 	if (*length != -1)
-		(*length) += XP_STRLEN (NAME_OF(o));
+		(*length) += PL_strlen (NAME_OF(o));
 	}
     else {
 		appendcOFile(fp,';');
@@ -1356,12 +1356,12 @@ static void writeGroup(OFile *fp, VObject *o)
 {
     char buf1[256];
     char buf2[256];
-    XP_STRCPY(buf1,NAME_OF(o));
+    PL_strcpy(buf1,NAME_OF(o));
     while ((o=isAPropertyOf(o,VCGroupingProp)) != 0) {
-	XP_STRCPY(buf2,STRINGZ_VALUE_OF(o));
-	XP_STRCAT(buf2,".");
-	XP_STRCAT(buf2,buf1);
-	XP_STRCPY(buf1,buf2);
+	PL_strcpy(buf2,STRINGZ_VALUE_OF(o));
+	PL_strcat(buf2,".");
+	PL_strcat(buf2,buf1);
+	PL_strcpy(buf1,buf2);
 	}
     appendsOFile(fp,buf1);
 }
@@ -1474,7 +1474,7 @@ void writeVObjectToFile(char *fname, VObject *o)
 	XP_FileClose(fp);
 	}
 #else
-	XP_ASSERT (FALSE);
+	PR_ASSERT (PR_FALSE);
 #endif
 }
 
@@ -1490,7 +1490,7 @@ void writeVObjectsToFile(char *fname, VObject *list)
 	XP_FileClose(fp);
 	}
 #else
-	XP_ASSERT (FALSE);
+	PR_ASSERT (PR_FALSE);
 #endif
 }
 
@@ -1523,9 +1523,9 @@ char* writeMemVObjects(char *s, int *len, VObject *list)
 vwchar_t* fakeUnicode(const char *ps, int *bytes)
 {
     vwchar_t *r, *pw;
-    int len = strlen(ps)+1;
+    int len = PL_strlen(ps)+1;
 
-    pw = r = (vwchar_t*)XP_ALLOC(sizeof(vwchar_t)*len);
+    pw = r = (vwchar_t*)PR_Malloc(sizeof(vwchar_t)*len);
     if (bytes)
 	*bytes = len * sizeof(vwchar_t);
 
@@ -1554,7 +1554,7 @@ char* fakeCString(const vwchar_t *u)
 {
     char *s, *t;
     int len = uStrLen(u) + 1;
-    t = s = (char*)XP_ALLOC(len);
+    t = s = (char*)PR_Malloc(len);
     while (*u) {
 	if (*u == (vwchar_t)0x2028)
 	    *t = '\n';

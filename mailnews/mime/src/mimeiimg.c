@@ -90,7 +90,7 @@ MimeInlineImage_parse_begin (MimeObject *obj)
 
 	  part = mime_part_address(obj);
 	  if (!part) return MK_OUT_OF_MEMORY;
-	  image_url = mime_set_url_part(obj->options->url, part, TRUE);
+	  image_url = mime_set_url_part(obj->options->url, part, PR_TRUE);
 	  if (!image_url)
 		{
 		  PR_Free(part);
@@ -110,7 +110,7 @@ MimeInlineImage_parse_begin (MimeObject *obj)
 	  html = obj->options->make_image_html(img->image_data);
 	  if (!html) return MK_OUT_OF_MEMORY;
 
-	  status = MimeObject_write(obj, html, PL_strlen(html), TRUE);
+	  status = MimeObject_write(obj, html, PL_strlen(html), PR_TRUE);
 	  PR_Free(html);
 	  if (status < 0) return status;
 	}
@@ -128,7 +128,7 @@ MimeInlineImage_parse_eof (MimeObject *obj, PRBool abort_p)
 
   /* Force out any buffered data from the superclass (the base64 decoder.) */
   status = ((MimeObjectClass*)&MIME_SUPERCLASS)->parse_eof(obj, abort_p);
-  if (status < 0) abort_p = TRUE;
+  if (status < 0) abort_p = PR_TRUE;
 
   if (img->image_data)
 	{
@@ -166,7 +166,7 @@ MimeInlineImage_parse_decoded_buffer (char *buf, PRInt32 size, MimeObject *obj)
 		  PR_ASSERT(obj->options->state->first_data_written_p);
 		}
 	  
-	  return MimeObject_write(obj, buf, size, TRUE);
+	  return MimeObject_write(obj, buf, size, PR_TRUE);
 	}
 
 

@@ -343,7 +343,7 @@ extern int MimeObject_output_init(MimeObject *obj, const char *content_type);
 
 /* The `user_visible_p' argument says whether the output that has just been
    written will cause characters or images to show up on the screen, that
-   is, it should be FALSE if the stuff being written is merely structural
+   is, it should be PR_FALSE if the stuff being written is merely structural
    HTML or whitespace ("<P>", "</TABLE>", etc.)  This information is used
    when making the decision of whether a separating <HR> is needed.
  */
@@ -361,11 +361,6 @@ extern int MimeObject_write_separator(MimeObject *);
  */
 
 extern int MK_OUT_OF_MEMORY;
-
-#ifdef FREEIF
-# undef FREEIF
-#endif
-#define FREEIF(obj) do { if (obj) { PR_Free (obj); obj = 0; }} while (0)
 
 
 #ifndef MOZILLA_30
@@ -389,6 +384,7 @@ MimeSendMessage(MimeDisplayOptions* options, char* to, char* subject,
 
 
 /* #### These ought to be in libxp or nspr, not libmsg...*/
+#if 0
 extern int msg_GrowBuffer (PRInt32 desired_size, PRInt32 element_size,
 						   PRInt32 quantum, char **buffer, PRInt32 *size);
 
@@ -400,6 +396,7 @@ extern int msg_LineBuffer (const char *net_buffer, PRInt32 net_buffer_size,
 											   PRUint32 line_length,
 											   void *closure),
 						   void *closure);
+#endif
 
 /* This is the data tagged to contexts and the declaration needs to be
    in a header file since more than mimemoz.c needs to see it now...

@@ -100,10 +100,10 @@ mime_new (MimeObjectClass *class, MimeHeaders *hdrs,
   object = (MimeObject *) PR_MALLOC(size);
   if (!object) return 0;
 
-  XP_MEMSET(object, 0, size);
+  memset(object, 0, size);
   object->class = class;
   object->headers = hdrs;
-  object->showAttachmentIcon = FALSE; /* initialize ricardob's new member. */
+  object->showAttachmentIcon = PR_FALSE; /* initialize ricardob's new member. */
 
   if (override_content_type && *override_content_type)
 	object->content_type = PL_strdup(override_content_type);
@@ -196,7 +196,7 @@ mime_find_class (const char *content_type, MimeHeaders *hdrs,
 			 know about. */
 		  char *ct = (hdrs
 					  ? MimeHeaders_get(hdrs, HEADER_CONTENT_TYPE,
-										FALSE, FALSE)
+										PR_FALSE, PR_FALSE)
 					  : 0);
 		  char *proto = (ct
 						 ? MimeHeaders_get_parameter(ct, PARAM_PROTOCOL, NULL, NULL)
@@ -209,9 +209,9 @@ mime_find_class (const char *content_type, MimeHeaders *hdrs,
       HG01444
 #endif
 
-		  FREEIF(proto);
-		  FREEIF(micalg);
-		  FREEIF(ct);
+		  PR_FREEIF(proto);
+		  PR_FREEIF(micalg);
+		  PR_FREEIF(ct);
 		}
 
 	  if (!class && !exact_match_p)
@@ -297,11 +297,11 @@ mime_find_class (const char *content_type, MimeHeaders *hdrs,
 			  char *name = (hdrs ? MimeHeaders_get_name(hdrs) : 0);
 			  if (name)
 				class = (MimeObjectClass *)&mimeExternalObjectClass;
-			  FREEIF(name);
+			  PR_FREEIF(name);
 			}
 
 		  if (opts->state)
-			opts->state->first_part_written_p = TRUE;
+			opts->state->first_part_written_p = PR_TRUE;
 		}
 	  else if (mime_subclass_p(class,(MimeObjectClass *)&mimeContainerClass) &&
 			   !mime_subclass_p(class,(MimeObjectClass *)&mimeMessageClass))
@@ -326,7 +326,7 @@ mime_find_class (const char *content_type, MimeHeaders *hdrs,
 			 text parts to also be displayed as links.) */
 		  class = (MimeObjectClass *)&mimeExternalObjectClass;
 		  if (opts->state)
-			opts->state->first_part_written_p = TRUE;
+			opts->state->first_part_written_p = PR_TRUE;
 		}
 	}
 
@@ -363,14 +363,14 @@ mime_create (const char *content_type, MimeHeaders *hdrs,
   char *content_disposition = 0;
   MimeObject *obj = 0;
   char *override_content_type = 0;
-  static PRBool reverse_lookup = FALSE, got_lookup_pref = FALSE;
+  static PRBool reverse_lookup = PR_FALSE, got_lookup_pref = PR_FALSE;
 
   if (!got_lookup_pref)
   {
 #ifndef MOZILLA_30
 	  PREF_GetBoolPref("mailnews.autolookup_unknown_mime_types",&reverse_lookup);
 #endif
-	  got_lookup_pref = TRUE;
+	  got_lookup_pref = PR_TRUE;
   }
 
 
@@ -379,15 +379,15 @@ mime_create (const char *content_type, MimeHeaders *hdrs,
 	 try to guess what type it really is based on the file extension.  I HATE
 	 that we have to do this...
 
-     If the preference "mailnews.autolookup_unknown_mime_types" is set to TRUE,
+     If the preference "mailnews.autolookup_unknown_mime_types" is set to PR_TRUE,
      then we try to do this EVERY TIME when we do not have an entry for the given
 	 MIME type in our table, not only when it's application/octet-stream. */
   if (hdrs && opts && opts->file_type_fn &&
 
 	  /* ### mwelch - don't override AppleSingle */
-	  (content_type ? PL_strcasecmp(content_type, APPLICATION_APPLEFILE) : TRUE) &&
+	  (content_type ? PL_strcasecmp(content_type, APPLICATION_APPLEFILE) : PR_TRUE) &&
 	  /* ## davidm Apple double shouldn't use this #$%& either. */
-	  (content_type ? PL_strcasecmp(content_type, MULTIPART_APPLEDOUBLE) : TRUE) &&
+	  (content_type ? PL_strcasecmp(content_type, MULTIPART_APPLEDOUBLE) : PR_TRUE) &&
 	  (!content_type ||
 	   !PL_strcasecmp(content_type, APPLICATION_OCTET_STREAM) ||
 	   !PL_strcasecmp(content_type, UNKNOWN_CONTENT_TYPE) ||
@@ -399,11 +399,11 @@ mime_create (const char *content_type, MimeHeaders *hdrs,
 		{
 		  override_content_type = opts->file_type_fn (name,
 													  opts->stream_closure);
-		  FREEIF(name);
+		  PR_FREEIF(name);
 
 		  if (override_content_type &&
 			  !PL_strcasecmp(override_content_type, UNKNOWN_CONTENT_TYPE))
-			FREEIF(override_content_type);
+			PR_FREEIF(override_content_type);
 
 		  if (override_content_type)
 			content_type = override_content_type;
@@ -411,7 +411,7 @@ mime_create (const char *content_type, MimeHeaders *hdrs,
 	}
 
 
-  class = mime_find_class(content_type, hdrs, opts, FALSE);
+  class = mime_find_class(content_type, hdrs, opts, PR_FALSE);
 
   PR_ASSERT(class);
   if (!class) goto FAIL;
@@ -441,7 +441,7 @@ mime_create (const char *content_type, MimeHeaders *hdrs,
 #endif /* !MOZILLA_30 */
 		content_disposition = (hdrs
 							   ? MimeHeaders_get(hdrs, HEADER_CONTENT_DISPOSITION,
-												 TRUE, FALSE)
+												 PR_TRUE, PR_FALSE)
 							   : 0);
   }
 
@@ -451,7 +451,7 @@ mime_create (const char *content_type, MimeHeaders *hdrs,
   else
 	class = (MimeObjectClass *)&mimeExternalObjectClass;
 
-  FREEIF(content_disposition);
+  PR_FREEIF(content_disposition);
   obj = mime_new (class, hdrs, content_type);
 
  FAIL:
@@ -464,7 +464,7 @@ mime_create (const char *content_type, MimeHeaders *hdrs,
 	{
 	  if (obj)
 		{
-		  FREEIF(obj->content_type);
+		  PR_FREEIF(obj->content_type);
 		  obj->content_type = override_content_type;
 		}
 	  else
@@ -505,7 +505,7 @@ mime_classinit(MimeObjectClass *class)
   if (status < 0) return status;
 
   /* Now we're done. */
-  class->class_initialized = TRUE;
+  class->class_initialized = PR_TRUE;
   return 0;
 }
 
@@ -526,9 +526,9 @@ PRBool
 mime_subclass_p(MimeObjectClass *child, MimeObjectClass *parent)
 {
   if (child == parent)
-	return TRUE;
+	return PR_TRUE;
   else if (!child->superclass)
-	return FALSE;
+	return PR_FALSE;
   else
 	return mime_subclass_p(child->superclass, parent);
 }
@@ -614,7 +614,7 @@ mime_imap_part_address(MimeObject *obj)
 		return 0;
 	
 	imap_part = MimeHeaders_get(obj->headers,
-		IMAP_EXTERNAL_CONTENT_HEADER, FALSE, FALSE);
+		IMAP_EXTERNAL_CONTENT_HEADER, PR_FALSE, PR_FALSE);
 
 	return imap_part;
 }
@@ -634,7 +634,7 @@ mime_set_url_part(const char *url, char *part, PRBool append_p)
 {
   const char *part_begin = 0;
   const char *part_end = 0;
-  PRBool got_q = FALSE;
+  PRBool got_q = PR_FALSE;
   const char *s;
   char *result;
 
@@ -642,7 +642,7 @@ mime_set_url_part(const char *url, char *part, PRBool append_p)
 	{
 	  if (*s == '?')
 		{
-		  got_q = TRUE;
+		  got_q = PR_TRUE;
 		  if (!PL_strncasecmp(s, "?part=", 6))
 			part_begin = (s += 6);
 		}
@@ -792,7 +792,7 @@ mime_find_content_type_of_part(const char *part, MimeObject *obj)
   obj = mime_address_to_part(part, obj);
   if (!obj) return 0;
 
-  result = (obj->headers ? MimeHeaders_get(obj->headers, HEADER_CONTENT_TYPE, TRUE, FALSE) : 0);
+  result = (obj->headers ? MimeHeaders_get(obj->headers, HEADER_CONTENT_TYPE, PR_TRUE, PR_FALSE) : 0);
 
   return result;
 }
@@ -938,7 +938,7 @@ mime_parse_url_options(const char *url, MimeDisplayOptions *options)
 		}
 	  else if (!PL_strncasecmp ("part", q, name_end - q))
 		{
-		  FREEIF (options->part_to_load);
+		  PR_FREEIF (options->part_to_load);
 		  if (end > value)
 			{
 			  options->part_to_load = (char *) PR_MALLOC(end - value + 1);
@@ -951,16 +951,16 @@ mime_parse_url_options(const char *url, MimeDisplayOptions *options)
 	  else if (!PL_strncasecmp ("rot13", q, name_end - q))
 		{
 		  if (end <= value || !PL_strncasecmp ("true", value, end - value))
-			options->rot13_p = TRUE;
+			options->rot13_p = PR_TRUE;
 		  else
-			options->rot13_p = FALSE;
+			options->rot13_p = PR_FALSE;
 		}
 	  else if (!PL_strncasecmp ("inline", q, name_end - q))
 		{
 		  if (end <= value || !PL_strncasecmp ("true", value, end - value))
-			options->no_inline_p = FALSE;
+			options->no_inline_p = PR_FALSE;
 		  else
-			options->no_inline_p = TRUE;
+			options->no_inline_p = PR_TRUE;
 		}
 
 	  q = end;
@@ -1076,19 +1076,19 @@ MimeOptions_write(MimeDisplayOptions *opt, char *data, PRInt32 length,
 
   if (opt->state->separator_queued_p && user_visible_p)
 	{
-	  opt->state->separator_queued_p = FALSE;
+	  opt->state->separator_queued_p = PR_FALSE;
 	  if (opt->state->separator_suppressed_p)
-		opt->state->separator_suppressed_p = FALSE;
+		opt->state->separator_suppressed_p = PR_FALSE;
 	  else
 		{
 		  char sep[] = "<HR WIDTH=\"90%\" SIZE=4>";
 		  int status = opt->output_fn(sep, PL_strlen(sep), closure);
-		  opt->state->separator_suppressed_p = FALSE;
+		  opt->state->separator_suppressed_p = PR_FALSE;
 		  if (status < 0) return status;
 		}
 	}
   if (user_visible_p)
-	opt->state->separator_suppressed_p = FALSE;
+	opt->state->separator_suppressed_p = PR_FALSE;
 
   if (length > 0)
 	{
@@ -1119,7 +1119,7 @@ int
 MimeObject_write_separator(MimeObject *obj)
 {
   if (obj->options && obj->options->state)
-	obj->options->state->separator_queued_p = TRUE;
+	obj->options->state->separator_queued_p = PR_TRUE;
   return 0;
 }
 
@@ -1137,7 +1137,7 @@ MimeObject_output_init(MimeObject *obj, const char *content_type)
 
 	  if (!obj->options->output_init_fn)
 		{
-		  obj->options->state->first_data_written_p = TRUE;
+		  obj->options->state->first_data_written_p = PR_TRUE;
 		  return 0;
 		}
 
@@ -1147,12 +1147,12 @@ MimeObject_output_init(MimeObject *obj, const char *content_type)
 		  name = MimeHeaders_get_name(obj->headers);
 
 		  ct = MimeHeaders_get(obj->headers, HEADER_CONTENT_TYPE,
-							   FALSE, FALSE);
+							   PR_FALSE, PR_FALSE);
 		  if (ct)
 			{
 			  x_mac_type   = MimeHeaders_get_parameter(ct,PARAM_X_MAC_TYPE, NULL, NULL);
 			  x_mac_creator= MimeHeaders_get_parameter(ct,PARAM_X_MAC_CREATOR, NULL, NULL);
-			  FREEIF(obj->options->default_charset);
+			  PR_FREEIF(obj->options->default_charset);
 			  obj->options->default_charset = MimeHeaders_get_parameter(ct, "charset", NULL, NULL);
 			  PR_Free(ct);
 			}
@@ -1169,10 +1169,10 @@ MimeObject_output_init(MimeObject *obj, const char *content_type)
 	  status = obj->options->output_init_fn (content_type, charset, name,
 											 x_mac_type, x_mac_creator,
 											 obj->options->stream_closure);
-	  FREEIF(name);
-	  FREEIF(x_mac_type);
-	  FREEIF(x_mac_creator);
-	  obj->options->state->first_data_written_p = TRUE;
+	  PR_FREEIF(name);
+	  PR_FREEIF(x_mac_type);
+	  PR_FREEIF(x_mac_creator);
+	  obj->options->state->first_data_written_p = PR_TRUE;
 	  return status;
 	}
   return 0;

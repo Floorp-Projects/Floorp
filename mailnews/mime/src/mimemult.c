@@ -84,11 +84,11 @@ MimeMultipart_initialize (MimeObject *object)
   /* This is an abstract class; it shouldn't be directly instanciated. */
   PR_ASSERT(object->class != (MimeObjectClass *) &mimeMultipartClass);
 
-  ct = MimeHeaders_get (object->headers, HEADER_CONTENT_TYPE, FALSE, FALSE);
+  ct = MimeHeaders_get (object->headers, HEADER_CONTENT_TYPE, PR_FALSE, PR_FALSE);
   mult->boundary = (ct
 					? MimeHeaders_get_parameter (ct, HEADER_PARM_BOUNDARY, NULL, NULL)
 					: 0);
-  FREEIF(ct);
+  PR_FREEIF(ct);
   mult->state = MimeMultipartPreamble;
   return ((MimeObjectClass*)&MIME_SUPERCLASS)->initialize(object);
 }
@@ -99,9 +99,9 @@ MimeMultipart_finalize (MimeObject *object)
 {
   MimeMultipart *mult = (MimeMultipart *) object;
 
-  object->class->parse_eof(object, FALSE);
+  object->class->parse_eof(object, PR_FALSE);
 
-  FREEIF(mult->boundary);
+  PR_FREEIF(mult->boundary);
   if (mult->hdrs)
 	MimeHeaders_free(mult->hdrs);
   mult->hdrs = 0;
@@ -128,7 +128,7 @@ MimeMultipart_parse_line (char *line, PRInt32 length, MimeObject *obj)
 	  obj->options &&
 	  !obj->options->write_html_p &&
 	  obj->options->output_fn)
-	return MimeObject_write(obj, line, length, TRUE);
+	return MimeObject_write(obj, line, length, PR_TRUE);
 
 
   if (mult->state == MimeMultipartEpilogue)  /* already done */
@@ -200,7 +200,7 @@ MimeMultipart_parse_line (char *line, PRInt32 length, MimeObject *obj)
 	  status = (((MimeMultipartClass *) obj->class)->parse_child_line(obj,
 																	  line,
 																	  length,
-																	  TRUE));
+																	  PR_TRUE));
 	  if (status < 0) return status;
 	  mult->state = MimeMultipartPartLine;
 	  break;
@@ -210,7 +210,7 @@ MimeMultipart_parse_line (char *line, PRInt32 length, MimeObject *obj)
 	  status = (((MimeMultipartClass *) obj->class)->parse_child_line(obj,
 																	  line,
 																	  length,
-																	  FALSE));
+																	  PR_FALSE));
 	  if (status < 0) return status;
 	  break;
 
@@ -237,7 +237,7 @@ MimeMultipart_check_boundary(MimeObject *obj, const char *line, PRInt32 length)
 
   /* This is a candidate line to be a boundary.  Check it out... */
   blen = PL_strlen(mult->boundary);
-  term_p = FALSE;
+  term_p = PR_FALSE;
 
   /* strip trailing whitespace (including the newline.) */
   while(length > 2 && XP_IS_SPACE(line[length-1]))
@@ -248,7 +248,7 @@ MimeMultipart_check_boundary(MimeObject *obj, const char *line, PRInt32 length)
 	  line[length-1] == '-' &&
 	  line[length-2] == '-')
 	{
-	  term_p = TRUE;
+	  term_p = PR_TRUE;
 	  length -= 2;
 	}
 
@@ -272,12 +272,12 @@ MimeMultipart_create_child(MimeObject *obj)
   int status;
   char *ct = (mult->hdrs
 			  ? MimeHeaders_get (mult->hdrs, HEADER_CONTENT_TYPE,
-								 TRUE, FALSE)
+								 PR_TRUE, PR_FALSE)
 			  : 0);
   const char *dct = (((MimeMultipartClass *) obj->class)->default_part_type);
   MimeObject *body = NULL;
   MimeObject *parent = NULL;
-  PRBool showIcon = TRUE;
+  PRBool showIcon = PR_TRUE;
 
   mult->state = MimeMultipartPartFirstLine;
   /* Don't pass in NULL as the content-type (this means that the
@@ -286,7 +286,7 @@ MimeMultipart_create_child(MimeObject *obj)
    */
   body = mime_create(((ct && *ct) ? ct : (dct ? dct: TEXT_PLAIN)),
 					 mult->hdrs, obj->options);
-  FREEIF(ct);
+  PR_FREEIF(ct);
   if (!body) return MK_OUT_OF_MEMORY;
   status = ((MimeContainerClass *) obj->class)->add_child(obj, body);
   if (status < 0)
@@ -325,7 +325,7 @@ MimeMultipart_create_child(MimeObject *obj)
 	{
 #ifdef JS_ATTACHMENT_MUMBO_JUMBO
 	  int attachment_count = 0;
-	  PRBool isMsgBody = FALSE, isAlternativeOrRelated = FALSE;
+	  PRBool isMsgBody = PR_FALSE, isAlternativeOrRelated = PR_FALSE;
 #endif
 	  status = body->class->parse_begin(body);
 	  if (status < 0) return status;
@@ -352,26 +352,26 @@ MimeMultipart_create_child(MimeObject *obj)
 		  char *tmp = NULL;
 
 		  /* if (strncasestr(body->headers->all_headers, "DISPOSITION: INLINE", 300))
-		  	showIcon = FALSE; */
+		  	showIcon = PR_FALSE; */
 		  if (PL_strstr(body->content_type, "text/x-vcard"))
-			  showIcon = FALSE;
+			  showIcon = PR_FALSE;
 		  else if (PL_strstr(body->content_type, "text/html"))
-			  showIcon = FALSE;
+			  showIcon = PR_FALSE;
 		  else if (PL_strstr(body->content_type, "message/rfc822"))
-			  showIcon = FALSE;
+			  showIcon = PR_FALSE;
 		  else if (PL_strstr(body->content_type, "multipart/signed"))
-			  showIcon = FALSE;
+			  showIcon = PR_FALSE;
 		  else if (PL_strstr(body->content_type, "application/x-pkcs7-signature"))
-			  showIcon = FALSE;
+			  showIcon = PR_FALSE;
 		  else if (PL_strstr(body->content_type, "multipart/mixed"))
-			  showIcon = FALSE;
+			  showIcon = PR_FALSE;
 
 		  if (showIcon)
 		  {
-			  (obj)->showAttachmentIcon = TRUE;
+			  (obj)->showAttachmentIcon = PR_TRUE;
 			  parent = obj->parent;
 			  while (parent) {
-				  (parent)->showAttachmentIcon = TRUE;
+				  (parent)->showAttachmentIcon = PR_TRUE;
 				  parent = parent->parent;
 			  }
 		  }
@@ -392,7 +392,7 @@ document.getElementById(\"attach%ld\").style.display = \"\";\n\
               (long) obj->options->attachment_icon_layer_id,
 							(long) obj->options->attachment_icon_layer_id);
 			  if (tmp) {
-				status = MimeObject_write(obj, tmp, PL_strlen(tmp), TRUE);
+				status = MimeObject_write(obj, tmp, PL_strlen(tmp), PR_TRUE);
 				PR_Free(tmp);
 				if (status < 0)
 					return status;
@@ -409,7 +409,7 @@ document.getElementById(\"attach%ld\").style.display = \"\";\n\
 static PRBool
 MimeMultipart_output_child_p(MimeObject *obj, MimeObject *child)
 {
-  return TRUE;
+  return PR_TRUE;
 }
 
 
@@ -433,9 +433,9 @@ MimeMultipart_close_child(MimeObject *object)
 	  if (kid)
 		{
 		  int status;
-		  status = kid->class->parse_eof(kid, FALSE);
+		  status = kid->class->parse_eof(kid, PR_FALSE);
 		  if (status < 0) return status;
-		  status = kid->class->parse_end(kid, FALSE);
+		  status = kid->class->parse_end(kid, PR_FALSE);
 		  if (status < 0) return status;
 
 #ifdef MIME_DRAFTS
@@ -544,7 +544,7 @@ MimeMultipart_parse_eof (MimeObject *obj, PRBool abort_p)
 	  obj->ibuffer_fp = 0;
 	  if (status < 0)
 		{
-		  obj->closed_p = TRUE;
+		  obj->closed_p = PR_TRUE;
 		  return status;
 		}
 	}
@@ -584,7 +584,7 @@ MimeMultipart_debug_print (MimeObject *obj, FILE *stream, PRInt32 depth)
 		  cont->nchildren, (cont->nchildren == 1 ? "" : "s"),
 		  (mult->boundary ? mult->boundary : "(none)"),
 		  (PRUint32) mult);
-  FREEIF(addr);
+  PR_FREEIF(addr);
 
 /*
   if (cont->nchildren > 0)

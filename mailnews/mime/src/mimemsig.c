@@ -101,7 +101,7 @@ HG09003
 
   if (sig->sig_decoder_data)
 	{
-	  MimeDecoderDestroy(sig->sig_decoder_data, TRUE);
+	  MimeDecoderDestroy(sig->sig_decoder_data, PR_TRUE);
 	  sig->sig_decoder_data = 0;
 	}
 }
@@ -137,7 +137,7 @@ MimeMultipartSigned_parse_eof (MimeObject *obj, PRBool abort_p)
 	  if (status < 0) return status;
 	}
 
-  MimeMultipartSigned_cleanup(obj, FALSE);
+  MimeMultipartSigned_cleanup(obj, PR_FALSE);
   return ((MimeObjectClass*)&MIME_SUPERCLASS)->parse_eof(obj, abort_p);
 }
 
@@ -145,7 +145,7 @@ MimeMultipartSigned_parse_eof (MimeObject *obj, PRBool abort_p)
 static void
 MimeMultipartSigned_finalize (MimeObject *obj)
 {
-  MimeMultipartSigned_cleanup(obj, TRUE);
+  MimeMultipartSigned_cleanup(obj, PR_TRUE);
   ((MimeObjectClass*)&MIME_SUPERCLASS)->finalize(obj);
 }
 
@@ -156,8 +156,8 @@ MimeMultipartSigned_parse_line (char *line, PRInt32 length, MimeObject *obj)
   MimeMultipart *mult = (MimeMultipart *) obj;
   MimeMultipartSigned *sig = (MimeMultipartSigned *) obj;
   MimeMultipartParseState old_state = mult->state;
-  PRBool hash_line_p = TRUE;
-  PRBool no_headers_p = FALSE;
+  PRBool hash_line_p = PR_TRUE;
+  PRBool no_headers_p = PR_FALSE;
   int status = 0;
 
   /* First do the parsing for normal multipart/ objects by handing it off to
@@ -189,7 +189,7 @@ MimeMultipartSigned_parse_line (char *line, PRInt32 length, MimeObject *obj)
 			 that this line is the preceeding boundary string (and we
 			 should ignore it.)
 		   */
-		  hash_line_p = FALSE;
+		  hash_line_p = PR_FALSE;
 
 		  if (sig->state == MimeMultipartSignedPreamble)
 			sig->state = MimeMultipartSignedBodyFirstHeader;
@@ -205,7 +205,7 @@ MimeMultipartSigned_parse_line (char *line, PRInt32 length, MimeObject *obj)
 		  if (sig->state == MimeMultipartSignedBodyFirstHeader)
 			{			
 			  sig->state = MimeMultipartSignedBodyFirstLine;
-			  no_headers_p = TRUE;
+			  no_headers_p = PR_TRUE;
 			}
 		  else if (sig->state == MimeMultipartSignedBodyHeaders)
 			sig->state = MimeMultipartSignedBodyFirstLine;
@@ -341,7 +341,7 @@ MimeMultipartSigned_parse_line (char *line, PRInt32 length, MimeObject *obj)
 			 reached the end of the signed data.
 		   */
 		  status = (((MimeMultipartSignedClass *) obj->class)
-					->xlation_data_eof) (sig->xlation_closure, FALSE);
+					->xlation_data_eof) (sig->xlation_closure, PR_FALSE);
 		  if (status < 0) return status;
 		}
 	  break;
@@ -363,7 +363,7 @@ MimeMultipartSigned_parse_line (char *line, PRInt32 length, MimeObject *obj)
 		MimeDecoderData *(*fn) (int (*) (const char*, PRInt32,void*), void*) = 0;
 		char *encoding = MimeHeaders_get (sig->sig_hdrs,
 										  HEADER_CONTENT_TRANSFER_ENCODING,
-										  TRUE, FALSE);
+										  PR_TRUE, PR_FALSE);
 		if (!encoding)
 		  ;
 		else if (!PL_strcasecmp(encoding, ENCODING_BASE64))
@@ -591,7 +591,7 @@ MimeMultipartSigned_emit_child (MimeObject *obj)
 					->xlation_generate_html (sig->xlation_closure));
 	  if (!html) return -1; /* MK_OUT_OF_MEMORY? */
 
-	  status = MimeObject_write(obj, html, PL_strlen(html), FALSE);
+	  status = MimeObject_write(obj, html, PL_strlen(html), PR_FALSE);
 	  PR_Free(html);
 	  if (status < 0) return status;
 
@@ -612,10 +612,10 @@ MimeMultipartSigned_emit_child (MimeObject *obj)
 		  html = obj->options->generate_post_header_html_fn(NULL,
 													obj->options->html_closure,
 															outer_headers);
-		  obj->options->state->post_header_html_run_p = TRUE;
+		  obj->options->state->post_header_html_run_p = PR_TRUE;
 		  if (html)
 			{
-			  status = MimeObject_write(obj, html, PL_strlen(html), FALSE);
+			  status = MimeObject_write(obj, html, PL_strlen(html), PR_FALSE);
 			  PR_Free(html);
 			  if (status < 0) return status;
 			}
@@ -652,7 +652,7 @@ MimeMultipartSigned_emit_child (MimeObject *obj)
 
 #ifdef MIME_DRAFTS
   if (body->options->decompose_file_p) {
-	  body->options->signed_p = TRUE;
+	  body->options->signed_p = PR_TRUE;
 	  if (!mime_typep(body, (MimeObjectClass*)&mimeMultipartClass) &&
 		body->options->decompose_file_init_fn)
 		body->options->decompose_file_init_fn ( body->options->stream_closure, body->headers );
@@ -684,12 +684,12 @@ MimeMultipartSigned_emit_child (MimeObject *obj)
 	  if (status < 0) return status;
 	}
 
-  MimeMultipartSigned_cleanup(obj, FALSE);
+  MimeMultipartSigned_cleanup(obj, PR_FALSE);
 
   /* Done parsing. */
-  status = body->class->parse_eof(body, FALSE);
+  status = body->class->parse_eof(body, PR_FALSE);
   if (status < 0) return status;
-  status = body->class->parse_end(body, FALSE);
+  status = body->class->parse_end(body, PR_FALSE);
   if (status < 0) return status;
 
 #ifdef MIME_DRAFTS

@@ -76,12 +76,12 @@ XP_BEGIN_PROTOS
    a newly-allocated string (which the caller must free.)  If the header
    is not present, or has no contents, NULL is returned.
 
-   If `strip_p' is TRUE, then the data returned will be the first token
+   If `strip_p' is PR_TRUE, then the data returned will be the first token
    of the header; else it will be the full text of the header.  (This is
    useful for getting just "text/plain" from "text/plain; name=foo".)
 
-   If `all_p' is FALSE, then the first header encountered is used, and
-   any subsequent headers of the same name are ignored.  If TRUE, then
+   If `all_p' is PR_FALSE, then the first header encountered is used, and
+   any subsequent headers of the same name are ignored.  If PR_TRUE, then
    all headers of the same name are appended together (this is useful
    for gathering up all CC headers into one, for example.)
  */
@@ -234,7 +234,7 @@ struct MimeDisplayOptions
 
   PRBool dexlate_p;		/* Whether all traces of xlateion should be
 							   eradicated -- this is only meaningful when
-							   write_html_p is FALSE; we set this when
+							   write_html_p is PR_FALSE; we set this when
 							   attaching a message for forwarding, since
 							   forwarding someone else a message that wasn't
 							   xlated for them doesn't work.  We have to
@@ -242,14 +242,14 @@ struct MimeDisplayOptions
 							 */
 
 #ifndef MOZILLA_30
-  PRBool nice_html_only_p;		/* If TRUE, then we only should write html if
+  PRBool nice_html_only_p;		/* If PR_TRUE, then we only should write html if
 								   it's pretty HTML (stuff that we're willing
 								   to get shipped out in mail messages).  If we
 								   can't generate nice stuff for some part,
 								   then don't say anything at all. */
 
-  PRBool dont_touch_citations_p; /* If TRUE, then we should leave citations
-									 alone in plaintext parts.  If FALSE, then
+  PRBool dont_touch_citations_p; /* If PR_TRUE, then we should leave citations
+									 alone in plaintext parts.  If PR_FALSE, then
 									 go ahead and tweak the fonts according
 									 to preferences. */
 #endif /* !MOZILLA_30 */
@@ -296,7 +296,7 @@ struct MimeDisplayOptions
      start or immediately after the end of the encapsulated HTML.
      layer_encapsulate_p indicates whether or not to put special
      ILAYER container tags around the HTML -- Also, when start_p is
-     FALSE, this function should close off any tags we've left open,
+     PR_FALSE, this function should close off any tags we've left open,
      reset the font size and face, etc.  This may be called multiple
      times -- in particular, it will be called at the end of each
      message part which might contain human-generated (and thus

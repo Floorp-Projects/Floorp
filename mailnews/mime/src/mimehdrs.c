@@ -95,8 +95,8 @@ MimeHeaders_new (void)
   MimeHeaders *hdrs = (MimeHeaders *) PR_MALLOC(sizeof(MimeHeaders));
   if (!hdrs) return 0;
 
-  XP_MEMSET(hdrs, 0, sizeof(*hdrs));
-  hdrs->done_p = FALSE;
+  memset(hdrs, 0, sizeof(*hdrs));
+  hdrs->done_p = PR_FALSE;
 
   return hdrs;
 }
@@ -105,10 +105,10 @@ void
 MimeHeaders_free (MimeHeaders *hdrs)
 {
   if (!hdrs) return;
-  FREEIF(hdrs->all_headers);
-  FREEIF(hdrs->heads);
-  FREEIF(hdrs->obuffer);
-  FREEIF(hdrs->munged_subject);
+  PR_FREEIF(hdrs->all_headers);
+  PR_FREEIF(hdrs->heads);
+  PR_FREEIF(hdrs->obuffer);
+  PR_FREEIF(hdrs->munged_subject);
   hdrs->obuffer_fp = 0;
   hdrs->obuffer_size = 0;
 
@@ -133,7 +133,7 @@ MimeHeaders_copy (MimeHeaders *hdrs)
 
   hdrs2 = (MimeHeaders *) PR_MALLOC(sizeof(*hdrs));
   if (!hdrs2) return 0;
-  XP_MEMSET(hdrs2, 0, sizeof(*hdrs2));
+  memset(hdrs2, 0, sizeof(*hdrs2));
 
   if (hdrs->all_headers)
 	{
@@ -158,7 +158,7 @@ MimeHeaders_copy (MimeHeaders *hdrs)
 										* sizeof(*hdrs->heads));
 	  if (!hdrs2->heads)
 		{
-		  FREEIF(hdrs2->all_headers);
+		  PR_FREEIF(hdrs2->all_headers);
 		  PR_Free(hdrs2);
 		  return 0;
 		}
@@ -179,7 +179,7 @@ MimeHeaders_compact (MimeHeaders *hdrs)
   PR_ASSERT(hdrs);
   if (!hdrs) return;
 
-  FREEIF(hdrs->obuffer);
+  PR_FREEIF(hdrs->obuffer);
   hdrs->obuffer_fp = 0;
   hdrs->obuffer_size = 0;
 
@@ -208,7 +208,7 @@ MimeHeaders_parse_line (const char *buffer, PRInt32 size, MimeHeaders *hdrs)
 	{
 	  /* If this is a blank line, we're done.
 	   */
-	  hdrs->done_p = TRUE;
+	  hdrs->done_p = PR_TRUE;
 	  return MimeHeaders_build_heads_list(hdrs);
 	}
 
@@ -243,7 +243,7 @@ MimeHeaders_build_heads_list(MimeHeaders *hdrs)
   if (hdrs->all_headers_fp == 0)
 	{
 	  /* Must not have been any headers (we got the blank line right away.) */
-	  FREEIF (hdrs->all_headers);
+	  PR_FREEIF (hdrs->all_headers);
 	  hdrs->all_headers_size = 0;
 	  return 0;
 	}
@@ -282,7 +282,7 @@ MimeHeaders_build_heads_list(MimeHeaders *hdrs)
   hdrs->heads = (char **) PR_MALLOC((hdrs->heads_size + 1) * sizeof(char *));
   if (!hdrs->heads)
 	return MK_OUT_OF_MEMORY;
-  XP_MEMSET(hdrs->heads, 0, (hdrs->heads_size + 1) * sizeof(char *));
+  memset(hdrs->heads, 0, (hdrs->heads_size + 1) * sizeof(char *));
 
 
   /* Now make another pass through the headers, and this time, record the
@@ -363,7 +363,7 @@ MimeHeaders_get (MimeHeaders *hdrs, const char *header_name,
   if (!hdrs->done_p)
 	{
 	  int status;
-	  hdrs->done_p = TRUE;
+	  hdrs->done_p = PR_TRUE;
 	  status = MimeHeaders_build_heads_list(hdrs);
 	  if (status < 0) return 0;
 	}
@@ -655,7 +655,9 @@ MimeHeaders_get_parameter (const char *header_value, const char *parm_name,
 				  len = PL_strlen(s);
 				  ns = (char *) PR_Realloc(s, len+(value_end-value_start)+1);
 				  if (!ns)
-					  FREEIF(s);
+                    {
+					  PR_FREEIF(s);
+                    }
 				  else if (ns != s)
 					  s = ns;
 			  }
@@ -685,7 +687,7 @@ MimeHeaders_get_parameter (const char *header_value, const char *parm_name,
 
 
 #define MimeHeaders_write(OPT,DATA,LENGTH) \
-	MimeOptions_write((OPT), (DATA), (LENGTH), TRUE);
+	MimeOptions_write((OPT), (DATA), (LENGTH), PR_TRUE);
 
 static char *
 MimeHeaders_default_news_link_generator (const char *dest, void *closure,
@@ -702,7 +704,7 @@ MimeHeaders_default_news_link_generator (const char *dest, void *closure,
 	  PL_strcpy (result, prefix);
 	  PL_strcat (result, new_dest);
 	}
-  FREEIF (new_dest);
+  PR_FREEIF (new_dest);
   return result;
 }
 
@@ -784,11 +786,11 @@ MimeHeaders_default_addbook_link_generator (const char *dest, void *closure,
 		MSG_UnquotePhraseOrAddr (name, &unquotedName);
 
 	winCharSetID = INTL_DefaultWinCharSetID(0);
-	converted = INTL_DecodeMimePartIIStr((const char *) unquotedName, winCharSetID, FALSE);
+	converted = INTL_DecodeMimePartIIStr((const char *) unquotedName, winCharSetID, PR_FALSE);
 	if (converted && (converted != unquotedName)) {
 		char charsetName[128];
 		charsetName[0] = 0;
-		FREEIF(unquotedName);
+		PR_FREEIF(unquotedName);
 		unquotedName = converted;
 		INTL_CharSetIDToName(winCharSetID, charsetName);
 		if (charsetName[0]) {
@@ -829,9 +831,9 @@ MimeHeaders_default_addbook_link_generator (const char *dest, void *closure,
 		}
 	}
 
-	FREEIF(unquotedAddr);
-	FREEIF(unquotedName);
-	FREEIF(charset);
+	PR_FREEIF(unquotedAddr);
+	PR_FREEIF(unquotedName);
+	PR_FREEIF(charset);
 
 	if (!tmp) break;
 	tmp2 = NET_Escape(tmp, URL_XALPHAS);
@@ -841,8 +843,8 @@ MimeHeaders_default_addbook_link_generator (const char *dest, void *closure,
 	PR_Free(tmp2);
 	break;
   }
-  FREEIF(names);
-  FREEIF(addresses);
+  PR_FREEIF(names);
+  PR_FREEIF(addresses);
   return result;
 }
 
@@ -877,7 +879,7 @@ MimeHeaders_convert_rfc1522(MimeDisplayOptions *opt,
 								   opt->stream_closure);
 	  if (status < 0)
 		{
-		  FREEIF(converted);
+		  PR_FREEIF(converted);
 		  return status;
 		}
 
@@ -979,7 +981,7 @@ MimeHeaders_write_random_header_1 (MimeHeaders *hdrs,
 									   &converted, &converted_length);
   if (status < 0) 
   {
-    FREEIF(cleanName);
+    PR_FREEIF(cleanName);
     return status;
   }
   if (converted)
@@ -992,8 +994,8 @@ MimeHeaders_write_random_header_1 (MimeHeaders *hdrs,
 									 (contents_length * 4));
   if (status < 0)
 	{
-	  FREEIF(converted);
-    FREEIF(cleanName);
+	  PR_FREEIF(converted);
+    PR_FREEIF(cleanName);
 	  return status;
 	}
 
@@ -1025,7 +1027,7 @@ MimeHeaders_write_random_header_1 (MimeHeaders *hdrs,
 #endif /* !MOZILLA_30 */
 								contents, contents_length, out,
 								hdrs->obuffer_size - (out - hdrs->obuffer) -10,
-								TRUE);
+								PR_TRUE);
 	  if (status < 0) return status;
 	  out += PL_strlen(out);
 	  PR_ASSERT(out < (hdrs->obuffer + hdrs->obuffer_size));
@@ -1068,8 +1070,8 @@ MimeHeaders_write_random_header_1 (MimeHeaders *hdrs,
   *out = 0; 
 
   status = MimeHeaders_write(opt, hdrs->obuffer, out - hdrs->obuffer);
-  FREEIF(converted);
-  FREEIF(cleanName);
+  PR_FREEIF(converted);
+  PR_FREEIF(cleanName);
   if (status < 0)
 	return status;
   else
@@ -1082,9 +1084,9 @@ MimeHeaders_write_random_header (MimeHeaders *hdrs, const char *name,
 								 PRBool all_p, MimeDisplayOptions *opt)
 {
   int status = 0;
-  char *contents = MimeHeaders_get (hdrs, name, FALSE, all_p);
+  char *contents = MimeHeaders_get (hdrs, name, PR_FALSE, all_p);
   if (!contents) return 0;
-  status = MimeHeaders_write_random_header_1(hdrs, name, contents, opt, FALSE);
+  status = MimeHeaders_write_random_header_1(hdrs, name, contents, opt, PR_FALSE);
   PR_Free(contents);
   return status;
 }
@@ -1095,7 +1097,7 @@ MimeHeaders_write_subject_header_1 (MimeHeaders *hdrs, const char *name,
 									const char *contents,
 									MimeDisplayOptions *opt)
 {
-  return MimeHeaders_write_random_header_1(hdrs, name, contents, opt, TRUE);
+  return MimeHeaders_write_random_header_1(hdrs, name, contents, opt, PR_TRUE);
 }
 
 static int
@@ -1103,9 +1105,9 @@ MimeHeaders_write_subject_header (MimeHeaders *hdrs, const char *name,
 								  MimeDisplayOptions *opt)
 {
   int status = 0;
-  char *contents = MimeHeaders_get (hdrs, name, FALSE, FALSE);
+  char *contents = MimeHeaders_get (hdrs, name, PR_FALSE, PR_FALSE);
   status = MimeHeaders_write_subject_header_1 (hdrs, name, contents, opt);
-  FREEIF(contents);
+  PR_FREEIF(contents);
   return status;
 }
 
@@ -1144,7 +1146,7 @@ MimeHeaders_write_grouped_header_1 (MimeHeaders *hdrs, const char *name,
 	return 0;
 
   if (!opt->fancy_headers_p)
-	return MimeHeaders_write_random_header (hdrs, name, TRUE, opt);
+	return MimeHeaders_write_random_header (hdrs, name, PR_TRUE, opt);
 
   if (name) name = MimeHeaders_localize_header_name(name, opt);
 
@@ -1333,9 +1335,9 @@ MimeHeaders_write_grouped_header_1 (MimeHeaders *hdrs, const char *name,
       {
         char *r = 0;
         r         = MimeHeaders_get (hdrs, HEADER_REPLY_TO,
-          FALSE, TRUE);
-        if (!r) r = MimeHeaders_get (hdrs, HEADER_FROM, FALSE, TRUE);
-        if (!r) r = MimeHeaders_get (hdrs, HEADER_SENDER, FALSE, TRUE);
+          PR_FALSE, PR_TRUE);
+        if (!r) r = MimeHeaders_get (hdrs, HEADER_FROM, PR_FALSE, PR_TRUE);
+        if (!r) r = MimeHeaders_get (hdrs, HEADER_SENDER, PR_FALSE, PR_TRUE);
         
         if (r)
         {
@@ -1353,7 +1355,7 @@ MimeHeaders_write_grouped_header_1 (MimeHeaders *hdrs, const char *name,
         link = 0;
       
       link2 = (link ? NET_EscapeHTML (link) : 0);
-      FREEIF (link);
+      PR_FREEIF (link);
       link = link2;
       
       if (link)
@@ -1392,7 +1394,7 @@ MimeHeaders_write_grouped_header_1 (MimeHeaders *hdrs, const char *name,
 #ifndef MOZILLA_30
       /* Begin hack of out of envelope XSENDER info */
       if (orig_name && !PL_strcasecmp(orig_name, HEADER_FROM)) { 
-        char * statusLine = MimeHeaders_get (hdrs, HEADER_X_MOZILLA_STATUS, FALSE, FALSE);
+        char * statusLine = MimeHeaders_get (hdrs, HEADER_X_MOZILLA_STATUS, PR_FALSE, PR_FALSE);
         PRUint16 flags =0;
         
 #define UNHEX(C) \
@@ -1406,7 +1408,7 @@ MimeHeaders_write_grouped_header_1 (MimeHeaders *hdrs, const char *name,
           for (i=0; i < 4; i++, cp++) {
             flags = (flags << 4) | UNHEX(*cp);
           }
-          FREEIF(statusLine);
+          PR_FREEIF(statusLine);
         }
         
         if (flags & MSG_FLAG_SENDER_AUTHED) {
@@ -1496,7 +1498,7 @@ MimeHeaders_write_grouped_header_1 (MimeHeaders *hdrs, const char *name,
   else status = 1;
 
  FAIL:
-  FREEIF(converted);
+  PR_FREEIF(converted);
   return status;
 }
 
@@ -1506,7 +1508,7 @@ MimeHeaders_write_grouped_header (MimeHeaders *hdrs, const char *name,
 								  PRBool mail_header_p)
 {
   int status = 0;
-  char *contents = MimeHeaders_get (hdrs, name, FALSE, TRUE);
+  char *contents = MimeHeaders_get (hdrs, name, PR_FALSE, PR_TRUE);
   if (!contents) return 0;
   status = MimeHeaders_write_grouped_header_1 (hdrs, name, contents, opt,
 											   mail_header_p);
@@ -1515,14 +1517,14 @@ MimeHeaders_write_grouped_header (MimeHeaders *hdrs, const char *name,
 }
 
 #define MimeHeaders_write_address_header(hdrs,name,opt) \
-	MimeHeaders_write_grouped_header(hdrs,name,opt,TRUE)
+	MimeHeaders_write_grouped_header(hdrs,name,opt,PR_TRUE)
 #define MimeHeaders_write_news_header(hdrs,name,opt) \
-	MimeHeaders_write_grouped_header(hdrs,name,opt,FALSE)
+	MimeHeaders_write_grouped_header(hdrs,name,opt,PR_FALSE)
 
 #define MimeHeaders_write_address_header_1(hdrs,name,contents,opt) \
-	MimeHeaders_write_grouped_header_1(hdrs,name,contents,opt,TRUE)
+	MimeHeaders_write_grouped_header_1(hdrs,name,contents,opt,PR_TRUE)
 #define MimeHeaders_write_news_header_1(hdrs,name,contents,opt) \
-	MimeHeaders_write_grouped_header_1(hdrs,name,contents,opt,FALSE)
+	MimeHeaders_write_grouped_header_1(hdrs,name,contents,opt,PR_FALSE)
 
 
 static int
@@ -1541,7 +1543,7 @@ MimeHeaders_write_id_header_1 (MimeHeaders *hdrs, const char *name,
 	return 0;
 
   if (!opt->fancy_headers_p)
-	return MimeHeaders_write_random_header (hdrs, name, TRUE, opt);
+	return MimeHeaders_write_random_header (hdrs, name, PR_TRUE, opt);
 
   name = MimeHeaders_localize_header_name(name, opt);
 
@@ -1729,7 +1731,7 @@ MimeHeaders_write_id_header (MimeHeaders *hdrs, const char *name,
   PR_ASSERT(hdrs);
   if (!hdrs) return -1;
 
-  contents = MimeHeaders_get (hdrs, name, FALSE, TRUE);
+  contents = MimeHeaders_get (hdrs, name, PR_FALSE, PR_TRUE);
   if (!contents) return 0;
   status = MimeHeaders_write_id_header_1 (hdrs, name, contents, show_ids, opt);
   PR_Free(contents);
@@ -1786,11 +1788,11 @@ static int
 MimeHeaders_write_interesting_headers (MimeHeaders *hdrs,
 									   MimeDisplayOptions *opt)
 {
-  PRBool wrote_any_p = FALSE;
+  PRBool wrote_any_p = PR_FALSE;
   int status = 0;
   const char **rest;
-  PRBool did_from = FALSE;
-  PRBool did_resent_from = FALSE;
+  PRBool did_from = PR_FALSE;
+  PRBool did_resent_from = PR_FALSE;
 
   PR_ASSERT(hdrs);
   if (!hdrs) return -1;
@@ -1815,7 +1817,7 @@ MimeHeaders_write_interesting_headers (MimeHeaders *hdrs,
 	  else if (!PL_strcasecmp(name, HEADER_REFERENCES))
 		{
 		  if (opt->headers != MimeHeadersSomeNoRef)
-			status = MimeHeaders_write_id_header (hdrs, name, FALSE, opt);
+			status = MimeHeaders_write_id_header (hdrs, name, PR_FALSE, opt);
 		}
 
 	  /* Random other Message-ID headers.  These aren't shown by default, but
@@ -1824,7 +1826,7 @@ MimeHeaders_write_interesting_headers (MimeHeaders *hdrs,
 	  else if (!PL_strcasecmp(name, HEADER_MESSAGE_ID) ||
 			   !PL_strcasecmp(name, HEADER_RESENT_MESSAGE_ID))
 		{
-		  status = MimeHeaders_write_id_header (hdrs, name, TRUE, opt);
+		  status = MimeHeaders_write_id_header (hdrs, name, PR_TRUE, opt);
 		}
 
 	  /* The From header supercedes the Sender header.
@@ -1833,7 +1835,7 @@ MimeHeaders_write_interesting_headers (MimeHeaders *hdrs,
 			   !PL_strcasecmp(name, HEADER_FROM))
 		{
 		  if (did_from) continue;
-		  did_from = TRUE;
+		  did_from = PR_TRUE;
 		  status = MimeHeaders_write_address_header (hdrs, HEADER_FROM, opt);
 		  if (status == 0)
 			status = MimeHeaders_write_address_header (hdrs, HEADER_SENDER,
@@ -1846,7 +1848,7 @@ MimeHeaders_write_interesting_headers (MimeHeaders *hdrs,
 			   !PL_strcasecmp(name, HEADER_RESENT_FROM))
 		{
 		  if (did_resent_from) continue;
-		  did_resent_from = TRUE;
+		  did_resent_from = PR_TRUE;
 		  status = MimeHeaders_write_address_header (hdrs, HEADER_RESENT_FROM,
 													 opt);
 		  if (status == 0)
@@ -1861,10 +1863,10 @@ MimeHeaders_write_interesting_headers (MimeHeaders *hdrs,
 	  else if (!PL_strcasecmp(name, HEADER_REPLY_TO))
 		{
 		  char *reply_to = MimeHeaders_get (hdrs, HEADER_REPLY_TO,
-											FALSE, FALSE);
+											PR_FALSE, PR_FALSE);
 		  if (reply_to)
 			{
-			  char *from = MimeHeaders_get (hdrs, HEADER_FROM, FALSE, FALSE);
+			  char *from = MimeHeaders_get (hdrs, HEADER_FROM, PR_FALSE, PR_FALSE);
 			  char *froma = (from
 							 ? MSG_ExtractRFC822AddressMailboxes(from)
 							 : 0);
@@ -1872,20 +1874,20 @@ MimeHeaders_write_interesting_headers (MimeHeaders *hdrs,
 							 ? MSG_ExtractRFC822AddressMailboxes(reply_to)
 							 : 0);
 
-			  FREEIF(reply_to);
+			  PR_FREEIF(reply_to);
 			  if (!froma || !repa || PL_strcasecmp (froma, repa))
 				{
-				  FREEIF(froma);
-				  FREEIF(repa);
+				  PR_FREEIF(froma);
+				  PR_FREEIF(repa);
 				  status = MimeHeaders_write_address_header (hdrs,
 															 HEADER_REPLY_TO,
 															 opt);
 				}
-			  FREEIF(repa);
-			  FREEIF(froma);
-			  FREEIF(from);
+			  PR_FREEIF(repa);
+			  PR_FREEIF(froma);
+			  PR_FREEIF(from);
 			}
-		  FREEIF(reply_to);
+		  PR_FREEIF(reply_to);
 		}
 
 	  /* Random other address headers.
@@ -1916,7 +1918,7 @@ MimeHeaders_write_interesting_headers (MimeHeaders *hdrs,
 	   */
 	  else
 		{
-		  status = MimeHeaders_write_random_header (hdrs, name, FALSE, opt);
+		  status = MimeHeaders_write_random_header (hdrs, name, PR_FALSE, opt);
 		}
 
 	  if (status < 0) break;
@@ -1932,7 +1934,7 @@ MimeHeaders_write_all_headers (MimeHeaders *hdrs, MimeDisplayOptions *opt)
 {
   int status;
   int i;
-  PRBool wrote_any_p = FALSE;
+  PRBool wrote_any_p = PR_FALSE;
 
   PR_ASSERT(hdrs);
   if (!hdrs) return -1;
@@ -1946,7 +1948,7 @@ MimeHeaders_write_all_headers (MimeHeaders *hdrs, MimeDisplayOptions *opt)
    */
   if (!hdrs->done_p)
 	{
-	  hdrs->done_p = TRUE;
+	  hdrs->done_p = PR_TRUE;
 	  status = MimeHeaders_build_heads_list(hdrs);
 	  if (status < 0) return 0;
 	}
@@ -2022,12 +2024,12 @@ MimeHeaders_write_all_headers (MimeHeaders *hdrs, MimeDisplayOptions *opt)
 	  else if (!PL_strcasecmp(name, HEADER_MESSAGE_ID) ||
 			   !PL_strcasecmp(name, HEADER_RESENT_MESSAGE_ID) ||
 			   !PL_strcasecmp(name, HEADER_REFERENCES))
-		status = MimeHeaders_write_id_header_1(hdrs, name, c2, TRUE, opt);
+		status = MimeHeaders_write_id_header_1(hdrs, name, c2, PR_TRUE, opt);
 	  else if (!PL_strcasecmp(name, HEADER_SUBJECT))
 		status = MimeHeaders_write_subject_header_1(hdrs, name, c2, opt);
 
 	  else
-		status = MimeHeaders_write_random_header_1(hdrs, name, c2, opt, FALSE);
+		status = MimeHeaders_write_random_header_1(hdrs, name, c2, opt, PR_FALSE);
 	  PR_Free(name);
 	  PR_Free(c2);
 
@@ -2048,15 +2050,15 @@ MimeHeaders_write_microscopic_headers (MimeHeaders *hdrs,
 									   MimeDisplayOptions *opt)
 {
   int status = 1;
-  char *subj  = MimeHeaders_get (hdrs, HEADER_SUBJECT, FALSE, FALSE);
-  char *from  = MimeHeaders_get (hdrs, HEADER_FROM, FALSE, TRUE);
-  char *date  = MimeHeaders_get (hdrs, HEADER_DATE, FALSE, TRUE);
+  char *subj  = MimeHeaders_get (hdrs, HEADER_SUBJECT, PR_FALSE, PR_FALSE);
+  char *from  = MimeHeaders_get (hdrs, HEADER_FROM, PR_FALSE, PR_TRUE);
+  char *date  = MimeHeaders_get (hdrs, HEADER_DATE, PR_FALSE, PR_TRUE);
   char *out;
 
   if (!from)
-	from = MimeHeaders_get (hdrs, HEADER_SENDER, FALSE, TRUE);
+	from = MimeHeaders_get (hdrs, HEADER_SENDER, PR_FALSE, PR_TRUE);
   if (!date)
-	date = MimeHeaders_get (hdrs, HEADER_RESENT_DATE, FALSE, TRUE);
+	date = MimeHeaders_get (hdrs, HEADER_RESENT_DATE, PR_FALSE, PR_TRUE);
 
   if (date && opt->reformat_date_fn)
 	{
@@ -2123,7 +2125,7 @@ MimeHeaders_write_microscopic_headers (MimeHeaders *hdrs,
 # endif /* !MOZILLA_30 */
 							  subj, PL_strlen(subj), out,
 							  hdrs->obuffer_size - (out - hdrs->obuffer) - 10,
-							  TRUE);
+							  PR_TRUE);
 	if (status < 0) goto FAIL;
 
   out += PL_strlen(out);
@@ -2138,7 +2140,7 @@ MimeHeaders_write_microscopic_headers (MimeHeaders *hdrs,
 # endif /* !MOZILLA_30 */
 							  from, PL_strlen(from), out,
 							  hdrs->obuffer_size - (out - hdrs->obuffer) - 10,
-							  TRUE);
+							  PR_TRUE);
   if (status < 0) goto FAIL;
 
   out += PL_strlen(out);
@@ -2153,7 +2155,7 @@ MimeHeaders_write_microscopic_headers (MimeHeaders *hdrs,
 # endif /* !MOZILLA_30 */
 							  date, PL_strlen(date), out,
 							  hdrs->obuffer_size - (out - hdrs->obuffer) - 10,
-							  TRUE);
+							  PR_TRUE);
   if (status < 0) goto FAIL;
 
   out += PL_strlen(out);
@@ -2175,7 +2177,7 @@ MimeHeaders_write_microscopic_headers (MimeHeaders *hdrs,
   if (from) {
 	status = MimeHeaders_write(opt, hdrs->obuffer, PL_strlen(hdrs->obuffer));
 	if (status < 0) goto FAIL;
-	status = MimeHeaders_write_grouped_header_1(hdrs, NULL, from, opt, TRUE);
+	status = MimeHeaders_write_grouped_header_1(hdrs, NULL, from, opt, PR_TRUE);
 	if (status < 0) goto FAIL;
 	out = hdrs->obuffer;
   }
@@ -2203,7 +2205,7 @@ MimeHeaders_write_microscopic_headers (MimeHeaders *hdrs,
 #endif /* !MOZILLA_30 */
 							   subj, PL_strlen(subj), out,
 							   hdrs->obuffer_size - (out - hdrs->obuffer) - 10,
-							   TRUE);
+							   PR_TRUE);
 	  if (status < 0) goto FAIL;
   } else {
 	  PL_strcpy(out, "<BR>");
@@ -2249,9 +2251,9 @@ MimeHeaders_write_microscopic_headers (MimeHeaders *hdrs,
 
  FAIL:
 
-  FREEIF(subj);
-  FREEIF(from);
-  FREEIF(date);
+  PR_FREEIF(subj);
+  PR_FREEIF(from);
+  PR_FREEIF(date);
 
   return (status < 0 ? status : 1);
 }
@@ -2272,9 +2274,9 @@ MimeHeaders_write_citation_headers (MimeHeaders *hdrs, MimeDisplayOptions *opt)
   if (!opt || !opt->output_fn)
 	return 0;
 
-  from = MimeHeaders_get(hdrs, HEADER_FROM, FALSE, FALSE);
+  from = MimeHeaders_get(hdrs, HEADER_FROM, PR_FALSE, PR_FALSE);
   if (!from)
-	from = MimeHeaders_get(hdrs, HEADER_SENDER, FALSE, FALSE);
+	from = MimeHeaders_get(hdrs, HEADER_SENDER, PR_FALSE, PR_FALSE);
   if (!from)
 	from = PL_strdup("Unknown");
   if (!from)
@@ -2284,7 +2286,7 @@ MimeHeaders_write_citation_headers (MimeHeaders *hdrs, MimeDisplayOptions *opt)
 	}
 
 #if 0
-  id = MimeHeaders_get(hdrs, HEADER_MESSAGE_ID, FALSE, FALSE);
+  id = MimeHeaders_get(hdrs, HEADER_MESSAGE_ID, PR_FALSE, PR_FALSE);
 #endif
 
   name = MSG_ExtractRFC822AddressNames (from);
@@ -2293,7 +2295,7 @@ MimeHeaders_write_citation_headers (MimeHeaders *hdrs, MimeDisplayOptions *opt)
 	  name = from;
 	  from = 0;
 	}
-  FREEIF(from);
+  PR_FREEIF(from);
 
   fmt = (id
 		 ? XP_GetString(MK_MSG_IN_MSG_X_USER_WROTE)
@@ -2348,9 +2350,9 @@ MimeHeaders_write_citation_headers (MimeHeaders *hdrs, MimeDisplayOptions *opt)
 
  FAIL:
 
-  FREEIF(from);
-  FREEIF(name);
-  FREEIF(id);
+  PR_FREEIF(from);
+  PR_FREEIF(name);
+  PR_FREEIF(id);
   return (status < 0 ? status : 1);
 }
 
@@ -2368,7 +2370,7 @@ MimeHeaders_write_raw_headers (MimeHeaders *hdrs, MimeDisplayOptions *opt,
 
   if (hdrs && !hdrs->done_p)
 	{
-	  hdrs->done_p = TRUE;
+	  hdrs->done_p = PR_TRUE;
 	  status = MimeHeaders_build_heads_list(hdrs);
 	  if (status < 0) return 0;
 	}
@@ -2418,14 +2420,14 @@ int
 MimeHeaders_write_headers_html (MimeHeaders *hdrs, MimeDisplayOptions *opt)
 {
   int status = 0;
-  PRBool wrote_any_p = FALSE;
+  PRBool wrote_any_p = PR_FALSE;
 
   PR_ASSERT(hdrs);
   if (!hdrs) return -1;
 
   if (!opt || !opt->output_fn) return 0;
 
-  FREEIF(hdrs->munged_subject);
+  PR_FREEIF(hdrs->munged_subject);
 
   status = MimeHeaders_grow_obuffer (hdrs, /*210*/ 750);
   if (status < 0) return status;
@@ -2516,7 +2518,7 @@ MimeHeaders_write_headers_html (MimeHeaders *hdrs, MimeDisplayOptions *opt)
   if (status < 0) goto FAIL;
   if (hdrs->munged_subject) {
     char* t2 = NET_EscapeHTML(hdrs->munged_subject);
-    FREEIF(hdrs->munged_subject);
+    PR_FREEIF(hdrs->munged_subject);
     if (t2) {
       status = MimeHeaders_grow_obuffer(hdrs, PL_strlen(t2) + 20);
       if (status >= 0) {
@@ -2525,7 +2527,7 @@ MimeHeaders_write_headers_html (MimeHeaders *hdrs, MimeDisplayOptions *opt)
           PL_strlen(hdrs->obuffer));
       }
     }
-    FREEIF(t2);
+    PR_FREEIF(t2);
     if (status < 0) goto FAIL;
   }
   
@@ -2535,18 +2537,18 @@ MimeHeaders_write_headers_html (MimeHeaders *hdrs, MimeDisplayOptions *opt)
 }
 
 
-/* Returns TRUE if we should show colored tags on attachments.
+/* Returns PR_TRUE if we should show colored tags on attachments.
    Useful for IMAP MIME parts on demand, because it shows a different
    color for undownloaded parts. */
 static PRBool
 MimeHeaders_getShowAttachmentColors()
 {
-	static PRBool gotPref = FALSE;
-	static PRBool showColors = FALSE;
+	static PRBool gotPref = PR_FALSE;
+	static PRBool showColors = PR_FALSE;
 	if (!gotPref)
 	{
 		PREF_GetBoolPref("mailnews.color_tag_attachments", &showColors);
-		gotPref = TRUE;
+		gotPref = PR_TRUE;
 	}
 	return showColors;
 }
@@ -2566,16 +2568,16 @@ MimeHeaders_write_attachment_box(MimeHeaders *hdrs,
 {
   int status = 0;
   char *type = 0, *desc = 0, *enc = 0, *icon = 0, *type_desc = 0, *partColor = 0;
-  PRBool downloaded = TRUE;
+  PRBool downloaded = PR_TRUE;
 
   PR_ASSERT(hdrs);
   if (!hdrs) return -1;
 
   type = (content_type
 		  ? PL_strdup(content_type)
-		  : MimeHeaders_get(hdrs, HEADER_CONTENT_TYPE, TRUE, FALSE));
+		  : MimeHeaders_get(hdrs, HEADER_CONTENT_TYPE, PR_TRUE, PR_FALSE));
 
-  downloaded = opt->missing_parts ? (MimeHeaders_get(hdrs, IMAP_EXTERNAL_CONTENT_HEADER, FALSE, FALSE) == NULL) : TRUE;
+  downloaded = opt->missing_parts ? (MimeHeaders_get(hdrs, IMAP_EXTERNAL_CONTENT_HEADER, PR_FALSE, PR_FALSE) == NULL) : PR_TRUE;
 
   if (type && *type && opt)
 	{
@@ -2596,7 +2598,7 @@ MimeHeaders_write_attachment_box(MimeHeaders *hdrs,
 	{
 	  PR_Free(type);
 	  type = PL_strdup(XP_GetString(MK_MSG_MIME_MAC_FILE));
-	  FREEIF(icon);
+	  PR_FREEIF(icon);
 	  icon = PL_strdup("internal-gopher-binary");
 	}
 
@@ -2675,7 +2677,7 @@ MimeHeaders_write_attachment_box(MimeHeaders *hdrs,
 		  PUT_STRING(name_hdr);
 		  PUT_STRING(HEADER_MIDDLE_JUNK);
 		  PUT_STRING(name);
-		  FREEIF(name);
+		  PR_FREEIF(name);
 		  PUT_STRING(HEADER_END_JUNK);
 		}
 
@@ -2693,15 +2695,15 @@ MimeHeaders_write_attachment_box(MimeHeaders *hdrs,
 		  PUT_STRING(type);
 		  if (type_desc)
 			PUT_STRING(")");
-		  FREEIF(type);
-		  FREEIF(type_desc);
+		  PR_FREEIF(type);
+		  PR_FREEIF(type_desc);
 		  PUT_STRING(HEADER_END_JUNK);
 		}
 
 	  enc = (encoding
 			 ? PL_strdup(encoding)
 			 : MimeHeaders_get(hdrs, HEADER_CONTENT_TRANSFER_ENCODING,
-							   TRUE, FALSE));
+							   PR_TRUE, PR_FALSE));
 	  if (enc)
 		{
 		  const char *enc_hdr = MimeHeaders_localize_header_name("Encoding",
@@ -2710,15 +2712,15 @@ MimeHeaders_write_attachment_box(MimeHeaders *hdrs,
 		  PUT_STRING(enc_hdr);
 		  PUT_STRING(HEADER_MIDDLE_JUNK);
 		  PUT_STRING(enc);
-		  FREEIF(enc);
+		  PR_FREEIF(enc);
 		  PUT_STRING(HEADER_END_JUNK);
 		}
 
-	  desc = MimeHeaders_get(hdrs, HEADER_CONTENT_DESCRIPTION, FALSE, FALSE);
+	  desc = MimeHeaders_get(hdrs, HEADER_CONTENT_DESCRIPTION, PR_FALSE, PR_FALSE);
 	  if (!desc)
 		{
 		  desc = MimeHeaders_get(hdrs, HEADER_X_SUN_DATA_DESCRIPTION,
-								 FALSE, FALSE);
+								 PR_FALSE, PR_FALSE);
 
 		  /* If there's an X-Sun-Data-Description, but it's the same as the
 			 X-Sun-Data-Type, don't show it.
@@ -2726,10 +2728,10 @@ MimeHeaders_write_attachment_box(MimeHeaders *hdrs,
 		  if (desc)
 			{
 			  char *loser = MimeHeaders_get(hdrs, HEADER_X_SUN_DATA_TYPE,
-											FALSE, FALSE);
+											PR_FALSE, PR_FALSE);
 			  if (loser && !PL_strcasecmp(loser, desc))
-				FREEIF(desc);
-			  FREEIF(loser);
+				PR_FREEIF(desc);
+			  PR_FREEIF(loser);
 			}
 		}
 
@@ -2741,7 +2743,7 @@ MimeHeaders_write_attachment_box(MimeHeaders *hdrs,
 		  PUT_STRING(desc_hdr);
 		  PUT_STRING(HEADER_MIDDLE_JUNK);
 		  PUT_STRING(desc);
-		  FREEIF(desc);
+		  PR_FREEIF(desc);
 		  PUT_STRING(HEADER_END_JUNK);
 		}
 
@@ -2763,11 +2765,11 @@ MimeHeaders_write_attachment_box(MimeHeaders *hdrs,
 # undef PUT_STRING
 
  FAIL:
-  FREEIF(type);
-  FREEIF(desc);
-  FREEIF(enc);
-  FREEIF(icon);
-  FREEIF(type_desc);
+  PR_FREEIF(type);
+  PR_FREEIF(desc);
+  PR_FREEIF(enc);
+  PR_FREEIF(icon);
+  PR_FREEIF(type_desc);
   MimeHeaders_compact (hdrs);
   return status;
 }
@@ -2850,7 +2852,7 @@ mime_decode_filename(char *name)
 		if (d) *d = '?';
 		win_csid = INTL_DocToWinCharSetID(mail_csid);
 		
-		cvt = INTL_DecodeMimePartIIStr(returnVal, win_csid, FALSE);
+		cvt = INTL_DecodeMimePartIIStr(returnVal, win_csid, PR_FALSE);
 		if (cvt && cvt != returnVal)
 			returnVal = cvt;
 	}
@@ -2887,7 +2889,7 @@ MimeHeaders_get_name(MimeHeaders *hdrs)
 {
   char *s = 0, *name = 0, *cvt = 0;
 
-  s = MimeHeaders_get(hdrs, HEADER_CONTENT_DISPOSITION, FALSE, FALSE);
+  s = MimeHeaders_get(hdrs, HEADER_CONTENT_DISPOSITION, PR_FALSE, PR_FALSE);
   if (s)
 	{
 	  name = MimeHeaders_get_parameter(s, HEADER_PARM_FILENAME, NULL, NULL);
@@ -2896,7 +2898,7 @@ MimeHeaders_get_name(MimeHeaders *hdrs)
 
   if (! name)
   {
-	  s = MimeHeaders_get(hdrs, HEADER_CONTENT_TYPE, FALSE, FALSE);
+	  s = MimeHeaders_get(hdrs, HEADER_CONTENT_TYPE, PR_FALSE, PR_FALSE);
 	  if (s)
 	  {
 		  name = MimeHeaders_get_parameter(s, HEADER_PARM_NAME, NULL, NULL);
@@ -2905,10 +2907,10 @@ MimeHeaders_get_name(MimeHeaders *hdrs)
   }
 
   if (! name)
-	  name = MimeHeaders_get (hdrs, HEADER_CONTENT_NAME, FALSE, FALSE);
+	  name = MimeHeaders_get (hdrs, HEADER_CONTENT_NAME, PR_FALSE, PR_FALSE);
   
   if (! name)
-	  name = MimeHeaders_get (hdrs, HEADER_X_SUN_DATA_NAME, FALSE, FALSE);
+	  name = MimeHeaders_get (hdrs, HEADER_X_SUN_DATA_NAME, PR_FALSE, PR_FALSE);
 
   if (name)
   {

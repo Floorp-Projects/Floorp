@@ -24,20 +24,17 @@
 #include "plstr.h"
 #include "prmem.h"
 
-#undef FREEIF
-#define FREEIF(obj) do { if (obj) { PR_Free (obj); obj = 0; }} while (0)
-
 extern int MK_OUT_OF_MEMORY;
 
 
-static int msg_quote_phrase_or_addr (char *address, int32 length,
-									 XP_Bool addr_p);
+static int msg_quote_phrase_or_addr (char *address, PRInt32 length,
+									 PRBool addr_p);
 static int msg_parse_rfc822_addresses (const char *line,
 							char **names,
 							char **addresses,
-							XP_Bool quote_names_p,
-							XP_Bool quote_addrs_p,
-							XP_Bool first_only_p);
+							PRBool quote_names_p,
+							PRBool quote_addrs_p,
+							PRBool first_only_p);
 
 
 /* Given a string which contains a list of RFC822 addresses, parses it into
@@ -62,35 +59,35 @@ int
 msg_parse_rfc822_addresses (const char *line,
 							char **names,
 							char **addresses,
-							XP_Bool quote_names_p,
-							XP_Bool quote_addrs_p,
-							XP_Bool first_only_p)
+							PRBool quote_names_p,
+							PRBool quote_addrs_p,
+							PRBool first_only_p)
 {
-  uint32 addr_count = 0;
-  uint32 line_length;
+  PRUint32 addr_count = 0;
+  PRUint32 line_length;
   const char *line_end;
   const char *this_start;
   char *name_buf = 0, *name_out, *name_start;
   char *addr_buf = 0, *addr_out, *addr_start;
-  XP_ASSERT (line);
+  PR_ASSERT (line);
   if (! line)
 	return -1;
   if (names)
 	*names = 0;
   if (addresses)
 	*addresses = 0;
-  line_length = XP_STRLEN (line);
+  line_length = PL_strlen (line);
   if (line_length == 0)
 	return 0;
 
-  name_buf = (char *) XP_ALLOC (line_length * 2 + 10);
+  name_buf = (char *) PR_Malloc (line_length * 2 + 10);
   if (! name_buf)
 	return MK_OUT_OF_MEMORY;
 
-  addr_buf = (char *) XP_ALLOC (line_length * 2 + 10);
+  addr_buf = (char *) PR_Malloc (line_length * 2 + 10);
   if (! addr_buf)
 	{
-	  FREEIF (name_buf);
+	  PR_FREEIF (name_buf);
 	  return MK_OUT_OF_MEMORY;
 	}
 
@@ -108,7 +105,7 @@ msg_parse_rfc822_addresses (const char *line,
 
   while (*line_end)
 	{
-	  uint32 paren_depth = 0;
+	  PRUint32 paren_depth = 0;
 	  const char *oparen = 0;
 	  const char *mailbox_start = 0;
 	  const char *mailbox_end = 0;
@@ -256,8 +253,8 @@ msg_parse_rfc822_addresses (const char *line,
 	  if (mailbox_end)
 		{
 		  const char *s;
-		  XP_ASSERT (*mailbox_start == '<');
-		  XP_ASSERT (*mailbox_end == '>');
+		  PR_ASSERT (*mailbox_start == '<');
+		  PR_ASSERT (*mailbox_end == '>');
 
 		  /* First, copy the name.
 		   */
@@ -397,14 +394,14 @@ msg_parse_rfc822_addresses (const char *line,
 	  if (quote_names_p && names)
 		{
 		  int L = name_out - name_start - 1;
-		  L = msg_quote_phrase_or_addr (name_start, L, FALSE);
+		  L = msg_quote_phrase_or_addr (name_start, L, PR_FALSE);
 		  name_out = name_start + L + 1;
 		}
 
 	  if (quote_addrs_p && addresses)
 		{
 		  int L = addr_out - addr_start - 1;
-		  L = msg_quote_phrase_or_addr (addr_start, L, TRUE);
+		  L = msg_quote_phrase_or_addr (addr_start, L, PR_TRUE);
 		  addr_out = addr_start + L + 1;
 		}
 
@@ -460,7 +457,7 @@ MSG_ParseRFC822Addresses (const char *line,
 						  char **names,
 						  char **addresses)
 {
-  return msg_parse_rfc822_addresses(line, names, addresses, TRUE, TRUE, FALSE);
+  return msg_parse_rfc822_addresses(line, names, addresses, PR_TRUE, PR_TRUE, PR_FALSE);
 }
 
 
@@ -471,13 +468,13 @@ MSG_ParseRFC822Addresses (const char *line,
    be (N*2)+2.
  */
 static int
-msg_quote_phrase_or_addr (char *address, int32 length, XP_Bool addr_p)
+msg_quote_phrase_or_addr (char *address, PRInt32 length, PRBool addr_p)
 {
   int quotable_count = 0;
   int unquotable_count = 0;
-  int32 i, new_length;
+  PRInt32 i, new_length;
   char *in, *out;
-  XP_Bool atsign = FALSE;
+  PRBool atsign = PR_FALSE;
 
   /* If the entire address is quoted, fall out now. */
   if (address[0] == '"' && address[length - 1] == '"')
@@ -490,7 +487,7 @@ msg_quote_phrase_or_addr (char *address, int32 length, XP_Bool addr_p)
 
 	  else if (*in == '@' && !atsign && addr_p)
 		/* Exactly one unquoted at-sign is allowed in an address. */
-		atsign = TRUE;
+		atsign = PR_TRUE;
 
 	  else if (*in == '\\' || *in == '"')
 		/* If the name contains backslashes or quotes, they must be escaped. */
@@ -550,22 +547,22 @@ msg_quote_phrase_or_addr (char *address, int32 length, XP_Bool addr_p)
 	*out-- = '"';
   while (out > address)
 	{
-	  XP_ASSERT(in >= address);
+	  PR_ASSERT(in >= address);
 	  *out-- = *in;
 	  if (atsign && *in == '@')
 		{
 		  *out-- = '"';
-		  atsign = FALSE;
+		  atsign = PR_FALSE;
 		}
 	  if (*in == '\\' || *in == '"')
 		{
-		  XP_ASSERT(out > address);
+		  PR_ASSERT(out > address);
 		  *out-- = '\\';
 		}
 	  in--;
 	}
-  XP_ASSERT(in == address - 1);
-  XP_ASSERT(out == address);
+  PR_ASSERT(in == address - 1);
+  PR_ASSERT(out == address);
   *out = '"';
   address[new_length] = 0;
   return new_length;
@@ -591,7 +588,7 @@ MSG_UnquotePhraseOrAddr (char *line, char** lineout)
 		  then there is nothing to do */
 		if (*line != '"')
 		{
-			(*lineout) = XP_STRDUP (line);
+			(*lineout) = PL_strdup (line);
 			if (!lineout)
 				return -1;
 			else
@@ -610,10 +607,10 @@ MSG_UnquotePhraseOrAddr (char *line, char** lineout)
 			outlen++;
 			lineptr++;
 		}
-		tmpLine = (char *) XP_ALLOC (outlen + 1);
+		tmpLine = (char *) PR_Malloc (outlen + 1);
 		if (!tmpLine)
 			return -1;
-		XP_MEMSET(tmpLine, 0, outlen);
+		memset(tmpLine, 0, outlen);
 		/* dont output the first double quote */
 		line++;
 		lineptr = line;
@@ -634,7 +631,7 @@ MSG_UnquotePhraseOrAddr (char *line, char** lineout)
 		}
 		*outptr = '\0';
 		if (tmpLine)
-			(*lineout) = XP_STRDUP (tmpLine);
+			(*lineout) = PL_strdup (tmpLine);
 		else
 			result = -1;
 		PR_FREEIF (tmpLine);
@@ -649,7 +646,7 @@ MSG_ExtractRFC822AddressMailboxes (const char *line)
 {
   char *addrs = 0;
   char *result, *s, *out;
-  uint32 i, size = 0;
+  PRUint32 i, size = 0;
   int status = MSG_ParseRFC822Addresses (line, 0, &addrs);
   if (status <= 0)
 	return 0;
@@ -657,12 +654,12 @@ MSG_ExtractRFC822AddressMailboxes (const char *line)
   s = addrs;
   for (i = 0; (int) i < status; i++)
 	{
-	  uint32 j = XP_STRLEN (s);
+	  PRUint32 j = PL_strlen (s);
 	  s += j + 1;
 	  size += j + 2;
 	}
 
-  result = (char*)XP_ALLOC (size + 1);
+  result = (char*)PR_Malloc (size + 1);
   if (! result)
 	{
 	  PR_Free (addrs);
@@ -672,7 +669,7 @@ MSG_ExtractRFC822AddressMailboxes (const char *line)
   s = addrs;
   for (i = 0; (int) i < status; i++)
 	{
-	  uint32 j = XP_STRLEN (s);
+	  PRUint32 j = PL_strlen (s);
 	  XP_MEMCPY (out, s, j);
 	  out += j;
 	  if ((int) (i+1) < status)
@@ -702,9 +699,9 @@ MSG_ExtractRFC822AddressNames (const char *line)
   char *names = 0;
   char *addrs = 0;
   char *result, *s1, *s2, *out;
-  uint32 i, size = 0;
-  int status = msg_parse_rfc822_addresses(line, &names, &addrs, FALSE, FALSE,
-										  FALSE);
+  PRUint32 i, size = 0;
+  int status = msg_parse_rfc822_addresses(line, &names, &addrs, PR_FALSE, PR_FALSE,
+										  PR_FALSE);
   if (status <= 0)
 	return 0;
 
@@ -712,14 +709,14 @@ MSG_ExtractRFC822AddressNames (const char *line)
   s2 = addrs;
   for (i = 0; (int) i < status; i++)
 	{
-	  uint32 j1 = XP_STRLEN (s1);
-	  uint32 j2 = XP_STRLEN (s2);
+	  PRUint32 j1 = PL_strlen (s1);
+	  PRUint32 j2 = PL_strlen (s2);
 	  s1 += j1 + 1;
 	  s2 += j2 + 1;
 	  size += (j1 ? j1 : j2) + 2;
 	}
 
-  result = (char*)XP_ALLOC (size + 1);
+  result = (char*)PR_Malloc (size + 1);
   if (! result)
 	{
 	  PR_Free (names);
@@ -731,8 +728,8 @@ MSG_ExtractRFC822AddressNames (const char *line)
   s2 = addrs;
   for (i = 0; (int) i < status; i++)
 	{
-	  uint32 j1 = XP_STRLEN (s1);
-	  uint32 j2 = XP_STRLEN (s2);
+	  PRUint32 j1 = PL_strlen (s1);
+	  PRUint32 j2 = PL_strlen (s2);
 
 	  if (j1)
 		{
@@ -768,23 +765,23 @@ MSG_ExtractRFC822AddressName (const char *line)
 {
   char *name = 0;
   char *addr = 0;
-  int status = msg_parse_rfc822_addresses(line, &name, &addr, FALSE, FALSE,
-										  TRUE);
+  int status = msg_parse_rfc822_addresses(line, &name, &addr, PR_FALSE, PR_FALSE,
+										  PR_TRUE);
   if (status <= 0)
 	return 0;
   /* This can happen if there is an address like "From: foo bar" which
 	 we parse as two addresses (that's a syntax error.)  In that case,
 	 we'll return just the first one (the rest is after the NULL.)
-  XP_ASSERT(status == 1);
+  PR_ASSERT(status == 1);
    */
   if (name && *name)
 	{
-	  FREEIF(addr);
+	  PR_FREEIF(addr);
 	  return name;
 	}
   else
 	{
-	  FREEIF(name);
+	  PR_FREEIF(name);
 	  return addr;
 	}
 }
@@ -792,12 +789,12 @@ MSG_ExtractRFC822AddressName (const char *line)
 
 static char *
 msg_format_rfc822_addresses (const char *names, const char *addrs,
-							 int count, XP_Bool wrap_lines_p)
+							 int count, PRBool wrap_lines_p)
 {
   char *result, *out;
   const char *s1, *s2;
-  uint32 i, size = 0;
-  uint32 column = 10;
+  PRUint32 i, size = 0;
+  PRUint32 column = 10;
 
   if (count <= 0)
 	return 0;
@@ -806,14 +803,14 @@ msg_format_rfc822_addresses (const char *names, const char *addrs,
   s2 = addrs;
   for (i = 0; (int) i < count; i++)
 	{
-	  uint32 j1 = XP_STRLEN (s1);
-	  uint32 j2 = XP_STRLEN (s2);
+	  PRUint32 j1 = PL_strlen (s1);
+	  PRUint32 j2 = PL_strlen (s2);
 	  s1 += j1 + 1;
 	  s2 += j2 + 1;
 	  size += j1 + j2 + 10;
 	}
 
-  result = (char *) XP_ALLOC (size + 1);
+  result = (char *) PR_Malloc (size + 1);
   if (! result) return 0;
 
   out = result;
@@ -823,8 +820,8 @@ msg_format_rfc822_addresses (const char *names, const char *addrs,
   for (i = 0; (int) i < count; i++)
 	{
 	  char *o;
-	  uint32 j1 = XP_STRLEN (s1);
-	  uint32 j2 = XP_STRLEN (s2);
+	  PRUint32 j1 = PL_strlen (s1);
+	  PRUint32 j2 = PL_strlen (s2);
 
 	  if (wrap_lines_p && i > 0 &&
 		  (column + j1 + j2 + 3 +
@@ -880,7 +877,7 @@ MSG_ReformatRFC822Addresses (const char *line)
   int status = MSG_ParseRFC822Addresses (line, &names, &addrs);
   if (status <= 0)
 	return 0;
-  result = msg_format_rfc822_addresses (names, addrs, status, TRUE);
+  result = msg_format_rfc822_addresses (names, addrs, status, PR_TRUE);
   PR_Free (names);
   PR_Free (addrs);
   return result;

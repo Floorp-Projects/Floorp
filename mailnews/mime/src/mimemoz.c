@@ -157,7 +157,7 @@ mime_reformat_date(const char *date, void *stream_closure)
   time_t t;
   PR_ASSERT(date);
   if (!date) return 0;
-  t = XP_ParseTimeString(date, FALSE);
+  t = XP_ParseTimeString(date, PR_FALSE);
   if (t <= 0) return 0;
   s = MSG_FormatDateFromContext(context, t);
   if (!s) return 0;
@@ -260,7 +260,7 @@ mime_convert_rfc1522 (const char *input_line, PRInt32 input_length,
     }
 
   converted = IntlDecodeMimePartIIStr(line, 
-      INTL_DocToWinCharSetID(INTL_DefaultDocCharSetID(msd->context)), FALSE);
+      INTL_DocToWinCharSetID(INTL_DefaultDocCharSetID(msd->context)), PR_FALSE);
 
   if (line != input_line)
     PR_Free(line);
@@ -289,8 +289,8 @@ mime_output_fn(char *buf, PRInt32 size, void *stream_closure)
 #ifdef DEBUG_rhp
   if (msd->logit) {
       PR_Write(msd->logit, buf, size);
-      if ( (buf[strlen(buf)-1] == '\n') ||
-           (buf[strlen(buf)-1] == '\r'))
+      if ( (buf[PL_strlen(buf)-1] == '\n') ||
+           (buf[PL_strlen(buf)-1] == '\r'))
       	PR_Write(msd->logit, "\n", 1);
   }
 #endif
@@ -340,13 +340,13 @@ mime_set_html_state_fn (void *stream_closure,
                         rand_buf[3], rand_buf[4], rand_buf[5]);
       if (!buf)
         return MK_OUT_OF_MEMORY;
-      status = MimeOptions_write(msd->options, buf, PL_strlen(buf), TRUE);
+      status = MimeOptions_write(msd->options, buf, PL_strlen(buf), PR_TRUE);
       PR_Free(buf);
     }
 #endif /* MOZILLA_30 */
   } else {
     status = MimeOptions_write(msd->options, random_close_tags,
-                               PL_strlen(random_close_tags), FALSE);
+                               PL_strlen(random_close_tags), PR_FALSE);
     if (status < 0)
       return status;
 
@@ -359,7 +359,7 @@ mime_set_html_state_fn (void *stream_closure,
                         rand_buf[3], rand_buf[4], rand_buf[5]);
       if (!buf)
         return MK_OUT_OF_MEMORY;
-      status = MimeOptions_write(msd->options, buf, PL_strlen(buf), TRUE);
+      status = MimeOptions_write(msd->options, buf, PL_strlen(buf), PR_TRUE);
       PR_Free(buf);
       if (status < 0)
           return status;
@@ -406,8 +406,8 @@ mime_display_stream_complete (void *stream)
   if (obj)
     {
       int status;
-      status = obj->class->parse_eof(obj, FALSE);
-      obj->class->parse_end(obj, (status < 0 ? TRUE : FALSE));
+      status = obj->class->parse_eof(obj, PR_FALSE);
+      obj->class->parse_end(obj, (status < 0 ? PR_TRUE : PR_FALSE));
 
 #ifdef HAVE_MIME_DATA_SLOT
       if (msd &&
@@ -429,9 +429,9 @@ mime_display_stream_complete (void *stream)
           obj = NULL;
           if (msd->options)
             {
-              FREEIF(msd->options->part_to_load);
-			  FREEIF(msd->options->default_charset);
-			  FREEIF(msd->options->override_charset);
+              PR_FREEIF(msd->options->part_to_load);
+			  PR_FREEIF(msd->options->default_charset);
+			  PR_FREEIF(msd->options->override_charset);
               PR_Free(msd->options);
               msd->options = 0;
             }
@@ -469,7 +469,7 @@ mime_display_stream_complete (void *stream)
       if (msd->context->mime_data->previous_locked_url)
 		;
 #ifdef RICHIE
-        NET_ChangeCacheFileLock(msd->url, TRUE);
+        NET_ChangeCacheFileLock(msd->url, PR_TRUE);
 #endif
     }
 #endif /* LOCK_LAST_CACHED_MESSAGE */
@@ -500,9 +500,9 @@ mime_display_stream_abort (void *stream, int status)
   if (obj)
     {
       if (!obj->closed_p)
-        obj->class->parse_eof(obj, TRUE);
+        obj->class->parse_eof(obj, PR_TRUE);
       if (!obj->parsed_p)
-        obj->class->parse_end(obj, TRUE);
+        obj->class->parse_end(obj, PR_TRUE);
 
 #ifdef HAVE_MIME_DATA_SLOT
       if (msd &&
@@ -523,7 +523,7 @@ mime_display_stream_abort (void *stream, int status)
           mime_free(obj);
           if (msd->options)
             {
-              FREEIF(msd->options->part_to_load);
+              PR_FREEIF(msd->options->part_to_load);
               PR_Free(msd->options);
               msd->options = 0;
             }
@@ -535,7 +535,7 @@ mime_display_stream_abort (void *stream, int status)
       if (msd->stream)
         {
 		  if (msd->context && msd->context->mime_data && msd->context->mime_data->last_parsed_object)
-			  msd->context->mime_data->last_parsed_object->showAttachmentIcon = FALSE;
+			  msd->context->mime_data->last_parsed_object->showAttachmentIcon = PR_FALSE;
 
 		  msd->stream->abort (msd->stream, status);
           
@@ -740,10 +740,10 @@ mime_make_output_stream(const char *content_type,
   if (!url->content_type) return 0;
   url->content_encoding = 0;
 
-  if (charset)       FREEIF(url->charset);
-  if (content_name)  FREEIF(url->content_name);
-  if (x_mac_type)    FREEIF(url->x_mac_type);
-  if (x_mac_creator) FREEIF(url->x_mac_creator);
+  if (charset)       PR_FREEIF(url->charset);
+  if (content_name)  PR_FREEIF(url->content_name);
+  if (x_mac_type)    PR_FREEIF(url->x_mac_type);
+  if (x_mac_creator) PR_FREEIF(url->x_mac_creator);
   if (charset)       url->charset       = PL_strdup(charset);
   if (content_name)  url->content_name  = PL_strdup(content_name);
   if (x_mac_type)    url->x_mac_type    = PL_strdup(x_mac_type);
@@ -788,21 +788,21 @@ mime_make_output_stream(const char *content_type,
 	  (PL_strcasestr(url->address, "&part=") ||
 	   PL_strcasestr(url->address, "?part=")))
   {
-	  FREEIF(orig_content_type);
-	  FREEIF(orig_encoding);
+	  PR_FREEIF(orig_content_type);
+	  PR_FREEIF(orig_encoding);
   }
   else
 #endif
   {
-	  FREEIF(url->content_type);
-	  FREEIF(url->content_encoding);
+	  PR_FREEIF(url->content_type);
+	  PR_FREEIF(url->content_encoding);
 	  url->content_type     = orig_content_type;
 	  url->content_encoding = orig_encoding;
   }
 
 #ifdef LOCK_LAST_CACHED_MESSAGE
   /* Always cache this one. */
-  url->must_cache = TRUE;
+  url->must_cache = PR_TRUE;
 
   /* Un-cache the last one. */
   if (context->mime_data &&
@@ -816,7 +816,7 @@ mime_make_output_stream(const char *content_type,
           /* Note: if post data was involved here, we'd lose.  We're assuming
              that all we need to save is the url->address. */
 #ifdef RICHIE
-          NET_ChangeCacheFileLock(url_s, FALSE);
+          NET_ChangeCacheFileLock(url_s, PR_FALSE);
 #endif
           NET_FreeURLStruct(url_s);
         }
@@ -992,14 +992,14 @@ mime_output_init_fn (const char *type,
               mime_free(context->mime_data->last_parsed_object);
               if (options)
                 {
-                  FREEIF(options->part_to_load);
+                  PR_FREEIF(options->part_to_load);
                   PR_Free(options);
                 }
             }
 
           /* Cut the old saved pointer, whether its parsed or not. */
           context->mime_data->last_parsed_object = 0;
-          FREEIF(context->mime_data->last_parsed_url);
+          PR_FREEIF(context->mime_data->last_parsed_url);
         }
 
       /* And now save away the current object, for consultation the first
@@ -1009,7 +1009,7 @@ mime_output_init_fn (const char *type,
           context->mime_data = PR_NEW(struct MimeDisplayData);
           if (!context->mime_data)
             return MK_OUT_OF_MEMORY;
-          XP_MEMSET(context->mime_data, 0, sizeof(*context->mime_data));
+          memset(context->mime_data, 0, sizeof(*context->mime_data));
         }
       context->mime_data->last_parsed_object = msd->obj;
       context->mime_data->last_parsed_url = PL_strdup(msd->url->address);
@@ -1071,7 +1071,7 @@ MIME_MessageConverter2 (int format_out, void *closure,
 
   msd = PR_NEW(struct mime_stream_data);
   if (!msd) return 0;
-  XP_MEMSET(msd, 0, sizeof(*msd));
+  memset(msd, 0, sizeof(*msd));
 #ifdef DEBUG_rhp
 #if defined(XP_WIN) || defined(XP_OS2)
   PR_Delete("C:\\mhtml.html");
@@ -1092,7 +1092,7 @@ MIME_MessageConverter2 (int format_out, void *closure,
       PR_Free(msd);
       return 0;
     }
-  XP_MEMSET(msd->options, 0, sizeof(*msd->options));
+  memset(msd->options, 0, sizeof(*msd->options));
 #ifndef MOZILLA_30
   msd->options->pane = url->msg_pane;
 #endif /* !MOZILLA_30 */
@@ -1100,7 +1100,7 @@ MIME_MessageConverter2 (int format_out, void *closure,
   /* handle the case where extracting attachments from nested messages */
 #ifdef RICHIE
   if (url->content_modified != IMAP_CONTENT_NOT_MODIFIED)
-	  msd->options->missing_parts = TRUE;
+	  msd->options->missing_parts = PR_TRUE;
 #endif /* RICHIE */
 
 #ifdef RICHIE
@@ -1133,17 +1133,17 @@ MIME_MessageConverter2 (int format_out, void *closure,
       format_out == FO_CACHE_AND_PRINT ||
       format_out == FO_SAVE_AS_POSTSCRIPT ||
       format_out == FO_CACHE_AND_SAVE_AS_POSTSCRIPT)
-    msd->options->fancy_headers_p = TRUE;
+    msd->options->fancy_headers_p = PR_TRUE;
 
 #ifndef MOZILLA_30
   if (format_out == FO_NGLAYOUT ||
       format_out == FO_CACHE_AND_NGLAYOUT)
-    msd->options->output_vcard_buttons_p = TRUE;
+    msd->options->output_vcard_buttons_p = PR_TRUE;
 #endif /* !MOZILLA_30 */
  
   if (format_out == FO_NGLAYOUT ||
       format_out == FO_CACHE_AND_NGLAYOUT) {
-    msd->options->fancy_links_p = TRUE;
+    msd->options->fancy_links_p = PR_TRUE;
   }
 
   msd->options->headers = MimeHeadersSome;
@@ -1161,17 +1161,17 @@ MIME_MessageConverter2 (int format_out, void *closure,
       case 1: MIME_HeaderType = MimeHeadersSome; break;
       case 2: MIME_HeaderType = MimeHeadersAll; break;
       default:
-        PR_ASSERT(FALSE);
+        PR_ASSERT(PR_FALSE);
         break;
     }
-    MIME_NoInlineAttachments = TRUE;
+    MIME_NoInlineAttachments = PR_TRUE;
     PREF_GetBoolPref("mail.inline_attachments", &MIME_NoInlineAttachments);
     MIME_NoInlineAttachments = !MIME_NoInlineAttachments;
                                 /* This pref is written down in with the
                                    opposite sense of what we like to use... */
-    MIME_WrapLongLines = FALSE;
+    MIME_WrapLongLines = PR_FALSE;
     PREF_GetBoolPref("mail.wrap_long_lines", &MIME_WrapLongLines);
-    MIME_VariableWidthPlaintext = TRUE;
+    MIME_VariableWidthPlaintext = PR_TRUE;
     PREF_GetBoolPref("mail.fixed_width_messages",
                      &MIME_VariableWidthPlaintext);
     MIME_VariableWidthPlaintext = !MIME_VariableWidthPlaintext;
@@ -1194,14 +1194,14 @@ MIME_MessageConverter2 (int format_out, void *closure,
     {
 #ifndef MOZILLA_30
       MSG_Pane* pane = MSG_FindPane(context, MSG_MESSAGEPANE);
-      msd->options->rot13_p = FALSE;
+      msd->options->rot13_p = PR_FALSE;
       if (pane) {
         msd->options->rot13_p = MSG_ShouldRot13Message(pane);
       }
 #else  /* MOZILLA_30 */
 
-      PRBool all_headers_p = FALSE;
-      PRBool micro_headers_p = FALSE;
+      PRBool all_headers_p = PR_FALSE;
+      PRBool micro_headers_p = PR_FALSE;
       MSG_GetContextPrefs(context,
                           &all_headers_p,
                           &micro_headers_p,
@@ -1221,7 +1221,7 @@ MIME_MessageConverter2 (int format_out, void *closure,
   status = mime_parse_url_options(url->address, msd->options);
   if (status < 0)
     {
-      FREEIF(msd->options->part_to_load);
+      PR_FREEIF(msd->options->part_to_load);
       PR_Free(msd->options);
       PR_Free(msd);
       return 0;
@@ -1245,10 +1245,10 @@ MIME_MessageConverter2 (int format_out, void *closure,
            )
     {
       msd->options->headers = MimeHeadersCitation;
-      msd->options->fancy_headers_p = FALSE;
+      msd->options->fancy_headers_p = PR_FALSE;
 #ifndef MOZILLA_30
       if (format_out == FO_QUOTE_HTML_MESSAGE) {
-        msd->options->nice_html_only_p = TRUE;
+        msd->options->nice_html_only_p = PR_TRUE;
       }
 #endif /* !MOZILLA_30 */
     }
@@ -1269,12 +1269,12 @@ MIME_MessageConverter2 (int format_out, void *closure,
      before sending it.
    */
   if ((format_out == FO_MAIL_TO || format_out == FO_CACHE_AND_MAIL_TO) &&
-      msd->options->write_html_p == FALSE)
-    msd->options->dexlate_p = TRUE;
+      msd->options->write_html_p == PR_FALSE)
+    msd->options->dexlate_p = PR_TRUE;
 #endif /* FO_MAIL_MESSAGE_TO */
 
   msd->options->url                   = url->address;
-  msd->options->write_html_p          = TRUE;
+  msd->options->write_html_p          = PR_TRUE;
   msd->options->output_init_fn        = mime_output_init_fn;
 
 #if !defined(MOZILLA_30) && defined(XP_MAC)
@@ -1291,7 +1291,7 @@ MIME_MessageConverter2 (int format_out, void *closure,
 #ifndef MOZILLA_30
   if (format_out == FO_QUOTE_HTML_MESSAGE) {
     msd->options->charset_conversion_fn = mime_insert_html_convert_charset;
-    msd->options->dont_touch_citations_p = TRUE;
+    msd->options->dont_touch_citations_p = PR_TRUE;
   } else 
 #endif
     msd->options->charset_conversion_fn = mime_convert_charset;
@@ -1325,7 +1325,7 @@ MIME_MessageConverter2 (int format_out, void *closure,
       format_out == FO_EDT_SAVE_IMAGE ||
 #endif
       msd->options->part_to_load)
-    msd->options->write_html_p = FALSE;
+    msd->options->write_html_p = PR_FALSE;
 
   PR_ASSERT(!msd->stream);
 
@@ -1334,7 +1334,7 @@ MIME_MessageConverter2 (int format_out, void *closure,
                   MESSAGE_RFC822);
   if (!obj)
     {
-      FREEIF(msd->options->part_to_load);
+      PR_FREEIF(msd->options->part_to_load);
       PR_Free(msd->options);
       PR_Free(msd);
       return 0;
@@ -1348,13 +1348,13 @@ MIME_MessageConverter2 (int format_out, void *closure,
   stream = PR_NEW (NET_StreamClass);
   if (!stream)
     {
-      FREEIF(msd->options->part_to_load);
+      PR_FREEIF(msd->options->part_to_load);
       PR_Free(msd->options);
       PR_Free(msd);
       PR_Free(obj);
       return 0;
     }
-  XP_MEMSET (stream, 0, sizeof (*stream));
+  memset (stream, 0, sizeof (*stream));
 
   stream->name           = "MIME Conversion Stream";
   stream->complete       = mime_display_stream_complete;
@@ -1370,7 +1370,7 @@ MIME_MessageConverter2 (int format_out, void *closure,
   if (status < 0)
     {
       PR_Free(stream);
-      FREEIF(msd->options->part_to_load);
+      PR_FREEIF(msd->options->part_to_load);
       PR_Free(msd->options);
       PR_Free(msd);
       PR_Free(obj);
@@ -1402,7 +1402,7 @@ mime_image_begin(const char *image_url, const char *content_type,
   mid = PR_NEW(struct mime_image_stream_data);
   if (!mid) return 0;
 
-  XP_MEMSET(mid, 0, sizeof(*mid));
+  memset(mid, 0, sizeof(*mid));
   mid->msd = msd;
 
   /* Internal-external-reconnect only works when going to the screen.
@@ -1627,9 +1627,9 @@ mime_extract_relative_part_address(MWContext *context, const char *url)
 
 FAIL:
 
-  FREEIF(part);
-  FREEIF(url1);
-  FREEIF(url2);
+  PR_FREEIF(part);
+  PR_FREEIF(url1);
+  PR_FREEIF(url2);
   return result;
 }
 
@@ -1806,12 +1806,12 @@ PRBool MimeObjectChildIsMessageBody(MimeObject *obj,
 									 PRBool *isAlternativeOrRelated)
 {
 	char *disp = 0;
-	PRBool bRet = FALSE;
+	PRBool bRet = PR_FALSE;
 	MimeObject *firstChild = 0;
 	MimeContainer *container = (MimeContainer*) obj;
 
 	if (isAlternativeOrRelated)
-		*isAlternativeOrRelated = FALSE;
+		*isAlternativeOrRelated = PR_FALSE;
 
 	if (!container ||
 		!mime_subclass_p(obj->class, 
@@ -1823,14 +1823,14 @@ PRBool MimeObjectChildIsMessageBody(MimeObject *obj,
 							 &mimeMultipartRelatedClass)) 
 	{
 		if (isAlternativeOrRelated)
-			*isAlternativeOrRelated = TRUE;
+			*isAlternativeOrRelated = PR_TRUE;
 		return bRet;
 	}
 	else if (mime_subclass_p(obj->class, (MimeObjectClass*)
 							 &mimeMultipartAlternativeClass))
 	{
 		if (isAlternativeOrRelated)
-			*isAlternativeOrRelated = TRUE;
+			*isAlternativeOrRelated = PR_TRUE;
 		return bRet;
 	}
 
@@ -1844,10 +1844,10 @@ PRBool MimeObjectChildIsMessageBody(MimeObject *obj,
 
 	disp = MimeHeaders_get (firstChild->headers,
 							HEADER_CONTENT_DISPOSITION, 
-							TRUE,
-							FALSE);
+							PR_TRUE,
+							PR_FALSE);
 	if (disp /* && !PL_strcasecmp (disp, "attachment") */)
-		bRet = FALSE;
+		bRet = PR_FALSE;
 	else if (!PL_strcasecmp (firstChild->content_type, TEXT_PLAIN) ||
 			 !PL_strcasecmp (firstChild->content_type, TEXT_HTML) ||
 			 !PL_strcasecmp (firstChild->content_type, TEXT_MDL) ||
@@ -1855,10 +1855,10 @@ PRBool MimeObjectChildIsMessageBody(MimeObject *obj,
 			 !PL_strcasecmp (firstChild->content_type, MULTIPART_RELATED) ||
 			 !PL_strcasecmp (firstChild->content_type, MESSAGE_NEWS) ||
 			 !PL_strcasecmp (firstChild->content_type, MESSAGE_RFC822))
-		bRet = TRUE;
+		bRet = PR_TRUE;
 	else
-		bRet = FALSE;
-	FREEIF(disp);
+		bRet = PR_FALSE;
+	PR_FREEIF(disp);
 	return bRet;
 }
 
@@ -1868,7 +1868,7 @@ MimeGetAttachmentCount(MWContext* context)
 {
   MimeObject* obj;
   MimeContainer* cobj;
-  PRBool isMsgBody = FALSE, isAlternativeOrRelated = FALSE;
+  PRBool isMsgBody = PR_FALSE, isAlternativeOrRelated = PR_FALSE;
 
   PR_ASSERT(context);
   if (!context ||
@@ -1903,7 +1903,7 @@ MimeGetAttachmentList(MWContext* context, MSG_AttachmentData** data)
   PRInt32 i;
   char* disp;
   char c;
-  PRBool isMsgBody = FALSE, isAlternativeOrRelated = FALSE;
+  PRBool isMsgBody = PR_FALSE, isAlternativeOrRelated = PR_FALSE;
 
   if (!data) return 0;
   *data = NULL;
@@ -1952,7 +1952,7 @@ MimeGetAttachmentList(MWContext* context, MSG_AttachmentData** data)
 	}
 	else
 	{
-		tmp->url = mime_set_url_part(context->mime_data->last_parsed_url, part, TRUE);
+		tmp->url = mime_set_url_part(context->mime_data->last_parsed_url, part, PR_TRUE);
 	}
 	/*
 	tmp->url = PR_smprintf("%s%cpart=%s", context->mime_data->last_parsed_url,
@@ -1963,7 +1963,7 @@ MimeGetAttachmentList(MWContext* context, MSG_AttachmentData** data)
       PL_strdup(child->content_type) : NULL;
     tmp->real_encoding = child->encoding ? PL_strdup(child->encoding) : NULL;
     disp = MimeHeaders_get(child->headers, HEADER_CONTENT_DISPOSITION,
-                           FALSE, FALSE);
+                           PR_FALSE, PR_FALSE);
     if (disp) {
       tmp->real_name = MimeHeaders_get_parameter(disp, "filename", NULL, NULL);
 	  if (tmp->real_name)
@@ -1979,7 +1979,7 @@ MimeGetAttachmentList(MWContext* context, MSG_AttachmentData** data)
       PR_Free(disp);
     }
     disp = MimeHeaders_get(child->headers, HEADER_CONTENT_TYPE,
-                       FALSE, FALSE);
+                       PR_FALSE, PR_FALSE);
     if (disp)
     {
       tmp->x_mac_type   = MimeHeaders_get_parameter(disp, PARAM_X_MAC_TYPE, NULL, NULL);
@@ -2003,7 +2003,7 @@ MimeGetAttachmentList(MWContext* context, MSG_AttachmentData** data)
     }
     tmp->description = MimeHeaders_get(child->headers,
                                        HEADER_CONTENT_DESCRIPTION,
-                                       FALSE, FALSE);
+                                       PR_FALSE, PR_FALSE);
 #ifndef MOZILLA_30
     if (tmp->real_type && !PL_strcasecmp(tmp->real_type, MESSAGE_RFC822) &&
         (!tmp->real_name || *tmp->real_name == 0))
@@ -2022,7 +2022,7 @@ MimeFreeAttachmentList(MSG_AttachmentData* data)
   if (data) {
     MSG_AttachmentData* tmp;
     for (tmp = data ; tmp->url ; tmp++) {
-      /* Can't do FREEIF on `const' values... */
+      /* Can't do PR_FREEIF on `const' values... */
       if (tmp->url) PR_Free((char *) tmp->url);
       if (tmp->real_type) PR_Free((char *) tmp->real_type);
       if (tmp->real_encoding) PR_Free((char *) tmp->real_encoding);
@@ -2063,12 +2063,12 @@ MimeDestroyContextData(MWContext *context)
       mime_free(context->mime_data->last_parsed_object);
       if (options)
         {
-          FREEIF(options->part_to_load);
+          PR_FREEIF(options->part_to_load);
           PR_Free(options);
         }
 
       context->mime_data->last_parsed_object = 0;
-      FREEIF(context->mime_data->last_parsed_url);
+      PR_FREEIF(context->mime_data->last_parsed_url);
     }
 
 #ifdef LOCK_LAST_CACHED_MESSAGE
@@ -2083,7 +2083,7 @@ MimeDestroyContextData(MWContext *context)
           /* Note: if post data was involved here, we'd lose.  We're assuming
              that all we need to save is the url->address. */
 #ifdef RICHIE
-          NET_ChangeCacheFileLock(url_s, FALSE);
+          NET_ChangeCacheFileLock(url_s, PR_FALSE);
 #endif
           NET_FreeURLStruct(url_s);
         }
@@ -2109,7 +2109,7 @@ MimeDestroyContextData(MWContext *context)
 {
   if (!context) return;
 
-  FREEIF(context->mime_charset);
+  PR_FREEIF(context->mime_charset);
 }
 #endif /* !HAVE_MIME_DATA_SLOT */
 
@@ -2159,7 +2159,7 @@ mime_richtext_write (void *stream, const char* buf, PRInt32 size)
 {
   struct mime_richtext_data *data = (struct mime_richtext_data *) stream;  
   return msg_LineBuffer (buf, size, &data->ibuffer, &data->ibuffer_size,
-                         &data->ibuffer_fp, FALSE, mime_richtext_write_line,
+                         &data->ibuffer_fp, PR_FALSE, mime_richtext_write_line,
                          data);
 }
 
@@ -2178,7 +2178,7 @@ mime_richtext_complete (void *stream)
 {
   struct mime_richtext_data *mrd = (struct mime_richtext_data *) stream;  
   if (!mrd) return;
-  FREEIF(mrd->obuffer);
+  PR_FREEIF(mrd->obuffer);
   if (mrd->stream)
     {
       mrd->stream->complete (mrd->stream);
@@ -2192,7 +2192,7 @@ mime_richtext_abort (void *stream, int status)
 {
   struct mime_richtext_data *mrd = (struct mime_richtext_data *) stream;  
   if (!mrd) return;
-  FREEIF(mrd->obuffer);
+  PR_FREEIF(mrd->obuffer);
   if (mrd->stream)
     {
       mrd->stream->abort (mrd->stream, status);
@@ -2220,7 +2220,7 @@ MIME_RichtextConverter_1 (int format_out, void *closure,
       PR_Free(next_stream);
       return 0;
     }
-  XP_MEMSET(data, 0, sizeof(*data));
+  memset(data, 0, sizeof(*data));
   data->url = url;
   data->context = context;
   data->format_out = format_out;
@@ -2234,7 +2234,7 @@ MIME_RichtextConverter_1 (int format_out, void *closure,
       PR_Free(data);
       return 0;
     }
-  XP_MEMSET (stream, 0, sizeof (*stream));
+  memset (stream, 0, sizeof (*stream));
 
   stream->name           = "Richtext Conversion Stream";
   stream->complete       = mime_richtext_complete;
@@ -2251,14 +2251,14 @@ NET_StreamClass *
 MIME_RichtextConverter (int format_out, void *closure,
                         URL_Struct *url, MWContext *context)
 {
-  return MIME_RichtextConverter_1 (format_out, closure, url, context, FALSE);
+  return MIME_RichtextConverter_1 (format_out, closure, url, context, PR_FALSE);
 }
 
 NET_StreamClass * 
 MIME_EnrichedTextConverter (int format_out, void *closure,
                             URL_Struct *url, MWContext *context)
 {
-  return MIME_RichtextConverter_1 (format_out, closure, url, context, TRUE);
+  return MIME_RichtextConverter_1 (format_out, closure, url, context, PR_TRUE);
 }
 
 
@@ -2334,8 +2334,8 @@ mime_vcard_complete (void *stream)
   if (vcd->obj) {
     int status;
 
-    status = vcd->obj->class->parse_eof ( vcd->obj, FALSE );
-    vcd->obj->class->parse_end( vcd->obj, status < 0 ? TRUE : FALSE );
+    status = vcd->obj->class->parse_eof ( vcd->obj, PR_FALSE );
+    vcd->obj->class->parse_end( vcd->obj, status < 0 ? PR_TRUE : PR_FALSE );
     
     mime_free (vcd->obj);
     vcd->obj = 0;
@@ -2360,9 +2360,9 @@ mime_vcard_abort (void *stream, int status )
       int status;
       
       if ( !vcd->obj->closed_p )
-          status = vcd->obj->class->parse_eof ( vcd->obj, TRUE );
+          status = vcd->obj->class->parse_eof ( vcd->obj, PR_TRUE );
       if ( !vcd->obj->parsed_p )
-          vcd->obj->class->parse_end( vcd->obj, TRUE );
+          vcd->obj->class->parse_end( vcd->obj, PR_TRUE );
       
       mime_free (vcd->obj);
       vcd->obj = 0;
@@ -2424,14 +2424,14 @@ MIME_VCardConverter2 ( int format_out,
         return 0;
     }
 
-    vcd->options->write_html_p        = TRUE;
+    vcd->options->write_html_p        = PR_TRUE;
     vcd->options->output_fn           = mime_output_fn;
     if (format_out == FO_NGLAYOUT ||
         format_out == FO_CACHE_AND_NGLAYOUT)
-    vcd->options->output_vcard_buttons_p = TRUE;
+    vcd->options->output_vcard_buttons_p = PR_TRUE;
 
 #ifdef MIME_DRAFTS
-    vcd->options->decompose_file_p = FALSE; /* new field in MimeDisplayOptions */
+    vcd->options->decompose_file_p = PR_FALSE; /* new field in MimeDisplayOptions */
 #endif /* MIME_DRAFTS */
 
     vcd->options->url = url->address;
@@ -2449,7 +2449,7 @@ MIME_VCardConverter2 ( int format_out,
 	PR_FREEIF(content_type);
 
     if ( !obj ) {
-        FREEIF( vcd->options->part_to_load );
+        PR_FREEIF( vcd->options->part_to_load );
         PR_Free ( next_stream );
         PR_Free ( vcd->options );
         PR_Free ( vcd );
@@ -2461,7 +2461,7 @@ MIME_VCardConverter2 ( int format_out,
 
     stream = PR_NEWZAP ( NET_StreamClass );
     if ( !stream ) {
-        FREEIF ( vcd->options->part_to_load );
+        PR_FREEIF ( vcd->options->part_to_load );
         PR_Free ( next_stream );
         PR_Free ( vcd->options );
         PR_Free ( vcd );
@@ -2482,7 +2482,7 @@ MIME_VCardConverter2 ( int format_out,
         status = obj->class->parse_begin ( obj );
     if ( status < 0 ) {
         PR_Free ( stream );
-        FREEIF( vcd->options->part_to_load );
+        PR_FREEIF( vcd->options->part_to_load );
         PR_Free ( next_stream );
         PR_Free ( vcd->options );
         PR_Free ( vcd );
@@ -2516,8 +2516,8 @@ int
 mime_TranslateCalendar(char* caldata, char** html) 
 {
 #ifdef JULIAN_EXISTS
-    static PRBool initialized = FALSE;
-    static PRBool bFoundNLSDataDirectory = FALSE;
+    static PRBool initialized = PR_FALSE;
+    static PRBool bFoundNLSDataDirectory = PR_FALSE;
     void* closure;
     if (!initialized) {
 	Julian_Form_Callback_Struct jcbs;
@@ -2549,7 +2549,7 @@ mime_TranslateCalendar(char* caldata, char** html)
         jcbs.GetString = XP_GetString;
                 
 		bFoundNLSDataDirectory = jf_Initialize(&jcbs);
-		initialized = TRUE;
+		initialized = PR_TRUE;
     }
     closure = jf_New(caldata, (PRBool) bFoundNLSDataDirectory);
     *html = jf_getForm(closure);
@@ -2612,8 +2612,8 @@ static void mime_calendar_complete (void *stream)
   if (cald->obj) {
     int status;
 
-    status = cald->obj->class->parse_eof ( cald->obj, FALSE );
-    cald->obj->class->parse_end( cald->obj, status < 0 ? TRUE : FALSE );
+    status = cald->obj->class->parse_eof ( cald->obj, PR_FALSE );
+    cald->obj->class->parse_end( cald->obj, status < 0 ? PR_TRUE : PR_FALSE );
     
     mime_free (cald->obj);
     cald->obj = 0;
@@ -2637,9 +2637,9 @@ static void mime_calendar_abort (void *stream, int status )
       int status;
       
       if ( !cald->obj->closed_p )
-          status = cald->obj->class->parse_eof ( cald->obj, TRUE );
+          status = cald->obj->class->parse_eof ( cald->obj, PR_TRUE );
       if ( !cald->obj->parsed_p )
-          cald->obj->class->parse_end( cald->obj, TRUE );
+          cald->obj->class->parse_end( cald->obj, PR_TRUE );
       
       mime_free (cald->obj);
       cald->obj = 0;
@@ -2688,14 +2688,14 @@ extern NET_StreamClass * MIME_JulianConverter (int format_out, void *closure, UR
         return 0;
     }
 
-    cald->options->write_html_p        = TRUE;
+    cald->options->write_html_p        = PR_TRUE;
     cald->options->output_fn           = mime_output_fn;
     if (format_out == FO_NGLAYOUT ||
         format_out == FO_CACHE_AND_NGLAYOUT)
-    cald->options->output_vcard_buttons_p = FALSE;
+    cald->options->output_vcard_buttons_p = PR_FALSE;
 
 #ifdef MIME_DRAFTS
-    cald->options->decompose_file_p = FALSE; /* new field in MimeDisplayOptions */
+    cald->options->decompose_file_p = PR_FALSE; /* new field in MimeDisplayOptions */
 #endif /* MIME_DRAFTS */
 
     cald->options->url = url->address;
@@ -2709,7 +2709,7 @@ extern NET_StreamClass * MIME_JulianConverter (int format_out, void *closure, UR
 #endif
 
     if ( !obj ) {
-        FREEIF( cald->options->part_to_load );
+        PR_FREEIF( cald->options->part_to_load );
         PR_Free ( next_stream );
         PR_Free ( cald->options );
         PR_Free ( cald );
@@ -2721,7 +2721,7 @@ extern NET_StreamClass * MIME_JulianConverter (int format_out, void *closure, UR
 
     stream = PR_NEWZAP ( NET_StreamClass );
     if ( !stream ) {
-        FREEIF ( cald->options->part_to_load );
+        PR_FREEIF ( cald->options->part_to_load );
         PR_Free ( next_stream );
         PR_Free ( cald->options );
         PR_Free ( cald );
@@ -2742,7 +2742,7 @@ extern NET_StreamClass * MIME_JulianConverter (int format_out, void *closure, UR
         status = obj->class->parse_begin ( obj );
     if ( status < 0 ) {
         PR_Free ( stream );
-        FREEIF( cald->options->part_to_load );
+        PR_FREEIF( cald->options->part_to_load );
         PR_Free ( next_stream );
         PR_Free ( cald->options );
         PR_Free ( cald );

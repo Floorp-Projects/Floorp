@@ -75,9 +75,9 @@ MimeContainer_finalize (MimeObject *object)
 	 in forward order (0-N) but are destroyed in backward order (N-0)
    */
   if (!object->closed_p)
-	object->class->parse_eof (object, FALSE);
+	object->class->parse_eof (object, PR_FALSE);
   if (!object->parsed_p)
-	object->class->parse_end (object, FALSE);
+	object->class->parse_end (object, PR_FALSE);
 
   if (cont->children)
 	{
@@ -89,7 +89,7 @@ MimeContainer_finalize (MimeObject *object)
 			mime_free(kid);
 		  cont->children[i] = 0;
 		}
-	  FREEIF(cont->children);
+	  PR_FREEIF(cont->children);
 	  cont->nchildren = 0;
 	}
   ((MimeObjectClass*)&MIME_SUPERCLASS)->finalize(object);
@@ -186,7 +186,7 @@ MimeContainer_add_child (MimeObject *parent, MimeObject *child)
 static PRBool
 MimeContainer_displayable_inline_p (MimeObjectClass *class, MimeHeaders *hdrs)
 {
-  return TRUE;
+  return PR_TRUE;
 }
 
 
@@ -204,7 +204,7 @@ MimeContainer_debug_print (MimeObject *obj, FILE *stream, PRInt32 depth)
 		  addr ? addr : "???",
 		  cont->nchildren, (cont->nchildren == 1 ? "" : "s"),
 		  (PRUint32) cont);
-  FREEIF(addr);
+  PR_FREEIF(addr);
 
 /*
   if (cont->nchildren > 0)
