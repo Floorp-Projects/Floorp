@@ -45,17 +45,17 @@ if (verifyDiskSpace(fProgram, srDest))
 
     // register chrome
     var cf = getFolder("Chrome");
-    registerChrome(LOCALE | DELAYED_CHROME, getFolder(cf, chromeName), localeName + "global/");
-    registerChrome(LOCALE | DELAYED_CHROME, getFolder(cf, chromeName), localeName + "communicator/");
-    registerChrome(LOCALE | DELAYED_CHROME, getFolder(cf, chromeName), localeName + "messenger/");
-    registerChrome(LOCALE | DELAYED_CHROME, getFolder(cf, chromeName), localeName + "editor/");
-    registerChrome(LOCALE | DELAYED_CHROME, getFolder(cf, chromeName), localeName + "navigator/");
-    registerChrome(LOCALE | DELAYED_CHROME, getFolder(cf, chromeName), localeName + "necko/");
-    registerChrome(LOCALE | DELAYED_CHROME, getFolder(cf, chromeName), localeName + "cookie/");
-    registerChrome(LOCALE | DELAYED_CHROME, getFolder(cf, chromeName), localeName + "wallet/");
-    registerChrome(LOCALE | DELAYED_CHROME, getFolder(cf, platformName), localeName + "global-platform/");
-    registerChrome(LOCALE | DELAYED_CHROME, getFolder(cf, platformName), localeName + "communicator-platform/");
-    registerChrome(LOCALE | DELAYED_CHROME, getFolder(cf, platformName), localeName + "navigator-platform/");
+    registerChrome(LOCALE, getFolder(cf, chromeName), localeName + "global/");
+    registerChrome(LOCALE, getFolder(cf, chromeName), localeName + "communicator/");
+    registerChrome(LOCALE, getFolder(cf, chromeName), localeName + "messenger/");
+    registerChrome(LOCALE, getFolder(cf, chromeName), localeName + "editor/");
+    registerChrome(LOCALE, getFolder(cf, chromeName), localeName + "navigator/");
+    registerChrome(LOCALE, getFolder(cf, chromeName), localeName + "necko/");
+    registerChrome(LOCALE, getFolder(cf, chromeName), localeName + "cookie/");
+    registerChrome(LOCALE, getFolder(cf, chromeName), localeName + "wallet/");
+    registerChrome(LOCALE, getFolder(cf, platformName), localeName + "global-platform/");
+    registerChrome(LOCALE, getFolder(cf, platformName), localeName + "communicator-platform/");
+    registerChrome(LOCALE, getFolder(cf, platformName), localeName + "navigator-platform/");
 
     if (err == SUCCESS)
     {
