@@ -39,6 +39,8 @@ class nsIDocumentLoader;
 class nsIDocumentLoaderObserver : public nsISupports 
 {
 public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOCUMENT_LOADER_OBSERVER_IID)
+
   /**
    * Notify the observer that a new document will be loaded.  
    *
