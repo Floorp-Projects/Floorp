@@ -55,8 +55,8 @@ enum nsBrowsingProfileFlag {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// size of hex encoding:
-const PRUint32 kBrowsingProfileCookieSize = sizeof(nsBrowsingProfileVector) * 2;
+// size of hex encoding (plus one for null-termination):
+const PRUint32 kBrowsingProfileCookieSize = sizeof(nsBrowsingProfileVector) * 2 + 1;
 
 #define NS_IBROWSINGPROFILE_IID                      \
 { /* 4aef9ba2-e0af-11d2-8cca-0060b0fc14a3 */         \
@@ -78,6 +78,8 @@ public:
 
     NS_IMETHOD GetCookieString(char buf[kBrowsingProfileCookieSize]) = 0;
 
+    NS_IMETHOD SetCookieString(char buf[kBrowsingProfileCookieSize]) = 0;
+
     NS_IMETHOD GetDescription(char* *htmlResult) = 0;
 
     NS_IMETHOD CountPageVisit(const char* url) = 0;
@@ -95,7 +97,6 @@ public:
 ////////////////////////////////////////////////////////////////////////////////
 
 extern nsresult
-NS_NewBrowsingProfile(const char* userProfileName,
-                      nsIBrowsingProfile* *result);
+NS_NewBrowsingProfile(nsIBrowsingProfile* *aResult);
 
 #endif // nsIBrowsingProfile_h__
