@@ -742,12 +742,14 @@ if ($action eq 'update') {
     foreach (keys %::FORM) {
         next unless /^bit_/;
         #print "$_=$::FORM{$_}<br>\n";
+        detaint_natural($::FORM{$_}) || die "Groupset field tampered with";
         $groupset .= " + $::FORM{$_}";
     }
     my $blessgroupset = "0";
     foreach (keys %::FORM) {
         next unless /^blbit_/;
         #print "$_=$::FORM{$_}<br>\n";
+        detaint_natural($::FORM{$_}) || die "Blessgroupset field tampered with";
         $blessgroupset .= " + $::FORM{$_}";
     }
 
@@ -767,7 +769,8 @@ if ($action eq 'update') {
         } else {
            SendSQL("UPDATE profiles
                     SET groupset =
-                         groupset - (groupset & $opblessgroupset) + $groupset
+                         groupset - (groupset & $opblessgroupset) + 
+                         (($groupset) & $opblessgroupset)
                     WHERE login_name=" . SqlQuote($userold));
 
            # I'm paranoid that someone who I give the ability to bless people
