@@ -22,12 +22,20 @@
 use diagnostics;
 use strict;
 
-print "Content-type: multipart/x-mixed-replace;boundary=thisrandomstring\n";
-print "\n";
-print "--thisrandomstring\n";
-
-
 require "CGI.pl";
+
+my $serverpush = 1;
+
+if ($ENV{'HTTP_USER_AGENT'} =~ /MSIE/) {
+    # Internet explorer doesn't seem to understand server push.  What fun.
+    $serverpush = 0;
+}
+
+if ($serverpush) {
+    print "Content-type: multipart/x-mixed-replace;boundary=thisrandomstring\n";
+    print "\n";
+    print "--thisrandomstring\n";
+}
 
 # Shut up misguided -w warnings about "used only once":
 
@@ -290,9 +298,11 @@ if (defined $::FORM{'order'} && $::FORM{'order'} ne "") {
     $query .= $::FORM{'order'};
 }
 
-print "Please stand by ... <p>\n";
-if (defined $::FORM{'debug'}) {
-    print "<pre>$query</pre>\n";
+if ($serverpush) {
+    print "Please stand by ... <p>\n";
+    if (defined $::FORM{'debug'}) {
+        print "<pre>$query</pre>\n";
+    }
 }
 
 SendSQL($query);
@@ -391,8 +401,10 @@ while (@row = FetchSQLData()) {
 my $buglist = join(":", @bugarray);
 
 
-print "\n";
-print "--thisrandomstring\n";
+if ($serverpush) {
+    print "\n";
+    print "--thisrandomstring\n";
+}
 
 
 my $toolong = 0;
@@ -594,4 +606,6 @@ if ($count > 0) {
         print "<A HREF=\"buglist.cgi?$fields&tweak=1\">Make changes to several of these bugs at once.</A>\n";
     }
 }
-print "\n--thisrandomstring--\n";
+if ($serverpush) {
+    print "\n--thisrandomstring--\n";
+}
