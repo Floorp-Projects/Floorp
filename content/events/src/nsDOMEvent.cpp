@@ -28,7 +28,7 @@ static NS_DEFINE_IID(kIPrivateDOMEventIID, NS_IPRIVATEDOMEVENT_IID);
 static char* mEventNames[] = {
   "onmousedown", "onmouseup", "onclick", "ondblclick", "onmouseover", "onmouseout",
   "onmousemove", "onkeydown", "onkeyup", "onkeypress", "onfocus", "onblur", 
-  "onload", "onunload", "onabort", "onerror"
+  "onload", "onunload", "onabort", "onerror", "onsubmit", "onreset"
 };
 
 nsDOMEvent::nsDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent) {
@@ -224,15 +224,19 @@ NS_METHOD nsDOMEvent::GetButton(PRUint32* aButton)
   switch (mEvent->message) {
   case NS_MOUSE_LEFT_BUTTON_UP:
   case NS_MOUSE_LEFT_BUTTON_DOWN:
+  case NS_MOUSE_LEFT_CLICK:
   case NS_MOUSE_LEFT_DOUBLECLICK:
     *aButton = 1;
     break;
   case NS_MOUSE_MIDDLE_BUTTON_UP:
   case NS_MOUSE_MIDDLE_BUTTON_DOWN:
+  case NS_MOUSE_MIDDLE_CLICK:
+  case NS_MOUSE_MIDDLE_DOUBLECLICK:
     *aButton = 2;
     break;
   case NS_MOUSE_RIGHT_BUTTON_UP:
   case NS_MOUSE_RIGHT_BUTTON_DOWN:
+  case NS_MOUSE_RIGHT_CLICK:
   case NS_MOUSE_RIGHT_DOUBLECLICK:
     *aButton = 3;
     break;
@@ -286,9 +290,11 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
   case NS_MOUSE_RIGHT_BUTTON_UP:
     return mEventNames[eDOMEvents_mouseup];
   case NS_MOUSE_LEFT_CLICK:
+  case NS_MOUSE_MIDDLE_CLICK:
   case NS_MOUSE_RIGHT_CLICK:
     return mEventNames[eDOMEvents_click];
   case NS_MOUSE_LEFT_DOUBLECLICK:
+  case NS_MOUSE_MIDDLE_DOUBLECLICK:
   case NS_MOUSE_RIGHT_DOUBLECLICK:
     return mEventNames[eDOMEvents_dblclick];
   case NS_MOUSE_ENTER:
@@ -314,6 +320,10 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
     return mEventNames[eDOMEvents_abort];
   case NS_IMAGE_ERROR:
     return mEventNames[eDOMEvents_error];
+  case NS_FORM_SUBMIT:
+    return mEventNames[eDOMEvents_submit];
+  case NS_FORM_RESET:
+    return mEventNames[eDOMEvents_reset];
   default:
     break;
   }

@@ -957,22 +957,65 @@ PRBool    nsDocument::SetProperty(JSContext *aContext, jsval aID, jsval *aVp)
     mPropName.SetString(JS_GetStringChars(JS_ValueToString(aContext, aID)));
     mPrefix.SetString(mPropName, 2);
     if (mPrefix == "on") {
+      nsIEventListenerManager *mManager = nsnull;
+
       if (mPropName == "onmousedown" || mPropName == "onmouseup" || mPropName ==  "onclick" ||
          mPropName == "onmouseover" || mPropName == "onmouseout") {
-        if (NS_OK != SetScriptEventListener(aContext, kIDOMMouseListenerIID)) {
-          return PR_FALSE;
+        if (NS_OK == GetListenerManager(&mManager)) {
+          nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
+          if (NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, kIDOMMouseListenerIID)) {
+            NS_RELEASE(mManager);
+            return PR_FALSE;
+          }
         }
       }
-      else if (mPropName == "onkeydown" || mPropName == "onkeyup" || mPropName == "onkeypress" ) {
-        if (NS_OK != SetScriptEventListener(aContext, kIDOMKeyListenerIID)) {
-          return PR_FALSE;
+      else if (mPropName == "onkeydown" || mPropName == "onkeyup" || mPropName == "onkeypress") {
+        if (NS_OK == GetListenerManager(&mManager)) {
+          nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
+          if (NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, kIDOMKeyListenerIID)) {
+            NS_RELEASE(mManager);
+            return PR_FALSE;
+          }
         }
       }
-      else if (mPropName == "onmousemove" ) {
-        if (NS_OK != SetScriptEventListener(aContext, kIDOMMouseMotionListenerIID)) {
-          return PR_FALSE;
+      else if (mPropName == "onmousemove") {
+        if (NS_OK == GetListenerManager(&mManager)) {
+          nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
+          if (NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, kIDOMMouseMotionListenerIID)) {
+            NS_RELEASE(mManager);
+            return PR_FALSE;
+          }
         }
       }
+      else if (mPropName == "onfocus" || mPropName == "onblur") {
+        if (NS_OK == GetListenerManager(&mManager)) {
+          nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
+          if (NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, kIDOMFocusListenerIID)) {
+            NS_RELEASE(mManager);
+            return PR_FALSE;
+          }
+        }
+      }
+      else if (mPropName == "onsubmit" || mPropName == "onreset") {
+        if (NS_OK == GetListenerManager(&mManager)) {
+          nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
+          if (NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, kIDOMFormListenerIID)) {
+            NS_RELEASE(mManager);
+            return PR_FALSE;
+          }
+        }
+      }
+      else if (mPropName == "onload" || mPropName == "onunload" || mPropName == "onabort" ||
+               mPropName == "onerror") {
+        if (NS_OK == GetListenerManager(&mManager)) {
+          nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
+          if (NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, kIDOMLoadListenerIID)) {
+            NS_RELEASE(mManager);
+            return PR_FALSE;
+          }
+        }
+      }
+      NS_IF_RELEASE(mManager);
     }
   }
   return PR_TRUE;
@@ -995,49 +1038,6 @@ PRBool    nsDocument::Convert(JSContext *aContext, jsval aID)
 
 void      nsDocument::Finalize(JSContext *aContext)
 {
-}
-
-nsresult nsDocument::SetScriptEventListener(JSContext *aContext, REFNSIID aListenerTypeIID)
-{
-  //First get the mScriptObject or make one if we don't have one.
-  nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
-
-  if (nsnull == mScriptObject) {
-    GetScriptObject(mScriptCX, &mScriptObject);
-  }
-
-  if (nsnull != mScriptObject) {
-    nsIEventListenerManager *mManager = nsnull;
-    nsVoidArray *mListeners;
-
-    if (NS_OK == GetListenerManager(&mManager) && 
-        NS_OK == mManager->GetEventListeners(&mListeners, aListenerTypeIID)) {
-      //Run through the listeners for this IID and see if a script listener is registered
-      //If so, we're set.
-      if (nsnull != mListeners) {
-        nsIScriptEventListener *mScriptListener;
-        nsIDOMEventListener *mEventListener;
-        for (int i=0; i<mListeners->Count(); i++) {
-          mEventListener = (nsIDOMEventListener*)mListeners->ElementAt(i);
-          if (NS_OK == mEventListener->QueryInterface(kIScriptEventListenerIID, (void**)&mScriptListener)) {
-            NS_RELEASE(mScriptListener);
-            NS_RELEASE(mManager);
-            return NS_OK;
-          }
-        }
-      }
-      //If we didn't find a script listener or no listeners existed create and add a new one.
-      nsIDOMEventListener *mScriptListener;
-      if (NS_OK == NS_NewScriptEventListener(&mScriptListener, mScriptCX, mScriptObject)) {
-        mManager->AddEventListener(mScriptListener, aListenerTypeIID);
-        NS_RELEASE(mScriptListener);
-        NS_RELEASE(mManager);
-        return NS_OK;
-      }
-    }
-    NS_IF_RELEASE(mManager);
-  }
-  return NS_ERROR_FAILURE;
 }
 
 /**

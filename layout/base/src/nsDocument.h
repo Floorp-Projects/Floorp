@@ -235,6 +235,7 @@ public:
   NS_IMETHOD ReleaseEvent(nsIDOMEventListener *aListener);
   NS_IMETHOD AddEventListener(nsIDOMEventListener *aListener, const nsIID& aIID);
   NS_IMETHOD RemoveEventListener(nsIDOMEventListener *aListener, const nsIID& aIID);
+  NS_IMETHOD GetListenerManager(nsIEventListenerManager** aInstancePtrResult);
   NS_IMETHOD GetNewListenerManager(nsIEventListenerManager **aInstancePtrResult);
 
   NS_IMETHOD HandleDOMEvent(nsIPresContext& aPresContext, 
@@ -269,8 +270,6 @@ protected:
 
 protected:
   virtual void AddStyleSheetToSet(nsIStyleSheet* aSheet, nsIStyleSet* aSet);  // subclass hook
-  NS_IMETHOD GetListenerManager(nsIEventListenerManager** aInstancePtrResult);
-  nsresult SetScriptEventListener(JSContext *aContext, REFNSIID aListenerTypeIID);
 
   nsDocument();
   virtual ~nsDocument(); 
