@@ -32,7 +32,6 @@
 #include "nsIEventQueueService.h"
 #include "nsIProgressEventSink.h"
 #include "nsIEventSinkGetter.h"
-#include "nsIFTPContext.h"
 #include "nsIMIMEService.h"
 #include "nsProxyObjectManager.h"
 
@@ -108,7 +107,11 @@ nsFTPChannel::Init(const char* verb, nsIURI* uri, nsILoadGroup *aGroup,
     mOriginalURI = originalURI ? originalURI : uri;
     mURL = uri;
 
-    mLoadGroup = aGroup;
+    if (aGroup) {
+        mLoadGroup = aGroup;
+        rv = mLoadGroup->AddChannel(this, nsnull);
+        if (NS_FAILED(rv)) return rv;
+    }
 
     mEventSinkGetter = getter;
 
@@ -270,8 +273,10 @@ nsFTPChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
                                    mHandler,
                                    this, ctxt, mEventSinkGetter);
     mHandler = 0; // XXX this can go away when the channel is no longer being leaked.
-    if (NS_FAILED(rv)) return rv;
-
+    if (NS_FAILED(rv)) {
+        NS_RELEASE(protocolInterpreter);
+        return rv;
+    }
     rv = mPool->DispatchRequest((nsIRunnable*)protocolInterpreter);
 
     NS_RELEASE(protocolInterpreter);
@@ -326,7 +331,7 @@ nsFTPChannel::GetContentType(char* *aContentType) {
         if (!*aContentType) {
             rv = NS_ERROR_OUT_OF_MEMORY;
         }
-        PR_LOG(gFTPLog, PR_LOG_DEBUG, ("nsFTPChannel::NewChannel() returned %s\n", *aContentType));
+        PR_LOG(gFTPLog, PR_LOG_DEBUG, ("nsFTPChannel::GetContentType() returned %s\n", *aContentType));
         return rv;
     }
 
@@ -335,7 +340,7 @@ nsFTPChannel::GetContentType(char* *aContentType) {
         rv = MIMEService->GetTypeFromURI(mURL, aContentType);
         if (NS_SUCCEEDED(rv)) {
             mContentType = *aContentType;
-            PR_LOG(gFTPLog, PR_LOG_DEBUG, ("nsFTPChannel::NewChannel() returned %s\n", *aContentType));
+            PR_LOG(gFTPLog, PR_LOG_DEBUG, ("nsFTPChannel::GetContentType() returned %s\n", *aContentType));
             return rv;
         }
     }
@@ -406,6 +411,12 @@ nsFTPChannel::SetConnectionQueue(nsIEventQueue *aEventQ) {
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsFTPChannel::SetContentLength(PRInt32 aLength) {
+    mContentLength = aLength;
+    return NS_OK;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // nsIStreamObserver methods:
 
@@ -438,6 +449,9 @@ nsFTPChannel::OnStopRequest(nsIChannel* channel, nsISupports* context,
     if (mListener) {
         rv = mListener->OnStopRequest(channel, mContext, aStatus, aMsg);
     }
+
+    if (mLoadGroup)
+        rv = mLoadGroup->RemoveChannel(this, nsnull, aStatus, aMsg);
     return rv;
 }
 
@@ -453,23 +467,6 @@ nsFTPChannel::OnDataAvailable(nsIChannel* channel, nsISupports* context,
 
     PR_LOG(gFTPLog, PR_LOG_DEBUG, ("nsFTPChannel::OnDataAvailable(channel = %x, context = %x, stream = %x, srcOffset = %d, length = %d)\n", channel, context, aIStream, aSourceOffset, aLength));
 
-    if (context) {
-        nsCOMPtr<nsIFTPContext> ftpCtxt = do_QueryInterface(context, &rv);
-        if (NS_FAILED(rv)) return rv;
-
-        char *type = nsnull;
-        rv = ftpCtxt->GetContentType(&type);
-        if (NS_FAILED(rv)) return rv;
-
-        nsCAutoString cType(type);
-        cType.ToLowerCase();
-        mContentType = cType.GetBuffer();
-        nsAllocator::Free(type);
-
-        rv = ftpCtxt->GetContentLength(&mContentLength);
-        if (NS_FAILED(rv)) return rv;
-    }
-    
     if (mListener) {
         rv = mListener->OnDataAvailable(channel, mContext, aIStream, aSourceOffset, aLength);
     }

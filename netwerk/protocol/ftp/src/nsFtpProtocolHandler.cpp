@@ -26,7 +26,6 @@
 #include "nsIURL.h"
 #include "nsCRT.h"
 #include "nsIComponentManager.h"
-#include "nsIServiceManager.h"
 #include "nsIEventSinkGetter.h"
 #include "nsIProgressEventSink.h"
 #include "nsConnectionCacheObj.h"
@@ -53,22 +52,9 @@ static NS_DEFINE_CID(kStandardURLCID,            NS_STANDARDURL_CID);
 
 nsFtpProtocolHandler::nsFtpProtocolHandler() {
     NS_INIT_REFCNT();
-    NS_NEWXPCOM(mRootConnectionList, nsHashtable);
-    NS_NewThreadPool(getter_AddRefs(mPool), NS_FTP_CONNECTION_COUNT,
-                          NS_FTP_CONNECTION_COUNT,
-                          NS_FTP_CONNECTION_STACK_SIZE);
-}
-
-// cleans up a connection list entry
-PRBool CleanupConnEntry(nsHashKey *aKey, void *aData, void *closure) {
-    // XXX do we need to explicitly close the streams?
-    delete (nsConnectionCacheObj*)aData;
-    return PR_TRUE;
 }
 
 nsFtpProtocolHandler::~nsFtpProtocolHandler() {
-    mRootConnectionList->Reset(CleanupConnEntry);
-    NS_DELETEXPCOM(mRootConnectionList);
 }
 
 
@@ -93,8 +79,7 @@ NS_IMETHODIMP_(nsrefcnt) nsFtpProtocolHandler::Release(void)
   return mRefCnt;                                            
 }
 
-NS_IMPL_QUERY_INTERFACE2(nsFtpProtocolHandler, nsIProtocolHandler, nsIConnectionCache);
-//NS_IMPL_ISUPPORTS2(nsFtpProtocolHandler, nsIProtocolHandler, nsIConnectionCache);
+NS_IMPL_QUERY_INTERFACE3(nsFtpProtocolHandler, nsIProtocolHandler, nsIConnectionCache, nsIObserver);
 
 NS_METHOD
 nsFtpProtocolHandler::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult)
@@ -114,8 +99,28 @@ nsFtpProtocolHandler::Create(nsISupports* aOuter, const nsIID& aIID, void* *aRes
     if (ph == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(ph);
-    nsresult rv = ph->QueryInterface(aIID, aResult);
+    nsresult rv = ph->Init();
+    if (NS_FAILED(rv)) return rv;
+    rv = ph->QueryInterface(aIID, aResult);
     NS_RELEASE(ph);
+    return rv;
+}
+
+nsresult
+nsFtpProtocolHandler::Init() {
+    nsresult rv;
+    NS_NEWXPCOM(mRootConnectionList, nsHashtable);
+    if (!mRootConnectionList) return NS_ERROR_OUT_OF_MEMORY;
+    rv = NS_NewThreadPool(getter_AddRefs(mPool), NS_FTP_CONNECTION_COUNT,
+                          NS_FTP_CONNECTION_COUNT,
+                          NS_FTP_CONNECTION_STACK_SIZE);
+    if (NS_FAILED(rv)) return rv;
+
+    NS_WITH_SERVICE(nsIObserverService, obsServ, NS_OBSERVERSERVICE_PROGID, &rv);
+    if (NS_SUCCEEDED(rv)) {
+        nsAutoString topic(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+        obsServ->AddObserver(this, topic.GetUnicode());
+    }
     return rv;
 }
     
@@ -222,4 +227,30 @@ nsFtpProtocolHandler::InsertConn(const char *aKey, nsConnectionCacheObj *aConn) 
     return NS_OK;
 }
 
+// cleans up a connection list entry
+PRBool CleanupConnEntry(nsHashKey *aKey, void *aData, void *closure) {
+    // XXX do we need to explicitly close the streams?
+    delete (nsConnectionCacheObj*)aData;
+    return PR_TRUE;
+}
+
+// nsIObserver method
+NS_IMETHODIMP
+nsFtpProtocolHandler::Observe(nsISupports     *aSubject,
+                              const PRUnichar *aTopic,
+                              const PRUnichar *someData ) {
+    nsresult rv;
+    if (mRootConnectionList) {
+        mRootConnectionList->Reset(CleanupConnEntry);
+        NS_DELETEXPCOM(mRootConnectionList);
+        mRootConnectionList = nsnull;
+    }
+    // remove ourself from the observer service.
+    NS_WITH_SERVICE(nsIObserverService, obsServ, NS_OBSERVERSERVICE_PROGID, &rv);
+    if (NS_SUCCEEDED(rv)) {
+        nsAutoString topic(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+        obsServ->RemoveObserver(this, topic.GetUnicode());
+    }
+    return NS_OK;
+}
 ////////////////////////////////////////////////////////////////////////////////
