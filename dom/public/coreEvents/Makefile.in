@@ -49,6 +49,7 @@ EXPORTS		= \
 		nsIDOMTextListener.h \
 		nsIDOMCompositionListener.h \
 		nsIDOMMenuListener.h \
+		nsIDOMScrollListener.h \
 		$(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))

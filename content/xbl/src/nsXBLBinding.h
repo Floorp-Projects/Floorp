@@ -125,6 +125,7 @@ public:
   static PRBool IsKeyHandler(const nsString& aName);
   static PRBool IsFocusHandler(const nsString& aName);
   static PRBool IsXULHandler(const nsString& aName);
+  static PRBool IsScrollHandler(const nsString& aName);
 
 // Internal member functions
 protected:

@@ -150,6 +150,7 @@ protected:
   nsVoidArray* mTextListeners;
   nsVoidArray* mCompositionListeners;
   nsVoidArray* mMenuListeners;
+  nsVoidArray* mScrollListeners;
   nsCOMPtr<nsIPrincipal> mPrincipal;
   PRBool mDestroyed;
 
@@ -220,8 +221,12 @@ protected:
 #define NS_EVENT_BITS_MENU_ACTION          0x08
 #define NS_EVENT_BITS_XUL_BROADCAST        0x10
 #define NS_EVENT_BITS_XUL_COMMAND_UPDATE   0x20
-#define NS_EVENT_BITS_SCROLLPORT_OVERFLOW  0x40
-#define NS_EVENT_BITS_SCROLLPORT_UNDERFLOW 0x80
+
+//nsIScrollListener
+#define NS_EVENT_BITS_SCROLLPORT_NONE             0x00
+#define NS_EVENT_BITS_SCROLLPORT_OVERFLOW         0x01
+#define NS_EVENT_BITS_SCROLLPORT_UNDERFLOW        0x02
+#define NS_EVENT_BITS_SCROLLPORT_OVERFLOWCHANGED  0x04
 
 //nsIDOMDragListener
 #define NS_EVENT_BITS_DRAG_NONE     0x00

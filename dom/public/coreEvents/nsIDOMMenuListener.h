@@ -42,8 +42,6 @@ public:
   NS_IMETHOD Action(nsIDOMEvent* aEvent) = 0;
   NS_IMETHOD Broadcast(nsIDOMEvent* aEvent) = 0;
   NS_IMETHOD CommandUpdate(nsIDOMEvent* aEvent) = 0;
-  NS_IMETHOD Overflow(nsIDOMEvent* aEvent) = 0;
-  NS_IMETHOD Underflow(nsIDOMEvent* aEvent) = 0;
 };
 
 #endif // nsIDOMMenuListener_h__

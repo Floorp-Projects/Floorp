@@ -50,7 +50,7 @@ static char* mEventNames[] = {
   "submit", "reset", "change", "select", "input", "paint" ,"text",
   "create", "close", "destroy", "command", "broadcast", "commandupdate",
   "dragenter", "dragover", "dragexit", "dragdrop", "draggesture", "resize",
-  "scroll","overflow", "underflow"
+  "scroll","overflow", "underflow", "overflowchanged"
 }; 
 
 nsDOMEvent::nsDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent, const nsString& aEventType) {
@@ -1147,6 +1147,8 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
     return mEventNames[eDOMEvents_overflow];
   case NS_SCROLLPORT_UNDERFLOW:
     return mEventNames[eDOMEvents_underflow];
+  case NS_SCROLLPORT_OVERFLOWCHANGED:
+    return mEventNames[eDOMEvents_overflowchanged];
   default:
     break;
   }
