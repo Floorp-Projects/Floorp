@@ -1694,12 +1694,20 @@ namespace MetaData {
             break;
         case ExprNode::superExpr:
             {
-                js2val a;
+                SuperExprNode *s = checked_cast<SuperExprNode *>(p);
                 JS2Class *c = env->getEnclosingClass();
-                if ((c == NULL) || !env->findThis(this, false, &a))
-                    reportError(Exception::syntaxError, "No 'super' available", p->pos);
-                if (c->super == NULL)
-                    reportError(Exception::definitionError, "No 'super' for this class", p->pos);
+                if (s->op) {
+                    if (c == NULL)                    
+                        reportError(Exception::syntaxError, "No 'super' available", p->pos);
+                    ValidateExpression(cxt, env, s->op);
+                }
+                else {
+                    js2val a;
+                    if ((c == NULL) || !env->findThis(this, false, &a))
+                        reportError(Exception::syntaxError, "No 'super' available", p->pos);
+                    if (c->super == NULL)
+                        reportError(Exception::definitionError, "No 'super' for this class", p->pos);
+                }
             }
             break;
         case ExprNode::objectLiteral:
@@ -2125,7 +2133,14 @@ doUnary:
             break;
         case ExprNode::superExpr:
             {
-                bCon->emitOp(eSuper, p->pos);
+                SuperExprNode *s = checked_cast<SuperExprNode *>(p);
+                if (s->op) {
+                    Reference *lVal = SetupExprNode(env, phase, s->op, exprType);
+                    if (lVal) lVal->emitReadBytecode(bCon, p->pos);
+                    bCon->emitOp(eSuperExpr, p->pos);
+                }
+                else
+                    bCon->emitOp(eSuper, p->pos);
             }
             break;
         case ExprNode::Null:

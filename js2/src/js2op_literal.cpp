@@ -120,17 +120,28 @@
 
     case eSuper: // XXX literal?
         {
-            bool result = meta->env->findThis(meta, false, &a);
-            ASSERT(result);
+            if (!meta->env->findThis(meta, false, &a))
+                ASSERT(false);
             if (JS2VAL_IS_INACCESSIBLE(a))
                 meta->reportError(Exception::compileExpressionError, "'this' not available for 'super'", errorPos());
-            JS2Class *limit = meta->env->getEnclosingClass()->super;
-            b = limit->implicitCoerce(meta, a, limit);
-            ASSERT(JS2VAL_IS_OBJECT(b));
-            if (JS2VAL_IS_NULL(b))
-                push(JS2VAL_NULL);
-            else
-                push(OBJECT_TO_JS2VAL(new LimitedInstance(JS2VAL_TO_OBJECT(b), limit)));
+makeLimitedInstance:
+            {
+                JS2Class *limit = meta->env->getEnclosingClass()->super;
+                ASSERT(limit);
+                a = limit->implicitCoerce(meta, a, limit);
+                ASSERT(JS2VAL_IS_OBJECT(a));
+                if (JS2VAL_IS_NULL(a))
+                    push(JS2VAL_NULL);
+                else
+                    push(OBJECT_TO_JS2VAL(new LimitedInstance(JS2VAL_TO_OBJECT(a), limit)));
+            }
+        }
+        break;
+
+    case eSuperExpr: // XXX literal?
+        {
+            a = pop();
+            goto makeLimitedInstance;
         }
         break;
 

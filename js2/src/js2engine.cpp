@@ -513,6 +513,7 @@ namespace MetaData {
         { eString,  "String", STR_PTR },            // <string pointer:u32>
         { eThis,  "This", 0 },
         { eSuper,  "Super", 0 },
+        { eSuperExpr,  "SuperExpr", 0 },
         { eNewObject,  "NewObject", U16 },         // <argCount:u16>
         { eNewArray,  "NewArray", U16 },          // <argCount:u16>
 
@@ -791,6 +792,9 @@ namespace MetaData {
         case eUndefined:
         case eLongZero:
             return 1;       // push literal value
+
+        case eSuperExpr:
+            return 0;
 
         case eSlotWrite:
             return -1;      // write the value, don't preserve it

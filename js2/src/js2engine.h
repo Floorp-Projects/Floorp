@@ -84,6 +84,7 @@ enum JS2Op {
     eString,            // <string pointer:u32>
     eThis,
     eSuper,
+    eSuperExpr,
     eNewObject,         // <argCount:u16>
     eNewArray,          // <argCount:u16>
 
