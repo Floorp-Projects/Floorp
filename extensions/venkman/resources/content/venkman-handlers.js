@@ -137,6 +137,36 @@ function con_ondc ()
     console.sourceView.outliner.invalidate();
 }
 
+console.onDebugMenuShowing =
+function con_showdebug ()
+{
+    console.ui["menu_initAtStartup"].setAttribute ("checked",
+                                                   console.jsds.initAtStartup);
+
+    var check;
+    
+    switch (getThrowMode())
+    {
+        case TMODE_IGNORE:
+            check = "menu_TModeIgnore";
+            break;
+        case TMODE_TRACE:
+            check = "menu_TModeTrace";
+            break;
+        case TMODE_BREAK:
+            check = "menu_TModeBreak";
+            break;
+    }
+    
+    var menu = console.ui["menu_TModeIgnore"];
+    console.ui["menu_TModeIgnore"].setAttribute("checked",
+                                                "menu_TModeIgnore" == check);
+    console.ui["menu_TModeTrace"].setAttribute("checked",
+                                               "menu_TModeTrace" == check);
+    console.ui["menu_TModeBreak"].setAttribute("checked",
+                                               "menu_TModeBreak" == check);
+}
+
 console.onLoad =
 function con_load (e)
 {
@@ -444,7 +474,7 @@ function cli_ihelp (e)
 
     for (var i in ary)
     {        
-        display (getMsg(MSN_FMT_USAGE, [ary[i].name, ary[i].usage], MT_USAGE));
+        display (getMsg(MSN_FMT_USAGE, [ary[i].name, ary[i].usage]), MT_USAGE);
         display (ary[i].help, MT_HELP);
     }
 
@@ -926,34 +956,6 @@ function con_tabcomplete (e)
                 
     }
 
-}
-
-console.onTModeMenuCreate =
-function con_tmodecreate()
-{
-    var check;
-    
-    switch (getThrowMode())
-    {
-        case TMODE_IGNORE:
-            check = "menu_TModeIgnore";
-            break;
-        case TMODE_TRACE:
-            check = "menu_TModeTrace";
-            break;
-        case TMODE_BREAK:
-            check = "menu_TModeBreak";
-            break;
-    }
-    
-    var menu = document.getElementById("menu_TModeIgnore");
-    menu.setAttribute("checked", "menu_TModeIgnore" == check);
-
-    menu = document.getElementById("menu_TModeTrace");
-    menu.setAttribute("checked", "menu_TModeTrace" == check);
-
-    menu = document.getElementById("menu_TModeBreak");
-    menu.setAttribute("checked", "menu_TModeBreak" == check);
 }
 
 console.onUnload =

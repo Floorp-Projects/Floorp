@@ -74,6 +74,8 @@
       <command id="cmd_tmode_break" oncommand="setThrowMode(TMODE_BREAK);"/>
       <command id="cmd_stop" oncommand="console.doCommandToggleStop();"/>
       <command id="cmd_reload" oncommand="console.doCommandReload();"/>
+      <command id="cmd_init_at_startup" 
+        oncommand="console.jsds.initAtStartup = !console.jsds.initAtStartup"/>
 
       <!-- Tasks commands, from overlay -->
       <commandset id="tasksCommands"/>
@@ -167,7 +169,8 @@
   
         <!-- Debug menu -->
         <menu id="menu_Debug" label="&Debug.label;" accesskey="&Debug.aKey;">
-          <menupopup id="menu_DebugPopup">
+          <menupopup id="menu_DebugPopup"
+            onpopupshowing="console.onDebugMenuShowing(event);">
             <menuitem id="menu_Stop" key="key_stop"
               observes="cmd_stop"
               label="&Stop.label;" accesskey="&Stop.aKey;"/>
@@ -184,27 +187,24 @@
               observes="cmd_step_out"
               label="&StepOut.label;" accesskey="&StepOut.aKey;"/>
             <menuseparator/>
-            <menu id="menu_ThrowMode" label="&TModeMenu.label;"
-                  accesskey="&TModeMenu.aKey;">
-              <menupopup onpopupshowing="console.onTModeMenuCreate();">
-                <menuitem id="menu_TModeIgnore"
-                          observes="cmd_tmode_ignore" type="radio"
-                          label="&TModeIgnore.label;"
-                          accesskey="&TModeIgnore.aKey;"/>
-                <menuitem id="menu_TModeTrace"
-                          observes="cmd_tmode_trace" type="radio"
-                          label="&TModeTrace.label;"
-                          accesskey="&TModeTrace.aKey;"/>
-                <menuitem id="menu_TModeBreak"
-                          observes="cmd_tmode_break" type="radio"
-                          label="&TModeBreak.label;"
-                          accesskey="&TModeBreak.aKey;"/>
-                <menuseparator/>
-                <menuitem id="menu_TModeCycle" label = "&TModeCycle.label;"
-                          observes="cmd_tmode_cycle" key="key_tmode_cycle"
-                          accesskey="&TModeCycle.aKey;"/>
-              </menupopup>
-            </menu>
+
+            <menuitem id="menu_TModeIgnore"
+              observes="cmd_tmode_ignore" type="radio"
+              label="&TModeIgnore.label;"
+              accesskey="&TModeIgnore.aKey;"/>
+            <menuitem id="menu_TModeTrace"
+              observes="cmd_tmode_trace" type="radio"
+              label="&TModeTrace.label;"
+              accesskey="&TModeTrace.aKey;"/>
+            <menuitem id="menu_TModeBreak"
+              observes="cmd_tmode_break" type="radio"
+              label="&TModeBreak.label;"
+              accesskey="&TModeBreak.aKey;"/>
+            <menuseparator/>
+
+            <menuitem id="menu_initAtStartup" observes="cmd_init_at_startup"
+              type="checkbox"
+              label="&InitAtStartup.label;" accesskey="&InitAtStartup.aKey;"/>
           </menupopup>
         </menu>
 

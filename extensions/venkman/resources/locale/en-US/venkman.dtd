@@ -34,37 +34,35 @@
    -
    -->
 
-<!ENTITY app.name.short "venkman">
-<!ENTITY app.name.long "JavaScript Debugger">
-<!ENTITY app.version "prototype_a">
-<!ENTITY app.author "mozilla.org">
-
 <!ENTITY MainWindow.title "JavaScript Debugger">
-<!ENTITY Reload.label "Reload">
-<!ENTITY Reload.aKey "R">
-<!ENTITY Debug.label "Debug">
-<!ENTITY Debug.aKey "D">
-<!ENTITY Cont.label "Continue">
-<!ENTITY Cont.aKey "C">
-<!ENTITY StepIn.label "Step Into">
-<!ENTITY StepIn.aKey "I">
-<!ENTITY StepOver.label "Step Over">
-<!ENTITY StepOver.aKey "O">
-<!ENTITY StepOut.label "Step Out">
-<!ENTITY StepOut.aKey "T">
-<!ENTITY Stop.label "Stop">
-<!ENTITY Stop.aKey "p">
-<!ENTITY TModeMenu.label "Exceptions">
-<!ENTITY TModeMenu.aKey "E">
-<!ENTITY TModeIgnore.label "Ignore">
-<!ENTITY TModeIgnore.aKey "I">
-<!ENTITY TModeTrace.label "Trace">
-<!ENTITY TModeTrace.aKey "T">
-<!ENTITY TModeBreak.label "Break">
-<!ENTITY TModeBreak.aKey "B">
-<!ENTITY TModeCycle.label "Cycle">
-<!ENTITY TModeCycle.aKey "C">
 
+<!-- view menu -->
+<!ENTITY Reload.label        "Reload">
+<!ENTITY Reload.aKey         "R">
+
+<!-- debug menu -->
+<!ENTITY Debug.label         "Debug">
+<!ENTITY Debug.aKey          "D">
+<!ENTITY Cont.label          "Continue">
+<!ENTITY Cont.aKey           "C">
+<!ENTITY StepIn.label        "Step Into">
+<!ENTITY StepIn.aKey              "I">
+<!ENTITY StepOver.label      "Step Over">
+<!ENTITY StepOver.aKey            "O">
+<!ENTITY StepOut.label       "Step Out">
+<!ENTITY StepOut.aKey         "t">
+<!ENTITY Stop.label          "Stop">
+<!ENTITY Stop.aKey              "p">
+<!ENTITY TModeIgnore.label   "Ignore Exceptions">
+<!ENTITY TModeIgnore.aKey     "g">
+<!ENTITY TModeTrace.label    "Trace Exceptions">
+<!ENTITY TModeTrace.aKey      "r">
+<!ENTITY TModeBreak.label    "Stop for Exceptions">
+<!ENTITY TModeBreak.aKey              "E">
+<!ENTITY InitAtStartup.label "Initialize at Startup">
+<!ENTITY InitAtStartup.aKey   "n">
+
+<!-- toolips -->
 <!ENTITY Cont.tooltip "Continue debugging">
 <!ENTITY Stop.tooltip "Stop the current operation">
 <!ENTITY StepOver.tooltip "Step over statement">
@@ -73,6 +71,7 @@
 <!ENTITY DebugBar.tooltip "Debugging Toolbar">
 <!ENTITY MenuBar.tooltip "Menu Bar">
 
+<!-- status bar -->
 <!ENTITY StatusText.label "Welcome to the JavaScript Debugger">
 
 <!-- source outliner -->

@@ -403,8 +403,16 @@ function init()
     display(getMsg(MSN_VERSION, console.version), MT_HELLO);
     displayCommands();
 
-    console._statusElement = document.getElementById ("status-text");
+    console.ui = new Object();
+    console.ui["menu_initAtStartup"] =
+        document.getElementById ("menu_initAtStartup");
+    console.ui["menu_TModeIgnore"] = document.getElementById("menu_TModeIgnore");
+    console.ui["menu_TModeTrace"] = document.getElementById("menu_TModeTrace");
+    console.ui["menu_TModeBreak"] = document.getElementById("menu_TModeBreak");
+    console.ui["status-text"] = document.getElementById ("status-text");
+
     console._statusStack = new Array();
+
     startupTests();
 }
 
@@ -570,7 +578,7 @@ console.load = load;
 console.__defineGetter__ ("status", con_getstatus);
 function con_getstatus ()
 {
-    return console._statusElement.getAttribute ("label");
+    return console.ui["status-text"].getAttribute ("label");
 }
 
 console.__defineSetter__ ("status", con_setstatus);
@@ -579,7 +587,7 @@ function con_setstatus (msg)
     if (!msg)
         msg = console._statusStack[console._statusStack.length - 1];
     
-    console._statusElement.setAttribute ("label", msg);
+    console.ui["status-text"].setAttribute ("label", msg);
 }
 
 console.pushStatus =
