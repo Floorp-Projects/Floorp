@@ -88,7 +88,7 @@
   <vbox id="folderbox" flex="1">
     <separator/>
     <hbox flex="1">
-      <label id="createinlabel" value="&createin.label;"/>
+      <label id="movetolabel" value="&moveto.label;"/>
       <hbox flex="1">
         <bookmarks-tree id="bookmarks-view" flex="1" type="folders"/>
         <vbox>
