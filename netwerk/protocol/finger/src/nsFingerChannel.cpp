@@ -30,8 +30,11 @@
 #include "nsISocketTransportService.h"
 #include "nsIStringStream.h"
 #include "nsMimeTypes.h"
+#include "nsIStreamConverterService.h"
+#include "nsITXTToHTMLConv.h"
 
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
+static NS_DEFINE_CID(kStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
 
 #define BUFFER_SEG_SIZE (4*1024)
 #define BUFFER_MAX_SIZE (64*1024)
@@ -267,7 +270,7 @@ nsFingerChannel::SetLoadAttributes(PRUint32 aLoadAttributes)
     return NS_OK;
 }
 
-#define FINGER_TYPE TEXT_PLAIN
+#define FINGER_TYPE TEXT_HTML
 
 NS_IMETHODIMP
 nsFingerChannel::GetContentType(char* *aContentType) {
@@ -466,7 +469,28 @@ nsFingerChannel::OnStopRequest(nsIChannel* aChannel, nsISupports* aContext,
         // we're no longer acting as an observer.
  
         mActAsObserver = PR_FALSE;
-        return aChannel->AsyncRead(this, mResponseContext);
+        nsCOMPtr<nsIStreamListener> converterListener;
+
+        NS_WITH_SERVICE(nsIStreamConverterService, StreamConvService,
+                         kStreamConverterServiceCID, &rv);
+        if (NS_FAILED(rv)) return rv;
+
+        nsAutoString fromStr; fromStr.AssignWithConversion("text/plain");
+        nsAutoString toStr; toStr.AssignWithConversion("text/html");
+
+        rv = StreamConvService->AsyncConvertData(fromStr.GetUnicode(),
+              toStr.GetUnicode(), this, mResponseContext,
+              getter_AddRefs(converterListener));
+        if (NS_FAILED(rv)) return rv;
+
+        nsCOMPtr<nsITXTToHTMLConv> converter(do_QueryInterface(converterListener));
+        if (converter) {
+          nsAutoString title; title.AssignWithConversion("Finger Results");
+          converter->SetTitle(title.GetUnicode());
+          converter->PreFormatHTML(PR_TRUE);
+        }
+
+        return aChannel->AsyncRead(converterListener, mResponseContext);
     }
 
 }
