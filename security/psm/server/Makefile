@@ -314,8 +314,10 @@ ifneq ($(OS_ARCH), WINNT)
 endif
 	$(NSINSTALL) -m 755 $(PROGRAM) xpi/psm
 ifneq ($(OS_ARCH), WINNT)
-	cd $(PLATFORM); ../$(DIST)/bin/regxpcom
-	cp $(PLATFORM)/component.reg xpi/psm
+	$(NSINSTALL) -m 755 $(DIST)/bin/regxpcom $(PLATFORM)
+	$(NSINSTALL) -m 755 start-regxpcom $(PLATFORM)
+	cd $(PLATFORM); start-regxpcom
+	$(NSINSTALL) -m 644 $(PLATFORM)/component.reg xpi/psm
 endif
 	cp $(INSTALL_JS) xpi/install.js
 	cd xpi; zip -T -r ../$(PLATFORM)/psm.xpi psm install.js
