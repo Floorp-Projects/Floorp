@@ -164,15 +164,8 @@ nsProxyObject::Post( PRUint32 methodIndex, nsXPTMethodInfo *methodInfo, nsXPTCMi
 
     nsXPTCVariant   *fullParam = (nsXPTCVariant*)malloc(sizeof(nsXPTCVariant) * paramCount);
     
-    for (int index = 0; index < paramCount; index++)
-    {
-		const nsXPTParamInfo& param = methodInfo->GetParam(index);
-        const nsXPTType& type = param.GetType();
-        
-        fullParam[index].val   = params[index].val;
-		fullParam[index].type  = type;
-        fullParam[index].flags = 0;
-    }
+    for (int i = 0; i < paramCount; i++)
+        fullParam[i].Init(params[i], methodInfo->GetParam(i).GetType());
     
     mDestQueue->EnterMonitor();
     
