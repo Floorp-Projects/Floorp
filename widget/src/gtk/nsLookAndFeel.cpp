@@ -310,6 +310,13 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
    case eMetric_DragFullWindow:
     aMetric = 1;
     break;
+   case eMetric_ScrollArrowStyle:
+    aMetric = eMetric_ScrollArrowStyleSingle;
+    break;
+   case eMetric_ScrollSliderStyle:
+    aMetric = eMetric_ScrollThumbStyleProportional;
+    break;
+
   default:
     aMetric = 0;
     res     = NS_ERROR_FAILURE;

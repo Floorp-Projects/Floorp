@@ -116,9 +116,23 @@ public:
     eMetric_MultiLineCaretWidth,                          // pixel width of caret in a multi-line field
     eMetric_SubmenuDelay,                                 // delay before submenus open
     eMetric_MenusCanOverlapOSBar,                         // can popups overlap menu/task bar?
-    eMetric_DragFullWindow                                // show window contents while dragging?
+    eMetric_DragFullWindow,                               // show window contents while dragging?
+    
+    eMetric_ScrollArrowStyle,                             // position of scroll arrows in a scrollbar
+    eMetric_ScrollSliderStyle                             // is scroll thumb proportional or fixed?
   } nsMetricID;
 
+  enum {
+    eMetric_ScrollArrowStyleSingle,                       // single arrow at each end
+    eMetric_ScrollArrowStyleBothAtBottom,                 // both arrows at bottom/right, none at top/left
+    eMetric_ScrollArrowStyleBothAtEachEnd,                // both arrows at both ends
+    eMetric_ScrollArrowStyleBothAtTop                     // both arrows at top/left, none at bottom/right
+  };
+  enum {
+    eMetric_ScrollThumbStyleNormal,
+    eMetric_ScrollThumbStyleProportional
+  };
+  
   typedef enum {
     eMetricFloat_TextFieldVerticalInsidePadding,
     eMetricFloat_TextFieldHorizontalInsidePadding,
