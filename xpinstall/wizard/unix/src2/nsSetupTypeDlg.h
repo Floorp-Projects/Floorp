@@ -28,6 +28,7 @@
 #include <sys/stat.h>
 #include "nsXInstallerDlg.h"
 #include "nsSetupType.h"
+#include "nsObjectIgnore.h"
 #include "nsLegacyCheck.h"
 
 class nsSetupTypeDlg : public nsXInstallerDlg
@@ -61,6 +62,7 @@ public:
     static void         DeleteInstDelete(GtkWidget *aWidget, gpointer aData);
     static void         DeleteInstCancel(GtkWidget *aWidget, gpointer aData);
     static int          ConstructPath(char *aDest, char *aTrunk, char *aLeaf);
+    static int          CheckDestEmpty();
     static int          VerifyDiskSpace();
     static int          DSAvailable();
     static int          DSRequired();
