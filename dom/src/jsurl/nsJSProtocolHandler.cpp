@@ -198,6 +198,7 @@ nsJSProtocolHandler::NewChannel(const char* verb,
                                 nsIChannel* *result)
 {
     NS_ENSURE_ARG_POINTER(uri);
+    NS_ENSURE_ARG_POINTER(notificationCallbacks);
 
     nsresult rv;
 
