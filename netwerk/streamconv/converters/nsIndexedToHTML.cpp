@@ -443,6 +443,7 @@ NS_IMETHODIMP
 nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
                                   nsISupports *aCtxt,
                                   nsIDirIndex *aIndex) {
+    nsresult rv;
     if (!aIndex)
         return NS_ERROR_NULL_POINTER;
 
@@ -460,7 +461,21 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
     nsXPIDLCString loc;
     aIndex->GetLocation(getter_Copies(loc));
     
-    pushBuffer.AppendWithConversion(loc);
+    if (!mTextToSubURI) {
+        mTextToSubURI = do_GetService(NS_ITEXTTOSUBURI_CONTRACTID, &rv);
+        if (NS_FAILED(rv)) return rv;
+    }
+    
+    nsXPIDLCString encoding;
+    rv = mParser->GetEncoding(getter_Copies(encoding));
+    if (NS_FAILED(rv)) return rv;
+
+    nsXPIDLString unEscapeSpec;
+    rv = mTextToSubURI->UnEscapeAndConvert(encoding, loc,
+                                           getter_Copies(unEscapeSpec));
+    if (NS_FAILED(rv)) return rv;
+    
+    pushBuffer.Append(unEscapeSpec);
 
     pushBuffer.Append(NS_LITERAL_STRING("\"><img src=\""));
 
