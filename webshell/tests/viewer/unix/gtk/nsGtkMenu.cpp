@@ -136,12 +136,6 @@ GtkItemFactoryEntry menu_items[] =
   { "/Style/_Gfx Scrollbars Mode",		nsnull,	nsnull,			0,			"<Branch>" },
   { "/Style/Gfx Scrollbars Mode/Gfx On",	nsnull,	(GIFC)gtk_ifactory_cb,	VIEWER_GFX_SCROLLBARS_ON,	nsnull },
   { "/Style/Gfx Scrollbars Mode/Gfx Off",	nsnull,	(GIFC)gtk_ifactory_cb,	VIEWER_GFX_SCROLLBARS_OFF,	nsnull },
-  { "/Style/Gfx _Combobox Mode",		nsnull,	nsnull,			0,			"<Branch>" },
-  { "/Style/Gfx Combobox Mode/Gfx On",	nsnull,	(GIFC)gtk_ifactory_cb,	VIEWER_GFX_COMBOBOX_ON,	nsnull },
-  { "/Style/Gfx Combobox Mode/Gfx Off",	nsnull,	(GIFC)gtk_ifactory_cb,	VIEWER_GFX_COMBOBOX_OFF,	nsnull },
-  { "/Style/Gfx _Listbox Mode",		nsnull,	nsnull,			0,			"<Branch>" },
-  { "/Style/Gfx Listbox Mode/Gfx On",	nsnull,	(GIFC)gtk_ifactory_cb,	VIEWER_GFX_LISTBOX_ON,	nsnull },
-  { "/Style/Gfx Listbox Mode/Gfx Off",	nsnull,	(GIFC)gtk_ifactory_cb,	VIEWER_GFX_LISTBOX_OFF,	nsnull },
 //#endif
 
   { "/_URLs",                                nsnull, nsnull,                 0,              "<Branch>" },
