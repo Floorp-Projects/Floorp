@@ -116,6 +116,7 @@ protected:
   // Spacing style for the frame we are reflowing; only valid after reflow
   const nsStyleSpacing* mStyleSpacing;
 
+  nscoord mComputedWidth;               // copy of reflowstate's computedWidth
   nsMargin mMargin;
   nscoord mX, mY;
   nsHTMLReflowMetrics mMetrics;
