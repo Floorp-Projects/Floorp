@@ -1122,18 +1122,25 @@ orkinTable::MoveOid( // change position of row in unsorted table
   nsIMdbEnv* mev, // context
   const mdbOid* inOid,  // row oid to find in table
   mdb_pos inHintFromPos, // suggested hint regarding start position
-  mdb_pos inToPos,       // desired new position for row inRowId
+  mdb_pos inToPos,       // desired new position for row inOid
   mdb_pos* outActualPos) // actual new position of row in table
 {
-  MORK_USED_3(inHintFromPos,inToPos,inOid);
   mdb_err outErr = 0;
-  mdb_pos actualPos = 0;
+  mdb_pos actualPos = -1; // meaning it was never found in table
   morkEnv* ev = this->CanUseTable(mev, /*inMutable*/ morkBool_kFalse, &outErr);
   if ( ev )
   {
-    // remember table->MaybeDirtySpaceStoreAndTable();
+    morkTable* table = (morkTable*) mHandle_Object;
+    morkStore* store = table->mTable_Store;
+    if ( inOid && store )
+    {
+      morkRow* row = store->GetRow(ev, inOid);
+      if ( row )
+        actualPos = table->MoveRow(ev, row, inHintFromPos, inToPos);
+    }
+    else
+      ev->NilPointerError();
 
-    ev->StubMethodOnlyError();
     outErr = ev->AsErr();
   }
   if ( outActualPos )
@@ -1146,18 +1153,21 @@ orkinTable::MoveRow( // change position of row in unsorted table
   nsIMdbEnv* mev, // context
   nsIMdbRow* ioRow,  // row oid to find in table
   mdb_pos inHintFromPos, // suggested hint regarding start position
-  mdb_pos inToPos,       // desired new position for row inRowId
+  mdb_pos inToPos,       // desired new position for row ioRow
   mdb_pos* outActualPos) // actual new position of row in table
 {
-  MORK_USED_3(inHintFromPos,inToPos,ioRow);
-  mdb_pos actualPos = 0;
+  mdb_pos actualPos = -1; // meaning it was never found in table
   mdb_err outErr = 0;
   morkEnv* ev = this->CanUseTable(mev, /*inMutable*/ morkBool_kFalse, &outErr);
   if ( ev )
   {
-    // remember table->MaybeDirtySpaceStoreAndTable();
-    
-    ev->StubMethodOnlyError();
+    morkRow* row = 0;
+    orkinRow* orow = (orkinRow*) ioRow;
+    if ( orow->CanUseRow(mev, /*inMutable*/ morkBool_kFalse, &outErr, &row) )
+    {
+      morkTable* table = (morkTable*) mHandle_Object;
+      actualPos = table->MoveRow(ev, row, inHintFromPos, inToPos);
+    }
     outErr = ev->AsErr();
   }
   if ( outActualPos )

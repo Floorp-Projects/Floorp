@@ -207,8 +207,11 @@ morkTable::CutTableGcUse(morkEnv* ev)
 
 void morkTable::SetTableClean(morkEnv* ev)
 {
-  nsIMdbHeap* heap = mTable_Store->mPort_Heap;
-  mTable_ChangeList.CutAndZapAllListMembers(ev, heap); // forget changes
+  if ( mTable_ChangeList.HasListMembers() )
+  {
+    nsIMdbHeap* heap = mTable_Store->mPort_Heap;
+    mTable_ChangeList.CutAndZapAllListMembers(ev, heap); // forget changes
+  }
   mTable_ChangesCount = 0;
   
   mTable_Flags = 0;
@@ -242,6 +245,31 @@ void morkTable::NoteTableMoveRow(morkEnv* ev, morkRow* ioRow, mork_pos inPos)
   }
 }
 
+void morkTable::note_row_move(morkEnv* ev, morkRow* ioRow, mork_pos inNewPos)
+{
+  if ( this->IsTableRewrite() || this->HasChangeOverflow() )
+    this->NoteTableSetAll(ev);
+  else
+  {
+    nsIMdbHeap* heap = mTable_Store->mPort_Heap;
+    morkTableChange* tableChange = new(*heap, ev)
+      morkTableChange(ev, ioRow, inNewPos);
+    if ( tableChange )
+    {
+      if ( ev->Good() )
+      {
+        mTable_ChangeList.PushTail(tableChange);
+        ++mTable_ChangesCount;
+      }
+      else
+      {
+        tableChange->ZapOldNext(ev, heap);
+        this->NoteTableSetAll(ev);
+      }
+    }
+  }
+}
+
 void morkTable::note_row_change(morkEnv* ev, mork_change inChange,
   morkRow* ioRow)
 {
@@ -270,8 +298,11 @@ void morkTable::note_row_change(morkEnv* ev, mork_change inChange,
 
 void morkTable::NoteTableSetAll(morkEnv* ev)
 {
-  nsIMdbHeap* heap = mTable_Store->mPort_Heap;
-  mTable_ChangeList.CutAndZapAllListMembers(ev, heap); // forget changes
+  if ( mTable_ChangeList.HasListMembers() )
+  {
+    nsIMdbHeap* heap = mTable_Store->mPort_Heap;
+    mTable_ChangeList.CutAndZapAllListMembers(ev, heap); // forget changes
+  }
   mTable_ChangesCount = 0;
   this->SetTableRewrite();
 }
@@ -468,6 +499,118 @@ morkRow* morkTable::find_member_row(morkEnv* ev, morkRow* ioRow)
     }
   }
   return (morkRow*) 0;
+}
+
+mork_pos
+morkTable::MoveRow(morkEnv* ev, morkRow* ioRow, // change row position
+  mork_pos inHintFromPos, // suggested hint regarding start position
+  mork_pos inToPos) // desired new position for row ioRow
+  // MoveRow() returns the actual position of ioRow afterwards; this
+  // position is -1 if and only if ioRow was not found as a member.     
+{
+  mork_pos outPos = -1; // means ioRow was not a table member
+  mork_bool canDirty = ( this->IsTableClean() )?
+    this->MaybeDirtySpaceStoreAndTable() : morkBool_kTrue;
+  
+  morkRow** rows = (morkRow**) mTable_RowArray.mArray_Slots;
+  mork_count count = mTable_RowArray.mArray_Fill;
+  if ( count && rows && ev->Good() ) // any members at all? no errors?
+  {
+    mork_pos lastPos = count - 1; // index of last row slot
+      
+    if ( inToPos > lastPos ) // beyond last used array slot?
+      inToPos = lastPos; // put row into last available slot
+    else if ( inToPos < 0 ) // before first usable slot?
+      inToPos = 0; // put row in very first slow
+      
+    if ( inHintFromPos > lastPos ) // beyond last used array slot?
+      inHintFromPos = lastPos; // seek row in last available slot
+    else if ( inHintFromPos < 0 ) // before first usable slot?
+      inHintFromPos = 0; // seek row in very first slow
+
+    morkRow** fromSlot = 0; // becomes nonzero of ioRow is ever found
+    morkRow** rowsEnd = rows + count; // one past last used array slot
+    
+    if ( inHintFromPos <= 0 ) // start of table? just scan for row?
+    {
+      morkRow** cursor = rows - 1; // before first array slot
+      while ( ++cursor < rowsEnd )
+      {
+        if ( *cursor == ioRow )
+        {
+          fromSlot = cursor;
+          break; // end while loop
+        }
+      }
+    }
+    else // search near the start position and work outwards
+    {
+      morkRow** lo = rows + inHintFromPos; // lowest search point
+      morkRow** hi = lo; // highest search point starts at lowest point
+      
+      // Seek ioRow in spiral widening search below and above inHintFromPos.
+      // This is faster when inHintFromPos is at all accurate, but is slower
+      // than a straightforward scan when inHintFromPos is nearly random.
+      
+      while ( lo >= rows || hi < rowsEnd ) // keep searching?
+      {
+        if ( lo >= rows ) // low direction search still feasible?
+        {
+          if ( *lo == ioRow ) // actually found the row?
+          {
+            fromSlot = lo;
+            break; // end while loop
+          }
+          --lo; // advance further lower
+        }
+        if ( hi < rowsEnd ) // high direction search still feasible?
+        {
+          if ( *hi == ioRow ) // actually found the row?
+          {
+            fromSlot = hi;
+            break; // end while loop
+          }
+          ++hi; // advance further higher
+        }
+      }
+    }
+    
+    if ( fromSlot ) // ioRow was found as a table member?
+    {
+      outPos = fromSlot - rows; // actual position where row was found
+      if ( outPos != inToPos ) // actually need to move this row?
+      {
+        morkRow** toSlot = rows + inToPos; // slot where row must go
+        
+        ++mTable_RowArray.mArray_Seed; // we modify the array now:
+        
+        if ( fromSlot < toSlot ) // row is moving upwards?
+        {
+          morkRow** up = fromSlot; // leading pointer going upward
+          while ( ++up <= toSlot ) // have not gone above destination?
+          {
+            *fromSlot = *up; // shift down one
+            fromSlot = up; // shift trailing pointer up
+          }
+        }
+        else // ( fromSlot > toSlot ) // row is moving downwards
+        {
+          morkRow** down = fromSlot; // leading pointer going downward
+          while ( --down >= toSlot ) // have not gone below destination?
+          {
+            *fromSlot = *down; // shift up one
+            fromSlot = down; // shift trailing pointer
+          }
+        }
+        *toSlot = ioRow;
+        outPos = inToPos; // okay, we actually moved the row here
+
+        if ( canDirty )
+          this->note_row_move(ev, ioRow, inToPos);
+      }
+    }
+  }
+  return outPos;
 }
 
 mork_bool
