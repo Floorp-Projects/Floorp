@@ -28,7 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 ifdef MOZ_XSL
 MODULE = transformiix
-REQUIRES = string xpcom necko dom layout widget webbrwsr
+REQUIRES = string xpcom necko dom layout widget webbrwsr js docshell webshell gfx2 uriloader locale appshell xpconnect
 endif
 
 CPPSRCS = XMLParser.cpp
