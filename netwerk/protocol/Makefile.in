@@ -27,6 +27,7 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS=		 \
 	about	 \
+	data	 \
 	file	 \
 	resource \
 	ftp	 \
