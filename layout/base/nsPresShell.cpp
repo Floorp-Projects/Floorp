@@ -2001,6 +2001,22 @@ PresShell::ArePrefStyleRulesEnabled(PRBool& aEnabled)
 NS_IMETHODIMP
 PresShell::SetPreferenceStyleRules(PRBool aForceReflow)
 {
+  if (!mDocument) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  nsCOMPtr<nsIScriptGlobalObject> globalObj;
+	mDocument->GetScriptGlobalObject(getter_AddRefs(globalObj));
+
+  // If the document doesn't have a global object there's no need to
+  // notify its presshell about changes to preferences since the
+  // document is in a state where it doesn't matter any more (see
+  // DocumentViewerImpl::Close()).
+
+  if (!globalObj) {
+    return NS_ERROR_NULL_POINTER;
+  } 
+
   NS_PRECONDITION(mPresContext, "presContext cannot be null");
   if (mPresContext) {
     nsresult result = NS_OK;
@@ -2081,9 +2097,9 @@ PresShell::SetPreferenceStyleRules(PRBool aForceReflow)
 
     return result;
 
-  } else {
-    return NS_ERROR_NULL_POINTER;
   }
+
+  return NS_ERROR_NULL_POINTER;
 }
 
 nsresult PresShell::ClearPreferenceStyleRules(void)
@@ -3244,9 +3260,6 @@ PresShell::CompleteMove(PRBool aForward, PRBool aExtend)
         result = GetPrimaryFrameFor(bodyContent, &frame);
         if (frame)
         {
-          PRInt32 offset;
-          PRInt32 offsetend;
-          PRBool  beginFrameContent;
           PRInt8  outsideLimit = -1;//search from beginning
           nsPeekOffsetStruct pos;
           pos.mAmount = eSelectLine;
