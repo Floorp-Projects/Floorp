@@ -655,17 +655,6 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
                 }
             }
 
-            // XXX Hackery to ensure that mailnews works. Force the
-            // element to hold a reference to the
-            // resource. Unfortunately, this'll break for HTML
-            // elements.
-            {
-                nsCOMPtr<nsIXULContent> xulele = do_QueryInterface(realKid);
-                if (xulele) {
-                    xulele->ForceElementToOwnResource(PR_TRUE);
-                }
-            }
-
             // Set up the element's 'container' and 'empty'
             // attributes.
             PRBool iscontainer, isempty;

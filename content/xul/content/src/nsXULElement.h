@@ -22,7 +22,7 @@
  * Contributor(s):
  *   Chris Waterson <waterson@netscape.com>
  *   Peter Annema <disttsc@bart.nl>
- *
+ *   Mike Shaver <shaver@mozilla.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -355,13 +355,12 @@ public:
     static void ReleaseGlobals() { NS_IF_RELEASE(gXBLService); }
 
 protected:
-    // pseudo-constants
     static nsrefcnt             gRefCnt;
+    // pseudo-constants
     static nsIRDFService*       gRDFService;
     static nsINameSpaceManager* gNameSpaceManager;
     static PRInt32              kNameSpaceID_RDF;
     static PRInt32              kNameSpaceID_XUL;
-
 
 public:
     static nsresult
@@ -449,7 +448,6 @@ public:
     NS_IMETHOD ClearLazyState(PRInt32 aFlags);
     NS_IMETHOD GetLazyState(PRInt32 aFlag, PRBool& aValue);
     NS_IMETHOD AddScriptEventListener(nsIAtom* aName, const nsAReadableString& aValue);
-    NS_IMETHOD ForceElementToOwnResource(PRBool aForce);
     
     // nsIDOMNode (from nsIDOMElement)
     NS_DECL_NSIDOMNODE
@@ -529,16 +527,23 @@ protected:
     nsIContent*                         mParent;             // [WEAK]
     nsCheapVoidArray                    mChildren;           // [OWNER]
     nsCOMPtr<nsIEventListenerManager>   mListenerManager;    // [OWNER]
-#ifdef DEBUG
-    PRBool                              mIsScriptObjectRooted;
-#endif
 
-    // The nearest enclosing content node with a binding
-    // that created us. [Weak]
+    /**
+     * The state of our sloth for lazy content model construction via
+     * RDF; see nsIXULContent and nsRDFGenericBuilder.
+     */
+    PRInt32                             mLazyState;
+
+    /**
+     * The nearest enclosing content node with a binding
+     * that created us. [Weak]
+     */
     nsIContent*                         mBindingParent;
 
-    // Lazily instantiated if/when object is mutated. Instantiating
-    // the mSlots makes an nsXULElement 'heavyweight'.
+    /**
+     * Lazily instantiated if/when object is mutated. mAttributes are
+     * lazily copied from the prototype when changed.
+     */
     struct Slots {
         Slots(nsXULElement* mElement);
         ~Slots();
@@ -547,24 +552,73 @@ protected:
         nsCOMPtr<nsINameSpace>              mNameSpace;          // [OWNER]
         nsCOMPtr<nsINodeInfo>               mNodeInfo;           // [OWNER]
         nsVoidArray*                        mBroadcastListeners; // [WEAK]
-        nsIDOMXULElement*                   mBroadcaster;        // [WEAK]
         nsCOMPtr<nsIControllers>            mControllers;        // [OWNER]
-        nsCOMPtr<nsIRDFResource>            mOwnedResource;      // [OWNER]
+
+        /**
+         * Attribute values that override the values from the prototype.
+         */
         nsXULAttributes*                    mAttributes;
 
-        // The state of our sloth for lazy content model construction via
-        // RDF; see nsIXULContent and nsRDFGenericBuilder.
+        /**
+         * The state of our sloth for lazy content model construction via
+         * RDF; see nsIXULContent and nsRDFGenericBuilder.
+         */
         PRInt32                             mLazyState;
 
-        // An unreferenced bare pointer to an aggregate that can
-        // implement element-specific APIs.
+        /**
+         * An unreferenced bare pointer to an aggregate that can
+         * implement element-specific APIs.
+         */
         nsXULAggregateElement*              mInnerXULElement;
     };
 
     friend struct Slots;
     Slots* mSlots;
+
+    /**
+     * Ensure that we've got an mSlots object, creating a Slots object
+     * if necessary.
+     */
     nsresult EnsureSlots();
 
+    /**
+     * Ensure that our mSlots has an mAttributes, creating an
+     * nsXULAttributes object if necessary.
+     */
+    nsresult EnsureAttributes();
+
+    /**
+     * Abandon our prototype linkage, and copy all attributes locally
+     */
+    nsresult MakeHeavyweight();
+
+    /**
+     * Return our private copy of the attribute, if one exists.
+     */
+    nsXULAttribute *FindLocalAttribute(nsINodeInfo *info) const;
+
+    /**
+     * Return our private copy of the attribute, if one exists.
+     */
+    nsXULAttribute *FindLocalAttribute(PRInt32 aNameSpaceID,
+                                       nsIAtom *aName,
+                                       PRInt32 *aIndex = nsnull) const;
+
+    /**
+     * Return our prototype's attribute, if one exists.
+     */
+    nsXULPrototypeAttribute *FindPrototypeAttribute(nsINodeInfo *info) const;
+
+    /**
+     * Return our prototype's attribute, if one exists.
+     */
+    nsXULPrototypeAttribute *FindPrototypeAttribute(PRInt32 aNameSpaceID,
+                                                    nsIAtom *aName) const;
+    /**
+     * Add a listener for the specified attribute, if appropriate.
+     */
+    nsresult AddListenerFor(nsINodeInfo *aNodeInfo,
+                            PRBool aCompileEventHandlers);
 
 protected:
     // Internal accessors. These shadow the 'Slots', and return
@@ -573,9 +627,7 @@ protected:
     nsINameSpace*              NameSpace() const       { return mSlots ? mSlots->mNameSpace.get()       : mPrototype->mNameSpace.get(); }
     nsINodeInfo*               NodeInfo() const        { return mSlots ? mSlots->mNodeInfo              : mPrototype->mNodeInfo; }
     nsVoidArray*               BroadcastListeners() const { return mSlots ? mSlots->mBroadcastListeners       : nsnull; }
-    nsIDOMXULElement*          Broadcaster() const        { return mSlots ? mSlots->mBroadcaster              : nsnull; }
     nsIControllers*            Controllers() const        { return mSlots ? mSlots->mControllers.get()        : nsnull; }
-    nsIRDFResource*            OwnedResource() const      { return mSlots ? mSlots->mOwnedResource.get()      : nsnull; }
     nsXULAttributes*           Attributes() const         { return mSlots ? mSlots->mAttributes               : nsnull; }
     nsXULAggregateElement*     InnerXULElement() const    { return mSlots ? mSlots->mInnerXULElement          : nsnull; }
 
