@@ -87,7 +87,7 @@ nsresult StringUnicharInputStream::Read(PRUnichar* aBuf,
   if (amount > aCount) {
     amount = aCount;
   }
-  nsCRT::memcpy(aBuf + aOffset, us + mPos, sizeof(PRUnichar) * amount);
+  nsCRT::memcpy(aBuf, us + mPos, sizeof(PRUnichar) * amount);
   mPos += amount;
   *aReadCount = amount;
   return NS_OK;
