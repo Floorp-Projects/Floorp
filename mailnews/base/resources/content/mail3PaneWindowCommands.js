@@ -606,7 +606,7 @@ function CommandUpdate_UndoRedo()
     EnableMenuItem("menu_redo", SetupUndoRedoCommand("cmd_redo"));
 }
 
-/*function MessagePaneHasFocus()
+function MessagePaneHasFocus()
 {
 	var focusedWindow = top.document.commandDispatcher.focusedWindow;
 	var messagePaneWindow = top.frames['messagepane'];
@@ -633,7 +633,7 @@ function IsSubWindowOf(search, wind, found)
 			return true;
 	}
 	return false;
-}*/
+}
 
 
 function SetupCommandUpdateHandlers()
@@ -862,5 +862,76 @@ function SetTemplateTreeItemOpen(open)
 		else
 			templateTreeItem.removeAttribute("open");
 	}
+}
+
+function SwitchPaneFocus(event)
+{
+	if (event && (event.shiftKey))
+	{
+		dump("Inside the SwitchPaneFocus \n");
+		var focusedElement = document.commandDispatcher.focusedElement;
+		var focusedElementId="";
+
+		if ( MessagePaneHasFocus() )
+			SetFocusThreadPane();
+		else 
+		{
+			try 
+			{ 
+				focusedElementId = focusedElement.getAttribute('id');
+				if(focusedElementId == "threadTree")
+					SetFocusFolderPane();
+				else if(focusedElementId == "folderTree")
+					SetFocusMessagePane();
+			}
+			catch(e) 
+			{
+				SetFocusMessagePane();
+			}
+		}
+	}
+	else
+	{
+		dump("Inside the SwitchPaneFocus \n");
+		var focusedElement = document.commandDispatcher.focusedElement;
+		var focusedElementId="";
+
+		if ( MessagePaneHasFocus() )
+			SetFocusFolderPane();
+		else 
+		{
+			try 
+			{ 
+				focusedElementId = focusedElement.getAttribute('id');
+				if(focusedElementId == "threadTree")
+					SetFocusMessagePane();
+				else if(focusedElementId == "folderTree")
+					SetFocusThreadPane();
+			}
+			catch(e) 
+			{
+				SetFocusMessagePane();
+			}
+		}
+	}
+
+}
+
+function SetFocusFolderPane()
+{
+	document.getElementById("folderTree").focus();
+	return;
+}
+
+function SetFocusThreadPane()
+{
+	document.getElementById("threadTree").focus();
+	return;
+}
+
+function SetFocusMessagePane()
+{
+	top.frames['messagepane'].focus();
+	return;
 }
 

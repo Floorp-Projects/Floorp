@@ -147,6 +147,9 @@ Rights Reserved.
 	<key id="key_find" key="&findCmd.key;" xulkey="true" shift="false" observes="cmd_find"/>
 	<key id="key_findAgain" key="&findAgainCmd.key;" xulkey="true" shift="false" observes="cmd_findAgain"/>
 
+	<!-- Tab Keys -->
+	<key id="tabpane" keycode="VK_TAB" onkeypress="SwitchPaneFocus(event)" />
+
 </keyset>
 
 	<popup id="threadPaneContext" oncreate="return fillThreadPaneContextMenu();" >
