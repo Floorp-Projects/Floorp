@@ -472,7 +472,7 @@ static REGERR nr_ReadFile(FILEHANDLE fh, REGOFF offset, int32 len, void *buffer)
             /* we'll assume the read was OK--this is a gamble but */
             /* missing errors will cause fewer problems than too many. */
             p = (unsigned char*)buffer + readlen;
-            while ( (*p == (unsigned char)FILLCHAR) && (p < dbgend) ) {
+            while ( (p < dbgend) && (*p == (unsigned char)FILLCHAR) ) {
                 p++;
             }
 
