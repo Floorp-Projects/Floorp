@@ -268,7 +268,7 @@ sftk_getCrl(SFTKTokenObject *object)
 	return (certDBEntryRevocation *)object->obj.objectInfo;
     }
 
-    isKrl = (PRBool) object->obj.handle == SFTK_TOKEN_KRL_HANDLE;
+    isKrl = (PRBool) (object->obj.handle == SFTK_TOKEN_KRL_HANDLE);
     crl = nsslowcert_FindCrlByKey(object->obj.slot->certDB,
 							&object->dbKey, isKrl);
     object->obj.objectInfo = (void *)crl;
