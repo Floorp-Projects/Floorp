@@ -52,6 +52,7 @@ nsXInstaller::ParseConfig()
     if (err != nsINIParser::OK)
         return err;
 
+    XI_ERR_BAIL(ParseGeneral(parser));
     XI_ERR_BAIL(gCtx->ldlg->Parse(parser));
     XI_ERR_BAIL(gCtx->wdlg->Parse(parser));
     XI_ERR_BAIL(gCtx->cdlg->Parse(parser)); // components before setup type
@@ -251,21 +252,18 @@ nsXInstaller::DrawNavButtons()
 }
 
 int
-nsXInstaller::Download()
+nsXInstaller::ParseGeneral(nsINIParser *aParser)
 {
-    return OK;
-}
+    int     err = OK;
+    char    *dest = NULL;
+    int     size = 0;
+ 
+    /* optional: destination directory can be specified in config.ini */
+    err = aParser->GetStringAlloc(GENERAL, DEFAULT_LOCATION, &dest, &size);
+    if (err == OK)
+        gCtx->opt->mDestination = dest;
 
-int
-nsXInstaller::Extract()
-{
-    return OK;
-}
-
-int
-nsXInstaller::Install()
-{
-    return OK;
+    return err;
 }
 
 int

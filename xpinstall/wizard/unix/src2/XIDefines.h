@@ -40,6 +40,13 @@
 #define DEST_DIR "Destination Directory"
 #define BROWSE "Browse..."
 #define SELECT_DIR "Select a directory"
+#define DOESNT_EXIST "Directory %s doesn't exist.  Create it?\n"
+#define YES_LABEL "Yes"
+#define NO_LABEL "No"
+#define OK_LABEL "OK"
+#define ERROR "Error [%d]: %s\n" 
+#define FATAL_ERROR "Fatal error [%d]: %s\n"
+#define WARNING "Warning [%d]: %s\n"
 #define DESCRIPTION "Description"
 #define DOWNLOADING "Downloading..."
 #define PREPARING "Preparing installer modules..."
@@ -69,6 +76,9 @@
 /*--------------------------------------------------------------------*
  *   Parse Keys
  *--------------------------------------------------------------------*/
+#define GENERAL             "General"
+#define DEFAULT_LOCATION    "Default Location" 
+
 #define DLG_WELCOME         "Dialog Welcome"
 #define SHOW_DLG            "Show Dialog"
 #define TITLE               "Title"

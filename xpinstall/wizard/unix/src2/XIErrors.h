@@ -29,6 +29,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <gtk/gtk.h>
 
 /*------------------------------------------------------------------*
  *   X Installer Errors
@@ -53,16 +54,19 @@
         E_NO_DOWNLOAD   = -615,     /* download failed  */
         E_EXTRACTION    = -616,     /* extraction of xpcom failed */
         E_FORK_FAILED   = -617,     /* failed to fork a process */
-        E_LIB_OPEN      = -418,     /* couldn't open stub lib */
-        E_LIB_SYM       = -419,     /* couldn't get symbol in lib */
+        E_LIB_OPEN      = -618,     /* couldn't open stub lib */
+        E_LIB_SYM       = -619,     /* couldn't get symbol in lib */
         E_XPI_FAIL      = -420,     /* a xpistub call failed */
         E_INSTALL       = -421,     /* a .xpi failed to install */
-        E_CP_FAIL       = -622      /* copy of a xpi failed */
+        E_CP_FAIL       = -622,     /* copy of a xpi failed */
+        E_NO_DEST       = -623,     /* destination dir doesn't exist */
+        E_MKDIR_FAIL    = -624      /* can't make destination dir */
     };
 
 #define FATAL_ERR_THRESHOLD -500    /* errs below this cause app quit */
 #define GENERAL_ERR_THRESHOLD -1    /* errs below this cause dlg to come up*/
 
-int ErrorHandler(int aErr);
+int     ErrorHandler(int aErr);
+void    ErrDlgOK(GtkWidget *aWidget, gpointer aData);
 
 #endif /* _XI_ERRORS_H_ */

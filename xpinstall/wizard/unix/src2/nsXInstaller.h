@@ -45,9 +45,7 @@ public:
 
     int ParseConfig();
     int RunWizard(int argc, char **argv);
-    int Download();
-    int Extract();
-    int Install();
+    int ParseGeneral(nsINIParser *aParser);
 
     static gint Kill(GtkWidget *widget, GtkWidget *event, gpointer data);
 

@@ -29,6 +29,7 @@ static GtkWidget        *sBrowseBtn;
 static gint             sBrowseBtnID;
 static GtkWidget        *sFolder;
 static GSList           *sGroup;
+static GtkWidget        *sCreateDestDlg;
 
 nsSetupTypeDlg::nsSetupTypeDlg() :
     mMsg0(NULL),
@@ -78,6 +79,10 @@ nsSetupTypeDlg::Next(GtkWidget *aWidget, gpointer aData)
         gCtx->bMoving = FALSE;
         return;
     }
+
+    // verify selected destination directory exists
+    if (OK != nsSetupTypeDlg::VerifyDestination())
+        return;
 
     // hide this notebook page
     gCtx->sdlg->Hide(nsXInstallerDlg::FORWARD_MOVE);
@@ -324,8 +329,11 @@ nsSetupTypeDlg::Show(int aDirection)
         gtk_table_attach_defaults(GTK_TABLE(destTable), frame, 0, 2, 0, 1);
         gtk_widget_show(frame);
 
-        gCtx->opt->mDestination = (char *) malloc(1024 * sizeof(char));
-        getcwd(gCtx->opt->mDestination, 1024);
+        if (!gCtx->opt->mDestination)
+        {
+            gCtx->opt->mDestination = (char *) malloc(1024 * sizeof(char));
+            getcwd(gCtx->opt->mDestination, 1024);
+        }
         sFolder = gtk_label_new(gCtx->opt->mDestination);
         gtk_label_set_line_wrap(GTK_LABEL(sFolder), TRUE);
         gtk_widget_show(sFolder);
@@ -535,12 +543,12 @@ nsSetupTypeDlg::SelectFolderOK(GtkWidget *aWidget, GtkFileSelection *aFileSel)
 {
     DUMP("SelectFolderOK");
 
+    struct stat destStat;
     char *selDir = gtk_file_selection_get_filename(
                     GTK_FILE_SELECTION(aFileSel));
-    int len = strlen(selDir);
-    char *lastSlash = strrchr(selDir, '/');
-    if (len != lastSlash - selDir + 1)  // not a dir, but a file so ignore
-        return; 
+    if (0 == stat(selDir, &destStat))
+        if (!S_ISDIR(destStat.st_mode)) /* not a directory so don't tear down */
+            return;
 
     strcpy(gCtx->opt->mDestination, selDir);
 
@@ -558,4 +566,76 @@ nsSetupTypeDlg::RadBtnToggled(GtkWidget *aWidget, gpointer aData)
     DUMP("RadBtnToggled");
     
     gCtx->opt->mSetupType = (int) aData;
+}
+
+int
+nsSetupTypeDlg::VerifyDestination()
+{
+    int err = E_NO_DEST;
+    int stat_err = 0;
+    struct stat dummy; 
+    GtkWidget *yesButton, *noButton, *label;
+    char message[1024];
+    
+    stat_err = stat(gCtx->opt->mDestination, &dummy);
+    if (stat_err == 0)
+        return OK;
+
+    // destination doesn't exist so ask user if we should create it
+    memset(message, 0, 1024);
+    sprintf(message, DOESNT_EXIST, gCtx->opt->mDestination);
+
+    sCreateDestDlg = gtk_dialog_new();
+    label = gtk_label_new(message);
+    yesButton = gtk_button_new_with_label(YES_LABEL);
+    noButton = gtk_button_new_with_label(NO_LABEL);
+
+    gtk_container_add(GTK_CONTAINER(GTK_DIALOG(sCreateDestDlg)->action_area),
+                      yesButton);
+    gtk_container_add(GTK_CONTAINER(GTK_DIALOG(sCreateDestDlg)->action_area),
+                      noButton);
+    gtk_signal_connect(GTK_OBJECT(yesButton), "clicked",
+                       GTK_SIGNAL_FUNC(CreateDestYes), sCreateDestDlg);
+    gtk_signal_connect(GTK_OBJECT(noButton), "clicked",
+                       GTK_SIGNAL_FUNC(CreateDestNo), sCreateDestDlg);
+
+    gtk_container_add(GTK_CONTAINER(GTK_DIALOG(sCreateDestDlg)->vbox), label);
+    
+    gtk_widget_show_all(sCreateDestDlg);
+
+    return err;
+}
+
+void
+nsSetupTypeDlg::CreateDestYes(GtkWidget *aWidget, gpointer aData)
+{
+    DUMP("CreateDestYes");
+    int err = 0; 
+    err = mkdir(gCtx->opt->mDestination, 0755);
+    gtk_widget_destroy(sCreateDestDlg);
+
+    if (err != 0)
+        ErrorHandler(E_MKDIR_FAIL);
+
+    // hide this notebook page
+    gCtx->sdlg->Hide(nsXInstallerDlg::FORWARD_MOVE);
+
+    // disconnect this dlg's nav btn signal handlers
+    gtk_signal_disconnect(GTK_OBJECT(gCtx->back), gCtx->backID);
+    gtk_signal_disconnect(GTK_OBJECT(gCtx->next), gCtx->nextID);
+    gtk_signal_disconnect(GTK_OBJECT(sBrowseBtn), sBrowseBtnID);
+
+    // show the last dlg
+    if (gCtx->opt->mSetupType == (gCtx->sdlg->GetNumSetupTypes() - 1))
+        gCtx->cdlg->Show(nsXInstallerDlg::FORWARD_MOVE);
+    else
+        gCtx->idlg->Show(nsXInstallerDlg::FORWARD_MOVE);
+}
+
+void
+nsSetupTypeDlg::CreateDestNo(GtkWidget *aWidget, gpointer aData)
+{
+    DUMP("CreateDestNo");
+
+    gtk_widget_destroy(sCreateDestDlg);
 }

@@ -25,6 +25,7 @@
 #ifndef _NS_SETUPTYPEDLG_H_
 #define _NS_SETUPTYPEDLG_H_
 
+#include <sys/stat.h>
 #include "nsXInstallerDlg.h"
 #include "nsSetupType.h"
 
@@ -49,6 +50,9 @@ public:
     static void         SelectFolderOK(GtkWidget *aWidget, 
                                        GtkFileSelection *aFileSel);
     static void         RadBtnToggled(GtkWidget *aWidget, gpointer aData);
+    static int          VerifyDestination();
+    static void         CreateDestYes(GtkWidget *aWidget, gpointer aData);
+    static void         CreateDestNo(GtkWidget *aWidget, gpointer aData);
 
 /*---------------------------------------------------------------------*
  *   INI Properties

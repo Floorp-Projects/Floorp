@@ -38,4 +38,11 @@
 
 LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH
 export LD_LIBRARY_PATH
+
+PATH=.:$PATH
+export PATH
+
+MOZILLA_FIVE_HOME=.
+export MOZILLA_FIVE_HOME
+
 exec mozilla-installer-bin
