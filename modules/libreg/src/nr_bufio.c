@@ -79,6 +79,10 @@ struct BufioFileStruct
     PRInt32 dirtystart;
     PRInt32 dirtyend;
     PRBool  readOnly;   /* whether the file allows writing or not */
+#ifdef DEBUG_dveditz
+    PRUint32 reads;
+    PRUint32 writes;
+#endif
     char    *data;      /* the data buffer */
 };
 
@@ -276,6 +280,9 @@ PRUint32 bufio_Read(BufioFile* file, char* dest, PRUint32 count)
         memcpy( dest, file->data + startOffset, bytesCopied );
         retcount = bytesCopied;
         file->fpos += bytesCopied;
+#ifdef DEBUG_dveditz
+        file->reads++;
+#endif
 
         /* Was that all we wanted, or do we need to get more? */
 
@@ -295,14 +302,22 @@ PRUint32 bufio_Read(BufioFile* file, char* dest, PRUint32 count)
                 startOffset = file->fpos - file->datastart;
 
                 /* we may not have been able to load as much as we wanted */
-                if ( startOffset+leftover <= file->datasize )
+                if ( startOffset > file->datasize )
+                    bytesRead = 0;
+                else if ( startOffset+leftover <= file->datasize )
                     bytesRead = leftover;
                 else
                     bytesRead = file->datasize - startOffset;
 
-                memcpy( dest+bytesCopied, file->data+startOffset, bytesRead );
-                file->fpos += bytesRead;
-                retcount += bytesRead;
+                if ( bytesRead )
+                {
+                    memcpy( dest+bytesCopied, file->data+startOffset, bytesRead );
+                    file->fpos += bytesRead;
+                    retcount += bytesRead;
+#ifdef DEBUG_dveditz
+                    file->reads++;
+#endif
+                }
             }
             else 
             {
@@ -338,6 +353,9 @@ PRUint32 bufio_Read(BufioFile* file, char* dest, PRUint32 count)
             /* the tail end of the range we want is already buffered */
             /* first copy the buffered data to the dest area         */
             memcpy( dest+leftover, file->data, bytesCopied );
+#ifdef DEBUG_dveditz
+            file->reads++;
+#endif
         }
             
         /* now pick up the part that's not already in the buffer */
@@ -348,12 +366,20 @@ PRUint32 bufio_Read(BufioFile* file, char* dest, PRUint32 count)
             startOffset = file->fpos - file->datastart;
 
             /* we may not have been able to read as much as we wanted */
-            if ( startOffset+leftover <= file->datasize )
+            if ( startOffset > file->datasize )
+                bytesRead = 0;
+            else if ( startOffset+leftover <= file->datasize )
                 bytesRead = leftover;
             else
                 bytesRead = file->datasize - startOffset;
 
-            memcpy( dest, file->data+startOffset, bytesRead );
+            if ( bytesRead )
+            {
+                memcpy( dest, file->data+startOffset, bytesRead );
+#ifdef DEBUG_dveditz
+                file->reads++;
+#endif
+            }
         }
         else
         {
@@ -380,14 +406,17 @@ PRUint32 bufio_Read(BufioFile* file, char* dest, PRUint32 count)
 
 
 /**
- * write through to disk skipping buffering. This will change
+ * Buffered writes
  */
 PRUint32 bufio_Write(BufioFile* file, const char* src, PRUint32 count)
 {
+    const char* newsrc;
     PRInt32  startOffset;
     PRInt32  endOffset;
+    PRUint32 leftover;
     PRUint32 retcount = 0;
     PRUint32 bytesWritten = 0;
+    PRUint32 bytesCopied = 0;
 
     /* sanity check arguments */
     if ( !file || !src || count == 0 || file->readOnly )
@@ -398,69 +427,108 @@ PRUint32 bufio_Write(BufioFile* file, const char* src, PRUint32 count)
     startOffset = file->fpos - file->datastart;
     endOffset = startOffset + count;
 
-    if ( startOffset >= 0 && 
-         startOffset <  BUFIO_BUFSIZE && 
-         endOffset   <= BUFIO_BUFSIZE )
+    if ( startOffset >= 0 && startOffset <  BUFIO_BUFSIZE )
     {
-        /* the entire area we want to write is buffered */
-        bytesWritten = count;
-        memcpy( file->data + startOffset, src, bytesWritten );
+        /* the area we want to write starts in the buffer */
+
+        if ( endOffset <= BUFIO_BUFSIZE )
+            bytesCopied = count;
+        else
+            bytesCopied = BUFIO_BUFSIZE - startOffset;
+
+        memcpy( file->data + startOffset, src, bytesCopied );
         file->bufdirty = PR_TRUE;
+        endOffset = startOffset + bytesCopied;
+        file->dirtystart = PR_MIN( startOffset, file->dirtystart );
+        file->dirtyend   = PR_MAX( endOffset,   file->dirtyend );
+#ifdef DEBUG_dveditz
+        file->writes++;
+#endif
 
         if ( endOffset > file->datasize )
             file->datasize = endOffset;
 
-        file->dirtystart = PR_MIN( startOffset, file->dirtystart );
-        file->dirtyend   = PR_MAX( endOffset,   file->dirtyend );
-    }
-    else if ( count > BUFIO_BUFSIZE )
-    {
-        /* the data doesn't fit in a buffer, write w/out buffering. */
+        retcount = bytesCopied;
+        file->fpos += bytesCopied;
 
-        /* first check to see if it overlaps our current buffer */
-        if ( startOffset < BUFIO_BUFSIZE && endOffset > 0 )
-        {
-            /* this write overlaps at least part of the current buffer */
-
-            /* Flush any dirty data first */
-            if ( file->bufdirty ) 
-                _bufio_flushBuf( file );
-
-            /* then empty the buffer so stale data isn't used */
-            file->datasize = 0;
-            file->dirtystart = BUFIO_BUFSIZE;
-            file->dirtyend = 0;
-        }
-
-        /* now if is safe to do the write */
-        if ( fseek( file->fd, file->fpos, SEEK_SET ) == 0 )
-        {
-            bytesWritten = fwrite( src, 1, count, file->fd );
-        }
+        /* was that all we had to write, or is there more? */
+        leftover = count - bytesCopied;
+        newsrc = src+bytesCopied;
     }
     else
     {
-        /* the data doesn't fit in the current buffer, so we'll just */
-        /* start a new buffer. Flush any dirty data first            */
-        if ( file->bufdirty )
-            _bufio_flushBuf( file );
+        /* range doesn't start in the loaded buffer but it might end there */
+        if ( endOffset > 0 && endOffset <= BUFIO_BUFSIZE )
+            bytesCopied = endOffset;
+        else
+            bytesCopied = 0;
 
-        bytesWritten = count;
-        memcpy( file->data, src, bytesWritten );
-        file->bufdirty = PR_TRUE;
-        file->datastart = file->fpos; /* NB: original fpos! */
-        file->datasize = bytesWritten;
-        file->dirtystart = 0;
-        file->dirtyend = file->datasize;
+        leftover = count - bytesCopied;
+        newsrc = src;
+
+        if ( bytesCopied )
+        {
+            /* the tail end of the write range is already in the buffer */
+            memcpy( file->data, src+leftover, bytesCopied );
+            file->bufdirty      = PR_TRUE;
+            file->dirtystart    = 0;
+            file->dirtyend      = PR_MAX( endOffset, file->dirtyend );
+#ifdef DEBUG_dveditz
+            file->writes++;
+#endif
+
+            if ( endOffset > file->datasize )
+                file->datasize = endOffset;
+        }
     }
 
-    file->fpos += bytesWritten;
-    if ( file->fpos > file->fsize )
+    /* if we only wrote part of the request pick up the leftovers */
+    if ( leftover )
     {
-        file->fsize = file->fpos;
+        /* load the buffer with the new range, if possible */
+        if ( _bufio_loadBuf( file, leftover ) )
+        {
+            startOffset = file->fpos - file->datastart;
+            endOffset   = startOffset + leftover;
+
+            memcpy( file->data+startOffset, newsrc, leftover );
+            file->bufdirty      = PR_TRUE;
+            file->dirtystart    = startOffset;
+            file->dirtyend      = endOffset;
+#ifdef DEBUG_dveditz
+            file->writes++;
+#endif
+            if ( endOffset > file->datasize )
+                file->datasize = endOffset;
+
+            bytesWritten = leftover;
+        }
+        else
+        {
+            /* request didn't fit in a buffer, write directly */
+            if ( fseek( file->fd, file->fpos, SEEK_SET ) == 0 )
+                bytesWritten = fwrite( newsrc, 1, leftover, file->fd );
+            else
+                bytesWritten = 0; /* seek failed! */
+        }
+
+        if ( retcount )
+        {
+            /* we already counted the first part we wrote */
+            retcount    += bytesWritten;
+            file->fpos  += bytesWritten;
+        }
+        else
+        {
+            retcount    = bytesCopied + bytesWritten;
+            file->fpos  += retcount;
+        }
     }
+
+    if ( file->fpos > file->fsize )
+        file->fsize = file->fpos;
     
-    return bytesWritten;
+    return retcount;
 }
 
 
@@ -519,20 +587,17 @@ static PRBool _bufio_loadBuf( BufioFile* file, PRUint32 count )
     else
     {
         bytesRead = fread( file->data, 1, BUFIO_BUFSIZE, file->fd );
-        if (bytesRead)
-        {
-            file->datastart  = startBuf;
-            file->datasize   = bytesRead;
-            file->bufdirty   = PR_FALSE;
-            file->dirtystart = BUFIO_BUFSIZE;
-            file->dirtyend   = 0;
-        }
-
-        /* return true if we got *any* of the requested data */
-        if ( bytesRead > (PRUint32)(file->fpos - startBuf) )
-            return PR_TRUE;
-        else
-            return PR_FALSE;
+        file->datastart  = startBuf;
+        file->datasize   = bytesRead;
+        file->bufdirty   = PR_FALSE;
+        file->dirtystart = BUFIO_BUFSIZE;
+        file->dirtyend   = 0;
+#ifdef DEBUG_dveditz
+        printf("REG: buffer read %d (%d) after %d reads\n",startBuf,file->fpos,file->reads);
+        file->reads = 0;
+        file->writes = 0;
+#endif
+        return PR_TRUE;
     }
 }
 
@@ -554,7 +619,16 @@ static int _bufio_flushBuf( BufioFile* file )
         dirtyamt = file->dirtyend - file->dirtystart;
         written = fwrite( file->data+file->dirtystart, 1, dirtyamt, file->fd );
         if ( written == dirtyamt )
+        {
+#ifdef DEBUG_dveditz
+            printf("REG: buffer flush %d - %d after %d writes\n",startpos,startpos+written,file->writes);
+            file->writes = 0;
+#endif
+            file->bufdirty   = PR_FALSE;
+            file->dirtystart = BUFIO_BUFSIZE;
+            file->dirtyend   = 0;
             return 0;
+        }
     }
     return -1;
 }
