@@ -94,8 +94,9 @@ struct nsLineLayout {
   nsIFrame* mKidPrevInFlow;
 
   // Whenever the line layout creates a frame this slot is incremented
-  PRInt32 mNewFrames;
+  PRIntn mNewFrames;
   PRIntn mFramesReflowed;
+  PRIntn mOldChildCount;
 
   // Current reflow data indicating where we are in the line, how much
   // width remains and the maximum element size so far.
@@ -105,6 +106,7 @@ struct nsLineLayout {
   // reflow area when a floater is placed.
   PRBool mReflowDataChanged;
 
+  PRPackedBool mMustReflowMappedChildren;
   PRPackedBool mUnconstrainedWidth;
   PRPackedBool mUnconstrainedHeight;
   PRPackedBool mMarginApplied;
@@ -159,7 +161,7 @@ protected:
 
   nsresult WordBreakReflow();
 
-  nsresult ReflowMappedChild(nsReflowCommand* aReflowCommand);
+  nsresult ReflowMappedChild();
 
   nsresult ReflowChild(nsReflowCommand* aReflowCommand);
 
@@ -183,7 +185,7 @@ protected:
 
   nsresult ReflowUnmapped();
 
-  nsresult AlignChildren();
+  void AlignChildren();
 
   nsIFrame* GetWordStartParent();
 };
