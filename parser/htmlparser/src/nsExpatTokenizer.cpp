@@ -146,19 +146,19 @@ NS_IMPL_RELEASE(nsExpatTokenizer)
 void nsExpatTokenizer::SetupExpatParser(void) {
   if (mExpatParser) {
     // Set up the callbacks
-    XML_SetElementHandler(mExpatParser, HandleStartElement, HandleEndElement);    
-    XML_SetCharacterDataHandler(mExpatParser, HandleCharacterData);
-    XML_SetProcessingInstructionHandler(mExpatParser, HandleProcessingInstruction);
-    XML_SetDefaultHandlerExpand(mExpatParser, HandleDefault);
-    XML_SetUnparsedEntityDeclHandler(mExpatParser, HandleUnparsedEntityDecl);
-    XML_SetNotationDeclHandler(mExpatParser, HandleNotationDecl);
-    XML_SetExternalEntityRefHandler(mExpatParser, HandleExternalEntityRef);
-    XML_SetCommentHandler(mExpatParser, HandleComment);
-    XML_SetUnknownEncodingHandler(mExpatParser, HandleUnknownEncoding, NULL);
-    XML_SetCdataSectionHandler(mExpatParser, HandleStartCdataSection,
-                               HandleEndCdataSection);
+    XML_SetElementHandler(mExpatParser, Tokenizer_HandleStartElement, Tokenizer_HandleEndElement);    
+    XML_SetCharacterDataHandler(mExpatParser, Tokenizer_HandleCharacterData);
+    XML_SetProcessingInstructionHandler(mExpatParser, Tokenizer_HandleProcessingInstruction);
+    XML_SetDefaultHandlerExpand(mExpatParser, Tokenizer_HandleDefault);
+    XML_SetUnparsedEntityDeclHandler(mExpatParser, Tokenizer_HandleUnparsedEntityDecl);
+    XML_SetNotationDeclHandler(mExpatParser, Tokenizer_HandleNotationDecl);
+    XML_SetExternalEntityRefHandler(mExpatParser, Tokenizer_HandleExternalEntityRef);
+    XML_SetCommentHandler(mExpatParser, Tokenizer_HandleComment);
+    XML_SetUnknownEncodingHandler(mExpatParser, Tokenizer_HandleUnknownEncoding, NULL);
+    XML_SetCdataSectionHandler(mExpatParser, Tokenizer_HandleStartCdataSection,
+                               Tokenizer_HandleEndCdataSection);
 
-    XML_SetDoctypeDeclHandler(mExpatParser, HandleStartDoctypeDecl, HandleEndDoctypeDecl);
+    XML_SetDoctypeDeclHandler(mExpatParser, Tokenizer_HandleStartDoctypeDecl, Tokenizer_HandleEndDoctypeDecl);
 
     // Set up the user data.
     XML_SetUserData(mExpatParser, (void*) mState);
@@ -519,7 +519,7 @@ void nsExpatTokenizer::FrontloadMisplacedContent(nsDeque& aDeque){
 /* Expat Callback Functions start here */
 /***************************************/
 
-void nsExpatTokenizer::HandleStartElement(void *userData, const XML_Char *name, const XML_Char **atts) {
+void Tokenizer_HandleStartElement(void *userData, const XML_Char *name, const XML_Char **atts) {
   XMLParserState* state = (XMLParserState*) userData;
   CToken* theToken = state->tokenAllocator->CreateTokenOfType(eToken_start,eHTMLTag_unknown, nsLiteralString((PRUnichar*)name));
   if(theToken) {    
@@ -531,7 +531,7 @@ void nsExpatTokenizer::HandleStartElement(void *userData, const XML_Char *name, 
       startToken->SetIDAttributeAtom(attributeAtom);
     }
 
-    AddToken(theToken, NS_OK, state->tokenDeque, state->tokenAllocator);
+    nsExpatTokenizer::AddToken(theToken, NS_OK, state->tokenDeque, state->tokenAllocator);
 
     // For each attribute on this element, create and add attribute tokens to the token queue
     int theAttrCount=0;    
@@ -555,7 +555,7 @@ void nsExpatTokenizer::HandleStartElement(void *userData, const XML_Char *name, 
         }
       }
       CToken* theTok=(CToken*)theAttrToken;
-      AddToken(theTok, NS_OK, state->tokenDeque, state->tokenAllocator);
+      nsExpatTokenizer::AddToken(theTok, NS_OK, state->tokenDeque, state->tokenAllocator);
       atts += 2;
     }
     theToken->SetAttributeCount(theAttrCount);
@@ -565,18 +565,18 @@ void nsExpatTokenizer::HandleStartElement(void *userData, const XML_Char *name, 
   }
 }
 
-void nsExpatTokenizer::HandleEndElement(void *userData, const XML_Char *name) {
+void Tokenizer_HandleEndElement(void *userData, const XML_Char *name) {
   XMLParserState* state = (XMLParserState*) userData;
   CToken* theToken = state->tokenAllocator->CreateTokenOfType(eToken_end,eHTMLTag_unknown, nsLiteralString((PRUnichar *) name));
   if(theToken) {
-    AddToken(theToken, NS_OK, state->tokenDeque, state->tokenAllocator);
+    nsExpatTokenizer::AddToken(theToken, NS_OK, state->tokenDeque, state->tokenAllocator);
   }
   else{
     //THROW A HUGE ERROR IF WE CANT CREATE A TOKEN!
   }
 }
 
-void nsExpatTokenizer::HandleCharacterData(void *userData, const XML_Char *s, int len) { 
+void Tokenizer_HandleCharacterData(void *userData, const XML_Char *s, int len) { 
   XMLParserState* state = (XMLParserState*) userData;
 
   if (state->incdata) {    
@@ -615,7 +615,7 @@ void nsExpatTokenizer::HandleCharacterData(void *userData, const XML_Char *s, in
     }
     
     if(newToken) {
-      AddToken(newToken, NS_OK, state->tokenDeque, state->tokenAllocator);
+      nsExpatTokenizer::AddToken(newToken, NS_OK, state->tokenDeque, state->tokenAllocator);
     }
     else {
       //THROW A HUGE ERROR IF WE CANT CREATE A TOKEN!
@@ -623,7 +623,7 @@ void nsExpatTokenizer::HandleCharacterData(void *userData, const XML_Char *s, in
   }  
 }
 
-void nsExpatTokenizer::HandleComment(void *userData, const XML_Char *name) {
+void Tokenizer_HandleComment(void *userData, const XML_Char *name) {
   XMLParserState* state = (XMLParserState*) userData;
   if (state->indoctype) {
     // We do not want comments popping out of the doctype...
@@ -633,7 +633,7 @@ void nsExpatTokenizer::HandleComment(void *userData, const XML_Char *name) {
   } else {
     CToken* theToken = state->tokenAllocator->CreateTokenOfType(eToken_comment, eHTMLTag_unknown, nsLiteralString((PRUnichar*)name));
     if(theToken) {
-      AddToken(theToken, NS_OK, state->tokenDeque, state->tokenAllocator);
+      nsExpatTokenizer::AddToken(theToken, NS_OK, state->tokenDeque, state->tokenAllocator);
     }
     else{
       //THROW A HUGE ERROR IF WE CANT CREATE A TOKEN!
@@ -641,13 +641,13 @@ void nsExpatTokenizer::HandleComment(void *userData, const XML_Char *name) {
   }
 }
 
-void nsExpatTokenizer::HandleStartCdataSection(void *userData) {
+void Tokenizer_HandleStartCdataSection(void *userData) {
   XMLParserState* state = (XMLParserState*) userData;
 
   state->incdata = PR_TRUE;
 }
 
-void nsExpatTokenizer::HandleEndCdataSection(void *userData) {
+void Tokenizer_HandleEndCdataSection(void *userData) {
   XMLParserState* state = (XMLParserState*) userData;
   CToken* cdataToken = state->tokenAllocator->CreateTokenOfType(eToken_cdatasection,
                                                                 eHTMLTag_unknown,
@@ -655,15 +655,15 @@ void nsExpatTokenizer::HandleEndCdataSection(void *userData) {
 
   // We've reached the end of the current CDATA section. Push the current
   // CDATA token onto the token queue 
-  AddToken(cdataToken, NS_OK, state->tokenDeque, state->tokenAllocator);
+  nsExpatTokenizer::AddToken(cdataToken, NS_OK, state->tokenDeque, state->tokenAllocator);
 
   state->incdata = PR_FALSE;
   state->cdataText.Truncate();
 }
 
-void nsExpatTokenizer::HandleProcessingInstruction(void *userData, 
-                                                   const XML_Char *target, 
-                                                   const XML_Char *data) 
+void Tokenizer_HandleProcessingInstruction(void *userData, 
+                                           const XML_Char *target, 
+                                           const XML_Char *data) 
 {
   XMLParserState* state = (XMLParserState*) userData;
   nsAutoString theString;
@@ -677,14 +677,14 @@ void nsExpatTokenizer::HandleProcessingInstruction(void *userData,
   
   CToken* theToken = state->tokenAllocator->CreateTokenOfType(eToken_instruction,eHTMLTag_unknown, theString);
   if(theToken) {
-    AddToken(theToken, NS_OK, state->tokenDeque, state->tokenAllocator);
+    nsExpatTokenizer::AddToken(theToken, NS_OK, state->tokenDeque, state->tokenAllocator);
   }
   else{
     //THROW A HUGE ERROR IF WE CANT CREATE A TOKEN!
   }
 }
 
-void nsExpatTokenizer::HandleDefault(void *userData, const XML_Char *s, int len) {
+void Tokenizer_HandleDefault(void *userData, const XML_Char *s, int len) {
   XMLParserState* state = (XMLParserState*) userData;
   if (state->indoctype) {
     state->doctypeText.Append((PRUnichar*)s, len);
@@ -696,18 +696,18 @@ void nsExpatTokenizer::HandleDefault(void *userData, const XML_Char *s, int len)
     
     while ((offset = str.FindChar('\n', PR_FALSE, offset + 1)) != -1) {
       newLine = state->tokenAllocator->CreateTokenOfType(eToken_newline, eHTMLTag_unknown);
-      AddToken(newLine, NS_OK, state->tokenDeque, state->tokenAllocator);
+      nsExpatTokenizer::AddToken(newLine, NS_OK, state->tokenDeque, state->tokenAllocator);
     }
   }
 }
 
-void nsExpatTokenizer::HandleUnparsedEntityDecl(void *userData, 
-                                          const XML_Char *entityName, 
-                                          const XML_Char *base, 
-                                          const XML_Char *systemId, 
-                                          const XML_Char *publicId,
-                                          const XML_Char *notationName) {
-  NS_NOTYETIMPLEMENTED("Error: nsExpatTokenizer::HandleUnparsedEntityDecl() not yet implemented.");
+void Tokenizer_HandleUnparsedEntityDecl(void *userData, 
+                                        const XML_Char *entityName, 
+                                        const XML_Char *base, 
+                                        const XML_Char *systemId, 
+                                        const XML_Char *publicId,
+                                        const XML_Char *notationName) {
+  NS_NOTYETIMPLEMENTED("Error: Tokenizer_HandleUnparsedEntityDecl() not yet implemented.");
 }
 
 
@@ -832,19 +832,19 @@ nsresult nsExpatTokenizer::LoadStream(nsIInputStream* in,
   return res;
 }
 
-void nsExpatTokenizer::HandleNotationDecl(void *userData,
-                                    const XML_Char *notationName,
-                                    const XML_Char *base,
-                                    const XML_Char *systemId,
-                                    const XML_Char *publicId){
-  NS_NOTYETIMPLEMENTED("Error: nsExpatTokenizer::HandleNotationDecl() not yet implemented.");
+void Tokenizer_HandleNotationDecl(void *userData,
+                                  const XML_Char *notationName,
+                                  const XML_Char *base,
+                                  const XML_Char *systemId,
+                                  const XML_Char *publicId){
+  NS_NOTYETIMPLEMENTED("Error: Tokenizer_HandleNotationDecl() not yet implemented.");
 }
 
-int nsExpatTokenizer::HandleExternalEntityRef(XML_Parser parser,
-                                         const XML_Char *openEntityNames,
-                                         const XML_Char *base,
-                                         const XML_Char *systemId,
-                                         const XML_Char *publicId)
+int Tokenizer_HandleExternalEntityRef(XML_Parser parser,
+                                      const XML_Char *openEntityNames,
+                                      const XML_Char *base,
+                                      const XML_Char *systemId,
+                                      const XML_Char *publicId)
 {
   int result = PR_TRUE;
 
@@ -855,12 +855,12 @@ int nsExpatTokenizer::HandleExternalEntityRef(XML_Parser parser,
   nsAutoString baseURL( (const PRUnichar*) base );
   nsAutoString absURL;
 
-  nsresult rv = OpenInputStream(urlSpec, baseURL, getter_AddRefs(in), &absURL);
+  nsresult rv = nsExpatTokenizer::OpenInputStream(urlSpec, baseURL, getter_AddRefs(in), &absURL);
 
   if (NS_SUCCEEDED(rv) && nsnull != in) {
     PRUint32 retLen = 0;
     PRUnichar *uniBuf = nsnull;
-    rv = LoadStream(in, uniBuf, retLen);
+    rv = nsExpatTokenizer::LoadStream(in, uniBuf, retLen);
 
     // Pass the buffer to expat for parsing
     if (NS_SUCCEEDED(rv) && nsnull != uniBuf) {    
@@ -882,37 +882,37 @@ int nsExpatTokenizer::HandleExternalEntityRef(XML_Parser parser,
   }
 #else /* ! XML_DTD */
 
-  NS_NOTYETIMPLEMENTED("Error: nsExpatTokenizer::HandleExternalEntityRef() not yet implemented.");
+  NS_NOTYETIMPLEMENTED("Error: Tokenizer_HandleExternalEntityRef() not yet implemented.");
 
 #endif /* XML_DTD */
 
   return result;
 }
 
-int nsExpatTokenizer::HandleUnknownEncoding(void *encodingHandlerData,
-                                       const XML_Char *name,
-                                       XML_Encoding *info) {
-  NS_NOTYETIMPLEMENTED("Error: nsExpatTokenizer::HandleUnknownEncoding() not yet implemented.");
+int Tokenizer_HandleUnknownEncoding(void *encodingHandlerData,
+                                    const XML_Char *name,
+                                    XML_Encoding *info) {
+  NS_NOTYETIMPLEMENTED("Error: Tokenizer_HandleUnknownEncoding() not yet implemented.");
   int result=0;
   return result;
 }
 
-void nsExpatTokenizer::HandleStartDoctypeDecl(void *userData, 
-                                              const XML_Char *doctypeName)
+void Tokenizer_HandleStartDoctypeDecl(void *userData, 
+                                      const XML_Char *doctypeName)
 {  
   XMLParserState* state = (XMLParserState*) userData;
   state->indoctype = PR_TRUE;
   state->doctypeText.Assign(NS_LITERAL_STRING("<!DOCTYPE "));
 }
 
-void nsExpatTokenizer::HandleEndDoctypeDecl(void *userData)
+void Tokenizer_HandleEndDoctypeDecl(void *userData)
 {
   XMLParserState* state = (XMLParserState*) userData;
 
   state->doctypeText.AppendWithConversion(">");
   CToken* token = state->tokenAllocator->CreateTokenOfType(eToken_doctypeDecl, eHTMLTag_unknown, state->doctypeText);
   if (token) {
-    AddToken(token, NS_OK, state->tokenDeque, state->tokenAllocator);
+    nsExpatTokenizer::AddToken(token, NS_OK, state->tokenDeque, state->tokenAllocator);
   }
   state->indoctype = PR_FALSE;
   state->doctypeText.Truncate();
