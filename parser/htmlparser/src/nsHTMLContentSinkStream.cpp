@@ -939,9 +939,6 @@ void nsHTMLContentSinkStream::AddEndTag(const nsIParserNode& aNode)
 //  const nsString&   name = aNode.GetText();
   nsAutoString      tagName;
 
-  if (tag == eHTMLTag_body)
-    mInBody = PR_FALSE;
-
   if (tag == eHTMLTag_unknown)
   {
     tagName = aNode.GetText();
@@ -962,7 +959,7 @@ void nsHTMLContentSinkStream::AddEndTag(const nsIParserNode& aNode)
   if (IndentChildren(tag))
     mIndent--;
 
-  if (mDoFormat && BreakBeforeClose(tag))
+  if ((mDoFormat || !mInBody) && BreakBeforeClose(tag))
   {
     if (mColPos != 0)
     {
@@ -985,6 +982,9 @@ void nsHTMLContentSinkStream::AddEndTag(const nsIParserNode& aNode)
   Write(kGreaterThan);
 
   mColPos += strlen(mBuffer) + 1;
+
+  if (tag == eHTMLTag_body)
+    mInBody = PR_FALSE;
   
   if ((mDoFormat || !mInBody) && BreakAfterClose(tag))
   {
