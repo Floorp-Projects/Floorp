@@ -27,21 +27,22 @@ RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
 var NC = "http://home.netscape.com/NC-rdf#";
 
 var sidebar = new Object;
+var original_panels = new Array();
 
 function debug(msg)
 {
-  //dump(msg);
+  //dump(msg+"\n");
 }
 
 function Init()
 {
-  sidebar.db       = window.arguments[0];
-  sidebar.resource = window.arguments[1];
-  debug("sidebar.db = " + sidebar.db + "\n");
-  debug("sidebar.resource = " + sidebar.resource + "\n");
+  sidebar.datasource_uri = window.arguments[0];
+  sidebar.resource       = window.arguments[1];
+  debug("sidebar.datasource_uri = " + sidebar.datasource_uri);
+  debug("sidebar.resource       = " + sidebar.resource);
 
   // This will load the datasource, if it isn't already.
-  sidebar.datasource = RDF.GetDataSource(sidebar.db);
+  sidebar.datasource = RDF.GetDataSource(sidebar.datasource_uri);
 
   // Add the necessary datasources to the select list
   var select_list = document.getElementById('selected-panels');
@@ -50,12 +51,21 @@ function Init()
   // Root the customize dialog at the correct place.
   select_list.setAttribute('ref', sidebar.resource);
 
+  saveInitialPanels();
   enableButtons();
+}
+
+function saveInitialPanels()
+{
+  var root = document.getElementById('selected-panels-root');
+  for (var node = root.firstChild; node != null; node = node.nextSibling) {
+    original_panels[original_panels.length] = node.getAttribute('id');
+  }
 }
 
 function addOption(registry, service, selectIt)
 {
-  dump("Adding "+service.Value+"\n");
+  debug("Adding "+service.Value);
   var option_title     = getAttr(registry, service, 'title');
   var option_customize = getAttr(registry, service, 'customize');
   var option_content   = getAttr(registry, service, 'content');
@@ -87,7 +97,7 @@ function addOption(registry, service, selectIt)
   treeroot.appendChild(item);
 
   if (selectIt) {
-    dump("Selecting new item\n");
+    debug("Selecting new item");
     tree.selectItem(item)
   }
 }
@@ -126,6 +136,7 @@ function moveUp() {
     }
   }
   enableButtons();
+  enableSave();
 }
    
 function moveDown() {
@@ -143,6 +154,7 @@ function moveDown() {
     }
   }
   enableButtons();
+  enableSave();
 }
 
 function enableButtons() {
@@ -153,6 +165,7 @@ function enableButtons() {
   var remove    = document.getElementById('remove-button');
 
   var numSelected = tree.selectedItems.length;
+
   var noneSelected, isFirst, isLast, selectedNode
 
   if (numSelected > 0) {
@@ -233,10 +246,7 @@ function RemovePanel()
   enableSave();
 }
 
-// Note that there is a bug with resource: URLs right now.
-var FileURL = "file:////u/slamm/tt/sidebar-browser.rdf";
 
-// var the "NC" namespace. Used to construct resources
 function Save()
 {
   // Iterate through the 'selected-panels' tree to collect the panels
@@ -251,20 +261,20 @@ function Save()
 
   // Now remove all the current panels from the datasource.
 
-  // Create a "container" wrapper around the "NC:BrowserSidebarRoot"
+  // Create a "container" wrapper around the "urn:sidebar:ccurent-panel-list"
   // object. This makes it easier to manipulate the RDF:Seq correctly.
   var container = Components.classes["component://netscape/rdf/container"].createInstance();
   container = container.QueryInterface(Components.interfaces.nsIRDFContainer);
   container.Init(sidebar.datasource, RDF.GetResource(sidebar.resource));
 
   for (var ii = container.GetCount(); ii >= 1; --ii) {
-    dump('removing panel ' + ii + '\n');
+    debug('removing panel ' + ii);
     container.RemoveElementAt(ii, true);
   }
 
   // Now iterate through the panels, and re-add them to the datasource
   for (var ii = 0; ii < panels.length; ++ii) {
-    debug('adding ' + panels[ii] + '\n');
+    debug('adding ' + panels[ii]);
     container.AppendElement(RDF.GetResource(panels[ii]));
   }
 
@@ -274,20 +284,38 @@ function Save()
   window.close();
 }
 
-function otherPanelSelected()
+function otherPanelSelected(event, target)
 { 
-    var add_button = document.getElementById('add_button');
-    var preview_button = document.getElementById('preview_button');
-    var other_panels = document.getElementById('other-panels');
+ if (target.getAttribute('container') == 'true') {
+   if (target.getAttribute('open') == 'true') {
+	 target.removeAttribute('open');
+   } else {
+	 target.setAttribute('open','true');
+   }
+   return;
+ }
 
-    if (other_panels.selectedItems.length > 0) {
-        add_button.setAttribute('disabled','');
-        preview_button.setAttribute('disabled','');
-    }
-    else {
-        add_button.setAttribute('disabled','true');
-        preview_button.setAttribute('disabled','true');
-    }
+  var add_button = document.getElementById('add_button');
+  var preview_button = document.getElementById('preview_button');
+  var other_panels = document.getElementById('other-panels');
+
+  var num_selected = 0;
+  // Only count non-folders as selected for button enabling
+  for (var ii=0; ii<other_panels.selectedItems.length; ii++) {
+    var node = other_panels.selectedItems[ii];
+	if (node.getAttribute('container') != 'true') {
+	  num_selected++;
+	}
+  }
+
+  if (num_selected > 0) {
+    add_button.setAttribute('disabled','');
+    preview_button.setAttribute('disabled','');
+  }
+  else {
+    add_button.setAttribute('disabled','true');
+    preview_button.setAttribute('disabled','true');
+  }
 }
 
 function AddPanel() 
@@ -299,6 +327,10 @@ function AddPanel()
   for (var nodeIndex=0; nodeIndex<select_list.length; nodeIndex++) {
     var node = select_list[nodeIndex];
     if (!node)    break;
+	// Skip folders
+	if (node.getAttribute('folder') == 'true') {
+	  continue;
+	}
     var id = node.getAttribute("id");
     if (!id)      break;
     var rdfNode = RDF.GetResource(id);
@@ -318,6 +350,10 @@ function PreviewPanel()
   for (var nodeIndex=0; nodeIndex<select_list.length; nodeIndex++) {
     var node = select_list[nodeIndex];
     if (!node)    break;
+	// Skip folders
+	if (node.getAttribute('folder') == 'true') {
+	  continue;
+	}
     var id = node.getAttribute("id");
     if (!id)      break;
     var rdfNode = RDF.GetResource(id);
@@ -335,6 +371,38 @@ function PreviewPanel()
 }
 
 function enableSave() {
+  debug("in enableSave()");
+  var root = document.getElementById('selected-panels-root');
+  var panels = root.childNodes;  
+  var list_unchanged = (panels.length == original_panels.length);
+debug ("panels.length="+panels.length);
+debug ("orig.length="+original_panels.length);
+  for (var ii = 0; ii < panels.length && list_unchanged; ii++) {
+		 //node = root.firstChild; node != null; node = node.nextSibling) {
+	debug("orig="+original_panels[ii]);
+	debug(" new="+panels.item(ii).getAttribute('id'));
+    debug("orig.length="+original_panels.length+" ii="+ii);
+    if (original_panels[ii] != panels.item(ii).getAttribute('id')) {
+      list_unchanged = false;
+	}
+  }
   var save_button = document.getElementById('save_button');
-  save_button.setAttribute('disabled','');  
+  if (list_unchanged) {
+	save_button.setAttribute('disabled','true');  
+  } else {
+	save_button.setAttribute('disabled','');  
+  }
 }
+
+function dumpAttributes(node) {
+  var attributes = node.attributes
+
+  if (!attributes || attributes.length == 0) {
+    debug("no attributes\n")
+  }
+  for (var ii=0; ii < attributes.length; ii++) {
+    var attr = attributes.item(ii)
+    debug("attr "+ii+": "+ attr.name +"="+attr.value)
+  }
+}
+
