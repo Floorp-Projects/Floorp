@@ -28,7 +28,7 @@ import org.mozilla.util.ParameterCheck;
  * This is a static class, it is neven instantiated.
 
  *
- * @version $Id: BrowserControlCanvasFactory.java,v 1.2 1999/08/10 03:59:03 mark.lin%eng.sun.com Exp $
+ * @version $Id: BrowserControlCanvasFactory.java,v 1.3 1999/08/12 21:29:15 mark.lin%eng.sun.com Exp $
  * 
  * @see	org.mozilla.webclient.test.EmbeddedMozilla
 
@@ -86,10 +86,10 @@ public static BrowserControlCanvas newBrowserControlCanvas()
             Class.forName("sun.awt.windows.WDrawingSurfaceInfo");
         
         if (win32DrawingSurfaceInfoClass != null) {
-            className = "org.mozilla.webclient.win32.Win32MozWebShellCanvas";
+            className = "org.mozilla.webclient.win32.Win32BrowserControlCanvas";
         }
     } catch (Exception e) {
-        className = null;
+        // Do nothing????
     }
 
     try {
@@ -100,7 +100,7 @@ public static BrowserControlCanvas newBrowserControlCanvas()
             className = "org.mozilla.webclient.motif.MotifBrowserControlCanvas";
         }
     } catch (Exception e) {
-        className = null;
+        // Do nothing????
     }
 
     if (className != null) {
@@ -135,7 +135,7 @@ public static void main(String [] args)
     Assert.setEnabled(true);
     Log.setApplicationName("BrowserControlCanvasFactory");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: BrowserControlCanvasFactory.java,v 1.2 1999/08/10 03:59:03 mark.lin%eng.sun.com Exp $");
+    Log.setApplicationVersionDate("$Id: BrowserControlCanvasFactory.java,v 1.3 1999/08/12 21:29:15 mark.lin%eng.sun.com Exp $");
 
 	BrowserControlCanvas canvas = BrowserControlCanvasFactory.newBrowserControlCanvas();
 
