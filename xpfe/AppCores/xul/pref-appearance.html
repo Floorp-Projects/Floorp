@@ -1,0 +1,69 @@
+<html>
+
+<head>
+<title>Sample Prefs Panel</title>
+</head>
+
+<style>
+	body  {
+	  background-color:#CCCCCC
+	}
+	   
+	#righttext {
+	  text-align: left;
+	  font-style: bold;
+	}
+
+
+	#righttext {
+	  text-align: right;
+	}
+
+	#top  {
+	background-color: grey
+	}
+
+//	table {
+//	    display:block;
+//	    border: groove white 2px;
+//	    min-height: 16px;
+//	    color: white;
+//	}
+
+</style>
+
+<script language="JavaScript" src="PrefsWindow.js">
+</script>
+
+<body ID=here onload="return StartUp('Appearance');">
+	<DIV ID=top>
+		<SPAN ID=lefttext>Appearance</SPAN>
+	</DIV>
+	<br>
+
+	On startup, launch
+	
+	<FORM>
+		<table>
+			<tr><td><input type="checkbox">Navigator</td></tr>
+			<tr><td><input type="checkbox">Messenger</td></tr>
+			<tr><td><input type="checkbox">Composer</td></tr>
+			<tr><td><input type="checkbox">Calendar</td></tr>
+		</table>
+	</FORM>
+
+		<br>
+		<br>
+
+	Show toolbars as
+
+	<FORM>
+		<table>
+			<tr><td><input name="showtoolbar" type="radio">Pictures and Text</td></tr>
+			<tr><td><input name="showtoolbar" type="radio">Pictures Only</td></tr>
+			<tr><td><input name="showtoolbar" type="radio">Text Only</td></tr>
+		</table>
+	</FORM>
+
+</body>
+</html>

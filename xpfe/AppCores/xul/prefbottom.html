@@ -1,0 +1,53 @@
+<html>
+
+<head>
+	<script language="JavaScript" src="PrefsWindow.js">
+	</script>
+</head>
+
+<style>
+	body  {
+	  background-color:#CCCCCC
+	}
+	   
+	#lefttext {
+	  text-align: left;
+	  font-style: bold;
+	}
+
+
+	#righttext {
+	  text-align: right;
+	}
+
+	#top  {
+	  font-family:system;
+      background-color: grey
+	}
+
+</style>
+
+<body onload="return StartUp('Bottom');">
+	<table width="100%" cellpadding=0 cellspacing=0>
+		<tr>
+			<td valign="right" width="160">
+				<center>
+					<form>
+
+					<input type="button" align="bottom" value="Help">
+					</input>
+
+					<input type="button" align="bottom" value="Cancel" onclick="DoSave();">
+					</input>
+
+					<input type="button" align="bottom" value="OK" onClick="DoCancel();">
+					</input>
+
+					 </form>
+				 </center>	  
+			  </td>
+		  </tr>
+	</table>
+</body>  
+
+</html>

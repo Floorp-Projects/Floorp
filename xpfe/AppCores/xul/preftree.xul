@@ -1,0 +1,180 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="preftree.css" type="text/css"?>
+
+<!DOCTYPE window>
+
+<xul:window xmlns:html="http://www.w3.org/TR/REC-html40"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload = "ChangePanelURL(pref-appearance.html);"> 
+
+<html:script>
+
+  function ClickChangePanel(node)
+  {
+    url = node.getAttribute('name');
+    ChangePanelURL(url);
+  }
+
+  function ChangePanelURL(url)
+  {
+    dump("ChangePanel(" + url + ")\n");
+    var prefsCore = XPAppCoresManager.Find("PrefsCore");
+    if (!prefsCore)
+    {
+      prefsCore = new PrefsCore();
+      if (prefsCore)
+      {
+        prefsCore.Init("PrefsCore");
+      }
+    }
+    if (prefsCore)
+    {
+      prefsCore.ChangePanel(url);
+    }
+
+    return true;
+  }
+
+</html:script>
+
+<tree onclick="return ClickChangePanel(event.target);"> 
+  
+  <treebody>
+  
+    <treeitem>
+       
+      <treecell name="resource:/res/samples/pref-appearance.html"><treeindentation/>Appearance</treecell>
+       
+	  <treechildren>
+        <treeitem>
+          <treecell name="resource:/res/samples/pref-fonts.html"><treeindentation/>Fonts</treecell>
+	    </treeitem>
+        <treeitem>
+          <treecell><treeindentation/>Colors</treecell>
+	    </treeitem>
+      </treechildren>
+    
+    </treeitem>
+ 
+    <treeitem>
+
+      <treecell name="resource:/res/samples/pref-navigator.html"><treeindentation/>Navigator</treecell>
+       
+	  <treechildren>
+        <treeitem>
+          <treecell><treeindentation/>Languages</treecell>
+	    </treeitem>
+        <treeitem>
+          <treecell><treeindentation/>Applications</treecell>
+	    </treeitem>
+        <treeitem>
+          <treecell><treeindentation/>Smart Browsing</treecell>
+	    </treeitem>
+      </treechildren>
+    
+    </treeitem>
+ 
+     <treeitem>
+       
+      <treecell><treeindentation/>Mail & News</treecell>
+       
+	  <treechildren>
+        <treeitem>
+          <treecell><treeindentation/>Identity</treecell>
+	    </treeitem>
+        <treeitem>
+          <treecell><treeindentation/>Mail Servers</treecell>
+	    </treeitem>
+        <treeitem>
+          <treecell><treeindentation/>News Servers</treecell>
+	    </treeitem>
+        <treeitem>
+          <treecell><treeindentation/>Addressing</treecell>
+	    </treeitem>
+        <treeitem>
+          <treecell><treeindentation/>Messages</treecell>
+	    </treeitem>
+        <treeitem>
+          <treecell><treeindentation/>Window Settings</treecell>
+	    </treeitem>
+        <treeitem>
+          <treecell><treeindentation/>Copies & Folders</treecell>
+	    </treeitem>
+        <treeitem>
+          <treecell><treeindentation/>Formatting</treecell>
+	    </treeitem>
+        <treeitem>
+          <treecell><treeindentation/>Return Receipts</treecell>
+	    </treeitem>
+        <treeitem>
+          <treecell><treeindentation/>Disk Space</treecell>
+	    </treeitem>
+      </treechildren>
+    
+    </treeitem>
+    
+     <treeitem>
+       
+      <treecell><treeindentation/>Composer</treecell>
+       
+	  <treechildren>
+        <treeitem>
+          <treecell><treeindentation/>Publish</treecell>
+	    </treeitem>
+      </treechildren>
+    
+    </treeitem>
+    
+     <treeitem>
+       
+      <treecell><treeindentation/>Roaming Access</treecell>
+       
+	  <treechildren>
+        <treeitem>
+          <treecell><treeindentation/>Server Info</treecell>
+	    </treeitem>
+        <treeitem>
+          <treecell><treeindentation/>File Selection</treecell>
+	    </treeitem>
+      </treechildren>
+    
+    </treeitem>
+    
+     <treeitem>
+       
+      <treecell><treeindentation/>Offline</treecell>
+       
+	  <treechildren>
+        <treeitem>
+          <treecell><treeindentation/>Download</treecell>
+	    </treeitem>
+      </treechildren>
+    
+    </treeitem>
+    
+     <treeitem>
+       
+      <treecell><treeindentation/>Advanced</treecell>
+       
+	  <treechildren>
+        <treeitem>
+          <treecell><treeindentation/>Publish</treecell>
+	    </treeitem>
+        <treeitem>
+          <treecell><treeindentation/>Cache</treecell>
+	    </treeitem>
+        <treeitem>
+          <treecell><treeindentation/>Proxies</treecell>
+	    </treeitem>
+        <treeitem>
+          <treecell><treeindentation/>Smart Update</treecell>
+	    </treeitem>
+      </treechildren>
+    
+    </treeitem>
+    
+  </treebody>
+  
+</tree>
+
+</window>

@@ -1,0 +1,63 @@
+window {
+	display: block;
+	width: 100%;
+	border: thin black solid bottom;
+}
+
+tree {
+	display: table;
+	background-color: white;
+	border: none;
+	border-spacing: 0px;
+	border-collapse: collapse;
+	width: 100%;
+}
+
+treeitem {
+	display: table-row;
+    visibility: visible; 
+}
+
+treehead {
+	display: table-header-group;
+}
+
+treebody {
+	display: table-row-group;	
+}
+
+treehead > treeitem { 
+    visibility: visible; 
+} 
+treeitem[open] > treechildren > treeitem { 
+    visibility: visible; 
+}
+treebody > treeitem { 
+    visibility: visible; 
+} 
+
+
+treecell {
+	display: table-cell;
+	color: black;
+	font-family: Arial;
+	font-size: 12pt;
+}
+
+treehead treeitem treecell {
+	background-color: white;
+	border: thin black solid;
+	color: black;
+}
+
+treeicon {
+	display: list-item;
+	list-style-image: url("http://rava/~hyatt/ClosedRead.gif");
+	list-style-position: inside;
+}
+
+treecell[selectedcell] {
+	background-color: yellow;
+}
+
+
