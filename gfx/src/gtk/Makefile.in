@@ -42,7 +42,6 @@ REQUIRES	= xpcom \
 		  unicharutil \
 		  windowwatcher \
 		  locale \
-		  intl \
 		  $(NULL)
 
 CSRCS		= nsPrintdGTK.c

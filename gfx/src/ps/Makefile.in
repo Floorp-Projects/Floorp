@@ -41,7 +41,6 @@ REQUIRES	= xpcom \
 		  gfx2 \
 		  necko \
 		  imglib2 \
-		  intl \
 		  $(NULL)
 EXTRA_DSO_LIBS += gkgfx
 

@@ -30,7 +30,6 @@ MODULE		= necko
 LIBRARY_NAME	= nkres_s
 REQUIRES	= xpcom \
 		  string \
-		  mimetype \
 		  $(NULL)
 
 CPPSRCS		=			 \

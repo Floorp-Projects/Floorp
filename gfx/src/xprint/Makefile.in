@@ -45,7 +45,6 @@ REQUIRES	= xpcom \
 		  unicharutil \
 		  gfx2 \
 		  imglib2 \
-		  intl \
 		  $(NULL)
 
 CSRCS		= \
