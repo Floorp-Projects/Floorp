@@ -19,7 +19,6 @@
 #ifndef nsAppShell_h__
 #define nsAppShell_h__
 
-#include "nsObject.h"
 #include "nsIAppShell.h"
 
 #include <Xm/MainW.h>
@@ -28,20 +27,17 @@
  * Native MOTIF Application shell wrapper
  */
 
-class nsAppShell : public nsIAppShell, public nsObject
+class nsAppShell : public nsIAppShell
 {
   private:
     Widget       mTopLevel;
     XtAppContext mAppContext;
 
   public:
-                            nsAppShell(nsISupports *aOuter); 
-    virtual                 ~nsAppShell();
+    nsAppShell();
+    virtual ~nsAppShell();
 
-    // nsISupports. Forward to the nsObject base class
-    BASE_SUPPORT
-
-    virtual nsresult        QueryObject(const nsIID& aIID, void** aInstancePtr);
+    NS_DECL_ISUPPORTS
 
     // nsIAppShellInterface
   

@@ -143,7 +143,7 @@ fprintf(stderr, "Entering Eidget Factory\n");fflush(stderr);
     }
 
     else if (aIID.Equals(kIAppShellIID)) {
-      nsIAppShell *appInst = (nsIAppShell*)new nsAppShell(aOuter);
+      nsIAppShell *appInst = (nsIAppShell*)new nsAppShell();
       if (appInst == NULL) {  
           return NS_ERROR_OUT_OF_MEMORY;  
       }  
