@@ -961,8 +961,8 @@ void nsWindow::SetCursor(nsCursor aCursor)
         newCursor = XCreateFontCursor(display, XC_right_side);
       break;
 
-      case eCursor_arrow_east:
-      case eCursor_arrow_east_plus:
+      case eCursor_arrow_west:
+      case eCursor_arrow_west_plus:
         newCursor = XCreateFontCursor(display, XC_left_side);
       break;
 
