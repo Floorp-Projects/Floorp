@@ -272,11 +272,13 @@ nsHTTPHandler::NewChannel(nsIURI* i_URL, nsIChannel **o_Instance)
             rv = pChannel->Init();
             if (NS_FAILED(rv)) goto done;
 
-            rv = mProxySvc->GetProxyEnabled(&checkForProxy);
-            if (checkForProxy)
-            {
-                rv = mProxySvc->ExamineForProxy(i_URL, pChannel);
-                if (NS_FAILED(rv)) goto done;
+						if (mProxySvc) {
+	            rv = mProxySvc->GetProxyEnabled(&checkForProxy);
+	            if (checkForProxy)
+	            {
+	                rv = mProxySvc->ExamineForProxy(i_URL, pChannel);
+	                if (NS_FAILED(rv)) goto done;
+	            }
             }
 
             rv = pChannel->QueryInterface(NS_GET_IID(nsIChannel), 
@@ -765,6 +767,8 @@ nsHTTPHandler::Init()
     nsresult rv = NS_OK;
 
     mProxySvc = do_GetService(kProtocolProxyServiceCID, &rv);
+    NS_ASSERTION (NS_SUCCEEDED(rv), "Get Proxy Service failed");
+
     mPrefs = do_GetService(kPrefServiceCID, &rv);
     if (!mPrefs)
         return NS_ERROR_OUT_OF_MEMORY;
