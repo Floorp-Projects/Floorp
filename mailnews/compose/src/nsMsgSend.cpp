@@ -305,11 +305,24 @@ static char* NET_GetURLFromLocalFile(char *filename)
 static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
+#ifdef XP_UNIX
+#define TEMP_PATH "/usr/tmp/"
+#endif
+
+#ifdef XP_PC
+#define TEMP_PATH  "c:\\temp\\"
+#endif
+
+#ifdef XP_MAC
+#define TEMP_PATH  ""
+#endif
+
 char * WH_TempName(const char * prefix)
 {
 	nsresult res;
-	nsString tempPath = "c:\\temp\\";
+	nsString tempFilePath = TEMP_PATH;
 
+/*JFD
 	#define PREF_LENGTH 128 
 	char prefValue[PREF_LENGTH];
 	PRInt32 prefLength = PREF_LENGTH;
@@ -318,16 +331,17 @@ char * WH_TempName(const char * prefix)
 	{
 		res = prefs->GetCharPref("browser.download_directory", prefValue, &prefLength);
 		if (NS_SUCCEEDED(res) && prefLength > 0)
-			tempPath = PL_strdup(prefValue);
+			tempFilePath = PL_strdup(prefValue);
 	}
 	
-	if (tempPath.Last() != '\\')
-		tempPath += '\\';
+	if (tempFilePath.Last() != '\\')
+		tempFilePath += '\\';
+*/
 
-	tempPath += prefix;
-	tempPath += "01.txt";	//JFD, need to be smarter than that!
+	tempFilePath += prefix;
+	tempFilePath += "01.txt";	//JFD, need to be smarter than that!
 
-	return tempPath.ToNewCString();
+	return tempFilePath.ToNewCString();
 }
 
 /* this function will be used by the factory to generate an Message Send Object....*/
@@ -5063,7 +5077,8 @@ void nsMsgSendMimeDeliveryState::DeliverFileAsMail ()
 			PL_strcat (buf2, m_fields->GetBcc());
 	}
 
-	nsFilePath filePath (m_msg_file_name ? m_msg_file_name : "");
+	nsFileSpec fileSpec (m_msg_file_name ? m_msg_file_name : "");	//need to convert to unix path
+	nsFilePath filePath (fileSpec);
 
     nsresult rv = NS_OK;
     NS_WITH_SERVICE(nsISmtpService, smtpService, kSmtpServiceCID, &rv);
@@ -5080,7 +5095,8 @@ void nsMsgSendMimeDeliveryState::DeliverFileAsNews ()
     return;
   }
 
-  nsFilePath filePath (m_msg_file_name ? m_msg_file_name : "");
+  nsFileSpec fileSpec (m_msg_file_name ? m_msg_file_name : "");	//need to convert to unix path
+  nsFilePath filePath (fileSpec);
 
   nsresult rv = NS_OK;
   NS_WITH_SERVICE(nsINntpService, nntpService, kNntpServiceCID, &rv);
