@@ -501,12 +501,17 @@ nsInputFrame::CalculateSize (nsIPresContext* aPresContext, nsInputFrame* aFrame,
   float p2t = aPresContext->GetPixelsToTwips();
 
   // determine the width
+  nscoord adjSize;
   if (eContentAttr_HasValue == colStatus) {  // col attr will provide width
     if (aSpec.mColSizeAttrInPixels) {
-      aBounds.width = NSIntPixelsToTwips(colAttr.GetPixelValue(), p2t);
+      adjSize = (colAttr.GetPixelValue() > 0) ? colAttr.GetPixelValue() : 15;
+      aBounds.width = NSIntPixelsToTwips(adjSize, p2t);
     }
     else {
       PRInt32 col = ((colAttr.GetUnit() == eHTMLUnit_Pixel) ? colAttr.GetPixelValue() : colAttr.GetIntValue());
+      if (col <= 0) {
+        col = 1;
+      }
       charWidth = GetTextSize(*aPresContext, aFrame, col, aBounds);
       aRowHeight = aBounds.height;  // XXX aBounds.height has CSS_NOTSET
     }
@@ -516,7 +521,7 @@ nsInputFrame::CalculateSize (nsIPresContext* aPresContext, nsInputFrame* aFrame,
   }
   else {
     if (CSS_NOTSET != aCSSSize.width) {  // css provides width
-      aBounds.width = aCSSSize.width;
+      aBounds.width = (aCSSSize.width > 0) ? aCSSSize.width : 1;
 	    aWidthExplicit = PR_TRUE;
     } 
     else {                       
@@ -543,21 +548,21 @@ nsInputFrame::CalculateSize (nsIPresContext* aPresContext, nsInputFrame* aFrame,
   if (nsnull != aSpec.mRowSizeAttr) {
     rowStatus = content->GetAttribute(aSpec.mRowSizeAttr, rowAttr);
   }
-
   if (eContentAttr_HasValue == rowStatus) { // row attr will provide height
     PRInt32 rowAttrInt = ((rowAttr.GetUnit() == eHTMLUnit_Pixel) ? rowAttr.GetPixelValue() : rowAttr.GetIntValue());
+    adjSize = (rowAttrInt > 0) ? rowAttrInt : 1;
     if (0 == charWidth) {
       charWidth = GetTextSize(*aPresContext, aFrame, 1, textSize);
-      aBounds.height = textSize.height * rowAttrInt;
+      aBounds.height = textSize.height * adjSize;
       aRowHeight = textSize.height;
-      numRows = rowAttrInt;
+      numRows = adjSize;
     }
     else {
-      aBounds.height = aBounds.height * rowAttrInt;
+      aBounds.height = aBounds.height * adjSize;
     }
   }
   else if (CSS_NOTSET != aCSSSize.height) {  // css provides height
-    aBounds.height = aCSSSize.height;
+    aBounds.height = (aCSSSize.height > 0) ? aCSSSize.height : 1;
 	  aHeightExplicit = PR_TRUE;
   } 
   else {         // use default height in num lines
