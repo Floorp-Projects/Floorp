@@ -35,6 +35,9 @@ nsBlockBandData::nsBlockBandData()
 nsBlockBandData::~nsBlockBandData()
 {
   NS_IF_RELEASE(mSpaceManager);
+  if (trapezoids != mData) {
+    delete [] trapezoids;
+  }
 }
 
 nsresult
@@ -59,16 +62,31 @@ nsBlockBandData::Init(nsISpaceManager* aSpaceManager,
 // Get the available reflow space for the current y coordinate. The
 // available space is relative to our coordinate system (0,0) is our
 // upper left corner.
-void
+nsresult
 nsBlockBandData::GetAvailableSpace(nscoord aY, nsRect& aResult)
 {
   // Get the raw band data for the given Y coordinate
-  mSpaceManager->GetBandData(aY, mSpace, *this);
+  PRInt32 currentSize = size;
+  nsresult rv = mSpaceManager->GetBandData(aY, mSpace, *this);
+  while (NS_FAILED(rv)) {
+    // We need more space for our bands
+    if (trapezoids != mData) {
+      delete [] trapezoids;
+    }
+    PRInt32 newSize = size * 2;
+    trapezoids = new nsBandTrapezoid[newSize];
+    if (!trapezoids) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    size = newSize;
+    rv = mSpaceManager->GetBandData(aY, mSpace, *this);
+  }
 
   // Compute the bounding rect of the available space, i.e. space
   // between any left and right floaters.
   ComputeAvailSpaceRect();
   aResult = mAvailSpace;
+  return NS_OK;
 }
 
 /**
@@ -88,7 +106,7 @@ nsBlockBandData::ComputeAvailSpaceRect()
     return;
   }
 
-  nsBandTrapezoid* trapezoid = mData;
+  nsBandTrapezoid* trapezoid = trapezoids;
   nsBandTrapezoid* rightTrapezoid = nsnull;
 
   PRInt32 floaters = 0;
@@ -100,7 +118,7 @@ nsBlockBandData::ComputeAvailSpaceRect()
     // left and right floaters. Use the right-most floater to
     // determine where the right edge of the available space is.
     for (i = 0; i < count; i++) {
-      trapezoid = &mData[i];
+      trapezoid = &trapezoids[i];
       if (trapezoid->state != nsBandTrapezoid::Available) {
         const nsStyleDisplay* display;
         if (nsBandTrapezoid::OccupiedMultiple == trapezoid->state) {
@@ -116,7 +134,7 @@ nsBlockBandData::ComputeAvailSpaceRect()
             else if (NS_STYLE_FLOAT_RIGHT == display->mFloats) {
               floaters++;
               if ((nsnull == rightTrapezoid) && (i > 0)) {
-                rightTrapezoid = &mData[i - 1];
+                rightTrapezoid = &trapezoids[i - 1];
               }
             }
           }
@@ -129,14 +147,14 @@ nsBlockBandData::ComputeAvailSpaceRect()
           else if (NS_STYLE_FLOAT_RIGHT == display->mFloats) {
             floaters++;
             if ((nsnull == rightTrapezoid) && (i > 0)) {
-              rightTrapezoid = &mData[i - 1];
+              rightTrapezoid = &trapezoids[i - 1];
             }
           }
         }
       }
     }
   }
-  else if (mData[0].state != nsBandTrapezoid::Available) {
+  else if (trapezoids[0].state != nsBandTrapezoid::Available) {
     // We have a floater using up all the available space
     floaters = 1;
   }
@@ -277,7 +295,7 @@ nsBlockBandData::ClearFloaters(nscoord aY, PRUint8 aBreakType)
     nscoord yMost = aYS;
     PRInt32 i;
     for (i = 0; i < count; i++) {
-      nsBandTrapezoid* trapezoid = &mData[i];
+      nsBandTrapezoid* trapezoid = &trapezoids[i];
       if (nsBandTrapezoid::Available != trapezoid->state) {
         if (nsBandTrapezoid::OccupiedMultiple == trapezoid->state) {
           PRInt32 fn, numFrames = trapezoid->frames->Count();
@@ -315,7 +333,7 @@ nsBlockBandData::GetMaxElementSize(nscoord* aWidthResult,
   nscoord maxWidth = 0;
   nscoord maxHeight = 0;
   for (PRInt32 i = 0; i < count; i++) {
-    const nsBandTrapezoid* trap = &mData[i];
+    const nsBandTrapezoid* trap = &trapezoids[i];
     if (trap->state != nsBandTrapezoid::Available) {
       // Get the width of the impacted area and update the maxWidth
       trap->GetRect(r);

@@ -35,7 +35,7 @@ public:
 
   // Get some available space. Note that aY is relative to the current
   // space manager translation.
-  void GetAvailableSpace(nscoord aY, nsRect& aResult);
+  nsresult GetAvailableSpace(nscoord aY, nsRect& aResult);
 
   // Clear any current floaters, returning a new Y coordinate
   nscoord ClearFloaters(nscoord aY, PRUint8 aBreakType);
@@ -46,7 +46,7 @@ public:
   }
 
   const nsBandTrapezoid* GetTrapezoid(PRInt32 aIndex) const {
-    return &mData[aIndex];
+    return &trapezoids[aIndex];
   }
 
   // Get the number of floaters that are impacting the current
@@ -71,7 +71,6 @@ protected:
   nsSize mSpace;
 
   // Trapezoids used during band processing
-  // nsBlockBandData what happens if we need more than 12 trapezoids?
   nsBandTrapezoid mData[12];
 
   // Bounding rect of available space between any left and right floaters
@@ -84,9 +83,6 @@ protected:
 
   void ComputeAvailSpaceRect();
   PRBool ShouldClearFrame(nsIFrame* aFrame, PRUint8 aBreakType);
-#if 0
-  nscoord GetFrameYMost(nsIFrame* aFrame);
-#endif
 };
 
 #endif /* nsBlockBandData_h___ */
