@@ -58,6 +58,7 @@
 #include "nsIWindowWatcher.h"
 #include "nsIDOMWindow.h"
 #include "nsEscape.h"
+#include "nsIContentViewer.h"
 
 #include "nsIDocShell.h"
 #include "nsIScriptGlobalObject.h"
@@ -117,6 +118,28 @@ static PRUint32 GetMessageSizeFromURI(const char * originalMsgURI)
   return msgSize;
 }
 #endif
+
+void
+SetWindowSticky(nsIDOMWindowInternal *aWindow)
+{
+  nsCOMPtr<nsIScriptGlobalObject> globalObj(do_QueryInterface(aWindow));
+  if (globalObj)
+  {
+    nsCOMPtr<nsIDocShell> docshell;
+    globalObj->GetDocShell(getter_AddRefs(docshell));
+
+    if (docshell)
+    {
+      nsCOMPtr<nsIContentViewer> contentViewer;
+      docshell->GetContentViewer(getter_AddRefs(contentViewer));
+
+      if (contentViewer)
+      {
+        contentViewer->SetSticky(PR_TRUE);
+      }
+    }
+  }
+}
 
 nsMsgComposeService::nsMsgComposeService()
 {
@@ -742,6 +765,8 @@ nsMsgComposeService::CacheWindow(nsIDOMWindowInternal *aWindow, PRBool aComposeH
   {
     if (!mCachedWindows[i].window)
     {
+      SetWindowSticky(aWindow);
+
       rv = ShowCachedComposeWindow(aWindow, PR_FALSE);
       if (NS_SUCCEEDED(rv))
         mCachedWindows[i].Initialize(aWindow, aListener, aComposeHTML);
