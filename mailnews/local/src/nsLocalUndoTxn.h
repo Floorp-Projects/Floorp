@@ -32,7 +32,7 @@
 	0x874363b4, 0x242e, 0x11d3, \
 	{ 0xaf, 0xad, 0x00, 0x10, 0x83, 0x00, 0x2d, 0xa8 } }
 
-class nsLocalMoveCopyMsgTxn : public nsMsgTxn, public nsIUrlListener
+class nsLocalMoveCopyMsgTxn : public nsMsgTxn
 {
 public:
     NS_DEFINE_STATIC_IID_ACCESSOR(NS_LOCALMOVECOPYMSGTXN_IID)
@@ -44,10 +44,6 @@ public:
     virtual ~nsLocalMoveCopyMsgTxn();
 
     NS_DECL_ISUPPORTS_INHERITED
-
-    // nsIUrlListener methods
-	NS_IMETHOD OnStartRunningUrl(nsIURI * aUrl);
-	NS_IMETHOD OnStopRunningUrl(nsIURI * aUrl, nsresult aExitCode);
 
     // overloading nsITransaction methods
 	NS_IMETHOD Undo(void);

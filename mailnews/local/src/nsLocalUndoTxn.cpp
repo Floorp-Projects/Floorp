@@ -59,10 +59,6 @@ nsLocalMoveCopyMsgTxn::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     {
         *aInstancePtr = NS_STATIC_CAST(nsLocalMoveCopyMsgTxn*, this);
     }
-    else if (aIID.Equals(nsIUrlListener::GetIID()))
-    {
-        *aInstancePtr = NS_STATIC_CAST(nsIUrlListener*, this);
-    }
 
     if (*aInstancePtr)
     {
@@ -181,9 +177,7 @@ nsLocalMoveCopyMsgTxn::UndoImapDeleteFlag(nsIMsgFolder* folder,
             nsString2 msgIds("", eOneByte);
             PRUint32 i, count = keyArray.GetSize();
 
-            rv  = QueryInterface(nsIUrlListener::GetIID(),
-                                 getter_AddRefs(urlListener));
-            if (NS_FAILED(rv)) return rv;
+            urlListener = do_QueryInterface(folder, &rv);
 
             for (i=0; i < count; i++)
             {
@@ -215,7 +209,7 @@ nsLocalMoveCopyMsgTxn::UndoImapDeleteFlag(nsIMsgFolder* folder,
                                                          PR_TRUE);
                     if (NS_SUCCEEDED(rv))
                         imapService->SelectFolder(eventQueue, folder,
-                                                  this, nsnull);
+                                                  urlListener, nsnull);
                 }
             }
         }
@@ -335,16 +329,3 @@ nsLocalMoveCopyMsgTxn::Redo()
 
     return rv;
 }
-
-NS_IMETHODIMP
-nsLocalMoveCopyMsgTxn::OnStartRunningUrl(nsIURI* aUrl)
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsLocalMoveCopyMsgTxn::OnStopRunningUrl(nsIURI* aUrl, nsresult exitCode)
-{
-    return NS_OK;
-}
-

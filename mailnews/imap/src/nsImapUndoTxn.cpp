@@ -133,10 +133,6 @@ nsImapMoveCopyMsgTxn::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     {
         *aInstancePtr = NS_STATIC_CAST(nsImapMoveCopyMsgTxn*, this);
     }
-    else if (aIID.Equals(nsIUrlListener::GetIID()))
-    {
-        *aInstancePtr = NS_STATIC_CAST(nsIUrlListener*, this);
-    }
 
     if (*aInstancePtr)
     {
@@ -378,16 +374,4 @@ nsImapMoveCopyMsgTxn::RedoMailboxDelete()
     return rv;
 }
 
-
-NS_IMETHODIMP
-nsImapMoveCopyMsgTxn::OnStartRunningUrl(nsIURI* aUrl)
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsImapMoveCopyMsgTxn::OnStopRunningUrl(nsIURI* aUrl, nsresult exitCode)
-{
-    return NS_OK;
-}
 
