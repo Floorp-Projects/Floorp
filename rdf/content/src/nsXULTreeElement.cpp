@@ -46,20 +46,12 @@ nsXULTreeElement::nsXULTreeElement(nsIDOMXULElement* aOuter)
   NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create DOM node list");
   if (NS_FAILED(rv)) return;
 
-  mSelectedRows = children;
-
-  children = nsnull;
-  rv = nsRDFDOMNodeList::Create(&children);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create DOM node list");
-  if (NS_FAILED(rv)) return;
-
   mSelectedCells = children;
 }
 
 nsXULTreeElement::~nsXULTreeElement()
 {
   NS_IF_RELEASE(mSelectedItems);
-  NS_IF_RELEASE(mSelectedRows);
   NS_IF_RELEASE(mSelectedCells);
 }
 
@@ -72,17 +64,77 @@ nsXULTreeElement::GetSelectedItems(nsIDOMNodeList** aSelectedItems)
 }
 
 NS_IMETHODIMP
-nsXULTreeElement::GetSelectedRows(nsIDOMNodeList** aSelectedRows)
-{
-  NS_IF_ADDREF(mSelectedRows);
-  *aSelectedRows = mSelectedRows;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsXULTreeElement::GetSelectedCells(nsIDOMNodeList** aSelectedCells)
 {
   NS_IF_ADDREF(mSelectedCells);
   *aSelectedCells = mSelectedCells;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULTreeElement::SelectItem(nsIDOMXULElement* aTreeItem)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULTreeElement::SelectCell(nsIDOMXULElement* aTreeCell)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsXULTreeElement::ClearSelection()
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULTreeElement::AddItemToSelection(nsIDOMXULElement* aTreeItem)
+{
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsXULTreeElement::RemoveItemFromSelection(nsIDOMXULElement* aTreeItem)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULTreeElement::AddCellToSelection(nsIDOMXULElement* aTreeCell)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULTreeElement::RemoveCellFromSelection(nsIDOMXULElement* aTreeCell)
+{
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsXULTreeElement::SelectItemRange(nsIDOMXULElement* aStartItem, nsIDOMXULElement* aEndItem)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULTreeElement::SelectCellRange(nsIDOMXULElement* aStartItem, nsIDOMXULElement* aEndItem)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULTreeElement::SelectAll()
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULTreeElement::InvertSelection()
+{
   return NS_OK;
 }
