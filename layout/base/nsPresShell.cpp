@@ -1030,6 +1030,10 @@ public:
   
 #endif
 
+#ifdef PR_LOGGING
+  static PRLogModuleInfo* gLog;
+#endif
+
 protected:
   virtual ~PresShell();
 
@@ -1181,6 +1185,10 @@ private:
   nsresult HandleEventInternal(nsEvent* aEvent, nsIView* aView, PRUint32 aFlags, nsEventStatus *aStatus);
 };
 
+#ifdef PR_LOGGING
+PRLogModuleInfo* PresShell::gLog;
+#endif
+
 #ifdef NS_DEBUG
 static void
 VerifyStyleTree(nsIPresContext* aPresContext, nsIFrameManager* aFrameManager)
@@ -1311,6 +1319,10 @@ PresShell::PresShell():mAnonymousContentTable(nsnull),
 #endif
 #ifdef IBMBIDI
   mBidiLevel = BIDI_LEVEL_UNDEFINED;
+#endif
+#ifdef PR_LOGGING
+  if (! gLog)
+    gLog = PR_NewLogModule("PresShell");
 #endif
 }
 
@@ -5663,7 +5675,7 @@ PresShell::ReflowCommandRemoved(nsIReflowCommand* aRC)
 void
 PresShell::DoneRemovingReflowCommands()
 {
-  if (mRCCreatedDuringLoad == 0 && !mDocumentLoading && mDummyLayoutRequest) {
+  if (mRCCreatedDuringLoad == 0 && mDummyLayoutRequest) {
     RemoveDummyLayoutRequest();
   }
 }
@@ -5689,11 +5701,10 @@ PresShell::AddDummyLayoutRequest(void)
       if (NS_FAILED(rv)) return rv;
       rv = loadGroup->AddRequest(mDummyLayoutRequest, nsnull);
       if (NS_FAILED(rv)) return rv;
-    }
 
-#ifdef DEBUG_nisheeth
-    printf("presshell=%p, Added dummy layout request.\n", this);
-#endif
+      PR_LOG(gLog, PR_LOG_ALWAYS,
+             ("presshell=%p, Added dummy layout request %p", this, mDummyLayoutRequest.get()));
+    }
   }
   return rv;
 }
@@ -5714,12 +5725,11 @@ PresShell::RemoveDummyLayoutRequest(void)
       rv = loadGroup->RemoveRequest(mDummyLayoutRequest, nsnull, NS_OK);
       if (NS_FAILED(rv)) return rv;
 
+      PR_LOG(gLog, PR_LOG_ALWAYS,
+             ("presshell=%p, Removed dummy layout request %p", this, mDummyLayoutRequest.get()));
+
       mDummyLayoutRequest = nsnull;
     }
-
-#ifdef DEBUG_nisheeth
-    printf("presshell=%p, Removed dummy layout request.\n", this);
-#endif
   }
   return rv;
 }
