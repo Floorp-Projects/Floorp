@@ -739,7 +739,7 @@ nsHTMLEditRules::WillDeleteSelection(nsIDOMSelection *aSelection,
                 nsCOMPtr<nsIDOMNode> topParent;
                 nextNode->GetParentNode(getter_AddRefs(topParent));
                 *aHandled = PR_TRUE;
-                res = JoinNodesSmart(nextNode,node,&selNode,&selOffset);
+                res = JoinNodesSmart(node,nextNode,&selNode,&selOffset);
                 if (NS_FAILED(res)) return res;
                 // fix up selection
                 res = aSelection->Collapse(selNode,selOffset);
