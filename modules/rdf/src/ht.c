@@ -1486,6 +1486,7 @@ deleteHTNode(HT_Resource node)
 {
 	HT_Value		value,nextValue;
 	HT_View			view;
+	HT_Resource		parent;
 	ldiv_t			cdiv;
 	uint32			bucketNum, itemListIndex, offset;
 
@@ -1557,6 +1558,13 @@ deleteHTNode(HT_Resource node)
 	}
 
 	removeHTFromHash(node->view->pane, node);
+	parent = node->parent;
+	if (parent->numChildren > 0)	--(parent->numChildren);
+	while (parent != NULL)
+	{
+		--(parent->numChildrenTotal);
+		parent=parent->parent;
+	}
 	node->node = NULL;
 	node->view = NULL;
 	node->parent = NULL;
@@ -2087,7 +2095,7 @@ deleteHTSubtree (HT_Resource subtree)
 void
 deleteContainerItem (HT_Resource container, RDF_Resource item)
 {
-	HT_Resource		nc, pr, parent, nx = NULL;
+	HT_Resource		nc, pr, nx = NULL;
 
 	nc = container->child;
 	pr = nc;
@@ -2111,22 +2119,12 @@ deleteContainerItem (HT_Resource container, RDF_Resource item)
 	nc = nc->next;
 	}
 	if (nx == NULL) return;
-	--container->numChildren;
   
-	parent = container;
-	while (parent != NULL)
-	{
-		--(parent->numChildrenTotal);
-		parent=parent->parent;
-	}
-	if ((nx != NULL) && (HT_IsContainer(nx)))
+	if (HT_IsContainer(nx))
 	{
 		deleteHTSubtree(nx);
 	}
-	if (nx)
-	{
-		deleteHTNode(nx);
-	}
+	deleteHTNode(nx);
 
 	if (gBatchUpdate != true)
 	{
@@ -3612,6 +3610,9 @@ HT_DoMenuCmd(HT_Pane pane, HT_MenuCmd menuCmd)
 				if (HT_IsContainer(node))
 				{
 					destroyViewInt(node, PR_TRUE);
+					RDF_Assert(node->view->pane->db, node->node,
+						gNavCenter->RDF_Command, gNavCenter->RDF_Command_Refresh,
+						RDF_RESOURCE_TYPE);
 					refreshItemList (node, HT_EVENT_VIEW_REFRESH);
 				}
 				break;

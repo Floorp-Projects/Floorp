@@ -504,6 +504,10 @@ nlocalStoreAssert (RDFT rdf, RDF_Resource u, RDF_Resource s, void* v,
     uint16  n    = 0;
     size_t tsize;
     PRBool ans = 0;
+    
+    /* don't store RDF Commands in the local store */
+    if (s == gNavCenter->RDF_Command)	return 0;
+    
     data =  DBM_GetSlotValue(rdf, u, s, 0, &size);
     if (((data == NULL) && (size != 0)) || ((size == 0) && (data != NULL))) return 0;
     while (n < size) {

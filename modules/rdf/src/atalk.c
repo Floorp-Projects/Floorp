@@ -32,8 +32,6 @@ void	stopAsyncCursors();
 
 
 	/* globals */
-static PRHashTable	*atalk2rdfHash;
-static PRHashTable	*invatalk2rdfHash;
 static RDFT		gRDFDB = NULL;
 
 
@@ -119,8 +117,12 @@ processZones(char *zones, uint16 numZones)
 
 			setContainerp(r, PR_TRUE);
 			setAtalkResourceName(r);
-			remoteStoreAdd(gRDFDB, r, gCoreVocab->RDF_parent,
-				parent, RDF_RESOURCE_TYPE, PR_TRUE);
+			if (!remoteStoreHasAssertion (gRDFDB, r, gCoreVocab->RDF_parent,
+				parent, RDF_RESOURCE_TYPE, PR_TRUE))
+			{
+				remoteStoreAdd(gRDFDB, r, gCoreVocab->RDF_parent,
+					parent, RDF_RESOURCE_TYPE, PR_TRUE);
+			}
 			parent = r;
 		}
 		zones += (1 + (unsigned)zones[0]);
@@ -307,8 +309,12 @@ AtalkPossible(RDFT rdf, RDF_Resource u, RDF_Resource s, PRBool inversep)
 {
 	char		*id;
 
-	if (((startsWith("at://", resourceID(u))) || (startsWith("virtualat://", resourceID(u)))) &&
-		(s == gCoreVocab->RDF_parent) && (containerp(u)))
+	if ((u == gNavCenter->RDF_Appletalk) && (s == gCoreVocab->RDF_parent) && (inversep))
+	{
+		getZones();
+	}
+	else if ((startsWith("at://", resourceID(u))) && (containerp(u) &&
+		(s == gCoreVocab->RDF_parent) && (inversep)))
 	{
 		id = resourceID(u);
 		getServers(u);
@@ -346,7 +352,8 @@ AtalkAssert (RDFT mcf, RDF_Resource u, RDF_Resource s, void *v, RDF_ValueType ty
 
 	if (s == gNavCenter->RDF_Command)
 	{
-		if ((startsWith("afp:/", resourceID(u))) && (v == gNavCenter->RDF_Command_Launch))
+		if ((startsWith("afp:/", resourceID(u))) && (type == RDF_RESOURCE_TYPE) &&
+			(tv) && (v == gNavCenter->RDF_Command_Launch))
 		{
 			/* indicate that we handle mounting of AFP URLs */
 
@@ -618,10 +625,14 @@ AtalkAssert (RDFT mcf, RDF_Resource u, RDF_Resource s, void *v, RDF_ValueType ty
 			if (volume != NULL)		freeMem(volume);
 			if (volPassword != NULL)	freeMem(volPassword);
 		}
-	}
-	else
-	{
-		retVal = remoteStoreHasAssertion (mcf, u, s, v, type, tv);
+		else if ((type == RDF_RESOURCE_TYPE) && (tv) && (v == gNavCenter->RDF_Command_Refresh))
+		{
+			remoteStoreAdd(gRDFDB, u, s, v, type, tv);
+			if ((u == gNavCenter->RDF_Appletalk) || (startsWith("virtualat:/", resourceID(u))))
+			{
+				getZones();
+			}
+		}
 	}
 	return(retVal);
 }
@@ -641,6 +652,10 @@ AtalkHasAssertion (RDFT rdf, RDF_Resource u, RDF_Resource s, void *v, RDF_ValueT
 
 			retVal = true;
 		}
+	}
+	else
+	{
+		retVal = remoteStoreHasAssertion (rdf, u, s, v, type, tv);
 	}
 	return(retVal);
 }
@@ -669,9 +684,6 @@ MakeAtalkStore (char* url)
 			ntr->destroy = AtalkDestroy;
 			ntr->url = copyString(url);
 			gRDFDB  = ntr;
-
-			atalk2rdfHash = PR_NewHashTable(500, idenHash, idenEqual, idenEqual, null, null);
-			invatalk2rdfHash = PR_NewHashTable(500, idenHash, idenEqual, idenEqual, null, null);
 
 			setAtalkResourceName(gNavCenter->RDF_Appletalk);
 			getZones();

@@ -153,6 +153,7 @@ createNavCenterVocab () {
   
   gNavCenter->RDF_Command = RDF_GetResource (gCoreDB, "Command", true);
   gNavCenter->RDF_Command_Launch = RDF_GetResource(gCoreDB, "Command:Launch", true);
+  gNavCenter->RDF_Command_Refresh = RDF_GetResource(gCoreDB, "Command:Refresh", true);
 
   /* NavCenter appearance styles */
 

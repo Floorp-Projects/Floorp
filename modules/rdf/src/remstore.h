@@ -44,6 +44,7 @@ RDFT		existingRDFFileDB (char* url);
 RDFT		MakeFileDB (char* url);
 void		freeAssertion (Assertion as);
 PRBool		remoteAssert3 (RDFFile fi, RDFT mcf, RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType type, PRBool tv);
+void		remoteStoreflushChildren(RDFT mcf, RDF_Resource parent);
 Assertion	remoteStoreAdd (RDFT mcf, RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType type, PRBool tv);
 Assertion	remoteStoreRemove (RDFT mcf, RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType type);
 PRBool		fileReadablep (char* id);

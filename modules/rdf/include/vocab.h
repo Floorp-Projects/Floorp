@@ -97,6 +97,7 @@ typedef struct _RDF_NCVocabStruct {
   
   RDF_Resource RDF_Command;
   RDF_Resource RDF_Command_Launch;
+  RDF_Resource RDF_Command_Refresh;
 
   /* NavCenter appearance styles */
 

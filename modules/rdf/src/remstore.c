@@ -148,12 +148,46 @@ remoteAssert3 (RDFFile fi, RDFT mcf, RDF_Resource u, RDF_Resource s, void* v,
 
 
 
+void
+remoteStoreflushChildren(RDFT mcf, RDF_Resource parent)
+{
+	RDF_Cursor		c;
+	RDF_Resource		child;
+
+	if (parent == NULL)	return;
+	if ((c = remoteStoreGetSlotValues (mcf, parent, gCoreVocab->RDF_parent,
+		RDF_RESOURCE_TYPE,  true, true)) != NULL)
+	{
+		while((child = remoteStoreNextValue (mcf, c)) != NULL)
+		{
+			remoteStoreflushChildren(mcf, child);
+			/* XXX should we remove all arcs coming off of this node? */
+			remoteStoreRemove (mcf, child, gCoreVocab->RDF_parent,
+				parent, RDF_RESOURCE_TYPE);
+		}
+		remoteStoreDisposeCursor (mcf, c);
+	}
+}
+
+
+
 Assertion
 remoteStoreAdd (RDFT mcf, RDF_Resource u, RDF_Resource s, void* v, 
 			  RDF_ValueType type, PRBool tv)
 {
   Assertion nextAs, prevAs, newAs; 
   nextAs = prevAs = u->rarg1;
+
+  if (s == gNavCenter->RDF_Command)
+  {
+  	if ((type == RDF_RESOURCE_TYPE) && (tv) && (v == gNavCenter->RDF_Command_Refresh))
+  	{
+  		/* flush any children of 'u' */
+  		remoteStoreflushChildren(mcf, u);
+	}
+	/* don't store RDF Commands in the remote store */
+  	return(NULL);
+  }
   
   while (nextAs != null) {
     if (asEqual(mcf, nextAs, u, s, v, type)) return null;
@@ -249,7 +283,11 @@ possiblyAccessFile (RDFT mcf, RDF_Resource u, RDF_Resource s, PRBool inversep)
   if (mcf->possiblyAccessFile) (*(mcf->possiblyAccessFile))(mcf, u, s, inversep);
 }
 
-void RDFFilePossiblyAccessFile (RDFT rdf, RDF_Resource u, RDF_Resource s, PRBool inversep) {
+
+
+void
+RDFFilePossiblyAccessFile (RDFT rdf, RDF_Resource u, RDF_Resource s, PRBool inversep)
+{
   if ((resourceType(u) == RDF_RT) && 
        (strstr(rdf->url, ".rdf") || strstr(rdf->url, ".mcf")) &&
 	  (strstr(resourceID(u), ".rdf") || strstr(resourceID(u), ".mcf")) && 
@@ -261,11 +299,16 @@ void RDFFilePossiblyAccessFile (RDFT rdf, RDF_Resource u, RDF_Resource s, PRBool
 
 
 
-
 PRBool
 remoteStoreHasAssertion (RDFT mcf, RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType type, PRBool tv)
 {
   Assertion nextAs;
+  
+  if ((s == gNavCenter->RDF_Command) && (type == RDF_RESOURCE_TYPE) && (tv) && (v == gNavCenter->RDF_Command_Refresh))
+  {
+  	return true;
+  }
+  
   nextAs = u->rarg1;
   while (nextAs != null) {
     if (asEqual(mcf, nextAs, u, s, v, type) && (nextAs->tv == tv)) return true;
@@ -534,7 +577,7 @@ MakeSCookDB (char* url)
     ntr->hasAssertion = remoteStoreHasAssertion;
     ntr->nextValue = remoteStoreNextValue;
     ntr->disposeCursor = remoteStoreDisposeCursor;
-    ntr->possiblyAccessFile = SCookPossiblyAccessFile ;
+    ntr->possiblyAccessFile = SCookPossiblyAccessFile;
     ntr->url = copyString(url);
     return ntr;
   } else return NULL;
