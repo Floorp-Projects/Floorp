@@ -153,11 +153,6 @@ typedef FILE          * XP_File;
     #define SEEK_END PR_SEEK_END
 #endif
 
-#if defined(XP_UNIX)
-#define USE_MMAP_REGISTRY_IO 1
-#else
-#define USE_MMAP_REGISTRY_IO 0
-#endif
 
 #if USE_MMAP_REGISTRY_IO
 
@@ -183,8 +178,8 @@ typedef MmioFile* XP_File;
 #define XP_FileRead(dest,count,file)    PR_Read((file), (dest), (count))
 #define XP_FileWrite(src,count,file)    PR_Write((file), (src), (count))
 #define XP_FileTell(file)               PR_Seek(file, 0, PR_SEEK_CUR)
-#define XP_FileClose(file)              PR_Close(file)
 #define XP_FileOpen(path, flags, mode)  PR_Open((path), (flags), (mode))
+#define XP_FileClose(file)              PR_Close(file)
 #ifdef XP_MAC
 #define XP_FileFlush(file)              PR_Sync(file)
 #else
@@ -219,35 +214,9 @@ typedef PRFileDesc* XP_File;
 
 #ifdef STANDALONE_REGISTRY /* included from prmon.h otherwise */
 #include "prtypes.h"
-
-#if 0
-typedef long            int32;
-typedef unsigned long   uint32;
-typedef short           int16;
-typedef unsigned short  uint16;
-typedef unsigned char   uint8;
-
-#ifdef XP_MAC
-#include <Types.h>
-    typedef char BOOL;
-    typedef char Bool;
-    typedef char XP_Bool;
-#elif defined(XP_PC)
-    typedef int Bool;
-    typedef int XP_Bool;
-#else
-    /*  XP_UNIX: X11/Xlib.h "define"s Bool to be int. This is really lame
-     *  (that's what typedef is for losers). So.. in lieu of a #undef Bool
-     *  here (Xlib still needs ints for Bool-typed parameters) people have
-     *  been #undef-ing Bool before including this file.
-     *  Can we just #undef Bool here? <mailto:mcafee> (help from djw, converse)
-     */
-
-    typedef char Bool;
-    typedef char XP_Bool;
-#endif /* XP_MAC */
-#endif /* 0 */
 #endif /*STANDALONE_REGISTRY*/
+
+typedef int XP_Bool;
 
 #ifdef XP_PC
  typedef struct _stat   XP_StatStruct;

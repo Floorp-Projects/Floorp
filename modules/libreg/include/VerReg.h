@@ -42,7 +42,7 @@ typedef struct _version
 /* CreateRegistry flags */
 #define CR_NEWREGISTRY 1
 
-XP_BEGIN_PROTOS
+PR_BEGIN_EXTERN_C
 /* ---------------------------------------------------------------------
  * Version Registry Operations
  * ---------------------------------------------------------------------
@@ -78,10 +78,10 @@ VR_INTERFACE(REGERR) VR_UninstallDeleteFileFromList(char *component_path, char *
 VR_INTERFACE(REGERR) VR_UninstallDeleteSharedFilesKey(char *regPackageName);
 VR_INTERFACE(REGERR) VR_UninstallDestroy(char *regPackageName);
 VR_INTERFACE(REGERR) VR_EnumUninstall(REGENUM *state, char* userPackageName,
-                                    int32 len1, char*regPackageName, int32 len2, Bool bSharedList);
+                                    int32 len1, char*regPackageName, int32 len2, PRBool bSharedList);
 VR_INTERFACE(REGERR) VR_GetUninstallUserName(char *regPackageName, char *outbuf, uint32 buflen);
 
-XP_END_PROTOS
+PR_END_EXTERN_C
 
 #endif   /* _VERREG_H_ */
 

@@ -22,6 +22,7 @@
 #include "NSReg.h"
 #include "prmem.h"
 #include "prlock.h"
+#include "prlog.h"
 
 /* extra locking for the paranoid */
 /* #define EXTRA_THREADSAFE */

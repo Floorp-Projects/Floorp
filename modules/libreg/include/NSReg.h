@@ -26,8 +26,6 @@
 #ifndef _NSREG_H_
 #define _NSREG_H_
 
-#include "xp_core.h"
-
 typedef void (*nr_RegPackCallbackFunc) (void *userData, int32 bytes, int32 totalBytes);
 
 typedef int32   REGERR;
@@ -122,7 +120,7 @@ typedef struct _reginfo
   #define VR_INTERFACE(type)     type
 #endif
 
-XP_BEGIN_PROTOS
+PR_BEGIN_EXTERN_C
 
 
 
@@ -520,7 +518,7 @@ VR_INTERFACE(void)      NR_ShutdownRegistry(void);
 VR_INTERFACE(REGERR)    NR_StartupRegistry(void);
 
 
-XP_END_PROTOS
+PR_END_EXTERN_C
 
 #endif   /* _NSREG_H_ */
 

@@ -43,10 +43,11 @@
 #include <io.h>
 #endif
 
-#ifdef STANDALONE_REGISTRY
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
+
+#ifdef STANDALONE_REGISTRY
+#include <stdlib.h>
 #include <assert.h>
 #endif /*STANDALONE_REGISTRY*/
 
@@ -120,7 +121,7 @@ PRLock *vr_lock = NULL;
  * ---------------------------------------------------------------------
  */
 static REGERR vr_Init(void);
-static Bool   vr_CompareDirs( char *dir1, char *dir2 );
+static XP_Bool vr_CompareDirs( char *dir1, char *dir2 );
 static REGERR vr_SetCurrentNav( char *product, char *programPath, char *versionStr);
 static REGERR vr_ParseVersion(char *verstr, VERSION *result);
 
@@ -279,7 +280,7 @@ done:
 #define VR_FILE_SEP '/'
 #endif
 
-static Bool vr_CompareDirs( char *dir1, char *dir2 )
+static XP_Bool vr_CompareDirs( char *dir1, char *dir2 )
 {
     int len1,len2;
     len1 = XP_STRLEN( dir1 );
@@ -1128,8 +1129,8 @@ VR_INTERFACE(REGERR) VR_GetRefCount(char *component_path, int *result)
 
 static REGERR vr_GetUninstallItemPath(char *regPackageName, char *regbuf, uint32 regbuflen)
 {
-    Bool bSharedUninstall = FALSE;
-    Bool bNavPackage = FALSE;
+    XP_Bool bSharedUninstall = FALSE;
+    XP_Bool bNavPackage = FALSE;
     uint32 len = 0;
     uint32 sharedstrlen = 0;
     uint32 curstrlen = 0;
@@ -1755,7 +1756,7 @@ VR_INTERFACE(REGERR) VR_UninstallDestroy(char *component_path)
 }   /* UninstallDestroy */
 
 VR_INTERFACE(REGERR) VR_EnumUninstall(REGENUM *state, char* userPackageName,
-                                    int32 len1, char*regPackageName, int32 len2, Bool bSharedList)
+                                    int32 len1, char*regPackageName, int32 len2, XP_Bool bSharedList)
 {
     REGERR err;
     RKEY key;
