@@ -86,9 +86,10 @@ void PlugletViewMotif::Initialize() {
         clazz = NULL;
         return;
     }
-    getAwtData((void*)&awt_depth, (void*)&awt_cmap, (void*)&awt_visual, 
-               (void*)&awt_num_colors, NULL);
-    getAwtLockFunctions(&AwtLock, &AwtUnLock, &AwtNoFlushUnLock,NULL);
+    getAwtData(&awt_depth, &awt_cmap, &awt_visual, 
+               &awt_num_colors, NULL);
+    getAwtLockFunctions((void*)&AwtLock, (void*)&AwtUnLock, 
+			(void*)&AwtNoFlushUnLock,NULL);
 }
 
 PRBool PlugletViewMotif::SetWindow(nsPluginWindow* win) {
