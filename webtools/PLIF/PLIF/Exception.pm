@@ -32,7 +32,7 @@ use vars qw(@ISA @EXPORT);
 use overload '""' => 'stringify', 'cmp' => 'comparison';
 require Exporter;
 @ISA = qw(Exporter);
-@EXPORT = qw(try catch with fallthrough except otherwise finally);
+@EXPORT = qw(try catch with fallthrough except otherwise finally syntaxError);
 
 # To use this package, you first have to define your own exceptions:
 #
@@ -74,7 +74,7 @@ sub seMaxLength() { 80 }
 sub seMaxArguments() { 10 }
 sub seEllipsis() { '...' }
 
-sub syntax($;$) {
+sub syntaxError($;$) {
     my($message, $offset) = @_;
     $offset = 0 unless defined($offset);
     my($package, $filename, $line) = caller(1 + $offset);
@@ -140,14 +140,14 @@ sub init {
 
 sub raise {
     my($exception, @data) = @_;
-    syntax "Syntax error in \"raise\": \"$exception\" is not a PLIF::Exception class", 1 unless UNIVERSAL::isa($exception, __PACKAGE__);
+    syntaxError "Syntax error in \"raise\": \"$exception\" is not a PLIF::Exception class", 1 unless UNIVERSAL::isa($exception, __PACKAGE__);
     die $exception->init(@data);
 }
 
 # similar to raise, but only warns instead of dying
 sub report {
     my($exception, @data) = @_;
-    syntax "Syntax error in \"report\": \"$exception\" is not a PLIF::Exception class", 1 unless UNIVERSAL::isa($exception, __PACKAGE__);
+    syntaxError "Syntax error in \"report\": \"$exception\" is not a PLIF::Exception class", 1 unless UNIVERSAL::isa($exception, __PACKAGE__);
     warn $exception->init(@data);
 }
 
@@ -155,7 +155,7 @@ sub try(&;$) {
     my($code, $continuation) = @_;
     if (defined($continuation) and
         (not ref($continuation) or not $continuation->isa('PLIF::Exception::Internal::Continuation'))) {
-        syntax 'Syntax error in continuation of "try" clause';
+        syntaxError 'Syntax error in continuation of "try" clause';
     }
     my $context = wantarray;
     my @result; # for array context
@@ -180,14 +180,14 @@ sub try(&;$) {
 
 sub catch($$) {
     my($class, $continuation, @more) = @_;
-    syntax "Syntax error in \"catch ... with\" clause: \"$class\" is not a PLIF::Exception class" unless $class->isa('PLIF::Exception');
+    syntaxError "Syntax error in \"catch ... with\" clause: \"$class\" is not a PLIF::Exception class" unless $class->isa('PLIF::Exception');
     if (not defined($continuation) or
         not ref($continuation) or
         not $continuation->isa('PLIF::Exception::Internal::With')) {
-        syntax 'Syntax error: missing "with" operator in "catch" clause';
+        syntaxError 'Syntax error: missing "with" operator in "catch" clause';
     }
     { local $" = '\', \'';
-      syntax "Syntax error after \"catch ... with\" clause ('@_'?)" if (scalar(@more)); }
+      syntaxError "Syntax error after \"catch ... with\" clause ('@_'?)" if (scalar(@more)); }
     $continuation->{'resolved'} = 1;
     my $handler = $continuation->{'handler'};
     $continuation = $continuation->{'continuation'};
@@ -203,7 +203,7 @@ sub with(&;$) {
     if (defined($continuation) and
         (not ref($continuation) or
          not $continuation->isa('PLIF::Exception::Internal::Continuation'))) {
-        syntax 'Syntax error after "catch ... with" clause';
+        syntaxError 'Syntax error after "catch ... with" clause';
     }
     return PLIF::Exception::Internal::With->create($handler, $continuation);
 }
@@ -215,7 +215,7 @@ sub except(&;$) {
          not $continuation->isa('PLIF::Exception::Internal::Continuation') or
          defined($continuation->{'except'}) or
          scalar(@{$continuation->{'handlers'}}))) {
-        syntax 'Syntax error after "except" clause';
+        syntaxError 'Syntax error after "except" clause';
     }
     if (not defined($continuation)) {
         $continuation = PLIF::Exception::Internal::Continuation->create();
@@ -232,7 +232,7 @@ sub otherwise(&;$) {
          defined($continuation->{'otherwise'}) or
          defined($continuation->{'except'}) or
          scalar(@{$continuation->{'handlers'}}))) {
-        syntax 'Syntax error after "otherwise" clause';
+        syntaxError 'Syntax error after "otherwise" clause';
     }
     if (not defined($continuation)) {
         $continuation = PLIF::Exception::Internal::Continuation->create();
@@ -243,7 +243,7 @@ sub otherwise(&;$) {
 
 sub finally(&;@) {
     my($handler, @continuation) = @_;
-    syntax 'Missing semicolon after "finally" clause' if (scalar(@continuation));
+    syntaxError 'Missing semicolon after "finally" clause' if (scalar(@continuation));
     my $continuation = PLIF::Exception::Internal::Continuation->create();
     $continuation->{'finally'} = $handler;
     return $continuation;
