@@ -57,7 +57,7 @@ LLIBS= \
 
 include <$(DEPTH)\config\rules.mak>
 
-libs:: $(DLL)
+libs:: $(DLL) $(LIBRARY) 
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
 
