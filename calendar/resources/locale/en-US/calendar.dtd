@@ -111,6 +111,8 @@
 <!ENTITY newtodo.percentcomplete.label "&#37; complete">
 <!ENTITY newtodo.categories.label "Categories">
 <!ENTITY newtodo.starttime.warning "Your start date occurs after your due date.">
+<!ENTITY newtodo.cancelled.label "Cancelled">
+<!ENTITY newtodo.status.label "Status">
 
 <!ENTITY calendar.confirm.deleteevent "Are you sure you want to delete this event titled: " >        
 <!ENTITY calendar.confirm.deleteuntitledevent "Are you sure you want to delete this untitled event?" >

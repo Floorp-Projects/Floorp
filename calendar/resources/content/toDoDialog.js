@@ -152,20 +152,11 @@ function loadCalendarToDoDialog()
    setFieldValue( "title-field", gToDo.title  );
    setFieldValue( "description-field", gToDo.description );
    setFieldValue( "uri-field", gToDo.url );
-
+   
    switch( gToDo.status )
    {
-      case gToDo.ICAL_STATUS_NEEDSACTION:
-         setFieldValue( "status-field", "ICAL_STATUS_NEEDSACTION" );
-      break;
-      case gToDo.ICAL_STATUS_INPROGRESS:
-         setFieldValue( "status-field", "ICAL_STATUS_INPROGRESS" );
-      break;
-      case gToDo.ICAL_STATUS_COMPLETED:
-         setFieldValue( "status-field", "ICAL_STATUS_COMPLETED" );
-      break;
       case gToDo.ICAL_STATUS_CANCELLED:
-         setFieldValue( "status-field", "ICAL_STATUS_CANCELLED" );
+         setFieldValue( "cancelled-checkbox", true, "checked" );
       break;
    }
    
@@ -243,9 +234,7 @@ function onOKCommand()
    
    gToDo.title       = getFieldValue( "title-field" );
    gToDo.description = getFieldValue( "description-field" );
-   if( getFieldValue( "status-field" ) != "" )
-      gToDo.status      = eval( "gToDo."+getFieldValue( "status-field" ) );
-
+   
    var dueDate = getDateTimeFieldValue( "due-date-text" );
    gToDo.due.year = dueDate.getYear()+1900;
    gToDo.due.month = dueDate.getMonth();
@@ -275,6 +264,7 @@ function onOKCommand()
 
    var percentcomplete = getFieldValue( "percent-complete-menulist" );
    percentcomplete =  parseInt( percentcomplete );
+   
    if(percentcomplete > 100)
       percentcomplete = 100;
    else if(percentcomplete < 0)
@@ -293,18 +283,23 @@ function onOKCommand()
       gToDo.status = gToDo.ICAL_STATUS_COMPLETED;
    }
    else
+   {
       gToDo.completed.clear();
-      if (percentcomplete == 0)
-         gToDo.status = gToDo.ICAL_STATUS_NEEDSACTION;
-      else
+      
+      var cancelled = getFieldValue( "cancelled-checkbox", "checked" );
+      
+      if( cancelled )
+         gToDo.status = gToDo.ICAL_STATUS_CANCELLED;
+      else if (percentcomplete > 0)
          gToDo.status = gToDo.ICAL_STATUS_INPROCESS;
-
-
-   dump( "!!!-->in calendarEventDialog.js, alarmUnits is "+gToDo.alarmUnits );
+      else
+         gToDo.status = gToDo.ICAL_STATUS_NEEDSACTION;
+   }
+   
+   
    if ( getFieldValue( "alarm-email-checkbox", "checked" ) ) 
    {
       gToDo.alarmEmailAddress = getFieldValue( "alarm-email-field", "value" );
-      dump( "!!!-->in calendarEventDialog.js, alarmEmailAddress is "+gToDo.alarmEmailAddress );
    }
    else
    {
@@ -627,7 +622,10 @@ function getFieldValue( elementId, propertyName )
    }
    else
    {
-      return field.value;
+      if( field )
+         return field.value;
+      else
+         alert( elementId );
    }
 }
 
