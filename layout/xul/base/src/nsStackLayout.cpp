@@ -191,16 +191,14 @@ nsStackLayout::AddOffset(nsBoxLayoutState& aState, nsIBox* aChild, nsSize& aSize
   nsSize offset(0,0);
   
   // get the left and top offsets
-  nsIFrame* frame;
-  aChild->GetFrame(&frame);
   
   // As an optimization, we cache the fact that we are not positioned to avoid
   // wasting time fetching attributes and checking style data.
-  if (frame->GetStateBits() & NS_STATE_STACK_NOT_POSITIONED)
+  if (aChild->GetStateBits() & NS_STATE_STACK_NOT_POSITIONED)
     return PR_FALSE;
   
   PRBool offsetSpecified = PR_FALSE;
-  const nsStylePosition* pos = frame->GetStylePosition();
+  const nsStylePosition* pos = aChild->GetStylePosition();
   if (eStyleUnit_Coord == pos->mOffset.GetLeftUnit()) {
      nsStyleCoord left = 0;
      pos->mOffset.GetLeft(left);
@@ -215,7 +213,7 @@ nsStackLayout::AddOffset(nsBoxLayoutState& aState, nsIBox* aChild, nsSize& aSize
      offsetSpecified = PR_TRUE;
   }
 
-  nsIContent* content = frame->GetContent();
+  nsIContent* content = aChild->GetContent();
 
   if (content) {
     nsPresContext* presContext = aState.PresContext();
@@ -242,9 +240,9 @@ nsStackLayout::AddOffset(nsBoxLayoutState& aState, nsIBox* aChild, nsSize& aSize
   if (!offsetSpecified) {
     // If no offset was specified at all, then we cache this fact to avoid requerying
     // CSS or the content model.
-    frame->AddStateBits(NS_STATE_STACK_NOT_POSITIONED);
+    aChild->AddStateBits(NS_STATE_STACK_NOT_POSITIONED);
   }
-    
+  
   return offsetSpecified;
 }
 
@@ -275,9 +273,7 @@ nsStackLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
       if (childRect.height < 0)
         childRect.height = 0;
 
-      nsRect oldRect;
-      child->GetBounds(oldRect);
-
+      nsRect oldRect(child->GetRect());
       PRBool sizeChanged = (oldRect != childRect);
 
       // only lay out dirty children or children whose sizes have changed
@@ -317,7 +313,7 @@ nsStackLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
           child->Layout(aState);
 
           // Get the child's new rect.
-          child->GetBounds(childRect);
+          childRect = child->GetRect();
           childRect.Inflate(margin);
 
           // Did the child push back on us and get bigger?
@@ -355,8 +351,7 @@ nsStackLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
    
    // if some HTML inside us got bigger we need to force ourselves to
    // get bigger
-   nsRect bounds;
-   aBox->GetBounds(bounds);
+   nsRect bounds(aBox->GetRect());
    nsMargin bp;
    aBox->GetBorderAndPadding(bp);
    clientRect.Inflate(bp);

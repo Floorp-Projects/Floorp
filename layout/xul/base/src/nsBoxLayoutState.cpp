@@ -177,10 +177,7 @@ nsBoxLayoutState::Unwind(nsReflowPath* aReflowPath, nsIBox* aRootBox)
       // It's nested HTML. Mark the root box's frame with
       // NS_FRAME_HAS_DIRTY_CHILDREN so MarkDirty won't walk off the
       // top of the box hierarchy and schedule another reflow command.
-      nsIFrame* frame;
-      aRootBox->GetFrame(&frame);
-
-      frame->AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
+      aRootBox->AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
 
       // Clear the frame's dirty bit so that MarkDirty doesn't
       // optimize the layout away.
@@ -201,10 +198,7 @@ nsBoxLayoutState::Unwind(nsReflowPath* aReflowPath, nsIBox* aRootBox)
       // Mark the root box's frame with NS_FRAME_HAS_DIRTY_CHILDREN so
       // that MarkDirty won't walk off the top of the box hierarchy
       // and schedule another reflow command.
-      nsIFrame* frame;
-      aRootBox->GetFrame(&frame);
-
-      frame->AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
+      aRootBox->AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
 
       // The target is a box. Mark it dirty, generating a new reflow
       // command targeted at us and coelesce out this one.
@@ -225,9 +219,7 @@ nsBoxLayoutState::Unwind(nsReflowPath* aReflowPath, nsIBox* aRootBox)
         nsIBox* parent;
         ibox->GetParentBox(&parent);
         if (parent) {
-          nsIFrame* parentFrame;
-          parent->GetFrame(&parentFrame);
-          parentFrame->AddStateBits(NS_FRAME_IS_DIRTY);
+          parent->AddStateBits(NS_FRAME_IS_DIRTY);
         }
 
       }
@@ -243,37 +235,10 @@ nsBoxLayoutState::Unwind(nsReflowPath* aReflowPath, nsIBox* aRootBox)
 nsIBox*
 nsBoxLayoutState::GetBoxForFrame(nsIFrame* aFrame, PRBool& aIsAdaptor)
 {
-  if (aFrame == nsnull)
-    return nsnull;
-
-  nsIBox* ibox = nsnull;
-  if (NS_FAILED(aFrame->QueryInterface(NS_GET_IID(nsIBox), (void**)&ibox))) {
+  if (aFrame && !aFrame->IsBoxFrame())
     aIsAdaptor = PR_TRUE;
 
-    // if we hit a non box. Find the box in out last container
-    // and clear its cache.
-    nsIFrame* parent = aFrame->GetParent();
-    nsIBox* parentBox = nsnull;
-    if (NS_FAILED(parent->QueryInterface(NS_GET_IID(nsIBox), (void**)&parentBox))) 
-       return nsnull;
-
-    if (parentBox) {
-      nsIBox* start = nsnull;
-      parentBox->GetChildBox(&start);
-      while (start) {
-        nsIFrame* frame = nsnull;
-        start->GetFrame(&frame);
-        if (frame == aFrame) {
-          ibox = start;
-          break;
-        }
-
-        start->GetNextBox(&start);
-      }
-    }
-  } 
-
-  return ibox;
+  return aFrame;
 }
 
 /*

@@ -47,7 +47,6 @@
 
 #include "nsIFrame.h"
 
-class nsIBox;
 class nsGridLayout2;
 class nsBoxLayoutState;
 

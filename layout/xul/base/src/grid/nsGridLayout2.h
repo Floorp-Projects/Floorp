@@ -43,7 +43,7 @@
 #include "nsStackLayout.h"
 #include "nsIGridPart.h"
 #include "nsCOMPtr.h"
-#include "nsIBox.h"
+#include "nsIFrame.h"
 #include "nsGrid.h"
 
 class nsGridRowGroupLayout;

@@ -55,7 +55,7 @@
 #include "nsIView.h"
 #include "nsIWidget.h"
 #include "nsIDOMXULElement.h"
-#include "nsIBox.h"
+#include "nsIFrame.h"
 
 // Static IIDs/CIDs. Try to minimize these.
 static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);

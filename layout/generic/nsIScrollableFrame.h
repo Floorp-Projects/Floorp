@@ -45,7 +45,6 @@
 #include "nsPresContext.h"
 
 class nsIFrame;
-class nsIBox;
 class nsBoxLayoutState;
 
 // IID for the nsIScrollableFrame interface

@@ -48,7 +48,6 @@
 #include "nsIFrame.h"
 #include "nsIScrollableView.h"
 #include "nsIScrollableFrame.h"
-#include "nsIBox.h"
 
 
 class nsScrollBoxObject : public nsIScrollBoxObject, public nsBoxObject
@@ -116,7 +115,7 @@ NS_IMETHODIMP nsScrollBoxObject::ScrollByLine(PRInt32 dlines)
 // with 'overflow:hidden', the boxobject's frame is an nsXULScrollFrame,
 // the <scrollbox>'s box frame is the scrollframe's "scrolled frame", and
 // the <scrollbox>'s child box is a child of that.
-static nsIBox* GetScrolledBox(nsBoxObject* aScrollBox) {
+static nsIFrame* GetScrolledBox(nsBoxObject* aScrollBox) {
   nsIFrame* frame = aScrollBox->GetFrame();
   if (!frame) 
     return nsnull;
@@ -128,11 +127,8 @@ static nsIBox* GetScrolledBox(nsBoxObject* aScrollBox) {
   nsIFrame* scrolledFrame = scrollFrame->GetScrolledFrame();
   if (!scrolledFrame)
     return nsnull;
-  nsIBox* scrollBox;
-  if (NS_FAILED(CallQueryInterface(scrolledFrame, &scrollBox)))
-    return nsnull;
   nsIBox* scrolledBox;
-  if (NS_FAILED(scrollBox->GetChildBox(&scrolledBox)))
+  if (NS_FAILED(scrolledFrame->GetChildBox(&scrolledBox)))
     return nsnull;
   return scrolledBox;
 }
@@ -143,12 +139,12 @@ NS_IMETHODIMP nsScrollBoxObject::ScrollByIndex(PRInt32 dindexes)
     nsIScrollableView* scrollableView = GetScrollableView();
     if (!scrollableView)
        return NS_ERROR_FAILURE;
-    nsIBox* scrolledBox = GetScrolledBox(this);
+    nsIFrame* scrolledBox = GetScrolledBox(this);
     if (!scrolledBox)
        return NS_ERROR_FAILURE;
 
     nsRect rect;
-    nsIBox* child;
+    nsIFrame* child;
 
     // now get the scrolled boxes first child.
     scrolledBox->GetChildBox(&child);
@@ -162,7 +158,7 @@ NS_IMETHODIMP nsScrollBoxObject::ScrollByIndex(PRInt32 dindexes)
 
     // first find out what index we are currently at
     while(child) {
-      child->GetBounds(rect);
+      rect = child->GetRect();
       if (horiz) {
         diff = rect.x + rect.width/2; // use the center, to avoid rounding errors
         if (diff > cp.x) {
@@ -187,7 +183,7 @@ NS_IMETHODIMP nsScrollBoxObject::ScrollByIndex(PRInt32 dindexes)
       while(child) {
         child->GetNextBox(&child);
         if (child)
-          child->GetBounds(rect);
+          rect = child->GetRect();
         count++;
         if (count >= dindexes)
           break;
@@ -196,7 +192,7 @@ NS_IMETHODIMP nsScrollBoxObject::ScrollByIndex(PRInt32 dindexes)
    } else if (dindexes < 0) {
       scrolledBox->GetChildBox(&child);
       while(child) {
-        child->GetBounds(rect);
+        rect = child->GetRect();
         if (count >= curIndex + dindexes)
           break;
 
@@ -238,7 +234,7 @@ NS_IMETHODIMP nsScrollBoxObject::ScrollToElement(nsIDOMElement *child)
     float pixelsToTwips = 0.0;
     pixelsToTwips = mPresShell->GetPresContext()->PixelsToTwips();
     
-    nsIBox* scrolledBox = GetScrolledBox(this);
+    nsIFrame* scrolledBox = GetScrolledBox(this);
     if (!scrolledBox)
        return NS_ERROR_FAILURE;
 
@@ -319,7 +315,7 @@ NS_IMETHODIMP nsScrollBoxObject::EnsureElementIsVisible(nsIDOMElement *child)
     float pixelsToTwips = 0.0;
     pixelsToTwips = mPresShell->GetPresContext()->PixelsToTwips();
     
-    nsIBox* scrolledBox = GetScrolledBox(this);
+    nsIFrame* scrolledBox = GetScrolledBox(this);
     if (!scrolledBox)
        return NS_ERROR_FAILURE;
 

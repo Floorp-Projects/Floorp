@@ -45,7 +45,7 @@
 #include "nsFrameNavigator.h"
 #include "nsCOMPtr.h"
 #include "nsIContent.h"
-#include "nsIBox.h"
+#include "nsIFrame.h"
 
 nsIBox*
 nsFrameNavigator::GetChildBeforeAfter(nsPresContext* aPresContext,

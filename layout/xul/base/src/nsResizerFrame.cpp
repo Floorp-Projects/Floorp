@@ -122,9 +122,6 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
 			 mLastPoint = aEvent->refPoint;
 			 aEvent->widget->GetScreenBounds(mWidgetRect);
 
-			 nsRect bounds;
-			 aEvent->widget->GetBounds(bounds);
-
 			 *aEventStatus = nsEventStatus_eConsumeNoDefault;
 			 doDefault = PR_FALSE;
 		 }

@@ -87,9 +87,7 @@ PRInt32 nsSliderFrame::gSnapMultiplier = 6;
 static already_AddRefed<nsIContent>
 GetContentOfBox(nsIBox *aBox)
 {
-  nsIFrame *frame;
-  aBox->GetFrame(&frame);
-  nsIContent* content = frame->GetContent();
+  nsIContent* content = aBox->GetContent();
   NS_IF_ADDREF(content);
   return content;
 }
@@ -301,8 +299,7 @@ nsSliderFrame::Paint(nsPresContext*      aPresContext,
   GetChildBox(&thumb);
 
   if (thumb) {
-    nsRect thumbRect;
-    thumb->GetBounds(thumbRect);
+    nsRect thumbRect(thumb->GetRect());
     nsMargin m;
     thumb->GetMargin(m);
     thumbRect.Inflate(m);
@@ -420,8 +417,7 @@ nsSliderFrame::DoLayout(nsBoxLayoutState& aState)
   else
     thumbRect.y += pos;
 
-  nsRect oldThumbRect;
-  thumbBox->GetBounds(oldThumbRect);
+  nsRect oldThumbRect(thumbBox->GetRect());
   LayoutChildAt(aState, thumbBox, thumbRect);
 
 
@@ -584,13 +580,7 @@ nsSliderFrame::GetScrollbar()
    if (scrollbar == nsnull)
        return this;
 
-   nsIBox* ibox = nsnull;
-   scrollbar->QueryInterface(NS_GET_IID(nsIBox), (void**)&ibox);
-
-   if (ibox == nsnull)
-       return this;
-
-   return ibox;
+   return scrollbar->IsBoxFrame() ? scrollbar : this;
 }
 
 void
@@ -1012,10 +1002,7 @@ nsSliderFrame::EnsureOrient()
 {
   nsIBox* scrollbarBox = GetScrollbar();
 
-  nsIFrame* frame = nsnull;
-  scrollbarBox->GetFrame(&frame);
-
-  PRBool isHorizontal = frame->GetStateBits() & NS_STATE_IS_HORIZONTAL;
+  PRBool isHorizontal = (scrollbarBox->GetStateBits() & NS_STATE_IS_HORIZONTAL) != 0;
   if (isHorizontal)
       mState |= NS_STATE_IS_HORIZONTAL;
   else

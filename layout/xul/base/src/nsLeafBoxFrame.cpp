@@ -83,8 +83,10 @@ NS_NewLeafBoxFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame )
   
 } // NS_NewTextFrame
 
-nsLeafBoxFrame::nsLeafBoxFrame(nsIPresShell* aShell):nsBox(aShell)
+nsLeafBoxFrame::nsLeafBoxFrame(nsIPresShell* aShell)
+    : mMouseThrough(unset)
 {
+    mState |= NS_FRAME_IS_BOX;
 }
 
 #ifdef DEBUG_LAYOUT
@@ -109,10 +111,9 @@ nsLeafBoxFrame::Init(nsPresContext*  aPresContext,
   nsresult  rv = nsLeafFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 
    // see if we need a widget
-  nsIBox *parent;
-  if (aParent && NS_SUCCEEDED(CallQueryInterface(aParent, &parent))) {
+  if (aParent && aParent->IsBoxFrame()) {
     PRBool needsWidget = PR_FALSE;
-    parent->ChildrenMustHaveWidgets(needsWidget);
+    aParent->ChildrenMustHaveWidgets(needsWidget);
     if (needsWidget) {
         nsHTMLContainerFrame::CreateViewForFrame(this, nsnull, PR_TRUE); 
         nsIView* view = GetView();
@@ -160,6 +161,30 @@ void nsLeafBoxFrame::UpdateMouseThrough()
   }
 }
 
+NS_IMETHODIMP
+nsLeafBoxFrame::GetMouseThrough(PRBool& aMouseThrough)
+{
+  switch (mMouseThrough)
+  {
+    case always:
+      aMouseThrough = PR_TRUE;
+      return NS_OK;
+    case never:
+      aMouseThrough = PR_FALSE;      
+      return NS_OK;
+    case unset:
+    {
+      if (mParent && mParent->IsBoxFrame())
+        return mParent->GetMouseThrough(aMouseThrough);
+      else {
+        aMouseThrough = PR_FALSE;      
+        return NS_OK;
+      }
+    }
+  }
+
+  return NS_ERROR_FAILURE;
+}
 
 NS_IMETHODIMP  
 nsLeafBoxFrame::GetFrameForPoint(nsPresContext* aPresContext,
@@ -174,13 +199,6 @@ nsLeafBoxFrame::GetFrameForPoint(nsPresContext* aPresContext,
     return NS_ERROR_FAILURE;
 
   *aFrame = this;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsLeafBoxFrame::GetFrame(nsIFrame** aFrame)
-{
-  *aFrame = this;  
   return NS_OK;
 }
 
@@ -315,10 +333,9 @@ nsLeafBoxFrame::Reflow(nsPresContext*   aPresContext,
   Layout(state);
   
   // ok our child could have gotten bigger. So lets get its bounds
-  GetBounds(r);
   
   // get the ascent
-  nscoord ascent = r.height;
+  nscoord ascent = mRect.height;
 
   // Only call GetAscent when not doing Initial reflow while in PP
   // or when it is Initial reflow while in PP and a chrome doc
@@ -330,8 +347,8 @@ nsLeafBoxFrame::Reflow(nsPresContext*   aPresContext,
     GetAscent(state, ascent);
   }
 
-  aDesiredSize.width  = r.width;
-  aDesiredSize.height = r.height;
+  aDesiredSize.width  = mRect.width;
+  aDesiredSize.height = mRect.height;
   aDesiredSize.ascent = ascent;
   aDesiredSize.descent = 0;
 
@@ -405,6 +422,71 @@ nsLeafBoxFrame::CharacterDataChanged(nsPresContext* aPresContext,
   return nsLeafFrame::CharacterDataChanged(aPresContext, aChild, aAppend);
 }
 
+NS_IMETHODIMP
+nsLeafBoxFrame::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
+{
+    return nsBox::GetPrefSize(aState, aSize);
+}
+
+NS_IMETHODIMP
+nsLeafBoxFrame::GetMinSize(nsBoxLayoutState& aState, nsSize& aSize)
+{
+    return nsBox::GetMinSize(aState, aSize);
+}
+
+NS_IMETHODIMP
+nsLeafBoxFrame::GetMaxSize(nsBoxLayoutState& aState, nsSize& aSize)
+{
+    return nsBox::GetMaxSize(aState, aSize);
+}
+
+NS_IMETHODIMP
+nsLeafBoxFrame::GetFlex(nsBoxLayoutState& aState, nscoord& aFlex)
+{
+    return nsBox::GetFlex(aState, aFlex);
+}
+
+NS_IMETHODIMP
+nsLeafBoxFrame::GetAscent(nsBoxLayoutState& aState, nscoord& aAscent)
+{
+    return nsBox::GetAscent(aState, aAscent);
+}
+
+NS_IMETHODIMP
+nsLeafBoxFrame::NeedsRecalc()
+{
+    return nsBox::NeedsRecalc();
+}
+
+NS_IMETHODIMP
+nsLeafBoxFrame::DoLayout(nsBoxLayoutState& aState)
+{
+    return nsBox::DoLayout(aState);
+}
+
+PRBool
+nsLeafBoxFrame::HasStyleChange()
+{
+    return nsBox::HasStyleChange();
+}
+
+void
+nsLeafBoxFrame::SetStyleChangeFlag(PRBool aDirty)
+{
+    nsBox::SetStyleChangeFlag(aDirty);
+}
+
+PRBool
+nsLeafBoxFrame::GetWasCollapsed(nsBoxLayoutState& aState)
+{
+    return nsBox::GetWasCollapsed(aState);
+}
+
+void
+nsLeafBoxFrame::SetWasCollapsed(nsBoxLayoutState& aState, PRBool aWas)
+{
+    nsBox::SetWasCollapsed(aState, aWas);
+}
 
 NS_INTERFACE_MAP_BEGIN(nsLeafBoxFrame)
   NS_INTERFACE_MAP_ENTRY(nsIBox)

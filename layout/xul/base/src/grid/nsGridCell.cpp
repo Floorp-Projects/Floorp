@@ -44,7 +44,6 @@
 
 #include "nsGridCell.h"
 #include "nsFrame.h"
-#include "nsIBox.h"
 #include "nsBox.h"
 #include "nsStackLayout.h"
 

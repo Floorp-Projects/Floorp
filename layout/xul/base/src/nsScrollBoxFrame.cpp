@@ -52,7 +52,6 @@
 #include "nsWidgetsCID.h"
 #include "nsScrollBoxFrame.h"
 #include "nsLayoutAtoms.h"
-#include "nsIBox.h"
 #include "nsBoxLayoutState.h"
 #include "nsIBoxToBlockAdaptor.h"
 #include "nsIScrollbarMediator.h"
@@ -337,7 +336,7 @@ nsScrollBoxFrame::DoLayout(nsBoxLayoutState& aState)
   kid->SetBounds(aState, childRect);
   kid->Layout(aState);
 
-  kid->GetBounds(childRect);
+  childRect = kid->GetRect();
 
   clientRect.Inflate(margin);
 
@@ -369,12 +368,9 @@ nsScrollBoxFrame::DoLayout(nsBoxLayoutState& aState)
   SyncLayout(aState);
 
   if (adaptor) {
-     nsIFrame* frame;
-     kid->GetFrame(&frame);
-
      nsRect r(0, 0, childRect.width, childRect.height);
-     nsContainerFrame::SyncFrameViewAfterReflow(presContext, frame,
-       frame->GetView(), &r, NS_FRAME_NO_MOVE_VIEW);
+     nsContainerFrame::SyncFrameViewAfterReflow(presContext, kid,
+       kid->GetView(), &r, NS_FRAME_NO_MOVE_VIEW);
   }
 
   nsIView* view = GetView();
@@ -383,29 +379,26 @@ nsScrollBoxFrame::DoLayout(nsBoxLayoutState& aState)
     scrollingView->ComputeScrollOffsets(PR_TRUE);
   }
 
-  nsRect scrollPort;
-  GetBounds(scrollPort);
-
-  kid->GetBounds(childRect);
+  childRect = kid->GetRect();
 
   // first see what changed
   PRBool vertChanged = PR_FALSE;
   PRBool horizChanged = PR_FALSE;
 
-  if (mVerticalOverflow && childRect.height <= scrollPort.height) {
+  if (mVerticalOverflow && childRect.height <= mRect.height) {
     mVerticalOverflow = PR_FALSE;
     vertChanged = PR_TRUE;
-  } else if (childRect.height > scrollPort.height) {
+  } else if (childRect.height > mRect.height) {
     if (!mVerticalOverflow) {
        mVerticalOverflow = PR_TRUE;
     }
     vertChanged = PR_TRUE;
   }
 
-  if (mHorizontalOverflow && childRect.width <= scrollPort.width) {
+  if (mHorizontalOverflow && childRect.width <= mRect.width) {
     mHorizontalOverflow = PR_FALSE;
     horizChanged = PR_TRUE;
-  } else if (childRect.width > scrollPort.width) {
+  } else if (childRect.width > mRect.width) {
     if (!mHorizontalOverflow) {
       mHorizontalOverflow = PR_TRUE;
     }

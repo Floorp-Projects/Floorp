@@ -42,7 +42,7 @@
 
 class nsAccessKeyInfo;
 
-class nsLeafBoxFrame : public nsLeafFrame, public nsBox
+class nsLeafBoxFrame : public nsLeafFrame
 {
 public:
 
@@ -51,7 +51,12 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIBox frame interface
-  NS_IMETHOD GetFrame(nsIFrame** aFrame);
+  NS_IMETHOD GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize);
+  NS_IMETHOD GetMinSize(nsBoxLayoutState& aState, nsSize& aSize);
+  NS_IMETHOD GetMaxSize(nsBoxLayoutState& aState, nsSize& aSize);
+  NS_IMETHOD GetFlex(nsBoxLayoutState& aState, nscoord& aFlex);
+  NS_IMETHOD GetAscent(nsBoxLayoutState& aState, nscoord& aAscent);
+  NS_IMETHOD NeedsRecalc();
 
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
@@ -88,7 +93,18 @@ public:
                               nsIAtom* aAttribute,
                               PRInt32 aModType);
 
+  NS_IMETHOD GetMouseThrough(PRBool& aMouseThrough);
+  virtual PRBool ComputesOwnOverflowArea() { return PR_FALSE; }
+
 protected:
+
+  virtual PRBool HasStyleChange();
+  virtual void SetStyleChangeFlag(PRBool aDirty);
+
+  virtual PRBool GetWasCollapsed(nsBoxLayoutState& aState);
+  virtual void SetWasCollapsed(nsBoxLayoutState& aState, PRBool aWas);
+
+  NS_IMETHOD DoLayout(nsBoxLayoutState& aState);
 
 #ifdef DEBUG_LAYOUT
   virtual void GetBoxName(nsAutoString& aName);
@@ -100,6 +116,8 @@ protected:
 
  nsLeafBoxFrame(nsIPresShell* aShell);
 
+protected:
+  eMouseThrough mMouseThrough;
 
 private:
 

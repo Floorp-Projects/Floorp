@@ -81,7 +81,6 @@
 #include "nsFrameNavigator.h"
 #include "nsCSSRendering.h"
 #include "nsIServiceManager.h"
-#include "nsBoxToBlockAdaptor.h"
 #include "nsIBoxLayout.h"
 #include "nsSprocketLayout.h"
 #include "nsIDocument.h"
@@ -147,8 +146,9 @@ NS_NewBoxFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRBool aIsRoot, n
 } // NS_NewBoxFrame
 
 nsBoxFrame::nsBoxFrame(nsIPresShell* aPresShell, PRBool aIsRoot, nsIBoxLayout* aLayoutManager)
-:nsContainerBox(aPresShell)
+  : mMouseThrough(unset)
 {
+  mState |= NS_FRAME_IS_BOX;
   mState |= NS_STATE_IS_HORIZONTAL;
   mState |= NS_STATE_AUTO_STRETCH;
 
@@ -174,28 +174,6 @@ nsBoxFrame::~nsBoxFrame()
 {
 }
 
-NS_IMETHODIMP nsBoxFrame::SetParent(const nsIFrame* aParent)
-{
-  nsresult rv = nsContainerFrame::SetParent(aParent);
-
-  // our box parent can only be a box. Make sure its a box and set it
-  // if its not a box then its nsnull
-
-  // cast away const so we can call QueryInterface.
-  nsIFrame* parent = (nsIFrame*)aParent;
-
-  // don't use com ptr. Frames don't support ADDREF or RELEASE;
-  nsIBox* boxParent = nsnull;
-
-  if (parent)
-     parent->QueryInterface(NS_GET_IID(nsIBox), (void**)&boxParent);
-
-  nsBox::SetParentBox(boxParent);
-
-  return rv;
-}
-
-
 NS_IMETHODIMP
 nsBoxFrame::GetVAlign(Valignment& aAlign)
 {
@@ -215,33 +193,18 @@ nsBoxFrame::SetInitialChildList(nsPresContext* aPresContext,
                                 nsIAtom*        aListName,
                                 nsIFrame*       aChildList)
 {
-  SanityCheck(mFrames);
-
   nsresult r = nsContainerFrame::SetInitialChildList(aPresContext, aListName, aChildList);
   if (r == NS_OK) {
     // initialize our list of infos.
     nsBoxLayoutState state(aPresContext->PresShell());
-    InitChildren(state, aChildList);
-    CheckFrameOrder();
+    CheckBoxOrder(state);
+    if (mLayoutManager)
+      mLayoutManager->ChildrenSet(this, state, mFrames.FirstChild());
   } else {
     NS_WARNING("Warning add child failed!!\n");
   }
 
-  SanityCheck(mFrames);
-
   return r;
-}
-
-PRBool 
-nsBoxFrame::IsHorizontal() const
-{
-   return mState & NS_STATE_IS_HORIZONTAL;
-}
-
-PRBool 
-nsBoxFrame::IsNormalDirection() const
-{
-   return mState & NS_STATE_IS_DIRECTION_NORMAL;
 }
 
 /**
@@ -261,10 +224,9 @@ nsBoxFrame::Init(nsPresContext*  aPresContext,
   nsresult  rv = nsContainerFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 
   // see if we need a widget. Get our parent. Querty interface the parent we are given. 
-  nsIBox *parent;
-  if (aParent && NS_SUCCEEDED(CallQueryInterface(aParent, &parent))) {
+  if (aParent && aParent->IsBoxFrame()) {
     PRBool needsWidget = PR_FALSE;
-    parent->ChildrenMustHaveWidgets(needsWidget);
+    aParent->ChildrenMustHaveWidgets(needsWidget);
     if (needsWidget) {
         nsHTMLContainerFrame::CreateViewForFrame(this, nsnull, PR_TRUE);
 
@@ -304,6 +266,31 @@ void nsBoxFrame::UpdateMouseThrough()
       
     }
   }
+}
+
+NS_IMETHODIMP
+nsBoxFrame::GetMouseThrough(PRBool& aMouseThrough)
+{
+  switch(mMouseThrough)
+  {
+    case always:
+      aMouseThrough = PR_TRUE;
+      return NS_OK;
+    case never:
+      aMouseThrough = PR_FALSE;      
+      return NS_OK;
+    case unset:
+    {
+      if (mParent && mParent->IsBoxFrame())
+        return mParent->GetMouseThrough(aMouseThrough);
+      else {
+        aMouseThrough = PR_FALSE;      
+        return NS_OK;
+      }
+    }
+  }
+
+  return NS_ERROR_FAILURE;
 }
 
 void
@@ -697,9 +684,7 @@ nsBoxFrame::ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild)
    GetChildBox(&box);
    while (box)
    {
-     nsIFrame* frame = nsnull;
-     box->GetFrame(&frame);
-     if (frame == aChild) {
+     if (box == aChild) {
        box->MarkDirty(state);
        return RelayoutDirtyChild(state, box);
      }
@@ -866,10 +851,9 @@ nsBoxFrame::Reflow(nsPresContext*          aPresContext,
   Layout(state);
   
   // ok our child could have gotten bigger. So lets get its bounds
-  GetBounds(r);
   
   // get the ascent
-  nscoord ascent = r.height;
+  nscoord ascent = mRect.height;
 
   // getting the ascent could be a lot of work. Don't get it if
   // we are the root. The viewport doesn't care about it.
@@ -885,10 +869,10 @@ nsBoxFrame::Reflow(nsPresContext*          aPresContext,
     }
   }
 
-  aDesiredSize.width  = r.width;
-  aDesiredSize.height = r.height;
+  aDesiredSize.width  = mRect.width;
+  aDesiredSize.height = mRect.height;
   aDesiredSize.ascent = ascent;
-  aDesiredSize.descent = r.height - ascent;
+  aDesiredSize.descent = mRect.height - ascent;
 
   // NS_FRAME_OUTSIDE_CHILDREN is set in SetBounds() above
   if (mState & NS_FRAME_OUTSIDE_CHILDREN) {
@@ -941,9 +925,35 @@ nsBoxFrame::GetPrefSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)
 #endif
 
   nsresult rv = NS_OK;
-  rv = nsContainerBox::GetPrefSize(aBoxLayoutState, mPrefSize);
+  aSize.width = 0;
+  aSize.height = 0;
 
-  aSize = mPrefSize;
+  PRBool collapsed = PR_FALSE;
+  IsCollapsed(aBoxLayoutState, collapsed);
+  if (collapsed)
+    return NS_OK;
+
+  // if the size was not completely redefined in CSS then ask our children
+  if (!nsIBox::AddCSSPrefSize(aBoxLayoutState, this, aSize))
+  {
+    aSize.width = 0;
+    aSize.height = 0;
+
+    if (mLayoutManager) {
+      rv = mLayoutManager->GetPrefSize(this, aBoxLayoutState, aSize);
+      nsIBox::AddCSSPrefSize(aBoxLayoutState, this, aSize);
+    } else
+      rv = nsBox::GetPrefSize(aBoxLayoutState, aSize);
+  }
+
+  nsSize minSize(0,0);
+  nsSize maxSize(0,0);
+  GetMinSize(aBoxLayoutState, minSize);
+  GetMaxSize(aBoxLayoutState, maxSize);
+
+  BoundsCheck(minSize, aSize, maxSize);
+
+  mPrefSize = aSize;
  
   return rv;
 }
@@ -961,9 +971,19 @@ nsBoxFrame::GetAscent(nsBoxLayoutState& aBoxLayoutState, nscoord& aAscent)
 #endif
 
   nsresult rv = NS_OK;
-  rv = nsContainerBox::GetAscent(aBoxLayoutState, mAscent);
+  aAscent = 0;
 
-  aAscent = mAscent;
+  PRBool collapsed = PR_FALSE;
+  IsCollapsed(aBoxLayoutState, collapsed);
+  if (collapsed)
+    return NS_OK;
+
+  if (mLayoutManager)
+    rv = mLayoutManager->GetAscent(this, aBoxLayoutState, aAscent);
+  else
+    rv = nsBox::GetAscent(aBoxLayoutState, aAscent);
+
+  mAscent = aAscent;
  
   return rv;
 }
@@ -982,10 +1002,28 @@ nsBoxFrame::GetMinSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)
 
   nsresult rv = NS_OK;
 
-  mMinSize.SizeTo(0,0);
-  rv = nsContainerBox::GetMinSize(aBoxLayoutState, mMinSize);
+  aSize.SizeTo(0, 0);
+
+  PRBool collapsed = PR_FALSE;
+  IsCollapsed(aBoxLayoutState, collapsed);
+  if (collapsed)
+    return NS_OK;
+
+  // if the size was not completely redefined in CSS then ask our children
+  if (!nsIBox::AddCSSMinSize(aBoxLayoutState, this, aSize))
+  {
+    aSize.width = 0;
+    aSize.height = 0;
+
+    if (mLayoutManager) {
+      rv = mLayoutManager->GetMinSize(this, aBoxLayoutState, aSize);
+      nsIBox::AddCSSMinSize(aBoxLayoutState, this, aSize);
+    } else {
+      rv = nsBox::GetMinSize(aBoxLayoutState, aSize);
+    }
+  }
   
-  aSize = mMinSize;
+  mMinSize = aSize;
 
   return rv;
 }
@@ -1004,10 +1042,28 @@ nsBoxFrame::GetMaxSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)
 
   nsresult rv = NS_OK;
 
-  mMaxSize.SizeTo(0,0);
-  nsContainerBox::GetMaxSize(aBoxLayoutState, mMaxSize);
-  
-  aSize = mMaxSize;
+  aSize.SizeTo(NS_INTRINSICSIZE, NS_INTRINSICSIZE);
+
+  PRBool collapsed = PR_FALSE;
+  IsCollapsed(aBoxLayoutState, collapsed);
+  if (collapsed)
+    return NS_OK;
+
+  // if the size was not completely redefined in CSS then ask our children
+  if (!nsIBox::AddCSSMaxSize(aBoxLayoutState, this, aSize))
+  {
+    aSize.width = NS_INTRINSICSIZE;
+    aSize.height = NS_INTRINSICSIZE;
+
+    if (mLayoutManager) {
+      rv = mLayoutManager->GetMaxSize(this, aBoxLayoutState, aSize);
+      nsIBox::AddCSSMaxSize(aBoxLayoutState, this, aSize);
+    } else {
+      rv = nsBox::GetMaxSize(aBoxLayoutState, aSize);
+    }
+  }
+
+  mMaxSize = aSize;
 
   return rv;
 }
@@ -1023,40 +1079,8 @@ nsBoxFrame::GetFlex(nsBoxLayoutState& aBoxLayoutState, nscoord& aFlex)
   nsresult rv = NS_OK;
 
   mFlex = 0;
-  rv = nsContainerBox::GetFlex(aBoxLayoutState, mFlex);
+  rv = nsBox::GetFlex(aBoxLayoutState, mFlex);
   aFlex = mFlex;
-
-  return rv;
-}
-
-#ifdef DEBUG_LAYOUT
-void
-nsBoxFrame::PropagateDebug(nsBoxLayoutState& aState)
-{
-  // propagate debug information
-  if (mState & NS_STATE_DEBUG_WAS_SET) {
-      if (mState & NS_STATE_SET_TO_DEBUG)
-          SetDebug(aState, PR_TRUE);
-      else
-          SetDebug(aState, PR_FALSE);
-  } else if (mState & NS_STATE_IS_ROOT) {
-    SetDebug(aState, gDebug);
-  }
-}
-#endif
-
-NS_IMETHODIMP
-nsBoxFrame::BeginLayout(nsBoxLayoutState& aState)
-{
-
-  nsresult rv = nsContainerBox::BeginLayout(aState);
-
-  // mark ourselves as dirty so no child under us 
-  // can post an incremental layout.
-  mState |= NS_FRAME_HAS_DIRTY_CHILDREN;
-#ifdef DEBUG_LAYOUT
-  PropagateDebug(aState);
-#endif
 
   return rv;
 }
@@ -1068,7 +1092,16 @@ nsBoxFrame::BeginLayout(nsBoxLayoutState& aState)
 NS_IMETHODIMP
 nsBoxFrame::DoLayout(nsBoxLayoutState& aState)
 {
-  return nsContainerBox::DoLayout(aState);
+  PRUint32 oldFlags = aState.LayoutFlags();
+  aState.SetLayoutFlags(0);
+
+  nsresult rv = NS_OK;
+  if (mLayoutManager)
+    rv = mLayoutManager->Layout(this, aState);
+
+  aState.SetLayoutFlags(oldFlags);
+
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -1078,8 +1111,7 @@ nsBoxFrame::Destroy(nsPresContext* aPresContext)
   RegUnregAccessKey(aPresContext, PR_FALSE);
 
   // clean up the container box's layout manager and child boxes
-  nsBoxLayoutState state(aPresContext);
-  nsContainerBox::Destroy(state);
+  SetLayoutManager(nsnull);
 
   return nsContainerFrame::Destroy(aPresContext);
 } 
@@ -1127,16 +1159,17 @@ nsBoxFrame::RemoveFrame(nsPresContext* aPresContext,
                         nsIAtom*        aListName,
                         nsIFrame*       aOldFrame)
 {
-  SanityCheck(mFrames);
-
-  // remove child from our info list
   nsBoxLayoutState state(aPresContext);
-  Remove(state, aOldFrame);
 
   // remove the child frame
-  mFrames.DestroyFrame(aPresContext, aOldFrame);
+  mFrames.RemoveFrame(aOldFrame);
 
-  SanityCheck(mFrames);
+  // notify the layout manager
+  if (mLayoutManager)
+    mLayoutManager->ChildrenRemoved(this, state, aOldFrame);
+
+  // destroy the child frame
+  aOldFrame->Destroy(aPresContext);
 
   // mark us dirty and generate a reflow command
   MarkDirtyChildren(state);
@@ -1151,31 +1184,20 @@ nsBoxFrame::InsertFrames(nsPresContext* aPresContext,
                          nsIFrame*       aPrevFrame,
                          nsIFrame*       aFrameList)
 {
-   SanityCheck(mFrames);
-
-   nsIBox* prevBox = GetBox(aPrevFrame);
-   if (prevBox == nsnull && aPrevFrame != nsnull) {
-#ifdef DEBUG
-     printf("Warning prev sibling is not in our list!!!\n");
-#endif
-     aPrevFrame = nsnull;
-   }
-
-   // insert the frames to our info list
    nsBoxLayoutState state(aPresContext);
-   Insert(state, aPrevFrame, aFrameList);
-    
-   // insert the frames in out regular frame list
+
+   // insert the child frames
    mFrames.InsertFrames(this, aPrevFrame, aFrameList);
+
+   // notify the layout manager
+   if (mLayoutManager)
+     mLayoutManager->ChildrenInserted(this, state, aPrevFrame, aFrameList);
 
 #ifdef DEBUG_LAYOUT
    // if we are in debug make sure our children are in debug as well.
    if (mState & NS_STATE_CURRENTLY_IN_DEBUG)
-       SetDebugOnChildList(state, mFirstChild, PR_TRUE);
+       SetDebugOnChildList(state, mFrames.FirstChild(), PR_TRUE);
 #endif
-
-   CheckFrameOrder();
-   SanityCheck(mFrames);
 
    // mark us dirty and generate a reflow command
    MarkDirtyChildren(state);
@@ -1190,23 +1212,20 @@ nsBoxFrame::AppendFrames(nsPresContext* aPresContext,
                          nsIAtom*        aListName,
                          nsIFrame*       aFrameList)
 {
-   SanityCheck(mFrames);
-
-    // append them after
    nsBoxLayoutState state(aPresContext);
-   Append(state,aFrameList);
 
-   // append in regular frames
-   mFrames.AppendFrames(this, aFrameList); 
+   // append the new frames
+   mFrames.AppendFrames(this, aFrameList);
+
+   // notify the layout manager
+   if (mLayoutManager)
+     mLayoutManager->ChildrenAppended(this, state, aFrameList);
 
 #ifdef DEBUG_LAYOUT
    // if we are in debug make sure our children are in debug as well.
    if (mState & NS_STATE_CURRENTLY_IN_DEBUG)
-       SetDebugOnChildList(state, mFirstChild, PR_TRUE);
+       SetDebugOnChildList(state, mFrames.FirstChild(), PR_TRUE);
 #endif
-
-   CheckFrameOrder();
-   SanityCheck(mFrames);
 
    MarkDirtyChildren(state);
    MarkDirty(state);
@@ -1329,11 +1348,6 @@ nsBoxFrame::AttributeChanged(nsPresContext* aPresContext,
     nsIBox* parent;
     GetParentBox(&parent);
     parent->RelayoutChildAtOrdinal(state, this);
-    nsIFrame* parentFrame;
-    parent->GetFrame(&parentFrame);
-    nsBoxFrame* parentBoxFrame = (nsBoxFrame*) parentFrame;
-    if (parentBoxFrame)
-      parentBoxFrame->CheckFrameOrder();
     parent->MarkDirty(state);
   }
   // If the accesskey changed, register for the new value
@@ -1345,30 +1359,6 @@ nsBoxFrame::AttributeChanged(nsPresContext* aPresContext,
   return rv;
 }
 
-NS_IMETHODIMP 
-nsBoxFrame::GetInset(nsMargin& margin)
-{
-  margin.SizeTo(0,0,0,0);
-
-#ifdef DEBUG_LAYOUT
-  if (mState & NS_STATE_CURRENTLY_IN_DEBUG) {
-     nsMargin debugMargin(0,0,0,0);
-     nsMargin debugBorder(0,0,0,0);
-     nsMargin debugPadding(0,0,0,0);
-     GetDebugBorder(debugBorder);
-     PixelMarginToTwips(mPresContext, debugBorder);
-     GetDebugMargin(debugMargin);
-     PixelMarginToTwips(mPresContext, debugMargin);
-     GetDebugMargin(debugPadding);
-     PixelMarginToTwips(mPresContext, debugPadding);
-     margin += debugBorder;
-     margin += debugMargin;
-     margin += debugPadding;
-  }
-#endif
-
-  return NS_OK;
-}
 
 #ifdef DEBUG_COELESCED
 static PRInt32 StyleCoelesced = 0;
@@ -1389,42 +1379,6 @@ nsBoxFrame::SetStyleChangeFlag(PRBool aDirty)
      mState |= (NS_STATE_STYLE_CHANGE);
   else 
      mState &= ~NS_STATE_STYLE_CHANGE;
-}
-
-nsresult
-nsBoxFrame::SyncLayout(nsBoxLayoutState& aState)
-{
-  nsresult rv = nsBox::SyncLayout(aState);
-  mState &= ~(NS_STATE_STYLE_CHANGE);
-  return rv;
-}
-
-void 
-nsBoxFrame::CheckFrameOrder()
-{
-  if (mOrderBoxes) {
-    // synchronize the frame order with the box order by simply walking
-    // the box list and linking each frame as its box is linked
-    nsIBox* box = mFirstChild;
-    nsIFrame* frame1;
-    box->GetFrame(&frame1);
-    
-    nsIBox* box2;
-    nsIFrame* frame;
-    nsIFrame* frame2;
-    while (box) {
-      box->GetNextBox(&box2);
-      box->GetFrame(&frame);
-      if (box2)
-        box2->GetFrame(&frame2);
-      else
-        frame2 = nsnull;
-      frame->SetNextSibling(frame2);
-      box = box2;
-    }
-    
-    mFrames.SetFrames(frame1);
-  }
 }
 
 #ifdef DEBUG_LAYOUT
@@ -1638,25 +1592,20 @@ nsBoxFrame::PaintChildren(nsPresContext*      aPresContext,
   nsIBox* kid = nsnull;
   GetChildBox(&kid);
   while (nsnull != kid) {
-    nsIFrame* frame = nsnull;
-    kid->GetFrame(&frame);
-
     if (!hasClipped && NS_STYLE_OVERFLOW_CLIP == disp->mOverflowX) {
         // if we haven't already clipped and we should
         // check to see if the child is in out bounds. If not then
         // we begin clipping.
-        nsRect cr(0,0,0,0);
-        kid->GetBounds(cr);
     
         // if our rect does not contain the childs then begin clipping
-        if (!r.Contains(cr)) {
+        if (!r.Contains(kid->GetRect())) {
             aRenderingContext.PushState();
             aRenderingContext.SetClipRect(r, nsClipCombine_kIntersect);
             hasClipped = PR_TRUE;
         }
     }
 
-    PaintChild(aPresContext, aRenderingContext, aDirtyRect, frame, aWhichLayer);
+    PaintChild(aPresContext, aRenderingContext, aDirtyRect, kid, aWhichLayer);
 
     kid->GetNextBox(&kid);
   }
@@ -1684,11 +1633,9 @@ nsBoxFrame::PaintChildren(nsPresContext*      aPresContext,
             // if we haven't already clipped and we should
             // check to see if the child is in out bounds. If not then
             // we begin clipping.
-            nsRect cr(0,0,0,0);
-            kid->GetBounds(cr);
     
             // if our rect does not contain the childs then begin clipping
-            if (!r.Contains(cr)) {
+            if (!r.Contains(kid->mRect)) {
                 aRenderingContext.PushState();
                 aRenderingContext.SetClipRect(r, nsClipCombine_kIntersect);
                 hasClipped = PR_TRUE;
@@ -1698,8 +1645,7 @@ nsBoxFrame::PaintChildren(nsPresContext*      aPresContext,
 
         nscoord x, y, borderSize, spacerSize;
         
-        nsRect cr(0,0,0,0);
-        kid->GetBounds(cr);
+        nsRect cr(kid->mRect);
         nsMargin margin;
         kid->GetMargin(margin);
         cr.Inflate(margin);
@@ -1765,13 +1711,6 @@ NS_INTERFACE_MAP_BEGIN(nsBoxFrame)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIBox)
 NS_INTERFACE_MAP_END_INHERITING(nsContainerFrame)
 
-NS_IMETHODIMP
-nsBoxFrame::GetFrame(nsIFrame** aFrame)
-{
-  *aFrame = this;  
-  return NS_OK;
-}
-
 #ifdef DEBUG_LAYOUT
 void
 nsBoxFrame::GetBoxName(nsAutoString& aName)
@@ -1830,9 +1769,7 @@ nsBoxFrame::GetFrameForPoint(nsPresContext*   aPresContext,
       PRBool isDebug = PR_FALSE;
       box->GetDebug(isDebug);
       if (isDebug) {
-        nsIFrame* frame = nsnull;
-        box->GetFrame(&frame);
-        *aFrame = frame;
+        *aFrame = box;
         return NS_OK;
       }
     }
@@ -1851,9 +1788,7 @@ nsBoxFrame::GetFrameForPoint(nsPresContext*   aPresContext,
   nsIBox* kid = nsnull;
   GetChildBox(&kid);
   while (nsnull != kid) {
-    nsIFrame* frame = nsnull;
-    kid->GetFrame(&frame);
-    GetFrameForPointChild(aPresContext, tmp, aWhichLayer, frame, hit != nsnull, &hit);
+    GetFrameForPointChild(aPresContext, tmp, aWhichLayer, kid, hit != nsnull, &hit);
     kid->GetNextBox(&kid);
   }
   if (hit)
@@ -1913,37 +1848,10 @@ nsBoxFrame::GetFrameForPointChild(nsPresContext*   aPresContext,
 nsIBox*
 nsBoxFrame::GetBoxForFrame(nsIFrame* aFrame, PRBool& aIsAdaptor)
 {
-  if (aFrame == nsnull)
-    return nsnull;
-
-  nsIBox* ibox = nsnull;
-  if (NS_FAILED(aFrame->QueryInterface(NS_GET_IID(nsIBox), (void**)&ibox))) {
+  if (aFrame && !aFrame->IsBoxFrame())
     aIsAdaptor = PR_TRUE;
 
-    // if we hit a non box. Find the box in out last container
-    // and clear its cache.
-    nsIBox* parentBox = nsnull;
-    if (NS_FAILED(aFrame->GetParent()->
-                  QueryInterface(NS_GET_IID(nsIBox), (void**)&parentBox)))
-       return nsnull;
-
-    if (parentBox) {
-      nsIBox* start = nsnull;
-      parentBox->GetChildBox(&start);
-      while (start) {
-        nsIFrame* frame = nsnull;
-        start->GetFrame(&frame);
-        if (frame == aFrame) {
-          ibox = start;
-          break;
-        }
-
-        start->GetNextBox(&start);
-      }
-    }
-  } 
-
-  return ibox;
+  return aFrame;
 }
 
 /*
@@ -2037,9 +1945,7 @@ nsresult
 nsBoxFrame::GetContentOf(nsIContent** aContent)
 {
     // If we don't have a content node find a parent that does.
-    nsIFrame* frame;
-    GetFrame(&frame);
-
+    nsIFrame *frame = this;
     while (frame) {
       *aContent = frame->GetContent();
       if (*aContent) {
@@ -2259,6 +2165,29 @@ nsBoxFrame::GetDebugPadding(nsMargin& aPadding)
 {
     aPadding.SizeTo(2,2,2,2);
 }
+
+NS_IMETHODIMP 
+nsBoxFrame::GetInset(nsMargin& margin)
+{
+  margin.SizeTo(0,0,0,0);
+
+  if (mState & NS_STATE_CURRENTLY_IN_DEBUG) {
+     nsMargin debugMargin(0,0,0,0);
+     nsMargin debugBorder(0,0,0,0);
+     nsMargin debugPadding(0,0,0,0);
+     GetDebugBorder(debugBorder);
+     PixelMarginToTwips(mPresContext, debugBorder);
+     GetDebugMargin(debugMargin);
+     PixelMarginToTwips(mPresContext, debugMargin);
+     GetDebugMargin(debugPadding);
+     PixelMarginToTwips(mPresContext, debugPadding);
+     margin += debugBorder;
+     margin += debugMargin;
+     margin += debugPadding;
+  }
+
+  return NS_OK;
+}
 #endif
 
 void 
@@ -2317,9 +2246,6 @@ nsBoxFrame::DisplayDebugInfoFor(nsIBox*         aBox,
     nscoord x = aPoint.x;
     nscoord y = aPoint.y;
 
-    nsIFrame* ourFrame = nsnull;
-    aBox->GetFrame(&ourFrame);
-
     // get the area inside our border but not our debug margins.
     nsRect insideBorder;
     aBox->GetContentRect(insideBorder);
@@ -2352,11 +2278,8 @@ nsBoxFrame::DisplayDebugInfoFor(nsIBox*         aBox,
             (!isHorizontal && x < insideBorder.x + m.left)) {
             //printf("**** inside debug border *******\n");
             while (child) 
-            {    
-               nsRect r;
-               child->GetBounds(r);
-               nsIFrame* childFrame = nsnull;
-               child->GetFrame(&childFrame);
+            {
+                const nsRect& r = child->mRect;
 
                 // if we are not in the child. But in the spacer above the child.
                 if ((isHorizontal && x >= r.x && x < r.x + r.width) ||
@@ -2366,13 +2289,13 @@ nsBoxFrame::DisplayDebugInfoFor(nsIBox*         aBox,
                         if (mDebugChild == child)
                             return NS_OK;
 
-                        if (ourFrame->GetContent()) {
+                        if (aBox->GetContent()) {
                           printf("---------------\n");
                           DumpBox(stdout);
                           printf("\n");
                         }
 
-                        if (childFrame->GetContent()) {
+                        if (child->GetContent()) {
                             printf("child #%d: ", count);
                             child->DumpBox(stdout);
                             printf("\n");
@@ -2444,13 +2367,24 @@ nsBoxFrame::DisplayDebugInfoFor(nsIBox*         aBox,
 
         return NS_OK;
 }
+
+void
+nsBoxFrame::SetDebugOnChildList(nsBoxLayoutState& aState, nsIBox* aChild, PRBool aDebug)
+{
+    nsIBox* child = nsnull;
+     GetChildBox(&child);
+     while (child)
+     {
+        child->SetDebug(aState, aDebug);
+        child->GetNextBox(&child);
+     }
+}
 #endif
 
 nsresult
 nsBoxFrame::GetFrameSizeWithMargin(nsIBox* aBox, nsSize& aSize)
 {
-  nsRect rect(0,0,0,0);
-  aBox->GetBounds(rect);
+  nsRect rect(aBox->GetRect());
   nsMargin margin(0,0,0,0);
   aBox->GetMargin(margin);
   rect.Inflate(margin);
@@ -2661,3 +2595,207 @@ nsBoxFrame::FireDOMEvent(nsPresContext *aPresContext, const nsAString& aDOMEvent
   }
 }
 
+void 
+nsBoxFrame::CheckBoxOrder(nsBoxLayoutState& aState)
+{
+  // Run through our list of children and check whether we
+  // need to sort them.  Count up the children at the same
+  // time, since we're already traversing the list.
+  PRBool orderBoxes = PR_FALSE;
+  PRInt32 childCount = 0;
+  nsIFrame *child = mFrames.FirstChild();
+
+  while (child) {
+    ++childCount;
+
+    PRUint32 ordinal;
+    child->GetOrdinal(aState, ordinal);
+    if (ordinal != DEFAULT_ORDINAL_GROUP)
+      orderBoxes = PR_TRUE;
+
+    child = child->GetNextSibling();
+  }
+
+  if (!orderBoxes || childCount < 2)
+    return;
+
+  // Turn the child list into an array for sorting.
+  nsIFrame** boxes = new nsIFrame*[childCount];
+  nsIFrame* box = mFrames.FirstChild();
+  nsIFrame** boxPtr = boxes;
+  while (box) {
+    *boxPtr++ = box;
+    box = box->GetNextSibling();
+  }
+
+  // sort the array by ordinal group, selection sort
+  // XXX this could use a more efficient sort
+  PRInt32 i, j, min;
+  PRUint32 minOrd, jOrd;
+  for(i = 0; i < childCount; i++) {
+    min = i;
+    boxes[min]->GetOrdinal(aState, minOrd);
+    for(j = i + 1; j < childCount; j++) {
+      boxes[j]->GetOrdinal(aState, jOrd);
+      if (jOrd < minOrd) {
+        min = j;
+        minOrd = jOrd;
+      }
+    }
+    box = boxes[min];
+    boxes[min] = boxes[i];
+    boxes[i] = box;
+  }
+
+  // turn the array back into linked list, with first and last cached
+  mFrames.SetFrames(boxes[0]);
+  for (i = 0; i < childCount - 1; ++i)
+    boxes[i]->SetNextSibling(boxes[i+1]);
+
+  boxes[childCount-1]->SetNextSibling(nsnull);
+  delete [] boxes;
+}
+
+NS_IMETHODIMP
+nsBoxFrame::SetLayoutManager(nsIBoxLayout* aLayout)
+{
+  mLayoutManager = aLayout;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBoxFrame::GetLayoutManager(nsIBoxLayout** aLayout)
+{
+  *aLayout = mLayoutManager;
+  NS_IF_ADDREF(*aLayout);
+  return NS_OK;
+}
+
+nsresult
+nsBoxFrame::LayoutChildAt(nsBoxLayoutState& aState, nsIBox* aBox, const nsRect& aRect)
+{
+  // get the current rect
+  nsRect oldRect(aBox->GetRect());
+  aBox->SetBounds(aState, aRect);
+
+  PRBool dirty = PR_FALSE;
+  PRBool dirtyChildren = PR_FALSE;
+  aBox->IsDirty(dirty);
+  aBox->HasDirtyChildren(dirtyChildren);
+
+  PRBool layout = PR_TRUE;
+  if (!(dirty || dirtyChildren) && aState.LayoutReason() != nsBoxLayoutState::Initial) 
+     layout = PR_FALSE;
+  
+  if (layout || (oldRect.width != aRect.width || oldRect.height != aRect.height))  {
+    return aBox->Layout(aState);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBoxFrame::RelayoutChildAtOrdinal(nsBoxLayoutState& aState, nsIBox* aChild)
+{
+  PRUint32 ord;
+  aChild->GetOrdinal(aState, ord);
+  
+  PRUint32 ordCmp;
+  nsIFrame *firstChild = mFrames.FirstChild();
+  nsIBox* box = firstChild;
+  nsIBox* newPrevSib = firstChild;
+  
+  box->GetOrdinal(aState, ordCmp);
+  if (ord < ordCmp) {
+    // new ordinal is lower than the lowest current ordinal, so it will not
+    // have a previous sibling
+    newPrevSib = nsnull;
+  } else {  
+    // search for the box after which we will insert this box
+    while (box) {
+      box->GetOrdinal(aState, ordCmp);
+      if (newPrevSib && ordCmp > ord)
+        break;
+      
+      newPrevSib = box;
+      box->GetNextBox(&box);
+    }
+  }
+    
+  // look for the previous sibling of |aChild|
+  nsIBox* oldPrevSib = firstChild;
+  while (oldPrevSib) {
+    nsIBox* me;
+    oldPrevSib->GetNextBox(&me);
+    if (aChild == me) {
+      break;
+    }
+    oldPrevSib = me;
+  }
+  
+  // if we are moving |mFirstChild|, we'll have to update the |mFirstChild| 
+  // value later on
+  PRBool firstChildMoved = PR_FALSE;
+  if (aChild == firstChild)
+    firstChildMoved = PR_TRUE;
+
+  nsIBox* newNextSib;
+  if (newPrevSib) {
+    // insert |aChild| between |newPrevSib| and its next sibling
+    newPrevSib->GetNextBox(&newNextSib);
+    newPrevSib->SetNextBox(aChild);
+  } else {
+    // no |newPrevSib| found, so this box will become |mFirstChild|
+    newNextSib = firstChild;
+    firstChild = aChild;
+  }
+  
+  // link up our new next sibling
+  nsIBox* oldNextSib;
+  aChild->GetNextBox(&oldNextSib);
+  aChild->SetNextBox(newNextSib);
+
+  // link |oldPrevSib| with |oldNextSib| to fill the gap left behind
+  if (oldPrevSib)
+    oldPrevSib->SetNextBox(oldNextSib);
+  
+  if (firstChildMoved)
+    firstChild = oldNextSib;
+
+  mFrames.SetFrames(firstChild);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBoxFrame::GetIndexOf(nsIBox* aBox, PRInt32* aIndex)
+{
+    nsIBox* child = mFrames.FirstChild();
+    PRInt32 count = 0;
+    while (child) 
+    {       
+      if (aBox == child) {
+          *aIndex = count;
+          return NS_OK;
+      }
+
+      child->GetNextBox(&child);
+      count++;
+    }
+
+    *aIndex = -1;
+
+    return NS_OK;
+}
+
+PRBool
+nsBoxFrame::GetWasCollapsed(nsBoxLayoutState& aState)
+{
+  return nsBox::GetWasCollapsed(aState);
+}
+
+void
+nsBoxFrame::SetWasCollapsed(nsBoxLayoutState& aState, PRBool aWas)
+{
+  nsBox::SetWasCollapsed(aState, aWas);
+}

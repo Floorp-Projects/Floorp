@@ -6202,6 +6202,10 @@ nsBlockFrame::Init(nsPresContext*  aPresContext,
 
   nsresult rv = nsBlockFrameSuper::Init(aPresContext, aContent, aParent,
                                         aContext, aPrevInFlow);
+
+  if (IsBoxWrapped())
+    mState |= NS_BLOCK_SPACE_MGR;
+
   return rv;
 }
 
@@ -6591,6 +6595,19 @@ nsBlockFrame::BuildFloatList(nsBlockReflowState& aState)
       }
     }
   }
+}
+
+NS_IMETHODIMP
+nsBlockFrame::SetParent(const nsIFrame* aParent)
+{
+  nsresult rv = nsBlockFrameSuper::SetParent(aParent);
+  if (IsBoxWrapped())
+    mState |= NS_BLOCK_SPACE_MGR;
+
+  // XXX should we clear NS_BLOCK_SPACE_MGR if we were the child of a box
+  // but no longer are?
+
+  return rv;
 }
 
 // XXX keep the text-run data in the first-in-flow of the block

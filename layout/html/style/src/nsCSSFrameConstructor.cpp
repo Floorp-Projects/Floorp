@@ -113,6 +113,7 @@
 #include "nsScrollPortFrame.h"
 #include "nsXULAtoms.h"
 #include "nsBoxFrame.h"
+#include "nsIBoxLayout.h"
 #ifdef MOZ_ENABLE_CAIRO
 #include "nsCanvasFrame.h"
 #endif
@@ -5817,11 +5818,9 @@ nsCSSFrameConstructor::BeginBuildingScrollFrame(nsIPresShell*            aPresSh
   nsRefPtr<nsStyleContext> contentStyle = aContentStyle;
 
   if (!gfxScrollFrame) {
-    nsCOMPtr<nsIBox> box = do_QueryInterface(aParentFrame);
-
     // Build a XULScrollFrame when the parent is a box, because XULScrollFrames
     // do box layout well. Otherwise build an HTMLScrollFrame.
-    if (box) {
+    if (aParentFrame->IsBoxFrame()) {
       NS_NewXULScrollFrame(aPresShell, &gfxScrollFrame, aIsRoot);
     } else {
       NS_NewHTMLScrollFrame(aPresShell, &gfxScrollFrame, aIsRoot);
@@ -9816,12 +9815,9 @@ nsCSSFrameConstructor::StyleChangeReflow(nsPresContext* aPresContext,
 #endif
 
   // Is it a box? If so we can coelesce.
-  nsresult rv;
-  nsIBox *box;
-  rv = CallQueryInterface(aFrame, &box);
-  if (NS_SUCCEEDED(rv) && box) {
+  if (aFrame->IsBoxFrame()) {
     nsBoxLayoutState state(aPresContext);
-    box->MarkStyleChange(state);
+    aFrame->MarkStyleChange(state);
   }
   else {
     // If the frame is part of a split block-in-inline hierarchy, then
@@ -9833,10 +9829,10 @@ nsCSSFrameConstructor::StyleChangeReflow(nsPresContext* aPresContext,
 
     // Target a style-change reflow at the frame.
     nsHTMLReflowCommand *reflowCmd;
-    rv = NS_NewHTMLReflowCommand(&reflowCmd, aFrame,
-                                 eReflowType_StyleChanged,
-                                 nsnull,
-                                 aAttribute);
+    nsresult rv = NS_NewHTMLReflowCommand(&reflowCmd, aFrame,
+                                          eReflowType_StyleChanged,
+                                          nsnull,
+                                          aAttribute);
   
     if (NS_SUCCEEDED(rv))
       aPresContext->PresShell()->AppendReflowCommand(reflowCmd);

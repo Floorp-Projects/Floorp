@@ -221,35 +221,32 @@ nsPopupSetFrame::DoLayout(nsBoxLayoutState& aState)
   while (currEntry) {
     nsIFrame* popupChild = currEntry->mPopupFrame;
     if (popupChild) {
-      nsIBox* ibox = nsnull;
-      nsresult rv2 = popupChild->QueryInterface(NS_GET_IID(nsIBox), (void**)&ibox);
-      NS_ASSERTION(NS_SUCCEEDED(rv2) && ibox,"popupChild is not box!!");
+      NS_ASSERTION(popupChild->IsBoxFrame(), "popupChild is not box!!");
 
       // then get its preferred size
       nsSize prefSize(0,0);
       nsSize minSize(0,0);
       nsSize maxSize(0,0);
 
-      ibox->GetPrefSize(aState, prefSize);
-      ibox->GetMinSize(aState, minSize);
-      ibox->GetMaxSize(aState, maxSize);
+      popupChild->GetPrefSize(aState, prefSize);
+      popupChild->GetMinSize(aState, minSize);
+      popupChild->GetMaxSize(aState, maxSize);
 
       BoundsCheck(minSize, prefSize, maxSize);
 
       // if the pref size changed then set bounds to be the pref size
       // and sync the view. Also set new pref size.
      // if (currEntry->mLastPref != prefSize) {
-        ibox->SetBounds(aState, nsRect(0,0,prefSize.width, prefSize.height));
+        popupChild->SetBounds(aState, nsRect(0,0,prefSize.width, prefSize.height));
         RepositionPopup(currEntry, aState);
         currEntry->mLastPref = prefSize;
      // }
 
       // is the new size too small? Make sure we handle scrollbars correctly
       nsIBox* child;
-      ibox->GetChildBox(&child);
+      popupChild->GetChildBox(&child);
 
-      nsRect bounds(0,0,0,0);
-      ibox->GetBounds(bounds);
+      nsRect bounds(popupChild->GetRect());
 
       nsCOMPtr<nsIScrollableFrame> scrollframe = do_QueryInterface(child);
       if (scrollframe &&
@@ -257,20 +254,20 @@ nsPopupSetFrame::DoLayout(nsBoxLayoutState& aState)
         // if our pref height
         if (bounds.height < prefSize.height) {
           // layout the child
-          ibox->Layout(aState);
+          popupChild->Layout(aState);
 
           nsMargin scrollbars = scrollframe->GetActualScrollbarSizes();
           if (bounds.width < prefSize.width + scrollbars.left + scrollbars.right)
           {
             bounds.width += scrollbars.left + scrollbars.right;
             //printf("Width=%d\n",width);
-            ibox->SetBounds(aState, bounds);
+            popupChild->SetBounds(aState, bounds);
           }
         }
       }
     
       // layout the child
-      ibox->Layout(aState);
+      popupChild->Layout(aState);
 
       // only size popup if open
       if (currEntry->mCreateHandlerSucceeded) {
@@ -315,12 +312,10 @@ nsPopupSetFrame::SetDebug(nsBoxLayoutState& aState, nsIFrame* aList, PRBool aDeb
           return NS_OK;
 
       while (aList) {
-          nsIBox* ibox = nsnull;
-          if (NS_SUCCEEDED(aList->QueryInterface(NS_GET_IID(nsIBox), (void**)&ibox)) && ibox) {
-              ibox->SetDebug(aState, aDebug);
-          }
+        if (aList->IsBoxFrame())
+          aList->SetDebug(aState, aDebug);
 
-          aList = aList->GetNextSibling();
+        aList = aList->GetNextSibling();
       }
 
       return NS_OK;

@@ -44,7 +44,6 @@
 
 #include "nsGridRowLayout.h"
 #include "nsBoxLayoutState.h"
-#include "nsIBox.h"
 #include "nsIScrollableFrame.h"
 #include "nsBox.h"
 #include "nsStackLayout.h"

@@ -55,7 +55,6 @@ class nsReflowState;
 class nsCalculatedBoxInfo;
 struct nsHTMLReflowMetrics;
 class nsString;
-class nsIBox;
 class nsHTMLReflowCommand;
 
 class nsBoxLayoutState

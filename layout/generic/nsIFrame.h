@@ -79,6 +79,8 @@ class nsIView;
 class nsIWidget;
 class nsIDOMRange;
 class nsISelectionController;
+class nsBoxLayoutState;
+class nsIBoxLayout;
 #ifdef ACCESSIBILITY
 class nsIAccessible;
 #endif
@@ -89,10 +91,12 @@ struct nsRect;
 struct nsSize;
 struct nsMargin;
 
+typedef class nsIFrame nsIBox;
+
 // IID for the nsIFrame interface 
-// a6cf9050-15b3-11d2-932e-00805f8add32
+// 7a243690-a766-4394-bc13-788b1bf63ef1
 #define NS_IFRAME_IID \
- { 0xa6cf9050, 0x15b3, 0x11d2,{0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}}
+ { 0x7a243690, 0xa766, 0x4394,{0xbc, 0x13, 0x78, 0x8b, 0x1b, 0xf6, 0x3e, 0xf1}}
 
 /**
  * Indication of how the frame can be split. This is used when doing runaround
@@ -159,6 +163,10 @@ typedef PRUint32 nsFrameState;
 // If this bit is set, then the frame corresponds to generated content
 #define NS_FRAME_GENERATED_CONTENT                    0x00000040
 
+// If this bit is set, then the frame uses XUL flexible box layout
+// for its children.
+#define NS_FRAME_IS_BOX                               0x00000080
+
 // If this bit is set, then the frame has been moved out of the flow,
 // e.g., it is absolutely positioned or floated
 #define NS_FRAME_OUT_OF_FLOW                          0x00000100
@@ -213,6 +221,10 @@ typedef PRUint32 nsFrameState;
 // The upper 12 bits of the frame state word are reserved for frame
 // implementations.
 #define NS_FRAME_IMPL_RESERVED                        0xFFF00000
+
+// Box layout bits
+#define NS_STATE_IS_HORIZONTAL                        0x00400000
+#define NS_STATE_IS_DIRECTION_NORMAL                  0x80000000
 
 //----------------------------------------------------------------------
 
@@ -1260,6 +1272,113 @@ NS_PTR_TO_INT32(frame->GetProperty(nsLayoutAtoms::embeddingLevel))
    * @return whether the frame is focusable via mouse, kbd or script.
    */
   PRBool IsFocusable(PRInt32 *aTabIndex = nsnull);
+
+  // BOX LAYOUT METHODS
+  // These methods have been migrated from nsIBox and are in the process of
+  // being refactored. DO NOT USE OUTSIDE OF XUL.
+  PRBool IsBoxFrame() const { return (mState & NS_FRAME_IS_BOX) != 0; }
+  PRBool IsBoxWrapped() const
+  { return (!IsBoxFrame() && mParent && mParent->IsBoxFrame()); }
+
+  enum Halignment {
+    hAlign_Left,
+    hAlign_Right,
+    hAlign_Center
+  };
+
+  enum Valignment {
+    vAlign_Top,
+    vAlign_Middle,
+    vAlign_BaseLine,
+    vAlign_Bottom
+  };
+
+  NS_IMETHOD GetPrefSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)=0;
+  NS_IMETHOD GetMinSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)=0;
+  NS_IMETHOD GetMaxSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)=0;
+  NS_IMETHOD GetFlex(nsBoxLayoutState& aBoxLayoutState, nscoord& aFlex)=0;
+  NS_HIDDEN_(nsresult)
+    GetOrdinal(nsBoxLayoutState& aBoxLayoutState, PRUint32& aOrdinal);
+
+  NS_IMETHOD GetAscent(nsBoxLayoutState& aBoxLayoutState, nscoord& aAscent)=0;
+  NS_IMETHOD IsCollapsed(nsBoxLayoutState& aBoxLayoutState, PRBool& aCollapsed)=0;
+  // This does not alter the overflow area. If the caller is changing
+  // the box size, the caller is responsible for updating the overflow
+  // area. It's enough to just call Layout or SyncLayout on the
+  // box. You can pass PR_TRUE to aRemoveOverflowArea as a
+  // convenience.
+  NS_IMETHOD SetBounds(nsBoxLayoutState& aBoxLayoutState, const nsRect& aRect,
+                       PRBool aRemoveOverflowArea = PR_FALSE)=0;
+  NS_HIDDEN_(nsresult) Layout(nsBoxLayoutState& aBoxLayoutState);
+  nsresult IsDirty(PRBool& aIsDirty) { aIsDirty = (mState & NS_FRAME_IS_DIRTY) != 0; return NS_OK; }
+  nsresult HasDirtyChildren(PRBool& aIsDirty) { aIsDirty = (mState & NS_FRAME_HAS_DIRTY_CHILDREN) != 0; return NS_OK; }
+  NS_IMETHOD MarkDirty(nsBoxLayoutState& aState)=0;
+  NS_HIDDEN_(nsresult) MarkDirtyChildren(nsBoxLayoutState& aState);
+  nsresult GetChildBox(nsIBox** aBox)
+  {
+    // box layout ends at box-wrapped frames, so don't allow these frames
+    // to report child boxes.
+    *aBox = IsBoxFrame() ? GetFirstChild(nsnull) : nsnull;
+    return NS_OK;
+  }
+  nsresult GetNextBox(nsIBox** aBox)
+  {
+    *aBox = (mParent && mParent->IsBoxFrame()) ? mNextSibling : nsnull;
+    return NS_OK;
+  }
+  nsresult SetNextBox(nsIBox* aBox) { return NS_OK; }
+  NS_HIDDEN_(nsresult) GetParentBox(nsIBox** aParent);
+  NS_IMETHOD GetBorderAndPadding(nsMargin& aBorderAndPadding);
+  NS_IMETHOD GetBorder(nsMargin& aBorderAndPadding)=0;
+  NS_IMETHOD GetPadding(nsMargin& aBorderAndPadding)=0;
+#ifdef DEBUG_LAYOUT
+  NS_IMETHOD GetInset(nsMargin& aInset)=0;
+#else
+  nsresult GetInset(nsMargin& aInset) { aInset.SizeTo(0, 0, 0, 0); return NS_OK; }
+#endif
+  NS_IMETHOD GetMargin(nsMargin& aMargin)=0;
+  NS_IMETHOD SetLayoutManager(nsIBoxLayout* aLayout)=0;
+  NS_IMETHOD GetLayoutManager(nsIBoxLayout** aLayout)=0;
+  NS_HIDDEN_(nsresult) GetContentRect(nsRect& aContentRect);
+  NS_HIDDEN_(nsresult) GetClientRect(nsRect& aContentRect);
+  NS_IMETHOD GetVAlign(Valignment& aAlign) = 0;
+  NS_IMETHOD GetHAlign(Halignment& aAlign) = 0;
+
+  PRBool IsHorizontal() const { return (mState & NS_STATE_IS_HORIZONTAL) != 0; }
+  nsresult GetOrientation(PRBool& aIsHorizontal)  /// XXX to be removed
+  { aIsHorizontal = IsHorizontal(); return NS_OK; }
+
+  PRBool IsNormalDirection() const { return (mState & NS_STATE_IS_DIRECTION_NORMAL) != 0; }
+  nsresult GetDirection(PRBool& aIsNormal)  /// XXX to be removed
+  { aIsNormal = IsNormalDirection(); return NS_OK; }
+
+  NS_HIDDEN_(nsresult) Redraw(nsBoxLayoutState& aState, const nsRect* aRect = nsnull, PRBool aImmediate = PR_FALSE);
+  NS_IMETHOD NeedsRecalc()=0;
+  NS_IMETHOD RelayoutDirtyChild(nsBoxLayoutState& aState, nsIBox* aChild)=0;
+  NS_IMETHOD RelayoutChildAtOrdinal(nsBoxLayoutState& aState, nsIBox* aChild)=0;
+  NS_IMETHOD GetMouseThrough(PRBool& aMouseThrough)=0;
+  NS_IMETHOD MarkChildrenStyleChange()=0;
+  NS_IMETHOD MarkStyleChange(nsBoxLayoutState& aState)=0;
+#ifdef DEBUG_LAYOUT
+  NS_IMETHOD SetDebug(nsBoxLayoutState& aState, PRBool aDebug)=0;
+  NS_IMETHOD GetDebug(PRBool& aDebug)=0;
+  NS_IMETHOD GetDebugBoxAt(const nsPoint& aPoint, nsIBox** aBox)=0;
+
+  NS_IMETHOD DumpBox(FILE* out)=0;
+#endif
+  NS_IMETHOD ChildrenMustHaveWidgets(PRBool& aMust) const=0;
+  NS_IMETHOD GetIndexOf(nsIBox* aChild, PRInt32* aIndex)=0;
+
+  static PRBool AddCSSPrefSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize);
+  static PRBool AddCSSMinSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize);
+  static PRBool AddCSSMaxSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize);
+  static PRBool AddCSSFlex(nsBoxLayoutState& aState, nsIBox* aBox, nscoord& aFlex);
+  static PRBool AddCSSCollapsed(nsBoxLayoutState& aState, nsIBox* aBox, PRBool& aCollapsed);
+  static PRBool AddCSSOrdinal(nsBoxLayoutState& aState, nsIBox* aBox, PRUint32& aOrdinal);
+
+  // END OF BOX LAYOUT METHODS
+  // The above methods have been migrated from nsIBox and are in the process of
+  // being refactored. DO NOT USE OUTSIDE OF XUL.
 
 protected:
   // Members
