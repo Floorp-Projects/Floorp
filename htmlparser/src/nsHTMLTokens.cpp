@@ -297,6 +297,28 @@ void CStartToken::DebugDumpSource(nsOutputStream& out) {
  *  @return  nada
  */
 void CStartToken::GetSource(nsString& anOutputString){
+  anOutputString="<";
+  /*
+   * mTextValue used to contain the name of the tag.
+   * But for the sake of performance we now rely on the tagID
+   * rather than tag name.  This however, caused bug 15204
+   * to reincarnate. Since, mTextvalue is not being used here..
+   * I'm just going to comment it out.
+   * 
+   */
+  // anOutputString+=mTextValue; 
+  if(mTrailingContent.Length()>0)
+    anOutputString+=mTrailingContent;
+}
+
+/*
+ *  
+ *  
+ *  @update  harishd 03/23/00
+ *  @param   result appended to the output string.
+ *  @return  nada
+ */
+void CStartToken::AppendSource(nsString& anOutputString){
   anOutputString+="<";
   /*
    * mTextValue used to contain the name of the tag.
@@ -427,6 +449,19 @@ void CEndToken::DebugDumpSource(nsOutputStream& out) {
  *  @return  nada
  */
 void CEndToken::GetSource(nsString& anOutputString){
+  anOutputString="</";
+  anOutputString+=mTextValue;
+  anOutputString+=">";
+}
+
+/*
+ *  
+ *  
+ *  @update  harishd 03/23/00
+ *  @param   result appended to the output string.
+ *  @return  nada
+ */
+void CEndToken::AppendSource(nsString& anOutputString){
   anOutputString+="</";
   anOutputString+=mTextValue;
   anOutputString+=">";
@@ -1174,6 +1209,20 @@ void CAttributeToken::DebugDumpToken(nsOutputStream& out) {
  *  @return  nada
  */
 void CAttributeToken::GetSource(nsString& anOutputString){
+  anOutputString=mTextKey;
+  anOutputString+="=";
+  anOutputString+=mTextValue;
+  anOutputString+=";";
+}
+
+/*
+ *  
+ *  
+ *  @update  harishd 03/23/00
+ *  @param   result appended to the output string.
+ *  @return  nada
+ */
+void CAttributeToken::AppendSource(nsString& anOutputString){
   anOutputString+=mTextKey;
   anOutputString+="=";
   anOutputString+=mTextValue;
@@ -1668,6 +1717,19 @@ void CEntityToken::DebugDumpSource(nsOutputStream& out) {
  *  @return  nada
  */
 void CEntityToken::GetSource(nsString& anOutputString){
+  anOutputString="&";
+  anOutputString+=mTextValue;
+  //anOutputString+=";";
+}
+
+/*
+ *  
+ *  
+ *  @update  harishd 03/23/00
+ *  @param   result appended to the output string.
+ *  @return  nada
+ */
+void CEntityToken::AppendSource(nsString& anOutputString){
   anOutputString+="&";
   anOutputString+=mTextValue;
   //anOutputString+=";";
@@ -1857,6 +1919,17 @@ void CSkippedContentToken::DebugDumpSource(nsOutputStream& out) {
  */
 void CSkippedContentToken::GetSource(nsString& anOutputString){
   anOutputString="$skipped-content";
+}
+
+/*
+ *  
+ *  
+ *  @update  harishd 03/23/00
+ *  @param   result appended to the output string.
+ *  @return  nada
+ */
+void CSkippedContentToken::AppendSource(nsString& anOutputString){
+  anOutputString+="$skipped-content";
 }
 
 /**

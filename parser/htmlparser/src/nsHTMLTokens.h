@@ -129,6 +129,7 @@ class CStartToken: public CHTMLToken {
             void          SetEmpty(PRBool aValue);
     virtual void          DebugDumpSource(nsOutputStream& out);
     virtual void          GetSource(nsString& anOutputString);
+    virtual void          AppendSource(nsString& anOutputString);
 
     virtual void          Reinitialize(PRInt32 aTag, const nsString& aString);
   
@@ -157,6 +158,7 @@ class CEndToken: public CHTMLToken {
     virtual PRInt32     GetTokenType(void);
     virtual void        DebugDumpSource(nsOutputStream& out);
     virtual void        GetSource(nsString& anOutputString);
+    virtual void        AppendSource(nsString& anOutputString);
 };
 
 
@@ -198,6 +200,7 @@ class CEntityToken : public CHTMLToken {
     static  PRInt32     TranslateToUnicodeStr(PRInt32 aValue,nsString& aString);
     virtual  void       DebugDumpSource(nsOutputStream& out);
     virtual void        GetSource(nsString& anOutputString);
+    virtual void        AppendSource(nsString& anOutputString);
 };
 
 
@@ -274,6 +277,7 @@ class CAttributeToken: public CHTMLToken {
     virtual void          SanitizeKey();
     virtual void          DebugDumpToken(nsOutputStream& out);
     virtual void          GetSource(nsString& anOutputString);
+    virtual void          AppendSource(nsString& anOutputString);
     virtual void          DebugDumpSource(nsOutputStream& out);
             PRBool        mLastAttribute;
     virtual void          Reinitialize(PRInt32 aTag, const nsString& aString);
@@ -352,6 +356,7 @@ class CSkippedContentToken: public CAttributeToken {
     virtual PRInt32     GetTokenType(void);
     virtual void        DebugDumpSource(nsOutputStream& out);
     virtual void        GetSource(nsString& anOutputString);
+    virtual void        AppendSource(nsString& anOutputString);
   protected:
 };
 

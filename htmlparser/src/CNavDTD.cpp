@@ -2046,7 +2046,9 @@ nsresult CNavDTD::CollectSkippedContent(nsCParserNode& aNode,PRInt32 &aCount) {
           aNode.mSkippedContent->Append(mScratch);
         }
       }
-      else theNextToken->GetSource(*aNode.mSkippedContent);
+      else {
+        theNextToken->AppendSource(*aNode.mSkippedContent);
+      }
     }
     mTokenRecycler->RecycleToken(theNextToken);
   }
