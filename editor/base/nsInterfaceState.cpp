@@ -515,38 +515,23 @@ nsresult
 nsInterfaceState::UpdateListState(const char* observerName)
 {
   nsresult  rv = NS_ERROR_NO_INTERFACE;
-
-  nsCOMPtr<nsIDOMSelection>  domSelection;
-  {
-    nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
-    editor->GetSelection(getter_AddRefs(domSelection));
-  }
+  nsAutoString tagStr;  // empty by default.
   
-  nsCOMPtr<nsIDOMNode>       domNode;
-  if (domSelection)
-    domSelection->GetAnchorNode(getter_AddRefs(domNode));
-  
-  // tagStr will hold the list state when we're done.
-  nsAutoString  tagStr; tagStr.AssignWithConversion("ol");
-  nsCOMPtr<nsIDOMElement> parentElement;
-  rv = mEditor->GetElementOrParentByTagName(tagStr, domNode, getter_AddRefs(parentElement));
+  PRBool bMixed, bOL, bUL;
+  rv = mEditor->GetListState(bMixed, bOL, bUL);
   if (NS_FAILED(rv)) return rv;  
 
-  if (!parentElement)
-  {
+  if (bMixed)
+    {} // leave tagStr empty
+  else if (bOL)
+    tagStr.AssignWithConversion("ol");
+  else if (bUL)
     tagStr.AssignWithConversion("ul");
-    rv = mEditor->GetElementOrParentByTagName(tagStr, domNode, getter_AddRefs(parentElement));
-    if (NS_FAILED(rv)) return rv;
-    
-    if (!parentElement)
-      tagStr.SetLength(0);
-  }
+  // else leave tagStr empty
   
-  if (tagStr != mListTag)
-  {
-    rv = SetNodeAttribute(observerName, "format", tagStr);
-    mListTag = tagStr;
-  }
+  rv = SetNodeAttribute(observerName, "format", tagStr);
+    
+  mListTag = tagStr;
 
   return rv;
 }

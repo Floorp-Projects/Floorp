@@ -1885,7 +1885,7 @@ nsresult nsHTMLEditor::RemoveInlinePropertyImpl(nsIAtom *aProperty, const nsStri
       aProperty = nsIEditProperty::a;
 
     if (aProperty) return mTypeInState->ClearProp(aProperty, *aAttribute);
-//    else return mTypeInState->ClearAllProps();
+    else return mTypeInState->ClearAllProps();
   }
   nsAutoEditBatch batchIt(this);
   nsAutoRules beginRulesSniffing(this, kOpRemoveTextProperty, nsIEditor::eNext);
@@ -2311,7 +2311,7 @@ NS_IMETHODIMP nsHTMLEditor::InsertHTMLWithCharset(const nsString& aInputString,
   if (!selection) return NS_ERROR_NULL_POINTER;
 
   // give rules a chance to handle or cancel
-  nsTextRulesInfo ruleInfo(nsHTMLEditRules::kInsertElement);
+  nsTextRulesInfo ruleInfo(nsTextEditRules::kInsertElement);
   PRBool cancel, handled;
   res = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
   if (NS_FAILED(res)) return res;
@@ -2407,7 +2407,7 @@ NS_IMETHODIMP nsHTMLEditor::InsertBreak()
   if (NS_FAILED(res)) return res;
   if (!selection) return NS_ERROR_NULL_POINTER;
 
-  nsTextRulesInfo ruleInfo(nsHTMLEditRules::kInsertBreak);
+  nsTextRulesInfo ruleInfo(nsTextEditRules::kInsertBreak);
   res = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
   if (NS_FAILED(res)) return res;
   if (!cancel && !handled)
@@ -2496,7 +2496,7 @@ nsHTMLEditor::InsertElementAtSelection(nsIDOMElement* aElement, PRBool aDeleteSe
 
   // hand off to the rules system, see if it has anything to say about this
   PRBool cancel, handled;
-  nsTextRulesInfo ruleInfo(nsHTMLEditRules::kInsertElement);
+  nsTextRulesInfo ruleInfo(nsTextEditRules::kInsertElement);
   ruleInfo.insertElement = aElement;
   res = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
   if (cancel || (NS_FAILED(res))) return res;
@@ -2842,6 +2842,16 @@ nsHTMLEditor::GetListTags(nsStringArray *aTagList)
   return GetParentBlockTags(aTagList, PR_TRUE);
 }
 
+NS_IMETHODIMP 
+nsHTMLEditor::GetListState(PRBool &aMixed, PRBool &aOL, PRBool &aUL)
+{
+  if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
+
+  nsCOMPtr<nsIHTMLEditRules> htmlRules = do_QueryInterface(mRules);
+  if (!htmlRules) return NS_ERROR_FAILURE;
+  
+  return htmlRules->GetListState(aMixed, aOL, aUL);
+}
 
 NS_IMETHODIMP
 nsHTMLEditor::MakeOrChangeList(const nsString& aListType)
@@ -2860,7 +2870,7 @@ nsHTMLEditor::MakeOrChangeList(const nsString& aListType)
   if (NS_FAILED(res)) return res;
   if (!selection) return NS_ERROR_NULL_POINTER;
 
-  nsTextRulesInfo ruleInfo(nsHTMLEditRules::kMakeList);
+  nsTextRulesInfo ruleInfo(nsTextEditRules::kMakeList);
   if (aListType.EqualsWithConversion("ol")) ruleInfo.bOrdered = PR_TRUE;
   else  ruleInfo.bOrdered = PR_FALSE;
   res = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
@@ -2938,7 +2948,7 @@ nsHTMLEditor::RemoveList(const nsString& aListType)
   if (NS_FAILED(res)) return res;
   if (!selection) return NS_ERROR_NULL_POINTER;
 
-  nsTextRulesInfo ruleInfo(nsHTMLEditRules::kRemoveList);
+  nsTextRulesInfo ruleInfo(nsTextEditRules::kRemoveList);
   if (aListType.EqualsWithConversion("ol")) ruleInfo.bOrdered = PR_TRUE;
   else  ruleInfo.bOrdered = PR_FALSE;
   res = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
@@ -2967,7 +2977,7 @@ nsHTMLEditor::InsertBasicBlock(const nsString& aBlockType)
   res = GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(res)) return res;
   if (!selection) return NS_ERROR_NULL_POINTER;
-  nsTextRulesInfo ruleInfo(nsHTMLEditRules::kMakeBasicBlock);
+  nsTextRulesInfo ruleInfo(nsTextEditRules::kMakeBasicBlock);
   ruleInfo.blockType = &aBlockType;
   res = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
   if (cancel || (NS_FAILED(res))) return res;
@@ -3030,11 +3040,11 @@ nsHTMLEditor::Indent(const nsString& aIndent)
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
 
   PRBool cancel, handled;
-  PRInt32 theAction = nsHTMLEditRules::kIndent;
+  PRInt32 theAction = nsTextEditRules::kIndent;
   PRInt32 opID = kOpIndent;
   if (aIndent.EqualsWithConversion("outdent"))
   {
-    theAction = nsHTMLEditRules::kOutdent;
+    theAction = nsTextEditRules::kOutdent;
     opID = kOpOutdent;
   }
   nsAutoEditBatch beginBatching(this);
@@ -3126,7 +3136,7 @@ nsHTMLEditor::Align(const nsString& aAlignType)
   nsresult res = GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(res)) return res;
   if (!selection) return NS_ERROR_NULL_POINTER;
-  nsTextRulesInfo ruleInfo(nsHTMLEditRules::kAlign);
+  nsTextRulesInfo ruleInfo(nsTextEditRules::kAlign);
   ruleInfo.alignType = &aAlignType;
   res = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
   if (cancel || NS_FAILED(res))
@@ -4493,7 +4503,7 @@ NS_IMETHODIMP nsHTMLEditor::PasteAsCitedQuotation(const nsString& aCitation,
   if (!selection) return NS_ERROR_NULL_POINTER;
 
   // give rules a chance to handle or cancel
-  nsTextRulesInfo ruleInfo(nsHTMLEditRules::kInsertElement);
+  nsTextRulesInfo ruleInfo(nsTextEditRules::kInsertElement);
   PRBool cancel, handled;
   res = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
   if (NS_FAILED(res)) return res;
@@ -4644,7 +4654,7 @@ nsHTMLEditor::InsertAsPlaintextQuotation(const nsString& aQuotedText,
   if (!selection) return NS_ERROR_NULL_POINTER;
 
   // give rules a chance to handle or cancel
-  nsTextRulesInfo ruleInfo(nsHTMLEditRules::kInsertElement);
+  nsTextRulesInfo ruleInfo(nsTextEditRules::kInsertElement);
   PRBool cancel, handled;
   rv = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
   if (NS_FAILED(rv)) return rv;
@@ -4710,7 +4720,7 @@ nsHTMLEditor::InsertAsCitedQuotation(const nsString& aQuotedText,
   if (!selection) return NS_ERROR_NULL_POINTER;
 
   // give rules a chance to handle or cancel
-  nsTextRulesInfo ruleInfo(nsHTMLEditRules::kInsertElement);
+  nsTextRulesInfo ruleInfo(nsTextEditRules::kInsertElement);
   PRBool cancel, handled;
   res = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
   if (NS_FAILED(res)) return res;
@@ -5183,6 +5193,11 @@ nsHTMLEditor::CanContainTag(nsIDOMNode* aParent, const nsString &aTag)
   // if parent is a list and tag is text, say "no". 
   if (IsListNode(aParent) && (aTag.EqualsWithConversion("__moz_text")))
     return PR_FALSE;
+  // if both are lists, return true
+  if (IsListNode(aParent) && 
+     ( aTag.EqualsWithConversion("ol") ||
+       aTag.EqualsWithConversion("ul") ) )
+    return PR_TRUE;
   // else fall thru
   return nsEditor::CanContainTag(aParent, aTag);
 }

@@ -125,6 +125,12 @@ nsresult TypeInState::SetProp(nsIAtom *aProp, const nsString &aAttr, const nsStr
 }
 
 
+nsresult TypeInState::ClearAllProps()
+{
+  // null prop means "all" props
+  return ClearProp(nsnull,nsAutoString(),nsAutoString());
+}
+
 nsresult TypeInState::ClearProp(nsIAtom *aProp)
 {
   return ClearProp(aProp,nsAutoString(),nsAutoString());
@@ -238,9 +244,22 @@ nsresult TypeInState::RemovePropFromSetList(nsIAtom *aProp,
                                             const nsString &aValue)
 {
   PRInt32 index;
-  if (IsPropSet(aProp, aAttr, aValue, index))
+  PropItem *item;
+  if (!aProp)
   {
-    PropItem *item = (PropItem*)mSetArray.ElementAt(index);
+    // clear _all_ props
+    while ((index = mSetArray.Count()))
+    {
+      // go backwards to keep nsVoidArray from memmoving everything each time
+      index--; // nsVoidArray is zero based
+      item = (PropItem*)mSetArray.ElementAt(index);
+      mSetArray.RemoveElementAt(index);
+      if (item) delete item;
+    }
+  }
+  else if (FindPropInList(aProp, aAttr, aValue, mSetArray, index))
+  {
+    item = (PropItem*)mSetArray.ElementAt(index);
     mSetArray.RemoveElementAt(index);
     if (item) delete item;
   }
@@ -253,7 +272,7 @@ nsresult TypeInState::RemovePropFromClearedList(nsIAtom *aProp,
                                             const nsString &aValue)
 {
   PRInt32 index;
-  if (IsPropCleared(aProp, aAttr, aValue, index))
+  if (FindPropInList(aProp, aAttr, aValue, mClearedArray, index))
   {
     PropItem *item = (PropItem*)mClearedArray.ElementAt(index);
     mClearedArray.RemoveElementAt(index);
@@ -307,13 +326,30 @@ PRBool TypeInState::IsPropCleared(nsIAtom *aProp,
                                   const nsString &aValue,
                                   PRInt32 &outIndex)
 {
+  if (FindPropInList(aProp, aAttr, aValue, mClearedArray, outIndex))
+    return PR_TRUE;
+  if (FindPropInList(0, 0, 0, mClearedArray, outIndex))
+  {
+    // special case for all props cleared
+    outIndex = -1;
+    return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
+PRBool TypeInState::FindPropInList(nsIAtom *aProp, 
+                                   const nsString &aAttr,
+                                   const nsString &aValue,
+                                   nsVoidArray &aList,
+                                   PRInt32 &outIndex)
+{
   // linear search.  list should be short.
-  PRInt32 i, count = mClearedArray.Count();
+  PRInt32 i, count = aList.Count();
   for (i=0; i<count; i++)
   {
-    PropItem *item = (PropItem*)mClearedArray[i];
+    PropItem *item = (PropItem*)aList[i];
     if ( (item->tag == aProp) &&
-         (item->attr == aAttr) )
+         (item->attr == aAttr) ) 
     {
       outIndex = i;
       return PR_TRUE;
@@ -321,6 +357,7 @@ PRBool TypeInState::IsPropCleared(nsIAtom *aProp,
   }
   return PR_FALSE;
 }
+
 
 
 /********************************************************************

@@ -126,11 +126,7 @@ public:
   NS_IMETHOD GetParentBlockTags(nsStringArray *aTagList, PRBool aGetLists);
   NS_IMETHOD GetParagraphTags(nsStringArray *aTagList);
   NS_IMETHOD GetListTags(nsStringArray *aTagList);
-//  NS_IMETHOD RemoveParagraphStyle();
-
-//  NS_IMETHOD AddBlockParent(nsString& aParentTag);
-//  NS_IMETHOD ReplaceBlockParent(nsString& aParentTag);
-//  NS_IMETHOD RemoveParent(const nsString &aParentTag);
+  NS_IMETHOD GetListState(PRBool &aMixed, PRBool &aOL, PRBool &aUL);
 
   NS_IMETHOD MakeOrChangeList(const nsString& aListType);
   NS_IMETHOD RemoveList(const nsString& aListType);
