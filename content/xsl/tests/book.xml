@@ -1,0 +1,5 @@
+<?xml version='1.0'?>
+<?xsl:stylesheet href="book.xsl" type="text/xsl"?>
+<doc>
+<title>Nisheeth's Document</title>
+</doc>
