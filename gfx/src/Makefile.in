@@ -77,9 +77,11 @@ CPPSRCS		= \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \
+		$(MKSHLIB_FORCE_ALL) \
 		$(MOZ_TIMER_LIBS) \
 		$(DIST)/lib/libimg_s.a \
 		$(DIST)/lib/libmozutil_s.a \
+		$(MKSHLIB_UNFORCE_ALL) \
 		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 
