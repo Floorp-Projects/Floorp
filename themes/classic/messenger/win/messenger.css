@@ -540,3 +540,7 @@ searchterm
   border-left          : 1px solid ThreeDShadow;
 }
 
+#searchTermTree 
+{
+  min-height: 50px;
+}

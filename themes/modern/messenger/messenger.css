@@ -577,6 +577,10 @@ spring.spacer {
    margin: 0px 0px 0px 0px;
  }
 
+#searchTermTree {
+  min-height: 50px;
+}
+
 /* ::::: move to content :::::: */
 
 dummy.usesMailWidgets {

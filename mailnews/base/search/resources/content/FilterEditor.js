@@ -66,7 +66,7 @@ function filterEditorOnLoad()
 
 function onEnterInSearchTerm()
 {
-  // do nothing.  okOk() will get called since this is a dialog
+  // do nothing.  onOk() will get called since this is a dialog
 }
 
 function onOk()

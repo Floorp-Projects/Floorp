@@ -81,7 +81,7 @@ Rights Reserved.
       <text class="label" value="&conditionDesc.label;"/>
 
       <hbox flex="1">
-        <hbox id="searchTermListBox" flex="1"/>
+        <vbox id="searchTermListBox" flex="1"/>
         <vbox>
            <spring flex="1"/>
            <button label="&searchButton.label;" id="search-button" oncommand="onSearchButton(event);"/>

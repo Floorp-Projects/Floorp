@@ -60,9 +60,9 @@ Contributor(s):
 
   <separator/>
 
-  <vbox>
+  <vbox flex="1">
     <text class="label" value="&conditionDesc.label;"/>
-    <hbox id="searchTermListBox" flex="1"/>
+    <vbox id="searchTermListBox" flex="1"/>
   </vbox>
 
   <separator/>

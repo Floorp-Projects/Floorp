@@ -20,6 +20,7 @@
 
  Contributor(s):
  Alec Flett <alecf@netscape.com>
+ Håkan Waara <hwaara@chello.se>
 -->
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/searchTermOverlay.dtd" >
@@ -38,7 +39,7 @@
     
     <hbox flex="1">
       <hbox id="searchterms"/>
-      <tree class="inset" flex="1" id="searchTermTree" style="height: 100px; min-height: 50px;">
+      <tree class="inset" flex="1" id="searchTermTree">
         <treecolgroup>
           <treecol flex="1"/>
           <treecol flex="4"/>
