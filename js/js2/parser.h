@@ -33,19 +33,26 @@ namespace JavaScript {
 
 	// A Reader reads Unicode characters from some source -- either a file or a string.
 	// get() returns all of the characters followed by a char16eof.
+	// If get() returns LF (u000A), CR (u000D), LS (u2028), or PS (u2029), then beginLine()
+	// must be called before getting or peeking any more characters.
 	class Reader {
+	  protected:
 		const char16 *begin;			// Beginning of current buffer
 		const char16 *p;				// Position in current buffer
 		const char16 *end;				// End of current buffer
 		const char16 *lineStart;		// Pointer to start of current line
 		uint32 nGetsPastEnd;			// Number of times char16eof has been returned
+	  public:
+		uint32 lineNum;					// One-based number of current line
+		FileOffset lineFileOffset;		// Byte or character offset of start of current line relative to all of input
+	  private:
 
 		String *recordString;			// String, if any, into which recordChar() records characters
 		const char16 *recordBase;		// Position of last beginRecording() call
 		const char16 *recordPos;		// Position of last recordChar() call; nil if a discrepancy occurred
 		
 	  protected:
-		Reader(): nGetsPastEnd(0) {}
+		Reader(): nGetsPastEnd(0), lineNum(1), lineFileOffset(0) {}
 	  public:
 		Reader(const char16 *begin, const char16 *end);
 	  private:
@@ -57,7 +64,7 @@ namespace JavaScript {
 		char16orEOF peek();
 		void unget(uint32 n = 1);
 		
-		void beginLine();
+		virtual void beginLine() = 0;
 		uint32 charPos() const;
 		void backUpTo(uint32 pos);
 
@@ -92,17 +99,8 @@ namespace JavaScript {
 	}
 
 
-	// Set the beginning of the current line.  unget cannot be subsequently called past this point.
-	inline void Reader::beginLine()
-	{
-		lineStart = p;
-	  #ifdef DEBUG
-		recordString = 0;
-	  #endif
-	}
-
-	// Return the character offset relative to the current line.  This cannot be called
-	// if the current position is past the end of the input.
+	// Return the number of characters between the current position and the beginning of the current line.
+	// This cannot be called if the current position is past the end of the input.
 	inline uint32 Reader::charPos() const
 	{
 		ASSERT(!nGetsPastEnd);
@@ -139,6 +137,7 @@ namespace JavaScript {
 
 	  public:
 		StringReader(const String &s, const String &source);
+		void beginLine();
 		String sourceFile() const;
 	};
 
@@ -298,8 +297,7 @@ namespace JavaScript {
 
 		Kind kind;						// The token's kind
 		bool lineBreak;					// True if line break precedes this token
-		uint32 lineNum;					// One-based source line number
-		uint32 charPos;					// Zero-based character offset of this token in source line
+		SourcePosition pos;				// Position of this token
 		StringAtom *identifier;			// The token's characters; non-null for identifiers, keywords, and regular expressions only
 		String chars;					// The token's characters; valid for strings, units, numbers, and regular expression flags only
 		float64 value;					// The token's value (numbers only)
@@ -313,7 +311,7 @@ namespace JavaScript {
 
 
 	class Lexer {
-		enum {tokenBufferSize = 3};	// Token lookahead buffer size
+		enum {tokenBufferSize = 3};		// Token lookahead buffer size
 	  public:
 		Reader &reader;
 		World &world;
@@ -325,7 +323,6 @@ namespace JavaScript {
 		int nTokensBack;				// Number of Tokens on which unget() can be called; these Tokens are beind nextToken
 		bool savedPreferRegExp[tokenBufferSize]; // Circular buffer of saved values of preferRegExp to get() calls
 	  #endif
-		uint32 lineNum;					// Current line number
 		bool lexingUnit;				// True if lexing a unit identifier immediately following a number
 
 	  public:
@@ -351,5 +348,151 @@ namespace JavaScript {
 		void lexToken(bool preferRegExp);
 	  public:
 	};
+
+
+	class ParseNode {
+		enum Kind {
+			Empty,						// Empty (used in array literals, argument lists, etc.)
+			Id,							// Identifier
+			Num,						// Numeral
+			Str,						// String
+			Unit,						// Unit after numeral
+			RegExp,						// Regular expression
+
+		  // Punctuators
+			OpenParenthesis,			// (
+			CloseParenthesis,			// )
+			OpenBracket,				// [
+			CloseBracket,				// ]
+			OpenBrace,					// {
+			CloseBrace,					// }
+
+			Comma,						// ,
+			Semicolon,					// ;
+			Dot,						// .
+			DoubleDot,					// ..
+			TripleDot,					// ...
+			Arrow,						// ->
+			Colon,						// :
+			DoubleColon,				// ::
+			Pound,						// #
+			At,							// @
+
+			Increment,					// ++
+			Decrement,					// --
+
+			Complement,					// ~
+			Not,						// !
+
+			Times,						// *
+			Divide,						// /
+			Modulo,						// %
+			Plus,						// +
+			Minus,						// -
+			LeftShift,					// <<
+			RightShift,					// >>
+			LogicalRightShift,			// >>>
+			LogicalAnd,					// &&
+			LogicalXor,					// ^^
+			LogicalOr,					// ||
+			And,						// &	// These must be at constant offsets from LogicalAnd ... LogicalOr
+			Xor,						// ^
+			Or,							// |
+
+			Assignment,					// =
+			TimesEquals,				// *=	// These must be at constant offsets from Times ... Or
+			DivideEquals,				// /=
+			ModuloEquals,				// %=
+			PlusEquals,					// +=
+			MinusEquals,				// -=
+			LeftShiftEquals,			// <<=
+			RightShiftEquals,			// >>=
+			LogicalRightShiftEquals,	// >>>=
+			LogicalAndEquals,			// &&=
+			LogicalXorEquals,			// ^^=
+			LogicalOrEquals,			// ||=
+			AndEquals,					// &=
+			XorEquals,					// ^=
+			OrEquals,					// |=
+
+			Equal,						// ==
+			NotEqual,					// !=
+			LessThan,					// <
+			LessThanOrEqual,			// <=
+			GreaterThan,				// >	// >, >= must be at constant offsets from <, <=
+			GreaterThanOrEqual,			// >=
+			Identical,					// ===
+			NotIdentical,				// !==
+
+			Question,					// ?
+
+		  // Reserved words
+			Abstract,					// abstract
+			Break,						// break
+			Case,						// case
+			Catch,						// catch
+			Class,						// class
+			Const,						// const
+			Continue,					// continue
+			Debugger,					// debugger
+			Default,					// default
+			Delete,						// delete
+			Do,							// do
+			Else,						// else
+			Enum,						// enum
+			Eval,						// eval
+			Export,						// export
+			Extends,					// extends
+			False,						// false
+			Final,						// final
+			Finally,					// finally
+			For,						// for
+			Function,					// function
+			Goto,						// goto
+			If,							// if
+			Implements,					// implements
+			Import,						// import
+			In,							// in
+			Instanceof,					// instanceof
+			Native,						// native
+			New,						// new
+			Null,						// null
+			Package,					// package
+			Private,					// private
+			Protected,					// protected
+			Public,						// public
+			Return,						// return
+			Static,						// static
+			Super,						// super
+			Switch,						// switch
+			Synchronized,				// synchronized
+			This,						// this
+			Throw,						// throw
+			Throws,						// throws
+			Transient,					// transient
+			True,						// true
+			Try,						// try
+			Typeof,						// typeof
+			Var,						// var
+			Volatile,					// volatile
+			While,						// while
+			With,						// with
+
+		  // Non-reserved words
+			Box,						// box
+			Constructor,				// constructor
+			Field,						// field
+			Get,						// get
+			Language,					// language
+			Local,						// local
+			Method,						// method
+			Override,					// override
+			Set,						// set
+			Version						// version
+		};
+	};
+
+	//class Parser: public Lexer {
+	//};
 }
 #endif

@@ -31,7 +31,7 @@ namespace JS = JavaScript;
 
 // Create a Reader reading characters from begin up to but not including end.
 JS::Reader::Reader(const char16 *begin, const char16 *end):
-	begin(begin), p(begin), end(end), lineStart(begin), nGetsPastEnd(0)
+	begin(begin), p(begin), end(end), lineStart(begin), nGetsPastEnd(0), lineNum(1), lineFileOffset(0)
 {
 	ASSERT(begin <= end);
   #ifdef DEBUG
@@ -137,6 +137,17 @@ JS::StringReader::StringReader(const String &s, const String &source):
 {
 	const char16 *begin = str.data();
 	setBuffer(begin, begin, begin + str.size());
+}
+
+
+// Set the beginning of the current line.  unget cannot be subsequently called past this point.
+// This can only be called if the previous character was LF (u000A), CR (u000D), LS (u2028), or PS (u2029).
+// Moreover, in these cases this method must be called before reading any more characters.
+void JS::StringReader::beginLine()
+{
+	++lineNum;
+	lineStart = p;
+	lineFileOffset = static_cast<uint32>(p - begin);
 }
 
 
@@ -345,7 +356,6 @@ JS::Lexer::Lexer(Reader &reader, World &world): reader(reader), world(world)
   #ifdef DEBUG
 	nTokensBack = 0;
   #endif
-	lineNum = 1;
 	lexingUnit = false;
 }
 
@@ -418,7 +428,12 @@ void JS::Lexer::syntaxError(const char *message, uint backUp)
 		ch = reader.get();
 	} while (ch != char16eof && !isLineBreak(char16orEOFToChar16(ch)));
 	reader.unget();
-	Exception e(Exception::SyntaxError, widenCString(message), reader.sourceFile(), lineNum, charPos,
+
+	SourcePosition position;
+	position.lineFileOffset = reader.lineFileOffset;
+	position.lineNum = reader.lineNum;
+	position.charPos = charPos;
+	Exception e(Exception::SyntaxError, widenCString(message), reader.sourceFile(), position,
 				reader.extract(0, reader.charPos()));
 	throw e;
 }
@@ -721,7 +736,7 @@ void JS::Lexer::lexToken(bool preferRegExp)
 		    	goto next;
 
 		      case CharInfo::IdGroup:
-		    	t.charPos = reader.charPos() - 1;
+		    	t.pos.charPos = reader.charPos() - 1;
 		      readIdentifier:
 		    	{
 			    	reader.unget();
@@ -734,7 +749,7 @@ void JS::Lexer::lexToken(bool preferRegExp)
 
 		      case CharInfo::NonIdGroup:
 		      case CharInfo::IdContinueGroup:
-		    	t.charPos = reader.charPos() - 1;
+		    	t.pos.charPos = reader.charPos() - 1;
 		    	switch (ch) {
 				  case '(':
 					kind = Token::OpenParenthesis;	// (
@@ -764,7 +779,7 @@ void JS::Lexer::lexToken(bool preferRegExp)
 					kind = Token::Dot;				// .
 					ch2 = getChar();
 					if (isASCIIDecimalDigit(char16orEOFToChar16(ch2))) {
-						reader.backUpTo(t.charPos);
+						reader.backUpTo(t.pos.charPos);
 						goto number;				// decimal point
 					} else if (ch2 == '.') {
 						kind = Token::DoubleDot;	// ..
@@ -824,7 +839,6 @@ void JS::Lexer::lexToken(bool preferRegExp)
 							ch = getChar();
 							if (isLineBreak(char16orEOFToChar16(ch))) {
 								reader.beginLine();
-								++lineNum;
 								t.lineBreak = true;
 							}
 							if (ch == char16eof)
@@ -941,12 +955,12 @@ void JS::Lexer::lexToken(bool preferRegExp)
 		      case CharInfo::LineBreakGroup:
 		      endOfLine:
 				reader.beginLine();
-				++lineNum;
 				t.lineBreak = true;
 				goto next;
 			}
 		}
 	}
 	t.kind = kind;
-	t.lineNum = lineNum;
+	t.pos.lineFileOffset = reader.lineFileOffset;
+	t.pos.lineNum = reader.lineNum;
 }
