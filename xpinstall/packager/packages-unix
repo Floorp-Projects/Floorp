@@ -92,6 +92,7 @@ bin/components/libraptorhtmlpars.so
 bin/components/libraptorview.so
 bin/components/librdf.so
 bin/components/librelated.so
+bin/components/libshistory.so
 bin/components/libstreamconv.so
 bin/components/libstrres.so
 bin/components/libtimer_gtk.so
@@ -139,6 +140,7 @@ bin/components/psmglue.so
 bin/components/psmglue.xpt
 bin/components/rdf.xpt
 bin/components/related.xpt
+bin/components/shistory.xpt
 bin/components/sidebar.xpt
 bin/components/signonviewer.xpt
 bin/components/unicharutil.xpt
