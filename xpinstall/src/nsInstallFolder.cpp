@@ -41,8 +41,6 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsAppDirectoryServiceDefs.h"
 
-#include "nsFileLocations.h"
-#include "nsIFileLocator.h"
 
 struct DirectoryTable
 {

@@ -54,7 +54,7 @@
 #include "nsIDOMWindow.h"
 #include "nsDirectoryService.h"
 #include "nsDirectoryServiceDefs.h"
-#include "nsFileLocations.h"
+#include "nsAppDirectoryServiceDefs.h"
 
 #include "nsProxiedService.h"
 #include "nsIAppShellComponentImpl.h"
@@ -65,7 +65,6 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID );
 static NS_DEFINE_IID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
-static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
 static NS_DEFINE_CID(kDialogParamBlockCID, NS_DialogParamBlock_CID);
 static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 
@@ -614,11 +613,12 @@ nsXPInstallManager::GetDestinationFile(nsString& url, nsILocalFile* *file)
     PRInt32 pos = url.RFindChar('/');
     url.Mid( leaf, pos+1, url.Length() );
 
+    NS_WITH_SERVICE(nsIProperties, directoryService,
+                    NS_DIRECTORY_SERVICE_PROGID, &rv);
+
     if (mChromeType == 0 )
     {
         // a regular XPInstall, not chrome
-        NS_WITH_SERVICE(nsIProperties, directoryService,
-                        NS_DIRECTORY_SERVICE_PROGID, &rv);
         if (NS_SUCCEEDED(rv))
         {
             nsCOMPtr<nsILocalFile> temp;
@@ -634,15 +634,14 @@ nsXPInstallManager::GetDestinationFile(nsString& url, nsILocalFile* *file)
     else
     {
         // a chrome install, download straight to final destination
-        NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
-        if (NS_SUCCEEDED(rv))
+        if (NS_SUCCEEDED(rv)) // Getting directoryService
         {
-            nsCOMPtr<nsIFileSpec>   userChrome;
-            nsCOMPtr<nsILocalFile>  target;
+            nsCOMPtr<nsILocalFile>  userChrome;
 
             // Get the user's Chrome directory, create if necessary
-            rv = locator->GetFileLocation(
-                            nsSpecialFileSpec::App_UserChromeDirectory,
+                        
+            rv = directoryService->Get(NS_APP_USER_CHROME_DIR,
+                                       NS_GET_IID(nsIFile), 
                             getter_AddRefs(userChrome));
 
             NS_ASSERTION(NS_SUCCEEDED(rv) && userChrome,
@@ -653,18 +652,14 @@ nsXPInstallManager::GetDestinationFile(nsString& url, nsILocalFile* *file)
                 rv = userChrome->Exists(&exists);
                 if (NS_SUCCEEDED(rv) && !exists)
                 {
-                    rv = userChrome->CreateDir();
+                    rv = userChrome->Create(nsIFile::DIRECTORY_TYPE, 0775);
                 }
-
-                nsFileSpec  tmpSpec;
-                userChrome->GetFileSpec(&tmpSpec);
-                rv = NS_FileSpecToIFile(&tmpSpec, getter_AddRefs(target));
 
                 if (NS_SUCCEEDED(rv))
                 {
-                    target->AppendUnicode(leaf.GetUnicode());
-                    MakeUnique(target);
-                    *file = target;
+                    userChrome->AppendUnicode(leaf.GetUnicode());
+                    MakeUnique(userChrome);
+                    *file = userChrome;
                     NS_IF_ADDREF(*file);
                 }
             }
