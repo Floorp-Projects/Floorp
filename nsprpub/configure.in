@@ -70,6 +70,10 @@ _OPTIMIZE_FLAGS=-O
 _DEBUG_FLAGS=-g
 MOZ_DEBUG=1
 MOZ_OPTIMIZE=
+OBJDIR=.
+OBJDIR_NAME=.
+NSINSTALL='$(MOD_DEPTH)/config/$(OBJDIR_NAME)/nsinstall'
+
 dnl Link in libraries necessary to resolve all symbols for shared libs
 RESOLVE_LINK_SYMBOLS=
 
@@ -1170,6 +1174,11 @@ AC_SUBST(NOSUCHFILE)
 AC_SUBST(MOZ_OBJFORMAT)
 AC_SUBST(ULTRASPARC_LIBRARY)
 AC_SUBST(ULTRASPARC_FILTER_LIBRARY)
+
+AC_SUBST(OBJDIR)
+AC_SUBST(OBJDIR_NAME)
+AC_SUBST(NSINSTALL)
+AC_SUBST(OPTIMIZER)
 
 dnl ========================================================
 dnl Generate output files.

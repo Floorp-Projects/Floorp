@@ -76,7 +76,6 @@ LIBRARY_VERSION	= $(MOD_VERSION)
 
 RELEASE_LIBS = $(TARGETS)
 
-ifndef USE_AUTOCONF
 ifeq ($(OS_ARCH),WINNT)
 ifeq ($(OS_TARGET), WIN16)
 EXTRA_LIBS = $(DIST)/lib/nspr$(MOD_VERSION).lib
@@ -97,7 +96,8 @@ endif
 endif
 endif
 
-else
+ifndef USE_AUTOCONF
+
 ifeq ($(MOZ_OS2_TOOLS),VACPP)
 EXTRA_LIBS = $(DIST)/lib/nspr$(MOD_VERSION).$(LIB_SUFFIX)
 

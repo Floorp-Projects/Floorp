@@ -162,17 +162,18 @@ ifeq ($(OS_ARCH),NEWS-OS)
 OS_LIBS		= -lsocket -lnsl -lgen -lresolv
 endif
 
+ifdef GC_LEAK_DETECTOR
+OS_LIBS		+= -L$(DIST)/lib -lboehm
+endif
+
+endif # USE_AUTOCONF
+
 ifeq ($(OS_ARCH),WINNT)
 ifneq ($(OS_TARGET),WIN16)
 OS_LIBS		= advapi32.lib wsock32.lib
 endif
 endif
 
-ifdef GC_LEAK_DETECTOR
-OS_LIBS		+= -L$(DIST)/lib -lboehm
-endif
-
-endif # USE_AUTOCONF
 #
 # Define platform-dependent OBJS
 #
@@ -274,15 +275,6 @@ ifdef GC_LEAK_DETECTOR
 OBJS += memory/$(OBJDIR)/prgcleak.$(OBJ_SUFFIX)
 endif
 
-ifdef USE_AUTOCONF
-
-include $(srcdir)/md/$(PR_MD_ARCH_DIR)/objs.mk
-ifdef USE_BTHREADS
-include $(srcdir)/bthreads/objs.mk
-endif
-
-else
-
 ifeq ($(OS_ARCH), WINNT)
 ifneq ($(OS_TARGET),WIN16)
 DLLBASE=/BASE:0x30000000
@@ -294,7 +286,18 @@ EXTRA_LIBS += $(GLOWDIR)/glowcode.lib
 endif
 endif
 endif
+endif # WINNT
 
+ifdef USE_AUTOCONF
+
+include $(srcdir)/md/$(PR_MD_ARCH_DIR)/objs.mk
+ifdef USE_BTHREADS
+include $(srcdir)/bthreads/objs.mk
+endif
+
+else
+
+ifeq ($(OS_ARCH), WINNT)
 ifeq ($(OS_TARGET), WIN16)
 OBJS +=	md/windows/$(OBJDIR)/w16null.$(OBJ_SUFFIX) \
 	md/windows/$(OBJDIR)/w16proc.$(OBJ_SUFFIX)      \
@@ -352,8 +355,6 @@ OBJS +=	md/windows/$(OBJDIR)/ntdllmn.$(OBJ_SUFFIX) \
 endif
 endif
 
-else
-
 ifeq ($(OS_ARCH),OS2)
 OBJS +=	md/os2/$(OBJDIR)/os2io.$(OBJ_SUFFIX) \
 	md/os2/$(OBJDIR)/os2sock.$(OBJ_SUFFIX) \
@@ -374,9 +375,9 @@ ifeq ($(OS_ARCH), BeOS)
 else
 	# Unix
 	include $(srcdir)/md/unix/objs.mk
-endif
-endif
-endif
+endif # BeOS
+endif # OS2
+endif # WINNT
 endif # !USE_AUTOCONF
 
 LIBRARY_NAME = nspr
