@@ -105,7 +105,6 @@ public:
   nsMsgDeliverMode                mMode;
   nsCOMPtr<CopyListener>          mCopyListener;
   char                            *mSavePref;
-  nsCOMPtr<nsIMsgCopyService>     mCopyService;
 };
 
 // Useful function for the back end...

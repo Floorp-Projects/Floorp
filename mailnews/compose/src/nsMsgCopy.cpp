@@ -182,7 +182,7 @@ nsMsgCopy::DoCopy(nsIFileSpec *aDiskFile, nsIMsgFolder *dstFolder,
     return NS_ERROR_FAILURE;
 
 	//Call copyservice with dstFolder, disk file, and txnManager
-	NS_WITH_SERVICE(nsIMsgCopyService, mCopyService, kMsgCopyServiceCID, &rv); 
+	NS_WITH_SERVICE(nsIMsgCopyService, copyService, kMsgCopyServiceCID, &rv); 
 	if(NS_SUCCEEDED(rv))
 	{
     mCopyListener = do_QueryInterface(new CopyListener());
@@ -190,7 +190,7 @@ nsMsgCopy::DoCopy(nsIFileSpec *aDiskFile, nsIMsgFolder *dstFolder,
       return MK_OUT_OF_MEMORY;
 
     mCopyListener->SetMsgComposeAndSendObject(aMsgSendObj);
-    rv = mCopyService->CopyFileMessage(aDiskFile, dstFolder, aMsgToReplace, aIsDraft, 
+    rv = copyService->CopyFileMessage(aDiskFile, dstFolder, aMsgToReplace, aIsDraft, 
                                       mCopyListener, nsnull, txnMgr);
 	}
 
