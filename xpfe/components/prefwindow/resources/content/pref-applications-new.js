@@ -109,7 +109,7 @@ function onOK()
   if (gDS)
     gDS.Flush();
   
-  window.opener.gNewTypeRV = true;
+  window.opener.gNewTypeRV = gMIMEField.value;
   window.close();  
 }
 
