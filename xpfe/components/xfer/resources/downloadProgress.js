@@ -343,14 +343,9 @@ function onError( errorCode ) {
     var msg = "Unknown error";
     switch ( errorCode ) {
         default:
+            msg += " [" + errorCode + "]\n";
             break;
     }
     alert( msg );
-    try {
-        window.close();
-    } catch ( exception ) {
-    }
-    dump( "Error closing dialog\n" );  
-    onStatus( "Error.  Press Close button to close dialog." );
-    dialog.cancel.childNodes[0].nodeValue = "Close";
+    window.close();
 }
