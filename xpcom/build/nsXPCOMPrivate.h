@@ -39,6 +39,7 @@
 #define nsXPComPrivate_h__
 
 #include "nscore.h"
+#include "nsXPCOM.h"
 /**
  * Private Method to register an exit routine.  This method
  * allows you to setup a callback that will be called from 
@@ -67,6 +68,44 @@ NS_RegisterXPCOMExitRoutine(XPCOMExitRoutine exitRoutine, PRUint32 priority);
 
 extern "C" NS_COM nsresult
 NS_UnregisterXPCOMExitRoutine(XPCOMExitRoutine exitRoutine);
+
+
+// PUBLIC
+typedef nsresult (PR_CALLBACK *InitFunc)(nsIServiceManager* *result, nsIFile* binDirectory, nsIDirectoryServiceProvider* appFileLocationProvider);
+typedef nsresult (PR_CALLBACK *ShutdownFunc)(nsIServiceManager* servMgr);
+typedef nsresult (PR_CALLBACK *GetServiceManagerFunc)(nsIServiceManager* *result);
+typedef nsresult (PR_CALLBACK *GetComponentManagerFunc)(nsIComponentManager* *result);
+typedef nsresult (PR_CALLBACK *GetComponentRegistrarFunc)(nsIComponentRegistrar* *result);
+typedef nsresult (PR_CALLBACK *GetMemoryManagerFunc)(nsIMemory* *result);
+typedef nsresult (PR_CALLBACK *NewLocalFileFunc)(const nsAString &path, PRBool followLinks, nsILocalFile* *result);
+typedef nsresult (PR_CALLBACK *NewNativeLocalFileFunc)(const nsACString &path, PRBool followLinks, nsILocalFile* *result);
+// PRIVATE
+typedef nsresult (PR_CALLBACK *RegisterXPCOMExitRoutineFunc)(XPCOMExitRoutine exitRoutine, PRUint32 priority);
+typedef nsresult (PR_CALLBACK *UnregisterXPCOMExitRoutineFunc)(XPCOMExitRoutine exitRoutine);
+
+typedef struct XPCOMFunctions{
+    PRUint32 version;
+    PRUint32 size;
+
+    InitFunc init;
+    ShutdownFunc shutdown;
+    GetServiceManagerFunc getServiceManager;
+    GetComponentManagerFunc getComponentManager;
+    GetComponentRegistrarFunc getComponentRegistrar;
+    GetMemoryManagerFunc getMemoryManager;
+    NewLocalFileFunc newLocalFile;
+    NewNativeLocalFileFunc newNativeLocalFile;
+
+    RegisterXPCOMExitRoutineFunc registerExitRoutine;
+    UnregisterXPCOMExitRoutineFunc unregisterExitRoutine;
+} XPCOMFunctions;
+
+typedef nsresult (PR_CALLBACK *GetFrozenFunctionsFunc)(XPCOMFunctions *entryPoints);
+extern "C" NS_COM nsresult
+NS_GetFrozenFunctions(XPCOMFunctions *entryPoints);
+
+// think hard before changing this
+#define XPCOM_GLUE_VERSION 1
 
 #endif
 

@@ -193,6 +193,12 @@ nsComponentManagerImpl* nsComponentManagerImpl::gComponentManager = NULL;
 nsIProperties     *gDirectoryService = NULL;
 PRBool gXPCOMShuttingDown = PR_FALSE;
 
+// If XPCOM is unloaded, we need a way to ensure that all statics have been 
+// reinitalized when reloading.  Here we create a boolean which is initialized
+// to true.  During shutdown, this boolean with set to false.  When we startup,
+// this boolean will be checked and if the value is not true, startup will fail.
+static PRBool gXPCOMHasGlobalsBeenInitalized = PR_TRUE;
+
 // For each class that wishes to support nsIClassInfo, add a line like this
 // NS_DECL_CLASSINFO(nsMyClass)
 
@@ -309,6 +315,10 @@ nsresult NS_COM NS_InitXPCOM2(nsIServiceManager* *result,
                               nsIFile* binDirectory,
                               nsIDirectoryServiceProvider* appFileLocationProvider)
 {
+
+    if (!gXPCOMHasGlobalsBeenInitalized)
+        return NS_ERROR_NOT_INITIALIZED;
+
     nsresult rv = NS_OK;
 
      // We are not shutting down
@@ -510,6 +520,29 @@ NS_UnregisterXPCOMExitRoutine(XPCOMExitRoutine exitRoutine)
     return okay ? NS_OK : NS_ERROR_FAILURE;
 }
 
+nsresult NS_COM
+NS_GetFrozenFunctions(XPCOMFunctions *functions)
+{
+    if (!functions)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    if (functions->version != XPCOM_GLUE_VERSION)
+        return NS_ERROR_FAILURE;
+
+    functions->init = &NS_InitXPCOM2;
+    functions->shutdown = &NS_ShutdownXPCOM;
+    functions->getServiceManager = &NS_GetServiceManager;
+    functions->getComponentManager = &NS_GetComponentManager;
+    functions->getComponentRegistrar = &NS_GetComponentRegistrar;
+    functions->getMemoryManager = &NS_GetMemoryManager;
+    functions->newLocalFile = &NS_NewLocalFile;
+    functions->newNativeLocalFile = &NS_NewNativeLocalFile;
+
+    functions->registerExitRoutine = &NS_RegisterXPCOMExitRoutine;
+    functions->unregisterExitRoutine = &NS_UnregisterXPCOMExitRoutine;
+
+    return NS_OK;
+}
 
 //
 // NS_ShutdownXPCOM()
@@ -643,6 +676,7 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
     NS_ShutdownLeakDetector();
 #endif
 
+    gXPCOMHasGlobalsBeenInitalized = PR_FALSE;
     return NS_OK;
 }
 

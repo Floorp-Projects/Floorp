@@ -30,7 +30,6 @@ include $(srcdir)/objs.mk
 DIRS            = standalone
 
 MODULE		= xpcom
-XPIDL_MODULE	= xpcom_glue
 LIBRARY_NAME	= xpcomglue_s
 
 REQUIRES	= $(NULL)
