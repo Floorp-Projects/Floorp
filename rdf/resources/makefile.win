@@ -44,7 +44,6 @@ FILES=\
         remote-flash-3.rdf              \
         sidebar.css                     \
 	sidebar.js			\
-	sidebar-browser.css		\
 	sidebar-browser.rdf		\
 	sidebar-browser.xul		\
         stock.gif                       \
