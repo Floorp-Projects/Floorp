@@ -32,6 +32,10 @@
 #include "proto.h"
 
 #include "libevent.h"
+#include "g-html-view.h"
+#include "g-util.h"
+#include <gdk/gdk.h>
+#include <gtk/gtk.h>
 
 #if 0
 #define DA_EVENTS (GDK_EXPOSURE_MASK        |\
@@ -58,6 +62,11 @@ extern GdkVisual *gnomefe_visual;
 
 static MWContext *last_documented_context;
 static LO_Element *last_documented_element;
+
+static gint
+html_view_size_allocate(GtkWidget *widget,
+                        GtkAllocation *alloc,
+                        void *data);
 
 static gint
 html_view_realize_handler(GtkWidget *widget,
@@ -91,6 +100,11 @@ html_view_realize_handler(GtkWidget *widget,
     
     IL_SetDisplayMode (context->img_cx, display_prefs, &dpy_data);
   }
+  /* add the callback after the widget has been realized and the compositor
+     has been created above */
+  printf("connecting size_realloc to context %x\n", context);
+  gtk_signal_connect(GTK_OBJECT(MOZ_VIEW(view)->subview_parent), "size_allocate",
+                     GTK_SIGNAL_FUNC(html_view_size_allocate), context);
   return TRUE;
 }
 
@@ -353,58 +367,14 @@ html_view_event_handler(GtkWidget *widget,
     {
     case GDK_EXPOSE:
       {
-        /* this is the wrong place, but I can't locate
-           the right event. GDK_CONFIGURE does not seem
-           to catch the scrolled_window resizing events
-        */
-        if (view->sw_width  != MOZ_VIEW(view)->subview_parent->allocation.width ||
-            view->sw_height != MOZ_VIEW(view)->subview_parent->allocation.height )
-          {
-            view->sw_width = MOZ_VIEW(view)->subview_parent->allocation.width;
-            view->sw_height = MOZ_VIEW(view)->subview_parent->allocation.height;
-            if (context->compositor)
-              CL_ResizeCompositorWindow(context->compositor,
-                                        view->sw_width,
-                                        view->sw_height);
-          }
 	moz_html_view_refresh_rect(view,
 				   event->expose.area.x,
 				   event->expose.area.y,
 				   event->expose.area.width,
 				   event->expose.area.height);
-	
-
-        if (view->scrolled_window->allocation.width != 
-            view->s_width ||
-            view->scrolled_window->allocation.height !=
-            view->s_height ||
-            view->s_depth != gnomefe_depth) {
-          event->configure.width = view->s_width =
-            view->scrolled_window->allocation.width;
-          event->configure.height = view->s_height =
-            view->scrolled_window->allocation.height;
-				/* Fall thru... */
-          return TRUE;
-          break;
-	}
-	else
-          {
-            return FALSE;
-            break;
-          }
+        return TRUE;
+        break;
       }
-    case GDK_CONFIGURE:
-      printf ("html_view_event_handler: configure %d,%d\n",
-              event->configure.width, event->configure.height);
-      /* We only need the composited area without the scrollbars.  However,
-	 since the scrollbars can become managed and then unmanaged during
-	 layout, it is not worth the effort of keeping track of when they
-	 are visible.  Instead we make the compositor the size of the drawing
-	 area and just let the scrollbars clip the background layer. */
-      if (context->compositor)
-	CL_ResizeCompositorWindow(context->compositor,
-				  event->configure.width,
-				  event->configure.height);
       return TRUE;
       break;
     case GDK_MOTION_NOTIFY:
@@ -424,6 +394,31 @@ html_view_event_handler(GtkWidget *widget,
       return FALSE;
       break;
     }
+}
+
+static gint
+html_view_size_allocate(GtkWidget *widget,
+                        GtkAllocation *alloc,
+                        void *data)
+{
+  MozHTMLView *view = NULL;
+  MWContext *window_context = NULL;
+
+  window_context = (MWContext *)data;
+  
+  printf("size_allocate called with %x as context.\n", data);
+  view = find_html_view(window_context);
+  if (view->sw_width  != MOZ_VIEW(view)->subview_parent->allocation.width ||
+      view->sw_height != MOZ_VIEW(view)->subview_parent->allocation.height )
+    {
+      view->sw_width = MOZ_VIEW(view)->subview_parent->allocation.width;
+      view->sw_height = MOZ_VIEW(view)->subview_parent->allocation.height;
+      if (window_context->compositor != NULL)
+        CL_ResizeCompositorWindow(window_context->compositor,
+                                  view->sw_width,
+                                  view->sw_height);
+    }
+  return FALSE;
 }
 
 void 
