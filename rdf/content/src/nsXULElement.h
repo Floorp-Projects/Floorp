@@ -335,6 +335,7 @@ protected:
     static nsIAtom*             kIdAtom;
     static nsIAtom*             kObservesAtom;
     static nsIAtom*             kPopupAtom;
+    static nsIAtom*             kMenuPopupAtom;
     static nsIAtom*             kRefAtom;
     static nsIAtom*             kSelectedAtom;
     static nsIAtom*             kStyleAtom;
@@ -348,7 +349,8 @@ protected:
     static nsIAtom*             kTreeRowAtom;
     static nsIAtom*             kEditorAtom;
     static nsIAtom*             kWindowAtom;
-	static nsIAtom*             kNullAtom;
+    
+	  static nsIAtom*             kNullAtom;
 
 public:
     static nsresult

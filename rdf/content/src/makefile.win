@@ -54,6 +54,7 @@ CPP_OBJS=\
         .\$(OBJDIR)\nsXULSortService.obj          \
         .\$(OBJDIR)\nsXULTreeElement.obj          \
         .\$(OBJDIR)\nsXULEditorElement.obj        \
+		.\$(OBJDIR)\nsXULPopupElement.obj         \
 	$(NULL)
 
 # XXX we are including layout\html\base\src to get HTML elements

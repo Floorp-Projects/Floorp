@@ -90,6 +90,7 @@
 #include "nsXULControllers.h"
 #include "nsXULEditorElement.h"
 #include "nsXULTreeElement.h"
+#include "nsXULPopupElement.h"
 #include "prlog.h"
 #include "rdf.h"
 #include "rdfutil.h"
@@ -265,6 +266,7 @@ nsIAtom*             nsXULElement::kContextAtom;
 nsIAtom*             nsXULElement::kIdAtom;
 nsIAtom*             nsXULElement::kObservesAtom;
 nsIAtom*             nsXULElement::kPopupAtom;
+nsIAtom*             nsXULElement::kMenuPopupAtom;
 nsIAtom*             nsXULElement::kRefAtom;
 nsIAtom*             nsXULElement::kSelectedAtom;
 nsIAtom*             nsXULElement::kStyleAtom;
@@ -326,6 +328,7 @@ nsXULElement::Init()
         kIdAtom             = NS_NewAtom("id");
         kObservesAtom       = NS_NewAtom("observes");
         kPopupAtom          = NS_NewAtom("popup");
+        kMenuPopupAtom      = NS_NewAtom("menupopup");
         kRefAtom            = NS_NewAtom("ref");
         kSelectedAtom       = NS_NewAtom("selected");
         kStyleAtom          = NS_NewAtom("style");
@@ -397,6 +400,7 @@ nsXULElement::~nsXULElement()
         NS_IF_RELEASE(kIdAtom);
         NS_IF_RELEASE(kObservesAtom);
         NS_IF_RELEASE(kPopupAtom);
+        NS_IF_RELEASE(kMenuPopupAtom);
         NS_IF_RELEASE(kRefAtom);
         NS_IF_RELEASE(kSelectedAtom);
         NS_IF_RELEASE(kStyleAtom);
@@ -581,6 +585,20 @@ nsXULElement::QueryInterface(REFNSIID iid, void** result)
     }
     else if (iid.Equals(NS_GET_IID(nsIChromeEventHandler))) {
         *result = NS_STATIC_CAST(nsIChromeEventHandler*, this);
+    }
+    else if ((iid.Equals(NS_GET_IID(nsIDOMXULPopupElement))) &&
+             (NameSpaceID() == kNameSpaceID_XUL) &&
+             ((Tag() == kPopupAtom) || (Tag() == kMenuPopupAtom))) {
+        // We delegate XULPopupElement APIs to an aggregate object
+        if (! InnerXULElement()) {
+            rv = EnsureSlots();
+            if (NS_FAILED(rv)) return rv;
+
+            if ((mSlots->mInnerXULElement = new nsXULPopupElement(this)) == nsnull)
+                return NS_ERROR_OUT_OF_MEMORY;
+        }
+
+        return InnerXULElement()->QueryInterface(iid, result);
     }
     else if ((iid.Equals(NS_GET_IID(nsIDOMXULTreeElement)) ||
               iid.Equals(NS_GET_IID(nsIXULTreeContent))) &&
@@ -1602,6 +1620,10 @@ nsXULElement::GetScriptObject(nsIScriptContext* aContext, void** aScriptObject)
         else if (Tag() == kEditorAtom) {
             fn = NS_NewScriptXULEditorElement;
             rootname = "nsXULEditorElement::mScriptObject";
+        }
+        else if ((Tag() == kMenuPopupAtom) || (Tag() == kPopupAtom)) {
+            fn = NS_NewScriptXULPopupElement;
+            rootname = "nsXULPopupElement::mScriptObject";
         }
         else {
             fn = NS_NewScriptXULElement;
