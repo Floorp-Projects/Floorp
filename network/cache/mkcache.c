@@ -905,7 +905,8 @@ NET_RemoveDiskCacheObjects(uint32 remove_num)
 	DBT *corrupt_entry_array[CORRUPT_ENTRY_ARRAY_SIZE];
 	uint32 total_cl=0;
 	uint32 total_number=0;
-	time_t date, lock_date, last_modified_date;
+	time_t date, lock_date;
+    time_t last_modified_date = (time_t) 0;
 	uint32 i,j;
 	char *filename;
 	char *url_address;
@@ -1787,12 +1788,12 @@ NET_CacheConverter (FO_Present_Types format_out,
          if (URL_s->address) /* Why are we doing this? */
         {
           
-          char *tail;
+          char *tail = NULL;
           char *suffix;
           char *allocSuffix; /* in case we have to allocate a suffix */
           char *end;
           char *junk;
-          char old_char;
+          char old_char = 0;
 
           suffix = allocSuffix = NULL;
 
@@ -2051,12 +2052,12 @@ NET_CacheConverter (FO_Present_Types format_out,
 			if (cache_object->address)
 			  {
 				
-				char *tail;
+				char *tail = NULL;
 				char *suffix;
 				char *allocSuffix; /* in case we have to allocate a suffix */
 				char *end;
 				char *junk;
-				char old_char;
+				char old_char = 0;
 
 				suffix = allocSuffix = NULL;
 
@@ -2683,7 +2684,7 @@ NET_FindURLInCache(URL_Struct * URL_s, MWContext *ctxt)
     XP_StatStruct    stat_entry;
 	int   status;
 	char *byterange;
-	char  byterange_char;
+	char  byterange_char = 0;
 	DBT  *key;
 	DBT   data;
 	TRACEMSG(("Checking for URL in cache"));
