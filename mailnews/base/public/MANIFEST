@@ -16,7 +16,6 @@
 # This is a list of local files which get copied to the mozilla:dist:mailnews directory
 #
 
-nsIMessenger.h
 msgCore.h
 nsMsgFolderFlags.h
 nsMsgLocalFolderHdrs.h

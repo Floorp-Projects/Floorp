@@ -33,7 +33,6 @@ IDLSRCS =                                       \
 			$(NULL)
 
 EXPORTS =                           \
-			nsIMessenger.h			\
 			msgCore.h               \
 			nsMsgFolderFlags.h      \
 			nsMsgLocalFolderHdrs.h  \
