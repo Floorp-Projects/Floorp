@@ -78,8 +78,13 @@ nsresult nsTimerPeriodical::AddTimer(nsTimerImpl * aTimer)
 nsresult nsTimerPeriodical::RemoveTimer(nsTimerImpl * aTimer)
 //----------------------------------------------------------------------------------------
 {
-  // if someone tries to cancel a timer that is firing now, we just ignore them.
-  if (aTimer == mFiringTimer) return NS_OK;
+  // if someone tries to cancel a timer that is firing now, set a flag that
+  // gets it removed once the fire callback returns
+  if (aTimer == mFiringTimer)
+  {
+    aTimer->mCanceledInCallback = PR_TRUE;
+    return NS_OK;
+  }
   
   RemoveTimerFromList(aTimer, mTimers);
   RemoveTimerFromList(aTimer, mReadyTimers);
@@ -127,7 +132,6 @@ void nsTimerPeriodical::IdleAction(const EventRecord &inMacEvent)
 
 //----------------------------------------------------------------------------------------
 void nsTimerPeriodical::ProcessTimers(UInt32 currentTicks)
-// This only fires one timer per call right now.
 //----------------------------------------------------------------------------------------
 {
   PRBool done = PR_FALSE;
@@ -176,7 +180,7 @@ void nsTimerPeriodical::FireAndReprimeTimer(nsTimerImpl* aTimer)
     aTimer->SetDelay(aTimer->GetDelay());
 
   // if this is a repeating timer, put it back in the list
-  if (aTimer->GetType() != NS_TYPE_ONE_SHOT)
+  if (aTimer->GetType() != NS_TYPE_ONE_SHOT && !aTimer->mCanceledInCallback)
   {
     AddTimerToList(aTimer, mTimers);
   }
@@ -185,6 +189,7 @@ void nsTimerPeriodical::FireAndReprimeTimer(nsTimerImpl* aTimer)
     if (!aTimer->mTimerSpent)
     {
       aTimer->mTimerSpent = PR_TRUE;
+      aTimer->mCanceledInCallback = PR_FALSE;       // just in case someone wants to reuse it
       NS_RELEASE(aTimer);   // this timer is dead
     }
   }

@@ -105,8 +105,9 @@ class nsTimerImpl : public nsITimer
     nsTimerImpl*        mNext;  
 
     PRPackedBool        mTimerSpent;    // the timer is done, and was released
+    PRPackedBool        mCanceledInCallback;       // whether the timer callback cancelled it
 #if DEBUG
-    UInt32		          mSignature;
+    UInt32		        mSignature;
 #endif
 
 };
