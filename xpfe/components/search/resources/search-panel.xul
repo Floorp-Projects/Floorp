@@ -64,7 +64,7 @@
             <menulist id="basicEngineMenu"
                       ref="NC:SearchEngineRoot"
                       datasources="rdf:internetsearch"
-                      sortResource="http://home.netscape.com/NC-ref#Name"
+                      sortResource="http://home.netscape.com/NC-rdf#Name"
                       sortDirection="ascending">
               <template>
                 <menupopup id="basicPopup">
