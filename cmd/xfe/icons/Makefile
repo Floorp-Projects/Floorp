@@ -160,7 +160,6 @@ MKICONS_LIB	=  \
 		  $(DIST)/lib/libutil.a \
 		  $(DIST)/lib/libxp.a \
 		  $(DIST)/lib/libplc21.a \
-		  $(DIST)/lib/libnetwork.a \
 		  $(DIST)/lib/libxpcom.a
 endif
 
