@@ -147,7 +147,7 @@ ac_help="$ac_help
 ac_help="$ac_help
   --disable-mathml        Disable MathML support"
 ac_help="$ac_help
-  --enable-xtf            Enable XTF (pluggable xml tags) support"
+  --disable-xtf           Disable XTF (pluggable xml tags) support"
 ac_help="$ac_help
   --enable-svg            Enable SVG support"
 ac_help="$ac_help
@@ -13755,10 +13755,10 @@ fi
 # Check whether --enable-xtf or --disable-xtf was given.
 if test "${enable_xtf+set}" = set; then
   enableval="$enable_xtf"
-  if test "$enableval" = "yes"; then
-    MOZ_XTF=1
-  elif test "$enableval" = "no"; then
-    MOZ_XTF= 
+  if test "$enableval" = "no"; then
+    MOZ_XTF=
+  elif test "$enableval" = "yes"; then
+    MOZ_XTF=1 
   else
     { echo "configure: error: Option, xtf, does not take an argument ($enableval)." 1>&2; exit 1; }
   fi
