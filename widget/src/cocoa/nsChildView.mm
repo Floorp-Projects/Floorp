@@ -1040,7 +1040,7 @@ NS_IMETHODIMP nsChildView::Invalidate(PRBool aIsSynchronous)
   if (aIsSynchronous)
     [mView display];
   else
-    [mView setNeedsDisplay:true];
+    [mView setNeedsDisplay:YES];
   
   return NS_OK;
 }
