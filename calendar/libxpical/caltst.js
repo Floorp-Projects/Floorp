@@ -50,7 +50,7 @@ const DEFAULT_RECUR = true;
 const DEFAULT_RECURINTERVAL = 7;
 const DEFAULT_RECURUNITS = "days";
 const DEFAULT_RECURFOREVER = true;
-const DEFAULT_ATTACHMENT = DEFAULT_SERVER
+const DEFAULT_ATTACHMENT = DEFAULT_SERVER;
 
 var iCalLib = null;
 var gObserver = null;

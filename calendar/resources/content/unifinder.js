@@ -330,7 +330,15 @@ var gSearchTimeout = null;
 
 function unifinderSearchKeyPress( searchTextItem, event )
 {
-   // always clear the old one first
+   // 13 == return
+   if (event && event.keyCode == 13) 
+   {
+     clearSearchTimer();
+     doSearch();
+     return;
+   }
+    
+    // always clear the old one first
     
    clearSearchTimer();
    
