@@ -37,8 +37,6 @@
 #include "nsFindDialog.h"
 
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-
 // Standard implementations of addref/release.
 NS_IMPL_ADDREF( nsFindDialog );
 NS_IMPL_RELEASE( nsFindDialog );
@@ -59,7 +57,7 @@ nsFindDialog::QueryInterface( REFNSIID anIID, void **anInstancePtr)
         } else if ( anIID.Equals( nsIDocumentObserver::GetIID() ) ) {
             *anInstancePtr = (void*) ((nsIDocumentObserver*)this);
             NS_ADDREF_THIS();
-        } else if ( anIID.Equals( kISupportsIID ) ) {
+        } else if ( anIID.Equals( nsISupports::GetIID() ) ) {
             *anInstancePtr = (void*) ((nsISupports*)(nsIDocumentObserver*)this);
             NS_ADDREF_THIS();
         } else {
@@ -76,10 +74,11 @@ nsFindDialog::QueryInterface( REFNSIID anIID, void **anInstancePtr)
 // ctor
 nsFindDialog::nsFindDialog( nsIFindComponent         *aComponent,
                             nsFindComponent::Context *aContext )
-        : mComponent( nsDontQueryInterface<nsIFindComponent>( aComponent ) ),
+        : mComponent( dont_QueryInterface(aComponent) ),
           mContext( aContext ),
-          mWebShell(),
-          mWindow() {
+          mDialogWebShell(),
+          mDialogWindow()
+{
     // Initialize ref count.
     NS_INIT_REFCNT();
     mContext->AddRef();
@@ -88,7 +87,7 @@ nsFindDialog::nsFindDialog( nsIFindComponent         *aComponent,
 
 // This is cribbed from nsBrowserAppCore.cpp also (and should be put somewhere once
 // and reused)...
-static int APP_DEBUG = 0;
+static const int APP_DEBUG = 0;
 static nsresult setAttribute( nsIWebShell *shell,
                               const char *id,
                               const char *name,
@@ -140,27 +139,28 @@ static nsresult setAttribute( nsIWebShell *shell,
 
 // Do startup stuff from C++ side.
 NS_IMETHODIMP
-nsFindDialog::ConstructBeforeJavaScript(nsIWebShell *aWebShell) {
+nsFindDialog::ConstructBeforeJavaScript(nsIWebShell *aWebShell)
+{
     nsresult rv = NS_OK;
 
     // Save web shell pointer.
-    mWebShell = nsDontQueryInterface<nsIWebShell>( aWebShell );
+    mDialogWebShell = dont_QueryInterface(aWebShell);
 
     // Store instance information into dialog's DOM.
     if ( mContext ) {
-        setAttribute( mWebShell,
-                      "data.searchString",
+        setAttribute( mDialogWebShell,
+                      "data.findKey",
                       "value",
                       mContext->mSearchString );
-        setAttribute( mWebShell,
-                      "data.ignoreCase",
+        setAttribute( mDialogWebShell,
+                      "data.caseSensitive",
                       "value",
-                      mContext->mIgnoreCase ? "true" : "false" );
-        setAttribute( mWebShell,
+                      mContext->mCaseSensitive ? "true" : "false" );
+        setAttribute( mDialogWebShell,
                       "data.searchBackward",
                       "value",
                       mContext->mSearchBackwards ? "true" : "false" );
-        setAttribute( mWebShell,
+        setAttribute( mDialogWebShell,
                       "data.wrap",
                       "value",
                       mContext->mWrapSearch ? "true" : "false" );
@@ -168,7 +168,7 @@ nsFindDialog::ConstructBeforeJavaScript(nsIWebShell *aWebShell) {
 
     // Add as observer of the xul document.
     nsCOMPtr<nsIContentViewer> cv;
-    rv = mWebShell->GetContentViewer(getter_AddRefs(cv));
+    rv = mDialogWebShell->GetContentViewer(getter_AddRefs(cv));
     if ( cv ) {
         // Up-cast.
         nsCOMPtr<nsIDocumentViewer> docv(do_QueryInterface(cv));
@@ -188,14 +188,6 @@ nsFindDialog::ConstructBeforeJavaScript(nsIWebShell *aWebShell) {
     return rv;
 }
 
-// Utility function to close a window given a root nsIWebShell.
-static void closeWindow( nsIWebShellWindow *aWebShellWindow ) {
-    if ( aWebShellWindow ) {
-        // crashes!
-        aWebShellWindow->Close();
-    }
-}
-
 // Handle attribute changing; we only care about the element "data.execute"
 // which is used to signal command execution from the UI.
 NS_IMETHODIMP
@@ -205,12 +197,12 @@ nsFindDialog::AttributeChanged( nsIDocument *aDocument,
                                 PRInt32      aHint ) {
     nsresult rv = NS_OK;
     // Look for data.execute command changing.
-    nsString id;
-    nsCOMPtr<nsIAtom> atomId = nsDontQueryInterface<nsIAtom>( NS_NewAtom("id") );
-    aContent->GetAttribute( kNameSpaceID_None, atomId, id );
-    if ( id == "data.execute" ) {
+    nsString idStr;
+    nsCOMPtr<nsIAtom> atomId = dont_QueryInterface(NS_NewAtom("id"));
+    aContent->GetAttribute( kNameSpaceID_None, atomId, idStr );
+    if ( idStr == "data.execute" ) {
         nsString cmd;
-        nsCOMPtr<nsIAtom> atomCommand = nsDontQueryInterface<nsIAtom>( NS_NewAtom("command") );
+        nsCOMPtr<nsIAtom> atomCommand = dont_QueryInterface(NS_NewAtom("command"));
         aContent->GetAttribute( kNameSpaceID_None, atomCommand, cmd );
         // Reset command so we detect next request.
         aContent->SetAttribute( kNameSpaceID_None, atomCommand, "", PR_FALSE );
@@ -231,31 +223,32 @@ nsFindDialog::AttributeChanged( nsIDocument *aDocument,
 void
 nsFindDialog::OnFind( nsIContent *aContent )
 {
-	if ( mWebShell && mContext )
+	if ( mDialogWebShell && mContext )
 	{
 		nsAutoString		valueStr;
 
 		// Get arguments and store into the search context.
-		nsCOMPtr<nsIAtom> atomKey = nsDontQueryInterface<nsIAtom>( NS_NewAtom("key") );
+		nsCOMPtr<nsIAtom> atomKey = dont_QueryInterface(NS_NewAtom("findKey"));
 		aContent->GetAttribute( kNameSpaceID_None, atomKey, mContext->mSearchString );
 
-		nsCOMPtr<nsIAtom> atomIgnoreCase = nsDontQueryInterface<nsIAtom>( NS_NewAtom("ignoreCase") );
-		aContent->GetAttribute( kNameSpaceID_None, atomIgnoreCase, valueStr );
-		mContext->mIgnoreCase = (valueStr == "true");
+		nsCOMPtr<nsIAtom> atomCaseSensitive = dont_QueryInterface(NS_NewAtom("caseSensitive"));
+		aContent->GetAttribute( kNameSpaceID_None, atomCaseSensitive, valueStr );
+		mContext->mCaseSensitive = (valueStr == "true");
 
-		nsCOMPtr<nsIAtom> atomSearchBackwards = nsDontQueryInterface<nsIAtom>( NS_NewAtom("searchBackwards") );
+		nsCOMPtr<nsIAtom> atomSearchBackwards = dont_QueryInterface(NS_NewAtom("searchBackwards"));
 		aContent->GetAttribute( kNameSpaceID_None, atomSearchBackwards, valueStr );
 		mContext->mSearchBackwards = (valueStr == "true");
 
-		nsCOMPtr<nsIAtom> atomWrapSearch = nsDontQueryInterface<nsIAtom>( NS_NewAtom("wrap") );
+		nsCOMPtr<nsIAtom> atomWrapSearch = dont_QueryInterface(NS_NewAtom("wrap"));
 		aContent->GetAttribute( kNameSpaceID_None, atomWrapSearch, valueStr );
 		mContext->mWrapSearch = (valueStr == "true");
 
 		// Search for next occurrence.
 		if ( mComponent )
 		{
+		  PRBool  foundMatch;
 			// Find next occurrence in this context.
-			mComponent->FindNext(mContext);
+			mComponent->FindNext(mContext, &foundMatch);
 		}
 	}
 }
@@ -264,23 +257,25 @@ nsFindDialog::OnFind( nsIContent *aContent )
 void
 nsFindDialog::OnNext()
 {
-    if ( mContext && mComponent )
-    {
-        // Find next occurrence in this context.
-        mComponent->FindNext(mContext);
-    }
+  if ( mContext && mComponent )
+  {
+	  PRBool  foundMatch;
+      // Find next occurrence in this context.
+    mComponent->FindNext(mContext, &foundMatch);
+  }
 }
 
 void
 nsFindDialog::OnCancel()
 {
     // Close the window.
-    closeWindow( mWindow );
+    if (mDialogWindow)
+    	mDialogWindow->Close();
 }
 
 void
 nsFindDialog::SetWindow( nsIWebShellWindow *aWindow )
 {
-    mWindow = nsDontQueryInterface<nsIWebShellWindow>(aWindow);
+    mDialogWindow = nsDontQueryInterface<nsIWebShellWindow>(aWindow);
 }
 

@@ -29,8 +29,8 @@ public:
     NS_DEFINE_STATIC_CID_ACCESSOR( NS_FINDCOMPONENT_CID );
 
     // ctor/dtor
-    nsFindComponent();
-    virtual ~nsFindComponent();
+               nsFindComponent();
+    virtual    ~nsFindComponent();
 
     // This class implements the nsISupports interface functions.
     NS_DECL_ISUPPORTS
@@ -39,7 +39,11 @@ public:
     NS_DECL_IAPPSHELLCOMPONENT
 
     // This class implements the nsIFindComponent interface functions.
-    NS_DECL_IFINDCOMPONENT
+    NS_IMETHOD CreateContext(nsIWebShell *aWebShell, nsIEditor* aEditor, nsISupports **aResult);
+    NS_IMETHOD Find(nsISupports *aContext, PRBool *aDidFind);
+    NS_IMETHOD Replace(nsISupports *aContext);
+    NS_IMETHOD FindNext(nsISupports *aContext, PRBool *aDidFind);
+    NS_IMETHOD ResetContext(nsISupports *aContext, nsIEditor* aEditor, nsIWebShell *aNewWebShell);
 
     // "Context" for this implementation.
     class Context : public nsISupports
@@ -50,32 +54,36 @@ public:
 										Context();
 				virtual 		~Context();
 				NS_IMETHOD	Init( nsIWebShell *aWebShell,
-			                 const nsString &lastSearchString,
-			                 PRBool lastIgnoreCase,
+				               nsIEditor* aEditor,
+			                 const nsString& lastSearchString,
+			                 const nsString& lastReplaceString,
+			                 PRBool lastCaseSensitive,
 			                 PRBool lastSearchBackwards,
 			                 PRBool lastWrapSearch);
 
-				NS_IMETHOD	Reset( nsIWebShell *aNewWebShell );
-				NS_IMETHOD	DoFind();
+				NS_IMETHOD	Reset(nsIWebShell *aNewWebShell);
+				NS_IMETHOD	DoFind(PRBool *aDidFind);
+				NS_IMETHOD	DoReplace();
 
-                // Utility to construct new TS document from our webshell.
-                nsCOMPtr<nsITextServicesDocument> MakeTSDocument();
-      
-        // Maybe add Find/FindNext functions here?
+        // Utility to construct new TS document from our webshell.
+        NS_IMETHOD  MakeTSDocument(nsIWebShell* aWebShell, nsITextServicesDocument** aDoc);
+        NS_IMETHOD  GetCurrentBlockIndex(nsITextServicesDocument *aDoc, PRInt32 *outBlockIndex);
+        NS_IMETHOD  SetupDocForSearch(nsITextServicesDocument *aDoc, PRInt32 *outBlockOffset);
 
-        nsCOMPtr<nsIWebShell> mWebShell;
-        nsIDocument *mLastDocument; // Document last searched.
-        nsString mSearchString;
-        PRBool   mIgnoreCase;
-        PRBool   mSearchBackwards;
-        PRBool   mWrapSearch;
-        PRUint32 mLastBlockOffset; // last offset within the cur block that we found something
-        PRInt32  mLastBlockIndex;  // last block (negative indicates it's relative to last block)
+        nsIWebShell* mTargetWebShell;			// weak link. Don't hold a reference
+        nsIEditor*   mEditor;							// weak link. Don't hold a reference
+        nsString     mSearchString;
+        nsString     mReplaceString;
+        PRBool       mCaseSensitive;
+        PRBool       mSearchBackwards;
+        PRBool       mWrapSearch;
+
     }; // nsFindComponent::Context
 
 protected:
     nsString                     mLastSearchString;
-    PRBool                       mLastIgnoreCase;
+    nsString                     mLastReplaceString;
+    PRBool                       mLastCaseSensitive;
     PRBool                       mLastSearchBackwards;
     PRBool                       mLastWrapSearch;
     nsInstanceCounter            mInstanceCounter;
