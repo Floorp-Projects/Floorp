@@ -1903,7 +1903,7 @@ nsWidget::OnButtonPressSignal(GdkEventButton * aGdkButtonEvent)
   nsMouseScrollEvent scrollEvent;
   PRUint32 eventType = 0;
 
-#if defined(DEBUG_pavlov) || defined(DEBUG_akkana)
+#if defined(DEBUG_pavlov)
   printf("button press\n");
 #endif
 
