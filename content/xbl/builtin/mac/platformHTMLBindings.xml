@@ -76,6 +76,8 @@
       <handler event="keypress" keycode="VK_RIGHT" modifiers="shift" command="cmd_selectCharNext" />
       <handler event="keypress" keycode="VK_UP" modifiers="shift" command="cmd_selectLinePrevious" />
       <handler event="keypress" keycode="VK_DOWN" modifiers="shift" command="cmd_selectLineNext" />
+      <handler event="keypress" keycode="VK_UP" modifiers="accel" command="cmd_scrollTop"/>
+      <handler event="keypress" keycode="VK_DOWN" modifiers="accel" command="cmd_scrollBottom"/>      
 	</handlers>
   </binding>
 
