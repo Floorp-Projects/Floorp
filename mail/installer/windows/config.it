@@ -234,10 +234,11 @@ C1=Component Mail
 C2=Component Uninstaller
 C3=Component US English Profile Defaults
 C4=Component En US lang pack
-C5=Component RSS
+C5=Component Offline
+C6=Component RSS
 ; Make sure Component QFA is LAST so 3rd party developers who might not want
 ; this component can easily remove it.
-C6=Component QFA
+C7=Component QFA
 
 [Setup Type1]
 ;*** LOCALIZE ME BABY ***
@@ -623,7 +624,7 @@ Description Long=Adds Offline support to $ProductName$ Mail.
 Archive=offline.xpi
 $InstallSize$:offline
 $InstallSizeArchive$:offline.xpi
-Attributes=FORCE_UPGRADE|VISIBLE
+Attributes=SELECTED|FORCE_UPGRADE|VISIBLE
 Force Upgrade File0=[SETUP PATH]\chrome\offline.jar
 FileCount=$FileCount$
 
