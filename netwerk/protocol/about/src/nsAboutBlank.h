@@ -26,10 +26,7 @@ class nsAboutBlank : public nsIAboutModule
 public:
     NS_DECL_ISUPPORTS
 
-    NS_IMETHOD NewChannel(const char *verb,
-                          nsIURI *aURI,
-                          nsIEventSinkGetter *eventSinkGetter,
-                          nsIChannel **result);
+    NS_DECL_NSIABOUTMODULE
 
     nsAboutBlank() { NS_INIT_REFCNT(); }
     virtual ~nsAboutBlank() {}

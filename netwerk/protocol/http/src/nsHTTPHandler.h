@@ -119,12 +119,7 @@ public:
     };
 
     // Functions from nsIHTTPProtocolHandler
-    NS_IMETHOD NewEncodeStream(nsIInputStream *rawStream, PRUint32 encodeFlags,
-                               nsIInputStream **_retval);
-    NS_IMETHOD NewDecodeStream(nsIInputStream *encodedStream, PRUint32 decodeFlags,
-                               nsIInputStream **_retval);
-    NS_IMETHOD NewPostDataStream(PRBool isFile, const char *data, PRUint32 encodeFlags,
-                                 nsIInputStream **_retval);
+    NS_DECL_NSIHTTPPROTOCOLHANDLER
 
     /* 
         Pull out an existing transport from the list, or if none exists

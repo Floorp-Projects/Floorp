@@ -52,65 +52,11 @@ public:
 
     ////////////////////////////////////////////////////////////////////////////
     // nsIURI methods:
-
-    /* attribute string Spec; */
-    NS_IMETHOD GetSpec(char * *aSpec);
-    NS_IMETHOD SetSpec(char * aSpec);
-
-    /* attribute string Scheme; */
-    NS_IMETHOD GetScheme(char * *aScheme);
-    NS_IMETHOD SetScheme(char * aScheme);
-
-    /* attribute string PreHost; */
-    NS_IMETHOD GetPreHost(char * *aPreHost);
-    NS_IMETHOD SetPreHost(char * aPreHost);
-
-    /* attribute string Host; */
-    NS_IMETHOD GetHost(char * *aHost);
-    NS_IMETHOD SetHost(char * aHost);
-
-    /* attribute long Port; */
-    NS_IMETHOD GetPort(PRInt32 *aPort);
-    NS_IMETHOD SetPort(PRInt32 aPort);
-
-    /* attribute string Path; */
-    NS_IMETHOD GetPath(char * *aPath);
-    NS_IMETHOD SetPath(char * aPath);
-
-    /* boolean Equals (in nsIURI other); */
-    NS_IMETHOD Equals(nsIURI *other, PRBool *_retval);
-
-    /* nsIURI Clone (); */
-    NS_IMETHOD Clone(nsIURI **_retval);
-
-    /* void SetRelativePath (in string i_RelativePath); */
-    NS_IMETHOD SetRelativePath(const char *i_RelativePath);
+    NS_DECL_NSIURI
 
     ////////////////////////////////////////////////////////////////////////////
     // nsIURL methods:
-
-    /* attribute string Directory; */
-    NS_IMETHOD GetDirectory(char * *aDirectory);
-    NS_IMETHOD SetDirectory(char * aDirectory);
-
-    /* attribute string FileName; */
-    NS_IMETHOD GetFileName(char * *aFileName);
-    NS_IMETHOD SetFileName(char * aFileName);
-
-	/* attribute string Param; */
-	NS_IMETHOD GetParam(char * *aParam);
-	NS_IMETHOD SetParam(char * aParam);
-
-    /* attribute string Query; */
-    NS_IMETHOD GetQuery(char * *aQuery);
-    NS_IMETHOD SetQuery(char * aQuery);
-
-    /* attribute string Ref; */
-    NS_IMETHOD GetRef(char * *aRef);
-    NS_IMETHOD SetRef(char * aRef);
-
-    /* void DirFile (out string o_DirFile); */
-    NS_IMETHOD DirFile(char **o_DirFile);
+    NS_DECL_NSIURL
 
 	/* todo move this to protected later */
 	nsresult ParsePath(void);

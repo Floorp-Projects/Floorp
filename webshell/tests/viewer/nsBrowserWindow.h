@@ -112,14 +112,10 @@ public:
 
 #ifdef NECKO
   // nsIStreamObserver
-  NS_IMETHOD OnStartRequest(nsIChannel* channel, nsISupports *ctxt);
-  NS_IMETHOD OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
-                           nsresult status, const PRUnichar *errorMsg);
+  NS_DECL_NSISTREAMOBSERVER
 
   // nsIProgressEventSink
-  NS_IMETHOD OnProgress(nsIChannel* channel, nsISupports *ctxt,
-                        PRUint32 aProgress, PRUint32 aProgressMax);
-  NS_IMETHOD OnStatus(nsIChannel* channel, nsISupports *ctxt, const PRUnichar *aMsg);
+  NS_DECL_NSIPROGRESSEVENTSINK
 
 #else
   // nsIStreamObserver
