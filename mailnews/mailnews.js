@@ -193,7 +193,6 @@ pref("mailnews.offline_sync_news",         false);
 pref("mailnews.offline_sync_send_unsent",  true);
 pref("mailnews.offline_sync_work_offline", false);   
 pref("mailnews.force_ascii_search",         false);
-pref("mailnews.autolookup_unknown_mime_types",  true);
 
 pref("mailnews.send_default_charset",       "chrome://messenger/locale/messenger.properties");
 pref("mailnews.view_default_charset",       "chrome://messenger/locale/messenger.properties");
