@@ -125,7 +125,7 @@ nsAppShell::EventIsForModalWindow(PRBool aRealEvent, void *aEvent,
        */
        if (win == eWin) {
 #ifdef DEBUG_danm
-         printf(" Short circut");
+         printf(" Short circuit");
 #endif
          isInWindow = PR_TRUE;
        } else {
