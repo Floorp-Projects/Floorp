@@ -387,7 +387,7 @@ type_expression[boolean initial, boolean allowIn]
 // ********* Statements **********
 
 statement[int scope, boolean non_empty, ControlNodeGroup container]
-	:	(definition[scope]) => definition[scope]
+	:	(definition[scope, container]) => definition[scope, container]
 	|	code_statement[non_empty, container, null]
 	;
 
@@ -692,28 +692,29 @@ import_source
 	;
 
 // ********* Definitions **********
-definition[int scope]
-	:	visibility global_definition
-	|	local_definition[scope]
+definition[int scope, ControlNodeGroup container]
+	:	visibility global_definition[container]
+	|	local_definition[scope, container]
 	;
 
-global_definition
+global_definition[ControlNodeGroup container]
     { ExpressionNode e = null; }
 	:	version_definition semicolon
 	|	variable_definition semicolon
 
 	// Syntactic predicate is required to disambiguate between getter/setter methods
 	// and getter/setter functions
-	|	("traditional" | "function" | (("getter" | "setter") "function")) => e = function_definition
+	|	("traditional" | "function" | (("getter" | "setter") "function"))
+	        => e = function_definition { container.add(new ControlNode(e)); }
 	|	member_definition
 	|	class_definition
 	;
 
-local_definition[int scope]
+local_definition[int scope, ControlNodeGroup container]
     { ExpressionNode e = null; }
 	:	{scope == TopLevelScope || scope == ClassScope}? (class_definition | member_definition)
 	|	variable_definition semicolon
-	|	e = function_definition
+	|	e = function_definition { container.add(new ControlNode(e)); }
 	;
 
 // ********* Visibility Specifications **********
@@ -780,7 +781,7 @@ function_definition returns [ExpressionNode e]
 	:	e = named_function
 	|	"getter" e = named_function
 	|	"setter" e = named_function
-	|	traditional_function
+	|	e = traditional_function
 	;
 
 anonymous_function returns [ExpressionNode e]
@@ -838,9 +839,10 @@ result_signature
 		)?
 	;
 
-traditional_function
-    { ExpressionNode e = null; ControlNodeGroup c = new ControlNodeGroup(); }
-	: "traditional" "function" e = identifier "(" traditional_parameter_list ")" block[BlockScope, c]
+traditional_function returns [ExpressionNode e]
+    { e = null; JSIdentifier id = null; ControlNodeGroup c = new ControlNodeGroup(); }
+	: "traditional" "function" id = identifier "(" traditional_parameter_list ")" block[BlockScope, c]
+	    { e = new FunctionNode(id, c); }
 	;
 
 traditional_parameter_list
