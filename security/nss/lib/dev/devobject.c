@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devobject.c,v $ $Revision: 1.16 $ $Date: 2002/02/05 22:32:38 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: devobject.c,v $ $Revision: 1.17 $ $Date: 2002/02/13 21:09:15 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -365,6 +365,17 @@ get_token_cert
     NSS_CK_ATTRIBUTE_TO_UTF8(&cert_template[5],  rvCert->nickname);
     NSS_CK_ATTRIBUTE_TO_ITEM(&cert_template[6], &rvCert->subject);
     NSS_CK_ATTRIBUTE_TO_UTF8(&cert_template[7],  rvCert->email);
+    /* XXX this would be better accomplished by dividing attributes to
+     * retrieve into "required" and "optional"
+     */
+    if (rvCert->encoding.size == 0 ||
+        rvCert->issuer.size == 0 ||
+        rvCert->serial.size == 0 ||
+        rvCert->subject.size == 0) 
+    {
+	/* received a bum object from the token */
+	goto loser;
+    }
 #ifdef NSS_3_4_CODE
     /* nss 3.4 database doesn't associate email address with cert */
     if (!rvCert->email) {
