@@ -491,13 +491,15 @@ protected:
 
   nsString mOverURL;
   nsString mOverTarget;
-  PRBool   mIsInSHist;
+
+  PRPackedBool mIsInSHist;
+  PRPackedBool mIsFrame;
+  PRPackedBool mFailedToLoadHistoryService;
 
   nsScrollPreference mScrollPref;
   PRInt32 mMarginWidth;
   PRInt32 mMarginHeight;
   PRInt32 mScrolling[2];
-  PRBool  mIsFrame;
   nsVoidArray mRefreshments;
 
 	nsWebShellType mWebShellType;
@@ -650,6 +652,7 @@ nsWebShell::nsWebShell()
   mChromeShell = nsnull;
   mSHist = nsnull;
   mIsInSHist = PR_FALSE;
+  mFailedToLoadHistoryService = PR_FALSE;
   mDefaultCharacterSet = "";
   mProcessedEndDocumentLoad = PR_FALSE;
   mHintCharset = "";
@@ -3024,56 +3027,59 @@ nsWebShell::OnOverLink(nsIContent* aContent,
 }
 
 NS_IMETHODIMP
-nsWebShell:: GetLinkState(const PRUnichar* aURLSpec, nsLinkState& aState)
+nsWebShell::GetLinkState(const PRUnichar* aURLSpec, nsLinkState& aState)
 {
   aState = eLinkState_Unvisited;
   
   nsresult rv;
 
   // XXX: GlobalHistory is going to be moved out of the webshell into a more appropriate place.
-  if (nsnull == mHistoryService) {
+  if ((nsnull == mHistoryService) && !mFailedToLoadHistoryService) {
     rv = nsServiceManager::GetService(kGlobalHistoryCID,
                                       nsIGlobalHistory::GetIID(),
                                       (nsISupports**) &mHistoryService);
 
-    if (NS_FAILED(rv))
-      return NS_OK; // XXX Okay, we couldn't color the link. Big deal.
+    if (NS_FAILED(rv)) {
+      mFailedToLoadHistoryService = PR_TRUE;
+    }
   }
 
-  // XXX aURLSpec should really be a char*, not a PRUnichar*.
-  nsAutoString urlStr(aURLSpec);
-
-  char buf[256];
-  char* url = buf;
-
-  if (urlStr.Length() >= PRInt32(sizeof buf)) {
-    url = new char[urlStr.Length() + 1];
+  if (mHistoryService) {
+    // XXX aURLSpec should really be a char*, not a PRUnichar*.
+    nsAutoString urlStr(aURLSpec);
+  
+    char buf[256];
+    char* url = buf;
+  
+    if (urlStr.Length() >= PRInt32(sizeof buf)) {
+      url = new char[urlStr.Length() + 1];
+    }
+  
+    PRInt64 lastVisitDate;
+  
+    if (url) {
+      urlStr.ToCString(url, urlStr.Length() + 1);
+  
+      rv = mHistoryService->GetLastVisitDate(url, &lastVisitDate);
+  
+      if (url != buf)
+        delete[] url;
+    }
+    else {
+      rv = NS_ERROR_OUT_OF_MEMORY;
+    }
+  
+  //XXX: Moved to destructor  nsServiceManager::ReleaseService(kGlobalHistoryCID, mHistoryService);
+  
+    if (NS_FAILED(rv)) return rv;
+  
+    // a last-visit-date of zero means we've never seen it before; so
+    // if it's not zero, we must've seen it.
+    if (! LL_IS_ZERO(lastVisitDate))
+      aState = eLinkState_Visited;
+  
+    // XXX how to tell if eLinkState_OutOfDate?
   }
-
-  PRInt64 lastVisitDate;
-
-  if (url) {
-    urlStr.ToCString(url, urlStr.Length() + 1);
-
-    rv = mHistoryService->GetLastVisitDate(url, &lastVisitDate);
-
-    if (url != buf)
-      delete[] url;
-  }
-  else {
-    rv = NS_ERROR_OUT_OF_MEMORY;
-  }
-
-//XXX: Moved to destructor  nsServiceManager::ReleaseService(kGlobalHistoryCID, mHistoryService);
-
-  if (NS_FAILED(rv)) return rv;
-
-  // a last-visit-date of zero means we've never seen it before; so
-  // if it's not zero, we must've seen it.
-  if (! LL_IS_ZERO(lastVisitDate))
-    aState = eLinkState_Visited;
-
-  // XXX how to tell if eLinkState_OutOfDate?
 
   return NS_OK;
 }
