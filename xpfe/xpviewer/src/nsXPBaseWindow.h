@@ -70,8 +70,10 @@ public:
                   PRUint32           aChromeMask,
                   PRBool             aAllowPlugins = PR_TRUE);
 
+
   NS_IMETHOD SetLocation(PRInt32 aX, PRInt32 aY);
   NS_IMETHOD SetDimensions(PRInt32 aWidth, PRInt32 aHeight);
+
   NS_IMETHOD GetWindowBounds(nsRect& aBounds);
   NS_IMETHOD GetBounds(nsRect& aBounds);
   NS_IMETHOD SetVisible(PRBool aIsVisible);
