@@ -226,6 +226,28 @@ DefParam("warnfooterhtml",
          "</font>");
 
 
+DefParam("passwordmail",
+q{The email that gets sent to people to tell them their password.  Within
+this text, %mailaddress% gets replaced by the person's email address,
+%login% gets replaced by the person's login (usually the same thing), and
+%password% gets replaced by their password.  %<i>anythingelse</i>% gets
+replaced by the definition of that parameter (as defined on this page).},
+         "l",
+         q{From: bugzilla-daemon
+To: %mailaddress%
+Subject: Your Bugzilla password.
+
+To use the wonders of Bugzilla, you can use the following:
+
+ E-mail address: %login%
+       Password: %password%
+
+ To change your password, go to:
+ %urlbase%userprefs.cgi
+});
+
+
+
 DefParam("changedmail",
 q{The email that gets sent to people when a bug changes.  Within this
 text, %to% gets replaced by the assigned-to and reported-by people,

@@ -578,23 +578,11 @@ sub CheckEmailSyntax {
 sub MailPassword {
     my ($login, $password) = (@_);
     my $urlbase = Param("urlbase");
-    my $template = "From: bugzilla-daemon
-To: %s
-Subject: Your bugzilla password.
-
-To use the wonders of bugzilla, you can use the following:
-
- E-mail address: %s
-       Password: %s
-
- To change your password, go to:
- ${urlbase}userprefs.cgi
-
- (Your bugzilla and CVS password, if any, are not currently synchronized.
- Top hackers are working around the clock to fix this, as you read this.)
-";
-    my $msg = sprintf($template, $login . Param('emailsuffix'),
-                      $login, $password);
+    my $template = Param("passwordmail");
+    my $msg = PerformSubsts($template,
+                            {"mailaddress" => $login . Param('emailsuffix'),
+                             "login" => $login,
+                             "password" => $password});
 
     open SENDMAIL, "|/usr/lib/sendmail -t";
     print SENDMAIL $msg;
