@@ -734,7 +734,7 @@ name=PleaseMailAPassword>
 
 
 sub PutHeader {
-    my ($title, $h1, $h2, $extra, $ignoreshutdown) = (@_);
+    my ($title, $h1, $h2, $extra, $ignoreshutdown, $jscript) = (@_);
 
     if (!defined $h1) {
 	$h1 = $title;
@@ -745,9 +745,10 @@ sub PutHeader {
     if (!defined $extra) {
 	$extra = "";
     }
+    $jscript ||= "";
 
     print "<HTML><HEAD>\n<TITLE>$title</TITLE>\n";
-    print Param("headerhtml") . "\n</HEAD>\n";
+    print Param("headerhtml") . "\n$jscript\n</HEAD>\n";
     print "<BODY   BGCOLOR=\"#FFFFFF\" TEXT=\"#000000\"\n";
     print "LINK=\"#0000EE\" VLINK=\"#551A8B\" ALINK=\"#FF0000\" $extra>\n";
 
