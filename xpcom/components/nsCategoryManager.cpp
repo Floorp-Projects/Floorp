@@ -291,10 +291,12 @@ nsCategoryManager::GetCategoryEntryRaw( const char *aCategoryName,
     NS_ASSERTION(_retval,       "_retval is NULL!");
 
     nsresult status = NS_ERROR_NOT_AVAILABLE;
-    if ( CategoryNode* category = find_category(aCategoryName) )
+    CategoryNode* category = find_category(aCategoryName);
+    if (category) 
       {
         nsStringKey entryKey(aEntryName);
-        if ( LeafNode* entry = NS_STATIC_CAST(LeafNode*, category->Get(&entryKey)) )
+        LeafNode* entry = NS_STATIC_CAST(LeafNode*, category->Get(&entryKey));
+        if (entry)
           status = (*_retval = nsXPIDLCString::Copy(*entry)) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
       }
 
@@ -398,7 +400,8 @@ nsCategoryManager::DeleteCategoryEntry( const char *aCategoryName,
         inconveniences JS clients
       */
 
-    if ( CategoryNode* category = find_category(aCategoryName) )
+    CategoryNode* category = find_category(aCategoryName);
+    if (category)
       {
         nsStringKey entryKey(aEntryName);
         category->RemoveAndDelete(&entryKey);
@@ -437,7 +440,8 @@ nsCategoryManager::EnumerateCategory( const char *aCategoryName,
     *_retval = 0;
 
     nsresult status = NS_ERROR_NOT_AVAILABLE;
-    if ( CategoryNode* category = find_category(aCategoryName) )
+    CategoryNode* category = find_category(aCategoryName);
+    if (category)
       {
         nsCOMPtr<nsIEnumerator> innerEnumerator;
         if ( NS_SUCCEEDED(status = NS_NewHashtableEnumerator(category, ExtractKeyString, 0, getter_AddRefs(innerEnumerator))) )
@@ -551,7 +555,8 @@ NS_CategoryManagerGetFactory( nsIFactory** aFactory )
     nsresult status;
 
     *aFactory = 0;
-    if ( nsIFactory* new_factory = NS_STATIC_CAST(nsIFactory*, new nsCategoryManagerFactory) )
+    nsIFactory* new_factory = NS_STATIC_CAST(nsIFactory*, new nsCategoryManagerFactory);
+    if (new_factory)
       {
         *aFactory = new_factory;
         NS_ADDREF(*aFactory);
