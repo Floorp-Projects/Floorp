@@ -617,6 +617,14 @@ InternetSearchDataSource::GetTarget(nsIRDFResource *source,
 		if (NS_FAILED(rv))	return(rv);
 		source = trueEngine;
 	}
+	
+	if (isSearchURI(source) && (property == kNC_Child))
+	{
+		// fake out the generic builder (i.e. return anything in this case)
+		// so that search containers never appear to be empty
+		*target = source;
+		return(NS_OK);
+	}
 
 	if (mInner)
 	{
