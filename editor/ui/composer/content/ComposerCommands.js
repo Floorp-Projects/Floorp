@@ -62,6 +62,7 @@ function SetupHTMLEditorCommands()
   controller.registerCommand("cmd_advancedProperties", nsAdvancedPropertiesCommand);
   controller.registerCommand("cmd_objectProperties",   nsObjectPropertiesCommand);
   controller.registerCommand("cmd_removeLinks",        nsRemoveLinksCommand);
+  controller.registerCommand("cmd_editLink",        nsEditLinkCommand);
   
   controller.registerCommand("cmd_image",         nsImageCommand);
   controller.registerCommand("cmd_hline",         nsHLineCommand);
@@ -1215,6 +1216,25 @@ var nsRemoveLinksCommand =
   doCommand: function(aCommand)
   {
     window.editorShell.RemoveTextProperty("href", "");
+    window._content.focus();
+  }
+};
+
+
+//-----------------------------------------------------------------------------------
+var nsEditLinkCommand =
+{
+  isCommandEnabled: function(aCommand, dummy)
+  {
+    // Not really used -- this command is only in context menu, and we do enabling there
+    return (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML());
+  },
+  doCommand: function(aCommand)
+  {
+    var element = window.editorShell.GetSelectedElement("href");
+    if (element)
+      EditorOpenUrl(element.href);
+
     window._content.focus();
   }
 };

@@ -113,6 +113,7 @@
     <command id="cmd_AllTagsMode"      oncommand="goDoCommand('cmd_AllTagsMode')"    label="&AllTagsMode.label;"/>
     <command id="cmd_HTMLSourceMode"   oncommand="goDoCommand('cmd_HTMLSourceMode')"/>
     <command id="cmd_PreviewMode"      oncommand="goDoCommand('cmd_PreviewMode')"    label="&PreviewMode.label;"/>
+    <command id="cmd_editLink"         oncommand="goDoCommand('cmd_editLink')"/>
 
     <!-- dummy command used just to disable things in non-HTML modes -->
     <command id="cmd_renderedHTMLEnabler"/>
