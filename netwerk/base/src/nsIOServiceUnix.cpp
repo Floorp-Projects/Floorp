@@ -40,7 +40,7 @@
 #include "nsIOService.h"
 #include "nsEscape.h"
 
-NS_IMETHODIMP nsIOService::GetURLFromFile(nsIFile *aFile, char * *aURL)
+NS_IMETHODIMP nsIOService::GetURLSpecFromFile(nsIFile *aFile, char * *aURL)
 {
     NS_ENSURE_ARG_POINTER(aURL);
     *aURL = nsnull;
@@ -73,7 +73,7 @@ NS_IMETHODIMP nsIOService::GetURLFromFile(nsIFile *aFile, char * *aURL)
     return rv;
 }
 
-NS_IMETHODIMP nsIOService::SetFileFromURL(nsIFile* aFile, const char * aURL)
+NS_IMETHODIMP nsIOService::InitFileFromURLSpec(nsIFile* aFile, const char * aURL)
 {
     NS_ENSURE_ARG(aURL);
     nsresult rv;
