@@ -1771,10 +1771,13 @@ LayoutHorizontal(Widget w,XfeLinked children)
 				/* Obtain the dimensions for the child */
 				LayoutGetChildDimensions(w,child,&width,&height);
 				
-				assert( width > 0 );
-				assert( height > 0 );
-				
-				_XfeConfigureWidget(child,x,y,width,height);
+/* 				assert( width > 0 ); */
+/* 				assert( height > 0 ); */
+
+				if ((width > 0) && (height > 0))
+				{
+					_XfeConfigureWidget(child,x,y,width,height);
+				}
 				
 				x += (_XfeWidth(child) + _XfeOrientedSpacing(w));
 			}
