@@ -1592,6 +1592,9 @@ nsMsgLocalMailFolder::CopyMessages(nsIMsgFolder* srcFolder, nsISupportsArray*
   if (isMove)
     srcFolder->EnableNotifications(allMessageCountNotifications, PR_FALSE);
 
+  // don't update the counts in the dest folder until it is all over
+  EnableNotifications(allMessageCountNotifications, PR_FALSE);
+
   rv = InitCopyState(aSupport, messages, isMove, listener, msgWindow);
   if (NS_FAILED(rv)) return rv;
   char *uri = nsnull;
@@ -2158,6 +2161,9 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
         srcFolder->NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);
 		  ClearCopyState();
 	  }
+
+      // enable the dest folder
+      EnableNotifications(allMessageCountNotifications, PR_TRUE);
   }
 
 	return rv;
@@ -2185,6 +2191,9 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndMove()
         srcFolder->EnableNotifications(allMessageCountNotifications, PR_TRUE);
         srcFolder->NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);
 			}
+
+            // enable the dest folder
+            EnableNotifications(allMessageCountNotifications, PR_TRUE);
 
 			//passing in NS_OK because we only get in here if copy portion succeeded
 			copyService->NotifyCompletion(mCopyState->m_srcSupport, this, NS_OK);
