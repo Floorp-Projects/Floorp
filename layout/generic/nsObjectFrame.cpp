@@ -533,21 +533,19 @@ nsObjectFrame::Init(nsIPresContext*  aPresContext,
     return rv; // bail at this point
   }
 
+  
+  // only do the following for the object tag
+  nsCOMPtr<nsIAtom> tag;
+  aContent->GetTag(*getter_AddRefs(tag));
+  if (tag.get() != nsHTMLAtoms::object) return rv;
 
   // for now, we should try to do the same for "document" types and create
   // and IFrame-like sub-frame
   PRBool bDoc = PR_FALSE;
   IsSupportedDocument(aContent, &bDoc);
-  
+
   if(bDoc)
   {
-    // fix up DATA= to SRC=
-    nsAutoString url;
-    if (NS_CONTENT_ATTR_HAS_VALUE != 
-         aContent->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::data, url))
-      return rv;  // if DATA= is empty, what shall we do? bail for now...
-    aContent->SetAttr(kNameSpaceID_HTML, nsHTMLAtoms::src, url, PR_FALSE);
-
     nsCOMPtr<nsIPresShell> shell;
     aPresContext->GetShell(getter_AddRefs(shell));
     nsIFrame * aNewFrame = nsnull;
