@@ -22,10 +22,10 @@
 #include "nsIStreamListener.h"
 #include "nsString.h"
 
-class nsIWebShell;
+class nsIBrowserWindow;
 class nsITimer;
 class nsVoidArray;
-class nsViewer;
+class nsViewerApp;
 
 /* 
   This class loads creates and loads URLs until finished.
@@ -36,7 +36,7 @@ class nsViewer;
 class nsDocLoader : public nsIStreamObserver
 {
 public:
-  nsDocLoader(nsIWebShell* aWebWidget, nsViewer* aViewer, 
+  nsDocLoader(nsIBrowserWindow* aBrowser, nsViewerApp* aViewer, 
               PRInt32 aSeconds=1, PRBool aPostExit=PR_TRUE);
 
   // nsISupports
@@ -49,8 +49,8 @@ public:
   NS_IMETHOD OnStopBinding(nsIURL* aURL, PRInt32 status, const nsString& aMsg);
     
   // Add a URL to the doc loader
-  void AddURL(char* aURL);
-  void AddURL(nsString* aURL);
+  void AddURL(const char* aURL);
+  void AddURL(const nsString& aURL);
 
   // Get the timer and the url list
   // needed to be available for the call back methods
@@ -92,15 +92,15 @@ protected:
 
   void LoadDoc(PRInt32 aDocNum, PRBool aObserveIt);
 
-  PRInt32       mDocNum;
-  PRBool        mStart;
-  PRInt32       mDelay;
-  PRBool        mPostExit;
-  nsIWebShell*  mWebShell;
-  nsViewer*     mViewer;
-  nsString      mURL;
-  nsVoidArray*  mURLList;
-  nsVoidArray*  mTimers;
+  PRInt32           mDocNum;
+  PRBool            mStart;
+  PRInt32           mDelay;
+  PRBool            mPostExit;
+  nsIBrowserWindow* mBrowser;
+  nsViewerApp*      mViewer;
+  nsString          mURL;
+  nsVoidArray*      mURLList;
+  nsVoidArray*      mTimers;
 };
 
 #endif

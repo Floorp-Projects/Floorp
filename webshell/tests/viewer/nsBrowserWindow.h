@@ -32,6 +32,12 @@ class nsIButton;
 class nsIThrobber;
 class nsViewerApp;
 
+#ifdef NS_DEBUG
+class nsIPresShell;
+#endif
+
+#define SAMPLES_BASE_URL "resource:/res/samples"
+
 /**
  * Abstract base class for our test app's browser windows
  */
@@ -56,6 +62,7 @@ public:
                   PRUint32 aChromeMask);
   NS_IMETHOD MoveTo(PRInt32 aX, PRInt32 aY);
   NS_IMETHOD SizeTo(PRInt32 aWidth, PRInt32 aHeight);
+  NS_IMETHOD GetBounds(nsRect& aBounds);
   NS_IMETHOD Show();
   NS_IMETHOD Hide();
   NS_IMETHOD ChangeChrome(PRUint32 aNewChromeMask);
@@ -63,6 +70,7 @@ public:
   NS_IMETHOD LoadURL(const nsString& aURL);
   NS_IMETHOD SetTitle(const nsString& aTitle);
   NS_IMETHOD GetTitle(nsString& aResult);
+  NS_IMETHOD GetWebShell(nsIWebShell*& aResult);
 
   // nsIStreamObserver
   NS_IMETHOD OnStartBinding(nsIURL* aURL, const char *aContentType);
@@ -107,7 +115,12 @@ public:
   void ShowFrameSize();
   void ShowStyleSize();
   void DoDebugSave();
+  void DoDebugRobot();
+  void DoSiteWalker();
+  void DoJSConsole();
+  void DoEditorMode();
   nsEventStatus DispatchDebugMenu(PRInt32 aID);
+  nsIPresShell* GetPresShell();
 #endif
 
   void SetApp(nsViewerApp* aApp) {

@@ -31,6 +31,18 @@ nsNativeViewerApp::~nsNativeViewerApp()
 {
 }
 
+int
+nsNativeViewerApp::Run()
+{
+  mAppShell->Run();
+  return 0;
+}
+
+void
+nsNativeViewerApp::CreateRobot(nsBrowserWindow* aWindow)
+{
+}
+
 //----------------------------------------------------------------------
 
 nsNativeBrowserWindow::nsNativeBrowserWindow()
@@ -67,7 +79,7 @@ nsNativeBrowserWindow::DispatchMenuItem(PRInt32 aID)
 
 //----------------------------------------------------------------------
 
-void main(int argc, char **argv)
+int main(int argc, char **argv)
 {
 
   // Hack to get il_ss set so it doesn't fail in xpcompat.c
@@ -76,6 +88,7 @@ void main(int argc, char **argv)
 
   gTheApp = new nsNativeViewerApp();
   gTheApp->Initialize(argc, argv);
-  gTheApp->OpenWindow();
   gTheApp->Run();
+
+  return 0;
 }

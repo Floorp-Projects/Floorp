@@ -23,6 +23,9 @@
 #include "nsIPref.h"
 #include "nsINetService.h"
 #include "nsRepository.h"
+#include "nsDocLoader.h"
+#include "prprf.h"
+#include "plstr.h"
 
 #ifdef VIEWER_PLUGINS
 static nsIPluginManager *gPluginManager = nsnull;
@@ -43,7 +46,11 @@ static NS_DEFINE_IID(kINetContainerApplicationIID,
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 nsViewerApp::nsViewerApp()
+  : mStartURL("resource:/res/samples/test0.html")
 {
+  mDelay = 1;
+  mRepeatCount = 1;
+  mNumSamples = 10;
 }
 
 nsViewerApp::~nsViewerApp()
@@ -163,15 +170,126 @@ nsViewerApp::Exit()
   return NS_OK;
 }
 
+static void
+PrintHelpInfo(char **argv)
+{
+  fprintf(stderr, "Usage: %s [-p][-q][-md #][-f filename][-d #] [starting url]\n", argv[0]);
+  fprintf(stderr, "\t-p[#]   -- run purify, optionally with a # that says which sample to stop at.  For example, -p2 says to run samples 0, 1, and 2.\n");
+  fprintf(stderr, "\t-q   -- run quantify\n");
+  fprintf(stderr, "\t-md # -- set the crt debug flags to #\n");
+  fprintf(stderr, "\t-d # -- set the delay between URL loads to # (in milliseconds)\n");
+  fprintf(stderr, "\t-r # -- set the repeat count, which is the number of times the URLs will be loaded in batch mode.\n");
+  fprintf(stderr, "\t-f filename -- read a list of URLs from <filename>\n");
+}
+
+static void
+AddTestDocsFromFile(nsDocLoader* aDocLoader, const nsString& aFileName)
+{
+  char cfn[1000];
+  aFileName.ToCString(cfn, sizeof(cfn));
+#ifdef XP_PC
+  FILE* fp = fopen(cfn, "rb");
+#else
+  FILE* fp = fopen(cfn, "r");
+#endif
+
+  for (;;) {
+    char linebuf[2000];
+    char* cp = fgets(linebuf, sizeof(linebuf), fp);
+    if (nsnull == cp) {
+      break;
+    }
+    if (linebuf[0] == '#') {
+      continue;
+    }
+
+    // strip crlf's from the line
+    int len = strlen(linebuf);
+    if (0 != len) {
+      if (('\n' == linebuf[len-1]) || ('\r' == linebuf[len-1])) {
+        linebuf[--len] = 0;
+      }
+    }
+    if (0 != len) {
+      if (('\n' == linebuf[len-1]) || ('\r' == linebuf[len-1])) {
+        linebuf[--len] = 0;
+      }
+    }
+
+    // Add non-empty lines to the test list
+    if (0 != len) {
+      aDocLoader->AddURL(linebuf);
+    }
+  }
+
+  fclose(fp);
+}
+
 NS_IMETHODIMP
 nsViewerApp::ProcessArguments(int argc, char** argv)
 {
+  int i;
+  for (i = 1; i < argc; i++) {
+    if (argv[i][0] == '-') {
+      if (PL_strncmp(argv[i], "-p", 2) == 0) {
+        mDoPurify = PR_TRUE;
+        char *optionalSampleStopIndex = &(argv[i][2]);
+        if ('\0' != *optionalSampleStopIndex)
+        {
+          if (1!=sscanf(optionalSampleStopIndex, "%d", &mNumSamples))
+          {
+            PrintHelpInfo(argv);
+            exit(-1);
+          }
+        }
+      }
+      else if (PL_strcmp(argv[i], "-q") == 0) {
+        mDoQuantify = PR_TRUE;
+      }
+      else if (PL_strcmp(argv[i], "-f") == 0) {
+        mLoadTestFromFile = PR_TRUE;
+        i++;
+        if (i>=argc || nsnull==argv[i] || nsnull==*(argv[i]))
+        {
+          PrintHelpInfo(argv);
+          exit(-1);
+        }
+        mInputFileName = argv[i];
+      }
+      else if (PL_strcmp(argv[i], "-d") == 0) {
+        i++;
+        if (i>=argc || 1!=sscanf(argv[i], "%d", &mDelay))
+        {
+          PrintHelpInfo(argv);
+          exit(-1);
+        }
+      }
+      else if (PL_strcmp(argv[i], "-r") == 0) {
+        i++;
+        if (i>=argc || 1!=sscanf(argv[i], "%d", &mRepeatCount))
+        {
+          PrintHelpInfo(argv);
+          exit(-1);
+        }
+      }
+      else {
+        PrintHelpInfo(argv);
+        exit(-1);
+      }
+    }
+    else
+      break;
+  }
+  if (i < argc) {
+    mStartURL = argv[i];
+  }
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsViewerApp::OpenWindow()
 {
+  // Create browser window
   nsBrowserWindow* bw = nsnull;
   nsresult rv = NSRepository::CreateInstance(kBrowserWindowCID, nsnull,
                                              kIBrowserWindowIID,
@@ -179,12 +297,58 @@ nsViewerApp::OpenWindow()
   bw->SetApp(this);
   bw->Init(mAppShell, nsRect(0, 0, 620, 400), PRUint32(~0));
   bw->Show();
-  {
-    bw->LoadURL("resource:/res/samples/test0.html");
+
+  if (mDoPurify) {
+    mDocLoader = new nsDocLoader(bw, this, mDelay);
+    mDocLoader->AddRef();
+    for (PRInt32 i = 0; i < mRepeatCount; i++) {
+      for (int docnum = 0; docnum < mNumSamples; docnum++) {
+        char url[500];
+        PR_snprintf(url, 500, "%s/test%d.html", SAMPLES_BASE_URL, docnum);
+        mDocLoader->AddURL(url);
+      }
+    }
+    mDocLoader->StartTimedLoading();
+  }
+  else if (mLoadTestFromFile) {
+    mDocLoader = new nsDocLoader(bw, this, mDelay);
+    mDocLoader->AddRef();
+    for (PRInt32 i = 0; i < mRepeatCount; i++) {
+      AddTestDocsFromFile(mDocLoader, mInputFileName);
+    }
+    if (0 == mDelay) {
+      mDocLoader->StartLoading();
+    }
+    else {
+      mDocLoader->StartTimedLoading();
+    }
+  }
+  else {
+    bw->LoadURL(mStartURL);
   }
 
   return NS_OK;
 }
+
+#if XXX_fix_me
+    if (mDoQuantify) {
+      // Synthesize 20 ResizeReflow commands (+/- 10 pixels) and then
+      // exit.
+#define kNumReflows 20
+      for (PRIntn i = 0; i < kNumReflows; i++) {
+        nsRect r;
+        bw->GetBounds(r);
+        if (i & 1) {
+          r.width -= 10;
+        }
+        else {
+          r.width += 10;
+        }
+        bw->SizeTo(r.width, r.height);
+      }
+    }
+    mAppShell->Exit();
+#endif
 
 //----------------------------------------
 
@@ -233,4 +397,407 @@ void
 nsViewerApp::AfterDispatch()
 {
    NET_PollSockets();
+}
+
+//----------------------------------------
+
+#ifdef XP_PC
+// XXX temporary robot code until it's made XP
+#include "prenv.h"
+#include "resources.h"
+#include "nsIPresShell.h"
+#include "nsIDocument.h"
+#include "nsIURL.h"
+
+#define DEBUG_EMPTY "(none)"
+static int gDebugRobotLoads = 5000;
+static char gVerifyDir[_MAX_PATH];
+static BOOL gVisualDebug = TRUE;
+
+extern HANDLE gInstance, gPrevInstance;
+
+extern "C" NS_EXPORT int DebugRobot(
+  nsVoidArray * workList, nsIWebShell * ww,
+  int imax, char * verify_dir,
+  void (*yieldProc)(const char *));
+
+void yieldProc(const char * str)
+{
+  // Process messages
+  MSG msg;
+  while (PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE)) {
+    GetMessage(&msg, NULL, 0, 0);
+    if (
+#if 0
+      !JSConsole::sAccelTable ||
+        !gConsole ||
+        !gConsole->GetMainWindow() ||
+        !TranslateAccelerator(gConsole->GetMainWindow(), JSConsole::sAccelTable, &msg)
+#else
+      1
+#endif
+      ) {
+      TranslateMessage(&msg);
+      DispatchMessage(&msg);
+      /* Pump Netlib... */
+      NET_PollSockets();
+    }
+  }
+}
+
+/* Debug Robot Dialog options */
+
+BOOL CALLBACK DlgProc(HWND hDlg, UINT msg, WPARAM wParam,LPARAM lParam)
+{
+   BOOL translated = FALSE;
+   HWND hwnd;
+   switch (msg)
+   {
+      case WM_INITDIALOG:
+         {
+            SetDlgItemInt(hDlg,IDC_PAGE_LOADS,5000,FALSE);
+            char * text = PR_GetEnv("VERIFY_PARSER");
+            SetDlgItemText(hDlg,IDC_VERIFICATION_DIRECTORY,text ? text : DEBUG_EMPTY);
+            hwnd = GetDlgItem(hDlg,IDC_UPDATE_DISPLAY);
+            SendMessage(hwnd,BM_SETCHECK,TRUE,0);
+         }
+         return FALSE;
+      case WM_COMMAND:
+         switch (LOWORD(wParam))
+         {
+            case IDOK:
+               gDebugRobotLoads = GetDlgItemInt(hDlg,IDC_PAGE_LOADS,&translated,FALSE);
+               GetDlgItemText(hDlg, IDC_VERIFICATION_DIRECTORY, gVerifyDir, sizeof(gVerifyDir));
+               if (!strcmp(gVerifyDir,DEBUG_EMPTY))
+                  gVerifyDir[0] = '\0';
+               hwnd = GetDlgItem(hDlg,IDC_UPDATE_DISPLAY);
+               gVisualDebug = (BOOL)SendMessage(hwnd,BM_GETCHECK,0,0);
+               EndDialog(hDlg,IDOK);
+               break;
+            case IDCANCEL:
+               EndDialog(hDlg,IDCANCEL);
+               break;
+         }
+         break;
+      default:
+         return FALSE;
+   }
+   return TRUE;
+}
+
+BOOL CreateRobotDialog(HWND hParent)
+{
+   BOOL result = (DialogBox(gInstance,MAKEINTRESOURCE(IDD_DEBUGROBOT),hParent,(DLGPROC)DlgProc) == IDOK);
+   return result;
+}
+#endif
+
+NS_IMETHODIMP
+nsViewerApp::CreateRobot(nsBrowserWindow* aWindow)
+{
+#ifdef XP_PC
+  if (CreateRobotDialog(aWindow->mWindow->GetNativeData(NS_NATIVE_WIDGET)))
+  {
+    nsIPresShell* shell = aWindow->GetPresShell();
+    if (nsnull != shell) {
+      nsIDocument* doc = shell->GetDocument();
+      if (nsnull!=doc) {
+        const char * str = doc->GetDocumentURL()->GetSpec();
+        nsVoidArray * gWorkList = new nsVoidArray();
+        gWorkList->AppendElement(new nsString(str));
+        DebugRobot( 
+          gWorkList, 
+          gVisualDebug ? aWindow->mWebShell : nsnull, 
+          gDebugRobotLoads, 
+          PL_strdup(gVerifyDir),
+          yieldProc);
+      }
+    }
+  }
+#endif
+  return NS_OK;
+}
+
+//----------------------------------------
+
+#ifdef XP_PC
+static nsBrowserWindow* gWinData;
+static int gTop100Pointer = 0;
+static char * gTop100List[] = {
+   "http://www.yahoo.com",
+   "http://www.netscape.com",
+   "http://www.microsoft.com",
+   "http://www.excite.com",
+   "http://www.mckinley.com",
+   "http://www.city.net",
+   "http://www.webcrawler.com",
+   "http://www.mirabilis.com",
+   "http://www.infoseek.com",
+   "http://www.pathfinder.com",
+   "http://www.warnerbros.com",
+   "http://www.cnn.com",
+   "http://www.altavista.digital.com",
+   "http://www.altavista.com",
+   "http://www.usatoday.com",
+   "http://www.disney.com",
+   "http://www.starwave.com",
+   "http://www.hotwired.com",
+   "http://www.hotbot.com",
+   "http://www.lycos.com",
+   "http://www.pointcom.com",
+   "http://www.cnet.com",
+   "http://www.search.com",
+   "http://www.news.com",
+   "http://www.download.com",
+   "http://www.geocities.com",
+   "http://www.aol.com",
+   "http://members.aol.com",
+   "http://www.imdb.com",
+   "http://uk.imdb.com",
+   "http://macromedia.com",
+   "http://www.infobeat.com",
+   "http://www.fxweb.com",
+   "http://www.whowhere.com",
+   "http://www.real.com",
+   "http://www.sportsline.com",
+   "http://www.dejanews.com",
+   "http://www.the-park.com",
+   "http://www.cmpnet.com",
+   "http://www.go2net.com",
+   "http://www.metacrawler.com",
+   "http://www.playsite.com",
+   "http://www.stocksite.com",
+   "http://www.sony.com",
+   "http://www.music.sony.com",
+   "http://www.station.sony.com",
+   "http://www.scea.sony.com",
+   "http://www.infospace.com",
+   "http://www.zdnet.com",
+   "http://www.hotfiles.com",
+   "http://www.chathouse.com",
+   "http://www.looksmart.com",
+   "http://www.iamginegames.com",
+   "http://www.macaddict.com",
+   "http://www.rsac.org",
+   "http://www.apple.com",
+   "http://www.beseen.com",
+   "http://www.dogpile.com",
+   "http://www.xoom.com",
+   "http://www.tucows.com",
+   "http://www.freethemes.com",
+   "http://www.winfiles.com",
+   "http://www.vservers.com",
+   "http://www.mtv.com",
+   "http://www.the-xfiles.com",
+   "http://www.datek.com",
+   "http://www.cyberthrill.com",
+   "http://www.surplusdirect.com",
+   "http://www.tomshardware.com",
+   "http://www.bigyellow.com",
+   "http://www.100hot.com",
+   "http://www.messagemates.com",
+   "http://www.onelist.com",
+   "http://www.bluemountain.com",
+   "http://www.ea.com",
+   "http://www.bullfrog.co.uk",
+   "http://www.travelocity.com",
+   "http://www.ibm.com",
+   "http://www.bigcharts.com",
+   "http://www.davesclassics.com",
+   "http://www.goto.com",
+   "http://www.weather.com",
+   "http://www.gamespot.com",
+   "http://www.bloomberg.com",
+   "http://www.winzip.com",
+   "http://www.filez.com",
+   "http://www.westwood.com",
+   "http://www.internet.com",
+   "http://www.cardmaster.com",
+   "http://www.creaf.com",
+   "http://netaddress.usa.net",
+   "http://www.occ.com",
+   "http://www.as.org",
+   "http://www.amazon.com",
+   "http://www.drudgereport.com",
+   "http://www.hardradio.com",
+   "http://www.intel.com",
+   "http://www.mp3.com",
+   "http://www.ebay.com",
+   "http://www.msn.com",
+   "http://www.fifa.com",
+   "http://www.attitude.com",
+   "http://www.happypuppy.com",
+   "http://www.gamesdomain.com",
+   "http://www.onsale.com",
+   "http://www.tm.com",
+   "http://www.xlnc1.com",
+   "http://www.greatsports.com",
+   "http://www.discovery.com",
+   "http://www.nai.com",
+   "http://www.nasa.gov",
+   "http://www.ogr.com",
+   "http://www.warzone.com",
+   "http://www.gamestats.com",
+   "http://www.winamp.com",
+   "http://java.sun.com",
+   "http://www.hp.com",
+   "http://www.cdnow.com",
+   "http://www.nytimes.com",
+   "http://www.majorleaguebaseball.com",
+   "http://www.washingtonpost.com",
+   "http://www.planetquake.com",
+   "http://www.wsj.com",
+   "http://www.slashdot.org",
+   "http://www.adobe.com",
+   "http://www.quicken.com",
+   "http://www.talkcity.com",
+   "http://www.developer.com",
+   "http://www.mapquest.com",
+   0
+   };
+
+// XXX temporary site walker code until it's made XP
+
+BOOL CALLBACK
+SiteWalkerDlgProc(HWND hDlg, UINT msg, WPARAM wParam,LPARAM lParam)
+{
+   BOOL translated = FALSE;
+   switch (msg)
+   {
+      case WM_INITDIALOG:
+         {
+            SetDlgItemText(hDlg,IDC_SITE_NAME, gTop100List[gTop100Pointer]);
+            EnableWindow(GetDlgItem(hDlg,ID_SITE_PREVIOUS),TRUE);
+            if (gWinData)
+               gWinData->LoadURL(gTop100List[gTop100Pointer]);
+         }
+         return FALSE;
+      case WM_COMMAND:
+         switch (LOWORD(wParam))
+         {
+            case ID_SITE_NEXT:
+               {
+                  char * p = gTop100List[++gTop100Pointer];
+                  if (p) {
+                     EnableWindow(GetDlgItem(hDlg,ID_SITE_NEXT),TRUE);
+                     SetDlgItemText(hDlg,IDC_SITE_NAME, p);
+                     if (gWinData)
+                        gWinData->LoadURL(gTop100List[gTop100Pointer]);
+                  }
+                  else  {
+                     EnableWindow(GetDlgItem(hDlg,ID_SITE_NEXT),FALSE);
+                     EnableWindow(GetDlgItem(hDlg,ID_SITE_PREVIOUS),TRUE);
+                     SetDlgItemText(hDlg,IDC_SITE_NAME, "[END OF LIST]");
+                  }
+               }
+               break;
+            case ID_SITE_PREVIOUS:
+               {
+                  if (gTop100Pointer > 0) {
+                     EnableWindow(GetDlgItem(hDlg,ID_SITE_PREVIOUS),TRUE);
+                     SetDlgItemText(hDlg,IDC_SITE_NAME, gTop100List[--gTop100Pointer]);
+                     if (gWinData)
+                        gWinData->LoadURL(gTop100List[gTop100Pointer]);
+                  }
+                  else  {
+                     EnableWindow(GetDlgItem(hDlg,ID_SITE_PREVIOUS),FALSE);
+                     EnableWindow(GetDlgItem(hDlg,ID_SITE_NEXT),TRUE);
+                  }
+               }
+               break;
+            case ID_EXIT:
+               EndDialog(hDlg,IDCANCEL);
+               NS_RELEASE(gWinData);
+               break;
+         }
+         break;
+      default:
+         return FALSE;
+   }
+   return TRUE;
+}
+
+BOOL CreateSiteWalkerDialog(HWND hParent)
+{
+   BOOL result = (DialogBox(gInstance,MAKEINTRESOURCE(IDD_SITEWALKER),hParent,(DLGPROC)SiteWalkerDlgProc) == IDOK);
+   return result;
+}
+#endif
+
+NS_IMETHODIMP
+nsViewerApp::CreateSiteWalker(nsBrowserWindow* aWindow)
+{
+#ifdef XP_PC
+  if (nsnull == gWinData) {
+    gWinData = aWindow;
+    NS_ADDREF(aWindow);
+    CreateSiteWalkerDialog(aWindow->mWindow->GetNativeData(NS_NATIVE_WIDGET));
+  }
+#endif
+  return NS_OK;
+}
+
+//----------------------------------------
+
+#ifdef XP_PC
+#include "jsconsres.h"
+#include "JSConsole.h"
+
+static NS_DEFINE_IID(kIScriptContextOwnerIID, NS_ISCRIPTCONTEXTOWNER_IID);
+JSConsole *gConsole = NULL;
+
+void DestroyConsole()
+{
+ if (gConsole) {
+    gConsole->SetNotification(NULL);
+    delete gConsole;
+    gConsole = NULL;
+  }
+}
+
+void ShowConsole(nsBrowserWindow* aWindow)
+{
+    HWND hWnd = aWindow->mWindow->GetNativeData(NS_NATIVE_WIDGET);
+    if (!gConsole) {
+
+      // load the accelerator table for the console
+      if (!JSConsole::sAccelTable) {
+        JSConsole::sAccelTable = LoadAccelerators(gInstance,
+                                                  MAKEINTRESOURCE(ACCELERATOR_TABLE));
+      }
+      
+      nsIScriptContextOwner *owner = nsnull;
+      nsIScriptContext *context = nsnull;        
+      // XXX needs to change to aWindow->mWebShell
+      if (NS_OK == aWindow->QueryInterface(kIScriptContextOwnerIID, (void **)&owner)) {
+        if (NS_OK == owner->GetScriptContext(&context)) {
+
+          // create the console
+          gConsole = JSConsole::CreateConsole();
+          gConsole->SetContext(context);
+          // lifetime of the context is still unclear at this point.
+          // Anyway, as long as the web widget is alive the context is alive.
+          // Maybe the context shouldn't even be RefCounted
+          context->Release();
+          gConsole->SetNotification(DestroyConsole);
+        }
+        
+        NS_RELEASE(owner);
+      }
+      else {
+        MessageBox(hWnd, "Unable to load JavaScript", "Viewer Error", MB_ICONSTOP);
+      }
+    }
+}
+#endif
+
+NS_IMETHODIMP
+nsViewerApp::CreateJSConsole(nsBrowserWindow* aWindow)
+{
+#ifdef XP_PC
+  if (nsnull == gConsole) {
+    ShowConsole(aWindow);
+  }
+#endif
+  return NS_OK;
 }

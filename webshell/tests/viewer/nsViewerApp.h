@@ -21,13 +21,24 @@
 
 #include "nsINetContainerApplication.h"
 #include "nsIAppShell.h"
+#include "nsString.h"
+#include "nsCRT.h"
+#include "nsVoidArray.h"
 
 class nsIPref;
+class nsDocLoader;
+class nsBrowserWindow;
 
 class nsViewerApp : public nsINetContainerApplication,
                     public nsDispatchListener
 {
 public:
+  void* operator new(size_t sz) {
+    void* rv = new char[sz];
+    nsCRT::zero(rv, sz);
+    return rv;
+  }
+
   virtual ~nsViewerApp();
 
   // nsISupports
@@ -48,24 +59,36 @@ public:
   NS_IMETHOD Initialize(int argc, char** argv);
   NS_IMETHOD ProcessArguments(int argc, char** argv);
   NS_IMETHOD OpenWindow();
-
+  NS_IMETHOD CreateRobot(nsBrowserWindow* aWindow);
+  NS_IMETHOD CreateSiteWalker(nsBrowserWindow* aWindow);
+  NS_IMETHOD CreateJSConsole(nsBrowserWindow* aWindow);
   NS_IMETHOD Exit();
 
-  void Run() {
-    mAppShell->Run();
-  }
+  virtual int Run() = 0;
 
 protected:
   nsViewerApp();
 
   nsIAppShell* mAppShell;
   nsIPref* mPrefs;
+  nsString mStartURL;
+  PRBool mDoPurify;
+  PRBool mDoQuantify;
+  PRBool mLoadTestFromFile;
+  nsString mInputFileName;
+  PRInt32 mNumSamples;
+  nsVoidArray mInputFiles;
+  PRInt32 mDelay;
+  PRInt32 mRepeatCount;
+  nsDocLoader* mDocLoader;
 };
 
 class nsNativeViewerApp : public nsViewerApp {
 public:
   nsNativeViewerApp();
   ~nsNativeViewerApp();
+
+  virtual int Run();
 };
 
 #endif /* nsViewerApp_h___ */

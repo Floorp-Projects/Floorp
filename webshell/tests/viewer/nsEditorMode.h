@@ -21,7 +21,7 @@
 
 #include "nsIDOMDocument.h"
 
-extern nsresult nsInitEditorMode(nsIDOMDocument * aDOMDocument);
+extern nsresult NS_InitEditorMode(nsIDOMDocument * aDOMDocument);
 extern nsresult nsAppendText(nsString *aStr);
 extern nsresult nsDeleteLast();
 extern nsresult nsSetCurrentNode(nsIDOMNode *aNode);

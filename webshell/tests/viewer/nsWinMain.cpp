@@ -24,7 +24,7 @@
 
 extern "C" int  NET_PollSockets();
 
-static HANDLE gInstance, gPrevInstance;
+HANDLE gInstance, gPrevInstance;
 static nsITimer* gNetTimer;
 
 nsNativeViewerApp::nsNativeViewerApp()
@@ -34,6 +34,44 @@ nsNativeViewerApp::nsNativeViewerApp()
 nsNativeViewerApp::~nsNativeViewerApp()
 {
 }
+
+static void
+PollNet(nsITimer *aTimer, void *aClosure)
+{
+  NET_PollSockets();
+  NS_IF_RELEASE(gNetTimer);
+  if (NS_OK == NS_NewTimer(&gNetTimer)) {
+    gNetTimer->Init(PollNet, nsnull, 1000 / 50);
+  }
+}
+
+int
+nsNativeViewerApp::Run()
+{
+  OpenWindow();
+ 
+  // Process messages
+  MSG msg;
+  PollNet(0, 0);
+  while (::GetMessage(&msg, NULL, 0, 0)) {
+    if (
+#if 0
+!JSConsole::sAccelTable ||
+        !gConsole ||
+        !gConsole->GetMainWindow() ||
+        !TranslateAccelerator(gConsole->GetMainWindow(), JSConsole::sAccelTable, &msg)
+#endif
+        1
+      ) {
+      TranslateMessage(&msg);
+      DispatchMessage(&msg);
+      NET_PollSockets();
+    }
+  }
+  return msg.wParam;
+}
+
+//----------------------------------------------------------------------
 
 //----------------------------------------------------------------------
 
@@ -66,69 +104,26 @@ nsNativeBrowserWindow::DispatchMenuItem(PRInt32 aID)
 
 //----------------------------------------------------------------------
 
-static void
-PollNet(nsITimer *aTimer, void *aClosure)
-{
-  NET_PollSockets();
-  NS_IF_RELEASE(gNetTimer);
-  if (NS_OK == NS_NewTimer(&gNetTimer)) {
-    gNetTimer->Init(PollNet, nsnull, 1000 / 50);
-  }
-}
-
-static int
-RunViewer(HANDLE instance, HANDLE prevInstance, int nCmdShow,
-          nsViewerApp* app)
-{
-  gInstance = instance;
-  gPrevInstance = prevInstance;
-
-  app->OpenWindow();
-
-//  SetViewer(aViewer);
-//  nsIWidget *mainWindow = nsnull;
-//  nsDocLoader* dl = aViewer->SetupViewer(&mainWindow, 0, 0);
- 
-  // Process messages
-  MSG msg;
-  PollNet(0, 0);
-  while (::GetMessage(&msg, NULL, 0, 0)) {
-    if (
-#if 0
-!JSConsole::sAccelTable ||
-        !gConsole ||
-        !gConsole->GetMainWindow() ||
-        !TranslateAccelerator(gConsole->GetMainWindow(), JSConsole::sAccelTable, &msg)
-#endif
-        1
-      ) {
-      TranslateMessage(&msg);
-      DispatchMessage(&msg);
-      NET_PollSockets();
-    }
-  }
-
-//  aViewer->CleanupViewer(dl);
-
-  return msg.wParam;
-}
-
-void main(int argc, char **argv)
+int main(int argc, char **argv)
 {
   PL_InitializeEventsLib("");
   nsViewerApp* app = new nsNativeViewerApp();
   app->Initialize(argc, argv);
-  RunViewer(GetModuleHandle(NULL), NULL, SW_SHOW, app);
+  app->Run();
   delete app;
+
+  return 0;
 }
 
 int PASCAL
 WinMain(HANDLE instance, HANDLE prevInstance, LPSTR cmdParam, int nCmdShow)
 {
+  gInstance = instance;
+  gPrevInstance = prevInstance;
   PL_InitializeEventsLib("");
   nsViewerApp* app = new nsNativeViewerApp();
   app->Initialize(0, nsnull);
-  int rv = RunViewer(instance, prevInstance, nCmdShow, app);
+  int result = app->Run();
   delete app;
-  return rv;
+  return result;
 }
