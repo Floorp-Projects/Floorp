@@ -51,12 +51,12 @@ public:
                          const nsString& string1, const nsString& string2, PRInt32* result);
 
   // compare two sort keys
-  // length is character length not byte length, result is same as strcmp
+  // length is a byte length, result is same as strcmp
   PRInt32 CompareSortKey(const PRUint8* key1, const PRUint32 len1, 
                          const PRUint8* key2, const PRUint32 len2);
 
   // normalize string before collation key generation
-  nsresult NormalizeString(nsString stringInOut);
+  nsresult NormalizeString(nsAutoString& stringInOut);
 
 protected:
   nsICaseConversion*  mCaseConversion;

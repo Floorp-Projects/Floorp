@@ -21,6 +21,7 @@
 #include "nsCollationCID.h"
 #include "nsUnicharUtilCIID.h"
 
+////////////////////////////////////////////////////////////////////////////////
 
 NS_DEFINE_IID(kICollationFactoryIID, NS_ICOLLATIONFACTORY_IID);
 NS_DEFINE_IID(kICollationIID, NS_ICOLLATION_IID);
@@ -46,19 +47,16 @@ nsresult nsCollationFactory::CreateCollation(nsILocale* locale, nsICollation** i
   return res;
 }
 
+////////////////////////////////////////////////////////////////////////////////
 
 NS_DEFINE_CID(kUnicharUtilCID, NS_UNICHARUTIL_CID);
 NS_DEFINE_IID(kCaseConversionIID, NS_ICASECONVERSION_IID);
 
 nsCollation::nsCollation()
 {
-  nsresult res;
-
   mCaseConversion = NULL;
-  res = nsRepository::CreateInstance(kUnicharUtilCID,
-                                NULL,
-                                kCaseConversionIID,
-                                (void**) &mCaseConversion);
+  nsresult res = nsRepository::CreateInstance(kUnicharUtilCID, NULL, kCaseConversionIID, (void**) &mCaseConversion);
+  NS_ASSERTION(NS_SUCCEEDED(res), "CreateInstance failed for kCaseConversionIID");
 }
 
 nsCollation::~nsCollation()
@@ -67,12 +65,9 @@ nsCollation::~nsCollation()
     mCaseConversion->Release();
 }
 
-// compare two strings
-// locale RFC1766 (e.g. "en-US"), result is same as strcmp
 nsresult nsCollation::CompareString(nsICollation *inst, const nsCollationStrength strength, 
                                     const nsString& string1, const nsString& string2, PRInt32* result)
 {
-  //*result = string1.Compare(string2, (strength != kCollationCaseSensitive));
   PRUint32 aLength1, aLength2;
   PRUint8 *aKey1, *aKey2;
   nsresult res;
@@ -118,15 +113,13 @@ nsresult nsCollation::CompareString(nsICollation *inst, const nsCollationStrengt
   return res;
 }
 
-// compare two sort keys
-// length is character length not byte length, result is same as strcmp
 PRInt32 nsCollation::CompareSortKey(const PRUint8* key1, const PRUint32 len1, 
                                     const PRUint8* key2, const PRUint32 len2)
 {
   PRUint32 len = (len1 < len2) ? len1 : len2;
   PRInt32 result;
 
-  result = (PRUint32) memcmp(key1, key2, sizeof(PRUnichar) * len);
+  result = (PRUint32) memcmp(key1, key2, len);
   if (result == 0 && len1 != len2) {
     result = (len1 < len2) ? -1 : 1;
   }
@@ -134,9 +127,23 @@ PRInt32 nsCollation::CompareSortKey(const PRUint8* key1, const PRUint32 len1,
   return result;
 }
 
-// normalize string before collation key generation
-nsresult nsCollation::NormalizeString(nsString stringInOut)
+nsresult nsCollation::NormalizeString(nsAutoString& stringInOut)
 {
+  if (mCaseConversion == NULL) {
+    stringInOut.ToLowerCase();
+  }
+  else {
+    PRUnichar *aBuffer;
+    PRInt32 aLength = stringInOut.Length();
+
+    aBuffer = new PRUnichar[aLength];
+    if (aBuffer == NULL) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    mCaseConversion->ToLower(stringInOut.GetUnicode(), aBuffer, aLength);
+    stringInOut.SetString(aBuffer, aLength);
+    delete [] aBuffer;
+  }
   return NS_OK;
 }
 
