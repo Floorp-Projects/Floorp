@@ -35,11 +35,12 @@
 #include "nsVoidArray.h"
 #include "nsIRenderingContextWin.h"
 #include "nsDrawingSurfaceWin.h"
+#include "nsRenderingContextImpl.h"
 
 class GraphicsState;
 class nsDrawingSurfaceWin;
 
-class nsRenderingContextWin : public nsIRenderingContext,
+class nsRenderingContextWin : public nsRenderingContextImpl,
                               nsIRenderingContextWin
 {
 public:
@@ -178,9 +179,9 @@ public:
 protected:
   void SetupFontAndColor(void);
 
-private:
   ~nsRenderingContextWin();
 
+private:
    // ConditionRect is used to fix a coordinate overflow problem under WIN95. 
   void ConditionRect(nsRect aSrcRect, RECT& aDestRect);
 
