@@ -31,7 +31,7 @@
 
 
 /**
- * Native MOTIF Application shell wrapper
+ * Native MAC Application shell wrapper
  */
 
 class nsAppShell : public nsIAppShell
