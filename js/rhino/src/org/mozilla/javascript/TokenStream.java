@@ -848,11 +848,28 @@ public class TokenStream {
                 }
                 str = new String(ca, 0, destination);
             }
-            else
+            else {
                 // Return the corresponding token if it's a keyword
-                if ((result = stringToKeyword(str)) != EOF) {
-                    return result;
+                result = stringToKeyword(str);
+                if (result != EOF) {
+                    if (result != RESERVED) {
+                        return result;
+                    }
+                    else if (!Context.getContext().hasFeature(
+                            Context.FEATURE_RESERVED_KEYWORD_AS_IDENTIFIER))
+                    {
+                        return result;
+                    }
+                    else {
+                        // If implementation permits to use future reserved
+                        // keywords in violation with the EcmaScript standard,
+                        // treat it as name but issue warning
+                        Object[] errArgs = { str };
+                        reportSyntaxWarning("msg.reserved.keyword", errArgs);
+                        result = EOF;
+                    }
                 }
+            }
 
             this.string = str;
             return NAME;
@@ -887,11 +904,7 @@ public class TokenStream {
                      */
                     if (base == 8 && c >= '8') {
                         Object[] errArgs = { c == '8' ? "8" : "9" };
-                        Context.reportWarning(
-                            Context.getMessage("msg.bad.octal.literal",
-                                               errArgs),
-                            getSourceName(),
-                            in.getLineno(), getLine(), getOffset());
+                        reportSyntaxWarning("msg.bad.octal.literal", errArgs);
                         base = 10;
                     }
                 }
@@ -1345,6 +1358,12 @@ public class TokenStream {
             Context.reportError(message, getSourceName(),
                                 getLineno(), getLine(), getOffset());
         }
+    }
+
+    private void reportSyntaxWarning(String messageProperty, Object[] args) {
+        String message = Context.getMessage(messageProperty, args);
+        Context.reportWarning(message, getSourceName(),
+                              getLineno(), getLine(), getOffset());
     }
 
     public String getSourceName() { return sourceName; }

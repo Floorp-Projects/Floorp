@@ -1633,36 +1633,47 @@ public class Context {
     public static final int FEATURE_MEMBER_EXPR_AS_FUNCTION_NAME = 2;
     
     /**
+     * if hasFeature(RESERVED_KEYWORD_AS_IDENTIFIER) returns true,
+     * treat future reserved keyword (see  Ecma-262, section 7.5.3) as ordinary
+     * identifiers but warn about this usage
+     */
+    public static final int FEATURE_RESERVED_KEYWORD_AS_IDENTIFIER = 3;
+    
+    /**
      * Controls certain aspects of script semantics. 
      * Should be overwritten to alter default behavior.
      * @param featureIndex feature index to check
      * @return true if the <code>featureIndex</code> feature is turned on
      * @see #FEATURE_NON_ECMA_GET_YEAR
      * @see #FEATURE_MEMBER_EXPR_AS_FUNCTION_NAME
+     * @see #FEATURE_RESERVED_KEYWORD_AS_IDENTIFIER
      */
     public boolean hasFeature(int featureIndex) {
-        if (featureIndex == FEATURE_NON_ECMA_GET_YEAR) {
-           /*
-            * During the great date rewrite of 1.3, we tried to track the
-            * evolving ECMA standard, which then had a definition of
-            * getYear which always subtracted 1900.  Which we
-            * implemented, not realizing that it was incompatible with
-            * the old behavior...  now, rather than thrash the behavior
-            * yet again, we've decided to leave it with the - 1900
-            * behavior and point people to the getFullYear method.  But
-            * we try to protect existing scripts that have specified a
-            * version...
-            */
-            return (version == Context.VERSION_1_0 
-                    || version == Context.VERSION_1_1
-                    || version == Context.VERSION_1_2);
+        switch (featureIndex) {
+            case FEATURE_NON_ECMA_GET_YEAR:
+               /*
+                * During the great date rewrite of 1.3, we tried to track the
+                * evolving ECMA standard, which then had a definition of
+                * getYear which always subtracted 1900.  Which we
+                * implemented, not realizing that it was incompatible with
+                * the old behavior...  now, rather than thrash the behavior
+                * yet again, we've decided to leave it with the - 1900
+                * behavior and point people to the getFullYear method.  But
+                * we try to protect existing scripts that have specified a
+                * version...
+                */
+                return (version == Context.VERSION_1_0 
+                        || version == Context.VERSION_1_1
+                        || version == Context.VERSION_1_2);
+
+            case FEATURE_MEMBER_EXPR_AS_FUNCTION_NAME:
+                return false;
+            
+            case FEATURE_RESERVED_KEYWORD_AS_IDENTIFIER:
+                return false;
         }
-        else if (featureIndex == FEATURE_MEMBER_EXPR_AS_FUNCTION_NAME) {
-            return false;
-        }
-        // Unreachable code
-        if (Context.check) Context.codeBug();
-        return false;
+        // It is a bug to call the method with unknown featureIndex
+        throw new IllegalArgumentException();
     }
 
     /**
