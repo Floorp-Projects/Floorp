@@ -183,9 +183,25 @@ THREAD_KEY_T cpuid_key;
 THREAD_KEY_T last_thread_key;
 static sigset_t set, oldset;
 
+static void
+threadid_key_destructor(void *value)
+{
+    PRThread *me = (PRThread *)value;
+    PR_ASSERT((me != NULL) && (me->flags & _PR_ATTACHED));
+    /*
+     * The Solaris thread library sets the thread specific
+     * data (the current thread) to NULL before invoking
+     * the destructor.  We need to restore it to prevent the
+     * _PR_MD_CURRENT_THREAD() call in _PRI_DetachThread()
+     * from attaching the thread again.
+     */
+    _PR_MD_SET_CURRENT_THREAD(me);
+    _PRI_DetachThread();
+}
+
 void _MD_EarlyInit(void)
 {
-    THR_KEYCREATE(&threadid_key, NULL);
+    THR_KEYCREATE(&threadid_key, threadid_key_destructor);
     THR_KEYCREATE(&cpuid_key, NULL);
     THR_KEYCREATE(&last_thread_key, NULL);
     sigemptyset(&set);
@@ -337,12 +353,27 @@ void _MD_lock(struct _MDLock *md_lock)
     mutex_lock(&md_lock->lock);
 }
 
-PRThread *_pr_current_thread_tls()
+PRThread *_pr_attached_thread_tls()
 {
     PRThread *ret;
 
     thr_getspecific(threadid_key, (void **)&ret);
     return ret;
+}
+
+PRThread *_pr_current_thread_tls()
+{
+    PRThread *thread;
+
+    thread = _MD_GET_ATTACHED_THREAD();
+
+    if (NULL == thread) {
+        thread = _PRI_AttachThread(
+            PR_USER_THREAD, PR_PRIORITY_NORMAL, NULL, 0);
+    }
+    PR_ASSERT(thread != NULL);
+
+    return thread;
 }
 
 PRStatus
