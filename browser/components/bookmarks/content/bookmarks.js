@@ -759,6 +759,8 @@ var BookmarksController = {
     var item0    = aSelection.item[0].Value;
     var type0    = aSelection.type[0];
     var isNotRef = !aSelection.isRef;
+    var i;
+
     switch(aCommand) {
     case "cmd_undo":
     case "cmd_redo":
@@ -778,7 +780,7 @@ var BookmarksController = {
       const kSuppStringIID = Components.interfaces.nsISupportsCString;
     
       var flavours = ["moz/bookmarkclipboarditem", "text/x-moz-url"];
-      for (var i = 0; i < flavours.length; ++i) {
+      for (i = 0; i < flavours.length; ++i) {
         const kSuppString = Components.classes[kSuppStringContractID].createInstance(kSuppStringIID);
         kSuppString.data = flavours[i];
         flavourArray.AppendElement(kSuppString);
@@ -800,7 +802,7 @@ var BookmarksController = {
     case "cmd_bm_openinnewtab":
       return true;
     case "cmd_bm_openfolder":
-      for (var i=0; i<aSelection.length; ++i) {
+      for (i=0; i<aSelection.length; ++i) {
         if (aSelection.type[i] == ""         ||
             aSelection.type[i] == "Bookmark" ||
             aSelection.type[i] == "BookmarkSeparator")
