@@ -27,6 +27,7 @@ IDLSRCS =				  \
 		nsIMsgFolder.idl	  \
 		nsIDOMMsgAppCore.idl	\
 		nsIMsgGroupRecord.idl   \
+		nsIMsgIncomingServer.idl	\
 		$(NULL)
 
 EXPORTS =				\
@@ -51,6 +52,12 @@ EXPORTS =				\
 		nsIFolderListener.h	\
 		nsIDOMMsgAppCore.h	\
 		nsIMsgGroupRecord.h	\
+		nsIMsgSignature.h	\
+		nsIMsgVCard.h		\
+		nsIMsgAccount.h			\
+		nsIMsgAccountManager.h	\
+		nsIMsgIdentity.h		\
+		nsIMsgIncomingServer.h	\
 		nsICopyMessageListener.h \
 		nsIMessageView.h	\
 		$(NULL)

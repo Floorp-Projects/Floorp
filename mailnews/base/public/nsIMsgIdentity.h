@@ -1,69 +1,86 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- *
- * The contents of this file are subject to the Netscape Public License
- * Version 1.0 (the "NPL"); you may not use this file except in
- * compliance with the NPL.  You may obtain a copy of the NPL at
- * http://www.mozilla.org/NPL/
- *
- * Software distributed under the NPL is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
- * for the specific language governing rights and limitations under the
- * NPL.
- *
- * The Initial Developer of this code under the NPL is Netscape
- * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
- * Reserved.
+/*
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM nsIMsgIdentity.idl
  */
 
-#ifndef nsIMsgIdentity_h___
-#define nsIMsgIdentity_h___
+#ifndef __gen_nsIMsgIdentity_h__
+#define __gen_nsIMsgIdentity_h__
 
-#include "nsISupports.h"
+#include "nsISupports.h" /* interface nsISupports */
+#include "nsIMsgSignature.h" /* interface nsIMsgSignature */
+#include "nsIMsgVCard.h" /* interface nsIMsgVCard */
+#include "nsIPref.h" /* interface nsIPref */
+#include "nsID.h" /* interface nsID */
 
-/* D3B4A420-D5AC-11d2-806A-006008128C4E */
+#ifdef XPIDL_JS_STUBS
+#include "jsapi.h"
+#endif
 
-#define NS_IMSGIDENTITY_IID								\
-{ 0xd3b4a420, 0xd5ac, 0x11d2,							\
-    { 0x80, 0x6a, 0x0, 0x60, 0x8, 0x12, 0x8c, 0x4e } }
+/* starting interface:    nsIMsgIdentity */
 
-/* E7F875B0-D5AC-11d2-806A-006008128C4E */
-#define NS_IMSGIDENTITY_CID								\
-{ 0xe7f875b0, 0xd5ac, 0x11d2,							\
-	{ 0x80, 0x6a, 0x0, 0x60, 0x8, 0x12, 0x8c, 0x4e } }
+/* {D3B4A420-D5AC-11d2-806A-006008128C4E} */
+#define NS_IMSGIDENTITY_IID_STR "D3B4A420-D5AC-11d2-806A-006008128C4E"
+#define NS_IMSGIDENTITY_IID \
+  {0xD3B4A420, 0xD5AC, 0x11d2, \
+    { 0x80, 0x6A, 0x00, 0x60, 0x08, 0x12, 0x8C, 0x4E }}
 
-///////////////////////////////////////////////////////////////////////////////////
-// an identity is an object designed to encapsulate all the information we need 
-// to know about a user identity. I expect this interface to grow and change a lot
-// as we flesh out our thoughts on multiple identities and what properties go into
-// these identities.
-//////////////////////////////////////////////////////////////////////////////////
+class nsIMsgIdentity : public nsISupports {
+ public: 
+  static const nsIID& GetIID() {
+    static nsIID iid = NS_IMSGIDENTITY_IID;
+    return iid;
+  }
 
-class nsIMsgIdentity : public nsISupports
-{
-public:
-    static const nsIID& GetIID() { static nsIID iid = NS_IMSGIDENTITY_IID; return iid; }
+  /* attribute string identityName; */
+  NS_IMETHOD GetIdentityName(char * *aIdentityName) = 0;
+  NS_IMETHOD SetIdentityName(char * aIdentityName) = 0;
 
-	///////////////////////////////////////////////////////////////////////////////////
-	// The user's current identity is used to abstract out information such as the
-	// user name, pwd, mail server to use, etc....
-	//////////////////////////////////////////////////////////////////////////////////
-	NS_IMETHOD GetRootFolderPath(const char ** aRootFolderPath) = 0;
+  /* attribute string fullName; */
+  NS_IMETHOD GetFullName(char * *aFullName) = 0;
+  NS_IMETHOD SetFullName(char * aFullName) = 0;
 
-	NS_IMETHOD GetPopName(const char ** aPopName) = 0; // right now it is pop & smtp user name
-	NS_IMETHOD GetSmtpName(const char ** aSmtpName) = 0;
+  /* attribute string email; */
+  NS_IMETHOD GetEmail(char * *aEmail) = 0;
+  NS_IMETHOD SetEmail(char * aEmail) = 0;
 
-	NS_IMETHOD GetOrganization(const char ** aOrganization) = 0;
-	NS_IMETHOD GetUserFullName(const char ** aUserFullName) = 0; // User real name
-	NS_IMETHOD GetUserEmail(const char ** aUserEmail) = 0;
-	NS_IMETHOD GetPopPassword(const char ** aUserPassword) = 0;
-	NS_IMETHOD GetPopServer(const char ** aHostName) = 0;
-	NS_IMETHOD GetSmtpServer(const char ** aHostName) = 0;
-	NS_IMETHOD GetReplyTo(const char ** aReplyTo) = 0;
-	NS_IMETHOD GetImapServer(const char ** aHostName) = 0;
-	NS_IMETHOD GetImapName(const char ** aImapName) = 0;
-	NS_IMETHOD GetImapPassword(const char ** aImapPassword) = 0;
+  /* attribute string replyTo; */
+  NS_IMETHOD GetReplyTo(char * *aReplyTo) = 0;
+  NS_IMETHOD SetReplyTo(char * aReplyTo) = 0;
 
+  /* attribute string organization; */
+  NS_IMETHOD GetOrganization(char * *aOrganization) = 0;
+  NS_IMETHOD SetOrganization(char * aOrganization) = 0;
+
+  /* attribute boolean useHtml; */
+  NS_IMETHOD GetUseHtml(PRBool *aUseHtml) = 0;
+  NS_IMETHOD SetUseHtml(PRBool aUseHtml) = 0;
+
+  /* attribute nsIMsgSignature signature; */
+  NS_IMETHOD GetSignature(nsIMsgSignature * *aSignature) = 0;
+  NS_IMETHOD SetSignature(nsIMsgSignature * aSignature) = 0;
+
+  /* attribute nsIMsgVCard vCard; */
+  NS_IMETHOD GetVCard(nsIMsgVCard * *aVCard) = 0;
+  NS_IMETHOD SetVCard(nsIMsgVCard * aVCard) = 0;
+
+  /* attribute string smtpHostname; */
+  NS_IMETHOD GetSmtpHostname(char * *aSmtpHostname) = 0;
+  NS_IMETHOD SetSmtpHostname(char * aSmtpHostname) = 0;
+
+  /* attribute string smtpUsername; */
+  NS_IMETHOD GetSmtpUsername(char * *aSmtpUsername) = 0;
+  NS_IMETHOD SetSmtpUsername(char * aSmtpUsername) = 0;
+
+  /* attribute string key; */
+  NS_IMETHOD GetKey(char * *aKey) = 0;
+  NS_IMETHOD SetKey(char * aKey) = 0;
+
+  /* void LoadPreferences (in nsIPref prefs, in string identityKey); */
+  NS_IMETHOD LoadPreferences(nsIPref *prefs, const char *identityKey) = 0;
+
+#ifdef XPIDL_JS_STUBS
+  static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
+  static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, nsIMsgIdentity *priv);
+#endif
 };
 
-#endif /* nsIMsgIdentity_h___ */
+#endif /* __gen_nsIMsgIdentity_h__ */

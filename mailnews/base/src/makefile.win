@@ -35,11 +35,12 @@ CPPSRCS=                     \
 	nsMsgImapMailFolder.cpp  \
 	nsUrlListenerManager.cpp \
 	nsMsgMailSession.cpp	 \
-	nsMsgIdentity.cpp		 \
 	nsJSMsgAppCore.cpp		\
 	nsMsgAppCore.cpp		\
 	nsCopyMessageStreamListener.cpp \
 	nsMessageViewDataSource.cpp \
+	nsMsgAccountManager.cpp	\
+	nsMsgAccount.cpp		\
 	$(NULL)
 
 
@@ -53,11 +54,12 @@ CPP_OBJS=                               \
 	.\$(OBJDIR)\nsMsgImapMailFolder.obj \
 	.\$(OBJDIR)\nsUrlListenerManager.obj \
 	.\$(OBJDIR)\nsMsgMailSession.obj	\
-	.\$(OBJDIR)\nsMsgIdentity.obj		\
 	.\$(OBJDIR)\nsMsgAppCore.obj		\
 	.\$(OBJDIR)\nsJSMsgAppCore.obj		\
 	.\$(OBJDIR)\nsCopyMessageStreamListener.obj	\
 	.\$(OBJDIR)\nsMessageViewDataSource.obj \
+	.\$(OBJDIR)\nsMsgAccountManager.obj	\
+	.\$(OBJDIR)\nsMsgAccount.obj		\
 	$(NULL)
 
 
@@ -67,7 +69,6 @@ EXPORTS=                \
 	nsMsgKeyArray.h     \
 	nsUrlListenerManager.h \
 	nsMsgMailSession.h  \
-	nsMsgIdentity.h		\
 	nsMsgAppCore.h		\
 	nsMessageViewDataSource.h \
 	$(NULL)

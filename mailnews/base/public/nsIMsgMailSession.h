@@ -41,7 +41,8 @@
 // cruft in it....
 //////////////////////////////////////////////////////////////////////////////////
 
-class nsIMsgIdentity;
+#include "nsIMsgIdentity.h"
+#include "nsIMsgIncomingServer.h"
 
 class nsIMsgMailSession : public nsISupports
 {
@@ -54,6 +55,7 @@ public:
 	//////////////////////////////////////////////////////////////////////////////////
 
 	NS_IMETHOD GetCurrentIdentity(nsIMsgIdentity ** aIdentity) = 0;
+    NS_IMETHOD GetCurrentServer(nsIMsgIncomingServer* *aServer) = 0;
 };
 
 #endif /* nsIMsgMailSession_h___ */

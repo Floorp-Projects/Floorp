@@ -26,13 +26,14 @@ MODULE=mailnewsbase
 LIBRARY_NAME=mailnewsbase_s
 
 EXPORTS = \
-	nsMessenger.h	\
-	nsMsgKeyArray.h\
-	nsMsgRFC822Parser.h \
-	nsUrlListenerManager.h \
-	nsMsgMailSession.h \
-	nsMsgIdentity.h	\
-	nsMsgAppCore.h	\
+	nsMessenger.h			\
+	nsMsgKeyArray.h			\
+	nsMsgRFC822Parser.h		\
+	nsUrlListenerManager.h 	\
+	nsMsgMailSession.h 		\
+	nsMsgAppCore.h			\
+	nsMsgAccountManager.h	\
+	nsMsgAccount.h			\
 	nsMessageViewDataSource.h \
 	$(NULL)
 
@@ -45,10 +46,11 @@ CPPSRCS = \
 	nsMsgImapMailFolder.cpp \
 	nsUrlListenerManager.cpp \
 	nsMsgMailSession.cpp	\
-	nsMsgIdentity.cpp	\
 	nsMsgAppCore.cpp	\
 	nsJSMsgAppCore.cpp	\
-	nsMsgMD5.cpp \
+	nsMsgMD5.cpp 			\
+	nsMsgAccountManager.cpp	\
+	nsMsgAccount.cpp		\
 	nsCopyMessageStreamListener.cpp \
 	nsMessageViewDataSource.cpp \
 	$(NULL)

@@ -18,34 +18,83 @@
 
 #include "msgCore.h" // for pre-compiled headers
 #include "nsIMsgIdentity.h"
-#include "nsMsgIdentity.h"
+#include "nsIMsgAccountManager.h"
+#include "nsIPop3IncomingServer.h"
 #include "nsMsgMailSession.h"
+#include "nsMsgLocalCID.h"
+#include "nsMsgBaseCID.h"
 
 NS_IMPL_ISUPPORTS(nsMsgMailSession, nsIMsgMailSession::GetIID());
 
-nsMsgMailSession::nsMsgMailSession()
+static NS_DEFINE_CID(kMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
+static NS_DEFINE_CID(kMsgIdentityCID, NS_MSGIDENTITY_CID);
+static NS_DEFINE_CID(kPop3IncomingServerCID, NS_POP3INCOMINGSERVER_CID);
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
+    
+
+nsMsgMailSession::nsMsgMailSession():
+  m_accountManager(0)
 {
 	NS_INIT_REFCNT();
-	m_currentIdentity = new nsMsgIdentity();
-	if (m_currentIdentity)
-		NS_ADDREF(m_currentIdentity);
+
+    nsresult rv;
+    /* kick of the prefs now, we'll need them for the account manager */
+    
+    nsIPref* prefs;
+    rv = nsServiceManager::GetService(kPrefCID,
+                                      nsIPref::GetIID(),
+                                      (nsISupports**)&prefs);
+    if (NS_FAILED(rv)) return;
+    
+    if (prefs && NS_SUCCEEDED(rv))
+      rv = prefs->Startup("prefs.js");
+    
+    (void)nsServiceManager::ReleaseService(kPrefCID, prefs);
+
+    rv = nsComponentManager::CreateInstance(kMsgAccountManagerCID,
+                                            NULL,
+                                            nsIMsgAccountManager::GetIID(),
+                                            (void **)&m_accountManager);
+    if (NS_SUCCEEDED(rv))
+      m_accountManager->LoadAccounts();
 
 }
 
 nsMsgMailSession::~nsMsgMailSession()
 {
-	NS_IF_RELEASE(m_currentIdentity);
+	NS_IF_RELEASE(m_accountManager);
 }
 
 
 // nsIMsgMailSession
 nsresult nsMsgMailSession::GetCurrentIdentity(nsIMsgIdentity ** aIdentity)
 {
-	if (aIdentity)
-	{
-		*aIdentity = m_currentIdentity;
-		NS_IF_ADDREF(m_currentIdentity);
-	}
+  nsresult rv=NS_ERROR_UNEXPECTED;
+  nsIMsgAccount *defaultAccount;
 
-	return NS_OK;
+  if (m_accountManager)
+    rv = m_accountManager->GetDefaultAccount(&defaultAccount);
+  if (NS_FAILED(rv)) return rv;
+  
+  rv = defaultAccount->GetDefaultIdentity(aIdentity);
+  
+  NS_IF_RELEASE(defaultAccount);
+
+  return rv;
+}
+
+nsresult nsMsgMailSession::GetCurrentServer(nsIMsgIncomingServer ** aServer)
+{
+  nsresult rv=NS_ERROR_UNEXPECTED;
+  nsIMsgAccount *defaultAccount;
+  if (m_accountManager)
+    rv = m_accountManager->GetDefaultAccount(&defaultAccount);
+
+  if (NS_FAILED(rv)) return rv;
+
+  rv = defaultAccount->GetIncomingServer(aServer);
+
+  NS_IF_RELEASE(defaultAccount);
+
+  return rv;
 }

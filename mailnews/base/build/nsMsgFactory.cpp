@@ -41,6 +41,9 @@
 #include "nsIUrlListenerManager.h"
 #include "nsUrlListenerManager.h"
 #include "nsMsgMailSession.h"
+#include "nsMsgAccount.h"
+#include "nsMsgAccountManager.h"
+#include "nsMsgIdentity.h"
 #include "nsMessageViewDataSource.h"
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
@@ -60,6 +63,10 @@ static NS_DEFINE_CID(kCMsgGroupRecordCID, NS_MSGGROUPRECORD_CID);
 
 static NS_DEFINE_CID(kCMessageViewDataSourceCID, NS_MESSAGEVIEWDATASOURCE_CID);
 
+static NS_DEFINE_CID(kCMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
+static NS_DEFINE_CID(kCMsgAccountCID, NS_MSGACCOUNT_CID);
+
+static NS_DEFINE_CID(kCMsgIdentityCID, NS_MSGIDENTITY_CID);
 
 ////////////////////////////////////////////////////////////
 //
@@ -146,14 +153,11 @@ nsMsgFactory::CreateInstance(nsISupports *aOuter,
                              const nsIID &aIID,
                              void **aResult)  
 {  
-	nsresult res = NS_OK;
-
 	if (aResult == NULL)  
 		return NS_ERROR_NULL_POINTER;  
 
 	*aResult = NULL;  
   
-	nsISupports *inst = nsnull;
 
 	// ClassID check happens here
 	// Whenever you add a new class that supports an interface, plug it in here!!!
@@ -197,6 +201,22 @@ nsMsgFactory::CreateInstance(nsISupports *aOuter,
 	{
 		return NS_NewMsgAppCore(aIID, aResult);
 	}
+
+  else if (mClassID.Equals(kCMsgAccountManagerCID))
+  {
+    return NS_NewMsgAccountManager(aIID, aResult);
+  }
+  
+  else if (mClassID.Equals(kCMsgAccountCID))
+  {
+    return NS_NewMsgAccount(aIID, aResult);
+  }
+  
+  else if (mClassID.Equals(kCMsgIdentityCID)) {
+    nsMsgIdentity* identity = new nsMsgIdentity();
+    return identity->QueryInterface(aIID, aResult);
+  }
+  
 	else if (mClassID.Equals(kCMessageViewDataSourceCID))
 	{
 		nsMessageViewDataSource * msgView = new nsMessageViewDataSource();
@@ -297,6 +317,25 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
                                   "component://netscape/appcores/messenger",
                                   path,
                                   PR_TRUE, PR_TRUE);
+
+  rv = compMgr->RegisterComponent(kCMsgAccountManagerCID,
+                                  "Messenger Account Manager",
+                                  "component://netscape/messenger/account-manager",
+                                  path,
+                                  PR_TRUE, PR_TRUE);
+
+  rv = compMgr->RegisterComponent(kCMsgAccountCID,
+                                  "Messenger User Account",
+                                  "component://netscape/messenger/account",
+                                  path,
+                                  PR_TRUE, PR_TRUE);
+
+  rv = compMgr->RegisterComponent(kCMsgIdentityCID,
+                                  "Messenger User Identity",
+                                  "component://netscape/messenger/identity",
+                                  path,
+                                  PR_TRUE, PR_TRUE);
+  
   if (NS_FAILED(rv)) goto done;
 #if 0
   rv = compMgr->RegisterComponent(kCMsgGroupRecordCID,

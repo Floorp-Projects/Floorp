@@ -32,6 +32,8 @@ EXPORTS = \
 	nsNewsSet.h	\
 	nsMsgFolder.h	\
 	nsLocalFolderSummarySpec.h	\
+	nsMsgIdentity.h	\
+	nsMsgIncomingServer.h	\
 	$(NULL)
 
 CPPSRCS = \
@@ -41,6 +43,8 @@ CPPSRCS = \
 	nsUInt32Array.cpp	\
 	nsNewsSet.cpp	\
 	nsLocalFolderSummarySpec.cpp	\
+	nsMsgIdentity.cpp	\
+	nsMsgIncomingServer.cpp	\
 	$(NULL)
 
 EXTRA_DSO_LDOPTS =	\

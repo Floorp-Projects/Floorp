@@ -27,7 +27,13 @@
 #include "nsISupportsArray.h"
 #include "nsIPref.h"
 
-static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
+// stuff for temporary root folder hack
+#include "nsIMsgMailSession.h"
+#include "nsIMsgIncomingServer.h"
+#include "nsIPop3IncomingServer.h"
+
+static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
+
 
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
 // that doesn't allow you to call ::nsISupports::GetIID() inside of a class
@@ -1386,25 +1392,14 @@ NS_IMETHODIMP nsMsgFolder::GetHostName(char **hostName)
 #include "prprf.h"
 #include "prsystem.h"
 
-static const char kMsgRootFolderPref[] = "mail.rootFolder";
-
-char* gMailboxRoot = nsnull;
+static char *gMailboxRoot = nsnull;
 
 nsresult
 nsGetMailboxRoot(nsFileSpec &result)
 {
   nsresult rv = NS_OK;
-  if (gMailboxRoot == nsnull) {
-    // get mailbox root preference and cache it permanently - this
-    // is extremely temporary...I'm waiting for hubie to check in the 
-    // new preferences service stuff.
-#if 1
-    nsIPref* prefs;
-    rv = nsServiceManager::GetService(kPrefCID, nsIPref::GetIID(), (nsISupports**)&prefs);
-    if (NS_FAILED(rv)) return rv; 
 
-    if (prefs && NS_SUCCEEDED(rv)) {
-      rv = prefs->Startup("prefs.js");
+#if 0
       if (NS_SUCCEEDED(rv)) {
 #if defined(XP_MAC)
 		  char prefValue[1024];
@@ -1420,15 +1415,46 @@ nsGetMailboxRoot(nsFileSpec &result)
 #endif
       }
     }
-    (void)nsServiceManager::ReleaseService(kPrefCID, prefs);
     if (NS_FAILED(rv)) return rv;
-#else
-    gMailboxRoot = nsCRT::strdup("d:\\program files\\netscape\\users\\warren\\mail");
-#endif
+
   }
   result = gMailboxRoot;
   // XXX free gMailboxRoot somewhere (on shutdown?)
-  return rv; 
+  return rv;
+
+#else
+     
+    // temporary stuff. for now get everything from the mail session
+  if (gMailboxRoot == nsnull) {
+    nsIMsgMailSession *session;
+    rv = nsServiceManager::GetService(kMsgMailSessionCID,
+                                      nsIMsgMailSession::GetIID(),
+                                      (nsISupports **)&session);
+    
+    if (NS_SUCCEEDED(rv)) {
+      nsIMsgIncomingServer *server;
+      rv = session->GetCurrentServer(&server);
+      if (NS_FAILED(rv)) printf("nsGetMailboxRoot: Couldn't get current server\n");
+      if (NS_SUCCEEDED(rv)) {
+        nsIPop3IncomingServer *popServer;
+        rv = server->QueryInterface(nsIPop3IncomingServer::GetIID(),
+                                    (void **)&popServer);
+        if (NS_FAILED(rv)) printf("nsGetMailboxRoot: Couldn't get pop3 server\n");
+        if (NS_SUCCEEDED(rv)) {
+          rv = popServer->GetRootFolderPath(&gMailboxRoot);
+          if (NS_FAILED(rv)) printf("nsGetMailboxRoot: Couldn't get root\n");
+          NS_RELEASE(popServer);
+        }
+        NS_RELEASE(server);
+        
+      }
+      nsServiceManager::ReleaseService(kMsgMailSessionCID, session);
+    }
+  } /* if (gMailboxRoot == nsnull) .. */
+  result = gMailboxRoot;
+  return rv;
+      
+#endif
 }
 
 nsresult
@@ -1450,6 +1476,10 @@ nsURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
 {
   nsresult rv;
 
+#ifdef DEBUG_alecf
+  printf("nsPath2URI(%s, %s, ??)", rootURI, uriStr);
+#endif
+  
   nsAutoString sep;
   sep += PR_GetDirectorySeparator();
 
@@ -1508,6 +1538,10 @@ nsURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
 
   if(path.Length() > 0)
 	  pathResult +=path;
+
+#ifdef DEBUG_alecf
+  printf("->%s\n", (const char *)pathResult);
+#endif
   return NS_OK;
 }
 

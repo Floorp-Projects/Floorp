@@ -16,6 +16,8 @@
  * Reserved.
  */
 
+#include "prsystem.h"
+
 #include "nsIDOMMsgAppCore.h"
 #include "nsMsgAppCore.h"
 #include "nsIScriptObjectOwner.h"
@@ -39,7 +41,8 @@
 #include "nsIDocumentViewer.h"
 
 #include "nsIMsgMailSession.h"
-#include "nsIMsgIdentity.h"
+#include "nsIMsgIncomingServer.h"
+#include "nsIPop3IncomingServer.h"
 #include "nsIMailboxService.h"
 #include "nsINntpService.h"
 #include "nsFileSpec.h"
@@ -436,7 +439,6 @@ nsMsgAppCore::Open3PaneWindow()
 nsresult
 nsMsgAppCore::GetNewMail()
 {
-  printf("nsMsgAppCore::GetNewMail()\n");
   // get the pop3 service and ask it to fetch new mail....
   nsIPop3Service * pop3Service = nsnull;
   nsresult rv = nsServiceManager::GetService(kCPop3ServiceCID, nsIPop3Service::GetIID(),
@@ -514,27 +516,34 @@ void nsMsgAppCore::InitializeFolderRoot()
                                       (nsISupports **) &mailSession);
 	if (NS_SUCCEEDED(rv) && mailSession)
 	{
-		nsIMsgIdentity * identity = nsnull;
-		rv = mailSession->GetCurrentIdentity(&identity);
-		if (NS_SUCCEEDED(rv) && identity)
+		nsIMsgIncomingServer* server = nsnull;
+		rv = mailSession->GetCurrentServer(&server);
+		if (NS_SUCCEEDED(rv) && server)
 		{
-			const char * folderRoot = nsnull;
-			identity->GetRootFolderPath(&folderRoot);
-			if (folderRoot)
-			{
-				// everyone should have a inbox so let's tack that folder name on to the root path...
-				// mscott: this only works on windows...add 
-				char * fullPath = PR_smprintf("%s\\%s", folderRoot, "Inbox");
-				if (fullPath)
-				{
-					m_folderPath = fullPath;
-					PR_Free(fullPath);
-				}
-			} // if we have a folder root for the current identity
-
-			NS_IF_RELEASE(identity);
-		} // if we have an identity
-
+			char * folderRoot = nsnull;
+            nsIPop3IncomingServer *popServer;
+            rv = server->QueryInterface(nsIPop3IncomingServer::GetIID(),
+                                        (void **)&popServer);
+            if (NS_SUCCEEDED(rv)) {
+                popServer->GetRootFolderPath(&folderRoot);
+                if (folderRoot)
+                    {
+                        // everyone should have a inbox so let's
+                        // tack that folder name on to the root path...
+                        char * fullPath =
+                            PR_smprintf("%s%c%s", folderRoot,
+                                        PR_GetDirectorySeparator(),
+                                        "Inbox");
+                        if (fullPath)
+                            {
+                                m_folderPath = fullPath;
+                                PR_Free(fullPath);
+                            }
+                    } // if we have a folder root for the current identity
+                NS_IF_RELEASE(popServer);
+            }
+			NS_IF_RELEASE(server);
+		} // if we have an server
 		// now release the mail service because we are done with it
 		nsServiceManager::ReleaseService(kCMsgMailSessionCID, mailSession);
 	} // if we have a mail session
@@ -563,7 +572,7 @@ nsMsgAppCore::OpenURL(const char * url)
 		}
 		if (PL_strncmp(url, "mailbox:", 8) == 0 || PL_strncmp(url, kMessageRootURI, PL_strlen(kMessageRootURI)) == 0)
 		{
-			PRUint32 msgIndex;
+			PRUint32 msgIndex=0;
 			nsFileSpec folderPath; 
 			PRBool displayNumber;
 			if(isdigit(url[8]))
