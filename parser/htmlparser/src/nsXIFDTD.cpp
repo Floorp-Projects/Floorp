@@ -47,7 +47,6 @@ static NS_DEFINE_IID(kIDTDIID,      NS_IDTD_IID);
 static NS_DEFINE_IID(kClassIID,     NS_XIF_DTD_CID); 
 
 static const char* kNullToken = "Error: Null token given";
-static const char* kInvalidTagStackPos = "Error: invalid tag stack position";
 static const char* kXIFDocHeader= "<!DOCTYPE xif>";
 static const char* kXIFDocInfo= "document_info";
 static const char* kXIFCharset= "charset";
@@ -455,7 +454,6 @@ nsresult nsXIFDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIPars
 nsresult nsXIFDTD::WillHandleToken(CToken* aToken,eHTMLTokenTypes& aType) {
   NS_ASSERTION(aToken!=nsnull,"invalid token");
 
-  nsresult result=NS_OK;
   if(aToken) {
     aType=eHTMLTokenTypes(aToken->GetTokenType());
     eXIFTags theNewType = eXIFTag_userdefined;
@@ -554,7 +552,8 @@ nsresult nsXIFDTD::PreprocessStack(void) {
     // mUseCount = 2 ---> Node passed to the sink already so don't open once again.
     if(theNode->mUseCount==1) {
       eHTMLTags theTag=(theNode->mToken)? (eHTMLTags)theNode->mToken->GetTypeID():eHTMLTag_unknown;
-      if(theTag!=eHTMLTag_unknown) {
+      if(theTag!=eHTMLTag_unknown)
+      {
         if(IsHTMLContainer(theTag)) {
           result=mSink->OpenContainer(*theNode);
         }
