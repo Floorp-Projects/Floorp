@@ -19,9 +19,52 @@
  * Contributor(s): Stephen Lamm <slamm@netscape.com>
  */ 
 
+// the rdf service
+var RDF = 'component://netscape/rdf/rdf-service'
+RDF = Components.classes[RDF].getService();
+RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
+
+var NC = "http://home.netscape.com/NC-rdf#";
+
+var sidebarObj = new Object;
+var customizeObj = new Object;
+
+function debug(msg) {
+  // Uncomment for noise
+  // dump("customize-panel: msg+"\n");
+}
+
 function Init()
 {
-  var customize_url = window.arguments[0];
+  customizeObj.id = window.arguments[0];
+  customizeObj.url = window.arguments[1];
+  sidebarObj.datasource_uri = window.arguments[2];
+  sidebarObj.resource = window.arguments[3];
+
+  debug("panel id:  " + customizeObj.id);
+  debug("panel url: " + customizeObj.url);
+
+  sidebarObj.datasource = RDF.GetDataSource(sidebarObj.datasource_uri);
+
   var customize_frame = document.getElementById('customize_frame');
-  customize_frame.setAttribute('src', customize_url);
+  customize_frame.setAttribute('src', customizeObj.url);
 }
+
+// Use an assertion to pass a "refresh" event to all the sidebars.
+// They use observers to watch for this assertion (in sidebarOverlay.js).
+function RefreshPanel() {
+  debug("refresh the sidebar now");
+  var sb_resource = RDF.GetResource(sidebarObj.resource);
+  var refresh_resource = RDF.GetResource(NC + "refresh_panel");
+  var panel_resource = RDF.GetLiteral(customizeObj.id);
+  debug("panel id from literal: "+panel_resource.Value);
+
+  sidebarObj.datasource.Assert(sb_resource,
+                               refresh_resource,
+                               panel_resource,
+                               true);
+  sidebarObj.datasource.Unassert(sb_resource,
+                                 refresh_resource,
+                                 panel_resource);
+}
+
