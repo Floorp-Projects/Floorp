@@ -1032,7 +1032,9 @@ nsresult CNavDTD::HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsI
                 // compatible we should not attempt to close the tags above it, for
                 // the contents inside the table might get thrown out of the table.
                 // The safest thing to do is to discard this tag.
-                return result;
+                if(!gHTMLElements[aChildTag].CanAutoCloseTag(theParentTag,eToken_start)) {
+                  return result;
+                }
               }
               CloseContainersTo(theIndex,theParentTag,PR_TRUE);
             }//if
@@ -1478,14 +1480,15 @@ nsresult CNavDTD::HandleEndToken(CToken* aToken) {
           UpdateStyleStackForCloseTag(theChildTag,theChildTag);
         }
         else {
-          if(kNotFound==GetIndexOfChildOrSynonym(mBodyContext->mStack,theChildTag)) {
+          if((kNotFound==GetIndexOfChildOrSynonym(mBodyContext->mStack,theChildTag)) ||
+             (!gHTMLElements[theChildTag].CanAutoCloseTag(mBodyContext->Last(),eToken_end))) {
             UpdateStyleStackForCloseTag(theChildTag,theChildTag);
             if(gHTMLElements[theChildTag].IsMemberOf(kBlockEntity)) {
               // Oh boy!! we found a "stray" block entity. Nav4.x and IE introduce line break in
               // such cases. So, let's simulate that effect for compatibility.
               // Ex. <html><body>Hello</P>There</body></html>
               CHTMLToken* theToken = (CHTMLToken*)gRecycler->CreateTokenOfType(eToken_start,theChildTag);
-              result=HandleStartToken(theToken);
+              result=HandleToken(theToken,mParser);
             }
             else return result;
           }

@@ -84,6 +84,7 @@ struct nsHTMLElement {
   CTagList*       GetEndRootTags(void) const {return mEndRootNodes;}
   CTagList*       GetAutoCloseStartTags(void) const {return mAutocloseStart;}
   CTagList*       GetAutoCloseEndTags(void) const {return mAutocloseEnd;}
+  CTagList*       GetNonAutoCloseEndTags(void) const {return mDontAutocloseEnd;}
   eHTMLTags       GetCloseTargetForEndTag(nsEntryStack& aTagStack,PRInt32 anIndex) const;
 
   CTagList*       GetSpecialChildren(void) const {return mSpecialKids;}
@@ -98,6 +99,7 @@ struct nsHTMLElement {
   PRBool          CanOmitStartTag(eHTMLTags aChild) const;
   PRBool          CanOmitEndTag(void) const;
   PRBool          CanContainSelf(void) const;
+  PRBool          CanAutoCloseTag(eHTMLTags aTag, eHTMLTokenTypes aType) const;
   PRBool          HasSpecialProperty(PRInt32 aProperty) const;
   PRBool          SectionContains(eHTMLTags aTag,PRBool allowDepthSearch);
  
@@ -122,6 +124,7 @@ struct nsHTMLElement {
   CTagList*       mAutocloseStart;    //these are the start tags that you can automatically close with this START tag
   CTagList*       mAutocloseEnd;      //these are the start tags that you can automatically close with this END tag
   CTagList*       mSynonymousTags;    //These are morally equivalent; an end tag for one can close a start tag for another (like <Hn>)
+  CTagList*       mDontAutocloseEnd;  //these are the end tags that you cannot automatically close with this END tag
   int             mParentBits;        //defines groups that can contain this element
   int             mInclusionBits;     //defines parental and containment rules
   int             mExclusionBits;     //defines things you CANNOT contain
