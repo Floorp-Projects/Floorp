@@ -483,7 +483,7 @@ XXX ...couldn't get this to work...
         Access mAccess;
         uint16 mDepth;
         void emitCodeSequence(ByteCodeGen *bcg);
-        uint16 baseExpressionDepth() { return mDepth + 1; }
+        uint16 baseExpressionDepth() { return (uint16)(mDepth + 1); }
         void emitDelete(ByteCodeGen *bcg);
     };
 

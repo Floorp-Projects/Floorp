@@ -771,7 +771,7 @@ static JSValue Date_format(Context * /*cx*/, float64 date, formatspec format)
 }
 
 
-extern JSValue Date_TypeCast(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+extern JSValue Date_TypeCast(Context *cx, const JSValue& /*thisValue*/, JSValue * /*argv*/, uint32 /*argc*/)
 {
     int64 us, ms, us2ms;
     float64 msec_time;
@@ -861,7 +861,7 @@ JSValue Date_Constructor(Context *cx, const JSValue& thisValue, JSValue *argv, u
     return thatValue;
 }
 
-JSValue Date_parse(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 /*argc*/)
+JSValue Date_parse(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 /*argc*/)
 {
     const String *str = argv[0].toString(cx).string;
     float64 d = date_parseString(*str);
@@ -869,7 +869,7 @@ JSValue Date_parse(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 
     return JSValue(d);
 }
 
-JSValue Date_UTC(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+JSValue Date_UTC(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 argc)
 {
     float64 array[MAXARGS];
     uint32 loop;

@@ -2329,7 +2329,7 @@ JSValue JSValue::valueToUInt16(Context *, const JSValue& value)
     return JSValue((float64)d);
 }
 
-JSValue JSValue::valueToBoolean(Context *cx, const JSValue& value)
+JSValue JSValue::valueToBoolean(Context * /*cx*/, const JSValue& value)
 {
     switch (value.tag) {
     case f64_tag:

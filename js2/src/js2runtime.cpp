@@ -1998,7 +1998,7 @@ static JSValue GlobalObject_ParseInt(Context *cx, const JSValue& /*thisValue*/, 
     const char16 *sBegin = string->begin();
     float64 f = 0.0;
     if (sBegin)
-        f = stringToInteger(sBegin, string->end(), numEnd, radix);
+        f = stringToInteger(sBegin, string->end(), numEnd, (uint)radix);
     return JSValue(f);
 }
 
@@ -2015,7 +2015,7 @@ static JSValue GlobalObject_ParseFloat(Context *cx, const JSValue& /*thisValue*/
     return JSValue(f);
 }
 
-static JSValue GlobalObject_isNaN(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 argc)
+static JSValue GlobalObject_isNaN(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 /*argc*/)
 {
     float64 f = argv[0].toNumber(cx).f64;
     if (JSDOUBLE_IS_NaN(f))
@@ -2024,7 +2024,7 @@ static JSValue GlobalObject_isNaN(Context *cx, const JSValue& /*thisValue*/, JSV
         return kFalseValue;
 }
 
-static JSValue GlobalObject_isFinite(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 argc)
+static JSValue GlobalObject_isFinite(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 /*argc*/)
 {
     float64 f = argv[0].toNumber(cx).f64;
     if (JSDOUBLE_IS_FINITE(f))
