@@ -590,19 +590,11 @@ nsMsgSendLater::StartNextMailFileSend()
 NS_IMETHODIMP 
 nsMsgSendLater::GetUnsentMessagesFolder(nsIMsgIdentity *userIdentity, nsIMsgFolder **folder)
 {
-  char        *uri = nsnull;
   nsresult    rv;
-
-  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv)); 
-  if (NS_FAILED(rv) || !prefs) 
-    return nsnull;
-
-  rv = prefs->CopyCharPref("mail.default_sendlater_uri", &uri);
-  if (NS_FAILED(rv) || !uri) 
-    uri = PR_smprintf("%s", ANY_SERVER);
+  char        *uri = GetFolderURIFromUserPrefs(nsIMsgSend::nsMsgQueueForLater, userIdentity);
 
   if (!uri)
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_OUT_OF_MEMORY;
 
   rv = LocateMessageFolder(userIdentity, nsIMsgSend::nsMsgQueueForLater, uri, folder);
   PR_FREEIF(uri);

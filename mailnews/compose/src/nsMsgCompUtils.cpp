@@ -1880,6 +1880,18 @@ GetFolderURIFromUserPrefs(nsMsgDeliverMode   aMode,
 	uri = PR_smprintf("%s", ANY_SERVER);
 	rv = NS_OK;
     }
+    else
+    {
+      // check if uri is unescaped, and if so, escape it and reset the pef.
+      if (PL_strchr(uri, ' ') != nsnull)
+      {
+        nsCAutoString uriStr(uri);
+        uriStr.ReplaceSubstring(" ", "%20");
+        PR_Free(uri);
+        uri = PL_strdup(uriStr.get());
+        prefs->SetCharPref("mail.default_sendlater_uri", uriStr.get());
+      }
+    }
   }
   else if (aMode == nsIMsgSend::nsMsgSaveAsDraft)    // SaveAsDraft (Drafts)
   {
