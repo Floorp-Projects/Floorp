@@ -79,7 +79,7 @@ function verifyAccounts() {
         var accounts = am.accounts;
 
         // as long as we have some accounts, we're fine.
-        if (accounts.Count() < 0) return;
+        if (accounts.Count() > 0) return;
 
         try {
             am.UpgradePrefs();
