@@ -37,6 +37,7 @@ DEPTH = ..\..\..
 
 DIRS= \
     public \
+    resources \
     src
 
 include <$(DEPTH)\config\rules.mak>

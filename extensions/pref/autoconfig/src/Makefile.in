@@ -48,7 +48,7 @@ endif
 EXPORT_LIBRARY   = 1
 IS_COMPONENT     = 1
 MODULE_NAME      = nsAutoConfigModule
-REQUIRES         = xpcom string js xpconnect necko profile pref embedcomponents
+REQUIRES         = xpcom string intl js xpconnect necko profile pref appshell embedcomponents windowwatcher
 
 include $(topsrcdir)/config/config.mk
 

@@ -82,6 +82,7 @@ protected:
   PRBool mDeleteCalled;
   nsCOMPtr<nsISplashScreen> mSplashScreen;
   nsCOMPtr<nsINativeAppSupport> mNativeAppSupport;
+  PRBool mInProfileStartup;
 
   PRUint16 mModalWindowCount;
   // Set when the appshell service is going away.

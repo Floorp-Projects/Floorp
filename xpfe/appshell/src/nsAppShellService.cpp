@@ -112,7 +112,8 @@ nsAppShellService::nsAppShellService() :
   mNativeAppSupport( nsnull ),
   mModalWindowCount( 0 ),
   mShuttingDown( PR_FALSE ),
-  mQuitOnLastWindowClosing( PR_TRUE )
+  mQuitOnLastWindowClosing( PR_TRUE ),
+  mInProfileStartup( PR_FALSE )
 {
   NS_INIT_REFCNT();
 }
@@ -242,6 +243,7 @@ nsAppShellService::DoProfileStartup(nsICmdLineService *aCmdLineService, PRBool c
     nsCOMPtr<nsIProfileInternal> profileMgr(do_GetService(NS_PROFILE_CONTRACTID, &rv));
     NS_ENSURE_SUCCESS(rv,rv);
 
+    mInProfileStartup = PR_TRUE;
     PRBool saveQuitOnLastWindowClosing = mQuitOnLastWindowClosing;
     mQuitOnLastWindowClosing = PR_FALSE;
         
@@ -259,6 +261,11 @@ nsAppShellService::DoProfileStartup(nsICmdLineService *aCmdLineService, PRBool c
     }
 
     mQuitOnLastWindowClosing = saveQuitOnLastWindowClosing;
+    mInProfileStartup = PR_FALSE;
+
+    // if Quit() was called while we were starting up we have a failure situation...
+    if (mShuttingDown)
+      return NS_ERROR_FAILURE;
     return rv;
 }
 
@@ -553,7 +560,9 @@ nsAppShellService::HandleExitEvent(PLEvent* aEvent)
   event->mService->mAppShell->Exit();
 
   // We're done "shutting down".
-  event->mService->mShuttingDown = PR_FALSE;
+  // unless we are currently "starting up" in which case this event wasn't properly handled.
+  if (!event->mService->mInProfileStartup)
+    event->mService->mShuttingDown = PR_FALSE;
 
   return nsnull;
 }
