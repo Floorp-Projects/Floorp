@@ -1427,15 +1427,15 @@ nsEditorShell::SaveAs()
 }
 
 NS_IMETHODIMP    
-nsEditorShell::CloseWindow()
+nsEditorShell::CloseWindow( PRBool *_retval )
 {
   nsresult rv = NS_OK;
-  PRBool result;
-  rv = CheckAndSaveDocument(GetString("BeforeClosing").GetUnicode(),&result);
   
+  rv = CheckAndSaveDocument(GetString("BeforeClosing").GetUnicode(),_retval);
+ 
   // Don't close the window if there was an error saving file or 
   //   user canceled an action along the way
-  if (NS_SUCCEEDED(rv) && result)
+  if (NS_SUCCEEDED(rv) && *_retval)
     mWebShellWin->Close();
 
   return rv;

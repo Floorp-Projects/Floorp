@@ -120,7 +120,7 @@ interface nsIEditorShell : nsISupports
    */
   boolean  CheckAndSaveDocument(in wstring reasonToSave);
 
-  void CloseWindow();
+  boolean CloseWindow();
   void Print();
   void Exit();
   
