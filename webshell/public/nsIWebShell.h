@@ -307,6 +307,16 @@ public:
 	 */
 	NS_IMETHOD GetWebShellType(nsWebShellType& aWebShellType) = 0;
 
+  /**
+   * Get the nearest enclosing chrome shell.
+   */
+  NS_IMETHOD GetContainingChromeShell(nsIWebShell** aResult) = 0;
+
+  /** 
+   * Set the nearest enclosing chrome shell.
+   */
+  NS_IMETHOD SetContainingChromeShell(nsIWebShell* aChromeShell) = 0;
+
   //
   // Document load api's
   //
