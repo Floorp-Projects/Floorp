@@ -3448,8 +3448,9 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                  * This counts as a non-local jump, so do the finally thing.
                  */
 
-                /* popscope */
-                if (js_NewSrcNote(cx, cg, SRC_HIDDEN) < 0 ||
+                /* leavewith, annotated so the decompiler knows to pop  */
+                off = cg->stackDepth - 1;
+                if (js_NewSrcNote2(cx, cg, SRC_CATCH, off) < 0 ||
                     js_Emit1(cx, cg, JSOP_LEAVEWITH) < 0) {
                     return JS_FALSE;
                 }
@@ -4316,7 +4317,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 #endif
             /* Annotate JSOP_INITELEM so we decompile 2:c and not just c. */
             if (pn3->pn_type == TOK_NUMBER) {
-                if (js_NewSrcNote(cx, cg, SRC_LABEL) < 0)
+                if (js_NewSrcNote2(cx, cg, SRC_LABEL, 0) < 0)
                     return JS_FALSE;
                 if (js_Emit1(cx, cg, JSOP_INITELEM) < 0)
                     return JS_FALSE;

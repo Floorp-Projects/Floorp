@@ -853,6 +853,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
     JSString *str;
     JSBool ok;
     jsval val;
+    static const char catch_cookie[] = "/*CATCH*/";
+    static const char with_cookie[] = "/*WITH*/";
 
 /*
  * Local macros
@@ -1075,6 +1077,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 
                     js_printf(jp, ") {\n");
                     jp->indent += 4;
+                    todo = Sprint(&ss->sprinter, catch_cookie);
                     len = 0;
                     break;
 
@@ -1130,7 +1133,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 break;
 
             {
-              static const char finally_cookie[] = "finally-cookie";
+              static const char finally_cookie[] = "/*FINALLY*/";
 
               case JSOP_FINALLY:
                 jp->indent -= 4;
@@ -1177,6 +1180,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                  * The decompiler must match the code generator's model, which
                  * is why JSOP_FINALLY pushes a cookie that JSOP_RETSUB pops.
                  */
+                LOCAL_ASSERT(ss->top >= (uintN) GET_ATOM_INDEX(pc));
                 ss->top = (uintN) GET_ATOM_INDEX(pc);
                 break;
 
@@ -1245,15 +1249,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 todo = -2;
                 break;
 
-            {
-              static const char with_cookie[] = "with-cookie";
-
               case JSOP_ENTERWITH:
-                sn = js_GetSrcNote(jp->script, pc);
-                if (sn && SN_TYPE(sn) == SRC_HIDDEN) {
-                    todo = -2;
-                    break;
-                }
+                JS_ASSERT(!js_GetSrcNote(jp->script, pc));
                 rval = POP_STR();
                 js_printf(jp, "\twith (%s) {\n", rval);
                 jp->indent += 4;
@@ -1266,11 +1263,15 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 if (sn && SN_TYPE(sn) == SRC_HIDDEN)
                     break;
                 rval = POP_STR();
+                if (sn && SN_TYPE(sn) == SRC_CATCH) {
+                    LOCAL_ASSERT(strcmp(rval, catch_cookie) == 0);
+                    LOCAL_ASSERT((uintN) js_GetSrcNoteOffset(sn, 0) == ss->top);
+                    break;
+                }
                 LOCAL_ASSERT(strcmp(rval, with_cookie) == 0);
                 jp->indent -= 4;
                 js_printf(jp, "\t}\n");
                 break;
-            }
 
               case JSOP_SETRVAL:
               case JSOP_RETURN:
