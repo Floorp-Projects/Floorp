@@ -87,7 +87,8 @@ our_photon_input_add (int               fd,
 //
 //-------------------------------------------------------------------------
 nsAppShell::nsAppShell()  
-{ 
+{
+	NS_INIT_ISUPPORTS();
   mEventQueue  = nsnull;
   mFD          = -1;
 }

@@ -108,6 +108,9 @@ PRBool              nsWidget::sJustGotDeactivated = PR_FALSE;
 
 nsWidget::nsWidget()
 {
+  // XXX Shouldn't this be done in nsBaseWidget?
+	// NS_INIT_ISUPPORTS();
+
   if (!sLookAndFeel) {
     if (NS_OK != nsComponentManager::CreateInstance(kLookAndFeelCID,
                                                     nsnull,
@@ -1374,9 +1377,9 @@ void nsWidget::InitKeyEvent(PhKeyEvent_t *aPhKeyEvent,
     PRBool IsChar;
     unsigned long keysym;
     if (Pk_KF_Cap_Valid & aPhKeyEvent->key_flags)
-    	keysym = nsConvertKey(aPhKeyEvent->key_cap, &IsChar);
-	else
         keysym = nsConvertKey(aPhKeyEvent->key_sym, &IsChar);
+	else
+    	keysym = nsConvertKey(aPhKeyEvent->key_cap, &IsChar);
 
     anEvent.isShift =   ( aPhKeyEvent->key_mods & Pk_KM_Shift ) ? PR_TRUE : PR_FALSE;
     anEvent.isControl = ( aPhKeyEvent->key_mods & Pk_KM_Ctrl )  ? PR_TRUE : PR_FALSE;
@@ -1389,15 +1392,16 @@ void nsWidget::InitKeyEvent(PhKeyEvent_t *aPhKeyEvent,
 
       if ((anEvent.isControl) || (anEvent.isAlt))
         anEvent.charCode = aPhKeyEvent->key_cap;
-      else
-        anEvent.isControl = anEvent.isAlt = anEvent.isMeta = PR_FALSE;
-    }
-    else {
-      anEvent.charCode = 0; 
-      anEvent.keyCode  =  (keysym  & 0x00FF);
-    }
-  }
-}
+	  	else
+	  	  anEvent.isShift = anEvent.isControl = anEvent.isAlt = anEvent.isMeta = PR_FALSE;
+    	}
+		else {
+ 	    anEvent.charCode = 0; 
+ 	    anEvent.keyCode  =  (keysym  & 0x00FF);
+  	  }
+  	}
+
+	}
 
 
 PRBool  nsWidget::DispatchKeyEvent( PhKeyEvent_t *aPhKeyEvent ) {
@@ -2094,7 +2098,7 @@ int nsWidget::DndCallback( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbi
 			nsDragService *d;
 			d = ( nsDragService * )sDragService;
 			d->SetDropData( (char*)cbdnd->data+4+100, (PRUint32) *(int*)cbdnd->data, (char*) cbdnd->data + 4 );
-/* ATENTIE */ printf("SetDropData with data=%s\n", (char*) cbdnd->data );
+///* ATENTIE */ printf("SetDropData with data=%s\n", (char*) cbdnd->data );
 
 			pWidget->ProcessDrag( cbinfo->event, NS_DRAGDROP_DROP, &ptrev->pos );
 			sDragService->EndDragSession();

@@ -58,6 +58,7 @@ NS_IMPL_ISUPPORTS1(nsToolkit,nsIToolkit);
 //-------------------------------------------------------------------------
 nsToolkit::nsToolkit()  
 {
+	NS_INIT_ISUPPORTS();
 }
 
 
