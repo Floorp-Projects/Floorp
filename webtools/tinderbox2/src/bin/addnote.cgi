@@ -6,8 +6,8 @@
 #		 on the tinderbox status page.
 
 
-# $Revision: 1.7 $ 
-# $Date: 2001/07/20 19:04:47 $ 
+# $Revision: 1.8 $ 
+# $Date: 2001/08/02 20:06:02 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/addnote.cgi,v $ 
 # $Name:  $ 
@@ -197,7 +197,7 @@ sub save_note {
                        "/Notice\.Update\.$time\.$MAILADDR"); 
 
   $update_file =~ s/\@/\./g;
-  $update_file = main::extract_filename_chars($update_file);
+  $update_file = main::extract_safe_filename($update_file);
   
   Persistence::save_structure( 
                              $record,
