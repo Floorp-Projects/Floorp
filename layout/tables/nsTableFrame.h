@@ -29,6 +29,8 @@
 #include "nsStyleConsts.h"
 #include "nsIStyleContext.h"
 #include "nsITableLayout.h"
+#include "nsTableColFrame.h"
+#include "nsTableColGroupFrame.h"
 
 class nsCellMap;
 class nsTableCellFrame;
@@ -43,8 +45,6 @@ class nsHTMLValue;
 struct InnerTableReflowState;
 struct nsStylePosition;
 struct nsStyleSpacing;
-enum nsTableColType;
-enum nsTableColGroupType;
 
 /**
  * Child list name indices
