@@ -858,6 +858,7 @@ nsTreeContentView::AttributeChanged(nsIDocument *aDocument,
     if (aAttribute == nsXULAtoms::ref ||
         aAttribute == nsXULAtoms::properties ||
         aAttribute == nsXULAtoms::mode ||
+        aAttribute == nsHTMLAtoms::src ||
         aAttribute == nsHTMLAtoms::value ||
         aAttribute == nsHTMLAtoms::label) {
       nsIContent* parent = aContent->GetParent();
