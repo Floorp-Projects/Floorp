@@ -122,9 +122,8 @@ public:
         nsImapSaveMessageToDisk                 = 0x10000030
 	} nsImapAction;
 
-	// Initialization method used to initialize the url...right now
-	// we only need the user name....we may need more info in the future
-	NS_IMETHOD Initialize(const char * aUserName) = 0;
+	// Initialization method used to initialize the url...
+	NS_IMETHOD Initialize() = 0;
 
 	/////////////////////////////////////////////////////////////////////////////// 
 	// Getters and Setters for the imap specific event sinks to bind to to your url
