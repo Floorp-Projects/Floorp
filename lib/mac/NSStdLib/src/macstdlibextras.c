@@ -150,6 +150,7 @@ void InitializeMacToolbox(void)
 		TEInit();
 		InitDialogs(0);
 		InitCursor();
+		InitContextualMenus();
 #endif
 #if DEBUG
 		InitializeSIOUX(false);
