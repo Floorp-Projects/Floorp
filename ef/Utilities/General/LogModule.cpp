@@ -121,6 +121,13 @@ setLogFile(const char* inFileName)
     file = fopen(inFileName, "w");
     return (file != NULL);
 }
+
+void LogModuleObject::
+flushLogFile()
+{
+    if (file)
+	fflush(file);
+}
 #endif
 
 
