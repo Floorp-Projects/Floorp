@@ -225,8 +225,7 @@ select[disabled]:-moz-display-comboboxcontrol-frame {
 
 /* hidden inputs */
 input[type="hidden"] {
-  border: none;
-  visibility: hidden;
+  display: none;
   -moz-binding: none;
 }
 
