@@ -2025,6 +2025,10 @@ nsGenericHTMLElement::GetCommonMappedAttributesImpact(const nsIAtom* aAttribute,
     aHint = NS_STYLE_HINT_REFLOW;  // XXX really? possibly FRAMECHANGE?
     return PR_TRUE;
   }
+  else if (nsHTMLAtoms::kClass == aAttribute) {		// bug 8862
+    aHint = NS_STYLE_HINT_FRAMECHANGE;
+    return PR_TRUE;
+  }
   else if (nsHTMLAtoms::_baseHref == aAttribute) {
     aHint = NS_STYLE_HINT_VISUAL; // at a minimum, elements may need to override
     return PR_TRUE;
