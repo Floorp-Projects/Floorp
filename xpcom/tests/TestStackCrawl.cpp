@@ -5,10 +5,7 @@
 
 int main(int argc, char* argv[])
 {
-    char buf[16384];
-    nsTraceRefcnt::WalkTheStack(buf, sizeof(buf));
-    printf("%s\n", buf);
-
+    nsTraceRefcnt::WalkTheStack(stdout);
     return 0;
 }
 
