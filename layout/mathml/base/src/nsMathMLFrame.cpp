@@ -534,8 +534,13 @@ GetMathMLAttributeStyleSheet(nsIPresContext* aPresContext,
   if (!cssSheet)
     return;
   cssSheet->Init(uri);
+  nsCOMPtr<nsIDOMCSSStyleSheet> domSheet(do_QueryInterface(cssSheet));
+  if (domSheet) {
+    PRUint32 index;
+    domSheet->InsertRule(NS_LITERAL_STRING("@namespace url(http://www.w3.org/1998/Math/MathML);"),
+                                           0, &index);
+  }
   cssSheet->SetTitle(NS_ConvertASCIItoUCS2(kTitle));
-  cssSheet->SetDefaultNameSpaceID(kNameSpaceID_MathML);
   nsCOMPtr<nsIStyleSheet> sheet(do_QueryInterface(cssSheet));
 
   // all done, no further activity from the net involved, so we better do this
@@ -666,7 +671,7 @@ nsMathMLFrame::MapAttributesIntoCSS(nsIPresContext* aPresContext,
       // insert the rule (note: when the sheet already has @namespace and
       // friends, insert after them, e.g., at the end, otherwise it won't work)
       // For MathML 2, insert at the end to give it precedence
-      PRInt32 pos = (map->compatibility == kMathMLversion2) ? count : 0;
+      PRInt32 pos = (map->compatibility == kMathMLversion2) ? count : 1;
       PRUint32 index;
       domSheet->InsertRule(cssRule, pos, &index);
       ++ruleCount;

@@ -1162,7 +1162,7 @@ PRBool CSSParserImpl::ProcessImport(PRInt32& aErrorCode, const nsString& aURLSpe
       return PR_FALSE;
     }
 
-    mChildLoader->LoadChildSheet(mSheet, url, aMedia, kNameSpaceID_Unknown, rule);
+    mChildLoader->LoadChildSheet(mSheet, url, aMedia, rule);
   }
   
   return PR_TRUE;

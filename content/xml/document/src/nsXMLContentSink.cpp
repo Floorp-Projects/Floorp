@@ -837,7 +837,7 @@ nsXMLContentSink::ProcessStyleLink(nsIContent* aElement,
       return NS_OK; // The URL is bad, move along, don't propagate the error (for now)
     }
     PRBool doneLoading;
-    rv = mCSSLoader->LoadStyleLink(aElement, url, aTitle, aMedia, kNameSpaceID_Unknown,
+    rv = mCSSLoader->LoadStyleLink(aElement, url, aTitle, aMedia,
                                    ((!aAlternate) ? mParser : nsnull),
                                    doneLoading, 
                                    this);

@@ -260,7 +260,6 @@ public:
                              nsIUnicharInputStream* aIn, 
                              const nsAString& aTitle, 
                              const nsAString& aMedia, 
-                             PRInt32 aDefaultNameSpaceID,
                              nsIParser* aParserToUnblock,
                              PRBool& aCompleted,
                              nsICSSLoaderObserver* aObserver);
@@ -269,7 +268,6 @@ public:
                            nsIURI* aURL, 
                            const nsAString& aTitle, 
                            const nsAString& aMedia, 
-                           PRInt32 aDefaultNameSpaceID,
                            nsIParser* aParserToUnblock,
                            PRBool& aCompleted,
                            nsICSSLoaderObserver* aObserver);
@@ -277,7 +275,6 @@ public:
   NS_IMETHOD LoadChildSheet(nsICSSStyleSheet* aParentSheet,
                             nsIURI* aURL, 
                             const nsAString& aMedia,
-                            PRInt32 aDefaultNameSpaceID,
                             nsICSSImportRule* aRule);
 
   NS_IMETHOD LoadAgentSheet(nsIURI* aURL, nsICSSStyleSheet** aSheet);
@@ -312,7 +309,6 @@ private:
   // must be non-null then.
   nsresult CreateSheet(nsIURI* aURI,
                        nsIContent* aLinkingContent,
-                       PRUint32 aDefaultNameSpaceID,
                        PRBool aSyncLoad,
                        StyleSheetState& aSheetState,
                        nsICSSStyleSheet** aSheet);
