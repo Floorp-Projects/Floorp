@@ -68,6 +68,7 @@ include <$(DEPTH)\config\rules.mak>
 
 install:: $(PROGRAMS)
 	-for %p in ($(PROGRAMS)) do $(MAKE_INSTALL) %p $(DIST)\bin
+	$(MAKE_INSTALL) rules.txt $(DIST)\bin
 
 clobber::
 	-for %p in ($(PROGRAMS)) do $(RM) %p $(DIST)\bin\%p
