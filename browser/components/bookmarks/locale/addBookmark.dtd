@@ -24,6 +24,6 @@
 <!ENTITY expanderUp.tooltip      "Hide">
 <!ENTITY addGroup.label          "Bookmark all tabs in a folder">
 <!ENTITY addGroup.accesskey      "B">
-<!ENTITY newFolder.label         "New Folder">
+<!ENTITY newFolder.label         "New Folder...">
 <!ENTITY newFolder.accesskey     "N">
 <!ENTITY acceptButton.label      "Add">
