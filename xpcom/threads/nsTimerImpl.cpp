@@ -577,7 +577,7 @@ NS_IMETHODIMP nsTimerManager::FireNextIdleTimer()
   if (count > 0) {
     nsTimerImpl *theTimer = NS_STATIC_CAST(nsTimerImpl*, NS_STATIC_CAST(nsITimer*, gIdleTimers->ElementAt(0))); // addrefs
 
-    gIdleTimers->RemoveElement(NS_STATIC_CAST(nsITimer*, theTimer));
+    gIdleTimers->RemoveElement(NS_STATIC_CAST(nsITimer*, theTimer), 0);
 
     theTimer->Fire();
 
