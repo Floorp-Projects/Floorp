@@ -1,4 +1,3 @@
-#!gmake
 #
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "NPL"); you may not use this file except in
@@ -14,35 +13,35 @@
 # Communications Corporation.  Portions created by Netscape are
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
+#
 
-DEPTH = ../../..
+DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
-VPATH		= @srcdir@
 srcdir		= @srcdir@
-MODULE		= msgimap
+VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-XPIDLSRCS =				  \
-		nsIImapServerSink.idl	\
+MODULE		= msgimap
+
+EXPORTS		= \
+		nsIImapUrl.h \
+		nsIImapProtocol.h \
+		nsIImapLog.h \
+		nsIIMAPHostSessionList.h \
+		nsIImapMailFolderSink.h \
+		nsIImapExtensionSink.h \
+		nsIImapMiscellaneousSink.h \
+		nsIImapService.h \
+		$(NULL)
+
+XPIDLSRCS	= \
+		nsIImapServerSink.idl \
 		nsIImapMessageSink.idl \
 		nsIImapIncomingServer.idl \
 		nsIImapFlagAndUidState.idl \
-		nsIImapMockChannel.idl		\
+		nsIImapMockChannel.idl \
 		$(NULL)
-
-EXPORTS= 								\
-			nsIImapUrl.h				\
-			nsIImapProtocol.h			\
-			nsIImapLog.h				\
-			nsIIMAPHostSessionList.h 	\
-			nsIImapMailFolderSink.h 	\
-			nsIImapExtensionSink.h 		\
-			nsIImapMiscellaneousSink.h 	\
-			nsIImapService.h			\
-			$(NULL)
-
-include $(topsrcdir)/config/config.mk
 
 include $(topsrcdir)/config/rules.mk
 

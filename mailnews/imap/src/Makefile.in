@@ -17,13 +17,13 @@
 
 DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
-VPATH		= @srcdir@
 srcdir		= @srcdir@
+VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME	= msgimap_s
 MODULE		= msgimap
+LIBRARY_NAME	= msgimap_s
 
 EXPORTS		= \
 		nsImapMessage.h \
@@ -67,8 +67,6 @@ CPPSRCS		= \
 
 include $(topsrcdir)/config/config.mk
 
-MKSHLIB		:=
-
 # we don't want the shared lib, but we want to force the creation of a static lib.
 override NO_SHARED_LIB=1
 override NO_STATIC_LIB=
@@ -76,5 +74,6 @@ override NO_STATIC_LIB=
 include $(topsrcdir)/config/rules.mk
 
 ifeq ($(OS_ARCH), Linux)
-DEFINES += -D_BSD_SOURCE
+DEFINES		+= -D_BSD_SOURCE
 endif
+
