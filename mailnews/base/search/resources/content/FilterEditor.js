@@ -50,7 +50,6 @@ var gActionLabel;
 var gFilterBundle;
 var gPreFillName;
 var nsMsgSearchScope = Components.interfaces.nsMsgSearchScope;
-var gPref;
 var gPrefBranch;
 var gMailSession = null;
 var gMoveToFolderCheckbox;
@@ -73,8 +72,7 @@ function filterEditorOnLoad()
     initializeSearchWidgets();
     initializeFilterWidgets();
 
-    gPref = Components.classes["@mozilla.org/preferences;1"].getService(Components.interfaces.nsIPref);
-    gPrefBranch = gPref.getDefaultBranch(null);
+    gPrefBranch = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefService).getBranch(null);
     gFilterBundle = document.getElementById("bundle_filter");
     InitMessageLabel();
     if ("arguments" in window && window.arguments[0]) {
@@ -252,7 +250,7 @@ function setLabelAttributes(labelID, menuItemID)
     try
     {
         color = gPrefBranch.getCharPref("mailnews.labels.color." + labelID);
-        prefString = gPref.getComplexValue("mailnews.labels.description." + labelID,
+        prefString = gPrefBranch.getComplexValue("mailnews.labels.description." + labelID,
                                            Components.interfaces.nsIPrefLocalizedString);
     }
     catch(ex)
