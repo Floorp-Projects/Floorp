@@ -1689,6 +1689,7 @@ NS_IMETHODIMP nsProfile::StartCommunicator(const char* profileName)
 	 */
     NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
     prefs->ShutDown();
+    prefs->StartUp();
     prefs->ResetPrefs();
     prefs->ReadUserPrefs();
 
