@@ -105,6 +105,12 @@ NS_IMETHODIMP nsGenericAccessible::GetAccValue(nsAString& _retval)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+/* readonly attribute long accId; */
+NS_IMETHODIMP nsGenericAccessible::GetAccId(PRInt32 *aAccId)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 /* void setAccName (in DOMString name); */
 NS_IMETHODIMP nsGenericAccessible::SetAccName(const nsAString& name)
 {

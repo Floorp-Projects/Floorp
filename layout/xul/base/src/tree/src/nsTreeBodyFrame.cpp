@@ -737,6 +737,59 @@ NS_IMETHODIMP nsTreeBodyFrame::GetColumnIndex(const PRUnichar *aColID, PRInt32 *
   return NS_OK;
 }
 
+NS_IMETHODIMP nsTreeBodyFrame::GetColumnID(PRInt32 colIndex, nsAString & _retval)
+{
+  _retval = NS_LITERAL_STRING("");
+  for (nsTreeColumn* currCol = mColumns; currCol; currCol = currCol->GetNext()) {
+    if (currCol->GetColIndex() == colIndex) {
+      _retval = currCol->GetID();
+      break;
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsTreeBodyFrame::GetKeyColumnIndex(PRInt32 *_retval)
+{
+  nsAutoString attr;
+  PRInt32 first, primary, sorted;
+
+  first = primary = sorted = -1;
+  for (nsTreeColumn* currCol = mColumns; currCol; currCol = currCol->GetNext()) {
+    // Skip hidden column
+    currCol->GetElement()->GetAttr(kNameSpaceID_None, nsHTMLAtoms::hidden, attr);
+    if (attr.EqualsIgnoreCase("true"))
+      continue;
+
+    // Skip non-text column
+    if (currCol->GetType() != nsTreeColumn::eText)
+      continue;
+
+    if (first == -1)
+      first = currCol->GetColIndex();
+    
+    currCol->GetElement()->GetAttr(kNameSpaceID_None, nsXULAtoms::sortDirection, attr);
+    if (attr.Length() > 0) { // Use sorted column as the primary
+      sorted = currCol->GetColIndex();
+      break;
+    }
+
+    if (currCol->IsPrimary())
+      if (primary == -1)
+        primary = currCol->GetColIndex();
+  }
+
+  if (sorted >= 0)
+    *_retval = sorted;
+  else if (primary >= 0)
+    *_retval = primary;
+  else
+    *_retval = first;
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsTreeBodyFrame::GetFirstVisibleRow(PRInt32 *_retval)
 {
   *_retval = mTopRowIndex;

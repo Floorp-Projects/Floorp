@@ -82,6 +82,7 @@
 #include "nsXULSelectAccessible.h"
 #include "nsXULTabAccessible.h"
 #include "nsXULTextAccessible.h"
+#include "nsXULTreeAccessible.h"
 #include "nsIAccessible.h"
 
 // For native window support for object/embed/applet tags
@@ -1216,6 +1217,56 @@ nsAccessibilityService::GetHTMLObjectAccessibleFor(nsIDOMNode *aNode,
   return NS_ERROR_FAILURE;
 }
 
+NS_IMETHODIMP nsAccessibilityService::CreateXULTreeAccessible(nsIDOMNode *aNode, nsIAccessible **_retval)
+{
+#ifdef MOZ_XUL
+  nsCOMPtr<nsIWeakReference> weakShell;
+  GetShellFromNode(aNode, getter_AddRefs(weakShell));
+
+  *_retval = new nsXULTreeAccessible(aNode, weakShell);
+  if (! *_retval) 
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(*_retval);
+#else
+  *_retval = nsnull;
+#endif // MOZ_XUL
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsAccessibilityService::CreateXULTreeColumnsAccessible(nsIDOMNode *aNode, nsIAccessible **_retval)
+{
+#ifdef MOZ_XUL
+  nsCOMPtr<nsIWeakReference> weakShell;
+  GetShellFromNode(aNode, getter_AddRefs(weakShell));
+
+  *_retval = new nsXULTreeColumnsAccessible(aNode, weakShell);
+  if (! *_retval) 
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(*_retval);
+#else
+  *_retval = nsnull;
+#endif // MOZ_XUL
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsAccessibilityService::CreateXULTreeColumnitemAccessible(nsIDOMNode *aNode, nsIAccessible **_retval)
+{
+#ifdef MOZ_XUL
+  nsCOMPtr<nsIWeakReference> weakShell;
+  GetShellFromNode(aNode, getter_AddRefs(weakShell));
+
+  *_retval = new nsXULTreeColumnitemAccessible(aNode, weakShell);
+  if (! *_retval) 
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(*_retval);
+#else
+  *_retval = nsnull;
+#endif // MOZ_XUL
+  return NS_OK;
+}
 
 /**
   * GetAccessibleFor - get an nsIAccessible from a DOM node

@@ -251,6 +251,24 @@ NS_IMETHODIMP nsTreeBoxObject::GetColumnIndex(const PRUnichar *aColID, PRInt32 *
   return NS_OK;
 }
 
+NS_IMETHODIMP nsTreeBoxObject::GetColumnID(PRInt32 colIndex, nsAString & _retval)
+{
+  _retval = NS_LITERAL_STRING("");
+  nsITreeBoxObject* body = GetTreeBody();
+  if (body)
+    return body->GetColumnID(colIndex, _retval);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsTreeBoxObject::GetKeyColumnIndex(PRInt32 *_retval)
+{
+  *_retval = 0;
+  nsITreeBoxObject* body = GetTreeBody();
+  if (body)
+    return body->GetKeyColumnIndex(_retval);
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsTreeBoxObject::GetFirstVisibleRow(PRInt32 *_retval)
 {
   nsITreeBoxObject* body = GetTreeBody();

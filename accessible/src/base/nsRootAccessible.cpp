@@ -79,6 +79,9 @@
 #include "nsIScrollableView.h"
 #include "nsIDOMXULSelectCntrlEl.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
+#include "nsXULTreeAccessible.h"
+#include "nsITreeSelection.h"
+#include "nsAccessibilityService.h"
 
 NS_INTERFACE_MAP_BEGIN(nsRootAccessible)
   NS_INTERFACE_MAP_ENTRY(nsIAccessibleDocument)
@@ -533,12 +536,35 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
       optionTargetNode = do_QueryInterface(selectItem);
     }
 
+    // If it's a tree element, need the currently selected item
+    PRInt32 treeIndex = -1;
+    nsCOMPtr<nsITreeBoxObject> treeBox;
+    nsXULTreeAccessible::GetTreeBoxObject(targetNode, getter_AddRefs(treeBox));
+    if (treeBox) {
+      nsCOMPtr<nsITreeSelection> selection;
+      treeBox->GetSelection(getter_AddRefs(selection));
+      if (selection)
+        selection->GetCurrentIndex(&treeIndex);
+    }
+
     nsAutoString eventType;
     aEvent->GetType(eventType);
 
     nsCOMPtr<nsIAccessible> accessible;
 
     if (NS_SUCCEEDED(mAccService->GetAccessibleFor(targetNode, getter_AddRefs(accessible)))) {
+      // tree event
+      if (treeBox && treeIndex >= 0 && 
+          (eventType.EqualsIgnoreCase("DOMMenuItemActive") || eventType.EqualsIgnoreCase("select"))) {
+        nsCOMPtr<nsIWeakReference> weakShell;
+        nsAccessibilityService::GetShellFromNode(targetNode, getter_AddRefs(weakShell));
+        accessible = new nsXULTreeitemAccessible(accessible, targetNode, weakShell, treeIndex);
+        if (!accessible)
+          return NS_ERROR_OUT_OF_MEMORY;
+        mListener->HandleEvent(nsIAccessibleEventListener::EVENT_FOCUS, accessible);
+        return NS_OK;
+      }
+
       if (eventType.EqualsIgnoreCase("focus") || eventType.EqualsIgnoreCase("DOMMenuItemActive")) { 
         if (optionTargetNode &&
             NS_SUCCEEDED(mAccService->GetAccessibleFor(optionTargetNode, getter_AddRefs(accessible)))) {
@@ -619,7 +645,10 @@ NS_IMETHODIMP nsRootAccessible::Change(nsIDOMEvent* aEvent)
 }
 
 // gets Select events when text is selected in a textarea or input
-NS_IMETHODIMP nsRootAccessible::Select(nsIDOMEvent* aEvent) { return NS_OK; }
+NS_IMETHODIMP nsRootAccessible::Select(nsIDOMEvent* aEvent) 
+{
+  return HandleEvent(aEvent);
+}
 
 // gets Input events when text is entered or deleted in a textarea or input
 NS_IMETHODIMP nsRootAccessible::Input(nsIDOMEvent* aEvent) { return NS_OK; }

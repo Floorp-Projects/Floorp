@@ -80,6 +80,16 @@ interface nsITreeBoxObject : nsISupports
   long getColumnIndex(in wstring colID);
 
   /**
+   * Get the ID of the specified column.
+   */
+  AString getColumnID(in long colIndex);
+
+  /**
+   * Get the index of the primary column.
+   */
+  long getKeyColumnIndex();
+
+  /**
    * Get the index of the first visible row.
    */
   long getFirstVisibleRow();

@@ -39,6 +39,7 @@ REQUIRES = \
   imglib2 \
   intl \
   layout \
+  layout_xul \
   locale \
   necko \
   plugin \

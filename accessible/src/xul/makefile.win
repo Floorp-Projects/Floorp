@@ -29,6 +29,7 @@ REQUIRES = \
   gfx \
   intl \
   layout \
+  layout_xul \
   necko \
   plugin \
   pref \
@@ -44,6 +45,7 @@ CPP_OBJS = \
   .\$(OBJDIR)\nsXULSelectAccessible.obj \
   .\$(OBJDIR)\nsXULTabAccessible.obj \
   .\$(OBJDIR)\nsXULTextAccessible.obj \
+  .\$(OBJDIR)\nsXULTreeAccessible.obj \
   $(NULL)
 
 EXPORTS = \

@@ -60,10 +60,11 @@ public:
   // nsIAccessibilityService methods:
   NS_DECL_NSIACCESSIBILITYSERVICE
 
+  static nsresult GetShellFromNode(nsIDOMNode *aNode, nsIWeakReference **weakShell);
+
 private:
   nsresult GetHTMLObjectAccessibleFor(nsIDOMNode *aNode, nsIPresShell *aShell, nsObjectFrame *aFrame, nsIAccessible **_retval);
   nsresult GetInfo(nsISupports* aFrame, nsIFrame** aRealFrame, nsIWeakReference** aShell, nsIDOMNode** aContent);
-  nsresult GetShellFromNode(nsIDOMNode *aNode, nsIWeakReference **weakShell);
   void GetOwnerFor(nsIPresShell *aPresShell, nsIPresShell **aOwnerShell, nsIContent **aOwnerContent);
   nsIContent* FindContentForDocShell(nsIPresShell* aPresShell, nsIContent* aContent, nsIDocShell*  aDocShell);
 };
