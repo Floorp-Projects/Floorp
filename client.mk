@@ -229,12 +229,12 @@ $(TOPSRCDIR)/configure: $(TOPSRCDIR)/configure.in $(EXTRA_CONFIG_DEPS)
 	cd $(TOPSRCDIR); $(AUTOCONF)
 endif
 
-$(OBJDIR)/Makefile $(OBJDIR)/config.status $(OBJDIR)/config.cache: $(TOPSRCDIR)/configure $(TOPSRCDIR)/allmakefiles.sh $(TOPSRCDIR)/.client-defs.mk
+$(OBJDIR)/Makefile $(OBJDIR)/config.status: $(TOPSRCDIR)/configure $(TOPSRCDIR)/allmakefiles.sh $(TOPSRCDIR)/.client-defs.mk
 	@if test ! -d $(OBJDIR); then $(MKDIR) $(OBJDIR); else true; fi
 	@echo cd $(OBJDIR); 
 	@echo ../configure
 	@cd $(OBJDIR) && \
-	  $(TOPSRCDIR)/configure $(CONFIG_FLAGS) \
+	  $(TOPSRCDIR)/configure \
 	  || ( echo "*** Fix above errors and then restart with\
                \"$(MAKE) -f client.mk build\"" && exit 1 )
 
@@ -248,13 +248,13 @@ endif
 ####################################
 # Depend
 
-depend: $(OBJDIR)/Makefile $(OBJDIR)/config.status $(OBJDIR)/config.cache
+depend: $(OBJDIR)/Makefile $(OBJDIR)/config.status
 	cd $(OBJDIR); $(MAKE) $@;
 
 ####################################
 # Build it
 
-build:  $(OBJDIR)/Makefile $(OBJDIR)/config.status $(OBJDIR)/config.cache
+build:  $(OBJDIR)/Makefile $(OBJDIR)/config.status
 	cd $(OBJDIR); $(MAKE);
 
 ####################################
