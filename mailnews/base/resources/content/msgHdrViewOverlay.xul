@@ -50,16 +50,6 @@ Rights Reserved.
 					</box>
 				</box>
 
-        <box class="header-part1" align="horizontal">
-          <spring class="buttonSpacer"/>
-            <box align="vertical">
-             <spring class="buttonTopSpacer"/>
-             <button id="addToAddressBookButton" oncommand="AddSenderToAddressBook();"/>
-             <spring flex="1"/>
-            </box>
-          <spring class="buttonSpacer"/>
-        </box>
-
         <box id="attachmentBox" class="header-part1" align="horizontal" collapsed="true">
           <spring class="buttonSpacer"/>
             <box align="vertical">
