@@ -20,6 +20,7 @@
  *
  * Contributor(s): Garth Smedley <garths@oeone.com>
  *                 Mike Potter <mikep@oeone.com>
+ *                 Chris Charabaruk <coldacid@meldstar.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -209,8 +210,8 @@ function loadCalendarEventDialog()
    setFieldValue( "repeat-checkbox", gEvent.recur, "checked");
    setFieldValue( "repeat-length-field", gEvent.recurInterval );
    setFieldValue( "repeat-length-units", gEvent.recurUnits, "value" );  
-   setFieldValue( "repeat-forever-radio", (gEvent.recurForever != undefined && gEvent.recurForever != false), "checked" );
-   setFieldValue( "repeat-until-radio", (gEvent.recurForever == undefined || gEvent.recurForever == false), "checked" );
+   setFieldValue( "repeat-forever-radio", (gEvent.recurForever != undefined && gEvent.recurForever != false), "selected" );
+   setFieldValue( "repeat-until-radio", (gEvent.recurForever == undefined || gEvent.recurForever == false), "selected" );
    
    // update enabling and disabling
    
@@ -799,23 +800,27 @@ function updateRepeatUnitExtensions( )
            case "days":
                weekExtensions.setAttribute( "collapsed", "true" );
                monthExtensions.setAttribute( "collapsed", "true" );
+               sizeToContent();  
            break;
            
            case "weeks":
                weekExtensions.setAttribute( "collapsed", "false" );
                monthExtensions.setAttribute( "collapsed", "true" );
                updateAdvancedWeekRepeat();
+               sizeToContent();  
            break;
            
            case "months":
                weekExtensions.setAttribute( "collapsed", "true" );
                monthExtensions.setAttribute( "collapsed", "false" );
                updateAdvancedRepeatDayOfMonth();
+               sizeToContent();  
            break;
            
            case "years":
                weekExtensions.setAttribute( "collapsed", "true" );
                monthExtensions.setAttribute( "collapsed", "true" );
+               sizeToContent();  
            break;
        
        }
@@ -1264,4 +1269,3 @@ function debug( Text )
    dump( "\n"+ Text + "\n");
 
 }
-
