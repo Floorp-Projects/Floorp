@@ -422,7 +422,7 @@ private:
   nsresult CleanupNewsgroupList(); /* cleans up m_newsgroupList, and set it to null */
 
     // cache related helper methods
-  nsresult DoomCacheEntryForRunningUrl();
+  void FinishMemCacheEntry(PRBool valid); // either mark it valid, or doom it
   nsresult OpenCacheEntry(); // makes a request to the cache service for a cache entry for a url
   PRBool ReadFromLocalCache(); // attempts to read the url out of our local (offline) cache....
   nsresult ReadFromNewsConnection(); // creates a new news connection to read the url 

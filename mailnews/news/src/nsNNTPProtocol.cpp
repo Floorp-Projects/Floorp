@@ -888,7 +888,6 @@ nsNNTPProtocol::OnCacheEntryAvailable(nsICacheEntryDescriptor *entry, nsCacheAcc
     // gets written to both 
     if (access & nsICache::ACCESS_WRITE && !(access & nsICache::ACCESS_READ))
     {
-      entry->MarkValid();
       // use a stream listener Tee to force data into the cache and to our current channel listener...
       nsCOMPtr<nsIStreamListener> newListener;
       nsCOMPtr<nsIStreamListenerTee> tee = do_CreateInstance(kStreamListenerTeeCID, &rv);
@@ -1157,7 +1156,7 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
             //
             // see bug http://bugzilla.mozilla.org/show_bug.cgi?id=108294
             if (m_runningURL)
-              DoomCacheEntryForRunningUrl();
+              FinishMemCacheEntry(PR_FALSE); // cleanup mem cache entry
 
             return CloseConnection();
           }
@@ -1218,24 +1217,25 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
 
 }
 
-nsresult nsNNTPProtocol::DoomCacheEntryForRunningUrl()
+void nsNNTPProtocol::FinishMemCacheEntry(PRBool valid)
 {
   nsCOMPtr <nsICacheEntryDescriptor> memCacheEntry;
   nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
   if (mailnewsurl)
     mailnewsurl->GetMemCacheEntry(getter_AddRefs(memCacheEntry));
   if (memCacheEntry)
-    memCacheEntry->Doom();
-  return NS_OK;
+  {
+    if (valid)
+      memCacheEntry->MarkValid();
+    else
+      memCacheEntry->Doom();
+  }
 }
 
 // stop binding is a "notification" informing us that the stream associated with aURL is going away. 
 NS_IMETHODIMP nsNNTPProtocol::OnStopRequest(nsIRequest *request, nsISupports * aContext, nsresult aStatus)
 {
-    // If failed, remove incomplete cache entry (and it'll be reloaded next time).
-    if (NS_FAILED(aStatus) && m_runningURL)
-      DoomCacheEntryForRunningUrl();
-      
+    FinishMemCacheEntry(NS_SUCCEEDED(aStatus)); // either remove mem cache entry, or mark it valid
 
     nsMsgProtocol::OnStopRequest(request, aContext, aStatus);
 
@@ -2266,7 +2266,7 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommandResponse()
     PRBool savingArticleOffline = (m_channelListener == nsnull);
     
     if (m_runningURL)
-      DoomCacheEntryForRunningUrl();
+      FinishMemCacheEntry(PR_FALSE);  // cleanup mem cache entry
     
     if (NS_SUCCEEDED(rv) && group_name && !savingArticleOffline) {
       MarkCurrentMsgRead();
