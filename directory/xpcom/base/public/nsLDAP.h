@@ -1,4 +1,4 @@
-#include "ldap.h"
+
 #include "nsError.h"
 #include "nspr.h"
 
@@ -13,6 +13,9 @@
 
 #define NS_ERROR_LDAP_NOT_SUPPORTED \
   NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_LDAP, LDAP_NOT_SUPPORTED)
+
+#define NS_ERROR_LDAP_DECODING_ERROR \
+  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_LDAP, LDAP_DECODING_ERROR)
 
 #ifdef DEBUG
 extern PRLogModuleInfo *gLDAPLogModule;	   // defn in nsLDAPProtocolModule.cpp
