@@ -3,12 +3,12 @@
 <plist version="1.0">
 <dict>
 	<key>Google</key>
-	<string>http://www.google.com/search?q=%s</string>
+	<string>http://www.google.com/search?ie=UTF-8&amp;oe=UTF-8&amp;q=%s</string>
 	<key>Google Images</key>
-	<string>http://images.google.com/images?q=%s</string>
+	<string>http://images.google.com/images?ie=UTF-8&amp;oe=UTF-8&amp;q=%s</string>
 	<key>PreferredSearchEngine</key>
 	<string>Google</string>
 	<key>Search this Site</key>
-	<string>http://www.google.com/search?q=%s site:%d</string>
+	<string>http://www.google.com/search?ie=UTF-8&amp;oe=UTF-8&amp;q=%s site:%d</string>
 </dict>
 </plist>
