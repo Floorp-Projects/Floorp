@@ -843,7 +843,9 @@ nsresult nsEditor::CreateTxnForDeleteSelection(nsIEditor::Direction aDir,
   // allocate the out-param transaction
   result = TransactionFactory::GetNewTransaction(kEditAggregateTxnIID, (EditTxn **)aTxn);
   if (NS_FAILED(result))
+  {
     return result;
+  }
   nsISelection* selection;
   result = mPresShell->GetSelection(&selection);
   if ((NS_SUCCEEDED(result)) && (nsnull!=selection))
@@ -852,58 +854,47 @@ nsresult nsEditor::CreateTxnForDeleteSelection(nsIEditor::Direction aDir,
     enumerator = selection;
     if (enumerator)
     {
-      enumerator->First();  
-      nsISupports *currentItem;
-      result = enumerator->CurrentItem(&currentItem);
-      /*while */ if ((NS_SUCCEEDED(result)) && (nsnull!=currentItem))
+      for (enumerator->First();NS_OK != enumerator->IsDone() ; enumerator->Next())
       {
-        nsCOMPtr<nsIDOMRange> range(currentItem);
-        PRBool isCollapsed;
-        range->GetIsCollapsed(&isCollapsed);
-        if (PR_FALSE==isCollapsed)
+        nsISupports *currentItem=nsnull;
+        result = enumerator->CurrentItem(&currentItem);
+        if ((NS_SUCCEEDED(result)) && (currentItem))
         {
-          DeleteRangeTxn *txn;
-          result = TransactionFactory::GetNewTransaction(kDeleteRangeTxnIID, (EditTxn **)&txn);
-          if (nsnull!=txn)
+          nsCOMPtr<nsIDOMRange> range(currentItem);
+          PRBool isCollapsed;
+          range->GetIsCollapsed(&isCollapsed);
+          if (PR_FALSE==isCollapsed)
           {
-            txn->Init(range);
-            (*aTxn)->AppendChild(txn);
+            DeleteRangeTxn *txn;
+            result = TransactionFactory::GetNewTransaction(kDeleteRangeTxnIID, (EditTxn **)&txn);
+            if (nsnull!=txn)
+            {
+              txn->Init(range);
+              (*aTxn)->AppendChild(txn);
+            }
+            else
+              result = NS_ERROR_OUT_OF_MEMORY;
           }
           else
-            result = NS_ERROR_OUT_OF_MEMORY;
-        }
-        else
-        { // we have an insertion point.  delete the thing in front of it or behind it, depending on aDir
-          nsCOMPtr<nsIDOMNode> node;
-          PRInt32 offset;
-          PRInt32 length=1;
-          result = range->GetStartParent(getter_AddRefs(node));
-          result = range->GetStartOffset(&offset);
-          nsCOMPtr<nsIDOMCharacterData> text(node);
-          if (node)
-          { // we have text, so delete a char at the proper offset
-            // XXX: doesn't handle beginning/end of text node, which needs to jump to next|prev node
-            if (nsIEditor::eRTL==aDir)
-            {
-              if (0!=offset)
-                offset --;
+          { // we have an insertion point.  delete the thing in front of it or behind it, depending on aDir
+            nsCOMPtr<nsIDOMNode> node;
+            PRInt32 offset;
+            PRInt32 length=1;
+            result = range->GetStartParent(getter_AddRefs(node));
+            result = range->GetStartOffset(&offset);
+            nsCOMPtr<nsIDOMCharacterData> text(node);
+            if (node)
+            { // we have text, so delete a char at the proper offset
+              // XXX: doesn't handle beginning/end of text node, which needs to jump to next|prev node
+              if (nsIEditor::eRTL==aDir)
+              {
+                if (0!=offset)
+                  offset --;
+              }
+              DeleteTextTxn *txn;
+              result = CreateTxnForDeleteText(text, offset, length, &txn);
+              (*aTxn)->AppendChild(txn);
             }
-            DeleteTextTxn *txn;
-            result = CreateTxnForDeleteText(text, offset, length, &txn);
-            (*aTxn)->AppendChild(txn);
-          }
-        }
-        // XXX: should call IsDone -- waiting for fix from greg
-        // when fixed, change if to while
-        if (NS_SUCCEEDED(result))
-        {
-          nsresult nextResult = enumerator->Next();
-          // XXX hack for now
-          if (nextResult==NS_ERROR_FAILURE)
-            return result;
-          if (NS_SUCCEEDED(nextResult))
-          {
-            result = enumerator->CurrentItem(&currentItem);
           }
         }
       }
@@ -914,7 +905,15 @@ nsresult nsEditor::CreateTxnForDeleteSelection(nsIEditor::Direction aDir,
 
   // if we didn't build the transaction correctly, destroy the out-param transaction so we don't leak it.
   if (NS_FAILED(result))
+  {
+    printf ("new result = %d, NS_FAILED=%d, macro expanded out=%d\n",
+             result, NS_FAILED(result), ((result) & 0x80000000));
+  }
+  
+  if (NS_FAILED(result))
+  {
     NS_IF_RELEASE(*aTxn);
+  }
 
   return result;
 }
