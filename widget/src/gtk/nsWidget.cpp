@@ -813,50 +813,50 @@ void nsWidget::InitCallbacks(char *aName)
  * doing this. */
   gtk_signal_connect_after(GTK_OBJECT(mWidget),
                            "button_press_event",
-                           GTK_SIGNAL_FUNC(gtk_true),
+                           GTK_SIGNAL_FUNC(PR_TRUE),
                            NULL);
   gtk_signal_connect(GTK_OBJECT(mWidget),
                      "button_release_event",
-                     GTK_SIGNAL_FUNC(gtk_true),
+                     GTK_SIGNAL_FUNC(PR_TRUE),
                      NULL);
   gtk_signal_connect(GTK_OBJECT(mWidget),
                      "motion_notify_event",
-                     GTK_SIGNAL_FUNC(gtk_true),
+                     GTK_SIGNAL_FUNC(PR_TRUE),
                      NULL);
 #endif
   /*
     gtk_signal_connect(GTK_OBJECT(mWidget),
     "enter_notify_event",
-    GTK_SIGNAL_FUNC(gtk_true),
+    GTK_SIGNAL_FUNC(PR_TRUE),
     NULL);
     gtk_signal_connect(GTK_OBJECT(mWidget),
     "leave_notify_event",
-    GTK_SIGNAL_FUNC(gtk_true),
+    GTK_SIGNAL_FUNC(PR_TRUE),
     NULL);
     
     gtk_signal_connect(GTK_OBJECT(mWidget),
     "draw",
-    GTK_SIGNAL_FUNC(gtk_false),
+    GTK_SIGNAL_FUNC(PR_FALSE),
     NULL);
     gtk_signal_connect(GTK_OBJECT(mWidget),
     "expose_event",
-    GTK_SIGNAL_FUNC(gtk_true),
+    GTK_SIGNAL_FUNC(PR_TRUE),
     NULL);
     gtk_signal_connect(GTK_OBJECT(mWidget),
     "key_press_event",
-    GTK_SIGNAL_FUNC(gtk_true),
+    GTK_SIGNAL_FUNC(PR_TRUE),
     NULL);
     gtk_signal_connect(GTK_OBJECT(mWidget),
     "key_release_event",
-    GTK_SIGNAL_FUNC(gtk_true),
+    GTK_SIGNAL_FUNC(PR_TRUE),
     NULL);
     gtk_signal_connect(GTK_OBJECT(mWidget),
     "focus_in_event",
-    GTK_SIGNAL_FUNC(gtk_true),
+    GTK_SIGNAL_FUNC(PR_TRUE),
     NULL);
     gtk_signal_connect(GTK_OBJECT(mWidget),
     "focus_out_event",
-    GTK_SIGNAL_FUNC(gtk_true),
+    GTK_SIGNAL_FUNC(PR_TRUE),
     NULL);
   */
 }

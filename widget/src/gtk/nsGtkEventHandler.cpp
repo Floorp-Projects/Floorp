@@ -294,7 +294,7 @@ idle_resize_cb(gpointer data)
   // empty.  that will remove this idle timeout.
   // if it's > 1 then it will be restarted and
   // this will be run again.
-  return FALSE;
+  return PR_FALSE;
 }
 
 void handle_size_allocate(GtkWidget *w, GtkAllocation *alloc, gpointer p)

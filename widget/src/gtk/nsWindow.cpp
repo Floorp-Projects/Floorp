@@ -165,7 +165,7 @@ gint handle_delete_event(GtkWidget *w, GdkEventAny *e, nsWindow *win)
 {
   win->SetIsDestroying( PR_TRUE );
   win->Destroy();
-  return TRUE;
+  return PR_TRUE;
 }
 
 NS_METHOD nsWindow::PreCreateWidget(nsWidgetInitData *aInitData)

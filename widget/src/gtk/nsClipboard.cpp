@@ -362,7 +362,7 @@ nsClipboard::GetNativeClipboardData(nsITransferable * aTransferable)
   // i is in case we get a runaway (yuck).
   for (int i=0; mBlocking == PR_TRUE && i < 10000; ++i)
   {
-    gtk_main_iteration_do(TRUE);
+    gtk_main_iteration_do(PR_TRUE);
   }
 
 #ifdef DEBUG_CLIPBOARD
