@@ -364,14 +364,6 @@ BEGIN {
               "<br>Bl:", print_bloat_delta($bloat, $bloat_cmp);
       }
 
-      # Binary
-      #
-      if ($br->{binaryname} ne '') {
-        $binfile = "$buildtree/bin/$br->{buildtime}/$br->{buildname}/"
-          ."$br->{binaryname}";
-        $binfile =~ s/ //g;
-        print " <a href=$rel_path$binfile>B</a>";
-      }
       print "</tt>\n</td>";
     }
     print "</tr>\n";
