@@ -154,8 +154,14 @@ enum {
 -(IBAction)paste:(id)aSender;
 -(BOOL)canPaste;
 -(IBAction)delete:(id)aSender;
+-(BOOL)canDelete;
 -(IBAction)selectAll:(id)aSender;
+
 -(IBAction)undo:(id)aSender;
+-(IBAction)redo:(id)aSender;
+
+- (BOOL)canUndo;
+- (BOOL)canRedo;
 
 -(NSString*)getCurrentURLSpec;
 
