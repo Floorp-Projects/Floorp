@@ -50,9 +50,11 @@ class nsIRDFService;
     nsIRDFContainer* 		mContainer;
     nsIRDFContainerUtils* 	mContainerUtils;
     nsIRDFResource* 		mRootResource;
-    nsIRDFService* 		mRDFService;
+    nsIRDFService* 			mRDFService;
 
     IBOutlet id mOutlineView;	
+
+    NSMutableDictionary*	mDictionary;
 }
 
 // Initialization Methods

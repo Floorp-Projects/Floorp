@@ -967,8 +967,10 @@ static NSString *SearchToolbarItemIdentifier = @"Search Toolbar Item";
     [panelsItem setView:[[mSidebarSourceTabView tabViewItemAtIndex:3] view]];
 #endif
 
+    // remove default tab from nib
     [mSidebarTabView removeTabViewItem:[mSidebarTabView tabViewItemAtIndex:0]];
     
+    // insert the tabs we want
     [mSidebarTabView insertTabViewItem:bookItem   atIndex:0];
     [mSidebarTabView insertTabViewItem:histItem   atIndex:1];
 #if USE_SEARCH_ITEM
@@ -978,6 +980,17 @@ static NSString *SearchToolbarItemIdentifier = @"Search Toolbar Item";
     [mSidebarTabView insertTabViewItem:panelsItem atIndex:3];
 #endif
     
+    BOOL showHistory = NO;
+    nsCOMPtr<nsIPrefBranch> pref(do_GetService("@mozilla.org/preferences-service;1"));
+    if (pref) {
+      PRBool historyPref = PR_FALSE;
+      if (NS_SUCCEEDED(pref->GetBoolPref("chimera.show_history", &historyPref)))
+        showHistory = historyPref ? YES : NO;
+    }
+    
+    if (!showHistory)
+      [mSidebarTabView removeTabViewItem:[mSidebarTabView tabViewItemAtIndex:1]];
+      
     [mSidebarTabView selectFirstTabViewItem:self];
 }
 
