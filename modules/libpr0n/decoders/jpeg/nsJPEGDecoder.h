@@ -100,6 +100,7 @@ public:
 
   JSAMPARRAY mSamples;
   JSAMPARRAY mSamples3;
+  PRUint8*   mRGBPadRow;
 
   PRInt32 mCompletedPasses;
   PRInt32 mPasses;

@@ -70,6 +70,9 @@ nsJPEGDecoder::nsJPEGDecoder()
   mSamples3 = nsnull;
 
   mBytesToSkip = 0;
+  
+  memset(&mInfo, 0, sizeof(jpeg_decompress_struct));
+  mRGBPadRow = nsnull;
 }
 
 nsJPEGDecoder::~nsJPEGDecoder()
@@ -94,15 +97,12 @@ NS_IMETHODIMP nsJPEGDecoder::Init(imgIRequest *aRequest)
              10240); // this could be a lot smaller (like 3-6k?)
 
   /* Step 1: allocate and initialize JPEG decompression object */
-
-  /* Now we can initialize the JPEG decompression object. */
+  mInfo.err = jpeg_std_error(&mErr.pub);
   jpeg_create_decompress(&mInfo);
-
-
-  /* Step 2: specify data source (eg, a file) */
+  
   decoder_source_mgr *src;
-
   if (mInfo.src == NULL) {
+    //mInfo.src = PR_NEWZAP(decoder_source_mgr);
     src = PR_NEWZAP(decoder_source_mgr);
     if (!src) {
       return PR_FALSE;
@@ -110,9 +110,8 @@ NS_IMETHODIMP nsJPEGDecoder::Init(imgIRequest *aRequest)
     mInfo.src = (struct jpeg_source_mgr *) src;
   }
 
-  mInfo.err = jpeg_std_error(&mErr.pub);
-
-  mErr.pub.error_exit = il_error_exit;
+  /* Step 2: specify data source (eg, a file) */
+  mErr.pub.error_exit = il_error_exit; /* XXX should be before jpeg_std_error ? */
 
   /* Setup callback functions. */
   src->pub.init_source = init_source;
@@ -167,7 +166,8 @@ NS_IMETHODIMP nsJPEGDecoder::Close()
 
 
   // XXX progressive? ;)
-//  OutputScanlines(mInfo.output_height);
+  // not really progressive according to the state machine... -saari
+  OutputScanlines(mInfo.output_height);
 
 
   /* Step 8: Release JPEG decompression object */
@@ -217,7 +217,7 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
   {
     /* Step 3: read file parameters with jpeg_read_header() */
     if (jpeg_read_header(&mInfo, TRUE) == JPEG_SUSPENDED)
-      return NS_OK;
+      return NS_OK; /* I/O suspension */
 
     /*
      * Don't allocate a giant and superfluous memory buffer
@@ -251,6 +251,11 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
     mSamples = (*mInfo.mem->alloc_sarray)((j_common_ptr) &mInfo,
                                            JPOOL_IMAGE,
                                            row_stride, 1);
+                                           
+    mRGBPadRow = (PRUint8*) PR_MALLOC(mInfo.output_width * 4);                                       
+    memset(mRGBPadRow, 0, mInfo.output_width * 4);
+    
+    
 
     /* Allocate RGB buffer for conversion from greyscale. */
     if (mInfo.output_components != 3) {
@@ -281,7 +286,7 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
 
     /* Step 5: Start decompressor */
     if (jpeg_start_decompress(&mInfo) == FALSE)
-      return NS_OK;
+      return NS_OK; /* I/O suspension */
 
     mState = JPEG_DECOMPRESS_PROGRESSIVE;
 
@@ -291,10 +296,14 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
     } while (!((status == JPEG_SUSPENDED) ||
                (status == JPEG_REACHED_EOI)));
 
-    if (status == JPEG_REACHED_EOI) {
-      mState = JPEG_FINAL_PROGRESSIVE_SCAN_OUTPUT;
-    } else {
-      return NS_OK;
+    switch (status) {
+      case JPEG_REACHED_EOI:
+        // End of image
+        mState = JPEG_FINAL_PROGRESSIVE_SCAN_OUTPUT;
+        break;
+      case JPEG_SUSPENDED:
+      default:
+        return NS_OK;
     }
 
   case JPEG_FINAL_PROGRESSIVE_SCAN_OUTPUT:
@@ -307,7 +316,7 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
     /* Step 7: Finish decompression */
 
     if (jpeg_finish_decompress(&mInfo) == FALSE)
-      return NS_OK;
+      return NS_OK; /* I/O suspension */
 
     mState = JPEG_SINK_NON_JPEG_TRAILER;
 
@@ -343,7 +352,7 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
      * Here the array is only one element long, but you could ask for
      * more than one scanline at a time if that's more convenient.
      */
-    (void) jpeg_read_scanlines(&mInfo, buffer, 1);
+    (void) jpeg_read_scanlines(&mInfo, buffer, 1); /*XXX can have I/O suspension! */
     /* Assume put_scanline_someplace wants a pointer and sample count. */
     mFrame->SetImageData(buffer[0], row_stride, row_stride*mInfo.output_scanline /* XXX ??? */);
 
@@ -377,7 +386,12 @@ nsJPEGDecoder::OutputScanlines(int num_scanlines)
       JSAMPROW samples;
       
       /* Request one scanline.  Returns 0 or 1 scanlines. */
-      int ns = jpeg_read_scanlines(&mInfo, mSamples, 1);
+      int ns;
+      if(mInfo.output_components != 3)
+        ns = jpeg_read_scanlines(&mInfo, mSamples3, 1); /* XXX can have I/O suspension */
+      else
+        ns = jpeg_read_scanlines(&mInfo, mSamples, 1); /* XXX can have I/O suspension */
+        
 #if 0
       ILTRACE(15,("il:jpeg: scanline %d, ns = %d",
                   mInfo.output_scanline, ns));
@@ -405,11 +419,33 @@ nsJPEGDecoder::OutputScanlines(int num_scanlines)
           }
           samples = mSamples3[0];
       } else {        /* 24-bit color image */
-          samples = mSamples[0];
+        //JSAMPLE j, *j1, *j1end, *j3;
+        
+        //j1 = mSamples3[0];
+        //j1end = j1 + mInfo.output_width;
+        //j3 = mSamples3[0];
+        
+        //while(j1 < j1end) {
+        //  mSamples3[0] = j1++;
+        //  mSamples3[1] = j1++
+        //  
+        //}
+        PRUint8* ptrOutputBuf = mRGBPadRow;
+        PRUint8* ptrDecodedBuf = mSamples[0];
+        //while(j1 < j1end) {
+        //  ptrOutputBuf++ = ptrDecodedBuf++;
+        //  ptrOutputBuf++ = ptrDecodedBuf++;
+        //  ptrOutputBuf++ = ptrDecodedBuf++;
+        //  ptrOutputBuf++ = 0; //pad
+        //}
+        //samples = ptrOutputBuf;
+        samples = ptrDecodedBuf;
       }
 
-
-      mFrame->SetImageData(samples, strlen((const char *)samples), strlen((const char *)samples)*mInfo.output_scanline /* XXX ??? */);
+      mFrame->SetImageData(
+        samples,             // data
+        mInfo.output_width * 3,  // length
+        (mInfo.output_scanline-1) * (mInfo.output_width*3)); // offset
 #if 0
       ic->imgdcb->ImgDCBHaveRow( 0, samples, 0, mInfo.output_width, mInfo.output_scanline-1,
                   1, ilErase, pass);
@@ -488,15 +524,54 @@ il_error_exit (j_common_ptr cinfo)
 #endif
 }
 
-
-
-void PR_CALLBACK
-init_source (j_decompress_ptr jd)
+/******************************************************************************/
+/*-----------------------------------------------------------------------------
+ * This is the callback routine from the IJG JPEG library used to supply new
+ * data to the decompressor when its input buffer is exhausted.  It juggles
+ * multiple buffers in an attempt to avoid unnecessary copying of input data.
+ *
+ * (A simpler scheme is possible: It's much easier to use only a single
+ * buffer; when fill_input_buffer() is called, move any unconsumed data
+ * (beyond the current pointer/count) down to the beginning of this buffer and
+ * then load new data into the remaining buffer space.  This approach requires
+ * a little more data copying but is far easier to get right.)
+ *
+ * At any one time, the JPEG decompressor is either reading from the necko
+ * input buffer, which is volatile across top-level calls to the IJG library,
+ * or the "backtrack" buffer.  The backtrack buffer contains the remaining
+ * unconsumed data from the necko buffer after parsing was suspended due
+ * to insufficient data in some previous call to the IJG library.
+ *
+ * When suspending, the decompressor will back up to a convenient restart
+ * point (typically the start of the current MCU). The variables
+ * next_input_byte & bytes_in_buffer indicate where the restart point will be
+ * if the current call returns FALSE.  Data beyond this point must be
+ * rescanned after resumption, so it must be preserved in case the decompressor
+ * decides to backtrack.
+ *
+ * Returns:
+ *  TRUE if additional data is available, FALSE if no data present and
+ *   the JPEG library should therefore suspend processing of input stream
+ *---------------------------------------------------------------------------*/
+static NS_METHOD ReadDataOut(nsIInputStream* in,
+                             void* closure,
+                             const char* fromRawSegment,
+                             PRUint32 toOffset,
+                             PRUint32 count,
+                             PRUint32 *writeCount)
 {
+  j_decompress_ptr jd = NS_STATIC_CAST(j_decompress_ptr, closure);
+  decoder_source_mgr *src = NS_REINTERPRET_CAST(decoder_source_mgr *, jd->src);
+
+  src->pub.next_input_byte = NS_REINTERPRET_CAST(const unsigned char *, fromRawSegment);
+  src->pub.bytes_in_buffer = count;
+
+  *writeCount = 0; // pretend we didn't really read anything
+
+  return NS_ERROR_FAILURE; // return error so that we can point to this buffer and exit the ReadSegments loop
 }
 
-
-
+/******************************************************************************/
 static NS_METHOD DiscardData(nsIInputStream* in,
                              void* closure,
                              const char* fromRawSegment,
@@ -512,6 +587,35 @@ static NS_METHOD DiscardData(nsIInputStream* in,
   return NS_OK;
 }
 
+
+/******************************************************************************/
+/* data source manager method 
+/******************************************************************************/
+
+
+/******************************************************************************/
+/* data source manager method 
+	Initialize source.  This is called by jpeg_read_header() before any
+	data is actually read.  May leave
+	bytes_in_buffer set to 0 (in which case a fill_input_buffer() call
+	will occur immediately).
+*/
+void PR_CALLBACK
+init_source (j_decompress_ptr jd)
+{
+}
+
+/******************************************************************************/
+/* data source manager method
+	Skip num_bytes worth of data.  The buffer pointer and count should
+	be advanced over num_bytes input bytes, refilling the buffer as
+	needed.  This is used to skip over a potentially large amount of
+	uninteresting data (such as an APPn marker).  In some applications
+	it may be possible to optimize away the reading of the skipped data,
+	but it's not clear that being smart is worth much trouble; large
+	skips are uncommon.  bytes_in_buffer may be zero on return.
+	A zero or negative skip count should be treated as a no-op.
+*/
 void PR_CALLBACK
 skip_input_data (j_decompress_ptr jd, long num_bytes)
 {
@@ -539,64 +643,28 @@ skip_input_data (j_decompress_ptr jd, long num_bytes)
     PRUint32 _retval;
     src->decoder->mInStream->ReadSegments(DiscardData, NS_STATIC_CAST(void*, jd), 
                                           num_bytes, &_retval);
-    src->decoder->mDataLen -= _retval;
-
-    src->decoder->mBytesToSkip = 0;
+    // XXX not sure we should be managing this buffer here
+    //src->decoder->mDataLen -= _retval;
+    //src->decoder->mBytesToSkip = 0;
+    
     src->pub.bytes_in_buffer -= (size_t)num_bytes;
     src->pub.next_input_byte += num_bytes;
   }
 }
 
 
-
-/*-----------------------------------------------------------------------------
- * This is the callback routine from the IJG JPEG library used to supply new
- * data to the decompressor when its input buffer is exhausted.  It juggles
- * multiple buffers in an attempt to avoid unnecessary copying of input data.
- *
- * (A simpler scheme is possible: It's much easier to use only a single
- * buffer; when fill_input_buffer() is called, move any unconsumed data
- * (beyond the current pointer/count) down to the beginning of this buffer and
- * then load new data into the remaining buffer space.  This approach requires
- * a little more data copying but is far easier to get right.)
- *
- * At any one time, the JPEG decompressor is either reading from the netlib
- * input buffer, which is volatile across top-level calls to the IJG library,
- * or the "backtrack" buffer.  The backtrack buffer contains the remaining
- * unconsumed data from the netlib buffer after parsing was suspended due
- * to insufficient data in some previous call to the IJG library.
- *
- * When suspending, the decompressor will back up to a convenient restart
- * point (typically the start of the current MCU). The variables
- * next_input_byte & bytes_in_buffer indicate where the restart point will be
- * if the current call returns FALSE.  Data beyond this point must be
- * rescanned after resumption, so it must be preserved in case the decompressor
- * decides to backtrack.
- *
- * Returns:
- *  TRUE if additional data is available, FALSE if no data present and
- *   the JPEG library should therefore suspend processing of input stream
- *---------------------------------------------------------------------------*/
-
-static NS_METHOD ReadDataOut(nsIInputStream* in,
-                             void* closure,
-                             const char* fromRawSegment,
-                             PRUint32 toOffset,
-                             PRUint32 count,
-                             PRUint32 *writeCount)
-{
-  j_decompress_ptr jd = NS_STATIC_CAST(j_decompress_ptr, closure);
-  decoder_source_mgr *src = NS_REINTERPRET_CAST(decoder_source_mgr *, jd->src);
-
-  src->pub.next_input_byte = NS_REINTERPRET_CAST(const unsigned char *, fromRawSegment);
-  src->pub.bytes_in_buffer = count;
-
-  *writeCount = 0; // pretend we didn't really read anything
-
-  return NS_ERROR_FAILURE; // return error so that we can point to this buffer and exit the ReadSegments loop
-}
-
-
+/******************************************************************************/
+/* data source manager method
+	This is called whenever bytes_in_buffer has reached zero and more
+	data is wanted.  In typical applications, it should read fresh data
+	into the buffer (ignoring the current state of next_input_byte and
+	bytes_in_buffer), reset the pointer & count to the start of the
+	buffer, and return TRUE indicating that the buffer has been reloaded.
+	It is not necessary to fill the buffer entirely, only to obtain at
+	least one more byte.  bytes_in_buffer MUST be set to a positive value
+	if TRUE is returned.  A FALSE return should only be used when I/O
+	suspension is desired.
+*/
 boolean PR_CALLBACK
 fill_input_buffer (j_decompress_ptr jd)
 {
@@ -627,10 +695,12 @@ fill_input_buffer (j_decompress_ptr jd)
 
 }
 
-
+/******************************************************************************/
+/* data source manager method */
 /*
  * Terminate source --- called by jpeg_finish_decompress() after all
- * data has been read to clean up JPEG source manager.
+ * data has been read to clean up JPEG source manager. NOT called by 
+ * jpeg_abort() or jpeg_destroy().
  */
 void PR_CALLBACK
 term_source (j_decompress_ptr jd)
