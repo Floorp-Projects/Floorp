@@ -440,8 +440,11 @@ nsCSSFrameConstructor::ConstructTableFrame(nsIPresContext*  aPresContext,
         //                    aAbsoluteItems, nonTableRelatedFrame);
         //childList->SetNextSibling(nonTableRelatedFrame);
         //NS_IF_RELEASE(tag);
+        nsFrameItems childItems;
         TableProcessChild(aPresContext, childContent, innerFrame, parentStyleContext,
-                          aAbsoluteItems, childFrame, aFixedItems, aTableCreator);
+                          aAbsoluteItems, childItems, aFixedItems, aTableCreator);
+        childFrame = childItems.childList; // XXX: Need to change this whole function to return a list of frames
+                                            // rather than a single frame. - DWH
         break;
       }
 
@@ -966,9 +969,7 @@ nsCSSFrameConstructor::TableProcessChildren(nsIPresContext*  aPresContext,
                                             nsTableCreator&  aTableCreator)
 {
   nsresult rv = NS_OK;
-  // Initialize OUT parameter
-  aChildItems.childList = nsnull;
-
+  
   // Iterate the child content objects and construct a frame
   nsIFrame* lastChildFrame = nsnull;
   PRInt32   count;
@@ -978,16 +979,11 @@ nsCSSFrameConstructor::TableProcessChildren(nsIPresContext*  aPresContext,
 
   aContent->ChildCount(count);
   for (PRInt32 i = 0; i < count; i++) {
-    nsIFrame*            childFrame = nsnull;
     nsCOMPtr<nsIContent> childContent;
     
     aContent->ChildAt(i, *getter_AddRefs(childContent));
     rv = TableProcessChild(aPresContext, childContent, aParentFrame, parentStyleContext,
-                           aAbsoluteItems, childFrame, aFixedItems, aTableCreator);
-
-    if (NS_SUCCEEDED(rv) && (nsnull != childFrame)) {
-      aChildItems.AddChild(childFrame);
-    }
+                           aAbsoluteItems, aChildItems, aFixedItems, aTableCreator);
   }
 
   return rv;
@@ -999,15 +995,13 @@ nsCSSFrameConstructor::TableProcessChild(nsIPresContext*  aPresContext,
                                          nsIFrame*        aParentFrame,
                                          nsIStyleContext* aParentStyleContext,
                                          nsAbsoluteItems& aAbsoluteItems,
-                                         nsIFrame*&       aChildFrame,
+                                         nsFrameItems&    aChildItems,
                                          nsAbsoluteItems& aFixedItems,
                                          nsTableCreator&  aTableCreator)
 {
   nsresult rv = NS_OK;
-  aChildFrame = nsnull;
-
+  
   if (nsnull != aChildContent) {
-    aChildFrame = nsnull;
     nsCOMPtr<nsIStyleContext> childStyleContext;
     aPresContext->ResolveStyleContextFor(aChildContent, aParentStyleContext,
                                          getter_AddRefs(childStyleContext));
@@ -1020,9 +1014,7 @@ nsCSSFrameConstructor::TableProcessChild(nsIPresContext*  aPresContext,
          (childDisplay->mDisplay == NS_STYLE_DISPLAY_TABLE_ROW) ||
          (childDisplay->mDisplay == NS_STYLE_DISPLAY_TABLE_COLUMN) ||
          (childDisplay->mDisplay == NS_STYLE_DISPLAY_TABLE_CELL) ) {
-      nsFrameItems childItems;
-      rv = ConstructFrame(aPresContext, aChildContent, aParentFrame, aAbsoluteItems, childItems, aFixedItems);
-      aChildFrame = childItems.childList;
+      rv = ConstructFrame(aPresContext, aChildContent, aParentFrame, aAbsoluteItems, aChildItems, aFixedItems);
     } else {
       nsCOMPtr<nsIAtom> tag;
       aChildContent->GetTag(*getter_AddRefs(tag));
@@ -1031,18 +1023,16 @@ nsCSSFrameConstructor::TableProcessChild(nsIPresContext*  aPresContext,
         // if the parent is a table, put the form in the outer table frame
         const nsStyleDisplay* parentDisplay = (const nsStyleDisplay*)
           aParentStyleContext->GetStyleData(eStyleStruct_Display);
-        nsFrameItems childItems;
-        childItems.AddChild(aChildFrame);
         if (parentDisplay->mDisplay == NS_STYLE_DISPLAY_TABLE) {
-          nsIFrame* innerFrame;
-          aParentFrame->GetParent(&innerFrame);
-          rv = ConstructFrame(aPresContext, aChildContent, innerFrame, aAbsoluteItems, 
-                              childItems, aFixedItems);
+          nsIFrame* outerFrame; 
+          aParentFrame->GetParent(&outerFrame);
+          rv = ConstructFrame(aPresContext, aChildContent, outerFrame, aAbsoluteItems, 
+                              aChildItems, aFixedItems);
+          // XXX: Seems like this is going into the inner frame's child list instead of the outer frame. - DWH
         } else {
           rv = ConstructFrame(aPresContext, aChildContent, aParentFrame, 
-                              aAbsoluteItems, childItems, aFixedItems);
+                              aAbsoluteItems, aChildItems, aFixedItems);
         }
-        aChildFrame = childItems.childList;
       // wrap it in a table cell, row, row group, table if it is a valid tag or display
       // and not whitespace. For example we don't allow map, head, body, etc.
       } else { 
@@ -1061,8 +1051,10 @@ nsCSSFrameConstructor::TableProcessChild(nsIPresContext*  aPresContext,
           }
           if (needCell) {
             nsIFrame* cellFrame;
+            nsIFrame* childFrame; // XXX: Need to change the ConstructTableCell function to return lists of frames. - DWH
             rv = ConstructTableCellFrame(aPresContext, aChildContent, aParentFrame, childStyleContext, 
-                                         aAbsoluteItems, aChildFrame, cellFrame, aFixedItems, aTableCreator);
+                                         aAbsoluteItems, childFrame, cellFrame, aFixedItems, aTableCreator);
+            aChildItems.AddChild(childFrame);
           }
         }
       }
