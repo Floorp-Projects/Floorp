@@ -64,7 +64,7 @@
 #endif
 
 #include <unistd.h>
-
+#include "nsCursorManager.h"
 
 @interface ChildView(Private)
 
@@ -115,7 +115,6 @@ nsIWidget         * gRollupWidget   = nsnull;
 // these static
 static NMRec  gNMRec;
 static Boolean  gNotificationInstalled = false;
-
 
 #pragma mark -
 
@@ -904,59 +903,7 @@ nsIMenuBar* nsChildView::GetMenuBar()
 NS_METHOD nsChildView::SetCursor(nsCursor aCursor)
 {
   nsBaseWidget::SetCursor(aCursor);
-  
-  short cursor = -1;
-  switch (aCursor)
-  {
-    case eCursor_standard:        cursor = kThemeArrowCursor;           break;
-    case eCursor_wait:            cursor = kThemeWatchCursor;           break;
-    case eCursor_select:          cursor = kThemeIBeamCursor;           break;
-    case eCursor_hyperlink:       cursor = kThemePointingHandCursor;    break;
-    case eCursor_sizeWE:          cursor = kThemeResizeLeftRightCursor; break;
-    case eCursor_sizeNS:          cursor = 129;                         break;
-    case eCursor_sizeNW:          cursor = 130;                         break;
-    case eCursor_sizeSE:          cursor = 131;                         break;
-    case eCursor_sizeNE:          cursor = 132;                         break;
-    case eCursor_sizeSW:          cursor = 133;                         break;
-    case eCursor_arrow_north:     cursor = 134;                         break;
-    case eCursor_arrow_north_plus:cursor = 135;                         break;
-    case eCursor_arrow_south:     cursor = 136;                         break;
-    case eCursor_arrow_south_plus:cursor = 137;                         break;
-    case eCursor_arrow_west:      cursor = 138;                         break;
-    case eCursor_arrow_west_plus: cursor = 139;                         break;
-    case eCursor_arrow_east:      cursor = 140;                         break;
-    case eCursor_arrow_east_plus: cursor = 141;                         break;
-    case eCursor_crosshair:       cursor = kThemeCrossCursor;           break;
-    case eCursor_move:            cursor = kThemeOpenHandCursor;        break;
-    case eCursor_help:            cursor = 143;                         break;
-    case eCursor_copy:            cursor = 144;                         break; // CSS3
-    case eCursor_alias:           cursor = 145;                         break;
-    case eCursor_context_menu:    cursor = 146;                         break;
-    case eCursor_cell:            cursor = kThemePlusCursor;            break;
-    case eCursor_grab:            cursor = kThemeOpenHandCursor;        break;
-    case eCursor_grabbing:        cursor = kThemeClosedHandCursor;      break;
-    case eCursor_spinning:        cursor = 200;                         break;  // better than kThemeSpinningCursor
-    case eCursor_count_up:        cursor = kThemeCountingUpHandCursor;          break;
-    case eCursor_count_down:      cursor = kThemeCountingDownHandCursor;        break;
-    case eCursor_count_up_down:   cursor = kThemeCountingUpAndDownHandCursor;   break;
-    case eCursor_zoom_in:         cursor = 149;                         break;
-    case eCursor_zoom_out:        cursor = 150;                         break;
-  }
-  if (cursor >= 0)
-  {
-    if (cursor >= 128)
-    {
-      nsMacResources::OpenLocalResourceFile();
-      CursHandle cursHandle = ::GetCursor(cursor);
-      NS_ASSERTION ( cursHandle, "Can't load cursor, is the resource file installed correctly?" );
-      if ( cursHandle )
-        ::SetCursor(*cursHandle);
-      nsMacResources::CloseLocalResourceFile();
-    }
-    else
-      ::SetThemeCursor(cursor);
-  }
- 
+  [[nsCursorManager sharedInstance] setCursor: aCursor];
   return NS_OK;
 } // nsChildView::SetCursor
 
@@ -1338,6 +1285,7 @@ NS_IMETHODIMP nsChildView::Invalidate(PRBool aIsSynchronous)
   if (!mView || !mVisible)
     return NS_OK;
 
+printf(". invalidate full widget\n");
   if (aIsSynchronous)
     [mView display];
   else
@@ -1359,6 +1307,7 @@ NS_IMETHODIMP nsChildView::Invalidate(const nsRect &aRect, PRBool aIsSynchronous
   NSRect r;
   ConvertGeckoToCocoaRect ( aRect, r );
   
+printf(". invalidate rect\n");
   if (aIsSynchronous)
     [mView displayRect:r];
   else
@@ -1375,6 +1324,7 @@ NS_IMETHODIMP nsChildView::Invalidate(const nsRect &aRect, PRBool aIsSynchronous
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsChildView::Validate()
 {
+printf(". validate full widget\n");
   [mView setNeedsDisplay:NO];
   return NS_OK;
 }
@@ -1398,6 +1348,7 @@ NS_IMETHODIMP nsChildView::InvalidateRegion(const nsIRegion *aRegion, PRBool aIs
   region->GetBoundingBox ( &bounds.x, &bounds.y, &bounds.width, &bounds.height );
   ConvertGeckoToCocoaRect(bounds, r);
   
+printf(". invalidate region\n");
   if ( aIsSynchronous )
     [mView displayRect:r];
   else
@@ -2476,6 +2427,7 @@ nsChildView::Idle()
   }
     
    // tell gecko to paint.
+printf("- drawRect in nsChildView\n");
   nsRect r;
   ConvertCocoaToGeckoRect(aRect, r);
   nsCOMPtr<nsIRenderingContext> rendContext = getter_AddRefs(mGeckoChild->GetRenderingContext());
