@@ -4,7 +4,6 @@
 
 nsAppleEvents.h
 nsAppShellCIDs.h
-nsIAppShellService.h
 nsICmdLineService.h
 nsIWebShellWindow.h
 nsIWidgetController.h
