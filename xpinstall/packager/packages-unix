@@ -195,6 +195,7 @@ bin/chrome/htmlBindings.xml
 bin/chrome/platformHTMLBindings.xml
 bin/chrome/xul.css
 bin/chrome/xulBindings.xml
+bin/chrome/menulistBindings.xml
 bin/chrome/autocomplete.xml
 
 bin/defaults/pref/editor.js
