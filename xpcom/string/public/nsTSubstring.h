@@ -215,6 +215,19 @@ class nsTSubstring_CharT : public nsTAString_CharT
       NS_COM PRBool Equals( const char_type* data ) const;
       NS_COM PRBool Equals( const char_type* data, const comparator_type& comp ) const;
 
+      NS_COM PRBool EqualsASCII( const char* data, size_type len ) const;
+#ifdef NS_DISABLE_LITERAL_TEMPLATE
+      inline PRBool EqualsLiteral( const char* str ) const
+        {
+          return EqualsASCII(str, strlen(str));
+        }
+#else
+      template<int N>
+      inline PRBool EqualsLiteral( const char (&str)[N] ) const
+        {
+          return EqualsASCII(str, N-1);
+        }
+#endif
 
         /**
          * assignment

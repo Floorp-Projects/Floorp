@@ -62,6 +62,11 @@
   // for |PRUnichar|
 #endif
 
+#ifndef nsDebug_h__
+#include "nsDebug.h"
+  // for NS_ASSERTION
+#endif
+
 #ifdef HAVE_CPP_BOOL
   typedef bool nsCharTraits_bool;
 #else
@@ -179,6 +184,20 @@ struct nsCharTraits<PRUnichar>
 
         return 0;
 #endif
+      }
+
+    static
+    int
+    compareASCII( const char_type* s1, const char* s2, size_t n )
+      {
+        for ( ; n--; ++s1, ++s2 )
+          {
+            NS_ASSERTION(!(*s2 & ~0x7F), "Unexpected non-ASCII character");
+            if ( !eq_int_type(to_int_type(*s1), to_int_type(*s2)) )
+              return to_int_type(*s1) - to_int_type(*s2);
+          }
+
+        return 0;
       }
 
     static
@@ -330,6 +349,19 @@ struct nsCharTraits<char>
     compare( const char_type* s1, const char_type* s2, size_t n )
       {
         return memcmp(s1, s2, n);
+      }
+
+    static
+    int
+    compareASCII( const char_type* s1, const char* s2, size_t n )
+      {
+#ifdef DEBUG
+        for (size_t i = 0; i < n; ++i)
+          {
+            NS_ASSERTION(!(s2[i] & ~0x7F), "Unexpected non-ASCII character");
+          }
+#endif
+        return compare(s1, s2, n);
       }
 
     static
