@@ -566,8 +566,6 @@ sub MakeResourceAliases()
 	_InstallResources(":mozilla:xpfe:components:console:resources:skin:MANIFEST",			"$global_chrome_dir:skin:default:", 0);
 	_InstallResources(":mozilla:xpfe:components:console:resources:locale:en-US:MANIFEST",	"$global_chrome_dir:locale:en-US:", 0);
 
-	_InstallResources(":mozilla:xpfe:components:autocomplete:resources:skin:MANIFEST",	    "$chrome_dir");
-
 	{
 		 my($wallet_chrome_dir) = "$chrome_dir" . "Wallet";
 		_InstallResources(":mozilla:extensions:wallet:cookieviewer:MANIFEST",				"$wallet_chrome_dir:content:default:", 0);
@@ -938,8 +936,6 @@ sub BuildClientDist()
 	 _InstallFromManifest(":mozilla:xpfe:components:regviewer:MANIFEST_IDL",		"$distdirectory:idl:");
    # console
 	 _InstallFromManifest(":mozilla:xpfe:components:console:MANIFEST_IDL",		"$distdirectory:idl:");
-     # autocomplete
-	 _InstallFromManifest(":mozilla:xpfe:components:autocomplete:public:MANIFEST_IDL",		"$distdirectory:idl:");
 
 	# XPAPPS
 	_InstallFromManifest(":mozilla:xpfe:appshell:public:MANIFEST",					"$distdirectory:xpfe:");
@@ -1211,7 +1207,6 @@ sub BuildIDLProjects()
 	BuildIDLProject(":mozilla:xpfe:components:macbuild:mozcompsIDL.mcp",			"mozcomps");
 	BuildIDLProject(":mozilla:xpfe:components:timebomb:macbuild:timebombIDL.mcp",	"tmbm");
 	BuildIDLProject(":mozilla:xpfe:components:console:macbuild:ConsoleIDL.mcp",	"console");
-	BuildIDLProject(":mozilla:xpfe:components:autocomplete:macbuild:AutoCompleteIDL.mcp",	"autocomplete");
 	
 	BuildIDLProject(":mozilla:xpfe:appshell:macbuild:appshellIDL.mcp",				"appshell");
 	
@@ -1533,6 +1528,12 @@ sub BuildLayoutProjects()
 	
 	print("--- Starting Layout projects ---\n");
 
+    open(OUTPUT, ">:mozilla:layout:build:gbdate.h") || die "could not open gbdate.h";
+	my($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime;
+    # localtime returns year minus 1900
+    $year = $year + 1900;
+    printf(OUTPUT "#define PRODUCT_VERSION \"%04d%02d%02d\"\n", $year, 1+$mon, $mday);
+    close(OUTPUT);
 	#//
 	#// Build Layout projects
 	#//
@@ -1633,7 +1634,6 @@ sub BuildXPAppProjects()
 	BuildOneProject(":mozilla:xpfe:components:shistory:macbuild:shistory.mcp", "shistory$D.shlb", "shistoryComponent.toc", 1, $main::ALIAS_SYM_FILES, 1);
 	BuildOneProject(":mozilla:xpfe:components:related:macbuild:Related.mcp", "Related$D.shlb", "RelatedComponent.toc", 1, $main::ALIAS_SYM_FILES, 1);
 	BuildOneProject(":mozilla:xpfe:components:console:macbuild:Console.mcp", "Console$D.shlb", "Console.toc", 1, $main::ALIAS_SYM_FILES, 1);
-	BuildOneProject(":mozilla:xpfe:components:autocomplete:macbuild:AutoComplete.mcp", "AutoComplete$D.shlb", "AutoComplete.toc", 1, $main::ALIAS_SYM_FILES, 1);
 		
 	# Applications
 	BuildOneProject(":mozilla:xpfe:appshell:macbuild:AppShell.mcp",				"AppShell$D.shlb", "AppShell.toc", 1, $main::ALIAS_SYM_FILES, 1);
