@@ -41,10 +41,8 @@ gfxImageFrame::gfxImageFrame() :
   mInitalized(PR_FALSE),
   mMutable(PR_TRUE),
   mHasBackgroundColor(PR_FALSE),
-  mHasTransparentColor(PR_FALSE),
   mTimeout(100),
   mBackgroundColor(0),
-  mTransparentColor(0),
   mDisposalMethod(0)
 {
   /* member initializers and constructor code */
@@ -479,28 +477,6 @@ NS_IMETHODIMP gfxImageFrame::SetBackgroundColor(gfx_color aBackgroundColor)
   mHasBackgroundColor = PR_TRUE;
   return NS_OK;
 }
-
-/* attribute gfx_color transparentColor; */
-NS_IMETHODIMP gfxImageFrame::GetTransparentColor(gfx_color *aTransparentColor)
-{
-  if (!mInitalized || !mHasTransparentColor)
-    return NS_ERROR_NOT_INITIALIZED;
-    
-  *aTransparentColor = mTransparentColor;
-  return NS_OK;
-}
-NS_IMETHODIMP gfxImageFrame::SetTransparentColor(gfx_color aTransparentColor)
-{
-  if (!mInitalized)
-    return NS_ERROR_NOT_INITIALIZED;
-
-  mTransparentColor = aTransparentColor;
-  mHasTransparentColor = PR_TRUE;
-  return NS_OK;
-}
-
-
-
 
 NS_IMETHODIMP gfxImageFrame::GetInterface(const nsIID & aIID, void * *result)
 {

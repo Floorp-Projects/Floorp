@@ -190,9 +190,4 @@ interface gfxIImageFrame : nsISupports
    * GIF specific, should be in a GIF specific frame
    */  
   attribute gfx_color backgroundColor;
-
-  /* frame transparent color
-   * GIF specific, should be in a GIF specific frame
-   */
-  attribute gfx_color transparentColor;
 };
