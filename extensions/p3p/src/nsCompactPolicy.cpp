@@ -1,26 +1,25 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
- * Version: NPL 1.1/GPL 2.0/LGPL 2.1
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
- * The contents of this file are subject to the Netscape Public License
- * Version 1.1 (the "License"); you may not use this file except in
- * compliance with the License. You may obtain a copy of the License at
- * http://www.mozilla.org/NPL/
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
  *
  * Software distributed under the License is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is the Platform for Privacy Preferences.
  *
- * The Initial Developer of the Original Code is 
+ * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * Portions created by the Initial Developer are Copyright (C) 2002
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s):
- *
+ * Contributor(s): Harish Dhurvasula <harishd@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -28,11 +27,11 @@
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the NPL, indicate your
+ * use your version of this file under the terms of the MPL, indicate your
  * decision by deleting the provisions above and replace them with the notice
  * and other provisions required by the GPL or the LGPL. If you do not delete
  * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the NPL, the GPL or the LGPL.
+ * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
 
@@ -116,7 +115,7 @@ PRInt32 MapTokenToConsent(const nsACString::const_iterator& aStart,
         case eToken_ONL:
         case eToken_PHY:
         case eToken_UNI:
-          rv = NS_NO_CONSENT;
+          rv = NS_PII_TOKEN;
           break;
         // Tokens that indicate collection of
         // Personally Identifiable Information 
@@ -161,21 +160,26 @@ PRInt32 ParsePolicy(nsACString::const_iterator& aStart,
   PRInt32 rv = NS_HAS_POLICY;
   
   if (aStart != aEnd) {
-    // stip off the begining quote
-    if (*aStart == '"' && ++aStart == aEnd) {
+    // strip off the begining quote or apostrophe
+    const char quoteChar = *aStart;
+    if ((quoteChar == '"' || quoteChar == '\'') && ++aStart == aEnd) {
       return NS_NO_POLICY ;
     }
 
     nsACString::const_iterator tokenStart = aStart;
     while (aStart != aEnd) {
-      if (*aStart != ' ' && *aStart != '"') { // quote ends compact policy
+      if (*aStart != ' ' && *aStart != quoteChar) { 
         ++aStart;
       }
       else {
         PRInt32 consent = MapTokenToConsent(tokenStart,aStart);
 
         if (consent == -1) {
-          if (!(rv & NS_NO_CONSENT | NS_IMPLICIT_CONSENT | NS_EXPLICIT_CONSENT | NS_NON_PII_TOKEN)) {
+          if (!(rv & (NS_PII_TOKEN  |
+                      NS_NO_CONSENT | 
+                      NS_IMPLICIT_CONSENT | 
+                      NS_EXPLICIT_CONSENT |  
+                      NS_NON_PII_TOKEN))) {
             rv = NS_NO_POLICY;
           }
           break;
@@ -186,13 +190,58 @@ PRInt32 ParsePolicy(nsACString::const_iterator& aStart,
         }
         else {
           rv |= consent;
+          if (consent & NS_PII_TOKEN) {
+            if (rv & NS_NO_CONSENT) {
+              // PII is collected without consent.
+              // No need to parse CP any further.
+              break;
+            }
+          }
+          else if (consent & NS_NO_CONSENT) {
+            rv &= ~(NS_IMPLICIT_CONSENT | NS_EXPLICIT_CONSENT);
+            if (rv & NS_PII_TOKEN) {
+              // PII is collected without consent.
+              // No need to parse CP any further.
+              break;
+            }
+          }
+          else if (consent & NS_IMPLICIT_CONSENT) {
+            rv &= ~NS_EXPLICIT_CONSENT;
+            if (rv & NS_NO_CONSENT) {
+              rv &= ~NS_IMPLICIT_CONSENT;
+            }
+          }
+          else if (consent & NS_EXPLICIT_CONSENT) {
+            if (rv & (NS_NO_CONSENT | NS_IMPLICIT_CONSENT)) {
+              rv &= ~NS_EXPLICIT_CONSENT;
+            }
+          }
+          
+          if (*aStart == quoteChar) {
+            break; // done parsing CP
+          }
+         
           while (++aStart != aEnd && *aStart == ' '); // skip spaces
           tokenStart = aStart;
         }
       }
     }
-  }
 
+    if (rv & NS_PII_TOKEN) {
+      if (!(rv & (NS_NO_CONSENT | NS_IMPLICIT_CONSENT | NS_EXPLICIT_CONSENT))) {
+        // CP did not contain any information about opt-in / opt-out
+        rv = NS_NO_CONSENT; 
+      }
+    }
+    else {
+      // If a PII token is not present, in the CP, we can be sure
+      // that no personally identifiable information is collected.
+      if (rv & (NS_NO_CONSENT | NS_IMPLICIT_CONSENT | NS_EXPLICIT_CONSENT)) {
+        rv = NS_NON_PII_TOKEN; // PII not collected.
+      }
+    }
+  }
+   
   NS_ASSERTION(rv > NS_HAS_POLICY,"compact policy error");
   return rv;
 }
@@ -242,10 +291,11 @@ nsCompactPolicy::OnHeaderAvailable(const char* aP3PHeader,
   header.EndReading(end);
 
   if (FindCompactPolicy(begin,end)) {
-    PRInt32 consent =  ParsePolicy(begin,end);
-    
     nsCStringKey key(aSpec);
-    mPolicyTable.Put(&key, NS_INT32_TO_PTR(consent));
+    if (!mPolicyTable.Exists(&key)) {
+      PRInt32 consent =  ParsePolicy(begin,end);
+      mPolicyTable.Put(&key, NS_INT32_TO_PTR(consent));
+    }
   }
   
   return result;

@@ -35,56 +35,32 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-CP_TOKEN(ALL)
-CP_TOKEN(ADM)
-CP_TOKEN(BUS)
-CP_TOKEN(CAO)
-CP_TOKEN(CNT)
-CP_TOKEN(COM)
-CP_TOKEN(CON)
-CP_TOKEN(COR)
-CP_TOKEN(CUR)
-CP_TOKEN(CUS)
-CP_TOKEN(DEL)
-CP_TOKEN(DEM)
-CP_TOKEN(DEV)
-CP_TOKEN(DSP)
-CP_TOKEN(FIN)
-CP_TOKEN(GOV)
-CP_TOKEN(HEA)
-CP_TOKEN(HIS)
-CP_TOKEN(IDC)
-CP_TOKEN(IND)
-CP_TOKEN(INT)
-CP_TOKEN(IVA)
-CP_TOKEN(IVD)
-CP_TOKEN(LAW)
-CP_TOKEN(LEG)
-CP_TOKEN(MON)
-CP_TOKEN(NAV)
-CP_TOKEN(NID)
-CP_TOKEN(NOI)
-CP_TOKEN(NON)
-CP_TOKEN(NOR)
-CP_TOKEN(ONL)
-CP_TOKEN(OTC)
-CP_TOKEN(OTI)
-CP_TOKEN(OTP)
-CP_TOKEN(OTR)
-CP_TOKEN(OUR)
-CP_TOKEN(PHY)
-CP_TOKEN(POL)
-CP_TOKEN(PRE)
-CP_TOKEN(PSA)
-CP_TOKEN(PSD)
-CP_TOKEN(PUB)
-CP_TOKEN(PUR)
-CP_TOKEN(SAM)
-CP_TOKEN(STA)
-CP_TOKEN(STP)
-CP_TOKEN(TAI)
-CP_TOKEN(TEL)
-CP_TOKEN(TST)
-CP_TOKEN(UNI)
-CP_TOKEN(UNR)
+#ifndef NS_P3PUTILS_H__
+#define NS_P3PUTILS_H__
+
+#include "nsString.h"
+#include "nsCRT.h"
+#include "nsVoidArray.h"
+#include "nsCOMPtr.h"                                                           
+
+
+class nsIDOMNode;
+
+class nsP3PUtils {
+  public:
+    static nsresult GetAttributeValue(nsIDOMNode* aNode, char* aAttrName, nsAString& aAttrValue);
+    static nsresult DeterminePolicyScope(const nsVoidArray& aNodeList, const char* aPath, PRBool* aOut);
+    static nsresult GetElementsByTagName(nsIDOMNode* aNode, const nsAString& aTagName, nsVoidArray& aReturn);
+    static PRBool   IsPathIncluded(const nsAString& aURI, const nsAString& aPath);
+    static PRBool   ParseWildCard(nsAString& aLhs,  nsAString& aRhs);
+    static const    nsDependentSubstring TrimCharsInSet(const char* aSet, const nsAString& aValue);
+    static void     CleanArray(nsVoidArray& aArray);
+  private:
+    //  Use the |static| methods |only|
+    nsP3PUtils()  {}
+    ~nsP3PUtils() {}
+};
+
+#endif
+
 

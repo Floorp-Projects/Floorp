@@ -35,56 +35,55 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-CP_TOKEN(ALL)
-CP_TOKEN(ADM)
-CP_TOKEN(BUS)
-CP_TOKEN(CAO)
-CP_TOKEN(CNT)
-CP_TOKEN(COM)
-CP_TOKEN(CON)
-CP_TOKEN(COR)
-CP_TOKEN(CUR)
-CP_TOKEN(CUS)
-CP_TOKEN(DEL)
-CP_TOKEN(DEM)
-CP_TOKEN(DEV)
-CP_TOKEN(DSP)
-CP_TOKEN(FIN)
-CP_TOKEN(GOV)
-CP_TOKEN(HEA)
-CP_TOKEN(HIS)
-CP_TOKEN(IDC)
-CP_TOKEN(IND)
-CP_TOKEN(INT)
-CP_TOKEN(IVA)
-CP_TOKEN(IVD)
-CP_TOKEN(LAW)
-CP_TOKEN(LEG)
-CP_TOKEN(MON)
-CP_TOKEN(NAV)
-CP_TOKEN(NID)
-CP_TOKEN(NOI)
-CP_TOKEN(NON)
-CP_TOKEN(NOR)
-CP_TOKEN(ONL)
-CP_TOKEN(OTC)
-CP_TOKEN(OTI)
-CP_TOKEN(OTP)
-CP_TOKEN(OTR)
-CP_TOKEN(OUR)
-CP_TOKEN(PHY)
-CP_TOKEN(POL)
-CP_TOKEN(PRE)
-CP_TOKEN(PSA)
-CP_TOKEN(PSD)
-CP_TOKEN(PUB)
-CP_TOKEN(PUR)
-CP_TOKEN(SAM)
-CP_TOKEN(STA)
-CP_TOKEN(STP)
-CP_TOKEN(TAI)
-CP_TOKEN(TEL)
-CP_TOKEN(TST)
-CP_TOKEN(UNI)
-CP_TOKEN(UNR)
+#ifndef NS_POLICYREFERENCE_H__
+#define NS_POLICYREFERENCE_H__
 
+#include "nsCOMPtr.h"
+#include "nsIURI.h"
+#include "nsIXMLHttpRequest.h"
+#include "nsIDOMEventListener.h"
+#include "nsIDOMDocument.h"
+#include "nsString.h"
+#include "nsCRT.h"
+#include "nsIPolicyReference.h"
+#include "nsIPolicyListener.h"
+#include "nsIPolicyTarget.h"
+#include "nsWeakReference.h"
+
+class nsPolicyReference : public nsIPolicyReference,
+                          public nsIDOMEventListener,
+                          public nsIPolicyTarget,
+                          public nsSupportsWeakReference
+{
+public:
+  // nsISupports
+  NS_DECL_ISUPPORTS
+  
+  nsPolicyReference();
+  virtual ~nsPolicyReference( );
+  
+  // nsIPolicyReference
+  NS_DECL_NSIPOLICYREFERENCE
+  // nsIPolicyReference
+  NS_DECL_NSIPOLICYTARGET
+  // nsIDOMEventListener
+  NS_IMETHOD HandleEvent(nsIDOMEvent  *aEvent);
+
+protected:
+  nsresult Load(const char* aURI);
+  nsresult ProcessPolicyReferenceFile(nsIDOMDocument* aDocument, char** aLocation);
+  nsresult ProcessPolicyRefElement(nsIDOMDocument* aDocument, nsIDOMNodeList* aNodeList, nsAString& aPolicyLocation);
+  nsresult ProcessPolicyRefChildren(nsIDOMNode* aNode);
+  nsresult ProcessExpiryElement(nsIDOMNodeList* aNodeList);
+  
+  nsCOMPtr<nsIWeakReference>  mListener;
+  nsCOMPtr<nsIXMLHttpRequest> mXMLHttpRequest;
+  nsCOMPtr<nsIDOMDocument>    mDocument;
+  nsCOMPtr<nsIURI>            mMainURI;
+  nsCOMPtr<nsIURI>            mCurrentURI;
+  nsCOMPtr<nsIURI>            mLinkedURI;
+  PRUint32                    mFlags;
+  PRUint32                    mError;
+};
+
+#endif
