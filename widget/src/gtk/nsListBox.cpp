@@ -187,8 +187,9 @@ PRBool nsListBox::GetItemAt(nsString& anItem, PRInt32 aPosition)
   if (text) {
     anItem.SetLength(0);
     anItem.Append(text);
+    result = PR_TRUE;
   }
-  return PR_TRUE;
+  return result;
 
 #if 0
   XmStringTable list;
@@ -216,15 +217,21 @@ PRBool nsListBox::GetItemAt(nsString& anItem, PRInt32 aPosition)
 //-------------------------------------------------------------------------
 NS_METHOD nsListBox::GetSelectedItem(nsString& aItem)
 {
-#if 0
-  int * list;
-  int   count;
+  PRInt32 i=0, index=-1;
+  GtkCList *clist = GTK_CLIST(mCList);
+  GList *list = clist->row_list;
 
-  if (XmListGetSelectedPos(mCList, &list, &count)) {
-    GetItemAt(aItem, list[0]-1);
-    XtFree((char *)list);
+  for (i=0; i < clist->rows && index == -1; i++, list = list->next) {
+    if (GTK_CLIST_ROW (list)->state == GTK_STATE_SELECTED) {
+      char *text = nsnull;
+      gtk_clist_get_text(GTK_CLIST(mCList),i,0,&text);
+      if (text) {
+        aItem.SetLength(0);
+        aItem.Append(text);
+      }
+      return NS_OK;
+    }
   }
-#endif
   return NS_OK;
 }
 
@@ -235,24 +242,21 @@ NS_METHOD nsListBox::GetSelectedItem(nsString& aItem)
 //-------------------------------------------------------------------------
 PRInt32 nsListBox::GetSelectedIndex()
 {
-#if 0
+  PRInt32 i=0, index=-1;
   if (!mMultiSelect) {
-    int * list;
-    int   count;
+    GtkCList *clist = GTK_CLIST(mCList);
+    GList *list = clist->row_list;
 
-    if (XmListGetSelectedPos(mCList, &list, &count)) {
-      int index = -1;
-      if (count > 0) {
-        index = list[0]-1;
+    for (i=0; i < clist->rows && index == -1; i++, list = list->next) {
+      if (GTK_CLIST_ROW (list)->state == GTK_STATE_SELECTED) {
+        index = i;
       }
-      XtFree((char *)list);
-      return index;
     }
   } else {
     NS_ASSERTION(PR_FALSE, "Multi selection list box does not support GetSelectedIndex()");
   }
-#endif
-  return -1;
+
+  return index;
 }
 
 //-------------------------------------------------------------------------
@@ -290,19 +294,16 @@ PRInt32 nsListBox::GetSelectedCount()
 //-------------------------------------------------------------------------
 NS_METHOD nsListBox::GetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize)
 {
-#if 0
-  int * list;
-  int   count;
+  PRInt32 i=0, num = 0;
+  GtkCList *clist = GTK_CLIST(mCList);
+  GList *list = clist->row_list;
 
-  if (XmListGetSelectedPos(mCList, &list, &count)) {
-    int num = aSize > count?count:aSize;
-    int i;
-    for (i=0;i<num;i++) {
-      aIndices[i] = (PRInt32)list[i]-1;
+  for (i=0; i < clist->rows && num < aSize; i++, list = list->next) {
+    if (GTK_CLIST_ROW (list)->state == GTK_STATE_SELECTED) {
+      aIndices[i] = (PRInt32)i;
+      num++;
     }
-    XtFree((char *)list);
   }
-#endif
   return NS_OK;
 }
 
@@ -313,15 +314,11 @@ NS_METHOD nsListBox::GetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize)
 //-------------------------------------------------------------------------
 NS_METHOD nsListBox::SetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize)
 {
-#if 0
-  if (GetSelectedCount() > 0) {
-    XtVaSetValues(mCList, XmNselectedItemCount, 0, NULL);
-  }
+  gtk_clist_unselect_all(GTK_CLIST(mCList));
   int i;
   for (i=0;i<aSize;i++) {
     SelectItem(aIndices[i]);
   }
-#endif
   return NS_OK;
 }
 
