@@ -351,19 +351,6 @@ private:
    */
   void GetMaxWidgetBounds(nsRect& aMaxWidgetBounds) const;
 
-  void DoSetWindowDimensions(nscoord aWidth, nscoord aHeight)
-  {
-    nsRect oldDim;
-    nsRect newDim(0, 0, aWidth, aHeight);
-    mRootView->GetDimensions(oldDim);
-    if (oldDim != newDim) {
-      // Don't resize the widget. It is already being set elsewhere.
-      mRootView->SetDimensions(newDim, PR_TRUE, PR_FALSE);
-      if (mObserver)
-        mObserver->ResizeReflow(mRootView, aWidth, aHeight);
-    }
-  }
-
 public: // NOT in nsIViewManager, so private to the view module
   nsView* GetRootView() const { return mRootView; }
   nsView* GetMouseEventGrabber() const;
@@ -404,11 +391,6 @@ private:
   nsIScrollableView *mRootScrollable;
   nscolor           mDefaultBackgroundColor;
   nsPoint           mMouseLocation; // device units, relative to mRootView
-
-  // The size for a resize that we delayed until the root view becomes
-  // visible again.
-  nsSize            mDelayedResize;
-
   nsCOMPtr<nsIBlender> mBlender;
   nsISupportsArray  *mCompositeListeners;
   nsCOMPtr<nsIFactory> mRegionFactory;
