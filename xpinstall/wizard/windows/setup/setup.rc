@@ -1,3 +1,6 @@
+//Microsoft Developer Studio generated resource script.
+//
+
 /* -*- Mode: C; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /*
  * The contents of this file are subject to the Netscape Public License
@@ -22,8 +25,6 @@
  *     Sean Su <ssu@netscape.com>
  */
 
-//Microsoft Developer Studio generated resource script.
-//
 #include "resource.h"
 
 #define APSTUDIO_READONLY_SYMBOLS
@@ -116,6 +117,15 @@ END
 
 #endif    // !_MAC
 
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+1                       ICON    DISCARDABLE     "setup.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
