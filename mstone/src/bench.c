@@ -1,4 +1,4 @@
-/* -*- Mode: C; c-file-style: "bsd"; comment-column: 40 -*- */
+/* -*- Mode: C; c-file-style: "stroustrup"; comment-column: 40 -*- */
 /* 
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -220,7 +220,7 @@ retryWrite(ptcx_t ptcx, SOCKET sock, char *buf, int count)
     int ret;
     int byteswritten = 0;
 
-    D_PRINTF(debugfile, "retryWrite(%d, %d)\n", sock, count);
+    D_PRINTF(debugfile, "retryWrite(%d, %d)...\n", sock, count);
     while (count) {
 	if (gf_timeexpired >= EXIT_FAST) {
 	    D_PRINTF (debugfile, "retryWrite gf_timeexpired\n");
@@ -247,7 +247,7 @@ retryWrite(ptcx_t ptcx, SOCKET sock, char *buf, int count)
 	buf += ret;
 	count -= ret;
     }
-    D_PRINTF(debugfile, "retryWrite(%d, %d)=%d\n", sock, count, byteswritten);
+    D_PRINTF(debugfile, "retryWrite(%d, ?)=%d\n", sock, byteswritten);
     return byteswritten;
 }
 
@@ -341,38 +341,6 @@ sendCommand(ptcx_t ptcx, SOCKET sock, char *command)
 
 	if (gf_timeexpired >= EXIT_FAST) {
 	    D_PRINTF(debugfile,"sendCommand() Time expired.\n");
-	    break;
-	}
-    }
-
-    ptcx->byteswritten += sentbytes;
-
-    return sentbytes;
-}
-
-/* assumes we already included the <CRLF>.<CRLF> at the end of message */
-int
-sendMessage(ptcx_t ptcx, SOCKET sock, char *message)
-{
-    int writelen;
-    int sentbytes = 0;
-    int sent;
-
-    writelen = strlen(message);
-
-    D_PRINTF(debugfile, "Writing message to server: len=%d\n", writelen );
-
-    while (sentbytes < writelen) {
-	if ((sent = retryWrite(ptcx, sock, message + sentbytes,
-			       writelen - sentbytes)) == -1) {
-	    strcat (ptcx->errMsg, "<sendMessage");
-            return -1;
-        }
-
-	sentbytes += sent;
-
-	if (gf_timeexpired >= EXIT_FAST) {
-	    D_PRINTF(debugfile,"sendMessage() Time expired.\n");
 	    break;
 	}
     }
@@ -623,7 +591,7 @@ rangeNext (range_t *range, unsigned long last)
     } else if (range->sequential < 0) {	/* decrementing sequential */
 	n = last - 1;
     } else {				/* random */
-	n = range->first + (RANDOM() % range->span);
+	n = range->first + (RANDOM() % (range->span+1));
 	assert ((n >= range->first) && (n <= range->last));
     }
 					/* check range */

@@ -1,4 +1,4 @@
-/* -*- Mode: C; c-file-style: "bsd"; comment-column: 40 -*- */
+/* -*- Mode: C; c-file-style: "stroustrup"; comment-column: 40 -*- */
 /* 
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -65,22 +65,17 @@ typedef struct pish_command {
 
     char *	passwdFormat;
 
+    long	flags;			/* protocol specific flags */
+
     /* SMTP command attrs */
     char *	addressFormat;
     range_t	addressRange;		/* address range for all threads */
 
-    char *	smtpMailFrom;
-    char *	filename;
     int 	numRecipients;	/* recpients per message */
-    int 	msgsize;	/* message size without trailing CRLF.CRLF */
-    char *	msgMailFrom;	/* message mail from (envelope sender) */
-    char *	msgdata;	/* cache the file in mem */
-    int		useEHLO;	/* use EHLO instead of HELO */
-    int 	useAUTHLOGIN;	/* use AUTH LOGIN to authenticate */
-    int 	useAUTHPLAIN;	/* use AUTH PLAIN to authenticate */
-
-    /* POP/IMAP flag to leave mail on server */
-    int 	leaveMailOnServer;	/* IMAP > 2: leave unseen */
+    char *	smtpMailFrom;		/* default from address */
+    char *	filePattern;		/* filename pattern */
+    int		fileCount;		/* number of files */
+    void *	files;			/* array of file info */
 
     /* IMAP command attrs */
     char *	imapSearchFolder;

@@ -1,4 +1,4 @@
-/* -*- Mode: C; c-file-style: "bsd"; comment-column: 40 -*- */
+/* -*- Mode: C; c-file-style: "stroustrup"; comment-column: 40 -*- */
 /* 
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -44,6 +44,9 @@ typedef struct _doPOP3_state {
     int		msgCounter;		/* count in download */
 } doPOP3_state_t;
 
+/* POP3 flags definitions */
+#define leaveMailOnServer 0x01
+
 static void doPop3Exit (ptcx_t ptcx, doPOP3_state_t	*me);
 
 
@@ -58,7 +61,11 @@ PopParseNameValue (pmail_command_t cmd,
     if (pishParseNameValue(cmd, name, tok) == 0)
 	;				/* done */
     else if (strcmp(name, "leavemailonserver") == 0)
-	pish->leaveMailOnServer = atoi(tok);
+	if (atoi(tok) > 0) {
+	    pish->flags |= leaveMailOnServer;
+	} else {
+	    pish->flags &= ~leaveMailOnServer;
+	}
     else {
 	return -1;
     }
@@ -365,7 +372,7 @@ doPop3Loop(ptcx_t ptcx, mail_command_t *cmd, cmd_stats_t *ptimer, void *mystate)
     }
 
       /* if we're not told to leave mail on server, delete the message */
-    if (!pish->leaveMailOnServer) {
+    if (!(pish->flags & leaveMailOnServer)) {
 	/* send the DELE command */
 	sprintf(command, "DELE %d%s", me->msgCounter, CRLF);
 	event_start(ptcx, &stats->cmd);
