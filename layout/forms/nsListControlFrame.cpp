@@ -737,7 +737,7 @@ nsListControlFrame::GetSelectedIndexFromContent(nsIContent *aContent)
     for (inx = 0; inx < numOptions; inx++) {
       nsCOMPtr<nsIContent> option = getter_AddRefs(GetOptionAsContent(options, inx));
       if (option) {
-        if (option == aContent) {
+        if (option.get() == aContent) {
           return inx;
         }
       }
