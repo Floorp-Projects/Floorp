@@ -783,6 +783,20 @@ SEC_DupCrl;
 ;+    local:
 ;+       *;
 ;+};
+;+NSS_3.9.2 { 	# NSS 3.9.2 release
+;+    global:
+NSS_IsInitialized;
+PK11_DestroyGenericObject;
+PK11_DestroyGenericObjects;
+PK11_FindGenericObjects;
+PK11_GetNextGenericObject;
+PK11_GetPrevGenericObject;
+PK11_LinkGenericObject;
+PK11_ReadRawAttribute;
+PK11_UnlinkGenericObject;
+;+    local:
+;+       *;
+;+};
 ;+NSS_3.10 { 	# NSS 3.10 release
 ;+    global:
 CERT_DecodeAltNameExtension;

@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: nssinit.c,v 1.66 2004/04/27 23:04:38 gerv%gerv.net Exp $ */
+/* $Id: nssinit.c,v 1.67 2004/06/21 23:01:51 relyea%netscape.com Exp $ */
 
 #include <ctype.h>
 #include "seccomon.h"
@@ -568,6 +568,11 @@ NSS_Shutdown(void)
     return rv;
 }
 
+PRBool
+NSS_IsInitialized(void)
+{
+    return nss_IsInitted;
+}
 
 
 extern const char __nss_base_rcsid[];

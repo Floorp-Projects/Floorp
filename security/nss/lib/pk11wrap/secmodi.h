@@ -114,6 +114,8 @@ SECStatus PBE_PK11ParamToAlgid(SECOidTag algTag, SECItem *param,
 extern void pk11sdr_Init(void);
 extern void pk11sdr_Shutdown(void);
 
+PRBool pk11_LoginStillRequired(PK11SlotInfo *slot, void *wincx);
+
 SEC_END_PROTOS
 
 #endif

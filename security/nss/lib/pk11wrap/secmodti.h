@@ -44,6 +44,8 @@
 #include "prtypes.h"
 #include "nssilckt.h"
 #include "pk11init.h"
+#include "secmodt.h"
+#include "pkcs11t.h"
 
 #ifndef NSS_3_4_CODE
 #define NSS_3_4_CODE
@@ -189,6 +191,17 @@ struct PK11ContextStr {
 				     * CKM_SHA, etc.*/
     PRBool		fortezzaHack; /*Fortezza SSL has some special
 				       * non-standard semantics*/
+};
+
+/*
+ * structure to hold a pointer to a unique PKCS #11 object 
+ * (pointer to the slot and the object id).
+ */
+struct PK11GenericObjectStr {
+    PK11GenericObject *prev;
+    PK11GenericObject *next;
+    PK11SlotInfo *slot;
+    CK_OBJECT_HANDLE objectID;
 };
 
 #endif /* _SECMODTI_H_ */
