@@ -63,8 +63,8 @@ function createShortcuts()
   fileExe              = getFolder("file:///", fTemp);
   scExeDesc            = "$ProductName$";
   scFolderName         = "$ProductName$";
-  scSafeModeDesc       = "$ProductName$ (No Extensions)";
-  scSafeModeParam      = "-no-extensions";
+  scSafeModeDesc       = "$ProductName$ (Safe Mode)";
+  scSafeModeParam      = "-safe-mode";
 
   if (winreg) {
     // determine if the script is running under NT or not
@@ -143,18 +143,11 @@ function createShortcuts()
       File.windowsShortcut(fileExe, fFolderPrograms, scExeDesc, fProgram, "", fileExe, 0);
       File.windowsShortcut(fileExe, fFolderPrograms,  scSafeModeDesc, fProgram, scSafeModeParam,  fileExe, 0);
     }
-    if (winreg.getValueNumber(subkey, "Create Quick Launch Shortcut") != 0 && folderQuickLaunchExists) {
-      logComment("creating QuickLaunch in " + fFolderQuickLaunch);
+    if (winreg.getValueNumber(subkey, "Create Quick Launch Shortcut") != 0 && folderQuickLaunchExists)
       File.windowsShortcut(fileExe, fFolderQuickLaunch, scExeDesc, fProgram,  "", fileExe, 0);
-    }
     // Always create the default shortcuts. 
     File.windowsShortcut(fileExe, fDefShortcuts,    scExeDesc,      fProgram, "",               fileExe, 0);
     File.windowsShortcut(fileExe, fDefShortcuts,    scSafeModeDesc, fProgram, scSafeModeParam,  fileExe, 0);
-
-    // Clean up after ourselves
-    winreg.deleteValue(subkey, "Create Desktop Shortcut");
-    winreg.deleteValue(subkey, "Create Quick Launch Shortcut");
-    winreg.deleteValue(subkey, "Create Start Menu Shortcut");
 
     if(!restrictedAccess) {
       winreg.setRootKey(winreg.HKEY_LOCAL_MACHINE);
@@ -337,6 +330,10 @@ function upgradeCleanup()
   deleteThisFile("Program",     "defaults/pref/winpref.js");
   deleteThisFile("Program",     "defaults/pref/xpinstall.js");
   deleteThisFolder("Program",   "defaults/profile/US");
+  
+  // These files are related to app patches and will interfere with the 
+  // UA/app version strings if we do not remove them. 
+  deleteThisFile("Program",	    "defaults/pref/bug259708.js");
   
   // Now clean up Uninstall entries that may be laying around in the
   // registry for older versions of the software that we're overwriting/

@@ -44,7 +44,11 @@ function upgradeCleanup()
   deleteThisFile("Program",	      "defaults/pref/xpinstall.js");
   deleteThisFile("Program",	      "defaults/profile/panels.rdf");
   deleteThisFolder("Program",	    "defaults/profile/US");
-
+  
+  // These files are related to app patches and will interfere with the 
+  // UA/app version strings if we do not remove them. 
+  deleteThisFile("Program",	    "defaults/pref/bug259708.js");
+  
   // Remove defunct miscellany
   deleteThisFolder("Program",     "ipc");
   deleteThisFile("Program",       "mangle");
@@ -56,7 +60,7 @@ function upgradeCleanup()
 
 var srDest = $SpaceRequired$;
 
-var err = initInstall("$ProductName$", "Firefox", "$Version$"); 
+var err = initInstall("$ProductName$", "Browser", "$Version$"); 
 logComment("initInstall: " + err);
 
 var communicatorFolder = getFolder("Program");

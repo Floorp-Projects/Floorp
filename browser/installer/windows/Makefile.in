@@ -1,4 +1,4 @@
-# ***** BEGIN LICENSE BLOCK *****   
+# ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
 # The contents of this file are subject to the Mozilla Public License Version
@@ -42,11 +42,53 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-CONFIG_DIR=$(shell cygpath -a $(srcdir))
+include $(topsrcdir)/toolkit/mozapps/installer/package-name.mk
+
+CONFIG_DIR=$(shell cygpath -a instgen)
 OBJ_DIR=$(shell cygpath -a $(DEPTH))
 SRC_DIR=$(shell cygpath -a $(topsrcdir))
 
-installer: firefox.manifest
+LOCALIZED_FILES = \
+	install.it \
+	$(NULL)
+
+PP_LOCALIZED_FILES = \
+	packages-static \
+	config.it \
+	uninstall.it \
+	installer.cfg \
+	$(NULL)
+
+INSTALLER_FILES = \
+	abe.jst \
+	adt.jst \
+	browser.jst \
+	chatzilla.jst \
+	editor.jst \
+	help.jst \
+	inspector.jst \
+	psm.jst \
+	talkback.jst \
+	venkman.jst \
+	xpcom.jst \
+	redirect.it \
+	app.tag \
+	7zip.bat \
+	$(NULL)
+
+DEFINES += -DAB_CD=$(AB_CD) -DPKG_BASENAME=$(PKG_BASENAME)
+
+include $(topsrcdir)/toolkit/locales/$(AB_CD)/installer/windows/charset.mk
+
+installer:
+	$(NSINSTALL) -D instgen
+	$(INSTALL) $(addprefix $(topsrcdir)/toolkit/locales/$(AB_CD)/installer/windows/,$(LOCALIZED_FILES)) $(addprefix $(srcdir)/,$(INSTALLER_FILES)) instgen
+	iconv -f UTF-8 -t $(WIN_INSTALLER_CHARSET) $(topsrcdir)/browser/locales/$(AB_CD)/installer/installer.inc > instgen/installer.inc
+	$(EXIT_ON_ERROR) \
+	for i in $(PP_LOCALIZED_FILES); do \
+	  $(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) -Iinstgen/installer.inc $(srcdir)/$$i > instgen/$$i; \
+	done
+	$(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) -I$(topsrcdir)/browser/locales/$(AB_CD)/defines.inc $(srcdir)/ab-CD.jst > instgen/$(AB_CD).jst
 	cd $(topsrcdir)/toolkit/mozapps/installer && perl build_static.pl -config "$(CONFIG_DIR)" -srcDir "$(SRC_DIR)" -objDir "$(OBJ_DIR)"
 
 include $(topsrcdir)/config/rules.mk
@@ -58,8 +100,3 @@ ifndef MOZ_USE_OFFICIAL_BRANDING
 	cp $(srcdir)/Watermrk.bmp  $(DIST)/branding/Watermrk.bmp
 endif
 
-# Create a manifest for use with codesighs, by stripping "bin/" off of the
-# beginning of lines in the packages file.
-
-firefox.manifest: packages-static
-	grep "^bin\\\\" $^ | sed "s?^bin\\\\??" > $@

@@ -8,22 +8,16 @@
 ; ; file comment
 ;
 
+#filter substitution
+
 bin/.autoreg
 
-[langenus]
-; en-US 
-bin/chrome/en-US.jar
-bin/chrome/en-unix.jar
-
-[regus]
-; US
-; If you add a new directory you must explicitly call addDirectory in regus.jst
-bin/chrome/US.jar
-bin/defaults/profile/US/*
+[@AB_CD@]
+bin/chrome/@AB_CD@.jar
+bin/defaults/pref/firefox-l10n.js
+; If you add a new directory you must explicitly call addDirectory in ab-CD.jst
+bin/browserconfig.properties
 bin/searchplugins/*
-
-[deflenus]
-; Default files for US
 bin/defaults/profile/bookmarks.html
 bin/defaults/profile/localstore.rdf
 bin/defaults/profile/prefs.js
@@ -31,15 +25,14 @@ bin/defaults/profile/search.rdf
 bin/defaults/profile/mimeTypes.rdf
 bin/defaults/profile/extensions/Extensions.rdf
 bin/defaults/profile/extensions/installed-extensions.txt
-bin/defaults/profile/extensions/{641d8d09-7dda-4850-8228-ac0ab65e2ac9}/install.rdf
 bin/defaults/profile/extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}/install.rdf
+bin/defaults/profile/chrome/*
 
 [xpcom]
 bin/libmozjs.so
 bin/libplc4.so
 bin/libplds4.so
 bin/libxpcom.so
-bin/libxpcom_core.so
 bin/libxpistub.so
 bin/libnspr4.so
 bin/components/libxpinstall.so
@@ -60,7 +53,6 @@ bin/xpicleanup
 bin/components/accessibility.xpt
 bin/components/accessibility-atk.xpt
 bin/components/appshell.xpt
-bin/components/appstartup.xpt
 bin/components/autocomplete.xpt
 bin/components/autoconfig.xpt
 bin/components/bookmarks.xpt
@@ -89,10 +81,12 @@ bin/components/dom_views.xpt
 bin/components/dom_xbl.xpt
 bin/components/dom_xpath.xpt
 bin/components/dom_xul.xpt
+bin/components/dom_loadsave.xpt
 bin/components/downloads.xpt
 bin/components/editor.xpt
 bin/components/embed_base.xpt
 bin/components/exthandler.xpt
+bin/components/fastfind.xpt
 bin/components/filepicker.xpt
 bin/components/find.xpt
 bin/components/gfx.xpt
@@ -124,6 +118,7 @@ bin/components/necko_dns.xpt
 bin/components/necko_file.xpt
 bin/components/necko_ftp.xpt
 bin/components/necko_http.xpt
+bin/components/necko_jar.xpt
 bin/components/necko_res.xpt
 bin/components/necko_socket.xpt
 bin/components/necko_strconv.xpt
@@ -133,13 +128,11 @@ bin/components/oji.xpt
 bin/components/passwordmgr.xpt
 bin/components/plugin.xpt
 bin/components/prefetch.xpt
-bin/components/prefmigr.xpt
 bin/components/pref.xpt
 bin/components/profile.xpt
 bin/components/progressDlg.xpt
 bin/components/proxyObjInst.xpt
 bin/components/rdf.xpt
-bin/components/related.xpt
 bin/components/satchel.xpt
 bin/components/search.xpt
 bin/components/shistory.xpt
@@ -147,8 +140,6 @@ bin/components/sidebar.xpt
 bin/components/toolkitprofile.xpt
 bin/components/txtsvc.xpt
 bin/components/txmgr.xpt
-bin/components/typeaheadfind.xpt
-bin/components/ucnative.xpt
 bin/components/uconv.xpt
 bin/components/unicharutil.xpt
 bin/components/uriloader.xpt
@@ -226,6 +217,7 @@ bin/res/ua.css
 bin/res/html.css
 bin/res/quirk.css
 bin/res/forms.css
+bin/res/platform-forms.css
 bin/res/EditorOverride.css
 bin/res/table-add-column-after-active.gif
 bin/res/table-add-column-after-hover.gif

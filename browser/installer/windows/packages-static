@@ -8,22 +8,15 @@
 ; ; file comment
 ;
 
+#filter substitution
+
 bin/.autoreg
 
-[langenus]
-; en-US 
-bin\chrome\en-US.jar
-bin\chrome\en-win.jar
-
-[regus]
-; US
-; If you add a new directory you must explicitly call addDirectory in regus.jst
-bin\chrome\US.jar
-bin\defaults\profile\US\*
+[@AB_CD@]
+bin\chrome\@AB_CD@.jar
+bin\defaults\pref\firefox-l10n.js
+bin\browserconfig.properties
 bin\searchplugins\*
-
-[deflenus]
-; Default files for US
 bin\defaults\profile\bookmarks.html
 bin\defaults\profile\localstore.rdf
 bin\defaults\profile\prefs.js
@@ -33,6 +26,7 @@ bin\defaults\profile\extensions\Extensions.rdf
 bin\defaults\profile\extensions\installed-extensions.txt
 bin\defaults\profile\extensions\{641d8d09-7dda-4850-8228-ac0ab65e2ac9}\install.rdf
 bin\defaults\profile\extensions\{972ce4c6-7e08-4474-a285-3208198ce6fd}\install.rdf
+bin\defaults\profile\chrome\*
 
 [xpcom]
 bin\js3250.dll
@@ -44,7 +38,6 @@ bin\nspr4.dll
 bin\components\xpinstal.dll
 bin\components\jar50.dll
 bin\xpcom_compat.dll
-bin\xpcom_core.dll
 
 [browser]
 ; [Base Browser Files]
@@ -60,7 +53,6 @@ bin\components\alerts.xpt
 bin\components\accessibility.xpt
 bin\components\accessibility-msaa.xpt
 bin\components\appshell.xpt
-bin\components\appstartup.xpt
 bin\components\autocomplete.xpt
 bin\components\autoconfig.xpt
 bin\components\bookmarks.xpt
@@ -90,10 +82,12 @@ bin\components\dom_views.xpt
 bin\components\dom_xbl.xpt
 bin\components\dom_xpath.xpt
 bin\components\dom_xul.xpt
+bin\components\dom_loadsave.xpt
 bin\components\downloads.xpt
 bin\components\editor.xpt
 bin\components\embed_base.xpt
 bin\components\exthandler.xpt
+bin\components\fastfind.xpt
 bin\components\find.xpt
 bin\components\gfx.xpt
 bin\components\helperAppDlg.xpt
@@ -128,6 +122,7 @@ bin\components\necko_dns.xpt
 bin\components\necko_file.xpt
 bin\components\necko_ftp.xpt
 bin\components\necko_http.xpt
+bin\components\necko_jar.xpt
 bin\components\necko_res.xpt
 bin\components\necko_viewsource.xpt
 bin\components\oji.xpt
@@ -136,6 +131,7 @@ bin\components\plugin.xpt
 bin\components\pref.xpt
 bin\components\prefetch.xpt
 bin\components\prefmigr.xpt
+bin\components\profile.xpt
 bin\components\progressDlg.xpt
 bin\components\proxyObject.xpt
 bin\components\rdf.xpt
@@ -148,7 +144,6 @@ bin\components\signonviewer.xpt
 bin\components\toolkitprofile.xpt
 bin\components\txtsvc.xpt
 bin\components\txmgr.xpt
-bin\components\typeaheadfind.xpt
 bin\components\ucnative.xpt
 bin\components\uconv.xpt
 bin\components\unicharutil.xpt
@@ -212,6 +207,7 @@ bin\res\ua.css
 bin\res\html.css
 bin\res\quirk.css
 bin\res\forms.css
+bin\res\platform-forms.css
 bin\res\EditorOverride.css
 bin\res\table-add-column-after-active.gif
 bin\res\table-add-column-after-hover.gif
@@ -284,3 +280,13 @@ bin\chrome\help.jar
 ; [Additional Browsing Enhancements]
 [abe]
 
+[talkback]
+bin\components\qfaservices.dll
+bin\components\qfaservices.xpt
+bin\components\BrandRes.dll
+bin\components\fullsoft.dll
+bin\components\master.ini
+bin\components\talkback-l10n.ini
+bin\components\talkback.cnt
+bin\components\talkback.exe
+bin\components\talkback.hlp
