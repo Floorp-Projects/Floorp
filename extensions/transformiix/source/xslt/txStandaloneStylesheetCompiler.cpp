@@ -354,7 +354,8 @@ txDriver::onDoneCompiling(txStylesheetCompiler* aCompiler, nsresult aResult,
 }
 
 nsresult
-txDriver::loadURI(const nsAString& aUri, txStylesheetCompiler* aCompiler)
+txDriver::loadURI(const nsAString& aUri, const nsAString& aReferrerUri,
+                  txStylesheetCompiler* aCompiler)
 {
     nsAutoString errMsg;
     istream* xslInput = URIUtils::getInputStream(aUri, errMsg);
