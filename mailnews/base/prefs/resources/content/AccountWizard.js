@@ -206,6 +206,16 @@ function FinishAccount() {
     if (!serverIsNntp(pageData))
         EnableCheckMailAtStartUpIfNeeded(gCurrentAccount);
 
+    if (!document.getElementById("downloadMsgs").hidden) {
+      if (document.getElementById("downloadMsgs").checked) {
+        window.opener.gNewAccountToLoad = gCurrentAccount; // load messages for new POP account
+      }
+      else if (gCurrentAccount == am.defaultAccount) {
+        // stop check for msgs when this is first account created from new profile
+        window.opener.gLoadStartFolder = false;
+      }
+    }
+
     // in case we crash, force us a save of the prefs file NOW
     try {
       am.saveAccountInfo();
@@ -224,7 +234,6 @@ function FinishAccount() {
   catch(ex) { 
   }
 }
-
 
 // prepopulate pageData with stuff from accountData
 // use: to prepopulate the wizard with account information

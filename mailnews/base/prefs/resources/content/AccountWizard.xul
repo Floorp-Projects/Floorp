@@ -256,6 +256,10 @@ Rights Reserved.
         </rows>
       </grid>
       <separator/>
+      <hbox id="downloadMsgsBox">
+        <checkbox id="downloadMsgs" label="&downloadOnLogin.label;" checked="true"/>
+      </hbox>
+      <spacer flex="1"/>
       <description>&clickFinish.label;</description>
     </vbox>
   </wizardpage>

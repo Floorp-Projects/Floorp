@@ -208,6 +208,8 @@ function msgOpenAccountWizard()
       window.openDialog("chrome://messenger/content/AccountWizard.xul",
                         "AccountWizard", "chrome,modal,titlebar,resizable");
 
+  loadInboxForNewAccount();
+
   //For the first account we need to reset the default smtp server in the panel.
   var smtpService = Components.classes["@mozilla.org/messengercompose/smtp;1"].getService(Components.interfaces.nsISmtpService);
   var serverCount = smtpService.smtpServers.Count();
@@ -230,4 +232,20 @@ function MsgAccountManager(selectPage)
     window.openDialog("chrome://messenger/content/AccountManager.xul",
                       "AccountManager", "chrome,modal,titlebar,resizable",
                       { server: server, selectPage: selectPage });
+}
+
+function loadInboxForNewAccount() {
+  // gNewAccountToLoad is set in the final screen of the Account Wizard if a POP account
+  // was created, the download messages box is checked, and the wizard was opened from the 3pane
+  if (gNewAccountToLoad) {
+    var rootMsgFolder = gNewAccountToLoad.incomingServer.rootMsgFolder;
+    var outNumFolders = new Object();
+    var inboxFolder = rootMsgFolder.getFoldersWithFlag(0x1000, 1, outNumFolders);      
+    var selectedFolderResource = inboxFolder.QueryInterface(Components.interfaces.nsIRDFResource);
+    var selectedFolder = selectedFolderResource.QueryInterface(Components.interfaces.nsIFolder);
+    SelectFolder(selectedFolder.URI);
+    window.focus();
+    setTimeout(MsgGetMessage, 0);
+    gNewAccountToLoad = null;
+  }
 }

@@ -124,6 +124,7 @@ function serverPageInit() {
       // Set pop3 server type as default selection
       var pop3RadioItem = document.getElementById("pop3");
       serverTypeRadioGroup.selectedItem = pop3RadioItem;
+      setServerType();
     }
   }
 
@@ -187,4 +188,14 @@ function setServerType()
   var pageData = parent.GetPageData();
   var serverType = (document.getElementById("servertype")).selectedItem.value;
   setPageData(pageData, "server", "servertype", serverType);
+
+  var ioService = Components.classes["@mozilla.org/network/io-service;1"]
+                            .getService(Components.interfaces.nsIIOService);
+
+  // only show checkbox if (1) mail window is opener (2) this is a pop account and (3) we are online  
+  var openedFromMail = (window.opener.location.href == "chrome://messenger/content/messenger.xul") || 
+                       (window.opener.location.href == "chrome://messenger/content/mail3PaneWindowVertLayout.xul");
+         
+  document.getElementById("downloadMsgs").hidden = (openedFromMail && serverType == "pop3" && !ioService.offline) ? false : true;
+  
 }
