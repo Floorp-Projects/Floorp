@@ -34,7 +34,7 @@
 /*
  * CMS ASN.1 templates
  *
- * $Id: cmsasn1.c,v 1.2 2000/06/13 21:56:26 chrisk%netscape.com Exp $
+ * $Id: cmsasn1.c,v 1.3 2000/06/14 23:12:48 chrisk%netscape.com Exp $
  */
 
 #include "cmslocal.h"
@@ -149,9 +149,9 @@ static const SEC_ASN1Template NSSCMSSignerIdentifierTemplate[] = {
     { SEC_ASN1_CHOICE,
 	  offsetof(NSSCMSSignerIdentifier,identifierType), NULL,
 	  sizeof(NSSCMSSignerIdentifier) },
-    { SEC_ASN1_EXPLICIT | SEC_ASN1_CONSTRUCTED | SEC_ASN1_CONTEXT_SPECIFIC | 0,
+    { SEC_ASN1_POINTER | SEC_ASN1_CONTEXT_SPECIFIC | 0,
 	  offsetof(NSSCMSSignerIdentifier,id.subjectKeyID),
-	  SEC_PointerToOctetStringTemplate,
+	  SEC_OctetStringTemplate,
 	  NSSCMSRecipientID_SubjectKeyID },
     { SEC_ASN1_POINTER,
 	  offsetof(NSSCMSSignerIdentifier,id.issuerAndSN),
