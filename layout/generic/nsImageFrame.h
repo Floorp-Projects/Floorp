@@ -43,6 +43,7 @@
 #include "nsIPresContext.h"
 #include "nsIImageFrame.h"
 #include "nsIIOService.h"
+#include "nsIObserver.h"
 
 #include "nsTransform2D.h"
 #include "imgIRequest.h"
@@ -56,6 +57,7 @@ class nsILoadGroup;
 struct nsHTMLReflowState;
 struct nsHTMLReflowMetrics;
 struct nsSize;
+class nsIPrefBranch;
 
 class nsImageFrame;
 
@@ -138,7 +140,13 @@ public:
 
   NS_IMETHOD GetIntrinsicImageSize(nsSize& aSize);
 
-  static void ReleaseGlobals() { NS_IF_RELEASE(sIOService); }
+  static void ReleaseGlobals() {
+    if (gIconLoad) {
+      gIconLoad->Shutdown();
+      NS_RELEASE(gIconLoad);
+    }
+    NS_IF_RELEASE(sIOService);
+  }
 
 protected:
   // nsISupports
@@ -179,7 +187,7 @@ protected:
 
   void DisplayAltFeedback(nsIPresContext*      aPresContext,
                           nsIRenderingContext& aRenderingContext,
-                          PRInt32              aIconId);
+                          imgIRequest*         aRequest);
 
   void GetInnerArea(nsIPresContext* aPresContext,
                     nsRect& aInnerArea) const;
@@ -249,8 +257,6 @@ private:
   
   nsMargin            mBorderPadding;
 
-  nsIPresContext*     mPresContext;  // weak ref
-
   static nsIIOService* sIOService;
 
   /* loading / broken image icon support */
@@ -269,55 +275,43 @@ private:
   // is, handle it and return TRUE otherwise, return FALSE (aCompleted
   // is an input arg telling the routine if the request has completed)
   PRBool HandleIconLoads(imgIRequest* aRequest, PRBool aCompleted);
-  void InvalidateIcon(nsIPresContext *aPresContext);
+  void InvalidateIcon();
 
-  class IconLoad;
-  friend class IconLoad; // to allow |IconLoad| to access |SingleIconLoad|.
-  struct SingleIconLoad {
-    nsCOMPtr<imgIRequest> mRequest;
-  };
-
-  class IconLoad {
+  class IconLoad : public nsIObserver {
     // private class that wraps the data and logic needed for 
     // broken image and loading image icons
   public:
-    IconLoad(nsIPresContext *aPresContext, imgIDecoderObserver* aObserver)
-      : mRefCount(0),
-        mLoadObserver(aObserver),
-        mIconsLoaded(PR_FALSE)
-    {
-      GetPrefs(aPresContext);
-    }
+    IconLoad(imgIDecoderObserver* aObserver);
 
-    ~IconLoad()
+    void Shutdown()
     {
-      if (mIconLoads[0].mRequest) {
-        mIconLoads[0].mRequest->Cancel(NS_ERROR_FAILURE);
+      // in case the pref service releases us later
+      if (mLoadingImage) {
+        mLoadingImage->Cancel(NS_ERROR_FAILURE);
+        mLoadingImage = nsnull;
       }
-      if (mIconLoads[1].mRequest) {
-        mIconLoads[1].mRequest->Cancel(NS_ERROR_FAILURE);
+      if (mBrokenImage) {
+        mBrokenImage->Cancel(NS_ERROR_FAILURE);
+        mBrokenImage = nsnull;
       }
     }
 
-    void AddRef(void) { ++mRefCount; }
-    PRBool Release(void) { return --mRefCount == 0; }
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIOBSERVER
+
   private:
-    void GetPrefs(nsIPresContext *aPresContext);
+    void GetPrefs(nsIPrefBranch *aPrefService);
 
-    PRUint32         mRefCount;
-
-    // values for image loading icons
-#define NS_ICON_LOADING_IMAGE (0)
-#define NS_ICON_BROKEN_IMAGE  (1)
   public:
-    struct SingleIconLoad mIconLoads[2];
+    nsCOMPtr<imgIRequest> mLoadingImage;
+    nsCOMPtr<imgIRequest> mBrokenImage;
     nsCOMPtr<imgIDecoderObserver> mLoadObserver; // keeps the observer alive
-    PRPackedBool     mIconsLoaded;
+    PRUint8          mIconsLoaded;
     PRPackedBool     mPrefForceInlineAltText;
     PRPackedBool     mPrefAllImagesBlocked;
     PRPackedBool     mPrefShowPlaceholders;
   };
-  static IconLoad* mIconLoad; // singleton pattern: one LoadIcons instance is used
+  static IconLoad* gIconLoad; // singleton pattern: one LoadIcons instance is used
 };
 
 #endif /* nsImageFrame_h___ */
