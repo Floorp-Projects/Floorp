@@ -77,6 +77,8 @@ public:
 
 private:
 
+  nsresult EnsureSecurityStringBundle();
+  
   nsresult AlertDialog(nsIInterfaceRequestor *ctx, const char *prefName,
                    const PRUnichar *messageName,
                    const PRUnichar *showAgainName);
