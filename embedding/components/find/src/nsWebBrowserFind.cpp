@@ -648,24 +648,6 @@ nsresult nsWebBrowserFind::SearchInFrame(nsIDOMWindow* aWindow,
     if (!mFind)
         mFind = do_CreateInstance(NS_FIND_CONTRACTID, &rv);
 
-#if DEBUG_smfr
-    {
-        nsCOMPtr<nsIDocShell>  searchShell;
-        GetDocShellFromWindow(searchFrame, getter_AddRefs(searchShell));
-        nsCOMPtr<nsIWebNavigation> webnav = do_QueryInterface(searchShell);
-        if (webnav)
-        {
-            nsCOMPtr<nsIURI> curURI;
-            webnav->GetCurrentURI(getter_AddRefs(curURI));
-            nsXPIDLCString   uriSpec;
-            if (curURI)
-                curURI->GetSpec(getter_Copies(uriSpec));
-            
-            printf("Searching frame %s\n", (const char*)uriSpec);
-        }
-    }
-#endif
-
     (void) mFind->SetCaseSensitive(mMatchCase);
     (void) mFind->SetFindBackwards(mFindBackwards);
 
