@@ -130,34 +130,41 @@
   <observes element="dialog.start" attribute="ready" onchange="StartupViewSource()"/>
     
   <menubar>
-      <menu value="&fileMenu.label;">
-      <menuitem value="&browserCmd.label;" onaction="BrowserNewWindow();"/>
-      	<menu value="&newMenu.label;">
-      		<menuitem value="&newMailCmd.label;" onaction="MsgNewMessage();"/>
-		      <menuitem value="&newChatCmd.label;" onaction=""/>
-		      <menuseparator />
-		      <menuitem value="&newBlankPageCmd.label;" onaction="BrowserNewWindow();"/>
-		      <menuitem value="&newPageFromTemplateCmd.label;" onaction="BrowserNewWindow();"/>
-		      <menuitem value="&newPageFromDraftCmd.label;" onaction="BrowserNewWindow();"/>
-    		</menu>
-      <menuitem value="&openCmd.label;" onaction="BrowserOpenWindow();"/>
-      <menuseparator />
-      <menuitem value="&sendPageCmd.label;" onaction="NotImplementedYet();"/>
-	   <menuseparator />
-      <menu value="&offlineMenu.label;">
-	      <menuitem value="&offlineGoOfflineCmd.label;" onaction="NotImplementedYet();"/>
-	      <menuseparator />
-	      <menuitem value="&offlineSynchronizeCmd.label;" onaction="NotImplementedYet();"/>
-      </menu>
-      <menuseparator />
-      <menuitem value="&printSetupCmd.label;" onaction=";"/>
-      <menuitem value="&printPreviewCmd.label;" onaction=""/>
-      <menuitem value="&printCmd.label;" onaction="BrowserPrint()"/>
-      <menuseparator />
-	  <menuitem value="closeCmd.label" onaction="BrowserClose();"/>
-	  <menuitem value="quitCmd.label" onaction="BrowserExit();"/>
+    <menu value="&fileMenu.label;">
+	    <menupopup>
+			  <menuitem value="&browserCmd.label;" onaction="BrowserNewWindow();"/>
+      			<menu value="&newMenu.label;">
+				  <menupopup>
+      				<menuitem value="&newMailCmd.label;" onaction="MsgNewMessage();"/>
+					  <menuitem value="&newChatCmd.label;" onaction=""/>
+					  <menuseparator />
+					  <menuitem value="&newBlankPageCmd.label;" onaction="BrowserNewWindow();"/>
+					  <menuitem value="&newPageFromTemplateCmd.label;" onaction="BrowserNewWindow();"/>
+					  <menuitem value="&newPageFromDraftCmd.label;" onaction="BrowserNewWindow();"/>
+				  </menupopup>
+    			</menu>
+			  <menuitem value="&openCmd.label;" onaction="BrowserOpenWindow();"/>
+			  <menuseparator />
+			  <menuitem value="&sendPageCmd.label;" onaction="NotImplementedYet();"/>
+			   <menuseparator />
+			  <menu value="&offlineMenu.label;">
+				  <menupopup>
+				  <menuitem value="&offlineGoOfflineCmd.label;" onaction="NotImplementedYet();"/>
+				  <menuseparator />
+				  <menuitem value="&offlineSynchronizeCmd.label;" onaction="NotImplementedYet();"/>
+				  </menupopup>
+			  </menu>
+			  <menuseparator />
+			  <menuitem value="&printSetupCmd.label;" onaction=";"/>
+			  <menuitem value="&printPreviewCmd.label;" onaction=""/>
+			  <menuitem value="&printCmd.label;" onaction="BrowserPrint()"/>
+			  <menuseparator />
+			  <menuitem value="closeCmd.label" onaction="BrowserClose();"/>
+			  <menuitem value="quitCmd.label" onaction="BrowserExit();"/>
+		</menupopup>
     </menu>
-	<menu value="&editMenu.label;"> 
+	<menu value="&editMenu.label;">
+	  <menupopup> 
       <menuitem value="&undoCmd.label;" onaction="NotImplementedYet();" disabled=""/> 
       <menuitem value="&redoCmd.label;" onaction="NotImplementedYet();" disabled=""/> 
       <menuseparator /> 
@@ -169,9 +176,11 @@
       <menuitem value="&selectAllCmd.label;" onaction="NotImplementedYet();"/> 
       <menuseparator /> 
       <menuitem value="&preferences.label;" onaction="DoPreferences();"/> 
+	  </menupopup>
     </menu> 
 
     <menu value="&viewMenu.label;">
+	  <menupopup>
       <menuitem value="&toolbarsCmd.label;" onaction="NotImplementedYet();" disabled=""/>
       <menuitem value="&sidebarCmd.label;" onaction="NotImplementedYet();" disabled=""/>
       <menuseparator />
@@ -179,12 +188,14 @@
       <menuitem value="Reduce Text Size" onaction="NotImplementedYet();" disabled=""/>
       <menuseparator />
       <menu value="&useStyleSheetMenu.label;" onaction="NotImplementedYet();">
-	      <menuitem value="&useStyleSheetDefaultCmd.label;" onaction="NotImplementedYet();" disabled=""/>
+	      <menupopup>
+		  <menuitem value="&useStyleSheetDefaultCmd.label;" onaction="NotImplementedYet();" disabled=""/>
 	      <menuseparator />
 	      <menuitem value="&useStyleSheetEasyReadingCmd.label;" onaction="NotImplementedYet();" disabled=""/>
 	      <menuitem value="&useStyleSheetMaximumInformationCmd.label;" onaction="NotImplementedYet();" disabled=""/>
 	      <menuitem value="&useStlyleSheetBizarreCmd.label;" onaction="NotImplementedYet();" disabled=""/>
-      </menu>
+          </menupopup>
+	  </menu>
       <menuseparator />
       <menuitem value="&reloadCmd.label;" onaction="BrowserReload();" disabled=""/>
       <menuitem value="&showImagesCmd.label;" onaction="NotImplementedYet();" disabled=""/>
@@ -194,13 +205,17 @@
       <menuitem value="&pageInfoCmd.label;" onaction="NotImplementedYet();"/>
       <menuseparator />
       <menu value="&charSetMenu.label;">
-	      <menuitem value="&charWesternCmd.label;" onaction="BrowserSetDocumentCharacterSet('ISO-8859-1');"/>
+	      <menupopup>
+		  <menuitem value="&charWesternCmd.label;" onaction="BrowserSetDocumentCharacterSet('ISO-8859-1');"/>
 	      <menuitem value="&charJapaneseCmd.label;" onaction="BrowserSetDocumentCharacterSet('ISO-2022-JP');"/>
 	      <menuitem value="&charShiftJisCmd.label;" onaction="BrowserSetDocumentCharacterSet('Shift_JIS');"/>
 	      <menuitem value="&charEupCmd.label;" onaction="BrowserSetDocumentCharacterSet('EUC-JP');"/>
+	      </menupopup>
 	   </menu>
+	   </menupopup>
     </menu>
     <menu value="&searchMenu.label;">
+	  <menupopup>
       <menuitem value="&findOnCmd.label;" onaction="BrowserFind();;" disabled=""/>
       <menuitem value="&findAgainCmd.label;" onaction="BrowserFindAgain();" disabled=""/>
       <menuseparator />
@@ -215,13 +230,17 @@
       <menuitem value="&searchPeopleCmd.label;" onaction="NotImplementedYet();" disabled=""/>
       <menuseparator />
       <menuitem value="&searchComputerCmd.label;" onaction="NotImplementedYet();" disabled=""/>
+	  </menupopup>
     </menu>
     <menu value="&goMenu.label;">
+	  <menupopup>
       <menuitem value="&goBackCmd.label;" onaction="BrowserBack();" disabled=""/>
       <menuitem value="&goForwardCmd.label;" onaction="BrowserForward();" disabled=""/>
       <menuitem value="&goHomeCmd.label;" onaction="BrowserHome();" disabled=""/>
+	  </menupopup>
     </menu>
 	 <menu value="&tasksMenu.label;">
+	  <menupopup>
       <menuitem value="&navigatorCmd.label;" onaction="NotImplementedYet();" disabled=""/>
       <menuitem value="&messengerCmd.label;" onaction="OpenMessenger();" />
       <menuitem value="&editorCmd.label;"    onaction="OpenEditor();" />
@@ -229,10 +248,12 @@
       <menuitem value="&chatCmd.label;" onaction="NotImplementedYet();" disabled=""/>
       <menuitem value="&shoppingCartCmd.label;" onaction="NotImplementedYet();" disabled=""/>
       <menu value="&toolsMenu.label;">
-	      <menuitem value="&toolsPluginsInfoCmd.label;" onaction="NotImplementedYet();" disabled=""/>
+	      <menupopup>
+		  <menuitem value="&toolsPluginsInfoCmd.label;" onaction="NotImplementedYet();" disabled=""/>
 	      <menuitem value="&toolsServerToolsCmd.label;" onaction="NotImplementedYet();" disabled=""/>
 	      <menuitem value="&toolsJavaConsoleCmd.label;" onaction="NotImplementedYet();" disabled=""/>
 	      <menuitem value="&toolsJavascriptDebuggerCmd.label;" onaction="NotImplementedYet();" disabled=""/>
+		  </menupopup>
       </menu>
       <menuseparator />
       <menuitem value="&securityInfo.label;" onaction="NotImplementedYet();" disabled=""/>
@@ -240,9 +261,11 @@
       <menuitem value="&window1Cmd.label;" onaction="NotImplementedYet();" key="1" disabled=""/>
       <menuitem value="&window2Cmd.label;" onaction="NotImplementedYet();" disabled=""/>
       <menuitem value="&window3Cmd.label;" onaction="NotImplementedYet();" disabled=""/>
+	  </menupopup>
     </menu>
     
      <menu value="&helpMenuCmd.label;">
+	  <menupopup>
       <menuitem value="&helpContentsCmd.label;" onaction="window.frames[0].location.href = 'http://www.mozilla.org/projects/user-docs/local/browserhelp/browsertop.html'" disabled=""/>
       <menuseparator />
       <menuitem value="&howTutorialCmd.label;" onaction="NotImplementedYet();" disabled=""/>
@@ -256,6 +279,7 @@
       <menuseparator />
       <menuitem value="&aboutCommunicatorCmd.label;" 
 	            onaction="window.frames[0].location.href='http://www.mozilla.org/projects/seamonkey/release-notes/index.html'" disabled=""/>
+	  </menupopup>
     </menu>
   </menubar>
   
