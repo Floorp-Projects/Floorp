@@ -180,6 +180,13 @@ JSValue JSObject::getPropertyValue(PropertyIterator &i)
     return *prop->mData.vp;
 }
 
+Property *JSObject::insertNewProperty(const String &name, NamespaceList *names, PropertyAttribute attrFlags, JSType *type, const JSValue &v)
+{
+    Property *prop = new Property(new JSValue(v), type, attrFlags);
+    const PropertyMap::value_type e(name, new NamespacedProperty(prop, names));
+    mProperties.insert(e);
+    return prop;
+}
 
 void JSObject::defineGetterMethod(Context * /*cx*/, const String &name, AttributeStmtNode *attr, JSFunction *f)
 {
@@ -264,7 +271,7 @@ Property *JSObject::defineVariable(Context *cx, const String &name, NamespaceLis
 }
 
 // add a property (with a value)
-Property *JSObject::defineVariable(Context *cx, const String &name, AttributeStmtNode *attr, JSType *type, JSValue v)
+Property *JSObject::defineVariable(Context *cx, const String &name, AttributeStmtNode *attr, JSType *type, const JSValue v)
 {
     NamespaceList *names = (attr) ? attr->attributeValue->mNamespaceList : NULL;
     PropertyAttribute attrFlags = (attr) ? attr->attributeValue->mTrueFlags : 0;
@@ -278,6 +285,11 @@ Property *JSObject::defineVariable(Context *cx, const String &name, AttributeStm
             else
                 cx->reportError(Exception::typeError, "Duplicate definition '{0}'", name);
         }
+        else {
+            // override the existing value
+            PROPERTY_VALUEPOINTER(it) = new JSValue(v);
+            return PROPERTY(it);
+        }
     }
 
     Property *prop = new Property(new JSValue(v), type, attrFlags);
@@ -285,7 +297,7 @@ Property *JSObject::defineVariable(Context *cx, const String &name, AttributeStm
     mProperties.insert(e);
     return prop;
 }
-Property *JSObject::defineVariable(Context *cx, const String &name, NamespaceList *names, JSType *type, JSValue v)
+Property *JSObject::defineVariable(Context *cx, const String &name, NamespaceList *names, JSType *type, const JSValue v)
 {
     PropertyIterator it;
     if (hasOwnProperty(name, names, Read, &it)) {
@@ -483,7 +495,7 @@ void JSInstance::setProperty(Context *cx, const String &name, NamespaceList *nam
 
 void JSArrayInstance::getProperty(Context *cx, const String &name, NamespaceList *names)
 {
-    if (name.compare(widenCString("length")) == 0)
+    if (name.compare(cx->Length_StringAtom) == 0)
         cx->pushValue(JSValue((float64)mLength));
     else
         JSInstance::getProperty(cx, name, names);
@@ -491,7 +503,7 @@ void JSArrayInstance::getProperty(Context *cx, const String &name, NamespaceList
 
 void JSArrayInstance::setProperty(Context *cx, const String &name, NamespaceList *names, const JSValue &v)
 {
-    if (name.compare(widenCString("length")) == 0) {
+    if (name.compare(cx->Length_StringAtom) == 0) {
         uint32 newLength = (uint32)(v.toUInt32(cx).f64);
         if (newLength != v.toNumber(cx).f64)
             cx->reportError(Exception::rangeError, "out of range value for length"); 
@@ -506,10 +518,14 @@ void JSArrayInstance::setProperty(Context *cx, const String &name, NamespaceList
         mLength = newLength;
     }
     else {
-        if (findNamespacedProperty(name, names) == mProperties.end())
-            defineVariable(cx, name, names, Object_Type, v);
-        else
-            JSInstance::setProperty(cx, name, names, v);
+        PropertyIterator it = findNamespacedProperty(name, names);
+        if (it == mProperties.end())
+            insertNewProperty(name, names, 0, Object_Type, v);
+        else {
+            Property *prop = PROPERTY(it);
+            ASSERT(prop->mFlag == ValuePointer);
+            *prop->mData.vp = v;
+        }
         JSValue v = JSValue(&name);
         JSValue v_int = v.toUInt32(cx);
         if ((v_int.f64 != two32minus1) && (v_int.toString(cx).string->compare(name) == 0)) {
@@ -521,7 +537,7 @@ void JSArrayInstance::setProperty(Context *cx, const String &name, NamespaceList
 
 void JSStringInstance::getProperty(Context *cx, const String &name, NamespaceList *names)
 {
-    if (name.compare(widenCString("length")) == 0) {
+    if (name.compare(cx->Length_StringAtom) == 0) {
         cx->pushValue(JSValue((float64)mLength));
     }
     else
@@ -622,6 +638,7 @@ void ScopeChain::setNameValue(Context *cx, const String& name, AttributeStmtNode
         if ((*s)->hasProperty(name, names, Write, &i)) {
             if (PROPERTY_KIND(i) == ValuePointer) {
                 *PROPERTY_VALUEPOINTER(i) = v;
+                break;
             }
             else
                 ASSERT(false);      // what else needs to be implemented ?
@@ -832,7 +849,7 @@ void Context::buildRuntime(StmtNode *p)
 }
 
 // Generate bytecode for the linked list of statements in p
-JS2Runtime::ByteCodeModule *Context::genCode(StmtNode *p, String /*sourceName*/)
+JS2Runtime::ByteCodeModule *Context::genCode(StmtNode *p, const String &/*sourceName*/)
 {
     mScopeChain->addScope(getGlobalObject());
     JS2Runtime::ByteCodeGen bcg(this, mScopeChain);
@@ -850,23 +867,23 @@ JS2Runtime::ByteCodeModule *Context::genCode(StmtNode *p, String /*sourceName*/)
 */
 bool ScopeChain::isPossibleUncheckedFunction(FunctionDefinition *f)
 {
-	bool result = false;
+    bool result = false;
     if ((f->resultType == NULL)
-			&& (f->restParameter == NULL)
-			&& (f->optParameters == NULL)
-			&& (f->prefix == FunctionName::normal)
-			&& (topClass() == NULL)) {
-		result = true;
-		VariableBinding *b = f->parameters;
-		while (b) {
-			if (b->type != NULL) {
-				result = false;
-				break;
-			}
-			b = b->next;
-		}
+	    && (f->restParameter == NULL)
+	    && (f->optParameters == NULL)
+	    && (f->prefix == FunctionName::normal)
+	    && (topClass() == NULL)) {
+	result = true;
+	VariableBinding *b = f->parameters;
+	while (b) {
+	    if (b->type != NULL) {
+		    result = false;
+		    break;
+	    }
+	    b = b->next;
 	}
-	return result;
+    }
+    return result;
 }
 
 //  The first pass over the tree - it just installs the names of each declaration
@@ -935,6 +952,7 @@ void ScopeChain::collectNames(StmtNode *p)
         {
             ForStmtNode *f = checked_cast<ForStmtNode *>(p);
             if (f->initializer) collectNames(f->initializer);
+            collectNames(f->stmt);
         }
         break;
     case StmtNode::Const:
@@ -972,6 +990,8 @@ void ScopeChain::collectNames(StmtNode *p)
             bool isOperator = (f->attributeValue->mTrueFlags & Property::Operator) == Property::Operator;
             bool isPrototype = (f->attributeValue->mTrueFlags & Property::Prototype) == Property::Prototype;
             
+            JSFunction *fnc = new JSFunction(NULL, this);
+
             /* Determine whether a function is unchecked, which is the case if -
                  XXX strict mode is disabled at the point of the function definition; 
                  the function is not a class or interface member; 
@@ -982,11 +1002,11 @@ void ScopeChain::collectNames(StmtNode *p)
             */
             if (!isPrototype
                     && (!isOperator)
-					&& isPossibleUncheckedFunction(&f->function)) {
+		    && isPossibleUncheckedFunction(&f->function)) {
                 isPrototype = true;
+                fnc->setIsUnchecked();
             }
 
-            JSFunction *fnc = new JSFunction(NULL, this);
             fnc->setIsPrototype(isPrototype);
             fnc->setIsConstructor(isConstructor);
             fnc->setFunctionName(&f->function);
@@ -1081,7 +1101,11 @@ void ScopeChain::collectNames(StmtNode *p)
                                     defineSetterMethod(m_cx, name, f, fnc);
                                 break;
                             case FunctionName::normal:
-                                f->attributeValue->mTrueFlags |= Property::Const;
+                                // make a function into a const declaration, but only if any types
+                                // have been specified - otherwise it's a 1.5 atyle definition and
+                                // duplicates are allowed
+                                if (!isPossibleUncheckedFunction(&f->function))
+                                    f->attributeValue->mTrueFlags |= Property::Const;
                                 if (isStatic)
                                     defineStaticMethod(m_cx, name, f, fnc);
                                 else
@@ -1313,7 +1337,7 @@ Reference *JSType::genReference(bool hasBase, const String& name, NamespaceList 
     return NULL;
 }
 
-JSType::JSType(Context *cx, const StringAtom *name, JSType *super) 
+JSType::JSType(Context *cx, const StringAtom *name, JSType *super, JSObject *protoObj) 
             : JSObject(Type_Type),
                     mSuperType(super), 
                     mVariableCount(0),
@@ -1333,10 +1357,15 @@ JSType::JSType(Context *cx, const StringAtom *name, JSType *super)
         mUnaryOperators[i] = NULL;
 
     // every class gets a prototype object
-    mPrototypeObject = new JSObject();
+    if (protoObj)
+        mPrototypeObject = protoObj;
+    else
+        mPrototypeObject = new JSObject();
     // and that object is prototype-linked to the super-type's prototype object
     if (mSuperType)
         mPrototypeObject->mPrototype = mSuperType->mPrototypeObject;
+
+//    defineVariable(cx, cx->Prototype_StringAtom, NULL, Object_Type, JSValue(mPrototypeObject));
 }
 
 JSType::JSType(JSType *xClass)     // used for constructing the static component type
@@ -1355,6 +1384,8 @@ JSType::JSType(JSType *xClass)     // used for constructing the static component
         mUnaryOperators[i] = NULL;
 }
 
+// Establish the super class - connects the prototype's prototype
+// and accounts for the super class's instance fields & methods
 void JSType::setSuperType(JSType *super)
 {
     mSuperType = super;
@@ -1424,9 +1455,10 @@ Reference *Activation::genReference(bool /* hasBase */, const String& name, Name
 
 
 
-
-
-
+/*
+Process the statements in the function body, handling parameters and local 
+variables to collect names & types.
+*/
 void Context::buildRuntimeForFunction(FunctionDefinition &f, JSFunction *fnc)
 {
     fnc->mParameterBarrel = new ParameterBarrel();
@@ -1448,6 +1480,10 @@ void Context::buildRuntimeForFunction(FunctionDefinition &f, JSFunction *fnc)
     mScopeChain->popScope();
 }
 
+/*
+The incoming AttributeStmtNode has a list of attributes - evaluate those and return
+the resultant Attribute value. If there are no attributes, return the default value.
+*/
 void Context::setAttributeValue(AttributeStmtNode *s, PropertyAttribute defaultValue)
 {
     Attribute *attributeValue = NULL;
@@ -1508,6 +1544,7 @@ void Context::buildRuntimeForStmt(StmtNode *p)
         {
             ForStmtNode *f = checked_cast<ForStmtNode *>(p);
             if (f->initializer) buildRuntimeForStmt(f->initializer);
+            buildRuntimeForStmt(f->stmt);
         }
         break;
     case StmtNode::Var:
@@ -1696,13 +1733,67 @@ static JSValue Object_done(Context *, const JSValue& /*thisValue*/, JSValue * /*
 
 
 
-static JSValue Function_Constructor(Context *cx, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/)
+static JSValue Function_Constructor(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
 {
     JSValue v = thisValue;
     if (v.isNull())
         v = Function_Type->newInstance(cx);
-    // XXX use the arguments to compile a string into a function
     ASSERT(v.isObject());
+
+    String s;
+    if (argc == 0)
+        s = widenCString("() { }");
+    else {
+        if (argc == 1)
+            s = widenCString("() {") + *argv[0].toString(cx).string + "}";
+        else {
+            s = widenCString("(");         // ')'
+            for (int i = 0; i < (argc - 1); i++) {
+                s += *argv[i].toString(cx).string;
+                if (i < (argc - 2))
+                    s += widenCString(", ");
+            }
+/* ( */     s += ") {" + *argv[argc - 1].toString(cx).string + "}";
+        }
+    }
+
+    JSFunction *fnc = NULL;
+    /***************************************************************/
+    {
+        Arena a;
+        Parser p(cx->mWorld, a, cx->mFlags, s, widenCString("function constructor"));
+        cx->mReader = &p.lexer.reader;
+
+        FunctionExprNode *f = p.parseFunctionExpression(0);
+        if (!p.lexer.peek(true).hasKind(Token::end)) 
+            cx->reportError(Exception::syntaxError, "Unexpected stuff after the function body");
+
+        fnc = new JSFunction(NULL, cx->mScopeChain);
+
+        uint32 reqArgCount = 0;
+        uint32 optArgCount = 0;
+
+        VariableBinding *b = f->function.parameters;
+        while ((b != f->function.optParameters) && (b != f->function.restParameter)) {
+            reqArgCount++;
+            b = b->next;
+        }
+        while (b != f->function.restParameter) {
+            optArgCount++;
+            b = b->next;
+        }
+        fnc->setArgCounts(reqArgCount, optArgCount, (f->function.restParameter != NULL));
+
+	if (cx->mScopeChain->isPossibleUncheckedFunction(&f->function))
+	    fnc->setIsPrototype(true);
+
+        cx->buildRuntimeForFunction(f->function, fnc);
+        ByteCodeGen bcg(cx, cx->mScopeChain);
+        bcg.genCodeForFunction(f->function, f->pos, fnc, false, NULL);
+    }
+    /***************************************************************/
+
+    v = JSValue(fnc);
     return v;
 }
 
@@ -1720,7 +1811,7 @@ static JSValue Function_hasInstance(Context *cx, const JSValue& thisValue, JSVal
         return kFalseValue;
 
     ASSERT(thisValue.isFunction());
-    thisValue.function->getProperty(cx, widenCString("prototype"), CURRENT_ATTR);
+    thisValue.function->getProperty(cx, cx->Prototype_StringAtom, CURRENT_ATTR);
     JSValue p = cx->popValue();
 
     if (!p.isObject())
@@ -1749,14 +1840,23 @@ static JSValue Number_Constructor(Context *cx, const JSValue& thisValue, JSValue
     return v;
 }
 
-static JSValue Number_toString(Context *, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/)
+static JSValue Number_toString(Context *cx, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/)
 {
     ASSERT(thisValue.isObject());
+    if (thisValue.getType() != Number_Type)
+        cx->reportError(Exception::typeError, "Number.toString called on something other than a Number object");
     JSObject *thisObj = thisValue.object;
     return JSValue(numberToString(*((double *)(thisObj->mPrivate))));
 }
 
-
+static JSValue Number_valueOf(Context *cx, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/)
+{
+    ASSERT(thisValue.isObject());
+    if (thisValue.getType() != Number_Type)
+        cx->reportError(Exception::typeError, "Number.valueOf called on something other than a Number object");
+    JSObject *thisObj = thisValue.object;
+    return JSValue(*((double *)(thisObj->mPrivate)));
+}
 
 static JSValue Integer_Constructor(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
 {
@@ -1800,15 +1900,26 @@ static JSValue Boolean_Constructor(Context *cx, const JSValue& thisValue, JSValu
     return v;
 }
 
-static JSValue Boolean_toString(Context *, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/)
+static JSValue Boolean_toString(Context *cx, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/)
 {
     ASSERT(thisValue.isObject());
     JSObject *thisObj = thisValue.object;
 
     if (thisObj->mPrivate != 0)
-        return JSValue(new String(widenCString("true")));
+        return JSValue(&cx->True_StringAtom);
     else
-        return JSValue(new String(widenCString("false")));
+        return JSValue(&cx->False_StringAtom);
+}
+
+static JSValue Boolean_valueOf(Context *cx, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/)
+{
+    ASSERT(thisValue.isObject());
+    JSObject *thisObj = thisValue.object;
+
+    if (thisObj->mPrivate != 0)
+        return kTrueValue; //JSValue(1.0);
+    else
+        return kFalseValue; //kPositiveZero;
 }
 
 static JSValue ExtendAttribute_Invoke(Context * /*cx*/, const JSValue& /*thisValue*/, JSValue *argv, uint32 argc)
@@ -1821,6 +1932,50 @@ static JSValue ExtendAttribute_Invoke(Context * /*cx*/, const JSValue& /*thisVal
 
     return JSValue(x);
 }
+
+static JSValue GlobalObject_Eval(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 /*argc*/)
+{
+    if (!argv[0].isString())
+        return argv[0];
+    const String *sourceStr = argv[0].toString(cx).string;
+
+    Activation *prev = cx->mActivationStack.top();
+
+    return cx->readEvalString(*sourceStr, widenCString("eval source"), cx->mScopeChain, prev->mThis);
+}
+
+static JSValue GlobalObject_ParseInt(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 argc)
+{
+    ASSERT(argc >= 1);
+    int radix = 0;      // default for stringToInteger
+    if (argc == 2)
+        radix = argv[1].toInt32(cx).f64;
+    if ((radix < 0) || (radix > 36))
+        return kNaNValue;
+
+    const String *string = argv[0].toString(cx).string;
+    const char16 *numEnd;
+    const char16 *sBegin = string->begin();
+    float64 f = 0.0;
+    if (sBegin)
+        f = stringToInteger(sBegin, string->end(), numEnd, radix);
+    return JSValue(f);
+}
+
+static JSValue GlobalObject_ParseFloat(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 argc)
+{
+    ASSERT(argc == 1);
+
+    const String *string = argv[0].toString(cx).string;
+    const char16 *numEnd;
+    const char16 *sBegin = string->begin();
+    float64 f = 0.0;
+    if (sBegin)
+        f = stringToDouble(sBegin, string->end(), numEnd);
+    return JSValue(f);
+}
+
+
               
 JSValue JSFunction::runArgInitializer(Context *cx, uint32 a, const JSValue& thisValue, JSValue *argv, uint32 argc)
 {
@@ -1884,7 +2039,7 @@ void Context::initClass(JSType *type, ClassDef *cdef, PrototypeFunctions *pdef)
             FunctionName *fnName = new FunctionName();
             fun->setFunctionName(fnName);
             fun->setArgCounts(pdef->mDef[i].length, 0, false);
-            type->mPrototypeObject->defineVariable(this, *name, //widenCString(pdef->mDef[i].name), 
+            type->mPrototypeObject->defineVariable(this, *name,
                                                (NamespaceList *)(NULL), 
                                                pdef->mDef[i].result, 
                                                JSValue(fun));
@@ -1901,36 +2056,40 @@ void Context::initClass(JSType *type, ClassDef *cdef, PrototypeFunctions *pdef)
 static JSValue arrayMaker(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 argc)
 {
     ASSERT(argc == 2);
-    ASSERT(argv[0].isType() && argv[1].isType());
-
+    ASSERT(argv[0].isType());
     JSType *baseType = argv[0].type;
-    ASSERT(baseType == Array_Type);
 
-    JSType *elementType = argv[1].type;
+    if ((baseType == Array_Type) && argv[1].isType()) {
+        JSType *elementType = argv[1].type;
+        JSType *result = new JSArrayType(cx, elementType, NULL, Object_Type);
+        result->setDefaultConstructor(cx, Array_Type->getDefaultConstructor());
+        return JSValue(result);
+    }
+    else {
+        // then it's just <type>[] - an element reference
+        argv[0].type->getProperty(cx, *argv[1].toString(cx).string, NULL);
+        return cx->popValue();
+    }
 
-    JSType *result = new JSArrayType(cx, elementType, NULL, Object_Type);
-    result->setDefaultConstructor(cx, Array_Type->getDefaultConstructor());
-
-    return JSValue(result);
 }
 
 void Context::initBuiltins()
 {
     ClassDef builtInClasses[] =
     {
-        { "Object",         Object_Constructor,    &kNullValue    },
-        { "Type",           NULL,                  &kNullValue    },
-        { "Function",       Function_Constructor,  &kNullValue    },
-        { "Number",         Number_Constructor,    &kPositiveZero },
-        { "Integer",        Integer_Constructor,   &kPositiveZero },
-        { "String",         String_Constructor,    &kNullValue    },
-        { "Array",          Array_Constructor,     &kNullValue    },
-        { "Boolean",        Boolean_Constructor,   &kFalseValue   },
-        { "Void",           NULL,                  &kNullValue    },
-        { "Unit",           NULL,                  &kNullValue    },
-        { "Attribute",      NULL,                  &kNullValue    },
-        { "NamedArgument",  NULL,                  &kNullValue    },
-        { "Date",           Date_Constructor,      &kPositiveZero },
+        { "Object",         Object_Constructor,    &kUndefinedValue     },
+        { "Type",           NULL,                  &kNullValue          },
+        { "Function",       Function_Constructor,  &kNullValue          },
+        { "Number",         Number_Constructor,    &kPositiveZero       },
+        { "Integer",        Integer_Constructor,   &kPositiveZero       },
+        { "String",         String_Constructor,    &kNullValue          },
+        { "Array",          Array_Constructor,     &kNullValue          },
+        { "Boolean",        Boolean_Constructor,   &kFalseValue         },
+        { "Void",           NULL,                  &kNullValue          },
+        { "Unit",           NULL,                  &kNullValue          },
+        { "Attribute",      NULL,                  &kNullValue          },
+        { "NamedArgument",  NULL,                  &kNullValue          },
+        { "Date",           Date_Constructor,      &kPositiveZero       },
     };
 
     Object_Type  = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[0].name)], NULL);
@@ -1938,20 +2097,43 @@ void Context::initBuiltins()
     // XXX aren't all the built-ins thus?
 
     Type_Type           = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[1].name)], Object_Type);
-    Function_Type       = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[2].name)], Object_Type);
+    Object_Type->mType  = Type_Type;
+    
+    // 
+    // ECMA 1.5 says Function.prototype is a Function object, it's [[class]] property is "Function"
+    // ECMA 2.0 says Function.prototype is an Object NOT an instance of the class
+    // here we sort of manage that by having a JSFunction object as the prototype object, not a JSFunctionInstance
+    // (which we don't actually have, hmm).
+    // For String, etc. this same issue needs to be finessed
+
+    JSFunction *funProto = new JSFunction(Object_Type, NULL);
+    Function_Type       = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[2].name)], Object_Type, funProto);
+    Function_Type->defineVariable(this, Prototype_StringAtom, NULL, Object_Type, JSValue(funProto));
+    
     Number_Type         = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[3].name)], Object_Type);
+    Number_Type->defineVariable(this, Prototype_StringAtom, NULL, Object_Type, JSValue(Number_Type->mPrototypeObject));
+
     Integer_Type        = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[4].name)], Object_Type);
+
     String_Type         = new JSStringType(this, &mWorld.identifiers[widenCString(builtInClasses[5].name)], Object_Type);
+    String_Type->defineVariable(this, Prototype_StringAtom, NULL, Object_Type, JSValue(String_Type->mPrototypeObject));
+
     Array_Type          = new JSArrayType(this, Object_Type, &mWorld.identifiers[widenCString(builtInClasses[6].name)], Object_Type);
+    Array_Type->defineVariable(this, Prototype_StringAtom, NULL, Object_Type, JSValue(Array_Type->mPrototypeObject));
+            
     Boolean_Type        = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[7].name)], Object_Type);
+    Boolean_Type->defineVariable(this, Prototype_StringAtom, NULL, Object_Type, JSValue(Boolean_Type->mPrototypeObject));
+    
     Void_Type           = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[8].name)], Object_Type);
     Unit_Type           = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[9].name)], Object_Type);
     Attribute_Type      = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[10].name)], Object_Type);
     NamedArgument_Type  = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[11].name)], Object_Type);
+
     Date_Type           = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[12].name)], Object_Type);
+    Date_Type->defineVariable(this, Prototype_StringAtom, NULL, Object_Type, JSValue(Date_Type->mPrototypeObject));
 
 
-    String_Type->defineVariable(this, widenCString("fromCharCode"), NULL, String_Type, JSValue(new JSFunction(String_fromCharCode, String_Type)));
+    String_Type->defineVariable(this, FromCharCode_StringAtom, NULL, String_Type, JSValue(new JSFunction(String_fromCharCode, String_Type)));
 
 
     ProtoFunDef objectProtos[] = 
@@ -1974,6 +2156,7 @@ void Context::initBuiltins()
     {
         { "toString", String_Type, 0, Number_toString },
         { "toSource", String_Type, 0, Number_toString },
+        { "valueOf",  Number_Type, 0, Number_valueOf },
         { NULL }
     };
     ProtoFunDef integerProtos[] = 
@@ -1986,12 +2169,13 @@ void Context::initBuiltins()
     {
         { "toString", String_Type, 0, Boolean_toString },
         { "toSource", String_Type, 0, Boolean_toString },
+        { "valueOf",  Number_Type, 0, Boolean_valueOf },
         { NULL }
     };
 
     ASSERT(mGlobal);
     *mGlobal = Object_Type->newInstance(this);
-    initClass(Object_Type,  &builtInClasses[0], new PrototypeFunctions(&objectProtos[0]) );
+    initClass(Object_Type,          &builtInClasses[0],  new PrototypeFunctions(&objectProtos[0]) );
     
     initClass(Type_Type,            &builtInClasses[1],  NULL );
     initClass(Function_Type,        &builtInClasses[2],  new PrototypeFunctions(&functionProtos[0]) );
@@ -2007,6 +2191,9 @@ void Context::initBuiltins()
     initClass(Date_Type,            &builtInClasses[12], getDateProtos() );
 
     Type_Type->defineUnaryOperator(Index, new JSFunction(arrayMaker, Type_Type));
+
+    Array_Type->defineUnaryOperator(Index, new JSFunction(Array_GetElement, Object_Type));
+    Array_Type->defineUnaryOperator(IndexEqual, new JSFunction(Array_SetElement, Object_Type));
 
 }
 
@@ -2076,13 +2263,38 @@ JS2Runtime::Operator Context::getOperator(uint32 parameterCount, const String &n
 
 
 Context::Context(JSObject **global, World &world, Arena &a, Pragma::Flags flags) 
-    : VirtualKeyWord(world.identifiers["virtual"]),
-      ConstructorKeyWord(world.identifiers["constructor"]),
-      OperatorKeyWord(world.identifiers["operator"]),
-      FixedKeyWord(world.identifiers["fixed"]),
-      DynamicKeyWord(world.identifiers["dynamic"]),
-      ExtendKeyWord(world.identifiers["extend"]),
-      PrototypeKeyWord(world.identifiers["prototype"]),
+
+    : Virtual_StringAtom        (world.identifiers["virtual"]),
+      Constructor_StringAtom    (world.identifiers["constructor"]),
+      Operator_StringAtom       (world.identifiers["operator"]),
+      Fixed_StringAtom          (world.identifiers["fixed"]),
+      Dynamic_StringAtom        (world.identifiers["dynamic"]),
+      Extend_StringAtom         (world.identifiers["extend"]),
+      Prototype_StringAtom      (world.identifiers["prototype"]),
+      Forin_StringAtom          (world.identifiers["forin"]),
+      Value_StringAtom          (world.identifiers["value"]),
+      Next_StringAtom           (world.identifiers["next"]),
+      Done_StringAtom           (world.identifiers["done"]),
+      Undefined_StringAtom      (world.identifiers["undefined"]),
+      Object_StringAtom         (world.identifiers["object"]),
+      Boolean_StringAtom        (world.identifiers["boolean"]),
+      Number_StringAtom         (world.identifiers["number"]),
+      String_StringAtom         (world.identifiers["string"]),
+      Function_StringAtom       (world.identifiers["function"]),
+      HasInstance_StringAtom    (world.identifiers["hasInstance"]),
+      True_StringAtom           (world.identifiers["true"]),
+      False_StringAtom          (world.identifiers["false"]),
+      Null_StringAtom           (world.identifiers["null"]),
+      ToString_StringAtom       (world.identifiers["toString"]),
+      ValueOf_StringAtom        (world.identifiers["valueOf"]),
+      Length_StringAtom         (world.identifiers["length"]),
+      FromCharCode_StringAtom   (world.identifiers["fromCharCode"]),
+      Math_StringAtom           (world.identifiers["Math"]),
+      NaN_StringAtom            (world.identifiers["NaN"]),
+      Eval_StringAtom           (world.identifiers["eval"]),
+      Infinity_StringAtom       (world.identifiers["Infinity"]),
+      Empty_StringAtom          (world.identifiers[""]),
+      Arguments_StringAtom      (world.identifiers["arguments"]),
 
       mWorld(world),
       mScopeChain(NULL),
@@ -2101,19 +2313,27 @@ Context::Context(JSObject **global, World &world, Arena &a, Pragma::Flags flags)
       mGlobal(global) 
 
 {
+    uint32 i;
+    
     initOperatorTable();
 
     mScopeChain = new ScopeChain(this, mWorld);
     if (Object_Type == NULL) {                
         initBuiltins();
-        JSObject *mathObj = Object_Type->newInstance(this);
-        getGlobalObject()->defineVariable(this, widenCString("Math"), (NamespaceList *)(NULL), Object_Type, JSValue(mathObj));
-        initMathObject(this, mathObj);    
-        getGlobalObject()->defineVariable(this, widenCString("undefined"), (NamespaceList *)(NULL), Void_Type, kUndefinedValue);
-        getGlobalObject()->defineVariable(this, widenCString("NaN"), (NamespaceList *)(NULL), Void_Type, kNaNValue);
-        getGlobalObject()->defineVariable(this, widenCString("Infinity"), (NamespaceList *)(NULL), Void_Type, kPositiveInfinity);                
-        initDateObject(this);
     }
+    
+
+    JSObject *mathObj = Object_Type->newInstance(this);
+    getGlobalObject()->defineVariable(this, Math_StringAtom, (NamespaceList *)(NULL), Object_Type, JSValue(mathObj));
+    initMathObject(this, mathObj);
+    initDateObject(this);
+    
+    Number_Type->defineVariable(this, widenCString("MAX_VALUE"), NULL, Number_Type, JSValue(maxValue));
+    Number_Type->defineVariable(this, widenCString("MIN_VALUE"), NULL, Number_Type, JSValue(minValue));
+    Number_Type->defineVariable(this, widenCString("NaN"), NULL, Number_Type, JSValue(nan));
+    Number_Type->defineVariable(this, widenCString("POSITIVE_INFINITY"), NULL, Number_Type, JSValue(positiveInfinity));
+    Number_Type->defineVariable(this, widenCString("NEGATIVE_INFINITY"), NULL, Number_Type, JSValue(negativeInfinity));
+
     initOperators();
     
     struct Attribute_Init {
@@ -2144,13 +2364,45 @@ Context::Context(JSObject **global, World &world, Arena &a, Pragma::Flags flags)
         { "const",          Property::Const,            0 },
     };
     
-    for (uint32 i = 0; i < (sizeof(attribute_init) / sizeof(Attribute_Init)); i++) {
+    for (i = 0; i < (sizeof(attribute_init) / sizeof(Attribute_Init)); i++) {
         Attribute *attr = new Attribute(attribute_init[i].trueFlags, attribute_init[i].falseFlags);
         getGlobalObject()->defineVariable(this, widenCString(attribute_init[i].name), (NamespaceList *)(NULL), Attribute_Type, JSValue(attr));
     }
 
     JSFunction *x = new JSFunction(ExtendAttribute_Invoke, Attribute_Type);
-    getGlobalObject()->defineVariable(this, widenCString("extend"), (NamespaceList *)(NULL), Attribute_Type, JSValue(x));
+    getGlobalObject()->defineVariable(this, Extend_StringAtom, (NamespaceList *)(NULL), Attribute_Type, JSValue(x));
+
+
+    
+    
+    ProtoFunDef globalObjectFunctions[] = {
+        { "eval",           Object_Type, 1, GlobalObject_Eval },
+        { "parseInt",       Number_Type, 2, GlobalObject_ParseInt },
+        { "parseFloat",     Number_Type, 2, GlobalObject_ParseFloat },
+    };
+    
+    for (i = 0; i < (sizeof(globalObjectFunctions) / sizeof(ProtoFunDef)); i++) {
+        x = new JSFunction(globalObjectFunctions[i].imp, globalObjectFunctions[i].result);
+        x->setArgCounts(globalObjectFunctions[i].length, 0, false);
+        x->setIsPrototype(true);
+        getGlobalObject()->defineVariable(this, widenCString(globalObjectFunctions[i].name), (NamespaceList *)(NULL), globalObjectFunctions[i].result, JSValue(x));    
+    }
+
+/*    
+    x = new JSFunction(GlobalObject_Eval, Object_Type);
+    x->setArgCounts(1, 0, false);
+    x->setIsPrototype(true);
+    getGlobalObject()->defineVariable(this, Eval_StringAtom, (NamespaceList *)(NULL), Object_Type, JSValue(x));
+
+    x = new JSFunction(GlobalObject_ParseInt, Number_Type);
+    x->setArgCounts(2, 0, false);
+    x->setIsPrototype(true);
+    getGlobalObject()->defineVariable(this, widenCString("parseInt"), (NamespaceList *)(NULL), Object_Type, JSValue(x));
+*/
+
+    getGlobalObject()->defineVariable(this, Undefined_StringAtom, (NamespaceList *)(NULL), Void_Type, kUndefinedValue);
+    getGlobalObject()->defineVariable(this, NaN_StringAtom, (NamespaceList *)(NULL), Void_Type, kNaNValue);
+    getGlobalObject()->defineVariable(this, Infinity_StringAtom, (NamespaceList *)(NULL), Void_Type, kPositiveInfinity);                
 
 }
 

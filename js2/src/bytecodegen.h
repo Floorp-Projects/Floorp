@@ -95,7 +95,8 @@ typedef enum {
     NewObjectOp,            //                          --> <object>
     NewThisOp,              //                          <type> -->
     NewInstanceOp,          //  <argc>                  <type> <args> --> <object>
-    DeleteOp,               //  <index>                 <object> --> <boolean>
+    DeleteOp,               //  <poolindex>             <object> --> <boolean>
+    DeleteNameOp,           //  <poolindex>              --> <boolean>
     TypeOfOp,               //                          <object> --> <string>
     InstanceOfOp,           //                          <object> <object> --> <boolean>
     AsOp,                   //                          <object> <type> --> <object>
@@ -171,6 +172,7 @@ extern ByteCodeData gByteCodeData[OpCodeCount];
     public:
             
         ByteCodeModule(ByteCodeGen *bcg, JSFunction *f);
+        ~ByteCodeModule();
 
 #ifdef DEBUG
         void* operator new(size_t s)    { void *t = STD::malloc(s); trace_alloc("ByteCodeModule", s, t); return t; }
@@ -180,8 +182,8 @@ extern ByteCodeData gByteCodeData[OpCodeCount];
         uint32 getLong(uint32 index) const          { return *((uint32 *)&mCodeBase[index]); }
         uint16 getShort(uint32 index) const         { return *((uint16 *)&mCodeBase[index]); }
         int32 getOffset(uint32 index) const         { return *((int32 *)&mCodeBase[index]); }
-        const String *getString(uint32 index) const { return &mStringPoolContents[index]; }
-        float64 getNumber(uint32 index) const       { return mNumberPoolContents[index]; }
+        const String *getString(uint32 index) const { return (const String *)(index); }
+        float64 getNumber(uint8 *p) const       { return *((float64 *)p); }
 
         void setSource(const String &source, const String &sourceLocation)
         {
@@ -199,9 +201,6 @@ extern ByteCodeData gByteCodeData[OpCodeCount];
         
         uint8 *mCodeBase;
         uint32 mLength;
-
-        String *mStringPoolContents;
-        float64 *mNumberPoolContents;
 
         PC_Position *mCodeMap;
         uint32 mCodeMapLength;
@@ -258,6 +257,12 @@ extern ByteCodeData gByteCodeData[OpCodeCount];
                 mStackTop(0),
                 mStackMax(0)
         { }
+
+        ByteCodeGen::~ByteCodeGen()
+        {
+            delete mBuffer;
+            delete mPC_Map;
+        }
 
 #ifdef DEBUG
         void* operator new(size_t s)    { void *t = STD::malloc(s); trace_alloc("ByteCodeGen", s, t); return t; }
@@ -344,6 +349,7 @@ extern ByteCodeData gByteCodeData[OpCodeCount];
 
         void addPointer(void *v)    { ASSERT(sizeof(void *) == sizeof(uint32)); addLong((uint32)(v)); }   // XXX Pointer size dependant !!!
         
+        void addFloat64(float64 v)  { mBuffer->insert(mBuffer->end(), (uint8 *)&v, (uint8 *)(&v) + sizeof(float64)); }
         void addLong(uint32 v)      { mBuffer->insert(mBuffer->end(), (uint8 *)&v, (uint8 *)(&v) + sizeof(uint32)); }
         void addOffset(int32 v)     { mBuffer->insert(mBuffer->end(), (uint8 *)&v, (uint8 *)(&v) + sizeof(int32)); }
         void setOffset(uint32 index, int32 v) { *((int32 *)(mBuffer->begin() + index)) = v; }   // XXX dubious pointer usage

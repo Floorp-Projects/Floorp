@@ -224,7 +224,7 @@ void NameReference::emitTypeOf(ByteCodeGen *bcg)
 
 void NameReference::emitDelete(ByteCodeGen *bcg)
 {
-    bcg->addOp(DeleteOp);
+    bcg->addOp(DeleteNameOp);
     bcg->addStringRef(mName); 
 }
 
@@ -266,7 +266,7 @@ void ElementReference::emitCodeSequence(ByteCodeGen *bcg)
 
 void ElementReference::emitDelete(ByteCodeGen *bcg) 
 {
-    bcg->addOpAdjustDepth(DeleteElementOp, -mDepth);
+    bcg->addOpAdjustDepth(DeleteElementOp, -(mDepth - 1));
     bcg->addShort(mDepth);
 }
 
@@ -299,6 +299,7 @@ ByteCodeData gByteCodeData[OpCodeCount] = {
 { -1,       "NewThis", },
 { -128,     "NewInstance", },
 { 0,        "Delete", },
+{ 1,        "DeleteName", },
 { 0,        "TypeOf", },
 { -1,       "InstanceOf", },
 { -1,       "As", },
@@ -362,21 +363,14 @@ ByteCodeModule::ByteCodeModule(ByteCodeGen *bcg, JSFunction *f)
     mCodeMap = new PC_Position[mCodeMapLength];
     memcpy(mCodeMap, bcg->mPC_Map->begin(), mCodeMapLength * sizeof(PC_Position));
 
-    mStringPoolContents = new String[bcg->mStringPoolContents.size()];
-
-    int index = 0;
-    for (std::vector<String>::iterator s_i = bcg->mStringPoolContents.begin(),
-            s_end = bcg->mStringPoolContents.end(); (s_i != s_end); s_i++, index++)
-        mStringPoolContents[index] = *s_i;
-
-    mNumberPoolContents = new float64[bcg->mNumberPoolContents.size()];
-    index = 0;
-    for (std::vector<float64>::iterator f_i = bcg->mNumberPoolContents.begin(),
-            f_end = bcg->mNumberPoolContents.end(); (f_i != f_end); f_i++, index++)
-        mNumberPoolContents[index] = *f_i;
-
     mLocalsCount = bcg->mScopeChain->countVars();
     mStackDepth = toUInt32(bcg->mStackMax);
+}
+
+ByteCodeModule::~ByteCodeModule()
+{
+    delete mCodeBase;
+    delete mCodeMap;
 }
 
 size_t ByteCodeModule::getPositionForPC(uint32 pc)
@@ -461,6 +455,8 @@ void ByteCodeGen::addOp(uint8 op)
 
 void ByteCodeGen::addNumberRef(float64 f)
 {
+    addFloat64(f);
+/*
     NumberPool::iterator i = mNumberPool.find(f);
     if (i != mNumberPool.end())
         addLong(i->second);
@@ -469,10 +465,15 @@ void ByteCodeGen::addNumberRef(float64 f)
         mNumberPool[f] = mNumberPoolContents.size();
         mNumberPoolContents.push_back(f);
     }
+*/
 }
 
 void ByteCodeGen::addStringRef(const String &str)
 {
+    const StringAtom &s = m_cx->mWorld.identifiers[str];
+    addPointer((void *)(&s));
+
+/*
     StringPool::iterator i = mStringPool.find(str);
     if (i != mStringPool.end())
         addLong(i->second);
@@ -481,6 +482,7 @@ void ByteCodeGen::addStringRef(const String &str)
         mStringPool[str] = mStringPoolContents.size();
         mStringPoolContents.push_back(str);
     }
+*/
 }
 
 
@@ -889,7 +891,7 @@ bool ByteCodeGen::genCodeForStatement(StmtNode *p, ByteCodeGen *static_cg, uint3
                 objectWriteRef->emitCodeSequence(this);
                 addOp(GetInvokePropertyOp);
 //              addIdentifierRef(widenCString("Iterator"), widenCString("forin"));
-                addStringRef(widenCString("forin"));
+                addStringRef(m_cx->Forin_StringAtom);
                 addOpAdjustDepth(InvokeOp, -1);
                 addLong(0);
                 addByte(Explicit);
@@ -902,7 +904,7 @@ bool ByteCodeGen::genCodeForStatement(StmtNode *p, ByteCodeGen *static_cg, uint3
             setLabel(labelAtTopOfBlock);
                 iteratorReadRef->emitCodeSequence(this);
                 addOp(GetPropertyOp);
-                addStringRef(widenCString("value"));
+                addStringRef(m_cx->Value_StringAtom);
                 value->emitCodeSequence(this);
                 addOp(PopOp);
 
@@ -915,7 +917,7 @@ bool ByteCodeGen::genCodeForStatement(StmtNode *p, ByteCodeGen *static_cg, uint3
             setLabel(labelAtIncrement);
                 objectReadRef->emitCodeSequence(this);
                 addOp(GetInvokePropertyOp);
-                addStringRef(widenCString("next"));
+                addStringRef(m_cx->Next_StringAtom);
                 iteratorReadRef->emitCodeSequence(this);
                 addOpAdjustDepth(InvokeOp, -2);
                 addLong(1);
@@ -936,7 +938,7 @@ bool ByteCodeGen::genCodeForStatement(StmtNode *p, ByteCodeGen *static_cg, uint3
             setLabel(breakLabel);
                 objectReadRef->emitCodeSequence(this);
                 addOp(GetInvokePropertyOp);
-                addStringRef(widenCString("done"));
+                addStringRef(m_cx->Done_StringAtom);
                 iteratorReadRef->emitCodeSequence(this);
                 addOpAdjustDepth(InvokeOp, -2);
                 addLong(1);
@@ -1348,6 +1350,11 @@ bool ByteCodeGen::genCodeForStatement(StmtNode *p, ByteCodeGen *static_cg, uint3
 Reference *ByteCodeGen::genReference(ExprNode *p, Access acc)
 {
     switch (p->getKind()) {
+    case ExprNode::parentheses:
+        {
+            UnaryExprNode *u = checked_cast<UnaryExprNode *>(p);
+            return genReference(u->op, acc);
+        }
     case ExprNode::index:
         {
             InvokeExprNode *i = checked_cast<InvokeExprNode *>(p);
@@ -2085,6 +2092,8 @@ BinaryOpEquals:
         {
             InvokeExprNode *i = checked_cast<InvokeExprNode *>(p);
             Reference *ref = genReference(i->op, Read);
+            if (ref == NULL)
+                m_cx->reportError(Exception::referenceError, "Unrecogizable call target", p->pos);
 
             ref->emitInvokeSequence(this);
 
@@ -2250,8 +2259,8 @@ BinaryOpEquals:
             }
             fnc->setArgCounts(reqArgCount, optArgCount, (f->function.restParameter != NULL));
 
-			if (mScopeChain->isPossibleUncheckedFunction(&f->function))
-				fnc->setIsPrototype(true);
+	    if (mScopeChain->isPossibleUncheckedFunction(&f->function))
+		fnc->setIsPrototype(true);
 
             m_cx->buildRuntimeForFunction(f->function, fnc);
             ByteCodeGen bcg(m_cx, mScopeChain);
@@ -2309,6 +2318,22 @@ BinaryOpEquals:
             genExpr(j->op1);
             genExpr(j->op2);
             addOp(JuxtaposeOp);
+        }
+        break;
+    case ExprNode::comma:
+        {
+            BinaryExprNode *c = checked_cast<BinaryExprNode *>(p);
+            genExpr(c->op1);
+            return genExpr(c->op2);
+        }
+        break;
+    case ExprNode::Void:
+        {
+            UnaryExprNode *v = checked_cast<UnaryExprNode *>(p);
+            genExpr(v->op);
+            addOp(PopOp);
+            addOp(LoadConstantUndefinedOp);
+            return Object_Type;
         }
         break;
     default:
@@ -2428,13 +2453,14 @@ uint32 printInstruction(Formatter &f, uint32 i, const ByteCodeModule& bcm)
     case SetPropertyOp:
     case LoadConstantStringOp:
     case DeleteOp:
+    case DeleteNameOp:
         f << *bcm.getString(bcm.getLong(i));
         i += 4;
         break;
 
     case LoadConstantNumberOp:
-        f << bcm.getNumber(bcm.getLong(i));
-        i += 4;
+        f << bcm.getNumber(&bcm.mCodeBase[i]);
+        i += 8;
         break;
 
     case LoadTypeOp:

@@ -35,13 +35,13 @@ namespace JavaScript {
 
 namespace JS2Runtime {
 
-
     extern JSValue Array_Constructor(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc);
     extern JSValue Array_concat(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc);
 
     Context::PrototypeFunctions *getArrayProtos();
 
-
+    extern JSValue Array_GetElement(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc);
+    extern JSValue Array_SetElement(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc);
 
 }
 

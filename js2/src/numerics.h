@@ -66,6 +66,8 @@ namespace JavaScript {
     extern double positiveInfinity;
     extern double negativeInfinity;
     extern double nan;
+    extern double minValue;
+    extern double maxValue;
 
 //
 // Portable double-precision floating point to string and back conversions

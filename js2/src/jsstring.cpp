@@ -57,20 +57,19 @@ JSValue String_Constructor(Context *cx, const JSValue& thisValue, JSValue *argv,
         thatValue = String_Type->newInstance(cx);
     ASSERT(thatValue.isObject());
     JSObject *thisObj = thatValue.object;
-    ASSERT(dynamic_cast<JSStringInstance *>(thisObj));
-    JSStringInstance *strInst = (JSStringInstance *)thisObj;
+    JSStringInstance *strInst = checked_cast<JSStringInstance *>(thisObj);
 
     if (argc > 0)
         thisObj->mPrivate = (void *)(new String(*argv[0].toString(cx).string));
     else
-        thisObj->mPrivate = (void *)(new String(widenCString("")));
+        thisObj->mPrivate = (void *)(&cx->Empty_StringAtom);
     strInst->mLength = ((String *)(thisObj->mPrivate))->size();
     return thatValue;
 }
 
 JSValue String_fromCharCode(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 argc)
 {
-    String *resultStr = new String();
+    String *resultStr = new String();   // can't use cx->mEmptyString because we're modifying this below
     resultStr->reserve(argc);
     for (uint32 i = 0; i < argc; i++)
         *resultStr += (char16)(argv[i].toUInt16(cx).f64);
@@ -78,12 +77,25 @@ JSValue String_fromCharCode(Context *cx, const JSValue& /*thisValue*/, JSValue *
     return JSValue(resultStr);
 }
 
-static JSValue String_toString(Context * /*cx*/, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/)
+static JSValue String_toString(Context *cx, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/)
 {
     ASSERT(thisValue.isObject());
+    if (thisValue.getType() != String_Type)
+        cx->reportError(Exception::typeError, "String.toString called on something other than a string thing");
     JSObject *thisObj = thisValue.object;
     return JSValue((String *)thisObj->mPrivate);
 }
+
+static JSValue String_valueOf(Context *cx, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/)
+{
+    ASSERT(thisValue.isObject());
+    if (thisValue.getType() != String_Type)
+        cx->reportError(Exception::typeError, "String.valueOf called on something other than a string thing");
+    JSObject *thisObj = thisValue.object;
+    return JSValue((String *)thisObj->mPrivate);
+}
+
+
 
 struct MatchResult {
     bool failure;
@@ -180,16 +192,6 @@ step11:
 
 }
 
-static JSValue String_valueOf(Context *cx, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/)
-{
-    ASSERT(thisValue.isObject());
-    if (thisValue.isString())
-        return thisValue;
-    else
-        cx->reportError(Exception::typeError, "String.valueOf called on something other than a string thing");
-    return kUndefinedValue;
-}
-
 static JSValue String_charAt(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
 {
     ASSERT(thisValue.isObject());
@@ -200,7 +202,7 @@ static JSValue String_charAt(Context *cx, const JSValue& thisValue, JSValue *arg
         pos = (uint32)(argv[0].toInt32(cx).f64);
 
     if ((pos < 0) || (pos >= str->size()))
-        return JSValue(new String());       // have an empty string kValue somewhere?
+        return JSValue(&cx->Empty_StringAtom);
     else
         return JSValue(new String(1, (*str)[pos]));
     
@@ -367,7 +369,7 @@ static JSValue String_slice(Context *cx, const JSValue& thisValue, JSValue *argv
         end = sourceLength;
 
     if (start > end)
-        return JSValue(new String());
+        return JSValue(&cx->Empty_StringAtom);
     return JSValue(new String(sourceString->substr(start, end - start)));
 }
 
@@ -420,7 +422,7 @@ Context::PrototypeFunctions *getStringProtos()
     Context::ProtoFunDef stringProtos[] = 
     {
         { "toString",           String_Type, 0, String_toString },
-        { "valueof",            String_Type, 0, String_valueOf },
+        { "valueOf",            String_Type, 0, String_valueOf },
         { "charAt",             String_Type, 1, String_charAt },
         { "charCodeAt",         Number_Type, 1, String_charCodeAt },
         { "concat",             String_Type, 1, String_concat },

@@ -97,7 +97,7 @@ static float64 firstDayOfMonth[2][12] = {
 #define Day(t)                          floor((t) / msPerDay)
 #define TIMECLIP(d)                     ((JSDOUBLE_IS_FINITE(d) \
 		                            && !((d < 0 ? -d : d) > HalfTimeDomain)) \
-                                                ? JSValue::float64ToInteger(d + (+0.)) : kNaNValue.f64)
+                                                ? JSValue::float64ToInteger(d + (+0.)) : nan)
 #define LocalTime(t)                    ((t) + LocalTZA + DaylightSavingTA(t))
 #define DayFromMonth(m, leap)           firstDayOfMonth[leap][(int32)m];
 #define DayFromYear(y)                  (365 * ((y)-1970) + fd::floor(((y)-1969)/4.0)            \
@@ -368,7 +368,7 @@ static JSValue Date_makeTime(Context *cx, const JSValue& thisValue, JSValue *arg
     for (i = 0; i < argc; i++) {
         argv[i] = argv[i].toNumber(cx);        
         if (JSDOUBLE_IS_NaN(argv[i])) {
-            *date = kNaNValue.f64;
+            *date = nan;
             return kNaNValue;
         }
 	args[i] = argv[i].toInteger(cx).f64;
@@ -604,7 +604,7 @@ static float64 date_parseString(const String &s)
 
 syntax:
     /* syntax error */
-    return kNaNValue.f64;
+    return nan;
 }
 
 #define MAXARGS        7
@@ -673,7 +673,7 @@ JSValue Date_Constructor(Context *cx, const JSValue& thisValue, JSValue *argv, u
 		    /* if any arg is NaN, make a NaN date object
 		       and return */
 		    if (!JSDOUBLE_IS_FINITE(double_arg)) {
-		        *((float64 *)(thisObj->mPrivate)) = kNaNValue.f64;
+		        *((float64 *)(thisObj->mPrivate)) = nan;
                         return thatValue;
 		    }
 		    array[loop] = JSValue::float64ToInteger(double_arg);
@@ -1189,7 +1189,7 @@ static JSValue Date_setYear(Context *cx, const JSValue& thisValue, JSValue *argv
     result = *date;
     year = argv[0].toNumber(cx).f64;
     if (!JSDOUBLE_IS_FINITE(year)) {
-	*date = kNaNValue.f64;
+	*date = nan;
 	return JSValue(*date);
     }
 
@@ -1293,7 +1293,7 @@ static JSValue Date_valueOf(Context *cx, const JSValue& thisValue, JSValue *argv
     /* Convert to number only if the hint was given, otherwise favor string. */
     if (argc == 1) {
     	const String *str = argv[0].toString(cx).string;
-	if (str->compare(widenCString("number")) == 0)
+	if (str->compare(&cx->Number_StringAtom) == 0)
 	    return Date_getTime(cx, thisValue, argv, argc);
     }
     return Date_toString(cx, thisValue, argv, argc);

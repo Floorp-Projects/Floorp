@@ -137,7 +137,7 @@ namespace JS2Runtime {
         NamespaceList *mNext;
     };
 
-    typedef std::pair<Property *, NamespaceList *> NamespacedProperty;
+    typedef std::pair<Property *, NamespaceList *> NamespacedProperty; 
 
     typedef std::multimap<String, NamespacedProperty *, std::less<const String> > PropertyMap;
     typedef PropertyMap::iterator PropertyIterator;

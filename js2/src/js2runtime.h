@@ -174,6 +174,7 @@ static const double two31 = 2147483648.0;
         bool isType() const                             { return (tag == type_tag); }
         bool isFunction() const                         { return (tag == function_tag); }
         bool isString() const                           { return (tag == string_tag); }
+        bool isPrimitive() const                        { return (tag != object_tag) && (tag != type_tag) && (tag != function_tag); }
 
         bool isUndefined() const                        { return (tag == undefined_tag); }
         bool isNull() const                             { return (tag == null_tag); }
@@ -221,15 +222,15 @@ static const double two31 = 2147483648.0;
     };
     Formatter& operator<<(Formatter& f, const JSValue& value);
 
-    extern const JSValue kUndefinedValue;
-    extern const JSValue kNaNValue;
-    extern const JSValue kTrueValue;
-    extern const JSValue kFalseValue;
-    extern const JSValue kNullValue;
-    extern const JSValue kNegativeZero;
-    extern const JSValue kPositiveZero;
-    extern const JSValue kNegativeInfinity;
-    extern const JSValue kPositiveInfinity;
+    extern JSValue kUndefinedValue;
+    extern JSValue kNaNValue;
+    extern JSValue kTrueValue;
+    extern JSValue kFalseValue;
+    extern JSValue kNullValue;
+    extern JSValue kNegativeZero;
+    extern JSValue kPositiveZero;
+    extern JSValue kNegativeInfinity;
+    extern JSValue kPositiveInfinity;
     
 
     
@@ -546,6 +547,10 @@ XXX ...couldn't get this to work...
         virtual Property *defineVariable(Context *cx, const String &name, AttributeStmtNode *attr, JSType *type);
         virtual Property *defineVariable(Context *cx, const String &name, NamespaceList *names, JSType *type);
 
+        // add a property/value into the map 
+        // - assumes the map doesn't already have this property
+        Property *insertNewProperty(const String &name, NamespaceList *names, PropertyAttribute attrFlags, JSType *type, const JSValue &v);
+
         virtual Property *defineStaticVariable(Context *cx, const String &name, AttributeStmtNode *attr, JSType *type)
         {
             return JSObject::defineVariable(cx, name, attr, type);   
@@ -576,8 +581,8 @@ XXX ...couldn't get this to work...
         virtual void defineGetterMethod(Context *cx, const String &name, AttributeStmtNode *attr, JSFunction *f);
         virtual void defineSetterMethod(Context *cx, const String &name, AttributeStmtNode *attr, JSFunction *f);
 
-        virtual Property *defineVariable(Context *cx, const String &name, AttributeStmtNode *attr, JSType *type, JSValue v);
-        virtual Property *defineVariable(Context *cx, const String &name, NamespaceList *names, JSType *type, JSValue v);
+        virtual Property *defineVariable(Context *cx, const String &name, AttributeStmtNode *attr, JSType *type, const JSValue v);
+        virtual Property *defineVariable(Context *cx, const String &name, NamespaceList *names, JSType *type, const JSValue v);
         
         virtual Reference *genReference(bool hasBase, const String& name, NamespaceList *names, Access acc, uint32 depth);
 
@@ -687,7 +692,7 @@ XXX ...couldn't get this to work...
 
     class JSType : public JSObject {
     public:        
-        JSType(Context *cx, const StringAtom *name, JSType *super);
+        JSType(Context *cx, const StringAtom *name, JSType *super, JSObject *protoObj = NULL);
         JSType(JSType *xClass);     // used for constructing the static component type
 
         virtual ~JSType() { }       // keeping gcc happy
@@ -1075,6 +1080,19 @@ XXX ...couldn't get this to work...
             return top->hasProperty(name, names, acc, p);
         }
 
+        bool hasOwnProperty(const String& name, NamespaceList *names, Access acc, PropertyIterator *p)
+        {
+            JSObject *top = mScopeStack.back();
+            return top->hasOwnProperty(name, names, acc, p);
+        }
+
+        // delete a property from the top object (already know it's there)
+        void deleteProperty(const String &name, NamespaceList *names)
+        {
+            JSObject *top = mScopeStack.back();
+            top->deleteProperty(name, names);
+        }
+
         // generate a reference to the given name
         Reference *getName(const String& name, NamespaceList *names, Access acc);
 
@@ -1197,7 +1215,8 @@ XXX ...couldn't get this to work...
             if (scopeChain) {
                 mScopeChain = new ScopeChain(*scopeChain);
             }
-            mPrototype = Function_Type->mPrototypeObject;
+            if (Function_Type)    // protect against bootstrap
+                mPrototype = Function_Type->mPrototypeObject;
             mActivation.mContainer = this;
         }
         
@@ -1219,7 +1238,8 @@ XXX ...couldn't get this to work...
                         mRestParameterName(NULL),
                         mClass(NULL)
         {
-            mPrototype = Function_Type->mPrototypeObject;
+            if (Function_Type)    // protect against bootstrap
+                mPrototype = Function_Type->mPrototypeObject;
             mActivation.mContainer = this;
         }
 
@@ -1420,13 +1440,37 @@ XXX ...couldn't get this to work...
         void operator delete(void* t)   { trace_release("Context", t); STD::free(t); }
 #endif
 
-        StringAtom& VirtualKeyWord; 
-        StringAtom& ConstructorKeyWord; 
-        StringAtom& OperatorKeyWord; 
-        StringAtom& FixedKeyWord;
-        StringAtom& DynamicKeyWord;
-        StringAtom& ExtendKeyWord;
-        StringAtom& PrototypeKeyWord;
+        StringAtom& Virtual_StringAtom; 
+        StringAtom& Constructor_StringAtom; 
+        StringAtom& Operator_StringAtom; 
+        StringAtom& Fixed_StringAtom;
+        StringAtom& Dynamic_StringAtom;
+        StringAtom& Extend_StringAtom;
+        StringAtom& Prototype_StringAtom;
+        StringAtom& Forin_StringAtom;
+        StringAtom& Value_StringAtom;
+        StringAtom& Next_StringAtom;
+        StringAtom& Done_StringAtom;
+        StringAtom& Undefined_StringAtom;
+        StringAtom& Object_StringAtom;
+        StringAtom& Boolean_StringAtom;
+        StringAtom& Number_StringAtom;
+        StringAtom& String_StringAtom;
+        StringAtom& Function_StringAtom;
+        StringAtom& HasInstance_StringAtom;
+        StringAtom& True_StringAtom;
+        StringAtom& False_StringAtom;
+        StringAtom& Null_StringAtom;
+        StringAtom& ToString_StringAtom;
+        StringAtom& ValueOf_StringAtom;
+        StringAtom& Length_StringAtom;
+        StringAtom& FromCharCode_StringAtom;
+        StringAtom& Math_StringAtom;
+        StringAtom& NaN_StringAtom;
+        StringAtom& Eval_StringAtom;
+        StringAtom& Infinity_StringAtom;
+        StringAtom& Empty_StringAtom;
+        StringAtom& Arguments_StringAtom;
 
         void initBuiltins();
         void initClass(JSType *type, ClassDef *cdef, PrototypeFunctions *pdef);
@@ -1479,7 +1523,7 @@ XXX ...couldn't get this to work...
         uint32 mStackTop;
         uint32 mStackMax;
 
-        void pushValue(JSValue v)
+        void pushValue(JSValue &v)
         {
             ASSERT(mStackTop < mStackMax);
             mStack[mStackTop++] = v;
@@ -1516,7 +1560,7 @@ XXX ...couldn't get this to work...
         // put the value in at 'index', lifting everything above that up by one
         void insertValue(JSValue v, uint32 index)
         {
-            ASSERT((mStackTop + 1) < mStackMax);
+            ASSERT(mStackTop < mStackMax);      // we're effectively pushing one entry
             for (uint32 i = mStackTop - 1; i >= index; i--)
                 mStack[i + 1] = mStack[i];
             mStack[index] = v;
@@ -1565,11 +1609,12 @@ XXX ...couldn't get this to work...
         
 
         JSValue readEvalFile(const String& fileName);
+        JSValue readEvalString(const String &str, const String& fileName, ScopeChain *scopeChain, const JSValue& thisValue);
 
         void buildRuntime(StmtNode *p);
         void buildRuntimeForFunction(FunctionDefinition &f, JSFunction *fnc);
         void buildRuntimeForStmt(StmtNode *p);
-        ByteCodeModule *genCode(StmtNode *p, String sourceName);
+        ByteCodeModule *genCode(StmtNode *p, const String &sourceName);
 
         JSValue interpret(ByteCodeModule *bcm, int offset, ScopeChain *scopeChain, const JSValue& thisValue, JSValue *argv, uint32 argc);
         JSValue interpret(uint8 *pc, uint8 *endPC);

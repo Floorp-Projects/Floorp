@@ -225,9 +225,11 @@ static PRLock *freelist_lock;
 //
 
 
-double JS::positiveInfinity;
-double JS::negativeInfinity;
-double JS::nan;
+    double JS::positiveInfinity;
+    double JS::negativeInfinity;
+    double JS::nan;
+    double JS::minValue;
+    double JS::maxValue;
 
 
 struct InitNumerics {InitNumerics();};
@@ -241,21 +243,24 @@ InitNumerics::InitNumerics()
     word1(JS::negativeInfinity) = 0;
     word0(JS::nan) = 0x7FFFFFFF;
     word1(JS::nan) = 0xFFFFFFFF;
+    word0(JS::minValue) = 0;
+    word1(JS::minValue) = 1;
+    JS::maxValue = 1.7976931348623157E+308;
 }
 
 
 // had to move these here since they depend upon the values
 // initialized above, and we can't guarantee order other than
 // lexically in a single file.
-const JSValue JS::JS2Runtime::kUndefinedValue;
-const JSValue JS::JS2Runtime::kNaNValue = JSValue(nan);
-const JSValue JS::JS2Runtime::kTrueValue = JSValue(true);
-const JSValue JS::JS2Runtime::kFalseValue = JSValue(false);
-const JSValue JS::JS2Runtime::kNullValue = JSValue(JSValue::null_tag);
-const JSValue JS::JS2Runtime::kNegativeZero = JSValue(-0.0);
-const JSValue JS::JS2Runtime::kPositiveZero = JSValue(0.0);
-const JSValue JS::JS2Runtime::kNegativeInfinity = JSValue(negativeInfinity);
-const JSValue JS::JS2Runtime::kPositiveInfinity = JSValue(positiveInfinity);
+JSValue JS::JS2Runtime::kUndefinedValue;
+JSValue JS::JS2Runtime::kNaNValue = JSValue(nan);
+JSValue JS::JS2Runtime::kTrueValue = JSValue(true);
+JSValue JS::JS2Runtime::kFalseValue = JSValue(false);
+JSValue JS::JS2Runtime::kNullValue = JSValue(JSValue::null_tag);
+JSValue JS::JS2Runtime::kNegativeZero = JSValue(-0.0);
+JSValue JS::JS2Runtime::kPositiveZero = JSValue(0.0);
+JSValue JS::JS2Runtime::kNegativeInfinity = JSValue(negativeInfinity);
+JSValue JS::JS2Runtime::kPositiveInfinity = JSValue(positiveInfinity);
 
 //
 // Portable double-precision floating point to string and back conversions
