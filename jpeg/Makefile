@@ -80,18 +80,3 @@ endif
 
 include $(DEPTH)/config/rules.mk
 
-#
-# Trying to compile jidctred.c with -O2 causes cc1 (?) to dump core,
-# leaving gcc hanging.  Using -O works fine.
-#
-# Linux 2.0.30 (RedHat 5 Alpha)
-# 64MB RAM
-# egcs-2.90.23 980102 (egcs-1.0.1 release)
-#
-ifeq ($(OS_ARCH)$(CPU_ARCH),Linuxalpha)
-ifdef BUILD_OPT
-$(OBJDIR)/jidctred.o: jidctred.c
-	@$(MAKE_OBJDIR)
-	$(CC) -o $@ -c $(XP_DEFINE) -O $(OS_CFLAGS) $(MDUPDATE_FLAGS) $(DEFINES) $(INCLUDES) $(XCFLAGS) $(PROF_FLAGS) $<
-endif
-endif
