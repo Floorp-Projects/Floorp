@@ -38,6 +38,7 @@ LINCS=-I$(PUBLIC)\raptor                \
       -I$(PUBLIC)\pref                  \
       -I$(PUBLIC)\js                    \
       -I$(PUBLIC)\dom                   \
+      -I$(PUBLIC)\pref                  \
       -I$(PUBLIC)\rdf                   \
       -I$(PUBLIC)\editor                \
       -I$(PUBLIC)\caps                  \
