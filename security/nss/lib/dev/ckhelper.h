@@ -41,7 +41,7 @@
 #define CKHELPER_H
 
 #ifdef DEBUG
-static const char CKHELPER_CVS_ID[] = "@(#) $RCSfile: ckhelper.h,v $ $Revision: 1.8 $ $Date: 2001/10/19 18:10:58 $ $Name:  $";
+static const char CKHELPER_CVS_ID[] = "@(#) $RCSfile: ckhelper.h,v $ $Revision: 1.9 $ $Date: 2001/11/05 17:18:47 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifdef NSS_3_4_CODE
@@ -88,9 +88,11 @@ NSS_EXTERN_DATA const NSSItem g_ck_class_privkey;
  *
  * Convert a CK_ATTRIBUTE to an NSSItem.
  */
-#define NSS_CK_ATTRIBUTE_TO_ITEM(attrib, item)     \
-    (item)->data = (void *)(attrib)->pValue;       \
-    (item)->size = (PRUint32)(attrib)->ulValueLen; \
+#define NSS_CK_ATTRIBUTE_TO_ITEM(attrib, item)         \
+    if ((CK_LONG)(attrib)->ulValueLen > 0) {           \
+	(item)->data = (void *)(attrib)->pValue;       \
+	(item)->size = (PRUint32)(attrib)->ulValueLen; \
+    }
 
 /* NSS_CK_ATTRIBUTE_TO_UTF8(attrib, str)
  *
@@ -149,6 +151,13 @@ nssCKObject_SetAttributes
   CK_ULONG count,
   nssSession *session,
   NSSSlot  *slot
+);
+
+NSS_EXTERN PRBool
+nssCKObject_IsTokenObjectTemplate
+(
+  CK_ATTRIBUTE_PTR objectTemplate, 
+  CK_ULONG otsize
 );
 
 PR_END_EXTERN_C

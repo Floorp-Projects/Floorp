@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: slot.c,v $ $Revision: 1.9 $ $Date: 2001/10/11 16:33:38 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: slot.c,v $ $Revision: 1.10 $ $Date: 2001/11/05 17:18:48 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -438,6 +438,7 @@ nssSlot_SetPassword
     return nssrv;
 }
 
+#ifdef PURE_STAN
 NSS_IMPLEMENT nssSession *
 nssSlot_CreateSession
 (
@@ -504,6 +505,7 @@ nssSession_Destroy
     }
     return (ckrv == CKR_OK) ? PR_SUCCESS : PR_FAILURE;
 }
+#endif
 
 NSS_IMPLEMENT PRStatus
 nssSession_EnterMonitor

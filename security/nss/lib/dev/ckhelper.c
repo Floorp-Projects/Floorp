@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: ckhelper.c,v $ $Revision: 1.8 $ $Date: 2001/10/19 18:10:57 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: ckhelper.c,v $ $Revision: 1.9 $ $Date: 2001/11/05 17:18:47 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef PKIT_H
@@ -90,34 +90,38 @@ nssCKObject_GetAttributes
   NSSSlot *slot
 )
 {
-   nssArenaMark *mark;
-   CK_SESSION_HANDLE hSession;
-   CK_ULONG i;
-   CK_RV ckrv;
-   PRStatus nssrv;
-   PRBool alloced = PR_FALSE;
-   hSession = session->handle; 
-   if (arenaOpt) {
+    nssArenaMark *mark;
+    CK_SESSION_HANDLE hSession;
+    CK_ULONG i;
+    CK_RV ckrv;
+    PRStatus nssrv;
+    PRBool alloced = PR_FALSE;
+    hSession = session->handle; 
+    if (arenaOpt) {
 	mark = nssArena_Mark(arenaOpt);
 	if (!mark) {
 	    goto loser;
 	}
-   }
-   nssSession_EnterMonitor(session);
-   /* XXX kinda hacky, if the storage size is already in the first template
-    * item, then skip the alloc portion
-    */
-   if (obj_template[0].ulValueLen == 0) {
+    }
+    nssSession_EnterMonitor(session);
+    /* XXX kinda hacky, if the storage size is already in the first template
+     * item, then skip the alloc portion
+     */
+    if (obj_template[0].ulValueLen == 0) {
 	/* Get the storage size needed for each attribute */
 	ckrv = CKAPI(slot)->C_GetAttributeValue(hSession,
 	                                        object, obj_template, count);
-	if (ckrv != CKR_OK) {
+	if (ckrv != CKR_OK && 
+	    ckrv != CKR_ATTRIBUTE_TYPE_INVALID &&
+	    ckrv != CKR_ATTRIBUTE_SENSITIVE) 
+	{
 	    nssSession_ExitMonitor(session);
 	    /* set an error here */
 	    goto loser;
 	}
 	/* Allocate memory for each attribute. */
 	for (i=0; i<count; i++) {
+	    if ((CK_LONG)obj_template[i].ulValueLen <= 0) continue;
 	    obj_template[i].pValue = nss_ZAlloc(arenaOpt, 
 	                                        obj_template[i].ulValueLen);
 	    if (!obj_template[i].pValue) {
@@ -126,25 +130,28 @@ nssCKObject_GetAttributes
 	    }
 	}
 	alloced = PR_TRUE;
-   }
-   /* Obtain the actual attribute values. */
-   ckrv = CKAPI(slot)->C_GetAttributeValue(hSession,
-                                           object, obj_template, count);
-   nssSession_ExitMonitor(session);
-   if (ckrv != CKR_OK) {
+    }
+    /* Obtain the actual attribute values. */
+    ckrv = CKAPI(slot)->C_GetAttributeValue(hSession,
+                                            object, obj_template, count);
+    nssSession_ExitMonitor(session);
+    if (ckrv != CKR_OK && 
+        ckrv != CKR_ATTRIBUTE_TYPE_INVALID &&
+        ckrv != CKR_ATTRIBUTE_SENSITIVE) 
+    {
 	/* set an error here */
 	goto loser;
-   }
-   if (alloced && arenaOpt) {
+    }
+    if (alloced && arenaOpt) {
 	nssrv = nssArena_Unmark(arenaOpt, mark);
 	if (nssrv != PR_SUCCESS) {
 	    goto loser;
 	}
-   }
-   return PR_SUCCESS;
+    }
+    return PR_SUCCESS;
 loser:
-   if (alloced) {
-	    if (arenaOpt) {
+    if (alloced) {
+	if (arenaOpt) {
 	    /* release all arena memory allocated before the failure. */
 	    (void)nssArena_Release(arenaOpt, mark);
 	} else {
@@ -154,8 +161,8 @@ loser:
 		nss_ZFreeIf(obj_template[j].pValue);
 	    }
 	}
-   }
-   return PR_FAILURE;
+    }
+    return PR_FAILURE;
 }
 
 NSS_IMPLEMENT PRStatus
@@ -228,5 +235,31 @@ nssCKObject_SetAttributes
     } else {
 	return PR_FAILURE;
     }
+}
+
+/*
+NSS_IMPLEMENT PRBool
+nssCKObject_IsTokenObject
+(
+  CK_OBJECT_HANDLE object
+)
+{
+}
+*/
+
+NSS_IMPLEMENT PRBool
+nssCKObject_IsTokenObjectTemplate
+(
+  CK_ATTRIBUTE_PTR objectTemplate, 
+  CK_ULONG otsize
+)
+{
+    CK_ULONG ul;
+    for (ul=0; ul<otsize; ul++) {
+	if (objectTemplate[ul].type == CKA_TOKEN) {
+	    return (*((CK_BBOOL*)objectTemplate[ul].pValue) == CK_TRUE);
+	}
+    }
+    return PR_FALSE;
 }
 
