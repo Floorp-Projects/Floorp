@@ -93,6 +93,8 @@ Rights Reserved.
 	<broadcaster id="Messenger:Throbber" busy="false"/>
 	<broadcaster id="Messenger:Status"/>
 	<broadcaster id="Messenger:LoadingProgress"/>
+	
+	<broadcaster id="cmd_nextUnreadMsg" oncommand="MsgNextUnreadMessage();"/>
 </broadcasterset>
 
 <keyset id="keyset">
@@ -108,11 +110,11 @@ Rights Reserved.
 	<key id="key_copy"/>
 	<key id="key_paste"/>
 	<key id="key_delete"/>
+	<key id="key_backspace"/>
 	<key id="key_selectAll"/>
 	<key id="key_preferences"/>
   
-  <key id="key_delete" keycode="VK_DELETE" shift="false" control="false"
-        onkeypress="goDoCommand('button_delete')"/>
+	<key id="key_nextUnreadMsg" key="&nextUnreadMsgCmd.key;" charcode="&nextUnreadMsgCmd.key;" observes="cmd_NextUnreadMsg"/>
 </keyset>
 
 <popupset>
@@ -587,7 +589,7 @@ Rights Reserved.
       <menu value="&nextMenu.label;">
         <menupopup>
 		<menuitem value="&nextMsgCmd.label;" oncommand="MsgNextMessage();"/>
-        <menuitem value="&nextUnreadMsgCmd.label;" oncommand="MsgNextUnreadMessage();"/>
+        <menuitem value="&nextUnreadMsgCmd.label;" key="key_nextUnreadMsg" observes="cmd_nextUnreadMsg"/>
         <menuitem value="&nextFlaggedMsgCmd.label;" oncommand="MsgNextFlaggedMessage();"/>
 		<menuseparator/>
 		<menuitem value="&nextUnreadThread.label;" oncommand="MsgNextUnreadThread();"/>

@@ -208,6 +208,7 @@ Rights Reserved.
 <!ENTITY nextMenu.label "Next"> 
 <!ENTITY nextMsgCmd.label "Message">  
 <!ENTITY nextUnreadMsgCmd.label "Unread Message">  
+<!ENTITY nextUnreadMsgCmd.key "N">  
 <!ENTITY nextFlaggedMsgCmd.label "Flagged Message">  
 <!ENTITY nextUnflaggedMsgCmd.label "Unflagged Message">  
 <!ENTITY nextUnreadThread.label "Unread Thread">

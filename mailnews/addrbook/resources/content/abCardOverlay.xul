@@ -55,7 +55,7 @@ Rights Reserved.
 							<html:label for="FirstName" class="CardEdit">&FirstName.label;</html:label>
 							<box class="CardEditWidth">
 								<html:input type="text" id="FirstName" class="CardEdit" flex="1"
-											onkeypress="top.GenerateDisplayName()" />
+											oninput="top.GenerateDisplayName()" />
 							</box>
 						</box>
 						<box align="horizontal">
@@ -63,7 +63,7 @@ Rights Reserved.
 							<html:label for="LastName" class="CardEdit">&LastName.label;</html:label>
 							<box class="CardEditWidth">
 								<html:input id="LastName" type="text" class="CardEdit" flex="1"
-											onkeypress="top.GenerateDisplayName()"/>
+											oninput="top.GenerateDisplayName()"/>
 							</box>
 						</box>
 						<box align="horizontal">
@@ -71,7 +71,7 @@ Rights Reserved.
 							<html:label for="DisplayName" class="CardEdit">&DisplayName.label;</html:label>
 							<box class="CardEditWidth">
 								<html:input id="DisplayName" type="text" class="CardEdit" flex="1"
-											onkeypress="top.DisplayNameChanged()"/>
+											oninput="top.DisplayNameChanged()"/>
 							</box>
 						</box>
 						<box align="horizontal">

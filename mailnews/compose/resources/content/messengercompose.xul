@@ -101,6 +101,7 @@ Rights Reserved.
 	<key id="key_copy"/>
 	<key id="key_paste"/>
 	<key id="key_delete"/>
+	<key id="key_backspace"/>
 	<key id="key_selectAll"/>
 	<key id="key_find" xulkey="true" key="&findCmd.key;" disabled="true" observes="cmd_find"/>
 	<key id="key_findAgain" xulkey="true" key="&findAgainCmd.key;" disabled="true" observes="cmd_findAgain"/>
