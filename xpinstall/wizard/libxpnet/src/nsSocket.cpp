@@ -47,7 +47,7 @@
 
 #define MAXSOCKADDR 128
 
-#if defined(SOLARIS) || defined(_WINDOWS) || defined(IRIX)
+#if (defined(SOLARIS) && !defined(_SOCKLEN_T)) || defined(_WINDOWS) || defined(IRIX)
 #define socklen_t int
 #endif
 
