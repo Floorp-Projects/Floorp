@@ -24,9 +24,9 @@
 #define nsCEvent_h__
 
 #include "windows.h"
-#include "nsIEvent.h"
+#include "nsIWinEvent.h"
 
-class nsCEvent : public nsIEvent
+class nsCEvent : public nsIWinEvent
 {
 public:
 	nsCEvent(void* platformEventData=nsnull);
@@ -34,6 +34,7 @@ public:
 	NS_DECL_ISUPPORTS
 
 	NS_DECL_NSIEVENT
+	NS_DECL_NSIWINEVENT
 
 protected:
 	virtual ~nsCEvent();

@@ -27,6 +27,11 @@ MAKE_OBJ_TYPE=DLL
 DLLNAME=eventloop
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
+XPIDLSRCS=									\
+		.\nsIWinEvent.idl					\
+		.\nsIWinEventFilter.idl			\
+		$(NULL)
+
 CPP_OBJS=												\
 		.\..\xp\$(OBJDIR)\nsCLoopModule.obj		\
 		.\..\xp\$(OBJDIR)\nsCBaseLoop.obj		\
