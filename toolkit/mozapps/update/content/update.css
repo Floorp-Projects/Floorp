@@ -1,5 +1,0 @@
-updateitem {
-  -moz-binding: url("chrome://mozapps/content/update/updates.xml#updateItem");
-  display: -moz-box;
-}
-
