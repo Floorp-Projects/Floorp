@@ -1500,7 +1500,7 @@ PUBLIC void    INTL_UnicodeToStr(
 	if (encoding != lastEncoding)
 	{
 		/* Unload all the table we need */
-		if (lastEncoding != INVALID_ENCODING_ID)
+		if (lastEncoding != (INTL_Encoding_ID) INVALID_ENCODING_ID)
 			UnloadUCS2TableSet(&tableset,TRUE);
 
 		/* load all the table we need */
