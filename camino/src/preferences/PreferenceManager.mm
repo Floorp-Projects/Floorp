@@ -89,8 +89,11 @@ app_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count);
     nsresult rv;
     ICStop (mInternetConfig);
     nsCOMPtr<nsIPrefService> pref(do_GetService(NS_PREF_CONTRACTID, &rv));
-    if (!NS_FAILED(rv))
+    if (NS_SUCCEEDED(rv)) {
+        //NSLog(@"Saving prefs file");
         pref->SavePrefFile(nsnull);
+    }
+    
     [super dealloc];
 }
 

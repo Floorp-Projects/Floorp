@@ -46,224 +46,32 @@
 #include "nsILocalFile.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsIWebProgressListener.h"
+#include "nsIDownload.h"
 #include "nsIComponentManager.h"
 #include "nsIPref.h"
 
-
-class nsDownloadListener : public nsIWebProgressListener
-{
-public:
-    nsDownloadListener(ProgressDlgController* aController,
-                       nsIWebBrowserPersist* aPersist,
-                       nsISupports*     aSource,
-                       NSString*        aDestination,
-                       const char*      aContentType,
-                       nsIInputStream*  aPostData,
-                       BOOL             aBypassCache)
-    {
-        NS_INIT_ISUPPORTS();
-        mController = aController;
-        mWebPersist = aPersist;
-        // The source is either a simple URL or a complete document.
-        mURL = do_QueryInterface(aSource);
-        if (!mURL)
-            mDocument = do_QueryInterface(aSource);
-        
-        PRUint32 dstLen = [aDestination length];
-        PRUnichar* tmp = new PRUnichar[dstLen + sizeof(PRUnichar)];
-        tmp[dstLen] = (PRUnichar)'\0';
-        [aDestination getCharacters:tmp];
-        nsAutoString dstStr(tmp);
-        delete tmp;
-        
-        NS_NewLocalFile(dstStr, PR_FALSE, getter_AddRefs(mDestination));
-        // XXX check for failure
-
-        mContentType          = aContentType;
-        mPostData             = aPostData;
-        mBypassCache          = aBypassCache;
-        mNetworkTransfer      = PR_FALSE;
-        mGotFirstStateChange  = PR_FALSE;
-    };
-    
-    virtual ~nsDownloadListener() {};
-
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIWEBPROGRESSLISTENER
-  
-public:
-    void BeginDownload();
-    void InitDialog();
-    void CancelDownload();
-    
-private: // Member variables
-    ProgressDlgController*          mController;        // Controller for our UI.
-    nsCOMPtr<nsIWebBrowserPersist>  mWebPersist;        // Our web persist object.
-    nsCOMPtr<nsIURL>                mURL;               // The URL of our source file. Null if we're saving a complete document.
-    nsCOMPtr<nsILocalFile>          mDestination;       // Our destination URL.
-    nsCString                       mContentType;       // Our content type string.
-    nsCOMPtr<nsIDOMHTMLDocument>    mDocument;          // A DOM document.  Null if we're only saving a simple URL.
-    nsCOMPtr<nsIInputStream>        mPostData;          // For complete documents, this is our post data from session history.
-    PRPackedBool                    mBypassCache;       // Whether we should bypass the cache or not.
-    PRPackedBool                    mNetworkTransfer;     // true if the first OnStateChange has the NETWORK bit set
-    PRPackedBool                    mGotFirstStateChange; // true after we've seen the first OnStateChange
-};
-
-NS_IMPL_ISUPPORTS1(nsDownloadListener, nsIWebProgressListener)
-
-/* void onProgressChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in long aCurSelfProgress, in long aMaxSelfProgress, in long aCurTotalProgress, in long aMaxTotalProgress); */
-NS_IMETHODIMP 
-nsDownloadListener::OnProgressChange(nsIWebProgress *aWebProgress, 
-                                      nsIRequest *aRequest, 
-                                      PRInt32 aCurSelfProgress, 
-                                      PRInt32 aMaxSelfProgress, 
-                                      PRInt32 aCurTotalProgress, 
-                                      PRInt32 aMaxTotalProgress)
-{
-  [mController setProgressBar:aCurTotalProgress maxProg:aMaxTotalProgress];
-  return NS_OK;
-}
-
-/* void onLocationChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in nsIURI location); */
-NS_IMETHODIMP 
-nsDownloadListener::OnLocationChange(nsIWebProgress *aWebProgress, 
-           nsIRequest *aRequest, 
-           nsIURI *location)
-{
-  return NS_OK;
-}
-
-/* void onStatusChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in nsresult aStatus, in wstring aMessage); */
-NS_IMETHODIMP 
-nsDownloadListener::OnStatusChange(nsIWebProgress *aWebProgress, 
-               nsIRequest *aRequest, 
-               nsresult aStatus, 
-               const PRUnichar *aMessage)
-{
-  return NS_OK;
-}
-
-/* void onSecurityChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in unsigned long state); */
-NS_IMETHODIMP 
-nsDownloadListener::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRUint32 state)
-{
-  return NS_OK;
-}
-
-// Implementation of nsIWebProgressListener
-/* void onStateChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in unsigned long aStateFlags, in unsigned long aStatus); */
-NS_IMETHODIMP 
-nsDownloadListener::OnStateChange(nsIWebProgress *aWebProgress,  nsIRequest *aRequest,  PRUint32 aStateFlags, 
-                                    PRUint32 aStatus)
-{
-  // NSLog(@"State changed: state %u, status %u", aStateFlags, aStatus);  
-  if (!mGotFirstStateChange) {
-    mNetworkTransfer = ((aStateFlags & STATE_IS_NETWORK) != 0);
-    mGotFirstStateChange = PR_TRUE;
-  }
-  
-  // when the entire download finishes, stop the progress timer and clean up
-  // the window and controller. We will get this even in the event of a cancel,
-  // so this is the only place in the listener where we should kill the download.
-  if ((aStateFlags & STATE_STOP) && (!mNetworkTransfer || (aStateFlags & STATE_IS_NETWORK))) {
-    [mController killDownloadTimer];
-    [mController setDownloadProgress:nil];
-  }
-  return NS_OK; 
-}
-
-void
-nsDownloadListener::BeginDownload()
-{
-    if (mWebPersist) {
-        mWebPersist->SetProgressListener(this);
-        PRInt32 flags = nsIWebBrowserPersist::PERSIST_FLAGS_NO_CONVERSION | 
-                        nsIWebBrowserPersist::PERSIST_FLAGS_REPLACE_EXISTING_FILES;
-        if (mBypassCache)
-            flags |= nsIWebBrowserPersist::PERSIST_FLAGS_BYPASS_CACHE;
-        else
-            flags |= nsIWebBrowserPersist::PERSIST_FLAGS_FROM_CACHE;
-            
-        if (mURL)
-            mWebPersist->SaveURI(mURL, mPostData, mDestination);
-        else {
-            PRInt32 encodingFlags = 0;
-            nsCOMPtr<nsILocalFile> filesFolder;
-            
-            if (!mContentType.Equals("text/plain")) {
-                // Create a local directory in the same dir as our file.  It
-                // will hold our associated files.
-                filesFolder = do_CreateInstance("@mozilla.org/file/local;1");
-                nsAutoString unicodePath;
-                mDestination->GetPath(unicodePath);
-                filesFolder->InitWithPath(unicodePath);
-                
-                nsAutoString leafName;
-                filesFolder->GetLeafName(leafName);
-                nsAutoString nameMinusExt(leafName);
-                PRInt32 index = nameMinusExt.RFind(".");
-                if (index >= 0)
-                    nameMinusExt.Left(nameMinusExt, index);
-                nameMinusExt += NS_LITERAL_STRING(" Files"); // XXXdwh needs to be localizable!
-                filesFolder->SetLeafName(nameMinusExt);
-                PRBool exists = PR_FALSE;
-                filesFolder->Exists(&exists);
-                if (!exists)
-                    filesFolder->Create(nsILocalFile::DIRECTORY_TYPE, 0755);
-            }
-            else
-                encodingFlags |= nsIWebBrowserPersist::ENCODE_FLAGS_FORMATTED |
-                                 nsIWebBrowserPersist::ENCODE_FLAGS_ABSOLUTE_LINKS |
-                                 nsIWebBrowserPersist::ENCODE_FLAGS_NOFRAMES_CONTENT;
-                                 
-            mWebPersist->SaveDocument(mDocument, mDestination, filesFolder, mContentType.get(),
-                                      encodingFlags, 80);
-        }
-    }
-    
-    InitDialog();
-}
-
-void
-nsDownloadListener::InitDialog()
-{
-    if (!mURL && !mDocument)
-        return;
-        
-    if (mWebPersist) {
-        if (mURL) {
-            nsCAutoString spec;
-            mURL->GetSpec(spec);
-            nsAutoString spec2; spec2.AssignWithConversion(spec.get());
-            [mController setSourceURL: spec2.get()];
-        }
-        else {
-            nsAutoString spec;
-            mDocument->GetURL(spec);
-            [mController setSourceURL: spec.get()];
-        }
-    }
-
-    nsAutoString pathStr;
-    mDestination->GetPath(pathStr);
-    [mController setDestination: pathStr.get()];
-    [mController setDownloadTimer];
-}
-
-void
-nsDownloadListener::CancelDownload()
-{
-  if (mWebPersist)
-    mWebPersist->CancelSave();
-}
-
-
-static NSString *SaveFileToolbarIdentifier    		= @"Save File Dialog Toolbar";
-static NSString *CancelToolbarItemIdentifier  		= @"Cancel Toolbar Item";
+static NSString *SaveFileToolbarIdentifier        = @"Save File Dialog Toolbar";
+static NSString *CancelToolbarItemIdentifier      = @"Cancel Toolbar Item";
 static NSString *PauseResumeToolbarItemIdentifier = @"Pause and Resume Toggle Toolbar Item";
 static NSString *ShowFileToolbarItemIdentifier    = @"Show File Toolbar Item";
 static NSString *OpenFileToolbarItemIdentifier    = @"Open File Toolbar Item";
 static NSString *LeaveOpenToolbarItemIdentifier   = @"Leave Open Toggle Toolbar Item";
+
+
+@implementation ChimeraDownloadControllerFactory : DownloadControllerFactory
+
+- (NSWindowController<DownloadProgressDisplay> *)createDownloadController
+{
+  NSWindowController* progressController = [[ProgressDlgController alloc] initWithWindowNibName: @"ProgressDialog"];
+  NSAssert([progressController conformsToProtocol:@protocol(DownloadProgressDisplay)],
+              @"progressController should conform to DownloadProgressDisplay protocol");
+  return progressController;
+}
+
+@end
+
+#pragma mark -
+
 
 @interface ProgressDlgController(Private)
 -(void)setupToolbar;
@@ -271,57 +79,25 @@ static NSString *LeaveOpenToolbarItemIdentifier   = @"Leave Open Toggle Toolbar 
 
 @implementation ProgressDlgController
 
--(void)setWebPersist:(nsIWebBrowserPersist*)aPersist 
-              source:(nsISupports*)aSource
-         destination:(NSString*)aDestination
-         contentType:(const char*)aContentType
-            postData:(nsIInputStream*)aInputStream
-         bypassCache:(BOOL)aBypassCache
+- (void)dealloc
 {
-    mDownloadListener = new nsDownloadListener(self, aPersist, aSource,
-                                               aDestination, aContentType,
-                                               aInputStream, aBypassCache);
-    NS_ADDREF(mDownloadListener);
-}
-
--(void) setProgressBar:(long int)curProgress maxProg:(long int)maxProgress
-{
-  aCurrentProgress = curProgress; // fall back for stat calcs
-  if (![mProgressBar isIndeterminate]) { //most likely - just update value
-    if (curProgress == maxProgress) //handles little bug in FTP download size
-      [mProgressBar setMaxValue:maxProgress];
-    [mProgressBar setDoubleValue:curProgress];
-  }
-  else if (maxProgress > 0) { // ok, we're starting up with good max & cur values
-    [mProgressBar setIndeterminate:NO];
-    [mProgressBar setMaxValue:maxProgress];
-    [mProgressBar setDoubleValue:curProgress];
-  } // if neither case was true, it's barber pole city.
-}
-
--(void) setSourceURL: (const PRUnichar*)aSource
-{
-  [mFromField setStringValue: [NSString stringWithCharacters:aSource length:nsCRT::strlen(aSource)]];
-}
-
--(void) setDestination: (const PRUnichar*)aDestination
-{
-  [mToField setStringValue: [[NSString stringWithCharacters:aDestination length:nsCRT::strlen(aDestination)] stringByAbbreviatingWithTildeInPath]];
+  NS_IF_RELEASE(mDownloader);
+  [super dealloc];
 }
 
 - (void)windowDidLoad
 {
   mDownloadIsPaused = NO;
   mDownloadIsComplete = NO;
+
   nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
   PRBool save = PR_FALSE;
-  prefs->GetBoolPref("browser.download.progressDnldDialog.keepAlive",&save);
+  prefs->GetBoolPref("browser.download.progressDnldDialog.keepAlive", &save);
   mSaveFileDialogShouldStayOpen = save;
+
   [self setupToolbar];
   [mProgressBar setUsesThreadedAnimation:YES];      
-  [mProgressBar startAnimation:self];
-  if (mDownloadListener)
-    mDownloadListener->BeginDownload();
+  [mProgressBar startAnimation:self];   // move to onStateChange
 }
 
 - (void)setupToolbar
@@ -438,7 +214,9 @@ static NSString *LeaveOpenToolbarItemIdentifier   = @"Leave Open Toggle Toolbar 
 
 -(void)cancel
 {
-  mDownloadListener->CancelDownload();
+  if (mDownloader)    // we should always have one
+    mDownloader->CancelDownload();
+  
   // clean up downloaded file. - do it here on in CancelDownload?
   NSFileManager *fileManager = [NSFileManager defaultManager];
   NSString *thePath = [[mToField stringValue] stringByExpandingTildeInPath];
@@ -457,22 +235,29 @@ static NSString *LeaveOpenToolbarItemIdentifier   = @"Leave Open Toggle Toolbar 
 
 -(void)pauseAndResumeDownload
 {
-  if ( ! mDownloadIsPaused ) {
-    //Do logic to pause download
+  if ( !mDownloadIsPaused )
+  {
     mDownloadIsPaused = YES;
     [pauseResumeToggleToolbarItem setLabel:@"Resume"];
     [pauseResumeToggleToolbarItem setPaletteLabel:@"Resume Download"];
     [pauseResumeToggleToolbarItem setToolTip:@"Resume the paused FTP download"];
     [pauseResumeToggleToolbarItem setImage:[NSImage imageNamed:@"saveResume"]];
     [self killDownloadTimer];
-  } else {
-    //Do logic to resume download
+
+    if (mDownloader)    // we should always have one
+      mDownloader->PauseDownload();
+  } 
+  else
+  {
     mDownloadIsPaused = NO;
     [pauseResumeToggleToolbarItem setLabel:@"Pause"];
     [pauseResumeToggleToolbarItem setPaletteLabel:@"Pause Download"];
     [pauseResumeToggleToolbarItem setToolTip:@"Pause this FTP file download"];
     [pauseResumeToggleToolbarItem setImage:[NSImage imageNamed:@"savePause"]];
-    [self setDownloadTimer];
+    [self setupDownloadTimer];
+
+    if (mDownloader)    // we should always have one
+      mDownloader->ResumeDownload();
   }
 }
 
@@ -531,12 +316,6 @@ static NSString *LeaveOpenToolbarItemIdentifier   = @"Leave Open Toggle Toolbar 
   return YES; 
 }
 
-- (void)dealloc
-{
-  NS_IF_RELEASE(mDownloadListener);
-  [super dealloc];
-}
-
 - (void)killDownloadTimer
 {
   if (mDownloadTimer) {
@@ -545,7 +324,7 @@ static NSString *LeaveOpenToolbarItemIdentifier   = @"Leave Open Toggle Toolbar 
     mDownloadTimer = nil;
   }    
 }
-- (void)setDownloadTimer
+- (void)setupDownloadTimer
 {
   [self killDownloadTimer];
   mDownloadTimer = [[NSTimer scheduledTimerWithTimeInterval:1.0
@@ -590,7 +369,7 @@ static NSString *LeaveOpenToolbarItemIdentifier   = @"Leave Open Toggle Toolbar 
     return [[[NSString alloc] initWithString:[[NSBundle mainBundle] localizedStringForKey:@"UnderMin" value:@"Under a minute" table:@"ProgressDialog"]] autorelease];
   }    
   // seconds becomes minutes and we keep checking.  
-  seconds=seconds/60;
+  seconds = seconds/60;
   if (seconds < 60) {
     if (seconds < 2)
       return [[[NSString alloc] initWithString:[[NSBundle mainBundle] localizedStringForKey:@"AboutMin" value:@"About a minute" table:@"ProgressDialog"]] autorelease];
@@ -598,7 +377,7 @@ static NSString *LeaveOpenToolbarItemIdentifier   = @"Leave Open Toggle Toolbar 
     return [[[NSString alloc] initWithFormat:[[NSBundle mainBundle] localizedStringForKey:@"AboutMins" value:@"About %d minutes" table:@"ProgressDialog"],seconds] autorelease];
   }
   //this download will never seemingly never end. now seconds become hours.
-  seconds=seconds/60;
+  seconds = seconds/60;
   if (seconds < 2)
     return [[[NSString alloc] initWithString:[[NSBundle mainBundle] localizedStringForKey:@"AboutHour" value:@"Over an hour" table:@"ProgressDialog"]] autorelease];
   return [[[NSString alloc] initWithFormat:[[NSBundle mainBundle] localizedStringForKey:@"AboutHours" value:@"Over %d hours" table:@"ProgressDialog"],seconds] autorelease];
@@ -629,8 +408,11 @@ static NSString *LeaveOpenToolbarItemIdentifier   = @"Leave Open Toggle Toolbar 
 // this handles lots of things.
 - (void)setDownloadProgress:(NSTimer *)downloadTimer;
 {
+  // XXX this logic needs cleaning up.
+  
   // Ack! we're closing the window with the download still running!
-  if (mDownloadIsComplete) {        
+  if (mDownloadIsComplete)
+  {
     [[self window] performClose:self];  
     return;
   }
@@ -644,26 +426,28 @@ static NSString *LeaveOpenToolbarItemIdentifier   = @"Leave Open Toggle Toolbar 
   [mElapsedTimeLabel setStringValue:[self formatTime:(++elapsedSec)]];
   // for status field & time left
   float maxBytes = ([mProgressBar maxValue]);
-  float byteSec = aCurrentProgress/elapsedSec;
+  float byteSec = mCurrentProgress/elapsedSec;
   // OK - if downloadTimer is nil, we're done - fix maxBytes value for status report.
   if (!downloadTimer)
-    maxBytes = aCurrentProgress;
+    maxBytes = mCurrentProgress;
   // update status field 
   NSString *labelString = [[NSBundle mainBundle] localizedStringForKey:@"LabelString"
                                                                  value:@"%@ of %@ total (at %@/sec)"
                                                                  table:@"ProgressDialog"];
-  [mStatusLabel setStringValue: [NSString stringWithFormat:labelString, [self formatBytes:aCurrentProgress], [self formatBytes:maxBytes], [self formatBytes:byteSec]]];
+  [mStatusLabel setStringValue: [NSString stringWithFormat:labelString, [self formatBytes:mCurrentProgress], [self formatBytes:maxBytes], [self formatBytes:byteSec]]];
   // updating estimated time left field
   // if maxBytes < 0, can't calc time left.
   // if !downloadTimer, download is finished.  either way, make sure time left is 0.
-  if ((maxBytes > 0) && (downloadTimer)) {
-    int secToGo = (int)ceil((elapsedSec*maxBytes/aCurrentProgress)-elapsedSec);
+  if ((maxBytes > 0) && (downloadTimer))
+  {
+    int secToGo = (int)ceil((elapsedSec*maxBytes/mCurrentProgress) - elapsedSec);
     [mTimeLeftLabel setStringValue:[self formatFuzzyTime:secToGo]];
   }
-  else if (!downloadTimer) {  // download done.  Set remaining time to 0, fix progress bar & cancel button
+  else if (!downloadTimer)
+  {                            // download done.  Set remaining time to 0, fix progress bar & cancel button
     mDownloadIsComplete = YES;            // all done. we got a STATE_STOP
     [mTimeLeftLabel setStringValue:@""];
-    [self setProgressBar:aCurrentProgress maxProg:aCurrentProgress];
+    [self setProgressTo:mCurrentProgress ofMax:mCurrentProgress];
     if (!mSaveFileDialogShouldStayOpen)
       [[self window] performClose:self];  // close window
     else
@@ -671,6 +455,61 @@ static NSString *LeaveOpenToolbarItemIdentifier   = @"Leave Open Toggle Toolbar 
   }
   else //maxBytes is undetermined.  Set remaining time to question marks.
       [mTimeLeftLabel setStringValue:@"???"];
+}
+
+#pragma mark -
+
+// DownloadProgressDisplay protocol methods
+
+- (void)onStartDownload
+{
+  [self showWindow: self];
+  [self setupDownloadTimer];
+}
+
+- (void)onEndDownload
+{
+  [self killDownloadTimer];
+  [self setDownloadProgress:nil];
+}
+
+- (void)setProgressTo:(long)aCurProgress ofMax:(long)aMaxProgress
+{
+  mCurrentProgress = aCurProgress;         // fall back for stat calcs
+
+  if (![mProgressBar isIndeterminate]) 	  //most likely - just update value
+  {
+    if (aCurProgress == aMaxProgress)      //handles little bug in FTP download size
+      [mProgressBar setMaxValue:aMaxProgress];
+
+    [mProgressBar setDoubleValue:aCurProgress];
+  }
+  else if (aMaxProgress > 0)	             // ok, we're starting up with good max & cur values
+  {
+    [mProgressBar setIndeterminate:NO];
+    [mProgressBar setMaxValue:aMaxProgress];
+    [mProgressBar setDoubleValue:aCurProgress];
+  } // if neither case was true, it's barber pole city.
+}
+
+-(void) setDownloadListener: (nsDownloader*)aDownloader
+{
+  if (mDownloader != aDownloader)
+    NS_IF_RELEASE(mDownloader);
+
+  NS_IF_ADDREF(mDownloader = aDownloader);
+}
+
+- (void)setSourceURL:(NSString*)aSourceURL
+{
+  [mFromField setStringValue: aSourceURL];  
+  [mFromField display];  // force an immmeditate update
+}
+
+- (void)setDestinationPath:(NSString*)aDestPath
+{
+  [mToField setStringValue: [aDestPath stringByAbbreviatingWithTildeInPath]];
+  [mToField display];   // force an immmeditate update
 }
 
 @end

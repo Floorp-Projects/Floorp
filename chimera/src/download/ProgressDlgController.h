@@ -36,6 +36,9 @@
  * ***** END LICENSE BLOCK ***** */
 
 #import <AppKit/AppKit.h>
+
+#import "DownloadProgressDisplay.h"
+
 #include "nscore.h"
 
 class nsIWebBrowserPersist;
@@ -43,42 +46,37 @@ class nsISupports;
 class nsIInputStream;
 class nsDownloadListener;
 
-@interface ProgressDlgController : NSWindowController {
-    IBOutlet id mFromField;
-    IBOutlet id mToField;
-    IBOutlet id mStatusLabel;
-    IBOutlet id mTimeLeftLabel;
-    IBOutlet id mElapsedTimeLabel;
-    IBOutlet id mProgressBar;
+
+@interface ChimeraDownloadControllerFactory : DownloadControllerFactory
+@end
+
+
+@interface ProgressDlgController : NSWindowController <DownloadProgressDisplay>
+{
+    IBOutlet NSTextField *mElapsedTimeLabel;
+    IBOutlet NSTextField *mFromField;
+    IBOutlet NSTextField *mStatusLabel;
+    IBOutlet NSTextField *mTimeLeftLabel;
+    IBOutlet NSTextField *mToField;
+    IBOutlet NSProgressIndicator *mProgressBar;
 
     NSToolbarItem *pauseResumeToggleToolbarItem;
     NSToolbarItem *leaveOpenToggleToolbarItem;
 
-    BOOL mDownloadIsPaused;
-    BOOL mSaveFileDialogShouldStayOpen;
-    BOOL mDownloadIsComplete;
-    long int aCurrentProgress;	// if progress bar is indeterminate, can still calc stats.
+    BOOL      mDownloadIsPaused;
+    BOOL      mSaveFileDialogShouldStayOpen;
+    BOOL      mDownloadIsComplete;
+    long      mCurrentProgress; // if progress bar is indeterminate, can still calc stats.
         
-    nsDownloadListener* mDownloadListener;
-    NSTimer *mDownloadTimer;
+    nsDownloader        *mDownloader;   // we hold a ref to this
+    NSTimer             *mDownloadTimer;
 }
 
--(void) setWebPersist: (nsIWebBrowserPersist*)aPersist 
-               source: (nsISupports*)aSource
-               destination: (NSString*)aDestination
-               contentType: (const char*)aContentType
-               postData: (nsIInputStream*)aInputStream
-               bypassCache: (BOOL)aBypassCache;
-
--(void) setProgressBar:(long int)aCurProgress
-               maxProg:(long int)aMaxProgress;
--(void) setDownloadTimer;
+-(void) setupDownloadTimer;
 -(void) killDownloadTimer;
 -(void) setDownloadProgress:(NSTimer *)aTimer;
 -(NSString *) formatTime:(int)aSeconds;
 -(NSString *) formatFuzzyTime:(int)aSeconds;
 -(NSString *) formatBytes:(float)aBytes;
--(void) setSourceURL: (const PRUnichar*)aSource;
--(void) setDestination: (const PRUnichar*)aDestination;
 
 @end

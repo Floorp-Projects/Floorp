@@ -5,12 +5,12 @@
             CLASS = ProgressDlgController; 
             LANGUAGE = ObjC; 
             OUTLETS = {
-                mElapsedTimeLabel = id; 
-                mFromField = id; 
-                mProgressBar = id; 
-                mStatusLabel = id; 
-                mTimeLeftLabel = id; 
-                mToField = id; 
+                mElapsedTimeLabel = NSTextField; 
+                mFromField = NSTextField; 
+                mProgressBar = NSProgressIndicator; 
+                mStatusLabel = NSTextField; 
+                mTimeLeftLabel = NSTextField; 
+                mToField = NSTextField; 
             }; 
             SUPERCLASS = NSWindowController; 
         }
