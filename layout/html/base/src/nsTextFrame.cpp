@@ -4720,6 +4720,13 @@ nsTextFrame::MeasureText(nsIPresContext*          aPresContext,
   PRBool  justDidFirstLetter = PR_FALSE;
   nsTextDimensions dimensions, lastWordDimensions;
   PRBool  measureTextRuns = PR_FALSE;
+
+  if (contentLength == 0) {
+    aTextData.mX = 0;
+    aTextData.mAscent = 0;
+    aTextData.mDescent = 0;
+    return NS_FRAME_COMPLETE;
+  }
 #if defined(_WIN32) || defined(XP_OS2) || defined(MOZ_X11)
   // see if we have implementation for GetTextDimensions()
   PRUint32 hints = 0;
