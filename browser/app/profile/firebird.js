@@ -38,7 +38,7 @@
 // SYNTAX HINTS:  dashes are delimiters.  Use underscores instead.
 //  The first character after a period must be alphabetic.
 
-pref("startup.homepage_override_url","chrome://navigator-region/locale/region.properties");
+// pref("startup.homepage_override_url","chrome://navigator-region/locale/region.properties");
 pref("browser.chromeURL","chrome://browser/content/");
 
 pref("keyword.enabled", true);
@@ -57,9 +57,9 @@ pref("backups.number_of_prefs_copies", 1);
 // 0 = blank, 1 = home (browser.startup.homepage), 2 = last
 // XXXBlake Remove this stupid pref
 pref("browser.startup.page",                1);
-pref("browser.startup.homepage",	          "chrome://navigator-region/locale/region.properties");
+pref("browser.startup.homepage",	          "chrome://browser-region/locale/region.properties");
 // "browser.startup.homepage_override" was for 4.x
-pref("browser.startup.homepage_override.1", true);
+pref("browser.startup.homepage_override.1", false);
 
 pref("browser.cache.enable",                true); // see also network.http.use-cache
 pref("browser.cache.disk.enable",           true);
@@ -593,7 +593,7 @@ pref("bidi.support", 1);
 // 2 = defaultcharactersetBidi
 pref("bidi.characterset", 1);
 
-pref("browser.throbber.url","chrome://navigator-region/locale/region.properties");
+pref("browser.throbber.url","chrome://browser-region/locale/region.properties");
 
 // used for double-click word selection behavior. Win will override.
 pref("layout.word_select.eat_space_to_next_word", false);
