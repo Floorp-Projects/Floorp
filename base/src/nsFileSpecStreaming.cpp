@@ -11,7 +11,7 @@
 nsOutputStream& operator << (nsOutputStream& s, const nsFileURL& url)
 //----------------------------------------------------------------------------------------
 {
-    return s << url.GetURLString();
+    return s << url.GetAsString();
 }
 
 //----------------------------------------------------------------------------------------
