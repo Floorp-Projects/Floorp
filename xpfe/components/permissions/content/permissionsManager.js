@@ -229,28 +229,19 @@ function deletePermissions() {
         k++;
       }
       permissions.splice(j, k-j);
+      permissionsTreeView.rowCount -= k - j;
+      permissionsTree.treeBoxObject.rowCountChanged(j, j - k);
     }
   }
 
-  var box = permissionsTree.treeBoxObject;
-  var firstRow = box.getFirstVisibleRow();
-  if (firstRow > (permissions.length - 1) ) {
-    firstRow = permissions.length - 1;
-  }
-  permissionsTreeView.rowCount = permissions.length;
-  box.rowCountChanged(0, permissions.length);
-  box.scrollToRow(firstRow);
-
   if (permissions.length) {
     var nextSelection = (selections[0] < permissions.length) ? selections[0] : permissions.length - 1;
-    box.view.selection.select(-1); 
-    box.view.selection.select(nextSelection);
+    permissionsTreeView.selection.select(nextSelection);
+    permissionsTree.treeBoxObject.ensureRowIsVisible(nextSelection);
   } 
   else {
     document.getElementById("removePermission").setAttribute("disabled", "true")
     document.getElementById("removeAllPermissions").setAttribute("disabled","true");
-
-    permissionsTree.treeBoxObject.view.selection.select(-1); 
   }
 }
 
@@ -272,10 +263,9 @@ function updatePendingRemovals(host) {
 }
 
 function clearTree() {
-  permissionsTree.treeBoxObject.view.selection.select(-1); 
-
+  var oldCount = permissionsTreeView.rowCount;
   permissionsTreeView.rowCount = 0;
-  permissionsTree.treeBoxObject.invalidate();
+  permissionsTree.treeBoxObject.rowCountChanged(0, -oldCount);
 
   document.getElementById("removePermission").setAttribute("disabled", "true")
   document.getElementById("removeAllPermissions").setAttribute("disabled","true");
