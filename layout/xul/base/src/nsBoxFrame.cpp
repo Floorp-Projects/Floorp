@@ -277,20 +277,22 @@ nsBoxFrame::GetRedefinedMinPrefMax(nsIPresContext&  aPresContext, nsIFrame* aFra
 
     if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::width, value))
     {
-        nsHTMLValue aResult;
-        nsGenericHTMLElement::ParseValueOrPercent(value, aResult, eHTMLUnit_Pixel);
         float p2t;
         aPresContext.GetScaledPixelsToTwips(&p2t);
-        aSize.prefSize.width = NSIntPixelsToTwips(aResult.GetPixelValue(), p2t);
+
+        value.Trim("%");
+
+        aSize.prefSize.width = NSIntPixelsToTwips(value.ToInteger(&error), p2t);
     }
 
     if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::height, value))
     {
-        nsHTMLValue aResult;
-        nsGenericHTMLElement::ParseValueOrPercent(value, aResult, eHTMLUnit_Pixel);
         float p2t;
         aPresContext.GetScaledPixelsToTwips(&p2t);
-        aSize.prefSize.height = NSIntPixelsToTwips(aResult.GetPixelValue(), p2t);
+
+        value.Trim("%");
+
+        aSize.prefSize.height = NSIntPixelsToTwips(value.ToInteger(&error), p2t);
     }
 }
 
