@@ -34,6 +34,7 @@ mailnews/imap/tests/harness/Makefile
 mailnews/news/Makefile
 mailnews/news/public/Makefile
 mailnews/news/src/Makefile
+mailnews/news/build/Makefile
 mailnews/news/tests/Makefile
 mailnews/news/tests/nntp/Makefile
 mailnews/mime/Makefile
