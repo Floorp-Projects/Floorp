@@ -26,21 +26,24 @@
 #include <prtypes.h>
 #include <prinrval.h>
 
+static const PRUint32 kCACHE_VERSION = 5;
+
 class nsCacheObject //: public nsISupports
 {
 
 public:
-	enum state_flags 
-	{
-		INIT=0x000000,
-		PARTIAL=0x000001
-	};
 
-	nsCacheObject();
-	nsCacheObject(const nsCacheObject& another);
-	nsCacheObject(const char* i_url);
+    enum state_flags 
+    {
+        INIT=0x000000,
+        PARTIAL=0x000001
+    };
 
-	virtual ~nsCacheObject();
+    nsCacheObject();
+    nsCacheObject(const nsCacheObject& another);
+    nsCacheObject(const char* i_url);
+
+    virtual ~nsCacheObject();
 
 /*
     NS_IMETHOD              QueryInterface(const nsIID& aIID, 
@@ -50,56 +53,65 @@ public:
 
 */
 
-	void        Address(const char* i_url);
-	const char* Address(void) const;
+    void        Address(const char* i_url);
+    const char* Address(void) const;
 
-	void        Etag(const char* i_etag);
-	const char* Etag(void) const;
+    void        Etag(const char* i_etag);
+    const char* Etag(void) const;
 
-	PRIntervalTime
+    PRIntervalTime
                 Expires(void) const;
-	void        Expires(PRIntervalTime i_Expires);
+    void        Expires(PRIntervalTime i_Expires);
 
-	PRUint16    Hits(void) const;
-	PRBool      IsExpired(void) const;
-	PRBool      IsPartial(void) const;
-	PRIntervalTime
+    PRUint16    Hits(void) const;
+
+    /* Read and write info about this cache object */
+    void*       Info(void) const;
+    PRBool      Info(void*);
+    PRUint32    InfoSize(void) const;
+
+    PRBool      IsExpired(void) const;
+    PRBool      IsPartial(void) const;
+    PRIntervalTime
                 LastAccessed(void) const;
 
-	PRIntervalTime
+    PRIntervalTime
                 LastModified(void) const;
-	void        LastModified(PRIntervalTime i_lastModified);
+    void        LastModified(PRIntervalTime i_lastModified);
 
-        PRInt16     Module(void) const;
-        void        Module(PRUint16 i_m);
+    PRInt16     Module(void) const;
+    void        Module(PRUint16 i_m);
 
-	PRUint32    Size(void) const;
-	void        Size(PRUint32 s);
+    PRUint32    Size(void) const;
+    void        Size(PRUint32 s);
 
-	const char*     
+    const char*     
                 Trace() const;
-	
+
 //	virtual	void getReadStream();
 //	virtual void getWriteStream();
 
 protected:
-	
-	void	    Init();
 
-	char*	    m_Etag;
-	PRIntervalTime
+    void        Init();
+
+    char*       m_Etag;
+    PRIntervalTime
                 m_Expires;
-	int		    m_Flags;
-	PRUint16    m_Hits;
-	PRIntervalTime
+    int         m_Flags;
+    PRUint16    m_Hits;
+    PRIntervalTime
                 m_LastAccessed, m_LastModified;
-	PRUint32	m_Size;
-	char*	    m_Url;
+    PRUint32    m_Size;
+    char*       m_Url;
 
-    PRInt16    m_Module;
+    PRInt16     m_Module;
+
+    void*       m_pInfo;
+    PRUint32    m_info_size;
 
 private:
-    nsCacheObject& operator=(const nsCacheObject& x);	
+    nsCacheObject& operator=(const nsCacheObject& x);
 };
 
 inline const char* nsCacheObject::Address(void) const
