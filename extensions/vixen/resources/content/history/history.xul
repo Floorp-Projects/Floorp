@@ -2,6 +2,7 @@
 
 <?xml-stylesheet href="chrome://communicator/skin/"?>
 <?xml-stylesheet href="chrome://vixen/skin/history/history.css"?>
+<?xml-stylesheet href="chrome://vixen/content/history/historyContent.css"?>
 
 <window id="vxHistory" orient="vertical"
         windowtype="vixen:history"
@@ -13,6 +14,11 @@
   <script src="chrome://global/content/nsJSComponentManager.js"></script>
   <script src="chrome://vixen/content/vxUtils.js"></script>
   
+  <!-- drag and drop -->
+  <script src="chrome://global/content/nsJSSupportsUtils.js"></script>
+  <script src="chrome://global/content/nsTransferable.js"></script>
+  <script src="chrome://global/content/nsDragAndDrop.js"></script>
+  
   <!-- history -->
   <script src="chrome://vixen/content/history/history.js"></script>
   
@@ -22,10 +28,11 @@
 
   <stringbundle id="historyBundle" src="chrome://vixen/locale/history/history.properties"/>
 
-  <tree id="historyTree" style="width: 0px; height; 0px;"
+  <tree id="historyTree" style="width: 0px; height; 0px; margin: 0px;" class="inset"
         flex="1" datasources="rdf:null" multiple="true"
         ref="urn:mozilla:vixen:transactions">
     <treecolgroup>
+      <treecol/>
       <treecol flex="1"/>
     </treecolgroup>
     <template>
@@ -53,19 +60,23 @@
         </bindings>
         <action>
           <treechildren>
-            <treeitem uri="?transaction">
-              <treerow class="transaction-row" 
+            <treeitem uri="?transaction" command="?command-string">
+              <treerow class="transaction-row"
                        state="?transaction-state"
                        position="?transaction-position">
-                <treecell value="?description" command="?command-string"/>
+                <treecell state="?transaction-state" 
+                          class="treecell-history-grabber" allowevents="true" value="+"/>
+                <treecell class="treecell-history-cell"
+                          state="?transaction-state"
+                          value="?description" crop="right" flex="1"/>
               </treerow>
-            </treeitem>          
+            </treeitem>
           </treechildren>
         </action>
       </rule>
     </template>
     
-    <treechildren id="historyKids" flex="1"/>
+    <treechildren id="historyKids" flex="1" ondraggesture="nsDragAndDrop.startDrag(event, historyDNDObserver)"/>
   </tree>
   
 </window>      

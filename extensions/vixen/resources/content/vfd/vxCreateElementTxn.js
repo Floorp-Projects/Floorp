@@ -89,7 +89,7 @@ vxCreateElementTxn.prototype = {
   
   get commandString()
   {
-    var commandString = "create-element";
+    var commandString = "create-element::{ mLocalName: " + this.mLocalName + "};";
     return commandString;    
   },
 

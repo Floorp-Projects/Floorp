@@ -98,3 +98,39 @@ var vfdFocusObserver = {
   }
 };
 
+function requestUndo ()
+{
+  _dd("requestUndo");
+  var rootShell = vxUtils.getRootShell();
+  if (rootShell) rootShell.undo();
+}
+
+function requestRedo ()
+{
+  _dd("requestRedo");
+  var rootShell = vxUtils.getRootShell();
+  if (rootShell) rootShell.redo();
+}
+
+var historyDNDObserver = 
+{
+  onDragStart: function ()
+  {
+    var tree = document.getElementById("historyTree");
+    if (!tree.selectedItems.length) return null;
+    
+    var commandString = "";
+    for (var i = 0; i < tree.selectedItems.length; ++i) {
+      var currItem = tree.selectedItems[i];
+      if (currItem)
+        commandString += currItem.getAttribute("command");
+    }      
+    
+    _ddf("command-string dragged", commandString);
+
+    var flavourList = { };
+    flavourList["text/x-moz-vixen-command"] = { width: 2, data: commandString };
+    return flavourList;
+  }
+};  
+

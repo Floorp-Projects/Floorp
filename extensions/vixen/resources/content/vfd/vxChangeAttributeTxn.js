@@ -111,11 +111,11 @@ vxChangeAttributeTxn.prototype = {
   // XXX TODO: update to support multiple attribute syntax
   get commandString()
   {
-    var commandString = "change-attribute,";
-/*    commandString += this.mRemoveFlag ? "remove," : "set,";
-    commandString += this.mElement.id + ",";
-    commandString += this.mAttribute + ",";
-    commandString += this.mValue;*/
+    var commandString = "change-attribute::{";
+    commandString += "attributes: [" + this.mAttributes + "],";
+    commandString += "values: [" + this.mValues + "],";
+    commandString += "removeFlags: [" + this.mRemoveFlags + "]";
+    commandString += "};";
     return commandString;    
   },
   

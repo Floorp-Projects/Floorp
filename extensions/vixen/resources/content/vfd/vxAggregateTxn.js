@@ -76,8 +76,10 @@ vxAggregateTxn.prototype = {
 
   get commandString()
   {
-    var commandString = "aggregate-txn";
-    // XXX TODO: elaborate
+    var commandString = "aggregate-txn::{ mTransactions: [";
+    for (var txn in this.mTransactionList)
+      commandString += this.mTransactionList[txn].commandString + ",";
+    commandString += "] };";
     return commandString;    
   }
 };
