@@ -39,7 +39,7 @@
 #ifndef nsUnicodeToMacIcelandic_h___
 #define nsUnicodeToMacIcelandic_h___
 
-#include "nsUCvLatinSupport.h"
+#include "nsUCSupport.h"
 
 //----------------------------------------------------------------------
 // Class nsUnicodeToMacIcelandic [declaration]
@@ -59,13 +59,6 @@ public:
    */
   nsUnicodeToMacIcelandic();
 
-protected:
-
-  //--------------------------------------------------------------------
-  // Subclassing of nsEncoderSupport class [declaration]
-
-  NS_IMETHOD GetMaxLength(const PRUnichar * aSrc, PRInt32 aSrcLength, 
-      PRInt32 * aDestLength);
 };
 
 #endif /* nsUnicodeToMacIcelandic_h___ */

@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #include "nsISO2022KRToUnicode.h"
-#include "nsUCvKOSupport.h"
+#include "nsUCSupport.h"
 #include "nsICharsetConverterManager.h"
 #include "nsIServiceManager.h"
 

@@ -39,7 +39,7 @@
 #ifndef nsUCS4LEToUnicode_h___
 #define nsUCS4LEToUnicode_h___
 
-#include "nsUCvLatinSupport.h"
+#include "nsUCSupport.h"
 
 //----------------------------------------------------------------------
 // Class nsUCS4LEToUnicode [declaration]
@@ -58,11 +58,6 @@ public:
    * Class constructor.
    */
   nsUCS4LEToUnicode();
-
-  /**
-   * Static class constructor.
-   */
-  static nsresult CreateInstance(nsISupports **aResult);
 
 protected:
 

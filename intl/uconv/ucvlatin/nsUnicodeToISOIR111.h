@@ -39,7 +39,7 @@
 #ifndef nsUnicodeToISOIR111_h___
 #define nsUnicodeToISOIR111_h___
 
-#include "nsUCvLatinSupport.h"
+#include "nsUCSupport.h"
 
 //----------------------------------------------------------------------
 // Class nsUnicodeToISOIR111 [declaration]
@@ -59,13 +59,6 @@ public:
    */
   nsUnicodeToISOIR111();
 
-protected:
-
-  //--------------------------------------------------------------------
-  // Subclassing of nsEncoderSupport class [declaration]
-
-  NS_IMETHOD GetMaxLength(const PRUnichar * aSrc, PRInt32 aSrcLength, 
-      PRInt32 * aDestLength);
 };
 
 #endif /* nsUnicodeToISOIR111_h___ */

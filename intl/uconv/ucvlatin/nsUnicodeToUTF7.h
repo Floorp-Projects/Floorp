@@ -39,7 +39,7 @@
 #ifndef nsUnicodeToUTF7_h___
 #define nsUnicodeToUTF7_h___
 
-#include "nsUCvLatinSupport.h"
+#include "nsUCSupport.h"
 
 //----------------------------------------------------------------------
 // Class nsBasicUTF7Encoder [declaration]
@@ -84,8 +84,6 @@ protected:
   NS_IMETHOD ConvertNoBuffNoErr(const PRUnichar * aSrc, PRInt32 * aSrcLength, 
       char * aDest, PRInt32 * aDestLength);
   NS_IMETHOD FinishNoBuff(char * aDest, PRInt32 * aDestLength);
-  NS_IMETHOD GetMaxLength(const PRUnichar * aSrc, PRInt32 aSrcLength, 
-      PRInt32 * aDestLength);
   NS_IMETHOD Reset();
 };
 

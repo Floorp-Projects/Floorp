@@ -87,8 +87,11 @@ static const PRInt16 * g_ufShiftTables[SIZE_OF_TABLES] = {
 //----------------------------------------------------------------------
 // Class nsUnicodeToISO2022JP [implementation]
 
+// worst case max length: 
+//  1  2 3  4  5  6  7 8
+// ESC $ B XX XX ESC ( B
 nsUnicodeToISO2022JP::nsUnicodeToISO2022JP() 
-: nsEncoderSupport()
+: nsEncoderSupport(8)
 {
   mHelper = NULL;
   Reset();
@@ -97,16 +100,6 @@ nsUnicodeToISO2022JP::nsUnicodeToISO2022JP()
 nsUnicodeToISO2022JP::~nsUnicodeToISO2022JP() 
 {
   NS_IF_RELEASE(mHelper);
-}
-
-nsresult nsUnicodeToISO2022JP::CreateInstance(nsISupports ** aResult) 
-{
-  nsIUnicodeEncoder *p = new nsUnicodeToISO2022JP();
-  if(p) {
-   *aResult = p;
-   return NS_OK;
-  }
-  return NS_ERROR_OUT_OF_MEMORY;
 }
 
 nsresult nsUnicodeToISO2022JP::ChangeCharset(PRInt32 aCharset,
@@ -246,17 +239,6 @@ NS_IMETHODIMP nsUnicodeToISO2022JP::FinishNoBuff(char * aDest,
                                                  PRInt32 * aDestLength)
 {
   ChangeCharset(0, aDest, aDestLength);
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsUnicodeToISO2022JP::GetMaxLength(const PRUnichar * aSrc, 
-                                                 PRInt32 aSrcLength,
-                                                 PRInt32 * aDestLength)
-{
-  // worst case
-  //  1  2 3  4  5  6  7 8
-  // ESC $ B XX XX ESC ( B
-  *aDestLength = 8*aSrcLength;
   return NS_OK;
 }
 

@@ -39,7 +39,7 @@
 #ifndef nsT61ToUnicode_h___
 #define nsT61ToUnicode_h___
 
-#include "nsUCvLatinSupport.h"
+#include "nsUCSupport.h"
 
 //----------------------------------------------------------------------
 // Class nsT61ToUnicode [declaration]
@@ -59,13 +59,6 @@ public:
    */
   nsT61ToUnicode();
 
-protected:
-
-  //--------------------------------------------------------------------
-  // Subclassing of nsDecoderSupport class [declaration]
-
-  NS_IMETHOD GetMaxLength(const char * aSrc, PRInt32 aSrcLength, 
-      PRInt32 * aDestLength);
 };
 
 #endif /* nsT61ToUnicode_h___ */

@@ -39,7 +39,7 @@
 #ifndef nsUnicodeToCP936_h___
 #define nsUnicodeToCP936_h___
 
-#include "nsUCvCnSupport.h"
+#include "nsUCSupport.h"
 
 //----------------------------------------------------------------------
 // Class nsUnicodeToCP936 [declaration]

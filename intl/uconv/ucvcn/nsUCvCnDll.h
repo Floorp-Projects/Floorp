@@ -41,5 +41,4 @@
 
 #include "prtypes.h"
 
-#define g_AsciiMapping ucvcn_g_AsciiMapping
 #endif /* nsUCvCnDll_h___ */

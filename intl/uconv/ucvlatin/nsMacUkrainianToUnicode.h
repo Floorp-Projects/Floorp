@@ -39,7 +39,7 @@
 #ifndef nsMacUkrainianToUnicode_h___
 #define nsMacUkrainianToUnicode_h___
 
-#include "nsUCvLatinSupport.h"
+#include "nsUCSupport.h"
 
 //----------------------------------------------------------------------
 // Class nsMacUkrainianToUnicode [declaration]

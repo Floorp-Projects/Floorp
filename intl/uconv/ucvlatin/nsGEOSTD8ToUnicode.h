@@ -23,7 +23,7 @@
 #ifndef nsGEOSTD8ToUnicode_h___
 #define nsGEOSTD8ToUnicode_h___
 
-#include "nsUCvLatinSupport.h"
+#include "nsUCSupport.h"
 
 //----------------------------------------------------------------------
 // Class nsGEOSTD8ToUnicode [declaration]

@@ -39,7 +39,7 @@
 #ifndef nsUnicodeToKOI8R_h___
 #define nsUnicodeToKOI8R_h___
 
-#include "nsUCvLatinSupport.h"
+#include "nsUCSupport.h"
 
 //----------------------------------------------------------------------
 // Class nsUnicodeToKOI8R [declaration]
@@ -59,13 +59,6 @@ public:
    */
   nsUnicodeToKOI8R();
 
-protected:
-
-  //--------------------------------------------------------------------
-  // Subclassing of nsEncoderSupport class [declaration]
-
-  NS_IMETHOD GetMaxLength(const PRUnichar * aSrc, PRInt32 aSrcLength, 
-      PRInt32 * aDestLength);
 };
 
 #endif /* nsUnicodeToKOI8R_h___ */

@@ -39,7 +39,7 @@
 #ifndef nsHZToUnicode_h___
 #define nsHZToUnicode_h___
 
-#include "nsUCvCnSupport.h"
+#include "nsUCSupport.h"
 #include "gbku.h"
 
 //----------------------------------------------------------------------
@@ -67,8 +67,6 @@ protected:
   // Subclassing of nsDecoderSupport class [declaration]
   NS_IMETHOD ConvertNoBuff(const char* aSrc, PRInt32 * aSrcLength, 
                            PRUnichar *aDest, PRInt32 * aDestLength); 
-  NS_IMETHOD GetMaxLength(const char * aSrc, PRInt32 aSrcLength, 
-                           PRInt32 * aDestLength);
   nsGBKConvUtil mUtil;
 
 private:

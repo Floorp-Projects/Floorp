@@ -38,7 +38,7 @@
 
 
 #include "nsUnicodeToUEscape.h"
-#include "nsUCvLatinSupport.h"
+#include "nsUCSupport.h"
 #include <string.h>
 
 char hexarray[]="0123456789ABCDEF";

@@ -181,13 +181,6 @@ viewer:Components:tmbm.xpt
 viewer:Components:txmgr.xpt 
 viewer:Components:uconv.shlb 
 viewer:Components:uconv.xpt 
-viewer:Components:ucvcn.shlb 
-viewer:Components:ucvibm.shlb 
-viewer:Components:ucvja.shlb 
-viewer:Components:ucvko.shlb 
-viewer:Components:ucvlatin.shlb 
-viewer:Components:ucvtw.shlb 
-viewer:Components:ucvtw2.shlb 
 viewer:Components:unicharutil.xpt 
 viewer:Components:uriloader.shlb 
 viewer:Components:uriloader.xpt 

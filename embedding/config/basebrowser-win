@@ -149,16 +149,8 @@ components\uconv.dll
 components\uconv.xpt
 components\lwbrk.dll
 components\nslocale.dll
-components\ucvlatin.dll
 components\unicharutil.xpt
 components\chardet.dll
-; optional - on english only systems
-; components\ucvja.dll for japanese 
-; components\ucvko.dll for korean
-; components\ucvcn.dll for simplified chinese
-; components\ucvtw.dll for traditional chinese
-; components\ucvtw2.dll for traditional chinese
-; components\ucvibm.dll for ibm
 
 ; required i18n libs
 components\strres.dll

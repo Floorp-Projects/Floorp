@@ -47,7 +47,7 @@
 #ifndef nsUnicodeToGBK_h___
 #define nsUnicodeToGBK_h___
 
-#include "nsUCvCnSupport.h"
+#include "nsUCSupport.h"
 #include "nsCOMPtr.h"
 #include "nsIUnicodeEncoder.h"
 #include "gbku.h"
@@ -61,7 +61,7 @@ public:
   /**
    * Class constructor.
    */
-  nsUnicodeToGBK();
+  nsUnicodeToGBK(PRUint32 aMaxLengthFactor = 2);
   virtual ~nsUnicodeToGBK() {};
 
 protected:
@@ -72,9 +72,6 @@ protected:
                             PRInt32 * aSrcLength, 
                             char * aDest, 
                             PRInt32 * aDestLength);
-
-  NS_IMETHOD GetMaxLength(const PRUnichar * aSrc, PRInt32 aSrcLength, 
-      PRInt32 * aDestLength);
 
   NS_IMETHOD ConvertNoBuffNoErr(const PRUnichar * aSrc, PRInt32 * aSrcLength, 
                                 char * aDest, PRInt32 * aDestLength)
@@ -100,11 +97,9 @@ protected:
 class nsUnicodeToGB18030: public nsUnicodeToGBK
 {
 public:
-  nsUnicodeToGB18030() {};
+  nsUnicodeToGB18030() : nsUnicodeToGBK(4) {};
   virtual ~nsUnicodeToGB18030() {};
 protected:
-  NS_IMETHOD GetMaxLength(const PRUnichar * aSrc, PRInt32 aSrcLength, 
-      PRInt32 * aDestLength);
   virtual void CreateExtensionEncoder();
   virtual void Create4BytesEncoder();
   virtual PRBool EncodeSurrogate(PRUnichar aSurrogateHigh, PRUnichar aSurrogateLow, char* aDest);
@@ -127,9 +122,6 @@ public:
   nsUnicodeToGB18030Font1();
   virtual ~nsUnicodeToGB18030Font1() {};
 protected: 
-  NS_IMETHOD GetMaxLength(const PRUnichar * aSrc, 
-                                PRInt32 aSrcLength,
-                                PRInt32 * aDestLength);
   NS_IMETHOD FillInfo(PRUint32 *aInfo);
 };
 

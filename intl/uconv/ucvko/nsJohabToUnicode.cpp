@@ -82,7 +82,7 @@ static const PRUint16 *g_JOHABShiftTableSet [] = {
 };
 
 static const PRUint16 *g_JOHABMappingTableSet [] ={
-  g_AsciiMapping,
+  g_ucvko_AsciiMapping,
   g_HangulNullMapping,
   g_utJohabJamoMapping,
   g_utKSC5601Mapping,
@@ -97,18 +97,7 @@ nsJohabToUnicode::nsJohabToUnicode()
 : nsMultiTableDecoderSupport(sizeof(g_JOHABRanges) / sizeof(g_JOHABRanges[0]),
                         (uRange*) &g_JOHABRanges,
                         (uShiftTable**) &g_JOHABShiftTableSet, 
-                        (uMappingTable**) &g_JOHABMappingTableSet)
+                        (uMappingTable**) &g_JOHABMappingTableSet, 1)
 {
 }
 
-//----------------------------------------------------------------------
-// Subclassing of nsTablesDecoderSupport class [implementation]
-
-NS_IMETHODIMP nsJohabToUnicode::GetMaxLength(const char * aSrc, 
-                                              PRInt32 aSrcLength, 
-                                              PRInt32 * aDestLength)
-{
-  // we are a single byte to Unicode converter, so...
-  *aDestLength = aSrcLength;
-  return NS_OK_UDEC_EXACTLENGTH;
-}

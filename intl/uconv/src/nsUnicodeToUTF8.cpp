@@ -38,7 +38,7 @@
 
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
-#include "nsUCvMinSupport.h"
+#include "nsUCSupport.h"
 #include "nsUnicodeToUTF8.h"
 #include <string.h>
 

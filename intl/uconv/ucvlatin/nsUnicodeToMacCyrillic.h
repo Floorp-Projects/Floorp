@@ -39,7 +39,7 @@
 #ifndef nsUnicodeToMacCyrillic_h___
 #define nsUnicodeToMacCyrillic_h___
 
-#include "nsUCvLatinSupport.h"
+#include "nsUCSupport.h"
 
 //----------------------------------------------------------------------
 // Class nsUnicodeToMacCyrillic [declaration]
@@ -59,13 +59,6 @@ public:
    */
   nsUnicodeToMacCyrillic();
 
-protected:
-
-  //--------------------------------------------------------------------
-  // Subclassing of nsEncoderSupport class [declaration]
-
-  NS_IMETHOD GetMaxLength(const PRUnichar * aSrc, PRInt32 aSrcLength, 
-      PRInt32 * aDestLength);
 };
 
 #endif /* nsUnicodeToMacCyrillic_h___ */

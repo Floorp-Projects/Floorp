@@ -27,9 +27,10 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= ucvja
-LIBRARY_NAME	= ucvja
-EXPORT_LIBRARY = 1
-IS_COMPONENT	= 1
+LIBRARY_NAME	= ucvja_s
+#EXPORT_LIBRARY = 1
+#IS_COMPONENT	= 1
+FORCE_STATIC_LIB = 1
 MODULE_NAME	= nsUCvJAModule
 REQUIRES	= xpcom \
 		  string \
@@ -41,8 +42,6 @@ CPPSRCS		= \
 		nsUnicodeToSJIS.cpp \
 		nsCP932ToUnicode.cpp \
 		nsUnicodeToCP932.cpp \
-		nsUCvJaSupport.cpp \
-		nsUCvJaModule.cpp \
 		nsUnicodeToEUCJP.cpp \
 		nsUnicodeToISO2022JP.cpp \
 		nsUnicodeToJISx0201.cpp \
@@ -54,6 +53,11 @@ EXPORTS		= \
 		nsUCVJACID.h \
 		nsUCVJA2CID.h \
 		$(NULL)
+
+#SHARED_LIBRARY_LIBS = $(DIST)/lib/$(LIB_PREFIX)ucvutil_s.$(LIB_SUFFIX)
+
+LOCAL_INCLUDES	= -I$(srcdir)/../util
+
 
 EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS)
 

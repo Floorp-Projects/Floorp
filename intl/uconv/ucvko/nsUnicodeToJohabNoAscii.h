@@ -39,7 +39,7 @@
 #ifndef nsUnicodeToJohabNoAscii_h___
 #define nsUnicodeToJohabNoAscii_h___
 
-#include "nsUCvKOSupport.h"
+#include "nsUCSupport.h"
 
 //----------------------------------------------------------------------
 // Class nsUnicodeToJohabNoAscii [declaration]
@@ -57,8 +57,6 @@ public:
    */
   nsUnicodeToJohabNoAscii();
 
-  NS_IMETHOD GetMaxLength( const PRUnichar* aSrc, PRInt32 aSrcLength, 
-                           PRInt32* aDestLength);
 };
 
 #endif /* nsUnicodeToJohabNoAscii_h___ */

@@ -39,7 +39,7 @@
 #ifndef nsCP1251ToUnicode_h___
 #define nsCP1251ToUnicode_h___
 
-#include "nsUCvLatinSupport.h"
+#include "nsUCSupport.h"
 
 //----------------------------------------------------------------------
 // Class nsCP1251ToUnicode [declaration]

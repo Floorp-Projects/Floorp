@@ -88,19 +88,9 @@ nsBIG5HKSCSToUnicode::nsBIG5HKSCSToUnicode()
 : nsMultiTableDecoderSupport(6,
                             (uRange* ) &g_BIG5HKSCSRanges,
                             (uShiftTable**) &g_BIG5HKSCSShiftTableSet,
-                            (uMappingTable**) &g_BIG5HKSCSMappingTableSet)
+                            (uMappingTable**) &g_BIG5HKSCSMappingTableSet,
+                             1)
 {
 }
 
 
-//----------------------------------------------------------------------
-// Subclassing of nsMultiTableDecoderSupport class [implementation]
-
-NS_IMETHODIMP nsBIG5HKSCSToUnicode::GetMaxLength(const char * aSrc,
-                                              PRInt32 aSrcLength,
-                                              PRInt32 * aDestLength)
-{
-  // we are a single byte to Unicode converter, so...
-  *aDestLength = aSrcLength;
-  return NS_OK_UDEC_EXACTLENGTH;
-}

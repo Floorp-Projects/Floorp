@@ -56,20 +56,13 @@ static const PRInt16 g_UCS2BEShiftTable[] =  {
 
 nsUnicodeToUCS2BE::nsUnicodeToUCS2BE() 
 : nsTableEncoderSupport((uShiftTable*) &g_UCS2BEShiftTable, 
-                        (uMappingTable*) &g_UCS2BEMappingTable)
+                        (uMappingTable*) &g_UCS2BEMappingTable, 2)
 {
 }
 
 //----------------------------------------------------------------------
 // Subclassing of nsTableEncoderSupport class [implementation]
 
-NS_IMETHODIMP nsUnicodeToUCS2BE::GetMaxLength(const PRUnichar * aSrc, 
-                                              PRInt32 aSrcLength,
-                                              PRInt32 * aDestLength)
-{
-  *aDestLength = 2*aSrcLength;
-  return NS_OK_UENC_EXACTLENGTH;
-}
 NS_IMETHODIMP nsUnicodeToUCS2BE::FillInfo(PRUint32 *aInfo)
 {
   memset(aInfo, 0xFF, (0x10000L >> 3));

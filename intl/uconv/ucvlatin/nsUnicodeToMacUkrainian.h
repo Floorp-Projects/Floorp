@@ -39,7 +39,7 @@
 #ifndef nsUnicodeToMacUkrainian_h___
 #define nsUnicodeToMacUkrainian_h___
 
-#include "nsUCvLatinSupport.h"
+#include "nsUCSupport.h"
 
 //----------------------------------------------------------------------
 // Class nsUnicodeToMacUkrainian [declaration]
@@ -59,13 +59,6 @@ public:
    */
   nsUnicodeToMacUkrainian();
 
-protected:
-
-  //--------------------------------------------------------------------
-  // Subclassing of nsEncoderSupport class [declaration]
-
-  NS_IMETHOD GetMaxLength(const PRUnichar * aSrc, PRInt32 aSrcLength, 
-      PRInt32 * aDestLength);
 };
 
 #endif /* nsUnicodeToMacUkrainian_h___ */

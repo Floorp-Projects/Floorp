@@ -209,18 +209,9 @@ Components:uconv.xpt
 Components:lwbrkDebug.shlb
 Components:nslocaleDebug.shlb
 Components:nslocale.xpt
-Components:ucvlatinDebug.shlb
 Components:chardetDebug.shlb
 Components:chardet.xpt
 Components:UniversalchardetDebug.shlb
-
-; optional - on english only systems
-; Components:ucvjaDebug.shlb for japanese 
-; Components:ucvkoDebug.shlb for korean
-; Components:ucvcnDebug.shlb for simplified chinese
-; Components:ucvtwDebug.shlb for traditional chinese
-; Components:ucvtw2Debug.shlb for traditional chinese
-; Components:ucvibmDebug.shlb for ibm
 
 
 res:language.properties

@@ -49,7 +49,7 @@
 // Class nsBasicUTF7Encoder [implementation]
 
 nsBasicUTF7Encoder::nsBasicUTF7Encoder(char aLastChar, char aEscChar) 
-: nsEncoderSupport()
+: nsEncoderSupport(5)
 {
   mLastChar = aLastChar;
   mEscChar = aEscChar;
@@ -294,15 +294,6 @@ NS_IMETHODIMP nsBasicUTF7Encoder::FinishNoBuff(char * aDest,
                                                PRInt32 * aDestLength)
 {
   return ShiftEncoding(ENC_DIRECT, aDest, aDestLength);
-}
-
-NS_IMETHODIMP nsBasicUTF7Encoder::GetMaxLength(const PRUnichar * aSrc, 
-                                               PRInt32 aSrcLength,
-                                               PRInt32 * aDestLength)
-{
-  // worst case
-  *aDestLength = 5*aSrcLength;
-  return NS_OK;
 }
 
 NS_IMETHODIMP nsBasicUTF7Encoder::Reset()

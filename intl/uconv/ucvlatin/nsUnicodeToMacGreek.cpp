@@ -55,17 +55,6 @@ static const PRInt16 g_MacGreekShiftTable[] =  {
 
 nsUnicodeToMacGreek::nsUnicodeToMacGreek() 
 : nsTableEncoderSupport((uShiftTable*) &g_MacGreekShiftTable, 
-                        (uMappingTable*) &g_MacGreekMappingTable)
+                        (uMappingTable*) &g_MacGreekMappingTable, 1)
 {
-}
-
-//----------------------------------------------------------------------
-// Subclassing of nsTableEncoderSupport class [implementation]
-
-NS_IMETHODIMP nsUnicodeToMacGreek::GetMaxLength(const PRUnichar * aSrc, 
-                                              PRInt32 aSrcLength,
-                                              PRInt32 * aDestLength)
-{
-  *aDestLength = aSrcLength;
-  return NS_OK_UENC_EXACTLENGTH;
 }

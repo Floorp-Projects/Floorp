@@ -43,8 +43,7 @@
 
 extern "C" PRUint16 g_utKSC5601Mapping[];
 extern "C" PRUint16 g_ufKSC5601Mapping[];
-#define g_AsciiMapping ucvko_g_AsciiMapping
-extern "C" PRUint16 g_AsciiMapping[];
+extern "C" PRUint16 g_ucvko_AsciiMapping[];
 extern "C" PRUint16 g_HangulNullMapping[];
 extern "C" PRUint16 g_ufJohabJamoMapping[];
 

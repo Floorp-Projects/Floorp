@@ -39,7 +39,7 @@
 #ifndef nsMacIcelandicToUnicode_h___
 #define nsMacIcelandicToUnicode_h___
 
-#include "nsUCvLatinSupport.h"
+#include "nsUCSupport.h"
 
 //----------------------------------------------------------------------
 // Class nsMacIcelandicToUnicode [declaration]

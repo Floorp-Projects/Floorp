@@ -39,7 +39,7 @@
 #ifndef nsUnicodeToUEscape_h___
 #define nsUnicodeToUEscape_h___
 
-#include "nsUCvLatinSupport.h"
+#include "nsUCSupport.h"
 #include "nsISupports.h"
 
 // XXX should we inherited from nsEncoderSupprt ? We don't want the buffer stuff there
@@ -50,7 +50,7 @@ public:
   /**
    * Class constructor.
    */
-  nsUnicodeToUEscape() {};
+  nsUnicodeToUEscape() : nsEncoderSupport(6) {};
 
   NS_IMETHOD FillInfo(PRUint32* aInfo)
   {
@@ -73,13 +73,6 @@ protected:
 
   //--------------------------------------------------------------------
   // Subclassing of nsEncoderSupport class [declaration]
-
-  NS_IMETHOD GetMaxLength(const PRUnichar * aSrc, PRInt32 aSrcLength, 
-      PRInt32 * aDestLength)
-  {
-    *aDestLength = 6*aSrcLength;
-    return NS_OK;
-  };
 
   NS_IMETHOD ConvertNoBuffNoErr(const PRUnichar * aSrc, PRInt32 * aSrcLength, 
       char * aDest, PRInt32 * aDestLength) 

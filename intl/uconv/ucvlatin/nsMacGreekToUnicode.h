@@ -39,7 +39,7 @@
 #ifndef nsMacGreekToUnicode_h___
 #define nsMacGreekToUnicode_h___
 
-#include "nsUCvLatinSupport.h"
+#include "nsUCSupport.h"
 
 //----------------------------------------------------------------------
 // Class nsMacGreekToUnicode [declaration]
@@ -59,13 +59,6 @@ public:
    */
   nsMacGreekToUnicode();
 
-protected:
-
-  //--------------------------------------------------------------------
-  // Subclassing of nsDecoderSupport class [declaration]
-
-  NS_IMETHOD GetMaxLength(const char * aSrc, PRInt32 aSrcLength, 
-      PRInt32 * aDestLength);
 };
 
 #endif /* nsMacGreekToUnicode_h___ */

@@ -39,7 +39,7 @@
 #ifndef nsUnicodeToISO885914_h___
 #define nsUnicodeToISO885914_h___
 
-#include "nsUCvLatinSupport.h"
+#include "nsUCSupport.h"
 
 //----------------------------------------------------------------------
 // Class nsUnicodeToISO885914 [declaration]
@@ -59,13 +59,6 @@ public:
    */
   nsUnicodeToISO885914();
 
-protected:
-
-  //--------------------------------------------------------------------
-  // Subclassing of nsEncoderSupport class [declaration]
-
-  NS_IMETHOD GetMaxLength(const PRUnichar * aSrc, PRInt32 aSrcLength, 
-      PRInt32 * aDestLength);
 };
 
 #endif /* nsUnicodeToISO885914_h___ */

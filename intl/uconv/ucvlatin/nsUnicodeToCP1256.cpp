@@ -55,18 +55,7 @@ static const PRInt16 g_ufShiftTable[] =  {
 
 nsUnicodeToCP1256::nsUnicodeToCP1256() 
 : nsTableEncoderSupport((uShiftTable*) &g_ufShiftTable, 
-                        (uMappingTable*) &g_ufMappingTable)
+                        (uMappingTable*) &g_ufMappingTable, 1)
 {
 }
 
-
-//----------------------------------------------------------------------
-// Subclassing of nsTableEncoderSupport class [implementation]
-
-NS_IMETHODIMP nsUnicodeToCP1256::GetMaxLength(const PRUnichar * aSrc, 
-                                              PRInt32 aSrcLength,
-                                              PRInt32 * aDestLength)
-{
-  *aDestLength = aSrcLength;
-  return NS_OK_UENC_EXACTLENGTH;
-}

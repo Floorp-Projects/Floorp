@@ -39,7 +39,7 @@
 #ifndef nsMacCEToUnicode_h___
 #define nsMacCEToUnicode_h___
 
-#include "nsUCvLatinSupport.h"
+#include "nsUCSupport.h"
 
 //----------------------------------------------------------------------
 // Class nsMacCEToUnicode [declaration]
@@ -59,13 +59,6 @@ public:
    */
   nsMacCEToUnicode();
 
-protected:
-
-  //--------------------------------------------------------------------
-  // Subclassing of nsDecoderSupport class [declaration]
-
-  NS_IMETHOD GetMaxLength(const char * aSrc, PRInt32 aSrcLength, 
-      PRInt32 * aDestLength);
 };
 
 #endif /* nsMacCEToUnicode_h___ */

@@ -39,7 +39,7 @@
 #ifndef nsUnicodeToVPS_h___
 #define nsUnicodeToVPS_h___
 
-#include "nsUCvLatinSupport.h"
+#include "nsUCSupport.h"
 
 //----------------------------------------------------------------------
 // Class nsUnicodeToVPS [declaration]
@@ -59,13 +59,6 @@ public:
    */
   nsUnicodeToVPS();
 
-protected:
-
-  //--------------------------------------------------------------------
-  // Subclassing of nsEncoderSupport class [declaration]
-
-  NS_IMETHOD GetMaxLength(const PRUnichar * aSrc, PRInt32 aSrcLength, 
-      PRInt32 * aDestLength);
 };
 
 #endif /* nsUnicodeToVPS_h___ */

@@ -58,17 +58,7 @@ static const PRInt16 g_T61ShiftTable[] =  {
 
 nsT61ToUnicode::nsT61ToUnicode() 
 : nsTableDecoderSupport((uShiftTable*) &g_T61ShiftTable, 
-                        (uMappingTable*) &g_T61MappingTable)
+                        (uMappingTable*) &g_T61MappingTable, 1)
 {
 }
 
-//----------------------------------------------------------------------
-// Subclassing of nsTableDecoderSupport class [implementation]
-
-NS_IMETHODIMP nsT61ToUnicode::GetMaxLength(const char * aSrc, 
-                                            PRInt32 aSrcLength, 
-                                            PRInt32 * aDestLength)
-{
-  *aDestLength = aSrcLength;
-  return NS_OK;
-}

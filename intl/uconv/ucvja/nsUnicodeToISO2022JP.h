@@ -39,7 +39,7 @@
 #ifndef nsUnicodeToISO2022JP_h___
 #define nsUnicodeToISO2022JP_h___
 
-#include "nsUCvJaSupport.h"
+#include "nsUCSupport.h"
 
 //----------------------------------------------------------------------
 // Class nsUnicodeToISO2022JP [declaration]
@@ -64,11 +64,6 @@ public:
    */
   virtual ~nsUnicodeToISO2022JP();
 
-  /**
-   * Static class constructor.
-   */
-  static nsresult CreateInstance(nsISupports **aResult);
-
 protected:
 
   PRInt32                   mCharset;       // current character set
@@ -83,8 +78,6 @@ protected:
   NS_IMETHOD ConvertNoBuffNoErr(const PRUnichar * aSrc, PRInt32 * aSrcLength, 
       char * aDest, PRInt32 * aDestLength);
   NS_IMETHOD FinishNoBuff(char * aDest, PRInt32 * aDestLength);
-  NS_IMETHOD GetMaxLength(const PRUnichar * aSrc, PRInt32 aSrcLength, 
-      PRInt32 * aDestLength);
   NS_IMETHOD Reset();
   NS_IMETHOD FillInfo(PRUint32 *aInfo);
 };

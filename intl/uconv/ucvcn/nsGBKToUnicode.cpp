@@ -62,12 +62,6 @@ public:
   virtual ~nsGBKUnique2BytesToUnicode() 
     { };
 protected:
-  NS_IMETHOD GetMaxLength(const char* aSrc, PRInt32 aSrcLength,
-                          PRInt32 * aDestLength)
-  {
-     *aDestLength = aSrcLength;
-     return NS_OK;
-  };
 };
 
 static PRUint16 g_utGBKUnique2Bytes[] = {
@@ -75,7 +69,7 @@ static PRUint16 g_utGBKUnique2Bytes[] = {
 };
 nsGBKUnique2BytesToUnicode::nsGBKUnique2BytesToUnicode() 
 : nsTableDecoderSupport((uShiftTable*) &g_2BytesShiftTable,
-        (uMappingTable*) &g_utGBKUnique2Bytes) 
+        (uMappingTable*) &g_utGBKUnique2Bytes, 1) 
 {
 }
 
@@ -89,12 +83,6 @@ public:
   virtual ~nsGB18030Unique2BytesToUnicode() 
     { };
 protected:
-  NS_IMETHOD GetMaxLength(const char* aSrc, PRInt32 aSrcLength,
-                          PRInt32 * aDestLength)
-  {
-     *aDestLength = aSrcLength;
-     return NS_OK;
-  };
 };
 
 static PRUint16 g_utGB18030Unique2Bytes[] = {
@@ -102,7 +90,7 @@ static PRUint16 g_utGB18030Unique2Bytes[] = {
 };
 nsGB18030Unique2BytesToUnicode::nsGB18030Unique2BytesToUnicode() 
 : nsTableDecoderSupport((uShiftTable*) &g_2BytesShiftTable,
-        (uMappingTable*) &g_utGB18030Unique2Bytes) 
+        (uMappingTable*) &g_utGB18030Unique2Bytes, 1) 
 {
 }
 
@@ -120,12 +108,6 @@ public:
   virtual ~nsGB18030Unique4BytesToUnicode() 
     { };
 protected:
-  NS_IMETHOD GetMaxLength(const char* aSrc, PRInt32 aSrcLength,
-                          PRInt32 * aDestLength)
-  {
-     *aDestLength = aSrcLength;
-     return NS_OK;
-  };
 };
 
 static PRUint16 g_utGB18030Unique4Bytes[] = {
@@ -133,7 +115,7 @@ static PRUint16 g_utGB18030Unique4Bytes[] = {
 };
 nsGB18030Unique4BytesToUnicode::nsGB18030Unique4BytesToUnicode() 
 : nsTableDecoderSupport((uShiftTable*) &g_GB18030_4BytesShiftTable,
-        (uMappingTable*) &g_utGB18030Unique4Bytes) 
+        (uMappingTable*) &g_utGB18030Unique4Bytes, 1) 
 {
 }
 
@@ -143,14 +125,6 @@ nsGB18030Unique4BytesToUnicode::nsGB18030Unique4BytesToUnicode()
 
 //----------------------------------------------------------------------
 // Subclassing of nsTablesDecoderSupport class [implementation]
-
-NS_IMETHODIMP nsGBKToUnicode::GetMaxLength(const char * aSrc, 
-                                              PRInt32 aSrcLength, 
-                                              PRInt32 * aDestLength)
-{
-  *aDestLength = aSrcLength;
-  return NS_OK;
-}
 
 #define LEGAL_GBK_MULTIBYTE_FIRST_BYTE(c)  \
       (UINT8_IN_RANGE(0x81, (c), 0xFE))

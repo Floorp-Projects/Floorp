@@ -66,7 +66,7 @@ static const PRUint16 g_ufCP949NoKSCHangulMapping[] = {
 
 
 static const PRUint16 *g_CP949MappingTable[3] = {
-  g_AsciiMapping,
+  g_ucvko_AsciiMapping,
   g_ufKSC5601Mapping,
   g_ufCP949NoKSCHangulMapping
 };
@@ -83,17 +83,8 @@ static const PRUint16 *g_CP949ShiftTable[3] =  {
 nsUnicodeToCP949::nsUnicodeToCP949() 
 : nsMultiTableEncoderSupport(3,
                         (uShiftTable**) g_CP949ShiftTable, 
-                        (uMappingTable**) g_CP949MappingTable)
+                        (uMappingTable**) g_CP949MappingTable,
+                             2 /* max len = src * 2 */)
 {
 }
 
-//----------------------------------------------------------------------
-// Subclassing of nsTableEncoderSupport class [implementation]
-
-NS_IMETHODIMP nsUnicodeToCP949::GetMaxLength(const PRUnichar * aSrc, 
-                                              PRInt32 aSrcLength,
-                                              PRInt32 * aDestLength)
-{
-  *aDestLength = aSrcLength * 2; 
-  return NS_OK;
-}

@@ -1748,13 +1748,6 @@ sub BuildInternationalProjects()
 
     BuildOneProject(":mozilla:intl:chardet:macbuild:chardet.xml",               "chardet$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:intl:uconv:macbuild:uconv.xml",                   "uconv$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:intl:uconv:macbuild:ucvlatin.xml",                "ucvlatin$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:intl:uconv:macbuild:ucvja.xml",                   "ucvja$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:intl:uconv:macbuild:ucvtw.xml",                   "ucvtw$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:intl:uconv:macbuild:ucvtw2.xml",                  "ucvtw2$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:intl:uconv:macbuild:ucvcn.xml",                   "ucvcn$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:intl:uconv:macbuild:ucvko.xml",                   "ucvko$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:intl:uconv:macbuild:ucvibm.xml",                  "ucvibm$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
     if ($main::options{mathml})
     {
         BuildOneProject(":mozilla:intl:uconv:macbuild:ucvmath.xml",             "ucvmath$D.$S", 1, $main::ALIAS_SYM_FILES, 1);

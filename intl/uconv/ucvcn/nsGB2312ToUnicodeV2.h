@@ -39,7 +39,7 @@
 #ifndef nsGB2312ToUnicodeV2_h___
 #define nsGB2312ToUnicodeV2_h___
 
-#include "nsUCvCnSupport.h"
+#include "nsUCSupport.h"
 #include "gbku.h"
 #include "nsGBKToUnicode.h"
 //----------------------------------------------------------------------

@@ -39,7 +39,7 @@
 #ifndef nsUnicodeToBIG5NoAscii_h___
 #define nsUnicodeToBIG5NoAscii_h___
 
-#include "nsUCvTWSupport.h"
+#include "nsUCSupport.h"
 
 //----------------------------------------------------------------------
 // Class nsUnicodeToBIG5NoAscii [declaration]
@@ -59,12 +59,6 @@ public:
 
   NS_IMETHOD FillInfo(PRUint32 *aInfo);
 protected:
-
-  //--------------------------------------------------------------------
-  // Subclassing of nsEncoderSupport class [declaration]
-
-  NS_IMETHOD GetMaxLength(const PRUnichar * aSrc, PRInt32 aSrcLength, 
-      PRInt32 * aDestLength);
 };
 
 #endif /* nsUnicodeToBIG5NoAscii_h___ */

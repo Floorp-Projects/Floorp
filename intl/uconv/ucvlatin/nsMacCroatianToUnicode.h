@@ -39,7 +39,7 @@
 #ifndef nsMacCroatianToUnicode_h___
 #define nsMacCroatianToUnicode_h___
 
-#include "nsUCvLatinSupport.h"
+#include "nsUCSupport.h"
 
 //----------------------------------------------------------------------
 // Class nsMacCroatianToUnicode [declaration]

@@ -69,13 +69,6 @@
 //----------------------------------------------------------------------
 // Subclassing of nsTablesDecoderSupport class [implementation]
 
-NS_IMETHODIMP nsHZToUnicode::GetMaxLength(const char * aSrc, 
-                                              PRInt32 aSrcLength, 
-                                              PRInt32 * aDestLength)
-{
-  *aDestLength = aSrcLength;
-  return NS_OK;
-}
 #define HZ_STATE_GB		1
 #define HZ_STATE_ASCII	2
 #define HZ_STATE_TILD	3
@@ -84,7 +77,7 @@ NS_IMETHODIMP nsHZToUnicode::GetMaxLength(const char * aSrc,
 #define HZLEAD3 '}'
 #define HZLEAD4 '\n'
 
-nsHZToUnicode::nsHZToUnicode()
+nsHZToUnicode::nsHZToUnicode() : nsBufferDecoderSupport(1)
 {
   mHZState = HZ_STATE_ASCII;	// per HZ spec, default to ASCII state 
 }

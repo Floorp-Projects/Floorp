@@ -39,7 +39,7 @@
 #ifndef nsBIG5HKSCSToUnicode_h___
 #define nsBIG5HKSCSToUnicode_h___
 
-#include "nsUCvTWSupport.h"
+#include "nsUCSupport.h"
 
 //----------------------------------------------------------------------
 // Class nsBIG5HKSCSToUnicode [declaration]
@@ -60,12 +60,6 @@ public:
   nsBIG5HKSCSToUnicode();
 
 protected:
-
-  //--------------------------------------------------------------------
-  // Subclassing of nsDecoderSupport class [declaration]
-
-  NS_IMETHOD GetMaxLength(const char * aSrc, PRInt32 aSrcLength,
-      PRInt32 * aDestLength);
 };
 
 #endif /* nsBIG5HKSCSToUnicode_h___ */

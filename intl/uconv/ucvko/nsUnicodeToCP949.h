@@ -39,7 +39,7 @@
 #ifndef nsUnicodeToCP949_h___
 #define nsUnicodeToCP949_h___
 
-#include "nsUCvKOSupport.h"
+#include "nsUCSupport.h"
 
 //----------------------------------------------------------------------
 // Class nsUnicodeToCP949 [declaration]
@@ -60,12 +60,6 @@ public:
   nsUnicodeToCP949();
 
 protected:
-
-  //--------------------------------------------------------------------
-  // Subclassing of nsEncoderSupport class [declaration]
-
-  NS_IMETHOD GetMaxLength(const PRUnichar * aSrc, PRInt32 aSrcLength, 
-      PRInt32 * aDestLength);
 };
 
 #endif /* nsUnicodeToCP949_h___ */

@@ -44,7 +44,8 @@
 
 //----------------------------------------------------------------------
 // Class nsUnicodeToGB2312V2 [implementation]
-nsUnicodeToGB2312V2::nsUnicodeToGB2312V2()
+nsUnicodeToGB2312V2::nsUnicodeToGB2312V2() :
+  nsEncoderSupport(2)
 {
   mUtil.InitToGBKTable();
 }
@@ -102,14 +103,6 @@ NS_IMETHODIMP nsUnicodeToGB2312V2::ConvertNoBuff(const PRUnichar * aSrc,
 
 //----------------------------------------------------------------------
 // Subclassing of nsTableEncoderSupport class [implementation]
-
-NS_IMETHODIMP nsUnicodeToGB2312V2::GetMaxLength(const PRUnichar * aSrc, 
-                                              PRInt32 aSrcLength,
-                                              PRInt32 * aDestLength)
-{
-  *aDestLength = 2 * aSrcLength;
-  return NS_OK;
-}
 
 NS_IMETHODIMP nsUnicodeToGB2312V2::FillInfo(PRUint32 *aInfo)
 {

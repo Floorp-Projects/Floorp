@@ -58,7 +58,7 @@
 #define HZLEAD2 '{'
 #define HZLEAD3 '}'
 #define UNICODE_TILD	0x007E
-nsUnicodeToHZ::nsUnicodeToHZ()
+nsUnicodeToHZ::nsUnicodeToHZ() : nsEncoderSupport(6)
 {
   mUtil.InitToGBKTable();
   mHZState = HZ_STATE_ASCII;	// per HZ spec, default to HZ mode
@@ -140,14 +140,5 @@ NS_IMETHODIMP nsUnicodeToHZ::FillInfo(PRUint32 *aInfo)
   //GB2312 font lib also have single byte ASCII characters, set them here
   for ( PRUint16 u = 0x0000; u <= 0x007F; u++)
     SET_REPRESENTABLE(aInfo, u);
-  return NS_OK;
-}
-//----------------------------------------------------------------------
-// Subclassing of nsTableEncoderSupport class [implementation]
-NS_IMETHODIMP nsUnicodeToHZ::GetMaxLength(const PRUnichar * aSrc, 
-                                              PRInt32 aSrcLength,
-                                              PRInt32 * aDestLength)
-{
-  *aDestLength = 6 * aSrcLength;
   return NS_OK;
 }

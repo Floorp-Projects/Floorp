@@ -45,7 +45,7 @@
 // Class nsBasicUTF7Decoder [implementation]
 
 nsBasicUTF7Decoder::nsBasicUTF7Decoder(char aLastChar, char aEscChar) 
-: nsBufferDecoderSupport()
+: nsBufferDecoderSupport(1)
 {
   mLastChar = aLastChar;
   mEscChar = aEscChar;
@@ -244,15 +244,6 @@ NS_IMETHODIMP nsBasicUTF7Decoder::ConvertNoBuff(const char * aSrc,
   *aSrcLength = src - aSrc;
   *aDestLength = dest - aDest;
   return res;
-}
-
-NS_IMETHODIMP nsBasicUTF7Decoder::GetMaxLength(const char * aSrc, 
-                                               PRInt32 aSrcLength, 
-                                               PRInt32 * aDestLength)
-{
-  // worst case
-  *aDestLength = aSrcLength;
-  return NS_OK;
 }
 
 NS_IMETHODIMP nsBasicUTF7Decoder::Reset()

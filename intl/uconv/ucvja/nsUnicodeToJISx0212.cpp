@@ -51,27 +51,8 @@ static PRInt16 g0212ShiftTable[] =  {
 
 nsUnicodeToJISx0212::nsUnicodeToJISx0212() 
 : nsTableEncoderSupport((uShiftTable*) g0212ShiftTable,
-                        (uMappingTable*) g_uf0212Mapping)
+                        (uMappingTable*) g_uf0212Mapping,
+                        2 /* max len = src * 2 */)
 {
 }
 
-nsresult nsUnicodeToJISx0212::CreateInstance(nsISupports ** aResult) 
-{
-  nsIUnicodeEncoder *p = new nsUnicodeToJISx0212();
-  if(p) {
-   *aResult = p;
-   return NS_OK;
-  }
-  return NS_ERROR_OUT_OF_MEMORY;
-}
-
-//----------------------------------------------------------------------
-// Subclassing of nsTableEncoderSupport class [implementation]
-
-NS_IMETHODIMP nsUnicodeToJISx0212::GetMaxLength(const PRUnichar * aSrc, 
-                                             PRInt32 aSrcLength,
-                                             PRInt32 * aDestLength)
-{
-  *aDestLength = 2*aSrcLength;
-  return NS_OK_UENC_EXACTLENGTH;
-}

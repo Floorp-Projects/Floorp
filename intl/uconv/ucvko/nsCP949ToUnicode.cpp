@@ -95,7 +95,7 @@ static const PRUint16 *g_CP949ShiftTableSet [] = {
 };
 
 static const PRUint16 *g_CP949MappingTableSet [] ={
-  g_AsciiMapping,
+  g_ucvko_AsciiMapping,
   g_HangulNullMapping,
   g_utKSC5601Mapping,
   g_utCP949NoKSCHangulMapping,
@@ -112,19 +112,7 @@ nsCP949ToUnicode::nsCP949ToUnicode()
 : nsMultiTableDecoderSupport(sizeof(g_CP949Ranges) / sizeof(g_CP949Ranges[0]),
                         (uRange*) &g_CP949Ranges,
                         (uShiftTable**) &g_CP949ShiftTableSet, 
-                        (uMappingTable**) &g_CP949MappingTableSet)
+                        (uMappingTable**) &g_CP949MappingTableSet, 1)
 {
-}
-
-//----------------------------------------------------------------------
-// Subclassing of nsTablesDecoderSupport class [implementation]
-
-NS_IMETHODIMP nsCP949ToUnicode::GetMaxLength(const char * aSrc, 
-                                              PRInt32 aSrcLength, 
-                                              PRInt32 * aDestLength)
-{
-  // we are a single byte to Unicode converter, so...
-  *aDestLength = aSrcLength;
-  return NS_OK_UDEC_EXACTLENGTH;
 }
 

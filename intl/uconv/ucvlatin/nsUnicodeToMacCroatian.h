@@ -39,7 +39,7 @@
 #ifndef nsUnicodeToMacCroatian_h___
 #define nsUnicodeToMacCroatian_h___
 
-#include "nsUCvLatinSupport.h"
+#include "nsUCSupport.h"
 
 //----------------------------------------------------------------------
 // Class nsUnicodeToMacCroatian [declaration]
@@ -59,13 +59,6 @@ public:
    */
   nsUnicodeToMacCroatian();
 
-protected:
-
-  //--------------------------------------------------------------------
-  // Subclassing of nsEncoderSupport class [declaration]
-
-  NS_IMETHOD GetMaxLength(const PRUnichar * aSrc, PRInt32 aSrcLength, 
-      PRInt32 * aDestLength);
 };
 
 #endif /* nsUnicodeToMacCroatian_h___ */

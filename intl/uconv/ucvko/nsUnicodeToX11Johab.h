@@ -39,7 +39,7 @@
 #ifndef nsUnicodeToX11Johab_h___
 #define nsUnicodeToX11Johab_h___
 
-#include "nsUCvKOSupport.h"
+#include "nsUCSupport.h"
 
 //----------------------------------------------------------------------
 // Class nsUnicodeToX11Johab [declaration]

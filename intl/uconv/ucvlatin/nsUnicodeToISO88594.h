@@ -39,7 +39,7 @@
 #ifndef nsUnicodeToISO88594_h___
 #define nsUnicodeToISO88594_h___
 
-#include "nsUCvLatinSupport.h"
+#include "nsUCSupport.h"
 
 //----------------------------------------------------------------------
 // Class nsUnicodeToISO88594 [declaration]
@@ -59,13 +59,6 @@ public:
    */
   nsUnicodeToISO88594();
 
-protected:
-
-  //--------------------------------------------------------------------
-  // Subclassing of nsEncoderSupport class [declaration]
-
-  NS_IMETHOD GetMaxLength(const PRUnichar * aSrc, PRInt32 aSrcLength, 
-      PRInt32 * aDestLength);
 };
 
 #endif /* nsUnicodeToISO88594_h___ */

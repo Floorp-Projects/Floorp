@@ -36,7 +36,7 @@
 #ifndef nsUnicodeToCP855_h___
 #define nsUnicodeToCP855_h___
 
-#include "nsUCvIBMSupport.h"
+#include "nsUCSupport.h"
 
 //----------------------------------------------------------------------
 // Class nsUnicodeToCP855 [declaration]
@@ -53,13 +53,6 @@ public:
    */
   nsUnicodeToCP855();
 
-protected:
-
-  //--------------------------------------------------------------------
-  // Subclassing of nsEncoderSupport class [declaration]
-
-  NS_IMETHOD GetMaxLength(const PRUnichar * aSrc, PRInt32 aSrcLength, 
-      PRInt32 * aDestLength);
 };
 
 #endif /* nsUnicodeToCP855_h___ */

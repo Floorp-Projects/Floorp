@@ -55,14 +55,8 @@ static const PRInt16 g_UCS2LEShiftTable[] =  {
 
 nsUCS2LEToUnicode::nsUCS2LEToUnicode() 
 : nsTableDecoderSupport((uShiftTable*) &g_UCS2LEShiftTable, 
-                        (uMappingTable*) &g_UCS2LEMappingTable)
+                        (uMappingTable*) &g_UCS2LEMappingTable, 0)
 {
-}
-
-nsresult nsUCS2LEToUnicode::CreateInstance(nsISupports ** aResult) 
-{
-  *aResult = new nsUCS2LEToUnicode();
-  return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
 }
 
 //----------------------------------------------------------------------

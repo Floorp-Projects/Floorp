@@ -39,7 +39,7 @@
 #ifndef nsUnicodeToUserDefined_h___
 #define nsUnicodeToUserDefined_h___
 
-#include "nsUCvLatinSupport.h"
+#include "nsUCSupport.h"
 
 //----------------------------------------------------------------------
 // Class nsUnicodeToUserDefined [declaration]
@@ -58,13 +58,6 @@ public:
    */
   nsUnicodeToUserDefined();
 
-protected:
-
-  //--------------------------------------------------------------------
-  // Subclassing of nsEncoderSupport class [declaration]
-
-  NS_IMETHOD GetMaxLength(const PRUnichar * aSrc, PRInt32 aSrcLength, 
-      PRInt32 * aDestLength);
 };
 
 #endif /* nsUnicodeToUserDefined_h___ */

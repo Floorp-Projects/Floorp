@@ -39,7 +39,7 @@
 #ifndef nsVPSToUnicode_h___
 #define nsVPSToUnicode_h___
 
-#include "nsUCvLatinSupport.h"
+#include "nsUCSupport.h"
 
 //----------------------------------------------------------------------
 // Class nsVPSToUnicode [declaration]

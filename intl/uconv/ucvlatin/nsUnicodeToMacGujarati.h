@@ -39,7 +39,7 @@
 #ifndef nsUnicodeToMacGujarati_h___
 #define nsUnicodeToMacGujarati_h___
 
-#include "nsUCvLatinSupport.h"
+#include "nsUCSupport.h"
 
 //----------------------------------------------------------------------
 // Class nsUnicodeToMacGujarati [declaration]
@@ -56,13 +56,6 @@ public:
    */
   nsUnicodeToMacGujarati();
 
-protected:
-
-  //--------------------------------------------------------------------
-  // Subclassing of nsEncoderSupport class [declaration]
-
-  NS_IMETHOD GetMaxLength(const PRUnichar * aSrc, PRInt32 aSrcLength, 
-      PRInt32 * aDestLength);
 };
 
 #endif /* nsUnicodeToMacGujarati_h___ */

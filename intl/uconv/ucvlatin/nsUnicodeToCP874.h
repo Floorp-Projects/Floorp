@@ -39,7 +39,7 @@
 #ifndef nsUnicodeToCP874_h___
 #define nsUnicodeToCP874_h___
 
-#include "nsUCvLatinSupport.h"
+#include "nsUCSupport.h"
 
 //----------------------------------------------------------------------
 // Class nsUnicodeToCP874 [declaration]
@@ -59,13 +59,6 @@ public:
    */
   nsUnicodeToCP874();
 
-protected:
-
-  //--------------------------------------------------------------------
-  // Subclassing of nsEncoderSupport class [declaration]
-
-  NS_IMETHOD GetMaxLength(const PRUnichar * aSrc, PRInt32 aSrcLength, 
-      PRInt32 * aDestLength);
 };
 
 #endif /* nsUnicodeToCP874_h___ */

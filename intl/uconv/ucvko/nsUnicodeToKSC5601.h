@@ -39,7 +39,7 @@
 #ifndef nsUnicodeToKSC5601_h___
 #define nsUnicodeToKSC5601_h___
 
-#include "nsUCvKOSupport.h"
+#include "nsUCSupport.h"
 
 //----------------------------------------------------------------------
 // Class nsUnicodeToKSC5601 [declaration]
@@ -61,11 +61,6 @@ public:
 
 protected:
 
-  //--------------------------------------------------------------------
-  // Subclassing of nsEncoderSupport class [declaration]
-
-  NS_IMETHOD GetMaxLength(const PRUnichar * aSrc, PRInt32 aSrcLength, 
-      PRInt32 * aDestLength);
 };
 
 #endif /* nsUnicodeToKSC5601_h___ */

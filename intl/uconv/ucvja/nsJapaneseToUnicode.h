@@ -38,7 +38,7 @@
 #ifndef nsShiftJISToUnicode_h__
 #define nsShiftJISToUnicode_h__
 #include "nsISupports.h"
-#include "nsUCvJaSupport.h"
+#include "nsUCSupport.h"
 
 
 class nsShiftJISToUnicode : public nsBasicDecoderSupport

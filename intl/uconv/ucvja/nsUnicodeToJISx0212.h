@@ -39,7 +39,7 @@
 #ifndef nsUnicodeToJISx0212_h___
 #define nsUnicodeToJISx0212_h___
 
-#include "nsUCvJaSupport.h"
+#include "nsUCSupport.h"
 
 //----------------------------------------------------------------------
 // Class nsUnicodeToJISx0212 [declaration]
@@ -59,18 +59,8 @@ public:
    */
   nsUnicodeToJISx0212();
 
-  /**
-   * Static class constructor.
-   */
-  static nsresult CreateInstance(nsISupports **aResult);
-
 protected:
 
-  //--------------------------------------------------------------------
-  // Subclassing of nsEncoderSupport class [declaration]
-
-  NS_IMETHOD GetMaxLength(const PRUnichar * aSrc, PRInt32 aSrcLength, 
-      PRInt32 * aDestLength);
 };
 
 #endif /* nsUnicodeToJISx0212_h___ */

@@ -50,6 +50,7 @@ include $(topsrcdir)/config/rules.mk
 INCLUDES	+= \
 		-I$(srcdir)/../ucvlatin \
 		-I$(srcdir)/../ucvja \
+		-I$(srcdir)/../util \
 		$(NULL)
 
 LIBS		+= \

@@ -39,7 +39,7 @@
 #ifndef nsMacFarsiToUnicode_h___
 #define nsMacFarsiToUnicode_h___
 
-#include "nsUCvLatinSupport.h"
+#include "nsUCSupport.h"
 
 //----------------------------------------------------------------------
 // Class nsMacFarsiToUnicode [declaration]

@@ -39,7 +39,7 @@
 #ifndef nsMacCyrillicToUnicode_h___
 #define nsMacCyrillicToUnicode_h___
 
-#include "nsUCvLatinSupport.h"
+#include "nsUCSupport.h"
 
 //----------------------------------------------------------------------
 // Class nsMacCyrillicToUnicode [declaration]

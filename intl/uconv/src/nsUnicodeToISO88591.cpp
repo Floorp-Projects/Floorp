@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsUCvMinSupport.h"
+#include "nsUCSupport.h"
 #include "nsUnicodeToISO88591.h"
 
 //----------------------------------------------------------------------
@@ -56,18 +56,7 @@ static const PRInt16 g_ufShiftTable[] =  {
 
 nsUnicodeToISO88591::nsUnicodeToISO88591() 
 : nsTableEncoderSupport((uShiftTable*) &g_ufShiftTable, 
-                        (uMappingTable*) &g_ufMappingTable)
+                        (uMappingTable*) &g_ufMappingTable, 1)
 {
-}
-
-//----------------------------------------------------------------------
-// Subclassing of nsTableEncoderSupport class [implementation]
-
-NS_IMETHODIMP nsUnicodeToISO88591::GetMaxLength(const PRUnichar * aSrc, 
-                                              PRInt32 aSrcLength,
-                                              PRInt32 * aDestLength)
-{
-  *aDestLength = aSrcLength;
-  return NS_OK_UENC_EXACTLENGTH;
 }
 

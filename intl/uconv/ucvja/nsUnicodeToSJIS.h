@@ -39,7 +39,7 @@
 #ifndef nsUnicodeToSJIS_h___
 #define nsUnicodeToSJIS_h___
 
-#include "nsUCvJaSupport.h"
+#include "nsUCSupport.h"
 
 //----------------------------------------------------------------------
 // Class nsUnicodeToSJIS [declaration]
@@ -59,18 +59,8 @@ public:
    */
   nsUnicodeToSJIS();
 
-  /**
-   * Static class constructor.
-   */
-  static nsresult CreateInstance(nsISupports **aResult);
-
 protected:
 
-  //--------------------------------------------------------------------
-  // Subclassing of nsEncoderSupport class [declaration]
-
-  NS_IMETHOD GetMaxLength(const PRUnichar * aSrc, PRInt32 aSrcLength, 
-      PRInt32 * aDestLength);
 };
 
 #endif /* nsUnicodeToSJIS_h___ */

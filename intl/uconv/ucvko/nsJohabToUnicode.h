@@ -39,7 +39,7 @@
 #ifndef nsJohabToUnicode_h___
 #define nsJohabToUnicode_h___
 
-#include "nsUCvKOSupport.h"
+#include "nsUCSupport.h"
 
 //----------------------------------------------------------------------
 // Class nsJohabToUnicode [declaration]
@@ -60,12 +60,6 @@ public:
   nsJohabToUnicode();
 
 protected:
-
-  //--------------------------------------------------------------------
-  // Subclassing of nsDecoderSupport class [declaration]
-
-  NS_IMETHOD GetMaxLength(const char * aSrc, PRInt32 aSrcLength, 
-      PRInt32 * aDestLength);
 };
 
 #endif /* nsJohabToUnicode_h___ */

@@ -39,7 +39,7 @@
 #ifndef nsMacGujaratiToUnicode_h___
 #define nsMacGujaratiToUnicode_h___
 
-#include "nsUCvLatinSupport.h"
+#include "nsUCSupport.h"
 
 //----------------------------------------------------------------------
 // Class nsMacGujaratiToUnicode [declaration]

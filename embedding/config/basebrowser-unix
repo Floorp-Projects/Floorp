@@ -141,16 +141,8 @@ components/libuconv.so
 components/uconv.xpt
 components/liblwbrk.so
 components/libnslocale.so
-components/libucvlatin.so
 components/unicharutil.xpt
 components/libchardet.so
-; optional - on english only systems
-; components/libucvja.so for japanese
-; components/libucvko.so for korean
-; components/libucvcn.so for simplified chinese
-; components/libucvtw.so for traditional chinese
-; components/libucvtw2.so for traditional chinese
-; components/libucvibm.so for ibm
 
 ; required i18n libs
 components/libstrres.so
