@@ -48,6 +48,7 @@
 
   Here is a typical usage pattern:
 
+    #include <new.h> // You'll need this!
     #include "nsFixedSizeAllocator.h"
 
     // Say this is the object you want to allocate a ton of
