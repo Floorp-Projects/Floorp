@@ -267,65 +267,6 @@ PRBool nsWindow::ConvertStatus(nsEventStatus aStatus)
   return PR_FALSE;
 }
 
-//////////////////////////////////////////////////////////////////
-//
-// Turning TRACE_EVENTS on will cause printfs for all
-// mouse events that are dispatched.
-//
-// These are extra noisy, and thus have their own switch:
-//
-// NS_MOUSE_MOVE
-// NS_PAINT
-// NS_MOUSE_ENTER, NS_MOUSE_EXIT
-//
-//////////////////////////////////////////////////////////////////
-
-#undef TRACE_EVENTS
-#undef TRACE_EVENTS_MOTION
-#undef TRACE_EVENTS_PAINT
-#undef TRACE_EVENTS_CROSSING
-
-#ifdef DEBUG
-void
-nsWindow::DebugPrintEvent(nsGUIEvent &   aEvent,
-                          HWND           aWnd)
-{
-#ifndef TRACE_EVENTS_MOTION
-  if (aEvent.message == NS_MOUSE_MOVE)
-  {
-    return;
-  }
-#endif
-
-#ifndef TRACE_EVENTS_PAINT
-  if (aEvent.message == NS_PAINT)
-  {
-    return;
-  }
-#endif
-
-#ifndef TRACE_EVENTS_CROSSING
-  if (aEvent.message == NS_MOUSE_ENTER || aEvent.message == NS_MOUSE_EXIT)
-  {
-    return;
-  }
-#endif
-
-  static int sPrintCount=0;
-
-  printf("%4d %-26s(this=%-8p , HWND=%-8p",
-         sPrintCount++,
-         (const char *) nsAutoCString(debug_GuiEventToString(&aEvent)),
-         this,
-         aWnd);
-         
-  printf(" , x=%-3d, y=%d)",aEvent.point.x,aEvent.point.y);
-
-  printf("\n");
-}
-#endif // DEBUG
-//////////////////////////////////////////////////////////////////
-
 //-------------------------------------------------------------------------
 //
 // Initialize an event to dispatch
@@ -373,6 +314,14 @@ void nsWindow::InitEvent(nsGUIEvent& event, PRUint32 aEventType, nsPoint* aPoint
 
 NS_IMETHODIMP nsWindow::DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus)
 {
+#ifdef NS_DEBUG
+  debug_DumpEvent(stdout,
+                  event->widget,
+                  event,
+                  "something",
+                  (PRInt32) mWnd);
+#endif // NS_DEBUG
+
   aStatus = nsEventStatus_eIgnore;
  
   //if (nsnull != mMenuListener)
@@ -397,10 +346,6 @@ NS_IMETHODIMP nsWindow::DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus
 //-------------------------------------------------------------------------
 PRBool nsWindow::DispatchWindowEvent(nsGUIEvent* event)
 {
-#ifdef TRACE_EVENTS
-  DebugPrintEvent(*event,mWnd);
-#endif
-
   nsEventStatus status;
   DispatchEvent(event, status);
   return ConvertStatus(status);
@@ -1199,12 +1144,23 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::Invalidate(PRBool aIsSynchronous)
 {
-    if (mWnd) {
-        VERIFY(::InvalidateRect(mWnd, NULL, TRUE));
-        if (aIsSynchronous) {
+    if (mWnd) 
+    {
+#ifdef NS_DEBUG
+      debug_DumpInvalidate(stdout,
+                           this,
+                           nsnull,
+                           aIsSynchronous,
+                           "noname",
+                           (PRInt32) mWnd);
+#endif // NS_DEBUG
+      
+      VERIFY(::InvalidateRect(mWnd, NULL, TRUE));
+      if (aIsSynchronous) {
           VERIFY(::UpdateWindow(mWnd));
-        }
+      }
     }
+
     return NS_OK;
 }
 
@@ -1217,11 +1173,22 @@ NS_METHOD nsWindow::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
 {
   RECT rect;
 
-  if (mWnd) {
+  if (mWnd) 
+  {
     rect.left   = aRect.x;
     rect.top    = aRect.y;
     rect.right  = aRect.x + aRect.width;
     rect.bottom = aRect.y  + aRect.height;
+
+#ifdef NS_DEBUG
+    debug_DumpInvalidate(stdout,
+                         this,
+                         &aRect,
+                         aIsSynchronous,
+                         "noname",
+                         (PRInt32) mWnd);
+#endif // NS_DEBUG
+
     VERIFY(::InvalidateRect(mWnd, &rect, TRUE));
     if (aIsSynchronous) {
       VERIFY(::UpdateWindow(mWnd));
@@ -2985,19 +2952,17 @@ PRBool nsWindow::OnPaint()
     PRBool result = PR_TRUE;
     PAINTSTRUCT ps;
 
-#ifdef PAINT_DEBUG
-HRGN rgn = ::CreateRectRgn(0, 0, 0, 0);
-::GetUpdateRgn(mWnd, rgn, TRUE);
-HDC dc = ::GetDC(mWnd);
-HBRUSH brsh = ::CreateSolidBrush(RGB(255, 0, 0));
-::FillRgn(dc, rgn, brsh);
-::ReleaseDC(mWnd, dc);
-::DeleteObject(rgn);
+#ifdef NS_DEBUG
+    HRGN debugPaintFlashRegion = NULL;
+    HDC debugPaintFlashDC = NULL;
 
-int x;
-
-for (x = 0; x < 10000000; x++);
-#endif
+    if (debug_WantPaintFlashing())
+    {
+      debugPaintFlashRegion = ::CreateRectRgn(0, 0, 0, 0);
+      ::GetUpdateRgn(mWnd, debugPaintFlashRegion, TRUE);
+      debugPaintFlashDC = ::GetDC(mWnd);
+    }
+#endif // NS_DEBUG
 
     HDC hDC = ::BeginPaint(mWnd, &ps);
 
@@ -3005,7 +2970,9 @@ for (x = 0; x < 10000000; x++);
     // paint rect then use the IsRectEmpty() function...
     if (ps.rcPaint.left || ps.rcPaint.right || ps.rcPaint.top || ps.rcPaint.bottom) {
         // call the event callback 
-        if (mEventCallback) {
+        if (mEventCallback) 
+        {
+
             nsPaintEvent event;
 
             InitEvent(event, NS_PAINT);
@@ -3017,6 +2984,13 @@ for (x = 0; x < 10000000; x++);
             event.rect = &rect;
             event.eventStructType = NS_PAINT_EVENT;
 
+#ifdef NS_DEBUG
+          debug_DumpPaintEvent(stdout,
+                               this,
+                               &event,
+                               "noname",
+                               (PRInt32) mWnd);
+#endif // NS_DEBUG
 
             if (NS_OK == nsComponentManager::CreateInstance(kRenderingContextCID, 
                                                             nsnull, 
@@ -3051,6 +3025,19 @@ for (x = 0; x < 10000000; x++);
     }
 
     ::EndPaint(mWnd, &ps);
+
+#ifdef NS_DEBUG
+    if (debug_WantPaintFlashing())
+    {
+      ::InvertRgn(debugPaintFlashDC, debugPaintFlashRegion);
+      int x;
+      for (x = 0; x < 1000000; x++);
+      ::InvertRgn(debugPaintFlashDC, debugPaintFlashRegion);
+      for (x = 0; x < 1000000; x++);
+      ::ReleaseDC(mWnd, debugPaintFlashDC);
+      ::DeleteObject(debugPaintFlashRegion);
+    }
+#endif // NS_DEBUG
 
     return result;
 }
