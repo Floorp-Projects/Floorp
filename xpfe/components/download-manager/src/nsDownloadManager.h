@@ -47,7 +47,8 @@
 #include "nsIRDFRemoteDataSource.h"
 #include "nsIRDFContainer.h"
 #include "nsIRDFService.h"
-#include "nsIDOMXULDocument.h"
+#include "nsIDOMDocument.h"
+#include "nsIDOMEventListener.h"
 #include "nsIRDFContainerUtils.h"
 #include "nsIWebProgressListener.h"
 #include "nsIURI.h"
@@ -56,13 +57,15 @@
  
 class nsDownloadManager : public nsIDownloadManager,
                           public nsIRDFDataSource,
-                          public nsIRDFRemoteDataSource
+                          public nsIRDFRemoteDataSource,
+                          public nsIDOMEventListener
 {
 public:
   NS_DECL_NSIRDFDATASOURCE
   NS_DECL_NSIRDFREMOTEDATASOURCE
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOWNLOADMANAGER
+  NS_DECL_NSIDOMEVENTLISTENER
 
   nsresult Init();
 
@@ -72,11 +75,17 @@ public:
 protected:
   nsresult GetDownloadsContainer(nsIRDFContainer** aResult);
   nsresult GetProfileDownloadsFileURL(char** aDownloadsFileURL);
+  nsresult NotifyDownloadEnded(const char* aTargetPath);
+  PRBool MustUpdateUI() { if (mDocument) return PR_TRUE; return PR_FALSE; }
+
+private:
   nsCOMPtr<nsIRDFDataSource> mInner;
-  nsCOMPtr<nsIDOMXULDocument> mDocument;
+  nsCOMPtr<nsIDOMDocument> mDocument;
   nsCOMPtr<nsIDownloadProgressListener> mListener;
   nsCOMPtr<nsIRDFContainerUtils> mRDFContainerUtils;
   nsHashtable* mCurrDownloadItems;
+
+  friend class DownloadItem;
 };
 
 class DownloadItem : public nsIWebProgressListener,
@@ -93,9 +102,13 @@ public:
 
 protected:
   nsresult UpdateProgressInfo();
-
+  nsresult SetDownloadManager(nsDownloadManager* aDownloadManager);
+  nsresult SetInternalListener(nsIDownloadProgressListener* aInternalListener);
+  nsresult GetInternalListener(nsIDownloadProgressListener** aInternalListener);
+private:
   nsIRDFResource* mDownloadItem;
   nsIRDFDataSource* mDataSource;
+  nsDownloadManager* mDownloadManager;
 
   nsString mPrettyName;
   nsCOMPtr<nsILocalFile> mTarget;
@@ -108,6 +121,8 @@ protected:
   PRInt32 mMaxTotalProgress;
   PRInt32 mPercentComplete;
   PRInt64 mTimeStarted;
+
+  friend class nsDownloadManager;
 };
 
 #endif
