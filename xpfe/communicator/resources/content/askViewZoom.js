@@ -48,7 +48,6 @@ function onLoad() {
   dialog.input.select();
   dialog.input.focus();
 
-  sizeToContent();
   moveToAlertPosition();
   doEnabling();
 }
