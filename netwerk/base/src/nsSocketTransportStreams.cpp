@@ -60,11 +60,12 @@ nsSocketTransportStream::nsSocketTransportStream()
 {
   NS_INIT_REFCNT();
 
-  mIsTransportSuspended = PR_FALSE;
   mIsStreamBlocking     = PR_FALSE;
+  mIsTransportSuspended = PR_FALSE;
 
   mMonitor   = nsnull;
   mTransport = nsnull;
+  mBuffer    = nsnull;
   mStream    = nsnull;
 }
 
@@ -73,6 +74,7 @@ nsSocketTransportStream::~nsSocketTransportStream()
 {
   NS_IF_RELEASE(mTransport);
   NS_IF_RELEASE(mStream);
+  NS_IF_RELEASE(mBuffer);
 
   if (mMonitor) {
     PR_DestroyMonitor(mMonitor);
@@ -103,10 +105,10 @@ nsresult nsSocketTransportStream::Init(nsSocketTransport* aTransport,
   }
 
   if (NS_SUCCEEDED(rv)) {
-    nsIBuffer* buf;
-    rv = NS_NewBuffer(&buf, MAX_IO_BUFFER_SIZE, MAX_IO_BUFFER_SIZE);
-    if (NS_FAILED(rv)) return rv;
-    rv = NS_NewBufferInputStream(&mStream, buf);
+    rv = NS_NewBuffer(&mBuffer, MAX_IO_BUFFER_SIZE, 1*MAX_IO_BUFFER_SIZE);
+  }
+  if (NS_SUCCEEDED(rv)) {
+    rv = NS_NewBufferInputStream(&mStream, mBuffer);
   }
 
   return rv;
@@ -132,6 +134,18 @@ nsresult nsSocketTransportStream::BlockTransport(void)
 
   return NS_OK;
 }
+
+nsresult nsSocketTransportStream::GetWriteAmount(PRUint32 *aResultSize)
+{
+  nsresult rv;
+  char *segment;
+
+  *aResultSize = 0;
+  rv = mBuffer->GetWriteSegment(&segment, aResultSize);
+
+  return rv;
+}
+
 
 //
 // --------------------------------------------------------------------------
