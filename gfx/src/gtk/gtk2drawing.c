@@ -176,6 +176,11 @@ ensure_tooltip_widget()
 {
     if (!gTooltipWidget) {
         gTooltipWidget = gtk_tooltips_new();
+
+        /* take ownership of the tooltips object */
+        g_object_ref(gTooltipWidget);
+        gtk_object_sink(GTK_OBJECT(gTooltipWidget));
+
         gtk_tooltips_force_window(gTooltipWidget);
         gtk_widget_set_rc_style(gTooltipWidget->tip_window);
         gtk_widget_realize(gTooltipWidget->tip_window);
@@ -592,13 +597,31 @@ static gint
 moz_gtk_entry_paint(GdkDrawable* drawable, GdkRectangle* rect,
                     GdkRectangle* cliprect, GtkWidgetState* state)
 {
-    gint x = rect->x, y = rect->y, width = rect->width, height = rect->height;
+    gint x, y, width = rect->width, height = rect->height;
     GtkStyle* style;
+    gboolean interior_focus;
+    gint focus_width;
 
     ensure_entry_widget();
     style = gEntryWidget->style;
 
+    /* paint the background first */
+    x = XTHICKNESS(style);
+    y = YTHICKNESS(style);
+
+    TSOffsetStyleGCs(style, rect->x + x, rect->y + y);
+    gtk_paint_flat_box(style, drawable, GTK_STATE_NORMAL, GTK_SHADOW_NONE,
+                       cliprect, gEntryWidget, "entry_bg",  rect->x + x,
+                       rect->y + y, rect->width - 2*x, rect->height - 2*y);
+
+    gtk_widget_style_get(gEntryWidget,
+                         "interior-focus", &interior_focus,
+                         "focus-line-width", &focus_width,
+                         NULL);
+
     /*
+     * Now paint the shadow and focus border.
+     *
      * gtk+ is able to draw over top of the entry when it gains focus,
      * so the non-focused text border is implicitly already drawn when
      * the entry is drawn in a focused state.
@@ -607,36 +630,30 @@ moz_gtk_entry_paint(GdkDrawable* drawable, GdkRectangle* rect,
      * shadow, then draw the shadow again, inset, if we're focused.
      */
 
+    x = rect->x;
+    y = rect->y;
+
     TSOffsetStyleGCs(style, x, y);
-    if (!state->focused) {
-        gtk_paint_shadow(style, drawable, GTK_STATE_NORMAL, GTK_SHADOW_IN,
-                         cliprect, gEntryWidget, NULL, x, y, width, height);
-    }
+    gtk_paint_shadow(style, drawable, GTK_STATE_NORMAL, GTK_SHADOW_IN,
+                     cliprect, gEntryWidget, "entry", x, y, width, height);
   
 
-    if (state->focused) {
-        x += 1;
-        y += 1;
-        width -= 2;
-        height -= 2;
+    if (state->focused && !interior_focus) {
+        x += focus_width;
+        y += focus_width;
+        width -= 2 * focus_width;
+        height -= 2 * focus_width;
 
         TSOffsetStyleGCs(style, x, y);
-
         gtk_paint_shadow(style, drawable, GTK_STATE_NORMAL, GTK_SHADOW_IN,
-                         cliprect, gEntryWidget, NULL, x, y, width, height);
+                         cliprect, gEntryWidget, "entry",
+                         x, y, width, height);
 
+        TSOffsetStyleGCs(style, rect->x, rect->y);
         gtk_paint_focus(style, drawable,  GTK_STATE_NORMAL, cliprect,
                         gEntryWidget, "entry",
                         rect->x, rect->y, rect->width, rect->height);
     }
-
-    x = XTHICKNESS(style);
-    y = YTHICKNESS(style);
-
-    TSOffsetStyleGCs(style, rect->x + x, rect->y + y);
-    gtk_paint_flat_box(style, drawable, GTK_STATE_NORMAL, GTK_SHADOW_NONE,
-                       cliprect, gEntryWidget, "entry_bg",  rect->x + x,
-                       rect->y + y, rect->width - 2*x, rect->height - 2*y);
 
     return MOZ_GTK_SUCCESS;
 }
@@ -1008,22 +1025,22 @@ moz_gtk_get_scrollbar_metrics(gint* slider_width, gint* trough_border,
     ensure_scrollbar_widget();
 
     if (slider_width) {
-        gtk_widget_style_get (gHorizScrollbarWidget, "slider-width",
+        gtk_widget_style_get (gHorizScrollbarWidget, "slider_width",
                               slider_width, NULL);
     }
 
     if (trough_border) {
-        gtk_widget_style_get (gHorizScrollbarWidget, "trough-border",
+        gtk_widget_style_get (gHorizScrollbarWidget, "trough_border",
                               trough_border, NULL);
     }
 
     if (stepper_size) {
-        gtk_widget_style_get (gHorizScrollbarWidget, "stepper-size",
+        gtk_widget_style_get (gHorizScrollbarWidget, "stepper_size",
                               stepper_size, NULL);
     }
 
     if (stepper_spacing) {
-        gtk_widget_style_get (gHorizScrollbarWidget, "stepper-spacing",
+        gtk_widget_style_get (gHorizScrollbarWidget, "stepper_spacing",
                               stepper_spacing, NULL);
     }
 
@@ -1111,7 +1128,7 @@ gint
 moz_gtk_shutdown()
 {
     if (gTooltipWidget)
-        gtk_object_unref(GTK_OBJECT(gTooltipWidget));
+        g_object_unref(gTooltipWidget);
     /* This will destroy all of our widgets */
     if (gProtoWindow)
         gtk_widget_destroy(gProtoWindow);
