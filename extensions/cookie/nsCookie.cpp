@@ -19,6 +19,7 @@
  *
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Henrik Gemal <gemal@gemal.dk>
  */
 
 #define alphabetize 1
@@ -2217,7 +2218,7 @@ permission_Save() {
   }
 
   {
-    nsAutoString temp1; temp1.AssignWithConversion("# Netscape HTTP Cookie Permission File\n");
+    nsAutoString temp1; temp1.AssignWithConversion("# HTTP Cookie Permission File\n");
     cookie_Put(strm, temp1);
   }
 
@@ -2428,7 +2429,7 @@ cookie_Save() {
   }
 
   {
-    nsAutoString temp1; temp1.AssignWithConversion("# Netscape HTTP Cookie File\n");
+    nsAutoString temp1; temp1.AssignWithConversion("# HTTP Cookie File\n");
     cookie_Put(strm, temp1);
   }
 
