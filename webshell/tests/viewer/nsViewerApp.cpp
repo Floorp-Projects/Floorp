@@ -713,7 +713,7 @@ nsViewerApp::AfterDispatch()
 #define DEBUG_EMPTY "(none)"
 static PRInt32 gDebugRobotLoads = 5000;
 static char    gVerifyDir[_MAX_PATH];
-static PRBool  gVisualDebug = TRUE;
+static PRBool  gVisualDebug = PR_TRUE;
 
 // Robot
 static nsIDialog      * mRobotDialog = nsnull;
@@ -827,7 +827,7 @@ nsEventStatus PR_CALLBACK HandleRobotEvent(nsGUIEvent *aEvent)
         }
         PRBool state = PR_FALSE;
         mUpdateChkBtn->GetState(state);
-        gVisualDebug = state ? TRUE: FALSE;
+        gVisualDebug = state ? PR_TRUE: PR_FALSE;
 
       } 
 
@@ -860,12 +860,12 @@ static
 PRBool CreateRobotDialog(nsIWidget * aParent)
 {
 
-  PRBool result = TRUE;
+  PRBool result = PR_TRUE;
 
   if (mRobotDialog != nsnull) {
     NS_ShowWidget(mRobotDialog,PR_TRUE);
     NS_SetFocusToWidget(mStartBtn);
-    return TRUE;
+    return PR_TRUE;
   }
 
    nsILabel * label;
@@ -886,7 +886,7 @@ PRBool CreateRobotDialog(nsIWidget * aParent)
 
   nsComponentManager::CreateInstance(kDialogCID, nsnull, kIDialogIID, (void**)&mRobotDialog);
   if (nsnull == mRobotDialog)
-  	return FALSE;
+  	return PR_FALSE;
   
   NS_CreateDialog(aParent, mRobotDialog,rect,HandleRobotEvent,&font);
   mRobotDialog->SetLabel("Debug Robot Options");
@@ -1235,7 +1235,7 @@ static
 PRBool CreateSiteDialog(nsIWidget * aParent)
 {
 
-  PRBool result = TRUE;
+  PRBool result = PR_TRUE;
 
   if (mSiteDialog == nsnull) {
     nsILookAndFeel * lookAndFeel;
@@ -1264,7 +1264,7 @@ PRBool CreateSiteDialog(nsIWidget * aParent)
     nsIWidget* widget = nsnull;
     nsComponentManager::CreateInstance(kDialogCID, nsnull, kIDialogIID, (void**)&mSiteDialog);
     if (nsnull == mSiteDialog)
-      return FALSE;
+      return PR_FALSE;
     
     if (NS_OK == mSiteDialog->QueryInterface(kIWidgetIID,(void**)&widget))
     {
