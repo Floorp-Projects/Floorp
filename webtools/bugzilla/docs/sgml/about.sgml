@@ -79,29 +79,27 @@
   <section id="newversions">
     <title>New Versions</title>
     <para>
-      This is the &bzg-ver; version of The Bugzilla Guide. It is so named 
-      to match the current version of Bugzilla. If you are
+      This is the &bz-ver; version of The Bugzilla Guide. It is so named 
+      to match the current version of Bugzilla. 
+      <![%bz-devel;[
+        This version of the guide, like its associated Bugzilla version is a
+        development version. Information is subject to change between now and
+        when &bz-nextver; is released.
+      ]]>
+      If you are
       reading this from any source other than those below, please
       check one of these mirrors to make sure you are reading an
       up-to-date version of the Guide.
     </para>
     <para>
-      This document can be found in the following places:
+      The newest version of this guide can always be found at <ulink
+      url="http://www.bugzilla.org">bugzilla.org</ulink>; including
+      documentation for past releases and the current development version.
     </para>
     <para>
-      <itemizedlist>
-	<listitem>
-	  <para>
-	    <ulink url="http://www.bugzilla.org/">bugzilla.org</ulink>
-	  </para>
-	</listitem>
-	<listitem>
-	  <para>
-	    <ulink url="http://www.linuxdoc.org/">The Linux
-	      Documentation Project</ulink>
-	  </para>
-	</listitem>
-      </itemizedlist>
+      The documentation for the most recent stable release of Bugzilla can also
+      be found at
+      <ulink url="http://www.tldp.org">The Linux Documentation Project</ulink>.
     </para>
     <para>
       The latest version of this document can always be checked out via CVS.
