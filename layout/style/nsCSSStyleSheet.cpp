@@ -3786,6 +3786,12 @@ static PRBool SelectorMatches(RuleProcessorData &data,
   return result;
 }
 
+// Right now, there are four operators:
+//   PRUnichar(0), the descendent combinator, is greedy
+//   '~', the indirect adjacent sibling combinator, is greedy
+//   '+' and '>', the direct adjacent sibling and child combinators, are not
+#define NS_IS_GREEDY_OPERATOR(ch) (ch == PRUnichar(0) || ch == PRUnichar('~'))
+
 static PRBool SelectorMatchesTree(RuleProcessorData& aPrevData,
                                   nsCSSSelector* aSelector) 
 {
@@ -3799,7 +3805,8 @@ static PRBool SelectorMatchesTree(RuleProcessorData& aPrevData,
     // for adjacent sibling combinators, the content to test against the
     // selector is the previous sibling *element*
     RuleProcessorData* data;
-    if (PRUnichar('+') == selector->mOperator) {
+    if (PRUnichar('+') == selector->mOperator ||
+        PRUnichar('~') == selector->mOperator) {
       data = prevdata->mPreviousSiblingData;
       if (!data) {
         nsIContent* content = prevdata->mContent;

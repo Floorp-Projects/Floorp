@@ -1619,7 +1619,9 @@ PRBool CSSParserImpl::ParseSelectorGroup(nsresult& aErrorCode,
     }
 
     if (eCSSToken_Symbol == mToken.mType && 
-        ('+' == mToken.mSymbol || '>' == mToken.mSymbol)) {
+        ('+' == mToken.mSymbol ||
+         '>' == mToken.mSymbol ||
+         '~' == mToken.mSymbol)) {
       done = PR_FALSE;
       combinator = mToken.mSymbol;
       list->mSelectors->SetOperator(combinator);
