@@ -3069,24 +3069,31 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             if (!LookupArgOrVar(cx, &cg->treeContext, pn2))
                 return JS_FALSE;
             op = pn2->pn_op;
-            if (pn2->pn_slot >= 0) {
-                atomIndex = (jsatomid) pn2->pn_slot;
+            if (op == JSOP_ARGUMENTS) {
+                JS_ASSERT(!pn2->pn_expr); /* JSOP_ARGUMENTS => no initializer */
+#ifdef __GNUC__
+                atomIndex = 0;            /* quell GCC overwarning */
+#endif
             } else {
-                ale = js_IndexAtom(cx, pn2->pn_atom, &cg->atomList);
-                if (!ale)
-                    return JS_FALSE;
-                atomIndex = ALE_INDEX(ale);
+                if (pn2->pn_slot >= 0) {
+                    atomIndex = (jsatomid) pn2->pn_slot;
+                } else {
+                    ale = js_IndexAtom(cx, pn2->pn_atom, &cg->atomList);
+                    if (!ale)
+                        return JS_FALSE;
+                    atomIndex = ALE_INDEX(ale);
 
-                /* Emit a prolog bytecode to predefine the var w/ void value. */
-                CG_SWITCH_TO_PROLOG(cg);
-                EMIT_ATOM_INDEX_OP(pn->pn_op, atomIndex);
-                CG_SWITCH_TO_MAIN(cg);
-            }
-            if (pn2->pn_expr) {
-                if (op == JSOP_SETNAME)
-                    EMIT_ATOM_INDEX_OP(JSOP_BINDNAME, atomIndex);
-                if (!js_EmitTree(cx, cg, pn2->pn_expr))
-                    return JS_FALSE;
+                    /* Emit a prolog bytecode to predefine the variable. */
+                    CG_SWITCH_TO_PROLOG(cg);
+                    EMIT_ATOM_INDEX_OP(pn->pn_op, atomIndex);
+                    CG_SWITCH_TO_MAIN(cg);
+                }
+                if (pn2->pn_expr) {
+                    if (op == JSOP_SETNAME)
+                        EMIT_ATOM_INDEX_OP(JSOP_BINDNAME, atomIndex);
+                    if (!js_EmitTree(cx, cg, pn2->pn_expr))
+                        return JS_FALSE;
+                }
             }
             if (pn2 == pn->pn_head &&
                 js_NewSrcNote(cx, cg,
@@ -3095,7 +3102,12 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                               : SRC_VAR) < 0) {
                 return JS_FALSE;
             }
-            EMIT_ATOM_INDEX_OP(op, atomIndex);
+            if (op == JSOP_ARGUMENTS) {
+                if (js_Emit1(cx, cg, op) < 0)
+                    return JS_FALSE;
+            } else {
+                EMIT_ATOM_INDEX_OP(op, atomIndex);
+            }
             tmp = CG_OFFSET(cg);
             if (noteIndex >= 0) {
                 if (!js_SetSrcNoteOffset(cx, cg, (uintN)noteIndex, 0, tmp-off))
