@@ -2219,7 +2219,9 @@ pk11_NewObject(PK11Slot *slot)
 static CK_RV
 pk11_DestroySessionObjectData(PK11SessionObject *so)
 {
+#if defined(PKCS11_STATIC_ATTRIBUTES) || defined(PKCS11_REF_COUNT_ATTRIBUTES)
 	int i;
+#endif
 
 #ifdef PKCS11_STATIC_ATTRIBUTES
 	for (i=0; i < MAX_OBJS_ATTRS; i++) {
