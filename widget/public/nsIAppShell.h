@@ -77,6 +77,13 @@ public:
 
   virtual void Exit() = 0;
 
+  /**
+   * Returns Native Data
+   */
+
+  virtual void* GetNativeData(PRUint32 aDataType);
+
+
 };
 
 #endif // nsIAppShell_h__
