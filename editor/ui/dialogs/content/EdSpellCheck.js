@@ -164,7 +164,7 @@ function FillSuggestedList(firstWord)
 
   // Clear the current contents of the list
   while (list.hasChildNodes()) {
-    dump("Removing list option node\n");
+    dump("Removing list option node, value = "+list.lastChild.value+"\n");
     list.removeChild(list.lastChild);
   }
   // We may have the initial word
