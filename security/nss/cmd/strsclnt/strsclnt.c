@@ -83,6 +83,27 @@ int ssl2CipherSuites[] = {
     SSL_EN_RC2_128_CBC_EXPORT40_WITH_MD5,       /* D */
     SSL_EN_DES_64_CBC_WITH_MD5,                 /* E */
     SSL_EN_DES_192_EDE3_CBC_WITH_MD5,           /* F */
+#ifdef NSS_ENABLE_ECC
+    /* NOTE: Since no new SSL2 ciphersuites are being 
+     * invented, and we've run out of lowercase letters
+     * for SSL3 ciphers, we use letters G and beyond
+     * for new SSL3 ciphers.
+     */
+    TLS_ECDH_ECDSA_WITH_NULL_SHA,       	/* G */
+    TLS_ECDH_ECDSA_WITH_RC4_128_SHA,       	/* H */
+    TLS_ECDH_ECDSA_WITH_DES_CBC_SHA,       	/* I */
+    TLS_ECDH_ECDSA_WITH_3DES_EDE_CBC_SHA,    	/* J */
+    TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA,     	/* K */
+    TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA,     	/* L */
+    TLS_ECDH_RSA_WITH_NULL_SHA,          	/* M */
+    TLS_ECDH_RSA_WITH_RC4_128_SHA,       	/* N */
+    TLS_ECDH_RSA_WITH_DES_CBC_SHA,       	/* O */
+    TLS_ECDH_RSA_WITH_3DES_EDE_CBC_SHA,      	/* P */
+    TLS_ECDH_RSA_WITH_AES_128_CBC_SHA,       	/* Q */
+    TLS_ECDH_RSA_WITH_AES_256_CBC_SHA,       	/* R */
+    TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA,    	/* S */
+    TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,      	/* T */
+#endif /* NSS_ENABLE_ECC */
     0
 };
 

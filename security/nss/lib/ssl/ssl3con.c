@@ -37,7 +37,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: ssl3con.c,v 1.52 2003/03/26 00:31:12 wtc%netscape.com Exp $
+ * $Id: ssl3con.c,v 1.53 2003/03/29 00:18:26 nelsonb%netscape.com Exp $
  */
 
 #include "nssrenam.h"
@@ -423,28 +423,27 @@ typedef enum { ec_noName = 0,
 	       ec_pastLastName
 } ECName;
 
-/* XXX Change this when more curves are supported */
-#define supportedCurve(x) (((x) >= ec_secp160k1) && ((x) <= ec_secp521r1))
+#define supportedCurve(x) (((x) > ec_noName) && ((x) < ec_pastLastName))
 
 /* Table containing OID tags for elliptic curves named in the
  * ECC-TLS IETF draft.
  */
 static const SECOidTag ecName2OIDTag[] = {
 	0,  
-	0, /* SEC_OID_SECG_EC_SECT163K1, */  /*  1 */
-	0, /* SEC_OID_SECG_EC_SECT163R1, */  /*  2 */
-	0, /* SEC_OID_SECG_EC_SECT163R2, */  /*  3 */
-	0, /* SEC_OID_SECG_EC_SECT193R1, */  /*  4 */
-	0, /* SEC_OID_SECG_EC_SECT193R2, */  /*  5 */
-	0, /* SEC_OID_SECG_EC_SECT233K1, */  /*  6 */
-	0, /* SEC_OID_SECG_EC_SECT233R1, */  /*  7 */
-	0, /* SEC_OID_SECG_EC_SECT239K1, */  /*  8 */
-	0, /* SEC_OID_SECG_EC_SECT283K1, */  /*  9 */
-	0, /* SEC_OID_SECG_EC_SECT283R1, */  /* 10 */
-	0, /* SEC_OID_SECG_EC_SECT409K1, */  /* 11 */
-	0, /* SEC_OID_SECG_EC_SECT409R1, */  /* 12 */
-	0, /* SEC_OID_SECG_EC_SECT571K1, */  /* 13 */
-	0, /* SEC_OID_SECG_EC_SECT571R1, */  /* 14 */
+	SEC_OID_SECG_EC_SECT163K1,  /*  1 */
+	SEC_OID_SECG_EC_SECT163R1,  /*  2 */
+	SEC_OID_SECG_EC_SECT163R2,  /*  3 */
+	SEC_OID_SECG_EC_SECT193R1,  /*  4 */
+	SEC_OID_SECG_EC_SECT193R2,  /*  5 */
+	SEC_OID_SECG_EC_SECT233K1,  /*  6 */
+	SEC_OID_SECG_EC_SECT233R1,  /*  7 */
+	SEC_OID_SECG_EC_SECT239K1,  /*  8 */
+	SEC_OID_SECG_EC_SECT283K1,  /*  9 */
+	SEC_OID_SECG_EC_SECT283R1,  /* 10 */
+	SEC_OID_SECG_EC_SECT409K1,  /* 11 */
+	SEC_OID_SECG_EC_SECT409R1,  /* 12 */
+	SEC_OID_SECG_EC_SECT571K1,  /* 13 */
+	SEC_OID_SECG_EC_SECT571R1,  /* 14 */
 	SEC_OID_SECG_EC_SECP160K1,  /* 15 */
 	SEC_OID_SECG_EC_SECP160R1,  /* 16 */
 	SEC_OID_SECG_EC_SECP160R2,  /* 17 */

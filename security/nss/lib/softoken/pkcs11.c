@@ -236,6 +236,8 @@ struct mechanismList {
 
 #define CKF_EC_PNU		CKF_EC_FP | CKF_EC_NAMEDCURVE | CKF_EC_UNCOMPRESS
 
+#define CKF_EC_BPNU		CKF_EC_F_2M | CKF_EC_PNU
+
 #define CK_MAX 0xffffffff
 
 static const struct mechanismList mechanisms[] = {
@@ -284,10 +286,10 @@ static const struct mechanismList mechanisms[] = {
      {CKM_DH_PKCS_DERIVE,	{128, 1024, CKF_DERIVE}, 	PR_TRUE}, 
 #ifdef NSS_ENABLE_ECC
      /* -------------------- Elliptic Curve Operations --------------------- */
-     {CKM_EC_KEY_PAIR_GEN,	{112, 571, CKF_GENERATE_KEY_PAIR|CKF_EC_PNU}, PR_TRUE}, 
-     {CKM_ECDH1_DERIVE,	        {112, 571, CKF_DERIVE|CKF_EC_PNU}, PR_TRUE}, 
-     {CKM_ECDSA,	        {112, 571, CKF_SN_VR|CKF_EC_PNU}, PR_TRUE}, 
-     {CKM_ECDSA_SHA1,	        {112, 571, CKF_SN_VR|CKF_EC_PNU}, PR_TRUE}, 
+     {CKM_EC_KEY_PAIR_GEN,      {112, 571, CKF_GENERATE_KEY_PAIR|CKF_EC_BPNU}, PR_TRUE}, 
+     {CKM_ECDH1_DERIVE,         {112, 571, CKF_DERIVE|CKF_EC_BPNU}, PR_TRUE}, 
+     {CKM_ECDSA,                {112, 571, CKF_SN_VR|CKF_EC_BPNU}, PR_TRUE}, 
+     {CKM_ECDSA_SHA1,           {112, 571, CKF_SN_VR|CKF_EC_BPNU}, PR_TRUE}, 
 #endif /* NSS_ENABLE_ECC */
      /* ------------------------- RC2 Operations --------------------------- */
      {CKM_RC2_KEY_GEN,		{1, 128, CKF_GENERATE},		PR_TRUE},

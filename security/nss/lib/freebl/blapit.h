@@ -36,7 +36,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: blapit.h,v 1.9 2003/02/27 01:31:12 nelsonb%netscape.com Exp $
+ * $Id: blapit.h,v 1.10 2003/03/29 00:18:18 nelsonb%netscape.com Exp $
  */
 
 #ifndef _BLAPIT_H_
@@ -286,8 +286,8 @@ struct ECFieldIDStr {
     int         size;   /* field size in bits */
     ECFieldType type;
     union {
-        SECItem  prime;  /* prime p for (GFp) */
-        SECItem  m;      /* integer m for (GF2m) */
+        SECItem  prime; /* prime p for (GFp) */
+        SECItem  poly;  /* irreducible binary polynomial for (GF2m) */
     } u;
     int         k1;     /* first coefficient of pentanomial or
                          * the only coefficient of trinomial 
