@@ -58,6 +58,10 @@ include $(CORE_DEPTH)/coreconf/config.mk
 
 include ../platlibs.mk
 
+ifdef NISCC_TEST
+DEFINES += -DNISCC_TEST
+endif
+
 #######################################################################
 # (5) Execute "global" rules. (OPTIONAL)                              #
 #######################################################################
