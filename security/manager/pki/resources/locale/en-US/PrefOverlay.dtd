@@ -22,7 +22,7 @@
   -->
 
 <!ENTITY  masterpass.label             "Master Passwords">
-<!ENTITY  security.label               "Privacy & Security">
+<!ENTITY  security.label               "Privacy and Security">
 <!ENTITY  ssl.label                    "SSL">
 <!ENTITY  certs.label                  "Certificates">
 <!ENTITY  validation.label             "Validation">
