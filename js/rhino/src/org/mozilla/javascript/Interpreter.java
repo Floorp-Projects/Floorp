@@ -290,14 +290,7 @@ public class Interpreter
 
     private void badTree(Node node)
     {
-        try {
-            out = new PrintWriter(new FileOutputStream("icode.txt", true));
-            out.println("Un-handled node : " + node.toString());
-            out.close();
-        }
-        catch (IOException x) {}
-        throw new RuntimeException("Un-handled node : "
-                                        + node.toString());
+        throw new RuntimeException("Un-handled node: "+node.toString());
     }
 
     private int generateICode(Node node, int iCodeTop)
@@ -624,19 +617,9 @@ public class Interpreter
                         iCodeTop = addToken(Token.POP, iCodeTop);
                         iCodeTop = addToken(Token.UNDEFINED, iCodeTop);
                         break;
-                    case Token.NOT : {
-                        int trueJumpStart = iCodeTop;
-                        iCodeTop = addForwardGoto(Token.IFEQ,
-                                                  iCodeTop);
-                        iCodeTop = addToken(Token.TRUE, iCodeTop);
-                        int beyondJumpStart = iCodeTop;
-                        iCodeTop = addForwardGoto(Token.GOTO,
-                                                  iCodeTop);
-                        resolveForwardGoto(trueJumpStart, iCodeTop);
-                        iCodeTop = addToken(Token.FALSE, iCodeTop);
-                        resolveForwardGoto(beyondJumpStart, iCodeTop);
+                    case Token.NOT :
+                        iCodeTop = addToken(Token.NOT, iCodeTop);
                         break;
-                    }
                     case Token.BITNOT :
                         iCodeTop = addToken(Token.BITNOT, iCodeTop);
                         break;
@@ -825,9 +808,14 @@ public class Interpreter
             case Token.POP :
             case Token.POPV :
                 iCodeTop = updateLineNumber(node, iCodeTop);
-            case Token.ENTERWITH :
                 iCodeTop = generateICode(child, iCodeTop);
                 iCodeTop = addToken(type, iCodeTop);
+                itsStackDepth--;
+                break;
+
+            case Token.ENTERWITH :
+                iCodeTop = generateICode(child, iCodeTop);
+                iCodeTop = addToken(Token.ENTERWITH, iCodeTop);
                 itsStackDepth--;
                 break;
 
@@ -1306,164 +1294,147 @@ public class Interpreter
         return "";
     }
 
-    static PrintWriter out;
-    static {
+    private static void dumpICode(InterpreterData idata)
+    {
         if (Token.printICode) {
-            try {
-                out = new PrintWriter(new FileOutputStream("icode.txt"));
-                out.close();
-            }
-            catch (IOException x) {
-            }
-        }
-    }
+            int iCodeLength = idata.itsICodeTop;
+            byte iCode[] = idata.itsICode;
+            String[] strings = idata.itsStringTable;
+            PrintStream out = System.out;
+            out.println("ICode dump, for " + idata.itsName
+                        + ", length = " + iCodeLength);
+            out.println("MaxStack = " + idata.itsMaxStack);
 
-    private static void dumpICode(InterpreterData idata) {
-        if (Token.printICode) {
-            try {
-                int iCodeLength = idata.itsICodeTop;
-                byte iCode[] = idata.itsICode;
-                String[] strings = idata.itsStringTable;
+            for (int pc = 0; pc < iCodeLength; ) {
+                out.flush();
+                out.print(" [" + pc + "] ");
+                int token = iCode[pc] & 0xff;
+                String tname = icodeToName(token);
+                int old_pc = pc;
+                ++pc;
+                int icodeLength = icodeTokenLength(token);
+                switch (token) {
+                    default:
+                        if (icodeLength != 1) Context.codeBug();
+                        out.println(tname);
+                        break;
 
-                out = new PrintWriter(new FileOutputStream("icode.txt", true));
-                out.println("ICode dump, for " + idata.itsName
-                            + ", length = " + iCodeLength);
-                out.println("MaxStack = " + idata.itsMaxStack);
-
-                for (int pc = 0; pc < iCodeLength; ) {
-                    out.flush();
-                    out.print(" [" + pc + "] ");
-                    int token = iCode[pc] & 0xff;
-                    String tname = icodeToName(token);
-                    int old_pc = pc;
-                    ++pc;
-                    int icodeLength = icodeTokenLength(token);
-                    switch (token) {
-                        default:
-                            if (icodeLength != 1) Context.codeBug();
-                            out.println(tname);
-                            break;
-
-                        case Icode_GOSUB :
-                        case Token.GOTO :
-                        case Token.IFEQ :
-                        case Token.IFNE : {
-                            int newPC = getTarget(iCode, pc);
-                            out.println(tname + " " + newPC);
-                            pc += 2;
-                            break;
-                        }
-                        case Icode_RETSUB :
-                        case Token.ENUMINIT :
-                        case Token.ENUMNEXT :
-                        case Icode_VARINC :
-                        case Icode_VARDEC :
-                        case Token.GETVAR :
-                        case Token.SETVAR :
-                        case Token.NEWTEMP :
-                        case Token.USETEMP : {
-                            int slot = (iCode[pc] & 0xFF);
-                            out.println(tname + " " + slot);
-                            pc++;
-                            break;
-                        }
-                        case Icode_CALLSPECIAL : {
-                            int callType = iCode[pc] & 0xFF;
-                            boolean isNew =  (iCode[pc + 1] != 0);
-                            int line = getShort(iCode, pc+2);
-                            int count = getIndex(iCode, pc + 4);
-                            out.println(tname + " " + callType  + " " + isNew
-                                        + " " + count + " " + line);
-                            pc += 8;
-                            break;
-                        }
-                        case Token.REGEXP : {
-                            int i = getIndex(iCode, pc);
-                            Object regexp = idata.itsRegExpLiterals[i];
-                            out.println(tname + " " + regexp);
-                            pc += 2;
-                            break;
-                        }
-                        case Icode_CLOSURE : {
-                            int i = getIndex(iCode, pc);
-                            InterpreterData data2 = idata.itsNestedFunctions[i];
-                            out.println(tname + " " + data2);
-                            pc += 2;
-                            break;
-                        }
-                        case Token.NEW :
-                        case Token.CALL : {
-                            int count = getIndex(iCode, pc + 2);
-                            String name = strings[getIndex(iCode, pc)];
-                            out.println(tname + " " + count + " \""
-                                        + name + '"');
-                            pc += 4;
-                            break;
-                        }
-                        case Icode_SHORTNUMBER : {
-                            int value = getShort(iCode, pc);
-                            out.println(tname + " " + value);
-                            pc += 2;
-                            break;
-                        }
-                        case Icode_INTNUMBER : {
-                            int value = getInt(iCode, pc);
-                            out.println(tname + " " + value);
-                            pc += 4;
-                            break;
-                        }
-                        case Token.NUMBER : {
-                            int index = getIndex(iCode, pc);
-                            double value = idata.itsDoubleTable[index];
-                            out.println(tname + " " + value);
-                            pc += 2;
-                            break;
-                        }
-                        case Icode_TYPEOFNAME :
-                        case Token.GETBASE :
-                        case Token.BINDNAME :
-                        case Token.SETNAME :
-                        case Token.NAME :
-                        case Icode_NAMEINC :
-                        case Icode_NAMEDEC :
-                        case Token.STRING : {
-                            String str = strings[getIndex(iCode, pc)];
-                            out.println(tname + " \"" + str + '"');
-                            pc += 2;
-                            break;
-                        }
-                        case Icode_LINE : {
-                            int line = getShort(iCode, pc);
-                            out.println(tname + " : " + line);
-                            pc += 2;
-                            break;
-                        }
+                    case Icode_GOSUB :
+                    case Token.GOTO :
+                    case Token.IFEQ :
+                    case Token.IFNE : {
+                        int newPC = getTarget(iCode, pc);
+                        out.println(tname + " " + newPC);
+                        pc += 2;
+                        break;
                     }
-                    if (old_pc + icodeLength != pc) Context.codeBug();
-                }
-
-                int[] table = idata.itsExceptionTable;
-                if (table != null) {
-                    out.println("Exception handlers: "
-                                 +table.length / EXCEPTION_SLOT_SIZE);
-                    for (int i = 0; i != table.length;
-                         i += EXCEPTION_SLOT_SIZE)
-                    {
-                        int tryStart     = table[i + EXCEPTION_TRY_START_SLOT];
-                        int tryEnd       = table[i + EXCEPTION_TRY_END_SLOT];
-                        int catchStart   = table[i + EXCEPTION_CATCH_SLOT];
-                        int finallyStart = table[i + EXCEPTION_FINALLY_SLOT];
-                        int withDepth    = table[i + EXCEPTION_WITH_DEPTH_SLOT];
-
-                        out.println(" "+tryStart+"\t "+tryEnd+"\t "
-                                    +catchStart+"\t "+finallyStart
-                                    +"\t "+withDepth);
+                    case Icode_RETSUB :
+                    case Token.ENUMINIT :
+                    case Token.ENUMNEXT :
+                    case Icode_VARINC :
+                    case Icode_VARDEC :
+                    case Token.GETVAR :
+                    case Token.SETVAR :
+                    case Token.NEWTEMP :
+                    case Token.USETEMP : {
+                        int slot = (iCode[pc] & 0xFF);
+                        out.println(tname + " " + slot);
+                        pc++;
+                        break;
+                    }
+                    case Icode_CALLSPECIAL : {
+                        int callType = iCode[pc] & 0xFF;
+                        boolean isNew =  (iCode[pc + 1] != 0);
+                        int line = getShort(iCode, pc+2);
+                        int count = getIndex(iCode, pc + 4);
+                        out.println(tname+" "+callType+" "+isNew
+                                    +" "+count+" "+line);
+                        pc += 8;
+                        break;
+                    }
+                    case Token.REGEXP : {
+                        int i = getIndex(iCode, pc);
+                        Object regexp = idata.itsRegExpLiterals[i];
+                        out.println(tname + " " + regexp);
+                        pc += 2;
+                        break;
+                    }
+                    case Icode_CLOSURE : {
+                        int i = getIndex(iCode, pc);
+                        InterpreterData data2 = idata.itsNestedFunctions[i];
+                        out.println(tname + " " + data2);
+                        pc += 2;
+                        break;
+                    }
+                    case Token.NEW :
+                    case Token.CALL : {
+                        int count = getIndex(iCode, pc + 2);
+                        String name = strings[getIndex(iCode, pc)];
+                        out.println(tname+' '+count+" \""+name+'"');
+                        pc += 4;
+                        break;
+                    }
+                    case Icode_SHORTNUMBER : {
+                        int value = getShort(iCode, pc);
+                        out.println(tname + " " + value);
+                        pc += 2;
+                        break;
+                    }
+                    case Icode_INTNUMBER : {
+                        int value = getInt(iCode, pc);
+                        out.println(tname + " " + value);
+                        pc += 4;
+                        break;
+                    }
+                    case Token.NUMBER : {
+                        int index = getIndex(iCode, pc);
+                        double value = idata.itsDoubleTable[index];
+                        out.println(tname + " " + value);
+                        pc += 2;
+                        break;
+                    }
+                    case Icode_TYPEOFNAME :
+                    case Token.GETBASE :
+                    case Token.BINDNAME :
+                    case Token.SETNAME :
+                    case Token.NAME :
+                    case Icode_NAMEINC :
+                    case Icode_NAMEDEC :
+                    case Token.STRING : {
+                        String str = strings[getIndex(iCode, pc)];
+                        out.println(tname + " \"" + str + '"');
+                        pc += 2;
+                        break;
+                    }
+                    case Icode_LINE : {
+                        int line = getShort(iCode, pc);
+                        out.println(tname + " : " + line);
+                        pc += 2;
+                        break;
                     }
                 }
-
-                out.close();
+                if (old_pc + icodeLength != pc) Context.codeBug();
             }
-            catch (IOException x) {}
+
+            int[] table = idata.itsExceptionTable;
+            if (table != null) {
+                out.println("Exception handlers: "
+                             +table.length / EXCEPTION_SLOT_SIZE);
+                for (int i = 0; i != table.length;
+                     i += EXCEPTION_SLOT_SIZE)
+                {
+                    int tryStart     = table[i + EXCEPTION_TRY_START_SLOT];
+                    int tryEnd       = table[i + EXCEPTION_TRY_END_SLOT];
+                    int catchStart   = table[i + EXCEPTION_CATCH_SLOT];
+                    int finallyStart = table[i + EXCEPTION_FINALLY_SLOT];
+                    int withDepth    = table[i + EXCEPTION_WITH_DEPTH_SLOT];
+
+                    out.println(" "+tryStart+"\t "+tryEnd+"\t "
+                                +catchStart+"\t "+finallyStart
+                                +"\t "+withDepth);
+                }
+            }
+            out.flush();
         }
     }
 
@@ -1498,8 +1469,9 @@ public class Interpreter
             case Token.LSH :
             case Token.RSH :
             case Token.URSH :
-            case Token.NEG :
+            case Token.NOT :
             case Token.POS :
+            case Token.NEG :
             case Token.SUB :
             case Token.MUL :
             case Token.DIV :
@@ -2014,16 +1986,9 @@ public class Interpreter
         break;
     }
     case Token.IFNE : {
-        Object val = stack[stackTop];
-        boolean valBln;
-        if (val != DBL_MRK) {
-            valBln = !ScriptRuntime.toBoolean(val);
-        } else {
-            double valDbl = sDbl[stackTop];
-            valBln = !(valDbl == valDbl && valDbl != 0.0);
-        }
+        boolean valBln = stack_boolean(stack, sDbl, stackTop);
         --stackTop;
-        if (valBln) {
+        if (!valBln) {
             if (instructionThreshold != 0) {
                 instructionCount += pc + 3 - pcPrevBranch;
                 if (instructionCount > instructionThreshold) {
@@ -2038,14 +2003,7 @@ public class Interpreter
         break;
     }
     case Token.IFEQ : {
-        boolean valBln;
-        Object val = stack[stackTop];
-        if (val != DBL_MRK) {
-            valBln = ScriptRuntime.toBoolean(val);
-        } else {
-            double valDbl = sDbl[stackTop];
-            valBln = (valDbl == valDbl && valDbl != 0.0);
-        }
+        boolean valBln = stack_boolean(stack, sDbl, stackTop);
         --stackTop;
         if (valBln) {
             if (instructionThreshold != 0) {
@@ -2232,6 +2190,11 @@ public class Interpreter
         double lDbl = stack_double(stack, sDbl, stackTop);
         stack[stackTop] = DBL_MRK;
         sDbl[stackTop] = lDbl % rDbl;
+        break;
+    }
+    case Token.NOT : {
+        stack[stackTop] = stack_boolean(stack, sDbl, stackTop)
+                          ? Boolean.FALSE : Boolean.TRUE;
         break;
     }
     case Token.BINDNAME : {
@@ -2780,6 +2743,25 @@ public class Interpreter
     {
         Object x = stack[i];
         return (x != DBL_MRK) ? ScriptRuntime.toNumber(x) : stackDbl[i];
+    }
+
+    private static boolean stack_boolean(Object[] stack, double[] stackDbl,
+                                         int i)
+    {
+        Object x = stack[i];
+        if (x == DBL_MRK) {
+            double d = stackDbl[i];
+            return d == d && d != 0.0;
+        } else if (x instanceof Boolean) {
+            return ((Boolean)x).booleanValue();
+        } else if (x == null || x == Undefined.instance) {
+            return false;
+        } else if (x instanceof Number) {
+            double d = ((Number)x).doubleValue();
+            return (d == d && d != 0.0);
+        } else {
+            return ScriptRuntime.toBoolean(x);
+        }
     }
 
     private static void do_add(Object[] stack, double[] stackDbl, int stackTop)
