@@ -1104,4 +1104,8 @@ typedef basic_nsAReadableString<char>       nsAReadableCString;
 typedef basic_nsLiteralString<PRUnichar>    nsLiteralString;
 typedef basic_nsLiteralString<char>         nsLiteralCString;
 
+#define NS_LITERAL_STRING(s)  nsLiteralString(s, sizeof(s)/sizeof(wchar_t))
+#define NS_LITERAL_CSTRING(s) nsLiteralCString(s, sizeof(s))
+
+
 #endif // !defined(_nsAReadableString_h__)
