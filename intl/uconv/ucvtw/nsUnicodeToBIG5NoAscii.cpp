@@ -17,17 +17,11 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 
-#include "nsUnicodeToBIG5.h"
+#include "nsUnicodeToBIG5NoAscii.h"
 #include "nsUCvTWDll.h"
 
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
-
-
-static PRUint16 gAsciiShiftTable[] =  {
-  0, u1ByteCharset,
-  ShiftCell(0,   0, 0, 0, 0, 0, 0, 0),
-};
 
 static PRUint16 gBig5ShiftTable[] =  {
   0, u2BytesCharset,
@@ -35,29 +29,18 @@ static PRUint16 gBig5ShiftTable[] =  {
 };
  
 
-static PRUint16 *g_Big5MappingTable[2] = {
-  g_ASCIIMapping,
-  g_ufBig5Mapping
-};
-
-static PRUint16 *g_Big5ShiftTable[2] =  {
-  gAsciiShiftTable,
-  gBig5ShiftTable
-};
-
 //----------------------------------------------------------------------
-// Class nsUnicodeToBIG5 [implementation]
+// Class nsUnicodeToBIG5NoAscii [implementation]
 
-nsUnicodeToBIG5::nsUnicodeToBIG5() 
-: nsMultiTableEncoderSupport(2,
-                        (uShiftTable**) &g_Big5ShiftTable, 
-                        (uMappingTable**) &g_Big5MappingTable)
+nsUnicodeToBIG5NoAscii::nsUnicodeToBIG5NoAscii() 
+: nsTableEncoderSupport( (uShiftTable*) &gBig5ShiftTable, 
+                        (uMappingTable*) &g_ufBig5Mapping)
 {
 }
 
-nsresult nsUnicodeToBIG5::CreateInstance(nsISupports ** aResult) 
+nsresult nsUnicodeToBIG5NoAscii::CreateInstance(nsISupports ** aResult) 
 {
-  nsIUnicodeEncoder *p = new nsUnicodeToBIG5();
+  nsIUnicodeEncoder *p = new nsUnicodeToBIG5NoAscii();
   if(p) {
    *aResult = p;
    return NS_OK;
@@ -68,10 +51,10 @@ nsresult nsUnicodeToBIG5::CreateInstance(nsISupports ** aResult)
 //----------------------------------------------------------------------
 // Subclassing of nsTableEncoderSupport class [implementation]
 
-NS_IMETHODIMP nsUnicodeToBIG5::GetMaxLength(const PRUnichar * aSrc, 
+NS_IMETHODIMP nsUnicodeToBIG5NoAscii::GetMaxLength(const PRUnichar * aSrc, 
                                               PRInt32 aSrcLength,
                                               PRInt32 * aDestLength)
 {
   *aDestLength = 2 * aSrcLength;
-  return NS_OK;
+  return NS_OK_UENC_EXACTLENGTH;
 }

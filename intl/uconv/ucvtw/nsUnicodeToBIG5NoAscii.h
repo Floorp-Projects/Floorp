@@ -17,15 +17,39 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 
-#ifndef nsUCvTWDll_h___
-#define nsUCvTWDll_h___
+#ifndef nsUnicodeToBIG5NoAscii_h___
+#define nsUnicodeToBIG5NoAscii_h___
 
-#include "prtypes.h"
+#include "nsUCvTWSupport.h"
 
-extern "C" PRInt32 g_InstanceCount;
-extern "C" PRInt32 g_LockCount;
-extern "C" PRUint16 g_ufBig5Mapping[];
-extern "C" PRUint16 g_utBIG5Mapping[];
-extern "C" PRUint16 g_ASCIIMapping[];
+//----------------------------------------------------------------------
+// Class nsUnicodeToBIG5NoAscii [declaration]
 
-#endif /* nsUCvTWDll_h___ */
+/**
+ * A character set converter from Unicode to BIG5NoAscii.
+ *
+ */
+class nsUnicodeToBIG5NoAscii : public nsTableEncoderSupport
+{
+public:
+
+  /**
+   * Class constructor.
+   */
+  nsUnicodeToBIG5NoAscii();
+
+  /**
+   * Static class constructor.
+   */
+  static nsresult CreateInstance(nsISupports **aResult);
+
+protected:
+
+  //--------------------------------------------------------------------
+  // Subclassing of nsEncoderSupport class [declaration]
+
+  NS_IMETHOD GetMaxLength(const PRUnichar * aSrc, PRInt32 aSrcLength, 
+      PRInt32 * aDestLength);
+};
+
+#endif /* nsUnicodeToBIG5NoAscii_h___ */
