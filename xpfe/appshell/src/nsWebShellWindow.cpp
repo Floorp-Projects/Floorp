@@ -719,7 +719,7 @@ NS_IMETHODIMP nsWebShellWindow::OnConnectionsComplete()
   ///////////////////////////////
   // Find the Status Text DOM Node.  EVIL ASSUMPTION THAT ALL SUCH WINDOWS HAVE ONE.
   ///////////////////////////////
-  nsCOMPtr<nsIDOMDocument> statusDOMDoc(GetNamedDOMDoc(nsAutoString("browser.status")));
+  nsCOMPtr<nsIDOMDocument> statusDOMDoc(GetNamedDOMDoc(nsAutoString("status")));
   if (!statusDOMDoc)
     return NS_ERROR_FAILURE;
   nsCOMPtr<nsIDOMNode> parent(GetParentNodeFromDOMDoc(statusDOMDoc));
