@@ -154,6 +154,9 @@ public:
     
 protected:
 
+  void GetDocument ( nsIWebShell* inWebShell, nsIDocument** outDocument ) ;
+  void RegisterAsDocumentObserver ( nsIWebShell* inWebShell ) ;
+
   nsHashtable           mObserverTable;   // stores observers for content change notification
   
   PRUint32              mNumMenus;
@@ -164,9 +167,6 @@ protected:
   PRBool       mIsMenuBarAdded;
   
   nsWeakPtr   mWebShellWeakRef;    // weak ref to webshell
-
-
-  void RegisterAsDocumentObserver ( nsIWebShell* inWebShell ) ;
 
   // Mac Specific
   Handle      mMacMBarHandle;
