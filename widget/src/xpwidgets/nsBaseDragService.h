@@ -23,6 +23,7 @@
 #include "nsIDragSession.h"
 #include "nsITransferable.h"
 #include "nsSize.h"
+#include "nsISupportsArray.h"
 #include "nsCOMPtr.h"
 
 /**
