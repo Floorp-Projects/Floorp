@@ -263,24 +263,26 @@ Contributor(s): ______________________________________. -->
     <toolbar class="toolbar-primary chromeclass-toolbar" id="nav-bar" persist="collapsed" 
              grippytooltip="aTooltip" grippytooltiptext="&navigationBar.tooltip;"
              tbautostretch="always">
-      <menubutton class="menubutton-dual toolbar top" id="back-button" value="&backButton.label;" 
-                  crop="right" observes="canGoBack" oncommand="gotoHistoryIndex(event);"
-                  tooltip="aTooltip"
-                  buttonaction="BrowserBack();" buttontooltiptext="&backButton.tooltip;">  
-     	  <menupopup oncreate="BrowserBackMenu(event);"/>
-      </menubutton>
-      <menubutton class="menubutton-dual toolbar top" id="forward-button" 
-                  crop="right" observes="canGoForward" tooltip="aTooltip"
-                  oncommand="gotoHistoryIndex(event);" buttonaction="BrowserForward();"
-                  value="&forwardButton.label;" buttontooltiptext="&forwardButton.tooltip;">  
-    	  <menupopup oncreate="BrowserForwardMenu(event);"/>
-      </menubutton>
+      <box id="nav-bar-buttons">
+        <menubutton class="menubutton-dual toolbar top" id="back-button" value="&backButton.label;" 
+                    crop="right" observes="canGoBack" oncommand="gotoHistoryIndex(event);"
+                    tooltip="aTooltip"
+                    buttonaction="BrowserBack();" buttontooltiptext="&backButton.tooltip;">  
+       	  <menupopup oncreate="BrowserBackMenu(event);"/>
+        </menubutton>
+        <menubutton class="menubutton-dual toolbar top" id="forward-button" 
+                    crop="right" observes="canGoForward" tooltip="aTooltip"
+                    oncommand="gotoHistoryIndex(event);" buttonaction="BrowserForward();"
+                    value="&forwardButton.label;" buttontooltiptext="&forwardButton.tooltip;">  
+      	  <menupopup oncreate="BrowserForwardMenu(event);"/>
+        </menubutton>
 
-      <button class="button-toolbar-1 top" id="reload-button" crop="right" observes="canReload" value="&reloadButton.label;" 
-              tooltip="aTooltip" tooltiptext="&reloadButton.tooltip;"/>
-      <button class="button-toolbar-1 top" id="stop-button" crop="right" observes="canStop" onclick="BrowserStop()" value="&stopButton.label;" 
-              tooltip="aTooltip" tooltiptext="&stopButton.tooltip;"/>
-
+        <button class="button-toolbar-1 top" id="reload-button" crop="right" observes="canReload" value="&reloadButton.label;" 
+                tooltip="aTooltip" tooltiptext="&reloadButton.tooltip;"/>
+        <button class="button-toolbar-1 top" id="stop-button" crop="right" observes="canStop" onclick="BrowserStop()" value="&stopButton.label;" 
+                tooltip="aTooltip" tooltiptext="&stopButton.tooltip;"/>
+      </box>
+                
       <box id="nav-bar-inner" autostretch="never" flex="1" style="min-width: 0px;">
         <box id="urlbar-group" class="box-toolbar-group chromeclass-location" flex="1">
           <box autostretch="never" valign="middle" flex="1" id="urlbar-container">
