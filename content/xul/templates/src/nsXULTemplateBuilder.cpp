@@ -469,9 +469,8 @@ nsXULTemplateBuilder::Propagate(nsIRDFResource* aSource,
             nsRDFTestNode* rdftestnode = NS_STATIC_CAST(nsRDFTestNode*, *i);
 
             Instantiation seed;
-            if (rdftestnode->CanPropagate(aSource, aProperty, aTarget, seed)) {
+            if (rdftestnode->CanPropagate(aSource, aProperty, aTarget, seed))
                 livenodes.Add(rdftestnode);
-            }
         }
     }
 
@@ -573,23 +572,15 @@ nsXULTemplateBuilder::OnAssert(nsIRDFDataSource* aDataSource,
     if (IsActivated(aSource))
         return NS_OK;
 
-    nsresult rv;
-
 	if (mCache)
         mCache->Assert(aSource, aProperty, aTarget, PR_TRUE /* XXX should be value passed in */);
 
     LOG("onassert", aSource, aProperty, aTarget);
 
     nsClusterKeySet newkeys;
-    rv = Propagate(aSource, aProperty, aTarget, newkeys);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = FireNewlyMatchedRules(newkeys);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = SynchronizeAll(aSource, aProperty, nsnull, aTarget);
-    if (NS_FAILED(rv)) return rv;
-
+    Propagate(aSource, aProperty, aTarget, newkeys);
+    FireNewlyMatchedRules(newkeys);
+    SynchronizeAll(aSource, aProperty, nsnull, aTarget);
     return NS_OK;
 }
 
@@ -646,19 +637,13 @@ nsXULTemplateBuilder::OnUnassert(nsIRDFDataSource* aDataSource,
     if (IsActivated(aSource))
         return NS_OK;
 
-    nsresult rv;
-
 	if (mCache)
 		mCache->Unassert(aSource, aProperty, aTarget);
 
     LOG("onunassert", aSource, aProperty, aTarget);
 
-    rv = Retract(aSource, aProperty, aTarget);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = SynchronizeAll(aSource, aProperty, aTarget, nsnull);
-    if (NS_FAILED(rv)) return rv;
-    
+    Retract(aSource, aProperty, aTarget);
+    SynchronizeAll(aSource, aProperty, aTarget, nsnull);
     return NS_OK;
 }
 
@@ -688,30 +673,22 @@ nsXULTemplateBuilder::OnChange(nsIRDFDataSource* aDataSource,
 			mCache->Assert(aSource, aProperty, aNewTarget, PR_TRUE);
 	}
 
-    nsresult rv;
-
     LOG("onchange", aSource, aProperty, aNewTarget);
 
     if (aOldTarget) {
         // Pull any old rules that were relying on aOldTarget
-        rv = Retract(aSource, aProperty, aOldTarget);
-        if (NS_FAILED(rv)) return rv;
+        Retract(aSource, aProperty, aOldTarget);
     }
 
     if (aNewTarget) {
         // Fire any new rules that are activated by aNewTarget
         nsClusterKeySet newkeys;
-        rv = Propagate(aSource, aProperty, aNewTarget, newkeys);
-        if (NS_FAILED(rv)) return rv;
-
-        rv = FireNewlyMatchedRules(newkeys);
-        if (NS_FAILED(rv)) return rv;
+        Propagate(aSource, aProperty, aNewTarget, newkeys);
+        FireNewlyMatchedRules(newkeys);
     }
 
     // Synchronize any of the content model that may have changed.
-    rv = SynchronizeAll(aSource, aProperty, aOldTarget, aNewTarget);
-    if (NS_FAILED(rv)) return rv;
-
+    SynchronizeAll(aSource, aProperty, aOldTarget, aNewTarget);
     return NS_OK;
 }
 
