@@ -135,7 +135,6 @@ LIBS			= \
 			$(PROFILER_LIBS) \
 			$(NULL)
 
-MOTIF_LIBS		= -lviewer_motif_s $(XP_LIBS) $(MOZ_MOTIF_LDFLAGS)
 QT_LIBS			= -lviewer_qt_s $(XP_LIBS) $(MOZ_QT_LDFLAGS)
 XLIB_LIBS		= -lviewer_xlib_s $(XP_LIBS) $(MOZ_XLIB_LDFLAGS)
 GTK_LIBS		= -lviewer_gtk_s -lgtksuperwin $(XP_LIBS) $(MOZ_GTK_LDFLAGS)
@@ -167,7 +166,7 @@ endif
 
 CXXFLAGS		+= $(MOZ_TOOLKIT_REGISTRY_CFLAGS)
 
-GARBAGE			+= $(PROGRAM)_gtk $(PROGRAM)_motif $(PROGRAM)_qt $(PROGRAM)_xlib
+GARBAGE			+= $(PROGRAM)_gtk $(PROGRAM)_qt $(PROGRAM)_xlib
 
 install:: $(PROGRAM) $(srcdir)/mozilla-viewer.sh
 ifneq ($(MOZ_WIDGET_TOOLKIT),os2)
@@ -175,9 +174,6 @@ ifneq ($(MOZ_WIDGET_TOOLKIT),os2)
 endif
 
 unix/gtk/libviewer_gtk_s.a:
-	@$(MAKE) -C $(@D) $(@F)
-
-unix/motif/libviewer_motif_s.a:
 	@$(MAKE) -C $(@D) $(@F)
 
 unix/qt/libviewer_qt_s.a:
@@ -191,10 +187,6 @@ $(PROGRAM)_gtk: $(PROGOBJS) $(EXTRA_DEPS) Makefile Makefile.in unix/gtk/libviewe
 
 	$(MOZ_POST_PROGRAM_COMMAND) $@
 
-$(PROGRAM)_motif: $(PROGOBJS) $(EXTRA_DEPS) Makefile Makefile.in unix/motif/libviewer_motif_s.a
-	$(CCC) $(CXXFLAGS) -o $@ $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(MOTIF_LIBS) $(OS_LIBS) $(PROFILER_LIBS)
-	$(MOZ_POST_PROGRAM_COMMAND) $@
-
 $(PROGRAM)_qt: $(PROGOBJS) $(EXTRA_DEPS) Makefile Makefile.in unix/qt/libviewer_qt_s.a
 	$(CCC) $(CXXFLAGS) -o $@ $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(QT_LIBS) $(OS_LIBS) $(PROFILER_LIBS)
 	$(MOZ_POST_PROGRAM_COMMAND) $@
@@ -205,11 +197,6 @@ $(PROGRAM)_xlib: $(PROGOBJS) $(EXTRA_DEPS) Makefile Makefile.in unix/xlib/libvie
 
 ifdef MOZ_ENABLE_GTK
 install:: $(PROGRAM)_gtk
-	$(INSTALL) -m 555 $< $(DIST)/bin
-endif
-
-ifdef MOZ_ENABLE_MOTIF
-install:: $(PROGRAM)_motif
 	$(INSTALL) -m 555 $< $(DIST)/bin
 endif
 

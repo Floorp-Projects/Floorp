@@ -112,8 +112,4 @@ clean clobber realclean clobber_all::
 	cd $(MKDEPEND_DIR); $(MAKE) $@
 endif
 
-ifdef MOZILLA_DETECT
-clean clobber realclean clobber_all::
-	cd $(MOZILLA_DETECT_DIR); $(MAKE) $@
-endif
 

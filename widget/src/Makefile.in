@@ -47,10 +47,6 @@ ifdef MOZ_ENABLE_GTK2
 DIRS		+= gtk2
 endif
 
-ifdef MOZ_ENABLE_MOTIF
-DIRS		+= motif
-endif
-
 ifdef MOZ_ENABLE_XLIB
 DIRS		+= xlibxtbin
 DIRS		+= xlib
