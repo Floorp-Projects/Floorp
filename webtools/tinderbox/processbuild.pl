@@ -107,7 +107,7 @@ if (defined $startup_buildnames_pat
 # Scrape data
 #   Look for build name in scrapedata.pl.
 require "$tinderbox{tree}/scrapebuilds.pl" if -r "$tinderbox{tree}/scrapebuilds.pl";
-if ($scrape_builds->{$buildname}
+if ($scrape_builds->$tinderbox{$build}
     and $tinderbox{status} eq 'success') {
   system "./scrape.pl $tinderbox{tree} $tinderbox{logfile}";
 }
