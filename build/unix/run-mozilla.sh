@@ -391,6 +391,16 @@ then
         XSUNSMESIZE="512"
         export XSUNTRANSPORT XSUNSMESIZE
 fi
+## Populate XPSERVERLIST if it was not set yet
+if [ "$XPSERVERLIST" = "" ]
+then
+    if [ -f /etc/init.d/xprint ] ; then
+        XPSERVERLIST="`/bin/sh /etc/init.d/xprint get_xpserverlist`"
+        if [ "$XPSERVERLIST" != "" ] ; then
+            export XPSERVERLIST
+        fi
+    fi
+fi
 # Font path for Xft
 FONTCONFIG_PATH="/etc/fonts:${MOZILLA_FIVE_HOME}/res/Xft"
 export FONTCONFIG_PATH
