@@ -322,7 +322,6 @@ profile/pref-migrator/public/Makefile
 profile/pref-migrator/src/Makefile
 profile/pref-migrator/resources/Makefile
 profile/defaults/Makefile
-profile/idlservices/Makefile
 rdf/Makefile
 rdf/base/Makefile
 rdf/base/idl/Makefile
