@@ -45,7 +45,6 @@ public:
     NS_IMETHOD GetURI(nsIURI * *aURL);
     NS_IMETHOD OpenInputStream(PRUint32 startPosition, PRInt32 readCount, nsIInputStream **_retval);
     NS_IMETHOD OpenOutputStream(PRUint32 startPosition, nsIOutputStream **_retval);
-	NS_IMETHOD Open() { return NS_OK; };
     NS_IMETHOD AsyncRead(PRUint32 startPosition, PRInt32 readCount,
                          nsISupports *ctxt,
                          nsIEventQueue *eventQueue,

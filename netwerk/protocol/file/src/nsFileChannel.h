@@ -61,9 +61,6 @@ public:
     /* nsIOutputStream OpenOutputStream (); */
     NS_IMETHOD OpenOutputStream(PRUint32 startPosition, nsIOutputStream **_retval);
 
-    /* No-op */
-    NS_IMETHOD Open() { return NS_OK; }; 
-
     /* void AsyncRead (in unsigned long startPosition, in long readCount, in nsISupports ctxt, in nsIEventQueue eventQueue, in nsIStreamListener listener); */
     NS_IMETHOD AsyncRead(PRUint32 startPosition, PRInt32 readCount, nsISupports *ctxt, nsIEventQueue *eventQueue, nsIStreamListener *listener);
 
