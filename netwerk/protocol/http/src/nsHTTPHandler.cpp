@@ -22,6 +22,7 @@
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *   Christopher Blizzard <blizzard@mozilla.org>
+ *   Darin Fisher <darin@netscape.com>
  */
 
 #include "nspr.h"

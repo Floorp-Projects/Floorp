@@ -20,6 +20,7 @@
  * Original Author: Gagan Saksena <gagan@netscape.com>
  *
  * Contributor(s): 
+ *   Darin Fisher <darin@netscape.com>
  */
 
 #ifndef _nsAuthEngine_h_
