@@ -408,7 +408,7 @@ NS_IMETHODIMP nsBrowserWindow::GetMainWidget(nsIWidget** aMainWidget)
 NS_IMETHODIMP nsBrowserWindow::SetFocus()
 {
    //XXX First Check In
-   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
+   NS_WARNING("Not Yet Implemented");
    return NS_OK;
 }
 
