@@ -31,60 +31,26 @@
 # GPL.
 #
 
-DEPTH	= ../..
-# MODULE	= seccmd
+CORE_DEPTH = ../../..
 
-REQUIRES = nss nspr libdbm
+# MODULE public and private header  directories are implicitly REQUIRED.
+MODULE = nss
 
-DIRS = lib  \
- zlib \
- atob  \
- bltest \
- btoa  \
- certcgi \
- certutil  \
- checkcert  \
- crlutil  \
- dbtest \
- derdump  \
- digest  \
- makepqg  \
- ocspclnt  \
- oidcalc  \
- p7content  \
- p7env  \
- p7sign  \
- p7verify  \
- pk12util \
- pp  \
- rngtest \
- rsaperf \
- sdrtest \
- selfserv  \
- signtool \
- signver \
- shlibsign \
- smimetools  \
- SSLsample \
- ssltap  \
- strsclnt \
- swfort  \
- tstclnt  \
- vfyserv \
- modutil \
- $(NULL)
+DEFINES += -DSHLIB_SUFFIX=\"$(DLL_SUFFIX)\" -DSHLIB_PREFIX=\"$(DLL_PREFIX)\"
 
-TEMPORARILY_DONT_BUILD = \
- $(NULL)
+CSRCS = \
+	shlibsign.c \
+	$(NULL)
 
-# rsaperf  \
-#
-#       needs to look at what needs to happen to make jar build in
-# the binary release environment.
-#
-# perror requires lib/strerror.c which requires the client code installed 
-# to build (requires allxpstr.h)
-#
-DONT_BULD = jar \
- perror \
-$(NULL)
+# headers for the MODULE (defined above) are implicitly required.
+REQUIRES = dbm seccmd
+
+# WINNT uses EXTRA_LIBS as the list of libs to link in.
+# Unix uses     OS_LIBS for that purpose.
+# We can solve this via conditional makefile code, but 
+# can't do this in manifest.mn because OS_ARCH isn't defined there.
+# So, look in the local Makefile for the defines for the list of libs.
+
+PROGRAM = shlibsign
+
+#USE_STATIC_LIBS = 1
