@@ -39,13 +39,7 @@
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIFormControl.h"
 
-static NS_DEFINE_IID(kIWalletServiceIID, NS_IWALLETSERVICE_IID);
-static NS_DEFINE_IID(kIDOMHTMLFormElementIID, NS_IDOMHTMLFORMELEMENT_IID);
-static NS_DEFINE_IID(kIFormSubmitObserverIID, NS_IFORMSUBMITOBSERVER_IID);
-static NS_DEFINE_IID(kIDOMHTMLDocumentIID, NS_IDOMHTMLDOCUMENT_IID);
 static NS_DEFINE_IID(kDocLoaderServiceCID, NS_DOCUMENTLOADER_SERVICE_CID);
-static NS_DEFINE_IID(kIDocumentLoaderIID, NS_IDOCUMENTLOADER_IID);
-
 
 nsWalletlibService::nsWalletlibService()
 {
@@ -197,7 +191,7 @@ void nsWalletlibService::Init()
 
   // Get the global document loader service...  
   rv = nsServiceManager::GetService
-    (kDocLoaderServiceCID, kIDocumentLoaderIID, (nsISupports **)&docLoaderService);
+    (kDocLoaderServiceCID, NS_GET_IID(nsIDocumentLoader), (nsISupports **)&docLoaderService);
   if (NS_SUCCEEDED(rv) && docLoaderService) {
     //Register ourselves as an observer for the new doc loader
     docLoaderService->AddObserver((nsIDocumentLoaderObserver*)this);
