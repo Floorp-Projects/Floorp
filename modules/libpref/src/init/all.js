@@ -29,7 +29,11 @@ config("timebomb.relative_timebomb_secret_name","general.bproxy_cert_digest");
 config("timebomb.relative_timebomb_days",-1);
 config("timebomb.relative_timebomb_warning_days",-1);
 
+// various default search settings
 pref("network.search.url","http://cgi.netscape.com/cgi-bin/url_search.cgi?search=");
+pref("browser.search.opensidebarsearchpanel", true);
+pref("browser.search.powermode", 0);
+
 pref("general.bproxy_cert_digest",0);
 
 pref("keyword.URL", "http://keyword.netscape.com/keyword/");
