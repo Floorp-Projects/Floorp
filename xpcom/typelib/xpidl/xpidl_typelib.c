@@ -24,6 +24,7 @@
 #include "xpidl.h"
 #include <xpt_xdr.h>
 #include <xpt_struct.h>
+#include <time.h>               /* XXX XP? */
 
 struct priv_data {
     XPTHeader *header;
@@ -238,6 +239,7 @@ compare_IDEs(const void *ap, const void *bp)
             return 1;
         }
     }
+    /* these had better not be NULL... */
     return strcmp(a->name, b->name);
 #undef COMPARE
 }
@@ -293,6 +295,7 @@ static gboolean
 pass_1(TreeState *state)
 {
     gboolean ok = FALSE;
+
     if (state->tree) {
         state->priv = calloc(1, sizeof(struct priv_data));
         if (!state->priv)
@@ -314,10 +317,7 @@ pass_1(TreeState *state)
         fprintf(stderr, "found %d interfaces\n", IFACES(state));
 #endif
         HEADER(state) = XPT_NewHeader(IFACES(state));
-        HEADER(state)->annotations =
-            XPT_NewAnnotation(XPT_ANN_LAST | XPT_ANN_PRIVATE,
-                              XPT_NewStringZ("xpidl 0.99.1"),
-                              XPT_NewStringZ("I should put something here."));
+
 
         /* fill IDEs from hash table */
         IFACES(state) = 0;
@@ -332,10 +332,35 @@ pass_1(TreeState *state)
         ok = TRUE;
     } else {
         /* write the typelib */
-        char *data;
-        uint32 len, header_sz;
+        time_t now;
+        char *annotate_val, *data;
+        uint32 i, len, header_sz;
         XPTState *xstate = XPT_NewXDRState(XPT_ENCODE, NULL, 0);
         XPTCursor curs, *cursor = &curs;
+        /* fill in the annotations, listing resolved interfaces in order */
+
+        (void)time(&now);
+        annotate_val = PR_smprintf("Created from %s.idl\nCreation date: %s"
+                                   "Interfaces:",
+                                   state->basename, ctime(&now));
+
+        for (i = 0; i < HEADER(state)->num_interfaces; i++) {
+            XPTInterfaceDirectoryEntry *ide;
+            ide = &HEADER(state)->interface_directory[i];
+            if (ide->interface_descriptor) {
+                annotate_val = PR_sprintf_append(annotate_val, " %s",
+                                                 ide->name);
+                if (!annotate_val)
+                    return FALSE;
+            }
+        }
+
+        HEADER(state)->annotations =
+            XPT_NewAnnotation(XPT_ANN_LAST | XPT_ANN_PRIVATE,
+                              XPT_NewStringZ("xpidl 0.99.9"),
+                              XPT_NewStringZ(annotate_val));
+        PR_smprintf_free(annotate_val);
+
 #ifdef DEBUG_shaver_misc
         fprintf(stderr, "writing the typelib\n");
 #endif
