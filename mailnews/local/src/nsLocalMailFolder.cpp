@@ -1879,6 +1879,11 @@ nsMsgLocalMailFolder::CopyMessages(nsIMsgFolder* srcFolder, nsISupportsArray*
   {
     mCopyState->m_copyingMultipleMessages = PR_TRUE;
     rv = CopyMessagesTo(mCopyState->m_messages, msgWindow, this, isMove);
+    if (NS_FAILED(rv))
+    {
+      NS_ERROR("copy message failed");
+      (void) OnCopyCompleted(srcSupport, PR_FALSE);
+    }
   }
   else
   {
@@ -2790,7 +2795,7 @@ nsresult nsMsgLocalMailFolder::CopyMessagesTo(nsISupportsArray *messages,
    
   nsresult rv;
 
-  nsCOMPtr<nsICopyMessageStreamListener> copyStreamListener = do_CreateInstance(NS_COPYMESSAGESTREAMLISTENER_CONTRACTID);
+  nsCOMPtr<nsICopyMessageStreamListener> copyStreamListener = do_CreateInstance(NS_COPYMESSAGESTREAMLISTENER_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv,rv);
   
   nsCOMPtr<nsICopyMessageListener> copyListener(do_QueryInterface(dstFolder));
@@ -2873,7 +2878,7 @@ nsresult nsMsgLocalMailFolder::CopyMessageTo(nsISupports *message,
   nsXPIDLCString uri;
   srcFolder->GetUriForMsg(msgHdr, getter_Copies(uri));
 
-  nsCOMPtr<nsICopyMessageStreamListener> copyStreamListener = do_CreateInstance(NS_COPYMESSAGESTREAMLISTENER_CONTRACTID);
+  nsCOMPtr<nsICopyMessageStreamListener> copyStreamListener = do_CreateInstance(NS_COPYMESSAGESTREAMLISTENER_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv,rv);
   
   nsCOMPtr<nsICopyMessageListener> copyListener(do_QueryInterface(dstFolder));
