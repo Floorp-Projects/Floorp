@@ -135,7 +135,11 @@ if (!$application) { $application="firefox"; } //Default App is Firefox
 //App_Version
 //Get Max Version for Application Specified
 if (!$app_version) {
-    $sql = "SELECT `major`,`minor`,`release`,`SubVer` FROM `applications` WHERE `AppName` = '$application' ORDER BY `major` DESC, `minor` DESC, `release` DESC, `SubVer` DESC LIMIT 1";
+    $sql = "SELECT `major`,`minor`,`release`,`SubVer` 
+            FROM `applications` 
+            WHERE `AppName` = '$application' 
+            ORDER BY `major` DESC, `minor` DESC, `release` DESC, `SubVer` DESC 
+            LIMIT 1";
     $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
     $row = mysql_fetch_array($sql_result);
         $release = "$row[major].$row[minor]";
@@ -152,7 +156,11 @@ if (!$app_version) {
 
 
 //Check for Internal Versioning for the $app_version
-  $sql = "SELECT `int_version`,`major`,`minor`,`release`,`SubVer` FROM `applications` WHERE `AppName`='$application' AND `int_version` IS NOT NULL ORDER BY `major` DESC, `minor` DESC, `release` DESC, `SubVer` DESC";
+  $sql = "SELECT `int_version`,`major`,`minor`,`release`,`SubVer` 
+          FROM `applications` 
+          WHERE `AppName`='$application' 
+            AND `int_version` IS NOT NULL 
+          ORDER BY `major` DESC, `minor` DESC, `release` DESC, `SubVer` DESC";
   $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
     while ($row = mysql_fetch_array($sql_result)) {
         $release = "$row[major].$row[minor]";

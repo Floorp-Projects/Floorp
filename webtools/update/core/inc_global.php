@@ -40,13 +40,13 @@
 
 //Cache Control Headers
 if ($nocache==TRUE) {
-$expstr = gmdate("D, d M Y H:i:s", time() - 1800) . " GMT";
-header("Expires: $expstr");
-header("Cache-Control: public, max-age=0");
+  $expstr = gmdate("D, d M Y H:i:s", time() - 1800) . " GMT";
+  header("Expires: $expstr");
+  header("Cache-Control: public, max-age=0");
 } else {
-$expstr = gmdate("D, d M Y H:i:s", time() + 1800) . " GMT";
-header("Expires: $expstr");
-header("Cache-Control: public, max-age=1800");
+  $expstr = gmdate("D, d M Y H:i:s", time() + 1800) . " GMT";
+  header("Expires: $expstr");
+  header("Cache-Control: public, max-age=1800");
 }
 
 // ---------------------------
@@ -54,47 +54,52 @@ header("Cache-Control: public, max-age=1800");
 // ---------------------------
 function escape_string($value)
 {
-   // Stripslashes if we need to
-   if (get_magic_quotes_gpc()) {
-       $value = stripslashes($value);
-   }
+  // Stripslashes if we need to
+  if (get_magic_quotes_gpc()) {
+    $value = stripslashes($value);
+  }
 
-   // Quote it if it's not an integer
-   if (!is_numeric($value)) {
-       $value = mysql_real_escape_string($value);
-   }
+  // Quote it if it's not an integer
+  if (!is_numeric($value)) {
+    $value = mysql_real_escape_string($value);
+  }
 
-   return $value;
+  return $value;
 }
 
 
 
 //Remove HTML tags and escape enities from GET/POST vars.
 foreach ($_GET as $key => $val) {
-    $_GET["$key"] = htmlentities(str_replace("\\","",strip_tags($_GET["$key"])));
+  $_GET["$key"] = htmlentities(str_replace("\\","",strip_tags($_GET["$key"])));
 }
 
 foreach ($_POST as $key => $val) {
-    if (!is_array($_POST["$key"])) {
-        $_POST["$key"] = htmlentities(str_replace("\\","",strip_tags($_POST["$key"])));
-    }
+  if (!is_array($_POST["$key"])) {
+    $_POST["$key"] = htmlentities(str_replace("\\","",strip_tags($_POST["$key"])));
+  }
 }
 
 // Bug 250596 Fixes for incoming $_GET variables.
 if ($_GET["application"]) {
-$_GET["application"] = escape_string(strtolower($_GET["application"]));
-$sql = "SELECT AppID FROM  `applications` WHERE `AppName` = '".ucwords(strtolower($_GET["application"]))."' LIMIT 1";
- $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-   if (mysql_num_rows($sql_result)===0) {unset($_GET["application"]);}
+  $_GET["application"] = escape_string(strtolower($_GET["application"]));
+  $sql = "SELECT AppID FROM  `applications`
+          WHERE `AppName` = '".ucwords(strtolower($_GET["application"]))."' 
+          LIMIT 1";
+  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+  if (mysql_num_rows($sql_result)===0) {unset($_GET["application"]);}
 }
 
 
 if ($_GET["category"] AND $_GET["category"] !=="All"
-    AND $_GET["category"] !=="Editors Pick" AND $_GET["category"] !=="Popular"
-    AND $_GET["category"] !=="Top Rated" AND $_GET["category"] !=="Newest") {
-$sql = "SELECT CatName FROM  `categories` WHERE `CatName` = '".escape_string(ucwords(strtolower($_GET["category"])))."' LIMIT 1";
- $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-   if (mysql_num_rows($sql_result)===0) {unset($_GET["category"]);}
+AND $_GET["category"] !=="Editors Pick" AND $_GET["category"] !=="Popular"
+AND $_GET["category"] !=="Top Rated" AND $_GET["category"] !=="Newest") {
+  $sql = "SELECT CatName 
+          FROM `categories` 
+          WHERE `CatName` = '".escape_string(ucwords(strtolower($_GET["category"])))."' 
+          LIMIT 1";
+  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+  if (mysql_num_rows($sql_result)===0) {unset($_GET["category"]);}
 }
 
 if (!is_numeric($_GET["id"])) { unset($_GET["id"]); }
@@ -105,46 +110,46 @@ if (!is_numeric($_GET["numpg"])) { unset($_GET["numpg"]); }
 // page_error() function
 
 function page_error($reason, $custom_message) {
-    global $page_header, $page_footer;
+  global $page_header, $page_footer;
 
-    echo"<TITLE>Mozilla Update :: Error</TITLE>\n";
+  echo"<TITLE>Mozilla Update :: Error</TITLE>\n";
 
-    include"$page_header";
-    echo"<div id=\"mBody\">";
-    echo"<h1>Mozilla Update :: Error</h1>\n";
-    echo"<SPAN style=\"font-size: 12pt\">\n";
-    echo"Mozilla Update has encountered an error and is unable to fulfill your request. Please try your request again later. If the
-    problem continues, please contact the Mozilla Update staff. More information about the error may be found at the end of this
-    message.<BR><BR>
-    Error $reason: $custom_message<BR><BR>
-    &nbsp;&nbsp;&nbsp;<A HREF=\"javascript:history.back()\">&#171;&#171; Go Back to Previous Page</A>";
-    echo"</SPAN>\n";
-    echo"</div>\n";
-    include"$page_footer";
-    echo"</body>\n</html>\n";
-    exit;
+  include"$page_header";
+  echo"<div id=\"mBody\">";
+  echo"<h1>Mozilla Update :: Error</h1>\n";
+  echo"<SPAN style=\"font-size: 12pt\">\n";
+  echo"Mozilla Update has encountered an error and is unable to fulfill your request. Please try your request again later. If the
+       problem continues, please contact the Mozilla Update staff. More information about the error may be found at the end of this
+       message.<BR><BR>
+       Error $reason: $custom_message<BR><BR>
+       &nbsp;&nbsp;&nbsp;<A HREF=\"javascript:history.back()\">&#171;&#171; Go Back to Previous Page</A>";
+  echo"</SPAN>\n";
+  echo"</div>\n";
+  include"$page_footer";
+  echo"</body>\n</html>\n";
+  exit;
 }
 
 function writeFormKey()
 {
-	$sql = "SELECT UserPass FROM userprofiles WHERE UserID = '".$_SESSION["uid"]."'";
-	$res = mysql_query($sql) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-	$row = mysql_fetch_array($res);
-	echo "<input type=\"hidden\" name=\"formkey\" value=\"".md5($row["UserPass"])."\">\n";
+  $sql = "SELECT UserPass FROM userprofiles WHERE UserID = '".$_SESSION["uid"]."'";
+  $res = mysql_query($sql) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+  $row = mysql_fetch_array($res);
+  echo "<input type=\"hidden\" name=\"formkey\" value=\"".md5($row["UserPass"])."\">\n";
 }
 
 function checkFormKey()
 {
-	$key = $_POST["formkey"];
-	$sql = "SELECT UserPass FROM userprofiles WHERE UserID = '".$_SESSION["uid"]."'";
-	$res = mysql_query($sql) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-	$row = mysql_fetch_array($res);
-	if ($key != md5($row["UserPass"]))
-	{
-		echo "<br><font size=+2 color='red'>WARNING: FORMKEY MISMATCH!</font><br>\n";
-		return false;
-	}
-	return true;
+  $key = $_POST["formkey"];
+  $sql = "SELECT UserPass FROM userprofiles WHERE UserID = '".$_SESSION["uid"]."'";
+  $res = mysql_query($sql) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+  $row = mysql_fetch_array($res);
+  if ($key != md5($row["UserPass"]))
+  {
+    echo "<br><font size=+2 color='red'>WARNING: FORMKEY MISMATCH!</font><br>\n";
+    return false;
+  }
+  return true;
 }
 
 // -----------------------------
@@ -153,27 +158,27 @@ function checkFormKey()
 // -----------------------------
 
 function uriparams() {
-    global $app_version, $application, $items_per_page, $category, $OS, $uriparams_skip;
-    $uriparams = "";
+  global $app_version, $application, $items_per_page, $category, $OS, $uriparams_skip;
+  $uriparams = "";
 
-    if ($application and $uriparams_skip !="application") { $uriparams .="application=$application&amp;"; }
-    if ($app_version and $uriparams_skip !="application") { $uriparams .="version=$app_version&amp;"; }
-    if ($OS) { $uriparams .="os=$OS&amp;"; }
-    if ($category and $uriparams_skip !="category") { $uriparams .="category=$category&amp;"; }
-    if ($items_per_page) { $uriparams .="numpg=$items_per_page"; }
-    if (substr($uriparams, -1)==";") {
-        $uriparams = substr($uriparams,0,strlen($uriparams)-5);
-    }
-    return $uriparams;
+  if ($application and $uriparams_skip !="application") { $uriparams .="application=$application&amp;"; }
+  if ($app_version and $uriparams_skip !="application") { $uriparams .="version=$app_version&amp;"; }
+  if ($OS) { $uriparams .="os=$OS&amp;"; }
+  if ($category and $uriparams_skip !="category") { $uriparams .="category=$category&amp;"; }
+  if ($items_per_page) { $uriparams .="numpg=$items_per_page"; }
+  if (substr($uriparams, -1)==";") {
+    $uriparams = substr($uriparams,0,strlen($uriparams)-5);
+  }
+  return $uriparams;
 }
 
 // -----------------------------
 // function installtrigger() -- print installtrigger function for extension/theme installation on page.
-// Usage null uriparams(string functionname) 
+// Usage null uriparams(string functionname)
 // -----------------------------
 
 function installtrigger($functionname) {
-    if ($functionname=="extensions") {
+  if ($functionname=="extensions") {
     echo'
         <script type="text/javascript">
         <!--
@@ -198,7 +203,7 @@ function installtrigger($functionname) {
     ';
 
 
-    } else if ($functionname=="themes") {
+  } else if ($functionname=="themes") {
     echo'
         <script type="text/javascript">
         <!--
@@ -213,7 +218,7 @@ function installtrigger($functionname) {
         -->
         </script>
     ';
-    }
+  }
 }
 
 ?>

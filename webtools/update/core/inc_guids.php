@@ -38,12 +38,10 @@
 
 //Reset GUIDs to something human-readable
 if ($_GET["application"]=="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}") {
-$_GET["application"]="firefox"; 
-
+  $_GET["application"]="firefox";
 } else if ($_GET["application"]=="{3550f703-e582-4d05-9a08-453d09bdfdc6}") {
-$_GET["application"]="thunderbird";
-
+  $_GET["application"]="thunderbird";
 } else if ($_GET["application"]=="{86c18b42-e466-45a9-ae7a-9b95ba6f5640}") {
-$_GET["application"]="mozilla";
+  $_GET["application"]="mozilla";
 }
 ?>

@@ -41,36 +41,43 @@ require"../core/config.php";
 
 
 //Check and see if the CommentID/ID is valid.
-$sql = "SELECT `ID`, `CommentID` FROM `feedback` WHERE `ID` = '".escape_string($_GET[id])."' AND `CommentID`='".escape_string($_GET["commentid"])."' LIMIT 1";
+$sql = "SELECT `ID`, `CommentID` 
+        FROM `feedback` 
+        WHERE `ID` = '".escape_string($_GET[id])."' 
+          AND `CommentID`='".escape_string($_GET["commentid"])."' 
+        LIMIT 1";
 $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_ERROR);
-    if(mysql_num_rows($sql_result)=="0") {
-        unset($_GET["id"],$_GET["commentid"],$id,$commentid);
-    } else {
-        $id = escape_string($_GET["id"]);
-        $commentid = escape_string($_GET["commentid"]);
-    }
+if(mysql_num_rows($sql_result)=="0") {
+  unset($_GET["id"],$_GET["commentid"],$id,$commentid);
+} else {
+  $id = escape_string($_GET["id"]);
+  $commentid = escape_string($_GET["commentid"]);
+}
 
-    //Make Sure action is as expected.
-    if ($_GET["action"]=="report") {
-        $action="yes";
-    }
+//Make Sure action is as expected.
+if ($_GET["action"]=="report") {
+  $action="yes";
+}
 
-    if (!$commentid or !$action ) {
-    //No CommentID / Invalid Action --> Error.
-        page_error("4","No Comment ID or Action is Invalid");
-        exit;
-    }
+if (!$commentid or !$action ) {
+  //No CommentID / Invalid Action --> Error.
+  page_error("4","No Comment ID or Action is Invalid");
+  exit;
+}
 
 //Set Flag on the Comment Record
-    $sql = "UPDATE `feedback` SET `flag`='YES' WHERE `CommentID`='$commentid' LIMIT 1";
-    $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+$sql = "UPDATE `feedback` 
+        SET `flag`='YES' 
+        WHERE `CommentID`='$commentid' 
+        LIMIT 1";
+$sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
 
 
 
 if ($_GET["type"]=="E") {
-    $type="extensions";
+  $type="extensions";
 } else if ($_GET["type"]=="T") {
-    $type="themes";
+  $type="themes";
 }
 
 $return_path="$type/moreinfo.php?id=$id&vid=$vid&".uriparams()."&page=comments&pageid=$_GET[pageid]#$commentid";
@@ -80,6 +87,7 @@ $return_path="$type/moreinfo.php?id=$id&vid=$vid&".uriparams()."&page=comments&p
 <head>
 <title>Mozilla Update :: Report a Comment</title>
 </head>
+ 
 <body>
 <?php
 include"$page_header";

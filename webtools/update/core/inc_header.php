@@ -37,7 +37,7 @@
 // ***** END LICENSE BLOCK *****
 ?>
 
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 	<meta name="keywords" content="mozilla update, mozilla extensions, mozilla plugins, thunderbird themes, thunderbird extensions, firefox extensions, firefox themes,">
 	
 	<link rel="stylesheet" type="text/css" href="/css/print.css" media="print">

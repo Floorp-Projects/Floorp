@@ -44,14 +44,14 @@ $app = strtolower($_GET["application"]);  // Firefox, Thunderbird, Mozilla
 $type = escape_string($_GET["type"]); //E, T, [P]
 $list = ucwords(strtolower($_GET["list"])); // Newest, Updated, [Editors], Popular
 
-$sitetitle = "Mozilla Update";
-$siteicon = "http://www.mozilla.org/images/mozilla-16.png";
-$siteurl = $_SERVER["SERVER_NAME"];
+$sitetitle =       "Mozilla Update";
+$siteicon =        "http://www.mozilla.org/images/mozilla-16.png";
+$siteurl =         $_SERVER["SERVER_NAME"];
 $sitedescription = "the way to keep your mozilla software up-to-date";
-$sitelanguage = "en-US";
-$sitecopyright = "Copyright 2004-2005 The Mozilla Organization";
-$currenttime = gmdate(r);// GMT 
-$rssttl = "120"; //Life of feed in minutes
+$sitelanguage =    "en-US";
+$sitecopyright =   "Copyright 2004-2005 The Mozilla Organization";
+$currenttime =     gmdate(r);// GMT 
+$rssttl =          "120"; //Life of feed in minutes
 
 header("Content-Type: application/xml; charset=utf-8");
 

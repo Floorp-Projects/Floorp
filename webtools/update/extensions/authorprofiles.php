@@ -46,7 +46,10 @@ require"../core/config.php";
 <?php
 //Bookmarking-Friendly Page Title
 $id = escape_string($_GET["id"]);
-$sql = "SELECT  UserName FROM `userprofiles`  WHERE UserID = '$id' LIMIT 1";
+$sql = "SELECT  UserName 
+        FROM `userprofiles`  
+        WHERE UserID = '$id' 
+        LIMIT 1";
 $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
     if (mysql_num_rows($sql_result)===0) {
         $return = page_error("2","Author ID is Invalid or Missing.");
@@ -72,27 +75,34 @@ include"$page_header";
 
 <?php
 $userid = escape_string($_GET["id"]);
- $sql = "SELECT * FROM `userprofiles` WHERE `UserID` = '$userid' LIMIT 1";
- $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-   $row = mysql_fetch_array($sql_result);
-    $userid = $row["UserID"];
-    $username = $row["UserName"];
-    $useremail = $row["UserEmail"];
-    $userwebsite = $row["UserWebsite"];
-    $usermode = $row["UserMode"];
-    $useremailhide = $row["UserEmailHide"];
+$sql = "SELECT * 
+        FROM `userprofiles` 
+        WHERE `UserID` = '$userid' 
+        LIMIT 1";
+$sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+$row = mysql_fetch_array($sql_result);
+$userid = $row["UserID"];
+$username = $row["UserName"];
+$useremail = $row["UserEmail"];
+$userwebsite = $row["UserWebsite"];
+$usermode = $row["UserMode"];
+$useremailhide = $row["UserEmailHide"];
 
-    if ($usermode=="A") {
-        $usermode_text = "Mozilla Update Administrator";
-    } else if ($usermode=="E") {
-        $usermode_text = "Mozilla Update Editor";
-    } else if ($usermode=="U") {
-        $usermode_text = "Extension/Theme Author";
-    }
+if ($usermode=="A") {
+  $usermode_text = "Mozilla Update Administrator";
+} else if ($usermode=="E") {
+  $usermode_text = "Mozilla Update Editor";
+} else if ($usermode=="U") {
+  $usermode_text = "Extension/Theme Author";
+}
 ?>
 
 <h2>Author Profile &#187; <?php echo"$username"; ?></h2>
-<?php if ($usermode_text) { echo"<div style=\"margin-bottom: 5px\"><strong>$usermode_text</strong></div>\n"; } ?>
+<?php
+if ($usermode_text)
+  echo"<div style=\"margin-bottom: 5px\"><strong>$usermode_text</strong></div>\n";
+
+?>
 
 Homepage: <?php 
 if ($userwebsite) {echo"<A HREF=\"$userwebsite\">$userwebsite</A>";
@@ -110,23 +120,28 @@ echo"<A HREF=\"mailto:$useremail\">$useremail</A>";
 &nbsp;<BR>
 <h2>All Extensions and Themes by <?php echo"$username"; ?></h2>
 <?php
-$sql = "SELECT  TM.ID, TM.Type, TM.Name, TM.Description, TM.DateUpdated, TM.TotalDownloads, TU.UserEmail FROM  `main`  TM 
-LEFT JOIN authorxref TAX ON TM.ID = TAX.ID
-INNER JOIN userprofiles TU ON TAX.UserID = TU.UserID
-WHERE TU.UserID = '$userid' AND TM.Type !='P'
-ORDER  BY  `Type` , `Name` ";
- $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-  $numresults = mysql_num_rows($sql_result);
-  while ($row = mysql_fetch_array($sql_result)) {
-
-
-$sql2 = "SELECT `vID`, `Version` FROM `version` WHERE `ID` = '$row[ID]' AND `approved` = 'YES' ORDER BY `Version` ASC LIMIT 1";
- $sql_result2 = mysql_query($sql2, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+$sql = "SELECT  TM.ID, TM.Type, TM.Name, TM.Description,
+                TM.DateUpdated, TM.TotalDownloads, TU.UserEmail 
+        FROM  `main`  TM 
+        LEFT JOIN authorxref TAX ON TM.ID = TAX.ID
+        INNER JOIN userprofiles TU ON TAX.UserID = TU.UserID
+        WHERE TU.UserID = '$userid' AND TM.Type !='P'
+        ORDER  BY  `Type` , `Name` ";
+$sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+$numresults = mysql_num_rows($sql_result);
+while ($row = mysql_fetch_array($sql_result)) {
+  $sql2 = "SELECT `vID`, `Version` 
+           FROM `version` 
+           WHERE `ID` = '$row[ID]' 
+             AND `approved` = 'YES' 
+           ORDER BY `Version` ASC 
+           LIMIT 1";
+  $sql_result2 = mysql_query($sql2, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
   while ($row2 = mysql_fetch_array($sql_result2)) {
-   $vid = $row2["vID"];
-   $version = $row2["Version"];
+    $vid = $row2["vID"];
+    $version = $row2["Version"];
 
-$v++;
+    $v++;
     $id = $row["ID"];
     $type = $row["Type"];
     $name = $row["Name"];
@@ -137,27 +152,27 @@ $v++;
     $authors = $row["UserEmail"];
     $downloadcount = $row["TotalDownloads"];
 
-	$day=substr($dateupdated,8,2);  //get the day
-    $month=substr($dateupdated,5,2); //get the month
-    $year=substr($dateupdated,0,4); //get the year
-    $hour=substr($dateupdated,11,2); //get the hour
-    $minute=substr($dateupdated,14,2); //get the minute
-    $second=substr($dateupdated,17,2); //get the sec
+    $day = substr($dateupdated,8,2);      //get the day
+    $month = substr($dateupdated,5,2);    //get the month
+    $year = substr($dateupdated,0,4);     //get the year
+    $hour = substr($dateupdated,11,2);    //get the hour
+    $minute = substr($dateupdated,14,2);  //get the minute
+    $second = substr($dateupdated,17,2);  //get the sec
     $timestamp = strtotime("$year-$month-$day $hour:$minute:$second");
     $dateupdated = gmdate("F d, Y g:i:sa", $timestamp); //gmdate("F d, Y", $dutimestamp);
 
-                if ($type=="E") {
-                    $typename = "extensions";
-                } else if ($type=="T") {
-                    $typename = "themes";
-                }
+    if ($type == "E") {
+      $typename = "extensions";
+    } else if ($type == "T") {
+      $typename = "themes";
+    }
 
-echo"<h3><A HREF=\"/$typename/moreinfo.php?".uriparams()."&amp;id=$id\">$name</A></h3>";
-echo"$description<br>\n";
-}
+    echo"<h3><A HREF=\"/$typename/moreinfo.php?".uriparams()."&amp;id=$id\">$name</A></h3>";
+    echo"$description<br>\n";
+  }
 }
 if ($numresults=="0") {
-echo"No Extensions or Themes in the Database for $username";
+  echo"No Extensions or Themes in the Database for $username";
 }
 ?>
 </DIV>

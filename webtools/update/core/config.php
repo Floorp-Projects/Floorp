@@ -41,27 +41,40 @@
 
 
 // MySQL Server Configuration Variables
-include"dbconfig.php"; // Include Database Server Configuration File
+include "dbconfig.php"; // Include Database Server Configuration File
 
 // General Website Configuration Variables
-$websitepath = "/opt/update-beta";                 // Local Path to Site Files
-$repositorypath = "/opt/update-beta/files/";        //Path to XPI/JAR Respository
-$sitehostname = $_SERVER["SERVER_NAME"]; // DNS Hostname, ex. "update.mozilla.org"
-$ftpurl = "http://ftp.mozilla.org/pub/mozilla.org"; // URL to FTP site
+
+// Local Path to Site Files
+$websitepath =    "/opt/update-beta";
+
+// Path to XPI/JAR Respository
+$repositorypath = "/opt/update-beta/files/";
+
+// DNS Hostname, ex. "update.mozilla.org"
+$sitehostname =   $_SERVER["SERVER_NAME"];
+
+// URL to FTP site
+$ftpurl =         "http://ftp.mozilla.org/pub/mozilla.org";
 
 // Page Header and Footer Path Variables
-$page_header = "$websitepath/core/inc_header.php";  // Path to Page Header on Disk
-$page_footer = "$websitepath/core/inc_footer.php";  // Path to Page Footer on Disk
+
+// Path to Page Header on Disk
+$page_header = "$websitepath/core/inc_header.php";
+
+// Path to Page Footer on Disk
+$page_footer = "$websitepath/core/inc_footer.php";
 
 //Function: getmicrotime() - Page Load Timing Debug Function
 function getmicrotime() {
-	list($usec, $sec) = explode(" ", microtime());
-    return ((float)$usec + (float)$sec);
+  list($usec, $sec) = explode(" ", microtime());
+
+  return ((float)$usec + (float)$sec);
 }
 $time_start = getmicrotime();
 
 // Update Core Include Files
-include"inc_guids.php"; // GUID --> AppName Handler
-include"inc_global.php"; // Global Functions - Variable Cleanup
-include"inc_browserdetection.php"; //Browser Detection - App Variable Handling
+include "inc_guids.php"; // GUID --> AppName Handler
+include "inc_global.php"; // Global Functions - Variable Cleanup
+include "inc_browserdetection.php"; //Browser Detection - App Variable Handling
 ?>
