@@ -375,9 +375,8 @@ int main(int argc, char **argv)
     // ensure strict file permissions
     umask(0077);
 
-#ifdef DEBUG
     IPC_InitLog("###");
-#endif
+
     LOG(("daemon started...\n"));
 
     //XXX uncomment these lines to test slow starting daemon

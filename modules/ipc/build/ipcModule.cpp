@@ -49,6 +49,7 @@
 //-----------------------------------------------------------------------------
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(ipcService, Init)
 
+#if 0
 NS_METHOD
 ipcServiceRegisterProc(nsIComponentManager *aCompMgr,
                        nsIFile *aPath,
@@ -81,6 +82,7 @@ ipcServiceUnregisterProc(nsIComponentManager *aCompMgr,
                                     IPC_SERVICE_CONTRACTID, PR_TRUE);
     return NS_OK;
 }
+#endif
 
 #ifdef XP_UNIX
 #include "ipcSocketProviderUnix.h"
@@ -96,9 +98,11 @@ static const nsModuleComponentInfo components[] = {
   { IPC_SERVICE_CLASSNAME,
     IPC_SERVICE_CID,
     IPC_SERVICE_CONTRACTID,
-    ipcServiceConstructor,
+    ipcServiceConstructor },
+    /*
     ipcServiceRegisterProc,
     ipcServiceUnregisterProc },
+    */
 #ifdef XP_UNIX
   { IPC_SOCKETPROVIDER_CLASSNAME,
     IPC_SOCKETPROVIDER_CID,

@@ -298,9 +298,8 @@ ReleaseLock()
 int
 main(int argc, char **argv)
 {
-#ifdef DEBUG
     IPC_InitLog("###");
-#endif
+
     LOG(("daemon started...\n"));
 
     if (!AcquireLock())

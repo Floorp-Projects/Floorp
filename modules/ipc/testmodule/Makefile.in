@@ -45,7 +45,6 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= testmodule
 LIBRARY_NAME	= testmodule
 EXPORT_LIBRARY = 1
-IS_COMPONENT	= 1
 MODULE_NAME	= testmodule
 REQUIRES	= xpcom \
 		  ipc \

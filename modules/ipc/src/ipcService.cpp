@@ -106,9 +106,7 @@ ipcService::ipcService()
 {
     NS_INIT_ISUPPORTS();
 
-#ifdef DEBUG
     IPC_InitLog(">>>");
-#endif
 }
 
 ipcService::~ipcService()
