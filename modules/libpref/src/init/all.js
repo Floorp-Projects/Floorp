@@ -219,11 +219,17 @@ pref("capability.policy.default.navigator.preference.write", "UniversalPreferenc
 pref("capability.policy.default.windowinternal.close", "allAccess");
 pref("capability.policy.default.windowinternal.location.write", "allAccess");
 
+pref("capability.policy.mailnews.sites", "mailbox: imap: news: pop: pop3:");
+
+pref("capability.policy.mailnews.domexception.tostring", "noAccess");
+pref("capability.policy.mailnews.htmldocument.domain", "noAccess");
+pref("capability.policy.mailnews.htmldocument.url", "noAccess");
+pref("capability.policy.mailnews.nsdocument.location", "noAccess");
+pref("capability.policy.mailnews.window.name.write", "noAccess");
+pref("capability.policy.mailnews.windowinternal.location", "noAccess");
+
 // window.openDialog is insecure and must be made inaccessible from web scripts - see bug 56009
 pref("capability.policy.default.windowinternal.opendialog", "noAccess");
-
-pref("capability.policy.mailnews.sites", "mailbox: imap: news: pop: pop3:");
-pref("capability.policy.mailnews.window.name", "noAccess");
 
 localDefPref("ghist.expires.pos",          4);
 localDefPref("ghist.expires.width",        1400);
