@@ -799,7 +799,7 @@ nsBaseIBFrame::ComputeFinalSize(nsBlockReflowState& aState,
 {
   // XXX handle floater problems this way...
   PRBool isFixedWidth = aState.HaveFixedContentWidth();
-  PRBool isFixedHeight = NS_AUTOHEIGHT != aState.computedHeight;
+  PRBool isFixedHeight = aState.HaveFixedContentHeight();
 
 #if 0
   if (NS_BODY_SHRINK_WRAP & mFlags) {

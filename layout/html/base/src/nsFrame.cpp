@@ -1493,7 +1493,8 @@ NS_IMETHODIMP nsFrame::IsPercentageBase(PRBool& aBase) const
     const nsStyleDisplay* display;
     GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
     if ((display->mDisplay == NS_STYLE_DISPLAY_BLOCK) || 
-        (display->mDisplay == NS_STYLE_DISPLAY_LIST_ITEM)) {
+        (display->mDisplay == NS_STYLE_DISPLAY_LIST_ITEM) ||
+        (display->mDisplay == NS_STYLE_DISPLAY_TABLE_CELL)) {
       aBase = PR_TRUE;
     }
     else {

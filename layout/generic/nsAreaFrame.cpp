@@ -546,33 +546,22 @@ nsAreaFrame::ReflowAbsoluteItems(nsIPresContext& aPresContext,
 #endif
 
     if (placeFrame || reflowFrame) {
-      // Get the rect for the absolutely positioned element
-      nsRect  rect;
-      ComputeAbsoluteFrameBounds(aPresContext, absoluteFrame, aReflowState,
-                                 position, rect);
-  
       nsIHTMLReflow*  htmlReflow;
       if (NS_OK == absoluteFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
         htmlReflow->WillReflow(aPresContext);
-        absoluteFrame->MoveTo(rect.x, rect.y);
-
-        if (reflowFrame) {
-          // Resize reflow the absolutely positioned element
-          nsSize  availSize(rect.width, rect.height);
-      
-          if (NS_STYLE_OVERFLOW_VISIBLE == display->mOverflow) {
-            // Don't constrain the height since the container should be enlarged
-            // to contain overflowing frames
-            availSize.height = NS_UNCONSTRAINEDSIZE;
-          }
-      
-          nsHTMLReflowMetrics desiredSize(nsnull);
-          nsHTMLReflowState   reflowState(aPresContext, absoluteFrame,
-                                          aReflowState, availSize,
-                                          reflowReason);
-          nsReflowStatus      status;
-          htmlReflow->Reflow(aPresContext, desiredSize, reflowState, status);
         
+        if (reflowFrame) {
+          nsSize              availSize(aReflowState.computedWidth, NS_UNCONSTRAINEDSIZE);
+          nsHTMLReflowMetrics kidDesiredSize(nsnull);
+          nsHTMLReflowState   kidReflowState(aPresContext, absoluteFrame,
+                                             aReflowState, availSize,
+                                             reflowReason);
+          nsReflowStatus      status;
+          // XXX Temporary hack until the block/inline code starts using 'computedWidth'
+          kidReflowState.availableWidth = kidReflowState.computedWidth;
+          htmlReflow->Reflow(aPresContext, kidDesiredSize, kidReflowState, status);
+        
+#if 0
           // Figure out what size to actually use. If we let the child choose its
           // size, then use what the child requested. Otherwise, use the value
           // specified in the style information
@@ -587,6 +576,11 @@ nsAreaFrame::ReflowAbsoluteItems(nsIPresContext& aPresContext,
                (NS_STYLE_OVERFLOW_VISIBLE == display->mOverflow))) {
             rect.height = desiredSize.height;
           }
+#else
+          nsRect  rect(kidReflowState.computedOffsets.left + kidReflowState.computedLeftMargin,
+                       kidReflowState.computedOffsets.top + kidReflowState.computedTopMargin,
+                       kidDesiredSize.width, kidDesiredSize.height);
+#endif
           absoluteFrame->SetRect(rect);
         }
       }

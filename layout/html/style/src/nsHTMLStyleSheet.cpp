@@ -1840,7 +1840,7 @@ HTMLStyleSheetImpl::ConstructFrameByDisplayType(nsIPresContext*       aPresConte
     isAbsolutelyPositioned = PR_TRUE;
 
     // Create an area frame
-    NS_NewAreaFrame(aNewFrame, NS_BLOCK_SHRINK_WRAP);
+    NS_NewAreaFrame(aNewFrame, 0);
     aNewFrame->Init(*aPresContext, aContent, aAbsoluteItems.containingBlock,
                     aParentFrame, aStyleContext);
 

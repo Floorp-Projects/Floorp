@@ -23,6 +23,8 @@
 #include "nsIHTMLReflow.h"
 #include "nsIContent.h"
 #include "nsHTMLAtoms.h"
+#include "nsIPresContext.h"
+#include "nsIPresShell.h"
 
 PRBool
 nsHTMLReflowState::HaveFixedContentWidth() const
@@ -199,7 +201,7 @@ nsHTMLReflowState::CalculateLeftRightMargin(const nsHTMLReflowState* aContaining
       if (availMarginSpace <= 0) {
         aComputedLeftMargin = aComputedRightMargin = 0;
       } else {
-        aComputedLeftMargin = (availMarginSpace + 1) / 2;
+        aComputedLeftMargin = availMarginSpace / 2;
         aComputedRightMargin = availMarginSpace - aComputedLeftMargin;
       }
     } else {
@@ -208,6 +210,229 @@ nsHTMLReflowState::CalculateLeftRightMargin(const nsHTMLReflowState* aContaining
 
   } else if (isAutoRightMargin) {
     aComputedRightMargin = PR_MAX(0, availMarginSpace - aComputedLeftMargin);
+  }
+}
+
+void
+nsHTMLReflowState::InitAbsoluteConstraints(nsIPresContext& aPresContext,
+                                           const nsHTMLReflowState* cbrs,
+                                           const nsStylePosition* aPosition,
+                                           nscoord containingBlockWidth,
+                                           nscoord containingBlockHeight)
+{
+  const nsStyleSpacing* spacing;
+  frame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct*&)spacing);
+  const nsStyleDisplay* display;
+  frame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
+
+  // If any of the offsets are 'auto', then get the placeholder frame and compute
+  // its origin relative to the containing block
+  nsPoint placeholderOffset(0, 0);
+  if ((eStyleUnit_Auto == aPosition->mOffset.GetLeftUnit()) ||
+      (eStyleUnit_Auto == aPosition->mOffset.GetTopUnit()) ||
+      (eStyleUnit_Auto == aPosition->mOffset.GetRightUnit()) ||
+      (eStyleUnit_Auto == aPosition->mOffset.GetBottomUnit())) {
+    
+    // Get the placeholder frame
+    nsIFrame*     placeholderFrame;
+    nsIPresShell* presShell = aPresContext.GetShell();
+
+    presShell->GetPlaceholderFrameFor(frame, placeholderFrame);
+    NS_RELEASE(presShell);
+    NS_ASSERTION(nsnull != placeholderFrame, "no placeholder frame");
+    if (nsnull != placeholderFrame) {
+      placeholderFrame->GetOrigin(placeholderOffset);
+
+      nsIFrame* parent;
+      placeholderFrame->GetGeometricParent(parent);
+      while ((nsnull != parent) && (parent != cbrs->frame)) {
+        nsPoint origin;
+
+        parent->GetOrigin(origin);
+        placeholderOffset += origin;
+        parent->GetGeometricParent(parent);
+      }
+    }
+  }
+
+  // Compute border and padding
+  nsMargin borderPadding;
+  ComputeBorderPaddingFor(frame, parentReflowState, borderPadding);
+
+  nsStyleUnit widthUnit = aPosition->mWidth.GetUnit();
+  nsStyleUnit heightUnit = aPosition->mHeight.GetUnit();
+
+  // Initialize the 'left' and 'right' computed offsets
+  PRBool        leftIsAuto = PR_FALSE, rightIsAuto = PR_FALSE;
+  nsStyleCoord  coord;
+  if (eStyleUnit_Auto == aPosition->mOffset.GetLeftUnit()) {
+    if (NS_STYLE_DIRECTION_LTR == display->mDirection) {
+      computedOffsets.left = placeholderOffset.x;
+    } else {
+      computedOffsets.left = 0;
+      leftIsAuto = PR_TRUE;
+    }
+  } else {
+    ComputeHorizontalValue(containingBlockWidth, aPosition->mOffset.GetLeftUnit(),
+                           aPosition->mOffset.GetLeft(coord),
+                           computedOffsets.left);
+  }
+  if (eStyleUnit_Auto == aPosition->mOffset.GetRightUnit()) {
+    if (NS_STYLE_DIRECTION_RTL == display->mDirection) {
+      computedOffsets.right = placeholderOffset.x;
+    } else {
+      computedOffsets.right = 0;
+      rightIsAuto = PR_TRUE;
+    }
+  } else {
+    ComputeHorizontalValue(containingBlockWidth, aPosition->mOffset.GetRightUnit(),
+                           aPosition->mOffset.GetRight(coord),
+                           computedOffsets.right);
+  }
+
+  // Calculate the computed width
+  if (eStyleUnit_Auto == widthUnit) {
+    // Any remaining 'auto' values for 'left', 'right', 'margin-left', or
+    // 'margin-right' are replaced with 0 (their default value)
+    computedWidth = containingBlockWidth - computedOffsets.left -
+      computedLeftMargin - borderPadding.left - borderPadding.right -
+      computedRightMargin - computedOffsets.right;
+
+  } else {
+    // Use the specified value for the computed width
+    ComputeHorizontalValue(containingBlockWidth, widthUnit, aPosition->mWidth,
+                           computedWidth);
+
+    if (leftIsAuto) {
+      // Any 'auto' on 'margin-left' or 'margin-right' are replaced with 0
+      // (their default value)
+      computedOffsets.left = containingBlockWidth - computedLeftMargin -
+        borderPadding.left - computedWidth - borderPadding.right -
+        computedRightMargin - computedOffsets.right;
+
+    } else if (rightIsAuto) {
+      // Any 'auto' on 'margin-left' or 'margin-right' are replaced with 0
+      // (their default value)
+      computedOffsets.right = containingBlockWidth - computedOffsets.left -
+        computedLeftMargin - borderPadding.left - computedWidth -
+        borderPadding.right - computedRightMargin;
+
+    } else {
+      // All that's left to solve for are 'auto' values for 'margin-left' and
+      // 'margin-right'
+      if ((eStyleUnit_Auto == spacing->mMargin.GetLeftUnit()) ||
+          (eStyleUnit_Auto == spacing->mMargin.GetRightUnit())) {
+
+        nscoord availMarginSpace = containingBlockWidth - computedOffsets.left -
+          borderPadding.left - computedWidth - borderPadding.right -
+          computedOffsets.right;
+
+        if (availMarginSpace > 0) {
+          if (eStyleUnit_Auto == spacing->mMargin.GetLeftUnit()) {
+            if (eStyleUnit_Auto == spacing->mMargin.GetRightUnit()) {
+              // Both 'margin-left' and 'margin-right' are 'auto', so they get
+              // equal values
+              computedLeftMargin = availMarginSpace / 2;
+              computedRightMargin = availMarginSpace - computedLeftMargin;
+            } else {
+              computedLeftMargin = availMarginSpace;
+            }
+          } else {
+            computedRightMargin = availMarginSpace;
+          }
+        }
+      }
+    }
+  }
+
+  // Initialize the 'top' and 'bottom' computed offsets
+  PRBool  bottomIsAuto = PR_FALSE;
+  if (eStyleUnit_Auto == aPosition->mOffset.GetTopUnit()) {
+    // Use the placeholder position
+    computedOffsets.top = placeholderOffset.y;
+  } else {
+    nsStyleCoord  coord;
+    ComputeVerticalValue(containingBlockHeight, aPosition->mOffset.GetTopUnit(),
+                         aPosition->mOffset.GetTop(coord), computedOffsets.top);
+  }
+  if (eStyleUnit_Auto == aPosition->mOffset.GetBottomUnit()) {
+    if (eStyleUnit_Auto == heightUnit) {
+      computedOffsets.bottom = 0;        
+    } else {
+      bottomIsAuto = PR_TRUE;
+    }
+  } else {
+    nsStyleCoord  coord;
+    ComputeVerticalValue(containingBlockHeight, aPosition->mOffset.GetBottomUnit(),
+                         aPosition->mOffset.GetBottom(coord), computedOffsets.bottom);
+  }
+
+  // Check for a percentage based height and a containing block height
+  // that depends on its content height, i.e., not explicitly specified
+  if (eStyleUnit_Percent == heightUnit) {
+    if (NS_AUTOHEIGHT == containingBlockHeight) {
+      // Interpret the height like 'auto'
+      heightUnit = eStyleUnit_Auto;
+    }
+  }
+
+  // Calculate the computed height
+  if (eStyleUnit_Auto == heightUnit) {
+    // Any 'auto' on 'margin-top' or 'margin-bottom' are replaced with 0
+    // (their default value)
+    if (NS_FRAME_IS_REPLACED(frameType)) {
+      computedHeight = NS_INTRINSICSIZE;
+    } else {
+      // If the containing block's height was not explicitly specified (i.e.,
+      // it depends on its content height), then so does our height
+      if (NS_AUTOHEIGHT == containingBlockHeight) {
+        computedHeight = NS_AUTOHEIGHT;
+
+      } else {
+        computedHeight = containingBlockHeight - computedOffsets.top - 
+          computedTopMargin - borderPadding.top - borderPadding.bottom -
+          computedBottomMargin - computedOffsets.bottom;
+      }
+    }
+  } else {
+    // Use the specified value for the computed height
+    ComputeVerticalValue(containingBlockHeight, heightUnit, aPosition->mHeight,
+                         computedHeight);
+
+    if (NS_AUTOHEIGHT != containingBlockHeight) {
+      if (bottomIsAuto) {
+        // Any 'auto' on 'margin-top' or 'margin-bottom' are replaced with 0
+        computedOffsets.bottom = containingBlockHeight - computedOffsets.top -
+          computedTopMargin - borderPadding.top - computedHeight -
+          borderPadding.bottom - computedBottomMargin;
+  
+      } else {
+        // All that's left to solve for are 'auto' values for 'margin-top' and
+        // 'margin-bottom'
+        if ((eStyleUnit_Auto == spacing->mMargin.GetTopUnit()) ||
+            (eStyleUnit_Auto == spacing->mMargin.GetBottomUnit())) {
+  
+          nscoord availMarginSpace = containingBlockHeight - computedOffsets.top -
+            borderPadding.top - computedHeight - borderPadding.bottom -
+            computedOffsets.bottom;
+  
+          if (availMarginSpace > 0) {
+            if (eStyleUnit_Auto == spacing->mMargin.GetTopUnit()) {
+              if (eStyleUnit_Auto == spacing->mMargin.GetBottomUnit()) {
+                // Both 'margin-top' and 'margin-bottom' are 'auto', so they get
+                // equal values
+                computedTopMargin = availMarginSpace / 2;
+                computedBottomMargin = availMarginSpace - computedTopMargin;
+              } else {
+                computedTopMargin = availMarginSpace;
+              }
+            } else {
+              computedBottomMargin = availMarginSpace;
+            }
+          }
+        }
+      }
+    }
   }
 }
 
@@ -273,11 +498,19 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
       containingBlockWidth = availableWidth;
     }
 
-    // Check for a percentage based height
+    // Check for a percentage based width and an unconstrained containing
+    // block width
+    if (eStyleUnit_Percent == widthUnit) {
+      if (NS_UNCONSTRAINEDSIZE == cbrs->computedWidth) {
+        // Interpret the width like 'auto'
+        widthUnit = eStyleUnit_Auto;
+      }
+    }
+    // Check for a percentage based height and a containing block height
+    // that depends on the content height
     if (eStyleUnit_Percent == heightUnit) {
-      // If the height of the containing block depends on the content height,
-      // the height is interpreted like 'auto'
       if (NS_AUTOHEIGHT == cbrs->computedHeight) {
+        // Interpret the height like 'auto'
         heightUnit = eStyleUnit_Auto;
       }
     }
@@ -331,13 +564,16 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
       }
 
       if (eStyleUnit_Auto == widthUnit) {
-        // Compute border and padding
-        nsMargin borderPadding;
-        ComputeBorderPaddingFor(frame, parentReflowState, borderPadding);
+        computedWidth = availableWidth;
 
-        // Internal table elements don't have margins, but they have border
-        // and padding
-        computedWidth = availableWidth - borderPadding.left - borderPadding.right;
+        if (computedWidth != NS_UNCONSTRAINEDSIZE) {
+          // Internal table elements don't have margins, but they have border
+          // and padding
+          nsMargin borderPadding;
+          ComputeBorderPaddingFor(frame, parentReflowState, borderPadding);
+          computedWidth -= borderPadding.left + borderPadding.right;
+        }
+      
       } else {
         ComputeHorizontalValue(containingBlockWidth, widthUnit, pos->mWidth,
                                computedWidth);
@@ -356,8 +592,12 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
                              computedHeight);
       }
 
+    } else if (NS_FRAME_GET_TYPE(frameType) == NS_CSS_FRAME_TYPE_ABSOLUTE) {
+      InitAbsoluteConstraints(aPresContext, cbrs, pos, containingBlockWidth,
+                              containingBlockHeight);
+    
     } else {
-      // Block-level elements and absolutely positioned elements
+      // Block-level elements
       const nsStyleSpacing* spacing;
       frame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct*&)spacing);
 
@@ -373,11 +613,16 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
           computedWidth = NS_INTRINSICSIZE;
 
         } else {
-          // Block-level non-replaced element in the flow. 'auto' values for
-          // margin-left and margin-right become 0 and the sum of the areas must
-          // equal the width of the containing block
-          computedWidth = containingBlockWidth - computedLeftMargin - computedRightMargin -
-                          borderPadding.left - borderPadding.right;
+          // Block-level non-replaced element in the flow
+          if (NS_UNCONSTRAINEDSIZE == containingBlockWidth) {
+            computedWidth = NS_UNCONSTRAINEDSIZE;
+          } else {
+            // Block-level non-replaced element in the flow. 'auto' values for
+            // margin-left and margin-right become 0 and the sum of the areas must
+            // equal the width of the containing block
+            computedWidth = containingBlockWidth - computedLeftMargin - computedRightMargin -
+                            borderPadding.left - borderPadding.right;
+          }
         }
         
       } else {
