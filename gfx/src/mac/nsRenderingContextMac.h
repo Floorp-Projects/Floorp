@@ -115,6 +115,19 @@ public:
   //locals
   NS_IMETHOD CommonInit(void);
   NS_IMETHOD SetClipRectInPixels(const nsRect& aRect, nsClipCombine aCombine, PRBool &aClipEmpty);
+
+protected:
+  GrafPtr mOldPort;
+  inline void	StartDraw()
+  				{
+					::GetPort(&mOldPort);
+					::SetPort(mCurrentBuffer);
+  				}
+
+  inline void	EndDraw()
+  				{
+					::SetPort(mOldPort);
+  				}
 	
 protected:
   float             		mP2T; // Pixel to Twip conversion factor
@@ -125,7 +138,8 @@ protected:
   
   nsIDeviceContext			*mContext;
   
-  nsDrawingSurfaceMac		mFrontBuffer;      // current buffer to draw into
+  nsDrawingSurfaceMac		mFrontBuffer;      // screen port
+  nsDrawingSurfaceMac		mCurrentBuffer;    // current buffer to draw into (= mCurStatePtr->mRenderingSurface)
   
   // cps - Wierd hack
   Rect						mMacScreenPortRelativeRect;
