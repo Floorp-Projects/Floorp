@@ -1897,6 +1897,7 @@ nsXULElement::GetListenerManager(nsIEventListenerManager** aResult)
                                                 kIEventListenerManagerIID,
                                                 getter_AddRefs(mListenerManager));
         if (NS_FAILED(rv)) return rv;
+        mListenerManager->SetListenerTarget(NS_STATIC_CAST(nsIStyledContent*, this));
     }
 
     *aResult = mListenerManager;
@@ -2243,6 +2244,8 @@ nsXULElement::SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aCompileE
           nsDoc->SetBoxObjectFor(domElement, nsnull);
         }
 
+        if (mListenerManager)
+          mListenerManager->SetListenerTarget(nsnull);
         mListenerManager = nsnull;
 
         mDocument = aDocument; // not refcounted
