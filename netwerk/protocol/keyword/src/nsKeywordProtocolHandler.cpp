@@ -144,6 +144,7 @@ NS_IMETHODIMP
 nsKeywordProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
                                    nsILoadGroup *aGroup,
                                    nsIEventSinkGetter* eventSinkGetter,
+                                   nsIURI* aOriginalURI,
                                    nsIChannel* *result) {
     nsresult rv;
 
@@ -163,7 +164,7 @@ nsKeywordProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
     NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    return serv->NewChannelFromURI(verb, uri, aGroup, eventSinkGetter, result);    
+    return serv->NewChannelFromURI(verb, uri, aGroup, eventSinkGetter, aOriginalURI, result);    
 }
 
 ////////////////////////////////////////////////////////////////////////////////
