@@ -127,8 +127,8 @@ public:
     NS_IMETHOD FindGroup(const char* name, nsINNTPNewsgroup* *_retval);
     NS_IMETHOD AddGroup(const char *groupname, nsINNTPNewsgroup **_retval);
     
-    NS_IMETHOD RemoveGroup(const char *groupName);
-    /*	NS_IMETHOD RemoveGroup(nsINNTPNewsgroup*); */
+    NS_IMETHOD RemoveGroupByName(const char *groupName);
+    NS_IMETHOD RemoveGroup(nsINNTPNewsgroup*);
     
     
 
@@ -139,7 +139,7 @@ public:
        stuff with a type of xpXoverCache. */
     NS_IMETHOD GetDbDirName(char * *aDbDirName);
     /* helper for internal accesses - part of the Pre-Mozilla API) */
-    char *GetDBDirName();
+    const char *GetDBDirName();
 
     /* Returns a list of newsgroups.  The result
        must be free'd using PR_Free(); the
@@ -1602,10 +1602,11 @@ nsNNTPHost::AddGroup(const char *groupName,
 	// no need to diddle folder pane for new categories.
 	needpaneupdate = m_hostinfo && !group->IsCategory();
 
-	newsInfo = FindGroup(groupName);
-	if (newsInfo) {	// seems to be already added
+    nsresult rv;
+    rv = FindGroup(groupName, &newsInfo);
+	if (NS_SUCCEEDED(rv)) {	// seems to be already added
 		if (!newsInfo->IsSubscribed()) {
-			newsInfo->Subscribe(PR_TRUE);
+			newsInfo->SetSubscribed(PR_TRUE);
 			XPPtrArray* infolist = (XPPtrArray*) m_hostinfo->GetSubFolders();
 			// don't add it if it's already in the list!
 			if (infolist->FindIndex(0, newsInfo) == -1)
@@ -1624,9 +1625,13 @@ nsNNTPHost::AddGroup(const char *groupName,
 			// groups are added at end so look there first...
 			newsInfo = (nsINNTPNewsgroup *)
 				m_groups->GetAt(m_groups->GetSize() - 1);
-			if (PL_strcmp(newsInfo->GetNewsgroupName(), groupName)) {
-				newsInfo = FindGroup(groupName);
-				PR_ASSERT(newsInfo);
+
+            char *newsgroupName;
+            rv = newsInfo->GetName(&newsgroupName);
+			if (NS_SUCCEEDED(rv) &&
+                PL_strcmp(newsgroupName, groupName)) {
+				rv = FindGroup(groupName, &newsInfo);
+				PR_ASSERT(NS_SUCCEEDED(rv));
 			}
 		}
 		PR_Free(groupLine);
@@ -1646,8 +1651,12 @@ nsNNTPHost::AddGroup(const char *groupName,
 			if (!child) break;
 			char* fullname = child->GetFullName();
 			if (!fullname) break;
-			nsINNTPNewsgroup* info = FindGroup(fullname);
-			if (info) {
+            
+			nsINNTPNewsgroup* info;
+            nsresult rv;
+            
+            rv = FindGroup(fullname, &info);
+			if (NS_SUCCEEDED(rv)) {
 				if (!info->IsSubscribed()) {
 					info->Subscribe(PR_TRUE);
 				}
@@ -1669,18 +1678,24 @@ nsNNTPHost::AddGroup(const char *groupName,
 			newsInfo->SetFlag(MSG_FOLDER_FLAG_ELIDED);
 			MSG_FolderInfoCategoryContainer *catContainer =
 				(MSG_FolderInfoCategoryContainer *) newsInfo;
+#ifdef HAVE_MASTER
 			catContainer->BuildCategoryTree(catContainer, groupName, group,
-											2, m_master);
+											);
+#endif
 		}
 	}
 	else if (group->IsCategory() && categoryContainer)
 	{
+#ifdef HAVE_MASTER
 		categoryContainer->AddToCategoryTree(categoryContainer, groupName, group, m_master);
+#endif
 	}
 
+#ifdef HAVE_MASTER
 	if (needpaneupdate && newsInfo)
 		m_master->BroadcastFolderAdded (newsInfo);
-
+#endif
+    
 	MarkDirty();
 
 DONE:
@@ -1728,24 +1743,29 @@ nsINNTPNewsgroup *nsNNTPHost::SwitchCategoryContainerToNews(MSG_FolderInfoCatego
 	return retInfo;
 }
 
-void nsNNTPHost::RemoveGroup (nsINNTPNewsgroup *newsInfo)
+nsresult
+nsNNTPHost::RemoveGroup (nsINNTPNewsgroup *newsInfo)
 {
 	if (newsInfo && newsInfo->IsSubscribed()) 
 	{
 		newsInfo->Subscribe(PR_FALSE);
+#ifdef HAVE_MASTER
 		m_master->BroadcastFolderDeleted (newsInfo);
+#endif
 		XPPtrArray* infolist = (XPPtrArray*) m_hostinfo->GetSubFolders();
 		infolist->Remove(newsInfo);
 	}
 }
 
-void
-nsNNTPHost::RemoveGroup(const char* groupName)
+nsresult
+nsNNTPHost::RemoveGroupByName(const char* groupName)
 {
 	nsINNTPNewsgroup *newsInfo = NULL;
 
-	newsInfo = FindGroup(groupName);
+    nsresult rv = FindGroup(groupName, &newsInfo);
 	RemoveGroup (newsInfo);
+
+    return NS_OK;
 }
 
 
@@ -1826,7 +1846,10 @@ nsNNTPHost::GetFirstGroupNeedingCounts()
 		nsINNTPNewsgroup* info = (nsINNTPNewsgroup*) ((*m_groups)[i]);
 		if (info->GetWantNewTotals() && info->IsSubscribed()) {
 			info->SetWantNewTotals(PR_FALSE);
-			return PL_strdup(info->GetNewsgroupName());
+            char *newsgroupName;
+            nsresult rv = info->GetName(&newsgroupName);
+			if (NS_SUCCEEDED(rv))
+                return PL_strdup(newsgroupName);
 		}
 	}
 	return NULL;
@@ -1871,7 +1894,8 @@ PRBool nsNNTPHost::NeedsExtension (const char * /*extension*/)
 	return needed;
 }
 
-void nsNNTPHost::AddExtension (const char *ext)
+nsresult
+nsNNTPHost::AddExtension (const char *ext)
 {
 	if (!QueryExtension(ext))
 	{
@@ -1881,15 +1905,20 @@ void nsNNTPHost::AddExtension (const char *ext)
 	}
 }
 
-PRBool nsNNTPHost::QueryExtension (const char *ext)
+nsresult
+nsNNTPHost::QueryExtension (const char *ext, PRBool *retval)
 {
+    *retval = PR_FALSE;
 	for (int i = 0; i < m_supportedExtensions.GetSize(); i++)
-		if (!PL_strcmp(ext, (char*) m_supportedExtensions.GetAt(i)))
-			return PR_TRUE;
-	return PR_FALSE;
+		if (!PL_strcmp(ext, (char*) m_supportedExtensions.GetAt(i))) {
+			*retval=PR_TRUE;
+            return NS_OK;
+        }
+	return NS_OK;
 }
 
-void nsNNTPHost::AddSearchableGroup (const char *group)
+nsresult
+nsNNTPHost::AddSearchableGroup (const char *group)
 {
 	if (!QuerySearchableGroup(group))
 	{
@@ -1921,7 +1950,7 @@ PRBool nsNNTPHost::QuerySearchableGroup (const char *group)
 			return PR_TRUE; // everything is searchable
 		else if (NULL != (starInSearchableGroup = PL_strchr(searchableGroup, '*')))
 		{
-			if (!XP_STRNCASECMP(group, searchableGroup, PL_strlen(searchableGroup)-2))
+			if (!PL_strncasecmp(group, searchableGroup, PL_strlen(searchableGroup)-2))
 				return PR_TRUE; // this group is in a searchable hierarchy
 		}
 		else if (!PL_strcasecmp(group, searchableGroup))
@@ -1949,7 +1978,7 @@ nsNNTPHost::QuerySearchableGroupCharsets(const char *group)
 			gotGroup = PR_TRUE; // everything is searchable
 		else if (NULL != (starInSearchableGroup = PL_strchr(searchableGroup, '*')))
 		{
-			if (!XP_STRNCASECMP(group, searchableGroup, PL_strlen(searchableGroup)-2))
+			if (!PL_strncasecmp(group, searchableGroup, PL_strlen(searchableGroup)-2))
 				gotGroup = PR_TRUE; // this group is in a searchable hierarchy
 		}
 		else if (!PL_strcasecmp(group, searchableGroup))
@@ -1965,7 +1994,8 @@ nsNNTPHost::QuerySearchableGroupCharsets(const char *group)
 	return result;
 }
 
-void nsNNTPHost::AddSearchableHeader (const char *header)
+nsresult
+nsNNTPHost::AddSearchableHeader (const char *header)
 {
 	if (!QuerySearchableHeader(header))
 	{
@@ -1975,15 +2005,20 @@ void nsNNTPHost::AddSearchableHeader (const char *header)
 	}
 }
 
-PRBool nsNNTPHost::QuerySearchableHeader(const char *header)
+nsresult
+nsNNTPHost::QuerySearchableHeader(const char *header, PRBool *retval)
 {
+    *retval=PR_FALSE;
 	for (int i = 0; i < m_searchableHeaders.GetSize(); i++)
-		if (!XP_STRNCASECMP(header, (char*) m_searchableHeaders.GetAt(i), PL_strlen(header)))
-			return PR_TRUE;
-	return PR_FALSE;
+		if (!PL_strncasecmp(header, (char*) m_searchableHeaders.GetAt(i), PL_strlen(header))) {
+			*retval = PR_TRUE;
+            return NS_OK;
+        }
+	return NS_OK;
 }
 
-void nsNNTPHost::AddPropertyForGet (const char *property, const char *value)
+nsresult
+nsNNTPHost::AddPropertyForGet (const char *property, const char *value)
 {
 	char *tmp = NULL;
 	
@@ -1994,14 +2029,20 @@ void nsNNTPHost::AddPropertyForGet (const char *property, const char *value)
 	tmp = PL_strdup(value);
 	if (tmp)
 		m_valuesForGet.Add (tmp);
+    return NULL;
 }
 
-const char *nsNNTPHost::QueryPropertyForGet (const char *property)
+nsresult
+nsNNTPHost::QueryPropertyForGet (const char *property, const char *retval)
 {
+    *retval=NULL;
 	for (int i = 0; i < m_propertiesForGet.GetSize(); i++)
-		if (!PL_strcasecmp(property, (const char *) m_propertiesForGet.GetAt(i)))
-			return (const char *) m_valuesForGet.GetAt(i);
-	return NULL;
+		if (!PL_strcasecmp(property, (const char *) m_propertiesForGet.GetAt(i))) {
+            *retval = (const char *) m_valuesForGet.GetAt(i);
+			return NS_OK;
+        }
+    
+	return NS_OK;
 }
 
 
@@ -2613,7 +2654,11 @@ void nsNNTPHost::GroupNotFound(const char *groupName, PRBool opening)
 			}
 		}
 		else if (newsInfo)
+#ifdef HAVE_MASTER
 			m_master->BroadcastFolderDeleted (newsInfo);
+#else
+            ;
+#endif
 
 		if (newsInfo)
 		{
