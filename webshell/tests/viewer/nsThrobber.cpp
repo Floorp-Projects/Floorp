@@ -200,7 +200,7 @@ nsThrobber::~nsThrobber()
 
 NS_IMPL_ISUPPORTS(nsThrobber, kIImageObserverIID)
 
-NS_IMETHODIMP
+nsresult
 nsThrobber::Init(nsIWidget* aParent, const nsRect& aBounds, const nsString& aFileNameMask, PRInt32 aNumImages)
 {
   mWidth     = aBounds.width;
@@ -216,7 +216,7 @@ nsThrobber::Init(nsIWidget* aParent, const nsRect& aBounds, const nsString& aFil
   return LoadThrobberImages(aFileNameMask, aNumImages);
 }
 
-NS_IMETHODIMP
+nsresult
 nsThrobber::MoveTo(PRInt32 aX, PRInt32 aY)
 {
   NS_PRECONDITION(nsnull != mWidget, "no widget");
@@ -224,28 +224,28 @@ nsThrobber::MoveTo(PRInt32 aX, PRInt32 aY)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsThrobber::Show()
 {
   mWidget->Show(PR_TRUE);
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsThrobber::Hide()
 {
   mWidget->Show(PR_FALSE);
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsThrobber::Start()
 {
   mRunning = PR_TRUE;
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsThrobber::Stop()
 {
   mRunning = PR_FALSE;
