@@ -50,11 +50,11 @@ interface nsIDOMXULElement : nsIDOMElement
                                                  in nsIDOMElement element);
   void                      removeBroadcastListener(in DOMString attr,
                                                     in nsIDOMElement element);
-  void                      doCommand();
 
   void                      focus();
   void                      blur();
   void                      click();
+  void                      command();
 
   nsIDOMNodeList            getElementsByAttribute(in DOMString name,
                                                    in DOMString value);

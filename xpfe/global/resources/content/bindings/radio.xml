@@ -120,6 +120,7 @@
               break;
             }
           }
+          this.selectedItem.command();
         ]]>
         </body>
       </method>
@@ -133,7 +134,7 @@
 
          ]]>
       </handler>
-      
+
       <handler event="mousedown" button="0">
         <![CDATA[
             if (event.target.localName == "radio" && !event.target.disabled)
