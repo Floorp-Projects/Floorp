@@ -27,6 +27,7 @@ include $(topsrcdir)/config/rules.mk
 FILES = \
 	history.xul	\
 	history.css	\
+	history.js	\
 	history-test.xul	\
 	history-test.js		\
 	$(NULL)
