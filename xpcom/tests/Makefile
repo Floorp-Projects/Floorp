@@ -1,4 +1,3 @@
-#!gmake
 #
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "NPL"); you may not use this file except in
@@ -15,37 +14,29 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-DEPTH=../..
+DEPTH		= ../..
 
-include $(DEPTH)/config/config.mk
+DIRS		= dynamic
 
-CFLAGS += -DUSE_NSREG 
-
-CPPSRCS = \
-	RegFactory.cpp \
-	TestFactory.cpp	\
-	$(NULL)
-
-INCLUDES=-I../src -I$(DIST)/include
-
-DIRS = dynamic 
-
-EX_LIBS = \
-	$(DIST)/bin/libreg.$(DLL_SUFFIX)	\
-	$(DIST)/bin/libxpcom.$(DLL_SUFFIX)	\
-	$(DIST)/lib/libplc21.a	\
-	$(DIST)/lib/libplds21.a	\
-	$(DIST)/lib/libnspr21.a	\
-	$(NULL)
-
-PROGS	= $(addprefix $(OBJDIR)/, $(CPPSRCS:.cpp=))
-
-NON_DIRS = $(PROGS)
-TARGETS = $(NON_DIRS)
+CPPSRCS		= RegFactory.cpp TestFactory.cpp
 
 include $(DEPTH)/config/rules.mk
 
-ifeq ($(OS_TARGET),Rhapsody)
+CFLAGS		+= -DUSE_NSREG
+INCLUDES	= -I../src -I$(DIST)/include
+
+EX_LIBS		= $(DIST)/lib/libxpcom.$(LIB_SUFFIX) \
+		  $(DIST)/lib/libreg.$(LIB_SUFFIX) \
+		  $(DIST)/lib/libplc21.$(LIB_SUFFIX) \
+		  $(DIST)/lib/libplds21.$(LIB_SUFFIX) \
+		  $(DIST)/lib/libnspr21.$(LIB_SUFFIX) \
+		  $(NULL)
+
+PROGS		= $(addprefix $(OBJDIR)/, $(CPPSRCS:.cpp=))
+
+TARGETS		= $(PROGS)
+
+ifeq ($(OS_ARCH),Rhapsody)
 $(PROGS):$(OBJDIR)/%: $(OBJDIR)/%.o $(EX_LIBS)
 	@$(MAKE_OBJDIR)
 	$(CC) -o $@ $@.o $(LDFLAGS) $(EX_LIBS) $(OS_LIBS)
