@@ -262,7 +262,7 @@ public abstract class IdScriptable extends ScriptableObject
                         int nameSlot = (id  - 1) * SLOT_SPAN + NAME_SLOT;
                         String name = (String)valueArray[nameSlot];
                         if (names == null) {
-                            names = new Object[maxId - 1];
+                            names = new Object[maxId];
                         }
                         names[count++] = name;
                     }
