@@ -24,7 +24,9 @@
  *   Brian Ryner <bryner@netscape.com>
  *   Terry Hayes <thayes@netscape.com>
  */
+#ifdef MOZ_LOGGING
 #define FORCE_PR_LOG
+#endif
 
 #include "nspr.h"
 #include "prlog.h"
