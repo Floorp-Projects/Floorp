@@ -46,6 +46,19 @@ public:
   nsCString		     mInitialURL;
 };
 
+/* signals */
+
+enum {
+  LOAD_START,
+  LOAD_PROGRESS,
+  LOAD_COMPLETE,
+  LAST_SIGNAL
+};
+
+static guint moz_embed_signals[LAST_SIGNAL] = { 0 };
+
+/* class and instance initialization */
+
 static void
 gtk_moz_embed_class_init(GtkMozEmbedClass *klass);
 
@@ -145,13 +158,11 @@ gtk_moz_embed_class_init(GtkMozEmbedClass *klass)
     {
       // create the event queue
       rv = eventQService->CreateThreadEventQueue();
-      if (!NS_SUCCEEDED(rv))
-	g_print("Warning: Could not create the event queue for the the thread");
+      g_return_if_fail(NS_SUCCEEDED(rv));
 
       nsIEventQueue *eventQueue;
-      rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, &eventQueue);
-      if (!NS_SUCCEEDED(rv))
-	g_print("Warning: Could not create the thread event queue\n");
+     rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, &eventQueue);
+      g_return_if_fail(NS_SUCCEEDED(rv));
 
       gdk_input_add(eventQueue->GetEventQueueSelectFD(),
 		    GDK_INPUT_READ,
@@ -172,9 +183,12 @@ gtk_moz_embed_init(GtkMozEmbed *embed)
   embed_private = new GtkMozEmbedPrivate();
   // create an nsIWebBrowser object
   embed_private->webBrowser = do_CreateInstance(kWebBrowserCID);
+  g_return_if_fail(embed_private->webBrowser);
   // create our glue widget
   GtkMozEmbedChrome *chrome = new GtkMozEmbedChrome();
+  g_return_if_fail(chrome);
   embed_private->embed = do_QueryInterface((nsISupports *)(nsIGtkEmbed *) chrome);
+  g_return_if_fail(embed_private->embed);
   // we haven't created our superwin yet
   embed_private->superwin = NULL;
   // hide it
@@ -184,8 +198,7 @@ gtk_moz_embed_init(GtkMozEmbed *embed)
 		     GTK_SIGNAL_FUNC(gtk_moz_embed_handle_show), NULL);
   // get our hands on the browser chrome
   nsCOMPtr<nsIWebBrowserChrome> browserChrome = do_QueryInterface(embed_private->embed);
-  if (!browserChrome)
-    g_print("Warning: Failed to QI embed window to nsIWebBrowserChrome\n");
+  g_return_if_fail(browserChrome);
   // set the toplevel window
   embed_private->webBrowser->SetTopLevelWindow(browserChrome);
   // set the widget as the owner of the object
@@ -221,8 +234,7 @@ gtk_moz_embed_load_url(GtkWidget *widget, const char *url)
   }
 
   nsCOMPtr<nsIWebNavigation> navigation = do_QueryInterface(embed_private->webBrowser);
-  if (!navigation)
-    g_print("Warning: failed to QI webBrowser to nsIWebNavigation\n");
+  g_return_if_fail(navigation);
   nsString URLString;
   URLString.SetString(url);
   navigation->LoadURI(URLString.GetUnicode());
@@ -278,6 +290,7 @@ gtk_moz_embed_realize(GtkWidget *widget)
 
   // init our window
   nsCOMPtr<nsIBaseWindow> webBrowserBaseWindow = do_QueryInterface(embed_private->webBrowser);
+  g_return_if_fail(webBrowserBaseWindow);
   webBrowserBaseWindow->InitWindow(embed_private->superwin, NULL, 0, 0,
 				   widget->allocation.width, widget->allocation.height);
   webBrowserBaseWindow->Create();
@@ -293,6 +306,7 @@ gtk_moz_embed_realize(GtkWidget *widget)
   // set our webBrowser object as the content listener object
   nsCOMPtr<nsIURIContentListener> uriListener;
   uriListener = do_QueryInterface(embed_private->embed);
+  g_return_if_fail(uriListener);
   embed_private->webBrowser->SetParentURIContentListener(uriListener);
 
   // If an initial url was stored, load it
