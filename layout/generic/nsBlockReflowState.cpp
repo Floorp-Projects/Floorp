@@ -313,7 +313,9 @@ public:
 
   nsresult StyleChangedReflow(nsBlockReflowState& aState);
 
+#if 0
   nsresult FindTextRuns(nsBlockReflowState& aState);
+#endif
 
   nsresult ChildIncrementalReflow(nsBlockReflowState& aState);
 
@@ -326,11 +328,11 @@ public:
 
   PRBool ReflowLine(nsBlockReflowState& aState,
                     LineData* aLine,
-                    nsInlineReflowStatus& aReflowResult);
+                    nsReflowStatus& aReflowResult);
 
   PRBool PlaceLine(nsBlockReflowState& aState,
                    LineData* aLine,
-                   nsInlineReflowStatus aReflowStatus);
+                   nsReflowStatus aReflowStatus);
 
   void FindFloaters(LineData* aLine);
 
@@ -339,7 +341,7 @@ public:
   PRBool ReflowInlineFrame(nsBlockReflowState& aState,
                            LineData* aLine,
                            nsIFrame* aFrame,
-                           nsInlineReflowStatus& aResult);
+                           nsReflowStatus& aResult);
 
   nsresult SplitLine(nsBlockReflowState& aState,
                      LineData* aLine,
@@ -349,13 +351,13 @@ public:
   PRBool ReflowBlockFrame(nsBlockReflowState& aState,
                           LineData* aLine,
                           nsIFrame* aFrame,
-                          nsInlineReflowStatus& aResult);
+                          nsReflowStatus& aResult);
 
   PRBool PullFrame(nsBlockReflowState& aState,
                    LineData* aToLine,
                    LineData** aFromList,
                    PRBool aUpdateGeometricParent,
-                   nsInlineReflowStatus&  aResult);
+                   nsReflowStatus& aResult);
 
   void PushLines(nsBlockReflowState& aState);
 
@@ -401,13 +403,10 @@ public:
 
 //----------------------------------------------------------------------
 
-class BulletFrame : public nsFrame, private nsIInlineReflow {
+class BulletFrame : public nsFrame {
 public:
   BulletFrame(nsIContent* aContent, nsIFrame* aParentFrame);
   virtual ~BulletFrame();
-
-  // nsISupports
-  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
 
   // nsIFrame
   NS_IMETHOD DeleteFrame(nsIPresContext& aPresContext);
@@ -417,12 +416,15 @@ public:
   NS_IMETHOD ListTag(FILE* out) const;
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
 
-  // nsIInlineReflow
+  // nsIHTMLReflow
+#if 0
   NS_IMETHOD FindTextRuns(nsLineLayout& aLineLayout,
                           nsIReflowCommand* aReflowCommand);
-  NS_IMETHOD InlineReflow(nsLineLayout& aLineLayout,
-                          nsHTMLReflowMetrics& aMetrics,
-                          const nsHTMLReflowState& aReflowState);
+#endif
+  NS_IMETHOD Reflow(nsIPresContext& aPresContext,
+                    nsHTMLReflowMetrics& aMetrics,
+                    const nsHTMLReflowState& aReflowState,
+                    nsReflowStatus& aStatus);
 
   void SetListItemOrdinal(nsBlockReflowState& aBlockState);
 
@@ -446,20 +448,6 @@ BulletFrame::BulletFrame(nsIContent* aContent, nsIFrame* aParentFrame)
 
 BulletFrame::~BulletFrame()
 {
-}
-
-NS_IMETHODIMP
-BulletFrame::QueryInterface(REFNSIID aIID, void** aInstancePtrResult)
-{
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null pointer");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(kIInlineReflowIID)) {
-    *aInstancePtrResult = (void*) ((nsIInlineReflow*)this);
-    return NS_OK;
-  }
-  return nsFrame::QueryInterface(aIID, aInstancePtrResult);
 }
 
 NS_IMETHODIMP
@@ -840,12 +828,13 @@ BulletFrame::GetDesiredSize(nsIPresContext*  aCX,
 }
 
 NS_IMETHODIMP
-BulletFrame::InlineReflow(nsLineLayout& aLineLayout,
-                          nsHTMLReflowMetrics& aMetrics,
-                          const nsHTMLReflowState& aReflowState)
+BulletFrame::Reflow(nsIPresContext& aPresContext,
+                    nsHTMLReflowMetrics& aMetrics,
+                    const nsHTMLReflowState& aReflowState,
+                    nsReflowStatus& aStatus)
 {
   // Get the base size
-  GetDesiredSize(&aLineLayout.mPresContext, aReflowState, aMetrics);
+  GetDesiredSize(&aPresContext, aReflowState, aMetrics);
 
   // Add in the border and padding; split the top/bottom between the
   // ascent and descent to make things look nice
@@ -862,9 +851,11 @@ BulletFrame::InlineReflow(nsLineLayout& aLineLayout,
     aMetrics.maxElementSize->width = aMetrics.width;
     aMetrics.maxElementSize->height = aMetrics.height;
   }
-  return NS_FRAME_COMPLETE;
+  aStatus = NS_FRAME_COMPLETE;
+  return NS_OK;
 }
 
+#if 0
 NS_IMETHODIMP
 BulletFrame::FindTextRuns(nsLineLayout& aLineLayout,
                           nsIReflowCommand* aReflowCommand)
@@ -872,6 +863,7 @@ BulletFrame::FindTextRuns(nsLineLayout& aLineLayout,
   aLineLayout.EndTextRun();
   return NS_OK;
 }
+#endif
 
 //----------------------------------------------------------------------
 
@@ -2105,11 +2097,13 @@ nsBlockFrame::AppendNewFrames(nsIPresContext& aPresContext,
 nsresult
 nsBlockFrame::InitialReflow(nsBlockReflowState& aState)
 {
+#if 0
   // Generate text-run information
   nsresult rv = FindTextRuns(aState);
   if (NS_OK != rv) {
     return rv;
   }
+#endif
 
   // Reflow everything
   aState.GetAvailableSpace();
@@ -2163,11 +2157,13 @@ nsBlockFrame::FrameAppendedReflow(nsBlockReflowState& aState)
   // impacted line will be marked dirty
   AppendNewFrames(aState.mPresContext, firstAppendedFrame);
 
+#if 0
   // Generate text-run information
   rv = FindTextRuns(aState);
   if (NS_OK != rv) {
     return rv;
   }
+#endif
 
   // Recover our reflow state
   LineData* firstDirtyLine = mLines;
@@ -2221,6 +2217,7 @@ nsBlockFrame::FrameAppendedReflow(nsBlockReflowState& aState)
   return ReflowLinesAt(aState, firstDirtyLine);
 }
 
+#if 0
 // XXX keep the text-run data in the first-in-flow of the block
 nsresult
 nsBlockFrame::FindTextRuns(nsBlockReflowState& aState)
@@ -2268,6 +2265,7 @@ nsBlockFrame::FindTextRuns(nsBlockReflowState& aState)
 
   return NS_OK;
 }
+#endif
 
 nsresult
 nsBlockFrame::FrameInsertedReflow(nsBlockReflowState& aState)
@@ -2432,12 +2430,14 @@ nsBlockFrame::FrameRemovedReflow(nsBlockReflowState& aState)
 nsresult
 nsBlockFrame::ChildIncrementalReflow(nsBlockReflowState& aState)
 {
+#if 0
   // Generate text-run information; this will also "fluff out" any
   // inline children's frame tree.
   nsresult rv = FindTextRuns(aState);
   if (NS_OK != rv) {
     return rv;
   }
+#endif
 
   // XXX temporary
   aState.GetAvailableSpace();
@@ -2475,7 +2475,7 @@ nsBlockFrame::ReflowLinesAt(nsBlockReflowState& aState, LineData* aLine)
 {
   // Reflow the lines that are already ours
   while (nsnull != aLine) {
-    nsInlineReflowStatus rs;
+    nsReflowStatus rs;
     if (!ReflowLine(aState, aLine, rs)) {
       if (NS_IS_REFLOW_ERROR(rs)) {
         return nsresult(rs);
@@ -2543,7 +2543,7 @@ nsBlockFrame::ReflowLinesAt(nsBlockReflowState& aState, LineData* aLine)
 
     // Now reflow it and any lines that it makes during it's reflow.
     while (nsnull != aLine) {
-      nsInlineReflowStatus rs;
+      nsReflowStatus rs;
       if (!ReflowLine(aState, aLine, rs)) {
         if (NS_IS_REFLOW_ERROR(rs)) {
           return nsresult(rs);
@@ -2566,7 +2566,7 @@ nsBlockFrame::ReflowLinesAt(nsBlockReflowState& aState, LineData* aLine)
 PRBool
 nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
                          LineData* aLine,
-                         nsInlineReflowStatus& aReflowResult)
+                         nsReflowStatus& aReflowResult)
 {
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
      ("nsBlockFrame::ReflowLine: line=%p", aLine));
@@ -2868,7 +2868,7 @@ PRBool
 nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
                                LineData* aLine,
                                nsIFrame* aFrame,
-                               nsInlineReflowStatus& aReflowResult)
+                               nsReflowStatus& aReflowResult)
 {
   NS_PRECONDITION(0 == aState.mLineLayout.GetPlacedFrames(),
                   "non-empty line with a block");
@@ -2993,7 +2993,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
                                                 aFrame,
                                                 nextInFlow);
     if (NS_OK != rv) {
-      aReflowResult = nsInlineReflowStatus(rv);
+      aReflowResult = rv;
       return PR_FALSE;
     }
     if (nsnull != nextInFlow) {
@@ -3003,7 +3003,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
                                     (LINE_IS_BLOCK |
                                      LINE_LAST_CONTENT_IS_COMPLETE));
       if (nsnull == line) {
-        aReflowResult = nsInlineReflowStatus(NS_ERROR_OUT_OF_MEMORY);
+        aReflowResult = NS_ERROR_OUT_OF_MEMORY;
         return PR_FALSE;
       }
       line->mNext = aLine->mNext;
@@ -3031,7 +3031,7 @@ PRBool
 nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
                                 LineData* aLine,
                                 nsIFrame* aFrame,
-                                nsInlineReflowStatus& aReflowResult)
+                                nsReflowStatus& aReflowResult)
 {
   nsresult rv;
   nsIFrame* nextInFlow;
@@ -3064,7 +3064,7 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
     rv = nsHTMLContainerFrame::CreateNextInFlow(aState.mPresContext,
                                                 this, aFrame, nextInFlow);
     if (NS_OK != rv) {
-      aReflowResult = nsInlineReflowStatus(rv);
+      aReflowResult = rv;
       return PR_FALSE;
     }
     if (nsnull != nextInFlow) {
@@ -3088,7 +3088,7 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
                                                     this, aFrame,
                                                     nextInFlow);
         if (NS_OK != rv) {
-          aReflowResult = nsInlineReflowStatus(rv);
+          aReflowResult = rv;
           return PR_FALSE;
         }
         if (nsnull != nextInFlow) {
@@ -3106,7 +3106,7 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
   // Split line since we aren't going to keep going
   rv = SplitLine(aState, aLine, aFrame, lineWasComplete);
   if (NS_IS_REFLOW_ERROR(rv)) {
-    aReflowResult = nsInlineReflowStatus(rv);
+    aReflowResult = rv;
   }
   return PR_FALSE;
 }
@@ -3167,7 +3167,7 @@ nsBlockFrame::PullFrame(nsBlockReflowState& aState,
                         LineData* aLine,
                         LineData** aFromList,
                         PRBool aUpdateGeometricParent,
-                        nsInlineReflowStatus& aReflowResult)
+                        nsReflowStatus& aReflowResult)
 {
   LineData* fromLine = *aFromList;
   NS_ASSERTION(nsnull != fromLine, "bad line to pull from");
@@ -3250,7 +3250,7 @@ nsBlockFrame::PullFrame(nsBlockReflowState& aState,
 PRBool
 nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
                         LineData* aLine,
-                        nsInlineReflowStatus aReflowStatus)
+                        nsReflowStatus aReflowStatus)
 {
   // Align the children. This also determines the actual height and
   // width of the line.
@@ -3352,13 +3352,14 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
       nsSize availSize;
       availSize.width = NS_UNCONSTRAINEDSIZE;
       availSize.height = NS_UNCONSTRAINEDSIZE;
-      nsHTMLReflowState reflowState(mBullet, aState, availSize);
+      nsHTMLReflowState reflowState(mBullet, aState, availSize, &aState.mLineLayout);
       nsHTMLReflowMetrics metrics(nsnull);
-      nsIInlineReflow* iir;
-      if (NS_OK == mBullet->QueryInterface(kIInlineReflowIID, (void**) &iir)) {
-        mBullet->WillReflow(aState.mPresContext);
-        iir->InlineReflow(aState.mLineLayout, metrics, reflowState);
-        mBullet->DidReflow(aState.mPresContext, NS_FRAME_REFLOW_FINISHED);
+      nsIHTMLReflow* htmlReflow;
+      if (NS_OK == mBullet->QueryInterface(kIHTMLReflowIID, (void**) &htmlReflow)) {
+        nsReflowStatus  status;
+        htmlReflow->WillReflow(aState.mPresContext);
+        htmlReflow->Reflow(aState.mPresContext, metrics, reflowState, status);
+        htmlReflow->DidReflow(aState.mPresContext, NS_FRAME_REFLOW_FINISHED);
       }
 
       // Place the bullet now

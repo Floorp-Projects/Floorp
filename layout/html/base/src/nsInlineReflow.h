@@ -20,11 +20,10 @@
 #define nsInlineReflow_h___
 
 #include "nsIFrame.h"
-#include "nsIInlineReflow.h"
+#include "nsIHTMLReflow.h"
 
 class nsFrameReflowState;
 class nsHTMLContainerFrame;
-class nsIRunaround;
 class nsLineLayout;
 struct nsStyleDisplay;
 struct nsStylePosition;
@@ -50,7 +49,7 @@ public:
 
   void UpdateBand(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
 
-  nsInlineReflowStatus ReflowFrame(nsIFrame* aFrame);
+  nsReflowStatus ReflowFrame(nsIFrame* aFrame);
 
   void VerticalAlignFrames(nsRect& aLineBox);
 
@@ -102,11 +101,11 @@ protected:
 
   PRBool ReflowFrame(nsHTMLReflowMetrics& aMetrics,
                      nsRect& aBounds,
-                     nsInlineReflowStatus& aStatus);
+                     nsReflowStatus& aStatus);
 
   PRBool CanPlaceFrame(nsHTMLReflowMetrics& aMetrics,
                        nsRect& aBounds,
-                       nsInlineReflowStatus& aStatus);
+                       nsReflowStatus& aStatus);
 
   void PlaceFrame(nsHTMLReflowMetrics& aMetrics, nsRect& aBounds);
 

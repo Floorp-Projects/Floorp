@@ -26,7 +26,6 @@ extern const nsIID kIAbsoluteItemsIID;
 extern const nsIID kIAnchoredItemsIID;
 extern const nsIID kIFloaterContainerIID;
 extern const nsIID kIHTMLContentIID;
-extern const nsIID kIInlineReflowIID;
 extern const nsIID kIRunaroundIID;
 extern const nsIID kIHTMLReflowIID;
 

@@ -54,15 +54,11 @@ nsInlineReflowState::~nsInlineReflowState()
 
 //----------------------------------------------------------------------
 
-class nsInlineFrame : public nsHTMLContainerFrame,
-                      public nsIInlineReflow
+class nsInlineFrame : public nsHTMLContainerFrame
 {
 public:
   nsInlineFrame(nsIContent* aContent, nsIFrame* aParent);
   virtual ~nsInlineFrame();
-
-  // nsISupports
-  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
 
   // nsIFrame
   NS_IMETHOD Init(nsIPresContext& aPresContext, nsIFrame* aChildList);
@@ -71,12 +67,15 @@ public:
                                    nsIStyleContext* aStyleContext,
                                    nsIFrame*& aContinuingFrame);
 
-  // nsIInlineReflow
+  // nsIHTMLReflow
+#if 0
   NS_IMETHOD FindTextRuns(nsLineLayout& aLineLayout,
                           nsIReflowCommand* aReflowCommand);
-  NS_IMETHOD InlineReflow(nsLineLayout& aLineLayout,
-                          nsHTMLReflowMetrics& aDesiredSize,
-                          const nsHTMLReflowState& aReflowState);
+#endif
+  NS_IMETHOD Reflow(nsIPresContext& aPresContext,
+                    nsHTMLReflowMetrics& aDesiredSize,
+                    const nsHTMLReflowState& aReflowState,
+                    nsReflowStatus& aStatus);
 
   virtual PRIntn GetSkipSides() const;
 
@@ -93,8 +92,8 @@ public:
   nsresult FrameAppendedReflow(nsInlineReflowState& aState,
                                nsInlineReflow& aInlineReflow);
 
-  nsresult FrameRemovedReflow(nsInlineReflowState& aState,
-                              nsInlineReflow& aInlineReflow);
+  nsReflowStatus FrameRemovedReflow(nsInlineReflowState& aState,
+                                    nsInlineReflow& aInlineReflow);
 
   nsresult ChildIncrementalReflow(nsInlineReflowState& aState,
                                   nsInlineReflow& aInlineReflow);
@@ -108,15 +107,15 @@ public:
 
   PRBool ReflowMapped(nsInlineReflowState& aState,
                       nsInlineReflow& aInlineReflow,
-                      nsInlineReflowStatus& aReflowStatus);
+                      nsReflowStatus& aReflowStatus);
 
   PRBool ReflowFrame(nsInlineReflowState& aState,
                      nsInlineReflow& aInlineReflow,
                      nsIFrame* aFrame,
-                     nsInlineReflowStatus& aReflowStatus);
+                     nsReflowStatus& aReflowStatus);
 
-  nsInlineReflowStatus PullUpChildren(nsInlineReflowState& aState,
-                                      nsInlineReflow& aInlineReflow);
+  nsReflowStatus PullUpChildren(nsInlineReflowState& aState,
+                                nsInlineReflow& aInlineReflow);
 
   nsIFrame* PullOneChild(nsInlineFrame* aNextInFlow,
                          nsIFrame* aLastChild);
@@ -157,20 +156,6 @@ nsInlineFrame::nsInlineFrame(nsIContent* aContent, nsIFrame* aParent)
 
 nsInlineFrame::~nsInlineFrame()
 {
-}
-
-NS_IMETHODIMP
-nsInlineFrame::QueryInterface(REFNSIID aIID, void** aInstancePtrResult)
-{
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null pointer");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(kIInlineReflowIID)) {
-    *aInstancePtrResult = (void*) ((nsIInlineReflow*)this);
-    return NS_OK;
-  }
-  return nsFrame::QueryInterface(aIID, aInstancePtrResult);
 }
 
 PRIntn
@@ -249,7 +234,7 @@ nsInlineFrame::CreateContinuingFrame(nsIPresContext&  aCX,
   return NS_OK;
 }
 
-
+#if 0
 NS_IMETHODIMP
 nsInlineFrame::FindTextRuns(nsLineLayout&  aLineLayout,
                             nsIReflowCommand* aReflowCommand)
@@ -284,6 +269,7 @@ nsInlineFrame::FindTextRuns(nsLineLayout&  aLineLayout,
                  ("exit nsInlineFrame::FindTextRuns rv=%x", rv));
   return rv;
 }
+#endif
 
 void
 nsInlineFrame::InsertNewFrame(nsIPresContext& aPresContext,
@@ -316,9 +302,10 @@ nsInlineFrame::InsertNewFrame(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-nsInlineFrame::InlineReflow(nsLineLayout&        aLineLayout,
-                            nsHTMLReflowMetrics& aMetrics,
-                            const nsHTMLReflowState& aReflowState)
+nsInlineFrame::Reflow(nsIPresContext& aPresContext,
+                      nsHTMLReflowMetrics& aMetrics,
+                      const nsHTMLReflowState& aReflowState,
+                      nsReflowStatus& aStatus)
 {
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
     ("enter nsInlineFrame::InlineReflow maxSize=%d,%d reason=%d nif=%p",
@@ -335,7 +322,7 @@ nsInlineFrame::InlineReflow(nsLineLayout&        aLineLayout,
   }
 
   // Prepare for reflow
-  nsInlineReflowState state(aLineLayout.mPresContext, aReflowState, aMetrics);
+  nsInlineReflowState state(aPresContext, aReflowState, aMetrics);
 
   // If we're constrained adjust the available size so it excludes space
   // needed for border/padding
@@ -351,21 +338,22 @@ nsInlineFrame::InlineReflow(nsLineLayout&        aLineLayout,
   GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
 
   // Prepare inline reflow engine
-  nsInlineReflow inlineReflow(aLineLayout, state, this);
+  NS_ASSERTION(nsnull != aReflowState.lineLayout, "no line layout");
+  nsInlineReflow inlineReflow(*aReflowState.lineLayout, state, this);
   inlineReflow.Init(state.mBorderPadding.left, state.mBorderPadding.top,
                     width, height);
 
 // ListTag(stdout); printf(": enter isMarginRoot=%c\n", state.mIsMarginRoot?'T':'F');
   // Now translate in by our border and padding
-  aLineLayout.mSpaceManager->Translate(state.mBorderPadding.left,
+  NS_ASSERTION(nsnull != aReflowState.spaceManager, "no space manager");
+  aReflowState.spaceManager->Translate(state.mBorderPadding.left,
                                        state.mBorderPadding.top);
 
   // Based on the type of reflow, switch out to the appropriate
   // routine.
-  nsresult rv = NS_OK;
   if (eReflowReason_Initial == state.reason) {
     DrainOverflowLists();
-    rv = InitialReflow(state, inlineReflow);
+    aStatus = InitialReflow(state, inlineReflow);
     mState &= ~NS_FRAME_FIRST_REFLOW;
   }
   else if (eReflowReason_Incremental == state.reason) {
@@ -385,7 +373,7 @@ nsInlineFrame::InlineReflow(nsLineLayout&        aLineLayout,
       nsIFrame* prevSibling;
       switch (type) {
       case nsIReflowCommand::FrameAppended:
-        rv = FrameAppendedReflow(state, inlineReflow);
+        aStatus = FrameAppendedReflow(state, inlineReflow);
         break;
 
       case nsIReflowCommand::FrameInserted:
@@ -394,16 +382,16 @@ nsInlineFrame::InlineReflow(nsLineLayout&        aLineLayout,
         state.reflowCommand->GetPrevSiblingFrame(prevSibling);
         InsertNewFrame(state.mPresContext, newFrame, prevSibling);
         // XXX For now map into full reflow...
-        rv = ResizeReflow(state, inlineReflow);
+        aStatus = ResizeReflow(state, inlineReflow);
         break;
 
       case nsIReflowCommand::FrameRemoved:
-        rv = FrameRemovedReflow(state, inlineReflow);
+        aStatus = FrameRemovedReflow(state, inlineReflow);
         break;
 
       default:
         // XXX For now map the other incremental operations into full reflows
-        rv = ResizeReflow(state, inlineReflow);
+        aStatus = ResizeReflow(state, inlineReflow);
         break;
       }
     }
@@ -412,24 +400,24 @@ nsInlineFrame::InlineReflow(nsLineLayout&        aLineLayout,
       state.reflowCommand->GetNext(state.mNextRCFrame);
 
       // Continue the reflow
-      rv = ChildIncrementalReflow(state, inlineReflow);
+      aStatus = ChildIncrementalReflow(state, inlineReflow);
     }
   }
   else if (eReflowReason_Resize == state.reason) {
     DrainOverflowLists();
-    rv = ResizeReflow(state, inlineReflow);
+    aStatus = ResizeReflow(state, inlineReflow);
   }
   ComputeFinalSize(state, inlineReflow, aMetrics);
 // ListTag(stdout); printf(": exit carriedMargins=%d,%d\n", aMetrics.mCarriedOutTopMargin, aMetrics.mCarriedOutBottomMargin);
 
   // Now translate in by our border and padding
-  aLineLayout.mSpaceManager->Translate(-state.mBorderPadding.left,
+  aReflowState.spaceManager->Translate(-state.mBorderPadding.left,
                                        -state.mBorderPadding.top);
 
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
-     ("exit nsInlineFrame::InlineReflow size=%d,%d rv=%x nif=%p",
-      aMetrics.width, aMetrics.height, rv, mNextInFlow));
-  return rv;
+     ("exit nsInlineFrame::InlineReflow size=%d,%d status=%x nif=%p",
+      aMetrics.width, aMetrics.height, aStatus, mNextInFlow));
+  return NS_OK;
 }
 
 // XXX factor this (into nsFrameReflowState?) so that both block and
@@ -573,13 +561,13 @@ nsInlineFrame::ComputeFinalSize(nsInlineReflowState& aState,
   }
 }
 
-nsInlineReflowStatus
+nsReflowStatus
 nsInlineFrame::InitialReflow(nsInlineReflowState& aState,
                              nsInlineReflow& aInlineReflow)
 {
   NS_PRECONDITION(nsnull == mNextInFlow, "bad frame-appended-reflow");
 
-  nsInlineReflowStatus rs = NS_FRAME_COMPLETE;
+  nsReflowStatus rs = NS_FRAME_COMPLETE;
   if (nsnull != mFirstChild) {
     if (!ReflowMapped(aState, aInlineReflow, rs)) {
       return rs;
@@ -588,7 +576,7 @@ nsInlineFrame::InitialReflow(nsInlineReflowState& aState,
   return rs;
 }
 
-nsInlineReflowStatus
+nsReflowStatus
 nsInlineFrame::FrameAppendedReflow(nsInlineReflowState& aState,
                                    nsInlineReflow& aInlineReflow)
 {
@@ -601,7 +589,7 @@ nsInlineFrame::FrameAppendedReflow(nsInlineReflowState& aState,
   // Add the new frames
   AppendNewFrames(aState.mPresContext, firstAppendedFrame);
 
-  nsInlineReflowStatus rs = NS_FRAME_COMPLETE;
+  nsReflowStatus rs = NS_FRAME_COMPLETE;
   if (nsnull != mFirstChild) {
     if (!ReflowMapped(aState, aInlineReflow, rs)) {
       return rs;
@@ -610,7 +598,7 @@ nsInlineFrame::FrameAppendedReflow(nsInlineReflowState& aState,
   return rs;
 }
 
-nsInlineReflowStatus
+nsReflowStatus
 nsInlineFrame::FrameRemovedReflow(nsInlineReflowState& aState,
                                   nsInlineReflow& aInlineReflow)
 {
@@ -666,7 +654,7 @@ nsInlineFrame::FrameRemovedReflow(nsInlineReflowState& aState,
   return ResizeReflow(aState, aInlineReflow);
 }
 
-nsInlineReflowStatus
+nsReflowStatus
 nsInlineFrame::ChildIncrementalReflow(nsInlineReflowState& aState,
                                       nsInlineReflow& aInlineReflow)
 {
@@ -674,11 +662,11 @@ nsInlineFrame::ChildIncrementalReflow(nsInlineReflowState& aState,
   return ResizeReflow(aState, aInlineReflow);
 }
 
-nsInlineReflowStatus
+nsReflowStatus
 nsInlineFrame::ResizeReflow(nsInlineReflowState& aState,
                             nsInlineReflow& aInlineReflow)
 {
-  nsInlineReflowStatus rs = NS_FRAME_COMPLETE;
+  nsReflowStatus rs = NS_FRAME_COMPLETE;
   if (nsnull != mFirstChild) {
     if (!ReflowMapped(aState, aInlineReflow, rs)) {
       return rs;
@@ -695,7 +683,7 @@ nsInlineFrame::ResizeReflow(nsInlineReflowState& aState,
 PRBool
 nsInlineFrame::ReflowMapped(nsInlineReflowState& aState,
                             nsInlineReflow& aInlineReflow,
-                            nsInlineReflowStatus& aReflowStatus)
+                            nsReflowStatus& aReflowStatus)
 {
   PRBool keepGoing = PR_TRUE;
   aState.mLastChild = nsnull;
@@ -711,11 +699,11 @@ nsInlineFrame::ReflowMapped(nsInlineReflowState& aState,
   return keepGoing;
 }
 
-nsInlineReflowStatus
+nsReflowStatus
 nsInlineFrame::PullUpChildren(nsInlineReflowState& aState,
                               nsInlineReflow& aInlineReflow)
 {
-  nsInlineReflowStatus reflowStatus = NS_FRAME_COMPLETE;
+  nsReflowStatus reflowStatus = NS_FRAME_COMPLETE;
   nsInlineFrame* nextInFlow = (nsInlineFrame*) mNextInFlow;
   while (nsnull != nextInFlow) {
     // Get child from our next-in-flow
@@ -751,7 +739,7 @@ PRBool
 nsInlineFrame::ReflowFrame(nsInlineReflowState& aState,
                            nsInlineReflow& aInlineReflow,
                            nsIFrame* aFrame,
-                           nsInlineReflowStatus& aReflowStatus)
+                           nsReflowStatus& aReflowStatus)
 {
   aInlineReflow.SetIsFirstChild(aFrame == mFirstChild);
   aReflowStatus = aInlineReflow.ReflowFrame(aFrame);
@@ -812,7 +800,7 @@ nsInlineFrame::ReflowFrame(nsInlineReflowState& aState,
     nsresult rv;
     rv = CreateNextInFlow(aState.mPresContext, this, aFrame, newFrame);
     if (NS_OK != rv) {
-      aReflowStatus = nsInlineReflowStatus(rv);
+      // XXX RETURN ERROR STATUS...
       return PR_FALSE;
     }
 

@@ -56,21 +56,7 @@ nsPlaceholderFrame::~nsPlaceholderFrame()
 {
 }
 
-NS_IMETHODIMP
-nsPlaceholderFrame::QueryInterface(REFNSIID aIID, void** aInstancePtrResult)
-{
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null pointer");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(kIInlineReflowIID)) {
-    nsIInlineReflow* tmp = this;
-    *aInstancePtrResult = (void*) tmp;
-    return NS_OK;
-  }
-  return nsFrame::QueryInterface(aIID, aInstancePtrResult);
-}
-
+#if 0
 NS_IMETHODIMP
 nsPlaceholderFrame::FindTextRuns(nsLineLayout&     aLineLayout,
                                  nsIReflowCommand* aReflowCommand)
@@ -78,14 +64,14 @@ nsPlaceholderFrame::FindTextRuns(nsLineLayout&     aLineLayout,
   aLineLayout.EndTextRun();
   return NS_OK;
 }
+#endif
 
 NS_IMETHODIMP
-nsPlaceholderFrame::InlineReflow(nsLineLayout&            aLineLayout,
-                                 nsHTMLReflowMetrics&     aDesiredSize,
-                                 const nsHTMLReflowState& aReflowState)
+nsPlaceholderFrame::Reflow(nsIPresContext&          aPresContext,
+                           nsHTMLReflowMetrics&     aDesiredSize,
+                           const nsHTMLReflowState& aReflowState,
+                           nsReflowStatus&          aStatus)
 {
-  nsIPresContext& presContext = aLineLayout.mPresContext;
-
   // Get the floater container in which we're inserted
   nsIFrame*             containingBlock;
   nsIFloaterContainer*  container = nsnull;
@@ -106,11 +92,12 @@ nsPlaceholderFrame::InlineReflow(nsLineLayout&            aLineLayout,
     NS_ASSERTION(nsnull != mAnchoredItem, "no anchored item");
 
     // Notify our containing block that there's a new floater
-    container->AddFloater(&presContext, aReflowState, mAnchoredItem, this);
+    container->AddFloater(&aPresContext, aReflowState, mAnchoredItem, this);
   }
 
   // Let line layout know about the floater
-  aLineLayout.AddFloater(this);
+  NS_ASSERTION(nsnull != aReflowState.lineLayout, "no line layout");
+  aReflowState.lineLayout->AddFloater(this);
 
   aDesiredSize.width = 0;
   aDesiredSize.height = 0;
@@ -120,7 +107,9 @@ nsPlaceholderFrame::InlineReflow(nsLineLayout&            aLineLayout,
     aDesiredSize.maxElementSize->width = aDesiredSize.width;
     aDesiredSize.maxElementSize->height = aDesiredSize.height;
   }
-  return NS_FRAME_COMPLETE;
+
+  aStatus = NS_FRAME_COMPLETE;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
