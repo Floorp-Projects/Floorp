@@ -18,8 +18,6 @@
 <!ENTITY tabCmd.label "New Tab">
 <!ENTITY tabCmd.accesskey "T">
 <!ENTITY tabCmd.commandkey "t">
-<!ENTITY openCmd.label "Open Location">
-<!ENTITY openCmd.accesskey "L">
 <!ENTITY openCmd.commandkey "l">
 <!ENTITY openFileCmd.label "Open File...">
 <!ENTITY openFileCmd.accesskey "o">
