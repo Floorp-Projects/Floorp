@@ -113,7 +113,7 @@ toolbar titledbutton {
   font: 2.5mm sans-serif;
 }
 
-toolbar [pseudoclass~="hover"] {
+toolbar titledbutton[pseudoclass~="hover"] {
   border: 1px outset white;
 	color:blue;
 	//text-decoration:underline;
@@ -142,6 +142,62 @@ toolbar titledbutton[pseudoclass~="active"]:-moz-outline {
 toolbar titledbutton[disabled] {
 	opacity: 0.5;
 }
+
+
+titledbutton[class=push] { 
+  display: inline;
+  vertical-align: bottom;
+  cursor: default;
+
+  border: 2px outset rgb(156, 154, 156);
+  background-color: rgb(206, 207, 206);
+  color:black; 
+
+  padding: 1px;
+}
+
+titledbutton[class=push][pseudoclass~="active"] {
+  border-style: inset;
+
+  padding-left: 2px;
+  padding-right: 0px;
+  padding-top: 2px;
+  padding-bottom: 0px;
+}
+
+titledbutton[class=push][pseudoclass~="hover"] {
+}
+
+titledbutton[class=push][pseudoclass~="active"]:-moz-outline {
+   border : 1px solid black;
+}
+
+titledbutton[class=push][pseudoclass~="hover"]:-moz-outline {
+   border : 1px solid black;
+}
+
+titledbutton[class=push][disabled] {
+   border-style: solid;
+}
+
+titledbutton[class=push]:-moz-focus-inner {
+   padding-left  : 2px;
+   padding-right : 2px;
+   padding-top   : 1px;
+   padding-bottom: 1px;
+   margin: 0px;
+}
+
+titledbutton[class=push][pseudoclass~="focus"]:-moz-focus-inner {
+   padding-left  : 1px;
+   padding-right : 1px;
+   padding-top   : 0px;
+   padding-bottom: 0px;
+ 
+   margin: 0px;
+   border : 1px dotted black;
+}
+
 
 /**** Please put all browser specific style here eventually it will be moved 
       out to another .css file like navigator.xul 
@@ -211,3 +267,5 @@ titledbutton[class=secure] {
 
 titledbutton[class=insecure] {
 }
+
+
