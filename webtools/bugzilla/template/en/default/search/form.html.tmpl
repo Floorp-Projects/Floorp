@@ -41,12 +41,12 @@ var tms = new Array();
 [% n = 0 %]
 [% FOREACH p = product %]
   cpts[[% n %]] = [ 
-    [%- FOREACH item = componentsbyproduct.$p %]'[% item FILTER js %]', [%- END -%]];
+    [%- FOREACH item = componentsbyproduct.$p %]'[% item FILTER js %]'[% ", " UNLESS loop.last %] [%- END -%] ];
   vers[[% n %]] = [ 
-    [%- FOREACH item = versionsbyproduct.$p -%]'[%  item FILTER js %]', [%- END -%]];
+    [%- FOREACH item = versionsbyproduct.$p -%]'[%  item FILTER js %]'[% ", " UNLESS loop.last %] [%- END -%] ];
   [% IF Param('usetargetmilestone') %]
   tms[[% n %]]  = [ 
-     [%- FOREACH item = milestonesbyproduct.$p %]'[% item FILTER js %]', [%- END -%]];
+     [%- FOREACH item = milestonesbyproduct.$p %]'[% item FILTER js %]'[% ", " UNLESS loop.last %] [%- END -%] ];
   [% END %]
   [% n = n+1 %]
 [% END %]
