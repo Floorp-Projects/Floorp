@@ -7621,7 +7621,14 @@ nsresult nsImapMockChannel::OpenCacheEntry()
       *anchor = '\0';
     }
     else
-      mTryingToReadPart = PR_TRUE;
+    {
+      // check if this is a filter plugin requesting the message. In that case,we're not
+      // fetching a part, and we want the cache key to be just the uri.
+      if (strcmp(anchor, "?header=filter"))
+        mTryingToReadPart = PR_TRUE;
+      else
+        *anchor = '\0'; 
+    }
   }
   return cacheSession->AsyncOpenCacheEntry(urlSpec.get(), nsICache::ACCESS_READ_WRITE, this);
 }
