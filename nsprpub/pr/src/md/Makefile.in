@@ -74,7 +74,7 @@ CSRCS =          \
 
 TARGETS	= $(OBJS)
 
-INCLUDES = -I$(DIST)/include -I$(topsrcdir)/pr/include
+INCLUDES = -I$(includedir) -I$(topsrcdir)/pr/include
 
 DEFINES	+= -D_NSPR_BUILD_
 

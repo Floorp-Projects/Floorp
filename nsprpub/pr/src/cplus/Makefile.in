@@ -59,7 +59,7 @@ OBJS = $(addprefix $(OBJDIR)/,$(CXXSRCS:.cpp=.$(OBJ_SUFFIX)))
 
 TARGETS	= $(OBJS)
 
-INCLUDES = -I$(DIST)/include
+INCLUDES = -I$(includedir)
 
 include $(topsrcdir)/config/rules.mk
 

@@ -44,7 +44,7 @@ OPTIMIZER =
 endif
 endif
 
-INCLUDES = -I$(DIST)/include -I../include
+INCLUDES = -I$(includedir) -I../include
 
 CSRCS = prgcapi.c prmsgc.c
 
@@ -66,13 +66,13 @@ NSPR_VERSION = $(MOD_VERSION)
 
 ifeq ($(OS_ARCH), WINNT)
 ifeq ($(OS_TARGET), WIN16)
-EXTRA_LIBS = $(DIST)/lib/nspr$(NSPR_VERSION).lib
+EXTRA_LIBS = $(libdir)/nspr$(NSPR_VERSION).lib
 else
 DLLBASE=/BASE:0x30000000
 #RES=$(OBJDIR)/ds.res
 #RESNAME=$(MOD_DEPTH)/pr/src/nspr.rc
 #OS_LIBS = user32.lib
-EXTRA_LIBS = $(DIST)/lib/libnspr$(NSPR_VERSION).lib
+EXTRA_LIBS = $(libdir)/libnspr$(NSPR_VERSION).lib
 
 ifdef MOZ_DEBUG
 ifdef GLOWCODE
@@ -83,7 +83,7 @@ endif
 
 else
 ifeq ($(MOZ_OS2_TOOLS),VACPP)
-EXTRA_LIBS = $(DIST)/lib/nspr$(NSPR_VERSION).$(LIB_SUFFIX)
+EXTRA_LIBS = $(libdir)/nspr$(NSPR_VERSION).$(LIB_SUFFIX)
 
 else
 ifeq ($(OS_ARCH), AIX)
@@ -94,9 +94,9 @@ OS_LIBS += -lc_r
 endif
 endif
 ifeq ($(OS_ARCH)$(OS_RELEASE), AIX4.1)
-EXTRA_LIBS = -L$(DIST)/lib -lnspr$(NSPR_VERSION)_shr
+EXTRA_LIBS = -L$(libdir) -lnspr$(NSPR_VERSION)_shr
 else
-EXTRA_LIBS = -L$(DIST)/lib -lnspr$(NSPR_VERSION)
+EXTRA_LIBS = -L$(libdir) -lnspr$(NSPR_VERSION)
 endif
 endif
 endif
@@ -120,14 +120,14 @@ RELEASE_LIBS = $(TARGETS)
 include $(MOD_DEPTH)/config/rules.mk
 
 #
-# The Client build wants the shared libraries in $(DIST)/bin,
+# The Client build wants the shared libraries in $(bindir),
 # so we also install them there.
 #
 
 export:: $(TARGETS)
-	$(INSTALL) -m 444 $(TARGETS) $(DIST)/lib
+	$(INSTALL) -m 444 $(TARGETS) $(libdir)
 ifdef SHARED_LIBRARY
-	$(INSTALL) -m 444 $(SHARED_LIBRARY) $(DIST)/bin
+	$(INSTALL) -m 444 $(SHARED_LIBRARY) $(bindir)
 endif
 ifeq ($(MOZ_BITS),16)
 	$(INSTALL) -m 444 $(TARGETS) $(MOZ_DIST)/lib

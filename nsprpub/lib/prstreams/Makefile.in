@@ -71,7 +71,7 @@ ifeq ($(OS_ARCH), BeOS)
 endif
 endif # !USE_AUTOCONF
 
-INCLUDES = -I$(DIST)/include
+INCLUDES = -I$(includedir)
 
 HEADERS = $(wildcard $(srcdir)/*.h)
 
@@ -88,24 +88,24 @@ OBJS = $(addprefix $(OBJDIR)/,$(CSRCS:.c=.$(OBJ_SUFFIX)) $(CXXSRCS:.cpp=.$(OBJ_S
 ifndef USE_AUTOCONF
 ifeq ($(OS_ARCH), WINNT)
     ifeq ($(OS_TARGET), WIN16)
-        EXTRA_LIBS = $(DIST)/lib/nspr$(MOD_VERSION).lib
+        EXTRA_LIBS = $(libdir)/nspr$(MOD_VERSION).lib
     else
         DLLBASE=/BASE:0x30000000
         RES=$(OBJDIR)/prstrms.res
         RESNAME=prstrms.rc
         OS_LIBS = user32.lib
         ifeq ($(OS_TARGET), WIN95)
-            EXTRA_LIBS = $(DIST)/lib/nspr$(MOD_VERSION).lib
+            EXTRA_LIBS = $(libdir)/nspr$(MOD_VERSION).lib
         else
-            EXTRA_LIBS = $(DIST)/lib/libnspr$(MOD_VERSION).lib
+            EXTRA_LIBS = $(libdir)/libnspr$(MOD_VERSION).lib
         endif
     endif
 else
     ifeq ($(OS_ARCH),OS2)
       ifeq ($(MOZ_OS2_TOOLS),VACPP)
-         EXTRA_LIBS = $(DIST)/lib/nspr$(MOD_VERSION).$(LIB_SUFFIX)
+         EXTRA_LIBS = $(libdir)/nspr$(MOD_VERSION).$(LIB_SUFFIX)
       else
-         EXTRA_LIBS = -L$(DIST)/lib -lnspr$(MOD_VERSION) -lstdcpp
+         EXTRA_LIBS = -L$(libdir) -lnspr$(MOD_VERSION) -lstdcpp
       endif
     else
     ifeq ($(OS_ARCH), AIX)
@@ -127,9 +127,9 @@ else
       endif
     endif
     ifeq ($(OS_ARCH)$(OS_RELEASE), AIX4.1)
-        EXTRA_LIBS = -L$(DIST)/lib -lnspr$(MOD_VERSION)_shr
+        EXTRA_LIBS = -L$(libdir) -lnspr$(MOD_VERSION)_shr
     else
-        EXTRA_LIBS = -L$(DIST)/lib -lnspr$(MOD_VERSION)
+        EXTRA_LIBS = -L$(libdir) -lnspr$(MOD_VERSION)
     endif
 endif
 endif
@@ -145,7 +145,7 @@ ifeq ($(OS_ARCH),SCOOS)
     EXTRA_LIBS =
 endif
 ifeq ($(OS_ARCH),BeOS)
-    EXTRA_LIBS = -lstdc++.r4 -L$(DIST)/lib -lnspr$(MOD_VERSION)
+    EXTRA_LIBS = -lstdc++.r4 -L$(libdir) -lnspr$(MOD_VERSION)
 endif
 
 ifeq ($(OS_ARCH), UNIXWARE)
@@ -154,7 +154,7 @@ endif
 endif # !USE_AUTOCONF
 
 ifdef RESOLVE_LINK_SYMBOLS
-EXTRA_LIBS := -L$(DIST)/lib -lnspr$(MOD_VERSION)
+EXTRA_LIBS := -L$(libdir) -lnspr$(MOD_VERSION)
 endif
 
 LIBRARY_NAME    = prstrms
@@ -208,20 +208,20 @@ endif
 #
 
 export:: $(TARGETS) $(HEADERS)
-	$(INSTALL) -m 444 $(HEADERS) $(DIST)/include
-	$(INSTALL) -m 444 $(TARGETS) $(DIST)/lib
+	$(INSTALL) -m 444 $(HEADERS) $(includedir)
+	$(INSTALL) -m 444 $(TARGETS) $(libdir)
 ifeq ($(OS_ARCH),OS2)
-	$(INSTALL) -m 444 $(TARGETS) $(DIST)/bin
+	$(INSTALL) -m 444 $(TARGETS) $(bindir)
 endif
 ifeq ($(OS_ARCH),HP-UX)
 ifdef SHARED_LIBRARY
-	$(INSTALL) -m 755 $(SHARED_LIBRARY) $(DIST)/lib
+	$(INSTALL) -m 755 $(SHARED_LIBRARY) $(libdir)
 endif
 endif
 ifeq ($(OS_ARCH),OpenVMS)
-	$(INSTALL) -m 444 $(SHARED_LIBRARY) $(DIST)/lib
+	$(INSTALL) -m 444 $(SHARED_LIBRARY) $(libdir)
 ifdef SHARED_LIBRARY
-	$(INSTALL) -m 444 $(SHARED_LIBRARY:.$(DLL_SUFFIX)=.vms) $(DIST)/lib
+	$(INSTALL) -m 444 $(SHARED_LIBRARY:.$(DLL_SUFFIX)=.vms) $(libdir)
 endif
 endif
 

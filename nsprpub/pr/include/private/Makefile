@@ -45,7 +45,7 @@ HEADERS = $(RELEASE_HEADERS) pprmwait.h primpl.h
 include $(MOD_DEPTH)/config/rules.mk
 
 export:: $(RELEASE_HEADERS)
-	$(INSTALL) -m 444 $(RELEASE_HEADERS) $(DIST)/include/private
+	$(INSTALL) -m 444 $(RELEASE_HEADERS) $(includedir)/private
 ifeq ($(MOZ_BITS),16)
 	$(INSTALL) -m 444 $(RELEASE_HEADERS) $(MOZ_INCL)/private
 endif

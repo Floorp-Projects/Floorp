@@ -1,7 +1,14 @@
 
+INCLUDED_AUTOCONF_MK = 1
 USE_AUTOCONF	= 1
 MOZILLA_CLIENT	= @MOZILLA_CLIENT@
 DIST		= @prefix@
+prefix		= @prefix@
+exec_prefix	= @exec_prefix@
+bindir		= @bindir@
+includedir	= @includedir@
+libdir		= @libdir@
+
 OBJDIR_NAME	= @OBJDIR_NAME@
 OBJDIR		= @OBJDIR@
 OBJ_SUFFIX	= @OBJ_SUFFIX@

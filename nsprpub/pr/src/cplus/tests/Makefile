@@ -64,16 +64,16 @@ PROGS = $(addprefix $(OBJDIR)/, $(CXXSRCS:.cpp=$(PROG_SUFFIX)))
 
 TARGETS = $(PROGS) $(OBJS)
 
-INCLUDES = -I.. -I$(DIST)/include
+INCLUDES = -I.. -I$(includedir)
 
 # Setting the variables LDOPTS and LIBPR.  We first initialize
 # them to the default values, then adjust them for some platforms.
-LDOPTS = -L$(DIST)/lib
+LDOPTS = -L$(libdir)
 LIBPR = -lnspr$(MOD_VERSION)
 LIBPL = -lplc$(MOD_VERSION)
 
 ifeq ($(OS_ARCH), IRIX)
-    LDOPTS += -rpath $(PWD)/$(DIST)/lib -rdata_shared
+    LDOPTS += -rpath $(PWD)/$(libdir) -rdata_shared
     # For 6.x machines, include this flag
     ifeq ($(basename $(OS_RELEASE)),6)
         ifeq ($(USE_N32),1)
@@ -94,9 +94,9 @@ endif
 ifeq ($(OS_ARCH), SunOS)
     ifneq ($(OS_RELEASE), 4.1.3_U1)
         ifdef NS_USE_GCC
-            LDOPTS += -Xlinker -R -Xlinker $(PWD)/$(DIST)/lib
+            LDOPTS += -Xlinker -R -Xlinker $(PWD)/$(libdir)
         else
-            LDOPTS += -R $(PWD)/$(DIST)/lib
+            LDOPTS += -R $(PWD)/$(libdir)
         endif
     endif
 
@@ -120,20 +120,20 @@ endif # SunOS
 
 ifeq ($(OS_ARCH), WINNT)
 ifeq ($(OS_TARGET), WIN16)
-  LIBPR = $(DIST)/lib/nspr$(MOD_VERSION).lib
-  LIBPL = $(DIST)/lib/plc$(MOD_VERSION).lib
+  LIBPR = $(libdir)/nspr$(MOD_VERSION).lib
+  LIBPL = $(libdir)/plc$(MOD_VERSION).lib
 else
   LDOPTS = -NOLOGO -DEBUG -DEBUGTYPE:CV -INCREMENTAL:NO
-  LIBPR = $(DIST)/lib/libnspr$(MOD_VERSION).$(LIB_SUFFIX)
-  LIBPL = $(DIST)/lib/libplc$(MOD_VERSION).$(LIB_SUFFIX)
+  LIBPR = $(libdir)/libnspr$(MOD_VERSION).$(LIB_SUFFIX)
+  LIBPL = $(libdir)/libplc$(MOD_VERSION).$(LIB_SUFFIX)
 endif
 endif
 
 ifeq ($(OS_ARCH),OS2)
   ifeq ($(MOZ_OS2_TOOLS),VACPP)
     LDOPTS = -NOE -DEBUG -nologo -PMTYPE:VIO
-    LIBPR = $(DIST)/lib/nspr$(MOD_VERSION).lib
-    LIBPLC = $(DIST)/lib/plc$(MOD_VERSION).lib
+    LIBPR = $(libdir)/nspr$(MOD_VERSION).lib
+    LIBPLC = $(libdir)/plc$(MOD_VERSION).lib
   else
     LDOPTS += -Zomf -Zlinker /PM:VIO -lstdcpp
   endif
@@ -144,16 +144,16 @@ PWD = $(shell pwd)
 endif
 
 ifeq ($(OS_ARCH), OSF1)
-LDOPTS += -rpath $(PWD)/$(DIST)/lib
+LDOPTS += -rpath $(PWD)/$(libdir)
 endif
 
 ifeq ($(OS_ARCH), HP-UX)
-    LDOPTS += -Wl,+s,+b,$(PWD)/$(DIST)/lib
+    LDOPTS += -Wl,+s,+b,$(PWD)/$(libdir)
 endif
 
 # AIX
 ifeq ($(OS_ARCH),AIX)
-    LDOPTS += -blibpath:$(PWD)/$(DIST)/lib:/usr/lib:/lib
+    LDOPTS += -blibpath:$(PWD)/$(libdir):/usr/lib:/lib
     ifeq ($(OS_ARCH)$(OS_RELEASE),AIX4.1)
         LIBPR = -lnspr$(MOD_VERSION)_shr
         LIBPLC = -lplc$(MOD_VERSION)_shr
@@ -167,7 +167,7 @@ ifeq ($(OS_ARCH), Linux)
     ifeq ($(OS_RELEASE), 1.2)
         EXTRA_LIBS = -ldl
     else
-        LDOPTS += -Xlinker -rpath $(PWD)/$(DIST)/lib
+        LDOPTS += -Xlinker -rpath $(PWD)/$(libdir)
         ifeq ($(USE_PTHREADS),1)
             EXTRA_LIBS = -lpthread
         endif
@@ -178,8 +178,8 @@ ifeq ($(OS_ARCH), NCR)
 # XXX: We see some strange problems when we link with libnspr.so.
 # So for now we use static libraries on NCR.  The shared library
 # stuff below is commented out.
-LIBPR = $(DIST)/lib/libnspr$(MOD_VERSION).a
-LIBPL = $(DIST)/lib/libplc$(MOD_VERSION).a
+LIBPR = $(libdir)/libnspr$(MOD_VERSION).a
+LIBPL = $(libdir)/libplc$(MOD_VERSION).a
 EXTRA_LIBS = -lsocket -lnsl -ldl
 
 # NCR needs to link against -lsocket -lnsl (and -lc, which is linked
@@ -189,7 +189,7 @@ EXTRA_LIBS = -lsocket -lnsl -ldl
 # This hardcodes in the executable programs the directory to find
 # libnspr.so etc. at program startup.  Equivalent to the -R or -rpath 
 # option for ld on other platforms.
-#export LD_RUN_PATH = $(PWD)/$(DIST)/lib
+#export LD_RUN_PATH = $(PWD)/$(libdir)
 endif
 
 ifeq ($(OS_ARCH), SCO_SV)
@@ -199,11 +199,11 @@ EXTRA_LIBS = -lsocket
 # This hardcodes in the executable programs the directory to find
 # libnspr.so etc. at program startup.  Equivalent to the -R or -rpath
 # option for ld on other platforms.
-export LD_RUN_PATH = $(PWD)/$(DIST)/lib
+export LD_RUN_PATH = $(PWD)/$(libdir)
 endif
 
 ifeq ($(OS_ARCH), UNIXWARE)
-export LD_RUN_PATH = $(PWD)/$(DIST)/lib
+export LD_RUN_PATH = $(PWD)/$(libdir)
 endif
 
 #####################################################
@@ -236,7 +236,7 @@ ifeq ($(AIX_PRE_4_2),1)
 $(OBJDIR)/%: $(OBJDIR)/%.$(OBJ_SUFFIX)
 	@$(MAKE_OBJDIR)
 	rm -f $@ $(AIX_TMP)
-	$(CC) $(AIX_LINK_OPTS) -o $(AIX_TMP) $< $(DIST)/lib/libnspr$(MOD_VERSION).a
+	$(CC) $(AIX_LINK_OPTS) -o $(AIX_TMP) $< $(libdir)/libnspr$(MOD_VERSION).a
 	$(CC) -o $@ $(AIX_TMP) $(AIX_WRAP)
 	rm -f $(AIX_TMP)
 

@@ -176,19 +176,19 @@ MDCPUCFG_H = _beos.cfg
 endif
 
 export:: $(MDCPUCFG_H)
-	$(INSTALL) -m 444 $(MDCPUCFG_H) $(DIST)/include
+	$(INSTALL) -m 444 $(MDCPUCFG_H) $(includedir)
 ifeq ($(MOZ_BITS),16)
-	cp $(DIST)/include/$(MDCPUCFG_H) $(DIST)/include/prcpucfg.h
+	cp $(includedir)/$(MDCPUCFG_H) $(includedir)/prcpucfg.h
 	$(INSTALL) -m 444 $(MDCPUCFG_H) $(MOZ_INCL)
-	mv -f $(DIST)/include/$(MDCPUCFG_H) $(MOZ_INCL)/prcpucfg.h
+	mv -f $(includedir)/$(MDCPUCFG_H) $(MOZ_INCL)/prcpucfg.h
 else
 ifneq ($(OS_ARCH),OpenVMS)
-	mv -f $(DIST)/include/$(MDCPUCFG_H) $(DIST)/include/prcpucfg.h
+	mv -f $(includedir)/$(MDCPUCFG_H) $(includedir)/prcpucfg.h
 else
 # mv'ing a link causes the file itself to move, not the link.
-	rm -f $(DIST)/include/$(MDCPUCFG_H)
-	rm -f $(DIST)/include/prcpucfg.h
-	ln -fs `pwd`/$(MDCPUCFG_H) $(DIST)/include/prcpucfg.h
+	rm -f $(includedir)/$(MDCPUCFG_H)
+	rm -f $(includedir)/prcpucfg.h
+	ln -fs `pwd`/$(MDCPUCFG_H) $(includedir)/prcpucfg.h
 endif
 endif
 

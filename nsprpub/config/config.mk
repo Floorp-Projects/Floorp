@@ -177,6 +177,13 @@ MOZ_INCL	= $(NSDEPTH)/dist/public/win16
 MOZ_DIST	= $(NSDEPTH)/dist/WIN16D_D.OBJ
 endif
 
+# if not using autoconf, set these values accordingly
+prefix		= $(DIST)
+exec_prefix	= $(prefix)
+bindir		= $(prefix)/bin
+includedir	= $(prefix)/include
+libdir		= $(prefix)/lib
+
 VPATH		= $(OBJDIR)
 DEPENDENCIES	= $(OBJDIR)/.md
 

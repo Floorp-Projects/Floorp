@@ -44,7 +44,7 @@ OPTIMIZER =
 endif
 endif
 
-INCLUDES = -I$(DIST)/include
+INCLUDES = -I$(includedir)
 
 CSRCS =\
 	plvrsion.c  \
@@ -70,15 +70,15 @@ RELEASE_LIBS = $(TARGETS)
 
 ifeq ($(OS_ARCH),WINNT)
 ifeq ($(OS_TARGET), WIN16)
-EXTRA_LIBS = $(DIST)/lib/nspr$(MOD_VERSION).lib
+EXTRA_LIBS = $(libdir)/nspr$(MOD_VERSION).lib
 else
 DLLBASE=/BASE:0x30000000
 RES=$(OBJDIR)/plc.res
 RESNAME=plc.rc
 ifeq ($(OS_TARGET),WIN95)
-EXTRA_LIBS = $(DIST)/lib/nspr$(MOD_VERSION).lib
+EXTRA_LIBS = $(libdir)/nspr$(MOD_VERSION).lib
 else
-EXTRA_LIBS = $(DIST)/lib/libnspr$(MOD_VERSION).lib
+EXTRA_LIBS = $(libdir)/libnspr$(MOD_VERSION).lib
 endif
 
 ifdef MOZ_DEBUG
@@ -90,7 +90,7 @@ endif
 
 else
 ifeq ($(MOZ_OS2_TOOLS),VACPP)
-EXTRA_LIBS = $(DIST)/lib/nspr$(MOD_VERSION).$(LIB_SUFFIX)
+EXTRA_LIBS = $(libdir)/nspr$(MOD_VERSION).$(LIB_SUFFIX)
 
 else
 ifeq ($(OS_ARCH), AIX)
@@ -101,9 +101,9 @@ OS_LIBS += -lc_r
 endif
 endif
 ifeq ($(OS_ARCH)$(OS_RELEASE), AIX4.1)
-EXTRA_LIBS = -L$(DIST)/lib -lnspr$(MOD_VERSION)_shr
+EXTRA_LIBS = -L$(libdir) -lnspr$(MOD_VERSION)_shr
 else
-EXTRA_LIBS = -L$(DIST)/lib -lnspr$(MOD_VERSION)
+EXTRA_LIBS = -L$(libdir) -lnspr$(MOD_VERSION)
 endif
 endif
 endif
@@ -165,21 +165,21 @@ endif
 #
 
 #
-# The Client build wants the shared libraries in $(DIST)/bin,
+# The Client build wants the shared libraries in $(bindir),
 # so we also install them there.
 #
 
 export:: $(TARGETS)
-	$(INSTALL) -m 444 $(TARGETS) $(DIST)/lib
+	$(INSTALL) -m 444 $(TARGETS) $(libdir)
 ifdef SHARED_LIBRARY
 ifeq ($(OS_ARCH),HP-UX)
-	$(INSTALL) -m 755 $(SHARED_LIBRARY) $(DIST)/lib
-	$(INSTALL) -m 755 $(SHARED_LIBRARY) $(DIST)/bin
+	$(INSTALL) -m 755 $(SHARED_LIBRARY) $(libdir)
+	$(INSTALL) -m 755 $(SHARED_LIBRARY) $(bindir)
 else
-	$(INSTALL) -m 444 $(SHARED_LIBRARY) $(DIST)/bin
+	$(INSTALL) -m 444 $(SHARED_LIBRARY) $(bindir)
 endif
 ifeq ($(OS_ARCH), OpenVMS)
-	$(INSTALL) -m 444 $(SHARED_LIBRARY:.$(DLL_SUFFIX)=.vms) $(DIST)/lib
+	$(INSTALL) -m 444 $(SHARED_LIBRARY:.$(DLL_SUFFIX)=.vms) $(libdir)
 endif
 endif
 ifeq ($(MOZ_BITS),16)
