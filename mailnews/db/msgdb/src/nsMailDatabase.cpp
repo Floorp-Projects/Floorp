@@ -419,8 +419,17 @@ nsresult nsMailDatabase::SetFolderInfoValid(nsFileSpec &folderName, int num, int
 	nsFileSpec					summaryPath(summarySpec);
 	nsresult		err;
 
-	if (stat((const char*) folderName, &st)) 
+	char	*nativeFileName = nsCRT::strdup(folderName);
+#ifdef XP_PC
+	UnixToNative(nativeFileName);
+#endif
+
+	if (!folderName.Exists())
 		return NS_MSG_ERROR_FOLDER_SUMMARY_MISSING;
+
+	stat(nativeFileName, &st);
+
+	PR_FREEIF(nativeFileName);	// ### use file spec method for size and time stamp when they're written.
 
 	// should we have type safe downcast methods again?
 	nsMailDatabase *pMessageDB = (nsMailDatabase *) nsMailDatabase::FindInCache(summaryPath);

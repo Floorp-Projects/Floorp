@@ -237,8 +237,7 @@ int nsMsgDatabase::FindInCache(nsMsgDatabase* pMessageDB)
 
 PRBool nsMsgDatabase::MatchDbName(nsFileSpec &dbName)	// returns PR_TRUE if they match
 {
-	// ### we need equality operators for nsFileSpec...
-	return !strcmp(dbName, m_dbName); 
+	return (m_dbName == dbName); 
 }
 
 //----------------------------------------------------------------------
@@ -259,10 +258,7 @@ void nsMsgDatabase::DumpCache()
 {
 	for (PRUint32 i = 0; i < GetDBCache()->Count(); i++)
 	{
-#ifdef DEBUG_bienvenu
-		nsMsgDatabase* pMessageDB = 
-#endif
-        GetDBCache()->ElementAt(i);
+		nsMsgDatabase* pMessageDB = NS_STATIC_CAST(nsMsgDatabase*, GetDBCache()->ElementAt(i));
 	}
 }
 #endif /* DEBUG */
@@ -323,8 +319,6 @@ extern nsIMdbFactory *NS_NewIMdbFactory();
 	static nsIMdbFactory *gMDBFactory = NULL;
 	if (!gMDBFactory)
 	{
-//		gMDBFactory = new nsIMdbFactory;
-		// ### hook up class factory code when it's working
 		gMDBFactory = MakeMdbFactory(); //new nsIMdbFactory;
 	}
 	return gMDBFactory;
