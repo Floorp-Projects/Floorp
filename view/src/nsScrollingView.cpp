@@ -119,13 +119,13 @@ nsresult nsScrollingView :: Init(nsIViewManager* aManager,
           void *aWidgetInitData,
 					nsNativeWindow aNative,
 					PRInt32 aZIndex,
-					const nsRect *aClipRect,
+					const nsViewClip *aClip,
 					float aOpacity,
 					nsViewVisibility aVisibilityFlag)
 {
   nsresult rv;
   
-  rv = nsView :: Init(aManager, aBounds, aParent, aWindowIID, aWidgetInitData, aNative, aZIndex, aClipRect, aOpacity, aVisibilityFlag);
+  rv = nsView :: Init(aManager, aBounds, aParent, aWindowIID, aWidgetInitData, aNative, aZIndex, aClip, aOpacity, aVisibilityFlag);
 
   if (rv == NS_OK)
   {
