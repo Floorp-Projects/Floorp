@@ -189,6 +189,7 @@
                 // database is encrypted, see if it is still locked
 //              if (locked) { -- there's currently no way to make such a test
                   // it's encrypted and locked, we lose
+                  elementCount = threshhold+1;
                   return enable;
 //              }
               }
