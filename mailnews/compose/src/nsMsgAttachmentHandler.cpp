@@ -225,7 +225,7 @@ JFD */
 		  /* and also patch the types.
 		   */
 
-		  PR_snprintf(tmp, sizeof(tmp),, MULTIPART_APPLEDOUBLE ";\r\n boundary=\"%s\"",
+		  PR_snprintf(tmp, sizeof(tmp), MULTIPART_APPLEDOUBLE ";\r\n boundary=\"%s\"",
 					 separator);
 
 		  PR_FREEIF(separator);
