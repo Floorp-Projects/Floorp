@@ -221,10 +221,10 @@ class nsReadingIterator
 
           while ( n )
             {
+              normalize_backward();
               difference_type one_hop = NS_MIN(n, size_backward());
               NS_ASSERTION(one_hop>0, "Infinite loop: can't advance (backward) a readable iterator beyond the end of a string");
               mPosition -= one_hop;
-              normalize_backward();
               n -= one_hop;
             }
 
@@ -252,6 +252,7 @@ class basic_nsAReadableString
     */
   {
     public:
+      typedef CharT                     char_type;
       typedef PRUint32                  size_type;
       typedef PRUint32                  index_type;
 
@@ -262,12 +263,17 @@ class basic_nsAReadableString
       virtual ~basic_nsAReadableString() { }
         // ...yes, I expect to be sub-classed.
 
-      nsReadingIterator<CharT>  BeginReading( PRUint32 aOffset = 0 ) const;
-      nsReadingIterator<CharT>  EndReading( PRUint32 aOffset = 0 ) const;
+      nsReadingIterator<CharT>  BeginReading() const;
+      nsReadingIterator<CharT>  EndReading() const;
 
       virtual PRUint32  Length() const = 0;
       PRBool  IsEmpty() const;
 
+        /**
+         * |CharAt|, |operator[]|, |First()|, and |Last()| are not guaranteed to be constant-time operations.
+         * These signatures should be pushed down into interfaces that guarantee flat allocation.
+         * Clients at _this_ level should always use iterators.
+         */
       CharT  CharAt( PRUint32 ) const;
       CharT  operator[]( PRUint32 ) const;
       CharT  First() const;
@@ -412,21 +418,21 @@ nsReadingIterator<CharT>::normalize_backward()
 template <class CharT>
 inline
 nsReadingIterator<CharT>
-basic_nsAReadableString<CharT>::BeginReading( PRUint32 aOffset ) const
+basic_nsAReadableString<CharT>::BeginReading() const
   {
     nsReadableFragment<CharT> fragment;
-    const CharT* startPos = GetReadableFragment(fragment, kFragmentAt, aOffset);
+    const CharT* startPos = GetReadableFragment(fragment, kFirstFragment);
     return nsReadingIterator<CharT>(fragment, startPos, *this);
   }
 
 template <class CharT>
 inline
 nsReadingIterator<CharT>
-basic_nsAReadableString<CharT>::EndReading( PRUint32 aOffset ) const
+basic_nsAReadableString<CharT>::EndReading() const
   {
     nsReadableFragment<CharT> fragment;
-    const CharT* startPos = GetReadableFragment(fragment, kFragmentAt, NS_MAX(0U, Length()-aOffset));
-    return nsReadingIterator<CharT>(fragment, startPos, *this);
+    GetReadableFragment(fragment, kLastFragment);
+    return nsReadingIterator<CharT>(fragment, fragment.mEnd, *this);
   }
 
 template <class CharT>
@@ -525,26 +531,13 @@ basic_nsAReadableString<CharT>::Implementation() const
 
 
 
-  /*
-    Note: the following four functions, |CharAt|, |operator[]|, |First|, and |Last|, are implemented
-    in the simplest reasonable scheme; by calling |GetReadableFragment| and resolving the pointer it
-    returns.  The alternative is to force at least one of these methods to be |virtual|.  The ideal
-    candidate for that change would be |CharAt|.
-
-    This is something to measure in the context of how string classes are actually used.  In practice,
-    do people extract a character at a time in performance critical places?  If so, can they use
-    iterators instead?  If they must extract single characters, _and_ they can't use iterators, _and_
-    it happens enough to notice, then we'll take the hit and make |CharAt| virtual.
-  */
-
 template <class CharT>
 CharT
 basic_nsAReadableString<CharT>::CharAt( PRUint32 aIndex ) const
   {
     NS_ASSERTION(aIndex<Length(), "|CharAt| out-of-range");
 
-    nsReadableFragment<CharT> fragment;
-    return *GetReadableFragment(fragment, kFragmentAt, aIndex);
+    return *(BeginReading()+=aIndex);
   }
 
 template <class CharT>
@@ -556,19 +549,21 @@ basic_nsAReadableString<CharT>::operator[]( PRUint32 aIndex ) const
   }
 
 template <class CharT>
-inline
 CharT
 basic_nsAReadableString<CharT>::First() const
   {
-    return CharAt(0);
+    NS_ASSERTION(Length()>0, "|First()| on an empty string");
+
+    return *BeginReading();
   }
 
 template <class CharT>
-inline
 CharT
 basic_nsAReadableString<CharT>::Last() const
   {
-    return CharAt(Length()-1);
+    NS_ASSERTION(Length()>0, "|Last()| on an empty string");
+
+    return *(EndReading()-=1);
   }
 
 template <class CharT>
