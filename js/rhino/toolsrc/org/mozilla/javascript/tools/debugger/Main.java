@@ -143,6 +143,21 @@ public class Main {
         return debugGui.console.getErr();
     }
 
+    public void pack()
+    {
+        debugGui.pack();
+    }
+
+    public void setSize(int w, int h)
+    {
+        debugGui.setSize(w, h);
+    }
+
+    public void setVisible(boolean flag)
+    {
+        debugGui.setVisible(flag);
+    }
+
     public static void main(String[] args)
         throws Exception
     {
