@@ -147,7 +147,6 @@ messenger.jar:
     content/messenger/fieldMapExport.js                                        (import/resources/content/fieldMapExport.js)
     content/messenger/fieldMapImport.xul                                       (import/resources/content/fieldMapImport.xul)
     content/messenger/fieldMapImport.js                                        (import/resources/content/fieldMapImport.js)
-    content/messenger/abookstat.js                                             (mime/abstatus/resources/content/abookstat.js)
     content/messenger/attach.js                                                (mime/emitters/resources/content/attach.js)
     content/messenger/mime.js                                                  (mime/resources/content/mime.js)
     content/messenger/downloadheaders.js                                       (news/resources/content/downloadheaders.js)
