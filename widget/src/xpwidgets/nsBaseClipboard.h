@@ -62,3 +62,4 @@ protected:
 };
 
 #endif // nsBaseClipboard_h__
+
