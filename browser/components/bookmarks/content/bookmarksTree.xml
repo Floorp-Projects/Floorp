@@ -54,13 +54,13 @@
         var colinfo = colinfostr.split(" ");
         for (var i = 0; i < colinfo.length; ++i) {
           if (colinfo[i] == "") continue;
-          
+
           var querymarker = colinfo[i].indexOf("?");
           var anonid = colinfo[i].substring(4, querymarker);
           var col = document.getAnonymousElementByAttribute(this, "id", anonid);
-          
+
           if (!anonid || !col) break;
-          
+
           var attrstring = colinfo[i].substr(querymarker + 1);
 
           var attrpairs = attrstring.split("&");
@@ -112,7 +112,7 @@
             }
             formatString = formatString.replace(/%6%/, child.getAttribute("ordinal"));
             persistString += formatString;
-          }          
+          }
           child = child.nextSibling;
         }
         this.setAttribute("colinfo", persistString);
@@ -353,12 +353,12 @@
         <parameter name="aParent"/>
         <parameter name="aOrientation"/>
         <body><![CDATA[
-          if (aItem === undefined)
-            return BookmarksUtils.getTargetFromFolder(this.getRootResource());
 
-          if (aOrientation == BookmarksUtils.DROP_ON) {
+          if (!aParent || aParent.Value == "NC:BookmarksTopRoot")
+            return BookmarksUtils.getTargetFromFolder(RDF.GetResource("NC:BookmarksRoot"))
+
+          if (aOrientation == BookmarksUtils.DROP_ON)
             return BookmarksUtils.getTargetFromFolder(aItem);
-          }
 
           RDFC.Init(this.db, aParent);
           var index = RDFC.IndexOf(aItem);
@@ -453,7 +453,7 @@
             newSelection.rangedSelect(newRanges[i].min, newRanges[i].max, true);
         ]]></body>
       </method>
-          
+
       <field name="_itemToBeToggled">  []</field>
       <field name="_parentToBeToggled">[]</field>
       <method name="preUpdateTreeSelection">
@@ -571,8 +571,7 @@
             throw Components.results.NS_OK; 
           var selection = this.mOuter._selection;
           aXferData.data = BookmarksUtils.getXferDataFromSelection(selection);
-          const kDSIID = Components.interfaces.nsIDragService;
-          if (aEvent.ctrlKey || !selection.containsMutable)
+          if (aEvent.ctrlKey)
             aDragAction.action = kDSIID.DRAGDROP_ACTION_COPY;
         }
       })
@@ -644,10 +643,21 @@
         mOuter: this,
         canDropOn: function(index)
         {
-          return true;
+          var dragSession = DS.getCurrentSession();
+          if (!dragSession)
+            return false;
+          var selection = BookmarksUtils.getSelectionFromXferData(dragSession);
+          return !selection.containsImmutable;
         },
         canDropBeforeAfter: function(index, before)
         {
+          var dragSession = DS.getCurrentSession();
+          if (!dragSession)
+            return false;
+          var selection = BookmarksUtils.getSelectionFromXferData(dragSession);
+          if (selection.containsImmutable)
+            return false;
+
           if (index != 0)
             return true;
           if (this.mOuter.getRowResource(index).Value != "NC:BookmarksRoot")
@@ -656,8 +666,7 @@
         },
         onDrop: function(row, orientation)
         {  
-          var dragService = Components.classes["@mozilla.org/widget/dragservice;1"].getService().QueryInterface(Components.interfaces.nsIDragService);  
-          var dragSession = dragService.getCurrentSession();
+          var dragSession = DS.getCurrentSession();
           if (!dragSession)
             return;
           //var date = Date.now();
@@ -675,16 +684,12 @@
           }
           //var firstVisibleRow = this.mOuter.treeBoxObject.getFirstVisibleRow()
           this.mOuter.treeBoxObject.selection.selectEventsSuppressed = true;
-          // Notify the datasource that we're about to begin a batch operation
-          //BMDS.beginUpdateBatch();
-          const kDSIID = Components.interfaces.nsIDragService;
           const kCopyAction = kDSIID.DRAGDROP_ACTION_COPY + kDSIID.DRAGDROP_ACTION_LINK;
 
           if (dragSession.dragAction & kCopyAction)
             BookmarksUtils.insertSelection("drag", selection, target);
           else
             BookmarksUtils.moveSelection  ("drag", selection, target);
-          //BMDS.endUpdateBatch();
           //this.mOuter.treeBoxObject.selection.currentIndex=-1;
           // temporary hack: for an unknown reason, rebuilding cause a scroll to the bottom
           // if the first visible row is not 0
