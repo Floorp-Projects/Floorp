@@ -183,9 +183,22 @@ var folderListener = {
              }
            }
            if (uri == gCurrentLoadingFolderURI) {
+             // NOTE,
+             // if you change the scrolling code below,
+             // double check the scrolling logic in
+             // searchBar.js, restorePreSearchView()
+
              gCurrentLoadingFolderURI = "";
 
+             // if we didn't just scroll, 
+             // scroll to the first new message
+             // but don't select it
+             if (!scrolled)
+               scrolled = ScrollToMessage(nsMsgNavigationType.firstNew, true, false /* selectMessage */);
+
              if (!scrolled && pref.getBoolPref("mailnews.remember_selected_message")) {
+               // if we failed to scroll to a new message,
+               // reselect the last selected message
                var lastMessageLoaded = msgFolder.lastMessageLoaded;
                  
                if (lastMessageLoaded != nsMsgKey_None) {
@@ -193,30 +206,31 @@ var folderListener = {
                }
              }
 
-             // Now let's select the first new message if there is one
              if (!scrolled) {
-               // if we didn't just scroll, scroll to the first new message
-               // don't select it though
-               scrolled = ScrollToMessage(nsMsgNavigationType.firstNew, true, false /* selectMessage */);
-                    
-               // if we failed to find a new message, 
+               // if we still haven't scrolled,
                // scroll to the newest, which might be the top or the bottom
                // depending on our sort order and sort type
-               if (!scrolled) {
-                 if (gDBView.sortOrder == nsMsgViewSortOrder.ascending) {
-                   switch (gDBView.sortType) {
-                     case nsMsgViewSortType.byDate: 
-                     case nsMsgViewSortType.byId: 
-                     case nsMsgViewSortType.byThread: 
-                       scrolled = ScrollToMessage(nsMsgNavigationType.lastMessage, true, false /* selectMessage */);
-                       break;
-                   }
+               if (gDBView.sortOrder == nsMsgViewSortOrder.ascending) {
+                 switch (gDBView.sortType) {
+                   case nsMsgViewSortType.byDate: 
+                   case nsMsgViewSortType.byId: 
+                   case nsMsgViewSortType.byThread: 
+                     scrolled = ScrollToMessage(nsMsgNavigationType.lastMessage, true, false /* selectMessage */);
+                     break;
                  }
                }
 
+               // if still we haven't scrolled,
+               // scroll to the top.
                if (!scrolled)
                  EnsureRowInThreadTreeIsVisible(0);
-             }
+             }            
+
+             // NOTE,
+             // if you change the scrolling code above,
+             // double check the scrolling logic in
+             // searchBar.js, restorePreSearchView()
+
              SetBusyCursor(window, false);
            }
            if (gNotifyDefaultInboxLoadedOnStartup && (folder.flags & 0x1000))

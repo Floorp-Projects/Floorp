@@ -218,19 +218,60 @@ function restorePreSearchView()
 
   RerootThreadPane();
    
-  //now restore selection
+  var scrolled = false;
+  
+  // now restore selection
   if (selectedHdr)
   {
     gDBView.selectMsgByKey(selectedHdr.messageKey);
     var treeView = gDBView.QueryInterface(Components.interfaces.nsITreeView);
     var selectedIndex = treeView.selection.currentIndex;
-    if (selectedIndex >= 0)  //scroll
+    if (selectedIndex >= 0) 
+    {
+      // scroll
       EnsureRowInThreadTreeIsVisible(selectedIndex);
+      scrolled = true;
+    }
     else
       ClearMessagePane();
   }
-  else
-    ScrollToMessage(nsMsgNavigationType.firstNew, true, false /* selectMessage */);
+
+  // NOTE,
+  // if you change the scrolling code below,
+  // double check the scrolling logic in
+  // msgMail3PaneWindow.js, "FolderLoaded" event code
+  if (!scrolled)
+  {
+    // if we didn't just scroll, 
+    // scroll to the first new message
+    // but don't select it
+    scrolled = ScrollToMessage(nsMsgNavigationType.firstNew, true, false /* selectMessage */);
+    if (!scrolled) 
+    {
+      // if we still haven't scrolled,
+      // scroll to the newest, which might be the top or the bottom
+      // depending on our sort order and sort type
+      if (sortOrder == nsMsgViewSortOrder.ascending) 
+      {
+        switch (sortType) 
+        {
+          case nsMsgViewSortType.byDate: 
+          case nsMsgViewSortType.byId: 
+          case nsMsgViewSortType.byThread: 
+            scrolled = ScrollToMessage(nsMsgNavigationType.lastMessage, true, false /* selectMessage */);
+            break;
+        }
+      }
+      // if still we haven't scrolled,
+      // scroll to the top.
+      if (!scrolled)
+        EnsureRowInThreadTreeIsVisible(0);
+    }
+  }
+  // NOTE,
+  // if you change the scrolling code above,
+  // double check the scrolling logic in
+  // msgMail3PaneWindow.js, "FolderLoaded" event code
 }
 
 function onSearch(aSearchTerms)
