@@ -75,6 +75,7 @@
 <!ENTITY certmgr.issued "Issued On">
 <!ENTITY certmgr.expires "Expires On">
 <!ENTITY certmgr.email "E-Mail Address">
+<!ENTITY certmgr.serial "Serial Number">
 
 <!ENTITY certmgr.help.label "Help">
 <!ENTITY certmgr.ok.label "OK">
