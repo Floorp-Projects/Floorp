@@ -26,6 +26,13 @@
 #include "nsIDOMWindowInternal.h"
 #include "nsIDOMDocument.h"
 #include "nsIScriptGlobalObject.h"
+#include "nsISelectionPrivate.h"
+#include "nsITransactionManager.h"
+
+#include "nsIEditorDocShell.h"
+
+#include "nsIChannel.h"
+#include "nsIWebProgress.h"
 
 #include "nsIControllers.h"
 #include "nsIController.h"
@@ -33,9 +40,16 @@
 
 #include "nsIPresShell.h"
 
+#include "nsComposerCommandsUpdater.h"
+
 #include "nsEditingSession.h"
 
 #include "nsIComponentManager.h"
+#include "nsIInterfaceRequestor.h"
+
+#if DEBUG
+#define NOISY_DOC_LOADING   1
+#endif
 
 /*---------------------------------------------------------------------------
 
@@ -43,6 +57,7 @@
 
 ----------------------------------------------------------------------------*/
 nsEditingSession::nsEditingSession()
+: mDoneSetup(PR_FALSE)
 {
   NS_INIT_ISUPPORTS();
 }
@@ -54,9 +69,10 @@ nsEditingSession::nsEditingSession()
 ----------------------------------------------------------------------------*/
 nsEditingSession::~nsEditingSession()
 {
+  NS_IF_RELEASE(mStateMaintainer);
 }
 
-NS_IMPL_ISUPPORTS2(nsEditingSession, nsIEditingSession, nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS3(nsEditingSession, nsIEditingSession, nsIWebProgressListener, nsISupportsWeakReference)
 
 /*---------------------------------------------------------------------------
 
@@ -74,57 +90,98 @@ nsEditingSession::Init(nsIDOMWindow *aWindow)
   mEditingShell = getter_AddRefs(NS_GetWeakReference(docShell));
   if (!mEditingShell) return NS_ERROR_NO_INTERFACE;
 
-  rv = SetupFrameControllers(aWindow);
-  if (NS_FAILED(rv)) return rv;
-  
   return NS_OK;
 }
 
 
 /*---------------------------------------------------------------------------
 
-  GetEditingShell
+  MakeWindowEditable
 
-  [noscript] readonly attribute nsIEditingShell editingShell;
+  void makeWindowEditable (in nsIDOMWindow aWindow, in boolean inDoAfterUriLoad);
 ----------------------------------------------------------------------------*/
-NS_IMETHODIMP 
-nsEditingSession::GetEditingShell(nsIEditingShell * *outEditingShell)
+NS_IMETHODIMP
+nsEditingSession::MakeWindowEditable(nsIDOMWindow *aWindow, PRBool inDoAfterUriLoad)
 {
-  nsCOMPtr<nsIDocShell> docShell = do_QueryReferent(mEditingShell);
-  if (!docShell) return NS_ERROR_FAILURE;
+  nsresult rv = PrepareForEditing();
+  if (NS_FAILED(rv)) return rv;  
+  
+  nsCOMPtr<nsIEditorDocShell> editorDocShell;
+  rv = GetEditorDocShellFromWindow(aWindow, getter_AddRefs(editorDocShell));
+  if (NS_FAILED(rv)) return rv;  
+  
+  // set the flag on the docShell to say that it's editable
+  rv = editorDocShell->MakeEditable(inDoAfterUriLoad);
+  if (NS_FAILED(rv)) return rv;  
+  
+  rv = SetupFrameControllers(aWindow);
+  if (NS_FAILED(rv)) return rv;
 
-  return docShell->QueryInterface(NS_GET_IID(nsIEditingShell), outEditingShell);
+  // make an editor immediately
+  if (!inDoAfterUriLoad)
+  {
+    rv = SetupEditorOnWindow(aWindow);
+    if (NS_FAILED(rv)) return rv;  
+  }
+  
+  return NS_OK;
 }
-
 
 /*---------------------------------------------------------------------------
 
-  SetupEditorOnFrame
+  WindowIsEditable
 
-  nsIEditor setupEditorOnFrame (in nsIDOMWindow aWindow);
+  boolean windowIsEditable (in nsIDOMWindow aWindow);
+----------------------------------------------------------------------------*/
+NS_IMETHODIMP nsEditingSession::WindowIsEditable(nsIDOMWindow *aWindow, PRBool *outIsEditable)
+{
+  nsCOMPtr<nsIEditorDocShell> editorDocShell;
+  nsresult rv = GetEditorDocShellFromWindow(aWindow, getter_AddRefs(editorDocShell));
+  if (NS_FAILED(rv)) return rv;  
+
+  return editorDocShell->GetEditable(outIsEditable);
+}
+
+/*---------------------------------------------------------------------------
+
+  SetupEditorOnWindow
+
+  nsIEditor setupEditorOnWindow (in nsIDOMWindow aWindow);
 ----------------------------------------------------------------------------*/
 NS_IMETHODIMP
-nsEditingSession::SetupEditorOnFrame(nsIDOMWindow *aWindow, nsIEditor **outEditor)
+nsEditingSession::SetupEditorOnWindow(nsIDOMWindow *aWindow)
 {
-  nsresult rv;
-  nsCOMPtr<nsIEditor> editor(do_CreateInstance("@mozilla.org/editor/htmleditor;1", &rv));
-  if (NS_FAILED(rv)) return rv;
+  nsresult rv = PrepareForEditing();
+  if (NS_FAILED(rv)) return rv;  
 
   nsCOMPtr<nsIDocShell> docShell;
   rv = GetDocShellFromWindow(aWindow, getter_AddRefs(docShell));
   if (NS_FAILED(rv)) return rv;  
   
+  nsCOMPtr<nsIEditorDocShell>   editorDocShell(do_QueryInterface(docShell, &rv));
+  if (NS_FAILED(rv)) return rv;
+  
+  nsCOMPtr<nsIEditor> editor(do_CreateInstance("@mozilla.org/editor/htmleditor;1", &rv));
+  if (NS_FAILED(rv)) return rv;
+
+  // set the editor on the docShell. The docShell now owns it.
+  rv = editorDocShell->SetEditor(editor);
+  if (NS_FAILED(rv)) return rv;
+  
   nsCOMPtr<nsIPresShell> presShell;
   rv = docShell->GetPresShell(getter_AddRefs(presShell));
   if (NS_FAILED(rv)) return rv;
+  if (!presShell) return NS_ERROR_FAILURE;
   
   nsCOMPtr<nsIContentViewer> contentViewer;
   rv = docShell->GetContentViewer(getter_AddRefs(contentViewer));
   if (NS_FAILED(rv)) return rv;
+  if (!contentViewer) return NS_ERROR_FAILURE;
     
   nsCOMPtr<nsIDOMDocument> domDoc;  
   rv = contentViewer->GetDOMDocument(getter_AddRefs(domDoc));
   if (NS_FAILED(rv)) return rv;
+  if (!domDoc) return NS_ERROR_FAILURE;
   
   nsCOMPtr<nsISelectionController> selCon = do_QueryInterface(presShell);
 
@@ -135,28 +192,65 @@ nsEditingSession::SetupEditorOnFrame(nsIDOMWindow *aWindow, nsIEditor **outEdito
   if (NS_FAILED(rv)) return rv;
 
   // set the editor on the controller
-  SetEditorOnControllers(aWindow, editor);
+  rv = SetEditorOnControllers(aWindow, editor);
+  if (NS_FAILED(rv)) return rv;
+
+  // make the UI state maintainer
+  NS_NEWXPCOM(mStateMaintainer, nsComposerCommandsUpdater);
+  if (!mStateMaintainer) return NS_ERROR_OUT_OF_MEMORY;
+  mStateMaintainer->AddRef();      // the owning reference
+
+  // now init the state maintainer
+  // XXX this needs to swap out editors
+  rv = mStateMaintainer->Init(editor);
+  if (NS_FAILED(rv)) return rv;
+
+	nsCOMPtr<nsISelection>	selection;
+	editor->GetSelection(getter_AddRefs(selection));	
+  nsCOMPtr<nsISelectionPrivate> selPriv = do_QueryInterface(selection);
+	if (!selPriv) return NS_ERROR_FAILURE;
+
+  rv = selPriv->AddSelectionListener(mStateMaintainer);
+  if (NS_FAILED(rv)) return rv;
+
+  // and set it up as a doc state listener
+  rv = editor->AddDocumentStateListener(NS_STATIC_CAST(nsIDocumentStateListener*, mStateMaintainer));
+  if (NS_FAILED(rv)) return rv;
   
-  *outEditor = editor;
-  NS_ADDREF(*outEditor);
+  // and as a transaction listener
+  nsCOMPtr<nsITransactionManager> txnMgr;
+  editor->GetTransactionManager(getter_AddRefs(txnMgr));
+  if (txnMgr)
+  {
+    txnMgr->AddListener(NS_STATIC_CAST(nsITransactionListener*, mStateMaintainer));
+  }
+  
   return NS_OK;
 }
 
 
 /*---------------------------------------------------------------------------
 
-  TearDownEditorOnFrame
+  TearDownEditorOnWindow
 
-  void tearDownEditorOnFrame (in nsIDOMWindow aWindow);
+  void tearDownEditorOnWindow (in nsIDOMWindow aWindow);
 ----------------------------------------------------------------------------*/
 NS_IMETHODIMP
-nsEditingSession::TearDownEditorOnFrame(nsIDOMWindow *aWindow)
+nsEditingSession::TearDownEditorOnWindow(nsIDOMWindow *aWindow)
 {
   nsresult rv;
   
   // null out the editor on the controller
   rv = SetEditorOnControllers(aWindow, nsnull);
   if (NS_FAILED(rv)) return rv;  
+  
+  nsCOMPtr<nsIEditorDocShell> editorDocShell;
+  rv = GetEditorDocShellFromWindow(aWindow, getter_AddRefs(editorDocShell));
+  if (NS_FAILED(rv)) return rv;  
+  
+  // null out the editor on the docShell
+  rv = editorDocShell->SetEditor(nsnull);
+  if (NS_FAILED(rv)) return rv;
   
   return NS_OK;
 }
@@ -168,10 +262,249 @@ nsEditingSession::TearDownEditorOnFrame(nsIDOMWindow *aWindow)
   nsIEditor getEditorForFrame (in nsIDOMWindow aWindow);
 ----------------------------------------------------------------------------*/
 NS_IMETHODIMP 
-nsEditingSession::GetEditorForFrame(nsIDOMWindow *aWindow, nsIEditor **_retval)
+nsEditingSession::GetEditorForWindow(nsIDOMWindow *aWindow, nsIEditor **outEditor)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsCOMPtr<nsIEditorDocShell> editorDocShell;
+  nsresult rv = GetEditorDocShellFromWindow(aWindow, getter_AddRefs(editorDocShell));
+  if (NS_FAILED(rv)) return rv;  
+  
+  return editorDocShell->GetEditor(outEditor);
 }
+
+#ifdef XP_MAC
+#pragma mark -
+#endif
+
+/*---------------------------------------------------------------------------
+
+  OnStateChange
+
+----------------------------------------------------------------------------*/
+NS_IMETHODIMP
+nsEditingSession::OnStateChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRInt32 aStateFlags, PRUint32 aStatus)
+{
+  //
+  // A Request has started...
+  //
+  if (aStateFlags & nsIWebProgressListener::STATE_START)
+  {
+    // Page level notification...
+    if (aStateFlags & nsIWebProgressListener::STATE_IS_NETWORK)
+    {
+      StartPageLoad(aWebProgress);
+    }
+
+    // Document level notification...
+    if (aStateFlags & nsIWebProgressListener::STATE_IS_DOCUMENT)
+    {
+      if (NotifyingCurrentDocument(aWebProgress))
+        (void)StartDocumentLoad(aWebProgress);
+    }
+  }
+  //
+  // A Request is being processed
+  //
+  else if (aStateFlags & nsIWebProgressListener::STATE_TRANSFERRING)
+  {
+    if (aStateFlags * nsIWebProgressListener::STATE_IS_DOCUMENT)
+    {
+      // document transfer started
+    }
+  }
+  //
+  // Got a redirection
+  //
+  else if (aStateFlags & nsIWebProgressListener::STATE_REDIRECTING)
+  {
+    if (aStateFlags * nsIWebProgressListener::STATE_IS_DOCUMENT)
+    {
+      // got a redirect
+    }
+  }
+  //
+  // A network or document Request as finished...
+  //
+  else if (aStateFlags & nsIWebProgressListener::STATE_STOP)
+  {
+
+    // Document level notification...
+    if (aStateFlags & nsIWebProgressListener::STATE_IS_DOCUMENT)
+    {
+      if (NotifyingCurrentDocument(aWebProgress))
+      {
+        nsCOMPtr<nsIChannel> channel(do_QueryInterface(aRequest));
+        (void)EndDocumentLoad(aWebProgress, channel, aStatus);
+      }      
+    }
+
+    // Page level notification...
+    if (aStateFlags & nsIWebProgressListener::STATE_IS_NETWORK)
+    {
+      nsCOMPtr<nsIChannel> channel(do_QueryInterface(aRequest));
+      (void)EndPageLoad(aWebProgress, channel, aStatus);
+    }
+  }
+
+  return NS_OK;
+}
+
+/*---------------------------------------------------------------------------
+
+  OnProgressChange
+
+----------------------------------------------------------------------------*/
+NS_IMETHODIMP
+nsEditingSession::OnProgressChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRInt32 aCurSelfProgress, PRInt32 aMaxSelfProgress, PRInt32 aCurTotalProgress, PRInt32 aMaxTotalProgress)
+{
+    return NS_OK;
+}
+
+/*---------------------------------------------------------------------------
+
+  OnLocationChange
+
+----------------------------------------------------------------------------*/
+NS_IMETHODIMP
+nsEditingSession::OnLocationChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, nsIURI *location)
+{
+    return NS_OK;
+}
+
+/*---------------------------------------------------------------------------
+
+  OnStatusChange
+
+----------------------------------------------------------------------------*/
+NS_IMETHODIMP
+nsEditingSession::OnStatusChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, nsresult aStatus, const PRUnichar *aMessage)
+{
+    return NS_OK;
+}
+
+/*---------------------------------------------------------------------------
+
+  OnSecurityChange
+
+----------------------------------------------------------------------------*/
+NS_IMETHODIMP
+nsEditingSession::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRInt32 state)
+{
+    return NS_OK;
+}
+
+
+#ifdef XP_MAC
+#pragma mark -
+#endif
+
+/*---------------------------------------------------------------------------
+
+  NotifyingCurrentDocument
+
+  Check that this notification is for our document. Necessary?
+----------------------------------------------------------------------------*/
+
+PRBool
+nsEditingSession::NotifyingCurrentDocument(nsIWebProgress *aWebProgress)
+{
+  return PR_TRUE;
+}
+
+
+/*---------------------------------------------------------------------------
+
+  StartDocumentLoad
+
+  Called on start of load in a single frame
+----------------------------------------------------------------------------*/
+nsresult
+nsEditingSession::StartDocumentLoad(nsIWebProgress *aWebProgress)
+{
+#ifdef NOISY_DOC_LOADING
+  printf("Editing session StartDocumentLoad\n");
+#endif
+
+  NS_ENSURE_ARG(aWebProgress);
+  
+  // If we have an editor here, then we got a reload after making the editor.
+  // We need to blow it away and make a new one at the end of the load.
+  nsCOMPtr<nsIDOMWindow> domWindow;
+  aWebProgress->GetDOMWindow(getter_AddRefs(domWindow));
+
+  if (domWindow)
+  {
+    nsresult rv = TearDownEditorOnWindow(domWindow);
+  }
+    
+  return NS_OK;
+}
+
+/*---------------------------------------------------------------------------
+
+  EndDocumentLoad
+
+  Called on end of load in a single frame
+----------------------------------------------------------------------------*/
+nsresult
+nsEditingSession::EndDocumentLoad(nsIWebProgress *aWebProgress, nsIChannel* aChannel, nsresult aStatus)
+{
+  NS_ENSURE_ARG(aWebProgress);
+  
+#ifdef NOISY_DOC_LOADING
+  printf("Editing shell EndDocumentLoad\n");
+#endif
+  // we want to call the base class EndDocumentLoad, but avoid some of the stuff
+  // that nsWebShell does (need to refactor).
+  
+  // OK, time to make an editor on this document
+  nsCOMPtr<nsIDOMWindow> domWindow;
+  aWebProgress->GetDOMWindow(getter_AddRefs(domWindow));
+  
+  nsCOMPtr<nsIDocShell> docShell;
+  nsresult rv = GetDocShellFromWindow(domWindow, getter_AddRefs(docShell));
+  if (NS_FAILED(rv)) return rv;       // better error handling?
+  
+  nsCOMPtr<nsIEditorDocShell> editorDocShell(do_QueryInterface(docShell));
+  // did someone set the flag to make this shell editable?
+  if (editorDocShell)
+  {
+    PRBool  makeEditable;
+    editorDocShell->GetEditable(&makeEditable);
+  
+    if (makeEditable)
+    {
+      nsresult rv = SetupEditorOnWindow(domWindow);
+    }
+  }
+
+  return NS_OK;
+}
+
+
+/*---------------------------------------------------------------------------
+
+  StartPageLoad
+
+  Called on start load of the entire page (incl. subframes)
+----------------------------------------------------------------------------*/
+nsresult
+nsEditingSession::StartPageLoad(nsIWebProgress *aWebProgress)
+{
+  return NS_OK;
+}
+
+/*---------------------------------------------------------------------------
+
+  EndPageLoad
+
+  Called on end load of the entire page (incl. subframes)
+----------------------------------------------------------------------------*/
+nsresult
+nsEditingSession::EndPageLoad(nsIWebProgress *aWebProgress, nsIChannel* aChannel, nsresult aStatus)
+{
+  return NS_OK;
+}
+
 
 #ifdef XP_MAC
 #pragma mark -
@@ -196,6 +529,52 @@ nsEditingSession::GetDocShellFromWindow(nsIDOMWindow *inWindow, nsIDocShell** ou
   return NS_OK;
 }
 
+/*---------------------------------------------------------------------------
+
+  GetEditorDocShellFromWindow
+
+  Utility method. This will always return an error if no docShell
+  is returned.
+----------------------------------------------------------------------------*/
+nsresult
+nsEditingSession::GetEditorDocShellFromWindow(nsIDOMWindow *inWindow, nsIEditorDocShell** outDocShell)
+{
+  nsCOMPtr<nsIDocShell> docShell;
+  nsresult rv = GetDocShellFromWindow(inWindow, getter_AddRefs(docShell));
+  if (NS_FAILED(rv)) return rv;
+  
+  return docShell->QueryInterface(NS_GET_IID(nsIEditorDocShell), outDocShell);
+}
+
+/*---------------------------------------------------------------------------
+
+  PrepareForEditing
+
+  Set up this editing session for one or more editors
+----------------------------------------------------------------------------*/
+nsresult
+nsEditingSession::PrepareForEditing()
+{
+  if (mDoneSetup)
+    return NS_OK;
+    
+  mDoneSetup = PR_TRUE;
+
+  nsCOMPtr<nsIDocShell> docShell = do_QueryReferent(mEditingShell);
+  if (!docShell) return NS_ERROR_NOT_INITIALIZED;
+
+  nsCOMPtr<nsIDOMWindow>  domWindow = do_GetInterface(docShell);
+  if (!domWindow) return NS_ERROR_FAILURE;
+  
+  // register callback
+  nsCOMPtr<nsIWebProgress> webProgress = do_GetInterface(docShell);
+  if (!webProgress) return NS_ERROR_FAILURE;
+
+  nsresult rv = webProgress->AddProgressListener(this);
+  if (NS_FAILED(rv)) return rv;
+
+  return NS_OK;
+}
 
 
 /*---------------------------------------------------------------------------
@@ -216,6 +595,7 @@ nsEditingSession::SetupFrameControllers(nsIDOMWindow *inWindow)
   rv = domWindowInt->GetControllers(getter_AddRefs(controllers));
   if (NS_FAILED(rv)) return rv;
 
+  // the first is an editor controller, and takes an nsIEditor as the refCon
   nsCOMPtr<nsIController> controller(do_CreateInstance("@mozilla.org/editor/editorcontroller;1", &rv));
   if (NS_FAILED(rv)) return rv;  
 
@@ -223,10 +603,21 @@ nsEditingSession::SetupFrameControllers(nsIDOMWindow *inWindow)
   rv = editorController->Init(nsnull);    // we set the editor later when we have one
   if (NS_FAILED(rv)) return rv;
 
-  rv = controllers->AppendController(controller);
+  rv = controllers->InsertControllerAt(0, controller);
   if (NS_FAILED(rv)) return rv;  
 
-  return NS_OK;  
+  // the second is an composer controller, and also takes an nsIEditor as the refCon
+  controller = do_CreateInstance("@mozilla.org/editor/composercontroller;1", &rv);
+  if (NS_FAILED(rv)) return rv;  
+
+  nsCOMPtr<nsIEditorController> composerController(do_QueryInterface(controller));
+  rv = composerController->Init(nsnull);    // we set the editor later when we have one
+  if (NS_FAILED(rv)) return rv;
+
+  rv = controllers->InsertControllerAt(1, controller);
+  if (NS_FAILED(rv)) return rv;  
+
+  return NS_OK;
 }
 
 /*---------------------------------------------------------------------------
@@ -270,4 +661,5 @@ nsEditingSession::SetEditorOnControllers(nsIDOMWindow *inWindow, nsIEditor* inEd
 
   return NS_OK;
 }
+
 

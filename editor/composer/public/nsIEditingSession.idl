@@ -31,15 +31,29 @@ interface nsIEditingShell;
 [scriptable, uuid(D3B0AA04-F221-11D4-A73C-EAA4BAA8B4FC)]
 interface nsIEditingSession : nsISupports
 {
-  [noscript] readonly attribute nsIEditingShell editingShell;
-  
+
+  /*  Init the editing session, passing the window that will be the root of
+      the session (usually the content root frame.
+  */
   void          init(in nsIDOMWindow aWindow);
 
-
-  nsIEditor     setupEditorOnFrame(in nsIDOMWindow aWindow);
-  void          tearDownEditorOnFrame(in nsIDOMWindow aWindow);
+  /*  Make this window editable */
+  void          makeWindowEditable(in nsIDOMWindow aWindow, in boolean inDoAfterUriLoad);
   
-	nsIEditor     getEditorForFrame(in nsIDOMWindow aWindow);
+  /*  Test whether a specific window has had its editable flag set; it may have an editor
+      now, or will get one after the uri load.
+      
+      Use this, passing the content root window, to test if we've set up editing
+      for this content.
+  */
+  boolean       windowIsEditable(in nsIDOMWindow aWindow);
+  
+  /*  Get the editor for this window. May return null */
+	nsIEditor     getEditorForWindow(in nsIDOMWindow aWindow);	
+
+  /*  lower level */
+  void          setupEditorOnWindow(in nsIDOMWindow aWindow);
+  void          tearDownEditorOnWindow(in nsIDOMWindow aWindow);
 
 };
 

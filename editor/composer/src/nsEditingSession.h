@@ -36,8 +36,8 @@
 #include "nsIDocShell.h"
 #endif
 
-#ifndef __gen_nsIEditingShell_h__
-#include "nsIEditingShell.h"
+#ifndef __gen_nsIWebProgressListener_h__
+#include "nsIWebProgressListener.h"
 #endif
 
 #ifndef __gen_nsIEditingSession_h__
@@ -45,11 +45,18 @@
 #endif
 
 
+
 #define NS_EDITINGSESSION_CID                            \
 { 0xbc26ff01, 0xf2bd, 0x11d4, { 0xa7, 0x3c, 0xe5, 0xa4, 0xb5, 0xa8, 0xbd, 0xfc } }
 
 
+class nsIWebProgress;
+class nsIEditorDocShell;
+
+class nsComposerCommandsUpdater;
+
 class nsEditingSession : public nsIEditingSession,
+                         public nsIWebProgressListener,
                          public nsSupportsWeakReference
 {
 public:
@@ -60,6 +67,9 @@ public:
   // nsISupports
   NS_DECL_ISUPPORTS
 
+  // nsIWebProgressListener
+  NS_DECL_NSIWEBPROGRESSLISTENER
+  
   // nsIEditingSession
   NS_DECL_NSIEDITINGSESSION
 
@@ -67,13 +77,27 @@ public:
 protected:
 
   nsresult        GetDocShellFromWindow(nsIDOMWindow *inWindow, nsIDocShell** outDocShell);  
+  nsresult        GetEditorDocShellFromWindow(nsIDOMWindow *inWindow, nsIEditorDocShell** outDocShell);
   nsresult        SetupFrameControllers(nsIDOMWindow *inWindow);
   
   nsresult        SetEditorOnControllers(nsIDOMWindow *inWindow, nsIEditor* inEditor);
 
+  nsresult        PrepareForEditing();
+  
+  // progress load stuff
+  nsresult        StartDocumentLoad(nsIWebProgress *aWebProgress);
+  nsresult        EndDocumentLoad(nsIWebProgress *aWebProgress, nsIChannel* aChannel, nsresult aStatus);
+  nsresult        StartPageLoad(nsIWebProgress *aWebProgress);
+  nsresult        EndPageLoad(nsIWebProgress *aWebProgress, nsIChannel* aChannel, nsresult aStatus);
+  
+  PRBool          NotifyingCurrentDocument(nsIWebProgress *aWebProgress);
+
 protected:
 
   nsWeakPtr       mEditingShell;      // weak ptr back to our editing (web) shell. It owns us.
+  PRBool          mDoneSetup;         // have we prepared for editing yet?
+
+  nsComposerCommandsUpdater    *mStateMaintainer;      // we hold the owning ref to this.
   
 };
 
