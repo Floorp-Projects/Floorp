@@ -779,6 +779,10 @@ nsStr::HashCode(const nsStr& aDest)
 
 #include <ctype.h>
 
+#ifdef XP_MAC
+#define isascii(c)      ((unsigned)(c) < 0x80)
+#endif
+
 void
 nsStr::Print(const nsStr& aDest, FILE* out, PRBool truncate)
 {
