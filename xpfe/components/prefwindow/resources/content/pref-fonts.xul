@@ -72,19 +72,19 @@
 	<html:div>
 	<html:input name="fonts" type="radio" id="pref:0:int:browser.use_document_fonts" val="checked" />
 		<html:label for="pref:0:int:browser.use_document_fonts" accesskey="t" tabindex="0">
-			&useDefaultFontRadio; 
+			&useDefaultFont;
 		</html:label> 
 	</html:div>	
 	<html:div>
 	<html:input name="fonts" type="radio" id="pref:1:int:browser.use_document_fonts" val="checked" />
 		<html:label for="pref:1:int:browser.use_document_fonts" accesskey="t" tabindex="0">
-			&useDocFontRadio;
+			&useDocFontNonDynamic;
 		</html:label>
 	</html:div>	
 	<html:div>
 	<html:input name="fonts" type="radio" id="pref:2:int:browser.use_document_fonts" val="checked" />
 		<html:label for="pref:2:int:browser.use_document_fonts" accesskey="t" tabindex="0">
-			&useDocFontsRadio;
+			&useDocFontDynamic;
 		</html:label>
 	</html:div>	
 		</html:fieldset>
@@ -143,9 +143,9 @@
        <html:table>
 			<html:tr><html:td>&header2;</html:td></html:tr>
 			<html:tr><html:td><html:label>
-					<html:input name="fonts" type="radio" id="pref:0:int:browser.use_document_fonts" val="checked" />&useDefaultFontRadio;</html:label></html:td></html:tr>
-					<html:tr><html:td><html:label><html:input name="fonts" type="radio" id="pref:1:int:browser.use_document_fonts" />&useDocFontRadio;</html:label></html:td></html:tr>
-					<html:tr><html:td><html:label><html:input name="fonts" type="radio" id="pref:2:int:browser.use_document_fonts" />&useDocFontsRadio;</html:label></html:td></html:tr>
+					<html:input name="fonts" type="radio" id="pref:0:int:browser.use_document_fonts" val="checked" />&useDefaultFont;</html:label></html:td></html:tr>
+					<html:tr><html:td><html:label><html:input name="fonts" type="radio" id="pref:1:int:browser.use_document_fonts" />&useDocFontNonDynamic;</html:label></html:td></html:tr>
+					<html:tr><html:td><html:label><html:input name="fonts" type="radio" id="pref:2:int:browser.use_document_fonts" />&useDocFontDynamic;</html:label></html:td></html:tr>
 		</html:table>
 
 -->
