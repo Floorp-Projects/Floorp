@@ -479,15 +479,16 @@
       </td>
     </tr>
 </table>
-</div>
+<!-- from EdDialogOverlay -->
+<xul:box id="advancedEditButtonNoHR"/>
+
+</div> <!-- END of "MoreRow" block that is hidden by More/Fewer button -->
 
 <!-- ///////////////////// End Parent Table //////////////////////////////////// -->
    </td>
   </tr>
 </table>
-
-<!-- from EdDialogOverlay -->
-<xul:box id="advancedEditButton"/>
+<div><hr width="100%"/></div>
 <!-- ////////////////////////// OK CANCEL Box /////////////////////////////// -->
 
   <!-- from global dialogOverlay -->
