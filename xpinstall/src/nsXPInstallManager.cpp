@@ -335,7 +335,8 @@ PRBool nsXPInstallManager::ConfirmChromeInstall()
         NS_WITH_SERVICE(nsIPrompt, dlgService, kNetSupportDialogCID, &rv);
         if (NS_SUCCEEDED(rv))
         {
-            rv = dlgService->ConfirmCheck( confirmText, 
+            rv = dlgService->ConfirmCheck( nsnull,
+                                           confirmText, 
                                            applyNowText, 
                                            &mSelectChrome, 
                                            &bInstall );

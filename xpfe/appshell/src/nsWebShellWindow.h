@@ -34,7 +34,6 @@
 #include "nsITimer.h"
 
 #include "nsIPrompt.h"
-#include "nsINetPrompt.h"
 // can't use forward class decl's because of template bugs on Solaris 
 #include "nsIDOMDocument.h"
 #include "nsIDOMNode.h"
@@ -62,9 +61,7 @@ class nsWebShellWindow : public nsXULWindow,
                          public nsIWebShellWindow,
                          public nsIWebShellContainer,
                          public nsIDocumentLoaderObserver,
-                         public nsIDocumentObserver,
-                         public nsIPrompt,
-                         public nsINetPrompt
+                         public nsIDocumentObserver
 
 {
 public:
@@ -90,6 +87,7 @@ public:
   NS_IMETHOD GetWidget(nsIWidget *& aWidget);
   NS_IMETHOD GetDOMWindow(nsIDOMWindow** aDOMWindow);
   NS_IMETHOD ConvertWebShellToDOMWindow(nsIWebShell* aShell, nsIDOMWindow** aDOMWindow);
+  NS_IMETHOD GetPrompter(nsIPrompt* *result);
   // nsWebShellWindow methods...
   nsresult Initialize(nsIXULWindow * aParent, nsIAppShell* aShell, nsIURI* aUrl,
                       PRBool aCreatedVisible, PRBool aLoadDefaultPage,
@@ -167,11 +165,6 @@ public:
   // nsIBaseWindow
   NS_IMETHOD Destroy();
 
-  // nsIPrompt
-  NS_DECL_NSIPROMPT
-
-	// nsINetPrompt
-  NS_DECL_NSINETPROMPT
 protected:
   
   void LoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aParentWindow);
@@ -206,6 +199,7 @@ protected:
   nsCOMPtr<nsITimer>      mSPTimer;
   PRBool                  mSPTimerSize, mSPTimerPosition;
   PRLock *                mSPTimerLock;
+  nsCOMPtr<nsIPrompt>     mPrompter;
 
   void        SetPersistenceTimer(PRBool aSize, PRBool aPosition);
   static void FirePersistenceTimer(nsITimer *aTimer, void *aClosure);

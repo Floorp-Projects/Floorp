@@ -2393,7 +2393,7 @@ nsInstall::Alert(nsString& string)
     if (NS_FAILED(res)) 
         return res;
     
-    return dialog->Alert(string.GetUnicode());
+    return dialog->Alert(nsnull, string.GetUnicode());
 }
 
 PRInt32    
@@ -2406,7 +2406,7 @@ nsInstall::Confirm(nsString& string, PRBool* aReturn)
     if (NS_FAILED(res)) 
         return res;
     
-    return dialog->Confirm(string.GetUnicode(), aReturn);
+    return dialog->Confirm(nsnull, string.GetUnicode(), aReturn);
 }
 
 

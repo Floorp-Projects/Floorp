@@ -82,7 +82,7 @@ NS_IMETHODIMP nsContentTreeOwner::GetInterface(const nsIID& aIID, void** aSink)
    if(aIID.Equals(NS_GET_IID(nsIWebBrowserChrome)))
       *aSink = NS_STATIC_CAST(nsIWebBrowserChrome*, this);
    else if(aIID.Equals(NS_GET_IID(nsIPrompt)))
-      return mXULWindow->QueryInterface(aIID, aSink);
+      return mXULWindow->GetInterface(aIID, aSink);
    else
       return QueryInterface(aIID, aSink);
 

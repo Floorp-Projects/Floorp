@@ -1166,7 +1166,7 @@ NS_IMETHODIMP GlobalWindowImpl::Alert(JSContext* cx, jsval* argv, PRUint32 argc)
    nsCOMPtr<nsIPrompt> prompter(do_GetInterface(mDocShell));
    NS_ENSURE_TRUE(prompter, NS_ERROR_FAILURE);
 
-   return prompter->Alert(str.GetUnicode());
+   return prompter->Alert(nsnull, str.GetUnicode());
 }
 
 NS_IMETHODIMP GlobalWindowImpl::Confirm(JSContext* cx, jsval* argv,
@@ -1185,7 +1185,7 @@ NS_IMETHODIMP GlobalWindowImpl::Confirm(JSContext* cx, jsval* argv,
    nsCOMPtr<nsIPrompt> prompter(do_GetInterface(mDocShell));
    NS_ENSURE_TRUE(prompter, NS_ERROR_FAILURE);
 
-   return prompter->Confirm(str.GetUnicode(), aReturn);
+   return prompter->Confirm(nsnull, str.GetUnicode(), aReturn);
 }
 
 NS_IMETHODIMP GlobalWindowImpl::Prompt(JSContext* cx, jsval* argv, 
@@ -1213,7 +1213,8 @@ NS_IMETHODIMP GlobalWindowImpl::Prompt(JSContext* cx, jsval* argv,
 
    PRBool b;
    PRUnichar* uniResult = nsnull;
-   ret = prompter->Prompt(str.GetUnicode(), initial.GetUnicode(), &uniResult, &b);
+   ret = prompter->Prompt(nsnull, str.GetUnicode(), nsnull,
+                          initial.GetUnicode(), &uniResult, &b);
    aReturn = uniResult;
    if(uniResult)
       nsAllocator::Free(uniResult);

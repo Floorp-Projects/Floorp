@@ -60,7 +60,6 @@
 // Once other kinds of auth are up change TODO
 #include "nsBasicAuth.h" 
 static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
-#include "nsINetPrompt.h"
 #include "nsProxiedService.h"
 
 static NS_DEFINE_IID(kProxyObjectManagerIID, NS_IPROXYEVENT_MANAGER_IID);
@@ -1781,14 +1780,17 @@ nsHTTPChannel::Authenticate(const char *iChallenge, PRBool iProxyAuth)
         message.AppendWithConversion(iChallenge);
         
         // Get url
-         nsXPIDLCString urlCString; 
+        nsXPIDLCString urlCString; 
         mURI->GetHost(getter_Copies(urlCString));
         
-        rv = mPrompter->PromptUsernameAndPassword(
-                message.GetUnicode(),
-                &user,
-                &passwd,
-                &retval);
+        nsAutoString hostname = NS_ConvertToString(urlCString); // XXX i18n
+        rv = mPrompter->PromptUsernameAndPassword(nsnull,
+                                                  message.GetUnicode(),
+                                                  hostname.GetUnicode(),
+                                                  PR_FALSE,
+                                                  &user,
+                                                  &passwd,
+                                                  &retval);
        
         if (NS_SUCCEEDED(rv) && (retval))
         {

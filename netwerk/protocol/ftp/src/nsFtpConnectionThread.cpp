@@ -810,8 +810,11 @@ nsFtpConnectionThread::S_user() {
             message.AssignWithConversion("Enter username and password for "); //TODO localize it!
             message.AppendWithConversion(host);
 
-            rv = proxyprompter->PromptUsernameAndPassword(message.GetUnicode(),
-                    &user, &passwd, &retval);
+            nsAutoString realm = NS_ConvertToString(host);                   // XXX i18n 
+            rv = proxyprompter->PromptUsernameAndPassword(nsnull,
+                                                          message.GetUnicode(),
+                                                          realm.GetUnicode(), PR_FALSE,
+                                                          &user, &passwd, &retval);
 
             // if the user canceled or didn't supply a username we want to fail
             if (!retval || (user && !*user) )
@@ -889,9 +892,10 @@ nsFtpConnectionThread::S_pass() {
             message.AppendWithConversion(" on ");
             message.AppendWithConversion(host);
 
-            rv = proxyprompter->PromptPassword(message.GetUnicode(),
-                        title.GetUnicode(),
-                        &passwd, &retval);
+            rv = proxyprompter->PromptPassword(title.GetUnicode(),
+                                               message.GetUnicode(),
+                                               NS_ConvertASCIItoUCS2(host).GetUnicode(), 
+                                               PR_FALSE, &passwd, &retval);
 
             // we want to fail if the user canceled or didn't enter a password.
             if (!retval || (passwd && !*passwd) )

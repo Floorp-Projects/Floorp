@@ -256,8 +256,6 @@ NS_INTERFACE_MAP_BEGIN(nsWebShellWindow)
    NS_INTERFACE_MAP_ENTRY(nsIWebShellWindow)
    NS_INTERFACE_MAP_ENTRY(nsIWebShellContainer)
    NS_INTERFACE_MAP_ENTRY(nsIDocumentLoaderObserver)
-   NS_INTERFACE_MAP_ENTRY(nsIPrompt)
-   NS_INTERFACE_MAP_ENTRY(nsINetPrompt)
    NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
    NS_INTERFACE_MAP_ENTRY(nsIXULWindow)
    NS_INTERFACE_MAP_ENTRY(nsIBaseWindow)
@@ -1432,7 +1430,7 @@ void nsWebShellWindow::LoadContentAreas() {
     char        *urlChar;
     nsIWebShell *contentShell;
     nsresult rv;
-    for (endPos = 0; endPos < searchSpec.Length(); ) {
+    for (endPos = 0; endPos < (PRInt32)searchSpec.Length(); ) {
       // extract contentAreaID and URL substrings
       begPos = endPos;
       eqPos = searchSpec.FindChar('=', PR_FALSE,begPos);
@@ -1729,9 +1727,265 @@ NS_IMETHODIMP nsWebShellWindow::Destroy()
    
    return nsXULWindow::Destroy();
 }
- 
+
+////////////////////////////////////////////////////////////////////////////////
+// XXX What a mess we have here w.r.t. our prompting interfaces. As far as I
+// can tell, the situation looks something like this:
+//
+//      - clients get the nsIPrompt from the web shell window
+//      - the web shell window passes control to nsCommonDialogs
+//      - nsCommonDialogs calls into js with the current dom window
+//      - the dom window gets the nsIPrompt of its tree owner
+//      - somewhere along the way a real dialog comes up
+// 
+// This little transducer maps the nsIPrompt interface to the nsICommonDialogs
+// interface. Ideally, nsIPrompt would be implemented by nsIDOMWindow which 
+// would eliminate the need for this.
+
+class nsDOMWindowPrompter : public nsIPrompt
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIPROMPT
+
+  nsDOMWindowPrompter(nsIDOMWindow* window);
+  virtual ~nsDOMWindowPrompter() {}
+
+  nsresult Init();
+
+protected:
+  nsCOMPtr<nsIDOMWindow>        mDOMWindow;
+  nsCOMPtr<nsICommonDialogs>    mCommonDialogs;
+};
+
+static nsresult
+NS_NewDOMWindowPrompter(nsIPrompt* *result, nsIDOMWindow* window)
+{
+  nsresult rv;
+  nsDOMWindowPrompter* prompter = new nsDOMWindowPrompter(window);
+  if (prompter == nsnull)
+    return NS_ERROR_OUT_OF_MEMORY;
+  NS_ADDREF(prompter);
+  rv = prompter->Init();
+  if (NS_FAILED(rv)) {
+    NS_RELEASE(prompter);
+    return rv;
+  }
+  *result = prompter;
+  return NS_OK;
+}
+
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsDOMWindowPrompter, nsIPrompt)
+
+nsDOMWindowPrompter::nsDOMWindowPrompter(nsIDOMWindow* window)
+  : mDOMWindow(window)
+{
+  NS_INIT_REFCNT();
+}
+
+nsresult
+nsDOMWindowPrompter::Init()
+{
+  nsresult rv;
+  mCommonDialogs = do_GetService(kCommonDialogsCID, &rv);
+  return rv;
+}
+
+NS_IMETHODIMP
+nsDOMWindowPrompter::Alert(const PRUnichar* dialogTitle, 
+                           const PRUnichar* text)
+{
+  nsresult rv;
+  nsAutoString title(dialogTitle);
+  if (title == nsnull)
+    title.AssignWithConversion("Alert");        // XXX i18n
+  rv = mCommonDialogs->Alert(mDOMWindow, title.GetUnicode(), text);
+  return rv; 
+}
+
+NS_IMETHODIMP
+nsDOMWindowPrompter::Confirm(const PRUnichar* dialogTitle, 
+                             const PRUnichar* text,
+                             PRBool *_retval)
+{
+  nsresult rv; 
+  nsAutoString title(dialogTitle);
+  if (title == nsnull)
+    title.AssignWithConversion("Confirm");        // XXX i18n
+  rv = mCommonDialogs->Confirm(mDOMWindow, title.GetUnicode(), text, _retval);
+  return rv; 
+}
+
+NS_IMETHODIMP
+nsDOMWindowPrompter::ConfirmCheck(const PRUnichar* dialogTitle, 
+                                  const PRUnichar* text,
+                                  const PRUnichar* checkMsg,
+                                  PRBool *checkValue,
+                                  PRBool *_retval)
+{
+	nsresult rv;
+  nsAutoString title(dialogTitle);
+  if (title == nsnull)
+    title.AssignWithConversion("Confirm");        // XXX i18n
+  rv = mCommonDialogs->ConfirmCheck(mDOMWindow, title.GetUnicode(), text, 
+                                    checkMsg, checkValue, _retval);
+  return rv; 
+}
+
+NS_IMETHODIMP
+nsDOMWindowPrompter::Prompt(const PRUnichar* dialogTitle,
+                            const PRUnichar* text,
+                            const PRUnichar* passwordRealm,
+                            const PRUnichar* defaultText,
+                            PRUnichar* *result,
+                            PRBool *_retval)
+{
+  // ignore passwordRealm here?
+  nsresult rv; 
+  nsAutoString title(dialogTitle);
+  if (title == nsnull)
+    title.AssignWithConversion("Prompt");        // XXX i18n
+  rv = mCommonDialogs->Prompt(mDOMWindow, title.GetUnicode(), text,
+                              defaultText, result, _retval);
+  return rv; 
+}
+
+NS_IMETHODIMP
+nsDOMWindowPrompter::PromptUsernameAndPassword(const PRUnichar* dialogTitle, 
+                                               const PRUnichar* text,
+                                               const PRUnichar* passwordRealm,
+                                               PRBool persistPassword,
+                                               PRUnichar* *user,
+                                               PRUnichar* *pwd,
+                                               PRBool *_retval)
+{	
+  // ignore passwordRealm and persistPassword here?
+  nsresult rv; 
+  nsAutoString title(dialogTitle);
+  if (title == nsnull)
+    title.AssignWithConversion("Prompt");        // XXX i18n
+  rv = mCommonDialogs->PromptUsernameAndPassword(mDOMWindow, title.GetUnicode(), text,
+                                                 user, pwd, _retval);
+  return rv;
+}
+
+NS_IMETHODIMP
+nsDOMWindowPrompter::PromptPassword(const PRUnichar* dialogTitle, 
+                                    const PRUnichar* text,
+                                    const PRUnichar* passwordRealm,
+                                    PRBool persistPassword,
+                                    PRUnichar* *pwd,
+                                    PRBool *_retval)
+{
+  // ignore passwordRealm and persistPassword here?
+  nsresult rv;
+  nsAutoString title(dialogTitle);
+  if (title == nsnull)
+    title.AssignWithConversion("Prompt");        // XXX i18n
+  rv = mCommonDialogs->PromptPassword(mDOMWindow, title.GetUnicode(), text,
+                                      pwd, _retval);
+  return rv;
+}
+
+NS_IMETHODIMP
+nsDOMWindowPrompter::Select(const PRUnichar *dialogTitle,
+                            const PRUnichar* inMsg,
+                            PRUint32 inCount, 
+                            const PRUnichar **inList,
+                            PRInt32 *outSelection,
+                            PRBool *_retval)
+{
+  nsresult rv; 
+  nsAutoString title(dialogTitle);
+  if (title == nsnull)
+    title.AssignWithConversion("Select");        // XXX i18n
+  rv = mCommonDialogs->Select(mDOMWindow, title.GetUnicode(), inMsg,
+                              inCount, inList, outSelection, _retval);
+  return rv;
+}
+
+NS_IMETHODIMP
+nsDOMWindowPrompter::UniversalDialog(const PRUnichar *inTitleMessage,
+                                     const PRUnichar *inDialogTitle, /* e.g., alert, confirm, prompt, prompt password */
+                                     const PRUnichar *inMsg, /* main message for dialog */
+                                     const PRUnichar *inCheckboxMsg, /* message for checkbox */
+                                     const PRUnichar *inButton0Text, /* text for first button */
+                                     const PRUnichar *inButton1Text, /* text for second button */
+                                     const PRUnichar *inButton2Text, /* text for third button */
+                                     const PRUnichar *inButton3Text, /* text for fourth button */
+                                     const PRUnichar *inEditfield1Msg, /*message for first edit field */
+                                     const PRUnichar *inEditfield2Msg, /* message for second edit field */
+                                     PRUnichar **inoutEditfield1Value, /* initial and final value for first edit field */
+                                     PRUnichar **inoutEditfield2Value, /* initial and final value for second edit field */
+                                     const PRUnichar *inIConURL, /* url of icon to be displayed in dialog */
+                                     /* examples are
+                                        "chrome://global/skin/question-icon.gif" for question mark,
+                                        "chrome://global/skin/alert-icon.gif" for exclamation mark
+                                     */
+                                     PRBool *inoutCheckboxState, /* initial and final state of check box */
+                                     PRInt32 inNumberButtons, /* total number of buttons (0 to 4) */
+                                     PRInt32 inNumberEditfields, /* total number of edit fields (0 to 2) */
+                                     PRInt32 inEditField1Password, /* is first edit field a password field */
+                                     PRInt32 *outButtonPressed) /* number of button that was pressed (0 to 3) */
+{
+  nsresult rv;
+  rv = mCommonDialogs->UniversalDialog(mDOMWindow, 
+                                       inTitleMessage,
+                                       inDialogTitle,
+                                       inMsg,
+                                       inCheckboxMsg,
+                                       inButton0Text,
+                                       inButton1Text,
+                                       inButton2Text,
+                                       inButton3Text,
+                                       inEditfield1Msg,
+                                       inEditfield2Msg,
+                                       inoutEditfield1Value,
+                                       inoutEditfield2Value,
+                                       inIConURL,
+                                       inoutCheckboxState,
+                                       inNumberButtons,
+                                       inNumberEditfields,
+                                       inEditField1Password,
+                                       outButtonPressed);
+  return rv;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+NS_IMETHODIMP
+nsWebShellWindow::GetPrompter(nsIPrompt* *result)
+{
+  nsresult rv;
+  if (mPrompter == nsnull) {
+    nsIWebShell* tempWebShell;
+    GetWebShell(tempWebShell);
+    nsCOMPtr<nsIWebShell> webShell(dont_AddRef(tempWebShell));
+    nsCOMPtr<nsIDOMWindow> domWindow;
+    rv = ConvertWebShellToDOMWindow(webShell, getter_AddRefs(domWindow));
+    if (NS_FAILED(rv)) {
+      NS_ERROR("Unable to retrieve the DOM window from the new web shell.");
+      return rv;
+    }
+    nsCOMPtr<nsIPrompt> prompt;
+    rv = NS_NewDOMWindowPrompter(getter_AddRefs(prompt), domWindow);
+    if (NS_FAILED(rv)) return rv;
+
+    // wrap the nsDOMWindowPrompter in a nsISingleSignOnPrompt:
+    rv = NS_NewSingleSignOnPrompt(getter_AddRefs(mPrompter), prompt);
+    if (NS_FAILED(rv)) return rv;
+  }
+  *result = mPrompter; 
+  NS_ADDREF(*result);
+  return NS_OK;
+}
+
+#if 0
+////////////////////////////////////////////////////////////////////////////////
 // nsIPrompt
-NS_IMETHODIMP nsWebShellWindow::Alert(const PRUnichar *text)
+
+NS_IMETHODIMP nsWebShellWindow::Alert(const PRUnichar* dialogTitle, 
+                                      const PRUnichar* text)
 {
   nsresult rv; 
   nsCOMPtr<nsIDOMWindow> domWindow;
@@ -1752,7 +2006,9 @@ NS_IMETHODIMP nsWebShellWindow::Alert(const PRUnichar *text)
   return rv; 
 }
 
-NS_IMETHODIMP nsWebShellWindow::Confirm(const PRUnichar *text, PRBool *_retval)
+NS_IMETHODIMP nsWebShellWindow::Confirm(const PRUnichar* dialogTitle, 
+                                        const PRUnichar* text,
+                                        PRBool *_retval)
 {
   nsresult rv; 
   nsCOMPtr<nsIDOMWindow> domWindow;
@@ -1772,7 +2028,11 @@ NS_IMETHODIMP nsWebShellWindow::Confirm(const PRUnichar *text, PRBool *_retval)
   return rv; 
 }
 
-NS_IMETHODIMP nsWebShellWindow::ConfirmCheck(const PRUnichar *text, const PRUnichar *checkMsg, PRBool *checkValue, PRBool *_retval)
+NS_IMETHODIMP nsWebShellWindow::ConfirmCheck(const PRUnichar* dialogTitle, 
+                                             const PRUnichar* text,
+                                             const PRUnichar* checkMsg,
+                                             PRBool *checkValue,
+                                             PRBool *_retval)
 {
 	nsresult rv; 
   nsCOMPtr<nsIDOMWindow> domWindow;
@@ -1841,7 +2101,12 @@ NS_IMETHODIMP nsWebShellWindow::UniversalDialog
 
 
 
-NS_IMETHODIMP nsWebShellWindow::Prompt(const PRUnichar *text, const PRUnichar *defaultText, PRUnichar **result, PRBool *_retval)
+NS_IMETHODIMP nsWebShellWindow::Prompt(const PRUnichar* dialogTitle,
+                                       const PRUnichar* text,
+                                       const PRUnichar* passwordRealm,
+                                       const PRUnichar* defaultText,
+                                       PRUnichar* *result,
+                                       PRBool *_retval)
 {
   nsresult rv; 
   nsCOMPtr<nsIDOMWindow> domWindow;
@@ -1862,7 +2127,13 @@ NS_IMETHODIMP nsWebShellWindow::Prompt(const PRUnichar *text, const PRUnichar *d
   return rv; 
 }
 
-NS_IMETHODIMP nsWebShellWindow::PromptUsernameAndPassword(const PRUnichar *text, PRUnichar **user, PRUnichar **pwd, PRBool *_retval)
+NS_IMETHODIMP nsWebShellWindow::PromptUsernameAndPassword(const PRUnichar* dialogTitle, 
+                                                          const PRUnichar* text,
+                                                          const PRUnichar* passwordRealm,
+                                                          PRBool persistPassword,
+                                                          PRUnichar* *user,
+                                                          PRUnichar* *pwd,
+                                                          PRBool *_retval)
 {	
   nsresult rv; 
   nsCOMPtr<nsIDOMWindow> domWindow;
@@ -1884,7 +2155,12 @@ nsString defaultTitle; defaultTitle.AssignWithConversion("Prompt Username and Pa
   return rv;
 }
 
-NS_IMETHODIMP nsWebShellWindow::PromptPassword(const PRUnichar *text, const PRUnichar *title, PRUnichar **pwd, PRBool *_retval)
+NS_IMETHODIMP nsWebShellWindow::PromptPassword(const PRUnichar* dialogTitle, 
+                                               const PRUnichar* text,
+                                               const PRUnichar* passwordRealm,
+                                               PRBool persistPassword,
+                                               PRUnichar* *pwd,
+                                               PRBool *_retval)
 {
   nsresult rv; 
   nsCOMPtr<nsIDOMWindow> domWindow;
@@ -1899,7 +2175,7 @@ NS_IMETHODIMP nsWebShellWindow::PromptPassword(const PRUnichar *text, const PRUn
  
  NS_WITH_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, &rv);
  if ( NS_SUCCEEDED( rv ) )
- 	rv = dialog->PromptPassword( domWindow, title, text, pwd, _retval );
+ 	rv = dialog->PromptPassword( domWindow, dialogTitle, text, pwd, _retval );
   return rv;
 }
 
@@ -1922,30 +2198,30 @@ NS_IMETHODIMP nsWebShellWindow::Select( const PRUnichar *inDialogTitle, const PR
   return rv;
 }
 
-NS_IMETHODIMP nsWebShellWindow::Alert(const char *url, PRBool stripUrl, const PRUnichar *title, const PRUnichar *text)
+NS_IMETHODIMP nsWebShellWindow::Alert(const char *key, const PRUnichar *title, const PRUnichar *text)
 {
 	return Alert( text );
 }
 
 
-NS_IMETHODIMP nsWebShellWindow::Confirm(const char *url, PRBool stripUrl, const PRUnichar *title, const PRUnichar *text, PRBool *_retval)
+NS_IMETHODIMP nsWebShellWindow::Confirm(const char *key, const PRUnichar *title, const PRUnichar *text, PRBool *_retval)
 {
 	return Confirm( text, _retval );
 }
 
-NS_IMETHODIMP nsWebShellWindow::PromptUsernameAndPassword(const char *url, PRBool stripUrl, const PRUnichar *title, const PRUnichar *text, PRUnichar **user, PRUnichar **pwd, PRBool *_retval)
+NS_IMETHODIMP nsWebShellWindow::PromptUsernameAndPassword(const char *key, const PRUnichar *title, const PRUnichar *text, PRUnichar **user, PRUnichar **pwd, PRBool *_retval)
 {
 	nsresult res;
    NS_WITH_SERVICE(nsIWalletService, wallet, kWalletServiceCID, &res);
    if (NS_FAILED(res)) {
-	     return PromptUsernameAndPassword(text,user, pwd, _retval);
+	     return PromptUsernameAndPassword(text, user, pwd, _retval);
    }
    nsCOMPtr<nsIPrompt> prompter = this;
-   return wallet->PromptUsernameAndPasswordURL(text,user, pwd, url, stripUrl, prompter, _retval);
+   return wallet->PromptUsernameAndPassword(text, user, pwd, key, prompter, PR_TRUE, _retval);
 }
 
 
-NS_IMETHODIMP nsWebShellWindow::PromptPassword(const char *url, PRBool stripUrl, const PRUnichar *title, const PRUnichar *text, PRUnichar **pwd, PRBool *_retval)
+NS_IMETHODIMP nsWebShellWindow::PromptPassword(const char *key, const PRUnichar *title, const PRUnichar *text, PRUnichar **pwd, PRBool *_retval)
 {
    nsresult res;
    NS_WITH_SERVICE(nsIWalletService, wallet, kWalletServiceCID, &res);
@@ -1953,10 +2229,10 @@ NS_IMETHODIMP nsWebShellWindow::PromptPassword(const char *url, PRBool stripUrl,
 	     return PromptPassword(text, title, pwd, _retval);
    }
    nsCOMPtr<nsIPrompt> prompter = this;
-   return wallet->PromptPasswordURL(text, pwd, url, stripUrl, prompter,  _retval);
+   return wallet->PromptPassword(text, pwd, key, prompter, PR_TRUE, _retval);
 }
 
-NS_IMETHODIMP nsWebShellWindow::Prompt(const char *url, PRBool stripUrl, const PRUnichar *title, const PRUnichar *text, PRUnichar **value, PRBool *_retval)
+NS_IMETHODIMP nsWebShellWindow::Prompt(const char *key, const PRUnichar *title, const PRUnichar *text, PRUnichar **value, PRBool *_retval)
 {
    nsresult res;
    NS_WITH_SERVICE(nsIWalletService, wallet, kWalletServiceCID, &res);
@@ -1964,5 +2240,11 @@ NS_IMETHODIMP nsWebShellWindow::Prompt(const char *url, PRBool stripUrl, const P
 	     return Prompt(text, title, value, _retval);
    }
    nsCOMPtr<nsIPrompt> prompter = this;
-   return wallet->PromptURL(text, nsnull, value, url, stripUrl, prompter,  _retval);
+   return wallet->Prompt(text, nsnull, value, key, prompter,  _retval);
 }
+
+#endif
+
+
+
+

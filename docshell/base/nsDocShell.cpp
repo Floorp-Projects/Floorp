@@ -1045,7 +1045,7 @@ NS_IMETHODIMP nsDocShell::LoadURI(const PRUnichar* aURI)
       dnsMsg.AppendWithConversion(' ');
       dnsMsg.Append(messageStr);
 
-      prompter->Alert(dnsMsg.GetUnicode());
+      prompter->Alert(nsnull, dnsMsg.GetUnicode());
       } // end unknown protocol
 
    if(!uri)
