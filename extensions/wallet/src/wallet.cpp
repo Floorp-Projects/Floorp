@@ -487,6 +487,43 @@ wallet_DumpStopwatch() {
 }
 #endif /* DEBUG */
 
+
+/**********************/
+/* Concatenating and Copying Strings */
+/**********************/
+
+#undef StrAllocCopy
+#define StrAllocCopy(dest, src) Local_SACopy (&(dest), src)
+PRIVATE char *
+Local_SACopy(char **destination, const char *source) {
+  if(*destination) {
+    PL_strfree(*destination);
+    *destination = 0;
+  }
+  *destination = PL_strdup(source);
+  return *destination;
+}
+
+#undef StrAllocCat
+#define StrAllocCat(dest, src) Local_SACat (&(dest), src)
+PRIVATE char *
+Local_SACat(char **destination, const char *source) {
+  if (source && *source) {
+    if (*destination) {
+      int length = PL_strlen (*destination);
+      *destination = (char *) PR_Realloc(*destination, length + PL_strlen(source) + 1);
+      if (*destination == NULL) {
+        return(NULL);
+      }
+      PL_strcpy (*destination + length, source);
+    } else {
+      *destination = PL_strdup(source);
+    }
+  }
+  return *destination;
+}
+  
+
 /********************************************************/
 /* The following data and procedures are for preference */
 /********************************************************/
@@ -499,12 +536,17 @@ SI_RegisterCallback(const char* domain, PrefChangedFunc callback, void* instance
 extern PRBool
 SI_GetBoolPref(const char * prefname, PRBool defaultvalue);
 
-static const char *pref_captureForms =
-    "wallet.captureForms";
-PRIVATE Bool wallet_captureForms = PR_FALSE;
+extern void
+SI_SetBoolPref(const char * prefname, PRBool prefvalue);
+
+static const char *pref_captureForms = "wallet.captureForms";
+static const char *pref_WalletNotified = "wallet.Notified";
+
+PRIVATE PRBool wallet_captureForms = PR_FALSE;
+PRIVATE PRBool wallet_Notified = PR_FALSE;
 
 PRIVATE void
-wallet_SetFormsCapturingPref(Bool x)
+wallet_SetFormsCapturingPref(PRBool x)
 {
     /* do nothing if new value of pref is same as current value */
     if (x == wallet_captureForms) {
@@ -528,7 +570,7 @@ void
 wallet_RegisterCapturePrefCallbacks(void)
 {
     PRBool x;
-    static Bool first_time = PR_TRUE;
+    static PRBool first_time = PR_TRUE;
 
     if(first_time)
     {
@@ -539,12 +581,29 @@ wallet_RegisterCapturePrefCallbacks(void)
     }
 }
 
-PRIVATE Bool
+PRIVATE PRBool
 wallet_GetFormsCapturingPref(void)
 {
     wallet_RegisterCapturePrefCallbacks();
     return wallet_captureForms;
 }
+
+PRIVATE void
+wallet_SetWalletNotificationPref(PRBool x) {
+  SI_SetBoolPref(pref_WalletNotified, x);
+  wallet_Notified = x;
+}
+
+PRIVATE PRBool
+wallet_GetWalletNotificationPref(void) {
+  static PRBool first_time = PR_TRUE;
+  if (first_time) {
+    PRBool x = SI_GetBoolPref(pref_WalletNotified, PR_FALSE);
+    wallet_SetWalletNotificationPref(x);        
+  }
+  return wallet_Notified;
+}
+
 
 /*************************************************************************/
 /* The following routines are used for accessing strings to be localized */
@@ -2874,9 +2933,7 @@ WLLT_OnSubmit(nsIContent* formNode) {
 #endif
 
   /* get to the form elements */
-#ifdef AutoCapture
   PRInt32 count = 0;
-#endif
   nsIDOMHTMLFormElement* formElement = nsnull;
   nsresult result = formNode->QueryInterface(kIDOMHTMLFormElementIID, (void**)&formElement);
   if ((NS_SUCCEEDED(result)) && (nsnull != formElement)) {
@@ -2891,9 +2948,7 @@ WLLT_OnSubmit(nsIContent* formNode) {
 
       /* got to the form elements at long last */
       /* now build arrays for single signon */
-#ifdef AutoCapture
       /* also find out how many text fields are on the form */
-#endif
       PRUint32 numElements;
       elements->GetLength(&numElements);
       for (PRUint32 elementX = 0; elementX < numElements; elementX++) {
@@ -2909,11 +2964,9 @@ WLLT_OnSubmit(nsIContent* formNode) {
             if (NS_SUCCEEDED(result)) {
               PRBool isText = ((type == "") || (type.Compare("text", PR_TRUE)==0));
               PRBool isPassword = (type.Compare("password", PR_TRUE)==0);
-#ifdef AutoCapture
               if (isText) {
                 count++;
               }
-#endif
               if (value_cnt < MAX_ARRAY_SIZE) {
                 if (isText) {
                   type_array[value_cnt] = FORM_TYPE_TEXT;
@@ -2943,7 +2996,23 @@ WLLT_OnSubmit(nsIContent* formNode) {
       SINGSIGN_RememberSignonData
         (URLName, (char**)name_array, (char**)value_array, (char**)type_array, value_cnt);
 
-#ifdef AutoCaputure
+#ifndef AutoCaputure
+      /* give notification if this is first significant form submitted */
+      if ((count>=3) && !wallet_GetWalletNotificationPref()) {
+
+        /* conditions all met, now give notification */
+        char* notification = 0;
+        char * message = Wallet_Localize("WalletNotification1");
+        StrAllocCopy(notification, message);
+        PR_FREEIF(message);
+        message = Wallet_Localize("WalletNotification2");
+        StrAllocCat(notification, message);
+        PR_FREEIF(message);
+        wallet_SetWalletNotificationPref(PR_TRUE);
+        Wallet_Alert(notification);
+        PR_Free (notification);
+      }
+#else
       /* save form if it meets all necessary conditions */
       if (wallet_GetFormsCapturingPref() && (count>=3) && wallet_OKToCapture(URLName)) {
 
