@@ -240,16 +240,16 @@ nsScriptLoader::InNonScriptingContainer(nsIDOMHTMLScriptElement* aScriptElement)
     NS_ASSERTION(nodeInfo, "element without node info");
 
     if (nodeInfo) {
-      nsCOMPtr<nsIAtom> localName = nodeInfo->GetNameAtom();
+      nsIAtom *localName = nodeInfo->NameAtom();
       
       // XXX noframes and noembed are currently unconditionally not
       // displayed and processed. This might change if we support either
       // prefs or per-document container settings for not allowing
       // frames or plugins.
       if (content->IsContentOfType(nsIContent::eHTML) &&
-          ((localName.get() == nsHTMLAtoms::iframe) ||
-           (localName.get() == nsHTMLAtoms::noframes) ||
-           (localName.get() == nsHTMLAtoms::noembed))) {
+          ((localName == nsHTMLAtoms::iframe) ||
+           (localName == nsHTMLAtoms::noframes) ||
+           (localName == nsHTMLAtoms::noembed))) {
         return PR_TRUE;
       }
     }

@@ -1532,8 +1532,8 @@ nsXULDocument::Persist(const nsAString& aID,
 
     nsCOMPtr<nsINodeInfo> ni = element->GetExistingAttrNameFromQName(aAttr);
     if (ni) {
-        tag = ni->GetNameAtom();
-        nameSpaceID = ni->GetNamespaceID();
+        tag = ni->NameAtom();
+        nameSpaceID = ni->NamespaceID();
     }
     else {
         tag = do_GetAtom(aAttr);
@@ -2339,10 +2339,9 @@ nsXULDocument::CreateElement(nsINodeInfo *aNodeInfo, nsIContent** aResult)
         if (NS_FAILED(rv)) return rv;
     }
     else {
-        PRInt32 namespaceID = aNodeInfo->GetNamespaceID();
-
         nsCOMPtr<nsIElementFactory> elementFactory;
-        GetElementFactory(namespaceID, getter_AddRefs(elementFactory));
+        GetElementFactory(aNodeInfo->NamespaceID(),
+                          getter_AddRefs(elementFactory));
 
         rv = elementFactory->CreateInstanceByTag(aNodeInfo,
                                                  getter_AddRefs(result));
@@ -3474,10 +3473,8 @@ nsXULDocument::CreateElement(nsXULPrototypeElement* aPrototype, nsIContent** aRe
         // what. So we need to copy everything out of the prototype
         // into the element.
 
-        PRInt32 namespaceID = aPrototype->mNodeInfo->GetNamespaceID();
-
         nsCOMPtr<nsIElementFactory> elementFactory;
-        GetElementFactory(namespaceID,
+        GetElementFactory(aPrototype->mNodeInfo->NamespaceID(),
                           getter_AddRefs(elementFactory));
         rv = elementFactory->CreateInstanceByTag(aPrototype->mNodeInfo,
                                                  getter_AddRefs(result));
@@ -3836,11 +3833,8 @@ nsXULDocument::OverlayForwardReference::Merge(nsIContent* aTargetNode,
         nsCOMPtr<nsINodeInfo> ni = aTargetNode->GetNodeInfo();
 
         if (ni) {
-            nsCOMPtr<nsINodeInfoManager> nimgr;
-            ni->GetNodeInfoManager(getter_AddRefs(nimgr));
-
-            nimgr->GetNodeInfo(attr, prefix, nameSpaceID,
-                               getter_AddRefs(ni));
+            ni->NodeInfoManager()->GetNodeInfo(attr, prefix, nameSpaceID,
+                                               getter_AddRefs(ni));
         }
 
         rv = aTargetNode->SetAttr(ni, value, PR_FALSE);

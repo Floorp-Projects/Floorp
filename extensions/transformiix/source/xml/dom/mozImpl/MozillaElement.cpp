@@ -45,7 +45,7 @@ Element::Element(nsIDOMElement* aElement, Document* aOwner) :
     NS_ASSERTION(cont, "Element doesn't implement nsIContent");
     nsINodeInfo *nodeInfo = cont->GetNodeInfo();
     NS_ASSERTION(nodeInfo, "a element without nodeinfo");
-    mNamespaceID = nodeInfo->GetNamespaceID();
+    mNamespaceID = nodeInfo->NamespaceID();
 }
 
 /**

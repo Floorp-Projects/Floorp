@@ -1263,11 +1263,8 @@ nsHTMLAttributes::SetAttributeFor(nsINodeInfo* aAttrName,
   rv = SetAttributeName(aAttrName, haveAttr);
   NS_ENSURE_SUCCESS(rv, rv);
   if (haveAttr) {
-    PRInt32 namespaceID = aAttrName->GetNamespaceID();
-    nsCOMPtr<nsIAtom> localName = aAttrName->GetNameAtom();
-
-    HTMLAttribute* attr = HTMLAttribute::FindHTMLAttribute(localName,
-                                                           namespaceID,
+    HTMLAttribute* attr = HTMLAttribute::FindHTMLAttribute(aAttrName->NameAtom(),
+                                                           aAttrName->NamespaceID(),
                                                            mFirstUnmapped);
     NS_ASSERTION(attr, "failed to find attribute");
     if (!attr)
@@ -1301,8 +1298,7 @@ nsHTMLAttributes::GetAttribute(nsIAtom* aAttrName, PRInt32 aNamespaceID,
 
   *aValue = &attr->mValue;
 
-  // AddRefs
-  *aPrefix = attr->mAttribute.GetNodeInfo()->GetPrefixAtom().get();
+  NS_IF_ADDREF(*aPrefix = attr->mAttribute.GetNodeInfo()->GetPrefixAtom());
 
   return attr->mValue.GetUnit() == eHTMLUnit_Null ? 
          NS_CONTENT_ATTR_NO_VALUE : 
@@ -1327,12 +1323,10 @@ nsHTMLAttributes::GetAttributeNameAt(PRInt32 aIndex,
     }
     else {
         nsINodeInfo* ni = mAttrNames[aIndex].GetNodeInfo();
-        *aNamespaceID = ni->GetNamespaceID();
+        *aNamespaceID = ni->NamespaceID();
 
-        // AddRefs
-        *aName = ni->GetNameAtom().get();
-        // AddRefs
-        *aPrefix = ni->GetPrefixAtom().get();
+        NS_ADDREF(*aName = ni->NameAtom());
+        NS_IF_ADDREF(*aPrefix = ni->GetPrefixAtom());
     }
     result = NS_OK;
   }
@@ -1500,11 +1494,10 @@ nsHTMLAttributes::List(FILE* out, PRInt32 aIndent) const
     }
     else {
       nsINodeInfo* ni = mAttrNames[index].GetNodeInfo();
-      PRInt32 namespaceID = ni->GetNamespaceID();
-      nsCOMPtr<nsIAtom> localName = ni->GetNameAtom();
       nsCOMPtr<nsIAtom> prefix;
       const nsHTMLValue *tmp;
-      GetAttribute(localName, namespaceID, getter_AddRefs(prefix), &tmp);
+      GetAttribute(ni->NameAtom(), ni->GetNamespaceID(),
+                   getter_AddRefs(prefix), &tmp);
       value = *tmp;
       ni->GetQualifiedName(buffer);
     }

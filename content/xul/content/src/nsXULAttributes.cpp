@@ -296,7 +296,8 @@ nsXULAttribute::GetNamespaceURI(nsAString& aNamespaceURI)
 NS_IMETHODIMP
 nsXULAttribute::GetPrefix(nsAString& aPrefix)
 {
-  return mNodeInfo->GetPrefix(aPrefix);
+  mNodeInfo->GetPrefix(aPrefix);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -326,7 +327,8 @@ nsXULAttribute::SetPrefix(const nsAString& aPrefix)
 NS_IMETHODIMP
 nsXULAttribute::GetLocalName(nsAString& aLocalName)
 {
-  return mNodeInfo->GetLocalName(aLocalName);
+  mNodeInfo->GetLocalName(aLocalName);
+  return NS_OK;
 }
 
 NS_IMETHODIMP

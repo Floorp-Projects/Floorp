@@ -118,7 +118,7 @@ NS_IMETHODIMP
 nsSVGElementFactory::CreateInstanceByTag(nsINodeInfo *aNodeInfo,
                                            nsIContent** aResult)
 {
-  nsCOMPtr<nsIAtom> name = aNodeInfo->GetNameAtom();
+  nsIAtom *name = aNodeInfo->NameAtom();
   
   if (name == nsSVGAtoms::polyline)
     return NS_NewSVGPolylineElement(aResult, aNodeInfo);

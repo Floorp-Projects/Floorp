@@ -68,6 +68,7 @@
 #include "nsIScriptError.h"
 #include "nsIDOMScriptObjectFactory.h"
 #include "nsDOMCID.h"
+#include "nsArray.h"
 
 
 static NS_DEFINE_CID(kDOMScriptObjectFactoryCID,
@@ -411,9 +412,7 @@ nsXULPrototypeDocument::Read(nsIObjectInputStream* aStream)
                  "no prototype script context!");
 
     // nsINodeInfo table
-    nsCOMPtr<nsISupportsArray> nodeInfos;
-    rv |= NS_NewISupportsArray(getter_AddRefs(nodeInfos));
-    NS_ENSURE_TRUE(nodeInfos, rv);
+    nsCOMArray<nsINodeInfo> nodeInfos;
 
     rv |= aStream->Read32(&referenceCount);
     nsAutoString namespaceURI, qualifiedName;
@@ -423,7 +422,8 @@ nsXULPrototypeDocument::Read(nsIObjectInputStream* aStream)
 
         nsCOMPtr<nsINodeInfo> nodeInfo;
         rv |= mNodeInfoManager->GetNodeInfo(qualifiedName, namespaceURI, getter_AddRefs(nodeInfo));
-        rv |= nodeInfos->AppendElement(nodeInfo);
+        if (!nodeInfos.AppendObject(nodeInfo))
+            rv |= NS_ERROR_OUT_OF_MEMORY;
     }
 
     // Document contents
@@ -433,7 +433,7 @@ nsXULPrototypeDocument::Read(nsIObjectInputStream* aStream)
     if ((nsXULPrototypeNode::Type)type != nsXULPrototypeNode::eType_Element)
         return NS_ERROR_FAILURE;
 
-    rv |= mRoot->Deserialize(aStream, scriptContext, mURI, nodeInfos);
+    rv |= mRoot->Deserialize(aStream, scriptContext, mURI, &nodeInfos);
     rv |= NotifyLoadDone();
 
     return rv;
@@ -478,15 +478,14 @@ nsXULPrototypeDocument::Write(nsIObjectOutputStream* aStream)
     rv |= NS_WriteOptionalObject(aStream, mDocumentPrincipal, PR_TRUE);
     
     // nsINodeInfo table
-    nsCOMPtr<nsISupportsArray> nodeInfos;
-    rv |= mNodeInfoManager->GetNodeInfoArray(getter_AddRefs(nodeInfos));
+    nsCOMArray<nsINodeInfo> nodeInfos;
+    rv |= mNodeInfoManager->GetNodeInfos(&nodeInfos);
     NS_ENSURE_SUCCESS(rv, rv);
-    PRUint32 nodeInfoCount;
-    nodeInfos->Count(&nodeInfoCount);
+    PRInt32 nodeInfoCount = nodeInfos.Count();
 
     rv |= aStream->Write32(nodeInfoCount);
-    for (i = 0; i < nodeInfoCount; ++i) {
-        nsCOMPtr<nsINodeInfo> nodeInfo = do_QueryElementAt(nodeInfos, i);
+    for (PRInt32 j = 0; j < nodeInfoCount; ++j) {
+        nsINodeInfo *nodeInfo = nodeInfos[j];
         NS_ENSURE_TRUE(nodeInfo, NS_ERROR_FAILURE);
 
         nsAutoString namespaceURI;
@@ -494,7 +493,7 @@ nsXULPrototypeDocument::Write(nsIObjectOutputStream* aStream)
         rv |= aStream->WriteWStringZ(namespaceURI.get());
 
         nsAutoString qualifiedName;
-        rv |= nodeInfo->GetQualifiedName(qualifiedName);
+        nodeInfo->GetQualifiedName(qualifiedName);
         rv |= aStream->WriteWStringZ(qualifiedName.get());
     }
 
@@ -506,7 +505,7 @@ nsXULPrototypeDocument::Write(nsIObjectOutputStream* aStream)
     rv |= globalObject->GetContext(getter_AddRefs(scriptContext));
     
     if (mRoot)
-        rv |= mRoot->Serialize(aStream, scriptContext, nodeInfos);
+        rv |= mRoot->Serialize(aStream, scriptContext, &nodeInfos);
  
     return rv;
 }

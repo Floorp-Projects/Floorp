@@ -969,7 +969,7 @@ NS_CreateHTMLElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo,
   if (!parserService)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  nsCOMPtr<nsIAtom> name = aNodeInfo->GetNameAtom();
+  nsIAtom *name = aNodeInfo->NameAtom();
 
   // Find tag in tag table
   PRInt32 id;
