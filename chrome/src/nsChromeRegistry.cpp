@@ -71,7 +71,7 @@
 #include "nsIIOService.h"
 #include "nsIResProtocolHandler.h"
 #include "nsLayoutCID.h"
-#include "nsGFXCIID.h"
+#include "nsGfxCIID.h"
 #include "nsIImageManager.h"
 #include "prio.h"
 
