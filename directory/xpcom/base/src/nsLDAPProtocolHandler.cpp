@@ -90,7 +90,7 @@ nsLDAPProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
     NS_ASSERTION(!aBaseURI, "base url passed into LDAP protocol handler");
 
     nsIURI* uri;
-    rv = nsComponentManager::CreateInstance(kStandardURLCID, nsnull,
+    rv = nsComponentManager::CreateInstance(kSimpleURICID, nsnull,
                                             NS_GET_IID(nsIURI),
                                             (void**)&uri);
     if (NS_FAILED(rv)) return rv;
