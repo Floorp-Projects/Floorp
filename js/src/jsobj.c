@@ -1655,8 +1655,11 @@ js_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent)
 
     /* Allocate a slots vector, with a -1'st element telling its length. */
     newslots = (jsval *) JS_malloc(cx, (nslots + 1) * sizeof(jsval));
-    if (!newslots)
+    if (!newslots) {
+        js_DropObjectMap(cx, obj->map, obj);
+        obj->map = NULL;
         goto bad;
+    }
     newslots[0] = nslots;
     newslots++;
 
