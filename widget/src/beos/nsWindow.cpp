@@ -1060,6 +1060,10 @@ NS_METHOD nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 			
 		if(mustunlock)
 			mView->UnlockLooper();
+		//No feedback from BView/BWindow in this case.
+		//Informing xp layer directly
+		if(!mIsVisible || !mView->Window()->IsActive())
+			OnResize(mBounds);
 	}
 	else
 	{
