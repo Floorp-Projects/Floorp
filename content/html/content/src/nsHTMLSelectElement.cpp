@@ -445,7 +445,6 @@ nsHTMLSelectElement::InsertOptionsIntoList(nsIContent* aOptions,
     // Get the frame stuff for notification. No need to flush here
     // since if there's no frame for the select yet the select will
     // get into the right state once it's created.
-    nsIFormControlFrame* fcFrame = nsnull;
     nsISelectControlFrame* selectFrame =
       GetPrimaryFrameInternal(PR_FALSE, PR_FALSE);
 
@@ -1620,17 +1619,12 @@ nsHTMLSelectElement::SelectSomething()
   PRUint32 count;
   GetLength(&count);
   for (PRUint32 i=0; i<count; i++) {
-    nsCOMPtr<nsIDOMNode> optionNode;
-    Item(i, getter_AddRefs(optionNode));
-    nsCOMPtr<nsIDOMHTMLOptionElement> option = do_QueryInterface(optionNode);
-    if (option) {
-      PRBool disabled;
-      nsresult rv = option->GetDisabled(&disabled);
+    PRBool disabled;
+    nsresult rv = IsOptionDisabled(i, &disabled);
 
-      if (NS_FAILED(rv) || !disabled) {
-        SetSelectedIndex(i);
-        break;
-      }
+    if (NS_FAILED(rv) || !disabled) {
+      SetSelectedIndex(i);
+      break;
     }
   }
 
