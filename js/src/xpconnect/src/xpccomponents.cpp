@@ -167,24 +167,38 @@ nsXPCComponents_Interfaces::NewEnumerate(nsIXPConnectWrappedNative *wrapper,
             nsCOMPtr<nsISupports> isup;
 
             e = (nsIEnumerator*) JSVAL_TO_PRIVATE(*statep);
-            if(NS_COMFALSE == e->IsDone() &&
-               NS_SUCCEEDED(e->CurrentItem(getter_AddRefs(isup))) && isup)
+            
+            while(1)
             {
-                e->Next();
-                nsCOMPtr<nsIInterfaceInfo> iface(do_QueryInterface(isup));
-                if(iface)
+                if(NS_COMFALSE == e->IsDone() &&
+                   NS_SUCCEEDED(e->CurrentItem(getter_AddRefs(isup))) && isup)
                 {
-                    JSString* idstr;
-                    const char* name;
-                    if(NS_SUCCEEDED(iface->GetNameShared(&name)) && name &&
-                       nsnull != (idstr = JS_NewStringCopyZ(cx, name)) &&
-                       JS_ValueToId(cx, STRING_TO_JSVAL(idstr), idp))
+                    e->Next();
+                    nsCOMPtr<nsIInterfaceInfo> iface(do_QueryInterface(isup));
+                    if(iface)
                     {
-                        return NS_OK;
+                        JSString* idstr;
+                        const char* name;
+                        PRBool scriptable;
+
+                        if(NS_SUCCEEDED(iface->IsScriptable(&scriptable)) && 
+                           !scriptable)
+                        {
+                            continue;
+                        }
+
+                        if(NS_SUCCEEDED(iface->GetNameShared(&name)) && name &&
+                           nsnull != (idstr = JS_NewStringCopyZ(cx, name)) &&
+                           JS_ValueToId(cx, STRING_TO_JSVAL(idstr), idp))
+                        {
+                            return NS_OK;
+                        }
                     }
                 }
+                // else...
+                break;
             }
-            // else... FALL THROUGH
+            // FALL THROUGH
         }
 
         case JSENUMERATE_DESTROY:
