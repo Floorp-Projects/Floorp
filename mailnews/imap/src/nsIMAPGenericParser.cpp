@@ -583,7 +583,15 @@ char *nsIMAPGenericParser::CreateParenGroup()
 #ifdef DEBUG_bienvenu
 	NS_ASSERTION(fNextToken[0] == '(', "we don't have a paren group!");
 #endif
+
 	int numOpenParens = 1;
+
+	// build up a buffer with the paren group.
+	// start with an initial chunk, expand later if necessary
+	nsString2 buf;
+	nsString2 returnString;
+	int bytesUsed = 0;
+	
 	// count the number of parens in the current token
 	int count, tokenLen = PL_strlen(fNextToken);
 	for (count = 1; (count < tokenLen) && (numOpenParens > 0); count++)
@@ -594,62 +602,132 @@ char *nsIMAPGenericParser::CreateParenGroup()
 			numOpenParens--;
 	}
 
-	// build up a buffer with the paren group.
-	int bytesUsed = 0;
-	nsString2 buf;
-	nsString2 returnString;
 	if ((numOpenParens > 0) && ContinueParse())
 	{
-		// flush buf
-//		if (bytesUsed > 0)
-//		{
-//			buf[bytesUsed] = 0;
-//			StrAllocCat(rv, buf);
-//			bytesUsed = 0;
-//		}
-		
-		// First, copy that first token from before
-		buf += fNextToken;
+		// Copy that first token from before
+		returnString =fNextToken;
+		returnString.Append(" ");	// space that got stripped off the token
 
-		buf += " ";	// space that got stripped off the token
+		PRBool extractReset = PR_TRUE;
+		while (extractReset && ContinueParse())
+		{
+			extractReset = PR_FALSE;
+			// Go through the current line and look for the last close paren.
+			// We're not trying to parse it just yet, just separate it out.
+			int len = PL_strlen(fCurrentTokenPlaceHolder);
+			for (count = 0; (count < len) && (numOpenParens > 0) && !extractReset; count++)
+			{
+				if (*fCurrentTokenPlaceHolder == '{')
+				{
+					fNextToken = GetNextToken();
+					NS_ASSERTION(fNextToken, "out of memory?or invalid syntax");
+					if (fNextToken)
+					{
+						int tokenLen = PL_strlen(fNextToken);
+						if (fNextToken[tokenLen-1] == '}')
+						{
+							// ok, we're looking at a literal string here
+						
+							// first, flush buf
+							if (bytesUsed > 0)
+							{
+								buf.SetCharAt(bytesUsed, 0);
+								returnString.Append(buf);
+								bytesUsed = 0;
+							}
 
-		// Go through the current line and look for the last close paren.
-		// We're not trying to parse it just yet, just separate it out.
-		int len = PL_strlen(fCurrentTokenPlaceHolder);
-		for (count = 0; (count < len) && (numOpenParens > 0); count++)
-		{
-			if (fCurrentTokenPlaceHolder[count] == '(')
-				numOpenParens++;
-			else if (fCurrentTokenPlaceHolder[count] == ')')
-				numOpenParens--;
-		}
+							returnString.Append(fNextToken);	// append the {xx} to the buffer
+							returnString.Append(CRLF);			// append a CRLF to the buffer
+							char *lit = CreateLiteral();
+							fTokenizerAdvanced = PR_FALSE;	// force it to use fCurrentTokenPlaceHolder
+							NS_ASSERTION(lit, "syntax error or out of memory");
+							if (lit)
+							{
+								returnString.Append(lit);
+								//fCurrentTokenPlaceHolder += XP_STRLEN(lit);
+								//AdvanceTokenizerStartingPoint(XP_STRLEN(lit));
+								//fNextToken = GetNextToken();
+								extractReset = TRUE;
+								PR_Free(lit);
+							}
+						}
+						else
+						{
+#ifdef DEBUG_bienvenu
+							NS_ASSERTION(FALSE, "syntax error creating paren group");	// maybe not an error, but definitely a rare condition
+#endif
+						}
+					}
+				}
+				else if (*fCurrentTokenPlaceHolder == '"')
+				{
+					// We're looking at a quoted string here.
+					// Ignore the characters within it.
 
-		if (count < len)
-		{
-			// we found the last close paren.
-			// Set fNextToken, fCurrentTokenPlaceHolder, etc.
-			char oldChar = fCurrentTokenPlaceHolder[count];
-			fCurrentTokenPlaceHolder[count] = 0;
-			buf += fCurrentTokenPlaceHolder;
-			fCurrentTokenPlaceHolder[count] = oldChar;
-			fCurrentTokenPlaceHolder = fCurrentTokenPlaceHolder + count;
-			fNextToken = GetNextToken();
-		}
-		else
-		{
-			// there should always be either a space or CRLF after the response, right?
-			SetSyntaxError(TRUE);
+					// first, flush buf
+					if (bytesUsed > 0)
+					{
+						buf.SetCharAt(bytesUsed, 0);
+						returnString.Append(buf);
+						bytesUsed = 0;
+					}
+
+					fNextToken = GetNextToken();
+					NS_ASSERTION(fNextToken, "syntax error or out of memory creating paren group");
+					if (fNextToken)
+					{
+						char *q = CreateQuoted();
+						fTokenizerAdvanced = FALSE;	// force it to use fCurrentTokenPlaceHolder
+						NS_ASSERTION(q, "syntax error or out of memory creating paren group");
+						if (q)
+						{
+							returnString.Append("\"");
+							returnString.Append(q);
+							returnString.Append("\"");
+							extractReset = TRUE;
+							PR_Free(q);
+						}
+					}
+				}
+				else if (*fCurrentTokenPlaceHolder == '(')
+					numOpenParens++;
+				else if (*fCurrentTokenPlaceHolder == ')')
+					numOpenParens--;
+
+
+				if (!extractReset)
+				{
+					// append this character to the buffer
+					buf.SetCharAt(bytesUsed, *fCurrentTokenPlaceHolder);
+					bytesUsed++;
+					fCurrentTokenPlaceHolder++;
+				}
+			}
 		}
 	}
 	else if ((numOpenParens == 0) && ContinueParse())
 	{
-		// the whole paren group response was a single token
-		buf = fNextToken;
+		// the whole paren group response was finished in a single token
+		buf.Append(fNextToken);
 	}
 
-	if (numOpenParens < 0)
-		SetSyntaxError(TRUE);
 
-	return buf.ToNewCString();
+	if (numOpenParens != 0 || !ContinueParse())
+	{
+		SetSyntaxError(TRUE);
+		returnString.SetLength(0);
+	}
+	else
+	{
+		// flush buf the final time
+		if (bytesUsed > 0)
+		{
+			buf.SetCharAt(bytesUsed, 0);
+			returnString.Append(buf);
+		}
+		fNextToken = GetNextToken();
+	}
+
+	return returnString.ToNewCString();
 }
 

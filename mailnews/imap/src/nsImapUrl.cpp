@@ -159,7 +159,7 @@ NS_IMETHODIMP nsImapUrl::GetRequiredImapState(nsImapState * aImapUrlState)
 		// the imap action determines the state we must be in...check the 
 		// the imap action.
 
-		if (m_imapAction & 0x1000000)
+		if (m_imapAction & 0x10000000)
 			*aImapUrlState = nsImapSelectedState;
 		else
 			*aImapUrlState = nsImapAuthenticatedState;

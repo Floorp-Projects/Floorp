@@ -75,8 +75,6 @@ public:
 		// since the following url actions require us to be in the authenticated
 		// state, the high bit is left blank....
 		nsImapTest								= 0x00000001,
-		nsImapSelectFolder						= 0x00000002,
-		nsImapLiteSelectFolder					= 0x00000003,
 		nsImapExpungeFolder						= 0x00000004,
 		nsImapCreateFolder						= 0x00000005,
 		nsImapDeleteFolder						= 0x00000006,
@@ -104,6 +102,8 @@ public:
         
 		// nsImapSelectedState urls. Note, the high bit is always set for
 		// imap actions which require us to be in the selected state
+		nsImapSelectFolder						= 0x10000002,
+		nsImapLiteSelectFolder					= 0x10000003,
 		nsImapMsgFetch							= 0x10000018,
 		nsImapMsgHeader							= 0x10000019,
 		nsImapSearch							= 0x1000001A,

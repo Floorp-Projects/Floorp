@@ -103,6 +103,9 @@ NS_IMETHODIMP nsImapService::SelectFolder(PLEventQueue * aClientEventQueue, nsII
 			if (NS_SUCCEEDED(rv) && hostName)
 			{
 				char * urlSpec = PR_smprintf("imap://%s", hostName);
+#ifdef DEBUG_bienvenu
+				urlSpec = PR_smprintf("imap://%s/Inbox", hostName);
+#endif
 				rv = imapUrl->SetSpec(urlSpec);
 				PR_Free(hostName);
 				PR_FREEIF(urlSpec);

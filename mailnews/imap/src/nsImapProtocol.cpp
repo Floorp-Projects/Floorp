@@ -1804,8 +1804,7 @@ void nsImapProtocol::PipelinedFetchMessageParts(const char *uid, nsIMAPMessagePa
 	// assumes no chunking
 
 	// build up a string to fetch
-#ifdef HAVE_PORT
-	char *stringToFetch = NULL, *what = NULL;
+	nsString2 stringToFetch(eOneByte), what(eOneByte);
 	int32 currentPartNum = 0;
 	while ((parts->GetNumParts() > currentPartNum) && !DeathSignalReceived())
 	{
@@ -1815,36 +1814,28 @@ void nsImapProtocol::PipelinedFetchMessageParts(const char *uid, nsIMAPMessagePa
 			// Do things here depending on the type of message part
 			// Append it to the fetch string
 			if (currentPartNum > 0)
-				StrAllocCat(stringToFetch, " ");
+				stringToFetch.Append(" ");
 
 			switch (currentPart->GetFields())
 			{
 			case kMIMEHeader:
-				what = PR_smprintf("BODY[%s.MIME]",currentPart->GetPartNumberString());
-				if (what)
-				{
-					StrAllocCat(stringToFetch, what);
-					PR_Free(what);
-				}
-				else
-					HandleMemoryFailure();
+				what = "BODY[";
+				what.Append(currentPart->GetPartNumberString());
+				what.Append(".MIME]");
+				stringToFetch.Append(what);
 				break;
 			case kRFC822HeadersOnly:
 				if (currentPart->GetPartNumberString())
 				{
-					what = PR_smprintf("BODY[%s.HEADER]", currentPart->GetPartNumberString());
-					if (what)
-					{
-						StrAllocCat(stringToFetch, what);
-						PR_Free(what);
-					}
-					else
-						HandleMemoryFailure();
+					what = "BODY[";
+					what.Append(currentPart->GetPartNumberString());
+					what.Append(".HEADER]");
+					stringToFetch.Append(what);
 				}
 				else
 				{
 					// headers for the top-level message
-					StrAllocCat(stringToFetch, "BODY[HEADER]");
+					stringToFetch.Append("BODY[HEADER]");
 				}
 				break;
 			default:
@@ -1871,7 +1862,6 @@ void nsImapProtocol::PipelinedFetchMessageParts(const char *uid, nsIMAPMessagePa
 		ParseIMAPandCheckForNewMail(commandString.GetBuffer());
 		PR_Free(stringToFetch);
 	}
-#endif // HAVE_PORT
 }
 
 
@@ -4095,6 +4085,8 @@ void nsImapProtocol::OnMoveFolderHierarchy(const char * aSourceMailbox)
 	            FolderRenamed(sourceMailbox, newBoxName);
         }
     }
+    else
+    	HandleMemoryFailure();
 #endif
 }
 
@@ -4233,7 +4225,6 @@ void nsImapProtocol::ProcessAuthenticatedStateURL()
 
 	PR_FREEIF(sourceMailbox);
 }
-
 
 void nsImapProtocol::ProcessAfterAuthenticated()
 {
