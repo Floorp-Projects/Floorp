@@ -3999,38 +3999,45 @@ NS_IMETHODIMP
 nsGenericHTMLContainerFormElement::SetForm(nsIDOMHTMLFormElement* aForm,
                                            PRBool aRemoveFromForm)
 {
-  nsAutoString nameVal, idVal;
-
-  if (aRemoveFromForm) {
-    GetAttr(kNameSpaceID_None, nsHTMLAtoms::name, nameVal);
-    GetAttr(kNameSpaceID_None, nsHTMLAtoms::id, idVal);
-
-    if (mForm) {
-      mForm->RemoveElement(this);
-
-      if (!nameVal.IsEmpty())
-        mForm->RemoveElementFromTable(this, nameVal);
-
-      if (!idVal.IsEmpty())
-        mForm->RemoveElementFromTable(this, idVal);
-    }
+  PRBool isDemotingForm = PR_FALSE;
+  if (mForm) {
+    mForm->IsDemotingForm(&isDemotingForm);
   }
 
-  if (aForm) {
-    nsCOMPtr<nsIForm> theForm(do_QueryInterface(aForm));
-    mForm = theForm;  // Even if we fail, update mForm (nsnull in failure)
+  if (!isDemotingForm) {
+    nsAutoString nameVal, idVal;
 
-    if (theForm) {
-      theForm->AddElement(this);
+    if (aRemoveFromForm) {
+      GetAttr(kNameSpaceID_None, nsHTMLAtoms::name, nameVal);
+      GetAttr(kNameSpaceID_None, nsHTMLAtoms::id, idVal);
 
-      if (!nameVal.IsEmpty())
-        theForm->AddElementToTable(this, nameVal);
+      if (mForm) {
+        mForm->RemoveElement(this);
 
-      if (!idVal.IsEmpty())
-        theForm->AddElementToTable(this, idVal);
+        if (!nameVal.IsEmpty())
+          mForm->RemoveElementFromTable(this, nameVal);
+
+        if (!idVal.IsEmpty())
+          mForm->RemoveElementFromTable(this, idVal);
+      }
     }
-  } else {
-    mForm = nsnull;
+
+    if (aForm) {
+      nsCOMPtr<nsIForm> theForm(do_QueryInterface(aForm));
+      mForm = theForm;  // Even if we fail, update mForm (nsnull in failure)
+
+      if (theForm) {
+        theForm->AddElement(this);
+
+        if (!nameVal.IsEmpty())
+          theForm->AddElementToTable(this, nameVal);
+
+        if (!idVal.IsEmpty())
+          theForm->AddElementToTable(this, idVal);
+      }
+    } else {
+      mForm = nsnull;
+    }
   }
 
   return NS_OK;
@@ -4231,37 +4238,44 @@ NS_IMETHODIMP
 nsGenericHTMLLeafFormElement::SetForm(nsIDOMHTMLFormElement* aForm,
                                       PRBool aRemoveFromForm)
 {
-  nsAutoString nameVal, idVal;
-
-  if (aRemoveFromForm) {
-    GetAttr(kNameSpaceID_None, nsHTMLAtoms::name, nameVal);
-    GetAttr(kNameSpaceID_None, nsHTMLAtoms::id, idVal);
-
-    if (mForm) {
-      mForm->RemoveElement(this);
-
-      if (nameVal.Length())
-        mForm->RemoveElementFromTable(this, nameVal);
-
-      if (idVal.Length())
-        mForm->RemoveElementFromTable(this, idVal);
-    }
+  PRBool isDemotingForm = PR_FALSE;
+  if (mForm) {
+    mForm->IsDemotingForm(&isDemotingForm);
   }
 
-  if (aForm) {
-    nsCOMPtr<nsIForm> theForm = do_QueryInterface(aForm);
-    mForm = theForm;  // Even if we fail, update mForm (nsnull in failure)
-    if (theForm) {
-      theForm->AddElement(this);
+  if (!isDemotingForm) {
+    nsAutoString nameVal, idVal;
 
-      if (nameVal.Length())
-        theForm->AddElementToTable(this, nameVal);
+    if (aRemoveFromForm) {
+      GetAttr(kNameSpaceID_None, nsHTMLAtoms::name, nameVal);
+      GetAttr(kNameSpaceID_None, nsHTMLAtoms::id, idVal);
 
-      if (idVal.Length())
-        theForm->AddElementToTable(this, idVal);
+      if (mForm) {
+        mForm->RemoveElement(this);
+
+        if (nameVal.Length())
+          mForm->RemoveElementFromTable(this, nameVal);
+
+        if (idVal.Length())
+          mForm->RemoveElementFromTable(this, idVal);
+      }
     }
-  } else {
-    mForm = nsnull;
+
+    if (aForm) {
+      nsCOMPtr<nsIForm> theForm = do_QueryInterface(aForm);
+      mForm = theForm;  // Even if we fail, update mForm (nsnull in failure)
+      if (theForm) {
+        theForm->AddElement(this);
+
+        if (nameVal.Length())
+          theForm->AddElementToTable(this, nameVal);
+
+        if (idVal.Length())
+          theForm->AddElementToTable(this, idVal);
+      }
+    } else {
+      mForm = nsnull;
+    }
   }
 
   return NS_OK;
