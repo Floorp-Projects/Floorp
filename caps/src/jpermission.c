@@ -30,6 +30,7 @@
 
 static char *userTargetErrMsg;
 static nsPermState gPermState;
+void *gPrincipalCert;
 
 static void
 nsUserTargetHandleMonitorError(int rv)
@@ -54,17 +55,27 @@ java_netscape_security_savePrivilege(nsPermState permState)
   PR_CExitMonitor((void *)&gPermState);
 }
 
+PR_PUBLIC_API(void *)
+java_netscape_security_getCert(char *prinStr)
+{
+  return gPrincipalCert;
+}
+
+
 PR_PUBLIC_API(nsPermState) 
-nsJSJavaDisplayDialog(char *prinStr, char *targetStr, char *riskStr, PRBool isCert)
+nsJSJavaDisplayDialog(char *prinStr, char *targetStr, char *riskStr, PRBool isCert, void*cert)
 {
   void * context = XP_FindSomeContext(); 
   PRIntervalTime sleep = (PRIntervalTime)PR_INTERVAL_NO_TIMEOUT;
   nsPermState ret_val=nsPermState_NotSet;
 
+  PR_CEnterMonitor((void *)&gPermState);
+  /* XXX: The following is a hack, we should passs gPrincipalCert to SECNAV_... code,
+   * but all this code will change real soon in the new world order
+   */
+  gPrincipalCert = cert;
   SECNAV_signedAppletPrivileges(context, prinStr, targetStr, 
                                 riskStr, isCert);
-
-  PR_CEnterMonitor((void *)&gPermState);
   nsUserTargetHandleMonitorError(PR_CWait((void*)&gPermState, sleep));
   nsUserTargetHandleMonitorError(PR_CNotifyAll((void*)&gPermState));
   ret_val = gPermState;

@@ -39,14 +39,14 @@ CPPSRCS		=	        \
 		nsUserTarget.cpp                  \
 		admin.cpp                         \
 		nsCaps.cpp                        \
-		nsCCapsManager.cpp		\
-		nsCCertPrincipal.cpp		\
-		nsCCodebasePrincipal.cpp	\
-		nsCCapsManagerFactory.cpp	\
-		nsCCodeSourcePrincipal.cpp	\
+		nsCCapsManager.cpp		  \
+		nsCCertPrincipal.cpp		  \
+		nsCCodebasePrincipal.cpp	  \
+		nsCCapsManagerFactory.cpp	  \
+		nsCCodeSourcePrincipal.cpp        \
 		$(NULL)
 
-REQUIRES	= xpcom security layer js jar pref img util rdf caps 
+REQUIRES	= nspr xpcom security layer js jar pref img util rdf caps 
 
 ifndef MOZ_NATIVE_ZLIB
 REQUIRES += zlib
@@ -61,4 +61,3 @@ CSRCS		=	        \
 include $(topsrcdir)/config/rules.mk
 
 INCLUDES	+= -I$(topsrcdir)/include
-

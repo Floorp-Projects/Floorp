@@ -31,9 +31,9 @@ extern "C" {
 static PRBool displayUI=PR_FALSE;
 
 static nsPermState 
-displayPermissionDialog(char *prinStr, char *targetStr, char *riskStr, PRBool isCert)
+displayPermissionDialog(char *prinStr, char *targetStr, char *riskStr, PRBool isCert, void *cert)
 {
-  return nsJSJavaDisplayDialog(prinStr, targetStr, riskStr, isCert);
+  return nsJSJavaDisplayDialog(prinStr, targetStr, riskStr, isCert, cert);
 
 }
 
@@ -60,6 +60,7 @@ nsPrivilege * nsUserTarget::enablePrivilege(nsPrincipal *prin, void *data)
   XP_STRCPY(targetStr, OPTION);
   XP_STRCAT(targetStr, desc);
   PRBool isCert = (prin->isCodebase()) ? PR_FALSE : PR_TRUE;
+  void *cert = prin->getCertificate();
   nsPermState permState = nsPermState_AllowedSession;
 
   /* 
@@ -73,7 +74,7 @@ nsPrivilege * nsUserTarget::enablePrivilege(nsPrincipal *prin, void *data)
   } else if (displayUI) {
 	/* set displayUI to TRUE, to enable UI */
     nsCaps_lock();
-    permState = displayPermissionDialog(prinStr, targetStr, riskStr, isCert); 
+    permState = displayPermissionDialog(prinStr, targetStr, riskStr, isCert, cert); 
     nsCaps_unlock();
   }
 

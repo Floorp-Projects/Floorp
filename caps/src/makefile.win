@@ -64,11 +64,11 @@ OBJS=                                       \
     .\$(OBJDIR)\nsUserTarget.obj            \
     .\$(OBJDIR)\admin.obj                   \
     .\$(OBJDIR)\nsCaps.obj                  \
-    .\$(OBJDIR)\nsCCapsManager.obj           \
+    .\$(OBJDIR)\nsCCapsManager.obj          \
     .\$(OBJDIR)\nsCCertPrincipal.obj        \
     .\$(OBJDIR)\nsCCodebasePrincipal.obj    \
-    .\$(OBJDIR)\nsCCapsManagerFactory.obj    \
-    .\$(OBJDIR)\nsCCodeSourcePrincipal.obj   \
+    .\$(OBJDIR)\nsCCapsManagerFactory.obj   \
+    .\$(OBJDIR)\nsCCodeSourcePrincipal.obj  \
     $(NULL)
 
 
@@ -93,7 +93,7 @@ LINCS= $(LINCS) \
 # ns/dist/public/win16
 #
 !if "$(MOZ_BITS)" == "32"
-		-I$(PUBLIC)/js           \
+		-I$(PUBLIC)\js \
 		-I$(PUBLIC)\nspr \
 		-I$(PUBLIC)\xpcom \
 		-I$(PUBLIC)\security \
@@ -104,9 +104,9 @@ LINCS= $(LINCS) \
 		-I$(PUBLIC)\pref \
 		-I$(DEPTH)\lib\layout \
 		-I$(DEPTH)\lib\libstyle \
-		-I$(PUBLIC)\rdf \
 		-I$(PUBLIC)\caps \
 		-I$(PUBLIC)\public \
+#		-I$(PUBLIC)\rdf \
 		$(NULL)
 
 #//------------------------------------------------------------------------
