@@ -9,6 +9,11 @@ if (verifyDiskSpace(fProgram, srDest))
   err = addDirectory("", "$Version$", "bin", fProgram, "", true);
   logComment("addDirectory: " + err);
   
+  addFile("Inspector Command Line Handler",
+          "bin/components/inspector-cmdline.js",
+          getFolder("Components"),
+          "");
+
   var jarFolder = getFolder("Chrome", "inspector.jar");
   registerChrome(PACKAGE | DELAYED_CHROME, jarFolder, "content/inspector/");
   registerChrome(SKIN | DELAYED_CHROME, jarFolder, "skin/modern/inspector/");
