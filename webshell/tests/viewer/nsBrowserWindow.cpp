@@ -699,18 +699,22 @@ nsBrowserWindow::OnProgress(nsIURL* aURL,
                             const nsString& aMsg)
 {
   if (mStatus) {
-    nsAutoString url;
-    if (nsnull != aURL) {
-      aURL->ToString(url);
+    if (aMsg.Length() < 1) {
+      nsAutoString url;
+      if (nsnull != aURL) {
+        aURL->ToString(url);
+      }
+      url.Append(": progress ");
+      url.Append(aProgress, 10);
+      if (0 != aProgressMax) {
+        url.Append(" (out of ");
+        url.Append(aProgressMax, 10);
+        url.Append(")");
+      }
+      mStatus->SetText(url);
+    } else {
+      mStatus->SetText(aMsg);
     }
-    url.Append(": progress ");
-    url.Append(aProgress, 10);
-    if (0 != aProgressMax) {
-      url.Append(" (out of ");
-      url.Append(aProgressMax, 10);
-      url.Append(")");
-    }
-    mStatus->SetText(url);
   }
   return NS_OK;
 }
