@@ -56,8 +56,6 @@
 NSPR_CO_TAG = NSPRPUB_PRE_4_2_CLIENT_BRANCH
 PSM_CO_TAG = #We will now build PSM from the tip instead of a branch.
 NSS_CO_TAG = NSS_CLIENT_TAG
-LDAPCSDK_CO_TAG = ldapcsdk_50_client_branch
-ACCESSIBLE_CO_TAG = 
 IMGLIB2_CO_TAG = 
 BUILD_MODULES = all
 
@@ -240,32 +238,6 @@ else
 CVSCO_NSPR = $(CVS) $(CVS_FLAGS) co $(NSPR_CO_FLAGS) $(CVS_CO_DATE_FLAGS) $(NSPR_CO_MODULE)
 endif
 
-####################################
-# CVS defines for the C LDAP SDK
-#
-LDAPCSDK_CO_MODULE = mozilla/directory/c-sdk
-LDAPCSDK_CO_FLAGS := -P
-ifdef MOZ_CO_FLAGS
-  LDAPCSDK_CO_FLAGS := $(MOZ_CO_FLAGS)
-endif
-ifdef LDAPCSDK_CO_TAG
-  LDAPCSDK_CO_FLAGS := $(LDAPCSDK_CO_FLAGS) -r $(LDAPCSDK_CO_TAG)
-endif
-CVSCO_LDAPCSDK = $(CVS) $(CVS_FLAGS) co $(LDAPCSDK_CO_FLAGS) $(CVS_CO_DATE_FLAGS) $(LDAPCSDK_CO_MODULE)
-
-####################################
-# CVS defines for the C LDAP SDK
-#
-ACCESSIBLE_CO_MODULE = mozilla/accessible
-ACCESSIBLE_CO_FLAGS := -P
-ifdef MOZ_CO_FLAGS
-  ACCESSIBLE_CO_FLAGS := $(MOZ_CO_FLAGS)
-endif
-ifdef ACCESSIBLE_CO_TAG
-  ACCESSIBLE_CO_FLAGS := $(ACCESSIBLE_CO_FLAGS) -r $(ACCESSIBLE_CO_TAG)
-endif
-CVSCO_ACCESSIBLE = $(CVS) $(CVS_FLAGS) co $(ACCESSIBLE_CO_FLAGS) $(CVS_CO_DATE_FLAGS) $(ACCESSIBLE_CO_MODULE)
-
 
 ####################################
 # CVS defines for new image library
@@ -279,11 +251,6 @@ ifdef IMGLIB2_CO_TAG
   IMGLIB2_CO_FLAGS := $(IMGLIB2_CO_FLAGS) -r $(IMGLIB2_CO_TAG)
 endif
 CVSCO_IMGLIB2 = $(CVS) $(CVS_FLAGS) co $(IMGLIB2_CO_FLAGS) $(CVS_CO_DATE_FLAGS) $(IMGLIB2_CO_MODULE)
-
-####################################
-# CVS defines for Calendar 
-#
-CVSCO_CALENDAR := $(CVSCO) $(CVS_CO_DATE_FLAGS) mozilla/calendar mozilla/other-licenses/libical
 
 ####################################
 # CVS defines for SeaMonkey
@@ -316,17 +283,8 @@ ifeq (,$(filter security security/manager, $(BUILD_MODULE_CVS)))
   CVSCO_PSM :=
   CVSCO_NSS :=
 endif
-ifeq (,$(filter directory/c-sdk, $(BUILD_MODULE_CVS)))
-  CVSCO_LDAPCSDK :=
-endif
-ifeq (,$(filter accessible, $(BUILD_MODULE_CVS)))
-  CVSCO_ACCESSIBLE :=
-endif
 ifeq (,$(filter modules/libpr0n, $(BUILD_MODULE_CVS)))
   CVSCO_IMGLIB2 :=
-endif
-ifeq (,$(filter calendar other-licenses/libical, $(BUILD_MODULE_CVS)))
-  CVSCO_CALENDAR :=
 endif
 endif
 
@@ -348,19 +306,6 @@ CHECKOUT_LIBART := cvs_co $(CVSCO_LIBART)
 else
 CHECKOUT_LIBART := true
 FASTUPDATE_LIBART := true
-endif
-
-####################################
-# CVS defines for Phoenix (pulled and built if MOZ_PHOENIX is set)
-#
-CVSCO_PHOENIX := $(CVSCO) $(CVS_CO_DATE_FLAGS) mozilla/toolkit mozilla/browser
-
-ifdef MOZ_PHOENIX
-FASTUPDATE_PHOENIX := fast_update $(CVSCO_PHOENIX)
-CHECKOUT_PHOENIX := cvs_co $(CVSCO_PHOENIX)
-else
-CHECKOUT_PHOENIX := true
-FASTUPDATE_PHOENIX := true
 endif
 
 ####################################
@@ -417,8 +362,7 @@ checkout::
 ifdef RUN_AUTOCONF_LOCALLY
 	@echo "Removing local configures" ; \
 	cd $(ROOTDIR) && \
-	$(RM) -f mozilla/configure mozilla/nsprpub/configure \
-		mozilla/directory/c-sdk/configure
+	$(RM) -f mozilla/configure mozilla/nsprpub/configure
 endif
 	@echo "checkout start: "`date` | tee $(CVSCO_LOGFILE)
 	@echo '$(CVSCO) $(CVS_CO_DATE_FLAGS) mozilla/minimo.mk $(MOZCONFIG_MODULES)'; \
@@ -438,12 +382,8 @@ real_checkout:
 	cvs_co $(CVSCO_NSPR) && \
 	cvs_co $(CVSCO_NSS) && \
 	cvs_co $(CVSCO_PSM) && \
-        cvs_co $(CVSCO_LDAPCSDK) && \
-        cvs_co $(CVSCO_ACCESSIBLE) && \
         cvs_co $(CVSCO_IMGLIB2) && \
-	cvs_co $(CVSCO_CALENDAR) && \
 	$(CHECKOUT_LIBART) && \
-	$(CHECKOUT_PHOENIX) && \
 	$(CHECKOUT_CODESIGHS) && \
 	cvs_co $(CVSCO_SEAMONKEY)
 	@echo "checkout finish: "`date` | tee -a $(CVSCO_LOGFILE)
@@ -459,8 +399,7 @@ real_checkout:
 ifdef RUN_AUTOCONF_LOCALLY
 	@echo Generating configures using $(AUTOCONF) ; \
 	cd $(TOPSRCDIR) && $(AUTOCONF) && \
-	cd $(TOPSRCDIR)/nsprpub && $(AUTOCONF) && \
-	cd $(TOPSRCDIR)/directory/c-sdk && $(AUTOCONF)
+	cd $(TOPSRCDIR)/nsprpub && $(AUTOCONF)
 endif
 
 fast-update:
@@ -472,8 +411,7 @@ fast-update:
 ifdef RUN_AUTOCONF_LOCALLY
 	@echo "Removing local configures" ; \
 	cd $(ROOTDIR) && \
-	$(RM) -f mozilla/configure mozilla/nsprpub/configure \
-		mozilla/directory/c-sdk/configure
+	$(RM) -f mozilla/configure mozilla/nsprpub/configure
 endif
 	@echo "checkout start: "`date` | tee $(CVSCO_LOGFILE)
 	@echo '$(CVSCO) mozilla/minimo.mk $(MOZCONFIG_MODULES)'; \
@@ -498,12 +436,8 @@ real_fast-update:
 	failed=.fast_update-failed.tmp && \
 	cd mozilla && \
 	fast_update $(CVSCO_PSM) && \
-	fast_update $(CVSCO_LDAPCSDK) && \
-	fast_update $(CVSCO_ACCESSIBLE) && \
 	fast_update $(CVSCO_IMGLIB2) && \
-	fast_update $(CVSCO_CALENDAR) && \
 	$(FASTUPDATE_LIBART) && \
-	$(FASTUPDATE_PHOENIX) && \
 	$(FASTUPDATE_CODESIGHS) && \
 	fast_update $(CVSCO_SEAMONKEY)
 	@echo "fast_update finish: "`date` | tee -a $(CVSCO_LOGFILE)
