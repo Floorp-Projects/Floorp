@@ -165,7 +165,7 @@ nsresult CValidDTD::CreateNewInstance(nsIDTD** aInstancePtrResult){
  * @param   
  * @return  TRUE if this DTD can satisfy the request; FALSE otherwise.
  */
-PRBool CValidDTD::CanParse(nsString& aContentType, PRInt32 aVersion){
+PRBool CValidDTD::CanParse(nsString& aContentType, nsString& aCommand, PRInt32 aVersion){
   PRBool result=aContentType.Equals(kXMLTextContentType);
   return result;
 }

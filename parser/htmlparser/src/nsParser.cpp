@@ -30,6 +30,8 @@
 #include "nshtmlpars.h"
 #include "nsWellFormedDTD.h"
 
+// #include "nsViewSourceHTML.h" //uncomment this to partially enable viewsource...
+
 #undef rickgdebug
 #ifdef  rickgdebug
 #include "CRtfDTD.h"
@@ -86,9 +88,13 @@ class CSharedParserObjects {
 public:
 
   CSharedParserObjects() : mDeallocator(), mDTDDeque(mDeallocator) {
-    mWellFormedXMLDTD=0;
-    NS_NewWellFormed_DTD(&mWellFormedXMLDTD);
-    RegisterDTD(mWellFormedXMLDTD);
+    nsIDTD* theDTD;
+    NS_NewWellFormed_DTD(&theDTD);
+    RegisterDTD(theDTD);
+
+//Uncomment these to enable viewsource...
+//    NS_NewViewSourceHTML(&theDTD);
+//    RegisterDTD(theDTD);
   }
 
   ~CSharedParserObjects() {
@@ -106,7 +112,6 @@ public:
 
   CDTDDeallocator mDeallocator;
   nsDeque mDTDDeque;
-  nsIDTD* mWellFormedXMLDTD;
 };
 
 CSharedParserObjects gSharedParserObjects;
@@ -180,7 +185,7 @@ MakeConversionTable()
  *  @param   
  *  @return  
  */
-nsParser::nsParser() {
+nsParser::nsParser() : mCommand() {
   NS_INIT_REFCNT();
   mParserFilter = 0;
   mObserver = 0;
@@ -269,6 +274,19 @@ nsIParserFilter * nsParser::SetParserFilter(nsIParserFilter * aFilter)
 }
 
 /**
+ *  Call this method once you've created a parser, and want to instruct it
+ *  about the command which caused the parser to be constructed. For example,
+ *  this allows us to select a DTD which can do, say, view-source.
+ *  
+ *  @update  gess 3/25/98
+ *  @param   aContentSink -- ptr to content sink that will receive output
+ *  @return	 ptr to previously set contentsink (usually null)  
+ */
+void nsParser::SetCommand(const char* aCommand){
+  mCommand="view-source";
+}
+
+/**
  *  This method gets called in order to set the content
  *  sink for this parser to dump nodes to.
  *  
@@ -343,10 +361,10 @@ eParseMode nsParser::GetParseMode(void){
  *  @param   
  *  @return  
  */
-PRBool FindSuitableDTD( CParserContext& aParserContext) {
+PRBool FindSuitableDTD( CParserContext& aParserContext,nsString& aCommand) {
 
     //Let's start by tring the defaultDTD, if one exists...
-  if(aParserContext.mDTD && (aParserContext.mDTD->CanParse(aParserContext.mSourceType,0)))
+  if(aParserContext.mDTD && (aParserContext.mDTD->CanParse(aParserContext.mSourceType,aCommand,0)))
     return PR_TRUE;
 
   PRBool  result=PR_FALSE;
@@ -357,7 +375,7 @@ PRBool FindSuitableDTD( CParserContext& aParserContext) {
   while(b<e){
     nsIDTD* theDTD=(nsIDTD*)b.GetCurrent();
     if(theDTD) {
-      result=theDTD->CanParse(aParserContext.mSourceType,0); 
+      result=theDTD->CanParse(aParserContext.mSourceType,aCommand,0); 
       if(result){
         theDTD->CreateNewInstance(&aParserContext.mDTD);
         break;
@@ -459,7 +477,7 @@ PRInt32 nsParser::WillBuildModel(nsString& aFilename){
   PRInt32 result=kNoError;
   if(mParserContext){
     mParserContext->mParseMode=DetermineParseMode(*this);  
-    if(PR_TRUE==FindSuitableDTD(*mParserContext)) {
+    if(PR_TRUE==FindSuitableDTD(*mParserContext,mCommand)) {
       mParserContext->mDTD->SetParser(this);
       mParserContext->mDTD->SetContentSink(mSink);
       mParserContext->mDTD->WillBuildModel(aFilename,PRBool(0==mParserContext->mPrevContext));

@@ -289,7 +289,7 @@ nextstep:
      * An nsIStreamListener connected to the parser is returned in
      * aDocListener.
      */
-    rv = doc->StartDocumentLoad(aURL, aContainer, aDocListener);
+    rv = doc->StartDocumentLoad(aURL, aContainer, aDocListener, aCommand);
     if (NS_OK != rv) {
         NS_IF_RELEASE(docv);
         goto done;
@@ -348,7 +348,7 @@ nsDocFactoryImpl::CreateImageDocument(nsIURL* aURL,
      * An nsIStreamListener connected to the parser is returned in
      * aDocListener.
      */
-    rv = doc->StartDocumentLoad(aURL, aContainer, aDocListener);
+    rv = doc->StartDocumentLoad(aURL, aContainer, aDocListener,aCommand);
     if (NS_OK != rv) {
         NS_IF_RELEASE(docv);
         goto done;

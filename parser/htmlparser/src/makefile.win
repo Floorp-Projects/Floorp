@@ -44,7 +44,8 @@ CPPSRCS=					\
 	nsHTMLContentSinkStream.cpp		\
 	nsValidDTD.cpp				\
 	nsWellFormedDTD.cpp			\
-	nsXIFDTD.cpp				\
+	nsViewSourceHTML.cpp \
+  nsXIFDTD.cpp				\
 	prstrm.cpp				\
 	$(NULL)
 
@@ -69,6 +70,7 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsHTMLContentSinkStream.obj	\
 	.\$(OBJDIR)\nsValidDTD.obj		\
 	.\$(OBJDIR)\nsWellFormedDTD.obj		\
+	.\$(OBJDIR)\nsViewSourceHTML.obj		\
 	.\$(OBJDIR)\nsXIFDTD.obj		\
 	.\$(OBJDIR)\prstrm.obj			\
 	$(NULL)

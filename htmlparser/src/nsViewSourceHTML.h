@@ -24,8 +24,8 @@
  *         
  */
 
-#ifndef __NS_WELLFORMED_DTD
-#define __NS_WELLFORMED_DTD
+#ifndef __NS_VIEWSOURCE_HTML_
+#define __NS_VIEWSOURCE_HTML_
 
 #include "nsIDTD.h"
 #include "nsISupports.h"
@@ -34,9 +34,9 @@
 #include "nsVoidArray.h"
 #include "nsDeque.h"
 
-#define NS_WELLFORMED_DTD_IID      \
-  {0xa39c6bfd, 0x15f0,  0x11d2, \
-  {0x80, 0x41, 0x0, 0x10, 0x4b, 0x98, 0x3f, 0xd4}}
+#define NS_VIEWSOURCE_HTML_IID      \
+  {0xb6003010, 0x7932, 0x11d2, \
+  {0x80, 0x1b, 0x0, 0x60, 0x8, 0xbf, 0xc4, 0x89 }}
 
 
 class nsIHTMLContentSink;
@@ -47,7 +47,7 @@ class nsParser;
 
 
 
-class CWellFormedDTD : public nsIDTD {
+class CViewSourceHTML: public nsIDTD {
             
   public:
 
@@ -61,7 +61,7 @@ class CWellFormedDTD : public nsIDTD {
      *  @param   
      *  @return  
      */
-    CWellFormedDTD();
+    CViewSourceHTML();
 
     /**
      *  
@@ -70,7 +70,7 @@ class CWellFormedDTD : public nsIDTD {
      *  @param   
      *  @return  
      */
-    virtual ~CWellFormedDTD();
+    virtual ~CViewSourceHTML();
 
 
     /**
@@ -236,7 +236,7 @@ protected:
     nsDeque             mTokenDeque;
 };
 
-extern NS_HTMLPARS nsresult NS_NewWellFormed_DTD(nsIDTD** aInstancePtrResult);
+extern NS_HTMLPARS nsresult NS_NewViewSourceHTML(nsIDTD** aInstancePtrResult);
 
 #endif 
 

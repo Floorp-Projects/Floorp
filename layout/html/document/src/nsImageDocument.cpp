@@ -55,7 +55,8 @@ public:
 
   NS_IMETHOD StartDocumentLoad(nsIURL* aURL, 
                                nsIContentViewerContainer* aContainer,
-                               nsIStreamListener** aDocListener);
+                               nsIStreamListener** aDocListener,
+                               const char* aCommand);
 
   nsresult CreateSyntheticDocument();
 
@@ -184,7 +185,8 @@ nsImageDocument::~nsImageDocument()
 NS_IMETHODIMP
 nsImageDocument::StartDocumentLoad(nsIURL* aURL, 
                                    nsIContentViewerContainer* aContainer,
-                                   nsIStreamListener** aDocListener)
+                                   nsIStreamListener** aDocListener,
+                                   const char* aCommand)
 {
   NS_IF_RELEASE(mDocumentURL);
   mDocumentURL = aURL;

@@ -99,7 +99,7 @@ class nsIDTD : public nsISupports {
      * @param   aContentType -- string representing type of doc to be converted (ie text/html)
      * @return  TRUE if this DTD can satisfy the request; FALSE otherwise.
      */
-    virtual PRBool CanParse(nsString& aContentType, PRInt32 aVersion)=0;
+    virtual PRBool CanParse(nsString& aContentType, nsString& aCommand, PRInt32 aVersion)=0;
 
     /**
      * This method, typically called by the parser, is used to try to autodetect the 

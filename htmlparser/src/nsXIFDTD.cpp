@@ -375,7 +375,7 @@ nsresult nsXIFDTD::CreateNewInstance(nsIDTD** aInstancePtrResult){
  * @param   
  * @return  TRUE if this DTD can satisfy the request; FALSE otherwise.
  */
-PRBool nsXIFDTD::CanParse(nsString& aContentType, PRInt32 aVersion){
+PRBool nsXIFDTD::CanParse(nsString& aContentType, nsString& aCommand, PRInt32 aVersion){
   PRBool result=aContentType.Equals(kXIFTextContentType);
   return result;
 }

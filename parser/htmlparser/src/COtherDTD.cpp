@@ -168,8 +168,8 @@ nsresult COtherDTD::CreateNewInstance(nsIDTD** aInstancePtrResult){
  * @param   
  * @return  TRUE if this DTD can satisfy the request; FALSE otherwise.
  */
-PRBool COtherDTD::CanParse(nsString& aContentType, PRInt32 aVersion){
-  return CNavDTD::CanParse(aContentType,aVersion);
+PRBool COtherDTD::CanParse(nsString& aContentType, nsString& aCommand, PRInt32 aVersion){
+  return CNavDTD::CanParse(aContentType,aCommand,aVersion);
 }
 
 /**

@@ -77,7 +77,8 @@ public:
 
   NS_IMETHOD StartDocumentLoad(nsIURL *aUrl, 
                                nsIContentViewerContainer* aContainer,
-                               nsIStreamListener **aDocListener) = 0;
+                               nsIStreamListener **aDocListener,
+                               const char* aCommand) = 0;
 
   /**
    * Return the title of the document. May return null.

@@ -99,6 +99,17 @@ friend class CTokenHandler;
      */
     virtual nsIContentSink* SetContentSink(nsIContentSink* aSink);
     
+    /**
+     *  Call this method once you've created a parser, and want to instruct it
+	   *  about the command which caused the parser to be constructed. For example,
+     *  this allows us to select a DTD which can do, say, view-source.
+     *  
+     *  @update  gess 3/25/98
+     *  @param   aContentSink -- ptr to content sink that will receive output
+     *  @return	 ptr to previously set contentsink (usually null)  
+     */
+    virtual void SetCommand(const char* aCommand);
+
     virtual nsIParserFilter* SetParserFilter(nsIParserFilter* aFilter);
     
     virtual void RegisterDTD(nsIDTD* aDTD);
@@ -297,6 +308,7 @@ protected:
     nsIParserFilter*    mParserFilter;
     PRBool              mDTDVerification;
     PRBool              mParserEnabled;
+    nsString            mCommand;
 };
 
 

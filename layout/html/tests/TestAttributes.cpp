@@ -172,7 +172,8 @@ public:
   MyDocument();
   NS_IMETHOD StartDocumentLoad(nsIURL *aUrl, 
                                nsIContentViewerContainer* aContainer,
-                               nsIStreamListener **aDocListener)
+                               nsIStreamListener **aDocListener,
+                               const char* aCommand)
   {
     return NS_OK;
   }

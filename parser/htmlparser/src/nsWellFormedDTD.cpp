@@ -167,7 +167,7 @@ nsresult CWellFormedDTD::CreateNewInstance(nsIDTD** aInstancePtrResult){
  * @param   
  * @return  TRUE if this DTD can satisfy the request; FALSE otherwise.
  */
-PRBool CWellFormedDTD::CanParse(nsString& aContentType, PRInt32 aVersion){
+PRBool CWellFormedDTD::CanParse(nsString& aContentType, nsString& aCommand, PRInt32 aVersion){
   PRBool result=aContentType.Equals(kXMLTextContentType);
   return result;
 }
