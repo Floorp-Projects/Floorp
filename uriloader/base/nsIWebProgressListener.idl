@@ -157,9 +157,10 @@ interface nsIWebProgressListener : nsISupports
    * @param aRequest
    *        The nsIRequest that has changed state.
    * @param aStateFlags
-   *        Flags indicating the new state.  This value is a combination
-   *        of one of the State Transition Flags and one or more of the
-   *        State Type Flags defined above.
+   *        Flags indicating the new state.  This value is a combination of one
+   *        of the State Transition Flags and one or more of the State Type
+   *        Flags defined above.  All undefined bits are reserved for future
+   *        use.
    * @param aStatus
    *        Error status code associated with the state change.  This parameter
    *        should be ignored unless aStateFlags includes the STATE_STOP bit.
@@ -247,7 +248,7 @@ interface nsIWebProgressListener : nsISupports
    * after document load completion.  It might also be called if an error
    * occurs during network loading.
    *
-   * NOTE: These notification will only occur if a security package is
+   * NOTE: These notifications will only occur if a security package is
    * installed.
    *
    * @param aWebProgress
@@ -255,7 +256,8 @@ interface nsIWebProgressListener : nsISupports
    * @param aRequest
    *        The nsIRequest that has new security state.
    * @param aState
-   *        A value composed of the Security State Flags listed above.
+   *        A value composed of the Security State Flags listed above.  Any
+   *        undefined bits are reserved for future use.
    */
   void onSecurityChange(in nsIWebProgress aWebProgress,
                         in nsIRequest aRequest,
