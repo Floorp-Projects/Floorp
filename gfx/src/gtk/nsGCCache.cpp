@@ -29,14 +29,6 @@
 
 GdkRegion *nsGCCache::copyRegion = NULL;
 
-  DEBUG_METER(
-              static struct {
-                int hits[GC_CACHE_SIZE];
-                int misses;
-                int reclaim;
-              } GCCacheStats;
-              )
-
 nsGCCache::nsGCCache()
 {
   PR_INIT_CLIST(&GCCache);

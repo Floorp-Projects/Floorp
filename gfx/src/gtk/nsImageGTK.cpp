@@ -26,9 +26,14 @@
 #include <gdk/gdkx.h>
 
 #include "nsImageGTK.h"
+#include "nsGCCache.h"
 #include "nsRenderingContextGTK.h"
 
 #include "nspr.h"
+
+
+static nsGCCache gcCache;
+
 
 #define IsFlagSet(a,b) ((a) & (b))
 
@@ -782,10 +787,7 @@ void nsImageGTK::CreateAlphaBitmap(PRInt32 aWidth, PRInt32 aHeight)
     pixmap = GDK_WINDOW_XWINDOW(mAlphaPixmap);
 
     if (!s1bitGC) {
-      GdkGCValues gcv;
-      memset(&gcv, 0, sizeof(GdkGCValues));
-      gcv.function = GDK_COPY;
-      s1bitGC = gdk_gc_new_with_values(mAlphaPixmap, &gcv, GDK_GC_FUNCTION);
+      s1bitGC = gdk_gc_new(mAlphaPixmap);
     }
 
     XPutImage(dpy, pixmap, GDK_GC_XGC(s1bitGC), x_image, 0, 0, 0, 0,
@@ -823,9 +825,6 @@ void nsImageGTK::DrawImageOffscreen(PRInt32 validX, PRInt32 validY, PRInt32 vali
   if (IsFlagSet(nsImageUpdateFlags_kBitsChanged, mFlags)) {
 
     if (!sXbitGC) {
-      GdkGCValues gcv;
-      memset(&gcv, 0, sizeof(GdkGCValues));
-      gcv.function = GDK_COPY;
       sXbitGC = gdk_gc_new(mImagePixmap);
     }
 
@@ -841,6 +840,7 @@ void nsImageGTK::DrawImageOffscreen(PRInt32 validX, PRInt32 validY, PRInt32 vali
 
 void nsImageGTK::SetupGCForAlpha(GdkGC *aGC, PRInt32 aX, PRInt32 aY)
 {
+  // XXX should use (different?) GC cache here
   if (mAlphaPixmap)
   {
     // Setup gc to use the given alpha-pixmap for clipping
@@ -1030,19 +1030,20 @@ NS_IMETHODIMP nsImageGTK::DrawTile(nsIRenderingContext &aContext,
 
   nsDrawingSurfaceGTK *drawing = (nsDrawingSurfaceGTK*)aSurface;
 
-  GdkGC *copyGC;
-  copyGC = gdk_gc_new(drawing->GetDrawable());
-  //  gdk_gc_copy(copyGC, ((nsRenderingContextGTK&)aContext).GetGC());
+  GdkGC *gc;
 
   CreateOffscreenPixmap(mWidth, mHeight);
 
   if (mAlphaBits) {
+
+    gc = gdk_gc_new(drawing->GetDrawable());
+
     // tile images...
     DrawImageOffscreen(0, 0, mWidth, mHeight);
 
-    SetupGCForAlpha(copyGC, 0, 0);
+    SetupGCForAlpha(gc, 0, 0);
 
-    TileImage(drawing->GetDrawable(), copyGC, mImagePixmap, aSrcRect, aTileRect.width, aTileRect.height);
+    TileImage(drawing->GetDrawable(), gc, mImagePixmap, aSrcRect, aTileRect.width, aTileRect.height);
   }
 
   else {
@@ -1051,27 +1052,28 @@ NS_IMETHODIMP nsImageGTK::DrawTile(nsIRenderingContext &aContext,
                        PR_MIN(mDecodedX2-mDecodedX1, mWidth),
                        PR_MIN(mDecodedY2-mDecodedY1, mHeight));
 
-    XGCValues xvalues;
-    memset(&xvalues, 0, sizeof(XGCValues));
-    unsigned long xvalues_mask = 0;
-    xvalues.fill_style = FillTiled;
-    xvalues.tile = GDK_WINDOW_XWINDOW(mImagePixmap);
-    xvalues.ts_x_origin = aTileRect.x;
-    xvalues.ts_y_origin = aTileRect.y;
-    xvalues_mask = GCFillStyle | GCTile | GCTileStipXOrigin | GCTileStipYOrigin;
-    XChangeGC(GDK_DISPLAY(), GDK_GC_XGC(copyGC), xvalues_mask, &xvalues);
+    GdkGCValues values;
+    GdkGCValuesMask valuesMask;
+    memset(&values, 0, sizeof(GdkGCValues));
+    values.fill = GDK_TILED;
+    values.tile = mImagePixmap;
+    values.ts_x_origin = aTileRect.x;
+    values.ts_y_origin = aTileRect.y;
+    valuesMask = GdkGCValuesMask(GDK_GC_FILL | GDK_GC_TILE | GDK_GC_TS_X_ORIGIN | GDK_GC_TS_Y_ORIGIN);
+
+    gc = gcCache.GetGC(drawing->GetDrawable(), &values, valuesMask, nsnull);
 
     // draw onscreen
     printf("gdk_draw_rectangle(..., %d, %d, %d, %d)\n",
            aTileRect.x, aTileRect.y, 
            aTileRect.width, aTileRect.height);
 
-    gdk_draw_rectangle(drawing->GetDrawable(), copyGC, PR_TRUE,
+    gdk_draw_rectangle(drawing->GetDrawable(), gc, PR_TRUE,
                        0, 0,
                        aTileRect.width, aTileRect.height);
   }
 
-  gdk_gc_unref(copyGC);
+  gdk_gc_unref(gc);
 
   return NS_OK;
 }
