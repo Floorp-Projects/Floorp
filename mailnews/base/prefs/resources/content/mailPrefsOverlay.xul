@@ -46,8 +46,8 @@
   <page id="cookiesPanel">
     <checkbox id="networkDisableCookieForMailNews"
               label="&disableCookieForMailNews.label;" accesskey="&disableCookieForMailNews.accesskey;"
-              pref="true" preftype="bool" prefstring="network.cookie.disableCookieForMailNews"
-              prefattribute="checked" insertafter="networkCookieBehaviorSeparator"/>
+              preftype="bool" prefstring="network.cookie.disableCookieForMailNews"
+              insertafter="networkCookieBehaviorSeparator"/>
   </page>
 
   <!-- category tree entries for mail/news -->
