@@ -4925,6 +4925,8 @@ nsBlockFrame::DoRemoveFrame(nsIPresContext* aPresContext,
     NS_ASSERTION(tmp == aDeletedFrame, "bad prevSibling");
   }
 #endif
+  if (line == line_end) 
+    return NS_ERROR_FAILURE;
 
   // Remove frame and all of its continuations
   while (nsnull != aDeletedFrame) {

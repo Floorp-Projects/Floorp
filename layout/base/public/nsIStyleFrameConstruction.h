@@ -117,6 +117,9 @@ public:
     * @param aChild               the content node that was inserted
     * @param aNewIndexInContainer the index of aChild in aContainer
     * @param aFrameState          the layout history object used to initialize the new frame(s)
+    * @param aInContentReplaced   PR_TRUE must be passed in if this is called from ContentReplaced
+    *                              - this will prevent calling ReframeContainingBlock when a special 
+    *                                inline block situation is detected
     *
     * @return  NS_OK
     * @see     nsIDocumentObserver
@@ -125,7 +128,8 @@ public:
                              nsIContent*     aContainer,
                              nsIContent*     aChild,
                              PRInt32         aIndexInContainer,
-                             nsILayoutHistoryState* aFrameState) = 0;
+                             nsILayoutHistoryState* aFrameState,
+                             PRBool aInContentReplaced) = 0;
 
   /**
     * Notification that content was replaced in the content tree.
@@ -154,6 +158,9 @@ public:
     * @param aContainer           the content node into which content was appended
     * @param aChild               the content node that was inserted
     * @param aNewIndexInContainer the index of aChild in aContainer
+    * @param aInContentReplaced   PR_TRUE must be passed in if this is called from ContentReplaced
+    *                              - this will prevent calling ReframeContainingBlock when a special 
+    *                                inline block situation is detected
     *
     * @return  NS_OK
     * @see     nsIDocumentObserver
@@ -161,7 +168,8 @@ public:
   NS_IMETHOD ContentRemoved(nsIPresContext* aPresContext,
                             nsIContent*     aContainer,
                             nsIContent*     aChild,
-                            PRInt32         aIndexInContainer) = 0;
+                            PRInt32         aIndexInContainer,
+                            PRBool aInContentReplaced) = 0;
 
   /**
     * Notification that content was changed in the content tree.

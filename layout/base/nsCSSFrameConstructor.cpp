@@ -417,10 +417,10 @@ SetFrameIsSpecial(nsIFrameManager* aFrameManager, nsIFrame* aFrame, nsIFrame* aS
 static nsIFrame*
 GetIBContainingBlockFor(nsIFrame* aFrame)
 {
-  // Get the first "normal" ancestor of the target frame.
   NS_PRECONDITION(IsFrameSpecial(aFrame),
                   "GetIBContainingBlockFor() should only be called on known IB frames");
 
+  // Get the first "normal" ancestor of the target frame.
   nsIFrame* parentFrame;
   do {
     aFrame->GetParent(&parentFrame);
@@ -435,6 +435,10 @@ GetIBContainingBlockFor(nsIFrame* aFrame)
 
     aFrame = parentFrame;
   } while (1);
+ 
+  // post-conditions
+  NS_ASSERTION(parentFrame, "no normal ancestor found for special frame in GetIBContainingBlockFor");
+  NS_ASSERTION(parentFrame != aFrame, "parentFrame is actually the child frame - bogus reslt");
 
   return parentFrame;
 }
@@ -7619,6 +7623,8 @@ FindPreviousSibling(nsIPresShell* aPresShell,
                     nsIContent*   aContainer,
                     PRInt32       aIndexInContainer)
 {
+  NS_ASSERTION(aPresShell && aContainer, "null arguments");
+
   ChildIterator first, iter;
   ChildIterator::Init(aContainer, &first, &iter);
   iter.seek(aIndexInContainer);
@@ -7658,6 +7664,11 @@ FindPreviousSibling(nsIPresShell* aPresShell,
         prevSibling = placeholderFrame;
       }
 
+#ifdef DEBUG
+      nsIFrame* containerFrame = nsnull;
+      aPresShell->GetPrimaryFrameFor(aContainer, &containerFrame);
+      NS_ASSERTION(prevSibling != containerFrame, "Previous Sibling is the Container's frame");
+#endif
       // Found a previous sibling, we're done!
       return prevSibling;
     }
@@ -7905,7 +7916,7 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
           nsIContent* item = nsCOMPtr<nsIContent>(*iter);
           if (item == child)
             // Call ContentInserted with this index.
-            ContentInserted(aPresContext, aContainer, child, iter.index(), mTempFrameTreeState);
+            ContentInserted(aPresContext, aContainer, child, iter.index(), mTempFrameTreeState, PR_FALSE);
         }
       }
 
@@ -8298,11 +8309,12 @@ nsCSSFrameConstructor::RemoveDummyFrameFromSelect(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
-                                       nsIContent*     aContainer,
-                                       nsIContent*     aChild,
-                                       PRInt32         aIndexInContainer,
-                                       nsILayoutHistoryState* aFrameState)
+nsCSSFrameConstructor::ContentInserted(nsIPresContext*        aPresContext,
+                                       nsIContent*            aContainer,
+                                       nsIContent*            aChild,
+                                       PRInt32                aIndexInContainer,
+                                       nsILayoutHistoryState* aFrameState,
+                                       PRBool                 aInContentReplaced)
 {
   // XXXldb Do we need to re-resolve style to handle the CSS2 + combinator and
   // the :empty pseudo-class?
@@ -8585,8 +8597,10 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
 
   // If the frame we are manipulating is a special frame then do
   // something different instead of just inserting newly created
-  // frames.
-  if (IsFrameSpecial(parentFrame)) {
+  // frames. 
+  // NOTE: if we are in ContentReplaced, 
+  //       then do not reframe as we are already doing just that!
+  if (IsFrameSpecial(parentFrame) && !aInContentReplaced) {
     // We are pretty harsh here (and definitely not optimal) -- we
     // wipe out the entire containing block and recreate it from
     // scratch. The reason is that because we know that a special
@@ -8832,10 +8846,11 @@ nsCSSFrameConstructor::ContentReplaced(nsIPresContext* aPresContext,
 {
   // XXX For now, do a brute force remove and insert.
   nsresult res = ContentRemoved(aPresContext, aContainer, 
-                                aOldChild, aIndexInContainer);
-  if (NS_OK == res) {
+                                aOldChild, aIndexInContainer, PR_TRUE);
+
+  if (NS_SUCCEEDED(res)) {
     res = ContentInserted(aPresContext, aContainer, 
-                          aNewChild, aIndexInContainer, nsnull);
+                          aNewChild, aIndexInContainer, nsnull, PR_TRUE);
   }
 
   return res;
@@ -8891,7 +8906,7 @@ DoDeletingFrameSubtree(nsIPresContext*  aPresContext,
                        nsIFrame*        aFrame)
 {
   NS_PRECONDITION(aFrameManager, "no frame manager");
-  
+
   // Remove the mapping from the content object to its frame
   nsCOMPtr<nsIContent> content;
   aFrame->GetContent(getter_AddRefs(content));
@@ -9169,7 +9184,8 @@ NS_IMETHODIMP
 nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
                                       nsIContent*     aContainer,
                                       nsIContent*     aChild,
-                                      PRInt32         aIndexInContainer)
+                                      PRInt32         aIndexInContainer,
+                                      PRBool          aInContentReplaced)
 {
   // XXXldb Do we need to re-resolve style to handle the CSS2 + combinator and
   // the :empty pseudo-class?
@@ -9340,7 +9356,9 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
     // If the frame we are manipulating is a special frame then do
     // something different instead of just inserting newly created
     // frames.
-    if (IsFrameSpecial(childFrame)) {
+    // NOTE: if we are in ContentReplaced, 
+    //       then do not reframe as we are already doing just that!
+    if (IsFrameSpecial(childFrame) && !aInContentReplaced) {
       // We are pretty harsh here (and definitely not optimal) -- we
       // wipe out the entire containing block and recreate it from
       // scratch. The reason is that because we know that a special
@@ -11751,7 +11769,7 @@ nsCSSFrameConstructor::RecreateFramesForContent(nsIPresContext* aPresContext,
 
       // Remove the frames associated with the content object on which the
       // attribute change occurred.
-      rv = ContentRemoved(aPresContext, container, aContent, indexInContainer);
+      rv = ContentRemoved(aPresContext, container, aContent, indexInContainer, PR_FALSE);
 
       // Now that the old frame is gone (and has stopped depending on obsolete style
       // data, we need to blow away our style information if this reframe happened as
@@ -11768,7 +11786,7 @@ nsCSSFrameConstructor::RecreateFramesForContent(nsIPresContext* aPresContext,
     
       if (NS_SUCCEEDED(rv)) {
         // Now, recreate the frames associated with this content object.
-        rv = ContentInserted(aPresContext, container, aContent, indexInContainer, mTempFrameTreeState);
+        rv = ContentInserted(aPresContext, container, aContent, indexInContainer, mTempFrameTreeState, PR_FALSE);
       }      
     }
   }
@@ -13904,46 +13922,50 @@ nsresult
 nsCSSFrameConstructor::ReframeContainingBlock(nsIPresContext* aPresContext, nsIFrame* aFrame)
 {
 #ifdef DEBUG
-  if (gNoisyContentUpdates) {
+  PRBool isAttinasi = PR_FALSE;
+#ifdef DEBUG_attinasi
+  isAttinasi = PR_TRUE;
+#endif // DEBUG_attinasi
+
+  // ReframeContainingBlock is a NASTY routine, it causes terrible performance problems
+  // so I want to see when it is happening!  Unfortunately, it is happening way to often because
+  // so much content on the web causes 'special' block-in-inline frame situations and we handle them
+  // very poorly
+  if (gNoisyContentUpdates || isAttinasi) {
     printf("nsCSSFrameConstructor::ReframeContainingBlock frame=%p\n",
            NS_STATIC_CAST(void*, aFrame));
   }
 #endif
 
   // Get the first "normal" ancestor of the target frame.
-  nsIFrame* parentFrame = GetIBContainingBlockFor(aFrame);
-  if (parentFrame) {
+  nsIFrame* containingBlock = GetIBContainingBlockFor(aFrame);
+  if (containingBlock) {
     // From here we look for the containing block in case the target
     // frame is already a block (which can happen when an inline frame
     // wraps some of its content in an anonymous block; see
     // ConstructInline)
-    //
-    // XXXwaterson I don't think this extra step is necessary: we
-    // should just be able to recreate the frames starting from the IB
-    // containing block.
-    nsIFrame* containingBlock = GetFloaterContainingBlock(aPresContext, aFrame);
-    if (containingBlock) {
-      // And get the containingBlock's content
-      nsCOMPtr<nsIContent> blockContent;
-      containingBlock->GetContent(getter_AddRefs(blockContent));
-      if (blockContent) {
-        // Now find the containingBlock's content's parent
-        nsCOMPtr<nsIContent> parentContainer;
-        blockContent->GetParent(*getter_AddRefs(parentContainer));
-        if (parentContainer) {
+   
+    // NOTE: We used to get the FloaterContainingBlock here, but it was often wrong.
+    // GetIBContainingBlock works much better and provides the correct container in all cases
+    // so GetFloaterContainingBlock(aPresContext, aFrame) has been removed
 
+    // And get the containingBlock's content
+    nsCOMPtr<nsIContent> blockContent;
+    containingBlock->GetContent(getter_AddRefs(blockContent));
+    if (blockContent) {
+      // Now find the containingBlock's content's parent
+      nsCOMPtr<nsIContent> parentContainer;
+      blockContent->GetParent(*getter_AddRefs(parentContainer));
+      if (parentContainer) {
 #ifdef DEBUG
-          if (gNoisyContentUpdates) {
-            printf("  ==> blockContent=%p, parentContainer=%p\n",
-                   NS_STATIC_CAST(void*, blockContent),
-                   NS_STATIC_CAST(void*, parentContainer));
-          }
-#endif
-
-          PRInt32 ix;
-          parentContainer->IndexOf(blockContent, ix);
-          return ContentReplaced(aPresContext, parentContainer, blockContent, blockContent, ix);
+        if (gNoisyContentUpdates) {
+          printf("  ==> blockContent=%p, parentContainer=%p\n",
+                 blockContent.get(), parentContainer.get());
         }
+#endif
+        PRInt32 ix;
+        parentContainer->IndexOf(blockContent, ix);
+        return ContentReplaced(aPresContext, parentContainer, blockContent, blockContent, ix);
       }
     }
   }
