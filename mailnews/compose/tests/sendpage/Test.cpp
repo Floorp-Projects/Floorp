@@ -293,7 +293,7 @@ GetHackIdentity()
 {
 nsresult rv;
 
-  NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kCMsgMailSessionCID, &rv);
+  NS_WITH_SERVICE(nsIMsgAccountManager, accountManager, NS_MSGACCOUNTMANAGER_PROGID, &rv);
   if (NS_FAILED(rv)) 
   {
     printf("Failure on Mail Session Init!\n");
@@ -301,16 +301,7 @@ nsresult rv;
   }  
 
   nsCOMPtr<nsIMsgIdentity>        identity = nsnull;
-  nsCOMPtr<nsIMsgAccountManager>  accountManager;
-
-  rv = mailSession->GetAccountManager(getter_AddRefs(accountManager));
-  if (NS_FAILED(rv)) 
-  {
-    printf("Failure getting account Manager!\n");
-    return nsnull;
-  }  
-
-  rv = mailSession->GetCurrentIdentity(getter_AddRefs(identity));
+  rv = accountManager->GetCurrentIdentity(getter_AddRefs(identity));
   if (NS_FAILED(rv)) 
   {
     printf("Failure getting Identity!\n");
