@@ -45,6 +45,10 @@ if (verifyDiskSpace(fProgram, srDest))
     registerChrome(SKIN | DELAYED_CHROME, getFolder(cf,"modern.jar"),"skin/modern/navigator/");
     registerChrome(CONTENT | DELAYED_CHROME, getFolder(cf,"help.jar"),"content/help/");
     registerChrome(LOCALE | DELAYED_CHROME, getFolder(cf,"help.jar"),"locale/en-US/help/");
+    registerChrome(CONTENT | DELAYED_CHROME, getFolder(cf,"pippki.jar"), "pippki/");
+    registerChrome(CONTENT | DELAYED_CHROME, getFolder(cf,"pipnss.jar"), "pipnss/");
+    registerChrome(LOCALE | DELAYED_CHROME, getFolder(cf,"pippki.jar"), "en-US/pippki/");
+    registerChrome(LOCALE | DELAYED_CHROME, getFolder(cf,"pipnss.jar"), "en-US/pipnss/");
 
     // make an alias to the browser on the desktop 
     var desktopFolder = getFolder("Mac Desktop");
