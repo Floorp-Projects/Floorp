@@ -702,6 +702,9 @@ NS_IMETHODIMP
 nsBindingManager::FlushChromeBindings()
 {
   mBindingTable->Enumerate(MarkForDeath);
+
+  mDocumentTable = nsnull;
+  
   return NS_OK;
 }
 

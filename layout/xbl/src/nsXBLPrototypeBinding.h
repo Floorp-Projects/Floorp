@@ -88,7 +88,6 @@ public:
 
 // Static members
   static PRUint32 gRefCnt;
-  static nsIXBLService* gXBLService;
   static nsIAtom* kInheritStyleAtom;
   static nsIAtom* kHandlersAtom;
   static nsIAtom* kChildrenAtom;

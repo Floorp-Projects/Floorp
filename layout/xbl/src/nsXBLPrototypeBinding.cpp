@@ -118,7 +118,6 @@ nsIAtom* nsXBLPrototypeBinding::kInheritsAtom = nsnull;
 nsIAtom* nsXBLPrototypeBinding::kHTMLAtom = nsnull;
 nsIAtom* nsXBLPrototypeBinding::kValueAtom = nsnull;
 
-nsIXBLService* nsXBLPrototypeBinding::gXBLService = nsnull;
 nsFixedSizeAllocator nsXBLPrototypeBinding::kPool;
 
 static const size_t kBucketSizes[] = {
@@ -161,10 +160,6 @@ nsXBLPrototypeBinding::nsXBLPrototypeBinding(const nsCString& aID, nsIContent* a
     kInheritsAtom = NS_NewAtom("inherits");
     kHTMLAtom = NS_NewAtom("html");
     kValueAtom = NS_NewAtom("value");
-    
-    nsServiceManager::GetService("@mozilla.org/xbl;1",
-                                   NS_GET_IID(nsIXBLService),
-                                   (nsISupports**) &gXBLService);
   }
 
   // These all use atoms, so we have to do these ops last to ensure
@@ -200,9 +195,6 @@ nsXBLPrototypeBinding::~nsXBLPrototypeBinding(void)
     NS_RELEASE(kInheritsAtom);
     NS_RELEASE(kHTMLAtom);
     NS_RELEASE(kValueAtom);
-
-    nsServiceManager::ReleaseService("@mozilla.org/xbl;1", gXBLService);
-    gXBLService = nsnull;
   }
 }
 
