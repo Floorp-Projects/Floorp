@@ -68,7 +68,7 @@ CInternetKeywordTooltipPane :: CalcFrameWithRespectTo ( LWindow* inOwningWindow,
 														Rect& outPortFrame )
 {
 	// calc pane size with it centered under the location bar
-	CToolTipPane::CalcFrameWithRespectTo ( inOwningWindow, inOwningPane, inMacEvent, outPortFrame );
+	CToolTipPane::CalcFrameWithRespectTo ( inOwningWindow, inMacEvent, outPortFrame );
 	
 	Rect theOwningPortFrame;
 	inOwningPane->CalcPortFrameRect(theOwningPortFrame);
