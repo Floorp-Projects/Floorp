@@ -46,7 +46,6 @@ CHROME_SKIN = \
 	list-down.gif \
 	list-up-dis.gif \
 	list-up.gif \
-	online.gif \
 	$(NULL)
 
 CHROME_L10N = \
