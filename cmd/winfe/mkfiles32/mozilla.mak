@@ -359,8 +359,10 @@ LINK_LIBS= \
     $(DIST)\lib\hook.lib \
 !endif
 #!if defined(EDITOR)
+!if !defined(MOZ_LITE)
 !ifdef JAVA_OR_OJI
     $(DIST)\lib\edtplug.lib \
+!endif
 !endif
 #!endif
 !ifndef NO_SECURITY
