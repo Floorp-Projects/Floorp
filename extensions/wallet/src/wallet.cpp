@@ -1207,17 +1207,21 @@ Wallet_SetKey(PRBool isNewkey) {
   }
 
   char * newkey;
+  PRBool useDefaultKey = PR_FALSE;
+
   if ((wallet_KeySize() == 0) && !isNewkey) {
-    newkey = PL_strdup("");
+    useDefaultKey = PR_TRUE;
+    newkey = PL_strdup("~");
   } else {
     newkey = wallet_GetString(password);
   }
   keyCancel = PR_FALSE;
   if (newkey == NULL) { /* user hit cancel button */
+    useDefaultKey = PR_TRUE;
     if (wallet_KeySize() < 0) { /* no password file existed before */
-      newkey  = PL_strdup(""); /* use zero-length password */
+      newkey  = PL_strdup("~"); /* use zero-length password */
     } else if (isNewkey) { /* user is changing the password */
-      newkey  = PL_strdup(""); /* use zero-length password */
+      newkey  = PL_strdup("~"); /* use zero-length password */
     } else {
       keyCancel = PR_TRUE;
       return PR_FALSE; /* user could not supply the correct password */
@@ -1255,7 +1259,7 @@ Wallet_SetKey(PRBool isNewkey) {
      * key[1..n],key[0] obscured by the actual key.
      */
 
-    if (PL_strlen(key) != 0) {
+    if (!useDefaultKey && (PL_strlen(key) != 0)) {
       char* p = key+1;
       while (*p) {
         strm2.put(*(p++)^Wallet_GetKey());
@@ -1279,7 +1283,7 @@ Wallet_SetKey(PRBool isNewkey) {
      */
 
     /* test for a null key */
-    if ((PL_strlen(key) == 0) && (wallet_KeySize() == 0) ) {
+    if (useDefaultKey && (wallet_KeySize() == 0) ) {
       Wallet_RestartKey();
       keySet = PR_TRUE;
       return PR_TRUE;
@@ -2832,7 +2836,6 @@ WLLT_RequestToCapture(nsIPresShell* shell) {
                         result = inputElement->GetType(type);
                         if (NS_SUCCEEDED(result)) {
                           PRBool isText = ((type == "") || (type.Compare("text", PR_TRUE)==0));
-                          PRBool isPassword = (type.Compare("password", PR_TRUE)==0);
                           if (isText) {
                             count++;
                           }
