@@ -334,6 +334,7 @@ sub BuildClientDist()
 
 	#LOCALE
 	_InstallFromManifest(":mozilla:intl:locale:public:MANIFEST",						"$distdirectory:locale:");
+	_InstallFromManifest(":mozilla:intl:locale:public:MANIFEST_IDL",			"$distdirectory:idl:");
 
 	#LWBRK
 	_InstallFromManifest(":mozilla:intl:lwbrk:public:MANIFEST",						"$distdirectory:lwbrk:");
@@ -781,6 +782,8 @@ sub BuildIDLProjects()
 	BuildIDLProject(":mozilla:mailnews:mime:macbuild:mimeIDL.mcp",					"Mime");
 
 	BuildIDLProject(":mozilla:caps:macbuild:CapsIDL.mcp",							"caps");
+
+	BuildIDLProject(":mozilla:intl:locale:macbuild:nsLocaleIDL.mcp",					"nsLocale");
 
 	print("--- IDL projects complete ----\n")
 }
