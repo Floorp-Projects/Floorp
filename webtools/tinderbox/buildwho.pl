@@ -129,5 +129,6 @@ sub build_who {
         $last_date=$ci->[$CI_DATE];
     }
     close (WHOLOG);
+    chdir "../tinderbox";
     move($temp_who_file, $who_file);
 }
