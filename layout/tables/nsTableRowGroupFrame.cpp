@@ -27,7 +27,7 @@
 #include "nsIView.h"
 
 #ifdef NS_DEBUG
-static PRBool gsDebug1 = PR_TRUE;
+static PRBool gsDebug1 = PR_FALSE;
 static PRBool gsDebug2 = PR_FALSE;
 //#define NOISY
 //#define NOISY_FLOW
