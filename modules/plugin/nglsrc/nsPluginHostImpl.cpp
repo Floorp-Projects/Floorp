@@ -58,7 +58,7 @@
 #include "nsDiskModule.h"
 #endif
 
-#ifdef XP_PC
+#if defined(XP_PC) && !defined(XP_OS2)
 #include "windows.h"
 #include "winbase.h"
 #endif

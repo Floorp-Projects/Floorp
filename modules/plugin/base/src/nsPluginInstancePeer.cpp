@@ -39,7 +39,7 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptObjectOwner.h"
 
-#ifdef XP_PC
+#if defined(XP_PC) && !defined(XP_OS2)
 #include "windows.h"
 #include "winbase.h"
 #endif
@@ -200,7 +200,11 @@ nsPluginStreamToFile::nsPluginStreamToFile(const char* target, nsIPluginInstance
 	// open the file and prepare it for writing
 	char buf[400], tpath[300];
 #ifdef XP_PC
+#ifdef XP_OS2
+    PL_strcpy(tpath, getenv("TEMP"));
+#else
 	::GetTempPath(sizeof(tpath), tpath);
+#endif
 	PRInt32 len = PL_strlen(tpath);
 
 	if ((len > 0) && (tpath[len-1] != '\\'))
