@@ -267,49 +267,6 @@ input[type="file"] > input[type="button"]:-moz-focus-inner
   border: 1px dotted transparent;
 }
 
-/* radio buttons */
-input[type="radio"] {
-  border: 2px inset ThreeDFace;
-  background-color: -moz-Field;
-  color: -moz-FieldText;
-  width: 12px;
-  height: 12px;
-  cursor: default;
-  vertical-align: baseline;
-  -moz-border-radius: 100%;
-  -moz-binding: none;
-  margin: 3px 3px 0px 5px;
-  padding: 0;
-}
-
-/* common features of radio buttons and check boxes */
-input[type="radio"][disabled],
-input[type="radio"][disabled]:active,
-input[type="radio"][disabled]:hover,
-input[type="radio"][disabled]:hover:active {
-  padding: 1px;
-  border: 1px inset ThreeDShadow;
-  background-color: GrayText;
-}
-
-input[type="radio"]:focus {
-  border-style: groove;
-}
-
-input[type="radio"]:hover:active {
-  border-style: inset;
-  background-color: ThreeDFace;
-}
-
-*|*:-moz-radio {
-  background-color: -moz-FieldText;
-  width: 4px;
-  height: 4px;
-  left: 6px;
-  top: 6px;
-  -moz-border-radius: 3px;
-}
-
 @media print {
   input, textarea, select, button {
     -moz-user-focus: none !important;

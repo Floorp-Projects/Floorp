@@ -26,6 +26,7 @@
   ======================================================================= */
 
 @namespace url(http://www.w3.org/1999/xhtml);
+@namespace xul url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 /* ..... disabled state ..... */
 
@@ -48,7 +49,7 @@ input[type="radio"] {
   background-color: -moz-Field;
 }
 
-.input-radio-check-box2 {
+xul|*.input-radio-check-box2 {
   border-top: 1px solid ThreeDDarkShadow;
   border-right: 1px solid ThreeDLightShadow;
   border-bottom: 1px solid ThreeDLightShadow;
@@ -66,7 +67,7 @@ input[type="radio"]:hover:active {
 
 /* ..... selected state ..... */
 
-input[type="radio"]:checked > .input-radio-check-box2 {
+input[type="radio"]:checked > xul|*.input-radio-check-box2 {
   list-style-image: url("chrome://forms/skin/radio-check.gif");
 }
 

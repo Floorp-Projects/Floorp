@@ -40,7 +40,7 @@
    xmlns="http://www.mozilla.org/xbl"
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <binding id="radio">
+  <binding id="radio" extends="xul:button">
     <content>
       <xul:hbox class="input-radio-check-box2" flex="1">
         <xul:image class="input-radio-check"/>
