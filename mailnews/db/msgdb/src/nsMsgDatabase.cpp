@@ -186,6 +186,8 @@ NS_IMETHODIMP nsMsgDBService::OpenMailDBFromFileSpec(nsIFileSpec *aFolderName, P
   NS_ENSURE_SUCCESS(rv, rv);
   rv = msgDB->Open(aFolderName, aCreate, aUpgrading);
   NS_IF_ADDREF(*pMessageDB = msgDB);
+  if (aCreate && msgDB && rv == NS_MSG_ERROR_FOLDER_SUMMARY_MISSING)
+    rv = NS_OK;
   return rv;
 }
 
