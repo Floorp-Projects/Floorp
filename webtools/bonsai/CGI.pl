@@ -96,7 +96,6 @@ sub shell_escape {
 # Make sure CVS revisions are in a specific format
 sub sanitize_revision {
     my ($rev) = @_;
-    print STDERR "Testing: |$rev|\n";
     if ($rev =~ /^[A-Za-z]+/) {
         $rev =~ s/^([\w-]+).*/$1/;
     } elsif ($rev =~ /^\d+\.\d+/) {
