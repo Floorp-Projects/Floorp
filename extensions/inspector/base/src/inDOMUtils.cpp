@@ -54,7 +54,7 @@
 #include "nsIXBLBinding.h" 
 
 #include "nsIStyleContext.h"
-#include "nsIRuleNode.h"
+#include "nsRuleNode.h"
 #include "nsIStyleRule.h"
 #include "nsICSSStyleRule.h"
 #include "nsIDOMCSSStyleRule.h"
@@ -99,22 +99,19 @@ inDOMUtils::GetStyleRules(nsIDOMElement *aElement, nsISupportsArray **_retval)
 
   // create a resource for all the style rules from the 
   // context and add them to aArcs
-  nsCOMPtr<nsIRuleNode> ruleNode;
-  styleContext->GetRuleNode(getter_AddRefs(ruleNode));
+  nsRuleNode* ruleNode;
+  styleContext->GetRuleNode(&ruleNode);
   
   nsCOMPtr<nsIStyleRule> srule;
-  nsCOMPtr<nsIRuleNode> ruleNodeTmp;
   while (ruleNode) {
     ruleNode->GetRule(getter_AddRefs(srule));
     rules->InsertElementAt(srule, 0);
     
-    ruleNode->GetParent(getter_AddRefs(ruleNodeTmp));
-    ruleNode = ruleNodeTmp;
+    ruleNode = ruleNode->GetParent();
     
     // don't be adding that there root node
-    PRBool isRoot;
-    ruleNode->IsRoot(&isRoot);
-    if (isRoot) break;
+    if (ruleNode->IsRoot())
+      break;
   }
 
   *_retval = rules;
