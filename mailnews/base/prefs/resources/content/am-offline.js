@@ -245,7 +245,7 @@ function disableIfLocked( prefstrArray )
     if (!gLockedPref)
       gLockedPref = new Array;
 
-    for (i=0; i<prefstrArray.length; i++) {
+    for (var i=0; i<prefstrArray.length; i++) {
         var id = prefstrArray[i].id;
         var element = document.getElementById(id);
         if (gPref.prefIsLocked(prefstrArray[i].prefstring)) {
