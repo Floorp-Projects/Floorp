@@ -484,7 +484,23 @@ sub packit_l10n {
         }
         system("mkdir -p $package_location");
         system("mkdir -p $stagedir");
-        run_locale_shell_command "cp $package_location/../*$locale*.dmg.gz $stagedir/";
+
+        # If .../*.dmg.gz exists, copy it to the staging directory.  Otherwise, copy
+        # .../*.dmg if it exists.
+        my @dmg;
+        @dmg = grep { -f $_ } <${package_location}/../*$locale*.dmg.gz>;
+        if ( scalar(@dmg) eq 0 ) {
+          @dmg = grep { -f $_ } <${package_location}/../*$locale*.dmg>;
+        }
+
+        if ( scalar(@dmg) gt 0 ) {
+          my $dmg_files = join(' ', @dmg);
+          TinderUtils::print_log "Copying $dmg_files to $stagedir/\n";
+          TinderUtils::run_shell_command "cp $dmg_files $stagedir/";
+        } else {
+	  TinderUtils::print_log "No files to copy\n";
+        }
+
         if ($tinderstatus eq 'success') {
           run_locale_shell_command "mkdir -p $stagedir/mac-xpi/";
           run_locale_shell_command "cp $package_location/*$locale.langpack.xpi $stagedir/mac-xpi/$locale.xpi";
