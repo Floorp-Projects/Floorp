@@ -208,7 +208,6 @@ private:
 
     static const char* sJSEnabledPrefName;
     static const char* sJSMailEnabledPrefName;
-    static const char* sPrincipalPrefix;
 
     nsObjectHashtable* mOriginToPolicyMap;
     nsHashtable* mClassPolicies;
