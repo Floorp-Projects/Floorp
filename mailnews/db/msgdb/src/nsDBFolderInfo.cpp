@@ -41,7 +41,7 @@ nsDBFolderInfo::nsDBFolderInfo(nsMsgDatabase *mdb)
 			if (err == NS_OK)
 			{
 				gDBFolderInfoOID.mOid_Scope = m_rowScopeToken;
-				gDBFolderInfoOID.mOid_Scope = 1;
+				gDBFolderInfoOID.mOid_Id = 1;
 			}
 		}
 	}
@@ -112,7 +112,7 @@ nsresult nsDBFolderInfo::InitFromExistingDB()
 		if (store)
 		{
 			mdb_count outTableCount; // current number of such tables
-			mdb_bool mustBeUnique, // whether port can hold only one of these
+			mdb_bool mustBeUnique; // whether port can hold only one of these
 			ret = store->GetTableKind(m_mdb->GetEnv(), m_rowScopeToken, m_tableKindToken, &outTableCount, 
 				&mustBeUnique, &m_mdbTable);
 			PR_ASSERT(mustBeUnique && outTableCount == 1);

@@ -20,6 +20,7 @@
 
 
 #include "nsMsgDatabase.h"
+#include "nsDBFolderInfo.h"
 
 #ifdef WE_HAVE_MDBINTERFACES
 static NS_DEFINE_IID(kIMDBIID, NS_IMDB_IID);
@@ -152,6 +153,7 @@ nsMsgDatabase::nsMsgDatabase() : m_dbName("")
 {
 	m_mdbEnv = NULL;
 	m_mdbStore = NULL;
+	m_mdbAllMsgHeadersTable = NULL;
 	m_mdbTokensInitialized = FALSE;
 }
 
@@ -217,7 +219,15 @@ nsresult nsMsgDatabase::OpenMDB(const char *dbName, PRBool create)
 				if (NS_SUCCEEDED(ret) && outDone)
 				{
 					ret = myMDBFactory->ThumbToOpenStore(m_mdbEnv, thumb, &m_mdbStore);
+					if (ret == NS_OK)
+						ret = InitExistingDB();
 				}
+			}
+			else if (create)	// ### need error code saying why open file store failed
+			{
+				ret = myMDBFactory->CreateNewFileStore(m_mdbEnv, dbName, NULL, &m_mdbStore);
+				if (ret == NS_OK)
+					ret = InitNewDB();
 			}
 		}
 	}
@@ -268,9 +278,55 @@ nsresult nsMsgDatabase::ForceClosed()
 
 const char *kMsgHdrsScope = "ns:msg:db:row:scope:msgs:all";
 const char *kMsgHdrsTableKind = "ns:msg:db:table:kind:msgs";
-struct mdbOid gMsgHdrsOID;
+const char *kSubjectColumnName = "subject";
+const char *kSenderColumnName = "sender";
+const char *kMessageIdColumnName = "message-id";
+const char *kReferencesColumnName = "references";
+const char *kRecipientsColumnName = "recipients";
+const char *kDateColumnName = "date";
+const char *kMessageSizeColumnName = "size";
+const char *kFlagsColumnName = "flags";
+const char *kPriorityColumnName = "priority";
 
-// initialize the various tokens in our db's env
+struct mdbOid gAllMsgHdrsTableOID;
+
+// set up empty tables, dbFolderInfo, etc.
+nsresult nsMsgDatabase::InitNewDB()
+{
+	nsresult err = NS_OK;
+
+	err = InitMDBInfo();
+	if (err == NS_OK)
+	{
+		nsDBFolderInfo *dbFolderInfo = new nsDBFolderInfo(this);
+		if (dbFolderInfo)
+		{
+			err = dbFolderInfo->AddToNewMDB();
+			mdbStore *store = GetStore();
+			// create the unique table for the dbFolderInfo.
+			mdb_err err = store->NewTable(GetEnv(), m_hdrRowScopeToken, 
+				m_hdrTableKindToken, PR_FALSE, &m_mdbAllMsgHeadersTable);
+
+		}
+		else
+			err = NS_ERROR_OUT_OF_MEMORY;
+	}
+	return err;
+}
+
+nsresult nsMsgDatabase::InitExistingDB()
+{
+	nsresult err = NS_OK;
+
+	err = InitMDBInfo();
+	if (err == NS_OK)
+	{
+		err = GetStore()->GetTable(GetEnv(), &gAllMsgHdrsTableOID, &m_mdbAllMsgHeadersTable);
+	}
+	return err;
+}
+
+// initialize the various tokens and tables in our db's env
 nsresult nsMsgDatabase::InitMDBInfo()
 {
 	nsresult err = NS_OK;
@@ -281,7 +337,27 @@ nsresult nsMsgDatabase::InitMDBInfo()
 		err	= GetStore()->StringToToken(GetEnv(), kMsgHdrsScope, &m_hdrRowScopeToken); 
 		if (err == NS_OK)
 		{
+			GetStore()->StringToToken(GetEnv(),  kSubjectColumnName, &m_subjectColumnToken);
+			GetStore()->StringToToken(GetEnv(),  kSenderColumnName, &m_senderColumnToken);
+			GetStore()->StringToToken(GetEnv(),  kMessageIdColumnName, &m_messageIdColumnToken);
+			// if we just store references as a string, we won't get any savings from the
+			// fact there's a lot of duplication. So we may want to break them up into
+			// multiple columns, r1, r2, etc.
+			GetStore()->StringToToken(GetEnv(),  kReferencesColumnName, &m_referencesColumnToken);
+			// similarly, recipients could be tokenized properties
+			GetStore()->StringToToken(GetEnv(),  kRecipientsColumnName, &m_recipientsColumnToken);
+			GetStore()->StringToToken(GetEnv(),  kDateColumnName, &m_dateColumnToken);
+			GetStore()->StringToToken(GetEnv(),  kMessageSizeColumnName, &m_messageSizeColumnToken);
+			GetStore()->StringToToken(GetEnv(),  kFlagsColumnName, &m_flagsColumnToken);
+			GetStore()->StringToToken(GetEnv(),  kPriorityColumnName, &m_priorityColumnToken);
+
 			err = GetStore()->StringToToken(GetEnv(), kMsgHdrsTableKind, &m_hdrTableKindToken); 
+			if (err == NS_OK)
+			{
+				// The table of all message hdrs will have table id 1.
+				gAllMsgHdrsTableOID.mOid_Scope = m_hdrRowScopeToken;
+				gAllMsgHdrsTableOID.mOid_Id = 1;
+			}
 		}
 	}
 	return err;
@@ -294,9 +370,39 @@ nsresult nsMsgDatabase::GetMsgHdrForKey(MessageKey messageKey, nsMsgHdr **msgHdr
 	return err;
 }
 
-nsresult nsMsgDatabase::CreateNewHdr(PRBool *newThread, nsMsgHdr **newHdr, PRBool notify /* = FALSE */)
+nsresult nsMsgDatabase::CreateNewHdr(PRBool *newThread, MessageHdrStruct *hdrStruct, nsMsgHdr **newHdr, PRBool notify /* = FALSE */)
 {
 	nsresult	err = NS_OK;
+	mdbRow		*hdrRow;
+	struct mdbOid allMsgHdrsTableOID;
+
+	allMsgHdrsTableOID.mOid_Scope = m_hdrRowScopeToken;
+	allMsgHdrsTableOID.mOid_Id = hdrStruct->m_messageKey;
+
+	err  = GetStore()->NewRowWithOid(GetEnv(), m_hdrRowScopeToken,
+		&allMsgHdrsTableOID, &hdrRow);
+
+	// add the row to the singleton table.
+	if (NS_SUCCEEDED(err))
+	{
+		struct mdbYarn yarn;
+
+		yarn.mYarn_Grow = NULL;
+		hdrRow->AddColumn(GetEnv(),  m_subjectColumnToken, nsStringToYarn(&yarn, &hdrStruct->m_author));
+		delete[] yarn.mYarn_Buf;	// won't need this when we have nsCString
+		
+		err = m_mdbAllMsgHeadersTable->AddRow(GetEnv(), hdrRow);
+	}
+
 	return err;
+}
+
+/* static */struct mdbYarn *nsMsgDatabase::nsStringToYarn(struct mdbYarn *yarn, nsString *str)
+{
+	yarn->mYarn_Buf = str->ToNewCString();
+	yarn->mYarn_Size = PL_strlen((const char *) yarn->mYarn_Buf) + 1;
+	yarn->mYarn_Fill = yarn->mYarn_Size;
+	yarn->mYarn_Form = 0;	// what to do with this? Should be parsed out of the mime2 header?
+	return yarn;
 }
 

@@ -39,23 +39,22 @@ public:
 };
 
 // This is to be used as an interchange object, to make creating nsMsgHeaders easier.
-struct MessageHdrStruct
+typedef struct _MessageHdrStruct
 {
 	MessageKey   m_threadId; 
 	MessageKey	m_messageKey; 	
-	nsString	m_subject;
-	nsString	m_author;
-	nsString	m_messageId;
-	nsString	m_references; 
-	nsString	m_recipients;
+	nsString	m_subject;		// should be nsCString when it's impl
+	nsString	m_author;		// should be nsCString when it's impl
+	nsString	m_messageId;	// should be nsCString when it's impl
+	nsString	m_references;	// should be nsCString when it's impl
+	nsString	m_recipients;	// should be nsCString when it's impl
 	time_t 		m_date;         // is there some sort of PR type I should use for this?
 	PRUint32	m_messageSize;	// lines for news articles, bytes for local mail and imap messages
 	PRUint32	m_flags;
 	PRInt16		m_numChildren;		// for top-level threads
 	PRInt16		m_numNewChildren;	// for top-level threads
 	MSG_PRIORITY m_priority;
-public:
-};
+} MessageHdrStruct;
 
 // I don't think this is going to be an interface, actually, since it's just
 // a thin layer above MDB that defines the msg db schema.
@@ -76,8 +75,9 @@ public:
 	virtual nsresult	ForceClosed();
 	// get a message header for the given key. Caller must release()!
 	virtual nsresult	GetMsgHdrForKey(MessageKey messageKey, nsMsgHdr **msgHdr);
-
-	virtual nsresult	CreateNewHdr(PRBool *newThread, nsMsgHdr **newHdr, PRBool notify = FALSE);
+	// create a new message header from a hdrStruct. Caller must release resulting header,
+	// after adding any extra properties they want.
+	virtual nsresult	CreateNewHdr(PRBool *newThread, MessageHdrStruct *hdrStruct, nsMsgHdr **newHdr, PRBool notify = FALSE);
 
 	// iterator methods
 	// iterate through message headers, in no particular order
@@ -93,6 +93,9 @@ public:
 	mdbStore	*GetStore() {return m_mdbStore;}
 
 	static nsMsgDatabase* FindInCache(nsFilePath &dbName);
+
+	// helper function to copy an nsString to a yarn.
+	static	struct mdbYarn *nsStringToYarn(struct mdbYarn *yarn, nsString *str);
 	static void		CleanupCache();
 #ifdef DEBUG
 	static int		GetNumInCache(void) {return(GetDBCache()->GetSize());}
@@ -102,6 +105,7 @@ protected:
 	nsDBFolderInfo 	*m_dbFolderInfo;
 	mdbEnv			*m_mdbEnv;	// to be used in all the db calls.
 	mdbStore		*m_mdbStore;
+	mdbTable		*m_mdbAllMsgHeadersTable;
 	nsFilePath		m_dbName;
 
 	nsrefcnt		mRefCnt;
@@ -115,11 +119,22 @@ protected:
 	static nsMsgDatabaseArray	*m_dbCache;
 
 	// mdb bookkeeping stuff
+	nsresult			InitExistingDB();
+	nsresult			InitNewDB();
 	nsresult			InitMDBInfo();
 	PRBool				m_mdbTokensInitialized;
 
 	mdb_token			m_hdrRowScopeToken;
 	mdb_token			m_hdrTableKindToken;
+	mdb_token			m_subjectColumnToken;
+	mdb_token			m_senderColumnToken;
+	mdb_token			m_messageIdColumnToken;
+	mdb_token			m_referencesColumnToken;
+	mdb_token			m_recipientsColumnToken;
+	mdb_token			m_dateColumnToken;
+	mdb_token			m_messageSizeColumnToken;
+	mdb_token			m_flagsColumnToken;
+	mdb_token			m_priorityColumnToken;
 
 };
 
