@@ -21,7 +21,7 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: ProcessorState.h,v 1.7 2000/11/07 10:46:03 kvisco%ziplink.net Exp $
+ * $Id: ProcessorState.h,v 1.8 2001/01/19 21:24:44 axel%pike.org Exp $
  */
 
 
@@ -50,7 +50,7 @@
 /**
  * Class used for keeping the current state of the XSL Processor
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.7 $ $Date: 2000/11/07 10:46:03 $
+ * @version $Revision: 1.8 $ $Date: 2001/01/19 21:24:44 $
 **/
 class ProcessorState : public ContextState {
 
@@ -59,6 +59,11 @@ public:
     static const String wrapperNSPrefix;
     static const String wrapperName;
     static const String wrapperNS;
+
+    /**
+     * Creates a new ProcessorState
+    **/
+    ProcessorState();
 
     /**
      * Creates a new ProcessorState for the given XSL document
