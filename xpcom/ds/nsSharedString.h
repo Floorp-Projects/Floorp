@@ -69,7 +69,10 @@ class basic_nsSharedString
         {
           nsrefcnt result = --mRefCount;
           if ( !mRefCount )
-            delete this;
+            {
+              delete this;
+              // BULLSHIT ALERT: need to make |delete| match |new|
+            }
           return result;
         }
 
@@ -109,7 +112,7 @@ class nsSharedStringPtr
       // ...
 
     private:
-      basic_nsSharedString<CharT>*  mPtr;
+      basic_nsSharedString<CharT>*  mRawPtr;
   };
 
 
