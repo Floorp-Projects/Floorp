@@ -76,7 +76,7 @@ public class Matrix implements Scriptable {
     /**
      * The zero-parameter constructor.
      *
-     * When Context.defineClass is called with this class, it will
+     * When ScriptableObject.defineClass is called with this class, it will
      * construct Matrix.prototype using this constructor.
      */
     public Matrix() {
