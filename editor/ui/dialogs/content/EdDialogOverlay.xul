@@ -82,7 +82,7 @@
               oncommand="MakeInputValueRelativeOrAbsolute(this);"
               tooltiptext="&makeUrlRelative.tooltip;"/>
     <spacer flex="1"/>
-    <button label="&chooseButton.label;" accesskey="&chooseFileLink.accessKey;" oncommand="chooseLinkFile();"/>
+    <button label="&chooseButton.label;" accesskey="&chooseFile.accessKey;" oncommand="chooseLinkFile();"/>
   </hbox>
 </vbox>  
 
