@@ -1803,14 +1803,10 @@ net_get_ftp_file_mdtm_response(ActiveEntry * ce)
          *         xxx     if present, is a fractional second and may be any length
          * Time is expressed in UTC (GMT), not local time.
          */
-#ifndef NSPR20
-        PRTime ts;
-        int64 t, s2us, st;
-#else
+
         PRExplodedTime ts;
         int64 s2us, st;
 		PRTime t;
-#endif /* NSPR20 */
         time_t tt;
 
         TRACEMSG(("Parsing MDTM \"%.1024s\"", cd->return_msg, CR, LF));
@@ -1819,11 +1815,8 @@ net_get_ftp_file_mdtm_response(ActiveEntry * ce)
                      (cd->return_msg[1] - '0') *  100 +
                      (cd->return_msg[2] - '0') *   10 +
                      (cd->return_msg[3] - '0');
-#ifndef NSPR20
-        ts.tm_mon = ((cd->return_msg[4] - '0') * 10 + (cd->return_msg[5] - '0')) - 1;
-#else
+
         ts.tm_month = ((cd->return_msg[4] - '0') * 10 + (cd->return_msg[5] - '0')) - 1;
-#endif /* NSPR20 */
         ts.tm_mday = (cd->return_msg[6] - '0') * 10 + (cd->return_msg[7] - '0');
         ts.tm_hour = (cd->return_msg[8] - '0') * 10 + (cd->return_msg[9] - '0');
         ts.tm_min  = (cd->return_msg[10] - '0') * 10 + (cd->return_msg[11] - '0');
@@ -1844,11 +1837,7 @@ net_get_ftp_file_mdtm_response(ActiveEntry * ce)
          * }
          */
 
-#ifndef NSPR20
-        t = PR_ComputeTime(&ts);
-#else
         t = PR_ImplodeTime(&ts);
-#endif /* NSPR20 */
         LL_I2L(s2us, PR_USEC_PER_SEC);
         LL_DIV(st, t, s2us);
         LL_L2I(tt, st);
@@ -1856,19 +1845,10 @@ net_get_ftp_file_mdtm_response(ActiveEntry * ce)
 #ifdef DEBUG
         {
             char line[256];
-#ifndef NSPR20
-            PRTime et;
-            int64 t2;
-#else
             PRExplodedTime et;
 			PRTime t2;
-#endif /* NSPR20 */
             LL_MUL(t2, st, s2us);
-#ifndef NSPR20
-            PR_ExplodeTime(&et, t2);
-#else
             PR_ExplodeTime(t2, PR_GMTParameters, &et);
-#endif /* NSPR20 */
             PR_FormatTimeUSEnglish(line, sizeof(line), "%Y%m%d%H%M%S", &et);
             TRACEMSG(("Parse check: mdtm is \"%s\"", line));
         }

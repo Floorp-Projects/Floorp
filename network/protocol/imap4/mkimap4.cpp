@@ -37,22 +37,17 @@
 #include "netutils.h"
 #include "nslocks.h"
 
-#ifdef NSPR20
 #ifdef XP_MAC
 #include "prpriv.h"             /* for NewNamedMonitor */
 #else
 #include "private/prpriv.h"
 #endif
-#endif /* NSPR20 */
 
 #define MAX_NEW_IMAP_FOLDER_COUNT 50
 #define IMAP_DB_HEADERS "From To Cc Subject Date Priority X-Priority Message-ID References Newsgroups"
 
-#ifndef NSPR20
-#define IMAP_YIELD(A) PR_Yield()
-#else
+
 #define IMAP_YIELD(A) PR_Sleep(PR_INTERVAL_NO_WAIT)
-#endif
 
 extern "C"
 {
@@ -120,10 +115,8 @@ extern int XP_MSG_IMAP_LOGIN_FAILED;
 extern void net_graceful_shutdown(PRFileDesc* sock, XP_Bool isSecure);
 }
 
-#ifdef NSPR20
 extern PRLogModuleInfo* IMAP;
 #define out PR_LOG_ALWAYS
-#endif
 
 static int32 gMIMEOnDemandThreshold = 15000;
 static XP_Bool gMIMEOnDemand = FALSE;
@@ -1644,12 +1637,7 @@ int WaitForFEEventLoopCount;
 
 void TIMAP4BlockingConnection::WaitForIOCompletion()
 {
-#ifdef NSPR20
 	PRIntervalTime sleepTime = PR_MicrosecondsToInterval(kImapSleepTime);
-#else
-	int64 sleepTime;
-	LL_I2L(sleepTime, kImapSleepTime);
-#endif
 
     PR_EnterMonitor(fIOMonitor);
     fBlockedForIO = TRUE;
@@ -2520,12 +2508,8 @@ void TNavigatorImapConnection::StartProcessingActiveEntries()
     }
 
 
-#ifndef NSPR20
-	int64 sleepTime;
-	LL_I2L(sleepTime, kImapSleepTime);
-#else
+
 	PRIntervalTime sleepTime = PR_MicrosecondsToInterval(kImapSleepTime);
-#endif
 	PR_EnterMonitor(fPermissionToDieMonitor);
 	while (!fIsSafeToDie)
 		PR_Wait(fPermissionToDieMonitor, sleepTime);
@@ -2554,12 +2538,7 @@ void TNavigatorImapConnection::WaitForEventQueueEmptySignal()
 	// it does not wake up and check DeathSignalReceived()
 	// sometimes it is run after DeathSignalReceived and the thread
 	// has to drain its final fe events before death.
-#ifdef NSPR20
 	PRIntervalTime sleepTime = kImapSleepTime;
-#else
-	int64 sleepTime;
-	LL_I2L(sleepTime, kImapSleepTime);
-#endif
 
     PR_EnterMonitor(fEventQueueEmptySignalMonitor);
     while(!fEventQueueEmptySignalHappened)
@@ -2578,12 +2557,7 @@ void TNavigatorImapConnection::SignalEventQueueEmpty()
 
 void TNavigatorImapConnection::WaitForNextAppendMessageSize()
 {
-#ifdef NSPR20
 	PRIntervalTime sleepTime = kImapSleepTime;
-#else
-	int64 sleepTime;
-	LL_I2L(sleepTime, kImapSleepTime);
-#endif
 
     PR_EnterMonitor(fMsgCopyDataMonitor);
     while(!fMsgAppendSizeIsNew && !DeathSignalReceived())
@@ -2594,12 +2568,7 @@ void TNavigatorImapConnection::WaitForNextAppendMessageSize()
 
 void TNavigatorImapConnection::WaitForPotentialListOfMsgsToFetch(uint32 **msgIdList, uint32 &msgCount)
 {
-#ifdef NSPR20
 	PRIntervalTime sleepTime = kImapSleepTime;
-#else
-	int64 sleepTime;
-	LL_I2L(sleepTime, kImapSleepTime);
-#endif
 
     PR_EnterMonitor(fMsgCopyDataMonitor);
     while(!fFetchMsgListIsNew && !DeathSignalReceived())
@@ -2625,12 +2594,7 @@ void TNavigatorImapConnection::NotifyKeyList(uint32 *keys, uint32 keyCount)
 
 void TNavigatorImapConnection::WaitForMessageUploadToComplete()
 {
-#ifdef NSPR20
 	PRIntervalTime sleepTime = kImapSleepTime;
-#else
-	int64 sleepTime;
-	LL_I2L(sleepTime, kImapSleepTime);
-#endif
 
     PR_EnterMonitor(fMessageUploadMonitor);
     while(!fMessageUploadCompleted && !DeathSignalReceived())
@@ -2690,12 +2654,7 @@ void TNavigatorImapConnection::SetFolderInfo(MSG_FolderInfo *folder, XP_Bool fol
 
 void TNavigatorImapConnection::WaitForNextActiveEntry()
 {
-#ifdef NSPR20
 	PRIntervalTime sleepTime = kImapSleepTime;
-#else
-	int64 sleepTime;
-	LL_I2L(sleepTime, kImapSleepTime);
-#endif
 
     PR_EnterMonitor(fActiveEntryMonitor);
     while(!fNextEntryEventSignalHappened && !DeathSignalReceived())
@@ -3899,12 +3858,7 @@ EMailboxDiscoverStatus TNavigatorImapConnection::GetMailboxDiscoveryStatus( )
 
 void TNavigatorImapConnection::WaitForFEEventCompletion()
 {
-#ifdef NSPR20
 	PRIntervalTime sleepTime = kImapSleepTime;
-#else
-	int64 sleepTime;
-	LL_I2L(sleepTime, kImapSleepTime);
-#endif
 
     PR_EnterMonitor(fEventCompletionMonitor);
 //#ifdef KMCENTEE_DEBUG 
@@ -3926,12 +3880,7 @@ void TNavigatorImapConnection::WaitForFEEventCompletion()
 
 void TNavigatorImapConnection::WaitForTunnelCompletion()
 {
-#ifdef NSPR20
 	PRIntervalTime sleepTime = kImapSleepTime;
-#else
-	int64 sleepTime;
-	LL_I2L(sleepTime, kImapSleepTime);
-#endif
 
     PR_EnterMonitor(fTunnelCompletionMonitor);
 
@@ -9470,11 +9419,8 @@ XP_Bool TNavigatorImapConnection::GetIOTunnellingEnabled()
 
 
 PR_STATIC_CALLBACK(void)
-#ifndef NSPR20
-imap_thread_main_function(void *imapConnectionVoid, void *)
-#else
+
 imap_thread_main_function(void *imapConnectionVoid)
-#endif /* NSPR20 */
 {
     TNavigatorImapConnection    *imapConnection = 
         (TNavigatorImapConnection *) imapConnectionVoid;
@@ -9640,27 +9586,14 @@ TNavigatorImapConnection::SetupConnection(ActiveEntry * ce, MSG_Master *master, 
 
 	        newConnection = TRUE;
 	        // start the imap thread
-#ifdef NSPR20
 	        PRThread *imapThread = PR_CreateThread(PR_USER_THREAD, imap_thread_main_function, blockingConnection,
 												   PR_PRIORITY_NORMAL, PR_LOCAL_THREAD, PR_UNJOINABLE_THREAD,
 												   0);		// standard stack
-#else
-	        PRThread *imapThread = PR_CreateThread("imapIOthread",
-	                                                threadPriority,  
-	                                                0);     // standard stack
-#endif	            
 	        // save the thread object so an IMAP interrupt will
 	        // cause the TIMAP4BlockingConnection destructor to
 	        // destroy it.                                                                          
 	        blockingConnection->SetBlockingThread(imapThread);
 	        newConnectionData->netConnection = blockingConnection;
-#ifndef NSPR20
-	        PR_Start(imapThread,                                            // thread to start
-	                 imap_thread_main_function,             // first function to call
-	                 blockingConnection,                            // function argument
-	                 nil);                                                          // function argument
-#endif
-
 
 			XP_Bool folderNeedsSubscribing = FALSE;
 			XP_Bool folderNeedsACLRefreshed = FALSE;

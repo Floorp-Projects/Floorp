@@ -43,9 +43,7 @@ net_CertLdapLoad(ActiveEntry *ce)
 	ce->status = err;
     } else {
 #endif
-#ifdef NSPR20_DISABLED /* need to convert to PRFileDesc */
-	ce->socket = connData->fd;
-#endif
+
 	PR_ASSERT(0);
 
 #ifdef XP_UNIX

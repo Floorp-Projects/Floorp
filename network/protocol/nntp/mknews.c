@@ -106,12 +106,7 @@ extern int MK_MSG_COLLABRA_DISABLED;
 extern int MK_MSG_EXPIRE_NEWS_ARTICLES;
 
 /* Logging stuff */
-#ifndef NSPR20
-PR_LOG_DEFINE(NNTP);
-#define NNTP_LOG_READ(buf) PR_LOG(NNTP, out, ("Receiving: %s", buf))
-#define NNTP_LOG_WRITE(buf)	PR_LOG(NNTP, out, ("Sending: %s", buf))
-#define NNTP_LOG_NOTE(buf) PR_LOG(NNTP, out, buf)
-#else
+
 PRLogModuleInfo* NNTP = NULL;
 #define out		PR_LOG_ALWAYS
 
@@ -129,8 +124,6 @@ PR_LOG(NNTP, out, ("Sending: %s", buf)) ;
 if (NNTP==NULL) \
     NNTP = PR_NewLogModule("NNTP"); \
 PR_LOG(NNTP, out, buf) ;
-
-#endif /* NSPR20 */
 
 /* Forward declarations */
 static int net_xpat_send (ActiveEntry*);
@@ -1225,11 +1218,8 @@ net_send_first_nntp_command (ActiveEntry *ce)
 		time_t last_update =
 			MSG_NewsgroupsLastUpdatedTime(cd->host);
 		char small_buf[64];
-#ifndef NSPR20
-        PRTime  expandedTime;
-#else
+		
         PRExplodedTime  expandedTime;
-#endif /* NSPR20 */
 
 		if(!last_update)
 	 	  {
@@ -1247,11 +1237,8 @@ net_send_first_nntp_command (ActiveEntry *ce)
            LL_I2L(timeInSec, last_update);
            LL_I2L(secToUSec, PR_USEC_PER_SEC);
            LL_MUL(timeInUSec, timeInSec, secToUSec);
-#ifndef NSPR20
-           PR_ExplodeTime( &expandedTime, timeInUSec );
-#else
+
            PR_ExplodeTime(timeInUSec, PR_LocalTimeParameters, &expandedTime);
-#endif /* NSPR20 */
         }
 		PR_FormatTimeUSEnglish(small_buf, sizeof(small_buf), 
                                "NEWGROUPS %y%m%d %H%M%S", &expandedTime);
@@ -4255,11 +4242,6 @@ net_NewsLoad (ActiveEntry *ce)
 	status = MK_MSG_COLLABRA_DISABLED;
 	goto FAIL;
   }
-
-
-#ifndef NSPR20
-  PR_LogInit (&NNTPLog);
-#endif
 
   if(!cd)
 	{
