@@ -38,6 +38,7 @@ protected:
 	//{{AFX_MSG(CPickerDlg)
 	afx_msg void OnOk();
 	virtual BOOL OnInitDialog();
+	afx_msg void OnDblclkListbrowser();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

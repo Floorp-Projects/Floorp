@@ -23,10 +23,13 @@
 
 enum TestResult
 {
+	trNotRun,
 	trFailed,
 	trPassed,
 	trPartial
 };
+
+typedef void (__cdecl *OutputStringProc)(const TCHAR *szMessage, ...);
 
 class BrowserInfo
 {
@@ -34,6 +37,7 @@ public:
 	CControlSiteInstance *pControlSite;
 	IUnknown *pIUnknown;
 	CLSID clsid;
+	OutputStringProc pfnOutputString;
 
 	HRESULT GetWebBrowser(IWebBrowserApp **pWebBrowser)
 	{
@@ -71,6 +75,7 @@ struct Test
 	TCHAR *szName;
 	TCHAR *szDesc;
 	TestProc pfn;
+	TestResult nLastResult;
 };
 
 struct TestSet

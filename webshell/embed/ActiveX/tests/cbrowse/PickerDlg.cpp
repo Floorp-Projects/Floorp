@@ -56,6 +56,7 @@ void CPickerDlg::DoDataExchange(CDataExchange* pDX)
 BEGIN_MESSAGE_MAP(CPickerDlg, CDialog)
 	//{{AFX_MSG_MAP(CPickerDlg)
 	ON_BN_CLICKED(IDOK, OnOk)
+	ON_LBN_DBLCLK(IDC_LISTBROWSER, OnDblclkListbrowser)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -90,3 +91,8 @@ void CPickerDlg::OnOk()
 	EndDialog(IDOK);
 }
 
+
+void CPickerDlg::OnDblclkListbrowser() 
+{
+	OnOk();
+}

@@ -45,6 +45,15 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 #pragma code_page(1252)
 #endif //_WIN32
 
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDR_MAINFRAME           ICON    DISCARDABLE     "res\\cbrowse.ico"
+
 #ifdef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -84,15 +93,6 @@ END
 
 /////////////////////////////////////////////////////////////////////////////
 //
-// Icon
-//
-
-// Icon with lowest ID value placed first to ensure application icon
-// remains consistent on all systems.
-IDR_MAINFRAME           ICON    DISCARDABLE     "res\\cbrowse.ico"
-
-/////////////////////////////////////////////////////////////////////////////
-//
 // Dialog
 //
 
@@ -107,12 +107,12 @@ BEGIN
     CONTROL         "",IDC_BROWSER_MARKER,"Static",SS_BLACKFRAME,7,24,310,
                     205
     PUSHBUTTON      "Run",IDC_RUNTEST,325,296,50,14,WS_DISABLED
-    LISTBOX         IDC_LISTMESSAGES,7,247,310,63,LBS_SORT | 
-                    LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    LISTBOX         IDC_LISTMESSAGES,7,247,310,63,LBS_NOINTEGRALHEIGHT | 
+                    WS_VSCROLL | WS_TABSTOP
     LTEXT           "Messages:",IDC_STATIC,7,233,110,11
     CONTROL         "Tree1",IDC_TESTLIST,"SysTreeView32",TVS_HASBUTTONS | 
                     TVS_HASLINES | TVS_LINESATROOT | TVS_SHOWSELALWAYS | 
-                    WS_BORDER | WS_TABSTOP,330,16,134,222
+                    TVS_TRACKSELECT | WS_BORDER | WS_TABSTOP,330,16,134,222
     GROUPBOX        "Tests",IDC_STATIC,324,7,146,237
     COMBOBOX        IDC_URL,45,7,180,52,CBS_DROPDOWNLIST | WS_VSCROLL | 
                     WS_TABSTOP
