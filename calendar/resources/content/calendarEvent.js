@@ -131,7 +131,7 @@ function CalendarEventDataSource( observer, UserPath, syncPath )
 
       this.UserPath = rv;
 
-      this.gICalLib.setServer( this.UserPath+"/CalendarDataFile.txt" );
+      this.gICalLib.setServer( this.UserPath+"/CalendarDataFile.ics" );
       
       this.gICalLib.addObserver( observer );
       
