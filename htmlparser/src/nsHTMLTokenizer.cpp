@@ -284,7 +284,7 @@ nsresult nsHTMLTokenizer::DidTokenize(PRBool aIsFinalChunk)
  *  @param  anErrorCode: arg that will hold error condition
  *  @return new token or null 
  */
-nsresult nsHTMLTokenizer::ConsumeToken(nsScanner& aScanner,PRBool& aFlushTokens) {
+nsresult nsHTMLTokenizer::ConsumeToken(nsScanner& aScanner) {
 
   PRUnichar theChar;
   CToken* theToken=0;
@@ -304,7 +304,7 @@ nsresult nsHTMLTokenizer::ConsumeToken(nsScanner& aScanner,PRBool& aFlushTokens)
 
       if(!mPlainText) {
         if(kLessThan==theChar) {
-          return ConsumeTag(theChar,theToken,aScanner,aFlushTokens);
+          return ConsumeTag(theChar,theToken,aScanner);
         }
         else if(kAmpersand==theChar){
           return ConsumeEntity(theChar,theToken,aScanner);
@@ -340,7 +340,7 @@ nsresult nsHTMLTokenizer::ConsumeToken(nsScanner& aScanner,PRBool& aFlushTokens)
  *  @param   aToken is the out arg holding our new token
  *  @return  error code.
  */
-nsresult nsHTMLTokenizer::ConsumeTag(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner,PRBool& aFlushTokens) {
+nsresult nsHTMLTokenizer::ConsumeTag(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner) {
 
   nsresult result=aScanner.GetChar(aChar);
 
@@ -376,7 +376,7 @@ nsresult nsHTMLTokenizer::ConsumeTag(PRUnichar aChar,CToken*& aToken,nsScanner& 
 
       default:
         if(nsString::IsAlpha(aChar))
-          result=ConsumeStartTag(aChar,aToken,aScanner,aFlushTokens);
+          result=ConsumeStartTag(aChar,aToken,aScanner);
         else if(kEOF!=aChar) {
           // We are not dealing with a tag. So, put back the char
           // and leave the decision to ConsumeText().
@@ -482,7 +482,7 @@ nsresult nsHTMLTokenizer::ConsumeScriptContent(nsScanner& aScanner,CToken*& aTok
  * @param 
  * @return
  */
-nsresult nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner,PRBool& aFlushTokens) {
+nsresult nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner) {
   PRInt32 theDequeSize=mTokenDeque.GetSize(); //remember this for later in case you have to unwind...
   nsresult result=NS_OK;
 
@@ -512,7 +512,7 @@ nsresult nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,CToken*& aToken,nsScan
           nsAutoString endTag(nsHTMLTags::GetStringValue(theTag));
           endTag.Insert("</",0,2);
           CToken* textToken=theRecycler->CreateTokenOfType(eToken_text,theTag);
-          result=((CTextToken*)textToken)->ConsumeUntil(0,PR_TRUE,aScanner,endTag,mParseMode,aFlushTokens);  //tell new token to finish consuming text...    
+          result=((CTextToken*)textToken)->ConsumeUntil(0,PR_TRUE,aScanner,endTag,mParseMode);  //tell new token to finish consuming text...    
           //endTag.Append(">");
           CToken* endToken=theRecycler->CreateTokenOfType(eToken_end,theTag,endTag);
           AddToken(textToken,result,&mTokenDeque,theRecycler);
