@@ -42,7 +42,7 @@
 */
 //-----------------------------------------------------------------------------
 printBugNumber(96526);
-printStatus('Just seeing that we don't crash when compiling this function -');
+printStatus("Just seeing that we don't crash when compiling this function -");
 
 
 function setaction(jumpto)
