@@ -188,11 +188,11 @@ sub show_graph {
   print "<A title=\"Moving average of last 10 points\">Average:</a>";
   if($AVG) {
 	print "(<b>on</b>|";
-	print "<a href=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$AUTOSCALE&size=$SIZE&days=$DAYS&units=$UNITS&ltype=$LTYPE&points=$points&avg=0\">off</a>";
+	print "<a href=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$AUTOSCALE&size=$SIZE&days=$DAYS&units=$UNITS&ltype=$LTYPE&points=$POINTS&avg=0\">off</a>";
 	print ")\n";
   } else {
 	print "(";
-	print "<a href=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$AUTOSCALE&size=$SIZE&days=$DAYS&units=$UNITS&ltype=$LTYPE&points=$points&avg=1\">on</a>";	
+	print "<a href=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$AUTOSCALE&size=$SIZE&days=$DAYS&units=$UNITS&ltype=$LTYPE&points=$POINTS&avg=1\">on</a>";	
     print "|<b>off</b>)\n";
   }
   print "</font>\n";
