@@ -240,6 +240,7 @@ DeleteRangeTxn::CreateTxnsToDeleteBetween(nsIDOMNode *aStartParent,
       numToDel = aEndOffset-aStartOffset;
     txn->Init(mEditor, textNode, aStartOffset, numToDel);
     AppendChild(txn);
+    NS_RELEASE(txn);
   }
   else
   {
@@ -266,6 +267,7 @@ DeleteRangeTxn::CreateTxnsToDeleteBetween(nsIDOMNode *aStartParent,
 
       txn->Init(child);
       AppendChild(txn);
+      NS_RELEASE(txn);
     }
   }
   return result;
