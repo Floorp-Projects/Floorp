@@ -12,12 +12,15 @@ private:
    double         fTotalCpuTime;    //total cpu time
    double         fTotalRealTime;   //total real time
    EState         fState;           //stopwatch state
+   EState         fSavedState;      //last saved state
 
 public:
    Stopwatch();
    void           Start(bool reset = true);
    void           Stop();
    void           Continue();
+   void           SaveState();      // record current state of stopwatch
+   void           RestoreState();   // restore last recored state of stopwatch
    double         RealTime();
    void           Reset() { ResetCpuTime(); ResetRealTime(); }
    void           ResetCpuTime(double time = 0) { Stop();  fTotalCpuTime = time; }

@@ -8,6 +8,7 @@ Stopwatch::Stopwatch() {
    if (!gTicks) gTicks = (clock_t)sysconf(_SC_CLK_TCK);
 #endif
    fState         = kUndefined;
+   fSavedState    = kUndefined;
    fTotalCpuTime  = 0;
    fTotalRealTime = 0;
    Start();
@@ -49,6 +50,17 @@ void Stopwatch::Stop() {
    fState = kStopped;
 }
 
+
+void Stopwatch::SaveState() {
+  fSavedState = fState;
+}
+
+void Stopwatch::RestoreState() {
+  if (fSavedState == kRunning && fState == kStopped)
+    Start(FALSE);
+  else if (fSavedState == kStopped && fState == kRunning)
+    Stop();
+}
 
 void Stopwatch::Continue() {
 
