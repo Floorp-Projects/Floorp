@@ -301,7 +301,8 @@ CSSLoaderImpl::SetPreferredSheet(const nsAString& aTitle)
   mPreferredSheet = aTitle;
 
   // start any pending alternates that aren't alternates anymore
-  mPendingDatas.Enumerate(StartNonAlternates, this);
+  if (mPendingDatas.IsInitialized())
+    mPendingDatas.Enumerate(StartNonAlternates, this);
   return NS_OK;
 }
 
