@@ -128,6 +128,7 @@ nsresult nsImapMoveCoalescer::PlaybackMoves()
       nsMsgKeyArray *keysToAdd = (nsMsgKeyArray *) m_sourceKeyArrays.ElementAt(i);
       if (keysToAdd)
       {
+        PRInt32 numNewMessages = 0;
         nsCAutoString messageIds;
         
         nsImapMailFolder::AllocateUidStringFromKeys(keysToAdd->GetArray(), keysToAdd->GetSize(), messageIds);
@@ -135,12 +136,29 @@ nsresult nsImapMoveCoalescer::PlaybackMoves()
         if (numKeysToAdd == 0)
           continue;
 
+        nsCOMPtr<nsISupportsArray> messages;
+        NS_NewISupportsArray(getter_AddRefs(messages));
+        for (PRUint32 keyIndex = 0; keyIndex < keysToAdd->GetSize(); keyIndex++)
+        {
+          nsCOMPtr<nsIMsgDBHdr> mailHdr = nsnull;
+          rv = m_sourceFolder->GetMessageHeader(keysToAdd->ElementAt(keyIndex), getter_AddRefs(mailHdr));
+          if (NS_SUCCEEDED(rv) && mailHdr)
+          {
+            nsCOMPtr<nsISupports> iSupports = do_QueryInterface(mailHdr);
+            messages->AppendElement(iSupports);
+            PRBool isRead = PR_FALSE;
+            mailHdr->GetIsRead(&isRead);
+            if (!isRead)
+              numNewMessages++;
+          }
+        }
         PRUint32 destFlags;
         destFolder->GetFlags(&destFlags);
         if (! (destFlags & MSG_FOLDER_FLAG_JUNK)) // don't set has new on junk folder
         {
-          destFolder->SetNumNewMessages(numKeysToAdd);
-          destFolder->SetHasNewMessages(PR_TRUE);
+          destFolder->SetNumNewMessages(numNewMessages);
+          if (numNewMessages > 0)
+            destFolder->SetHasNewMessages(PR_TRUE);
         }
         // adjust the new message count on the source folder
         PRInt32 oldNewMessageCount = 0;
@@ -155,18 +173,6 @@ nsresult nsImapMoveCoalescer::PlaybackMoves()
         nsCOMPtr <nsISupports> sourceSupports = do_QueryInterface(m_sourceFolder, &rv);
         nsCOMPtr <nsIUrlListener> urlListener(do_QueryInterface(sourceSupports));
         
-        nsCOMPtr<nsISupportsArray> messages;
-        NS_NewISupportsArray(getter_AddRefs(messages));
-        for (PRUint32 keyIndex = 0; keyIndex < keysToAdd->GetSize(); keyIndex++)
-        {
-          nsCOMPtr<nsIMsgDBHdr> mailHdr = nsnull;
-          rv = m_sourceFolder->GetMessageHeader(keysToAdd->ElementAt(keyIndex), getter_AddRefs(mailHdr));
-          if (NS_SUCCEEDED(rv) && mailHdr)
-          {
-            nsCOMPtr<nsISupports> iSupports = do_QueryInterface(mailHdr);
-            messages->AppendElement(iSupports);
-          }
-        }
         keysToAdd->RemoveAll();
         nsCOMPtr<nsIMsgCopyService> copySvc = do_GetService(NS_MSGCOPYSERVICE_CONTRACTID);
         if (copySvc)

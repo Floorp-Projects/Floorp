@@ -271,7 +271,8 @@ nsMsgFilter::GetSortedActionList(nsISupportsArray *actionList)
  
     nsMsgRuleActionType actionType;
     action->GetType(&actionType);
-    if (actionType == nsMsgFilterAction::MoveToFolder)  //we always want MoveToFolder action to be last
+    //we always want MoveToFolder action to be last (or delete to trash)
+    if (actionType == nsMsgFilterAction::MoveToFolder || actionType == nsMsgFilterAction::Delete)  
       actionList->AppendElement(action);
     else
     {

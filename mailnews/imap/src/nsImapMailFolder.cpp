@@ -3160,7 +3160,7 @@ NS_IMETHODIMP nsImapMailFolder::ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWindo
 
   PRBool msgIsNew = PR_TRUE;
 
-  for (PRUint32 actionIndex = 0; actionIndex < numActions && *applyMore; actionIndex++)
+  for (PRUint32 actionIndex = 0; actionIndex < numActions; actionIndex++)
   {
     nsCOMPtr<nsIMsgRuleAction> filterAction;
     filterActionList->QueryElementAt(actionIndex, NS_GET_IID(nsIMsgRuleAction), getter_AddRefs(filterAction));
@@ -3239,6 +3239,7 @@ NS_IMETHODIMP nsImapMailFolder::ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWindo
         {
           nsMsgKeyArray keysToFlag;
           keysToFlag.Add(msgKey);
+          msgHdr->OrFlags(MSG_FLAG_READ, &newFlags);
           StoreImapFlags(kImapMsgSeenFlag, PR_TRUE, keysToFlag.GetArray(), keysToFlag.GetSize());
           msgIsNew = PR_FALSE;
         }
@@ -3685,8 +3686,10 @@ nsresult nsImapMailFolder::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
         if (imapDeleteIsMoveToTrash)
         {
         }
-         
-        destIFolder->SetFlag(MSG_FOLDER_FLAG_GOT_NEW);
+        PRBool isRead = PR_FALSE;
+        mailHdr->GetIsRead(&isRead);
+        if (!isRead)
+          destIFolder->SetFlag(MSG_FOLDER_FLAG_GOT_NEW);
         
         if (imapDeleteIsMoveToTrash)  
           err = 0;
