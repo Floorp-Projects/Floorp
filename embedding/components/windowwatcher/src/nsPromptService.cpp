@@ -233,9 +233,11 @@ nsPromptService::ConfirmCheck(nsIDOMWindow *parent,
   block->GetInt(eButtonPressed, &tempInt);
   *_retval = tempInt ? PR_FALSE : PR_TRUE;
 
-  block->GetInt(eCheckboxState, & tempInt);
-  *checkValue = PRBool( tempInt );
-
+  if (*_retval) {
+    block->GetInt(eCheckboxState, & tempInt);
+    *checkValue = PRBool( tempInt );
+  }
+  
   return rv;
 }
 
