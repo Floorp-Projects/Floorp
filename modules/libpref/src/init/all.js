@@ -426,8 +426,7 @@ pref("imap.io.mac.logging", false);
 
 pref("browser.editor.disabled", false);
 
-pref("SpellChecker.DefaultLanguage", 0);
-pref("SpellChecker.DefaultDialect", 0);
+pref("spellchecker.dictionary", "");
 
 pref("mime.table.allow_add", true);
 pref("mime.table.allow_edit", true);

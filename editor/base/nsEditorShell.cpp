@@ -94,6 +94,8 @@
 
 #include "nsILookAndFeel.h"
 
+#include "nsIChromeRegistry.h"
+
 ///////////////////////////////////////
 // Editor Includes
 ///////////////////////////////////////
@@ -140,6 +142,7 @@ static NS_DEFINE_CID(kCStringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_CID(kCommonDialogsCID,         NS_CommonDialog_CID );
 static NS_DEFINE_CID(kDialogParamBlockCID,      NS_DialogParamBlock_CID);
 static NS_DEFINE_CID(kPrefServiceCID,           NS_PREF_CID);
+static NS_DEFINE_CID(kChromeRegistryCID,        NS_CHROMEREGISTRY_CID);
 
 /* Define Interface IDs */
 static NS_DEFINE_IID(kISupportsIID,             NS_ISUPPORTS_IID);
@@ -4588,6 +4591,45 @@ nsEditorShell::InitSpellChecker()
     if (NS_FAILED(result))
       return result;
 
+    // Tell the spellchecker what dictionary to use:
+
+    PRUnichar *dictName = nsnull;
+
+    NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &result);
+
+    if (NS_SUCCEEDED(result) && prefs)
+      result = prefs->CopyUnicharPref("spellchecker.dictionary", &dictName);
+
+    if (! dictName || ! *dictName)
+    {
+      // Prefs didn't give us a dictionary name, so just get the current
+      // locale and use that as the default dictionary name!
+
+      if (dictName)
+      {
+        nsMemory::Free(dictName);
+        dictName = nsnull;
+      }
+
+      nsCOMPtr<nsIChromeRegistry> chromeRegistry = do_GetService(kChromeRegistryCID, &result);
+
+      if (NS_SUCCEEDED(result) && chromeRegistry)
+        result = chromeRegistry->GetSelectedLocale(NS_LITERAL_STRING("navigator"), &dictName);
+    }
+
+    if (NS_SUCCEEDED(result) && dictName && *dictName)
+      result = SetCurrentDictionary(dictName);
+
+    if (dictName)
+      nsMemory::Free(dictName);
+
+    // If an error was thrown while checking the dictionary pref, just
+    // fail silently so that the spellchecker dialog is allowed to come
+    // up. The user can manually reset the language to their choice on
+    // the dialog if it is wrong.
+
+    result = NS_OK;
+
     DeleteSuggestedWordList();
   }
 
@@ -4839,6 +4881,22 @@ nsEditorShell::UninitSpellChecker()
    // We can spell check with any editor type
   if (mEditor)
   {
+    // Save the last used dictionary to the user's preferences.
+    NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &result);
+
+    if (NS_SUCCEEDED(result) && prefs)
+    {
+      PRUnichar *dictName = nsnull;
+
+      result = GetCurrentDictionary(&dictName);
+
+      if (NS_SUCCEEDED(result) && dictName && *dictName)
+        result = prefs->SetUnicharPref("spellchecker.dictionary", dictName);
+
+      if (dictName)
+        nsMemory::Free(dictName);
+    }
+
     // Cleanup - kill the spell checker
     DeleteSuggestedWordList();
     mDictionaryList.Clear();
