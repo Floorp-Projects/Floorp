@@ -120,7 +120,8 @@ disableSSL2Ciphers(void)
 	SECStatus rv;
         rv = SSL_EnableCipher(ssl2CipherSuites[i], SSL_NOT_ALLOWED);
 	if (rv != SECSuccess) {
-	    fprintf(stderr, "SSL_EnableCipher failed with value 0x%04x\n",
+	    fprintf(stderr, 
+		    "strsclnt: SSL_EnableCipher failed with value 0x%04x\n",
 		    ssl2CipherSuites[i]);
 	    exit(1);
 	}
@@ -137,7 +138,8 @@ disableSSL3Ciphers(void)
 	SECStatus rv;
         rv = SSL_EnableCipher(ssl3CipherSuites[i], SSL_NOT_ALLOWED);
 	if (rv != SECSuccess) {
-	    fprintf(stderr, "SSL_EnableCipher failed with value 0x%04x\n",
+	    fprintf(stderr, 
+		    "strsclnt: SSL_EnableCipher failed with value 0x%04x\n",
 		    ssl3CipherSuites[i]);
 	    exit(1);
 	}
@@ -223,7 +225,7 @@ errWarn(char * funcString)
     PRErrorCode  perr      = PR_GetError();
     const char * errString = SECU_Strerror(perr);
 
-    fprintf(stderr, "%s returned error %d:\n%s\n",
+    fprintf(stderr, "strsclnt: %s returned error %d:\n%s\n",
             funcString, perr, errString);
 }
 
@@ -270,14 +272,14 @@ mySSLAuthCertificate(void *arg, PRFileDesc *fd, PRBool checkSig,
 
     peerCert = SSL_PeerCertificate(fd);
 
-    PRINTF("Subject: %s\nIssuer : %s\n", 
+    PRINTF("strsclnt: Subject: %s\nstrsclnt: Issuer : %s\n", 
            peerCert->subjectName, peerCert->issuerName); 
     /* invoke the "default" AuthCert handler. */
     rv = SSL_AuthCertificate(arg, fd, checkSig, isServer);
 
     ++certsTested;
     if (rv == SECSuccess) {
-	fputs("-- SSL: Server Certificate Validated.\n", stderr);
+	fputs("strsclnt: -- SSL: Server Certificate Validated.\n", stderr);
     } 
     /* error, if any, will be displayed by the Bad Cert Handler. */
     return rv;  
@@ -287,7 +289,8 @@ static int /* should be SECStatus but public prototype says int. */
 myBadCertHandler( void *arg, PRFileDesc *fd)
 {
     int err = PR_GetError();
-    fprintf(stderr, "-- SSL: Server Certificate Invalid, err %d.\n%s\n", 
+    fprintf(stderr, 
+	    "strsclnt: -- SSL: Server Certificate Invalid, err %d.\n%s\n", 
             err, SECU_Strerror(err));
     return (MakeCertOK ? SECSuccess : SECFailure);
 }
@@ -324,20 +327,16 @@ printSecurityInfo(PRFileDesc *fd)
 	result = SSL_SecurityStatus(fd, &op, &cp, &kp0, &kp1, &ip, &sp);
 	if (result != SECSuccess)
 	    return;
-#if 0
-	PRINTF("bulk cipher %s, %d secret key bits, %d key bits, status: %d\n"
-	       "subject DN: %s\n"
-	       "issuer  DN: %s\n", cp, kp1, kp0, op, sp, ip);
-#else
-	PRINTF("bulk cipher %s, %d secret key bits, %d key bits, status: %d\n",
+	PRINTF(
+	"strsclnt: cipher %s, %d secret key bits, %d key bits, status: %d\n",
 	       cp, kp1, kp0, op);
-#endif
 	PR_Free(cp);
 	PR_Free(ip);
 	PR_Free(sp);
     }
 
-    PRINTF("%ld cache hits; %ld cache misses, %ld cache not reusable\n",
+    PRINTF(
+    "strsclnt: %ld cache hits; %ld cache misses, %ld cache not reusable\n",
     	ssl3_hsh_sid_cache_hits, 
 	ssl3_hsh_sid_cache_misses,
 	ssl3_hsh_sid_cache_not_ok);
@@ -386,7 +385,8 @@ thread_wrapper(void * arg)
     slot->rv = (* slot->startFunc)(slot->a, slot->b, slot->c);
 
     /* Handle cleanup of thread here. */
-    PRINTF("Thread in slot %d returned %d\n", slot - threads, slot->rv);
+    PRINTF("strsclnt: Thread in slot %d returned %d\n", 
+	   slot - threads, slot->rv);
 
     PR_Lock(threadLock);
     slot->running = rs_idle;
@@ -446,7 +446,7 @@ launch_thread(
 				      PR_UNJOINABLE_THREAD, 0);
     if (slot->prThread == NULL) {
 	PR_Unlock(threadLock);
-	printf("Failed to launch thread!\n");
+	printf("strsclnt: Failed to launch thread!\n");
 	return SECFailure;
     } 
 
@@ -454,7 +454,7 @@ launch_thread(
     slot->running = 1;
     ++numRunning;
     PR_Unlock(threadLock);
-    PRINTF("Launched thread in slot %d \n", i);
+    PRINTF("strsclnt: Launched thread in slot %d \n", i);
 
     return SECSuccess;
 }
@@ -477,7 +477,7 @@ reap_threads(void)
     for (i = 0; i < numUsed; ++i) {
 	slot = threads + i;
     	if (slot->running != rs_idle)  {
-	    FPRINTF(stderr, "Thread in slot %d is in state %d!\n", 
+	    FPRINTF(stderr, "strsclnt: Thread in slot %d is in state %d!\n", 
 	            i, slot->running);
     	}
     }
@@ -589,7 +589,8 @@ do_writes(
 	    errWarn("PR_Write bigBuf");
 	    break;
 	}
-	FPRINTF(stderr, "PR_Write wrote %d bytes from bigBuf\n", count );
+	FPRINTF(stderr, "strsclnt: PR_Write wrote %d bytes from bigBuf\n", 
+		count );
 	sent += count;
     }
     if (count >= 0) {	/* last write didn't fail. */
@@ -633,7 +634,8 @@ handle_fdx_connection( PRFileDesc * ssl_sock, int connection)
 		break;
 	    }
 	    countRead += count;
-	    FPRINTF(stderr, "connection %d read %d bytes (%d total).\n", 
+	    FPRINTF(stderr, 
+		    "strsclnt: connection %d read %d bytes (%d total).\n", 
 		    connection, count, countRead );
 	    if (firstTime) {
 		firstTime = 0;
@@ -649,7 +651,7 @@ handle_fdx_connection( PRFileDesc * ssl_sock, int connection)
     lockedVars_Destroy(&lv);
 
     FPRINTF(stderr, 
-    "connection %d read %d bytes total. -----------------------------\n", 
+    "strsclnt: connection %d read %d bytes total. -----------------------\n", 
     	    connection, countRead);
 
 cleanup:
@@ -694,7 +696,7 @@ handle_connection( PRFileDesc *ssl_sock, int connection)
 	}
 
 	countRead += rv;
-	FPRINTF(stderr, "connection %d read %d bytes (%d total).\n", 
+	FPRINTF(stderr, "strsclnt: connection %d read %d bytes (%d total).\n", 
 		connection, rv, countRead );
     }
     PR_Free(buf);
@@ -703,7 +705,7 @@ handle_connection( PRFileDesc *ssl_sock, int connection)
     /* Caller closes the socket. */
 
     FPRINTF(stderr, 
-    "connection %d read %d bytes total. -----------------------------\n", 
+    "strsclnt: connection %d read %d bytes total. -----------------------\n", 
     	    connection, countRead);
 
     return SECSuccess;	/* success */
@@ -805,7 +807,8 @@ getIPAddress(const char * hostName)
 #define h_addr  h_addr_list[0]   /* address, for backward compatibility */
 
     p = (const unsigned char *)(prHostEnt.h_addr); /* in Network Byte order */
-    FPRINTF(stderr, "%s -> %d.%d.%d.%d\n", hostName, p[0], p[1], p[2], p[3]);
+    FPRINTF(stderr, "strsclnt: %s -> %d.%d.%d.%d\n", hostName, 
+	    p[0], p[1], p[2], p[3]);
     rv = (p[0] << 24) | (p[1] << 16) | (p[2] << 8) | p[3];
     return rv;
 }
@@ -859,7 +862,7 @@ client_main(
                 rv = SSL_EnableCipher(cipher, SSL_ALLOWED);
 		if (rv != SECSuccess) {
 		    fprintf(stderr, 
-			    "SSL_EnableCipher failed with value 0x%04x\n",
+		    "strsclnt: SSL_EnableCipher failed with value 0x%04x\n",
 			    cipher);
 		    exit(1);
 		}
@@ -1072,13 +1075,14 @@ main(int argc, char **argv)
 
 	cert[kt_rsa] = PK11_FindCertFromNickname(nickName, passwd);
 	if (cert[kt_rsa] == NULL) {
-	    fprintf(stderr, "Can't find certificate %s\n", nickName);
+	    fprintf(stderr, "strsclnt: Can't find certificate %s\n", nickName);
 	    exit(1);
 	}
 
 	privKey[kt_rsa] = PK11_FindKeyByAnyCert(cert[kt_rsa], passwd);
 	if (privKey[kt_rsa] == NULL) {
-	    fprintf(stderr, "Can't find Private Key for cert %s\n", nickName);
+	    fprintf(stderr, "strsclnt: Can't find Private Key for cert %s\n", 
+		    nickName);
 	    exit(1);
 	}
 
@@ -1086,13 +1090,14 @@ main(int argc, char **argv)
     if (fNickName) {
 	cert[kt_fortezza] = PK11_FindCertFromNickname(fNickName, passwd);
 	if (cert[kt_fortezza] == NULL) {
-	    fprintf(stderr, "Can't find certificate %s\n", fNickName);
+	    fprintf(stderr, "strsclnt: Can't find certificate %s\n", fNickName);
 	    exit(1);
 	}
 
 	privKey[kt_fortezza] = PK11_FindKeyByAnyCert(cert[kt_fortezza], passwd);
 	if (privKey[kt_fortezza] == NULL) {
-	    fprintf(stderr, "Can't find Private Key for cert %s\n", fNickName);
+	    fprintf(stderr, "strsclnt: Can't find Private Key for cert %s\n", 
+		    fNickName);
 	    exit(1);
 	}
     }
@@ -1103,9 +1108,10 @@ main(int argc, char **argv)
     if (ssl3_hsh_sid_cache_hits + ssl3_hsh_sid_cache_misses +
         ssl3_hsh_sid_cache_not_ok == 0) {
 	/* presumably we were testing SSL2. */
-	printf("%d server certificates tested.\n", certsTested);
+	printf("strsclnt: %d server certificates tested.\n", certsTested);
     } else {
-	printf("%ld cache hits; %ld cache misses, %ld cache not reusable\n",
+	printf(
+	"strsclnt: %ld cache hits; %ld cache misses, %ld cache not reusable\n",
 	    ssl3_hsh_sid_cache_hits, 
 	    ssl3_hsh_sid_cache_misses,
 	    ssl3_hsh_sid_cache_not_ok);
