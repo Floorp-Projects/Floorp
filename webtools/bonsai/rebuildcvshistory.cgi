@@ -150,7 +150,7 @@ sub ProcessOneFile {
 
                          elsif ($line =~ /^branches: [0-9 .;]*$/) {
                               # Ignore these lines; make sure they don't
-                              # become part of the desciption.
+                              # become part of the description.
                          }
 
                          else {

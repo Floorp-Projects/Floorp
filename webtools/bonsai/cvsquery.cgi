@@ -330,7 +330,7 @@ sub print_result {
         $span = 1;
         if( ($l = $ci->[$::CI_LOG]) ne '' ){
             #
-            # Calculate the number of consequitive logs that are
+            # Calculate the number of consecutive logs that are
             #  the same and nuke them
             #
             $j = $k+1;

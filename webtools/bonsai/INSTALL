@@ -165,7 +165,7 @@ Here is the short list of changes I had to make
     you are going to use LXR/Bonsai
 
   file: template-*
-    Here you will probably want to watch closely at the places whare
+    Here you will probably want to watch closely at the places where
     you see the word 'mozilla' near '.cgi'. There are a lot of
     mozilla-specific paths hardcoded
     
@@ -210,7 +210,7 @@ want to edit it to use the user and password you want for the bonsai
 database.
 Then go to Bonsai administration page and press "Rebuild CVS history"
 button. Then you may go to the theater and watch a movie or two. It
-will talke a lot of time. It takes several seconds to process one
+will take a lot of time. It takes several seconds to process one
 file. The more revisions in file the more time it will take. My SUN
 workstation with 2x200Mhz UltraSPARC processors run about an hour to
 process about 4K files with 20K+ revisions. Your mileage may vary.
@@ -238,7 +238,7 @@ or whatever is appropriate for your mail transport agent.
 by making CVS send e-mail about each checkin.  (See the comments at
 the top of dolog.pl for some clues.) One alternative theory would be
 to take advantage of the CVS history command, which provides
-all necessary information to get list of files recently commited, so
+all necessary information to get the list of recently committed files, so
 there is no need to send/process email. Just set up a cron job that
 will periodically look for CVS tree changes and update database.  On
 the other hand, it's not at all clear how efficient the cvs history
@@ -250,7 +250,7 @@ tree  translations. Another thing to configure - banners.
   c) LXR could be improved in a number of ways. Using MySQL database
 instead of DB would probably be a good idea. It's unclear what impact
 it will have on performance though. Incremental database updates would
-be nice. It might be also nice to borrow syntax highliting from LSN.
+be nice. It might also be nice to borrow syntax highlighting from LSN.
 
 
 5. Conclusion.

@@ -63,7 +63,7 @@ params:	This file contains many operating parameters.  This can be
 	edited using the editparams.cgi webpage; you should probably
 	not edit it directory.
 
-	The ./configure script will make a guess on the paramaters
+	The ./configure script will make a guess at the parameters
 	that control paths for scripts to execute, and create an
 	initial params file for you.  It looks for things on your
 	PATH, so if it complains, add the directories in which these

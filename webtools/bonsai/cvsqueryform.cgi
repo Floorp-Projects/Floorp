@@ -67,7 +67,7 @@ print "
 
 
 #
-# check to see if there are multple repositories
+# check to see if there are multiple repositories
 #
 my @reposList = &getRepositoryList();
 my $bMultiRepos = (@reposList > 1);

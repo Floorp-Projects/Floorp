@@ -244,7 +244,7 @@ DefParam("bugsystemexpr",
          'Bugsystemexpr defines what to replace a number found in log
          messages with.  It is used to generate an HTML reference to
          the bug database in the displayed text.  The number of the
-         bug found can be inserted using the %bug_id% substition.',
+         bug found can be inserted using the %bug_id% substitution.',
          "t",
          '<A HREF="%bugs_base%show_bug.cgi?id=%bug_id%">%bug_id%</A>');
 

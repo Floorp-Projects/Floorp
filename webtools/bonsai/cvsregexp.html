@@ -11,7 +11,7 @@
 Description of MySQL regular expression syntax.</H1>
 Regular expressions are a powerful way of specifying complex searches.
 
-<P><B>MySQL</B> uses regular Henry Spencers inplementation of regular expressions.
+<P><B>MySQL</B> uses Henry Spencer's implementation of regular expressions.
 And that is aimed to conform to POSIX 1003.2. <B>MySQL</B> uses the extended
 version.
 
@@ -121,7 +121,7 @@ mysql> select "pipi" regexp "^(pi)+$";&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 <TT>{2,3}</TT></DT>
 
 <DD>
-The is a more general way of writing regexps that match many occurences.</DD>
+There is a more general way of writing regexps that match many occurrences.</DD>
 
 <DL COMPACT>
 <DT>
@@ -142,7 +142,7 @@ Can be written as <TT>a{1,}</TT>.</DD>
 <DD>
 Can be written as <TT>a{0,1}</TT>.</DD>
 </DL>
-To be more precice an atom followed by a bound containing one integer <TT>i</TT>
+To be more precise, an atom followed by a bound containing one integer <TT>i</TT>
 and no comma matches a sequence of exactly <TT>i</TT> matches of the atom.
 An atom followed by a bound containing one integer <TT>i</TT> and a comma
 matches a sequence of <TT>i</TT> or more matches of the atom. An atom followed
@@ -162,7 +162,7 @@ Any character which is (not if ^ is used) either <TT>a</TT>, <TT>b</TT>,
 <TT>c</TT>, <TT>d</TT> or <TT>X</TT>. To include <TT>]</TT> it has to be
 written first. To include <TT>-</TT> it has to be written first or last.
 So <TT>[0-9]</TT> matches any decimal digit. All character that does not
-have a defined mening inside a <TT>[]</TT> pair has no special meaning
+have a defined meaning inside a <TT>[]</TT> pair has no special meaning
 and matches only itself.</DD>
 
 <PRE>mysql> select "aXbc" regexp "[a-dXYZ]";&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -> 1
