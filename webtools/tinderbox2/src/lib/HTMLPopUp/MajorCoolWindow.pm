@@ -5,15 +5,8 @@
 # application MajorCool.
 
 
-
-# the code at this site looks interesting.  Perhaps I will add this as
-# an alternative implementation someday.
-#
-#	 http://www.webreference.com/dhtml/hiermenus/
-
-
-# $Revision: 1.5 $ 
-# $Date: 2000/09/22 14:55:12 $ 
+# $Revision: 1.6 $ 
+# $Date: 2000/10/17 23:53:36 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/HTMLPopUp/MajorCoolWindow.pm,v $ 
 # $Name:  $ 
