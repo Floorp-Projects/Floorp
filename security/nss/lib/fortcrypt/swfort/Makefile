@@ -73,10 +73,10 @@ include $(CORE_DEPTH)/coreconf/rules.mk
 #######################################################################
 
 
-$(OBJDIR)/nslib.c:: swflib.c nsmap.h
+$(OBJDIR)/nslib.c: nsmap.h swflib.c
 	@$(MAKE_OBJDIR)
-	rm -f nslib.c
-	cat nsmap.h swflib.c > $(OBJDIR)/nslib.c
+	rm -f $@
+	cat $+ > $@
 
 export:: private_export
 
