@@ -62,6 +62,7 @@ _nt_handle_restarted_io(PRThread *restarted_io)
      * be the result for a context switch too..
      */
     PR_ASSERT(restarted_io->io_suspended == PR_TRUE);
+    PR_ASSERT(restarted_io->md.thr_bound_cpu == restarted_io->cpu);
 
     _PR_THREAD_LOCK(restarted_io);
     if (restarted_io->io_pending == PR_FALSE) {
@@ -79,6 +80,7 @@ _nt_handle_restarted_io(PRThread *restarted_io)
         _PR_SLEEPQ_UNLOCK(restarted_io->cpu);
     }
     restarted_io->io_suspended = PR_FALSE;
+    restarted_io->md.thr_bound_cpu = NULL;
 
     _PR_THREAD_UNLOCK(restarted_io);
 

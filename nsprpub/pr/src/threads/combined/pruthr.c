@@ -1844,10 +1844,14 @@ _PR_AddThreadToRunQ(
      * _PR_MD_WAKEUP_WAITER).
 	 * Threads with a suspended I/O operation remain bound to
 	 * the same cpu until I/O is cancelled
+     *
+     * NOTE: the boolean expression below must be the exact
+     * opposite of the corresponding boolean expression in
+     * _PR_MD_WAKEUP_WAITER.
      */
-    if (!_PR_IS_NATIVE_THREAD(me) && ((cpu == me->cpu) ||
-					(thread->io_suspended))) {
-		PR_ASSERT(!thread->io_suspended ||
+    if ((!_PR_IS_NATIVE_THREAD(me) && (cpu == me->cpu)) ||
+					(thread->md.thr_bound_cpu)) {
+		PR_ASSERT(!thread->md.thr_bound_cpu ||
 							(thread->md.thr_bound_cpu == cpu));
         _PR_RUNQ_LOCK(cpu);
         _PR_ADD_RUNQ(thread, cpu, pri);

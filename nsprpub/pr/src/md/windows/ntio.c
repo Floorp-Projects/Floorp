@@ -339,7 +339,9 @@ _PR_MD_PAUSE_CPU(PRIntervalTime ticks)
                  * wakeup occurs by calling ReleaseSemaphore.
                  */
                 if ( key == KEY_CVAR ) {
-                    PR_ASSERT(completed_io->io_pending == PR_FALSE || completed_io->io_suspended == PR_TRUE);
+                    PR_ASSERT(completed_io->io_pending == PR_FALSE);
+                    PR_ASSERT(completed_io->io_suspended == PR_FALSE);
+                    PR_ASSERT(completed_io->md.thr_bound_cpu == NULL);
 
                     /* Thread has already been deleted from sleepQ */
 
@@ -801,7 +803,8 @@ _PR_MD_WAKEUP_WAITER(PRThread *thread)
          * XXXMB - can we know when we are truely idle (and not checking 
          *         the runq)?
          */
-        if (_PR_IS_NATIVE_THREAD(me) || (thread->cpu != me->cpu)) {
+        if ((_PR_IS_NATIVE_THREAD(me) || (thread->cpu != me->cpu)) &&
+                (!thread->md.thr_bound_cpu)) {
             /* The thread should not be in any queue */
             PR_ASSERT(thread->queueCount == 0);
             if ( PostQueuedCompletionStatus(_pr_completion_port, 0, 
@@ -1027,6 +1030,7 @@ _NT_IO_ABORT(PRInt32 sock)
         /* Set up to wait for I/O completion again */
         me->state = _PR_IO_WAIT;
         me->io_suspended = PR_FALSE;
+        me->md.interrupt_disabled = PR_TRUE;
     }
     _PR_THREAD_UNLOCK(me);
 
@@ -1061,11 +1065,13 @@ _NT_IO_ABORT(PRInt32 sock)
             ++missing_completions;
         }
 
+        me->md.interrupt_disabled = PR_FALSE;
         me->io_pending = PR_FALSE;
         me->state = _PR_RUNNING;
     }
 
     PR_ASSERT(me->io_pending == PR_FALSE);
+    me->md.thr_bound_cpu = NULL;
     me->io_suspended = PR_FALSE;
 
     return rv;
@@ -1543,7 +1549,7 @@ retry:
             }
 
             if (elapsed < timeout) {
-                /* Socket is not connected but time not elapsed, RESUME IO */
+                /* Socket is connected but time not elapsed, RESUME IO */
                 timeout -= elapsed;
                 me->state = _PR_IO_WAIT;
                 if (_NT_ResumeIO(me, timeout) == PR_FAILURE)
@@ -1558,8 +1564,9 @@ retry:
 
         rv = _NT_IO_ABORT(*newSock);
 
-        PR_ASSERT(me->io_suspended ==  PR_FALSE);
         PR_ASSERT(me->io_pending ==  PR_FALSE);
+        PR_ASSERT(me->io_suspended ==  PR_FALSE);
+        PR_ASSERT(me->md.thr_bound_cpu ==  NULL);
         /* If the IO is still suspended, it means we didn't get any 
          * completion from NT_IO_WAIT.  This is not disasterous, I hope,
          * but it may mean we still have an IO outstanding...  Try to 
@@ -1576,7 +1583,9 @@ retry:
         return -1;
     }
 
-    PR_ASSERT(me->io_pending == PR_FALSE || me->io_suspended == PR_TRUE);
+    PR_ASSERT(me->io_pending == PR_FALSE);
+    PR_ASSERT(me->io_suspended == PR_FALSE);
+    PR_ASSERT(me->md.thr_bound_cpu == NULL);
 
     if (me->md.blocked_io_status == 0) {
 		_PR_MD_MAP_ACCEPTEX_ERROR(me->md.blocked_io_error);
@@ -1597,8 +1606,6 @@ retry:
             &llen,
             (LPSOCKADDR *)(raddr),
             (unsigned int *)&rlen);
-
-    PR_ASSERT(me->io_pending == PR_FALSE);
 
     return me->md.blocked_io_bytes;
 }
@@ -3685,12 +3692,12 @@ PR_IMPLEMENT(PRStatus) PR_NT_CancelIo(PRFileDesc *fd)
 	_PR_THREAD_UNLOCK(me);
 	if (fWait)
 		_NT_IO_WAIT(me, PR_INTERVAL_NO_TIMEOUT);
-	me->md.thr_bound_cpu = NULL;
 	PR_ASSERT(me->io_suspended ==  PR_FALSE);
 	PR_ASSERT(me->io_pending ==  PR_FALSE);
 
 	_PR_THREAD_LOCK(me);
 	me->md.interrupt_disabled = PR_FALSE;
+	me->md.thr_bound_cpu = NULL;
     me->io_suspended = PR_FALSE;
     me->io_pending = PR_FALSE;
 	me->state = _PR_RUNNING;
