@@ -20,14 +20,15 @@
 #define nsBlockFrame_h___
 
 #include "nsHTMLContainerFrame.h"
+#include "nsFrameReflowState.h"
 #include "nsLineLayout.h"
-#include "nsInlineLayout.h"
 #include "nsVoidArray.h"
 #include "nsISpaceManager.h"
 
 class nsBlockFrame;
-struct nsInlineLayout;
+class nsInlineReflow;
 class nsPlaceholderFrame;
+
 struct LineData;
 
 /* 52b33130-0b99-11d2-932e-00805f8add32 */
@@ -36,14 +37,11 @@ struct LineData;
 
 // XXX hide this as soon as list bullet code is cleaned up
 
-struct nsBlockReflowState : public nsReflowState {
-  nsBlockReflowState(nsIPresContext*      aPresContext,
-                     nsISpaceManager*     aSpaceManager,
-                     nsBlockFrame*        aBlock,
-                     nsIStyleContext*     aBlockSC,
+struct nsBlockReflowState : public nsFrameReflowState {
+  nsBlockReflowState(nsIPresContext& aPresContext,
                      const nsReflowState& aReflowState,
-                     nsReflowMetrics&     aMetrics,
-                     PRBool               aComputeMaxElementSize);
+                     const nsReflowMetrics& aMetrics,
+                     nsISpaceManager* aSpaceManager);
 
   ~nsBlockReflowState();
 
@@ -62,44 +60,31 @@ struct nsBlockReflowState : public nsReflowState {
 
   PRBool IsLeftMostChild(nsIFrame* aFrame);
 
-  nsIPresContext* mPresContext;
+  nsLineLayout mLineLayout;
+  nsInlineReflow* mInlineReflow;
+
   nsISpaceManager* mSpaceManager;
   nsBlockFrame* mBlock;
-  PRBool mBlockIsPseudo;
+//  PRBool mBlockIsPseudo;
   nsBlockFrame* mNextInFlow;
+
+  PRBool mInlineReflowPrepared;
+
   PRUint8 mTextAlign;
-  PRUint8 mDirection;
 
-  nsMargin mBorderPadding;
-  nsSize mInnerSize;            // inner area after removing border+padding
   nsSize mStyleSize;
+
   PRIntn mStyleSizeFlags;
-  nscoord mDeltaWidth;
+
   nscoord mBottomEdge;          // maximum Y
-  nscoord mBulletPadding;
-  nscoord mLeftPadding;
 
-  PRPackedBool mUnconstrainedWidth;
-  PRPackedBool mUnconstrainedHeight;
-  PRPackedBool mNoWrap;
-  PRPackedBool mComputeMaxElementSize;
-  nscoord mX, mY;
-  nscoord mPrevBottomMargin;
-  nscoord mOuterTopMargin;
+  nscoord mBulletPadding;// XXX Get rid of these
+  nscoord mLeftPadding;// XXX Get rid of these
+
+  PRBool mUnconstrainedWidth;
+  PRBool mUnconstrainedHeight;
+  nscoord mY;
   nscoord mKidXMost;
-
-  // When a block that contains a block is unconstrained we need to
-  // give the inner block a limited width otherwise they don't reflow
-  // properly.
-  PRPackedBool mHaveBlockMaxWidth;
-  nscoord mBlockMaxWidth;
-
-  nsSize mMaxElementSize;
-
-  nsLineLayout mLineLayout;
-
-  nsInlineLayout mInlineLayout;
-  PRBool mInlineLayoutPrepared;
 
   nsIFrame* mPrevChild;
 
