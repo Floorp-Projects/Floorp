@@ -273,6 +273,16 @@ nsToolboxFrame :: Reflow(nsIPresContext&          aPresContext,
       break;
   }
 
+  mSumOfToolbarHeights = 0;
+  mNumToolbars = 0;
+  
+  // compute amount (in twips) each toolbar will be offset from the right because of 
+  // the grippy
+  float p2t;
+  aPresContext.GetScaledPixelsToTwips(&p2t);
+  nscoord onePixel = NSIntPixelsToTwips(1, p2t);
+  nsPoint offset ( kGrippyWidthInPixels * onePixel, 0 );   // remember to leave room for the grippy on the right
+
   // Until I can handle incremental reflow correctly (or at all), I need to at
   // least make sure that I don't be a bad citizen. This will certainly betray my 
   // complete lack of understanding of the reflow code, but I think I need to
@@ -288,23 +298,25 @@ nsToolboxFrame :: Reflow(nsIPresContext&          aPresContext,
     }
   }
   
-  // start with a reasonable desired size (in twips), which will be changed to 
-  // the size of our children plus some other stuff below.
-  mSumOfToolbarHeights = 0;
-  mNumToolbars = 0;
-  aDesiredSize.width = 6000;
-  aDesiredSize.height = 3000;
-  aDesiredSize.ascent = 3000;
-  aDesiredSize.descent = 0;
-  if (nsnull != aDesiredSize.maxElementSize) {
+  // Step One: How big can we be?
+  //
+  // Figure out our size. Are we intrinsic? Computed? Ignore any
+  // fixed height stuff. We are going to be as tall as we want to be. Width,
+  // on the other hand, should behave as told.
+  nsSize availableSize(0,0);
+  PRBool fixedWidthContent = aReflowState.HaveFixedContentWidth();
+  if ( aReflowState.computedWidth == NS_INTRINSICSIZE )
+    fixedWidthContent = PR_FALSE;
+  availableSize.width = fixedWidthContent ? aReflowState.computedWidth : aReflowState.availableWidth;
+  
+#if 0
+  // cvs-blame tells me that I wrote this code, but i have no idea why or what it does.
+  // chalk it up to superstition, i guess.
+  if ( aDesiredSize.maxElementSize ) {
     aDesiredSize.maxElementSize->width = 0;
     aDesiredSize.maxElementSize->height = 0;
   }
-
-  float p2t;
-  aPresContext.GetScaledPixelsToTwips(&p2t);
-  nscoord onePixel = NSIntPixelsToTwips(1, p2t);
-  nsPoint offset ( kGrippyWidthInPixels * onePixel, 0 );   // remember to leave room for the grippy on the right
+#endif
 
   // Get the first child of the toolbox content node and the first child frame of the toolbox
   nsCOMPtr<nsIContent> toolboxContent;
@@ -314,6 +326,8 @@ nsToolboxFrame :: Reflow(nsIPresContext&          aPresContext,
   unsigned int contentCounter = 0;
   nsIFrame* childFrame = mFrames.FirstChild();
   
+  // Step Two: Layout the children
+  //
   // iterate over the content nodes and the frames at the same time. If there is a content node for which there
   // is no frame (we assume because the display is set to none), then we probably have a collapsed toolbar.
   // There are several cases we need to look for:
@@ -340,7 +354,9 @@ nsToolboxFrame :: Reflow(nsIPresContext&          aPresContext,
       childFrame->GetContent(getter_AddRefs(currentFrameContent));
     if ( childFrame && currentFrameContent && childContent == currentFrameContent ) {
       //
-      // they are the same, so find the width/height desired by the toolbar frame.
+      // they are the same, so find the width/height desired by the toolbar frame, 
+      // less the horizontal space for the grippy, up to the max given to us by our
+      // parent.
       //
 
 #ifdef NS_DEBUG
@@ -352,7 +368,7 @@ nsToolboxFrame :: Reflow(nsIPresContext&          aPresContext,
     printf("BUG 3505:: Found a collapsed toolbar (display:none) but the frame still exists!!!!\n");
 #endif
 
-      nsSize maxSize(aReflowState.availableWidth, aReflowState.availableHeight);
+      const nsSize maxSize(availableSize.width - offset.x, aReflowState.availableHeight);
 		
       nsHTMLReflowState reflowState(aPresContext, aReflowState, childFrame, maxSize);
       nsIHTMLReflow* htmlReflow = nsnull;                               // can't use nsCOMPtr because of bad COM
@@ -433,11 +449,17 @@ nsToolboxFrame :: Reflow(nsIPresContext&          aPresContext,
   
   }
   
+  // Final step: setting our size
+  //
   // let our toolbox be as wide as our parent says we can be and as tall
   // as our child toolbars. If any of the toolbars are not visible (collapsed), 
-  // we need to add some extra room for the bottom bar.
-  aDesiredSize.width = aReflowState.availableWidth - 50;
+  // we need to add some extra room for the bottom bar. Make sure to take borders
+  // into consideration.
+  const nsMargin& borderPadding = aReflowState.mComputedBorderPadding;
+  aDesiredSize.width = availableSize.width;
+  aDesiredSize.width += borderPadding.left + borderPadding.right;
   aDesiredSize.height = anyCollapsedToolbars ? offset.y + 200 : offset.y;
+  aDesiredSize.height += borderPadding.top + borderPadding.bottom;
 
   // remember how many toolbars we have
   mNumToolbars = grippyIndex;
