@@ -317,12 +317,24 @@ doc_raptor:
 
 # Build tarball
 
+DATE_CMD=d:\usr\local\bin\date
+!if [$(DATE_CMD) +%Y%m%d > today.inc]
+!endif
+DATE=\
+!include "today.inc"
+DATE=$(DATE: =)^
+
+!if [del today.inc]
+!endif
+
 TAR = tar
 ZIP = $(MOZ_TOOLS)\bin\zip
 GZIP = gzip
 
-TARBALL = $(MOZ_SRC)\raptor-win-src-04-15-98.tar
-TARBALL_ZIP = $(MOZ_SRC)\raptor-win-src-04-15-98.zip
+TARBALL = $(MOZ_SRC)\win-$(DATE).tar
+TARBALL_ZIP = $(MOZ_SRC)\win-$(DATE).zip
+
+TARFILES = ns README\\raptor
 
 tarballs: tarball_zip tarball_gz
 
@@ -330,13 +342,13 @@ tarball_zip: prepare_for_tarballing
     @echo Making $(TARBALL_ZIP)
     cd $(MOZ_SRC)\.
     rm -f $(TARBALL_ZIP)
-    $(ZIP) -9 -r -q $(TARBALL_ZIP) ns
+    $(ZIP) -9 -r -q $(TARBALL_ZIP) $(TARFILES)
 
 tarball_gz: prepare_for_tarballing
     @echo Making $(TARBALL)
     cd $(MOZ_SRC)\.
     rm -f $(TARBALL) $(TARBALL).gz
-    $(TAR) cf $(TARBALL) ns
+    $(TAR) cf $(TARBALL) $(TARFILES)
     @echo Making gzip of $(TARBALL)
     $(GZIP) -9 -q $(TARBALL)
 
