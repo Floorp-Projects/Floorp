@@ -37,6 +37,7 @@
 #include "plhash.h"
 #include "prmem.h"
 #include "plstr.h"
+#include "prprf.h"
 
 #include "jsapi.h"
 
@@ -265,81 +266,78 @@ void nsPref::useDefaultPrefFile()
 	    NS_ASSERTION(NS_SUCCEEDED(rv), "ERROR: File locator cannot locate prefs file.");
 	    nsServiceManager::ReleaseService(kFileLocatorCID, locator);
     }
-    if (!prefsFile.Exists())
-    {
-      nsOutputFileStream stream(prefsFile);
-      if (stream.is_open()) {
-		NS_WITH_SERVICE(nsIProfile, profileService, kProfileCID, &rv);
-		if (NS_FAILED(rv)) {
-          stream << PREFS_HEADER_LINE_1 << nsEndl << PREFS_HEADER_LINE_2 << nsEndl << nsEndl;
-		}
-		else {
-          char* currProfileName = nsnull;
-          rv = profileService->GetCurrentProfile(&currProfileName);
-          if (NS_FAILED(rv)) {
-            stream << PREFS_HEADER_LINE_1 << nsEndl << PREFS_HEADER_LINE_2 << nsEndl << nsEndl;
-          }
-          else {
-            stream << PREFS_HEADER_LINE_1 << nsEndl << PREFS_HEADER_LINE_2 << nsEndl << nsEndl
-                   << "user_pref(\"browser.startup.homepage\", \"http://www.mozilla.org\");" << nsEndl
-                   << "user_pref(\"mail.accountmanager.accounts\", \"account0,account1\");" << nsEndl
-                   << "user_pref(\"mail.account.account0.identities\", \"id1\");" << nsEndl
-                   << "user_pref(\"mail.account.account0.server\", \"server0\");" << nsEndl
-                   << "user_pref(\"mail.account.account1.identities\", \"id1\");" << nsEndl
-                   << "user_pref(\"mail.account.account1.server\", \"server1\");" << nsEndl
-                   << "user_pref(\"mail.identity.id1.fullName\", \"" << currProfileName <<"\");" << nsEndl
-                   << "user_pref(\"mail.identity.id1.organization\", \"mozilla.org\");" << nsEndl
-                   << "user_pref(\"mail.identity.id1.smtp_name\", \"" << currProfileName << "\");" << nsEndl
-                   << "user_pref(\"mail.identity.id1.smtp_server\", \"nsmail-2\");" << nsEndl
-                   << "user_pref(\"mail.identity.id1.useremail\", \"" << currProfileName << "@netscape.com\");" << nsEndl
-                   << "user_pref(\"mail.identity.id1.send_html\", true);" << nsEndl
-                   << "user_pref(\"mail.identity.id1.wrap_column\", 72);" << nsEndl
-                   << "user_pref(\"mail.server.server0.directory\", "
-#ifdef XP_UNIX
-                   << "\"/u/" << currProfileName << "/mozillaImapMail\");" 
-#else
-#ifdef XP_MAC
-                   << "\"HD:System Folder:Preferences:Netscape Users:" << currProfileName << ":ImapMail\");" 
-#else
-#ifdef XP_WIN
-                   << "\"c:\\\\program files\\\\netscape\\\\users\\\\" << currProfileName << "\\\\ImapMail\");" 
-#else
-#error you_need_to_edit_this_file_for_your_freak_os
-#endif /* XP_WIN */
-#endif /* XP_MAC */
-#endif /* XP_UNIX */
-                   << nsEndl
-                   << "user_pref(\"mail.server.server0.hostname\", \"nsmail-2\");" << nsEndl
-                   << "user_pref(\"mail.server.server0.password\", \"clear text password\");" << nsEndl
-                   << "user_pref(\"mail.server.server0.type\", \"imap\");" << nsEndl
-                   << "user_pref(\"mail.server.server0.userName\", \"" << currProfileName << "\");" << nsEndl
-                   << "user_pref(\"mail.server.server1.directory\", "
-#ifdef XP_UNIX
-                   << "\"/u/" << currProfileName << "\");" 
-#else
-#ifdef XP_MAC
-                   << "\"HD:System Folder:Preferences:Netscape Users:" << currProfileName << ":News\");" 
-#else
-#ifdef XP_WIN
-                   << "\"c:\\\\program files\\\\netscape\\\\users\\\\" << currProfileName << "\\\\News\");" 
-#else
-#error you_need_to_edit_this_file_for_your_freak_os
-#endif /* XP_WIN */
-#endif /* XP_MAC */
-#endif /* XP_UNIX */
-                   << nsEndl
-                   << "user_pref(\"mail.server.server1.hostname\", \"news.mozilla.org\");" << nsEndl
-                   << "user_pref(\"mail.server.server1.type\", \"nntp\");" << nsEndl
-                   << "user_pref(\"news.max_articles\",50);" << nsEndl
-                   << "user_pref(\"news.mark_old_read\",false);" << nsEndl
-                   << nsEndl;
-          }
-	  if (currProfileName) PR_DELETE(currProfileName);
-        }
-      }
+    if (!prefsFile.Exists()) {
+       nsOutputFileStream stream(prefsFile);
+       if (stream.is_open()) {
+         stream << PREFS_HEADER_LINE_1 << nsEndl << PREFS_HEADER_LINE_2 << nsEndl << nsEndl;
+         stream.close();
+       }
     }
-    if (prefsFile.Exists())
-      rv = StartUpWith(prefsFile);
+
+    if (prefsFile.Exists()) {
+       rv = StartUpWith(prefsFile);
+
+       // sspitzer:  eventually this code should be moved into the profile manager
+       // that code should be setting up the prefs based on the what the user enters.
+       NS_WITH_SERVICE(nsIProfile, profileService, kProfileCID, &rv);
+       if (NS_SUCCEEDED(rv)) {
+         char* currProfileName = nsnull;
+         rv = profileService->GetCurrentProfile(&currProfileName);
+         if (NS_SUCCEEDED(rv)) {
+           char *imapDirStr;
+           char *newsDirStr;
+           char *emailStr;
+           
+           emailStr = PR_smprintf("%s@netscape.com",currProfileName);
+#ifdef XP_UNIX
+           imapDirStr = PR_smprintf("/u/%s/mozillaImapMail", currProfileName);
+           newsDirStr = PR_smprintf("/u/%s", currProfileName);
+#else
+#ifdef XP_MAC
+           imapDirStr = PR_smprintf("HD:System Folder:Preferences:Netscape Users:%s:ImapMail", currProfileName);
+           newsDirStr = PR_smprintf("HD:System Folder:Preferences:Netscape Users:%s:News", currProfileName);
+#else
+#ifdef XP_WIN
+           imapDirStr = PR_smprintf("c:\\program files\\netscape\\users\\%s\\ImapMail",currProfileName);
+           newsDirStr = PR_smprintf("c:\\program files\\netscape\\users\\%s\\News",currProfileName);
+#else
+#error you_need_to_edit_this_file_for_your_freak_os
+#endif /* XP_WIN */
+#endif /* XP_MAC */
+#endif /* XP_UNIX */
+           SetCharPref("browser.startup.homepage", "http://www.mozilla.org");
+           SetCharPref("mail.accountmanager.accounts", "account0,account1");
+           SetCharPref("mail.account.account0.identities", "id1");
+           SetCharPref("mail.account.account0.server", "server0");
+           SetCharPref("mail.account.account1.identities", "id1");
+           SetCharPref("mail.account.account1.server", "server1");
+           SetCharPref("mail.identity.id1.fullName", currProfileName);
+           SetCharPref("mail.identity.id1.organization", "mozilla.org");
+           SetCharPref("mail.identity.id1.smtp_name", currProfileName);
+           SetCharPref("mail.identity.id1.smtp_server", "nsmail-2");
+           SetCharPref("mail.identity.id1.useremail", emailStr);
+           SetBoolPref("mail.identity.id1.send_html", PR_TRUE);
+           SetIntPref("mail.identity.id1.wrap_column", 72);
+           SetCharPref("mail.server.server0.directory", imapDirStr);
+           SetCharPref("mail.server.server0.hostname", "nsmail-2");
+           SetCharPref("mail.server.server0.password", "clear text password");
+           SetCharPref("mail.server.server0.type", "imap");
+           SetCharPref("mail.server.server0.userName", currProfileName);
+           SetCharPref("mail.server.server1.directory", newsDirStr);
+           SetCharPref("mail.server.server1.hostname", "news.mozilla.org");
+           SetCharPref("mail.server.server1.type", "nntp");
+           SetIntPref("news.max_articles",50);
+           SetBoolPref("news.mark_old_read",PR_FALSE);
+           PR_FREEIF(imapDirStr);
+           PR_FREEIF(newsDirStr);
+           PR_FREEIF(emailStr);
+
+           // need to save the prefs now
+           SavePrefFile();
+         }
+         if (currProfileName) PR_DELETE(currProfileName);
+       }
+    }
     return;
 } // nsPref::useDefaultPrefFile
 
