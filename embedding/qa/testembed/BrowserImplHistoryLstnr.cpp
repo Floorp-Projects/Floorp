@@ -57,7 +57,7 @@ NS_IMETHODIMP CBrowserImpl::OnHistoryNewEntry(nsIURI *theUri)
 {
 	CQaUtils::QAOutput("nsIHistoryListener::OnHistoryNewEntry()", 2);
 
-    CQaUtils::GetTheUri(theUri, 2);
+    CQaUtils::GetTheUri(theUri, 1);
 
 	return NS_OK;
 }
@@ -67,7 +67,9 @@ NS_IMETHODIMP CBrowserImpl::OnHistoryGoBack(nsIURI *theUri, PRBool *notify)
 {
 	CQaUtils::QAOutput("nsIHistoryListener::OnHistoryGoBack()", 2);
 
-    CQaUtils::GetTheUri(theUri, 2);
+    CQaUtils::GetTheUri(theUri, 1);
+	*notify = PR_TRUE;
+	CQaUtils::FormatAndPrintOutput("OnHistoryGoBack() notification = ", *notify, 1);
 
 	return NS_OK;
 }
@@ -76,7 +78,9 @@ NS_IMETHODIMP CBrowserImpl::OnHistoryGoForward(nsIURI *theUri, PRBool *notify)
 {
 	CQaUtils::QAOutput("nsIHistoryListener::OnHistoryGoForward()", 2);
 
-	CQaUtils::GetTheUri(theUri, 2);
+	CQaUtils::GetTheUri(theUri, 1);
+	*notify = PR_TRUE;
+	CQaUtils::FormatAndPrintOutput("OnHistoryGoForward() notification = ", *notify, 1);
 
 	return NS_OK;
 }
@@ -85,7 +89,9 @@ NS_IMETHODIMP CBrowserImpl::OnHistoryReload(nsIURI *theUri, PRUint32 reloadFlags
 {
 	CQaUtils::QAOutput("nsIHistoryListener::OnHistoryReload()", 2);
 
-	CQaUtils::GetTheUri(theUri, 2);
+	CQaUtils::GetTheUri(theUri, 1);
+	*notify = PR_TRUE;
+	CQaUtils::FormatAndPrintOutput("OnHistoryReload() notification = ", *notify, 1);
 
 	return NS_OK;
 }
@@ -94,7 +100,9 @@ NS_IMETHODIMP CBrowserImpl::OnHistoryGotoIndex(PRInt32 theIndex, nsIURI *theUri,
 {
 	CQaUtils::QAOutput("nsIHistoryListener::OnHistoryGotoIndex()", 2);
 
-    CQaUtils::GetTheUri(theUri, 2);
+    CQaUtils::GetTheUri(theUri, 1);
+	*notify = PR_TRUE;
+	CQaUtils::FormatAndPrintOutput("OnHistoryGotoIndex() notification = ", *notify, 1);
 
 	return NS_OK;
 }
@@ -102,6 +110,9 @@ NS_IMETHODIMP CBrowserImpl::OnHistoryGotoIndex(PRInt32 theIndex, nsIURI *theUri,
 NS_IMETHODIMP CBrowserImpl::OnHistoryPurge(PRInt32 theNumEntries, PRBool *notify)
 {
 	CQaUtils::QAOutput("nsIHistoryListener::OnHistoryPurge()", 2);
+
+	*notify = PR_TRUE;
+	CQaUtils::FormatAndPrintOutput("OnHistoryPurge() notification = ", *notify, 1);
 
 	return NS_OK;
 }
