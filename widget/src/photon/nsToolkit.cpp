@@ -38,8 +38,6 @@
 #include "nsToolkit.h"
 #include "nscore.h"
 
-#include "nsPhWidgetLog.h"
-
 //
 // Static thread local storage index of the Toolkit 
 // object associated with a given thread...

@@ -38,7 +38,6 @@
 #include "nsLookAndFeel.h"
 #include <Pt.h>
 #include "nsFont.h"
-#include "nsPhWidgetLog.h"
 
 #define PH_TO_NS_RGB(ns) (ns & 0xff) << 16 | (ns & 0xff00) | ((ns >> 16) & 0xff) 
 
