@@ -165,6 +165,9 @@ public:
 	NS_IMETHOD	CreateListOfMessageIdsString(nsString2 *result) = 0;
 	NS_IMETHOD	MessageIdsAreUids(PRBool *result) = 0;
 	NS_IMETHOD	GetMsgFlags(imapMessageFlagsType *result) = 0;	// kAddMsgFlags or kSubtractMsgFlags only
+    NS_IMETHOD GetChildDiscoveryDepth(PRInt32* discoveryDepth) = 0;
+    NS_IMETHOD GetOnlineSubDirSeparator(char* separator) = 0;
+	NS_IMETHOD SetOnlineSubDirSeparator(char onlineDirSeparator) = 0;
 
 	NS_IMETHOD	SetAllowContentChange(PRBool allowContentChange) = 0;
 	NS_IMETHOD  GetAllowContentChange(PRBool *results) = 0;

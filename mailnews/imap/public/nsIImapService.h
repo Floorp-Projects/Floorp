@@ -129,6 +129,25 @@ public:
                                const char *messageIdentifierList,
                                imapMessageFlagsType flags,
                                PRBool messageIdsAreUID) = 0;
+
+    NS_IMETHOD DiscoverAllFolders(PLEventQueue* aClientEventQueue,
+                                  nsIMsgFolder* aImapMailFolder,
+                                  nsIUrlListener* aUrlListener,
+                                  nsIURL** aURL) = 0;
+    NS_IMETHOD DiscoverAllAndSubscribedFolders(PLEventQueue*
+                                               aClientEventQueue,
+                                               nsIMsgFolder* aImapMailFolder,
+                                               nsIUrlListener* aUrlListener,
+                                               nsIURL** aURL) = 0;
+    NS_IMETHOD DiscoverChildren(PLEventQueue* aClientEventQueue,
+                                nsIMsgFolder* aImapMailFolder,
+                                nsIUrlListener* aUrlListener,
+                                nsIURL** aURL) = 0;
+    NS_IMETHOD DiscoverLevelChildren(PLEventQueue* aClientEventQueue,
+                                     nsIMsgFolder* aImapMailFolder,
+                                     nsIUrlListener* aUrlListener,
+                                     PRInt32 level,
+                                     nsIURL** aURL) = 0;
 };
 
 

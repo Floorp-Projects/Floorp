@@ -835,6 +835,206 @@ nsImapService::SetImapUrlSink(nsIMsgFolder* aMsgFolder,
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsImapService::DiscoverAllFolders(PLEventQueue* aClientEventQueue,
+                                  nsIMsgFolder* aImapMailFolder,
+                                  nsIUrlListener* aUrlListener,
+                                  nsIURL** aURL)
+{
+    NS_ASSERTION (aImapMailFolder && aClientEventQueue, 
+                  "Oops ... null aClientEventQueue or aImapMailFolder");
+    if (!aImapMailFolder || ! aClientEventQueue)
+        return NS_ERROR_NULL_POINTER;
+    
+    nsIImapProtocol* aProtocol = nsnull;
+    nsIImapUrl* aImapUrl = nsnull;
+    nsString2 urlSpec(eOneByte);
+
+    nsresult rv = GetImapConnectionAndUrl(aClientEventQueue, aImapUrl,
+                                          aProtocol, urlSpec);
+    if (NS_SUCCEEDED (rv) && aImapUrl && aProtocol)
+    {
+        rv = SetImapUrlSink(aImapMailFolder, aImapUrl);
+
+        if (NS_SUCCEEDED(rv))
+        {
+            urlSpec.Append("/discoverallboxes");
+            rv = aImapUrl->SetSpec(urlSpec.GetBuffer());
+            if (NS_SUCCEEDED(rv))
+            {
+                aImapUrl->RegisterListener(aUrlListener);
+                aProtocol->LoadUrl(aImapUrl, nsnull);
+                if (aURL)
+                {
+                    *aURL = aImapUrl;
+                    NS_ADDREF(*aURL);
+                }
+            }
+        }
+    }
+    NS_IF_RELEASE(aImapUrl);
+    NS_IF_RELEASE(aProtocol);
+    return rv;
+}
+
+NS_IMETHODIMP
+nsImapService::DiscoverAllAndSubscribedFolders(PLEventQueue* aClientEventQueue,
+                                              nsIMsgFolder* aImapMailFolder,
+                                              nsIUrlListener* aUrlListener,
+                                              nsIURL** aURL)
+{
+    NS_ASSERTION (aImapMailFolder && aClientEventQueue, 
+                  "Oops ... null aClientEventQueue or aImapMailFolder");
+    if (!aImapMailFolder || ! aClientEventQueue)
+        return NS_ERROR_NULL_POINTER;
+    
+    nsIImapProtocol* aProtocol = nsnull;
+    nsIImapUrl* aImapUrl = nsnull;
+    nsString2 urlSpec(eOneByte);
+
+    nsresult rv = GetImapConnectionAndUrl(aClientEventQueue, aImapUrl,
+                                          aProtocol, urlSpec);
+    if (NS_SUCCEEDED (rv) && aImapUrl && aProtocol)
+    {
+        rv = SetImapUrlSink(aImapMailFolder, aImapUrl);
+
+        if (NS_SUCCEEDED(rv))
+        {
+            urlSpec.Append("/discoverallandsubscribedboxes");
+            rv = aImapUrl->SetSpec(urlSpec.GetBuffer());
+            if (NS_SUCCEEDED(rv))
+            {
+                aImapUrl->RegisterListener(aUrlListener);
+                aProtocol->LoadUrl(aImapUrl, nsnull);
+                if (aURL)
+                {
+                    *aURL = aImapUrl;
+                    NS_ADDREF(*aURL);
+                }
+            }
+        }
+    }
+    NS_IF_RELEASE(aImapUrl);
+    NS_IF_RELEASE(aProtocol);
+    return rv;
+}
+
+NS_IMETHODIMP
+nsImapService::DiscoverChildren(PLEventQueue* aClientEventQueue,
+                                nsIMsgFolder* aImapMailFolder,
+                                nsIUrlListener* aUrlListener,
+                                nsIURL** aURL)
+{
+    NS_ASSERTION (aImapMailFolder && aClientEventQueue, 
+                  "Oops ... null aClientEventQueue or aImapMailFolder");
+    if (!aImapMailFolder || ! aClientEventQueue)
+        return NS_ERROR_NULL_POINTER;
+    
+    nsIImapProtocol* aProtocol = nsnull;
+    nsIImapUrl* aImapUrl = nsnull;
+    nsString2 urlSpec(eOneByte);
+
+    nsresult rv = GetImapConnectionAndUrl(aClientEventQueue, aImapUrl,
+                                          aProtocol, urlSpec);
+    if (NS_SUCCEEDED (rv) && aImapUrl && aProtocol)
+    {
+        rv = SetImapUrlSink(aImapMailFolder, aImapUrl);
+
+        if (NS_SUCCEEDED(rv))
+        {
+            PRBool gotFolder = PR_FALSE;
+            char *folderName = nsnull;
+            
+            aImapMailFolder->GetName(&folderName);
+            if (folderName && *folderName != nsnull)
+            {
+                // **** fix me with host specific hierarchySeparator please
+                urlSpec.Append("/discoverchildren>/");
+                urlSpec.Append(folderName);
+                rv = aImapUrl->SetSpec(urlSpec.GetBuffer());
+                if (NS_SUCCEEDED(rv))
+                {
+                    aImapUrl->RegisterListener(aUrlListener);
+                    aProtocol->LoadUrl(aImapUrl, nsnull);
+                    if (aURL)
+                    {
+                        *aURL = aImapUrl;
+                        NS_ADDREF(*aURL);
+                    }
+                }
+            }
+            else
+            {
+                rv = NS_ERROR_NULL_POINTER;
+            }
+            delete [] folderName;
+        }
+    }
+    NS_IF_RELEASE(aImapUrl);
+    NS_IF_RELEASE(aProtocol);
+    return rv;
+}
+
+NS_IMETHODIMP
+nsImapService::DiscoverLevelChildren(PLEventQueue* aClientEventQueue,
+                                     nsIMsgFolder* aImapMailFolder,
+                                     nsIUrlListener* aUrlListener,
+                                     PRInt32 level,
+                                     nsIURL** aURL)
+{
+    NS_ASSERTION (aImapMailFolder && aClientEventQueue, 
+                  "Oops ... null aClientEventQueue or aImapMailFolder");
+    if (!aImapMailFolder || ! aClientEventQueue)
+        return NS_ERROR_NULL_POINTER;
+    
+    nsIImapProtocol* aProtocol = nsnull;
+    nsIImapUrl* aImapUrl = nsnull;
+    nsString2 urlSpec(eOneByte);
+
+    nsresult rv = GetImapConnectionAndUrl(aClientEventQueue, aImapUrl,
+                                          aProtocol, urlSpec);
+    if (NS_SUCCEEDED (rv) && aImapUrl && aProtocol)
+    {
+        rv = SetImapUrlSink(aImapMailFolder, aImapUrl);
+
+        if (NS_SUCCEEDED(rv))
+        {
+            PRBool gotFolder = PR_FALSE;
+            char *folderName = nsnull;
+            
+            aImapMailFolder->GetName(&folderName);
+            if (folderName && *folderName != nsnull)
+            {
+                urlSpec.Append("/discoverlevelchildren>");
+                urlSpec.Append(level);
+                // **** fix me with host specific hierarchySeparator please
+                urlSpec.Append("/"); // hierarchySeparator "/"
+                urlSpec.Append(folderName);
+                rv = aImapUrl->SetSpec(urlSpec.GetBuffer());
+                if (NS_SUCCEEDED(rv))
+                {
+                    aImapUrl->RegisterListener(aUrlListener);
+                    aProtocol->LoadUrl(aImapUrl, nsnull);
+                    if (aURL)
+                    {
+                        *aURL = aImapUrl;
+                        NS_ADDREF(*aURL);
+                    }
+                }
+            }
+            else
+            {
+                rv = NS_ERROR_NULL_POINTER;
+            }
+            delete [] folderName;
+        }
+    }
+    NS_IF_RELEASE(aImapUrl);
+    NS_IF_RELEASE(aProtocol);
+    return rv;
+}
+
+
 #ifdef HAVE_PORT
 
 /* fetching the headers of RFC822 messages */
@@ -902,33 +1102,6 @@ char *CreateImapMailboxCreateUrl(const char *imapHost, const char *mailbox,char 
 	char *returnString = createStartOfIMAPurl(imapHost, XP_STRLEN(formatString) + XP_STRLEN(mailbox));
 	if (returnString)
 		sprintf(returnString + XP_STRLEN(returnString), formatString, hierarchySeparator, mailbox);
-   /* Reviewed 4.51 safe use of sprintf */
-        
-	return returnString;
-}
-
-/* discover the mailboxes of this account  */
-char *CreateImapAllMailboxDiscoveryUrl(const char *imapHost)
-{
-	static const char *formatString = "discoverallboxes";
-
-	char *returnString = createStartOfIMAPurl(imapHost, XP_STRLEN(formatString));
-	if (returnString)
-		sprintf(returnString + XP_STRLEN(returnString), formatString);
-   /* Reviewed 4.51 safe use of sprintf */
-        
-	return returnString;
-}
-
-
-/* discover the mailboxes of this account, and the subscribed mailboxes  */
-char *CreateImapAllAndSubscribedMailboxDiscoveryUrl(const char *imapHost)
-{
-	static const char *formatString = "discoverallandsubscribedboxes";
-
-	char *returnString = createStartOfIMAPurl(imapHost, XP_STRLEN(formatString));
-	if (returnString)
-		sprintf(returnString + XP_STRLEN(returnString), formatString);
    /* Reviewed 4.51 safe use of sprintf */
         
 	return returnString;
