@@ -1,8 +1,5 @@
 #!perl
 
-	use Moz;
-	use BuildList;
-
 #
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "NPL"); you may not use this file except in
@@ -20,12 +17,22 @@
 # Reserved.
 #
 
+	use Moz;
+	use BuildList;
+
 $DEBUG = 0;
 $MOZ_LITE = 0;		# build moz medium. This will come from a config file at some stage.
 
 Moz::OpenErrorLog(":::Mozilla.BuildLog");
 Moz::StopForErrors();
 
-chdir(":::");
+chdir("::::");
 
+# Make the dist directory, and essential sub-directories
+PrepareDist();
+
+# Popuplate the dist directory
+DistMozilla();
+
+# Now build the projects
 BuildMozilla();
