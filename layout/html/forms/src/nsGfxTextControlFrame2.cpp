@@ -718,8 +718,8 @@ nsGfxTextControlFrame2::ReflowStandard(nsIPresContext*          aPresContext,
   aDesiredSize.descent = 0;
 
   if (aDesiredSize.maxElementSize) {
-    aDesiredSize.maxElementSize->width  = minSize.width;
-    aDesiredSize.maxElementSize->height = minSize.height;
+    aDesiredSize.maxElementSize->width  = widthExplicit?desiredSize.width:minSize.width;
+    aDesiredSize.maxElementSize->height = heightExplicit?desiredSize.height:minSize.height;
   }
 
   return NS_OK;
