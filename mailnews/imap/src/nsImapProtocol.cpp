@@ -7943,12 +7943,12 @@ nsresult nsImapMockChannel::ReadFromMemCache(nsICacheEntryDescriptor *entry)
 
   PRUint32 annotationLength = 0;
   nsXPIDLCString annotation;
-  nsXPIDLCString entryKey;
+  nsCAutoString entryKey;
   nsXPIDLCString contentType;
   nsresult rv = NS_OK;
   PRBool shouldUseCacheEntry = PR_FALSE;
 
-  entry->GetKey(getter_Copies(entryKey));
+  entry->GetKey(entryKey);
   // if we have a part, then we should use the cache entry.
   if (entryKey.FindChar('?') != kNotFound)
   {
