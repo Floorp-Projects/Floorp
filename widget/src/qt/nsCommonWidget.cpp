@@ -991,28 +991,31 @@ nsCommonWidget::keyPressEvent(QKeyEvent *e)
     // release.  gtk2 already filters the extra key release events for
     // us.
 
+    nsKeyEvent pressEvent(NS_KEY_PRESS, this);
+    InitKeyEvent(&pressEvent, e);
+    pressEvent.charCode = (PRInt32)e->text()[0].unicode();
+
     if (!e->isAutoRepeat()) {
 
         // send the key down event
         nsKeyEvent downEvent(NS_KEY_DOWN, this);
         InitKeyEvent(&downEvent, e);
         DispatchEvent(&downEvent, status);
+        if (ignoreEvent(status)) { // If prevent default on keydown, do same for keypress
+          pressEvent.flags |= NS_EVENT_FLAG_NO_DEFAULT;
+        }
     }
-
-    nsKeyEvent event(NS_KEY_PRESS, this);
-    InitKeyEvent(&event, e);
-    event.charCode = (PRInt32)e->text()[0].unicode();
 
     // before we dispatch a key, check if it's the context menu key.
     // If so, send a context menu key event instead.
-    if (isContextMenuKey(event)) {
+    if (isContextMenuKey(pressEvent)) {
         nsMouseEvent contextMenuEvent;
-        keyEventToContextMenuEvent(&event, &contextMenuEvent);
+        keyEventToContextMenuEvent(&pressEvent, &contextMenuEvent);
         DispatchEvent(&contextMenuEvent, status);
     }
     else {
         // send the key press event
-        DispatchEvent(&event, status);
+        DispatchEvent(&pressEvent, status);
     }
 
     return ignoreEvent(status);

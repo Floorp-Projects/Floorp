@@ -1571,6 +1571,10 @@ nsWindow::OnKeyPressEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
     }
     nsKeyEvent event(NS_KEY_PRESS, this);
     InitKeyEvent(event, aEvent);
+    if (status == nsEventStatus_eConsumeNoDefault) {
+      // If prevent default set for onkeydown, do the same for onkeypress
+      event.flags |= NS_EVENT_FLAG_NO_DEFAULT;
+    }
     event.charCode = nsConvertCharCodeToUnicode(aEvent);
     if (event.charCode) {
         event.keyCode = 0;

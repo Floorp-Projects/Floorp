@@ -57,9 +57,9 @@ public:
    
   NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
   
-  NS_IMETHOD KeyUp(nsIDOMEvent* aMouseEvent);
-  NS_IMETHOD KeyDown(nsIDOMEvent* aMouseEvent);
-  NS_IMETHOD KeyPress(nsIDOMEvent* aMouseEvent);
+  NS_IMETHOD KeyUp(nsIDOMEvent* aKeyEvent);
+  NS_IMETHOD KeyDown(nsIDOMEvent* aKeyEvent);
+  NS_IMETHOD KeyPress(nsIDOMEvent* aKeyEvent);
   
   NS_IMETHOD Focus(nsIDOMEvent* aEvent);
   NS_IMETHOD Blur(nsIDOMEvent* aEvent);

@@ -884,10 +884,13 @@ PRBool  nsWidget::DispatchKeyEvent( PhKeyEvent_t *aPhKeyEvent ) {
   if (aPhKeyEvent->key_flags & Pk_KF_Key_Down) {
 		nsKeyEvent keyDownEvent(NS_KEY_DOWN, w);
 		InitKeyEvent(aPhKeyEvent, keyDownEvent);
-		w->OnKey(keyDownEvent);
+		PRBool noDefault = w->OnKey(keyDownEvent);
 
 		nsKeyEvent keyPressEvent(NS_KEY_PRESS, w);
 		InitKeyPressEvent(aPhKeyEvent, keyPressEvent);
+		if (noDefault) {  // If prevent default set for keydown, do same for keypress
+			keyPressEvent.flags = NS_EVENT_FLAG_NO_DEFAULT;
+		}
 		w->OnKey(keyPressEvent);
   	}
   else if (aPhKeyEvent->key_flags & Pk_KF_Key_Repeat) {

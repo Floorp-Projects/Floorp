@@ -477,7 +477,7 @@ gint handle_key_press_event_for_text(GtkObject *w, GdkEventKey* event,
   NS_ADDREF(win);
   nsKeyEvent keyDownEvent(NS_KEY_DOWN, win);
   InitKeyEvent(event, keyDownEvent);
-  win->OnKey(keyDownEvent);
+  PRBool noDefault = win->OnKey(keyDownEvent);
 
   // Don't pass Shift, Control, Alt and Meta as NS_KEY_PRESS events.
   if (event->keyval == GDK_Shift_L
@@ -498,6 +498,10 @@ gint handle_key_press_event_for_text(GtkObject *w, GdkEventKey* event,
   //
   nsKeyEvent keyPressEvent(NS_KEY_PRESS, win);
   InitKeyPressEvent(event, keyPressEvent);
+  if (noDefault) {  // If prevent default set for onkeydown, do the same for onkeypress
+    event.flags |= NS_EVENT_FLAG_NO_DEFAULT;
+  }
+
   win->OnKey(keyPressEvent);
 
   NS_RELEASE(win);
@@ -552,13 +556,14 @@ gint handle_key_press_event(GtkObject *w, GdkEventKey* event, gpointer p)
   //   but lie about where it came from and say it is from the
   //   window that currently has focus inside our app...
   //
+  PRBool noDefault = PR_FALSE;
   nsKeyEvent keyDownEvent(NS_KEY_DOWN, win);
   InitKeyEvent(event, keyDownEvent);
   // if we need to suppress this NS_KEY_DOWN event, reset the flag
   if (suppressNextKeyDown == PR_TRUE)
     suppressNextKeyDown = PR_FALSE;
   else
-    win->OnKey(keyDownEvent);
+    noDefault = win->OnKey(keyDownEvent);
 
   // Don't pass Shift, Alt, Control and Meta as NS_KEY_PRESS events.
   if (event->keyval == GDK_Shift_L
@@ -580,6 +585,9 @@ gint handle_key_press_event(GtkObject *w, GdkEventKey* event, gpointer p)
   // Call nsConvertCharCodeToUnicode() here to get kevent.charCode 
   nsKeyEvent keyPressEvent(NS_KEY_PRESS, win);
   InitKeyPressEvent(event, keyPressEvent);
+  if (noDefault) {  // If prevent default set for onkeydown, do the same for onkeypress
+    event.flags |= NS_EVENT_FLAG_NO_DEFAULT;
+  }
 
   if (event->length) {
     if (keyPressEvent.charCode || keyPressEvent.keyCode) {

@@ -434,7 +434,7 @@ protected:
   virtual PRBool          OnPaint(HDC aDC = nsnull);
   virtual PRBool          OnResize(nsRect &aWindowRect);
 
-  BOOL                    OnChar(UINT charCode);
+  BOOL                    OnChar(UINT charCode, PRUint32 aFlags = 0);
 
   BOOL                    OnKeyDown( UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyCode);
   BOOL                    OnKeyUp( UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyCode);
@@ -455,7 +455,8 @@ protected:
 
   void                    GetCompositionString(HIMC aHIMC, DWORD aIndex, nsString* aStrUnicode, nsCString* aStrAnsi);
 
-  virtual PRBool          DispatchKeyEvent(PRUint32 aEventType, WORD aCharCode, UINT aVirtualCharCode, LPARAM aKeyCode);
+  virtual PRBool          DispatchKeyEvent(PRUint32 aEventType, WORD aCharCode, UINT aVirtualCharCode,
+                                           LPARAM aKeyCode, PRUint32 aFlags = 0);
 
   virtual PRBool          DispatchFocus(PRUint32 aEventType, PRBool isMozWindowTakingFocus);
   virtual PRBool          OnScroll(UINT scrollCode, int cPos);

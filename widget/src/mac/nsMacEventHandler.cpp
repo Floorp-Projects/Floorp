@@ -1167,6 +1167,10 @@ PRBool nsMacEventHandler::HandleKeyEvent(EventRecord& aOSEvent)
           return result;
 
         InitializeKeyEvent(keyPressEvent, aOSEvent, focusedWidget, NS_KEY_PRESS);
+        if (result) {
+          // If keydown default was prevented, do same for keypress
+          keyPressEvent.flags |= NS_EVENT_FLAG_NO_DEFAULT;
+        }
 
         // before we dispatch this key, check if it's the contextmenu key.
         // If so, send a context menu event instead.
