@@ -47,6 +47,7 @@
 
 #ifdef _WINDOWS
 #include <conio.h>
+#include <io.h>
 #define QUIET_FGETS quiet_fgets
 static int quiet_fgets (char *buf, int length, FILE *input);
 #else

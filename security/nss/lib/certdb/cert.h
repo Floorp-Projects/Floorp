@@ -34,7 +34,7 @@
 /*
  * cert.h - public data structures and prototypes for the certificate library
  *
- * $Id: cert.h,v 1.3 2000/09/09 06:08:43 nelsonb%netscape.com Exp $
+ * $Id: cert.h,v 1.4 2001/01/04 08:21:10 nelsonb%netscape.com Exp $
  */
 
 #ifndef _CERT_H_
@@ -1384,6 +1384,10 @@ extern SECItem *
 CERT_SPKDigestValueForCert(PRArenaPool *arena, CERTCertificate *cert,
 			   SECOidTag digestAlg, SECItem *fill);
 
+/*
+ * fill in nsCertType field of the cert based on the cert extension
+ */
+extern SECStatus CERT_GetCertType(CERTCertificate *cert);
 
 SEC_END_PROTOS
 

@@ -44,6 +44,7 @@
 #include "secutil.h"
 #include "plgetopt.h"
 #include "softoken.h"
+#include "nss.h"
 
 char *progName;
 char *testdir = NULL;

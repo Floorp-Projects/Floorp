@@ -31,7 +31,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: prng_fips1861.c,v 1.9 2001/01/03 19:49:32 larryh%netscape.com Exp $
+ * $Id: prng_fips1861.c,v 1.10 2001/01/04 08:21:12 nelsonb%netscape.com Exp $
  */
 
 #include "prerr.h"
@@ -43,6 +43,7 @@
 #include "nssilock.h"
 #include "secitem.h"
 #include "sha_fast.h"
+#include "secrng.h"	/* for RNG_GetNoise() */
 
 /*
  * The minimum amount of seed data required before the generator will
