@@ -44,14 +44,12 @@
   class="color-dialog profile"
   title="&windowtitle.label;"
   orient="vertical"
-  style="width: 475px; height: 335px; user-focus: ignore"
+  style="width: 42em;"
   onclose="onExit();"
   onload="StartUp();"> 
       
-  <!-- note: wtf is with the 'onclose' above. Is that a real, actual, valid event?! -->      
-      
-	<script language="javascript" src="chrome://global/content/strres.js"></script>
-	<script language="javascript" src="chrome://global/content/nsJSComponentManager.js"></script>
+  <script language="javascript" src="chrome://global/content/strres.js"></script>
+  <script language="javascript" src="chrome://global/content/nsJSComponentManager.js"></script>
   <script language="javascript" src="chrome://communicator/content/profile/profileSelection.js"></script>
   <script language="javascript" src="chrome://communicator/content/profile/profileManager.js"></script>
   
@@ -65,9 +63,9 @@
 
     <!-- instructions -->
     <deck id="prattle">
-      <html id="intro" flex="1">&introgeneral.label;</html>
+      <html id="intro" style="width: 17em;" flex="1">&introgeneral.label;</html>
       <box orient="vertical" id="manager">
-        <html class="label" style="width: 200px;">&pmTextA.label;</html>
+        <html style="width: 17em;" class="label">&pmTextA.label;</html>
         <spring flex="1"/>
         <box>
           <box orient="vertical" flex="1" id="managebuttons">
@@ -113,6 +111,6 @@
   
   <separator class="thin" />
   
-  <box class="box-status" value="&profilemanager.label;" progress=""/>
+  <box id="profileManager-status" class="box-status" value="&profilemanager.label;" progress=""/>
   
 </window>

@@ -7,7 +7,7 @@
 
   <binding id="smallheader">
     <content>
-      <xul:box class="toolbar-primary" autostretch="never" flex="1">
+      <xul:box class="box-smallheader-box toolbar-primary" autostretch="never" flex="1">
         <xul:text class="box-smallheader-left" inherits="title:value"/>
         <xul:spring flex="1"/>
         <xul:text class="box-smallheader-right" inherits="description:value"/>
