@@ -51,10 +51,8 @@ function Startup()
   dialog.rowsInput    = document.getElementById("rowsInput");
   dialog.columnsInput = document.getElementById("columnsInput");
   dialog.widthInput = document.getElementById("widthInput");
-  dialog.heightInput = document.getElementById("heightInput");
   dialog.borderInput = document.getElementById("borderInput");
   dialog.widthPixelOrPercentMenulist = document.getElementById("widthPixelOrPercentMenulist");
-  dialog.heightPixelOrPercentMenulist = document.getElementById("heightPixelOrPercentMenulist");
 
   // Make a copy to use for AdvancedEdit
   globalElement = tableElement.cloneNode(false);
@@ -94,7 +92,6 @@ function InitDialog()
   // Get the width attribute of the element, stripping out "%"
   // This sets contents of menu combobox list
   dialog.widthInput.value = InitPixelOrPercentMenulist(globalElement, tableElement, "widthInput","widthPixelOrPercentMenulist", gPercent);
-  dialog.heightInput.value = InitPixelOrPercentMenulist(globalElement, tableElement, "heightInput","heightPixelOrPercentMenulist", gPixel);
   dialog.borderInput.value = globalElement.getAttribute("border");
 }
 
@@ -160,25 +157,6 @@ function ValidateData()
     globalElement.setAttribute("width", widthText);
   }
 
-  isPercent = (dialog.heightPixelOrPercentMenulist.selectedIndex == 1);
-  var heightText = TrimString(dialog.heightInput.value);
-  if (heightText.length > 0)
-  {
-    if (isPercent)
-      maxLimit = 100;
-    else
-      // Upper limit when using pixels
-      maxLimit = maxPixels;
-
-    heightText = ValidateNumberString(heightText, 1, maxLimit);
-    if (heightText.length == 0)
-      return false;
-
-    if (isPercent)
-      heightText += "%";
-
-    globalElement.setAttribute("height", heightText);
-  }
   return true;
 }
 

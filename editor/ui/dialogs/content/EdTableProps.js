@@ -99,8 +99,6 @@ function Startup()
   // Get dialog widgets - Table Panel
   dialog.TableRowsInput = document.getElementById("TableRowsInput");
   dialog.TableColumnsInput = document.getElementById("TableColumnsInput");
-  dialog.TableHeightInput = document.getElementById("TableHeightInput");
-  dialog.TableHeightUnits = document.getElementById("TableHeightUnits");
   dialog.TableWidthInput = document.getElementById("TableWidthInput");
   dialog.TableWidthUnits = document.getElementById("TableWidthUnits");
   dialog.BorderWidthInput = document.getElementById("BorderWidthInput");
@@ -259,7 +257,6 @@ function InitDialog()
   // Get Table attributes
   dialog.TableRowsInput.value = rowCount;
   dialog.TableColumnsInput.value = colCount;
-  dialog.TableHeightInput.value = InitPixelOrPercentMenulist(globalTableElement, TableElement, "height", "TableHeightUnits", gPercent);
   dialog.TableWidthInput.value = InitPixelOrPercentMenulist(globalTableElement, TableElement, "width", "TableWidthUnits", gPercent);
   dialog.BorderWidthInput.value = globalTableElement.border;
   dialog.SpacingInput.value = globalTableElement.cellSpacing;
@@ -306,7 +303,7 @@ function InitCellPanel()
     dialog.CellHeightInput.value = InitPixelOrPercentMenulist(globalCellElement, CellElement, "height", "CellHeightUnits", gPercent);
     dialog.CellHeightCheckbox.checked = AdvancedEditUsed && previousValue != dialog.CellHeightInput.value;
 
-    previousValue= dialog.CellHeightInput.value;
+    previousValue= dialog.CellWidthInput.value;
     dialog.CellWidthInput.value = InitPixelOrPercentMenulist(globalCellElement, CellElement, "width", "CellWidthUnits", gPixel);
     dialog.CellWidthCheckbox.checked = AdvancedEditUsed && previousValue != dialog.CellWidthInput.value;
 
@@ -847,11 +844,6 @@ function ValidateTableData()
   if (error) return false;
 
 
-  ValidateNumber("TableHeightInput", dialog.TableHeightUnits, 
-                  1, maxPixels, globalTableElement, "height");
-  if (error) return false;
-
-
   ValidateNumber("TableWidthInput", dialog.TableWidthUnits, 
                  1, maxPixels, globalTableElement, "width");
   if (error) return false;
@@ -937,7 +929,8 @@ function ValidateCellData()
   }
 
   if (dialog.CellVAlignCheckbox.checked)
-    SetAlign("CellVAlignList", defVAlign, globalCellElement, "valign");
+    SetAlign("CellVAlignList", "", globalCellElement, "valign");
+    // SetAlign("CellVAlignList", defVAlign, globalCellElement, "valign");
 
   if (dialog.TextWrapCheckbox.checked)
   {
@@ -1221,7 +1214,6 @@ function ApplyTableAttributes()
     }
   }
 
-  CloneAttribute(TableElement, globalTableElement, "height");
   CloneAttribute(TableElement, globalTableElement, "width");
   CloneAttribute(TableElement, globalTableElement, "border");
   CloneAttribute(TableElement, globalTableElement, "cellspacing");
