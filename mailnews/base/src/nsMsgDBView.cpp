@@ -3698,21 +3698,21 @@ nsMsgViewIndex nsMsgDBView::ThreadIndexOfMsg(nsMsgKey msgKey,
 
 nsMsgKey nsMsgDBView::GetKeyOfFirstMsgInThread(nsMsgKey key)
 {
-	nsCOMPtr <nsIMsgThread> pThread;
-	nsCOMPtr <nsIMsgDBHdr> msgHdr;
+  nsCOMPtr <nsIMsgThread> pThread;
+  nsCOMPtr <nsIMsgDBHdr> msgHdr;
   nsresult rv = m_db->GetMsgHdrForKey(key, getter_AddRefs(msgHdr));
   NS_ENSURE_SUCCESS(rv, rv);
   rv = m_db->GetThreadContainingMsgHdr(msgHdr, getter_AddRefs(pThread));
   NS_ENSURE_SUCCESS(rv, rv);
-	nsMsgKey	firstKeyInThread = nsMsgKey_None;
-
-	NS_ASSERTION(pThread, "error getting msg from thread");
-	if (!pThread)
-		return firstKeyInThread;
-
-	// ### dmb UnreadOnly - this is wrong. But didn't seem to matter in 4.x
-	pThread->GetChildKeyAt(0, &firstKeyInThread);
-	return firstKeyInThread;
+  nsMsgKey	firstKeyInThread = nsMsgKey_None;
+  
+  NS_ASSERTION(pThread, "error getting msg from thread");
+  if (!pThread)
+    return firstKeyInThread;
+  
+  // ### dmb UnreadOnly - this is wrong. But didn't seem to matter in 4.x
+  pThread->GetChildKeyAt(0, &firstKeyInThread);
+  return firstKeyInThread;
 }
 
 NS_IMETHODIMP nsMsgDBView::GetKeyAt(nsMsgViewIndex index, nsMsgKey *result)
@@ -3724,31 +3724,31 @@ NS_IMETHODIMP nsMsgDBView::GetKeyAt(nsMsgViewIndex index, nsMsgKey *result)
 
 nsMsgKey nsMsgDBView::GetAt(nsMsgViewIndex index) 
 {
-	if (index >= m_keys.GetSize() || index == nsMsgViewIndex_None)
-		return nsMsgKey_None;
-	else
-		return(m_keys.GetAt(index));
+  if (index >= m_keys.GetSize() || index == nsMsgViewIndex_None)
+    return nsMsgKey_None;
+  else
+    return(m_keys.GetAt(index));
 }
 
 nsMsgViewIndex	nsMsgDBView::FindKey(nsMsgKey key, PRBool expand)
 {
-	nsMsgViewIndex retIndex = nsMsgViewIndex_None;
-	retIndex = (nsMsgViewIndex) (m_keys.FindIndex(key));
-	if (key != nsMsgKey_None && retIndex == nsMsgViewIndex_None && expand && m_db)
-	{
-		nsMsgKey threadKey = GetKeyOfFirstMsgInThread(key);
-		if (threadKey != nsMsgKey_None)
-		{
-			nsMsgViewIndex threadIndex = FindKey(threadKey, PR_FALSE);
-			if (threadIndex != nsMsgViewIndex_None)
-			{
-				PRUint32 flags = m_flags[threadIndex];
-				if ((flags & MSG_FLAG_ELIDED) && NS_SUCCEEDED(ExpandByIndex(threadIndex, nsnull)))
-					retIndex = FindKey(key, PR_FALSE);
-			}
-		}
-	}
-	return retIndex;
+  nsMsgViewIndex retIndex = nsMsgViewIndex_None;
+  retIndex = (nsMsgViewIndex) (m_keys.FindIndex(key));
+  if (key != nsMsgKey_None && retIndex == nsMsgViewIndex_None && expand && m_db)
+  {
+    nsMsgKey threadKey = GetKeyOfFirstMsgInThread(key);
+    if (threadKey != nsMsgKey_None)
+    {
+      nsMsgViewIndex threadIndex = FindKey(threadKey, PR_FALSE);
+      if (threadIndex != nsMsgViewIndex_None)
+      {
+        PRUint32 flags = m_flags[threadIndex];
+        if ((flags & MSG_FLAG_ELIDED) && NS_SUCCEEDED(ExpandByIndex(threadIndex, nsnull)))
+          retIndex = FindKey(key, PR_FALSE);
+      }
+    }
+  }
+  return retIndex;
 }
 
 nsresult nsMsgDBView::GetThreadCount(nsMsgKey messageKey, PRUint32 *pThreadCount)
@@ -3981,59 +3981,59 @@ nsresult nsMsgDBView::ExpandByIndex(nsMsgViewIndex index, PRUint32 *pNumExpanded
 
 nsresult nsMsgDBView::CollapseAll()
 {
-    for (PRInt32 i = 0; i < GetSize(); i++)
-    {
-        PRUint32 numExpanded;
-        PRUint32 flags = m_flags[i];
-        if (!(flags & MSG_FLAG_ELIDED) && (flags & MSG_VIEW_FLAG_HASCHILDREN))
-            CollapseByIndex(i, &numExpanded);
-    }
-    return NS_OK;
+  for (PRInt32 i = 0; i < GetSize(); i++)
+  {
+    PRUint32 numExpanded;
+    PRUint32 flags = m_flags[i];
+    if (!(flags & MSG_FLAG_ELIDED) && (flags & MSG_VIEW_FLAG_HASCHILDREN))
+      CollapseByIndex(i, &numExpanded);
+  }
+  return NS_OK;
 }
 
 nsresult nsMsgDBView::CollapseByIndex(nsMsgViewIndex index, PRUint32 *pNumCollapsed)
 {
-	nsMsgKey		firstIdInThread;
-	nsresult	rv;
-	PRInt32	flags = m_flags[index];
-	PRInt32	threadCount = 0;
-
-	if (flags & MSG_FLAG_ELIDED || !(m_viewFlags & nsMsgViewFlagsType::kThreadedDisplay) || !(flags & MSG_VIEW_FLAG_HASCHILDREN))
-		return NS_OK;
-	flags  |= MSG_FLAG_ELIDED;
-
-	if (index > m_keys.GetSize())
-		return NS_MSG_MESSAGE_NOT_FOUND;
-
-	firstIdInThread = m_keys[index];
-	nsCOMPtr <nsIMsgDBHdr> msgHdr;
+  nsMsgKey		firstIdInThread;
+  nsresult	rv;
+  PRInt32	flags = m_flags[index];
+  PRInt32	threadCount = 0;
+  
+  if (flags & MSG_FLAG_ELIDED || !(m_viewFlags & nsMsgViewFlagsType::kThreadedDisplay) || !(flags & MSG_VIEW_FLAG_HASCHILDREN))
+    return NS_OK;
+  flags  |= MSG_FLAG_ELIDED;
+  
+  if (index > m_keys.GetSize())
+    return NS_MSG_MESSAGE_NOT_FOUND;
+  
+  firstIdInThread = m_keys[index];
+  nsCOMPtr <nsIMsgDBHdr> msgHdr;
   rv = m_db->GetMsgHdrForKey(firstIdInThread, getter_AddRefs(msgHdr));
-	if (NS_FAILED(rv) || msgHdr == nsnull)
-	{
-		NS_ASSERTION(PR_FALSE, "error collapsing thread");
-		return NS_MSG_MESSAGE_NOT_FOUND;
-	}
-
-	m_flags[index] = flags;
-	NoteChange(index, 1, nsMsgViewNotificationCode::changed);
-
-	rv = ExpansionDelta(index, &threadCount);
-	if (NS_SUCCEEDED(rv))
-	{
-		PRInt32 numRemoved = threadCount; // don't count first header in thread
+  if (NS_FAILED(rv) || msgHdr == nsnull)
+  {
+    NS_ASSERTION(PR_FALSE, "error collapsing thread");
+    return NS_MSG_MESSAGE_NOT_FOUND;
+  }
+  
+  m_flags[index] = flags;
+  NoteChange(index, 1, nsMsgViewNotificationCode::changed);
+  
+  rv = ExpansionDelta(index, &threadCount);
+  if (NS_SUCCEEDED(rv))
+  {
+    PRInt32 numRemoved = threadCount; // don't count first header in thread
     NoteStartChange(index + 1, -numRemoved, nsMsgViewNotificationCode::insertOrDelete);
-		// start at first id after thread.
-		for (int i = 1; i <= threadCount && index + 1 < m_keys.GetSize(); i++)
-		{
-			m_keys.RemoveAt(index + 1);
-			m_flags.RemoveAt(index + 1);
-			m_levels.RemoveAt(index + 1);
-		}
-		if (pNumCollapsed != nsnull)
-			*pNumCollapsed = numRemoved;	
-		NoteEndChange(index + 1, -numRemoved, nsMsgViewNotificationCode::insertOrDelete);
-	}
-	return rv;
+    // start at first id after thread.
+    for (int i = 1; i <= threadCount && index + 1 < m_keys.GetSize(); i++)
+    {
+      m_keys.RemoveAt(index + 1);
+      m_flags.RemoveAt(index + 1);
+      m_levels.RemoveAt(index + 1);
+    }
+    if (pNumCollapsed != nsnull)
+      *pNumCollapsed = numRemoved;	
+    NoteEndChange(index + 1, -numRemoved, nsMsgViewNotificationCode::insertOrDelete);
+  }
+  return rv;
 }
 
 nsresult nsMsgDBView::OnNewHeader(nsMsgKey newKey, nsMsgKey aParentKey, PRBool /*ensureListed*/)
@@ -5138,14 +5138,14 @@ nsresult nsMsgDBView::FindNextFlagged(nsMsgViewIndex startIndex, nsMsgViewIndex 
 
 nsresult nsMsgDBView::FindFirstNew(nsMsgViewIndex *pResultIndex)
 {
-    if (m_db) 
-    {
-        nsMsgKey firstNewKey;
-        m_db->GetFirstNew(&firstNewKey);
-        if (pResultIndex)
-            *pResultIndex = FindKey(firstNewKey, PR_TRUE);
-    }
-    return NS_OK;
+  if (m_db) 
+  {
+    nsMsgKey firstNewKey = nsMsgKey_None;
+    m_db->GetFirstNew(&firstNewKey);
+    *pResultIndex = (firstNewKey != nsMsgKey_None)
+        ? FindKey(firstNewKey, PR_TRUE) : nsMsgViewIndex_None;
+  }
+  return NS_OK;
 }
 
 // Generic routine to find next unread id. It doesn't do an expand of a
@@ -5276,35 +5276,35 @@ PRBool nsMsgDBView::IsValidIndex(nsMsgViewIndex index)
 
 nsresult nsMsgDBView::OrExtraFlag(nsMsgViewIndex index, PRUint32 orflag)
 {
-	PRUint32	flag;
-	if (!IsValidIndex(index))
-		return NS_MSG_INVALID_DBVIEW_INDEX;
-	flag = m_flags[index];
-	flag |= orflag;
-	m_flags[index] = flag;
-	OnExtraFlagChanged(index, flag);
-	return NS_OK;
+  PRUint32	flag;
+  if (!IsValidIndex(index))
+    return NS_MSG_INVALID_DBVIEW_INDEX;
+  flag = m_flags[index];
+  flag |= orflag;
+  m_flags[index] = flag;
+  OnExtraFlagChanged(index, flag);
+  return NS_OK;
 }
 
 nsresult nsMsgDBView::AndExtraFlag(nsMsgViewIndex index, PRUint32 andflag)
 {
-	PRUint32	flag;
-	if (!IsValidIndex(index))
-		return NS_MSG_INVALID_DBVIEW_INDEX;
-	flag = m_flags[index];
-	flag &= andflag;
-	m_flags[index] = flag;
-	OnExtraFlagChanged(index, flag);
-	return NS_OK;
+  PRUint32	flag;
+  if (!IsValidIndex(index))
+    return NS_MSG_INVALID_DBVIEW_INDEX;
+  flag = m_flags[index];
+  flag &= andflag;
+  m_flags[index] = flag;
+  OnExtraFlagChanged(index, flag);
+  return NS_OK;
 }
 
 nsresult nsMsgDBView::SetExtraFlag(nsMsgViewIndex index, PRUint32 extraflag)
 {
-	if (!IsValidIndex(index))
-		return NS_MSG_INVALID_DBVIEW_INDEX;
-	m_flags[index] = extraflag;
-	OnExtraFlagChanged(index, extraflag);
-	return NS_OK;
+  if (!IsValidIndex(index))
+    return NS_MSG_INVALID_DBVIEW_INDEX;
+  m_flags[index] = extraflag;
+  OnExtraFlagChanged(index, extraflag);
+  return NS_OK;
 }
 
 
@@ -5372,6 +5372,7 @@ nsresult nsMsgDBView::ToggleThreadIgnored(nsIMsgThread *thread, nsMsgViewIndex t
     return NS_MSG_INVALID_DBVIEW_INDEX;
   PRUint32 threadFlags;
   thread->GetFlags(&threadFlags);
+  NS_ASSERTION((threadFlags & MSG_FLAG_IGNORED) == (m_flags[threadIndex] & MSG_FLAG_IGNORED), "thread flags and view flags out of sync");
   rv = SetThreadIgnored(thread, threadIndex, !((threadFlags & MSG_FLAG_IGNORED) != 0));
   return rv;
 }

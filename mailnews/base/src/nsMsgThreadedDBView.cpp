@@ -414,10 +414,8 @@ nsresult nsMsgThreadedDBView::ListThreadIds(nsMsgKey *startMsg, PRBool unreadOnl
         msgFlags &= ~MSG_VIEW_FLAGS;
         pOutput[numListed] = msgKey;
         pLevels[numListed] = 0;
-        // DMB TODO - This will do for now...Until we decide how to
-        // handle thread flags vs. message flags, if we do decide
-        // to make them different.
-        msgHdr->OrFlags(threadFlags & (MSG_FLAG_WATCHED | MSG_FLAG_IGNORED), &newMsgFlags);
+        // turn off these flags on msg hdr - they belong in thread
+        msgHdr->AndFlags(~(MSG_FLAG_WATCHED | MSG_FLAG_IGNORED), &newMsgFlags);
         AdjustReadFlag(msgHdr, &msgFlags);
         // try adding in MSG_VIEW_FLAG_ISTHREAD flag for unreadonly view.
         pFlags[numListed] = msgFlags | MSG_VIEW_FLAG_ISTHREAD | threadFlags;
