@@ -40,13 +40,7 @@
 
 #include "nspr.h"
 
-#include "prlog.h"
-
-#if defined(PR_LOGGING)
-extern PRLogModuleInfo *gImgLog;
-#else
-#define gImgLog
-#endif
+#include "ImageLogging.h"
 
 NS_IMPL_ISUPPORTS3(imgRequestProxy, imgIRequest, imgIDecoderObserver, gfxIImageContainerObserver)
 
@@ -96,14 +90,10 @@ NS_IMETHODIMP imgRequestProxy::Cancel(nsresult status)
   if (mCanceled)
     return NS_ERROR_FAILURE;
 
-  PR_LOG(gImgLog, PR_LOG_DEBUG,
-         ("[this=%p] imgRequestProxy::Cancel {ENTER}\n", this));
+  LOG_SCOPE("imgRequestProxy::Cancel");
 
   mCanceled = PR_TRUE;
   nsresult rv = NS_REINTERPRET_CAST(imgRequest*, mOwner.get())->RemoveObserver(this, status);
-
-  PR_LOG(gImgLog, PR_LOG_DEBUG,
-         ("[this=%p] imgRequestProxy::Cancel {EXIT}\n", this));
 
   return rv;
 }

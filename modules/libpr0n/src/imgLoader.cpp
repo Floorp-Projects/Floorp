@@ -46,13 +46,7 @@
 #include "nsAutoLock.h"
 #endif
 
-#include "prlog.h"
-
-#if defined(PR_LOGGING)
-extern PRLogModuleInfo *gImgLog;
-#else
-#define gImgLog
-#endif
+#include "ImageLogging.h"
 
 static NS_DEFINE_CID(kImageRequestCID, NS_IMGREQUEST_CID);
 static NS_DEFINE_CID(kImageRequestProxyCID, NS_IMGREQUESTPROXY_CID);
@@ -79,10 +73,16 @@ imgLoader::~imgLoader()
   PR_DestroyLock(mLock);
 #endif
 }
+#include "nsString.h"
+#include "nsAReadableString.h"
+
+PRLogModuleInfo *testLog = PR_NewLogModule("test123");
 
 /* imgIRequest loadImage (in nsIURI uri, in imgIDecoderObserver aObserver, in nsISupports cx); */
 NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI, imgIDecoderObserver *aObserver, nsISupports *cx, imgIRequest **_retval)
 {
+  LOG_SCOPE("imgLoader::LoadImage");
+
   NS_ASSERTION(aURI, "imgLoader::LoadImage -- NULL URI pointer");
 
 #if defined(PR_LOGGING)
@@ -100,9 +100,7 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI, imgIDecoderObserver *aObserver,
 #ifdef LOADER_THREADSAFE
     nsAutoLock lock(mLock); // lock when we are adding things to the cache
 #endif
-
-    PR_LOG(gImgLog, PR_LOG_DEBUG,
-           ("[this=%p] imgLoader::LoadImage |cache miss| {ENTER}\n", this));
+    LOG_SCOPE("imgLoader::LoadImage |cache miss|");
 
     nsCOMPtr<nsIIOService> ioserv(do_GetService("@mozilla.org/network/io-service;1"));
     if (!ioserv) return NS_ERROR_FAILURE;
@@ -131,8 +129,6 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI, imgIDecoderObserver *aObserver,
     // XXX are we calling this too early?
     newChannel->AsyncOpen(NS_STATIC_CAST(nsIStreamListener *, request), cx);
 
-    PR_LOG(gImgLog, PR_LOG_DEBUG,
-           ("[this=%p] imgLoader::LoadImage |cache miss| {EXIT}\n", this));
   } else {
     PR_LOG(gImgLog, PR_LOG_DEBUG,
            ("[this=%p] imgLoader::LoadImage |cache hit| [request=%p]\n",
@@ -150,9 +146,6 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI, imgIDecoderObserver *aObserver,
 
   *_retval = proxyRequest;
   NS_ADDREF(*_retval);
-
-  PR_LOG(gImgLog, PR_LOG_DEBUG,
-         ("[this=%p] imgLoader::LoadImage {EXIT}\n", this));
 
   return NS_OK;
 }
