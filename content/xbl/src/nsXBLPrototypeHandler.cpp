@@ -852,20 +852,20 @@ nsXBLPrototypeHandler::ConstructPrototype(nsIContent* aKeyElement,
   mEventName = getter_AddRefs(NS_NewAtom(event));
 
   if (aPhase) {
-    const nsDependentString phase(aPhase);
-    if (phase.Equals(NS_LITERAL_STRING("capturing")))
+    if (Compare(nsDependentString(aPhase), NS_LITERAL_STRING("capturing")) == 0)
       mPhase = NS_PHASE_CAPTURING;
-    else if (phase.Equals(NS_LITERAL_STRING("target")))
+    else if (Compare(nsDependentString(aPhase), NS_LITERAL_STRING("target")) == 0)
       mPhase = NS_PHASE_TARGET;
   }
 
   // Button and clickcount apply only to XBL handlers and don't apply to XUL key
   // handlers.  
-  if (aButton && *aButton)
-    mDetail = *aButton - '0';
-
-  if (aClickCount && *aClickCount)
-    mMisc = *aClickCount - '0';
+  nsAutoString button(aButton);
+  nsAutoString clickcount(aClickCount);
+  if (!button.IsEmpty())
+    mDetail = button.First() - '0';
+  if (!clickcount.IsEmpty())
+    mMisc = clickcount.First() - '0';
 
   // Modifiers are supported by both types of handlers (XUL and XBL).  
   nsAutoString modifiers(aModifiers);

@@ -5521,7 +5521,7 @@ nsCSSDeclaration::TryBackgroundPosition(nsAWritableString & aString,
     AppendValueToString(eCSSProperty_background_x_position, backgroundXValue);
     AppendValueToString(eCSSProperty_background_y_position, backgroundYValue);
     aString.Append(backgroundYValue);
-    if (!backgroundXValue.Equals(backgroundYValue, nsCaseInsensitiveStringComparator())) {
+    if (Compare(backgroundXValue, backgroundYValue, nsCaseInsensitiveStringComparator())) {
       // the two values are different
       aString.Append(PRUnichar(' '));
       aString.Append(backgroundXValue);
