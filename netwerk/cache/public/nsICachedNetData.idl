@@ -16,44 +16,54 @@
  * Reserved.
  */
 
-#include "nsIChannel.idl"
+#include "nsINetDataCacheRecord.idl"
+#include "nsrootidl.idl"
 
 interface nsIFileSpec;
 interface nsIURI;
 
 /**
- * The nsICachedNetData represents a single entry in a cache that implements
- * the nsINetDataCache interface.  It provides access to the cached network
- * data and metadata, e.g. HTTP headers, for a single URI.
+ * The nsICachedNetData interface represents a single entry in a database that
+ * caches data retrieved from the network. This interface is implemented by the
+ * cache manager on top of the low-level nsINetDataCacheRecord and
+ * nsINetDataCache interfaces that are implemented by the database.
  *
+ * Each cache record may contain both content and metadata.  The content may
+ * be, for example, GIF image data or HTML, and it is accessed through
+ * nsIChannel's streaming API.  The opaque metadata, which may contain HTTP
+ * headers among other things, is stored as a byte array.  Each entry in the
+ * cache is indexed by two different keys: a record id number and a key created
+ * by combining the URI with a "secondary key", e.g. HTTP post data.
+ *
+ * Though this interface inherits from nsIChannel, it is expected that the
+ * following nsIChannel methods return NS_NOT_IMPLEMENTED:
+ *    + GetContentType()
+ *    + GetContentLength()
+ *
+ * Though nsIChannel provides for both async and synchronous I/O APIs,
+ * nsIRawCachedNetData need not implement both.  If an async I/O method
+ * returns NS_NOT_IMPLEMENTED, the cache manager will fall back to the
+ * synchronous equivalent.
+ *
+ * @See nsICachedNetData
  * @See nsINetDataCache
  * @See nsINetDataDiskCache
- * @See nsINetDataCacheManager
- */
+ * @See nsINetDataCacheManager */
 [scriptable, uuid(6aeb2a40-6d43-11d3-90c8-000064657374)]
-interface nsICachedNetData : nsIChannel
+interface nsICachedNetData : nsINetDataCacheRecord
 {
     /**
-     * The secondaryKey is combined with the URI (for which an accessor is
-     * defined in the nsIChannel interface), to act as an index into the cache.
-     * The secondaryKey could be, for example, HTTP form post data.
+     * Retrieve the secondary key passed into nsINetDataCache::GetCachedNetData()
      */
-    readonly attribute string secondaryKey;
+    [size_is(length)] string GetSecondaryKey(out unsigned long length);
 
     /**
-     * Opaque, protocol-specific data, e.g. HTTP headers, that can be
-     * updated for each cache entry independently of the content data.
+     * This flag indicates that a protocol handler supports partial fetching of
+     * data.  If so, the cache manager may truncate the content to accommodate other
+     * cache entries rather than deleting it wholesale.
      */
-    attribute string MetaData;
-
-    /**
-     * Number of content bytes stored in the cache.  This may be less
-     * than the complete content length if a partial cache fill
-     * occurred.  Also, the cached content can be truncated by
-     * reducing the value of this attribute. 
-     */
-    attribute unsigned long StoredContentLength;
-
+    attribute boolean AllowPartial;
+    
     /**
      * Indicates that the write stream supplying content data for the cache did
      * not complete normally, so the content may be truncated.
@@ -61,8 +71,10 @@ interface nsICachedNetData : nsIChannel
     readonly attribute boolean Partial;
 
     /**
-     * True, if a write stream is open for this cache entry.  There can only
-     * be a single write stream open at a time for each cache entry.
+     * True, if a write stream is open for this cache entry or if no
+     * stream data has ever been stored in this cache record.  There
+     * can only be a single write stream open at a time for each cache
+     * entry.
      */
     readonly attribute boolean UpdateInProgress;
 
@@ -71,50 +83,28 @@ interface nsICachedNetData : nsIChannel
      */
 
     /**
-     * Date/time of expiration for this record, at which point the data and
-     * meta-data are no longer valid and the record may be garbage-collected.
+     * Date/time of expiration for this record, at which point the content is
+     * *likely* to be stale.  This heuristic date does not necessarily
+     * correspond to the HTTP Expires header, as it does not determine when
+     * cached network data must be validated with the origin server, but only
+     * serves as a hint to the cache replacement policy.
      */
-    readonly attribute PRTime Expiration;
+    readonly attribute PRTime ExpirationTime;
 
     /**
      * Date/time of last access (retrieval) of the data in this record.
      */
-    readonly attribute PRTime LastRetrieval;
+    readonly attribute PRTime LastRetrievalTime;
 
-	/**
-	 * The cache entry last used before this entry was last used.
-	 * (The "next least-recently-used" entry.)
-	 */
-	readonly attribute nsICachedNetData NextLRU;
-
-	/**
-	 * The cached response with the next closest expiration date (in
-	 * the future) to this one
-     */
-	readonly attribute nsICachedNetData NextToExpire;
-    
     /**
      * Number of times an output stream has been created for this cache entry
-     * since it was created.
+     * since it was first stored.
      */
-    readonly attribute long NumberRetrievals;
-
-    /** True, if a write stream is currently open for this cache entry */
-    readonly attribute boolean CacheFillInProgress;
-
-    /** 
-     * Delete this cache entry and its associated content. Any associated open
-     * streams are aborted.
-     */
-    void Delete();
+    readonly attribute PRUint16 NumberRetrievals;
 
     /**
-     * When a cache stores each URI's content in a standalone disk file, this
-     * method will identify the corresponding file.  This may be used to
-     * implement the "stream-as-file" semantics required by some plugins.
-     * However, no cache is required to store the data from each URI in an
-     * individual file, so it is acceptable for an implementer of this method
-     * to signal NS_NOT_IMPLEMENTED.
+     * If the underlying cache database is persistent, flush this entry's data
+     * to the database.
      */
-    readonly attribute nsIFileSpec Filename;
+    void Commit();
 };

@@ -18,7 +18,7 @@
 
 #include "nsISupports.idl"
 
-interface nsISimpleEnumerator;
+interface nsIEnumerator;
 interface nsICachedNetData;
 interface nsINetDataCache;
 interface nsINetDataDiskCache;
@@ -74,35 +74,42 @@ interface nsINetDataCacheManager : nsISupports
      * The optionally-NULL secondaryKey argument can be used for form
      * post data in the case of HTTP.
      */
-    nsICachedNetData GetCachedNetData(in nsIURI uri, in string secondaryKey, in unsigned long flags);
+    nsICachedNetData GetCachedNetData(in nsIURI uri,
+                                      [size_is(secondaryKeyLength)] in string secondaryKey,
+                                      in PRUint32 secondaryKeyLength,
+                                      in PRUint32 flags);
 
     /**
      * Returns true if cached content is available for the given URI, even if
      * only partial data is stored.  The flags argument behaves the same as for
      * the GetCachedNetData() method, above.
      */
-    boolean Contains(in nsIURI uri, in unsigned long flags);
+    boolean Contains(in nsIURI uri,
+                     [size_is(secondaryKeyLength)] in string secondaryKey,
+                     in PRUint32 secondaryKeyLength,
+                     in PRUint32 flags);
 
     /**
      * Total number of unexpired URI entries stored in all caches.  This number
      * does not take into account duplicate URIs, e.g. because the memory cache
      * and the disk cache might each contain an entry for the same URI.
      */
-    readonly attribute unsigned long NumEntries;
+    readonly attribute PRUint32 NumEntries;
 
     /**
      * Enumerate the unexpired URI entries stored in all caches.  Some URIs may
      * be enumerated more than once, e.g.  because the the memory cache and the
      * disk cache might each contain an entry for the same URI.
      */
-    nsISimpleEnumerator EnumerateCacheEntries();
+    nsIEnumerator NewCacheEntryEnumerator();
 
     /*
-     * Enumerate all the loaded cache modules.  The first module enumerated will
-     * be the memory cache, the second will be the disk cache, followed by all
-     * the extension caches, in search order.
+     * Enumerate all the loaded nsINetDataCache-implementing cache
+     * modules.  The first module enumerated will be the memory cache,
+     * the second will be the disk cache, followed by all the
+     * extension caches, in search order.
      */
-    nsISimpleEnumerator EnumerateCacheModules();
+    nsIEnumerator NewCacheModuleEnumerator();
 
     /**
      * Retrieve an interface pointer to the distinguished memory cache.
@@ -124,10 +131,9 @@ interface nsINetDataCacheManager : nsISupports
     void RemoveAll();
 
     /**
-     * This call may be used to free up memory used by the memory cache under
-     * conditions of high memory pressure.  It returns an estimate of the
-     * number of bytes of data free'ed.  This method can be invoked from any
-     * thread.
+     * Return the number of times that GetCachedNetData() located an
+     * existing cache entry divided by the number of times
+     * GetCachedNetData was called.
      */
-    unsigned long EvictFromMemoryCache(in unsigned long bytesRequested);
+    readonly attribute double HitRatio;
 };

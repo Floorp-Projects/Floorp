@@ -1,0 +1,113 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+#include "nsISupports.idl"
+#include "nsrootidl.idl"
+
+interface nsIFileSpec;
+interface nsIChannel;
+
+/**
+ * The nsINetDataCacheRecord represents a single entry in a database that
+ * caches data retrieved from the network. On top of this low-level interface
+ * to the raw record data, the cache manager implements a higher-level interface,
+ * nsICachedNetData. The parent database implements the nsINetDataCache interface.
+ *
+ * Each cache record may contain both content and metadata.  The content may
+ * be, for example, GIF image data or HTML, and it is accessed through
+ * nsIChannel's streaming API.  The opaque metadata, which may contain HTTP
+ * headers among other things, is stored as a byte array.  Each entry in the
+ * cache is indexed by two different keys: a record id number and an opaque
+ * string.  The latter contains the URI and other secondary key information,
+ * e.g. HTTP form post key/value pairs.
+ *
+ * Though this interface inherits from nsIChannel, it is expected that the
+ * following nsIChannel methods return NS_NOT_IMPLEMENTED:
+ *    + GetURI()
+ *    + GetContentType()
+ *    + GetContentLength()
+ *
+ * Though nsIChannel provides for both async and synchronous I/O APIs,
+ * nsIRawCachedNetData need not implement both.  If an async I/O method
+ * returns NS_NOT_IMPLEMENTED, the cache manager will fall back to the
+ * synchronous equivalent.
+ *
+ * The nsINetDataCacheRecord interface is agnostic as to where the data is
+ * stored and whether the storage is volatile or persistent.  The memory cache,
+ * the disk cache and any extension caches must all implement this interface.
+ *
+ * @See nsICachedNetData
+ * @See nsINetDataCache
+ * @See nsINetDataDiskCache
+ * @See nsINetDataCacheManager
+ */
+[scriptable, uuid(fdcdd6a0-7461-11d3-90ca-0040056a906e)]
+interface nsINetDataCacheRecord : nsISupports
+{
+    /**
+     * As far as the nsINetDataCacheRecord implementation is concerned, the
+     * cache entry database key is an opaque blob, but it's intended to contain
+     * both the URI and any secondary keys, such as HTTP post data.
+     */
+    [size_is(length)] string GetKey(out unsigned long length);
+
+    /**
+     * A persistent record number assigned by the cache which must be unique
+     * among all entries stored within the same cache.  The record ID serves as
+     * an alternate key to the cache record. 
+     */
+    readonly attribute PRInt32 RecordID;
+
+    /**
+     * Opaque, protocol-specific data, e.g. HTTP headers, which can be updated
+     * for each cache entry independently of the content data.
+     */
+    [size_is(length)] string GetMetaData(out unsigned long length);
+    void SetMetaData([size_is(length)] in string data, in PRUint32 length);
+
+    /**
+     * Number of content bytes stored in the cache, i.e. via the nsIChannel
+     * streaming APIs.  This may be less than the complete content length if a
+     * partial cache fill occurred.  Also, the cached content can be truncated
+     * by reducing the value of this attribute.  When this attribute is set
+     * to zero the associated cache file, if any, should be deleted.
+     */
+    attribute PRUint32 StoredContentLength;
+
+    /** 
+     * Delete this cache entry and its associated content. Any associated open
+     * streams are aborted.
+     */
+    void Delete();
+
+    /**
+     * If a cache is implemented such that it stores each URI's content in an
+     * individual disk file, this method will identify the file corresponding
+     * to this record.  This may be used to implement the "stream-as-file"
+     * semantics required by some plugins.  However, no cache implementation is
+     * *required* to store the data from each URI in an individual file, so it
+     * is acceptable for an implementation of this method to signal
+     * NS_NOT_IMPLEMENTED.
+     */
+    readonly attribute nsIFileSpec Filename;
+
+    /**
+     * Create a channel for reading or writing a stream of content into the entry
+     */
+    nsIChannel NewChannel();
+};
