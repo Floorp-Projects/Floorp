@@ -256,7 +256,7 @@ var folderListener = {
          SelectFolder(folder.URI);
        }
        else if (eventType == "msgLoaded") {
-        OnMsgLoaded(folder, gCurrentDisplayedMessage);
+        OnMsgLoaded(folder, gDBView.URIForFirstSelectedMessage);
        }
     }
 }
