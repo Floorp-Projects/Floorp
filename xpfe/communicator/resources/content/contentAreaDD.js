@@ -44,7 +44,7 @@ var contentAreaDNDObserver = {
       var urlstring = null;
       // htmlstring will be filled automatically if you fill urlstring
       var htmlstring = null;
-
+      var isAnchor = false;
       var domselection = aEvent.view.getSelection();
       if (domselection && !domselection.isCollapsed && 
           domselection.containsNode(draggedNode,false))
@@ -53,9 +53,11 @@ var contentAreaDNDObserver = {
 
           var firstAnchor = this.findFirstAnchor(domselection.anchorNode);
 
-          if (firstAnchor)
+          if (firstAnchor && domselection.containsNode(firstAnchor,false)) {
+            isAnchor = true;
             urlstring = firstAnchor.href;
-          
+          }
+
           var privateSelection = domselection.QueryInterface(Components.interfaces.nsISelectionPrivate);
           if (privateSelection)
           {
@@ -73,7 +75,6 @@ var contentAreaDNDObserver = {
           if (aEvent.altKey && findParentNode(draggedNode, 'a'))
             return false;
           
-          var isAnchor = false;
           switch (draggedNode.localName.toUpperCase())
             {
               case 'AREA':
@@ -138,7 +139,7 @@ var contentAreaDNDObserver = {
 
       // if we haven't constructed a html version, make one now
       if (!htmlstring && urlstring)
-          htmlstring = this.createLinkText(urlstring, urlstring);
+        htmlstring = this.createLinkText(urlstring, titlestring);
 
       // now create the flavour lists
       aXferData.data = new TransferData();
