@@ -404,27 +404,26 @@ nsDTDContext::nsDTDContext() : mStack(), mEntities(0){
   mResidualStyleCount=0;
   mContextTopIndex=-1;
   mTableStates=0;
-  mCounters=0;
   mTokenAllocator=0;
   mNodeAllocator=0;
   mAllBits=0;
 
-#ifdef  NS_DEBUG
+#ifdef DEBUG
   memset(mXTags,0,sizeof(mXTags));
+  mCounters = 0;
 #endif
 } 
  
-
-
-class CEntityDeallocator: public nsDequeFunctor{
-public:
-  virtual void* operator()(void* anObject) {
-    CNamedEntity *theEntity=(CNamedEntity*)anObject;
-    delete theEntity;
-    return 0;
-  }
-};
-
+#ifdef DEBUG
+  class CEntityDeallocator: public nsDequeFunctor{
+  public:
+    virtual void* operator()(void* anObject) {
+      CNamedEntity *theEntity=(CNamedEntity*)anObject;
+      delete theEntity;
+      return 0;
+    }
+  };
+#endif
 
 /**
  * 
@@ -440,14 +439,18 @@ nsDTDContext::~nsDTDContext() {
     delete theState;
   } 
 
+#ifdef DEBUG
   CEntityDeallocator theDeallocator;
   mEntities.ForEach(theDeallocator);
   if(mCounters) {
     delete [] mCounters;
     mCounters = 0;
   }
+#endif
+
 }
 
+#ifdef DEBUG
 
 CNamedEntity* nsDTDContext::GetEntity(const nsString& aName)const {
   PRInt32 theCount=mEntities.GetSize();
@@ -488,7 +491,6 @@ CNamedEntity*  nsDTDContext::RegisterEntity(const nsString& aName,const nsString
   }
   return theEntity;
 }
-
 
 /****************************************************************
   The abacus class is useful today for debug purposes, but it
@@ -902,6 +904,7 @@ PRInt32 nsDTDContext::IncrementCounter(eHTMLTags aTag,nsIParserNode& aNode,nsStr
   return result;
 }
 
+#endif
 
 /**
  * 

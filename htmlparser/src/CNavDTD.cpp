@@ -397,7 +397,10 @@ nsresult CNavDTD::WillBuildModel(  const CParserContext& aParserContext,nsIConte
     STOP_TIMER();
     MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::WillBuildModel(), this=%p\n", this));
 
+#ifdef DEBUG
     mBodyContext->ResetCounters();
+#endif
+
     mDocType=aParserContext.mDocType;
 
     if(aSink && (!mSink)) {
@@ -982,6 +985,7 @@ nsresult CNavDTD::DidHandleStartTag(nsIParserNode& aNode,eHTMLTags aChildTag){
       }
       break;
 
+#ifdef DEBUG
     case eHTMLTag_counter:
       {
         PRInt32   theCount=mBodyContext->GetCount();
@@ -1026,6 +1030,7 @@ nsresult CNavDTD::DidHandleStartTag(nsIParserNode& aNode,eHTMLTags aChildTag){
         }
       }
       break; 
+#endif
 
     default:
       break;
@@ -2126,21 +2131,24 @@ nsresult CNavDTD::HandleEntityToken(CToken* aToken) {
   nsAutoString theStr(aToken->GetStringValue());
   PRUnichar theChar=theStr.CharAt(0);
   if((kHashsign!=theChar) && (-1==nsHTMLEntities::EntityToUnicode(theStr))){
-
+    CToken *theToken=0;
+#ifdef DEBUG
     //before we just toss this away as a bogus entity, let's check...
     CNamedEntity *theEntity=mBodyContext->GetEntity(theStr);
-    CToken *theToken=0;
     if(theEntity) {
-      theToken=NS_STATIC_CAST(CTextToken*,mTokenAllocator->CreateTokenOfType(eToken_text,eHTMLTag_text,theEntity->mValue));
+      theToken = NS_STATIC_CAST(CTextToken*,mTokenAllocator->CreateTokenOfType(eToken_text,eHTMLTag_text,theEntity->mValue));
     }
     else {
+#endif
       //if you're here we have a bogus entity.
       //convert it into a text token.
       nsAutoString entityName;
       entityName.Assign(NS_LITERAL_STRING("&"));
       entityName.Append(theStr); //should append the entity name; fix bug 51161.
       theToken = mTokenAllocator->CreateTokenOfType(eToken_text,eHTMLTag_text,entityName);
+#ifdef DEBUG
     }
+#endif
     return HandleToken(theToken,mParser); //theToken should get recycled automagically...
   }
 
@@ -3225,20 +3233,22 @@ nsresult CNavDTD::OpenForm(const nsIParserNode *aNode){
 nsresult CNavDTD::CloseForm(const nsIParserNode *aNode){
 //  NS_PRECONDITION(mBodyContext->GetCount() > 0, kInvalidTagStackPos);
   nsresult result=NS_OK;
-  if((mFlags & NS_PARSER_FLAG_HAS_OPEN_FORM) && (mOpenFormCount == 1)) {
-    mFlags &= ~NS_PARSER_FLAG_HAS_OPEN_FORM;
+  if(mFlags & NS_PARSER_FLAG_HAS_OPEN_FORM) {
+    if (mOpenFormCount == 1) {
+      mFlags &= ~NS_PARSER_FLAG_HAS_OPEN_FORM;
 
-    STOP_TIMER();
-    MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::CloseForm(), this=%p\n", this));
+      STOP_TIMER();
+      MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::CloseForm(), this=%p\n", this));
 
-    result=(mSink) ? mSink->CloseForm(*aNode) : NS_OK; 
+      result=(mSink) ? mSink->CloseForm(*aNode) : NS_OK; 
 
-    MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::CloseForm(), this=%p\n", this));
-    START_TIMER();
+      MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::CloseForm(), this=%p\n", this));
+      START_TIMER();
         
-    mFlags &= ~NS_PARSER_FLAG_IS_FORM_CONTAINER;
+      mFlags &= ~NS_PARSER_FLAG_IS_FORM_CONTAINER;
+    }
+    --mOpenFormCount;
   }
-  --mOpenFormCount;
   return result;
 }
 

@@ -1016,14 +1016,18 @@ public:
     PRInt32   theCount=aContext->GetCount();
     eHTMLTags theGrandParentTag=aContext->TagAt(theCount-2);
 
-    nsCParserNode *theNode=(nsCParserNode*)aNode;   
+    nsCParserNode *theNode = (nsCParserNode*)aNode;
+
+#ifdef DEBUG
     nsAutoString  theNumber;
     aContext->IncrementCounter(theGrandParentTag,*theNode,theNumber);
 
     CTextToken theToken(theNumber);
     PRInt32 theLineNumber=0;
     nsCParserNode theNewNode(&theToken,theLineNumber,0 /*stack token*/);
-    result=aSink->AddLeaf(theNewNode);
+    *theNode = theNewNode;
+#endif
+    result=aSink->AddLeaf(*theNode);
     return result;
   }
 
