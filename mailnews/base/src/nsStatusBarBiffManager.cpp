@@ -151,14 +151,14 @@ nsresult nsStatusBarBiffManager::PerformStatusBarBiff(PRUint32 newBiffFlag)
 			if(domDocument)
 			{
 				nsCOMPtr<nsIDOMElement> domElement;
-				domDocument->GetElementById(NS_ConvertASCIItoUCS2("mini-mail"), getter_AddRefs(domElement));
+				domDocument->GetElementById(NS_LITERAL_STRING("mini-mail"), getter_AddRefs(domElement));
 
 				if (domElement) {
 					if (newBiffFlag == nsIMsgFolder::nsMsgBiffState_NewMail) {
-						domElement->SetAttribute(NS_ConvertASCIItoUCS2("BiffState"), NS_ConvertASCIItoUCS2("NewMail"));
+						domElement->SetAttribute(NS_LITERAL_STRING("BiffState"), NS_LITERAL_STRING("NewMail"));
 					}
 					else if (newBiffFlag == nsIMsgFolder::nsMsgBiffState_NoMail){
-						domElement->RemoveAttribute(NS_ConvertASCIItoUCS2("BiffState"));
+						domElement->RemoveAttribute(NS_LITERAL_STRING("BiffState"));
 					}
 				}
 			}
