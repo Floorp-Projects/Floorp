@@ -39,6 +39,10 @@
 // Tell QuickSearch that the source of this is the sidebar
 var sidebar = 1;
 
+function load_absolute_url( aAbsoluteURL ) {
+    _content.location = aAbsoluteURL;
+}
+
 function load_relative_url( aRelativeURL ) {
     aRelativeURL = '[% Param('urlbase') %]' + aRelativeURL;
     _content.location = aRelativeURL;

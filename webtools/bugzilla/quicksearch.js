@@ -47,7 +47,7 @@ function do_shift(l) {
 
 function go_to (url) {
     if ( typeof sidebar != "undefined" && sidebar == 1 ) {
-        load_relative_url(url);
+        load_absolute_url(url);
     } else {
         document.location.href = url;
     }
