@@ -111,6 +111,8 @@ static MaskString mechanismStrings[] = {
 	{"SHA1", PUBLIC_MECH_SHA1_FLAG},
 	{"MD5", PUBLIC_MECH_MD5_FLAG},
 	{"MD2", PUBLIC_MECH_MD2_FLAG},
+	{"SSL", PUBLIC_MECH_SSL_FLAG},
+	{"TLS", PUBLIC_MECH_TLS_FLAG},
 	{"RANDOM", PUBLIC_MECH_RANDOM_FLAG},
 	{"FRIENDLY", PUBLIC_MECH_FRIENDLY_FLAG}
 };
@@ -447,6 +449,12 @@ ListModule(char *moduleName)
 
 		/* Slot Info */
 		PR_fprintf(PR_STDOUT, "\n"PAD"Slot: %s\n", PK11_GetSlotName(slot));
+		mechanisms = getStringFromFlags(slot->defaultFlags,
+			mechanismStrings, numMechanismStrings);
+		if(mechanisms[0] =='\0') {
+		     mechanisms = "None";
+		}
+		PR_fprintf(PR_STDOUT, PAD"Slot Mechanism Flags: %s\n", mechanisms);
 		PR_fprintf(PR_STDOUT, PAD"Manufacturer: %.32s\n",
 			slotinfo.manufacturerID);
 		if(slot->isHW) {
@@ -671,13 +679,14 @@ EnableModule(char *moduleName, char *slotName, PRBool enable)
  *
  */
 Error
-SetDefaultModule(char *moduleName, char *mechanisms)
+SetDefaultModule(char *moduleName, char *slotName, char *mechanisms)
 {
 	SECMODModule *module;
 	PK11SlotInfo *slot;
 	int s, i;
 	unsigned long mechFlags = getFlagsFromString(mechanisms, mechanismStrings,
 		numMechanismStrings);
+	PRBool found = PR_FALSE;
 	Error errcode = UNSPECIFIED_ERR;
 
 	mechFlags =  SECMOD_PubMechFlagstoInternal(mechFlags);
@@ -693,6 +702,15 @@ SetDefaultModule(char *moduleName, char *mechanisms)
 	for(s=0; s < module->slotCount; s++) {
 		slot = module->slots[s];
 
+		if ((slotName != NULL) &&
+			!((strcmp(PK11_GetSlotName(slot),slotName) == 0) ||
+			(strcmp(PK11_GetTokenName(slot),slotName) == 0)) ) {
+		    /* we are only interested in changing the one slot */
+		    continue;
+		}
+
+		found = PR_TRUE;
+
 		/* Go through each mechanism */
 		for(i=0; i < num_pk11_default_mechanisms; i++) {
 			if(PK11_DefaultArray[i].flag & mechFlags) {
@@ -701,6 +719,11 @@ SetDefaultModule(char *moduleName, char *mechanisms)
 					PR_TRUE);
 			}
 		}
+	}
+	if (slotName && !found) {
+		PR_fprintf(PR_STDERR, errStrings[NO_SUCH_SLOT_ERR], slotName);
+		errcode = NO_SUCH_SLOT_ERR;
+		goto loser;
 	}
 
 	/* Delete and re-add module to save changes */
@@ -730,13 +753,14 @@ loser:
  * U n s e t D e f a u l t M o d u l e
  */
 Error
-UnsetDefaultModule(char *moduleName, char *mechanisms)
+UnsetDefaultModule(char *moduleName, char *slotName, char *mechanisms)
 {
 	SECMODModule * module;
 	PK11SlotInfo *slot;
 	int s, i;
 	unsigned long mechFlags = getFlagsFromString(mechanisms,
 		mechanismStrings, numMechanismStrings);
+	PRBool found = PR_FALSE;
 
 	mechFlags =  SECMOD_PubMechFlagstoInternal(mechFlags);
 
@@ -748,12 +772,22 @@ UnsetDefaultModule(char *moduleName, char *mechanisms)
 
 	for(s=0; s < module->slotCount; s++) {
 		slot = module->slots[s];
+		if ((slotName != NULL) &&
+			!((strcmp(PK11_GetSlotName(slot),slotName) == 0) ||
+			(strcmp(PK11_GetTokenName(slot),slotName) == 0)) ) {
+		    /* we are only interested in changing the one slot */
+		    continue;
+		}
 		for(i=0; i <num_pk11_default_mechanisms; i++) {
 			if(PK11_DefaultArray[i].flag & mechFlags) {
 				PK11_UpdateSlotAttribute(slot, &(PK11_DefaultArray[i]),
 					PR_FALSE);
 			}
 		}
+	}
+	if (slotName && !found) {
+		PR_fprintf(PR_STDERR, errStrings[NO_SUCH_SLOT_ERR], slotName);
+		return NO_SUCH_SLOT_ERR;
 	}
 
 	/* Delete and re-add module to save changes */
