@@ -51,9 +51,9 @@
   .bookmarkitem
     {
       list-style-image    : url("chrome://communicator/skin/bookmarks/location.gif");
-      cursor			  : pointer;
+      cursor			        : pointer;
     }
-  
+
   .bookmarkfolder
     {
       list-style-image    : url("chrome://communicator/skin/bookmarks/bookmark-folder-closed.gif");
@@ -69,7 +69,61 @@
       list-style-image    : url("chrome://communicator/skin/bookmarks/bookmark-folder-open.gif");
     }  
 
+/* Bookmark item/folder buttons on the personal toolbar */
 
+  /* need to override default border on button-toolbar buttons/menubuttons */    
+  .button-toolbar.bookmarkitem
+    {
+      behavior            : url("chrome://global/skin/classicBindings.xml#toolbarbutton-left");
+      border              : none;      
+      vertical-align      : middle;
+      margin              : 1px 2px 1px 2px;
+    }
+    
+  .button-toolbar.bookmarkfolder, .button-toolbar.bookmarkfolder:hover
+    {
+      border              : none;
+    }    
+    
+  .button-toolbar.bookmarkitem > .toolbarbutton-left-icon
+    {
+      margin-right        : 4px;
+    }
+    
+  .bookmarkitem.button-toolbar:hover
+    {
+      color               : #0000FF;
+      text-decoration     : underline;
+      cursor              : pointer;
+      border              : none;      
+    }
+
+  .bookmarkitem.button-toolbar:hover:active
+    {
+      color               : #FF0000;
+      text-decoration     : underline;
+      border              : none;
+    }
+
+  /* drag and drop feedback */
+  .bookmarkitem.button-toolbar[dragover-left="true"]
+    {
+      margin-left         : 0px;
+      border-left         : 2px solid threeddarkshadow;
+    }
+
+  .bookmarkitem.button-toolbar[dragover-right="true"]
+    {
+      margin-right        : 0px;
+      border-right        : 2px solid threeddarkshadow;
+    }
+
+  .menubutton-toolbar-single-text[dragover-top="true"]
+    {
+      background-color    : threeddarkshadow;
+      color               : threedhighlight;
+    }
+    
 /** 
  * Bookmarks tree items
  **/    

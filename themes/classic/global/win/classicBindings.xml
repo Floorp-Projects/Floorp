@@ -161,6 +161,15 @@
     </content>
   </binding>
 
+  <binding id="disabled-text" extends="xul:stack">
+    <content>
+      <xul:stack class="disabled-text-stack">
+        <xul:text class="disabled-text-bottom"/>
+        <xul:text class="disabled-text-top"/>
+      </xul:stack>        
+    </content>  
+  </binding>
+
 <!--  
   <binding id="throbber" extends="xul:box">
     <content autostretch="never">
@@ -169,5 +178,5 @@
   </binding>
 -->
 
-  
 </bindings>
+

@@ -22,185 +22,79 @@
 
 /* This contains CSS just for editor toolbars */
 
-#EditorToolbox {
-  min-width: 1px;
-}
+#EditorToolbox 
+  {
+    min-width             : 1px;
+  }
 
-#EditModeToolbar {
-  padding:       0px;
-  /* Same as "standard" toolbar background */
-  border-top:    1px solid #003366;
-  border-bottom: 1px solid darkgray;
-  margin-bottom: 0px;
-  min-width:     1px;
-  color:         white;
-  background-color: #999999;
-  overflow:      hidden;
-}
+#EditModeToolbar 
+  {
+    padding               : 0px;
+    border-top            : 1px solid #003366;
+    border-bottom         : 1px solid darkgray;
+    margin-bottom         : 0px;
+    min-width             : 1px;
+    color                 : white;
+    background-color      : #999999;
+    overflow              : hidden;
+  }
 
-/* TODO: Make a Windows-specific version to use "threedface",
-         "threedhighlight", and "threedshadow" 
-         for button background-color and shading
-*/
+button.edit-mode:hover, 
+button.edit-mode:hover:active,
+button.edit-mode 
+  {
+    behavior              : url(chrome://global/content/xulBindings.xml#buttonleft);
+    -moz-border-radius    : 0px 0px 8px 8px;
+    padding               : 1px 5px 1px 4px;
+    margin                : 0px 1px;
+    color                 : black;
+    background-color      : #CCCCCC;
+    border-top            : 0px;
+    border-bottom         : 1px solid #666666;
+    border-left           : 1px solid white;
+    border-right          : 1px solid #666666;
+  }
 
-button.edit-mode:hover, button.edit-mode:hover:active,
-button.edit-mode {
-  /* We need this to suppress Ben's different bindings for classic buttons */
-  behavior : url(chrome://global/content/xulBindings.xml#buttonleft);
-  -moz-border-radius: 0px 0px 8px 8px;
-  padding: 1px 5px 1px 4px;
-  margin: 0px 1px;
-  color: black;
-  background-color: #CCCCCC;
-  border-top: 0px;
-  border-bottom: 1px solid #666666;
-  border-left: 1px solid white;
-  border-right: 1px solid #666666;
-}
+button.edit-mode:hover 
+  {
+    border                : 1px solid black;
+    border-top            : 0px;
+  }
 
-button.edit-mode:hover {
-  border:  1px solid black;
-  border-top: 0px;
-}
+button.edit-mode:hover:active 
+  {
+    padding               : 2px 4px 0px 5px;
+  }
 
-button.edit-mode:hover:active {
-  padding: 2px 4px 0px 5px;
-}
-
-button.edit-mode[selected="1"] {
-/* Not resizing well! - use color instead
-  font-weight: bold; 
-*/
-  background-color: #FFFFFF;
-}
+button.edit-mode[selected="1"] 
+  {
+    background-color      : #FFFFFF;
+  }
 
 button.edit-mode[selected="1"]:active,
-button.edit-mode[selected="1"]:hover:active {
-  padding: 2px 4px 0px 5px;
-}
-
-#NormalModeButton {
-  list-style-image:url(chrome://editor/skin/images/editmode-normal.gif); 
-}
-
-#TagModeButton {
-  list-style-image:url(chrome://editor/skin/images/editmode-tags.gif); 
-}
-#SourceModeButton {
-  list-style-image:url(chrome://editor/skin/images/editmode-html.gif); 
-}
-#PreviewModeButton {
-  list-style-image:url(chrome://editor/skin/images/editmode-preview.gif); 
-}
-
-/* Needed to suppress inner box settings - same as button.plain
-   (we can't use 'plain', else we get no outer borders!)
-*/
-button.edit-mode:hover:active > .button-internal-box,
-button.edit-mode > .button-internal-box, 
-button.edit-mode > .button-internal-box:hover:active,
-button.edit-mode > .button-internal-box > .button-text-container, 
-button.edit-mode > .button-internal-box > .button-text-container:hover:active,
-button.edit-mode > .button-internal-box > .button-text-container > .button-text, 
-button.edit-mode > .button-internal-box > .button-text-container > .button.text:hover:active,
-button.edit-mode > .button-internal-box > .button-icon, 
-button.edit-mode > .button-internal-box > .button.icon:hover:active
-{
-  border  : 0px ! important;
-  margin  : 0px;
-  padding : 0px;
-}
-
-/*** States for all Editor Formatting Toolbar Buttons (Like Underline, Bold, etc.) ****/
-
-.button-toolbar
-    {
-      behavior			  : url(chrome://global/content/xulBindings.xml#buttonleft);
-      min-width           : 24px;
-      margin              : 1px 0px;
-      border              : 1px solid transparent;
-      background-color	  : transparent;
-      padding			  : 0px;
-    }
-
-.button-toolbar:hover
-	{
-	  border              : 1px solid #000000;
-	}
-	
-.button-toolbar > .button-internal-box
+button.edit-mode[selected="1"]:hover:active 
   {
-  	  padding             : 0px 1px 3px 2px;
-      vertical-align      : middle;
-      text-align          : center;
-      border              : 1px solid transparent;
-      background-color	  : transparent;
+    padding               : 2px 4px 0px 5px;
   }
 
-.button-toolbar > .button-internal-box > .button-text-container
+#NormalModeButton 
   {
-  	padding: 0px;
+    list-style-image      : url(chrome://editor/skin/images/editmode-normal.gif); 
   }
 
-  .button-toolbar[disabled="true"],
-  .button-toolbar[disabled="true"]:hover,
-  .button-toolbar[disabled="true"]:hover:active
-    {
-   	  border              : 1px solid transparent;
-      color               : #777777;
-      background-color	  : transparent;
-    }
-
-  .button-toolbar:hover > .button-internal-box
-    {
-      border-left         : 1px solid #FFFFFF;
-      border-top          : 1px solid #FFFFFF;
-      border-right        : 1px solid #9D9D9D;
-      border-bottom       : 1px solid #9D9D9D;
-      background-color	  : transparent;
-    }
-
-  .button-toolbar:hover:active
-    {
-    	padding			  : 0px;
-    }
-
-  .button-toolbar:hover:active > .button-internal-box
-    {
-      padding             : 1px 0px 2px 3px;
-      border-left         : 1px solid #444444;
-      border-top          : 1px solid #444444;
-      border-right        : 1px solid #AAAAAA;
-      border-bottom       : 1px solid #AAAAAA;
-      background-color	  : #666666;
-    }
-
-  .button-toolbar[disabled="true"] > .button-internal-box,
-  .button-toolbar[disabled="true"]:hover > .button-internal-box,
-  .button-toolbar[disabled="true"]:hover:active > .button-internal-box
-    {
-      padding             : 0px 1px 3px 2px;
-      border              : 1px solid transparent;
-      color				  : #777777;
-      background-color	  : transparent;
-    }
-
-/**** Toggled ON styles ******/
-
-.button-toolbar[toggled="true"]
+#TagModeButton 
   {
-  	border              : 1px solid #000000;
+    list-style-image      : url(chrome://editor/skin/images/editmode-tags.gif); 
   }
 
-
-.button-toolbar[toggled="true"] > .button-internal-box
+#SourceModeButton 
   {
-  	  padding             : 1px 0px 2px 3px;
-      border-left         : 1px solid #444444;
-      border-top          : 1px solid #444444;
-      border-right        : 1px solid #AAAAAA;
-      border-bottom       : 1px solid #AAAAAA;
-      background-color	  : #666666;
+    list-style-image      : url(chrome://editor/skin/images/editmode-html.gif); 
+  }
+
+#PreviewModeButton 
+  {
+    list-style-image      : url(chrome://editor/skin/images/editmode-preview.gif); 
   }
 
 /* Image URLs for all Editor toolbar buttons */
@@ -830,46 +724,37 @@ button.edit-mode > .button-internal-box > .button.icon:hover:active
     list-style-image      : url("chrome://editor/skin/images/justify-hover-active.gif"); 
   }
 
-#text-align-left > .button-internal-box, #align-left-button > .button-internal-box,
-#text-align-center > .button-internal-box, #align-center-button > .button-internal-box,
-#text-align-right > .button-internal-box, #align-right-button > .button-internal-box,
-#text-align-justify > .button-internal-box, #align-justify-button > .button-internal-box
+.ColorPickerLabel 
   {
-  	  padding             : 2px 1px 3px 2px;
+    border                : 1px inset white;
+    margin                : 0px;
+    padding               : 2px;
+    text-align            : center;
   }
 
-#text-align-left:hover:active > .button-internal-box, #align-left-button:hover:active > .button-internal-box,
-#text-align-center:hover:active > .button-internal-box, #align-center-button:hover:active > .button-internal-box,
-#text-align-right:hover:active > .button-internal-box, #align-right-button:hover:active > .button-internal-box,
-#text-align-justify:hover:active > .button-internal-box, #align-justify-button:hover:active > .button-internal-box
+.color-button 
   {
-  	  padding             : 3px 0px 2px 3px;
+    border                : 1px inset #CCCCCC;
+    padding               : 0px;
+    width                 : 14px;
+    height                : 12px;
+    margin                : 2px;
   }
 
-.ColorPickerLabel {
-  border:     1px inset white;
-  margin:     0px;
-  padding:    2px;
-  text-align: center;
-}
+.color-button:hover 
+  {
+    border                : 1px solid #000000;
+  }
 
-/* TODO: How to make inset color skinable? */
-.color-button {
-  border: 1px inset #CCCCCC;
-  padding: 0px;
-  width:  14px;
-  height: 12px;
-  margin:  2px;
-}
+#TextColorButton 
+  {
+    margin                : 2px 9px 9px 2px;
+  }
 
-.color-button:hover {
-  border:  1px solid #000000;
-}
-
-#TextColorButton {
-  margin: 2px 9px 9px 2px;
-}
-
-#BackgroundColorButton {
-  margin: 9px 2px 2px 9px;
-}
+#BackgroundColorButton 
+  {
+    margin                : 9px 2px 2px 9px;
+  }
+  
+  
+  

@@ -258,24 +258,21 @@
     border                : 1px solid #000000;
   }
 
-  
-  
 /*  
 text[disabled="true"]
   {
     behavior              : url("chrome://global/skin/classicBindings.xml#textdisabled");
   }  
+*/
   
-text[disabled="true"] > .text-top
+.disabled-text-bottom
   {
     color                 : threedshadow;
     margin                : 0px 1px 1px 0px;
   }  
   
-text[disabled="true"] > .text-bottom
+.disabled-text-top
   {
     color                 : threedhighlight;
     margin                : 1px 0px 0px 1px;
   }
-
-  */

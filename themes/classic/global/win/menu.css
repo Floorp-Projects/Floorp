@@ -71,8 +71,8 @@ menuseparator
 
 menubar > menu 
   {
-    padding               : 2px 1px 2px 3px;
-    margin                : 0px;
+    padding               : 2px 5px 2px 7px;
+    margin                : 0px 0px 1px 0px;
     border                : 1px solid transparent;
   }
 
@@ -90,6 +90,7 @@ menubar > menu[menuactive="true"][open="true"]
     border-top            : 1px solid threedshadow;
     border-right          : 1px solid threedhighlight;
     border-bottom         : 1px solid threedhighlight;
+    padding               : 3px 4px 1px 8px;
   }
 
 menupopup > menu[menuactive="true"],
@@ -106,7 +107,7 @@ popup > menuitem[menuactive="true"]
  **/
 .menu-right 
   {
-    margin                : 0px 0px 0px 6px;
+    margin                : 0px 4px 0px 6px;
     width                 : 8px;
     text-align            : center;
     list-style-image      : url("chrome://global/skin/menu-arrow.gif");
