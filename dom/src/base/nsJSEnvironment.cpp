@@ -179,7 +179,6 @@ nsJSContext::GetNativeContext()
 NS_IMETHODIMP
 nsJSContext::InitContext(nsIScriptGlobalObject *aGlobalObject)
 {
-  nsresult result = NS_ERROR_FAILURE;
   nsIScriptObjectOwner *owner;
   JSObject *global;
   nsresult res = aGlobalObject->QueryInterface(kIScriptObjectOwnerIID, (void **)&owner);
