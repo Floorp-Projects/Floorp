@@ -356,6 +356,18 @@ pref("mailnews.html_domains","");
 pref("mailnews.plaintext_domains","");
 pref("mailnews.global_html_domains.version",1);
 
+// Pref controlling the updates on the pre-configured accounts.
+// In order to add new pre-configured accounts (after a version),
+// increase the following version number besides updating the
+// pref mail.accountmanager.appendaccounts 
+pref("mailnews.append_preconfig_accounts.version",1);
+
+// Pref controlling the updates on the pre-configured smtp servers.
+// In order to add new pre-configured smtp servers (after a version),
+// increase the following version number besides updating the
+// pref mail.smtpservers.appendsmtpservers
+pref("mail.append_preconfig_smtpservers.version",1);
+
 pref("mail.biff.play_sound",true);
 pref("mail.biff.show_alert", true);
 
