@@ -24,6 +24,7 @@
 #include <string.h>
 
 #include "http.h"
+#include "html.h"
 #include "io.h"
 #include "view.h"
 
@@ -227,7 +228,7 @@ viewReport(View *view, char *str)
 {
 	if (verbose)
 	{
-		fprintf(view->out, str);
+         	fprintf(view->out, (char *) escapeHTML((unsigned char *) str));
 		fprintf(view->out, "<br>");
 		fflush(view->out);
 	}

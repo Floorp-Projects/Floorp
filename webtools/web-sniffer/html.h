@@ -51,5 +51,6 @@ void htmlRegister(char *tag, char *attributeName, HTMLHandler handler);
 void htmlRegisterTagHandler(HTMLHandler handler);
 void htmlRegisterURLHandler(HTMLHandler handler);
 unsigned char *toHTML(unsigned char *str);
+unsigned char *escapeHTML(unsigned char *str);
 
 #endif /* _HTML_H_ */

@@ -141,7 +141,7 @@ getSocketAndIPAddress(void *a, unsigned char *hostName, int port,
 	{
 		reportTime(REPORT_TIME_GETHOSTBYNAME_FAILURE, &theTime);
 		reportStatus(a, "gethostbyname_r failed", __FILE__, __LINE__);
-		viewReport(a, "failed<br><hr>");
+		fprintf(stdout, "failed<br><hr><br>");
 		close(sock);
 		return -1;
 	}
@@ -150,7 +150,7 @@ getSocketAndIPAddress(void *a, unsigned char *hostName, int port,
 
 	reportStatus(a, "gethostbyname_r succeeded", __FILE__, __LINE__);
 
-	viewReport(a, "succeeded<br><hr>");
+	fprintf(stdout, "succeeded<br><hr><br>");
 
 	MUTEX_LOCK();
 	dnsCount++;
@@ -273,7 +273,7 @@ netConnect(void *a, unsigned char *hostName, int port)
 		reportStatus(a, "connect failed", __FILE__, __LINE__);
 		viewReport(a, "failed:");
 		viewReport(a, strerror(errno) ? strerror(errno) : "NULL");
-		viewReport(a, "<hr>");
+		fprintf(stdout, "<hr><br>");
 		return -1;
 	}
 
@@ -281,7 +281,7 @@ netConnect(void *a, unsigned char *hostName, int port)
 
 	reportStatus(a, "connect succeeded", __FILE__, __LINE__);
 
-	viewReport(a, "succeeded<br><hr>");
+	fprintf(stdout, "succeeded<br><hr><br>");
 
 	MUTEX_LOCK();
 	connectCount++;

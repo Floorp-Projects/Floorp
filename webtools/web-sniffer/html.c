@@ -850,6 +850,29 @@ htmlRead(void *a, Input *input, unsigned char *base)
 unsigned char *
 toHTML(unsigned char *str)
 {
+	unsigned char   *escaped_str;
+	unsigned char   *result;
+
+        escaped_str = escapeHTML(str);
+
+	result = NULL;
+
+        result = calloc(strlen((char *) escaped_str)+2, 1);
+	if (!result)
+	{
+	        fprintf(stderr, "cannot calloc toHTML string\n");
+		exit(0);
+	}
+        result[0] = '"';
+        strcat((char *) result, (char *) escaped_str);
+        strcat((char *) result, "\"");
+
+	return result;
+}
+
+unsigned char *
+escapeHTML(unsigned char *str)
+{
 	char		buf[2];
 	int		i;
 	int		j;
@@ -892,17 +915,15 @@ toHTML(unsigned char *str)
 		}
 		if (!result)
 		{
-			result = calloc(len + 3, 1);
+			result = calloc(len + 1, 1);
 			if (!result)
 			{
 				fprintf(stderr,
-					"cannot calloc toHTML string\n");
+					"cannot calloc escapeHTML string\n");
 				exit(0);
 			}
-			result[0] = '"';
 		}
 	}
-	strcat((char *) result, "\"");
 
 	return result;
 }
