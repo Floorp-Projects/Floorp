@@ -486,6 +486,26 @@ public class FunctionObject extends NativeFunction {
             }
 
             return result;
+        } else if (method != null && !isStatic) {
+            Scriptable result;
+            try {
+                result = (Scriptable) method.getDeclaringClass().newInstance();
+            } catch (IllegalAccessException e) {
+                throw WrappedException.wrapException(e);
+            } catch (InstantiationException e) {
+                throw WrappedException.wrapException(e);
+            }
+
+            result.setPrototype(getClassPrototype());
+            result.setParentScope(getParentScope());
+
+            Object val = call(cx, scope, result, args);
+            if (val != null && val != Undefined.instance &&
+                val instanceof Scriptable)
+            {
+                return (Scriptable) val;
+            }
+            return result;
         }
 
         return super.construct(cx, scope, args);
