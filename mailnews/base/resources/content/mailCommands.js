@@ -398,10 +398,6 @@ function DownloadSelectedMessages(compositeDataSource, messages, markFlagged)
 
 function ViewPageSource(messages)
 {
-	var url;
-	var uri;
-	var mailSessionContractID      = "@mozilla.org/messenger/services/session;1";
-
 	var numMessages = messages.length;
 
 	if (numMessages == 0)
@@ -410,33 +406,30 @@ function ViewPageSource(messages)
 		return false;
 	}
 
-	// First, get the mail session
-	var mailSession = Components.classes[mailSessionContractID].getService();
-	if (!mailSession)
-		return false;
+    try {
+        // First, get the mail session
+        const mailSessionContractID = "@mozilla.org/messenger/services/session;1";
+        const nsIMsgMailSession = Components.interfaces.nsIMsgMailSession;
+        var mailSession = Components.classes[mailSessionContractID].getService(nsIMsgMailSession);
 
-	mailSession = mailSession.QueryInterface(Components.interfaces.nsIMsgMailSession);
-	if (!mailSession)
-		return false;
+        var mailCharacterSet = "charset=" + msgWindow.mailCharacterSet;
 
-	for(var i = 0; i < numMessages; i++)
-	{
-		uri = messages[i];
-  
-		// Now, we need to get a URL from a URI
-		url = mailSession.ConvertMsgURIToMsgURL(uri, msgWindow);
-		if (url) {
-            // XXX what if there already is a "?", like "?part=0"
-            // XXX shouldn't this be "&header=src" in that case?
-			url += "?header=src";
-        }
-    
-        window.openDialog( "chrome://navigator/content/viewSource.xul",
-                           "_blank",
-                           "scrollbars,resizable,chrome,dialog=no",
-                           url);
+        for (var i = 0; i < numMessages; i++)
+        {
+            // Now, we need to get a URL from a URI
+            var url = mailSession.ConvertMsgURIToMsgURL(messages[i], msgWindow);
+
+            window.openDialog( "chrome://navigator/content/viewSource.xul",
+                               "_blank",
+                               "scrollbars,resizable,chrome,dialog=no",
+                               url,
+                               mailCharacterSet);
         }
         return true;
+    } catch (e) {
+        // Couldn't get mail session
+        return false;
+    }
 }
 
 function doHelpButton() 
