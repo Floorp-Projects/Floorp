@@ -25,13 +25,14 @@
 #include "nsIImage.h"
 #include "nsTransform2D.h"
 #include <stdlib.h>
+#include "il_util.h"
 
 
 const nsPoint *gPts;
 
 // comparison routines for qsort 
-int compare_ind(const void *u,const void *v){return gPts[(int)*((int*)u)].y <= gPts[(int)*((int*)v)].y ? -1 : 1;}
-int compare_active(const void *u,const void *v){return ((Edge*)u)->x <= ((Edge*)v)->x ? -1 : 1;}
+PRInt32 compare_ind(const void *u,const void *v){return gPts[(PRInt32)*((PRInt32*)u)].y <= gPts[(PRInt32)*((PRInt32*)v)].y ? -1 : 1;}
+PRInt32 compare_active(const void *u,const void *v){return ((Edge*)u)->x <= ((Edge*)v)->x ? -1 : 1;}
 
 
 /** ---------------------------------------------------
@@ -184,7 +185,7 @@ nsPathIter::eSegType  curveType;
   thePathIter = new nsPathIter(pp0,aNumPts);
 	while ( thePathIter->NextSeg(thecurve,curveType) ) {
     // draw the curve we found
-    if(eLINE == curveType){
+    if(nsPathIter::eLINE == curveType){
       DrawStdLine(NSToCoordRound(thecurve.mAnc1.x),NSToCoordRound(thecurve.mAnc1.y),NSToCoordRound(thecurve.mAnc2.x),NSToCoordRound(thecurve.mAnc2.y));
     } else {
       thecurve.SubDivide(this);
@@ -236,7 +237,7 @@ PRInt16               curPoint=0;
   thePathIter = new nsPathIter(pp0,aNumPts);
 	while ( thePathIter->NextSeg(thecurve,curveType) ) {
     // build a polygon with the points
-    if(eLINE == curveType){
+    if(nsPathIter::eLINE == curveType){
       thePath[curPoint++].MoveTo(NSToCoordRound(thecurve.mAnc1.x),NSToCoordRound(thecurve.mAnc1.y));
       thePath[curPoint++].MoveTo(NSToCoordRound(thecurve.mAnc2.x),NSToCoordRound(thecurve.mAnc2.y));
     } else {
@@ -261,16 +262,18 @@ PRInt16               curPoint=0;
 NS_IMETHODIMP
 nsRenderingContextImpl::RasterPolygon(const nsPoint aPointArray[],PRInt32 aNumPts)
 {
-int           x,k,y0,y1,y,i,j,xl,xr;
-int           *ind;
+PRInt32       k,y0,y1,y,i,j,xl,xr,extra=0;
+PRInt32       *ind;
 nsPoint       pts[20];
 nsPoint       *pp,*pp0;
 const nsPoint *np;
-nsPoint       thePath[MAXPATHSIZE];
-
 
   if (aNumPts<=0)
     return NS_OK;
+
+#ifdef XP_WIN
+  extra = 1;
+#endif
 
   // Transform the points first
   if (aNumPts > 20){
@@ -284,7 +287,7 @@ nsPoint       thePath[MAXPATHSIZE];
 	for ( i= 0; i < aNumPts; i++,np++,pp++){
 		pp->x = np->x;
 		pp->y = np->y;
-		mTranMatrix->TransformCoord((int*)&pp->x,(int*)&pp->y);
+		mTranMatrix->TransformCoord((PRInt32*)&pp->x,(PRInt32*)&pp->y);
 	}
 
   ind = new PRInt32[aNumPts];
@@ -299,8 +302,8 @@ nsPoint       thePath[MAXPATHSIZE];
 
   mAct = 0;			// start with empty active list 
   k = 0;				// ind[k] is next vertex to process 
-  y0 = (int)ceil(pp0[ind[0]].y-.5);
-  y1 = (int)floor(pp0[ind[aNumPts-1]].y-.5);
+  y0 = (PRInt32)ceil(pp0[ind[0]].y-.5);
+  y1 = (PRInt32)floor(pp0[ind[aNumPts-1]].y-.5);
 
   for (y=y0; y<=y1; y++) {		// step through scanlines
 	// check vertices between previous scanline and current one, if any */
@@ -323,15 +326,12 @@ nsPoint       thePath[MAXPATHSIZE];
 
 	  // draw horizontal segments for scanline y
 	  for (j=0; j<mAct; j+=2) {	// draw horizontal segments
-	    xl = (int) ceil(mActive[j].x-.5);		/* left end of span */
+	    xl = (PRInt32) ceil(mActive[j].x-.5);		/* left end of span */
 
-	    xr = (int)floor(mActive[j+1].x-.5);	/* right end of span */
+	    xr = (PRInt32)floor(mActive[j+1].x-.5);	/* right end of span */
 
       if(xl<=xr){
-        DrawStdLine(xl,y,xr,y);
-        //for(x=xl;x<xr;x++){
-          //aTheBits->SetPixel(x,y,aRed,aGreen,aBlue);
-        //}
+        DrawStdLine(xl,y,xr+extra,y);
       }
 	    mActive[j].x += mActive[j].dx;	/* increment edge coords */
 	    mActive[j+1].x += mActive[j+1].dx;
@@ -351,11 +351,15 @@ nsPoint       thePath[MAXPATHSIZE];
  * @update dc 12/06/1999
  */
 void
-nsRenderingContextImpl::cdelete(int i)		
+nsRenderingContextImpl::cdelete(PRInt32 i)		
 {
-int j;
+PRInt32 j;
 
-  for (j=0; j<mAct && mActive[j].i!=i; j++);
+  for(j=0;j<mAct;j++){
+    if (mActive[j].i==i)
+      break;
+  }
+
   if (j>=mAct) 
     return;	
   mAct--;
@@ -367,10 +371,10 @@ int j;
  * @update dc 12/06/1999
  */
 void 
-nsRenderingContextImpl::cinsert(int i,int y,const nsPoint aPointArray[],PRInt32 aNumPts)		
+nsRenderingContextImpl::cinsert(PRInt32 i,PRInt32 y,const nsPoint aPointArray[],PRInt32 aNumPts)		
 {
-int j;
-double  dx;
+PRInt32       j;
+double        dx;
 const nsPoint *p, *q;
 
   j = i<aNumPts-1 ? i+1 : 0;
