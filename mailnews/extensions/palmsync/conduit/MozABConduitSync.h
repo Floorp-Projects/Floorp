@@ -62,9 +62,9 @@
 #define CONDUIT_LOG3(fd, format, arg1, arg2, arg3) \
   if (fd) \
     {fprintf(fd, format, arg1, arg2, arg3); fflush(fd);}
-#define CONDUIT_LOG4(fd, format, arg1, arg2, arg3, arg4) \
+#define CONDUIT_LOG5(fd, format, arg1, arg2, arg3, arg4, arg5) \
   if (fd) \
-    {fprintf(fd, format, arg1, arg2, arg3, arg4); fflush(fd);}
+    {fprintf(fd, format, arg1, arg2, arg3, arg4, arg5); fflush(fd);}
 
 class CMozABConduitSync
 {

@@ -284,8 +284,9 @@ DWORD WINAPI DoFastSync(LPVOID lpParameter)
     // Log moz addrbooks.
     for (mozABIndex=0; mozABIndex<mozABCount; mozABIndex++)
     {
-      CONDUIT_LOG4(gFD, "Moz AB[%d] category index=%d, name= '%s', url= '%s'\n",
-              mozABIndex, mozCatIndexList[mozABIndex], mozABNameList[mozABIndex]->GetBuffer(0), mozABUrlList[mozABIndex]->GetBuffer(0));
+      CONDUIT_LOG5(gFD, "Moz AB[%d] category index/synced=%d/%d, name= '%s', url= '%s'\n",
+                   mozABIndex, mozCatIndexList[mozABIndex], !mozIsFirstSyncList[mozABIndex], 
+                   mozABNameList[mozABIndex]->GetBuffer(0), mozABUrlList[mozABIndex]->GetBuffer(0));
     }
 
     // For each category, try to find the corresponding AB in the moz AB list

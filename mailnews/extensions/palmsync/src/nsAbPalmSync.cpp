@@ -229,11 +229,15 @@ nsresult nsAbPalmHotSync::GetABInterface()
               (dirType == kPABDirectory))
             continue;
 
-          // if Palm category is already assigned to AB then just check that
+          // If Palm category is already assigned to AB then just check that (ie, was synced before).
           if((palmCategoryIndex > -1) && (mPalmCategoryIndex == palmCategoryIndex))
             break;
 
-          // if Palm category is not already assigned check the AB name
+          // If Palm category is not already assigned check the AB name (ie, never
+          // synced before). Note that Palm category name is only 15 chars max.
+          if (description.Length() > 15 && mAbName.Length() <= 15)
+            description.Cut(15, description.Length()-15);
+
           if(description == mAbName)
             break;
           directory = nsnull;
