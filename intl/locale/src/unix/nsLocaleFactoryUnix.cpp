@@ -32,18 +32,18 @@ NS_DEFINE_IID(kIDateTimeFormatIID, NS_IDATETIMEFORMAT_IID);
 
 
 
-nsLocaleWinFactory::nsLocaleWinFactory(const nsCID &aClass)   
+nsLocaleUnixFactory::nsLocaleUnixFactory(const nsCID &aClass)   
 {   
   mRefCnt = 0;
   mClassID = aClass;
 }   
 
-nsLocaleWinFactory::~nsLocaleWinFactory()   
+nsLocaleUnixFactory::~nsLocaleUnixFactory()   
 {   
   NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");   
 }   
 
-nsresult nsLocaleWinFactory::QueryInterface(const nsIID &aIID,   
+nsresult nsLocaleUnixFactory::QueryInterface(const nsIID &aIID,   
                                       void **aResult)   
 {   
   if (aResult == NULL) {   
@@ -67,12 +67,12 @@ nsresult nsLocaleWinFactory::QueryInterface(const nsIID &aIID,
   return NS_OK;   
 }   
 
-nsrefcnt nsLocaleWinFactory::AddRef()   
+nsrefcnt nsLocaleUnixFactory::AddRef()   
 {   
   return ++mRefCnt;   
 }   
 
-nsrefcnt nsLocaleWinFactory::Release()   
+nsrefcnt nsLocaleUnixFactory::Release()   
 {   
   if (--mRefCnt == 0) {   
     delete this;   
@@ -81,7 +81,7 @@ nsrefcnt nsLocaleWinFactory::Release()
   return mRefCnt;   
 }  
 
-nsresult nsLocaleWinFactory::CreateInstance(nsISupports *aOuter,  
+nsresult nsLocaleUnixFactory::CreateInstance(nsISupports *aOuter,  
                                          const nsIID &aIID,  
                                          void **aResult)  
 {
@@ -120,7 +120,7 @@ nsresult nsLocaleWinFactory::CreateInstance(nsISupports *aOuter,
   return res;
 }
 
-nsresult nsLocaleWinFactory::LockFactory(PRBool aLock)  
+nsresult nsLocaleUnixFactory::LockFactory(PRBool aLock)  
 {  
   // Not implemented in simplest case.  
   return NS_OK;

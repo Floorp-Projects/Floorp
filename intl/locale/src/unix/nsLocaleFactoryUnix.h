@@ -24,7 +24,7 @@
 
 
 
-class nsLocaleWinFactory : public nsIFactory
+class nsLocaleUnixFactory : public nsIFactory
 {   
   public:   
     // nsISupports methods   
@@ -40,8 +40,8 @@ class nsLocaleWinFactory : public nsIFactory
 
     NS_IMETHOD LockFactory(PRBool aLock);   
 
-    nsLocaleWinFactory(const nsCID &aClass);   
-    ~nsLocaleWinFactory();   
+    nsLocaleUnixFactory(const nsCID &aClass);   
+    ~nsLocaleUnixFactory();   
 
   private:   
     nsrefcnt  mRefCnt;   

@@ -69,9 +69,9 @@ extern "C" NS_EXPORT nsresult NSGetFactory(const nsCID &aCID, nsISupports* servi
 	}
 	
 	//
-	// let the nsLocaleFactoryWin logic take over from here
+	// let the nsLocaleUnixFactory logic take over from here
 	//
-	factoryInstance = new nsLocaleWinFactory(aCID);
+	factoryInstance = new nsLocaleUnixFactory(aCID);
 
 	if(NULL == factoryInstance) 
 	{
