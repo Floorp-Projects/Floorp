@@ -1152,30 +1152,33 @@ PRBool nsClipboard::GetTargets(GdkAtom aSelectionAtom)
                         targetsAtom,
                         GDK_CURRENT_TIME);
 
-  gtk_grab_add(sWidget);
-
-  // Now we need to wait until the callback comes in ...
-  // i is in case we get a runaway (yuck).
+  /* see comment in DoRealConvert for why we check for mBlocking here */
+  if (mBlocking) {
+    gtk_grab_add(sWidget);
+    
+    // Now we need to wait until the callback comes in ...
+    // i is in case we get a runaway (yuck).
 #ifdef DEBUG_CLIPBOARD
-  g_print("      Waiting for the callback... mBlocking = %d\n", mBlocking);
+    g_print("      Waiting for the callback... mBlocking = %d\n", mBlocking);
 #endif /* DEBUG_CLIPBOARD */
-
-  XEvent xevent;
-  while (!XCheckTypedWindowEvent(GDK_DISPLAY(), GDK_WINDOW_XWINDOW(sWidget->window), SelectionNotify, &xevent));
-
-  GdkEvent event;
-  event.selection.type = GDK_SELECTION_NOTIFY;
-  event.any.window = gdk_window_lookup (xevent.xany.window);
-  event.any.send_event = xevent.xany.send_event ? TRUE : FALSE;
-  event.selection.window = event.any.window;
-  event.selection.selection = xevent.xselection.selection;
-  event.selection.target = xevent.xselection.target;
-  event.selection.property = xevent.xselection.property;
-  event.selection.time = xevent.xselection.time;
-
-  gtk_widget_event(sWidget, &event);
-
-  gtk_grab_remove(sWidget);
+    
+    XEvent xevent;
+    while (!XCheckTypedWindowEvent(GDK_DISPLAY(), GDK_WINDOW_XWINDOW(sWidget->window), SelectionNotify, &xevent));
+    
+    GdkEvent event;
+    event.selection.type = GDK_SELECTION_NOTIFY;
+    event.any.window = gdk_window_lookup (xevent.xany.window);
+    event.any.send_event = xevent.xany.send_event ? TRUE : FALSE;
+    event.selection.window = event.any.window;
+    event.selection.selection = xevent.xselection.selection;
+    event.selection.target = xevent.xselection.target;
+    event.selection.property = xevent.xselection.property;
+    event.selection.time = xevent.xselection.time;
+    
+    gtk_widget_event(sWidget, &event);
+    
+    gtk_grab_remove(sWidget);
+  }
 
 #ifdef DEBUG_CLIPBOARD
   g_print("    }\n");
