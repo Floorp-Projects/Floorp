@@ -32,7 +32,7 @@
 #include "nsIDocument.h"
 
 
-typedef PRBool (*navigationFunction)(nsIDOMXULElement *message, navigationInfoPtr info);
+typedef PRBool (*navigationFunction)(nsIDOMNode *message, navigationInfoPtr info);
 typedef PRBool (*navigationResourceFunction)(nsIRDFResource *message, navigationInfoPtr info);
 //struct for keeping track of all info related to a navigation request.
 typedef struct infoStruct
@@ -50,37 +50,71 @@ typedef struct infoStruct
 	nsCOMPtr<nsIDOMXULDocument> document;
 } navigationInfo;
 
+static nsresult
+GetMessageFromNode(nsIDOMNode *aNode, nsIRDFService *rdf, nsIMessage **aResult)
+{
+    nsresult rv;
+
+    nsCOMPtr<nsIDOMXULElement> xulElement(do_QueryInterface(aNode, &rv));
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    nsAutoString id;
+    xulElement->GetId(id);
+
+    nsCOMPtr<nsIRDFResource> messageResource;
+    rdf->GetUnicodeResource(id.GetUnicode(), getter_AddRefs(messageResource));
+
+    return messageResource->QueryInterface(NS_GET_IID(nsIMessage),
+                                           (void **)aResult);
+}
+
 //navigation functions
-static PRBool AnyMessageNavigationFunction(nsIDOMXULElement *message, navigationInfoPtr info)
+static PRBool AnyMessageNavigationFunction(nsIDOMNode *message, navigationInfoPtr info)
 {
 	return PR_TRUE;
 }
 
-static PRBool UnreadMessageNavigationFunction(nsIDOMXULElement *message, navigationInfoPtr info)
+static PRBool
+UnreadMessageNavigationFunction(nsIDOMNode *messageNode,
+                                navigationInfoPtr info)
 {
-	nsAutoString unreadStr; unreadStr.AssignWithConversion("IsUnread");
-	nsAutoString resultStr;
-
-	message->GetAttribute(unreadStr, resultStr);
-	return(resultStr.EqualsWithConversion("true"));
+    nsCOMPtr<nsIMessage> message;
+    GetMessageFromNode(messageNode, info->rdfService,
+                       getter_AddRefs(message));
+    PRUint32 flags=0;
+    message->GetFlags(&flags);
+    
+    // return FALSE if the message is read
+    return ((flags & MSG_FLAG_READ) != MSG_FLAG_READ);
 }
 
-static PRBool FlaggedMessageNavigationFunction(nsIDOMXULElement *message, navigationInfoPtr info)
+static PRBool
+FlaggedMessageNavigationFunction(nsIDOMNode *messageNode,
+                                 navigationInfoPtr info)
 {
-	nsAutoString flaggedStr; flaggedStr.AssignWithConversion("Flagged");
-	nsAutoString resultStr;
+    nsCOMPtr<nsIMessage> message;
+    GetMessageFromNode(messageNode, info->rdfService,
+                       getter_AddRefs(message));
+    
+    PRUint32 flags=0;
+    message->GetFlags(&flags);
 
-	message->GetAttribute(flaggedStr, resultStr);
-	return(resultStr.EqualsWithConversion("flagged"));
+    // return TRUE if the message is flagged
+    return ((flags & MSG_FLAG_MARKED) == MSG_FLAG_MARKED);
 }
 
-static PRBool NewMessageNavigationFunction(nsIDOMXULElement *message, navigationInfoPtr info)
+static PRBool
+NewMessageNavigationFunction(nsIDOMNode *messageNode, navigationInfoPtr info)
 {
-	nsAutoString statusStr; statusStr.AssignWithConversion("Status");
-	nsAutoString resultStr;
+    nsCOMPtr<nsIMessage> message;
+    GetMessageFromNode(messageNode, info->rdfService,
+                       getter_AddRefs(message));
+    
+    PRUint32 flags=0;
+    message->GetFlags(&flags);
 
-	message->GetAttribute(statusStr, resultStr);
-	return(resultStr.EqualsWithConversion("new"));
+    // return TRUE if the message is new
+    return ((flags & MSG_FLAG_NEW) == MSG_FLAG_NEW);
 }
 
 //resource functions
@@ -166,29 +200,17 @@ static PRBool NewMessageNavigationResourceFunction(nsIRDFResource *message, navi
 }
 
 //Thread navigation functions.
-static PRBool UnreadThreadNavigationFunction(nsIDOMXULElement *messageElement, navigationInfoPtr info)
+static PRBool
+UnreadThreadNavigationFunction(nsIDOMNode *messageNode, navigationInfoPtr info)
 {
 	nsresult rv;
 
-	nsAutoString idAttribute; idAttribute.AssignWithConversion("id");
-	nsAutoString idResult;
-
-	rv = messageElement->GetAttribute(idAttribute, idResult);
-	if(NS_FAILED(rv))
-		return PR_FALSE;
-
-	nsCOMPtr<nsIRDFResource> messageResource;
-
-  nsCAutoString idresultC;
-  idresultC.AssignWithConversion(idResult);
-	rv = info->rdfService->GetResource(idresultC, getter_AddRefs(messageResource));
-	if(NS_FAILED(rv))
-		return PR_FALSE;
-
-	nsCOMPtr<nsIMessage> message = do_QueryInterface(messageResource);
-	if(!message)
-		return PR_FALSE;
-
+    nsCOMPtr<nsIMessage> message;
+    rv = GetMessageFromNode(messageNode, info->rdfService,
+                            getter_AddRefs(message));
+    if (NS_FAILED(rv))
+        return PR_FALSE;
+    
 	nsCOMPtr<nsIMsgFolder> folder;
 	rv = message->GetMsgFolder(getter_AddRefs(folder));
 	if(NS_FAILED(rv))
@@ -224,7 +246,15 @@ nsresult nsMsgViewNavigationService::Init()
 }
 
 //Finds the next message after originalMessage based on the type
-NS_IMETHODIMP nsMsgViewNavigationService::FindNextMessage(PRInt32 type, nsIDOMXULTreeElement *tree, nsIDOMXULElement *originalMessage, nsIRDFService *rdfService, nsIDOMXULDocument *document, PRBool wrapAround, PRBool isThreaded, nsIDOMXULElement ** nextMessage)
+NS_IMETHODIMP
+nsMsgViewNavigationService::FindNextMessage(PRInt32 type,
+                                            nsIDOMXULTreeElement *tree,
+                                            nsIDOMXULElement *originalMessage,
+                                            nsIRDFService *rdfService,
+                                            nsIDOMXULDocument *document,
+                                            PRBool wrapAround,
+                                            PRBool isThreaded,
+                                            nsIDOMXULElement ** nextMessage)
 {
 	nsresult rv = NS_OK;
 
@@ -291,7 +321,15 @@ NS_IMETHODIMP nsMsgViewNavigationService::FindNextMessage(PRInt32 type, nsIDOMXU
 }
 
 //Finds the previous message before the original message based on the type.
-NS_IMETHODIMP nsMsgViewNavigationService::FindPreviousMessage(PRInt32 type, nsIDOMXULTreeElement *tree, nsIDOMXULElement *originalMessage, nsIRDFService *rdfService, nsIDOMXULDocument *document, PRBool wrapAround, PRBool isThreaded, nsIDOMXULElement ** previousMessage)
+NS_IMETHODIMP
+nsMsgViewNavigationService::FindPreviousMessage(PRInt32 type,
+                                                nsIDOMXULTreeElement *tree,
+                                                nsIDOMXULElement *originalMessage,
+                                                nsIRDFService *rdfService,
+                                                nsIDOMXULDocument *document,
+                                                PRBool wrapAround,
+                                                PRBool isThreaded,
+                                                nsIDOMXULElement ** previousMessage)
 {
 	nsresult rv = NS_OK;
 
@@ -331,7 +369,15 @@ NS_IMETHODIMP nsMsgViewNavigationService::FindPreviousMessage(PRInt32 type, nsID
 }
 
 //Finds the next thread after the thread the original Message is in based on the type.
-NS_IMETHODIMP nsMsgViewNavigationService::FindNextThread(PRInt32 type, nsIDOMXULTreeElement *tree, nsIDOMXULElement *originalMessage, nsIRDFService *rdfService, nsIDOMXULDocument *document, PRBool wrapAround, PRBool checkOriginalMessage, nsIDOMXULElement ** nextThread)
+NS_IMETHODIMP
+nsMsgViewNavigationService::FindNextThread(PRInt32 type,
+                                           nsIDOMXULTreeElement *tree,
+                                           nsIDOMXULElement *originalMessage,
+                                           nsIRDFService *rdfService,
+                                           nsIDOMXULDocument *document,
+                                           PRBool wrapAround,
+                                           PRBool checkOriginalMessage,
+                                           nsIDOMXULElement ** nextThread)
 {
 	nsresult rv = NS_OK;
 	nsCOMPtr<nsIDOMNode> originalMessageNode = do_QueryInterface(originalMessage);
@@ -367,7 +413,13 @@ NS_IMETHODIMP nsMsgViewNavigationService::FindNextThread(PRInt32 type, nsIDOMXUL
 }
 
 //Given a top level message, returns the first message in the thread that matches the type.
-NS_IMETHODIMP nsMsgViewNavigationService::FindNextInThread(PRInt32 type, nsIDOMXULTreeElement *tree, nsIDOMXULElement *originalMessage, nsIRDFService *rdfService, nsIDOMXULDocument *document, nsIDOMXULElement ** nextMessage)
+NS_IMETHODIMP
+nsMsgViewNavigationService::FindNextInThread(PRInt32 type,
+                                             nsIDOMXULTreeElement *tree,
+                                             nsIDOMXULElement *originalMessage,
+                                             nsIRDFService *rdfService,
+                                             nsIDOMXULDocument *document,
+                                             nsIDOMXULElement ** nextMessage)
 {
 	nsresult rv = NS_OK;
 	nsCOMPtr<nsIDOMNode> originalMessageNode = do_QueryInterface(originalMessage);
@@ -402,7 +454,9 @@ NS_IMETHODIMP nsMsgViewNavigationService::FindNextInThread(PRInt32 type, nsIDOMX
 }
 
 //Finds the first message in the tree.
-NS_IMETHODIMP nsMsgViewNavigationService::FindFirstMessage(nsIDOMXULTreeElement *tree, nsIDOMXULElement ** firstMessage)
+NS_IMETHODIMP
+nsMsgViewNavigationService::FindFirstMessage(nsIDOMXULTreeElement *tree,
+                                             nsIDOMXULElement ** firstMessage)
 {
 	nsresult rv;
 	nsCOMPtr<nsIDOMNodeList> children;
@@ -511,11 +565,7 @@ nsresult nsMsgViewNavigationService::FindNextMessageUnthreaded(navigationInfoPtr
 	//if we have to check the start message, check it now.
 	if(info->checkStartMessage)
 	{
-		nsCOMPtr<nsIDOMXULElement> originalElement = do_QueryInterface(info->originalMessage);
-		if(!originalElement)
-			return NS_ERROR_FAILURE;
-
-		if(info->navFunction(originalElement, info))
+		if(info->navFunction(info->originalMessage, info))
 		{
 			*nextMessage = info->originalMessage;
 			NS_IF_ADDREF(*nextMessage);
@@ -542,11 +592,7 @@ nsresult nsMsgViewNavigationService::FindNextMessageUnthreaded(navigationInfoPtr
 
 	while(next && (next.get() != info->originalMessage.get()))
 	{
-		nsCOMPtr<nsIDOMXULElement> nextElement = do_QueryInterface(next);
-		if(!nextElement)
-			return NS_ERROR_FAILURE;
-
-		if(info->navFunction(nextElement, info))
+		if(info->navFunction(next, info))
 		 break;
 
 		nsCOMPtr<nsIDOMNode> nextSibling;
@@ -596,14 +642,10 @@ nsresult nsMsgViewNavigationService::FindNextMessageInThreads(nsIDOMNode *startM
 	nsCOMPtr<nsIDOMNode> nextChildMessage;
 	nsresult rv;
 
-	nsCOMPtr<nsIDOMXULElement> startElement = do_QueryInterface(startMessage);
-	if(!startElement)
-		return NS_ERROR_FAILURE;
-
 	//First check startMessage if we are supposed to
 	if(info->checkStartMessage)
 	{
-		if(info->navFunction(startElement, info))
+		if(info->navFunction(startMessage, info))
 		{
 			*nextMessage = startMessage;
 			NS_IF_ADDREF(*nextMessage);
@@ -624,6 +666,10 @@ nsresult nsMsgViewNavigationService::FindNextMessageInThreads(nsIDOMNode *startM
 	//if we're on the top level and a thread function has been passed in, we might be able to search faster.
 	if(!parentNodeName.EqualsWithConversion("treeitem") && info->navThreadFunction)
 	{
+        nsCOMPtr<nsIDOMXULElement> startElement = do_QueryInterface(startMessage);
+        if(!startElement)
+            return NS_ERROR_FAILURE;
+
 		return GetNextMessageByThread(startElement, info, nextMessage);
 
 	}
@@ -743,11 +789,7 @@ nsresult nsMsgViewNavigationService::FindNextInChildren(nsIDOMNode *parent, navi
 					return NS_OK;
 				}
 
-				nsCOMPtr<nsIDOMXULElement> childElement = do_QueryInterface(childMessage);
-				if(!childElement)
-					return NS_ERROR_FAILURE;
-
-				if(info->navFunction(childElement, info))
+				if(info->navFunction(childMessage, info))
 				{
 					*nextMessage = childMessage;
 					NS_IF_ADDREF(*nextMessage);
@@ -991,11 +1033,8 @@ nsresult nsMsgViewNavigationService::GetNextThread(navigationInfoPtr info, nsIDO
 	*nextThread = nsnull;
 	if(info->checkStartMessage)
 	{
-		nsCOMPtr<nsIDOMXULElement> originalElement = do_QueryInterface(info->originalMessage);
-		if(!originalElement)
-			return NS_ERROR_FAILURE;
 
-		if(info->navThreadFunction(originalElement, info))
+		if(info->navThreadFunction(info->originalMessage, info))
 		{
 			*nextThread = info->originalMessage;
 			NS_IF_ADDREF(*nextThread);
@@ -1063,11 +1102,7 @@ nsresult nsMsgViewNavigationService::GetNextInThread(navigationInfoPtr info, nsI
 	nsresult rv;
 	*nextMessage = nsnull;
 
-	nsCOMPtr<nsIDOMXULElement> originalNode = do_QueryInterface(info->originalMessage);
-	if(!originalNode)
-		return NS_ERROR_FAILURE;
-
-	if(info->navFunction(originalNode, info))
+	if(info->navFunction(info->originalMessage, info))
 	{
 		*nextMessage = info->originalMessage;
 		NS_IF_ADDREF(*nextMessage);
@@ -1113,11 +1148,7 @@ nsresult nsMsgViewNavigationService::FindPreviousMessage(navigationInfoPtr info,
 
 	while(previous && (previous.get() != info->originalMessage.get()))
 	{
-		nsCOMPtr<nsIDOMXULElement> previousElement = do_QueryInterface(previous);
-		if(!previousElement)
-			return NS_ERROR_FAILURE;
-
-		if(info->navFunction(previousElement, info))
+		if(info->navFunction(previous, info))
 			break;
 
 		nsCOMPtr<nsIDOMNode> previousSibling;
@@ -1194,11 +1225,7 @@ nsresult nsMsgViewNavigationService::FindNextInThreadSiblings(nsIDOMNode *startM
 			return NS_OK;
 		}
 
-		nsCOMPtr<nsIDOMXULElement> nextElement = do_QueryInterface(next);
-		if(!nextElement)
-			return NS_ERROR_FAILURE;
-
-		if(info->navFunction(nextElement, info))
+		if(info->navFunction(next, info))
 		{
 			*nextMessage = next;
 			NS_IF_ADDREF(*nextMessage);

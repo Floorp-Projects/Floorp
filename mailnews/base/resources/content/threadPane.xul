@@ -35,38 +35,31 @@ Rights Reserved.
 
 <tree datasources="rdf:null" id="threadTree"
 	  		  onselect="top.ThreadPaneSelectionChange(); document.commandDispatcher.updateCommands('tree-select');"
-			  onblur="goOnEvent(this,'blur')"
-			  containment="http://home.netscape.com/NC-rdf#MessageChild"
+              onclick="ThreadPaneOnClick(event);"
+              onblur="goOnEvent(this,'blur')"
+   	          ondragover="return DragOverTree(event);"
+              ondraggesture="return BeginDragThreadTree(event);"
+              ondragdrop="return DropOnThreadTree(event);"
+              containment="http://home.netscape.com/NC-rdf#MessageChild"
 			  allownegativeassertions="false"
-			coalesceduplicatearcs="false"
+              coalesceduplicatearcs="false"
 			  multiple="true">
-
+       
   <template>
   	<rule>
-    <treechildren flex="1" onclick="ThreadPaneOnClick(event);"
-			ondragover="return DragOverTree(event);"
-			ondraggesture="return BeginDragThreadTree(event);"
-			ondragdrop="return DropOnThreadTree(event);">
-		<treeitem uri="..."
-			 Status="rdf:http://home.netscape.com/NC-rdf#Status"
-  			 Flagged="rdf:http://home.netscape.com/NC-rdf#Flagged"
-  		     Priority="rdf:http://home.netscape.com/NC-rdf#Priority" 
-			 IsUnread="rdf:http://home.netscape.com/NC-rdf#IsUnread"
-			 HasAttachment="rdf:http://home.netscape.com/NC-rdf#HasAttachment"
-			 IsImapDeleted="rdf:http://home.netscape.com/NC-rdf#IsImapDeleted"
-			 MessageType="rdf:http://home.netscape.com/NC-rdf#MessageType">
+    <treechildren flex="1" >
+        <treeitem uri="...">
 
-	  		<treerow class="tree-thread-row" IsUnread="rdf:http://home.netscape.com/NC-rdf#IsUnread">
-				<treecell value="rdf:http://home.netscape.com/NC-rdf#Thread"/>
-				<treecell class="treecell-indent tree-cell-threadpane-icon" indent="true" value="rdf:http://home.netscape.com/NC-rdf#Subject"
+              <treerow class="tree-thread-row" IsUnread="rdf:http://home.netscape.com/NC-rdf#IsUnread">
+                <treecell value="rdf:http://home.netscape.com/NC-rdf#Thread"/>
+                <treecell class="treecell-indent tree-cell-threadpane-icon"
+                  indent="true"
+                  value="rdf:http://home.netscape.com/NC-rdf#Subject"
                   Status="rdf:http://home.netscape.com/NC-rdf#Status"
-  			          Flagged="rdf:http://home.netscape.com/NC-rdf#Flagged"
-  		            Priority="rdf:http://home.netscape.com/NC-rdf#Priority"
-			            IsUnread="rdf:http://home.netscape.com/NC-rdf#IsUnread"
-			            HasAttachment="rdf:http://home.netscape.com/NC-rdf#HasAttachment"
-			            IsImapDeleted="rdf:http://home.netscape.com/NC-rdf#IsImapDeleted"
-			            MessageType="rdf:http://home.netscape.com/NC-rdf#MessageType"/>
-				<treecell value="rdf:http://home.netscape.com/NC-rdf#Sender" id ="SenderColumnTemplate"/>
+                  HasAttachment="rdf:http://home.netscape.com/NC-rdf#HasAttachment"
+                  IsImapDeleted="rdf:http://home.netscape.com/NC-rdf#IsImapDeleted"
+                  MessageType="rdf:http://home.netscape.com/NC-rdf#MessageType"/>
+            	<treecell value="rdf:http://home.netscape.com/NC-rdf#Sender" id ="SenderColumnTemplate"/>
 				<treecell allowevents="true" class="treecell-image unreadcol" 
                   onclick="return top.ToggleMessageRead(event.target.parentNode.parentNode.parentNode)"
                   value="rdf:http://home.netscape.com/NC-rdf#IsUnread"/>
@@ -119,10 +112,10 @@ Rights Reserved.
 		<treecell class="treecell-header treecell-inset-header" value="&unreadColumn.label;" onclick="return top.MsgSortByUnread();"/>
 		<treecell class="treecell-header treecell-inset-header" value="&totalColumn.label;" onclick="return top.MsgSortByTotal();"/>
 		<treecell class="treecell-header treecell-inset-header" value="&orderReceivedColumn.label;" onclick="return top.MsgSortByOrderReceived();"/>
-		<treecell class="treecell-header treecell-inset-header" allowevents="true" id="popupCell" tooltip="aTooltip" tooltiptext="&columnChooser.tooltip;">
+		<treecell class="treecell-header treecell-inset-header" allowevents="true" id="popupCell" tooltip="aTooltip" tooltiptext="&columnChooser.tooltip;" autostretch="never">
 		  <menu>
-		    <button class="plain" src="chrome://global/skin/opentwisty.gif"/>
-			<menupopup popupanchor="bottomright" 
+            <image src="chrome://global/skin/opentwisty.gif"/>
+			<menupopup popupanchor="bottomright" style="border: 1px solid green"
 			           popupalign="topright"
 					   oncreate="BuildTreePopup(document.getElementById('theThreadColumns'), document.getElementById('headRow'), this,
 			                                    document.getElementById('popupCell'))"/>
