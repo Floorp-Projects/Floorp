@@ -812,7 +812,7 @@ static NS_DEFINE_IID(kIRDFResourceManagerIID,   NS_IRDFRESOURCEMANAGER_IID);
   nsIRDFDataBase* db         = nsnull;
   nsIRDFDocument* doc        = nsnull;
   nsIRDFResourceManager* mgr = nsnull;
-  nsIRDFNode* root           = nsnull;
+  nsIRDFResource* root       = nsnull;
 
   result = nsnull; // reasonable default
 
@@ -842,7 +842,7 @@ static NS_DEFINE_IID(kIRDFResourceManagerIID,   NS_IRDFRESOURCEMANAGER_IID);
                                                   (nsISupports**) &mgr)))
     goto done;
 
-  if (NS_FAILED(rv = mgr->GetNode("rdf:bookmarks", root)))
+  if (NS_FAILED(rv = mgr->GetResource("rdf:bookmarks", &root)))
     goto done;
 
   if (NS_FAILED(rv = doc->SetRootResource(root)))
