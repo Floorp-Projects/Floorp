@@ -44,11 +44,6 @@ EXTRA_DSO_LDOPTS+= -lXm -lXt -lX11 -lm
 endif
 
 CPPSRCS= \
-	nsMenuButton.cpp \
-	nsToolbarItemHolder.cpp \
-	nsToolbarManager.cpp \
-	nsToolbar.cpp \
-	nsImageButton.cpp \
         nsMenuBar.cpp \
         nsMenu.cpp \
         nsMenuItem.cpp \
