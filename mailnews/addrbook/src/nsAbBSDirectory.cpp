@@ -142,7 +142,7 @@ NS_IMETHODIMP nsAbBSDirectory::GetChildNodes(nsIEnumerator* *result)
 
 				if (server->dirType == PABDirectory)
 				{
-					nsString name; name.AssignWithConversion(server->fileName);
+					nsAutoString name; name.AssignWithConversion(server->fileName);
 					PRInt32 pos = name.Find("na2");
 					if (pos >= 0) /* check: this is a 4.x file, remove when conversion is done */
 						continue;
@@ -180,7 +180,7 @@ NS_IMETHODIMP nsAbBSDirectory::GetChildNodes(nsIEnumerator* *result)
 						nsFileSpec* dbPath;
 						abSession->GetUserProfileDirectory(&dbPath);
 
-						nsString file; file.AssignWithConversion(server->fileName);
+						nsAutoString file; file.AssignWithConversion(server->fileName);
 						(*dbPath) += file;
 
 						NS_WITH_SERVICE(nsIAddrDatabase, addrDBFactory, kAddressBookDBCID, &rv);
@@ -217,13 +217,13 @@ NS_IMETHODIMP nsAbBSDirectory::CreateNewDirectory(PRUint32 prefCount, const char
 		switch (tolower(prefName[jk][0]))
 		{
 		case 'd':
-			if (!PL_strcasecmp(prefName[jk], "description"))
+			if (!nsCRT::strcasecmp(prefName[jk], "description"))
 			{
 				unicharDescription = (PRUnichar *)prefValue[jk];
 			}
 			break;
 		case 'f':
-			if (!PL_strcasecmp(prefName[jk], "fileName"))
+			if (!nsCRT::strcasecmp(prefName[jk], "fileName"))
 			{
 				nsString descString(prefValue[jk]);
 				PRInt32 unicharLength = descString.Length();
@@ -231,12 +231,12 @@ NS_IMETHODIMP nsAbBSDirectory::CreateNewDirectory(PRUint32 prefCount, const char
 			}
 			break;
 		case 'm':
-			if (!PL_strcasecmp(prefName[jk], "migrating"))
+			if (!nsCRT::strcasecmp(prefName[jk], "migrating"))
 			{
 				nsString descString(prefValue[jk]);
 				PRInt32 unicharLength = descString.Length();
 				INTL_ConvertFromUnicode(prefValue[jk], unicharLength, &charMigrate);
-				if (!PL_strcasecmp(charMigrate, "true"))
+				if (!nsCRT::strcasecmp(charMigrate, "true"))
 				{
 					migrating = PR_TRUE;
 				}
@@ -251,12 +251,7 @@ NS_IMETHODIMP nsAbBSDirectory::CreateNewDirectory(PRUint32 prefCount, const char
 	}
 	else
 	{
-    char *uri = nsnull;
-    if (PL_strstr(charFileName, ".mab"))
-	    uri = PR_smprintf("%s%s", kDirectoryDataSourceRoot, charFileName);
-    rv = CreateDirectoryByURI(unicharDescription, uri, migrating);
-		if (uri)
-      PR_smprintf_free(uri);
+    rv = CreateDirectoryPAB(unicharDescription, charFileName, migrating);
 	}
 
 	if (charFileName)
@@ -265,6 +260,37 @@ NS_IMETHODIMP nsAbBSDirectory::CreateNewDirectory(PRUint32 prefCount, const char
 		nsMemory::Free(charMigrate);
 
 	return rv;
+}
+
+nsresult nsAbBSDirectory::CreateDirectoryPAB(const PRUnichar *displayName, const char *fileName,  PRBool migrating)
+{
+  if (!displayName )
+  {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  DIR_Server * server = nsnull;
+  DirectoryType dirType = PABDirectory;
+
+  DIR_AddNewAddressBook(displayName, fileName, migrating, dirType, &server);
+
+  char *uri = PR_smprintf("%s%s",kDirectoryDataSourceRoot, server->fileName);
+
+  nsCOMPtr<nsIAbDirectory> newDir;
+  nsresult rv = AddDirectory(uri, getter_AddRefs(newDir));
+
+  if (uri)
+    PR_smprintf_free(uri);
+  if (NS_SUCCEEDED(rv) && newDir)
+  {
+    newDir->SetDirName((PRUnichar *)displayName);
+    nsVoidKey key((void *)newDir);
+    mServers.Put (&key, (void *)server);
+    NotifyItemAdded(newDir);
+    return NS_OK;
+  }
+  else
+    return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP nsAbBSDirectory::CreateDirectoryByURI(const PRUnichar *displayName, const char *uri, PRBool migrating)
@@ -330,7 +356,7 @@ NS_IMETHODIMP nsAbBSDirectory::DeleteDirectory(nsIAbDirectory *directory)
 					{
 						nsCOMPtr<nsIAbDirectory> listDir(do_QueryInterface(pSupport, &rv));
 						nsCOMPtr<nsIAbMDBDirectory> dblistDir(do_QueryInterface(pSupport, &rv));
-						if (listDir)
+						if (listDir && dblistDir)
 						{
 							directory->DeleteDirectory(listDir);
 							dblistDir->RemoveElementsFromAddressList();

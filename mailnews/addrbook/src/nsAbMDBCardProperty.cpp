@@ -209,8 +209,8 @@ NS_IMETHODIMP nsAbMDBCardProperty::SetAnonymousStringAttribute
 {
 	nsresult rv = NS_OK;
 
-	char* pAttribute = PL_strdup(attrname);
-	char* pValue = PL_strdup(value);
+	char* pAttribute = nsCRT::strdup(attrname);
+	char* pValue = nsCRT::strdup(value);
 	if (pAttribute && pValue)
 	{
 		rv = SetAnonymousAttribute(&m_pAnonymousStrAttributes, 
@@ -218,8 +218,8 @@ NS_IMETHODIMP nsAbMDBCardProperty::SetAnonymousStringAttribute
 	}
 	else
 	{
-		PR_FREEIF(pAttribute);
-		PR_FREEIF(pValue);
+		nsCRT::free(pAttribute);
+		nsCRT::free(pValue);
 		rv = NS_ERROR_NULL_POINTER;
 	}
 	return rv;
@@ -230,7 +230,7 @@ NS_IMETHODIMP nsAbMDBCardProperty::SetAnonymousIntAttribute
 {
 	nsresult rv = NS_OK;
 
-	char* pAttribute = PL_strdup(attrname);
+	char* pAttribute = nsCRT::strdup(attrname);
 	PRUint32* pValue = (PRUint32 *)PR_Calloc(1, sizeof(PRUint32));
 	*pValue = value;
 	if (pAttribute && pValue)
@@ -240,7 +240,7 @@ NS_IMETHODIMP nsAbMDBCardProperty::SetAnonymousIntAttribute
 	}
 	else
 	{
-		PR_FREEIF(pAttribute);
+		nsCRT::free(pAttribute);
 		PR_FREEIF(pValue);
 		rv = NS_ERROR_NULL_POINTER;
 	}
@@ -252,7 +252,7 @@ NS_IMETHODIMP nsAbMDBCardProperty::SetAnonymousBoolAttribute
 {
 	nsresult rv = NS_OK;
 
-	char* pAttribute = PL_strdup(attrname);
+	char* pAttribute = nsCRT::strdup(attrname);
 	PRBool* pValue = (PRBool *)PR_Calloc(1, sizeof(PRBool));
 	*pValue = value;
 	if (pAttribute && pValue)
@@ -261,8 +261,8 @@ NS_IMETHODIMP nsAbMDBCardProperty::SetAnonymousBoolAttribute
 			&m_pAnonymousBoolValues, pAttribute, pValue);
 	}
 	else
-	{
-		PR_FREEIF(pAttribute);
+	{	
+		nsCRT::free(pAttribute);
 		PR_FREEIF(pValue);
 		rv = NS_ERROR_NULL_POINTER;
 	}
@@ -304,126 +304,89 @@ NS_IMETHODIMP nsAbMDBCardProperty::GetCardURI(char **uri)
 
 NS_IMETHODIMP nsAbMDBCardProperty::CopyCard(nsIAbMDBCard* srcCardDB)
 {
-	nsresult err = NS_OK;
-	nsCOMPtr<nsIAbCard> srcCard(do_QueryInterface(srcCardDB, &err));
-	if (NS_FAILED(err)) 
-		return NS_ERROR_NULL_POINTER;
+	nsresult rv = NS_OK;
+	nsCOMPtr<nsIAbCard> srcCard(do_QueryInterface(srcCardDB, &rv));
+	NS_ENSURE_SUCCESS(rv, rv);
 
-	PRUnichar *str = nsnull;
-	srcCard->GetFirstName(&str);
+	nsXPIDLString str;
+	srcCard->GetFirstName(getter_Copies(str));
 	SetFirstName(str);
-	PR_FREEIF(str);
 
-	srcCard->GetLastName(&str);
+	srcCard->GetLastName(getter_Copies(str));
 	SetLastName(str);
-	PR_FREEIF(str);
-	srcCard->GetDisplayName(&str);
+	srcCard->GetDisplayName(getter_Copies(str));
 	SetDisplayName(str);
-	PR_FREEIF(str);
-	srcCard->GetNickName(&str);
+	srcCard->GetNickName(getter_Copies(str));
 	SetNickName(str);
-	PR_FREEIF(str);
-	srcCard->GetPrimaryEmail(&str);
+	srcCard->GetPrimaryEmail(getter_Copies(str));
 	SetPrimaryEmail(str);
-	PR_FREEIF(str);
-	srcCard->GetSecondEmail(&str);
+	srcCard->GetSecondEmail(getter_Copies(str));
 	SetSecondEmail(str);
-	PR_FREEIF(str);
 
-        PRUint32 format = nsIAbPreferMailFormat::unknown;
-        srcCard->GetPreferMailFormat(&format);
-        SetPreferMailFormat(format);
+  PRUint32 format = nsIAbPreferMailFormat::unknown;
+  srcCard->GetPreferMailFormat(&format);
+  SetPreferMailFormat(format);
 
-	srcCard->GetWorkPhone(&str);
+	srcCard->GetWorkPhone(getter_Copies(str));
 	SetWorkPhone(str);
-	PR_FREEIF(str);
-	srcCard->GetHomePhone(&str);
+	srcCard->GetHomePhone(getter_Copies(str));
 	SetHomePhone(str);
-	PR_FREEIF(str);
-	srcCard->GetFaxNumber(&str);
+	srcCard->GetFaxNumber(getter_Copies(str));
 	SetFaxNumber(str);
-	PR_FREEIF(str);
-	srcCard->GetPagerNumber(&str);
+	srcCard->GetPagerNumber(getter_Copies(str));
 	SetPagerNumber(str);
-	PR_FREEIF(str);
-	srcCard->GetCellularNumber(&str);
+	srcCard->GetCellularNumber(getter_Copies(str));
 	SetCellularNumber(str);
-	PR_FREEIF(str);
-	srcCard->GetHomeAddress(&str);
+	srcCard->GetHomeAddress(getter_Copies(str));
 	SetHomeAddress(str);
-	PR_FREEIF(str);
-	srcCard->GetHomeAddress2(&str);
+	srcCard->GetHomeAddress2(getter_Copies(str));
 	SetHomeAddress2(str);
-	PR_FREEIF(str);
-	srcCard->GetHomeCity(&str);
+	srcCard->GetHomeCity(getter_Copies(str));
 	SetHomeCity(str);
-	PR_FREEIF(str);
-	srcCard->GetHomeState(&str);
+	srcCard->GetHomeState(getter_Copies(str));
 	SetHomeState(str);
-	PR_FREEIF(str);
-	srcCard->GetHomeZipCode(&str);
+	srcCard->GetHomeZipCode(getter_Copies(str));
 	SetHomeZipCode(str);
-	PR_FREEIF(str);
-	srcCard->GetHomeCountry(&str);
+	srcCard->GetHomeCountry(getter_Copies(str));
 	SetHomeCountry(str);
-	PR_FREEIF(str);
-	srcCard->GetWorkAddress(&str);
+	srcCard->GetWorkAddress(getter_Copies(str));
 	SetWorkAddress(str);
-	PR_FREEIF(str);
-	srcCard->GetWorkAddress2(&str);
+	srcCard->GetWorkAddress2(getter_Copies(str));
 	SetWorkAddress2(str);
-	PR_FREEIF(str);
-	srcCard->GetWorkCity(&str);
+	srcCard->GetWorkCity(getter_Copies(str));
 	SetWorkCity(str);
-	PR_FREEIF(str);
-	srcCard->GetWorkState(&str);
+	srcCard->GetWorkState(getter_Copies(str));
 	SetWorkState(str);
-	PR_FREEIF(str);
-	srcCard->GetWorkZipCode(&str);
+	srcCard->GetWorkZipCode(getter_Copies(str));
 	SetWorkZipCode(str);
-	PR_FREEIF(str);
-	srcCard->GetWorkCountry(&str);
+	srcCard->GetWorkCountry(getter_Copies(str));
 	SetWorkCountry(str);
-	PR_FREEIF(str);
-	srcCard->GetJobTitle(&str);
+	srcCard->GetJobTitle(getter_Copies(str));
 	SetJobTitle(str);
-	PR_FREEIF(str);
-	srcCard->GetDepartment(&str);
+	srcCard->GetDepartment(getter_Copies(str));
 	SetDepartment(str);
-	PR_FREEIF(str);
-	srcCard->GetCompany(&str);
+	srcCard->GetCompany(getter_Copies(str));
 	SetCompany(str);
-	PR_FREEIF(str);
-	srcCard->GetWebPage1(&str);
+	srcCard->GetWebPage1(getter_Copies(str));
 	SetWebPage1(str);
-	PR_FREEIF(str);
-	srcCard->GetWebPage2(&str);
+	srcCard->GetWebPage2(getter_Copies(str));
 	SetWebPage2(str);
-	PR_FREEIF(str);
-	srcCard->GetBirthYear(&str);
+	srcCard->GetBirthYear(getter_Copies(str));
 	SetBirthYear(str);
-	PR_FREEIF(str);
-	srcCard->GetBirthMonth(&str);
+	srcCard->GetBirthMonth(getter_Copies(str));
 	SetBirthMonth(str);
-	PR_FREEIF(str);
-	srcCard->GetBirthDay(&str);
+	srcCard->GetBirthDay(getter_Copies(str));
 	SetBirthDay(str);
-	PR_FREEIF(str);
-	srcCard->GetCustom1(&str);
+	srcCard->GetCustom1(getter_Copies(str));
 	SetCustom1(str);
-	PR_FREEIF(str);
-	srcCard->GetCustom2(&str);
+	srcCard->GetCustom2(getter_Copies(str));
 	SetCustom2(str);
-	PR_FREEIF(str);
-	srcCard->GetCustom3(&str);
+	srcCard->GetCustom3(getter_Copies(str));
 	SetCustom3(str);
-	PR_FREEIF(str);
-	srcCard->GetCustom4(&str);
+	srcCard->GetCustom4(getter_Copies(str));
 	SetCustom4(str);
-	PR_FREEIF(str);
-	srcCard->GetNotes(&str);
+	srcCard->GetNotes(getter_Copies(str));
 	SetNotes(str);
-	PR_FREEIF(str);
 
 	PRUint32 tableID, rowID;
 	srcCardDB->GetDbTableID(&tableID);
@@ -473,19 +436,19 @@ static const char *kAbPrintUrlFormat = "addbook:printone?email=%s&folder=%s";
 	if (!aPrintCardUrl)
 		return NS_OK;
 
-	PRUnichar *email = nsnull;
-	GetPrimaryEmail(&email);
-	nsString emailStr(email);
+  nsXPIDLString email;
+	GetPrimaryEmail(getter_Copies(email));
+	nsAutoString emailStr(email);
 
 	if (emailStr.Length() == 0)
 	{
 		*aPrintCardUrl = PR_smprintf("");
 		return NS_OK;
 	}
-	PRUnichar *dirName = nsnull;
+  nsXPIDLString dirName;
 	if (mCardDatabase)
-		mCardDatabase->GetDirectoryName(&dirName);
-	nsString dirNameStr(dirName);
+		mCardDatabase->GetDirectoryName(getter_Copies(dirName));
+	nsAutoString dirNameStr(dirName);
 	if (dirNameStr.Length() == 0)
 	{
 		*aPrintCardUrl = PR_smprintf("");
@@ -500,9 +463,6 @@ static const char *kAbPrintUrlFormat = "addbook:printone?email=%s&folder=%s";
 
 	nsMemory::Free(emailCharStr);
 	nsMemory::Free(dirCharStr);
-
-	PR_FREEIF(dirName);
-	PR_FREEIF(email);
 
 	return NS_OK;
 }

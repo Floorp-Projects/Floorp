@@ -29,30 +29,19 @@
 #include "nsXPIDLString.h"
 #include "nsCOMPtr.h"
 #include "nsAbBaseCID.h"
-#include "nsAbCard.h"
-#include "nsAddrDatabase.h"
-#include "nsIAbListener.h"
-#include "nsIAddrBookSession.h"
-#include "nsIAddressBook.h"
+#include "nsIAbCard.h"
+
+#include "rdf.h"
 
 #include "mdb.h"
 #include "prlog.h"
 #include "prprf.h"
 #include "prmem.h"
 
-/* The definition is nsAddressBook.cpp */
-extern const char *kDirectoryDataSourceRoot;
-
-
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
-static NS_DEFINE_CID(kAbCardCID, NS_ABCARD_CID);
-static NS_DEFINE_CID(kAddrBookSessionCID, NS_ADDRBOOKSESSION_CID);
-static NS_DEFINE_CID(kAddrBookCID, NS_ADDRESSBOOK_CID);
-
 nsAbDirProperty::nsAbDirProperty(void)
-  : m_LastModifiedDate(0),
-	m_DbPath(nsnull), m_Server(nsnull)
+  : m_LastModifiedDate(0)
 {
 	NS_INIT_REFCNT();
 
@@ -61,7 +50,6 @@ nsAbDirProperty::nsAbDirProperty(void)
 
 nsAbDirProperty::~nsAbDirProperty(void)
 {
-	PR_FREEIF(m_DbPath);
 }
 
 NS_IMPL_ADDREF(nsAbDirProperty)
@@ -80,28 +68,6 @@ NS_IMETHODIMP nsAbDirProperty::QueryInterface(REFNSIID aIID, void** aResult)
     }
     return NS_NOINTERFACE;
 }   
-
-////////////////////////////////////////////////////////////////////////////////
-
-NS_IMETHODIMP nsAbDirProperty::GetDirFilePath(char **dbPath)
-{
-	if (m_Server && m_Server->fileName)
-	{
-		nsresult rv = NS_OK;
-		nsFileSpec* dbFile = nsnull;
-
-		NS_WITH_SERVICE(nsIAddrBookSession, abSession, kAddrBookSessionCID, &rv); 
-		if(NS_SUCCEEDED(rv))
-			abSession->GetUserProfileDirectory(&dbFile);
-		
-		(*dbFile) += m_Server->fileName;
-		char* file = PL_strdup(dbFile->GetCString());
-		*dbPath = file;
-		
-		return NS_OK;
-	}
-	return NS_ERROR_FAILURE;
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -146,83 +112,6 @@ NS_IMETHODIMP nsAbDirProperty::SetLastModifiedDate(PRUint32 aLastModifiedDate)
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsAbDirProperty::GetServer(DIR_Server * *aServer)
-{
-	if (aServer)
-	{
-		*aServer = m_Server;
-		return NS_OK;
-	}
-	else
-		return NS_ERROR_NULL_POINTER;
-}
-
-NS_IMETHODIMP nsAbDirProperty::SetServer(DIR_Server * aServer)
-{
-	m_Server = aServer;
-	return NS_OK;
-}
-
-NS_IMETHODIMP
-nsAbDirProperty::GetChildNodes(nsIEnumerator **childList)
-{ return NS_OK; }
-
-NS_IMETHODIMP
-nsAbDirProperty::GetChildCards(nsIEnumerator **childCards)
-{ return NS_OK; }
-
-NS_IMETHODIMP
-nsAbDirProperty::AddChildCards(const char *uriName, nsIAbCard **childCard)
-{ return NS_OK; }
-
-NS_IMETHODIMP
-nsAbDirProperty::AddDirectory(const char *uriName, nsIAbDirectory **childDir)
-{ return NS_OK; }
-
-NS_IMETHODIMP
-nsAbDirProperty::DeleteDirectory(nsIAbDirectory *dierctory)
-{ return NS_OK; }
-
-NS_IMETHODIMP
-nsAbDirProperty::DeleteCards(nsISupportsArray *cards)
-{ return NS_OK; }
-
-NS_IMETHODIMP
-nsAbDirProperty::HasCard(nsIAbCard *cards, PRBool *hasCard)
-{ return NS_OK; }
-
-NS_IMETHODIMP
-nsAbDirProperty::HasDirectory(nsIAbDirectory *dir, PRBool *hasDir)
-{ return NS_OK; }
-
-NS_IMETHODIMP
-nsAbDirProperty::CreateNewDirectory(const PRUnichar *dirName, const char *fileName, PRBool migrating)
-{ return NS_OK; }
-
-NS_IMETHODIMP
-nsAbDirProperty::CreateNewMailingList(const char* uri, nsIAbDirectory *list)
-{ return NS_OK; }
-
-NS_IMETHODIMP
-nsAbDirProperty::GetDirUri(char **uri)
-{ return NS_OK; }
-
-NS_IMETHODIMP 
-nsAbDirProperty::ClearDatabase()
-{ return NS_OK; }
-
-NS_IMETHODIMP 
-nsAbDirProperty::NotifyDirItemAdded(nsISupports *item)
-{ return NS_OK; }
-
-NS_IMETHODIMP 
-nsAbDirProperty::RemoveElementsFromAddressList()
-{ return NS_OK; }
-
-NS_IMETHODIMP 
-nsAbDirProperty::RemoveEmailAddressAt(PRUint32 aIndex)
-{ return NS_OK; }
-
 nsresult nsAbDirProperty::GetAttributeName(PRUnichar **aName, nsString& value)
 {
 	if (aName)
@@ -263,18 +152,6 @@ NS_IMETHODIMP nsAbDirProperty::GetDescription(PRUnichar * *aDescription)
 NS_IMETHODIMP nsAbDirProperty::SetDescription(const PRUnichar * aDescription)
 { return SetAttributeName(aDescription, m_Description); }
 
-NS_IMETHODIMP nsAbDirProperty::GetDbRowID(PRUint32 *aDbRowID)
-{
-	*aDbRowID = m_dbRowID;
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsAbDirProperty::SetDbRowID(PRUint32 aDbRowID)
-{
-	m_dbRowID = aDbRowID;
-	return NS_OK;
-}
-
 NS_IMETHODIMP nsAbDirProperty::GetIsMailList(PRBool *aIsMailList)
 {
 	*aIsMailList = m_bIsMailList;
@@ -290,7 +167,9 @@ NS_IMETHODIMP nsAbDirProperty::SetIsMailList(PRBool aIsMailList)
 NS_IMETHODIMP nsAbDirProperty::GetAddressLists(nsISupportsArray * *aAddressLists)
 {
 	if (!m_AddressList)
+	{
 		NS_NewISupportsArray(getter_AddRefs(m_AddressList));
+	}
 
 	*aAddressLists = m_AddressList;
 	NS_ADDREF(*aAddressLists);
@@ -303,119 +182,33 @@ NS_IMETHODIMP nsAbDirProperty::SetAddressLists(nsISupportsArray * aAddressLists)
 	return NS_OK;
 }
 
-/* add mailing list to the parent directory */
-NS_IMETHODIMP nsAbDirProperty::AddMailListToDirectory(nsIAbDirectory *mailList)
-{
-    if (!m_AddressList)
-        NS_NewISupportsArray(getter_AddRefs(m_AddressList));
-    PRUint32 i, count;
-    m_AddressList->Count(&count);
-    for (i = 0; i < count; i++)
-    {
-        nsresult err;
-        nsCOMPtr<nsISupports> pSupport = getter_AddRefs(m_AddressList->ElementAt(i));
-        nsCOMPtr<nsIAbDirectory> pList(do_QueryInterface(pSupport, &err));
-        if (mailList == pList.get())
-            return NS_OK;
-    }	
-    m_AddressList->AppendElement(mailList);
-    return NS_OK;
-}
-
-/* add addresses to the mailing list */
-NS_IMETHODIMP nsAbDirProperty::AddAddressToList(nsIAbCard *card)
-{
-    if (!m_AddressList)
-        NS_NewISupportsArray(getter_AddRefs(m_AddressList));
-    PRUint32 i, count;
-    m_AddressList->Count(&count);
-    for (i = 0; i < count; i++)
-    {
-        nsresult err;
-        nsCOMPtr<nsISupports> pSupport = getter_AddRefs(m_AddressList->ElementAt(i));
-        nsCOMPtr<nsIAbCard> pCard(do_QueryInterface(pSupport, &err));
-        if (card == pCard.get())
-            return NS_OK;
-    }
-    m_AddressList->AppendElement(card);
-    return NS_OK;
-}
-
 NS_IMETHODIMP nsAbDirProperty::AddMailListToDatabase(const char *uri)
 {
 	nsresult rv = NS_OK;
+	NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
+	NS_ENSURE_SUCCESS(rv, rv);
 
-	nsCOMPtr<nsIAddrDatabase>  listDatabase;  
+	nsCOMPtr<nsIRDFResource> res;
+	rv = rdf->GetResource(uri, getter_AddRefs(res));
+	NS_ENSURE_SUCCESS(rv, rv);
 
-	NS_WITH_SERVICE(nsIAddressBook, addresBook, kAddrBookCID, &rv); 
-	if (NS_SUCCEEDED(rv))
-		rv = addresBook->GetAbDatabaseFromURI(uri, getter_AddRefs(listDatabase));
+	nsCOMPtr<nsIAbDirectory> directory(do_QueryInterface(res, &rv));
+	NS_ENSURE_SUCCESS(rv, rv);      
 
-	if (listDatabase)
-	{
-		listDatabase->CreateMailListAndAddToDB(this, PR_TRUE);
-		listDatabase->Commit(kLargeCommit);
-		listDatabase = null_nsCOMPtr();
+	rv = directory->AddMailList(this);
 
-		NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv);
-		if(NS_FAILED(rv))
-			return rv;
-		nsCOMPtr<nsIRDFResource> parentResource;
-		rv = rdfService->GetResource(uri, getter_AddRefs(parentResource));
-		nsCOMPtr<nsIAbDirectory> parentDir = do_QueryInterface(parentResource);
-		if (!parentDir)
-			return NS_ERROR_NULL_POINTER;
-
-		char *listUri = PR_smprintf("%s/MailList%ld", uri, m_dbRowID);
-		if (listUri)
-		{
-			parentDir->CreateNewMailingList(listUri, this);
-			PR_smprintf_free(listUri);
-			return NS_OK;
-		}
-		else
-			return NS_ERROR_FAILURE;
-	}
-	else
-		return NS_ERROR_FAILURE;
+	return rv;
 }
-
-NS_IMETHODIMP nsAbDirProperty::EditMailListToDatabase(const char *uri)
-{
-	nsresult rv = NS_OK;
-
-	nsCOMPtr<nsIAddrDatabase>  listDatabase;  
-
-	NS_WITH_SERVICE(nsIAddressBook, addresBook, kAddrBookCID, &rv); 
-	if (NS_SUCCEEDED(rv))
-		rv = addresBook->GetAbDatabaseFromURI(uri, getter_AddRefs(listDatabase));
-
-	if (listDatabase)
-	{
-		listDatabase->EditMailList(this, PR_TRUE);
-		listDatabase->Commit(kLargeCommit);
-		listDatabase = null_nsCOMPtr();
-
-		return NS_OK;
-
-	}
-	else
-		return NS_ERROR_FAILURE;
-}
-
 
 NS_IMETHODIMP nsAbDirProperty::CopyMailList(nsIAbDirectory* srcList)
 {
-	PRUnichar *str = nsnull;
-	srcList->GetListName(&str);
+  nsXPIDLString str;
+	srcList->GetListName(getter_Copies(str));
 	SetListName(str);
-	PR_FREEIF(str);
-	srcList->GetListNickName(&str);
+	srcList->GetListNickName(getter_Copies(str));
 	SetListNickName(str);
-	PR_FREEIF(str);
-	srcList->GetDescription(&str);
+	srcList->GetDescription(getter_Copies(str));
 	SetDescription(str);
-	PR_FREEIF(str);
 
 	SetIsMailList(PR_TRUE);
 
@@ -424,9 +217,57 @@ NS_IMETHODIMP nsAbDirProperty::CopyMailList(nsIAbDirectory* srcList)
 	NS_IF_ADDREF(pAddressLists);
 	SetAddressLists(pAddressLists);
 
-	PRUint32 rowID;
-	srcList->GetDbRowID(&rowID);
-	SetDbRowID(rowID);
-
 	return NS_OK;
 }
+
+
+
+
+
+
+
+
+// nsIAbDirectory NOT IMPLEMENTED methods
+
+NS_IMETHODIMP
+nsAbDirProperty::GetChildNodes(nsIEnumerator **childList)
+{ return NS_ERROR_NOT_IMPLEMENTED; }
+
+NS_IMETHODIMP
+nsAbDirProperty::GetChildCards(nsIEnumerator **childCards)
+{ return NS_ERROR_NOT_IMPLEMENTED; }
+
+NS_IMETHODIMP
+nsAbDirProperty::DeleteDirectory(nsIAbDirectory *dierctory)
+{ return NS_ERROR_NOT_IMPLEMENTED; }
+
+NS_IMETHODIMP
+nsAbDirProperty::DeleteCards(nsISupportsArray *cards)
+{ return NS_ERROR_NOT_IMPLEMENTED; }
+
+NS_IMETHODIMP
+nsAbDirProperty::HasCard(nsIAbCard *cards, PRBool *hasCard)
+{ return NS_ERROR_NOT_IMPLEMENTED; }
+
+NS_IMETHODIMP
+nsAbDirProperty::HasDirectory(nsIAbDirectory *dir, PRBool *hasDir)
+{ return NS_ERROR_NOT_IMPLEMENTED; }
+
+NS_IMETHODIMP
+nsAbDirProperty::CreateNewDirectory(PRUint32 prefCount, const char **prefName, const PRUnichar **prefValue)
+{ return NS_ERROR_NOT_IMPLEMENTED; }
+
+NS_IMETHODIMP nsAbDirProperty::CreateDirectoryByURI(const PRUnichar *dirName, const char *uri, PRBool migrating)
+{ return NS_ERROR_NOT_IMPLEMENTED; }
+
+NS_IMETHODIMP nsAbDirProperty::AddMailList(nsIAbDirectory *list)
+{ return NS_ERROR_NOT_IMPLEMENTED; }
+
+NS_IMETHODIMP nsAbDirProperty::EditMailListToDatabase(const char *uri)
+{ return NS_ERROR_NOT_IMPLEMENTED; }
+
+NS_IMETHODIMP nsAbDirProperty::AddCard(nsIAbCard *childCard, nsIAbCard **_retval)
+{ return NS_ERROR_NOT_IMPLEMENTED; }
+
+NS_IMETHODIMP nsAbDirProperty::DropCard(nsIAbCard *childCard, nsIAbCard **_retval)
+{ return NS_ERROR_NOT_IMPLEMENTED; }

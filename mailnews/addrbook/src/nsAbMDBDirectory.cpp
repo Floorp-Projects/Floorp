@@ -343,7 +343,7 @@ NS_IMETHODIMP nsAbMDBDirectory::GetChildCards(nsIEnumerator* *result)
 {
 	if (mURI && mIsMailingList == -1)
 	{
-		nsString file; file.AssignWithConversion(&(mURI[PL_strlen(kDirectoryDataSourceRoot)]));
+		nsAutoString file; file.AssignWithConversion(&(mURI[PL_strlen(kDirectoryDataSourceRoot)]));
 		PRInt32 pos = file.Find("/");
 		if (pos != -1)
 			mIsMailingList = 1;
@@ -648,7 +648,7 @@ NS_IMETHODIMP nsAbMDBDirectory::AddMailList(nsIAbDirectory *list)
 	if (NS_SUCCEEDED(rv) && newList)
 	{
 		nsCOMPtr<nsIAddrDBListener> listener(do_QueryInterface(newList, &rv));
-    NS_ENSURE_SUCCESS(rv, NS_ERROR_NULL_POINTER);
+    NS_ENSURE_SUCCESS(rv, rv);
 		mDatabase->AddListener(listener);
 
 		dbnewList->CopyDBMailList (dblist);
@@ -715,7 +715,7 @@ NS_IMETHODIMP nsAbMDBDirectory::DropCard(nsIAbCard* card, nsIAbCard **_retval)
 
 	if (mURI && mIsMailingList == -1)
 	{
-		nsString file; file.AssignWithConversion(&(mURI[PL_strlen(kDirectoryDataSourceRoot)]));
+		nsAutoString file; file.AssignWithConversion(&(mURI[PL_strlen(kDirectoryDataSourceRoot)]));
 		PRInt32 pos = file.Find("/");
 		if (pos != -1)
 			mIsMailingList = 1;
@@ -792,20 +792,18 @@ NS_IMETHODIMP nsAbMDBDirectory::OnCardEntryChange
 		NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
-		char* cardURI = nsnull;
 		nsCOMPtr<nsIAbMDBCard> dbcard(do_QueryInterface(card, &rv));
     NS_ENSURE_SUCCESS(rv, rv);
 		if (!dbcard)
 			return NS_ERROR_FAILURE;
 
-		rv = dbcard->GetCardURI(&cardURI);
+    nsXPIDLCString cardURI;
+		rv = dbcard->GetCardURI(getter_Copies(cardURI));
 		if (!cardURI)
 			return NS_ERROR_NULL_POINTER;
 		
 		nsCOMPtr<nsIRDFResource> res;
 		rv = rdf->GetResource(cardURI, getter_AddRefs(res));
-		if(cardURI)
-			PR_smprintf_free(cardURI);
 		if (NS_SUCCEEDED(rv))
 		{
 			nsCOMPtr<nsIAbMDBCard> dbpersonCard = do_QueryInterface(res);
@@ -816,7 +814,7 @@ NS_IMETHODIMP nsAbMDBDirectory::OnCardEntryChange
 				{
 					dbpersonCard->SetAbDatabase(mDatabase);
 					nsCOMPtr<nsIAddrDBListener> listener(do_QueryInterface(dbpersonCard, &rv));
-					NS_ENSURE_SUCCESS(rv, NS_ERROR_NULL_POINTER);
+					NS_ENSURE_SUCCESS(rv, rv);
 					mDatabase->AddListener(listener);
 				}
 				nsCOMPtr<nsISupports> cardSupports(do_QueryInterface(dbpersonCard));

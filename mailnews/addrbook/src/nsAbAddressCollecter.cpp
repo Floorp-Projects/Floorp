@@ -96,8 +96,7 @@ NS_IMETHODIMP nsAbAddressCollecter::CollectAddress(const char *address)
 		return NS_OK;
 
 	NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
-	if (NS_FAILED(rv) || !pPref)
-		return NS_ERROR_FAILURE;    
+  NS_ENSURE_SUCCESS(rv, rv);
 
 	if(sizeLimitEnabled == -1){
 		rv = pPref->GetBoolPref(PREF_COLLECT_EMAIL_ADDRESS_ENABLE_SIZE_LIMIT, &sizeLimitEnabled);
@@ -146,6 +145,7 @@ NS_IMETHODIMP nsAbAddressCollecter::CollectAddress(const char *address)
 			if (NS_SUCCEEDED(rv) && !exclude)
 			{
 				nsCOMPtr <nsIAbCard> existingCard;
+				nsCOMPtr <nsIAbCard> cardInstance;
 
 				rv = m_historyAB->GetCardForEmailAddress(m_historyDirectory, curAddress, getter_AddRefs(existingCard));
 
@@ -171,7 +171,7 @@ NS_IMETHODIMP nsAbAddressCollecter::CollectAddress(const char *address)
 						}
 						nsAutoString email; email.AssignWithConversion(curAddress);
 						senderCard->SetPrimaryEmail((PRUnichar*)email.GetUnicode());
-						senderCard->AddCardToDatabase(kCollectedAddressbookUri);
+						senderCard->AddCardToDatabase(kCollectedAddressbookUri, getter_AddRefs (cardInstance));
 					}
 				}
 				else //address is already in the CAB
@@ -182,7 +182,7 @@ NS_IMETHODIMP nsAbAddressCollecter::CollectAddress(const char *address)
 						m_historyAB->DeleteCard( existingCard, PR_TRUE );
 						SetNamesForCard(existingCard, curName);
 						//append it to the bottom.
-						existingCard->AddCardToDatabase(kCollectedAddressbookUri);
+						existingCard->AddCardToDatabase(kCollectedAddressbookUri, getter_AddRefs (cardInstance));
 					}
 					else
 					{
@@ -236,13 +236,11 @@ nsresult nsAbAddressCollecter::OpenHistoryAB(nsIAddrDatabase **aDatabase)
 		delete dbPath;
 	}
 	NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv);
-	if (NS_FAILED(rv)) 
-		return rv;
+	NS_ENSURE_SUCCESS(rv, rv);
 
 	nsCOMPtr <nsIRDFResource> resource;
 	rv = rdfService->GetResource(kCollectedAddressbookUri, getter_AddRefs(resource));
-	if (NS_FAILED(rv)) 
-		return rv;
+	NS_ENSURE_SUCCESS(rv, rv);
 
 	// query interface 
 	m_historyDirectory = do_QueryInterface(resource, &rv);

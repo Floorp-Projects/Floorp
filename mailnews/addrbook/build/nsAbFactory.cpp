@@ -38,8 +38,12 @@
 
 #include "nsDirectoryDataSource.h"
 #include "nsCardDataSource.h"
-#include "nsAbDirectory.h"
-#include "nsAbCard.h"
+
+#include "nsAbBSDirectory.h"
+
+#include "nsAbMDBDirectory.h"
+#include "nsAbMDBCard.h"
+
 #include "nsAddrDatabase.h"
 #include "nsAddressBook.h"
 #include "nsAddrBookSession.h"
@@ -50,13 +54,19 @@
 #include "nsAddbookUrl.h"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAddressBook)
+
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsAbDirectoryDataSource,Init)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbDirectory)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsAbCardDataSource,Init)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbCard)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbCardProperty)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsAddrDatabase)
+
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbDirProperty)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbCardProperty)
+
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbBSDirectory)
+
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbMDBDirectory)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbMDBCard)
+
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsAddrDatabase)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAddrBookSession)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbAutoCompleteSession)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbAddressCollecter)
@@ -70,36 +80,54 @@ static nsModuleComponentInfo components[] =
     NS_ADDRESSBOOK_CID,
     NS_ADDRESSBOOK_CONTRACTID,
     nsAddressBookConstructor },
+
   { "Address Book Startup Handler",
     NS_ADDRESSBOOK_CID,
     NS_ADDRESSBOOKSTARTUPHANDLER_CONTRACTID,
     nsAddressBookConstructor,
     nsAddressBook::RegisterProc,
     nsAddressBook::UnregisterProc },
+
   { "Address Book Directory Datasource",
     NS_ABDIRECTORYDATASOURCE_CID,
     NS_ABDIRECTORYDATASOURCE_CONTRACTID,
     nsAbDirectoryDataSourceConstructor },
-  { "Address Book Directory",
-    NS_ABDIRECTORY_CID,
-    NS_ABDIRECTORY_CONTRACTID,
-    nsAbDirectoryConstructor },
+
   { "Address Book Card Datasource",
     NS_ABCARDDATASOURCE_CID,
     NS_ABCARDDATASOURCE_CONTRACTID,
     nsAbCardDataSourceConstructor },
-  { "Address Book Card",
-    NS_ABCARD_CID,
-    NS_ABCARD_CONTRACTID,
-    nsAbCardConstructor },
+
+
+
+  { "Address Boot Strap Directory",
+    NS_ABDIRECTORY_CID,
+    NS_ABDIRECTORY_CONTRACTID,
+    nsAbBSDirectoryConstructor },
+
+
+
+  { "Address MDB Book Directory",
+    NS_ABMDBDIRECTORY_CID,
+    NS_ABMDBDIRECTORY_CONTRACTID,
+    nsAbMDBDirectoryConstructor },
+
+  { "Address MDB Book Card",
+    NS_ABMDBCARD_CID,
+    NS_ABMDBCARD_CONTRACTID,
+    nsAbMDBCardConstructor },
+
+
   { "Address Database",
     NS_ADDRDATABASE_CID,
     NS_ADDRDATABASE_CONTRACTID,
     nsAddrDatabaseConstructor },
+
   { "Address Book Card Property",
     NS_ABCARDPROPERTY_CID,
     NS_ABCARDPROPERTY_CONTRACTID,
     nsAbCardPropertyConstructor },
+
   { "Address Book Directory Property",
     NS_ABDIRPROPERTY_CID,
     NS_ABDIRPROPERTY_CONTRACTID,

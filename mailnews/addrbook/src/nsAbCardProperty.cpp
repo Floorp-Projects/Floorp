@@ -33,21 +33,11 @@
 #include "rdf.h"
 #include "nsCOMPtr.h"
 
-#include "nsAddrDatabase.h"
-#include "nsIAddrBookSession.h"
 #include "nsIPref.h"
-#include "nsIAddressBook.h"
+#include "nsIAbDirectory.h"
 
-static NS_DEFINE_CID(kAddressBookDBCID, NS_ADDRDATABASE_CID);
-static NS_DEFINE_CID(kAddrBookSessionCID, NS_ADDRBOOKSESSION_CID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
-static NS_DEFINE_CID(kAddrBookCID, NS_ADDRESSBOOK_CID);
-
-
-/* The definition is nsAddressBook.cpp */
-extern const char *kDirectoryDataSourceRoot;
-extern const char *kCardDataSourceRoot;
 
 /* The definition is nsAddrDatabase.cpp */
 extern const char *kMainPersonalAddressBook;
@@ -96,56 +86,16 @@ nsAbCardProperty::nsAbCardProperty(void)
 	NS_INIT_REFCNT();
 
 	m_LastModDate = 0;
-	m_Key = 0;
+
 	m_PreferMailFormat = nsIAbPreferMailFormat::unknown;
-
 	m_bIsMailList = PR_FALSE;
+	m_MailListURI = 0;
 
-	m_dbTableID = 0;
-	m_dbRowID = 0;
 
-	m_pAnonymousStrAttributes = nsnull;
-	m_pAnonymousStrValues = nsnull;
-	m_pAnonymousIntAttributes = nsnull;
-	m_pAnonymousIntValues = nsnull;
-	m_pAnonymousBoolAttributes = nsnull;
-	m_pAnonymousBoolValues = nsnull;
 }
 
 nsAbCardProperty::~nsAbCardProperty(void)
 {
-	if (m_pAnonymousStrAttributes)
-		RemoveAnonymousList(m_pAnonymousStrAttributes);
-	if (m_pAnonymousIntAttributes)
-		RemoveAnonymousList(m_pAnonymousIntAttributes);
-	if (m_pAnonymousBoolAttributes)
-		RemoveAnonymousList(m_pAnonymousBoolAttributes);
-
-	if (m_pAnonymousStrValues)
-		RemoveAnonymousList(m_pAnonymousStrValues);
-	if (m_pAnonymousIntValues)
-		RemoveAnonymousList(m_pAnonymousIntValues);
-	if (m_pAnonymousBoolValues)
-		RemoveAnonymousList(m_pAnonymousBoolValues);
-
-	if (mCardDatabase)
-		mCardDatabase = null_nsCOMPtr();
-}
-
-nsresult nsAbCardProperty::RemoveAnonymousList(nsVoidArray* pArray)
-{
-	if (pArray)
-	{
-		PRUint32 count = pArray->Count();
-		for (int i = count - 1; i >= 0; i--)
-		{
-			void* pPtr = pArray->ElementAt(i);
-			PR_FREEIF(pPtr);
-			pArray->RemoveElementAt(i);
-		}
-		delete pArray;
-	}
-	return NS_OK;
 }
 
 NS_IMPL_ADDREF(nsAbCardProperty)
@@ -191,7 +141,7 @@ nsresult nsAbCardProperty::SetAttributeName(const PRUnichar *aName, nsString& ar
 
 NS_IMETHODIMP nsAbCardProperty::GetPreferMailFormat(PRUint32 *aFormat)
 {
-	*aFormat = m_PreferMailFormat;
+	*aFormat = m_PreferMailFormat;	
 	return NS_OK;
 }
 
@@ -213,28 +163,31 @@ NS_IMETHODIMP nsAbCardProperty::SetIsMailList(PRBool aIsMailList)
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsAbCardProperty::GetDbTableID(PRUint32 *aDbTableID)
+NS_IMETHODIMP nsAbCardProperty::GetMailListURI(char **aMailListURI)
 {
-	*aDbTableID = m_dbTableID;
-	return NS_OK;
+	if (aMailListURI)
+	{
+		if (m_MailListURI)
+			*aMailListURI = nsCRT::strdup(m_MailListURI);
+		else
+			*aMailListURI = nsCRT::strdup("");
+
+		return NS_OK;
+	}
+	else
+		return NS_ERROR_NULL_POINTER;
 }
 
-NS_IMETHODIMP nsAbCardProperty::SetDbTableID(PRUint32 aDbTableID)
+NS_IMETHODIMP nsAbCardProperty::SetMailListURI(const char *aMailListURI)
 {
-	m_dbTableID = aDbTableID;
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsAbCardProperty::GetDbRowID(PRUint32 *aDbRowID)
-{
-	*aDbRowID = m_dbRowID;
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsAbCardProperty::SetDbRowID(PRUint32 aDbRowID)
-{
-	m_dbRowID = aDbRowID;
-	return NS_OK;
+	if (aMailListURI)
+	{
+		nsCRT::free (m_MailListURI);
+		m_MailListURI = nsCRT::strdup(aMailListURI);
+		return NS_OK;
+	}
+	else
+		return NS_ERROR_NULL_POINTER;
 }
 
 NS_IMETHODIMP nsAbCardProperty::GetCardValue(const char *attrname, PRUnichar **value)
@@ -311,10 +264,11 @@ NS_IMETHODIMP nsAbCardProperty::GetCardValue(const char *attrname, PRUnichar **v
 		GetCustom4(value);
     else if (!PL_strcmp(attrname, kNotesColumn))
 		GetNotes(value);
-	else if (!PL_strcmp(attrname, kPreferMailFormatColumn))
-	{	// PreferMailFormat is interger, not a string
-		return NS_OK;
-	}
+    else if (!PL_strcmp(attrname, kPreferMailFormatColumn))
+    {	// PreferMailFormat is interger, not a string
+    	return NS_OK;
+    }
+    
 	/* else handle pass down attribute */
 
 	return NS_OK;
@@ -397,485 +351,16 @@ NS_IMETHODIMP nsAbCardProperty::SetCardValue(const char *attrname, const PRUnich
 		rv = SetDepartment((PRUnichar *)value);
     else if (!PL_strcmp(attrname, kCompanyColumn))
 		rv = SetCompany((PRUnichar *)value);
-	else if (!PL_strcmp(attrname, kPreferMailFormatColumn))
-	{	// PreferMailFormat is interger, not a string
-		return NS_OK;
-	}
-	else
-	{
-		nsAutoString cardValue(value);
-		char* valueStr = cardValue.ToNewUTF8String();
-		rv = SetAnonymousStringAttribute(attrname, valueStr);
-		nsMemory::Free(valueStr);
-	}
-	return rv;
-}
-
-NS_IMETHODIMP nsAbCardProperty::SetAbDatabase(nsIAddrDatabase* database)
-{
-	mCardDatabase = database;
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsAbCardProperty::GetAnonymousStrAttrubutesList(nsVoidArray **attrlist)
-{
-	if (attrlist && m_pAnonymousStrAttributes)
-	{
-		*attrlist = m_pAnonymousStrAttributes;
-		return NS_OK;
-	}
-	else
-		return NS_ERROR_NULL_POINTER;
-}
-
-NS_IMETHODIMP nsAbCardProperty::GetAnonymousStrValuesList(nsVoidArray **valuelist)
-{
-	if (valuelist && m_pAnonymousStrValues)
-	{
-		*valuelist = m_pAnonymousStrValues;
-		return NS_OK;
-	}
-	else
-		return NS_ERROR_NULL_POINTER;
-}
-
-NS_IMETHODIMP nsAbCardProperty::GetAnonymousIntAttrubutesList(nsVoidArray **attrlist)
-{
-	if (attrlist && m_pAnonymousIntAttributes)
-	{
-		*attrlist = m_pAnonymousIntAttributes;
-		return NS_OK;
-	}
-	else
-		return NS_ERROR_NULL_POINTER;
-}
-
-NS_IMETHODIMP nsAbCardProperty::GetAnonymousIntValuesList(nsVoidArray **valuelist)
-{
-	if (valuelist && m_pAnonymousIntValues)
-	{
-		*valuelist = m_pAnonymousIntValues;
-		return NS_OK;
-	}
-	else
-		return NS_ERROR_NULL_POINTER;
-}
-
-NS_IMETHODIMP nsAbCardProperty::GetAnonymousBoolAttrubutesList(nsVoidArray **attrlist)
-{
-	if (attrlist && m_pAnonymousBoolAttributes)
-	{
-		*attrlist = m_pAnonymousBoolAttributes;
-		return NS_OK;
-	}
-	else
-		return NS_ERROR_NULL_POINTER;
-}
-
-NS_IMETHODIMP nsAbCardProperty::GetAnonymousBoolValuesList(nsVoidArray **valuelist)
-{
-	if (valuelist && m_pAnonymousBoolValues)
-	{
-		*valuelist = m_pAnonymousBoolValues;
-		return NS_OK;
-	}
-	else
-		return NS_ERROR_NULL_POINTER;
-}
-
-nsresult nsAbCardProperty::SetAnonymousAttribute
-(nsVoidArray** pAttrAray, nsVoidArray** pValueArray, void *attrname, void *value)
-{
-	nsresult rv = NS_OK;
-	nsVoidArray* pAttributes = *pAttrAray;
-	nsVoidArray* pValues = *pValueArray; 
-
-	if (!pAttributes && !pValues)
-	{
-		pAttributes = new nsVoidArray();
-		pValues = new nsVoidArray();
-		*pAttrAray = pAttributes;
-		*pValueArray = pValues;
-	}
-	if (pAttributes && pValues)
-	{
-		if (attrname && value)
-		{
-			pAttributes->AppendElement(attrname);
-			pValues->AppendElement(value);
-		}
-	}
-	else
-	{ 
-		rv = NS_ERROR_FAILURE;
-	}
-
-	return rv;
-}	
-
-
-NS_IMETHODIMP nsAbCardProperty::SetAnonymousStringAttribute
-(const char *attrname, const char *value)
-{
-	nsresult rv = NS_OK;
-
-	char* pAttribute = PL_strdup(attrname);
-	char* pValue = PL_strdup(value);
-	if (pAttribute && pValue)
-	{
-		rv = SetAnonymousAttribute(&m_pAnonymousStrAttributes, 
-			&m_pAnonymousStrValues, pAttribute, pValue);
-	}
-	else
-	{
-		PR_FREEIF(pAttribute);
-		PR_FREEIF(pValue);
-		rv = NS_ERROR_NULL_POINTER;
-	}
-	return rv;
-}	
-
-NS_IMETHODIMP nsAbCardProperty::SetAnonymousIntAttribute
-(const char *attrname, PRUint32 value)
-{
-	nsresult rv = NS_OK;
-
-	char* pAttribute = PL_strdup(attrname);
-	PRUint32* pValue = (PRUint32 *)PR_Calloc(1, sizeof(PRUint32));
-	*pValue = value;
-	if (pAttribute && pValue)
-	{
-		rv = SetAnonymousAttribute(&m_pAnonymousIntAttributes, 
-			&m_pAnonymousIntValues, pAttribute, pValue);
-	}
-	else
-	{
-		PR_FREEIF(pAttribute);
-		PR_FREEIF(pValue);
-		rv = NS_ERROR_NULL_POINTER;
-	}
-	return rv;
-}	
-
-NS_IMETHODIMP nsAbCardProperty::SetAnonymousBoolAttribute
-(const char *attrname, PRBool value)
-{
-	nsresult rv = NS_OK;
-
-	char* pAttribute = PL_strdup(attrname);
-	PRBool* pValue = (PRBool *)PR_Calloc(1, sizeof(PRBool));
-	*pValue = value;
-	if (pAttribute && pValue)
-	{
-		rv = SetAnonymousAttribute(&m_pAnonymousBoolAttributes, 
-			&m_pAnonymousBoolValues, pAttribute, pValue);
-	}
-	else
-	{
-		PR_FREEIF(pAttribute);
-		PR_FREEIF(pValue);
-		rv = NS_ERROR_NULL_POINTER;
-	}
-	return rv;
-}
-
-NS_IMETHODIMP nsAbCardProperty::AddAnonymousAttributesToDB()
-{
-	nsresult rv = NS_OK;
-	if (mCardDatabase)
-		mCardDatabase = null_nsCOMPtr();
-	rv = GetCardDatabase(kPersonalAddressbookUri);
-	if (NS_SUCCEEDED(rv) && mCardDatabase)
-		rv = mCardDatabase->AddAnonymousAttributesFromCard(this);
-	return rv;
-}
-
-NS_IMETHODIMP nsAbCardProperty::EditAnonymousAttributesInDB()
-{
-	nsresult rv = NS_OK;
-	if (mCardDatabase)
-		mCardDatabase = null_nsCOMPtr();
-	rv = GetCardDatabase(kPersonalAddressbookUri);
-	if (NS_SUCCEEDED(rv) && mCardDatabase)
-		rv = mCardDatabase->EditAnonymousAttributesFromCard(this);
-	return rv;
-}
-
-/* caller need to PR_smprintf_free *uri */
-NS_IMETHODIMP nsAbCardProperty::GetCardURI(char **uri)
-{
-	char* cardURI = nsnull;
-	nsFileSpec  *filePath = nsnull;
-	if (mCardDatabase)
-	{
-		mCardDatabase->GetDbPath(&filePath);
-		if (filePath)
-		{
-			char* file = nsnull;
-			file = filePath->GetLeafName();
-			if (file && m_dbRowID)
-			{
-				if (m_bIsMailList)
-					cardURI = PR_smprintf("%s%s/ListCard%ld", kCardDataSourceRoot, file, m_dbRowID);
-				else
-					cardURI = PR_smprintf("%s%s/Card%ld", kCardDataSourceRoot, file, m_dbRowID);
-			}
-			if (file)
-				nsCRT::free(file);
-			delete filePath;
-		}
-	}
-	if (cardURI)
-	{
-		*uri = cardURI;
-		return NS_OK;
-	}
-	else
-		return NS_ERROR_NULL_POINTER;
-}
-
-nsresult nsAbCardProperty::GetCardDatabase(const char *uri)
-{
-	nsresult rv = NS_OK;
-
-	NS_WITH_SERVICE(nsIAddrBookSession, abSession, kAddrBookSessionCID, &rv); 
-	if (NS_SUCCEEDED(rv))
-	{
-		nsFileSpec* dbPath;
-		abSession->GetUserProfileDirectory(&dbPath);
-
-		const char* file = nsnull;
-		file = &(uri[PL_strlen(kDirectoryDataSourceRoot)]);
-		(*dbPath) += file;
-		
-		if (dbPath->Exists())
-		{
-			NS_WITH_SERVICE(nsIAddrDatabase, addrDBFactory, kAddressBookDBCID, &rv);
-
-			if (NS_SUCCEEDED(rv) && addrDBFactory)
-				rv = addrDBFactory->Open(dbPath, PR_TRUE, getter_AddRefs(mCardDatabase), PR_TRUE);
-		}
-		else
-			rv = NS_ERROR_FAILURE;
-		delete dbPath;
-	}
-	return rv;
-}
-
-NS_IMETHODIMP nsAbCardProperty::AddCardToDatabase(const char *uri)
-{
-	nsresult rv = NS_OK;
-	PRBool bInMailList = PR_FALSE;
-
-	if (!mCardDatabase && uri)
-		rv = GetCardDatabase(uri);
-	if (NS_FAILED(rv)) //maillist
-	{
-		NS_WITH_SERVICE(nsIAddressBook, addresBook, kAddrBookCID, &rv); 
-		if (NS_SUCCEEDED(rv))
-			rv = addresBook->GetAbDatabaseFromURI(uri, getter_AddRefs(mCardDatabase));
-		bInMailList = PR_TRUE;
-	}
-
-	if (mCardDatabase)
-	{
-		if (bInMailList)
-		{
-			char* listString = PL_strrstr(uri, "MailList");
-			if (listString)
-			{
-				listString += PL_strlen("MailList");
-				PRInt32 listID = atoi(listString);
-				mCardDatabase->CreateNewListCardAndAddToDB(listID, this, PR_TRUE);
-			}
-			else
-				return NS_ERROR_FAILURE;
-		}
-		else
-			mCardDatabase->CreateNewCardAndAddToDB(this, PR_TRUE);
-		mCardDatabase->Commit(kLargeCommit);
-		return NS_OK;
-	}
-	else
-		return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP nsAbCardProperty::DropCardToDatabase(const char *uri)
-{
-	nsresult rv = NS_OK;
-	nsCOMPtr<nsIAddrDatabase>  dropDatabase;  
-
-	NS_WITH_SERVICE(nsIAddressBook, addresBook, kAddrBookCID, &rv); 
-	if (NS_SUCCEEDED(rv))
-		rv = addresBook->GetAbDatabaseFromURI(uri, getter_AddRefs(dropDatabase));
-
-	if (dropDatabase)
-	{
-		dropDatabase->CreateNewCardAndAddToDB(this, PR_FALSE);
-		dropDatabase->Commit(kLargeCommit);
-		return NS_OK;
-	}
-	else
-		return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP nsAbCardProperty::EditCardToDatabase(const char *uri)
-{
-	if (!mCardDatabase && uri)
-		GetCardDatabase(uri);
-
-	if (mCardDatabase)
-	{
-		mCardDatabase->EditCard(this, PR_TRUE);
-		mCardDatabase->Commit(kLargeCommit);
-		return NS_OK;
-	}
-	else
-		return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP nsAbCardProperty::CopyCard(nsIAbCard* srcCard)
-{
-	PRUnichar *str = nsnull;
-	srcCard->GetFirstName(&str);
-	SetFirstName(str);
-	PR_FREEIF(str);
-
-	srcCard->GetLastName(&str);
-	SetLastName(str);
-	PR_FREEIF(str);
-	srcCard->GetDisplayName(&str);
-	SetDisplayName(str);
-	PR_FREEIF(str);
-	srcCard->GetNickName(&str);
-	SetNickName(str);
-	PR_FREEIF(str);
-	srcCard->GetPrimaryEmail(&str);
-	SetPrimaryEmail(str);
-	PR_FREEIF(str);
-	srcCard->GetSecondEmail(&str);
-	SetSecondEmail(str);
-	PR_FREEIF(str);
-
-	PRUint32 format = nsIAbPreferMailFormat::unknown;
-	srcCard->GetPreferMailFormat(&format);
-	SetPreferMailFormat(format);
-
-	srcCard->GetWorkPhone(&str);
-	SetWorkPhone(str);
-	PR_FREEIF(str);
-	srcCard->GetHomePhone(&str);
-	SetHomePhone(str);
-	PR_FREEIF(str);
-	srcCard->GetFaxNumber(&str);
-	SetFaxNumber(str);
-	PR_FREEIF(str);
-	srcCard->GetPagerNumber(&str);
-	SetPagerNumber(str);
-	PR_FREEIF(str);
-	srcCard->GetCellularNumber(&str);
-	SetCellularNumber(str);
-	PR_FREEIF(str);
-	srcCard->GetHomeAddress(&str);
-	SetHomeAddress(str);
-	PR_FREEIF(str);
-	srcCard->GetHomeAddress2(&str);
-	SetHomeAddress2(str);
-	PR_FREEIF(str);
-	srcCard->GetHomeCity(&str);
-	SetHomeCity(str);
-	PR_FREEIF(str);
-	srcCard->GetHomeState(&str);
-	SetHomeState(str);
-	PR_FREEIF(str);
-	srcCard->GetHomeZipCode(&str);
-	SetHomeZipCode(str);
-	PR_FREEIF(str);
-	srcCard->GetHomeCountry(&str);
-	SetHomeCountry(str);
-	PR_FREEIF(str);
-	srcCard->GetWorkAddress(&str);
-	SetWorkAddress(str);
-	PR_FREEIF(str);
-	srcCard->GetWorkAddress2(&str);
-	SetWorkAddress2(str);
-	PR_FREEIF(str);
-	srcCard->GetWorkCity(&str);
-	SetWorkCity(str);
-	PR_FREEIF(str);
-	srcCard->GetWorkState(&str);
-	SetWorkState(str);
-	PR_FREEIF(str);
-	srcCard->GetWorkZipCode(&str);
-	SetWorkZipCode(str);
-	PR_FREEIF(str);
-	srcCard->GetWorkCountry(&str);
-	SetWorkCountry(str);
-	PR_FREEIF(str);
-	srcCard->GetJobTitle(&str);
-	SetJobTitle(str);
-	PR_FREEIF(str);
-	srcCard->GetDepartment(&str);
-	SetDepartment(str);
-	PR_FREEIF(str);
-	srcCard->GetCompany(&str);
-	SetCompany(str);
-	PR_FREEIF(str);
-	srcCard->GetWebPage1(&str);
-	SetWebPage1(str);
-	PR_FREEIF(str);
-	srcCard->GetWebPage2(&str);
-	SetWebPage2(str);
-	PR_FREEIF(str);
-	srcCard->GetBirthYear(&str);
-	SetBirthYear(str);
-	PR_FREEIF(str);
-	srcCard->GetBirthMonth(&str);
-	SetBirthMonth(str);
-	PR_FREEIF(str);
-	srcCard->GetBirthDay(&str);
-	SetBirthDay(str);
-	PR_FREEIF(str);
-	srcCard->GetCustom1(&str);
-	SetCustom1(str);
-	PR_FREEIF(str);
-	srcCard->GetCustom2(&str);
-	SetCustom2(str);
-	PR_FREEIF(str);
-	srcCard->GetCustom3(&str);
-	SetCustom3(str);
-	PR_FREEIF(str);
-	srcCard->GetCustom4(&str);
-	SetCustom4(str);
-	PR_FREEIF(str);
-	srcCard->GetNotes(&str);
-	SetNotes(str);
-	PR_FREEIF(str);
-
-	PRUint32 tableID, rowID;
-	srcCard->GetDbTableID(&tableID);
-	SetDbTableID(tableID);
-	srcCard->GetDbRowID(&rowID);
-	SetDbRowID(rowID);
-
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsAbCardProperty::GetCollationKey(const PRUnichar *str, PRUnichar **key)
-{
-	nsresult rv = NS_OK;
-	nsAutoString resultStr;
-
-	if (mCardDatabase)
-	{
-		rv = mCardDatabase->CreateCollationKey(str, resultStr);
-		*key = resultStr.ToNewUnicode();
-	}
-	else
+    else if (!PL_strcmp(attrname, kPreferMailFormatColumn))
+    		{	// PreferMailFormat is interger, not a string
+    		return NS_OK;
+    		}
+    else
 		rv = NS_ERROR_FAILURE;
 
-	return rv;
+    return rv;
 }
+
 
 NS_IMETHODIMP
 nsAbCardProperty::GetFirstName(PRUnichar * *aFirstName)
@@ -1025,14 +510,6 @@ NS_IMETHODIMP
 nsAbCardProperty::GetLastModifiedDate(PRUint32 *aLastModifiedDate)
 { *aLastModifiedDate = m_LastModDate; return NS_OK; }
 
-NS_IMETHODIMP 
-nsAbCardProperty::GetKey(PRUint32 *aKey)
-{ *aKey = m_Key; return NS_OK; }
-
-NS_IMETHODIMP 
-nsAbCardProperty::SetRecordKey(PRUint32 key)
-{ m_Key = key; return NS_OK; }
-
 NS_IMETHODIMP
 nsAbCardProperty::SetFirstName(const PRUnichar * aFirstName)
 { return SetAttributeName(aFirstName, m_FirstName); }
@@ -1181,6 +658,13 @@ NS_IMETHODIMP
 nsAbCardProperty::SetLastModifiedDate(PRUint32 aLastModifiedDate)
 { return m_LastModDate = aLastModifiedDate; }
 
+
+
+NS_IMETHODIMP 
+nsAbCardProperty::SetName(const PRUnichar * aName)
+{
+	return NS_OK;
+}
 NS_IMETHODIMP 
 nsAbCardProperty::GetName(PRUnichar * *aName)
 {
@@ -1188,8 +672,7 @@ nsAbCardProperty::GetName(PRUnichar * *aName)
 	// get name depend on "mail.addr_book.lastnamefirst" 
 	// 0= displayname, 1= lastname first, 2=firstname first
     NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
-    if (NS_FAILED(rv) || !pPref) 
-		return NS_ERROR_FAILURE;
+    NS_ENSURE_SUCCESS(rv, rv);
 
 	PRInt32 lastNameFirst = 0;
     rv = pPref->GetIntPref("mail.addr_book.lastnamefirst", &lastNameFirst);
@@ -1202,18 +685,16 @@ nsAbCardProperty::GetName(PRUnichar * *aName)
 			nsString name;
 			nsString firstName;
 			nsString lastName;
-			PRUnichar *str = nsnull;
-			GetFirstName(&str);
+      nsXPIDLString str;
+			GetFirstName(getter_Copies(str));
 			if (str)
 			{
 				firstName = str;
-				PR_FREEIF(str);
 			}
-			GetLastName(&str);
+			GetLastName(getter_Copies(str));
 			if (str)
 			{
 				lastName = str;
-				PR_FREEIF(str);
 			}
 
 			if (lastName.Length() == 0)
@@ -1250,51 +731,147 @@ nsAbCardProperty::GetName(PRUnichar * *aName)
 	return NS_OK;
 }
 
-NS_IMETHODIMP 
-nsAbCardProperty::SetName(const PRUnichar * aName)
+NS_IMETHODIMP nsAbCardProperty::Copy(nsIAbCard* srcCard)
 {
+	nsXPIDLString str;
+	srcCard->GetFirstName(getter_Copies(str));
+	SetFirstName(str);
+
+	srcCard->GetLastName(getter_Copies(str));
+	SetLastName(str);
+	srcCard->GetDisplayName(getter_Copies(str));
+	SetDisplayName(str);
+	srcCard->GetNickName(getter_Copies(str));
+	SetNickName(str);
+	srcCard->GetPrimaryEmail(getter_Copies(str));
+	SetPrimaryEmail(str);
+	srcCard->GetSecondEmail(getter_Copies(str));
+	SetSecondEmail(str);
+
+	PRUint32 format = nsIAbPreferMailFormat::unknown;
+	srcCard->GetPreferMailFormat(&format);
+	SetPreferMailFormat(format);
+
+	srcCard->GetWorkPhone(getter_Copies(str));
+	SetWorkPhone(str);
+	srcCard->GetHomePhone(getter_Copies(str));
+	SetHomePhone(str);
+	srcCard->GetFaxNumber(getter_Copies(str));
+	SetFaxNumber(str);
+	srcCard->GetPagerNumber(getter_Copies(str));
+	SetPagerNumber(str);
+	srcCard->GetCellularNumber(getter_Copies(str));
+	SetCellularNumber(str);
+	srcCard->GetHomeAddress(getter_Copies(str));
+	SetHomeAddress(str);
+	srcCard->GetHomeAddress2(getter_Copies(str));
+	SetHomeAddress2(str);
+	srcCard->GetHomeCity(getter_Copies(str));
+	SetHomeCity(str);
+	srcCard->GetHomeState(getter_Copies(str));
+	SetHomeState(str);
+	srcCard->GetHomeZipCode(getter_Copies(str));
+	SetHomeZipCode(str);
+	srcCard->GetHomeCountry(getter_Copies(str));
+	SetHomeCountry(str);
+	srcCard->GetWorkAddress(getter_Copies(str));
+	SetWorkAddress(str);
+	srcCard->GetWorkAddress2(getter_Copies(str));
+	SetWorkAddress2(str);
+	srcCard->GetWorkCity(getter_Copies(str));
+	SetWorkCity(str);
+	srcCard->GetWorkState(getter_Copies(str));
+	SetWorkState(str);
+	srcCard->GetWorkZipCode(getter_Copies(str));
+	SetWorkZipCode(str);
+	srcCard->GetWorkCountry(getter_Copies(str));
+	SetWorkCountry(str);
+	srcCard->GetJobTitle(getter_Copies(str));
+	SetJobTitle(str);
+	srcCard->GetDepartment(getter_Copies(str));
+	SetDepartment(str);
+	srcCard->GetCompany(getter_Copies(str));
+	SetCompany(str);
+	srcCard->GetWebPage1(getter_Copies(str));
+	SetWebPage1(str);
+	srcCard->GetWebPage2(getter_Copies(str));
+	SetWebPage2(str);
+	srcCard->GetBirthYear(getter_Copies(str));
+	SetBirthYear(str);
+	srcCard->GetBirthMonth(getter_Copies(str));
+	SetBirthMonth(str);
+	srcCard->GetBirthDay(getter_Copies(str));
+	SetBirthDay(str);
+	srcCard->GetCustom1(getter_Copies(str));
+	SetCustom1(str);
+	srcCard->GetCustom2(getter_Copies(str));
+	SetCustom2(str);
+	srcCard->GetCustom3(getter_Copies(str));
+	SetCustom3(str);
+	srcCard->GetCustom4(getter_Copies(str));
+	SetCustom4(str);
+	srcCard->GetNotes(getter_Copies(str));
+	SetNotes(str);
+
 	return NS_OK;
 }
 
-NS_IMETHODIMP 
-nsAbCardProperty::GetPrintCardUrl(char * *aPrintCardUrl)
+NS_IMETHODIMP nsAbCardProperty::AddCardToDatabase(const char *uri, nsIAbCard **_retval)
 {
-static const char *kAbPrintUrlFormat = "addbook:printone?email=%s&folder=%s";
+	nsresult rv = NS_OK;
+	NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-	if (!aPrintCardUrl)
-		return NS_OK;
+	nsCOMPtr<nsIRDFResource> res;
+	rv = rdf->GetResource(uri, getter_AddRefs(res));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-	PRUnichar *email = nsnull;
-	GetPrimaryEmail(&email);
-	nsString emailStr(email);
+	nsCOMPtr<nsIAbDirectory> directory(do_QueryInterface(res, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-	if (emailStr.Length() == 0)
-	{
-		*aPrintCardUrl = PR_smprintf("");
-		return NS_OK;
-	}
-	PRUnichar *dirName = nsnull;
-	if (mCardDatabase)
-		mCardDatabase->GetDirectoryName(&dirName);
-	nsString dirNameStr(dirName);
-	if (dirNameStr.Length() == 0)
-	{
-		*aPrintCardUrl = PR_smprintf("");
-		return NS_OK;
-	}
-	dirNameStr.ReplaceSubstring(NS_ConvertASCIItoUCS2(" "), NS_ConvertASCIItoUCS2("%20"));
-
-  char *emailCharStr = emailStr.ToNewUTF8String();
-  char *dirCharStr = dirNameStr.ToNewUTF8String();
-
-	*aPrintCardUrl = PR_smprintf(kAbPrintUrlFormat, emailCharStr, dirCharStr);
-
-	nsMemory::Free(emailCharStr);
-	nsMemory::Free(dirCharStr);
-
-	PR_FREEIF(dirName);
-	PR_FREEIF(email);
-
-	return NS_OK;
+	nsCOMPtr<nsIAbCard> cardInstance;
+	rv = directory->AddCard (this, getter_AddRefs (cardInstance));
+	
+	*_retval = cardInstance;
+	NS_IF_ADDREF(*_retval);
+	return rv;
 }
 
+NS_IMETHODIMP nsAbCardProperty::DropCardToDatabase(const char *uri, nsIAbCard **_retval)
+{
+	nsresult rv = NS_OK;
+	NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
+	NS_ENSURE_SUCCESS(rv, rv);
+
+	nsCOMPtr<nsIRDFResource> res;
+	rv = rdf->GetResource(uri, getter_AddRefs(res));
+	NS_ENSURE_SUCCESS(rv, rv);
+
+	nsCOMPtr<nsIAbDirectory> directory(do_QueryInterface(res, &rv));
+	NS_ENSURE_SUCCESS(rv, rv);       
+
+	nsCOMPtr<nsIAbCard> cardInstance;
+	rv = directory->DropCard (this, getter_AddRefs (cardInstance));
+	
+	*_retval = cardInstance;
+	NS_IF_ADDREF(*_retval);
+	return rv;
+}
+
+
+// nsIAbCard NOT IMPLEMENTED methods
+
+NS_IMETHODIMP nsAbCardProperty::EditCardToDatabase(const char *uri)
+{
+	return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsAbCardProperty::GetPrintCardUrl(char * *aPrintCardUrl)
+{
+	return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsAbCardProperty::GetCollationKey(const PRUnichar *str, PRUnichar **key)
+{
+	return NS_ERROR_NOT_IMPLEMENTED;
+}

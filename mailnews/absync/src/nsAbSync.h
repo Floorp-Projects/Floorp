@@ -29,6 +29,7 @@
 #include "nsCOMPtr.h"
 #include "nsIAddrDatabase.h"
 #include "nsIAbDirectory.h"
+#include "nsIAbMDBCard.h"
 #include "nsAbSyncCRCModel.h"
 #include "nsVoidArray.h"
 #include "nsIStringBundle.h"

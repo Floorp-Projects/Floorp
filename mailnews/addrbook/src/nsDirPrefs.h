@@ -37,12 +37,12 @@ PRInt32 INTL_ConvertFromUnicode(const PRUnichar* uniBuffer,
 #define PREF_LDAP_VERSION_NAME     "ldap_2.version"
 #define PREF_LDAP_SERVER_TREE_NAME "ldap_2.servers"
 
-#define kCardRoot                  "abcard://"
-#define kDirectoryRoot		         "abdirectory://"
+#define kCardRoot                  "abmdbcard://"
+#define kDirectoryRoot		         "abmdbdirectory://"
 #define kPersonalAddressbook		   "abook.mab"
-#define kPersonalAddressbookUri	   "abdirectory://abook.mab"
+#define kPersonalAddressbookUri	   "abmdbdirectory://abook.mab"
 #define kCollectedAddressbook		   "history.mab"
-#define kCollectedAddressbookUri	 "abdirectory://history.mab"
+#define kCollectedAddressbookUri	 "abmdbdirectory://history.mab"
 
 /* DIR_Server.dirType */
 typedef enum
@@ -248,7 +248,7 @@ nsVoidArray* DIR_GetDirectories();
 nsresult DIR_GetDirServers();
 nsresult DIR_ShutDown(void);  /* FEs should call this when the app is shutting down. It frees all DIR_Servers regardless of ref count values! */
 
-nsresult DIR_AddNewAddressBook(const PRUnichar *dirName, const char *fileName, PRBool migrating, DIR_Server** pServer);
+nsresult DIR_AddNewAddressBook(const PRUnichar *dirName, const char *fileName, PRBool migrating, DirectoryType dirType, DIR_Server** pServer);
 nsresult DIR_ContainsServer(DIR_Server* pServer, PRBool *hasDir);
 
 nsresult DIR_DecrementServerRefCount (DIR_Server *);

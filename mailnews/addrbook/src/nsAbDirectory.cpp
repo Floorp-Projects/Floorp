@@ -99,13 +99,12 @@ NS_IMETHODIMP nsAbDirectory::OnCardEntryChange
 	if (abCode == AB_NotifyInserted && card)
 	{ 
 		NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
-
-		if(NS_FAILED(rv))
-			return rv;
+		NS_ENSURE_SUCCESS(rv, rv);
 
 		char* cardURI = nsnull;
 		rv = card->GetCardURI(&cardURI);
-		if (NS_FAILED(rv) || !cardURI)
+    NS_ENSURE_SUCCESS(rv, rv);
+		if (!cardURI)
 			return NS_ERROR_NULL_POINTER;
 
 		nsCOMPtr<nsIRDFResource> res;
@@ -122,8 +121,7 @@ NS_IMETHODIMP nsAbDirectory::OnCardEntryChange
 				{
 					personCard->SetAbDatabase(mDatabase);
 					nsCOMPtr<nsIAddrDBListener> listener(do_QueryInterface(personCard, &rv));
-					if (NS_FAILED(rv)) 
-						return NS_ERROR_NULL_POINTER;
+					NS_ENSURE_SUCCESS(rv, rv);
 					mDatabase->AddListener(listener);
 				}
 				nsCOMPtr<nsISupports> cardSupports(do_QueryInterface(personCard));
@@ -215,7 +213,7 @@ NS_IMETHODIMP nsAbDirectory::GetChildNodes(nsIEnumerator* *result)
 						nsFileSpec* dbPath;
 						abSession->GetUserProfileDirectory(&dbPath);
 
-						nsString file; file.AssignWithConversion(server->fileName);
+						nsAutoString file; file.AssignWithConversion(server->fileName);
 						(*dbPath) += file;
 
 						NS_WITH_SERVICE(nsIAddrDatabase, addrDBFactory, kAddressBookDBCID, &rv);
@@ -242,18 +240,14 @@ NS_IMETHODIMP nsAbDirectory::AddDirectory(const char *uriName, nsIAbDirectory **
 
 	nsresult rv = NS_OK;
 	NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
-
-	if(NS_FAILED(rv))
-		return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
 	
 	nsCOMPtr<nsIRDFResource> res;
 	rv = rdf->GetResource(uriName, getter_AddRefs(res));
-	if (NS_FAILED(rv))
-		return rv;
+	NS_ENSURE_SUCCESS(rv, rv);
 
 	nsCOMPtr<nsIAbDirectory> directory(do_QueryInterface(res, &rv));
-	if (NS_FAILED(rv))
-		return rv;        
+	NS_ENSURE_SUCCESS(rv, rv);        
 
 	mSubDirectories->AppendElement(directory);
 	*childDir = directory;
@@ -269,18 +263,14 @@ nsresult nsAbDirectory::AddMailList(const char *uriName)
 
 	nsresult rv = NS_OK;
 	NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
-
-	if(NS_FAILED(rv))
-		return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
 	
 	nsCOMPtr<nsIRDFResource> res;
 	rv = rdf->GetResource(uriName, getter_AddRefs(res));
-	if (NS_FAILED(rv))
-		return rv;
+	NS_ENSURE_SUCCESS(rv, rv);
 
 	nsCOMPtr<nsIAbDirectory> directory(do_QueryInterface(res, &rv));
-	if (NS_FAILED(rv))
-		return rv;        
+	NS_ENSURE_SUCCESS(rv, rv);       
 
 	mSubDirectories->AppendElement(directory);
 	 
@@ -291,7 +281,7 @@ NS_IMETHODIMP nsAbDirectory::GetChildCards(nsIEnumerator* *result)
 {
 	if (mURI && mIsMailingList == -1)
 	{
-		nsString file; file.AssignWithConversion(&(mURI[PL_strlen(kDirectoryDataSourceRoot)]));
+		nsAutoString file; file.AssignWithConversion(&(mURI[PL_strlen(kDirectoryDataSourceRoot)]));
 		PRInt32 pos = file.Find("/");
 		if (pos != -1)
 			mIsMailingList = 1;
@@ -317,7 +307,7 @@ NS_IMETHODIMP nsAbDirectory::CreateNewDirectory(const PRUnichar *dirName, const 
 		return NS_ERROR_NULL_POINTER;
 
 	DIR_Server * server = nsnull;
-	nsresult rv = DIR_AddNewAddressBook(dirName, fileName, migrating, &server);
+	nsresult rv = DIR_AddNewAddressBook(dirName, fileName, PABDirectory, &server);
 
 	nsCOMPtr<nsIAbDirectory> newDir;
 	char *uri = PR_smprintf("%s%s", kDirectoryDataSourceRoot, server->fileName);
@@ -360,8 +350,7 @@ NS_IMETHODIMP nsAbDirectory::CreateNewMailingList(const char* uri, nsIAbDirector
 		if (listDatabase)
 		{
 			nsCOMPtr<nsIAddrDBListener> listener(do_QueryInterface(newList, &rv));
-			if (NS_FAILED(rv)) 
-				return NS_ERROR_NULL_POINTER;
+			NS_ENSURE_SUCCESS(rv, rv);
 			listDatabase->AddListener(listener);
 		}
 		newList->CopyMailList(list);
@@ -380,23 +369,20 @@ NS_IMETHODIMP nsAbDirectory::AddChildCards(const char *uriName, nsIAbCard **chil
 
 	nsresult rv = NS_OK;
 	NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
-
-	if(NS_FAILED(rv))
-		return rv;
+	NS_ENSURE_SUCCESS(rv, rv);
 
 	nsCOMPtr<nsIRDFResource> res;
   rv = rdf->GetResource(uriName, getter_AddRefs(res));
-	if (NS_FAILED(rv))
-	{
-		return rv;
-	}
+	NS_ENSURE_SUCCESS(rv, rv);
+
 	nsCOMPtr<nsIAbCard> personCard(do_QueryInterface(res, &rv));
 	if (NS_FAILED(rv))
 	{
 		rv = nsComponentManager::CreateInstance(kAbCardCID, nsnull, NS_GET_IID(nsIAbCard), getter_AddRefs(personCard));
-		if (NS_FAILED(rv) || !personCard)
+		NS_ENSURE_SUCCESS(rv, rv);
+    if (!personCard)
 		{
-			return rv;
+			return NS_ERROR_NULL_POINTER;
 		}
 	}
 
@@ -477,7 +463,7 @@ NS_IMETHODIMP nsAbDirectory::DeleteCards(nsISupportsArray *cards)
 		PRUint32 cardCount;
 		PRUint32 i;
 		rv = cards->Count(&cardCount);
-		if (NS_FAILED(rv)) return rv;
+		NS_ENSURE_SUCCESS(rv, rv);
 		for (i = 0; i < cardCount; i++)
 		{
 			nsCOMPtr<nsISupports> cardSupports;
@@ -526,8 +512,7 @@ NS_IMETHODIMP nsAbDirectory::DeleteCards(nsISupportsArray *cards)
 						{
 							rv = NS_OK;
 							NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv);
-							if(NS_FAILED(rv))
-								return rv;
+							NS_ENSURE_SUCCESS(rv, rv);
 							nsCOMPtr<nsIRDFResource> listResource;
 							rv = rdfService->GetResource(listUri, getter_AddRefs(listResource));
 							nsCOMPtr<nsIAbDirectory> listDir = do_QueryInterface(listResource);
@@ -610,7 +595,7 @@ nsresult nsAbDirectory::DeleteDirectoryCards(nsIAbDirectory* directory, DIR_Serv
 			{
 				PRUint32 cardCount;
 				rv = cardArray->Count(&cardCount);
-				if (NS_FAILED(rv)) return rv;
+				NS_ENSURE_SUCCESS(rv, rv);
 				for(PRUint32 i = 0; i < cardCount; i++)
 				{
 					nsCOMPtr<nsISupports> cardSupports = getter_AddRefs(cardArray->ElementAt(i));
@@ -674,7 +659,7 @@ NS_IMETHODIMP nsAbDirectory::DeleteDirectory(nsIAbDirectory *directory)
 
 		nsXPIDLCString uri;
 		rv = directory->GetDirUri(getter_Copies(uri));
-		if (NS_FAILED(rv)) return rv;
+		NS_ENSURE_SUCCESS(rv, rv);
 
 		nsCOMPtr<nsIAddrDatabase> database;
 		NS_WITH_SERVICE(nsIAddressBook, addresBook, kAddrBookCID, &rv); 
@@ -727,7 +712,7 @@ NS_IMETHODIMP nsAbDirectory::HasDirectory(nsIAbDirectory *dir, PRBool *hasDir)
 	{
 		nsXPIDLCString uri;
 		rv = dir->GetDirUri(getter_Copies(uri));
-		if (NS_FAILED(rv)) return rv;
+		NS_ENSURE_SUCCESS(rv, rv);
 		nsCOMPtr<nsIAddrDatabase> database;
 		NS_WITH_SERVICE(nsIAddressBook, addresBook, kAddrBookCID, &rv); 
 		if (NS_SUCCEEDED(rv))

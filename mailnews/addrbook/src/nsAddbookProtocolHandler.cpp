@@ -37,6 +37,7 @@
 #include "nsNetUtil.h"
 #include "nsIStringStream.h"
 #include "nsIAddrBookSession.h"
+#include "nsIAbMDBCard.h"
 #include "nsIAbDirectory.h"
 #include "nsIRDFResource.h"
 #include "nsIRDFService.h"
@@ -103,7 +104,7 @@ nsAddbookProtocolHandler::~nsAddbookProtocolHandler()
   mReportColumns = nsnull;
 }
 
-NS_IMPL_ISUPPORTS1(nsAddbookProtocolHandler, nsIProtocolHandler)
+NS_IMPL_ISUPPORTS1(nsAddbookProtocolHandler, nsIProtocolHandler);
 
 NS_METHOD
 nsAddbookProtocolHandler::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
@@ -121,7 +122,7 @@ NS_IMETHODIMP nsAddbookProtocolHandler::GetScheme(char * *aScheme)
 {
 	nsresult rv = NS_OK;
 	if (aScheme)
-		*aScheme = PL_strdup("addbook");
+		*aScheme = nsCRT::strdup("addbook");
 	else
 		rv = NS_ERROR_NULL_POINTER;
 	return rv; 
@@ -168,15 +169,12 @@ nsAddbookProtocolHandler::GenerateHTMLOutputChannel( char *aHtmlOutput,
     return NS_ERROR_FAILURE;
 
   rv = NS_NewStringInputStream(getter_AddRefs(s), NS_ConvertASCIItoUCS2(aHtmlOutput));
-  if (NS_FAILED(rv)) 
-    return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
   
   inStr = do_QueryInterface(s, &rv);
-  if (NS_FAILED(rv)) 
-    return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
   rv = NS_NewInputStreamChannel(&channel, aURI, inStr, "text/html", aHtmlOutputSize);
-  if (NS_FAILED(rv)) 
-    return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
   
   *_retval = channel;
   return rv;
@@ -303,9 +301,12 @@ nsAddbookProtocolHandler::FindPossibleAbName(nsIAbCard  *aCard,
   nsVoidArray *attrlist = nsnull;
   nsVoidArray *valuelist = nsnull;
 
-  if (NS_SUCCEEDED(aCard->GetAnonymousStrAttrubutesList(&attrlist)) && attrlist)
+  nsCOMPtr<nsIAbMDBCard> dbaCard(do_QueryInterface(aCard, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (NS_SUCCEEDED(dbaCard->GetAnonymousStrAttrubutesList(&attrlist)) && attrlist)
   {
-    if (NS_SUCCEEDED(aCard->GetAnonymousStrValuesList(&valuelist)) && valuelist)
+    if (NS_SUCCEEDED(dbaCard->GetAnonymousStrValuesList(&valuelist)) && valuelist)
     {
       char    *attr = nsnull;
 
@@ -402,8 +403,7 @@ nsAddbookProtocolHandler::GeneratePrintOutput(nsIAddbookUrl *addbookUrl,
 
   // Now, open the database...for now, make it the default
   rv = OpenAB(abFileName, &aDatabase);
-  if (NS_FAILED(rv))
-    return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // RICHIE - this works for any address book...not sure why
   rv = rdfService->GetResource(kPersonalAddressbookUri, getter_AddRefs(resource));
@@ -452,7 +452,8 @@ nsAddbookProtocolHandler::BuildSingleHTML(nsIAddrDatabase *aDatabase, nsIAbDirec
     return NS_ERROR_FAILURE;
 
   nsresult rv = aDatabase->GetCardForEmailAddress(directory, charEmail, getter_AddRefs(workCard));
-  if (NS_FAILED(rv) || (!workCard)) 
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!workCard) 
     return NS_ERROR_FAILURE;
 
   // Ok, build a little HTML for output...
@@ -487,7 +488,8 @@ nsAddbookProtocolHandler::BuildAllHTML(nsIAddrDatabase *aDatabase, nsIAbDirector
 
   nsIEnumerator     *cardEnum = nsnull;
   rv = aDatabase->EnumerateCards(directory, &cardEnum);
-  if (NS_FAILED(rv) || (!cardEnum))
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!cardEnum)
     return NS_ERROR_FAILURE;
 
   InitPrintColumns();

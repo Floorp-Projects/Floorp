@@ -342,7 +342,7 @@ protected:
 	nsresult			CheckAndUpdateRecordKey();
 	nsresult			UpdateLowercaseEmailListName();
 	nsresult			ConvertAndAddLowercaseColumn(nsIMdbRow * row, mdb_token fromCol, mdb_token toCol);
-	nsresult			AddUnicodeToColumn(nsIMdbRow * row, mdb_token colToken, PRUnichar* pUnicodeStr);
+	nsresult			AddUnicodeToColumn(nsIMdbRow * row, mdb_token colToken, const PRUnichar* pUnicodeStr);
 	nsresult			GetRowForCharColumn(const char *lowerUTF8String, mdb_column findColumn, 
 											PRBool bIsCard, nsIMdbRow **findRow);
 	nsresult			GetRowForCharColumn(const PRUnichar *unicodeStr, mdb_column findColumn, 

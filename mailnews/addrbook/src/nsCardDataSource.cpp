@@ -203,7 +203,7 @@ nsresult nsAbCardDataSource::Init()
   nsresult rv = nsServiceManager::GetService(kRDFServiceCID,
                                              NS_GET_IID(nsIRDFService),
                                              (nsISupports**) &mRDFService); // XXX probably need shutdown listener here
-  if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
 
   NS_WITH_SERVICE(nsIAddrBookSession, abSession, kAddrBookSessionCID, &rv); 
   if (NS_SUCCEEDED(rv))
@@ -416,8 +416,7 @@ nsAbCardDataSource::getCardArcLabelsOut(nsIAbCard *card,
 {
 	nsresult rv;
 	rv = NS_NewISupportsArray(arcs);
-	if(NS_FAILED(rv))
-		return rv;
+	NS_ENSURE_SUCCESS(rv, rv);
 
 	(*arcs)->AppendElement(kNC_DisplayName);
 	(*arcs)->AppendElement(kNC_Name);
@@ -445,7 +444,7 @@ nsAbCardDataSource::GetAllCommands(nsIRDFResource* source,
   nsCOMPtr<nsIAbCard> card(do_QueryInterface(source, &rv));
   if (NS_SUCCEEDED(rv)) {
     rv = NS_NewISupportsArray(getter_AddRefs(cmds));
-    if (NS_FAILED(rv)) return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
     cmds->AppendElement(kNC_Delete);
     cmds->AppendElement(kNC_NewCard);
   }
@@ -653,8 +652,7 @@ nsresult nsAbCardDataSource::createCardNode(nsIAbCard* card,
 			nsCRT::free(tempStr);
 		}
 	}
-	if (NS_FAILED(rv)) 
-		return rv;
+	NS_ENSURE_SUCCESS(rv, rv);
 	if (name)
 	{
 		nsString nameString(name);

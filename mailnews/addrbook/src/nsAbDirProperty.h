@@ -30,7 +30,6 @@
 #define nsAbDirProperty_h__
 
 #include "nsIAbDirectory.h" /* include the interface we are going to support */
-#include "nsAbRDFResource.h"
 #include "nsIAbCard.h"
 #include "nsISupportsArray.h"
 #include "nsCOMPtr.h"
@@ -58,13 +57,10 @@ protected:
 
 	nsString m_DirName;
 	PRUint32 m_LastModifiedDate;
-	nsFileSpec* m_DbPath;
-	DIR_Server* m_Server;
 
 	nsString m_ListName;
 	nsString m_ListNickName;
 	nsString m_Description;
-	PRUint32 m_dbRowID;
 	PRBool   m_bIsMailList;
 
 	nsCOMPtr<nsISupportsArray> m_AddressList;

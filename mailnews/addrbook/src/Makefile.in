@@ -34,11 +34,9 @@ CPPSRCS		= \
 		nsAddressBook.cpp \
 		nsAddrBookSession.cpp \
 		nsAbRDFDataSource.cpp \
-		nsAbRDFResource.cpp \
+		nsAbMDBRDFResource.cpp \
 		nsCardDataSource.cpp \
 		nsDirectoryDataSource.cpp \
-		nsAbCard.cpp \
-		nsAbDirectory.cpp \
 		nsAbCardProperty.cpp \
 		nsDirPrefs.cpp \
 		nsAddrDatabase.cpp \
@@ -46,6 +44,11 @@ CPPSRCS		= \
 		nsAbAutoCompleteSession.cpp \
 		nsAbAddressCollecter.cpp \
 		nsAddbookProtocolHandler.cpp  \
+		nsAbMDBDirProperty.cpp \
+		nsAbMDBDirectory.cpp \
+		nsAbMDBCardProperty.cpp \
+		nsAbMDBCard.cpp \
+		nsAbBSDirectory.cpp \
 		nsAddbookUrl.cpp    \
 		$(NULL)
 
@@ -53,11 +56,9 @@ EXPORTS		= \
 		nsAddressBook.h \
 		nsAddrBookSession.h \
 		nsAbRDFDataSource.h \
-		nsAbRDFResource.h \
+		nsAbMDBRDFResource.h \
 		nsCardDataSource.h \
 		nsDirectoryDataSource.h \
-		nsAbCard.h \
-		nsAbDirectory.h \
 		nsAbCardProperty.h \
 		nsDirPrefs.h \
 		nsAddrDatabase.h \
@@ -66,6 +67,11 @@ EXPORTS		= \
 		nsAbAddressCollecter.h \
 		nsAddbookProtocolHandler.h  \
 		nsAddbookUrl.h  \
+		nsAbMDBDirProperty.h \
+		nsAbMDBDirectory.h \
+		nsAbMDBCardProperty.h \
+		nsAbMDBCard.h \
+		nsAbBSDirectory.h \
 		$(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.

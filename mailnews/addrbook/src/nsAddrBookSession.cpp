@@ -122,9 +122,9 @@ NS_IMETHODIMP nsAddrBookSession::GetUserProfileDirectory(nsFileSpec * *userDir)
 	nsXPIDLCString pathBuf;
 	
 	rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(profileDir));
-	if (NS_FAILED(rv)) return rv;
+	NS_ENSURE_SUCCESS(rv, rv);
 	rv = profileDir->GetPath(getter_Copies(pathBuf));
-	if (NS_FAILED(rv)) return rv;
+	NS_ENSURE_SUCCESS(rv, rv);
 	
 	*userDir = new nsFileSpec(pathBuf);
 	NS_ENSURE_TRUE(*userDir, NS_ERROR_OUT_OF_MEMORY);

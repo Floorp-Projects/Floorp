@@ -44,21 +44,15 @@ class nsAbCardProperty: public nsIAbCard
 public: 
 
 	NS_DECL_ISUPPORTS
-  NS_DECL_NSIABCARD
+	NS_DECL_NSIABCARD
+
 	nsAbCardProperty(void);
 	virtual ~nsAbCardProperty(void);
 
-	// nsIAbCard methods:
-
-
 protected:
 
-	nsresult GetCardDatabase(const char *uri);
 	nsresult GetAttributeName(PRUnichar **aName, nsString& value);
 	nsresult SetAttributeName(const PRUnichar *aName, nsString& arrtibute);
-	nsresult RemoveAnonymousList(nsVoidArray* pArray);
-	nsresult SetAnonymousAttribute(nsVoidArray** pAttrAray, 
-					nsVoidArray** pValueArray, void *attrname, void *value);
 
 	nsString m_FirstName;
 	nsString m_LastName;
@@ -97,23 +91,11 @@ protected:
 	nsString m_Custom4;
 	nsString m_Note;
 	PRUint32 m_LastModDate;
-	PRUint32 m_Key;
+ PRUint32 m_Key;
 	PRUint32 m_PreferMailFormat;
 
 	PRBool   m_bIsMailList;
-
-	PRUint32 m_dbTableID;
-	PRUint32 m_dbRowID;
-
-	nsCOMPtr<nsIAddrDatabase> mCardDatabase;  
-
-	nsVoidArray* m_pAnonymousStrAttributes;
-	nsVoidArray* m_pAnonymousStrValues;
-	nsVoidArray* m_pAnonymousIntAttributes;
-	nsVoidArray* m_pAnonymousIntValues;
-	nsVoidArray* m_pAnonymousBoolAttributes;
-	nsVoidArray* m_pAnonymousBoolValues;
-
+	char*    m_MailListURI;
 };
 
 #endif

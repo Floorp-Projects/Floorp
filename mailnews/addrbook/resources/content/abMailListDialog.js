@@ -95,7 +95,16 @@ function GetListValue(mailList, doAdd)
     if (fieldValue == "")
     {
       if (doAdd == false && cardproperty)
-        mailList.removeEmailAddressAt(pos);
+      try
+      {
+        mailList.addressLists.DeleteElementAt(pos);
+      }
+      catch(ex)
+      {
+        // Ignore attempting to remove an item
+        // at a position greater than the number
+        // of elements in the addressLists attribute
+      }
     }
     else if (cardproperty)
     {
@@ -122,7 +131,7 @@ function GetListValue(mailList, doAdd)
   if (doAdd == false && i < oldTotal)
   {
     for (var j = i; j < oldTotal; j++)
-      mailList.addressLists.RemoveElementAt(j);
+      mailList.addressLists.DeleteElementAt(j);
   }
   return true;
 }
@@ -169,7 +178,7 @@ function OnLoadMailList()
     if ( window.arguments[0].selectedAB )
       selectedAB = window.arguments[0].selectedAB;
     else
-      selectedAB = "abdirectory://abook.mab";
+      selectedAB = "abmdbdirectory://abook.mab";
   }
 
   // set popup with address book names
@@ -240,7 +249,6 @@ function OnLoadEditList()
   if (editList.addressLists)
   {
     var total = editList.addressLists.Count();
-dump("*** editList.Count = "+total+"\n");
     if (total)
     {
       var treeChildren = document.getElementById('addressList');
@@ -303,7 +311,6 @@ function SetInputValue(inputValue, parentNode, templateNode)
 function awNotAnEmptyArea(event)
 {
   //This is temporary until i figure out how to ensure to always having an empty space after the last row
-  dump("awNotAnEmptyArea\n");
 
   var lastInput = awGetInputElement(top.MAX_RECIPIENTS);
   if ( lastInput && lastInput.value )
@@ -314,10 +321,9 @@ function awNotAnEmptyArea(event)
 
 function awClickEmptySpace(targ, setFocus)
 {
-  if ("localName" in targ && targ.localName != 'treechildren')
+  if (targ.localName != 'treechildren')
     return;
 
-  dump("awClickEmptySpace\n");
   var lastInput = awGetInputElement(top.MAX_RECIPIENTS);
 
   if ( lastInput && lastInput.value )
@@ -329,7 +335,6 @@ function awClickEmptySpace(targ, setFocus)
 
 function awReturnHit(inputElement)
 {
-  dump("***** awReturnHit\n");
   var row = awGetRowByInputElement(inputElement);
 
   if ( inputElement.value )
@@ -344,7 +349,6 @@ function awReturnHit(inputElement)
 
 function awInputChanged(inputElement)
 {
-  dump("awInputChanged\n");
 //  AutoCompleteAddress(inputElement);
 
   //Do we need to add a new row?

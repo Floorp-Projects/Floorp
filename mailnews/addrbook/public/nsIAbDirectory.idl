@@ -32,42 +32,97 @@
 #include "nsDirPrefs.h"
 %}
 
-[scriptable, uuid(1920E485-0709-11d3-A2EC-001083003D0C)]
+[scriptable, uuid(AA920C90-1DD1-11B2-96D3-AA81268ADAFC)]
 interface nsIAbDirectory : nsISupports {
 
+	// The name of the directory
     attribute wstring dirName;
     attribute unsigned long  lastModifiedDate;
-    [noscript] attribute DIR_Server server;
 
-	readonly attribute string dirFilePath;
+	// Defines wether this directory is a mail
+	// list or not
+	attribute PRBool isMailList;
+
+
+	// Get the children directories
 	readonly attribute nsIEnumerator childNodes;
-	readonly attribute nsIEnumerator childCards;
-	nsIAbCard addChildCards(in string uriName);
-	nsIAbDirectory addDirectory(in string uriName);
-	void deleteDirectory(in nsIAbDirectory dierctory);
-	void deleteCards(in nsISupportsArray cards);
-	boolean hasCard(in nsIAbCard cards);
-	boolean hasDirectory(in nsIAbDirectory dir);
-	void createNewDirectory(in wstring dirName, in string fileName, in boolean migrating);
-	void createNewMailingList(in string uri, in nsIAbDirectory list);
-	string getDirUri();
-	void addMailListToDirectory(in nsIAbDirectory mailList);
-	void copyMailList(in nsIAbDirectory srcList);
 
+	// Get the cards associated with the directory
+	// This will return the cards associated with
+	// the mailing lists too
+	readonly attribute nsIEnumerator childCards;
+
+
+	// Deletes either a mailing list or a top
+	// level directory, which also updates the
+	// preferences
+	void deleteDirectory(in nsIAbDirectory dierctory);
+
+	// Delete the 
+	void deleteCards(in nsISupportsArray cards);
+
+
+	// Check if directory contains card
+	boolean hasCard(in nsIAbCard cards);
+
+	// Check if directory contains directory
+	boolean hasDirectory(in nsIAbDirectory dir);
+
+	// Creates a new card in the directory
+	// with the properties defined by card
+	nsIAbCard  addCard(in nsIAbCard card);
+	nsIAbCard  dropCard(in nsIAbCard card);
+
+
+	// Mail list specific
+	//
+
+	// This attribute servers two purposes 
+	// depending if the directory is a mail list.
+	// If not mail list directories are stored here
+	// If so mail list card entries are stored here
+	attribute nsISupportsArray addressLists;
+
+	// Specific to a directory which stores mail lists
+	//
+
+	// Creates a new mailing list in the directory
+	// with the properties defined by list
+	void addMailList (in nsIAbDirectory list);
+
+	// Specific to a directory which is a mail list
+	//
+
+	// listName is not needed, dirName could be used
+	// instead
 	attribute wstring listName;
 	attribute wstring listNickName;
 	attribute wstring description;
-    attribute unsigned long dbRowID;
-	attribute PRBool isMailList;
-	attribute nsISupportsArray addressLists;
 
-	void addAddressToList(in nsIAbCard card);
+	// Adds a new mail list into the directory
+	// defined by the uri
 	void addMailListToDatabase(in string uri);
-	void editMailListToDatabase(in string uri);
-	void removeEmailAddressAt(in unsigned long aIndex);
 
-	[noscript] void clearDatabase();
-	[noscript] void notifyDirItemAdded(in nsISupports item);
-	[noscript] void removeElementsFromAddressList();
-	
+	// Edits an existing mail in the directory
+	// defined by the uri
+	void editMailListToDatabase(in string uri);
+
+	// Copies mail list properties from the srcList
+	void copyMailList(in nsIAbDirectory srcList);
+
+	/*
+		Only creates a top level address book
+		which is stored in the preferences
+
+		Need to change to factory based approach
+		to create new address books
+
+		This method should become redundant or 
+		be only associated with card folders
+	*/
+	void createNewDirectory(in unsigned long prefCount,[array, size_is(prefCount)] in string prefName, [array, size_is(prefCount)] in wstring prefValue);
+
+    /* create a directory by passing the display name and address book uri */
+	void CreateDirectoryByURI(in wstring displayName, in string uri, in boolean migrating);
+
 };

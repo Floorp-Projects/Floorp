@@ -180,9 +180,7 @@ nsresult nsAbCard::AddSubNode(nsAutoString name, nsIAbCard **childCard)
 
 	nsresult rv = NS_OK;
 	NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
-
-	if(NS_FAILED(rv))
-		return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCAutoString uri;
   uri.Append(mURI);
@@ -196,11 +194,9 @@ nsresult nsAbCard::AddSubNode(nsAutoString name, nsIAbCard **childCard)
 
 	nsCOMPtr<nsIRDFResource> res;
   rv = rdf->GetResource(uri.get(), getter_AddRefs(res));
-	if (NS_FAILED(rv))
-		return rv;
+	NS_ENSURE_SUCCESS(rv, rv);
 	nsCOMPtr<nsIAbCard> card(do_QueryInterface(res, &rv));
-	if (NS_FAILED(rv))
-		return rv;        
+	NS_ENSURE_SUCCESS(rv, rv);       
 
 	*childCard = card;
 	NS_IF_ADDREF(*childCard);

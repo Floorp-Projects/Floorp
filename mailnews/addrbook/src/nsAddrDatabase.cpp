@@ -29,8 +29,9 @@
 #include "nsString.h"
 #include "nsAbBaseCID.h"
 #include "nsIAbCard.h"
+#include "nsIAbMDBCard.h"
 #include "nsIAbDirectory.h"
-#include "nsAbCard.h"
+#include "nsIAbMDBDirectory.h"
 #include "nsIAddrBookSession.h"
 
 #include "prmem.h"
@@ -321,8 +322,7 @@ NS_IMETHODIMP nsAddrDatabase::NotifyCardAttribChange(PRUint32 abCode, nsIAddrDBL
             (nsIAddrDBListener *) m_ChangeListeners->ElementAt(i);
 
 		nsresult rv = changeListener->OnCardAttribChange(abCode, instigator); 
-        if (NS_FAILED(rv)) 
-			return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
 	}
     return NS_OK;
 }
@@ -339,7 +339,7 @@ NS_IMETHODIMP nsAddrDatabase::NotifyCardEntryChange(PRUint32 abCode, nsIAbCard *
             (nsIAddrDBListener *) m_ChangeListeners->ElementAt(i);
 
 		nsresult rv = changeListener->OnCardEntryChange(abCode, card, instigator); 
-        if (NS_FAILED(rv)) return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
 	}
     return NS_OK;
 }
@@ -356,7 +356,7 @@ nsresult nsAddrDatabase::NotifyListEntryChange(PRUint32 abCode, nsIAbDirectory *
             (nsIAddrDBListener *) m_ChangeListeners->ElementAt(i);
 
 		nsresult rv = changeListener->OnListEntryChange(abCode, dir, instigator); 
-        if (NS_FAILED(rv)) return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
 	}
     return NS_OK;
 }
@@ -364,8 +364,8 @@ nsresult nsAddrDatabase::NotifyListEntryChange(PRUint32 abCode, nsIAbDirectory *
 
 NS_IMETHODIMP nsAddrDatabase::NotifyAnnouncerGoingAway(void)
 {
-    if (m_ChangeListeners == nsnull)
-		return NS_OK;
+  if (m_ChangeListeners == nsnull)
+	return NS_OK;
 	// run loop backwards because listeners remove themselves from the list 
 	// on this notification
 	PRInt32 i;
@@ -375,10 +375,9 @@ NS_IMETHODIMP nsAddrDatabase::NotifyAnnouncerGoingAway(void)
             (nsIAddrDBListener *) m_ChangeListeners->ElementAt(i);
 
 		nsresult rv = changeListener->OnAnnouncerGoingAway(this); 
-        if (NS_FAILED(rv)) 
-			return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
 	}
-    return NS_OK;
+  return NS_OK;
 }
 
 
@@ -637,7 +636,7 @@ NS_IMETHODIMP nsAddrDatabase::OpenMDB(nsFileSpec *dbName, PRBool create)
 		{
 			nsIMdbThumb *thumb = nsnull;
 			const char *pFilename = dbName->GetCString(); /* do not free */
-			char	*nativeFileName = PL_strdup(pFilename);
+			char	*nativeFileName = nsCRT::strdup(pFilename);
 			nsIMdbHeap* dbHeap = 0;
 			mdb_bool dbFrozen = mdbBool_kFalse; // not readonly, we want modifiable
 
@@ -683,7 +682,7 @@ NS_IMETHODIMP nsAddrDatabase::OpenMDB(nsFileSpec *dbName, PRBool create)
 				}
 			}
 
-			PR_FREEIF(nativeFileName);
+			nsCRT::free(nativeFileName);
 
 			if (NS_SUCCEEDED(ret) && thumb)
 			{
@@ -1129,11 +1128,11 @@ nsresult nsAddrDatabase::ConvertAndAddLowercaseColumn
 /*  
 Chnage the unicode string to lowercase, then convert to UTF8 string to store in db
 */
-nsresult nsAddrDatabase::AddUnicodeToColumn(nsIMdbRow * row, mdb_token colToken, PRUnichar* pUnicodeStr)
+nsresult nsAddrDatabase::AddUnicodeToColumn(nsIMdbRow * row, mdb_token colToken, const PRUnichar* pUnicodeStr)
 {
 	nsresult err = NS_OK;
 	nsAutoString displayString(pUnicodeStr);
-    char* pDisplayUTF8Str = displayString.ToNewUTF8String();
+  char* pDisplayUTF8Str = displayString.ToNewUTF8String();
 	nsAutoString newUnicodeString(pUnicodeStr);
 	newUnicodeString.ToLowerCase();
 	char* pUTF8Str = newUnicodeString.ToNewUTF8String();
@@ -1261,446 +1260,378 @@ nsresult nsAddrDatabase::AddAttributeColumnsToRow(nsIAbCard *card, nsIMdbRow *ca
 	m_mdbPabTable->GetOid(GetEnv(), &tableOid);
 	cardRow->GetOid(GetEnv(), &rowOid);
 
-	card->SetDbTableID(tableOid.mOid_Id);
-	card->SetDbRowID(rowOid.mOid_Id);
-
+	nsCOMPtr<nsIAbMDBCard> dbcard(do_QueryInterface(card, &err));
+	if(NS_SUCCEEDED(err) && dbcard)
+		{
+		dbcard->SetDbTableID(tableOid.mOid_Id);
+		dbcard->SetDbRowID(rowOid.mOid_Id);
+		}
 	// add the row to the singleton table.
-	if (NS_SUCCEEDED(err) && cardRow)
+	if (card && cardRow)
 	{
-		PRUnichar* pUnicodeStr = nsnull;
+	  nsXPIDLString unicodeStr;
 		PRInt32 unicharLength = 0;
-		char* pUTF8Str = nsnull;
-		card->GetFirstName(&pUnicodeStr);
-		unicharLength = nsCRT::strlen(pUnicodeStr);
-		if (pUnicodeStr)
+	  nsXPIDLCString utf8Str;
+		card->GetFirstName(getter_Copies(unicodeStr));
+		unicharLength = nsCRT::strlen(unicodeStr);
+		if (unicodeStr)
 		{
-			INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
-			if (pUTF8Str)
+			INTL_ConvertFromUnicode(unicodeStr, unicharLength, getter_Copies(utf8Str));
+			if (utf8Str)
+      {
+				AddFirstName(cardRow, utf8Str);
+      }
+		}
+		card->GetLastName(getter_Copies(unicodeStr));
+		unicharLength = nsCRT::strlen(unicodeStr);
+		if (unicodeStr)
+		{
+			INTL_ConvertFromUnicode(unicodeStr, unicharLength, getter_Copies(utf8Str));
+			if (utf8Str)
 			{
-				AddFirstName(cardRow, pUTF8Str);
-				PR_FREEIF(pUTF8Str);
+				AddLastName(cardRow, utf8Str);
 			}
 		}
-		PR_FREEIF(pUnicodeStr);
-		card->GetLastName(&pUnicodeStr);
-		unicharLength = nsCRT::strlen(pUnicodeStr);
-		if (pUnicodeStr)
+		card->GetDisplayName(getter_Copies(unicodeStr));
+		unicharLength = nsCRT::strlen(unicodeStr);
+		if (unicodeStr)
 		{
-			INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
-			if (pUTF8Str)
+			INTL_ConvertFromUnicode(unicodeStr, unicharLength, getter_Copies(utf8Str));
+			if (utf8Str)
 			{
-				AddLastName(cardRow, pUTF8Str);
-				PR_FREEIF(pUTF8Str);
+				AddDisplayName(cardRow, utf8Str);
 			}
 		}
-		PR_FREEIF(pUnicodeStr);
-		card->GetDisplayName(&pUnicodeStr);
-		unicharLength = nsCRT::strlen(pUnicodeStr);
-		if (pUnicodeStr)
+		card->GetNickName(getter_Copies(unicodeStr));
+		unicharLength = nsCRT::strlen(unicodeStr);
+		if (unicodeStr)
 		{
-			INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
-			if (pUTF8Str)
+			INTL_ConvertFromUnicode(unicodeStr, unicharLength, getter_Copies(utf8Str));
+			if (utf8Str)
 			{
-				AddDisplayName(cardRow, pUTF8Str);
-				PR_FREEIF(pUTF8Str);
+				AddNickName(cardRow, utf8Str);
 			}
 		}
-		PR_FREEIF(pUnicodeStr);
-		card->GetNickName(&pUnicodeStr);
-		unicharLength = nsCRT::strlen(pUnicodeStr);
-		if (pUnicodeStr)
-		{
-			INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
-			if (pUTF8Str)
-			{
-				AddNickName(cardRow, pUTF8Str);
-				PR_FREEIF(pUTF8Str);
-			}
-		}
-		PR_FREEIF(pUnicodeStr);
 
-		card->GetPrimaryEmail(&pUnicodeStr);
-		if (pUnicodeStr)
-			AddUnicodeToColumn(cardRow, m_PriEmailColumnToken, pUnicodeStr);
-		PR_FREEIF(pUnicodeStr);
+		card->GetPrimaryEmail(getter_Copies(unicodeStr));
+		if (unicodeStr)
+			AddUnicodeToColumn(cardRow, m_PriEmailColumnToken, unicodeStr);
 
-		card->GetSecondEmail(&pUnicodeStr);
-		unicharLength = nsCRT::strlen(pUnicodeStr);
-		if (pUnicodeStr)
+		card->GetSecondEmail(getter_Copies(unicodeStr));
+		unicharLength = nsCRT::strlen(unicodeStr);
+		if (unicodeStr)
 		{
-			INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
-			if (pUTF8Str)
+			INTL_ConvertFromUnicode(unicodeStr, unicharLength, getter_Copies(utf8Str));
+			if (utf8Str)
 			{
-				Add2ndEmail(cardRow, pUTF8Str);
-				PR_FREEIF(pUTF8Str);
+				Add2ndEmail(cardRow, utf8Str);
 			}
 		}
-		PR_FREEIF(pUnicodeStr);
 
 		PRUint32 format = nsIAbPreferMailFormat::unknown;
 		card->GetPreferMailFormat(&format);
 		AddPreferMailFormat(cardRow, format);
 
-		card->GetWorkPhone(&pUnicodeStr);
-		unicharLength = nsCRT::strlen(pUnicodeStr);
-		if (pUnicodeStr)
+		card->GetWorkPhone(getter_Copies(unicodeStr));
+		unicharLength = nsCRT::strlen(unicodeStr);
+		if (unicodeStr)
 		{
-			INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
-			if (pUTF8Str)
+			INTL_ConvertFromUnicode(unicodeStr, unicharLength, getter_Copies(utf8Str));
+			if (utf8Str)
 			{
-				AddWorkPhone(cardRow, pUTF8Str);
-				PR_FREEIF(pUTF8Str);
+				AddWorkPhone(cardRow, utf8Str);
 			}
 		}
-		PR_FREEIF(pUnicodeStr);
-		card->GetHomePhone(&pUnicodeStr);
-		unicharLength = nsCRT::strlen(pUnicodeStr);
-		if (pUnicodeStr)
+		card->GetHomePhone(getter_Copies(unicodeStr));
+		unicharLength = nsCRT::strlen(unicodeStr);
+		if (unicodeStr)
 		{
-			INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
-			if (pUTF8Str)
+			INTL_ConvertFromUnicode(unicodeStr, unicharLength, getter_Copies(utf8Str));
+			if (utf8Str)
 			{
-				AddHomePhone(cardRow, pUTF8Str);
-				PR_FREEIF(pUTF8Str);
+				AddHomePhone(cardRow, utf8Str);
 			}
 		}
-		PR_FREEIF(pUnicodeStr);
-		card->GetFaxNumber(&pUnicodeStr);
-		unicharLength = nsCRT::strlen(pUnicodeStr);
-		if (pUnicodeStr)
+		card->GetFaxNumber(getter_Copies(unicodeStr));
+		unicharLength = nsCRT::strlen(unicodeStr);
+		if (unicodeStr)
 		{
-			INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
-			if (pUTF8Str)
+			INTL_ConvertFromUnicode(unicodeStr, unicharLength, getter_Copies(utf8Str));
+			if (utf8Str)
 			{
-				AddFaxNumber(cardRow, pUTF8Str);
-				PR_FREEIF(pUTF8Str);
+				AddFaxNumber(cardRow, utf8Str);
 			}
 		}
-		PR_FREEIF(pUnicodeStr);
-		card->GetPagerNumber(&pUnicodeStr);
-		unicharLength = nsCRT::strlen(pUnicodeStr);
-		if (pUnicodeStr)
+		card->GetPagerNumber(getter_Copies(unicodeStr));
+		unicharLength = nsCRT::strlen(unicodeStr);
+		if (unicodeStr)
 		{
-			INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
-			if (pUTF8Str)
+			INTL_ConvertFromUnicode(unicodeStr, unicharLength, getter_Copies(utf8Str));
+			if (utf8Str)
 			{
-				AddPagerNumber(cardRow,pUTF8Str);
-				PR_FREEIF(pUTF8Str);
+				AddPagerNumber(cardRow,utf8Str);
 			}
 		}
-		PR_FREEIF(pUnicodeStr);
-		card->GetCellularNumber(&pUnicodeStr);
-		unicharLength = nsCRT::strlen(pUnicodeStr);
-		if (pUnicodeStr)
+		card->GetCellularNumber(getter_Copies(unicodeStr));
+		unicharLength = nsCRT::strlen(unicodeStr);
+		if (unicodeStr)
 		{
-			INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
-			if (pUTF8Str)
+			INTL_ConvertFromUnicode(unicodeStr, unicharLength, getter_Copies(utf8Str));
+			if (utf8Str)
 			{
-				AddCellularNumber(cardRow,pUTF8Str);
-				PR_FREEIF(pUTF8Str);
+				AddCellularNumber(cardRow,utf8Str);
 			}
 		}
-		PR_FREEIF(pUnicodeStr);
-		card->GetHomeAddress(&pUnicodeStr);
-		unicharLength = nsCRT::strlen(pUnicodeStr);
-		if (pUnicodeStr)
+		card->GetHomeAddress(getter_Copies(unicodeStr));
+		unicharLength = nsCRT::strlen(unicodeStr);
+		if (unicodeStr)
 		{
-			INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
-			if (pUTF8Str)
+			INTL_ConvertFromUnicode(unicodeStr, unicharLength, getter_Copies(utf8Str));
+			if (utf8Str)
 			{
-				AddHomeAddress(cardRow, pUTF8Str);
-				PR_FREEIF(pUTF8Str);
+				AddHomeAddress(cardRow, utf8Str);
 			}
 		}
-		PR_FREEIF(pUnicodeStr);
-		card->GetHomeAddress2(&pUnicodeStr); 
-		unicharLength = nsCRT::strlen(pUnicodeStr);
-		if (pUnicodeStr)
+		card->GetHomeAddress2(getter_Copies(unicodeStr)); 
+		unicharLength = nsCRT::strlen(unicodeStr);
+		if (unicodeStr)
 		{
-			INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
-			if (pUTF8Str)
+			INTL_ConvertFromUnicode(unicodeStr, unicharLength, getter_Copies(utf8Str));
+			if (utf8Str)
 			{
-				AddHomeAddress2(cardRow, pUTF8Str);
-				PR_FREEIF(pUTF8Str);
+				AddHomeAddress2(cardRow, utf8Str);
 			}
 		}
-		PR_FREEIF(pUnicodeStr);
-		card->GetHomeCity(&pUnicodeStr); 
-		unicharLength = nsCRT::strlen(pUnicodeStr);
-		if (pUnicodeStr)
+		card->GetHomeCity(getter_Copies(unicodeStr)); 
+		unicharLength = nsCRT::strlen(unicodeStr);
+		if (unicodeStr)
 		{
-			INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
-			if (pUTF8Str)
+			INTL_ConvertFromUnicode(unicodeStr, unicharLength, getter_Copies(utf8Str));
+			if (utf8Str)
 			{
-				AddHomeCity(cardRow, pUTF8Str);
-				PR_FREEIF(pUTF8Str);
+				AddHomeCity(cardRow, utf8Str);
 			}
 		}
-		PR_FREEIF(pUnicodeStr);
-		card->GetHomeState(&pUnicodeStr); 
-		unicharLength = nsCRT::strlen(pUnicodeStr);
-		if (pUnicodeStr)
+		card->GetHomeState(getter_Copies(unicodeStr)); 
+		unicharLength = nsCRT::strlen(unicodeStr);
+		if (unicodeStr)
 		{
-			INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
-			if (pUTF8Str)
+			INTL_ConvertFromUnicode(unicodeStr, unicharLength, getter_Copies(utf8Str));
+			if (utf8Str)
 			{
-				AddHomeState(cardRow, pUTF8Str);
-				PR_FREEIF(pUTF8Str);
+				AddHomeState(cardRow, utf8Str);
 			}
 		}
-		PR_FREEIF(pUnicodeStr);
-		card->GetHomeZipCode(&pUnicodeStr); 
-		unicharLength = nsCRT::strlen(pUnicodeStr);
-		if (pUnicodeStr)
+		card->GetHomeZipCode(getter_Copies(unicodeStr)); 
+		unicharLength = nsCRT::strlen(unicodeStr);
+		if (unicodeStr)
 		{
-			INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
-			if (pUTF8Str)
+			INTL_ConvertFromUnicode(unicodeStr, unicharLength, getter_Copies(utf8Str));
+			if (utf8Str)
 			{
-				AddHomeZipCode(cardRow, pUTF8Str);
-				PR_FREEIF(pUTF8Str);
+				AddHomeZipCode(cardRow, utf8Str);
 			}
 		}
-		PR_FREEIF(pUnicodeStr);
-		card->GetHomeCountry(&pUnicodeStr); 
-		unicharLength = nsCRT::strlen(pUnicodeStr);
-		if (pUnicodeStr)
+		card->GetHomeCountry(getter_Copies(unicodeStr)); 
+		unicharLength = nsCRT::strlen(unicodeStr);
+		if (unicodeStr)
 		{
-			INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
-			if (pUTF8Str)
+			INTL_ConvertFromUnicode(unicodeStr, unicharLength, getter_Copies(utf8Str));
+			if (utf8Str)
 			{
-				AddHomeCountry(cardRow, pUTF8Str);
-				PR_FREEIF(pUTF8Str);
+				AddHomeCountry(cardRow, utf8Str);
 			}
 		}
-		PR_FREEIF(pUnicodeStr);
-		card->GetWorkAddress(&pUnicodeStr);  
-		unicharLength = nsCRT::strlen(pUnicodeStr);
-		if (pUnicodeStr)
+		card->GetWorkAddress(getter_Copies(unicodeStr));  
+		unicharLength = nsCRT::strlen(unicodeStr);
+		if (unicodeStr)
 		{
-			INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
-			if (pUTF8Str)
+			INTL_ConvertFromUnicode(unicodeStr, unicharLength, getter_Copies(utf8Str));
+			if (utf8Str)
 			{
-				AddWorkAddress(cardRow, pUTF8Str);
-				PR_FREEIF(pUTF8Str);
+				AddWorkAddress(cardRow, utf8Str);
 			}
 		}
-		PR_FREEIF(pUnicodeStr);
-		card->GetWorkAddress2(&pUnicodeStr); 
-		unicharLength = nsCRT::strlen(pUnicodeStr);
-		if (pUnicodeStr)
+		card->GetWorkAddress2(getter_Copies(unicodeStr)); 
+		unicharLength = nsCRT::strlen(unicodeStr);
+		if (unicodeStr)
 		{
-			INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
-			if (pUTF8Str)
+			INTL_ConvertFromUnicode(unicodeStr, unicharLength, getter_Copies(utf8Str));
+			if (utf8Str)
 			{
-				AddWorkAddress2(cardRow, pUTF8Str);
-				PR_FREEIF(pUTF8Str);
+				AddWorkAddress2(cardRow, utf8Str);
 			}
 		}
-		PR_FREEIF(pUnicodeStr);
-		card->GetWorkCity(&pUnicodeStr); 
-		unicharLength = nsCRT::strlen(pUnicodeStr);
-		if (pUnicodeStr)
+		card->GetWorkCity(getter_Copies(unicodeStr)); 
+		unicharLength = nsCRT::strlen(unicodeStr);
+		if (unicodeStr)
 		{
-			INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
-			if (pUTF8Str)
+			INTL_ConvertFromUnicode(unicodeStr, unicharLength, getter_Copies(utf8Str));
+			if (utf8Str)
 			{
-				AddWorkCity(cardRow, pUTF8Str);
-				PR_FREEIF(pUTF8Str);
+				AddWorkCity(cardRow, utf8Str);
 			}
 		}
-		PR_FREEIF(pUnicodeStr);
-		card->GetWorkState(&pUnicodeStr); 
-		unicharLength = nsCRT::strlen(pUnicodeStr);
-		if (pUnicodeStr)
+		card->GetWorkState(getter_Copies(unicodeStr)); 
+		unicharLength = nsCRT::strlen(unicodeStr);
+		if (unicodeStr)
 		{
-			INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
-			if (pUTF8Str)
+			INTL_ConvertFromUnicode(unicodeStr, unicharLength, getter_Copies(utf8Str));
+			if (utf8Str)
 			{
-				AddWorkState(cardRow, pUTF8Str);
-				PR_FREEIF(pUTF8Str);
+				AddWorkState(cardRow, utf8Str);
 			}
 		}
-		PR_FREEIF(pUnicodeStr);
-		card->GetWorkZipCode(&pUnicodeStr); 
-		unicharLength = nsCRT::strlen(pUnicodeStr);
-		if (pUnicodeStr)
+		card->GetWorkZipCode(getter_Copies(unicodeStr)); 
+		unicharLength = nsCRT::strlen(unicodeStr);
+		if (unicodeStr)
 		{
-			INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
-			if (pUTF8Str)
+			INTL_ConvertFromUnicode(unicodeStr, unicharLength, getter_Copies(utf8Str));
+			if (utf8Str)
 			{
-				AddWorkZipCode(cardRow, pUTF8Str);
-				PR_FREEIF(pUTF8Str);
+				AddWorkZipCode(cardRow, utf8Str);
 			}
 		}
-		PR_FREEIF(pUnicodeStr);
-		card->GetWorkCountry(&pUnicodeStr); 
-		unicharLength = nsCRT::strlen(pUnicodeStr);
-		if (pUnicodeStr)
+		card->GetWorkCountry(getter_Copies(unicodeStr)); 
+		unicharLength = nsCRT::strlen(unicodeStr);
+		if (unicodeStr)
 		{
-			INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
-			if (pUTF8Str)
+			INTL_ConvertFromUnicode(unicodeStr, unicharLength, getter_Copies(utf8Str));
+			if (utf8Str)
 			{
-				AddWorkCountry(cardRow, pUTF8Str);
-				PR_FREEIF(pUTF8Str);
+				AddWorkCountry(cardRow, utf8Str);
 			}
 		}
-		PR_FREEIF(pUnicodeStr);
-		card->GetJobTitle(&pUnicodeStr); 
-		unicharLength = nsCRT::strlen(pUnicodeStr);
-		if (pUnicodeStr)
+		card->GetJobTitle(getter_Copies(unicodeStr)); 
+		unicharLength = nsCRT::strlen(unicodeStr);
+		if (unicodeStr)
 		{
-			INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
-			if (pUTF8Str)
+			INTL_ConvertFromUnicode(unicodeStr, unicharLength, getter_Copies(utf8Str));
+			if (utf8Str)
 			{
-				AddJobTitle(cardRow, pUTF8Str);
-				PR_FREEIF(pUTF8Str);
+				AddJobTitle(cardRow, utf8Str);
 			}
 		}
-		PR_FREEIF(pUnicodeStr);
-		card->GetDepartment(&pUnicodeStr); 
-		unicharLength = nsCRT::strlen(pUnicodeStr);
-		if (pUnicodeStr)
+		card->GetDepartment(getter_Copies(unicodeStr)); 
+		unicharLength = nsCRT::strlen(unicodeStr);
+		if (unicodeStr)
 		{
-			INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
-			if (pUTF8Str)
+			INTL_ConvertFromUnicode(unicodeStr, unicharLength, getter_Copies(utf8Str));
+			if (utf8Str)
 			{
-				AddDepartment(cardRow, pUTF8Str);
-				PR_FREEIF(pUTF8Str);
+				AddDepartment(cardRow, utf8Str);
 			}
 		}
-		PR_FREEIF(pUnicodeStr);
-		card->GetCompany(&pUnicodeStr); 
-		unicharLength = nsCRT::strlen(pUnicodeStr);
-		if (pUnicodeStr)
+		card->GetCompany(getter_Copies(unicodeStr)); 
+		unicharLength = nsCRT::strlen(unicodeStr);
+		if (unicodeStr)
 		{
-			INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
-			if (pUTF8Str)
+			INTL_ConvertFromUnicode(unicodeStr, unicharLength, getter_Copies(utf8Str));
+			if (utf8Str)
 			{
-				AddCompany(cardRow, pUTF8Str);
-				PR_FREEIF(pUTF8Str);
+				AddCompany(cardRow, utf8Str);
 			}
 		}
-		PR_FREEIF(pUnicodeStr);
-		card->GetWebPage1(&pUnicodeStr); 
-		unicharLength = nsCRT::strlen(pUnicodeStr);
-		if (pUnicodeStr)
+		card->GetWebPage1(getter_Copies(unicodeStr)); 
+		unicharLength = nsCRT::strlen(unicodeStr);
+		if (unicodeStr)
 		{
-			INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
-			if (pUTF8Str)
+			INTL_ConvertFromUnicode(unicodeStr, unicharLength, getter_Copies(utf8Str));
+			if (utf8Str)
 			{
-				AddWebPage1(cardRow,pUTF8Str);
-				PR_FREEIF(pUTF8Str);
+				AddWebPage1(cardRow,utf8Str);
 			}
 		}
-		PR_FREEIF(pUnicodeStr);
-		card->GetWebPage2(&pUnicodeStr); 
-		unicharLength = nsCRT::strlen(pUnicodeStr);
-		if (pUnicodeStr)
+		card->GetWebPage2(getter_Copies(unicodeStr)); 
+		unicharLength = nsCRT::strlen(unicodeStr);
+		if (unicodeStr)
 		{
-			INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
-			if (pUTF8Str)
+			INTL_ConvertFromUnicode(unicodeStr, unicharLength, getter_Copies(utf8Str));
+			if (utf8Str)
 			{
-				AddWebPage2(cardRow, pUTF8Str);
-				PR_FREEIF(pUTF8Str);
+				AddWebPage2(cardRow, utf8Str);
 			}
 		}
-		PR_FREEIF(pUnicodeStr);
-		card->GetBirthYear(&pUnicodeStr); 
-		unicharLength = nsCRT::strlen(pUnicodeStr);
-		if (pUnicodeStr)
+		card->GetBirthYear(getter_Copies(unicodeStr)); 
+		unicharLength = nsCRT::strlen(unicodeStr);
+		if (unicodeStr)
 		{
-			INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
-			if (pUTF8Str)
+			INTL_ConvertFromUnicode(unicodeStr, unicharLength, getter_Copies(utf8Str));
+			if (utf8Str)
 			{
-				AddBirthYear(cardRow, pUTF8Str);
-				PR_FREEIF(pUTF8Str);
+				AddBirthYear(cardRow, utf8Str);
 			}
 		}
-		PR_FREEIF(pUnicodeStr);
-		card->GetBirthMonth(&pUnicodeStr); 
-		unicharLength = nsCRT::strlen(pUnicodeStr);
-		if (pUnicodeStr)
+		card->GetBirthMonth(getter_Copies(unicodeStr)); 
+		unicharLength = nsCRT::strlen(unicodeStr);
+		if (unicodeStr)
 		{
-			INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
-			if (pUTF8Str)
+			INTL_ConvertFromUnicode(unicodeStr, unicharLength, getter_Copies(utf8Str));
+			if (utf8Str)
 			{
-				AddBirthMonth(cardRow, pUTF8Str);
-				PR_FREEIF(pUTF8Str);
+				AddBirthMonth(cardRow, utf8Str);
 			}
 		}
-		PR_FREEIF(pUnicodeStr);
-		card->GetBirthDay(&pUnicodeStr); 
-		unicharLength = nsCRT::strlen(pUnicodeStr);
-		if (pUnicodeStr)
+		card->GetBirthDay(getter_Copies(unicodeStr)); 
+		unicharLength = nsCRT::strlen(unicodeStr);
+		if (unicodeStr)
 		{
-			INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
-			if (pUTF8Str)
+			INTL_ConvertFromUnicode(unicodeStr, unicharLength, getter_Copies(utf8Str));
+			if (utf8Str)
 			{
-				AddBirthDay(cardRow, pUTF8Str);
-				PR_FREEIF(pUTF8Str);
+				AddBirthDay(cardRow, utf8Str);
 			}
 		}
-		PR_FREEIF(pUnicodeStr);
-		card->GetCustom1(&pUnicodeStr); 
-		unicharLength = nsCRT::strlen(pUnicodeStr);
-		if (pUnicodeStr)
+		card->GetCustom1(getter_Copies(unicodeStr)); 
+		unicharLength = nsCRT::strlen(unicodeStr);
+		if (unicodeStr)
 		{
-			INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
-			if (pUTF8Str)
+			INTL_ConvertFromUnicode(unicodeStr, unicharLength, getter_Copies(utf8Str));
+			if (utf8Str)
 			{
-				AddCustom1(cardRow,pUTF8Str);
-				PR_FREEIF(pUTF8Str);
+				AddCustom1(cardRow,utf8Str);
 			}
 		}
-		PR_FREEIF(pUnicodeStr);
-		card->GetCustom2(&pUnicodeStr); 
-		unicharLength = nsCRT::strlen(pUnicodeStr);
-		if (pUnicodeStr)
+		card->GetCustom2(getter_Copies(unicodeStr)); 
+		unicharLength = nsCRT::strlen(unicodeStr);
+		if (unicodeStr)
 		{
-			INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
-			if (pUTF8Str)
+			INTL_ConvertFromUnicode(unicodeStr, unicharLength, getter_Copies(utf8Str));
+			if (utf8Str)
 			{
-				AddCustom2(cardRow, pUTF8Str);
-				PR_FREEIF(pUTF8Str);
+				AddCustom2(cardRow, utf8Str);
 			}
 		}
-		PR_FREEIF(pUnicodeStr);
-		card->GetCustom3(&pUnicodeStr); 
-		unicharLength = nsCRT::strlen(pUnicodeStr);
-		if (pUnicodeStr)
+		card->GetCustom3(getter_Copies(unicodeStr)); 
+		unicharLength = nsCRT::strlen(unicodeStr);
+		if (unicodeStr)
 		{
-			INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
-			if (pUTF8Str)
+			INTL_ConvertFromUnicode(unicodeStr, unicharLength, getter_Copies(utf8Str));
+			if (utf8Str)
 			{
-				AddCustom3(cardRow, pUTF8Str);
-				PR_FREEIF(pUTF8Str);
+				AddCustom3(cardRow, utf8Str);
 			}
 		}
-		PR_FREEIF(pUnicodeStr);
-		card->GetCustom4(&pUnicodeStr); 
-		unicharLength = nsCRT::strlen(pUnicodeStr);
-		if (pUnicodeStr)
+		card->GetCustom4(getter_Copies(unicodeStr)); 
+		unicharLength = nsCRT::strlen(unicodeStr);
+		if (unicodeStr)
 		{
-			INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
-			if (pUTF8Str)
-			{
-				AddCustom4(cardRow, pUTF8Str);
-				PR_FREEIF(pUTF8Str);
-			}
+			INTL_ConvertFromUnicode(unicodeStr, unicharLength, getter_Copies(utf8Str));
+			if (utf8Str)
+      {
+				AddCustom4(cardRow, utf8Str);
+      }
 		}
-		PR_FREEIF(pUnicodeStr);
-		card->GetNotes(&pUnicodeStr); 
-		unicharLength = nsCRT::strlen(pUnicodeStr);
-		if (pUnicodeStr)
+		card->GetNotes(getter_Copies(unicodeStr)); 
+		unicharLength = nsCRT::strlen(unicodeStr);
+		if (unicodeStr)
 		{
-			INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
-			if (pUTF8Str)
-			{
-				AddNotes(cardRow, pUTF8Str);
-				PR_FREEIF(pUTF8Str);
-			}
+			INTL_ConvertFromUnicode(unicodeStr, unicharLength, getter_Copies(utf8Str));
+			if (utf8Str)
+      {
+				AddNotes(cardRow, utf8Str);
+      }
 		}
-		PR_FREEIF(pUnicodeStr);
 	}
 	return NS_OK;
 }
@@ -1780,13 +1711,13 @@ nsresult nsAddrDatabase::AddListCardColumnsToRow
 		return NS_ERROR_NULL_POINTER;
 
 	nsresult	err = NS_OK;
-	PRUnichar *email = nsnull;
-	pCard->GetPrimaryEmail(&email);
+  nsXPIDLString email;
+	pCard->GetPrimaryEmail(getter_Copies(email));
 	PRInt32 emailLength = nsCRT::strlen(email);
 	if (email)
 	{
-		char* pUTF8Email = nsnull;
-		INTL_ConvertFromUnicode(email, emailLength, (char**)&pUTF8Email);
+    nsXPIDLCString pUTF8Email;
+		INTL_ConvertFromUnicode(email, emailLength, getter_Copies(pUTF8Email));
 		if (pUTF8Email)
 		{
 			nsIMdbRow	*pCardRow = nsnull;
@@ -1844,7 +1775,6 @@ nsresult nsAddrDatabase::AddListCardColumnsToRow
 					}
 				}
 			}
-			PR_FREEIF(pUTF8Email);
 
 			if (!pCardRow)
 				return NS_ERROR_NULL_POINTER;
@@ -1866,7 +1796,6 @@ nsresult nsAddrDatabase::AddListCardColumnsToRow
 			pCardRow->CutStrongRef(GetEnv());
 		}
 	}
-	PR_FREEIF(email);
 
 	return NS_OK;
 }
@@ -1882,45 +1811,42 @@ nsresult nsAddrDatabase::AddListAttributeColumnsToRow(nsIAbDirectory *list, nsIM
 	m_mdbPabTable->GetOid(GetEnv(), &tableOid);
 	listRow->GetOid(GetEnv(), &rowOid);
 
-	list->SetDbRowID(rowOid.mOid_Id);
+	nsCOMPtr<nsIAbMDBDirectory> dblist(do_QueryInterface(list,&err));
+	if (NS_SUCCEEDED(err))
+		dblist->SetDbRowID(rowOid.mOid_Id);
 
 	// add the row to the singleton table.
 	if (NS_SUCCEEDED(err) && listRow)
 	{
-		PRUnichar* pUnicodeStr = nsnull;
+	  nsXPIDLString unicodeStr;
 		PRInt32 unicharLength = 0;
-		char* pUTF8Str = nsnull;
+	  nsXPIDLCString utf8Str;
 
-		list->GetListName(&pUnicodeStr);
-		unicharLength = nsCRT::strlen(pUnicodeStr);
-		if (pUnicodeStr)
-			AddUnicodeToColumn(listRow, m_ListNameColumnToken, pUnicodeStr);
-		PR_FREEIF(pUnicodeStr);
+		list->GetListName(getter_Copies(unicodeStr));
+		unicharLength = nsCRT::strlen(unicodeStr);
+		if (unicodeStr)
+			AddUnicodeToColumn(listRow, m_ListNameColumnToken, unicodeStr);
 
-		list->GetListNickName(&pUnicodeStr);
-		unicharLength = nsCRT::strlen(pUnicodeStr);
-		if (pUnicodeStr)
+		list->GetListNickName(getter_Copies(unicodeStr));
+		unicharLength = nsCRT::strlen(unicodeStr);
+		if (unicodeStr)
 		{
-			INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
-			if (pUTF8Str)
+			INTL_ConvertFromUnicode(unicodeStr, unicharLength, getter_Copies(utf8Str));
+			if (utf8Str)
 			{
-				AddListNickName(listRow, pUTF8Str);
-				PR_FREEIF(pUTF8Str);
+				AddListNickName(listRow, utf8Str);
 			}
 		}
-		PR_FREEIF(pUnicodeStr);
-		list->GetDescription(&pUnicodeStr);
-		unicharLength = nsCRT::strlen(pUnicodeStr);
-		if (pUnicodeStr)
+		list->GetDescription(getter_Copies(unicodeStr));
+		unicharLength = nsCRT::strlen(unicodeStr);
+		if (unicodeStr)
 		{
-			INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
-			if (pUTF8Str)
+			INTL_ConvertFromUnicode(unicodeStr, unicharLength, getter_Copies(utf8Str));
+			if (utf8Str)
 			{
-				AddListDescription(listRow, pUTF8Str);
-				PR_FREEIF(pUTF8Str);
+				AddListDescription(listRow, utf8Str);
 			}
 		}
-		PR_FREEIF(pUnicodeStr);
 
 		nsISupportsArray* pAddressLists;
 		list->GetAddressLists(&pAddressLists);
@@ -1928,6 +1854,7 @@ nsresult nsAddrDatabase::AddListAttributeColumnsToRow(nsIAbDirectory *list, nsIM
 		PRUint32 count;
 		pAddressLists->Count(&count);
 
+	  nsXPIDLString email;
 		PRUint32 i, total;
 		total = 0;
 		for (i = 0; i < count; i++)
@@ -1938,12 +1865,10 @@ nsresult nsAddrDatabase::AddListAttributeColumnsToRow(nsIAbDirectory *list, nsIM
 			if (NS_FAILED(err))
 				continue;
 
-			PRUnichar *email = nsnull;
-			pCard->GetPrimaryEmail(&email);
+			pCard->GetPrimaryEmail(getter_Copies(email));
 			PRInt32 emailLength = nsCRT::strlen(email);
 			if (email && emailLength)
 				total++;
-	                PR_FREEIF(email);
 		}
 		SetListAddressTotal(listRow, total);
 
@@ -1956,8 +1881,7 @@ nsresult nsAddrDatabase::AddListAttributeColumnsToRow(nsIAbDirectory *list, nsIM
 			if (NS_FAILED(err))
 				continue;
 			pos = i + 1;
-			PRUnichar *email = nsnull;
-			pCard->GetPrimaryEmail(&email);
+			pCard->GetPrimaryEmail(getter_Copies(email));
 			PRInt32 emailLength = nsCRT::strlen(email);
 			if (email && emailLength)
 			{
@@ -1966,7 +1890,6 @@ nsresult nsAddrDatabase::AddListAttributeColumnsToRow(nsIAbDirectory *list, nsIM
 				if (pNewCard)
 					pAddressLists->ReplaceElementAt(pNewCard, i);
 			}
-	                PR_FREEIF(email);
 		}
 	}
 	return NS_OK;
@@ -1993,7 +1916,7 @@ nsresult nsAddrDatabase::GetAddressRowByPos(nsIMdbRow* listRow, PRUint16 pos, ns
 	sprintf(columnStr, kMailListAddressFormat, pos);
 	GetStore()->StringToToken(GetEnv(),  columnStr, &listAddressColumnToken);
 
-    nsAutoString tempString;
+  nsAutoString tempString;
 	mdb_id rowID;
 	nsresult err = GetIntColumn(listRow, listAddressColumnToken, (PRUint32*)&rowID, 0);
 	if (NS_SUCCEEDED(err))
@@ -2248,8 +2171,8 @@ nsresult nsAddrDatabase::DoAnonymousAttributesTransaction(AB_NOTIFY_CODE code)
 		  
 	if (!m_mdbAnonymousTable)
 		err = InitAnonymousTable();
-
-	if (NS_FAILED(err) || !m_mdbAnonymousTable)
+  NS_ENSURE_SUCCESS(err, err);
+	if (!m_mdbAnonymousTable)
 		return NS_ERROR_FAILURE;
 
 	DoStringAnonymousTransaction(m_pAnonymousStrAttributes, m_pAnonymousStrValues, code);
@@ -2263,18 +2186,23 @@ nsresult nsAddrDatabase::DoAnonymousAttributesTransaction(AB_NOTIFY_CODE code)
 void nsAddrDatabase::GetAnonymousAttributesFromCard(nsIAbCard* card)
 {
 	nsresult err = NS_OK;
-	RemoveAnonymousList(m_pAnonymousStrAttributes);
-	RemoveAnonymousList(m_pAnonymousStrValues);
-	RemoveAnonymousList(m_pAnonymousIntAttributes);
-	RemoveAnonymousList(m_pAnonymousIntValues);
-	RemoveAnonymousList(m_pAnonymousBoolAttributes);
-	RemoveAnonymousList(m_pAnonymousBoolValues);
-	err = card->GetAnonymousStrAttrubutesList(&m_pAnonymousStrAttributes);
-	err = card->GetAnonymousStrValuesList(&m_pAnonymousStrValues);
-	err = card->GetAnonymousIntAttrubutesList(&m_pAnonymousIntAttributes);
-	err = card->GetAnonymousIntValuesList(&m_pAnonymousIntValues);
-	err = card->GetAnonymousBoolAttrubutesList(&m_pAnonymousBoolAttributes);
-	err = card->GetAnonymousBoolValuesList(&m_pAnonymousBoolValues);
+
+	nsCOMPtr<nsIAbMDBCard> dbcard(do_QueryInterface(card, &err));
+	if(NS_SUCCEEDED(err) && dbcard)
+		{
+		RemoveAnonymousList(m_pAnonymousStrAttributes);
+		RemoveAnonymousList(m_pAnonymousStrValues);
+		RemoveAnonymousList(m_pAnonymousIntAttributes);
+		RemoveAnonymousList(m_pAnonymousIntValues);
+		RemoveAnonymousList(m_pAnonymousBoolAttributes);
+		RemoveAnonymousList(m_pAnonymousBoolValues);
+		err = dbcard->GetAnonymousStrAttrubutesList(&m_pAnonymousStrAttributes);
+		err = dbcard->GetAnonymousStrValuesList(&m_pAnonymousStrValues);
+		err = dbcard->GetAnonymousIntAttrubutesList(&m_pAnonymousIntAttributes);
+		err = dbcard->GetAnonymousIntValuesList(&m_pAnonymousIntValues);
+		err = dbcard->GetAnonymousBoolAttrubutesList(&m_pAnonymousBoolAttributes);
+		err = dbcard->GetAnonymousBoolValuesList(&m_pAnonymousBoolValues);
+		}
 }
 
 NS_IMETHODIMP nsAddrDatabase::AddAnonymousAttributesFromCard(nsIAbCard* card)
@@ -2356,7 +2284,12 @@ NS_IMETHODIMP nsAddrDatabase::DeleteCard(nsIAbCard *card, PRBool notify)
 		rowOid.mOid_Scope = m_ListRowScopeToken;
 	else
 		rowOid.mOid_Scope = m_CardRowScopeToken;
-	card->GetDbRowID((PRUint32*)&rowOid.mOid_Id);
+
+	nsCOMPtr<nsIAbMDBCard> dbcard(do_QueryInterface(card, &err));
+  NS_ENSURE_SUCCESS(err, err);
+
+	dbcard->GetDbRowID((PRUint32*)&rowOid.mOid_Id);
+
 	err = GetStore()->GetRow(GetEnv(), &rowOid, &pCardRow);
 	if (pCardRow)
 	{
@@ -2370,8 +2303,7 @@ NS_IMETHODIMP nsAddrDatabase::DeleteCard(nsIAbCard *card, PRBool notify)
 		{
 			
 			nsCOMPtr<nsIAddrDBListener> listener(do_QueryInterface(card, &err));
-			if (NS_FAILED(err)) 
-				return NS_ERROR_NULL_POINTER;
+			NS_ENSURE_SUCCESS(err, err);
 			RemoveListener(listener);
 
 			if (notify) 
@@ -2440,20 +2372,29 @@ NS_IMETHODIMP nsAddrDatabase::DeleteCardFromMailList(nsIAbDirectory *mailList, n
 	nsIMdbRow* pListRow = nsnull;
 	mdbOid listRowOid;
 	listRowOid.mOid_Scope = m_ListRowScopeToken;
-	mailList->GetDbRowID((PRUint32*)&listRowOid.mOid_Id);
+
+	nsCOMPtr<nsIAbMDBDirectory> dbmailList(do_QueryInterface(mailList,&err));
+	if(NS_FAILED(err))
+		return NS_ERROR_NULL_POINTER;
+	dbmailList->GetDbRowID((PRUint32*)&listRowOid.mOid_Id);
+
 	err = GetStore()->GetRow(GetEnv(), &listRowOid, &pListRow);
 
 	if (pListRow)
 	{
 		PRUint32 cardRowID;
-		card->GetDbRowID(&cardRowID);
+
+		nsCOMPtr<nsIAbMDBCard> dbcard(do_QueryInterface(card, &err));
+		if(NS_FAILED(err) || !dbcard)
+			return NS_ERROR_NULL_POINTER;
+		dbcard->GetDbRowID(&cardRowID);
+
 		err = DeleteCardFromListRow(pListRow, cardRowID);
 
 		if (NS_SUCCEEDED(err))
 		{			
 			nsCOMPtr<nsIAddrDBListener> listener(do_QueryInterface(card, &err));
-			if (NS_FAILED(err)) 
-				return NS_ERROR_NULL_POINTER;
+			NS_ENSURE_SUCCESS(err, err);
 			RemoveListener(listener);
 
 			if (beNotify) 
@@ -2474,11 +2415,15 @@ NS_IMETHODIMP nsAddrDatabase::EditCard(nsIAbCard *card, PRBool notify)
 	nsIMdbRow* pCardRow = nsnull;
 	mdbOid rowOid;
 	rowOid.mOid_Scope = m_CardRowScopeToken;
-	card->GetDbRowID((PRUint32*)&rowOid.mOid_Id);
+
+	nsCOMPtr<nsIAbMDBCard> dbcard(do_QueryInterface(card, &err));
+	NS_ENSURE_SUCCESS(err, err);
+	dbcard->GetDbRowID((PRUint32*)&rowOid.mOid_Id);
+
 	err = GetStore()->GetRow(GetEnv(), &rowOid, &pCardRow);
 	if (pCardRow)
 		err = AddAttributeColumnsToRow(card, pCardRow);
-	if (NS_FAILED(err)) return err;
+	NS_ENSURE_SUCCESS(err, err);
 
 	if (notify) 
 		NotifyCardEntryChange(AB_NotifyPropertyChanged, card, NULL);
@@ -2499,15 +2444,21 @@ NS_IMETHODIMP nsAddrDatabase::ContainsCard(nsIAbCard *card, PRBool *hasCard)
 	PRBool bIsMailList;
 
 	card->GetIsMailList(&bIsMailList);
-
+	
 	if (bIsMailList)
 		rowOid.mOid_Scope = m_ListRowScopeToken;
 	else
 		rowOid.mOid_Scope = m_CardRowScopeToken;
-	card->GetDbRowID((PRUint32*)&rowOid.mOid_Id);
+
+	nsCOMPtr<nsIAbMDBCard> dbcard(do_QueryInterface(card, &err));
+	NS_ENSURE_SUCCESS(err, err);
+	dbcard->GetDbRowID((PRUint32*)&rowOid.mOid_Id);
+
 	err = m_mdbPabTable->HasOid(GetEnv(), &rowOid, &hasOid);
 	if (NS_SUCCEEDED(err))
+	{
 		*hasCard = hasOid;
+	}
 
 	return err;
 }
@@ -2523,7 +2474,11 @@ NS_IMETHODIMP nsAddrDatabase::DeleteMailList(nsIAbDirectory *mailList, PRBool no
 	nsIMdbRow* pListRow = nsnull;
 	mdbOid rowOid;
 	rowOid.mOid_Scope = m_ListRowScopeToken;
-	mailList->GetDbRowID((PRUint32*)&rowOid.mOid_Id);
+
+	nsCOMPtr<nsIAbMDBDirectory> dbmailList(do_QueryInterface(mailList,&err));
+	NS_ENSURE_SUCCESS(err, err);
+	dbmailList->GetDbRowID((PRUint32*)&rowOid.mOid_Id);
+
 	err = GetStore()->GetRow(GetEnv(), &rowOid, &pListRow);
 	if (pListRow)
 	{
@@ -2533,8 +2488,7 @@ NS_IMETHODIMP nsAddrDatabase::DeleteMailList(nsIAbDirectory *mailList, PRBool no
 		{
 			
 			nsCOMPtr<nsIAddrDBListener> listener(do_QueryInterface(mailList, &err));
-			if (NS_FAILED(err)) 
-				return NS_ERROR_NULL_POINTER;
+			NS_ENSURE_SUCCESS(err, err);
 			RemoveListener(listener);
 		}
 		pListRow->CutStrongRef(GetEnv());
@@ -2552,13 +2506,17 @@ NS_IMETHODIMP nsAddrDatabase::EditMailList(nsIAbDirectory *mailList, PRBool noti
 	nsIMdbRow* pListRow = nsnull;
 	mdbOid rowOid;
 	rowOid.mOid_Scope = m_ListRowScopeToken;
-	mailList->GetDbRowID((PRUint32*)&rowOid.mOid_Id);
+
+	nsCOMPtr<nsIAbMDBDirectory> dbmailList(do_QueryInterface(mailList,&err));
+	NS_ENSURE_SUCCESS(err, err);
+	dbmailList->GetDbRowID((PRUint32*)&rowOid.mOid_Id);
+
 	err = GetStore()->GetRow(GetEnv(), &rowOid, &pListRow);
 	if (pListRow)
 	{
 		err = AddListAttributeColumnsToRow(mailList, pListRow);
 	}
-	if (NS_FAILED(err)) return err;
+	NS_ENSURE_SUCCESS(err, err);
 
 	if (notify)
 	{
@@ -2600,7 +2558,11 @@ NS_IMETHODIMP nsAddrDatabase::ContainsMailList(nsIAbDirectory *mailList, PRBool 
 	mdbOid rowOid;
 
 	rowOid.mOid_Scope = m_ListRowScopeToken;
-	mailList->GetDbRowID((PRUint32*)&rowOid.mOid_Id);
+
+	nsCOMPtr<nsIAbMDBDirectory> dbmailList(do_QueryInterface(mailList,&err));
+	NS_ENSURE_SUCCESS(err, err);
+	dbmailList->GetDbRowID((PRUint32*)&rowOid.mOid_Id);
+
 	err = m_mdbPabTable->HasOid(GetEnv(), &rowOid, &hasOid);
 	if (err == NS_OK)
 		*hasList = hasOid;
@@ -2896,8 +2858,8 @@ NS_IMETHODIMP nsAddrDatabase::SetAnonymousStringAttribute
 {
 	nsresult rv = NS_OK;
 
-	char* pAttribute = PL_strdup(attrname);
-	char* pValue = PL_strdup(value);
+	char* pAttribute = nsCRT::strdup(attrname);
+	char* pValue = nsCRT::strdup(value);
 	if (pAttribute && pValue)
 	{
 		rv = SetAnonymousAttribute(&m_pAnonymousStrAttributes, 
@@ -2905,8 +2867,8 @@ NS_IMETHODIMP nsAddrDatabase::SetAnonymousStringAttribute
 	}
 	else
 	{
-		PR_FREEIF(pAttribute);
-		PR_FREEIF(pValue);
+		nsCRT::free(pAttribute);
+		nsCRT::free(pValue);
 		rv = NS_ERROR_NULL_POINTER;
 	}
 	return rv;
@@ -2917,7 +2879,7 @@ NS_IMETHODIMP nsAddrDatabase::SetAnonymousIntAttribute
 {
 	nsresult rv = NS_OK;
 
-	char* pAttribute = PL_strdup(attrname);
+	char* pAttribute = nsCRT::strdup(attrname);
 	PRUint32* pValue = (PRUint32 *)PR_Calloc(1, sizeof(PRUint32));
 	*pValue = value;
 	if (pAttribute && pValue)
@@ -2927,7 +2889,7 @@ NS_IMETHODIMP nsAddrDatabase::SetAnonymousIntAttribute
 	}
 	else
 	{
-		PR_FREEIF(pAttribute);
+		nsCRT::free(pAttribute);
 		PR_FREEIF(pValue);
 		rv = NS_ERROR_NULL_POINTER;
 	}
@@ -2939,7 +2901,7 @@ NS_IMETHODIMP nsAddrDatabase::SetAnonymousBoolAttribute
 {
 	nsresult rv = NS_OK;
 
-	char* pAttribute = PL_strdup(attrname);
+	char* pAttribute = nsCRT::strdup(attrname);
 	PRBool* pValue = (PRBool *)PR_Calloc(1, sizeof(PRBool));
 	*pValue = value;
 	if (pAttribute && pValue)
@@ -2949,7 +2911,7 @@ NS_IMETHODIMP nsAddrDatabase::SetAnonymousBoolAttribute
 	}
 	else
 	{
-		PR_FREEIF(pAttribute);
+		nsCRT::free(pAttribute);
 		PR_FREEIF(pValue);
 		rv = NS_ERROR_NULL_POINTER;
 	}
@@ -2980,8 +2942,8 @@ NS_IMETHODIMP nsAddrDatabase::GetAnonymousStringAttribute(const char *attrname, 
 				err = GetStringColumn(cardRow, anonymousColumnToken, tempString);
 				if (NS_SUCCEEDED(err) && tempString.Length())
 				{
-                    tempCString = tempString.ToNewUTF8String();
-					*value = PL_strdup(tempCString);
+          tempCString = tempString.ToNewUTF8String();
+					*value = nsCRT::strdup(tempCString);
 					Recycle(tempCString);
 					return NS_OK;
 				}
@@ -3097,22 +3059,22 @@ value is UTF8 string, need to convert back to lowercase unicode then
 back to UTF8 string
 */
 nsresult nsAddrDatabase::AddLowercaseColumn
-(nsIMdbRow * row, mdb_token columnToken, const char* utf8String)
+(nsIMdbRow * row, mdb_token columnToken, const char* utf8Str)
 {
 	nsresult err = NS_OK;
-	if (utf8String)
+	if (utf8Str)
 	{
 		PRUnichar *unicodeStr = nsnull;
-		INTL_ConvertToUnicode((const char *)utf8String, nsCRT::strlen(utf8String), (void**)&unicodeStr);
+		INTL_ConvertToUnicode((const char *)utf8Str, nsCRT::strlen(utf8Str), (void**)&unicodeStr);
 		if (unicodeStr)
 		{
 			nsAutoString newUnicodeString(unicodeStr);
 			newUnicodeString.ToLowerCase();
-			char * pUTF8Str = newUnicodeString.ToNewUTF8String();
-			if (pUTF8Str)
+			char * utf8Str = newUnicodeString.ToNewUTF8String();
+			if (utf8Str)
 			{
-				err = AddCharStringColumn(row, columnToken, pUTF8Str);
-				Recycle(pUTF8Str);
+				err = AddCharStringColumn(row, columnToken, utf8Str);
+				Recycle(utf8Str);
 			}
 			PR_FREEIF(unicodeStr);
 		}
@@ -3126,7 +3088,7 @@ nsresult nsAddrDatabase::GetCardFromDB(nsIAbCard *newCard, nsIMdbRow* cardRow)
 	if (!newCard || !cardRow)
 		return NS_ERROR_NULL_POINTER;
 
-    nsAutoString tempString;
+  nsAutoString tempString;
 
 	err = GetStringColumn(cardRow, m_FirstNameColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
@@ -3351,7 +3313,11 @@ nsresult nsAddrDatabase::GetCardFromDB(nsIAbCard *newCard, nsIMdbRow* cardRow)
 	PRUint32 key = 0;
 	err = GetIntColumn(cardRow, m_RecordKeyColumnToken, &key, 0);
 	if (NS_SUCCEEDED(err))
-		newCard->SetRecordKey(key);
+	{
+		nsCOMPtr<nsIAbMDBCard> dbnewCard(do_QueryInterface(newCard, &err));
+		if (NS_SUCCEEDED(err) && dbnewCard)
+			dbnewCard->SetRecordKey(key);
+	}
 
 	return err;
 }
@@ -3383,7 +3349,11 @@ nsresult nsAddrDatabase::GetListCardFromDB(nsIAbCard *listCard, nsIMdbRow* listR
 	PRUint32 key = 0;
 	err = GetIntColumn(listRow, m_RecordKeyColumnToken, &key, 0);
 	if (NS_SUCCEEDED(err))
-		listCard->SetRecordKey(key);
+	{
+		nsCOMPtr<nsIAbMDBCard> dblistCard(do_QueryInterface(listCard, &err));
+		if (NS_SUCCEEDED(err) && dblistCard)
+			dblistCard->SetRecordKey(key);
+	}
 	return err;
 }
 
@@ -3430,7 +3400,11 @@ nsresult nsAddrDatabase::GetListFromDB(nsIAbDirectory *newList, nsIMdbRow* listR
 		{
 			nsCOMPtr<nsIAbCard> card;
 			err = CreateABCard(cardRow, getter_AddRefs(card));
-			newList->AddAddressToList(card);
+
+			nsCOMPtr<nsIAbMDBDirectory>
+			dbnewList(do_QueryInterface(newList, &err));
+			if(NS_SUCCEEDED(err))
+				dbnewList->AddAddressToList(card);
 		}
 //		NS_IF_ADDREF(card);
 	}
@@ -3724,15 +3698,23 @@ NS_IMETHODIMP nsAddrDatabase::GetMailingListsFromDB(nsIAbDirectory *parentDir)
 
 NS_IMETHODIMP nsAddrDatabase::EnumerateListAddresses(nsIAbDirectory *directory, nsIEnumerator **result)
 {
-	mdb_id rowID;
-	directory->GetDbRowID((PRUint32*)&rowID);
+    nsresult rv = NS_OK; 
+    mdb_id rowID;
+
+    nsCOMPtr<nsIAbMDBDirectory> dbdirectory(do_QueryInterface(directory,&rv));
+    
+    if(NS_SUCCEEDED(rv))
+    {
+    dbdirectory->GetDbRowID((PRUint32*)&rowID);
+
     nsListAddressEnumerator* e = new nsListAddressEnumerator(this, rowID);
 	m_dbDirectory = directory;
     if (e == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(e);
     *result = e;
-    return NS_OK;
+    }
+    return rv;
 }
 
 nsresult nsAddrDatabase::CreateCard(nsIMdbRow* cardRow, mdb_id listRowID, nsIAbCard **result)
@@ -3755,23 +3737,30 @@ nsresult nsAddrDatabase::CreateCard(nsIMdbRow* cardRow, mdb_id listRowID, nsIAbC
 			cardURI = PR_smprintf("%s%s/MailList%ld/Card%ld", kCardDataSourceRoot, file, listRowID, rowID);
 		else
 			cardURI = PR_smprintf("%s%s/Card%ld", kCardDataSourceRoot, file, rowID);
+
 		nsCOMPtr<nsIAbCard> personCard;
-		rv = m_dbDirectory->AddChildCards(cardURI, getter_AddRefs(personCard));
-		if (personCard)
+		nsCOMPtr<nsIAbMDBDirectory> dbm_dbDirectory(do_QueryInterface(m_dbDirectory,&rv));
+    if (NS_SUCCEEDED(rv) && dbm_dbDirectory)
+		  rv = dbm_dbDirectory->AddChildCards(cardURI, getter_AddRefs(personCard));
+
+		nsCOMPtr<nsIAbMDBCard> dbpersonCard (do_QueryInterface(personCard, &rv));
+
+		if (NS_SUCCEEDED(rv) && dbpersonCard)
 		{
 			GetCardFromDB(personCard, cardRow);
 			mdbOid tableOid;
 			m_mdbPabTable->GetOid(GetEnv(), &tableOid);
-			personCard->SetDbTableID(tableOid.mOid_Id);
-			personCard->SetDbRowID(rowID);
-			personCard->SetAbDatabase(this);
+
+			dbpersonCard->SetDbTableID(tableOid.mOid_Id);
+			dbpersonCard->SetDbRowID(rowID);
+			dbpersonCard->SetAbDatabase(this);
 
 			nsCOMPtr<nsIAddrDBListener> listener(do_QueryInterface(personCard, &rv));
-			if (NS_FAILED(rv)) 
-				return NS_ERROR_NULL_POINTER;
-
+			NS_ENSURE_SUCCESS(rv, rv);
+			
 			AddListener(listener);
 		}
+
 		*result = personCard;
 		NS_IF_ADDREF(*result);
 
@@ -3802,6 +3791,7 @@ nsresult nsAddrDatabase::CreateABCardInList(nsIMdbRow* cardRow, nsIAbCard **resu
 /* create a card for mailing list in the address book */
 nsresult nsAddrDatabase::CreateABListCard(nsIMdbRow* listRow, nsIAbCard **result)
 {
+
     nsresult rv = NS_OK; 
 
 	mdbOid outOid;
@@ -3810,39 +3800,50 @@ nsresult nsAddrDatabase::CreateABListCard(nsIMdbRow* listRow, nsIAbCard **result
 	if (listRow->GetOid(GetEnv(), &outOid) == NS_OK)
         rowID = outOid.mOid_Id;
 
-	if(NS_SUCCEEDED(rv))
-	{
-		char* cardURI = nsnull;
-		char* file = nsnull;
+	char* cardURI = nsnull;
+	char* listURI = nsnull;
+	char* file = nsnull;
+	file = m_dbName.GetLeafName();
+	cardURI = PR_smprintf("%s%s/ListCard%ld", kCardDataSourceRoot, file, rowID);
+	listURI = PR_smprintf("%s%s/MailList%ld", kDirectoryDataSourceRoot, file, rowID);
 
-		file = m_dbName.GetLeafName();
-		cardURI = PR_smprintf("%s%s/ListCard%ld", kCardDataSourceRoot, file, rowID);
-		nsCOMPtr<nsIAbCard> personCard;
-		rv = m_dbDirectory->AddChildCards(cardURI, getter_AddRefs(personCard));
+	nsCOMPtr<nsIAbCard> personCard;
+	nsCOMPtr<nsIAbMDBDirectory> dbm_dbDirectory(do_QueryInterface(m_dbDirectory, &rv));
+	if(NS_SUCCEEDED(rv) && dbm_dbDirectory)
+	{
+		rv = dbm_dbDirectory->AddChildCards(cardURI, getter_AddRefs(personCard));
+
 		if (personCard)
 		{
 			GetListCardFromDB(personCard, listRow);
 			mdbOid tableOid;
 			m_mdbPabTable->GetOid(GetEnv(), &tableOid);
-			personCard->SetDbTableID(tableOid.mOid_Id);
-			personCard->SetDbRowID(rowID);
-			personCard->SetAbDatabase(this);
+	
+			nsCOMPtr<nsIAbMDBCard> dbpersonCard(do_QueryInterface(personCard, &rv));
+      if (NS_SUCCEEDED(rv) && dbpersonCard)
+      {
+			  dbpersonCard->SetDbTableID(tableOid.mOid_Id);
+			  dbpersonCard->SetDbRowID(rowID);
+			  dbpersonCard->SetAbDatabase(this);
+      }
 			personCard->SetIsMailList(PR_TRUE);
+			personCard->SetMailListURI(listURI);
 
 			nsCOMPtr<nsIAddrDBListener> listener(do_QueryInterface(personCard, &rv));
-			if (NS_FAILED(rv)) 
-				return NS_ERROR_NULL_POINTER;
+      NS_ENSURE_SUCCESS(rv, rv);
 
 			AddListener(listener);
 		}
+		
 		*result = personCard;
 		NS_IF_ADDREF(*result);
-
-		if (file)
-			nsCRT::free(file);
-		if (cardURI)
-			PR_smprintf_free(cardURI);
 	}
+	if (file)
+		nsCRT::free(file);
+	if (cardURI)
+		PR_smprintf_free(cardURI);
+	if (listURI)
+		PR_smprintf_free(listURI);
 
 	return rv;
 }
@@ -3861,37 +3862,42 @@ nsresult nsAddrDatabase::CreateABList(nsIMdbRow* listRow, nsIAbDirectory **resul
 	if (listRow->GetOid(GetEnv(), &outOid) == NS_OK)
         rowID = outOid.mOid_Id;
 
-	if(NS_SUCCEEDED(rv))
-	{
-		char* listURI = nsnull;
-		char* file = nsnull;
+	char* listURI = nsnull;
+	char* file = nsnull;
 
-		file = m_dbName.GetLeafName();
-		listURI = PR_smprintf("%s%s/MailList%ld", kDirectoryDataSourceRoot, file, rowID);
-		nsCOMPtr<nsIAbDirectory> mailList;
-		rv = m_dbDirectory->AddDirectory(listURI, getter_AddRefs(mailList));
+	file = m_dbName.GetLeafName();
+	listURI = PR_smprintf("%s%s/MailList%ld", kDirectoryDataSourceRoot, file, rowID);
+
+	nsCOMPtr<nsIAbDirectory> mailList;
+	nsCOMPtr<nsIAbMDBDirectory> dbm_dbDirectory(do_QueryInterface(m_dbDirectory, &rv));
+	if(NS_SUCCEEDED(rv) && dbm_dbDirectory)
+	{
+		rv = dbm_dbDirectory->AddDirectory(listURI, getter_AddRefs(mailList));
+
+		nsCOMPtr<nsIAbMDBDirectory> dbmailList (do_QueryInterface(mailList, &rv));
+
 		if (mailList)
-		{
+    {
 			GetListFromDB(mailList, listRow);
-			mailList->SetDbRowID(rowID);
+			dbmailList->SetDbRowID(rowID);
 			mailList->SetIsMailList(PR_TRUE);
 
 			nsCOMPtr<nsIAddrDBListener> listener(do_QueryInterface(mailList, &rv));
-			if (NS_FAILED(rv)) 
-				return NS_ERROR_NULL_POINTER;
+			NS_ENSURE_SUCCESS(rv, rv);
+
 			AddListener(listener);
 
-			m_dbDirectory->AddMailListToDirectory(mailList);
+			dbm_dbDirectory->AddMailListToDirectory(mailList);
 
 			*result = mailList;
 			NS_IF_ADDREF(*result);
 		}
-
-		if (file)
-			nsCRT::free(file);
-		if (listURI)
-			PR_smprintf_free(listURI);
 	}
+
+	if (file)
+		nsCRT::free(file);
+	if (listURI)
+		PR_smprintf_free(listURI);
 
 	return rv;
 }
@@ -3966,7 +3972,7 @@ nsresult nsAddrDatabase::GetCollationKeyGenerator()
 		nsCOMPtr<nsILocale> locale; 
 
 		NS_WITH_SERVICE(nsILocaleService, localeSvc, kLocaleServiceCID, &rv);
-		if (NS_FAILED(rv)) return rv;
+		NS_ENSURE_SUCCESS(rv, rv);
 
 		rv = localeSvc->GetApplicationLocale(getter_AddRefs(locale));
 		if (NS_SUCCEEDED(rv) && locale)
@@ -3974,7 +3980,8 @@ nsresult nsAddrDatabase::GetCollationKeyGenerator()
 			nsCOMPtr <nsICollationFactory> factory;
 
 			rv = nsComponentManager::CreateInstance(kCollationFactoryCID, NULL,
-									  NS_GET_IID(nsICollationFactory), getter_AddRefs(factory)); 
+									  NS_GET_IID(nsICollationFactory), 
+									  getter_AddRefs(factory)); 
 			if (NS_SUCCEEDED(rv) && factory)
 			{
 				rv = factory->CreateCollation(locale, getter_AddRefs(m_collationKeyGenerator));
@@ -4031,9 +4038,8 @@ NS_IMETHODIMP nsAddrDatabase::AddListDirNode(nsIMdbRow * listRow)
 	nsresult rv = NS_OK;
 
 	NS_WITH_SERVICE( nsIProxyObjectManager, proxyMgr, kProxyObjectManagerCID, &rv);
-	if (NS_FAILED(rv)) {
-		return rv;
-	}
+	NS_ENSURE_SUCCESS(rv, rv);
+
 	NS_WITH_PROXIED_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, NS_UI_THREAD_EVENTQ, &rv);
 	if (NS_SUCCEEDED(rv)) 
 	{
@@ -4051,14 +4057,18 @@ NS_IMETHODIMP nsAddrDatabase::AddListDirNode(nsIMdbRow * listRow)
 			nsCOMPtr<nsIAbDirectory> mailList;
 			rv = CreateABList(listRow, getter_AddRefs(mailList));
 			if (mailList)
-				parentDir->NotifyDirItemAdded(mailList);
+			{
+				nsCOMPtr<nsIAbMDBDirectory> dbparentDir(do_QueryInterface(parentDir, &rv));
+				if(NS_SUCCEEDED(rv))
+					dbparentDir->NotifyDirItemAdded(mailList);
+			}
 		}
 		if (parentUri)
 			PR_smprintf_free(parentUri);
 		if (file)
 			nsCRT::free(file);
 	}
-	return NS_OK;
+	return rv;
 }
 
 NS_IMETHODIMP nsAddrDatabase::FindMailListbyUnicodeName(const PRUnichar *listName, PRBool *exist)
@@ -4197,8 +4207,7 @@ NS_IMETHODIMP nsAddrDatabase::RemoveExtraCardsInCab(PRUint32 cardTotal, PRUint32
 		if (card)
 		{				
 			nsCOMPtr<nsIAddrDBListener> listener(do_QueryInterface(card, &err));
-			if (NS_FAILED(err)) 
-				return NS_ERROR_NULL_POINTER;
+			NS_ENSURE_SUCCESS(err, err);
 			RemoveListener(listener);
 
 			NotifyCardEntryChange(AB_NotifyDeleted, card, NULL);

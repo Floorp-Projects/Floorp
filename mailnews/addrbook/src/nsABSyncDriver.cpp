@@ -70,8 +70,7 @@ NS_IMETHODIMP nsAbSyncDriver::KickIt()
 {
   nsresult rv = NS_OK;
 	NS_WITH_SERVICE(nsIAbSync, sync, kAbSync, &rv); 
-	if (NS_FAILED(rv) || !sync) 
-		return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Add ourselves to the party!
   sync->AddSyncListener((nsIAbSyncListener *)this);

@@ -164,13 +164,12 @@ function AbEditCard()
     var card = rdf.GetResource(uri);
     card = card.QueryInterface(Components.interfaces.nsIAbCard);
     if (card.isMailList) {
-      var dirUri = dirTree.selectedItems[0].getAttribute("id");
-      var listUri = dirUri + "/MailList" + card.dbRowID;
+      listUri = card.mailListURI;
       goEditListDialog(resultsTree.getAttribute("ref"), listUri);
     }
     else {
       var updateFunc = ("gUpdateCardView" in top) ? top.gUpdateCardView : null;
-      goEditCardDialog(resultsTree.getAttribute("ref"), card, updateFunc);
+      goEditCardDialog(resultsTree.getAttribute("ref"), card, updateFunc, uri);
     }
   }
 }

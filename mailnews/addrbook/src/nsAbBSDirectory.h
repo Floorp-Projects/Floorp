@@ -52,6 +52,7 @@ protected:
 
 	nsresult NotifyItemAdded(nsISupports *item);
 	nsresult NotifyItemDeleted(nsISupports *item);
+  nsresult CreateDirectoryPAB(const PRUnichar *displayName, const char *fileName,  PRBool migrating);
 
 protected:
 	PRBool mInitialized;

@@ -23,7 +23,7 @@
 
 #include "nsAbRDFDataSource.h"
 #include "nsAbBaseCID.h"
-#include "nsAbDirectory.h"
+#include "nsIAbDirectory.h"
 #include "nsIAddrBookSession.h"
 #include "nsIAbCard.h"
 
@@ -60,9 +60,9 @@ static NS_DEFINE_CID(kRDFServiceCID,  NS_RDFSERVICE_CID);
 nsresult nsAbRDFDataSource::createNode(nsString& str, nsIRDFNode **node)
 {
 	*node = nsnull;
-    nsresult rv; 
-    NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv); 
-    if (NS_FAILED(rv)) return rv;   // always check this before proceeding 
+  nsresult rv; 
+  NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv); 
+  NS_ENSURE_SUCCESS(rv, rv); // always check this before proceeding 
 	nsCOMPtr<nsIRDFLiteral> value;
 	rv = rdf->GetLiteral(str.GetUnicode(), getter_AddRefs(value));
 	if (NS_SUCCEEDED(rv)) 
@@ -177,7 +177,7 @@ nsresult nsAbRDFDataSource::Init()
 	nsresult rv = nsServiceManager::GetService(kRDFServiceCID,
 											 NS_GET_IID(nsIRDFService),
 											 (nsISupports**) &mRDFService); 
-	if (NS_FAILED(rv)) return rv;
+	NS_ENSURE_SUCCESS(rv, rv);
 
 	mRDFService->RegisterDataSource(this, PR_FALSE);
 	
@@ -273,7 +273,7 @@ NS_IMETHODIMP nsAbRDFDataSource::AddObserver(nsIRDFObserver* n)
   if (! mObservers) {
     nsresult rv;
     rv = NS_NewISupportsArray(getter_AddRefs(mObservers));
-    if (NS_FAILED(rv)) return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
   }
   mObservers->AppendElement(n);
   return NS_OK;

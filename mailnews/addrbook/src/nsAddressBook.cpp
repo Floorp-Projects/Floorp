@@ -26,7 +26,7 @@
 #include "nsAbBaseCID.h"
 #include "nsDirPrefs.h"
 #include "nsIAddrBookSession.h"
-#include "nsAbRDFResource.h"
+// #include "nsAbRDFResource.h"
 #include "nsIAddrDatabase.h"
 
 #include "plstr.h"
@@ -59,14 +59,15 @@ static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_CID(kAddressBookDBCID, NS_ADDRDATABASE_CID);
 static NS_DEFINE_CID(kAddrBookSessionCID, NS_ADDRBOOKSESSION_CID);
-static NS_DEFINE_CID(kAbDirectoryCID, NS_ABDIRECTORY_CID); 
+// static NS_DEFINE_CID(kAbDirectoryCID, NS_ABDIRECTORY_CID); 
 static NS_DEFINE_CID(kAbCardPropertyCID, NS_ABCARDPROPERTY_CID);
 static NS_DEFINE_CID(kAB4xUpgraderServiceCID, NS_AB4xUPGRADER_CID);
 
 const char *kDirectoryDataSourceRoot = kDirectoryRoot;
 const char *kCardDataSourceRoot = kCardRoot;
 
-
+//use this for creating new address book or directory
+static const char *kBSDDirectoryRoot = "abdirectory://";
 
 static nsresult ConvertDOMListToResourceArray(nsIDOMNodeList *nodeList, nsISupportsArray **resourceArray)
 {
@@ -142,23 +143,16 @@ NS_IMETHODIMP nsAddressBook::DeleteCards
 	nsCOMPtr<nsIRDFResource> resource;
 
 	rv = srcDirectory->GetResource(getter_AddRefs(resource));
-
-	if(NS_FAILED(rv))
-		return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
 
 	rv = tree->GetDatabase(getter_AddRefs(database));
-	if(NS_FAILED(rv))
-		return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
 
 	rv = ConvertDOMListToResourceArray(nodeList, getter_AddRefs(resourceArray));
-	if(NS_FAILED(rv))
-		return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
 
 	rv = NS_NewISupportsArray(getter_AddRefs(dirArray));
-	if(NS_FAILED(rv))
-	{
-		return NS_ERROR_OUT_OF_MEMORY;
-	}
+	NS_ENSURE_SUCCESS(rv, rv);
 
 	dirArray->AppendElement(resource);
 	
@@ -168,42 +162,27 @@ NS_IMETHODIMP nsAddressBook::DeleteCards
 }
 
 NS_IMETHODIMP nsAddressBook::NewAddressBook
-(nsIRDFCompositeDataSource* db, nsIDOMXULElement *srcDirectory, const PRUnichar *name)
+(nsIRDFCompositeDataSource* db, nsIDOMXULElement *srcDirectory, PRUint32 prefCount, const char **prefName, const PRUnichar **prefValue)
 {
-	if(!db || !srcDirectory || !name)
+	if(!db || !srcDirectory || !*prefName || !*prefValue)
 		return NS_ERROR_NULL_POINTER;
 
 	nsresult rv = NS_OK;
-    NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv);
-	if(NS_FAILED(rv))
-		return rv;
-
-	nsCOMPtr<nsISupportsArray> nameArray, dirArray;
-
-	rv = NS_NewISupportsArray(getter_AddRefs(dirArray));
-	if(NS_FAILED(rv))
-		return NS_ERROR_OUT_OF_MEMORY;
+	NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
 
 	nsCOMPtr<nsIRDFResource> parentResource;
-	char *parentUri = PR_smprintf("%s", kDirectoryDataSourceRoot);
+	char *parentUri = PR_smprintf("%s", kBSDDirectoryRoot);
 	rv = rdfService->GetResource(parentUri, getter_AddRefs(parentResource));
-	nsCOMPtr<nsIAbDirectory> parentDir = do_QueryInterface(parentResource);
-	if (!parentDir)
-		return NS_ERROR_NULL_POINTER;
 	if (parentUri)
 		PR_smprintf_free(parentUri);
-	dirArray->AppendElement(parentResource);
+	NS_ENSURE_SUCCESS(rv, rv);
 
-	rv = NS_NewISupportsArray(getter_AddRefs(nameArray));
-	if(NS_FAILED(rv))
-		return NS_ERROR_OUT_OF_MEMORY;
-	nsString nameStr(name);
-	nsCOMPtr<nsIRDFLiteral> nameLiteral;
+	nsCOMPtr<nsIAbDirectory> parentDir = do_QueryInterface(parentResource, &rv);
+	NS_ENSURE_SUCCESS(rv, rv);
+		
+	rv = parentDir->CreateNewDirectory (prefCount, prefName, prefValue);
 
-	rdfService->GetLiteral(nameStr.GetUnicode(), getter_AddRefs(nameLiteral));
-	nameArray->AppendElement(nameLiteral);
-
-	DoCommand(db, NC_RDF_NEWDIRECTORY, dirArray, nameArray);
 	return rv;
 }
 
@@ -215,13 +194,11 @@ NS_IMETHODIMP nsAddressBook::DeleteAddressBooks
 
 	nsresult rv = NS_OK;
     NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv);
-	if(NS_FAILED(rv))
-		return rv;
+	NS_ENSURE_SUCCESS(rv, rv);
 
 	nsCOMPtr<nsISupportsArray> resourceArray;
 	rv = ConvertDOMListToResourceArray(nodeList, getter_AddRefs(resourceArray));
-	if(NS_FAILED(rv))
-		return rv;
+	NS_ENSURE_SUCCESS(rv, rv);
 
 	DoCommand(db, NC_RDF_DELETE, parentDir, resourceArray);
 	return rv;
@@ -233,9 +210,8 @@ nsresult nsAddressBook::DoCommand(nsIRDFCompositeDataSource* db, char *command,
 
 	nsresult rv;
 
-    NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv);
-	if(NS_FAILED(rv))
-		return rv;
+  NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv);
+	NS_ENSURE_SUCCESS(rv, rv);
 
 	nsCOMPtr<nsIRDFResource> commandResource;
 	rv = rdfService->GetResource(command, getter_AddRefs(commandResource));
@@ -329,7 +305,7 @@ NS_IMETHODIMP nsAddressBook::GetAbDatabaseFromURI(const char *uri, nsIAddrDataba
 		if(NS_SUCCEEDED(rv))
 			abSession->GetUserProfileDirectory(&dbPath);
 		
-		nsString file; file.AssignWithConversion(&(uri[PL_strlen(kDirectoryDataSourceRoot)]));
+		nsAutoString file; file.AssignWithConversion(&(uri[PL_strlen(kDirectoryDataSourceRoot)]));
 		PRInt32 pos = file.Find("/");
 		if (pos != -1)
 			file.Truncate(pos);
@@ -362,7 +338,7 @@ nsresult nsAddressBook::GetAbDatabaseFromFile(char* pDbFile, nsIAddrDatabase **d
 		if(NS_SUCCEEDED(rv))
 			abSession->GetUserProfileDirectory(&dbPath);
 		
-		nsString file; file.AssignWithConversion(pDbFile);
+		nsAutoString file; file.AssignWithConversion(pDbFile);
 		(*dbPath) += file;
 
 		NS_WITH_SERVICE(nsIAddrDatabase, addrDBFactory, kAddressBookDBCID, &rv);
@@ -407,7 +383,7 @@ NS_IMETHODIMP nsAddressBook::MailListNameExists(const PRUnichar *name, PRBool *e
 			DIR_Server *server = (DIR_Server *)pDirectories->ElementAt(i);
 			if (server->dirType == PABDirectory)
 			{
-				nsString dbfile; dbfile.AssignWithConversion(server->fileName);
+				nsAutoString dbfile; dbfile.AssignWithConversion(server->fileName);
 				PRInt32 pos = dbfile.Find("na2");
 				if (pos >= 0) /* check: this is a 4.x file, remove when conversion is done */
 					continue;
@@ -517,6 +493,8 @@ nsresult AddressBookParser::ParseFile()
 			mDbUri = PR_smprintf("%s%s.mab", kDirectoryDataSourceRoot, leafName);
 	}
 
+	// to do: we should use only one "return rv;" at the very end, instead of this
+	//  multi return structure
 	nsresult rv = NS_OK;
 	nsFileSpec* dbPath = nsnull;
 	char* fileName = PR_smprintf("%s.mab", leafName);
@@ -533,15 +511,12 @@ nsresult AddressBookParser::ParseFile()
 		if (NS_SUCCEEDED(rv) && addrDBFactory)
 			rv = addrDBFactory->Open(dbPath, PR_TRUE, getter_AddRefs(mDatabase), PR_TRUE);
 	}
+	NS_ENSURE_SUCCESS(rv, rv);
 
-	if (NS_FAILED(rv))
-        return NS_ERROR_FAILURE;
-
-    NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv);
-	if(NS_FAILED(rv))
-		return rv;
+  NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv);
+	NS_ENSURE_SUCCESS(rv, rv);
 	nsCOMPtr<nsIRDFResource> parentResource;
-	char *parentUri = PR_smprintf("%s", kDirectoryDataSourceRoot);
+	char *parentUri = PR_smprintf("%s", kBSDDirectoryRoot);
 	rv = rdfService->GetResource(parentUri, getter_AddRefs(parentResource));
 	nsCOMPtr<nsIAbDirectory> parentDir = do_QueryInterface(parentResource);
 	if (!parentDir)
@@ -557,14 +532,14 @@ nsresult AddressBookParser::ParseFile()
 			return nsnull;
 		PRUnichar *dirName = nsnull;
 		rv = pPref->GetLocalizedUnicharPref("ldap_2.servers.pab.description", &dirName);
-		parentDir->CreateNewDirectory(dirName, fileName, mMigrating);
+		parentDir->CreateDirectoryByURI(dirName, mDbUri, mMigrating);
 		nsMemory::Free(dirName);
 	}
 	else
-		parentDir->CreateNewDirectory(fileString.GetUnicode(), fileName, mMigrating);
-
+		parentDir->CreateDirectoryByURI(fileString.GetUnicode(), mDbUri, mMigrating);
+			
     // Initialize the parser for a run...
-    mLine.Truncate();
+  mLine.Truncate();
 
 	if (mFileType == TABFile)
 		rv = ParseTabFile();
@@ -573,14 +548,12 @@ nsresult AddressBookParser::ParseFile()
 	else 
 		rv = NS_ERROR_FAILURE;
 
-	if(NS_FAILED(rv))
-		return rv;
-
 	if (leafName)
 		nsCRT::free(leafName);
 	if (fileName)
 		PR_smprintf_free(fileName);
-   return NS_OK;
+
+	return rv;
 }
 
 nsresult AddressBookParser::ParseTabFile()
@@ -1410,7 +1383,7 @@ NS_IMETHODIMP nsAddressBook::ConvertNA2toLDIF(nsIFileSpec *srcFileSpec, nsIFileS
   if (!srcFileSpec || !dstFileSpec) return NS_ERROR_NULL_POINTER;
   
   nsCOMPtr <nsIAbUpgrader> abUpgrader = do_GetService(NS_AB4xUPGRADER_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
   if (!abUpgrader) return NS_ERROR_FAILURE;
 
   rv = abUpgrader->StartUpgrade4xAddrBook(srcFileSpec, dstFileSpec);
@@ -1432,12 +1405,12 @@ NS_IMETHODIMP nsAddressBook::ConvertLDIFtoMAB(nsIFileSpec *fileSpec, PRBool migr
     if (!fileSpec) return NS_ERROR_FAILURE;
 
 	rv = fileSpec->OpenStreamForReading();
-    if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
 
 	AddressBookParser abParser(fileSpec, migrating);
 
 	rv = abParser.ParseFile();
-    if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
 
 	rv = fileSpec->CloseStream();
     return rv;
@@ -1448,7 +1421,7 @@ NS_IMETHODIMP nsAddressBook::ImportAddressBook()
     nsresult rv = NS_ERROR_FAILURE;
 
     nsCOMPtr<nsIFilePicker> filePicker = do_CreateInstance("@mozilla.org/filepicker;1", &rv);
-    if (NS_FAILED(rv)) return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
 	
     filePicker->Init(nsnull, nsnull, nsIFilePicker::modeOpen);
 
@@ -1460,12 +1433,12 @@ NS_IMETHODIMP nsAddressBook::ImportAddressBook()
         
     nsCOMPtr<nsILocalFile> localFile;
     rv = filePicker->GetFile(getter_AddRefs(localFile));
-    if (NS_FAILED(rv)) return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
                     
     nsXPIDLCString path;
     localFile->GetPath(getter_Copies(path));
     nsCOMPtr<nsIFileSpec> fileSpec = do_CreateInstance("@mozilla.org/filespec;1", &rv);
-    if (NS_FAILED(rv)) return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
     fileSpec->SetNativePath(path);
 
 	// todo, check that we have a file, not a directory, and that is readable
@@ -1473,7 +1446,7 @@ NS_IMETHODIMP nsAddressBook::ImportAddressBook()
 
 	nsXPIDLCString leafName;
 	rv = fileSpec->GetLeafName(getter_Copies(leafName));
-  	if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
 
 	// todo:  detect na2 files a better way
 	PRBool isNA2File = PR_FALSE;
@@ -1493,15 +1466,15 @@ NS_IMETHODIMP nsAddressBook::ImportAddressBook()
 		nsCOMPtr <nsIFileSpec> tmpLDIFFile;
 		nsSpecialSystemDirectory file(nsSpecialSystemDirectory::OS_TemporaryDirectory);
 		rv = NS_NewFileSpecWithSpec(file, getter_AddRefs(tmpLDIFFile));
-  		NS_ASSERTION(NS_SUCCEEDED(rv) && tmpLDIFFile,"failed to get the tmp dir");
-  		if (NS_FAILED(rv)) return rv;
+    NS_ASSERTION(NS_SUCCEEDED(rv) && tmpLDIFFile,"failed to get the tmp dir");
+  	NS_ENSURE_SUCCESS(rv, rv);
 		if (!tmpLDIFFile) return NS_ERROR_FAILURE;
 
 		nsCAutoString tmpFileName;
 		tmpFileName = (const char *)leafName;
 		tmpFileName += ".ldif";	
 		rv = tmpLDIFFile->AppendRelativeUnixPath((const char *)tmpFileName);
-  		if (NS_FAILED(rv)) return rv;
+  	NS_ENSURE_SUCCESS(rv, rv);
 
 		// todo:  
 		// check to see that that file doesn't exist.
@@ -1513,21 +1486,21 @@ NS_IMETHODIMP nsAddressBook::ImportAddressBook()
 		// have no idea what the charset was (it's in the 4.x prefs file)
 		// so we just guess that it is the system charset.
 		rv = abUpgrader->SetCurrentCharset("");
-  		if (NS_FAILED(rv)) return rv;
+  	NS_ENSURE_SUCCESS(rv, rv);
 
 		rv = ConvertNA2toLDIF(fileSpec, tmpLDIFFile);
-  		if (NS_FAILED(rv)) return rv;
+  	NS_ENSURE_SUCCESS(rv, rv);
 
-    	rv = ConvertLDIFtoMAB(tmpLDIFFile, PR_FALSE /* migrating */);
-  		if (NS_FAILED(rv)) return rv;
+    rv = ConvertLDIFtoMAB(tmpLDIFFile, PR_FALSE /* migrating */);
+    NS_ENSURE_SUCCESS(rv, rv);
 
 		rv = tmpLDIFFile->Delete(PR_TRUE);
-  		if (NS_FAILED(rv)) return rv;
+  	NS_ENSURE_SUCCESS(rv, rv);
 	}
 	else {
 		// this will convert ldif and tab files
-    	rv = ConvertLDIFtoMAB(fileSpec, PR_FALSE /* migrating */);
-  		if (NS_FAILED(rv)) return rv;
+    rv = ConvertLDIFtoMAB(fileSpec, PR_FALSE /* migrating */);
+  	NS_ENSURE_SUCCESS(rv, rv);
 	}
     return rv;
 }

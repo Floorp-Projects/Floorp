@@ -386,46 +386,46 @@ nsresult nsAbAutoCompleteSession::SearchDirectory(nsString& fileName, nsAbAutoCo
 {
     nsresult rv = NS_OK;
     NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr <nsIRDFResource> resource;
     char * strFileName = fileName.ToNewCString();
     rv = rdfService->GetResource(strFileName, getter_AddRefs(resource));
     Recycle(strFileName);
-    if (NS_FAILED(rv)) return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
 
     // query interface 
     nsCOMPtr<nsIAbDirectory> directory(do_QueryInterface(resource, &rv));
-    if (NS_FAILED(rv)) return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
     
-    if (!fileName.EqualsWithConversion(kDirectoryDataSourceRoot))
+    if (!fileName.EqualsWithConversion("abdirectory://"))
         rv = SearchCards(directory, searchStr, results);
     
     if (!searchSubDirectory)
         return rv;
   
     nsCOMPtr<nsIEnumerator> subDirectories;
- 	if (NS_SUCCEEDED(directory->GetChildNodes(getter_AddRefs(subDirectories))) && subDirectories)
-	{
-		nsCOMPtr<nsISupports> item;
-		if (NS_SUCCEEDED(subDirectories->First()))
-		{
-		    do
-		    {
+    if (NS_SUCCEEDED(directory->GetChildNodes(getter_AddRefs(subDirectories))) && subDirectories)
+    {
+        nsCOMPtr<nsISupports> item;
+        if (NS_SUCCEEDED(subDirectories->First()))
+        {
+		        do
+            {
                 if (NS_SUCCEEDED(subDirectories->CurrentItem(getter_AddRefs(item))))
                 {
                     directory = do_QueryInterface(item, &rv);
                     if (NS_SUCCEEDED(rv))
                     {
-			            DIR_Server *server = nsnull;
-                        if (NS_SUCCEEDED(directory->GetServer(&server)) && server)
-                        {
-                            nsAutoString subFileName(fileName);
-                            if (subFileName.Last() != '/')
-                                subFileName.AppendWithConversion("/");
-                            subFileName.AppendWithConversion(server->fileName);
-                            rv = SearchDirectory(subFileName, searchStr, results, PR_TRUE);
-                        }
+		                    nsCOMPtr<nsIRDFResource> subResource(do_QueryInterface(item, &rv));
+		                    if (NS_SUCCEEDED(rv))
+		                    {
+		                        nsXPIDLCString URI;
+		                        subResource->GetValue(getter_Copies(URI));
+		                        nsAutoString subURI;
+		                        subURI.AssignWithConversion(URI);
+		                        rv = SearchDirectory(subURI, searchStr, results, PR_TRUE);
+		                    }
                     }
                 }
             } while (NS_SUCCEEDED(subDirectories->Next()));
@@ -443,8 +443,7 @@ nsresult nsAbAutoCompleteSession::SearchPreviousResults(nsAbAutoCompleteSearchSt
     nsresult rv;
 
     rv = previousSearchResult->GetSearchString(getter_Copies(prevSearchString));
-    if (NS_FAILED(rv))
-        return NS_ERROR_FAILURE;
+    NS_ENSURE_SUCCESS(rv, rv);
     
     if (!(const PRUnichar*)prevSearchString || ((const PRUnichar*)prevSearchString)[0] == 0)
         return NS_ERROR_FAILURE;
@@ -465,30 +464,30 @@ nsresult nsAbAutoCompleteSession::SearchPreviousResults(nsAbAutoCompleteSearchSt
         if (NS_FAILED(rv) || nbrOfItems <= 0)
             return NS_ERROR_FAILURE;
         
-	    nsCOMPtr<nsISupports> item;
-	    nsCOMPtr<nsIAutoCompleteItem> resultItem;
+        nsCOMPtr<nsISupports> item;
+        nsCOMPtr<nsIAutoCompleteItem> resultItem;
         nsAbAutoCompleteParam *param;
 
-	    for (i = 0, pos = 0; i < nbrOfItems; i ++, pos ++)
-	    {
-	        rv = array->QueryElementAt(pos, NS_GET_IID(nsIAutoCompleteItem),
-                                       getter_AddRefs(resultItem));
-	        if (NS_FAILED(rv))
-                return NS_ERROR_FAILURE;
-	        
+        for (i = 0, pos = 0; i < nbrOfItems; i ++, pos ++)
+        {
+	          rv = array->QueryElementAt(pos, NS_GET_IID(nsIAutoCompleteItem),
+                                           getter_AddRefs(resultItem));
+	          NS_ENSURE_SUCCESS(rv, rv);
+	            
             rv = resultItem->GetParam(getter_AddRefs(item));
-	        if (NS_FAILED(rv) || !item)
+            NS_ENSURE_SUCCESS(rv, rv);
+	          if (!item)
                 return NS_ERROR_FAILURE;
 
             param = (nsAbAutoCompleteParam *)(void *)item;
             
-			MatchType matchType;
-			if (CheckEntry(searchStr, param->mNickName, param->mDisplayName,  param->mFirstName,  param->mLastName, param->mEmailAddress, &matchType))
-        AddToResult(param->mNickName, param->mDisplayName,  param->mFirstName,  param->mLastName, param->mEmailAddress,
-          param->mNotes, param->mIsMailList, matchType, results);
+			      MatchType matchType;
+			      if (CheckEntry(searchStr, param->mNickName, param->mDisplayName,  param->mFirstName,  param->mLastName, param->mEmailAddress, &matchType))
+                AddToResult(param->mNickName, param->mDisplayName,  param->mFirstName,  param->mLastName, param->mEmailAddress,
+            param->mNotes, param->mIsMailList, matchType, results);
 
-	    }
-	    return NS_OK;
+	      }
+	      return NS_OK;
     }
 
     return NS_ERROR_ABORT;
@@ -504,8 +503,7 @@ NS_IMETHODIMP nsAbAutoCompleteSession::OnStartLookup(const PRUnichar *uSearchStr
     PRBool enableAutocomplete = PR_TRUE;
 
     NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
-    if (NS_FAILED(rv) || !pPref) 
-		  return NS_ERROR_FAILURE;
+    NS_ENSURE_SUCCESS(rv, rv);
 
     pPref->GetBoolPref("mail.enable_autocomplete", &enableAutocomplete);
 
@@ -531,7 +529,7 @@ NS_IMETHODIMP nsAbAutoCompleteSession::OnStartLookup(const PRUnichar *uSearchStr
     if (NS_SUCCEEDED(rv))
 		  if (NS_FAILED(SearchPreviousResults(&searchStrings, previousSearchResult, results)))
 		  {
-			  nsAutoString root; root.AssignWithConversion(kDirectoryDataSourceRoot);
+			  nsAutoString root; root.AssignWithConversion("abdirectory://");
 			  rv = SearchDirectory(root, &searchStrings, results, PR_TRUE);
 		  }
                 

@@ -42,28 +42,18 @@
 	{ 0x9e, 0x7, 0x0, 0xa0, 0xc9, 0x2b, 0x5f, 0xd }	\
 }
 
+
+
 //
 // nsAbDirectoryDataSource
 //
 #define NS_ABDIRECTORYDATASOURCE_CONTRACTID \
   NS_RDF_DATASOURCE_CONTRACTID_PREFIX "addressdirectory"
 
-#define NS_ABDIRECTORYDATASOURCE_CID				\
+#define NS_ABDIRECTORYDATASOURCE_CID			\
 { /* 0A79186D-F754-11d2-A2DA-001083003D0C */		\
-    0xa79186d, 0xf754, 0x11d2,						\
+    0xa79186d, 0xf754, 0x11d2,				\
     {0xa2, 0xda, 0x0, 0x10, 0x83, 0x0, 0x3d, 0xc}	\
-}
-
-//
-// nsAbDirectory
-//
-#define NS_ABDIRECTORY_CONTRACTID \
-  NS_RDF_RESOURCE_FACTORY_CONTRACTID_PREFIX "abdirectory"
-
-#define NS_ABDIRECTORY_CID                  \
-{ /* {6C21831D-FCC2-11d2-A2E2-001083003D0C}*/		\
-	0x6c21831d, 0xfcc2, 0x11d2,						\
-	{0xa2, 0xe2, 0x0, 0x10, 0x83, 0x0, 0x3d, 0xc}	\
 }
 
 //
@@ -72,23 +62,51 @@
 #define NS_ABCARDDATASOURCE_CONTRACTID \
   NS_RDF_DATASOURCE_CONTRACTID_PREFIX "addresscard"
 
-#define NS_ABCARDDATASOURCE_CID						\
+#define NS_ABCARDDATASOURCE_CID				\
 { /* 1920E486-0709-11d3-A2EC-001083003D0C */		\
-    0x1920e486, 0x709, 0x11d3,						\
+    0x1920e486, 0x709, 0x11d3,				\
     {0xa2, 0xec, 0x0, 0x10, 0x83, 0x0, 0x3d, 0xc}	\
 }
 
-//
-// nsAbCard
-//
-#define NS_ABCARD_CONTRACTID \
-  NS_RDF_RESOURCE_FACTORY_CONTRACTID_PREFIX "abcard"
 
-#define NS_ABCARD_CID						\
-{ /* {1920E487-0709-11d3-A2EC-001083003D0C}*/		\
-	0x1920e487, 0x709, 0x11d3,						\
-	{0xa2, 0xec, 0x0, 0x10, 0x83, 0x0, 0x3d, 0xc}	\
+//
+// nsAbBSDirectory
+//
+#define NS_ABDIRECTORY_CONTRACTID \
+  NS_RDF_RESOURCE_FACTORY_CONTRACTID_PREFIX "abdirectory"
+
+#define NS_ABDIRECTORY_CID             	 			\
+{ /* {012D3C24-1DD2-11B2-BA79-B4AD359FC461}*/			\
+    	0x012D3C24, 0x1DD2, 0x11B2,				\
+	{0xBA, 0x79, 0xB4, 0xAD, 0x35, 0x9F, 0xC4, 0x61}	\
 }
+
+
+//
+// nsAbMDBDirectory
+//
+#define NS_ABMDBDIRECTORY_CONTRACTID \
+  NS_RDF_RESOURCE_FACTORY_CONTRACTID_PREFIX "abmdbdirectory"
+
+#define NS_ABMDBDIRECTORY_CID             		\
+{ /* {e618f894-1dd1-11b2-889c-9aaefaa90dde}*/		\
+    0xe618f894, 0x1dd1, 0x11b2,				\
+    {0x88, 0x9c, 0x9a, 0xae, 0xfa, 0xa9, 0x0d, 0xde}	\
+}
+
+//
+// nsAbMDBCard
+//
+#define NS_ABMDBCARD_CONTRACTID \
+  NS_RDF_RESOURCE_FACTORY_CONTRACTID_PREFIX "abmdbcard"
+
+#define NS_ABMDBCARD_CID				\
+{ /* {f578a5d2-1dd1-11b2-8841-f45cc5e765f8} */		\
+    0xf578a5d2, 0x1dd1, 0x11b2,				\
+    {0x88, 0x41, 0xf4, 0x5c, 0xc5, 0xe7, 0x65, 0xf8}	\
+}
+
+
 
 //
 // nsAddressBookDB

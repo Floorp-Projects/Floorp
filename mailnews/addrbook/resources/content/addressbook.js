@@ -5,7 +5,7 @@ var gAddressBookBundle;
 
 function OnLoadAddressBook()
 {
-  gAddressBookBundle = document.getElementById("bundle_addressBook");
+	gAddressBookBundle = document.getElementById("bundle_addressBook");
 	verifyAccounts(); 	// this will do migration, if we need to.
 
 	top.addressbook = Components.classes["@mozilla.org/addressbook;1"].createInstance();
@@ -161,7 +161,11 @@ function AbNewAddressBook()
 
 function AbCreateNewAddressBook(name)
 {
-	top.addressbook.newAddressBook(dirTree.database, resultsTree, name);
+	var prefsAttr = new Array;
+	var prefsValue = new Array;
+	prefsAttr[0]  = "description";
+	prefsValue[0]  = name;  
+	top.addressbook.newAddressBook(dirTree.database, resultsTree, 1, prefsAttr, prefsValue);
 }
 
 function AbPrintCard()
@@ -267,8 +271,8 @@ function AbDeleteDirectory()
         // check to see if personal or collected address books is selected for deletion.
         // if yes, prompt the user an appropriate message saying these cannot be deleted
         // if no, mark the selected items for deletion
-        if ((selArray[i].getAttribute("id") != "abdirectory://history.mab") &&
-             (selArray[i].getAttribute("id") != "abdirectory://abook.mab"))
+        if ((selArray[i].getAttribute("id") != "abmdbdirectory://history.mab") &&
+             (selArray[i].getAttribute("id") != "abmdbdirectory://abook.mab"))
         {
             var parent = selArray[i].parentNode.parentNode;
             if (parent)
@@ -317,4 +321,3 @@ function clickResultsTree(event)
 
 	if ( event.detail == 2 ) top.AbEditCard();
 }
-

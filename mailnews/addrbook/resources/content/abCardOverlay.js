@@ -43,7 +43,7 @@ function OnLoadNewCard()
     if ("selectedAB" in window.arguments[0])
       editCard.selectedAB = window.arguments[0].selectedAB;
     else
-      editCard.selectedAB = "abdirectory://abook.mab";
+      editCard.selectedAB = "abmdbdirectory://abook.mab";
 
     // we may have been given properties to pre-initialize the window with....
     // we'll fill these in here...
@@ -108,6 +108,8 @@ function OnLoadEditCard()
       editCard.okCallback = window.arguments[0].okCallback;
     if ( window.arguments[0].abURI )
       editCard.abURI = window.arguments[0].abURI;
+    if ( window.arguments[0].abCardURI )
+      editCard.abCardURI = window.arguments[0].abCardURI;
   }
 
   // set global state variables
