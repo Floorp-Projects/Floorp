@@ -309,6 +309,14 @@ PRIVATE uint16 DingbatsToTbl[] = {
 #include "macdingb.ut"
 };
 /*--------------------------------------------------------------------------*/
+/*	Thai  */
+PRIVATE uint16 TIS620FromTbl[] = {
+#include "cp874.uf" /* use cp874 untill we have real TIS 620 table */
+};
+PRIVATE uint16 TIS620ToTbl[] = {
+#include "cp874.ut" /* use cp874 untill we have real TIS 620 table */
+};
+/*--------------------------------------------------------------------------*/
 PRIVATE uTable* LoadToUCS2Table(uint16 csid)
 {
 	switch(csid) {
@@ -386,6 +394,8 @@ PRIVATE uTable* LoadToUCS2Table(uint16 csid)
 	case CS_UCS2:
 		return (uTable*) Ucs2Tbl;
 
+	case CS_TIS620:
+		return (uTable*) TIS620ToTbl;
 	/*	Other Stuff */
 	default:
 		XP_ASSERT(TRUE);
@@ -469,6 +479,9 @@ PRIVATE uTable* LoadFromUCS2Table(uint16 csid)
 	case CS_UTF8:
 	case CS_UCS2:
 		return (uTable*) Ucs2Tbl;
+
+	case CS_TIS620:
+		return (uTable*) TIS620FromTbl;
 
 		/*	Other Stuff */
 	default:
