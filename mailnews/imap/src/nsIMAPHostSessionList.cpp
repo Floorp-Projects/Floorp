@@ -43,6 +43,7 @@ nsIMAPHostInfo::nsIMAPHostInfo(const char *hostName, const char *userName)
 	fShowDeletedMessages = PR_FALSE;
     fGotNamespaces = PR_FALSE;
 	fNamespacesOverridable = PR_TRUE;
+	fTempNamespaceList = nsIMAPNamespaceList::CreatensIMAPNamespaceList();
 }
 
 nsIMAPHostInfo::~nsIMAPHostInfo()
@@ -53,6 +54,7 @@ nsIMAPHostInfo::~nsIMAPHostInfo()
 	PR_FREEIF(fHierarchyDelimiters);
     PR_FREEIF(fOnlineDir);
 	delete fNamespaceList;
+	delete fTempNamespaceList;
 	delete fShellCache;
 }
 
@@ -570,7 +572,6 @@ NS_IMETHODIMP nsIMAPHostSessionList::CommitNamespacesForHost(const char *hostNam
 {
 	PR_EnterMonitor(gCachedHostInfoMonitor);
 	nsIMAPHostInfo *host = FindHost(hostName, userName);
-#if 0
 	if (host)
 	{
 		EIMAPNamespaceType type = kPersonalNamespace;
@@ -595,7 +596,7 @@ NS_IMETHODIMP nsIMAPHostSessionList::CommitNamespacesForHost(const char *hostNam
 			int32 numInNS = host->fNamespaceList->GetNumberOfNamespaces(type);
 			if (numInNS == 0)
 			{
-				MSG_SetNamespacePrefixes(master, host->fHostName, type, NULL);
+//				MSG_SetNamespacePrefixes(master, host->fHostName, type, NULL);
 			}
 			else if (numInNS >= 1)
 			{
@@ -619,8 +620,8 @@ NS_IMETHODIMP nsIMAPHostSessionList::CommitNamespacesForHost(const char *hostNam
 				}
 				if (pref)
 				{
-					MSG_SetNamespacePrefixes(master, host->fHostName, type, pref);
-					PR_FREE(pref);
+//					MSG_SetNamespacePrefixes(master, host->fHostName, type, pref);
+					PR_Free(pref);
 				}
 			}
 		}
@@ -629,9 +630,8 @@ NS_IMETHODIMP nsIMAPHostSessionList::CommitNamespacesForHost(const char *hostNam
 		
 		// Now reset all of libmsg's namespace references.
 		// Did I mention this needs to be running in the mozilla thread?
-		MSG_ResetNamespaceReferences(master, host->fHostName);
+//		MSG_ResetNamespaceReferences(master, host->fHostName);
 	}
-#endif // ### DMB must figure out what to do about this.
 	PR_ExitMonitor(gCachedHostInfoMonitor);
 	return (host == NULL) ? NS_ERROR_ILLEGAL_VALUE : NS_OK;
 }

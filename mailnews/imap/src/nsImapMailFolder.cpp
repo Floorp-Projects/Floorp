@@ -2882,20 +2882,6 @@ nsImapMailFolder::UpdateSecurityStatus(nsIImapProtocol* aProtocol)
     return NS_ERROR_FAILURE;
 }
 
-	// ****
-NS_IMETHODIMP
-nsImapMailFolder::FinishImapConnection(nsIImapProtocol* aProtocol)
-{
-    return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsImapMailFolder::SetImapHostPassword(nsIImapProtocol* aProtocol,
-                                      GenericInfo* aInfo)
-{
-    return NS_ERROR_FAILURE;
-}
-
 NS_IMETHODIMP
 nsImapMailFolder::SetBiffStateAndUpdate(nsIImapProtocol* aProtocol,
                                         nsMsgBiffState biffState)
@@ -2993,13 +2979,6 @@ nsImapMailFolder::PercentProgress(nsIImapProtocol* aProtocol,
 
 NS_IMETHODIMP
 nsImapMailFolder::PastPasswordCheck(nsIImapProtocol* aProtocol)
-{
-    return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsImapMailFolder::CommitNamespaces(nsIImapProtocol* aProtocol,
-                                   const char* hostName)
 {
     return NS_ERROR_FAILURE;
 }

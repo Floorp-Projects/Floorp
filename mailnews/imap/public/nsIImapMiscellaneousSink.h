@@ -53,9 +53,6 @@ public:
 	NS_IMETHOD HeaderFetchCompleted(nsIImapProtocol* aProtocol) = 0;
 	NS_IMETHOD UpdateSecurityStatus(nsIImapProtocol* aProtocol) = 0;
 	// ****
-	NS_IMETHOD FinishImapConnection(nsIImapProtocol* aProtocol) = 0;
-	NS_IMETHOD SetImapHostPassword(nsIImapProtocol* aProtocol,
-																 GenericInfo* aInfo) = 0;
 	NS_IMETHOD SetBiffStateAndUpdate(nsIImapProtocol* aProtocol,
 																	 nsMsgBiffState biffState) = 0;
 	NS_IMETHOD GetStoredUIDValidity(nsIImapProtocol* aProtocol,
@@ -66,8 +63,6 @@ public:
 	NS_IMETHOD PercentProgress(nsIImapProtocol* aProtocol,
 														 ProgressInfo* aInfo) = 0;
 	NS_IMETHOD PastPasswordCheck(nsIImapProtocol* aProtocol) = 0;
-	NS_IMETHOD CommitNamespaces(nsIImapProtocol* aProtocol,
-															const char* hostName) = 0;
 	NS_IMETHOD TunnelOutStream(nsIImapProtocol* aProtocol,
 														 msg_line_info* aInfo) = 0;
 	NS_IMETHOD ProcessTunnel(nsIImapProtocol* aProtocol,

@@ -212,9 +212,6 @@ public:
     NS_IMETHOD HeaderFetchCompleted(nsIImapProtocol* aProtocol);
     NS_IMETHOD UpdateSecurityStatus(nsIImapProtocol* aProtocol);
     // ****
-    NS_IMETHOD FinishImapConnection(nsIImapProtocol* aProtocol);
-    NS_IMETHOD SetImapHostPassword(nsIImapProtocol* aProtocol,
-                                   GenericInfo* aInfo);
     NS_IMETHOD SetBiffStateAndUpdate(nsIImapProtocol* aProtocol,
                                      nsMsgBiffState biffState);
     NS_IMETHOD GetStoredUIDValidity(nsIImapProtocol* aProtocol,
@@ -226,8 +223,6 @@ public:
     NS_IMETHOD PercentProgress(nsIImapProtocol* aProtocol,
                                ProgressInfo* aInfo);
     NS_IMETHOD PastPasswordCheck(nsIImapProtocol* aProtocol);
-    NS_IMETHOD CommitNamespaces(nsIImapProtocol* aProtocol,
-                                const char* hostName);
     NS_IMETHOD TunnelOutStream(nsIImapProtocol* aProtocol,
 														 msg_line_info* aInfo);
     NS_IMETHOD ProcessTunnel(nsIImapProtocol* aProtocol,
@@ -654,23 +649,6 @@ struct UpdateSecurityStatusProxyEvent : public nsImapMiscellaneousSinkProxyEvent
     NS_IMETHOD HandleEvent();
 };
 
-struct FinishImapConnectionProxyEvent : public nsImapMiscellaneousSinkProxyEvent
-{
-    FinishImapConnectionProxyEvent(nsImapMiscellaneousSinkProxy* aProxy);
-    virtual ~FinishImapConnectionProxyEvent();
-    NS_IMETHOD HandleEvent();
-};
-
-struct SetImapHostPasswordProxyEvent : public nsImapMiscellaneousSinkProxyEvent
-{
-    SetImapHostPasswordProxyEvent(nsImapMiscellaneousSinkProxy* aProxy,
-                                  GenericInfo* aInfo);
-    virtual ~SetImapHostPasswordProxyEvent();
-    NS_IMETHOD HandleEvent();
-    GenericInfo m_info;
-};
-
-
 struct SetBiffStateAndUpdateProxyEvent : public nsImapMiscellaneousSinkProxyEvent
 {
     SetBiffStateAndUpdateProxyEvent(nsImapMiscellaneousSinkProxy* aProxy,
@@ -723,15 +701,6 @@ struct PastPasswordCheckProxyEvent : public nsImapMiscellaneousSinkProxyEvent
     PastPasswordCheckProxyEvent(nsImapMiscellaneousSinkProxy* aProxy);
     virtual ~PastPasswordCheckProxyEvent();
     NS_IMETHOD HandleEvent();
-};
-
-struct CommitNamespacesProxyEvent : public nsImapMiscellaneousSinkProxyEvent
-{
-    CommitNamespacesProxyEvent(nsImapMiscellaneousSinkProxy* aProxy,
-                               const char* hostName);
-    virtual ~CommitNamespacesProxyEvent();
-    NS_IMETHOD HandleEvent();
-    char* m_hostName;
 };
 
 struct TunnelOutStreamProxyEvent : public nsImapMiscellaneousSinkProxyEvent

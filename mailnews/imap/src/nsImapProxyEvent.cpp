@@ -1334,55 +1334,6 @@ nsImapMiscellaneousSinkProxy::UpdateSecurityStatus(nsIImapProtocol* aProtocol)
 }
 
 NS_IMETHODIMP
-nsImapMiscellaneousSinkProxy::FinishImapConnection(nsIImapProtocol* aProtocol)
-{
-    nsresult res = NS_OK;
-    NS_ASSERTION (m_protocol == aProtocol, "Ooh ooh, wrong protocol");
-
-    if (PR_GetCurrentThread() == m_thread)
-    {
-        FinishImapConnectionProxyEvent *ev =
-            new FinishImapConnectionProxyEvent(this);
-        if(nsnull == ev)
-            res = NS_ERROR_OUT_OF_MEMORY;
-        else
-            ev->PostEvent(m_eventQueue);
-    }
-    else
-    {
-        res = m_realImapMiscellaneousSink->FinishImapConnection(aProtocol);
-    }
-    return res;
-}
-
-NS_IMETHODIMP
-nsImapMiscellaneousSinkProxy::SetImapHostPassword(nsIImapProtocol* aProtocol,
-                                              GenericInfo* aInfo)
-{
-    nsresult res = NS_OK;
-    NS_PRECONDITION (aInfo, "Oops... null aInfo");
-    if(!aInfo)
-        return NS_ERROR_NULL_POINTER;
-    NS_ASSERTION (m_protocol == aProtocol, "Ooh ooh, wrong protocol");
-
-    if (PR_GetCurrentThread() == m_thread)
-    {
-        SetImapHostPasswordProxyEvent *ev =
-            new SetImapHostPasswordProxyEvent(this, aInfo);
-        if(nsnull == ev)
-            res = NS_ERROR_OUT_OF_MEMORY;
-        else
-            ev->PostEvent(m_eventQueue);
-    }
-    else
-    {
-        res = m_realImapMiscellaneousSink->SetImapHostPassword(aProtocol, aInfo);
-    }
-    return res;
-}
-
-
-NS_IMETHODIMP
 nsImapMiscellaneousSinkProxy::SetBiffStateAndUpdate(nsIImapProtocol* aProtocol,
                                                 nsMsgBiffState biffState)
 {
@@ -1533,36 +1484,6 @@ nsImapMiscellaneousSinkProxy::PastPasswordCheck(nsIImapProtocol* aProtocol)
     else
     {
         res = m_realImapMiscellaneousSink->PastPasswordCheck(aProtocol);
-    }
-    return res;
-}
-
-NS_IMETHODIMP
-nsImapMiscellaneousSinkProxy::CommitNamespaces(nsIImapProtocol* aProtocol,
-                                           const char* hostName)
-{
-    nsresult res = NS_OK;
-    NS_PRECONDITION (hostName, "Oops... null hostName");
-    if(!hostName)
-        return NS_ERROR_NULL_POINTER;
-    NS_ASSERTION (m_protocol == aProtocol, "Ooh ooh, wrong protocol");
-
-    if (PR_GetCurrentThread() == m_thread)
-    {
-        CommitNamespacesProxyEvent *ev =
-            new CommitNamespacesProxyEvent(this, hostName);
-        if(nsnull == ev)
-            res = NS_ERROR_OUT_OF_MEMORY;
-        else
-        {
-            ev->SetNotifyCompletion(PR_TRUE);
-            ev->PostEvent(m_eventQueue);
-        }
-    }
-    else
-    {
-        res = m_realImapMiscellaneousSink->CommitNamespaces(aProtocol, hostName);
-        aProtocol->NotifyFEEventCompletion();
     }
     return res;
 }
@@ -2959,26 +2880,6 @@ HeaderFetchCompletedProxyEvent::HandleEvent()
     return res;
 }
 
-FinishImapConnectionProxyEvent::FinishImapConnectionProxyEvent(
-    nsImapMiscellaneousSinkProxy* aProxy) :
-    nsImapMiscellaneousSinkProxyEvent(aProxy)
-{
-}
-
-FinishImapConnectionProxyEvent::~FinishImapConnectionProxyEvent()
-{
-}
-
-NS_IMETHODIMP
-FinishImapConnectionProxyEvent::HandleEvent()
-{
-    nsresult res = m_proxy->m_realImapMiscellaneousSink->FinishImapConnection(
-        m_proxy->m_protocol);
-    if (m_notifyCompletion)
-        m_proxy->m_protocol->NotifyFEEventCompletion();
-    return res;
-}
-
 UpdateSecurityStatusProxyEvent::UpdateSecurityStatusProxyEvent(
     nsImapMiscellaneousSinkProxy* aProxy) :
     nsImapMiscellaneousSinkProxyEvent(aProxy)
@@ -2994,41 +2895,6 @@ UpdateSecurityStatusProxyEvent::HandleEvent()
 {
     nsresult res = m_proxy->m_realImapMiscellaneousSink->UpdateSecurityStatus(
         m_proxy->m_protocol);
-    if (m_notifyCompletion)
-        m_proxy->m_protocol->NotifyFEEventCompletion();
-    return res;
-}
-
-SetImapHostPasswordProxyEvent::SetImapHostPasswordProxyEvent(
-    nsImapMiscellaneousSinkProxy* aProxy, GenericInfo* aInfo) :
-    nsImapMiscellaneousSinkProxyEvent(aProxy)
-{
-    NS_ASSERTION (aInfo, "Oops... a null info");
-    if (aInfo)
-    {
-        m_info.c = PL_strdup(aInfo->c);
-        m_info.hostName = PL_strdup(aInfo->hostName);
-        m_info.rv = aInfo->rv;
-    }
-    else
-    {
-        memset(&m_info, 0, sizeof(GenericInfo));
-    }
-}
-
-SetImapHostPasswordProxyEvent::~SetImapHostPasswordProxyEvent()
-{
-    if (m_info.c)
-        PL_strfree(m_info.c);
-    if (m_info.hostName)
-        PL_strfree(m_info.hostName);
-}
-
-NS_IMETHODIMP
-SetImapHostPasswordProxyEvent::HandleEvent()
-{
-    nsresult res = m_proxy->m_realImapMiscellaneousSink->SetImapHostPassword(
-        m_proxy->m_protocol, &m_info);
     if (m_notifyCompletion)
         m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
@@ -3183,33 +3049,6 @@ PastPasswordCheckProxyEvent::HandleEvent()
 {
     nsresult res = m_proxy->m_realImapMiscellaneousSink->PastPasswordCheck(
         m_proxy->m_protocol);
-    if (m_notifyCompletion)
-        m_proxy->m_protocol->NotifyFEEventCompletion();
-    return res;
-}
-
-CommitNamespacesProxyEvent::CommitNamespacesProxyEvent(
-    nsImapMiscellaneousSinkProxy* aProxy, const char* hostName) :
-    nsImapMiscellaneousSinkProxyEvent(aProxy)
-{
-    NS_ASSERTION (hostName, "Oops... a null host name");
-    if (hostName)
-        m_hostName = PL_strdup(hostName);
-    else
-        m_hostName = nsnull;
-}
-
-CommitNamespacesProxyEvent::~CommitNamespacesProxyEvent()
-{
-    if (m_hostName)
-        PL_strfree(m_hostName);
-}
-
-NS_IMETHODIMP
-CommitNamespacesProxyEvent::HandleEvent()
-{
-    nsresult res = m_proxy->m_realImapMiscellaneousSink->CommitNamespaces(
-        m_proxy->m_protocol, m_hostName);
     if (m_notifyCompletion)
         m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;

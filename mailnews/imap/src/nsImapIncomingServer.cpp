@@ -126,6 +126,7 @@ private:
     nsCOMPtr<nsISupportsArray> m_urlQueue;
     nsVoidArray					m_urlConsumers;
 	PRUint32					m_capability;
+	PRBool						m_gotNamespaces;
 };
 
 
@@ -162,6 +163,7 @@ nsImapIncomingServer::nsImapIncomingServer() : m_rootFolderPath(nsnull)
 	rv = NS_NewISupportsArray(getter_AddRefs(m_connectionCache));
     rv = NS_NewISupportsArray(getter_AddRefs(m_urlQueue));
 	m_capability = kCapabilityUndefined;
+	m_gotNamespaces = PR_FALSE;
 }
 
 nsImapIncomingServer::~nsImapIncomingServer()
@@ -1085,6 +1087,8 @@ nsresult nsImapIncomingServer::GetUnverifiedFolders(nsISupportsArray *aFoldersAr
 	if (!aFoldersArray && !aNumUnverifiedFolders)
 		return NS_ERROR_NULL_POINTER;
 
+	if (aNumUnverifiedFolders)
+		*aNumUnverifiedFolders = 0;
 	nsCOMPtr<nsIFolder> rootFolder;
 	nsresult rv = GetRootFolder(getter_AddRefs(rootFolder));
 	if(NS_SUCCEEDED(rv) && rootFolder)
@@ -1150,3 +1154,20 @@ NS_IMETHODIMP  nsImapIncomingServer::SetCapability(PRUint32 capability)
 	return NS_OK;
 }
 
+NS_IMETHODIMP  nsImapIncomingServer::CommitNamespaces()
+{
+	char * hostName = nsnull;
+	char * userName = nsnull;
+	
+	nsresult rv = GetHostName(&hostName);
+	rv = GetUsername(&userName);
+	
+
+	NS_WITH_SERVICE(nsIImapHostSessionList, hostSession, kCImapHostSessionList, &rv);
+    if (NS_FAILED(rv)) 
+		return rv;
+	m_gotNamespaces = PR_TRUE;	// so we only issue NAMESPACE once per host per session.
+
+	return hostSession->CommitNamespacesForHost(hostName, userName);
+
+}

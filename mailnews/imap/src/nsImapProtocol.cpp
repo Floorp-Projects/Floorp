@@ -730,25 +730,6 @@ void nsImapProtocol::EstablishServerConnection()
 	SetFlag(IMAP_RECEIVED_GREETING);
 
 #ifdef UNREADY_CODE // mscott: I don't think we need to care about this stuff...
-    while (!DeathSignalReceived() && (GetConnectionStatus() == MK_WAITING_FOR_CONNECTION))
-    {
-        TImapFEEvent *feFinishConnectionEvent = 
-            new TImapFEEvent(FinishIMAPConnection,  // function to call
-                             this,                  // for access to current
-                                                    // entry and monitor
-                             nil,
-							 PR_TRUE);
-        
-        fFEEventQueue->AdoptEventToEnd(feFinishConnectionEvent);
-        IMAP_YIELD(PR_INTERVAL_NO_WAIT);
-        
-        // wait here for the connection finish io to finish
-        WaitForFEEventCompletion();
-		if (!DeathSignalReceived() && (GetConnectionStatus() == MK_WAITING_FOR_CONNECTION))
-			WaitForIOCompletion();
-        
-    }       
-    
 	if (GetConnectionStatus() == MK_CONNECTED)
     {
         // get the one line response from the IMAP server
@@ -3340,11 +3321,8 @@ void nsImapProtocol::SetCopyResponseUid(nsMsgKeyArray* aKeyArray,
 
 void nsImapProtocol::CommitNamespacesForHostEvent()
 {
-    if (m_imapMiscellaneousSink)
-    {
-        m_imapMiscellaneousSink->CommitNamespaces(this, GetImapHostName());
-        WaitForFEEventCompletion();
-    }
+    if (m_imapServerSink)
+        m_imapServerSink->CommitNamespaces();
 }
 
 // notifies libmsg that we have new capability data for the current host
