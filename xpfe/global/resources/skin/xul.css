@@ -275,20 +275,17 @@ xpmenu {
 	font: inherit;
 }
 
-
-/* xpmenu visibility rules */
-:-moz-dropdown-menu {
-  background-color:inherit;
+xpmenuchildren {
+  display: block;
+  font: inherit;
+  visibility:hidden;
+  background-color: #CCCCDD;
   color: inherit;
   border: 1px white outset;
   width: 150px;
 }
 
-xpmenuchildren:-moz-dropdown-menu {
-  visibility:hidden;
-}
-
-xpmenuchildren[menuactive="true"]:-moz-dropdown-menu {
+xpmenuchildren[menuactive="true"] {
   visibility: visible;
 }
 
