@@ -83,6 +83,7 @@ dnl Set the minimum version of toolkit libs used by mozilla
 dnl ========================================================
 GLIB_VERSION=1.2.0
 GTK_VERSION=1.2.0
+GDK_PIXBUF_VERSION=0.8.0
 LIBIDL_VERSION=0.6.3
 PERL_VERSION=5.004
 
@@ -1103,6 +1104,19 @@ then
         $XLIBS $XEXT_LIBS)
     AC_CHECK_HEADER(X11/extensions/Xinerama.h)
 
+    dnl ========================================================
+    dnl =
+    dnl = Check for XIE
+    dnl =
+    dnl ========================================================
+    AC_CHECK_LIB(XIE, XieFloGeometry, [MOZ_XIE_LIBS="-lXIE"],,
+        $XLIBS $XEXT_LIBS)
+    AC_CHECK_HEADER(X11/extensions/XIElib.h)
+
+    if test "$MOZ_XIE_LIBS"; then
+        HAVE_XIE=1
+    fi
+
 	LDFLAGS="$_SAVE_LDFLAGS"
 
 	dnl ========================================================
@@ -1290,10 +1304,23 @@ then
 	])
 fi
 
+HAVE_GDK_PIXBUF=
+MOZ_GDK_PIXBUF_CFLAGS=
+MOZ_GDK_PIXBUF_LIBS=
+
 if test "$MOZ_ENABLE_GTK"
 then
     AM_PATH_GTK($GTK_VERSION,,
       AC_MSG_ERROR(Test for GTK failed.))
+
+
+    AM_PATH_GDK_PIXBUF($GDK_PIXBUF_VERSION,
+      [HAVE_GDK_PIXBUF=1],)
+
+    if test "$HAVE_GDK_PIXBUF"; then
+        MOZ_GDK_PIXBUF_CFLAGS=$GDK_PIXBUF_CFLAGS
+        MOZ_GDK_PIXBUF_LIBS=$GDK_PIXBUF_LIBS
+    fi
 
 dnl ========================================================
 dnl =							   =
@@ -1723,6 +1750,12 @@ AC_SUBST(MOZ_ENABLE_XPRINT)
 AC_SUBST(MOZ_QT_CFLAGS)
 AC_SUBST(MOZ_QT_LDFLAGS)
 AC_SUBST(MOZ_DEFAULT_TOOLKIT)
+
+AC_SUBST(HAVE_GDK_PIXBUF)
+AC_SUBST(MOZ_GDK_PIXBUF_CFLAGS)
+AC_SUBST(MOZ_GDK_PIXBUF_LIBS)
+AC_SUBST(HAVE_XIE)
+AC_SUBST(MOZ_XIE_LIBS)
 
 AC_SUBST(MOZ_XINERAMA_LIBS)
 AC_SUBST(MOZ_ENABLE_XINERAMA)
@@ -3854,13 +3887,15 @@ if test "$MOZ_NEW_CACHE" = "1"; then
 fi
 AC_SUBST(MOZ_NEW_CACHE)
 
-dnl New image library is not yet enabled by default.  This is a temporary
-dnl option for testing
-MOZ_ARG_ENABLE_BOOL(libpr0n,
-[  --enable-libpr0n        Enable new image library],
-  USE_IMG2=1
-  AC_DEFINE(USE_IMG2))
-
+dnl libpr0n on by default
+USE_IMG2=1
+dnl Turn off the new image library.  Soon to go away.
+MOZ_ARG_DISABLE_BOOL(libpr0n,
+[  --disable-libpr0n       Disable new imagelib],
+   USE_IMG2=)
+if test "USE_IMG2"; then
+  AC_DEFINE(USE_IMG2)
+fi
 AC_SUBST(USE_IMG2)
 
 dnl ========================================================
