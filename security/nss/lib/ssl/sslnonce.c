@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslnonce.c,v 1.1 2000/03/31 19:35:15 relyea%netscape.com Exp $
+ * $Id: sslnonce.c,v 1.2 2000/05/24 19:28:27 nelsonb%netscape.com Exp $
  */
 
 #include "cert.h"
@@ -159,11 +159,7 @@ ssl_LookupSID(PRUint32 addr, PRUint16 port, const char *peerID,
 
 	SSL_TRC(8, ("SSL: Lookup1: sid=0x%x", sid));
 
-	if (((sid->version < SSL_LIBRARY_VERSION_3_0) &&
-	                     (sid->time + ssl_sid_timeout  < now)) ||
-	    ((sid->version >= SSL_LIBRARY_VERSION_3_0) &&
-	                     (sid->time + ssl3_sid_timeout < now)) ||
-	    !sid->references) {
+	if (sid->time < now || !sid->references) {
 	    /*
 	    ** This session-id timed out, or was orphaned.
 	    ** Don't even care who it belongs to, blow it out of our cache.
@@ -211,6 +207,7 @@ ssl_LookupSID(PRUint32 addr, PRUint16 port, const char *peerID,
 static void 
 CacheSID(sslSessionID *sid)
 {
+    PRUint32  expirationPeriod;
     SSL_TRC(8, ("SSL: Cache: sid=0x%x cached=%d addr=0x%08x port=0x%04x "
 		"time=%x cached=%d",
 		sid, sid->cached, sid->addr, sid->port, sid->time,
@@ -221,6 +218,7 @@ CacheSID(sslSessionID *sid)
 
     /* XXX should be different trace for version 2 vs. version 3 */
     if (sid->version < SSL_LIBRARY_VERSION_3_0) {
+	expirationPeriod = ssl3_sid_timeout;
 	PRINT_BUF(8, (0, "sessionID:",
 		  sid->u.ssl2.sessionID, sizeof(sid->u.ssl2.sessionID)));
 	PRINT_BUF(8, (0, "masterKey:",
@@ -230,6 +228,7 @@ CacheSID(sslSessionID *sid)
     } else {
 	if (sid->u.ssl3.sessionIDLength == 0) 
 	    return;
+	expirationPeriod = ssl_sid_timeout;
 	PRINT_BUF(8, (0, "sessionID:",
 		      sid->u.ssl3.sessionID, sid->u.ssl3.sessionIDLength));
     }
@@ -244,7 +243,7 @@ CacheSID(sslSessionID *sid)
     sid->cached = in_client_cache;
     sid->next   = cache;
     cache       = sid;
-    sid->time   = ssl_Time();
+    sid->time   = ssl_Time() + expirationPeriod;
     UNLOCK_CACHE;
 }
 
@@ -329,6 +328,7 @@ SSL_ClearSessionCache(void)
     UNLOCK_CACHE;
 }
 
+/* returns an unsigned int containing the number of seconds in PR_Now() */
 PRUint32
 ssl_Time(void)
 {
