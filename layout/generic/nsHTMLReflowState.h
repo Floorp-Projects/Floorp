@@ -147,14 +147,22 @@ struct nsHTMLReflowState {
   // reason == eReflowReason_Incremental.
   nsReflowPath        *path;
 
-  // the available space in which to reflow the frame. The space represents the
-  // amount of room for the frame's border, padding, and content area (not the
-  // margin area. The parent frame deals with the child frame's margins). The
-  // frame size you choose should fit within the available space.
-  // A value of NS_UNCONSTRAINEDSIZE for the available height means you can
-  // choose whatever size you want. In galley mode the available height is always
-  // NS_UNCONSTRAINEDSIZE, and only page mode involves a constrained height
-  nscoord              availableWidth, availableHeight;
+  // the available width in which to reflow the frame. The space
+  // represents the amount of room for the frame's border, padding,
+  // and content area (not the margin area. The parent frame deals
+  // with the child frame's margins). The frame size you choose should
+  // fit within the available width.
+  nscoord              availableWidth;
+
+  // A value of NS_UNCONSTRAINEDSIZE for the available height means
+  // you can choose whatever size you want. In galley mode the
+  // available height is always NS_UNCONSTRAINEDSIZE, and only page
+  // mode involves a constrained height. The element's the top border
+  // and padding, and content, must fit. If the element is complete
+  // after reflow then its bottom border, padding and margin (and
+  // similar for its complete ancestors) will need to fit in this
+  // height.
+  nscoord              availableHeight;
 
   // rendering context to use for measurement
   nsIRenderingContext* rendContext;

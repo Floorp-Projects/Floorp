@@ -39,6 +39,8 @@
 #ifdef NS_DEBUG
 #include "nsIFrameDebug.h"
 #endif
+#include "nsVoidArray.h"
+#include "nsLayoutUtils.h"
 
 #ifdef IBMBIDI
 #include "nsCOMPtr.h"
@@ -160,6 +162,7 @@ nsFrameList::AppendFrame(nsIFrame* aParent, nsIFrame* aFrame)
 {
   NS_PRECONDITION(nsnull != aFrame, "null ptr");
   if (nsnull != aFrame) {
+    NS_PRECONDITION(!aFrame->GetNextSibling(), "Can only append one frame here");
     nsIFrame* lastChild = LastChild();
     if (nsnull == lastChild) {
       mFirstChild = aFrame;
@@ -180,11 +183,11 @@ PRBool
 nsFrameList::RemoveFrame(nsIFrame* aFrame, nsIFrame* aPrevSiblingHint)
 {
   NS_PRECONDITION(nsnull != aFrame, "null ptr");
-  if (nsnull != aFrame) {
+  if (aFrame) {
     nsIFrame* nextFrame = aFrame->GetNextSibling();
-    aFrame->SetNextSibling(nsnull);
     if (aFrame == mFirstChild) {
       mFirstChild = nextFrame;
+      aFrame->SetNextSibling(nsnull);
       return PR_TRUE;
     }
     else {
@@ -194,6 +197,7 @@ nsFrameList::RemoveFrame(nsIFrame* aFrame, nsIFrame* aPrevSiblingHint)
       }
       if (prevSibling) {
         prevSibling->SetNextSibling(nextFrame);
+        aFrame->SetNextSibling(nsnull);
         return PR_TRUE;
       }
     }
@@ -439,6 +443,58 @@ nsFrameList::GetLength() const
     frame = frame->GetNextSibling();
   }
   return count;
+}
+
+static int PR_CALLBACK CompareByContentOrder(const void* aF1, const void* aF2,
+                                             void* aDummy)
+{
+  const nsIFrame* f1 = NS_STATIC_CAST(const nsIFrame*, aF1);
+  const nsIFrame* f2 = NS_STATIC_CAST(const nsIFrame*, aF2);
+  if (f1->GetContent() != f2->GetContent()) {
+    return nsLayoutUtils::CompareTreePosition(f1->GetContent(), f2->GetContent());
+  }
+
+  if (f1 == f2) {
+    return 0;
+  }
+
+  const nsIFrame* f;
+  for (f = f2; f; f = f->GetPrevInFlow()) {
+    if (f == f1) {
+      // f1 comes before f2 in the flow
+      return -1;
+    }
+  }
+  for (f = f1; f; f = f->GetPrevInFlow()) {
+    if (f == f2) {
+      // f1 comes after f2 in the flow
+      return 1;
+    }
+  }
+
+  NS_ASSERTION(PR_FALSE, "Frames for same content but not in relative flow order");
+  return 0;
+}
+
+void
+nsFrameList::SortByContentOrder()
+{
+  if (!mFirstChild)
+    return;
+
+  nsAutoVoidArray array;
+  nsIFrame* f;
+  for (f = mFirstChild; f; f = f->GetNextSibling()) {
+    array.AppendElement(f);
+  }
+  array.Sort(CompareByContentOrder, nsnull);
+  f = mFirstChild = NS_STATIC_CAST(nsIFrame*, array.FastElementAt(0));
+  for (PRInt32 i = 1; i < array.Count(); ++i) {
+    nsIFrame* ff = NS_STATIC_CAST(nsIFrame*, array.FastElementAt(i));
+    f->SetNextSibling(ff);
+    f = ff;
+  }
+  f->SetNextSibling(nsnull);
 }
 
 nsIFrame*

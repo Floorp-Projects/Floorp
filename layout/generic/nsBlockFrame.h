@@ -63,6 +63,32 @@ class nsIntervalSet;
 #define NS_BLOCK_FRAME_ABSOLUTE_LIST_INDEX      4
 #define NS_BLOCK_FRAME_LAST_LIST_INDEX      NS_BLOCK_FRAME_ABSOLUTE_LIST_INDEX
 
+/**
+ * Some invariants:
+ * -- The overflow out-of-flows list contains the out-of-
+ * flow frames whose placeholders are in the overflow list.
+ * -- A given piece of content has at most one placeholder
+ * frame in a block's normal child list.
+ * -- A given piece of content can have an unlimited number
+ * of placeholder frames in the overflow-lines list.
+ * -- A line containing a continuation placeholder contains
+ * only continuation placeholders.
+ * -- While a block is being reflowed, its overflowPlaceholdersList
+ * frame property points to an nsFrameList in its
+ * nsBlockReflowState. This list contains placeholders for
+ * floats whose prev-in-flow is in the block's regular line
+ * list. The list is always empty/non-existent after the
+ * block has been reflowed.
+ * -- In all these frame lists, if there are two frames for
+ * the same content appearing in the list, then the frames
+ * appear with the prev-in-flow before the next-in-flow.
+ * -- While reflowing a block, its overflow line list
+ * will usually be empty but in some cases will have lines
+ * (while we reflow the block at its shrink-wrap width).
+ * In this case any new overflowing content must be
+ * prepended to the overflow lines.
+ */
+
 // see nsHTMLParts.h for the public block state bits
 #define NS_BLOCK_HAS_LINE_CURSOR            0x01000000
 #define NS_BLOCK_HAS_OVERFLOW_LINES         0x02000000
@@ -222,9 +248,11 @@ public:
   virtual void DeleteNextInFlowChild(nsPresContext* aPresContext,
                                      nsIFrame*       aNextInFlow);
 
-  // Determines whether the collapsed margin carried out of the last
-  // line includes the margin-top of a line with clearance (in which
-  // case we must avoid collapsing that margin with our bottom margin)
+  /**
+   * Determines whether the collapsed margin carried out of the last
+   * line includes the margin-top of a line with clearance (in which
+   * case we must avoid collapsing that margin with our bottom margin)
+   */
   PRBool CheckForCollapsedBottomMarginFromClearanceLine();
 
   /** return the topmost block child based on y-index.
@@ -243,7 +271,7 @@ public:
 
   // Create a contination for aPlaceholder and its out of flow frame and
   // add it to the list of overflow floats
-  nsresult SplitPlaceholder(nsPresContext& aPresContext, nsIFrame& aPlaceholder);
+  nsresult SplitPlaceholder(nsBlockReflowState& aState, nsIFrame* aPlaceholder);
 
   void UndoSplitPlaceholders(nsBlockReflowState& aState,
                              nsIFrame*           aLastPlaceholder);
@@ -257,6 +285,12 @@ public:
     nsContainerFrame::PaintChild(aPresContext, aRenderingContext,
                                  aDirtyRect, aFrame, aWhichLayer, aFlags);
   }
+
+  PRBool HandleOverflowPlaceholdersForPulledFrame(
+    nsBlockReflowState& aState, nsIFrame* aFrame);
+
+  PRBool HandleOverflowPlaceholdersOnPulledLine(
+    nsBlockReflowState& aState, nsLineBox* aLine);
 
 protected:
   nsBlockFrame();
@@ -331,18 +365,23 @@ protected:
   nsresult AddFrames(nsIFrame* aFrameList,
                      nsIFrame* aPrevSibling);
 
+public:
   /** does all the real work for removing aDeletedFrame from this
     * finds the line containing aFrame.
     * handled continued frames
     * marks lines dirty as needed
+    * @param aDestroyFrames if false then we don't actually destroy the
+    * frame or its next in flows, we just remove them. This does NOT work
+    * on out of flow frames so always use PR_TRUE for out of flows.
     */
-  nsresult DoRemoveFrame(nsIFrame* aDeletedFrame);
+  nsresult DoRemoveFrame(nsIFrame* aDeletedFrame, PRBool aDestroyFrames = PR_TRUE);
+protected:
 
   /** grab overflow lines from this block's prevInFlow, and make them
     * part of this block's mLines list.
     * @return PR_TRUE if any lines were drained.
     */
-  PRBool DrainOverflowLines();
+  PRBool DrainOverflowLines(nsBlockReflowState& aState);
 
   /**
     * Remove a float from our float list and also the float cache
@@ -350,6 +389,8 @@ protected:
     */
   line_iterator RemoveFloat(nsIFrame* aFloat);
 
+  void CollectFloats(nsIFrame* aFrame, nsFrameList& aList, nsIFrame** aTail,
+                     PRBool aFromOverflow);
   // Remove a float, abs, rel positioned frame from the appropriate block's list
   static void DoRemoveOutOfFlowFrame(nsIFrame* aFrame);
 
@@ -391,8 +432,11 @@ protected:
     */
   nsresult PrepareResizeReflow(nsBlockReflowState& aState);
 
-  /** reflow all lines that have been marked dirty */
-  nsresult ReflowDirtyLines(nsBlockReflowState& aState);
+  /** reflow all lines that have been marked dirty.
+   * @param aTryPull set this to PR_TRUE if you want to try pulling content from
+   * our next in flow while there is room.
+   */
+  nsresult ReflowDirtyLines(nsBlockReflowState& aState, PRBool aTryPull);
 
   //----------------------------------------
   // Methods for line reflow
@@ -498,13 +542,13 @@ protected:
                      PRBool     aDamageDeletedLine,
                      nsIFrame*& aFrameResult);
 
-  nsresult PullFrameFrom(nsBlockReflowState& aState,
-                         nsLineBox* aLine,
-                         nsBlockFrame* aFromContainer,
-                         PRBool aFromOverflowLine,
-                         nsLineList::iterator aFromLine,
-                         PRBool aDamageDeletedLines,
-                         nsIFrame*& aFrameResult);
+  PRBool PullFrameFrom(nsBlockReflowState& aState,
+                       nsLineBox* aLine,
+                       nsBlockFrame* aFromContainer,
+                       PRBool aFromOverflowLine,
+                       nsLineList::iterator aFromLine,
+                       PRBool aDamageDeletedLines,
+                       nsIFrame*& aFrameResult);
 
   void PushLines(nsBlockReflowState& aState,
                  nsLineList::iterator aLineBefore);
@@ -552,17 +596,39 @@ protected:
 
   //----------------------------------------
 
+public:
   nsLineList* GetOverflowLines() const;
+protected:
   nsLineList* RemoveOverflowLines();
   nsresult SetOverflowLines(nsLineList* aOverflowLines);
 
   nsFrameList* GetOverflowPlaceholders() const;
-  nsFrameList* RemoveOverflowPlaceholders();
-  nsresult SetOverflowPlaceholders(nsFrameList* aOverflowPlaceholders);
 
-  nsFrameList* GetOverflowOutOfFlows() const;
-  nsFrameList* RemoveOverflowOutOfFlows();
-  nsresult SetOverflowOutOfFlows(nsFrameList* aFloaters);
+  /**
+   * This class is useful for efficiently modifying the out of flow
+   * overflow list. It gives the client direct writable access to
+   * the frame list temporarily but ensures that property is only
+   * written back if absolutely necessary.
+   */
+  struct nsAutoOOFFrameList {
+    nsFrameList mList;
+
+    nsAutoOOFFrameList(nsBlockFrame* aBlock) :
+      mList(aBlock->GetOverflowOutOfFlows().FirstChild()),
+      aOldHead(mList.FirstChild()), mBlock(aBlock) {}
+    ~nsAutoOOFFrameList() {
+      if (mList.FirstChild() != aOldHead) {
+        mBlock->SetOverflowOutOfFlows(mList);
+      }
+    }
+  protected:
+    nsIFrame* aOldHead;
+    nsBlockFrame* mBlock;
+  };
+  friend class nsAutoOOFFrameList;
+
+  nsFrameList GetOverflowOutOfFlows() const;
+  void SetOverflowOutOfFlows(const nsFrameList& aList);
 
   nsIFrame* LastChild();
 
@@ -612,6 +678,24 @@ protected:
   static void InitDebugFlags();
 #endif
 };
+
+#ifdef DEBUG
+class AutoNoisyIndenter {
+public:
+  AutoNoisyIndenter(PRBool aDoIndent) : mIndented(aDoIndent) {
+    if (mIndented) {
+      nsBlockFrame::gNoiseIndent++;
+    }
+  }
+  ~AutoNoisyIndenter() {
+    if (mIndented) {
+      nsBlockFrame::gNoiseIndent--;
+    }
+  }
+private:
+  PRBool mIndented;
+};
+#endif
 
 #endif /* nsBlockFrame_h___ */
 

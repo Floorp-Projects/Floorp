@@ -77,7 +77,8 @@ public:
                     const nsMargin&          aComputedOffsets,
                     nsCollapsingMargin&      aBottomMarginResult /* out */,
                     nsRect&                  aInFlowBounds,
-                    nsRect&                  aCombinedRect);
+                    nsRect&                  aCombinedRect,
+                    nsReflowStatus           aReflowStatus);
 
   void AlignBlockHorizontally(nscoord aWidth, nsBlockHorizontalAlign&);
 

@@ -538,6 +538,7 @@ nsFrameManager::RegisterPlaceholderFrame(nsPlaceholderFrame* aPlaceholderFrame)
 
   NS_ASSERTION(!entry->placeholderFrame, "Registering a placeholder for a frame that already has a placeholder!");
   entry->placeholderFrame = aPlaceholderFrame;
+
   return NS_OK;
 }
 

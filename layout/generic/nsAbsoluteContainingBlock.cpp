@@ -490,9 +490,7 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
     PrettyUC(aReflowState.mComputedHeight, height);
     printf("c=%s,%s \n", width, height);
   }
-  if (nsBlockFrame::gNoisy) {
-    nsBlockFrame::gNoiseIndent++;
-  }
+  AutoNoisyIndenter indent(nsBlockFrame::gNoisy);
 #endif // DEBUG
 
   nsresult  rv;
@@ -665,11 +663,8 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
       }
     }
 #ifdef DEBUG
-    if (nsBlockFrame::gNoisy) {
-      nsBlockFrame::gNoiseIndent--;
-    }
     if (nsBlockFrame::gNoisyReflow) {
-      nsFrame::IndentBy(stdout,nsBlockFrame::gNoiseIndent);
+      nsFrame::IndentBy(stdout,nsBlockFrame::gNoiseIndent - 1);
       printf("abs pos ");
       if (nsnull != aKidFrame) {
         nsIFrameDebug*  frameDebug;

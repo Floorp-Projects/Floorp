@@ -252,12 +252,12 @@ public:
   //----------------------------------------
   // Inform the line-layout about the presence of a floating frame
   // XXX get rid of this: use get-frame-type?
-  void InitFloat(nsPlaceholderFrame* aFrame, nsReflowStatus& aReflowStatus) {
-    mBlockRS->InitFloat(*this, aFrame, aReflowStatus);
+  PRBool InitFloat(nsPlaceholderFrame* aFrame, nsReflowStatus& aReflowStatus) {
+    return mBlockRS->InitFloat(*this, aFrame, aReflowStatus);
   }
 
-  void AddFloat(nsPlaceholderFrame* aFrame, nsReflowStatus& aReflowStatus) {
-    mBlockRS->AddFloat(*this, aFrame, PR_FALSE, aReflowStatus);
+  PRBool AddFloat(nsPlaceholderFrame* aFrame, nsReflowStatus& aReflowStatus) {
+    return mBlockRS->AddFloat(*this, aFrame, PR_FALSE, aReflowStatus);
   }
 
   //----------------------------------------

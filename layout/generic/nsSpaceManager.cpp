@@ -359,11 +359,13 @@ nsSpaceManager::GetBandData(nscoord       aYOffset,
   // If there are no unavailable rects or the offset is below the bottommost
   // band, then all the space is available
   nscoord yMost;
-  
+  nscoord maxHeight = aMaxSize.height == NS_UNCONSTRAINEDSIZE ? NS_UNCONSTRAINEDSIZE 
+    : PR_MAX(0, aMaxSize.height - aYOffset);
+
   if (!YMost(yMost) || (y >= yMost)) {
     // All the requested space is available
     aBandData.mCount = 1;
-    aBandData.mTrapezoids[0] = nsRect(0, aYOffset, aMaxSize.width, aMaxSize.height);
+    aBandData.mTrapezoids[0] = nsRect(0, aYOffset, aMaxSize.width, maxHeight);
     aBandData.mTrapezoids[0].mState = nsBandTrapezoid::Available;
     aBandData.mTrapezoids[0].mFrame = nsnull;
   } else {
@@ -378,14 +380,14 @@ nsSpaceManager::GetBandData(nscoord       aYOffset,
         // the top of the band is available
         aBandData.mCount = 1;
         aBandData.mTrapezoids[0] =
-          nsRect(0, aYOffset, aMaxSize.width, PR_MIN(band->mTop - y, aMaxSize.height));
+          nsRect(0, aYOffset, aMaxSize.width, PR_MIN(band->mTop - y, maxHeight));
         aBandData.mTrapezoids[0].mState = nsBandTrapezoid::Available;
         aBandData.mTrapezoids[0].mFrame = nsnull;
         break;
       } else if (y < band->mBottom) {
         // The band contains the y-offset. Return a list of available and
         // unavailable rects within the band
-        return GetBandAvailableSpace(band, y, aMaxSize, aBandData);
+        return GetBandAvailableSpace(band, y, nsSize(aMaxSize.width, maxHeight), aBandData);
       } else {
         // Skip to the next band
         band = GetNextBand(band);
