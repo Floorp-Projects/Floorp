@@ -136,7 +136,7 @@ var folderListener = {
 				{
 				  gCurrentLoadingFolderURI = "";
 				  //Now let's select the first new message if there is one
-				  SelectFirstNewMessage();
+				  ScrollToFirstNewMessage();
 				}
 			}
 

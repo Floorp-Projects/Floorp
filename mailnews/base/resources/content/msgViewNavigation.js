@@ -575,14 +575,16 @@ function FindNextThread(startThread, nextThreadFunction, startFromBeginning, che
 	return nextThread;
 }
 
-function SelectFirstNewMessage()
+function ScrollToFirstNewMessage()
 {
 	var tree = GetThreadTree();
 
 	var newMessage = GetNextMessage(tree, null, GoNewMessage, ResourceGoNewMessage, null, false)
 
 	if(newMessage)
-		SelectNextMessage(newMessage); 
+	{
+		tree.ensureElementIsVisible(newMessage); 
+	}
 }
 
 
