@@ -120,8 +120,9 @@ protected:
 
 private:
   nsresult CreateScrollingView(nsIPresContext* aPresContext);
-  PRBool mVerticalOverflow;
-  PRBool mHorizontalOverflow;
+  PRPackedBool mVerticalOverflow;
+  PRPackedBool mHorizontalOverflow;
+  nsRect mRestoreRect;
   
 protected:
   virtual PRBool NeedsClipWidget();
