@@ -554,7 +554,9 @@ protected:
     nsIURI * m_url;
     nsCOMPtr<nsILoadGroup> m_loadGroup;
     nsCOMPtr<nsIStreamListener> m_channelListener;
-    nsCOMPtr<nsISupports> m_channelContext;
+    // non owning ref of the context in order to fix a circular ref count
+    // because the context is already the uri...
+    nsISupports * m_channelContext;
 };
 
 #endif  // nsImapProtocol_h___

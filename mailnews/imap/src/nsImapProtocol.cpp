@@ -605,7 +605,11 @@ void nsImapProtocol::ReleaseUrlState()
 	m_imapMiscellaneousSink = null_nsCOMPtr();
     m_channelListener = null_nsCOMPtr();
     m_channelContext = null_nsCOMPtr();
-    m_mockChannel = null_nsCOMPtr();
+    if (m_mockChannel)
+    {
+        m_mockChannel->Close();
+        m_mockChannel = null_nsCOMPtr();
+    }
     m_channelInputStream = null_nsCOMPtr();
     m_channelOutputStream = null_nsCOMPtr();
 
@@ -666,7 +670,11 @@ NS_IMETHODIMP nsImapProtocol::Run()
     me->m_outputStream = null_nsCOMPtr();
     me->m_channelListener = null_nsCOMPtr();
     me->m_channelContext = null_nsCOMPtr();
-    me->m_mockChannel = null_nsCOMPtr();
+    if (me->m_mockChannel)
+    {
+        me->m_mockChannel->Close();
+        me->m_mockChannel = null_nsCOMPtr();
+    }
     me->m_channelInputStream = null_nsCOMPtr();
     me->m_channelOutputStream = null_nsCOMPtr();
     me->m_sinkEventQueue = null_nsCOMPtr();
@@ -6143,10 +6151,17 @@ NS_IMPL_ISUPPORTS2(nsImapMockChannel, nsIImapMockChannel, nsIChannel)
 nsImapMockChannel::nsImapMockChannel()
 {
     NS_INIT_REFCNT();
+    m_channelContext = nsnull;
 }
 
 nsImapMockChannel::~nsImapMockChannel()
 {
+}
+
+NS_IMETHODIMP nsImapMockChannel::Close()
+{
+    m_channelListener = null_nsCOMPtr();
+    return NS_OK;
 }
 
 nsresult nsImapMockChannel::Create(const nsIID &iid, void ** aInstancePtrResult)

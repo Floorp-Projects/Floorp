@@ -165,6 +165,7 @@ NS_IMETHODIMP nsImapMailFolder::GetPath(nsIFileSpec** aPathName)
     		return NS_ERROR_OUT_OF_MEMORY;
    
         rv = nsImapURI2Path(kImapRootURI, mURI, *m_pathName);
+//		printf("constructing path %s\n", (const char *) *m_pathName);
         if (NS_FAILED(rv)) return rv;
     }
 	rv = NS_NewFileSpecWithSpec(*m_pathName, aPathName);
@@ -715,7 +716,7 @@ NS_IMETHODIMP nsImapMailFolder::UpdateSummaryTotals(PRBool force)
 {
 	// could we move this into nsMsgDBFolder, or do we need to deal
 	// with the pending imap counts?
-	nsresult rv;
+	nsresult rv = NS_OK;
 
 	PRInt32 oldUnreadMessages = mNumUnreadMessages;
 	PRInt32 oldTotalMessages = mNumTotalMessages;
@@ -745,7 +746,6 @@ NS_IMETHODIMP nsImapMailFolder::UpdateSummaryTotals(PRBool force)
 		PR_smprintf_free(oldUnreadMessagesStr);
 	}
 
-	return NS_OK;
     return rv;
 }
     
