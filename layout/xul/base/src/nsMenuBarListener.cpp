@@ -267,11 +267,13 @@ nsMenuBarListener::KeyPress(nsIDOMEvent* aKeyEvent)
   if (uiEvent) {
     // See if a letter was pressed.
     PRUint32 charCode;
-    uiEvent->GetCharCode(&charCode);
+    uiEvent->GetKeyCode(&charCode);
     if ((active || mAltKeyDown) && (charCode >= NS_VK_A && charCode <= NS_VK_Z)) {
       // Do shortcut navigation.
       mAltKeyDown = PR_FALSE; // Clear this. ALT presses are irrelevant now.
       
+      // A letter was pressed. We want to see if a shortcut gets matched. If
+      // so, we'll know the menu got activated.
       mMenuBarFrame->ShortcutNavigation(charCode, active);
     }
   }
