@@ -5,9 +5,9 @@
 # application MajorCool.
 
 
-# $Revision: 1.6 $ 
-# $Date: 2000/10/17 23:53:36 $ 
-# $Author: kestes%staff.mail.com $ 
+# $Revision: 1.7 $ 
+# $Date: 2001/02/15 20:49:42 $ 
+# $Author: kestes%tradinglinx.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/HTMLPopUp/MajorCoolWindow.pm,v $ 
 # $Name:  $ 
 
@@ -85,7 +85,7 @@ sub page_header {
 $header .=<<EOF;
 <HTML>
         <!-- This file was automatically created by $main::0  -->
-        <!-- version: $main::$VERSION -->
+        <!-- version: $main::VERSION -->
         <!-- at $main::LOCALTIME -->
 <HEAD>
 	$refresh
