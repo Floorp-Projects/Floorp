@@ -47,15 +47,6 @@ public:
     nsBufferInputStream(nsIBuffer* buf, PRBool blocking);
     virtual ~nsBufferInputStream();
 
-    PRUint32 ReadableAmount() {
-        nsresult rv;
-        PRUint32 amt;
-        const char* buf;
-        rv = mBuffer->GetReadSegment(0, &buf, &amt); // should never fail
-        NS_ASSERTION(NS_SUCCEEDED(rv), "GetInputBuffer failed");
-        return amt;
-    }
-
     nsresult Fill();
 
 protected:
