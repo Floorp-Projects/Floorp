@@ -93,13 +93,10 @@ menuitem[_moz-menuactive="true"][disabled="true"] {
 
 /* ::::: menu/menuitems in menubar ::::: */
 
-/* Match the Windows XP look and feel rather than the Windows 2000 look and feel.
-   -dwh */
-
 menubar > menu {
   border: 1px solid transparent;
-  padding: 3px 5px 2px 7px;
-  margin: 0px 0px 1px 0px;
+  padding: 2px 5px 2px 7px;
+  margin: 1px 0px 1px 0px;
 }
 
 menubar > menu[disabled="true"] {
@@ -107,7 +104,17 @@ menubar > menu[disabled="true"] {
 }
 
 menubar > menu[_moz-menuactive="true"] {
-  background-color: Highlight;
+  border-top: 1px solid ThreeDHighlight;
+  border-right: 1px solid ThreeDShadow;
+  border-bottom: 1px solid ThreeDShadow;
+  border-left: 1px solid ThreeDHighlight;
+}
+
+menubar > menu[_moz-menuactive="true"][open="true"] {
+  border-top: 1px solid ThreeDShadow;
+  border-right: 1px solid ThreeDHighlight;
+  border-bottom: 1px solid ThreeDHighlight;
+  border-left: 1px solid ThreeDShadow;
 }
 
 /* ..... internal content .... */
