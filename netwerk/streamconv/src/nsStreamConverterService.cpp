@@ -346,7 +346,6 @@ nsStreamConverterService::FindConverter(const char *aProgID, nsCStringArray **aE
     if (!source) return NS_ERROR_OUT_OF_MEMORY;
 
     SCTableData *data = (SCTableData*)lBFSTable.Get(source);
-    NS_ASSERTION(data, "trying to convert a from type that hasn't been registered.");
     if (!data) return NS_ERROR_FAILURE;
 
     BFSState *state = (BFSState*)data->data;
