@@ -41,6 +41,8 @@ OBJS =                                  \
 	.\$(OBJDIR)\nsRegionWin.obj          \
 	.\$(OBJDIR)\nsDeviceContextSpecWin.obj          \
 	.\$(OBJDIR)\nsDeviceContextSpecFactoryW.obj          \
+	.\$(OBJDIR)\nsScreenWin.obj          \
+	.\$(OBJDIR)\nsScreenManagerWin.obj          \
 	.\$(OBJDIR)\nsGfxFactoryWin.obj          \
 	$(NULL)
 

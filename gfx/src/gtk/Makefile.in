@@ -45,6 +45,8 @@ CPPSRCS		= \
 		nsRegionGTK.cpp \
 		nsGCCache.cpp \
 		nsRenderingContextGTK.cpp \
+		nsScreenGtk.cpp \
+		nsScreenManagerGtk.cpp \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
