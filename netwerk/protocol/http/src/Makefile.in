@@ -21,6 +21,8 @@ VPATH		= @srcdir@
 
 LIBRARY_NAME = http
 
+IS_COMPONENT = 1
+
 include $(DEPTH)/config/autoconf.mk
 
 CPPSRCS =                              \
