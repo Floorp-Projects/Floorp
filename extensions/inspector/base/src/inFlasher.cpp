@@ -166,29 +166,37 @@ inFlasher::DrawElementOutline(nsIDOMElement* aElement)
   nsCOMPtr<nsIDOMWindowInternal> window = inLayoutUtils::GetWindowFor(aElement);
   if (!window) return NS_OK;
   nsCOMPtr<nsIPresShell> presShell = inLayoutUtils::GetPresShellFor(window);
-  nsIFrame* frame = inLayoutUtils::GetFrameFor(aElement, presShell);
-  if (!frame) return NS_OK;
 
   nsCOMPtr<nsIPresContext> presContext;
   presShell->GetPresContext(getter_AddRefs(presContext));
-  nsCOMPtr<nsIRenderingContext> rcontext;
-  presShell->CreateRenderingContext(frame, getter_AddRefs(rcontext));
 
-  // get view bounds in case this frame is being scrolled
-  nsRect rect = frame->GetRect();
-  nsPoint origin = inLayoutUtils::GetClientOrigin(presContext, frame);
-  rect.x = origin.x;
-  rect.y = origin.y;
-  mCSSUtils->AdjustRectForMargins(frame, rect);
-  
   float p2t;
   p2t = presContext->PixelsToTwips();
 
-  if (mInvert) {
-    rcontext->InvertRect(rect.x, rect.y, rect.width, rect.height);
-  }
+  PRBool isFirstFrame = PR_TRUE;
+  nsCOMPtr<nsIRenderingContext> rcontext;
+  nsIFrame* frame = inLayoutUtils::GetFrameFor(aElement, presShell);
+  while (frame) {
+    if (!rcontext) {
+      presShell->CreateRenderingContext(frame, getter_AddRefs(rcontext));
+    }
+    // get view bounds in case this frame is being scrolled
+    nsRect rect = frame->GetRect();
+    nsPoint origin = inLayoutUtils::GetClientOrigin(presContext, frame);
+    rect.MoveTo(origin);
+    mCSSUtils->AdjustRectForMargins(frame, rect);
 
-  DrawOutline(rect.x, rect.y, rect.width, rect.height, p2t, rcontext);
+    if (mInvert) {
+      rcontext->InvertRect(rect);
+    }
+
+    frame->GetNextInFlow(&frame);
+
+    PRBool isLastFrame = (frame == nsnull);
+    DrawOutline(rect.x, rect.y, rect.width, rect.height, p2t, rcontext,
+                isFirstFrame, isLastFrame);
+    isFirstFrame = PR_FALSE;
+  }
 
   return NS_OK;
 }
@@ -222,14 +230,19 @@ inFlasher::ScrollElementIntoView(nsIDOMElement *aElement)
 
 void
 inFlasher::DrawOutline(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
-                       float aP2T, nsIRenderingContext* aRenderContext)
+                       float aP2T, nsIRenderingContext* aRenderContext,
+                       PRBool aDrawBegin, PRBool aDrawEnd)
 {
   aRenderContext->SetColor(mColor);
 
   DrawLine(aX, aY, aWidth, DIR_HORIZONTAL, BOUND_OUTER, aP2T, aRenderContext);
-  DrawLine(aX, aY, aHeight, DIR_VERTICAL, BOUND_OUTER, aP2T, aRenderContext);
+  if (aDrawBegin) {
+    DrawLine(aX, aY, aHeight, DIR_VERTICAL, BOUND_OUTER, aP2T, aRenderContext);
+  }
   DrawLine(aX, aY+aHeight, aWidth, DIR_HORIZONTAL, BOUND_INNER, aP2T, aRenderContext);
-  DrawLine(aX+aWidth, aY, aHeight, DIR_VERTICAL, BOUND_INNER, aP2T, aRenderContext);
+  if (aDrawEnd) {
+    DrawLine(aX+aWidth, aY, aHeight, DIR_VERTICAL, BOUND_INNER, aP2T, aRenderContext);
+  }
 }
 
 void
