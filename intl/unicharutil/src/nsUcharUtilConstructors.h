@@ -53,7 +53,7 @@
 // Functions used to create new instances of a given object by the
 // generic factory.
 
-#define MAKE_CTOR(_name)                                             \
+#define UNICHARUTIL_MAKE_CTOR(_name)                                 \
 static NS_IMETHODIMP                                                 \
 CreateNew##_name(nsISupports* aOuter, REFNSIID aIID, void **aResult) \
 {                                                                    \
@@ -79,7 +79,7 @@ CreateNew##_name(nsISupports* aOuter, REFNSIID aIID, void **aResult) \
 }
 
 
-MAKE_CTOR(HankakuToZenkaku)
+UNICHARUTIL_MAKE_CTOR(HankakuToZenkaku)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCaseConversionImp2)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsEntityConverter)
