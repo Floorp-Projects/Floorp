@@ -41,12 +41,10 @@ iframe {
 
 <box align="vertical">
 <html:div>
-  <toolbox>
-    <toolbar id="sidebarbar">
-        <titledbutton align="left" src="" value="reload" onclick="window.location.reload()"/>
-        <titledbutton align="left" src="" value="Customize" />
-    </toolbar>
-  </toolbox>
+  <toolbar id="sidebarbar">
+    <titledbutton align="left" src="" value="reload" onclick="window.location.reload()"/>
+    <titledbutton align="left" src="" value="Customize" />
+  </toolbar>
 </html:div>
 
 
