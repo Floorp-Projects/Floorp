@@ -41,7 +41,7 @@ function test()
     catch (e if true)
     {
         caught = true;
-        e = "this change should not propagate outside of this scope.";
+        e = "this change should not propagate outside of this scope";
     }
     catch (e if false)
     {   
@@ -57,7 +57,7 @@ function test()
     
     if (e != "foo")
         reportFailure ("Exception data modified inside catch() scope should " +
-                       "not be visible in the function scope (e ='" +
+                       "not be visible in the function scope (e = '" +
                        e + "'.)");
 
     exitFunc ("test");
