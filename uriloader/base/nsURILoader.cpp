@@ -55,6 +55,9 @@
 #include "nsWeakReference.h"
 #include "nsIHttpChannel.h"
 
+#include "nsMimeTypes.h"
+#include "nsIMIMEService.h"
+
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeOwner.h"
@@ -273,6 +276,43 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest *request, nsISupports * 
 
   rv = aChannel->GetContentType(getter_Copies(contentType));
   if (NS_FAILED(rv)) return rv;
+
+  //
+  // Step zero:  If the content-type is unknown (ie. either 
+  //             application/x-unknown-content-type or */* then try to
+  //             find a better one from the MIME Service...
+  //
+  if (!nsCRT::strcasecmp(contentType, UNKNOWN_CONTENT_TYPE) ||
+    !nsCRT::strcasecmp(contentType, "*/*")) 
+  {
+    nsCOMPtr<nsIMIMEService> mimeService;
+    mimeService = do_GetService(NS_MIMESERVICE_CONTRACTID, &rv);
+
+    if (NS_SUCCEEDED(rv)) {
+      nsCOMPtr<nsIURI> uri;
+
+      rv = aChannel->GetURI(getter_AddRefs(uri));
+      if (NS_FAILED(rv)) return rv;
+
+      rv = mimeService->GetTypeFromURI(uri, getter_Copies(contentType));
+      if (NS_SUCCEEDED(rv)) {
+        rv = aChannel->SetContentType(contentType);
+      }
+    }
+
+    if (NS_FAILED(rv) && !nsCRT::strcasecmp(contentType, "*/*")) {
+      //
+      // If something with the MimeService failed, and the content type is
+      // "*/*" then change it to "application/x-unknown-content-type" so
+      // the buffer sniffer will be called later...  At least that is
+      // better than nothing!
+      //
+      rv = aChannel->SetContentType(UNKNOWN_CONTENT_TYPE);
+      if (NS_SUCCEEDED(rv)) {
+        contentType.Assign(UNKNOWN_CONTENT_TYPE);
+      }
+    }
+  }
 
    // go to the uri dispatcher and give them our stuff...
   nsCOMPtr<nsIURILoader> uriLoader;
