@@ -430,6 +430,14 @@ NS_IMETHODIMP nsDocShellTreeOwner::OnChildStatusChange(nsIChannel* aChannel,
       aProgressStatusFlags);
 }
 
+NS_IMETHODIMP nsDocShellTreeOwner::OnLocationChange(nsIURI* aURI)
+{
+   if(!mOwnerProgressListener)
+      return NS_OK;
+
+   return mOwnerProgressListener->OnLocationChange(aURI);
+}
+
 //*****************************************************************************
 // nsDocShellTreeOwner: Helpers
 //*****************************************************************************   
