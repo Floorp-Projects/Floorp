@@ -22,18 +22,22 @@
  */
 
 #include "prlog.h"
+#include "prinrval.h"
 
 #include "nsString.h"
 
 #if defined(PR_LOGGING)
 extern PRLogModuleInfo *gImgLog;
 
+#define GIVE_ME_MS_NOW() PR_IntervalToMilliseconds(PR_IntervalNow())
+
 class LogScope {
 public:
   LogScope(PRLogModuleInfo *aLog, void *from, const nsAReadableCString &fn) :
     mLog(aLog), mFrom(from), mFunc(fn)
   {
-    PR_LOG(mLog, PR_LOG_DEBUG, ("[this=%p] %s {ENTER}\n",
+    PR_LOG(mLog, PR_LOG_DEBUG, ("%d [this=%p] %s {ENTER}\n",
+                                   GIVE_ME_MS_NOW(),
                                    mFrom, mFunc.get()));
   }
 
@@ -42,7 +46,8 @@ public:
            const nsLiteralCString &paramName, const char *paramValue) :
     mLog(aLog), mFrom(from), mFunc(fn)
   {
-    PR_LOG(mLog, PR_LOG_DEBUG, ("[this=%p] %s (%s=\"%s\") {ENTER}\n",
+    PR_LOG(mLog, PR_LOG_DEBUG, ("%d [this=%p] %s (%s=\"%s\") {ENTER}\n",
+                                   GIVE_ME_MS_NOW(),
                                    mFrom, mFunc.get(),
                                    paramName.get(),
                                    paramValue));
@@ -53,7 +58,8 @@ public:
            const nsLiteralCString &paramName, const void *paramValue) :
     mLog(aLog), mFrom(from), mFunc(fn)
   {
-    PR_LOG(mLog, PR_LOG_DEBUG, ("[this=%p] %s (%s=%p) {ENTER}\n",
+    PR_LOG(mLog, PR_LOG_DEBUG, ("%d [this=%p] %s (%s=%p) {ENTER}\n",
+                                   GIVE_ME_MS_NOW(),
                                    mFrom, mFunc.get(),
                                    paramName.get(),
                                    paramValue));
@@ -64,7 +70,8 @@ public:
            const nsLiteralCString &paramName, PRInt32 paramValue) :
     mLog(aLog), mFrom(from), mFunc(fn)
   {
-    PR_LOG(mLog, PR_LOG_DEBUG, ("[this=%p] %s (%s=\"%d\") {ENTER}\n",
+    PR_LOG(mLog, PR_LOG_DEBUG, ("%d [this=%p] %s (%s=\"%d\") {ENTER}\n",
+                                   GIVE_ME_MS_NOW(),
                                    mFrom, mFunc.get(),
                                    paramName.get(),
                                    paramValue));
@@ -75,7 +82,8 @@ public:
            const nsLiteralCString &paramName, PRUint32 paramValue) :
     mLog(aLog), mFrom(from), mFunc(fn)
   {
-    PR_LOG(mLog, PR_LOG_DEBUG, ("[this=%p] %s (%s=\"%d\") {ENTER}\n",
+    PR_LOG(mLog, PR_LOG_DEBUG, ("%d [this=%p] %s (%s=\"%d\") {ENTER}\n",
+                                   GIVE_ME_MS_NOW(),
                                    mFrom, mFunc.get(),
                                    paramName.get(),
                                    paramValue));
@@ -83,7 +91,8 @@ public:
 
 
   ~LogScope() {
-    PR_LOG(mLog, PR_LOG_DEBUG, ("[this=%p] %s {EXIT}\n",
+    PR_LOG(mLog, PR_LOG_DEBUG, ("%d [this=%p] %s {EXIT}\n",
+                                   GIVE_ME_MS_NOW(),
                                    mFrom, mFunc.get()));
   }
 
@@ -93,6 +102,58 @@ private:
   nsCAutoString mFunc;
 };
 
+
+class LogFunc {
+public:
+  LogFunc(PRLogModuleInfo *aLog, void *from, const nsLiteralCString &fn)
+  {
+    PR_LOG(aLog, PR_LOG_DEBUG, ("%d [this=%p] %s\n",
+                                GIVE_ME_MS_NOW(), from,
+                                fn.get()));
+  }
+
+  LogFunc(PRLogModuleInfo *aLog, void *from, const nsLiteralCString &fn,
+          const nsLiteralCString &paramName, const char *paramValue)
+  {
+    PR_LOG(aLog, PR_LOG_DEBUG, ("%d [this=%p] %s (%s=\"%s\")\n",
+                                GIVE_ME_MS_NOW(), from,
+                                fn.get(),
+                                paramName.get(), paramValue));
+  }
+
+  LogFunc(PRLogModuleInfo *aLog, void *from, const nsLiteralCString &fn,
+          const nsLiteralCString &paramName, const void *paramValue)
+  {
+    PR_LOG(aLog, PR_LOG_DEBUG, ("%d [this=%p] %s (%s=\"%p\")\n",
+                                GIVE_ME_MS_NOW(), from,
+                                fn.get(),
+                                paramName.get(), paramValue));
+  }
+
+
+  LogFunc(PRLogModuleInfo *aLog, void *from, const nsLiteralCString &fn,
+          const nsLiteralCString &paramName, PRUint32 paramValue)
+  {
+    PR_LOG(aLog, PR_LOG_DEBUG, ("%d [this=%p] %s (%s=\"%d\")\n",
+                                GIVE_ME_MS_NOW(), from,
+                                fn.get(),
+                                paramName.get(), paramValue));
+  }
+
+};
+
+
+class LogMessage {
+public:
+  LogMessage(PRLogModuleInfo *aLog, void *from, const nsLiteralCString &fn,
+             const nsLiteralCString &msg)
+  {
+    PR_LOG(aLog, PR_LOG_DEBUG, ("%d [this=%p] %s -- %s\n",
+                                GIVE_ME_MS_NOW(), from,
+                                fn.get(),
+                                msg.get()));
+  }
+};
 
 #define LOG_SCOPE(l, s) \
   LogScope LOG_SCOPE_TMP_VAR ##__LINE__ (l,                            \
@@ -105,7 +166,45 @@ private:
                                          NS_LITERAL_CSTRING(s),        \
                                          NS_LITERAL_CSTRING(pn), pv)
 
+#define LOG_FUNC(l, s)                  \
+  LogFunc(l,                            \
+          NS_STATIC_CAST(void *, this), \
+          NS_LITERAL_CSTRING(s))
+
+#define LOG_FUNC_WITH_PARAM(l, s, pn, pv) \
+  LogFunc(l,                              \
+          NS_STATIC_CAST(void *, this),   \
+          NS_LITERAL_CSTRING(s),          \
+          NS_LITERAL_CSTRING(pn), pv)
+
+#define LOG_STATIC_FUNC(l, s)           \
+  LogFunc(l,                            \
+          nsnull,                       \
+          NS_LITERAL_CSTRING(s))
+
+#define LOG_STATIC_FUNC_WITH_PARAM(l, s, pn, pv) \
+  LogFunc(l,                             \
+          nsnull,                        \
+          NS_LITERAL_CSTRING(s),         \
+          NS_LITERAL_CSTRING(pn), pv)
+
+
+
+#define LOG_MSG(l, s, m)                   \
+  LogMessage(l,                            \
+             NS_STATIC_CAST(void *, this), \
+             NS_LITERAL_CSTRING(s),        \
+             NS_LITERAL_CSTRING(m))
+
+
 #else
 #define LOG_SCOPE(l, s)
 #define LOG_SCOPE_WITH_PARAM(l, s, pn, pv)
+#define LOG_FUNC(l, s)
+#define LOG_FUNC_WITH_PARAM(l, s, pn, pv)
+#define LOG_STATIC_FUNC(l, s)
+#define LOG_STATIC_FUNC_WITH_PARAM(l, s, pn, pv)
+#define LOG_MSG(l, s, m)
 #endif
+
+#define LOG_MSG_WITH_PARAM LOG_FUNC_WITH_PARAM

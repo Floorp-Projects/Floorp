@@ -46,7 +46,6 @@ public:
   imgCache();
   virtual ~imgCache();
 
-#ifdef MOZ_NEW_CACHE
   static void Shutdown(); // for use by the factory
 
   /* additional members */
@@ -56,27 +55,5 @@ public:
 
   static nsresult ClearChromeImageCache();
   static nsresult ClearImageCache();
-
-#else
-  static void Shutdown() { }
-
-  /* additional members */
-  static PRBool Put(nsIURI *aKey, imgRequest *request, nsICacheEntryDescriptor **aEntry) {
-    return PR_FALSE;
-  }
-  static PRBool Get(nsIURI *aKey, imgRequest **aRequest, nsICacheEntryDescriptor **aEntry) {
-    return PR_FALSE;
-  }
-  static PRBool Remove(nsIURI *aKey) {
-    return PR_FALSE;
-  }
-  static nsresult ClearChromeImageCache() {
-    return NS_ERROR_FAILURE;
-  }
-  static nsresult ClearImageCache() {
-    return NS_ERROR_FAILURE;
-  }
-
-#endif /* MOZ_NEW_CACHE */
 };
 
