@@ -24,6 +24,7 @@
 #include "nsIPresContext.h"
 #include "nsIContent.h"
 #include "nsIStyleContext.h"
+#include "nsIReflowCommand.h"
 #include "nsHTMLContainerFrame.h"
 #include "nsBlockFrame.h"
 #include "nsIDOMHTMLParagraphElement.h"
@@ -140,6 +141,29 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
     reason = eReflowReason_Incremental;
     // Make sure we only incrementally reflow once
     mNextRCFrame = nsnull;
+  }
+  else if (mOuterReflowState.reason == eReflowReason_StyleChange) {
+    reason = eReflowReason_StyleChange;
+  }
+  else {
+    if (mOuterReflowState.reason == eReflowReason_Incremental) {
+      // If the incremental reflow command is a StyleChanged reflow
+      // and it's target is the current block, then make sure we send
+      // StyleChange reflow reasons down to all the children so that
+      // they don't over-optimize their reflow.
+      nsIReflowCommand* rc = mOuterReflowState.reflowCommand;
+      if (rc) {
+        nsIReflowCommand::ReflowType type;
+        rc->GetType(type);
+        if (type == nsIReflowCommand::StyleChanged) {
+          nsIFrame* target;
+          rc->GetTarget(target);
+          if (target == mOuterReflowState.frame) {
+            reason = eReflowReason_StyleChange;
+          }
+        }
+      }
+    }
   }
 
   // Setup reflow state for reflowing the frame
