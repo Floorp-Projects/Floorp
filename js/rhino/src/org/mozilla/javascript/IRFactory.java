@@ -666,9 +666,9 @@ public class IRFactory {
      */
     public Object createRegExp(String string, String flags) {
         return flags.length() == 0
-               ? new Node(TokenStream.OBJECT,
+               ? new Node(TokenStream.REGEXP,
                           new Node(TokenStream.STRING, string))
-               : new Node(TokenStream.OBJECT,
+               : new Node(TokenStream.REGEXP,
                           new Node(TokenStream.STRING, string),
                           new Node(TokenStream.STRING, flags));
     }

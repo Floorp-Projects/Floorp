@@ -1380,12 +1380,12 @@ class Parser {
             sourceAddString(ts.STRING, s);
             return nf.createString(s);
 
-        case TokenStream.OBJECT:
+        case TokenStream.REGEXP:
         {
             String flags = ts.regExpFlags;
             ts.regExpFlags = null;
             String re = ts.getString();
-            sourceAddString(ts.OBJECT, '/' + re + '/' + flags);
+            sourceAddString(ts.REGEXP, '/' + re + '/' + flags);
             return nf.createRegExp(re, flags);
         }
 

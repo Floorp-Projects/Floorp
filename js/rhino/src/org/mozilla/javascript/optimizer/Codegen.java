@@ -596,7 +596,7 @@ public class Codegen extends Interpreter {
                 visitPrimary(node);
                 break;
 
-              case TokenStream.OBJECT:
+              case TokenStream.REGEXP:
                 visitObject(node);
                 break;
 

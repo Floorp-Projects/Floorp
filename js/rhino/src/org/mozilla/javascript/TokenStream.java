@@ -137,7 +137,7 @@ public class TokenStream {
         SHEQ        = 53,   // shallow equality (===)
         SHNE        = 54,   // shallow inequality (!==)
         CLOSURE     = 55,
-        OBJECT      = 56,
+        REGEXP      = 56,
         POP         = 57,
         POS         = 58,
         VARINC      = 59,
@@ -313,7 +313,7 @@ public class TokenStream {
                 case SHEQ:            return "sheq";
                 case SHNE:            return "shne";
                 case CLOSURE:         return "closure";
-                case OBJECT:          return "object";
+                case REGEXP:          return "object";
                 case POP:             return "pop";
                 case POS:             return "pos";
                 case VARINC:          return "varinc";
@@ -428,7 +428,7 @@ public class TokenStream {
                     return name + " " + tokenToName(this.op);
 
                 case STRING:
-                case OBJECT:
+                case REGEXP:
                 case NAME:
                     return name + " `" + this.string + "'";
 
@@ -1238,7 +1238,7 @@ public class TokenStream {
                 this.string = new String(stringBuffer, 0, reEnd);
                 this.regExpFlags = new String(stringBuffer, reEnd,
                                               stringBufferTop - reEnd);
-                return OBJECT;
+                return REGEXP;
             }
 
 

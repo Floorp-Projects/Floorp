@@ -387,7 +387,7 @@ public class NodeTransformer {
                 node.setType(inFunction ? TokenStream.POP : TokenStream.POPV);
                 break;
 
-              case TokenStream.OBJECT:
+              case TokenStream.REGEXP:
               {
                 ObjArray regexps = (ObjArray) tree.getProp(Node.REGEXP_PROP);
                 if (regexps == null) {
@@ -395,7 +395,7 @@ public class NodeTransformer {
                     tree.putProp(Node.REGEXP_PROP, regexps);
                 }
                 regexps.add(node);
-                Node n = new Node(TokenStream.OBJECT);
+                Node n = new Node(TokenStream.REGEXP);
                 iterator.replaceCurrent(n);
                 n.putProp(Node.REGEXP_PROP, node);
                 break;

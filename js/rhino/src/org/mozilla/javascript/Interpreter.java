@@ -1009,10 +1009,10 @@ public class Interpreter {
                 // could release the local here??
                 break;
 
-            case TokenStream.OBJECT : {
+            case TokenStream.REGEXP : {
                     Node regexp = (Node) node.getProp(Node.REGEXP_PROP);
                     int index = regexp.getExistingIntProp(Node.REGEXP_PROP);
-                    iCodeTop = addByte(TokenStream.OBJECT, iCodeTop);
+                    iCodeTop = addByte(TokenStream.REGEXP, iCodeTop);
                     iCodeTop = addShort(index, iCodeTop);
                     itsStackDepth++;
                     if (itsStackDepth > itsData.itsMaxStack)
@@ -1278,7 +1278,7 @@ public class Interpreter {
                                 pc += 6;
                             }
                             break;
-                        case TokenStream.OBJECT :
+                        case TokenStream.REGEXP :
                         case TokenStream.CLOSURE :
                         case TokenStream.NEW :
                         case TokenStream.CALL : {
@@ -1431,7 +1431,7 @@ public class Interpreter {
                 // arg count
                 return 1 + 2 + 2 + 2;
 
-            case TokenStream.OBJECT :
+            case TokenStream.REGEXP :
             case TokenStream.CLOSURE :
             case TokenStream.NEW :
             case TokenStream.CALL :
@@ -2426,7 +2426,7 @@ public class Interpreter {
         pc += 2;
         break;
     }
-    case TokenStream.OBJECT : {
+    case TokenStream.REGEXP : {
         int i = getShort(iCode, pc + 1);
         stack[++stackTop] = idata.itsRegExpLiterals[i];
         pc += 2;
