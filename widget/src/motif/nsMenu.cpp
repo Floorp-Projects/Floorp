@@ -147,7 +147,8 @@ NS_METHOD nsMenu::Create(nsIMenuBar *aParent, const nsString &aLabel)
   mMenuBarParent = aParent;
   NS_ADDREF(mMenuBarParent);
   Create(GetNativeParent(), aLabel);
-  aParent->AddMenu(this);
+  NS_ASSERTION(0, "nsIMenu has changed.  fix me!");
+  //aParent->AddMenu(this);
   return NS_OK;
 }
 
@@ -157,7 +158,8 @@ NS_METHOD nsMenu::Create(nsIMenu *aParent, const nsString &aLabel)
   mMenuParent = aParent;
   NS_ADDREF(mMenuParent);
   Create(GetNativeParent(), aLabel);
-  aParent->AddMenu(this);
+  NS_ASSERTION(0, "nsIMenu has changed.  fix me!");
+  //aParent->AddMenu(this);
   return NS_OK;
 }
 

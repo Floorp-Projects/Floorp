@@ -120,7 +120,7 @@ Widget nsMenuItem::GetNativeParent()
 {
   void * voidData;
   if (nsnull != mMenuParent) {
-    mMenuParent->GetNativeData(voidData);
+    mMenuParent->GetNativeData(&voidData);
   } else if (nsnull != mPopUpParent) {
     mPopUpParent->GetNativeData(voidData);
   } else {
@@ -194,7 +194,7 @@ NS_METHOD nsMenuItem::Create(nsIMenu        *aParent,
   }
 
   Create(widget, GetNativeParent(), aLabel, aCommand);
-  aParent->AddItem(this);
+  //aParent->AddItem(this);
 
   return NS_OK;
 }
