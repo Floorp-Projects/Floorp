@@ -57,7 +57,7 @@
 static NS_DEFINE_CID(kRDFServiceCID,   NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFContainerCID, NS_RDFCONTAINER_CID);
 
-class nsXPINotifierImpl : public nsISupports
+class nsXPINotifierImpl : public nsIRDFXMLSinkObserver
 {
 
 public:
@@ -461,7 +461,7 @@ nsXPINotifierImpl::OpenRemoteDataSource(const char* aURL, PRBool blocking, nsIRD
             nsCOMPtr<nsIRDFXMLSink> sink = do_QueryInterface(remote, &rv);
             if (NS_FAILED(rv)) return rv;
 
-            rv = sink->AddXMLSinkObserver((nsIRDFXMLSinkObserver*)this);
+            rv = sink->AddXMLSinkObserver(this);
             if (NS_FAILED(rv)) return rv;
         }
 
@@ -526,6 +526,9 @@ NS_IMETHODIMP
 nsXPINotifierImpl::OnEndLoad(nsIRDFXMLSink *aSink)
 {
     nsresult rv;
+
+    (void) aSink->RemoveXMLSinkObserver(this);
+
     nsCOMPtr<nsIRDFDataSource> distributorDataSource = do_QueryInterface(aSink, &rv);
     if (NS_FAILED(rv)) return rv;
 
@@ -632,6 +635,7 @@ nsXPINotifierImpl::OnEndLoad(nsIRDFXMLSink *aSink)
 NS_IMETHODIMP
 nsXPINotifierImpl::OnError(nsIRDFXMLSink *aSink, nsresult aResult, const PRUnichar* aErrorMsg)
 {
+    (void) aSink->RemoveXMLSinkObserver(this);
     return NS_OK;
 }
 
@@ -662,7 +666,7 @@ nsXPINotifierImpl::QueryInterface(REFNSIID aIID, void** aResult)
     }
     else if (aIID.Equals(nsIRDFXMLSinkObserver::GetIID())) 
     {
-        *aResult = NS_STATIC_CAST(nsIRDFXMLSinkObserver*, (nsIRDFXMLSinkObserver*)this);
+        *aResult = NS_STATIC_CAST(nsIRDFXMLSinkObserver*, this);
     }
     else 
     {
