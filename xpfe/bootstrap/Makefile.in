@@ -74,8 +74,8 @@ LIBS = \
 	-lmozutil	\
 	-lxp		\
 	-lxpcom		\
-	$(NSPR_LIBS)	\
 	$(ZLIB_LIBS)	\
+	$(NSPR_LIBS)	\
 	-lpwcac		\
 	$(TK_LIBS)	\
 	$(NULL)

@@ -209,7 +209,11 @@ jsmath.o: $(FDLIBM_LIBRARY) $(JSMATH_PRELINK)
 ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
 	ld -r -o $@ $(JSMATH_PRELINK) $(FDLIBM_LIBRARY)
 else
+ifeq ($(OS_ARCH), IRIX)
+	ld -n32 -r -o $@ $(JSMATH_PRELINK) $(FDLIBM_LIBRARY)
+else
 	ld -r -o $@ $(JSMATH_PRELINK) $(FDLIBM_LIBRARY)
+endif
 endif
 
 $(JSMATH_PRELINK): jsmath.c
