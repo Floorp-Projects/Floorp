@@ -1,5 +1,6 @@
 #!/usr/bin/perl
-#
+# -*- Mode: perl; indent-tabs-mode: nil -*-
+# 
 # Requires: tinder-defaults.pl
 #
 # Intent: This is becoming a general-purpose tinderbox
@@ -20,7 +21,7 @@ use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
 
 
-$::UtilsVersion = '$Revision: 1.116 $ ';
+$::UtilsVersion = '$Revision: 1.117 $ ';
 
 package TinderUtils;
 
@@ -982,15 +983,25 @@ sub run_all_tests {
 		# Settle OS.
 		run_system_cmd("sync; sleep 10", 35);
 
+		if (system("\\grep -s general.skins.selectedSkin $pref_file > /dev/null")) {
+		  print_log "Setting general.skins.selectedSkin to modern/1.0\n";
+		  open PREFS, ">>$pref_file" or die "can't open $pref_file ($?)\n";
+		  print PREFS "user_pref(\"general.skins.selectedSkin\", \"modern/1.0\");\n";
+		  close PREFS;
+		} else {
+		  print_log "Modern skin already set.\n";
+		}
+
+
 		my $url  = "-chrome \"file:$build_dir/mozilla/xpfe/test/winopen.xul\"";
 		if($test_result eq 'success') {
 			$open_time = AliveTestReturnToken("XULWindowOpenTest",
-											  $build_dir,
-											  $binary,
-											  " -P $Settings::MozProfileName " . $url,
-											  $Settings::XULWindowOpenTestTimeout,
-											  "__xulWinOpenTime",
-											  ":");
+							  $build_dir,
+							  $binary,
+							  " -P $Settings::MozProfileName " . $url,
+							  $Settings::XULWindowOpenTestTimeout,
+							  "__xulWinOpenTime",
+							  ":");
 			chomp($open_time);
 		}
 		if($open_time) {
