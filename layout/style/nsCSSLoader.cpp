@@ -1385,7 +1385,11 @@ CSSLoaderImpl::LoadSheet(SheetLoadData* aLoadData, StyleSheetState aSheetState)
     httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Accept"),
                                   NS_LITERAL_CSTRING("text/css,*/*;q=0.1"),
                                   PR_FALSE);
-    if (mDocument) {
+    if (aLoadData->mParentData) {
+      nsCOMPtr<nsIURI> parentURI;
+      aLoadData->mParentData->mSheet->GetURL(*getter_AddRefs(parentURI));
+      httpChannel->SetReferrer(parentURI);
+    } else if (mDocument) {
       nsIURI *documentURI = mDocument->GetDocumentURI();
       NS_ASSERTION(documentURI, "Null document uri is bad!");
       if (documentURI) {
