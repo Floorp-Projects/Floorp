@@ -689,6 +689,8 @@ JSJ_AttachCurrentThreadToJava(JSJavaVM *jsjava_vm, const char *name, JNIEnv **ja
     java_vm = jsjava_vm->java_vm;
     if (JSJ_callbacks && JSJ_callbacks->attach_current_thread)
         jEnv = JSJ_callbacks->attach_current_thread(java_vm);
+    else
+        return NULL;
     if (jEnv == NULL) 
         return NULL;
 
@@ -746,6 +748,8 @@ jsj_MapJavaThreadToJSJavaThreadState(JNIEnv *jEnv, char **errp)
     /* First, figure out which Java VM is calling us */
     if (JSJ_callbacks && JSJ_callbacks->get_java_vm)
         java_vm = JSJ_callbacks->get_java_vm(jEnv);
+    else
+        return NULL;
     if (java_vm == NULL)
         return NULL;
 
