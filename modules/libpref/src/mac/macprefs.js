@@ -55,8 +55,8 @@ pref("font.name.monospace.he", "אריאל");
 pref("font.name.cursive.he", "XXX.cursive");
 pref("font.name.fantasy.he", "XXX.fantasy");
 
-pref("font.name.serif.ja", "本明朝−Ｍ"); 
-pref("font.name.sans-serif.ja", "丸ゴシック−Ｍ"); 
+pref("font.name.serif.ja", "平成明朝"); 
+pref("font.name.sans-serif.ja", "平成角ゴシック"); 
 pref("font.name.monospace.ja", "Osaka−等幅"); 
 pref("font.name.cursive.ja", "XXX.cursive");
 pref("font.name.fantasy.ja", "XXX.fantasy");
@@ -120,6 +120,49 @@ pref("font.name.sans-serif.zh-TW", "Apple LiGothic Medium");
 pref("font.name.monospace.zh-TW", "Apple LiGothic Medium");  
 pref("font.name.cursive.zh-TW", "XXX.cursive");
 pref("font.name.fantasy.zh-TW", "XXX.fantasy");
+
+pref("font.default", "serif");
+pref("font.size.variable.ar", 16);
+pref("font.size.fixed.ar", 13);
+
+pref("font.size.variable.el", 16);
+pref("font.size.fixed.el", 13);
+
+pref("font.size.variable.he", 16);
+pref("font.size.fixed.he", 13);
+
+pref("font.size.variable.ja", 14);
+pref("font.size.fixed.ja", 14);
+
+pref("font.size.variable.ko", 16);
+pref("font.size.fixed.ko", 16);
+
+pref("font.size.variable.th", 16);
+pref("font.size.fixed.th", 13);
+
+pref("font.size.variable.tr", 16);
+pref("font.size.fixed.tr", 13);
+
+pref("font.size.variable.x-baltic", 16);
+pref("font.size.fixed.x-baltic", 13);
+
+pref("font.size.variable.x-central-euro", 16);
+pref("font.size.fixed.x-central-euro", 13);
+
+pref("font.size.variable.x-cyrillic", 16);
+pref("font.size.fixed.x-cyrillic", 13);
+
+pref("font.size.variable.x-unicode", 16);
+pref("font.size.fixed.x-unicode", 13);
+
+pref("font.size.variable.x-western", 16);
+pref("font.size.fixed.x-western", 13);
+
+pref("font.size.variable.zh-CN", 16);
+pref("font.size.fixed.zh-CN", 16);
+
+pref("font.size.variable.zh-TW", 16);
+pref("font.size.fixed.zh-TW", 16);
 
 // Override the Windows settings: no menu key, meta accelerator key.
 pref("ui.key.menuAccessKey", 0);
