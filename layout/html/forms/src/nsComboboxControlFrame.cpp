@@ -1068,6 +1068,10 @@ nsComboboxControlFrame::ReflowCombobox(nsIPresContext *         aPresContext,
 
   REFLOW_NOISY_MSG3("**AdjustCombobox - Reflow: WW: %d  HH: %d\n", aDesiredSize.width, aDesiredSize.height);
 
+  if (nsnull != aDesiredSize.maxElementSize) {
+    aDesiredSize.maxElementSize->width  = aDesiredSize.width;
+    aDesiredSize.maxElementSize->height = aDesiredSize.height;
+  }
   // Now cache the available height as our height without border and padding
   // This sets up the optimization for if a new available width comes in and we are equal or
   // less than it we can bail
