@@ -351,7 +351,7 @@ nsLayoutDLF::CreateDocument(const char* aCommand,
     if (NS_FAILED(rv))
       break;
 
-    // Create the document viewer
+    // Create the document viewer  XXX: could reuse document viewer here!
     rv = NS_NewDocumentViewer(getter_AddRefs(docv));
     if (NS_FAILED(rv))
       break;
