@@ -320,11 +320,11 @@ nsMsgKeySet::Output(char **outputStr)
 
 	s_size = (size * 12) + 10;	// dmb - try to make this allocation get used at least once.
   s_head = (char *) nsMemory::Alloc(s_size);
+	if (! s_head) return NS_ERROR_OUT_OF_MEMORY;
+
 	s_head[0] = '\0';			// otherwise, s_head will contain garbage.
 	s = s_head;
 	s_end = s + s_size;
-
-	if (! s) return NS_ERROR_OUT_OF_MEMORY;
 
 	while (tail < end) {
 		PRInt32 from;
@@ -514,11 +514,11 @@ nsMsgKeySet::Optimize()
 	output_size = input_size + 1;
 	input_tail = m_data;
 	output_data = (PRInt32 *) PR_Malloc (sizeof (PRInt32) * output_size);
+	if (!output_data) return PR_FALSE;
+
 	output_tail = output_data;
 	input_end = input_tail + input_size;
 	output_end = output_data + output_size;
-
-	if (!output_data) return PR_FALSE;
 
 	/* We're going to modify the set, so invalidate the cache. */
 	m_cached_value = -1;
