@@ -230,7 +230,7 @@ print q(
    <BR><B>
 );
 
-my $link_path;
+my $link_path = "";
 foreach my $path (split('/',$rcs_path)) {
 
     # Customize this translation
@@ -238,7 +238,8 @@ foreach my $path (split('/',$rcs_path)) {
     my $lxr_path = Fix_LxrLink($link_path);
     print "<A HREF='$lxr_path'>$path</a>/ ";
 }
-print "<A HREF='$link_path$file_tail'>$file_tail</a> ";
+my $lxr_path = Fix_LxrLink("$link_path$file_tail");
+print "<A HREF='$lxr_path'>$file_tail</a> ";
 
 print " (<A HREF='cvsblame.cgi?file=$filename&rev=$revision&root=$root'";
 print " onmouseover='return log(event,\"$::prev_revision{$revision}\",\"$revision\");'" if $use_layers;
@@ -247,7 +248,6 @@ print "$browse_revtag:" unless $browse_revtag eq 'HEAD';
 print $revision if $revision;
 print "</A>)";
 
-my $lxr_path = Fix_LxrLink("$link_path$file_tail");
 print qq(
 </B>
   </TD>
