@@ -80,7 +80,7 @@ JSS_throwMsgPrErrArg(JNIEnv *env, char *throwableClassName, char *message,
         JSS_throw(env, OUT_OF_MEMORY_ERROR);
         goto finish;
     }
-    SNPRINTF(msg, msgLen, "%s: (%d) %s", message, errCode, errStr);
+    PR_snprintf(msg, msgLen, "%s: (%ld) %s", message, errCode, errStr);
 
     JSS_throwMsg(env, throwableClassName, msg);
 

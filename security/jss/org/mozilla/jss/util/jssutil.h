@@ -278,12 +278,6 @@ JSS_throwMsgPrErrArg(JNIEnv *env, char *throwableClassName, char *message,
 #define JSS_throwMsgPrErr(e, cn, m) \
     JSS_throwMsgPrErrArg((e), (cn), (m), PR_GetError())
 
-#ifdef _WINDOWS
-#define SNPRINTF _snprintf
-#else
-#define SNPRINTF snprintf
-#endif
-
 PR_END_EXTERN_C
 
 #endif

@@ -576,7 +576,7 @@ Java_org_mozilla_jss_ssl_SSLSocket_setCipherPreference(
     status = SSL_CipherPrefSetDefault(cipher, enable);
     if(status != SECSuccess) {
         char buf[128];
-        SNPRINTF(buf, 128, "Failed to %s cipher 0x%lx\n",
+        PR_snprintf(buf, 128, "Failed to %s cipher 0x%lx\n",
             (enable ? "enable" : "disable"), cipher);
         JSS_throwMsgPrErr(env, SOCKET_EXCEPTION, buf);
         goto finish;
