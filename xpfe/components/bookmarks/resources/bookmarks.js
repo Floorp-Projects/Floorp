@@ -489,8 +489,6 @@ function OpenURL(event, node, root)
 	return(true);
 }
 
-
-
 function doSort(sortColName)
 {
 	var node = document.getElementById(sortColName);
@@ -951,4 +949,16 @@ function doContextCmd(cmdName)
 
 	debug("doContextCmd ends.");
 	return(true);
+}
+
+function bookmarkSelect()
+{
+  var tree = document.getElementById( "bookmarksTree" );
+  var status = document.getElementById( "statusbar-text" );
+  if( tree.selectedItems.length != 1 ) {
+    status.setAttribute( "value", "" );
+    return;
+  }
+  var url = tree.selectedItems[0].getAttribute("location");
+  status.setAttribute( "value", url );
 }
