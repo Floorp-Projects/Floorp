@@ -58,9 +58,11 @@ extern "C" char *MIME_DecodeMimePartIIStr(const char *header, char *charset);
 char *MIME_EncodeMimePartIIStr(const char *header, const char* mailCharset, const PRInt32 encodedWordSize);
 
 /**
- * Apply charset conversion to a given buffer.
+ * Apply charset conversion to a given string. The conversion is done by an unicode round trip.
  * This is a replacement for INTL_ConvertLineWithoutAutoDetect.
  *
+ * Note the caller cannot call this muliple times for a large buffer (of multi byte text)
+ * since this will not save a state info (i.e. converter instance will be created/destroyed for every call).
  *
  * @param from_charset[IN] A charset name in C string.
  * @param to_charset  [IN] A charset name in C string.
@@ -68,12 +70,14 @@ char *MIME_EncodeMimePartIIStr(const char *header, const char* mailCharset, cons
  * @param outCstring  [OUT] Converted buffer (in C string) is set. Allocated buffer should be freed by PR_FREE.
  * @return            nsresult, 0 is success, otherwise error.
  */
-PRUint32 MIME_ConvertCharset(const char* from_charset, const char* to_charset,
+PRInt32 MIME_ConvertCharset(const char* from_charset, const char* to_charset,
                              const char* inCstring, char** outCstring);
 
 /**
- * Convert an input buffer with a charset into unicode.
+ * Convert an input string with a charset into unicode.
  *
+ * Note the caller cannot call this muliple times for a large buffer (of multi byte text)
+ * since this will not save a state info (i.e. converter instance will be created/destroyed for every call).
  *
  * @param from_charset [IN] A charset name in C string.
  * @param inCstring    [IN] Input buffer (in C string) to convert.
@@ -81,7 +85,7 @@ PRUint32 MIME_ConvertCharset(const char* from_charset, const char* to_charset,
  * @param uniLength    [OUT] Output unicode buffer character length is set.
  * @return             nsresult, 0 is success, otherwise error.
  */
-PRUint32 MIME_ConvertToUnicode(const char* from_charset, const char* inCstring,
+PRInt32 MIME_ConvertToUnicode(const char* from_charset, const char* inCstring,
                                void** uniBuffer, PRInt32* uniLength);
 
 /**
@@ -94,7 +98,7 @@ PRUint32 MIME_ConvertToUnicode(const char* from_charset, const char* inCstring,
  * @param outCstring   [OUT] Output buffer (in C string) is set. Allocated buffer should be freed by PR_FREE.
  * @return             nsresult, 0 is success, otherwise error.
  */
-PRUint32 MIME_ConvertFromUnicode(const char* to_charset, const void* uniBuffer, const PRInt32 uniLength,
+PRInt32 MIME_ConvertFromUnicode(const char* to_charset, const void* uniBuffer, const PRInt32 uniLength,
                                  char** outCstring);
 
 
@@ -106,7 +110,17 @@ PRUint32 MIME_ConvertFromUnicode(const char* to_charset, const void* uniBuffer, 
  * @param str          [IN] An input C string (UTF-8).
  * @return             A pointer to the next character.
  */
-unsigned char * NextChar_UTF8(unsigned char *str);
+char * NextChar_UTF8(char *str);
+
+/**
+ * Find a substring (UTF-8: us-ascii is a sub set of UTF-8).
+ *
+ *
+ * @param s1          [IN] A C string (UTF-8) to search.
+ * @param s2          [IN] A C string (UTF-8) to search for.
+ * @return            The first occurrence of s2 in s1, or NULL if s2 does not appear in s1.
+ */
+char * Strstr_UTF8(const char *s1, const char *s2);
 
 /*
  * To be removed. Existing for the backword compatibility. 

@@ -319,7 +319,7 @@ static  char *  intl_decode_mime_part2_str(const char *, int , char* );
 static char *DecodeBase64Buffer(char *subject);
 static char *EncodeBase64Buffer(char *subject, size_t size);
 
-static PRUint32 INTL_ConvertCharset(const char* from_charset, const char* to_charset,
+static PRInt32 INTL_ConvertCharset(const char* from_charset, const char* to_charset,
                                     const char* inBuffer, const PRInt32 inLength,
                                     char** outBuffer);
 
@@ -1171,7 +1171,7 @@ char *intl_decode_mime_part2_str(const char *header, char* charset)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-static PRUint32 INTL_ConvertCharset(const char* from_charset, const char* to_charset,
+static PRInt32 INTL_ConvertCharset(const char* from_charset, const char* to_charset,
                                     const char* inBuffer, const PRInt32 inLength,
                                     char** outBuffer)
 {
@@ -1224,10 +1224,10 @@ static PRUint32 INTL_ConvertCharset(const char* from_charset, const char* to_cha
   // set the results
   *outBuffer = dstPtr;
 
-  return NS_SUCCEEDED(res) ? 0 : 1;
+  return NS_SUCCEEDED(res) ? 0 : -1;
 }
 
-static PRUint32 INTL_ConvertToUnicode(const char* from_charset, const char* aBuffer, const PRInt32 aLength,
+static PRInt32 INTL_ConvertToUnicode(const char* from_charset, const char* aBuffer, const PRInt32 aLength,
                                       void** uniBuffer, PRInt32* uniLength)
 {
   nsICharsetConverterManager * ccm = nsnull;
@@ -1261,10 +1261,10 @@ static PRUint32 INTL_ConvertToUnicode(const char* from_charset, const char* aBuf
     }    
     nsServiceManager::ReleaseService(kCharsetConverterManagerCID, ccm);
   }  
-  return NS_SUCCEEDED(res) ? 0 : 1;
+  return NS_SUCCEEDED(res) ? 0 : -1;
 }
 
-static PRUint32 INTL_ConvertFromUnicode(const char* to_charset, const void* uniBuffer, const PRInt32 uniLength,
+static PRInt32 INTL_ConvertFromUnicode(const char* to_charset, const void* uniBuffer, const PRInt32 uniLength,
                                         char** aBuffer)
 {
   nsICharsetConverterManager * ccm = nsnull;
@@ -1297,7 +1297,7 @@ static PRUint32 INTL_ConvertFromUnicode(const char* to_charset, const void* uniB
     }    
     nsServiceManager::ReleaseService(kCharsetConverterManagerCID, ccm);
   }
-  return NS_SUCCEEDED(res) ? 0 : 1;
+  return NS_SUCCEEDED(res) ? 0 : -1;
 }
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1324,31 +1324,36 @@ PUBLIC char *INTL_EncodeMimePartIIStr_VarLen(char *subject, int16 wincsid, PRBoo
   return PL_strdup(subject);
 }
 
-PRUint32 MIME_ConvertCharset(const char* from_charset, const char* to_charset,
+PRInt32 MIME_ConvertCharset(const char* from_charset, const char* to_charset,
                              const char* inCstring, char** outCstring)
 {
   // optimization for the special case
   if ((!PL_strcasecmp(from_charset, "us-ascii") && !PL_strcasecmp(to_charset, "utf-8")) ||
       (!PL_strcasecmp(from_charset, "utf-8") && !PL_strcasecmp(to_charset, "us-ascii"))) {
     *outCstring = PL_strdup(inCstring);
-    return 0;
+    return (outCstring != NULL) ? 0 : -1;
   }
   return INTL_ConvertCharset(from_charset, to_charset, inCstring, PL_strlen(inCstring), outCstring);
 }
 
-PRUint32 MIME_ConvertToUnicode(const char* from_charset, const char* inCstring,
+PRInt32 MIME_ConvertToUnicode(const char* from_charset, const char* inCstring,
                                void** uniBuffer, PRInt32* uniLength)
 {
   char charset[kMAX_CSNAME];
-  // Since we don't have a converter us-ascii and the manager does not map, we do the mapping here.
+  // Since we don't have a converter for us-ascii and the manager does not map, 
+  // so we do the mapping here.
   PL_strcpy(charset, PL_strcasecmp(from_charset, "us-ascii") ? (char *) from_charset : "iso-8859-1");
   return INTL_ConvertToUnicode(charset, inCstring, PL_strlen(inCstring), uniBuffer, uniLength);
 }
 
-PRUint32 MIME_ConvertFromUnicode(const char* to_charset, const void* uniBuffer, const PRInt32 uniLength,
+PRInt32 MIME_ConvertFromUnicode(const char* to_charset, const void* uniBuffer, const PRInt32 uniLength,
                                  char** outCstring)
 {
-  return INTL_ConvertFromUnicode(to_charset, uniBuffer, uniLength, outCstring);
+  char charset[kMAX_CSNAME];
+  // Since we don't have a converter for us-ascii and the manager does not map, 
+  // so we do the mapping here.
+  PL_strcpy(charset, PL_strcasecmp(to_charset, "us-ascii") ? (char *) to_charset : "iso-8859-1");
+  return INTL_ConvertFromUnicode(charset, uniBuffer, uniLength, outCstring);
 }
 
 extern "C" char *MIME_DecodeMimePartIIStr(const char *header, char *charset)
@@ -1380,9 +1385,23 @@ char *MIME_EncodeMimePartIIStr(const char* header, const char* mailCharset, cons
   return utf8_EncodeMimePartIIStr((char *) header, (char *) mailCharset, encodedWordSize);
 }
 
-unsigned char * NextChar_UTF8(unsigned char *str)
+// UTF-8 utility functions.
+
+char * NextChar_UTF8(char *str)
 {
-  return NextChar_UTF8(str);
+  return (char *) utf8_nextchar((unsigned char *) str);
+}
+
+char * Strstr_UTF8(const char *s1, const char *s2)
+{
+  char *str = (char *) s1;
+  int len = PL_strlen(s2);
+  do {
+    if (!strncmp(str, s2, len)) {
+      return str;
+    }
+  } while (str = NextChar_UTF8(str));
+  return NULL;
 }
 
 } /* end of extern "C" */
