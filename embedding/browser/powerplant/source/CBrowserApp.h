@@ -61,7 +61,7 @@ public:
 	// this overriding method returns the status of menu items
 	virtual void            FindCommandStatus(PP_PowerPlant::CommandT inCommand,
             								  Boolean &outEnabled, Boolean &outUsesMark,
-            								  PP_PowerPlant::Char16 &outMark, Str255 outName);
+            								  UInt16 &outMark, Str255 outName);
 								
    virtual Boolean          AttemptQuitSelf(SInt32 inSaveOption);
 

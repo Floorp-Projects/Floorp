@@ -37,15 +37,21 @@
 #include <UGraphicUtils.h>
 #include <UEnvironment.h>
 #include <Appearance.h>
-#include <UConditionalDialogs.h>
 #include <LCMAttachment.h>
 #include <UCMMUtils.h>
+
+#if PP_Target_Carbon
+#include <UNavServicesDialogs.h>
+#else
+#include <UConditionalDialogs.h>
+#endif
 
 #include "ApplIDs.h"
 #include "CBrowserWindow.h"
 #include "CBrowserShell.h"
 #include "CUrlField.h"
 #include "CThrobber.h"
+#include "CIconServicesIcon.h"
 #include "CWebBrowserCMAttachment.h"
 #include "UMacUnicode.h"
 #include "CAppFileLocationProvider.h"
@@ -67,6 +73,7 @@
 #include "nsIFileSpec.h"
 #include "nsMPFileLocProvider.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "macstdlibextras.h"
 #include "SIOUX.h"
 #include "nsIURL.h"
@@ -97,14 +104,20 @@ int main()
 											// Parameter is number of Master Pointer
 											// blocks to allocate
 	
-	
-	PP_PowerPlant::UQDGlobals::InitializeToolbox(&qd);	// Initialize standard Toolbox managers
 
+#if __PowerPlant__ >= 0x02100000
+	PP_PowerPlant::UQDGlobals::InitializeToolbox();
+#else
+	PP_PowerPlant::UQDGlobals::InitializeToolbox(&qd);
+#endif
+    
 #if DEBUG
 	::InitializeSIOUX(false);
 #endif
-	
+
+#if !TARGET_CARBON		
 	::InitTSMAwareApplication();
+#endif
 	
 	new PP_PowerPlant::LGrowZone(20000);	// Install a GrowZone function to catch low memory situations.
 
@@ -114,7 +127,9 @@ int main()
 		theApp.Run();
 	}
 
+#if !TARGET_CARBON	
 	::CloseTSMAwareApplication();
+#endif
 	
 	return 0;
 }
@@ -141,6 +156,7 @@ CBrowserApp::CBrowserApp()
 	RegisterClass_(PP_PowerPlant::LTabGroupView);
     RegisterClass_(PP_PowerPlant::LIconControl);
     RegisterClass_(PP_PowerPlant::LView);
+	RegisterClass_(PP_PowerPlant::LDialogBox);
 	
 	// Register the Appearance Manager/GA classes
 	PP_PowerPlant::UControlRegistry::RegisterClasses();
@@ -150,6 +166,7 @@ CBrowserApp::CBrowserApp()
 	RegisterClass_(CBrowserWindow);
 	RegisterClass_(CUrlField);
 	RegisterClass_(CThrobber);
+	RegisterClass_(CIconServicesIcon);
 
 #if USE_PROFILES	
 	RegisterClass_(LScroller);
@@ -343,28 +360,44 @@ void CBrowserApp::HandleAppleEvent(const AppleEvent&	inAppleEvent,
 		case 5000:
 		    {
 		        OSErr err;
-		        Handle dataH;
 		        
         		StAEDescriptor urlDesc;
 			    err = ::AEGetParamDesc(&inAppleEvent, keyDirectObject, typeWildCard, urlDesc);
 			    ThrowIfOSErr_(err);
+			    AEDesc finalDesc;
 			    
 			    StAEDescriptor coerceDesc;
 			    if (urlDesc.DescriptorType() != typeChar) {
 			        err = ::AECoerceDesc(urlDesc, typeChar, coerceDesc);
 			        ThrowIfOSErr_(err);
-			        dataH = ((AEDesc)coerceDesc).dataHandle;
+			        finalDesc = coerceDesc;
 			    }
 			    else
-			        dataH = ((AEDesc)urlDesc).dataHandle;
+			        finalDesc = urlDesc;
 			        
-			    Size dataSize = ::GetHandleSize(dataH);
-			    StHandleLocker lock(dataH);
+			    Size dataSize = ::AEGetDescDataSize(&finalDesc);
+			    StPointerBlock dataPtr(dataSize);
+			    err = ::AEGetDescData(&finalDesc, dataPtr.Get(), dataSize);
+			    ThrowIfOSErr_(err);
+			    			    
+		        PRUint32 chromeFlags;
 			    
-       			CBrowserWindow *theWindow = CBrowserWindow::CreateWindow(nsIWebBrowserChrome::CHROME_DEFAULT, -1, -1);
+			    // If the URL begins with "view-source:", go with less chrome
+			    nsDependentCString dataAsStr(dataPtr.Get(), dataSize);
+                nsReadingIterator<char> start, end;
+                dataAsStr.BeginReading(start);
+                dataAsStr.EndReading(end);
+                FindInReadable(NS_LITERAL_CSTRING("view-source:"), start, end);
+                if ((start != end) && !start.size_backward()) 
+                    chromeFlags = nsIWebBrowserChrome::CHROME_WINDOW_CLOSE +
+                                  nsIWebBrowserChrome::CHROME_WINDOW_RESIZE;
+                else
+                    chromeFlags = nsIWebBrowserChrome::CHROME_DEFAULT;
+			    
+       			CBrowserWindow *theWindow = CBrowserWindow::CreateWindow(chromeFlags, -1, -1);
        			ThrowIfNil_(theWindow);
        			theWindow->SetSizeToContent(false);
-                theWindow->GetBrowserShell()->LoadURL(*dataH, dataSize);
+                theWindow->GetBrowserShell()->LoadURL(dataAsStr);
        			       			
        			theWindow->Show();
 			}
@@ -396,7 +429,7 @@ CBrowserApp::ObeyCommand(
    			ThrowIfNil_(theWindow);
    			theWindow->SetSizeToContent(false);
             // Just for demo sake, load a URL	
-            theWindow->GetBrowserShell()->LoadURL("http://www.mozilla.org");
+            theWindow->GetBrowserShell()->LoadURL(nsDependentCString("http://www.mozilla.org"));
    			theWindow->Show();
 			}
 			break;
@@ -427,7 +460,7 @@ CBrowserApp::ObeyCommand(
            			CBrowserWindow *theWindow = CBrowserWindow::CreateWindow(nsIWebBrowserChrome::CHROME_DEFAULT, -1, -1);
            			ThrowIfNil_(theWindow);
            			theWindow->SetSizeToContent(false);
-                    theWindow->GetBrowserShell()->LoadURL(urlSpec.get());
+                    theWindow->GetBrowserShell()->LoadURL(urlSpec);
            			theWindow->Show();
            		}
 			}
@@ -454,7 +487,7 @@ CBrowserApp::FindCommandStatus(
 	PP_PowerPlant::CommandT	inCommand,
 	Boolean					&outEnabled,
 	Boolean					&outUsesMark,
-	PP_PowerPlant::Char16	&outMark,
+	UInt16	                &outMark,
 	Str255					outName)
 {
 
@@ -534,7 +567,11 @@ Boolean CBrowserApp::SelectFileObject(PP_PowerPlant::CommandT	inCommand,
 		// and Navigation Services. The latter allows opening
 		// multiple files.
 
+#if PP_Target_Carbon
+	UNavServicesDialogs::LFileChooser	chooser;
+#else
 	UConditionalDialogs::LFileChooser	chooser;
+#endif
 	
 	NavDialogOptions *theDialogOptions = chooser.GetDialogOptions();
 	if (theDialogOptions) {

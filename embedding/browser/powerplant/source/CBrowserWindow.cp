@@ -35,6 +35,7 @@
 #include "nsIDOMWindow.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMWindowInternal.h"
+#include "nsRect.h"
 
 #include "CBrowserWindow.h"
 #include "CBrowserShell.h"
@@ -50,6 +51,13 @@
 #include <LBevelButton.h>
 #include <LProgressBar.h>
 
+#if PP_Target_Carbon
+#include <UEventMgr.h>
+#endif
+
+#include <algorithm>
+using namespace std;
+
 #include <InternetConfig.h>
 
 // CBrowserWindow:
@@ -61,6 +69,7 @@ enum
 {
 	paneID_BackButton		= 'Back',
 	paneID_ForwardButton	= 'Forw',
+	paneID_ReloadButton     = 'RLoa',
 	paneID_StopButton		= 'Stop',
 	paneID_URLField		= 'gUrl',
 	paneID_WebShellView	= 'WebS',
@@ -158,96 +167,134 @@ CBrowserWindow::~CBrowserWindow()
 }
 
 
-CBrowserWindow* CBrowserWindow::CreateWindow(PRUint32 chromeFlags, PRInt32 width, PRInt32 height)
+CBrowserWindow* CBrowserWindow::CreateWindow(PRUint32 inChromeFlags, PRInt32 width, PRInt32 height)
 {
-    const SInt16 kToolBarHeight = 34;
+    const SInt16 kStatusBarHeight = 16;
     
     CBrowserWindow	*theWindow;
+    PRUint32        chromeFlags;
     
-    if (chromeFlags == nsIWebBrowserChrome::CHROME_DEFAULT || chromeFlags == nsIWebBrowserChrome::CHROME_ALL)
+    if (inChromeFlags == nsIWebBrowserChrome::CHROME_DEFAULT)
+        chromeFlags = nsIWebBrowserChrome::CHROME_WINDOW_RESIZE |
+                      nsIWebBrowserChrome::CHROME_WINDOW_CLOSE |
+                      nsIWebBrowserChrome::CHROME_TOOLBAR |
+                      nsIWebBrowserChrome::CHROME_STATUSBAR;
+    else
+        chromeFlags = inChromeFlags;
+    
+    // Bounds - Set to an arbitrary rect - we'll size it after all the subviews are in.
+    Rect globalBounds;
+    globalBounds.left = 4;
+    globalBounds.top = 42;
+    globalBounds.right = globalBounds.left + 600;
+    globalBounds.bottom = globalBounds.top + 400;
+    
+    // ProcID and attributes
+    short windowDefProc;
+    UInt32 windowAttrs = (windAttr_Enabled | windAttr_Targetable);
+    if (chromeFlags & nsIWebBrowserChrome::CHROME_OPENAS_DIALOG)
     {
-        theWindow = dynamic_cast<CBrowserWindow*>(LWindow::CreateWindow(wind_BrowserWindow, LCommander::GetTopCommander()));
-        ThrowIfNil_(theWindow);
+        windowAttrs |= windAttr_Modal;
+
+        if (chromeFlags & nsIWebBrowserChrome::CHROME_TITLEBAR)
+        {
+            windowDefProc = kWindowMovableModalDialogProc;
+            windowAttrs |= windAttr_TitleBar;
+        }
+        else
+            windowDefProc = kWindowModalDialogProc;            
     }
     else
     {
-        // Bounds - Set to an arbitrary rect - we'll size it after all the subviews are in.
-        Rect globalBounds;
-        globalBounds.left = 4;
-        globalBounds.top = 42;
-        globalBounds.right = globalBounds.left + 600;
-        globalBounds.bottom = globalBounds.top + 400;
-        
-        // ProcID and attributes
-        short windowDefProc;
-        UInt32 windowAttrs = (windAttr_Enabled | windAttr_Targetable);
-        if (chromeFlags & nsIWebBrowserChrome::CHROME_OPENAS_DIALOG)
-        {
-            windowAttrs |= windAttr_Modal;
+        windowAttrs |= windAttr_Regular;    
 
-            if (chromeFlags & nsIWebBrowserChrome::CHROME_TITLEBAR)
-            {
-                windowDefProc = kWindowMovableModalDialogProc;
-                windowAttrs |= windAttr_TitleBar;
-            }
-            else
-                windowDefProc = kWindowModalDialogProc;            
+        if (chromeFlags & nsIWebBrowserChrome::CHROME_WINDOW_RESIZE)
+        {
+            windowDefProc = kWindowGrowDocumentProc;
+            windowAttrs |= windAttr_Resizable;
         }
         else
-        {
-            windowAttrs |= windAttr_Regular;    
-
-            if (chromeFlags & nsIWebBrowserChrome::CHROME_WITH_SIZE)
-            {
-                windowDefProc = kWindowGrowDocumentProc;
-                windowAttrs |= windAttr_Resizable;
-            }
-            else
-                windowDefProc = kWindowDocumentProc;            
-            
-            if (chromeFlags & nsIWebBrowserChrome::CHROME_WINDOW_CLOSE)
-                windowAttrs |= windAttr_CloseBox;
-        }
-
-        Boolean isChrome = (chromeFlags & nsIWebBrowserChrome::CHROME_OPENAS_CHROME) != 0;
-        theWindow = new CBrowserWindow(LCommander::GetTopCommander(), globalBounds, "\p", windowDefProc, windowAttrs, window_InFront, isChrome);
-        ThrowIfNil_(theWindow);
-        theWindow->SetUserCon(wind_BrowserWindow);
+            windowDefProc = kWindowDocumentProc;            
         
-        SPaneInfo aPaneInfo;
-        SViewInfo aViewInfo;
-        
-        aPaneInfo.paneID = paneID_WebShellView;
-        aPaneInfo.width = globalBounds.right - globalBounds.left;
-        aPaneInfo.height = globalBounds.bottom - globalBounds.top;
-        if (!(chromeFlags & nsIWebBrowserChrome::CHROME_OPENAS_DIALOG) && chromeFlags & nsIWebBrowserChrome::CHROME_WITH_SIZE)
-            aPaneInfo.height -= 15;
-        if (chromeFlags & nsIWebBrowserChrome::CHROME_TOOLBAR)
-            aPaneInfo.height -= kToolBarHeight;
-        aPaneInfo.visible = true;
-        aPaneInfo.enabled = true;
-        aPaneInfo.bindings.left = true;
-        aPaneInfo.bindings.top = true;
-        aPaneInfo.bindings.right = true;
-        aPaneInfo.bindings.bottom = true;
-        aPaneInfo.left = 0;
-        aPaneInfo.top = (chromeFlags & nsIWebBrowserChrome::CHROME_TOOLBAR) ? kToolBarHeight - 1 : 0;
-        aPaneInfo.userCon = 0;
-        aPaneInfo.superView = theWindow;
-        
-        aViewInfo.imageSize.width = 0;
-        aViewInfo.imageSize.height = 0;
-        aViewInfo.scrollPos.h = aViewInfo.scrollPos.v = 0;
-        aViewInfo.scrollUnit.h = aViewInfo.scrollUnit.v = 1;
-        aViewInfo.reconcileOverhang = 0;
-        
-        CBrowserShell *aShell = new CBrowserShell(aPaneInfo, aViewInfo);
-        ThrowIfNil_(aShell);
-        aShell->PutInside(theWindow, false);
-        
-        // Now the window is constructed...
-        theWindow->FinishCreate();        
+        if (chromeFlags & nsIWebBrowserChrome::CHROME_WINDOW_CLOSE)
+            windowAttrs |= windAttr_CloseBox;
     }
+
+    Boolean isChrome = (chromeFlags & nsIWebBrowserChrome::CHROME_OPENAS_CHROME) != 0;
+    theWindow = new CBrowserWindow(LCommander::GetTopCommander(), globalBounds, "\p", windowDefProc, windowAttrs, window_InFront, isChrome);
+    ThrowIfNil_(theWindow);
+
+    SDimension16 windowSize, toolBarSize;
+    theWindow->GetFrameSize(windowSize);
+
+    if (chromeFlags & nsIWebBrowserChrome::CHROME_TOOLBAR)
+    {
+    	LView::SetDefaultView(theWindow);
+    	LCommander::SetDefaultCommander(theWindow);
+    	LAttachable::SetDefaultAttachable(nil);
+
+        LView *toolBarView = static_cast<LView*>(UReanimator::ReadObjects(ResType_PPob, 131));
+        ThrowIfNil_(toolBarView);
+                    
+        toolBarView->GetFrameSize(toolBarSize);
+        toolBarView->PlaceInSuperFrameAt(0, 0, false);
+        toolBarSize.width = windowSize.width;
+        toolBarView->ResizeFrameTo(toolBarSize.width, toolBarSize.height, false);
+    }
+
+    SPaneInfo aPaneInfo;
+    SViewInfo aViewInfo;
+    
+    aPaneInfo.paneID = paneID_WebShellView;
+    aPaneInfo.width = windowSize.width;
+    aPaneInfo.height = windowSize.height;
+    if (chromeFlags & nsIWebBrowserChrome::CHROME_TOOLBAR)
+        aPaneInfo.height -= toolBarSize.height;
+    if (chromeFlags & nsIWebBrowserChrome::CHROME_STATUSBAR)
+        aPaneInfo.height -= kStatusBarHeight - 1;
+    aPaneInfo.visible = true;
+    aPaneInfo.enabled = true;
+    aPaneInfo.bindings.left = true;
+    aPaneInfo.bindings.top = true;
+    aPaneInfo.bindings.right = true;
+    aPaneInfo.bindings.bottom = true;
+    aPaneInfo.left = 0;
+    aPaneInfo.top = (chromeFlags & nsIWebBrowserChrome::CHROME_TOOLBAR) ? toolBarSize.height : 0;
+    aPaneInfo.userCon = 0;
+    aPaneInfo.superView = theWindow;
+    
+    aViewInfo.imageSize.width = 0;
+    aViewInfo.imageSize.height = 0;
+    aViewInfo.scrollPos.h = aViewInfo.scrollPos.v = 0;
+    aViewInfo.scrollUnit.h = aViewInfo.scrollUnit.v = 1;
+    aViewInfo.reconcileOverhang = 0;
+    
+    CBrowserShell *aShell = new CBrowserShell(aPaneInfo, aViewInfo);
+    ThrowIfNil_(aShell);
+    aShell->PutInside(theWindow, false);
+   
+    if (chromeFlags & nsIWebBrowserChrome::CHROME_STATUSBAR)
+    {
+    	LView::SetDefaultView(theWindow);
+    	LCommander::SetDefaultCommander(theWindow);
+    	LAttachable::SetDefaultAttachable(nil);
+
+        LView *statusView = static_cast<LView*>(UReanimator::ReadObjects(ResType_PPob, 130));
+        ThrowIfNil_(statusView);
+        
+        statusView->PlaceInSuperFrameAt(0, windowSize.height - kStatusBarHeight + 1, false);
+        statusView->ResizeFrameTo(windowSize.width - 15, kStatusBarHeight, false);
+    }        
+
+    // Only add context menus to our default window type
+    if (inChromeFlags == nsIWebBrowserChrome::CHROME_DEFAULT)
+    {
+        CWebBrowserCMAttachment *cmAttachment = new CWebBrowserCMAttachment(theWindow, 0);
+        theWindow->AddAttachment(cmAttachment);
+    }       
+    
+    // Now the window is constructed...
+    theWindow->FinishCreate();        
 
 	Rect	theBounds;
 	theWindow->GetGlobalBounds(theBounds);
@@ -286,10 +333,17 @@ void CBrowserWindow::FinishCreate()
    // This needs to be done AFTER the subviews are constructed
    // but BEFORE the subviews do FinishCreateSelf.
    
-	Rect portRect = GetMacPort()->portRect;	
+   	Rect portRect;
+   	
+#if PP_Target_Carbon
+	::GetWindowPortBounds(GetMacWindow(), &portRect);
+#else
+	portRect = GetMacPort()->portRect;
+#endif
+	
 	nsRect r(0, 0, portRect.right - portRect.left, portRect.bottom - portRect.top);
 	
-	nsresult rv = mWindow->Create((nsNativeWidget)GetMacPort(), r, nsnull, nsnull, nsnull, nsnull, nsnull);
+	nsresult rv = mWindow->Create(Compat_GetMacWindow(), r, nsnull, nsnull, nsnull, nsnull, nsnull);
 	if (NS_FAILED(rv))
 	   Throw_(NS_ERROR_GET_CODE(rv));
 
@@ -309,9 +363,8 @@ void CBrowserWindow::FinishCreateSelf()
 {
 	SetLatentSub(mBrowserShell);
 	
-	// Find our subviews - When we have a way of creating this
-	// window with various chrome flags, we may or may not have
-	// all of these subviews so don't fail if they don't exist
+	// Find our subviews - Depending on our chrome flags, we may or may
+	// not have any of these subviews so don't fail if they don't exist
 	mURLField = dynamic_cast<LEditText*>(FindPaneByID(paneID_URLField));
 	mStatusBar = dynamic_cast<LStaticText*>(FindPaneByID(paneID_StatusBar));
 	mThrobber = dynamic_cast<CThrobber*>(FindPaneByID(paneID_Throbber));
@@ -319,17 +372,20 @@ void CBrowserWindow::FinishCreateSelf()
 	if (mProgressBar)
 	   mProgressBar->Hide();
 	
-	mBackButton = dynamic_cast<LBevelButton*>(FindPaneByID(paneID_BackButton));
+	mBackButton = dynamic_cast<LControl*>(FindPaneByID(paneID_BackButton));
 	if (mBackButton)
 		mBackButton->Disable();
-	mForwardButton = dynamic_cast<LBevelButton*>(FindPaneByID(paneID_ForwardButton));
+	mForwardButton = dynamic_cast<LControl*>(FindPaneByID(paneID_ForwardButton));
 	if (mForwardButton)
 		mForwardButton->Disable();
-	mStopButton = dynamic_cast<LBevelButton*>(FindPaneByID(paneID_StopButton));
+	mReloadButton = dynamic_cast<LControl*>(FindPaneByID(paneID_ReloadButton));
+	if (mReloadButton)
+		mReloadButton->Disable();	
+	mStopButton = dynamic_cast<LControl*>(FindPaneByID(paneID_StopButton));
 	if (mStopButton)
 		mStopButton->Disable();
 
-	UReanimator::LinkListenerToControls(this, this, mUserCon);
+	UReanimator::LinkListenerToControls(this, this, view_BrowserToolBar);
 	StartListening();
 	StartBroadcasting();	
 }
@@ -340,7 +396,14 @@ void CBrowserWindow::ResizeFrameBy(SInt16		inWidthDelta,
                 				   Boolean	    inRefresh)
 {
 	// Resize the widget BEFORE subviews get resized
-	Rect portRect = GetMacPort()->portRect;	
+   	Rect portRect;
+   	
+#if PP_Target_Carbon
+	::GetWindowPortBounds(GetMacWindow(), &portRect);
+#else
+	portRect = GetMacPort()->portRect;
+#endif
+
 	mWindow->Resize(portRect.right - portRect.left, portRect.bottom - portRect.top, inRefresh);
 
 	Inherited::ResizeFrameBy(inWidthDelta, inHeightDelta, inRefresh);	
@@ -374,13 +437,12 @@ Boolean CBrowserWindow::ObeyCommand(CommandT			inCommand,
 #pragma unused(ioParam)
 
 	Boolean	cmdHandled = true;
+	nsresult rv;
 	
 	switch (inCommand)
 	{
 	    case cmd_OpenLinkInNewWindow:
-	        {
-	            nsresult rv;
-	            
+	        {	            
 	            // Get the URL from the link
 	            ThrowIfNil_(mContextMenuDOMNode);
 	            nsCOMPtr<nsIDOMHTMLAnchorElement> linkElement(do_QueryInterface(mContextMenuDOMNode, &rv));
@@ -392,43 +454,18 @@ Boolean CBrowserWindow::ObeyCommand(CommandT			inCommand,
 	            
 	            nsCAutoString urlSpec;
 	            CopyUCS2toASCII(href, urlSpec);
-	            
-	            // Send an AppleEvent to ourselves to open a new window with the given URL
-	            
-	            // IMPORTANT: We need to make our target address using a ProcessSerialNumber
-	            // from GetCurrentProcess. This will cause our AppleEvent to be handled from
-	            // the event loop. Creating and showing a new window before the context menu
-	            // click is done being processed is fatal. If we make the target address with a
-	            // ProcessSerialNumber in which highLongOfPSN == 0 && lowLongOfPSN == kCurrentProcess,
-	            // the event will be dispatched to us directly and we die.
-	            
-	            OSErr err;
-	            ProcessSerialNumber	currProcess;
-	            StAEDescriptor selfAddrDesc;
-	            
-	            err = ::GetCurrentProcess(&currProcess);
-	            ThrowIfOSErr_(err);
-	            err = ::AECreateDesc(typeProcessSerialNumber, (Ptr) &currProcess,
-							         sizeof(currProcess), selfAddrDesc);
-				ThrowIfOSErr_(err);
-
-        		AppleEvent	getURLEvent;
-        		err = ::AECreateAppleEvent(kInternetEventClass, kAEGetURL,
-										selfAddrDesc,
-										kAutoGenerateReturnID,
-										kAnyTransactionID,
-										&getURLEvent);
-                ThrowIfOSErr_(err);
-        		
-        		StAEDescriptor urlDesc(typeChar, urlSpec.get(), urlSpec.Length());
-        		
-        		err = ::AEPutParamDesc(&getURLEvent, keyDirectObject, urlDesc);
-        		if (err) {
-        		    ::AEDisposeDesc(&getURLEvent);
-        		    Throw_(err);
-        		}
-        		UAppleEventsMgr::SendAppleEvent(getURLEvent);
+	            SendOpenURLEventToSelf(urlSpec);
 	        }
+            break;
+            
+        case cmd_ViewPageSource:
+            {
+                nsCAutoString currentURL;
+                rv = mBrowserShell->GetCurrentURL(currentURL);
+                ThrowIfError_(rv);
+                currentURL.Insert("view-source:", 0);
+                SendOpenURLEventToSelf(currentURL);
+            }
             break;
             
 		case paneID_BackButton:
@@ -438,10 +475,18 @@ Boolean CBrowserWindow::ObeyCommand(CommandT			inCommand,
 		case paneID_ForwardButton:
 			mBrowserShell->Forward();
 			break;
+			
+		case paneID_ReloadButton:
+		    mBrowserShell->Reload();
+		    break;
 
 		case paneID_StopButton:
 			mBrowserShell->Stop();
 			break;
+			
+	    case cmd_Reload:
+	        mBrowserShell->Reload();
+	        break;
 
 		case paneID_URLField:
 		  	{
@@ -449,7 +494,7 @@ Boolean CBrowserWindow::ObeyCommand(CommandT			inCommand,
 			mURLField->GetText(nil, 0, &urlTextLen);
         	StPointerBlock  urlTextPtr(urlTextLen, true, false);
 			mURLField->GetText(urlTextPtr.Get(), urlTextLen, &urlTextLen);
-			mBrowserShell->LoadURL(urlTextPtr.Get(), urlTextLen);
+			mBrowserShell->LoadURL(nsDependentCString(urlTextPtr.Get(), urlTextLen));
 			}
 			break;
 			
@@ -474,7 +519,7 @@ CBrowserWindow::FindCommandStatus(
 	PP_PowerPlant::CommandT	inCommand,
 	Boolean					&outEnabled,
 	Boolean					&outUsesMark,
-	PP_PowerPlant::Char16	&outMark,
+	UInt16	                &outMark,
 	Str255					outName)
 {
 
@@ -626,33 +671,37 @@ NS_METHOD CBrowserWindow::OnStatusNetStop(nsIWebProgress *progress, nsIRequest *
 	   mProgressBar->Hide();
 	}
 	
-	// Enable back, forward, stop
+	// Enable back, forward, reload, stop
 	if (mBackButton)
 		mBrowserShell->CanGoBack() ? mBackButton->Enable() : mBackButton->Disable();
 	if (mForwardButton)
 		mBrowserShell->CanGoForward() ? mForwardButton->Enable() : mForwardButton->Disable();
+    if (mReloadButton)
+        mReloadButton->Enable();
 	if (mStopButton)
 		mStopButton->Disable();
 		
-    // If this is a chrome window and it's first load, do some things.    
-    if (mIsChromeWindow && !mInitialLoadComplete) {
+    // If this is the first load, do some things.    
+    if (!mInitialLoadComplete) {
     
-        // If we don't have a title yet, see if we can get one from the DOM
-        LStr255 windowTitle;
-        GetDescriptor(windowTitle);
-        if (!windowTitle.Length())
-            SetTitleFromDOMDocument();
-        
-        // If we are being sized intrinsically, do it now    
-    	if (mSizeToContent)
-    	    SizeToContent();
+        if (mIsChromeWindow) {
+            // If we don't have a title yet, see if we can get one from the DOM
+            LStr255 windowTitle;
+            GetDescriptor(windowTitle);
+            if (!windowTitle.Length())
+                SetTitleFromDOMDocument();
+            
+            // If we are being sized intrinsically, do it now    
+        	if (mSizeToContent)
+        	    SizeToContent();
+        }
         
         // If we deferred showing ourselves because waiting to be sized, do it now
         if (mVisible && !IsVisible())
             Show();
-
+	    
+	    mInitialLoadComplete = true;	
     }
-	mInitialLoadComplete = true;	
 	mBusy = false;
 		
 	// Inform any other interested parties
@@ -758,7 +807,12 @@ NS_METHOD CBrowserWindow::OnShowContextMenu(PRUint32 aContextFlags, nsIDOMEvent 
         // null event but will fill in the mouse location and modifier keys.
         
         EventRecord macEvent;
+        
+#if PP_Target_Carbon
+		UEventMgr::GetMouseAndModifiers(macEvent);
+#else
         ::OSEventAvail(0, &macEvent);
+#endif
         
         mContextMenuContext = aContextFlags;
         mContextMenuDOMNode = aNode;
@@ -795,6 +849,47 @@ NS_METHOD CBrowserWindow::SetTitleFromDOMDocument()
         
     return rv;
 }
+
+void CBrowserWindow::SendOpenURLEventToSelf(const nsACString& url)
+{    
+    // Send an AppleEvent to ourselves to open a new window with the given URL
+    
+    // IMPORTANT: We need to make our target address using a ProcessSerialNumber
+    // from GetCurrentProcess. This will cause our AppleEvent to be handled from
+    // the event loop. Creating and showing a new window before the context menu
+    // click is done being processed is fatal. If we make the target address with a
+    // ProcessSerialNumber in which highLongOfPSN == 0 && lowLongOfPSN == kCurrentProcess,
+    // the event will be dispatched to us directly and we die.
+    
+    OSErr err;
+    ProcessSerialNumber	currProcess;
+    StAEDescriptor selfAddrDesc;
+    
+    err = ::GetCurrentProcess(&currProcess);
+    ThrowIfOSErr_(err);
+    err = ::AECreateDesc(typeProcessSerialNumber, (Ptr) &currProcess,
+				         sizeof(currProcess), selfAddrDesc);
+	ThrowIfOSErr_(err);
+
+	AppleEvent	getURLEvent;
+	err = ::AECreateAppleEvent(kInternetEventClass, kAEGetURL,
+							selfAddrDesc,
+							kAutoGenerateReturnID,
+							kAnyTransactionID,
+							&getURLEvent);
+    ThrowIfOSErr_(err);
+
+    const nsPromiseFlatCString& flatURL = PromiseFlatCString(url);	
+	StAEDescriptor urlDesc(typeChar, flatURL.get(), flatURL.Length());
+	
+	err = ::AEPutParamDesc(&getURLEvent, keyDirectObject, urlDesc);
+	if (err) {
+	    ::AEDisposeDesc(&getURLEvent);
+	    Throw_(err);
+	}
+	UAppleEventsMgr::SendAppleEvent(getURLEvent);
+}
+
 
 // ---------------------------------------------------------------------------
 //	Window Creator

@@ -119,7 +119,7 @@ void  CThrobber::NotifyError(nsIImageRequest *aImageRequest,
 
 void CThrobber::FinishCreateSelf()
 {
-   CBrowserWindow *ourWindow = dynamic_cast<CBrowserWindow*>(LWindow::FetchWindowObject(GetMacPort()));
+   CBrowserWindow *ourWindow = dynamic_cast<CBrowserWindow*>(LWindow::FetchWindowObject(Compat_GetMacWindow()));
    ThrowIfNil_(ourWindow);
    
    // Get the widget from the browser window

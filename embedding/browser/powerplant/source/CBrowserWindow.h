@@ -109,7 +109,7 @@ public:
     virtual void                FindCommandStatus(PP_PowerPlant::CommandT	inCommand,
                                              	  Boolean					&outEnabled,
                                              	  Boolean					&outUsesMark,
-                                             	  PP_PowerPlant::Char16	    &outMark,
+                                             	  UInt16	                &outMark,
                                              	  Str255					outName);
 
     NS_METHOD                   GetWidget(nsIWidget** aWidget);
@@ -162,6 +162,7 @@ protected:
    // -----------------------------------
    
    NS_METHOD                    SetTitleFromDOMDocument();
+   void                         SendOpenURLEventToSelf(const nsACString& url);
 
 protected:
     nsCOMPtr<nsIWidget>         mWindow;
@@ -172,7 +173,7 @@ protected:
 	LEditText*			        mURLField;
 	LStaticText*		        mStatusBar;
 	CThrobber*                  mThrobber;
-	LBevelButton			    *mBackButton, *mForwardButton, *mStopButton;
+	LControl			        *mBackButton, *mForwardButton, *mReloadButton, *mStopButton;
 	LProgressBar*               mProgressBar;
 	Boolean                     mBusy;
 	Boolean                     mInitialLoadComplete;
