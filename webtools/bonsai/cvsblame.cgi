@@ -354,6 +354,7 @@ sub print_top {
 <HEAD>
 <TITLE>CVS Blame $title_text</TITLE>
 <SCRIPT>
+var event = 0;	// Nav3.0 compatibility
 document.loaded = false;
 
 function revToName (rev) {
@@ -416,8 +417,6 @@ function dif(prev_rev, rev) {
 }
 file_tail = "$file_tail";
 
-/* Make JavaScript happy in akbar */
-event = 0;
 initialLayer = "<TABLE BORDER=1 CELLSPACING=1 CELLPADDING=1><TR><TD><B>Page loading...please wait.</B></TD></TR></TABLE>";
 
 </SCRIPT>
