@@ -825,7 +825,7 @@ if [ "$MOZ_LDAP_XPCOM" ]; then
 fi
 
 
-for extension in "$MOZ_EXTENSIONS"; do
+for extension in $MOZ_EXTENSIONS; do
     case "$extension" in
         cookie ) MAKEFILES_extensions="$MAKEFILES_extensions
 	    extensions/cookie/Makefile
@@ -847,7 +847,8 @@ for extension in "$MOZ_EXTENSIONS"; do
 	    extensions/irc/xul/locale/Makefile
 	    extensions/irc/xul/locale/en-US/Makefile
             " ;;
-	transformiix) MAKEFILES_extensions="$MAKEFILES_transformiix"
+	transformiix ) MAKEFILES_extensions="$MAKEFILES_extensions
+	    $MAKEFILES_transformiix"
 	    ;;
         wallet ) MAKEFILES_extensions="$MAKEFILE_extensions
 	    extensions/wallet/Makefile
