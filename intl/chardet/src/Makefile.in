@@ -36,6 +36,7 @@ CPPSRCS		= \
 		  nsDetectionAdaptor.cpp \
 		  nsDebugDetector.cpp \
 		  nsPSMDetectors.cpp \
+		  nsCyrillicDetector.cpp \
 		  $(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))

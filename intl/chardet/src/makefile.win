@@ -36,6 +36,7 @@ CPPSRCS= \
          nsDetectionAdaptor.cpp \
          nsDebugDetector.cpp \
          nsPSMDetectors.cpp \
+         nsCyrillicDetector.cpp \
 	$(NULL)
 
 CPP_OBJS= \
@@ -46,6 +47,7 @@ CPP_OBJS= \
         .\$(OBJDIR)\nsDetectionAdaptor.obj \
         .\$(OBJDIR)\nsDebugDetector.obj \
         .\$(OBJDIR)\nsPSMDetectors.obj \
+        .\$(OBJDIR)\nsCyrillicDetector.obj \
 	$(NULL)
 
 MODULE=chardet
