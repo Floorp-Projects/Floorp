@@ -145,7 +145,7 @@
           </hbox>
           <separator class="thin"/>
           <hbox align="start">
-            <checkbox id="checkbox" label="&checkbox.label;" />
+            <checkbox id="checkbox" label="&checkbox.label;" persist="checked"/>
           </hbox>
       </vbox>
       
