@@ -820,7 +820,9 @@ nsHTTPChannel::CheckCache()
     // For now, we handle only GET and HEAD requests
     nsCOMPtr<nsIAtom> httpMethod;
     httpMethod = mRequest->GetMethod();
-    if ((httpMethod != nsHTTPAtoms::Get) && (httpMethod != nsHTTPAtoms::Head))
+    nsIAtom *mP = httpMethod;
+
+    if ((mP != nsHTTPAtoms::Get) && (mP != nsHTTPAtoms::Head))
         return NS_OK;
 
     // If this is the first time we've been called for this channel,
