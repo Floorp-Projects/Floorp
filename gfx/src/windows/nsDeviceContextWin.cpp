@@ -38,7 +38,6 @@
 #include "nsDeviceContextWin.h"
 #include "nsRenderingContextWin.h"
 #include "nsDeviceContextSpecWin.h"
-#include "nsIPref.h"
 #include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
 #include "nsIScreenManager.h"
@@ -54,12 +53,7 @@
 
 #define DOC_TITLE_LENGTH      64
 
-static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
-
-PRBool nsDeviceContextWin::gRound = PR_FALSE;
 PRUint32 nsDeviceContextWin::sNumberOfScreens = 0;
-
-static char* nav4rounding = "font.size.nav4rounding";
 
 #include "prlog.h"
 #ifdef PR_LOGGING 
@@ -84,17 +78,6 @@ nsDeviceContextWin :: nsDeviceContextWin()
   mSpec = nsnull;
   mCachedClientRect = PR_FALSE;
   mCachedFullRect = PR_FALSE;
-
-  nsresult res = NS_ERROR_FAILURE;
-  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &res));
-  if (NS_SUCCEEDED(res)) {
-    static PRBool roundingInitialized = PR_FALSE;
-    if (!roundingInitialized) {
-      roundingInitialized = PR_TRUE;
-      PrefChanged(nav4rounding, this);
-    }
-    prefs->RegisterCallback(nav4rounding, PrefChanged, this);
-  }
 }
 
 nsDeviceContextWin :: ~nsDeviceContextWin()
@@ -114,12 +97,6 @@ nsDeviceContextWin :: ~nsDeviceContextWin()
   }
 
   NS_IF_RELEASE(mSpec);
-
-  nsresult res = NS_ERROR_FAILURE;
-  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &res));
-  if (NS_SUCCEEDED(res)) {
-    prefs->UnregisterCallback(nav4rounding, PrefChanged, this);
-  }
 }
 
 NS_IMETHODIMP nsDeviceContextWin :: Init(nsNativeWidget aWidget)
@@ -905,21 +882,7 @@ NS_IMETHODIMP nsDeviceContextWin :: EndPage(void)
   return NS_OK;
 }
 
-int
-nsDeviceContextWin :: PrefChanged(const char* aPref, void* aClosure)
-{
-  nsresult res = NS_ERROR_FAILURE;
-  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &res));
-  if (NS_SUCCEEDED(res)) {
-    prefs->GetBoolPref(nav4rounding, &gRound);
-    nsDeviceContextWin* deviceContext = (nsDeviceContextWin*) aClosure;
-    deviceContext->FlushFontCache();
-  }
-
-  return 0;
-}
-
-char* 
+char*
 nsDeviceContextWin :: GetACPString(const nsAString& aStr)
 {
    int acplen = aStr.Length() * 2 + 1;

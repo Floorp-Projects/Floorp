@@ -497,28 +497,9 @@ void
 nsFontMetricsWin::FillLogFont(LOGFONT* logFont, PRInt32 aWeight,
   PRBool aSizeOnly)
 {
-  float app2dev, app2twip, scale;
+  float app2dev;
   app2dev = mDeviceContext->AppUnitsToDevUnits();
-  if (nsDeviceContextWin::gRound) {
-    app2twip = mDeviceContext->DevUnitsToTwips();
-    mDeviceContext->GetCanonicalPixelScale(scale);
-    app2twip *= app2dev * scale;
-
-    // This interesting bit of code rounds the font size off to the floor point
-    // value. This is necessary for proper font scaling under windows.
-    PRInt32 sizePoints = NSTwipsToFloorIntPoints(nscoord(mFont.size*app2twip));
-    float rounded = ((float)NSIntPointsToTwips(sizePoints)) / app2twip;
-
-    // round font size off to floor point size to be windows compatible
-    // this is proper (windows) rounding
-    logFont->lfHeight = - NSToIntRound(rounded * app2dev);
-
-    // this floor rounding is to make ours compatible with Nav 4.0
-    //logFont->lfHeight = - LONG(rounded * app2dev);
-  }
-  else {
-    logFont->lfHeight = - NSToIntRound(mFont.size * app2dev);
-  }
+  logFont->lfHeight = - NSToIntRound(mFont.size * app2dev);
 
   // Quick return if we came here just to compute the font size
   if (aSizeOnly) return;

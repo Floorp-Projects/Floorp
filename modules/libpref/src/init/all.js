@@ -1025,8 +1025,6 @@ pref("font.size.fixed.zh-TW", 16);
 pref("font.size.variable.zh-HK", 16);
 pref("font.size.fixed.zh-HK", 16);
 
-pref("font.size.nav4rounding", false);
-
 pref("ui.key.menuAccessKeyFocuses", true);
 
 // override double-click word selection behavior.
@@ -1385,8 +1383,6 @@ pref("font.size.fixed.zh-TW", 16);
 
 pref("font.size.variable.zh-HK", 16);
 pref("font.size.fixed.zh-HK", 16);
-
-pref("font.size.nav4rounding", false);
 
 pref("netinst.profile.show_profile_wizard", true); 
 
