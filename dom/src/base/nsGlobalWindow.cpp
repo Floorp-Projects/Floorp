@@ -752,11 +752,8 @@ NS_IMETHODIMP GlobalWindowImpl::GetDocument(nsIDOMDocument** aDocument)
      what it takes to do so. Note that domdoc here is the same thing as
      our mDocument, but we don't have to explicitly set the member variable
      because the docshell has already called SetNewDocument(). */
-/* Temporarily disabling until I figure out what's leaking.
-   (The document, obviously.)
   if (!mDocument && mDocShell)
     nsCOMPtr<nsIDOMDocument> domdoc(do_GetInterface(mDocShell));
-*/
 
   *aDocument = mDocument;
   NS_IF_ADDREF(*aDocument);
