@@ -34,7 +34,7 @@
 /*
  * Header for CMS types.
  *
- * $Id: cmst.h,v 1.7 2002/12/24 02:25:36 wtc%netscape.com Exp $
+ * $Id: cmst.h,v 1.8 2003/02/28 23:32:29 relyea%netscape.com Exp $
  */
 
 #ifndef _CMST_H_
@@ -283,7 +283,8 @@ struct NSSCMSOriginatorInfoStr {
  */
 typedef enum {
     NSSCMSRecipientID_IssuerSN = 0,
-    NSSCMSRecipientID_SubjectKeyID = 1
+    NSSCMSRecipientID_SubjectKeyID = 1,
+    NSSCMSRecipientID_BrandNew = 2
 } NSSCMSRecipientIDSelector;
 
 struct NSSCMSRecipientIdentifierStr {

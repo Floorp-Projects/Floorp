@@ -34,7 +34,7 @@
 /*
  * Interfaces of the CMS implementation.
  *
- * $Id: cms.h,v 1.15 2002/12/17 01:39:45 wtc%netscape.com Exp $
+ * $Id: cms.h,v 1.16 2003/02/28 23:32:29 relyea%netscape.com Exp $
  */
 
 #ifndef _CMS_H_
@@ -868,8 +868,34 @@ extern NSSCMSRecipientInfo *
 NSS_CMSRecipientInfo_CreateWithSubjKeyIDFromCert(NSSCMSMessage *cmsg, 
                                                  CERTCertificate *cert);
 
+/*
+ * NSS_CMSRecipientInfo_CreateNew - create a blank recipientinfo for 
+ * applications which want to encode their own CMS structures and
+ * key exchange types.
+ */
+extern NSSCMSRecipientInfo *
+NSS_CMSRecipientInfo_CreateNew(void* pwfn_arg);
+
+/*
+ * NSS_CMSRecipientInfo_CreateFromDER - create a recipientinfo  from partially
+ * decoded DER data for applications which want to encode their own CMS 
+ * structures and key exchange types.
+ */
+extern NSSCMSRecipientInfo *
+NSS_CMSRecipientInfo_CreateFromDER(SECItem* input, void* pwfn_arg);
+
 extern void
 NSS_CMSRecipientInfo_Destroy(NSSCMSRecipientInfo *ri);
+
+/*
+ * NSS_CMSRecipientInfo_GetCertAndKey - retrieve the cert and key from the
+ * recipientInfo struct. If retcert or retkey are NULL, the cert or 
+ * key (respectively) would not be returned). This function is a no-op if both 
+ * retcert and retkey are NULL. Caller inherits ownership of the cert and key
+ * he requested (and is responsible to free them).
+ */
+SECStatus NSS_CMSRecipientInfo_GetCertAndKey(NSSCMSRecipientInfo *ri,
+   CERTCertificate** retcert, SECKEYPrivateKey** retkey);
 
 extern int
 NSS_CMSRecipientInfo_GetVersion(NSSCMSRecipientInfo *ri);
