@@ -1199,6 +1199,11 @@ extern JS_PUBLIC_API(JSFunction *)
 JS_DefineFunction(JSContext *cx, JSObject *obj, const char *name, JSNative call,
                   uintN nargs, uintN attrs);
 
+extern JS_PUBLIC_API(JSFunction *)
+JS_DefineUCFunction(JSContext *cx, JSObject *obj,
+                    const jschar *name, size_t namelen, JSNative call,
+                    uintN nargs, uintN attrs);
+
 extern JS_PUBLIC_API(JSObject *)
 JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent);
 

@@ -2216,7 +2216,7 @@ DefineUCProperty(JSContext *cx, JSObject *obj,
 {
     JSAtom *atom;
 
-    atom = js_AtomizeChars(cx, name, AUTO_NAMELEN(name,namelen), 0);
+    atom = js_AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen), 0);
     if (!atom)
         return JS_FALSE;
     if (flags != 0 && OBJ_IS_NATIVE(obj)) {
@@ -2324,7 +2324,7 @@ LookupUCProperty(JSContext *cx, JSObject *obj,
 {
     JSAtom *atom;
 
-    atom = js_AtomizeChars(cx, name, AUTO_NAMELEN(name,namelen), 0);
+    atom = js_AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen), 0);
     if (!atom)
         return JS_FALSE;
     return OBJ_LOOKUP_PROPERTY(cx, obj, (jsid)atom, objp, propp);
@@ -2541,7 +2541,7 @@ JS_GetUCPropertyAttributes(JSContext *cx, JSObject *obj,
 {
     CHECK_REQUEST(cx);
     return GetPropertyAttributes(cx, obj,
-                    js_AtomizeChars(cx, name, AUTO_NAMELEN(name,namelen), 0),
+                    js_AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen), 0),
                     attrsp, foundp);
 }
 
@@ -2552,7 +2552,7 @@ JS_SetUCPropertyAttributes(JSContext *cx, JSObject *obj,
 {
     CHECK_REQUEST(cx);
     return SetPropertyAttributes(cx, obj,
-                    js_AtomizeChars(cx, name, AUTO_NAMELEN(name,namelen), 0),
+                    js_AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen), 0),
                     attrs, foundp);
 }
 
@@ -2592,7 +2592,7 @@ JS_GetUCProperty(JSContext *cx, JSObject *obj,
     JSAtom *atom;
 
     CHECK_REQUEST(cx);
-    atom = js_AtomizeChars(cx, name, AUTO_NAMELEN(name,namelen), 0);
+    atom = js_AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen), 0);
     if (!atom)
         return JS_FALSE;
     return OBJ_GET_PROPERTY(cx, obj, (jsid)atom, vp);
@@ -2606,7 +2606,7 @@ JS_SetUCProperty(JSContext *cx, JSObject *obj,
     JSAtom *atom;
 
     CHECK_REQUEST(cx);
-    atom = js_AtomizeChars(cx, name, AUTO_NAMELEN(name,namelen), 0);
+    atom = js_AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen), 0);
     if (!atom)
         return JS_FALSE;
     return OBJ_SET_PROPERTY(cx, obj, (jsid)atom, vp);
@@ -2620,7 +2620,7 @@ JS_DeleteUCProperty2(JSContext *cx, JSObject *obj,
     JSAtom *atom;
 
     CHECK_REQUEST(cx);
-    atom = js_AtomizeChars(cx, name, AUTO_NAMELEN(name,namelen), 0);
+    atom = js_AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen), 0);
     if (!atom)
         return JS_FALSE;
     return OBJ_DELETE_PROPERTY(cx, obj, (jsid)atom, rval);
@@ -3006,6 +3006,19 @@ JS_DefineFunction(JSContext *cx, JSObject *obj, const char *name, JSNative call,
 
     CHECK_REQUEST(cx);
     atom = js_Atomize(cx, name, strlen(name), 0);
+    if (!atom)
+        return NULL;
+    return js_DefineFunction(cx, obj, atom, call, nargs, attrs);
+}
+
+JS_PUBLIC_API(JSFunction *)
+JS_DefineUCFunction(JSContext *cx, JSObject *obj,
+                    const jschar *name, size_t namelen, JSNative call,
+                    uintN nargs, uintN attrs)
+{
+    JSAtom *atom;
+
+    atom = js_AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen), 0);
     if (!atom)
         return NULL;
     return js_DefineFunction(cx, obj, atom, call, nargs, attrs);
