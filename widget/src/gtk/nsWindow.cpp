@@ -3893,6 +3893,10 @@ nsWindow::ime_preedit_draw(nsIMEGtkIC *aXIC) {
 
 void
 nsWindow::ime_preedit_done() {
+#ifdef _AIX
+  IMEComposeStart(nsnull);
+  IMEComposeText(nsnull, nsnull, 0, nsnull);
+#endif
   IMEComposeEnd(nsnull);
 }
 
