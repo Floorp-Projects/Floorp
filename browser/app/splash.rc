@@ -47,11 +47,7 @@ IDI_APPLICATION ICON FIREFOX_ICO
 
 STRINGTABLE DISCARDABLE
 BEGIN
-#ifdef DEBUG
-    IDS_STARTMENU_APPNAME,              "Firefox Debug"
-#else
     IDS_STARTMENU_APPNAME,              "Firefox"
-#endif
 END
 
 #ifdef MOZ_STATIC_BUILD
