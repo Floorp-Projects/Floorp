@@ -186,6 +186,7 @@ public:
   static nsIAtom* onmouseover;
   static nsIAtom* onmouseout;
   static nsIAtom* onmouseup;
+  static nsIAtom* onpaint;
   static nsIAtom* onunload;
   static nsIAtom* outOfDate;
   static nsIAtom* overflow;

@@ -155,6 +155,7 @@ nsIAtom* nsHTMLAtoms::onmousemove;
 nsIAtom* nsHTMLAtoms::onmouseover;
 nsIAtom* nsHTMLAtoms::onmouseout;
 nsIAtom* nsHTMLAtoms::onmouseup;
+nsIAtom* nsHTMLAtoms::onpaint;
 nsIAtom* nsHTMLAtoms::onunload;
 nsIAtom* nsHTMLAtoms::outOfDate;
 nsIAtom* nsHTMLAtoms::overflow;
@@ -364,6 +365,7 @@ void nsHTMLAtoms::AddrefAtoms()
     onmouseover = NS_NewAtom("ONMOUSEOVER");
     onmouseout = NS_NewAtom("ONMOUSEOUT");
     onmouseup = NS_NewAtom("ONMOUSEUP");
+    onpaint = NS_NewAtom("ONPAINT");
     onunload = NS_NewAtom("ONUNLOAD");
     outOfDate = NS_NewAtom("OUT-OF-DATE");
     overflow = NS_NewAtom("OVERFLOW");
@@ -567,6 +569,7 @@ void nsHTMLAtoms::ReleaseAtoms()
     NS_RELEASE(onmouseover);
     NS_RELEASE(onmouseout);
     NS_RELEASE(onmouseup);
+    NS_RELEASE(onpaint);
     NS_RELEASE(onunload);
     NS_RELEASE(outOfDate);
     NS_RELEASE(overflow);
