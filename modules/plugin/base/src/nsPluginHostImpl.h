@@ -123,7 +123,8 @@ struct nsActivePlugin
   nsActivePlugin(nsPluginTag* aPluginTag,
                  nsIPluginInstance* aInstance, 
                  const char * url,
-                 PRBool aDefaultPlugin);
+                 PRBool aDefaultPlugin,
+                 nsIPluginInstancePeer *peer);
   ~nsActivePlugin();
 
   void setStopped(PRBool stopped);
@@ -416,7 +417,8 @@ private:
   void
   AddInstanceToActiveList(nsCOMPtr<nsIPlugin> aPlugin,
                           nsIPluginInstance* aInstance,
-                          nsIURI* aURL, PRBool aDefaultPlugin);
+                          nsIURI* aURL, PRBool aDefaultPlugin,
+                          nsIPluginInstancePeer *peer);
 
   nsresult 
   RegisterPluginMimeTypesWithLayout(nsPluginTag *pluginTag, nsIComponentManager * compManager, nsIFile * layoutPath);
