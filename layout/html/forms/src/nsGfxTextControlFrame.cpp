@@ -1097,10 +1097,12 @@ nsGfxTextControlFrame::InitializeTextControl(nsIPresShell *aPresShell, nsIDOMDoc
   nsresult result;
   if (!aPresShell || !aDoc) { return NS_ERROR_NULL_POINTER; }
 
-  nsIFrame *htmlFrame;
-  nsAutoString htmlTag("body");
-  result = GetFirstFrameForType(htmlTag, aPresShell, aDoc, &htmlFrame);
-  if (NS_SUCCEEDED(result) && htmlFrame)
+  /* needing a frame here is a hack.  We can't remove this hack until we can
+   * set presContext info before style resolution on the webshell
+   */
+  nsIFrame *frame;
+  result = aPresShell->GetRootFrame(&frame);
+  if (NS_SUCCEEDED(result) && frame)
   {
     PRInt32 type;
     GetType(&type);
@@ -1110,12 +1112,12 @@ nsGfxTextControlFrame::InitializeTextControl(nsIPresShell *aPresShell, nsIDOMDoc
     NS_ASSERTION(presContext, "null presentation context");
     if (!presContext) { return NS_ERROR_NULL_POINTER; }
 
-    /* this is the code for setting the pres context, which is MUCH better
-     * than grabbing the imbedded HTML frame and setting it.
-     * alas, the mechanisms for doing this are not yet in place.
-     * what I want to do is hand the webshell my pres context at creation
+    /* set all style that propogates from the text control to its content
+	 * into the presContext for the webshell.
+     * what I would prefer to do is hand the webshell my own 
+	 * pres context at creation, rather than having it create its own.
      */
-    /*
+
     nsFont font(presContext->GetDefaultFixedFontDeprecated()); 
     GetFont(presContext, font);
     const nsStyleFont* controlFont;
@@ -1131,66 +1133,19 @@ nsGfxTextControlFrame::InitializeTextControl(nsIPresShell *aPresShell, nsIDOMDoc
     presContext->SetDefaultBackgroundImageAttachment(controlColor->mBackgroundAttachment);
     presContext->SetDefaultBackgroundImageOffset(controlColor->mBackgroundXPosition, controlColor->mBackgroundYPosition);
     presContext->SetDefaultBackgroundImage(controlColor->mBackgroundImage);
-    */
 
-    nsIStyleContext* bodySC = nsnull;
-    htmlFrame->GetStyleContext(&bodySC);
-    nsStyleSpacing* bodySpacing = nsnull;
-    bodySpacing = (nsStyleSpacing*)bodySC->GetMutableStyleData(eStyleStruct_Spacing);
-    nsStyleCoord zero(0);
-    bodySpacing->mMargin.SetLeft(zero);
-    bodySpacing->mMargin.SetRight(zero);
-    bodySpacing->mMargin.SetTop(zero);
-    bodySpacing->mMargin.SetBottom(zero);
-    bodySpacing->mPadding.SetLeft(zero);
-    bodySpacing->mPadding.SetRight(zero);
-    bodySpacing->mPadding.SetTop(zero);
-    bodySpacing->mPadding.SetBottom(zero);
-    bodySpacing->mBorder.SetLeft(zero);
-    bodySpacing->mBorder.SetRight(zero);
-    bodySpacing->mBorder.SetTop(zero);
-    bodySpacing->mBorder.SetBottom(zero);
-
-    nsStylePosition* bodyPosition = nsnull;
-    bodyPosition = (nsStylePosition*)bodySC->GetMutableStyleData(eStyleStruct_Position);
-    const nsStylePosition* controlPosition;
-    GetStyleData(eStyleStruct_Position,  (const nsStyleStruct *&)controlPosition);
-    *bodyPosition = *controlPosition;
-/* qqq
-    if (NS_FORM_INPUT_TEXT == type || NS_FORM_INPUT_PASSWORD == type) {
-      bodyPosition->mWidth.SetIntValue(10000, eStyleUnit_Chars);
-    }
-*/
-
-    nsStyleFont* bodyFont = nsnull;
-    bodyFont = (nsStyleFont*)bodySC->GetMutableStyleData(eStyleStruct_Font);
-    //const nsStyleFont* controlFont;
-    //GetStyleData(eStyleStruct_Font,  (const nsStyleStruct *&)controlFont);
-    //*bodyFont = *controlFont;
-    nsFont font(presContext->GetDefaultFixedFontDeprecated()); 
-    GetFont(presContext, font);
-    bodyFont->mFont = font;
-    bodyFont->mFixedFont = font;
-
-    nsStyleColor* bodyColor = nsnull;
-    bodyColor = (nsStyleColor*)bodySC->GetMutableStyleData(eStyleStruct_Color);
-    const nsStyleColor* controlColor;
-    GetStyleData(eStyleStruct_Color,  (const nsStyleStruct *&)controlColor);
-    *bodyColor = *controlColor;
-
-    nsStyleText* bodyText = nsnull;
-    bodyText = (nsStyleText*)bodySC->GetMutableStyleData(eStyleStruct_Text);
-    const nsStyleText* controlText;
-    GetStyleData(eStyleStruct_Text,  (const nsStyleStruct *&)controlText);
-    *bodyText = *controlText;
-    if (NS_FORM_INPUT_TEXT == type || NS_FORM_INPUT_PASSWORD == type) {
-      // qqq bodyText->mWhiteSpace = NS_STYLE_WHITESPACE_MOZ_PRE_WRAP;
-      bodyText->mWhiteSpace = NS_STYLE_WHITESPACE_PRE;
-    }
-    bodyText->mTextAlign = NS_STYLE_TEXT_ALIGN_LEFT;
-
-    bodySC->RecalcAutomaticData(presContext);
-    NS_RELEASE(bodySC);
+    /* HACK:
+	 * since I don't yet have a hook for setting info on the pres context before style is
+     * resolved, I need to call remap style on the root frame's style context.
+     * The above code for setting presContext data should happen on a presContext that
+     * I create and pass into the webshell, rather than having the webshell create its own
+     */
+    nsIStyleContext* sc = nsnull;
+    result = frame->GetStyleContext(&sc);
+    if (NS_FAILED(result)) { return result; }
+    if (nsnull==sc) { return NS_ERROR_NULL_POINTER; }
+    sc->RemapStyle(presContext);
+	// end HACK
 
     // now that the style context is initialized, initialize the content
     nsAutoString value;
@@ -1379,7 +1334,6 @@ nsEnderDocumentObserver::nsEnderDocumentObserver()
 
 nsEnderDocumentObserver::~nsEnderDocumentObserver() 
 {
-  printf("destroying nsEnderDocumentObserver\n");
 }
 
 nsresult
@@ -2131,7 +2085,6 @@ NS_IMPL_RELEASE(EnderTempObserver);
 
 EnderTempObserver::~EnderTempObserver()
 {
-  printf("destroyed EnderTempObserver\n");
 }
 
 nsresult
