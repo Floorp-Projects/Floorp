@@ -128,9 +128,19 @@ public:
 
     virtual ~DiskCacheEntry() {}
 
+    /**
+     * Maps a cache access mode to a cached nsITransport for that access
+     * mode. We keep these cached to avoid repeated trips to the
+     * file transport service.
+     */
     nsCOMPtr<nsITransport>& getTransport(nsCacheAccessMode mode)
     {
         return mTransports[mode - 1];
+    }
+    
+    nsCOMPtr<nsITransport>& getMetaTransport(nsCacheAccessMode mode)
+    {
+        return mMetaTransports[mode - 1];
     }
     
     PRBool isDirty()
@@ -145,6 +155,7 @@ public:
 
 private:
     nsCOMPtr<nsITransport> mTransports[3];
+    nsCOMPtr<nsITransport> mMetaTransports[3];
     PRBool mDirty;
 };
 NS_IMPL_ISUPPORTS0(DiskCacheEntry);
@@ -188,7 +199,7 @@ nsDiskCacheDevice::Init()
     nsresult rv = installPrefListeners(this);
     if (NS_FAILED(rv)) return rv;
     
-    rv = mCachedEntries.Init();
+    rv = mBoundEntries.Init();
     if (NS_FAILED(rv)) return rv;
     
     return  NS_OK;
@@ -230,14 +241,22 @@ nsDiskCacheDevice::FindEntry(nsCString * key)
 
     // XXX look in entry hashtable first, if not found, then look on
     // disk, to see if we have a disk cache entry that maches.
-    nsCacheEntry * entry = mCachedEntries.GetEntry(key);
-    if (!entry)  return nsnull;
+    nsCacheEntry * entry = mBoundEntries.GetEntry(key);
+    if (!entry) {
+        nsresult rv = readDiskCacheEntry(key, &entry);
+        if (NS_FAILED(rv)) return nsnull;
+        rv = mBoundEntries.AddEntry(entry);
+        if (NS_FAILED(rv)) {
+            delete entry;
+            return nsnull;
+        }
+    }
 
     //** need nsCacheService::CreateEntry();
     entry->MarkActive(); // so we don't evict it
     //** find eviction element and move it to the tail of the queue
     
-    return entry;;
+    return entry;
 }
 
 
@@ -245,37 +264,23 @@ nsresult
 nsDiskCacheDevice::DeactivateEntry(nsCacheEntry * entry)
 {
     nsCString* key = entry->Key();
-    nsCacheEntry * ourEntry = mCachedEntries.GetEntry(key);
+    nsCacheEntry * ourEntry = mBoundEntries.GetEntry(key);
     NS_ASSERTION(ourEntry, "DeactivateEntry called for an entry we don't have!");
     if (!ourEntry)
         return NS_ERROR_INVALID_POINTER;
 
-    //** update disk entry from nsCacheEntry
-    //** MarkInactive(); // to make it evictable again
-    // XXX how do we know if the entry has been updated since opening the entry?
-    DiskCacheEntry* diskEntry = getDiskCacheEntry(entry);
-    if (diskEntry && diskEntry->isDirty()) {
-        nsCOMPtr<nsIFile> file;
-        nsresult rv = getFileForEntry(entry, PR_TRUE, getter_AddRefs(file));
-        if (NS_FAILED(rv)) return rv;
+    // commit any changes about this entry to disk.
+    updateDiskCacheEntry(entry);
 
-        nsCOMPtr<nsITransport> transport;
-        rv = getTransportForFile(file, nsICache::ACCESS_WRITE, getter_AddRefs(transport));
-        if (NS_FAILED(rv)) return rv;
-
-        nsCOMPtr<nsIOutputStream> output;
-        rv = transport->OpenOutputStream(0, -1, 0, getter_AddRefs(output));
-        if (NS_FAILED(rv)) return rv;
-        
-        // write the key to the file.
-        PRUint32 count = nsCRT::strlen(key->get());
-        rv = output->Write(key->get(), count, &count);
-        output->Close();
-        
-        // mark the disk entry as being consistent with meta data file.
-        diskEntry->setDirty(PR_FALSE);
-    }
+    // XXX eventually, as a performance enhancement, keep entries around for a while before deleting them.
+    // XXX right now, to prove correctness, destroy the entries eagerly.
+#if 0
+    mBoundEntries.RemoveEntry(entry);
+    delete entry;
+#else
     entry->MarkInactive();
+#endif
+
     return NS_OK;
 }
 
@@ -283,7 +288,7 @@ nsDiskCacheDevice::DeactivateEntry(nsCacheEntry * entry)
 nsresult
 nsDiskCacheDevice::BindEntry(nsCacheEntry * entry)
 {
-    nsresult  rv = mCachedEntries.AddEntry(entry);
+    nsresult  rv = mBoundEntries.AddEntry(entry);
     if (NS_FAILED(rv))
         return rv;
 
@@ -317,7 +322,7 @@ nsDiskCacheDevice::GetTransportForEntry(nsCacheEntry * entry,
     // XXX generate the name of the cache entry from the hash code of its key,
     // modulo the number of files we're willing to keep cached.
     nsCOMPtr<nsIFile> entryFile;
-    nsresult rv = getFileForEntry(entry, PR_FALSE, getter_AddRefs(entryFile));
+    nsresult rv = getFileForKey(entry->Key()->get(), PR_FALSE, getter_AddRefs(entryFile));
     if (NS_SUCCEEDED(rv)) {
         rv = getTransportForFile(entryFile, mode, getter_AddRefs(transport));
         if (NS_SUCCEEDED(rv))
@@ -345,7 +350,7 @@ void nsDiskCacheDevice::setCacheDirectory(nsILocalFile* cacheDirectory)
     mCacheDirectory = cacheDirectory;
 }
 
-nsresult nsDiskCacheDevice::getFileForEntry(nsCacheEntry * entry, PRBool meta, nsIFile ** result)
+nsresult nsDiskCacheDevice::getFileForKey(const char* key, PRBool meta, nsIFile ** result)
 {
     if (mCacheDirectory) {
         nsCOMPtr<nsIFile> entryFile;
@@ -353,7 +358,7 @@ nsresult nsDiskCacheDevice::getFileForEntry(nsCacheEntry * entry, PRBool meta, n
     	if (NS_FAILED(rv))
     		return rv;
         // generate the hash code for this entry, and use that as a file name.
-        PLDHashNumber hash = ::PL_DHashStringKey(NULL, entry->Key()->get());
+        PLDHashNumber hash = ::PL_DHashStringKey(NULL, key);
         char name[32];
         ::sprintf(name, "%08X%c", hash, (meta ? '.' : '\0'));
         entryFile->Append(name);
@@ -425,6 +430,223 @@ nsresult nsDiskCacheDevice::scanEntries()
     }
 
     return NS_OK;
+}
+
+struct MetaDataHeader {
+    PRUint32        mHeaderSize;
+    PRInt32         mFetchCount;
+    PRTime          mLastFetched;
+    PRTime          mLastValidated;
+    PRTime          mExpirationTime;
+    PRUint32        mDataSize;
+    PRUint32        mKeySize;
+    PRUint32        mMetaDataSize;
+    // followed by null-terminated key and metadata string values.
+
+    MetaDataHeader()
+        :   mHeaderSize(sizeof(MetaDataHeader)),
+            mFetchCount(0),
+            mLastFetched(LL_ZERO),
+            mLastValidated(LL_ZERO),
+            mExpirationTime(LL_ZERO),
+            mDataSize(0),
+            mKeySize(0),
+            mMetaDataSize(0)
+    {
+    }
+
+    MetaDataHeader(nsCacheEntry* entry)
+        :   mHeaderSize(sizeof(MetaDataHeader)),
+            mFetchCount(entry->FetchCount()),
+            mLastFetched(entry->LastFetched()),
+            mLastValidated(entry->LastValidated()),
+            mExpirationTime(entry->ExpirationTime()),
+            mDataSize(entry->DataSize()),
+            mKeySize(entry->Key()->Length() + 1),
+            mMetaDataSize(0)
+    {
+    }
+};
+
+struct MetaDataFile : MetaDataHeader {
+    char*           mKey;
+    char*           mMetaData;
+
+    MetaDataFile()
+        :   mKey(nsnull), mMetaData(nsnull)
+    {
+    }
+    
+    MetaDataFile(nsCacheEntry* entry)
+        :   MetaDataHeader(entry),
+            mKey(nsnull), mMetaData(nsnull)
+    {
+    }
+    
+    ~MetaDataFile()
+    {
+        delete[] mKey;
+        delete[] mMetaData;
+    }
+    
+    nsresult Init(nsCacheEntry* entry)
+    {
+        PRUint32 size = 1 + entry->Key()->Length();
+        mKey = new char[size];
+        if (!mKey) return NS_ERROR_OUT_OF_MEMORY;
+        nsCRT::memcpy(mKey, entry->Key()->get(), size);
+        return entry->FlattenMetaData(&mMetaData, &mMetaDataSize);
+    }
+
+    nsresult Write(nsIOutputStream* output);
+    nsresult Read(nsIInputStream* input);
+};
+
+nsresult MetaDataFile::Write(nsIOutputStream* output)
+{
+    nsresult rv;
+    PRUint32 count;
+    
+    rv = output->Write((char*)this, mHeaderSize, &count);
+    if (NS_FAILED(rv)) return rv;
+    
+    // write the key to the file.
+    rv = output->Write(mKey, mKeySize, &count);
+    if (NS_FAILED(rv)) return rv;
+    
+    // write the flattened metadata to the file.
+    if (mMetaDataSize) {
+        rv = output->Write(mMetaData, mMetaDataSize, &count);
+        if (NS_FAILED(rv)) return rv;
+    }
+    
+    return NS_OK;
+}
+
+nsresult MetaDataFile::Read(nsIInputStream* input)
+{
+    nsresult rv;
+    PRUint32 count;
+    
+    // read the header size used by this file.
+    rv = input->Read((char*)&mHeaderSize, sizeof(mHeaderSize), &count);
+    if (NS_FAILED(rv)) return rv;
+    rv = input->Read((char*)&mFetchCount, mHeaderSize - sizeof(mHeaderSize), &count);
+    if (NS_FAILED(rv)) return rv;
+
+    // read in the key.
+    mKey = new char[mKeySize];
+    if (!mKey) return NS_ERROR_OUT_OF_MEMORY;
+    rv = input->Read(mKey, mKeySize, &count);
+    if (NS_FAILED(rv)) return rv;
+
+    // read in the metadata.
+    if (mMetaDataSize) {
+        mMetaData = new char[mMetaDataSize];
+        if (!mMetaData) return NS_ERROR_OUT_OF_MEMORY;
+        rv = input->Read(mMetaData, mMetaDataSize, &count);
+        if (NS_FAILED(rv)) return rv;
+    }
+    
+    return NS_OK;
+}
+
+// XXX All these transports and opening/closing of files. We need a way to cache open files,
+// XXX and to seek. Perhaps I should just be using ANSI FILE objects for all of the metadata
+// XXX operations.
+
+nsresult nsDiskCacheDevice::updateDiskCacheEntry(nsCacheEntry* entry)
+{
+    DiskCacheEntry* diskEntry = getDiskCacheEntry(entry);
+    if (diskEntry && diskEntry->isDirty()) {
+        nsresult rv;
+        nsCOMPtr<nsITransport>& transport = diskEntry->getMetaTransport(nsICache::ACCESS_WRITE);
+        if (!transport) {
+            nsCOMPtr<nsIFile> file;
+            rv = getFileForKey(entry->Key()->get(), PR_TRUE, getter_AddRefs(file));
+            if (NS_FAILED(rv)) return rv;
+            
+            rv = getTransportForFile(file, nsICache::ACCESS_WRITE, getter_AddRefs(transport));
+            if (NS_FAILED(rv)) return rv;
+        }
+
+        nsCOMPtr<nsIOutputStream> output;
+        rv = transport->OpenOutputStream(0, -1, 0, getter_AddRefs(output));
+        if (NS_FAILED(rv)) return rv;
+        
+        // write the metadata to the file.
+        MetaDataFile metaDataFile(entry);
+        rv = metaDataFile.Init(entry);
+        if (NS_FAILED(rv)) return rv;
+        rv = metaDataFile.Write(output);
+        
+        rv = output->Close();
+        
+        // mark the disk entry as being consistent with meta data file.
+        diskEntry->setDirty(PR_FALSE);
+    }
+    return NS_OK;
+}
+
+nsresult nsDiskCacheDevice::readDiskCacheEntry(nsCString* key, nsCacheEntry ** result)
+{
+    nsresult rv = NS_ERROR_OUT_OF_MEMORY;
+    nsCacheEntry* entry = nsnull;
+    do {
+        nsCString* newKey = new nsCString(key->get());
+        if (!newKey) return NS_ERROR_OUT_OF_MEMORY;
+        
+        entry = new nsCacheEntry(newKey, PR_TRUE, nsICache::STORE_ON_DISK);
+        if (!entry) {
+            delete newKey;
+            return NS_ERROR_OUT_OF_MEMORY;
+        }
+        
+        DiskCacheEntry* diskEntry = ensureDiskCacheEntry(entry);
+        if (!diskEntry) break;
+
+        nsCOMPtr<nsITransport>& transport = diskEntry->getMetaTransport(nsICache::ACCESS_READ);
+        if (!transport) {
+            nsCOMPtr<nsIFile> file;
+            nsresult rv = getFileForKey(key->get(), PR_TRUE, getter_AddRefs(file));
+            if (NS_FAILED(rv)) break;
+
+            rv = getTransportForFile(file, nsICache::ACCESS_READ, getter_AddRefs(transport));
+            if (NS_FAILED(rv)) break;
+        }
+
+        nsCOMPtr<nsIInputStream> input;
+        rv = transport->OpenInputStream(0, -1, 0, getter_AddRefs(input));
+        if (NS_FAILED(rv)) break;
+        
+        // read the metadata file.
+        MetaDataFile metaDataFile;
+        rv = metaDataFile.Read(input);
+        input->Close();
+        if (NS_FAILED(rv)) break;
+        
+        // initialize the entry.
+        entry->SetFetchCount(metaDataFile.mFetchCount);
+        entry->SetLastFetched(metaDataFile.mLastFetched);
+        entry->SetLastValidated(metaDataFile.mLastValidated);
+        entry->SetLastValidated(metaDataFile.mLastValidated);
+        entry->SetExpirationTime(metaDataFile.mExpirationTime);
+        entry->SetDataSize(metaDataFile.mDataSize);
+        
+        // restore the metadata.
+        if (metaDataFile.mMetaDataSize) {
+            rv = entry->UnflattenMetaData(metaDataFile.mMetaData, metaDataFile.mMetaDataSize);
+            if (NS_FAILED(rv)) break;
+        }
+        
+        // celebrate!        
+        *result = entry;
+        return NS_OK;
+    } while (0);
+
+    // oh, auto_ptr<> would be nice right about now.    
+    delete entry;
+    return rv;
 }
 
 //** need methods for enumerating entries
