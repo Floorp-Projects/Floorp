@@ -29,7 +29,6 @@ Rights Reserved.
 <?xul-overlay href="chrome://messenger/content/mailWindowOverlay.xul"?>
 <?xul-overlay href="chrome://messenger/content/mailOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/contentAreaContextOverlay.xul"?>
-<?xul-overlay href="chrome://communicator/content/sidebar/sidebarOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/tasksOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/communicatorOverlay.xul"?>
 
@@ -140,24 +139,22 @@ Rights Reserved.
 </popup>
 
 <popup id="messagePaneContext"/>
-<popup id="sidebarPopup"/>
 
   <toolbox id="mailToolbarToolbox" class="toolbox-top">
     <menubar id="mailMenubar"/>
   </toolbox>
 
   <hbox style="height:100px" flex="1">
-    <vbox id="sidebar-box">
-      <tree id="folderTree" persist="height width" flex="1" context="folderPaneContext"/>
-    </vbox>
-          
-    <splitter id="sidebar-splitter"/>
-
+    <tree id="folderTree" style="min-width: 200px;" persist="height width" flex="1" context="folderPaneContext"/>
+      
+    <splitter id="gray_vertical_splitter" collapse="before" persist="state">
+      <grippy/>
+    </splitter>
+    
     <vbox flex="1">
-
       <vbox id="accountCentralBox" flex="1">
-                     <iframe name="accountCentralPane" flex="1" src="about:blank"/>
-                  </vbox>
+        <iframe name="accountCentralPane" flex="1" src="about:blank"/>
+      </vbox>
       <vbox id="messagesBox" flex="1">
       <hbox id="searchBox"/>
       <tree id="threadTree" flex="2" persist="height" style="height:0px" context="threadPaneContext"/>
@@ -176,16 +173,13 @@ Rights Reserved.
                  style="height: 0px; min-height: 1px" flex="1" name="messagepane" 
                  disablehistory="true" type="content-primary" src="about:blank"
                  disablesecurity="true"/>
-      </vbox>  
-      </vbox>
-
+       </vbox>  
+     </vbox>
    </vbox>             
-
   </hbox>
 
-      <statusbar id="status-bar" class="chromeclass-status mailwindow-statusbar">
-        <statusbarpanel id="unreadMessageCount" style="min-width: 5px"/>
-        <statusbarpanel id="totalMessageCount" style="min-width: 5px"/>
-      </statusbar>
-
+  <statusbar id="status-bar" class="chromeclass-status mailwindow-statusbar">
+    <statusbarpanel id="unreadMessageCount" style="min-width: 5px"/>
+    <statusbarpanel id="totalMessageCount" style="min-width: 5px"/>
+  </statusbar>
 </window>
