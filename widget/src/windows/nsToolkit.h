@@ -50,6 +50,8 @@ struct IActiveIMMApp;
 #endif
 
 struct MethodInfo;
+class nsIEventQueue;
+
 
 /**
  * Wrapper around the thread running the message pump.
@@ -72,6 +74,7 @@ class nsToolkit : public nsIToolkit
             PRThread*       GetGuiThread(void)       { return mGuiThread;   }
             HWND            GetDispatchWindow(void)  { return mDispatchWnd; }
             void            CreateInternalWindow(PRThread *aThread);
+            nsIEventQueue*  GetEventQueue(void);
 
 private:
                             ~nsToolkit();
