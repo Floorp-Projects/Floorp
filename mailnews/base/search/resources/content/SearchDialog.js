@@ -27,10 +27,7 @@ function createXUL(tag) {
 }
 
 function createOption(label,value) {
-    var opt = createHTML("OPTION");
-    opt.text = label;
-    opt.value = value;
-
+    var opt = new Option(label, value);
     return opt;
 }
 
@@ -53,6 +50,7 @@ function addStringComparators(selWidget) {
     var opt1=createOption("contains", "contains");
     var opt2=createOption("doesn't contain", "nocontain");
 
+    print("adding " + opt1.text + "\n");
     selWidget.add(opt1, null);
     selWidget.add(opt2, null);
 }
@@ -116,7 +114,6 @@ function OnMore(event) {
     parentBox.appendChild(createRow());
 
     var sel = document.getElementById("zoober");
-    sel.onchange = OnFieldSelect;
 }
 
 function OnLess(event) {

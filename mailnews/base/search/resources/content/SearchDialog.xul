@@ -74,7 +74,7 @@ Rights Reserved.
 
     <html:div align="horizontal" class="cleanborder" id="criteriabox">
     <html:div>
-    <html:select id="zoober" >
+    <html:select id="zoober" onchange="OnFieldSelect(event);">
       <html:option value="subject">&scopeSubject.label;</html:option>
       <html:option value="sender">&scopeSender.label;</html:option>
       <html:option value="date">&scopeDate.label;</html:option>
