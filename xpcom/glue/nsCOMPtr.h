@@ -27,11 +27,6 @@
     // for |NS_PRECONDITION|
 #endif
 
-#ifndef nscore_h___
-	#include "nscore.h"
-		// for |NS_REINTERPRET_CAST|
-#endif
-
 #ifndef nsISupports_h___
   #include "nsISupports.h"
     // for |nsresult|, |NS_ADDREF|, et al
@@ -100,11 +95,15 @@
 	/*
 		If the compiler doesn't support |explicit|, we'll just make it go away, trusting
 		that the builds under compilers that do have it will keep us on the straight and narrow.
-
-		This should probably be moved to "nscore.h".
 	*/
 #ifndef HAVE_CPP_EXPLICIT
   #define explicit
+#endif
+
+#ifdef HAVE_CPP_NEW_CASTS
+	#define NSCAP_REINTERPRET_CAST(T,x)	reinterpret_cast<T>(x)
+#else
+	#define NSCAP_REINTERPRET_CAST(T,x) ((T)(x))
 #endif
 
 #ifdef NSCAP_FEATURE_DEBUG_MACROS
@@ -371,7 +370,7 @@ class nsCOMPtr : private nsCOMPtr_base
       get() const
           // returns a |nsDerivedSafe<T>*| to deny clients the use of |AddRef| and |Release|
         {
-          return NS_REINTERPRET_CAST(nsDerivedSafe<T>*, mRawPtr);
+          return NSCAP_REINTERPRET_CAST(nsDerivedSafe<T>*, mRawPtr);
         }
 
       nsDerivedSafe<T>*
@@ -413,7 +412,7 @@ class nsCOMPtr : private nsCOMPtr_base
       T**
       StartAssignment()
         {
-          return NS_REINTERPRET_CAST(T**, begin_assignment());
+          return NSCAP_REINTERPRET_CAST(T**, begin_assignment());
         }
   };
 
@@ -446,7 +445,7 @@ class nsGetterAddRefs
       operator void**()
         {
           // NS_PRECONDITION(mTargetSmartPtr != 0, "getter_AddRefs into no destination");
-          return NS_REINTERPRET_CAST(void**, mTargetSmartPtr.StartAssignment());
+          return NSCAP_REINTERPRET_CAST(void**, mTargetSmartPtr.StartAssignment());
         }
 
       T*&
