@@ -34,6 +34,9 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsCOMPtr.h"
 #include "nsJSUtils.h"
 #include "nsIScriptSecurityManager.h"
+#include "nsIDOMWindow.h"
+#include "nsIDOMDocument.h"
+#include "nsIDocument.h"
 #include "nsIJSContextStack.h"
 
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
@@ -702,15 +705,23 @@ LocationImpl::GetSourceURL(JSContext* cx,
   nsCOMPtr<nsIScriptGlobalObject> nativeGlob;
   nsJSUtils::nsGetDynamicScriptGlobal(cx, getter_AddRefs(nativeGlob));
   if (nativeGlob) {
-    nsCOMPtr<nsIWebShell> webShell;
+    nsCOMPtr<nsIDOMWindow> window = do_QueryInterface(nativeGlob);
 
-    nativeGlob->GetWebShell(getter_AddRefs(webShell));
-    if (webShell) {
-      const PRUnichar* url;
+    if (window) {
+      nsCOMPtr<nsIDOMDocument> domDoc;
 
-      // XXX Ughh - incorrect ownership rules for url?
-      webShell->GetURL(&url);
-      result = NS_NewURI(sourceURL, url);
+      result = window->GetDocument(getter_AddRefs(domDoc));
+      if (NS_SUCCEEDED(result)) {
+        nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
+
+        if (doc) {
+          result = doc->GetBaseURL(*sourceURL);
+        }
+
+        if (!*sourceURL) {
+          *sourceURL = doc->GetDocumentURL();
+        }
+      }
     }
   }
 
