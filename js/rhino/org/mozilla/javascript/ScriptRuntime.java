@@ -547,13 +547,17 @@ public class ScriptRuntime {
                                       Class staticClass)
     {
         if (val == null) {
-            throw Context.reportRuntimeError(
-                getMessage("msg.null.to.object", null));
+            throw NativeGlobal.constructError(
+                        Context.getContext(), "ConversionError",
+                        ScriptRuntime.getMessage("msg.null.to.object", null),
+                        scope);
         }
         if (val instanceof Scriptable) {
             if (val == Undefined.instance) {
-                throw Context.reportRuntimeError(
-                    getMessage("msg.undef.to.object", null));
+                throw NativeGlobal.constructError(
+                        Context.getContext(), "ConversionError",
+                        ScriptRuntime.getMessage("msg.undef.to.object", null),
+                        scope);
             }
             return (Scriptable) val;
         }
@@ -763,8 +767,10 @@ public class ScriptRuntime {
             start = toObject(scope, obj);
         }
         if (start == null) {
-            throw Context.reportRuntimeError(getMessage
-                                             ("msg.null.to.object", null));
+            throw NativeGlobal.constructError(
+                        Context.getContext(), "ConversionError",
+                        ScriptRuntime.getMessage("msg.null.to.object", null),
+                        scope);
         }
         Scriptable m = start;
         do {
@@ -801,8 +807,10 @@ public class ScriptRuntime {
             s = toObject(scope, obj);
         }
         if (s == null) {
-            throw Context.reportRuntimeError(getMessage
-                                             ("msg.null.to.object", null));
+            throw NativeGlobal.constructError(
+                        Context.getContext(), "ConversionError",
+                        ScriptRuntime.getMessage("msg.null.to.object", null),
+                        scope);
         }
         return s.getPrototype();
     }
@@ -830,8 +838,10 @@ public class ScriptRuntime {
             s = toObject(scope, obj);
         }
         if (s == null) {
-            throw Context.reportRuntimeError(getMessage
-                                             ("msg.null.to.object", null));
+            throw NativeGlobal.constructError(
+                        Context.getContext(), "ConversionError",
+                        ScriptRuntime.getMessage("msg.null.to.object", null),
+                        scope);
         }
         return s.getParentScope();
     }
@@ -855,8 +865,10 @@ public class ScriptRuntime {
             s = s.getPrototype();
         }
         if (start == null) {
-            throw Context.reportRuntimeError(getMessage
-                                             ("msg.null.to.object", null));
+            throw NativeGlobal.constructError(
+                        Context.getContext(), "ConversionError",
+                        ScriptRuntime.getMessage("msg.null.to.object", null),
+                        scope);
         }
         start.setPrototype(result);
         return result;
@@ -881,8 +893,10 @@ public class ScriptRuntime {
             s = s.getParentScope();
         }
         if (start == null) {
-            throw Context.reportRuntimeError(getMessage
-                                             ("msg.null.to.object", null));
+            throw NativeGlobal.constructError(
+                        Context.getContext(), "ConversionError",
+                        ScriptRuntime.getMessage("msg.null.to.object", null),
+                        scope);
         }
         start.setParentScope(result);
         return result;
@@ -899,8 +913,10 @@ public class ScriptRuntime {
             start = toObject(scope, obj);
         }
         if (start == null) {
-            throw Context.reportRuntimeError(getMessage
-                                             ("msg.null.to.object", null));
+            throw NativeGlobal.constructError(
+                        Context.getContext(), "ConversionError",
+                        ScriptRuntime.getMessage("msg.null.to.object", null),
+                        scope);
         }
         Scriptable m = start;
         do {
@@ -1204,8 +1220,10 @@ public class ScriptRuntime {
             obj = obj.getParentScope();
         }
         Object[] args = { id };
-        throw Context.reportRuntimeError(getMessage
-                                         ("msg.is.not.defined", args));
+        throw NativeGlobal.constructError(
+                    Context.getContext(), "ReferenceError",
+                    ScriptRuntime.getMessage("msg.is.not.defined", args),
+                    scope);
     }
 
     public static Scriptable getThis(Scriptable base) {
@@ -1263,8 +1281,11 @@ public class ScriptRuntime {
         }
         catch (ClassCastException e) {
             Object[] errorArgs = { toString(fun) };
-            throw cx.reportRuntimeError(cx.getMessage
-                                        ("msg.isnt.function", errorArgs));
+            throw NativeGlobal.constructError(
+                        Context.getContext(), "TypeError",
+                        ScriptRuntime.getMessage("msg.isnt.function", 
+                                                    errorArgs),
+                        thisArg);
         }
 
         Scriptable thisObj;
@@ -1342,8 +1363,10 @@ public class ScriptRuntime {
             // fall through to error
         }
         Object[] errorArgs = { toString(fun) };
-        throw Context.reportRuntimeError(cx.getMessage
-                                         ("msg.isnt.function", errorArgs));
+        throw NativeGlobal.constructError(
+                    Context.getContext(), "TypeError",
+                    ScriptRuntime.getMessage("msg.isnt.function", errorArgs),
+                    scope);
     }
 
     public static Scriptable newObjectSpecial(Context cx, Object fun, 
@@ -1442,7 +1465,11 @@ public class ScriptRuntime {
             } while (m != null);
             obj = obj.getParentScope();
         }
-        throw Context.reportRuntimeError(id.toString() + " is not defined"); // XXX
+        Object args[] = { id };
+        throw NativeGlobal.constructError(
+                    Context.getContext(), "ReferenceError",
+                    ScriptRuntime.getMessage("msg.is.not.defined", args),
+                    scopeChain);
     }
 
     public static Object postIncrement(Object obj, String id, Scriptable scope) {
@@ -1454,8 +1481,10 @@ public class ScriptRuntime {
             start = toObject(scope, obj);
         }
         if (start == null) {
-            throw Context.reportRuntimeError(getMessage
-                                             ("msg.null.to.object", null));
+            throw NativeGlobal.constructError(
+                        Context.getContext(), "ConversionError",
+                        ScriptRuntime.getMessage("msg.null.to.object", null),
+                        scope);
         }
         Scriptable m = start;
         do {
@@ -1534,7 +1563,11 @@ public class ScriptRuntime {
             } while (m != null);
             obj = obj.getParentScope();
         }
-        throw Context.reportRuntimeError(id.toString() + " is not defined"); // XXX
+        Object args[] = { id };
+        throw NativeGlobal.constructError(
+                    Context.getContext(), "ReferenceError",
+                    ScriptRuntime.getMessage("msg.is.not.defined", args),
+                    scopeChain);
     }
 
     public static Object postDecrement(Object obj, String id, Scriptable scope) {
@@ -1546,8 +1579,10 @@ public class ScriptRuntime {
             start = toObject(scope, obj);
         }
         if (start == null) {
-            throw Context.reportRuntimeError(getMessage
-                                             ("msg.null.to.object", null));
+            throw NativeGlobal.constructError(
+                        Context.getContext(), "ConversionError",
+                        ScriptRuntime.getMessage("msg.null.to.object", null),
+                        scope);
         }
         Scriptable m = start;
         do {
@@ -1577,8 +1612,10 @@ public class ScriptRuntime {
         }
         Object result = ((Scriptable) val).getDefaultValue(null);
         if (result != null && result instanceof Scriptable)
-            throw Context.reportRuntimeError(getMessage
-                                             ("msg.bad.default.value", null));
+            throw NativeGlobal.constructError(
+                        Context.getContext(), "ConversionError",
+                        ScriptRuntime.getMessage("msg.bad.default.value", null),
+                        val);
         return result;
     }
 
@@ -1729,9 +1766,10 @@ public class ScriptRuntime {
 
       // Check RHS is an object
       if (! (b instanceof Scriptable)) {
-	throw Context.reportRuntimeError(getMessage
-					 ("msg.instanceof.not.object",
-					  null));
+        throw NativeGlobal.constructError(
+                    Context.getContext(), "TypeError",
+                    ScriptRuntime.getMessage("msg.instanceof.not.object", null),
+                    a);
       }
 
       // for primitive values on LHS, return false
@@ -1774,9 +1812,9 @@ public class ScriptRuntime {
      */
     public static boolean in(Object a, Object b) {
         if (!(b instanceof Scriptable)) {
-            throw Context.reportRuntimeError(getMessage
-                                             ("msg.in.not.object",
-                                              null));
+            throw NativeGlobal.constructError(
+                Context.getContext(), "TypeError",
+                ScriptRuntime.getMessage("msg.instanceof.not.object", null), a);
         }
         // OPT do it here rather than making a new FlattenedObject.
         FlattenedObject rhs = new FlattenedObject((Scriptable)b);
