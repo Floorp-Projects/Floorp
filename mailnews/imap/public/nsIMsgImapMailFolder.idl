@@ -26,7 +26,7 @@
 [scriptable, uuid(FBFEBE79-C1DD-11d2-8A40-0060B0FC04D2)]
 interface nsIMsgImapMailFolder : nsISupports {
   void RemoveSubFolder(in nsIMsgFolder folder);
-  void CreateClientSubfolderInfo(in string folderName);
+  void CreateClientSubfolderInfo(in string folderName, in wchar hierarchyDelimiter);
   void List();
   attribute boolean verifiedAsOnlineFolder;
   attribute boolean explicitlyVerify;

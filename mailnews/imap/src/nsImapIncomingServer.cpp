@@ -631,7 +631,7 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
 			}
 		}
 
-        hostFolder->CreateClientSubfolderInfo(folderPath);
+        hostFolder->CreateClientSubfolderInfo(folderPath, hierarchyDelimiter);
 		a_nsIFolder->GetChildWithURI(uri, PR_TRUE, getter_AddRefs(child));
     }
 	if (child)
@@ -722,10 +722,13 @@ NS_IMETHODIMP nsImapIncomingServer::OnlineFolderRename(const char *oldName, cons
         rv = GetRootFolder(getter_AddRefs(rootFolder));
         if (NS_SUCCEEDED(rv))
         {
+			PRUnichar hierarchyDelimiter;
+			parent->GetHierarchyDelimiter(&hierarchyDelimiter);
+
             nsCOMPtr<nsIMsgImapMailFolder> imapRootFolder =
                 do_QueryInterface(rootFolder, &rv);
             if (NS_SUCCEEDED(rv))
-            rv = imapRootFolder->CreateClientSubfolderInfo(newName);
+            rv = imapRootFolder->CreateClientSubfolderInfo(newName, hierarchyDelimiter);
         }
     }
 	return rv;

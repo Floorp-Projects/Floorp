@@ -351,7 +351,7 @@ NS_IMETHODIMP nsImapMailFolder::GetSubFolders(nsIEnumerator* *result)
 		if (isServer && NS_SUCCEEDED(mSubFolders->Count(&count)) && count == 0)
 		{
 			// create an inbox...
-			CreateClientSubfolderInfo("INBOX");
+			CreateClientSubfolderInfo("INBOX", kOnlineHierarchySeparatorUnknown);
 		}
         UpdateSummaryTotals(PR_FALSE);
 
@@ -441,7 +441,7 @@ nsImapMailFolder::UpdateFolder(nsIMsgWindow *msgWindow)
             GetHasSubFolders(&hasSubFolders);
             if (!hasSubFolders)
             {
-                rv = CreateClientSubfolderInfo("Inbox");
+                rv = CreateClientSubfolderInfo("Inbox", kOnlineHierarchySeparatorUnknown);
                 if (NS_FAILED(rv)) 
                     return rv;
             }
@@ -495,7 +495,7 @@ NS_IMETHODIMP nsImapMailFolder::CreateSubfolder(const char* folderName)
     return rv;
 }
 
-NS_IMETHODIMP nsImapMailFolder::CreateClientSubfolderInfo(const char *folderName)
+NS_IMETHODIMP nsImapMailFolder::CreateClientSubfolderInfo(const char *folderName, PRUnichar hierarchyDelimiter)
 {
 	nsresult rv = NS_OK;
     
@@ -539,7 +539,7 @@ NS_IMETHODIMP nsImapMailFolder::CreateClientSubfolderInfo(const char *folderName
         if (NS_FAILED(rv)) return rv;
         parentFolder = do_QueryInterface(res, &rv);
         if (NS_FAILED(rv)) return rv;
-	    return parentFolder->CreateClientSubfolderInfo(nsCAutoString(leafName));
+	    return parentFolder->CreateClientSubfolderInfo(nsCAutoString(leafName), hierarchyDelimiter);
     }
     
 	// if we get here, it's really a leaf, and "this" is the parent.
@@ -586,7 +586,7 @@ NS_IMETHODIMP nsImapMailFolder::CreateClientSubfolderInfo(const char *folderName
 			{
 				nsCAutoString onlineName = m_onlineFolderName; 
 				if (onlineName.Length() > 0)
-					onlineName += m_hierarchyDelimiter;
+					onlineName += hierarchyDelimiter;
 				onlineName += folderNameStr;
 				imapFolder->SetVerifiedAsOnlineFolder(PR_TRUE);
 				imapFolder->SetOnlineName(onlineName.GetBuffer());
