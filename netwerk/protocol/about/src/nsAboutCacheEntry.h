@@ -30,6 +30,7 @@
 #include "nsIChannel.h"
 #include "nsICacheListener.h"
 #include "nsICacheSession.h"
+#include "nsICacheEntryDescriptor.h"
 #include "nsIStreamListener.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
@@ -39,6 +40,7 @@ class nsICacheEntryDescriptor;
 class nsAboutCacheEntry : public nsIAboutModule
                         , public nsIChannel
                         , public nsICacheListener
+                        , public nsICacheMetaDataVisitor
 {
 public:
     NS_DECL_ISUPPORTS
@@ -46,8 +48,12 @@ public:
     NS_DECL_NSIREQUEST
     NS_DECL_NSICHANNEL
     NS_DECL_NSICACHELISTENER
+    NS_DECL_NSICACHEMETADATAVISITOR
 
-    nsAboutCacheEntry() { NS_INIT_ISUPPORTS(); }
+    nsAboutCacheEntry()
+        : mBuffer(nsnull)
+    { NS_INIT_ISUPPORTS(); }
+
     virtual ~nsAboutCacheEntry() {}
 
 private:
@@ -60,6 +66,7 @@ private:
     nsCOMPtr<nsIStreamListener>     mListener;
     nsCOMPtr<nsISupports>           mListenerContext;
     nsCOMPtr<nsICacheSession>       mCacheSession;
+    nsCString *                     mBuffer;
 };
 
 #define NS_ABOUT_CACHE_ENTRY_MODULE_CID              \
