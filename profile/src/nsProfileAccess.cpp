@@ -540,7 +540,7 @@ nsProfileAccess::FillProfileInfo(nsIFile* regName)
 #if defined (XP_MAC)
         // Need to store persistent strings on mac..
         PRBool pathChanged = PR_FALSE;
-        rv = GetProfilePathString(profilePath, (const PRUnichar *) directory.get(), &pathChanged);
+        rv = GetProfilePathString(directory.get(), profile.get(), profilePath, &pathChanged);
         NS_ENSURE_SUCCESS(rv,rv); 
 
         if (pathChanged)
@@ -1600,7 +1600,7 @@ nsProfileAccess::DetermineForceMigration(PRBool *forceMigration)
 
 // Get the unicode path from the persistent descriptor string
 nsresult
-nsProfileAccess::GetProfilePathString(nsString& dirPath, const PRUnichar *dirString, PRBool *pathChanged)
+nsProfileAccess::GetProfilePathString(const PRUnichar *dirString, const PRUnichar *profileName, nsString& dirPath, PRBool *pathChanged)
 {
     nsresult rv = NS_OK;
 
@@ -1620,7 +1620,14 @@ nsProfileAccess::GetProfilePathString(nsString& dirPath, const PRUnichar *dirStr
         if ( localFile )
         {
             rv = localFile->SetPersistentDescriptor(NS_ConvertUCS2toUTF8(path));
-            NS_ENSURE_SUCCESS(rv, rv);
+
+            // If persistent opeartion to set the profile dir failed,
+            // We need to build a default path here..
+            if (NS_FAILED(rv))
+            { 
+                rv = CreateDefaultProfileFolder(profileName, getter_AddRefs(localFile));
+                NS_ENSURE_SUCCESS(rv, rv);
+            }
 
             nsXPIDLString convertedPath;
             rv = localFile->GetUnicodePath(getter_Copies(convertedPath));
@@ -1667,21 +1674,8 @@ nsProfileAccess::SetProfilePathString(const nsString& dirPath, const nsString& p
             // the Documents of the startup volume.
             if (NS_FAILED(rv))
             {
-                // Get default user profiles location
-                nsCOMPtr<nsIFile> newProfileDir;    
-                rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILES_ROOT_DIR, getter_AddRefs(newProfileDir));
-                NS_ENSURE_SUCCESS(rv, rv);
-
-                // append profile name
-                rv = newProfileDir->AppendUnicode(profileName.GetUnicode());
-                NS_ENSURE_SUCCESS(rv, rv);
-
-                // Create unique dir
-                rv = newProfileDir->CreateUnique(NS_ConvertUCS2toUTF8(profileName.GetUnicode()), 
-                                                 nsIFile::DIRECTORY_TYPE, 0775);
-                NS_ENSURE_SUCCESS(rv, rv);
-
-                localFile = do_QueryInterface(newProfileDir, &rv);
+                // Create a profile folder in default profile location..
+                rv = CreateDefaultProfileFolder(profileName.GetUnicode(), getter_AddRefs(localFile));
                 NS_ENSURE_SUCCESS(rv, rv);
             }
         }
@@ -1693,5 +1687,34 @@ nsProfileAccess::SetProfilePathString(const nsString& dirPath, const nsString& p
         persistentPath = NS_ConvertUTF8toUCS2(convertedPath);
     }
     return rv; 
+}
+
+// We need to create a default folder with given profile name here...
+nsresult
+nsProfileAccess::CreateDefaultProfileFolder(const PRUnichar* profileName, nsILocalFile** newProfileDir)
+{
+    NS_ASSERTION(profileName, "Invalid Profile name");
+    NS_ENSURE_ARG_POINTER(newProfileDir);
+
+    nsresult rv;
+    
+    // Get default user profiles location
+    nsCOMPtr<nsIFile> defaultDir;    
+    rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILES_ROOT_DIR, getter_AddRefs(defaultDir));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // append profile name
+    rv = defaultDir->AppendUnicode(profileName);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Create unique dir
+    rv = defaultDir->CreateUnique(NS_ConvertUCS2toUTF8(profileName), 
+                                         nsIFile::DIRECTORY_TYPE, 0775);
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    rv = defaultDir->QueryInterface(NS_GET_IID(nsILocalFile), (void **) newProfileDir);
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    return NS_OK;
 }
 
