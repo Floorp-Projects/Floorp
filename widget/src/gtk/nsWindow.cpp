@@ -775,7 +775,8 @@ NS_METHOD nsWindow::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
     {
       mShell->allocation.width = aWidth;
       mShell->allocation.height = aHeight;
-      gtk_widget_set_usize(mShell, aWidth, aHeight);
+
+      gtk_window_set_default_size(GTK_WINDOW(mShell), aWidth, aHeight);
     }
 
     gtk_widget_set_usize(mWidget, aWidth, aHeight);
