@@ -18,90 +18,25 @@
         <xul:label xbl:inherits="value=updateCount" flex="1" crop="right"/>
       </xul:hbox>
     </content>
-    <implementation implements="nsIObserver, nsIAlertListener">
+    <implementation implements="nsIAlertListener">
       <constructor>
       <![CDATA[
-        var os = Components.classes["@mozilla.org/observer-service;1"]
-                          .getService(Components.interfaces.nsIObserverService);
-        os.addObserver(this, "Update:Ended", false);
-        this.refreshData("null");
+        this.refreshData(null);
       ]]>
       </constructor>
-      <destructor>
-      <![CDATA[
-        var os = Components.classes["@mozilla.org/observer-service;1"]
-                          .getService(Components.interfaces.nsIObserverService);
-        os.removeObserver(this, "Update:Ended");
-      ]]>
-      </destructor>
-      
-      <!-- nsIObserver -->
-      <method name="observe">
-        <parameter name="aSubject"/>
-        <parameter name="aTopic"/>
-        <parameter name="aData"/>
-        <body>
-        <![CDATA[
-          if (aTopic == "Update:Ended")
-            this.refreshData(Components.interfaces.nsIUpdateService.SOURCE_EVENT_BACKGROUND);
-        ]]>
-        </body>
-      </method>
       
       <method name="refreshData">
         <parameter name="aSourceEvent"/>
         <body>
         <![CDATA[
-            var updates = Components.classes["@mozilla.org/updates/update-service;1"]
-                                    .getService(Components.interfaces.nsIUpdateService);
-            this.severity     = updates.updateSeverity;
-            this.updateCount  = updates.updateCount;
-#ifdef XP_WIN
-            if (parseInt(aSourceEvent) == Components.interfaces.nsIUpdateService.SOURCE_EVENT_BACKGROUND)
-              this._showUpdateInfo();
-#endif
+          var updates = Components.classes["@mozilla.org/updates/update-service;1"]
+                                  .getService(Components.interfaces.nsIUpdateService);
+          this.severity     = updates.updateSeverity;
+          this.updateCount  = updates.updateCount;
         ]]>
         </body>
       </method>
 
-#ifdef XP_WIN
-      <method name="_showUpdateInfo">
-        <body>
-        <![CDATA[
-          var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
-                              .getService(Components.interfaces.nsIStringBundleService);
-          var bundle = sbs.createBundle("chrome://mozapps/locale/update/update.properties");
-
-          var alertTitle = bundle.GetStringFromName("updatesAvailableTitle");
-          var alertText = bundle.GetStringFromName("updatesAvailableText");
-          
-          var alerts = Components.classes["@mozilla.org/alerts-service;1"]
-                                 .getService(Components.interfaces.nsIAlertsService);
-          alerts.showAlertNotification("chrome://mozapps/skin/xpinstall/xpinstallItemGeneric.png",
-                                       alertTitle, alertText, true, "", this);
-        ]]>
-        </body>
-      </method>
-
-      <!-- nsIAlertListener -->
-      <method name="onAlertFinished">
-        <parameter name="aCookie"/>
-        <body>
-        <![CDATA[
-        ]]>
-        </body>      
-      </method>
-      
-      <method name="onAlertClickCallback">
-        <parameter name="aCookie"/>
-        <body>
-        <![CDATA[
-          this.showUpdates();
-        ]]>
-        </body>      
-      </method>
-#endif
-      
       <method name="showUpdates">
         <body>
         <![CDATA[

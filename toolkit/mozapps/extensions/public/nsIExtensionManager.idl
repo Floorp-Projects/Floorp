@@ -61,8 +61,6 @@ interface nsIExtensionManager : nsISupports
    */
   boolean checkForMismatches();
 
-  void handleCommandLineArgs();
-
   // Installing Extensions
   const unsigned long FLAG_INSTALL_PROFILE = 0x01;
   const unsigned long FLAG_INSTALL_GLOBAL  = 0x02;

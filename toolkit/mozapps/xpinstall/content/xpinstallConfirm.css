@@ -3,3 +3,10 @@ installitem {
   display: -moz-box;
 }
 
+.listbox {
+  -moz-appearance: listbox;
+}
+
+#itemList {
+  margin: 10px 4px 10px 4px;
+}
