@@ -1004,6 +1004,7 @@ pk11_handlePublicKeyObject(PK11Session *session, PK11Object *object,
 	if ( !pk11_hasAttribute(object, CKA_SUBPRIME)) {
 	    return CKR_TEMPLATE_INCOMPLETE;
 	}
+	/* fall through */
     case CKK_DH:
 	if ( !pk11_hasAttribute(object, CKA_PRIME)) {
 	    return CKR_TEMPLATE_INCOMPLETE;
@@ -1137,6 +1138,7 @@ pk11_handlePrivateKeyObject(PK11Session *session,PK11Object *object,CK_KEY_TYPE 
 	if ( !pk11_hasAttribute(object, CKA_NETSCAPE_DB)) {
 	    return CKR_TEMPLATE_INCOMPLETE;
 	}
+	/* fall through */
     case CKK_DH:
 	if ( !pk11_hasAttribute(object, CKA_PRIME)) {
 	    return CKR_TEMPLATE_INCOMPLETE;
