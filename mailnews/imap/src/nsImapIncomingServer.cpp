@@ -487,6 +487,7 @@ nsImapIncomingServer::LoadNextQueuedUrl(PRBool *aResult)
     PRBool removeUrlFromQueue = PR_FALSE;
     if (aImapUrl)
     {
+      nsImapProtocol::LogImapUrl("considering playing queued url", aImapUrl);
       rv = DoomUrlIfChannelHasError(aImapUrl, &removeUrlFromQueue);
       NS_ENSURE_SUCCESS(rv, rv);
       // if we didn't doom the url, lets run it.
@@ -496,6 +497,7 @@ nsImapIncomingServer::LoadNextQueuedUrl(PRBool *aResult)
         NS_IF_ADDREF(aConsumer);
         
         nsCOMPtr <nsIImapProtocol>  protocolInstance ;
+        nsImapProtocol::LogImapUrl("creating protocol instance to play queued url", aImapUrl);
         rv = CreateImapConnection(nsnull, aImapUrl, getter_AddRefs(protocolInstance));
         if (NS_SUCCEEDED(rv) && protocolInstance)
         {
@@ -510,7 +512,10 @@ nsImapIncomingServer::LoadNextQueuedUrl(PRBool *aResult)
           }
         }
         else
+        {
+          nsImapProtocol::LogImapUrl("failed creating protocol instance to play queued url", aImapUrl);
           keepGoing = PR_FALSE;
+        }
         NS_IF_RELEASE(aConsumer);
       }
       if (removeUrlFromQueue)

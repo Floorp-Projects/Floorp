@@ -1348,10 +1348,11 @@ PRBool nsImapProtocol::ProcessCurrentURL()
   ClearFlag(IMAP_CLEAN_UP_URL_STATE);
   m_urlInProgress = PR_FALSE;
 
-  if (GetConnectionStatus() >= 0 && imapMailFolderSink)
+  if (imapMailFolderSink)
   {
       imapMailFolderSink->PrepareToReleaseObject(copyState);
-      imapMailFolderSink->CopyNextStreamMessage(GetServerStateParser().LastCommandSuccessful(), copyState);
+      imapMailFolderSink->CopyNextStreamMessage(GetServerStateParser().LastCommandSuccessful() 
+                                                && GetConnectionStatus() >= 0, copyState);
       copyState = nsnull;
       imapMailFolderSink->ReleaseObject();
       imapMailFolderSink = nsnull;
@@ -1525,16 +1526,15 @@ nsresult nsImapProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
 NS_IMETHODIMP nsImapProtocol::IsBusy(PRBool *aIsConnectionBusy,
                                      PRBool *isInboxConnection)
 {
-	if (!aIsConnectionBusy || !isInboxConnection)
-		return NS_ERROR_NULL_POINTER;
+  if (!aIsConnectionBusy || !isInboxConnection)
+    return NS_ERROR_NULL_POINTER;
   NS_LOCK_INSTANCE();
   nsresult rv = NS_OK;
   *aIsConnectionBusy = PR_FALSE;
   *isInboxConnection = PR_FALSE;
   if (!m_transport)
   {
-    // ** jt -- something is really wrong kill the thread
-    TellThreadToDie(PR_FALSE);
+    // this connection might not be fully set up yet.
     rv = NS_ERROR_FAILURE;
   }
   else
@@ -1572,21 +1572,22 @@ NS_IMETHODIMP nsImapProtocol::CanHandleUrl(nsIImapUrl * aImapUrl,
   *aCanRunUrl = PR_FALSE; // assume guilty until proven otherwise...
   *hasToWait = PR_FALSE;
   
+  if (DeathSignalReceived())
+    return NS_ERROR_FAILURE;
   PRBool isBusy = PR_FALSE;
   PRBool isInboxConnection = PR_FALSE;
   
   if (!m_transport)
   {
-    // *** jt -- something is really wrong; it could be the dialer gave up
-    // the connection or ip binding has been release by the operating
-    // system; tell thread to die and return error failure
-    TellThreadToDie(PR_FALSE);
+    // this connection might not be fully set up yet.
     return NS_ERROR_FAILURE;
   }
-  else
+  else if (m_currentServerCommandTagNumber != 0) 
   {
     PRBool isAlive;
     rv = m_transport->IsAlive(&isAlive);
+    // if the transport is not alive, and we've ever sent a command with this connection, kill it.
+    // otherwise, we've probably just not finished setting it so don't kill it!
     if (NS_FAILED(rv) || !isAlive)
     {
       TellThreadToDie(PR_FALSE);
@@ -1605,7 +1606,7 @@ NS_IMETHODIMP nsImapProtocol::CanHandleUrl(nsIImapUrl * aImapUrl,
   if (isBusy)
   {
     nsImapState curUrlImapState;
-//    NS_ASSERTION(m_runningUrl,"isBusy, but no running url.");
+    NS_ASSERTION(m_runningUrl,"isBusy, but no running url.");
     if (m_runningUrl)
     {
       m_runningUrl->GetRequiredImapState(&curUrlImapState);
@@ -2522,13 +2523,13 @@ char *nsImapProtocol::CreateEscapedMailboxName(const char *rawName)
 
 void nsImapProtocol::SelectMailbox(const char *mailboxName)
 {
-    ProgressEventFunctionUsingId (IMAP_STATUS_SELECTING_MAILBOX);
-    IncrementCommandTagNumber();
-    
-    m_closeNeededBeforeSelect = PR_FALSE;   // initial value
+  ProgressEventFunctionUsingId (IMAP_STATUS_SELECTING_MAILBOX);
+  IncrementCommandTagNumber();
+  
+  m_closeNeededBeforeSelect = PR_FALSE;   // initial value
   GetServerStateParser().ResetFlagInfo(0);    
-    char *escapedName = CreateEscapedMailboxName(mailboxName);
-    nsCString commandBuffer(GetServerCommandTag());
+  char *escapedName = CreateEscapedMailboxName(mailboxName);
+  nsCString commandBuffer(GetServerCommandTag());
   commandBuffer.Append(" select \"");
   commandBuffer.Append(escapedName);
   commandBuffer.Append("\"" CRLF);

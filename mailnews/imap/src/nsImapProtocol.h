@@ -368,27 +368,27 @@ public:
 private:
   // the following flag is used to determine when a url is currently being run. It is cleared when we 
   // finish processng a url and it is set whenever we call Load on a url
-  PRBool			m_urlInProgress;	
-  PRBool			m_socketIsOpen;
-  PRBool			m_gotFEEventCompletion;
-  PRUint32		m_flags;	   // used to store flag information
+  PRBool                        m_urlInProgress;	
+  PRBool                        m_socketIsOpen;
+  PRBool                        m_gotFEEventCompletion;
+  PRUint32                      m_flags;	   // used to store flag information
   nsCOMPtr<nsIImapUrl>		m_runningUrl; // the nsIImapURL that is currently running
   nsImapAction	m_imapAction;  // current imap action associated with this connnection...
   
-  nsCString		m_hostName;
-  char			*m_userName;
-  char			*m_serverKey;
-  char			*m_dataOutputBuf;
+  nsCString             m_hostName;
+  char                  *m_userName;
+  char                  *m_serverKey;
+  char                  *m_dataOutputBuf;
   nsMsgLineStreamBuffer * m_inputStreamBuffer;
-  PRUint32		m_allocatedSize; // allocated size
+  PRUint32              m_allocatedSize; // allocated size
   PRUint32        m_totalDataSize; // total data size
   PRUint32        m_curReadIndex;  // current read index
-  nsCAutoString  m_trashFolderName;
+  nsCAutoString   m_trashFolderName;
   
   // Ouput stream for writing commands to the socket
-  nsCOMPtr<nsISocketTransport> m_transport; 
-  nsCOMPtr<nsIOutputStream>	   m_outputStream;   // this will be obtained from the transport interface
-  nsCOMPtr<nsIInputStream>     m_inputStream;
+  nsCOMPtr<nsISocketTransport>  m_transport; 
+  nsCOMPtr<nsIOutputStream>     m_outputStream;   // this will be obtained from the transport interface
+  nsCOMPtr<nsIInputStream>      m_inputStream;
   
   nsCOMPtr<nsIInputStream>  m_channelInputStream;
   nsCOMPtr<nsIOutputStream> m_channelOutputStream;
@@ -415,9 +415,9 @@ private:
   PRBool       m_imapThreadIsRunning;
   void ImapThreadMainLoop(void);
   PRBool ImapThreadIsRunning();
-  PRInt32				 m_connectionStatus;
+  PRInt32     m_connectionStatus;
   
-  PRBool			m_nextUrlReadyToRun;
+  PRBool      m_nextUrlReadyToRun;
   nsWeakPtr   m_server;
   
   nsCOMPtr<nsIImapMailFolderSink>     m_imapMailFolderSink;
@@ -637,12 +637,12 @@ private:
       kDiscoveringNamespacesOnly,
       kListingForCreate
   };
-  EMailboxHierarchyNameState m_hierarchyNameState;
-  EMailboxDiscoverStatus m_discoveryStatus;
-  nsVoidArray m_listedMailboxList;
-  nsVoidArray* m_deletableChildren;
-  PRUint32 m_flagChangeCount;
-  PRTime m_lastCheckTime;
+  EMailboxHierarchyNameState  m_hierarchyNameState;
+  EMailboxDiscoverStatus      m_discoveryStatus;
+  nsVoidArray                 m_listedMailboxList;
+  nsVoidArray*                m_deletableChildren;
+  PRUint32                    m_flagChangeCount;
+  PRTime                      m_lastCheckTime;
   
   PRBool CheckNeeded();
 };
