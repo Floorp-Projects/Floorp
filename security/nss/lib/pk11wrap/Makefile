@@ -75,14 +75,16 @@ include $(CORE_DEPTH)/coreconf/rules.mk
 export:: private_export
 
 # On AIX 4.3, IBM xlC_r compiler (version 3.6.6) cannot compile
-# pk11slot.c for unknown reasons.  A workaround is to compile it
-# with optimizations turned on.  (Bugzilla bug #63815)
+# pk11slot.c in 64-bit mode for unknown reasons.  A workaround is
+# to compile it with optimizations turned on.  (Bugzilla bug #63815)
 ifeq ($(OS_ARCH),AIX)
 ifeq ($(OS_RELEASE),4.3)
+ifeq ($(USE_64),1)
 ifndef BUILD_OPT
 $(OBJDIR)/pk11slot.o: pk11slot.c
 	@$(MAKE_OBJDIR)
 	$(CC) -o $@ -c -O2 $(CFLAGS) $<
+endif
 endif
 endif
 endif
