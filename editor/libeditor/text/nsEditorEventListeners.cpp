@@ -996,64 +996,54 @@ nsTextEditorMouseListener::MouseDown(nsIDOMEvent* aMouseEvent)
          doc->CreateXIF(XIFBuffer, sel);
 
          // Get the Clipboard
-         nsIClipboard* clipboard;
-         rv = nsServiceManager::GetService(kCClipboardCID,
-                                           nsIClipboard::GetIID(),
-                                           (nsISupports **)&clipboard);
-         if (NS_OK == rv) 
-         {
-            // Create a data flavor to tell the transferable 
-            // that it is about to receive XIF
-            nsAutoString flavor(kXIFMime);
+         NS_WITH_SERVICE(nsIClipboard, clipboard, kCClipboardCID, &rv);
+         if (NS_FAILED(rv)) return rv;
+        
+          // Create a data flavor to tell the transferable 
+          // that it is about to receive XIF
+          nsAutoString flavor(kXIFMime);
 
-            // Create a transferable for putting data on the Clipboard
-            nsCOMPtr<nsITransferable> trans;
-            rv = nsComponentManager::CreateInstance(kCTransferableCID, nsnull, 
-                                                    nsITransferable::GetIID(), 
-                                                    (void**) getter_AddRefs(trans));
-            if (NS_OK == rv) {
-               // The data on the clipboard will be in "XIF" format
-               // so give the clipboard transferable a "XIFConverter" for 
-               // converting from XIF to other formats
-               nsCOMPtr<nsIFormatConverter> xifConverter;
-               rv = nsComponentManager::CreateInstance(kCXIFConverterCID, nsnull, 
-                                                       nsIFormatConverter::GetIID(), 
-                                                       (void**) getter_AddRefs(xifConverter));
-               if (NS_OK == rv) {
-                  // Add the XIF DataFlavor to the transferable
-                  // this tells the transferable that it can handle receiving the XIF format
-                  trans->AddDataFlavor(&flavor);
+          // Create a transferable for putting data on the Clipboard
+          nsCOMPtr<nsITransferable> trans;
+          rv = nsComponentManager::CreateInstance(kCTransferableCID, nsnull, 
+                                                  nsITransferable::GetIID(), 
+                                                  (void**) getter_AddRefs(trans));
+          if (NS_OK == rv) {
+             // The data on the clipboard will be in "XIF" format
+             // so give the clipboard transferable a "XIFConverter" for 
+             // converting from XIF to other formats
+             nsCOMPtr<nsIFormatConverter> xifConverter;
+             rv = nsComponentManager::CreateInstance(kCXIFConverterCID, nsnull, 
+                                                     nsIFormatConverter::GetIID(), 
+                                                     (void**) getter_AddRefs(xifConverter));
+             if (NS_OK == rv) {
+                // Add the XIF DataFlavor to the transferable
+                // this tells the transferable that it can handle receiving the XIF format
+                trans->AddDataFlavor(&flavor);
 
-                  // Add the converter for going from XIF to other formats
-                  trans->SetConverter(xifConverter);
+                // Add the converter for going from XIF to other formats
+                trans->SetConverter(xifConverter);
 
-                  // Now add the XIF data to the transferable
-                  // the transferable wants the number bytes for the data and since it is double byte
-                  // we multiply by 2
-                  trans->SetTransferData(&flavor, XIFBuffer.ToNewUnicode(), XIFBuffer.Length()*2);
+                // Now add the XIF data to the transferable
+                // the transferable wants the number bytes for the data and since it is double byte
+                // we multiply by 2
+                trans->SetTransferData(&flavor, XIFBuffer.ToNewUnicode(), XIFBuffer.Length()*2);
 
-                  // Now invoke the drag session
-                  nsIDragService* dragService; 
-                  nsresult rv = nsServiceManager::GetService(kCDragServiceCID, 
-                                                             nsIDragService::GetIID(), 
-                                                             (nsISupports **)&dragService); 
-                  if (NS_OK == rv) { 
-                     nsCOMPtr<nsISupportsArray> items;
-                     NS_NewISupportsArray(getter_AddRefs(items));
-                     if ( items ) {
-                        items->AppendElement(trans);
-                        dragService->InvokeDragSession(items, nsnull, 
-                                  nsIDragService::DRAGDROP_ACTION_COPY | 
-                                  nsIDragService::DRAGDROP_ACTION_MOVE);
-                     }
-                     nsServiceManager::ReleaseService(kCDragServiceCID, dragService); 
-                  } 
-               }
-            }
-            nsServiceManager::ReleaseService(kCClipboardCID, clipboard);
-         }
-         return NS_ERROR_BASE;   // return that we've handled the event
-      }
+                // Now invoke the drag session
+                NS_WITH_SERVICE(nsIDragService, dragService, kCDragServiceCID, &rv);
+                if (NS_FAILED(rv)) return rv;
+                nsCOMPtr<nsISupportsArray> items;
+                NS_NewISupportsArray(getter_AddRefs(items));
+                if ( items ) {
+                  items->AppendElement(trans);
+                  dragService->InvokeDragSession(items, nsnull, 
+                              nsIDragService::DRAGDROP_ACTION_COPY | 
+                              nsIDragService::DRAGDROP_ACTION_MOVE);
+                } 
+             }
+          }
+       }
+       return NS_ERROR_BASE;   // return that we've handled the event
 #endif
   }
   // middle-mouse click (paste);
@@ -1347,66 +1337,63 @@ nsresult
 nsTextEditorDragListener::DragDrop(nsIDOMEvent* aMouseEvent)
 {
   // Create drag service for getting state of drag
-  nsIDragService* dragService;
-  nsresult rv = nsServiceManager::GetService(kCDragServiceCID,
-                                             nsIDragService::GetIID(),
-                                             (nsISupports **)&dragService);
-  if (NS_OK == rv) {
-    nsCOMPtr<nsIDragSession> dragSession(do_QueryInterface(dragService));
+  nsresult rv;
+  NS_WITH_SERVICE(nsIDragService, dragService, kCDragServiceCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsIDragSession> dragSession(do_QueryInterface(dragService));
   
-    if (dragSession) {
+  if (dragSession) {
 
-      // Create transferable for getting the drag data
-      nsCOMPtr<nsITransferable> trans;
-      rv = nsComponentManager::CreateInstance(kCTransferableCID, nsnull, 
-                                              nsITransferable::GetIID(), 
-                                              (void**) getter_AddRefs(trans));
-      if ( NS_SUCCEEDED(rv) && trans ) {
-        // Add the text Flavor to the transferable, 
-        // because that is the only type of data we are
-        // looking for at the moment.
-        trans->AddDataFlavor(kTextMime);
-        //trans->AddDataFlavor(mImageDataFlavor);
+    // Create transferable for getting the drag data
+    nsCOMPtr<nsITransferable> trans;
+    rv = nsComponentManager::CreateInstance(kCTransferableCID, nsnull, 
+                                            nsITransferable::GetIID(), 
+                                            (void**) getter_AddRefs(trans));
+    if ( NS_SUCCEEDED(rv) && trans ) {
+      // Add the text Flavor to the transferable, 
+      // because that is the only type of data we are
+      // looking for at the moment.
+      trans->AddDataFlavor(kTextMime);
+      //trans->AddDataFlavor(mImageDataFlavor);
 
-        // Fill the transferable with data for each drag item in succession
-        PRUint32 numItems = 0; 
-        if (NS_SUCCEEDED(dragSession->GetNumDropItems(&numItems))) { 
+      // Fill the transferable with data for each drag item in succession
+      PRUint32 numItems = 0; 
+      if (NS_SUCCEEDED(dragSession->GetNumDropItems(&numItems))) { 
 
-          printf("Num Drop Items %d\n", numItems); 
+        printf("Num Drop Items %d\n", numItems); 
 
-          PRUint32 i; 
-          for (i=0;i<numItems;++i) {
-            if (NS_SUCCEEDED(dragSession->GetData(trans, i))) { 
- 
-              // Get the string data out of the transferable
-              // Note: the transferable owns the pointer to the data
-              nsCOMPtr<nsISupports> genericDataObj;
-              PRUint32 len;
-              char* whichFlavor = nsnull;
-              trans->GetAnyTransferData(&whichFlavor, getter_AddRefs(genericDataObj), &len);
-              nsCOMPtr<nsISupportsString> textDataObj( do_QueryInterface(genericDataObj) );
-              // If the string was not empty then paste it in
-              if ( textDataObj )
-              {
-                char* text = nsnull;
-                textDataObj->ToString(&text);
-                nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
-                if ( htmlEditor && text )
-                  htmlEditor->InsertText(text);
-                dragSession->SetCanDrop(PR_TRUE);
-              }
+        PRUint32 i; 
+        for (i=0;i<numItems;++i) {
+          if (NS_SUCCEEDED(dragSession->GetData(trans, i))) { 
 
-              nsCRT::free(whichFlavor);
-              // XXX This is where image support might go
-              //void * data;
-              //trans->GetTransferData(mImageDataFlavor, (void **)&data, &len);
+            // Get the string data out of the transferable
+            // Note: the transferable owns the pointer to the data
+            nsCOMPtr<nsISupports> genericDataObj;
+            PRUint32 len;
+            char* whichFlavor = nsnull;
+            trans->GetAnyTransferData(&whichFlavor, getter_AddRefs(genericDataObj), &len);
+            nsCOMPtr<nsISupportsString> textDataObj( do_QueryInterface(genericDataObj) );
+            // If the string was not empty then paste it in
+            if ( textDataObj )
+            {
+              char* text = nsnull;
+              textDataObj->ToString(&text);
+              nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
+              if ( htmlEditor && text )
+                htmlEditor->InsertText(text);
+              dragSession->SetCanDrop(PR_TRUE);
             }
-          } // foreach drag item
-        }
-      } // if valid transferable
-    } // if valid drag session
-    nsServiceManager::ReleaseService(kCDragServiceCID, dragService);
-  } // if valid drag service
+
+            nsCRT::free(whichFlavor);
+            // XXX This is where image support might go
+            //void * data;
+            //trans->GetTransferData(mImageDataFlavor, (void **)&data, &len);
+          }
+        } // foreach drag item
+      }
+    } // if valid transferable
+  } // if valid drag session
 
   return NS_OK;
 }

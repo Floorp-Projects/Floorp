@@ -439,8 +439,8 @@ nsTextEditRules::CreateStyleForInsertText(nsIDOMSelection *aSelection, TypeInSta
   // properties on and off, this code only turns them on
   if (PR_TRUE==createNewTextNode)  
   {
+    offset = 0;
     nsCOMPtr<nsIDOMNode>parent = do_QueryInterface(anchor);
-    PRInt32 offset=0;
     if (parent)
     { // we have a selection, get the offset within the parent
       res = aSelection->GetAnchorOffset(&offset);

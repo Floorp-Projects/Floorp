@@ -3170,10 +3170,9 @@ NS_IMETHODIMP nsHTMLEditor::PasteAsCitedQuotation(const nsString& aCitation)
 NS_IMETHODIMP nsHTMLEditor::PasteAsPlaintextQuotation()
 {
   // Get Clipboard Service
-  nsIClipboard* clipboard;
-  nsresult rv = nsServiceManager::GetService(kCClipboardCID,
-                                             nsIClipboard::GetIID(),
-                                             (nsISupports **)&clipboard);
+  nsresult rv;
+  NS_WITH_SERVICE(nsIClipboard, clipboard, kCClipboardCID, &rv);
+  if (NS_FAILED(rv)) return rv;
 
   // Create generic Transferable for getting the data
   nsCOMPtr<nsITransferable> trans;
@@ -3205,7 +3204,6 @@ NS_IMETHODIMP nsHTMLEditor::PasteAsPlaintextQuotation()
       }
     }
   }
-  nsServiceManager::ReleaseService(kCClipboardCID, clipboard);
 
   return rv;
 }
@@ -3221,10 +3219,10 @@ NS_IMETHODIMP nsHTMLEditor::InsertAsPlaintextQuotation(const nsString& aQuotedTe
 {
   // Now we have the text.  Cite it appropriately:
   nsCOMPtr<nsICiter> citer;
-  nsCOMPtr<nsIPref> prefs;
-  nsresult rv = nsServiceManager::GetService(kPrefServiceCID,
-                                             nsIPref::GetIID(),
-                                             (nsISupports**)&prefs);
+  nsresult rv;
+  NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
   char *citationType = 0;
   rv = prefs->CopyCharPref("mail.compose.citationType", &citationType);
                           
@@ -3239,8 +3237,6 @@ NS_IMETHODIMP nsHTMLEditor::InsertAsPlaintextQuotation(const nsString& aQuotedTe
   else
     citer = new nsInternetCiter;
   
-  nsServiceManager::ReleaseService(kPrefServiceCID, prefs);
-
   // Let the citer quote it for us:
   nsString quotedStuff;
   rv = citer->GetCiteString(aQuotedText, quotedStuff);
