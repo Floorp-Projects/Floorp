@@ -21,6 +21,7 @@
  */
 
 #include "nsTimerPeriodical.h"
+#include "nsCOMPtr.h"
 #include "prlog.h"
 
 
@@ -83,8 +84,10 @@ nsresult nsTimerPeriodical::RemoveTimer(nsTimerImpl * aTimer)
   RemoveTimerFromList(aTimer, mTimers);
   RemoveTimerFromList(aTimer, mReadyTimers);
 
-  if (aTimer && !aTimer->mTimerSpent)   // if we haven't fired the timer, release it
-    NS_IF_RELEASE(aTimer);
+  if (aTimer && !aTimer->mTimerSpent) {   // if we haven't fired the timer, release it
+    aTimer->mTimerSpent = PR_TRUE;
+    NS_RELEASE(aTimer);
+  }
   
   return NS_OK;
 }
@@ -155,14 +158,17 @@ void nsTimerPeriodical::ProcessTimers(UInt32 currentTicks)
 void nsTimerPeriodical::FireAndReprimeTimer(nsTimerImpl* aTimer)
 //----------------------------------------------------------------------------------------
 {
+  nsCOMPtr<nsITimer> kungFuDeathGrip(aTimer);
+
   // if this timer is a precise timer, set the next fire time
   // before we execute the callback
   if (aTimer->GetType() == NS_TYPE_REPEATING_PRECISE)
     aTimer->SetDelay(aTimer->GetDelay());
 
   mFiringTimer = aTimer;
-  
+
   aTimer->Fire();
+
   mFiringTimer = nsnull;
 
   // if this is a slack timer, set the delay now
@@ -176,8 +182,11 @@ void nsTimerPeriodical::FireAndReprimeTimer(nsTimerImpl* aTimer)
   }
   else
   {
-    aTimer->mTimerSpent = PR_TRUE;
-    NS_RELEASE(aTimer);   // this timer is dead
+    if (!aTimer->mTimerSpent)
+    {
+      aTimer->mTimerSpent = PR_TRUE;
+      NS_RELEASE(aTimer);   // this timer is dead
+    }
   }
 }
 
@@ -325,5 +334,3 @@ nsresult nsTimerPeriodical::RemoveTimerFromList(nsTimerImpl* aTimer, nsTimerImpl
  
   return NS_OK;
 }
-
-
