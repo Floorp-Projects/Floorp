@@ -413,13 +413,9 @@ nsParseMailMessageState::nsParseMailMessageState()
 	m_IgnoreXMozillaStatus = PR_FALSE;
 	m_state = nsIMsgParseMailMsgState::ParseBodyState;
 	Clear();
+  NS_DEFINE_CID(kMsgHeaderParserCID, NS_MSGHEADERPARSER_CID);
 
-    NS_DEFINE_CID(kMsgHeaderParserCID, NS_MSGHEADERPARSER_CID);
-    
-    nsComponentManager::CreateInstance(kMsgHeaderParserCID,
-                                       nsnull,
-                                       nsIMsgHeaderParser::GetIID(),
-                                       (void **) getter_AddRefs(m_HeaderAddressParser));
+  m_HeaderAddressParser = do_GetService(kMsgHeaderParserCID);
 }
 
 nsParseMailMessageState::~nsParseMailMessageState()
