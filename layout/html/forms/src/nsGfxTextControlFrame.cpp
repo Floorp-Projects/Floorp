@@ -111,12 +111,6 @@ static NS_DEFINE_IID(kIDocumentViewerIID, NS_IDOCUMENT_VIEWER_IID);
 //#define NOISY
 const nscoord kSuggestedNotSet = -1;
 
-#ifdef NS_DEBUG
-static PRBool gNoisy = PR_FALSE;
-#else
-static const PRBool gNoisy = PR_FALSE;
-#endif
-
 nsresult
 NS_NewGfxTextControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
@@ -611,7 +605,9 @@ nsGfxTextControlFrame::CreateSubDoc(nsRect *aSizeOfSubdocContainer)
       rv = CreateWebShell(mFramePresContext, size);
       NS_ENSURE_SUCCESS(rv, rv);
       NS_ENSURE_TRUE(mWebShell, NS_ERROR_FAILURE);
-      if (gNoisy) { printf("%p webshell in CreateSubDoc set to bounds: x=%d, y=%d, w=%d, h=%d\n", mWebShell, subBounds.x, subBounds.y, subBounds.width, subBounds.height); }
+#ifdef NOISY 
+      printf("%p webshell in CreateSubDoc set to bounds: x=%d, y=%d, w=%d, h=%d\n", mWebShell.get(), subBounds.x, subBounds.y, subBounds.width, subBounds.height);
+#endif
       nsCOMPtr<nsIBaseWindow> webShellWin(do_QueryInterface(mWebShell));
       NS_ENSURE_TRUE(webShellWin, NS_ERROR_FAILURE);
       webShellWin->SetPositionAndSize(subBounds.x, subBounds.y, 
@@ -1145,7 +1141,9 @@ nsGfxTextControlFrame::CreateWebShell(nsIPresContext* aPresContext,
   GetOffsetFromView(aPresContext, origin, &parView);  
 
   nsRect viewBounds(origin.x, origin.y, aSize.width, aSize.height);
-  if (gNoisy) { printf("%p view bounds: x=%d, y=%d, w=%d, h=%d\n", view, origin.x, origin.y, aSize.width, aSize.height); }
+#ifdef NOISY
+  printf("%p view bounds: x=%d, y=%d, w=%d, h=%d\n", view, origin.x, origin.y, aSize.width, aSize.height);
+#endif
 
   nsCOMPtr<nsIViewManager> viewMan;
   presShell->GetViewManager(getter_AddRefs(viewMan));  
@@ -1821,7 +1819,9 @@ nsGfxTextControlFrame::Reflow(nsIPresContext* aPresContext,
         mDisplayFrame->Destroy(mFramePresContext);
         mDisplayFrame = nsnull;
       }
-      if (gNoisy) { printf("%p webshell in reflow set to bounds: x=%d, y=%d, w=%d, h=%d\n", mWebShell, subBoundsInPixels.x, subBoundsInPixels.y, subBoundsInPixels.width, subBoundsInPixels.height); }
+#ifdef NOISY
+      printf("%p webshell in reflow set to bounds: x=%d, y=%d, w=%d, h=%d\n", mWebShell.get(), subBoundsInPixels.x, subBoundsInPixels.y, subBoundsInPixels.width, subBoundsInPixels.height);
+#endif
       webShellWin->SetPositionAndSize(subBoundsInPixels.x, subBoundsInPixels.y,
          subBoundsInPixels.width, subBoundsInPixels.height, PR_FALSE);
 
@@ -1862,7 +1862,9 @@ nsGfxTextControlFrame::Reflow(nsIPresContext* aPresContext,
         nsReflowStatus status;
         rv = mDisplayFrame->Reflow(aPresContext, kidSize, kidReflowState, status);
         // notice how status is ignored here
-        if (gNoisy) { printf("%p mDisplayFrame resized to: x=%d, y=%d, w=%d, h=%d\n", mWebShell, subBounds.x, subBounds.y, subBounds.width, subBounds.height); }
+#ifdef NOISY
+        printf("%p mDisplayFrame resized to: x=%d, y=%d, w=%d, h=%d\n", mWebShell.get(), subBounds.x, subBounds.y, subBounds.width, subBounds.height); 
+#endif
         mDisplayFrame->SetRect(aPresContext, subBounds);
       }
     }
