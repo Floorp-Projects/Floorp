@@ -339,6 +339,19 @@ function unifinderRemoveCommand()
 
 
 /**
+*  This is called from the unifinder when a key is pressed in the categories tree
+*/
+
+function onUnifinderCategoriesKeyPress(event)
+{
+	if ((event.keyCode == 8)||(event.keyCode == 46))
+	{
+		unifinderRemoveCommand();
+	}
+}
+
+
+/**
 *  This is called from the unifinder when a key is pressed in the search field
 */
 
