@@ -272,7 +272,7 @@
 
         <splitter collapse="before"><grippy/></splitter>
 
-        <!-- script view -->
+        <!-- source view -->
 
         <outliner id="source-outliner" flex="50" persist="width"
           onclick="console.onSourceClick(event);">
@@ -283,7 +283,7 @@
             display="&SourceCol1.display;" persist="hidden width"
             class="outlinercol-header outlinercell-inset-header"/>
           <splitter class="tree-splitter"/>          
-          <outlinercol id="source-line-text" flex="95"
+          <outlinercol id="source-line-text" flex="90"
             display="" persist="hidden width"
             class="outlinercol-header outlinercell-inset-header"/>
           <outlinerbody id="source-outliner-body" flex="1"/>
