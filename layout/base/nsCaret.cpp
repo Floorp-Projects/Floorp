@@ -193,47 +193,84 @@ NS_IMETHODIMP nsCaret::GetWindowRelativeCoordinates(nsPoint& outCoordinates, PRB
 	if (NS_FAILED(err))	
 		return err;
 		
-#if 0
 	// code in progress
 	nsCOMPtr<nsIDOMNode>	focusNode;
-	PRInt32	focusOffset;
 	
-	if (NS_SUCCEEDED(domSelection->GetFocusNode(getter_AddRefs(focusNode))) && focusNode &&
-			NS_SUCCEEDED(domSelection->GetFocusOffset(&focusOffset)))
-	{
-		// is this a text node?
-		nsCOMPtr<nsIDOMCharacterData>	nodeAsText = do_QueryInterface(focusNode);
+	err = domSelection->GetFocusNode(getter_AddRefs(focusNode));
+	if (NS_FAILED(err))
+		return err;
+	if (!focusNode)
+		return NS_ERROR_FAILURE;
+	
+	PRInt32	focusOffset;
+	err = domSelection->GetFocusOffset(&focusOffset);
+	if (NS_FAILED(err))
+		return err;
 		
-		// note that we only work with text nodes here, unlike when drawing the caret.
-		// this is because this routine is intended for IME support, which only cares about text.
-		if (nodeAsText)
-		{
-			nsCOMPtr<nsIContent>contentNode = do_QueryInterface(focusNode);
-      
-			if (contentNode)
-			{
-				nsIFrame*	theFrame = nsnull;
-				PRInt32 	contentOffset = focusOffset;
-				
-				if (NS_SUCCEEDED(mPresShell->GetPrimaryFrameFor(contentNode, &theFrame)) &&
-					 theFrame && NS_SUCCEEDED(theFrame->GetChildFrameContainingOffset(focusOffset, &focusOffset, &theFrame)))
-				{
-					nsCOMPtr<nsIPresContext> presContext;
-					if (NS_SUCCEEDED(mPresShell->GetPresContext(getter_AddRefs(presContext))))
-					{
-						nsPoint		framePos(0, 0);
-						
-						theFrame->GetPointFromOffset(presContext, &inRendContext, mLastContentOffset, &framePos);
-						frameRect += framePos;
+	// is this a text node?
+	nsCOMPtr<nsIDOMCharacterData>	nodeAsText = do_QueryInterface(focusNode);
+	// note that we only work with text nodes here, unlike when drawing the caret.
+	// this is because this routine is intended for IME support, which only cares about text.
+	if (!nodeAsText)
+		return NS_ERROR_UNEXPECTED;
+	
+	nsCOMPtr<nsIContent>contentNode = do_QueryInterface(focusNode);
+	if (!contentNode)
+		return NS_ERROR_FAILURE;
 
-					}
-				}
-			}
-		}
-	}
-#endif
+	// find the frame that contains the content node that has focus
+	nsIFrame*	theFrame = nsnull;
+	err = mPresShell->GetPrimaryFrameFor(contentNode, &theFrame);
+	if (NS_FAILED(err))
+		return err;
+	
+	if (!theFrame)
+		return NS_ERROR_UNEXPECTED;
+		
+	// find the child frame containing the offset we want
+	PRInt32 	contentOffset = focusOffset;
+	err = theFrame->GetChildFrameContainingOffset(focusOffset, &focusOffset, &theFrame);
+	if (NS_FAILED(err))
+		return err;
+	
+	nsPoint		viewOffset(0, 0);
+	nsIView		*drawingView;			// views are not refcounted
+	GetViewForRendering(theFrame, eTopLevelWindowCoordinates, viewOffset, drawingView);
+	if (!drawingView)
+		return NS_ERROR_UNEXPECTED;
 
-	return NS_ERROR_NOT_IMPLEMENTED;
+	// ramp up to make a rendering context for measuring text.
+	// First, we get the pres context ...
+	nsCOMPtr<nsIPresContext> presContext;
+	err = mPresShell->GetPresContext(getter_AddRefs(presContext));
+	if (NS_FAILED(err))
+		return err;
+	
+	// ... then get a device context
+	nsCOMPtr<nsIDeviceContext> 		dx;
+	err = presContext->GetDeviceContext(getter_AddRefs(dx));
+	if (NS_FAILED(err))
+		return err;
+	if (!dx)
+		return NS_ERROR_UNEXPECTED;
+
+	// ... then tell it to make a rendering context
+	nsCOMPtr<nsIRenderingContext> rendContext;	
+	err = dx->CreateRenderingContext(drawingView, *getter_AddRefs(rendContext));						
+	if (NS_FAILED(err))
+		return err;
+	if (!rendContext)
+		return NS_ERROR_UNEXPECTED;
+
+	// now we can measure the offset into the frame.
+	nsPoint		framePos(0, 0);
+	theFrame->GetPointFromOffset(presContext, rendContext, contentOffset, &framePos);
+
+	// now add the frame offset to the view offset, and we're done
+	viewOffset += framePos;
+	outCoordinates = viewOffset;
+	
+	return NS_OK;
 }
 
 //-----------------------------------------------------------------------------
@@ -417,12 +454,12 @@ PRBool nsCaret::SetupDrawingFrameAndOffset()
 
 
 //-----------------------------------------------------------------------------
-void nsCaret::GetViewForRendering(nsPoint &viewOffset, nsIView* &outView)
+void nsCaret::GetViewForRendering(nsIFrame *caretFrame, EViewCoordinates coordType, nsPoint &viewOffset, nsIView* &outView)
 {
 	outView = nsnull;
 	
 	nsIView* theView = nsnull;
-	mLastCaretFrame->GetOffsetFromView(viewOffset, &theView);
+	caretFrame->GetOffsetFromView(viewOffset, &theView);
 	if (theView == nsnull) return;
 	
 	nscoord		x, y;
@@ -432,9 +469,12 @@ void nsCaret::GetViewForRendering(nsPoint &viewOffset, nsIView* &outView)
 		viewOffset.x += x;
 		viewOffset.y += y;
 
-		nsCOMPtr<nsIWidget>	viewWidget;
-		theView->GetWidget(*getter_AddRefs(viewWidget));
-		if (viewWidget) break;
+		if (coordType == eViewCoordinates)
+		{
+			nsCOMPtr<nsIWidget>	viewWidget;
+			theView->GetWidget(*getter_AddRefs(viewWidget));
+			if (viewWidget) break;
+		}
 		
 		theView->GetParent(theView);
 	} while (theView);
@@ -462,7 +502,7 @@ void nsCaret::DrawCaretWithContext(nsIRenderingContext& inRendContext)
 	
 	nsPoint		viewOffset(0, 0);
 	nsIView		*drawingView;
-	GetViewForRendering(viewOffset, drawingView);
+	GetViewForRendering(mLastCaretFrame, eViewCoordinates, viewOffset, drawingView);
 
 	if (drawingView == nsnull)
 		return;
@@ -511,7 +551,7 @@ void nsCaret::DrawCaret()
 	
 	nsPoint		viewOffset(0, 0);
 	nsIView		*drawingView;
-	GetViewForRendering(viewOffset, drawingView);
+	GetViewForRendering(mLastCaretFrame, eViewCoordinates, viewOffset, drawingView);
 	
 	if (drawingView)
 	{
