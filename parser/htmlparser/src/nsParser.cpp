@@ -1060,13 +1060,16 @@ nsresult nsParser::OnStartRequest(nsIURI* aURL, const char *aSourceType)
   mParserContext->mDTD=0;
 #ifdef NECKO
   nsresult rv;
-  char* contentType;
+  char* contentType = nsnull;
   rv = channel->GetContentType(&contentType);
-  if (NS_FAILED(rv)) {
-    NS_ASSERTION(contentType, "parser needs a content type to find a dtd");
+  if (NS_SUCCEEDED(rv))
+  {
+    mParserContext->mSourceType = contentType;
+	nsCRT::free(contentType);
   }
-  mParserContext->mSourceType = contentType;
-  nsCRT::free(contentType);
+  else
+    NS_ASSERTION(contentType, "parser needs a content type to find a dtd");
+
 #else
   mParserContext->mSourceType=aSourceType;
 #endif
