@@ -21,8 +21,12 @@
 <!ENTITY  deleteContent.accesskey               "c">
 
 <!ENTITY  savingFiles.title           "When Saving Files">
-<!ENTITY  preserveExistingFormatting  "Maintain source formatting">
-<!ENTITY  preserveExistingFormatting.tooltip    "Preserves line breaks and page's original structure ">
+<!ENTITY  preserveExistingFormatting  "Retain original source formatting">
+<!ENTITY  preserveExistingFormatting.accesskey  "o">
+<!ENTITY  preserveExistingFormatting.tooltip    "Preserves line breaks and page's original formatting">
+<!ENTITY  reformat.label              "Reformat (&quot;pretty print&quot;) HTML source">
+<!ENTITY  reformat.accesskey          "r">
+<!ENTITY  reformat.tooltip            "Reformat HTML tags using line breaks and indentation">
 
 <!ENTITY  saving                    "Saving">
 <!ENTITY  AutoSaveCheck             "Automatically save every">
