@@ -22,6 +22,8 @@ OS_LIBS += $(GUI_LIBS)
 LD_LIBS += \
 	raptorbase \
 	raptorhtmlpars \
+	raptorhtml \
+	png \
 	abouturl \
 	fileurl \
 	ftpurl \
@@ -42,13 +44,25 @@ LD_LIBS += \
 	netlib \
 	xpfc10 \
 	$(NATIVE_RAPTOR_WIDGET) \
-    $(NATIVE_LIBNLS_LIBS) \
+	calui10 \
+	calparser10 \
+	calcapi10 \
 	$(NATIVE_RAPTOR_GFX) \
 	$(RAPTOR_GFX) \
-	xpcom$(MOZ_BITS) \
 	$(NATIVE_ZLIB_DLL) \
 	$(NATIVE_XP_DLL) \
+	$(NATIVE_LIBNLS_LIBS) \
+	xpcom$(MOZ_BITS) \
+	util10 \
+	calcore10 \
+	cal_core_ical10 \
 	$(XP_REG_LIB)
+
+ifeq($(OS_ARCH),Linux)
+LD_LIBS += \
+	secfree stubnj stubsj util xp pwcac dbm
+endif
+
 
 STATIC_LIBS += shell
 
