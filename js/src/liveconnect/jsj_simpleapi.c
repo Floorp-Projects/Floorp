@@ -40,6 +40,8 @@
 #include "jsprf.h"
 #include "jsutil.h"
 
+#include <string.h>
+
 /* We can get away with global variables in our single-threaded,
    single-JSContext case. */
 static JSJavaVM *           the_jsj_vm = NULL;
@@ -76,14 +78,15 @@ default_create_java_vm(SystemJavaVM* *jvm, JNIEnv* *initialEnv, void* initargs)
 
     /* No Java VM supplied, so create our own */
     JDK1_1InitArgs vm_args;
-        
+    memset(&vm_args, 0, sizeof(vm_args));
+
     /* Magic constant indicates JRE version 1.1 */
     vm_args.version = 0x00010001;
     JNI_GetDefaultJavaVMInitArgs(&vm_args);
-        
+
     /* Prepend the classpath argument to the default JVM classpath */
     if (user_classpath) {
-#if defined(XP_UNIX) || defined(XP_BEOS)
+#if defined(XP_UNIX) || defined(XP_BEOS) || defined(XP_MAC)
         const char *full_classpath = JS_smprintf("%s:%s", user_classpath, vm_args.classpath);
 #else
         const char *full_classpath = JS_smprintf("%s;%s", user_classpath, vm_args.classpath);
@@ -137,6 +140,7 @@ JSJCallbacks jsj_default_callbacks = {
     default_map_jsj_thread_to_js_context,
     default_map_js_context_to_jsj_thread,
     default_map_java_object_to_js_object,
+    NULL,
     NULL,
     NULL,
     NULL,
