@@ -724,6 +724,24 @@ HTMLContentSink::CloseContainer(const nsIParserNode& aNode)
       parent->AppendChild(container,  allowReflow);
 #ifdef NS_DEBUG
       if (allowReflow && (((PRInt32)gSinkLogModuleInfo->level) > 127)) {
+        PRInt32 i, ns = mDocument->GetNumberOfShells();
+        for (i = 0; i < ns; i++) {
+          nsIPresShell* shell = mDocument->GetShellAt(i);
+          if (nsnull != shell) {
+            nsIViewManager* vm = shell->GetViewManager();
+            if(vm) {
+              nsIView* rootView = vm->GetRootView();
+              nsRect rect;
+              rootView->GetBounds(rect);
+              rect.x = 0;
+              rect.y = 0;
+              vm->Refresh(rootView, nsnull, &rect, NS_VMREFRESH_IMMEDIATE);
+              NS_RELEASE(rootView);
+            }
+            NS_RELEASE(vm);
+            NS_RELEASE(shell);
+          }
+        }
         printf("tick...\n");
         PR_Sleep(PR_SecondsToInterval(3));
       }
