@@ -659,8 +659,6 @@ nsBodyFrame::CreateAbsoluteView(nsIStyleContext* aStyleContext) const
                                                  kIViewIID, 
                                                  (void **)&view);
   if (NS_OK == result) {
-    // XXX Even though since we're absolutely positioned we should have a view,
-    // we might not...
     nsIView*  containingView;
     GetView(containingView);
     if (nsnull == containingView) {
@@ -713,13 +711,13 @@ nsBodyFrame::CreateAbsoluteView(nsIStyleContext* aStyleContext) const
     // the frame the view will be sized and positioned
     view->Init(viewManager, nsRect(0, 0, 0, 0), containingView, pClip);
     viewManager->InsertChild(containingView, view, zIndex);
-    // If the background color is transparent then mark the view as having
-    // transparent content.
+    // If the background color is transparent or the visibility is hidden
+    // then mark the view as having transparent content
     // XXX We could try and be smarter about this and check whether there's
     // a background image. If there is a background image and the image is
     // fully opaque then we don't need to mark the view as having transparent
     // content...
-    if (NS_STYLE_BG_COLOR_TRANSPARENT & color->mBackgroundFlags) {
+    if ((NS_STYLE_BG_COLOR_TRANSPARENT & color->mBackgroundFlags) || !display->mVisible) {
       viewManager->SetViewContentTransparency(view, PR_TRUE);
     }
     viewManager->SetViewOpacity(view, color->mOpacity);
