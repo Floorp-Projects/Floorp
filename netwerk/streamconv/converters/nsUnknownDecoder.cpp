@@ -531,7 +531,7 @@ PRBool nsUnknownDecoder::LastDitchSniff(nsIRequest* aRequest)
     mContentType = TEXT_PLAIN;
   }
   else {
-    mContentType = APPLICATION_GUESS_FROM_EXT;
+    mContentType = APPLICATION_OCTET_STREAM;
   }
 
   return PR_TRUE;    
@@ -600,4 +600,8 @@ void
 nsBinaryDetector::DetermineContentType(nsIRequest* aRequest)
 {
   LastDitchSniff(aRequest);
+  if (mContentType.Equals(APPLICATION_OCTET_STREAM)) {
+    // We want to guess at it instead
+    mContentType = APPLICATION_GUESS_FROM_EXT;
+  }
 }
