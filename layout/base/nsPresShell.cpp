@@ -5774,7 +5774,13 @@ PresShell::HandleEvent(nsIView         *aView,
     if ((NS_IS_KEY_EVENT(aEvent) || NS_IS_IME_EVENT(aEvent) ||
          aEvent->message == NS_CONTEXTMENU_KEY)) {
 
-      mPresContext->EventStateManager()->GetFocusedFrame(&mCurrentEventFrame);
+      nsIEventStateManager *esm = mPresContext->EventStateManager();
+
+      NS_IF_RELEASE(mCurrentEventContent);
+      esm->GetFocusedContent(&mCurrentEventContent);
+      NS_IF_ADDREF(mCurrentEventContent);
+
+      esm->GetFocusedFrame(&mCurrentEventFrame);
       if (!mCurrentEventFrame) {
 #if defined(MOZ_X11)
         if (NS_IS_IME_EVENT(aEvent)) {
