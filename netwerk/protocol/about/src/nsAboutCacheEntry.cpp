@@ -45,6 +45,7 @@
 #include "nsIStorageStream.h"
 #include "nsNetUtil.h"
 #include "prtime.h"
+#include "nsEscape.h"
 
 //-----------------------------------------------------------------------------
 // nsISupports implementation
@@ -563,7 +564,9 @@ nsAboutCacheEntry::VisitMetaDataElement(const char * key,
     mBuffer->Append("<tr><td><tt><b>");
     mBuffer->Append(key);
     mBuffer->Append(":</b></tt></td>\n<td><pre>");
-    mBuffer->Append(value);
+    char* escapedValue = nsEscapeHTML(value);
+    mBuffer->Append(escapedValue);
+    nsMemory::Free(escapedValue);
     mBuffer->Append("</pre></td></tr>\n");
 
     *keepGoing = PR_TRUE;
