@@ -77,6 +77,9 @@ END:VTIMEZONE\n";
 
     char timezonestr[1024];
 
+    if( builtin_timezones )
+        return;
+
     builtin_timezones = icalarray_new ( 44, 32); //HARDCODED sizeof(icaltimezone)=44
 
     icalcomponent *vcalendar = icalparser_parse_string(timezonecalstr);
@@ -391,11 +394,11 @@ NS_IMETHODIMP oeICalContainerImpl::AddEvent( oeIICalEvent *icalevent, const char
     printf( "oeICalContainerImpl::AddEvent()\n" );
 #endif
     nsresult rv;
-    oeIICal *calendar;
-    GetCalendar( server , &calendar );
+    nsCOMPtr<oeIICal> calendar;
+    GetCalendar( server , getter_AddRefs(calendar) );
     if( !calendar ) {
         AddCalendar( server );
-        GetCalendar( server , &calendar );
+        GetCalendar( server , getter_AddRefs(calendar) );
         if( !calendar ) {
             #ifdef ICAL_DEBUG
             printf( "oeICalContainerImpl::AddEvent()-Error cannot find or create calendar\n" );
@@ -828,11 +831,11 @@ NS_IMETHODIMP oeICalContainerImpl::AddTodo(oeIICalTodo *icaltodo, const char *se
     printf( "oeICalContainerImpl::AddTodo()\n" );
 #endif
     nsresult rv;
-    oeIICal *calendar;
-    GetCalendar(server , &calendar );
+    nsCOMPtr<oeIICal> calendar;
+    GetCalendar( server , getter_AddRefs(calendar) );
     if( !calendar ) {
         AddCalendar( server );
-        GetCalendar( server , &calendar );
+        GetCalendar( server , getter_AddRefs(calendar) );
         if( !calendar ) {
             #ifdef ICAL_DEBUG
             printf( "oeICalContainerImpl::AddTodo()-Error cannot find or create calendar\n" );

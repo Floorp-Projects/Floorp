@@ -1643,6 +1643,7 @@ void oeICalEventImpl::ChopAndAddEventToEnum( struct icaltimetype startdate, nsIS
         }
         eventDisplay->SetDisplayEndDate( enddateinms );
     }
+    NS_RELEASE( eventDisplay );
 }
 
 bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
@@ -2602,7 +2603,6 @@ oeICalEventDisplayImpl::oeICalEventDisplayImpl( oeIICalEvent* event )
     if( event == nsnull ) {
         mEvent = do_CreateInstance(OE_ICALEVENTDISPLAY_CONTRACTID, &rv);
     } else {
-        NS_ADDREF( event );
         mEvent = event;
     }
 
