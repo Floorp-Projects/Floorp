@@ -41,6 +41,8 @@ public:
 	NS_IMETHOD GetThreads(nsIEnumerator** threadEnumerator);
 	NS_IMETHOD GetThreadForMessage(nsIMessage *message, nsIMsgThread **thread);
 	NS_IMETHOD HasMessage(nsIMessage *message, PRBool *hasMessage);
+	NS_IMETHOD GetCharset(PRUnichar * *aCharset);
+	NS_IMETHOD SetCharset(PRUnichar * aCharset);
 
 	//nsIDBChangeListener
 	NS_IMETHOD OnKeyChange(nsMsgKey aKeyChanged, PRUint32 aOldFlags, PRUint32 aNewFlags, 
@@ -60,6 +62,7 @@ protected:
 
 protected:
 	nsCOMPtr<nsIMsgDatabase> mDatabase;  
+	nsString mCharset;
 
 
 };

@@ -18,7 +18,10 @@
 
 #include "nsMsgDBFolder.h"
 #include "nsMsgFolderFlags.h"
+#include "nsIPref.h"
 
+
+static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 NS_IMPL_ADDREF_INHERITED(nsMsgDBFolder, nsMsgFolder)
 NS_IMPL_RELEASE_INHERITED(nsMsgDBFolder, nsMsgFolder)
@@ -42,6 +45,7 @@ NS_IMETHODIMP nsMsgDBFolder::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 nsMsgDBFolder::nsMsgDBFolder(void)
+: mCharset("")
 {
 
 }
@@ -108,6 +112,57 @@ nsMsgDBFolder::HasMessage(nsIMessage *message, PRBool *hasMessage)
 	return rv;
 
 }
+
+NS_IMETHODIMP nsMsgDBFolder::GetCharset(PRUnichar * *aCharset)
+{
+	nsresult rv = NS_OK;
+	if(!aCharset)
+		return NS_ERROR_NULL_POINTER;
+
+	if(mCharset == "")
+	{
+		NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+
+		char *prefCharset = nsnull;
+		if (NS_SUCCEEDED(rv))
+		{
+			rv = prefs->CopyCharPref("intl.character_set_name", &prefCharset);
+		}
+  
+		nsString prefCharsetStr;
+		if(prefCharset)
+		{
+			prefCharsetStr = prefCharset;
+			PR_Free(prefCharset);
+		}
+		else
+		{
+			prefCharsetStr = "us-ascii";
+		}
+		*aCharset = prefCharsetStr.ToNewUnicode();
+	}
+	else
+	{
+		*aCharset = mCharset.ToNewUnicode();
+	}
+	return rv;
+}
+
+NS_IMETHODIMP nsMsgDBFolder::SetCharset(PRUnichar * aCharset)
+{
+	nsresult rv;
+
+	nsCOMPtr<nsIDBFolderInfo> folderInfo;
+	nsCOMPtr<nsIMsgDatabase> db; 
+	rv = GetDBFolderInfoAndDB(getter_AddRefs(folderInfo), getter_AddRefs(db));
+	if(NS_SUCCEEDED(rv))
+	{
+		nsString charset(aCharset);
+		rv = folderInfo->SetCharacterSet(charset);
+	}
+	return rv;
+}
+
 nsresult nsMsgDBFolder::ReadDBFolderInfo(PRBool force)
 {
 	// Since it turns out to be pretty expensive to open and close
@@ -119,8 +174,8 @@ nsresult nsMsgDBFolder::ReadDBFolderInfo(PRBool force)
     {
         nsCOMPtr<nsIDBFolderInfo> folderInfo;
         nsCOMPtr<nsIMsgDatabase> db; 
-        result = NS_SUCCEEDED(GetDBFolderInfoAndDB(getter_AddRefs(folderInfo), getter_AddRefs(db)));
-        if(result)
+        result = GetDBFolderInfoAndDB(getter_AddRefs(folderInfo), getter_AddRefs(db));
+        if(NS_SUCCEEDED(result))
         {
 			mIsCachable = TRUE;
             if (folderInfo)
@@ -137,7 +192,7 @@ nsresult nsMsgDBFolder::ReadDBFolderInfo(PRBool force)
 				//folderInfo->GetImapTotalPendingMessages(&mNumPendingTotalMessages);
 				//folderInfo->GetImapUnreadPendingMessages(&mNumPendingUnreadMessages);
 
-				// folderInfo->GetCSID(&mCsid);
+				folderInfo->GetCharacterSet(mCharset);
         
 				if (db && !db->HasNew() && mNumPendingUnreadMessages <= 0)
 					ClearFlag(MSG_FOLDER_FLAG_GOT_NEW);

@@ -50,7 +50,6 @@ nsMsgFolder::nsMsgFolder(void)
     mParent(nsnull),
     mNumUnreadMessages(-1),
     mNumTotalMessages(-1),
-    mCsid(0),
     mDepth(0), 
     mPrefFlags(0)
 	{
@@ -802,15 +801,6 @@ NS_IMETHODIMP nsMsgFolder::GetFolderPrefFlags(PRUint32 *flags)
 
 }
 
-NS_IMETHODIMP nsMsgFolder::SetFolderCSID(PRInt16 csid)
-{
-
-}
-
-NS_IMETHODIMP nsMsgFolder::GetFolderCSID(PRInt16 *csid)
-{
-
-}
 
 NS_IMETHODIMP nsMsgFolder::SetLastMessageLoaded(nsMsgKey lastMessageLoaded)
 {

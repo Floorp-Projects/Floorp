@@ -178,8 +178,6 @@ public:
 
   NS_IMETHOD SetFolderPrefFlags(PRUint32 flags);
   NS_IMETHOD GetFolderPrefFlags(PRUint32 *flags);
-  NS_IMETHOD SetFolderCSID(PRInt16 csid);
-  NS_IMETHOD GetFolderCSID(PRInt16 *csid);
 
 
   NS_IMETHOD SetLastMessageLoaded(nsMsgKey lastMessageLoaded);
@@ -263,6 +261,9 @@ public:
 	NS_IMETHOD DeleteMessages(nsISupportsArray *messages) = 0;
 	NS_IMETHOD GetNewMessages();
 
+	NS_IMETHOD GetCharset(PRUnichar * *aCharset) = 0;
+	NS_IMETHOD SetCharset(PRUnichar * aCharset) = 0;
+
 protected:
 	nsresult NotifyPropertyChanged(char *property, char* oldValue, char* newValue);
 	nsresult NotifyPropertyFlagChanged(nsISupports *item, char *property, PRUint32 oldValue,
@@ -288,7 +289,6 @@ protected:
   nsVoidArray *mListeners; //This can't be an nsISupportsArray because due to
 													 //ownership issues, listeners can't be AddRef'd
 
-  PRInt16 mCsid;			// default csid for folder/newsgroup - maintained by fe.
   PRUint8 mDepth;
   PRInt32 mPrefFlags;       // prefs like MSG_PREF_OFFLINE, MSG_PREF_ONE_PANE, etc
   nsISupports *mSemaphoreHolder; // set when the folder is being written to
