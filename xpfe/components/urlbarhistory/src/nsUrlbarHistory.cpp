@@ -116,7 +116,7 @@ nsUrlbarHistory::ClearHistory()
      nsCOMPtr<nsISimpleEnumerator>    entries;
   	 nsresult rv = mDataSource->GetTargets(kNC_URLBARHISTORY,
                                     kNC_CHILD,
-                                    true,
+                                    PR_TRUE,
 									getter_AddRefs(entries));
      NS_ENSURE_TRUE(entries, NS_ERROR_FAILURE);
 
@@ -153,7 +153,7 @@ nsUrlbarHistory::GetCount(PRInt32 * aResult)
 	nsCOMPtr<nsISimpleEnumerator>    entries;
   	nsresult rv = mDataSource->GetTargets(kNC_URLBARHISTORY,
                                     kNC_CHILD,
-                                    true,
+                                    PR_TRUE,
 									getter_AddRefs(entries));
     NS_ENSURE_TRUE(entries, NS_ERROR_FAILURE);
 
@@ -353,7 +353,7 @@ nsUrlbarHistory::SearchCache(const PRUnichar* searchStr, nsIAutoCompleteResults*
 
 	rv = mDataSource->GetTargets(kNC_URLBARHISTORY,
                                  kNC_CHILD,
-                                 true,
+                                 PR_TRUE,
 								 getter_AddRefs(entries));
      NS_ENSURE_TRUE(entries, NS_ERROR_FAILURE);
 
