@@ -266,7 +266,7 @@ ImageConsumer::KeepPumpingStream(nsITimer *aTimer, void *aClosure)
   if (consumer->mURL) {
     consumer->mURL->QueryInterface(kIURLIID, (void**)&url);
   }
-  consumer->OnStopBinding(url, NS_BINDING_SUCCEEDED, status);
+  consumer->OnStopBinding(url, NS_BINDING_SUCCEEDED, status.GetUnicode());
 
   NS_IF_RELEASE(url);
 }
