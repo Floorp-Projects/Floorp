@@ -76,9 +76,14 @@ nsDrawingSurfacePh :: nsDrawingSurfacePh()
 
 nsDrawingSurfacePh :: ~nsDrawingSurfacePh()
 {
-   PgShmemDestroy( mPixmap->image );
-   PmMemReleaseMC( (PmMemoryContext_t *) mGC);
-   PR_Free (mPixmap);
+  if( mIsOffscreen )
+  {
+    PmMemFlush( (PmMemoryContext_t *) mGC, mPixmap );
+    PmMemReleaseMC( (PmMemoryContext_t *) mGC);
+    PgShmemDestroy( mPixmap->image );
+    PR_Free (mPixmap);
+    PgSetGC(mholdGC);
+  }
 }
 
 NS_IMETHODIMP nsDrawingSurfacePh :: QueryInterface(REFNSIID aIID, void** aInstancePtr)

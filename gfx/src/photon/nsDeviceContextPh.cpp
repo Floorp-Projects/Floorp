@@ -239,41 +239,45 @@ NS_IMETHODIMP nsDeviceContextPh :: GetDrawingSurface(nsIRenderingContext &aConte
 /* I need to know the requested font size to finish this function */
 NS_IMETHODIMP nsDeviceContextPh :: CheckFontExistence(const nsString& aFontName)
 {
-  char *fontName = aFontName.ToNewCString();
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::CheckFontExistence  for <%s>\n", fontName));
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::CheckFontExistence\n" ));
 
   nsresult    ret_code = NS_ERROR_FAILURE;
-  int         MAX_FONTDETAIL = 30;
-  FontDetails fDetails[MAX_FONTDETAIL];
-  int         fontcount;
-  
-  fontcount = PfQueryFonts('a', PHFONT_ALL_FONTS, fDetails, MAX_FONTDETAIL);
-  if (fontcount >= MAX_FONTDETAIL)
-  {
-	printf("nsDeviceContextPh::CheckFontExistence Font Array should be increased!\n");
-  }
+  static char *fontName = aFontName.ToNewCString();
 
-  if (fontcount)
+  if( fontName )
   {
-    int index;
-	for(index=0; index < fontcount; index++)
-	{
-//      PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::CheckFontExistence  comparing <%s> with <%s>\n", fontName, fDetails[index].desc));
-	  if (strncmp(fontName, fDetails[index].desc, strlen(fontName)) == 0)
-	  {
-        PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::CheckFontExistence  Found the font <%s>\n", fDetails[index].desc));
-		ret_code = NS_OK;
-		break;	  
-	  }
-	}
-  }
-
-  if (ret_code == NS_ERROR_FAILURE)
-  {
-    PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::CheckFontExistence  Did not find the font <%s>\n", fontName));
-  }
+    int         MAX_FONTDETAIL = 30;
+    FontDetails fDetails[MAX_FONTDETAIL];
+    int         fontcount;
   
-  delete [] fontName;
+    fontcount = PfQueryFonts('a', PHFONT_ALL_FONTS, fDetails, MAX_FONTDETAIL);
+    if (fontcount >= MAX_FONTDETAIL)
+    {
+      PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::CheckFontExistence ERROR - Font Array should be increased!\n"));
+    }
+
+    if (fontcount)
+    {
+      int index;
+      for(index=0; index < fontcount; index++)
+      {
+        //PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::CheckFontExistence  comparing <%s> with <%s>\n", fontName, fDetails[index].desc));
+        if (strncmp(fontName, fDetails[index].desc, strlen(fontName)) == 0)
+        {
+          //PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::CheckFontExistence  Found the font <%s>\n", fDetails[index].desc));
+          ret_code = NS_OK;
+          break;	  
+        }
+      }
+    }
+
+    if( ret_code == NS_ERROR_FAILURE )
+    {
+      PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::CheckFontExistence  Did not find the font <%s>\n", fontName));
+    }
+  
+    delete [] fontName;
+  }
 
   /* Return ok and we will map it to some other font later */  
   return ret_code;
