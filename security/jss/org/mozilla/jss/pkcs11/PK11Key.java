@@ -48,11 +48,6 @@ abstract class PK11Key {
     //////////////////////////////////////////////////////////
     // Public Interface
     ///////////////////////////////////////////////////////////
-	public String getAlgorithm() {
-		Assert.notReached("Keys don't have algorithms");
-		return null;
-	}
-
     /**
      * Subclasses that support encoding can overload this method.
      */

@@ -81,6 +81,10 @@ public class PK11PrivKey extends org.mozilla.jss.pkcs11.PK11Key
         }
     }
 
+    public String getAlgorithm() {
+        return getType().toString();
+    }
+
     /**
      * Returns the size in bits of the modulus of an RSA Private key.
      * Returns -1 for other types of keys.
