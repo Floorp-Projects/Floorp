@@ -44,27 +44,33 @@
 #include "nsICategoryManager.h"
 #include "nsICharsetConverterManager.h"
 #include "nsICharsetConverterManager2.h"
-#include "nsIUnicodeDecodeHelper.h"
-#include "nsIUnicodeEncodeHelper.h"
 #include "nsIUnicodeDecoder.h"
 #include "nsIUnicodeEncoder.h"
-#include "nsICharsetConverterManager.h"
-#include "nsIPlatformCharset.h"
 #include "nsICharsetAlias.h"
-#include "nsITextToSubURI.h"
 #include "nsIServiceManager.h"
+
+
+#include "nsCharsetConverterManager.h"
+#include "nsCharsetAlias.h"
+#include "nsTextToSubURI.h"
+#include "nsConverterInputStream.h"
+#include "nsPlatformCharset.h"
+
+#ifndef MOZ_USE_NATIVE_UCONV
+#include "nsIUnicodeDecodeHelper.h"
+#include "nsIUnicodeEncodeHelper.h"
+#include "nsIPlatformCharset.h"
+#include "nsITextToSubURI.h"
+
 #include "nsUConvDll.h"
 #include "nsIFile.h"
 #include "nsIScriptableUConv.h"
-#include "nsConverterInputStream.h"
+
+#include "nsCRT.h"
 
 #include "nsUCSupport.h"
-#include "nsCharsetConverterManager.h"
 #include "nsUnicodeDecodeHelper.h"
 #include "nsUnicodeEncodeHelper.h"
-#include "nsPlatformCharset.h"
-#include "nsCharsetAlias.h"
-#include "nsTextToSubURI.h"
 #include "nsISO88591ToUnicode.h"
 #include "nsCP1252ToUnicode.h"
 #include "nsMacRomanToUnicode.h"
@@ -441,14 +447,9 @@ NS_CONVERTER_REGISTRY_END
 
 NS_IMPL_NSUCONVERTERREGSELF
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsCharsetConverterManager)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeDecodeHelper)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeEncodeHelper)
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPlatformCharset, Init)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsCharsetAlias2)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsTextToSubURI)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScriptableUnicodeConverter)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsConverterInputStream)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToUTF8)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUTF8ToUnicode)
 
@@ -646,6 +647,16 @@ const PRUint16 g_ufJohabJamoMapping[] ={
 #include "johabjamo.uf"
 };
 
+#else // MOZ_USE_NATIVE_UCONV
+
+#include "nsINativeUConvService.h"
+#include "nsNativeUConvService.h"
+
+NS_GENERIC_FACTORY_CONSTRUCTOR(NativeUConvService)
+
+#endif // #ifndef MOZ_USE_NATIVE_UCONV
+
+
 NS_IMETHODIMP
 nsConverterManagerDataRegister(nsIComponentManager* aCompMgr,
                                 nsIFile* aPath,
@@ -656,6 +667,12 @@ nsConverterManagerDataRegister(nsIComponentManager* aCompMgr,
   return nsCharsetConverterManager::RegisterConverterManagerData();
 }
 
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsCharsetConverterManager)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsTextToSubURI)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsCharsetAlias2)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsConverterInputStream)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPlatformCharset, Init)
+
 static const nsModuleComponentInfo components[] = 
 {
   { 
@@ -663,21 +680,6 @@ static const nsModuleComponentInfo components[] =
     NS_CHARSETCONVERTERMANAGER_CONTRACTID, 
     nsCharsetConverterManagerConstructor,
     nsConverterManagerDataRegister,
-  },
-  { 
-    "Unicode Decode Helper", NS_UNICODEDECODEHELPER_CID,
-    NS_UNICODEDECODEHELPER_CONTRACTID, 
-    nsUnicodeDecodeHelperConstructor 
-  },
-  { 
-    "Unicode Encode Helper", NS_UNICODEENCODEHELPER_CID,
-    NS_UNICODEENCODEHELPER_CONTRACTID, 
-    nsUnicodeEncodeHelperConstructor 
-  },
-  { 
-    "Platform Charset Information", NS_PLATFORMCHARSET_CID,
-    NS_PLATFORMCHARSET_CONTRACTID, 
-    nsPlatformCharsetConstructor
   },
   { 
     "Charset Alias Information",  NS_CHARSETALIAS_CID,
@@ -690,14 +692,37 @@ static const nsModuleComponentInfo components[] =
     nsTextToSubURIConstructor
   },
   { 
-    "Unicode Encoder / Decoder for Script", NS_ISCRIPTABLEUNICODECONVERTER_CID,
-    NS_ISCRIPTABLEUNICODECONVERTER_CONTRACTID, 
-    nsScriptableUnicodeConverterConstructor
+    "Platform Charset Information", NS_PLATFORMCHARSET_CID,
+    NS_PLATFORMCHARSET_CONTRACTID, 
+    nsPlatformCharsetConstructor
   },
   { "Unicode converter input stream", NS_CONVERTERINPUTSTREAM_CID,              
     NS_CONVERTERINPUTSTREAM_CONTRACTID, 
     nsConverterInputStreamConstructor 
-  },    
+  },   
+#ifdef MOZ_USE_NATIVE_UCONV
+  { 
+    "Native UConv Service", 
+    NS_NATIVE_UCONV_SERVICE_CID,
+    NS_NATIVE_UCONV_SERVICE_CONTRACT_ID, 
+    NativeUConvServiceConstructor,
+  },
+#else
+  { 
+    "Unicode Decode Helper", NS_UNICODEDECODEHELPER_CID,
+    NS_UNICODEDECODEHELPER_CONTRACTID, 
+    nsUnicodeDecodeHelperConstructor 
+  },
+  { 
+    "Unicode Encode Helper", NS_UNICODEENCODEHELPER_CID,
+    NS_UNICODEENCODEHELPER_CONTRACTID, 
+    nsUnicodeEncodeHelperConstructor 
+  },
+  { 
+    "Unicode Encoder / Decoder for Script", NS_ISCRIPTABLEUNICODECONVERTER_CID,
+    NS_ISCRIPTABLEUNICODECONVERTER_CONTRACTID, 
+    nsScriptableUnicodeConverterConstructor
+  },
   { 
     "ISO-8859-1 To Unicode Converter", NS_ISO88591TOUNICODE_CID, 
     NS_ISO88591TOUNICODE_CONTRACTID,
@@ -1696,6 +1721,7 @@ static const nsModuleComponentInfo components[] =
     NS_UNICODEDECODER_CONTRACTID_BASE "ISO-2022-CN",
     nsISO2022CNToUnicodeConstructor,
   },
+#endif // MOZ_USE_NATIVE_UCONV
 };
 
 NS_IMPL_NSGETMODULE(nsUConvModule, components);
