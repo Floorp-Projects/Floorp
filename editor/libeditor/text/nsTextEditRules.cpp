@@ -103,11 +103,12 @@ nsTextEditRules::WillDoAction(nsIDOMSelection *aSelection,
   // no matter what we are doing, sanity check the selection and force it
   // to be inside the PRE element
   
-  if (mFlags&TEXT_EDITOR_FLAG_PLAINTEXT)
-  {
-    nsresult res = PinSelectionInPRE(aSelection);
-    if (NS_FAILED(res)) return res;
-  }
+//  XXX - don't know the right way to do this test:
+//  if ( this is the kind of editor that has a mandatory PRE tag )
+//  {
+//    nsresult res = PinSelectionInPRE(aSelection);
+//    if (NS_FAILED(res)) return res;
+//  }
   
   // my kingdom for dynamic cast
   nsTextRulesInfo *info = NS_STATIC_CAST(nsTextRulesInfo*, aInfo);
