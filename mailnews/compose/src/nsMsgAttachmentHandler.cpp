@@ -41,6 +41,7 @@
 #include "nsTextFormatter.h"
 #include "nsIPrompt.h"
 #include "nsMsgSimulateError.h"
+#include "nsITextToSubURI.h"
 
 
 static  NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
@@ -568,7 +569,38 @@ nsMsgAttachmentHandler::SnarfAttachment(nsMsgCompFields *compFields)
 
   // Set a sane name for the attachment...
   if (tempName)
-    m_real_name = PL_strdup(tempName);
+  {
+    if (m_real_name)
+    {
+      nsMemory::Free(m_real_name);
+      m_real_name = nsnull;
+    }
+
+    nsCOMPtr<nsITextToSubURI> textToSubURI = do_CreateInstance(NS_ITEXTTOSUBURI_CONTRACTID, &status);
+
+    if (NS_SUCCEEDED(status))
+    {
+      // URI unescape and convert to UCS2
+      nsXPIDLString unescapedStr;
+      status = textToSubURI->UnEscapeAndConvert(NS_ConvertUCS2toUTF8(nsMsgI18NFileSystemCharset()).get(), 
+                                                tempName, getter_Copies(unescapedStr));
+
+      if (NS_SUCCEEDED(status))
+      {
+        // MIME encode if necessary
+        m_real_name = nsMsgI18NEncodeMimePartIIStr(NS_ConvertUCS2toUTF8(unescapedStr).get(), 
+                                                   compFields->GetCharacterSet(), 
+                                                   nsMsgMIMEGetConformToStandard());
+        // No need to MIME encode (return value was null), use the unescaped string
+        if (!m_real_name)
+          m_real_name = nsCRT::strdup(NS_ConvertUCS2toUTF8(unescapedStr).get());
+      }
+    }
+
+    // failure, dup the original string
+    if (!m_real_name)
+      m_real_name = nsCRT::strdup(tempName);
+  }
 
   PR_FREEIF(tempName);
 
