@@ -42,6 +42,7 @@ interface nsIInputStream;
 interface nsIURI;
 interface nsIStreamListener;
 interface nsIChannel;
+interface nsIMsgMailNewsUrl;
 
 [scriptable, uuid(4644FB25-5255-11d3-82B8-444553540002)] 
 interface nsIMimeMiscStatus : nsISupports{
@@ -66,6 +67,7 @@ interface nsIMsgHeaderSink : nsISupports {
 	void handleAttachment(in string contentType, in string url, in wstring displayName, in string
                           uri, in boolean aNotDownloaded);
     void onEndAllAttachments();
+    void onEndMsgDownload(in nsIMsgMailNewsUrl url);
 
 	attribute nsISupports securityInfo;
 };

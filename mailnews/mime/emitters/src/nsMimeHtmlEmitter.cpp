@@ -422,6 +422,12 @@ nsMimeHtmlDisplayEmitter::EndBody()
 {
   UtilityWriteCRLF("</body>");
   UtilityWriteCRLF("</html>");
+  nsCOMPtr<nsIMsgHeaderSink> headerSink; 
+  nsresult rv = GetHeaderSink(getter_AddRefs(headerSink));
+  nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl (do_QueryInterface(mURL, &rv));
+  if (headerSink)
+    headerSink->OnEndMsgDownload(mailnewsUrl);
+
   return NS_OK;
 }
 
