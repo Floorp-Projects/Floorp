@@ -182,7 +182,7 @@ my %map = (
   'windowwatcher',      'embedding/components/windowwatcher',
   'wsproxytest',        'extensions/xmlextras/proxy/src/tests',
   'xlibrgb',            'gfx/src/xlibrgb',
-  'xml-rpc',            'extensions/xml-rpc'
+  'xml-rpc',            'extensions/xml-rpc',
   'xmlextras',          'extensions/xmlextras',
   'xmlterm',            'extensions/xmlterm',
   'xpcom',              'xpcom',
