@@ -1562,6 +1562,7 @@ nsChildView::UpdateWidget(nsRect& aRect, nsIRenderingContext* aContext)
   paintEvent.nativeMsg        = NULL;
   paintEvent.renderingContext = aContext;       // nsPaintEvent
   paintEvent.rect             = &aRect;
+  paintEvent.region           = nsnull;
 
   // offscreen drawing is pointless.
   if (paintEvent.rect->x < 0)

@@ -792,70 +792,55 @@ nsWindow::UnqueueDraw ()
 }
 
 void 
-nsWindow::DoPaint (PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,
-                   nsIRegion *aClipRegion)
+nsWindow::DoPaint (nsIRegion *aClipRegion)
 {
- //Don't dispatch paint event if widget's height or width is 0
- if ((mBounds.width == 0) || (mBounds.height == 0)) {
-   return;
- }
+  if (!mEventCallback)
+    return;
 
-  if (mEventCallback) {
-
-    nsPaintEvent event;
-    nsRect rect(aX, aY, aWidth, aHeight);
+  nsPaintEvent event;
  
-    event.message = NS_PAINT;
-    event.widget = (nsWidget *)this;
-    event.eventStructType = NS_PAINT_EVENT;
-    event.point.x = aX;
-    event.point.y = aY; 
-    event.time = GDK_CURRENT_TIME; // No time in EXPOSE events
-    
-    event.rect = &rect;
-    event.region = nsnull;
-    
-    event.renderingContext = GetRenderingContext();
-    if (event.renderingContext) {
+  event.message = NS_PAINT;
+  event.widget = (nsWidget *)this;
+  event.eventStructType = NS_PAINT_EVENT;
+  event.point.x = 0;
+  event.point.y = 0; 
+  event.time = GDK_CURRENT_TIME; // No time in EXPOSE events
+
+  nsRect boundsRect;
+  aClipRegion->GetBoundingBox(&boundsRect.x, &boundsRect.y, &boundsRect.width, &boundsRect.height);
+  event.rect = &boundsRect;
+  event.region = aClipRegion;
+  
+  // Don't paint anything if our window isn't visible.
+  if (!mSuperWin || mSuperWin->visibility == GDK_VISIBILITY_FULLY_OBSCURED)
+    return;
+
+  event.renderingContext = GetRenderingContext();
+  if (!event.renderingContext)
+    return;
 
 #ifdef DEBUG
-      if (WANT_PAINT_FLASHING)
-      {
-        GdkWindow *gw = GetRenderWindow(GTK_OBJECT(mSuperWin));
-        if (gw)
-        {
-          GdkRectangle   ar;
-          GdkRectangle * area = (GdkRectangle*) NULL;
-        
-          if (event.rect)
-          {
-            ar.x = event.rect->x;
-            ar.y = event.rect->y;
-          
-            ar.width = event.rect->width;
-            ar.height = event.rect->height;
-          
-            area = &ar;
-          }
-        
-          nsGtkUtils::gdk_window_flash(gw,1,100000,area);
-        }
-      }
-
-      // Check the pref _before_ checking caps lock, because checking
-      // caps lock requires a server round-trip.
-      if (debug_GetCachedBoolPref("nglayout.debug.paint_dumping") && CAPS_LOCK_IS_ON)
-        debug_DumpPaintEvent(stdout, this, &event, 
-                             debug_GetName(GTK_OBJECT(mSuperWin)),
-                             (PRInt32) debug_GetRenderXID(GTK_OBJECT(mSuperWin)));
-#endif // DEBUG
-      
-      DispatchWindowEvent(&event);
-      NS_RELEASE(event.renderingContext);
+  GdkWindow *gw = GetRenderWindow(GTK_OBJECT(mSuperWin));
+  if (WANT_PAINT_FLASHING && gw)
+    {
+      GdkRegion *region;
+      aClipRegion->GetNativeRegion(*(void**)&region);
+      nsGtkUtils::gdk_window_flash(gw,1,100000,region);
     }
 
-  }
+  // Check the pref _before_ checking caps lock, because checking
+  // caps lock requires a server round-trip.
+  if (debug_GetCachedBoolPref("nglayout.debug.paint_dumping") && CAPS_LOCK_IS_ON)
+    debug_DumpPaintEvent(stdout, this, &event, 
+                         debug_GetName(GTK_OBJECT(mSuperWin)),
+                         (PRInt32) debug_GetRenderXID(GTK_OBJECT(mSuperWin)));
+#endif // DEBUG
+      
+  DispatchWindowEvent(&event);
+  NS_RELEASE(event.renderingContext);
 }
+
+static NS_DEFINE_CID(kRegionCID, NS_REGION_CID);
 
 NS_IMETHODIMP nsWindow::Update(void)
 {
@@ -866,40 +851,16 @@ NS_IMETHODIMP nsWindow::Update(void)
     UnqueueDraw();
 
   if (!mUpdateArea->IsEmpty()) {
-
-    PRUint32 numRects;
-    mUpdateArea->GetNumRects(&numRects);
-
-    // if we have 1 or more than 10 rects, just paint the bounding box otherwise
-    // lets paint each rect by itself
-
-    if (numRects != 1 && numRects < 10) {
-      nsRegionRectSet *regionRectSet = nsnull;
-
-      if (NS_FAILED(mUpdateArea->GetRects(&regionRectSet)))
-        return NS_ERROR_FAILURE;
-
-      PRUint32 len;
-      PRUint32 i;
-      
-      len = regionRectSet->mRectsLen;
-      
-      for (i=0;i<len;++i) {
-        nsRegionRect *r = &(regionRectSet->mRects[i]);
-        DoPaint (r->x, r->y, r->width, r->height, mUpdateArea);
-      }
-      
-      mUpdateArea->FreeRects(regionRectSet);
-      
-      mUpdateArea->SetTo(0, 0, 0, 0);
-      return NS_OK;
-    } else {
-      PRInt32 x, y, w, h;
-      mUpdateArea->GetBoundingBox(&x, &y, &w, &h);
-      DoPaint (x, y, w, h, mUpdateArea);
+    // Watch out for updates occuring during DoPaint. We must clear
+    // mUpdateArea before we go into DoPaint.
+    nsCOMPtr<nsIRegion> updateArea = mUpdateArea;
+    mUpdateArea = do_CreateInstance(kRegionCID);
+    if (mUpdateArea) {
+      mUpdateArea->Init();
       mUpdateArea->SetTo(0, 0, 0, 0);
     }
-
+    
+    DoPaint(updateArea);
   } else {
     //  g_print("nsWidget::Update(this=%p): avoided update of empty area\n", this);
   }

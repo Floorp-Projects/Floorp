@@ -252,7 +252,7 @@ private:
   void Refresh(nsView *aView, nsIRenderingContext *aContext,
                nsIRegion *region, PRUint32 aUpdateFlags);
   void DefaultRefresh(nsView* aView, const nsRect* aRect);
-  void RenderViews(nsView *aRootView, nsIRenderingContext& aRC, const nsRect& aRect,
+  void RenderViews(nsView *aRootView, nsIRenderingContext& aRC, const nsRegion& aRegion,
                    PRBool &aResult);
 
   void RenderDisplayListElement(DisplayListElement2* element, nsIRenderingContext &aRC);
@@ -276,7 +276,8 @@ private:
   PRBool AddToDisplayList(nsView *aView, DisplayZTreeNode* &aParent, nsRect &aClipRect,
     nsRect& aDirtyRect, PRUint32 aFlags, nscoord aAbsX, nscoord aAbsY, PRBool aAssumeIntersection);
   void ReapplyClipInstructions(PRBool aHaveClip, nsRect& aClipRect, PRInt32& aIndex);
-  nsresult OptimizeDisplayList(const nsRect& aDamageRect, nsRect& aFinalTransparentRect, nsRegion& aOpaqueRgn);
+  nsresult OptimizeDisplayList(const nsRegion& aDirtyRegion,
+                               nsRect& aFinalTransparentRect, nsRegion& aOpaqueRgn);
     // Remove redundant PUSH/POP_CLIP pairs.
   void ComputeViewOffset(nsView *aView, nsPoint *aOrigin);
 

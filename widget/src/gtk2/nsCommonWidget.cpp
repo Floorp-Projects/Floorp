@@ -82,6 +82,7 @@ nsCommonWidget::InitPaintEvent(nsPaintEvent &aEvent)
     aEvent.eventStructType = NS_PAINT_EVENT;
     aEvent.message = NS_PAINT;
     aEvent.widget = NS_STATIC_CAST(nsIWidget *, this);
+    aEvent.region = nsnull;
 }
 
 void

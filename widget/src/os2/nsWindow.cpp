@@ -2788,6 +2788,7 @@ PRBool nsWindow::OnPaint()
               rect.width = rcl.xRight - rcl.xLeft;
               rect.height = rcl.yTop - rcl.yBottom;
               event.rect = &rect;
+              event.region = nsnull;
               event.eventStructType = NS_PAINT_EVENT;
      
 #ifdef NS_DEBUG

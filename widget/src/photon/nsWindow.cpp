@@ -849,6 +849,7 @@ void nsWindow::RawDrawFunc( PtWidget_t * pWidget, PhTile_t * damage )
 		
 		pWin->InitEvent(pev, NS_PAINT);
 		pev.eventStructType = NS_PAINT_EVENT;
+		pev.region = nsnull;
 		pev.renderingContext = nsnull;
 		pev.renderingContext = pWin->GetRenderingContext();
 		for( dmg = new_damage; dmg; dmg = dmg->next ) {
@@ -866,6 +867,7 @@ void nsWindow::RawDrawFunc( PtWidget_t * pWidget, PhTile_t * damage )
 			pev.point.x = nsDmg.x;
 			pev.point.y = nsDmg.y;
 			pev.rect = &nsDmg;
+			pev.region = nsnull;
 
 			if( pev.renderingContext ) {
 				nsIRegion *ClipRegion = pWin->GetRegion( );

@@ -1677,12 +1677,13 @@ void nsWindow::UpdateWidget(nsRect& aRect, nsIRenderingContext* aContext)
 
 	// initialize the paint event
 	nsPaintEvent paintEvent;
-	paintEvent.eventStructType			= NS_PAINT_EVENT;		// nsEvent
-	paintEvent.message					= NS_PAINT;
-	paintEvent.widget					= this;					// nsGUIEvent
-	paintEvent.nativeMsg				= NULL;
-	paintEvent.renderingContext			= aContext;				// nsPaintEvent
-	paintEvent.rect						= &aRect;
+	paintEvent.eventStructType  = NS_PAINT_EVENT;   // nsEvent
+	paintEvent.message          = NS_PAINT;
+	paintEvent.widget           = this;             // nsGUIEvent
+	paintEvent.nativeMsg        = NULL;
+	paintEvent.renderingContext = aContext;         // nsPaintEvent
+	paintEvent.rect             = &aRect;
+  paintEvent.region           = nsnull;
 
 	// draw the widget
 	StartDraw(aContext);

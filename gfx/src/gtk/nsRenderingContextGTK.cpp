@@ -225,7 +225,7 @@ NS_IMETHODIMP nsRenderingContextGTK::LockDrawingSurface(PRInt32 aX, PRInt32 aY,
   PushState();
 
   return mSurface->Lock(aX, aY, aWidth, aHeight,
-  			aBits, aStride, aWidthBytes, aFlags);
+                        aBits, aStride, aWidthBytes, aFlags);
 }
 
 NS_IMETHODIMP nsRenderingContextGTK::UnlockDrawingSurface(void)
@@ -415,22 +415,13 @@ NS_IMETHODIMP nsRenderingContextGTK::GetClipRect(nsRect &aRect, PRBool &aClipVal
 }
 
 #ifdef DEBUG
-#undef TRACE_SET_CLIP
+// #define TRACE_SET_CLIP
 #endif
 
 #ifdef TRACE_SET_CLIP
 static char *
 nsClipCombine_to_string(nsClipCombine aCombine)
 {
-#ifdef TRACE_SET_CLIP
-  printf("nsRenderingContextGTK::SetClipRect(x=%d,y=%d,w=%d,h=%d,%s)\n",
-         trect.x,
-         trect.y,
-         trect.width,
-         trect.height,
-         nsClipCombine_to_string(aCombine));
-#endif // TRACE_SET_CLIP
-
   switch(aCombine)
     {
       case nsClipCombine_kIntersect:
@@ -793,8 +784,12 @@ NS_IMETHODIMP nsRenderingContextGTK::CreateDrawingSurface(const nsRect &aBounds,
   if (surf)
   {
     NS_ADDREF(surf);
+    PushState();
+    mClipRegion = nsnull;
     UpdateGC();
-    rv = surf->Init(mGC, aBounds.width, aBounds.height, aSurfFlags);    
+    rv = surf->Init(mGC, aBounds.width, aBounds.height, aSurfFlags);
+    PRBool empty;
+    PopState(empty);
   } else {
     rv = NS_ERROR_FAILURE;
   }
@@ -877,7 +872,7 @@ NS_IMETHODIMP nsRenderingContextGTK::DrawPolyline(const nsPoint aPoints[], PRInt
   g_return_val_if_fail(mSurface != NULL, NS_ERROR_FAILURE);
 
   GdkPoint *pts = new GdkPoint[aNumPoints];
-	for (i = 0; i < aNumPoints; i++)
+  for (i = 0; i < aNumPoints; i++)
   {
     nsPoint p = aPoints[i];
     mTranMatrix->TransformCoord(&p.x,&p.y);
@@ -1023,13 +1018,13 @@ NS_IMETHODIMP nsRenderingContextGTK::DrawPolygon(const nsPoint aPoints[], PRInt3
   g_return_val_if_fail(mSurface != NULL, NS_ERROR_FAILURE);
 
   GdkPoint *pts = new GdkPoint[aNumPoints];
-	for (PRInt32 i = 0; i < aNumPoints; i++)
+  for (PRInt32 i = 0; i < aNumPoints; i++)
   {
     nsPoint p = aPoints[i];
-		mTranMatrix->TransformCoord(&p.x,&p.y);
-		pts[i].x = p.x;
+    mTranMatrix->TransformCoord(&p.x,&p.y);
+    pts[i].x = p.x;
     pts[i].y = p.y;
-	}
+  }
 
   UpdateGC();
 
@@ -1046,13 +1041,13 @@ NS_IMETHODIMP nsRenderingContextGTK::FillPolygon(const nsPoint aPoints[], PRInt3
   g_return_val_if_fail(mSurface != NULL, NS_ERROR_FAILURE);
 
   GdkPoint *pts = new GdkPoint[aNumPoints];
-	for (PRInt32 i = 0; i < aNumPoints; i++)
+  for (PRInt32 i = 0; i < aNumPoints; i++)
   {
     nsPoint p = aPoints[i];
-		mTranMatrix->TransformCoord(&p.x,&p.y);
-		pts[i].x = p.x;
+    mTranMatrix->TransformCoord(&p.x,&p.y);
+    pts[i].x = p.x;
     pts[i].y = p.y;
-	}
+  }
 
   UpdateGC();
 

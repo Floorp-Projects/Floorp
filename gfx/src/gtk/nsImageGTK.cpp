@@ -411,7 +411,7 @@ void nsImageGTK::UpdateCachedImage()
     }
   }
   
-  mUpdateRegion.Empty();
+  mUpdateRegion.SetEmpty();
   mPendingUpdate = PR_FALSE;
   mFlags = nsImageUpdateFlags_kBitsChanged; // this should be 0'd out by Draw()
 }

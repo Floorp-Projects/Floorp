@@ -24,7 +24,7 @@
 
 nsresult nsRegionImpl::Init (void)
 {
-  mRegion.Empty ();
+  mRegion.SetEmpty ();
   return NS_OK;
 }
 
@@ -85,8 +85,7 @@ PRBool nsRegionImpl::IsEqual (const nsIRegion &aRegion)
 
 void nsRegionImpl::GetBoundingBox (PRInt32 *aX, PRInt32 *aY, PRInt32 *aWidth, PRInt32 *aHeight)
 {
-  nsRect BoundRect;
-  mRegion.GetBoundRect (BoundRect);
+  nsRect BoundRect = mRegion.GetBounds();
   *aX = BoundRect.x;
   *aY = BoundRect.y;
   *aWidth  = BoundRect.width;
@@ -95,7 +94,7 @@ void nsRegionImpl::GetBoundingBox (PRInt32 *aX, PRInt32 *aY, PRInt32 *aWidth, PR
 
 void nsRegionImpl::Offset (PRInt32 aXOffset, PRInt32 aYOffset)
 {
-  mRegion.Offset (aXOffset, aYOffset);
+  mRegion.MoveBy (aXOffset, aYOffset);
 }
 
 PRBool nsRegionImpl::ContainsRect (PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)

@@ -5202,8 +5202,11 @@ PRBool nsWindow::OnPaint()
                         ps.rcPaint.top, 
                         ps.rcPaint.right - ps.rcPaint.left, 
                         ps.rcPaint.bottom - ps.rcPaint.top);
-            event.rect = &rect;
             event.eventStructType = NS_PAINT_EVENT;
+            event.region = nsnull;
+            event.rect = &rect;
+            // Should probably pass in a real region here, using GetRandomRgn
+            // http://msdn.microsoft.com/library/default.asp?url=/library/en-us/gdi/clipping_4q0e.asp
 
 #ifdef NS_DEBUG
           debug_DumpPaintEvent(stdout,
