@@ -66,6 +66,13 @@ interface nsIWebBrowserPersist : nsISupports
   const unsigned long PERSIST_FLAGS_DONT_CHANGE_FILENAMES = 2048;
   /** Fail on broken inline links */
   const unsigned long PERSIST_FLAGS_FAIL_ON_BROKEN_LINKS = 4096;
+  /**
+   * Automatically cleanup after a failed or cancelled operation, deleting all
+   * created files and directories. This flag does nothing for failed upload
+   * operations to remote servers.
+   */
+  const unsigned long PERSIST_FLAGS_CLEANUP_ON_FAILURE = 8192;
+
 
   /**
    * Flags governing how data is fetched and saved from the network. 
