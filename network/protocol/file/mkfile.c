@@ -494,7 +494,7 @@ net_open_file (ActiveEntry * cur_entry)
 		/* if errno is equal to "Too many open files"
 		 * return a special error
 		 */
-#ifndef XP_MAC
+#ifdef EMFILE  /* Mac doesn't have EMFILE. */
 		if(errno == EMFILE)
         	return(MK_TOO_MANY_OPEN_FILES);
 		else

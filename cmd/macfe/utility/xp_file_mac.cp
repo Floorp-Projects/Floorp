@@ -1329,9 +1329,8 @@ int XP_FileDuplicateResourceFork( const char* oldFilePath, XP_FileType oldType,
 // I put these stubs here.  They can go away when we move to MSL.
 //======================================
 
-PR_EXTERN(char*) PR_GetEnv(const char *var);
+#include "prenv.h"  /* For PR_GetEnv */
 extern "C" {
-	char* PR_GetEnv(const char *var);
 	char* getenv(const char *var);
 }
 

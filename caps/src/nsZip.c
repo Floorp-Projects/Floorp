@@ -23,6 +23,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef XP_MAC
+#include "macstdlibextras.h"  /* for strncasecmp */
+#endif
 #include <fcntl.h>
 #if !(XP_MAC)
 #include <sys/types.h>

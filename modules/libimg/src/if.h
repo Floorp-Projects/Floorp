@@ -18,7 +18,7 @@
 
 /*   if.h --- Top-level image library internal routines
  *
- * $Id: if.h,v 3.2 1998/07/27 16:09:30 hardts%netscape.com Exp $
+ * $Id: if.h,v 3.3 1998/09/22 16:59:42 wtc%netscape.com Exp $
  */
 
 #ifndef _if_h
@@ -103,11 +103,7 @@ extern PRLogModuleInfo *il_log_module;
 
 #define FREE_IF_NOT_NULL(x)    do {if (x) {PR_FREEIF(x); (x) = NULL;}} while (0)
 
-#ifndef NSPR20
-#include "prosdep.h"  /* for IS_LITTLE_ENDIAN / IS_BIG_ENDIAN */
-#else
 #include "prtypes.h"  /* for IS_LITTLE_ENDIAN / IS_BIG_ENDIAN */
-#endif
 
 /* The imagelib labels bits in a 32-bit word from 31 on the left to 0 on the right.
    This macro performs the necessary conversion to make that definition work on

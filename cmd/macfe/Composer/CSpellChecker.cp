@@ -43,6 +43,8 @@
 #include "prlink.h"
 
 
+#define MAX_MAC_FILENAME 31
+
 /*	The difference between calling the spell checker lib from a DLL or from
 	a static linked lib depends on whether we're generating CFM code
 	(and on whether the static lib was included in the application project) */

@@ -35,11 +35,6 @@
 #define MAX_PATH _MAX_PATH
 #endif
 #ifdef XP_UNIX
-#ifdef NSPR20
-#include "md/prosdep.h"
-#else
-#include "prosdep.h"
-#endif
 #if defined(HPUX) || defined(SCO)
 /*
 ** HPUX: PATH_MAX is defined in <limits.h> to be 1023, but they

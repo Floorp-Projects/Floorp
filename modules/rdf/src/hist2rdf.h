@@ -31,11 +31,7 @@
 
 #include <stdio.h>
 
-#ifndef	NSPR20
-#include "prosdep.h"	/* for IS_LITTLE_ENDIAN / IS_BIG_ENDIAN */
-#else
-#include "prtypes.h"
-#endif
+#include "prtypes.h"	/* for IS_LITTLE_ENDIAN / IS_BIG_ENDIAN */
 
 
 

@@ -28,6 +28,7 @@ DEPTH=..\..\..\..
 OBJS = $(OBJS) .\$(OBJDIR)\xpstrdll.obj
 RCFLAGS=\
 	/I$(DEPTH)\include \
+	/I$(DIST)\include \
 	/I$(DEPTH)\dist\public\security \
 !if "$(MOZ_BITS)" == "32"
 	/DWIN32 \

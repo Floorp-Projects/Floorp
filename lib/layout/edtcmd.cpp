@@ -26,6 +26,10 @@
 #ifdef EDITOR
 
 #include "editor.h"
+#ifdef XP_UNIX
+#include <unistd.h>  /* for getpid() */
+#endif
+
 #ifdef DEBUG
 
 const char* kCommandNames[kCommandIDMax+1] = {

@@ -45,6 +45,7 @@ extern "C" {
 #include "resgui.h"
 
 #ifdef NSPR20
+#include "prthread.h"
 PR_BEGIN_EXTERN_C
 PR_EXTERN(PRThread*) PR_GetPrimaryThread(void);
 PR_END_EXTERN_C

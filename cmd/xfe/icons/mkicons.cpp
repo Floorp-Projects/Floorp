@@ -25,11 +25,7 @@
 
 #define JMC_INIT_IMGCB_ID
 #define JMC_INIT_IMGCBIF_ID
-#ifndef NSPR20
-#include "prosdep.h"
-#else
 #include "prtypes.h"
-#endif
 
 static char* header_comment =	
 "/*\n"

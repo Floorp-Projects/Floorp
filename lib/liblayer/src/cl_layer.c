@@ -26,6 +26,9 @@
 #include "xp_list.h"
 #include "layers.h"
 #include "cl_priv.h"
+#ifdef XP_MAC
+#include "macstdlibextras.h"  /* for strdup */
+#endif
 
 static void
 cl_hidden_changed(CL_Layer *layer);

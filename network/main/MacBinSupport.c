@@ -87,6 +87,8 @@ MacBinary header creation and CRC calculation based on Erny Tontlinger's free 'T
 
 #include "MoreFilesExtras.h"
 
+#include <Errors.h>
+
 enum
 {
 	kMB_SendingHeader,			/* Data from read is MB header */

@@ -25,6 +25,10 @@
 #define _VR_STUBS_H_
 
 #include <errno.h>
+#include <string.h>
+#ifdef XP_MAC
+#include "macstdlibextras.h"  /* For strcasecmp and strncasecmp */
+#endif
 
 #ifdef XP_MAC
 #include <stat.h>

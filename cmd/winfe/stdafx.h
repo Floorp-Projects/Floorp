@@ -38,6 +38,7 @@
 #ifdef _WIN32
 #include <afxcmn.h>
 #endif
+#include <winsock.h>
 
 /* More XP than anything */
 #include "xp.h"
