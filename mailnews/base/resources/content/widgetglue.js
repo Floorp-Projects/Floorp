@@ -258,12 +258,23 @@ function MsgDeleteMessage(fromToolbar)
 	}
 	dump("tree is valid\n");
 	//get the selected elements
-	var messageList = tree.selectedItems;
-	var nextMessage = GetNextMessageAfterDelete(messageList);
+	var messageList = ConvertDOMListToResourceArray(tree.selectedItems);
+    var nextMessage = GetNextMessageAfterDelete(messageList);
 	//get the current folder
-	messenger.DeleteMessages(tree, srcFolder, messageList);
+	messenger.DeleteMessages(tree.database, srcFolder.resource, messageList);
 	SelectNextMessage(nextMessage);
   }
+}
+
+function ConvertDOMListToResourceArray(nodeList)
+{
+    var result = Components.classes["component://netscape/supports-array"].createInstance(Components.interfaces.nsISupportsArray);
+
+    for (var i=0; i<nodeList.length; i++) {
+        result.AppendElement(nodeList[i].resource);
+    }
+
+    return result;
 }
 
 function MsgDeleteFolder()
@@ -286,7 +297,8 @@ function MsgDeleteFolder()
 			dump("No parenturi");
 		dump("folder = " + folder.nodeName + "\n"); 
 		dump("parent = " + parent.nodeName + "\n"); 
-		messenger.DeleteFolders(tree.database, parent, folder);
+		messenger.DeleteFolders(tree.database,
+                                parent.resource, folder.resource);
 	}
 
 
@@ -347,13 +359,15 @@ function MsgCopyMessage(destFolder)
 	if(tree)
 	{
 		//Get the selected messages to copy
-		var messageList = tree.selectedItems;
+		var messageList = ConvertDOMListToResourceArray(tree.selectedItems);
 		//get the current folder
 
 	//	dump('In copy messages.  Num Selected Items = ' + messageList.length);
 	//	dump('\n');
 		var srcFolder = GetThreadTreeFolder();
-		messenger.CopyMessages(tree.database, srcFolder, destFolder, messageList, false);
+		messenger.CopyMessages(tree.database,
+                               srcFolder.resource,
+                               destFolder.resource, messageList, false);
 	}	
 }
 
@@ -367,11 +381,13 @@ function MsgMoveMessage(destFolder)
 	if(tree)
 	{
 		//Get the selected messages to copy
-		var messageList = tree.selectedItems;
+		var messageList = ConvertDOMListToResourceArray(tree.selectedItems);
 		//get the current folder
 		var nextMessage = GetNextMessageAfterDelete(messageList);
 		var srcFolder = GetThreadTreeFolder();
-		messenger.CopyMessages(tree.database, srcFolder, destFolder, messageList, true);
+		messenger.CopyMessages(tree.database,
+                               srcFolder.resource,
+                               destFolder.resource, messageList, true);
 		SelectNextMessage(nextMessage);
 	}	
 }
@@ -660,7 +676,7 @@ function MsgEmptyTrash()
                     tree.clearItemSelection();
 					RefreshThreadTreeView();
 				}
-                messenger.EmptyTrash(tree.database, folder);
+                messenger.EmptyTrash(tree.database, folder.resource);
 			}
         }
     }
@@ -685,7 +701,7 @@ function MsgCompactFolder()
                     folderuri = folder.getAttribute('id');
                     dump(folderuri);
                     dump("folder = " + folder.nodeName + "\n"); 
-                    messenger.CompactFolder(tree.database, folder);
+                    messenger.CompactFolder(tree.database, folder.resource);
                 }
             }
         }
@@ -810,7 +826,7 @@ function MsgMarkMsgAsRead(markRead)
   dump("\MsgMarkMsgAsRead from XUL\n");
   var tree = GetThreadTree();
   //get the selected elements
-  var messageList = tree.selectedItems;
+  var messageList = ConvertDOMListToResourceArray(tree.selectedItems);
   messenger.MarkMessagesRead(tree.database, messageList, markRead);
 }
 
@@ -823,7 +839,7 @@ function MsgMarkAllRead()
 	if(selectedFolderList.length > 0)
 	{
 		var selectedFolder = selectedFolderList[0];
-		messenger.MarkAllMessagesRead(folderTree.database, selectedFolder);
+		messenger.MarkAllMessagesRead(folderTree.database, selectedFolder.resource);
 	}
 	else {
 		dump("Nothing was selected\n");
@@ -835,7 +851,7 @@ function MsgMarkAsFlagged(markFlagged)
   dump("\MsgMarkMsgAsFlagged from XUL\n");
   var tree = GetThreadTree();
   //get the selected elements
-  var messageList = tree.selectedItems;
+  var messageList = ConvertDOMListToResourceArray(tree.selectedItems);
   messenger.MarkMessagesFlagged(tree.database, messageList, markFlagged);
 
 }

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -24,99 +24,75 @@
 
 #include "nsMessenger.h"
 
+// xpcom
+#include "nsIComponentManager.h"
+#include "nsIServiceManager.h"
+#include "nsIFileSpecWithUI.h"
+#include "nsFileStream.h"
+#include "nsIStringStream.h"
+#include "nsEscape.h"
+#include "nsXPIDLString.h"
+
+// necko
+#include "nsMimeTypes.h"
+#include "nsIURL.h"
+#include "nsIStreamListener.h"
+#include "nsIStreamConverterService.h"
+#include "nsNetUtil.h"
+
+// rdf
+#include "nsIRDFCompositeDataSource.h"
+#include "nsIRDFResource.h"
+#include "nsIRDFService.h"
+#include "nsRDFCID.h"
+
+// gecko
+#include "nsLayoutCID.h"
+#include "nsIMarkupDocumentViewer.h"
+#include "nsIContentViewerFile.h"
+#include "nsIContentViewer.h" 
+
 /* rhp - for access to webshell */
 #include "nsIDOMWindow.h"
 #include "nsIBrowserWindow.h"
 #include "nsIWebShellWindow.h"
 #include "nsIScriptGlobalObject.h"
-#include "nsAppShellCIDs.h"
-#include "nsIAppShellService.h"
-#include "nsIServiceManager.h"
-#include "nsIURL.h"
-#include "nsIDOMDocument.h"
-#include "nsIDocument.h"
-#include "nsIDocumentViewer.h"
-#include "nsIMarkupDocumentViewer.h"
-#include "nsIContentViewerFile.h"
-#include "nsIDOMXULDocument.h"
 
-#include "nsIMsgMailSession.h"
-#include "nsIMsgIncomingServer.h"
-#include "nsIPop3IncomingServer.h"
-#include "nsINoIncomingServer.h"
-#include "nsIMsgMessageService.h"
-#include "nsIFileSpecWithUI.h"
-#include "nsFileStream.h"
 
-#include "nsIMessage.h"
-#include "nsIMsgFolder.h"
-#include "nsIPop3Service.h"
-
-#include "nsIDOMXULElement.h"
-#include "nsIRDFCompositeDataSource.h"
-#include "nsIRDFResource.h"
-#include "nsIRDFService.h"
-#include "nsRDFCID.h"
-#include "nsIAppShell.h"
-#include "nsIAppShellService.h"
-#include "nsIIOService.h"
-#include "nsAppShellCIDs.h"
-#include "nsMsgRDFUtils.h"
-#include "nsMsgFolderFlags.h"
-
-#include "nsICopyMsgStreamListener.h"
-#include "nsICopyMessageListener.h"
-
+// mail
 #include "nsMsgUtils.h"
 #include "nsMsgBaseCID.h"
-#include "nsMsgLocalCID.h"
+#include "nsIMsgMailSession.h"
 
-#include "nsIComponentManager.h"
+#include "nsIMsgFolder.h"
+#include "nsMsgFolderFlags.h"
+#include "nsIMsgIncomingServer.h"
 
-#include "nsIMsgSendLater.h" 
-#include "nsMsgCompCID.h"
-#include "nsIMsgSendLaterListener.h"
-#include "nsIMsgDraft.h"
-
-#include "nsIMsgCopyService.h"
-#include "nsIMsgCopyServiceListener.h"
+#include "nsIMsgMessageService.h"
+#include "nsIMessage.h"
 
 #include "nsMsgStatusFeedback.h"
+#include "nsMsgRDFUtils.h"
 
-#include "nsIContentViewer.h" 
-#include "nsIPref.h"
-#include "nsLayoutCID.h"
-#include "nsIPresContext.h"
-#include "nsIStringStream.h"
-#include "nsEscape.h"
-#include "nsIStreamListener.h"
-#include "nsIStreamConverterService.h"
-#include "nsIMsgCompose.h"
-#include "nsIMsgCompFields.h"
-#include "nsIMsgComposeService.h"
-#include "nsMsgCompFieldsFact.h"
+// compose
+#include "nsMsgCompCID.h"
 #include "nsMsgI18N.h"
-#include "nsNetUtil.h"
-#include "nsXPIDLString.h"
+
+// draft/folders/sendlater/etc
+#include "nsIMsgCopyService.h"
+#include "nsIMsgCopyServiceListener.h"
+#include "nsIMsgSendLater.h" 
+#include "nsIMsgSendLaterListener.h"
+#include "nsIMsgDraft.h"
+#include "nsIUrlListener.h"
 
 static NS_DEFINE_CID(kIStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID); 
-static NS_DEFINE_CID(kCPop3ServiceCID, NS_POP3SERVICE_CID);
 static NS_DEFINE_CID(kRDFServiceCID,	NS_RDFSERVICE_CID);
-static NS_DEFINE_IID(kIDocumentViewerIID,     NS_IDOCUMENT_VIEWER_IID); 
-static NS_DEFINE_IID(kAppShellServiceCID,        NS_APPSHELL_SERVICE_CID);
-static NS_DEFINE_CID(kComponentManagerCID,  NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kMsgSendLaterCID, NS_MSGSENDLATER_CID); 
-static NS_DEFINE_CID(kCopyMessageStreamListenerCID, NS_COPYMESSAGESTREAMLISTENER_CID); 
 static NS_DEFINE_CID(kMsgDraftCID, NS_MSGDRAFT_CID);
 static NS_DEFINE_CID(kPrintPreviewContextCID, NS_PRINT_PREVIEW_CONTEXT_CID);
-static NS_DEFINE_IID(kIPresContextIID, NS_IPRESCONTEXT_IID);
-static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kMsgCopyServiceCID,		NS_MSGCOPYSERVICE_CID);
-static NS_DEFINE_CID(kMsgComposeServiceCID, NS_MSGCOMPOSESERVICE_CID);
-static NS_DEFINE_CID(kMsgComposeCID, NS_MSGCOMPOSE_CID);
-static NS_DEFINE_CID(kMsgCompFieldsCID, NS_MSGCOMPFIELDS_CID);
 
 #if defined(DEBUG_seth_) || defined(DEBUG_sspitzer_) || defined(DEBUG_jefft)
 #define DEBUG_MESSENGER
@@ -150,49 +126,6 @@ public:
     nsXPIDLCString m_templateUri;
 };
 
-
-
-static nsresult ConvertDOMListToResourceArray(nsIDOMNodeList *nodeList, nsISupportsArray **resourceArray)
-{
-	nsresult rv = NS_OK;
-	PRUint32 listLength;
-	nsIDOMNode *node;
-	nsIDOMXULElement *xulElement;
-	nsIRDFResource *resource;
-
-	if(!resourceArray)
-		return NS_ERROR_NULL_POINTER;
-
-	if(NS_FAILED(rv = nodeList->GetLength(&listLength)))
-		return rv;
-
-	if(NS_FAILED(NS_NewISupportsArray(resourceArray)))
-	{
-		return NS_ERROR_OUT_OF_MEMORY;
-	}
-
-	for(PRUint32 i = 0; i < listLength; i++)
-	{
-		if(NS_FAILED(nodeList->Item(i, &node)))
-			return rv;
-
-		if(NS_SUCCEEDED(rv = node->QueryInterface(NS_GET_IID(nsIDOMXULElement), (void**)&xulElement)))
-		{
-			if(NS_SUCCEEDED(rv = xulElement->GetResource(&resource)) && resource)
-			{
-				(*resourceArray)->AppendElement(resource);
-				NS_RELEASE(resource);
-			}
-			NS_RELEASE(xulElement);
-		}
-		NS_RELEASE(node);
-		
-	}
-
-	return rv;
-}
-
-
 //
 // nsMessenger
 //
@@ -217,53 +150,15 @@ nsMessenger::~nsMessenger()
 //
 NS_IMPL_ISUPPORTS(nsMessenger, NS_GET_IID(nsIMessenger))
 
-//
-// nsIMsgAppCore
-//
-NS_IMETHODIMP    
-nsMessenger::Open3PaneWindow()
-{
-	const char *  urlstr=nsnull;
-	nsresult rv = NS_OK;
-	
-	nsCOMPtr<nsIWebShellWindow> newWindow;
-
-	urlstr = "resource:/res/samples/messenger.html";
-	NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv);
-  
-	nsCOMPtr<nsIURI> url;
-	NS_WITH_SERVICE(nsIIOService, pNetService, kIOServiceCID, &rv);
-
-	if (NS_SUCCEEDED(rv) && pNetService) 
-		rv = pNetService->NewURI(urlstr, nsnull, getter_AddRefs(url));
-
-
-	if (NS_SUCCEEDED(rv))
-        rv = appShell->CreateTopLevelWindow(nsnull,      // parent
-                                            url,
-                                            PR_TRUE,
-                                            PR_TRUE,
-                                            NS_CHROME_ALL_CHROME,
-                                            nsnull,      // callbacks
-                                            NS_SIZETOCONTENT,           // width
-                                            NS_SIZETOCONTENT,           // height
-                                            getter_AddRefs(newWindow)); // result widget
-	return rv;
-}
-
 nsresult
-nsMessenger::GetNewMessages(nsIRDFCompositeDataSource *db, nsIDOMXULElement *folderElement)
+nsMessenger::GetNewMessages(nsIRDFCompositeDataSource *db,
+                            nsIRDFResource *folderResource)
 {
-	nsresult rv;
-	nsCOMPtr<nsIRDFResource> folderResource;
+	nsresult rv=NS_OK;
 	nsCOMPtr<nsISupportsArray> folderArray;
 
-	if(!folderElement || !db)
+	if(!folderResource || !db)
 		return NS_ERROR_NULL_POINTER;
-
-	rv = folderElement->GetResource(getter_AddRefs(folderResource));
-	if(NS_FAILED(rv))
-		return rv;
 
 	if(NS_FAILED(NS_NewISupportsArray(getter_AddRefs(folderArray))))
 		return NS_ERROR_OUT_OF_MEMORY;
@@ -412,7 +307,7 @@ nsMessenger::OpenURL(const char * url)
 		//If it's not something we know about, then just load the url.
           else
           {
-			nsString urlStr(unescapedUrl);
+			nsAutoString urlStr(unescapedUrl);
 			if (mWebShell) {
 				mWebShell->LoadURL(urlStr.GetUnicode());
 			}
@@ -465,7 +360,7 @@ nsMessenger::OpenAttachment(const char * url, const char * displayName,
             NS_ADDREF(aListener);
             nsCOMPtr<nsIURI> aURL;
 
-            nsString urlString = unescapedUrl;
+            nsAutoString urlString = unescapedUrl;
             char *urlCString = urlString.ToNewCString();
             rv = CreateStartupUrl(urlCString, getter_AddRefs(aURL));
             nsCRT::free(urlCString);
@@ -599,7 +494,7 @@ nsMessenger::SaveAs(const char* url, PRBool asFile, nsIMsgIdentity* identity)
                 {
                   NS_ADDREF(aListener);
                   nsCOMPtr<nsIURI> aURL;
-                  nsString urlString = url;
+                  nsAutoString urlString = url;
                   urlString += "?header=none";
                   char *urlCString = urlString.ToNewCString();
                   rv = CreateStartupUrl(urlCString, getter_AddRefs(aURL));
@@ -626,8 +521,8 @@ nsMessenger::SaveAs(const char* url, PRBool asFile, nsIMsgIdentity* identity)
                     goto done;
                   }
                   nsAutoString from, to;
-                  from = "message/rfc822";
-                  to = saveAsFileType == 1 ? "text/html" : "text/plain";
+                  from = MESSAGE_RFC822;
+                  to = saveAsFileType == 1 ? TEXT_HTML : TEXT_PLAIN;
                   NS_WITH_SERVICE(nsIStreamConverterService,
                                   streamConverterService,  
                                   kIStreamConverterServiceCID, &rv);
@@ -715,29 +610,16 @@ nsMessenger::DoCommand(nsIRDFCompositeDataSource* db, char *command,
 }
 
 NS_IMETHODIMP
-nsMessenger::DeleteMessages(nsIDOMXULElement *tree, nsIDOMXULElement *srcFolderElement, nsIDOMNodeList *nodeList)
+nsMessenger::DeleteMessages(nsIRDFCompositeDataSource *database,
+                            nsIRDFResource *srcFolderResource,
+                            nsISupportsArray *resourceArray)
 {
 	nsresult rv;
 
-	if(!tree || !srcFolderElement || !nodeList)
+	if(!database || !srcFolderResource || !resourceArray)
 		return NS_ERROR_NULL_POINTER;
 
-	nsCOMPtr<nsIRDFCompositeDataSource> database;
-	nsCOMPtr<nsISupportsArray> resourceArray, folderArray;
-	nsCOMPtr<nsIRDFResource> resource;
-
-	rv = srcFolderElement->GetResource(getter_AddRefs(resource));
-
-	if(NS_FAILED(rv))
-		return rv;
-
-	rv = tree->GetDatabase(getter_AddRefs(database));
-	if(NS_FAILED(rv))
-		return rv;
-
-	rv =ConvertDOMListToResourceArray(nodeList, getter_AddRefs(resourceArray));
-	if(NS_FAILED(rv))
-		return rv;
+	nsCOMPtr<nsISupportsArray> folderArray;
 
 	rv = NS_NewISupportsArray(getter_AddRefs(folderArray));
 	if(NS_FAILED(rv))
@@ -745,33 +627,23 @@ nsMessenger::DeleteMessages(nsIDOMXULElement *tree, nsIDOMXULElement *srcFolderE
 		return NS_ERROR_OUT_OF_MEMORY;
 	}
 
-	folderArray->AppendElement(resource);
+	folderArray->AppendElement(srcFolderResource);
 	
 	rv = DoCommand(database, NC_RDF_DELETE, folderArray, resourceArray);
 
 	return rv;
 }
 
-NS_IMETHODIMP nsMessenger::DeleteFolders(nsIRDFCompositeDataSource *db, nsIDOMXULElement *parentFolderElement,
-							nsIDOMXULElement *folderElement)
+NS_IMETHODIMP nsMessenger::DeleteFolders(nsIRDFCompositeDataSource *db,
+                                         nsIRDFResource *parentResource,
+                                         nsIRDFResource *deletedFolderResource)
 {
 	nsresult rv;
 
-	if(!db || !parentFolderElement || !folderElement)
+	if(!db || !parentResource || !deletedFolderResource)
 		return NS_ERROR_NULL_POINTER;
 
 	nsCOMPtr<nsISupportsArray> parentArray, deletedArray;
-	nsCOMPtr<nsIRDFResource> parentResource, deletedFolderResource;
-
-	rv = parentFolderElement->GetResource(getter_AddRefs(parentResource));
-
-	if(NS_FAILED(rv))
-		return rv;
-
-	rv = folderElement->GetResource(getter_AddRefs(deletedFolderResource));
-
-	if(NS_FAILED(rv))
-		return rv;
 
 	rv = NS_NewISupportsArray(getter_AddRefs(parentArray));
 
@@ -796,34 +668,23 @@ NS_IMETHODIMP nsMessenger::DeleteFolders(nsIRDFCompositeDataSource *db, nsIDOMXU
 }
 
 NS_IMETHODIMP
-nsMessenger::CopyMessages(nsIRDFCompositeDataSource *database, nsIDOMXULElement *srcFolderElement,
-						  nsIDOMXULElement *dstFolderElement, nsIDOMNodeList *messages, PRBool isMove)
+nsMessenger::CopyMessages(nsIRDFCompositeDataSource *database,
+                          nsIRDFResource *srcResource, // folder
+						  nsIRDFResource *dstResource,
+                          nsISupportsArray *argumentArray, // nsIMessages
+                          PRBool isMove)
 {
 	nsresult rv;
 
-	if(!srcFolderElement || !dstFolderElement || !messages)
+	if(!srcResource || !dstResource || !argumentArray)
 		return NS_ERROR_NULL_POINTER;
 
-	nsCOMPtr<nsIRDFResource> srcResource, dstResource;
 	nsCOMPtr<nsIMsgFolder> srcFolder;
-	nsCOMPtr<nsISupportsArray> argumentArray;
 	nsCOMPtr<nsISupportsArray> folderArray;
-
-	rv = dstFolderElement->GetResource(getter_AddRefs(dstResource));
-	if(NS_FAILED(rv))
-		return rv;
-
-	rv = srcFolderElement->GetResource(getter_AddRefs(srcResource));
-	if(NS_FAILED(rv))
-		return rv;
-
+    
 	srcFolder = do_QueryInterface(srcResource);
 	if(!srcFolder)
 		return NS_ERROR_NO_INTERFACE;
-
-	rv =ConvertDOMListToResourceArray(messages, getter_AddRefs(argumentArray));
-	if(NS_FAILED(rv))
-		return rv;
 
 	nsCOMPtr<nsISupports> srcFolderSupports(do_QueryInterface(srcFolder));
 	if(srcFolderSupports)
@@ -842,114 +703,16 @@ nsMessenger::CopyMessages(nsIRDFCompositeDataSource *database, nsIDOMXULElement 
 
 }
 
-NS_IMETHODIMP
-nsMessenger::GetRDFResourceForMessage(nsIDOMXULElement *tree,
-                                       nsIDOMNodeList *nodeList, nsISupports
-                                       **aSupport) 
-{
-      nsresult rv;
-	  if(!tree || !nodeList)
-		  return NS_ERROR_NULL_POINTER;
-
-      nsISupportsArray *resourceArray;
-    nsIBidirectionalEnumerator *aEnumerator = nsnull;
-    *aSupport = nsnull;
-    nsISupports *aItem = nsnull;
-
-      if(NS_FAILED(rv =ConvertDOMListToResourceArray(nodeList, &resourceArray)))
-              return rv;
-
-    rv = NS_NewISupportsArrayEnumerator(resourceArray, &aEnumerator);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = aEnumerator->First();
-    while (rv == NS_OK)
-    {
-        rv = aEnumerator->CurrentItem(&aItem);
-        if (rv != NS_OK) break;
-        rv = aItem->QueryInterface(NS_GET_IID(nsIMessage), (void**)aSupport);
-        aItem->Release();
-        if (rv == NS_OK && *aSupport) break;
-        rv = aEnumerator->Next();
-    }
-
-    aEnumerator->Release();
-      NS_RELEASE(resourceArray);
-      return rv;
-}
 
 NS_IMETHODIMP
-nsMessenger::Exit()
+nsMessenger::MarkMessageRead(nsIRDFCompositeDataSource *database,
+                             nsIRDFResource *messageResource, PRBool markRead)
 {
-	nsresult rv = NS_OK;
-  /*
-   * Create the Application Shell instance...
-   */
-  NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv);
-  if (NS_SUCCEEDED(rv))
-    appShell->Shutdown();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMessenger::OnUnload()
-{
-    // ** clean up
-    // *** jt - We seem to have one extra ref count. I have no idea where it
-    // came from. This could be the global object we created in commandglue.js
-    // which causes us to have one more ref count. Call Release() here
-    // seems the right thing to do. This gurantees the nsMessenger instance
-    // gets deleted after we close down the messenger window.
-    
-    // smfr the one extra refcount is the result of a bug 8555, which I have 
-    // checked in a fix for. So I'm commenting out this extra release.
-    //Release();
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMessenger::Close()
-{
-    nsresult rv = NS_OK;
-    if (mWindow)
-    {
-        nsCOMPtr<nsIScriptGlobalObject>
-            globalScript(do_QueryInterface(mWindow));
-        nsCOMPtr<nsIWebShell> webshell, rootWebshell;
-        if (globalScript)
-            globalScript->GetWebShell(getter_AddRefs(webshell));
-        if (webshell)
-            webshell->GetRootWebShell(*getter_AddRefs(rootWebshell));
-        if (rootWebshell) 
-        {
-            nsCOMPtr<nsIWebShellContainer> webshellContainer;
-            nsCOMPtr<nsIWebShellWindow> webWindow;
-            rootWebshell->GetContainer(*getter_AddRefs(webshellContainer));
-            webWindow = do_QueryInterface(webshellContainer);
-            if (webWindow) 
-			{
-				webWindow->Show(PR_FALSE);
-                webWindow->Close();
-			}
-         }
-    }
-
-    return rv;
-}
-
-
-NS_IMETHODIMP
-nsMessenger::MarkMessageRead(nsIRDFCompositeDataSource *database, nsIDOMXULElement *message, PRBool markRead)
-{
-	if(!database || !message)
+	if(!database || !messageResource)
 		return NS_ERROR_NULL_POINTER;
 
 	nsresult rv;
 
-	nsCOMPtr<nsIRDFResource> messageResource;
-	rv = message->GetResource(getter_AddRefs(messageResource));
-	if(NS_FAILED(rv))
-		return rv;
 
 	nsCOMPtr<nsISupportsArray> resourceArray;
 
@@ -959,36 +722,21 @@ nsMessenger::MarkMessageRead(nsIRDFCompositeDataSource *database, nsIDOMXULEleme
 
 	resourceArray->AppendElement(messageResource);
 
-	rv = DoMarkMessagesRead(database, resourceArray, markRead);
+	rv = MarkMessagesRead(database, resourceArray, markRead);
 
 	return rv;
 }
 
 NS_IMETHODIMP
-nsMessenger::MarkMessagesRead(nsIRDFCompositeDataSource *database, nsIDOMNodeList *messages, PRBool markRead)
+nsMessenger::MarkMessagesRead(nsIRDFCompositeDataSource *database,
+                              nsISupportsArray *resourceArray,
+                              PRBool markRead)
 {
 	nsresult rv;
 
-	if(!database || !messages)
+	if(!database || !resourceArray)
 		return NS_ERROR_NULL_POINTER;
 
-	nsCOMPtr<nsISupportsArray> resourceArray;
-
-
-	rv =ConvertDOMListToResourceArray(messages, getter_AddRefs(resourceArray));
-	if(NS_FAILED(rv))
-		return rv;
-
-	rv= DoMarkMessagesRead(database, resourceArray, markRead);
-
-
-	return rv;
-}
-
-nsresult
-nsMessenger::DoMarkMessagesRead(nsIRDFCompositeDataSource *database, nsISupportsArray *resourceArray, PRBool markRead)
-{
-	nsresult rv;
 	nsCOMPtr<nsISupportsArray> argumentArray;
 
 	rv = NS_NewISupportsArray(getter_AddRefs(argumentArray));
@@ -1007,18 +755,14 @@ nsMessenger::DoMarkMessagesRead(nsIRDFCompositeDataSource *database, nsISupports
 }
 
 NS_IMETHODIMP
-nsMessenger::MarkAllMessagesRead(nsIRDFCompositeDataSource *database, nsIDOMXULElement *folder)
+nsMessenger::MarkAllMessagesRead(nsIRDFCompositeDataSource *database,
+                                 nsIRDFResource *folderResource)
 {
-	nsresult rv;
-	nsCOMPtr<nsIRDFResource> folderResource;
+	nsresult rv=NS_OK;
 	nsCOMPtr<nsISupportsArray> folderArray;
 
-	if(!folder || !database)
+	if(!folderResource || !database)
 		return NS_ERROR_NULL_POINTER;
-
-	rv = folder->GetResource(getter_AddRefs(folderResource));
-	if(NS_FAILED(rv))
-		return rv;
 
 	if(NS_FAILED(NS_NewISupportsArray(getter_AddRefs(folderArray))))
 		return NS_ERROR_OUT_OF_MEMORY;
@@ -1031,17 +775,14 @@ nsMessenger::MarkAllMessagesRead(nsIRDFCompositeDataSource *database, nsIDOMXULE
 }
 
 NS_IMETHODIMP
-nsMessenger::MarkMessageFlagged(nsIRDFCompositeDataSource *database, nsIDOMXULElement *message, PRBool markFlagged)
+nsMessenger::MarkMessageFlagged(nsIRDFCompositeDataSource *database,
+                                nsIRDFResource *messageResource,
+                                PRBool markFlagged)
 {
-	if(!database || !message)
+	if(!database || !messageResource)
 		return NS_ERROR_NULL_POINTER;
 
 	nsresult rv;
-
-	nsCOMPtr<nsIRDFResource> messageResource;
-	rv = message->GetResource(getter_AddRefs(messageResource));
-	if(NS_FAILED(rv))
-		return rv;
 
 	nsCOMPtr<nsISupportsArray> resourceArray;
 
@@ -1051,36 +792,21 @@ nsMessenger::MarkMessageFlagged(nsIRDFCompositeDataSource *database, nsIDOMXULEl
 
 	resourceArray->AppendElement(messageResource);
 
-	rv = DoMarkMessagesFlagged(database, resourceArray, markFlagged);
+	rv = MarkMessagesFlagged(database, resourceArray, markFlagged);
 
 	return rv;
 }
 
 NS_IMETHODIMP
-nsMessenger::MarkMessagesFlagged(nsIRDFCompositeDataSource *database, nsIDOMNodeList *messages, PRBool markFlagged)
+nsMessenger::MarkMessagesFlagged(nsIRDFCompositeDataSource *database,
+                                 nsISupportsArray *resourceArray,
+                                 PRBool markFlagged)
 {
 	nsresult rv;
 
-	if(!database || !messages)
+	if(!database || !resourceArray)
 		return NS_ERROR_NULL_POINTER;
 
-	nsCOMPtr<nsISupportsArray> resourceArray;
-
-
-	rv =ConvertDOMListToResourceArray(messages, getter_AddRefs(resourceArray));
-	if(NS_FAILED(rv))
-		return rv;
-
-	rv= DoMarkMessagesFlagged(database, resourceArray, markFlagged);
-
-
-	return rv;
-}
-
-nsresult
-nsMessenger::DoMarkMessagesFlagged(nsIRDFCompositeDataSource *database, nsISupportsArray *resourceArray, PRBool markFlagged)
-{
-	nsresult rv;
 	nsCOMPtr<nsISupportsArray> argumentArray;
 
 	rv = NS_NewISupportsArray(getter_AddRefs(argumentArray));
@@ -1123,7 +849,7 @@ nsMessenger::NewFolder(nsIRDFCompositeDataSource *database, nsIRDFResource *pare
     NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv);
 	if(NS_SUCCEEDED(rv))
 	{
-		nsString nameStr = name;
+		nsAutoString nameStr = name;
 		nsCOMPtr<nsIRDFLiteral> nameLiteral;
 
 		rdfService->GetLiteral(nameStr.GetUnicode(), getter_AddRefs(nameLiteral));
@@ -1160,43 +886,35 @@ nsMessenger::RenameFolder(nsIRDFCompositeDataSource* db,
 
 NS_IMETHODIMP
 nsMessenger::CompactFolder(nsIRDFCompositeDataSource* db,
-                           nsIDOMXULElement* folder)
+                           nsIRDFResource* folderResource)
 {
   nsresult rv = NS_ERROR_NULL_POINTER;
   
-  if (!db || !folder) return rv;
+  if (!db || !folderResource) return rv;
   nsCOMPtr<nsISupportsArray> folderArray;
-  nsCOMPtr<nsIRDFResource> folderResource;
 
-  rv = folder->GetResource(getter_AddRefs(folderResource));
-  if (NS_SUCCEEDED(rv))
-  {
-    rv = NS_NewISupportsArray(getter_AddRefs(folderArray));
-    if (NS_FAILED(rv)) return rv;
-    folderArray->AppendElement(folderResource);
-    rv = DoCommand(db, NC_RDF_COMPACT, folderArray, nsnull);
-  }
+  rv = NS_NewISupportsArray(getter_AddRefs(folderArray));
+  if (NS_FAILED(rv)) return rv;
+  folderArray->AppendElement(folderResource);
+  rv = DoCommand(db, NC_RDF_COMPACT, folderArray, nsnull);
+
   return rv;
 }
 
 NS_IMETHODIMP
 nsMessenger::EmptyTrash(nsIRDFCompositeDataSource* db,
-                        nsIDOMXULElement* folder)
+                        nsIRDFResource* folderResource)
 {
   nsresult rv = NS_ERROR_NULL_POINTER;
   
-  if (!db || !folder) return rv;
+  if (!db || !folderResource) return rv;
   nsCOMPtr<nsISupportsArray> folderArray;
-  nsCOMPtr<nsIRDFResource> folderResource;
 
-  rv = folder->GetResource(getter_AddRefs(folderResource));
-  if (NS_SUCCEEDED(rv))
-  {
-    rv = NS_NewISupportsArray(getter_AddRefs(folderArray));
-    if (NS_FAILED(rv)) return rv;
-    folderArray->AppendElement(folderResource);
-    rv = DoCommand(db, NC_RDF_EMPTYTRASH, folderArray, nsnull);
-  }
+  rv = NS_NewISupportsArray(getter_AddRefs(folderArray));
+  if (NS_FAILED(rv)) return rv;
+  folderArray->AppendElement(folderResource);
+  rv = DoCommand(db, NC_RDF_EMPTYTRASH, folderArray, nsnull);
+
   return rv;
 }
 

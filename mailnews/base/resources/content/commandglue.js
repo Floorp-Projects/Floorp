@@ -161,7 +161,7 @@ function GetNewMessages()
 	if(selectedFolderList.length > 0)
 	{
 		var selectedFolder = selectedFolderList[0];
-		messenger.GetNewMessages(folderTree.database, selectedFolder);
+		messenger.GetNewMessages(folderTree.database, selectedFolder.resource);
 	}
 	else {
 		dump("Nothing was selected\n");
@@ -356,7 +356,7 @@ function ToggleMessageRead(treeItem)
 	var tree = GetThreadTree();
 	var status = treeItem.getAttribute('Status');
 	var unread = (status == " ") || (status == "new");
-	messenger.MarkMessageRead(tree.database, treeItem, unread);
+	messenger.MarkMessageRead(tree.database, treeItem.resource, unread);
 }
 
 function ToggleMessageFlagged(treeItem)
@@ -367,7 +367,7 @@ function ToggleMessageFlagged(treeItem)
 	dump('flaggedValue is ' + flaggedValue);
 	dump('\n');
 	var flagged = (flaggedValue =="flagged");
-	messenger.MarkMessageFlagged(tree.database, treeItem, !flagged);
+	messenger.MarkMessageFlagged(tree.database, treeItem.resource, !flagged);
 }
 
 //Called when the splitter in between the thread and message panes is clicked.

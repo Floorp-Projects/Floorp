@@ -30,8 +30,6 @@
 
 %{C++
 #include "nsIDOMWindow.h"
-#include "nsIDOMNodeList.h"
-#include "nsIDOMXULElement.h"
 %}
 
 interface nsITransactionManager;
@@ -41,39 +39,50 @@ interface nsIMessenger : nsISupports {
 
     readonly attribute nsITransactionManager transactionManager;
 
-    void GetNewMessages(in nsIRDFCompositeDataSource database, in nsIDOMXULElement folder);
-	void Open3PaneWindow();
+    void GetNewMessages(in nsIRDFCompositeDataSource database,
+                        in nsIRDFResource folder);
     void SetWindow(in nsIDOMWindow ptr, in nsIMsgWindow msgWindow);
     void DoPrint();
     void DoPrintPreview();
-    void DeleteMessages(in nsIDOMXULElement tree, in nsIDOMXULElement srcFolder, in nsIDOMNodeList node);
-    void DeleteFolders(in nsIRDFCompositeDataSource db, in nsIDOMXULElement parentFolder, in nsIDOMXULElement folder);
-	void CopyMessages(in nsIRDFCompositeDataSource database, in nsIDOMXULElement srcFolderElement,
-					  in nsIDOMXULElement dstFolderElement, in nsIDOMNodeList messages,
+    void DeleteMessages(in nsIRDFCompositeDataSource database,
+                        in nsIRDFResource srcFolderResource,
+                        in nsISupportsArray messages);
+    void DeleteFolders(in nsIRDFCompositeDataSource db,
+                       in nsIRDFResource parentFolder,
+                       in nsIRDFResource folder);
+	void CopyMessages(in nsIRDFCompositeDataSource database,
+                      in nsIRDFResource srcFolder,
+					  in nsIRDFResource dstFolder,
+                      in nsISupportsArray messages,
 					  in boolean isMove);
-    nsISupports GetRDFResourceForMessage(in nsIDOMXULElement tree, in nsIDOMNodeList node);
+
     void OpenURL(in string url);
-	void Exit();
-    void Close();
-    void OnUnload();
-	void MarkMessagesRead(in nsIRDFCompositeDataSource database, in nsIDOMNodeList messages,
+	void MarkMessagesRead(in nsIRDFCompositeDataSource database,
+                          in nsISupportsArray messages,
 						  in boolean markRead);
-	void MarkMessageRead(in nsIRDFCompositeDataSource database, in nsIDOMXULElement message,
-						  in boolean markRead);
-	void MarkAllMessagesRead(in nsIRDFCompositeDataSource database, in nsIDOMXULElement folder);
+	void MarkMessageRead(in nsIRDFCompositeDataSource database,
+                         in nsIRDFResource message,
+                         in boolean markRead);
+	void MarkAllMessagesRead(in nsIRDFCompositeDataSource database,
+                             in nsIRDFResource folder);
 
-	void MarkMessagesFlagged(in nsIRDFCompositeDataSource database, in nsIDOMNodeList messages,
-						  in boolean markFlagged);
-	void MarkMessageFlagged(in nsIRDFCompositeDataSource database, in nsIDOMXULElement message,
-						  in boolean markFlagged);
+	void MarkMessagesFlagged(in nsIRDFCompositeDataSource database,
+                             in nsISupportsArray messages,
+                             in boolean markFlagged);
+	void MarkMessageFlagged(in nsIRDFCompositeDataSource database,
+                            in nsIRDFResource message,
+                            in boolean markFlagged);
 
-	void NewFolder(in nsIRDFCompositeDataSource database, in nsIRDFResource parentFolder,
+	void NewFolder(in nsIRDFCompositeDataSource database,
+                   in nsIRDFResource parentFolder,
 				   in string name);
 
     void RenameFolder(in nsIRDFCompositeDataSource db, 
                       in nsIRDFResource folder, in string name);
-    void CompactFolder(in nsIRDFCompositeDataSource db, in nsIDOMXULElement folder);
-    void EmptyTrash(in nsIRDFCompositeDataSource db, in nsIDOMXULElement folder);
+    void CompactFolder(in nsIRDFCompositeDataSource db,
+                       in nsIRDFResource folder);
+    void EmptyTrash(in nsIRDFCompositeDataSource db,
+                    in nsIRDFResource folder);
 
     void Undo();
     void Redo();
