@@ -174,11 +174,15 @@ interface nsIDOMWindowInternal : nsIDOMWindow
    * @param searchInFrames: should we search through all frames
    * @param showDialog: should we show the Find dialog
    */
-  [noscript] boolean         find(in DOMString str, 
-                                  in boolean caseSensitive,
-                                  in boolean backwards, 
-                                  in boolean wrapAround,
-                                  in boolean wholeWord, 
-                                  in boolean searchInFrames, 
-                                  in boolean showDialog);
+  [noscript] boolean        find(in DOMString str, 
+                                 in boolean caseSensitive,
+                                 in boolean backwards, 
+                                 in boolean wrapAround,
+                                 in boolean wholeWord, 
+                                 in boolean searchInFrames, 
+                                 in boolean showDialog);
+
+  // Ascii base64 data to binary data and vice versa...
+  DOMString                 atob(in DOMString aAsciiString);
+  DOMString                 btoa(in DOMString aBase64Data);
 };

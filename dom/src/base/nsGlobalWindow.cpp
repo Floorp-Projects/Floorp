@@ -125,6 +125,8 @@
 #include "nsDOMClassInfo.h"
 #include "nsIJSNativeInitializer.h"
 
+#include "plbase64.h"
+
 #include "nsIPrintSettings.h"
 
 #include "nsWindowRoot.h"
@@ -2892,6 +2894,108 @@ GlobalWindowImpl::FindInternal(nsAReadableString& aStr,
   }
 
   return rv;
+}
+
+static PRBool
+Is8bit(const nsAString& aString)
+{
+  static const PRUnichar EIGHT_BIT = PRUnichar(~0x00FF);
+
+  nsAString::const_iterator done_reading;
+  aString.EndReading(done_reading);
+
+  // for each chunk of |aString|...
+  PRUint32 fragmentLength = 0;
+  nsAString::const_iterator iter;
+  for (aString.BeginReading(iter); iter != done_reading;
+       iter.advance(PRInt32(fragmentLength))) {
+    fragmentLength = PRUint32(iter.size_forward());
+    const PRUnichar* c = iter.get();
+    const PRUnichar* fragmentEnd = c + fragmentLength;
+
+    // for each character in this chunk...
+    while (c < fragmentEnd)
+      if (*c++ & EIGHT_BIT)
+        return PR_FALSE;
+  }
+
+  return PR_TRUE;
+}
+
+NS_IMETHODIMP
+GlobalWindowImpl::Atob(const nsAString& aAsciiBase64String,
+                       nsAString& aBinaryData)
+{
+  aBinaryData.Truncate();
+
+  if (!Is8bit(aAsciiBase64String)) {
+    return NS_ERROR_DOM_INVALID_CHARACTER_ERR;
+  }
+
+  char *base64 = ToNewCString(aAsciiBase64String);
+  if (!base64) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  PRInt32 dataLen = aAsciiBase64String.Length();
+
+  PRInt32 resultLen = dataLen;
+  if (base64[dataLen - 1] == '=') {
+    if (base64[dataLen - 2] == '=') {
+      resultLen = dataLen - 2;
+    } else {
+      resultLen = dataLen - 1;
+    }
+  }
+
+  resultLen = ((resultLen * 3) / 4);
+
+  char *bin_data = PL_Base64Decode(base64, aAsciiBase64String.Length(),
+                                   nsnull);
+  if (!bin_data) {
+    nsMemory::Free(base64);
+
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  CopyASCIItoUCS2(Substring(bin_data, bin_data + resultLen), aBinaryData);
+
+  nsMemory::Free(base64);
+  PR_Free(bin_data);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GlobalWindowImpl::Btoa(const nsAString& aBinaryData,
+                       nsAString& aAsciiBase64String)
+{
+  aAsciiBase64String.Truncate();
+
+  if (!Is8bit(aBinaryData)) {
+    return NS_ERROR_DOM_INVALID_CHARACTER_ERR;
+  }
+
+  char *bin_data = ToNewCString(aBinaryData);
+  if (!bin_data) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  PRInt32 resultLen = ((aBinaryData.Length() + 2) / 3) * 4;
+
+  char *base64 = PL_Base64Encode(bin_data, aBinaryData.Length(), nsnull);
+  if (!base64) {
+    nsMemory::Free(bin_data);
+
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  CopyASCIItoUCS2(nsDependentCString(base64, resultLen), aAsciiBase64String);
+
+  PR_Free(base64);
+  nsMemory::Free(bin_data);
+
+  return NS_OK;
 }
 
 //*****************************************************************************
