@@ -179,6 +179,8 @@ public:
   virtual nsIStyleContext*  GetParent(void) const = 0;
   virtual nsISupportsArray* GetStyleRules(void) const = 0;
   virtual PRInt32 GetStyleRuleCount(void) const = 0;
+  virtual PRInt32 GetBackstopStyleRuleCount(void) const = 0;
+  virtual void SetBackstopStyleRuleCount(PRInt32 aCount) = 0;
 
   virtual nsIStyleContext* FindChildWithContent(nsIContent* aRules) = 0;
   virtual nsIStyleContext* FindChildWithRules(nsISupportsArray* aRules) = 0;
