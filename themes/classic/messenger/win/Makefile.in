@@ -41,7 +41,7 @@ EXPORT_RESOURCE_SAMPLES = \
 	folderPane.css \
 	msgHdrViewOverlay.css \
 	importDialog.css \
-	pref-mailnews.css
+	pref-mailnews.css \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
