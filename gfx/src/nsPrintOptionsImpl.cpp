@@ -1010,7 +1010,7 @@ NS_IMETHODIMP nsPrintOptions::GetGlobalPrintSettings(nsIPrintSettings * *aGlobal
         PRUnichar* printerName = nsnull;
         // Not sure if all platforms will return the proper error code
         // so for insurance, make sure there is a printer name
-        if (NS_SUCCEEDED(prtEnum->GetDefaultPrinterName(&printerName)) && printerName && !*printerName) {
+        if (NS_SUCCEEDED(prtEnum->GetDefaultPrinterName(&printerName)) && printerName && *printerName) {
           prtEnum->InitPrintSettingsFromPrinter(printerName, mGlobalPrintSettings);
           nsMemory::Free(printerName);
         }
