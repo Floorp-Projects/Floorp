@@ -69,6 +69,21 @@ HRESULT BrowserInfo::GetDocument(IHTMLDocument2 **pDocument)
 
 ///////////////////////////////////////////////////////////////////////////////
 
+struct InterfaceInfo
+{
+	const IID *piid;
+	const TCHAR *szName;
+};
+static InterfaceInfo aDocIIDs[] = 
+{
+	{ &IID_IOleCommandTarget,		_T("IOleCommandTarget") },
+	{ &IID_IHTMLDocument,			_T("IHTMLDocument") },
+	{ &IID_IHTMLDocument2,			_T("IHTMLDocument2") },
+	{ &IID_IHTMLElementCollection,	_T("IHTMLElementCollection") },
+	{ &IID_IHTMLElement,			_T("IHTMLElement") }
+};
+
+
 TestResult __cdecl tstDocument(BrowserInfo &cInfo)
 {
 	CIPtr(IHTMLDocument2) cpDocElement;
@@ -77,6 +92,21 @@ TestResult __cdecl tstDocument(BrowserInfo &cInfo)
 	{
 		cInfo.OutputString(_T("Error: No document"));
 		return trFailed;
+	}
+
+	// Dump out all the interfaces supported by the document element
+	for (int i = 0; i < sizeof(aDocIIDs) / sizeof(aDocIIDs[0]); i++)
+	{
+		IUnknown *pUnkI = NULL;
+		if (SUCCEEDED(cpDocElement->QueryInterface(*(aDocIIDs[i].piid), (void **) &pUnkI)))
+		{
+			cInfo.OutputString(_T("Info: Document supports interface %s"), aDocIIDs[i].szName);
+			pUnkI->Release();
+		}
+		else
+		{
+			cInfo.OutputString(_T("Info: Document doesn't support interface %s"), aDocIIDs[i].szName);
+		}
 	}
 
 	return trPassed;

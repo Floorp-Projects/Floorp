@@ -65,6 +65,7 @@ LINK32=link.exe
 # PROP Use_Debug_Libraries 1
 # PROP Output_Dir "Debug"
 # PROP Intermediate_Dir "Debug"
+# PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MDd /W3 /Gm /GX /Zi /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_AFXDLL" /Yu"stdafx.h" /FD /c
 # ADD CPP /nologo /MDd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_AFXDLL" /FR /Yu"stdafx.h" /FD /c
@@ -108,6 +109,10 @@ SOURCE=.\cbrowse.rc
 # Begin Source File
 
 SOURCE=.\CBrowseDlg.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\ControlEventSink.cpp
 # End Source File
 # Begin Source File
 
@@ -157,6 +162,10 @@ SOURCE=.\Cbrowse_i.h
 # Begin Source File
 
 SOURCE=.\CBrowseDlg.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\ControlEventSink.h
 # End Source File
 # Begin Source File
 
@@ -234,6 +243,10 @@ SOURCE=.\Scripts\Basic.vbs
 # Begin Source File
 
 SOURCE=.\Cbrowse.rgs
+# End Source File
+# Begin Source File
+
+SOURCE=.\ControlEventSink.rgs
 # End Source File
 # Begin Source File
 

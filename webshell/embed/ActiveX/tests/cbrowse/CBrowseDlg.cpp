@@ -5,6 +5,7 @@
 
 #include "cbrowse.h"
 #include "CBrowseDlg.h"
+#include "ControlEventSink.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -60,6 +61,7 @@ CBrowseDlg::CBrowseDlg(CWnd* pParent /*=NULL*/)
 
 	CWinApp *pApp = AfxGetApp();
 	m_szTestURL = pApp->GetProfileString(SECTION_TEST, KEY_TESTURL, KEY_TESTURL_DEFAULTVALUE);
+	m_szTestCGI = pApp->GetProfileString(SECTION_TEST, KEY_TESTCGI, KEY_TESTCGI_DEFAULTVALUE);
 }
 
 void CBrowseDlg::DoDataExchange(CDataExchange* pDX)
@@ -151,6 +153,14 @@ BOOL CBrowseDlg::OnInitDialog()
 	}
 	m_cmbURLs.SetCurSel(0);
 
+	// Create the contained web browser
+	CreateWebBrowser();
+
+	return TRUE;  // return TRUE  unless you set the focus to a control
+}
+
+HRESULT CBrowseDlg::CreateWebBrowser()
+{
 	// Get the position of the browser marker
 	CRect rcMarker;
 	GetDlgItem(IDC_BROWSER_MARKER)->GetWindowRect(&rcMarker);
@@ -159,15 +169,51 @@ BOOL CBrowseDlg::OnInitDialog()
 	GetDlgItem(IDC_BROWSER_MARKER)->DestroyWindow();
 
 	CControlSiteInstance::CreateInstance(&m_pControlSite);
-	if (m_pControlSite)
+	if (m_pControlSite == NULL)
 	{
-		PropertyList pl;
-		m_pControlSite->Create(m_clsid, pl);
-		m_pControlSite->Attach(GetSafeHwnd(), rcMarker, NULL);
-		m_pControlSite->SetPosition(rcMarker);
+		return E_OUTOFMEMORY;
 	}
 
-	return TRUE;  // return TRUE  unless you set the focus to a control
+	CControlEventSinkInstance *pEventSink = NULL;
+	CControlEventSinkInstance::CreateInstance(&pEventSink);
+	if (pEventSink == NULL)
+	{
+		m_pControlSite->Release();
+		m_pControlSite = NULL;
+		return E_OUTOFMEMORY;
+	}
+	pEventSink->m_pBrowseDlg = this;
+
+	PropertyList pl;
+	m_pControlSite->Create(m_clsid, pl);
+	m_pControlSite->Attach(GetSafeHwnd(), rcMarker, NULL);
+	m_pControlSite->SetPosition(rcMarker);
+
+	// Set up an event sink
+	CIUnkPtr spUnkObject;
+	m_pControlSite->GetControlUnknown(&spUnkObject);
+
+	IID iid = DIID_DWebBrowserEvents2;
+	CIPtr(IConnectionPointContainer) spICPContainer = spUnkObject;
+	if (spICPContainer)
+	{
+		CIPtr(IConnectionPoint) spICP;
+		spICPContainer->FindConnectionPoint(iid, &spICP);
+		if (spICP)
+		{
+			spICP->Advise(pEventSink, &m_dwCookie);
+		}
+	}
+
+	return S_OK;
+}
+
+
+HRESULT CBrowseDlg::DestroyWebBrowser()
+{
+	// TODO unsubscribe web event sink
+
+	return S_OK;
 }
 
 // If you add a minimize button to your dialog, you will need the code below
@@ -309,6 +355,7 @@ TestResult CBrowseDlg::RunTest(Test *pTest)
 		cInfo.pIUnknown = NULL;
 		cInfo.pBrowseDlg = this;
 		cInfo.szTestURL = m_szTestURL;
+		cInfo.szTestCGI = m_szTestCGI;
 		if (cInfo.pControlSite)
 		{
 			cInfo.pControlSite->GetControlUnknown(&cInfo.pIUnknown);

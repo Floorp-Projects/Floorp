@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -18,9 +18,7 @@
 #ifndef TESTS_H
 #define TESTS_H
 
-#define CIPtr(iface) \
-	CComQIPtr< iface, &IID_ ## iface >
-
+#include "CBrowse_i.h"
 
 class CBrowseDlg;
 struct Test;
@@ -35,6 +33,7 @@ public:
 	CLSID clsid;
 	CBrowseDlg *pBrowseDlg;
 	CString szTestURL;
+	CString szTestCGI;
 
 	void OutputString(const TCHAR *szMessage, ...);
 	HRESULT GetWebBrowser(IWebBrowserApp **pWebBrowser);
