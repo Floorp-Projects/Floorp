@@ -4379,24 +4379,19 @@ nsDocument::CreateElem(nsIAtom *aName, nsIAtom *aPrefix, PRInt32 aNamespaceID,
 {
   nsresult rv;
 #ifdef DEBUG
-  nsIParserService *parserService = nsContentUtils::GetParserServiceWeakRef();
-  NS_ASSERTION(parserService, "Can't get parserService to check name.");
-  if (parserService) {
-    nsAutoString qName;
-    if (aPrefix) {
-      aPrefix->ToString(qName);
-      qName.Append(':');
-    }
-    const char *name;
-    aName->GetUTF8String(&name);
-    AppendUTF8toUTF16(name, qName);
-
-    const PRUnichar *colon;
-    rv = parserService->CheckQName(qName, PR_TRUE, &colon);
-    NS_ASSERTION(NS_SUCCEEDED(rv),
-                 "Don't pass invalid names to nsDocument::CreateElem, "
-                 "check caller.");
+  nsAutoString qName;
+  if (aPrefix) {
+    aPrefix->ToString(qName);
+    qName.Append(':');
   }
+  const char *name;
+  aName->GetUTF8String(&name);
+  AppendUTF8toUTF16(name, qName);
+
+  rv = nsContentUtils::CheckQName(qName, PR_TRUE);
+  NS_ASSERTION(NS_SUCCEEDED(rv),
+               "Don't pass invalid names to nsDocument::CreateElem, "
+               "check caller.");
 #endif
 
   *aResult = nsnull;
