@@ -143,11 +143,11 @@ struct nsHTMLReflowState : nsReflowState {
 
   // Constraint that applies to width dimension
   nsHTMLFrameConstraint widthConstraint;
-  nscoord               minWidth, maxWidth;
+  nscoord               minWidth;
 
   // Constraint that applies to height dimension
   nsHTMLFrameConstraint heightConstraint;
-  nscoord               minHeight, maxHeight;
+  nscoord               minHeight;
 
   // Constructs an initial reflow state (no parent reflow state) for a
   // non-incremental reflow command. Sets reflowType to eReflowType_Block
