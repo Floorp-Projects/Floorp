@@ -26,6 +26,7 @@
 #include "nsCOMPtr.h"
 #include "nsIOutputStream.h"
 #include "nsIFileStream.h"
+#include "nsCRT.h"
 
 #if defined(_WIN32)
 #include <windows.h>
@@ -225,12 +226,12 @@ public:
     if (NS_FAILED(rv)) return rv;
     NS_ASSERTION(cnt == writeCnt, "failed to write all data");
     cnt = PR_snprintf(buf, 256, 
-        "     |<------class------>|<--------------References-------------->|<----------------Objects---------------->|<------Size----->|\n");
+        "     |<------Class----->|<-----Bytes------>|<----------------Objects---------------->|<--------------References-------------->|\n");
     rv = out->Write(buf, cnt, &writeCnt);
     if (NS_FAILED(rv)) return rv;
     NS_ASSERTION(cnt == writeCnt, "failed to write all data");
     cnt = PR_snprintf(buf, 256, 
-        "                               Rem    Total      Mean       StdDev       Rem    Total      Mean       StdDev Per-Class      Rem\n");
+        "                          Per-Inst   Leaked    Total      Rem      Mean       StdDev     Total      Rem      Mean       StdDev\n");
     rv = out->Write(buf, cnt, &writeCnt);
     if (NS_FAILED(rv)) return rv;
     NS_ASSERTION(cnt == writeCnt, "failed to write all data");
@@ -264,18 +265,18 @@ public:
         stddevObjs != 0) {
       char buf[256];
       PRUint32 cnt, writeCnt;
-      cnt = PR_snprintf(buf, 256, "%4d %-20.20s %8d %8d (%8.2f +/- %8.2f) %8d %8d (%8.2f +/- %8.2f) %8d %8d\n",
-                        i, mClassName, 
-                        (stats->mAddRefs - stats->mReleases),
-                        stats->mAddRefs,
-                        meanRefs,
-                        stddevRefs,
-                        (stats->mCreates - stats->mDestroys),
-                        stats->mCreates,
-                        meanObjs,
-                        stddevObjs,
+      cnt = PR_snprintf(buf, 256, "%4d %-20.20s %8d %8d %8d %8d (%8.2f +/- %8.2f) %8d %8d (%8.2f +/- %8.2f)\n",
+                        i, mClassName,
                         mClassSize,
-                        (stats->mCreates - stats->mDestroys) * mClassSize);
+                        (stats->mCreates - stats->mDestroys) * mClassSize,
+                        stats->mCreates,
+                        (stats->mCreates - stats->mDestroys),
+                        meanObjs,
+                        stddevObjs, 
+                        stats->mAddRefs,
+                        (stats->mAddRefs - stats->mReleases),
+                        meanRefs,
+                        stddevRefs);
       nsresult rv = out->Write(buf, cnt, &writeCnt);
       if (NS_FAILED(rv)) return rv;
       NS_ASSERTION(cnt == writeCnt, "failed to write all data");
