@@ -123,7 +123,7 @@ private:
   nsIDOMNode*  GetFocusNode();  //where is the carret
   PRInt32      GetFocusOffset();
   void         setFocus(nsIDOMNode*, PRInt32);
-  PRBool       GetBatching(){return mBatching;}
+  PRUint32     GetBatching(){return mBatching;}
   PRBool       GetNotifyFrames(){return mNotifyFrames;}
   void         SetDirty(PRBool aDirty=PR_TRUE){if (mBatching) mChangesDuringBatching = aDirty;}
 
@@ -137,7 +137,7 @@ private:
   PRInt32 mFocusOffset;
 
   //batching
-  PRBool mBatching;
+  PRUint32 mBatching;
   PRBool mChangesDuringBatching;
   PRBool mNotifyFrames;
 
@@ -360,7 +360,7 @@ nsRangeList::nsRangeList()
   NS_INIT_REFCNT();
   NS_NewISupportsArray(getter_AddRefs(mRangeArray));
   NS_NewISupportsArray(getter_AddRefs(mSelectionListeners));
-  mBatching = PR_FALSE;
+  mBatching = 0;
   mChangesDuringBatching = PR_FALSE;
   mNotifyFrames = PR_TRUE;
 }
@@ -855,9 +855,9 @@ nsRangeList::TakeFocus(nsIFocusTracker *aTracker, nsIFrame *aFrame, PRInt32 aOff
         nsSelectionStruct ss={nsSelectionStruct::SELON, 0,0, aOffset, aOffset, 0,0, eDirNext, PR_FALSE};
         aFrame->SetSelected(&ss);
         aTracker->SetFocus(aFrame,aFrame);
-        PRBool batching = mBatching;//hack to use the collapse code.
+        PRUint32 batching = mBatching;//hack to use the collapse code.
         PRBool changes = mChangesDuringBatching;
-        mBatching = PR_TRUE;
+        mBatching = 1;
         Collapse(domNode, aContentOffset + aOffset);
         mBatching = batching;
         mChangesDuringBatching = changes;
@@ -1126,9 +1126,7 @@ NS_IMETHODIMP
 nsRangeList::StartBatchChanges()
 {
   nsresult result(NS_OK);
-  if (PR_TRUE == mBatching)
-    result = NS_ERROR_FAILURE; 
-  mBatching = PR_TRUE;
+  mBatching++;
   return result;
 }
 
@@ -1138,10 +1136,9 @@ NS_IMETHODIMP
 nsRangeList::EndBatchChanges()
 {
   nsresult result(NS_OK);
-  if (PR_FALSE == mBatching)
-    result = NS_ERROR_FAILURE; 
-  mBatching = PR_FALSE;
-  if (mChangesDuringBatching){
+  mBatching--;
+  NS_ASSERTION(mBatching >=0,"Bad mBatching");
+  if (mBatching == 0 && mChangesDuringBatching){
     mChangesDuringBatching = PR_FALSE;
     NotifySelectionListeners();
   }
