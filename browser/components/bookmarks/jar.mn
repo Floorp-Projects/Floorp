@@ -26,8 +26,6 @@ browser.jar:
   content/browser/bookmarks/addBookmark.js                   (content/addBookmark.js)
   content/browser/bookmarks/addBookmark2.xul                  (content/addBookmark2.xul)        
   content/browser/bookmarks/addBookmark2.js                   (content/addBookmark2.js)
-  content/browser/bookmarks/findBookmark.xul                 (content/findBookmark.xul)
-  content/browser/bookmarks/findBookmark.js                  (content/findBookmark.js)
   content/browser/bookmarks/selectBookmark.xul               (content/selectBookmark.xul)
   content/browser/bookmarks/selectBookmark.js                (content/selectBookmark.js)
   content/browser/bookmarks/bookmarksProperties.xul          (content/bookmarksProperties.xul)
@@ -42,4 +40,3 @@ en-US.jar:
   locale/en-US/browser/bookmarks/bookmarksProperties.dtd (locale/bookmarksProperties.dtd)
   locale/en-US/browser/bookmarks/bookmarks.dtd           (locale/bookmarks.dtd)
   locale/en-US/browser/bookmarks/bookmarks.properties    (locale/bookmarks.properties)
-  locale/en-US/browser/bookmarks/findBookmark.dtd        (locale/findBookmark.dtd)
