@@ -60,7 +60,7 @@
 #include "nsEscape.h"
 #include "nsNetUtil.h"
 #include "nsIDNSService.h" // for host error code
-#include "nsIPasswordManager.h"
+#include "nsCPasswordManager.h"
 #include "nsIMemory.h"
 #include "nsIStringStream.h"
 #include "nsIPref.h"
@@ -1141,13 +1141,13 @@ nsFtpState::R_pass() {
         // user can retry if they want to
 
         if (!mPassword.IsEmpty()) {
-            nsCOMPtr<nsIPasswordManager> pm = do_GetService("@mozilla.org/passwordmanager;1");
+            nsCOMPtr<nsIPasswordManager> pm = do_GetService(NS_PASSWORDMANAGER_CONTRACTID);
             if (pm) {
                 nsCAutoString prePath;
                 nsresult rv = mURL->GetPrePath(prePath);
                 NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to get prepath");
                 if (NS_SUCCEEDED(rv)) {
-                    pm->RemoveUser(prePath.get(), nsnull);
+                    pm->RemoveUser(prePath, NS_LITERAL_STRING(""));
                 }
             }
         }

@@ -687,25 +687,41 @@ function GetPasswordManager()
     if (passwordManager)
       gPasswordManager = passwordManager.QueryInterface(Components.interfaces.nsIPasswordManager);
   }
-  return gPasswordManager
+  return gPasswordManager;
+}
+
+var gPasswordManagerInternal;
+function GetPasswordManagerInternal()
+{
+  if (!gPasswordManagerInternal)
+  {
+    try {
+      gPasswordManagerInternal =
+        Components.classes["@mozilla.org/passwordmanager;1"].createInstance(
+          Components.interfaces.nsIPasswordManagerInternal);
+    } catch (e) {
+    }
+  }
+  return gPasswordManagerInternal;
 }
 
 function GetSavedPassword(publishData)
 {
   if (!publishData || !publishData.savePassword)
     return "";
-
-  var passwordManager = GetPasswordManager();
-  if (!passwordManager)
+  var passwordManagerInternal = GetPasswordManagerInternal();
+  if (!passwordManagerInternal)
     return "";
 
-  var host = { value:publishData.publishUrl };
-  var user =  { value:publishData.username };
-  var password = {}; 
+  var host = {value:""};
+  var user =  {value:""};
+  var password = {value:""}; 
   try {
-    passwordManager.findPasswordEntry(host, user, password);
+    passwordManagerInternal.findPasswordEntry
+      (publishData.publishUrl, publishData.username, "", host, user, password);
     return password.value;
-  } catch (e) {}
+  } catch (e) {
+  }
 
   return "";
 }
