@@ -42,6 +42,7 @@ Rights Reserved.
 <html:script language="JavaScript" src="chrome://messengercompose/content/MsgComposeCommands.js"/>
 <html:script language="JavaScript" src="chrome://messengercompose/content/addressAutoComplete.js"/>
 
+<!-- Temporary remove key binding until it works fine
   <keyset id="defaultKeySet">
     <key id="acmdkey" disabled="false" shift="false" command="true" alt="false" key="a" onkeypress="EditorSelectAll()" />
     <key id="bcmdkey" disabled="false" shift="false" command="true" alt="false" key="b" onkeypress="EditorApplyStyle('b')"/>
@@ -61,8 +62,11 @@ Rights Reserved.
     <key id="ycmdkey" disabled="false" shift="false" command="true" alt="false" key="y" onkeypress="EditorRedo()" />
     <key id="zcmdkey" disabled="false" shift="false" command="true" alt="false" key="z" onkeypress="EditorUndo()" />
 
+-->
 <!-- how to handle return, enter, tab, function keys, arrow keys, others? -->
+<!--
   </keyset>
+-->
 
 <broadcaster id="args" value="editorType=default"/>
 
