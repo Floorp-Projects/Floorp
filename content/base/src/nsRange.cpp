@@ -1873,7 +1873,7 @@ nsresult nsRange::SurroundContents(nsIDOMNode* aN)
       ComparePoint(tAncestorContainer, i, &tResult);
       if(tResult == 0)
       {
-        tFound = true;
+        tFound = PR_TRUE;
         break;
       }
     }
