@@ -29,10 +29,6 @@
   list-style-image: url("chrome://editor/skin/icons/btn1.gif");
 }
 
-.toolbarseparator-primary {
-  width: 9px !important;
-}
-
 #newButton {
   -moz-image-region: rect(0 16px 16px 0);
 }

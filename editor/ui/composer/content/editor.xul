@@ -160,7 +160,7 @@
   <!-- toolbar filled out from editorOverlay -->
   <!-- add  class="standard" for dark blue background (icons need rework first) -->
   <toolbar class="chromeclass-toolbar toolbar-primary" id="EditToolbar" persist="collapsed" 
-           align="end" tbalign="stretch" grippytooltiptext="&compositionToolbar.tooltip;">
+           tbalign="stretch" grippytooltiptext="&compositionToolbar.tooltip;">
     <toolbarbutton id="newButton"/>
     <toolbarbutton id="openButton"/>
     <toolbarbutton id="saveButton"/>
