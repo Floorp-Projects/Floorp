@@ -583,10 +583,10 @@ nsAppShellService::Quit(PRUint32 aFerocity)
   if (aFerocity == eForceQuit) {
     // do it!
 
-#ifdef MOZ_PHOENIX
+    // No chance of the shutdown being cancelled from here on; tell people
+    // we're shutting down for sure while all services are still available.
     nsCOMPtr<nsIObserverService> obsService = do_GetService("@mozilla.org/observer-service;1", &rv);
     obsService->NotifyObservers(nsnull, "quit-application", nsnull);
-#endif
 
     // first shutdown native app support; doing this first will prevent new
     // requests to open additional windows coming in.
