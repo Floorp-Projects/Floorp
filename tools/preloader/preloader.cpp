@@ -628,8 +628,8 @@ VOID CALLBACK KeepAliveTimerProc(HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTim
     while(count<kMaxSteps) {
 
       volatile long *p=(long*)gFuncTable[theCurrentModule][theCurrentProc];
+      count++;
       if (p) {
-        count++;
         if (*p && p){  
         //don't actually invoke it, just cause it to load into memory...
         //note that modules have different number of entry points.
