@@ -19,6 +19,8 @@
 #ifndef _msgMessageFlags_h_
 #define _msgMessageFlags_h_
 
+#include "prtypes.h"
+
 typedef PRInt32 MsgFlags;
 
 /* Flags about a single message.  These values are used in the MSG_MessageLine
