@@ -217,10 +217,20 @@ nsHTMLEditRules::WillDoAction(nsIDOMSelection *aSelection,
   return nsTextEditRules::WillDoAction(aSelection, aInfo, aCancel);
 }
   
+  
 NS_IMETHODIMP 
 nsHTMLEditRules::DidDoAction(nsIDOMSelection *aSelection,
                              nsRulesInfo *aInfo, nsresult aResult)
 {
+  // my kingdom for dynamic cast
+  nsTextRulesInfo *info = NS_STATIC_CAST(nsTextRulesInfo*, aInfo);
+    
+  switch (info->action)
+  {
+    case kInsertBreak:
+      return NS_OK;
+  }
+
   return nsTextEditRules::DidDoAction(aSelection, aInfo, aResult);
 }
   
