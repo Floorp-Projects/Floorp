@@ -110,7 +110,7 @@ OperationStreamListener::OnDataAvailable(nsIRequest *aRequest,
                                          PRUint32 offset, PRUint32 count)
 {
     aRequest->Cancel(NS_BINDING_ABORTED);
-    return NS_BINDING_ABORTED;
+    return NS_OK;
 }
 
 nsresult
