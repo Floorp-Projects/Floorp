@@ -1248,7 +1248,7 @@ NS_IMETHODIMP mozXMLTermSession::AutoDetectMarkup(const nsString& aString,
   OutputMarkupType newMarkupType = PLAIN_TEXT;
 
   // Copy string and trim leading spaces/backspaces/tabs
-  nsAutoString str = aString;
+  nsAutoString str(aString);
   
   str.Trim(kWhitespace, PR_TRUE, PR_FALSE);
 
@@ -1372,7 +1372,7 @@ NS_IMETHODIMP mozXMLTermSession::InitStream(const nsString& streamURL,
     }
 
     // Initialize markup handling
-    nsCAutoString iframeName = "iframe";
+    nsCAutoString iframeName("iframe");
 #if 0
     iframeName.Append("t");
 #else
@@ -1606,7 +1606,7 @@ NS_IMETHODIMP mozXMLTermSession::ProcessOutput(const nsString& aString,
       // Write complete lines to document stream
 
       if (newline || streamOutput) {
-        nsAutoString str = aString;
+        nsAutoString str(aString);
         if (newline)
           str.AppendWithConversion("\n");
 
@@ -2737,7 +2737,7 @@ NS_IMETHODIMP mozXMLTermSession::FlushOutput(FlushActionType flushAction)
 
     if (mOutputDisplayNode != nsnull) {
       // Update displayed PRE text
-      nsAutoString outString = mPreTextBuffered;
+      nsAutoString outString(mPreTextBuffered);
       outString += mPreTextIncomplete;
 
       // Increment total output line count for entry
@@ -3869,7 +3869,7 @@ NS_IMETHODIMP mozXMLTermSession::NewIFrame(nsIDOMNode* parentNode,
   XMLT_LOG(mozXMLTermSession::NewIFrame,80,("\n"));
 
 #if 0
-  nsAutoString iframeFrag = "<iframe name='iframe";
+  nsAutoString iframeFrag("<iframe name='iframe");
   iframeFrag.Append(number,10);
   iframeFrag.Append("' frameborder=")
   iframeFrag.Append(frameBorder,10);

@@ -275,7 +275,7 @@ NS_IMETHODIMP mozXMLTermStream::Open(nsIDOMWindowInternal* aDOMWindow,
   // Determine Class ID for viewing specified mimetype
   nsCID classID;
   static const char command[] = "view";
-  nsCAutoString progID = NS_DOCUMENT_LOADER_FACTORY_PROGID_PREFIX;
+  nsCAutoString progID(NS_DOCUMENT_LOADER_FACTORY_PROGID_PREFIX);
   progID += command;
   progID += "/";
   progID += contentType;
@@ -361,7 +361,7 @@ NS_IMETHODIMP mozXMLTermStream::Close(void)
     return result;
 
   nsresult status = NS_OK;
-  nsAutoString errorMsg = "";
+  nsAutoString errorMsg;
   result = mStreamListener->OnStopRequest(mChannel, mContext,
                                           status, errorMsg.GetUnicode());
   if (NS_FAILED(result))
