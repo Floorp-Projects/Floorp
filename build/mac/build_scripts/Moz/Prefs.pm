@@ -74,7 +74,7 @@ sub WriteDefaultPrefsFile($)
 %   Lines which modify the default build settings. For the list of flags,
 %   see MozBuildFlags.pm. Examples are:
 %
-%    pull        runtime         1                    % just pull runtime
+%    build       pull            0                    % don't pull
 %    options     mng             1                    % turn mng on
 %   
 %   Line containing the special 'buildfrom' flag, which specifies
@@ -164,25 +164,26 @@ sub HandleBuildFromPref($$)
 
 sub ReadPrefsFile($$$$$)
 {
-  my($file_path, $pull_flags, $build_flags, $options_flags, $filepath_flags) = @_;
+  my($file_path, $build_flags, $options_flags, $filepath_flags, $create_if_missing) = @_;
   
   local(*PREFS_FILE);
   
   if (open(PREFS_FILE, "< $file_path"))
   {
-    print "Reading build prefs from $file_path\n";
+    print "Reading build prefs from '$file_path'\n";
   
     while (<PREFS_FILE>)
     {
       my($line) = $_;
-            
+      chomp($line);
+      
       if ($line =~ /^\#/ || $line =~ /^\s*$/) {    # ignore comments and empty lines
         next;
       }
-      
-      if (($line =~ /^\s*(\w+)\s+(\w+)\s+\"(.+)\"\s*/) ||
-          ($line =~ /^\s*(\w+)\s+(\w+)\s+\'(.+)\'\s*/) ||
-          ($line =~ /^\s*(\w+)\s+(\w+)\s+([^\s]+)\s*/))
+            
+      if (($line =~ /^\s*([^#\s]+)\s+([^#\s]+)\s+\"(.+)\"(\s+#.+)?/) ||
+          ($line =~ /^\s*([^#\s]+)\s+([^#\s]+)\s+\'(.+)\'(\s+#.+)?/) ||
+          ($line =~ /^\s*([^#\s]+)\s+([^#\s]+)\s+([^#\s]+)(\s+#.+)?/))
       {
         my($array_name) = $1;      
         my($option_name) = $2;
@@ -190,11 +191,7 @@ sub ReadPrefsFile($$$$$)
       
         # print "Read '$array_name' '$option_name' '$option_value'\n";
         
-        if ($array_name eq "pull")
-        {
-          HandlePrefSet($pull_flags, $option_name, $option_value, "Pull");
-        }
-        elsif ($array_name eq "build")
+        if ($array_name eq "build")
         {
           HandlePrefSet($build_flags, $option_name, $option_value, "Build");
         }
@@ -211,12 +208,12 @@ sub ReadPrefsFile($$$$$)
           print "Unknown pref option at $line\n";
         }
       }
-      elsif ($line =~ /^\s*buildfrom\s+(\w+)/)
+      elsif ($line =~ /^\s*buildfrom\s+([^#\s]+)(\s+#.+)?/)
       {
         my($build_start) = $1;
         HandleBuildFromPref($build_flags, $build_start);
       }
-      elsif ($line =~ /^\s*(\w+)\s+(\w+)/)
+      elsif ($line =~ /^\s*([^#\s]+)\s+([^#\s]+)(\s+#.+)?/)
       {
         my($build_var) = $1;
         my($var_setting) = $2;
@@ -226,14 +223,14 @@ sub ReadPrefsFile($$$$$)
       }
       else
       {
-        print "Unknown pref option at $line\n";
+        print "Unrecognized input line at $line\n";
       }
       
     }
     
     close(PREFS_FILE);  
   }
-  else
+  elsif ($create_if_missing)
   {
     print "No prefs file found at $file_path; using defaults\n";
     
@@ -251,16 +248,26 @@ sub ReadPrefsFile($$$$$)
 #
 #-------------------------------------------------------------------------------
 
-sub ReadMozUserPrefs($$$$$)
+sub ReadMozUserPrefs($$$$)
 {
-  my($prefs_file_name, $pull_flags, $build_flags, $options_flags, $filepath_flags) = @_;
+  my($prefs_file_name, $build_flags, $options_flags, $filepath_flags) = @_;
   
   if ($prefs_file_name eq "") { return; }
   
-  my($prefs_path) = GetPrefsFolder();
-  $prefs_path .= ":$prefs_file_name";
+  # if local prefs exist, just use those. Othewise, look in the prefs folder
+  if (-e $prefs_file_name)
+  {
+    # read local prefs
+    ReadPrefsFile($prefs_file_name, $build_flags, $options_flags, $filepath_flags, 0);
+  }
+  else
+  {
+    # first read prefs folder prefs
+    my($prefs_path) = GetPrefsFolder();
+    $prefs_path .= ":$prefs_file_name";
 
-  ReadPrefsFile($prefs_path, $pull_flags, $build_flags, $options_flags, $filepath_flags);
+    ReadPrefsFile($prefs_path, $build_flags, $options_flags, $filepath_flags, 1);
+  }
 }
 
 1;

@@ -7,11 +7,9 @@
 # Setting containing spaces must be quoted with double quotes.
 #-------------------------------------------------------------------------------
 
-pull_flags
-all             0
-
 build_flags
 all             1
+pull            0
 dist            0
 xpidl           0
 idl             0
@@ -49,5 +47,5 @@ xptlink         0
 filepath_flags
 idepath             ":CodeWarrior IDE Path.txt"
 sessionpath         ":Mozilla session path.txt"
-buildlogfilepath    ":Build Logs:Mozilla build log.txt"
+buildlogfilepath    ":Build Logs:Mozilla build log.txt"   # this is a path
 scriptlogfilepath   ":Build Logs:Mozilla script log.txt"

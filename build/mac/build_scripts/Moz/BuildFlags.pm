@@ -28,13 +28,11 @@ use vars qw(@ISA @EXPORT);
               );
 
 
-my(@pull_flags);
 my(@build_flags);
 my(@options_flags);
 my(@filepath_flags);
 
 my(%arrays_list) = (
-  "pull_flags",     \@pull_flags,
   "build_flags",    \@build_flags,
   "options_flags",  \@options_flags,
   "filepath_flags", \@filepath_flags
@@ -55,7 +53,7 @@ sub appendArrayFlag($$$)
   my($flags_array) = $arrays_list{$array_name};
   if ($flags_array)
   {
-    push(@{$flags_array}, @this_flag);
+    push(@{$flags_array}, @this_flag) || die "Failed to append\n";
   }
   else
   {
@@ -94,19 +92,19 @@ sub readFlagsFile($)
       }
 
       # 1-word line, probably array name
-      if ($line =~ /^(\w+)\s*$/)
+      if ($line =~ /^([^#\s]+)\s*$/)
       {
         $cur_array = $1;
         next;  
       }
-      elsif ($line =~ /^(\w+)\s+\"(.+)\"\s*$/)    # quoted option
+      elsif ($line =~ /^([^#\s]+)\s+\"(.+)\"(\s+#.+)?$/)    # quoted option, possible comment
       {
         my($flag) = $1;
         my($setting) = $2;
         
         appendArrayFlag($cur_array, $flag, $setting);
       }
-      elsif ($line =~ /^(\w+)\s+([^\s]+)\s*$/)
+      elsif ($line =~ /^([^#\s]+)\s+([^#\s]+)(\s+#.+)?$/)   # two-word line, possible comment
       {
         my($flag) = $1;
         my($setting) = $2;
@@ -163,14 +161,21 @@ sub printHash($)
 }
 
 
-#-------------------------------------------------------------------------------
-# SetPullFlags
-#-------------------------------------------------------------------------------
-sub SetPullFlags($)
+#-----------------------------------------------
+# printBuildArray
+#
+# Utility routine to print a 2D array
+#-----------------------------------------------
+sub printBuildArray($)
 {
-  my($pull) = @_;
+  my($build_array) = @_;
   
-  flagsArrayToHash(\@pull_flags, $pull);
+  my($entry);
+  foreach $entry (@$build_array)
+  {  
+    print "$entry->[0] = $entry->[1]\n";
+  }
+
 }
 
 #-------------------------------------------------------------------------------
@@ -248,6 +253,8 @@ sub _getBuildProgressFile()
 
 #//--------------------------------------------------------------------------------------------------
 #// setBuildProgressStart
+#// 
+#// This automagically sets $build{"all"} to 0
 #//--------------------------------------------------------------------------------------------------
 sub setBuildProgressStart($$)
 {
@@ -257,10 +264,11 @@ sub setBuildProgressStart($$)
   my($index);
   foreach $index (@$build_array)
   {
-    $index->[1] = $setting;    
+    $index->[1] = 0;  # $setting;    
 
     if ($index->[0] eq $name) {
-      $setting = 1;
+      # $setting = 1;
+      last;
     }    
   }
 
@@ -337,31 +345,59 @@ sub ReadBuildProgress($)
   }
 }
 
+#-------------------------------------------------------------------------------
+# clearOldBuildSettings
+#-------------------------------------------------------------------------------
+sub clearOldBuildSettings($$$$)
+{
+  my($build, $options, $optiondefines, $filepaths) = @_;
+
+  # empty the arrays in case we're being called twice
+  @build_flags = ();
+  @options_flags = ();
+  @filepath_flags = ();
+  
+  # and empty the hashes
+  %$build = ();
+  %$options = ();
+  %$optiondefines = ();
+  %$filepaths = ();
+}
 
 #-------------------------------------------------------------------------------
 # SetupBuildParams
 #-------------------------------------------------------------------------------
-sub SetupBuildParams($$$$$$$)
+sub SetupBuildParams($$$$$$)
 {
-  my($pull, $build, $options, $optiondefines, $filepaths, $flags_file, $prefs_file) = @_;
+  my($build, $options, $optiondefines, $filepaths, $flags_file, $prefs_file) = @_;
   
+  # Empty the hashes and arrays, to wipe out any stale data.
+  # Needed because these structures persist across two build scripts
+  # called using 'do' from a parent script.
+  clearOldBuildSettings($build, $options, $optiondefines, $filepaths);
+  
+  # Read from the flags file, which sets up the various arrays
   readFlagsFile($flags_file);
   
+  # If 'all' is set in the build array, propagate that to all entries
+  PropagateAllFlags(\@build_flags);
+  
   # read the user pref file, that can change values in the array
-  ReadMozUserPrefs($prefs_file, \@pull_flags, \@build_flags, \@options_flags, \@filepath_flags);
+  ReadMozUserPrefs($prefs_file, \@build_flags, \@options_flags, \@filepath_flags);
 
+  # If build progress exists, this clears flags in the array up to a certain point
   ReadBuildProgress(\@build_flags);
   
-  PropagateAllFlags(\@build_flags);
-  PropagateAllFlags(\@pull_flags);
+#  printBuildArray(\@build_flags);
+#  printBuildArray(\@options_flags);
   
-  SetPullFlags($pull);
   SetBuildFlags($build);
   SetBuildOptions($options);
   SetOptionDefines($optiondefines);
   SetFilepathFlags($filepaths);
   
-  # printHash($build);
+#  printHash($build);
+#  printHash($options);
 }
 
 
