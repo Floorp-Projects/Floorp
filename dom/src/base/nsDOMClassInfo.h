@@ -172,6 +172,10 @@ protected:
             str == sName_id);
   }
 
+  nsresult doCheckPropertyAccess(JSContext *cx, JSObject *obj, jsval id,
+                                 nsIXPConnectWrappedNative *wrapper,
+                                 PRUint32 accessMode, PRBool isWindow);
+
   static JSClass sDOMConstructorProtoClass;
 
   static nsIXPConnect *sXPConnect;
@@ -307,10 +311,6 @@ protected:
                                 PRBool *did_resolve);
   static nsresult DefineInterfaceProperty(JSContext *cx, JSObject *obj,
                                           JSString *str);
-
-  nsresult doCheckPropertyAccess(JSContext *cx, JSObject *obj, jsval id,
-                                 nsIXPConnectWrappedNative *wrapper,
-                                 PRUint32 accessMode);
 
 public:
   NS_IMETHOD PreCreate(nsISupports *nativeObj, JSContext *cx,
@@ -596,6 +596,8 @@ public:
   NS_IMETHOD NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                         JSObject *obj, jsval id, PRUint32 flags,
                         JSObject **objp, PRBool *_retval);
+  NS_IMETHOD GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                         JSObject *obj, jsval id, jsval *vp, PRBool *_retval);
   NS_IMETHOD SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                          JSObject *obj, jsval id, jsval *vp, PRBool *_retval);
 
