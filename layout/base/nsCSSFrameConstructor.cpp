@@ -3882,7 +3882,10 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresShell*        aPresShell,
         rv = NS_NewObjectFrame(aPresShell, &newFrame);
       }
       else if (nsHTMLAtoms::form == aTag) {
-        rv = NS_NewFormFrame(aPresShell, &newFrame, 0);
+        PRBool  isOutOfFlow = isFloating || isAbsolutelyPositioned || isFixedPositioned;
+
+        rv = NS_NewFormFrame(aPresShell, &newFrame,
+                             isOutOfFlow ? NS_BLOCK_SPACE_MGR|NS_BLOCK_MARGIN_ROOT : 0);
         processChildren = PR_TRUE;
       }
       else if (nsHTMLAtoms::frameset == aTag) {
