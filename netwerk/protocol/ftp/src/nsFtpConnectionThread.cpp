@@ -57,7 +57,7 @@
 #include "nsEscape.h"
 #include "nsNetUtil.h"
 #include "nsIDNSService.h" // for host error code
-#include "nsIWalletService.h"
+#include "nsIObserverService.h"
 #include "nsIMemory.h"
 #include "nsIStringStream.h"
 #include "nsIPref.h"
@@ -68,7 +68,6 @@
 #include "nsICacheListener.h"
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
-static NS_DEFINE_CID(kWalletServiceCID, NS_WALLETSERVICE_CID);
 static NS_DEFINE_CID(kStreamConverterServiceCID,    NS_STREAMCONVERTERSERVICE_CID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kStreamListenerTeeCID, NS_STREAMLISTENERTEE_CID);
@@ -1096,19 +1095,15 @@ nsFtpState::R_pass() {
         // user limit reached
         return FTP_ERROR;
     } else {
+        // XXX turns out that a failed login will _never_ trigger this
+        // code, because a failed login is a 530. Oops. And even when
+        // this code _is_ triggered, it doesn't work very well. See
+        // bug 113515 for more detail.
+
         // kick back out to S_pass() and ask the user again.
-        nsresult rv = NS_OK;
-
-        nsCOMPtr<nsIWalletService> walletService = 
-                 do_GetService(kWalletServiceCID, &rv);
-        if (NS_FAILED(rv)) return FTP_ERROR;
-
-        nsXPIDLCString uri;
-        rv = mURL->GetSpec(getter_Copies(uri));
-        if (NS_FAILED(rv)) return FTP_ERROR;
-
-        rv = walletService->SI_RemoveUser(uri, nsnull);
-        if (NS_FAILED(rv)) return FTP_ERROR;
+        nsCOMPtr<nsIObserverService> os = do_GetService("@mozilla.org/observer-service;1");
+        if (os)
+            os->NotifyObservers(mURL, "login-failed", nsnull);
 
         mRetryPass = PR_TRUE;
         return FTP_S_PASS;
