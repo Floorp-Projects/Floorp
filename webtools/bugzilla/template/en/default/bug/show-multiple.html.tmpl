@@ -116,8 +116,13 @@
     <tr>
       <td colspan="4">
         <b>URL:</b>&nbsp;
-        <a href="[% bug.bug_file_loc FILTER html %]">
-                 [% bug.bug_file_loc FILTER html %]</a>
+        [% IF bug.bug_file_loc 
+           AND NOT bug.bug_file_loc.match("^(javascript|data)") %]
+          <a href="[% bug.bug_file_loc FILTER html %]">
+                   [% bug.bug_file_loc FILTER html %]</a>
+        [% ELSE %]
+          [% bug.bug_file_loc FILTER html %]
+        [% END %]
     </tr>
 
     <tr>
