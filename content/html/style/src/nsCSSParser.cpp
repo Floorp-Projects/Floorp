@@ -2458,13 +2458,14 @@ PRBool CSSParserImpl::ParseURL(PRInt32& aErrorCode, nsCSSValue& aValue)
       // XXX editors won't like this - too bad for now
       nsAutoString absURL;
       if (nsnull != mURL) {
-        nsString baseURL;
+        nsAutoString baseURL;
         nsresult rv;
 #ifdef NECKO
-		nsCOMPtr<nsIURI> base;
-		rv = mURL->Clone(getter_AddRefs(base));
-		if (NS_SUCCEEDED(rv))
-			rv = NS_MakeAbsoluteURI(nsCAutoString(tk->mIdent), base, absURL);
+        nsCOMPtr<nsIURI> base;
+        rv = mURL->Clone(getter_AddRefs(base));
+        if (NS_SUCCEEDED(rv)) {
+          rv = NS_MakeAbsoluteURI(tk->mIdent, base, absURL);
+        }
 #else
         rv = NS_MakeAbsoluteURL(mURL, baseURL, tk->mIdent, absURL);
 #endif // NECKO
