@@ -28,10 +28,10 @@ CSRCS		= lots.c
 
 PROGRAM		= lots
 
-REQUIRES	= mozdbm
+#REQUIRES	= $(MOZ_LIB_DBM_PREFIX)dbm
 
 LIBS		= \
-	-lmozdbm \
+	-l$(MOZ_LIB_DBM_PREFIX)dbm \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

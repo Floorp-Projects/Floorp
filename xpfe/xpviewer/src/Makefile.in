@@ -74,7 +74,7 @@ LIBS := \
 	-limg \
 	$(JPEG_LIBS) \
 	$(PNG_LIBS) \
-	-ljs \
+	-l$(MOZ_LIB_JS_PREFIX)js \
 	-ljsdom \
 	-ljsurl \
 	$(DIST)/lib/libjsdomcore_s.a \
@@ -93,15 +93,15 @@ LIBS := \
 	-lstubnj \
 	-lstubsj \
 	-ltestdynamic \
-	-lmozutil \
+	-l$(MOZ_LIB_UTIL_PREFIX)util \
 	-lxp \
 	-lxpcom \
-	-lmozutil \
+	-l$(MOZ_LIB_UTIL_PREFIX)util \
 	-lxp \
 	-lxpcom \
 	$(ZLIB_LIBS) \
 	-lraptorplugin \
-	-lmozdbm \
+	-l$(MOZ_LIB_DBM_PREFIX)dbm \
 	$(NULL)
 
 include $(topsrcdir)/config/config.mk

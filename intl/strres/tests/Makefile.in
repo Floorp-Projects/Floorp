@@ -42,7 +42,7 @@ LIBS		= \
 	$(TK_LIBS) \
 	-lpref \
 	-lsecfree \
-	-ljs \
+	-l$(MOZ_LIB_JS_PREFIX)js \
 	-lxp \
 	-lraptorbase \
 	-lxpcom \

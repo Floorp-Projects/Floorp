@@ -136,7 +136,7 @@ JSJAVA_CFLAGS	= -I$(DEPTH)/sun-java/md-include \
 		  $(JSJAVA_STUBHEADERS)
 
 # NSPR_LIBS abstracts nspr version, etc. nicely.
-LDFLAGS 	+= -L$(DIST)/bin -lxpcom -lreg -ljsxpcom -ljs $(NSPR_LIBS) -lm
+LDFLAGS 	+= -L$(DIST)/bin -lxpcom -lreg -ljsxpcom -l$(MOZ_LIB_JS_PREFIX)js $(NSPR_LIBS) -lm
 
 ifeq ($(OS_ARCH), OSF1)
 LDFLAGS += -lc_r

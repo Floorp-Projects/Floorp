@@ -50,10 +50,10 @@ LIBS = \
 	-lpref \
 	-lsecfree \
 	-limg \
-	-lmozutil \
+	-l$(MOZ_LIB_UTIL_PREFIX)util \
 	$(PNG_LIBS) \
 	$(JPEG_LIBS) \
-	-ljs \
+	-l$(MOZ_LIB_JS_PREFIX)js \
 	-lxpcom \
 	-lreg \
 	-lxp \

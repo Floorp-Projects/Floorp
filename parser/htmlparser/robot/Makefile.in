@@ -52,7 +52,7 @@ LIBS = \
 	-lsecfree \
 	-lpref \
 	-lxp \
-	-ljs \
+	-l$(MOZ_LIB_JS_PREFIX)js \
 	-lxpcom \
 	-lreg \
 	$(TK_LIBS) \

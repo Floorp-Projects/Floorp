@@ -58,14 +58,14 @@ LIBS := \
 	-lpref \
 	-lsecfree \
 	-lnetutil \
-	-lmozutil \
+	-l$(MOZ_LIB_UTIL_PREFIX)util \
 	-limg \
 	$(PNG_LIBS) \
 	$(JPEG_LIBS) \
 	-lraptorbase \
 	-lxpcom \
 	-lreg \
-	-ljs \
+	-l$(MOZ_LIB_JS_PREFIX)js \
 	-lwidget$(MOZ_TOOLKIT) \
 	-lxp \
 	$(ZLIB_LIBS) \

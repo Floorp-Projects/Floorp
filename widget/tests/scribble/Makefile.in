@@ -66,7 +66,7 @@ LIBS := \
 	-limg \
 	$(PNG_LIBS) \
 	$(JPEG_LIBS) \
-	-ljs \
+	-l$(MOZ_LIB_JS_PREFIX)js \
 	-ljsdom \
 	-ljsurl \
 	$(DIST)/lib/libjsdomcore_s.a \
@@ -83,16 +83,16 @@ LIBS := \
 	-lremoturl \
 	-lsecfree \
 	-ltestdynamic \
-	-lmozutil \
+	-l$(MOZ_LIB_UTIL_PREFIX)util \
 	-lxp \
 	-lxpcom \
-	-lmozutil \
+	-l$(MOZ_LIB_UTIL_PREFIX)util \
 	-lxp \
 	-lxpcom \
 	-lreg \
 	$(ZLIB_LIBS) \
 	-lraptorplugin \
-	-lmozdbm \
+	-l$(MOZ_LIB_DBM_PREFIX)dbm \
 	$(TK_LIBS) \
 	$(NSPR_LIBS) \
 	$(NULL)
