@@ -1232,9 +1232,6 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
 {
   // if this is the top level web shell, initialize some things, in case the 
   // web shell is being recycled
-  nsIWebShell *rootWebShell;
-  GetRootWebShell(rootWebShell);
-  //if (this == rootWebShell) {
   if (!mIsFrame) {
     InitFrameData();
   }
