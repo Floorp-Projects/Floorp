@@ -1485,7 +1485,7 @@ sub GetFormat {
 
     # Now check that the template actually exists. We only want to check
     # if the template exists; any other errors (eg parse errors) will
-    # end up being detected laer.
+    # end up being detected later.
     eval {
         Bugzilla->template->context->template($template);
     };
