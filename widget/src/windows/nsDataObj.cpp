@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Sean Echevarria <Sean@Beatnik.com>
  *   Blake Ross <blaker@netscape.com>
+ *   Brodie Thiesfield <brofield@jellycan.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -57,6 +58,7 @@
 #include "nsDirectoryServiceDefs.h"
 #include "prprf.h"
 #include "nsCRT.h"
+#include "nsIStringBundle.h"
 
 #include <ole2.h>
 #ifndef __MINGW32__
@@ -476,6 +478,97 @@ nsDataObj :: GetFileContents ( FORMATETC& aFE, STGMEDIUM& aSTG )
 	
 } // GetFileContents
 
+// 
+// Given a unicode string, we ensure that it contains only characters which are valid within
+// the file system. Remove all forbidden characters from the name, and completely disallow 
+// any title that starts with a forbidden name and extension (e.g. "nul" is invalid, but 
+// "nul." and "nul.txt" are also invalid and will cause problems).
+//
+// It would seem that this is more functionality suited to being in nsILocalFile.
+//
+static void
+MangleTextToValidFilename(nsString & aText)
+{
+  static const char* forbiddenNames[] = {
+    "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9", 
+    "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9",
+    "CON", "PRN", "AUX", "NUL", "CLOCK$"
+  };
+
+  aText.StripChars(FILE_PATH_SEPARATOR  FILE_ILLEGAL_CHARACTERS);
+  aText.CompressWhitespace(PR_TRUE, PR_TRUE);
+  int nameLen;
+  for (int n = 0; n < NS_ARRAY_LENGTH(forbiddenNames); ++n) {
+    nameLen = strlen(forbiddenNames[n]);
+    if (aText.EqualsIgnoreCase(forbiddenNames[n], nameLen)) {
+      // invalid name is either the entire string, or a prefix with a period
+      if (aText.Length() == nameLen || aText.CharAt(nameLen) == PRUnichar('.')) {
+        aText.Truncate();
+        break;
+      }
+    }
+  }
+}
+
+// 
+// Given a unicode string, convert it down to a valid local charset filename
+// with the supplied extension. This ensures that we do not cut MBCS characters
+// in the middle.
+//
+// It would seem that this is more functionality suited to being in nsILocalFile.
+//
+static PRBool
+CreateFilenameFromText(nsString & aText, const char * aExtension,
+                         char * aFilename, PRUint32 aFilenameLen)
+{
+  // ensure that the supplied name doesn't have invalid characters. If 
+  // a valid mangled filename couldn't be created then it will leave the
+  // text empty.
+  MangleTextToValidFilename(aText);
+  if (aText.IsEmpty())
+    return PR_FALSE;
+
+  // repeatably call WideCharToMultiByte as long as the title doesn't fit in the buffer 
+  // available to us. Continually reduce the length of the source title until the MBCS
+  // version will fit in the buffer with room for the supplied extension. Doing it this
+  // way ensures that even in MBCS environments there will be a valid MBCS filename of
+  // the correct length.
+  int maxUsableFilenameLen = aFilenameLen - strlen(aExtension) - 1; // space for ext + null byte
+  int currLen, textLen = (int) NS_MIN(aText.Length(), aFilenameLen);
+  do {
+    currLen = WideCharToMultiByte(CP_ACP, 0, 
+      aText.get(), textLen--, aFilename, maxUsableFilenameLen, NULL, NULL);
+  }
+  while (currLen == 0 && textLen > 0 && GetLastError() == ERROR_INSUFFICIENT_BUFFER);
+  if (currLen > 0 && textLen > 0) {
+    strcpy(&aFilename[currLen], aExtension);
+    return PR_TRUE;
+  }
+  else {
+    // empty names aren't permitted
+    return PR_FALSE;
+  }
+}
+
+static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
+#define PAGEINFO_PROPERTIES "chrome://navigator/locale/pageInfo.properties"
+
+static PRBool
+GetLocalizedString(const PRUnichar * aName, nsXPIDLString & aString)
+{
+  nsresult rv;
+  nsCOMPtr<nsIStringBundleService> stringService = do_GetService(kStringBundleServiceCID, &rv);
+  if (NS_FAILED(rv)) 
+    return PR_FALSE;
+
+  nsCOMPtr<nsIStringBundle> stringBundle;
+  rv = stringService->CreateBundle(PAGEINFO_PROPERTIES, getter_AddRefs(stringBundle));
+  if (NS_FAILED(rv))
+    return PR_FALSE;
+
+  rv = stringBundle->GetStringFromName(aName, getter_Copies(aString));
+  return NS_SUCCEEDED(rv);
+}
 
 //
 // GetFileDescriptorInternetShortcut
@@ -486,65 +579,45 @@ nsDataObj :: GetFileContents ( FORMATETC& aFE, STGMEDIUM& aSTG )
 HRESULT
 nsDataObj :: GetFileDescriptorInternetShortcut ( FORMATETC& aFE, STGMEDIUM& aSTG )
 {
-  HRESULT result = S_OK;
-  
   // setup format structure
   FORMATETC fmetc = { 0, NULL, DVASPECT_CONTENT, 0, TYMED_HGLOBAL };
   fmetc.cfFormat = RegisterClipboardFormat ( CFSTR_FILEDESCRIPTOR );
 
-  HGLOBAL fileGroupDescHand = ::GlobalAlloc(GMEM_ZEROINIT|GMEM_SHARE,sizeof(FILEGROUPDESCRIPTOR));
-  if ( fileGroupDescHand ) {
-    LPFILEGROUPDESCRIPTOR fileGroupDesc = NS_REINTERPRET_CAST(LPFILEGROUPDESCRIPTOR, ::GlobalLock(fileGroupDescHand));
+  // get the title of the shortcut
+  nsAutoString title;
+  if ( NS_FAILED(ExtractShortcutTitle(title)) )
+    return E_OUTOFMEMORY;
 
-    nsAutoString title;
-    if ( NS_FAILED(ExtractShortcutTitle(title)) )
-      return E_OUTOFMEMORY;
+  HGLOBAL fileGroupDescHandle = ::GlobalAlloc(GMEM_ZEROINIT|GMEM_SHARE,sizeof(FILEGROUPDESCRIPTOR));
+  if (!fileGroupDescHandle)
+    return E_OUTOFMEMORY;
 
-    char titleStr[MAX_PATH+1];
-    int lenTitleStr = WideCharToMultiByte(CP_ACP, 0, title.get(), title.Length(), titleStr, MAX_PATH, NULL, NULL);
-    if (!lenTitleStr && (GetLastError() == ERROR_INSUFFICIENT_BUFFER)) {
-      // this is a very rare situation
-      int len = title.Length() - 1;
-      while ((len > 0) && (GetLastError() == ERROR_INSUFFICIENT_BUFFER)) {
-        lenTitleStr = WideCharToMultiByte(CP_ACP, 0, title.get(), len--, titleStr, MAX_PATH, NULL, NULL);  
-      } 
-    }
-    titleStr[lenTitleStr] = '\0';
- 
-    // replace any forbidden characters with
-    // dash, a la IE
-    char* pos;
-    const char* forbiddenChars = "\\:/";
-    for (int i = 0; i < PL_strlen(forbiddenChars); ++i) {
-      while (pos = PL_strchr((const char*)titleStr, forbiddenChars[i])) {
-        *pos = '-';
-      }
-    }
-
-    // one file in the file file:///c:/testcases/hellodescriptor block
-    fileGroupDesc->cItems = 1;
-    fileGroupDesc->fgd[0].dwFlags = FD_LINKUI;
-    
-    // create the filename string -- |.URL| extensions imply an internet shortcut file. Make
-    // sure the filename isn't too long as to blow out the array, and still have enough room
-    // for our .URL suffix.
-    
-    static const char* shortcutSuffix = ".URL";
-    static int suffixLen = strlen(shortcutSuffix);
-    int titleLen = strlen(titleStr);
-    int trimmedLen = titleLen > MAX_PATH - (suffixLen + 1) ? MAX_PATH - (suffixLen + 1) : titleLen;
-    titleStr[trimmedLen] = '\0';
-    sprintf(fileGroupDesc->fgd[0].cFileName, "%s%s", titleStr, shortcutSuffix);
-
-    ::GlobalUnlock ( fileGroupDescHand );
-    aSTG.hGlobal = fileGroupDescHand;
-    aSTG.tymed = TYMED_HGLOBAL;
+  LPFILEGROUPDESCRIPTOR fileGroupDesc = NS_REINTERPRET_CAST(LPFILEGROUPDESCRIPTOR, 
+      ::GlobalLock(fileGroupDescHandle));
+  if (!fileGroupDesc) {
+    ::GlobalFree(fileGroupDescHandle);
+    return E_OUTOFMEMORY;
   }
-  else
-    result = E_OUTOFMEMORY;
-    
-  return result;
+
+  // get a valid filename in the following order: 1) from the page title, 
+  // 2) localized string for an untitled page, 3) just use "Untitled.URL"
+  if (!CreateFilenameFromText(title, ".URL", fileGroupDesc->fgd[0].cFileName, MAX_PATH)) {
+    nsXPIDLString untitled;
+    if (!GetLocalizedString(NS_LITERAL_STRING("noPageTitle").get(), untitled) ||
+        !CreateFilenameFromText(untitled, ".URL", fileGroupDesc->fgd[0].cFileName, MAX_PATH))
+      strcpy(fileGroupDesc->fgd[0].cFileName, "Untitled.URL"); // fallback
+  }
+
+  // one file in the file block
+  fileGroupDesc->cItems = 1;
+  fileGroupDesc->fgd[0].dwFlags = FD_LINKUI;
   
+  ::GlobalUnlock( fileGroupDescHandle );
+  aSTG.hGlobal = fileGroupDescHandle;
+  aSTG.tymed = TYMED_HGLOBAL;
+
+  return S_OK;
+
 } // GetFileDescriptorInternetShortcut
 
 
@@ -557,37 +630,44 @@ nsDataObj :: GetFileDescriptorInternetShortcut ( FORMATETC& aFE, STGMEDIUM& aSTG
 HRESULT
 nsDataObj :: GetFileContentsInternetShortcut ( FORMATETC& aFE, STGMEDIUM& aSTG )
 {
-  HRESULT result = S_OK;
-  
-  nsAutoString url;
-  if ( NS_FAILED(ExtractShortcutURL(url)) )
-    return E_OUTOFMEMORY;
-  char* urlStr = ToNewCString(url);         // need to revisit here once we implement iDNS?!?!
-  if ( !urlStr )
-    return E_OUTOFMEMORY;
-    
   // setup format structure
   FORMATETC fmetc = { 0, NULL, DVASPECT_CONTENT, 0, TYMED_HGLOBAL };
   fmetc.cfFormat = RegisterClipboardFormat ( CFSTR_FILECONTENTS );
 
-  // create a global memory area and build up the file contents w/in it
+  nsAutoString url;
+  if ( NS_FAILED(ExtractShortcutURL(url)) )
+    return E_OUTOFMEMORY;
+
+  // will need to change if we ever support iDNS
+  nsCAutoString asciiUrl;
+  LossyCopyUTF16toASCII(url, asciiUrl);
+    
   static const char* shortcutFormatStr = "[InternetShortcut]\r\nURL=%s\r\n";
   static const int formatLen = strlen(shortcutFormatStr) - 2; // don't include %s in the len
-  const int totalLen = formatLen + strlen(urlStr) + 1;
-  HGLOBAL hGlobalMemory = ::GlobalAlloc(GMEM_SHARE, totalLen);
-  if ( hGlobalMemory ) {
-    char* contents = NS_REINTERPRET_CAST(char*, ::GlobalLock(hGlobalMemory));
-    PR_snprintf( contents, totalLen, shortcutFormatStr, urlStr );
-    ::GlobalUnlock(hGlobalMemory);
-    aSTG.hGlobal = hGlobalMemory;
-    aSTG.tymed = TYMED_HGLOBAL;
-  }
-  else
-    result = E_OUTOFMEMORY;
+  const int totalLen = formatLen + asciiUrl.Length(); // we don't want a null character on the end
 
-  nsMemory::Free ( urlStr );
+  // create a global memory area and build up the file contents w/in it
+  HGLOBAL hGlobalMemory = ::GlobalAlloc(GMEM_SHARE, totalLen);
+  if ( !hGlobalMemory )
+    return E_OUTOFMEMORY;
+
+  char* contents = NS_REINTERPRET_CAST(char*, ::GlobalLock(hGlobalMemory));
+  if ( !contents ) {
+    ::GlobalFree( hGlobalMemory );
+    return E_OUTOFMEMORY;
+  }
     
-  return result;
+  //NOTE: we intentionally use the Microsoft version of snprintf here because it does NOT null 
+  // terminate strings which reach the maximum size of the buffer. Since we know that the 
+  // formatted length here is totalLen, this call to _snprintf will format the string into 
+  // the buffer without appending the null character.
+  _snprintf( contents, totalLen, shortcutFormatStr, asciiUrl.get() );
+    
+  ::GlobalUnlock(hGlobalMemory);
+  aSTG.hGlobal = hGlobalMemory;
+  aSTG.tymed = TYMED_HGLOBAL;
+
+  return S_OK;
   
 } // GetFileContentsInternetShortcut
 
