@@ -267,6 +267,8 @@ public:
                                 PRInt32*           aFontID = nsnull);
 #endif /* MOZ_MATHML */
 
+  NS_IMETHOD RenderPostScriptDataFragment(const unsigned char *aData, unsigned long aDatalen);
+
 private:
   nsresult CommonInit(void);
   void PushClipState(void);

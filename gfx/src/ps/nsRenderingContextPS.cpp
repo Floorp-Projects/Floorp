@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
+ *   Leon Sha <leon.sha@sun.com>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -1419,7 +1420,16 @@ const nsFont    *font;
   }
 }
 
+NS_IMETHODIMP nsRenderingContextPS::RenderPostScriptDataFragment(const unsigned char *aData, unsigned long aDatalen)
+{
+  nsPostScriptObj *postscriptobj = GetPostScriptObj();
 
+  fprintf(postscriptobj->mPrintSetup->tmpBody, "1 -1 scale\n");
+  fprintf(postscriptobj->mPrintSetup->tmpBody, "0 %d translate\n", -(postscriptobj->mPrintSetup->height));
+  fwrite(aData, aDatalen, 1, postscriptobj->mPrintSetup->tmpBody);
+
+  return NS_OK;
+}
 
 #ifdef NOTNOW
 HPEN nsRenderingContextPS :: SetupSolidPen(void)

@@ -21,7 +21,7 @@
  *
  * Contributor(s):
  *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
- *
+ *   Leon Sha <leon.sha@sun.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -47,8 +47,9 @@
 #include <errno.h>
 #include <string.h> /* for strerror & memset */
 
-#define FORCE_PR_LOG /* Allow logging in the release build */
-#define PR_LOGGING 1
+#ifdef MOZ_LOGGING
+#define FORCE_PR_LOG 1 /* Allow logging in the release build */
+#endif /* MOZ_LOGGING */
 #include "prlog.h"
 
 #include "imgScaler.h"
@@ -1297,4 +1298,54 @@ NS_IMETHODIMP nsXPrintContext::GetPrintResolution(int &aPrintResolution)
   aPrintResolution = 0;
   return NS_ERROR_FAILURE;    
 }
+
+NS_IMETHODIMP nsXPrintContext::RenderPostScriptDataFragment(const unsigned char *aData, unsigned long aDatalen)
+{
+  PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, 
+         ("nsXPrintContext::RenderPostScriptDataFragment(aData, aDatalen=%d)\n", aDatalen));
+  
+  const char *embedded_formats_supported = XpGetOneAttribute(mPDisplay, mPContext,XPPrinterAttr, "xp-embedded-formats-supported");
+
+  /* Check whether "PostScript Level 2" is supported as embedding format
+   * (The content of the "xp-embedded-formats-supported" attribute needs
+   * to be searched in a case-insensitive way since the model-configs
+   * may use the same word with multiple variants of case
+   * (e.g. "PostScript" vs. "Postscript" or "PCL" vs. "Pcl" etc.")
+   * To avoid problems we simply use |PL_strcasestr()| (case-insensitive
+   * strstr()) instead of |strstr()| here...)
+   */
+  if( embedded_formats_supported == NULL )
+  {
+    PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("nsXPrintContext::RenderPostScriptDataFragment(): Embedding data not supported for this DDX/Printer\n"));
+    return NS_ERROR_FAILURE;    
+  }
+
+  if( PL_strcasestr(embedded_formats_supported, "PostScript 2") == NULL )
+  {
+    PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, 
+           ("nsXPrintContext::RenderPostScriptDataFragment(): Embedding data not supported for this DDX/Printer "
+            "(supported embedding formats are '%s')\n", embedded_formats_supported));
+    XFree((void *)embedded_formats_supported);
+    return NS_ERROR_FAILURE;    
+  }
+  
+  /* Note that the embedded PostScript code uses the same resolution and
+   * coordinate space as currently be used by the DDX (if you do not
+   * want that simply reset it yourself :) */
+  const char *type     = "PostScript 2"; /* Format of embedded data 
+                                          * (older PS DDX may be picky, fixed via
+                                          * http://xprint.mozdev.org/bugs/show_bug.cgi?id=4023)
+                                          */
+  const char *option   = "";             /* PostScript DDX does not support any options yet
+                                          * (in general |BadValue| will be returned for not
+                                          * supported options/option values) */
+
+  /* XpPutDocumentData() takes |const| input for all string arguments, only the X11 prototypes do not allow |const| yet */
+  XpPutDocumentData(mPDisplay, mDrawable, (unsigned char *)aData, aDatalen, (char *)type, (char *)option);
+
+  XFree((void *)embedded_formats_supported);
+  
+  return NS_OK;
+}
+
 

@@ -74,6 +74,8 @@ class nsRenderingContextXp : public nsRenderingContextXlib
 
   NS_IMETHOD CopyOffScreenBits(nsDrawingSurface aSrcSurf, PRInt32 aSrcX, PRInt32 aSrcY,
                                const nsRect &aDestBounds, PRUint32 aCopyFlags);
+
+  NS_IMETHOD RenderPostScriptDataFragment(const unsigned char *aData, unsigned long aDatalen);
                                
 protected:
   nsXPrintContext *mPrintContext; /* identical to |mRenderingSurface|
