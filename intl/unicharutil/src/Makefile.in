@@ -30,7 +30,7 @@ MODULE		= unicharutil
 LIBRARY_NAME	= unicharutil
 SHORT_LIBNAME	= ucharuti
 IS_COMPONENT	= 1
-REQUIRES	= xpcom uconv necko
+REQUIRES	= xpcom string uconv necko
 
 CPPSRCS		= \
 		nsCaseConversionImp2.cpp \

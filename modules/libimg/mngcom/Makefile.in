@@ -28,7 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= nsmng
 IS_COMPONENT	= 1
-REQUIRES	= xpcom img layout util locale mng
+REQUIRES	= xpcom string img layout util locale mng jpeg
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 EXTRA_DSO_LIBS  = libmng

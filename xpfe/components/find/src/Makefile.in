@@ -30,7 +30,7 @@ MODULE		= appcomps
 XPIDL_MODULE	= mozfind
 LIBRARY_NAME	= mozfind
 IS_COMPONENT	= 1
-REQUIRES	= xpcom dom js layout widget appshell editor necko txtsvc docshell locale uriloader
+REQUIRES	= xpcom string dom js layout widget appshell editor necko txtsvc docshell locale uriloader
 
 CPPSRCS		= nsFindComponent.cpp
 

@@ -28,7 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xpcom
 DIRS		= dynamic services
-REQUIRES	= necko
+REQUIRES	= necko string
 
 TESTS_NOT_COMPILING = \
 		TestArray.cpp \

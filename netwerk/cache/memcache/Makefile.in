@@ -25,7 +25,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE = nkcache
 LIBRARY_NAME = nkmemcache_s
-REQUIRES = xpcom necko
+REQUIRES = xpcom string necko
 
 EXPORTS=nsMemCacheCID.h \
 	nsMemCache.h \

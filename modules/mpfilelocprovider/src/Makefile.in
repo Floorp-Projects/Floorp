@@ -28,7 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= mpfilelocprovider
 LIBRARY_NAME	= mpfilelocprovider_s
-REQUIRES	= xpcom
+REQUIRES	= xpcom string
 
 CPPSRCS		= nsMPFileLocProvider.cpp
 

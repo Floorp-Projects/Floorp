@@ -26,7 +26,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-REQUIRES	= xpcom cookie necko intl locale layout widget dom
+REQUIRES	= xpcom string cookie necko intl locale layout widget dom
 
 PROGRAM		= TestCookie$(BIN_SUFFIX)
 CPPSRCS		= TestCookie.cpp

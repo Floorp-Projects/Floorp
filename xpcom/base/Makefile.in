@@ -30,6 +30,8 @@ MODULE		= xpcom
 XPIDL_MODULE	= xpcom_base
 LIBRARY_NAME	= xpcombase_s
 
+REQUIRES	= string
+
 CPPSRCS		= \
 		nsLogging.cpp \
 		nsAllocator.cpp \
