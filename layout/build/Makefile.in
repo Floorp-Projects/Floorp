@@ -56,6 +56,13 @@ SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/libraptorlayout_s.a \
 		$(NULL)
 
+ifdef MOZ_MATHML
+SHARED_LIBRARY_LIBS += \
+                $(DIST)/lib/libraptormathmlcontent_s.a \
+                $(DIST)/lib/libraptormathmlbase_s.a \
+                $(NSNULL)
+endif
+
 EXTRA_DSO_LDOPTS = \
 		$(MKSHLIB_FORCE_ALL) \
 		$(SHARED_LIBRARY_LIBS) \

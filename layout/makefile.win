@@ -21,6 +21,9 @@ DIRS=base html xml xul events build \
 !if defined(MOZ_XSL)
 xsl                                 \
 !endif
+!ifdef MOZ_MATHML
+mathml \
+!endif
 
 
 include <$(DEPTH)\config\rules.mak>
