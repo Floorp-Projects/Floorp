@@ -226,7 +226,7 @@ nsHTMLIFrameElement::StringToAttribute(nsIAtom* aAttribute,
     }
   }
   else if (aAttribute == nsHTMLAtoms::frameborder) {
-    if (ParseFrameborderValue(PR_TRUE, aValue, aResult)) {
+    if (ParseFrameborderValue(!InNavQuirksMode(mDocument), aValue, aResult)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
