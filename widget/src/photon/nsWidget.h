@@ -316,7 +316,8 @@ protected:
 		pt.x -= x; pt.y -= y;
 		}
 
-  inline void InitKeyEvent( PhKeyEvent_t *aPhKeyEvent, nsWidget *aWidget, nsKeyEvent &aKeyEvent, PRUint32 aEventType );
+	inline void InitKeyEvent(PhKeyEvent_t *aPhKeyEvent, nsKeyEvent &anEvent );
+	inline void InitKeyPressEvent(PhKeyEvent_t *aPhKeyEvent, nsKeyEvent &anEvent );
   void InitMouseEvent( PhPointerEvent_t * aPhButtonEvent,
                        nsWidget         * aWidget,
                        nsMouseEvent     & anEvent,
@@ -324,7 +325,7 @@ protected:
 
 
   /* Convert Photon key codes to Mozilla key codes */
-  PRUint32 nsConvertKey( unsigned long keysym, unsigned long keymods, PRBool *aIsChar );
+  PRUint32 nsConvertKey( PhKeyEvent_t *aPhKeyEvent );
 
 #if 0
   //Enable/Disable Photon Damage		  
