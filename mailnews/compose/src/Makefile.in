@@ -134,3 +134,10 @@ ifeq ($(OS_ARCH), Linux)
 DEFINES		+= -D_BSD_SOURCE
 endif
 
+ifeq ($(OS_ARCH),WINNT)
+ifdef MOZ_UNICODE
+DEFINES		+= -DMOZ_UNICODE
+endif
+endif
+
+
