@@ -571,7 +571,6 @@ protected:
 
   nsCompatibility       mCompatibilityMode;
   PRUint16              mImageAnimationMode;
-  PRUint8               mFocusRingWidth;
 
   unsigned              mUseDocumentFonts : 1;
   unsigned              mUseDocumentColors : 1;
