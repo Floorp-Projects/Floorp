@@ -4883,7 +4883,6 @@ function checknewpasswordfield()
   if (doCancel) {
     return true;
   }
-  PopUpAlert('in checknewpasswordfield()');
   if (passwordform.oldpassword && passwordform.oldpassword.value == '') {
     PopUpAlert('{supply_current_password}');
     resetForm(passwordform);
