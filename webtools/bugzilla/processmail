@@ -206,7 +206,7 @@ if (open(FID, "<data/nomail")) {
 
 my $regenerate = 0;
 
-if ($ARGV[0] eq "regenerate") {
+if (($#ARGV >= 1) && ($ARGV[0] eq "regenerate")) {
     $regenerate = 1;
     $#ARGV = -1;
     SendSQL("select bug_id from bugs order by bug_id");
