@@ -107,6 +107,7 @@ case "$target" in
 esac
 
 if test -n "$_WIN32_MSVC"; then
+    SKIP_PATH_CHECKS=1
     SKIP_COMPILER_CHECKS=1
     SKIP_LIBRARY_CHECKS=1
 fi
@@ -177,7 +178,12 @@ AC_ARG_ENABLE(mdupdate,
 	    USE_MDUPDATE=1
       fi ])
 
-AC_PATH_PROG(WHOAMI, whoami, :)
+if test -z "$SKIP_PATH_CHECKS"; then
+    AC_PATH_PROG(WHOAMI, $WHOAMI whoami, echo not_whoami)
+elif test -z "$WHOAMI"; then
+    WHOAMI=whoami
+fi
+
 if test -n "$MOZ_DEBUG"; then
     AC_DEFINE(DEBUG)
     AC_DEFINE_UNQUOTED(DEBUG_`$WHOAMI`)
@@ -300,9 +306,11 @@ fi # SKIP_COMPILER_CHECKS
 dnl ========================================================
 dnl Checks for programs.
 dnl ========================================================
-AC_PROG_INSTALL
-AC_PROG_LN_S
-AC_PATH_PROGS(PERL, perl5 perl, echo not_perl)
+if test -z "$SKIP_PATH_CHECKS"; then
+    AC_PATH_PROGS(PERL, perl5 perl, echo not_perl)
+elif test -z "$PERL"; then
+    PERL=perl
+fi
 
 dnl ========================================================
 dnl Default platform specific options
@@ -877,7 +885,6 @@ case "$target" in
         RANLIB='echo not_ranlib'
         STRIP='echo not_strip'
         NSINSTALL=nsinstall
-        INSTALL='${NSINSTALL}'
         RC=rc.exe
         GARBAGE='$(OBJDIR)/vc20.pdb $(OBJDIR)/vc40.pdb'
 	    OBJ_SUFFIX=obj
