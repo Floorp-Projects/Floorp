@@ -692,9 +692,7 @@ nsMsgIdentity::GetRequestReturnReceipt(PRBool *aVal)
   nsresult rv = GetBoolAttribute("use_custom_prefs", &useCustomPrefs);
   NS_ENSURE_SUCCESS(rv, rv);
   if (useCustomPrefs)
-  {
     return GetBoolAttribute("request_return_receipt_on", aVal);
-  }
 
   rv = getPrefService();
   NS_ENSURE_SUCCESS(rv, rv);
@@ -710,11 +708,9 @@ nsMsgIdentity::GetReceiptHeaderType(PRInt32 *aType)
   nsresult rv = GetBoolAttribute("use_custom_prefs", &useCustomPrefs);
   NS_ENSURE_SUCCESS(rv, rv);
   if (useCustomPrefs)
-  {
-    return GetBoolAttribute("request_receipt_header_type", aType);
-  }
+    return GetIntAttribute("request_receipt_header_type", aType);
 
   rv = getPrefService();
   NS_ENSURE_SUCCESS(rv, rv);
-  return m_prefBranch->GetBoolPref("mail.receipt.request_header_type", aType);
+  return m_prefBranch->GetIntPref("mail.receipt.request_header_type", aType);
 }
