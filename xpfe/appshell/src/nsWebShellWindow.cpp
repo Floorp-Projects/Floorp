@@ -117,7 +117,7 @@ nsresult nsWebShellWindow::Initialize(nsIAppShell* aShell, nsIURL* aUrl,
   urlString = tmpStr;
 
   // XXX: need to get the default window size from prefs...
-  nsRect r(0, 0, 600, 400);
+  nsRect r(0, 0, 600, 600);
   
   nsWidgetInitData initData;
 
