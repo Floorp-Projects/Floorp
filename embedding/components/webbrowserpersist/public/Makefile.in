@@ -31,8 +31,6 @@ XPIDL_MODULE	= webbrowserpersist
 
 XPIDLSRCS	= nsIWebBrowserPersist.idl \
                   nsCWebBrowserPersist.idl \
-                  nsIDOMWalker.idl \
-                  nsCDOMWalker.idl \
                   $(NULL)
 
 include $(topsrcdir)/config/rules.mk
