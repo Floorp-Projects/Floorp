@@ -62,7 +62,6 @@
 // Forward declares
 class QuotingOutputStreamListener;
 class nsMsgComposeSendListener;
-class nsMsgDocumentStateListener;
 class nsIAddrDatabase;
 class nsIEditorMailSupport;
 
@@ -134,7 +133,6 @@ private:
   PRBool                                    mConvertStructs;    // for TagConvertible
   
 	nsCOMPtr<nsIEditor>                       m_editor;
-	nsIEditorShell                            *m_editorShell;
 	nsIDOMWindowInternal                      *m_window;
   nsCOMPtr<nsIBaseWindow>                   m_baseWindow;
 	nsMsgCompFields                           *m_compFields;
@@ -152,7 +150,6 @@ private:
   nsString                                  mCiteReference;
 	nsCOMPtr<nsIMsgQuote>                     mQuote;
 	PRBool						                        mQuotingToFollow;   // Quoting indicator
-	nsMsgDocumentStateListener                *mDocumentListener;
 	MSG_ComposeType                           mType;		          // Message type
   nsCOMPtr<nsISupportsArray>                mStateListeners;		// contents are nsISupports
   PRBool                                    mCharsetOverride;
@@ -161,7 +158,6 @@ private:
   nsCString                                 mSmtpPassword;
     
   friend class QuotingOutputStreamListener;
-	friend class nsMsgDocumentStateListener;
 	friend class nsMsgComposeSendListener;
 };
 
@@ -238,29 +234,6 @@ public:
 private:
   nsWeakPtr               mWeakComposeObj;
 	MSG_DeliverMode         mDeliverMode;
-};
-
-////////////////////////////////////////////////////////////////////////////////////
-// This is a class that will allow us to listen to state changes in the Ender 
-// compose window. This is important since we must wait until the have this 
-////////////////////////////////////////////////////////////////////////////////////
-
-class nsMsgDocumentStateListener : public nsIDocumentStateListener {
-public:
-  nsMsgDocumentStateListener(void);
-  virtual ~nsMsgDocumentStateListener(void);
-
-  // nsISupports interface
-  NS_DECL_ISUPPORTS
-
-  NS_IMETHOD  NotifyDocumentCreated(void);
-  NS_IMETHOD  NotifyDocumentWillBeDestroyed(void);
-  NS_IMETHOD  NotifyDocumentStateChanged(PRBool nowDirty);
-
-  void        SetComposeObj(nsIMsgCompose *obj);
-
-  // class vars.
-  nsWeakPtr                 mWeakComposeObj;
 };
 
 /******************************************************************************

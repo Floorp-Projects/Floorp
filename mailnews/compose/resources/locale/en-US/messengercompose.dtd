@@ -45,6 +45,8 @@
 <!ENTITY closeCmd.label "Close">
 
 <!-- Edit menu items -->
+<!ENTITY editRewrapCmd.label "Rewrap">
+<!ENTITY editRewrapCmd.accesskey  "w">
 <!ENTITY findCmd.label "Find and Replace...">
 <!ENTITY findCmd.key "F">
 <!ENTITY findCmd.accesskey "F">
@@ -131,8 +133,6 @@
 
 <!ENTITY quoteCmd.label "Quote Message">
 <!ENTITY quoteCmd.accesskey "Q">
-<!ENTITY editRewrapCmd.label "Rewrap">
-<!ENTITY editRewrapCmd.accesskey  "R">
 <!ENTITY selectAddressCmd.label "Select Addresses...">
 <!ENTITY selectAddressCmd.key "">
 <!ENTITY selectAddressCmd.accesskey "c">

@@ -72,7 +72,6 @@
 #include "nsMimeTypes.h"
 #include "nsICharsetConverterManager.h"
 #include "nsTextFormatter.h"
-#include "nsIEditorShell.h"
 #include "nsIPlaintextEditor.h"
 #include "nsIHTMLEditor.h"
 #include "nsIEditorMailSupport.h"
@@ -113,6 +112,8 @@
 #include "nsMsgSimulateError.h"
 #include "nsIAddrDatabase.h"
 #include "nsILocalFile.h"
+#include "nsIContentViewer.h"
+#include "nsIMarkupDocumentViewer.h"
 
 // Defines....
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
@@ -242,9 +243,7 @@ nsMsgCompose::nsMsgCompose()
 
   mQuotingToFollow = PR_FALSE;
   mWhatHolder = 1;
-  mDocumentListener = nsnull;
   m_window = nsnull;
-  m_editorShell = nsnull;
   m_editor = nsnull;
   mQuoteStreamListener=nsnull;
   mCharsetOverride = PR_FALSE;
@@ -269,11 +268,6 @@ nsMsgCompose::~nsMsgCompose()
   printf("DISPOSE nsMsgCompose: %x\n", this);
 #endif
 
-  if (mDocumentListener)
-  {
-    mDocumentListener->SetComposeObj(nsnull);      
-    NS_RELEASE(mDocumentListener);
-  }
   NS_IF_RELEASE(m_compFields);
   NS_IF_RELEASE(mQuoteStreamListener);
 }
@@ -468,15 +462,6 @@ nsresult nsMsgCompose::TagEmbeddedObjects(nsIEditorMailSupport *aEditor)
   }
 
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMsgCompose::SetEditorFromEditorShell()
-{
-  NS_ASSERTION(m_editorShell, "SetEditorFromEditorShell() but no editor shell yet!");
-  if (!m_editorShell)
-    return NS_ERROR_UNEXPECTED;
-  return m_editorShell->GetEditor(getter_AddRefs(m_editor));
 }
 
 NS_IMETHODIMP
@@ -1180,8 +1165,6 @@ NS_IMETHODIMP nsMsgCompose::CloseWindow(PRBool recycleIt)
       NS_ASSERTION(m_editor, "no editor");
       if (m_editor)
       {
-        m_editor->RemoveDocumentStateListener(mDocumentListener);
-
         // XXX clear undo txn manager?
 
         rv = m_editor->EnableUndo(PR_FALSE);
@@ -1234,12 +1217,10 @@ NS_IMETHODIMP nsMsgCompose::CloseWindow(PRBool recycleIt)
   {
     if (m_editor)
     {
-      m_editor->RemoveDocumentStateListener(mDocumentListener);
-      m_editorShell = nsnull;
-      m_editor = nsnull;
         /* The editor will be destroyed during yje close window.
          * Set it to null to be sure we wont uses it anymore
          */
+      m_editor = nsnull;
     }
     nsIBaseWindow * aWindow = m_baseWindow;
     m_baseWindow = nsnull;
@@ -1260,12 +1241,6 @@ nsresult nsMsgCompose::Abort()
   return NS_OK;
 }
 
-nsresult nsMsgCompose::GetEditorShell(nsIEditorShell * *aEditorShell)
-{ 
-  NS_IF_ADDREF(*aEditorShell = m_editorShell);
-  return NS_OK;
-} 
-
 nsresult nsMsgCompose::GetEditor(nsIEditor * *aEditor)
 { 
   NS_IF_ADDREF(*aEditor = m_editor);
@@ -1275,51 +1250,54 @@ nsresult nsMsgCompose::GetEditor(nsIEditor * *aEditor)
 nsresult nsMsgCompose::ClearEditor()
 {
   m_editor = nsnull;
-  m_editorShell = nsnull;
   return NS_OK;
 }
 
-nsresult nsMsgCompose::SetEditorShell(nsIEditorShell * aEditorShell)
+// This used to be called BEFORE editor was created 
+//  (it did the loadUrl that triggered editor creation)
+// Since editorShell removal, it is called from JS after editor creation
+//  (loadUrl is done in JS)
+NS_IMETHODIMP nsMsgCompose::InitEditor(nsIEditor* aEditor, nsIDOMWindow* aContentWindow)
 {
-    // First, store the editor shell but do not addref it (see sfraser@netscape.com for explanation).
-    m_editorShell = aEditorShell;
-    m_editor = nsnull;
+  NS_ENSURE_ARG_POINTER(aEditor);
+  NS_ENSURE_ARG_POINTER(aContentWindow);
 
-    if (nsnull == m_editorShell)
-      return NS_OK;
-    
-    //
-    // Now this routine will create a listener for state changes
-    // in the editor and set us as the compose object of interest.
-    //
-    mDocumentListener = new nsMsgDocumentStateListener();
-    if (!mDocumentListener)
-        return NS_ERROR_OUT_OF_MEMORY;
+  m_editor = aEditor;
 
-    mDocumentListener->SetComposeObj(this);      
-    NS_ADDREF(mDocumentListener);
+  // Set the charset
+  nsAutoString msgCharSet;
+  msgCharSet.AssignWithConversion(m_compFields->GetCharacterSet());
 
-    // Make sure we setup to listen for editor state changes...
-    m_editorShell->RegisterDocumentStateListener(mDocumentListener);
+  m_editor->SetDocumentCharacterSet(msgCharSet);
 
-    // Set the charset
-    nsAutoString msgCharSet;
-    msgCharSet.AssignWithConversion(m_compFields->GetCharacterSet());
-    m_editorShell->SetDocumentCharacterSet(msgCharSet.get());
+  nsCOMPtr<nsIScriptGlobalObject> globalObj = do_QueryInterface(m_window);
 
-    if (mRecycledWindow)
-    {
-      // Editor document is already created therefore, we need to call the document
-      // listener ourself in order to make quoting works
-      mDocumentListener->NotifyDocumentCreated();
+  nsCOMPtr<nsIDocShell> docShell;
+  globalObj->GetDocShell(getter_AddRefs(docShell));
+  NS_ENSURE_TRUE(docShell, NS_ERROR_UNEXPECTED);
+
+  nsCOMPtr<nsIContentViewer> childCV;
+  NS_ENSURE_SUCCESS(docShell->GetContentViewer(getter_AddRefs(childCV)), NS_ERROR_FAILURE);
+  if (childCV)
+  {
+    nsCOMPtr<nsIMarkupDocumentViewer> markupCV = do_QueryInterface(childCV);
+    if (markupCV) {
+      NS_ENSURE_SUCCESS(markupCV->SetDefaultCharacterSet(msgCharSet.get()), NS_ERROR_FAILURE);
+      NS_ENSURE_SUCCESS(markupCV->SetForceCharacterSet(msgCharSet.get()), NS_ERROR_FAILURE);
     }
-    else
-    {
-      // Now, lets init the editor here!
-      // Just get a blank editor started...
-      m_editorShell->LoadUrl(NS_LITERAL_STRING("about:blank").get());
-    }
-    return NS_OK;
+  }
+
+  // This is what used to be done in mDocumentListener, 
+  //   nsMsgDocumentStateListener::NotifyDocumentCreated()
+  PRBool quotingToFollow = PR_FALSE;
+  GetQuotingToFollow(&quotingToFollow);
+  if (quotingToFollow)
+   return BuildQuotedMessageAndSignature();
+  else
+  {
+    NotifyStateListeners(eComposeFieldsReady, NS_OK);
+    return BuildBodyMessageAndSignature();
+  }
 } 
 
 nsresult nsMsgCompose::GetBodyModified(PRBool * modified)
@@ -3057,80 +3035,6 @@ NS_IMETHODIMP nsMsgComposeSendListener::OnStatusChange(nsIWebProgress *aWebProgr
 NS_IMETHODIMP nsMsgComposeSendListener::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRUint32 state)
 {
   /* Ignore this call */
-  return NS_OK;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////////
-// This is a class that will allow us to listen to state changes in the Ender 
-// compose window. This is important since we must wait until we are told Ender
-// is ready before we do various quoting operations
-////////////////////////////////////////////////////////////////////////////////////
-
-NS_IMPL_ISUPPORTS1(nsMsgDocumentStateListener, nsIDocumentStateListener)
-
-nsMsgDocumentStateListener::nsMsgDocumentStateListener(void)
-{
-  NS_INIT_ISUPPORTS();
-}
-
-nsMsgDocumentStateListener::~nsMsgDocumentStateListener(void)
-{
-}
-
-void        
-nsMsgDocumentStateListener::SetComposeObj(nsIMsgCompose *obj)
-{
-  mWeakComposeObj = getter_AddRefs(NS_GetWeakReference(obj));
-}
-
-nsresult
-nsMsgDocumentStateListener::NotifyDocumentCreated(void)
-{
-  // Ok, now the document has been loaded, so we are ready to setup  
-  // the compose window and let the user run hog wild!
-
-  // Now, do the appropriate startup operation...signature only
-  // or quoted message and signature...
-
-#ifdef MSGCOMP_TRACE_PERFORMANCE
-  nsCOMPtr<nsIMsgComposeService> composeService (do_GetService(NS_MSGCOMPOSESERVICE_CONTRACTID));
-  composeService->TimeStamp("Editor is done loading about:blank. This is New Compose window time.  Time for MIME.", PR_FALSE);
-#endif
-
-  nsCOMPtr<nsIMsgCompose>compose = do_QueryReferent(mWeakComposeObj);
-  if (compose)
-  {
-    compose->SetEditorFromEditorShell();
-
-    PRBool quotingToFollow = PR_FALSE;
-    compose->GetQuotingToFollow(&quotingToFollow);
-    if (quotingToFollow)
-      return compose->BuildQuotedMessageAndSignature();
-    else
-    {
-      compose->NotifyStateListeners(eComposeFieldsReady, NS_OK);
-      return compose->BuildBodyMessageAndSignature();
-    }
-  }
-  return NS_OK;
-}
-
-nsresult
-nsMsgDocumentStateListener::NotifyDocumentWillBeDestroyed(void)
-{
-  nsCOMPtr<nsIMsgCompose>compose = do_QueryReferent(mWeakComposeObj);
-  if (compose)
-    compose->SetEditorShell(nsnull);
-      /* The editor will be destroyed. Set it to null to
-       * be sure we wont use it anymore.
-       */
-  return NS_OK;
-}
-
-nsresult
-nsMsgDocumentStateListener::NotifyDocumentStateChanged(PRBool nowDirty)
-{
   return NS_OK;
 }
 

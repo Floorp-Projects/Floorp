@@ -44,7 +44,6 @@
 
 interface nsIDOMWindowInternal;
 interface nsIDOMNode;
-interface nsIEditorShell;
 interface nsIEditor;
 
 typedef long MSG_ComposeSaveType;
@@ -195,9 +194,6 @@ interface nsIMsgCompose : nsISupports {
   readonly attribute nsIEditor editor;
 
 	/* ... */
-  attribute nsIEditorShell editorShell;
-
-	/* ... */
   readonly attribute nsIDOMWindowInternal domWindow;
 
 	/* ... */
@@ -219,6 +215,15 @@ interface nsIMsgCompose : nsISupports {
 	attribute boolean bodyModified;
 
 
+	/**
+   *  Init the editor THIS USED TO BE [noscript]
+   *  Now, this is called after editor is created,
+   *  which is triggered by loading startup url from JS.
+   *  The completion of document loading is detected by observing 
+   *  the "obs_documentCreated" command
+   */
+  void initEditor(in nsIEditor editor, in nsIDOMWindow contentWindow);
+
 	/* The following functions are for internal use, essentially for the listener */
 
 	/* Clear the editor */
@@ -235,9 +240,6 @@ interface nsIMsgCompose : nsISupports {
 
   /* set any reply flags on the original message's folder */
   [noscript] void processReplyFlags();
-
-  /* ... */
-  [noscript] void setEditorFromEditorShell();
 
   /* ... */
   [noscript] void convertAndLoadComposeWindow(in nsStringRef aPrefix,

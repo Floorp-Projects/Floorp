@@ -72,6 +72,7 @@
 <script type="application/x-javascript" src="chrome://messenger/content/widgetglue.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/mail-offline.js"/>
 <script type="application/x-javascript" src="chrome://editor/content/editor.js"/>
+<script type="application/x-javascript" src="chrome://editor/content/editorUtilities.js"/>
 <!--script type="application/x-javascript" src="chrome://editor/content/EditorCommandsDebug.js"/-->
 <script type="application/x-javascript" src="chrome://messenger/content/messengercompose/MsgComposeCommands.js"/>
 
@@ -120,6 +121,7 @@
   <!--command id="cmd_pasteQuote"/  DO NOT INCLUDE THOSE PBROCASTER ESLE THE EDIT MENU WILL BE BROKEN! -->
   <!--command id="cmd_find"/-->
   <!--command id="cmd_findNext"/-->
+  <command id="cmd_rewrap"  oncommand="goDoCommand('cmd_rewrap')"/>
   <command id="cmd_delete"/>
   <command id="cmd_selectAll"/>
   <command id="cmd_account" oncommand="goDoCommand('cmd_account')"/>
@@ -132,7 +134,6 @@
   <command id="cmd_selectAddress" oncommand="goDoCommand('cmd_selectAddress')"/>
   <command id="cmd_outputFormat" oncommand="OutputFormatMenuSelect(event.target)"/>
   <command id="cmd_quoteMessage" oncommand="goDoCommand('cmd_quoteMessage')"/>
-  <command id="cmd_rewrap" oncommand="goDoCommand('cmd_rewrap')"/>
   <command id="cmd_insert"/>
 </commandset>
 
@@ -244,6 +245,7 @@
           <menuitem id="menu_copy"/>
           <menuitem id="menu_paste"/>
           <menuitem id="menu_pasteQuote"/>
+          <menuitem label="&editRewrapCmd.label;" accesskey="&editRewrapCmd.accesskey;" command="cmd_rewrap"/>
           <menuitem id="menu_delete"/>
           <menuseparator/>
           <menuitem id="menu_selectAll"/>
@@ -297,7 +299,6 @@
           <menuitem label="&selectAddressCmd.label;" accesskey="&selectAddressCmd.accesskey;" command="cmd_selectAddress"/>
           <menuitem label="&checkSpellingCmd.label;" id="menu_checkspelling" accesskey="&checkSpellingCmd.accesskey;" key="key_checkspelling" command="cmd_spelling"/>
           <menuitem label="&quoteCmd.label;" accesskey="&quoteCmd.accesskey;" command="cmd_quoteMessage"/>
-          <menuitem label="&editRewrapCmd.label;" accesskey="&editRewrapCmd.accesskey;" command="cmd_rewrap" oncommand="editorShell.Rewrap(false)"/>
           <menuseparator/>
           <menuitem id="returnReceiptMenu" type="checkbox" label="&returnReceiptMenu.label;" accesskey="&returnReceiptMenu.accesskey;" checked="false" oncommand="ToggleReturnReceipt(event.target)"/>
           <menu id="outputFormatMenu" label="&outputFormatMenu.label;" accesskey="&outputFormatMenu.accesskey;" command="cmd_outputFormat">

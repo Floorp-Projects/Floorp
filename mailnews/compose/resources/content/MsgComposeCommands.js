@@ -233,7 +233,7 @@ var gComposeRecyclingListener = {
       identityElement.focus();
 
     InitializeGlobalVariables();
-    window.editorShell.contentWindow.focus();
+    window.content.focus();
     ComposeStartup(true, params);
     enableEditableFields();
 
@@ -376,6 +376,7 @@ var defaultController =
 
       //Edit Menu
       case "cmd_pasteQuote":
+      case "cmd_rewrap":
       case "cmd_delete":
       case "cmd_selectAll":
       case "cmd_find":
@@ -406,6 +407,7 @@ var defaultController =
       case "cmd_bold":
       case "cmd_italic":
       case "cmd_underline":
+      case "cmd_smiley":
       case "cmd_strikethrough":
       case "cmd_superscript":
       case "cmd_subscript":
@@ -452,8 +454,6 @@ var defaultController =
       case "cmd_spelling":
       case "cmd_outputFormat":
       case "cmd_quoteMessage":
-      case "cmd_rewrap":
-
         return true;
 
       default:
@@ -494,6 +494,8 @@ var defaultController =
       case "cmd_find":
       case "cmd_findNext":
         //Disable the editor specific edit commands if the focus is not into the body
+        return !focusedElement;
+      case "cmd_rewrap":
         return !focusedElement;
       case "cmd_delete":
         return MessageHasSelectedAttachments();
@@ -622,6 +624,13 @@ var defaultController =
       case "cmd_print"              : DoCommandPrint();                                                        break;
 
       //Edit Menu
+      case "cmd_rewrap"             :
+          if (defaultController.isCommandEnabled(command))
+          {
+            gMsgCompose.editor.QueryInterface(Components.interfaces.nsIEditorMailSupport);
+            gMsgCompose.editor.rewrap(false);
+          }
+          break;
       case "cmd_delete"             : if (MessageHasSelectedAttachments()) RemoveSelectedAttachment();         break;
       case "cmd_selectAll"          : if (MessageHasAttachments()) SelectAllAttachments();                     break;
       case "cmd_account"            : MsgAccountManager(null); break;
@@ -634,10 +643,6 @@ var defaultController =
       //Options Menu
       case "cmd_selectAddress"      : if (defaultController.isCommandEnabled(command)) SelectAddress();         break;
       case "cmd_quoteMessage"       : if (defaultController.isCommandEnabled(command)) QuoteSelectedMessage();  break;
-      case "cmd_rewrap"             :
-          gMsgCompose.editor.QueryInterface(Components.interfaces.nsIEditorMailSupport);
-          gMsgCompose.editor.rewrap(false);
-          break;
       default:
 //        dump("##MsgCompose: don't know what to do with command " + command + "!\n");
         return;
@@ -695,7 +700,9 @@ function CommandUpdate_MsgCompose()
 
 function updateComposeItems() {
   try {
+
   //Edit Menu
+  goUpdateCommand("cmd_rewrap");
 
   //Insert Menu
   if (gMsgCompose && gMsgCompose.composeHTML)
@@ -723,6 +730,7 @@ function updateComposeItems() {
 
 function updateEditItems() {
   goUpdateCommand("cmd_pasteQuote");
+  goUpdateCommand("cmd_rewrap");
   goUpdateCommand("cmd_delete");
   goUpdateCommand("cmd_selectAll");
   goUpdateCommand("cmd_find");
@@ -1364,32 +1372,26 @@ function ComposeStartup(recycled, aParams)
       //Lets the compose object knows that we are dealing with a recycled window
       gMsgCompose.recycledWindow = recycled;
 
-      //Creating a Editor Shell
-      var editorElement = document.getElementById("content-frame");
+      // Get the <editor> element to startup an editor
+      var editorElement = GetCurrentEditorElement();
       if (!editorElement)
       {
         dump("Failed to get editor element!\n");
         return;
       }
-      var editorShell = editorElement.editorShell;
-      if (!editorShell)
-      {
-        dump("Failed to create editorShell!\n");
-        return;
-      }
-
       document.getElementById("returnReceiptMenu").setAttribute('checked', 
                                          gMsgCompose.compFields.returnReceipt);
 
-      if (!recycled) //The editor is already initialized and does not support to be re-initialized.
+      // If recycle, editor is already created
+      if (!recycled) 
       {
-        // save the editorShell in the window. The editor JS expects to find it there.
-        window.editorShell = editorShell;
+        try {
+          var editortype = gMsgCompose.composeHTML ? "htmlmail" : "textmail";
+          editorElement.makeEditable(editortype, true);
+        } catch (e) { dump(" FAILED TO START EDITOR: "+e+"\n"); }
 
         // setEditorType MUST be call before setContentWindow
-        if (gMsgCompose.composeHTML)
-          window.editorShell.editorType = "htmlmail";
-        else
+        if (!gMsgCompose.composeHTML)
         {
           //Remove HTML toolbar, format and insert menus as we are editing in plain text mode
           document.getElementById("outputFormatMenu").setAttribute("hidden", true);
@@ -1397,15 +1399,9 @@ function ComposeStartup(recycled, aParams)
           document.getElementById("formatMenu").setAttribute("hidden", true);
           document.getElementById("insertMenu").setAttribute("hidden", true);
           document.getElementById("menu_showFormatToolbar").setAttribute("hidden", true);
-
-          window.editorShell.editorType = "textmail";
         }
-        window.editorShell.webShellWindow = window;
-        window.editorShell.contentWindow = window._content;
-
         // Do setup common to Message Composer and Web Composer
         EditorSharedStartup();   
-   
       }
 
       var msgCompFields = gMsgCompose.compFields;
@@ -1434,10 +1430,54 @@ function ComposeStartup(recycled, aParams)
         if (attachments)
           for (i = 0; i < attachments.Count(); i ++)
             AddAttachment(attachments.QueryElementAt(i, Components.interfaces.nsIMsgAttachment));
-        }
+      }
 
       gMsgCompose.RegisterStateListener(stateListener);
-      gMsgCompose.editorShell = window.editorShell;      
+
+      if (recycled)
+      {
+        // This sets charset and does reply quote insertion
+        gMsgCompose.initEditor(GetCurrentEditor(), window.content);
+
+        if (gMsgCompose.composeHTML)
+        {
+          // Force color picker on toolbar to show document colors
+          onFontColorChange();
+          onBackgroundColorChange();
+        }
+      } 
+      else 
+      {
+        // Add an observer to be called when document is done loading,
+        //   which creates the editor
+        try {
+          GetCurrentCommandManager().
+                addCommandObserver(gMsgEditorCreationObserver, "obs_documentCreated");
+
+          // Load empty page to create the editor
+          editorElement.webNavigation.loadURI("about:blank", // uri string
+                               0,                            // load flags
+                               null,                         // referrer
+                               null,                         // post-data stream
+                               null);
+        } catch (e) {
+          dump(" Failed to startup editor: "+e+"\n");
+        }
+      }
+    }
+  }
+}
+
+// The new, nice, simple way of getting notified when a new editor has been created
+var gMsgEditorCreationObserver =
+{ 
+  observe: function(aSubject, aTopic, aData)
+  {
+    if (aTopic == "obs_documentCreated")
+    {
+      var editor = GetCurrentEditor();
+      if (editor && GetCurrentCommandManager() == aSubject)
+        gMsgCompose.initEditor(editor, window.content);
     }
   }
 }
@@ -1668,7 +1708,7 @@ function GenericSendMessage( msgType )
         if (sPrefs.getBoolPref("mail.SpellCheckBeforeSend")){
         //We disable spellcheck for the following -subject line, attachment pane, identity and addressing widget
         //therefore we need to explicitly focus on the mail body when we have to do a spellcheck.
-          editorShell.contentWindow.focus();
+          window.content.focus();
           window.cancelSendMessage = false;
           try {
             window.openDialog("chrome://editor/content/EdSpellCheck.xul", "_blank",
@@ -2072,7 +2112,7 @@ function AdjustFocus()
       }
       else {
         //dump("XXX focus on body\n");
-        editorShell.contentWindow.focus();
+        window.content.focus();
       }
       SuppressComposeCommandUpdating(false);
   }
@@ -2632,12 +2672,12 @@ function subjectKeyPress(event)
   switch(event.keyCode) {
   case 9:
     if (!event.shiftKey) {
-      window._content.focus();
+      window.content.focus();
       event.preventDefault();
     }
     break;
   case 13:
-    window._content.focus();
+    window.content.focus();
     break;
   }
 }
@@ -2812,7 +2852,7 @@ function SetMsgAttachmentElementFocus()
 function SetMsgBodyFrameFocus()
 {
   SuppressComposeCommandUpdating(true);
-  editorShell.contentWindow.focus();
+  window.content.focus();
   SuppressComposeCommandUpdating(false);
 }
 
