@@ -443,8 +443,8 @@ Rights Reserved.
 
 	<toolbar id="MsgHeadersToolbar" persist="collapsed">
 		<box align="horizontal" flex="100%">
-			<spring style="width:0.5em"/>
-			<box align="vertical" flex="75%">
+			<spring style="width:0.5em; min-width:0.5em"/>
+			<box align="vertical" flex="75%"  style="min-width: 20em">
 				<spring style="height:0.5em"/>
 				<box align="horizontal">
                     <text value="&fromAddr.label;"/>
@@ -479,8 +479,8 @@ Rights Reserved.
 				<spring style="height:0.5em"/>
 			</box>
 			
-			<spring style="width:0.5em"/>
-			<!--splitter id="gray_horizontal_splitter" persist="state"/-->
+			<!--spring style="width:0.5em"/-->
+			<splitter id="gray_horizontal_splitter" persist="state"/>
 			
 			<box align="vertical" flex="25%">
 				<spring style="height:0.5em"/>
@@ -502,7 +502,7 @@ Rights Reserved.
 				</box>
 				<spring style="height:0.5em"/>
 			</box>
-			<spring style="width:0.5em"/>
+			<spring style="width:0.5em; min-width:0.5em"/>
 		</box>
 	</toolbar>
 
