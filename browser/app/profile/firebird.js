@@ -120,7 +120,7 @@ pref("browser.download.progressDnldDialog.keepAlive", true); // keep the dnload 
 pref("browser.download.progressDnldDialog.enable_launch_reveal_buttons", true);
 pref("browser.download.useProgressDialogs", true);
 pref("browser.download.openSidebar", false);
-pref("browser.download.prompt", true);
+pref("browser.download.promptWithFilepicker", true);
 
 // various default search settings
 pref("browser.search.defaulturl", "chrome://browser-region/locale/region.properties");
