@@ -22,7 +22,9 @@
 
 #include "nsISupports.idl"
 #include "MailNewsTypes2.idl"
-#include "nsIImapUrl.idl" // for imapMessageFlagsType
+// #include "nsIImapUrl.idl" // for imapMessageFlagsType
+
+typedef unsigned short imapMessageFlagsType;
 
 typedef long nsOfflineImapOperationType;
 
