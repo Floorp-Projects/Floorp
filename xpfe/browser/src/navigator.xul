@@ -7,6 +7,46 @@
 			xmlns:xul ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 			xul:onConstruction="Startup()"> 
 
+  <html:style>
+      #header {
+        position: fixed;
+        width: 100%;
+        height: 75px;
+        top: 0;
+        right: 0;
+        bottom: auto;
+        left: 0;
+      }
+      #main {
+        position: fixed;
+        width: auto;
+        height: auto;
+        top: 75px;
+        right: 0;
+        bottom: 34px;
+        left: 0;
+        overflow: auto;
+        padding: 2px .5em;
+        border: solid 0px black;
+      }
+      #footer {
+        position: fixed;
+        width: 100%;
+        height: 34px;
+        top: auto;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        margin-top: auto;
+      }
+
+      button {
+        background-color: green;
+        color: red;
+      }
+
+  </html:style>
+
   <html:script>
   function Startup()
   {
@@ -19,8 +59,9 @@
       if (appCore != null) {
         dump("BrowserAppCore has been created.\n");
         appCore.Init("BrowserAppCore");
-	    appCore.setContentWindow(window.frames[0]);
-	    appCore.setWebShellWindow(window);
+	      appCore.setContentWindow(window.frames[0]);
+	      appCore.setWebShellWindow(window);
+	      appCore.setToolbarWindow(window);
         appCore.setDisableCallback("DoDisableButtons();");
         appCore.setEnableCallback("DoEnableButtons();");
         dump("Adding BrowserAppCore to AppCoreManager...\n");
@@ -28,13 +69,14 @@
       }
     } else {
       dump("BrowserAppCore has already been created! Why?\n");
+    }
 	}
-  }
 
   function DoDisableButtons()
   {
     // Find buttons in the UI and disable them
     dump("Browser disabling buttons\n");
+    document.getElementByID('urlbar')
   }
 
   function DoEnableButtons()
@@ -47,7 +89,7 @@
   {
     appCore = XPAppCoresManager.Find("BrowserAppCore");  
     if (appCore != null) {
-	  dump("Going Back\n");
+	    dump("Going Back\n");
       appCore.back();
     } else {
       dump("BrowserAppCore has not been created!\n");
@@ -58,7 +100,7 @@
   {
     appCore = XPAppCoresManager.Find("BrowserAppCore");  
     if (appCore != null) {
-	  dump("Going Forward\n");
+	    dump("Going Forward\n");
       appCore.forward();
     } else {
       dump("BrowserAppCore has not been created!\n");
@@ -69,7 +111,7 @@
   {
     appCore = XPAppCoresManager.Find("BrowserAppCore");  
     if (appCore != null) {
-	  dump("Opening New Window\n");
+	    dump("Opening New Window\n");
       appCore.newWindow();
     } else {
       dump("BrowserAppCore has not been created!\n");
@@ -128,67 +170,82 @@
 
   </xul:menubar>
   
+  <html:div html:id="header">
   <xul:toolbox>
   
-  <xul:toolbar>
-	      <html:button onClick="BrowserBack()" style="background-color: rgb(192,192,192);">	
-			 <xul:observes xul:element="canGoBack" xul:attribute="disabled"/>			
-             <html:img html:src="resource:/res/toolbar/TB_Back.gif"/><html:br/>Back
-          </html:button>
+    <xul:toolbar>
+	    <html:button onClick="BrowserBack()">	
+			  <xul:observes xul:element="canGoBack" xul:attribute="disabled"/>			
+        <html:img src="resource:/res/toolbar/TB_Back.gif"/><html:br/>Back
+      </html:button>
 
-          <html:button onClick="BrowserForward()" style="background-color:rgb(192,192,192);">
-			 <xul:observes xul:element="canGoForward" xul:attribute="disabled"/>
-             <html:img src="resource:/res/toolbar/TB_Forward.gif"/><html:br/>Forward
-          </html:button>
+      <html:button onClick="BrowserForward()" style="background-color:rgb(192,192,50);">
+			  <xul:observes xul:element="canGoForward" xul:attribute="disabled"/>
+        <html:img src="resource:/res/toolbar/TB_Forward.gif"/><html:br/>Forward
+      </html:button>
 
-          <html:button onClick="window.frames[0].location.reload()" style="background-color:rgb(192,192,192);">
-			 <xul:observes xul:element="canReload" xul:attribute="disabled"/>
-             <html:img src="resource:/res/toolbar/TB_Reload.gif"/><html:br/>Reload
-          </html:button>
+      <html:button onClick="window.frames[0].location.reload()">
+			  <xul:observes xul:element="canReload" xul:attribute="disabled"/>
+        <html:img src="resource:/res/toolbar/TB_Reload.gif"/><html:br/>Reload
+      </html:button>
 
-          <html:button onClick="window.frames[0].stop()" style="background-color:rgb(192,192,192);">
-             <xul:observes xul:element="canStop" xul:attribute="disabled"/>
-			 <html:img src="resource:/res/toolbar/TB_Stop.gif"/><html:br/>Stop
-          </html:button>
-          <html:button onClick="window.frames[0].home()" style="background-color:rgb(192,192,192);">
-             <html:img src="resource:/res/toolbar/TB_Home.gif"/><html:br/>Home
-          </html:button>
-          <html:button onClick="window.frames[0].print()" style="background-color:rgb(192,192,192);">
-             <xul:observes xul:element="canPrint" xul:attribute="disabled"/>
-			 <html:img src="resource:/res/toolbar/TB_Print.gif"/><html:br/>Print
-          </html:button>
-    	   <html:button onClick="window.frames[0].home()">
-             <html:img src="resource:/res/throbber/anims00.gif"/>
-          </html:button>	      
+      <html:button onClick="window.frames[0].stop()">
+        <xul:observes xul:element="canStop" xul:attribute="disabled"/>
+			  <html:img src="resource:/res/toolbar/TB_Stop.gif"/><html:br/>Stop
+      </html:button>
+
+      <html:button onClick="window.frames[0].home()">
+         <html:img src="resource:/res/toolbar/TB_Home.gif"/><html:br/>Home
+      </html:button>
+
+      <html:button onClick="window.frames[0].print()">
+        <xul:observes xul:element="canPrint" xul:attribute="disabled"/>
+			  <html:img src="resource:/res/toolbar/TB_Print.gif"/><html:br/>Print
+      </html:button>
+
+      <html:button onClick="window.frames[0].home()">
+        <html:img src="resource:/res/throbber/anims00.gif"/>
+      </html:button>	      
     </xul:toolbar>
+
     <xul:toolbar style="background-color:rgb(192,192,192);">
-          <html:button style="background-color:rgb(192,192,192);">
-             <html:img src="resource:/res/toolbar/TB_Bookmarks.gif"/>Bookmarks
-          </html:button>
+      <html:button style="background-color:rgb(192,192,192);">
+        <html:img src="resource:/res/toolbar/TB_Bookmarks.gif"/>Bookmarks
+      </html:button>
 		  
 		  <html:input html:id="urlbar" html:type="text" 
-		  html:onkeyup="if (event.which == 13) { window.frames[0].location.href=document.getElementByID('urlbar').value; }" style="width:325px;"/>   
+		    html:onkeyup="if (event.which == 13) { window.frames[0].location.href=document.getElementByID('urlbar').value; }" style="width:325px;"/>   
 
 		  <html:button style="background-color:rgb(192,192,192);">
-              <html:img src="resource:/res/toolbar/TB_WhatsRelated.gif"/>What's Related
-          </html:button>
+        <html:img src="resource:/res/toolbar/TB_WhatsRelated.gif"/>What's Related
+      </html:button>
     </xul:toolbar>
     
     <xul:toolbar>
-    	<html:button onClick="window.frames[0].home()">
-             <html:img src="resource:/res/toolbar/TB_Location.gif"/>Mozilla.org
-        </html:button>
-		<html:button onClick="window.frames[0].home()">
-             <html:img src="resource:/res/toolbar/TB_Location.gif"/>Mozilla.org
-        </html:button>
-		<html:button onClick="window.frames[0].home()">
-             <html:img src="resource:/res/toolbar/TB_Location.gif"/>Mozilla.org
-        </html:button>
+      <html:button onClick="window.frames[0].home()">
+        <html:img src="resource:/res/toolbar/TB_Location.gif"/>Mozilla.org
+      </html:button>
+
+	    <html:button onClick="window.frames[0].home()">
+        <html:img src="resource:/res/toolbar/TB_Location.gif"/>Mozilla.org
+      </html:button>
+
+	    <html:button onClick="window.frames[0].home()">
+        <html:img src="resource:/res/toolbar/TB_Location.gif"/>Mozilla.org
+      </html:button>
     </xul:toolbar>
     
   </xul:toolbox>
+  </html:div>
 
-   <html:iframe html:name="content" html:src="BrowserInitPage.html" html:width="550" html:height="450"/>
+  <html:div html:id="main">
+     <html:iframe html:name="content" html:src="BrowserInitPage.html" html:width="100%" html:height="450"></html:iframe>
+  </html:div>
+
+  <html:div html:id="footer">
+     <html:iframe html:name="status" html:src="status.html" html:width="100%" html:height="34"></html:iframe>
+  </html:div>
 
 </xul:window>
+
 
