@@ -1325,6 +1325,24 @@ nsRenderingContextGTK::CopyOffScreenBits(nsDrawingSurface aSrcSurf,
   g_return_val_if_fail(mTMatrix != NULL, NS_ERROR_FAILURE);
   g_return_val_if_fail(mSurface != NULL, NS_ERROR_FAILURE);
 
+#if 0
+  printf("nsRenderingContextGTK::CopyOffScreenBits()\nflags=\n");
+
+  if (aCopyFlags & NS_COPYBITS_USE_SOURCE_CLIP_REGION)
+    printf("NS_COPYBITS_USE_SOURCE_CLIP_REGION\n");
+
+  if (aCopyFlags & NS_COPYBITS_XFORM_SOURCE_VALUES)
+    printf("NS_COPYBITS_XFORM_SOURCE_VALUES\n");
+
+  if (aCopyFlags & NS_COPYBITS_XFORM_DEST_VALUES)
+    printf("NS_COPYBITS_XFORM_DEST_VALUES\n");
+
+  if (aCopyFlags & NS_COPYBITS_TO_BACK_BUFFER)
+    printf("NS_COPYBITS_TO_BACK_BUFFER\n");
+
+  printf("\n");
+#endif
+
   if (aCopyFlags & NS_COPYBITS_TO_BACK_BUFFER)
   {
     NS_ASSERTION(!(nsnull == mSurface), "no back buffer");
