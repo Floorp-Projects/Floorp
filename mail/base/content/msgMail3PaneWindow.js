@@ -526,6 +526,11 @@ var gThreePaneIncomingServerListener = {
 /* Functions related to startup */
 function OnLoadMessenger()
 {
+  setTimeout(delayedStartup, 0);
+}
+
+function delayedStartup()
+{
   AddMailOfflineObserver();
   CreateMailWindowGlobals();
   Create3PaneGlobals();
