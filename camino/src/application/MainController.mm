@@ -407,7 +407,7 @@ const int kReuseWindowOnAE = 2;
 +(BOOL) isBlankURL:(NSString*)inURL
 {
   BOOL isBlank = NO;
-  if (inURL == nil || [inURL isEqualToString: @"about:blank"] || [inURL isEqualToString: @""])
+  if (!inURL || [inURL isEqualToString: @"about:blank"] || [inURL isEqualToString: @""])
     isBlank = YES;
   return isBlank;
 }
