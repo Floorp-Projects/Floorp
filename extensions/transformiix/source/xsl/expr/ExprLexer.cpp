@@ -25,13 +25,13 @@
  * Bob Miller, Oblix Inc., kbob@oblix.com
  *   -- fixed bug with single quotes inside double quotes
  *
- * $Id: ExprLexer.cpp,v 1.3 1999/11/18 04:40:01 kvisco%ziplink.net Exp $
+ * $Id: ExprLexer.cpp,v 1.4 2000/02/17 03:30:31 kvisco%ziplink.net Exp $
  */
 
 /**
  * Lexical analyzer for XPath expressions
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.3 $ $Date: 1999/11/18 04:40:01 $
+ * @version $Revision: 1.4 $ $Date: 2000/02/17 03:30:31 $
 **/
 
 #include <iostream.h>
@@ -638,6 +638,8 @@ void ExprLexer::parse(const String& pattern) {
                 case ASTERIX:
                     matchToken(tokenBuffer, ch);
                     switch ( prevToken->type ) {
+                        case Token::PARENT_OP :
+                        case Token::ANCESTOR_OP:
                         case Token::AT_SIGN :
                         case Token::NULL_TOKEN:
                         case Token::L_PAREN:
