@@ -2254,23 +2254,17 @@ nsTextFrame::PaintUnicodeText(nsIPresContext* aPresContext,
 #ifdef IBMBIDI
     PRBool isRightToLeftOnBidiPlatform = PR_FALSE;
     PRBool isBidiSystem = PR_FALSE;
-    PRUint32 hints = 0;
-    aRenderingContext.GetHints(hints);
     PRBool bidiEnabled;
     nsCharType charType = eCharType_LeftToRight;
     aPresContext->GetBidiEnabled(&bidiEnabled);
     if (bidiEnabled) {
-      isBidiSystem = (hints & NS_RENDERING_HINT_BIDI_REORDERING);
-      aPresContext->SetIsBidiSystem(isBidiSystem);
+      aPresContext->GetIsBidiSystem(isBidiSystem);
       GetBidiProperty(aPresContext, nsLayoutAtoms::embeddingLevel, (void**) &level,sizeof(level));
       GetBidiProperty(aPresContext, nsLayoutAtoms::charType, (void**) &charType,sizeof(charType));
 
-      if (isBidiSystem && (eCharType_RightToLeft == charType) ) {
-        isRightToLeftOnBidiPlatform = PR_TRUE;
-      }
-      else if (eCharType_RightToLeftArabic == charType) {
-        isRightToLeftOnBidiPlatform = (hints & NS_RENDERING_HINT_ARABIC_SHAPING);
-      }
+      isRightToLeftOnBidiPlatform = (isBidiSystem &&
+                                     (eCharType_RightToLeft == charType ||
+                                      eCharType_RightToLeftArabic == charType));
       if (isRightToLeftOnBidiPlatform) {
         // indicate that the platform should use its native
         // capabilities to reorder the text with right-to-left
@@ -2280,11 +2274,12 @@ nsTextFrame::PaintUnicodeText(nsIPresContext* aPresContext,
       nsBidiPresUtils* bidiUtils;
       aPresContext->GetBidiUtils(&bidiUtils);
       if (bidiUtils) {
-        bidiUtils->FormatUnicodeText(aPresContext, text, textLength,
-                                     charType, level & 1, isBidiSystem);
+        PRInt32 rememberTextLength = textLength;
+        bidiUtils->ReorderUnicodeText(text, textLength,
+                                      charType, level & 1, isBidiSystem);
+        NS_ASSERTION(rememberTextLength == textLength, "Bidi formatting changed text length");
       }
     }
-    if (0 < textLength) { // textLength might change due to the bidi formattimg
 #endif // IBMBIDI
     if (!displaySelection || !isSelected ) //draw text normally
     { 
@@ -2434,7 +2429,6 @@ nsTextFrame::PaintUnicodeText(nsIPresContext* aPresContext,
       }
     }
 #ifdef IBMBIDI
-    }
     if (isRightToLeftOnBidiPlatform) {
       // indicate that future text should not be reordered with
       // right-to-left base direction 
@@ -2510,7 +2504,16 @@ nsTextFrame::GetPositionSlowly(nsIPresContext* aPresContext,
   PRInt32 textLength;
   PRInt32 numSpaces;
 
+#ifdef IBMBIDI
+  // Simulate a non-Bidi system for char by char measuring
+  PRBool isBidiSystem = PR_FALSE;
+  aPresContext->GetIsBidiSystem(isBidiSystem);
+  aPresContext->SetIsBidiSystem(PR_FALSE);
+#endif
   numSpaces = PrepareUnicodeText(tx, &indexBuffer, &paintBuffer, &textLength);
+#ifdef IBMBIDI
+  aPresContext->SetIsBidiSystem(isBidiSystem);
+#endif
   if (textLength <= 0) {
     // If we've already assigned aNewContent, make sure to 0 it out here.
     // aNewContent is undefined in the case that we return a failure,
@@ -2940,9 +2943,17 @@ nsTextFrame::PaintTextSlowly(nsIPresContext* aPresContext,
   nsTextTransformer tx(lb, nsnull, aPresContext);
   PRInt32 numSpaces;
   
+#ifdef IBMBIDI
+  // Simulate a non-Bidi system for char by char painting
+  PRBool isBidiSystem = PR_FALSE;
+  aPresContext->GetIsBidiSystem(isBidiSystem);
+  aPresContext->SetIsBidiSystem(PR_FALSE);
+#endif
   numSpaces = PrepareUnicodeText(tx, (displaySelection ? &indexBuffer : nsnull),
                                  &paintBuffer, &textLength);
-
+#ifdef IBMBIDI
+  aPresContext->SetIsBidiSystem(isBidiSystem);
+#endif
 
   PRInt32* ip = indexBuffer.mBuffer;
   PRUnichar* text = paintBuffer.mBuffer;
@@ -2963,12 +2974,13 @@ nsTextFrame::PaintTextSlowly(nsIPresContext* aPresContext,
                         (void**) &level,sizeof(level));
         GetBidiProperty(aPresContext, nsLayoutAtoms::charType, 
                         (void**) &charType,sizeof(charType));
+        PRInt32 rememberTextLength = textLength;
         // Since we paint char by char, handle the text like on non-bidi platform
-        bidiUtils->FormatUnicodeText(aPresContext, text, textLength, charType,
-                                     level & 1, PR_FALSE);
+        bidiUtils->ReorderUnicodeText(text, textLength, charType,
+                                      level & 1, PR_FALSE);
+        NS_ASSERTION(rememberTextLength == textLength, "Bidi formatting changed text length");
       }
     }
-    if (0 != textLength) { // textLength might change due to the bidi formattimg
 #endif // IBMBIDI
     ComputeExtraJustificationSpacing(aRenderingContext, aTextStyle, text, textLength, numSpaces);
     if (!displaySelection || !isSelected) { 
@@ -3066,9 +3078,6 @@ nsTextFrame::PaintTextSlowly(nsIPresContext* aPresContext,
         delete details;
       }
     }
-#ifdef IBMBIDI
-   }
-#endif // IBMBIDI
   }
 }
 
@@ -5185,6 +5194,18 @@ nsTextFrame::Reflow(nsIPresContext*          aPresContext,
 #ifdef IBMBIDI
   if ( (mContentLength > 0) && (mState & NS_FRAME_IS_BIDI) ) {
     startingOffset = mContentOffset;
+  }
+  PRBool bidiEnabled;
+  aPresContext->GetBidiEnabled(&bidiEnabled);
+  if (bidiEnabled) {
+    nsCharType charType = eCharType_LeftToRight;
+    PRUint32 hints = 0;
+    aReflowState.rendContext->GetHints(hints);
+    GetBidiProperty(aPresContext, nsLayoutAtoms::charType, (void**)&charType, sizeof(charType));
+    PRBool isBidiSystem = (eCharType_RightToLeftArabic == charType) ?
+                           (hints & NS_RENDERING_HINT_ARABIC_SHAPING) :
+                           (hints & NS_RENDERING_HINT_BIDI_REORDERING);
+    aPresContext->SetIsBidiSystem(isBidiSystem);
   }
 #endif //IBMBIDI
   nsLineLayout& lineLayout = *aReflowState.mLineLayout;

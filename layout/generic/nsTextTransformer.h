@@ -40,6 +40,10 @@
 #include "nsTextFragment.h"
 #include "nsISupports.h"
 #include "nsIPresContext.h"
+#ifdef IBMBIDI
+#include "nsBidi.h"
+#include "nsBidiUtils.h"
+#endif
 
 class nsIContent;
 class nsIFrame;
@@ -80,6 +84,14 @@ class nsIWordBreaker;
 
 // The text in the transform buffer is ascii
 #define NS_TEXT_TRANSFORMER_TRANSFORMED_TEXT_IS_ASCII		4
+
+#ifdef IBMBIDI
+// The text in the transform buffer needs Arabic shaping
+#define NS_TEXT_TRANSFORMER_DO_ARABIC_SHAPING 8
+
+// The text in the transform buffer needs numeric shaping
+#define NS_TEXT_TRANSFORMER_DO_NUMERIC_SHAPING 16
+#endif
 
 // A growable text buffer that tries to avoid using malloc by having a
 // builtin buffer. Ideally used as an automatic variable.
@@ -183,19 +195,33 @@ public:
   
   // Returns PR_TRUE if the LEAVE_AS_ASCII flag is set
   PRBool LeaveAsAscii() const {
-      return (mFlags & NS_TEXT_TRANSFORMER_LEAVE_AS_ASCII) ? PR_TRUE : PR_FALSE;
+      return (mFlags & NS_TEXT_TRANSFORMER_LEAVE_AS_ASCII) != 0;
   }
 
   // Returns PR_TRUE if any of the characters are multibyte (greater than 127)
   PRBool HasMultibyte() const {
-      return (mFlags & NS_TEXT_TRANSFORMER_HAS_MULTIBYTE) ? PR_TRUE : PR_FALSE;
+      return (mFlags & NS_TEXT_TRANSFORMER_HAS_MULTIBYTE) != 0;
   }
 
   // Returns PR_TRUE if the text in the transform bufer is ascii (i.e., it
   // doesn't contain any multibyte characters)
   PRBool TransformedTextIsAscii() const {
-      return (mFlags & NS_TEXT_TRANSFORMER_TRANSFORMED_TEXT_IS_ASCII) ? PR_TRUE : PR_FALSE;
+      return (mFlags & NS_TEXT_TRANSFORMER_TRANSFORMED_TEXT_IS_ASCII) != 0;
   }
+
+#ifdef IBMBIDI
+  // Returns PR_TRUE if the text in the transform bufer needs Arabic
+  // shaping
+  PRBool NeedsArabicShaping() const {
+    return (mFlags & NS_TEXT_TRANSFORMER_DO_ARABIC_SHAPING) != 0;
+  }
+  
+  // Returns PR_TRUE if the text in the transform bufer needs numeric
+  // shaping
+  PRBool NeedsNumericShaping() const {
+    return (mFlags & NS_TEXT_TRANSFORMER_DO_NUMERIC_SHAPING) != 0;
+  }
+#endif
 
   // Set or clears the LEAVE_AS_ASCII bit
   void SetLeaveAsAscii(PRBool aValue) {
@@ -215,6 +241,20 @@ public:
                mFlags &= (~NS_TEXT_TRANSFORMER_TRANSFORMED_TEXT_IS_ASCII);
   }
 
+#ifdef IBMBIDI
+  // Set or clears the NS_TEXT_TRANSFORMER_TRANSFORMED_DO_ARABIC_SHAPING bit
+  void SetNeedsArabicShaping(PRBool aValue) {
+    aValue ? mFlags |= NS_TEXT_TRANSFORMER_DO_ARABIC_SHAPING : 
+             mFlags &= (~NS_TEXT_TRANSFORMER_DO_ARABIC_SHAPING);
+  }
+
+  // Set or clears the NS_TEXT_TRANSFORMER_TRANSFORMED_DO_NUMERIC_SHAPING bit
+  void SetNeedsNumericShaping(PRBool aValue) {
+    aValue ? mFlags |= NS_TEXT_TRANSFORMER_DO_NUMERIC_SHAPING : 
+                       mFlags &= (~NS_TEXT_TRANSFORMER_DO_NUMERIC_SHAPING);
+  }
+#endif
+  
   PRUnichar* GetWordBuffer() {
     return mTransformBuf.GetBuffer();
   }
@@ -257,6 +297,12 @@ protected:
   void LanguageSpecificTransform(PRUnichar* aText, PRInt32 aLen,
                                  PRBool* aWasTransformed);
 
+#ifdef IBMBIDI
+  void DoArabicShaping(PRUnichar* aText, PRInt32& aTextLength, PRBool* aWasTransformed);
+
+  void DoNumericShaping(PRUnichar* aText, PRInt32& aTextLength, PRBool* aWasTransformed);
+#endif
+
   // The text fragment that we are looking at
   const nsTextFragment* mFrag;
 
@@ -275,6 +321,11 @@ protected:
   nsIWordBreaker* mWordBreaker;  // [WEAK]
 
   nsLanguageSpecificTransformType mLanguageSpecificTransformType;
+
+#ifdef IBMBIDI
+  nsIPresContext* mPresContext;
+  nsCharType      mCharType;
+#endif
 
   // Buffer used to hold the transformed words from GetNextWord or
   // GetPrevWord

@@ -75,6 +75,17 @@ public:
                              PRBool          aIsBidiSystem);
 
   /**
+   * Reorder Unicode text, taking into account bidi capabilities of the
+   * platform. The reordering includes symmetric swapping and removing
+   * control characters.
+   */
+  nsresult ReorderUnicodeText(PRUnichar*      aText,
+                              PRInt32&        aTextLength,
+                              nsCharType      aCharType,
+                              PRBool          aIsOddLevel,
+                              PRBool          aIsBidiSystem);
+
+  /**
    * Return our nsBidi object (bidi reordering engine)
    */
   nsresult GetBidiEngine(nsBidi** aBidiEngine);
