@@ -85,6 +85,7 @@ CPPSRCS		= \
 		nsSVGPolygonFrame.cpp \
 		nsSVGPolylineFrame.cpp \
 		nsSVGRectFrame.cpp \
+		nsSVGStopFrame.cpp \
 		nsSVGTSpanFrame.cpp \
 		nsSVGTextFrame.cpp \
 		nsSVGUseFrame.cpp \

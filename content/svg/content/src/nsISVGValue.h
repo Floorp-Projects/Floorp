@@ -67,7 +67,8 @@ class nsISVGValue : public nsISupports
 public:
   enum modificationType {
     mod_other = 0,
-    mod_context
+    mod_context,
+    mod_die
   };
 
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISVGVALUE_IID)

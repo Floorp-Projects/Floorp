@@ -49,7 +49,8 @@
 #include "nsISVGRendererRegion.h"
 #include "nsISVGContainerFrame.h"
 #include "nsISVGTextContainerFrame.h"
-#include "nsSVGGradientFrame.h"
+#include "nsSVGGradient.h"
+#include "nsISVGValueUtils.h"
 #include "nsReadableUtils.h"
 #include "nsCRT.h"
 #include "prdtoa.h"
@@ -66,6 +67,8 @@
 typedef nsFrame nsSVGGlyphFrameBase;
 
 class nsSVGGlyphFrame : public nsSVGGlyphFrameBase,
+                        public nsISVGValueObserver,
+                        public nsSupportsWeakReference,
                         public nsISVGGlyphGeometrySource, // : nsISVGGlyphMetricsSource : nsISVGGeometrySource
                         public nsISVGGlyphFragmentLeaf, // : nsISVGGlyphFragmentNode
                         public nsISVGChildFrame
@@ -103,6 +106,12 @@ public:
                           nsSpread        aSpread);
   NS_IMETHOD  GetSelected(PRBool *aSelected) const;
   NS_IMETHOD  IsSelectable(PRBool* aIsSelectable, PRUint8* aSelectStyle);
+
+  // nsISVGValueObserver
+  NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable,
+                                     nsISVGValue::modificationType aModType);
+  NS_IMETHOD DidModifySVGObservable (nsISVGValue* observable,
+                                     nsISVGValue::modificationType aModType);
 
   // nsISVGChildFrame interface:
   NS_IMETHOD Paint(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectTwips);
@@ -157,15 +166,18 @@ protected:
   nsISVGOuterSVGFrame *GetOuterSVGFrame();
   nsISVGTextFrame *GetTextFrame();
   void TransformPoint(float& x, float& y);
+  NS_IMETHOD Update(PRUint32 aFlags);
   
   nsCOMPtr<nsISVGRendererGlyphGeometry> mGeometry;
   nsCOMPtr<nsISVGRendererGlyphMetrics> mMetrics;
   float mX, mY;
-  PRUint32 mCharOffset;
   PRUint32 mGeometryUpdateFlags;
   PRUint32 mMetricsUpdateFlags;
+  PRUint32 mCharOffset;
   PRBool mFragmentTreeDirty;
   nsString mCharacterData;
+  nsCOMPtr<nsISVGGradient> mFillGradient;
+  nsCOMPtr<nsISVGGradient> mStrokeGradient;
 };
 
 //----------------------------------------------------------------------
@@ -204,7 +216,12 @@ nsSVGGlyphFrame::nsSVGGlyphFrame()
 
 nsSVGGlyphFrame::~nsSVGGlyphFrame()
 {
-
+  if (mFillGradient) {
+    NS_ADD_SVGVALUE_OBSERVER(mFillGradient);
+  }
+  if (mStrokeGradient) {
+    NS_ADD_SVGVALUE_OBSERVER(mStrokeGradient);
+  }
 }
 
 
@@ -217,6 +234,8 @@ NS_INTERFACE_MAP_BEGIN(nsSVGGlyphFrame)
   NS_INTERFACE_MAP_ENTRY(nsISVGGlyphGeometrySource)
   NS_INTERFACE_MAP_ENTRY(nsISVGGlyphFragmentLeaf)
   NS_INTERFACE_MAP_ENTRY(nsISVGGlyphFragmentNode)
+  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+  NS_INTERFACE_MAP_ENTRY(nsISVGValueObserver)
   NS_INTERFACE_MAP_ENTRY(nsISVGChildFrame)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGGlyphFrameBase)
 
@@ -264,8 +283,14 @@ nsSVGGlyphFrame::CharacterDataChanged(nsPresContext* aPresContext,
                                       nsIContent*     aChild,
                                       PRBool          aAppend)
 {
+	return Update(nsISVGGeometrySource::UPDATEMASK_ALL);
+}
+
+NS_IMETHODIMP
+nsSVGGlyphFrame::Update(PRUint32 aFlags)
+{
 #ifdef DEBUG
-//  printf("** nsSVGGlyphFrame::CharacterDataChanged\n");
+//  printf("** nsSVGGlyphFrame::Update\n");
 #endif
   nsISVGOuterSVGFrame* outerSVGFrame = GetOuterSVGFrame();
   if (!outerSVGFrame) {
@@ -275,8 +300,8 @@ nsSVGGlyphFrame::CharacterDataChanged(nsPresContext* aPresContext,
   
   outerSVGFrame->SuspendRedraw();
   UpdateFragmentTree();
-  UpdateMetrics(nsISVGGeometrySource::UPDATEMASK_ALL);
-  UpdateGeometry(nsISVGGeometrySource::UPDATEMASK_ALL);
+  UpdateMetrics(aFlags);
+  UpdateGeometry(aFlags);
   outerSVGFrame->UnsuspendRedraw();
 
   return NS_OK;
@@ -285,7 +310,18 @@ nsSVGGlyphFrame::CharacterDataChanged(nsPresContext* aPresContext,
 NS_IMETHODIMP
 nsSVGGlyphFrame::DidSetStyleContext(nsPresContext* aPresContext)
 {
-  return CharacterDataChanged(aPresContext, NULL, PR_FALSE);
+  // One of the styles that might have been changed are the urls that
+  // point to gradients, etc.  Drop our cached values to those
+  if (mFillGradient) {
+    NS_ADD_SVGVALUE_OBSERVER(mFillGradient);
+    mFillGradient = nsnull;
+  }
+  if (mStrokeGradient) {
+    NS_ADD_SVGVALUE_OBSERVER(mStrokeGradient);
+    mStrokeGradient = nsnull;
+  }
+
+  return CharacterDataChanged(aPresContext, nsnull, PR_FALSE);
 }
 
 NS_IMETHODIMP
@@ -339,6 +375,44 @@ nsSVGGlyphFrame::IsSelectable(PRBool* aIsSelectable,
   return rv;
 }
 
+//----------------------------------------------------------------------
+// nsISVGValueObserver methods:
+
+NS_IMETHODIMP
+nsSVGGlyphFrame::WillModifySVGObservable(nsISVGValue* observable,
+                                         nsISVGValue::modificationType aModType)
+{
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsSVGGlyphFrame::DidModifySVGObservable (nsISVGValue* observable,
+                                         nsISVGValue::modificationType aModType)
+{
+  // Is this a gradient?
+  nsCOMPtr<nsISVGGradient>val = do_QueryInterface(observable);
+  if (val) {
+    // Yes, we need to handle this differently
+    nsCOMPtr<nsISVGGradient>fill = do_QueryInterface(mFillGradient);
+    if (fill == val) {
+      if (aModType == nsISVGValue::mod_die) {
+        mFillGradient = nsnull;
+      }
+      return Update(nsISVGGeometrySource::UPDATEMASK_FILL_PAINT);
+    } else {
+      // No real harm in assuming a stroke gradient at this point
+      if (aModType == nsISVGValue::mod_die) {
+        mStrokeGradient = nsnull;
+      }
+      return Update(nsISVGGeometrySource::UPDATEMASK_STROKE_PAINT);
+    }
+  } else {
+    // No, all of our other observables update the canvastm by default
+    return Update(nsISVGGeometrySource::UPDATEMASK_CANVAS_TM);
+  }
+  return NS_OK;
+}
 
 //----------------------------------------------------------------------
 // nsISVGChildFrame methods
@@ -418,19 +492,7 @@ nsSVGGlyphFrame::GetCoveredRegion()
 NS_IMETHODIMP
 nsSVGGlyphFrame::InitialUpdate()
 {
-  nsISVGOuterSVGFrame* outerSVGFrame = GetOuterSVGFrame();
-  if (!outerSVGFrame) {
-    NS_ERROR("No outerSVGFrame");
-    return NS_ERROR_FAILURE;
-  }
-  
-  outerSVGFrame->SuspendRedraw();
-  UpdateFragmentTree();
-  UpdateMetrics(nsISVGGeometrySource::UPDATEMASK_ALL);
-  UpdateGeometry(nsISVGGeometrySource::UPDATEMASK_ALL);
-  outerSVGFrame->UnsuspendRedraw();
-  
-  return NS_OK;
+  return Update(nsISVGGeometrySource::UPDATEMASK_ALL);
 }  
 
 NS_IMETHODIMP
@@ -660,12 +722,19 @@ nsSVGGlyphFrame::GetStrokePaint(nscolor *aStrokePaint)
 NS_IMETHODIMP
 nsSVGGlyphFrame::GetStrokeGradient(nsISVGGradient **aGrad)
 {
-  nsIURI *aServer;
-  aServer = GetStyleSVG()->mStroke.mPaint.mPaintServer;
-  if (aServer == nsnull)
-    return NS_ERROR_FAILURE;
-  // Now have the URI.  Get the gradient 
-  return NS_GetSVGGradient(aGrad, aServer, mContent, nsSVGGlyphFrameBase::GetPresContext()->PresShell());
+  nsresult rv = NS_OK;
+  if (!mStrokeGradient) {
+    nsIURI *aServer;
+    aServer = GetStyleSVG()->mStroke.mPaint.mPaintServer;
+    if (aServer == nsnull)
+      return NS_ERROR_FAILURE;
+    // Now have the URI.  Get the gradient 
+    rv = NS_GetSVGGradient(getter_AddRefs(mStrokeGradient), aServer, mContent, 
+                           nsSVGGlyphFrameBase::GetPresContext()->PresShell());
+    NS_ADD_SVGVALUE_OBSERVER(mStrokeGradient);
+  }
+  *aGrad = mStrokeGradient;
+  return rv;
 }
 
 /* readonly attribute unsigned short fillPaintType; */
@@ -684,18 +753,24 @@ nsSVGGlyphFrame::GetFillPaint(nscolor *aFillPaint)
   return NS_OK;
 }
 
-/* [noscript] void GetStrokeGradient(nsISVGGradient **aGrad); */
+/* [noscript] void GetFillGradient(nsISVGGradient **aGrad); */
 NS_IMETHODIMP
 nsSVGGlyphFrame::GetFillGradient(nsISVGGradient **aGrad)
 {
-  nsIURI *aServer;
-  aServer = GetStyleSVG()->mFill.mPaint.mPaintServer;
-  if (aServer == nsnull)
-    return NS_ERROR_FAILURE;
-  // Now have the URI.  Get the gradient 
-  return NS_GetSVGGradient(aGrad, aServer, mContent, nsSVGGlyphFrameBase::GetPresContext()->PresShell());
+  nsresult rv = NS_OK;
+  if (!mFillGradient) {
+    nsIURI *aServer;
+    aServer = GetStyleSVG()->mFill.mPaint.mPaintServer;
+    if (aServer == nsnull)
+      return NS_ERROR_FAILURE;
+    // Now have the URI.  Get the gradient 
+    rv = NS_GetSVGGradient(getter_AddRefs(mFillGradient), aServer, mContent, 
+                           nsSVGGlyphFrameBase::GetPresContext()->PresShell());
+    NS_ADD_SVGVALUE_OBSERVER(mFillGradient);
+  }
+  *aGrad = mFillGradient;
+  return rv;
 }
-
 
 /* [noscript] boolean isClipChild; */
 NS_IMETHODIMP
