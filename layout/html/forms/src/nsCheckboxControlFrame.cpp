@@ -18,6 +18,7 @@
 
 #include "nsICheckButton.h"
 #include "nsFormControlFrame.h"
+#include "nsFormControlHelper.h"
 #include "nsFormFrame.h"
 #include "nsIContent.h"
 #include "prtypes.h"
@@ -190,9 +191,7 @@ nsCheckboxControlFrame::AttributeChanged(nsIPresContext* aPresContext,
         }
         NS_RELEASE(button);
       }
-    } else {
-      result = nsFormControlFrame::AttributeChanged(aPresContext, aChild, aAttribute, aHint);
-    }
+    }   
   }
   return result;
 }
@@ -237,7 +236,7 @@ nsCheckboxControlFrame::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValue
     if (PR_TRUE != state) {
       result = PR_FALSE;
     } else {
-      if (NS_CONTENT_ATTR_HAS_VALUE != valueResult) {
+      if (NS_CONTENT_ATTR_HAS_VALUE == valueResult) {
         aValues[0] = "on";
       } else {
         aValues[0] = value;
@@ -297,14 +296,14 @@ nsCheckboxControlFrame::PaintCheckBox(nsIPresContext& aPresContext,
                               NSIntPixelsToTwips(printOffsetY, p2t));
 
     // Draw's background + border
-  nsFormControlFrame::PaintFixedSizeCheckMarkBorder(aRenderingContext, p2t, *color);
+  nsFormControlHelper::PaintFixedSizeCheckMarkBorder(aRenderingContext, p2t, *color);
  
   PRBool checked = PR_TRUE;
 
     // Get current checked state from content model
   nsresult result = GetCurrentCheckState(&checked);
   if (PR_TRUE == checked) {
-    PaintFixedSizeCheckMark(aRenderingContext, p2t);
+    nsFormControlHelper::PaintFixedSizeCheckMark(aRenderingContext, p2t);
 
   }
   PRBool clip;

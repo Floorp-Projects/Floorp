@@ -320,7 +320,7 @@ NS_IMETHODIMP nsComboboxControlFrame::Reflow(nsIPresContext&          aPresConte
     mFirstTime = PR_FALSE;
   }
 
-  PRInt32 numChildren = LengthOf(mFirstChild);
+  PRInt32 numChildren = mFrames.GetLength();
   
   //nsIFrame* childFrame;
   if (1 == numChildren) {
@@ -425,6 +425,11 @@ NS_IMETHODIMP nsComboboxControlFrame::Reflow(nsIPresContext&          aPresConte
   PRInt32 scrollbarScaledWidth  = PRInt32(sbWidth * scale);
   PRInt32 scrollbarScaledHeight = PRInt32(sbWidth * scale);
 
+  nsFont font(aPresContext.GetDefaultFixedFont());
+  SystemAttrStruct sis;
+  sis.mFont = &font;
+  context->GetSystemAttribute(eSystemAttr_Font_Tooltips, &sis);
+
   nscoord adjustment = NSIntPixelsToTwips(14, p2t);
 
   aDesiredSize.width  = calcSize.width + scrollbarScaledWidth + border.left + border.right + adjustment;
@@ -495,7 +500,7 @@ nsComboboxControlFrame::PaintComboboxControl(nsIPresContext&      aPresContext,
 
     nsRect rect(0, 0, mRect.width, mRect.height);
     nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                    aDirtyRect, rect, *myColor, 0, 0);
+                                    aDirtyRect, rect, *myColor, *mySpacing, 0, 0);
 
     nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
                                 aDirtyRect, rect, *mySpacing, 0);
@@ -704,26 +709,17 @@ nsComboboxControlFrame::ReResolveStyleContext(nsIPresContext* aPresContext,
 
     PRBool currentIsVisible = (mCurrentStyleContext == mVisibleStyleContext?PR_TRUE:PR_FALSE);
 
-    nsIAtom * visibleContentPseudo = NS_NewAtom(":DROPDOWN-VISIBLE");
-    RefreshStyleContext(aPresContext, visibleContentPseudo, mVisibleStyleContext, mContent, mStyleContext);
-    NS_IF_RELEASE(visibleContentPseudo);
+    RefreshStyleContext(aPresContext, nsHTMLAtoms::dropDownVisible, mVisibleStyleContext, mContent, mStyleContext);
 
-    nsIAtom * hiddenContentPseudo = NS_NewAtom(":DROPDOWN-HIDDEN");
-    RefreshStyleContext(aPresContext, hiddenContentPseudo, mHiddenStyleContext, mContent, mStyleContext);
-    NS_IF_RELEASE(hiddenContentPseudo);
+    RefreshStyleContext(aPresContext, nsHTMLAtoms::dropDownHidden, mHiddenStyleContext, mContent, mStyleContext);
     mCurrentStyleContext = (currentIsVisible?mVisibleStyleContext:mHiddenStyleContext);
 
     mListFrame->ReResolveStyleContext(aPresContext, 
                                       (nsnull != mCurrentStyleContext? mCurrentStyleContext : mStyleContext));
 
     // Button Style
-    nsIAtom * btnOutContentPseudo = NS_NewAtom(":DROPDOWN-BTN-OUT");
-    RefreshStyleContext(aPresContext, btnOutContentPseudo, mBtnOutStyleContext, mContent, mStyleContext);
-    NS_IF_RELEASE(btnOutContentPseudo);
-
-    nsIAtom * btnPressContentPseudo = NS_NewAtom(":DROPDOWN-BTN-PRESSED");
-    RefreshStyleContext(aPresContext, btnPressContentPseudo, mBtnPressedStyleContext, mContent, mStyleContext);
-    NS_IF_RELEASE(btnPressContentPseudo);
+    RefreshStyleContext(aPresContext, nsHTMLAtoms::dropDownBtnOut, mBtnOutStyleContext, mContent, mStyleContext);
+    RefreshStyleContext(aPresContext, nsHTMLAtoms::dropDownBtnPressed, mBtnPressedStyleContext, mContent, mStyleContext);
 
     nsIAtom * txtBlkContentPseudo = NS_NewAtom(":COMBOBOX-TEXT");
     RefreshStyleContext(aPresContext, txtBlkContentPseudo, mBlockTextStyle, mContent, mStyleContext);
@@ -744,8 +740,8 @@ nsComboboxControlFrame::ReResolveStyleContext(nsIPresContext* aPresContext,
 }
 //----------------------------------------------------------------------
 NS_IMETHODIMP nsComboboxControlFrame::HandleEvent(nsIPresContext& aPresContext, 
-                                       nsGUIEvent*     aEvent,
-                                       nsEventStatus&  aEventStatus)
+                                                   nsGUIEvent*     aEvent,
+                                                   nsEventStatus&  aEventStatus)
 {
   if (nsEventStatus_eConsumeNoDefault == aEventStatus) {
     return NS_OK;

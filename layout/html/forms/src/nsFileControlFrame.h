@@ -40,8 +40,6 @@ public:
 
   NS_IMETHOD GetFrameName(nsString& aResult) const;
 
-  virtual void MouseClicked(nsIPresContext* aPresContext);
-
   virtual PRInt32 GetMaxNumValues();
 
   virtual PRBool GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
@@ -52,17 +50,34 @@ public:
   void SetTextFrame(nsTextControlFrame* aFrame) { mTextFrame = aFrame; }
 
   nsButtonControlFrame* GetBrowseFrame() { return mBrowseFrame; }
-  void  SetBrowseFrame(nsButtonControlFrame* aFrame) { mBrowseFrame = aFrame; }
-  NS_IMETHOD GetName(nsString* aName);
-  virtual void SetFormFrame(nsFormFrame* aFormFrame) { mFormFrame = aFormFrame; }
+  void           SetBrowseFrame(nsButtonControlFrame* aFrame) { mBrowseFrame = aFrame; }
+  NS_IMETHOD     GetName(nsString* aName);
+  virtual void   SetFormFrame(nsFormFrame* aFormFrame) { mFormFrame = aFormFrame; }
   virtual PRBool IsSuccessful(nsIFormControlFrame* aSubmitter);
-  virtual void Reset();
-  NS_IMETHOD GetType(PRInt32* aType) const;
-  void SetFocus(PRBool aOn, PRBool aRepaint);
+  virtual void   Reset();
+  NS_IMETHOD     GetType(PRInt32* aType) const;
+  void           SetFocus(PRBool aOn, PRBool aRepaint);
+
+  NS_IMETHOD GetFont(nsIPresContext* aPresContext, 
+                    nsFont&         aFont);
+
+  NS_IMETHOD GetFormContent(nsIContent*& aContent) const;
+  virtual nscoord GetVerticalInsidePadding(float aPixToTwip,
+                                           nscoord aInnerHeight) const;
+  virtual nscoord GetHorizontalInsidePadding(nsIPresContext& aPresContext,
+                                             float aPixToTwip, 
+                                             nscoord aInnerWidth,
+                                             nscoord aCharWidth) const;
+
+
+  // nsIFormMouseListener
+  virtual void MouseClicked(nsIPresContext* aPresContext);
 
   //static PRInt32 gSpacing;
 
 protected:
+  nsIWidget* GetWindowTemp(nsIView *aView); // XXX temporary
+
   virtual PRIntn GetSkipSides() const;
 
   nsTextControlFrame*   mTextFrame;

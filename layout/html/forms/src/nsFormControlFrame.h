@@ -20,6 +20,7 @@
 #define nsFormControlFrame_h___
 
 #include "nsIFormControlFrame.h"
+#include "nsFormControlHelper.h"
 #include "nsIFormManager.h"
 #include "nsISupports.h"
 #include "nsIWidget.h"
@@ -34,43 +35,6 @@ class nsFormFrame;
 
 #define CSS_NOTSET -1
 #define ATTR_NOTSET -1
-
-/**
-  * Enumeration of possible mouse states used to detect mouse clicks
-  */
-enum nsMouseState {
-  eMouseNone,
-  eMouseEnter,
-  eMouseExit,
-  eMouseDown,
-  eMouseUp
-};
-
-struct nsInputDimensionSpec
-{
-  nsIAtom*  mColSizeAttr;            // attribute used to determine width
-  PRBool    mColSizeAttrInPixels;    // is attribute value in pixels (otherwise num chars)
-  nsIAtom*  mColValueAttr;           // attribute used to get value to determine size
-                                     //    if not determined above
-  nsString* mColDefaultValue;        // default value if not determined above
-  nscoord   mColDefaultSize;         // default width if not determined above
-  PRBool    mColDefaultSizeInPixels; // is default width in pixels (otherswise num chars)
-  nsIAtom*  mRowSizeAttr;            // attribute used to determine height
-  nscoord   mRowDefaultSize;         // default height if not determined above
-
-  nsInputDimensionSpec(nsIAtom* aColSizeAttr, PRBool aColSizeAttrInPixels, 
-                       nsIAtom* aColValueAttr, nsString* aColDefaultValue,
-                       nscoord aColDefaultSize, PRBool aColDefaultSizeInPixels,
-                       nsIAtom* aRowSizeAttr, nscoord aRowDefaultSize)
-                       : mColSizeAttr(aColSizeAttr), mColSizeAttrInPixels(aColSizeAttrInPixels),
-                         mColValueAttr(aColValueAttr), 
-                         mColDefaultValue(aColDefaultValue), mColDefaultSize(aColDefaultSize),
-                         mColDefaultSizeInPixels(aColDefaultSizeInPixels),
-                         mRowSizeAttr(aRowSizeAttr), mRowDefaultSize(aRowDefaultSize)
-  {
-  }
-
-};
 
 /** 
   * nsFormControlFrame is the base class for frames of form controls. It
@@ -90,12 +54,6 @@ public:
   nsFormControlFrame();
 
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
-
-  static nscoord CalculateSize (nsIPresContext* aPresContext, nsFormControlFrame* aFrame,
-                                const nsSize& aCSSSize, nsInputDimensionSpec& aDimensionSpec, 
-                                nsSize& aBounds, PRBool& aWidthExplicit, 
-                                PRBool& aHeightExplicit, nscoord& aRowSize,
-                                nsIRenderingContext *aRendContext);
 
   /** 
     * Respond to a gui event
@@ -195,13 +153,6 @@ public:
     */
   virtual nsWidgetInitData* GetWidgetInitData(nsIPresContext& aPresContext);  
 
-  static nscoord GetTextSize(nsIPresContext& aContext, nsFormControlFrame* aFrame,
-                             const nsString& aString, nsSize& aSize,
-                             nsIRenderingContext *aRendContext);
-  static nscoord GetTextSize(nsIPresContext& aContext, nsFormControlFrame* aFrame,
-                             PRInt32 aNumChars, nsSize& aSize,
-                             nsIRenderingContext *aRendContext);
-
   void GetWidgetSize(nsSize& aSize) const { aSize.width  = mWidgetSize.width; 
                                             aSize.height = mWidgetSize.height; }
 
@@ -223,6 +174,21 @@ public:
   nsFormFrame* GetFormFrame() { return mFormFrame; }
   virtual void SetFormFrame(nsFormFrame* aFormFrame) { mFormFrame = aFormFrame; }
 
+  NS_IMETHOD GetFont(nsIPresContext* aPresContext, 
+                    nsFont&         aFont);
+
+  NS_IMETHOD GetFormContent(nsIContent*& aContent) const;
+
+   /**
+    * Get the width and height of this control based on CSS 
+    * @param aPresContext the presentation context
+    * @param aSize the size that this frame wants, set by this method. values of -1 
+    * for aSize.width or aSize.height indicate unset values.
+    */
+  static void GetStyleSize(nsIPresContext& aContext,
+                            const nsHTMLReflowState& aReflowState,
+                            nsSize& aSize);
+
 protected:
 
   virtual ~nsFormControlFrame();
@@ -241,18 +207,6 @@ protected:
                               const nsHTMLReflowState& aReflowState,
                               nsHTMLReflowMetrics& aDesiredLayoutSize,
                               nsSize& aDesiredWidgetSize);
-
-  NS_IMETHOD GetFont(nsIPresContext* aPresContext, nsFont& aFont);
-
-   /**
-    * Get the width and height of this control based on CSS 
-    * @param aPresContext the presentation context
-    * @param aSize the size that this frame wants, set by this method. values of -1 
-    * for aSize.width or aSize.height indicate unset values.
-    */
-  void GetStyleSize(nsIPresContext& aContext,
-                    const nsHTMLReflowState& aReflowState,
-                    nsSize& aSize);
 
 //
 //-------------------------------------------------------------------------------------
@@ -290,6 +244,7 @@ protected:
   //nscoord GetStyleDim(nsIPresContext& aPresContext, nscoord aMaxDim, 
   //                    nscoord aMaxWidth, const nsStyleCoord& aCoord);
 
+#if 0
 
 //
 //-------------------------------------------------------------------------------------
@@ -479,7 +434,7 @@ protected:
                          const nsRect& aDirtyRect, nsIStyleContext* aStyleContext, PRBool aInset,
                          nsIFrame* aForFrame, PRUint32 aWidth, PRUint32 aHeight);
 
-
+#endif
   nsMouseState mLastMouseState;
   nsIWidget*   mWidget;
   nsSize       mWidgetSize;

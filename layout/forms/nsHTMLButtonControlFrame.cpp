@@ -17,6 +17,7 @@
  */
 
 #include "nsHTMLContainerFrame.h"
+#include "nsFormControlHelper.h"
 #include "nsIFormControlFrame.h"
 #include "nsHTMLParts.h"
 #include "nsIFormControl.h"
@@ -46,13 +47,13 @@
 #include "nsColor.h"
 
 //Enumeration of possible mouse states used to detect mouse clicks
-enum nsMouseState {
+/*enum nsMouseState {
   eMouseNone,
   eMouseEnter,
   eMouseExit,
   eMouseDown,
   eMouseUp
-};
+};*/
 
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
 static NS_DEFINE_IID(kIFormControlFrameIID, NS_IFORMCONTROLFRAME_IID);
@@ -103,6 +104,17 @@ public:
   virtual void SetFormFrame(nsFormFrame* aFormFrame) { mFormFrame = aFormFrame; }
 
   void SetFocus(PRBool aOn, PRBool aRepaint);
+
+  NS_IMETHOD GetFont(nsIPresContext* aPresContext, 
+                    nsFont&         aFont);
+
+  NS_IMETHOD GetFormContent(nsIContent*& aContent) const;
+  virtual nscoord GetVerticalInsidePadding(float aPixToTwip,
+                                           nscoord aInnerHeight) const;
+  virtual nscoord GetHorizontalInsidePadding(nsIPresContext& aPresContext,
+                                             float aPixToTwip, 
+                                             nscoord aInnerWidth,
+                                             nscoord aCharWidth) const;
 
   void GetDefaultLabel(nsString& aLabel);
 
@@ -646,6 +658,36 @@ nsHTMLButtonControlFrame::Reflow(nsIPresContext& aPresContext,
 
 PRIntn
 nsHTMLButtonControlFrame::GetSkipSides() const
+{
+  return 0;
+}
+
+NS_IMETHODIMP
+nsHTMLButtonControlFrame::GetFont(nsIPresContext*        aPresContext, 
+                             nsFont&                aFont)
+{
+  nsFormControlHelper::GetFont(this, aPresContext, mStyleContext, aFont);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLButtonControlFrame::GetFormContent(nsIContent*& aContent) const
+{
+  return GetContent(aContent);
+}
+
+nscoord 
+nsHTMLButtonControlFrame::GetVerticalInsidePadding(float aPixToTwip, 
+                                               nscoord aInnerHeight) const
+{
+   return 0;
+}
+
+nscoord 
+nsHTMLButtonControlFrame::GetHorizontalInsidePadding(nsIPresContext& aPresContext,
+                                               float aPixToTwip, 
+                                               nscoord aInnerWidth,
+                                               nscoord aCharWidth) const
 {
   return 0;
 }

@@ -275,10 +275,8 @@ nsFormControlFrame::Reflow(nsIPresContext&      aPresContext,
       SetView(view);
     }
 
-    PRInt32 type;
-    GetType(&type);
  	const nsIID& id = GetCID();
-    if ((NS_FORM_INPUT_HIDDEN != type) && (PR_TRUE == supportsWidgets)) {
+    if (PR_TRUE == supportsWidgets) {
 	    // Do the following only if a widget is created
       nsWidgetInitData* initData = GetWidgetInitData(aPresContext); // needs to be deleted
       view->CreateWidget(id, initData);
@@ -430,9 +428,6 @@ nsFormControlFrame::AttributeChanged(nsIPresContext* aPresContext,
                                      nsIAtom*        aAttribute,
                                      PRInt32         aHint)
 {
-  if (nsHTMLAtoms::disabled == aAttribute) {
-    mWidget->Enable(!nsFormFrame::GetDisabled(this));
-  } 
   return NS_OK;
 }
 
@@ -690,7 +685,7 @@ NS_METHOD nsFormControlFrame::HandleEvent(nsIPresContext& aPresContext,
   return NS_OK;
 }
 
-void
+void 
 nsFormControlFrame::GetStyleSize(nsIPresContext& aPresContext,
                                  const nsHTMLReflowState& aReflowState,
                                  nsSize& aSize)
@@ -709,265 +704,26 @@ nsFormControlFrame::GetStyleSize(nsIPresContext& aPresContext,
   }
 }
 
-nsCompatibility
-GetRepChars(nsIPresContext& aPresContext, char& char1, char& char2) 
-{
-  nsCompatibility mode;
-  aPresContext.GetCompatibilityMode(mode);
-  if (eCompatibility_Standard == mode) {
-    char1 = 'm';
-    char2 = 'a';
-    return eCompatibility_Standard;
-  } else {
-    char1 = '%';
-    char2 = '%';
-    return eCompatibility_NavQuirks;
-  }
-}
-
-nscoord 
-nsFormControlFrame::GetTextSize(nsIPresContext& aPresContext, nsFormControlFrame* aFrame,
-                                const nsString& aString, nsSize& aSize,
-                                nsIRenderingContext *aRendContext)
-{
-  nsFont font(aPresContext.GetDefaultFixedFont());
-  aFrame->GetFont(&aPresContext, font);
-  //printf("\n GetTextSize %s", aString.ToNewCString());
-  nsIDeviceContext* deviceContext = aPresContext.GetDeviceContext();
-
-  nsIFontMetrics* fontMet;
-  deviceContext->GetMetricsFor(font, fontMet);
-  aRendContext->SetFont(fontMet);
-  aRendContext->GetWidth(aString, aSize.width);
-  fontMet->GetHeight(aSize.height);
-
-  char char1, char2;
-  nsCompatibility mode = GetRepChars(aPresContext, char1, char2);
-  nscoord char1Width, char2Width;
-  aRendContext->GetWidth(char1, char1Width);
-  aRendContext->GetWidth(char2, char2Width);
-
-  NS_RELEASE(fontMet);
-  NS_RELEASE(deviceContext);
-
-  if (eCompatibility_Standard == mode) {
-    return ((char1Width + char2Width) / 2) + 1;
-  } else {
-    return char1Width;
-  }
-}  
-  
-nscoord
-nsFormControlFrame::GetTextSize(nsIPresContext& aPresContext, nsFormControlFrame* aFrame,
-                                PRInt32 aNumChars, nsSize& aSize,
-                                nsIRenderingContext *aRendContext)
-{
-  nsAutoString val;
-  char char1, char2;
-  GetRepChars(aPresContext, char1, char2);
-  int i;
-  for (i = 0; i < aNumChars; i+=2) {
-    val += char1;  
-  }
-  for (i = 1; i < aNumChars; i+=2) {
-    val += char2;  
-  }
-  return GetTextSize(aPresContext, aFrame, val, aSize, aRendContext);
-}
-  
-PRInt32
-nsFormControlFrame::CalculateSize (nsIPresContext* aPresContext, nsFormControlFrame* aFrame,
-                             const nsSize& aCSSSize, nsInputDimensionSpec& aSpec, 
-                             nsSize& aBounds, PRBool& aWidthExplicit, 
-                             PRBool& aHeightExplicit, nscoord& aRowHeight,
-                             nsIRenderingContext *aRendContext) 
-{
-  nscoord charWidth   = 0;
-  PRInt32 numRows     = ATTR_NOTSET;
-  aWidthExplicit      = PR_FALSE;
-  aHeightExplicit     = PR_FALSE;
-
-  aBounds.width  = CSS_NOTSET;
-  aBounds.height = CSS_NOTSET;
-  nsSize textSize(0,0);
-
-  nsIContent* iContent = nsnull;
-  aFrame->GetContent((nsIContent*&) iContent);
-  if (!iContent) {
-    return 0;
-  }
-  nsIHTMLContent* hContent = nsnull;
-  nsresult result = iContent->QueryInterface(kIHTMLContentIID, (void**)&hContent);
-  if ((NS_OK != result) || !hContent) {
-    NS_RELEASE(iContent);
-    return 0;
-  }
-  nsAutoString valAttr;
-  nsresult valStatus = NS_CONTENT_ATTR_NOT_THERE;
-  if (nsnull != aSpec.mColValueAttr) {
-    valStatus = hContent->GetAttribute(kNameSpaceID_HTML, aSpec.mColValueAttr, valAttr);
-  }
-  nsHTMLValue colAttr;
-  nsresult colStatus = NS_CONTENT_ATTR_NOT_THERE;
-  if (nsnull != aSpec.mColSizeAttr) {
-    colStatus = hContent->GetHTMLAttribute(aSpec.mColSizeAttr, colAttr);
-  }
-  float p2t;
-  aPresContext->GetScaledPixelsToTwips(p2t);
-
-  // determine the width
-  nscoord adjSize;
-  if (NS_CONTENT_ATTR_HAS_VALUE == colStatus) {  // col attr will provide width
-    PRInt32 col = ((colAttr.GetUnit() == eHTMLUnit_Pixel) ? colAttr.GetPixelValue() : colAttr.GetIntValue());
-    if (aSpec.mColSizeAttrInPixels) {
-      col = (col <= 0) ? 15 : col; 
-      aBounds.width = NSIntPixelsToTwips(col, p2t);
-    }
-    else {
-      col = (col <= 0) ? 1 : col;
-      charWidth = GetTextSize(*aPresContext, aFrame, col, aBounds, aRendContext);
-      aRowHeight = aBounds.height;  // XXX aBounds.height has CSS_NOTSET
-    }
-    if (aSpec.mColSizeAttrInPixels) {
-      aWidthExplicit = PR_TRUE;
-    }
-  }
-  else {
-    if (CSS_NOTSET != aCSSSize.width) {  // css provides width
-      aBounds.width = (aCSSSize.width > 0) ? aCSSSize.width : 1;
-      aWidthExplicit = PR_TRUE;
-    } 
-    else {                       
-      if (NS_CONTENT_ATTR_HAS_VALUE == valStatus) { // use width of initial value 
-        charWidth = GetTextSize(*aPresContext, aFrame, valAttr, aBounds, aRendContext);
-      }
-      else if (aSpec.mColDefaultValue) { // use default value
-        charWidth = GetTextSize(*aPresContext, aFrame, *aSpec.mColDefaultValue, aBounds, aRendContext);
-      }
-      else if (aSpec.mColDefaultSizeInPixels) {    // use default width in pixels
-        charWidth = GetTextSize(*aPresContext, aFrame, 1, aBounds, aRendContext);
-        aBounds.width = aSpec.mColDefaultSize;
-      }
-      else  {                                    // use default width in num characters
-        charWidth = GetTextSize(*aPresContext, aFrame, aSpec.mColDefaultSize, aBounds, aRendContext); 
-      }
-      aRowHeight = aBounds.height; // XXX aBounds.height has CSS_NOTSET
-    }
-  }
-
-  // determine the height
-  nsHTMLValue rowAttr;
-  nsresult rowStatus = NS_CONTENT_ATTR_NOT_THERE;
-  if (nsnull != aSpec.mRowSizeAttr) {
-    rowStatus = hContent->GetHTMLAttribute(aSpec.mRowSizeAttr, rowAttr);
-  }
-  if (NS_CONTENT_ATTR_HAS_VALUE == rowStatus) { // row attr will provide height
-    PRInt32 rowAttrInt = ((rowAttr.GetUnit() == eHTMLUnit_Pixel) ? rowAttr.GetPixelValue() : rowAttr.GetIntValue());
-    adjSize = (rowAttrInt > 0) ? rowAttrInt : 1;
-    if (0 == charWidth) {
-      charWidth = GetTextSize(*aPresContext, aFrame, 1, textSize, aRendContext);
-      aBounds.height = textSize.height * adjSize;
-      aRowHeight = textSize.height;
-      numRows = adjSize;
-    }
-    else {
-      aBounds.height = aBounds.height * adjSize;
-    }
-  }
-  else if (CSS_NOTSET != aCSSSize.height) {  // css provides height
-    aBounds.height = (aCSSSize.height > 0) ? aCSSSize.height : 1;
-    aHeightExplicit = PR_TRUE;
-  } 
-  else {         // use default height in num lines
-    if (0 == charWidth) {  
-      charWidth = GetTextSize(*aPresContext, aFrame, 1, textSize, aRendContext);
-      aBounds.height = textSize.height * aSpec.mRowDefaultSize;
-      aRowHeight = textSize.height;
-    } 
-    else {
-      aBounds.height = aBounds.height * aSpec.mRowDefaultSize;
-    }
-  }
-
-  if ((0 == charWidth) || (0 == textSize.width)) {
-    charWidth = GetTextSize(*aPresContext, aFrame, 1, textSize, aRendContext);
-    aRowHeight = textSize.height;
-  }
-
-  // add inside padding if necessary
-  if (!aWidthExplicit) {
-    aBounds.width += (2 * aFrame->GetHorizontalInsidePadding(*aPresContext, p2t, aBounds.width, charWidth));
-  }
-  if (!aHeightExplicit) {
-    aBounds.height += (2 * aFrame->GetVerticalInsidePadding(p2t, textSize.height)); 
-  }
-
-  NS_RELEASE(hContent);
-  if (ATTR_NOTSET == numRows) {
-    numRows = aBounds.height / aRowHeight;
-  }
-
-  NS_RELEASE(iContent);
-  return numRows;
-}
-
-
-// this handles all of the input types rather than having them do it.
-NS_IMETHODIMP 
-nsFormControlFrame::GetFont(nsIPresContext* aPresContext, nsFont& aFont)
-{
-  const nsStyleFont* styleFont = (const nsStyleFont*)mStyleContext->GetStyleData(eStyleStruct_Font);
-
-  nsCompatibility mode;
-  aPresContext->GetCompatibilityMode(mode);
-
-  if (eCompatibility_Standard == mode) {
-    aFont = styleFont->mFont;
-    return NS_OK;
-  }
-
-  PRInt32 type;
-  GetType(&type);
-  switch (type) {
-    case NS_FORM_INPUT_TEXT:
-    case NS_FORM_TEXTAREA:
-    case NS_FORM_INPUT_PASSWORD:
-      aFont = styleFont->mFixedFont;
-      break;
-    case NS_FORM_INPUT_BUTTON:
-    case NS_FORM_INPUT_SUBMIT:
-    case NS_FORM_INPUT_RESET:
-    case NS_FORM_SELECT:
-      if ((styleFont->mFlags & NS_STYLE_FONT_FACE_EXPLICIT) || 
-          (styleFont->mFlags & NS_STYLE_FONT_SIZE_EXPLICIT)) {
-        aFont = styleFont->mFixedFont;
-        aFont.weight = NS_FONT_WEIGHT_NORMAL;  // always normal weight
-        aFont.size = styleFont->mFont.size;    // normal font size
-        if (0 == (styleFont->mFlags & NS_STYLE_FONT_FACE_EXPLICIT)) {
-          aFont.name = "Arial";  // XXX windows specific font
-        }
-      } else {
-        // use arial, scaled down one HTML size
-        // italics, decoration & variant(?) get used
-        aFont = styleFont->mFont;
-        aFont.name = "Arial";  // XXX windows specific font
-        aFont.weight = NS_FONT_WEIGHT_NORMAL; 
-        const nsFont& normal = aPresContext->GetDefaultFont();
-        PRInt32 scaler;
-        aPresContext->GetFontScaler(scaler);
-        float scaleFactor = nsStyleUtil::GetScalingFactor(scaler);
-        PRInt32 fontIndex = nsStyleUtil::FindNextSmallerFontSize(aFont.size, (PRInt32)normal.size, scaleFactor);
-        aFont.size = nsStyleUtil::CalcFontPointSize(fontIndex, (PRInt32)normal.size, scaleFactor);
-      }
-      break;
-  }
-  return NS_OK;
-}
-
 void
 nsFormControlFrame::Reset()
 {
 }
+
+NS_IMETHODIMP
+nsFormControlFrame::GetFormContent(nsIContent*& aContent) const
+{
+  return GetContent(aContent);
+}
+
+NS_IMETHODIMP
+nsFormControlFrame::GetFont(nsIPresContext*        aPresContext, 
+                             nsFont&                aFont)
+{
+  nsFormControlHelper::GetFont(this, aPresContext, mStyleContext, aFont);
+  return NS_OK;
+}
+
+
 
 nsresult nsFormControlFrame::GetDefaultCheckState(PRBool *aState)
 {
@@ -1002,7 +758,9 @@ nsresult nsFormControlFrame::SetCurrentCheckState(PRBool aState)
 	return res;
 }
 
+#if 0
 
+>>>>>>> 1.41
 //
 //-------------------------------------------------------------------------------------
 // Utility methods for rendering Form Elements using GFX
@@ -1300,7 +1058,6 @@ nsFormControlFrame::PaintScaledCheckMark(nsIRenderingContext& aRenderingContext,
 }
 #endif
 
-
 void
 nsFormControlFrame::PaintFocus(nsIRenderingContext& aRenderingContext,
                             const nsRect& aDirtyRect, nsRect& aInside, nsRect& aOutside)
@@ -1501,4 +1258,4 @@ nsFormControlFrame::PaintCircularBorder(nsIPresContext& aPresContext,
 }
 
 
-
+#endif
