@@ -19,7 +19,9 @@
 #include "nsTextWidget.h"
 #include <ToolUtils.h>
 #include <Appearance.h>
-
+#if TARGET_CARBON
+#include <ControlDefinitions.h>
+#endif
 
 NS_IMPL_ADDREF(nsTextWidget);
 NS_IMPL_RELEASE(nsTextWidget);
