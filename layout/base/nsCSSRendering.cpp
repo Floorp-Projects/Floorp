@@ -649,10 +649,10 @@ void nsCSSRendering::PaintBorder(nsIPresContext& aPresContext,
                                  nsIFrame* aForFrame,
                                  const nsRect& aDirtyRect,
                                  const nsRect& aBounds,
-                                 const nsStyleMolecule& aMolecule,
+                                 const nsStyleBorder& aStyle,
                                  PRIntn aSkipSides)
 {
-  const nsMargin& border = aMolecule.border;
+  const nsMargin& border = aStyle.mSize;
   if ((0 == border.left) && (0 == border.right) &&
       (0 == border.top) && (0 == border.bottom)) {
     // Empty border area
@@ -665,34 +665,34 @@ void nsCSSRendering::PaintBorder(nsIPresContext& aPresContext,
 
   //see if any sides are dotted or dashed
   for (PRIntn cnt = 0; cnt < 4; cnt++) {
-    if ((aMolecule.borderStyle[cnt] == NS_STYLE_BORDER_STYLE_DOTTED) ||
-        (aMolecule.borderStyle[cnt] == NS_STYLE_BORDER_STYLE_DASHED)) {
+    if ((aStyle.mStyle[cnt] == NS_STYLE_BORDER_STYLE_DOTTED) ||
+        (aStyle.mStyle[cnt] == NS_STYLE_BORDER_STYLE_DASHED)) {
       break;
     }
   }
   if (cnt < 4) {
     // Draw the dashed/dotted lines first
-    DrawDashedSides(cnt, aRenderingContext, aMolecule.borderStyle,
-                    aMolecule.borderColor, inside, outside,
+    DrawDashedSides(cnt, aRenderingContext, aStyle.mStyle,
+                    aStyle.mColor, inside, outside,
                     aSkipSides);
   }
 
   // Draw all the other sides
   if (0 == (aSkipSides & (1<<NS_SIDE_TOP))) {
-    DrawSide(aRenderingContext, NS_SIDE_TOP, aMolecule.borderStyle,
-             aMolecule.borderColor, inside, outside);
+    DrawSide(aRenderingContext, NS_SIDE_TOP, aStyle.mStyle,
+             aStyle.mColor, inside, outside);
   }
   if (0 == (aSkipSides & (1<<NS_SIDE_LEFT))) {
-    DrawSide(aRenderingContext, NS_SIDE_LEFT, aMolecule.borderStyle, 
-             aMolecule.borderColor, inside, outside);
+    DrawSide(aRenderingContext, NS_SIDE_LEFT, aStyle.mStyle, 
+             aStyle.mColor, inside, outside);
   }
   if (0 == (aSkipSides & (1<<NS_SIDE_BOTTOM))) {
-    DrawSide(aRenderingContext, NS_SIDE_BOTTOM, aMolecule.borderStyle,
-             aMolecule.borderColor, inside, outside);
+    DrawSide(aRenderingContext, NS_SIDE_BOTTOM, aStyle.mStyle,
+             aStyle.mColor, inside, outside);
   }
   if (0 == (aSkipSides & (1<<NS_SIDE_RIGHT))) {
-    DrawSide(aRenderingContext, NS_SIDE_RIGHT, aMolecule.borderStyle,
-             aMolecule.borderColor, inside, outside);
+    DrawSide(aRenderingContext, NS_SIDE_RIGHT, aStyle.mStyle,
+             aStyle.mColor, inside, outside);
   }
 }
 

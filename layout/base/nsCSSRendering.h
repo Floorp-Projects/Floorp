@@ -34,7 +34,7 @@ public:
                           nsIFrame* aForFrame,
                           const nsRect& aDirtyRect,
                           const nsRect& aBounds,
-                          const nsStyleMolecule& aMolecule,
+                          const nsStyleBorder& aStyle,
                           PRIntn aSkipSides);
 
   /**
