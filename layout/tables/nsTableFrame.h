@@ -382,7 +382,6 @@ public:
                        nscoord                  aAvailHeight,
                        nsReflowReason           aReason,
                        nsIFrame*&               aLastChildReflowed,
-                       PRBool&                  aDoCollapse,
                        PRBool&                  aDidBalance,
                        nsReflowStatus&          aStatus);
 
@@ -788,6 +787,12 @@ public:
 
   PRBool NeedToCalcBCBorders() const;
   void SetNeedToCalcBCBorders(PRBool aValue);
+  
+  PRBool NeedToCollapseRows() const;
+  void SetNeedToCollapseRows(PRBool aValue);
+  
+  PRBool NeedToCollapseColumns() const;
+  void SetNeedToCollapseColumns(PRBool aValue);
 
   /** Get the cell map for this table frame.  It is not always mCellMap.
     * Only the firstInFlow has a legit cell map
@@ -930,7 +935,9 @@ protected:
     PRUint32 mInitiatedSpecialReflow:1;
     PRUint32 mNeedToCalcBCBorders:1;
     PRUint32 mLeftContBCBorder:8;
-    PRUint32 : 11;                     // unused
+    PRUint32 mNeedToCollapseRows:1;    // rows that have visibility need to be collapse
+    PRUint32 mNeedToCollapseColumns:1; // colums that have visibility need to be collapsed
+    PRUint32 :9;                       // unused
   } mBits;
 
   nsTableCellMap*         mCellMap;            // maintains the relationships between rows, cols, and cells
@@ -1046,6 +1053,26 @@ inline PRBool nsTableFrame::IsRowInserted() const
 inline void nsTableFrame::SetRowInserted(PRBool aValue)
 {
   mBits.mRowInserted = (unsigned)aValue;
+}
+
+inline void nsTableFrame::SetNeedToCollapseRows(PRBool aValue)
+{
+  mBits.mNeedToCollapseRows = (unsigned)aValue;
+}
+
+inline PRBool nsTableFrame::NeedToCollapseRows() const
+{
+  return (PRBool)mBits.mNeedToCollapseRows;
+}
+
+inline void nsTableFrame::SetNeedToCollapseColumns(PRBool aValue)
+{
+  mBits.mNeedToCollapseColumns = (unsigned)aValue;
+}
+
+inline PRBool nsTableFrame::NeedToCollapseColumns() const
+{
+  return (PRBool)mBits.mNeedToCollapseColumns;
 }
 
 inline nsFrameList& nsTableFrame::GetColGroups()

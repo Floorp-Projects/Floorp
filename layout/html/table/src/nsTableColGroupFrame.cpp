@@ -426,10 +426,21 @@ NS_METHOD nsTableColGroupFrame::Reflow(nsIPresContext*          aPresContext,
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
   NS_ASSERTION(nsnull!=mContent, "bad state -- null content for frame");
   nsresult rv=NS_OK;
+  
+  const nsStyleVisibility* groupVis = GetStyleVisibility();
+  PRBool collapseGroup = (NS_STYLE_VISIBILITY_COLLAPSE == groupVis->mVisible);
+  if (collapseGroup) {
+    nsTableFrame* tableFrame = nsnull;
+    nsTableFrame::GetTableFrame(this, tableFrame);
+    if (tableFrame)  {
+      tableFrame->SetNeedToCollapseColumns(PR_TRUE);
+    }
+  }
   // for every content child that (is a column thingy and does not already have a frame)
   // create a frame and adjust it's style
   nsIFrame* kidFrame = nsnull;
- 
+  
+  
   if (eReflowReason_Incremental == aReflowState.reason) {
     rv = IncrementalReflow(aPresContext, aDesiredSize, aReflowState, aStatus);
   }

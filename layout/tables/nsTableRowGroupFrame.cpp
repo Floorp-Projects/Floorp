@@ -1201,6 +1201,11 @@ nsTableRowGroupFrame::Reflow(nsIPresContext*          aPresContext,
 
   nsRowGroupReflowState state(aReflowState, tableFrame);
   PRBool haveDesiredHeight = PR_FALSE;
+  const nsStyleVisibility* groupVis = GetStyleVisibility();
+  PRBool collapseGroup = (NS_STYLE_VISIBILITY_COLLAPSE == groupVis->mVisible);
+  if (collapseGroup) {
+    tableFrame->SetNeedToCollapseRows(PR_TRUE);
+  }
 
   if (eReflowReason_Incremental == aReflowState.reason) {
     rv = IncrementalReflow(aPresContext, aDesiredSize, state, aStatus);
