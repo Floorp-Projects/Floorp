@@ -197,7 +197,6 @@ static pascal void FileDialogEventHandlerProc( NavEventCallbackMessage msg, NavC
 Boolean
 nsFilePicker :: IsTypeInFilterList ( ResType inType )
 {
-return false;
   for ( int i = 0; i < mFilters.Count(); ++i ) {
     for ( int j = 0; j < mTypeLists[i]->osTypeCount; ++j ) {
       if ( mTypeLists[i]->osType[j] == inType ) 
