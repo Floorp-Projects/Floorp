@@ -69,7 +69,14 @@ function ComposeStartup()
 			else
 			{
 				window.editorShell.SetEditorType("text");
-				window.editorShell.wrapColumn = msgCompose.wrapLength;
+				try
+				{
+					window.editorShell.wrapColumn = msgCompose.wrapLength;
+				}
+				catch (e)
+				{
+					dump("### window.editorShell.wrapColumn exception text: " + e + " - failed\n");
+				}
 				dump("editor initialized in PLAIN TEXT mode\n");
 			}
 
