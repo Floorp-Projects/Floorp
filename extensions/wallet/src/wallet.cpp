@@ -38,7 +38,6 @@
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMHTMLSelectElement.h"
 #include "nsIDOMHTMLOptionElement.h"
-#include "nsICommonDialogs.h"
 #include "nsIURL.h"
 
 #include "nsFileStream.h"
@@ -73,7 +72,6 @@ static NS_DEFINE_IID(kIDOMHTMLOptionElementIID, NS_IDOMHTMLOPTIONELEMENT_IID);
 static NS_DEFINE_IID(kIIOServiceIID, NS_IIOSERVICE_IID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
-static NS_DEFINE_CID(kCommonDialogsCID, NS_CommonDialog_CID );
 static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_CID(kProfileCID, NS_PROFILE_CID);
 
@@ -744,24 +742,26 @@ Wallet_Confirm(PRUnichar * szMessage, nsIDOMWindow* window)
   PRBool retval = PR_TRUE; /* default value */
 
   nsresult res;  
-  NS_WITH_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, &res);
-  if (NS_FAILED(res)) {
+  nsCOMPtr<nsIPrompt> dialog; 
+  window->GetPrompt(getter_AddRefs(dialog)); 
+  if (!dialog) {
     return retval;
-  }
+  } 
 
   const nsAutoString message = szMessage;
   retval = PR_FALSE; /* in case user exits dialog by clicking X */
-  res = dialog->Confirm(window, nsnull, message.GetUnicode(), &retval);
+  res = dialog->Confirm(nsnull, message.GetUnicode(), &retval);
   return retval;
 }
 
 PUBLIC PRBool
 Wallet_ConfirmYN(PRUnichar * szMessage, nsIDOMWindow* window) {
   nsresult res;  
-  NS_WITH_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, &res);
-  if (NS_FAILED(res)) {
+  nsCOMPtr<nsIPrompt> dialog; 
+  window->GetPrompt(getter_AddRefs(dialog)); 
+  if (!dialog) {
     return PR_FALSE;
-  }
+  } 
 
   PRInt32 buttonPressed = 1; /* in case user exits dialog by clickin X */
   PRUnichar * yes_string = Wallet_Localize("Yes");
@@ -769,7 +769,6 @@ Wallet_ConfirmYN(PRUnichar * szMessage, nsIDOMWindow* window) {
   PRUnichar * confirm_string = Wallet_Localize("Confirm");
 
   res = dialog->UniversalDialog(
-    window, /* parent window */
     NULL, /* title message */
     confirm_string, /* title text in top line of window */
     szMessage, /* this is the main message */
@@ -799,10 +798,11 @@ PUBLIC PRInt32
 Wallet_3ButtonConfirm(PRUnichar * szMessage, nsIDOMWindow* window)
 {
   nsresult res;  
-  NS_WITH_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, &res);
-  if (NS_FAILED(res)) {
+  nsCOMPtr<nsIPrompt> dialog; 
+  window->GetPrompt(getter_AddRefs(dialog)); 
+  if (!dialog) {
     return 0; /* default value is NO */
-  }
+  } 
 
   PRInt32 buttonPressed = 1; /* default of NO if user exits dialog by clickin X */
   PRUnichar * yes_string = Wallet_Localize("Yes");
@@ -811,7 +811,6 @@ Wallet_3ButtonConfirm(PRUnichar * szMessage, nsIDOMWindow* window)
   PRUnichar * confirm_string = Wallet_Localize("Confirm");
 
   res = dialog->UniversalDialog(
-    window, /* parent window */
     NULL, /* title message */
     confirm_string, /* title text in top line of window */
     szMessage, /* this is the main message */
@@ -843,15 +842,16 @@ Wallet_3ButtonConfirm(PRUnichar * szMessage, nsIDOMWindow* window)
 PRIVATE void
 wallet_Alert(PRUnichar * szMessage, nsIDOMWindow* window)
 {
-  nsresult res;  
-  NS_WITH_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, &res);
-  if (NS_FAILED(res)) {
+  nsresult res;
+  nsCOMPtr<nsIPrompt> dialog; 
+  window->GetPrompt(getter_AddRefs(dialog)); 
+  if (!dialog) {
     return;     // XXX should return the error
-  }
+  } 
 
   const nsAutoString message = szMessage;
   PRUnichar * title = Wallet_Localize("CaveatTitle");
-  res = dialog->Alert(window, title, message.GetUnicode());
+  res = dialog->Alert(title, message.GetUnicode());
   Recycle(title);
   return;     // XXX should return the error
 }
@@ -871,12 +871,12 @@ PUBLIC PRBool
 Wallet_CheckConfirmYN
     (PRUnichar * szMessage, PRUnichar * szCheckMessage, PRBool* checkValue,
      nsIDOMWindow* window) {
-  nsresult res;  
-  NS_WITH_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, &res);
-  if (NS_FAILED(res)) {
-    *checkValue = 0;
+  nsresult res;
+  nsCOMPtr<nsIPrompt> dialog; 
+  window->GetPrompt(getter_AddRefs(dialog)); 
+  if (!dialog) {
     return PR_FALSE;
-  }
+  } 
 
   PRInt32 buttonPressed = 1; /* in case user exits dialog by clickin X */
   PRUnichar * yes_string = Wallet_Localize("Yes");
@@ -884,7 +884,6 @@ Wallet_CheckConfirmYN
   PRUnichar * confirm_string = Wallet_Localize("Confirm");
 
   res = dialog->UniversalDialog(
-    window, /* parent window */
     NULL, /* title message */
     confirm_string, /* title text in top line of window */
     szMessage, /* this is the main message */
