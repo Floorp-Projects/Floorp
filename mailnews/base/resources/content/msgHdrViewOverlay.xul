@@ -30,8 +30,24 @@ Rights Reserved.
 <script src="chrome://messenger/content/msgHdrViewOverlay.js"/>
 <script src="chrome://messenger/content/mime.js"/>
 
-<box id="msgHeaderView">
 
+<popup id="attachmentTreeContext">
+  <menuitem id="context-openAttachment" label="&openAttachmentCmd.label;" accesskey="&openAttachmentCmd.accesskey;"
+     oncommand="handleAttachmentSelection('openAttachment');"/>
+  <menuitem id="context-saveAttachment" label="&saveAsAttachmentCmd.label;" accesskey="&saveAsAttachmentCmd.accesskey;"
+     oncommand="handleAttachmentSelection('saveAttachment');"/>
+  <menuitem id="context-printAttachment" disabled="true" label="&printAttachmentCmd.label;" accesskey="&printAttachmentCmd.accesskey;"
+    oncommand="handleAttachmentSelection('printAttachment');"/>
+  <menuseparator/>
+  <menuitem id="context-saveAllAttachments" oncommand="SaveAllAttachments();" label="&saveAllAttachmentsCmd.label;" accesskey="&saveAllAttachmentsCmd.accesskey;"/>
+</popup>
+
+<popup id="attachmentMenuList">
+  <menuseparator/>
+  <menuitem label="&saveAllAttachmentsCmd.label;" oncommand="SaveAllAttachments();"/>
+</popup>
+
+<box id="msgHeaderView">
 <grid id="collapsedHeaderView" class="header-part1" flex="1" collapsed="true">
   <columns>
     <column class="collapsedToggleHdrBox" autostretch="never" >
@@ -141,19 +157,22 @@ Rights Reserved.
    
    </vbox>
 
-    <hbox id="expandedAttachmentBox" class="header-part1" collapsed = 'true'>
-      <spring class="buttonSpacer"/>
-        <vbox>
-           <spring class="buttonTopSpacer"/>
-           <menu id="attachmentMenu" class="attachment-menu">
-              <button id="attachmentButton" value="1" orient="right"/>
-              <menupopup id="attachmentPopup" popupanchor="bottomright" popupalign="topright">
-              </menupopup>
-           </menu>
-          <spring flex="1"/>
-      </vbox>
-      <spring class="buttonSpacer"/>
-    </hbox>
+   <vbox id="editMessageBox" class="header-part1" collapsed="true">
+    <spring class="buttonSpacer"/> 
+    <button id="editMessageButton" label="&editMessage.label;" orient="right" onclick="MsgComposeDraftMessage()"/>
+    <spring class="buttonSpacer"/> 
+   </vbox> 
+
+   <hbox id="expandedAttachmentBox" class="header-part1">
+     <text class="label" id="attachmentText" value="&attachmentsTree.label;" crop="right"/>
+     <tree id="attachmentTree" class="inset" flex="2" onclick="attachmentTreeClick(event);" context="attachmentTreeContext">
+       <treecolgroup>
+        <treecol flex="1"/>
+       </treecolgroup>
+       <treechildren id="attachmentsBody" flex="1">
+       </treechildren>
+     </tree>
+   </hbox>
 
   </hbox>
  </box>

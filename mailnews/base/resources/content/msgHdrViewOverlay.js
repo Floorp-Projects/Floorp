@@ -47,7 +47,8 @@ var gShowUserAgent = false;
 var gCollectIncoming = false;
 var gCollectNewsgroup = false;
 var gCollapsedHeaderViewMode = false;
-gBuildAttachmentsForCurrentMsg = false;
+var gBuildAttachmentsForCurrentMsg = false;
+var gBuildAttachmentPopupForCurrentMsg = true;
 
 var msgHeaderParser = Components.classes[msgHeaderParserContractID].getService(Components.interfaces.nsIMsgHeaderParser);
 var abAddressCollector = Components.classes[abAddressCollectorContractID].getService(Components.interfaces.nsIAbAddressCollecter);
@@ -211,7 +212,8 @@ var messageHeaderSink = {
       ClearCurrentHeaders();
       gGeneratedViewAllHeaderInfo = false;
       gBuildAttachmentsForCurrentMsg = false;
-      ClearAttachmentMenu();
+      gBuildAttachmentPopupForCurrentMsg = true;
+      ClearAttachmentTreeList();
       ClearEditMessageButton();
     },
 
@@ -225,11 +227,13 @@ var messageHeaderSink = {
 
       ClearHeaderView(gCollapsedHeaderView);
       ClearHeaderView(gExpandedHeaderView);
+
+      EnsureSubjectValue(); // make sure there is a subject even if it's empty so we'll show the subject and the twisty
       
       ShowMessageHeaderPane();
       UpdateMessageHeaders();
-//      if (gIsEditableMsgFolder)
-//        ShowEditMessageButton();
+      if (gIsEditableMsgFolder)
+        ShowEditMessageButton();
     },
 
     handleHeader: function(headerName, headerValue, dontCollectAddress) 
@@ -295,6 +299,17 @@ var messageHeaderSink = {
         displayAttachmentsForExpandedView();
     }
 };
+
+function EnsureSubjectValue()
+{
+  if (!('subject' in currentHeaderData))
+  {
+    var foo = new Object;
+    foo.headerValue = "";
+    foo.headerName = 'subject';
+    currentHeaderData[foo.headerName] = foo;
+  } 
+}
 
 // flush out any local state being held by a header entry for a given
 // table
@@ -725,24 +740,73 @@ function openAttachment(contentType, url, displayName, messageUri)
   messenger.openAttachment(contentType, url, displayName, messageUri);
 }
 
+function printAttachmentAttachment(contentType, url, displayName, messageUri)
+{
+  // we haven't implemented the ability to print attachments yet...
+  // messenger.printAttachment(contentType, url, displayName, messageUri);
+}
+
+// this is our onclick handler for the attachment tree. 
+// A double click in a tree cell simulates "opening" the attachment....
+function attachmentTreeClick(event)
+{
+	if(event.detail == 2) // double click
+	{
+    var target = event.originalTarget;
+		item = target.parentNode.parentNode;
+		if (item.localName == "treeitem")
+    {
+			var commandStringSuffix = item.getAttribute("commandSuffix");
+      var openString = 'openAttachment' + commandStringSuffix;
+      eval(openString);
+    }
+	}
+}
+
+// on command handlers for the attachment tree context menu...
+// commandPrefix matches one of our existing functions (openAttachment, saveAttachment, etc.) which we'll add to the command suffix
+// found on the tree item....
+function handleAttachmentSelection(commandPrefix)
+{
+  // get the selected attachment...and call openAttachment on it...
+  var attachmentTree = document.getElementById('attachmentTree');
+  var selectedAttachments = attachmentTree.selectedItems;
+  var treeItem = selectedAttachments[0];
+  var commandStringSuffix = treeItem.getAttribute("commandSuffix");
+  var openString = commandPrefix + commandStringSuffix;
+  eval(openString);
+}
+
+function generateCommandSuffixForAttachment(attachment)
+{
+  return "('" + attachment.contentType + "', '" + attachment.url + "', '" + escape(attachment.displayName) + "', '" + attachment.uri + "')";
+}
+
 function displayAttachmentsForExpandedView()
 {
   var numAttachments = currentAttachments.length;
   if (numAttachments > 0 && !gBuildAttachmentsForCurrentMsg)
   {
+    var attachmentList = document.getElementById('attachmentsBody');
+    var row, cell, item;
     for (index in currentAttachments)
     {
-       var attachment = currentAttachments[index];
-      // be sure to escape the display name before we insert it into the method
-      var commandStringPrefix = "('" + attachment.contentType + "', '" + attachment.url + "', '" + escape(attachment.displayName) + "', '" + attachment.uri + "')";
-      var screenDisplayName = attachment.displayName;
-      if (attachment.notDownloaded)
-      {
-        screenDisplayName += " " + gMessengerBundle.getString("notDownloaded");
-      }
+      var attachment = currentAttachments[index];
+      // we need to create a tree item, a tree row and a tree cell to insert the attachment
+      // into the attachment tree..
 
-      AddAttachmentToMenu(screenDisplayName, commandStringPrefix);    
-    }
+		  item = document.createElement("treeitem");
+		  row = document.createElement("treerow");
+		  cell = document.createElement("treecell");
+
+      cell.setAttribute('class', "treecell-iconic"); 
+     	cell.setAttribute("label", attachment.displayName);
+      item.setAttribute("commandSuffix", generateCommandSuffixForAttachment(attachment)); // set the command suffix on the tree item...
+      setApplicationIconForAttachment(attachment, cell);
+		  row.appendChild(cell);
+		  item.appendChild(row);
+		  attachmentList.appendChild(item);
+    } // for each attachment
     gBuildAttachmentsForCurrentMsg = true;
   }
 
@@ -751,6 +815,14 @@ function displayAttachmentsForExpandedView()
     attachmentNode.removeAttribute('collapsed');
   else
     attachmentNode.setAttribute('collapsed', true);
+}
+
+// attachment --> the attachment struct containing all the information on the attachment
+// treeCell --> the tree cell currently showing the attachment.
+function setApplicationIconForAttachment(attachment, treeCell)
+{
+   // generate a moz-icon url for the attachment so we'll show a nice icon next to it.
+   treeCell.setAttribute('src', "moz-icon:" + "//" + attachment.displayName + "?size=16&contentType=" + attachment.contentType);
 }
 
 function displayAttachmentsForCollapsedView()
@@ -767,16 +839,59 @@ function displayAttachmentsForCollapsedView()
   }
 }
 
-function AddAttachmentToMenu(name, oncommandPrefix) 
+// Public method called when we create the attachments file menu
+function FillAttachmentListPopup(popup)
+{
+  // the FE sometimes call this routie TWICE...I haven't been able to figure out why yet...
+  // protect against it...
+
+  if (!gBuildAttachmentPopupForCurrentMsg) return; 
+
+  // otherwise we need to build the attachment view...
+  // First clear out the old view...
+  ClearAttachmentMenu(popup);
+
+
+  for (index in currentAttachments)
+  {
+    addAttachmentToPopup(popup, currentAttachments[index]);
+  }
+
+  gBuildAttachmentPopupForCurrentMsg = false;
+
+}
+
+// Public method used to clear the file attachment menu
+function ClearAttachmentMenu(popup) 
 { 
-  var popup = document.getElementById("attachmentPopup"); 
+  if ( popup ) 
+  { 
+     while ( popup.childNodes.length > 2 ) 
+       popup.removeChild(popup.childNodes[0]); 
+  } 
+}
+
+// Public method used to determine the number of attachments for the currently displayed message...
+function GetNumberOfAttachmentsForDisplayedMessage()
+{
+  return currentAttachments.length;
+}
+
+// private method used to build up a menu list of attachments
+function addAttachmentToPopup(popup, attachment) 
+{ 
   if (popup)
   { 
     var item = document.createElement('menu');
     if ( item ) 
     {     
-      item = popup.appendChild(item);
-      item.setAttribute('label', name); 
+      // insert the item just before the separator...the separator is the 2nd to last element in the popup.
+      item.setAttribute('class', 'menu-iconic');
+      setApplicationIconForAttachment(attachment,item);
+      var numItemsInPopup = popup.childNodes.length;
+      item = popup.insertBefore(item, popup.childNodes[length-2]);
+      item.setAttribute('label', attachment.displayName); 
+      var oncommandPrefix = generateCommandSuffixForAttachment(attachment);
 
       var openpopup = document.createElement('menupopup');
       openpopup = item.appendChild(openpopup);
@@ -793,63 +908,49 @@ function AddAttachmentToMenu(name, oncommandPrefix)
       menuitementry.setAttribute('oncommand', 'saveAttachment' + oncommandPrefix); 
       menuitementry.setAttribute('label', "Save"); 
       menuitementry = openpopup.appendChild(menuitementry);
-    } 
-
-    var button = document.getElementById("attachmentButton");
-    if (button)
-    {
-       button.setAttribute("label", popup.childNodes.length);
-    }
-  } 
+    }  // if we created a menu item for this attachment...
+  } // if we have a popup
 } 
 
 function SaveAllAttachments()
 {
-    try 
-    {
-        messenger.saveAllAttachments(attachmentUrlArray.length,
-                                     attachmentUrlArray,
-                                     attachmentDisplayNameArray,
-                                     attachmentMessageUriArray);
-    }
-    catch (ex)
-    {
-        dump ("** failed to save all attachments ** \n");
-    }
+ try 
+ {
+   // convert our attachment data into some c++ friendly structs
+   var attachmentUrlArray = new Array();
+   var attachmentDisplayNameArray = new Array();
+   var attachmentMessageUriArray = new Array();
+
+   // populate these arrays..
+   for (index in currentAttachments)
+   {
+     var attachment = currentAttachments[index];
+     attachmentUrlArray[index] = attachment.url;
+     attachmentDisplayNameArray[index] = escape(attachment.displayName);
+     attachmentMessageUriArray[index] = attachment.uri;
+   }
+
+   // okay the list has been built...now call our save all attachments code...
+   messenger.saveAllAttachments(attachmentUrlArray.length, attachmentUrlArray, attachmentDisplayNameArray, attachmentMessageUriArray);
+ }
+ catch (ex)
+ {
+   dump ("** failed to save all attachments ** \n");
+ }
 }
 
-function AddSaveAllAttachmentsMenu()
-{
-  return;
-    var popup = document.getElementById("attachmentPopup");
-    if (popup && popup.childNodes.length > 1)
-    {
-        var separator = document.createElement('menuseparator');
-        var item = document.createElement('menuitem');
-        if (separator && item)
-        {
-            popup.appendChild(separator);
-            popup.appendChild(item);
-            item.setAttribute('label', "Save All...");
-            item.setAttribute('oncommand', "SaveAllAttachments()");
-        }
-    }
-}
-
-
-function ClearAttachmentMenu() 
+function ClearAttachmentTreeList() 
 { 
-  var popup = document.getElementById("attachmentPopup"); 
-  if ( popup ) 
+  var attachmentTreebody = document.getElementById("attachmentsBody"); 
+  if ( attachmentTreebody ) 
   { 
-     while ( popup.childNodes.length ) 
-       popup.removeChild(popup.childNodes[0]); 
+     while ( attachmentTreebody.childNodes.length ) 
+       attachmentTreebody.removeChild(attachmentTreebody.childNodes[0]); 
   } 
 }
 
 function ShowEditMessageButton() 
 {
-  return;
   var editBox = document.getElementById("editMessageBox");
   if (editBox)
     editBox.removeAttribute("collapsed");
@@ -857,7 +958,6 @@ function ShowEditMessageButton()
 
 function ClearEditMessageButton() 
 { 
-  return;
   var editBox = document.getElementById("editMessageBox");
   if (editBox)
     editBox.setAttribute("collapsed", "true");

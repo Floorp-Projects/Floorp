@@ -498,7 +498,7 @@ Rights Reserved.
         label="&folderContextProperties.label;"
         accesskey="&folderContextProperties.accesskey;"
         oncommand="MsgFolderProperties();"/>
-  </popup>
+  </popup> 
 
   <popup id="messagePaneContext"   
      oncreate="gMessagePaneContextMenu = new nsContextMenu(this); return fillMessagePaneContextMenu(gMessagePaneContextMenu);"
@@ -733,7 +733,9 @@ Rights Reserved.
         observes="cmd_openMessage"
         accesskey="&openMessageWindowCmd.accesskey;"
         key="key_openMessage"/>
-      <menu id="fileAttachmentMenu" label="&openAttachmentCmd.label;"/>
+      <menu id="fileAttachmentMenu" label="&openAttachmentCmd.label;">
+        <menupopup id="attachmentMenuList" oncreate="FillAttachmentListPopup(this);"/>
+      </menu>
       <menuseparator/>
       <menuitem id="menu_close"/>
       <menu label="&saveAsMenu.label;" accesskey="&saveAsMenu.accesskey;">

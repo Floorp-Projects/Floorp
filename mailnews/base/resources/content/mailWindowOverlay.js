@@ -53,23 +53,19 @@ function file_init()
 
 function file_attachments()
 {
-    var apChild=document.getElementById('attachmentPopup').cloneNode(true);
-    if (!apChild)
-        return false;
-    apChild.removeAttribute('popupanchor');
-    apChild.removeAttribute('popupalign');
-    var amParent=document.getElementById('fileAttachmentMenu');
-    if (!amParent)
-        return false;
-    if (apChild.childNodes.length){
-        if ( amParent.childNodes.length )
-            amParent.removeChild(amParent.childNodes[0]);
-        amParent.appendChild(apChild);
-        amParent.removeAttribute('hidden');
-    }
-    else
-        amParent.setAttribute('hidden',true);
-    return true;
+  var numAttachments = GetNumberOfAttachmentsForDisplayedMessage();
+  var amParent=document.getElementById('fileAttachmentMenu');
+  if (!amParent)
+    return false;
+
+  // hide the attachment menu item if the message does not have any messages..
+  if (numAttachments > 0)
+  {
+    amParent.removeAttribute('hidden');
+  }
+  else
+    amParent.setAttribute('hidden',true);
+  return true;
 }
 
 function InitEditMessagesMenu()
