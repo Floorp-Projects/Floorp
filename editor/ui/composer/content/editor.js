@@ -456,6 +456,18 @@ function EditorSetDocumentCharacterSet(aCharset)
   }
 }
 
+// ------------------------------------------------------------------
+function updateCharsetPopupMenu(menuPopup)
+{
+  if(editorShell.documentModified)
+  {
+    for (var i = 0; i < menuPopup.childNodes.length; i++)
+    {
+      var menuItem = menuPopup.childNodes[i];
+		menuItem.setAttribute('disabled', 'true');
+    }
+  }
+}
 
 // --------------------------- Text style ---------------------------
 
