@@ -1226,21 +1226,17 @@ void JS::PairListExprNode::print(PrettyPrinter &f) const
 		while (true) {
 			const ExprNode *field = p->field;
 			if (field) {
-				{
-					PrettyPrinter::Block b2(f);
-					f << field << ':';
-				}
+				f << field << ':';
 				f.fillBreak(0);
 			}
 
 			const ExprNode *value = p->value;
-			if (value) {
-				PrettyPrinter::Block b3(f);
+			if (value)
 				f << value;
-			}
 			
 			p = p->next;
-			if (!p) break;
+			if (!p)
+				break;
 			f << ',';
 			f.linearBreak(static_cast<uint32>(field || value));
 		}
@@ -1249,12 +1245,11 @@ void JS::PairListExprNode::print(PrettyPrinter &f) const
 
 void JS::InvokeExprNode::print(PrettyPrinter &f) const
 {
+	PrettyPrinter::Block b(f);
 	if (hasKind(New))
 		f << "new ";
-	{
-		PrettyPrinter::Block b(f);
-		f << op;
-	}
+	f << op;
+	PrettyPrinter::Indent i(f, 4);
 	f.fillBreak(0);
 	PairListExprNode::print(f);
 }
@@ -1263,10 +1258,7 @@ void JS::UnaryExprNode::print(PrettyPrinter &f) const
 {
 	if (hasKind(parentheses)) {
 		f << '(';
-		{
-			PrettyPrinter::Block b(f);
-			f << op;
-		}
+		f << op;
 		f << ')';
 	} else {
 		if (debugExprNodePrint)
@@ -1288,18 +1280,13 @@ void JS::BinaryExprNode::print(PrettyPrinter &f) const
 {
 	if (debugExprNodePrint)
 		f << '(';
-	{
-		PrettyPrinter::Block b(f);
-		f << op1;
-	}
+	PrettyPrinter::Block b(f);
+	f << op1;
 	uint32 nSpaces = hasKind(dot) || hasKind(dotParen) || hasKind(at) || hasKind(qualify) ? (uint32)0 : (uint32)1;
 	f.fillBreak(nSpaces);
 	f << kindName(getKind());
 	f.fillBreak(nSpaces);
-	{
-		PrettyPrinter::Block b(f);
-		f << op2;
-	}
+	f << op2;
 	if (hasKind(dotParen))
 		f << ')';
 	if (debugExprNodePrint)
@@ -1310,24 +1297,16 @@ void JS::TernaryExprNode::print(PrettyPrinter &f) const
 {
 	if (debugExprNodePrint)
 		f << '(';
-	{
-		PrettyPrinter::Block b(f);
-		f << op1;
-	}
+	PrettyPrinter::Block b(f);
+	f << op1;
 	f.fillBreak(1);
 	f << '?';
 	f.fillBreak(1);
-	{
-		PrettyPrinter::Block b(f);
-		f << op2;
-	}
+	f << op2;
 	f.fillBreak(1);
 	f << ':';
 	f.fillBreak(1);
-	{
-		PrettyPrinter::Block b(f);
-		f << op3;
-	}
+	f << op3;
 	if (debugExprNodePrint)
 		f << ')';
 }
@@ -1985,6 +1964,7 @@ JS::ExprNode *JS::Parser::parseExpression(bool noIn, bool noAssignment, bool noC
 						if (!t.hasKind(Token::colon))
 							syntaxError("':' expected", 0);
 						lexer.get(false);
+						subexpressionStack.advance_back();
 						s.op2 = e;
 						goto foundColon;
 					}
