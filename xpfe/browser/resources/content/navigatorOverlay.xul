@@ -129,7 +129,7 @@
     <command id="cmd_quit"/>
     <command id="cmd_close" oncommand="BrowserCloseTabOrWindow()"/>
     <command id="cmd_closeOtherTabs" oncommand="BrowserCloseOtherTabs()"/>
-    <command id="cmd_closeWindow" oncommand="BrowserCloseWindow()"/>
+    <command id="cmd_closeWindow" oncommand="BrowserTryToCloseWindow()"/>
 
     <!-- Edit Menu -->
     <command id="cmd_undo"/>
