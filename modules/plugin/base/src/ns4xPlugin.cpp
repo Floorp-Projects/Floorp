@@ -406,7 +406,9 @@ ns4xStreamWrapper::ns4xStreamWrapper(nsIOutputStream* stream)
 {
     NS_ASSERTION(stream != NULL, "bad stream");
 
-    NS_ADDREF(fStream);
+    fStream = stream;
+	
+	NS_ADDREF(fStream);
 
     memset(&fNPStream, 0, sizeof(fNPStream));
     fNPStream.ndata    = (void*) this;
@@ -414,6 +416,8 @@ ns4xStreamWrapper::ns4xStreamWrapper(nsIOutputStream* stream)
 
 ns4xStreamWrapper::~ns4xStreamWrapper(void)
 {
+	fStream->Close();
+
     NS_IF_RELEASE(fStream);
 }
 
@@ -472,7 +476,7 @@ ns4xPlugin::_newstream(NPP npp, NPMIMEType type, const char* window, NPStream* *
 int32 NP_EXPORT
 ns4xPlugin::_write(NPP npp, NPStream *pstream, int32 len, void *buffer)
 {
-    ns4xStreamWrapper* wrapper = (ns4xStreamWrapper*) npp->ndata;
+    ns4xStreamWrapper* wrapper = (ns4xStreamWrapper*) pstream->ndata;
 
     NS_ASSERTION(wrapper != NULL, "null wrapper");
 
@@ -492,7 +496,7 @@ ns4xPlugin::_write(NPP npp, NPStream *pstream, int32 len, void *buffer)
 nsresult NP_EXPORT
 ns4xPlugin::_destroystream(NPP npp, NPStream *pstream, NPError reason)
 {
-    ns4xStreamWrapper* wrapper = (ns4xStreamWrapper*) npp->ndata;
+    ns4xStreamWrapper* wrapper = (ns4xStreamWrapper*) pstream->ndata;
 
     NS_ASSERTION(wrapper != NULL, "null wrapper");
 

@@ -227,9 +227,12 @@ nsPluginStreamListener :: nsPluginStreamListener()
 nsPluginStreamListener :: ~nsPluginStreamListener()
 {
 #ifdef NS_DEBUG
-  const char* spec;
-  (void)mURL->GetSpec(&spec);
-  printf("killing stream for %s\n", mURL ? spec : "(unknown URL)");
+  if(mURL != nsnull)
+  {
+	const char* spec;
+	(void)mURL->GetSpec(&spec);
+	printf("killing stream for %s\n", mURL ? spec : "(unknown URL)");
+  }
 #endif
   NS_IF_RELEASE(mURL);
   NS_IF_RELEASE(mOwner);
@@ -499,7 +502,7 @@ NS_IMETHODIMP nsPluginStreamListener :: OnStopBinding(nsIURL* aURL, nsresult aSt
 			mStreamFile = nsnull;
 
 			char buf[400], tpath[300];
-#ifdef XP_WIN
+#ifdef XP_PC
 			::GetTempPath(sizeof(tpath), tpath);
 			PRInt32 len = PL_strlen(tpath);
 
@@ -512,7 +515,7 @@ NS_IMETHODIMP nsPluginStreamListener :: OnStopBinding(nsIURL* aURL, nsresult aSt
 			PL_strcpy(tpath, "/tmp/");
 #else
 			tpath[0] = 0;
-#endif // XP_WIN
+#endif // XP_PC
 			PR_snprintf(buf, sizeof(buf), "%s%08X.ngl", tpath, mStream);
 			mStream->AsFile(buf);
 		}
@@ -634,7 +637,7 @@ nsresult nsPluginStreamListener::SetUpStreamPeer(nsIURL* aURL, nsIPluginInstance
 		diskCache->AddObject(mCachedFile);
 #else // USE_CACHE
 		char buf[400], tpath[300];
-#ifdef XP_WIN
+#ifdef XP_PC
 		::GetTempPath(sizeof(tpath), tpath);
 		PRInt32 len = PL_strlen(tpath);
 
@@ -647,7 +650,7 @@ nsresult nsPluginStreamListener::SetUpStreamPeer(nsIURL* aURL, nsIPluginInstance
 		PL_strcpy(tpath, "/tmp/");
 #else
 		tpath[0] = 0;
-#endif // XP_WIN
+#endif // XP_PC
 		PR_snprintf(buf, sizeof(buf), "%s%08X.ngl", tpath, mStream);
 		mStreamFile = fopen(buf, "wb");
 #endif // USE_CACHE
