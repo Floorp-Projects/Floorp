@@ -138,6 +138,7 @@
 #include "nsIConsoleService.h"
 #include "nsIControllerContext.h"
 #include "nsGlobalWindowCommands.h"
+#include "nsAutoPtr.h"
 
 #include "plbase64.h"
 
@@ -3165,6 +3166,48 @@ GlobalWindowImpl::GetFrames(nsIDOMWindow** aFrames)
   return NS_OK;
 }
 
+struct nsCloseEvent : public PLEvent {
+  nsCloseEvent (GlobalWindowImpl *aWindow)
+    : mWindow(aWindow)
+  {
+  }
+ 
+  void HandleEvent() {
+    if (mWindow)
+      mWindow->ReallyCloseWindow();
+  }
+
+  nsresult PostCloseEvent();
+
+  nsRefPtr<GlobalWindowImpl> mWindow;
+};
+
+static void PR_CALLBACK HandleCloseEvent(nsCloseEvent* aEvent)
+{
+  aEvent->HandleEvent();
+}
+static void PR_CALLBACK DestroyCloseEvent(nsCloseEvent* aEvent)
+{
+  delete aEvent;
+}
+
+nsresult
+nsCloseEvent::PostCloseEvent()
+{
+  nsCOMPtr<nsIEventQueueService> eventService(do_GetService(kEventQueueServiceCID));
+  if (eventService) {
+    nsCOMPtr<nsIEventQueue> eventQueue;  
+    eventService->GetThreadEventQueue(PR_GetCurrentThread(), getter_AddRefs(eventQueue));
+    if (eventQueue) {
+
+      PL_InitEvent(this, nsnull, (PLHandleEventProc) ::HandleCloseEvent, (PLDestroyEventProc) ::DestroyCloseEvent);
+      return eventQueue->PostEvent(this);
+    }
+  }
+
+  return NS_ERROR_FAILURE;
+}
+
 NS_IMETHODIMP
 GlobalWindowImpl::Close()
 {
@@ -3268,9 +3311,30 @@ GlobalWindowImpl::Close()
     }
   }
 
-  // If we get past the above we're closing the window right now.
-  return ReallyCloseWindow();
+  
+  // We may have plugins on the page that have issued this close from their
+  // event loop and because we currently destroy the plugin window with
+  // frames, we crash. So, if we are called from Javascript, post an event
+  // to really close the window.
+  rv = NS_ERROR_FAILURE;
+  if (!IsCallerChrome()) {
+    nsCloseEvent *ev = new nsCloseEvent(this);
+
+    if (ev) {
+      rv = ev->PostCloseEvent();
+
+      if (NS_FAILED(rv)) {
+        delete ev;
+      }
+    } else rv = NS_ERROR_OUT_OF_MEMORY;
+  }
+  
+  if (NS_FAILED(rv))
+    rv = ReallyCloseWindow();
+  
+  return rv;
 }
+
 
 NS_IMETHODIMP
 GlobalWindowImpl::ReallyCloseWindow()
