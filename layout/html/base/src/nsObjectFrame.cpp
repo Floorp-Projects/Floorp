@@ -2666,7 +2666,10 @@ nsPluginInstanceOwner::Destroy()
       nsCOMPtr<nsIDOMKeyListener> keyListener;
       QueryInterface(NS_GET_IID(nsIDOMKeyListener), getter_AddRefs(keyListener));
       if (keyListener) { 
-        receiver->RemoveEventListenerByIID(keyListener, NS_GET_IID(nsIDOMKeyListener));
+        receiver->RemoveEventListener(NS_LITERAL_STRING("keypress"), keyListener, PR_TRUE);
+        receiver->RemoveEventListener(NS_LITERAL_STRING("keydown"), keyListener, PR_TRUE);
+        receiver->RemoveEventListener(NS_LITERAL_STRING("keyup"), keyListener, PR_TRUE);
+
       }
       else NS_ASSERTION(PR_FALSE, "Unable to remove event listener for plugin");
     }
