@@ -204,39 +204,39 @@ nsBrowserWindow::FindBrowserFor(nsIWidget* aWidget, PRIntn aWhich)
     if (nsnull != bw) {
       switch (aWhich) {
       case FIND_WINDOW:
-	bw->mWindow->QueryInterface(kIWidgetIID, (void**) &widget);
-	if (widget == aWidget) {
-	  result = bw;
-	}
-	NS_IF_RELEASE(widget);
-	break;
+        bw->mWindow->QueryInterface(kIWidgetIID, (void**) &widget);
+        if (widget == aWidget) {
+          result = bw;
+        }
+        NS_IF_RELEASE(widget);
+        break;
       case FIND_BACK:
-	if (bw->mBack) {
-	  bw->mBack->QueryInterface(kIWidgetIID, (void**) &widget);
-	  if (widget == aWidget) {
-	    result = bw;
-	  }
-	  NS_IF_RELEASE(widget);
-	}
-	break;
+        if (bw->mBack) {
+          bw->mBack->QueryInterface(kIWidgetIID, (void**) &widget);
+          if (widget == aWidget) {
+            result = bw;
+          }
+          NS_IF_RELEASE(widget);
+        }
+        break;
       case FIND_FORWARD:
-	if (bw->mForward) {
-	  bw->mForward->QueryInterface(kIWidgetIID, (void**) &widget);
-	  if (widget == aWidget) {
-	    result = bw;
-	  }
-	  NS_IF_RELEASE(widget);
-	}
-	break;
+        if (bw->mForward) {
+          bw->mForward->QueryInterface(kIWidgetIID, (void**) &widget);
+          if (widget == aWidget) {
+            result = bw;
+          }
+          NS_IF_RELEASE(widget);
+        }
+        break;
       case FIND_LOCATION:
-	if (bw->mLocation) {
-	  bw->mLocation->QueryInterface(kIWidgetIID, (void**) &widget);
-	  if (widget == aWidget) {
-	    result = bw;
-	  }
-	  NS_IF_RELEASE(widget);
-	}
-	break;
+        if (bw->mLocation) {
+          bw->mLocation->QueryInterface(kIWidgetIID, (void**) &widget);
+          if (widget == aWidget) {
+            result = bw;
+          }
+          NS_IF_RELEASE(widget);
+        }
+        break;
       }
     }
   }
@@ -1099,12 +1099,12 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
 
 nsresult
 nsBrowserWindow::Init(nsIAppShell* aAppShell,
-		      nsIPref* aPrefs,
-		      const nsRect& aBounds,
-		      PRUint32 aChromeMask,
-		      PRBool aAllowPlugins,
-		      nsIDocumentViewer* aDocumentViewer,
-		      nsIPresContext* aPresContext)
+                      nsIPref* aPrefs,
+                      const nsRect& aBounds,
+                      PRUint32 aChromeMask,
+                      PRBool aAllowPlugins,
+                      nsIDocumentViewer* aDocumentViewer,
+                      nsIPresContext* aPresContext)
 {
   mChromeMask = aChromeMask;
   mAppShell = aAppShell;
@@ -1115,27 +1115,27 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
 
   // Create top level window
   nsresult rv = nsRepository::CreateInstance(kWindowCID, nsnull, kIWidgetIID,
-					     (void**)&mWindow);
+                                             (void**)&mWindow);
   if (NS_OK != rv) {
     return rv;
   }
   nsRect r(0, 0, aBounds.width, aBounds.height);
   mWindow->Create((nsIWidget*)NULL, r, HandleBrowserEvent,
-		  nsnull, aAppShell);
+                  nsnull, aAppShell);
   mWindow->GetClientBounds(r);
 
   // Create web shell
   rv = nsRepository::CreateInstance(kWebShellCID, nsnull,
-				    kIWebShellIID,
-				    (void**)&mWebShell);
+                                    kIWebShellIID,
+                                    (void**)&mWebShell);
   if (NS_OK != rv) {
     return rv;
   }
   r.x = r.y = 0;
   nsRect ws = r;
   rv = mWebShell->Init(mWindow->GetNativeData(NS_NATIVE_WIDGET), 
-		       r.x, r.y, r.width, r.height,
-		       nsScrollPreference_kAuto, aAllowPlugins);
+                       r.x, r.y, r.width, r.height,
+                       nsScrollPreference_kAuto, aAllowPlugins);
   mWebShell->SetContainer((nsIWebShellContainer*) this);
   mWebShell->SetObserver((nsIStreamObserver*)this);
   mWebShell->SetPrefs(aPrefs);
@@ -1197,7 +1197,7 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
 
   // Create and place back button
   rv = nsRepository::CreateInstance(kButtonCID, nsnull, kIButtonIID,
-				    (void**)&mBack);
+                                    (void**)&mBack);
   if (NS_OK != rv) {
     return rv;
   }
@@ -1310,29 +1310,50 @@ nsBrowserWindow::Layout(PRInt32 aWidth, PRInt32 aHeight)
   }
 
   nsRect rr(0, 0, aWidth, aHeight);
-  nsIWidget* locationWidget = nsnull;
 
   // position location bar (it's stretchy)
-  if (mLocation && NS_OK == mLocation->QueryInterface(kIWidgetIID,(void**)&locationWidget)) {
-    if (mChromeMask & NS_CHROME_TOOL_BAR_ON) {
+  if (NS_CHROME_TOOL_BAR_ON & mChromeMask) {
+    nsIWidget* locationWidget = nsnull;
+    if (mLocation &&
+        NS_SUCCEEDED(mLocation->QueryInterface(kIWidgetIID,
+                                               (void**)&locationWidget))) {
       if (mThrobber) {
 	      locationWidget->Resize(2*BUTTON_WIDTH, 0,
-			  aWidth - (2*BUTTON_WIDTH + THROBBER_WIDTH),
-			  BUTTON_HEIGHT,
-			  PR_TRUE);
+                               aWidth - (2*BUTTON_WIDTH + THROBBER_WIDTH),
+                               BUTTON_HEIGHT,
+                               PR_TRUE);
 	      mThrobber->MoveTo(aWidth - THROBBER_WIDTH, 0);
       }
       else {
 	      locationWidget->Resize(2*BUTTON_WIDTH, 0,
-			  aWidth - 2*BUTTON_WIDTH,
-			  BUTTON_HEIGHT,
-			  PR_TRUE);
+                               aWidth - 2*BUTTON_WIDTH,
+                               BUTTON_HEIGHT,
+                               PR_TRUE);
       }
 
       locationWidget->Show(PR_TRUE);
+      NS_RELEASE(locationWidget);
     }
-    else {
-      locationWidget->Show(PR_FALSE);
+  }
+  else {
+    nsIWidget* w = nsnull;
+    if (mLocation &&
+        NS_SUCCEEDED(mLocation->QueryInterface(kIWidgetIID, (void**)&w))) {
+      w->Show(PR_FALSE);
+      NS_RELEASE(w);
+    }
+    if (mBack &&
+        NS_SUCCEEDED(mBack->QueryInterface(kIWidgetIID, (void**)&w))) {
+      w->Show(PR_FALSE);
+      NS_RELEASE(w);
+    }
+    if (mForward &&
+        NS_SUCCEEDED(mForward->QueryInterface(kIWidgetIID, (void**)&w))) {
+      w->Show(PR_FALSE);
+      NS_RELEASE(w);
+    }
+    if (mThrobber) {
+      mThrobber->Hide();
     }
   }
   
@@ -1354,15 +1375,16 @@ nsBrowserWindow::Layout(PRInt32 aWidth, PRInt32 aHeight)
 
   // inset the web widget
 
-  rr.height -= BUTTON_HEIGHT;
-  rr.y += BUTTON_HEIGHT;
+  if (NS_CHROME_TOOL_BAR_ON & mChromeMask) {
+    rr.height -= BUTTON_HEIGHT;
+    rr.y += BUTTON_HEIGHT;
+  }
 
   rr.x += WEBSHELL_LEFT_INSET;
   rr.y += WEBSHELL_TOP_INSET;
   rr.width -= WEBSHELL_LEFT_INSET + WEBSHELL_RIGHT_INSET;
   rr.height -= WEBSHELL_TOP_INSET + WEBSHELL_BOTTOM_INSET;
   mWebShell->SetBounds(rr.x, rr.y, rr.width, rr.height);
-  NS_IF_RELEASE(locationWidget);
 }
 
 NS_IMETHODIMP
@@ -1565,7 +1587,9 @@ nsBrowserWindow::EndLoadURL(nsIWebShell* aShell,
 
 
 NS_IMETHODIMP
-nsBrowserWindow::NewWebShell(nsIWebShell*& aNewWebShell)
+nsBrowserWindow::NewWebShell(PRUint32 aChromeMask,
+                             PRBool aVisible,
+                             nsIWebShell*& aNewWebShell)
 {
   nsresult rv = NS_OK;
 
@@ -1580,10 +1604,15 @@ nsBrowserWindow::NewWebShell(nsIWebShell*& aNewWebShell)
     GetBounds(bounds);
 
     browser->SetApp(mApp);
-    rv = browser->Init(mAppShell, mPrefs, bounds, mChromeMask, mAllowPlugins);
+
+    // Assume no controls for now
+    rv = browser->Init(mAppShell, mPrefs, bounds, aChromeMask, mAllowPlugins);
     if (NS_OK == rv)
     {
-      browser->Show();
+      // Default is to startup hidden
+      if (aVisible) {
+        browser->Show();
+      }
       nsIWebShell *shell;
       rv = browser->GetWebShell(shell);
       aNewWebShell = shell;

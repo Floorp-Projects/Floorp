@@ -2388,7 +2388,9 @@ nsBrowserWindow::EndLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, PRInt32 
 
 //----------------------------------------
 NS_IMETHODIMP
-nsBrowserWindow::NewWebShell(nsIWebShell*& aNewWebShell) 
+nsBrowserWindow::NewWebShell(PRUint32 aChromeMask,
+                             PRBool aVisible,
+                             nsIWebShell*& aNewWebShell) 
 {
   nsresult rv = NS_OK;
 
@@ -2402,9 +2404,11 @@ nsBrowserWindow::NewWebShell(nsIWebShell*& aNewWebShell)
     GetBounds(bounds);
 
     browser->SetApp(mApp);
-    rv = browser->Init(mAppShell, mPrefs, bounds, mChromeMask, mAllowPlugins);
+    rv = browser->Init(mAppShell, mPrefs, bounds, aChromeMask, mAllowPlugins);
     if (NS_OK == rv) {
-      browser->Show();
+      if (aVisible) {
+        browser->Show();
+      }
       nsIWebShell *shell;
       rv = browser->GetWebShell(shell);
       aNewWebShell = shell;

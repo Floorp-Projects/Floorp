@@ -516,7 +516,9 @@ NS_IMETHODIMP nsXPBaseWindow::GetDocument(nsIDOMHTMLDocument *& aDocument)
 }
 
 //-----------------------------------------------------------------
-NS_IMETHODIMP nsXPBaseWindow::NewWebShell(nsIWebShell*& aNewWebShell)
+NS_IMETHODIMP nsXPBaseWindow::NewWebShell(PRUint32 aChromeMask,
+                                          PRBool aVisible,
+                                          nsIWebShell*& aNewWebShell)
 {
   nsresult rv = NS_OK;
 
@@ -529,9 +531,11 @@ NS_IMETHODIMP nsXPBaseWindow::NewWebShell(nsIWebShell*& aNewWebShell)
     nsRect  bounds;
     GetBounds(bounds);
 
-    rv = dialogWindow->Init(mWindowType, mAppShell, mPrefs, mDialogURL, mTitle, bounds, 0, mAllowPlugins);
+    rv = dialogWindow->Init(mWindowType, mAppShell, mPrefs, mDialogURL, mTitle, bounds, aChromeMask, mAllowPlugins);
     if (NS_OK == rv) {
-      dialogWindow->SetVisible(PR_TRUE);
+      if (aVisible) {
+        dialogWindow->SetVisible(PR_TRUE);
+      }
       nsIWebShell *shell;
       rv = dialogWindow->GetWebShell(shell);
       aNewWebShell = shell;
