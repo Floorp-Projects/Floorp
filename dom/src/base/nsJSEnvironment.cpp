@@ -63,11 +63,12 @@ nsJSContext::~nsJSContext()
 
 NS_IMPL_ISUPPORTS(nsJSContext, kIScriptContextIID);
 
-PRBool nsJSContext::EvaluateString(const nsString& aScript, 
-                                   const char *aURL,
-                                   PRUint32 aLineNo,
-                                   nsString& aRetValue,
-                                   PRBool* aIsUndefined)
+NS_IMETHODIMP_(PRBool)
+nsJSContext::EvaluateString(const nsString& aScript, 
+                            const char *aURL,
+                            PRUint32 aLineNo,
+                            nsString& aRetValue,
+                            PRBool* aIsUndefined)
 {
   jsval val;
 
@@ -92,7 +93,8 @@ PRBool nsJSContext::EvaluateString(const nsString& aScript,
   return ret;
 }
 
-nsIScriptGlobalObject* nsJSContext::GetGlobalObject()
+NS_IMETHODIMP_(nsIScriptGlobalObject*)
+nsJSContext::GetGlobalObject()
 {
   JSObject *global = JS_GetGlobalObject(mContext);
   nsIScriptGlobalObject *script_global = nsnull;
@@ -109,13 +111,15 @@ nsIScriptGlobalObject* nsJSContext::GetGlobalObject()
   }
 }
 
-void* nsJSContext::GetNativeContext()
+NS_IMETHODIMP_(void*)
+nsJSContext::GetNativeContext()
 {
   return (void *)mContext;
 }
 
 
-nsresult nsJSContext::InitContext(nsIScriptGlobalObject *aGlobalObject)
+NS_IMETHODIMP
+nsJSContext::InitContext(nsIScriptGlobalObject *aGlobalObject)
 {
   nsresult result = NS_ERROR_FAILURE;
   nsIScriptObjectOwner *owner;
@@ -141,7 +145,8 @@ nsresult nsJSContext::InitContext(nsIScriptGlobalObject *aGlobalObject)
   return res;
 }
 
-nsresult nsJSContext::InitClasses()
+NS_IMETHODIMP
+nsJSContext::InitClasses()
 {
   nsresult res = NS_ERROR_FAILURE;
   nsIScriptGlobalObject *global = GetGlobalObject();
@@ -163,7 +168,7 @@ nsresult nsJSContext::InitClasses()
   return res;
 }
 
-nsresult 
+NS_IMETHODIMP
 nsJSContext::AddNamedReference(void *aSlot, 
                                void *aScriptObject,
                                const char *aName)
@@ -176,7 +181,7 @@ nsJSContext::AddNamedReference(void *aSlot,
   }
 }
 
-nsresult 
+NS_IMETHODIMP
 nsJSContext::RemoveReference(void *aSlot, void *aScriptObject)
 {
   JSObject *obj = (JSObject *)aScriptObject;
@@ -189,10 +194,16 @@ nsJSContext::RemoveReference(void *aSlot, void *aScriptObject)
   }
 }
 
-nsresult
+NS_IMETHODIMP
 nsJSContext::GC()
 {
   JS_GC(mContext);
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsJSContext::GetNameSpaceManager(nsIScriptNameSpaceManager** aInstancePtr)
+{
   return NS_OK;
 }
 

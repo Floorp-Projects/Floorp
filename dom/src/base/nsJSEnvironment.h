@@ -33,19 +33,20 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  virtual PRBool       EvaluateString(const nsString& aScript, 
-                                      const char *aURL,
-                                      PRUint32 aLineNo,
-                                      nsString& aRetValue,
-                                      PRBool* aIsUndefined);
-  virtual nsIScriptGlobalObject*    GetGlobalObject();
-  virtual void*                     GetNativeContext();
-  virtual nsresult     InitClasses();
-  virtual nsresult     InitContext(nsIScriptGlobalObject *aGlobalObject);
-  virtual nsresult     AddNamedReference(void *aSlot, void *aScriptObject,
+  NS_IMETHOD_(PRBool)       EvaluateString(const nsString& aScript, 
+                                           const char *aURL,
+                                           PRUint32 aLineNo,
+                                           nsString& aRetValue,
+                                           PRBool* aIsUndefined);
+  NS_IMETHOD_(nsIScriptGlobalObject*)    GetGlobalObject();
+  NS_IMETHOD_(void*)                     GetNativeContext();
+  NS_IMETHOD     InitClasses();
+  NS_IMETHOD     InitContext(nsIScriptGlobalObject *aGlobalObject);
+  NS_IMETHOD     AddNamedReference(void *aSlot, void *aScriptObject,
                                          const char *aName);
-  virtual nsresult RemoveReference(void *aSlot, void *aScriptObject);
-  virtual nsresult GC();
+  NS_IMETHOD     RemoveReference(void *aSlot, void *aScriptObject);
+  NS_IMETHOD     GC();
+  NS_IMETHOD GetNameSpaceManager(nsIScriptNameSpaceManager** aInstancePtr);
   NS_IMETHOD GetSecurityManager(nsIScriptSecurityManager** aInstancePtr);
 };
 

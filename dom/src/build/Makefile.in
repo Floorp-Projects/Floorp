@@ -32,7 +32,12 @@ MODULE=dom
 
 REQUIRES=xpcom raptor
 
-CPPSRCS=nsDOMFactory.cpp nsHTMLTagsEnums.cpp
+CPPSRCS=nsDOMFactory.cpp \
+	nsHTMLTagsEnums.cpp \
+	nsScriptNameSetRegistry.cpp \
+	nsScriptNameSpaceManager.cpp \
+        $(NULL)
+
 
 INCLUDES +=  -I$(PUBLIC)/xpcom -I$(PUBLIC)/raptor \
 	-I$(PUBLIC)/dom -I$(PUBLIC)/js -I$(srcdir)/../base -I$(PUBLIC)/jsurl

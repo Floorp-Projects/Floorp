@@ -20,10 +20,19 @@ IGNORE_MANIFEST=1
 
 DIRS=base coreDom coreEvents events html css
 DEFINES=-D_IMPL_NS_DOM 
-EXPORTS=nsIScriptContext.h nsIJSScriptObject.h nsIScriptObjectOwner.h \
-        nsIScriptGlobalObject.h nsIScriptContextOwner.h \
-	nsIScriptEventListener.h nsIDOMScriptObjectFactory.h \
-	nsIDOMNativeObjectRegistry.h nsDOMCID.h nsIScriptSecurityManager.h
+EXPORTS=nsIScriptContext.h 		\
+	nsIJSScriptObject.h 		\
+	nsIScriptObjectOwner.h 		\
+        nsIScriptGlobalObject.h 	\
+	nsIScriptContextOwner.h 	\
+	nsIScriptEventListener.h 	\
+	nsIDOMScriptObjectFactory.h 	\
+	nsIDOMNativeObjectRegistry.h 	\
+	nsDOMCID.h 			\
+	nsIScriptSecurityManager.h 	\
+	nsIScriptNameSetRegistry.h 	\
+	nsIScriptExternalNameSet.h	\
+	nsIScriptNameSpaceManager.h
 
 MODULE=dom 
 
