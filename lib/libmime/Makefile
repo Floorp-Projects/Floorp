@@ -52,6 +52,12 @@ CSRCS		= \
 		  addr.c \
 		  $(NULL)
 
+ifdef MOZ_MAIL_NEWS
+CSRCS		+= \
+		  mimevcrd.c \
+		  $(NULL)
+endif
+
 REQUIRES = mime nspr dbm img util layer security pref js julian nls xp network
 
 include $(DEPTH)/config/rules.mk

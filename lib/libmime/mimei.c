@@ -153,10 +153,10 @@ mime_find_class (const char *content_type, MimeHeaders *hdrs,
 	  else if (!strcasecomp(content_type+5,		"plain"))
 		class = (MimeObjectClass *)&mimeInlineTextPlainClass;
 #ifndef MOZILLA_30
-#if defined(MOZ_MAIL_NEWS) || defined(MOZ_MAIL_COMPOSE)
+#if defined(MOZ_MAIL_NEWS)
 	  else if (!strcasecomp(content_type+5,		"x-vcard"))
 		class = (MimeObjectClass *)&mimeInlineTextVCardClass;
-#endif /* MOZ_MAIL_NEWS || MOZ_MAIL_COMPOSE */
+#endif /* MOZ_MAIL_NEWS */
 #ifdef MOZ_CALENDAR
 	  else if (!strcasecomp(content_type+5,		"calendar"))
 		class = (MimeObjectClass *)&mimeInlineTextCalendarClass;
@@ -400,11 +400,11 @@ mime_create (const char *content_type, MimeHeaders *hdrs,
   {
 	/* change content-Disposition for vcards to be inline so */
 	/* we can see a nice html display */
-#ifndef MOZILLA_30
+#if !defined(MOZILLA_30) && defined(MOZ_MAIL_NEWS)
 	if (mime_subclass_p(class,(MimeObjectClass *)&mimeInlineTextVCardClass))
 		StrAllocCopy(content_disposition, "inline");
 	else
-#endif /* !MOZILLA_30 */
+#endif /* !MOZILLA_30 && MOZ_MAIL_NEWS */
 		content_disposition = (hdrs
 							   ? MimeHeaders_get(hdrs, HEADER_CONTENT_DISPOSITION,
 												 TRUE, FALSE)

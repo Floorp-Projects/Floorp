@@ -2342,7 +2342,7 @@ extern int MIME_HasAttachments(MWContext *context)
 }
 
 
-
+#ifdef MOZ_MAIL_NEWS
 extern NET_StreamClass *
 MIME_VCardConverter ( int format_out,
             void *closure,
@@ -2445,6 +2445,7 @@ MIME_VCardConverter ( int format_out,
 
     return stream;
 }
+#endif /* MOZ_MAIL_NEWS */
 
 
 
