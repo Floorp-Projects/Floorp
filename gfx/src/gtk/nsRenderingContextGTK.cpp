@@ -22,6 +22,7 @@
 #include "nsRegionGTK.h"
 #include "nsGraphicsStateGTK.h"
 #include "nsGfxCIID.h"
+#include "nsICharRepresentable.h"
 #include <math.h>
 
 #define NS_TO_GDK_RGB(ns) (ns & 0xff) << 16 | (ns & 0xff00) | ((ns >> 16) & 0xff)
@@ -983,7 +984,7 @@ nsRenderingContextGTK::GetWidth(const PRUnichar* aString, PRUint32 aLength,
       nsFontGTK** font = metrics->mLoadedFonts;
       nsFontGTK** end = &metrics->mLoadedFonts[metrics->mLoadedFontsCount];
       while (font < end) {
-        if (FONT_HAS_GLYPH((*font)->mMap, c)) {
+        if (IS_REPRESENTABLE((*font)->mMap, c)) {
 	  currFont = *font;
 	  goto FoundFont; // for speed -- avoid "if" statement
 	}
@@ -1188,7 +1189,7 @@ nsRenderingContextGTK::DrawString(const PRUnichar* aString, PRUint32 aLength,
       nsFontGTK** font = metrics->mLoadedFonts;
       nsFontGTK** lastFont = &metrics->mLoadedFonts[metrics->mLoadedFontsCount];
       while (font < lastFont) {
-        if (FONT_HAS_GLYPH((*font)->mMap, c)) {
+        if (IS_REPRESENTABLE((*font)->mMap, c)) {
 	  currFont = *font;
 	  goto FoundFont; // for speed -- avoid "if" statement
 	}

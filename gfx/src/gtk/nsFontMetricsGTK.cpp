@@ -21,6 +21,8 @@
 #include "nsFontMetricsGTK.h"
 #include "nsIServiceManager.h"
 #include "nsICharsetConverterManager.h"
+#include "nsICharRepresentable.h"
+#include "nsCOMPtr.h"
 #include "nspr.h"
 #include "plhash.h"
 
@@ -725,11 +727,11 @@ NS_IMETHODIMP  nsFontMetricsGTK::GetFontHandle(nsFontHandle &aHandle)
 
 struct nsFontCharSetInfo
 {
+  const char*            mCharSet;
   nsFontCharSetConverter Convert;
-  void                   (*GenerateMap)(nsFontCharSetInfo* aSelf);
   PRUint8                mSpecialUnderline;
-  PRUint8*               mMap;
-  nsIUnicodeEncoder*     mEncoder;
+  PRUint32*              mMap;
+  nsIUnicodeEncoder*     mConverter;
 };
 
 struct nsFontStretch
@@ -857,239 +859,91 @@ static PLHashTable* gCharSets = nsnull;
 
 static nsFontCharSetInfo Ignore = { nsnull };
 
-static gint
-ISO88591Convert(nsFontCharSetInfo* aSelf, const PRUnichar* aSrcBuf,
-  PRUint32 aSrcLen, PRUint8* aDestBuf, PRUint32 aDestLen)
+static void
+SetUpFontCharSetInfo(nsFontCharSetInfo* aSelf)
 {
-  if (aSrcLen > aDestLen) {
-    aSrcLen = aDestLen;
+  nsresult result;
+  NS_WITH_SERVICE(nsICharsetConverterManager, manager,
+    NS_CHARSETCONVERTERMANAGER_PROGID, &result);
+  if (manager && NS_SUCCEEDED(result)) {
+    nsAutoString charset(aSelf->mCharSet);
+    nsIUnicodeEncoder* converter = nsnull;
+    result = manager->GetUnicodeEncoder(&charset, &converter);
+    if (converter && NS_SUCCEEDED(result)) {
+      aSelf->mConverter = converter;
+      result = converter->SetOutputErrorBehavior(converter->kOnError_Replace,
+        nsnull, '?');
+      nsCOMPtr<nsICharRepresentable> mapper = do_QueryInterface(converter);
+      if (mapper) {
+        result = mapper->FillInfo(aSelf->mMap);
+      }
+    }
   }
-  gint ret = aSrcLen;
-  char* dest = (char*) aDestBuf;
-  while (aSrcLen--) {
-    *dest++ = (char) *aSrcBuf++;
-  }
-
-  return ret;
 }
 
-static void
-ISO88591GenerateMap(nsFontCharSetInfo* aSelf)
+static gint
+SingleByteConvert(nsFontCharSetInfo* aSelf, const PRUnichar* aSrcBuf,
+  PRInt32 aSrcLen, char* aDestBuf, PRInt32 aDestLen)
 {
-  PRUint8* map = aSelf->mMap;
-  PRUnichar c;
-  for (c = 0x20; c < 0x7f; c++) {
-    ADD_GLYPH(map, c);
+  gint count = 0;
+  if (aSelf->mConverter) {
+    aSelf->mConverter->Convert(aSrcBuf, &aSrcLen, aDestBuf, &aDestLen);
+    count = aDestLen;
   }
-  for (c = 0xa0; c <= 0xff; c++) {
-    ADD_GLYPH(map, c);
+
+  return count;
+}
+
+static gint
+DoubleByteConvert(nsFontCharSetInfo* aSelf, const PRUnichar* aSrcBuf,
+  PRInt32 aSrcLen, char* aDestBuf, PRInt32 aDestLen)
+{
+  gint count = 0;
+  if (aSelf->mConverter) {
+    aSelf->mConverter->Convert(aSrcBuf, &aSrcLen, aDestBuf, &aDestLen);
+    count = aDestLen;
   }
+  // XXX do high-bit if font requires it
+
+  return count;
 }
 
 static nsFontCharSetInfo ISO88591 =
-  { ISO88591Convert, ISO88591GenerateMap, 0 };
-
-#define JAPANESE
-#ifdef JAPANESE
-
-/*
-** BSDi BSD/OS with shlicc2 is unable to read all of u2j208.h:
-** ../../../../gfx/src/gtk/u2j208.h:1018: virtual memory exhausted
-** so don't include it for that platform.  (96M RAM, 256M swap)
-** This needs to be handled in a better way, IMO.  --briano.
-*/
-#ifndef __bsdi__
-#define TEMPORARY_CONVERTERS
-#endif
-
-#ifdef TEMPORARY_CONVERTERS
-
-#include "u2j208.h"
-
-static gint
-JISX02081983Convert(nsFontCharSetInfo* aSelf, const PRUnichar* aSrcBuf,
-  PRUint32 aSrcLen, PRUint8* aDestBuf, PRUint32 aDestLen)
-{
-  gint ret = 0;
-
-  while (aSrcLen--) {
-    unsigned short jis = unicodeToJISX0208[*aSrcBuf++];
-    if (aDestLen > 1) {
-      *aDestBuf++ = (jis >> 8);
-      *aDestBuf++ = (jis & 0xff);
-      aDestLen -= 2;
-      ret += 2;
-    }
-  }
-
-  return ret;
-}
-
-static void
-JISX02081983GenerateMap(nsFontCharSetInfo* aSelf)
-{
-  PRUint8* map = aSelf->mMap;
-  for (PRUint32 unicode = 0; unicode < 65536; unicode++) {
-    if (unicodeToJISX0208[unicode]) {
-      ADD_GLYPH(map, unicode);
-    }
-  }
-}
-
-#else /* TEMPORARY_CONVERTERS */
-
-static nsICharsetConverterManager* gConverterManager = nsnull;
-
-static gint
-JISX02081983Convert(nsFontCharSetInfo* aSelf, const PRUnichar* aSrcBuf,
-  PRUint32 aSrcLen, PRUint8* aDestBuf, PRUint32 aDestLen)
-{
-  nsIUnicodeEncoder* encoder = aSelf->mEncoder;
-  encoder->Reset();
-  encoder->Convert(aSrcBuf, (PRInt32*) &aSrcLen, (char*) aDestBuf,
-    (PRInt32*) &aDestLen);
-  int mask = 0x7f; // XXX should be 0xff for high-bit fonts
-  for (PRUint32 i = 0; i < aDestLen; i++) {
-    aDestBuf[i] &= mask;
-  }
-
-  return aDestLen / 2;
-}
-
-static void
-JISX02081983GenerateMap(nsFontCharSetInfo* aSelf)
-{
-  nsresult res;
-
-  if (!gConverterManager) {
-    res = nsServiceManager::GetService(kCharsetConverterManagerCID,
-      kICharsetConverterManagerIID, (nsISupports**) &gConverterManager);
-    if (NS_FAILED(res)) {
-      printf("cannot get converter manager\n");
-      return;
-    }
-  }
-  nsIUnicodeEncoder* encoder = aSelf->mEncoder;
-  if (!encoder) {
-    nsAutoString name("euc-jp");
-    res = gConverterManager->GetUnicodeEncoder(&name, &encoder);
-    if (NS_FAILED(res)) {
-      printf("cannot get euc-jp encoder\n");
-      return;
-    }
-    aSelf->mEncoder = encoder;
-  }
-  encoder->SetOutputErrorBehavior(encoder->kOnError_Replace, nsnull, '?');
-  PRUint8* map = aSelf->mMap;
-  PRUnichar c = 0;
-  for (PRUint16 row = 0; row < 256; row++) {
-    PRUnichar src[256];
-    for (PRUint16 cell = 0; cell < 256; cell++) {
-      src[cell] = ((row << 8) | cell);
-    }
-    PRInt32 srcLen = 256;
-    PRUint8 dest[256 * 3];
-    PRInt32 destLen = sizeof(dest);
-    /*
-    src[0] = 0x30de;
-    srcLen = 1;
-    */
-    encoder->Reset();
-    res = encoder->Convert(src, &srcLen, (char*) dest, &destLen);
-    /*
-    if (destLen == 1) {
-      printf("U+30DE -> %x\n", dest[0]);
-    }
-    else if (destLen == 2) {
-      printf("U+30DE -> %x %x\n", dest[0], dest[1]);
-    }
-    else {
-      printf("destLen %d\n", destLen);
-    }
-    return;
-    */
-    if (NS_FAILED(res)) {
-      printf("euc-jp Convert failed\n");
-      return;
-    }
-    if (srcLen != 256) {
-      printf("srcLen != 256\n");
-    }
-    PRUint8* d = (PRUint8*) dest;
-    if (!row) {
-      printf("row 0: ");
-      for (int i = 0; i < destLen; i++) {
-        printf("%02x ", d[i]);
-      }
-      printf("\n");
-    }
-    printf("row %d c %x destLen %d\n", row, c, destLen);
-    while (destLen > 0) {
-      PRUint8 b = *d;
-      if (b < 0x7f) {
-        printf("%x %x\n", c, b);
-        destLen--;
-        d++;
-      }
-      else if (b < 0x8e) {
-        printf("%x %x\n", c, b);
-        destLen--;
-        d++;
-      }
-      else if (b == 0x8e) {
-        printf("%x %x %x\n", c, b, d[1]);
-        destLen -= 2;
-        d += 2;
-      }
-      else if (b == 0x8f) {
-        printf("%x %x %x %x\n", c, b, d[1], d[2]);
-        destLen -= 3;
-        d += 3;
-      }
-      else if (b < 0xa1) {
-        printf("%x %x\n", c, b);
-        destLen--;
-        d++;
-      }
-      else if (b < 0xff) {
-        printf("%x %x %x\n", c, b, d[1]);
-        destLen -= 2;
-        d += 2;
-        ADD_GLYPH(map, c);
-      }
-      else {
-        printf("%x %x\n", c, b);
-        destLen--;
-        d++;
-      }
-      c++;
-    }
-    return;
-  }
-  if (FONT_HAS_GLYPH(map, 0x30de)) {
-    printf("map contains glyph 0x30de\n");
-  }
-  else {
-    printf("map does not contain glyph 0x30de\n");
-  }
-  /*
-  int count = 0;
-  for (c = 0; count < 500; c++) {
-    if (FONT_HAS_GLYPH(map, c)) {
-      printf("%x ", c);
-      count++;
-    }
-  }
-  printf("\n");
-  */
-}
-
-#endif /* TEMPORARY_CONVERTERS */
-
-static nsFontCharSetInfo JISX02081983 =
-  { JISX02081983Convert, JISX02081983GenerateMap, 1 };
-
-#endif /* JAPANESE */
+  { "iso-8859-1", SingleByteConvert, 0 };
+static nsFontCharSetInfo ISO88592 =
+  { "iso-8859-2", SingleByteConvert, 0 };
+static nsFontCharSetInfo ISO88593 =
+  { "iso-8859-3", SingleByteConvert, 0 };
+static nsFontCharSetInfo ISO88594 =
+  { "iso-8859-4", SingleByteConvert, 0 };
+static nsFontCharSetInfo ISO88595 =
+  { "iso-8859-5", SingleByteConvert, 0 };
+static nsFontCharSetInfo ISO88596 =
+  { "iso-8859-6", SingleByteConvert, 0 };
+static nsFontCharSetInfo ISO88597 =
+  { "iso-8859-7", SingleByteConvert, 0 };
+static nsFontCharSetInfo ISO88598 =
+  { "iso-8859-8", SingleByteConvert, 0 };
+static nsFontCharSetInfo ISO88599 =
+  { "iso-8859-9", SingleByteConvert, 0 };
+static nsFontCharSetInfo ISO885915 =
+  { "iso-8859-15", SingleByteConvert, 0 };
+static nsFontCharSetInfo JISX0201 =
+  { "jis_0201", SingleByteConvert, 1 };
+static nsFontCharSetInfo Big5 =
+  { "x-x-big5", DoubleByteConvert, 1 };
+static nsFontCharSetInfo CNS116431 =
+  { "x-cns-11643-1", DoubleByteConvert, 1 };
+static nsFontCharSetInfo CNS116432 =
+  { "x-cns-11643-2", DoubleByteConvert, 1 };
+static nsFontCharSetInfo GB2312 =
+  { "gb_2312-80", DoubleByteConvert, 1 };
+static nsFontCharSetInfo JISX0208 =
+  { "jis_0208-1983", DoubleByteConvert, 1 };
+static nsFontCharSetInfo JISX0212 =
+  { "jis_0212-1990", DoubleByteConvert, 1 };
+static nsFontCharSetInfo KSC5601 =
+  { "ks_c_5601-1987", DoubleByteConvert, 1 };
 
 /*
  * Normally, the charset of an X font can be determined simply by looking at
@@ -1122,27 +976,27 @@ static nsFontCharSetMap gCharSetMap[] =
   { "-ascii",             &Ignore        },
   { "-ibm pc",            &Ignore        },
   { "adobe-fontspecific", &Ignore        },
-  { "cns11643.1986-1",    &Ignore        },
-  { "cns11643.1986-2",    &Ignore        },
-  { "cns11643.1992-1",    &Ignore        },
+  { "cns11643.1986-1",    &CNS116431     },
+  { "cns11643.1986-2",    &CNS116432     },
+  { "cns11643.1992-1",    &CNS116431     },
   { "cns11643.1992-12",   &Ignore        },
-  { "cns11643.1992-2",    &Ignore        },
+  { "cns11643.1992-2",    &CNS116432     },
   { "cns11643.1992-3",    &Ignore        },
   { "cns11643.1992-4",    &Ignore        },
   { "cp1251-1",           &Ignore        },
   { "dec-dectech",        &Ignore        },
   { "dtsymbol-1",         &Ignore        },
   { "fontspecific-0",     &Ignore        },
-  { "gb2312.1980-0",      &Ignore        },
-  { "gb2312.1980-1",      &Ignore        },
+  { "gb2312.1980-0",      &GB2312        },
+  { "gb2312.1980-1",      &GB2312        },
   { "hp-japanese15",      &Ignore        },
   { "hp-japaneseeuc",     &Ignore        },
   { "hp-roman8",          &Ignore        },
   { "hp-schinese15",      &Ignore        },
   { "hp-tchinese15",      &Ignore        },
-  { "hp-tchinesebig5",    &Ignore        },
+  { "hp-tchinesebig5",    &Big5          },
   { "hp-wa",              &Ignore        },
-  { "hpbig5-",            &Ignore        },
+  { "hpbig5-",            &Big5          },
   { "hproc16-",           &Ignore        },
   { "ibm-1252",           &Ignore        },
   { "ibm-850",            &Ignore        },
@@ -1155,31 +1009,27 @@ static nsFontCharSetMap gCharSetMap[] =
   { "ibm-udctw",          &Ignore        },
   { "iso646.1991-irv",    &Ignore        },
   { "iso8859-1",          &ISO88591      },
-  { "iso8859-15",         &Ignore        },
+  { "iso8859-15",         &ISO885915     },
   { "iso8859-1@cn",       &Ignore        },
   { "iso8859-1@kr",       &Ignore        },
   { "iso8859-1@tw",       &Ignore        },
   { "iso8859-1@zh",       &Ignore        },
-  { "iso8859-2",          &Ignore        },
-  { "iso8859-3",          &Ignore        },
-  { "iso8859-4",          &Ignore        },
-  { "iso8859-5",          &Ignore        },
-  { "iso8859-6",          &Ignore        },
-  { "iso8859-7",          &Ignore        },
-  { "iso8859-8",          &Ignore        },
-  { "iso8859-9",          &Ignore        },
+  { "iso8859-2",          &ISO88592      },
+  { "iso8859-3",          &ISO88593      },
+  { "iso8859-4",          &ISO88594      },
+  { "iso8859-5",          &ISO88595      },
+  { "iso8859-6",          &ISO88596      },
+  { "iso8859-7",          &ISO88597      },
+  { "iso8859-8",          &ISO88598      },
+  { "iso8859-9",          &ISO88599      },
   { "iso10646-1",         &Ignore        },
-  { "jisx0201.1976-0",    &Ignore        },
-  { "jisx0201.1976-1",    &Ignore        },
-#ifdef JAPANESE
-  { "jisx0208.1983-0",    &JISX02081983  },
-#else
-  { "jisx0208.1983-0",    &Ignore        },
-#endif
-  { "jisx0208.1990-0",    &Ignore        },
-  { "jisx0212.1990-0",    &Ignore        },
+  { "jisx0201.1976-0",    &JISX0201      },
+  { "jisx0201.1976-1",    &JISX0201      },
+  { "jisx0208.1983-0",    &JISX0208      },
+  { "jisx0208.1990-0",    &JISX0208      },
+  { "jisx0212.1990-0",    &JISX0212      },
   { "koi8-r",             &Ignore        },
-  { "ksc5601.1987-0",     &Ignore        },
+  { "ksc5601.1987-0",     &KSC5601       },
   { "misc-fontspecific",  &Ignore        },
   { "sgi-fontspecific",   &Ignore        },
   { "sun-fontspecific",   &Ignore        },
@@ -1772,18 +1622,18 @@ SearchCharSet(PLHashEntry* he, PRIntn i, void* arg)
 {
   nsFontCharSet* charSet = (nsFontCharSet*) he->value;
   nsFontCharSetInfo* charSetInfo = charSet->mInfo;
-  PRUint8* map = charSetInfo->mMap;
+  PRUint32* map = charSetInfo->mMap;
   nsFontSearch* search = (nsFontSearch*) arg;
   PRUnichar c = search->mChar;
   if (!map) {
-    map = (PRUint8*) PR_Calloc(8192, 1);
+    map = (PRUint32*) PR_Calloc(2048, 4);
     if (!map) {
       return HT_ENUMERATE_NEXT;
     }
     charSetInfo->mMap = map;
-    charSetInfo->GenerateMap(charSetInfo);
+    SetUpFontCharSetInfo(charSetInfo);
   }
-  if (!FONT_HAS_GLYPH(map, c)) {
+  if (!IS_REPRESENTABLE(map, c)) {
     return HT_ENUMERATE_NEXT;
   }
 
@@ -2168,7 +2018,7 @@ nsFontMetricsGTK::GetWidth(nsFontGTK* aFont, const PRUnichar* aString,
 {
   XChar2b buf[512];
   gint len = aFont->mCharSetInfo->Convert(aFont->mCharSetInfo, aString, aLength,
-    (PRUint8*) buf, sizeof(buf));
+    (char*) buf, sizeof(buf));
   return gdk_text_width(aFont->mFont, (char*) buf, len);
 }
 
@@ -2178,7 +2028,7 @@ nsFontMetricsGTK::DrawString(nsDrawingSurfaceGTK* aSurface, nsFontGTK* aFont,
 {
   XChar2b buf[512];
   gint len = aFont->mCharSetInfo->Convert(aFont->mCharSetInfo, aString, aLength,
-    (PRUint8*) buf, sizeof(buf));
+    (char*) buf, sizeof(buf));
   ::gdk_draw_text(aSurface->GetDrawable(), aFont->mFont, aSurface->GetGC(), aX,
     aY + aFont->mBaselineAdjust, (char*) buf, len);
 }
