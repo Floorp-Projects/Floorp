@@ -95,7 +95,18 @@ void PR_CALLBACK nsStreamListenerEvent::HandlePLEvent(PLEvent* aEvent)
     NS_ASSERTION(nsnull != ev,"null event.");
 
     nsresult rv = ev->HandleEvent();
-    ev->mListener->SetStatus(rv);
+    //
+    // If the consumer fails, then cancel the transport.  This is necessary
+    // in case where the socket transport is blocked waiting for room in the
+    // pipe, but the consumer fails without consuming all the data.
+    //
+    // Unless the transport is cancelled, it will block forever, waiting for
+    // the pipe to empty...
+    //
+    if (NS_FAILED(rv)) {
+        nsresult cancelRv = ev->mChannel->Cancel(rv);
+        NS_ASSERTION(NS_SUCCEEDED(cancelRv), "Cancel failed");
+    }
 }
 
 void PR_CALLBACK nsStreamListenerEvent::DestroyPLEvent(PLEvent* aEvent)
@@ -193,15 +204,23 @@ nsOnStartRequestEvent::HandleEvent()
          ("netlibEvent: Handle Start [event=%x]", this));
 #endif
   nsIStreamObserver* receiver = (nsIStreamObserver*)mListener->GetReceiver();
-  return receiver->OnStartRequest(mChannel, mContext);
+  nsresult status;
+  nsresult rv = mChannel->GetStatus(&status);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "GetStatus failed");
+ 
+  if (NS_SUCCEEDED(rv) && NS_SUCCEEDED(status)) {
+      rv = receiver->OnStartRequest(mChannel, mContext);
+  }
+  else {
+	  NS_WARNING("not calling OnStartRequest");
+  }
+  return rv;
 }
 
 NS_IMETHODIMP 
 nsAsyncStreamObserver::OnStartRequest(nsIChannel* channel, nsISupports* context)
 {
-    nsresult rv = GetStatus();
-    if (NS_FAILED(rv)) return rv;
-
+    nsresult rv;
     nsOnStartRequestEvent* event = 
         new nsOnStartRequestEvent(this, channel, context);
     if (event == nsnull)
@@ -273,14 +292,16 @@ nsOnStopRequestEvent::HandleEvent()
          ("netlibEvent: Handle Stop [event=%x]", this));
 #endif
   nsIStreamObserver* receiver = (nsIStreamObserver*)mListener->GetReceiver();
-  nsresult rv = mListener->GetStatus();
+  nsresult status = NS_OK;
+  nsresult rv = mChannel->GetStatus(&status);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "GetStatus failed");
 
   //
   // If the consumer returned a failure code, then pass it out in the
   // OnStopRequest(...) notification...
   //
-  if (NS_FAILED(rv)) {
-    mStatus = rv;
+  if (NS_SUCCEEDED(rv) && NS_FAILED(status)) {
+    mStatus = status;
   }
   return receiver->OnStopRequest(mChannel, mContext, mStatus, mMessage);
 }
@@ -372,25 +393,20 @@ nsOnDataAvailableEvent::HandleEvent()
          ("netlibEvent: Handle Data [event=%x]", this));
 #endif
   nsIStreamListener* receiver = (nsIStreamListener*)mListener->GetReceiver();
-  nsresult rv = mListener->GetStatus();
+  nsresult status;
+  nsresult rv = mChannel->GetStatus(&status);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "GetStatus failed");
+
   //
   // Only send OnDataAvailable(... ) notifications if all previous calls
   // have succeeded...
   //
-  if (NS_SUCCEEDED(rv)) {
+  if (NS_SUCCEEDED(rv) && NS_SUCCEEDED(status)) {
     rv = receiver->OnDataAvailable(mChannel, mContext,
                                    mIStream, mSourceOffset, mLength);
-    //
-    // If the consumer fails, then cancel the transport.  This is necessary
-    // in case where the socket transport is blocked waiting for room in the
-    // pipe, but the consumer fails without consuming all the data.
-    //
-    // Unless the transport is cancelled, it will block forever, waiting for
-    // the pipe to empty...
-    //
-    if (NS_FAILED(rv)) {
-      mChannel->Cancel(rv);
-    }
+  }
+  else {
+	  NS_WARNING("not calling OnDataAvailable");
   }
   return rv;
 }
@@ -401,9 +417,7 @@ nsAsyncStreamListener::OnDataAvailable(nsIChannel* channel, nsISupports* context
                                        PRUint32 aSourceOffset,
                                        PRUint32 aLength)
 {
-    nsresult rv = GetStatus();
-    if (NS_FAILED(rv)) return rv;
-
+    nsresult rv;
     nsOnDataAvailableEvent* event = 
         new nsOnDataAvailableEvent(this, channel, context);
     if (event == nsnull)

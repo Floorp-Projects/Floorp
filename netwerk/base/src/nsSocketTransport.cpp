@@ -1367,8 +1367,13 @@ nsSocketTransport::IsPending(PRBool *result)
 NS_IMETHODIMP
 nsSocketTransport::GetStatus(nsresult *status)
 {
+  if (NS_FAILED(mCancelStatus))
+    *status = mCancelStatus;
+  else if (mStatus == NS_BASE_STREAM_WOULD_BLOCK)
+    *status = NS_OK;
+  else 
     *status = mStatus;
-    return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP

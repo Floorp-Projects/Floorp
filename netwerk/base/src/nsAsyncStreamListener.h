@@ -40,7 +40,6 @@ public:
 
     // nsAsyncStreamObserver methods:
     nsAsyncStreamObserver() 
-        : mStatus(NS_OK) 
     { 
         NS_INIT_REFCNT();
     }
@@ -51,13 +50,10 @@ public:
     Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
     nsISupports* GetReceiver()      { return mReceiver.get(); }
-    nsresult GetStatus()            { return mStatus; }
-    void SetStatus(nsresult value)  { if (NS_SUCCEEDED(mStatus)) mStatus = value; }
 
 protected:
     nsCOMPtr<nsIEventQueue>     mEventQueue;
     nsCOMPtr<nsIStreamObserver> mReceiver;
-    nsresult                    mStatus;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
