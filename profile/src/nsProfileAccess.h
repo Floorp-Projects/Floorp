@@ -195,6 +195,9 @@ private:
     PRPackedBool            mHaveLock;
 
 #if defined (XP_MAC)
+  #if TARGET_CARBON
+    int                     mLockFileDesc;
+  #endif
     nsCOMPtr<nsILocalFile>  mLockFile;
 #elif defined (XP_WIN)
     HANDLE                  mLockFileHandle;
