@@ -10,6 +10,7 @@ my $UNITS     = lc($req->param('units'));
 my $TBOX      = lc($req->param('tbox'));
 my $AUTOSCALE = lc($req->param('autoscale'));
 my $DAYS      = lc($req->param('days'));
+my $LTYPE     = lc($req->param('ltype'));
 my $DATAFILE  = "db/$TESTNAME/$TBOX";
 
 sub make_filenames_list {
@@ -131,9 +132,16 @@ sub show_graph {
 	$UNITS = "ms";
   }
 
+  my $ltype = "lines";
+  if($LTYPE eq "steps") {
+	$ltype = "steps";
+  } elsif($LTYPE eq "points") {
+	$ltype = "points ps 1";
+  }
 
   # interpolate params into gnuplot command
   # Removing set format x, let gnuplot figure this out.
+  #
   my $cmds = qq{
 				reset
 				set term png color
@@ -149,10 +157,12 @@ sub show_graph {
 				$yscale
 				set ylabel "$TESTNAME ($UNITS)"
 				set timestamp "Generated: %d/%b/%y %H:%M" 0,-1
+				set nokey
 				set grid
-				plot "$DATAFILE" using 1:2 with points ls 1, "$DATAFILE" using 1:2 with lines ls 2
+				plot "$DATAFILE" using 1:2 with $ltype
 			   };
 
+# plot "$DATAFILE" using 1:2 with points ps 1, "$DATAFILE" using 1:2 with lines ls 2
 
   # Set up command string for gnuplot
   open  (GNUPLOT, "| $gnuplot") || die "can't fork: $!";
@@ -171,7 +181,6 @@ sub show_graph {
 
 # main
 {
-
   if(!$TESTNAME) {
 	print_testnames();
   } elsif(!$TBOX) {
