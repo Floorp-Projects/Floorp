@@ -45,6 +45,18 @@ public:
     }
 
     /**
+     * Construct the time from a string.
+     */
+    nsTime(const char* dateStr, PRBool defaultToGMT) {
+        PRInt64 time;
+        PRStatus status = PR_ParseTimeString(dateStr, defaultToGMT, &time);
+        if (status == PR_SUCCESS)
+            mValue = time;
+        else
+            mValue = LL_ZERO;
+    }
+
+    /**
      * Construct a time from a PRTime.
      */
     nsTime(const PRTime aTime) : mValue(aTime) {
