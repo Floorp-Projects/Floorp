@@ -24,10 +24,8 @@
 [scriptable, uuid(a6cf90bd-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMCSSPageRule : nsIDOMCSSRule
 {
-
            attribute DOMString        selectorText;
                                         // raises(DOMException) on setting
 
   readonly attribute nsIDOMCSSStyleDeclaration  style;
 };
-

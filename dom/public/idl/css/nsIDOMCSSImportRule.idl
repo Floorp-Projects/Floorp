@@ -24,9 +24,7 @@
 [scriptable, uuid(a6cf90cf-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMCSSImportRule : nsIDOMCSSRule
 {
-
-  readonly attribute DOMString        href;
-  readonly attribute nsIDOMMediaList        media;
-  readonly attribute nsIDOMCSSStyleSheet    styleSheet;
+  readonly attribute DOMString           href;
+  readonly attribute nsIDOMMediaList     media;
+  readonly attribute nsIDOMCSSStyleSheet styleSheet;
 };
-

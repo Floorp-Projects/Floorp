@@ -29,4 +29,3 @@ interface nsIDOMMimeTypeArray : nsISupports
   nsIDOMMimeType            item(in unsigned long index);
   nsIDOMMimeType            namedItem(in DOMString name);
 };
-

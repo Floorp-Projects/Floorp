@@ -24,7 +24,6 @@
 [scriptable, uuid(a6cf90c1-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMCSSRule : nsISupports
 {
-
   const unsigned short      UNKNOWN_RULE                   = 0;
   const unsigned short      STYLE_RULE                     = 1;
   const unsigned short      CHARSET_RULE                   = 2;
@@ -33,11 +32,10 @@ interface nsIDOMCSSRule : nsISupports
   const unsigned short      FONT_FACE_RULE                 = 5;
   const unsigned short      PAGE_RULE                      = 6;
 
-  readonly attribute unsigned short   type;
-           attribute DOMString        cssText;
+  readonly attribute unsigned short      type;
+           attribute DOMString           cssText;
                                         // raises(DOMException) on setting
 
-  readonly attribute nsIDOMCSSStyleSheet    parentStyleSheet;
-  readonly attribute nsIDOMCSSRule          parentRule;
+  readonly attribute nsIDOMCSSStyleSheet parentStyleSheet;
+  readonly attribute nsIDOMCSSRule       parentRule;
 };
-

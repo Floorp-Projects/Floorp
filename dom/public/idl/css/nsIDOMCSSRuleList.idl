@@ -26,6 +26,5 @@ interface nsIDOMCSSRuleList : nsISupports
 {
 
   readonly attribute unsigned long    length;
-  nsIDOMCSSRule            item(in unsigned long index);
+  nsIDOMCSSRule      item(in unsigned long index);
 };
-
