@@ -216,6 +216,7 @@ NS_IMETHODIMP GlobalWindowImpl::SetContext(nsIScriptContext *aContext)
      NS_WARNING("Possibly early removal of script object, see bug #41608");
      mContext->RemoveReference(&mScriptObject, mScriptObject);
    }
+   
    mContext = aContext;
    return NS_OK; 
 }
