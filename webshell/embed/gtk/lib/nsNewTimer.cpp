@@ -43,7 +43,8 @@ nsresult NS_NewTimer(nsITimer ** aInstancePtrResult)
     NS_ASSERTION(NS_SUCCEEDED(frv),"Could not find timer factory.");
     NS_ASSERTION(nsnull != factory,"Could not instanciate timer factory.");
 
-    return NS_ERROR_FAILURE;
+    if (NS_FAILED(frv))
+      return frv;
   }
 
   rv = factory->CreateInstance(NULL,
