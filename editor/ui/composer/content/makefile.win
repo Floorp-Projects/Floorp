@@ -30,7 +30,7 @@ CHROME_CONTENT = \
 	.\TextEditorAppShell.xul \
 	.\editor.js \
 	.\publish.js \
-	.\PublishPrefs.js \
+	.\publishprefs.js \
 	.\ComposerCommands.js \
 	.\EditorCommandsDebug.js \
 	.\EditorContextMenu.js \
