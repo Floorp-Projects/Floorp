@@ -1325,26 +1325,6 @@ nsXULElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
     return NS_OK;
 }
 
-already_AddRefed<nsINodeInfo>
-nsXULElement::GetExistingAttrNameFromQName(const nsAString& aStr) const
-{
-    const nsAttrName* name = InternalGetExistingAttrNameFromQName(aStr);
-    if (!name) {
-        return nsnull;
-    }
-
-    nsINodeInfo* nodeInfo;
-    if (name->IsAtom()) {
-        mNodeInfo->NodeInfoManager()->GetNodeInfo(name->Atom(), nsnull,
-                                                   kNameSpaceID_None, &nodeInfo);
-    }
-    else {
-        NS_ADDREF(nodeInfo = name->NodeInfo());
-    }
-
-    return nodeInfo;
-}
-
 void
 nsXULElement::UnregisterAccessKey(const nsAString& aOldValue)
 {

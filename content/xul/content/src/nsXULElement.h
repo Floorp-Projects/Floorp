@@ -447,7 +447,6 @@ public:
     virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
     virtual nsIAtom *GetIDAttributeName() const;
     virtual nsIAtom *GetClassAttributeName() const;
-    virtual already_AddRefed<nsINodeInfo> GetExistingAttrNameFromQName(const nsAString& aStr) const;
     nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                      const nsAString& aValue, PRBool aNotify)
     {
