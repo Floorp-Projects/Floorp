@@ -45,8 +45,8 @@
 var bug = 144834;
 var summary = 'Local var having same name as switch label inside function';
 
-printBugNumber(bug);
-printStatus(summary);
+print(bug);
+print(summary);
 
 
 function RedrawSched()
