@@ -471,6 +471,24 @@ public:
 typedef std::pair<OverrideStatus *, OverrideStatus *> OverrideStatusPair;
 
 
+class LocalBindingEntry {
+public:
+    LocalBindingEntry(const String s) : first(s), second(NULL) { }
+    LocalBindingEntry(const String s, LocalBinding *b) : first(s), second(b) { }
+
+    const String key()  { return first; }
+    LocalBinding *value()  { return second; }
+
+    const String first;
+    LocalBinding *second;
+};
+
+inline bool operator==(const LocalBindingEntry &s1, const LocalBindingEntry &s2) {return s1.first == s2.first;}
+inline bool operator!=(const LocalBindingEntry &s1, const LocalBindingEntry &s2) {return s1.first != s2.first;}
+
+
+//typedef HashTable<LocalBindingEntry, String> LocalBindingMap;
+//typedef EntryIterator<LocalBindingEntry, String> LocalBindingIterator;
 
 
 // A LocalBindingMap maps names to a list of LocalBindings. Each LocalBinding in the list

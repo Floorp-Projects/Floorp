@@ -235,7 +235,8 @@ js2val trace(JS2Metadata *meta, const js2val /* thisValue */, js2val /* argv */ 
 
 void printFrameBindings(NonWithFrame *f)
 {
-    stdOut << " Local Bindings:\n";                    
+    stdOut << " Local Bindings:\n";   
+
     for (LocalBindingIterator rsb = f->localReadBindings.begin(), rsend = f->localReadBindings.end(); (rsb != rsend); rsb++) {
         stdOut << "\t" << *rsb->second->qname.nameSpace->name << "::" << *rsb->second->qname.id;
         bool found = false;
@@ -258,7 +259,6 @@ void printFrameBindings(NonWithFrame *f)
         if (!found)
             stdOut << "\t" << *wsb->second->qname.nameSpace->name << "::" << *wsb->second->qname.id << " [write-only]" << "\n";
     }
-
 }
 
 js2val dump(JS2Metadata *meta, const js2val /* thisValue */, js2val argv[], uint32 argc)

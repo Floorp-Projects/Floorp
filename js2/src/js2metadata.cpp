@@ -2476,37 +2476,35 @@ doUnary:
     // Clone the pluralFrame bindings into the singularFrame, instantiating new members for each binding
     void Environment::instantiateFrame(NonWithFrame *pluralFrame, NonWithFrame *singularFrame)
     {
-        LocalBindingIterator sbi, sbend;
-        
         singularFrame->localReadBindings.clear();
         singularFrame->localWriteBindings.clear();
 
-        for (sbi = pluralFrame->localReadBindings.begin(), sbend = pluralFrame->localReadBindings.end(); (sbi != sbend); sbi++) {
-            sbi->second->content->cloneContent = NULL;
+        for (LocalBindingIterator sbir = pluralFrame->localReadBindings.begin(), sbendr = pluralFrame->localReadBindings.end(); (sbir != sbendr); sbir++) {
+            sbir->second->content->cloneContent = NULL;
         }
-        for (sbi = pluralFrame->localWriteBindings.begin(), sbend = pluralFrame->localWriteBindings.end(); (sbi != sbend); sbi++) {
-            sbi->second->content->cloneContent = NULL;
+        for (LocalBindingIterator sbiw = pluralFrame->localWriteBindings.begin(), sbendw = pluralFrame->localWriteBindings.end(); (sbiw != sbendw); sbiw++) {
+            sbiw->second->content->cloneContent = NULL;
         }
-        for (sbi = pluralFrame->localReadBindings.begin(), sbend = pluralFrame->localReadBindings.end(); (sbi != sbend); sbi++) {
+        for (LocalBindingIterator sbir2 = pluralFrame->localReadBindings.begin(), sbendr2 = pluralFrame->localReadBindings.end(); (sbir2 != sbendr2); sbir2++) {
             LocalBinding *sb;
-            LocalBinding *m = sbi->second;
+            LocalBinding *m = sbir2->second;
             if (m->content->cloneContent == NULL) {
                 m->content->cloneContent = m->content->clone();
             }
             sb = new LocalBinding(m->qname, m->content->cloneContent);
             sb->xplicit = m->xplicit;
-            const LocalBindingMap::value_type e(sbi->first, sb);
+            const LocalBindingMap::value_type e(sbir2->first, sb);
             singularFrame->localReadBindings.insert(e);
         }
-        for (sbi = pluralFrame->localWriteBindings.begin(), sbend = pluralFrame->localWriteBindings.end(); (sbi != sbend); sbi++) {
+        for (LocalBindingIterator sbiw2 = pluralFrame->localWriteBindings.begin(), sbendw2 = pluralFrame->localWriteBindings.end(); (sbiw2 != sbendw2); sbiw2++) {
             LocalBinding *sb;
-            LocalBinding *m = sbi->second;
+            LocalBinding *m = sbiw2->second;
             if (m->content->cloneContent == NULL) {
                 m->content->cloneContent = m->content->clone();
             }
             sb = new LocalBinding(m->qname, m->content->cloneContent);
             sb->xplicit = m->xplicit;
-            const LocalBindingMap::value_type e(sbi->first, sb);
+            const LocalBindingMap::value_type e(sbiw2->first, sb);
             singularFrame->localWriteBindings.insert(e);
         }
 
@@ -2608,16 +2606,15 @@ doUnary:
         Multiname *mn = new Multiname(id);
         mn->addNamespace(namespaces);
         // Search the local frame for an overlapping definition
-        LocalBindingIterator b, end;
         if (access & ReadAccess) {
-            for (b = localFrame->localReadBindings.lower_bound(*id),
+            for (LocalBindingIterator b = localFrame->localReadBindings.lower_bound(*id),
                     end = localFrame->localReadBindings.upper_bound(*id); (b != end); b++) {
                 if (mn->matches(b->second->qname))
                     reportError(Exception::definitionError, "Duplicate definition {0}", pos, id);
             }
         }
         if (access & WriteAccess) {
-            for (b = localFrame->localWriteBindings.lower_bound(*id),
+            for (LocalBindingIterator b = localFrame->localWriteBindings.lower_bound(*id),
                     end = localFrame->localWriteBindings.upper_bound(*id); (b != end); b++) {
                 if (mn->matches(b->second->qname))
                     reportError(Exception::definitionError, "Duplicate definition {0}", pos, id);
@@ -2635,14 +2632,14 @@ doUnary:
                 if (fr->kind != WithFrameKind) {
                     NonWithFrame *nwfr = checked_cast<NonWithFrame *>(fr);
                     if (access & ReadAccess) {
-                        for (b = nwfr->localReadBindings.lower_bound(*id),
+                        for (LocalBindingIterator b = nwfr->localReadBindings.lower_bound(*id),
                                 end = nwfr->localReadBindings.upper_bound(*id); (b != end); b++) {
                             if (mn->matches(b->second->qname) && (b->second->content->kind != LocalMember::Forbidden))
                                 reportError(Exception::definitionError, "Duplicate definition {0}", pos, id);
                         }
                     }
                     if (access & WriteAccess) {
-                        for (b = nwfr->localWriteBindings.lower_bound(*id),
+                        for (LocalBindingIterator b = nwfr->localWriteBindings.lower_bound(*id),
                                 end = nwfr->localWriteBindings.upper_bound(*id); (b != end); b++) {
                             if (mn->matches(b->second->qname) && (b->second->content->kind != LocalMember::Forbidden))
                                 reportError(Exception::definitionError, "Duplicate definition {0}", pos, id);
@@ -2677,7 +2674,7 @@ doUnary:
                     for (NamespaceListIterator nli = mn->nsList->begin(), nlend = mn->nsList->end(); (nli != nlend); nli++) {
                         if (access & ReadAccess) {
                             bool foundEntry = false;
-                            for (b = nwfr->localReadBindings.lower_bound(*id),
+                            for (LocalBindingIterator b = nwfr->localReadBindings.lower_bound(*id),
                                     end = nwfr->localReadBindings.upper_bound(*id); (b != end); b++) {        
                                 if (b->second->qname.nameSpace == *nli) {
                                     ASSERT(b->second->content->kind == LocalMember::Forbidden);
@@ -2694,7 +2691,7 @@ doUnary:
                         }
                         if (access & WriteAccess) {
                             bool foundEntry = false;
-                            for (b = nwfr->localWriteBindings.lower_bound(*id),
+                            for (LocalBindingIterator b = nwfr->localWriteBindings.lower_bound(*id),
                                     end = nwfr->localWriteBindings.upper_bound(*id); (b != end); b++) {        
                                 if (b->second->qname.nameSpace == *nli) {
                                     ASSERT(b->second->content->kind == LocalMember::Forbidden);
