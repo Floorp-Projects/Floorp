@@ -52,7 +52,6 @@
 
 #include "nsIDOMEventListener.h"
 #include "nsISelectionListener.h"
-#include "nsIDOMMutationListener.h"
 #include "nsIDOMMouseMotionListener.h"
 
 #define kTopLeft       NS_LITERAL_STRING("nw")
@@ -79,38 +78,11 @@ public:
   /*interfaces for addref and release and queryinterface*/
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD NotifySelectionChanged(nsIDOMDocument *aDoc, nsISelection *aSel, short aReason);
+  NS_DECL_NSISELECTIONLISTENER
 
 protected:
 
-  nsCOMPtr<nsIHTMLEditor> mEditor;
-};
-
-// ==================================================================
-// ResizerMutationListener
-// ==================================================================
-
-class ResizerMutationListener : public nsIDOMMutationListener
-{
-public:
-  ResizerMutationListener (nsIHTMLEditor * aEditor);
-  virtual ~ResizerMutationListener ();
-
-  /*interfaces for addref and release and queryinterface*/
-  NS_DECL_ISUPPORTS
-
-  NS_IMETHOD SubtreeModified(nsIDOMEvent* aMutationEvent);
-  NS_IMETHOD NodeInserted(nsIDOMEvent* aMutationEvent);
-  NS_IMETHOD NodeRemoved(nsIDOMEvent* aMutationEvent);
-  NS_IMETHOD NodeRemovedFromDocument(nsIDOMEvent* aMutationEvent);
-  NS_IMETHOD NodeInsertedIntoDocument(nsIDOMEvent* aMutationEvent);
-  NS_IMETHOD AttrModified(nsIDOMEvent* aMutationEvent);
-  NS_IMETHOD CharacterDataModified(nsIDOMEvent* aMutationEvent);  
-  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
-
- protected:
-  nsCOMPtr<nsIHTMLEditor> mEditor;
-
+  nsIHTMLEditor * mEditor;
 };
 
 // ==================================================================
@@ -127,12 +99,13 @@ public:
 /*interfaces for addref and release and queryinterface*/
   NS_DECL_ISUPPORTS
 
+  NS_DECL_NSIDOMEVENTLISTENER
+
   NS_IMETHOD MouseMove(nsIDOMEvent* aMouseEvent);
   NS_IMETHOD DragMove(nsIDOMEvent* aMouseEvent);
-  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
 
  protected:
-  nsCOMPtr<nsIHTMLEditor> mEditor;
+  nsIHTMLEditor * mEditor;
 
 };
 
@@ -149,10 +122,10 @@ public:
   /*interfaces for addref and release and queryinterface*/
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
+  NS_DECL_NSIDOMEVENTLISTENER
 
  protected:
-  nsCOMPtr<nsIHTMLEditor> mEditor;
+  nsIHTMLEditor * mEditor;
 
 };
 
