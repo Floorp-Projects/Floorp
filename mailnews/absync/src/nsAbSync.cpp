@@ -2442,9 +2442,9 @@ nsAbSync::AddValueToNewCard(nsIAbCard *aCard, nsString *aTagName, nsString *aTag
     tempVal.Append(*aTagValue);
 
     if (aTagName->FindChar(aChar) != -1)
-      mPhoneTypes->AppendString(NS_ConvertASCIItoUCS2(tempVal.ToNewCString()));
+      mPhoneTypes->AppendString(tempVal);
     else
-      mPhoneValues->AppendString(NS_ConvertASCIItoUCS2(tempVal.ToNewCString()));
+      mPhoneValues->AppendString(tempVal);
 
     return NS_OK;
   }
