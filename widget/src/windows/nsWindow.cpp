@@ -109,6 +109,9 @@
 #define SPI_GETWHEELSCROLLLINES 104
 #endif
 
+// Pick some random timer ID.  Is there a better way?
+#define NS_FLASH_TIMER_ID 0x011231984
+
 static NS_DEFINE_CID(kCClipboardCID,       NS_CLIPBOARD_CID);
 static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
 static NS_DEFINE_CID(kTimerManagerCID, NS_TIMERMANAGER_CID);
@@ -431,6 +434,93 @@ static PRBool LangIDToCP(WORD aLangID, UINT& oCP)
            return PR_FALSE;
         }
 }
+
+/* This object maintains a correlation between attention timers and the
+   windows to which they belong. It's lighter than a hashtable (expected usage
+   is really just one at a time) and allows nsWindow::GetNSWindowPtr
+   to remain private. */
+class nsAttentionTimerMonitor {
+public:
+  nsAttentionTimerMonitor() : mHeadTimer(0) { }
+  ~nsAttentionTimerMonitor() {
+    TimerInfo *current, *next;
+    for (current = mHeadTimer; current; current = next) {
+      next = current->next;
+      delete current;
+    }
+  }
+  void AddTimer(HWND timerWindow, HWND flashWindow, UINT timerID) {
+    TimerInfo *info;
+    PRBool    newInfo = PR_FALSE;
+    info = FindInfo(timerWindow);
+    if (!info) {
+      info = new TimerInfo;
+      newInfo = PR_TRUE;
+    }
+    if (info) {
+      info->timerWindow = timerWindow;
+      info->flashWindow = flashWindow;
+      info->timerID = timerID;
+      info->next = 0;
+      if (newInfo)
+        AppendTimer(info);
+    }
+  }
+  HWND GetFlashWindowFor(HWND timerWindow) {
+    TimerInfo *info = FindInfo(timerWindow);
+    return info ? info->flashWindow : 0;
+  }
+  void KillTimer(HWND timerWindow) {
+    TimerInfo *info = FindInfo(timerWindow);
+    if (info) {
+      // make sure it's unflashed and kill the timer
+      ::FlashWindow(info->flashWindow, FALSE);
+      ::KillTimer(info->timerWindow, info->timerID);
+      RemoveTimer(info);
+      delete info;
+    }
+  }
+
+private:
+  struct TimerInfo {
+    HWND       timerWindow,
+               flashWindow;
+    UINT       timerID;
+    TimerInfo *next;
+  };
+  TimerInfo *FindInfo(HWND timerWindow) {
+    TimerInfo *scan;
+    for (scan = mHeadTimer; scan; scan = scan->next)
+      if (scan->timerWindow == timerWindow)
+        break;
+    return scan;
+  }
+  void AppendTimer(TimerInfo *info) {
+    if (!mHeadTimer)
+      mHeadTimer = info;
+    else {
+      TimerInfo *scan, *last;
+      for (scan = mHeadTimer; scan; scan = scan->next)
+        last = scan;
+      last->next = info;
+    }
+  }
+  void RemoveTimer(TimerInfo *info) {
+    TimerInfo *scan, *last = 0;
+    for (scan = mHeadTimer; scan && scan != info; scan = scan->next)
+      last = scan;
+    if (scan) {
+      if (last)
+        last->next = scan->next;
+      else
+        mHeadTimer = scan->next;
+    }
+  }
+
+  TimerInfo *mHeadTimer;
+};
+
+static nsAttentionTimerMonitor *gAttentionTimerMonitor = 0;
 
 //-------------------------------------------------------------------------
 //
@@ -1265,6 +1355,8 @@ NS_METHOD nsWindow::Destroy()
   if (mWnd) {
     // prevent the widget from causing additional events
     mEventCallback = nsnull;
+    if (gAttentionTimerMonitor)
+      gAttentionTimerMonitor->KillTimer(mWnd);
     VERIFY(::DestroyWindow(mWnd));
     mWnd = NULL;
     //our windows can be subclassed by
@@ -5616,39 +5708,51 @@ void nsWindow::GetCompositionWindowPos(HIMC hIMC, PRUint32 aEventType, COMPOSITI
 
 #endif
 
-// Pick some random timer ID.  Is there a better way?
-#define NS_FLASH_TIMER_ID 0x011231984
-
 // This function is called on a timer to do the flashing.  It simply toggles the flash
 // status until the window comes to the foreground.
-static VOID CALLBACK nsGetAttentionTimerFunc( HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime ) {
-    // Flash the window until we're in the foreground.
-    if ( GetForegroundWindow() != hwnd ) {
-        // We're not in the foreground yet.
-        FlashWindow( hwnd, TRUE );
-    } else {
-        FlashWindow( hwnd, FALSE );
-        KillTimer( hwnd, idEvent );
-    }
+static VOID CALLBACK nsGetAttentionTimerFunc(HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime) {
+
+  // flash the outermost owner if we're not the foreground
+  HWND flashwnd = gAttentionTimerMonitor->GetFlashWindowFor(hwnd);
+
+  // flash the window until we're in the foreground.
+  if (::GetForegroundWindow() != hwnd)
+    ::FlashWindow(flashwnd, TRUE);
+  else
+    gAttentionTimerMonitor->KillTimer(hwnd);
 }
 
 // Draw user's attention to this window until it comes to foreground.
 NS_IMETHODIMP
 nsWindow::GetAttention() {
-    // Got window?
-    if ( !mWnd ) {
-        return NS_ERROR_NOT_INITIALIZED;
-    }
 
-    // If window is in foreground, no notification is necessary.
-    if ( GetForegroundWindow() != mWnd ) {
-        // Kick off timer that does single flash till window comes to foreground.
-        SetTimer( mWnd, NS_FLASH_TIMER_ID, GetCaretBlinkTime(), (TIMERPROC)nsGetAttentionTimerFunc );
-    }
+  // Got window?
+  if (!mWnd)
+    return NS_ERROR_NOT_INITIALIZED;
 
-    return NS_OK;
+  // timer is on the parentmost window; window to flash is its ownermost
+  HWND nextwnd,
+       flashwnd,
+       timerwnd = mWnd;
+  while ((nextwnd = ::GetParent(timerwnd)) != 0)
+    timerwnd = nextwnd;
+  flashwnd = timerwnd;
+  while ((nextwnd = ::GetWindow(flashwnd, GW_OWNER)) != 0)
+    flashwnd = nextwnd;
+
+  // If window is in foreground, no notification is necessary.
+  if (::GetForegroundWindow() != timerwnd) {
+    // kick off a timer that does single flash until the window comes to the foreground
+    if (!gAttentionTimerMonitor)
+      gAttentionTimerMonitor = new nsAttentionTimerMonitor;
+    if (gAttentionTimerMonitor) {
+      gAttentionTimerMonitor->AddTimer(timerwnd, flashwnd, NS_FLASH_TIMER_ID);
+      ::SetTimer(timerwnd, NS_FLASH_TIMER_ID, GetCaretBlinkTime(), (TIMERPROC)nsGetAttentionTimerFunc);
+    }
+  }
+
+  return NS_OK;
 }
-
 
 //-------------------------------------------------------------------------
 //-------------------------------------------------------------------------
