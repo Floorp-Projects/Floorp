@@ -265,6 +265,14 @@ SOURCE=.\MozillaBrowser.ico
 SOURCE=.\MozillaBrowser.rgs
 # End Source File
 # End Group
+# Begin Group "Mozilla Headers"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=..\..\public\nsIWebShell.h
+# End Source File
+# End Group
 # Begin Source File
 
 SOURCE=.\makefile.win

@@ -60,6 +60,9 @@ CMozillaBrowser::CMozillaBrowser()
 	// Controls starts off unbusy
 	m_bBusy = FALSE;
 
+ 	// the IHTMLDOcument, lazy allocation.
+ 	m_pDocument = NULL;
+
 	// Register components
 	if (!m_bRegistryInitialized)
 	{
@@ -137,6 +140,13 @@ LRESULT CMozillaBrowser::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
 	// Unload browser helpers
 	UnloadBrowserHelpers();
 
+ 	// Destroy the htmldoc
+ 	if (m_pDocument != NULL)
+ 	{
+ 		m_pDocument->Release();
+ 		m_pDocument = NULL;
+ 	}
+
     // Destroy layout...
     if (m_pIWebShell != nsnull)
 	{
@@ -196,6 +206,66 @@ LRESULT CMozillaBrowser::OnPrint(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL&
 			NS_RELEASE(pContentViewer);
 		}
 	}
+	return 0;
+}
+
+
+LRESULT CMozillaBrowser::OnViewSource(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
+{	
+	// Get the url from the web shell
+	const PRUnichar *pszUrl = nsnull;
+	PRInt32 aHistoryIndex;
+	m_pIWebShell->GetHistoryIndex(aHistoryIndex);
+	m_pIWebShell->GetURL(aHistoryIndex, &pszUrl);
+
+	nsString strUrl(pszUrl);
+	nsString strTemp(nsString("view-source:") + strUrl);
+	strUrl = strTemp;
+
+	CIPtr(IDispatch) spDispNew;
+	VARIANT_BOOL bCancel = VARIANT_FALSE;
+	Fire_NewWindow2(&spDispNew, &bCancel);
+
+	if ((bCancel == VARIANT_FALSE) && spDispNew)
+	{
+		CIPtr(IWebBrowser2) spOther = spDispNew;;
+		if (spOther)
+		{
+			// tack in the viewsource command
+			BSTR bstrURL = SysAllocString(strUrl);
+			CComVariant vURL(bstrURL);
+			VARIANT vNull;
+			vNull.vt = VT_NULL;
+
+			spOther->Navigate2(&vURL, &vNull, &vNull, &vNull, &vNull);			
+
+			// when and if we can get the container we should
+			// be able to tell the other windows container not to show toolbars, menus, etc.
+			// we would also be able to show the window.  one fix would be to 
+			// change the navigate method to set a flag if it's viewing source, and to 
+			// have it's document complete method tell it's container to hide toolbars and menu.
+			/*
+			IDispatch *pOtherContainer = NULL;
+			pOther->get_Container(&pOtherContainer);
+			if(pOtherContainer != NULL)
+			{
+				DWebBrowserEvents2 *pOtherEventSink;
+				if(SUCCEEDED(pOtherContainer->QueryInterface(IID_IDWebBrowserEvents2,(void**)&pOtherEventSink)))
+				{
+					__asm int 3
+
+					pOtherEventSink->Release();
+				}
+
+				pOtherContainer->Release();
+			}
+			*/
+
+			SysFreeString(bstrURL);
+		}
+	}
+
+	bHandled = TRUE;
 	return 0;
 }
 
@@ -717,6 +787,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Navigate(BSTR URL, VARIANT __RPC_FAR 
 	}
 
 	// Extract the URL parameter
+ 	nsString sCommand("view");
 	nsString sUrl;
 	if (URL == NULL)
 	{
@@ -728,6 +799,13 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Navigate(BSTR URL, VARIANT __RPC_FAR 
 		USES_CONVERSION;
 		sUrl = OLE2A(URL);
 	}
+
+	// Check for a view-source op - this is a bit kludgy
+	if (sUrl.Compare(L"view-source:", PR_TRUE, 12) == 0)
+ 	{
+ 		sUrl.Left(sCommand, 11);
+ 		sUrl.Cut(0,12);
+ 	}
 
 	// Extract the launch flags parameter
 	LONG lFlags = 0;
@@ -793,8 +871,9 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Navigate(BSTR URL, VARIANT __RPC_FAR 
 
 	// TODO find the correct target frame
 
-	// Load the URL
-	m_pIWebShell->LoadURL(sUrl, pIPostData, bModifyHistory);
+	// Load the URL	
+	char *tmpCommand = sCommand.ToNewCString();
+	m_pIWebShell->LoadURL(sUrl, tmpCommand, pIPostData, bModifyHistory);
 	
 	return S_OK;
 }
@@ -979,15 +1058,24 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Document(IDispatch __RPC_FAR *__R
 		return E_UNEXPECTED;
 	}
 
-	CIEHtmlDocumentInstance *pDocument = NULL;
-	CIEHtmlDocumentInstance::CreateInstance(&pDocument);
-	if (pDocument == NULL)
-	{
-		return E_OUTOFMEMORY;
+	if (m_pDocument == NULL)
+ 	{	
+ 		CIEHtmlDocumentInstance::CreateInstance(&m_pDocument);
+  		if (m_pDocument == NULL)
+ 		{
+ 			return E_OUTOFMEMORY;
+ 		}
+ 		
+		// addref it so it doesn't go away on us.
+ 		m_pDocument->AddRef();
+ 
+ 		// give it a pointer to us.  note that we shouldn't be addref'd by this call, or it would be 
+ 		// a circular reference.
+ 		m_pDocument->SetParent(this);
 	}
 
-	pDocument->QueryInterface(IID_IDispatch, (void **) ppDisp);
-	pDocument->SetDOMNode(pIDOMDocument);
+	m_pDocument->QueryInterface(IID_IDispatch, (void **) ppDisp);
+	m_pDocument->SetDOMNode(pIDOMDocument);
 	pIDOMDocument->Release();
 
 	return S_OK;
@@ -2002,45 +2090,62 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_Resizable(VARIANT_BOOL Value)
 // To keep things open, all supported commands are in the table below which
 // can be extended when and if necessary.
 
+static const GUID CGID_IWebBrowser =
+{ 0xED016940L, 0xBD5B, 0x11cf, {0xBA, 0x4E, 0x00, 0xC0, 0x4F, 0xD7, 0x08, 0x16} };
+
+#define HTMLID_FIND 1
+#define HTMLID_VIEWSOURCE 2
+#define HTMLID_OPTIONS 3
+
 struct OleCommandInfo
 {
 	ULONG    nCmdID;
+	const GUID    *pCmdGUID;
 	ULONG    nWindowsCmdID;
 	wchar_t *szVerbText;
 	wchar_t *szStatusText;
 };
 
+struct OleExecData
+{
+	const GUID *pguidCmdGroup;
+	DWORD nCmdID;
+	DWORD nCmdexecopt;
+	VARIANT *pvaIn;
+	VARIANT *pvaOut;
+};
+
 static OleCommandInfo s_aSupportedCommands[] =
 {
-	{ OLECMDID_PRINT, ID_PRINT, L"Print", L"Print the page" },
-	{ OLECMDID_SAVEAS, 0, L"SaveAs", L"Save the page" },
-	{ OLECMDID_PAGESETUP, ID_PAGESETUP, L"Page Setup", L"Page Setup" },
-	{ OLECMDID_PROPERTIES, 0, L"Properties", L"Show page properties" },
-	{ OLECMDID_CUT, 0, L"Cut", L"Cut selection" },
-	{ OLECMDID_COPY, 0, L"Copy", L"Copy selection" },
-	{ OLECMDID_PASTE, 0, L"Paste", L"Paste as selection" },
-	{ OLECMDID_UNDO, 0, L"Undo", L"Undo" },
-	{ OLECMDID_REDO, 0, L"Redo", L"Redo" },
-	{ OLECMDID_SELECTALL, 0, L"SelectAll", L"Select all" },
-	{ OLECMDID_REFRESH, 0, L"Refresh", L"Refresh" },
-	{ OLECMDID_STOP, 0, L"Stop", L"Stop" },
-	{ OLECMDID_ONUNLOAD, 0, L"OnUnload", L"OnUnload" }
+	{ OLECMDID_PRINT, NULL, ID_PRINT, L"Print", L"Print the page" },
+	{ OLECMDID_SAVEAS, NULL, 0, L"SaveAs", L"Save the page" },
+	{ OLECMDID_PAGESETUP, NULL, ID_PAGESETUP, L"Page Setup", L"Page Setup" },
+	{ OLECMDID_PROPERTIES, NULL, 0, L"Properties", L"Show page properties" },
+	{ OLECMDID_CUT, NULL, 0, L"Cut", L"Cut selection" },
+	{ OLECMDID_COPY, NULL, 0, L"Copy", L"Copy selection" },
+	{ OLECMDID_PASTE, NULL, 0, L"Paste", L"Paste as selection" },
+	{ OLECMDID_UNDO, NULL, 0, L"Undo", L"Undo" },
+	{ OLECMDID_REDO, NULL, 0, L"Redo", L"Redo" },
+	{ OLECMDID_SELECTALL, NULL, 0, L"SelectAll", L"Select all" },
+	{ OLECMDID_REFRESH, NULL, 0, L"Refresh", L"Refresh" },
+	{ OLECMDID_STOP, NULL, 0, L"Stop", L"Stop" },
+	{ OLECMDID_ONUNLOAD, NULL, 0, L"OnUnload", L"OnUnload" },
+
+	// Unsupported IE 4.x command group
+	{ HTMLID_FIND, &CGID_IWebBrowser, 0, L"Find", L"Find" },
+	{ HTMLID_VIEWSOURCE, &CGID_IWebBrowser, 0, L"ViewSource", L"View Source" },
+	{ HTMLID_OPTIONS, &CGID_IWebBrowser, 0, L"Options", L"Options" },
 };
 
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::QueryStatus(const GUID __RPC_FAR *pguidCmdGroup, ULONG cCmds, OLECMD __RPC_FAR prgCmds[], OLECMDTEXT __RPC_FAR *pCmdText)
 {
-	// All command groups except the default are ignored
-	if (pguidCmdGroup != NULL)
-	{
-		OLECMDERR_E_UNKNOWNGROUP;
-	}
-
 	if (prgCmds == NULL)
 	{
 		return E_INVALIDARG;
 	}
 
+	BOOL bCmdGroupFound = FALSE;
 	BOOL bTextSet = FALSE;
 
 	// Iterate through list of commands and flag them as supported/unsupported
@@ -2053,14 +2158,22 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::QueryStatus(const GUID __RPC_FAR *pgu
 		int nSupportedCount = sizeof(s_aSupportedCommands) / sizeof(s_aSupportedCommands[0]);
 		for (int nSupported = 0; nSupported < nSupportedCount; nSupported++)
 		{
-			if (s_aSupportedCommands[nSupported].nCmdID != prgCmds[nCmd].cmdID)
+			OleCommandInfo *pCI = &s_aSupportedCommands[nSupported];
+
+			if (pguidCmdGroup && pCI->pCmdGUID && memcmp(pguidCmdGroup, pCI->pCmdGUID, sizeof(GUID)) == 0)
+			{
+				continue;
+			}
+			bCmdGroupFound = TRUE;
+
+			if (pCI->nCmdID != prgCmds[nCmd].cmdID)
 			{
 				continue;
 			}
 
 			// Command is supported so flag it and possibly enable it
 			prgCmds[nCmd].cmdf = OLECMDF_SUPPORTED;
-			if (s_aSupportedCommands[nSupported].nWindowsCmdID != 0)
+			if (pCI->nWindowsCmdID != 0)
 			{
 				prgCmds[nCmd].cmdf |= OLECMDF_ENABLED;
 			}
@@ -2072,11 +2185,11 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::QueryStatus(const GUID __RPC_FAR *pgu
 				wchar_t *pszTextToCopy = NULL;
 				if (pCmdText->cmdtextf & OLECMDTEXTF_NAME)
 				{
-					pszTextToCopy = s_aSupportedCommands[nSupported].szVerbText;
+					pszTextToCopy = pCI->szVerbText;
 				}
 				else if (pCmdText->cmdtextf & OLECMDTEXTF_STATUS)
 				{
-					pszTextToCopy = s_aSupportedCommands[nSupported].szStatusText;
+					pszTextToCopy = pCI->szStatusText;
 				}
 				
 				// Copy the text
@@ -2101,37 +2214,60 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::QueryStatus(const GUID __RPC_FAR *pgu
 		}
 	}
 	
+	// Was the command group found?
+	if (!bCmdGroupFound)
+	{
+		OLECMDERR_E_UNKNOWNGROUP;
+	}
+
 	return S_OK;
 }
 
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::Exec(const GUID __RPC_FAR *pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT __RPC_FAR *pvaIn, VARIANT __RPC_FAR *pvaOut)
 {
-	// All command groups except the default are ignored
-	if (pguidCmdGroup != NULL)
-	{
-		OLECMDERR_E_UNKNOWNGROUP;
-	}
+	BOOL bCmdGroupFound = FALSE;
 
 	// Search the support command list
 	int nSupportedCount = sizeof(s_aSupportedCommands) / sizeof(s_aSupportedCommands[0]);
 	for (int nSupported = 0; nSupported < nSupportedCount; nSupported++)
 	{
-		if (s_aSupportedCommands[nSupported].nCmdID != nCmdID)
+		OleCommandInfo *pCI = &s_aSupportedCommands[nSupported];
+
+		if (pguidCmdGroup && pCI->pCmdGUID && memcmp(pguidCmdGroup, pCI->pCmdGUID, sizeof(GUID)) == 0)
+		{
+			continue;
+		}
+		bCmdGroupFound = TRUE;
+
+		if (pCI->nCmdID != nCmdID)
 		{
 			continue;
 		}
 
 		// Command is supported but not implemented
-		if (s_aSupportedCommands[nSupported].nWindowsCmdID == 0)
+		if (pCI->nWindowsCmdID == 0)
 		{
 			continue;
 		}
 
-		// Send ourselves a WM_COMMAND windows message with the associated identifier
-		SendMessage(WM_COMMAND, LOWORD(s_aSupportedCommands[nSupported].nWindowsCmdID));
+		// Send ourselves a WM_COMMAND windows message with the associated
+		// identifier and exec data
+		OleExecData cData;
+		cData.pguidCmdGroup = pguidCmdGroup;
+		cData.nCmdID = nCmdID;
+		cData.nCmdexecopt = nCmdexecopt;
+		cData.pvaIn = pvaIn;
+		cData.pvaOut = pvaOut;
+		SendMessage(WM_COMMAND, LOWORD(pCI->nWindowsCmdID), (LPARAM) &cData);
 
 		return S_OK;
+	}
+
+	// Was the command group found?
+	if (!bCmdGroupFound)
+	{
+		OLECMDERR_E_UNKNOWNGROUP;
 	}
 
 	return OLECMDERR_E_NOTSUPPORTED;

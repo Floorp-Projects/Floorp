@@ -18,10 +18,12 @@
 #include "stdafx.h"
 #include "IEHtmlDocument.h"
 #include "IEHtmlElementCollection.h"
+#include "MozillaBrowser.h"
 
 
 CIEHtmlDocument::CIEHtmlDocument()
 {
+	m_pParent = NULL;
 }
 
 
@@ -29,6 +31,10 @@ CIEHtmlDocument::~CIEHtmlDocument()
 {
 }
 
+void CIEHtmlDocument::SetParent(CMozillaBrowser *parent)
+{
+	m_pParent = parent;
+}
 
 HRESULT CIEHtmlDocument::GetIDispatch(IDispatch **pDispatch)
 {
@@ -638,5 +644,31 @@ HRESULT STDMETHODCALLTYPE CIEHtmlDocument::toString(BSTR __RPC_FAR *String)
 HRESULT STDMETHODCALLTYPE CIEHtmlDocument::createStyleSheet(BSTR bstrHref, long lIndex, IHTMLStyleSheet __RPC_FAR *__RPC_FAR *ppnewStyleSheet)
 {
 	return E_NOTIMPL;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// IOleCommandTarget implementation
+
+
+HRESULT STDMETHODCALLTYPE CIEHtmlDocument::QueryStatus(const GUID __RPC_FAR *pguidCmdGroup, ULONG cCmds, OLECMD __RPC_FAR prgCmds[], OLECMDTEXT __RPC_FAR *pCmdText)
+{
+	HRESULT hr = E_NOTIMPL;
+	if(m_pParent)
+	{
+		hr = m_pParent->QueryStatus(pguidCmdGroup,cCmds,prgCmds,pCmdText);
+	}
+	return hr;
+}
+
+
+HRESULT STDMETHODCALLTYPE CIEHtmlDocument::Exec(const GUID __RPC_FAR *pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT __RPC_FAR *pvaIn, VARIANT __RPC_FAR *pvaOut)
+{
+	HRESULT hr = E_NOTIMPL;
+	if(m_pParent)
+	{
+		hr = m_pParent->Exec(pguidCmdGroup,nCmdID,nCmdexecopt,pvaIn,pvaOut);
+	}
+	return hr;
 }
 

@@ -267,12 +267,34 @@ CWebShellContainer::CanCreateNewWebShell(PRBool& aResult)
 	return rv;
 }
 
+
 NS_IMETHODIMP
-CWebShellContainer::SetNewWebShellInfo(const nsString& aName, const nsString& anURL, 
+CWebShellContainer::SetNewWebShellInfo(const nsString& aName, const nsString& anURL,
 							nsIWebShell* aOpenerShell, PRUint32 aChromeMask,
 							nsIWebShell** aNewShell, nsIWebShell** anInnerShell)
 {
 	nsresult rv = NS_ERROR_FAILURE;
+
+	CIPtr(IDispatch) cpDispNew;
+	VARIANT_BOOL bCancel = VARIANT_FALSE;
+	m_pEvents2->Fire_NewWindow2(&cpDispNew, &bCancel);
+
+	if (bCancel == VARIANT_FALSE && cpDispNew)
+	{
+		CIPtr(IWebBrowser2) cpOther = cpDispNew;
+		if (cpDispNew)
+		{
+			BSTR bstrURL = SysAllocString(anURL);
+			CComVariant vURL(bstrURL);
+			VARIANT vNull;
+			vNull.vt = VT_NULL;
+			cpOther->Navigate2(&vURL, &vNull, &vNull, &vNull, &vNull);
+			SysFreeString(bstrURL);
+		}
+
+		rv = NS_OK;
+	}
+
 	return rv;
 }
 

@@ -48,6 +48,7 @@ extern CComModule _Module;
 #include <atlcom.h>
 #include <atlctl.h>
 #include <mshtml.h>
+#include <docobj.h>
 #include <winsock2.h>
 
 #ifdef USE_PLUGIN
@@ -110,6 +111,7 @@ typedef long int32;
 #include "ActiveXTypes.h"
 #include "BrowserDiagnostics.h"
 #include "PropertyList.h"
+#include "IEHtmlDocument.h"
 #include "MozillaControl.h"
 #include "MozillaBrowser.h"
 #include "WebShellContainer.h"
