@@ -29,7 +29,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the
  * GPL.
- *  $Id: mpmontg.c,v 1.3 2000/08/01 01:38:30 nelsonb%netscape.com Exp $
+ *  $Id: mpmontg.c,v 1.4 2000/08/02 01:03:14 nelsonb%netscape.com Exp $
  */
 
 /* This file implements moduluar exponentiation using Montgomery's
@@ -55,9 +55,9 @@
 #define ODD_INTS    16   /* 2 ** (WINDOW_BITS - 1) */
 
 typedef struct {
-  mp_int       N;	/* modulus N */
   mp_digit     n0prime; /* n0' = - (n0 ** -1) mod MP_RADIX */
   mp_size      b;	/* R == 2 ** b,  also b = # significant bits in N */
+  mp_int       N;	/* modulus N */
 } mp_mont_modulus;
 
 /* computes T = REDC(T), 2^b == R */
@@ -70,17 +70,17 @@ mp_err s_mp_redc(mp_int *T, mp_mont_modulus *mmm)
   int i;
   int n = MP_USED(&mmm->N);
 
-  mp_init(&m);
-
-  MP_CHECKOK( s_mp_grow(T, 2 * n + 2) );
+  MP_CHECKOK( s_mp_pad(T, MP_USED(T) + n + 2) );
   for (i = 0; i < n; ++i ) {
     mp_digit m_i = MP_DIGIT(T, i) * n0prime;
     /* T += N * m_i * (MP_RADIX ** i); */
     MP_CHECKOK( s_mp_mul_d_add_offset(&mmm->N, m_i, T, i) );
   }
+  s_mp_clamp(T);
 
   /* T /= R */
 #ifdef DEBUG
+  MP_CHECKOK( mp_init(&m) );
   MP_CHECKOK( mp_div_2d(T, mmm->b, T, &m));
   /* here, remainder m should be equal to zero */
   if (mp_cmp_z(&m) != 0) {
@@ -102,7 +102,9 @@ mp_err s_mp_redc(mp_int *T, mp_mont_modulus *mmm)
   }
   rv = MP_OKAY;
 loser:
+#ifdef DEBUG
   mp_clear(&m);
+#endif
   return rv;
 }
 
@@ -112,7 +114,7 @@ mp_err mp_to_mont(const mp_int *x, mp_mont_modulus *mmm, mp_int *xMont)
 
   /* xMont = x * R mod N   where  N is modulus */
   MP_CHECKOK( mpl_lsh(x, xMont, mmm->b) );  		/* xMont = x << b */
-  MP_CHECKOK( mp_mod(xMont, &mmm->N, xMont) );		/*         mod N */
+  MP_CHECKOK( mp_div(xMont, &mmm->N, 0, xMont) );	/*         mod N */
 loser:
   return rv;
 }
@@ -150,23 +152,25 @@ mp_err mp_exptmod(const mp_int *inBase, const mp_int *exponent,
   mp_size bits_in_exponent;
   mp_size i;
   mp_err rv;
-  mp_int square, accum, goodBase;
+  mp_int square, accum, goodBase, tmp;
   mp_mont_modulus mmm;
 
   /* function for computing n0prime only works if n0 is odd */
   if (!mp_isodd(modulus))
     return s_mp_exptmod(inBase, exponent, modulus, result);
 
-  mp_init(&goodBase);
   if (mp_cmp(inBase, modulus) < 0) {
     base = inBase;
+    MP_DIGITS(&goodBase) = 0;
   } else {
+    mp_init(&goodBase);
     base = &goodBase;
     MP_CHECKOK( mp_mod(inBase, modulus, &goodBase) );
   }
 
   mp_init_size(&square, 2 * MP_USED(modulus) + 2);
-  mp_init_size(&accum,  2 * MP_USED(modulus) + 2);
+  mp_init_size(&accum,  3 * MP_USED(modulus) + 2);
+  mp_init_size(&tmp,    3 * MP_USED(modulus) + 2);
 
   mmm.N = *modulus;			/* a copy of the mp_int struct */
   i = mpl_significant_bits(modulus);
@@ -187,15 +191,14 @@ mp_err mp_exptmod(const mp_int *inBase, const mp_int *exponent,
     int expOff;
     mp_int power2, oddPowers[ODD_INTS];
 
-    mp_init(oddPowers);
-    MP_CHECKOK( mp_copy(&square, oddPowers));
+    MP_CHECKOK( mp_init_copy(oddPowers, &square) );
 
-    mp_init(&power2);
+    mp_init_size(&power2, MP_USED(modulus) + 2 * MP_USED(&square) + 2);
     MP_CHECKOK( mp_sqr(&square, &power2) );	/* square = square ** 2 */
     MP_CHECKOK( s_mp_redc(&power2, &mmm) );
 
     for (i = 1; i < ODD_INTS; ++i) {
-      mp_init(oddPowers + i);
+      mp_init_size(oddPowers + i, MP_USED(modulus) + 2 * MP_USED(&power2) + 2);
       MP_CHECKOK( mp_mul(oddPowers + (i - 1), &power2, oddPowers + i) );
       MP_CHECKOK( s_mp_redc(oddPowers + i, &mmm) );
     }
@@ -203,10 +206,13 @@ mp_err mp_exptmod(const mp_int *inBase, const mp_int *exponent,
     MP_CHECKOK( mp_to_mont(&accum, &mmm, &accum) );
 
 #define SQUARE \
-    MP_CHECKOK( s_mp_sqr(&accum) );\
+    memset(tmp.dp, 0, tmp.alloc * sizeof(mp_digit)); \
+    MP_CHECKOK( mp_sqr(&accum, &tmp) );\
+    mp_exch(&accum, &tmp); \
     MP_CHECKOK( s_mp_redc(&accum, &mmm) )
 #define MUL(x) \
-    MP_CHECKOK( s_mp_mul(&accum, oddPowers + (x)) ); \
+    MP_CHECKOK( mp_mul(&accum, oddPowers + (x), &tmp) ); \
+    mp_exch(&accum, &tmp); \
     MP_CHECKOK( s_mp_redc(&accum, &mmm))
 
     for (expOff = bits_in_exponent - WINDOW_BITS; expOff >= 0; expOff -= WINDOW_BITS) {
@@ -278,6 +284,7 @@ loser:
   mp_clear(&square);
   mp_clear(&accum);
   mp_clear(&goodBase);
+  mp_clear(&tmp);
   /* Don't mp_clear mmm.N because it is merely a copy of modulus.
   ** Just zap it.
   */

@@ -35,7 +35,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the GPL.
  *
- *  $Id: mpi.c,v 1.11 2000/08/01 01:38:29 nelsonb%netscape.com Exp $
+ *  $Id: mpi.c,v 1.12 2000/08/02 01:03:14 nelsonb%netscape.com Exp $
  */
 
 #include "mpi-priv.h"
@@ -78,6 +78,9 @@ static const char *s_dmap_1 =
   "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz+/";
 
 /* }}} */
+
+unsigned long mp_allocs;
+unsigned long mp_frees;
 
 /* {{{ Default precision manipulation */
 
@@ -132,6 +135,7 @@ mp_err mp_init(mp_int *mp)
 mp_err mp_init_size(mp_int *mp, mp_size prec)
 {
   ARGCHK(mp != NULL && prec > 0, MP_BADARG);
+/*if (prec < 128) prec = 128;	/* XXX HACK */
 
   if((DIGITS(mp) = s_mp_alloc(prec, sizeof(mp_digit))) == NULL)
     return MP_MEM;
@@ -163,12 +167,12 @@ mp_err mp_init_copy(mp_int *mp, const mp_int *from)
   if(mp == from)
     return MP_OKAY;
 
-  if((DIGITS(mp) = s_mp_alloc(USED(from), sizeof(mp_digit))) == NULL)
+  if((DIGITS(mp) = s_mp_alloc(ALLOC(from), sizeof(mp_digit))) == NULL)
     return MP_MEM;
 
   s_mp_copy(DIGITS(from), DIGITS(mp), USED(from));
   USED(mp) = USED(from);
-  ALLOC(mp) = USED(from);
+  ALLOC(mp) = ALLOC(from);
   SIGN(mp) = SIGN(from);
 
   return MP_OKAY;
@@ -209,7 +213,7 @@ mp_err mp_copy(const mp_int *from, mp_int *to)
       s_mp_copy(DIGITS(from), DIGITS(to), USED(from));
       
     } else {
-      if((tmp = s_mp_alloc(USED(from), sizeof(mp_digit))) == NULL)
+      if((tmp = s_mp_alloc(ALLOC(from), sizeof(mp_digit))) == NULL)
 	return MP_MEM;
 
       s_mp_copy(DIGITS(from), tmp, USED(from));
@@ -222,7 +226,7 @@ mp_err mp_copy(const mp_int *from, mp_int *to)
       }
 
       DIGITS(to) = tmp;
-      ALLOC(to) = USED(from);
+      ALLOC(to) = ALLOC(from);
     }
 
     /* Copy the precision and sign from the original */
@@ -795,48 +799,184 @@ CLEANUP:
 
   Compute c = a * b.  All parameters may be identical.
  */
-
-mp_err mp_mul(const mp_int *a, const mp_int *b, mp_int *c)
+mp_err   mp_mul(const mp_int *a, const mp_int *b, mp_int * c)
 {
+  mp_digit *pb = MP_DIGITS(b);
+  mp_word  w;
+  mp_int   tmp;
   mp_err   res;
+  mp_size  ib;
 
   ARGCHK(a != NULL && b != NULL && c != NULL, MP_BADARG);
 
-  if((res = mp_copy(a, c)) != MP_OKAY)
-    return res;
+  if (a == c) {
+    if ((res = mp_init_copy(&tmp, a)) != MP_OKAY)
+      return res;
+    if (a == b) 
+      b = &tmp;
+    a = &tmp;
+  } else if (b == c) {
+    if ((res = mp_init_copy(&tmp, b)) != MP_OKAY)
+      return res;
+    b = &tmp;
+  } else {
+    MP_DIGITS(&tmp) = 0;
+  }
 
-  if((res = s_mp_mul(c, b)) != MP_OKAY)
-    return res;
+  /* This has the effect of left-padding with zeroes... */
+  mp_zero(c);
+  if((res = s_mp_pad(c, USED(a) + USED(b))) != MP_OKAY)
+    goto CLEANUP;
+
+  /* Outer loop:  Digits of b */
+  for(ib = 0; ib < USED(b); ib++) {
+    mp_digit b_i    = *pb++;
+    mp_digit *pc    = DIGITS(c) + ib;
+    mp_digit *pa    = DIGITS(a);
+    mp_digit *palim = DIGITS(a) + USED(a);
+
+    if(b_i == 0)
+      continue;
+
+    w = 0;
+    /* Inner product:  Digits of a */
+    while (pa < palim) {
+      w += ((mp_word)b_i * *pa++) + *pc;
+      *pc++ = ACCUM(w);
+      w = CARRYOUT(w);
+    }
+
+    *pc = (mp_digit)w;
+  }
+
+  s_mp_clamp(c);
 
   if(SIGN(a) == SIGN(b) || s_mp_cmp_d(c, 0) == MP_EQ)
     SIGN(c) = ZPOS;
   else
     SIGN(c) = NEG;
 
-  return MP_OKAY;
-
+CLEANUP:
+  mp_clear(&tmp);
+  return res;
 } /* end mp_mul() */
 
 /* }}} */
 
-/* {{{ mp_sqr(a, b) */
+/* {{{ mp_sqr(a, sqr) */
 
 #if MP_SQUARE
-mp_err mp_sqr(const mp_int *a, mp_int *b)
+/*
+  Computes the square of a.  This can be done more
+  efficiently than a general multiplication, because many of the
+  computation steps are redundant when squaring.  The inner product
+  step is a bit more complicated, but we save a fair number of
+  iterations of the multiplication loop.
+ */
+
+/* sqr = a^2;   Caller provides both a and tmp; */
+mp_err   mp_sqr(const mp_int *a, mp_int *sqr)
 {
+  mp_word  w, k = 0;
   mp_err   res;
+  mp_size  ix, jx, kx;
+  mp_int   tmp;
 
-  ARGCHK(a != NULL && b != NULL, MP_BADARG);
+  ARGCHK(a != NULL && sqr != NULL, MP_BADARG);
 
-  if((res = mp_copy(a, b)) != MP_OKAY)
-    return res;
+  if (a == sqr) {
+    if((res = mp_init_copy(&tmp, a)) != MP_OKAY)
+      return res;
+    a = &tmp;
+  } else {
+    DIGITS(&tmp) = 0;
+  }
 
-  if((res = s_mp_sqr(b)) != MP_OKAY)
-    return res;
+  /* Left-pad with zeroes */
+  mp_zero(sqr);
+  if((res = s_mp_pad(sqr, 2 * USED(a))) != MP_OKAY)
+    goto CLEANUP;
 
-  SIGN(b) = ZPOS;
+  for(ix = 0; ix < USED(a); ix++) {
+    if(DIGIT(a, ix) == 0)
+      continue;
 
-  return MP_OKAY;
+    w = DIGIT(sqr, ix + ix) + (DIGIT(a, ix) * (mp_word)DIGIT(a, ix));
+
+    DIGIT(sqr, ix + ix) = ACCUM(w);
+    k = CARRYOUT(w);
+
+    /*
+      The inner product is computed as:
+
+         (C, S) = t[i,j] + 2 a[i] a[j] + C
+
+      This can overflow what can be represented in an mp_word, and
+      since C arithmetic does not provide any way to check for
+      overflow, we have to check explicitly for overflow conditions
+      before they happen.
+     */
+    for(jx = ix + 1; jx < USED(a); jx++) {
+      mp_word  u = 0, v;
+
+      /* Compute the multiplicative step */
+      w = (mp_word)DIGIT(a, ix) * DIGIT(a, jx);
+
+      /* If w is more than half MP_WORD_MAX, the doubling will
+	 overflow, and we need to record a carry out into the next
+	 word */
+      u = (w >> (MP_WORD_BIT - 1)) & 1;
+
+      /* Double what we've got, overflow will be ignored as defined
+	 for C arithmetic (we've already noted if it is to occur)
+       */
+      w *= 2;
+
+      /* Compute the additive step */
+      v = (mp_word)DIGIT(sqr, ix + jx) + k;
+
+      /* If we do not already have an overflow carry, check to see
+	 if the addition will cause one, and set the carry out if so 
+       */
+      u |= ((MP_WORD_MAX - v) < w);
+
+      /* Add in the rest, again ignoring overflow */
+      w += v;
+
+      /* Set the i,j digit of the output */
+      DIGIT(sqr, ix + jx) = ACCUM(w);
+
+      /* Save carry information for the next iteration of the loop.
+	 This is why k must be an mp_word, instead of an mp_digit */
+      k = CARRYOUT(w) | (u << DIGIT_BIT);
+
+    } /* for(jx ...) */
+
+    /* Set the last digit in the cycle and reset the carry */
+    k = DIGIT(sqr, ix + jx) + k;
+    DIGIT(sqr, ix + jx) = ACCUM(k);
+    k = CARRYOUT(k);
+
+    /* If we are carrying out, propagate the carry to the next digit
+       in the output.  This may cascade, so we have to be somewhat
+       circumspect -- but we will have enough precision in the output
+       that we won't overflow 
+     */
+    kx = 1;
+    while(k) {
+      k = (mp_word)DIGIT(sqr, ix + jx + kx) + 1;
+      DIGIT(sqr, ix + jx + kx) = ACCUM(k);
+      k = CARRYOUT(k);
+      ++kx;
+    }
+  } /* for(ix ...) */
+
+  SIGN(sqr) = ZPOS;
+  s_mp_clamp(sqr);
+
+CLEANUP:
+  mp_clear(&tmp);
+  return res;
 
 } /* end mp_sqr() */
 #endif
@@ -858,6 +998,7 @@ mp_err mp_sqr(const mp_int *a, mp_int *b)
 mp_err mp_div(const mp_int *a, const mp_int *b, mp_int *q, mp_int *r)
 {
   mp_err   res;
+  mp_int   *pQ, *pR;
   mp_int   qtmp, rtmp;
   int      cmp;
 
@@ -866,46 +1007,61 @@ mp_err mp_div(const mp_int *a, const mp_int *b, mp_int *q, mp_int *r)
   if(mp_cmp_z(b) == MP_EQ)
     return MP_RANGE;
 
+  DIGITS(&qtmp) = 0;
+  DIGITS(&rtmp) = 0;
   /* Set up some temporaries... */
-  if((res = mp_init_copy(&qtmp, a)) != MP_OKAY)
-    return res;
-  if((res = mp_init_copy(&rtmp, b)) != MP_OKAY)
-    goto CLEANUP;
+  if (!q || q == a || q == b) {
+    if((res = mp_init_copy(&qtmp, a)) != MP_OKAY)
+      return res;
+    pQ = &qtmp;
+  } else {
+    if((res = mp_copy(a, q)) != MP_OKAY)
+      return res;
+    pQ = q;
+  }
+  if (!r || r == a || r == b) {
+    if((res = mp_init_copy(&rtmp, b)) != MP_OKAY)
+      goto CLEANUP;
+    pR = &rtmp;
+  } else {
+    if((res = mp_copy(b, r)) != MP_OKAY)
+      goto CLEANUP;
+    pR = r;
+  }
 
   /*
     If a <= b, we can compute the solution without division;
     otherwise, we actually do the work required.
    */
-  if((cmp = s_mp_cmp(&qtmp, &rtmp)) < 0) {
-    s_mp_exch(&qtmp, &rtmp);
-    mp_zero(&qtmp);
+  if((cmp = s_mp_cmp(pQ, pR)) < 0) {
+    s_mp_exch(pQ, pR);
+    mp_zero(pQ);
   } else if(cmp == 0) {
-    mp_zero(&qtmp);
-    DIGIT(&qtmp, 0) = 1;
-    mp_zero(&rtmp);
+    mp_set(pQ, 1);
+    mp_zero(pR);
   } else {
-    if((res = s_mp_div(&qtmp, &rtmp)) != MP_OKAY)
+    if((res = s_mp_div(pQ, pR)) != MP_OKAY)
       goto CLEANUP;
   }
 
   /* Compute the signs for the output  */
-  SIGN(&rtmp) = SIGN(a); /* Sr = Sa              */
+  SIGN(pR) = SIGN(a); /* Sr = Sa              */
   if(SIGN(a) == SIGN(b))
-    SIGN(&qtmp) = ZPOS;  /* Sq = ZPOS if Sa = Sb */
+    SIGN(pQ) = ZPOS;  /* Sq = ZPOS if Sa = Sb */
   else
-    SIGN(&qtmp) = NEG;   /* Sq = NEG if Sa != Sb */
+    SIGN(pQ) = NEG;   /* Sq = NEG if Sa != Sb */
 
-  if(s_mp_cmp_d(&qtmp, 0) == MP_EQ)
-    SIGN(&qtmp) = ZPOS;
-  if(s_mp_cmp_d(&rtmp, 0) == MP_EQ)
-    SIGN(&rtmp) = ZPOS;
+  if(s_mp_cmp_d(pQ, 0) == MP_EQ)
+    SIGN(pQ) = ZPOS;
+  if(s_mp_cmp_d(pR, 0) == MP_EQ)
+    SIGN(pR) = ZPOS;
 
   /* Copy output, if it is needed      */
-  if(q) 
-    s_mp_exch(&qtmp, q);
+  if(q && q != pQ) 
+    s_mp_exch(pQ, q);
 
-  if(r) 
-    s_mp_exch(&rtmp, r);
+  if(r && r != pR) 
+    s_mp_exch(pR, r);
 
 CLEANUP:
   mp_clear(&rtmp);
@@ -2219,6 +2375,7 @@ mp_err   s_mp_grow(mp_int *mp, mp_size min)
 
     /* Set min to next nearest default precision block size */
     min = ((min + (s_mp_defprec - 1)) / s_mp_defprec) * s_mp_defprec;
+/*  if (min < 128) min = 128;	/* XXX HACK */
 
     if((tmp = s_mp_alloc(min, sizeof(mp_digit))) == NULL)
       return MP_MEM;
@@ -2248,8 +2405,12 @@ mp_err   s_mp_pad(mp_int *mp, mp_size min)
     mp_err  res;
 
     /* Make sure there is room to increase precision  */
-    if(min > ALLOC(mp) && (res = s_mp_grow(mp, min)) != MP_OKAY)
-      return res;
+    if (min > ALLOC(mp)) {
+      if ((res = s_mp_grow(mp, min)) != MP_OKAY)
+	return res;
+    } else {
+      s_mp_setz(DIGITS(mp) + USED(mp), min - USED(mp));
+    }
 
     /* Increase precision; should already be 0-filled */
     USED(mp) = min;
@@ -2307,6 +2468,7 @@ void s_mp_copy(const mp_digit *sp, mp_digit *dp, mp_size count)
 /* Allocate ni records of nb bytes each, and return a pointer to that     */
 void    *s_mp_alloc(size_t nb, size_t ni)
 {
+  ++mp_allocs;
   return calloc(nb, ni);
 
 } /* end s_mp_alloc() */
@@ -2320,9 +2482,10 @@ void    *s_mp_alloc(size_t nb, size_t ni)
 /* Free the memory pointed to by ptr                                      */
 void     s_mp_free(void *ptr)
 {
-  if(ptr)
+  if(ptr) {
+    ++mp_frees;
     free(ptr);
-
+  }
 } /* end s_mp_free() */
 #endif
 
@@ -2938,46 +3101,7 @@ mp_err   s_mp_sub(mp_int *a, const mp_int *b)  /* magnitude subtract      */
 /* Compute a = |a| * |b|                                                  */
 mp_err   s_mp_mul(mp_int *a, const mp_int *b)
 {
-  mp_digit *pb = MP_DIGITS(b);
-  mp_word  w;
-  mp_int   tmp;
-  mp_err   res;
-  mp_size  ib;
-
-  if((res = mp_init_size(&tmp, USED(a) + USED(b))) != MP_OKAY)
-    return res;
-
-  /* This has the effect of left-padding with zeroes... */
-  USED(&tmp) = USED(a) + USED(b);
-
-  /* Outer loop:  Digits of b */
-  for(ib = 0; ib < USED(b); ib++) {
-    mp_digit b_i    = *pb++;
-    mp_digit *pt    = DIGITS(&tmp) + ib;
-    mp_digit *pa    = DIGITS(a);
-    mp_digit *palim = DIGITS(a) + USED(a);
-
-    if(b_i == 0)
-      continue;
-
-    w = 0;
-    /* Inner product:  Digits of a */
-    while (pa < palim) {
-      w += ((mp_word)b_i * *pa++) + *pt;
-      *pt++ = ACCUM(w);
-      w = CARRYOUT(w);
-    }
-
-    *pt = (mp_digit)w;
-  }
-
-  s_mp_clamp(&tmp);
-  s_mp_exch(&tmp, a);
-
-  mp_clear(&tmp);
-
-  return MP_OKAY;
-
+  return mp_mul(a, b, a);
 } /* end s_mp_mul() */
 
 /* }}} */
@@ -3016,114 +3140,26 @@ mp_err	s_mp_mul_d_add_offset(mp_int *a, mp_digit b, mp_int *c, mp_size offset)
   return MP_OKAY;
 }
 
+#if MP_SQUARE
 /* {{{ s_mp_sqr(a) */
 
-/*
-  Computes the square of a, in place.  This can be done more
-  efficiently than a general multiplication, because many of the
-  computation steps are redundant when squaring.  The inner product
-  step is a bit more complicated, but we save a fair number of
-  iterations of the multiplication loop.
- */
-#if MP_SQUARE
 mp_err   s_mp_sqr(mp_int *a)
 {
-  mp_word  w, k = 0;
-  mp_int   tmp;
   mp_err   res;
-  mp_size  ix, jx, kx;
+  mp_int   tmp;
 
   if((res = mp_init_size(&tmp, 2 * USED(a))) != MP_OKAY)
     return res;
-
-  /* Left-pad with zeroes */
-  USED(&tmp) = 2 * USED(a);
-
-  for(ix = 0; ix < USED(a); ix++) {
-    if(DIGIT(a, ix) == 0)
-      continue;
-
-    w = DIGIT(&tmp, ix + ix) + (DIGIT(a, ix) * (mp_word)DIGIT(a, ix));
-
-    DIGIT(&tmp, ix + ix) = ACCUM(w);
-    k = CARRYOUT(w);
-
-    /*
-      The inner product is computed as:
-
-         (C, S) = t[i,j] + 2 a[i] a[j] + C
-
-      This can overflow what can be represented in an mp_word, and
-      since C arithmetic does not provide any way to check for
-      overflow, we have to check explicitly for overflow conditions
-      before they happen.
-     */
-    for(jx = ix + 1; jx < USED(a); jx++) {
-      mp_word  u = 0, v;
-
-      /* Compute the multiplicative step */
-      w = (mp_word)DIGIT(a, ix) * DIGIT(a, jx);
-
-      /* If w is more than half MP_WORD_MAX, the doubling will
-	 overflow, and we need to record a carry out into the next
-	 word */
-      u = (w >> (MP_WORD_BIT - 1)) & 1;
-
-      /* Double what we've got, overflow will be ignored as defined
-	 for C arithmetic (we've already noted if it is to occur)
-       */
-      w *= 2;
-
-      /* Compute the additive step */
-      v = (mp_word)DIGIT(&tmp, ix + jx) + k;
-
-      /* If we do not already have an overflow carry, check to see
-	 if the addition will cause one, and set the carry out if so 
-       */
-      u |= ((MP_WORD_MAX - v) < w);
-
-      /* Add in the rest, again ignoring overflow */
-      w += v;
-
-      /* Set the i,j digit of the output */
-      DIGIT(&tmp, ix + jx) = ACCUM(w);
-
-      /* Save carry information for the next iteration of the loop.
-	 This is why k must be an mp_word, instead of an mp_digit */
-      k = CARRYOUT(w) | (u << DIGIT_BIT);
-
-    } /* for(jx ...) */
-
-    /* Set the last digit in the cycle and reset the carry */
-    k = DIGIT(&tmp, ix + jx) + k;
-    DIGIT(&tmp, ix + jx) = ACCUM(k);
-    k = CARRYOUT(k);
-
-    /* If we are carrying out, propagate the carry to the next digit
-       in the output.  This may cascade, so we have to be somewhat
-       circumspect -- but we will have enough precision in the output
-       that we won't overflow 
-     */
-    kx = 1;
-    while(k) {
-      k = (mp_word)DIGIT(&tmp, ix + jx + kx) + 1;
-      DIGIT(&tmp, ix + jx + kx) = ACCUM(k);
-      k = CARRYOUT(k);
-      ++kx;
-    }
-  } /* for(ix ...) */
-
-  s_mp_clamp(&tmp);
-  s_mp_exch(&tmp, a);
-
+  res = mp_sqr(a, &tmp);
+  if (res == MP_OKAY) {
+    s_mp_exch(&tmp, a);
+  }
   mp_clear(&tmp);
-
-  return MP_OKAY;
-
-} /* end s_mp_sqr() */
-#endif
+  return res;
+}
 
 /* }}} */
+#endif
 
 /* {{{ s_mp_div(a, b) */
 
@@ -3155,15 +3191,15 @@ mp_err   s_mp_div(mp_int *a, mp_int *b)
   }
 
   /* Allocate space to store the quotient */
-  if((res = mp_init_size(&quot, USED(a))) != MP_OKAY)
+  if((res = mp_init_size(&quot, MP_ALLOC(a))) != MP_OKAY)
     return res;
 
   /* A working temporary for division     */
-  if((res = mp_init_size(&t, USED(a))) != MP_OKAY)
+  if((res = mp_init_size(&t, MP_ALLOC(a))) != MP_OKAY)
     goto T;
 
   /* Allocate space for the remainder     */
-  if((res = mp_init_size(&rem, USED(a))) != MP_OKAY)
+  if((res = mp_init_size(&rem, MP_ALLOC(a))) != MP_OKAY)
     goto REM;
 
   /* Normalize to optimize guessing       */
