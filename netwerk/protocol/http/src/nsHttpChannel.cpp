@@ -1415,6 +1415,11 @@ nsHttpChannel::ProcessRedirection(PRUint32 redirectType)
     if (!location)
         return NS_ERROR_FAILURE;
 
+    // make sure non-ASCII characters in the location header are escaped.
+    nsCAutoString locationBuf;
+    if (NS_EscapeURL(location, -1, esc_OnlyNonASCII, locationBuf))
+        location = locationBuf.get();
+
     if (mRedirectionLimit == 0) {
         LOG(("redirection limit reached!\n"));
         // this error code is fatal, and should be conveyed to our listener.
