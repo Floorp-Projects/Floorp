@@ -20,11 +20,11 @@
  * Contributor(s): 
  *   Pete Collins
  *   Brian King
+ *   Ben Goodger
  */
 
 var insertNew                           = true;
 var imageElement;
-var tagName                             = "img"
 var doSeeAll                            = true;
 var wasEnableAll                        = false;
 var hasAnyChanged                       = false;
@@ -77,6 +77,7 @@ function Startup()
       
   // Get a single selected image element
 
+  var tagName                           = "img"
   imageElement                          = editorShell.GetSelectedElement(tagName);
 
   if (imageElement) 
@@ -133,10 +134,6 @@ function InitDialog() {
   }
   dialog.altTextInput.value = str;
   
-  // we want to force an update so initialize "wasEnabledAll" to be the opposite of what the actual state is
-
-  wasEnabledAll = !((dialog.srcInput.value.length > 0) && (dialog.altTextInput.value.length > 0));
-  
   // set height and width
   // note: need to set actual image size if no attributes
 
@@ -183,25 +180,6 @@ function InitDialog() {
 
   alignpopup                            = document.getElementById("image.alignType");
 
-/********************* removed, some things are better said without words ******************
-
-  if ( alignpopup )
-  {
-    alignvalue                          = globalElement.getAttribute("align");
-
-    if ( alignvalue == "" )
-    {
-      alignvalue                        = "at the bottom";
-    }
-
-    dump( "popup value = " + alignvalue + "\n" );
-
-    alignpopup.setAttribute( "value", alignvalue );
-
-  }
-
-********************* removed, some things are better said without words ******************/
-
   // set spacing editfields
 
   sizevalue                             = globalElement.getAttribute("hspace");
@@ -213,12 +191,11 @@ function InitDialog() {
   sizevalue                             = globalElement.getAttribute("border");
   dialog.imageborderInput.value         = sizevalue;    
 
-  // force wasEnableAll to be different so everything gets updated
-
-  wasEnableAll                          = !(dialog.srcInput.value.length > 0);
+  
+  // we want to force an update so initialize "wasEnableAll" to be the opposite of what the actual state is
+  imageTypeExtension                    = checkForImage();
+  wasEnableAll                          = !imageTypeExtension;
   doOverallEnabling();
-
-  checkForImage( "image.srcInput" );
 }
 
 function chooseFile()
@@ -228,7 +205,7 @@ function chooseFile()
   fileName                              = editorShell.GetLocalFileURL(window, "img");
   if (fileName && fileName != "") {
     dialog.srcInput.value               = fileName;
-    checkForImage( "image.srcInput" );
+//  imageTypeExtension                  = checkForImage();
     doValueChanged();
   }
 
@@ -331,8 +308,9 @@ function doDimensionEnabling( doEnable )
 function doOverallEnabling()
 {
 
+  var imageTypeExtension                = checkForImage();
   var canEnableAll;
-  canEnableAll                          = imageType;
+  canEnableAll                          = imageTypeExtension;
 
   if ( wasEnableAll == canEnableAll )
     return;
@@ -398,71 +376,40 @@ function SetImageAlignment(align)
 }
 
 // an API to validate and image by sniffing out the extension
+/* assumes that the element id is "image.srcInput" */
+/* returns lower-case extension or 0 */
+function checkForImage() {
 
-var imageType                           = false;
-
-function checkForImage( elementID ){
-
-  image                                 = document.getElementById( elementID ).value;
+  image                                 = document.getElementById( "image.srcInput" ).value;
 
   if ( !image )
-  return;
+  return 0;
   
-  var length                            = image.length;
-
-  var tail                              = image.length - 4; 
-  var type                              = image.substring(tail,length);
-
-  if ( tail == 0 )  { 
-  return; 
-  }
-  else  {
+  /* look for an extension */
+  var tailindex                         = image.lastIndexOf("."); 
+  if ( tailindex == 0 )
+  return 0; 
+  
+  /* move past period, get the substring from the first character after the '.' to the last character (length) */
+  tail = tail + 1;
+  var type                              = image.substring(tail,image.length);
+  
+  /* convert extension to lower case */
+  if (type)
+    type = type.toLowerCase();
 
   switch( type )  {
 
-    case ".gif":
-    imageType    = type;
-    break;
-
-    case ".GIF":
-    imageType    = type;
-    break;
-
-    case ".jpg":
-    imageType    = type;
-    break;
-
-    case ".JPG":
-    imageType    = type;
-    break;
-
-    case "JPEG":
-    imageType    = type;
-    break;
-
+    case "gif":
+    case "jpg":
     case "jpeg":
-    imageType    = type;
+    case "png":
+              return type;
     break;
 
-    case ".png":
-    imageType    = type;
-    break;
-
-    case ".PNG":
-    imageType    = type;
-    break;
-
-    default : imageType   = false;
-
-
-      }
+    default : return 0;
 
     }
-
-  if( imageType ){ dump("Image is of type "+imageType+"\n\n"); }
-
-
-return(imageType);
 
 }
 
@@ -506,7 +453,8 @@ function constrainProportions( srcID, destID )
 //   accessible to AdvancedEdit() [in EdDialogCommon.js]
 function ValidateData()
 {
-  if ( !imageType ) {
+  var imageTypeExtension                = checkForImage();
+  if ( !imageTypeExtension ) {
     ShowInputErrorMessage(GetString("MissingImageError"));
     return false;
   }
@@ -561,14 +509,13 @@ function ValidateData()
   alignpopup = document.getElementById("image.alignType");
   if ( alignpopup )
   {
-    alignpopup.getAttribute( "value", alignvalue );
-    dump( "popup value = " + alignvalue + "\n" );
-    // TODO: FIX THIS!
-    // NO! DON'T DEPEND ON ENGLISH STRINGS
-    if ( alignvalue == "at the bottom" )
+    var alignurl;
+    alignpopup.getAttribute( "src", alignurl );
+    dump( "popup value = " + alignurl + "\n" );
+    if ( alignurl == "&bottomIcon.url;" )
       globalElement.removeAttribute("align");
-    else
-      globalElement.setAttribute("align", alignvalue );
+//    else
+//      globalElement.setAttribute("align", alignurl );
   }
 */
   return true;
