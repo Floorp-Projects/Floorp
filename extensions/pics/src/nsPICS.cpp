@@ -142,7 +142,7 @@ public:
   NS_IMETHOD SetNotified(nsIWebShellServices* aResult, nsIURL* aURL, PRBool notified);
 
   nsPICS();
-  ~nsPICS(void);
+  virtual ~nsPICS(void);
 
    // nsIDocumentLoaderObserver
   NS_IMETHOD OnStartDocumentLoad(nsIDocumentLoader* loader, 
