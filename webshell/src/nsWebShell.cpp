@@ -283,6 +283,7 @@ public:
   NS_IMETHOD EndLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, nsresult aStatus);
   NS_IMETHOD GetHistoryState(nsISupports** aLayoutHistoryState);
   NS_IMETHOD SetHistoryState(nsISupports* aLayoutHistoryState);
+  NS_IMETHOD FireUnloadEvent(void);
 
   // nsIWebShellServices
   NS_IMETHOD LoadDocument(const char* aURL,
@@ -387,6 +388,7 @@ protected:
   nsVoidArray mHistory;
   PRInt32 mHistoryIndex;
 
+  PRBool mFiredUnloadEvent;
 
   nsIGlobalHistory* mHistoryService;
   nsISessionHistory * mSHist;
@@ -409,6 +411,7 @@ protected:
 
   nsISupports* mHistoryState; // Weak reference.  Session history owns this.
 
+  nsresult FireUnloadForChildren();
   void ReleaseChildren();
   NS_IMETHOD DestroyChildren();
   nsresult DoLoadURL(nsIURI * aUri, 
@@ -585,6 +588,7 @@ nsWebShell::nsWebShell() : nsDocShell()
   mViewSource=PR_FALSE;
   mHistoryService = nsnull;
   mHistoryState = nsnull;
+  mFiredUnloadEvent = PR_FALSE;
 }
 
 nsWebShell::~nsWebShell()
@@ -679,6 +683,51 @@ nsWebShell::ReleaseChildren()
     webShell->SetContentViewer(nsnull);
   }
   mChildren.Clear();
+}
+
+nsresult
+nsWebShell::FireUnloadForChildren()
+{
+  nsresult rv = NS_OK;
+
+  PRInt32 i, n = mChildren.Count();
+  for (i = 0; i < n; i++) {
+    nsIDocShell* shell = (nsIDocShell*) mChildren.ElementAt(i);
+    nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(shell));
+    rv = webShell->FireUnloadEvent();
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP
+nsWebShell::FireUnloadEvent()
+{
+  nsresult rv = NS_OK;
+
+  if (mScriptGlobal) {
+    nsIDocumentViewer* docViewer;
+    if (mContentViewer && NS_SUCCEEDED(mContentViewer->QueryInterface(kIDocumentViewerIID, (void**)&docViewer))) {
+      nsIPresContext *presContext;
+      if (NS_SUCCEEDED(docViewer->GetPresContext(presContext))) {
+        nsEventStatus status = nsEventStatus_eIgnore;
+        nsMouseEvent event;
+        event.eventStructType = NS_EVENT;
+        event.message = NS_PAGE_UNLOAD;
+        rv = mScriptGlobal->HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+
+        NS_RELEASE(presContext);
+      }
+      NS_RELEASE(docViewer);
+    }
+  }
+
+  //Fire child unloads now while our data is intact.
+  rv = FireUnloadForChildren();
+
+  mFiredUnloadEvent = PR_TRUE;
+
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -3583,23 +3632,9 @@ NS_IMETHODIMP nsWebShell::Destroy()
 {
   nsresult rv = NS_OK;
 
-  //Fire unload event before we blow anything away.
-  if (mScriptGlobal) {
-    nsIDocumentViewer* docViewer;
-    if (nsnull != mContentViewer &&
-        NS_OK == mContentViewer->QueryInterface(kIDocumentViewerIID, (void**)&docViewer)) {
-      nsIPresContext *presContext;
-      if (NS_OK == docViewer->GetPresContext(presContext)) {
-        nsEventStatus status = nsEventStatus_eIgnore;
-        nsMouseEvent event;
-        event.eventStructType = NS_EVENT;
-        event.message = NS_PAGE_UNLOAD;
-        rv = mScriptGlobal->HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
-
-        NS_RELEASE(presContext);
-      }
-      NS_RELEASE(docViewer);
-    }
+  if (!mFiredUnloadEvent) {
+    //Fire unload event before we blow anything away.
+    rv = FireUnloadEvent();
   }
 
   // Stop any URLs that are currently being loaded...
