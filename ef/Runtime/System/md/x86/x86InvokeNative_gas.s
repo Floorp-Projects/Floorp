@@ -256,4 +256,4 @@ GLOBAL_ENTRY(sysInvokeNativeStubs)
 		STUB(232);  STUB(233);  STUB(234);  STUB(235);  STUB(236);  STUB(237);  STUB(238);  STUB(239); 
 		STUB(240);  STUB(241);  STUB(242);  STUB(243);  STUB(244);  STUB(245);  STUB(246);  STUB(247); 
 		STUB(248);  STUB(249);  STUB(250);  STUB(251);  STUB(252);  STUB(253);  STUB(254);  STUB(255); 
-		.size sysInvokeNativeStubs,1024
+		END_ENTRY(sysInvokeNativeStubs)
