@@ -1097,6 +1097,10 @@ JS_strtod(CONST char *s00, char **se, int *err)
 	bb = bd = bs = delta = NULL;
     sign = nz0 = nz = 0;
     rv = 0.;
+
+    /* Locking for Balloc's shared buffers that will be used in this block */
+    ACQUIRE_DTOA_LOCK();
+
     for(s = s00;;s++) switch(*s) {
     case '-':
         sign = 1;
@@ -1119,8 +1123,6 @@ JS_strtod(CONST char *s00, char **se, int *err)
         goto break2;
     }
 break2:
-    /* Locking for Balloc's shared buffers that will be used in this block */
-    ACQUIRE_DTOA_LOCK();
 
     if (*s == '0') {
         nz0 = 1;
