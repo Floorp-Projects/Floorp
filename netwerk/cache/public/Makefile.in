@@ -29,22 +29,7 @@ XPIDL_MODULE	= necko_cache
 
 include $(DEPTH)/config/autoconf.mk
 
-XPIDLSRCS	= $(NULL)
-
-ifdef OLD_CACHE
-XPIDLSRCS	+= \
-		nsICachedNetData.idl          \
-	        nsINetDataCacheManager.idl    \
-		nsINetDataCache.idl           \
-		nsINetDataCacheRecord.idl     \
-	        nsINetDataDiskCache.idl       \
-		nsIStreamAsFile.idl           \
-		$(NULL)
-endif
-
-
-ifdef MOZ_NEW_CACHE
-XPIDLSRCS	+= \
+XPIDLSRCS	= \
 		nsICache.idl		      \
 		nsICacheEntryDescriptor.idl   \
 		nsICacheListener.idl	      \
@@ -52,9 +37,6 @@ XPIDLSRCS	+= \
 		nsICacheSession.idl           \
 		nsICacheVisitor.idl           \
 	        $(NULL)
-endif
-
-EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 
 include $(topsrcdir)/config/rules.mk
 

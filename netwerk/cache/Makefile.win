@@ -25,9 +25,7 @@ include <$(DEPTH)/config/config.mak>
 
 DIRS= 	\
 	public                  \
-!ifdef MOZ_NEW_CACHE
 	src                     \
-!endif
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>

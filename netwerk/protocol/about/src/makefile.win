@@ -34,9 +34,7 @@ CPP_OBJS=                                      \
 	.\$(OBJDIR)\nsAboutBloat.obj           \
 	.\$(OBJDIR)\nsAboutRedirector.obj		 	\
 	.\$(OBJDIR)\nsAboutCache.obj		\
-!ifdef MOZ_NEW_CACHE
-    .\$(OBJDIR)\nsAboutCacheEntry.obj \
-!endif
+	.\$(OBJDIR)\nsAboutCacheEntry.obj \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak> 

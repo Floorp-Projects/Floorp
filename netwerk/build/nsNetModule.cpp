@@ -60,24 +60,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsAppleFileDecoder)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#if defined(OLD_CACHE)
-#include "nsINetDataCache.h"
-#include "nsINetDataCacheManager.h"
-#include "nsMemCacheCID.h"
-#include "nsMemCache.h"
-#include "nsNetDiskCache.h"
-#include "nsNetDiskCacheCID.h"
-#include "nsCacheManager.h"
-
-// Factory method to create a new nsMemCache instance.  Used
-// by nsNetDataCacheModule
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMemCache, Init)
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsNetDiskCache, Init)
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsCacheManager, Init)
-#endif
-
-///////////////////////////////////////////////////////////////////////////////
-
 #include "nsMIMEService.h"
 #include "nsXMLMIMEDataSource.h"
 #include "nsMIMEInfoImpl.h"
@@ -242,10 +224,8 @@ UnregisterBasicAuth(nsIComponentManager *aCompMgr, nsIFile *aPath,
 #include "nsAboutRedirector.h"
 #include "nsKeywordProtocolHandler.h"
 
-#ifdef MOZ_NEW_CACHE
 #include "nsAboutCacheEntry.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAboutCacheEntry)
-#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -991,13 +971,11 @@ static nsModuleComponentInfo gNetModuleInfo[] = {
       NS_ABOUT_MODULE_CONTRACTID_PREFIX "cache", 
       nsAboutCache::Create
     },
-#ifdef MOZ_NEW_CACHE
     { "about:cache-entry",
       NS_ABOUT_CACHE_ENTRY_MODULE_CID,
       NS_ABOUT_MODULE_CONTRACTID_PREFIX "cache-entry",
       nsAboutCacheEntryConstructor
     },
-#endif
     // from netwerk/protocol/keyword:
     { "The Keyword Protocol Handler", 
       NS_KEYWORDPROTOCOLHANDLER_CID,

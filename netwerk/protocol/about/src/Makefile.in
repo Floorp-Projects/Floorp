@@ -35,12 +35,9 @@ CPPSRCS		= \
 		nsAboutBlank.cpp \
 		nsAboutBloat.cpp \
 		nsAboutCache.cpp \
-        nsAboutRedirector.cpp \
+		nsAboutCacheEntry.cpp \
+	        nsAboutRedirector.cpp \
 		$(NULL)
-
-ifdef MOZ_NEW_CACHE
-CPPSRCS += nsAboutCacheEntry.cpp
-endif
 
 # we don't want the shared lib, but we want to force the creation of a
 # static lib.

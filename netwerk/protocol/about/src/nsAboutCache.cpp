@@ -34,15 +34,8 @@
 #include "nsNetUtil.h"
 #include "prtime.h"
 
-#ifdef MOZ_NEW_CACHE
 #include "nsICacheService.h"
-#else
-#include "nsICachedNetData.h"
-#include "nsINetDataCacheRecord.h"
-#endif
 
-
-#ifdef MOZ_NEW_CACHE
 static PRTime SecondsToPRTime(PRUint32 t_sec)
 {
     PRTime t_usec, usec_per_sec;
@@ -58,14 +51,9 @@ static void PrintTimeString(char *buf, PRUint32 bufsize, PRUint32 t_sec)
     PR_ExplodeTime(t_usec, PR_LocalTimeParameters, &et);
     PR_FormatTime(buf, bufsize, "%c", &et);
 }
-#endif
 
 
-#ifdef MOZ_NEW_CACHE
 NS_IMPL_ISUPPORTS2(nsAboutCache, nsIAboutModule, nsICacheVisitor)
-#else
-NS_IMPL_ISUPPORTS1(nsAboutCache, nsIAboutModule)
-#endif
 
 NS_IMETHODIMP
 nsAboutCache::NewChannel(nsIURI *aURI, nsIChannel **result)
@@ -96,13 +84,8 @@ nsAboutCache::NewChannel(nsIURI *aURI, nsIChannel **result)
     }
 */
     // Get the cache manager service
-#ifdef MOZ_NEW_CACHE
     NS_WITH_SERVICE(nsICacheService, cacheService,
                     NS_CACHESERVICE_CONTRACTID, &rv);
-#else
-    NS_WITH_SERVICE(nsINetDataCacheManager, cacheManager,
-                    NS_NETWORK_CACHE_MANAGER_CONTRACTID, &rv);
-#endif
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIStorageStream> storageStream;
@@ -120,44 +103,12 @@ nsAboutCache::NewChannel(nsIURI *aURI, nsIChannel **result)
 
     outputStream->Write(mBuffer, mBuffer.Length(), &bytesWritten);
 
-#ifdef MOZ_NEW_CACHE
     rv = ParseURI(aURI, mDeviceID);
     if (NS_FAILED(rv)) return rv;
 
     mStream = outputStream;
     rv = cacheService->VisitEntries(this);
     if (NS_FAILED(rv)) return rv;
-#else
-    nsCOMPtr<nsISimpleEnumerator> moduleIterator;
-    nsCOMPtr<nsISimpleEnumerator> entryIterator;
-
-    rv = cacheManager->NewCacheModuleIterator(getter_AddRefs(moduleIterator));
-    if (NS_FAILED(rv)) return rv;
-
-    nsCOMPtr<nsISupports> item;
-    nsCOMPtr<nsINetDataCache> cache;
-    nsCOMPtr<nsINetDataCacheRecord> cacheRecord;
-
-    do {
-      PRInt32 cacheEntryCount = 0;
-      PRInt32 cacheSize = 0;
-      PRBool bMoreModules = PR_FALSE;
-
-      rv = moduleIterator->HasMoreElements(&bMoreModules);
-      if (!bMoreModules) break;
-
-      rv = moduleIterator->GetNext(getter_AddRefs(item));
-      if (NS_FAILED(rv)) break;
-
-      cache = do_QueryInterface(item);
-      rv = cache->NewCacheEntryIterator(getter_AddRefs(entryIterator));
-      if (NS_FAILED(rv)) continue;
-
-      DumpCacheInfo(outputStream, cache);
-
-      DumpCacheEntries(outputStream, cacheManager, cache);
-    } while(1);
-#endif
 
     mBuffer.Assign("</body>\n</html>\n");
     outputStream->Write(mBuffer, mBuffer.Length(), &bytesWritten);
@@ -179,7 +130,6 @@ nsAboutCache::NewChannel(nsIURI *aURI, nsIChannel **result)
     return rv;
 }
 
-#ifdef MOZ_NEW_CACHE
 
 NS_IMETHODIMP
 nsAboutCache::VisitDevice(const char *deviceID,
@@ -366,211 +316,6 @@ nsAboutCache::ParseURI(nsIURI * uri, nsCString &deviceID)
     deviceID.Assign(Substring(valueStart, end));
     return NS_OK;
 }
-
-#else
-
-void nsAboutCache::DumpCacheInfo(nsIOutputStream *aStream, nsINetDataCache *aCache)
-{
-  PRUint32 bytesWritten, value;
-  nsXPIDLString str;
-
-  // Write out the Cache Name
-  aCache->GetDescription(getter_Copies(str));
-
-  mBuffer.Assign("<h2>");
-  mBuffer.AppendWithConversion(str);
-  mBuffer.Append("</h2>\n");
-
-  // Write out cache info
-
-  mBuffer.Append("<table>\n<tr><td><b>Current entries:</b></td>\n");
-  value = 0;
-  aCache->GetNumEntries(&value);
-  mBuffer.Append("<td>");
-  mBuffer.AppendInt(value);
-  mBuffer.Append("</td>\n</tr>\n");
-
-  mBuffer.Append("\n<tr><td><b>Maximum entries:</b></td>\n");
-  value = 0;
-  aCache->GetMaxEntries(&value);
-  mBuffer.Append("<td>");
-  mBuffer.AppendInt(value);
-  mBuffer.Append("</td>\n</tr>\n");
-
-  mBuffer.Append("\n<tr><td><b>Storage in use:</b></td>\n");
-  mBuffer.Append("<td>");
-  value = 0;
-  aCache->GetStorageInUse(&value);
-  mBuffer.AppendInt(value);
-  mBuffer.Append(" KB</td>\n</tr>\n");
-
-  mBuffer.Append("</table>\n<hr>\n");
-
-  aStream->Write(mBuffer, mBuffer.Length(), &bytesWritten);
-}
-
-
-void nsAboutCache::DumpCacheEntryInfo(nsIOutputStream *aStream,
-                                      nsINetDataCacheManager *aCacheMgr,
-                                      char * aKey, char *aSecondaryKey,
-                                      PRUint32 aSecondaryKeyLen)
-{
-  nsresult rv;
-  PRUint32 bytesWritten;
-  nsXPIDLCString str;
-  nsCOMPtr<nsICachedNetData> entry;
-
-  rv = aCacheMgr->GetCachedNetData(aKey, aSecondaryKey, aSecondaryKeyLen, 0,
-                                   getter_AddRefs(entry));
-  if (NS_FAILED(rv)) return;
-
-  // Entry start...
-  mBuffer.Assign("<p>\n");
-
-  // URI
-  mBuffer.Append("<tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
-                     "&nbsp;&nbsp;&nbsp;&nbsp;URL: </tt>");
-  entry->GetUriSpec(getter_Copies(str));
-  mBuffer.Append("<a href=\"");
-  mBuffer.Append(str);
-  mBuffer.Append("\">");
-  mBuffer.Append(str);
-  mBuffer.Append("</a><br>\n");
-
-  // Content length
-  PRUint32 length = 0;
-  entry->GetStoredContentLength(&length);
-
-  mBuffer.Append("<tt>Content Length: </tt>");
-  mBuffer.AppendInt(length);
-  mBuffer.Append("<br>\n");
-
-  // Number of accesses
-  PRUint16 numAccesses = 0;
-  entry->GetNumberAccesses(&numAccesses);
-
-  mBuffer.Append("<tt>&nbsp;# of accesses: </tt>");
-  mBuffer.AppendInt(numAccesses);
-  mBuffer.Append("<br>\n");
-
-  // Last modified time
-  char buf[255];
-  PRExplodedTime et;
-  PRTime t;
-
-  mBuffer.Append("<tt>&nbsp;Last Modified: </tt>");
-
-  entry->GetLastModifiedTime(&t);
-  if (LL_NE(t, LL_ZERO)) {
-    PR_ExplodeTime(t, PR_LocalTimeParameters, &et);
-    PR_FormatTime(buf, sizeof(buf), "%c", &et);
-    mBuffer.Append(buf);
-  } else {
-    mBuffer.Append("No modified date sent");
-  }
-  mBuffer.Append("<br>");
-
-  // Expires time
-  mBuffer.Append("<tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
-                 "Expires: </tt>");
-
-  entry->GetExpirationTime(&t);
-  if (LL_NE(t, LL_ZERO)) {
-    PR_ExplodeTime(t, PR_LocalTimeParameters, &et);
-    PR_FormatTime(buf, sizeof(buf), "%c", &et);
-    mBuffer.Append(buf);
-  } else {
-    mBuffer.Append("No expiration date sent");
-  }
-  mBuffer.Append("<br>");
-
-  // Flags
-  PRBool flag = PR_FALSE, foundFlag = PR_FALSE;
-  mBuffer.Append("<tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
-                 "Flags: </tt><b>");
-
-  flag = PR_FALSE;
-  entry->GetPartialFlag(&flag);
-  if (flag) {
-    mBuffer.Append("PARTIAL ");
-    foundFlag = PR_TRUE;
-  }
-  flag = PR_FALSE;
-  entry->GetUpdateInProgress(&flag);
-  if (flag) {
-    mBuffer.Append("UPDATE_IN_PROGRESS ");
-    foundFlag = PR_TRUE;
-  }
-  flag = PR_FALSE;
-  entry->GetInUse(&flag);
-  if (flag) {
-    mBuffer.Append("IN_USE");
-    foundFlag = PR_TRUE;
-  }
-
-  if (!foundFlag) {
-    mBuffer.Append("</b>none<br>\n");
-  } else {
-    mBuffer.Append("</b><br>\n");
-  }
-
-  // Entry is done...
-  mBuffer.Append("</p>\n");
-
-  aStream->Write(mBuffer, mBuffer.Length(), &bytesWritten);
-}
-
-nsresult nsAboutCache::DumpCacheEntries(nsIOutputStream *aStream,
-                                        nsINetDataCacheManager *aCacheMgr,
-                                        nsINetDataCache *aCache)
-{
-  nsresult rv;
-  nsCOMPtr<nsISimpleEnumerator> entryIterator;
-  nsCOMPtr<nsISupports> item;
-  nsCOMPtr<nsINetDataCacheRecord> cacheRecord;
-
-  rv = aCache->NewCacheEntryIterator(getter_AddRefs(entryIterator));
-  if (NS_FAILED(rv)) return rv;
-
-  do {
-    char *key, *secondaryKey;
-    PRUint32 keyLength;
-    PRBool bMoreEntries = PR_FALSE;
-
-    rv = entryIterator->HasMoreElements(&bMoreEntries);
-    if (!bMoreEntries) break;
-
-    rv = entryIterator->GetNext(getter_AddRefs(item));
-    if (NS_FAILED(rv)) break;
-
-    cacheRecord = do_QueryInterface(item);
-
-    rv = cacheRecord->GetKey(&keyLength, &key);
-    if (NS_FAILED(rv)) break;
-
-    // The URI spec is stored as the second of the two components that make up
-    // the nsINetDataCacheRecord key and is separated from the first component
-    // by a NUL character.
-    for(secondaryKey = key; *secondaryKey; secondaryKey++)
-        keyLength--;
-
-    // Account for NUL character
-    if (keyLength) {
-      keyLength--;
-      secondaryKey++;
-    } else {
-      secondaryKey = nsnull;
-    }
-
-    DumpCacheEntryInfo(aStream, aCacheMgr, key, secondaryKey, keyLength);
-
-    nsMemory::Free(key);
-  } while(1);
-
-  return NS_OK;
-}
-
-#endif /* MOZ_NEW_CACHE */
 
 
 NS_METHOD

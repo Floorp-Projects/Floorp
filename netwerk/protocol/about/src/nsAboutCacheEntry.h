@@ -24,8 +24,6 @@
 #ifndef nsAboutCacheEntry_h__
 #define nsAboutCacheEntry_h__
 
-#ifdef MOZ_NEW_CACHE
-
 #include "nsIAboutModule.h"
 #include "nsIChannel.h"
 #include "nsICacheListener.h"
@@ -76,7 +74,5 @@ private:
     0x438f,                                          \
     {0x9e, 0x50, 0xca, 0x01, 0x66, 0xe6, 0x37, 0x88} \
 }
-
-#endif // MOZ_NEW_CACHE
 
 #endif // nsAboutCacheEntry_h__
