@@ -107,7 +107,7 @@ NSPR_LIBS	= @NSPR_LIBS@
 
 ifndef NO_SHARED_LIB
 BUILD_UNIX_PLUGINS      = 1
-DSO_CFLAGS              = -fPIC
+DSO_CFLAGS              = @DSO_CFLAGS@
 MKSHLIB			= @MKSHLIB@
 DSO_LDOPTS		= @DSO_LDOPTS@
 endif
