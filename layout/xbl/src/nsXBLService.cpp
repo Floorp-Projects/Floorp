@@ -354,6 +354,17 @@ nsXBLStreamListener::Load(nsIDOMEvent* aEvent)
       nsXBLBindingRequest* req = (nsXBLBindingRequest*)mBindingRequests.ElementAt(i);
       req->DocumentLoaded(mBindingDocument);
     }
+
+    // All reqs normally have the same binding doc.  Force a synchronous
+    // reflow on this binding doc to deal with the fact that iframes
+    // don't construct or load their subdocs until they get a reflow.
+    if (count > 0) {
+      nsXBLBindingRequest* req = (nsXBLBindingRequest*)mBindingRequests.ElementAt(i);
+      nsCOMPtr<nsIDocument> document;
+      req->mBoundElement->GetDocument(*getter_AddRefs(document));
+      if (document)
+        document->FlushPendingNotifications();
+    }
   }
   
   for (i = 0; i < count; i++) {
