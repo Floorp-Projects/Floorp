@@ -596,7 +596,7 @@ END
 
 my $webservergroup_default;
 if ($^O !~ /MSWin32/i) {
-    $webservergroup_default = 'nobody';
+    $webservergroup_default = 'apache';
 } else {
     $webservergroup_default = '';
 }
@@ -1227,8 +1227,8 @@ WriteParams();
 #
 # Here we use --CHMOD-- and friends to set the file permissions
 #
-# The rationale is that the web server generally runs as nobody and so the cgi
-# scripts should not be writable for nobody, otherwise someone may be possible
+# The rationale is that the web server generally runs as apache and so the cgi
+# scripts should not be writable for apache, otherwise someone may be possible
 # to change the cgi's when exploiting some security flaw somewhere (not
 # necessarily in Bugzilla!)
 #
