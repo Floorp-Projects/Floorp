@@ -115,6 +115,8 @@ OS_LIBS += -llibuni
 endif
 endif
 
+LOCAL_INCLUDES	= -I$(srcdir)/../util
+
 ifneq (,$(filter cocoa mac, $(MOZ_WIDGET_TOOLKIT)))
 EXTRA_DSO_LDOPTS += $(TK_LIBS)
 endif
@@ -133,7 +135,6 @@ SHARED_LIBRARY_LIBS = \
 	$(DIST)/lib/$(LIB_PREFIX)ucvutil_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)ucvlatin_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)ucvibm_s.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)ucvutil_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)ucvja_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)ucvtw2_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)ucvtw_s.$(LIB_SUFFIX) \
