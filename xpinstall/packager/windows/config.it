@@ -253,8 +253,8 @@ Attributes=SELECTED
 url0=$URLPath$
 
 [Component2]
-Description Short=Mail&News
-Description Long=Seamonkey Mail&News
+Description Short=Mail & News
+Description Long=Seamonkey Mail & News
 Archive=mail.xpi
 $InstallSize$:mail
 $InstallSizeSystem$
@@ -276,7 +276,7 @@ Source=[XPI PATH]\core.xpi
 Destination=[TEMP]\core.ns
 $InstallSize$:core
 Cleanup=TRUE
-Message=Preparing SmartUpdate, please wait...
+Message=Preparing Install, please wait...
 
 ; The Timing key needs to be one of the following values:
 ;   pre download     - process before any files have been downloaded.

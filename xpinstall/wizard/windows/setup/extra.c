@@ -26,6 +26,7 @@
 #include "extra.h"
 #include "dialogs.h"
 #include "ifuncns.h"
+#include "time.h"
 
 ULONG (PASCAL *NS_GetDiskFreeSpace)(LPCTSTR, LPDWORD, LPDWORD, LPDWORD, LPDWORD);
 ULONG (PASCAL *NS_GetDiskFreeSpaceEx)(LPCTSTR, PULARGE_INTEGER, PULARGE_INTEGER, PULARGE_INTEGER);
@@ -1223,10 +1224,12 @@ siC *CreateSiCNode()
   if((siCNode = NS_GlobalAlloc(sizeof(struct sinfoComponent))) == NULL)
     exit(1);
 
-  siCNode->dwAttributes          = 0;
-  siCNode->ullInstallSize        = 0;
-  siCNode->ullInstallSizeSystem  = 0;
-  siCNode->ullInstallSizeArchive = 0;
+  siCNode->dwAttributes             = 0;
+  siCNode->ullInstallSize           = 0;
+  siCNode->ullInstallSizeSystem     = 0;
+  siCNode->ullInstallSizeArchive    = 0;
+  siCNode->lRandomInstallPercentage = 0;
+  siCNode->lRandomInstallValue      = 0;
 
   if((siCNode->szArchiveName = NS_GlobalAlloc(MAX_BUF)) == NULL)
     exit(1);
@@ -1419,7 +1422,11 @@ void SiCNodeSetItemsSelected(DWORD dwItems, DWORD *dwItemsSelected)
       {
         /* Found the item that was selected, set the */
         /* SIC_SELECTED attribute and break*/
-        siCTemp->dwAttributes |= SIC_SELECTED;
+        if((siCTemp->lRandomInstallPercentage == 0) ||
+           (siCTemp->lRandomInstallPercentage > siCTemp->lRandomInstallValue))
+          siCTemp->dwAttributes |= SIC_SELECTED;
+        else
+          siCTemp->dwAttributes &= ~SIC_SELECTED;
         break;
       }
       else
@@ -1438,7 +1445,11 @@ void SiCNodeSetItemsSelected(DWORD dwItems, DWORD *dwItemsSelected)
         {
           /* Found the item that was selected, set the */
           /* SIC_SELECTED attribute and break*/
-          siCTemp->dwAttributes |= SIC_SELECTED;
+          if((siCTemp->lRandomInstallPercentage == 0) ||
+             (siCTemp->lRandomInstallPercentage > siCTemp->lRandomInstallValue))
+            siCTemp->dwAttributes |= SIC_SELECTED;
+          else
+            siCTemp->dwAttributes &= ~SIC_SELECTED;
           break;
         }
         else
@@ -2145,6 +2156,15 @@ HRESULT ParseComponentAttributes(char *szAttribute)
   return(dwAttributes);
 }
 
+long RandomSelect()
+{
+  long lArbitrary = 0;
+
+  srand((unsigned)time(NULL));
+  lArbitrary = rand() % 100;
+  return(lArbitrary);
+}
+
 void InitSiComponents(char *szFileIni)
 {
   DWORD dwIndex0;
@@ -2207,6 +2227,16 @@ void InitSiComponents(char *szFileIni)
     /* get attributes of component */
     GetPrivateProfileString(szComponentItem, "Attributes", "", szBuf, MAX_BUF, szFileIni);
     siCTemp->dwAttributes = ParseComponentAttributes(szBuf);
+
+    /* get the random percentage value and select or deselect the component (by default) for
+     * installation */
+    GetPrivateProfileString(szComponentItem, "Random Install Percentage", "", szBuf, MAX_BUF, szFileIni);
+    if(*szBuf != '\0')
+    {
+      siCTemp->lRandomInstallPercentage = atol(szBuf);
+      if(siCTemp->lRandomInstallPercentage != 0)
+        siCTemp->lRandomInstallValue = RandomSelect();
+    }
 
     /* get all dependencies for this component */
     dwIndex1 = 0;
