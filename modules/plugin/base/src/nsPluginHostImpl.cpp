@@ -2089,7 +2089,7 @@ NS_IMETHODIMP nsPluginHostImpl::RegisterPlugin(REFNSIID aCID,
   nsMemory::Free(cid);
 
   nsRegistryKey pluginKey;
-  rv = registry->AddSubtree(nsIRegistry::Common, path, &pluginKey);
+  rv = registry->AddSubtree(nsIRegistry::Common, path.get(), &pluginKey);
   if (NS_FAILED(rv)) return rv;
 
   registry->SetStringUTF8(pluginKey, "name", aPluginName);
@@ -2100,7 +2100,7 @@ NS_IMETHODIMP nsPluginHostImpl::RegisterPlugin(REFNSIID aCID,
     mimepath.AppendInt(i);
 
     nsRegistryKey key;
-    registry->AddSubtree(pluginKey, mimepath, &key);
+    registry->AddSubtree(pluginKey, mimepath.get(), &key);
 
     registry->SetStringUTF8(key, "mimetype",    aMimeTypes[i]);
     registry->SetStringUTF8(key, "description", aMimeDescriptions[i]);
@@ -2128,7 +2128,7 @@ NS_IMETHODIMP nsPluginHostImpl::UnregisterPlugin(REFNSIID aCID)
   path += cid;
   nsMemory::Free(cid);
 
-  return registry->RemoveSubtree(nsIRegistry::Common, path);
+  return registry->RemoveSubtree(nsIRegistry::Common, path.get());
 }
 
 NS_IMETHODIMP nsPluginHostImpl::BeginWaitCursor(void)
@@ -2701,7 +2701,7 @@ nsresult nsPluginHostImpl::RegisterPluginMimeTypesWithLayout(nsPluginTag * plugi
 
     rv = compManager->RegisterComponentSpec(kPluginDocLoaderFactoryCID,
                                             "Plugin Loader Stub",
-                                            contractid,
+                                            contractid.get(),
                                             path,
                                             PR_TRUE,
                                             PR_FALSE);
@@ -4003,7 +4003,6 @@ nsPluginHostImpl::AddHeadersToChannel(const char *aHeadersData,
   nsCAutoString headerValue;
   PRInt32 crlf = 0;
   PRInt32 colon = 0;
-  nsIAtom *headerAtom;
   
   //
   // Turn the char * buffer into an nsString.
@@ -4032,7 +4031,7 @@ nsPluginHostImpl::AddHeadersToChannel(const char *aHeadersData,
     oneHeader.Left(headerName, colon);
     colon++;
     oneHeader.Mid(headerValue, colon, oneHeader.Length() - colon);
-    headerAtom = NS_NewAtom((const char *) headerName);
+    nsCOMPtr<nsIAtom> headerAtom(dont_AddRef(NS_NewAtom(headerName.get())));
     if (!headerAtom) {
       rv = NS_ERROR_NULL_POINTER;
       return rv;
@@ -4042,7 +4041,7 @@ nsPluginHostImpl::AddHeadersToChannel(const char *aHeadersData,
     // FINALLY: we can set the header!
     // 
     
-    rv =aChannel->SetRequestHeader(headerAtom, (const char *) headerValue);
+    rv =aChannel->SetRequestHeader(headerAtom, headerValue.get());
     if (NS_FAILED(rv)) {
       rv = NS_ERROR_NULL_POINTER;
       return rv;
