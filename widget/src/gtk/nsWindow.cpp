@@ -190,7 +190,6 @@ void nsWindow::InitToolkit(nsIToolkit *aToolkit,
 void nsWindow::InitDeviceContext(nsIDeviceContext *aContext,
                                  GtkWidget *aParentWidget) 
 {
-#if 0
   // keep a reference to the toolkit object
   if (aContext) {
     mContext = aContext;
@@ -211,7 +210,6 @@ void nsWindow::InitDeviceContext(nsIDeviceContext *aContext,
       mContext->Init(aParentWidget);
     }
   }
-#endif
 }
 
 
@@ -364,6 +362,7 @@ void nsWindow::CreateChildWindow(nsNativeWidget aNativeParent,
                                     XmNuserData, this,
 				    nsnull);
 #endif
+  mWidget = gtk_layout_new(0,0);
   if (aWidgetParent) {
     aWidgetParent->AddChild(this);
   }
