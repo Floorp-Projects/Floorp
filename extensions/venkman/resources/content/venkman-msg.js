@@ -39,21 +39,30 @@ function getMsg (msgName)
 {
     var restCount = arguments.length - 1;
     
-    if (restCount == 1 && arguments[1] instanceof Array)
+    try 
     {
-        return console._bundle.formatStringFromName (msgName, arguments[1], 
-                                                     arguments[1].length);
-    }
-    else if (restCount > 0)
-    {
-        var subPhrases = new Array();
-        for (var i = 1; i < arguments.length; ++i)
-            subPhrases.push(arguments[i]);
-        return console._bundle.formatStringFromName (msgName, subPhrases,
-                                                     subPhrases.length);
-    }
+        if (restCount == 1 && arguments[1] instanceof Array)
+        {
+            return console._bundle.formatStringFromName (msgName, arguments[1], 
+                                                         arguments[1].length);
+        }
+        else if (restCount > 0)
+        {
+            var subPhrases = new Array();
+            for (var i = 1; i < arguments.length; ++i)
+                subPhrases.push(arguments[i]);
+            return console._bundle.formatStringFromName (msgName, subPhrases,
+                                                         subPhrases.length);
+        }
 
-    return console._bundle.GetStringFromName (msgName);
+        return console._bundle.GetStringFromName (msgName);
+    }
+    catch (ex)
+    {
+        ASSERT (0, "caught exception getting value for ``" + msgName +
+                "''\n" + ex + "\n");
+        return msgName;
+    }
 }
 
 /* message types, don't localize */
@@ -102,12 +111,42 @@ const MSG_VAL_SCOPE       = getMsg("msg.val.scope");
 const MSG_HELLO1          = getMsg("msg.hello.1");
 const MSG_HELLO2          = getMsg("msg.hello.2");
 
+const MSG_TIP_HELP        = getMsg("msg.tip.help");
+
+const CMD_CMDS            = getMsg("cmd.commands");
+const CMD_CMDS_PARAMS     = getMsg("cmd.commands.params");
+const CMD_CMDS_HELP       = getMsg("cmd.commands.help");
+const CMD_CONT            = getMsg("cmd.cont");
+const CMD_CONT_PARAMS     = getMsg("cmd.cont.params");
+const CMD_CONT_HELP       = getMsg("cmd.cont.help");
+const CMD_EVAL            = getMsg("cmd.eval");
+const CMD_EVAL_PARAMS     = getMsg("cmd.eval.params");
+const CMD_EVAL_HELP       = getMsg("cmd.eval.help");
+const CMD_FRAME           = getMsg("cmd.frame");
+const CMD_FRAME_PARAMS    = getMsg("cmd.frame.params");
+const CMD_FRAME_HELP      = getMsg("cmd.frame.help");
+const CMD_HELP            = getMsg("cmd.help");
+const CMD_HELP_PARAMS     = getMsg("cmd.help.params");
+const CMD_HELP_HELP       = getMsg("cmd.help.help");
+const CMD_SCOPE           = getMsg("cmd.scope");
+const CMD_SCOPE_PARAMS    = getMsg("cmd.scope.params");
+const CMD_SCOPE_HELP      = getMsg("cmd.scope.help");
+const CMD_WHERE           = getMsg("cmd.where");
+const CMD_WHERE_PARAMS    = getMsg("cmd.where.params");
+const CMD_WHERE_HELP      = getMsg("cmd.where.help");
+const CMD_QUIT            = getMsg("cmd.quit");
+const CMD_QUIT_PARAMS     = getMsg("cmd.quit.params");
+const CMD_QUIT_HELP       = getMsg("cmd.quit.help");
+
 /* message names for parameterized messages */
 const MSN_ERR_NO_COMMAND     = "msg.err.nocommand";
 const MSN_ERR_NOTIMPLEMENTED = "msg.err.notimplemented";
 const MSN_ERR_AMBIGCOMMAND   = "msg.err.ambigcommand";
 
 const MSN_NO_PROPERTIES      = "msg.noproperties";
+const MSN_NO_CMDMATCH        = "msg.no-commandmatch";
+const MSN_CMDMATCH           = "msg.commandmatch";
+const MSN_CMDMATCH_ALL       = "msg.commandmatch.all";
 
 const MSN_CONT             = "msg.cont";
 const MSN_EVAL_ERROR       = "msg.eval.error";
