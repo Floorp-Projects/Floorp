@@ -125,9 +125,10 @@ my $greet = 0;
 my @greetings = 
 	( 
 	"g'day", "bonjour", "guten tag", "moshi, moshi",
-	"hello", "hola", "hi", "buon giorno", "aloha",
+	"hello", "hola", "hi", "buono giorno", "aloha",
 	"hey", "'sup", "lo", "howdy", "saluton", "hei",
-	"hallo"
+	"hallo", "word", "yo yo yo", "rheeet", "bom dia",
+	"ciao"
 	);
 
 # leave $slashdot tuned to undef if you don't want slashdot
