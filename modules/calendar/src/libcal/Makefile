@@ -4,7 +4,11 @@ MODULE = julian
 
 LIBRARY_NAME = julian
 
-NS_DEPTH = ../../..
+ifdef MOZ_TREX
+NS_DEPTH=../../../..
+else
+NS_DEPTH=../../..
+endif
 
 DEPTH = $(NS_DEPTH)
 
