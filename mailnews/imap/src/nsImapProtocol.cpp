@@ -4534,7 +4534,7 @@ void nsImapProtocol::Copy(nsString2 &messageList,
 		protocolString.Append(" uid");
 	protocolString.Append(" copy ");
 	protocolString.Append(messageList);
-	protocolString.Append("\"");
+	protocolString.Append(" \"");
 	protocolString.Append(escapedDestination);
 	protocolString.Append("\"" CRLF);
 	    
