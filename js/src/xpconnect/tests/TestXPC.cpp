@@ -453,6 +453,19 @@ MyEcho::PseudoQueryInterface(const nsIID & uuid, void * *result)
     return NS_OK;
 }        
 
+/* void DebugDumpJSStack (); */
+NS_IMETHODIMP
+MyEcho::DebugDumpJSStack()
+{
+    nsresult rv;
+    NS_WITH_SERVICE(nsIXPConnect, xpc, nsIXPConnect::GetCID(), &rv);
+    if(NS_SUCCEEDED(rv))
+    {
+        rv = xpc->DebugDumpJSStack();
+    }
+    return rv;
+}        
+
 /***************************************************************************/
 // security manager test class
 
@@ -1091,7 +1104,6 @@ sm_test_done:
 
         printf("ThreadJSContextStack tests...\n");
 
-        nsresult rv;
         NS_WITH_SERVICE(nsIJSContextStack, stack, "nsThreadJSContextStack", &rv);
 
         if(NS_SUCCEEDED(rv))
@@ -1188,7 +1200,6 @@ sm_test_done:
 #if 0
 // a fun test...
     {
-        nsresult rv;
         NS_WITH_SERVICE(nsIComponentManager, cm, kComponentManagerCID, &rv);
         if(NS_SUCCEEDED(rv))
         {

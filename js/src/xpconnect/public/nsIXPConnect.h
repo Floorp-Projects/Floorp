@@ -248,6 +248,8 @@ public:
     /* pass nsnull to clear pending exception */
     NS_IMETHOD SetPendingException(nsIXPCException* aException) = 0;
 
+    NS_IMETHOD DebugDumpJSStack() = 0;
+
     // XXX other methods?
 };
 

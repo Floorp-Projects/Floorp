@@ -740,3 +740,40 @@ nsXPConnect::DebugDumpObject(nsISupports* p, int depth)
 #endif
     return NS_OK;
 }
+
+NS_IMETHODIMP
+nsXPConnect::DebugDumpJSStack()
+{
+#ifdef DEBUG
+
+    nsIJSStackFrameLocation* stack;
+    if(NS_FAILED(GetCurrentJSStack(&stack)) || !stack)
+    {
+        printf("call to GetCurrentJSStack failed\n");
+        return NS_OK;
+    }
+
+    nsIJSStackFrameLocation* current = stack;
+    NS_ADDREF(current);
+
+    while(1)
+    {
+        char* text;
+        if(NS_FAILED(current->ToString(&text)))
+        {
+            printf("nsIJSStackFrameLocation::ToString failed!\n");
+            NS_RELEASE(current);
+            break;
+        }
+        printf("%s\n", text);
+        nsAllocator::Free(text);
+        nsIJSStackFrameLocation* prev = current;
+        nsresult rv = prev->GetCaller(&current);
+        NS_RELEASE(prev);
+        if(NS_FAILED(rv) || !current)
+            break;
+    }
+    NS_RELEASE(stack);
+#endif
+    return NS_OK;
+}

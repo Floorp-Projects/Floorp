@@ -280,6 +280,19 @@ xpctestEcho::PseudoQueryInterface(const nsIID & uuid, void * *result)
     return NS_OK;
 }        
 
+/* void DebugDumpJSStack (); */
+NS_IMETHODIMP
+xpctestEcho::DebugDumpJSStack()
+{
+    nsresult rv;
+    NS_WITH_SERVICE(nsIXPConnect, xpc, nsIXPConnect::GetCID(), &rv);
+    if(NS_SUCCEEDED(rv))
+    {
+        rv = xpc->DebugDumpJSStack();
+    }
+    return rv;
+}        
+
 /***************************************************************************/
 
 // static
@@ -304,3 +317,4 @@ xpctest::ConstructEcho(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 
     return rv;
 }
+
