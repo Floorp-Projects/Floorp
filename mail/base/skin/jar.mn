@@ -38,6 +38,7 @@ classic.jar:
     skin/classic/messenger/icons/folder-sent.png    (icons/folder-sent.png)
     skin/classic/messenger/icons/folder-template.png (icons/folder-template.png)
     skin/classic/messenger/icons/folder-trash.png   (icons/folder-trash.png) 
+    skin/classic/messenger/icons/folder-search.png  (icons/folder-search.png) 
     skin/classic/messenger/icons/message-mail-forwarded.png (icons/message-mail-forwarded.png)
     skin/classic/messenger/icons/message-mail-forwarded-read.png (icons/message-mail-forwarded-read.png)
     skin/classic/messenger/icons/message-mail-replied.png   (icons/message-mail-replied.png)

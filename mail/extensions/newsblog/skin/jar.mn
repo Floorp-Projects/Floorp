@@ -3,4 +3,5 @@ classic.jar:
   skin/classic/messenger-newsblog/newsBlogOverlay.css            (newsBlogOverlay.css)
   skin/classic/messenger-newsblog/icons/rss-feed.png            (rss-feed.png )
   skin/classic/messenger-newsblog/icons/server-rss.png          (server-rss.png)
+  skin/classic/messenger-newsblog/icons/folder-search-rss.png   (folder-search-rss.png)
   skin/classic/messenger-newsblog/contents.rdf                  

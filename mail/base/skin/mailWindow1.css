@@ -99,7 +99,7 @@ treechildren::-moz-tree-image(folderNameCol, specialFolder-Trash) {
 /* ..... Saved Search Folder ..... */
 
 treechildren::-moz-tree-image(folderNameCol, specialFolder-Virtual) {
-  list-style-image: url("chrome://messenger/skin/icons/Search-bar.png");
+  list-style-image: url("chrome://messenger/skin/icons/folder-search.png");
 }
 
 
