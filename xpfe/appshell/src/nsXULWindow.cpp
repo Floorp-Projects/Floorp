@@ -787,7 +787,7 @@ NS_IMETHODIMP nsXULWindow::ShowModal()
          rv = appShell->GetNativeEvent(isRealEvent, data);
          if(NS_SUCCEEDED(rv))
             {
-            mWindow->ModalEventFilter(isRealEvent, data, &processEvent);
+            window->ModalEventFilter(isRealEvent, data, &processEvent);
             if(processEvent)
                appShell->DispatchNativeEvent(isRealEvent, data);
             }
