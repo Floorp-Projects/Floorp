@@ -36,7 +36,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- *  $Id: mpi.h,v 1.9 2000/08/31 02:51:23 nelsonb%netscape.com Exp $
+ *  $Id: mpi.h,v 1.10 2000/08/31 03:59:48 nelsonb%netscape.com Exp $
  */
 
 #ifndef _H_MPI_
@@ -72,6 +72,9 @@ typedef unsigned int      mp_sign;
 typedef unsigned int      mp_size;
 typedef int               mp_err;
 
+typedef unsigned int      mp_digit;
+#define MP_DIGIT_MAX      UINT_MAX
+
 #ifndef MP_NO_MP_WORD
 #if defined(ULONG_LONG_MAX)			/* GCC, HPUX */
 #define MP_ULONG_LONG_MAX ULONG_LONG_MAX
@@ -80,9 +83,6 @@ typedef int               mp_err;
 #elif defined(ULONGLONG_MAX)			/* IRIX, AIX */
 #define MP_ULONG_LONG_MAX ULONGLONG_MAX
 #endif
-
-typedef unsigned int      mp_digit;
-#define MP_DIGIT_MAX      UINT_MAX
 
 #if defined(MP_ULONG_LONG_MAX) && MP_ULONG_LONG_MAX > UINT_MAX
 #if MP_ULONG_LONG_MAX == ULONG_MAX
