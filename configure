@@ -12144,7 +12144,7 @@ if test "${enable_libpr0n+set}" = set; then
   fi
 fi
 
-if test "USE_IMG2"; then
+if test "$USE_IMG2" = "1"; then
   cat >> confdefs.h <<\EOF
 #define USE_IMG2 1
 EOF
