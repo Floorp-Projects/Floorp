@@ -147,8 +147,8 @@ public:
   NS_IMETHOD SetSuggestedSize(nscoord aWidth, nscoord aHeight);
   NS_IMETHOD GetName(nsAString* aName);
   NS_IMETHOD GetType(PRInt32* aType) const;
-  NS_IMETHOD SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsAReadableString& aValue);
-  NS_IMETHOD GetProperty(nsIAtom* aName, nsAWritableString& aValue); 
+  NS_IMETHOD SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsAString& aValue);
+  NS_IMETHOD GetProperty(nsIAtom* aName, nsAString& aValue); 
   void       SetFocus(PRBool aOn, PRBool aRepaint);
   void       ScrollIntoView(nsIPresContext* aPresContext);
   virtual void InitializeControl(nsIPresContext* aPresContext);

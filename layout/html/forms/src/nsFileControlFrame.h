@@ -86,8 +86,8 @@ public:
                    PRUint32             aFlags = 0);
 
       // nsIFormControlFrame
-  NS_IMETHOD SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsAReadableString& aValue);
-  NS_IMETHOD GetProperty(nsIAtom* aName, nsAWritableString& aValue); 
+  NS_IMETHOD SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsAString& aValue);
+  NS_IMETHOD GetProperty(nsIAtom* aName, nsAString& aValue); 
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
   NS_IMETHOD OnContentReset();
 

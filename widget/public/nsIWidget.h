@@ -735,7 +735,7 @@ class nsIWidget : public nsISupports {
      *                   file name will be constructed
      */
 
-    NS_IMETHOD SetIcon(const nsAReadableString& anIconSpec) = 0;
+    NS_IMETHOD SetIcon(const nsAString& anIconSpec) = 0;
 
     /**
      * Set the widget's MenuBar.

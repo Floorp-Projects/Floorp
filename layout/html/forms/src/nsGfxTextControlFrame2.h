@@ -117,8 +117,8 @@ public:
                                     nsISupportsArray& aChildList);
 
   // Utility methods to get and set current widget state
-  void GetTextControlFrameState(nsAWritableString& aValue);
-  void SetTextControlFrameState(const nsAReadableString& aValue);
+  void GetTextControlFrameState(nsAString& aValue);
+  void SetTextControlFrameState(const nsAString& aValue);
   NS_IMETHOD SetInitialChildList(nsIPresContext* aPresContext,
                                   nsIAtom*        aListName,
                                   nsIFrame*       aChildList);
@@ -142,8 +142,8 @@ public:
   NS_IMETHOD GetFont(nsIPresContext* aPresContext, 
                      const nsFont*&  aFont);
   NS_IMETHOD GetFormContent(nsIContent*& aContent) const;
-  NS_IMETHOD SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsAReadableString& aValue);
-  NS_IMETHOD GetProperty(nsIAtom* aName, nsAWritableString& aValue); 
+  NS_IMETHOD SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsAString& aValue);
+  NS_IMETHOD GetProperty(nsIAtom* aName, nsAString& aValue); 
   NS_IMETHOD OnContentReset();
 
 

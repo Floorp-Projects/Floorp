@@ -557,7 +557,7 @@ nsMenuFrame::ToggleMenuState()
 }
 
 void
-nsMenuFrame::FireMenuDOMEvent(nsAReadableString& aDOMEventName)
+nsMenuFrame::FireMenuDOMEvent(const nsAString& aDOMEventName)
 {
   // Fire a DOM event for the title change.
   nsCOMPtr<nsIDOMEvent> event;

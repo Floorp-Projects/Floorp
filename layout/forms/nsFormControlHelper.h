@@ -172,7 +172,7 @@ public:
   * @returns PR_TRUE if aValue = "1", PR_FALSE otherwise
   */
 
-  static PRBool GetBool(const nsAReadableString& aValue);
+  static PRBool GetBool(const nsAString& aValue);
 
  /** 
   * Utility to convert a PRBool to a string
@@ -182,7 +182,7 @@ public:
 
   */
 
-  static void  GetBoolString(const PRBool aValue, nsAWritableString& aResult);
+  static void  GetBoolString(const PRBool aValue, nsAString& aResult);
 
   static nsCompatibility GetRepChars(nsIPresContext* aPresContext, char& char1, char& char2);
 

@@ -898,13 +898,13 @@ nsFormControlFrame::SetCurrentCheckState(PRBool aState)
 }
 
 NS_IMETHODIMP
-nsFormControlFrame::SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsAReadableString& aValue)
+nsFormControlFrame::SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsAString& aValue)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFormControlFrame::GetProperty(nsIAtom* aName, nsAWritableString& aValue)
+nsFormControlFrame::GetProperty(nsIAtom* aName, nsAString& aValue)
 {
   aValue.Truncate();
   return NS_OK;

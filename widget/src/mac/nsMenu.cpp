@@ -204,7 +204,7 @@ nsMenu::~nsMenu()
 // Create
 //
 NS_METHOD 
-nsMenu::Create( nsISupports * aParent, const nsAReadableString &aLabel, const nsAReadableString &aAccessKey, 
+nsMenu::Create( nsISupports * aParent, const nsAString &aLabel, const nsAString &aAccessKey, 
                      nsIChangeManager* aManager, nsIWebShell* aShell, nsIContent* aNode )
 {
   mWebShellWeakRef = getter_AddRefs(NS_GetWeakReference(aShell));
@@ -251,7 +251,7 @@ NS_METHOD nsMenu::GetLabel(nsString &aText)
 }
 
 //-------------------------------------------------------------------------
-NS_METHOD nsMenu::SetLabel(const nsAReadableString &aText)
+NS_METHOD nsMenu::SetLabel(const nsAString &aText)
 {
   mLabel = aText;
   
@@ -301,7 +301,7 @@ NS_METHOD nsMenu::GetAccessKey(nsString &aText)
 }
 
 //-------------------------------------------------------------------------
-NS_METHOD nsMenu::SetAccessKey(const nsAReadableString &aText)
+NS_METHOD nsMenu::SetAccessKey(const nsAString &aText)
 {
   return NS_OK;
 }

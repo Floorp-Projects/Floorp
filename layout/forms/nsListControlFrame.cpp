@@ -2197,7 +2197,7 @@ nsListControlFrame::SetDummyFrame(nsIFrame* aFrame)
 //---------------------------------------------------------
 NS_IMETHODIMP 
 nsListControlFrame::SetProperty(nsIPresContext* aPresContext, nsIAtom* aName,
-                                const nsAReadableString& aValue)
+                                const nsAString& aValue)
 {
   if (nsHTMLAtoms::selected == aName) {
     return NS_ERROR_INVALID_ARG; // Selected is readonly according to spec.
@@ -2214,7 +2214,7 @@ nsListControlFrame::SetProperty(nsIPresContext* aPresContext, nsIAtom* aName,
 
 //---------------------------------------------------------
 NS_IMETHODIMP 
-nsListControlFrame::GetProperty(nsIAtom* aName, nsAWritableString& aValue)
+nsListControlFrame::GetProperty(nsIAtom* aName, nsAString& aValue)
 {
   // Get the selected value of option from local cache (optimization vs. widget)
   if (nsHTMLAtoms::selected == aName) {

@@ -233,8 +233,8 @@ public:
     // nsIFormControlFrame
   NS_IMETHOD GetType(PRInt32* aType) const;
   NS_IMETHOD GetName(nsAString* aName);
-  NS_IMETHOD SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsAReadableString& aValue);
-  NS_IMETHOD GetProperty(nsIAtom* aName, nsAWritableString& aValue); 
+  NS_IMETHOD SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsAString& aValue);
+  NS_IMETHOD GetProperty(nsIAtom* aName, nsAString& aValue); 
   NS_IMETHOD GetMultiple(PRBool* aResult, nsIDOMHTMLSelectElement* aSelect = nsnull);
   NS_IMETHOD GetFont(nsIPresContext* aPresContext, 
                      const nsFont*&  aFont);

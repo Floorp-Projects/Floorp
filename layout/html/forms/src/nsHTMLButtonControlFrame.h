@@ -154,8 +154,8 @@ public:
   void GetDefaultLabel(nsString& aLabel);
 
        // nsIFormControlFrame
-  NS_IMETHOD SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsAReadableString& aValue);
-  NS_IMETHOD GetProperty(nsIAtom* aName, nsAWritableString& aValue); 
+  NS_IMETHOD SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsAString& aValue);
+  NS_IMETHOD GetProperty(nsIAtom* aName, nsAString& aValue); 
   NS_IMETHOD SetSuggestedSize(nscoord aWidth, nscoord aHeight);
 
 protected:

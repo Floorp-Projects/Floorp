@@ -628,7 +628,7 @@ nsresult nsFileControlFrame::RequiresWidget(PRBool& aRequiresWidget)
 
 NS_IMETHODIMP nsFileControlFrame::SetProperty(nsIPresContext* aPresContext,
                                               nsIAtom* aName,
-                                              const nsAReadableString& aValue)
+                                              const nsAString& aValue)
 {
   nsresult rv = NS_OK;
   if (nsHTMLAtoms::value == aName) {
@@ -643,7 +643,7 @@ NS_IMETHODIMP nsFileControlFrame::SetProperty(nsIPresContext* aPresContext,
   return rv;
 }      
 
-NS_IMETHODIMP nsFileControlFrame::GetProperty(nsIAtom* aName, nsAWritableString& aValue)
+NS_IMETHODIMP nsFileControlFrame::GetProperty(nsIAtom* aName, nsAString& aValue)
 {
   aValue.Truncate();  // initialize out param
 

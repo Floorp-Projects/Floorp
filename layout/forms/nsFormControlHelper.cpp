@@ -141,13 +141,13 @@ void nsFormControlHelper::PlatformToDOMLineBreaks(nsString &aString)
   aString.ReplaceSubstring(NS_LITERAL_STRING("\r").get(), NS_LITERAL_STRING("\n").get());
 }
 
-PRBool nsFormControlHelper::GetBool(const nsAReadableString& aValue)
+PRBool nsFormControlHelper::GetBool(const nsAString& aValue)
 {
   return aValue.Equals(NS_STRING_TRUE);
 }
 
 void nsFormControlHelper::GetBoolString(const PRBool aValue,
-                                        nsAWritableString& aResult)
+                                        nsAString& aResult)
 {
   if (aValue)
     aResult.Assign(NS_STRING_TRUE); 

@@ -804,7 +804,7 @@ nsBaseWidget::GetAttention() {
 }
 
 NS_IMETHODIMP
-nsBaseWidget::SetIcon(const nsAReadableString&)
+nsBaseWidget::SetIcon(const nsAString&)
 {
   return NS_OK;
 }

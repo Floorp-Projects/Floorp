@@ -237,7 +237,7 @@ protected:
 
 protected:
   nsresult SetDebug(nsBoxLayoutState& aState, nsIFrame* aList, PRBool aDebug);
-  void FireMenuDOMEvent(nsAReadableString& aDOMEventName);
+  void FireMenuDOMEvent(const nsAString& aDOMEventName);
 
   nsFrameList mPopupFrames;
   PRPackedBool mIsMenu; // Whether or not we can even have children or not.

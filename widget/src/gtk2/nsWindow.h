@@ -102,7 +102,7 @@ class nsWindow : public nsCommonWidget, public nsSupportsWeakReference {
   virtual void*      GetNativeData(PRUint32 aDataType);
   NS_IMETHOD         SetBorderStyle(nsBorderStyle aBorderStyle);
   NS_IMETHOD         SetTitle(const nsString& aTitle);
-  NS_IMETHOD         SetIcon(const nsAReadableString& anIconSpec);
+  NS_IMETHOD         SetIcon(const nsAString& anIconSpec);
   NS_IMETHOD         SetMenuBar(nsIMenuBar * aMenuBar);
   NS_IMETHOD         ShowMenuBar(PRBool aShow);
   NS_IMETHOD         WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect);

@@ -56,7 +56,7 @@ nsClipboardHelper::~nsClipboardHelper()
  *****************************************************************************/
 
 NS_IMETHODIMP
-nsClipboardHelper::CopyStringToClipboard(const nsAReadableString& aString,
+nsClipboardHelper::CopyStringToClipboard(const nsAString& aString,
                                          PRInt32 aClipboardID)
 {
   nsresult rv;
@@ -116,7 +116,7 @@ nsClipboardHelper::CopyStringToClipboard(const nsAReadableString& aString,
 }
 
 NS_IMETHODIMP
-nsClipboardHelper::CopyString(const nsAReadableString& aString)
+nsClipboardHelper::CopyString(const nsAString& aString)
 {
   nsresult rv;
 

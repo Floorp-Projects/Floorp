@@ -27,7 +27,7 @@
 #include "nsIClipboard.idl"
 
 %{ C++
-#include "nsString.h" // needed for AString -> nsAReadableString, unfortunately
+#include "nsString.h" // needed for AString -> nsAString, unfortunately
 %}
 
 /**

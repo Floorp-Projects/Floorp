@@ -4998,7 +4998,7 @@ NS_METHOD nsWindow::SetTitle(const nsString& aTitle)
   return NS_OK;
 } 
 
-NS_METHOD nsWindow::SetIcon(const nsAReadableString& anIconSpec) 
+NS_METHOD nsWindow::SetIcon(const nsAString& anIconSpec) 
 {
   // Start at app chrome directory.
   nsCOMPtr<nsIFile> chromeDir;

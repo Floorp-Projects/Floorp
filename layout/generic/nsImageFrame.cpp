@@ -1861,7 +1861,7 @@ nsImageFrame::IsImageComplete(PRBool* aComplete)
 }
 
 nsresult
-nsImageFrame::LoadImage(const nsAReadableString& aSpec, nsIPresContext *aPresContext, imgIRequest *aRequest, PRBool aCheckContentPolicy)
+nsImageFrame::LoadImage(const nsAString& aSpec, nsIPresContext *aPresContext, imgIRequest *aRequest, PRBool aCheckContentPolicy)
 {
   nsresult rv = RealLoadImage(aSpec, aPresContext, aRequest, aCheckContentPolicy);
 
@@ -1875,7 +1875,7 @@ nsImageFrame::LoadImage(const nsAReadableString& aSpec, nsIPresContext *aPresCon
 }
 
 nsresult
-nsImageFrame::RealLoadImage(const nsAReadableString& aSpec, nsIPresContext *aPresContext, imgIRequest *aRequest, PRBool aCheckContentPolicy)
+nsImageFrame::RealLoadImage(const nsAString& aSpec, nsIPresContext *aPresContext, imgIRequest *aRequest, PRBool aCheckContentPolicy)
 {
   nsresult rv = NS_OK;
 
@@ -1930,7 +1930,7 @@ nsImageFrame::RealLoadImage(const nsAReadableString& aSpec, nsIPresContext *aPre
 #define INTERNAL_GOPHER_LENGTH 16 /* "internal-gopher-" length */
 
 void
-nsImageFrame::GetDocumentCharacterSet(nsAWritableString& aCharset) const
+nsImageFrame::GetDocumentCharacterSet(nsAString& aCharset) const
 {
   nsresult rv;
   nsCOMPtr<nsIHTMLContent> htmlContent(do_QueryInterface(mContent, &rv));
@@ -1943,7 +1943,7 @@ nsImageFrame::GetDocumentCharacterSet(nsAWritableString& aCharset) const
 }
 
 void
-nsImageFrame::GetURI(const nsAReadableString& aSpec, nsIURI **aURI)
+nsImageFrame::GetURI(const nsAString& aSpec, nsIURI **aURI)
 {
   *aURI = nsnull;
 
@@ -1965,7 +1965,7 @@ nsImageFrame::GetURI(const nsAReadableString& aSpec, nsIURI **aURI)
 }
 
 void
-nsImageFrame::GetRealURI(const nsAReadableString& aSpec, nsIURI **aURI)
+nsImageFrame::GetRealURI(const nsAString& aSpec, nsIURI **aURI)
 {
   nsCOMPtr<nsIURI> baseURI;
   GetBaseURI(getter_AddRefs(baseURI));

@@ -205,19 +205,19 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHOD    CreateElementNS(const nsAReadableString& aNamespaceURI, const nsAReadableString& aQualifiedName, nsIDOMElement** aReturn) {
+  NS_IMETHOD    CreateElementNS(const nsAString& aNamespaceURI, const nsAString& aQualifiedName, nsIDOMElement** aReturn) {
     return NS_OK;
   }
 
-  NS_IMETHOD    CreateAttributeNS(const nsAReadableString& aNamespaceURI, const nsAReadableString& aQualifiedName, nsIDOMAttr** aReturn) {
+  NS_IMETHOD    CreateAttributeNS(const nsAString& aNamespaceURI, const nsAString& aQualifiedName, nsIDOMAttr** aReturn) {
     return NS_OK;
   }
 
-  NS_IMETHOD    GetElementsByTagNameNS(const nsAReadableString& aNamespaceURI, const nsAReadableString& aLocalName, nsIDOMNodeList** aReturn) {
+  NS_IMETHOD    GetElementsByTagNameNS(const nsAString& aNamespaceURI, const nsAString& aLocalName, nsIDOMNodeList** aReturn) {
     return NS_OK;
   }
 
-  NS_IMETHOD    GetElementById(const nsAReadableString& aElementId, nsIDOMElement** aReturn) {
+  NS_IMETHOD    GetElementById(const nsAString& aElementId, nsIDOMElement** aReturn) {
     return NS_OK;
   }
 
