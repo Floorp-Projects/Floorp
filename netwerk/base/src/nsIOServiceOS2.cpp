@@ -61,7 +61,6 @@ nsIOService::GetURLSpecFromFile(nsIFile *aFile, char * *aURL)
 
     // Replace \ with / to convert to an url
     for (char *s = (char *) ePath.get(); *s; ++s) {
-    {
         // We need to call isleadbyte because
         // Japanese windows can have 0x5C in the sencond byte 
         // of a Japanese character, for example 0x8F 0x5C is
