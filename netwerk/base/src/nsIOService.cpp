@@ -330,13 +330,12 @@ nsIOService::ResolveRelativePath(const char *relativePath, const char* basePath,
 {
     nsCAutoString name;
     nsCAutoString path(basePath);
-    
-    PRBool needsDelim = PR_FALSE;
-    if (path.Length() > 0)
-    {
-        PRUnichar last = path.Last();
-        needsDelim = !(last == '/' || last == '\\' || last == '\0');
-    }
+	PRBool needsDelim = PR_FALSE;
+
+	if ( !path.IsEmpty() ) {
+		PRUnichar last = path.Last();
+		needsDelim = !(last == '/' || last == '\\' );
+	}
 
     PRBool end = PR_FALSE;
     char c;
