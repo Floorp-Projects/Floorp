@@ -50,8 +50,6 @@
       <splitter class="tree-splitter"/>
       <treecol id="olcFileURL" label="&styleRuleURI.label;" flex="1"/>
       <splitter class="tree-splitter"/>
-      <treecol id="olcWeight" label="&styleRuleWeight.label;"/>
-      <splitter class="tree-splitter"/>
       <treecol id="olcLine" label="&styleRuleLineNumber.label;"/>
     </treecols>
     <treechildren id="olbStyleRules"/>

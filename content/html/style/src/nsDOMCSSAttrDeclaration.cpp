@@ -112,7 +112,7 @@ nsDOMCSSAttributeDeclaration::SetCSSDeclaration(nsCSSDeclaration* aDecl,
   NS_PRECONDITION(aDecl, "Null decl!");
     
   nsCOMPtr<nsICSSStyleRule> cssRule;
-  nsresult rv = NS_NewCSSStyleRule(getter_AddRefs(cssRule), nsCSSSelector());
+  nsresult rv = NS_NewCSSStyleRule(getter_AddRefs(cssRule), nsnull);
   if (NS_FAILED(rv)) {
     if (!aDeclOwnedByRule) {
       aDecl->RuleAbort();
@@ -121,7 +121,6 @@ nsDOMCSSAttributeDeclaration::SetCSSDeclaration(nsCSSDeclaration* aDecl,
   }
     
   cssRule->SetDeclaration(aDecl);
-  cssRule->SetWeight(PR_INT32_MAX);
   return mContent->SetHTMLAttribute(nsHTMLAtoms::style,
                                     nsHTMLValue(cssRule),
                                     aNotify);

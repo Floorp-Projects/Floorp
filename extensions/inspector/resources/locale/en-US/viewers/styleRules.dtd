@@ -50,7 +50,6 @@
 
 <!ENTITY styleRule.label "Rule">
 <!ENTITY styleRuleURI.label "File">
-<!ENTITY styleRuleWeight.label "Weight">
 <!ENTITY styleRuleLineNumber.label "Line">
 
 <!ENTITY styleRulePropPriority.label "Priority">

@@ -151,16 +151,6 @@ inDOMUtils::GetStyleRules(nsIDOMElement *aElement, nsISupportsArray **_retval)
 }
 
 NS_IMETHODIMP
-inDOMUtils::GetRuleWeight(nsIDOMCSSStyleRule *aRule, PRUint32 *_retval)
-{
-  if (!aRule) return NS_OK;
-  nsCOMPtr<nsIDOMCSSStyleRule> rule = aRule;
-  nsCOMPtr<nsICSSStyleRule> cssrule = do_QueryInterface(rule);
-  *_retval = cssrule->GetWeight();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 inDOMUtils::GetRuleLine(nsIDOMCSSStyleRule *aRule, PRUint32 *_retval)
 {
   if (!aRule) return NS_OK;

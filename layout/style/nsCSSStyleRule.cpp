@@ -537,8 +537,16 @@ void nsCSSSelector::AppendNegationToString(nsAString& aString)
 // Builds the textual representation of a selector. Called by DOM 2 CSS 
 // StyleRule:selectorText
 //
-nsresult nsCSSSelector::ToString( nsAString& aString, nsICSSStyleSheet* aSheet, PRBool aIsPseudoElem,
-                                  PRInt8 aNegatedIndex) const
+void
+nsCSSSelector::ToString(nsAString& aString, nsICSSStyleSheet* aSheet) const
+{
+  ToStringInternal(aString, aSheet, IsPseudoElement(mTag), 0);
+}
+
+void nsCSSSelector::ToStringInternal(nsAString& aString,
+                                     nsICSSStyleSheet* aSheet,
+                                     PRBool aIsPseudoElem,
+                                     PRIntn aNegatedIndex) const
 {
   nsAutoString temp;
   PRBool aIsNegated = PRBool(0 < aNegatedIndex);
@@ -546,7 +554,7 @@ nsresult nsCSSSelector::ToString( nsAString& aString, nsICSSStyleSheet* aSheet, 
   // selectors are linked from right-to-left, so the next selector in the linked list
   // actually precedes this one in the resulting string
   if (mNext) {
-    mNext->ToString(aString, aSheet, IsPseudoElement(mTag), PR_FALSE);
+    mNext->ToStringInternal(aString, aSheet, IsPseudoElement(mTag), 0);
     if (!aIsNegated && !IsPseudoElement(mTag)) {
       // don't add a leading whitespace if we have a pseudo-element
       // or a negated simple selector
@@ -685,7 +693,7 @@ nsresult nsCSSSelector::ToString( nsAString& aString, nsICSSStyleSheet* aSheet, 
 
   if (mNegations) {
     // chain all the negated selectors
-    mNegations->ToString(aString, aSheet, PR_FALSE, aNegatedIndex + 1);
+    mNegations->ToStringInternal(aString, aSheet, PR_FALSE, aNegatedIndex + 1);
   }
 
   // Append the operator only if the selector is not negated and is not
@@ -694,9 +702,82 @@ nsresult nsCSSSelector::ToString( nsAString& aString, nsICSSStyleSheet* aSheet, 
     aString.Append(PRUnichar(' '));
     aString.Append(mOperator);
   }
-  return NS_OK;
 }
 
+// -- nsCSSSelectorList -------------------------------
+
+MOZ_DECL_CTOR_COUNTER(nsCSSSelectorList)
+
+nsCSSSelectorList::nsCSSSelectorList(void)
+  : mSelectors(nsnull),
+    mNext(nsnull)
+{
+  MOZ_COUNT_CTOR(nsCSSSelectorList);
+}
+
+nsCSSSelectorList::~nsCSSSelectorList()
+{
+  MOZ_COUNT_DTOR(nsCSSSelectorList);
+  nsCSSSelector*  sel = mSelectors;
+  while (sel) {
+    nsCSSSelector* dead = sel;
+    sel = sel->mNext;
+    delete dead;
+  }
+  if (mNext) {
+    delete mNext;
+  }
+}
+
+void nsCSSSelectorList::AddSelector(const nsCSSSelector& aSelector)
+{ // prepend to list
+  nsCSSSelector* newSel = new nsCSSSelector(aSelector);
+  if (newSel) {
+    newSel->mNext = mSelectors;
+    mSelectors = newSel;
+  }
+}
+
+void
+nsCSSSelectorList::ToString(nsAString& aResult, nsICSSStyleSheet* aSheet)
+{
+  nsCSSSelectorList *p = this;
+  for (;;) {
+    p->mSelectors->ToString(aResult, aSheet);
+    p = p->mNext;
+    if (!p)
+      break;
+    aResult.Append(NS_LITERAL_STRING(", "));
+  }
+}
+
+nsCSSSelectorList*
+nsCSSSelectorList::Clone()
+{
+  nsCSSSelectorList *list = nsnull;
+  nsCSSSelectorList **list_cur = &list;
+  for (nsCSSSelectorList *l = this; l; l = l->mNext) {
+    nsCSSSelectorList *lcopy = new nsCSSSelectorList();
+    if (!lcopy) {
+      delete list;
+      return nsnull;
+    }
+    *list_cur = lcopy;
+    list_cur = &lcopy->mNext;
+
+    nsCSSSelector **sel_cur = &lcopy->mSelectors;
+    for (nsCSSSelector *s = l->mSelectors; s; s = s->mNext) {
+      nsCSSSelector *scopy = new nsCSSSelector(*s);
+      if (!scopy) {
+        delete list;
+        return nsnull;
+      }
+      *sel_cur = scopy;
+      sel_cur = &scopy->mNext;
+    }
+  }
+  return list;
+}
 
 // -- CSSImportantRule -------------------------------
 
@@ -1046,25 +1127,18 @@ class CSSStyleRuleImpl : public nsCSSRule,
                          public nsIDOMCSSStyleRule
 {
 public:
-  CSSStyleRuleImpl(const nsCSSSelector& aSelector);
+  CSSStyleRuleImpl(nsCSSSelectorList* aSelector);
   CSSStyleRuleImpl(const CSSStyleRuleImpl& aCopy); 
 
   NS_DECL_ISUPPORTS_INHERITED
 
-  virtual nsCSSSelector* FirstSelector(void);
-  virtual void AddSelector(const nsCSSSelector& aSelector);
-  virtual void DeleteSelector(nsCSSSelector* aSelector);
-  virtual void SetSourceSelectorText(const nsString& aSelectorText);
-  virtual void GetSourceSelectorText(nsString& aSelectorText) const;
+  virtual nsCSSSelectorList* Selector(void);
 
   virtual PRUint32 GetLineNumber(void) const;
   virtual void SetLineNumber(PRUint32 aLineNumber);
 
   virtual nsCSSDeclaration* GetDeclaration(void) const;
   virtual void SetDeclaration(nsCSSDeclaration* aDeclaration);
-
-  virtual PRInt32 GetWeight(void) const;
-  virtual void SetWeight(PRInt32 aWeight);
 
   virtual already_AddRefed<nsIStyleRule> GetImportantRule(void);
 
@@ -1100,39 +1174,28 @@ protected:
   virtual ~CSSStyleRuleImpl(void);
 
 protected:
-  nsCSSSelector           mSelector;
-  nsCSSDeclaration*      mDeclaration;
-  PRInt32                 mWeight;
+  nsCSSSelectorList*      mSelector; // null for style attribute
+  nsCSSDeclaration*       mDeclaration;
   CSSImportantRule*       mImportantRule;
   DOMCSSDeclarationImpl*  mDOMDeclaration;                          
   PRUint32                mLineNumber;
 };
 
-CSSStyleRuleImpl::CSSStyleRuleImpl(const nsCSSSelector& aSelector)
+CSSStyleRuleImpl::CSSStyleRuleImpl(nsCSSSelectorList* aSelector)
   : nsCSSRule(),
     mSelector(aSelector), mDeclaration(nsnull), 
-    mWeight(0), mImportantRule(nsnull),
+    mImportantRule(nsnull),
     mDOMDeclaration(nsnull)
 {
 }
 
 CSSStyleRuleImpl::CSSStyleRuleImpl(const CSSStyleRuleImpl& aCopy)
   : nsCSSRule(aCopy),
-    mSelector(aCopy.mSelector),
+    mSelector(aCopy.mSelector ? aCopy.mSelector->Clone() : nsnull),
     mDeclaration(nsnull),
-    mWeight(aCopy.mWeight),
     mImportantRule(nsnull),
     mDOMDeclaration(nsnull)
 {
-  nsCSSSelector* copySel = aCopy.mSelector.mNext;
-  nsCSSSelector* ourSel = &mSelector;
-
-  while (copySel && ourSel) {
-    ourSel->mNext = new nsCSSSelector(*copySel);
-    ourSel = ourSel->mNext;
-    copySel = copySel->mNext;
-  }
-
   if (aCopy.mDeclaration) {
     mDeclaration = aCopy.mDeclaration->Clone();
     if (nsnull != mDeclaration) {
@@ -1145,12 +1208,9 @@ CSSStyleRuleImpl::CSSStyleRuleImpl(const CSSStyleRuleImpl& aCopy)
 
 CSSStyleRuleImpl::~CSSStyleRuleImpl(void)
 {
-  nsCSSSelector*  next = mSelector.mNext;
-
-  while (nsnull != next) {
-    nsCSSSelector*  selector = next;
-    next = selector->mNext;
-    delete selector;
+  if (mSelector) {
+    delete mSelector;
+    mSelector = nsnull;
   }
   if (nsnull != mDeclaration) {
     mDeclaration->Release();
@@ -1182,61 +1242,9 @@ NS_IMPL_ADDREF_INHERITED(CSSStyleRuleImpl, nsCSSRule);
 NS_IMPL_RELEASE_INHERITED(CSSStyleRuleImpl, nsCSSRule);
 
 
-nsCSSSelector* CSSStyleRuleImpl::FirstSelector(void)
+nsCSSSelectorList* CSSStyleRuleImpl::Selector(void)
 {
-  return &mSelector;
-}
-
-void CSSStyleRuleImpl::AddSelector(const nsCSSSelector& aSelector)
-{
-  nsCSSSelector*  selector = new nsCSSSelector(aSelector);
-  nsCSSSelector*  last = &mSelector;
-
-  while (nsnull != last->mNext) {
-    last = last->mNext;
-  }
-  last->mNext = selector;
-}
-
-
-void CSSStyleRuleImpl::DeleteSelector(nsCSSSelector* aSelector)
-{
-  if (nsnull != aSelector) {
-    if (&mSelector == aSelector) {  // handle first selector
-      if (nsnull != mSelector.mNext) {
-        nsCSSSelector* nextOne = mSelector.mNext;
-        mSelector = *nextOne; // assign values
-        mSelector.mNext = nextOne->mNext;
-        delete nextOne;
-      }
-      else {
-        mSelector.Reset();
-      }
-    }
-    else {
-      nsCSSSelector*  selector = &mSelector;
-
-      while (nsnull != selector->mNext) {
-        if (aSelector == selector->mNext) {
-          selector->mNext = aSelector->mNext;
-          delete aSelector;
-          return;
-        }
-        selector = selector->mNext;
-      }
-    }
-  }
-}
-
-void CSSStyleRuleImpl::SetSourceSelectorText(const nsString& aSelectorText)
-{
-    /* no need for set, since get recreates the string */
-}
-
-void CSSStyleRuleImpl::GetSourceSelectorText(nsString& aSelectorText) const
-{
-  mSelector.ToString( aSelectorText, mSheet, IsPseudoElement(mSelector.mTag),
-                      0 );
+  return mSelector;
 }
 
 PRUint32 CSSStyleRuleImpl::GetLineNumber(void) const
@@ -1265,16 +1273,6 @@ void CSSStyleRuleImpl::SetDeclaration(nsCSSDeclaration* aDeclaration)
     mDeclaration = aDeclaration;
     mDeclaration->AddRef();
   }
-}
-
-PRInt32 CSSStyleRuleImpl::GetWeight(void) const
-{
-  return mWeight;
-}
-
-void CSSStyleRuleImpl::SetWeight(PRInt32 aWeight)
-{
-  mWeight = aWeight;
 }
 
 already_AddRefed<nsIStyleRule> CSSStyleRuleImpl::GetImportantRule(void)
@@ -1349,10 +1347,9 @@ CSSStyleRuleImpl::List(FILE* out, PRInt32 aIndent) const
   for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
 
   nsAutoString buffer;
-  mSelector.ToString(buffer, mSheet, PR_FALSE, 0);
+  if (mSelector)
+    mSelector->ToString(buffer, mSheet);
 
-  buffer.Append(NS_LITERAL_STRING(" weight: "));
-  buffer.AppendInt(mWeight, 10);
   buffer.Append(NS_LITERAL_STRING(" "));
   fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
   if (nsnull != mDeclaration) {
@@ -1378,9 +1375,10 @@ CSSStyleRuleImpl::GetType(PRUint16* aType)
 NS_IMETHODIMP    
 CSSStyleRuleImpl::GetCssText(nsAString& aCssText)
 {
-  mSelector.ToString( aCssText, mSheet, IsPseudoElement(mSelector.mTag),
-                      0 );
-  aCssText.Append(PRUnichar(' '));
+  if (mSelector) {
+    mSelector->ToString(aCssText, mSheet);
+    aCssText.Append(PRUnichar(' '));
+  }
   aCssText.Append(PRUnichar('{'));
   aCssText.Append(PRUnichar(' '));
   if (mDeclaration)
@@ -1424,7 +1422,10 @@ CSSStyleRuleImpl::GetParentRule(nsIDOMCSSRule** aParentRule)
 NS_IMETHODIMP    
 CSSStyleRuleImpl::GetSelectorText(nsAString& aSelectorText)
 {
-  mSelector.ToString( aSelectorText, mSheet, IsPseudoElement(mSelector.mTag), 0 );
+  if (mSelector)
+    mSelector->ToString(aSelectorText, mSheet);
+  else
+    aSelectorText.Truncate();
   return NS_OK;
 }
 
@@ -1456,7 +1457,7 @@ CSSStyleRuleImpl::GetStyle(nsIDOMCSSStyleDeclaration** aStyle)
 
 nsresult
 NS_NewCSSStyleRule(nsICSSStyleRule** aInstancePtrResult,
-                   const nsCSSSelector& aSelector)
+                   nsCSSSelectorList* aSelector)
 {
   if (aInstancePtrResult == nsnull) {
     return NS_ERROR_NULL_POINTER;
