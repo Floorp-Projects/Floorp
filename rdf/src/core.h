@@ -24,7 +24,7 @@
 #include "prprf.h"
 #include "prtime.h"
 #include <string.h>
-
+#include "bmk2rdf.h"
 
 /* mcf.c data structures and defines */
 

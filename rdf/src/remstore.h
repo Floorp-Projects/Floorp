@@ -21,7 +21,7 @@
 
 
 #include "rdf-int.h"
-
+#include "utils.h"
 #include "prtime.h"
 
 

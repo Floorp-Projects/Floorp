@@ -45,8 +45,7 @@
 
 
 #include "bmk2rdf.h"
-#include "utils.h"
-#include "time.h"
+
 #ifdef MOZILLA_CLIENT
 
 	/* extern declarations */

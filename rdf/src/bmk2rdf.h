@@ -23,6 +23,9 @@
 #include "rdf.h"
 #include "rdf-int.h"
 #include "vocab.h"
+#include "utils.h"
+#include "glue.h"
+#include "time.h"
 #include "stdio.h"
 #include "ctype.h"
 
@@ -66,6 +69,7 @@ void			newLeafBkItem (RDFFile f, char* token);
 char *			numericDate(char *url);
 void			HT_WriteOutAsBookmarks1 (RDF rdf, PRFileDesc *fp, RDF_Resource u, RDF_Resource top, int indent);
 void			flushBookmarks();
+RDFT			MakeBMKStore (char* url);
 
 
 
