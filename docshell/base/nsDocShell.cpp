@@ -5507,7 +5507,7 @@ nsDocShell::AddToSessionHistory(nsIURI * aURI,
      * HistoryLayoutState. By default, SH will set this
      * flag to PR_TRUE and save HistoryLayoutState.
      */    
-    if (PL_strcasestr(val, "no-store")) {
+    if (val && (PL_strcasestr(val, "no-store") || PL_strcasestr(val, "no-cache"))) {
         entry->SetSaveLayoutStateFlag(PR_FALSE);
     }
     if (cacheToken) {
