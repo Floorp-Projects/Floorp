@@ -212,7 +212,8 @@ sub load_buildlog {
       chomp;
       ($mailtime, $buildtime, $buildname,
        $errorparser, $buildstatus, $logfile, $binaryname) = split /\|/;
-
+      
+      $buildtime -= $buildtime % 60; # Round to minute
       # Ignore stuff in the future.
       next if $buildtime > $maxdate;
 
