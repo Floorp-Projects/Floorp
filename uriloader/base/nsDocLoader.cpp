@@ -94,17 +94,26 @@ static NS_DEFINE_IID(kIDocumentIID,                NS_IDOCUMENT_IID);
 static NS_DEFINE_IID(kIContentViewerContainerIID,  NS_ICONTENTVIEWERCONTAINER_IID);
 
 
-struct nsRequestInfo {
-  nsRequestInfo(nsIRequest *key) : mKey(key),
-                                   mCurrentProgress(0),
-                                   mMaxProgress(0)
+struct nsRequestInfo : public PLDHashEntryHdr
+{
+  nsRequestInfo(const void *key)
+    : mKey(key), mCurrentProgress(0), mMaxProgress(0)
   {
   }
 
-  void* mKey;
+  const void* mKey; // Must be first for the pldhash stubs to work
   PRInt32 mCurrentProgress;
   PRInt32 mMaxProgress;
 };
+
+
+PR_STATIC_CALLBACK(void)
+RequestInfoHashInitEntry(PLDHashTable *table, PLDHashEntryHdr *entry,
+                         const void *key)
+{
+  // Initialize the entry with placement new
+  new (entry) nsRequestInfo(key);
+}
 
 
 struct nsListenerInfo {
@@ -123,7 +132,7 @@ struct nsListenerInfo {
 
 
 nsDocLoaderImpl::nsDocLoaderImpl()
-                : mListenerInfoList(8)
+  : mListenerInfoList(8)
 {
   NS_INIT_REFCNT();
 
@@ -137,6 +146,25 @@ nsDocLoaderImpl::nsDocLoaderImpl()
   mParent    = nsnull;
 
   mIsLoadingDocument = PR_FALSE;
+
+  static PLDHashTableOps hash_table_ops =
+  {
+    PL_DHashAllocTable,
+    PL_DHashFreeTable,
+    PL_DHashGetKeyStub,
+    PL_DHashVoidPtrKeyStub,
+    PL_DHashMatchEntryStub,
+    PL_DHashMoveEntryStub,
+    PL_DHashClearEntryStub,
+    PL_DHashFinalizeStub,
+    RequestInfoHashInitEntry
+  };
+
+  if (!PL_DHashTableInit(&mRequestInfoHash, &hash_table_ops, nsnull,
+                         sizeof(nsRequestInfo), 16)) {
+    mRequestInfoHash.ops = nsnull;
+  }
+
   ClearInternalProgress();
 
   PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
@@ -153,15 +181,17 @@ nsDocLoaderImpl::SetDocLoaderParent(nsDocLoaderImpl *aParent)
 nsresult
 nsDocLoaderImpl::Init()
 {
-    nsresult rv;
+  if (!mRequestInfoHash.ops) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
-    rv = NS_NewLoadGroup(getter_AddRefs(mLoadGroup), this);
-    if (NS_FAILED(rv)) return rv;
+  nsresult rv = NS_NewLoadGroup(getter_AddRefs(mLoadGroup), this);
+  if (NS_FAILED(rv)) return rv;
 
-    PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
-           ("DocLoader:%p: load group %x.\n", this, mLoadGroup.get()));
+  PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
+         ("DocLoader:%p: load group %x.\n", this, mLoadGroup.get()));
 
-    return NS_NewISupportsArray(getter_AddRefs(mChildList));
+  return NS_NewISupportsArray(getter_AddRefs(mChildList));
 }
 
 NS_IMETHODIMP nsDocLoaderImpl::ClearParentDocLoader()
@@ -185,25 +215,30 @@ nsDocLoaderImpl::~nsDocLoaderImpl()
 
   Destroy();
 
-  PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
+  PR_LOG(gDocLoaderLog, PR_LOG_DEBUG,
          ("DocLoader:%p: deleted.\n", this));
 
   PRUint32 count=0;
   mChildList->Count(&count);
-  // if the doc loader still has children...we need to enumerate the children and make
-  // them null out their back ptr to the parent doc loader
-  if (count > 0) 
+  // if the doc loader still has children...we need to enumerate the
+  // children and make them null out their back ptr to the parent doc
+  // loader
+  if (count > 0)
   {
-    for (PRUint32 i=0; i<count; i++) 
+    for (PRUint32 i=0; i<count; i++)
     {
       nsCOMPtr<nsIDocumentLoader> loader;
       loader = getter_AddRefs(NS_STATIC_CAST(nsIDocumentLoader*, mChildList->ElementAt(i)));
 
-      if (loader) 
+      if (loader)
         loader->ClearParentDocLoader();
-    }    
+    }
     mChildList->Clear();
-  } 
+  }
+
+  if (mRequestInfoHash.ops) {
+    PL_DHashTableFinish(&mRequestInfoHash);
+  }
 }
 
 
@@ -424,15 +459,16 @@ nsDocLoaderImpl::Destroy()
   }
 
   // Release all the information about network requests...
-  ClearRequestInfoList();
+  ClearRequestInfoHash();
 
   // Release all the information about registered listeners...
-  nsListenerInfo *info;
   PRInt32 i, count;
 
   count = mListenerInfoList.Count();
   for(i=0; i<count; i++) {
-    info = NS_STATIC_CAST(nsListenerInfo*,mListenerInfoList.ElementAt(i));
+    nsListenerInfo *info =
+      NS_STATIC_CAST(nsListenerInfo*, mListenerInfoList.ElementAt(i));
+
     delete info;
   }
 
@@ -518,7 +554,7 @@ nsDocLoaderImpl::OnStartRequest(nsIRequest *request, nsISupports *aCtxt)
   }
   else {
     // The DocLoader is not busy, so clear out any cached information...
-    ClearRequestInfoList();
+    ClearRequestInfoHash();
   }
 
   NS_ASSERTION(!mIsLoadingDocument || mDocumentRequest,
@@ -1065,7 +1101,7 @@ NS_IMETHODIMP nsDocLoaderImpl::OnStatus(nsIRequest* aRequest, nsISupports* ctxt,
 
 void nsDocLoaderImpl::ClearInternalProgress()
 {
-  ClearRequestInfoList();
+  ClearRequestInfoHash();
 
   mCurrentSelfProgress  = mMaxSelfProgress  = 0;
   mCurrentTotalProgress = mMaxTotalProgress = 0;
@@ -1139,7 +1175,6 @@ void nsDocLoaderImpl::FireOnProgressChange(nsDocLoaderImpl *aLoadInitiator,
                                   aTotalProgress, aMaxTotalProgress);
   }
 }
-
 
 
 void nsDocLoaderImpl::FireOnStateChange(nsIWebProgress *aProgress,
@@ -1292,7 +1327,6 @@ nsDocLoaderImpl::FireOnStatusChange(nsIWebProgress* aWebProgress,
     mParent->FireOnStatusChange(aWebProgress, aRequest, aStatus, aMessage);
   }
 
-
   return NS_OK;
 }
 
@@ -1316,74 +1350,75 @@ nsDocLoaderImpl::GetListenerInfo(nsIWeakReference *aListener)
 
 nsresult nsDocLoaderImpl::AddRequestInfo(nsIRequest *aRequest)
 {
-  nsresult rv;
-  nsRequestInfo *info;
-
-  info = new nsRequestInfo(aRequest);
-  if (info) {
-    // XXX this method incorrectly returns a bool    
-    rv = mRequestInfoList.AppendElement(info) ? NS_OK : NS_ERROR_FAILURE;
-  } else {
-    rv = NS_ERROR_OUT_OF_MEMORY;
+  if (!PL_DHashTableOperate(&mRequestInfoHash, aRequest, PL_DHASH_ADD)) {
+    return NS_ERROR_OUT_OF_MEMORY;
   }
-  return rv;
-}
-
-nsRequestInfo * nsDocLoaderImpl::GetRequestInfo(nsIRequest *aRequest)
-{
-  nsRequestInfo *info;
-  PRInt32 i, count;
-
-  count = mRequestInfoList.Count();
-  for(i=0; i<count; i++) {
-    info = NS_STATIC_CAST(nsRequestInfo*, mRequestInfoList.ElementAt(i));
-    if (aRequest == info->mKey) {
-      return info;
-    }
-  }
-
-  return nsnull;
-}
-
-nsresult nsDocLoaderImpl::ClearRequestInfoList(void)
-{
-  nsRequestInfo *info;
-  PRInt32 i, count;
-
-  count = mRequestInfoList.Count();
-  for(i=0; i<count; i++) {
-    info = NS_STATIC_CAST(nsRequestInfo*, mRequestInfoList.ElementAt(i));
-    delete info;
-  }
-
-  mRequestInfoList.Clear();
-  mRequestInfoList.Compact();
 
   return NS_OK;
 }
 
-void nsDocLoaderImpl::CalculateMaxProgress(PRInt32 *aMax)
+nsRequestInfo * nsDocLoaderImpl::GetRequestInfo(nsIRequest *aRequest)
 {
-  PRInt32 i, count;
-  PRInt32 current=0, max=0;
+  nsRequestInfo *info =
+    NS_STATIC_CAST(nsRequestInfo *,
+                   PL_DHashTableOperate(&mRequestInfoHash, aRequest,
+                                        PL_DHASH_LOOKUP));
 
-  count = mRequestInfoList.Count();
-  for(i=0; i<count; i++) {
-    nsRequestInfo *info;
-  
-    info = NS_STATIC_CAST(nsRequestInfo*, mRequestInfoList.ElementAt(i));
+  if (PL_DHASH_ENTRY_IS_FREE(info)) {
+    // Nothing found in the hash, return null.
 
-    current += info->mCurrentProgress;
-    if (max >= 0) {
-      if (info->mMaxProgress < info->mCurrentProgress) {
-        max = -1;
-      } else {
-        max += info->mMaxProgress;
-      }
-    }
+    return nsnull;
   }
 
-  *aMax = max;
+  // Return what we found in the hash...
+
+  return info;
+}
+
+// PLDHashTable enumeration callback that just removes every entry
+// from the hash.
+PR_STATIC_CALLBACK(PLDHashOperator)
+RemoveInfoCallback(PLDHashTable *table, PLDHashEntryHdr *hdr, PRUint32 number,
+                   void *arg)
+{
+  return PL_DHASH_REMOVE;
+}
+
+void nsDocLoaderImpl::ClearRequestInfoHash(void)
+{
+  if (!mRequestInfoHash.ops || !mRequestInfoHash.entryCount) {
+    // No hash, or the hash is empty, nothing to do here then...
+
+    return;
+  }
+
+  PL_DHashTableEnumerate(&mRequestInfoHash, RemoveInfoCallback, nsnull);
+}
+
+// PLDHashTable enumeration callback that calculates the max progress.
+PR_STATIC_CALLBACK(PLDHashOperator)
+CalcMaxProgressCallback(PLDHashTable *table, PLDHashEntryHdr *hdr,
+                        PRUint32 number, void *arg)
+{
+  const nsRequestInfo *info = NS_STATIC_CAST(const nsRequestInfo *, hdr);
+  PRInt32 *max = NS_STATIC_CAST(PRInt32 *, arg);
+
+  if (info->mMaxProgress < info->mCurrentProgress) {
+    *max = -1;
+
+    return PL_DHASH_STOP;
+  }
+
+  *max += info->mMaxProgress;
+
+  return PL_DHASH_NEXT;
+}
+
+void nsDocLoaderImpl::CalculateMaxProgress(PRInt32 *aMax)
+{
+  *aMax = 0;
+
+  PL_DHashTableEnumerate(&mRequestInfoHash, CalcMaxProgressCallback, aMax);
 }
 
 NS_IMETHODIMP nsDocLoaderImpl::OnRedirect(nsIHttpChannel *aOldChannel, nsIChannel *aNewChannel)
