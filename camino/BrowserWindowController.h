@@ -86,7 +86,7 @@ class nsIDOMNode;
   IBOutlet NSTabView*         mSidebarTabView;
   IBOutlet NSTabView*         mSidebarSourceTabView;
   IBOutlet NSView*            mLocationToolbarView;
-  IBOutlet NSTextField*       mURLBar;
+  IBOutlet NSTextView*        mURLBar;
   IBOutlet NSTextField*       mStatus;
   IBOutlet NSProgressIndicator* mProgress;
   IBOutlet NSImageView*       mLock;
@@ -166,7 +166,6 @@ class nsIDOMNode;
 
 - (void)performAppropriateLocationAction;
 - (IBAction)goToLocationFromToolbarURLField:(id)sender;
-- (void)focusURLBar;
 - (void)beginLocationSheet;
 - (IBAction)endLocationSheet:(id)sender;
 - (IBAction)cancelLocationSheet:(id)sender;
@@ -174,6 +173,8 @@ class nsIDOMNode;
 - (IBAction)cancelAddBookmarkSheet:(id)sender;
 - (IBAction)endAddBookmarkSheet:(id)sender;
 - (void)cacheBookmarkDS: (id)aDS;
+
+- (NSSize)windowWillResize:(NSWindow *)sender toSize:(NSSize)proposedFrameSize;
 
 - (IBAction)viewSource:(id)aSender;
 

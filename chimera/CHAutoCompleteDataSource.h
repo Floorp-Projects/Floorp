@@ -25,11 +25,10 @@
 #import "CHAutoCompleteTextField.h"
 #include "nsIAutoCompleteResults.h"
 
-@class CHAutoCompleteTextField;
+@class CHAutoCompleteTextView;
 
 @interface CHAutoCompleteDataSource : NSObject
 {
-  CHAutoCompleteTextField *mTextField;
   NSImage *mIconImage;
   
   NSString* mErrorMessage;

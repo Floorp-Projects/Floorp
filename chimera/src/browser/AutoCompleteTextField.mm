@@ -19,6 +19,7 @@
 *
 * Contributor(s):
 *   Joe Hewitt <hewitt@netscape.com> (Original Author)
+*   David Haas <haas@cae.wisc.edu> 
 */
 
 #import "CHAutoCompleteTextField.h"
@@ -31,14 +32,15 @@
 
 static const int kMaxRows = 6;
 static const int kFrameMargin = 1;
+static const int kEscapeKeyCode = 53;
 
 class AutoCompleteListener : public nsIAutoCompleteListener
 {  
 public:
-  AutoCompleteListener(CHAutoCompleteTextField* aTextField)
+  AutoCompleteListener(CHAutoCompleteTextView* aTextView)
   {
     NS_INIT_REFCNT();
-    mTextField = aTextField;
+    mTextView = aTextView;
   }
   
   NS_DECL_ISUPPORTS
@@ -49,22 +51,30 @@ public:
 
   NS_IMETHODIMP OnAutoComplete(nsIAutoCompleteResults *aResults, AutoCompleteStatus aStatus)
   {
-    [mTextField dataReady:aResults status:aStatus];
+    [mTextView dataReady:aResults status:aStatus];
     return NS_OK;
   }
 
 private:
-  CHAutoCompleteTextField *mTextField;
+  CHAutoCompleteTextView *mTextView;
 };
 
 NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
 
 ////////////////////////////////////////////////////////////////////////
 
-@implementation CHAutoCompleteTextField
+@implementation CHAutoCompleteTextView
 
 - (void) awakeFromNib
 {
+  [self setAllowsUndo:YES];
+  [self setFieldEditor:YES];
+  [self setFont:[NSFont controlContentFontOfSize:0]];
+  [self setUsesFontPanel:NO];
+  [self setRichText:NO];
+  [self setVerticallyResizable:NO];
+  [self setBackgroundColor:[NSColor colorWithCalibratedWhite: 0.98 alpha: 1.0]];
+  
   NSTableColumn *column;
   NSScrollView *scrollView;
   NSCell *dataCell;
@@ -292,9 +302,8 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
   }
 
   // get the origin of the location bar in coordinates of the root view
-  locationFrame = [[self superview] frame];
-  locationOrigin = [[[self superview] superview] convertPoint:locationFrame.origin
-                                                toView:[[[self window] contentView] superview]];
+  locationFrame = [[[[self superview] superview] superview] frame];
+  locationOrigin = [[[[[self superview] superview] superview] superview] convertPoint:locationFrame.origin toView:[[[self window] contentView] superview]];
 
   // get the height of the table view
   winFrame = [[self window] frame];
@@ -343,11 +352,10 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
 - (void) completeResult:(int)aRow
 {
   NSRange matchRange;
-  NSText *text;
   NSString *result1;
 
   if (aRow < 0 && mSearchString) {
-    [self setStringValue:mSearchString];
+    [self setString:mSearchString];
   } else {
     if ([mDataSource rowCount] <= 0)
       return;
@@ -360,11 +368,10 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
       
 #if 1
       // fill in the textfield with the matching string
-      [self setStringValue:result1];
+      [self setString:result1];
       
       // select the text after the search string
-      text = [[self window] fieldEditor:NO forObject:self];
-      [text setSelectedRange:NSMakeRange([mSearchString length], [result1 length]-[mSearchString length])];
+      [self setSelectedRange:NSMakeRange([mSearchString length], [result1 length]-[mSearchString length])];
 #endif
     }
   }
@@ -373,8 +380,8 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
 - (void) enterResult:(int)aRow
 {
   if (aRow >= 0 && [mDataSource rowCount] > 0) {
-    [self setStringValue: [mDataSource resultString:[mTableView selectedRow] column:@"col1"]];
-    [self selectText:self];
+    [self setString: [mDataSource resultString:[mTableView selectedRow] column:@"col1"]];
+    [self selectAll:self];
     [self closePopup];
   } else if (mOpenTimer) {
     // if there was a search timer going when we hit enter, cancel it
@@ -390,9 +397,9 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
   NSString *url = [[controller getBrowserWrapper] getCurrentURLSpec];
   if (url) {
     [self clearResults];
-    
-    [self setStringValue:url];
-    [self selectText:self];
+    [[self undoManager] removeAllActions];
+    [self setString:url];
+    [self selectAll:self];
   }
 }
 
@@ -445,7 +452,7 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
 - (void) onRowClicked:(id)sender
 {
   [self enterResult:[mTableView clickedRow]];
-  [self sendAction:[self action] to:[self target]];
+  [[[self window] windowController] goToLocationFromToolbarURLField:self];
 }
 
 - (void) onBlur:(id)sender
@@ -460,26 +467,29 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
 
 // NSTextField delegate //////////////////////////////////
 
-- (void)controlTextDidChange:(NSNotification *)aNotification
+- (void)textDidChange:(NSNotification *)aNotification
 {
-  NSText *text = [[self window] fieldEditor:NO forObject:self];
-  NSRange range = [text selectedRange];
+  NSRange range = [self selectedRange];
   
   // make sure we're typing at the end of the string
-  if (range.location == [[self stringValue] length])
-    [self startSearch:[self stringValue] complete:!mBackspaced];
+  if (range.location == [[self string] length])
+    [self startSearch:[self string] complete:!mBackspaced];
   else
     [self clearResults];
   
   mBackspaced = NO;
 }
 
-- (void)controlTextDidEndEditing:(NSNotification *)aNotification
+- (void)textDidEndEditing:(NSNotification *)aNotification
 {
   [self closePopup];
+  [self setSelectedRange:NSMakeRange(0,0)];
+  [[self undoManager] removeAllActions];
+  if ([[[aNotification userInfo] objectForKey:@"NSTextMovement"] intValue] == NSReturnTextMovement)
+    [[[self window] windowController] goToLocationFromToolbarURLField:self];
 }
 
-- (BOOL)control:(NSControl *)control textView:(NSTextView *)textView doCommandBySelector:(SEL)command
+- (BOOL)textView:(NSTextView *)textView doCommandBySelector:(SEL)command
 {
   if (command == @selector(insertNewline:)) {
     [self enterResult:[mTableView selectedRow]];
@@ -513,11 +523,24 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
              command == @selector(deleteForward:)) {
     // if the user deletes characters, we need to know so that
     // we can prevent autocompletion later when search results come in
-    if ([[self stringValue] length] > 1)
+    if ([[self string] length] > 1)
       mBackspaced = YES;
   }
   
   return NO;
+}
+
+- (void)keyDown:(NSEvent *)theEvent
+{
+  if ([theEvent keyCode] == kEscapeKeyCode)
+    [self revertText];
+  else 
+    [super keyDown:theEvent];  
+}
+
+- (void) setPageProxyIcon:(NSImage *)aImage
+{
+  [mProxyIcon setImage:aImage];
 }
 
 @end

@@ -271,9 +271,7 @@ static NSArray* sToolbarDefaults = nil;
       // worry about retaining and releasing it.
       [mProgress retain];
     }
-    
-  [[mURLBar cell] setImage: [NSImage imageNamed:@"smallbookmark"]];
-  
+
     // Get our saved dimensions.
     [[self window] setFrameUsingName: @"NavigatorWindow"];
     
@@ -321,11 +319,18 @@ static NSArray* sToolbarDefaults = nil;
       [mPersonalToolbar removeFromSuperview];
       [mTabBrowser setFrame:NSMakeRect([mTabBrowser frame].origin.x, [mTabBrowser frame].origin.y,
                                [mTabBrowser frame].size.width, [mTabBrowser frame].size.height + height)];
-      mPersonalToolbar = nil;
+      mPersonalToolbar = nil;      
     }
     else if (![self shouldShowBookmarkToolbar]) {
       [mPersonalToolbar showBookmarksToolbar:NO];
     }
+}
+
+- (NSSize)windowWillResize:(NSWindow *)sender toSize:(NSSize)proposedFrameSize
+{
+	//if ( mChromeMask && !(mChromeMask & nsIWebBrowserChrome::CHROME_WINDOW_RESIZE) )
+  //  return [[self window] frame].size;
+	return proposedFrameSize;
 }
 
 - (void)drawerWillOpen: (NSNotification*)aNotification
@@ -631,7 +636,8 @@ static NSArray* sToolbarDefaults = nil;
 
 - (void)focusURLBar
 {
-    [mURLBar selectText: self];
+  [[self window] makeFirstResponder:mURLBar];
+	[mURLBar selectAll: self];
 }
 
 - (void)beginLocationSheet
@@ -702,7 +708,7 @@ static NSArray* sToolbarDefaults = nil;
 - (IBAction)goToLocationFromToolbarURLField:(id)sender
 {
   // trim off any whitespace around url
-  NSMutableString *theURL = [[NSMutableString alloc] initWithString:[sender stringValue]];
+  NSMutableString *theURL = [[NSMutableString alloc] initWithString:[sender string]];
   CFStringTrimWhitespace((CFMutableStringRef)theURL);
   [self loadURL:theURL referrer:nil];
   [theURL release];
@@ -753,7 +759,7 @@ static NSArray* sToolbarDefaults = nil;
   // Get the users preferred search engine from IC
   if (!searchEngine || [searchEngine isEqualToString:@"SearchPageDefault"]) {
     searchEngine = [[CHPreferenceManager sharedInstance] getICStringPref:kICWebSearchPagePrefs];
-      if (!searchEngine || ([searchEngine cStringLength] == 0))
+      if (!searchEngine || ([searchEngine length] == 0))
         searchEngine = @"http://dmoz.org/";
   }
 
@@ -932,11 +938,13 @@ static NSArray* sToolbarDefaults = nil;
     }
 */
 
-    [mURLBar setStringValue:locationString];
+    [mURLBar setString:locationString];
     [mLocationSheetURLField setStringValue:locationString];
 
-    [[self window] update];
-    [[self window] display];
+    // don't call [window display] here, no matter how much you might want
+    // to, because it forces a redraw of every view in the window and with a lot
+    // of tabs, it's dog slow.
+    // [[self window] display];
 }
 
 -(void)newTab:(BOOL)allowHomepage

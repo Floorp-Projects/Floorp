@@ -29,7 +29,7 @@
 
 @class CHAutoCompleteDataSource, CHPageProxyIcon;
 
-@interface CHAutoCompleteTextField : NSTextField
+@interface CHAutoCompleteTextView : NSTextView
 {
   IBOutlet CHPageProxyIcon *mProxyIcon;
   NSWindow *mPopupWin;
@@ -56,6 +56,7 @@
 
 - (void) setSession:(NSString *)aSession;
 - (NSString *) session;
+- (void) setPageProxyIcon:(NSImage *)aImage;
 
 - (NSTableView *) tableView;
 - (int) visibleRows;

@@ -206,8 +206,8 @@
     isGroup = YES;
   }
   
-  const char* titleC = [[[mBrowserWindowController getAddBookmarkTitle] stringValue] cString];
-  nsAutoString title; title.AssignWithConversion(titleC);
+  nsAutoString title;
+  NSStringTo_nsString([[mBrowserWindowController getAddBookmarkTitle] stringValue], title);
 
   nsAutoString tagName;
   if (mCachedHref)
@@ -224,7 +224,8 @@
   elt->SetAttribute(NS_LITERAL_STRING("name"), title);
 
   if (mCachedHref) {
-    nsAutoString href; href.AssignWithConversion([mCachedHref cString]);
+    nsAutoString href;
+    NSStringTo_nsString(mCachedHref, href);
     [mCachedHref release];
     elt->SetAttribute(NS_LITERAL_STRING("href"), href);
   }

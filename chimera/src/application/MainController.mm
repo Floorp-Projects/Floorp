@@ -360,6 +360,12 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 -(BrowserWindowController*)openBrowserWindowWithURL: (NSString*)aURL andReferrer: (NSString*)aReferrer
 {
 	BrowserWindowController* browser = [[BrowserWindowController alloc] initWithWindowNibName: @"BrowserWindow"];
+
+  // The process of creating a new tab in this brand new window loads about:blank for us as a 
+  // side effect of calling GetDocument(). We don't need to do it again.
+  if ( [aURL isEqualToString:@"about:blank"] )
+    [browser disableLoadPage];
+
   [browser loadURL: aURL referrer:aReferrer];
   [browser showWindow: self];
   return browser;
@@ -675,20 +681,20 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 
 -(IBAction) toggleBookmarksToolbar:(id)aSender
 {
-  NSWindow* mainWindow = [mApplication mainWindow];
-  if (!mainWindow) {
-    [self openBrowserWindowWithURL: @"about:blank" andReferrer:nil];
-    mainWindow = [mApplication mainWindow];
+  // do nothing if there is no window. we shouldn't get here in that case anyway, but
+  // just to be safe. If there is a browser window, toggle it's personal toolbar.
+  if ( [self isMainWindowABrowserWindow] ) {
+    NSWindow* mainWindow = [mApplication mainWindow];
+
+    float height = [[[mainWindow windowController] bookmarksToolbar] frame].size.height;
+    BOOL showToolbar = (BOOL)(!(height > 0));
+  
+    [[[mainWindow windowController] bookmarksToolbar] showBookmarksToolbar: showToolbar];
+  
+    // save prefs here
+    NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
+    [defaults setInteger: ((showToolbar) ? 0 : 1) forKey: USER_DEFAULTS_HIDE_PERS_TOOLBAR_KEY];
   }
-
-  float height = [[[mainWindow windowController] bookmarksToolbar] frame].size.height;
-  BOOL showToolbar = (BOOL)(!(height > 0));
-
-  [[[mainWindow windowController] bookmarksToolbar] showBookmarksToolbar: showToolbar];
-
-  // save prefs here
-  NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
-  [defaults setInteger: ((showToolbar) ? 0 : 1) forKey: USER_DEFAULTS_HIDE_PERS_TOOLBAR_KEY];
 }
 
 -(IBAction) infoLink:(id)aSender
