@@ -95,7 +95,7 @@ sub ChangeKarma {
                 $privateScores{lc $who} += $delta;
                 my @privateScores = %privateScores;
                 local $" = ' ';
-                $self->{'privateScores'}->{$nick} .= "@privateScores";
+                $self->{'privateScores'}->{$nick} = "@privateScores";
             }
         } elsif ($event->{'channel'} eq '') {
             $self->say($event, 'For private stats, you need to authenticate. Use the \'newuser\' and \'auth\' commands.');
