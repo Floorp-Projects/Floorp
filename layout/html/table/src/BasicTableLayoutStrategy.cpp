@@ -258,6 +258,10 @@ BasicTableLayoutStrategy::BalanceColumnWidths(nsIPresContext*          aPresCont
   maxWidth -= horOffset;
   maxWidth = PR_MAX(0, maxWidth);
 
+  // we will re-calc mCellSpacingTotal in case longer rows were added after Initialize was called
+  mCellSpacingTotal = 0;
+  nscoord spacingX = mTableFrame->GetCellSpacingX();
+
   PRInt32 numNonZeroWidthCols = 0;
   // set the table's columns to the min width
   nscoord minTableWidth = 0;
@@ -272,6 +276,12 @@ BasicTableLayoutStrategy::BalanceColumnWidths(nsIPresContext*          aPresCont
         (colFrame->GetPctWidth() > 0) || (colFrame->GetWidth(MIN_PRO) > 0)) {
       numNonZeroWidthCols++;
     }
+    if (mTableFrame->GetNumCellsOriginatingInCol(colX) > 0) {
+      mCellSpacingTotal += spacingX;
+    }
+  }
+  if (mCellSpacingTotal > 0) {
+    mCellSpacingTotal += spacingX; // add last cell spacing on right
   }
   minTableWidth += mCellSpacingTotal;
 
