@@ -3562,7 +3562,7 @@ nsHTMLEditor::GetSelectedElement(const nsString& aTagName, nsIDOMElement** aRetu
   // Empty string indicates we should match any element tag
   PRBool anyTag = (TagName.IsEmpty());
   PRBool isLinkTag = IsLink(TagName);
-  PRBool isNamedAnchorTag = IsLink(TagName);
+  PRBool isNamedAnchorTag = IsNamedAnchor(TagName);
   
   nsCOMPtr<nsIDOMElement> selectedElement;
   nsCOMPtr<nsIDOMRange> range;
@@ -3592,11 +3592,10 @@ nsHTMLEditor::GetSelectedElement(const nsString& aTagName, nsIDOMElement** aRetu
       selectedNode->GetNodeName(domTagName);
       domTagName.ToLowerCase();
 
-      // Only consider this node if requested to find a link or "any" tagname
-      if (anyTag ||
-          isLinkTag && IsLinkNode(selectedNode) ||
-          isNamedAnchorTag && IsNamedAnchorNode(selectedNode) ||
-          TagName == domTagName )
+      // Test for appropriate node type requested
+      if (anyTag || (TagName == domTagName) ||
+          (isLinkTag && IsLinkNode(selectedNode)) ||
+          (isNamedAnchorTag && IsNamedAnchorNode(selectedNode)))
       {
         bNodeFound = PR_TRUE;
         selectedElement = do_QueryInterface(selectedNode);
