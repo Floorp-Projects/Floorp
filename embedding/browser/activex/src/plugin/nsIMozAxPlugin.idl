@@ -22,16 +22,18 @@
 
 #include "nsISupports.idl"
 
+interface nsIVariant;
+
 [scriptable, uuid(b30c2717-2bbf-4475-9ddf-9e26f893f32a)]
 interface nsIMozAxPlugin : nsISupports
 {
-	void   invoke(in string str);
+	void invoke(in string str);
+	void invoke1(in string str, in nsIVariant a);
+	void invoke2(in string str, in nsIVariant a, in nsIVariant b);
+	void invoke3(in string str, in nsIVariant a, in nsIVariant b, in nsIVariant c);
+	void invoke4(in string str, in nsIVariant a, in nsIVariant b, in nsIVariant c, in nsIVariant d);
 
-	/* Set and return string values */
-	string getProperty(in string propertyName);
-	void   setProperty(in string propertyName, in string propertyValue);
-
-	/* Set or return an integer value */
-	short  getNProperty(in string propertyName);
-	void   setNProperty(in string propertyName, in short propertyValue);
+	/* Set and get values */
+	nsIVariant getProperty(in string propertyName);
+	void   setProperty(in string propertyName, in nsIVariant propertyValue);
 };
