@@ -116,7 +116,7 @@ protected:
     PRBool              mPrePopulationDone;
     nsRegistryKey       mLoadersKey;
     nsNativeComponentLoader *mNativeComponentLoader;
-    nsIFile            *mComponentsDir;
+    nsCOMPtr<nsIFile>   mComponentsDir;
     
     // Shutdown
     #define NS_SHUTDOWN_NEVERHAPPENED 0

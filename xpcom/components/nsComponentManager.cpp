@@ -286,7 +286,9 @@ nsresult nsComponentManagerImpl::Shutdown(void)
     NS_IF_RELEASE(mRegistry);
 #endif /* USE_REGISTRY */
 
-    delete mComponentsDir;
+    // This is were the nsFileSpec was deleted, so I am 
+	// going to assign zero to 
+	mComponentsDir = 0;
 
     // Release all the component loaders
     if (mLoaders)
@@ -422,7 +424,7 @@ nsComponentManagerImpl::PlatformInit(void)
                                     NS_GET_IID(nsIProperties), 
                                     getter_AddRefs(directoryService));  
     
-    directoryService->Get("xpcom.currentProcess.componentDirectory", NS_GET_IID(nsIFile), (void**)&mComponentsDir);
+    directoryService->Get("xpcom.currentProcess.componentDirectory", NS_GET_IID(nsIFile), getter_AddRefs(mComponentsDir));
 
     if (!mComponentsDir)
         return NS_ERROR_OUT_OF_MEMORY;
