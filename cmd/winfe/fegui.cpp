@@ -1469,7 +1469,9 @@ xp_FileName(const char * name, XP_FileType type, char* *myName)
 		break;
 #endif /* MOZ_LOC_INDEP */
 
-	default:
+    HG06197
+
+  	default:
 		ASSERT(0);  /* all types should be covered */
         break;
 	}
