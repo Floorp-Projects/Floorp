@@ -42,6 +42,8 @@
 	<key id="key_delete" command="true" key="&deleteCmd.key;" observes="cmd_delete"/>
 	<key id="key_selectAll" command="true" key="&selectAllCmd.key;" observes="cmd_selectAll"/>
 
+	<menuitem id="menu_preferences" value="&preferencesCmd.label;"/>
+		  
 	<!-- View Menu -->
 	<menu id="menu_View" value="&viewMenu.label;"/>
 
