@@ -25,7 +25,7 @@ the nearest future.
 
 Some time ago I've seen Linux Source Navigator (LSN) at
 http://sunsite.unc.edu/linux-source. I was impressed. 
-It was and is a wanderful tool to explore Linux kernel source code.
+It was and is a wonderful tool to explore Linux kernel source code.
 
 Then Mozilla.org came up with a more elaborate tool that includes
 source browser with crossreferencing (LXR http://lxr.linux.no) and CVS
@@ -34,7 +34,7 @@ While LXR formatting is not as pretty as LSN's one, it has a huge
 advantage - it lets you see where the identifier is defined and used.
 And Bonsai brings nice and easy (though sometimes incompatible with
 browsers other but Netscape's own) interface to the CVS history. This
-includes getting list of changes, giffs between revisions, etc.
+includes getting list of changes, diffs between revisions, etc.
 
 All in all LXR+Bonsai+other stuff beneath is a useful tool capable
 of handling huge projects. 
@@ -145,7 +145,7 @@ but you'd like to control your own tree. First step is to edit your
 Here is the short list of changes I had to make
 
   file: ident
-    1) change "&root=/cvsroot" to tour CVSROOT path
+    1) change "&root=/cvsroot" to your CVSROOT path
     2) change "file=/mozilla/" to the directory under CVSROOT where
        your sources are. In my case it is just "/"
 
@@ -159,7 +159,7 @@ Here is the short list of changes I had to make
 
   file: source
     You may find it useful to uncomment "$img = "/icons/..." lines if
-    you yse Explorer as it does not have internal-gopher-* images
+    you use Explorer as it does not have internal-gopher-* images
     built in. Actually Bonsai contains a lot of netscapism that will
     make your IE4 unhappy anyway. You'd better stick with Netscape if
     you are going to use LXR/Bonsai
@@ -169,7 +169,7 @@ Here is the short list of changes I had to make
     you see the word 'mozilla' near '.cgi'. There are a lot of
     mozilla-specific paths hardcoded
     
-    cgange/get rid of banner that loads straight from mozilla.org that
+    change/get rid of banner that loads straight from mozilla.org that
     may be very dangerous if you're working for micro$oft and your
     boss comes by.. 8-) 
 
@@ -228,7 +228,7 @@ on my.bonsai.machine, add a mail alias so that mail sent to
 first argument to handleCheckinMail.tcl is the directory that bonsai
 is installed in. E.g. in /etc/aliases, add
 
- bonsai-checkin-daemon: "|/usr/local/bonsai/handleCheckinMail.tcl /usr/local/bonsai"
+ bonsai-checkin-daemon: "|/usr/local/bonsai/handleCheckinMail.pl /usr/local/bonsai"
 
 or whatever is appropriate for your mail transport agent.
  
