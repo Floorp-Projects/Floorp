@@ -3182,6 +3182,24 @@ nsBrowserWindow::DumpReflowStats(FILE* out)
 }
 
 void
+nsBrowserWindow::DisplayReflowStats(PRBool aIsOn)
+{
+  nsIPresShell* shell = GetPresShell();
+  if (nsnull != shell) {
+#ifdef MOZ_REFLOW_PERF
+    shell->SetPaintFrameCount(aIsOn);
+    SetBoolPref("layout.reflow.showframecounts",aIsOn);
+    ForceRefresh();
+#else
+    fprintf(out,"***********************************\n");
+    fprintf(out, "Sorry, you have built with MOZ_REFLOW_PERF=1\n");
+    fprintf(out,"***********************************\n");
+#endif
+    NS_RELEASE(shell);
+  }
+}
+
+void
 nsBrowserWindow::ToggleFrameBorders()
 {
   nsILayoutDebugger* ld;
@@ -3513,6 +3531,16 @@ nsBrowserWindow::DispatchDebugMenu(PRInt32 aID)
 
     case VIEWER_DEBUG_DUMP_REFLOW_TOTS:
       DumpReflowStats();
+      result = nsEventStatus_eConsumeNoDefault;
+      break;
+
+    case VIEWER_DSP_REFLOW_CNTS_ON:
+      DisplayReflowStats(PR_TRUE);
+      result = nsEventStatus_eConsumeNoDefault;
+      break;
+
+    case VIEWER_DSP_REFLOW_CNTS_OFF:
+      DisplayReflowStats(PR_FALSE);
       result = nsEventStatus_eConsumeNoDefault;
       break;
 
