@@ -21,6 +21,7 @@
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
+#include "xp_str.h"
 #include "msgCore.h"
 #include "nsIURI.h"
 #include "nsParseMailbox.h"

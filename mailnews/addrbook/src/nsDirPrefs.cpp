@@ -36,6 +36,9 @@
 #include "plstr.h"
 #include "prmem.h"
 #include "libi18n.h"
+#include "xp_str.h"
+#include "xp_file.h"
+#include "prprf.h"
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kAddrBookSessionCID, NS_ADDRBOOKSESSION_CID);

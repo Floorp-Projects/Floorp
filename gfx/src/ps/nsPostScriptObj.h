@@ -29,6 +29,7 @@
 #include "xp_file.h"
 #include "ntypes.h"
 #include "net.h"
+#ifdef __cplusplus
 #include "nsColor.h"
 #include "nsCoord.h"
 #include "nsString.h"
@@ -40,7 +41,7 @@
 #include "nsIDeviceContextSpecPS.h"
 
 class nsIImage;
-
+#endif
 
 #define NS_LETTER_SIZE    0
 #define NS_LEGAL_SIZE     1
@@ -77,10 +78,12 @@ typedef struct page_breaks {
     int32 y_break;
 } PageBreaks;
 
+#ifdef __cplusplus
 typedef struct PS_LangGroupInfo_ {
   nsIUnicodeEncoder *mEncoder;
   nsHashtable       *mU2Ntable;
 } PS_LangGroupInfo;
+#endif
 
 typedef struct LineRecord_struct LineRecord;
 
@@ -100,8 +103,10 @@ struct PrintInfo_ {
   int pt_size;		    // Size of above table 
   int n_pages;		    // # of valid entries in above table 
 
+#if 0
   void (*scnatt)(MWContext*);   // SetCallNetlibAllTheTime 
   void (*ccnatt)(MWContext*);   // CLearCallNetlibAllTheTime 
+#endif
 
   char*	doc_title;	// best guess at title 
   int32 doc_width;	// Total document width 
@@ -192,6 +197,7 @@ struct PSContext_{
 };
 typedef struct PSContext_ PSContext;
 
+#ifdef __cplusplus
 class nsPostScriptObj
 {
 
@@ -413,6 +419,6 @@ private:
 
 };
 
-
+#endif /* __cplusplus */
 
 #endif

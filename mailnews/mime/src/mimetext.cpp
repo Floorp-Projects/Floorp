@@ -35,6 +35,7 @@
 #include "nsCRT.h"
 #include "nsIPref.h"
 #include "nsIServiceManager.h"
+#include "nsMimeTypes.h"
 
 #define MIME_SUPERCLASS mimeLeafClass
 MimeDefClass(MimeInlineText, MimeInlineTextClass, mimeInlineTextClass,

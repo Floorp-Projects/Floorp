@@ -34,8 +34,10 @@
 #include "mimemalt.h"
 #include "mimebuf.h"
 #include "mimemapl.h"
+#if 0
 #include "edt.h"
 #include "proto.h"
+#endif
 #include "prprf.h"
 #include "intl_csi.h"
 #include "mimei.h"      /* for moved MimeDisplayData struct */
@@ -62,6 +64,7 @@
 #include "nsMsgI18N.h"
 #include "nsICharsetConverterManager.h"
 #include "nsICharsetAlias.h"
+#include "nsMimeTypes.h"
 
 #include "nsIIOService.h"
 #include "nsIURI.h"
@@ -1049,6 +1052,7 @@ mime_get_main_object(MimeObject* obj)
   return NULL;
 }
 
+#if 0
 int
 MimeGetAttachmentCount(MWContext* context)
 {
@@ -1078,6 +1082,7 @@ MimeGetAttachmentCount(MWContext* context)
   else
 	  return cobj->nchildren;
 }
+#endif
 
 #ifdef MOZ_SECURITY
 HG56025
@@ -1147,11 +1152,12 @@ PRBool MimeObjectChildIsMessageBody(MimeObject *obj,
 HG99007
 #endif
 
+#if 0
 extern int MIME_HasAttachments(MWContext *context)
 {
 	return (context->mime_data && context->mime_data->last_parsed_object->showAttachmentIcon);
 }
-
+#endif
 //
 // New Stream Converter Interface
 //

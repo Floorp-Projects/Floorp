@@ -39,7 +39,7 @@
 
 #include "nsMathMLmpaddedFrame.h"
 
-#include "xp_mcom.h"  // to get XP_IS_SPACE
+#include "xp_str.h"  // to get XP_IS_SPACE
 
 //
 // <mpadded> -- adjust space around content - implementation

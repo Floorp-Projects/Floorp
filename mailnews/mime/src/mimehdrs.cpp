@@ -19,6 +19,7 @@
  *
  * Contributor(s): 
  */
+#include "xp_str.h"
 #include "nsCOMPtr.h"
 #include "msgCore.h"
 #include "mimei.h"

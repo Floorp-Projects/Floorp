@@ -35,7 +35,9 @@
 #include "plstr.h"
 #include "prlog.h"
 #include "prtypes.h"
+#if 0
 #include "xp_regexp.h"
+#endif
 
 #include "nsRepository.h"
 #include "nsIComponentManager.h"

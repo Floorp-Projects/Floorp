@@ -20,6 +20,7 @@
  * Contributor(s): 
  */
 
+#include "xp_file.h"
 #include "msgCore.h"
 #include "nsImapMailDatabase.h"
 #include "nsDBFolderInfo.h"

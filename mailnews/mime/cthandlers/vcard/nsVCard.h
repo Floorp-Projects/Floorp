@@ -62,7 +62,7 @@ DFARS 252.227-7013 or 48 CFR 52.227-19, as applicable.
 #ifndef __VCC_H__
 #define __VCC_H__ 1
 
-#include "xp.h"
+#include "xp_core.h"
 #include "nsFileStream.h"
 #include "nsFileSpec.h"
 #include "nsVCardObj.h"

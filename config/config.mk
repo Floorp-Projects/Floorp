@@ -300,7 +300,7 @@ JAVA_OPTIMIZER	= -g
 XBCFLAGS	= -FR$*
 endif
 
-INCLUDES	= $(LOCAL_INCLUDES) -I$(PUBLIC) -I$(topsrcdir)/include $(OS_INCLUDES)
+INCLUDES	= $(LOCAL_INCLUDES) -I$(PUBLIC) $(OS_INCLUDES)
 
 LIBNT		= $(DIST)/lib/libnt.$(LIB_SUFFIX)
 LIBAWT		= $(DIST)/lib/libawt.$(LIB_SUFFIX)

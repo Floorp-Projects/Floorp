@@ -69,6 +69,7 @@
 #include "prenv.h"
 #include "plstr.h"
 #include "prlink.h"
+#include "prprf.h"
 #include "mimecth.h"
 #include "mimebuf.h"
 #include "nsIServiceManager.h"
@@ -78,6 +79,7 @@
 #include "nsIComponentManager.h"
 #include "nsVoidArray.h"
 #include "nsMimeStringResources.h"
+#include "nsMimeTypes.h"
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_IID(kIMimeContentTypeHandlerIID, NS_IMIME_CONTENT_TYPE_HANDLER_IID);

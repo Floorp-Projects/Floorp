@@ -1226,7 +1226,7 @@ static int BeginVCard (MimeObject *obj)
     }
     
 	s_unique++;
-	PR_snprintf (htmlHeaders, sizeof(htmlHeaders), "<HTML>%s<BODY>%s", LINEBREAK, LINEBREAK);
+	PR_snprintf (htmlHeaders, sizeof(htmlHeaders), "<HTML>%s<BODY>%s", MSG_LINEBREAK, MSG_LINEBREAK);
     status = COM_MimeObject_write(obj, htmlHeaders, nsCRT::strlen(htmlHeaders), PR_TRUE);
 
 	if (status < 0) return status;

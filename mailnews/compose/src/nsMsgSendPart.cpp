@@ -32,6 +32,7 @@
 #include "nsMsgCompUtils.h"
 #include "nsFileStream.h"
 #include "nsMsgMimeCID.h"
+#include "nsMimeTypes.h"
 
 // defined in msgCompGlue.cpp
 static char *mime_mailto_stream_read_buffer = 0;

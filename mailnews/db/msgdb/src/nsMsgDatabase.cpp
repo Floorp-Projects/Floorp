@@ -36,6 +36,7 @@
 #include "nsMsgBaseCID.h"
 #include "nsMorkCID.h"
 #include "nsIMdbFactoryFactory.h"
+#include "xp_file.h"
 
 #include "nsILocale.h"
 #include "nsLocaleCID.h"

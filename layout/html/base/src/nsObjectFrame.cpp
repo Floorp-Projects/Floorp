@@ -59,7 +59,7 @@
 #include "nsIStyleContext.h"
 
 //~~~ For image mime types
-#include "net.h"
+#include "nsMimeTypes.h"
 
 #include "nsObjectFrame.h"
 

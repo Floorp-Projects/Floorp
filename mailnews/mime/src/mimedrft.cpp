@@ -35,6 +35,7 @@
 #include "mimebuf.h"
 #include "mimemoz2.h"
 #include "mimemsg.h"
+#include "nsMimeTypes.h"
 
 #include "prmem.h"
 #include "plstr.h"

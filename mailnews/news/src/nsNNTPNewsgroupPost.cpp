@@ -30,7 +30,7 @@
 #include "prmem.h"
 
 // for CRLF
-#include "fe_proto.h"
+//#include "fe_proto.h"
 
 const char* nsNNTPNewsgroupPost::m_headerName[HEADER_LAST+1]=
 {

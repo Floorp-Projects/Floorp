@@ -27,13 +27,16 @@
 #ifndef INTL_LIBI18N_H
 #define INTL_LIBI18N_H
 
+#include "xp_core.h"
+#include "csid.h"
+
+#if 0
 #include "xp.h"
 #ifndef iDocumentContext
 #define iDocumentContext MWContext *
 #endif
 #define Stream NET_StreamClass
 #define URL URL_Struct
-#include "csid.h"
 
 #ifdef _UNICVT_DLL_
 
@@ -53,8 +56,6 @@ enum {
 	csiditerate_TryIMAP4Search = 1
 };
 
-
-
 /*
  * To be called when backend catches charset info on <meta ... charset=...> tag.
  * This will force netlib to go get fresh data again either through cache or
@@ -69,8 +70,11 @@ enum
 	METACHARSET_RELAYOUTDONE
 };
 
+#endif 
+
 XP_BEGIN_PROTOS
 
+#if 0
 
 /*=======================================================*/
 /* Character Code Conversion (CCC).
@@ -288,6 +292,8 @@ PUBLIC void INTL_DestroyCharCodeConverter(
     CCCDataObject obj
 );
 
+#endif /* 0 */
+
 /**
  * Converts a piece of text from one charset to another.
  *
@@ -327,6 +333,7 @@ PUBLIC int16 INTL_DocToWinCharSetID(
     int16 csid
 );
 
+#if 0
 /**
  * Return the charset used in internet message from a specified charset.
  *
@@ -712,6 +719,7 @@ PUBLIC void INTL_ReportFontCharSets(
  */
 #define INTL_GetCCCDefaultCSID(obj) \
 		(((obj)->funcs_pointer->get_default_doc_csid)(obj))
+#endif
 
 /*@}*/
 /*=======================================================*/
@@ -773,6 +781,7 @@ PUBLIC unsigned char *INTL_CsidToCharsetNamePt(
     int16 charSetID
 );
 
+#if 0
 /**
  * Returns the Java charset name corresponding to the given charset ID.
  *
@@ -2843,7 +2852,12 @@ PUBLIC char *FE_GetLanguageCountry(INTL_LanguageCountry_Selector selector);
 
 PUBLIC const char *INTL_PlatformIdToISOCode(unsigned short platformIdNum, char *platformIdStr, XP_Bool bLanguage); 
 
+#endif
 
 XP_END_PROTOS
 
+
 #endif /* INTL_LIBI18N_H */
+
+
+

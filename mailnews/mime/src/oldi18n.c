@@ -19,17 +19,23 @@
  *
  * Contributor(s): 
  */
+#if 0
 #include "xp.h"
+#endif
+
+#include "libi18n.h"
 #include "prmem.h"
 #include "plstr.h"
 #include "intl_csi.h"
 
+#if 0
 INTL_CharSetInfo 
 LO_GetDocumentCharacterSetInfo(MWContext *context)
 {
     /* MOZ_FUNCTION_STUB; */
     return NULL;
 }
+#endif
 
 void 
 INTL_CharSetIDToName(int16 csid, char  *charset)
@@ -83,6 +89,7 @@ INTL_DocToWinCharSetID(int16 csid)
     return CS_FE_ASCII;
 }
 
+#if 0
 int16
 INTL_DefaultDocCharSetID(iDocumentContext context)
 {
@@ -97,3 +104,5 @@ unsigned char *INTL_ConvMailToWinCharCode(
 {
 	return NULL;
 }
+#endif
+

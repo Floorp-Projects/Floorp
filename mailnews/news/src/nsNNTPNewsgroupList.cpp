@@ -63,7 +63,7 @@
 #include "prprf.h"
 
 #include "nsCRT.h"
-#include "xp_mcom.h"
+#include "xp_str.h"
 
 #include "nsMsgDatabase.h"
 

@@ -67,6 +67,8 @@ DFARS 252.227-7013 or 48 CFR 52.227-19, as applicable.
 #include "nsVCardObj.h"
 #include "prmem.h"
 #include "plstr.h"
+#include "msgCore.h"
+#include "prprf.h"
 #define NOT_NULL(X)	X
 
 /* debugging utilities */
@@ -104,7 +106,7 @@ static PRBool needsQuotedPrintable (const char *s)
 {
     const unsigned char *p = (const unsigned char *)s;
 
-	if (PL_strstr (s, LINEBREAK))
+	if (PL_strstr (s, MSG_LINEBREAK))
 		return TRUE;
 
 	while (*p) {

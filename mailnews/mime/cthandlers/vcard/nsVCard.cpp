@@ -69,6 +69,7 @@ DFARS 252.227-7013 or 48 CFR 52.227-19, as applicable.
 #include "nsVCard.h"
 #include "nsVCardObj.h"
 #include "nsFileStream.h"
+#include "prprf.h"
 
 #ifndef lint
 char yysccsid[] = "@(#)yaccpar	1.4 (Berkeley) 02/25/90";

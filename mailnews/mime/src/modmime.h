@@ -24,7 +24,9 @@
 #define MIME_H
 
 #include "ntypes.h"
+#if 0
 #include "mimeenc.h"
+#endif
 
 XP_BEGIN_PROTOS
 

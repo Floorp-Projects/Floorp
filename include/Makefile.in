@@ -25,8 +25,24 @@ srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 EXPORTS         = \
+		csid.h \
+		intl_csi.h \
+		libi18n.h \
+		merrors.h \
+		msgcom.h \
+		msgtypes.h \
+		net.h \
+		npapi.h \
+		npupp.h \
+		ntypes.h \
                 platform.h \
+		xlate.h \
                 xp_core.h \
+                xp_file.h \
+		xp_mem.h \
+		xp_path.h \
+		xp_regexp.h \
+		xp_str.h \
                 $(NULL)
 
 EXPORTS         := $(addprefix $(srcdir)/, $(EXPORTS))

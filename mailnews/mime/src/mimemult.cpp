@@ -29,6 +29,7 @@
 #include "plstr.h"
 #include "prio.h"
 #include "nsMimeStringResources.h"
+#include "nsMimeTypes.h"
 
 #define MIME_SUPERCLASS mimeContainerClass
 MimeDefClass(MimeMultipart, MimeMultipartClass,
