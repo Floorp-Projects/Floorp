@@ -256,6 +256,13 @@ NS_IMETHODIMP nsMsgThread::AddChild(nsIMsgDBHdr *child, nsIMsgDBHdr *inReplyTo, 
   hdr->GetFlags(&newHdrFlags);
   hdr->GetMessageKey(&newHdrKey);
   
+  if (newHdrFlags & MSG_FLAG_IGNORED)
+    SetFlags(m_flags | MSG_FLAG_IGNORED);
+
+  if (newHdrFlags & MSG_FLAG_WATCHED)
+    SetFlags(m_flags | MSG_FLAG_WATCHED);
+
+  child->AndFlags(~(MSG_FLAG_WATCHED | MSG_FLAG_IGNORED), &newHdrFlags);
   PRUint32 numChildren;
   PRUint32 childIndex = 0;
   
@@ -998,7 +1005,7 @@ nsresult nsMsgThread::ChangeUnreadChildCount(PRInt32 delta)
   childCount += delta;
   if ((PRInt32) childCount < 0)
   {
-#ifdef DEBUG_bienvenu
+#ifdef DEBUG_bienvenu1
     NS_ASSERTION(PR_FALSE, "negative unread child count");
 #endif
     childCount = 0;

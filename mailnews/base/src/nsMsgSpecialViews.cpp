@@ -148,13 +148,17 @@ nsresult nsMsgWatchedThreadsWithUnreadDBView::AddMsgToThreadNotInView(nsIMsgThre
     GetFirstMessageHdrToDisplayInThread(threadHdr, getter_AddRefs(parentHdr));
     if (parentHdr && (ensureListed || !(msgFlags & MSG_FLAG_READ)))
     {
-      PRUint32 orFlags = MSG_VIEW_FLAG_ISTHREAD | MSG_FLAG_ELIDED;
       PRUint32 numChildren;
       threadHdr->GetNumChildren(&numChildren);
-      if (numChildren > 1)
-        orFlags |= MSG_VIEW_FLAG_HASCHILDREN;
-      parentHdr->OrFlags(orFlags, &newFlags);
       rv = AddHdr(parentHdr);
+      if (numChildren > 1)
+      {
+        nsMsgKey key;
+        parentHdr->GetMessageKey(&key);
+        nsMsgViewIndex viewIndex = FindViewIndex(key);
+        if (viewIndex != nsMsgViewIndex_None)
+          OrExtraFlag(viewIndex, MSG_FLAG_ELIDED | MSG_VIEW_FLAG_ISTHREAD | MSG_VIEW_FLAG_HASCHILDREN | MSG_FLAG_WATCHED);
+      }
     }
   }
   return rv;
