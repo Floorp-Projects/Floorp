@@ -118,6 +118,8 @@ static NS_DEFINE_CID(kCharsetConverterManagerCID,  NS_ICHARSETCONVERTERMANAGER_C
 //XXX for nsIPostData; this is wrong; we shouldn't see the nsIDocument type
 #include "nsIDocument.h"
 
+//#define DOCSHELL_LOAD 1
+
 #ifdef DEBUG
 #undef NOISY_LINKS
 #undef NOISY_WEBSHELL_LEAKS
@@ -686,12 +688,14 @@ nsWebShell::GetInterface(const nsIID &aIID, void** aInstancePtr)
       NS_ADDREF((nsISupports*)*aInstancePtr);
       return NS_OK;
       }
+#ifndef DOCSHELL_LOAD
    else if (aIID.Equals(NS_GET_IID(nsIURIContentListener)))
    {
       *aInstancePtr = NS_STATIC_CAST(nsIURIContentListener*, this);
       NS_ADDREF((nsISupports*)*aInstancePtr);
       return NS_OK;
    }
+#endif /* DOCSHELL_LOAD */
    else if(aIID.Equals(NS_GET_IID(nsIScriptGlobalObject)))
       {
       NS_ENSURE_SUCCESS(EnsureScriptEnvironment(), NS_ERROR_FAILURE);
