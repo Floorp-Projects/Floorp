@@ -63,14 +63,16 @@
     <key id="italickb"       key="&styleitalic.keybinding;"     observes="cmd_italic" modifiers="accel"/>
     <key id="underlinekb"    key="&styleunderline.keybinding;"  observes="cmd_underline" modifiers="accel"/>
 
-    <key id="fontfixedwidthkb"  key="&formatfontfixed.keybinding;"  oncommand="doStatefulCommand('cmd_fontFace', 'tt')"  modifiers="accel, shift"/>
+    <key id="fontfixedwidthkb"  key="&formatfontfixed.keybinding;"  oncommand="doStatefulCommand('cmd_fontFace', 'tt')"  modifiers="accel"/>
     <key id="increaseindentkb"  key="&formatindent.keybinding;"  observes="cmd_indent"  modifiers="accel"/>
     <key id="decreaseindentkb"  key="&formatoutdent.keybinding;"  observes="cmd_outdent"  modifiers="accel"/>
 
     <key id="removestyleskb"       key="&formatremovestyles.keybinding;"   observes="cmd_removeStyles"  modifiers="accel, shift"/>
-    <key id="removelinkskb"        key="&formatremovelinks.keybinding;"    observes="cmd_removeLinks"  modifiers="accel"/>
-    <key id="decreasefontsizekb"   key="&decreaseFontSize.keybinding;"     observes="cmd_decreaseFont"  modifiers="accel, shift"/>
-    <key id="increasefontsizekb"   key="&increaseFontSize.keybinding;"     observes="cmd_increaseFont"  modifiers="accel, shift"/>
+    <key id="removelinkskb"        key="&formatremovelinks.keybinding;"    observes="cmd_removeLinks"  modifiers="accel, shift"/>
+    <key id="decreasefontsizekb"   key="&decreaseFontSize.keybinding;"     observes="cmd_decreaseFont"  modifiers="accel"/>
+    <key id="increasefontsizekb"   key="&increaseFontSize.keybinding;"     observes="cmd_increaseFont"  modifiers="accel"/>
+
+    <key id="insertlinkkb"         key="&insertlink.keybinding;"           observes="cmd_link"          modifiers="accel"/>
   </keyset>
 
   <!-- commands updated when the editor gets created -->
@@ -341,7 +343,7 @@
   <!-- Insert menu -->
   <menu id="insertMenu" label="&insertMenu.label;" accesskey="&insertmenu.accesskey;">
     <menupopup>
-      <menuitem accesskey="&insertlink.accesskey;"       observes="cmd_link"        label="&insertLinkCmd.label;" />
+      <menuitem accesskey="&insertlink.accesskey;"       observes="cmd_link"        label="&insertLinkCmd.label;"   key="insertlinkkb"/>
       <menuitem accesskey="&insertanchor.accesskey;"     observes="cmd_anchor"      label="&insertAnchorCmd.label;"/>
       <menuitem accesskey="&insertimage.accesskey;"      observes="cmd_image"       label="&insertImageCmd.label;"/>
       <menuitem accesskey="&inserthline.accesskey;"      observes="cmd_hline"       label="&insertHLineCmd.label;"/>
