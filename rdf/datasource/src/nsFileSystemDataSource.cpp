@@ -456,13 +456,14 @@ FileSystemDataSource::HasAssertion(nsIRDFResource *source,
                              PRBool *hasAssertion /* out */)
 {
 	PRBool			retVal = PR_FALSE;
-	nsresult		rv = NS_ERROR_FAILURE;
+	nsresult		rv = NS_OK;
+
+	*hasAssertion = PR_FALSE;
 
 	// we only have positive assertions in the file system data source.
 	if (! tv)
 		return rv;
 
-	*hasAssertion = PR_FALSE;
 	if (peq(source, kNC_FileSystemRoot) || isFileURI(source))
 	{
 		if (peq(property, kRDF_type))
@@ -470,7 +471,6 @@ FileSystemDataSource::HasAssertion(nsIRDFResource *source,
 			if (peq((nsIRDFResource *)target, kRDF_type))
 			{
 				*hasAssertion = PR_TRUE;
-				rv = NS_OK;
 			}
 		}
 	}

@@ -777,11 +777,12 @@ RelatedLinksDataSource::HasAssertion(nsIRDFResource *source,
                              PRBool *hasAssertion /* out */)
 {
 	PRBool			retVal = PR_FALSE;
-	nsresult		rv = NS_ERROR_FAILURE;
+	nsresult		rv = NS_OK;
+
+	*hasAssertion = PR_FALSE;
 
 	// we only have positive assertions in the Related Links data source.
 
-	*hasAssertion = PR_FALSE;
 	if ((tv) && peq(source, kNC_RelatedLinksRoot))
 	{
 		if (peq(property, kRDF_type))
@@ -789,13 +790,11 @@ RelatedLinksDataSource::HasAssertion(nsIRDFResource *source,
 			if (peq((nsIRDFResource *)target, kRDF_type))
 			{
 				*hasAssertion = PR_TRUE;
-				rv = NS_OK;
 			}
 		}
 	}
 	else
 	{
-		rv = NS_RDF_NO_VALUE;
 		if (mInner)	rv = mInner->HasAssertion(source, property, target, tv, hasAssertion);
 	}
 	return (rv);
