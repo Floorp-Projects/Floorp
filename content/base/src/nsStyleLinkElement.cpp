@@ -108,12 +108,15 @@ void nsStyleLinkElement::ParseLinkTypes(const nsAReadableString& aTypes,
 
   nsReadingIterator<PRUnichar> start;
   PRBool inString = !nsCRT::IsAsciiSpace(*current);
+  nsAutoString subString;
 
   aTypes.BeginReading(start);
   while (current != done) {
-    if (nsCRT::IsAsciiSpace(*start)) {
+    if (nsCRT::IsAsciiSpace(*current)) {
       if (inString) {
-        aResult.AppendString(Substring(start, current));
+        subString = Substring(start, current);
+        ToLowerCase(subString);
+        aResult.AppendString(subString);
         inString = PR_FALSE;
       }
     }
@@ -126,8 +129,9 @@ void nsStyleLinkElement::ParseLinkTypes(const nsAReadableString& aTypes,
     current++;
   }
   if (inString) {
-    aResult.AppendString(Substring(start, current));
-    inString = PR_FALSE;
+    subString = Substring(start, current);
+    ToLowerCase(subString);
+    aResult.AppendString(subString);
   }
 }
 
