@@ -188,7 +188,7 @@ NS_IMETHODIMP nsPlaintextEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsIDragSession> dragSession;
-  dragService->GetCurrentSession(getter_AddRefs(dragService)));
+  dragService->GetCurrentSession(getter_AddRefs(dragSession));
   if (!dragSession) return NS_OK;
 
   // Get the nsITransferable interface for getting the data from the drop
