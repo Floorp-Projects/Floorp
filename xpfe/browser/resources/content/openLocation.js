@@ -118,9 +118,14 @@ function onChooseFile()
     var fp = Components.classes["component://mozilla/filepicker"].createInstance(nsIFilePicker);
     fp.init(window, bundle.GetStringFromName("chooseFileDialogTitle"), nsIFilePicker.modeOpen);
 
-    // When loading into Composer, direct user to prefer HTML files and text files:
     if (dialog.openAppList.data == "2")
-      fp.appendFilters(nsIFilePicker.filterHTML | nsIFilePicker.filterText | nsIFilePicker.filterAll);
+    {
+      // When loading into Composer, direct user to prefer HTML files and text files,
+      //   so we call separately to control the order of the filter list
+      fp.appendFilters(nsIFilePicker.filterHTML | nsIFilePicker.filterText);
+      fp.appendFilters(nsIFilePicker.filterText);
+      fp.appendFilters(nsIFilePicker.filterAll);
+    }
     else
       fp.appendFilters(nsIFilePicker.filterHTML | nsIFilePicker.filterText | 
 			nsIFilePicker.filterAll | nsIFilePicker.filterImages | nsIFilePicker.filterXML);
