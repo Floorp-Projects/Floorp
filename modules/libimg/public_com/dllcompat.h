@@ -32,10 +32,6 @@
 #include "prtypes.h"
 #include "nsCom.h"
 
-#include "xp_mcom.h"
-#include "xp_str.h"
-
-
 typedef void
 (*TimeoutCallbackFunction) (void * closure);
 

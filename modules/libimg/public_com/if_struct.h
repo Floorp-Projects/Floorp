@@ -18,7 +18,7 @@
 
 /*   if.h --- Top-level image library internal routines
  *
- * $Id: if_struct.h,v 1.4 1999/05/27 22:40:52 pnunn%netscape.com Exp $
+ * $Id: if_struct.h,v 1.5 1999/10/22 21:03:09 pnunn%netscape.com Exp $
  */
 
 #ifndef _if_h
@@ -36,7 +36,6 @@
 #include "prtime.h"
 #include "prlong.h"
 
-#include "dllcompat.h"
 #include "nsIImgDecoder.h"
 
 #include "ntypes.h"             /* typedefs for commonly used Netscape data

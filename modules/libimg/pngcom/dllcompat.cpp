@@ -28,12 +28,10 @@
 xpcompat that are needed by
 the local dll. So far, 
  1> Mac stuff.
- 2> NET_BACat
 */
 #include "prtypes.h"
 #include "prlog.h"
 #include "prmem.h"
-#include "xp_mcom.h"
 
 #include "nsCRT.h"
 
@@ -63,42 +61,6 @@ int XP_MSG_COMMENT = -25;
 int XP_MSG_UNKNOWN = -26;	
 int XP_MSG_COMPRESS_REMOVE = -27;	
 PR_END_EXTERN_C
-
-/*	binary block Allocate and Concatenate
- *
- *   destination_length  is the length of the existing block
- *   source_length   is the length of the block being added to the 
- *   destination block
- */
-char * 
-NET_BACat (char **destination, 
-		   size_t destination_length, 
-		   const char *source, 
-		   size_t source_length)
-{
-    if (source) 
-	  {
-        if (*destination) 
-	      {
-      	    *destination = (char *) PR_REALLOC (*destination, destination_length + source_length);
-            if (*destination == NULL) 
-	          return(NULL);
-
-            nsCRT::memmove(*destination + destination_length, source, source_length);
-
-          } 
-		else 
-		  {
-            *destination = (char *) PR_MALLOC (source_length);
-            if (*destination == NULL) 
-	          return(NULL);
-
-            nsCRT::memcpy(*destination, source, source_length);
-          }
-    }
-
-  return *destination;
-}
 
 
 #if defined(XP_MAC)
