@@ -207,7 +207,7 @@ nsFileView.prototype = {
     } else if (colID == "LastModifiedColumn") {
       if (!("cachedDate" in file)) {
         // perhaps overkill, but lets get the right locale handling
-        file.cachedDate = file.file.lastModificationDate;
+        file.cachedDate = file.file.lastModificationTime;
         file.cachedDateText = formatDate(file.cachedDate);
       }
       return file.cachedDateText;
@@ -332,11 +332,11 @@ nsFileView.prototype = {
         break;
       case nsFileView.SORTTYPE_DATE:
         for (i = 0; i < this.mDirList.length; i++) {
-          this.mDirList[i].cachedDate = this.mDirList[i].file.lastModificationDate;
+          this.mDirList[i].cachedDate = this.mDirList[i].file.lastModificationTime;
           this.mDirList[i].cachedDateText = formatDate(this.mDirList[i].cachedDate);
         }
         for (i = 0; i < this.mFilteredFiles.length; i++) {
-          this.mFilteredFiles[i].cachedDate = this.mFilteredFiles[i].file.lastModificationDate;
+          this.mFilteredFiles[i].cachedDate = this.mFilteredFiles[i].file.lastModificationTime;
           this.mFilteredFiles[i].cachedDateText = formatDate(this.mFilteredFiles[i].cachedDate);
         }
         compareFunc = sortDate;
@@ -380,7 +380,7 @@ nsFileView.prototype = {
         // this is a nsIFile object
         nextFile = { unicodeLeafName : nextFile.unicodeLeafName,
                      fileSize : 0,
-                     lastModificationDate : 0,
+                     lastModificationTime : 0,
                      isHidden: function() { return false; } };
       }
       // end of hack

@@ -187,7 +187,7 @@ class PythonComponentLoader:
         if e_location is None: # No escaped key needed.
             e_location = registry_location
         key = self.registry.addSubtreeRaw(self.xpcom_registry_key, e_location)
-        self.registry.setLongLong(key, lastModValueName, nsIFile.lastModificationDate)
+        self.registry.setLongLong(key, lastModValueName, nsIFile.lastModificationTime)
         self.registry.setLongLong(key, fileSizeValueName, nsIFile.fileSize)
     def _hasChanged(self, registry_location, nsIFile):
         if self.registry is None:
@@ -198,7 +198,7 @@ class PythonComponentLoader:
             e_location = registry_location
         try:
             key = self.registry.getSubtreeRaw(self.xpcom_registry_key, e_location)
-            if nsIFile.lastModificationDate != self.registry.getLongLong(key, lastModValueName):
+            if nsIFile.lastModificationTime != self.registry.getLongLong(key, lastModValueName):
                 return 1
             if nsIFile.fileSize != self.registry.getLongLong(key, fileSizeValueName):
                 return 1

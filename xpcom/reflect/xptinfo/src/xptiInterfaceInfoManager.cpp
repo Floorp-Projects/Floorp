@@ -707,7 +707,7 @@ xptiInterfaceInfoManager::DetermineAutoRegStrategy(nsISupportsArray* aSearchPath
             PRUint32 directory;
 
             if(NS_FAILED(file->GetFileSize(&size)) ||
-               NS_FAILED(file->GetLastModificationDate(&date)) ||
+               NS_FAILED(file->GetLastModificationTime(&date)) ||
                NS_FAILED(file->GetLeafName(getter_Copies(name))) ||
                !aWorkingSet->FindDirectoryOfFile(file, &directory))
             {
@@ -756,7 +756,7 @@ xptiInterfaceInfoManager::DetermineAutoRegStrategy(nsISupportsArray* aSearchPath
                 PRInt64 size;
                 PRInt64 date;
                 if(NS_FAILED(file->GetFileSize(&size)) ||
-                   NS_FAILED(file->GetLastModificationDate(&date)) ||
+                   NS_FAILED(file->GetLastModificationTime(&date)) ||
                    NS_FAILED(file->GetLeafName(getter_Copies(name))))
                 {
                     NS_ERROR("unexpected!");
@@ -824,7 +824,7 @@ xptiInterfaceInfoManager::AddOnlyNewFilesFromFileList(nsISupportsArray* aSearchP
         PRInt64 date;
         PRUint32 dir;
         if(NS_FAILED(file->GetFileSize(&size)) ||
-           NS_FAILED(file->GetLastModificationDate(&date)) ||
+           NS_FAILED(file->GetLastModificationTime(&date)) ||
            NS_FAILED(file->GetLeafName(getter_Copies(name))) ||
            !aWorkingSet->FindDirectoryOfFile(file, &dir))
         {
@@ -965,7 +965,7 @@ xptiInterfaceInfoManager::DoFullValidationMergeFromFileList(nsISupportsArray* aS
         PRInt64 date;
         PRUint32 dir;
         if(NS_FAILED(file->GetFileSize(&size)) ||
-           NS_FAILED(file->GetLastModificationDate(&date)) ||
+           NS_FAILED(file->GetLastModificationTime(&date)) ||
            NS_FAILED(file->GetLeafName(getter_Copies(name))) ||
            !aWorkingSet->FindDirectoryOfFile(file, &dir))
         {

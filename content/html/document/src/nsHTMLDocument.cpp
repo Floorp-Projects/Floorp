@@ -499,7 +499,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
       // if we failed to get a last modification date, then we don't
       // want to necessarily fail to create a document for this
       // file. Just don't set the last modified date on it...
-      rv = file->GetLastModificationDate(&modDate);
+      rv = file->GetLastModificationTime(&modDate);
       if (NS_SUCCEEDED(rv)) {
         PRExplodedTime prtime;
         char buf[100];

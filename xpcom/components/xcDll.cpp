@@ -243,7 +243,7 @@ nsDll::Sync()
         return NS_ERROR_FAILURE;
 
     // Populate m_modDate and m_size
-    nsresult rv = m_dllSpec->GetLastModificationDate(&m_modDate);
+    nsresult rv = m_dllSpec->GetLastModificationTime(&m_modDate);
     if (NS_FAILED(rv)) return rv;
     rv = m_dllSpec->GetFileSize(&m_size);
     return rv;
@@ -281,7 +281,7 @@ nsDll::HasChanged()
     // If mod date has changed, then dll has changed
     PRInt64 currentDate;
 
-    nsresult rv = m_dllSpec->GetLastModificationDate(&currentDate);
+    nsresult rv = m_dllSpec->GetLastModificationTime(&currentDate);
     
     if (NS_FAILED(rv) || LL_NE(currentDate, m_modDate))
       return PR_TRUE;
