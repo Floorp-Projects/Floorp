@@ -27,7 +27,7 @@
 */
 //-------------------------------------------------------------------------------------------------
 var bug = 83293;
-var summary = 'Testing str.replace(strA, strB) == str.replace(new RegExp(strA),strB)' ;
+var summary = 'Testing str.replace(strA, strB) == str.replace(new RegExp(strA),strB)';
 var status = '';
 var actual = '';
 var expect= '';
@@ -47,7 +47,7 @@ function test()
   enterFunc ('test');
   printBugNumber (bug);
   printStatus (summary);
- 
+
   status = 'Section A of test';
   strA = 'a';
   actual = str.replace(strA, strB);
@@ -78,5 +78,5 @@ function test()
   expect = str.replace(new RegExp(strA), strB);
   reportCompare(expect, actual, status);
 
-exitFunc ('test');
+  exitFunc ('test');
 }
