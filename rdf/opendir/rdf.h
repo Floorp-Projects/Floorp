@@ -23,6 +23,7 @@
 typedef struct _RDF_ResourceStruct* RDF_Resource;
 typedef struct _RDF_FileStruct* RDFT;
 typedef struct _RDF_CursorStruct* RDF_Cursor;
+typedef void (*WriteClientProc)(void* obj, char* buffer);
 
 typedef enum { 
   RDF_RESOURCE_TYPE,
@@ -38,7 +39,7 @@ void RDF_Unload (RDFT f);
 RDFT RDF_GetRDFT (char* url, int createp);
 
 RDF_Resource RDF_GetResource (char* url, int createp);
-
+char* RDF_ResourceID(RDF_Resource u);
 int RDF_Assert(RDFT db, RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType type);
 int RDF_Unassert (RDFT db, RDF_Resource u, RDF_Resource s,  void* v, RDF_ValueType type);
 

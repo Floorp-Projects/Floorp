@@ -22,24 +22,33 @@
 #if !defined(WIN32) && !defined(HPUX) && !defined(OSF1)
 extern "C" int gethostname(char *name, int namelen);
 #endif
+
+void
+WriteClient (void* obj, char* buffer) {
+  size_t len = strlen(buffer);
+  WAIWriteClient((ServerSession_t)obj, (const unsigned char *) buffer, len);
+}
+
+void AnswerOpenDirQuery(WriteClientProc callBack, void* obj, char* query);
+#define PREFIX "<html><body>"
+#define POSTFIX "</body><html>"
+
 long
 Run(ServerSession_t obj)
 {
-	char *buffer = "Hello World!!!\n";
 	char* query = malloc(300);
-	size_t bufflen = strlen(buffer);
 	WAIgetRequestInfo(obj, "QUERY",  &query);
-	WAIsetResponseContentLength(obj, bufflen);
+
+	//WAIsetResponseContentLength(obj, 10000);
 	WAIStartResponse(obj);
-	WAIWriteClient(obj, (const unsigned char *)buffer, bufflen);
-	WAIWriteClient(obj, (const unsigned char *)query, strlen(query));
+        WriteClient(obj, PREFIX);
+        
+     AnswerOpenDirQuery(WriteClient, obj, query);
+        WriteClient(obj, POSTFIX);
+        /*	WAIWriteClient(obj, (const unsigned char *)query, strlen(query));  */
 	return 0;
 }
 
-//
-// Two different ways to build here.
-// WinMain if you want a windows app.
-// main for Unix and windows console app.
 
 #if defined(WIN32)
 int WINAPI WinMain(
@@ -57,6 +66,7 @@ int main(int argc, char **argv)
 #endif
     char localhost[256];
     char *host;
+	RDF_Resource u;
     IIOPWebAppService_t obj;
 
 	//
@@ -103,9 +113,12 @@ int main(int argc, char **argv)
 	obj = WAIcreateWebAppService("OpenDir", Run, 0, 0);
 #endif
 	WAIregisterService(obj, host);
+	     RDF_Initialize();
+        RDF_ReadFile("opendir.rdf");
+ 
+        printf("done");
 	WAIimplIsReady();
-	RDF_Initialize();
-	RDF_ReadFile("opendir.rdf");
+    
 	return 0;
 }
  
