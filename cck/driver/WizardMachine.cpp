@@ -1230,14 +1230,19 @@ BOOL CWizardMachineApp::FillGlobalWidgetArray()
 
 void CWizardMachineApp::CreateNewCache()
 {
-	globs = fopen(CachePath, "w");
+	CreateNewCache(CachePath);
+}
+
+void CWizardMachineApp::CreateNewCache(CString CPath)
+{
+	globs = fopen(CPath, "w");
 	if (!globs)
 	{
 		fprintf(out, "--------------** TERMINATED - Can't open cache file **----------------\n");
 		exit( 3 );
 	}
 	CString RootCache = Root + CacheFile;
-	int CompareValue = RootCache.CompareNoCase(CachePath);
+	int CompareValue = RootCache.CompareNoCase(CPath);
 
 	for(int i=0; i< GlobalArrayIndex; i++)
 	{
