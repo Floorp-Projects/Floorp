@@ -291,7 +291,7 @@ nsFieldSetFrame::Reflow(nsIPresContext&          aPresContext,
                         nsReflowStatus&          aStatus)
 {
   // availSize could have unconstrained values, don't perform any addition on them
-  nsSize availSize(aReflowState.mComputedWidth, aReflowState.mComputedHeight);
+  nsSize availSize(aReflowState.mComputedWidth, aReflowState.availableHeight);
   
   // get our border and padding
   const nsMargin &borderPadding = aReflowState.mComputedBorderPadding;
