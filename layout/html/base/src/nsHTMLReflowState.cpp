@@ -2501,27 +2501,21 @@ nsHTMLReflowState::ComputeMargin(nscoord aContainingBlockWidth,
       // According to the CSS2 spec, margin percentages are
       // calculated with respect to the *width* of the containing
       // block, even for margin-top and margin-bottom.
-      if (NS_UNCONSTRAINEDSIZE == aContainingBlockWidth) {
-        mComputedMargin.top = 0;
-        mComputedMargin.bottom = 0;
-
+      if (eStyleUnit_Inherit == mStyleMargin->mMargin.GetTopUnit()) {
+        mComputedMargin.top = aContainingBlockRS->mComputedMargin.top;
       } else {
-        if (eStyleUnit_Inherit == mStyleMargin->mMargin.GetTopUnit()) {
-          mComputedMargin.top = aContainingBlockRS->mComputedMargin.top;
-        } else {
-          ComputeHorizontalValue(aContainingBlockWidth,
-                                 mStyleMargin->mMargin.GetTopUnit(),
-                                 mStyleMargin->mMargin.GetTop(top),
-                                 mComputedMargin.top);
-        }
-        if (eStyleUnit_Inherit == mStyleMargin->mMargin.GetBottomUnit()) {
-          mComputedMargin.bottom = aContainingBlockRS->mComputedMargin.bottom;
-        } else {
-          ComputeHorizontalValue(aContainingBlockWidth,
-                                 mStyleMargin->mMargin.GetBottomUnit(),
-                                 mStyleMargin->mMargin.GetBottom(bottom),
-                                 mComputedMargin.bottom);
-        }
+        ComputeHorizontalValue(aContainingBlockWidth,
+                               mStyleMargin->mMargin.GetTopUnit(),
+                               mStyleMargin->mMargin.GetTop(top),
+                               mComputedMargin.top);
+      }
+      if (eStyleUnit_Inherit == mStyleMargin->mMargin.GetBottomUnit()) {
+        mComputedMargin.bottom = aContainingBlockRS->mComputedMargin.bottom;
+      } else {
+        ComputeHorizontalValue(aContainingBlockWidth,
+                               mStyleMargin->mMargin.GetBottomUnit(),
+                               mStyleMargin->mMargin.GetBottom(bottom),
+                               mComputedMargin.bottom);
       }
     }
   }
