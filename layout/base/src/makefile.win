@@ -20,27 +20,50 @@ IGNORE_MANIFEST=1
 
 LIBRARY_NAME=raptorlayout_s 
 DEFINES=-D_IMPL_NS_LAYOUT -DWIN32_LEAN_AND_MEAN
-CPPSRCS=nsContainerFrame.cpp nsDocument.cpp nsFrame.cpp \
-    nsGalleyContext.cpp nsPresContext.cpp nsPresShell.cpp \
-    nsPrintPreviewContext.cpp nsReflowCommand.cpp \
-    nsSelection.cpp nsSelectionPoint.cpp nsSelectionRange.cpp \
-    nsSpaceManager.cpp \
-    nsSplittableFrame.cpp nsStyleCoord.cpp nsStyleContext.cpp \
-    nsStyleSet.cpp 
+
+CPPSRCS =				\
+	nsContainerFrame.cpp		\
+	nsDocument.cpp			\
+	nsFrame.cpp			\
+	nsFrameImageLoader.cpp		\
+	nsGalleyContext.cpp		\
+	nsPresContext.cpp		\
+	nsPresShell.cpp			\
+	nsPrintPreviewContext.cpp	\
+	nsReflowCommand.cpp		\
+	nsSelection.cpp			\
+	nsSelectionPoint.cpp		\
+	nsSelectionRange.cpp		\
+	nsSpaceManager.cpp		\
+	nsSplittableFrame.cpp		\
+	nsStyleContext.cpp		\
+	nsStyleCoord.cpp		\
+	nsStyleSet.cpp			\
+	$(NULL)
+
 MODULE=raptor 
 REQUIRES=xpcom raptor dom 
 EXPORTS=nsSelectionRange.h
-CPP_OBJS=.\$(OBJDIR)\nsContainerFrame.obj .\$(OBJDIR)\nsDocument.obj \
-    .\$(OBJDIR)\nsFrame.obj .\$(OBJDIR)\nsGalleyContext.obj \
-    .\$(OBJDIR)\nsPresContext.obj .\$(OBJDIR)\nsPresShell.obj \
-    .\$(OBJDIR)\nsPrintPreviewContext.obj \
-    .\$(OBJDIR)\nsReflowCommand.obj \
-    .\$(OBJDIR)\nsSelection.obj \
-    .\$(OBJDIR)\nsSelectionPoint.obj \
-    .\$(OBJDIR)\nsSelectionRange.obj \
-    .\$(OBJDIR)\nsSpaceManager.obj \
-    .\$(OBJDIR)\nsSplittableFrame.obj .\$(OBJDIR)\nsStyleCoord.obj \
-	.\$(OBJDIR)\nsStyleContext.obj .\$(OBJDIR)\nsStyleSet.obj 
+
+CPP_OBJS=					\
+	.\$(OBJDIR)\nsContainerFrame.obj	\
+	.\$(OBJDIR)\nsDocument.obj		\
+	.\$(OBJDIR)\nsFrame.obj			\
+	.\$(OBJDIR)\nsFrameImageLoader.obj	\
+	.\$(OBJDIR)\nsGalleyContext.obj		\
+	.\$(OBJDIR)\nsPresContext.obj		\
+	.\$(OBJDIR)\nsPresShell.obj		\
+	.\$(OBJDIR)\nsPrintPreviewContext.obj	\
+	.\$(OBJDIR)\nsReflowCommand.obj		\
+	.\$(OBJDIR)\nsSelection.obj		\
+	.\$(OBJDIR)\nsSelectionPoint.obj	\
+	.\$(OBJDIR)\nsSelectionRange.obj	\
+	.\$(OBJDIR)\nsSpaceManager.obj		\
+	.\$(OBJDIR)\nsSplittableFrame.obj	\
+	.\$(OBJDIR)\nsStyleContext.obj		\
+	.\$(OBJDIR)\nsStyleCoord.obj		\
+	.\$(OBJDIR)\nsStyleSet.obj		\
+	$(NULL)
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor \
     -I$(PUBLIC)\dom -I$(PUBLIC)\js -I$(PUBLIC)\netlib
