@@ -1622,8 +1622,7 @@ nsBookmarksService::getArgumentN(nsISupportsArray *arguments, nsIRDFResource *re
 				PRInt32 offset, nsIRDFResource **argValue)
 {
 	nsresult		rv;
-	PRInt32			loop;
-	PRUint32		numArguments;
+	PRUint32		loop, numArguments;
 
 	*argValue = nsnull;
 
