@@ -145,11 +145,23 @@ $ops{"LOAD_IMMEDIATE"} =
    rem    => "dest, immediate value (double)",
    params => [ ("TypedRegister", "double" ) ]
   };
-$ops{"LOAD_BOOLEAN"} =
+$ops{"LOAD_NULL"} =
   {
-   super  => "Instruction_2",
-   rem    => "dest, immediate value (boolean)",
-   params => [ ("TypedRegister", "bool" ) ]
+   super  => "Instruction_1",
+   rem    => "dest",
+   params => [ ("TypedRegister") ]
+  };
+$ops{"LOAD_TRUE"} =
+  {
+   super  => "Instruction_1",
+   rem    => "dest",
+   params => [ ("TypedRegister" ) ]
+  };
+$ops{"LOAD_FALSE"} =
+  {
+   super  => "Instruction_1",
+   rem    => "dest",
+   params => [ ("TypedRegister" ) ]
   };
 $ops{"LOAD_STRING"} =
   {
@@ -415,6 +427,12 @@ $ops{"CAST"} =
    super  => "Instruction_3",
    rem    => "dest, rvalue, toType",
    params => [ ("TypedRegister", "TypedRegister", "JSType*") ]
+  };
+$ops{"CLASS"} =
+  {
+   super  => "Instruction_2",
+   rem    => "dest, obj",
+   params => [ ("TypedRegister", "TypedRegister") ]
   };
 
 1;

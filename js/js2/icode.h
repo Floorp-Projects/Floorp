@@ -13,6 +13,7 @@
         BRANCH_TRUE, /* target label, condition */
         CALL, /* result, target, args */
         CAST, /* dest, rvalue, toType */
+        CLASS, /* dest, obj */
         COMPARE_EQ, /* dest, source1, source2 */
         COMPARE_GE, /* dest, source1, source2 */
         COMPARE_GT, /* dest, source1, source2 */
@@ -34,10 +35,12 @@
         GET_STATIC, /* dest, class, index */
         INSTANCEOF, /* dest, source1, source2 */
         JSR, /* target */
-        LOAD_BOOLEAN, /* dest, immediate value (boolean) */
+        LOAD_FALSE, /* dest */
         LOAD_IMMEDIATE, /* dest, immediate value (double) */
         LOAD_NAME, /* dest, name */
+        LOAD_NULL, /* dest */
         LOAD_STRING, /* dest, immediate value (string) */
+        LOAD_TRUE, /* dest */
         MOVE, /* dest, source */
         MULTIPLY, /* dest, source1, source2 */
         NAME_XCR, /* dest, name, value */
@@ -196,6 +199,22 @@
             (CAST, aOp1, aOp2, aOp3) {};
         virtual Formatter& print(Formatter& f) {
             f << opcodeNames[CAST] << "\t" << mOp1 << ", " << mOp2 << ", " << "'" << mOp3->getName() << "'";
+            return f;
+        }
+        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+            f << getRegisterValue(registers, mOp1.first) << ", " << getRegisterValue(registers, mOp2.first);
+            return f;
+        }
+    };
+
+    class Class : public Instruction_2<TypedRegister, TypedRegister> {
+    public:
+        /* dest, obj */
+        Class (TypedRegister aOp1, TypedRegister aOp2) :
+            Instruction_2<TypedRegister, TypedRegister>
+            (CLASS, aOp1, aOp2) {};
+        virtual Formatter& print(Formatter& f) {
+            f << opcodeNames[CLASS] << "\t" << mOp1 << ", " << mOp2;
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
@@ -531,14 +550,14 @@
         }
     };
 
-    class LoadBoolean : public Instruction_2<TypedRegister, bool> {
+    class LoadFalse : public Instruction_1<TypedRegister> {
     public:
-        /* dest, immediate value (boolean) */
-        LoadBoolean (TypedRegister aOp1, bool aOp2) :
-            Instruction_2<TypedRegister, bool>
-            (LOAD_BOOLEAN, aOp1, aOp2) {};
+        /* dest */
+        LoadFalse (TypedRegister aOp1) :
+            Instruction_1<TypedRegister>
+            (LOAD_FALSE, aOp1) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[LOAD_BOOLEAN] << "\t" << mOp1 << ", " << "'" << ((mOp2) ? "true" : "false") << "'";
+            f << opcodeNames[LOAD_FALSE] << "\t" << mOp1;
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
@@ -579,6 +598,22 @@
         }
     };
 
+    class LoadNull : public Instruction_1<TypedRegister> {
+    public:
+        /* dest */
+        LoadNull (TypedRegister aOp1) :
+            Instruction_1<TypedRegister>
+            (LOAD_NULL, aOp1) {};
+        virtual Formatter& print(Formatter& f) {
+            f << opcodeNames[LOAD_NULL] << "\t" << mOp1;
+            return f;
+        }
+        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+            f << getRegisterValue(registers, mOp1.first);
+            return f;
+        }
+    };
+
     class LoadString : public Instruction_2<TypedRegister, JSString*> {
     public:
         /* dest, immediate value (string) */
@@ -587,6 +622,22 @@
             (LOAD_STRING, aOp1, aOp2) {};
         virtual Formatter& print(Formatter& f) {
             f << opcodeNames[LOAD_STRING] << "\t" << mOp1 << ", " << "'" << *mOp2 << "'";
+            return f;
+        }
+        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+            f << getRegisterValue(registers, mOp1.first);
+            return f;
+        }
+    };
+
+    class LoadTrue : public Instruction_1<TypedRegister> {
+    public:
+        /* dest */
+        LoadTrue (TypedRegister aOp1) :
+            Instruction_1<TypedRegister>
+            (LOAD_TRUE, aOp1) {};
+        virtual Formatter& print(Formatter& f) {
+            f << opcodeNames[LOAD_TRUE] << "\t" << mOp1;
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
@@ -1186,6 +1237,7 @@
         "BRANCH_TRUE       ",
         "CALL              ",
         "CAST              ",
+        "CLASS             ",
         "COMPARE_EQ        ",
         "COMPARE_GE        ",
         "COMPARE_GT        ",
@@ -1207,10 +1259,12 @@
         "GET_STATIC        ",
         "INSTANCEOF        ",
         "JSR               ",
-        "LOAD_BOOLEAN      ",
+        "LOAD_FALSE        ",
         "LOAD_IMMEDIATE    ",
         "LOAD_NAME         ",
+        "LOAD_NULL         ",
         "LOAD_STRING       ",
+        "LOAD_TRUE         ",
         "MOVE              ",
         "MULTIPLY          ",
         "NAME_XCR          ",

@@ -222,11 +222,29 @@ namespace ICodeASM {
     }
 
     string8_citer
-    ICodeParser::parseICodeModuleOperand (string8_citer /*begin*/,
-                                          string8_citer end, string ** /*rval*/)
+    ICodeParser::parseICodeModuleOperand (string8_citer begin,
+                                          string8_citer end, 
+                                          VM::ICodeModule **rval)
     {
-        NOT_REACHED ("ICode modules are hard, lets go shopping.");
+        TokenLocation tl = seekTokenStart (begin, end);
+
+        if (tl.estimate != teString)
+            throw JSParseException (eidExpectString);
+
+        string8 *str;
+        end = lexString8 (tl.begin, end, &str);
+        StringAtom &typename_atom = mCx->getWorld().identifiers[str->c_str()];
+        delete str;
+        JSTypes::JSValue jsv = 
+            mCx->getGlobalObject()->getVariable(typename_atom);
+        if (!jsv.isFunction()) {
+            ASSERT(false);
+        }
+        *rval = jsv.function->getICode();
+
         return end;
+//        NOT_REACHED ("ICode modules are hard, lets go shopping.");
+//        return end;
     }
     
     string8_citer
@@ -417,7 +435,7 @@ namespace ICodeASM {
                 CASE_TYPE(ExprNodeKind, ExprNode::Kind, static_cast);
                 CASE_TYPE(Bool, bool, static_cast);
                 CASE_TYPE(Double, double, static_cast);
-                CASE_TYPE(ICodeModule, string *, reinterpret_cast);
+                CASE_TYPE(ICodeModule, VM::ICodeModule *, reinterpret_cast);
                 CASE_TYPE(JSClass, JSTypes::JSType *, reinterpret_cast);
                 CASE_TYPE(JSString, JSTypes::JSString *, reinterpret_cast);
                 CASE_TYPE(JSFunction, string *, reinterpret_cast);
