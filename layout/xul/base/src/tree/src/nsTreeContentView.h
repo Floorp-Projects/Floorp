@@ -118,11 +118,9 @@ class nsTreeContentView : public nsITreeView,
     // Content helpers.
     nsresult GetNamedCell(nsIContent* aContainer, const PRUnichar* aColID, nsIContent** aResult);
 
-    nsresult ParseProperties(nsIContent* aContent, Property** aProperty);
-
   private:
-    nsCOMPtr<nsITreeBoxObject>      mBoxObject;
-    nsCOMPtr<nsITreeSelection>      mSelection;
+    nsCOMPtr<nsITreeBoxObject>          mBoxObject;
+    nsCOMPtr<nsITreeSelection>          mSelection;
     nsCOMPtr<nsIContent>                mRoot;
     nsIDocument*                        mDocument;      // WEAK
     nsFixedSizeAllocator                mAllocator;
