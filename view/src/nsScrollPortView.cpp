@@ -382,7 +382,10 @@ void nsScrollPortView::AdjustChildWidgets(nsScrollPortView *aScrolling, nsView *
   if (aScrolling == aView)
   {
     nsIWidget *widget;
-    aScrolling->GetOffsetFromWidget(&aDx, &aDy, widget);
+    nscoord dx, dy;
+    aScrolling->GetOffsetFromWidget(&dx, &dy, widget);
+    aDx += dx;
+    aDy += dy;
     NS_IF_RELEASE(widget);
   }
 

@@ -883,22 +883,25 @@ NS_IMETHODIMP nsView::GetOffsetFromWidget(nscoord *aDx, nscoord *aDy, nsIWidget 
   nsView   *ancestor = GetParent();
   aWidget = nsnull;
   
-  // XXX aDx and aDy are OUT parameters and so we should initialize them
-  // to 0 rather than relying on the caller to do so...
-  while (nsnull != ancestor)
+  if (aDx) *aDx = 0;
+  if (aDy) *aDy = 0;
+  while (ancestor)
   {
     aWidget = ancestor->GetWidget();
     if (aWidget) {
       NS_ADDREF(aWidget);
       // the widget's (0,0) is at the top left of the view's bounds, NOT its position
-      nsRect r;
-      ancestor->GetDimensions(r);
-      aDx -= r.x;
-      aDy -= r.y;
+      if (aDx && aDy)
+      {
+        nsRect r;
+        ancestor->GetDimensions(r);
+        *aDx -= r.x;
+        *aDy -= r.y;
+      }
       return NS_OK;
     }
 
-    if ((nsnull != aDx) && (nsnull != aDy))
+    if (aDx && aDy)
     {
       ancestor->ConvertToParentCoords(aDx, aDy);
     }
@@ -920,7 +923,7 @@ nsresult nsView::GetDirtyRegion(nsIRegion*& aRegion)
   if (nsnull == mDirtyRegion) {
     nsresult rv = GetViewManager()->CreateRegion(&mDirtyRegion);
     if (NS_FAILED(rv))
-       return rv;
+      return rv;
   }
 
   aRegion = mDirtyRegion;
