@@ -196,7 +196,7 @@ function CrossFolderNavigation (type, supportsFolderPane )
             dump("XXX we need code to select the correct type of message, after we load the folder\n");
             break;
         case 1:
-            var promptText = gMessengerBundle.formatStringFromName("advanceNextPrompt", [ nextFolder.name ], 1); 
+            var promptText = gMessengerBundle.getFormattedString("advanceNextPrompt", [ nextFolder.name ], 1); 
             if (commonDialogs.Confirm(window, promptText, promptText)) {
                 gNextMessageAfterLoad = true;
                 if (supportsFolderPane)
