@@ -254,6 +254,7 @@ nsNntpTestDriver::InitializeProtocol(const char * urlString)
 	if (NS_FAILED(rv) || (m_url == nsnull)) 
 	{ 
         printf("InitializeProtocol failed\n");
+        m_protocolInitialized = PR_FALSE;
         return rv;
     }
 
@@ -263,9 +264,14 @@ nsNntpTestDriver::InitializeProtocol(const char * urlString)
 
 	// now create a protocol instance...
 	m_nntpProtocol = new nsNNTPProtocol(m_url, m_transport);
-	m_protocolInitialized = PR_TRUE;
-
-    return rv;
+    if (m_nntpProtocol == nsnull) {
+        m_protocolInitialized = PR_FALSE;
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+    else {
+        m_protocolInitialized = PR_TRUE;
+        return rv;
+    }
 }
 
 nsNntpTestDriver::~nsNntpTestDriver()
@@ -293,7 +299,7 @@ NS_IMETHODIMP nsNntpTestDriver::OnStopRunningUrl(nsIURL * aUrl, nsresult aExitCo
 	NS_PRECONDITION(aUrl, "just a sanity check since this is a test program");
 	nsresult rv = NS_OK;
 	m_runningURL = PR_FALSE;
-	return NS_OK;
+	return rv;
 }
 
 nsresult nsNntpTestDriver::RunDriver()
@@ -796,10 +802,7 @@ int main()
     }
 
 	// Create the Event Queue for this thread...
-    nsIEventQueueService* pEventQService;
-    result = nsServiceManager::GetService(kEventQueueServiceCID,
-                                          nsIEventQueueService::GetIID(),
-                                          (nsISupports**)&pEventQService);
+	NS_WITH_SERVICE(nsIEventQueueService, pEventQService, kEventQueueServiceCID, &result);
 	if (NS_FAILED(result)) return result;
 
     result = pEventQService->CreateThreadEventQueue();
