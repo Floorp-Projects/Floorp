@@ -54,9 +54,10 @@
 #include "nsIDocShellTreeOwner.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMScreen.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMWindowInternal.h"
+#include "nsIScreen.h"
+#include "nsIScreenManager.h"
 #include "nsIScriptContext.h"
 #include "nsIEventQueue.h"
 #include "nsIEventQueueService.h"
@@ -1447,97 +1448,112 @@ nsWindowWatcher::ReadyOpenedDocShellItem(nsIDocShellTreeItem *aOpenedItem,
   return rv;
 }
 
+/* Size and position the new window according to aFeatures. This method
+   is assumed to be called after the window has already been given
+   a default position and size; thus its current position and size are
+   accurate defaults. The new window is made visible at method end.
+*/
 void
 nsWindowWatcher::SizeOpenedDocShellItem(nsIDocShellTreeItem *aDocShellItem,
                                         nsIDOMWindow *aParent,
                                         const char *aFeatures,
                                         PRUint32 aChromeFlags)
 {
-  PRInt32 chromeX = 0, chromeY = 0, chromeCX = 100, chromeCY = 100;
-  PRInt32 contentCX = 100, contentCY = 100;
+  // position and size of window
+  PRInt32 left = 0,
+          top = 0,
+          width = 100,
+          height = 100;
+  // difference between chrome and content size
+  PRInt32 chromeWidth = 0,
+          chromeHeight = 0;
+  // whether the window size spec refers to chrome or content
+  PRBool  sizeChromeWidth = PR_TRUE,
+          sizeChromeHeight = PR_TRUE;
 
-  // Use sizes from the parent window, if any, as our default
-  if (aParent) {
-    nsCOMPtr<nsIDocShellTreeItem> item;
+  // get various interfaces for aDocShellItem, used throughout this method
+  nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
+  aDocShellItem->GetTreeOwner(getter_AddRefs(treeOwner));
+  nsCOMPtr<nsIBaseWindow> treeOwnerAsWin(do_QueryInterface(treeOwner));
+  if (!treeOwnerAsWin) // we'll need this to actually size the docshell
+    return;
 
-    GetWindowTreeItem(aParent, getter_AddRefs(item));
-    if (item) {
-      // if we are content, we may need the content sizes
-      nsCOMPtr<nsIBaseWindow> win(do_QueryInterface(item));
-      win->GetSize(&contentCX, &contentCY);
+  /* The current position and size will be unchanged if not specified
+     (and they fit entirely onscreen). Also, calculate the difference
+     between chrome and content sizes on aDocShellItem's window.
+     This latter point becomes important if chrome and content
+     specifications are mixed in aFeatures, and when bringing the window
+     back from too far off the right or bottom edges of the screen. */
 
-      // now the main window
-      nsCOMPtr<nsIDocShellTreeOwner> owner;
-      item->GetTreeOwner(getter_AddRefs(owner));
-      if (owner) {
-        nsCOMPtr<nsIBaseWindow> basewin(do_QueryInterface(owner));
-        if (basewin)
-          basewin->GetPositionAndSize(&chromeX, &chromeY,
-                                      &chromeCX, &chromeCY);
-      }
+  treeOwnerAsWin->GetPositionAndSize(&left, &top, &width, &height);
+  { // scope shellWindow why not
+    nsCOMPtr<nsIBaseWindow> shellWindow(do_QueryInterface(aDocShellItem));
+    if (shellWindow) {
+      PRInt32 cox, coy;
+      shellWindow->GetSize(&cox, &coy);
+      chromeWidth = width - cox;
+      chromeHeight = height - coy;
     }
   }
 
-  PRBool present = PR_FALSE;
-  PRBool positionSpecified = PR_FALSE;
+  // Parse position spec, if any, from aFeatures
+
+  PRBool  positionSpecified = PR_FALSE;
+  PRBool  present;
   PRInt32 temp;
 
+  present = PR_FALSE;
   if ((temp = WinHasOption(aFeatures, "left", 0, &present)) || present)
-    chromeX = temp;
+    left = temp;
   else if ((temp = WinHasOption(aFeatures, "screenX", 0, &present)) || present)
-    chromeX = temp;
-
+    left = temp;
   if (present)
     positionSpecified = PR_TRUE;
 
   present = PR_FALSE;
-
   if ((temp = WinHasOption(aFeatures, "top", 0, &present)) || present)
-    chromeY = temp;
+    top = temp;
   else if ((temp = WinHasOption(aFeatures, "screenY", 0, &present)) || present)
-    chromeY = temp;
-
+    top = temp;
   if (present)
     positionSpecified = PR_TRUE;
 
-  PRBool sizeChrome = PR_FALSE;
   PRBool sizeSpecified = PR_FALSE;
 
-  if ((temp = WinHasOption(aFeatures, "outerWidth", chromeCX, nsnull))) {
-    chromeCX = temp;
-    sizeChrome = PR_TRUE;
+  // Parse size spec, if any. Chrome size overrides content size.
+
+  if ((temp = WinHasOption(aFeatures, "outerWidth", width, nsnull))) {
+    width = temp;
+    sizeSpecified = PR_TRUE;
+  } else if ((temp = WinHasOption(aFeatures, "width",
+                                  width - chromeWidth, nsnull))) {
+    width = temp;
+    sizeChromeWidth = PR_FALSE;
+    sizeSpecified = PR_TRUE;
+  } else if ((temp = WinHasOption(aFeatures, "innerWidth",
+                                  width - chromeWidth, nsnull))) {
+    width = temp;
+    sizeChromeWidth = PR_FALSE;
     sizeSpecified = PR_TRUE;
   }
 
-  if ((temp = WinHasOption(aFeatures, "outerHeight", chromeCY, nsnull))) {
-    chromeCY = temp;
-    sizeChrome = PR_TRUE;
+  if ((temp = WinHasOption(aFeatures, "outerHeight", height, nsnull))) {
+    height = temp;
     sizeSpecified = PR_TRUE;
-  }
-
-  // We haven't switched to chrome sizing so we need to get the content area
-  if (!sizeChrome) {
-    if ((temp = WinHasOption(aFeatures, "width", chromeCX, nsnull))) {
-      contentCX = temp;
-      sizeSpecified = PR_TRUE;
-    } else if ((temp = WinHasOption(aFeatures, "innerWidth", chromeCX, nsnull))) {
-      contentCX = temp;
-      sizeSpecified = PR_TRUE;
-    }
-
-    if ((temp = WinHasOption(aFeatures, "height", chromeCY, nsnull))) {
-      contentCY = temp;
-      sizeSpecified = PR_TRUE;
-    } else if ((temp = WinHasOption(aFeatures, "innerHeight", chromeCY, nsnull))) {
-      contentCY = temp;
-      sizeSpecified = PR_TRUE;
-    }
+  } else if ((temp = WinHasOption(aFeatures, "height",
+                                  height - chromeHeight, nsnull))) {
+    height = temp;
+    sizeChromeHeight = PR_FALSE;
+    sizeSpecified = PR_TRUE;
+  } else if ((temp = WinHasOption(aFeatures, "innerHeight",
+                                  height - chromeHeight, nsnull))) {
+    height = temp;
+    sizeChromeHeight = PR_FALSE;
+    sizeSpecified = PR_TRUE;
   }
 
   nsresult res;
   PRBool enabled = PR_FALSE;
-  PRInt32 screenWidth = 0, screenHeight = 0;
-  PRInt32 winWidth, winHeight;
 
   // Check security state for use in determing window dimensions
   nsCOMPtr<nsIScriptSecurityManager>
@@ -1549,71 +1565,73 @@ nsWindowWatcher::SizeOpenedDocShellItem(nsIDocShellTreeItem *aDocShellItem,
   }
 
   if (!enabled) {
+
     // Security check failed.  Ensure all args meet minimum reqs.
-    if (sizeSpecified) {
-      if (sizeChrome) {
-        chromeCX = chromeCX < 100 ? 100 : chromeCX;
-        chromeCY = chromeCY < 100 ? 100 : chromeCY;
-      }
-      else {
-        contentCX = contentCX < 100 ? 100 : contentCX;
-        contentCY = contentCY < 100 ? 100 : contentCY;
-      }
-    }
 
-    if (positionSpecified) {
-      // We'll also need the screen dimensions
-      // XXX This should use nsIScreenManager once it's fully fleshed out.
-      nsCOMPtr<nsIDOMScreen> screen;
-      if (aParent) {
-        nsCOMPtr<nsIDOMWindowInternal> intparent(do_QueryInterface(aParent));
-        if (intparent)
-          intparent->GetScreen(getter_AddRefs(screen));
-      } else {
-        // XXX hmmph. try the new window.
-      }
-      if (screen) {
-        screen->GetAvailWidth(&screenWidth);
-        screen->GetAvailHeight(&screenHeight);
+    PRInt32 oldTop = top,
+            oldLeft = left;
+
+    // We'll also need the screen dimensions
+    nsCOMPtr<nsIScreen> screen;
+    nsCOMPtr<nsIScreenManager> screenMgr(do_GetService(
+                                         "@mozilla.org/gfx/screenmanager;1"));
+    if (screenMgr)
+      screenMgr->ScreenForRect(left, top, width, height,
+                               getter_AddRefs(screen));
+    if (screen) {
+      PRInt32 screenLeft, screenTop, screenWidth, screenHeight;
+      PRInt32 winWidth = width + (sizeChromeWidth ? 0 : chromeWidth),
+              winHeight = height + (sizeChromeHeight ? 0 : chromeHeight);
+
+      screen->GetAvailRect(&screenLeft, &screenTop,
+                           &screenWidth, &screenHeight);
+
+      if (sizeSpecified) {
+        /* Unlike position, force size out-of-bounds check only if
+           size actually was specified. Otherwise, intrinsically sized
+           windows are broken. */
+        if (height < 100)
+          height = 100;
+        if (winHeight > screenHeight)
+          height = screenHeight - (sizeChromeHeight ? 0 : chromeHeight);
+        if (width < 100)
+          width = 100;
+        if (winWidth > screenWidth)
+          width = screenWidth - (sizeChromeWidth ? 0 : chromeWidth);
       }
 
-      // This isn't strictly true but close enough
-      winWidth = sizeSpecified ? (sizeChrome ? chromeCX : contentCX) : 100;
-      winHeight = sizeSpecified ? (sizeChrome ? chromeCY : contentCY) : 100;
-
-      chromeX =
-        screenWidth < chromeX + winWidth ? screenWidth - winWidth : chromeX;
-      chromeX = chromeX < 0 ? 0 : chromeX;
-      chromeY = screenHeight < chromeY + winHeight
-                ? screenHeight - winHeight
-                : chromeY;
-      chromeY = chromeY < 0 ? 0 : chromeY;
+      if (left+winWidth > screenLeft+screenWidth)
+        left = screenLeft+screenWidth - winWidth;
+      if (left < screenLeft)
+        left = screenLeft;
+      if (top+winHeight > screenTop+screenHeight)
+        top = screenTop+screenHeight - winHeight;
+      if (top < screenTop)
+        top = screenTop;
+      if (top != oldTop || left != oldLeft)
+        positionSpecified = PR_TRUE;
     }
   }
 
-  nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
-  aDocShellItem->GetTreeOwner(getter_AddRefs(treeOwner));
-  nsCOMPtr<nsIBaseWindow> treeOwnerAsWin(do_QueryInterface(treeOwner));
-  if (treeOwnerAsWin) {
-    if (sizeChrome) {
-      if (positionSpecified && sizeSpecified)
-        treeOwnerAsWin->SetPositionAndSize(chromeX, chromeY, chromeCX,
-                                           chromeCY, PR_FALSE);
-      else {
-        if (sizeSpecified)
-          treeOwnerAsWin->SetSize(chromeCX, chromeCY, PR_FALSE);
-        if (positionSpecified)
-          treeOwnerAsWin->SetPosition(chromeX, chromeY);
-      }
-    }
+  // size and position the window
+
+  if (positionSpecified)
+    treeOwnerAsWin->SetPosition(left, top);
+  if (sizeSpecified) {
+    /* Prefer to trust the interfaces, which think in terms of pure
+       chrome or content sizes. If we have a mix, use the chrome size
+       adjusted by the chrome/content differences calculated earlier. */
+    if (!sizeChromeWidth && !sizeChromeHeight)
+      treeOwner->SizeShellTo(aDocShellItem, width, height);
     else {
-      if (positionSpecified)
-        treeOwnerAsWin->SetPosition(chromeX, chromeY);
-      if (sizeSpecified)
-        treeOwner->SizeShellTo(aDocShellItem, contentCX, contentCY);
+      if (!sizeChromeWidth)
+        width += chromeWidth;
+      if (!sizeChromeHeight)
+        height += chromeHeight;
+      treeOwnerAsWin->SetSize(width, height, PR_FALSE);
     }
-    treeOwnerAsWin->SetVisibility(PR_TRUE);
   }
+  treeOwnerAsWin->SetVisibility(PR_TRUE);
 }
 
 // attach the given array of JS values to the given window, as a property array

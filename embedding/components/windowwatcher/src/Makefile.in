@@ -47,6 +47,7 @@ LIBRARY_NAME	= windowwatcher_s
 REQUIRES	= xpcom \
 		  string \
 		  dom \
+		  gfx \
 		  windowwatcher \
 		  widget \
 		  js \
