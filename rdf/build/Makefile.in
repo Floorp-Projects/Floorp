@@ -29,6 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= rdf
 LIBRARY_NAME	= rdf
 IS_COMPONENT	= 1
+EXTRA_DSO_LIBS	= jsdom
 
 REQUIRES	= dom js netlib rdf raptor xpcom
 
@@ -42,10 +43,10 @@ EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 # XXX Note dependencies on implementation headers for factory functions
 
 SHARED_LIBRARY_LIBS = \
-		$(DIST)/lib/librdfbase_s.a \
-		$(DIST)/lib/librdfcontent_s.a \
-		$(DIST)/lib/librdfdatasource_s.a \
-		$(DIST)/lib/librdfutil_s.a \
+		$(DIST)/lib/librdfbase_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/librdfcontent_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/librdfdatasource_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/librdfutil_s.$(LIB_SUFFIX) \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \
@@ -54,8 +55,8 @@ EXTRA_DSO_LDOPTS = \
 		$(MKSHLIB_UNFORCE_ALL) \
 		$(MOZ_TIMER_LIBS) \
 		-L$(DIST)/bin \
-		-ljsdom \
-		-lmozjs \
+		$(EXTRA_DSO_LIBS) \
+		$(MOZ_JS_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 

@@ -23,6 +23,8 @@ dnl                 gnomefe update & enable-pthreads
 dnl               Ramiro Estrugo <ramiro@netscape.com>
 dnl                 X11 makedepend support
 dnl                 Insure support.
+dnl               Henry Sobotka <sobotka@axess.com>
+dnl                 OS/2 support
 dnl
 dnl Process this file with autoconf to produce a configure script.
 dnl ========================================================
@@ -141,7 +143,7 @@ if test -n "$CROSS_COMPILE" && test "$target" != "$host"; then
 
     AC_MSG_CHECKING([for host c compiler])
     if test -z "$HOST_CC"; then
-	AC_CHECK_PROGS(HOST_CC, gcc cc /usr/ucb/cc, "")
+	AC_CHECK_PROGS(HOST_CC, gcc cc /usr/ucb/cc icc, "")
 	if test -z "$HOST_CC"; then
 	    AC_MSG_ERROR([no acceptable c compiler found in \$PATH])
 	fi
@@ -149,7 +151,7 @@ if test -n "$CROSS_COMPILE" && test "$target" != "$host"; then
     AC_MSG_RESULT([$HOST_CC])
     AC_MSG_CHECKING([for host c++ compiler])
     if test -z "$HOST_CXX"; then
-	AC_CHECK_PROGS(HOST_CXX, $CCC c++ g++ gcc CC cxx cc++ cl, "")
+	AC_CHECK_PROGS(HOST_CXX, $CCC c++ g++ gcc CC cxx cc++ cl icc, "")
 	if test -z "$HOST_CXX"; then
 	    AC_MSG_ERROR([no acceptable c++ compiler found in \$PATH])
 	fi
@@ -252,13 +254,16 @@ else
     fi
 fi
 
-AC_PROG_CC_C_O
-if grep "NO_MINUS_C_MINUS_O 1" ./confdefs.h >/dev/null; then
-    USING_HCC=1
-    _OLDCC=$CC
-    _OLDCXX=$CXX
-    CC="${srcdir}/build/hcc '$CC'"
-    CXX="${srcdir}/build/hcpp '$CXX'"
+dnl Breaks icc on OS/2
+if test "$CC" != "icc"; then
+    AC_PROG_CC_C_O
+    if grep "NO_MINUS_C_MINUS_O 1" ./confdefs.h >/dev/null; then
+        USING_HCC=1
+        _OLDCC=$CC
+        _OLDCXX=$CXX
+        CC="${srcdir}/build/hcc '$CC'"
+        CXX="${srcdir}/build/hcpp '$CXX'"
+    fi
 fi
 
 GNU_CC=
@@ -284,6 +289,7 @@ AC_PROG_AWK
 AC_PATH_PROGS(EMACS, xemacs lemacs emacs, :)
 AC_PATH_PROGS(PERL, perl5 perl, :)
 AC_PATH_PROG(WHOAMI, whoami, :)
+AC_PATH_PROG(AUTOCONF, autoconf, :)
 AC_PATH_PROG(UNZIP, unzip, :)
 AC_PATH_PROG(ZIP, zip, :)
 AC_PATH_PROG(SYSTEM_MAKEDEPEND, makedepend)
@@ -334,6 +340,20 @@ LIB_SUFFIX=a
 TARGET_MD_ARCH=unix
 DIRENT_INO=d_ino
 NEED_BASE_DLL_NAME_ALSO=
+
+MOZ_JPEG_CFLAGS=
+MOZ_JPEG_LIBS='$(DIST)/lib/libjpeg.$(LIB_SUFFIX)'
+MOZ_ZLIB_CFLAGS=
+MOZ_ZLIB_LIBS='$(DIST)/lib/libzlib.$(LIB_SUFFIX)'
+MOZ_PNG_CFLAGS=
+MOZ_PNG_LIBS='$(DIST)/lib/libpng.$(LIB_SUFFIX)'
+
+MOZ_TIMER_LIBS='$(DIST)/lib/libtimer_s.$(LIB_SUFFIX)'
+MOZ_JS_LIBS='-lmozjs'
+XPCOM_LIBS='-L$(DIST)/bin -lxpcom'
+
+MOZ_COMPONENT_NSPR_LIBS='-L$(DIST)/bin $(NSPR_LIBS)'
+MOZ_COMPONENT_XPCOM_LIBS='-L$(DIST)/bin -lxpcom'
 
 if test -n "$CROSS_COMPILE"; then
     OS_TARGET="${target_os}"
@@ -480,7 +500,6 @@ SUNWSPRO5_VTABLE=)
 AC_LANG_RESTORE
 AC_SUBST(SUNWSPRO5_VTABLE)
 
-
 dnl ========================================================
 dnl System overrides of the defaults for target
 dnl ========================================================
@@ -506,6 +525,7 @@ case "$target" in
     MKSHLIB='$(CXX) $(DSO_LDOPTS)'
     DSO_LDOPTS='-nostart -Xlinker --ignore-undefined'
     TK_LIBS='-lbe -lroot'
+    MOZ_TIMER_LIBS='$(DIST)/lib/libtimer_beos.so'
     _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wno-multichar"
     _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wno-multichar -Wno-ctor-dtor-pr
 ivacy"
@@ -730,6 +750,60 @@ ivacy"
     fi
     ;;
 
+
+*-*-os2*)
+    MOZ_BUILD_ROOT=`pwd -D`
+    USE_SHORT_LIBNAME=1
+    BIN_SUFFIX='.exe'
+    OBJ_SUFFIX=obj
+    LIB_SUFFIX=lib
+    DLL_SUFFIX=.dll
+    DLLTOOL=''
+    LD='$(CC)'
+    DSO_CFLAGS=''
+    DSO_PIC_CFLAGS=''
+    MOZ_JPEG_LIBS='$(DIST)/lib/jpeg.$(LIB_SUFFIX)'
+    MOZ_ZLIB_LIBS='$(DIST)/lib/zlib.$(LIB_SUFFIX)'
+    MOZ_PNG_LIBS='$(DIST)/lib/png.$(LIB_SUFFIX)'
+    MOZ_JS_LIBS='$(DIST)/lib/mozjs.lib'
+    MOZ_TIMER_LIBS='$(DIST)/lib/timer.lib'
+
+    case "$target" in
+    *-*-os2_emx)
+        _PEDANTIC=''
+        AR=emxomfar
+        AR_FLAGS='-p128 r $@'
+        CFLAGS="-Zmtd -Zomf $CFLAGS"
+        CXXFLAGS="-Zmtd -Zomf $CXXFLAGS"
+        DSO_LDOPTS='-Zomf -Zdll -Zmt -Zcrtdll -Zlinker /NOO'
+        BIN_FLAGS='-Zlinker /PM:VIO -Zlinker /ST:0x30000'
+        IMPLIB='emximp -o'
+        FILTER='emxexp'
+        AC_DEFINE(OS2EMX_PLAIN_CHAR)
+        ;;
+
+    *-*-os2_vacpp)
+        AR=ilib
+        AR_FLAGS='/NOL /NOI /O:$(subst /,\\,$@)'
+        AR_LIST='/L'
+        AR_EXTRACT='-*'
+        AR_DELETE='-'
+        CFLAGS="$CFLAGS /qlibansi"
+        CXXFLAGS=""
+        DSO_LDOPTS=''
+        IMPLIB='implib /NOL /NOI'
+        FILTER='cppfilt -q -B -P'
+        AC_DEFINE(NO_ANSI_KEYWORDS)
+        AC_DEFINE(OS2::4)
+        AC_DEFINE(_X86_)
+        AC_DEFINE(TCPV40HDRS)
+        MOZ_COMPONENT_NSPR_LIBS='$(NSPR_LIBS)'
+        MOZ_COMPONENT_XPCOM_LIBS='$(DIST)/lib/xpcom.lib'
+        XPCOM_LIBS='$(DIST)/lib/xpcom.lib'
+        ;;
+    esac
+    ;;
+
 alpha*-*-osf*)
     if test "$GNU_CC"; then
 	DSO_LDOPTS='-shared -Wl,-soname -Wl,$@'
@@ -772,6 +846,7 @@ alpha*-*-osf*)
     AC_DEFINE(TARGET_CARBON)
     AC_DEFINE(TARGET_API_MAC_CARBON)
     ENABLE_TESTS=
+    MOZ_TIMER_LIBS='$(DIST)/lib/libtimer_mac.dylib'
     MOZ_WIDGET_TOOLKIT='mac'
     TK_LIBS='/System/Library/Frameworks/Carbon.framework/Carbon'
     CFLAGS="$CFLAGS -traditional-cpp -fno-common -I/System/Library/Frameworks/Carbon.framework/Headers"
@@ -874,6 +949,11 @@ NO_LD_ARCHIVE_FLAGS=
 if test -z "$MKSHLIB_FORCE_ALL"; then
     NO_LD_ARCHIVE_FLAGS=1
 fi
+case "$target" in
+*-*-os2_*)
+    NO_LD_ARCHIVE_FLAGS=
+    ;;
+esac
 AC_SUBST(NO_LD_ARCHIVE_FLAGS)
 
 XLDFLAGS="$X_LIBS"
@@ -926,19 +1006,31 @@ then
 fi # $no_x
 
 
+MOZ_WIDGET_TOOLKIT_LDFLAGS='-lwidget_$(MOZ_WIDGET_TOOLKIT)'
+MOZ_GFX_TOOLKIT_LDFLAGS='-lgfx_$(MOZ_WIDGET_TOOLKIT) $(MOZ_XLIBRGB_LDFLAGS)'
+WIDGET_DLL='\"libwidget_$(MOZ_WIDGET_TOOLKIT)$(DLL_SUFFIX)\"'
+GFXWIN_DLL='\"libgfx_$(MOZ_GFX_TOOLKIT)$(DLL_SUFFIX)\"'
 
-# BeOS toolkit setting
-if test "`echo $target_os | egrep "beos"`"; then
-        MOZ_WIDGET_TOOLKIT="beos"
-fi
+case "$target_os" in
+beos*)
+    MOZ_WIDGET_TOOLKIT="beos"
+    ;;
 
-# Photon toolkit setting for the Neutrino platform
-if test "`echo $target_os | egrep "nto"`"; then
-        MOZ_WIDGET_TOOLKIT="photon"
-        AC_DEFINE(NO_X11)
-        TK_CFLAGS='-I/usr/include/photon'
-        TK_LIBS='-lph -lphrender'
-fi
+nto*)
+    MOZ_WIDGET_TOOLKIT="photon"
+    AC_DEFINE(NO_X11)
+    TK_CFLAGS='-I/usr/include/photon'
+    TK_LIBS='-lph -lphrender'
+    ;;
+
+os2*)
+    MOZ_WIDGET_TOOLKIT=os2
+    MOZ_WIDGET_TOOLKIT_LDFLAGS='$(DIST)/lib/wdgt$(MOZ_WIDGET_TOOLKIT)'
+    MOZ_GFX_TOOLKIT_LDFLAGS='$(DIST)/lib/gfx_$(MOZ_WIDGET_TOOLKIT)'
+    WIDGET_DLL='\"wdgt$(MOZ_WIDGET_TOOLKIT)$(DLL_SUFFIX)\"'
+    GFXWIN_DLL='\"gfx_$(MOZ_GFX_TOOLKIT)$(DLL_SUFFIX)\"'
+    ;;
+esac
 
 dnl XXX BROKEN dnl ========================================================
 dnl XXX BROKEN dnl =
@@ -1599,6 +1691,13 @@ fi
 
 dnl Checks for header files.
 dnl ========================================================
+AC_HEADER_DIRENT
+dnl -ldir is a noop for OS/2
+case "$target_os" in
+os2*)
+    LIBS=
+    ;;
+esac
 AC_CHECK_HEADERS(sys/byteorder.h compat.h getopt.h)
 AC_CHECK_HEADERS(sys/bittypes.h memory.h unistd.h sys/filio.h)
 AC_CHECK_HEADERS(sys/ipc.h shm.h sys/shm.h X11/extensions/XShm.h)
@@ -1737,6 +1836,11 @@ then
 	    *-*-nto*) 
 			AC_DEFINE(_REENTRANT) 
 			;;
+
+        *-*-os2*)
+            USE_PTHREADS=
+            _PTHREAD_LDFLAGS=
+            ;;
 
 	    alpha*-*-osf*)
 			AC_DEFINE(_REENTRANT)
@@ -2143,6 +2247,9 @@ else
   AC_MSG_RESULT(no)
   _SAVE_LIBS=$LIBS
   LIBS="$LIBS -lstdc++"
+  if test "$target_os" = "os2_emx"; then
+    LIBS='-lemxio -lsocket -lstdcpp'
+  fi
   AC_MSG_CHECKING(for ostreams in -lstdc++)
   AC_CACHE_VAL(ac_cv_lib_stdcpp_ostream,
     [AC_TRY_LINK([#include <iostream.h>],
@@ -2612,6 +2719,13 @@ if test -z "$MOZ_POST_PROGRAM_COMMAND"; then
   MOZ_POST_PROGRAM_COMMAND=true
 fi
 
+case "$target" in
+*-*-os2*)
+    MOZ_POST_DSO_LIB_COMMAND='@echo'
+    MOZ_POST_PROGRAM_COMMAND='@echo'
+    ;;
+esac
+
 MOZ_ARG_ENABLE_BOOL(strip-libs,
 [  --enable-strip-libs     Enable stripping of .so and .a libs ],
   [ MOZ_POST_DSO_LIB_COMMAND=strip
@@ -2971,30 +3085,25 @@ MOZ_ARG_HEADER(Untested or Broken Options)
 
 dnl ========================================================
 dnl =
-dnl = MOZ_TIMER_LIBS
-dnl =
-dnl = Set the timer libs according to MOZ_MONOLITHIC_TOOLKIT
-dnl =
+dnl = OS/2 Build Options
+dnl = 
 dnl ========================================================
-MOZ_TIMER_LIBS='$(DIST)/lib/libtimer_s.a'
+MOZ_ARG_HEADER(OS/2 Build Options)
 
-# Beos needs to link the timer in dynamically
-case "$target" in
-    *-beos*)
-        MOZ_TIMER_LIBS='$(DIST)/lib/libtimer_beos.so'
-	;;
-esac
+MOZ_ARG_WITH_STRING(os2emx,
+[  --with-os2emx=\$val      Build for OS/2 with emx+gcc, set to OMF or A.OUT],
+    [ MOZ_OS2_TOOLS=EMX
+      MOZ_OS2_EMX_OBJECTFORMAT="$withval"
+      AC_DEFINE(XP_OS2_EMX) ])
 
-# so does MacOS
-case "$target" in
-    *-rhapsody*)
-        MOZ_TIMER_LIBS='$(DIST)/lib/libtimer_mac.dylib'
-    ;;
-esac
+MOZ_ARG_WITH_STRING(os2vacpp,
+[  --with-os2vacpp         Build for OS/2 with VAC++],
+    [ MOZ_OS2_TOOLS=VACPP
+      AC_DEFINE(XP_OS2_VACPP) ])
 
 dnl ========================================================
 dnl =
-dnl = End MOZ_TIMER_LIBS
+dnl = End OS/2 Build Options
 dnl =
 dnl ========================================================
 
@@ -3037,13 +3146,22 @@ AC_SUBST(AS_DASH_C_FLAG)
 AC_SUBST(LD)
 AC_SUBST(DLLTOOL)
 AC_SUBST(WINDRES)
+AC_SUBST(USE_SHORT_LIBNAME)
+AC_SUBST(IMPLIB)
+AC_SUBST(FILTER)
+AC_SUBST(BIN_FLAGS)
 AC_SUBST(NS_USE_NATIVE)
 AC_SUBST(MOZ_WIDGET_TOOLKIT)
+AC_SUBST(MOZ_WIDGET_TOOLKIT_LDFLAGS)
+AC_SUBST(WIDGET_DLL)
+AC_SUBST(GFXWIN_DLL)
 AC_SUBST(MOZ_GFX_TOOLKIT)
+AC_SUBST(MOZ_GFX_TOOLKIT_LDFLAGS)
 AC_SUBST(MOZ_UPDATE_XTERM)
 AC_SUBST(MOZ_MATHML)
 AC_SUBST(MOZ_MONOLITHIC_TOOLKIT)
 AC_SUBST(MOZ_TIMER_LIBS)
+AC_SUBST(MOZ_JS_LIBS)
 AC_SUBST(MOZ_SECURITY)
 dnl AC_SUBST(MOZ_NETCAST)
 AC_SUBST(MOZ_DEBUG)
@@ -3073,10 +3191,15 @@ AC_SUBST(FULL_STATIC_BUILD)
 AC_SUBST(BUILD_IDLC)
 
 AC_SUBST(MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS)
+AC_SUBST(MOZ_COMPONENT_NSPR_LIBS)
+AC_SUBST(MOZ_COMPONENT_XPCOM_LIBS)
+AC_SUBST(XPCOM_LIBS)
 
 AC_SUBST(MOZ_GLE)
 
 AC_SUBST(MOZ_BUILD_ROOT)
+AC_SUBST(MOZ_OS2_TOOLS)
+AC_SUBST(MOZ_OS2_EMX_OBJECTFORMAT)
 
 AC_SUBST(MOZ_POST_DSO_LIB_COMMAND)
 AC_SUBST(MOZ_POST_PROGRAM_COMMAND)
@@ -3303,6 +3426,14 @@ AC_SUBST(ZLIB_CFLAGS)
 AC_SUBST(ZLIB_LIBS)
 AC_SUBST(PNG_CFLAGS)
 AC_SUBST(PNG_LIBS)
+
+AC_SUBST(MOZ_JPEG_CFLAGS)
+AC_SUBST(MOZ_JPEG_LIBS)
+AC_SUBST(MOZ_ZLIB_CFLAGS)
+AC_SUBST(MOZ_ZLIB_LIBS)
+AC_SUBST(MOZ_PNG_CFLAGS)
+AC_SUBST(MOZ_PNG_LIBS)
+
 AC_SUBST(NSPR_INCLUDE_DIR)
 AC_SUBST(NSPR_CFLAGS)
 AC_SUBST(NSPR_LIBS)
@@ -3354,6 +3485,7 @@ AC_SUBST(DLL_SUFFIX)
 AC_DEFINE_UNQUOTED(MOZ_DLL_SUFFIX, "$DLL_SUFFIX")
 AC_SUBST(LIB_SUFFIX)
 AC_SUBST(OBJ_SUFFIX)
+AC_SUBST(BIN_SUFFIX)
 
 if test "$USING_HCC"; then
    CC='${topsrcdir}/build/hcc'
@@ -3378,8 +3510,12 @@ fi # $no_x
 dnl Set various defines and substitutions
 dnl ========================================================
 
-if test "$OS_TARGET" = "OS2"; then
+if test "$OS_TARGET" = "OS2" || test "$OS_TARGET" = "OS_2"; then
   AC_DEFINE(XP_PC)
+  AC_DEFINE(XP_OS2)
+  AC_DEFINE(OS2)
+  AC_DEFINE(BSD_SELECT)
+  AC_DEFINE(XP_OS2_FIX)
 elif test "$OS_TARGET" = "WINNT"; then
   AC_DEFINE(XP_PC)
 elif test "$OS_TARGET" = "BeOS"; then
@@ -3526,6 +3662,11 @@ dnl
 dnl Where the NSPR stuff gets installed: $DIST/{bin,lib,include}
 dnl 
 MOZ_NSPRENV_DIST=`pwd`/dist
+case "$target_os" in
+os2*)
+    MOZ_NSPRENV_DIST=`pwd -D`'/dist'
+    ;;
+esac
 
 dnl 
 dnl MAKE

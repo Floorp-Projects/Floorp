@@ -33,19 +33,25 @@ IS_COMPONENT	= 1
 CPPSRCS		= nsMsgNewsFactory.cpp
 EXPORTS		= nsMsgNewsCID.h
 
-SHARED_LIBRARY_LIBS = $(DIST)/lib/libmsgnews_s.a
+SHARED_LIBRARY_LIBS = $(DIST)/lib/libmsgnews_s.$(LIB_SUFFIX)
+
+EXTRA_DSO_LIBS = rdfutil_s
+
+ifeq ($(USE_SHORT_LIBNAME),1)
+EXTRA_DSO_LIBS += msgbutil
+else
+EXTRA_DSO_LIBS += msgbaseutil
+endif
 
 EXTRA_DSO_LDOPTS = \
 		$(MKSHLIB_FORCE_ALL) \
 		$(SHARED_LIBRARY_LIBS) \
 		$(MKSHLIB_UNFORCE_ALL) \
 		-L$(DIST)/bin \
-		$(XPCOM_LIBS) \
-		-lmsgbaseutil \
 		-L$(DIST)/lib \
-		-lrdfutil_s \
-		-lmozjs \
-		$(NSPR_LIBS) \
+		$(EXTRA_DSO_LIBS) \
+		$(MOZ_JS_LIBS) \
+		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

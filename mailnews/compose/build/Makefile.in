@@ -28,13 +28,20 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= msgcompose
 LIBRARY_NAME	= msgcompose
+SHORT_LIBNAME	= msgcomp
 IS_COMPONENT	= 1
+
+ifeq ($(USE_SHORT_LIBNAME),1)
+EXTRA_DSO_LIBS = msgbutil
+else
+EXTRA_DSO_LIBS = msgbaseutil
+endif
 
 CPPSRCS		= nsMsgCompFactory.cpp
 EXPORTS		= nsMsgCompCID.h
 
 SHARED_LIBRARY_LIBS = \
-		$(DIST)/lib/libmsgcompose_s.a \
+		$(DIST)/lib/libmsgcompose_s.$(LIB_SUFFIX) \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \
@@ -43,10 +50,9 @@ EXTRA_DSO_LDOPTS = \
 		$(MKSHLIB_UNFORCE_ALL) \
 		-L$(DIST)/bin \
 		-L$(DIST)/lib \
-		$(XPCOM_LIBS) \
-		-lmozjs \
-		-lmsgbaseutil \
-		$(NSPR_LIBS) \
+		$(EXTRA_DSO_LIBS) \
+		$(MOZ_JS_LIBS) \
+		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

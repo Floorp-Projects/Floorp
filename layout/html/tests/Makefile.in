@@ -26,7 +26,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=)
+SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
 
 CPPSRCS		= \
 		TestCSSParser.cpp \
@@ -36,21 +36,26 @@ CPPSRCS		= \
 
 LOCAL_INCLUDES	= -I$(srcdir)/../style/src
 
+ifeq ($(USE_SHORT_LIBNAME),1)
+EXTRA_DSO_LIBS += nggfx
+else
+EXTRA_DSO_LIBS += raptorgfx
+endif
+
 LIBS		= \
-		$(DIST)/lib/libraptorhtmlbase_s.a \
-		$(DIST)/lib/libnglhtmlcon_s.a \
-		$(DIST)/lib/libraptorhtmldoc_s.a \
-		$(DIST)/lib/libraptorhtmlstyle_s.a \
-		$(DIST)/lib/libraptorhtmltable_s.a \
-		$(DIST)/lib/libraptorlayout_s.a \
-		$(DIST)/lib/libraptorevents_s.a \
+		$(DIST)/lib/libraptorhtmlbase_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libnglhtmlcon_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libraptorhtmldoc_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libraptorhtmlstyle_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libraptorhtmltable_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libraptorlayout_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libraptorevents_s.$(LIB_SUFFIX) \
 		$(MOZ_TIMER_LIBS) \
-		-lmozjs \
-		-lraptorgfx \
-		$(XPCOM_LIBS) \
+		$(MOZ_JS_LIBS) \
+		$(EXTRA_DSO_LIBS) \
 		$(TK_LIBS) \
 		$(LOST_SYM_LIBS) \
-		$(NSPR_LIBS) \
+		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 
 include $(topsrcdir)/config/config.mk

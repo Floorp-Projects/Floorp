@@ -31,7 +31,10 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xpinstall
 LIBRARY_NAME	= xpinstall
+SHORT_LIBNAME	= xpinstal
 IS_COMPONENT	= 1
+
+EXTRA_DSO_LIBS	= jsdom
 
 REQUIRES	= dom js netlib raptor xpcom
 
@@ -69,8 +72,8 @@ LOCAL_INCLUDES	= -I$(srcdir)/../public
 
 EXTRA_DSO_LDOPTS = \
 		-L$(DIST)/bin \
-		-ljsdom \
-		-lmozjs \
+		$(EXTRA_DSO_LIBS) \
+		$(MOZ_JS_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
 		$(ZLIB_LIBS) \
 		$(NULL)

@@ -28,17 +28,16 @@ include $(DEPTH)/config/autoconf.mk
 
 CPPSRCS		= regExport.cpp regxpcom.cpp
 
-SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=)
+SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
 
 ifdef NO_LD_ARCHIVE_FLAGS
 LOST_SYM_LIBS	= -lxpcomds_s -lmozreg_s
 endif
 
 LIBS		= \
-		$(XPCOM_LIBS) \
 		$(LOST_SYM_LIBS) \
 		$(TK_LIBS) \
-		$(NSPR_LIBS) \
+		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
