@@ -400,6 +400,12 @@ NS_IMETHODIMP nsDocShell::GetInterface(const nsIID & aIID, void **aSink)
       if (NS_SUCCEEDED(rv) && shell)
         return shell->QueryInterface(aIID,aSink);    
     }
+    else if (aIID.Equals(NS_GET_IID(nsIDocShellTreeOwner))) {
+      nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
+      nsresult rv = GetTreeOwner(getter_AddRefs(treeOwner));
+      if (NS_SUCCEEDED(rv) && treeOwner)
+        return treeOwner->QueryInterface(aIID, aSink);
+    }
     else {
         return QueryInterface(aIID, aSink);
     }
@@ -1747,9 +1753,9 @@ nsDocShell::FindItemWithName(const PRUnichar * aName,
         // If the parent isn't of the same type fall through and ask tree owner.
     }
 
-    // This QI may fail, but comparing against null serves the same purpose
+    // This may fail, but comparing against null serves the same purpose
     nsCOMPtr<nsIDocShellTreeOwner>
-        reqAsTreeOwner(do_QueryInterface(aRequestor));
+        reqAsTreeOwner(do_GetInterface(aRequestor));
 
     if (mTreeOwner && (mTreeOwner != reqAsTreeOwner.get())) {
         NS_ENSURE_SUCCESS(mTreeOwner->FindItemWithName(aName,
