@@ -6,8 +6,9 @@ function Startup()
 	/* dump("Startup()\n"); */
 
 	if (window.arguments && window.arguments[0] && window.arguments[0])
-        {
+    {
 		param = window.arguments[0];
+		param.abort = true;         //if the user hit the close box, we will abort.
 		if (param.action)
 		{
 		    //Set the default radio array value
