@@ -93,67 +93,69 @@
 #include "nsIMsgWindow.h"
 #include "nsIDocShell.h"
 
+// update status on header download once per second
+#define MIN_STATUS_UPDATE_INTERVAL PR_USEC_PER_SEC
+
 static NS_DEFINE_CID(kCNewsDB, NS_NEWSDB_CID);
 
 nsNNTPNewsgroupList::nsNNTPNewsgroupList()
 {
-    NS_INIT_ISUPPORTS();
+  NS_INIT_ISUPPORTS();
 }
-
 
 nsNNTPNewsgroupList::~nsNNTPNewsgroupList()
 {
-	CleanUp();
+  CleanUp();
 }
 
 NS_IMPL_ISUPPORTS1(nsNNTPNewsgroupList, nsINNTPNewsgroupList)
 
-
 nsresult
 nsNNTPNewsgroupList::Initialize(nsINntpUrl *runningURL, nsIMsgNewsFolder *newsFolder)
 {
-    m_newsDB = nsnull;
-    m_lastProcessedNumber = 0;
-	m_lastMsgNumber = 0;
-	m_set = nsnull;
+  m_newsDB = nsnull;
+  m_lastProcessedNumber = 0;
+  m_lastMsgNumber = 0;
+  m_set = nsnull;
+  m_finishingXover = PR_FALSE;
+  memset(&m_knownArts, 0, sizeof(m_knownArts));
+  m_newsFolder = newsFolder;
+  m_knownArts.set = nsMsgKeySet::Create();
+  m_getOldMessages = PR_FALSE;
+  m_promptedAlready = PR_FALSE;
+  m_downloadAll = PR_FALSE;
+  m_maxArticles = 0;
+  m_firstMsgToDownload = 0;
+  m_lastMsgToDownload = 0;
+  m_runningURL = runningURL;
+  m_lastPercent = -1;
+  LL_I2L(m_lastStatusUpdate, 0);
 
-    m_finishingXover = PR_FALSE;
-
-	memset(&m_knownArts, 0, sizeof(m_knownArts));
-	m_newsFolder = newsFolder;
-	m_knownArts.set = nsMsgKeySet::Create();
-	m_getOldMessages = PR_FALSE;
-	m_promptedAlready = PR_FALSE;
-	m_downloadAll = PR_FALSE;
-	m_maxArticles = 0;
-	m_firstMsgToDownload = 0;
-	m_lastMsgToDownload = 0;
-	m_runningURL = runningURL;
-    return NS_OK;
+  return NS_OK;
 }
 
 nsresult
 nsNNTPNewsgroupList::CleanUp() 
 {
-	if (m_newsDB) {
-		m_newsDB->Commit(nsMsgDBCommitType::kSessionCommit);
-		m_newsDB->Close(PR_TRUE);
-        m_newsDB = nsnull;
-  	}
+  if (m_newsDB) {
+    m_newsDB->Commit(nsMsgDBCommitType::kSessionCommit);
+    m_newsDB->Close(PR_TRUE);
+    m_newsDB = nsnull;
+  }
 
-	if (m_knownArts.set) {
-		delete m_knownArts.set;
-		m_knownArts.set = nsnull;
-	}
+  if (m_knownArts.set) {
+    delete m_knownArts.set;
+    m_knownArts.set = nsnull;
+  }
 
-    m_newsFolder = nsnull;
-    m_runningURL = nsnull;
+  m_newsFolder = nsnull;
+  m_runningURL = nsnull;
     
-    return NS_OK;
+  return NS_OK;
 }
 
 #ifdef HAVE_CHANGELISTENER
-void	nsNNTPNewsgroupList::OnAnnouncerGoingAway (ChangeAnnouncer *instigator)
+void nsNNTPNewsgroupList::OnAnnouncerGoingAway (ChangeAnnouncer *instigator)
 {
 }
 #endif
@@ -257,7 +259,7 @@ nsNNTPNewsgroupList::GetRangeOfArtsToDownload(nsIMsgWindow *aMsgWindow,
       m_knownArts.set->AddRange(low,high);
     }
     
-    if (m_knownArts.set->IsMember(last_possible))	{
+    if (m_knownArts.set->IsMember(last_possible)) {
       nsXPIDLString statusString;
       nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
       NS_ENSURE_SUCCESS(rv, rv);
@@ -268,24 +270,24 @@ nsNNTPNewsgroupList::GetRangeOfArtsToDownload(nsIMsgWindow *aMsgWindow,
       
       rv = bundle->GetStringFromName(NS_LITERAL_STRING("noNewMessages").get(), getter_Copies(statusString));
       NS_ENSURE_SUCCESS(rv, rv);
+
       SetProgressStatus(statusString);
     }
     
-	if (maxextra <= 0 || last_possible < first_possible || last_possible < 1) 
-	{
-	  *status=0;
+    if (maxextra <= 0 || last_possible < first_possible || last_possible < 1) 
+    {
+      *status=0;
       return NS_OK;
-	}
+    }
 
-	m_knownArts.first_possible = first_possible;
-	m_knownArts.last_possible = last_possible;
+    m_knownArts.first_possible = first_possible;
+    m_knownArts.last_possible = last_possible;
 
     nsCOMPtr <nsIMsgIncomingServer> server;
     rv = folder->GetServer(getter_AddRefs(server));
     NS_ENSURE_SUCCESS(rv,rv);
 		
-	// QI to get the nntp incoming msg server
-	nsCOMPtr<nsINntpIncomingServer> nntpServer = do_QueryInterface(server, &rv);
+    nsCOMPtr<nsINntpIncomingServer> nntpServer = do_QueryInterface(server, &rv);
     NS_ENSURE_SUCCESS(rv,rv);
 
 	/* Determine if we only want to get just new articles or more messages.
@@ -466,8 +468,6 @@ nsNNTPNewsgroupList::InitXOVER(PRInt32 first_msg, PRInt32 last_msg)
 	return status;
 }
 
-#define NEWS_ART_DISPLAY_FREQ   20
-
 nsresult
 nsNNTPNewsgroupList::ParseLine(char *line, PRUint32 * message_number) 
 {
@@ -600,7 +600,7 @@ nsNNTPNewsgroupList::ParseLine(char *line, PRUint32 * message_number)
   	if (NS_FAILED(rv)) return rv;           
   }
 
-  GET_TOKEN ();											/* xref */
+  GET_TOKEN (); /* xref */
   
   rv = m_newsDB->AddNewHdrToDB(newMsgHdr, PR_TRUE);
   if (NS_FAILED(rv)) return rv;           
@@ -611,109 +611,124 @@ nsNNTPNewsgroupList::ParseLine(char *line, PRUint32 * message_number)
 nsresult
 nsNNTPNewsgroupList::ProcessXOVERLINE(const char *line, PRUint32 *status)
 {
-	PRUint32 message_number=0;
-	//  PRInt32 lines;
-	PRBool read_p = PR_FALSE;
-	nsresult rv = NS_OK;
+  PRUint32 message_number=0;
+  //  PRInt32 lines;
+  PRBool read_p = PR_FALSE;
+  nsresult rv = NS_OK;
 
-	NS_ASSERTION(line, "null ptr");
-	if (!line)
-        return NS_ERROR_NULL_POINTER;
+  NS_ASSERTION(line, "null ptr");
+  if (!line)
+    return NS_ERROR_NULL_POINTER;
 
-	if (m_newsDB)
-	{
-		char *xoverline = PL_strdup(line);
-		if (!xoverline) return NS_ERROR_OUT_OF_MEMORY;
-		rv = ParseLine(xoverline, &message_number);
-		PL_strfree(xoverline);
-		xoverline = nsnull;
-		if (NS_FAILED(rv)) return rv;
-	}
-	else
-		return NS_ERROR_NOT_INITIALIZED;
+  if (m_newsDB)
+  {
+    char *xoverline = PL_strdup(line);
+    if (!xoverline) 
+      return NS_ERROR_OUT_OF_MEMORY;
+    rv = ParseLine(xoverline, &message_number);
+    PL_strfree(xoverline);
+    xoverline = nsnull;
+    if (NS_FAILED(rv))
+      return rv;
+  }
+  else
+    return NS_ERROR_NOT_INITIALIZED;
 
-	NS_ASSERTION(message_number > m_lastProcessedNumber ||
-			message_number == 1, "bad message_number");
-	if (m_set && message_number > m_lastProcessedNumber + 1)
-	{
-		/* There are some articles that XOVER skipped; they must no longer
-		   exist.  Mark them as read in the newsrc, so we don't include them
-		   next time in our estimated number of unread messages. */
-		if (m_set->AddRange(m_lastProcessedNumber + 1, message_number - 1)) 
-		{
-		  /* This isn't really an important enough change to warrant causing
-			 the newsrc file to be saved; we haven't gathered any information
-			 that won't also be gathered for free next time.
-		   */
-		}
-	}
+  NS_ASSERTION(message_number > m_lastProcessedNumber ||
+               message_number == 1, "bad message_number");
+  if (m_set && message_number > m_lastProcessedNumber + 1)
+  {
+  /* There are some articles that XOVER skipped; they must no longer
+     exist.  Mark them as read in the newsrc, so we don't include them
+     next time in our estimated number of unread messages. */
+    if (m_set->AddRange(m_lastProcessedNumber + 1, message_number - 1)) 
+    {
+    /* This isn't really an important enough change to warrant causing
+       the newsrc file to be saved; we haven't gathered any information
+       that won't also be gathered for free next time.  */
+    }
+  }
 
-	m_lastProcessedNumber = message_number;
-	if (m_knownArts.set) 
-	{
-		int result = m_knownArts.set->Add(message_number);
-		if (result < 0) {
-            if (status) *status = result;
-            return NS_ERROR_NOT_INITIALIZED;
-        }
-	}
+  m_lastProcessedNumber = message_number;
+  if (m_knownArts.set) 
+  {
+    int result = m_knownArts.set->Add(message_number);
+    if (result < 0) {
+      if (status) 
+        *status = result;
+      return NS_ERROR_NOT_INITIALIZED;
+    }
+  }
 
-	if (message_number > m_lastMsgNumber)
-	m_lastMsgNumber = message_number;
-	else if (message_number < m_firstMsgNumber)
-	m_firstMsgNumber = message_number;
+  if (message_number > m_lastMsgNumber)
+    m_lastMsgNumber = message_number;
+  else if (message_number < m_firstMsgNumber)
+    m_firstMsgNumber = message_number;
 
-	if (m_set) {
-		read_p = m_set->IsMember(message_number);
-	}
+  if (m_set) {
+    read_p = m_set->IsMember(message_number);
+  }
 
-	/* Update the thermometer with a percentage of articles retrieved.
-	*/
-	if (m_lastMsgNumber > m_firstMsgNumber)
-	{
-		PRInt32	totalToDownload = m_lastMsgToDownload - m_firstMsgToDownload + 1;
-		PRInt32	lastIndex = m_lastProcessedNumber - m_firstMsgNumber + 1;
-		PRInt32	numDownloaded = lastIndex;
-		PRInt32	totIndex = m_lastMsgNumber - m_firstMsgNumber + 1;
+  /* Update the progress meter with a percentage of articles retrieved */
+  if (m_lastMsgNumber > m_firstMsgNumber)
+  {
+    PRInt32 totalToDownload = m_lastMsgToDownload - m_firstMsgToDownload + 1;
+    PRInt32 lastIndex = m_lastProcessedNumber - m_firstMsgNumber + 1;
+    PRInt32 numDownloaded = lastIndex;
+    PRInt32 totIndex = m_lastMsgNumber - m_firstMsgNumber + 1;
 
-		PRInt32 	percent = (totIndex) ? (PRInt32)(100.0 * (double)numDownloaded / (double)totalToDownload) : 0;
+    PRInt32  percent = (totIndex) ? (PRInt32)(100.0 * (double)numDownloaded / (double)totalToDownload) : 0;
 
-		SetProgressBarPercent(percent);
-		
-		/* only update every NEWS_ART_DISPLAY_FREQ articles for speed */
-		if ( (totIndex <= NEWS_ART_DISPLAY_FREQ) || ((lastIndex % NEWS_ART_DISPLAY_FREQ) == 0) || (lastIndex == totIndex))
-		{
-            nsAutoString numDownloadedStr;
-            numDownloadedStr.AppendInt(numDownloaded);
+    PRTime elapsedTime;
 
-            nsAutoString totalToDownloadStr;
-            totalToDownloadStr.AppendInt(totalToDownload);
+    LL_SUB(elapsedTime, PR_Now(), m_lastStatusUpdate);
 
-            nsXPIDLString statusString;
-            nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
-            NS_ENSURE_SUCCESS(rv, rv);
+    if (LL_CMP(elapsedTime, >, MIN_STATUS_UPDATE_INTERVAL) || 
+        lastIndex == totIndex)
+    {
+      nsAutoString numDownloadedStr;
+      numDownloadedStr.AppendInt(numDownloaded);
 
-            nsCOMPtr<nsIStringBundle> bundle;
-            rv = bundleService->CreateBundle(NEWS_MSGS_URL, getter_AddRefs(bundle));
-            NS_ENSURE_SUCCESS(rv, rv);
+      nsAutoString totalToDownloadStr;
+      totalToDownloadStr.AppendInt(totalToDownload);
 
-            const PRUnichar *formatStrings[2] = { numDownloadedStr.get(), totalToDownloadStr.get() };
-            rv = bundle->FormatStringFromName(NS_LITERAL_STRING("downloadingHeaders").get(), formatStrings, 2, getter_Copies(statusString));
-            NS_ENSURE_SUCCESS(rv, rv);
+      nsXPIDLString statusString;
+      nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
 
-			SetProgressStatus(statusString);
-		}
-	}
-    
-	return NS_OK;
+      nsCOMPtr<nsIStringBundle> bundle;
+      rv = bundleService->CreateBundle(NEWS_MSGS_URL, getter_AddRefs(bundle));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      const PRUnichar *formatStrings[2] = { numDownloadedStr.get(), totalToDownloadStr.get() };
+      rv = bundle->FormatStringFromName(NS_LITERAL_STRING("downloadingHeaders").get(), formatStrings, 2, getter_Copies(statusString));
+      NS_ENSURE_SUCCESS(rv, rv);
+      
+#ifdef DEBUG_NEWS
+      PRInt32 elapsed;
+      LL_L2I(elapsed, elapsedTime);
+      printf("usecs elapsed since last update: %d\n", elapsed);
+#endif
+
+      SetProgressStatus(statusString);
+      m_lastStatusUpdate = PR_Now();
+
+      // only update the progress meter if it has changed
+      if (percent != m_lastPercent) {
+        SetProgressBarPercent(percent);
+        m_lastPercent = percent;
+      }
+    }
+  }
+  return NS_OK;
 }
 
 nsresult
 nsNNTPNewsgroupList::ResetXOVER()
 {
-	m_lastMsgNumber = m_firstMsgNumber;
-	m_lastProcessedNumber = m_lastMsgNumber;
-	return 0;
+  m_lastMsgNumber = m_firstMsgNumber;
+  m_lastProcessedNumber = m_lastMsgNumber;
+  return 0;
 }
 
 /* When we don't have XOVER, but use HEAD, this is called instead.
@@ -728,77 +743,79 @@ nsNNTPNewsgroupList::ResetXOVER()
 nsresult
 nsNNTPNewsgroupList::ProcessNonXOVER (const char * /*line*/)
 {
-	// ### dmb write me
-    return NS_ERROR_NOT_IMPLEMENTED;
+  // ### dmb write me
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
-
 
 nsresult
 nsNNTPNewsgroupList::FinishXOVERLINE(int status, int *newstatus)
 {
-    nsresult rv;
-	struct MSG_NewsKnown* k;
+  nsresult rv;
+  struct MSG_NewsKnown* k;
 
-	/* If any XOVER lines from the last time failed to come in, mark those
-	 messages as read. */
+  /* If any XOVER lines from the last time failed to come in, mark those
+     messages as read. */
 
-	if (status >= 0 && m_lastProcessedNumber < m_lastMsgNumber) {
-		m_set->AddRange(m_lastProcessedNumber + 1, m_lastMsgNumber);
-	}
+  if (status >= 0 && m_lastProcessedNumber < m_lastMsgNumber) {
+    m_set->AddRange(m_lastProcessedNumber + 1, m_lastMsgNumber);
+  }
 
-	if (m_newsDB) {
-		m_newsDB->Close(PR_TRUE);
-		m_newsDB = nsnull;
-	}
+  if (m_newsDB) {
+    m_newsDB->Close(PR_TRUE);
+    m_newsDB = nsnull;
+  }
 
-	k = &m_knownArts;
+  k = &m_knownArts;
 
-	if (k && k->set) 
-	{
-		PRInt32 n = k->set->FirstNonMember();
-		if (n < k->first_possible || n > k->last_possible) 
-		{
-		  /* We know we've gotten all there is to know.  Take advantage of that to
-			 update our counts... */
-			// ### dmb
-		}
-	}
+  if (k && k->set) 
+  {
+    PRInt32 n = k->set->FirstNonMember();
+    if (n < k->first_possible || n > k->last_possible) 
+    {
+      /* We know we've gotten all there is to know.  
+         Take advantage of that to update our counts... */
+      // ### dmb
+    }
+  }
 
-    if (!m_finishingXover)
-	{
-		// turn on m_finishingXover - this is a horrible hack to avoid recursive 
-		// calls which happen when the fe selects a message as a result of getting EndingUpdate,
-		// which interrupts this url right before it was going to finish and causes FinishXOver
-		// to get called again.
-        m_finishingXover = PR_TRUE;
+  if (!m_finishingXover)
+  {
+    // turn on m_finishingXover - this is a horrible hack to avoid recursive 
+    // calls which happen when the fe selects a message as a result of getting EndingUpdate,
+    // which interrupts this url right before it was going to finish and causes FinishXOver
+    // to get called again.
+    m_finishingXover = PR_TRUE;
 
-        // XXX is this correct?
-        m_runningURL = nsnull;
+    // XXX is this correct?
+    m_runningURL = nsnull;
 
-		if (m_lastMsgNumber > 0) {
-            nsAutoString firstStr;
-            firstStr.AppendInt(m_lastProcessedNumber - m_firstMsgNumber + 1);
+    if (m_lastMsgNumber > 0) {
+      nsAutoString firstStr;
+      firstStr.AppendInt(m_lastProcessedNumber - m_firstMsgNumber + 1);
 
-            nsAutoString lastStr;
-            lastStr.AppendInt(m_lastMsgNumber - m_firstMsgNumber + 1);
+      nsAutoString lastStr;
+      lastStr.AppendInt(m_lastMsgNumber - m_firstMsgNumber + 1);
 
-            nsXPIDLString statusString;
-            nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
-            NS_ENSURE_SUCCESS(rv, rv);
+      nsXPIDLString statusString;
+      nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
 
-            nsCOMPtr<nsIStringBundle> bundle;
-            rv = bundleService->CreateBundle(NEWS_MSGS_URL, getter_AddRefs(bundle));
-            NS_ENSURE_SUCCESS(rv, rv);
+      nsCOMPtr<nsIStringBundle> bundle;
+      rv = bundleService->CreateBundle(NEWS_MSGS_URL, getter_AddRefs(bundle));
+      NS_ENSURE_SUCCESS(rv, rv);
 
-            const PRUnichar *formatStrings[2] = { firstStr.get(), lastStr.get() };
-            rv = bundle->FormatStringFromName(NS_LITERAL_STRING("downloadingArticles").get(), formatStrings, 2, getter_Copies(statusString));
-            NS_ENSURE_SUCCESS(rv, rv);
+      const PRUnichar *formatStrings[2] = { firstStr.get(), lastStr.get() };
+      rv = bundle->FormatStringFromName(NS_LITERAL_STRING("downloadingArticles").get(), formatStrings, 2, getter_Copies(statusString));
+      NS_ENSURE_SUCCESS(rv, rv);
 
-            SetProgressStatus(statusString);
-		}
-	}
-    if (newstatus) *newstatus=0;
-    return NS_OK;
+      SetProgressStatus(statusString);
+    }
+  }
+
+  if (newstatus) 
+    *newstatus=0;
+
+  return NS_OK;
 }
 
 nsresult
@@ -810,33 +827,35 @@ nsNNTPNewsgroupList::ClearXOVERState()
 void
 nsNNTPNewsgroupList::SetProgressBarPercent(PRInt32 percent)
 {
-        if (!m_runningURL) return;
+  if (!m_runningURL) 
+    return;
 
-        nsCOMPtr <nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(m_runningURL);
-        if (mailnewsUrl) {
-                nsCOMPtr <nsIMsgStatusFeedback> feedback;
-                mailnewsUrl->GetStatusFeedback(getter_AddRefs(feedback));
+  nsCOMPtr <nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(m_runningURL);
+  if (mailnewsUrl) {
+    nsCOMPtr <nsIMsgStatusFeedback> feedback;
+    mailnewsUrl->GetStatusFeedback(getter_AddRefs(feedback));
 
-                if (feedback) {
-                        feedback->ShowProgress(percent);
-                }
-        }
+    if (feedback) {
+      feedback->ShowProgress(percent);
+    }
+  }
 } 
 
 void
 nsNNTPNewsgroupList::SetProgressStatus(const PRUnichar *message)
 {
-        if (!m_runningURL) return;
+  if (!m_runningURL) 
+    return;
 
-        nsCOMPtr <nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(m_runningURL);
-        if (mailnewsUrl) {
-                nsCOMPtr <nsIMsgStatusFeedback> feedback;
-                mailnewsUrl->GetStatusFeedback(getter_AddRefs(feedback));
+  nsCOMPtr <nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(m_runningURL);
+  if (mailnewsUrl) {
+    nsCOMPtr <nsIMsgStatusFeedback> feedback;
+    mailnewsUrl->GetStatusFeedback(getter_AddRefs(feedback));
 
-                if (feedback) {
-                        feedback->ShowStatusString(message);
-                }
-        }
+    if (feedback) {
+      feedback->ShowStatusString(message);
+    }
+  }
 }     
 
 NS_IMETHODIMP nsNNTPNewsgroupList::SetGetOldMessages(PRBool aGetOldMessages) 

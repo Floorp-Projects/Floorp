@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *  Seth Spitzer <sspitzer@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -55,20 +56,20 @@
    articles we've already seen in the current newsgroup. */
 
 typedef struct MSG_NewsKnown {
-	nsMsgKeySet* set; /* Set of articles we've already gotten
-								  from the newsserver (if it's marked
-								  "read", then we've already gotten it).
-								  If an article is marked "read", it
-								  doesn't mean we're actually displaying
-								  it; it may be an article that no longer
-								  exists, or it may be one that we've
-								  marked read and we're only viewing
-								  unread messages. */
+  nsMsgKeySet* set; /* Set of articles we've already gotten
+                       from the newsserver (if it's marked
+                       "read", then we've already gotten it).
+                       If an article is marked "read", it
+                       doesn't mean we're actually displaying
+                       it; it may be an article that no longer
+                       exists, or it may be one that we've
+                       marked read and we're only viewing
+                       unread messages. */
 
-	PRInt32 first_possible;	/* The oldest article in this group. */
-	PRInt32 last_possible;	/* The newest article in this group. */
+  PRInt32 first_possible; /* The oldest article in this group. */
+  PRInt32 last_possible; /* The newest article in this group. */
 
-	PRBool shouldGetOldest;
+  PRBool shouldGetOldest;
 } MSG_NewsKnown;
 
 // This class should ultimately be part of a news group listing
@@ -88,41 +89,37 @@ public:
 private:
   NS_METHOD CleanUp();
      
-  PRBool          m_finishingXover;
+  PRBool  m_finishingXover;
 
 #ifdef HAVE_CHANGELISTENER
-  virtual void	OnAnnouncerGoingAway (ChangeAnnouncer *instigator);
+  virtual void OnAnnouncerGoingAway (ChangeAnnouncer *instigator);
 #endif
-  nsresult			ParseLine(char *line, PRUint32 *message_number);
-  nsresult			GetDatabase(const char *uri, nsIMsgDatabase **db);
-  void				SetProgressBarPercent(PRInt32 percent);
-  void				SetProgressStatus(const PRUnichar *message);
+  nsresult ParseLine(char *line, PRUint32 *message_number);
+  nsresult GetDatabase(const char *uri, nsIMsgDatabase **db);
+  void SetProgressBarPercent(PRInt32 percent);
+  void SetProgressStatus(const PRUnichar *message);
 
 protected:
-  PRBool			m_getOldMessages;
-  PRBool			m_promptedAlready;
-  PRBool			m_downloadAll;
-  PRInt32			m_maxArticles;
+  PRBool m_getOldMessages;
+  PRBool m_promptedAlready;
+  PRBool m_downloadAll;
+  PRInt32 m_maxArticles;
+  PRInt32 m_lastPercent;
+  PRTime m_lastStatusUpdate;
 
   nsCOMPtr <nsIMsgNewsFolder> m_newsFolder;
   nsCOMPtr <nsIMsgDatabase> m_newsDB;
   nsCOMPtr <nsINntpUrl> m_runningURL;
   
-  nsMsgKey		m_lastProcessedNumber;
-  nsMsgKey		m_firstMsgNumber;
-  nsMsgKey		m_lastMsgNumber;
-  PRInt32			m_firstMsgToDownload;
-  PRInt32			m_lastMsgToDownload;
+  nsMsgKey m_lastProcessedNumber;
+  nsMsgKey m_firstMsgNumber;
+  nsMsgKey m_lastMsgNumber;
+  PRInt32 m_firstMsgToDownload;
+  PRInt32 m_lastMsgToDownload;
   
-  struct MSG_NewsKnown	m_knownArts;
-  nsMsgKeySet		*m_set;
+  struct MSG_NewsKnown m_knownArts;
+  nsMsgKeySet *m_set;
 };
     
 #endif /* nsNNTPNewsgroupListState_h___ */
-
-
-
-
-
-
 

@@ -441,8 +441,8 @@ nsNNTPProtocol::~nsNNTPProtocol()
   }
   if (mUpdateTimer) {
     mUpdateTimer->Cancel();
-	  mUpdateTimer = nsnull;
-	}
+    mUpdateTimer = nsnull;
+  }
   Cleanup();
 }
 
