@@ -198,6 +198,22 @@ ifeq ($(OS_ARCH), Windows_NT)
 	endif
 else
 #
+# If uname -s returns "CYGWIN_NT-4.0", we assume that we are using
+# the uname.exe in the Cygwin tools.
+#
+ifeq (CYGWIN_NT,$(findstring CYGWIN_NT,$(OS_ARCH)))
+	OS_RELEASE := $(patsubst CYGWIN_NT-%,%,$(OS_ARCH))
+	OS_ARCH = WINNT
+	CPU_ARCH := $(shell uname -m)
+	#
+	# Cygwin's uname -m returns "i686" on a Pentium Pro machine.
+	#
+	ifneq (,$(findstring 86,$(CPU_ARCH)))
+		CPU_ARCH = x86
+	endif
+else
+#
+# Prior to the Beta 20 release, Cygwin was called GNU-Win32.
 # If uname -s returns "CYGWIN32/NT", we assume that we are using
 # the uname.exe in the GNU-Win32 tools.
 #
@@ -210,6 +226,7 @@ ifeq ($(OS_ARCH), CYGWIN32_NT)
 	ifneq (,$(findstring 86,$(CPU_ARCH)))
 		CPU_ARCH = x86
 	endif
+endif
 endif
 endif
 endif
