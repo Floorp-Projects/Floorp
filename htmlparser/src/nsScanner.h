@@ -269,7 +269,7 @@ class nsScanner {
        *  @param   
        *  @return  
        */
-      PRBool Append(const nsAReadableString& aBuffer);
+      nsresult Append(const nsAReadableString& aBuffer);
 
       /**
        *  
@@ -278,7 +278,7 @@ class nsScanner {
        *  @param   
        *  @return  
        */
-      PRBool Append(const char* aBuffer, PRUint32 aLen);
+      nsresult Append(const char* aBuffer, PRUint32 aLen);
 
       /**
        *  Call this to copy bytes out of the scanner that have not yet been consumed

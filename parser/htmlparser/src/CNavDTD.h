@@ -108,6 +108,7 @@ class nsITokenizer;
 class nsCParserNode;
 class nsTokenAllocator;
 
+
 /***************************************************************
   Now the main event: CNavDTD.
 
@@ -495,42 +496,37 @@ protected:
 
     nsIHTMLContentSink* mSink;
 
-    nsDTDContext*       mHeadContext;
     nsDTDContext*       mBodyContext;
-    nsDTDContext*       mFormContext;
-    nsDTDContext*       mMapContext;
     nsDTDContext*       mTempContext;
-    PRBool              mHasOpenForm;
+
+    PRInt32             mOpenHeadCount;
     PRInt32             mOpenMapCount;
-    PRInt32             mHasOpenHead;
-    PRBool              mHasOpenBody;
-    PRInt32             mHasOpenNoXXX;  //true when NOFRAMES, NOSCRIPT, NOEMBED, NOLAYER are open
-    PRBool              mHadFrameset;
-    PRBool              mHadBody;
-    nsString            mFilename;
-    nsIDTDDebug*		    mDTDDebug;
+    PRInt32             mAlternateTagOpenCount;  //true when NOFRAMES, NOSCRIPT, NOEMBED, NOLAYER are open
     PRInt32             mLineNumber;
-    nsParser*           mParser;
+
+    PRUint32            mComputedCRC32;
+    PRUint32            mExpectedCRC32;
+
+    PRUint16            mFlags;
+
+    nsString            mFilename;
+    nsString            mScratch;  //used for various purposes; non-persistent
+    nsAutoString        mMimeType;  //ok as an autostring; these are short.
+   
+    nsIDTDDebug*		    mDTDDebug;
     nsITokenizer*       mTokenizer;
+        
+    nsParser*           mParser;
     nsTokenAllocator*   mTokenAllocator;
     nsNodeAllocator     mNodeAllocator;
     nsDeque             mMisplacedContent;
     nsDeque             mSkippedContent;
-    PRBool              mHasOpenScript;
-    PRBool              mSaveBadTokens;
-    eHTMLTags           mSkipTarget;
     nsresult            mDTDState;
     nsDTDMode           mDTDMode;
+
+    eHTMLTags           mSkipTarget;
     eParserCommands     mParserCommand;   //tells us to viewcontent/viewsource/viewerrors...
     eParserDocType      mDocType;
-
-    PRUint32            mComputedCRC32;
-    PRUint32            mExpectedCRC32;
-    nsString            mScratch;  //used for various purposes; non-persistent
-    PRBool              mStyleHandlingEnabled;
-    PRBool              mRequestedHead;
-    PRBool              mIsFormContainer;
-    nsAutoString        mMimeType;  //ok as an autostring; these are short.
 
 };
 

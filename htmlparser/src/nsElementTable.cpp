@@ -367,7 +367,7 @@ void InitializeElementTable(void) {
 	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
       /*parent,incl,exclgroups*/          kFormControl, kFlowEntity, kFormControl,	
-      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special props, prop-range*/       kRequiresBody,kDefaultPropRange,
       /*special parents,kids,skip*/       0,&gButtonKids,eHTMLTag_unknown);
 
     Initialize( 
@@ -764,7 +764,7 @@ void InitializeElementTable(void) {
 	    /*rootnodes,endrootnodes*/          &gInFieldset,&gInFieldset,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
       /*parent,incl,exclgroups*/          kNone, kInlineEntity, kNone,	
-      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special props, prop-range*/       kRequiresBody,kDefaultPropRange,
       /*special parents,kids,skip*/       &gInFieldset,0,eHTMLTag_unknown);
 
     Initialize( 
@@ -1145,7 +1145,7 @@ void InitializeElementTable(void) {
 	    /*rootnodes,endrootnodes*/          &gInForm,	&gInForm,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
       /*parent,incl,exclgroups*/          kFormControl, kPCDATA, kNone,	
-      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special props, prop-range*/       kRequiresBody,kDefaultPropRange,
       /*special parents,kids,skip*/       &gInForm,&gContainsText,eHTMLTag_textarea);
 
     Initialize( 
@@ -1305,6 +1305,15 @@ void InitializeElementTable(void) {
       /*tag*/                             eHTMLTag_markupDecl,
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kFlowEntity, kNone, kNone,	
+      /*special props, prop-range*/       kOmitEndTag,kNoPropRange,
+      /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_instruction,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          0,0,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
       /*parent,incl,exclgroups*/          kFlowEntity, kNone, kNone,	
       /*special props, prop-range*/       kOmitEndTag,kNoPropRange,

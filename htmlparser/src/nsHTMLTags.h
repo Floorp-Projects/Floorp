@@ -44,7 +44,7 @@ enum nsHTMLTag {
   /* The remaining enums are not for tags */
   eHTMLTag_text,    eHTMLTag_whitespace, eHTMLTag_newline, 
   eHTMLTag_comment, eHTMLTag_entity,     eHTMLTag_doctypeDecl,
-  eHTMLTag_markupDecl,
+  eHTMLTag_markupDecl, eHTMLTag_instruction,
   eHTMLTag_userdefined
 };
 #undef HTML_TAG
