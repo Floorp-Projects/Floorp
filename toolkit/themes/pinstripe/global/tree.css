@@ -78,11 +78,15 @@ tree:not([hidecolumnpicker="true"]) treechildren::-moz-tree-row(odd) {
  background-color: #f0f0f0;
 }
 
-treechildren::-moz-tree-row(selected), treechildren::-moz-tree-row(odd, selected) {
+treechildren::-moz-tree-row(selected),
+treechildren::-moz-tree-row(odd, selected),
+tree:not([hidecolumnpicker="true"]) treechildren::-moz-tree-row(odd, selected) {
   background-color: #D0D0D0;
 }
 
-treechildren::-moz-tree-row(selected, focus), treechildren::-moz-tree-row(odd, selected, focus) {
+treechildren::-moz-tree-row(selected, focus), 
+treechildren::-moz-tree-row(odd, selected, focus),
+tree:not([hidecolumnpicker="true"]) treechildren::-moz-tree-row(odd, selected, focus) {
   /* background-color: Highlight; */
   background-color: #3874D1;
   color: #FFFFFF;
