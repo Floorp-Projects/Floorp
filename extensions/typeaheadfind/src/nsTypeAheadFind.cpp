@@ -890,8 +890,6 @@ nsTypeAheadFind::HandleText(nsIDOMEvent* aTextEvent)
     return NS_OK;
 
   textEvent->GetText(mIMEString);
-  if (mIMEString.IsEmpty())
-    return NS_OK;
 
   // show the candidate char/word in the status bar
   DisplayStatus(PR_FALSE, nsnull, PR_FALSE, mIMEString.get());
