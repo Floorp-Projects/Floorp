@@ -26,6 +26,7 @@
 #include "nsIHTMLContent.h"
 #include "nsGenericHTMLElement.h"
 #include "nsHTMLAtoms.h"
+#include "nsHTMLUtils.h"
 #include "nsHTMLIIDs.h"
 #include "nsIStyleContext.h"
 #include "nsIMutableStyleContext.h"
@@ -160,7 +161,6 @@ nsHTMLAreaElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 NS_IMPL_STRING_ATTR(nsHTMLAreaElement, AccessKey, accesskey)
 NS_IMPL_STRING_ATTR(nsHTMLAreaElement, Alt, alt)
 NS_IMPL_STRING_ATTR(nsHTMLAreaElement, Coords, coords)
-NS_IMPL_STRING_ATTR(nsHTMLAreaElement, Href, href)
 NS_IMPL_BOOL_ATTR(nsHTMLAreaElement, NoHref, nohref)
 NS_IMPL_STRING_ATTR(nsHTMLAreaElement, Shape, shape)
 NS_IMPL_INT_ATTR(nsHTMLAreaElement, TabIndex, tabindex)
@@ -257,6 +257,43 @@ nsHTMLAreaElement::RemoveFocus(nsIPresContext* aPresContext)
   return NS_OK;
 }
 
+
+NS_IMETHODIMP
+nsHTMLAreaElement::GetHref(nsString& aValue)
+{
+  // Return the canonical URI that this link refers to.
+  nsresult rv = NS_OK;
+
+  // Get href= attribute (relative URL).
+  nsAutoString relURLSpec;
+  mInner.GetAttribute(kNameSpaceID_None, nsHTMLAtoms::href, relURLSpec);
+
+  if (relURLSpec.Length()) {
+    // Get base URL.
+    nsCOMPtr<nsIURI> baseURL;
+    mInner.GetBaseURL(*getter_AddRefs(baseURL));
+
+    if (baseURL) {
+      // Get absolute URL.
+      nsXPIDLCString absURI;
+      NS_MakeAbsoluteURIWithCharset(getter_Copies(absURI), relURLSpec, mInner.mDocument, baseURL,
+                                    nsHTMLUtils::IOService, nsHTMLUtils::CharsetMgr);
+      aValue.AssignWithConversion(absURI);
+    }
+    else {
+      // Absolute URL is same as relative URL.
+      aValue = relURLSpec;
+    }
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP
+nsHTMLAreaElement::SetHref(const nsString& aValue)
+{
+  return mInner.SetAttribute(kNameSpaceID_None, nsHTMLAtoms::href, aValue, PR_TRUE);
+}
 
 NS_IMETHODIMP
 nsHTMLAreaElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
