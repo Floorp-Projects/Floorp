@@ -53,8 +53,9 @@ protected:
 
 protected:
    nsDocShell*                      mDocShell;
-   nsCOMPtr<nsIURIContentListener>  mParentContentListener;
    nsCOMPtr<nsIPresContext>         mPresContext;
+
+   nsIURIContentListener*            mParentContentListener;  // Weak Reference
 };
 
 #endif /* nsDSURIContentListener_h__ */
