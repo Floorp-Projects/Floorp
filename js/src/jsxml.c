@@ -478,8 +478,10 @@ JSExtendedClass js_QNameClass = {
 };
 
 /*
- * Uninitialized classes for AttributeName and AnyName, which are like QName,
- * except that they're never constructed and they have no getters.
+ * Classes for the ECMA-357-internal types AttributeName and AnyName, which
+ * are like QName, except that they have no property getters.  They share the
+ * qname_toString method, and therefore are exposed as constructable objects
+ * in this implementation.
  */
 JSClass js_AttributeNameClass = {
     js_AttributeName_str, JSCLASS_HAS_PRIVATE | JSCLASS_CONSTRUCT_PROTOTYPE,
@@ -4868,7 +4870,7 @@ xml_mark_private(JSContext *cx, JSXML *xml, void *arg)
  * This scope property both speeds up subsequent js_Find*Property calls, and
  * keeps the JSOP_NAME code in js_Interpret happy by giving it an sprop with
  * (getter, setter) == (GetProperty, PutProperty).  We can't use that getter
- * or setter as js_XMLClass's getProperty or setProperty, because doing so
+ * and setter as js_XMLClass's getProperty and setProperty, because doing so
  * would break the XML methods, which are function-valued properties of the
  * XML.prototype object.
  *
@@ -4981,7 +4983,7 @@ xml_deleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *rval)
      * for it to return to mean "found" and to provide a handle for access
      * operations to call the property's getter or setter.  The property also
      * helps speed up unqualified accesses via the property cache, avoiding
-     * essentialy two HasProperty searches.
+     * what amount to two HasProperty searches.
      *
      * But now it's time to remove any such property, to purge the property
      * cache and remove the scope entry.
