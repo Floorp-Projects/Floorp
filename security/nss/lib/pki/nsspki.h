@@ -35,7 +35,7 @@
 #define NSSPKI_H
 
 #ifdef DEBUG
-static const char NSSPKI_CVS_ID[] = "@(#) $RCSfile: nsspki.h,v $ $Revision: 1.3 $ $Date: 2001/09/13 22:16:21 $ $Name:  $";
+static const char NSSPKI_CVS_ID[] = "@(#) $RCSfile: nsspki.h,v $ $Revision: 1.4 $ $Date: 2001/10/11 16:34:44 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -44,9 +44,9 @@ static const char NSSPKI_CVS_ID[] = "@(#) $RCSfile: nsspki.h,v $ $Revision: 1.3 
  * This file prototypes the methods of the top-level PKI objects.
  */
 
-#ifndef DEVT_H
-#include "devt.h"
-#endif /* DEVT_H */
+#ifndef NSSDEVT_H
+#include "nssdevt.h"
+#endif /* NSSDEVT_H */
 
 #ifndef NSSPKIT_H
 #include "nsspkit.h"

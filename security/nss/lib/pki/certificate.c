@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.4 $ $Date: 2001/09/20 20:40:03 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.5 $ $Date: 2001/10/11 16:34:44 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
@@ -43,9 +43,35 @@ static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.4 $ 
 #include "pkit.h"
 #endif /* PKIT_H */
 
+#ifndef PKIM_H
+#include "pkim.h"
+#endif /* PKIM_H */
+
+#ifndef DEV_H
+#include "dev.h"
+#endif /* DEV_H */
+
 #ifndef CKHELPER_H
 #include "ckhelper.h"
 #endif /* CKHELPER_H */
+
+#ifndef CKT_H
+#ifdef NSS_3_4_CODE
+#define NSSCKT_H 
+#endif
+#include "ckt.h"
+#endif /* CKT_H */
+
+#ifndef BASE_H
+#include "base.h"
+#endif /* BASE_H */
+
+/* Hm, sadly, I'm using PK11_HashBuf...  Need to get crypto context going to
+ * get rid of that
+ */
+#define NSS_3_4_CODE
+#include "pk11func.h"
+#include "hasht.h"
 
 /* I assume the following accessors into cert fields will be needed.
  * We need to be able to return basic cert info, however, these are
@@ -57,10 +83,7 @@ NSSCertificate_GetLabel
   NSSCertificate *c
 )
 {
-    NSSUTF8 *rvStr;
-    rvStr = nssUTF8_Create(NULL, nssStringType_PrintableString, 
-                           c->label.data, c->label.size);
-    return rvStr;
+    return c->nickname;
 }
 
 NSS_IMPLEMENT NSSItem *
@@ -70,6 +93,16 @@ NSSCertificate_GetID
 )
 {
     return &c->id;
+}
+
+NSS_IMPLEMENT NSSCertificate *
+nssCertificate_AddRef
+(
+  NSSCertificate *c
+)
+{
+    c->refCount++;
+    return c;
 }
 
 /* NSS needs access to this function, but does anyone else? */
@@ -105,6 +138,65 @@ loser:
     return (NSSCertificate *)NULL;
 }
 
+static NSSCertificateType
+nss_cert_type_from_ck_attrib(CK_ATTRIBUTE_PTR attrib)
+{
+    CK_CERTIFICATE_TYPE ckCertType;
+    ckCertType = *((CK_ULONG *)attrib->pValue);
+    switch (ckCertType) {
+    case CKC_X_509:
+	return NSSCertificateType_PKIX;
+	break;
+    default:
+	return NSSCertificateType_Unknown;
+    }
+    return NSSCertificateType_Unknown;
+}
+
+static PRStatus
+nssCertificate_SetCertTrust
+(
+  NSSCertificate *c,
+  nssSession *session
+)
+{
+    PRStatus nssrv;
+    CK_TRUST saTrust, epTrust, csTrust;
+    CK_ULONG tobj_size, trust_size;
+    CK_OBJECT_CLASS tobjc = CKO_NETSCAPE_TRUST;
+    CK_OBJECT_HANDLE tobjID;
+    CK_ATTRIBUTE tobj_template[] = {
+	{ CKA_CLASS,          &tobjc, sizeof(CK_OBJECT_CLASS) },
+	{ CKA_CERT_SHA1_HASH, NULL,   0                       }
+    };
+    CK_ATTRIBUTE trust_template[] = {
+	{ CKA_TRUST_SERVER_AUTH,      &saTrust, sizeof(CK_TRUST) },
+	{ CKA_TRUST_EMAIL_PROTECTION, &epTrust, sizeof(CK_TRUST) },
+	{ CKA_TRUST_CODE_SIGNING,     &csTrust, sizeof(CK_TRUST) }
+    };
+    unsigned char sha1_hash[SHA1_LENGTH];
+    tobj_size = sizeof(tobj_template) / sizeof(tobj_template[0]);
+    trust_size = sizeof(trust_template) / sizeof(trust_template[0]);
+    /* First, use the SHA-1 hash of the cert to locate the trust object */
+    /* XXX get rid of this PK11_ call! */
+    PK11_HashBuf(SEC_OID_SHA1, sha1_hash, c->encoding.data, c->encoding.size);
+    tobj_template[1].pValue = (void *)sha1_hash;
+    tobj_template[1].ulValueLen = SHA1_LENGTH;
+    tobjID = nssToken_FindObjectByTemplate(c->token, session,
+                                           tobj_template, tobj_size);
+    if (tobjID == CK_INVALID_KEY) {
+	return PR_FAILURE;
+    }
+    /* Then use the trust object to find the trust settings */
+    nssrv = nssCKObject_GetAttributes(tobjID,
+                                      trust_template, trust_size,
+                                      NULL, session, c->slot);
+    c->trust.serverAuth = saTrust;
+    c->trust.emailProtection = epTrust;
+    c->trust.codeSigning = csTrust;
+    return PR_SUCCESS;
+}
+
 /* Create a certificate from an object handle. */
 NSS_IMPLEMENT NSSCertificate *
 NSSCertificate_CreateFromHandle
@@ -116,13 +208,16 @@ NSSCertificate_CreateFromHandle
 )
 {
     NSSCertificate *rvCert;
-    NSSArena *arena;
     PRStatus nssrv;
     CK_ULONG template_size;
     CK_ATTRIBUTE cert_template[] = {
-	{ CKA_ID,    NULL, 0 },
-	{ CKA_VALUE, NULL, 0 },
-	{ CKA_LABEL, NULL, 0 },
+	{ CKA_CERTIFICATE_TYPE, NULL, 0 },
+	{ CKA_ID,               NULL, 0 },
+	{ CKA_VALUE,            NULL, 0 },
+	{ CKA_LABEL,            NULL, 0 },
+	{ CKA_ISSUER,           NULL, 0 },
+	{ CKA_SUBJECT,          NULL, 0 },
+	{ CKA_SERIAL_NUMBER,    NULL, 0 }
     };
     template_size = sizeof(cert_template) / sizeof(cert_template[0]);
     rvCert = NSSCertificate_Create(arenaOpt);
@@ -131,17 +226,24 @@ NSSCertificate_CreateFromHandle
     }
     rvCert->handle = object;
     rvCert->slot = slot;
+    rvCert->token = slot->token;
     nssrv = nssCKObject_GetAttributes(object, cert_template, template_size,
-                                      rvCert->arena, session, rvCert->slot);
+                                      rvCert->arena, session, slot);
     if (nssrv) {
 	/* okay, but if failed because one of the attributes could not be
 	 * found, do it gracefully (i.e., catch the error).
 	 */
 	goto loser;
     }
-    NSS_CK_ATTRIBUTE_TO_ITEM(&cert_template[0], &rvCert->id);
-    NSS_CK_ATTRIBUTE_TO_ITEM(&cert_template[1], &rvCert->der);
-    NSS_CK_ATTRIBUTE_TO_ITEM(&cert_template[2], &rvCert->label);
+    rvCert->type = nss_cert_type_from_ck_attrib(&cert_template[0]);
+    NSS_CK_ATTRIBUTE_TO_ITEM(&cert_template[1], &rvCert->id);
+    NSS_CK_ATTRIBUTE_TO_ITEM(&cert_template[2], &rvCert->encoding);
+    NSS_CK_ATTRIBUTE_TO_UTF8(&cert_template[3],  rvCert->nickname);
+    NSS_CK_ATTRIBUTE_TO_ITEM(&cert_template[4], &rvCert->issuer);
+    NSS_CK_ATTRIBUTE_TO_ITEM(&cert_template[5], &rvCert->subject);
+    NSS_CK_ATTRIBUTE_TO_ITEM(&cert_template[6], &rvCert->serial);
+    /* get the email from an attrib */
+    nssCertificate_SetCertTrust(rvCert, session);
     return rvCert;
 loser:
     NSSCertificate_Destroy(rvCert);
@@ -167,8 +269,13 @@ NSSCertificate_DeleteStoredObject
   NSSCallback *uhh
 )
 {
-    nss_SetError(NSS_ERROR_NOT_FOUND);
-    return PR_FAILURE;
+    /* delete it from storage, but leave it in memory */
+    /* according to PKCS#11 2.11 section 13.2, the token must know how
+     * to handle deletion when there are multiple threads attempting to use
+     * the same object.
+     */
+    /* XXX use callback to log in if neccessary */
+    return nssToken_DeleteStoredObject(c->token, NULL, c->handle);
 }
 
 NSS_IMPLEMENT PRStatus
@@ -226,8 +333,22 @@ NSSCertificate_Encode
   NSSArena *arenaOpt
 )
 {
-    nss_SetError(NSS_ERROR_NOT_FOUND);
-    return NULL;
+    /* Item, DER, BER are all typedefs now... */
+    return nssItem_Duplicate((NSSItem *)&c->encoding, arenaOpt, rvOpt);
+}
+
+static nssDecodedCert *
+nssCertificate_GetDecoding
+(
+  NSSCertificate *c
+)
+{
+    if (!c->decoding) {
+	c->decoding = nssDecodedCert_Create(NULL, &c->encoding, c->type);
+	/* Now that it's decoded, make sure it's in the cache. */
+	nssTrustDomain_AddCertsToCache(c->trustDomain, &c, 1);
+    }
+    return c->decoding;
 }
 
 NSS_IMPLEMENT NSSCertificate **
@@ -242,8 +363,53 @@ NSSCertificate_BuildChain
   NSSArena *arenaOpt
 )
 {
-    nss_SetError(NSS_ERROR_NOT_FOUND);
-    return NULL;
+    PRStatus nssrv;
+    nssList *chain;
+    NSSItem *issuerID;
+    NSSCertificate **rvChain;
+    nssDecodedCert *dc;
+    chain = nssList_Create(NULL, PR_FALSE);
+    nssList_Add(chain, c);
+    if (rvLimit == 1) goto finish;
+    while (!nssItem_Equal(&c->subject, &c->issuer, &nssrv)) {
+	dc = nssCertificate_GetDecoding(c);
+	issuerID = dc->getIssuerIdentifier(dc);
+	if (issuerID) {
+	    c = nssTrustDomain_FindCertificateByIdentifier(c->trustDomain, 
+	                                                   issuerID);
+	    nss_ZFreeIf(issuerID);
+	    if (!c) {
+#if 0
+		nss_SetError(NSS_ERROR_CERTIFICATE_ISSUER_NOT_FOUND);
+#endif
+		goto finish;
+	    }
+	} else {
+	    c = NSSTrustDomain_FindBestCertificateBySubject(c->trustDomain,
+	                                                    &c->issuer,
+	                                                    timeOpt,
+	                                                    usage,
+	                                                    policiesOpt);
+	    if (!c) {
+#if 0
+		nss_SetError(NSS_ERROR_CERTIFICATE_ISSUER_NOT_FOUND);
+#endif
+		goto finish;
+	    }
+	}
+	nssList_Add(chain, c);
+	if (nssList_Count(chain) == rvLimit) goto finish;
+    }
+finish:
+    if (rvOpt) {
+	rvChain = rvOpt;
+    } else {
+	rvChain = nss_ZNEWARRAY(arenaOpt, 
+	                        NSSCertificate *, nssList_Count(chain));
+    }
+    nssList_GetArray(chain, (void **)rvChain, rvLimit);
+    nssList_Destroy(chain);
+    return rvChain;
 }
 
 NSS_IMPLEMENT NSSTrustDomain *
@@ -252,8 +418,12 @@ NSSCertificate_GetTrustDomain
   NSSCertificate *c
 )
 {
-    nss_SetError(NSS_ERROR_NOT_FOUND);
-    return NULL;
+#if 0
+    if (c->trustDomain) {
+	return nssTrustDomain_AddRef(c->trustDomain);
+    }
+#endif
+    return (NSSTrustDomain *)NULL;
 }
 
 NSS_IMPLEMENT NSSToken *
@@ -263,8 +433,10 @@ NSSCertificate_GetToken
   PRStatus *statusOpt
 )
 {
-    nss_SetError(NSS_ERROR_NOT_FOUND);
-    return NULL;
+    if (c->token) {
+	return nssToken_AddRef(c->token);
+    }
+    return (NSSToken *)NULL;
 }
 
 NSS_IMPLEMENT NSSSlot *
@@ -274,8 +446,12 @@ NSSCertificate_GetSlot
   PRStatus *statusOpt
 )
 {
-    nss_SetError(NSS_ERROR_NOT_FOUND);
-    return NULL;
+#if 0
+    if (c->token) {
+	return nssToken_GetSlot(c->token);
+    }
+#endif
+    return (NSSSlot *)NULL;
 }
 
 NSS_IMPLEMENT NSSModule *
@@ -285,8 +461,12 @@ NSSCertificate_GetModule
   PRStatus *statusOpt
 )
 {
-    nss_SetError(NSS_ERROR_NOT_FOUND);
-    return NULL;
+#if 0
+    if (c->token) {
+	return nssToken_GetModule(c->token);
+    }
+#endif
+    return (NSSModule *)NULL;
 }
 
 NSS_IMPLEMENT NSSItem *
@@ -381,8 +561,35 @@ NSSCertificate_GetPublicKey
   NSSCertificate *c
 )
 {
-    nss_SetError(NSS_ERROR_NOT_FOUND);
-    return NULL;
+    PRStatus nssrv;
+    CK_ATTRIBUTE pubktemplate[] = {
+	{ CKA_CLASS,   g_ck_class_pubkey.data, g_ck_class_pubkey.size },
+	{ CKA_ID,      NULL,                   0                      },
+	{ CKA_SUBJECT, NULL,                   0                      }
+    };
+    CK_ULONG count = sizeof(pubktemplate) / sizeof(pubktemplate[0]);
+    if (c->id.size > 0) {
+	/* CKA_ID */
+	NSS_CK_ITEM_TO_ATTRIBUTE(&c->id, &pubktemplate[1]);
+    } else {
+	/* failure, yes? */
+	return (NSSPublicKey *)NULL;
+    }
+    if (c->subject.size > 0) {
+	/* CKA_SUBJECT */
+	NSS_CK_ITEM_TO_ATTRIBUTE(&c->subject, &pubktemplate[2]);
+    } else {
+	/* failure, yes? */
+	return (NSSPublicKey *)NULL;
+    }
+    /* Try the cert's token first */
+#if 0
+    if (c->token) {
+	nssrv = nssToken_FindObjectByTemplate(c->token, pubktemplate, count);
+    }
+#endif
+    /* Try all other key tokens */
+    return (NSSPublicKey *)NULL;
 }
 
 NSS_IMPLEMENT NSSPrivateKey *

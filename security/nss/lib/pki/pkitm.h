@@ -31,61 +31,52 @@
  * GPL.
  */
 
-#ifndef PKI_H
-#define PKI_H
+#ifndef PKITM_H
+#define PKITM_H
 
 #ifdef DEBUG
-static const char PKI_CVS_ID[] = "@(#) $RCSfile: pki.h,v $ $Revision: 1.4 $ $Date: 2001/10/11 16:34:44 $ $Name:  $";
+static const char PKITM_CVS_ID[] = "@(#) $RCSfile: pkitm.h,v $ $Revision: 1.1 $ $Date: 2001/10/11 16:34:49 $ $Name:  $";
 #endif /* DEBUG */
+
+/*
+ * pkitm.h
+ *
+ * This file contains PKI-module specific types.
+ */
+
+#ifndef BASET_H
+#include "baset.h"
+#endif /* BASET_H */
 
 #ifndef PKIT_H
 #include "pkit.h"
 #endif /* PKIT_H */
 
-#ifndef NSSDEVT_H
-#include "nssdevt.h"
-#endif /* NSSDEVT_H */
-
 PR_BEGIN_EXTERN_C
 
-NSS_EXTERN NSSCertificate *
-nssCertificate_AddRef
-(
-  NSSCertificate *c
-);
-
-NSS_EXTERN NSSCertificate *
-NSSCertificate_CreateFromHandle
-(
-  NSSArena *arenaOpt,
-  CK_OBJECT_HANDLE object,
-  nssSession *session,
-  NSSSlot *slot
-);
-
-NSS_EXTERN NSSUTF8 *
-NSSCertificate_GetLabel
-(
-  NSSCertificate *c
-);
-
-NSS_EXTERN NSSItem *
-NSSCertificate_GetID
-(
-  NSSCertificate *c
-);
-
 /*
- * Look for a specific cert in the cache.
+ * nssDecodedCert
+ *
+ * This is an interface to allow the PKI module access to certificate
+ * information that can only be found by decoding.  The interface is
+ * generic, allowing each certificate type its own way of providing
+ * the information
  */
-NSS_EXTERN NSSCertificate *
-nssTrustDomain_GetCertForIssuerAndSNFromCache
-(
-  NSSTrustDomain *td,
-  NSSDER *issuer,
-  NSSDER *serialNum
-);
+struct nssDecodedCertStr {
+    NSSCertificateType type;
+    void *data;
+    /* returns the unique identifier for the cert (usually issuer + serial) */
+    NSSItem *  (*getIdentifier)(nssDecodedCert *dc);
+    /* returns the unique identifier for this cert's issuer */
+    NSSItem *  (*getIssuerIdentifier)(nssDecodedCert *dc);
+    /* returns the cert usage */
+    NSSUsage * (*getUsage)(nssDecodedCert *dc);
+    /* is time within the validity period of the cert? */
+    PRBool     (*isValidAtTime)(nssDecodedCert *dc, NSSTime *time);
+    /* is the validity period of this cert newer than cmpdc? */
+    PRBool     (*isNewerThan)(nssDecodedCert *dc, nssDecodedCert *cmpdc);
+};
 
 PR_END_EXTERN_C
 
-#endif /* PKI_H */
+#endif /* PKITM_H */

@@ -31,61 +31,39 @@
  * GPL.
  */
 
-#ifndef PKI_H
-#define PKI_H
+#ifndef PKINSS3HACK_H
+#define PKINSS3HACK_H
 
 #ifdef DEBUG
-static const char PKI_CVS_ID[] = "@(#) $RCSfile: pki.h,v $ $Revision: 1.4 $ $Date: 2001/10/11 16:34:44 $ $Name:  $";
+static const char PKINSS3HACK_CVS_ID[] = "@(#) $RCSfile: pkinss3hack.h,v $ $Revision: 1.1 $ $Date: 2001/10/11 16:34:46 $ $Name:  $";
 #endif /* DEBUG */
 
-#ifndef PKIT_H
-#include "pkit.h"
-#endif /* PKIT_H */
+#ifndef NSSPKIT_H
+#include "nsspkit.h"
+#endif /* NSSPKIT_H */
 
-#ifndef NSSDEVT_H
-#include "nssdevt.h"
-#endif /* NSSDEVT_H */
+#include "cert.h"
 
 PR_BEGIN_EXTERN_C
 
-NSS_EXTERN NSSCertificate *
-nssCertificate_AddRef
+NSS_EXTERN NSSTrustDomain *
+STAN_GetDefaultTrustDomain();
+
+NSS_IMPLEMENT void
+STAN_LoadDefaultNSS3TrustDomain
 (
-  NSSCertificate *c
+  void
 );
 
-NSS_EXTERN NSSCertificate *
-NSSCertificate_CreateFromHandle
+NSS_EXTERN PRStatus
+STAN_AddNewSlotToDefaultTD
 (
-  NSSArena *arenaOpt,
-  CK_OBJECT_HANDLE object,
-  nssSession *session,
-  NSSSlot *slot
+  PK11SlotInfo *sl
 );
 
-NSS_EXTERN NSSUTF8 *
-NSSCertificate_GetLabel
-(
-  NSSCertificate *c
-);
-
-NSS_EXTERN NSSItem *
-NSSCertificate_GetID
-(
-  NSSCertificate *c
-);
-
-/*
- * Look for a specific cert in the cache.
- */
-NSS_EXTERN NSSCertificate *
-nssTrustDomain_GetCertForIssuerAndSNFromCache
-(
-  NSSTrustDomain *td,
-  NSSDER *issuer,
-  NSSDER *serialNum
-);
+NSS_EXTERN CERTCertificate *
+STAN_GetCERTCertificate(NSSCertificate *c);
 
 PR_END_EXTERN_C
 
-#endif /* PKI_H */
+#endif /* PKINSS3HACK_H */
