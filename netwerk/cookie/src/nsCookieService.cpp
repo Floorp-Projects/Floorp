@@ -195,7 +195,7 @@ struct nsEnumerationData
 //
 //    set NSPR_LOG_MODULES=cookie:3 -- shows rejected cookies
 //    set NSPR_LOG_MODULES=cookie:4 -- shows accepted and rejected cookies
-//    set NSPR_LOG_FILE=c:\cookie.log
+//    set NSPR_LOG_FILE=cookie.log
 //
 // this next define has to appear before the include of prlog.h
 #define FORCE_PR_LOG // Allow logging in the release build
