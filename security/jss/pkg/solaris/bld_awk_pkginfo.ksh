@@ -1,6 +1,6 @@
 #!/usr/bin/ksh -p
 #
-#ident	"$Id: bld_awk_pkginfo.ksh,v 1.2 2003/01/13 19:42:13 glen.beasley%sun.com Exp $"
+#ident	"$Id: bld_awk_pkginfo.ksh,v 1.3 2003/01/14 20:26:36 glen.beasley%sun.com Exp $"
 #
 # Copyright 2002 Sun Microsystems, Inc.  All rights reserved.
 # Use is subject to license terms.
@@ -34,7 +34,7 @@ ARCH='ARCH=\"ISA\"'
 mach=""
 prodver=""
 awk_script=""
-version="JSS 3.3"
+version="JSSVERS"
 
 while getopts o:p:m:v: c
 do
@@ -89,7 +89,7 @@ cat << EOF > $awk_script
    }
 /$VERSION2/ {
       sub(/\=[^=]*$/,"=$rev\"")
-      sub(/NSPRVERS/,"$version")
+      sub(/JSSVERS/,"$version")
       print
       next
    }

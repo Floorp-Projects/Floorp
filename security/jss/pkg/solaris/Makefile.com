@@ -2,7 +2,7 @@
 # Copyright 2002 Sun Microsystems, Inc.  All rights reserved.
 # Use is subject to license terms.
 #
-#ident	"$Id: Makefile.com,v 1.2 2003/01/13 19:42:12 glen.beasley%sun.com Exp $"
+#ident	"$Id: Makefile.com,v 1.3 2003/01/14 20:26:35 glen.beasley%sun.com Exp $"
 #
 
 MACH = $(shell mach)
@@ -16,7 +16,7 @@ endif
 
 PKGARCHIVE = $(PUBLISH_ROOT)/pkgarchive
 DATAFILES = copyright
-FILES = $(DATAFILES) pkginfo
+FILES = $(DATAFILES) pkginfo prototype
 
 PACKAGE = $(shell basename `pwd`)
 
