@@ -46,12 +46,13 @@ nsMsgFolder::nsMsgFolder(void)
   : nsRDFResource(),
     mName(""),
     mFlags(0),
-    mNumUnreadMessages(0),	mNumTotalMessages(0),
+    mParent(nsnull),
+    mNumUnreadMessages(0),
+    mNumTotalMessages(0),
     mCsid(0),
     mDepth(0), 
-    mPrefFlags(0),
-	mParent(nsnull)
-{
+    mPrefFlags(0)
+	{
 //  NS_INIT_REFCNT(); done by superclass
 
 
@@ -899,10 +900,10 @@ NS_IMETHODIMP nsMsgFolder::GetExpansionArray(nsISupportsArray *expansionArray)
 		nsCOMPtr<nsIMsgFolder> folder = do_QueryInterface(supports, &rv);
 		if(NS_SUCCEEDED(rv))
 		{
-			PRUint32 cnt;
-      nsresult rv = expansionArray->Count(&cnt);
+			PRUint32 cnt2;
+      rv = expansionArray->Count(&cnt2);
       if (NS_SUCCEEDED(rv)) {
-        expansionArray->InsertElementAt(folder, cnt);
+        expansionArray->InsertElementAt(folder, cnt2);
         PRUint32 flags;
         folder->GetFlags(&flags);
         if (!(flags & MSG_FOLDER_FLAG_ELIDED))
