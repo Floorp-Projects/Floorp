@@ -1378,8 +1378,11 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
         break;
 
       case eHTMLTag_col:
-      case eHTMLTag_colgroup:
         break;    //singletons can't contain anything...
+
+      case eHTMLTag_colgroup:
+        result=PRBool(eHTMLTag_col==(eHTMLTags)aChild);
+        break;
 
       case eHTMLTag_dt:
         {
@@ -1913,7 +1916,7 @@ PRBool CNavDTD::IsContainer(eHTMLTags aTag) const {
   switch(aTag){
     case eHTMLTag_area:       case eHTMLTag_base:
     case eHTMLTag_basefont:   case eHTMLTag_br:
-    case eHTMLTag_col:        case eHTMLTag_colgroup:
+    case eHTMLTag_col:      //  case eHTMLTag_colgroup:
     case eHTMLTag_embed:
     case eHTMLTag_frame:
     case eHTMLTag_hr:         case eHTMLTag_img:
