@@ -27,3 +27,4 @@ skins\classic.jar:
     global\skin\message-icon.gif
     global\skin\question-icon.gif
     global\skin\alert-icon.gif
+    global\skin\dialogOverlay.css
