@@ -116,7 +116,7 @@ public:
     /**
      * Return a reference to the immutable Unicode string.
      */
-    operator const PRUnichar*();
+    operator const PRUnichar*() const;
 
     /**
      * Make a copy of the Unicode string. Use this function in the
@@ -192,6 +192,39 @@ getter_Shares(nsXPIDLString& aXPIDLString)
 }
 
 
+// XXX THESE ARE NOT strcmp()! DON'T TRY TO USE THEM AS SUCH!
+inline
+PRBool
+operator==(const PRUnichar* lhs, const nsXPIDLString& rhs)
+{
+    return lhs == NS_STATIC_CAST(const PRUnichar*, rhs);
+}
+
+inline
+PRBool
+operator==(const nsXPIDLString& lhs, const PRUnichar* rhs)
+{
+    return NS_STATIC_CAST(const PRUnichar*, lhs) == rhs;
+}
+
+
+#ifdef HAVE_CPP_TROUBLE_COMPARING_TO_ZERO
+
+inline
+PRBool
+operator==(int lhs, const nsXPIDLString& rhs)
+{
+    return NS_REINTERPRET_CAST(PRUnichar*, lhs) == NS_STATIC_CAST(const PRUnichar*, rhs);
+}
+
+inline
+PRBool
+operator==(const nsXPIDLString& lhs, int rhs)
+{
+    return NS_STATIC_CAST(const PRUnichar*, lhs) == NS_REINTERPRET_CAST(PRUnichar*, rhs);
+}
+
+#endif
 
 ////////////////////////////////////////////////////////////////////////
 // nsXPIDLCString
@@ -226,7 +259,7 @@ public:
     /**
      * Return a reference to the immutable single-byte string.
      */
-    operator const char*();
+    operator const char*() const;
 
     /**
      * Make a copy of the single-byte string. Use this function in the
@@ -301,6 +334,37 @@ getter_Shares(nsXPIDLCString& aXPIDLString)
     return nsXPIDLCString::GetterShares(aXPIDLString);
 }
 
+// XXX THESE ARE NOT strcmp()! DON'T TRY TO USE THEM AS SUCH!
+inline
+PRBool
+operator==(const char* lhs, const nsXPIDLCString& rhs)
+{
+    return lhs == NS_STATIC_CAST(const char*, rhs);
+}
 
+inline
+PRBool
+operator==(const nsXPIDLCString& lhs, const char* rhs)
+{
+    return NS_STATIC_CAST(const char*, lhs) == rhs;
+}
+
+#ifdef HAVE_CPP_TROUBLE_COMPARING_TO_ZERO
+
+inline
+PRBool
+operator==(int lhs, const nsXPIDLCString& rhs)
+{
+    return NS_REINTERPRET_CAST(char*, lhs) == NS_STATIC_CAST(const char*, rhs);
+}
+
+inline
+PRBool
+operator==(const nsXPIDLCString& lhs, int rhs)
+{
+    return NS_STATIC_CAST(const char*, lhs) == NS_REINTERPRET_CAST(char*, rhs);
+}
+
+#endif
 
 #endif // nsXPIDLString_h__
