@@ -43,7 +43,7 @@
 #define ASSERT assert
 #endif
 
-#include "RegExp.h"
+#include "regexp.h"
 
 
 typedef unsigned char uint8;
