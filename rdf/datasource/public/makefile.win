@@ -21,7 +21,6 @@ MODULE=rdf
 DEPTH=..\..\..
 
 EXPORTS	= \
-        nsIBookmarkDataSource.h	\
         nsILocalStore.h         \
         nsIRDFFileSystem.h      \
         nsIRDFFind.h		\

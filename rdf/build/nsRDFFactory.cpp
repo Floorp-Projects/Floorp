@@ -56,7 +56,6 @@ static NS_DEFINE_IID(kIFactoryIID,  NS_IFACTORY_IID);
 
 static NS_DEFINE_CID(kGenericFactoryCID,                  NS_GENERICFACTORY_CID);
 static NS_DEFINE_CID(kLocalStoreCID,                      NS_LOCALSTORE_CID);
-static NS_DEFINE_CID(kRDFBookmarkDataSourceCID,           NS_RDFBOOKMARKDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFCompositeDataSourceCID,          NS_RDFCOMPOSITEDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFContainerCID,                    NS_RDFCONTAINER_CID);
 static NS_DEFINE_CID(kRDFContainerUtilsCID,               NS_RDFCONTAINERUTILS_CID);
@@ -184,10 +183,6 @@ RDFFactoryImpl::CreateInstance(nsISupports *aOuter,
     else if (mClassID.Equals(kRDFXMLDataSourceCID)) {
         if (NS_FAILED(rv = NS_NewRDFXMLDataSource((nsIRDFXMLDataSource**) &inst)))
           return rv;
-    }
-    else if (mClassID.Equals(kRDFBookmarkDataSourceCID)) {
-        if (NS_FAILED(rv = NS_NewRDFBookmarkDataSource((nsIRDFDataSource**) &inst)))
-            return rv;
     }
     else if (mClassID.Equals(kRDFFileSystemDataSourceCID)) {
         if (NS_FAILED(rv = NS_NewRDFFileSystemDataSource((nsIRDFDataSource**) &inst)))
@@ -358,11 +353,6 @@ NSRegisterSelf(nsISupports* aServMgr , const char* aPath)
     if (NS_FAILED(rv)) return rv;
 
     // register our build-in datasources:
-    rv = compMgr->RegisterComponent(kRDFBookmarkDataSourceCID,  
-                                         "Bookmarks",
-                                         NS_RDF_DATASOURCE_PROGID_PREFIX "bookmarks",
-                                         aPath, PR_TRUE, PR_TRUE);
-    if (NS_FAILED(rv)) goto done;
     rv = compMgr->RegisterComponent(kRDFCompositeDataSourceCID, 
                                          "RDF Composite Data Source",
                                          NS_RDF_DATASOURCE_PROGID_PREFIX "composite-datasource",
@@ -515,8 +505,6 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* aPath)
                              (nsISupports**)&compMgr);
     if (NS_FAILED(rv)) return rv;
 
-    rv = compMgr->UnregisterComponent(kRDFBookmarkDataSourceCID,  aPath);
-    if (NS_FAILED(rv)) goto done;
     rv = compMgr->UnregisterComponent(kRDFFileSystemDataSourceCID,aPath);
     if (NS_FAILED(rv)) goto done;
     rv = compMgr->UnregisterComponent(kRDFSearchDataSourceCID,aPath);

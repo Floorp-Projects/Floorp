@@ -32,10 +32,6 @@
 #include "nsError.h"
 
 class nsIRDFDataSource;
-class nsIRDFDataBase;
-
-// in nsBookmarkDataSource.cpp
-nsresult NS_NewRDFBookmarkDataSource(nsIRDFDataSource** result);
 
 // in nsFileSystemDataSource.cpp
 nsresult NS_NewRDFFileSystemDataSource(nsIRDFDataSource** result);
@@ -48,9 +44,6 @@ nsresult NS_NewRDFFindDataSource(nsIRDFDataSource** result);
 
 // in nsFTPDataSource.cpp
 nsresult NS_NewRDFFTPDataSource(nsIRDFDataSource** result);
-
-// in nsRelatedLinksDataSource.cpp
-nsresult NS_NewRDFRelatedLinksDataSource(nsIRDFDataSource **result);
 
 #endif // nsBuiltinDataSources_h__
 
