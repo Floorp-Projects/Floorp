@@ -25,7 +25,7 @@
 
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
-<!DOCTYPE window SYSTEM "chrome://messenger/locale/am-identity-advanced.dtd">
+<!DOCTYPE page SYSTEM "chrome://messenger/locale/am-identity-advanced.dtd">
 
 <page
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"

@@ -21,7 +21,7 @@ Rights Reserved.
 
 <?xml-stylesheet href="chrome://messenger/skin/subscribe.css" type="text/css"?>
 
-<!DOCTYPE window SYSTEM "chrome://messenger/locale/subscribe.dtd">
+<!DOCTYPE dialog SYSTEM "chrome://messenger/locale/subscribe.dtd">
 
 <dialog xmlns:NC="http://home.netscape.com/NC-rdf#" 
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"

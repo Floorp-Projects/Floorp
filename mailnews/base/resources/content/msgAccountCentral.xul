@@ -22,7 +22,7 @@ Rights Reserved.
 
 <?xml-stylesheet href="chrome://messenger/skin/accountCentral.css" type="text/css"?>
 
-<!DOCTYPE window [
+<!DOCTYPE page [
  <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd">
  %brandDTD;
  <!ENTITY % acctCentralDTD SYSTEM "chrome://messenger/locale/msgAccountCentral.dtd">

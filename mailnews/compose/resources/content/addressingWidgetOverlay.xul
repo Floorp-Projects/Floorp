@@ -19,7 +19,7 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 --> 
 
-<!DOCTYPE window SYSTEM "chrome://messenger/locale/messengercompose/addressingWidgetOverlay.dtd">
+<!DOCTYPE overlay SYSTEM "chrome://messenger/locale/messengercompose/addressingWidgetOverlay.dtd">
 
 
 <overlay xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"

@@ -3,7 +3,7 @@
 <!-- platform specific commands -->
 <?xul-overlay href="chrome://messenger/content/platformMailOverlay.xul"?>
 
-<!DOCTYPE window SYSTEM "chrome://messenger/locale/mailOverlay.dtd">
+<!DOCTYPE overlay SYSTEM "chrome://messenger/locale/mailOverlay.dtd">
 
 <overlay id="mailABOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">

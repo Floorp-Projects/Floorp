@@ -26,7 +26,7 @@ Contributors:
 
 <?xul-overlay href="chrome://messenger/content/msgFolderPickerOverlay.xul"?>
 
-<!DOCTYPE window SYSTEM "chrome://messenger/locale/am-offline.dtd">
+<!DOCTYPE page SYSTEM "chrome://messenger/locale/am-offline.dtd">
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="parent.onPanelLoaded('am-offline.xul');">

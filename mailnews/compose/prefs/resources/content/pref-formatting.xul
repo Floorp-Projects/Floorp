@@ -2,7 +2,7 @@
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 
-<!DOCTYPE window SYSTEM "chrome://messenger/locale/messengercompose/pref-formatting.dtd">
+<!DOCTYPE page SYSTEM "chrome://messenger/locale/messengercompose/pref-formatting.dtd">
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="Init()"

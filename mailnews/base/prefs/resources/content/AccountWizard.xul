@@ -21,7 +21,7 @@ Rights Reserved.
 
 <?xml-stylesheet href="chrome://messenger/skin/accountWizard.css" type="text/css"?>
 
-<!DOCTYPE window SYSTEM "chrome://messenger/locale/AccountWizard.dtd">
+<!DOCTYPE wizard SYSTEM "chrome://messenger/locale/AccountWizard.dtd">
 
 <wizard id="AccountWizard" title="&windowTitle.label;"
         onwizardcancel="return onCancel();"

@@ -23,7 +23,7 @@
  Hkan Waara <hwaara@chello.se>
 -->
 
-<!DOCTYPE window SYSTEM "chrome://messenger/locale/searchTermOverlay.dtd" >
+<!DOCTYPE overlay SYSTEM "chrome://messenger/locale/searchTermOverlay.dtd" >
 
 <overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 

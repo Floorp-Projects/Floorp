@@ -24,7 +24,7 @@ Rights Reserved.
 
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
-<!DOCTYPE window SYSTEM "chrome://messenger/locale/aw-accounttype.dtd" >
+<!DOCTYPE page SYSTEM "chrome://messenger/locale/aw-accounttype.dtd" >
 <page id="accounttype" 
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     xmlns:nc="http://home.netscape.com/NC-rdf#"

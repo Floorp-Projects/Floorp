@@ -43,7 +43,7 @@
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
 
-<!DOCTYPE window SYSTEM "chrome://messenger/locale/pref-labels.dtd">
+<!DOCTYPE page SYSTEM "chrome://messenger/locale/pref-labels.dtd">
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="parent.initPanel('chrome://messenger/content/pref-labels.xul');"

@@ -2,7 +2,7 @@
 
 <?xml-stylesheet href="chrome://messenger/skin/accountManage.css" type="text/css"?>
 
-<!DOCTYPE window SYSTEM "chrome://messenger/locale/AccountManager.dtd" >
+<!DOCTYPE dialog SYSTEM "chrome://messenger/locale/AccountManager.dtd" >
 <dialog id="account-manager" 
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&accountManagerTitle.label;"

@@ -1,7 +1,7 @@
 <?xml version="1.0"?> 
 <!-- mac version of platformMailOverlay.xul -->
 
-<!DOCTYPE window SYSTEM "chrome://messenger/locale/mailOverlay.dtd">
+<!DOCTYPE overlay SYSTEM "chrome://messenger/locale/mailOverlay.dtd">
 
 <overlay id="platformMailOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">

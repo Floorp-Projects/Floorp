@@ -4,7 +4,7 @@
 
 <?xul-overlay href="chrome://messenger/content/msgFolderPickerOverlay.xul"?>
 
-<!DOCTYPE window SYSTEM "chrome://messenger/locale/am-copies.dtd" >
+<!DOCTYPE page SYSTEM "chrome://messenger/locale/am-copies.dtd" >
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="parent.onPanelLoaded('am-copies.xul');">
 

@@ -24,7 +24,7 @@ Rights Reserved.
 
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
-<!DOCTYPE window SYSTEM "chrome://messenger/locale/aw-login.dtd" >
+<!DOCTYPE page SYSTEM "chrome://messenger/locale/aw-login.dtd" >
 <page id="loginpage"
       xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="parent.wizardManager.onPageLoad('login');">

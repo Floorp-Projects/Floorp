@@ -30,7 +30,7 @@
 
 <?xul-overlay href="chrome://messenger/content/addressbook/abDirTreeOverlay.xul"?>
 
-<!DOCTYPE window [
+<!DOCTYPE page [
 <!ENTITY % abSelectAddressesDialogDTD SYSTEM "chrome://messenger/locale/addressbook/abSelectAddressesDialog.dtd" >
 %abSelectAddressesDialogDTD;
 <!ENTITY % abResultsPaneOverlayDTD SYSTEM "chrome://messenger/locale/addressbook/abResultsPaneOverlay.dtd" >

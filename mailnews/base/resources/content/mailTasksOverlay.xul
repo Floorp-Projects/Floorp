@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 
-<!DOCTYPE window [
+<!DOCTYPE overlay [
 <!ENTITY % mailTasksOverlayDTD SYSTEM "chrome://messenger/locale/mailTasksOverlay.dtd" >
 %mailTasksOverlayDTD;
 ]>

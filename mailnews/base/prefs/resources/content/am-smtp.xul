@@ -4,7 +4,7 @@
 
 <?xul-overlay href="chrome://messenger/content/smtpEditOverlay.xul"?>
 
-<!DOCTYPE window SYSTEM "chrome://messenger/locale/am-advanced.dtd" >
+<!DOCTYPE page SYSTEM "chrome://messenger/locale/am-advanced.dtd" >
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="onLoad();">

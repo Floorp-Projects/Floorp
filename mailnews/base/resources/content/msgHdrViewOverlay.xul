@@ -19,7 +19,7 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 -->
 
-<!DOCTYPE window SYSTEM "chrome://messenger/locale/msgHdrViewOverlay.dtd">
+<!DOCTYPE overlay SYSTEM "chrome://messenger/locale/msgHdrViewOverlay.dtd">
 
 <?xml-stylesheet href="chrome://messenger/skin/messageHeader.css" type="text/css"?>
 <?xml-stylesheet href="chrome://messenger/skin/messageKeywords.css" type="text/css"?>

@@ -21,7 +21,7 @@ Rights Reserved.
 
 <?xml-stylesheet href="chrome://messenger/skin/folderMenus.css" type="text/css"?>
 
-<!DOCTYPE window SYSTEM "chrome://messenger/locale/msgFolderPickerOverlay.dtd">
+<!DOCTYPE overlay SYSTEM "chrome://messenger/locale/msgFolderPickerOverlay.dtd">
 
 <overlay id="msgFolderPicker"
          xmlns:nc="http://home.netscape.com/NC-rdf#"

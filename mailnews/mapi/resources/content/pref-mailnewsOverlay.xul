@@ -20,7 +20,7 @@ Contributor(s):
   Srilatha Moturi <srilatha@netscape.com>
 -->
 
-<!DOCTYPE window [
+<!DOCTYPE overlay [
 <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
 %brandDTD;
 <!ENTITY % prefMailnewsOverlayDTD SYSTEM "chrome://messenger-mapi/locale/pref-mailnewsOverlay.dtd" >

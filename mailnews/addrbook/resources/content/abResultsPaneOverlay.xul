@@ -37,7 +37,7 @@
 
 <?xml-stylesheet href="chrome://messenger/skin/addressbook/abResultsPane.css" type="text/css"?>
 
-<!DOCTYPE window SYSTEM "chrome://messenger/locale/addressbook/abResultsPaneOverlay.dtd">
+<!DOCTYPE overlay SYSTEM "chrome://messenger/locale/addressbook/abResultsPaneOverlay.dtd">
 
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 

@@ -19,7 +19,7 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 --> 
 
-<!DOCTYPE window SYSTEM "chrome://messenger/locale/addressbook/abCardViewOverlay.dtd">
+<!DOCTYPE overlay SYSTEM "chrome://messenger/locale/addressbook/abCardViewOverlay.dtd">
 
 <overlay xmlns:html="http://www.w3.org/1999/xhtml"
      xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
