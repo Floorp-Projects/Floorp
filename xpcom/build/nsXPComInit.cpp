@@ -261,10 +261,24 @@ nsresult NS_COM NS_InitXPCOM(nsIServiceManager* *result)
     return rv;
 }
 
+//
+// NS_ShutdownXPCOM()
+//
+// The shutdown sequence for xpcom would be
+//
+// - Release the Global Service Manager
+//   - Release all service instances held by the global service manager
+//   - Release the Global Service Manager itself
+// - Release the Component Manager
+//   - Release all factories cached by the Component Manager
+//   - Unload Libraries
+//   - Release Progid Cache held by Component Manager
+//   - Release dll abstraction held by Component Manager
+//   - Release the Registry held by Component Manager
+//   - Finally, release the component manager itself
+//
 nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
 {
-    NS_ASSERTION(nsServiceManager::mGlobalServiceManager == servMgr,
-                 "This is not my global service manager!");
     NS_RELEASE(nsServiceManager::mGlobalServiceManager);
     NS_RELEASE(nsComponentManagerImpl::gComponentManager);
     return NS_OK;
