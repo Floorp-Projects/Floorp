@@ -445,6 +445,7 @@ js_Invoke(JSContext *cx, uintN argc, JSBool constructing)
 	    minargs = nvars = 0;
 	} else {
 	    funobj = JSVAL_TO_OBJECT(v);
+            parent = OBJ_GET_PARENT(cx, funobj);
 
 	    fun = JS_GetPrivate(cx, funobj);
             if (clasp != &js_ClosureClass) {
@@ -478,7 +479,7 @@ have_fun:
 		thisp = parent;
 	    else
 		parent = NULL;
-	}
+        }
     }
 
     /* Initialize a stack frame, except for thisp and scopeChain. */
@@ -502,8 +503,8 @@ have_fun:
     frame.exceptPending = JS_FALSE;
 
     /* Compute the 'this' parameter and store it in frame. */
-    if (thisp) {
-	/* Some objects (e.g., With) delegate this to another object. */
+    if (thisp && OBJ_GET_CLASS(cx, thisp) != &js_CallClass) {
+	/* Some objects (e.g., With) delegate 'this' to another object. */
 	thisp = OBJ_THIS_OBJECT(cx, thisp);
 	if (!thisp) {
 	    ok = JS_FALSE;
@@ -526,7 +527,15 @@ have_fun:
     	 *
     	 * The alert should display "true".
     	 */
-    	thisp = parent ? parent : cx->globalObject;
+        if (parent == NULL) {
+            parent = cx->globalObject;
+        } else {
+            /* walk up to find the top-level object */
+            JSObject *p;
+            thisp = parent;
+            while (p = OBJ_GET_PARENT(cx, thisp))
+                thisp = p;
+        }
     }
     frame.thisp = thisp;
 
