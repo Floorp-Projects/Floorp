@@ -295,7 +295,7 @@ nsHTMLFormElement::Submit()
   // XXX Need to do something special with mailto: or news: URLs
   nsIDocument* doc = nsnull;
   nsresult res = GetDocument(doc);
-  if ((NS_OK == res) && doc) {
+  if (NS_SUCCEEDED(res) && doc) {
     nsIPresShell *shell = doc->GetShellAt(0);
     if (nsnull != shell) {
       nsIFrame* frame;
@@ -303,7 +303,7 @@ nsHTMLFormElement::Submit()
       if (frame) {
         nsIFormManager* formMan = nsnull;
         res = frame->QueryInterface(kIFormManagerIID, (void**)&formMan);
-        if ((NS_OK == res) && formMan) {
+        if (NS_SUCCEEDED(res) && formMan) {
           nsCOMPtr<nsIPresContext> context;
           shell->GetPresContext(getter_AddRefs(context));
           if (context) {
@@ -329,7 +329,7 @@ nsHTMLFormElement::Reset()
   // XXX Need to do something special with mailto: or news: URLs
   nsIDocument* doc = nsnull;
   nsresult res = GetDocument(doc);
-  if ((NS_OK == res) && doc) {
+  if (NS_SUCCEEDED(res) && doc) {
     nsIPresShell *shell = doc->GetShellAt(0);
     if (nsnull != shell) {
       nsIFrame* frame;
@@ -337,7 +337,7 @@ nsHTMLFormElement::Reset()
       if (frame) {
         nsIFormManager* formMan = nsnull;
         res = frame->QueryInterface(kIFormManagerIID, (void**)&formMan);
-        if ((NS_OK == res) && formMan) {
+        if (NS_SUCCEEDED(res) && formMan) {
           res = formMan->OnReset();
         }
       }
@@ -656,19 +656,22 @@ nsresult nsFormControlList::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   if (NULL == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
-  static NS_DEFINE_IID(kIDOMHTMLCollectionIID, NS_IDOMHTMLCOLLECTION_IID);
-  if (aIID.Equals(kIDOMHTMLCollectionIID)) {
-    *aInstancePtr = (void*)(nsIDOMHTMLCollection*)this;
+  if (aIID.Equals(NS_GET_IID(nsIDOMHTMLCollection))) {
+    nsIDOMHTMLCollection* tmp = this;
+    *aInstancePtr = (void*)tmp;
     AddRef();
     return NS_OK;
   }
-  if (aIID.Equals(kIScriptObjectOwnerIID)) {
-    *aInstancePtr = (void*)(nsIScriptObjectOwner*)this;
+  if (aIID.Equals(NS_GET_IID(nsIScriptObjectOwner))) {
+    nsIScriptObjectOwner* tmp = this;
+    *aInstancePtr = (void*)tmp;
     AddRef();
     return NS_OK;
   }
-  if (aIID.Equals(kISupportsIID)) {
-    *aInstancePtr = (void*)(nsISupports*)(nsIDOMHTMLCollection*)this;
+  if (aIID.Equals(NS_GET_IID(nsISupports))) {
+    nsIDOMHTMLCollection* tmp = this;
+    nsISupports* tmp1 = tmp;
+    *aInstancePtr = (void*)tmp1;
     AddRef();
     return NS_OK;
   }

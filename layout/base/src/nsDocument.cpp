@@ -215,7 +215,6 @@ nsDOMStyleSheetCollection::QueryInterface(REFNSIID aIID, void** aInstancePtrResu
     return NS_ERROR_NULL_POINTER;
   }
 
-  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
   if (aIID.Equals(kIDOMStyleSheetCollectionIID)) {
     nsIDOMStyleSheetCollection *tmp = this;
     *aInstancePtrResult = (void*) tmp;
@@ -413,7 +412,6 @@ NS_IMPL_RELEASE(nsDOMImplementation)
 nsresult 
 nsDOMImplementation::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
-  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
   if (nsnull == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
@@ -804,8 +802,7 @@ nsresult nsDocument::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-  if (aIID.Equals(kISupportsIID)) {
+  if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
     nsIDocument* tmp = this;
     nsISupports* tmp2 = tmp;
     *aInstancePtr = (void*) tmp2;
