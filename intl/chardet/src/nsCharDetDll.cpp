@@ -30,10 +30,21 @@
 #include "nsMetaCharsetObserver.h"
 #include "nsXMLEncodingObserver.h"
 #include "nsDetectionAdaptor.h"
+#include "nsICharsetDetector.h"
 
 #include "nsMetaCharsetCID.h"
 #include "nsXMLEncodingCID.h"
 #include "nsCharsetDetectionAdaptorCID.h"
+
+
+#define INCLUDE_DBGDETECTOR
+#ifdef INCLUDE_DBGDETECTOR
+// for debuging only
+#include "nsDebugDetector.h"
+NS_DEFINE_CID(k1stBlkDbgDetectorCID,  NS_1STBLKDBG_DETECTOR_CID);
+NS_DEFINE_CID(k2ndBlkDbgDetectorCID,  NS_2NDBLKDBG_DETECTOR_CID);
+NS_DEFINE_CID(klastBlkDbgDetectorCID, NS_LASTBLKDBG_DETECTOR_CID);
+#endif /* INCLUDE_DBGDETECTOR  */
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 
@@ -63,6 +74,14 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* aServMgr,
     factory = NEW_XML_ENCODING_OBSERVER_FACTORY();
   } else if (aClass.Equals(kCharsetDetectionAdaptorCID)) {
     factory = NEW_DETECTION_ADAPTOR_FACTORY();
+#ifdef INCLUDE_DBGDETECTOR
+  } else if (aClass.Equals(k1stBlkDbgDetectorCID)) {
+    factory = NEW_1STBLKDBG_DETECTOR_FACTORY();
+  } else if (aClass.Equals(k2ndBlkDbgDetectorCID)) {
+    factory = NEW_2NDBLKDBG_DETECTOR_FACTORY();
+  } else if (aClass.Equals(klastBlkDbgDetectorCID)) {
+    factory = NEW_LASTBLKDBG_DETECTOR_FACTORY();
+#endif /* INCLUDE_DBGDETECTOR */
   }
 
   if(nsnull != factory) {
@@ -107,6 +126,23 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char *
                                   NS_CHARSET_DETECTION_ADAPTOR_PROGID, 
                                   path,
                                   PR_TRUE, PR_TRUE);
+#ifdef INCLUDE_DBGDETECTOR
+  rv = compMgr->RegisterComponent(k1stBlkDbgDetectorCID,
+                                  "Debuging Detector 1st block", 
+                                  NS_CHARSET_DETECTOR_PROGID_BASE "1stblkdbg", 
+                                  path,
+                                  PR_TRUE, PR_TRUE);
+  rv = compMgr->RegisterComponent(k2ndBlkDbgDetectorCID,
+                                  "Debuging Detector 2nd block", 
+                                  NS_CHARSET_DETECTOR_PROGID_BASE "2ndblkdbg", 
+                                  path,
+                                  PR_TRUE, PR_TRUE);
+  rv = compMgr->RegisterComponent(klastBlkDbgDetectorCID,
+                                  "Debuging Detector last block", 
+                                  NS_CHARSET_DETECTOR_PROGID_BASE "lastblkdbg", 
+                                  path,
+                                  PR_TRUE, PR_TRUE);
+#endif /* INCLUDE_DBGDETECTOR */
 
   (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
   return rv;
@@ -128,6 +164,11 @@ extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* aServMgr, const char
   rv = compMgr->UnregisterComponent(kMetaCharsetCID, path);
   rv = compMgr->UnregisterComponent(kXMLEncodingCID, path);
   rv = compMgr->UnregisterComponent(kCharsetDetectionAdaptorCID, path);
+#ifdef INCLUDE_DBGDETECTOR
+  rv = compMgr->UnregisterComponent(k1stBlkDbgDetectorCID, path);
+  rv = compMgr->UnregisterComponent(k2ndBlkDbgDetectorCID, path);
+  rv = compMgr->UnregisterComponent(klastBlkDbgDetectorCID, path);
+#endif /* INCLUDE_DBGDETECTOR */
 
   (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
   return rv;
