@@ -857,8 +857,8 @@ NS_IMETHODIMP nsScrollingView :: CreateScrollControls(nsNativeWidget aNative)
     rv = mCornerView->Init(mViewManager, trect, this,
                            nsnull, nsViewVisibility_kHide);
     mViewManager->InsertChild(this, mCornerView, 1);
-    mClipView->CreateWidget(kWidgetCID, nsnull,
-                            mWindow ? nsnull : aNative);
+    mCornerView->CreateWidget(kWidgetCID, nsnull,
+                              mWindow ? nsnull : aNative);
   }
 
   // Create a view for a vertical scrollbar
