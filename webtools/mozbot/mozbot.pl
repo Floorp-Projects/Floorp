@@ -69,6 +69,7 @@ my %pubcmds = (
                "up" => \&bot_up,
                "trees" => \&bot_tinderbox,
                "(slashdot|sd|\/\.)" => \&bot_slashdot,
+               "(freshmeat|fm)" => \&bot_freshmeat,,
                "(mozillazine|zine|mz)" => \&bot_mozillazine,
                "(mozillaorg|mozilla|mo)" => \&bot_mozillaorg,
                "debug" => \&bot_debug,
@@ -146,6 +147,13 @@ my $slashdot = "http://slashdot.org/ultramode.txt";
 my @slashdot;
 my $last_slashdot = 0;
 
+# leave $freshmeat tuned to undef if you don't want freshmeat
+# headlines checked every two hours
+
+my $freshmeat = "http://freshmeat.net/files/freshmeat/recentnews.txt";
+my @freshmeat;
+my $last_freshmeat = 0;
+
 # leave $mozillazine undef'd if you don't want mozillazine
 # headlines checked every eight hours
 
@@ -188,6 +196,7 @@ $bot->schedule (0, \&checksourcechange);
 $bot->schedule (0, \&mozillazine);
 $bot->schedule (0, \&mozillaorg);
 $bot->schedule (0, \&slashdot);
+$bot->schedule (0, \&freshmeat);
 $bot->schedule (0, \&stocks);
 
 &debug ("connecting to $server $port as $nick on $channel");
@@ -441,6 +450,7 @@ sub bot_debug
 	my %last = 
 		(
 		"slashdot" => $last_slashdot,
+		"freshmeat" => $last_freshmeat,
 		"mozillazine" => $last_mozillazine,
 		"mozillaorg" => $last_mozillaorg,
 		"tinderbox" => $last_tree,
@@ -466,6 +476,11 @@ sub bot_debug
 sub bot_slashdot {
     my ($nick, $cmd, $rest) = (@_);
     do_headlines($nick, "Headlines from Slashdot (http://slashdot.org/)", \@slashdot);
+}
+
+sub bot_freshmeat {
+    my ($nick, $cmd, $rest) = (@_);
+    do_headlines($nick, "Today in freshmeat (http://freshmeat.net/)", \@freshmeat);
 }
 
 
@@ -817,6 +832,29 @@ sub slashdot
 	push @slashdot, "last updated: " . &logdate ($last_slashdot);
 
     reportDiffs("SlashDot", "http://www.slashdot.org/", \@slashdot);
+
+}
+
+sub freshmeat
+{
+	return if (! defined $freshmeat);
+	&debug ("fetching freshmeat headlines");
+
+    $bot->schedule (60*60 + 30, \&freshmeat);
+    my $output = get $freshmeat;
+	$last_freshmeat = time;
+    return if (! $output);
+    my @sd = split /\n/, $output;
+
+    @freshmeat = ();
+
+    foreach my $i (0 .. $#sd)
+    {
+        push @freshmeat, $sd[$i] if ($i % 3 == 0);
+    }
+	push @freshmeat, "last updated: " . &logdate ($last_freshmeat);
+
+    reportDiffs("FreshMeat", "http://freshmeat.net/", \@freshmeat);
 
 }
 
