@@ -1069,15 +1069,31 @@ pref_DeleteItem(PLHashEntry *he, int i, void *arg)
 PrefResult
 PREF_DeleteBranch(const char *branch_name)
 {
-    char* branch_dot = PR_smprintf("%s.", branch_name);
-    if (!branch_dot)
-        return PREF_OUT_OF_MEMORY;      
+    char* branch_dot;
+    int len = (int)PL_strlen(branch_name);
+
     if (!gHashTable)
         return PREF_NOT_INITIALIZED;
 
+    /* The following check insures that if the branch name already has a "."
+     * at the end, we don't end up with a "..". This fixes an incompatibility
+     * between nsIPref, which needs the period added, and nsIPrefBranch which
+     * does not. When nsIPref goes away this function should be fixed to 
+     * never add the period at all.
+     */
+    if ((len > 1) && (branch_name[len - 1] == '.'))
+        branch_dot = (char *)branch_name;
+    else
+    {
+        branch_dot = PR_smprintf("%s.", branch_name);
+        if (!branch_dot)
+            return PREF_OUT_OF_MEMORY;
+    }
+
     PR_HashTableEnumerateEntries(gHashTable, pref_DeleteItem, (void*) branch_dot);
     
-    PR_Free(branch_dot);
+    if (branch_dot != branch_name)
+        PR_Free(branch_dot);
     return PREF_NOERROR;
 }
 
