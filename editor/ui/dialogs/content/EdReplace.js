@@ -139,7 +139,7 @@ function onFindNext()
   {
     var bundle = document.getElementById("findBundle");
     AlertWithTitle(null, bundle.getString("notFoundWarning"));
-    SetTextboxFocus(gReplaceDialog.findKey);
+    SetTextboxFocus(gReplaceDialog.findInput);
     gReplaceDialog.findInput.select();
     gReplaceDialog.findInput.focus();
     return false;
@@ -150,7 +150,7 @@ function onFindNext()
 function onReplace()
 {
   if (!gEditor)
-    return;
+    return false;
 
   // Does the current selection match the find string?
   var selection = gEditor.selection;
@@ -172,13 +172,13 @@ function onReplace()
     matches = false;
   else
   {
-    specArray = specStr.match(/\S+|\s+/g);
-    selArray = selStr.match(/\S+|\s+/g);
+    var specArray = specStr.match(/\S+|\s+/g);
+    var selArray = selStr.match(/\S+|\s+/g);
     if ( specArray.length != selArray.length)
       matches = false;
     else
     {
-      for (i=0; i<selArray.length; i++)
+      for (var i=0; i<selArray.length; i++)
       {
         if (selArray[i] != specArray[i])
         {
@@ -264,13 +264,23 @@ function onReplaceAll()
     endPt.setEnd(wholeDocRange.endContainer, wholeDocRange.endOffset);
   }
 
-  // Find and replace from here to end of document:
+  // Find and replace from here to end (start) of document:
   var foundRange;
-  while ((foundRange = finder.Find(findStr, wholeDocRange,
+  var searchRange = wholeDocRange.cloneRange();
+  while ((foundRange = finder.Find(findStr, searchRange,
                                    selecRange, endPt)) != null)
   {
     gEditor.selection.removeAllRanges();
     gEditor.selection.addRange(foundRange);
+
+    // The editor will leave the caret at the end of the replaced text.
+    // For reverse finds, we need it at the beginning,
+    // so save the next position now.
+    if (gReplaceDialog.searchBackwards.checked)
+    {
+      selecRange = foundRange.cloneRange();
+      selecRange.setEnd(selecRange.startContainer, selecRange.startOffset);
+    }
 
     // nsPlaintextEditor::InsertText fails if the string is empty,
     // so make that a special case:
@@ -279,11 +289,15 @@ function onReplaceAll()
     else
       gEditor.insertText(repStr);
 
-    selection = gEditor.selection;
-    if (selection.rangeCount <= 0) {
-      return;
+    // If we're going forward, we didn't save selecRange before, so do it now:
+    if (!gReplaceDialog.searchBackwards.checked)
+    {
+      selection = gEditor.selection;
+      if (selection.rangeCount <= 0) {
+        return;
+      }
+      selecRange = selection.getRangeAt(0).cloneRange();
     }
-    selecRange = selection.getRangeAt(0);
   }
 
   // If no wrapping, then we're done
@@ -315,6 +329,13 @@ function onReplaceAll()
     gEditor.selection.removeAllRanges();
     gEditor.selection.addRange(foundRange);
 
+    // Save insert point for backward case
+    if (gReplaceDialog.searchBackwards.checked)
+    {
+      selecRange = foundRange.cloneRange();
+      selecRange.setEnd(selecRange.startContainer, selecRange.startOffset);
+    }
+
     // nsPlaintextEditor::InsertText fails if the string is empty,
     // so make that a special case:
     if (repStr == "")
@@ -322,11 +343,15 @@ function onReplaceAll()
     else
       gEditor.insertText(repStr);
 
-    selection = gEditor.selection;
-    if (selection.rangeCount <= 0) {
-      return;
+    // Get insert point for forward case
+    if (!gReplaceDialog.searchBackwards.checked)
+    {
+      selection = gEditor.selection;
+      if (selection.rangeCount <= 0) {
+        return;
+      }
+      selecRange = selection.getRangeAt(0);
     }
-    selecRange = selection.getRangeAt(0);
   }
 }
 
