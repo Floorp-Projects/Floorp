@@ -31,8 +31,8 @@
                (:line-terminator (#?000A #?000D #?2028 #?2029) ())
                (:non-terminator (- :unicode-character :line-terminator)
                                 (($default-action $default-action)))
-               (:non-slash (- :unicode-character (#\/)) ())
-               (:non-asterisk-or-slash (- :unicode-character (#\* #\/)) ())
+               (:non-terminator-or-slash (- :non-terminator (#\/)) ())
+               (:non-terminator-or-asterisk-or-slash (- :non-terminator (#\* #\/)) ())
                (:ordinary-initial-identifier-character (+ :unicode-initial-alphabetic (#\$ #\_))
                                                        (($default-action $default-action)))
                (:ordinary-continuing-identifier-character (+ :unicode-alphanumeric (#\$ #\_))
@@ -52,24 +52,26 @@
                 (($default-action $default-action)))
                (:identity-escape (- :non-terminator :unicode-alphanumeric)
                                  (($default-action $default-action)))
-               (:ordinary-reg-exp-first-char (- :non-terminator (#\\ #\/ #\*))
-                                             (($default-action $default-action)))
                (:ordinary-reg-exp-char (- :non-terminator (#\\ #\/))
                                        (($default-action $default-action))))
               (($default-action character nil identity)
                ($digit-value integer digit-value digit-char-36)))
        
        (rule :$next-token
-             ((token token) (reg-exp-may-follow boolean))
+             ((token token))
+         (production :$next-token ($unit (:next-token unit)) $next-token-unit
+           (token (token :next-token)))
          (production :$next-token ($re (:next-token re)) $next-token-re
-           (token (token :next-token))
-           (reg-exp-may-follow (reg-exp-may-follow :next-token)))
+           (token (token :next-token)))
          (production :$next-token ($non-re (:next-token div)) $next-token-non-re
-           (token (token :next-token))
-           (reg-exp-may-follow (reg-exp-may-follow :next-token))))
+           (token (token :next-token))))
        
-       (%text nil "The start symbols are " (:grammar-symbol (:next-token re)) " and " (:grammar-symbol (:next-token div))
-              " depending on whether a " (:character-literal #\/) " should be interpreted as a regular expression or division.")
+       (%text nil "The start symbols are: "
+              (:grammar-symbol (:next-token unit)) " if the previous token was a number; "
+              (:grammar-symbol (:next-token re)) " if the previous token was not a number and a "
+              (:character-literal #\/) " should be interpreted as a regular expression; and "
+              (:grammar-symbol (:next-token div)) " if the previous token was not a number and a "
+              (:character-literal #\/) " should be interpreted as a division or division-assignment operator.")
 
        (deftype semantic-exception (oneof syntax-error))
        
@@ -90,64 +92,79 @@
        
        (%charclass :non-terminator)
        
-       (production :block-comment (#\/ #\* :block-comment-characters #\* #\/) block-comment)
+       (production :single-line-block-comment (#\/ #\* :block-comment-characters #\* #\/) single-line-block-comment)
        
        (production :block-comment-characters () block-comment-characters-empty)
-       (production :block-comment-characters (:block-comment-characters :non-slash) block-comment-characters-chars)
+       (production :block-comment-characters (:block-comment-characters :non-terminator-or-slash) block-comment-characters-chars)
        (production :block-comment-characters (:pre-slash-characters #\/) block-comment-characters-slash)
        
        (production :pre-slash-characters () pre-slash-characters-empty)
-       (production :pre-slash-characters (:block-comment-characters :non-asterisk-or-slash) pre-slash-characters-chars)
+       (production :pre-slash-characters (:block-comment-characters :non-terminator-or-asterisk-or-slash) pre-slash-characters-chars)
        (production :pre-slash-characters (:pre-slash-characters #\/) pre-slash-characters-slash)
        
-       (%charclass :non-slash)
-       (%charclass :non-asterisk-or-slash)
+       (%charclass :non-terminator-or-slash)
+       (%charclass :non-terminator-or-asterisk-or-slash)
+       
+       (production :multi-line-block-comment (#\/ #\* :multi-line-block-comment-characters :block-comment-characters #\* #\/) multi-line-block-comment)
+       
+       (production :multi-line-block-comment-characters (:block-comment-characters :line-terminator) multi-line-block-comment-characters-first)
+       (production :multi-line-block-comment-characters (:multi-line-block-comment-characters :block-comment-characters :line-terminator)
+                   multi-line-block-comment-characters-rest)
        (%print-actions)
        
        (%section "White space")
        
        (production :white-space () white-space-empty)
        (production :white-space (:white-space :white-space-character) white-space-character)
-       (production :white-space (:white-space :line-terminator) white-space-line-terminator)
-       (production :white-space (:white-space :line-comment :line-terminator) white-space-line-comment)
-       (production :white-space (:white-space :block-comment) white-space-block-comment)
+       (production :white-space (:white-space :single-line-block-comment) white-space-single-line-block-comment)
+       
+       (%section "Line breaks")
+       
+       (production :line-break (:line-terminator) line-break-line-terminator)
+       (production :line-break (:line-comment :line-terminator) line-break-line-comment)
+       (production :line-break (:multi-line-block-comment) line-break-multi-line-block-comment)
+       
+       (production :line-breaks (:line-break) line-breaks-first)
+       (production :line-breaks (:line-breaks :white-space :line-break) line-breaks-rest)
        
        (%section "Tokens")
        
-       (grammar-argument :tau re div)
+       (grammar-argument :tau re div unit)
+       (grammar-argument :tau_2 re div)
        
        (rule (:next-token :tau)
-             ((token token) (reg-exp-may-follow boolean))
-         (production (:next-token :tau) (:white-space (:token :tau)) next-token
-           (token (token :token))
-           (reg-exp-may-follow (reg-exp-may-follow :token))))
+             ((token token))
+         (production (:next-token re) (:white-space (:token re)) next-token-re
+           (token (token :token)))
+         (production (:next-token div) (:white-space (:token div)) next-token-div
+           (token (token :token)))
+         (production (:next-token unit) ((:- :ordinary-continuing-identifier-character #\\) :white-space (:token div)) next-token-unit-normal
+           (token (token :token)))
+         (production (:next-token unit) ((:- #\_) :identifier-name) next-token-unit-name
+           (token (oneof string (name :identifier-name))))
+         (production (:next-token unit) (#\_ :identifier-name) next-token-unit-underscore-name
+           (token (oneof string (name :identifier-name)))))
        
-       (rule (:token :tau)
-             ((token token) (reg-exp-may-follow boolean))
-         (production (:token :tau) (:identifier-or-reserved-word) token-identifier-or-reserved-word
-           (token (token :identifier-or-reserved-word))
-           (reg-exp-may-follow (reg-exp-may-follow :identifier-or-reserved-word)))
-         (production (:token :tau) (:punctuator) token-punctuator
-           (token (token :punctuator))
-           (reg-exp-may-follow (reg-exp-may-follow :punctuator)))
+       (%print-actions)
+       
+       (rule (:token :tau_2)
+             ((token token))
+         (production (:token :tau_2) (:line-breaks) token-line-breaks
+           (token (oneof line-break)))
+         (production (:token :tau_2) (:identifier-or-reserved-word) token-identifier-or-reserved-word
+           (token (token :identifier-or-reserved-word)))
+         (production (:token :tau_2) (:punctuator) token-punctuator
+           (token (oneof punctuator (punctuator :punctuator))))
          (production (:token div) (:division-punctuator) token-division-punctuator
-           (token (oneof punctuator (punctuator :division-punctuator)))
-           (reg-exp-may-follow true))
-         (production (:token :tau) (:numeric-literal) token-numeric-literal
-           (token (oneof number (double-value :numeric-literal)))
-           (reg-exp-may-follow false))
-         (production (:token :tau) (:quantity-literal) token-quantity-literal
-           (token (oneof quantity (quantity-value :quantity-literal)))
-           (reg-exp-may-follow false))
-         (production (:token :tau) (:string-literal) token-string-literal
-           (token (oneof string (string-value :string-literal)))
-           (reg-exp-may-follow false))
+           (token (oneof punctuator (punctuator :division-punctuator))))
+         (production (:token :tau_2) (:numeric-literal) token-numeric-literal
+           (token (oneof number (double-value :numeric-literal))))
+         (production (:token :tau_2) (:string-literal) token-string-literal
+           (token (oneof string (string-value :string-literal))))
          (production (:token re) (:reg-exp-literal) token-reg-exp-literal
-           (token (oneof regular-expression (r-e-value :reg-exp-literal)))
-           (reg-exp-may-follow false))
-         (production (:token :tau) (:end-of-input) token-end
-           (token (oneof end))
-           (reg-exp-may-follow true)))
+           (token (oneof regular-expression (r-e-value :reg-exp-literal))))
+         (production (:token :tau_2) (:end-of-input) token-end
+           (token (oneof end))))
        
        (production :end-of-input ($end) end-of-input-end)
        (production :end-of-input (:line-comment $end) end-of-input-line-comment)
@@ -158,11 +175,11 @@
        (deftype quantity (tuple (amount double)
                            (unit string)))
        
-       (deftype token (oneof (identifier string)
+       (deftype token (oneof line-break
+                             (identifier string)
                              (keyword string)
                              (punctuator string)
                              (number double)
-                             (quantity quantity)
                              (string string)
                              (regular-expression reg-exp)
                              end))
@@ -207,17 +224,15 @@
        (%charclass :ordinary-continuing-identifier-character)
        (%print-actions)
        
-       (define reserved-words-r-e (vector string)
+       (define reserved-words (vector string)
          (vector "abstract" "break" "case" "catch" "class" "const" "continue" "debugger" "default" "delete" "do" "else" "enum"
-                 "eval" "export" "extends" "final" "finally" "for" "function" "goto" "if" "implements" "import" "in"
-                 "instanceof" "native" "new" "package" "private" "protected" "public" "return" "static" "switch" "synchronized"
-                 "throw" "throws" "transient" "try" "typeof" "var" "volatile" "while" "with"))
-       (define reserved-words-div (vector string)
-         (vector "false" "null" "super" "this" "true"))
+                 "eval" "export" "extends" "false" "final" "finally" "for" "function" "goto" "if" "implements" "import" "in"
+                 "instanceof" "native" "new" "null" "package" "private" "protected" "public" "return" "static" "super" "switch" "synchronized"
+                 "this" "throw" "throws" "transient" "true" "try" "typeof" "var" "volatile" "while" "with"))
        (define non-reserved-words (vector string)
          (vector "box" "constructor" "field" "get" "language" "local" "method" "override" "set" "version"))
        (define keywords (vector string)
-         (append reserved-words-r-e (append reserved-words-div non-reserved-words)))
+         (append reserved-words non-reserved-words))
        
        (define (member (id string) (list (vector string))) boolean
          (if (empty list)
@@ -227,89 +242,76 @@
              (member id (subseq list 1)))))
        
        (rule :identifier-or-reserved-word
-             ((token token) (reg-exp-may-follow boolean))
+             ((token token))
          (production :identifier-or-reserved-word (:identifier-name) identifier-or-reserved-word-identifier-name
            (token (let ((id string (name :identifier-name)))
                     (if (and (member id keywords) (not (contains-escapes :identifier-name)))
                       (oneof keyword id)
-                      (oneof identifier id))))
-           (reg-exp-may-follow (let ((id string (name :identifier-name)))
-                                 (and (member id reserved-words-r-e) (not (contains-escapes :identifier-name)))))))
+                      (oneof identifier id))))))
        (%print-actions)
        
        (%section "Punctuators")
        
-       (rule :punctuator
-             ((token token) (reg-exp-may-follow boolean))
-         (production :punctuator (:punctuator-r-e) punctuator-r-e
-           (token (oneof punctuator (punctuator :punctuator-r-e)))
-           (reg-exp-may-follow true))
-         (production :punctuator (:punctuator-div) punctuator-div
-           (token (oneof punctuator (punctuator :punctuator-div)))
-           (reg-exp-may-follow false)))
-       
-       (rule :punctuator-r-e ((punctuator string))
-         (production :punctuator-r-e (#\!) punctuator-not (punctuator "!"))
-         (production :punctuator-r-e (#\! #\=) punctuator-not-equal (punctuator "!="))
-         (production :punctuator-r-e (#\! #\= #\=) punctuator-not-identical (punctuator "!=="))
-         (production :punctuator-r-e (#\#) punctuator-hash (punctuator "#"))
-         (production :punctuator-r-e (#\%) punctuator-modulo (punctuator "%"))
-         (production :punctuator-r-e (#\% #\=) punctuator-modulo-equals (punctuator "%="))
-         (production :punctuator-r-e (#\&) punctuator-and (punctuator "&"))
-         (production :punctuator-r-e (#\& #\&) punctuator-logical-and (punctuator "&&"))
-         (production :punctuator-r-e (#\& #\& #\=) punctuator-logical-and-equals (punctuator "&&="))
-         (production :punctuator-r-e (#\& #\=) punctuator-and-equals (punctuator "&="))
-         (production :punctuator-r-e (#\() punctuator-open-parenthesis (punctuator "("))
-         (production :punctuator-r-e (#\*) punctuator-times (punctuator "*"))
-         (production :punctuator-r-e (#\* #\=) punctuator-times-equals (punctuator "*="))
-         (production :punctuator-r-e (#\+) punctuator-plus (punctuator "+"))
-         (production :punctuator-r-e (#\+ #\=) punctuator-plus-equals (punctuator "+="))
-         (production :punctuator-r-e (#\,) punctuator-comma (punctuator ","))
-         (production :punctuator-r-e (#\-) punctuator-minus (punctuator "-"))
-         (production :punctuator-r-e (#\- #\=) punctuator-minus-equals (punctuator "-="))
-         (production :punctuator-r-e (#\- #\>) punctuator-arrow (punctuator "->"))
-         (production :punctuator-r-e (#\.) punctuator-period (punctuator "."))
-         (production :punctuator-r-e (#\. #\.) punctuator-double-dot (punctuator ".."))
-         (production :punctuator-r-e (#\. #\. #\.) punctuator-triple-dot (punctuator "..."))
-         (production :punctuator-r-e (#\:) punctuator-colon (punctuator ":"))
-         (production :punctuator-r-e (#\: #\:) punctuator-namespace (punctuator "::"))
-         (production :punctuator-r-e (#\;) punctuator-semicolon (punctuator ";"))
-         (production :punctuator-r-e (#\<) punctuator-less-than (punctuator "<"))
-         (production :punctuator-r-e (#\< #\<) punctuator-left-shift (punctuator "<<"))
-         (production :punctuator-r-e (#\< #\< #\=) punctuator-left-shift-equals (punctuator "<<="))
-         (production :punctuator-r-e (#\< #\=) punctuator-less-than-or-equal (punctuator "<="))
-         (production :punctuator-r-e (#\=) punctuator-assignment (punctuator "="))
-         (production :punctuator-r-e (#\= #\=) punctuator-equal (punctuator "=="))
-         (production :punctuator-r-e (#\= #\= #\=) punctuator-identical (punctuator "==="))
-         (production :punctuator-r-e (#\>) punctuator-greater-than (punctuator ">"))
-         (production :punctuator-r-e (#\> #\=) punctuator-greater-than-or-equal (punctuator ">="))
-         (production :punctuator-r-e (#\> #\>) punctuator-right-shift (punctuator ">>"))
-         (production :punctuator-r-e (#\> #\> #\=) punctuator-right-shift-equals (punctuator ">>="))
-         (production :punctuator-r-e (#\> #\> #\>) punctuator-logical-right-shift (punctuator ">>>"))
-         (production :punctuator-r-e (#\> #\> #\> #\=) punctuator-logical-right-shift-equals (punctuator ">>>="))
-         (production :punctuator-r-e (#\?) punctuator-question (punctuator "?"))
-         (production :punctuator-r-e (#\@) punctuator-at (punctuator "@"))
-         (production :punctuator-r-e (#\[) punctuator-open-bracket (punctuator "["))
-         (production :punctuator-r-e (#\^) punctuator-xor (punctuator "^"))
-         (production :punctuator-r-e (#\^ #\=) punctuator-xor-equals (punctuator "^="))
-         (production :punctuator-r-e (#\^ #\^) punctuator-logical-xor (punctuator "^^"))
-         (production :punctuator-r-e (#\^ #\^ #\=) punctuator-logical-xor-equals (punctuator "^^="))
-         (production :punctuator-r-e (#\{) punctuator-open-brace (punctuator "{"))
-         (production :punctuator-r-e (#\|) punctuator-or (punctuator "|"))
-         (production :punctuator-r-e (#\| #\=) punctuator-or-equals (punctuator "|="))
-         (production :punctuator-r-e (#\| #\|) punctuator-logical-or (punctuator "||"))
-         (production :punctuator-r-e (#\| #\| #\=) punctuator-logical-or-equals (punctuator "||="))
-         (production :punctuator-r-e (#\~) punctuator-complement (punctuator "~")))
-       
-       (rule :punctuator-div ((punctuator string))
-         (production :punctuator-div (#\)) punctuator-close-parenthesis (punctuator ")"))
-         (production :punctuator-div (#\+ #\+) punctuator-increment (punctuator "++"))
-         (production :punctuator-div (#\- #\-) punctuator-decrement (punctuator "--"))
-         (production :punctuator-div (#\]) punctuator-close-bracket (punctuator "]"))
-         (production :punctuator-div (#\}) punctuator-close-brace (punctuator "}")))
+       (rule :punctuator ((punctuator string))
+         (production :punctuator (#\!) punctuator-not (punctuator "!"))
+         (production :punctuator (#\! #\=) punctuator-not-equal (punctuator "!="))
+         (production :punctuator (#\! #\= #\=) punctuator-not-identical (punctuator "!=="))
+         (production :punctuator (#\#) punctuator-hash (punctuator "#"))
+         (production :punctuator (#\%) punctuator-modulo (punctuator "%"))
+         (production :punctuator (#\% #\=) punctuator-modulo-equals (punctuator "%="))
+         (production :punctuator (#\&) punctuator-and (punctuator "&"))
+         (production :punctuator (#\& #\&) punctuator-logical-and (punctuator "&&"))
+         (production :punctuator (#\& #\& #\=) punctuator-logical-and-equals (punctuator "&&="))
+         (production :punctuator (#\& #\=) punctuator-and-equals (punctuator "&="))
+         (production :punctuator (#\() punctuator-open-parenthesis (punctuator "("))
+         (production :punctuator (#\)) punctuator-close-parenthesis (punctuator ")"))
+         (production :punctuator (#\*) punctuator-times (punctuator "*"))
+         (production :punctuator (#\* #\=) punctuator-times-equals (punctuator "*="))
+         (production :punctuator (#\+) punctuator-plus (punctuator "+"))
+         (production :punctuator (#\+ #\+) punctuator-increment (punctuator "++"))
+         (production :punctuator (#\+ #\=) punctuator-plus-equals (punctuator "+="))
+         (production :punctuator (#\,) punctuator-comma (punctuator ","))
+         (production :punctuator (#\-) punctuator-minus (punctuator "-"))
+         (production :punctuator (#\- #\-) punctuator-decrement (punctuator "--"))
+         (production :punctuator (#\- #\=) punctuator-minus-equals (punctuator "-="))
+         (production :punctuator (#\- #\>) punctuator-arrow (punctuator "->"))
+         (production :punctuator (#\.) punctuator-period (punctuator "."))
+         (production :punctuator (#\. #\.) punctuator-double-dot (punctuator ".."))
+         (production :punctuator (#\. #\. #\.) punctuator-triple-dot (punctuator "..."))
+         (production :punctuator (#\:) punctuator-colon (punctuator ":"))
+         (production :punctuator (#\: #\:) punctuator-namespace (punctuator "::"))
+         (production :punctuator (#\;) punctuator-semicolon (punctuator ";"))
+         (production :punctuator (#\<) punctuator-less-than (punctuator "<"))
+         (production :punctuator (#\< #\<) punctuator-left-shift (punctuator "<<"))
+         (production :punctuator (#\< #\< #\=) punctuator-left-shift-equals (punctuator "<<="))
+         (production :punctuator (#\< #\=) punctuator-less-than-or-equal (punctuator "<="))
+         (production :punctuator (#\=) punctuator-assignment (punctuator "="))
+         (production :punctuator (#\= #\=) punctuator-equal (punctuator "=="))
+         (production :punctuator (#\= #\= #\=) punctuator-identical (punctuator "==="))
+         (production :punctuator (#\>) punctuator-greater-than (punctuator ">"))
+         (production :punctuator (#\> #\=) punctuator-greater-than-or-equal (punctuator ">="))
+         (production :punctuator (#\> #\>) punctuator-right-shift (punctuator ">>"))
+         (production :punctuator (#\> #\> #\=) punctuator-right-shift-equals (punctuator ">>="))
+         (production :punctuator (#\> #\> #\>) punctuator-logical-right-shift (punctuator ">>>"))
+         (production :punctuator (#\> #\> #\> #\=) punctuator-logical-right-shift-equals (punctuator ">>>="))
+         (production :punctuator (#\?) punctuator-question (punctuator "?"))
+         (production :punctuator (#\@) punctuator-at (punctuator "@"))
+         (production :punctuator (#\[) punctuator-open-bracket (punctuator "["))
+         (production :punctuator (#\]) punctuator-close-bracket (punctuator "]"))
+         (production :punctuator (#\^) punctuator-xor (punctuator "^"))
+         (production :punctuator (#\^ #\=) punctuator-xor-equals (punctuator "^="))
+         (production :punctuator (#\^ #\^) punctuator-logical-xor (punctuator "^^"))
+         (production :punctuator (#\^ #\^ #\=) punctuator-logical-xor-equals (punctuator "^^="))
+         (production :punctuator (#\{) punctuator-open-brace (punctuator "{"))
+         (production :punctuator (#\|) punctuator-or (punctuator "|"))
+         (production :punctuator (#\| #\=) punctuator-or-equals (punctuator "|="))
+         (production :punctuator (#\| #\|) punctuator-logical-or (punctuator "||"))
+         (production :punctuator (#\| #\| #\=) punctuator-logical-or-equals (punctuator "||="))
+         (production :punctuator (#\}) punctuator-close-brace (punctuator "}"))
+         (production :punctuator (#\~) punctuator-complement (punctuator "~")))
        
        (rule :division-punctuator ((punctuator string))
-         (production :division-punctuator (#\/) punctuator-divide (punctuator "/"))
+         (production :division-punctuator (#\/ (:- #\/ #\*)) punctuator-divide (punctuator "/"))
          (production :division-punctuator (#\/ #\=) punctuator-divide-equals (punctuator "/=")))
        (%print-actions)
        
@@ -396,22 +398,6 @@
        (%charclass :hex-digit)
        (%print-actions)
        
-       (%section "Quantity literals")
-       
-       (rule :quantity-literal ((quantity-value quantity))
-         (production :quantity-literal (:numeric-literal :quantity-name) quantity-literal-quantity-name
-           (quantity-value (tuple quantity (double-value :numeric-literal) (name :quantity-name)))))
-       
-       (rule :quantity-name ((name string))
-         (production :quantity-name ((:- :letter-e :letter-x) :identifier-name) quantity-name-identifier
-           (name (name :identifier-name)))
-         ;(production :quantity-name (:letter-e :identifier-name) quantity-name-e-identifier
-         ;  (name (append (vector ($default-action :letter-e)) (name :identifier-name))))
-         ;(production :quantity-name (:letter-x :identifier-name) quantity-name-x-identifier
-         ;  (name (append (vector ($default-action :letter-x)) (name :identifier-name))))
-         )
-       (%print-actions)
-       
        (%section "String literals")
        
        (grammar-argument :theta single double)
@@ -489,21 +475,12 @@
            (r-e-flags (append (r-e-flags :reg-exp-flags) (vector (character-value :continuing-identifier-character))))))
        
        (rule :reg-exp-body ((r-e-body string))
-         (production :reg-exp-body (#\/ :reg-exp-first-char :reg-exp-chars #\/) reg-exp-body
-           (r-e-body (append (r-e-body :reg-exp-first-char)
-                             (r-e-body :reg-exp-chars)))))
-       
-       (rule :reg-exp-first-char ((r-e-body string))
-         (production :reg-exp-first-char (:ordinary-reg-exp-first-char) reg-exp-first-char-ordinary
-           (r-e-body (vector ($default-action :ordinary-reg-exp-first-char))))
-         (production :reg-exp-first-char (#\\ :non-terminator) reg-exp-first-char-escape
-           (r-e-body (vector #\\ ($default-action :non-terminator)))))
-       
-       (%charclass :ordinary-reg-exp-first-char)
+         (production :reg-exp-body (#\/ (:- #\*) :reg-exp-chars #\/) reg-exp-body
+           (r-e-body (r-e-body :reg-exp-chars))))
        
        (rule :reg-exp-chars ((r-e-body string))
-         (production :reg-exp-chars () reg-exp-chars-none
-           (r-e-body ""))
+         (production :reg-exp-chars (:reg-exp-char) reg-exp-chars-one
+           (r-e-body (r-e-body :reg-exp-char)))
          (production :reg-exp-chars (:reg-exp-chars :reg-exp-char) reg-exp-chars-more
            (r-e-body (append (r-e-body :reg-exp-chars)
                              (r-e-body :reg-exp-char)))))
@@ -521,6 +498,7 @@
   (defparameter *lg* (lexer-grammar *ll*))
   (set-up-lexer-metagrammar *ll*)
   (defparameter *lm* (lexer-metagrammar *ll*)))
+
 
 #|
 (depict-rtf-to-local-file
@@ -568,53 +546,6 @@
 (print-illegal-strings m)
 |#
 
-
-(defun js-state-transition (action-results)
-  (assert-type action-results (tuple t bool))
-  (values action-results (if (second action-results) '($re) '($non-re))))
-
-(defun js-metaparse (string &key trace)
-  (lexer-metaparse *ll* string :initial-state '($re) :state-transition #'js-state-transition :trace trace))
-
-(defun js-pmetaparse (string &key (stream t) trace)
-  (lexer-pmetaparse *ll* string :initial-state '($re) :state-transition #'js-state-transition :stream stream :trace trace))
-
-
-; Return the JavaScript input string as a list of tokens like:
-;   (($number . 3.0) + - ++ else ($string . "a+bgde") ($end))
-(defun tokenize (string)
-  (mapcar
-   #'(lambda (token-value)
-       (let ((token-value (car token-value)))
-         (ecase (car token-value)
-           (identifier (cons '$identifier (cdr token-value)))
-           ((keyword punctuator) (intern (string-upcase (cdr token-value))))
-           (number (cons '$number (cdr token-value)))
-           (string (cons '$string (cdr token-value)))
-           (regular-expression (cons '$regular-expression (cdr token-value)))
-           (end '($end)))))
-   (js-metaparse string)))
-
-
-#|
-(lexer-pparse *ll* "0x20")
-(lexer-pparse *ll* "2b")
-(lexer-pparse *ll* " 3.75" :trace t)
-(lexer-pparse *ll* "25" :trace :code)
-(js-pmetaparse "32+abc//23e-a4*7e-2 3 id4 4ef;")
-(js-pmetaparse "32+abc//23e-a4*7e-2 3 id4 4ef;
-")
-(js-pmetaparse "32+abc/ /23e-a4*7e-2 3 /*id4 4*-/ef;
-
-fjds*/y//z")
-(js-pmetaparse "3a+in'a+b\\147\"de'\"'\"")
-(js-pmetaparse "3*/regexp*///x")
-(js-pmetaparse "/regexp*///x")
-(js-pmetaparse "if \\x69f \\u0069f")
-(js-pmetaparse "if \\x69f z\\x20z")
-(js-pmetaparse "3lbs 3in 3 in 3_in 3_lbs")
-(js-pmetaparse "3a+in'a+b\\040\\077\\700\\150\\15A\\69\"de'\"'\"")
-|#
 
 #+allegro (clean-grammar *lg*) ;Remove this line if you wish to print the grammar's state tables.
 (length (grammar-states *lg*))
