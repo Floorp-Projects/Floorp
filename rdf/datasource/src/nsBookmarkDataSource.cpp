@@ -504,7 +504,11 @@ public:
 ////////////////////////////////////////////////////////////////////////
 
 // XXX we should get this from prefs.
+#ifdef XP_MAC
+const char* BookmarkDataSourceImpl::kBookmarksFilename = "/usr/local/netscape/bin/res/rdf/bookmarks.html";
+#else
 const char* BookmarkDataSourceImpl::kBookmarksFilename = "res\\rdf\\bookmarks.html";
+#endif
 
 BookmarkDataSourceImpl::BookmarkDataSourceImpl(void)
 {
