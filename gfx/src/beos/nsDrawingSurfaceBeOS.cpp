@@ -64,7 +64,7 @@ nsDrawingSurfaceBeOS :: ~nsDrawingSurfaceBeOS()
 {
   if(mBitmap)
   {
-    mBitmap->RemoveChild(mView);
+    // Deleting mBitmap will also remove and delete any child views
 	delete mBitmap;
   }
 }
