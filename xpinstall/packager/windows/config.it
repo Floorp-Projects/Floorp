@@ -194,6 +194,7 @@ Description Long=Browser software for the internet
 Archive=core.xpi
 $InstallSize$:core
 $InstallSizeSystem$
+$InstallSizeArchive$:core.xpi
 ; Attributes can be the following values:
 ;   SELECTED  - the component is selected to be installed by default.
 ;   INVISIBLE - the component is not shown in the Select Components dialog.
@@ -210,6 +211,7 @@ Description Long=Seamonkey Mail&News
 Archive=mail.xpi
 $InstallSize$:mail
 $InstallSizeSystem$
+$InstallSizeArchive$:mail.xpi
 ;Dependency0=Netscape Seamonkey
 ; Attributes can be the following values:
 ;   SELECTED  - the component is selected to be installed by default.
@@ -225,6 +227,7 @@ url0=$URLPath$
 [Core]
 Source=[XPI PATH]\core.xpi
 Destination=[TEMP]\core.ns
+$InstallSize$:core
 Cleanup=TRUE
 Message=Preparing SmartUpdate, please wait...
 
