@@ -34,12 +34,13 @@
 #include "nsWeakPtr.h"
 #include "prprf.h"
 
+
 #include "nsITimer.h"
 #include "nsVoidArray.h"
 #include "nsString.h"
 #include "prmem.h"
 #include "plstr.h"
-//#include "il_strm.h"
+
 #include "merrors.h"
 
 #include "nsNetUtil.h"
@@ -48,10 +49,12 @@
 #include "nsIURIContentListener.h"
 #include "nsIHTTPChannel.h"
 #include "nsIStreamConverterService.h"
+#include "nsIPref.h"
 
 static NS_DEFINE_CID(kStreamConvServiceCID, NS_STREAMCONVERTERSERVICE_CID);
 static NS_DEFINE_IID(kIImageNetContextIID, IL_INETCONTEXT_IID);
 static NS_DEFINE_IID(kIURLIID, NS_IURL_IID);
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 PRLogModuleInfo *image_net_context_async_log_module = NULL;
 
@@ -760,11 +763,36 @@ ImageNetContextImpl::GetURL (ilIURL * aURL,
     rv = channel->GetLoadAttributes(&flags);
     if (NS_FAILED(rv)) goto error;
 
-    if (aURL->GetBackgroundLoad()) {
-      (void)channel->SetLoadAttributes(nsIChannel::LOAD_BACKGROUND | flags);
-    }
+    NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
+    if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsISupports> window (do_QueryInterface(NS_STATIC_CAST(nsIStreamListener *, ic)));
+	if((nsIChannel::LOAD_NORMAL == flags) &&( prefs ))
+	{
+		PRInt32 prefSetting;
+		if ( NS_SUCCEEDED( 	prefs->GetIntPref( "browser.cache.check_doc_frequency" , &prefSetting) ) )
+		{
+		   	switch ( prefSetting )
+		   	{
+
+	   			case 0:
+		   					flags |= nsIChannel::VALIDATE_ONCE_PER_SESSION;
+		   					break;
+		   		case 1:
+		   					flags |= nsIChannel::VALIDATE_ALWAYS;
+		   					break;
+		   		case 2:
+		   					flags |= nsIChannel::VALIDATE_NEVER;
+		   					break;
+		   	}
+		}
+	}
+
+   if (aURL->GetBackgroundLoad()) 
+      flags |= nsIChannel::LOAD_BACKGROUND;
+       
+   (void)channel->SetLoadAttributes(flags);
+
+   nsCOMPtr<nsISupports> window (do_QueryInterface(NS_STATIC_CAST(nsIStreamListener *, ic)));
 
     // let's try uri dispatching...
     nsCOMPtr<nsIURILoader> pURILoader (do_GetService(NS_URI_LOADER_PROGID, &rv));
@@ -775,6 +803,7 @@ ImageNetContextImpl::GetURL (ilIURL * aURL,
       if (bIsBackground) {
         loadCmd = nsIURILoader::viewNormalBackground;
       }
+
 
       rv = pURILoader->OpenURI(channel, loadCmd, nsnull /* window target */, 
                                window);
