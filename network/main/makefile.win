@@ -111,7 +111,7 @@ LINCS=-I$(XPDIST)\public\jtools	\
     -I$(XPDIST)\public\util	\
     -I$(XPDIST)\public\js 	\
     -I$(XPDIST)\public\parse 	\
-    -I$(XPDIST)\public\layout 	\
+    -I$(XPDIST)\public\lay 	\
     -I$(XPDIST)\public\style 	\
     -I$(XPDIST)\public\pref 	\
     -I$(XPDIST)\public\htmldlgs	\
