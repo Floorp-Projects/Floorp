@@ -1749,13 +1749,15 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent & anEvent)
 {
 	nsEventStatus rv = nsEventStatus_eIgnore;
 #ifdef XP_MAC
-	EventRecord* event = (EventRecord*) anEvent.nativeMsg;
-	nsPluginPort* port = (nsPluginPort*)mWidget->GetNativeData(NS_NATIVE_PLUGIN_PORT);
-	nsPluginEvent pluginEvent = { event, nsPluginPlatformWindowRef(port->port) };
-	PRBool eventHandled = PR_FALSE;
-	mInstance->HandleEvent(&pluginEvent, &eventHandled);
-	if (eventHandled)
-		rv = nsEventStatus_eConsumeNoDefault;
+	if (mInstance != NULL) {
+		EventRecord* event = (EventRecord*) anEvent.nativeMsg;
+		nsPluginPort* port = (nsPluginPort*)mWidget->GetNativeData(NS_NATIVE_PLUGIN_PORT);
+		nsPluginEvent pluginEvent = { event, nsPluginPlatformWindowRef(port->port) };
+		PRBool eventHandled = PR_FALSE;
+		mInstance->HandleEvent(&pluginEvent, &eventHandled);
+		if (eventHandled)
+			rv = nsEventStatus_eConsumeNoDefault;
+	}
 #endif
 	return rv;
 }
@@ -1765,16 +1767,18 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent & anEvent)
 void nsPluginInstanceOwner::Paint(const nsRect& aDirtyRect)
 {
 #ifdef XP_MAC
-	nsPluginPort* pluginPort = GetPluginPort();
+	if (mInstance != NULL) {
+		nsPluginPort* pluginPort = GetPluginPort();
 
-	EventRecord updateEvent;
-	::OSEventAvail(0, &updateEvent);
-	updateEvent.what = updateEvt;
-	updateEvent.message = UInt32(pluginPort->port);
-	
-	nsPluginEvent pluginEvent = { &updateEvent, nsPluginPlatformWindowRef(pluginPort->port) };
-	PRBool eventHandled = PR_FALSE;
-	mInstance->HandleEvent(&pluginEvent, &eventHandled);
+		EventRecord updateEvent;
+		::OSEventAvail(0, &updateEvent);
+		updateEvent.what = updateEvt;
+		updateEvent.message = UInt32(pluginPort->port);
+		
+		nsPluginEvent pluginEvent = { &updateEvent, nsPluginPlatformWindowRef(pluginPort->port) };
+		PRBool eventHandled = PR_FALSE;
+		mInstance->HandleEvent(&pluginEvent, &eventHandled);
+	}
 #endif
 }
 
@@ -1783,15 +1787,17 @@ void nsPluginInstanceOwner::Paint(const nsRect& aDirtyRect)
 void nsPluginInstanceOwner::Notify(nsITimer* /* timer */)
 {
 #ifdef XP_MAC
-	EventRecord idleEvent;
-	::OSEventAvail(0, &idleEvent);
-	idleEvent.what = nullEvent;
-	
-	nsPluginPort* pluginPort = GetPluginPort();
-	nsPluginEvent pluginEvent = { &idleEvent, nsPluginPlatformWindowRef(pluginPort->port) };
-	
-	PRBool eventHandled = PR_FALSE;
-	mInstance->HandleEvent(&pluginEvent, &eventHandled);
+	if (mInstance != NULL) {
+		EventRecord idleEvent;
+		::OSEventAvail(0, &idleEvent);
+		idleEvent.what = nullEvent;
+		
+		nsPluginPort* pluginPort = GetPluginPort();
+		nsPluginEvent pluginEvent = { &idleEvent, nsPluginPlatformWindowRef(pluginPort->port) };
+		
+		PRBool eventHandled = PR_FALSE;
+		mInstance->HandleEvent(&pluginEvent, &eventHandled);
+	}
 #endif
 
   // reprime the timer? currently have to create a new timer for each call, which is
