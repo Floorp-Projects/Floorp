@@ -1108,32 +1108,32 @@ nsPresContext::GetMetricsFor(const nsFont& aFont, nsIFontMetrics** aResult)
 }
 
 NS_IMETHODIMP
-nsPresContext::GetDefaultFont(PRUint8 aFontID, nsFont& aResult)
+nsPresContext::GetDefaultFont(PRUint8 aFontID, const nsFont** aResult)
 {
   nsresult rv = NS_OK;
   switch (aFontID) {
     // Special (our default variable width font and fixed width font)
     case kPresContext_DefaultVariableFont_ID:
-      aResult = mDefaultVariableFont;
+      *aResult = &mDefaultVariableFont;
       break;
     case kPresContext_DefaultFixedFont_ID:
-      aResult = mDefaultFixedFont;
+      *aResult = &mDefaultFixedFont;
       break;
     // CSS
     case kGenericFont_serif:
-      aResult = mDefaultSerifFont;
+      *aResult = &mDefaultSerifFont;
       break;
     case kGenericFont_sans_serif:
-      aResult = mDefaultSansSerifFont;
+      *aResult = &mDefaultSansSerifFont;
       break;
     case kGenericFont_monospace:
-      aResult = mDefaultMonospaceFont;
+      *aResult = &mDefaultMonospaceFont;
       break;
     case kGenericFont_cursive:
-      aResult = mDefaultCursiveFont;
+      *aResult = &mDefaultCursiveFont;
       break;
     case kGenericFont_fantasy: 
-      aResult = mDefaultFantasyFont;
+      *aResult = &mDefaultFantasyFont;
       break;
     default:
       rv = NS_ERROR_INVALID_ARG;

@@ -109,7 +109,7 @@ public:
   NS_IMETHOD GetMetricsFor(const nsFont& aFont, nsIFontMetrics** aResult);
   NS_IMETHOD AllocateFromShell(size_t aSize, void** aResult);
   NS_IMETHOD FreeToShell(size_t aSize, void* aFreeChunk);
-  NS_IMETHOD GetDefaultFont(PRUint8 aFontID, nsFont& aResult);
+  NS_IMETHOD GetDefaultFont(PRUint8 aFontID, const nsFont** aResult);
   NS_IMETHOD SetDefaultFont(PRUint8 aFontID, const nsFont& aFont);
   NS_IMETHOD GetCachedBoolPref(PRUint32 aPrefType, PRBool& aValue);
   NS_IMETHOD GetCachedIntPref(PRUint32 aPrefType, PRInt32& aValue);

@@ -265,7 +265,7 @@ public:
   NS_IMETHOD GetMetricsFor(const nsFont& aFont, nsIFontMetrics** aResult) = 0;
 
   /** Get the default font correponding to the given ID */
-  NS_IMETHOD GetDefaultFont(PRUint8 aFontID, nsFont& aResult) = 0;
+  NS_IMETHOD GetDefaultFont(PRUint8 aFontID, const nsFont** aResult) = 0;
   /** Set the default font correponding to the given ID */
   NS_IMETHOD SetDefaultFont(PRUint8 aFontID, const nsFont& aFont) = 0;
 

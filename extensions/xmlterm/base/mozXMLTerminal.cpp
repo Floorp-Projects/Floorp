@@ -588,18 +588,14 @@ NS_IMETHODIMP mozXMLTerminal::ScreenSize(PRInt32* rows, PRInt32* cols,
     return result;
 
   // Get the default fixed pitch font
-  nsFont defaultFixedFont("dummyfont", NS_FONT_STYLE_NORMAL,
-                          NS_FONT_VARIANT_NORMAL,
-                          NS_FONT_WEIGHT_NORMAL,
-                          NS_FONT_DECORATION_NONE, 16);
-
-  result = presContext->GetDefaultFont(kPresContext_DefaultFixedFont_ID, defaultFixedFont);
+  const nsFont* defaultFixedFont;
+  result = presContext->GetDefaultFont(kPresContext_DefaultFixedFont_ID, &defaultFixedFont);
   if (NS_FAILED(result))
     return result;
 
   // Get metrics for fixed font
   nsCOMPtr<nsIFontMetrics> fontMetrics;
-  result = presContext->GetMetricsFor(defaultFixedFont,
+  result = presContext->GetMetricsFor(*defaultFixedFont,
                                       getter_AddRefs(fontMetrics));
   if (NS_FAILED(result) || !fontMetrics)
     return result;
