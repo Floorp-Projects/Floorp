@@ -48,10 +48,10 @@
         persist="screenX screenY width height"
         >
 
-  <html:script language="JavaScript" src="chrome://editor/content/EditorCommands.js"/>
-  <html:script language="JavaScript" src="chrome://editor/content/ComposerCommands.js"/>
-  <html:script language="JavaScript" src="chrome://editor/content/EditorCommandsDebug.js"/>
-  <html:script language="javascript" src="chrome://global/content/strres.js"/>
+  <script language="JavaScript" src="chrome://editor/content/EditorCommands.js"/>
+  <script language="JavaScript" src="chrome://editor/content/ComposerCommands.js"/>
+  <script language="JavaScript" src="chrome://editor/content/EditorCommandsDebug.js"/>
+  <script language="javascript" src="chrome://global/content/strres.js"/>
 
   <commands id="commands">
     <commandset id="globalEditMenuItems"/>
@@ -86,7 +86,6 @@
 	<!-- keys are appended from the overlay -->
   <keyset id="defaultKeySet"/>
 
-<box orient="vertical" id="EditorMenuAndToolbars" collapsed="true">
   <menubar id="main-menubar" class="chromeclass-menubar">
     <menu id="fileMenu"/>
     <menu id="editMenu"/>
@@ -95,6 +94,7 @@
     <!-- id pulls in "Show Sidebar" item from sidebarOverlay -->
     <menupopup id="menu_View_Popup">
       <menu id="viewToolbar"/>
+  		<menuitem id="showEditModeBar"/>
       <menuseparator/>
       <menuitem id="viewSourceMenuitem"/>
       <menuitem id="viewParagraphMarks"/>
@@ -157,36 +157,34 @@
     </button>
   </toolbar>
   <toolbar id="FormatToolbar" class="chromeclass-toolbar" persist="collapsed">
-  <!-- We need this else menulists get stretched -->
-  <box autostretch="never">
-    <!-- from editorOverlay -->
-    <menulist id="ParagraphSelect"/>
-    <menulist id="FontFaceSelect"/>
+    <!-- We need this else menulists get stretched -->
+    <box autostretch="never" flex="1">
+      <!-- from editorOverlay -->
+      <menulist id="ParagraphSelect"/>
+      <menulist id="FontFaceSelect"/>
 
-    <stack id="ColorButtons"/>
+      <stack id="ColorButtons"/>
 
-    <button id="DecreaseFontSizeButton"/>
-    <button id="IncreaseFontSizeButton"/>
-    <button id="boldButton"/>
-    <button id="italicButton"/>
-    <button id="underlineButton"/>
-    <spring class="separator_small"/>
-    <button id="ulButton"/>
-    <button id="olButton"/>
-    <button id="outdentButton"/>
-    <button id="indentButton"/>
-    <spring class="separator_small"/>
-    <!-- TODO: Change to a menulist? -->
-    <menu>
-      <button id="AlignPopupButton"/>
-      <menupopup id="AlignmentPopup"/>
-    </menu>
-  </box>
+      <button id="DecreaseFontSizeButton"/>
+      <button id="IncreaseFontSizeButton"/>
+      <button id="boldButton"/>
+      <button id="italicButton"/>
+      <button id="underlineButton"/>
+      <spring class="separator_small"/>
+      <button id="ulButton"/>
+      <button id="olButton"/>
+      <button id="outdentButton"/>
+      <button id="indentButton"/>
+      <spring class="separator_small"/>
+      <!-- TODO: Change to a menulist? -->
+      <menu>
+        <button id="AlignPopupButton"/>
+        <menupopup id="AlignmentPopup"/>
+      </menu>
+    </box>
     <spring flex="1"/>
   </toolbar>
 </toolbox>
-</box> <!-- EditorMenuAndToolbars -->
-
 
 <!-- sidebar/toolbar/content/status -->
 <box id="sidebar-parent" flex="1">
@@ -197,15 +195,8 @@
   <box id="appcontent" orient="vertical" flex="1">
     <deck id="ContentWindowDeck" index="0" flex="1">
       <editor type="content-primary" id="content-frame" src="about:blank" flex="1"/>
-      <box orient="vertical" flex="1">
-        <box id="source-editor-label" autostretch="never" valign="middle">
-          <text class="label bold" value="&sourceEditor.label;"/>
-          <spring flex="1"/>
-          <button value="&sourceEditorCancelButton.label;" oncommand="CancelSourceEditing()"/>
-        </box>
-        <textfield class="source-editor" id="HTMLSourceWindow" multiline="true" rows="1"
-                   flex="1" style="width:1em; height:1em;"/>
-      </box>
+      <textfield class="source-editor" id="content-source" multiline="true" rows="1"
+                 flex="1" style="width:1em; height:1em;"/>
     </deck>
 
     <!-- TODO: Set collapsed="true" so default is to not show the editmode toolbar -->
@@ -214,7 +205,7 @@
       <!-- From editorOverlay.xul -->
       <text id="NormalModeButton"/>
       <text id="TagModeButton"/>
-<!--      <text id="SourceModeButton"/> -->
+      <text id="SourceModeButton"/>
       <text id="PreviewModeButton"/>
       <spring flex="1"/>
     </toolbar>

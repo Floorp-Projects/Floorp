@@ -120,6 +120,7 @@ public:
   NS_IMETHOD DeleteSelectionAndCreateNode(const nsString& aTag, nsIDOMNode ** aNewNode);
   NS_IMETHOD SelectElement(nsIDOMElement* aElement);
   NS_IMETHOD SetCaretAfterElement(nsIDOMElement* aElement);
+  NS_IMETHOD SetCaretToDocumentStart();
 
   NS_IMETHOD SetParagraphFormat(const nsString& aParagraphFormat);
 

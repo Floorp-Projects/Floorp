@@ -269,6 +269,10 @@ public:
     */
   NS_IMETHOD SetCaretAfterElement(nsIDOMElement* aElement)=0;
 
+  /**
+    * Set selection to start of document
+    */
+  NS_IMETHOD SetCaretToDocumentStart()=0;
 
   /**
    * Document me!

@@ -292,11 +292,11 @@
 
   		<menuitem value="&compositionToolbarCmd.label;" accesskey="&compositiontb.accesskey;" observes="cmd_viewCompToolbar"  />
   		<menuitem value="&formattingToolbarCmd.label;"  accesskey="&formattingtb.accesskey;"  observes="cmd_viewFormatToolbar" />
-  		<menuitem value="&editmodeToolbarCmd.label;"    accesskey="&editmodetb.accesskey;"    observes="cmd_viewEditModeToolbar" />
   		<menuitem value="&taskbarCmd.label;"            accesskey="&taskbarCmd.accesskey;"    observes="cmd_viewtaskbar" />
 
       </menupopup>
     </menu>
+    <menuitem id="showEditModeBar" value="&editmodeToolbarCmd.label;"    accesskey="&editmodetb.accesskey;"    observes="cmd_viewEditModeToolbar" />
     <menuitem id="viewSourceMenuitem" value="&viewPageSource.label;"     accesskey="&viewpagesource.accesskey;"     oncommand="EditorViewSource();"/>
     <menuitem id="viewParagraphMarks" value="&viewParagraphMarks.label;" accesskey="&viewparagraphmarks.accesskey;" oncommand="EditorToggleParagraphMarks();" persist="checked"/>
 
@@ -391,7 +391,7 @@
   <menu id="insertMenu" value="&insertMenu.label;" accesskey="&insertmenu.accesskey;">
     <menupopup>
       <menuitem accesskey="&insertlink.accesskey;"       observes="cmd_link"        value="&insertLinkCmd.label;" />
-      <menuitem accesskey="&insertanchor.accesskey;"     observes="cmd_anchor"      value="&insertCharsCmd.label;"/>
+      <menuitem accesskey="&insertanchor.accesskey;"     observes="cmd_anchor"      value="&insertAnchorCmd.label;"/>
       <menuitem accesskey="&insertimage.accesskey;"      observes="cmd_image"       value="&insertImageCmd.label;"/>
       <menuitem accesskey="&inserthline.accesskey;"      observes="cmd_hline"       value="&insertHLineCmd.label;"/>
       <menuitem accesskey="&inserttable.accesskey;"      observes="cmd_table"       value="&insertTableCmd.label;"/>
@@ -770,7 +770,8 @@
     <text class="color-button" id="BackColorPopupButton" popup="BackColorPopup"/>
     <text class="color-button" id="TextColorPopupButton" popup="TextColorPopup"/>
   </stack>
-  
+
+<!-- A BUG IN CSS/BOXES MAKES THIS ASSERT WHEN CLASS= IS PRESENT AND WE TRY TO COLLAPSE THE TOOLBOX -->
   <button class="button-toolbar" id="DecreaseFontSizeButton" observes="cmd_decreaseFont"/>
   <button class="button-toolbar" id="IncreaseFontSizeButton" observes="cmd_increaseFont"/>
 

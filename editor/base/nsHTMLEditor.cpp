@@ -2142,6 +2142,17 @@ nsresult nsHTMLEditor::GetAbsoluteOffsetsForPoints(nsIDOMNode *aInStartNode,
   return result;
 }
 
+NS_IMETHODIMP 
+nsHTMLEditor::SetCaretToDocumentStart()
+{
+  nsCOMPtr<nsIDOMElement> bodyElement;
+  nsresult res = nsEditor::GetBodyElement(getter_AddRefs(bodyElement));
+  if (NS_FAILED(res)) return res;
+  if (!bodyElement)   return NS_ERROR_NULL_POINTER;
+  nsCOMPtr<nsIDOMNode> bodyNode = do_QueryInterface(bodyElement);
+  return CollapseSelectionToDeepestNonTableFirstChild(nsnull, bodyNode);  
+}
+
 nsresult 
 nsHTMLEditor::CollapseSelectionToDeepestNonTableFirstChild(nsIDOMSelection *aSelection, nsIDOMNode *aNode)
 {

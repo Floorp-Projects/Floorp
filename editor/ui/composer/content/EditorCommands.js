@@ -43,19 +43,21 @@ var docWasModified = false;  // Check if clean document, if clean then unload wh
 var contentWindow = 0;
 var sourceContentWindow = 0;
 var ContentWindowDeck;
-var EditorMenuAndToolbars;
+var EditorToolbox;
+// Bummer! Can't get at enums from nsIDocumentEncoder.h
+var gOutputSelectionOnly = 1;
+var gOutputFormatted     = 2;
+var gOutputNoDoctype     = 4;
+var gOutputBodyOnly      = 8;
+var gOutputPreformatted  = 16;
+var gOutputWrap          = 32;
+var gOutputFormatFlowed  = 64;
+var gOutputAbsoluteLinks = 128;
+var gOutputEncodeEntities = 256;
 
 var gPrefs;
 // These must be kept in synch with the XUL <options> lists
-var gParagraphTagNames = new Array("","P","H1","H2","H3","H4","H5","H6","BLOCKQUOTE","ADDRESS","PRE","DT","DD");
-var gFontFaceNames = new Array("","tt","Arial, Helvetica","Times","Courier");
 var gFontSizeNames = new Array("xx-small","x-small","small","medium","large","x-large","xx-large");
-
-var gStyleTags = {
-    "bold"       : "b",
-    "italic"     : "i",
-    "underline"  : "u"
-  };
 
 const nsIFilePicker = Components.interfaces.nsIFilePicker;
 
@@ -124,11 +126,11 @@ var DocumentStateListener =
 function EditorStartup(editorType, editorElement)
 {
   contentWindow = window.content;
-  sourceContentWindow = document.getElementById("HTMLSourceWindow");
+  sourceContentWindow = document.getElementById("content-source");
 
   // XUL elements we use when switching from normal editor to edit source
   ContentWindowDeck = document.getElementById("ContentWindowDeck");
-  EditorMenuAndToolbars = document.getElementById("EditorMenuAndToolbars");
+  EditorToolbox = document.getElementById("EditorToolbox");
   
   // store the editor shell in the window, so that child windows can get to it.
   editorShell = editorElement.editorShell;
@@ -476,32 +478,6 @@ function onParagraphFormatChange(commandID)
 // dump(" ==== onParagraphFormatChange was called. state="+state+"|\n");
 
   return; //TODO: REWRITE THIS
-  var menulist = document.getElementById("ParagraphSelect");
-  if (menulist)
-  { 
-    // If we don't match anything, set to "normal"
-    var newIndex = 0;
-  	var format = select.getAttribute("format");
-    if ( format == "mixed")
-    {
-// dump("Mixed paragraph format *******\n");
-      // No single type selected
-      newIndex = -1;
-    }
-    else
-    {
-      for( var i = 0; i < gParagraphTagNames.length; i++)
-      {
-        if( gParagraphTagNames[i] == format )
-        {
-          newIndex = i;
-          break;
-        }
-      }
-    }
-    if (menulist.selectedIndex != newIndex)
-      menulist.selectedIndex = newIndex;
-  }
 }
 
 function EditorSetParagraphFormat(commandID, paraFormat)
@@ -890,20 +866,51 @@ function EditorAlign(commandID, alignType)
 
 function SetEditMode(mode)
 {
-  SetDisplayMode(mode);
+  var bodyNode = editorShell.editorDocument.getElementsByTagName("body").item(0);
+  if (!bodyNode)
+  {
+    dump("SetEditMode: We don't have a body node!\n");
+    return;
+  }
+  // Switch the UI mode before inserting contents
+  //   so user can't type in source window while new window is being filled
+  var previousMode = EditorDisplayMode;
+  if (!SetDisplayMode(mode))
+    return;
 
   if (mode == DisplayModeSource)
   {
-    // Get the current doc and output into the SourceWindow
-    sourceContentWindow.value = "this is sample text. We will insert current page source here";
-
-    contentWindow.blur();
-    sourceContentWindow.focus();
+    // Get the current contents and output into the SourceWindow
+    if (bodyNode)
+    {
+      var childCount = bodyNode.childNodes.length;
+      if( childCount)
+      {
+        // KLUDGE until we have an output flag that strips out <body> and </body> for us
+        var sourceContent = editorShell.GetContentsAs("text/html", gOutputBodyOnly);
+        sourceContentWindow.value = sourceContent.replace(/<body>/,"").replace(/<\/body>/,"");
+        sourceContentWindow.focus();
+        setTimeout("sourceContentWindow.focus()", 10);
+        return;
+      }
+    }
+    // If we fall through, revert to previous node
+    SetDisplayMode(PreviousNonSourceDisplayMode);
   }
-  else 
+  else if (previousMode == DisplayModeSource) 
   {
-    // Get the Source Window contents and paste into the HTML editor
+    // We are comming from edit source mode,
+    //   so transfer that back into the document
+    editorShell.SelectAll();
+    editorShell.InsertSource(sourceContentWindow.value);
+    // Clear out the source editor buffer
+    sourceContentWindow.value = "";
+    // reset selection to top of doc (wish we could preserve it!)
+    if (bodyNode)
+      editorShell.editorSelection.collapse(bodyNode, 0);
+
     contentWindow.focus();
+    setTimeout("contentWindow.focus()", 10);
   }
 }
 
@@ -916,6 +923,11 @@ function CancelSourceEditing()
 
 function SetDisplayMode(mode)
 {
+  // Already in requested mode:
+  //  return false to indicate we didn't switch
+  if (mode == EditorDisplayMode)
+    return false;
+
   EditorDisplayMode = mode;
 
   // Save the last non-source mode so we can cancel source editing easily
@@ -940,16 +952,16 @@ function SetDisplayMode(mode)
     // Switch to the sourceWindow (second in the deck)
     ContentWindowDeck.setAttribute("index","1");
 
-    // Get the current doc and output into the SourceWindow
-
     // Hide normal chrome
-    EditorMenuAndToolbars.setAttribute("style", "display:none");
+    // BUG IN CSS/BOXES MAKES THIS ASSERT LIKE MAD!
+    //EditorToolbox.setAttribute("style", "visibility:collapse");
 
     // THIS DOESN'T WORK!?
-    //EditorMenuAndToolbars.setAttribute("collapsed", "true");
+    //EditorToolbox.setAttribute("collapsed", "true");
 
     // TODO: WE MUST DISABLE ALL KEYBOARD COMMANDS!
-    contentWindow.blur();
+
+    // THIS DOESN'T WORK!
     sourceContentWindow.focus();
   }
   else 
@@ -958,13 +970,14 @@ function SetDisplayMode(mode)
     ContentWindowDeck.setAttribute("index","0");
 
     // Show normal chrome
-    EditorMenuAndToolbars.setAttribute("style", "display:inherit");
-    //EditorMenuAndToolbars.removeAttribute("collapsed");
+    // BUG IN CSS/BOXES MAKES THIS ASSERT LIKE MAD!
+    //EditorToolbox.setAttribute("style","visibility:inherit");
 
     // TODO: WE MUST ENABLE ALL KEYBOARD COMMANDS!
 
     contentWindow.focus();
   }
+  return true;
 }
 
 function EditorToggleParagraphMarks()

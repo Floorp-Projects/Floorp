@@ -168,13 +168,15 @@ GetDocument(nsIDocShell *aDocShell, nsIDocument **aDoc )
   return res;
 }
 
-// Utility to set and attribute of an element (used for throbber)
+// Utility get a UI element
 static nsresult 
-SetChromeAttribute( nsIDocShell *shell, const char *id, 
-                    const char *name,  const nsString &value )
+GetChromeElement(nsIDocShell *aShell, const char *aID, nsIDOMElement **aElement)
 {
+  if (!aElement) return NS_ERROR_NULL_POINTER;
+  *aElement = nsnull;
+
   nsCOMPtr<nsIDocument> doc;
-  nsresult rv = GetDocument( shell, getter_AddRefs(doc) );
+  nsresult rv = GetDocument( aShell, getter_AddRefs(doc) );
   if(NS_SUCCEEDED(rv) && doc)
   {
     // Up-cast.
@@ -183,12 +185,40 @@ SetChromeAttribute( nsIDocShell *shell, const char *id,
     {
       // Find specified element.
       nsCOMPtr<nsIDOMElement> elem;
-      rv = xulDoc->GetElementById( NS_ConvertASCIItoUCS2(id), getter_AddRefs(elem) );
-      if ( elem )
-        // Set the text attribute.
-        rv = elem->SetAttribute( NS_ConvertASCIItoUCS2(name), value );
+      rv = xulDoc->GetElementById( NS_ConvertASCIItoUCS2(aID), getter_AddRefs(elem) );
+      if (elem)
+      {
+        *aElement = elem.get();
+        NS_ADDREF(*aElement);
+      }
     }
   }
+  return rv;
+}
+
+// Utility to set and attribute of a UI element
+static nsresult 
+SetChromeAttribute(nsIDocShell *aShell, const char *aID, 
+                    const char *aName,  const nsString &aValue)
+{
+  nsCOMPtr<nsIDOMElement> elem;
+  nsresult rv = GetChromeElement(aShell, aID, getter_AddRefs(elem));
+  if (NS_SUCCEEDED(rv) && elem)
+    // Set the text attribute.
+    rv = elem->SetAttribute( NS_ConvertASCIItoUCS2(aName), aValue);
+
+  return rv;
+}
+
+static nsresult 
+RemoveChromeAttribute(nsIDocShell *aShell, const char *aID, const char *aName)
+{
+  nsCOMPtr<nsIDOMElement> elem;
+  nsresult rv = GetChromeElement(aShell, aID, getter_AddRefs(elem));
+  if (NS_SUCCEEDED(rv) && elem)
+    // Set the text attribute.
+    rv = elem->RemoveAttribute(NS_ConvertASCIItoUCS2(aName));
+
   return rv;
 }
 
@@ -484,10 +514,9 @@ nsEditorShell::PrepareDocumentForEditing(nsIDocumentLoader* aLoader, nsIURI *aUr
   if (!mMailCompose)
   {
     mContentWindow->Focus();
-    // turn on caret
-    nsCOMPtr<nsISelectionController> selCon;
-    editor->GetSelectionController(getter_AddRefs(selCon));
-    if (selCon) selCon->SetCaretEnabled(PR_TRUE);
+    // Collapse the selection to the begining of the document
+    // (this also turns on the caret)
+    mEditor->SetCaretToDocumentStart();
   }
   return NS_OK;
 }
@@ -1023,11 +1052,11 @@ nsEditorShell::SetDisplayMode(PRInt32 aDisplayMode)
 {
   nsresult  res = NS_OK;
 
+  // Reqesting SourceMode and we are already doing that
   if (aDisplayMode == eDisplayModeSource && mDisplayMode == eDisplayModeSource)
       return NS_OK;
 
-  nsAutoString indexVal = NS_ConvertASCIItoUCS2((aDisplayMode == eDisplayModeSource) ? "1" : "0");
-  SetChromeAttribute( mDocShell, "ContentWindowDeck", "index", indexVal );
+  // The rest of the HTML Source display work is in EditorCommand.js
 
   nsCOMPtr<nsIEditorStyleSheets> styleSheets = do_QueryInterface(mEditor);
   if (!styleSheets) return NS_NOINTERFACE;
