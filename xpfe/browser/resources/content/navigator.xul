@@ -241,7 +241,7 @@ Contributor(s): ______________________________________. -->
           </rule>
           <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
             <menupopup>
-              <menuseparator/>
+              <menuseparator uri="rdf:*"/>
             </menupopup>
           </rule>
           <rule>
