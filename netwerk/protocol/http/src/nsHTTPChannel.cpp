@@ -451,6 +451,20 @@ nsHTTPChannel::GetResponseDataListener(nsIStreamListener* *aListener)
     return rv;
 }
 
+NS_IMETHODIMP
+nsHTTPChannel::GetCharset(char* *o_String)
+{
+  nsresult rv = NS_OK;
+
+  *o_String = mCharset.ToNewCString();
+  if (!*o_String) {
+    rv = NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  return rv;
+}
+
+
 static NS_DEFINE_IID(kProxyObjectManagerIID, NS_IPROXYEVENT_MANAGER_IID);
 static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kNetModuleMgrCID, NS_NETMODULEMGR_CID);
@@ -699,6 +713,13 @@ nsresult nsHTTPChannel::SetContentType(const char* aContentType)
 {
     mContentType = aContentType;
     return NS_OK;
+}
+
+
+nsresult nsHTTPChannel::SetCharset(const char *aCharset)
+{
+  mCharset = aCharset;
+  return NS_OK;
 }
 
 

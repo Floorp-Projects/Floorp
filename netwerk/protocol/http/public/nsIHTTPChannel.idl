@@ -66,6 +66,8 @@ interface nsIHTTPChannel : nsIChannel
     readonly attribute nsIHTTPEventSink EventSink;
     
     readonly attribute nsIStreamListener ResponseDataListener;
+
+	readonly attribute string Charset;
 };
 
 

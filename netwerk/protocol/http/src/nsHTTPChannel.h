@@ -78,6 +78,7 @@ public:
     nsresult            SetResponse(nsHTTPResponse* i_pResp);
     nsresult            GetResponseContext(nsISupports** aContext);
     nsresult            SetContentType(const char* aContentType);
+    nsresult            SetCharset(const char *aCharset);
 
 protected:
     nsCOMPtr<nsIURI>            mURI;
@@ -99,6 +100,7 @@ protected:
     nsCOMPtr<nsILoadGroup>      mLoadGroup;
 
     nsCString                   mContentType;
+    nsCString                   mCharset;
     nsIInputStream*             mPostStream;
 };
 
