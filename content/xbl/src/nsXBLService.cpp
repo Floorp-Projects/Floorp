@@ -1335,10 +1335,9 @@ nsXBLService::StripWhitespaceNodes(nsIContent* aElement)
     aElement->ChildAt(i, *getter_AddRefs(child));
     nsCOMPtr<nsITextContent> text = do_QueryInterface(child);
     if (text) {
-      nsAutoString result;
-      text->CopyText(result);
-      result.StripWhitespace();
-      if (result.IsEmpty()) {
+      PRBool isEmpty;
+      text->IsOnlyWhitespace(&isEmpty);
+      if (isEmpty) {
         // This node contained nothing but whitespace.
         // Remove it from the content model.
         aElement->RemoveChildAt(i, PR_TRUE);
