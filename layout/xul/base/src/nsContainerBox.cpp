@@ -461,6 +461,7 @@ nsContainerBox::CheckBoxOrder(nsBoxLayoutState& aState)
       else
         boxes[i]->SetNextBox(nsnull);
     }
+    delete [] boxes;
   }
 }
 
