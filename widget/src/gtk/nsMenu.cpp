@@ -341,8 +341,8 @@ NS_METHOD nsMenu::RemoveAll()
         void *gtkmenuitem = nsnull;
         menuitem->GetNativeData(gtkmenuitem);
         if (gtkmenuitem) {
-          gtk_widget_ref(gtkmenuitem);
-          gtk_widget_destroy(gtkmenuitem);
+          gtk_widget_ref(GTK_WIDGET(gtkmenuitem));
+          gtk_widget_destroy(GTK_WIDGET(gtkmenuitem));
           // gtk_container_remove (GTK_CONTAINER (mMenu), GTK_WIDGET(gtkmenuitem));
         }
 
