@@ -301,8 +301,7 @@ nsPermissionManager::Remove(const nsACString &aHost,
 
     // If no more types are present, remove the entry
     if (entry->PermissionsAreEmpty()) {
-      //XXX Use RawRemove here, when bug 201034 is fixed
-      mHostTable.RemoveEntry(PromiseFlatCString(aHost).get());
+      mHostTable.RawRemoveEntry(entry);
       --mHostCount;
     }
     mChangedList = PR_TRUE;
