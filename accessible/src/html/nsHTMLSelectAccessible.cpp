@@ -52,7 +52,6 @@
 #include "nsIDOMHTMLOptionElement.h"
 #include "nsIDOMHTMLOptGroupElement.h"
 #include "nsIDOMHTMLSelectElement.h"
-#include "nsIDOMHTMLOListElement.h"
 #include "nsIListControlFrame.h"
 #include "nsIOptionElement.h"
 #include "nsISelectControlFrame.h"
@@ -424,41 +423,46 @@ NS_IMETHODIMP nsHTMLSelectOptionAccessible::GetAccNextSibling(nsIAccessible **_r
   // When getting the next sibling of an SelectOption we could be working with
   // either an optgroup or an option. We process this tree as flat.
   *_retval = nsnull;
-
-  nsCOMPtr<nsIDOMNode> next;
+  nsCOMPtr<nsIDOMNode> next = mDOMNode, currentNode;
   nsCOMPtr<nsIAccessibilityService> accService(do_GetService("@mozilla.org/accessibilityService;1"));
+
+  while (!*_retval && next) {
+    currentNode = next;
+    next = nsnull;
   
-  nsCOMPtr<nsIDOMHTMLOptGroupElement> currOptGroupElement(do_QueryInterface(mDOMNode));
+    nsCOMPtr<nsIDOMHTMLOptGroupElement> currOptGroupElement(do_QueryInterface(currentNode));
   
-  if (currOptGroupElement) {
-    mDOMNode->GetFirstChild(getter_AddRefs(next));
-  }
-  if (!next)  // no child under a <optgroup> or we started with a <option>
-    mDOMNode->GetNextSibling(getter_AddRefs(next));  // See if there is another <optgroup>
+    if (currOptGroupElement) {
+      currentNode->GetFirstChild(getter_AddRefs(next));
+    }
+    if (!next)  // no child under a <optgroup> or we started with a <option>
+      currentNode->GetNextSibling(getter_AddRefs(next));  // See if there is another <optgroup>
   
-  if (next) {
-    accService->GetAccessibleFor(next, _retval);  
-    return NS_OK;
-  }
-  // else No child then or child is not a <option> nor an <optgroup>
-  // go back up to the parent and get next sibling from there,
-  nsCOMPtr<nsIDOMNode> parent, parentNextSib;
-  mDOMNode->GetParentNode(getter_AddRefs(parent));
+    if (next) {
+      accService->GetAccessibleFor(next, _retval);  
+      continue;
+    }
+    // else No child then or child is not a <option> nor an <optgroup>
+    // go back up to the parent and get next sibling from there,
+    nsCOMPtr<nsIDOMNode> parent, parentNextSib;
+    currentNode->GetParentNode(getter_AddRefs(parent));
  
-  if (!parent) {
-    return NS_OK;
-  } else {
-    nsCOMPtr<nsIDOMHTMLOListElement> listElement(do_QueryInterface(parent));
-    if (listElement)  // we are done!
+    if (!parent)
       return NS_OK;
-  }
-  parent->GetNextSibling(getter_AddRefs(parentNextSib));
-  if (!parentNextSib) 
-    return NS_OK; // done
+
+    nsCOMPtr<nsIDOMNode> selectNode;
+    mParent->AccGetDOMNode(getter_AddRefs(selectNode));
+    if (parent == selectNode)
+      return NS_OK;  // End search for options at subtree's start
+
+    parent->GetNextSibling(getter_AddRefs(next));
+    if (!next) 
+      return NS_OK; // done
   
-  // We have a parent that is an option or option group
-  // get accessible for either one and return it 
-  accService->GetAccessibleFor(parentNextSib, _retval);
+    // We have a parent that is an option or option group
+    // get accessible for either one and return it 
+    accService->GetAccessibleFor(next, _retval);
+  }
   return NS_OK;
 } 
 
