@@ -55,6 +55,7 @@ const NS_NET_STATUS_WROTE_TO  = NS_ERROR_MODULE_NETWORK + 9;
 const nsIDOMWindowInternal = Components.interfaces.nsIDOMWindowInternal;
 const nsIWindowMediator = Components.interfaces.nsIWindowMediator;
 const nsIWindowDataSource = Components.interfaces.nsIWindowDataSource;
+const nsIWebNavigation = Components.interfaces.nsIWebNavigation;
 
 const MAX_HISTORY_MENU_ITEMS = 15;
 const MAX_HISTORY_ITEMS = 100;
@@ -69,7 +70,6 @@ var gProxyButton = null;
 var gProxyFavIcon = null;
 var gProxyDeck = null;
 var gNavigatorBundle;
-var gBrandBundle;
 var gLastValidURLStr = "";
 var gLastValidURL = null;
 var gHaveUpdatedToolbarState = false;
@@ -97,7 +97,6 @@ var gContextMenu = null;
 // Global variable that caches the default search engine info
 var gDefaultEngine = null;
 
-const nsIWebNavigation = Components.interfaces.nsIWebNavigation;
 var gPrintSettingsAreGlobal = true;
 var gSavePrintSettings = true;
 var gPrintSettings = null;
@@ -168,7 +167,7 @@ function getHomePage()
 {
   var url;
   try {
-    url = pref.getComplexValue("browser.startup.homepage",
+    url = gPrefService.getComplexValue("browser.startup.homepage",
                                Components.interfaces.nsIPrefLocalizedString).data;
   } catch (e) {
   }
@@ -216,7 +215,7 @@ function UpdatePageReport(event)
 
   if (gBrowser.mCurrentBrowser.pageReport) {
     gReportButton.setAttribute("blocked", "true");
-    if (pref && pref.getBoolPref("privacy.popups.firstTime")) {
+    if (gPrefService && gPrefService.getBoolPref("privacy.popups.firstTime")) {
       displayPageReportFirstTime();
 
       // Now set the pref.
@@ -248,7 +247,6 @@ function Startup()
 {
   // init globals
   gNavigatorBundle = document.getElementById("bundle_browser");
-  gBrandBundle = document.getElementById("bundle_brand");
   gBrowser = document.getElementById("content");
   gURLBar = document.getElementById("urlbar");
   gReportButton = document.getElementById("page-report-button");
@@ -425,9 +423,9 @@ function delayedStartup(aElt)
   SetPageProxyState("invalid", null);
 
   // Get the preferences service
-  var prefService = Components.classes["@mozilla.org/preferences-service;1"]
+  gPrefService = Components.classes["@mozilla.org/preferences-service;1"]
                               .getService(Components.interfaces.nsIPrefService);
-  prefService = prefService.getBranch(null);
+  gPrefService = gPrefService.getBranch(null);
 
   updateHomeTooltip();
 }
@@ -786,7 +784,7 @@ function BrowserLoadURL(aTriggeringEvent)
   if (url.match(/^view-source:/)) {
     BrowserViewSourceOfURL(url.replace(/^view-source:/, ""), null, null);
   } else {
-    if (pref && pref.getBoolPref("browser.tabs.opentabfor.urlbar") &&
+    if (gPrefService && gPrefService.getBoolPref("browser.tabs.opentabfor.urlbar") &&
         getBrowser().localName == "tabbrowser" &&
         aTriggeringEvent && 'ctrlKey' in aTriggeringEvent &&
         aTriggeringEvent.ctrlKey) {
@@ -1291,14 +1289,14 @@ function SearchBarPopupCommand(aEvent)
   if (aEvent.target.id == "miSearchModeFind") {
     searchBar.removeAttribute("searchmode");
     searchBar.setAttribute("autocompletesearchparam", "__PhoenixFindInPage");
-    pref.setCharPref("browser.search.defaultengine", "");
+    gPrefService.setCharPref("browser.search.defaultengine", "");
 
     // Clear out the search engine icon
     searchBar.firstChild.removeAttribute("src");
   } else {
     searchBar.setAttribute("searchmode", aEvent.target.id);
     searchBar.setAttribute("autocompletesearchparam", "q");
-    pref.setCharPref("browser.search.defaultengine", aEvent.target.id);
+    gPrefService.setCharPref("browser.search.defaultengine", aEvent.target.id);
   }
   
   searchBar.detachController();
@@ -1521,12 +1519,8 @@ function GetPrintSettings()
 
   try {
     if (gPrintSettings == null) {
-      var pref = Components.classes["@mozilla.org/preferences-service;1"]
-                           .getService(Components.interfaces.nsIPrefBranch);
-      if (pref) {
-        gPrintSettingsAreGlobal = pref.getBoolPref("print.use_global_printsettings", false);
-        gSavePrintSettings = pref.getBoolPref("print.save_print_settings", false);
-      }
+      gPrintSettingsAreGlobal = gPrefService.getBoolPref("print.use_global_printsettings", false);
+      gSavePrintSettings = gPrefService.getBoolPref("print.save_print_settings", false);
 
       var psService = Components.classes["@mozilla.org/gfx/printsettings-service;1"]
                                         .getService(Components.interfaces.nsIPrintSettingsService);
@@ -1935,7 +1929,7 @@ function OpenSearch(tabName, forceDialogFlag, searchStr, newWindowFlag)
   var forceAsURL = urlmatch.test(searchStr);
 
   try {
-    defaultSearchURL = pref.getComplexValue("browser.search.defaulturl",
+    defaultSearchURL = gPrefService.getComplexValue("browser.search.defaulturl",
                                             Components.interfaces.nsIPrefLocalizedString).data;
   } catch (ex) {
   }
@@ -1956,7 +1950,7 @@ function OpenSearch(tabName, forceDialogFlag, searchStr, newWindowFlag)
     } else {
       var searchMode = 0;
       try {
-        searchMode = pref.getIntPref("browser.search.powermode");
+        searchMode = gPrefService.getIntPref("browser.search.powermode");
       } catch(ex) {
       }
 
@@ -1984,7 +1978,7 @@ function OpenSearch(tabName, forceDialogFlag, searchStr, newWindowFlag)
 
           searchDS.RememberLastSearchText(escapedSearchStr);
           try {
-            var searchEngineURI = pref.getCharPref("browser.search.defaultengine");
+            var searchEngineURI = gPrefService.getCharPref("browser.search.defaultengine");
             if (searchEngineURI) {          
               var searchURL = getSearchUrl("actionButton");
               if (searchURL) {
@@ -2810,7 +2804,7 @@ nsBrowserStatusHandler.prototype =
   onLinkIconAvailable : function(aHref) {
     if (gProxyFavIcon) {
       
-      // XXXBlake pref.getBoolPref("browser.chrome.site_icons"))
+      // XXXBlake gPrefService.getBoolPref("browser.chrome.site_icons"))
       gProxyFavIcon.setAttribute("src", aHref);
 
       // update any bookmarks with new icon reference
@@ -3256,8 +3250,6 @@ function toggleSidebar(aCommandID) {
 
 function goPreferences(containerID, paneURL, itemID)
 {
-  var pref = Components.classes["@mozilla.org/preferences-service;1"]
-                       .getService(Components.interfaces.nsIPrefBranch);
   //check for an existing pref window and focus it; it's not application modal
   const kWindowMediatorContractID = "@mozilla.org/appshell/window-mediator;1";
   const kWindowMediatorIID = Components.interfaces.nsIWindowMediator;
