@@ -557,19 +557,35 @@ nsDocLoaderImpl::LoadDocument(nsIURI * aUri,
       || nsCRT::strcasecmp(aUrlScheme, "mailto") == 0
       || nsCRT::strcasecmp(aUrlScheme, "http") == 0)
     {
-      nsCOMPtr<nsIProgressEventSink> progressSink = do_QueryInterface(aContainer);
-      nsCOMPtr<nsIURIContentListener> contentListener = do_QueryInterface(aContainer);
       nsCOMPtr<nsISupports> aOpenContext = do_QueryInterface(mLoadGroup);
 
       // let's try uri dispatching...
       NS_WITH_SERVICE(nsIURILoader, pURILoader, kURILoaderCID, &rv);
       if (NS_SUCCEEDED(rv)) 
       {
-        rv = pURILoader->OpenURI(aUri, nsnull /* window target */, 
-                                 progressSink, contentListener,
-                                 nsnull /* refferring URI */, 
-                                 mLoadGroup, 
-                                 getter_AddRefs(aOpenContext));
+        // temporary hack for post data...eventually this snippet of code
+        // should be moved into the layout call when callers go through the
+        // uri loader directly!
+
+        if (aPostDataStream)
+        {
+          // query for private post data stream interface
+          nsCOMPtr<nsPIURILoaderWithPostData>  postLoader = do_QueryInterface(pURILoader, &rv);
+          if (NS_SUCCEEDED(rv))
+            rv = postLoader->OpenURIWithPostData(aUri, nsnull /* window target */,
+                                            aContainer,
+                                            nsnull /* referring uri */,
+                                            aPostDataStream,
+                                            mLoadGroup,
+                                            getter_AddRefs(aOpenContext));
+                                             
+        }
+        else
+          rv = pURILoader->OpenURI(aUri, nsnull /* window target */, 
+                                   aContainer,
+                                   nsnull /* refferring URI */, 
+                                   mLoadGroup, 
+                                   getter_AddRefs(aOpenContext));
         if (aOpenContext)
           mLoadGroup = do_QueryInterface(aOpenContext);
       }
