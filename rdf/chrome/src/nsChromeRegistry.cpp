@@ -3266,6 +3266,7 @@ NS_IMETHODIMP nsChromeRegistry::Observe(nsISupports *aSubject, const char *aTopi
       if (NS_SUCCEEDED(rv) && userChromeDir)
         rv = userChromeDir->Remove(PR_TRUE);
     }
+    FlushAllCaches();
   }
   else if (!strcmp("profile-after-change", aTopic)) {
     if (!mProfileInitialized) {
