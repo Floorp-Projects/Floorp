@@ -1074,94 +1074,6 @@ nsBlockFrame::FindBlockReflowState(nsIPresContext* aPresContext,
   return state;
 }
 
-nsresult
-nsBlockFrame::DoResizeReflow(nsBlockReflowState& aState,
-                             const nsSize&       aMaxSize,
-                             nsRect&             aDesiredRect,
-                             nsReflowStatus&     aStatus)
-{
-  NS_FRAME_TRACE_MSG(("enter nsBlockFrame::DoResizeReflow: deltaWidth=%d",
-                      aState.mDeltaWidth));
-
-#ifdef NS_DEBUG
-  if (GetVerifyTreeEnable()) {
-    VerifyLines(PR_TRUE);
-    PreReflowCheck();
-  }
-#endif
-
-  nsresult rv = NS_OK;
-  nsIPresShell* shell = aState.mPresContext->GetShell();
-  shell->PutCachedData(this, &aState);
-
-  // Check for an overflow list
-  DrainOverflowList();
-
-  if (nsnull != mLines) {
-    rv = ReflowMapped(aState);
-  }
-
-  if (NS_OK == rv) {
-    if ((nsnull != mLines) && (aState.mAvailSize.height <= 0)) {
-      // We are out of space
-    }
-    if (MoreToReflow(aState)) {
-      rv = ReflowUnmapped(aState);
-    }
-  }
-
-  // Return our desired rect
-  ComputeDesiredRect(aState, aMaxSize, aDesiredRect);
-
-  // Set return status
-  aStatus = NS_FRAME_COMPLETE;
-  if (NS_LINE_LAYOUT_NOT_COMPLETE == rv) {
-    rv = NS_OK;
-    aStatus = NS_FRAME_NOT_COMPLETE;
-  }
-#ifdef NS_DEBUG
-  if (GetVerifyTreeEnable()) {
-    // Verify that the line layout code pulled everything up when it
-    // indicates a complete reflow.
-    if (NS_FRAME_IS_COMPLETE(aStatus)) {
-      nsBlockFrame* nextBlock = (nsBlockFrame*) mNextInFlow;
-      while (nsnull != nextBlock) {
-        NS_ASSERTION((nsnull == nextBlock->mLines) &&
-                     (nextBlock->mChildCount == 0) &&
-                     (nsnull == nextBlock->mFirstChild),
-                     "bad completion status");
-        nextBlock = (nsBlockFrame*) nextBlock->mNextInFlow;
-      }
-
-#if XXX
-      // We better not be in the same parent frame as our prev-in-flow.
-      // If we are it means that we were continued instead of pulling up
-      // children.
-      if (nsnull != mPrevInFlow) {
-        nsIFrame* ourParent = mGeometricParent;
-        nsIFrame* prevParent = ((nsBlockFrame*)mPrevInFlow)->mGeometricParent;
-        NS_ASSERTION(ourParent != prevParent, "bad continuation");
-      }
-#endif
-    }
-  }
-#endif
-
-  // Now that reflow has finished, remove the cached pointer
-  shell->RemoveCachedData(this);
-  NS_RELEASE(shell);
-
-#ifdef NS_DEBUG
-  if (GetVerifyTreeEnable()) {
-    VerifyLines(PR_TRUE);
-    PostReflowCheck(aStatus);
-  }
-#endif
-
-  NS_FRAME_TRACE_REFLOW_OUT("nsBlockFrame::DoResizeReflow", aStatus);
-  return rv;
-}
-
 //----------------------------------------------------------------------
 
 NS_METHOD
@@ -1230,32 +1142,47 @@ nsBlockFrame::Reflow(nsIPresContext*      aPresContext,
                      nsRect&              aDesiredRect,
                      nsReflowStatus&      aStatus)
 {
+#ifdef NS_DEBUG
+  if (GetVerifyTreeEnable()) {
+    VerifyLines(PR_TRUE);
+    PreReflowCheck();
+  }
+#endif
+
   nsBlockReflowState state;
   nsresult           rv = NS_OK;
 
   if (eReflowReason_Initial == aReflowState.reason) {
-    NS_ASSERTION(0 != (NS_FRAME_FIRST_REFLOW & mState), "bad mState");
+//XXX remove this code and uncomment the assertion when the table code plays nice
+#ifdef NS_DEBUG
+    if (0 == (NS_FRAME_FIRST_REFLOW & mState)) {
+      printf("XXX: table code isn't setting the reflow reason properly! [nsBlockFrame.cpp]\n");
+    }
+#endif
+//XXX    NS_ASSERTION(0 != (NS_FRAME_FIRST_REFLOW & mState), "bad mState");
     rv = ProcessInitialReflow(aPresContext);
     if (NS_OK != rv) {
       return rv;
     }
   }
   else {
-    NS_ASSERTION(0 == (NS_FRAME_FIRST_REFLOW & mState), "bad mState");
+//XXX remove this code and uncomment the assertion when the table code plays nice
+#ifdef NS_DEBUG
+    if (0 != (NS_FRAME_FIRST_REFLOW & mState)) {
+      printf("XXX: table code isn't setting the reflow reason properly! [nsBlockFrame.cpp]\n");
+    }
+#endif
+//XXX    NS_ASSERTION(0 == (NS_FRAME_FIRST_REFLOW & mState), "bad mState");
   }
 
   aStatus = NS_FRAME_COMPLETE;
   rv = InitializeState(aPresContext, aSpaceManager, aReflowState.maxSize,
                        aDesiredSize.maxElementSize, state);
 
+  NS_FRAME_TRACE_MSG(("enter nsBlockFrame::Reflow: reason=%d deltaWidth=%d",
+                      aReflowState.reason, state.mDeltaWidth));
+
   if (eReflowReason_Incremental == aReflowState.reason) {
-#ifdef NS_DEBUG
-    if (GetVerifyTreeEnable()) {
-      VerifyLines(PR_TRUE);
-      PreReflowCheck();
-    }
-#endif
-  
     nsIPresShell* shell = state.mPresContext->GetShell();
     shell->PutCachedData(this, &state);
 
@@ -1285,7 +1212,8 @@ nsBlockFrame::Reflow(nsIPresContext*      aPresContext,
         NS_NOTYETIMPLEMENTED("unexpected reflow command");
       }
    } else {
-      // The command is passing through us. Get the next frame in the reflow chain
+      // The command is passing through us. Get the next frame in the
+      // reflow chain
       nsIFrame* nextFrame = aReflowState.reflowCommand->GetNext();
   
       // Restore our state as if nextFrame is the next frame to reflow
@@ -1303,7 +1231,8 @@ nsBlockFrame::Reflow(nsIPresContext*      aPresContext,
   
       // Have the line handle the incremental reflow
       nsRect  oldBounds = line->mBounds;
-      rv = lineLayout.IncrementalReflowFromChild(aReflowState.reflowCommand, nextFrame);
+      rv = lineLayout.IncrementalReflowFromChild(aReflowState.reflowCommand,
+                                                 nextFrame);
   
       // Now place the line. It's possible it won't fit
       rv = PlaceLine(state, lineLayout, line);
@@ -1331,19 +1260,49 @@ nsBlockFrame::Reflow(nsIPresContext*      aPresContext,
     // Now that reflow has finished, remove the cached pointer
     shell->RemoveCachedData(this);
     NS_RELEASE(shell);
-  
-  #ifdef NS_DEBUG
-    if (GetVerifyTreeEnable()) {
-      VerifyLines(PR_TRUE);
-      PostReflowCheck(aStatus);
-    }
-  #endif
-
   } else {
-    nsRect desiredRect;
-    rv = DoResizeReflow(state, aReflowState.maxSize, aDesiredRect, aStatus);
+    nsresult rv = NS_OK;
+    nsIPresShell* shell = aPresContext->GetShell();
+    shell->PutCachedData(this, &state);
+
+    // Check for an overflow list
+    DrainOverflowList();
+
+    if (nsnull != mLines) {
+      rv = ReflowMapped(state);
+    }
+
+    if (NS_OK == rv) {
+      if ((nsnull != mLines) && (state.mAvailSize.height <= 0)) {
+        // We are out of space
+      }
+      if (MoreToReflow(state)) {
+        rv = ReflowUnmapped(state);
+      }
+    }
+
+    // Return our desired rect
+    ComputeDesiredRect(state, aReflowState.maxSize, aDesiredRect);
+
+    // Set return status
+    aStatus = NS_FRAME_COMPLETE;
+    if (NS_LINE_LAYOUT_NOT_COMPLETE == rv) {
+      rv = NS_OK;
+      aStatus = NS_FRAME_NOT_COMPLETE;
+    }
+
+    // Now that reflow has finished, remove the cached pointer
+    shell->RemoveCachedData(this);
+    NS_RELEASE(shell);
   }
 
+#ifdef NS_DEBUG
+  if (GetVerifyTreeEnable()) {
+    VerifyLines(PR_TRUE);
+    PostReflowCheck(aStatus);
+  }
+#endif
+  NS_FRAME_TRACE_REFLOW_OUT("exit nsBlockFrame::Reflow", aStatus);
   return rv;
 }
 
