@@ -89,7 +89,7 @@ const unsigned char kRemoteVersion[] = "5.0";
 
 NS_IMPL_QUERY_INTERFACE2(nsGTKRemoteService,
                          nsIRemoteService,
-                         nsIObserver);
+                         nsIObserver)
 
 NS_IMETHODIMP_(nsrefcnt)
 nsGTKRemoteService::AddRef()
