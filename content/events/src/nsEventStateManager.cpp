@@ -2255,7 +2255,7 @@ nsEventStateManager::ClearFrameRefs(nsIFrame* aFrame)
   if (aFrame == mLastDragOverFrame)
     mLastDragOverFrame = nsnull;
   if (aFrame == mGestureDownFrame) {
-    mGestureDownFrame = nsnull;
+    StopTrackingDragGesture();
  #if CLICK_HOLD_CONTEXT_MENUS
     mEventDownWidget = nsnull;
     mEventPresContext = nsnull;
