@@ -1,5 +1,5 @@
 /*
- * $Id: NavigationTest.java,v 1.16 2004/06/23 17:08:23 edburns%acm.org Exp $
+ * $Id: NavigationTest.java,v 1.17 2004/06/23 19:21:06 edburns%acm.org Exp $
  */
 
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
@@ -93,7 +93,7 @@ public class NavigationTest extends WebclientTestCase {
 
     public void testFileAndStreamLoad() throws Exception {
 	BrowserControl firstBrowserControl = null;
-	DocumentListener listener = null;
+	DocumentLoadListenerImpl listener = null;
 	Selection selection = null;
 	firstBrowserControl = BrowserControlFactory.newBrowserControl();
 	assertNotNull(firstBrowserControl);
@@ -128,7 +128,7 @@ public class NavigationTest extends WebclientTestCase {
 	NavigationTest.keepWaiting = true;
 	
 	System.out.println("Loading url: " + testPage.toURL().toString());
-	eventRegistration.addDocumentLoadListener(listener = new DocumentListener() {
+	eventRegistration.addDocumentLoadListener(listener = new DocumentLoadListenerImpl() {
 		public void doEndCheck() {
 		    currentPage.selectAll();
 		    Selection selection = currentPage.getSelection();
@@ -152,7 +152,7 @@ public class NavigationTest extends WebclientTestCase {
 	//
 	RandomHTMLInputStream rhis = new RandomHTMLInputStream(10, false);
 	
-	eventRegistration.addDocumentLoadListener(listener = new DocumentListener() {
+	eventRegistration.addDocumentLoadListener(listener = new DocumentLoadListenerImpl() {
 		public void doEndCheck() {
 		    currentPage.selectAll();
 		    Selection selection = currentPage.getSelection();
@@ -177,7 +177,7 @@ public class NavigationTest extends WebclientTestCase {
 	NavigationTest.keepWaiting = true;
 
 	FileInputStream fis = new FileInputStream(testPage);
-	eventRegistration.addDocumentLoadListener(listener = new DocumentListener() {
+	eventRegistration.addDocumentLoadListener(listener = new DocumentLoadListenerImpl() {
 		public void doEndCheck() {
 		    currentPage.selectAll();
 		    Selection selection = currentPage.getSelection();
@@ -200,7 +200,7 @@ public class NavigationTest extends WebclientTestCase {
     }
 
     public void testStop() throws Exception {
-	DocumentListener listener = null;
+	DocumentLoadListenerImpl listener = null;
 	BrowserControl firstBrowserControl = BrowserControlFactory.newBrowserControl();
 	assertNotNull(firstBrowserControl);
 	BrowserControlCanvas canvas = (BrowserControlCanvas)
@@ -228,7 +228,7 @@ public class NavigationTest extends WebclientTestCase {
 	//
 	RandomHTMLInputStream rhis = new RandomHTMLInputStream(10, false);
 	
-	eventRegistration.addDocumentLoadListener(listener = new DocumentListener() {
+	eventRegistration.addDocumentLoadListener(listener = new DocumentLoadListenerImpl() {
 		private int progressCalls = 0;
 
 		public void doProgressCheck() {
@@ -259,7 +259,7 @@ public class NavigationTest extends WebclientTestCase {
 
     public void testRefresh() throws Exception {
 	BrowserControl firstBrowserControl = null;
-	DocumentListener listener = null;
+	DocumentLoadListenerImpl listener = null;
 	Selection selection = null;
 	firstBrowserControl = BrowserControlFactory.newBrowserControl();
 	assertNotNull(firstBrowserControl);
@@ -290,7 +290,7 @@ public class NavigationTest extends WebclientTestCase {
 	
 	NavigationTest.keepWaiting = true;
 
-	listener = new DocumentListener() {
+	listener = new DocumentLoadListenerImpl() {
 		public void doEndCheck() {
 		    currentPage.selectAll();
 		    Selection selection = currentPage.getSelection();
@@ -330,7 +330,7 @@ public class NavigationTest extends WebclientTestCase {
 
     public void testHttpLoad() throws Exception {
 	BrowserControl firstBrowserControl = null;
-	DocumentListener listener = null;
+	DocumentLoadListenerImpl listener = null;
 	Selection selection = null;
 	firstBrowserControl = BrowserControlFactory.newBrowserControl();
 	assertNotNull(firstBrowserControl);
@@ -362,7 +362,7 @@ public class NavigationTest extends WebclientTestCase {
 	NavigationTest.keepWaiting = true;
 	
 
-	eventRegistration.addDocumentLoadListener(listener = new DocumentListener() {
+	eventRegistration.addDocumentLoadListener(listener = new DocumentLoadListenerImpl() {
 		public void doEndCheck() {
 		    currentPage.selectAll();
 		    Selection selection = currentPage.getSelection();
@@ -387,26 +387,6 @@ public class NavigationTest extends WebclientTestCase {
 
 	frame.setVisible(false);
 	BrowserControlFactory.deleteBrowserControl(firstBrowserControl);
-    }
-
-    public static abstract class DocumentListener implements DocumentLoadListener {
-
-	public void eventDispatched(WebclientEvent event) {
-	    if (event instanceof DocumentLoadEvent) {
-		switch ((int) event.getType()) {
-		case ((int) DocumentLoadEvent.END_DOCUMENT_LOAD_EVENT_MASK):
-		    doEndCheck();
-		    break;
-		case ((int) DocumentLoadEvent.PROGRESS_URL_LOAD_EVENT_MASK):
-		    doProgressCheck();
-		    break;
-		}
-	    }
-	}	
-	
-	public void doEndCheck() {}
-
-	public void doProgressCheck() {}
     }
 
 }

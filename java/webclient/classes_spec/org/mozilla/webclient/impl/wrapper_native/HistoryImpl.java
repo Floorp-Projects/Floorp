@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* 
  * 
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -79,9 +79,12 @@ public void back()
     getWrapperFactory().verifyInitialized();
     Assert.assert_it(-1 != getNativeBrowserControl());
 
-    synchronized(getBrowserControl()) {
-        nativeBack(getNativeBrowserControl());
-    }
+    NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
+	    public Object run() {
+		nativeBack(getNativeBrowserControl());
+		return null;
+	    }
+	});
 }
             
 public boolean canBack()
@@ -283,7 +286,7 @@ public static void main(String [] args)
     Assert.setEnabled(true);
     Log.setApplicationName("HistoryImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: HistoryImpl.java,v 1.3 2004/04/10 21:50:38 edburns%acm.org Exp $");
+    Log.setApplicationVersionDate("$Id: HistoryImpl.java,v 1.4 2004/06/23 19:21:05 edburns%acm.org Exp $");
     
 }
 

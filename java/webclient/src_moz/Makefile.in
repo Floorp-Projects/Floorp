@@ -89,13 +89,13 @@ REQUIRES	= xpcom \
 #	CBrowserContainer.cpp \
 #	PromptActionEvents.cpp  \
 #	CurrentPageActionEvents.cpp \
-#	HistoryImpl.cpp \
 #	HistoryActionEvents.cpp \
 #	ISupportsPeer.cpp \
 #	NativeEventThreadActionEvents.cpp \
 #	WindowControlActionEvents.cpp \
 
 CPPSRCS = \
+	HistoryImpl.cpp \
 	WindowCreator.cpp \
 	nsActions.cpp \
 	NavigationActionEvents.cpp \
