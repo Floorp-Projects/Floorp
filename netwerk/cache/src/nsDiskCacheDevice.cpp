@@ -1481,7 +1481,7 @@ nsresult nsDiskCacheDevice::scanDiskCacheEntries(nsISupportsArray ** result)
     return NS_OK;
 }
 
-static int compareRecords(const void* e1, const void* e2, void* /*unused*/)
+PR_STATIC_CALLBACK(int) compareRecords(const void* e1, const void* e2, void* /*unused*/)
 {
     const nsDiskCacheRecord* r1 = (const nsDiskCacheRecord*) e1;
     const nsDiskCacheRecord* r2 = (const nsDiskCacheRecord*) e2;
