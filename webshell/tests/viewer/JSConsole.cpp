@@ -151,7 +151,13 @@ LRESULT CALLBACK JSConsole::WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
             ::SetFocus(hWndEdit);
         }
 
-        return ::CallWindowProc((FARPROC)::DefWindowProc, hWnd, uMsg, wParam, lParam);
+#if defined(STRICT)
+        return ::CallWindowProc((WNDPROC)::DefWindowProc, hWnd, uMsg, 
+                                wParam, lParam);
+#else
+        return ::CallWindowProc((FARPROC)::DefWindowProc, hWnd, uMsg, 
+                                wParam, lParam);
+#endif /* STRICT */
     }
 
     switch(uMsg) {
@@ -164,7 +170,13 @@ LRESULT CALLBACK JSConsole::WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
         case WM_DESTROY:
             console->OnDestroy();
 
-            return ::CallWindowProc((FARPROC)::DefWindowProc, hWnd, uMsg, wParam, lParam);
+#if defined(STRICT)
+            return ::CallWindowProc((WNDPROC)::DefWindowProc, hWnd, uMsg, 
+                                    wParam, lParam);
+#else
+            return ::CallWindowProc((FARPROC)::DefWindowProc, hWnd, uMsg, 
+                                    wParam, lParam);
+#endif /* STRICT */
 
         // enable/disable menu items
         case WM_INITMENUPOPUP:
@@ -263,7 +275,13 @@ LRESULT CALLBACK JSConsole::WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
             return console->OnSetFocus((HWND)wParam);
 
         default:
-            return ::CallWindowProc((FARPROC)::DefWindowProc, hWnd, uMsg, wParam, lParam);
+#if defined(STRICT)
+            return ::CallWindowProc((WNDPROC)::DefWindowProc, hWnd, uMsg, 
+                                    wParam, lParam);
+#else
+            return ::CallWindowProc((FARPROC)::DefWindowProc, hWnd, uMsg, 
+                                    wParam, lParam);
+#endif /* STRICT */
     }
 
     return 0;
