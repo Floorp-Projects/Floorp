@@ -518,7 +518,10 @@ nsresult nsPop3Protocol::LoadUrl(nsIURI* aURL, nsISupports * /* aConsumer */)
 
     nsCOMPtr<nsIMsgIncomingServer> server = do_QueryInterface(popServer);
     if (server)
+	{
         rv = server->GetLocalPath(&mailDirectory);
+		server->SetServerBusy(PR_TRUE); // the server is now busy
+	}
 
     m_pop3ConData->uidlinfo = net_pop3_load_state(host, GetUsername(), mailDirectory);
     PL_strfree(mailDirectory);
@@ -2649,6 +2652,15 @@ nsresult nsPop3Protocol::ProcessProtocolState(nsIURI * url, nsIInputStream * aIn
 
 			if (mailnewsurl)
 				mailnewsurl->SetUrlState(PR_FALSE, NS_OK);
+
+			if (m_nsIPop3Sink)
+			{
+				nsCOMPtr<nsIPop3IncomingServer> popServer;
+				m_nsIPop3Sink->GetPopServer(getter_AddRefs(popServer));
+				nsCOMPtr<nsIMsgIncomingServer> server = do_QueryInterface(popServer);
+				if (server)
+					server->SetServerBusy(PR_FALSE); // the server is now busy
+			}
 
             m_pop3ConData->next_state = POP3_FREE;
             break;

@@ -219,12 +219,20 @@ nsresult nsPop3Service::RunPopUrl(nsIMsgIncomingServer * aServer, nsIURI * aUrlT
 		// load up required server information
 		rv = aServer->GetUsername(getter_Copies(userName));
 
-		nsPop3Protocol * protocol = new nsPop3Protocol(aUrlToRun);
-		if (protocol)
+		// find out if the server is busy or not...if the server is busy, we are 
+		// *NOT* going to run the url
+		PRBool serverBusy = PR_FALSE;
+		rv = aServer->GetServerBusy(&serverBusy);
+
+		if (!serverBusy)
 		{
-			protocol->SetUsername(userName);
-			rv = protocol->LoadUrl(aUrlToRun);
-		}
+			nsPop3Protocol * protocol = new nsPop3Protocol(aUrlToRun);
+			if (protocol)
+			{
+				protocol->SetUsername(userName);
+				rv = protocol->LoadUrl(aUrlToRun);
+			}
+		} 
 	} // if server
 
 	return rv;
