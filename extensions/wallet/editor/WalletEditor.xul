@@ -42,11 +42,11 @@
     <box id="system" flex="100%" align="vertical">
       <spring style="height: 7px;"/>
       <text class="label" value="&div.walletdataonsystem.label;"/>
-      <html:div class="separator" align="horizontal" style="margin-bottom: -2px;"/>
+      <separator orient="horizontal" class="groove"/>
       <spring style="height: 10px;"/>
       <box id="system1" flex="100%" align="horizontal">
         <spring style="width: 7px;"/>
-        <html:div style="width: 195px;">
+        <div style="width: 195px;">
           <text class="label" value="&treehead.schemaname.label;"/>
           <tree multiple="true" id="schematree" class="inset"
              style="height: 250px; width: 195px;" align="vertical" onclick="ViewEntries();">
@@ -59,9 +59,9 @@
             <button id="removeSchema" class="dialog push" disabled="true" value="&button.remove.label;" onclick="DeleteSchema();"/>
             <button id="addSchema" class="dialog push" disabled="false" value="&button.add.label;" onclick="AddSchema();"/>
           </box>
-        </html:div>
+        </div>
         <spring style="width: 7px;"/>
-        <html:div style="width: 195px;">
+        <div style="width: 195px;">
           <text class="label" value="&treehead.entries.label;"/>
           <tree multiple="true" id="entrytree" class="inset"
             style="height: 113px; width: 195px;" align="vertical" onclick="ViewSynonyms();">
@@ -75,9 +75,9 @@
             <treecol width="100%"/>
             <treechildren id="synonymslist"/>
           </tree>
-        </html:div>
+        </div>
         <spring style="width: 7px;"/>
-        <html:div>
+        <div>
           <box align="vertical">
             <spring style="height: 12px;"/>
             <button id="removeEntry" class="dialog push" disabled="true" value="&button.remove.label;" onclick="DeleteEntry();"/>
@@ -86,11 +86,11 @@
             <button id="removeSynonym" class="dialog push" disabled="true" value="&button.remove.label;" onclick="DeleteSynonym();"/>
             <button id="addSynonym" class="dialog push" disabled="false" value="&button.add.label;" onclick="AddSynonym();"/>
           </box>
-        </html:div>
+        </div>
         <spring style="width: 7px;"/>
       </box>
     </box>
-    <html:div class="separator" align="horizontal" style="margin-bottom: -2px;"/>
+    <separator orient="horizontal" class="groove"/>
 
   <!-- from dialogOverlay.xul -->
   <spring style="height: 5px;"/>
