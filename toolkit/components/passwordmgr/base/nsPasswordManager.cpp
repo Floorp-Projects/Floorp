@@ -998,7 +998,9 @@ nsPasswordManager::Notify(nsIContent* aFormNode,
 
   // Check the reject list
   nsCAutoString realm;
-  if (!GetPasswordRealm(aFormNode->GetDocument()->GetDocumentURI(), realm))
+  // XXX bug 281125: GetDocument() could sometimes be null here, hinting
+  // XXX at a problem with document teardown while a modal dialog is posted.
+  if (!GetPasswordRealm(aFormNode->GetOwnerDoc()->GetDocumentURI(), realm))
     return NS_OK;
 
   PRInt32 rejectValue;
