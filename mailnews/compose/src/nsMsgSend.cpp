@@ -925,6 +925,13 @@ nsMsgComposeAndSend::GatherMimeAttachments()
     {
       for (i = 0; i < m_attachment_count; i++) 
       {
+        //
+        // rhp: This is here because we could get here after saying OK
+        // to a lot of prompts about not being able to fetch this part!
+        //
+        if (m_attachments[i].mPartUserOmissionOverride)
+          continue;
+
         // Now, we need to add this part to the m_related_part member so the 
         // message will be generated correctly.
         if (m_attachments[i].mMHTMLPart)
@@ -1389,8 +1396,8 @@ nsMsgComposeAndSend::ProcessMultipartRelated(PRInt32 *aMailboxCount, PRInt32 *aN
           workURL.Append(tUrl);
           if (NS_FAILED(nsMsgNewURL(&attachment.url, nsCAutoString(workURL))))
           {
-            // RICHIE SHERRY - just try to continue and send it without this image.
-            // return NS_ERROR_OUT_OF_MEMORY;
+            // rhp - just try to continue and send it without this image.
+            continue;
           }
         }
       }
@@ -1438,7 +1445,8 @@ nsMsgComposeAndSend::ProcessMultipartRelated(PRInt32 *aMailboxCount, PRInt32 *aN
     else
     {
       // If we get here, we got something we didn't expect!
-      return NS_ERROR_MIME_MPART_ATTACHMENT_ERROR;
+      // Just try to continue and send it without this thing.
+      continue;
     }
     
     // 
@@ -2857,7 +2865,7 @@ nsMsgComposeAndSend::DoFcc()
   nsresult rv = MimeDoFCC(mTempFileSpec,
                           nsMsgDeliverNow,
                           mCompFields->GetBcc(),
-						  mCompFields->GetFcc(), 
+						              mCompFields->GetFcc(), 
                           mCompFields->GetNewspostUrl());
   if (NS_FAILED(rv))
   {
@@ -2875,7 +2883,7 @@ nsMsgComposeAndSend::DoFcc()
     	rv = NS_OK;
 
     NotifyListenersOnStopCopy(rv);
-	nsCRT::free(eMsg);
+	  nsCRT::free(eMsg);
   }
 
   return rv;
@@ -3352,7 +3360,7 @@ nsMsgComposeAndSend::SendToMagicFolder(nsMsgDeliverMode mode)
       PRUnichar * eMsg = ComposeGetStringByID(rv);
       Fail(NS_ERROR_OUT_OF_MEMORY, eMsg);
       NotifyListenersOnStopCopy(rv);
-	  nsCRT::free(eMsg);
+	    nsCRT::free(eMsg);
     }
     
     return rv;

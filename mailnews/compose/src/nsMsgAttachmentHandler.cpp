@@ -33,6 +33,7 @@
 #include "nsXPIDLString.h"
 #include "nsIMsgMessageService.h"
 #include "nsMsgUtils.h"
+#include "nsMsgPrompts.h"
 
 static  NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
@@ -46,7 +47,7 @@ static  NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 #define AD_WORKING_BUFF_SIZE	                8192
 
-#ifdef RICHIE_APPLE_DOUBLE
+#ifdef RICHIE_XP_MAC
 
 extern PRBool       nsMsgIsMacFile(char       *aUrlString);
 extern void         MacGetFileType(nsFileSpec *fs, PRBool *useDefault, char **type, char **encoding);
@@ -66,7 +67,7 @@ void   MacGetFileType(nsFileSpec *fs, PRBool *useDefault, char **type, char **en
 nsMsgAttachmentHandler::nsMsgAttachmentHandler()
 {
   mMHTMLPart = PR_FALSE;
-  mPartOrderProcessed = PR_FALSE;
+  mPartUserOmissionOverride = PR_FALSE;
 
   m_charset = NULL;
 	m_override_type = NULL;
@@ -820,8 +821,41 @@ nsMsgAttachmentHandler::UrlExit(nsresult status, const PRUnichar* aMsg)
 
   if (NS_FAILED(status))
   {
-	  if (m_mime_delivery_state->m_status >= 0)
+    // At this point, we should probably ask a question to the user 
+    // if we should continue without this attachment.
+    //
+    PRBool            keepOnGoing = PR_TRUE;
+    nsXPIDLCString    turl;
+    PRUnichar         *msg = nsnull;
+    char              *printfString = nsnull;
+    char              *tString = nsnull;
+
+    msg = ComposeGetStringByID(NS_MSG_FAILURE_ON_OBJ_EMBED);
+    nsCAutoString     cQuestionString(msg);
+    
+    if (NS_SUCCEEDED(mURL->GetSpec(getter_Copies(turl))) && (turl))
+      tString = nsString(turl).ToNewCString();
+
+    if ( !tString )
+      printfString = PR_smprintf(cQuestionString, "?");
+    else
+      printfString = PR_smprintf(cQuestionString, tString);
+
+    nsMsgAskBooleanQuestionByString(nsString(printfString).GetUnicode(), &keepOnGoing);
+    PR_smprintf_free(printfString);
+    PR_FREEIF(msg);
+    PR_FREEIF(tString);
+
+    if (!keepOnGoing)
+    {
+	    if (m_mime_delivery_state->m_status >= 0)
+        m_mime_delivery_state->m_status = status;
+    }
+    else
+    {
+      status = 0;
       m_mime_delivery_state->m_status = status;
+    }
   }
 
   m_done = PR_TRUE;
@@ -900,6 +934,21 @@ nsMsgAttachmentHandler::UrlExit(nsresult status, const PRUnichar* aMsg)
 		  if (!m_mime_delivery_state->m_attachments[i].m_done)
 		  {
         next = &m_mime_delivery_state->m_attachments[i];
+        //
+        // rhp: We need to get a little more understanding to failed URL 
+        // requests. So, at this point if most of next is NULL, then we
+        // should just mark it fetched and move on! We probably ignored
+        // this earlier on in the send process.
+        //
+        if ( (!next->mURL) && (!next->m_uri) )
+        {
+          m_mime_delivery_state->m_attachments[i].m_done = PR_TRUE;
+          m_mime_delivery_state->m_attachment_pending_count--;
+          next->mPartUserOmissionOverride = PR_TRUE;
+          next = nsnull;
+          continue;
+        }
+
         break;
 		  }
     }

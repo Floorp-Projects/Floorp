@@ -32,11 +32,11 @@
 // Forward declarations...
 class    nsMsgComposeAndSend;
 
-#ifdef RICH_XP_MAC
+#ifdef RICHIE_XP_MAC
 
 #include "nsFileStream.h"
+#include "nsMsgAppleDouble.h"
 
-typedef 	appledouble_encode_object;
 typedef struct _AppledoubleEncodeObject
 {
 	appledouble_encode_object   ap_encode_obj;
@@ -123,7 +123,7 @@ public:
                                           // NOT the original file!
 
   PRBool                mMHTMLPart;           // This is true if its an MHTML part, otherwise, PR_FALSE
-  PRBool                mPartOrderProcessed;  // This is a flag to see if we processed this in the final sweep
+  PRBool                mPartUserOmissionOverride;  // This is true if the user send send the email without this part
 
   //
   // Vars for analyzing file data...
