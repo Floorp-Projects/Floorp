@@ -787,7 +787,6 @@ Contributor(s): ______________________________________. -->
      </box>
   </box>
 
-  <toolbox id="taskbar-toolbox">
-	  <toolbar id="taskbar" />
-	</toolbox>
+  <toolbox id="taskbox"/>
+
 </window>

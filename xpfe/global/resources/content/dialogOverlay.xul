@@ -17,9 +17,9 @@
 	<!-- OK & Cancel Buttons -->
 	 <box id="okCancelButtons" align="horizontal" style="margin-top: 0.5em">
 		<spring flex="100%"/>
-		<titledbutton id="ok" value="&okButton.label;" class="push" onclick="doOKButton()"/>	
+		<titledbutton id="ok" value="&okButton.label;" onclick="doOKButton()"/>	
 		<spring style="width:10px"/>
-		<titledbutton id="cancel" value="&cancelButton.label;" class="push" onclick="doCancelButton()"/>	
+		<titledbutton id="cancel" value="&cancelButton.label;" onclick="doCancelButton()"/>	
 		<spring style="width:10px"/>
 	</box>
 	
