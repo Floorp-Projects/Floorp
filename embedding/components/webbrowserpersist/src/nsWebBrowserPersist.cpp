@@ -29,6 +29,10 @@
 
 #include "nsIFileStreams.h"       // New Necko file streams
 
+#ifdef XP_MAC
+#include "nsILocalFileMac.h"
+#endif
+
 #include "nsNetUtil.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIFileTransportService.h"
