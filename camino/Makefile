@@ -56,3 +56,7 @@ endif
 
 all:
 	(cd projects; pbxbuild -target $(TARGET) -buildstyle $(BUILDSTYLE))
+
+clean clobber:
+	(cd projects; rm -rf build)
+
