@@ -208,6 +208,23 @@ nsEventStateManager::PostHandleEvent(nsIPresContext& aPresContext,
             if (sv) {
               nsKeyEvent * keyEvent = (nsKeyEvent *)aEvent;
               sv->ScrollByLines((keyEvent->keyCode == NS_VK_DOWN) ? 1 : -1);
+              
+              // force the update to happen now, otherwise multiple scrolls can
+              // occur before the update is processed. (bug #7354)
+              nsIViewManager* vm = nsnull;
+             	if (NS_OK == aView->GetViewManager(vm) && nsnull != vm) {
+             	  // I'd use Composite here, but it doesn't always work.
+                // vm->Composite();
+                nsIView* rootView = nsnull;
+                if (NS_OK == vm->GetRootView(rootView) && nsnull != rootView) {
+              	  nsIWidget* rootWidget = nsnull;
+              		if (NS_OK == rootView->GetWidget(rootWidget) && nsnull != rootWidget) {
+                    rootWidget->Update();
+                    NS_RELEASE(rootWidget);
+                  }
+              	}
+                NS_RELEASE(vm);
+              }
             }
           }
           break;
