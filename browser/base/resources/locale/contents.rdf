@@ -11,13 +11,13 @@
   <RDF:Description about="urn:mozilla:locale:en-US">
     <chrome:packages>
       <RDF:Seq about="urn:mozilla:locale:en-US:packages">
-        <RDF:li resource="urn:mozilla:locale:en-US:navigator"/>
+        <RDF:li resource="urn:mozilla:locale:en-US:browser"/>
       </RDF:Seq>
     </chrome:packages>
   </RDF:Description>
 
   <!-- Version Information.  State that we work only with major version of this
        package. -->
-  <RDF:Description about="urn:mozilla:locale:en-US:navigator"
+  <RDF:Description about="urn:mozilla:locale:en-US:browser"
 	chrome:localeVersion="0.9.9"/>
 </RDF:RDF>
