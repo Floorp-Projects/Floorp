@@ -1000,6 +1000,10 @@ NS_IMETHODIMP nsMsgDatabase::Commit(nsMsgDBCommit commitType)
 	nsresult	err = NS_OK;
 	nsIMdbThumb	*commitThumb = NULL;
 
+#ifdef DEBUG_seth
+    printf("nsMsgDatabase::Commit(%d)\n",commitType);
+#endif
+
 	if (commitType == nsMsgDBCommitType::kLargeCommit || commitType == nsMsgDBCommitType::kSessionCommit)
 	{
 		mdb_percent outActualWaste = 0;

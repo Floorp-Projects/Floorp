@@ -517,6 +517,9 @@ nsNntpIncomingServer::GetNntpConnection(nsIURI * aUri, nsIMsgWindow *aMsgWindow,
 
   rv = m_connectionCache->Count(&cnt);
   if (NS_FAILED(rv)) return rv;
+#ifdef DEBUG_seth
+  printf("XXX there are %d nntp connections in the conn cache.\n", (int)cnt);
+#endif
   for (PRUint32 i = 0; i < cnt && isBusy; i++) 
 	{
     aSupport = getter_AddRefs(m_connectionCache->ElementAt(i));
