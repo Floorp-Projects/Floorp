@@ -37,9 +37,11 @@ NS_NewURI(nsIURI* *result, const char* spec, nsIURI* baseURI)
 nsresult
 NS_NewURI(nsIURI* *result, const nsString& spec, nsIURI* baseURI)
 {
-    char* specStr = spec.ToNewCString();
+    // XXX if the string is unicode, GetBuffer() returns null. 
+    // XXX we need a strategy to deal w/ unicode specs (if there should
+    // XXX even be such a thing)
+    const char* specStr = spec.GetBuffer();
     nsresult rv = NS_NewURI(result, specStr, baseURI);
-    nsCRT::free(specStr);
     return rv;
 }
 
