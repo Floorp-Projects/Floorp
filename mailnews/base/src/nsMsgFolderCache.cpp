@@ -56,6 +56,7 @@ const char *kFoldersTableKind = "ns:msg:db:table:kind:folders";
 
 nsMsgFolderCache::nsMsgFolderCache()
 {
+  m_cacheElements = nsnull;
 	m_mdbEnv = nsnull;
 	m_mdbStore = nsnull;
 	NS_INIT_ISUPPORTS();
@@ -82,9 +83,6 @@ nsMsgFolderCache::~nsMsgFolderCache()
 		m_mdbEnv->Release();
 	}
 }
-
-
-
 
 NS_IMPL_ADDREF(nsMsgFolderCache)
 NS_IMPL_RELEASE(nsMsgFolderCache)
@@ -349,7 +347,7 @@ NS_IMETHODIMP nsMsgFolderCache::GetCacheElement(const char *pathKey, PRBool crea
 							nsIMsgFolderCacheElement **result)
 {
 
-	if (!result || !pathKey)
+	if (!result || !pathKey || !m_cacheElements)
 		return NS_ERROR_NULL_POINTER;
 		
 	if (strlen(pathKey) == 0) {
