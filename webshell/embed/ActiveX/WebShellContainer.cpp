@@ -18,6 +18,8 @@
 
 #include "stdafx.h"
 
+#include <limits.h>
+
 #include "WebShellContainer.h"
 
 
@@ -145,14 +147,39 @@ CWebShellContainer::BeginLoadURL(nsIWebShell* aShell, const PRUnichar* aURL)
 }
 
 
+#define FPKLUDGE
+#ifdef FPKLUDGE
+#include <float.h>
+#endif
+
 NS_IMETHODIMP
 CWebShellContainer::ProgressLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, PRInt32 aProgress, PRInt32 aProgressMax)
 {
 	USES_CONVERSION;
 	NG_TRACE(_T("CWebShellContainer::ProgressLoadURL(..., \"%s\", %d, %d)\n"), W2T(aURL), (int) aProgress, (int) aProgressMax);
 	
-	m_pEvents1->Fire_ProgressChange(aProgress, aProgressMax);
-	m_pEvents2->Fire_ProgressChange(aProgress, aProgressMax);
+	long nProgress = aProgress;
+	long nProgressMax = aProgressMax;
+
+	if (nProgress == 0)
+	{
+	}
+	if (nProgressMax == 0)
+	{
+		nProgressMax = LONG_MAX;
+	}
+	if (nProgress > nProgressMax)
+	{
+		nProgress = nProgressMax; // Progress complete
+	}
+
+#ifdef FPKLUDGE
+	_fpreset();
+#endif
+
+	m_pEvents1->Fire_ProgressChange(nProgress, nProgressMax);
+	m_pEvents2->Fire_ProgressChange(nProgress, nProgressMax);
+
 	return NS_OK;
 }
 
