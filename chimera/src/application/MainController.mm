@@ -292,6 +292,21 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 {
   // IE favorites: ~/Library/Preferences/Explorer/Favorites.html
   // Omniweb favorites: ~/Library/Application Support/Omniweb/Bookmarks.html
+  // For now, open the panel to IE's favorites.
+  NSOpenPanel* openPanel = [[NSOpenPanel alloc] init];
+  [openPanel setCanChooseFiles: YES];
+  [openPanel setCanChooseDirectories: NO];
+  [openPanel setAllowsMultipleSelection: NO];
+  NSArray* array = [NSArray arrayWithObjects: @"htm",@"html",@"xml", nil];
+  int result = [openPanel runModalForDirectory: @"~/Library/Preferences/Explorer/"
+                                          file: @"Favorites.html"
+                                         types: array];
+  if (result == NSOKButton) {
+    NSArray* urlArray = [openPanel URLs];
+    if ([urlArray count] == 0)
+      return;
+    NSURL* url = [urlArray objectAtIndex: 0];
+  }
 }
 
 -(IBAction) addBookmark:(id)aSender
