@@ -46,7 +46,7 @@
 #include "perl.h"
 #include "XSUB.h"
 
-#include "../jsapi.h"
+#include <jsapi.h>
 #include <string.h>
 
 /*---------------------------------------------------------------------------*/
@@ -58,7 +58,7 @@
 
 /* Forward declarations */
 static JSBool PerlConstruct(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *v);
-static JSBool PerlFinilize(JSContext *cx, JSObject *obj);
+static void PerlFinilize(JSContext *cx, JSObject *obj);
 static JSBool perl_eval(JSContext *cx, JSObject *obj, int argc, jsval *argv, jsval* rval);
 static JSBool perl_call(JSContext *cx, JSObject *obj, int argc, jsval *argv, jsval* rval);
 static JSBool perl_use(JSContext *cx, JSObject *obj, int argc, jsval *argv, jsval* rval);
@@ -78,7 +78,7 @@ static JSBool PVSetElement(JSContext *cx, JSObject *obj, jsint index, jsval v);
 static JSBool PVGetKey(JSContext *cx, JSObject *obj, char* name, jsval *rval);
 static JSBool PVSetKey(JSContext *cx, JSObject *obj, char* name, jsval v);
 static JSBool PVConvert(JSContext *cx, JSObject *obj, JSType type, jsval *v);
-static JSBool PVFinalize(JSContext *cx, JSObject *obj);
+static void PVFinalize(JSContext *cx, JSObject *obj);
 /* Exported functions */
 JS_EXPORT_API(JSObject*)	JS_InitPerlClass(JSContext *cx, JSObject *obj);
 JS_EXPORT_API(JSBool)		JSVALToSV(JSContext *cx, JSObject *obj, jsval v, SV** sv);
@@ -112,11 +112,11 @@ JSClass perlClass = {
     JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub,  PerlFinilize
 };
 
-JSFunctionSpec perlMethods[] = {
-    {"toString",  PerlToString, 0},
-    {"eval",  perl_eval, 0},
-    {"call",  perl_call, 0},
-    {"use",   perl_use,  0},
+static JSFunctionSpec perlMethods[] = {
+    {"toString",  (JSNative)PerlToString, 0},
+    {"eval",  (JSNative)perl_eval, 0},
+    {"call",  (JSNative)perl_call, 0},
+    {"use",   (JSNative)perl_use,  0},
     { NULL, NULL,0 }
 };
 
@@ -129,7 +129,7 @@ JSClass perlModuleClass = {
 };
 
 JSFunctionSpec perlModuleMethods[] = {
-    {"toString",  PMToString, 0},
+    {"toString",  (JSNative)PMToString, 0},
     { NULL, NULL,0 }
 };
 
@@ -142,7 +142,7 @@ JSClass perlValueClass = {
 };
 
 JSFunctionSpec perlValueMethods[] = {
-    {"toString",  PVToString, 0},
+    {"toString",  (JSNative)PVToString, 0},
     { NULL, NULL,             0}
 };
 
@@ -213,14 +213,14 @@ PerlConstruct(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *v)
 }
 
 /* Destructor. Deallocates the interpreter */
-static JSBool
+static void
 PerlFinilize(JSContext *cx, JSObject *obj)
 {
     PerlInterpreter *perl = JS_GetPrivate(cx, obj);
 
     perl_destruct(perl);
     perl_free(perl);
-    return JS_TRUE;
+    /*    return JS_TRUE; */
 }
 
 /*
@@ -232,7 +232,7 @@ PerlFinilize(JSContext *cx, JSObject *obj)
 static JSBool
 PerlToString(JSContext *cx, JSObject *obj, int argc, jsval *argv, jsval* rval){
     SV* sv = perl_get_sv("JS::ver", FALSE);
-    *rval = STRING_TO_JSVAL(JS_NewStringCopyZ(cx, SvPV(sv, na)));
+    *rval = STRING_TO_JSVAL(JS_NewStringCopyZ(cx, SvPV(sv, PL_na)));
     return JS_TRUE;
 }
 
@@ -292,7 +292,7 @@ perl_call(JSContext *cx, JSObject *obj, int argc, jsval *argv, jsval* rval)
     /* Differetiate between direct and method-like call */
     if((JS_TypeOfValue(cx, argv[-2]) == JSTYPE_FUNCTION) &&
             strcmp("call", JS_GetFunctionName(JS_ValueToFunction(cx, argv[-2])))){
-        fun_name = JS_GetFunctionName(JS_GetPrivate(cx, JSVAL_TO_OBJECT(argv[-2])));
+        fun_name = (char*)JS_GetFunctionName(JS_GetPrivate(cx, JSVAL_TO_OBJECT(argv[-2])));
         i=0;
     }else{
         fun_name = JS_GetStringBytes(JS_ValueToString(cx, argv[0]));
@@ -363,9 +363,9 @@ use(JSContext *cx, JSObject *obj, int argc, jsval *argv, const char* t){
 static JSBool
 checkError(JSContext *cx)
 {
-    if(SvTRUE(GvSV(errgv))){
+    if(SvTRUE(GvSV(PL_errgv))){ 
         JS_ReportError(cx, "perl eval failed: %s",
-            SvPV(GvSV(errgv), na));
+            SvPV(GvSV(PL_errgv), PL_na));
         /* clear error status. there should be a way to do this faster */
         perl_eval_sv(newSVpv("undef $@;", 0), G_KEEPERR);
         return JS_FALSE;
@@ -388,7 +388,7 @@ processReturn(JSContext *cx, JSObject *obj, jsval* rval)
         *rval = JSVAL_VOID;
         return JS_FALSE;
     }else if(!SvROK(js)){
-        JS_ReportError(cx, "$js (%s) must be of reference type", SvPV(js,na));
+        JS_ReportError(cx, "$js (%s) must be of reference type", SvPV(js,PL_na));
         return JS_FALSE;
     }
 
@@ -506,6 +506,9 @@ PMToString(JSContext *cx, JSObject *obj, int argc, jsval *argv, jsval* rval){
     Helped method. Retrieves the Perl reference stored
     in PerlValue object as private data.
 */
+
+#include <stdio.h>
+
 static SV*
 PVGetRef(JSContext *cx, JSObject *obj)
 {
@@ -537,24 +540,35 @@ PVCallStub (JSContext *cx, JSObject *obj, uintN argc,
     perl_object = PVGetRef(cx, obj);
 
     fun = JS_ValueToFunction(cx, argv[-2]);
-    name = JS_GetFunctionName(fun);
+    name = (char*) JS_GetFunctionName(fun);
     stash = SvSTASH(SvRV(perl_object));
     gv = gv_fetchmeth(stash, name, strlen(name), 0);
     /* cnt = perl_call_pv(method_name, 0); */
     /* start of perl call stuff */
+    if (! gv) {
+        char msg[256];
+        sprintf(msg, "Method ``%s'' not defined", name);
+        JS_ReportError(cx, msg);
+        return JS_FALSE;
+    }
+
     ENTER;
     SAVETMPS;
     PUSHMARK(SP);
+    //SvREFCNT_inc(perl_object);
     XPUSHs(perl_object); /* self for perl object method */
     for (i = 0; i < argc; i++) {
-        sv = sv_newmortal();
+        //sv = sv_newmortal();
         JSVALToSV(cx, obj, argv[i], &sv);
+        //sv_2mortal(sv);
         XPUSHs(sv);
     }
     PUTBACK;
 
     cnt = perl_call_sv((SV*)GvCV(gv), 0);
-    
+
+    //SvREFCNT_dec(perl_object);
+
     SPAGAIN;
     /* adjust stack for use of ST macro (see perlcall) */
     SP -= cnt;
@@ -834,22 +848,29 @@ PVConvert(JSContext *cx, JSObject *obj, JSType type, jsval *rval)
     Takes care of GC in Perl: we need to decrement Perl's
     reference count when PV goes out of scope.
 */
-static JSBool
+
+/* #include <stdio.h> */
+
+static void
 PVFinalize(JSContext *cx, JSObject *obj)
 {
     /* SV* sv = SvRV(PVGetRef(cx, obj)); */
-    SV* sv = PVGetRef(cx, obj);
-    /* SV *sv = PVGetRef(cx, obj);
-       if ( SvROK(sv) ) sv = SvRV( sv ); _PH_ test*/
+    SV *sv;
 
-    /* TODO: GC */
-    if(SvREFCNT(sv)>0){
-        /*fprintf(stderr, "Finilization: %d references left", SvREFCNT(sv));*/
-        SvREFCNT_dec(sv);
-        /*fprintf(stderr, "Finilization: %d references left", SvREFCNT(sv));*/
+    if ( obj ) {
+        sv = PVGetRef(cx, obj);
+        
+        /* SV *sv = PVGetRef(cx, obj);
+           if ( SvROK(sv) ) sv = SvRV( sv ); _PH_ test*/
+        
+        /* TODO: GC */
+        if(sv && SvREFCNT(sv)>0){
+            /*fprintf(stderr, "Finilization: %d references left", SvREFCNT(sv));*/
+            SvREFCNT_dec(sv);
+            /*fprintf(stderr, "Finilization: %d references left", SvREFCNT(sv));*/
+        }
     }
-
-    return JS_TRUE;
+    /*    return JS_TRUE; */
 }
 
 /*
@@ -864,16 +885,27 @@ JSVALToSV(JSContext *cx, JSObject *obj, jsval v, SV** sv)
     //*sv = &sv_undef; //__PH__??
     if(JSVAL_IS_PRIMITIVE(v)){
         if(JSVAL_IS_NULL(v) || JSVAL_IS_VOID(v)){
-            **sv = sv_undef;
+            *sv = &PL_sv_undef;
+            //printf("===> JSVALToSV: VOID\n");
         }else
         if(JSVAL_IS_INT(v)){
+            *sv = sv_newmortal();
             sv_setiv(*sv, JSVAL_TO_INT(v));
+            //*sv = newSViv(JSVAL_TO_INT(v));
+            //printf("===> JSVALToSV: INT\n");
         }else
         if(JSVAL_IS_DOUBLE(v)){
+            *sv = sv_newmortal();
             sv_setnv(*sv, *JSVAL_TO_DOUBLE(v));
+            //*sv = newSVnv(*JSVAL_TO_DOUBLE(v));
+            //printf("===> JSVALToSV: DOUBLE\n");
         }else
         if(JSVAL_IS_STRING(v)){
+            *sv = sv_newmortal();
             sv_setpv(*sv, JS_GetStringBytes(JSVAL_TO_STRING(v)));
+            //*sv = newSViv(0);
+            //sv_setpv(*sv, JS_GetStringBytes(JSVAL_TO_STRING(v)));
+            //printf("===> JSVALToSV: CHAR\n");
         }else{
             warn("Unknown primitive type");
         }
@@ -881,24 +913,26 @@ JSVALToSV(JSContext *cx, JSObject *obj, jsval v, SV** sv)
         if(JSVAL_IS_OBJECT(v)){
             JSObject *object = JSVAL_TO_OBJECT(v);
             if(JS_InstanceOf(cx, object, &perlValueClass, NULL)){
-                /* newSVsv(SvRV(PVGetRef(cx, object))); //__PH__?? */
                 *sv = PVGetRef(cx, object);
             }else{
                 if(JS_IsArrayObject(cx, object)){
+                    *sv = sv_newmortal();
                     sv_setref_pv(*sv, "JS::Object", (void*)object);
-                    sv_magic(SvRV(*sv), newSViv(cx), '~', NULL, 0);
+                    sv_magic(SvRV(*sv), newSViv((IV)cx), '~', NULL, 0);
+                    /* printf("===> JSVALToSV: ARRAY\n); */
                 }else{
+                    *sv = sv_newmortal();
                     sv_setref_pv(*sv, "JS::Object", (void*)object);
-                    sv_magic(SvRV(*sv), newSViv(cx), '~', NULL, 0);
+                    sv_magic(SvRV(*sv), newSViv((IV)cx), '~', NULL, 0);
+                    //printf("===> JSVALToSV: JS OBJECT\n");
                 }
             }
         }else{
             warn("Type conversion is not supported");
-            **sv = sv_undef;  //__PH__??
+            *sv = &PL_sv_undef;  //__PH__??
             return JS_FALSE;
         }
     }
-
     return JS_TRUE;
 }
 
@@ -909,37 +943,32 @@ JSVALToSV(JSContext *cx, JSObject *obj, jsval v, SV** sv)
     used by the Perl part of PerlConnect.
 */
 
-
-#define _IS_UNDEF(a) (SvANY(a) == SvANY(&sv_undef))
+#define SV_BIND_TO_OBJECT(sv) (sv_isobject(sv) || (SvROK(sv) && (\
+               SvTYPE(SvRV(sv)) == SVt_RV   ||\
+               SvTYPE(SvRV(sv)) == SVt_PVAV ||\
+               SvTYPE(SvRV(sv)) == SVt_PVHV ||\
+               SvTYPE(SvRV(sv)) == SVt_PVCV\
+            )))
 
 JSBool
 SVToJSVAL(JSContext *cx, JSObject *obj, SV *ref, jsval *rval) {
     SV *sv;
     char* name=NULL;
 
-    if(_IS_UNDEF(ref) || !SvRV(ref) || !SvROK(ref)) {
-        sv = ref;
-    }else{
+    /* we'll use the dereferrenced value (ecpet for object) */
+    if( SvROK(ref) ) {
         sv = SvRV(ref);
+    }else{
+        sv = ref;
     }
-    /* printf("In SVToJSVAL value %s, type=%d\n", SvPV(sv, na), SvTYPE(sv)); */
- 
-    /* object references are processed as objecs */
-    if ( _IS_UNDEF(sv) ){
+    /* printf("+++> In SVToJSVAL value %s, type=%d\n", SvPV(sv, PL_na), SvTYPE(sv)); */
+
+    if ( ! SvOK( ref ) ){
         *rval = JSVAL_VOID;
+        /* printf("---> SVToJSVAL returnig VOID\n"); */
     } else
-    if(SvIOK(sv)){
-      *rval = INT_TO_JSVAL(SvIV(sv));
-    } else
-    if(SvNOK(sv)){
-        JS_NewDoubleValue(cx, SvNV(sv), rval);
-    } else
-    if(SvPOK(sv)){
-        *rval = STRING_TO_JSVAL((JS_NewStringCopyZ(cx, SvPV(sv, na))));
-    } else 
-    if (1) /*(sv_isobject(ref))*/ {
-        JSObject *perlValue;
-        
+    if ( SV_BIND_TO_OBJECT(ref) ) {
+        JSObject *perlValue, *prototype;
         /*svtype type = SvTYPE(sv);
           switch(type){
           case SVt_RV:   name = "Perl Reference"; break;
@@ -953,20 +982,38 @@ SVToJSVAL(JSContext *cx, JSObject *obj, SV *ref, jsval *rval) {
           return JS_FALSE;
           }*/
         
-        /*printf("default\n");*/
+        /* printf("---> SVToJSVAL returning object\n"); */
         name = "Perl Value";
         /* __PH__ */
         SvREFCNT_inc(ref);
+        if (SvTYPE(sv) == SVt_PVAV)
+            prototype = JS_NewArrayObject(cx, 0, NULL);
+        else 
+            prototype = NULL;
         perlValue = JS_DefineObject(cx, obj, "PerlValue",
-                                    &perlValueClass, NULL, JSPROP_ENUMERATE);
+                                    &perlValueClass, prototype, JSPROP_ENUMERATE);
         JS_SetPrivate(cx, perlValue, ref);
         JS_DefineFunctions(cx, perlValue, perlValueMethods);
         JS_DefineProperty(cx, perlValue, "type",
                           name?STRING_TO_JSVAL(JS_NewStringCopyZ(cx, name)):JSVAL_VOID,
                           NULL, NULL, JSPROP_PERMANENT|JSPROP_READONLY);
         *rval = OBJECT_TO_JSVAL(perlValue); 
+    } else
+    if(SvIOK(sv)){
+        *rval = INT_TO_JSVAL(SvIV(sv));
+        /* printf("---> SVToJSVAL returnig INTEGER\n"); */
+    } else
+    if(SvNOK(sv)){
+        JS_NewDoubleValue(cx, SvNV(sv), rval);
+        /* printf("---> SVToJSVAL returnig DOUBLE\n"); */
+    } else
+    if(SvPOK(sv)){
+        *rval = STRING_TO_JSVAL((JS_NewStringCopyZ(cx, SvPV(sv, PL_na))));
+        /* printf("---> SVToJSVAL returnig CHAR\n\n"); */
+    } else {
+        *rval = JSVAL_VOID; /* shouldn't happen */
+        /* printf("---> SVToJSVAL returning VOID (panic)\n"); */
     }
-
     
     return JS_TRUE;
 }

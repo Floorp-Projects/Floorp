@@ -88,6 +88,18 @@ sub getValue {
     return $self->{ property };
 }
 
+sub getArray {
+    my $self = shift;
+    return [34, 35, 36, 37, 38];
+}
+
+sub getHash {
+    my $self = shift;
+    return { testkey1 => 'testvalue1',
+	     testkey2 => 'testvalue2',
+	     testkey3 => 'testvalue3', };
+}
+
 ############################################################
 # main part of the test script
 ############################################################
@@ -96,7 +108,7 @@ package main;
 use JS;
 
 BEGIN 
-  { $| = 1; print "1..11\n"; }
+  { $| = 1; print "1..12\n"; }
 END 
   { print "not ok 1\n" unless $loaded; }
 
@@ -114,41 +126,41 @@ my $testc = 1; #testcounter
 # the simplest test
 $testc++;
 $jsval = $cx->eval('6;');
-print $jsval == 6 ? "ok $testc\n" : "not ok $testc\n";
+print $jsval == 6 ? "ok $testc\n" : "not ok $testc\n"; #2
 
 ############################################################
 #second very simple test
 $testc++;
 $jsval = $cx->eval('"hallo";');
-print $jsval eq "hallo" ? "ok $testc\n" : "not ok $testc\n";
+print $jsval eq "hallo" ? "ok $testc\n" : "not ok $testc\n"; #3
 
 ############################################################
 # third very simple test
 $testc++;
 $jsval = $cx->eval("1.23");
-print $jsval == 1.23 ? "ok $testc\n" : "not ok $testc\n";
+print $jsval == 1.23 ? "ok $testc\n" : "not ok $testc\n"; #4
 
 ############################################################
 #undef is little bit tricky
 $testc++;
 $jsval = $cx->eval('undefined');
-print ! defined $jsval  ? "ok $testc\n" : "not ok $testc\n";
+print ! defined $jsval  ? "ok $testc\n" : "not ok $testc\n"; #5
 
 ############################################################
 #can ve tie js objects? (generally to hash, Arrays to arrays too)
 $testc++;
-$jsval = $cx->eval('foo = new Object(); foo.prop = 1; foo;');
+$jsval = $cx->eval('foo = new Object(); foo.prop = 11; foo;');
 my %hash;
 #read js property
 tie %hash, 'JS::Object', $jsval;
-print $hash{prop} == 1  ? "ok $testc\n" : "not ok $testc\n";
+print $hash{prop} == 11  ? "ok $testc\n" : "not ok $testc\n"; #6
 
 ############################################################
-#set js propertry
+#set js propertry 
 $testc++;
 $hash{prop2} = 2;
 $jsval = $cx->eval('foo.prop2;');
-print $jsval == 2  ? "ok $testc\n" : "not ok $testc\n";
+print $jsval == 2  ? "ok $testc\n" : "not ok $testc\n"; #7
 
 ############################################################
 #tie array
@@ -156,7 +168,7 @@ $testc++;
 my @arr;
 $jsval = $cx->eval('arr = new Array(); arr[0] = 0; arr[1] = 1; arr;');
 tie @arr, "JS::Object", $jsval;
-print ((($#arr == 1) && ($arr[1] == 1)) ? "ok $testc\n" : "not ok $testc\n");
+print ((($#arr == 1) && ($arr[1] == 1)) ? "ok $testc\n" : "not ok $testc\n");#8
 
 ############################################################
 # object delegation test
@@ -164,80 +176,62 @@ $testc++;
 $cx->createObject(new Proxy("init_value"), "perlobj", 
 		  { getObj   => \&Proxy::getObj,
 		    getValue => \&Proxy::getValue,
+		    getArray => \&Proxy::getArray,
+		    getHash  => \&Proxy::getHash,
 		  });
 $jsval = $cx->eval("perlobj.getValue()");
-print $jsval eq "init_value"  ? "ok $testc\n" : "not ok $testc\n";
+print $jsval eq "init_value"  ? "ok $testc\n" : "not ok $testc\n"; #9
 
 ############################################################
 # perl object returned to js
 $testc++;
 $jsval = $cx->eval("po = perlobj.getObj(); po.new_meth()");
-print $jsval eq "Son::new_meth" ? "ok $testc\n" : "not ok $testc\n";
-
+print $jsval eq "Son::new_meth" ? "ok $testc\n" : "not ok $testc\n"; #10
 
 ############################################################
 # and what about inherited methods?
 $testc++;
 $jsval = $cx->eval("po.old_meth()");
-print $jsval eq "Father::old_meth" ? "ok $testc\n" : "not ok $testc\n";
+print $jsval eq "Father::old_meth" ? "ok $testc\n" : "not ok $testc\n"; #11
+
+############################################################
+# pass an array, check the element
+$testc++;
+$jsval = $cx->eval("parr = perlobj.getArray(); parr[2];");
+print $jsval == 36 ? "ok $testc\n" : "not ok $testc\n"; #12
+
+############################################################
+# check the array length
+$testc++;
+$jsval = $cx->eval("parr.length");
+print $jsval == 5 ? "ok $testc\n" : "not ok $testc\n"; #13
+
+############################################################
+# pass a hash, check the element
+$testc++;
+$jsval = $cx->eval("phash = perlobj.getHash(); phash.testkey1;");
+print $jsval eq 'testvalue1' ? "ok $testc\n" : "not ok $testc\n"; #14
 
 ############################################################
 # error test
 $testc++;
 my $line;
+my $err;
 sub js_ErrorReporter {
     my ($msg, $file, $line, $linebuf, $token) = @_;
-    die "line $line";
+    $err =  "line $line $msg";
 }
 $cx->setErrorReporter( \&js_ErrorReporter );
-eval { $cx->eval("x = 2 + 4;\nsecond line is wrong\n"); };
-print $@ =~ /^line 1/ ? "ok $testc\n" : "not ok $testc\n";
+$cx->eval("x = 2 + 4;\nx.method()\n");
+print $err =~ /^line 1/ ? "ok $testc\n" : "not ok $testc\n"; #15
 
 ############################################################
 # cleanup
-# so far we have to undef context value, to make sure
-# it is disposed before runtome
+# so far we have to undef context value, to make sure,
+# it is disposed before runtime
 undef $cx;
 undef $rt;
 
 __END__
 
-############################################################
-# the old disabled tests (should work)
-############################################################
 
-use JS;
-# create new JS context
-($js = new JS()) or warn "new JS() failed";
-# eval for simple scalar cases
-# int
-($js->eval("100") == 100) or warn "Wrong value returned from eval()";
-# and string
-($js->eval("'test string'") eq 'test string') or warn "Wrong value returned from eval()";
-# double TODO: double comparison?
-($js->eval("1.25") == 1.25) or warn "Wrong value returned from eval()";
-# more complex eval:
-# return an object
-$obj = $js->eval(q/
-    x = new Object();
-    x.t='a';
-    x;
-/) or warn "eval failed";
-# tie this object to a hash
-tie %hash, "JS::Object", $obj;
-# try retrieving and manipulating values
-$hash{foo} = 1200;
-$_ = $hash{foo};
-($_ == 1200) or warn "Wrong value returned from hash";
-#
-$hash{bar} = 'abcdef';
-$_ = $hash{bar};
-($_ eq 'abcdef') or warn "Wrong value returned from hash";
-# exists/delete
-(exists $hash{bar}) or warn "\$hash{bar} should exist";
-delete $hash{bar};
-(!exists $hash{bar}) or warn "\$hash{bar} should be deleted";
-# exists/clear
-(exists $hash{foo}) or warn "\$hash{foo} should exist";
-undef %hash;
-(!exists $hash{foo}) or warn "\$hash{foo} should be deleted";

@@ -47,8 +47,9 @@ JSObject *       OBJECT
 OUTPUT
 jsval
     {
-        /* JSContext *cx = getContext(); */
-        JSVALToSV(cx, JS_GetGlobalObject(cx), $var, &$arg);
+	SV *foo;
+        JSVALToSV(cx, JS_GetGlobalObject(cx), $var, &foo);
+	sv_setsv($arg, foo);
     }
 
 OBJECT

@@ -109,10 +109,10 @@ sub DESTROY     #7/31/98 4:54PM
 package JS::Context;
 use vars qw($AUTOLOAD $DEBUG);
 
-sub AUTOLOAD        #7/28/98 8:24PM
-{
-    print "\nJS::Context::AUTOLOAD: $AUTOLOAD, not implemented yet\n" if $DEBUG;
-}   ##AUTOLOAD
+# sub AUTOLOAD        #7/28/98 8:24PM
+# {
+#     print "\nJS::Context::AUTOLOAD: $AUTOLOAD, not implemented yet\n" if $DEBUG;
+# }   ##AUTOLOAD
 
 sub new     #7/31/98 3:39PM
 {
