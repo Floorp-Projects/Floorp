@@ -96,10 +96,10 @@ struct JSArenaPool {
  */
 #ifdef JS_ARENA_CONST_ALIGN_MASK
 #define JS_ARENA_ALIGN(pool, n) (((jsuword)(n) + JS_ARENA_CONST_ALIGN_MASK)   \
-				 & ~(jsuword)JS_ARENA_CONST_ALIGN_MASK)
+                                 & ~(jsuword)JS_ARENA_CONST_ALIGN_MASK)
 
 #define JS_INIT_ARENA_POOL(pool, name, size) \
-	JS_InitArenaPool(pool, name, size, JS_ARENA_CONST_ALIGN_MASK + 1)
+        JS_InitArenaPool(pool, name, size, JS_ARENA_CONST_ALIGN_MASK + 1)
 #else
 #define JS_ARENA_ALIGN(pool, n) (((jsuword)(n) + (pool)->mask) & ~(pool)->mask)
 #endif
@@ -112,16 +112,17 @@ struct JSArenaPool {
 
 #define JS_ARENA_ALLOCATE_CAST(p, type, pool, nb)                             \
     JS_BEGIN_MACRO                                                            \
-	JSArena *_a = (pool)->current;                                        \
-	size_t _nb = JS_ARENA_ALIGN(pool, nb);                                \
-	jsuword _p = _a->avail;                                               \
-	jsuword _q = _p + _nb;                                                \
-	if (_q > _a->limit)                                                   \
-	    _p = (jsuword)JS_ArenaAllocate(pool, _nb);                        \
-	else                                                                  \
-	    _a->avail = _q;                                                   \
-	p = (type) _p;                                                        \
-	JS_ArenaCountAllocation(pool, nb);                                    \
+        JSArena *_a = (pool)->current;                                        \
+        size_t _nb = JS_ARENA_ALIGN(pool, nb);                                \
+        jsuword _p = _a->avail;                                               \
+        jsuword _q = _p + _nb;                                                \
+        JS_ASSERT(_q >= _p);                                                  \
+        if (_q > _a->limit)                                                   \
+            _p = (jsuword)JS_ArenaAllocate(pool, _nb);                        \
+        else                                                                  \
+            _a->avail = _q;                                                   \
+        p = (type) _p;                                                        \
+        JS_ArenaCountAllocation(pool, nb);                                    \
     JS_END_MACRO
 
 #define JS_ARENA_GROW(p, pool, size, incr)                                    \
