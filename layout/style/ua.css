@@ -424,24 +424,59 @@ IFRAME {
 }
 INPUT {
   vertical-align: bottom;
+  border: 2px inset rgb(192, 192, 192);
+  background-color: white;
+  color: black;
 }
 INPUT[type=radio] {
+  border: 2px inset rgb(192, 192, 192);
   background-color:white;
   color:black;
   width:12px;
   height:12px;
-  border-color:gray;
-  border-style:inset;
 }
 INPUT[type=checkbox] {
+  border: 2px inset rgb(192, 192, 192);
   width:11px;
   height:11px;
   background-color:white;
-  border-color:gray; 
-  border-style:inset;
   color:black;
-  border-width: 2px;
 }
+INPUT[type=button] {
+  border: 2px outset rgb(192, 192, 192);
+  color:black;
+  background-color: rgb(192, 192, 192);
+}
+INPUT[type=submit] {
+  border: 2px outset rgb(192, 192, 192);
+  color:black;
+  background-color: rgb(192, 192, 192);
+}
+INPUT[type=reset] {
+  border: 2px outset rgb(192, 192, 192);
+  background-color: rgb(192, 192, 192);
+  color:black;
+}
+INPUT[type=text] {
+  border: 2px inset rgb(192, 192, 192);
+  margin-right:10px; 
+  background-color: white;
+  color: black;
+}
+INPUT[type=password] {
+  border: 2px inset rgb(192, 192, 192);
+  margin-right:10px; 
+  background-color: white;
+  color:black;
+}
+INPUT[type=file] {
+  border: 2px inset rgb(192, 192, 192);
+  margin-right:10px; 
+  background-color: white;
+  color:black;
+}
+
+
 LABEL {
   display: inline;
   vertical-align: bottom;
@@ -474,6 +509,9 @@ BUTTON.DISABLED {
 }
 SELECT {
   vertical-align: bottom;
+  border: 1px inset #C0C0C0;
+  background-color: white;
+  color:black;
 }
 OPTION {
 }
@@ -489,6 +527,8 @@ OPTION.SELECTEDFOCUS {
 }
 TEXTAREA {
   vertical-align: bottom;
+  border: 2px inset #C0C0C0;
+  background-color:white;
 }
 
 /* Misc */
