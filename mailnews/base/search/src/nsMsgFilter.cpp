@@ -171,7 +171,7 @@ NS_IMETHODIMP nsMsgFilter::GetTerm(PRInt32 termIndex,
         // create the search value object
         nsMsgSearchValueImpl *searchValue =
             new nsMsgSearchValueImpl(&term->m_value);
-		*value = NS_STATIC_CAST(nsIMsgSearchValue*,searchValue);
+		*value = (nsIMsgSearchValue*)searchValue;
         NS_ADDREF(*value);
         
 		*booleanAnd = term->m_booleanOp;
