@@ -1085,6 +1085,18 @@ PRBool nsString::IsSpace(PRUnichar ch) {
 }
 
 /**-------------------------------------------------------
+ *  
+ *  
+ *  @update  gess 3/31/98
+ *  @param   
+ *  @return  isalpha
+ *------------------------------------------------------*/
+PRBool nsString::IsDigit(PRUnichar ch) {
+  // XXX i18n
+  return PRBool((ch >= '0') && (ch <= '9'));
+}
+
+/**-------------------------------------------------------
  *  This method trims characters found in aTrimSet from
  *  either end of the underlying string.
  *  
