@@ -430,6 +430,9 @@ protected:
 private:
   NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
   NS_IMETHOD_(nsrefcnt) Release() { return NS_OK; }
+
+  // for incremental typing navigation
+  static nsAString& GetIncrementalString ();
 };
 
 #endif /* nsListControlFrame_h___ */
