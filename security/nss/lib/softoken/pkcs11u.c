@@ -1303,9 +1303,9 @@ pk11_SetCertAttribute(PK11TokenObject *to, CK_ATTRIBUTE_TYPE type,
     char *nickname = NULL;
     SECStatus rv;
 
-    /* we can't change the ID or the EMAIL values, but let the
+    /* we can't change  the EMAIL values, but let the
      * upper layers feel better about the fact we tried to set these */
-    if ((type == CKA_ID) || (type == CKA_NETSCAPE_EMAIL)) {
+    if (type == CKA_NETSCAPE_EMAIL) {
 	return CKR_OK;
     }
 
@@ -1313,7 +1313,7 @@ pk11_SetCertAttribute(PK11TokenObject *to, CK_ATTRIBUTE_TYPE type,
 	return CKR_TOKEN_WRITE_PROTECTED;
     }
 
-    if (type != CKA_LABEL)  {
+    if ((type != CKA_LABEL)  && (type != CKA_ID)) {
 	return CKR_ATTRIBUTE_READ_ONLY;
     }
 
@@ -1322,6 +1322,27 @@ pk11_SetCertAttribute(PK11TokenObject *to, CK_ATTRIBUTE_TYPE type,
 	return CKR_OBJECT_HANDLE_INVALID;
     }
 
+    /* if the app is trying to set CKA_ID, it's probably because it just
+     * imported the key. Look to see if we need to set the CERTDB_USER bits.
+     */
+    if (type == CKA_ID) {
+	if (((cert->trust->sslFlags & CERTDB_USER) == 0) &&
+		((cert->trust->emailFlags & CERTDB_USER) == 0) &&
+		((cert->trust->objectSigningFlags & CERTDB_USER) == 0)) {
+	    PK11Slot *slot = to->obj.slot;
+
+	    if (slot->keyDB && nsslowkey_KeyForCertExists(slot->keyDB,cert)) {
+		NSSLOWCERTCertTrust trust = *cert->trust;
+		trust.sslFlags |= CERTDB_USER;
+		trust.emailFlags |= CERTDB_USER;
+		trust.objectSigningFlags |= CERTDB_USER;
+		nsslowcert_ChangeCertTrust(slot->certDB,cert,&trust);
+	    }
+	}
+	return CKR_OK;
+    }
+
+    /* must be CKA_LABEL */
     if (value != NULL) {
 	nickname = PORT_ZAlloc(len+1);
 	if (nickname == NULL) {
