@@ -19,9 +19,12 @@
 #ifndef _msgMessageFlags_h_
 #define _msgMessageFlags_h_
 
+typedef PRInt32 MsgFlags;
+
 /* Flags about a single message.  These values are used in the MSG_MessageLine
    struct and in a folder's mozilla-status line. The summary file database
-   uses a different internal set of flags.
+   will use the same set of flags, and some additional flags.
+   We also have the mozilla-status-2 line...
 */
 
 #define MSG_FLAG_READ     0x0001    /* has been read */
