@@ -349,8 +349,6 @@ SpacerMapAttributesIntoRule(const nsMappedAttributes* aAttributes,
   nsGenericHTMLElement::MapImageSizeAttributesInto(aAttributes, aData);
 
   if (aData->mSID == eStyleStruct_Position) {
-    nsHTMLValue value;
-
     const nsStyleDisplay* display = aData->mStyleContext->GetStyleDisplay();
 
     PRBool typeIsBlock = (display->mDisplay == NS_STYLE_DISPLAY_BLOCK);
@@ -358,43 +356,43 @@ SpacerMapAttributesIntoRule(const nsMappedAttributes* aAttributes,
     if (typeIsBlock) {
       // width: value
       if (aData->mPositionData->mWidth.GetUnit() == eCSSUnit_Null) {
-        aAttributes->GetAttribute(nsHTMLAtoms::width, value);
-        if (value.GetUnit() == eHTMLUnit_Integer) {
+        const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::width);
+        if (value && value->Type() == nsAttrValue::eInteger) {
           aData->mPositionData->
-            mWidth.SetFloatValue((float)value.GetIntValue(), eCSSUnit_Pixel);
-        } else if (value.GetUnit() == eHTMLUnit_Percent) {
+            mWidth.SetFloatValue((float)value->GetIntegerValue(),
+                                 eCSSUnit_Pixel);
+        } else if (value && value->Type() == nsAttrValue::ePercent) {
           aData->mPositionData->
-            mWidth.SetPercentValue(value.GetPercentValue());
+            mWidth.SetPercentValue(value->GetPercentValue());
         }
       }
 
       // height: value
       if (aData->mPositionData->mHeight.GetUnit() == eCSSUnit_Null) {
-        aAttributes->GetAttribute(nsHTMLAtoms::height, value);
-        if (value.GetUnit() == eHTMLUnit_Integer) {
+        const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::height);
+        if (value && value->Type() == nsAttrValue::eInteger) {
           aData->mPositionData->
-            mHeight.SetFloatValue((float)value.GetIntValue(),
+            mHeight.SetFloatValue((float)value->GetIntegerValue(),
                                   eCSSUnit_Pixel);
-        } else if (value.GetUnit() == eHTMLUnit_Percent) {
+        } else if (value && value->Type() == nsAttrValue::ePercent) {
           aData->mPositionData->
-            mHeight.SetPercentValue(value.GetPercentValue());
+            mHeight.SetPercentValue(value->GetPercentValue());
         }
       }
     } else {
       // size: value
       if (aData->mPositionData->mWidth.GetUnit() == eCSSUnit_Null) {
-        aAttributes->GetAttribute(nsHTMLAtoms::size, value);
-        if (value.GetUnit() == eHTMLUnit_Integer)
+        const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::size);
+        if (value && value->Type() == nsAttrValue::eInteger)
           aData->mPositionData->
-            mWidth.SetFloatValue((float)value.GetIntValue(),
+            mWidth.SetFloatValue((float)value->GetIntegerValue(),
                                  eCSSUnit_Pixel);
       }
     }
   } else if (aData->mSID == eStyleStruct_Display) {
-    nsHTMLValue value;
-    aAttributes->GetAttribute(nsHTMLAtoms::align, value);
-    if (value.GetUnit() == eHTMLUnit_Enumerated) {
-      PRUint8 align = (PRUint8)(value.GetIntValue());
+    const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::align);
+    if (value && value->Type() == nsAttrValue::eEnum) {
+      PRInt32 align = value->GetEnumValue();
       if (aData->mDisplayData->mFloat.GetUnit() == eCSSUnit_Null) {
         if (align == NS_STYLE_TEXT_ALIGN_LEFT)
           aData->mDisplayData->mFloat.SetIntValue(NS_STYLE_FLOAT_LEFT,
@@ -406,11 +404,9 @@ SpacerMapAttributesIntoRule(const nsMappedAttributes* aAttributes,
     }
 
     if (aData->mDisplayData->mDisplay == eCSSUnit_Null) {
-      if (aAttributes->GetAttribute(nsHTMLAtoms::type, value) !=
-          NS_CONTENT_ATTR_NOT_THERE &&
-          eHTMLUnit_String == value.GetUnit()) {
-        nsAutoString tmp;
-        value.GetStringValue(tmp);
+      const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::type);
+      if (value && value->Type() == nsAttrValue::eString) {
+        nsAutoString tmp(value->GetStringValue());
         if (tmp.EqualsIgnoreCase("line") ||
             tmp.EqualsIgnoreCase("vert") ||
             tmp.EqualsIgnoreCase("vertical") ||
@@ -443,12 +439,11 @@ DirectoryMenuMapAttributesIntoRule(const nsMappedAttributes* aAttributes,
 {
   if (aData->mSID == eStyleStruct_List) {
     if (aData->mListData->mType.GetUnit() == eCSSUnit_Null) {
-      nsHTMLValue value;
       // type: enum
-      if (aAttributes->GetAttribute(nsHTMLAtoms::type, value) !=
-          NS_CONTENT_ATTR_NOT_THERE) {
-        if (value.GetUnit() == eHTMLUnit_Enumerated)
-          aData->mListData->mType.SetIntValue(value.GetIntValue(), eCSSUnit_Enumerated);
+      const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::type);
+      if (value) {
+        if (value->Type() == nsAttrValue::eEnum)
+          aData->mListData->mType.SetIntValue(value->GetEnumValue(), eCSSUnit_Enumerated);
         else
           aData->mListData->mType.SetIntValue(NS_STYLE_LIST_STYLE_DISC, eCSSUnit_Enumerated);
       }

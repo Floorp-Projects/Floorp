@@ -339,29 +339,26 @@ void MapAttributesIntoRule(const nsMappedAttributes* aAttributes, nsRuleData* aD
 {
   if (aData->mSID == eStyleStruct_Position) {
     // height: value
-    nsHTMLValue value;
     if (aData->mPositionData->mHeight.GetUnit() == eCSSUnit_Null) {
-      aAttributes->GetAttribute(nsHTMLAtoms::height, value);
-      if (value.GetUnit() == eHTMLUnit_Integer)
-        aData->mPositionData->mHeight.SetFloatValue((float)value.GetIntValue(), eCSSUnit_Pixel);   
+      const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::height);
+      if (value && value->Type() == nsAttrValue::eInteger)
+        aData->mPositionData->mHeight.SetFloatValue((float)value->GetIntegerValue(), eCSSUnit_Pixel);   
     }
   }
   else if (aData->mSID == eStyleStruct_Text) {
     if (aData->mTextData->mTextAlign.GetUnit() == eCSSUnit_Null) {
       // align: enum
-      nsHTMLValue value;
-      aAttributes->GetAttribute(nsHTMLAtoms::align, value);
-      if (value.GetUnit() == eHTMLUnit_Enumerated)
-        aData->mTextData->mTextAlign.SetIntValue(value.GetIntValue(), eCSSUnit_Enumerated);
+      const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::align);
+      if (value && value->Type() == nsAttrValue::eEnum)
+        aData->mTextData->mTextAlign.SetIntValue(value->GetEnumValue(), eCSSUnit_Enumerated);
     }
   }
   else if (aData->mSID == eStyleStruct_TextReset) {
     if (aData->mTextData->mVerticalAlign.GetUnit() == eCSSUnit_Null) {
       // valign: enum
-      nsHTMLValue value;
-      aAttributes->GetAttribute(nsHTMLAtoms::valign, value);
-      if (value.GetUnit() == eHTMLUnit_Enumerated) 
-        aData->mTextData->mVerticalAlign.SetIntValue(value.GetIntValue(), eCSSUnit_Enumerated);
+      const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::valign);
+      if (value && value->Type() == nsAttrValue::eEnum)
+        aData->mTextData->mVerticalAlign.SetIntValue(value->GetEnumValue(), eCSSUnit_Enumerated);
     }
   }
 

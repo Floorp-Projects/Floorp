@@ -212,12 +212,10 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
 {
   if (aData->mSID == eStyleStruct_List) {
     if (aData->mListData->mType.GetUnit() == eCSSUnit_Null) {
-      nsHTMLValue value;
-    
       // type: enum
-      aAttributes->GetAttribute(nsHTMLAtoms::type, value);
-      if (value.GetUnit() == eHTMLUnit_Enumerated)
-        aData->mListData->mType.SetIntValue(value.GetIntValue(), eCSSUnit_Enumerated);
+      const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::type);
+      if (value && value->Type() == nsAttrValue::eEnum)
+        aData->mListData->mType.SetIntValue(value->GetEnumValue(), eCSSUnit_Enumerated);
     }
   }
 

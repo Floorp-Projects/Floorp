@@ -194,10 +194,9 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
 {
   if (aData->mSID == eStyleStruct_Display) {
     if (aData->mDisplayData->mClear.GetUnit() == eCSSUnit_Null) {
-      nsHTMLValue value;
-      aAttributes->GetAttribute(nsHTMLAtoms::clear, value);
-      if (value.GetUnit() == eHTMLUnit_Enumerated)
-        aData->mDisplayData->mClear.SetIntValue(value.GetIntValue(), eCSSUnit_Enumerated);
+      const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::clear);
+      if (value && value->Type() == nsAttrValue::eEnum)
+        aData->mDisplayData->mClear.SetIntValue(value->GetEnumValue(), eCSSUnit_Enumerated);
     }
   }
 

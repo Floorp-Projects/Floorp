@@ -133,25 +133,6 @@ nsMappedAttributes::SetAndTakeAttr(nsIAtom* aAttrName, nsAttrValue& aValue)
   return NS_OK;
 }
 
-nsresult
-nsMappedAttributes::GetAttribute(nsIAtom* aAttrName,
-                                 nsHTMLValue& aValue) const
-{
-  NS_PRECONDITION(aAttrName, "null name");
-
-  const nsAttrValue* val = GetAttr(aAttrName);
-
-  if (!val) {
-    aValue.Reset();
-    return NS_CONTENT_ATTR_NOT_THERE;
-  }
-
-  val->ToHTMLValue(aValue);
-
-  return NS_CONTENT_ATTR_HAS_VALUE;
-
-}
-
 const nsAttrValue*
 nsMappedAttributes::GetAttr(nsIAtom* aAttrName) const
 {

@@ -1783,10 +1783,9 @@ static void
 MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
                       nsRuleData* aData)
 {
-  nsHTMLValue value;
-  aAttributes->GetAttribute(nsHTMLAtoms::type, value);
-  if (value.GetUnit() == eHTMLUnit_Enumerated &&
-      value.GetIntValue() == NS_FORM_INPUT_IMAGE) {
+  const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::type);
+  if (value && value->Type() == nsAttrValue::eEnum &&
+      value->GetEnumValue() == NS_FORM_INPUT_IMAGE) {
     nsGenericHTMLFormElement::MapImageBorderAttributeInto(aAttributes, aData);
     nsGenericHTMLFormElement::MapImageMarginAttributeInto(aAttributes, aData);
     nsGenericHTMLFormElement::MapImageSizeAttributesInto(aAttributes, aData);

@@ -212,14 +212,11 @@ static void
 MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
                       nsRuleData* aData)
 {
-  nsHTMLValue value;
   PRBool noshade = PR_FALSE;
 
-  nsHTMLValue colorValue;
+  const nsAttrValue* colorValue = aAttributes->GetAttr(nsHTMLAtoms::color);
   nscolor color;
-  PRBool colorIsSet = aAttributes->GetAttribute(nsHTMLAtoms::color, colorValue) !=
-                      NS_CONTENT_ATTR_NOT_THERE &&
-                      colorValue.GetColorValue(color);
+  PRBool colorIsSet = colorValue && colorValue->GetColorValue(color);
 
   if (aData->mSID == eStyleStruct_Position ||
       aData->mSID == eStyleStruct_Border) {
@@ -232,11 +229,11 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
 
   if (aData->mSID == eStyleStruct_Margin) {
     // align: enum
-    aAttributes->GetAttribute(nsHTMLAtoms::align, value);
-    if (eHTMLUnit_Enumerated == value.GetUnit()) {
+    const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::align);
+    if (value && value->Type() == nsAttrValue::eEnum) {
       // Map align attribute into auto side margins
       nsCSSRect& margin = aData->mMarginData->mMargin;
-      switch (value.GetIntValue()) {
+      switch (value->GetEnumValue()) {
       case NS_STYLE_TEXT_ALIGN_LEFT:
         if (margin.mLeft.GetUnit() == eCSSUnit_Null)
           margin.mLeft.SetFloatValue(0.0f, eCSSUnit_Pixel);
@@ -261,11 +258,11 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
   else if (aData->mSID == eStyleStruct_Position) {
     // width: integer, percent
     if (aData->mPositionData->mWidth.GetUnit() == eCSSUnit_Null) {
-      aAttributes->GetAttribute(nsHTMLAtoms::width, value);
-      if (value.GetUnit() == eHTMLUnit_Integer) {
-        aData->mPositionData->mWidth.SetFloatValue((float)value.GetIntValue(), eCSSUnit_Pixel);
-      } else if (value.GetUnit() == eHTMLUnit_Percent) {
-        aData->mPositionData->mWidth.SetPercentValue(value.GetPercentValue());
+      const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::width);
+      if (value && value->Type() == nsAttrValue::eInteger) {
+        aData->mPositionData->mWidth.SetFloatValue((float)value->GetIntegerValue(), eCSSUnit_Pixel);
+      } else if (value && value->Type() == nsAttrValue::ePercent) {
+        aData->mPositionData->mWidth.SetPercentValue(value->GetPercentValue());
       }
     }
 
@@ -279,9 +276,9 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
         // the height includes the top and bottom borders that are initially 1px.
         // for size=1, html.css has a special case rule that makes this work by
         // removing all but the top border.
-        aAttributes->GetAttribute(nsHTMLAtoms::size, value);
-        if (value.GetUnit() == eHTMLUnit_Integer) {
-          aData->mPositionData->mHeight.SetFloatValue((float)value.GetIntValue(), eCSSUnit_Pixel);
+        const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::size);
+        if (value && value->Type() == nsAttrValue::eInteger) {
+          aData->mPositionData->mHeight.SetFloatValue((float)value->GetIntegerValue(), eCSSUnit_Pixel);
         } // else use default value from html.css
       }
     }
@@ -291,9 +288,9 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
     // if a size is set, use half of it per side, otherwise, use 1px per side
     float sizePerSide;
     PRBool allSides = PR_TRUE;
-    aAttributes->GetAttribute(nsHTMLAtoms::size, value);
-    if (value.GetUnit() == eHTMLUnit_Integer) {
-      sizePerSide = (float)value.GetIntValue() / 2.0f;
+    const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::size);
+    if (value && value->Type() == nsAttrValue::eInteger) {
+      sizePerSide = (float)value->GetIntegerValue() / 2.0f;
       if (sizePerSide < 1.0f) {
         // XXX When the pixel bug is fixed, all the special casing for
         // subpixel borders should be removed.

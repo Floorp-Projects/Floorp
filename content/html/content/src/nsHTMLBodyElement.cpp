@@ -505,8 +505,6 @@ void MapAttributesIntoRule(const nsMappedAttributes* aAttributes, nsRuleData* aD
 {
   if (aData->mSID == eStyleStruct_Display) {
     // When display if first asked for, go ahead and get our colors set up.
-    nsHTMLValue value;
-    
     nsIPresShell *presShell = aData->mPresContext->GetPresShell();
     if (presShell) {
       nsCOMPtr<nsIDocument> doc;
@@ -514,22 +512,20 @@ void MapAttributesIntoRule(const nsMappedAttributes* aAttributes, nsRuleData* aD
       if (doc) {
         nsHTMLStyleSheet* styleSheet = doc->GetAttributeStyleSheet();
         if (styleSheet) {
+          const nsAttrValue* value;
           nscolor color;
-          if (aAttributes->GetAttribute(nsHTMLAtoms::link, value) !=
-              NS_CONTENT_ATTR_NOT_THERE &&
-              value.GetColorValue(color)) {
+          value = aAttributes->GetAttr(nsHTMLAtoms::link);
+          if (value && value->GetColorValue(color)) {
             styleSheet->SetLinkColor(color);
           }
 
-          if (aAttributes->GetAttribute(nsHTMLAtoms::alink, value) !=
-              NS_CONTENT_ATTR_NOT_THERE &&
-              value.GetColorValue(color)) {
+          value = aAttributes->GetAttr(nsHTMLAtoms::alink);
+          if (value && value->GetColorValue(color)) {
             styleSheet->SetActiveLinkColor(color);
           }
 
-          if (aAttributes->GetAttribute(nsHTMLAtoms::vlink, value) !=
-              NS_CONTENT_ATTR_NOT_THERE &&
-              value.GetColorValue(color)) {
+          value = aAttributes->GetAttr(nsHTMLAtoms::vlink);
+          if (value && value->GetColorValue(color)) {
             styleSheet->SetVisitedLinkColor(color);
           }
         }
@@ -540,11 +536,9 @@ void MapAttributesIntoRule(const nsMappedAttributes* aAttributes, nsRuleData* aD
   if (aData->mSID == eStyleStruct_Color) {
     if (aData->mColorData->mColor.GetUnit() == eCSSUnit_Null) {
       // color: color
-      nsHTMLValue value;
       nscolor color;
-      if (aAttributes->GetAttribute(nsHTMLAtoms::text, value) !=
-          NS_CONTENT_ATTR_NOT_THERE &&
-          value.GetColorValue(color))
+      const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::text);
+      if (value && value->GetColorValue(color))
         aData->mColorData->mColor.SetColorValue(color);
     }
   }
