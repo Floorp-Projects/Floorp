@@ -29,6 +29,7 @@
 #include "nsIPrefBranch.h"
 #include "nsIPref.h"
 #include "nsIBrowserHistory.h"
+#include "nsICacheService.h"
 
 const int kDefaultExpireDays = 9;
 
@@ -215,5 +216,17 @@ const int kDefaultExpireDays = 9;
   return [self getStringPref: "browser.startup.homepage" withSuccess:&gotPref];
 }
 
+
+//
+// clearDiskCache:
+//
+// Clear the user's disk cache
+//
+-(IBAction) clearDiskCache:(id)aSender
+{
+  nsCOMPtr<nsICacheService> cacheServ ( do_GetService("@mozilla.org/network/cache-service;1") );
+  if ( cacheServ )
+    cacheServ->EvictEntries(nsICache::STORE_ON_DISK);
+}
 
 @end

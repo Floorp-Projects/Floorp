@@ -17,6 +17,7 @@
                 checkboxClicked = id; 
                 checkboxStartPageClicked = id; 
                 checkboxUseSystemHomePageClicked = id; 
+                clearDiskCache = id; 
                 clearGlobalHistory = id; 
                 historyDaysModified = id; 
                 openSystemInternetPanel = id; 
