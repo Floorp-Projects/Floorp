@@ -800,7 +800,7 @@ protected:
   virtual ~CSSImportantRule(void);
 
   nsCSSDeclaration*  mDeclaration;
-  nsICSSStyleSheet*   mSheet;
+  nsICSSStyleSheet*  mSheet;
 
 friend class CSSStyleRuleImpl;
 };
@@ -1246,15 +1246,14 @@ CSSStyleRuleImpl::CSSStyleRuleImpl(nsCSSSelectorList* aSelector,
     mImportantRule(nsnull),
     mDOMRule(nsnull)
 {
-  if (mDeclaration)
-    mDeclaration->AddRef();
+  mDeclaration->AddRef();
 }
 
 // for |Clone|
 CSSStyleRuleImpl::CSSStyleRuleImpl(const CSSStyleRuleImpl& aCopy)
   : nsCSSRule(aCopy),
     mSelector(aCopy.mSelector ? aCopy.mSelector->Clone() : nsnull),
-    mDeclaration(aCopy.mDeclaration ? aCopy.mDeclaration->Clone() : nsnull),
+    mDeclaration(aCopy.mDeclaration->Clone()),
     mImportantRule(nsnull),
     mDOMRule(nsnull)
 {
@@ -1276,10 +1275,19 @@ CSSStyleRuleImpl::CSSStyleRuleImpl(CSSStyleRuleImpl& aCopy,
   // the reverse pointer as well (and transfer ownership).
   aCopy.mDOMRule = nsnull;
 
-  // Transfer ownership of selector and declaration:
   NS_ASSERTION(aDeclaration == aCopy.mDeclaration, "declaration mismatch");
+  // Transfer ownership of selector and declaration:
   aCopy.mSelector = nsnull;
+#if 0
   aCopy.mDeclaration = nsnull;
+#else
+  // We ought to be able to transfer ownership of the selector and the
+  // declaration since this rule should now be unused, but unfortunately
+  // SetHTMLAttribute might use it before setting the new rule (see
+  // stack in bug 209575).  So leave the declaration pointer on the old
+  // rule.
+  mDeclaration->AddRef();
+#endif
 }
 
 
@@ -1337,11 +1345,9 @@ nsCSSDeclaration* CSSStyleRuleImpl::GetDeclaration(void) const
 
 already_AddRefed<nsIStyleRule> CSSStyleRuleImpl::GetImportantRule(void)
 {
-  if (!mImportantRule && mDeclaration) {
-    if (mDeclaration->HasImportantData()) {
-      mImportantRule = new CSSImportantRule(mSheet, mDeclaration);
-      NS_ADDREF(mImportantRule);
-    }
+  if (!mImportantRule && mDeclaration->HasImportantData()) {
+    mImportantRule = new CSSImportantRule(mSheet, mDeclaration);
+    NS_IF_ADDREF(mImportantRule);
   }
   NS_IF_ADDREF(mImportantRule);
   return mImportantRule;
@@ -1386,7 +1392,8 @@ NS_IMETHODIMP
 CSSStyleRuleImpl::Clone(nsICSSRule*& aClone) const
 {
   CSSStyleRuleImpl* clone = new CSSStyleRuleImpl(*this);
-  if (!clone) {
+  if (!clone || !clone->mDeclaration || (!clone->mSelector != !mSelector)) {
+    delete clone;
     aClone = nsnull;
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -1419,7 +1426,8 @@ CSSStyleRuleImpl::DeclarationChanged(PRBool aHandleContainer)
 
   NS_ADDREF(clone); // for return
 
-  if (aHandleContainer && mSheet) {
+  if (aHandleContainer) {
+    NS_ASSERTION(mSheet, "rule must be in a sheet");
     if (mParentRule) {
       mSheet->ReplaceRuleInGroup(mParentRule, this, clone);
     } else {
@@ -1528,6 +1536,7 @@ NS_NewCSSStyleRule(nsICSSStyleRule** aInstancePtrResult,
                    nsCSSSelectorList* aSelector,
                    nsCSSDeclaration* aDeclaration)
 {
+  NS_PRECONDITION(aDeclaration, "must have a declaration");
   CSSStyleRuleImpl *it = new CSSStyleRuleImpl(aSelector, aDeclaration);
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
