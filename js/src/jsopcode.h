@@ -85,6 +85,7 @@ typedef enum JSOp {
 #define JOF_ASSIGNING     0x2000  /* hint for JSClass.resolve, used for ops
                                      that do simplex assignment */
 #define JOF_BACKPATCH     0x4000  /* backpatch placeholder during codegen */
+#define JOF_LEFTASSOC     0x8000  /* left-associative operator */
 
 #define JOF_TYPE_IS_EXTENDED_JUMP(t) \
     ((unsigned)((t) - JOF_JUMPX) <= (unsigned)(JOF_LOOKUPSWITCHX - JOF_JUMPX))

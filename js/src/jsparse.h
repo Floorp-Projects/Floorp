@@ -249,9 +249,14 @@ struct JSParseNode {
         (pn)->pn_op = (pn2)->pn_op;                                           \
         (pn)->pn_arity = (pn2)->pn_arity;                                     \
         (pn)->pn_u = (pn2)->pn_u;                                             \
-        (pn2)->pn_type = TOK_EOF;                                             \
-        (pn2)->pn_op = JSOP_NOP;                                              \
-        (pn2)->pn_arity = PN_NULLARY;                                         \
+        PN_CLEAR_NODE(pn2);                                                   \
+    JS_END_MACRO
+
+#define PN_CLEAR_NODE(pn)                                                     \
+    JS_BEGIN_MACRO                                                            \
+        (pn)->pn_type = TOK_EOF;                                              \
+        (pn)->pn_op = JSOP_NOP;                                               \
+        (pn)->pn_arity = PN_NULLARY;                                          \
     JS_END_MACRO
 
 /* True if pn is a parsenode representing a literal constant. */

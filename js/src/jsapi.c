@@ -2933,43 +2933,41 @@ JS_BufferIsCompilableUnit(JSContext *cx, JSObject *obj,
                           const char *bytes, size_t length)
 {
     jschar *chars;
-    JSScript *script;
-    void *mark;
+    JSBool result;
+    JSExceptionState *exnState;
+    void *tempMark;
     JSTokenStream *ts;
     JSErrorReporter older;
-    JSBool hitEOF, result;
-    JSExceptionState *exnState;
 
     CHECK_REQUEST(cx);
-    mark = JS_ARENA_MARK(&cx->tempPool);
     chars = js_InflateString(cx, bytes, length);
     if (!chars)
         return JS_TRUE;
+
+    /*
+     * Return true on any out-of-memory error, so our caller doesn't try to
+     * collect more buffered source.
+     */
+    result = JS_TRUE;
     exnState = JS_SaveExceptionState(cx);
+    tempMark = JS_ARENA_MARK(&cx->tempPool);
     ts = js_NewTokenStream(cx, chars, length, NULL, 0, NULL);
-    if (!ts) {
-        result = JS_TRUE;
-        goto out;
+    if (ts) {
+        older = JS_SetErrorReporter(cx, NULL);
+        if (!js_ParseTokenStream(cx, obj, ts)) {
+            /*
+             * We ran into an error.  If it was because we ran out of source,
+             * we return false, so our caller will know to try to collect more
+             * buffered source.
+             */
+            result = (ts->flags & TSF_EOF) == 0;
+        }
+
+        JS_SetErrorReporter(cx, older);
+        js_CloseTokenStream(cx, ts);
+        JS_ARENA_RELEASE(&cx->tempPool, tempMark);
     }
 
-    older = JS_SetErrorReporter(cx, NULL);
-    script = CompileTokenStream(cx, obj, ts, mark, &hitEOF);
-    JS_SetErrorReporter(cx, older);
-
-    if (script == NULL) {
-        /*
-         * We ran into an error, but it was because we ran out of source,
-         * and not for some other reason.  For this case (and this case
-         * only) we return false, so the calling function knows to try to
-         * collect more source.
-         */
-        result = hitEOF ? JS_FALSE : JS_TRUE;
-    } else {
-        result = JS_TRUE;
-        js_DestroyScript(cx, script);
-    }
-
-out:
     JS_free(cx, chars);
     JS_RestoreExceptionState(cx, exnState);
     return result;
