@@ -49,7 +49,7 @@ protected:
 	nsresult BuildNewMailURI(nsIMsgFolder *folder, nsCAutoString &newMailURI);
 
 protected:
-	nsCOMPtr<nsIRDFDataSource> mInMemoryDataSource;
+    nsCOMPtr<nsISupports> mInMemoryDataSourceISupports;
 
 	static nsIRDFResource* kNC_FlashRoot;
 	static nsIRDFResource* kNC_Type;

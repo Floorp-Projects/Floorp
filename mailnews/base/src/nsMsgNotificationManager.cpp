@@ -91,6 +91,7 @@ nsMsgNotificationManager::~nsMsgNotificationManager()
 }
 
 NS_IMPL_ADDREF(nsMsgNotificationManager)
+NS_IMPL_RELEASE(nsMsgNotificationManager);
 
 NS_IMETHODIMP
 nsMsgNotificationManager::QueryInterface(REFNSIID iid, void** result)
@@ -109,7 +110,8 @@ nsMsgNotificationManager::QueryInterface(REFNSIID iid, void** result)
 	}
 	else if(iid.Equals(nsCOMTypeInfo<nsIRDFDataSource>::GetIID()))
 	{
-		*result = mInMemoryDataSource;
+        // Support nsIRDFDataSource by aggregation.
+		return mInMemoryDataSourceISupports->QueryInterface(iid, result);
 	}
 
 	if(*result)
@@ -120,28 +122,14 @@ nsMsgNotificationManager::QueryInterface(REFNSIID iid, void** result)
     return NS_NOINTERFACE;
 }
 
-NS_IMETHODIMP_(nsrefcnt) nsMsgNotificationManager::Release()
-{
-
-	--mRefCnt; 
-	if (mRefCnt == 1 && mInMemoryDataSource) { 
-		mInMemoryDataSource = nsnull; /* nsCOMPtr triggers Release() */ 
-	} 
-	else if (mRefCnt == 0) { 
-		delete this; 
-	} 
-	return mRefCnt; 
-
-}
-
 nsresult nsMsgNotificationManager::Init()
 {
 	nsresult rv;
 
 	rv = nsComponentManager::CreateInstance(kRDFInMemoryDataSourceCID, 
                                           this, 
-                                          nsCOMTypeInfo<nsIRDFDataSource>::GetIID(), 
-                                          getter_AddRefs(mInMemoryDataSource));
+                                          nsCOMTypeInfo<nsISupports>::GetIID(), 
+                                          getter_AddRefs(mInMemoryDataSourceISupports));
 
 	if(NS_FAILED(rv))
 		return rv;
@@ -253,7 +241,9 @@ nsresult nsMsgNotificationManager::AddNewMailNotification(nsIMsgFolder *folder)
 	timeStampString = "3:33pm";
 	urlString = "test";
 
-	mInMemoryDataSource->Assert(notificationResource, kNC_Type, kNC_NewMessages, PR_TRUE);
+    nsCOMPtr<nsIRDFDataSource> ds = do_QueryInterface(mInMemoryDataSourceISupports);
+
+	ds->Assert(notificationResource, kNC_Type, kNC_NewMessages, PR_TRUE);
 
 	PRUnichar* folderDescription;
 	rv = folder->GetNewMessagesNotificationDescription(&folderDescription);
@@ -265,7 +255,7 @@ nsresult nsMsgNotificationManager::AddNewMailNotification(nsIMsgFolder *folder)
 	rv = rdfService->GetLiteral(sourceString.GetUnicode(), getter_AddRefs(source));
 	if(NS_SUCCEEDED(rv))
 	{
-		mInMemoryDataSource->Assert(notificationResource, kNC_Source, source, PR_TRUE);
+		ds->Assert(notificationResource, kNC_Source, source, PR_TRUE);
 	}
 
 	PRInt32 newMessages;
@@ -279,7 +269,7 @@ nsresult nsMsgNotificationManager::AddNewMailNotification(nsIMsgFolder *folder)
 	rv = rdfService->GetLiteral(descriptionString.GetUnicode(), getter_AddRefs(description));
 	if(NS_SUCCEEDED(rv))
 	{
-		mInMemoryDataSource->Assert(notificationResource, kNC_Description, description, PR_TRUE);
+		ds->Assert(notificationResource, kNC_Description, description, PR_TRUE);
 	}
 
 	//Supposedly rdf will convert this into a localized time string.
@@ -292,16 +282,16 @@ nsresult nsMsgNotificationManager::AddNewMailNotification(nsIMsgFolder *folder)
 	rv = rdfService->GetLiteral(timeStampString.GetUnicode(), getter_AddRefs(timeStamp));
 	if(NS_SUCCEEDED(rv))
 	{
-		mInMemoryDataSource->Assert(notificationResource, kNC_TimeStamp, timeStamp, PR_TRUE);
+		ds->Assert(notificationResource, kNC_TimeStamp, timeStamp, PR_TRUE);
 	}
 
 	rv = rdfService->GetLiteral(urlString.GetUnicode(), getter_AddRefs(url));
 	if(NS_SUCCEEDED(rv))
 	{
-		mInMemoryDataSource->Assert(notificationResource, kNC_URL, url, PR_TRUE);
+		ds->Assert(notificationResource, kNC_URL, url, PR_TRUE);
 	}
 
-	mInMemoryDataSource->Assert(kNC_FlashRoot, kNC_Child, notificationResource, PR_TRUE);
+	ds->Assert(kNC_FlashRoot, kNC_Child, notificationResource, PR_TRUE);
 	return NS_OK;
 }
 
@@ -323,7 +313,9 @@ nsresult nsMsgNotificationManager::RemoveNewMailNotification(nsIMsgFolder *folde
 		return rv;
 	RemoveOldValues(notificationResource);
 
-	mInMemoryDataSource->Unassert(kNC_FlashRoot, kNC_Child, notificationResource);
+    nsCOMPtr<nsIRDFDataSource> ds = do_QueryInterface(mInMemoryDataSourceISupports);
+
+	ds->Unassert(kNC_FlashRoot, kNC_Child, notificationResource);
 
 	return NS_OK;
 }
@@ -333,25 +325,27 @@ nsresult nsMsgNotificationManager::RemoveOldValues(nsIRDFResource *notificationR
 	nsCOMPtr<nsIRDFNode> target;
 	nsresult rv;
 
-	rv = mInMemoryDataSource->GetTarget(notificationResource, kNC_Description, PR_TRUE, getter_AddRefs(target));
-	if(NS_SUCCEEDED(rv) && (rv != NS_RDF_NO_VALUE))
-		mInMemoryDataSource->Unassert(notificationResource, kNC_Description, target);
+    nsCOMPtr<nsIRDFDataSource> ds = do_QueryInterface(mInMemoryDataSourceISupports);
 
-	rv = mInMemoryDataSource->GetTarget(notificationResource, kNC_Type, PR_TRUE, getter_AddRefs(target));
+	rv = ds->GetTarget(notificationResource, kNC_Description, PR_TRUE, getter_AddRefs(target));
 	if(NS_SUCCEEDED(rv) && (rv != NS_RDF_NO_VALUE))
-		mInMemoryDataSource->Unassert(notificationResource, kNC_Type, target);
+		ds->Unassert(notificationResource, kNC_Description, target);
 
-	rv = mInMemoryDataSource->GetTarget(notificationResource, kNC_Source, PR_TRUE, getter_AddRefs(target));
+	rv = ds->GetTarget(notificationResource, kNC_Type, PR_TRUE, getter_AddRefs(target));
 	if(NS_SUCCEEDED(rv) && (rv != NS_RDF_NO_VALUE))
-		mInMemoryDataSource->Unassert(notificationResource, kNC_Source, target);
+		ds->Unassert(notificationResource, kNC_Type, target);
 
-	rv = mInMemoryDataSource->GetTarget(notificationResource, kNC_TimeStamp, PR_TRUE, getter_AddRefs(target));
+	rv = ds->GetTarget(notificationResource, kNC_Source, PR_TRUE, getter_AddRefs(target));
 	if(NS_SUCCEEDED(rv) && (rv != NS_RDF_NO_VALUE))
-		mInMemoryDataSource->Unassert(notificationResource, kNC_TimeStamp, target);
+		ds->Unassert(notificationResource, kNC_Source, target);
 
-	rv = mInMemoryDataSource->GetTarget(notificationResource, kNC_URL, PR_TRUE, getter_AddRefs(target));
+	rv = ds->GetTarget(notificationResource, kNC_TimeStamp, PR_TRUE, getter_AddRefs(target));
 	if(NS_SUCCEEDED(rv) && (rv != NS_RDF_NO_VALUE))
-		mInMemoryDataSource->Unassert(notificationResource, kNC_URL, target);
+		ds->Unassert(notificationResource, kNC_TimeStamp, target);
+
+	rv = ds->GetTarget(notificationResource, kNC_URL, PR_TRUE, getter_AddRefs(target));
+	if(NS_SUCCEEDED(rv) && (rv != NS_RDF_NO_VALUE))
+		ds->Unassert(notificationResource, kNC_URL, target);
 
 	return NS_OK;
 

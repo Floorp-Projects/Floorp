@@ -35,6 +35,7 @@
 
  */
 
+#include "nsAgg.h"
 #include "nsCOMPtr.h"
 #include "nscore.h"
 #include "nsIOutputStream.h"
@@ -178,12 +179,9 @@ protected:
     friend NS_IMETHODIMP
     NS_NewRDFInMemoryDataSource(nsISupports* aOuter, const nsIID& aIID, void** aResult);
 
-    nsISupports* mOuter;
-
 public:
 
-    // nsISupports
-    NS_DECL_ISUPPORTS
+    NS_DECL_AGGREGATED
 
     // nsIRDFDataSource methods
     NS_IMETHOD GetURI(char* *uri);
@@ -578,6 +576,13 @@ NS_IMETHODIMP
 NS_NewRDFInMemoryDataSource(nsISupports* aOuter, const nsIID& aIID, void** aResult)
 {
     NS_PRECONDITION(aResult != nsnull, "null ptr");
+    if (! aResult)
+        return NS_ERROR_NULL_POINTER;
+
+    if (aOuter && !aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
+        NS_ERROR("aggregation requires nsISupports");
+        return NS_ERROR_ILLEGAL_VALUE;
+    }
 
     InMemoryDataSource* datasource = new InMemoryDataSource(aOuter);
     if (! datasource)
@@ -587,7 +592,9 @@ NS_NewRDFInMemoryDataSource(nsISupports* aOuter, const nsIID& aIID, void** aResu
 
     rv = datasource->Init();
     if (NS_SUCCEEDED(rv)) {
-        rv = datasource->QueryInterface(aIID, aResult); // This'll AddRef()
+        datasource->fAggregated.AddRef();
+        rv = datasource->AggregatedQueryInterface(aIID, aResult); // This'll AddRef()
+        datasource->fAggregated.Release();
 
         if (NS_SUCCEEDED(rv))
             return rv;
@@ -603,10 +610,9 @@ NS_NewRDFInMemoryDataSource(nsISupports* aOuter, const nsIID& aIID, void** aResu
 InMemoryDataSource::InMemoryDataSource(nsISupports* aOuter)
     : mForwardArcs(nsnull),
       mReverseArcs(nsnull),
-      mOuter(aOuter),
       mLock(nsnull)
 {
-    NS_INIT_REFCNT();
+    NS_INIT_AGGREGATED(aOuter);
 }
 
 
@@ -684,60 +690,30 @@ InMemoryDataSource::DeleteForwardArcsEntry(PLHashEntry* he, PRIntn i, void* arg)
 
 ////////////////////////////////////////////////////////////////////////
 
-NS_IMETHODIMP_(nsrefcnt)
-InMemoryDataSource::AddRef()
-{
-    if (mOuter) {
-        return mOuter->AddRef();
-    }
-    else {
-        return ++mRefCnt;
-    }
-}
-
-
-NS_IMETHODIMP_(nsrefcnt)
-InMemoryDataSource::Release()
-{
-    nsrefcnt refcnt;
-    if (mOuter) {
-        refcnt = mOuter->Release();
-    }
-    else {
-        refcnt = --mRefCnt;
-    }
-    if (refcnt == 0) {
-        delete this;
-    }
-    return refcnt;
-}
-
+NS_IMPL_AGGREGATED(InMemoryDataSource)
 
 NS_IMETHODIMP
-InMemoryDataSource::QueryInterface(REFNSIID aIID, void** aResult)
+InMemoryDataSource::AggregatedQueryInterface(REFNSIID aIID, void** aResult)
 {
     NS_PRECONDITION(aResult != nsnull, "null ptr");
     if (! aResult)
         return NS_ERROR_NULL_POINTER;
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-
-    if (aIID.Equals(nsIRDFDataSource::GetIID()) ||
-        ((!mOuter && aIID.Equals(kISupportsIID)))) {
+    if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
+        *aResult = NS_STATIC_CAST(nsISupports*, &fAggregated);
+    }
+    else if (aIID.Equals(nsCOMTypeInfo<nsIRDFDataSource>::GetIID())) {
         *aResult = NS_STATIC_CAST(nsIRDFDataSource*, this);
     }
-    else if (aIID.Equals(nsIRDFPurgeableDataSource::GetIID())) {
+    else if (aIID.Equals(nsCOMTypeInfo<nsIRDFPurgeableDataSource>::GetIID())) {
         *aResult = NS_STATIC_CAST(nsIRDFPurgeableDataSource*, this);
-    }
-    else if (mOuter) {
-        return mOuter->QueryInterface(aIID, aResult);
     }
     else {
         *aResult = nsnull;
         return NS_NOINTERFACE;
     }
 
-    NS_ADDREF(this);
+    NS_ADDREF(NS_STATIC_CAST(nsISupports*, *aResult));
     return NS_OK;
 }
 
