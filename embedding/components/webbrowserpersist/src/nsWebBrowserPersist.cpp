@@ -737,7 +737,7 @@ nsresult nsWebBrowserPersist::SaveDocumentInternal(
 
         if (localDataPath)
         {
-            localDataPath->Create(nsILocalFile::DIRECTORY_TYPE, 0664);
+            localDataPath->Create(nsILocalFile::DIRECTORY_TYPE, 0755);
             PRBool exists = PR_FALSE;
             PRBool isDirectory = PR_FALSE;
             localDataPath->Exists(&exists);
@@ -984,7 +984,6 @@ nsWebBrowserPersist::CalculateAndAppendFileExt(nsIURI *aURI, nsIChannel *aChanne
 
         if (mimeInfo)
         {
-            PRBool matchingExt = PR_FALSE;
             nsXPIDLCString fileName;
             localFile->GetLeafName(getter_Copies(fileName));
 
