@@ -62,12 +62,13 @@ CMT_CopyDataToItem(const unsigned char *data, CMUint32 len)
 {
   CMTItem item;
 
-  item.data = calloc(len, 1);
+  item.data = (unsigned char*) calloc(len, 1);
   item.len = len;
   memcpy(item.data, data, len);
 
   return item;
 }
+
 
 static CMTStatus
 tmp_SendMessage(PCMT_CONTROL control, CMTItem *message)
