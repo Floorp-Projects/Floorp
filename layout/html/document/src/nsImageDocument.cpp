@@ -276,7 +276,7 @@ nsImageDocument::CreateSyntheticDocument()
 
   char* src;
   mDocumentURL->GetSpec(&src);
-  nsHTMLValue val( NS_ConvertASCIItoUCS2(src) );
+  nsHTMLValue val(src);
   delete[] src;
   image->SetHTMLAttribute(nsHTMLAtoms::src, val, PR_FALSE);
   image->SetHTMLAttribute(nsHTMLAtoms::alt, val, PR_FALSE);
