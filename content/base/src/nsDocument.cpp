@@ -1664,6 +1664,14 @@ nsDocument::ContentRemoved(nsIContent* aContainer,
 }
 
 NS_IMETHODIMP
+nsDocument::AttributeWillChange(nsIContent* aChild,
+                                PRInt32 aNameSpaceID,
+                                nsIAtom* aAttribute)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDocument::AttributeChanged(nsIContent* aChild,
                              PRInt32 aNameSpaceID,
                              nsIAtom* aAttribute,
@@ -2532,7 +2540,8 @@ nsDocument::GetLocalName(nsAWritableString& aLocalName)
 }
 
 NS_IMETHODIMP    
-nsDocument::InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild, nsIDOMNode** aReturn)
+nsDocument::InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild,
+                         nsIDOMNode** aReturn)
 {
   NS_ASSERTION(nsnull != aNewChild, "null ptr");
   PRInt32 index;

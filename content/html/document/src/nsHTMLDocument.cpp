@@ -37,6 +37,7 @@
 #include "nsIHTMLCSSStyleSheet.h"
 #include "nsIStyleSet.h"
 #include "nsHTMLAtoms.h"
+#include "nsLayoutAtoms.h"
 #include "nsIPresShell.h" 
 #include "nsIPresContext.h" 
 #include "nsIHTMLContent.h"
@@ -139,14 +140,15 @@ const PRInt32 kBackward = 1;
 #include "nsHTMLContentSinkStream.h"
 #endif
 
-// XXX Used to control whether we implement document.layers
-//#define NS_IMPLEMENT_DOCUMENT_LAYERS
-
+#define ELEMENT_NOT_IN_TABLE ((nsIContent *)1)
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kCookieServiceCID, NS_COOKIESERVICE_CID);
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
+
+static PRBool
+IsNamedItem(nsIContent* aContent, nsIAtom *aTag, nsAWritableString& aName);
 
 static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
 
@@ -178,58 +180,6 @@ MyPrefChangedCallback(const char*aPrefName, void* instance_data)
 	return 0;
 }
 
-// These functions are copied from nsprpub/lib/ds/plhash.c, with one
-// change to free the string used as a key.
-
-static void * PR_CALLBACK
-NamedItemsAllocTable(void *pool, PRSize size)
-{
-#if defined(XP_MAC)
-#pragma unused (pool)
-#endif
-
-    return PR_MALLOC(size);
-}
-
-static void PR_CALLBACK
-NamedItemsFreeTable(void *pool, void *item)
-{
-#if defined(XP_MAC)
-#pragma unused (pool)
-#endif
-
-    PR_Free(item);
-}
-
-static PLHashEntry * PR_CALLBACK
-NamedItemsAllocEntry(void *pool, const void *key)
-{
-#if defined(XP_MAC)
-#pragma unused (pool,key)
-#endif
-
-    return PR_NEW(PLHashEntry);
-}
-
-static void PR_CALLBACK
-NamedItemsFreeEntry(void *pool, PLHashEntry *he, PRUintn flag)
-{
-#if defined(XP_MAC)
-#pragma unused (pool)
-#endif
-
-    if (flag == HT_FREE_ENTRY) {
-        Recycle((char *)he->key);
-        PR_Free(he);
-    }
-}
-
-static PLHashAllocOps namedItemsHashAllocOps = {
-    NamedItemsAllocTable, NamedItemsFreeTable,
-    NamedItemsAllocEntry, NamedItemsFreeEntry
-};
-
-
 // ==================================================================
 // =
 // ==================================================================
@@ -258,7 +208,6 @@ nsHTMLDocument::nsHTMLDocument()
   mLinks = nsnull;
   mAnchors = nsnull;
   mLayers = nsnull;
-  mNamedItems = nsnull;
   mParser = nsnull;
   mDTDMode = eDTDMode_quirks;  
   mCSSLoader = nsnull;
@@ -279,13 +228,14 @@ nsHTMLDocument::nsHTMLDocument()
   }
 
   mDomainWasSet = PR_FALSE; // Bug 13871: Frameset spoofing
+
+  PrePopulateHashTables();
 }
 
 nsHTMLDocument::~nsHTMLDocument()
 {
   PRInt32 i;
 
-  DeleteNamedItems();
   NS_IF_RELEASE(mImages);
   NS_IF_RELEASE(mApplets);
   NS_IF_RELEASE(mEmbeds);
@@ -330,6 +280,8 @@ nsHTMLDocument::~nsHTMLDocument()
   {     
      nsServiceManager::ReleaseService("@mozilla.org/rdf/rdf-service;1", gRDF);
   }
+
+  InvalidateHashTables();
 }
 
 NS_IMETHODIMP
@@ -388,7 +340,9 @@ nsHTMLDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
 
   PRInt32 i;
 
-  DeleteNamedItems();
+  InvalidateHashTables();
+  PrePopulateHashTables();
+
   NS_IF_RELEASE(mImages);
   NS_IF_RELEASE(mApplets);
   NS_IF_RELEASE(mEmbeds);
@@ -485,23 +439,26 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
                                               aChannel, aLoadGroup,
                                               aContainer,
                                               aDocListener, aReset);
-  if (NS_FAILED(rv)) { return rv; }
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   nsAutoString charset; charset.AssignWithConversion("ISO-8859-1"); // fallback value in case webShell return error
   nsCharsetSource charsetSource = kCharsetFromWeakDocTypeDefault;
 
   nsCOMPtr<nsIURI> aURL;
   rv = aChannel->GetURI(getter_AddRefs(aURL));
-  if (NS_FAILED(rv)) return rv;
-  
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
   nsAutoString lastModified;
   nsCOMPtr<nsIHTTPChannel> httpChannel = do_QueryInterface(aChannel);
 
   PRBool bTryCache = PR_FALSE;
   PRUint32 cacheFlags = 0;
 
-  if (httpChannel) 
-  {
+  if (httpChannel) {
     nsXPIDLCString lastModHeader;
     nsIAtom* lastModKey = NS_NewAtom("last-modified");
 
@@ -510,36 +467,40 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
 
     NS_RELEASE(lastModKey);
     if (NS_SUCCEEDED(rv)) {
-      lastModified.AssignWithConversion( NS_STATIC_CAST(const char*, lastModHeader) );
+      lastModified.AssignWithConversion(NS_STATIC_CAST(const char*,
+                                                       lastModHeader));
       SetLastModified(lastModified);
     }
 
     nsXPIDLCString referrerHeader;
     nsAutoString referrer;
     // The misspelled key 'referer' is as per the HTTP spec
-    nsIAtom* referrerKey = NS_NewAtom("referer");
-    
-    rv = httpChannel->GetRequestHeader(referrerKey, 
-                                        getter_Copies(referrerHeader));
+    nsCOMPtr<nsIAtom> referrerKey(dont_AddRef(NS_NewAtom("referer")));
 
-    NS_RELEASE(referrerKey);
+    rv = httpChannel->GetRequestHeader(referrerKey, 
+                                       getter_Copies(referrerHeader));
+
     if (NS_SUCCEEDED(rv)) {
-      referrer.AssignWithConversion( NS_STATIC_CAST(const char*, referrerHeader) );
+      referrer.AssignWithConversion(NS_STATIC_CAST(const char*,
+                                                   referrerHeader));
       SetReferrer(referrer);
     }
 
-    if(kCharsetFromHTTPHeader > charsetSource)
-    {
-      nsIAtom* contentTypeKey = NS_NewAtom("content-type");
+    if(kCharsetFromHTTPHeader > charsetSource) {
+      nsCOMPtr<nsIAtom>
+        contentTypeKey(dont_AddRef(NS_NewAtom("content-type")));
+
       nsXPIDLCString contenttypeheader;
-      rv = httpChannel->GetResponseHeader(contentTypeKey, getter_Copies(contenttypeheader));
-      NS_RELEASE(contentTypeKey);
+      rv = httpChannel->GetResponseHeader(contentTypeKey,
+                                          getter_Copies(contenttypeheader));
+
       if (NS_SUCCEEDED(rv)) {
         nsAutoString contentType;
-        contentType.AssignWithConversion( NS_STATIC_CAST(const char*, contenttypeheader) );
+        contentType.AssignWithConversion(NS_STATIC_CAST(const char*,
+                                                        contenttypeheader));
+
         PRInt32 start = contentType.RFind("charset=", PR_TRUE ) ;
-        if(kNotFound != start)
-        {
+        if(start != kNotFound) {
           start += 8; // 8 = "charset=".length
           PRInt32 end = 0;
           if(PRUnichar('"') == contentType.CharAt(start)) {
@@ -554,17 +515,14 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
           }
           nsAutoString theCharset;
           contentType.Mid(theCharset, start, end - start);
-          nsICharsetAlias* calias = nsnull;
-          rv = nsServiceManager::GetService(
-                                            kCharsetAliasCID,
-                                            NS_GET_IID(nsICharsetAlias),
-                                            (nsISupports**) &calias);
-          if(NS_SUCCEEDED(rv) && (nsnull != calias) )
-          {
+          nsCOMPtr<nsICharsetAlias> calias(do_CreateInstance(kCharsetAliasCID,
+                                                             &rv));
+
+          if(calias) {
             nsAutoString preferred;
             rv = calias->GetPreferred(theCharset, preferred);
-            if(NS_SUCCEEDED(rv))
-            {
+
+            if(NS_SUCCEEDED(rv)) {
 #ifdef DEBUG_charset
  							char* cCharset = charset.ToNewCString();
 							printf("From HTTP Header, charset = %s\n", cCharset);
@@ -573,7 +531,6 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
               charset = preferred;
               charsetSource = kCharsetFromHTTPHeader;
             }
-            nsServiceManager::ReleaseService(kCharsetAliasCID, calias);
           }
         }
       }
@@ -582,14 +539,13 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     PRUint32 loadAttr = 0;
     rv = httpChannel->GetLoadAttributes(&loadAttr);
     NS_ASSERTION(NS_SUCCEEDED(rv),"cannot get load attribute");
-    if(NS_SUCCEEDED(rv) )
-    {
-       // copy from nsHTTPChannel.cpp
-       if(loadAttr & nsIChannel::CACHE_AS_FILE)
-           cacheFlags = nsINetDataCacheManager::CACHE_AS_FILE;
-       else if(loadAttr & nsIChannel::INHIBIT_PERSISTENT_CACHING)
-           cacheFlags = nsINetDataCacheManager::BYPASS_PERSISTENT_CACHE;
-       bTryCache = PR_TRUE;
+    if(NS_SUCCEEDED(rv)) {
+      // copy from nsHTTPChannel.cpp
+      if(loadAttr & nsIChannel::CACHE_AS_FILE)
+        cacheFlags = nsINetDataCacheManager::CACHE_AS_FILE;
+      else if(loadAttr & nsIChannel::INHIBIT_PERSISTENT_CACHING)
+        cacheFlags = nsINetDataCacheManager::BYPASS_PERSISTENT_CACHE;
+      bTryCache = PR_TRUE;
     }
 
     // Don't propogate the result code beyond here, since it
@@ -1292,55 +1248,47 @@ nsHTMLDocument::SetHeaderData(nsIAtom* aHeaderField,
   return result;
 }
 
-
 NS_IMETHODIMP 
 nsHTMLDocument::ContentAppended(nsIContent* aContainer,
                                 PRInt32 aNewIndexInContainer)
 {
-  if (nsnull != mNamedItems) {
-    nsCOMPtr<nsIAtom> name;
+  nsresult rv = RegisterNamedItems(aContainer);
 
-    aContainer->GetTag(*getter_AddRefs(name));
-    RegisterNamedItems(aContainer, name.get() == nsHTMLAtoms::form);
+  if (NS_FAILED(rv)) {
+    return rv;
   }
 
   return nsDocument::ContentAppended(aContainer, aNewIndexInContainer);
 }
 
 NS_IMETHODIMP 
-nsHTMLDocument::ContentInserted(nsIContent* aContainer,
-                                nsIContent* aChild,
+nsHTMLDocument::ContentInserted(nsIContent* aContainer, nsIContent* aContent,
                                 PRInt32 aIndexInContainer)
 {
-  if (nsnull != mNamedItems) {
-    PRBool inform = PR_FALSE;
-    if (aContainer) {
-      nsIAtom *name;
-      aContainer->GetTag(name);
-      inform = (name == nsHTMLAtoms::form);
-      NS_IF_RELEASE(name);
-    }
+  nsresult rv = RegisterNamedItems(aContent);
 
-    RegisterNamedItems(aChild, inform);
+  if (NS_FAILED(rv)) {
+    return rv;
   }
 
-  return nsDocument::ContentInserted(aContainer, aChild, aIndexInContainer);
+  return nsDocument::ContentInserted(aContainer, aContent, aIndexInContainer);
 }
 
 NS_IMETHODIMP
-nsHTMLDocument::ContentReplaced(nsIContent* aContainer,
-                                nsIContent* aOldChild,
+nsHTMLDocument::ContentReplaced(nsIContent* aContainer, nsIContent* aOldChild,
                                 nsIContent* aNewChild,
                                 PRInt32 aIndexInContainer)
 {
-  if (nsnull != mNamedItems) {
-    nsIAtom *name;
+  nsresult rv = UnregisterNamedItems(aOldChild);
 
-    aContainer->GetTag(name);
-    UnregisterNamedItems(aOldChild, name == nsHTMLAtoms::form);
-    RegisterNamedItems(aNewChild, name == nsHTMLAtoms::form);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
-    NS_IF_RELEASE(name);
+  rv = RegisterNamedItems(aNewChild);
+
+  if (NS_FAILED(rv)) {
+    return rv;
   }
 
   return nsDocument::ContentReplaced(aContainer, aOldChild, 
@@ -1348,20 +1296,83 @@ nsHTMLDocument::ContentReplaced(nsIContent* aContainer,
 }
 
 NS_IMETHODIMP 
-nsHTMLDocument::ContentRemoved(nsIContent* aContainer,
-                               nsIContent* aChild,
+nsHTMLDocument::ContentRemoved(nsIContent* aContainer, nsIContent* aContent,
                                PRInt32 aIndexInContainer)
 {
-  if ((nsnull != mNamedItems) && (nsnull != aContainer)) {
-    nsIAtom *name;
+  nsresult rv = UnregisterNamedItems(aContent);
 
-    aContainer->GetTag(name);
-    UnregisterNamedItems(aChild, name == nsHTMLAtoms::form);
-
-    NS_IF_RELEASE(name);
+  if (NS_FAILED(rv)) {
+    return rv;
   }
 
-  return nsDocument::ContentRemoved(aContainer, aChild, aIndexInContainer);
+  return nsDocument::ContentRemoved(aContainer, aContent, aIndexInContainer);
+}
+
+NS_IMETHODIMP
+nsHTMLDocument::AttributeWillChange(nsIContent* aContent, PRInt32 aNameSpaceID,
+                                    nsIAtom* aAttribute)
+{
+  // XXX: Check namespaces!!!
+
+  if (aAttribute == nsHTMLAtoms::name) {
+    nsCOMPtr<nsIAtom> tag;
+    nsAutoString value;
+
+    aContent->GetTag(*getter_AddRefs(tag));
+
+    if (IsNamedItem(aContent, tag, value)) {
+      nsresult rv = RemoveFromNameTable(value, aContent);
+
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+    }
+  } else if (aAttribute == nsHTMLAtoms::id) {
+    nsresult rv = RemoveFromIdTable(aContent);
+
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+  }
+
+  return nsDocument::AttributeWillChange(aContent, aNameSpaceID, aAttribute);
+}
+
+NS_IMETHODIMP
+nsHTMLDocument::AttributeChanged(nsIContent* aContent, PRInt32 aNameSpaceID,
+                                 nsIAtom* aAttribute, PRInt32 aHint)
+{
+  // XXX: Check namespaces!
+
+  if (aAttribute == nsHTMLAtoms::name) {
+    nsCOMPtr<nsIAtom> tag;
+    nsAutoString value;
+
+    aContent->GetTag(*getter_AddRefs(tag));
+
+    if (IsNamedItem(aContent, tag, value)) {
+      nsresult rv = AddToNameTable(value, aContent);
+
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+    }
+  } else if (aAttribute == nsHTMLAtoms::id) {
+    nsAutoString value;
+
+    aContent->GetAttribute(aNameSpaceID, nsHTMLAtoms::id, value);
+
+    if (!value.IsEmpty()) {
+      nsresult rv = AddToIdTable(value, aContent, PR_TRUE);
+
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+    }
+  }
+
+  return nsDocument::AttributeChanged(aContent, aNameSpaceID, aAttribute,
+                                      aHint);
 }
 
 NS_IMETHODIMP 
@@ -1389,6 +1400,7 @@ nsHTMLDocument::FlushPendingNotifications(PRBool aFlushReflows)
       result = sink->FlushPendingNotifications();
     }
   }
+
   if (NS_SUCCEEDED(result)) {
     result = nsDocument::FlushPendingNotifications(aFlushReflows);
   }
@@ -1984,7 +1996,7 @@ NS_IMETHODIMP
 nsHTMLDocument::GetLinks(nsIDOMHTMLCollection** aLinks)
 {
   if (nsnull == mLinks) {
-    mLinks = new nsContentList(this, MatchLinks, nsnull);
+    mLinks = new nsContentList(this, MatchLinks, nsString());
     if (nsnull == mLinks) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -2018,16 +2030,15 @@ nsHTMLDocument::MatchAnchors(nsIContent *aContent, nsString* aData)
 NS_IMETHODIMP    
 nsHTMLDocument::GetAnchors(nsIDOMHTMLCollection** aAnchors)
 {
-  if (nsnull == mAnchors) {
-    mAnchors = new nsContentList(this, MatchAnchors, nsnull);
-    if (nsnull == mAnchors) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
+  if (!mAnchors) {
+    mAnchors = new nsContentList(this, MatchAnchors, nsString());
+    NS_ENSURE_TRUE(mAnchors, NS_ERROR_OUT_OF_MEMORY);
+
     NS_ADDREF(mAnchors);
   }
 
   *aAnchors = (nsIDOMHTMLCollection *)mAnchors;
-  NS_ADDREF(mAnchors);
+  NS_ADDREF(*aAnchors);
 
   return NS_OK;
 }
@@ -2126,48 +2137,55 @@ nsHTMLDocument::OpenCommon(nsIURI* aSourceURL)
   if (NS_FAILED(result)) return result;
 
   //Before we reset the doc notify the globalwindow of the change.
+
   if (mScriptGlobalObject) {
     //Hold onto ourselves on the offchance that we're down to one ref
-    nsCOMPtr<nsIDOMDocument> kungFuDeathGrip (do_QueryInterface((nsIHTMLDocument*)this));
+
+    nsCOMPtr<nsIDOMDocument> kungFuDeathGrip =
+      do_QueryInterface((nsIHTMLDocument*)this);
+
     result = mScriptGlobalObject->SetNewDocument(kungFuDeathGrip);
-    if (NS_FAILED(result)) return result;
+
+    if (NS_FAILED(result))
+      return result;
   }
 
   result = Reset(channel, group);
-  if (NS_FAILED(result)) return result;
-  if (NS_OK == result) {
-    result = nsComponentManager::CreateInstance(kCParserCID, nsnull, 
-                                                NS_GET_IID(nsIParser), 
-                                                (void **)&mParser);
-    mIsWriting = 1;
-    
-    if (NS_OK == result) { 
-      nsCOMPtr<nsIHTMLContentSink> sink;
-      nsCOMPtr<nsIWebShell> webShell;
-        
-      // Get the webshell of our primary presentation shell
-      nsIPresShell* shell = (nsIPresShell*) mPresShells.ElementAt(0);
-      if (shell) {
-        nsCOMPtr<nsIPresContext> cx;
-        shell->GetPresContext(getter_AddRefs(cx));
-        nsCOMPtr<nsISupports> container;
-        if (NS_OK == cx->GetContainer(getter_AddRefs(container))) {
-          if (container) {
-            webShell = do_QueryInterface(container);
-          }
+  if (NS_FAILED(result))
+    return result;
+
+  result = nsComponentManager::CreateInstance(kCParserCID, nsnull, 
+                                              NS_GET_IID(nsIParser), 
+                                              (void **)&mParser);
+  mIsWriting = 1;
+
+  if (NS_SUCCEEDED(result)) { 
+    nsCOMPtr<nsIHTMLContentSink> sink;
+    nsCOMPtr<nsIWebShell> webShell;
+
+    // Get the webshell of our primary presentation shell
+    nsIPresShell* shell = (nsIPresShell*) mPresShells.ElementAt(0);
+    if (shell) {
+      nsCOMPtr<nsIPresContext> cx;
+      shell->GetPresContext(getter_AddRefs(cx));
+      nsCOMPtr<nsISupports> container;
+      if (NS_OK == cx->GetContainer(getter_AddRefs(container))) {
+        if (container) {
+          webShell = do_QueryInterface(container);
         }
       }
-      
-      result = NS_NewHTMLContentSink(getter_AddRefs(sink), this, aSourceURL, webShell,channel);
-      
-      if (NS_OK == result) {
-        static NS_DEFINE_CID(kNavDTDCID, NS_CNAVDTD_CID);
-        nsCOMPtr<nsIDTD> theDTD(do_CreateInstance(kNavDTDCID, &result));
-        if(NS_SUCCEEDED(result)) {
-          mParser->RegisterDTD(theDTD);
-        }
-        mParser->SetContentSink(sink); 
+    }
+
+    result = NS_NewHTMLContentSink(getter_AddRefs(sink), this, aSourceURL,
+                                   webShell, channel);
+
+    if (NS_OK == result) {
+      static NS_DEFINE_CID(kNavDTDCID, NS_CNAVDTD_CID);
+      nsCOMPtr<nsIDTD> theDTD(do_CreateInstance(kNavDTDCID, &result));
+      if(NS_SUCCEEDED(result)) {
+        mParser->RegisterDTD(theDTD);
       }
+      mParser->SetContentSink(sink); 
     }
   }
 
@@ -2231,11 +2249,12 @@ nsHTMLDocument::Close()
 {
   nsresult result = NS_OK;
 
-  if ((nsnull != mParser) && mIsWriting) {
+  if (mParser && mIsWriting) {
     nsAutoString emptyStr; emptyStr.AssignWithConversion("</HTML>");
     mWriteLevel++;
     result = mParser->Parse(emptyStr, NS_GENERATE_PARSER_KEY(), 
-                            NS_ConvertASCIItoUCS2("text/html"), PR_FALSE, PR_TRUE);
+                            NS_ConvertASCIItoUCS2("text/html"), PR_FALSE,
+                            PR_TRUE);
     mWriteLevel--;
     mIsWriting = 0;
     NS_IF_RELEASE(mParser);
@@ -2252,7 +2271,7 @@ nsHTMLDocument::WriteCommon(const nsAReadableString& aText,
 
   if (nsnull == mParser) {
     result = Open();
-    if (NS_OK != result) {
+    if (NS_FAILED(result)) {
       return result;
     }
   }
@@ -2383,14 +2402,17 @@ nsIContent *
 nsHTMLDocument::MatchId(nsIContent *aContent, const nsAReadableString& aId)
 {
   nsAutoString value;
-  nsIContent *result = nsnull;
 
-  if ((NS_CONTENT_ATTR_HAS_VALUE == aContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::id, value)) &&
-      aId.Equals(value)) {
+  nsresult rv = aContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::id,
+                                       value);
+
+  if (rv == NS_CONTENT_ATTR_HAS_VALUE && aId.Equals(value)) {
     return aContent;
   }
   
+  nsIContent *result = nsnull;
   PRInt32 i, count;
+
   aContent->ChildCount(count);
   for (i = 0; i < count && result == nsnull; i++) {
     nsIContent *child;
@@ -2403,25 +2425,41 @@ nsHTMLDocument::MatchId(nsIContent *aContent, const nsAReadableString& aId)
 }
 
 NS_IMETHODIMP    
-nsHTMLDocument::GetElementById(const nsAReadableString& aElementId, nsIDOMElement** aReturn)
+nsHTMLDocument::GetElementById(const nsAReadableString& aElementId,
+                               nsIDOMElement** aReturn)
 {
   NS_ENSURE_ARG_POINTER(aReturn);
   *aReturn = nsnull;
   
-  NS_WARN_IF_FALSE(!aElementId.IsEmpty(),"getElementById(\"\"), fix caller?");
+  NS_WARN_IF_FALSE(!aElementId.IsEmpty(), "getElementById(\"\"), fix caller?");
   if (aElementId.IsEmpty())
     return NS_OK;
 
-  // XXX For now, we do a brute force search of the content tree.
-  // We should come up with a more efficient solution.
-  nsCOMPtr<nsIContent> content = do_QueryInterface(MatchId(mRootContent,aElementId));
+  nsStringKey key(aElementId);
 
-  nsresult rv = NS_OK;
-  if (content) {
-    rv = content->QueryInterface(NS_GET_IID(nsIDOMElement),(void**)aReturn);
+  nsIContent *e = NS_STATIC_CAST(nsIContent *, mIdHashTable.Get(&key));
+
+  if (e == ELEMENT_NOT_IN_TABLE) {
+    // We're looked for this id before and we didn't find it, so it's
+    // not in the document now either
+
+    return NS_OK;
+  } else if (!e) {
+    e = MatchId(mRootContent, aElementId);
+
+    if (!e) {
+      // There is no element with the given id in the document, cache
+      // the fact that it's not in the document
+      mIdHashTable.Put(&key, ELEMENT_NOT_IN_TABLE);
+
+      return NS_OK;
+    }
+
+    // We found an element with a matching id, store that in the hash
+    mIdHashTable.Put(&key, e);
   }
 
-  return rv;
+  return CallQueryInterface(e, aReturn);
 }
 
 NS_IMETHODIMP
@@ -2455,13 +2493,12 @@ nsHTMLDocument::GetElementsByTagNameNS(const nsAReadableString& aNamespaceURI,
 PRBool
 nsHTMLDocument::MatchNameAttribute(nsIContent* aContent, nsString* aData)
 {
-  nsresult result;
   nsAutoString name;
 
-  result = aContent->GetAttribute(kNameSpaceID_None, 
-                                  nsHTMLAtoms::name,
-                                  name);
-  if ((result == NS_OK) && (nsnull != aData) && name.Equals(*aData)) {
+  nsresult rv = aContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::name,
+                                       name);
+
+  if (NS_SUCCEEDED(rv) && aData && name.Equals(*aData)) {
     return PR_TRUE;
   }
   else {
@@ -2473,16 +2510,14 @@ NS_IMETHODIMP
 nsHTMLDocument::GetElementsByName(const nsAReadableString& aElementName, 
                                   nsIDOMNodeList** aReturn)
 {
-  nsAutoString name(aElementName);
+  nsContentList* elements = new nsContentList(this, MatchNameAttribute,
+                                              aElementName);
+  NS_ENSURE_TRUE(elements, NS_ERROR_OUT_OF_MEMORY);
 
-  nsContentList* elements = new nsContentList(this, 
-                                              MatchNameAttribute, 
-                                              &name);
-  if (nsnull == elements) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+  *aReturn = elements;
+  NS_ADDREF(*aReturn);
 
-  return elements->QueryInterface(NS_GET_IID(nsIDOMNodeList), (void**)aReturn);
+  return NS_OK;
 }
 
 nsresult
@@ -2519,9 +2554,12 @@ nsHTMLDocument::GetPixelDimensions(nsIPresShell* aShell,
       // If we have a view check if it's scrollable. If not,
       // just use the view size itself
       if (view) {
-        nsIScrollableView* scrollableView;
-        
-        if (NS_SUCCEEDED(view->QueryInterface(NS_GET_IID(nsIScrollableView), (void**)&scrollableView))) {
+        nsIScrollableView* scrollableView = nsnull;
+
+        view->QueryInterface(NS_GET_IID(nsIScrollableView),
+                             (void**)&scrollableView);
+
+        if (scrollableView) {
           scrollableView->GetScrolledView(view);
         }
 
@@ -2840,11 +2878,11 @@ nsHTMLDocument::GetLastModified(nsAWritableString& aLastModified)
 NS_IMETHODIMP    
 nsHTMLDocument::GetEmbeds(nsIDOMHTMLCollection** aEmbeds)
 {
-  if (nsnull == mEmbeds) {
-    mEmbeds = new nsContentList(this, nsHTMLAtoms::embed, kNameSpaceID_Unknown);
-    if (nsnull == mEmbeds) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
+  if (!mEmbeds) {
+    mEmbeds = new nsContentList(this, nsHTMLAtoms::embed,
+                                kNameSpaceID_Unknown);
+    NS_ENSURE_TRUE(mEmbeds, NS_ERROR_OUT_OF_MEMORY);
+
     NS_ADDREF(mEmbeds);
   }
 
@@ -2853,43 +2891,6 @@ nsHTMLDocument::GetEmbeds(nsIDOMHTMLCollection** aEmbeds)
 
   return NS_OK;
 }
-
-#ifdef NS_IMPLEMENT_DOCUMENT_LAYERS
-PRBool
-nsHTMLDocument::MatchLayers(nsIContent *aContent, nsString* aData)
-{
-  nsIAtom *name;
-  aContent->GetTag(name);
-  nsAutoString attr;
-  PRBool result = PR_FALSE;
-  
-  if ((nsnull != name) && 
-      ((nsHTMLAtoms::layer == name) || (nsHTMLAtoms::ilayer == name))) {
-    result = PR_TRUE;
-  }
-
-  NS_IF_RELEASE(name);
-  return result;
-}
-
-NS_IMETHODIMP    
-nsHTMLDocument::GetLayers(nsIDOMHTMLCollection** aLayers)
-{
-  if (nsnull == mLayers) {
-    mLayers = new nsContentList(this, MatchLayers, nsnull);
-    if (nsnull == mLayers) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    NS_ADDREF(mLayers);
-  }
-
-  *aLayers = (nsIDOMHTMLCollection *)mLayers;
-  NS_ADDREF(mLayers);
-  *aLayers = nsnull;
-
-  return NS_OK;
-}
-#endif
 
 NS_IMETHODIMP    
 nsHTMLDocument::GetSelection(nsAWritableString& aReturn)
@@ -2971,212 +2972,508 @@ nsHTMLDocument::RouteEvent(nsIDOMEvent* aEvt)
   return NS_OK;
 }
 
-void
-nsHTMLDocument::DeleteNamedItems()
+static PRBool PR_CALLBACK
+NameHashCleanupEnumeratorCallback(nsHashKey *aKey, void *aData, void* closure)
 {
-  if (nsnull != mNamedItems) {
-    PL_HashTableDestroy(mNamedItems);
-    mNamedItems = nsnull;
+  nsBaseContentList *list = (nsBaseContentList *)aData;
+
+  // The document this hash is in is most likely going away so we
+  // reset the live nodelists to avoid leaving dangling pointers to
+  // non-existing content
+  list->Reset();
+
+  NS_RELEASE(list);
+
+  return PR_TRUE;
+}
+
+void
+nsHTMLDocument::InvalidateHashTables()
+{
+  mNameHashTable.Reset(NameHashCleanupEnumeratorCallback);
+  mIdHashTable.Reset();
+}
+
+static nsresult
+AddEmptyListToHash(const nsAReadableString& aName, nsHashtable& aHash)
+{
+  nsBaseContentList *list = new nsBaseContentList();
+  if (!list) {
+    return NS_ERROR_OUT_OF_MEMORY;
   }
+
+  NS_ADDREF(list);
+
+  nsStringKey key(aName);
+
+  aHash.Put(&key, list);
+
+  return NS_OK;
+}
+
+// Pre-fill the name hash with names that are likely to be resolved in
+// this document to avoid walking the tree looking for elements with
+// these names.
+
+nsresult
+nsHTMLDocument::PrePopulateHashTables()
+{
+  nsresult rv = NS_OK;
+
+  rv = AddEmptyListToHash(NS_LITERAL_STRING("write"), mNameHashTable);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = AddEmptyListToHash(NS_LITERAL_STRING("writeln"), mNameHashTable);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = AddEmptyListToHash(NS_LITERAL_STRING("open"), mNameHashTable);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = AddEmptyListToHash(NS_LITERAL_STRING("close"), mNameHashTable);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = AddEmptyListToHash(NS_LITERAL_STRING("forms"), mNameHashTable);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = AddEmptyListToHash(NS_LITERAL_STRING("elements"), mNameHashTable);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = AddEmptyListToHash(NS_LITERAL_STRING("characterSet"), mNameHashTable);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = AddEmptyListToHash(NS_LITERAL_STRING("nodeType"), mNameHashTable);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = AddEmptyListToHash(NS_LITERAL_STRING("parentNode"), mNameHashTable);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = AddEmptyListToHash(NS_LITERAL_STRING("cookie"), mNameHashTable);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return rv;
 }
 
 static PRBool
-IsNamedItem(nsIContent* aContent, nsIAtom *aTag,
-            PRBool aInForm, nsString& aName)
+IsNamedItem(nsIContent* aContent, nsIAtom *aTag, nsAWritableString& aName)
 {
   // Only the content types reflected in Level 0 with a NAME
   // attribute are registered. Images, layers and forms always get 
   // reflected up to the document. Applets and embeds only go
   // to the closest container (which could be a form).
   if ((aTag == nsHTMLAtoms::img) || (aTag == nsHTMLAtoms::form) ||
-      (!aInForm && ((aTag == nsHTMLAtoms::applet) || 
-                    (aTag == nsHTMLAtoms::embed)))) {
-    if ((NS_CONTENT_ATTR_HAS_VALUE == aContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::name, aName)) ||
-        (NS_CONTENT_ATTR_HAS_VALUE == aContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::id, aName))) {
-      return PR_TRUE;
-    }
-  }
+      (aTag == nsHTMLAtoms::applet) || (aTag == nsHTMLAtoms::embed) ||
+      (aTag == nsHTMLAtoms::object)) {
+    aContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::name, aName);
 
-#ifdef NS_IMPLEMENT_DOCUMENT_LAYERS
-  if ((aTag == nsHTMLAtoms::layer) || (aTag == nsHTMLAtoms::ilayer)) {
-    if ((NS_CONTENT_ATTR_HAS_VALUE == aContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::name, aName)) ||
-        (NS_CONTENT_ATTR_HAS_VALUE == aContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::id, aName))) {
+    if (!aName.IsEmpty()) {
       return PR_TRUE;
     }
   }
-#endif
 
   return PR_FALSE;
 }
 
-void
-nsHTMLDocument::UnregisterNamedItems(nsIContent *aContent, PRBool aInForm)
+nsresult
+nsHTMLDocument::AddToNameTable(const nsAReadableString& aName,
+                               nsIContent *aContent)
 {
-  nsAutoString value;
-  nsIAtom *tag;
-  aContent->GetTag(tag);
-  PRBool inForm;
+  nsStringKey key(aName);
 
-  if (IsNamedItem(aContent, tag, aInForm, value)) {
-      char *nameStr = value.ToNewCString();
-      PL_HashTableRemove(mNamedItems, nameStr);
-      Recycle(nameStr);
-  }
-  
-  inForm = aInForm || (tag == nsHTMLAtoms::form);
-  NS_IF_RELEASE(tag);
-  
-  PRInt32 i, count;
-  aContent->ChildCount(count);
-  for (i = 0; i < count; i++) {
-    nsIContent *child;
-    aContent->ChildAt(i, child);
-    UnregisterNamedItems(child, inForm);
-    NS_RELEASE(child);
-  }    
-}
+  nsBaseContentList* list = NS_STATIC_CAST(nsBaseContentList *,
+                                           mNameHashTable.Get(&key));
 
-void
-nsHTMLDocument::RegisterNamedItems(nsIContent *aContent, PRBool aInForm)
-{
-  nsAutoString value;
-  nsIAtom *tag;
-  aContent->GetTag(tag);
-  PRBool inForm;
-
-  if (IsNamedItem(aContent, tag, aInForm, value)) {
-    char *nameStr = value.ToNewCString();
-    // NSPR hashtables will leak keys if given the same entry twice, so
-    // remove first.  If it's not in the table, this will fail silently
-    // and quickly (it's one extra lookup).
-    PL_HashTableRemove(mNamedItems, nameStr);
-    PL_HashTableAdd(mNamedItems, nameStr, aContent);
+  if (!list) {
+    return NS_OK;
   }
 
-  inForm = aInForm || (tag == nsHTMLAtoms::form);
-  NS_IF_RELEASE(tag);
-  
-  PRInt32 i, count;
-  aContent->ChildCount(count);
-  for (i = 0; i < count; i++) {
-    nsIContent *child;
-    aContent->ChildAt(i, child);
-    RegisterNamedItems(child, inForm);
-    NS_RELEASE(child);
-  }  
+  PRInt32 i;
+
+  list->IndexOf(aContent, i);
+
+  if (i < 0) {
+    list->AppendElement(aContent);
+  }
+
+  return NS_OK;
 }
 
-nsIContent*
-nsHTMLDocument::FindNamedItem(nsIContent *aContent, 
-                              const nsString& aName,
-                              PRBool aInForm)
+nsresult
+nsHTMLDocument::AddToIdTable(const nsAReadableString& aId,
+                             nsIContent *aContent, PRBool aPutInTable)
+{
+  nsStringKey key(aId);
+
+  nsIContent *e = NS_STATIC_CAST(nsIContent *, mIdHashTable.Get(&key));
+
+  if (e == ELEMENT_NOT_IN_TABLE || (!e && aPutInTable)) {
+    mIdHashTable.Put(&key, aContent);
+  }
+
+  return NS_OK;
+}
+
+nsresult
+nsHTMLDocument::RemoveFromNameTable(const nsAReadableString& aName,
+                                    nsIContent *aContent)
+{
+  nsStringKey key(aName);
+
+  nsBaseContentList* list = NS_STATIC_CAST(nsBaseContentList *,
+                                           mNameHashTable.Get(&key));
+
+  if (list) {
+    list->RemoveElement(aContent);
+  }
+
+  return NS_OK;
+}
+
+nsresult
+nsHTMLDocument::RemoveFromIdTable(nsIContent *aContent)
 {
   nsAutoString value;
-  nsIAtom *tag;
-  aContent->GetTag(tag);
-  PRBool inForm;
 
-  if (IsNamedItem(aContent, tag, aInForm, value)) {
-    if (aName.Equals(value)) {
-      NS_IF_RELEASE(tag);
-      return aContent;
+  aContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::id, value);
+
+  if (value.IsEmpty()) {
+    return NS_OK;
+  }
+
+  nsStringKey key(value);
+
+  nsIContent *e = NS_STATIC_CAST(nsIContent *, mIdHashTable.Get(&key));
+
+  if (e != aContent)
+    return NS_OK;
+
+  mIdHashTable.Remove(&key);
+
+  return NS_OK;
+}
+
+nsresult
+nsHTMLDocument::UnregisterNamedItems(nsIContent *aContent)
+{
+  nsCOMPtr<nsIAtom> tag;
+
+  aContent->GetTag(*getter_AddRefs(tag));
+
+  if (tag == nsLayoutAtoms::textTagName) {
+    // Text nodes are not named items nor can they have children.
+
+    return NS_OK;
+  }
+
+  nsAutoString value;
+  nsresult rv = NS_OK;
+
+  if (IsNamedItem(aContent, tag, value)) {
+    rv = RemoveFromNameTable(value, aContent);
+
+    if (NS_FAILED(rv)) {
+      return rv;
     }
   }
 
-  inForm = aInForm || (tag == nsHTMLAtoms::form);
-  NS_IF_RELEASE(tag);
-  
-  PRInt32 i, count;
-  nsIContent *result = nsnull;
-  aContent->ChildCount(count);
-  for (i = 0; (i < count) && (nsnull == result); i++) {
-    nsIContent *child;
-    aContent->ChildAt(i, child);
-    result = FindNamedItem(child, aName, inForm);
-    NS_RELEASE(child);
-  }  
+  rv = RemoveFromIdTable(aContent);
 
-  return result;
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  PRInt32 i, count;
+
+  aContent->ChildCount(count);
+
+  for (i = 0; i < count; i++) {
+    nsIContent *child;
+
+    aContent->ChildAt(i, child);
+
+    UnregisterNamedItems(child);
+
+    NS_RELEASE(child);
+  }
+
+  return NS_OK;
+}
+
+nsresult
+nsHTMLDocument::RegisterNamedItems(nsIContent *aContent)
+{
+  nsCOMPtr<nsIAtom> tag;
+
+  aContent->GetTag(*getter_AddRefs(tag));
+
+  if (tag == nsLayoutAtoms::textTagName) {
+    // Text nodes are not named items nor can they have children.
+
+    return NS_OK;
+  }
+
+  nsAutoString value;
+
+  if (IsNamedItem(aContent, tag, value)) {
+    AddToNameTable(value, aContent);
+  }
+
+  aContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::id, value);
+
+  if (!value.IsEmpty()) {
+    nsresult rv = AddToIdTable(value, aContent, PR_FALSE);
+
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+  }
+
+  PRInt32 i, count;
+
+  aContent->ChildCount(count);
+
+  for (i = 0; i < count; i++) {
+    nsIContent *child;
+
+    aContent->ChildAt(i, child);
+
+    RegisterNamedItems(child);
+
+    NS_RELEASE(child);
+  }
+
+  return NS_OK;
+}
+
+void
+nsHTMLDocument::FindNamedItems(const nsAReadableString& aName,
+                               nsIContent *aContent, nsBaseContentList& aList)
+{
+  nsCOMPtr<nsIAtom> tag;
+  nsAutoString value;
+
+  aContent->GetTag(*getter_AddRefs(tag));
+
+  if (tag == nsLayoutAtoms::textTagName) {
+    // Text nodes are not named items nor can they have children.
+
+    return;
+  }
+
+  if (IsNamedItem(aContent, tag, value) && value.Equals(aName)) {
+    aList.AppendElement(aContent);
+  } else {
+    aContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::id, value);
+
+    if (value.Equals(aName)) {
+      AddToIdTable(value, aContent, PR_TRUE);
+    }
+  }
+
+  PRInt32 i, count;
+
+  aContent->ChildCount(count);
+
+  nsCOMPtr<nsIContent> child;
+
+  for (i = 0; i < count; i++) {
+    aContent->ChildAt(i, *getter_AddRefs(child));
+
+    FindNamedItems(aName, child, aList);
+  }
+}
+
+NS_IMETHODIMP
+nsHTMLDocument::ResolveName(const nsAReadableString& aName,
+                            nsIDOMHTMLFormElement *aForm,
+                            nsISupports **aResult)
+{
+  *aResult = nsnull;
+
+  // Bug 69826 - Make sure to flush the content model if the document
+  // is still loading.
+
+  // This is a perf killer while the document is loading!
+  FlushPendingNotifications(PR_FALSE);
+
+  nsStringKey key(aName);
+
+  // We have built a table and cache the named items. The table will
+  // be updated as content is added and removed.
+
+  nsBaseContentList *list = NS_STATIC_CAST(nsContentList *,
+                                           mNameHashTable.Get(&key));
+
+  if (!list) {
+#ifdef DEBUG_jst
+    {
+      printf ("nsHTMLDocument name cache miss for name '%s'\n",
+              NS_ConvertUCS2toUTF8(aName).get());
+    }
+#endif
+
+    list = new nsBaseContentList();
+    NS_ENSURE_TRUE(list, NS_ERROR_OUT_OF_MEMORY);
+
+    NS_ADDREF(list);
+
+    FindNamedItems(aName, mRootContent, *list);
+
+    mNameHashTable.Put(&key, list);
+  }
+
+  PRUint32 length;
+
+  list->GetLength(&length);
+
+  if (length == 1) {
+    // Onle one element in the list, return the list in stead of
+    // returning the list
+
+    nsCOMPtr<nsIDOMNode> node;
+
+    list->Item(0, getter_AddRefs(node));
+
+    if (aForm && node) {
+      // document.forms["foo"].bar should not map to <form name="bar">
+      // so we check here to see if we found a form and if we did we
+      // ignore what we found in the document. This doesn't deal with
+      // the case where more than one element in found in the document
+      // (i.e. there are two named items in the document that have the
+      // name we're looking for), that case is dealt with in
+      // nsFormContentList
+
+      nsCOMPtr<nsIDOMHTMLFormElement> f(do_QueryInterface(node));
+
+      if (f) {
+        node = nsnull;
+      }
+    }
+
+    *aResult = node;
+    NS_IF_ADDREF(*aResult);
+
+    return NS_OK;
+  }
+
+  if (length > 1) {
+    // The list contains more than one element, return the whole list,
+    // unless...
+
+    if (aForm) {
+      // ... we're called from a form, in that case we create a
+      // nsFormContentList which will filter out the elements in the
+      // list that don't belong to aForm
+
+      nsFormContentList *fc_list = new nsFormContentList(aForm, *list);
+      NS_ENSURE_TRUE(fc_list, NS_ERROR_OUT_OF_MEMORY);
+
+      PRUint32 len;
+
+      fc_list->GetLength(&len);
+
+      if (len < 2) {
+        // After t nsFormContentList is done filtering there's zero or
+        // one element in the list, return that element, or null if
+        // there's no element in the list.
+
+        nsCOMPtr<nsIDOMNode> node;
+
+        fc_list->Item(0, getter_AddRefs(node));
+
+        *aResult = node;
+        NS_IF_ADDREF(*aResult);
+
+        delete fc_list;
+
+        return NS_OK;
+      }
+
+      list = fc_list;
+    }
+
+    return list->QueryInterface(NS_GET_IID(nsISupports), (void **)aResult);
+  }
+
+  // No named items were found, look if we'll find the name by id.
+
+  nsIContent *e = NS_STATIC_CAST(nsIContent *, mIdHashTable.Get(&key));
+
+  if (e) {
+    nsCOMPtr<nsIAtom> tag;
+    e->GetTag(*getter_AddRefs(tag));
+
+    if (tag.get() == nsHTMLAtoms::embed ||
+        tag.get() == nsHTMLAtoms::img ||
+        tag.get() == nsHTMLAtoms::object ||
+        tag.get() == nsHTMLAtoms::applet) {
+      *aResult = e;
+      NS_ADDREF(*aResult);
+    }
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP    
 nsHTMLDocument::NamedItem(JSContext* cx, jsval* argv, PRUint32 argc, 
                           jsval* aReturn)
 {
-  nsresult result = NS_OK;
-  nsIContent *content = nsnull;
+  nsresult rv = NS_OK;
 
   if (argc < 1) 
     return NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR;
 
-  char *str = JS_GetStringBytes(JS_ValueToString(cx, argv[0]));
-  nsAutoString name; name.AssignWithConversion(str);
+  JSString *jsstr = ::JS_ValueToString(cx, argv[0]);
+  PRUnichar *ustr = NS_REINTERPRET_CAST(PRUnichar *, JS_GetStringChars(jsstr));
 
-  if (!name.EqualsWithConversion("write") && !name.EqualsWithConversion("writeln") &&
-      !name.EqualsWithConversion("close") && !name.EqualsWithConversion("open")) {
-    // XXX If we have a parser, it means that we're still loading the
-    // document. Since there's still content coming in (and not all
-    // may yet have been explicitly added to the document), we do
-    // a depth-first search rather than build up a table.
-    // Obviously, this may be inefficient for large documents.
-    if (nsnull != mParser) {
-      
-      // Bug 69826 - Make sure to flush the content model if
-      // the document is still loading.     
-      FlushPendingNotifications(PR_FALSE); 
-      
-      content = FindNamedItem(mRootContent, name, PR_FALSE);
-    }
-    else {
-      // If the document has completed loading, we build a table and
-      // cache the named items. The table will be updated as content
-      // is added and removed.
-      if (nsnull == mNamedItems) {
-        mNamedItems = PL_NewHashTable(10, PL_HashString, PL_CompareStrings, 
-                                      PL_CompareValues, &namedItemsHashAllocOps,
-                                      nsnull);
-        RegisterNamedItems(mRootContent, PR_FALSE);
-      }
+  nsCOMPtr<nsISupports> item;
 
-      content = (nsIContent *)PL_HashTableLookup(mNamedItems, str);
-    }
-  }
+  rv = ResolveName(nsLiteralString(ustr, ::JS_GetStringLength(jsstr)),
+                   nsnull, getter_AddRefs(item));
 
-  nsIScriptContext *context = (nsIScriptContext*)JS_GetContextPrivate(cx);
+  nsCOMPtr<nsIScriptObjectOwner> owner(do_QueryInterface(item));
+
+  nsIScriptContext *context = (nsIScriptContext*)::JS_GetContextPrivate(cx);
   JSObject *scriptObject;
-  result = GetScriptObject(context, (void **)&scriptObject);
-  if (NS_FAILED(result))
-    return result;
+  rv = GetScriptObject(context, (void **)&scriptObject);
+  if (NS_FAILED(rv))
+    return rv;
 
-  if (nsnull != content) {
-    nsIScriptSecurityManager *sm = nsJSUtils::nsGetSecurityManager(cx, scriptObject);
-    result = sm->CheckScriptAccess(cx, scriptObject, 
-                                   NS_DOM_PROP_NSHTMLFORMELEMENT_NAMEDITEM,
-                                   PR_FALSE);
-    if (NS_SUCCEEDED(result)) {
-      nsCOMPtr<nsIScriptObjectOwner> owner = do_QueryInterface(content);
+  if (owner) {
+    nsIScriptSecurityManager *sm =
+      nsJSUtils::nsGetSecurityManager(cx, scriptObject);
+
+    rv = sm->CheckScriptAccess(cx, scriptObject, 
+                               NS_DOM_PROP_NSHTMLFORMELEMENT_NAMEDITEM,
+                               PR_FALSE);
+    if (NS_SUCCEEDED(rv)) {
       JSObject* obj;
-  
-      result = owner->GetScriptObject(context, (void**)&obj);
-      if (NS_FAILED(result)) {
-        return result;
+
+      rv = owner->GetScriptObject(context, (void**)&obj);
+      if (NS_FAILED(rv)) {
+        return rv;
       }
+
       *aReturn = OBJECT_TO_JSVAL(obj);
     }
-    return result;
+
+    return rv;
   }
-  nsISupports *supports;
-  result = this->QueryInterface(NS_GET_IID(nsISupports), (void **) &supports);
-  if (NS_SUCCEEDED(result)) {
-    result = nsJSUtils::nsCallJSScriptObjectGetProperty(supports, cx, scriptObject,
-                                                        argv[0], aReturn);
-    NS_RELEASE(supports);
+
+  nsCOMPtr<nsISupports> supports;
+  rv = this->QueryInterface(NS_GET_IID(nsISupports), getter_AddRefs(supports));
+
+  if (NS_SUCCEEDED(rv)) {
+    rv = nsJSUtils::nsCallJSScriptObjectGetProperty(supports, cx, scriptObject,
+                                                    argv[0], aReturn);
   }
-  return result;
+
+  return rv;
 }
 
 NS_IMETHODIMP
-nsHTMLDocument::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
+nsHTMLDocument::GetScriptObject(nsIScriptContext *aContext,
+                                void** aScriptObject)
 {
   nsresult res = NS_OK;
   nsCOMPtr<nsIScriptGlobalObject> global;
@@ -3234,10 +3531,10 @@ nsHTMLDocument::Resolve(JSContext *aContext, JSObject *aObj, jsval aID,
 
   result = NamedItem(aContext, &aID, 1, &val);
   if (NS_SUCCEEDED(result) && val) {
-    char *str = JS_GetStringBytes(JSVAL_TO_STRING(aID));
-    ret = ::JS_DefineProperty(aContext, aObj,
-                              str, val,
-                              nsnull, nsnull, 0);
+    JSString *str = JSVAL_TO_STRING(aID);
+    ret = ::JS_DefineUCProperty(aContext, aObj,JS_GetStringChars(str),
+                                JS_GetStringLength(str), val, nsnull,
+                                nsnull, 0);
 
     *aDidDefineProperty = PR_TRUE;
   }
@@ -3330,11 +3627,10 @@ nsHTMLDocument::AddForm(nsIDOMHTMLFormElement *aForm)
 NS_IMETHODIMP    
 nsHTMLDocument::GetForms(nsIDOMHTMLCollection** aForms)
 {
-  if (nsnull == mForms) {
+  if (!mForms) {
     mForms = new nsContentList(this, nsHTMLAtoms::form, kNameSpaceID_Unknown);
-    if (nsnull == mForms) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
+    NS_ENSURE_TRUE(mForms, NS_ERROR_OUT_OF_MEMORY);
+
     NS_ADDREF(mForms);
   }
 

@@ -58,7 +58,6 @@ nsGenericDOMDataNode::nsGenericDOMDataNode()
   mScriptObject = nsnull;
   mListenerManager = nsnull;
   mRangeList = nsnull;
-  mCapturer = nsnull;
 }
 
 nsGenericDOMDataNode::~nsGenericDOMDataNode()

@@ -76,7 +76,8 @@ public:
     * @param aForm the form
     * @return NS_OK
     */
-  NS_IMETHOD SetForm(nsIDOMHTMLFormElement* aForm) = 0;
+  NS_IMETHOD SetForm(nsIDOMHTMLFormElement* aForm,
+                     PRBool aRemoveFromForm = PR_TRUE) = 0;
 
   /**
     * Get the type of this control

@@ -1789,6 +1789,14 @@ nsXULDocument::ContentRemoved(nsIContent* aContainer,
 }
 
 NS_IMETHODIMP
+nsXULDocument::AttributeWillChange(nsIContent* aChild,
+                                   PRInt32 aNameSpaceID,
+                                   nsIAtom* aAttribute)
+{
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXULDocument::StyleRuleChanged(nsIStyleSheet* aStyleSheet,
                                   nsIStyleRule* aStyleRule,
                                   PRInt32 aHint)

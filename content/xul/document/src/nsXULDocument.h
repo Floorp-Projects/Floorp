@@ -246,6 +246,9 @@ public:
     NS_IMETHOD ContentRemoved(nsIContent* aContainer,
                               nsIContent* aChild,
                               PRInt32 aIndexInContainer);
+    NS_IMETHOD AttributeWillChange(nsIContent* aChild,
+                                   PRInt32 aNameSpaceID,
+                                   nsIAtom* aAttribute);
 
     NS_IMETHOD StyleRuleChanged(nsIStyleSheet* aStyleSheet,
                                 nsIStyleRule* aStyleRule,

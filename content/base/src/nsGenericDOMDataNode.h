@@ -264,7 +264,6 @@ struct nsGenericDOMDataNode {
   nsIContent* mParent;
   void* mScriptObject;
   nsIEventListenerManager* mListenerManager;
-  nsIContent* mCapturer;
 
   nsTextFragment mText;
   nsVoidArray *mRangeList;

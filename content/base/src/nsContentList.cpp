@@ -32,10 +32,287 @@
 #include "nsLayoutAtoms.h"
 #include "nsHTMLAtoms.h" // XXX until atoms get factored into nsLayoutAtoms
 
-nsContentList::nsContentList(nsIDocument *aDocument)
+// Form related includes
+#include "nsIDOMHTMLFormElement.h"
+
+nsBaseContentList::nsBaseContentList()
+  : mScriptObject(nsnull)
 {
   NS_INIT_REFCNT();
-  mScriptObject = nsnull;
+}
+
+nsBaseContentList::~nsBaseContentList()
+{
+  // mElements only has weak references to the content objects so we
+  // don't need to do any cleanup here.
+}
+
+
+NS_IMPL_ADDREF(nsBaseContentList)
+NS_IMPL_RELEASE(nsBaseContentList)
+
+NS_INTERFACE_MAP_BEGIN(nsBaseContentList)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMNodeList)
+  NS_INTERFACE_MAP_ENTRY(nsIScriptObjectOwner)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMNodeList)
+NS_INTERFACE_MAP_END
+
+NS_IMETHODIMP
+nsBaseContentList::GetLength(PRUint32* aLength)
+{
+  *aLength = mElements.Count();
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBaseContentList::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
+{
+  nsISupports *tmp = NS_REINTERPRET_CAST(nsISupports *,
+                                         mElements.ElementAt(aIndex));
+
+  if (!tmp) {
+    *aReturn = nsnull;
+
+    return NS_OK;
+  }
+
+  return CallQueryInterface(tmp, aReturn);
+}
+
+NS_IMETHODIMP 
+nsBaseContentList::GetScriptObject(nsIScriptContext *aContext,
+                                   void** aScriptObject)
+{
+  nsresult res = NS_OK;
+  nsIScriptGlobalObject *global = aContext->GetGlobalObject();
+
+  if (!mScriptObject) {
+    nsIDOMScriptObjectFactory *factory;
+
+    res = nsGenericElement::GetScriptObjectFactory(&factory);
+    if (NS_FAILED(res)) {
+      return res;
+    }
+
+    res = factory->NewScriptNodeList(aContext,
+                                     NS_STATIC_CAST(nsIDOMNodeList *, this),
+                                     global, &mScriptObject);
+    NS_RELEASE(factory);
+  }
+
+  *aScriptObject = mScriptObject;
+
+  NS_RELEASE(global);
+
+  return res;
+}
+
+NS_IMETHODIMP 
+nsBaseContentList::SetScriptObject(void *aScriptObject)
+{
+  mScriptObject = aScriptObject;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBaseContentList::AppendElement(nsIContent *aContent)
+{
+  // Shouldn't hold a reference since we'll be told when the content
+  // leaves the document or the document will be destroyed.
+  mElements.AppendElement(aContent);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBaseContentList::RemoveElement(nsIContent *aContent)
+{
+  mElements.RemoveElement(aContent);
+  
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBaseContentList::IndexOf(nsIContent *aContent, PRInt32& aIndex)
+{
+  aIndex = mElements.IndexOf(aContent);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBaseContentList::Reset()
+{
+  mElements.Clear();
+
+  return NS_OK;
+}
+
+// nsFormContentList
+
+// This helper function checks if aContent is in some way associated
+// with aForm, this check is only successful if the form is a
+// container (and a form is a container as long as the document is
+// wellformed). If the form is a container the only elements that are
+// considerd to be associated with a form are the elements that are
+// contained within the form. If the form is a leaf element then all
+// the elements will be accepted into this list.
+
+static PRBool BelongsInForm(nsIDOMHTMLFormElement *aForm,
+                            nsIContent *aContent)
+{
+  nsCOMPtr<nsIContent> form(do_QueryInterface(aForm));
+
+  if (!form) {
+    NS_WARNING("This should not happen, form is not an nsIContent!");
+
+    return PR_TRUE;
+  }
+
+  if (form.get() == aContent) {
+    // The list for aForm contains the form itself, forms should not
+    // be reachable by name in the form namespace, so we return false
+    // here.
+
+    return PR_FALSE;
+  }
+
+  nsCOMPtr<nsIContent> content;
+
+  aContent->GetParent(*getter_AddRefs(content));
+
+  while (content) {
+    if (content == form) {
+      // aContent is contained within the form so we return true.
+
+      return PR_TRUE;
+    }
+
+    nsCOMPtr<nsIAtom> tag;
+
+    content->GetTag(*getter_AddRefs(tag));
+
+    if (tag.get() == nsHTMLAtoms::form) {
+      // The child is contained within a form, but not the right form
+      // so we ignore it.
+
+      return PR_FALSE;
+    }
+
+    nsIContent *tmp = content;
+
+    tmp->GetParent(*getter_AddRefs(content));
+  }
+
+  PRInt32 count = 0;
+
+  form->ChildCount(count);
+
+  if (!count) {
+    // The form is a leaf and aContent wasn't inside any other form so
+    // we return true
+
+    return PR_TRUE;
+  }
+
+  // The form is a container but aContent wasn't inside the form,
+  // return false
+
+  return PR_FALSE;
+}
+
+nsFormContentList::nsFormContentList(nsIDOMHTMLFormElement *aForm,
+                                     nsBaseContentList& aContentList)
+  : nsBaseContentList()
+{
+  NS_INIT_REFCNT();
+
+  // move elements that belong to mForm into this content list
+
+  PRUint32 i, length = 0;
+  nsCOMPtr<nsIDOMNode> item;
+
+  aContentList.GetLength(&length);
+
+  for (i = 0; i < length; i++) {
+    aContentList.Item(i, getter_AddRefs(item));
+
+    nsCOMPtr<nsIContent> c(do_QueryInterface(item));
+
+    if (c && BelongsInForm(aForm, c)) {
+      AppendElement(c);
+    }
+  }
+}
+
+nsFormContentList::~nsFormContentList()
+{
+  Reset();
+}
+
+NS_IMETHODIMP
+nsFormContentList::AppendElement(nsIContent *aContent)
+{
+  NS_ADDREF(aContent);
+
+  return nsBaseContentList::AppendElement(aContent);
+}
+
+NS_IMETHODIMP
+nsFormContentList::RemoveElement(nsIContent *aContent)
+{
+  PRInt32 i = mElements.IndexOf(aContent);
+
+  if (i >= 0) {
+    nsIContent *content = NS_STATIC_CAST(nsIContent *, mElements.ElementAt(i));
+
+    NS_RELEASE(content);
+
+    mElements.RemoveElementAt(i);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFormContentList::Reset()
+{
+  PRInt32 i, length = mElements.Count();
+
+  for (i = 0; i < length; i++) {
+    nsIContent *content = NS_STATIC_CAST(nsIContent *, mElements.ElementAt(i));
+
+    NS_RELEASE(content);
+  }
+
+  return nsBaseContentList::Reset();
+}
+
+
+// nsContentList implementation
+
+nsContentList::nsContentList(const nsContentList& aContentList)
+  : nsBaseContentList()
+{
+  mFunc = aContentList.mFunc;
+  mMatchAtom = aContentList.mMatchAtom;
+  mDocument = aContentList.mDocument;
+
+  if (aContentList.mData) {
+    mData = new nsString(*aContentList.mData);
+  } else {
+    mData = nsnull;
+  }
+
+  mMatchAll = aContentList.mMatchAll;
+  mRootContent = aContentList.mRootContent;
+  mElements = aContentList.mElements;
+}
+
+nsContentList::nsContentList(nsIDocument *aDocument)
+  : nsBaseContentList()
+{
   mFunc = nsnull;
   mMatchAtom = nsnull;
   mDocument = aDocument;
@@ -48,6 +325,7 @@ nsContentList::nsContentList(nsIDocument *aDocument,
                              nsIAtom* aMatchAtom,
                              PRInt32 aMatchNameSpaceId,
                              nsIContent* aRootContent)
+  : nsBaseContentList()
 {
   mMatchAtom = aMatchAtom;
   NS_IF_ADDREF(mMatchAtom);
@@ -64,14 +342,15 @@ nsContentList::nsContentList(nsIDocument *aDocument,
   Init(aDocument);
 }
 
-nsContentList::nsContentList(nsIDocument *aDocument, 
+nsContentList::nsContentList(nsIDocument *aDocument,
                              nsContentListMatchFunc aFunc,
-                             const nsString* aData,
+                             const nsAReadableString& aData,
                              nsIContent* aRootContent)
+  : nsBaseContentList()
 {
   mFunc = aFunc;
-  if (nsnull != aData) {
-    mData = new nsString(*aData);
+  if (!aData.IsEmpty()) {
+    mData = new nsString(aData);
     // If this fails, fail silently
   }
   else {
@@ -85,70 +364,46 @@ nsContentList::nsContentList(nsIDocument *aDocument,
 
 void nsContentList::Init(nsIDocument *aDocument)
 {
-  NS_INIT_REFCNT();
-  mScriptObject = nsnull;
   // We don't reference count the reference to the document
   // If the document goes away first, we'll be informed and we
   // can drop our reference.
   // If we go away first, we'll get rid of ourselves from the
   // document's observer list.
   mDocument = aDocument;
-  if (nsnull != mDocument) {
+  if (mDocument) {
     mDocument->AddObserver(this);
   }
   PopulateSelf();
 }
- 
+
 nsContentList::~nsContentList()
 {
-  if (nsnull != mDocument) {
+  if (mDocument) {
     mDocument->RemoveObserver(this);
   }
   
   NS_IF_RELEASE(mMatchAtom);
 
-  if (nsnull != mData) {
-    delete mData;
-  }
+  delete mData;
 }
 
-nsresult nsContentList::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if (nsnull == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIDOMNodeList))) {
-    *aInstancePtr = (void*)(nsIDOMNodeList*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIDOMHTMLCollection))) {
-    *aInstancePtr = (void*)(nsIDOMHTMLCollection*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIScriptObjectOwner))) {
-    *aInstancePtr = (void*)(nsIScriptObjectOwner*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsISupports))) {
-    *aInstancePtr = (void*)(nsISupports*)(nsIDOMNodeList*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
+NS_INTERFACE_MAP_BEGIN(nsContentList)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLCollection)
+NS_INTERFACE_MAP_END_INHERITING(nsBaseContentList)
 
-NS_IMPL_ADDREF(nsContentList)
-NS_IMPL_RELEASE(nsContentList)
+NS_IMPL_ADDREF_INHERITED(nsContentList, nsBaseContentList)
+NS_IMPL_RELEASE_INHERITED(nsContentList, nsBaseContentList)
 
 NS_IMETHODIMP 
 nsContentList::GetLength(PRUint32* aLength)
 {
   nsresult result = CheckDocumentExistence();
-  if (NS_OK == result) {
-    *aLength = mContent.Count();
+  if (NS_SUCCEEDED(result)) {
+    if (mDocument) {
+      mDocument->FlushPendingNotifications(PR_FALSE);
+    }
+
+    *aLength = mElements.Count();
   }
 
   return result;
@@ -158,15 +413,17 @@ NS_IMETHODIMP
 nsContentList::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
 {
   nsresult result = CheckDocumentExistence();
-  if (NS_OK == result) {
-    if (nsnull != mDocument) {
-      mDocument->FlushPendingNotifications(PR_FALSE); // Flush pending content changes Bug 4891
+  if (NS_SUCCEEDED(result)) {
+    if (mDocument) {
+      // Flush pending content changes Bug 4891
+      mDocument->FlushPendingNotifications(PR_FALSE);
     }
       
-    nsISupports *element = (nsISupports *)mContent.ElementAt(aIndex);
+    nsISupports *element = NS_STATIC_CAST(nsISupports *,
+                                          mElements.ElementAt(aIndex));
     
-    if (nsnull != element) {
-      result = element->QueryInterface(NS_GET_IID(nsIDOMNode), (void **)aReturn);
+    if (element) {
+      result = CallQueryInterface(element, aReturn);
     }
     else {
       *aReturn = nsnull;
@@ -181,23 +438,24 @@ nsContentList::NamedItem(const nsAReadableString& aName, nsIDOMNode** aReturn)
 {
   nsresult result = CheckDocumentExistence();
   
-  if (NS_OK == result) {
-    if (nsnull != mDocument) {
+  if (NS_SUCCEEDED(result)) {
+    if (mDocument) {
       mDocument->FlushPendingNotifications(PR_FALSE); // Flush pending content changes Bug 4891
     }
 
-    PRInt32 i, count = mContent.Count();
+    PRInt32 i, count = mElements.Count();
 
     for (i = 0; i < count; i++) {
-      nsIContent *content = (nsIContent *)mContent.ElementAt(i);
-      if (nsnull != content) {
+      nsIContent *content = NS_STATIC_CAST(nsIContent *,
+                                           mElements.ElementAt(i));
+      if (content) {
         nsAutoString name;
         // XXX Should it be an EqualsIgnoreCase?
         if (((content->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::name, name) == NS_CONTENT_ATTR_HAS_VALUE) &&
              (aName.Equals(name))) ||
             ((content->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::id, name) == NS_CONTENT_ATTR_HAS_VALUE) &&
              (aName.Equals(name)))) {
-          return content->QueryInterface(NS_GET_IID(nsIDOMNode), (void **)aReturn);
+          return CallQueryInterface(content, aReturn);
         }
       }
     }
@@ -208,55 +466,51 @@ nsContentList::NamedItem(const nsAReadableString& aName, nsIDOMNode** aReturn)
 }
 
 NS_IMETHODIMP 
-nsContentList::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
+nsContentList::GetScriptObject(nsIScriptContext *aContext,
+                               void** aScriptObject)
 {
   nsresult res = NS_OK;
   nsIScriptGlobalObject *global = aContext->GetGlobalObject();
 
-  if (nsnull == mScriptObject) {
+  if (!mScriptObject) {
     nsIDOMScriptObjectFactory *factory;
-    
+
     res = nsGenericElement::GetScriptObjectFactory(&factory);
-    if (NS_OK != res) {
+    if (NS_FAILED(res)) {
       return res;
     }
 
-    res = factory->NewScriptHTMLCollection(aContext, 
-                                           (nsISupports*)(nsIDOMHTMLCollection*)this, 
-                                           global, 
-                                           (void**)&mScriptObject);
+    res = factory->NewScriptHTMLCollection(aContext,
+                                           NS_STATIC_CAST(nsIDOMNodeList *,
+                                                          this),
+                                           global, &mScriptObject);
     NS_RELEASE(factory);
   }
+
   *aScriptObject = mScriptObject;
 
   NS_RELEASE(global);
+
   return res;
 }
 
-NS_IMETHODIMP 
-nsContentList::SetScriptObject(void *aScriptObject)
-{
-  mScriptObject = aScriptObject;
-  return NS_OK;
-}
-
-
 NS_IMETHODIMP
-nsContentList::ContentAppended(nsIDocument *aDocument,
-                               nsIContent* aContainer,
-                               PRInt32     aNewIndexInContainer)
+nsContentList::ContentAppended(nsIDocument *aDocument, nsIContent* aContainer,
+                               PRInt32 aNewIndexInContainer)
 {
   PRInt32 i, count;
+
   aContainer->ChildCount(count);
+
   if ((count > 0) && IsDescendantOfRoot(aContainer)) {
     PRBool repopulate = PR_FALSE;
+
     for (i = aNewIndexInContainer; i <= count-1; i++) {
-      nsIContent *content;
-      aContainer->ChildAt(i, content);
+      nsCOMPtr<nsIContent> content;
+      aContainer->ChildAt(i, *getter_AddRefs(content));
       if (mMatchAll || MatchSelf(content)) {
         repopulate = PR_TRUE;
       }
-      NS_RELEASE(content);
     }
     if (repopulate) {
       PopulateSelf();
@@ -319,7 +573,7 @@ nsContentList::ContentRemoved(nsIDocument *aDocument,
 NS_IMETHODIMP
 nsContentList::DocumentWillBeDestroyed(nsIDocument *aDocument)
 {
-  if (nsnull != mDocument) {
+  if (mDocument) {
     aDocument->RemoveObserver(this);
     mDocument = nsnull;
   }
@@ -367,45 +621,10 @@ nsContentList::Match(nsIContent *aContent, PRBool *aMatch)
       *aMatch = PR_TRUE;
     }
   }
-  else if (nsnull != mFunc) {
+  else if (mFunc) {
     *aMatch = (*mFunc)(aContent, mData);
   }
 
-  return NS_OK;
-}
-
-nsresult
-nsContentList::Add(nsIContent *aContent)
-{
-  // Shouldn't hold a reference since we'll be
-  // told when the content leaves the document or
-  // the document will be destroyed.
-  mContent.AppendElement(aContent);
-  
-  return NS_OK;
-}
-
-nsresult
-nsContentList::Remove(nsIContent *aContent)
-{
-  mContent.RemoveElement(aContent);
-  
-  return NS_OK;
-}
-
-nsresult
-nsContentList::IndexOf(nsIContent *aContent, PRInt32& aIndex)
-{
-  aIndex = mContent.IndexOf(aContent);
-
-  return NS_OK;
-}
-
-nsresult
-nsContentList::Reset()
-{
-  mContent.Clear();
-  
   return NS_OK;
 }
 
@@ -416,9 +635,9 @@ nsresult
 nsContentList::CheckDocumentExistence()
 {
   nsresult result = NS_OK;
-  if ((nsnull == mDocument) && (nsnull != mRootContent)) {
+  if (!mDocument && mRootContent) {
     result = mRootContent->GetDocument(mDocument);
-    if (nsnull != mDocument) {
+    if (mDocument) {
       mDocument->AddObserver(this);
       PopulateSelf();
     }
@@ -454,8 +673,7 @@ nsContentList::MatchSelf(nsIContent *aContent)
   return PR_FALSE;
 }
 
-// Add all elements in this subtree that match to
-// our list.
+// Add all elements in this subtree that match to our list.
 void 
 nsContentList::PopulateWith(nsIContent *aContent, PRBool aIncludeRoot)
 {
@@ -465,7 +683,7 @@ nsContentList::PopulateWith(nsIContent *aContent, PRBool aIncludeRoot)
   if (aIncludeRoot) {
     Match(aContent, &match);
     if (match) {
-      Add(aContent);
+      mElements.AppendElement(aContent);
     }
   }
   
@@ -483,10 +701,10 @@ void
 nsContentList::PopulateSelf()
 {
   Reset();
-  if (nsnull != mRootContent) {
+  if (mRootContent) {
     PopulateWith(mRootContent, PR_FALSE);
   }
-  else if (nsnull != mDocument) {
+  else if (mDocument) {
     nsIContent *root;
     root = mDocument->GetRootContent();
     if (root) {
@@ -503,22 +721,21 @@ nsContentList::PopulateSelf()
 PRBool
 nsContentList::IsDescendantOfRoot(nsIContent* aContainer) 
 {
-  if (nsnull == mRootContent) {
+  if (!mRootContent) {
     return PR_TRUE;
   }
   else if (mRootContent == aContainer) {
     return PR_TRUE;
   }
-  else if (nsnull == aContainer) {
+  else if (!aContainer) {
     return PR_FALSE;
   }
   else {
-    nsIContent* parent;
+    nsCOMPtr<nsIContent> parent;
     PRBool ret;
 
-    aContainer->GetParent(parent);
+    aContainer->GetParent(*getter_AddRefs(parent));
     ret = IsDescendantOfRoot(parent);
-    NS_IF_RELEASE(parent);
 
     return ret;
   }
@@ -528,7 +745,7 @@ nsContentList::IsDescendantOfRoot(nsIContent* aContainer)
 PRBool
 nsContentList::ContainsRoot(nsIContent* aContent)
 {
-  if (nsnull == mRootContent) {
+  if (!mRootContent) {
     return PR_FALSE;
   }
   else if (mRootContent == aContent) {
@@ -539,13 +756,13 @@ nsContentList::ContainsRoot(nsIContent* aContent)
 
     aContent->ChildCount(count);
     for (i = 0; i < count; i++) {
-      nsIContent *child;
-      aContent->ChildAt(i, child);
+      nsCOMPtr<nsIContent> child;
+
+      aContent->ChildAt(i, *getter_AddRefs(child));
+
       if (ContainsRoot(child)) {
-        NS_RELEASE(child);
         return PR_TRUE;
       }
-      NS_RELEASE(child);
     }
     
     return PR_FALSE;
@@ -558,7 +775,7 @@ nsContentList::ContainsRoot(nsIContent* aContent)
 void 
 nsContentList::DisconnectFromDocument()
 {
-  if (nsnull != mDocument) {
+  if (mDocument) {
     mDocument->RemoveObserver(this);
     mDocument = nsnull;
   }

@@ -31,12 +31,13 @@
 #include "nsIDOMNode.h"
 #include "nsIDOMHTMLBodyElement.h"
 #include "nsIHTMLContentContainer.h"
-#include "plhash.h"
+#include "nsHashtable.h"
 #include "jsapi.h"
 #include "rdf.h"
 #include "nsRDFCID.h"
 #include "nsIRDFService.h"
 
+class nsBaseContentList;
 class nsContentList;
 class nsIHTMLStyleSheet;
 class nsIHTMLCSSStyleSheet;
@@ -115,6 +116,14 @@ public:
   NS_IMETHOD ContentRemoved(nsIContent* aContainer,
                             nsIContent* aChild,
                             PRInt32 aIndexInContainer);
+  NS_IMETHOD AttributeChanged(nsIContent* aChild,
+                              PRInt32 aNameSpaceID,
+                              nsIAtom* aAttribute,
+                              PRInt32 aHint);
+  NS_IMETHOD AttributeWillChange(nsIContent* aChild,
+                                 PRInt32 aNameSpaceID,
+                                 nsIAtom* aAttribute);
+
   NS_IMETHOD FlushPendingNotifications(PRBool aFlushReflows = PR_TRUE);
 
   // nsIDOMDocument interface
@@ -126,7 +135,9 @@ public:
   // nsIDOMHTMLDocument interface
   NS_DECL_IDOMHTMLDOCUMENT
   NS_DECL_IDOMNSHTMLDOCUMENT
-  // the following is not part of nsIDOMHTMLDOCUMENT but allows the content sink to add forms
+
+  // the following is not part of nsIDOMHTMLDocument but allows the
+  // content sink to add forms
   NS_IMETHOD AddForm(nsIDOMHTMLFormElement* aForm);
 
   // From nsIScriptObjectOwner interface, implemented by nsDocument
@@ -141,18 +152,31 @@ public:
    */
   NS_IMETHOD WasDomainSet(PRBool* aDomainWasSet);
 
+  NS_IMETHOD ResolveName(const nsAReadableString& aName,
+                         nsIDOMHTMLFormElement *aForm,
+                         nsISupports **aResult);
+
 protected:
   nsresult GetPixelDimensions(nsIPresShell* aShell,
                               PRInt32* aWidth,
                               PRInt32* aHeight);
 
-  void RegisterNamedItems(nsIContent *aContent, PRBool aInForm);
-  void UnregisterNamedItems(nsIContent *aContent, PRBool aInForm);
-  nsIContent* FindNamedItem(nsIContent *aContent, const nsString& aName,
-                            PRBool aInForm);
+  nsresult RegisterNamedItems(nsIContent *aContent);
+  nsresult UnregisterNamedItems(nsIContent *aContent);
+  nsresult AddToNameTable(const nsAReadableString& aName,
+                          nsIContent *aContent);
+  nsresult AddToIdTable(const nsAReadableString& aId, nsIContent *aContent,
+                        PRBool aPutInTable);
+  nsresult RemoveFromNameTable(const nsAReadableString& aName,
+                               nsIContent *aContent);
+  nsresult RemoveFromIdTable(nsIContent *aContent);
 
-  void DeleteNamedItems();
+  void InvalidateHashTables();
+  nsresult PrePopulateHashTables();
+
   nsIContent *MatchId(nsIContent *aContent, const nsAReadableString& aId);
+  void FindNamedItems(const nsAReadableString& aName, nsIContent *aContent,
+                      nsBaseContentList& aList);
 
   virtual void InternalAddStyleSheet(nsIStyleSheet* aSheet);
   virtual void InternalInsertStyleSheetAt(nsIStyleSheet* aSheet,
@@ -195,8 +219,6 @@ protected:
   nsContentList *mForms;
   nsContentList *mLayers;
   
-  PLHashTable *mNamedItems;
-
   nsIParser *mParser;
   
   static nsrefcnt gRefCntRDFService;
@@ -212,6 +234,8 @@ protected:
    */
   PRBool       mDomainWasSet;
 
+  nsHashtable mNameHashTable;
+  nsHashtable mIdHashTable;
 };
 
 #endif /* nsHTMLDocument_h___ */

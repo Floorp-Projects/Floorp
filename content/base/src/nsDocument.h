@@ -305,7 +305,12 @@ public:
   NS_IMETHOD EndLoad();
   NS_IMETHOD ContentChanged(nsIContent* aContent,
                             nsISupports* aSubContent);
-  NS_IMETHOD ContentStatesChanged(nsIContent* aContent1, nsIContent* aContent2);
+  NS_IMETHOD ContentStatesChanged(nsIContent* aContent1,
+                                  nsIContent* aContent2);
+
+  NS_IMETHOD AttributeWillChange(nsIContent* aChild,
+                                 PRInt32 aNameSpaceID,
+                                 nsIAtom* aAttribute);
   NS_IMETHOD AttributeChanged(nsIContent* aChild,
                               PRInt32 aNameSpaceID,
                               nsIAtom* aAttribute,

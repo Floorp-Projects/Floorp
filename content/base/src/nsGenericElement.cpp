@@ -428,7 +428,6 @@ nsGenericElement::GetDOMSlots()
     mDOMSlots->mStyle = nsnull;
     mDOMSlots->mAttributeMap = nsnull;
     mDOMSlots->mRangeList = nsnull;
-    mDOMSlots->mCapturer = nsnull;
     mDOMSlots->mListenerManager = nsnull;
     mDOMSlots->mBindingParent = nsnull;
   }
@@ -445,7 +444,6 @@ nsGenericElement::MaybeClearDOMSlots()
       !mDOMSlots->mStyle &&
       !mDOMSlots->mAttributeMap &&
       !mDOMSlots->mRangeList &&
-      !mDOMSlots->mCapturer &&
       !mDOMSlots->mListenerManager &&
       !mDOMSlots->mBindingParent) {
 
@@ -2958,8 +2956,16 @@ nsGenericContainerElement::SetAttribute(nsINodeInfo* aNodeInfo,
     NS_ENSURE_TRUE(mAttributes, NS_ERROR_OUT_OF_MEMORY);
   }
 
+  nsCOMPtr<nsIAtom> name;
+  PRInt32 nameSpaceID;
+
+  aNodeInfo->GetNameAtom(*getter_AddRefs(name));
+  aNodeInfo->GetNamespaceID(nameSpaceID);
+
   if (aNotify && (nsnull != mDocument)) {
     mDocument->BeginUpdate();
+
+    mDocument->AttributeWillChange(this, nameSpaceID, name);
   }
 
   nsGenericAttribute* attr;
@@ -2985,12 +2991,6 @@ nsGenericContainerElement::SetAttribute(nsINodeInfo* aNodeInfo,
   }
 
   if (mDocument && NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsIAtom> name;
-    PRInt32 nameSpaceID;
-
-    aNodeInfo->GetNameAtom(*getter_AddRefs(name));
-    aNodeInfo->GetNamespaceID(nameSpaceID);
-
     nsCOMPtr<nsIBindingManager> bindingManager;
     mDocument->GetBindingManager(getter_AddRefs(bindingManager));
     nsCOMPtr<nsIXBLBinding> binding;
@@ -3108,6 +3108,8 @@ nsGenericContainerElement::UnsetAttribute(PRInt32 aNameSpaceID,
           attr->mNodeInfo->Equals(aName)) {
         if (aNotify && (nsnull != mDocument)) {
           mDocument->BeginUpdate();
+
+          mDocument->AttributeWillChange(this, aNameSpaceID, aName);
         }
 
         if (HasMutationListeners(this, NS_EVENT_BITS_MUTATION_ATTRMODIFIED)) {

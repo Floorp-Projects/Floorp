@@ -33,6 +33,7 @@ class nsIDOMHTMLMapElement;
 class nsIHTMLStyleSheet;
 class nsIStyleSheet;
 class nsICSSLoader;
+class nsIContent;
 
 /* b2a848b0-d0a9-11d1-89b1-006008911b81 */
 #define NS_IHTMLDOCUMENT_IID \
@@ -75,6 +76,10 @@ public:
    * Returns true if document.domain was set for this document
    */
   NS_IMETHOD WasDomainSet(PRBool* aDomainWasSet) = 0;
+
+  NS_IMETHOD ResolveName(const nsAReadableString& aName,
+                         nsIDOMHTMLFormElement *aForm,
+                         nsISupports **aResult) = 0;
 };
 
 #endif /* nsIHTMLDocument_h___ */
