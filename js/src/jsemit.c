@@ -1501,15 +1501,16 @@ js_LookupCompileTimeConstant(JSContext *cx, JSCodeGenerator *cg, JSAtom *atom,
 /*
  * Allocate an index invariant for all activations of the code being compiled
  * in cg, that can be used to store and fetch a reference to a cloned RegExp
- * object prototyped by the object literal in pn->pn_atom.  We need clones to
- * hold lastIndex and other direct properties that should not be shared among
- * threads sharing a precompiled function or script.
+ * object that shares the same JSRegExp private data created for the object
+ * literal in pn->pn_atom.  We need clones to hold lastIndex and other direct
+ * properties that should not be shared among threads sharing a precompiled
+ * function or script.
  *
  * If the code being compiled is function code, allocate a reserved slot in
- * the cloned function object that shares the precompiled script with other
+ * the cloned function object that shares its precompiled script with other
  * cloned function objects and with the compiler-created clone-parent.  There
  * are fun->nregexps such reserved slots in each function object cloned from
- * fun->object.  NB: during compilation, funobj slots must not be allocated,
+ * fun->object.  NB: during compilation, funobj slots must never be allocated,
  * because js_AllocSlot could hand out one of the slots that should be given
  * to a regexp clone.
  *
@@ -1517,15 +1518,19 @@ js_LookupCompileTimeConstant(JSContext *cx, JSCodeGenerator *cg, JSAtom *atom,
  * ALE_INDEX(ale), by ensuring that cg->treeContext.numGlobalVars is at least
  * one more than this index.  For global code, fp->vars is parallel to the
  * global script->atomMap.vector array, but possibly shorter for the common
- * case.  Global variable name literals in script->atomMap have fast-global
- * slot numbers (stored as int-tagged jsvals) in the former.  The atomIndex
- * for a regexp object literal thus addresses an fp->vars element not used by
- * fast-global variables, so we use that GC-scanned entry to keep the regexp
- * object clone.
+ * case (where var declarations and regexp literals cluster toward the front
+ * of the script or function body).
  *
- * In no case can cx->fp->varobj be a Call object, because that implies we
- * are compiling eval code, in which case (cx->fp->flags & JSFRAME_EVAL) is
- * true and js_GetToken will have already selected JSOP_OBJECT instead of
+ * Global variable name literals in script->atomMap have fast-global slot
+ * numbers (stored as int-tagged jsvals) in the corresponding fp->vars array
+ * element.  The atomIndex for a regexp object literal thus also addresses an
+ * fp->vars element that is not used by any optimized global variable, so we
+ * use that GC-scanned element to keep the regexp object clone alive, as well
+ * as to lazily create and find it at run-time for the JSOP_REGEXP bytecode.
+ *
+ * In no case can cx->fp->varobj be a Call object here, because that implies
+ * we are compiling eval code, in which case (cx->fp->flags & JSFRAME_EVAL)
+ * is true, and js_GetToken will have already selected JSOP_OBJECT instead of
  * JSOP_REGEXP, to avoid all this RegExp object cloning business.
  *
  * Why clone regexp objects?  ECMA specifies that when a regular expression
@@ -1538,9 +1543,7 @@ js_LookupCompileTimeConstant(JSContext *cx, JSCodeGenerator *cg, JSAtom *atom,
  * objects, which makes for collisions on the lastIndex property (especially
  * for global regexps) and on any ad-hoc properties.  Also, __proto__ and
  * __parent__ refer to the pre-compilation prototype and global objects, a
- * pigeon-hole problem for instanceof tests (although the instanceof operator
- * implementation for native function objects was hacked a while ago to work
- * around this problem cleanly).
+ * pigeon-hole problem for instanceof tests.
  */
 static JSBool
 IndexRegExpClone(JSContext *cx, JSParseNode *pn, JSAtomListElement *ale,
