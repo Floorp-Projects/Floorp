@@ -118,7 +118,6 @@ public:
                                const nsRect &aDestBounds, PRUint32 aCopyFlags);
 
   //locals
-  NS_IMETHOD SetClipRectInPixels(const nsRect& aRect, nsClipCombine aCombine, PRBool &aClipEmpty);
   NS_IMETHOD SetPortTextState();
   nsresult   Init(nsIDeviceContext* aContext, GrafPtr aPort);
 
