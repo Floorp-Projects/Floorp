@@ -39,6 +39,7 @@ install::
 	$(MAKE_INSTALL) raindrops_light.gif $(DISTRES)
 	$(MAKE_INSTALL) skindemo.xul $(DISTRES)
 	$(MAKE_INSTALL) DumpDOM.js $(DISTRES)
+	$(MAKE_INSTALL) onerror.js $(DISTRES)
 	$(MAKE_INSTALL) lessCols.gif $(DISTRES)
 	$(MAKE_INSTALL) lessCols_mo.gif $(DISTRES)
 	$(MAKE_INSTALL) lessCols_dis.gif $(DISTRES)
