@@ -39,7 +39,7 @@ NS_IMETHODIMP SplitElementTxn::Init(nsIEditor  *aEditor,
                                     nsIDOMNode *aNode,
                                     PRInt32     aOffset)
 {
-  mEditor = do_QueryInterface(aEditor);
+  mEditor = aEditor;
   mExistingRightNode = do_QueryInterface(aNode);
   mOffset = aOffset;
   return NS_OK;

@@ -37,7 +37,7 @@ NS_IMETHODIMP JoinElementTxn::Init(nsIEditor  *aEditor,
                                    nsIDOMNode *aLeftNode,
                                    nsIDOMNode *aRightNode)
 {
-  mEditor = do_QueryInterface(aEditor);
+  mEditor = aEditor;
   mLeftNode = do_QueryInterface(aLeftNode);
   mRightNode = do_QueryInterface(aRightNode);
   mOffset=0;
