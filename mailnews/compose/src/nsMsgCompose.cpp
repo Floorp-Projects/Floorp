@@ -722,7 +722,7 @@ nsMsgCompose::SendMsgEx(MSG_DeliverMode deliverMode,
 		char *outCString;
 
 		// Convert fields to UTF-8
-		if (NS_SUCCEEDED(ConvertFromUnicode(aCharset, addrTo, &outCString))) 
+		if (NS_SUCCEEDED(ConvertFromUnicode(aCharset, nsAutoString(addrTo), &outCString))) 
 		{
 			m_compFields->SetTo(outCString);
 			PR_Free(outCString);
@@ -733,7 +733,7 @@ nsMsgCompose::SendMsgEx(MSG_DeliverMode deliverMode,
 			m_compFields->SetTo(addrToCStr);
 	  }
 
-		if (NS_SUCCEEDED(ConvertFromUnicode(aCharset, addrCc, &outCString))) 
+		if (NS_SUCCEEDED(ConvertFromUnicode(aCharset, nsAutoString(addrCc), &outCString))) 
 		{
 			m_compFields->SetCc(outCString);
 			PR_Free(outCString);
@@ -744,7 +744,7 @@ nsMsgCompose::SendMsgEx(MSG_DeliverMode deliverMode,
       m_compFields->SetCc(addrCcCStr);
     }
 
-		if (NS_SUCCEEDED(ConvertFromUnicode(aCharset, addrBcc, &outCString))) 
+		if (NS_SUCCEEDED(ConvertFromUnicode(aCharset, nsAutoString(addrBcc), &outCString))) 
 		{
 			m_compFields->SetBcc(outCString);
 			PR_Free(outCString);
@@ -755,7 +755,7 @@ nsMsgCompose::SendMsgEx(MSG_DeliverMode deliverMode,
       m_compFields->SetBcc(addrBccCStr);
     }
 
-		if (NS_SUCCEEDED(ConvertFromUnicode(aCharset, newsgroup, &outCString))) 
+		if (NS_SUCCEEDED(ConvertFromUnicode(aCharset, nsAutoString(newsgroup), &outCString))) 
 		{
 			m_compFields->SetNewsgroups(outCString);
 			PR_Free(outCString);
@@ -766,7 +766,7 @@ nsMsgCompose::SendMsgEx(MSG_DeliverMode deliverMode,
       m_compFields->SetNewsgroups(newsgroupCStr);
     }
         
-		if (NS_SUCCEEDED(ConvertFromUnicode(aCharset, subject, &outCString))) 
+		if (NS_SUCCEEDED(ConvertFromUnicode(aCharset, nsAutoString(subject), &outCString))) 
 		{
 			m_compFields->SetSubject(outCString);
 			PR_Free(outCString);
@@ -779,7 +779,7 @@ nsMsgCompose::SendMsgEx(MSG_DeliverMode deliverMode,
 
 		// Convert body to mail charset not to utf-8 (because we don't manipulate body text)
 		aCharset.AssignWithConversion(m_compFields->GetCharacterSet());
-		if (NS_SUCCEEDED(ConvertFromUnicode(aCharset, body, &outCString))) 
+		if (NS_SUCCEEDED(ConvertFromUnicode(aCharset, nsAutoString(body), &outCString))) 
 		{
 			m_compFields->SetBody(outCString);
 			PR_Free(outCString);
@@ -1112,7 +1112,7 @@ nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI,
                 if (NS_SUCCEEDED(rv = ConvertFromUnicode(NS_ConvertASCIItoUCS2(msgCompHeaderInternalCharset()), decodedString, &aCString)))
                 {
 					        char * resultStr = nsnull;
-					        nsCString addressToBeRemoved = m_compFields->GetTo();
+					        nsCString addressToBeRemoved(m_compFields->GetTo());
 					  	
 		            if (m_identity)
 		            {
@@ -2195,7 +2195,8 @@ nsresult nsMsgCompose::AttachmentPrettyName(const PRUnichar* url, PRUnichar** _r
 	
 	if (PL_strncasestr(unescapeURL, "file:", 5))
 	{
-		nsFileURL fileUrl(url);
+	  nsAutoString urlString(url);
+		nsFileURL fileUrl(urlString);
 		nsFileSpec fileSpec(fileUrl);
 		char * leafName = fileSpec.GetLeafName();
 		if (leafName && *leafName)

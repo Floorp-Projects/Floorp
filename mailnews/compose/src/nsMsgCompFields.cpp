@@ -165,7 +165,7 @@ const char* nsMsgCompFields::GetHeader(PRInt32 header)
 nsresult nsMsgCompFields::SetHeader(PRInt32 header, const PRUnichar *value)
 {
 	char* cString;
-	ConvertFromUnicode(m_internalCharSet, value, &cString);
+	ConvertFromUnicode(m_internalCharSet, nsAutoString(value), &cString);
 	nsresult rv = SetAsciiHeader(header, cString);
 	PR_Free(cString);
 	
@@ -549,7 +549,7 @@ nsresult nsMsgCompFields::SetBody(const PRUnichar *value)
     PR_FREEIF(m_body);
     if (value) {
 		char* cString;
-		ConvertFromUnicode(m_internalCharSet, value, &cString);
+		ConvertFromUnicode(m_internalCharSet, nsAutoString(value), &cString);
 		m_body = cString;
 		if (!m_body)
 			retval = NS_ERROR_OUT_OF_MEMORY;
@@ -710,7 +710,7 @@ nsresult nsMsgCompFields::SplitRecipients(const PRUnichar *recipients, PRBool em
 			char * addresses;
 			PRUint32 numAddresses;
 
-			if (NS_FAILED(ConvertFromUnicode(NS_ConvertASCIItoUCS2(msgCompHeaderInternalCharset()), recipients, &recipientsStr)))
+			if (NS_FAILED(ConvertFromUnicode(NS_ConvertASCIItoUCS2(msgCompHeaderInternalCharset()), nsAutoString(recipients), &recipientsStr)))
 			  {
 			    nsCAutoString temp; temp.AssignWithConversion(recipients);
 				  recipientsStr = PL_strdup(temp);
@@ -802,7 +802,7 @@ nsresult nsMsgCompFields::SplitRecipientsEx(const PRUnichar *recipients, nsIMsgR
 			char * addresses;
 			PRUint32 numAddresses;
 
-			if (NS_FAILED(ConvertFromUnicode(NS_ConvertASCIItoUCS2(msgCompHeaderInternalCharset()), recipients, &recipientsStr)))
+			if (NS_FAILED(ConvertFromUnicode(NS_ConvertASCIItoUCS2(msgCompHeaderInternalCharset()), nsAutoString(recipients), &recipientsStr)))
 			{
 			  nsCAutoString temp; temp.AssignWithConversion(recipients);
 				recipientsStr = PL_strdup(temp);

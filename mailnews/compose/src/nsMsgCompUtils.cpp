@@ -641,7 +641,7 @@ mime_generate_headers (nsMsgCompFields *fields,
 	if (pSubject && *pSubject) {
     // alert the user if the subject contains characters out of charset range (e.g. multilingual data)
     nsAutoString u; // need to convert from UTF-8 to UCS2
-    if (NS_OK == nsMsgI18NConvertToUnicode(msgCompHeaderInternalCharset(), pSubject, u) &&
+    if (NS_OK == nsMsgI18NConvertToUnicode(nsCAutoString(msgCompHeaderInternalCharset()), nsCAutoString(pSubject), u) &&
         !nsMsgI18Ncheck_data_in_charset_range(charset, u)) {
       PRBool proceedTheSend;
       rv = nsMsgAskBooleanQuestionByID(aPrompt, NS_MSG_MULTILINGUAL_SEND, &proceedTheSend);
