@@ -627,8 +627,7 @@ VOID CALLBACK KeepAliveTimerProc(HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTim
 
     while(count<kMaxSteps) {
 
-        //should these be marked volatile?
-      long *p=(long*)gFuncTable[theCurrentModule][theCurrentProc];
+      volatile long *p=(long*)gFuncTable[theCurrentModule][theCurrentProc];
       if (p) {
         count++;
         if (*p && p){  
