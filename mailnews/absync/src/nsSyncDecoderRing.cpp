@@ -28,44 +28,52 @@
 #include "nsSyncDecoderRing.h"
 
 // Address book fields!
-char *kFirstNameColumn = "FirstName";
-char *kLastNameColumn = "LastName";
-char *kDisplayNameColumn = "DisplayName";
-char *kNicknameColumn = "NickName";
-char *kPriEmailColumn = "PrimaryEmail";
-char *k2ndEmailColumn = "SecondEmail";
-char *kPreferMailFormatColumn = "PreferMailFormat";
-char *kWorkPhoneColumn = "WorkPhone";
-char *kHomePhoneColumn = "HomePhone";
-char *kFaxColumn = "FaxNumber";
-char *kPagerColumn = "PagerNumber";
-char *kCellularColumn = "CellularNumber";
-char *kHomeAddressColumn = "HomeAddress";
-char *kHomeAddress2Column = "HomeAddress2";
-char *kHomeCityColumn = "HomeCity";
-char *kHomeStateColumn = "HomeState";
-char *kHomeZipCodeColumn = "HomeZipCode";
-char *kHomeCountryColumn = "HomeCountry";
-char *kWorkAddressColumn = "WorkAddress";
-char *kWorkAddress2Column = "WorkAddress2";
-char *kWorkCityColumn = "WorkCity";
-char *kWorkStateColumn = "WorkState";
-char *kWorkZipCodeColumn = "WorkZipCode";
-char *kWorkCountryColumn = "WorkCountry";
-char *kJobTitleColumn = "JobTitle";
-char *kDepartmentColumn = "Department";
-char *kCompanyColumn = "Company";
-char *kWebPage1Column = "WebPage1";
-char *kWebPage2Column = "WebPage2";
-char *kBirthYearColumn = "BirthYear";
-char *kBirthMonthColumn = "BirthMonth";
-char *kBirthDayColumn = "BirthDay";
-char *kCustom1Column = "Custom1";
-char *kCustom2Column = "Custom2";
-char *kCustom3Column = "Custom3";
-char *kCustom4Column = "Custom4";
-char *kNotesColumn = "Notes";
-char *kLastModifiedDateColumn = "LastModifiedDate";
+extern const char *kFirstNameColumn;
+extern const char *kLastNameColumn;
+extern const char *kDisplayNameColumn;
+extern const char *kNicknameColumn;
+extern const char *kPriEmailColumn;
+extern const char *k2ndEmailColumn;
+extern const char *kPreferMailFormatColumn;
+extern const char *kWorkPhoneColumn;
+extern const char *kHomePhoneColumn;
+extern const char *kFaxColumn;
+extern const char *kPagerColumn;
+extern const char *kCellularColumn;
+extern const char *kHomeAddressColumn;
+extern const char *kHomeAddress2Column;
+extern const char *kHomeCityColumn;
+extern const char *kHomeStateColumn;
+extern const char *kHomeZipCodeColumn;
+extern const char *kHomeCountryColumn;
+extern const char *kWorkAddressColumn;
+extern const char *kWorkAddress2Column;
+extern const char *kWorkCityColumn;
+extern const char *kWorkStateColumn;
+extern const char *kWorkZipCodeColumn;
+extern const char *kWorkCountryColumn;
+extern const char *kJobTitleColumn;
+extern const char *kDepartmentColumn;
+extern const char *kCompanyColumn;
+extern const char *kWebPage1Column;
+extern const char *kWebPage2Column;
+extern const char *kBirthYearColumn;
+extern const char *kBirthMonthColumn;
+extern const char *kBirthDayColumn;
+extern const char *kCustom1Column;
+extern const char *kCustom2Column;
+extern const char *kCustom3Column;
+extern const char *kCustom4Column;
+extern const char *kNotesColumn;
+extern const char *kLastModifiedDateColumn;
+
+// So far, we aren't really doing anything with these!
+extern const char *kAddressCharSetColumn;
+extern const char *kMailListName;
+extern const char *kMailListNickName;
+extern const char *kMailListDescription;
+extern const char *kMailListTotalAddresses;
+// So far, we aren't really doing anything with these!
 
 // Server record fields!
 char *kServerFirstNameColumn = "fname";
@@ -106,14 +114,6 @@ char *kServerCustom3Column = "Custom_3";
 char *kServerCustom4Column = "Custom_4";
 char *kServerNotesColumn = "addl_info";
 char *kServerLastModifiedDateColumn = "OMIT:LastModifiedDate";
-
-// So far, we aren't really doing anything with these!
-char *kAddressCharSetColumn = "AddrCharSet";
-char *kMailListName = "ListName";
-char *kMailListNickName = "ListNickName";
-char *kMailListDescription = "ListDescription";
-char *kMailListTotalAddresses = "ListTotalAddresses";
-// So far, we aren't really doing anything with these!
 
 nsSyncDecoderRing::nsSyncDecoderRing()
 {

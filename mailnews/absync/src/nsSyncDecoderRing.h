@@ -32,44 +32,52 @@
 #include "nsAbSyncCRCModel.h"
 
 // Address book fields!
-extern char *kFirstNameColumn;
-extern char *kLastNameColumn;
-extern char *kDisplayNameColumn; 
-extern char *kNicknameColumn;
-extern char *kPriEmailColumn;
-extern char *k2ndEmailColumn;
-extern char *kPreferMailFormatColumn;
-extern char *kWorkPhoneColumn;
-extern char *kHomePhoneColumn;
-extern char *kFaxColumn;
-extern char *kPagerColumn;
-extern char *kCellularColumn;
-extern char *kHomeAddressColumn;
-extern char *kHomeAddress2Column;
-extern char *kHomeCityColumn;
-extern char *kHomeStateColumn;
-extern char *kHomeZipCodeColumn; 
-extern char *kHomeCountryColumn;
-extern char *kWorkAddressColumn; 
-extern char *kWorkAddress2Column;
-extern char *kWorkCityColumn;
-extern char *kWorkStateColumn; 
-extern char *kWorkZipCodeColumn; 
-extern char *kWorkCountryColumn; 
-extern char *kJobTitleColumn;
-extern char *kDepartmentColumn;
-extern char *kCompanyColumn;
-extern char *kWebPage1Column;
-extern char *kWebPage2Column;
-extern char *kBirthYearColumn; 
-extern char *kBirthMonthColumn;
-extern char *kBirthDayColumn;
-extern char *kCustom1Column;
-extern char *kCustom2Column;
-extern char *kCustom3Column;
-extern char *kCustom4Column;
-extern char *kNotesColumn;
-extern char *kLastModifiedDateColumn;
+extern const char *kFirstNameColumn;
+extern const char *kLastNameColumn;
+extern const char *kDisplayNameColumn; 
+extern const char *kNicknameColumn;
+extern const char *kPriEmailColumn;
+extern const char *k2ndEmailColumn;
+extern const char *kPreferMailFormatColumn;
+extern const char *kWorkPhoneColumn;
+extern const char *kHomePhoneColumn;
+extern const char *kFaxColumn;
+extern const char *kPagerColumn;
+extern const char *kCellularColumn;
+extern const char *kHomeAddressColumn;
+extern const char *kHomeAddress2Column;
+extern const char *kHomeCityColumn;
+extern const char *kHomeStateColumn;
+extern const char *kHomeZipCodeColumn; 
+extern const char *kHomeCountryColumn;
+extern const char *kWorkAddressColumn; 
+extern const char *kWorkAddress2Column;
+extern const char *kWorkCityColumn;
+extern const char *kWorkStateColumn; 
+extern const char *kWorkZipCodeColumn; 
+extern const char *kWorkCountryColumn; 
+extern const char *kJobTitleColumn;
+extern const char *kDepartmentColumn;
+extern const char *kCompanyColumn;
+extern const char *kWebPage1Column;
+extern const char *kWebPage2Column;
+extern const char *kBirthYearColumn; 
+extern const char *kBirthMonthColumn;
+extern const char *kBirthDayColumn;
+extern const char *kCustom1Column;
+extern const char *kCustom2Column;
+extern const char *kCustom3Column;
+extern const char *kCustom4Column;
+extern const char *kNotesColumn;
+extern const char *kLastModifiedDateColumn;
+
+// So far, we aren't really doing anything with these!
+extern const char *kAddressCharSetColumn;
+extern const char *kMailListName;
+extern const char *kMailListNickName;
+extern const char *kMailListDescription;
+extern const char *kMailListTotalAddresses;
+// So far, we aren't really doing anything with these!
 
 // Server record fields!
 extern char *kServerFirstNameColumn;
@@ -110,14 +118,6 @@ extern char *kServerCustom3Column;
 extern char *kServerCustom4Column;
 extern char *kServerNotesColumn;
 extern char *kServerLastModifiedDateColumn;
-
-// So far, we aren't really doing anything with these!
-extern char *kAddressCharSetColumn;
-extern char *kMailListName;
-extern char *kMailListNickName;
-extern char *kMailListDescription;
-extern char *kMailListTotalAddresses;
-// So far, we aren't really doing anything with these!
 
 class nsSyncDecoderRing
 {
