@@ -1450,3 +1450,8 @@ nsRenderingContextGTK::CopyOffScreenBits(nsDrawingSurface aSrcSurf,
 
   return NS_OK;
 }
+
+NS_IMETHODIMP nsRenderingContextGTK::RetrieveCurrentNativeGraphicData(PRUint32 * ngd)
+{
+  return NS_OK;
+}

@@ -153,6 +153,7 @@ public:
 
   NS_IMETHOD CopyOffScreenBits(nsDrawingSurface aSrcSurf, PRInt32 aSrcX, PRInt32 aSrcY,
                                const nsRect &aDestBounds, PRUint32 aCopyFlags);
+  NS_IMETHOD RetrieveCurrentNativeGraphicData(PRUint32 * ngd);
 
 
   // Postscript utilities

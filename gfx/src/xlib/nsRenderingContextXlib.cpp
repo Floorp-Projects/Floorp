@@ -1363,6 +1363,11 @@ nsRenderingContextXlib::CopyOffScreenBits(nsDrawingSurface aSrcSurf, PRInt32 aSr
   return NS_OK;
 }
 
+NS_IMETHODIMP nsRenderingContextXlib::RetrieveCurrentNativeGraphicData(PRUint32 * ngd)
+{
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsRenderingContextXlib::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
 {

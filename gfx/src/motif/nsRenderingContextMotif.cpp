@@ -1438,3 +1438,8 @@ nsRenderingContextMotif :: CopyOffScreenBits(nsDrawingSurface aSrcSurf,
 
   return NS_OK;
 }
+
+NS_IMETHODIMP nsRenderingContextMotif::RetrieveCurrentNativeGraphicData(PRUint32 * ngd)
+{
+  return NS_OK;
+}

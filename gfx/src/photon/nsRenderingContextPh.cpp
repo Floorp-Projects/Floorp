@@ -1594,6 +1594,10 @@ if (aSrcSurf==destsurf)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsRenderingContextPh::RetrieveCurrentNativeGraphicData(PRUint32 * ngd)
+{
+  return NS_OK;
+}
 
 void nsRenderingContextPh :: PushClipState(void)
 {
