@@ -141,6 +141,10 @@ public:
 
    NS_IMETHOD GetLocation(nsIDOMLocation** aLocation);
    //NS_IMETHOD GetDocShell(nsIDocShell** aDocShell);
+   
+   NS_IMETHOD SetXPConnectObject(const PRUnichar* aProperty, nsISupports* aXPConnectObj);
+   NS_IMETHOD GetXPConnectObject(const PRUnichar* aProperty, nsISupports** aXPConnectObj);
+
    NS_IMETHOD Activate();
    NS_IMETHOD Deactivate();
 
@@ -185,7 +189,6 @@ protected:
    NS_IMETHOD GetTreeOwner(nsIDocShellTreeOwner** aTreeOwner);
    NS_IMETHOD GetTreeOwner(nsIBaseWindow** aTreeOwner);
    NS_IMETHOD GetWebBrowserChrome(nsIWebBrowserChrome** aBrowserChrome);
-   NS_IMETHOD EnsureXPConnectObjectHash();
    NS_IMETHOD GetScrollInfo(nsIScrollableView** aScrollableView, float* aP2T,
       float* aT2P);
    PRBool CheckForEventListener(JSContext* aContext, nsString& aPropName);
@@ -218,7 +221,6 @@ protected:
    PRBool                        mFirstDocumentLoad;
    nsString                      mStatus;
    nsString                      mDefaultStatus;
-   nsSupportsHashtable*          mXPConnectObjectHash;
 
    nsIScriptGlobalObjectOwner*   mGlobalObjectOwner; // Weak Reference
    nsIDocShell*                  mDocShell;  // Weak Reference
