@@ -54,13 +54,13 @@ extern PRLogModuleInfo* gXULTemplateLog;
 // nsRuleNetwork
 //
 
-static PLDHashNumber CRT_CALL
+static PLDHashNumber PR_CALLBACK
 HashEntry(PLDHashTable* aTable, const void* aKey)
 {
     return nsCRT::HashCode(NS_STATIC_CAST(const PRUnichar*, aKey));
 }
 
-static PRBool CRT_CALL
+static PRBool PR_CALLBACK
 MatchEntry(PLDHashTable* aTable, const PLDHashEntryHdr* aEntry, const void* aKey)
 {
     const nsRuleNetwork::SymtabEntry* entry =
@@ -69,7 +69,7 @@ MatchEntry(PLDHashTable* aTable, const PLDHashEntryHdr* aEntry, const void* aKey
     return 0 == nsCRT::strcmp(entry->mSymbol, NS_STATIC_CAST(const PRUnichar*, aKey));
 }
 
-static void CRT_CALL
+static void PR_CALLBACK
 ClearEntry(PLDHashTable* aTable, PLDHashEntryHdr* aEntry)
 {
     nsRuleNetwork::SymtabEntry* entry =
@@ -79,14 +79,14 @@ ClearEntry(PLDHashTable* aTable, PLDHashEntryHdr* aEntry)
     PL_DHashClearEntryStub(aTable, aEntry);
 }
 
-static PLDHashOperator CRT_CALL
+static PLDHashOperator PR_CALLBACK
 RemoveEach(PLDHashTable* aTable, PLDHashEntryHdr* aEntry, PRUint32 aNumber, void* aArg)
 {
     return PL_DHASH_REMOVE;
 }
 
 
-static void CRT_CALL
+static void PR_CALLBACK
 FinalizeTable(PLDHashTable* aTable)
 {
     PL_DHashTableEnumerate(aTable, RemoveEach, nsnull);

@@ -122,7 +122,7 @@ nsDiskCacheEntryHashTable::VisitEntries(Visitor *visitor)
 }
 
 
-PLDHashOperator CRT_CALL
+PLDHashOperator PR_CALLBACK
 nsDiskCacheEntryHashTable::VisitEntry(PLDHashTable *        table,
                                       PLDHashEntryHdr *     header,
                                       PRUint32              number,
@@ -136,7 +136,7 @@ nsDiskCacheEntryHashTable::VisitEntry(PLDHashTable *        table,
 /**
  *  hash table operation callback functions
  */
-const void * CRT_CALL
+const void * PR_CALLBACK
 nsDiskCacheEntryHashTable::GetKey(PLDHashTable * /*table*/, PLDHashEntryHdr * header)
 {
     HashTableEntry * hashEntry = (HashTableEntry *) header;
@@ -144,13 +144,13 @@ nsDiskCacheEntryHashTable::GetKey(PLDHashTable * /*table*/, PLDHashEntryHdr * he
 }
 
 
-PLDHashNumber CRT_CALL
+PLDHashNumber PR_CALLBACK
 nsDiskCacheEntryHashTable::HashKey( PLDHashTable *table, const void *key)
 {
     return (PLDHashNumber) key;
 }
 
-PRBool CRT_CALL
+PRBool PR_CALLBACK
 nsDiskCacheEntryHashTable::MatchEntry(PLDHashTable *             /* table */,
                                       const PLDHashEntryHdr *       header,
                                       const void *                  key)
@@ -159,7 +159,7 @@ nsDiskCacheEntryHashTable::MatchEntry(PLDHashTable *             /* table */,
     return (hashEntry->mDiskCacheEntry->getHashNumber() == (PLDHashNumber) key);
 }
 
-void CRT_CALL
+void PR_CALLBACK
 nsDiskCacheEntryHashTable::MoveEntry(PLDHashTable *              /* table */,
                                  const PLDHashEntryHdr *            fromHeader,
                                  PLDHashEntryHdr       *            toHeader)
@@ -172,7 +172,7 @@ nsDiskCacheEntryHashTable::MoveEntry(PLDHashTable *              /* table */,
 }
 
 
-void CRT_CALL
+void PR_CALLBACK
 nsDiskCacheEntryHashTable::ClearEntry(PLDHashTable *             /* table */,
                                       PLDHashEntryHdr *             header)
 {
@@ -182,14 +182,14 @@ nsDiskCacheEntryHashTable::ClearEntry(PLDHashTable *             /* table */,
 }
 
 
-void CRT_CALL
+void PR_CALLBACK
 nsDiskCacheEntryHashTable::Finalize(PLDHashTable * table)
 {
     (void) PL_DHashTableEnumerate(table, FreeCacheEntries, nsnull);
 }
 
 
-PLDHashOperator CRT_CALL
+PLDHashOperator PR_CALLBACK
 nsDiskCacheEntryHashTable::FreeCacheEntries(PLDHashTable *             /* table */,
                                             PLDHashEntryHdr *             header,
                                             PRUint32                      number,

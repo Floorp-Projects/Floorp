@@ -551,7 +551,7 @@ JS_DumpNamedRoots(JSRuntime *rt,
 #define JS_MAP_GCROOT_REMOVE    2       /* remove and free the current entry */
 
 typedef intN
-(* CRT_CALL JSGCRootMapFun)(void *rp, const char *name, void *data);
+(* JS_DLL_CALLBACK JSGCRootMapFun)(void *rp, const char *name, void *data);
 
 extern JS_PUBLIC_API(intN)
 JS_MapGCRoots(JSRuntime *rt, JSGCRootMapFun map, void *data);

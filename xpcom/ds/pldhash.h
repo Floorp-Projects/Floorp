@@ -187,24 +187,16 @@ struct PLDHashTable {
 #endif
 };
 
-#ifndef CRT_CALL
-#ifdef XP_OS2_VACPP
-#define CRT_CALL _Optlink
-#else
-#define CRT_CALL
-#endif
-#endif
-
 /*
  * Table space at entryStore is allocated and freed using these callbacks.
  * The allocator should return null on error only (not if called with nbytes
  * equal to 0; but note that jsdhash.c code will never call with 0 nbytes).
  */
 typedef void *
-(* CRT_CALL PLDHashAllocTable)(PLDHashTable *table, PRUint32 nbytes);
+(* PR_CALLBACK PLDHashAllocTable)(PLDHashTable *table, PRUint32 nbytes);
 
 typedef void
-(* CRT_CALL PLDHashFreeTable) (PLDHashTable *table, void *ptr);
+(* PR_CALLBACK PLDHashFreeTable) (PLDHashTable *table, void *ptr);
 
 /*
  * When a table grows or shrinks, each entry is queried for its key using this
@@ -213,23 +205,23 @@ typedef void
  * moved via moveEntry callbacks.
  */
 typedef const void *
-(* CRT_CALL PLDHashGetKey)    (PLDHashTable *table, PLDHashEntryHdr *entry);
+(* PR_CALLBACK PLDHashGetKey)    (PLDHashTable *table, PLDHashEntryHdr *entry);
 
 /*
  * Compute the hash code for a given key to be looked up, added, or removed
  * from table.  A hash code may have any PLDHashNumber value.
  */
 typedef PLDHashNumber
-(* CRT_CALL PLDHashHashKey)   (PLDHashTable *table, const void *key);
+(* PR_CALLBACK PLDHashHashKey)   (PLDHashTable *table, const void *key);
 
 /*
  * Compare the key identifying entry in table with the provided key parameter.
  * Return PR_TRUE if keys match, PR_FALSE otherwise.
  */
 typedef PRBool
-(* CRT_CALL PLDHashMatchEntry)(PLDHashTable *table,
-                               const PLDHashEntryHdr *entry,
-                               const void *key);
+(* PR_CALLBACK PLDHashMatchEntry)(PLDHashTable *table,
+                                  const PLDHashEntryHdr *entry,
+                                  const void *key);
 
 /*
  * Copy the data starting at from to the new entry storage at to.  Do not add
@@ -238,9 +230,9 @@ typedef PRBool
  * any reference-decrementing callback shortly.
  */
 typedef void
-(* CRT_CALL PLDHashMoveEntry)(PLDHashTable *table,
-                              const PLDHashEntryHdr *from,
-                              PLDHashEntryHdr *to);
+(* PR_CALLBACK PLDHashMoveEntry)(PLDHashTable *table,
+                                 const PLDHashEntryHdr *from,
+                                 PLDHashEntryHdr *to);
 
 /*
  * Clear the entry and drop any strong references it holds.  This callback is
@@ -248,7 +240,7 @@ typedef void
  * but only if the given key is found in the table.
  */
 typedef void
-(* CRT_CALL PLDHashClearEntry)(PLDHashTable *table, PLDHashEntryHdr *entry);
+(* PR_CALLBACK PLDHashClearEntry)(PLDHashTable *table, PLDHashEntryHdr *entry);
 
 /*
  * Called when a table (whether allocated dynamically by itself, or nested in
@@ -256,7 +248,7 @@ typedef void
  * allows table->ops-specific code to finalize table->data.
  */
 typedef void
-(* CRT_CALL PLDHashFinalize)  (PLDHashTable *table);
+(* PR_CALLBACK PLDHashFinalize)  (PLDHashTable *table);
 
 /* Finally, the "vtable" structure for PLDHashTable. */
 struct PLDHashTableOps {
@@ -433,8 +425,8 @@ PL_DHashTableRawRemove(PLDHashTable *table, PLDHashEntryHdr *entry);
  * otherwise undefined behavior results.
  */
 typedef PLDHashOperator
-(* CRT_CALL PLDHashEnumerator)(PLDHashTable *table, PLDHashEntryHdr *hdr,
-                               PRUint32 number, void *arg);
+(* PR_CALLBACK PLDHashEnumerator)(PLDHashTable *table, PLDHashEntryHdr *hdr,
+                                  PRUint32 number, void *arg);
 
 PR_EXTERN(PRUint32)
 PL_DHashTableEnumerate(PLDHashTable *table, PLDHashEnumerator etor, void *arg);

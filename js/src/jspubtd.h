@@ -116,18 +116,10 @@ typedef struct JSXDRState	 JSXDRState;
 typedef struct JSExceptionState  JSExceptionState;
 typedef struct JSLocaleCallbacks JSLocaleCallbacks;
 
-#ifndef CRT_CALL
-#ifdef XP_OS2_VACPP
-#define CRT_CALL _Optlink
-#else
-#define CRT_CALL
-#endif
-#endif
-
 /* JSClass (and JSObjectOps where appropriate) function pointer typedefs. */
 
 typedef JSBool
-(* CRT_CALL JSPropertyOp)(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
+(* JS_DLL_CALLBACK JSPropertyOp)(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
 
 /*
  * This function type is used for callbacks that enumerate the properties of
@@ -157,95 +149,95 @@ typedef JSBool
  * indicating failure.
  */
 typedef JSBool
-(* CRT_CALL JSNewEnumerateOp)(JSContext *cx, JSObject *obj,
-			      JSIterateOp enum_op,
-			      jsval *statep, jsid *idp);
+(* JS_DLL_CALLBACK JSNewEnumerateOp)(JSContext *cx, JSObject *obj,
+                                     JSIterateOp enum_op,
+                                     jsval *statep, jsid *idp);
 
 typedef JSBool
-(* CRT_CALL JSEnumerateOp)(JSContext *cx, JSObject *obj);
+(* JS_DLL_CALLBACK JSEnumerateOp)(JSContext *cx, JSObject *obj);
 
 typedef JSBool
-(* CRT_CALL JSResolveOp)(JSContext *cx, JSObject *obj, jsval id);
+(* JS_DLL_CALLBACK JSResolveOp)(JSContext *cx, JSObject *obj, jsval id);
 
 typedef JSBool
-(* CRT_CALL JSNewResolveOp)(JSContext *cx, JSObject *obj, jsval id, uintN flags,
-			    JSObject **objp);
+(* JS_DLL_CALLBACK JSNewResolveOp)(JSContext *cx, JSObject *obj, jsval id, uintN flags,
+                                   JSObject **objp);
 
 typedef JSBool
-(* CRT_CALL JSConvertOp)(JSContext *cx, JSObject *obj, JSType type, jsval *vp);
+(* JS_DLL_CALLBACK JSConvertOp)(JSContext *cx, JSObject *obj, JSType type, jsval *vp);
 
 typedef void
-(* CRT_CALL JSFinalizeOp)(JSContext *cx, JSObject *obj);
+(* JS_DLL_CALLBACK JSFinalizeOp)(JSContext *cx, JSObject *obj);
 
 typedef void
-(* CRT_CALL JSStringFinalizeOp)(JSContext *cx, JSString *str);
+(* JS_DLL_CALLBACK JSStringFinalizeOp)(JSContext *cx, JSString *str);
 
 typedef JSObjectOps *
-(* CRT_CALL JSGetObjectOps)(JSContext *cx, JSClass *clasp);
+(* JS_DLL_CALLBACK JSGetObjectOps)(JSContext *cx, JSClass *clasp);
 
 typedef JSBool
-(* CRT_CALL JSCheckAccessOp)(JSContext *cx, JSObject *obj, jsval id,
-			     JSAccessMode mode, jsval *vp);
+(* JS_DLL_CALLBACK JSCheckAccessOp)(JSContext *cx, JSObject *obj, jsval id,
+                                    JSAccessMode mode, jsval *vp);
 
 typedef JSBool
-(* CRT_CALL JSXDRObjectOp)(JSXDRState *xdr, JSObject **objp);
+(* JS_DLL_CALLBACK JSXDRObjectOp)(JSXDRState *xdr, JSObject **objp);
 
 typedef JSBool
-(* CRT_CALL JSHasInstanceOp)(JSContext *cx, JSObject *obj, jsval v,
-			     JSBool *bp);
+(* JS_DLL_CALLBACK JSHasInstanceOp)(JSContext *cx, JSObject *obj, jsval v,
+                                    JSBool *bp);
 
 typedef JSBool
-(* CRT_CALL JSSetObjectSlotOp)(JSContext *cx, JSObject *obj, uint32 slot,
-                               JSObject *pobj);
+(* JS_DLL_CALLBACK JSSetObjectSlotOp)(JSContext *cx, JSObject *obj, uint32 slot,
+                                      JSObject *pobj);
 
 typedef uint32
-(* CRT_CALL JSMarkOp)(JSContext *cx, JSObject *obj, void *arg);
+(* JS_DLL_CALLBACK JSMarkOp)(JSContext *cx, JSObject *obj, void *arg);
 
 /* JSObjectOps function pointer typedefs. */
 
 typedef JSObjectMap *
-(* CRT_CALL JSNewObjectMapOp)(JSContext *cx, jsrefcount nrefs,
-			      JSObjectOps *ops, JSClass *clasp,
-			      JSObject *obj);
+(* JS_DLL_CALLBACK JSNewObjectMapOp)(JSContext *cx, jsrefcount nrefs,
+                                     JSObjectOps *ops, JSClass *clasp,
+                                     JSObject *obj);
 
 typedef void
-(* CRT_CALL JSObjectMapOp)(JSContext *cx, JSObjectMap *map);
+(* JS_DLL_CALLBACK JSObjectMapOp)(JSContext *cx, JSObjectMap *map);
 
 typedef JSBool
-(* CRT_CALL JSLookupPropOp)(JSContext *cx, JSObject *obj, jsid id,
-			    JSObject **objp, JSProperty **propp
+(* JS_DLL_CALLBACK JSLookupPropOp)(JSContext *cx, JSObject *obj, jsid id,
+                                   JSObject **objp, JSProperty **propp
 #if defined JS_THREADSAFE && defined DEBUG
-			    , const char *file, uintN line
+                                 , const char *file, uintN line
 #endif
-			    );
+                                  );
 
 typedef JSBool
-(* CRT_CALL JSDefinePropOp)(JSContext *cx, JSObject *obj, jsid id, jsval value,
-			    JSPropertyOp getter, JSPropertyOp setter,
-			    uintN attrs, JSProperty **propp);
+(* JS_DLL_CALLBACK JSDefinePropOp)(JSContext *cx, JSObject *obj, jsid id, jsval value,
+                                   JSPropertyOp getter, JSPropertyOp setter,
+                                   uintN attrs, JSProperty **propp);
 
 typedef JSBool
-(* CRT_CALL JSPropertyIdOp)(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
+(* JS_DLL_CALLBACK JSPropertyIdOp)(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
 
 typedef JSBool
-(* CRT_CALL JSAttributesOp)(JSContext *cx, JSObject *obj, jsid id,
-			    JSProperty *prop, uintN *attrsp);
+(* JS_DLL_CALLBACK JSAttributesOp)(JSContext *cx, JSObject *obj, jsid id,
+                                   JSProperty *prop, uintN *attrsp);
 
 typedef JSBool
-(* CRT_CALL JSCheckAccessIdOp)(JSContext *cx, JSObject *obj, jsid id,
-			       JSAccessMode mode, jsval *vp, uintN *attrsp);
+(* JS_DLL_CALLBACK JSCheckAccessIdOp)(JSContext *cx, JSObject *obj, jsid id,
+                                      JSAccessMode mode, jsval *vp, uintN *attrsp);
 
 typedef JSObject *
-(* CRT_CALL JSObjectOp)(JSContext *cx, JSObject *obj);
+(* JS_DLL_CALLBACK JSObjectOp)(JSContext *cx, JSObject *obj);
 
 typedef void
-(* CRT_CALL JSPropertyRefOp)(JSContext *cx, JSObject *obj, JSProperty *prop);
+(* JS_DLL_CALLBACK JSPropertyRefOp)(JSContext *cx, JSObject *obj, JSProperty *prop);
 
 /* Typedef for native functions called by the JS VM. */
 
 typedef JSBool
-(* CRT_CALL JSNative)(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-		      jsval *rval);
+(* JS_DLL_CALLBACK JSNative)(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+                             jsval *rval);
 
 /* Callbacks and their arguments. */
 
@@ -256,14 +248,14 @@ typedef enum JSGCStatus {
 } JSGCStatus;
 
 typedef JSBool
-(* CRT_CALL JSGCCallback)(JSContext *cx, JSGCStatus status);
+(* JS_DLL_CALLBACK JSGCCallback)(JSContext *cx, JSGCStatus status);
 
 typedef JSBool
-(* CRT_CALL JSBranchCallback)(JSContext *cx, JSScript *script);
+(* JS_DLL_CALLBACK JSBranchCallback)(JSContext *cx, JSScript *script);
 
 typedef void
-(* CRT_CALL JSErrorReporter)(JSContext *cx, const char *message,
-			     JSErrorReport *report);
+(* JS_DLL_CALLBACK JSErrorReporter)(JSContext *cx, const char *message,
+                                    JSErrorReport *report);
 
 typedef struct JSErrorFormatString {
     const char *format;
@@ -271,25 +263,25 @@ typedef struct JSErrorFormatString {
 } JSErrorFormatString;
 
 typedef const JSErrorFormatString *
-(* CRT_CALL JSErrorCallback)(void *userRef, const char *locale,
-			     const uintN errorNumber);
+(* JS_DLL_CALLBACK JSErrorCallback)(void *userRef, const char *locale,
+			            const uintN errorNumber);
 
 #ifdef va_start
 #define JS_ARGUMENT_FORMATTER_DEFINED 1
 
 typedef JSBool
-(* CRT_CALL JSArgumentFormatter)(JSContext *cx, const char *format,
-				 JSBool fromJS, jsval **vpp, va_list *app);
+(* JS_DLL_CALLBACK JSArgumentFormatter)(JSContext *cx, const char *format,
+                                        JSBool fromJS, jsval **vpp, va_list *app);
 #endif
 
 typedef JSBool 
-(* CRT_CALL JSLocaleToUpperCase)(JSContext *cx, JSString *src, jsval *rval);
+(* JS_DLL_CALLBACK JSLocaleToUpperCase)(JSContext *cx, JSString *src, jsval *rval);
 
 typedef JSBool
-(* CRT_CALL JSLocaleToLowerCase)(JSContext *cx, JSString *src, jsval *rval);
+(* JS_DLL_CALLBACK JSLocaleToLowerCase)(JSContext *cx, JSString *src, jsval *rval);
 
 typedef JSBool
-(* CRT_CALL JSLocaleCompare)(JSContext *cx, JSString *src1, JSString *src2, jsval *rval);
+(* JS_DLL_CALLBACK JSLocaleCompare)(JSContext *cx, JSString *src1, JSString *src2, jsval *rval);
 
 
 

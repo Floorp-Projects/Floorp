@@ -129,7 +129,7 @@ nsresult nsMsgDatabase::AddHdrToCache(nsIMsgDBHdr *hdr, nsMsgKey key) // do we w
 }
 
 
-/* static */PLDHashOperator CRT_CALL nsMsgDatabase::HeaderEnumerator (PLDHashTable *table, PLDHashEntryHdr *hdr,
+/* static */PLDHashOperator PR_CALLBACK nsMsgDatabase::HeaderEnumerator (PLDHashTable *table, PLDHashEntryHdr *hdr,
                                PRUint32 number, void *arg)
 {
 
@@ -220,7 +220,7 @@ PLDHashTableOps nsMsgDatabase::gMsgDBHashTableOps =
   PL_DHashFinalizeStub
 };
 
-const void* CRT_CALL
+const void* PR_CALLBACK
 nsMsgDatabase::GetKey(PLDHashTable* aTable, PLDHashEntryHdr* aEntry)
 {
   MsgHdrHashElement* hdr = NS_REINTERPRET_CAST(MsgHdrHashElement*, aEntry);
@@ -232,20 +232,20 @@ nsMsgDatabase::GetKey(PLDHashTable* aTable, PLDHashEntryHdr* aEntry)
 
 // HashKey is supposed to maximize entropy in the low order bits, and the key
 // as is, should do that.
-PLDHashNumber CRT_CALL
+PLDHashNumber PR_CALLBACK
 nsMsgDatabase::HashKey(PLDHashTable* aTable, const void* aKey)
 {
   return PLDHashNumber(aKey);
 }
 
-PRBool CRT_CALL
+PRBool PR_CALLBACK
 nsMsgDatabase::MatchEntry(PLDHashTable* aTable, const PLDHashEntryHdr* aEntry, const void* aKey)
 {
   const MsgHdrHashElement* hdr = NS_REINTERPRET_CAST(const MsgHdrHashElement*, aEntry);
   return aKey == (const void *) hdr->mKey; // ### or get the key from the hdr...
 }
 
-void CRT_CALL
+void PR_CALLBACK
 nsMsgDatabase::MoveEntry(PLDHashTable* aTable, const PLDHashEntryHdr* aFrom, PLDHashEntryHdr* aTo)
 {
   const MsgHdrHashElement* from = NS_REINTERPRET_CAST(const MsgHdrHashElement*, aFrom);
@@ -254,7 +254,7 @@ nsMsgDatabase::MoveEntry(PLDHashTable* aTable, const PLDHashEntryHdr* aFrom, PLD
   *to = *from;
 }
 
-void CRT_CALL
+void PR_CALLBACK
 nsMsgDatabase::ClearEntry(PLDHashTable* aTable, PLDHashEntryHdr* aEntry)
 {
   MsgHdrHashElement* element = NS_REINTERPRET_CAST(MsgHdrHashElement*, aEntry);
@@ -262,10 +262,10 @@ nsMsgDatabase::ClearEntry(PLDHashTable* aTable, PLDHashEntryHdr* aEntry)
   element->mKey = nsMsgKey_None; // eh?
 }
 
-extern PLDHashNumber CRT_CALL
+extern PLDHashNumber PR_CALLBACK
 PL_DHashStringKey(PLDHashTable *table, const void *key);
 
-extern void CRT_CALL
+extern void PR_CALLBACK
 PL_DHashFinalizeStub(PLDHashTable *table);
 
 

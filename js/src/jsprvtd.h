@@ -96,41 +96,33 @@ typedef enum JSTrapStatus {
     JSTRAP_LIMIT
 } JSTrapStatus;
 
-#ifndef CRT_CALL
-#ifdef XP_OS2
-#define CRT_CALL _Optlink
-#else
-#define CRT_CALL
-#endif
-#endif
-
 typedef JSTrapStatus
-(* CRT_CALL JSTrapHandler)(JSContext *cx, JSScript *script, jsbytecode *pc, 
-                           jsval *rval, void *closure);
+(* JS_DLL_CALLBACK JSTrapHandler)(JSContext *cx, JSScript *script, jsbytecode *pc, 
+                                  jsval *rval, void *closure);
 
 typedef JSBool
-(* CRT_CALL JSWatchPointHandler)(JSContext *cx, JSObject *obj, jsval id,
-                                 jsval old, jsval *newp, void *closure);
+(* JS_DLL_CALLBACK JSWatchPointHandler)(JSContext *cx, JSObject *obj, jsval id,
+                                        jsval old, jsval *newp, void *closure);
 
 /* called just after script creation */
 typedef void
-(* CRT_CALL JSNewScriptHook)(JSContext  *cx,
-                             const char *filename,  /* URL of script */
-                             uintN      lineno,     /* line script starts */
-                             JSScript   *script,
-                             JSFunction *fun,
-                             void       *callerdata);
+(* JS_DLL_CALLBACK JSNewScriptHook)(JSContext  *cx,
+                                    const char *filename,  /* URL of script */
+                                    uintN      lineno,     /* line script starts */
+                                    JSScript   *script,
+                                    JSFunction *fun,
+                                    void       *callerdata);
 
 /* called just before script destruction */
 typedef void
-(* CRT_CALL JSDestroyScriptHook)(JSContext *cx, 
-                                 JSScript  *script, 
-                                 void      *callerdata);
+(* JS_DLL_CALLBACK JSDestroyScriptHook)(JSContext *cx, 
+                                        JSScript  *script, 
+                                        void      *callerdata);
 
 typedef void
-(* CRT_CALL JSSourceHandler)(const char *filename, uintN lineno, 
-                             jschar *str, size_t length, 
-                             void **listenerTSData, void *closure);
+(* JS_DLL_CALLBACK JSSourceHandler)(const char *filename, uintN lineno, 
+                                    jschar *str, size_t length, 
+                                    void **listenerTSData, void *closure);
 
 /*
 * This hook captures high level script execution and function calls
@@ -161,15 +153,15 @@ typedef void
 */
 
 typedef void *
-(* CRT_CALL JSInterpreterHook)(JSContext *cx, JSStackFrame *fp, JSBool before,
-                               JSBool *ok, void *closure);
+(* JS_DLL_CALLBACK JSInterpreterHook)(JSContext *cx, JSStackFrame *fp, JSBool before,
+                                      JSBool *ok, void *closure);
 
 typedef void
-(* CRT_CALL JSObjectHook)(JSContext *cx, JSObject *obj, JSBool isNew, 
-                          void *closure);
+(* JS_DLL_CALLBACK JSObjectHook)(JSContext *cx, JSObject *obj, JSBool isNew, 
+                                 void *closure);
 
 typedef JSBool
-(* CRT_CALL JSDebugErrorHook)(JSContext *cx, const char *message,
-                              JSErrorReport *report, void *closure);
+(* JS_DLL_CALLBACK JSDebugErrorHook)(JSContext *cx, const char *message,
+                                     JSErrorReport *report, void *closure);
 
 #endif /* jsprvtd_h___ */
