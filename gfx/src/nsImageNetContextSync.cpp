@@ -185,17 +185,13 @@ ImageNetContextSyncImpl::GetURL(ilIURL*          aURL,
   nsIURI* url = nsnull;
   aURL->QueryInterface(kIURLIID, (void **)&url);
 
+  nsresult res;
+
   // Get a network service interface which we'll use to create a stream
 #ifndef NECKO
-  nsINetService *service;
-  nsresult res = nsServiceManager::GetService(kNetServiceCID,
-                                          kINetServiceIID,
-                                          (nsISupports **)&service);
+  NS_WITH_SERVICE(nsINetService, service, kNetServiceCID, &res)
 #else
-  nsIIOService *service;
-  nsresult res = nsServiceManager::GetService(kIOServiceCID,
-                                              kIIOServiceIID,
-                                              (nsISupports **)&service);
+  NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &res);
 #endif // NECKO
 
   if (NS_SUCCEEDED(res)) {
@@ -267,8 +263,6 @@ ImageNetContextSyncImpl::GetURL(ilIURL*          aURL,
     }
 
     NS_IF_RELEASE(stream);
-    NS_RELEASE(service);
-
   } else {
     aReader->StreamAbort(-1);
     status = -1;
