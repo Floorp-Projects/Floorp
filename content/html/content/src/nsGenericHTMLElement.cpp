@@ -2627,11 +2627,11 @@ nsGenericHTMLContainerElement::ReplaceChildAt(nsIContent* aKid,
 {
   NS_PRECONDITION(nsnull != aKid, "null ptr");
   nsIContent* oldKid = (nsIContent *)mChildren.ElementAt(aIndex);
+  nsRange::OwnerChildReplaced(mContent, aIndex, oldKid);
   PRBool rv = mChildren.ReplaceElementAt(aKid, aIndex);
   if (rv) {
     NS_ADDREF(aKid);
     aKid->SetParent(mContent);
-    nsRange::OwnerChildReplaced(mContent, aIndex, oldKid);
     nsIDocument* doc = mDocument;
     if (nsnull != doc) {
       aKid->SetDocument(doc, PR_FALSE);
@@ -2672,8 +2672,8 @@ nsGenericHTMLContainerElement::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
   nsIContent* oldKid = (nsIContent *)mChildren.ElementAt(aIndex);
   if (nsnull != oldKid ) {
     nsIDocument* doc = mDocument;
-    mChildren.RemoveElementAt(aIndex);
     nsRange::OwnerChildRemoved(mContent, aIndex, oldKid);
+    mChildren.RemoveElementAt(aIndex);
     if (aNotify) {
       if (nsnull != doc) {
         doc->ContentRemoved(mContent, oldKid, aIndex);
