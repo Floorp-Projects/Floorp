@@ -197,6 +197,9 @@ nsHTMLTextAreaElement::nsHTMLTextAreaElement()
 
 nsHTMLTextAreaElement::~nsHTMLTextAreaElement()
 {
+  if (mValue) {
+    nsMemory::Free(mValue);
+  }
 }
 
 
