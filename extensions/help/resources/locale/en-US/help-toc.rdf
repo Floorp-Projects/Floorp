@@ -315,12 +315,12 @@
   </rdf:Description>
 
 
-<!-- MAIL HELP SECTION -->
+<!-- MAIL HELP SECTION-->
 
   <rdf:Description about="urn:root">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="mail"	nc:name="Using Netscape Mail" nc:link="chrome://help/locale/mail_help.html" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail"	nc:name="Using Mail" nc:link="chrome://help/locale/mail_help.html" /> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -328,7 +328,7 @@
 <rdf:Description about="#mail">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="mail-doc"	nc:name="Getting Started with Netscape Mail" nc:link="chrome://help/locale/mail_help.html" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc"	nc:name="Getting Started with Mail" nc:link="chrome://help/locale/mail_help.html" /> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -470,7 +470,7 @@
   <rdf:Description about="#mail">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="mail-doc-im" nc:name="Using Instant Messenger with Netscape Mail"  nc:link="chrome://help/locale/mail_help.html#INSTANT_MESSENGER"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-im" nc:name="Using Instant Messenger with Mail"  nc:link="chrome://help/locale/mail_help.html#INSTANT_MESSENGER"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -701,7 +701,7 @@
   <rdf:Description about="#mail-doc-address">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="mail-doc-add-about" nc:name="About Netscape Mail Address Books" nc:link="chrome://help/locale/mail_help.html#about_address_books" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-add-about" nc:name="About Mail Address Books" nc:link="chrome://help/locale/mail_help.html#about_address_books" /> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -913,7 +913,7 @@
 <rdf:Description about="#mail-doc-offline">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="mail-offline-setup" nc:name="Setting Up Netscape Mail to Work Offline" nc:link="chrome://help/locale/mail_help.html#OFFLINE_SETUP"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-offline-setup" nc:name="Setting Up Mail to Work Offline" nc:link="chrome://help/locale/mail_help.html#OFFLINE_SETUP"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -1074,7 +1074,7 @@
     </nc:subheadings>
   </rdf:Description>
 
-<!-- COMPOSER HELP SECTION -->
+<!-- COMPOSER HELP SECTION-->
 
  <rdf:Description about="urn:root">
     <nc:subheadings>
@@ -1408,12 +1408,12 @@
 
 
 
-<!-- CUSTOMIZATION HELP CONTENT -->
+<!-- CUSTOMIZATION HELP CONTENT-->
 
  <rdf:Description about="urn:root">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="cust" nc:name="Customizing Netscape 6"  nc:link="chrome://help/locale/customize_help.html"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust" nc:name="Customizing Mozilla"  nc:link="chrome://help/locale/customize_help.html"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -1422,7 +1422,7 @@
 <rdf:Description about="#cust">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="cust" nc:name="My Sidebar"  nc:link="chrome://help/locale/customize_help.html"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-sidebar" nc:name="My Sidebar"  nc:link="chrome://help/locale/customize_help.html"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -1626,7 +1626,7 @@
 <rdf:Description about="#cust">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="cust-page" nc:name="Specifying How Netscape Starts Up"  nc:link="chrome://help/locale/customize_help.html#cust_page"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-page" nc:name="Specifying How Mozilla Starts Up"  nc:link="chrome://help/locale/customize_help.html#cust_page"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -1655,7 +1655,6 @@
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
-
 
 <!-- NAVIGATOR SETTINGS CONTENT -->
 
@@ -2987,19 +2986,9 @@
     </nc:subheadings>
   </rdf:Description>
 
-<!-- GLOSSARY CONTENT -->
-
-
-<rdf:Description about="urn:root">
-    <nc:subheadings>
-      <rdf:Seq>
-        <rdf:li> 
-	<rdf:Description ID="glossary" nc:name="Glossary"
-  		nc:link="chrome://help/locale/glossary.html"/> </rdf:li>
-      </rdf:Seq>
-    </nc:subheadings>
-  </rdf:Description>
-
-
 
 </rdf:RDF>
+
+
+
+
