@@ -70,9 +70,14 @@ private:
   PRUint32      mDepth;
   PRBool        mWriteable;
   nsPaletteInfo mPaletteInfo;
-  PRUint32 mNumCells;
-  PRInt16 mScrollbarHeight;
-  PRInt16 mScrollbarWidth;
+  PRUint32      mNumCells;
+  PRInt16       mScrollbarHeight;
+  PRInt16       mScrollbarWidth;
+
+  float         mWidthFloat;
+  float         mHeightFloat;
+  PRInt32       mWidth;
+  PRInt32       mHeight;
 };
 
 #endif /* nsDeviceContextGTK_h___ */

@@ -71,6 +71,11 @@ private:
   Screen *             mScreen;
   Visual *             mVisual;
   int                  mDepth;
+
+  float                mWidthFloat;
+  float                mHeightFloat;
+  PRInt32              mWidth;
+  PRInt32              mHeight;
 };
 
 #endif
