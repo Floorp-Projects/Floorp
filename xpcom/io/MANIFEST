@@ -11,4 +11,4 @@ nsStorageStream.h
 nsLocalFile.h
 nsLocalFileMac.h
 nsILocalFileMac.h
-nsDirectorySevice.h
+nsDirectoryService.h
