@@ -22,3 +22,9 @@ window[chromehidden~="toolbar"] #navigator-throbber[busy="true"] {
 #search-bar {
   -moz-binding: url("chrome://browser/content/search.xml#searchbar");
 }
+
+bookmarks-toolbar {
+  -moz-binding: url("chrome://browser/content/bookmarks/bookmarksToolbar.xml#bookmarks-toolbar");
+  min-width: 0px;
+  width:0px;
+}
