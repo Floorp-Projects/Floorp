@@ -64,13 +64,13 @@ IDD_SPLASH DIALOGEX
 	END
 
 // Splash screen bitmap.
-//IDB_SPLASH BITMAP
-//	"splash.bmp"
+// IDB_SPLASH BITMAP
+// 	"splash.bmp"
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    ID_DDE_APPLICATION_NAME,            "Mozilla Firebird"
-    IDS_STARTMENU_APPNAME,              "Mozilla Firebird"
+    ID_DDE_APPLICATION_NAME,            "Mozilla Firebird Debug"
+    IDS_STARTMENU_APPNAME,              "Mozilla Firebird Debug"
 END
 
 #ifdef MOZ_STATIC_BUILD
