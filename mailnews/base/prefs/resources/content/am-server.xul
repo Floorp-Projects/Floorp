@@ -68,6 +68,7 @@ Contributors:
                   value="&userName.label;"/>
         </hbox>
         <hbox iscontrolcontainer="true" align="center">
+            <label id="fixedUserName" collapsed="true" use="server.realUsername"/>
             <textbox hidable="true" hidefor="nntp" wsm_persist="true"
                      size="25" id="server.realUsername"
                      prefstring="mail.server.%serverkey%.realusername"/>

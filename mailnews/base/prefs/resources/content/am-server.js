@@ -224,6 +224,7 @@ function setupFixedUI()
   var showFixedValues = gRedirectorType != null;
 
   var controls = [document.getElementById("fixedServerName"), 
+                  document.getElementById("fixedUserName"),
                   document.getElementById("fixedServerPort")];
 
   var len = controls.length;  
