@@ -20,7 +20,7 @@ Appendix Title {
   font-weight: bold;
   font-family: Arial;
   font-size: 24pt;
-  bottom-margin: 10pt;
+  margin-bottom: 10pt;
   display: block;
 }
 
@@ -34,7 +34,7 @@ Author {
 
 AuthorGroup {
   font-size: 12pt;
-  top-margin: 25pt;
+  margin-top: 25pt;
   display: block;
   font-weight: bold;
 }
@@ -53,7 +53,7 @@ Book Title {
   font-weight: bold;
   font-family: Arial;
   font-size: 18pt;
-  bottom-margin: 10pt;
+  margin-bottom: 10pt;
   display: block;
 }
 
@@ -70,9 +70,12 @@ BridgeHead {
 }
 
 Caution {
-  prefix-format: "Caution:";
   font-weight: bold;
   color: red;
+}
+
+Caution:before {
+  content: "Caution:";
 }
 
 Chapter {
@@ -84,7 +87,7 @@ Chapter Title {
   font-weight: bold;
   font-family: Arial;
   font-size: 20pt;
-  bottom-margin: 10pt;
+  margin-bottom: 10pt;
   display: block;
 }
 
@@ -263,7 +266,7 @@ Literal {
 }
 
 LiteralLayout {
-  whitespace: pre;
+  white-space: pre;
   display: block;
 }
 
@@ -282,9 +285,9 @@ Option {
 }
 
 OrderedList {
-  top-margin: 5pt;
-  left-margin: 20pt;
-  bottom-margin: 10pt;
+  margin-top: 5pt;
+  margin-left: 20pt;
+  margin-bottom: 10pt;
   display: block;
   list-style-type: decimal;
 }
@@ -315,9 +318,9 @@ Para LiteralLayout {
 }
 
 Para Screen {
-  top-margin: 7pt;
-  left-margin: 10pt;
-  bottom-margin: 7pt;
+  margin-top: 7pt;
+  margin-left: 10pt;
+  margin-bottom: 7pt;
   display: block;
 }
 
@@ -359,8 +362,8 @@ ProgramListingCO {
 PublisherName {
   font-family: Times, New, Roman;
   font-size: 20pt;
-  top-margin: 15pt;
-  bottom-margin: 15pt;
+  margin-top: 15pt;
+  margin-bottom: 15pt;
   display: block;
 }
 
@@ -441,22 +444,22 @@ Replaceable {
 
 Screen {
   display: block;
-  left-margin: 20pt;
-  bottom-margin: 10pt;
-  whitespace: pre;
+  margin-left: 20pt;
+  margin-bottom: 10pt;
+  white-space: pre;
 }
 
 ScreenCO {
-  whitespace: pre;
+  white-space: pre;
 }
 
 ScreenShot {
-  whitespace: pre;
+  white-space: pre;
 }
 
 Sect1 {
   display: block;
-  top-margin: 16pt;
+  margin-top: 16pt;
 }
 
 Sect1 Title {
@@ -468,7 +471,7 @@ Sect1 Title {
 
 Sect2 {
   display: block;
-  top-margin: 15pt;
+  margin-top: 15pt;
 }
 
 Sect2 Title {
@@ -480,7 +483,7 @@ Sect2 Title {
 
 Sect3 {
   display: block;
-  top-margin: 15pt;
+  margin-top: 15pt;
 }
 
 Sect3 Title {
@@ -530,7 +533,7 @@ Subtitle {
   font-size: 20pt;
   font-weight: bold;
   display: block;
-  align: center;
+  text-align: center;
 }
 
 Superscript {
@@ -568,7 +571,7 @@ Title {
   font-size: 20pt;
   font-weight: bold;
   display: block;
-  align: center;
+  text-align: center;
 }
 
 TitleAbbrev {
@@ -605,10 +608,14 @@ VarListEntry Term {
 }
 
 Warning {
-  prefix-format: "Warning:";
   font-weight: bold;
   color: fuchsia;
 }
+
+Warning:before {
+  content: "Warning:";
+}
+
 
 Year {
   font-family: serif;
