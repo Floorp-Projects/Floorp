@@ -60,6 +60,7 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
     res = mXPLookAndFeel->GetColor(aID, aColor);
     if (NS_SUCCEEDED(res))
       return res;
+    res = NS_OK;
   }
 
   aColor = 0; // default color black
