@@ -149,7 +149,7 @@ class URIFile(_File):
         if mode != "r":
             raise ValueError, "only 'r' mode supported'"
         io_service = components.classes["@mozilla.org/network/io-service;1"] \
-                        .createInstance("nsIIOService")
+                        .getService(components.interfaces.nsIIOService)
         if hasattr(url, "queryInterface"):
             url_ob = url
         else:
@@ -161,7 +161,7 @@ class URIFile(_File):
             raise ValueError, ("The URI '%s' is invalid (no scheme)" 
                                   % (url_ob.spec,))
         self.channel = io_service.newChannelFromURI(url_ob)
-        self.inputStream = self.channel.openInputStream()
+        self.inputStream = self.channel.open()
 
 # A "file object" implemented using Netscape's native file support.
 # Based on io.js - http://lxr.mozilla.org/seamonkey/source/xpcom/tests/utils/io.js
@@ -171,36 +171,28 @@ class LocalFile(_File):
     def init(self, name, mode = "r"):
         name = os.path.abspath(name) # Moz libraries under Linux fail with relative paths.
         self.close()
-        self.fileInst = _construct('@mozilla.org/file/local;1', "nsILocalFile", "initWithPath", name)
-        self.inputStream = None
-        self.channel = None
+        file = _construct('@mozilla.org/file/local;1', "nsILocalFile", "initWithPath", name)
+        self.fileIO = _construct('@mozilla.org/network/file-io;1', "nsIFileIO", "init", file, -1, -1)
         if mode in ["w","a"]:
             if mode== "w":
-                if self.fileInst.exists():
-                    self.fileInst.delete(0)
+                if file.exists():
+                    file.delete(0)
                 moz_mode = NS_CREATE_FILE | NS_WRONLY
             elif mode=="a":
                 moz_mode = NS_APPEND
             else:
                 assert 0, "Can't happen!"
-            perms = 0644
-            if not self.fileInst.exists():
-                self.fileInst.create(components.interfaces.nsILocalFile.NORMAL_FILE_TYPE, 0644)
-            self.channel = _construct('@mozilla.org/network/local-file-channel;1', "nsIFileChannel", "init",
-                                          self.fileInst, moz_mode, perms)
-            self.outputStream = self.channel.openOutputStream()
-            self.fileInst.permissions = perms
+            self.outputStream = self.fileIO.outputStream
 
         elif mode == "r":
-            self.channel = _construct('@mozilla.org/network/local-file-channel;1', "nsIFileChannel", "init",
-                                          self.fileInst, NS_RDONLY, self.fileInst.permissions)
-            self.inputStream = self.channel.openInputStream()
+            self.contentType, self.contentLength = self.fileIO.open()
+            self.inputStream = self.fileIO.inputStream
         else:
             raise ValueError, "Unknown mode"
 
     def read(self, n = -1):
         if n == -1:
-            n = self.fileInst.fileSize
+            n = self.contentLength
         return _File.read(self, n)
 
 
