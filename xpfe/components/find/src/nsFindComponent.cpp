@@ -695,7 +695,7 @@ nsFindComponent::Context::SetFindDialog( nsIDOMWindowInternal *aDialog )
 // ctor
 nsFindComponent::nsFindComponent()
     : mLastSearchString(),
-      mLastCaseSensitive( PR_TRUE ),
+      mLastCaseSensitive( PR_FALSE ),
       mLastSearchBackwards( PR_FALSE ),
       mLastWrapSearch( PR_FALSE )
 {
