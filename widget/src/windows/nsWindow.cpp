@@ -212,11 +212,8 @@ nsWindow::nsWindow() : nsBaseWidget()
 
 	mIMEProperty		= 0;
 	mIMEIsComposing		= PR_FALSE;
-	mIMECompositionString = NULL;
-	mIMECompositionStringSize = 0;
-	mIMECompositionStringLength = 0;
-	mIMECompositionUniString = NULL;
-	mIMECompositionUniStringSize = 0;
+	mIMECompString = NULL;
+	mIMECompUnicode = NULL;
 	mIMEAttributeString = NULL;
 	mIMEAttributeStringSize = 0;
 	mIMEAttributeStringLength = 0;
@@ -269,9 +266,14 @@ nsWindow::~nsWindow()
   //
   // delete any of the IME structures that we allocated
   //
-  if (mIMECompositionString!=NULL) delete [] mIMECompositionString;
-  if (mIMEAttributeString!=NULL) delete [] mIMEAttributeString;
-  if (mIMECompositionUniString!=NULL) delete [] mIMECompositionUniString;
+  if (mIMECompString!=NULL) 
+	nsCString::Recycle(mIMECompString);
+  if (mIMECompUnicode!=NULL) 
+	nsString::Recycle(mIMECompUnicode);
+  if (mIMEAttributeString!=NULL) 
+	delete [] mIMEAttributeString;
+  if (mIMECompClauseString!=NULL) 
+	delete [] mIMECompClauseString;
 
   NS_IF_RELEASE(mNativeDragTarget);
 }
@@ -2580,6 +2582,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 #ifdef KE_DEBUG
             printf("%s\tchar=%c\twp=%4x\tlp=%8x\n", (msg == WM_SYSCHAR) ? "WM_SYSCHAR" : "WM_CHAR" , wParam, wParam, lParam);
 #endif
+
             mIsShiftDown   = IS_VK_DOWN(NS_VK_SHIFT);
             if(WM_SYSCHAR==msg)
             {
@@ -3801,7 +3804,12 @@ NS_METHOD nsWindow::SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight)
 void
 nsWindow::HandleTextEvent(HIMC hIMEContext,PRBool aCheckAttr)
 {
+  NS_ASSERTION( mIMECompString, "mIMECompString is null");
+  NS_ASSERTION( mIMECompUnicode, "mIMECompUnicode is null");
   NS_ASSERTION( mIMEIsComposing, "conflict state");
+  if((nsnull == mIMECompString) || (nsnull == mIMECompUnicode))
+	return;
+
   nsTextEvent		event;
   nsPoint			point;
   size_t			unicharSize;
@@ -3814,17 +3822,20 @@ nsWindow::HandleTextEvent(HIMC hIMEContext,PRBool aCheckAttr)
   //
   // convert the composition string text into unicode before it is sent to xp-land
   //
-  unicharSize = ::MultiByteToWideChar(mCurrentKeyboardCP,MB_PRECOMPOSED,mIMECompositionString,mIMECompositionStringLength,
-	  mIMECompositionUniString,0);
+  unicharSize = ::MultiByteToWideChar(mCurrentKeyboardCP,MB_PRECOMPOSED,
+	mIMECompString->GetBuffer(),
+	mIMECompString->Length(),
+	NULL,0);
 
-  if (mIMECompositionUniStringSize < (PRInt32)(unicharSize+1)) {
-	if (mIMECompositionUniString!=NULL) delete [] mIMECompositionUniString;
-		mIMECompositionUniString = new PRUnichar[unicharSize+32];
-		mIMECompositionUniStringSize = unicharSize+32;
-  }
-  ::MultiByteToWideChar(mCurrentKeyboardCP,MB_PRECOMPOSED,mIMECompositionString,mIMECompositionStringLength,
-	  mIMECompositionUniString,unicharSize);
-  mIMECompositionUniString[unicharSize] = (PRUnichar)0;
+  mIMECompUnicode->SetCapacity(unicharSize+1);
+
+  unicharSize = ::MultiByteToWideChar(mCurrentKeyboardCP,MB_PRECOMPOSED,
+	mIMECompString->GetBuffer(),
+	mIMECompString->Length(),
+	(PRUnichar*)mIMECompUnicode->GetUnicode(),
+	mIMECompUnicode->mCapacity);
+  ((PRUnichar*)mIMECompUnicode->GetUnicode())[unicharSize] = (PRUnichar) 0;
+  mIMECompUnicode->mLength = unicharSize;
 
   //
   // we need to convert the attribute array, which is alligned with the mutibyte text into an array of offsets
@@ -3838,7 +3849,7 @@ nsWindow::HandleTextEvent(HIMC hIMEContext,PRBool aCheckAttr)
      event.rangeArray = nsnull;
   }
 
-  event.theText = mIMECompositionUniString;
+  event.theText = (PRUnichar*)mIMECompUnicode->GetUnicode();
   event.isShift	= mIsShiftDown;
   event.isControl = mIsControlDown;
   event.isMeta	= PR_FALSE;
@@ -3893,6 +3904,11 @@ nsWindow::HandleStartComposition(HIMC hIMEContext)
 #endif
 	::ImmSetCandidateWindow(hIMEContext,&candForm);
 	NS_RELEASE(event.widget);
+
+	if(nsnull == mIMECompString)
+		mIMECompString = new nsCAutoString();
+	if(nsnull == mIMECompUnicode)
+		mIMECompUnicode = new nsAutoString();
 	mIMEIsComposing = PR_TRUE;
 
 }
@@ -3938,6 +3954,10 @@ static PRUint32 PlatformToNSAttr(PRUint32 aAttr)
 void 
 nsWindow::MapDBCSAtrributeArrayToUnicodeOffsets(PRUint32* textRangeListLengthResult,nsTextRangeArray* textRangeListResult)
 {
+  NS_ASSERTION( mIMECompString, "mIMECompString is null");
+  NS_ASSERTION( mIMECompUnicode, "mIMECompUnicode is null");
+  if((nsnull == mIMECompString) || (nsnull == mIMECompUnicode))
+	return;
 	PRUint32	rangePointer;
 	PRInt32		ictr;
 	size_t		lastUnicodeOffset, substringLength, lastMBCSOffset;
@@ -3947,17 +3967,17 @@ nsWindow::MapDBCSAtrributeArrayToUnicodeOffsets(PRUint32* textRangeListLengthRes
 	//
 	if (mIMECompClauseStringLength==0) {
     // xxx Fix me....
-    NS_ASSERTION(mIMECursorPosition <= mIMECompositionStringLength, "wrong cursor positoin");
-    if(mIMECursorPosition > mIMECompositionStringLength)
-        mIMECursorPosition = mIMECompositionStringLength;
+    NS_ASSERTION(mIMECursorPosition <= mIMECompString->Length(), "wrong cursor positoin");
+    if(mIMECursorPosition > mIMECompString->Length())
+        mIMECursorPosition = mIMECompString->Length();
 		*textRangeListLengthResult = 2;
 		*textRangeListResult = new nsTextRange[2];
 		(*textRangeListResult)[0].mStartOffset=0;
-		substringLength = ::MultiByteToWideChar(mCurrentKeyboardCP,MB_PRECOMPOSED,mIMECompositionString,
-								mIMECompositionStringLength,NULL,0);
+		substringLength = ::MultiByteToWideChar(mCurrentKeyboardCP,MB_PRECOMPOSED,mIMECompString->GetBuffer(),
+								mIMECompString->Length(),NULL,0);
 		(*textRangeListResult)[0].mEndOffset = substringLength;
 		(*textRangeListResult)[0].mRangeType = NS_TEXTRANGE_RAWINPUT;
-		substringLength = ::MultiByteToWideChar(mCurrentKeyboardCP,MB_PRECOMPOSED,mIMECompositionString,
+		substringLength = ::MultiByteToWideChar(mCurrentKeyboardCP,MB_PRECOMPOSED,mIMECompString->GetBuffer(),
 								mIMECursorPosition,NULL,0);
 		(*textRangeListResult)[1].mStartOffset=substringLength;
 		(*textRangeListResult)[1].mEndOffset = substringLength;
@@ -3981,7 +4001,7 @@ nsWindow::MapDBCSAtrributeArrayToUnicodeOffsets(PRUint32* textRangeListLengthRes
 		// figure out the cursor position
 		//
 		
-		substringLength = ::MultiByteToWideChar(mCurrentKeyboardCP,MB_PRECOMPOSED,mIMECompositionString,mIMECursorPosition,NULL,0);
+		substringLength = ::MultiByteToWideChar(mCurrentKeyboardCP,MB_PRECOMPOSED,mIMECompString->GetBuffer(),mIMECursorPosition,NULL,0);
 		(*textRangeListResult)[0].mStartOffset=substringLength;
 		(*textRangeListResult)[0].mEndOffset = substringLength;
 		(*textRangeListResult)[0].mRangeType = NS_TEXTRANGE_CARETPOSITION;
@@ -3996,7 +4016,7 @@ nsWindow::MapDBCSAtrributeArrayToUnicodeOffsets(PRUint32* textRangeListLengthRes
 		for(ictr=0;ictr<mIMECompClauseStringLength;ictr++) {
 			if (mIMECompClauseString[ictr]!=0) {
 				(*textRangeListResult)[rangePointer].mStartOffset = lastUnicodeOffset;
-				substringLength = ::MultiByteToWideChar(mCurrentKeyboardCP,MB_PRECOMPOSED,mIMECompositionString+lastMBCSOffset,
+				substringLength = ::MultiByteToWideChar(mCurrentKeyboardCP,MB_PRECOMPOSED,mIMECompString->GetBuffer()+lastMBCSOffset,
 										mIMECompClauseString[ictr]-lastMBCSOffset,NULL,0);
 				(*textRangeListResult)[rangePointer].mEndOffset = lastUnicodeOffset + substringLength;
 				(*textRangeListResult)[rangePointer].mRangeType = 
@@ -4047,6 +4067,10 @@ BOOL nsWindow::OnIMEComposition(LPARAM  aGCS)
 #ifdef DEBUG_IME
 	printf("OnIMEComposition\n");
 #endif
+  NS_ASSERTION( mIMECompString, "mIMECompString is null");
+  NS_ASSERTION( mIMECompUnicode, "mIMECompUnicode is null");
+  if((nsnull == mIMECompString) || (nsnull == mIMECompUnicode))
+	return PR_TRUE;
 
 	HIMC hIMEContext;
 
@@ -4123,17 +4147,14 @@ BOOL nsWindow::OnIMEComposition(LPARAM  aGCS)
 
 		long compStrLen = ::ImmGetCompositionString(hIMEContext,
 			GCS_RESULTSTR,NULL,0);
-		if (compStrLen+1>mIMECompositionStringSize) {
-			delete [] mIMECompositionString;
-			mIMECompositionString = new char[compStrLen+32];
-			mIMECompositionStringSize = compStrLen+32;
-		}
+
+		mIMECompString->SetCapacity(compStrLen+1);
 		
-		::ImmGetCompositionString(hIMEContext,GCS_RESULTSTR,	
-			mIMECompositionString,
-			mIMECompositionStringSize);
-		mIMECompositionStringLength = compStrLen;
-		mIMECompositionString[compStrLen]='\0';
+		compStrLen = ::ImmGetCompositionString(hIMEContext,GCS_RESULTSTR,	
+			(char*)mIMECompString->GetBuffer(),
+			mIMECompString->mCapacity);
+  		((char*)mIMECompString->GetBuffer())[compStrLen] = '\0';
+		mIMECompString->mLength = compStrLen;
 
 #ifdef DEBUG_IME
 		fprintf(stderr,"GCS_RESULTSTR compStrLen = %d\n", compStrLen);
@@ -4154,23 +4175,18 @@ BOOL nsWindow::OnIMEComposition(LPARAM  aGCS)
 
 		long compStrLen = ::ImmGetCompositionString(hIMEContext,
 					GCS_COMPSTR,NULL,0);
-		if (compStrLen+1>mIMECompositionStringSize) {
-			if (mIMECompositionString!=NULL) 
-				delete [] mIMECompositionString;
-			mIMECompositionString = new char[compStrLen+32];
-			mIMECompositionStringSize = compStrLen+32;
-		}
+		mIMECompString->SetCapacity(compStrLen+1);
 		
-		::ImmGetCompositionString(hIMEContext,
+		compStrLen = ::ImmGetCompositionString(hIMEContext,
 			GCS_COMPSTR,
-			mIMECompositionString,
-			mIMECompositionStringSize);
-		mIMECompositionStringLength = compStrLen;
+			(char*)mIMECompString->GetBuffer(),
+			mIMECompString->mCapacity);
+  		((char*)mIMECompString->GetBuffer())[compStrLen] = '\0';
+		mIMECompString->mLength = compStrLen;
 
 #ifdef DEBUG_IME
 		fprintf(stderr,"GCS_COMPSTR compStrLen = %d\n", compStrLen);
 #endif
-		mIMECompositionString[compStrLen]='\0';
 		HandleTextEvent(hIMEContext);
 		result = PR_TRUE;
 	}
@@ -4182,7 +4198,8 @@ BOOL nsWindow::OnIMEComposition(LPARAM  aGCS)
 		if(! mIMEIsComposing) 
 			HandleStartComposition(hIMEContext);
 
-		mIMECompositionStringLength = 0;
+  		((char*)mIMECompString->GetBuffer())[0] = '\0';
+		mIMECompString->mLength = 0;
 		HandleTextEvent(hIMEContext,PR_FALSE);
 		result = PR_TRUE;
 	}
@@ -4222,8 +4239,8 @@ BOOL nsWindow::OnIMEEndComposition()
 		// first when we hit space in composition mode
 		// we need to clear out the current composition string 
 		// in that case. 
-		mIMECompositionStringLength = 0;
-		mIMECompositionString[0]='\0';
+  		((char*)mIMECompString->GetBuffer())[0] = '\0';
+		mIMECompString->mLength = 0;
 		HandleTextEvent(hIMEContext, PR_FALSE);
 
 		HandleEndComposition();

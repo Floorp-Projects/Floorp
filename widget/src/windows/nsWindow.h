@@ -271,11 +271,8 @@ protected:
 	// For Input Method Support
 	DWORD		mIMEProperty;
 	PRBool		mIMEIsComposing;
-	char*		mIMECompositionString;
-	PRUnichar*	mIMECompositionUniString;
-	PRInt32		mIMECompositionUniStringSize;
-	PRInt32		mIMECompositionStringLength;
-	PRInt32		mIMECompositionStringSize;
+	nsCString*	mIMECompString;
+	nsString*	mIMECompUnicode;
 	char*		mIMEAttributeString;
 	PRInt32		mIMEAttributeStringLength;
 	PRInt32		mIMEAttributeStringSize;
