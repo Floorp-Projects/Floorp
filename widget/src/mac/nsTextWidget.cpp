@@ -19,9 +19,6 @@
 #include "nsTextWidget.h"
 #include <ToolUtils.h>
 #include <Appearance.h>
-#if TARGET_CARBON
-#include <ControlDefinitions.h>
-#endif
 
 
 NS_IMPL_ADDREF(nsTextWidget);
@@ -104,19 +101,22 @@ NS_IMETHODIMP nsTextWidget::Create(nsIWidget *aParent,
 }
 
 
+//-------------------------------------------------------------------------
+//	Destroy
 //
-// Destroy
-//
+//-------------------------------------------------------------------------
 // The repeater in this widget needs to use out of band notification
-// to sever its dies with the nsTimer. If we just rely on the 
+// to sever its ties with the nsTimer. If we just rely on the 
 // dtor to do it, it will never get called because the nsTimer holds a ref to
 // this object.
 //
 NS_IMETHODIMP
-nsTextWidget :: Destroy ( )
+nsTextWidget::Destroy()
 {
+  Inherited::Destroy();
   if (mRepeating) RemoveFromRepeatList();
   if (mIdling) RemoveFromIdleList();
+  return NS_OK;
 }
 
 
