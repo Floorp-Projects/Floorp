@@ -584,7 +584,7 @@ nsMessenger::OpenAttachment(const char * aContentType, const char * aUrl, const
   rv = GetMessageServiceFromURI(aMessageUri, &messageService);
   if (messageService)
   {
-    rv = messageService->OpenAttachment(aContentType, aUrl, aMessageUri, mDocShell, mMsgWindow, nsnull);
+    rv = messageService->OpenAttachment(aContentType, aDisplayName, aUrl, aMessageUri, mDocShell, mMsgWindow, nsnull);
   }
   if (messageService)
      ReleaseMessageServiceFromURI(aMessageUri, messageService);

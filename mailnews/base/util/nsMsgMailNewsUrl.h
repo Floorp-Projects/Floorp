@@ -34,6 +34,7 @@
 #include "nsIURL.h"
 #include "nsILoadGroup.h"
 #include "nsIMsgSearchSession.h"
+
 ///////////////////////////////////////////////////////////////////////////////////
 // Okay, I found that all of the mail and news url interfaces needed to support
 // several common interfaces (in addition to those provided through nsIURI). 
@@ -68,9 +69,16 @@ protected:
 	PRBool	m_updatingFolder;
   PRBool  m_addContentToCache;
 
+  // the following field is really a bit of a hack to make 
+  // open attachments work. The external applications code sometimes trys to figure out the right
+  // handler to use by looking at the file extension of the url we are trying to load. Unfortunately,
+  // the attachment file name really isn't part of the url string....so we'll store it here...and if 
+  // the url we are running is an attachment url, we'll set it here. Then when the helper apps code
+  // asks us for it, we'll return the right value.
+  nsCString mAttachmentFileName;
+
 	// manager of all of current url listeners....
 	nsCOMPtr<nsIUrlListenerManager> m_urlListeners;
 };
-
 
 #endif /* nsMsgMailNewsUrl_h___ */

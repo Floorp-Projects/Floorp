@@ -475,7 +475,13 @@ NS_IMETHODIMP nsMsgMailNewsUrl::SetDirectory(const char *aDirectory)
 
 NS_IMETHODIMP nsMsgMailNewsUrl::GetFileName(char * *aFileName)
 {
-	return m_baseURL->GetFileName(aFileName);
+  if (!mAttachmentFileName.IsEmpty())
+  {
+    *aFileName = mAttachmentFileName.ToNewCString();
+    return NS_OK;
+  }
+  else
+	  return m_baseURL->GetFileName(aFileName);
 }
 
 NS_IMETHODIMP nsMsgMailNewsUrl::GetFileBaseName(char * *aFileBaseName)
@@ -490,7 +496,17 @@ NS_IMETHODIMP nsMsgMailNewsUrl::SetFileBaseName(const char * aFileBaseName)
 
 NS_IMETHODIMP nsMsgMailNewsUrl::GetFileExtension(char * *aFileExtension)
 {
-	return m_baseURL->GetFileExtension(aFileExtension);
+  if (!mAttachmentFileName.IsEmpty())
+  {
+    nsCAutoString extension;
+    PRInt32 pos = mAttachmentFileName.RFindCharInSet(".");
+    if (pos > 0)
+      mAttachmentFileName.Mid(extension, pos + 1 /* skip the '.' */, -1);
+    *aFileExtension = extension.ToNewCString();
+    return NS_OK;
+  }
+  else
+	  return m_baseURL->GetFileExtension(aFileExtension);
 }
 
 NS_IMETHODIMP nsMsgMailNewsUrl::SetFileExtension(const char * aFileExtension)
@@ -500,7 +516,8 @@ NS_IMETHODIMP nsMsgMailNewsUrl::SetFileExtension(const char * aFileExtension)
 
 NS_IMETHODIMP nsMsgMailNewsUrl::SetFileName(const char * aFileName)
 {
-	return m_baseURL->SetFileName(aFileName);
+  mAttachmentFileName = aFileName;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgMailNewsUrl::GetParam(char * *aParam)
@@ -542,4 +559,3 @@ NS_IMETHODIMP nsMsgMailNewsUrl::SetFilePath(const char *i_DirFile)
 {
 	return m_baseURL->SetFilePath(i_DirFile);
 }
-
