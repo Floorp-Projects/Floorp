@@ -1,57 +1,68 @@
-<?xml version="1.0"?> 
+<?xml version="1.0"?> <!-- -*- Mode: HTML -*- -->
+
+<!--
+The contents of this file are subject to the Netscape Public
+License Version 1.1 (the "License"); you may not use this file
+except in compliance with the License. You may obtain a copy of
+the License at http://www.mozilla.org/NPL/
+
+Software distributed under the License is distributed on an "AS
+IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+implied. See the License for the specific language governing
+rights and limitations under the License.
+
+The Original Code is Mozilla Communicator client code, released
+March 31, 1998.
+
+The Initial Developer of the Original Code is Netscape
+Communications Corporation. Portions created by Netscape are
+Copyright (C) 1998-1999 Netscape Communications Corporation. All
+Rights Reserved.
+
+Contributor(s): Stuart Parmenter <pavlov@netscape.com>
+                Simon Fraser <sfraser@netscape.com>
+                Bill Law <law@netscape.com>
+-->
+
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://global/locale/finddialog.dtd">
-<xul:window xmlns="http://www.w3.org/TR/REC-html40"
-		xmlns.xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload="onLoad()"
-        onunload="onUnload()"
-        style="padding:5px;"
-        title="&findDialog.title;">
 
-    <script language="JavaScript" src="chrome://global/content/finddialog.js"/>
+<window xmlns:html="http://www.w3.org/TR/REC-html40"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  onload="onLoad();"
+  onunload="onUnload();"
+  title="&findDialog.title;"
+  align="vertical"
+  style="padding:5px;">
 
-    <table border="0" style="width:100%;">
-        <tr>
-            <td class="fieldlabel">
-                &findField.label;
-            </td>
-            <td align="left">
-                <input id="dialog.findKey" style="width:300px;" onkeyup="onTyping(event.which)"/>
-            </td>
-        </tr>
+  <html:script language="JavaScript" src="chrome://global/content/finddialog.js"/>
+
+  <box align="horizontal">
+    <html:label style="padding-top:5px; padding-right:5px;">&findField.label;</html:label>
+
+    <box align="vertical" style="padding:0px;">
+      <html:input id="dialog.findKey" type="text" size="30" onkeyup="onTyping(event.which)"/>
+
+      <html:div>
+        <html:input type="checkbox" id="dialog.caseSensitive"/>
+        <html:label class="disabled" for="dialog.caseSensitive">&caseSensitiveCheckbox.label;</html:label>
+      </html:div>
     
-        <tr class="checkboxrow">
-            <td align="right">
-            </td>
-            <td class="buttonlabel">
-                <input type="checkbox" id="dialog.caseSensitive"/>
-                <label class="disabled" for="dialog.caseSensitive">&caseSensitiveCheckbox.label;</label>
-            </td>
-        </tr>
-    
-        <tr>
-            <td align="right">
-            </td>
-            <td  class="buttonlabel" align="left">
-               <input type="checkbox" id="dialog.wrap"/>
-               <label class="disabled" for="dialog.wrap">&wrapCheckbox.label;</label>
-            </td>
-        </tr>
-    
-        <tr>
-            <td align="right">
-            </td>
-            <td  class="buttonlabel" align="left">
-               <input type="checkbox" id="dialog.searchBackwards"/>
-               <label class="disabled" for="dialog.searchBackwards">&backwardsCheckbox.label;</label>
-            </td>
-        </tr>
-        <tr>
-            <td align="right" colspan="2">
-                <button class="cancelbutton" id="dialog.cancel" onclick="cancel()">&cancelButton.label;</button>
-                <button class="defaultbutton" id="dialog.find" onclick="find()">&findButton.label;</button>
-            </td>
-        </tr>
-    </table>
-  
-</xul:window>
+      <html:div>
+        <html:input type="checkbox" id="dialog.wrap"/>
+        <html:label class="disabled" for="dialog.wrap">&wrapCheckbox.label;</html:label>
+      </html:div>
+      <html:div>
+        <html:input type="checkbox" id="dialog.searchBackwards"/>
+        <html:label class="disabled" for="dialog.searchBackwards">&backwardsCheckbox.label;</html:label>
+      </html:div>
+    </box>
+  </box>
+
+  <!-- used to store the find text -->
+  <foo style="display:none;" id="fBLT" value="&findButton.label;"/>
+
+  <box id="okCancelButtons"/>
+
+</window>

@@ -796,7 +796,7 @@ static nsresult OpenDialogWithArg( nsIDOMWindow     *parent,
                                                     "svs%ip",
                                                     url,
                                                     JSVAL_NULL,
-                                                    "chrome",
+                                                    "chrome,resizable=no",
                                                     (const nsIID*)(&nsISearchContext::GetIID()),
                                                     (nsISupports*)arg );
                     if ( argv ) {

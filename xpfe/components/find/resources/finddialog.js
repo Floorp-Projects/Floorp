@@ -24,8 +24,8 @@
             dialog.caseSensitive   = document.getElementById("dialog.caseSensitive");
             dialog.wrap            = document.getElementById("dialog.wrap");
             dialog.searchBackwards = document.getElementById("dialog.searchBackwards");
-            dialog.find            = document.getElementById("dialog.find");
-            dialog.cancel          = document.getElementById("dialog.cancel");
+            dialog.find            = document.getElementById("ok");
+            dialog.cancel          = document.getElementById("cancel");
             dialog.enabled         = false;
         }
 
@@ -83,6 +83,12 @@
                 return;
             }
 
+            // change OK to find
+            dialog.find.setAttribute("value", document.getElementById("fBLT").getAttribute("value"));
+
+            // setup the dialogOverlay.xul button handlers
+            doSetOKCancel(onOK, onCancel);
+
             // Save search context.
             data = window.arguments[0];
 
@@ -108,26 +114,26 @@
             data.findDialog = null;
         }
 
-        function find()
+        function onOK()
         {
             // Transfer dialog contents to data elements.
             loadData();
 
             // Search.
             finder.FindNext( data );
+
+            // don't close the window
+            return false;
         }
 
-        function cancel()
+        function onCancel()
         {
             // Close the window.
-            window.close();
+            return true;
         }
 
         function onTyping( key )
         {
-            if ( key == 13 && dialog.enabled ) {
-                find();
-            } else {
                 if ( dialog.enabled ) {
                     // Disable OK if they delete all the text.
                     if ( dialog.findKey.value == "" ) {
@@ -141,5 +147,4 @@
                         dialog.find.removeAttribute( "disabled" );
                     }
                 }
-            }
         }
