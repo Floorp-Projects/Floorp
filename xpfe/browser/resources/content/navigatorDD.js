@@ -345,17 +345,8 @@ var homeButtonObserver = {
     {
       var aData = aData.length ? aData[0] : aData;
       var url = retrieveURLFromData(aData);
-      var prefService = nsJSComponentManager.getService("component://netscape/preferences",
-                                                        "nsIPref");
-      try 
-        {
-          var prefvalue = prefService.GetBoolPref("browser.homepage.enable_home_button_drop");
-        }                                                        
-      catch(e)
-        {
-          var prefvalue = false;
-        }
-      if (!prefvalue)
+      var showDialog = nsPreferences.getBoolPref("browser.homepage.enable_home_button_drop", false);
+      if (!showDialog)
         {
           var commonDialogService = nsJSComponentManager.getService("component://netscape/appshell/commonDialogs",
                                                                     "nsICommonDialogs");
@@ -364,12 +355,12 @@ var homeButtonObserver = {
           var promptMsg = bundle.GetStringFromName("droponhomemsg");
           var checkMsg = bundle.GetStringFromName("dontremindme");
           var setHomepage = commonDialogService.ConfirmCheck(window, promptTitle, promptMsg, checkMsg, checkValue);
-          prefService.SetBoolPref("browser.homepage.enable_home_button_drop", checkValue.value);
+          nsPreferences.setBoolPref("browser.homepage.enable_home_button_drop", checkValue.value);
         }
       else
         var setHomepage = true;
       if (setHomepage)
-        prefService.SetUnicharPref("browser.startup.homepage", url);                                           
+        nsPreferences.setUnicharPref("browser.startup.homepage", url);                                           
     },
     
   onDragOver: function (aEvent, aFlavour)
@@ -392,9 +383,7 @@ var homeButtonObserver = {
         
   onDragStart: function ()
     {
-      var prefService = nsJSComponentManager.getService("component://netscape/preferences",
-                                                        "nsIPref");
-      var homepage = prefService.CopyUnicharPref("browser.startup.homepage");                                                        
+      var homepage = nsPreferences.copyUnicharPref("browser.startup.homepage", "about:blank");
       var flavourList = { };
       flavourList["text/unicode"] = { width: 2, data: homepage };
       flavourList["text/x-moz-url"] = { width: 2, data: homepage };
