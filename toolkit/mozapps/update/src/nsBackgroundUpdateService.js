@@ -86,7 +86,7 @@ nsUpdateService.prototype = {
     
   /////////////////////////////////////////////////////////////////////////////
   // nsIUpdateService
-  watchForUpdates: function ()
+  watchForUpdates: function nsUpdateService_watchForUpdates ()
   {
     // This is called when the app starts, so check to see if the time interval
     // expired between now and the last time an automated update was performed.
@@ -107,34 +107,8 @@ nsUpdateService.prototype = {
       this._makeTimer(interval - timeSinceLastCheck);
   },
   
-  checkForUpdates: function (aItems, aItemCount, aUpdateTypes, aSourceEvent, aParentWindow)
+  checkForUpdates: function nsUpdateService_checkForUpdates (aItems, aItemCount, aUpdateTypes, aSourceEvent, aParentWindow)
   {
-    if (aSourceEvent == nsIUpdateService.SOURCE_EVENT_USER) {
-      if (aUpdateTypes & nsIUpdateItem.TYPE_APP) 
-        shouldShowMessage = !this._appUpdatesEnabled;
-      else if (aUpdateTypes & nsIUpdateItem.TYPE_ADDON || 
-               aUpdateTypes & nsIUpdateItem.TYPE_EXTENSION ||
-               aUpdateTypes & nsIUpdateItem.TYPE_THEME) 
-        shouldShowMessage = !this._extUpdatesEnabled;
-      else if (aUpdateTypes & nsIUpdateItem.TYPE_ANY) 
-        shouldShowMessage = !this._appUpdatesEnabled && !this._extUpdatesEnabled;
-    
-      if (shouldShowMessage) {
-        var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
-                            .getService(Components.interfaces.nsIStringBundleService);
-        var bundle = sbs.createBundle("chrome://mozapps/locale/update/update.properties");
-        var brandBundle = sbs.createBundle("chrome://global/locale/brand.properties");
-        var title = bundle.GetStringFromName("updateDisabledTitle");
-        var brandShortName = brandBundle.GetStringFromName("brandShortName");
-        var params = [brandShortName];
-        var message = bundle.formatStringFromName("updateDisabledMessage", params, params.length);
-        var ps = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
-                          .getService(Components.interfaces.nsIPromptService);
-        ps.alert(aParentWindow, title, message);
-        return;
-      }
-    }
-    
     switch (aSourceEvent) {
     case nsIUpdateService.SOURCE_EVENT_MISMATCH:
     case nsIUpdateService.SOURCE_EVENT_USER:
@@ -168,7 +142,20 @@ nsUpdateService.prototype = {
     }  
   },
   
-  checkForUpdatesInternal: function (aItems, aItemCount, aUpdateTypes, aSourceEvent)
+  _canUpdate: function (aPreference, aSourceEvent)
+  {
+    var canUpdate = false;
+    if (aPreference) 
+      canUpdate = true;
+    else {
+      // If app updates are disabled, then still proceed if this is a mismatch or user generated
+      // event (if the user asks to update, then we should update, regardless of preference setting)
+      canUpdate = aSourceEvent != Components.interfaces.nsIUpdateService.SOURCE_EVENT_BACKGROUND;
+    }
+    return canUpdate;
+  },
+  
+  checkForUpdatesInternal: function nsUpdateService_checkForUpdatesInternal (aItems, aItemCount, aUpdateTypes, aSourceEvent)
   {
     // Listen for notifications sent out by the app updater (implemented here) and the
     // extension updater (implemented in nsExtensionItemUpdater)
@@ -176,11 +163,12 @@ nsUpdateService.prototype = {
       this._updateObserver.destroy();
       this._updateObserver = null;
     }
+    var canUpdate;
     this._updateObserver = new nsUpdateObserver(aUpdateTypes, aSourceEvent, this);
     var os = Components.classes["@mozilla.org/observer-service;1"]
                        .getService(Components.interfaces.nsIObserverService);
     if ((aUpdateTypes & nsIUpdateItem.TYPE_ANY) || (aUpdateTypes & nsIUpdateItem.TYPE_APP)) {
-      if (this._appUpdatesEnabled) {
+      if (this._canUpdate(this._appUpdatesEnabled, aSourceEvent)) {
         os.addObserver(this._updateObserver, "Update:App:Ended", false);
 
         var dsURI = this._pref.getComplexValue(PREF_UPDATE_APP_URI, 
@@ -198,7 +186,7 @@ nsUpdateService.prototype = {
       }
     }
     if (!(aUpdateTypes & nsIUpdateItem.TYPE_APP)) { // TYPE_EXTENSION, TYPE_ANY, etc.
-      if (this._extUpdatesEnabled) {
+      if (this._canUpdate(this._extUpdatesEnabled, aSourceEvent)) {
         os.addObserver(this._updateObserver, "Update:Extension:Item-Ended", false);
         os.addObserver(this._updateObserver, "Update:Extension:Ended", false);
 
@@ -218,19 +206,19 @@ nsUpdateService.prototype = {
   },
   
   _rdf: null,
-  _ncR: function (aProperty)
+  _ncR: function nsUpdateService__ncR (aProperty)
   {
     return this._rdf.GetResource("http://home.netscape.com/NC-rdf#" + aProperty);
   },
   
-  _getProperty: function (aDS, aAppID, aProperty)
+  _getProperty: function nsUpdateService__getProperty (aDS, aAppID, aProperty)
   {
     var app = this._rdf.GetResource("urn:mozilla:app:" + aAppID);
     return aDS.GetTarget(app, this._ncR(aProperty), true).QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
   },
 
   // This is called when the remote update datasource is ready to be parsed.  
-  datasourceLoaded: function (aDataSource)
+  datasourceLoaded: function nsUpdateService_datasourceLoaded (aDataSource)
   {
     if (!this._rdf) {
       this._rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"]
@@ -288,7 +276,7 @@ nsUpdateService.prototype = {
     os.notifyObservers(null, "Update:App:Ended", "");
   },
   
-  datasourceError: function ()
+  datasourceError: function nsUpdateService_datasourceError ()
   {
     var os = Components.classes["@mozilla.org/observer-service;1"]
                       .getService(Components.interfaces.nsIObserverService);
@@ -359,7 +347,7 @@ nsUpdateService.prototype = {
   
   /////////////////////////////////////////////////////////////////////////////
   // nsITimerCallback
-  notify: function (aTimer)
+  notify: function nsUpdateService_notify (aTimer)
   {
     this.checkForUpdatesInternal([], 0, nsIUpdateItem.TYPE_ANY, 
                                  nsIUpdateService.SOURCE_EVENT_BACKGROUND);
@@ -367,7 +355,7 @@ nsUpdateService.prototype = {
   
   /////////////////////////////////////////////////////////////////////////////
   // nsIObserver
-  observe: function (aSubject, aTopic, aData)
+  observe: function nsUpdateService_observe (aSubject, aTopic, aData)
   {
     switch (aTopic) {
     case "nsPref:changed":
@@ -429,7 +417,7 @@ nsUpdateService.prototype = {
 
   /////////////////////////////////////////////////////////////////////////////
   // nsUpdateService
-  _makeTimer: function (aDelay)
+  _makeTimer: function nsUpdateService__makeTimer (aDelay)
   {
     if (this._timer) 
       this._timer.cancel();
@@ -452,7 +440,7 @@ nsUpdateService.prototype = {
                     d.getUTCMilliseconds());
   },
   
-  _clearAppUpdatePrefs: function ()
+  _clearAppUpdatePrefs: function nsUpdateService__clearAppUpdatePrefs ()
   {
     // Unset prefs used by the update service to signify application updates
     if (this._pref.prefHasUserValue(PREF_UPDATE_APP_UPDATESAVAILABLE))
@@ -467,7 +455,7 @@ nsUpdateService.prototype = {
 
   /////////////////////////////////////////////////////////////////////////////
   // nsISupports
-  QueryInterface: function (aIID) 
+  QueryInterface: function nsUpdateService_QueryInterface (aIID) 
   {
     if (!aIID.equals(Components.interfaces.nsIUpdateService) &&
         !aIID.equals(Components.interfaces.nsIObserver) && 
@@ -514,7 +502,7 @@ nsUpdateObserver.prototype = {
   
   /////////////////////////////////////////////////////////////////////////////
   // nsIObserver
-  observe: function (aSubject, aTopic, aData)
+  observe: function nsUpdateObserver_observe (aSubject, aTopic, aData)
   {
     switch (aTopic) {
     case "Update:Extension:Started":
@@ -545,7 +533,7 @@ nsUpdateObserver.prototype = {
     }
   },
   
-  notify: function (aTimer)
+  notify: function nsUpdateObserver_notify (aTimer)
   {
     // The Inline Browser Update UI uses this notification to refresh its update 
     // UI if necessary.
@@ -585,7 +573,7 @@ nsUpdateObserver.prototype = {
     this.destroy();
   },
 
-  destroy: function ()
+  destroy: function nsUpdateObserver_destroy ()
   {
     var os = Components.classes["@mozilla.org/observer-service;1"]
                         .getService(Components.interfaces.nsIObserverService);
@@ -597,11 +585,11 @@ nsUpdateObserver.prototype = {
 
   ////////////////////////////////////////////////////////////////////////////
   // nsIAlertListener
-  onAlertFinished: function ()
+  onAlertFinished: function nsUpdateObserver_onAlertFinished ()
   {
   },
   
-  onAlertClickCallback: function (aCookie)
+  onAlertClickCallback: function nsUpdateObserver_onAlertClickCallback (aCookie)
   {
     var updates = Components.classes["@mozilla.org/updates/update-service;1"]
                             .getService(Components.interfaces.nsIUpdateService);
@@ -612,7 +600,7 @@ nsUpdateObserver.prototype = {
   
   /////////////////////////////////////////////////////////////////////////////
   // nsISupports
-  QueryInterface: function (aIID) 
+  QueryInterface: function nsUpdateObserver_QueryInterface (aIID) 
   {
     if (!aIID.equals(Components.interfaces.nsIObserver) &&
         !aIID.equals(Components.interfaces.nsIAlertListener) && 
@@ -664,37 +652,48 @@ function UpdateItem ()
 }
 
 UpdateItem.prototype = {
-  init: function (aID, aVersion, aName, aRow, aUpdateURL, aIconURL, aUpdateRDF, aType)
+  init: function UpdateItem_init (aID, aVersion, aMinAppVersion, aMaxAppVersion, aName, aRow, aUpdateURL, aIconURL, aUpdateRDF, aType)
   {
-    this._id = aID;
-    this._version = aVersion;
-    this._name = aName;
-    this._row = aRow;
-    this._updateURL = aUpdateURL;
-    this._iconURL = aIconURL;
-    this._updateRDF = aUpdateRDF;
-    this._type = aType;
+    this._id            = aID;
+    this._version       = aVersion;
+    this._minAppVersion = aMinAppVersion;
+    this._maxAppVersion = aMaxAppVersion;
+    this._name          = aName;
+    this._row           = aRow;
+    this._updateURL     = aUpdateURL;
+    this._iconURL       = aIconURL;
+    this._updateRDF     = aUpdateRDF;
+    this._type          = aType;
   },
   
-  get id()        { return this._id;        },
-  get version()   { return this._version;   },
-  get name()      { return this._name;      },
-  get row()       { return this._row;       },
-  get updateURL() { return this._updateURL; },
-  get iconURL()   { return this._iconURL    },
-  get updateRDF() { return this._updateRDF; },
-  get type()      { return this._type;      },
+  get id()            { return this._id;            },
+  get version()       { return this._version;       },
+  get minAppVersion() { return this._minAppVersion; },
+  get maxAppVersion() { return this._maxAppVersion; },
+  get name()          { return this._name;          },
+  get row()           { return this._row;           },
+  get updateURL()     { return this._updateURL;     },
+  get iconURL()       { return this._iconURL        },
+  get updateRDF()     { return this._updateRDF;     },
+  get type()          { return this._type;          },
 
   get objectSource()
   {
-    return { id: this._id, version: this._version, name: this._name, 
-             row: this._row, updateURL: this._updateURL, 
-             iconURL: this._iconURL, type: this._type }.toSource();
+    return { id             : this._id, 
+             version        : this._version, 
+             minAppVersion  : this._minAppVersion,
+             maxAppVersion  : this._maxAppVersion,
+             name           : this._name, 
+             row            : this._row, 
+             updateURL      : this._updateURL, 
+             iconURL        : this._iconURL, 
+             type           : this._type 
+           }.toSource();
   },
 
   /////////////////////////////////////////////////////////////////////////////
   // nsISupports
-  QueryInterface: function (aIID) 
+  QueryInterface: function UpdateItem_QueryInterface (aIID) 
   {
     if (!aIID.equals(Components.interfaces.nsIUpdateItem) &&
         !aIID.equals(Components.interfaces.nsISupports))
@@ -714,7 +713,7 @@ nsVersionChecker.prototype = {
   // -ve      if B is newer
   // equal    if A == B
   // +ve      if A is newer
-  compare: function (aVersionA, aVersionB)
+  compare: function nsVersionChecker_compare (aVersionA, aVersionB)
   {
     var a = this._decomposeVersion(aVersionA);
     var b = this._decomposeVersion(aVersionB);
@@ -726,7 +725,7 @@ nsVersionChecker.prototype = {
   // 
   // a.b.c+ -> a*1000 + b*100 + c*10 + 1*[+]
   // i.e 0.6.1+ = 6 * 100 + 1 * 10 = 611. 
-  _decomposeVersion: function (aVersion)
+  _decomposeVersion: function nsVersionChecker__decomposeVersion (aVersion)
   {
     var result = 0;
     if (aVersion.charAt(aVersion.length-1) == "+") {
@@ -742,7 +741,7 @@ nsVersionChecker.prototype = {
     return result;
   },
   
-  _getValidInt: function (aPartString)
+  _getValidInt: function nsVersionChecker__getValidInt (aPartString)
   {
     var integer = parseInt(aPartString);
     if (isNaN(integer))
@@ -750,7 +749,7 @@ nsVersionChecker.prototype = {
     return integer;
   },
   
-  isValidVersion: function (aVersion)
+  isValidVersion: function nsVersionChecker_isValidVersion (aVersion)
   {
     var parts = aVersion.split(".");
     if (parts.length == 0)
@@ -770,7 +769,7 @@ nsVersionChecker.prototype = {
 
   /////////////////////////////////////////////////////////////////////////////
   // nsISupports
-  QueryInterface: function (aIID) 
+  QueryInterface: function nsVersionChecker_QueryInterface (aIID) 
   {
     if (!aIID.equals(Components.interfaces.nsIVersionChecker) &&
         !aIID.equals(Components.interfaces.nsISupports))

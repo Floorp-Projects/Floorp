@@ -380,6 +380,7 @@ var gUpdatePage = {
         var item = Components.classes["@mozilla.org/updates/item;1"]
                              .createInstance(Components.interfaces.nsIUpdateItem);
         item.init(appID, updates.appUpdateVersion,
+                  "", "", 
                   brandShortName, -1, updates.appUpdateURL, 
                   "chrome://mozapps/skin/update/icon32.png", 
                   "", nsIUpdateItem.TYPE_APP);
