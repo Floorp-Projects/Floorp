@@ -226,6 +226,7 @@ NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
   gtk_widget_set_name(mWidget, "nsWindow");
   mCursor = eCursor_select;
   SetCursor(eCursor_standard);
+  return NS_OK;
 }
 
 

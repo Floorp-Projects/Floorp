@@ -456,6 +456,7 @@ gint nsGtkWidget_Scrollbar_Callback(GtkWidget *w, gpointer p)
   sevent.message = NS_SCROLLBAR_POS;
   sevent.widget  = (nsWidget *) p;
   widget->OnScroll(sevent, GTK_ADJUSTMENT(w)->value);
+  return 0; /* XXX */
 }
 
 
@@ -478,6 +479,7 @@ gint nsGtkWidget_Expose_Callback(GtkWidget *w, gpointer p)
   pevent.rect = (nsRect *)&rect;
   widgetWindow->OnPaint(pevent);
 #endif
+  return 0; /* XXX */
 }
 
 //==============================================================
@@ -522,6 +524,7 @@ gint nsGtkWidget_Text_Callback(GtkWidget *w, GdkEvent* event, gpointer p)
   for (len = 0; len < cbs->text->length; len++)
     cbs->text->ptr[len] = '*';
 #endif
+  return 0; /* XXX */
 }
 
 //==============================================================

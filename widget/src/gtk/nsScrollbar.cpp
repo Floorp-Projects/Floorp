@@ -265,6 +265,7 @@ int nsScrollbar::AdjustScrollBarPosition(int aPosition)
   int cap = maxRange - sliderSize;
   return aPosition > cap ? cap : aPosition;
 #endif
+  return 0;  /* XXX */
 }
 
 //-------------------------------------------------------------------------
