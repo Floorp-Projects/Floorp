@@ -313,6 +313,7 @@ nsGenericDOMDataNode::AppendData(const nsString& aData)
 {
 #if 1
   // Allocate new buffer
+  nsresult result = NS_OK;
   PRInt32 dataLength = aData.Length();
   PRInt32 textLength = mText.GetLength();
   PRInt32 newSize = textLength + dataLength;
@@ -330,26 +331,34 @@ nsGenericDOMDataNode::AppendData(const nsString& aData)
   nsCRT::memcpy(to + textLength, aData.GetUnicode(),
                 sizeof(PRUnichar) * dataLength);
 
+  nsCOMPtr<nsITextContent> textContent = do_QueryInterface(mContent, &result);
+
   // Switch to new buffer
-  mText.SetTo(to, newSize);
+  // Dont do notification in SetText, since we will do it later
+  if (NS_SUCCEEDED(result)) {
+    result = textContent->SetText(to, newSize, PR_FALSE);
+  }
+  else {
+    result = SetText(to, newSize, PR_FALSE);
+  }
 
   delete [] to;
 
   // Trigger a reflow
   if (nsnull != mDocument) {
     nsTextContentChangeData* tccd = nsnull;
-    nsresult rv = NS_NewTextContentChangeData(&tccd);
-    if (NS_SUCCEEDED(rv)) {
+    result = NS_NewTextContentChangeData(&tccd);
+    if (NS_SUCCEEDED(result)) {
       tccd->SetData(nsITextContentChangeData::Append, textLength, dataLength);
-      mDocument->ContentChanged(mContent, tccd);
+      result = mDocument->ContentChanged(mContent, tccd);
       NS_RELEASE(tccd);
     }
     else {
-      mDocument->ContentChanged(mContent, nsnull);
+      result = mDocument->ContentChanged(mContent, nsnull);
     }
   }
 
-  return NS_OK;
+  return result;
 #else
   return ReplaceData(mText.GetLength(), 0, aData);
 #endif
