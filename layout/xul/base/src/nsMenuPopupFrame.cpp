@@ -19,6 +19,7 @@
 
 #include "nsMenuPopupFrame.h"
 #include "nsXULAtoms.h"
+#include "nsHTMLAtoms.h"
 #include "nsIContent.h"
 #include "prtypes.h"
 #include "nsIAtom.h"
@@ -74,6 +75,16 @@ nsMenuPopupFrame::Init(nsIPresContext&  aPresContext,
                                                   PR_FALSE,
                                                   getter_AddRefs(menuStyle));
   rv = nsBoxFrame::Init(aPresContext, aContent, aParent, menuStyle, aPrevInFlow);
+
+  // We default to being vertical.
+  nsString value;
+  mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::align, value);
+  mHorizontal = PR_FALSE;
+  if (value.EqualsIgnoreCase("vertical"))
+    mHorizontal = PR_FALSE;
+  else if (value.EqualsIgnoreCase("horizontal"))
+    mHorizontal = PR_TRUE;
+
   CreateViewForFrame(aPresContext, this, menuStyle, PR_TRUE);
 
   // Now that we've made a view, remove it and insert it at the correct
