@@ -42,14 +42,14 @@ extern void info_callback(png_structp png_ptr, png_infop info);
 
 extern void il_create_alpha_mask( il_container *, int, int, int ); 
 
-
+#if defined(PNG_LIBPNG_VER) && (PNG_LIBPNG_VER < 100)
 extern png_structp png_create_read_struct(png_charp user_png_ver, png_voidp, png_error_ptr, png_error_ptr);
 extern png_infop png_create_info_struct(png_structp png_ptr);
 
 extern void png_destroy_read_struct(png_structpp, png_infopp, png_infopp);
 extern void png_set_progressive_read_fn(png_structp, png_voidp, png_progressive_info_ptr, png_progressive_row_ptr, png_progressive_end_ptr);
 extern void png_process_data(png_structp, png_infop, png_bytep, png_size_t);
-
+#endif
 
 /*-----------------------------*/
 int

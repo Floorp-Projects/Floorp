@@ -74,11 +74,30 @@ CPPSRCS		= color.cpp \
 
 EXPORTS		= PIMGCB.h PPSIMGCB.h
 
-REQUIRES	= jtools java zlib nspr dbm jpeg util img png layer js xpcom
+REQUIRES	= jtools java nspr dbm util img layer js xpcom
 
-LOCAL_INCLUDES	= -I../png -I. -I$(DEPTH)/dist/public/zlib
+LOCAL_INCLUDES	= -I.
+EXTRA_LIBS	= 
 
-EXTRA_LIBS	= $(DIST)/lib/libzlib.a $(DIST)/lib/libpng.a
+ifndef MOZ_NATIVE_JPEG
+REQUIRES	+= jpeg
+endif
+
+ifdef MOZ_NATIVE_PNG
+EXTRA_LIBS	+= -lpng
+else
+REQUIRES	+= png
+LOCAL_INCLUDES	+= -I../png
+EXTRA_LIBS	+= $(DIST)/lib/libpng.a
+endif
+
+ifdef MOZ_NATIVE_ZLIB
+EXTRA_LIBS	+= -lz
+else
+REQUIRES	+= zlib
+LOCAL_INCLUDES	+= -I$(DEPTH)/dist/public/zlib
+EXTRA_LIBS 	+= $(DIST)/lib/libzlib.a
+endif
 
 #
 # Generate MIMGCB.c (and similar sources) here.

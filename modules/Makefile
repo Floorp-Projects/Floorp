@@ -30,11 +30,14 @@ DIRS = \
 	rdf \
 	xml \
 	schedulr \
-	zlib \
 	li \
 	progress \
 	plugin \
 	$(NULL)
+
+ifndef MOZ_NATIVE_ZLIB
+DIRS += zlib
+endif
 
 ifndef MOZ_SECURITY
 DIRS +=	security
