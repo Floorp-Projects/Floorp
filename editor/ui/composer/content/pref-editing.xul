@@ -22,6 +22,7 @@
   -->
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://editor/skin/EditorDialog.css" type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://editor/locale/pref-editing.dtd">
@@ -34,11 +35,12 @@
 
   <script lanugage="JavaScript">
   <![CDATA[
-    _elementIDs = ["editorAuthor", "textData", "linkData", "aLinkData", "fLinkData", "backgroundData", "useCustomColors", "backroundImageField"];
+    _elementIDs = ["editorAuthor", "useCustomColors", "textData", "linkData", "aLinkData", "fLinkData", "backgroundColorData", "backgroundImageData"];
   ]]>
   </script>
 
   <script language="JavaScript" src="chrome://editor/content/pref-composer.js"></script>
+  <script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js"/>
   <script language="JavaScript" src="chrome://global/content/strres.js"></script>
   <script language="JavaScript" src="chrome://communicator/content/pref/prefutilities.js"></script>
         
@@ -53,114 +55,114 @@
 
   <titledbox orient="vertical">
     <title value="&pageColorHeader;"/> 
-
-    <box>
+    <box orient="horizontal">
       <box orient="vertical">
         <radiogroup id="useCustomColors" orient="vertical" autostretch="never"  
                     pref="true" preftype="bool" prefstring="editor.use_custom_colors"
                     prefattribute="data">
-          <radio group="useCustomColors" data="false" value="&useNavigator.label;" accesskey="&useNavigator.accesskey;" oncommand="useNavigatorColors();"/>
-          <radio group="useCustomColors" data="true" value="&useCustomColors.label;" accesskey="&useCustomColors.accesskey;" oncommand="useCustomColors()"/>
+          <radio group="useCustomColors" id="DefaultColorsRadio"
+              data="false" 
+              value="&defaultColorsRadio.label;" 
+              accesskey="&defaultColors.accesskey;"
+              oncommand="UseDefaultColors();"/>
+          <text class="label" value="&defaultColorsMsg.label;" style="margin-left: 26px"/>
+          <radio group="useCustomColors" id="CustomColorsRadio" 
+              data="true" value="&customColorsRadio.label;"
+              accesskey="&customColors.accesskey;" 
+              oncommand="UseCustomColors()"/>
         </radiogroup>
-       <grid class="indent">
-          <columns>
-            <column flex="1"/>
-            <column/>
-          </columns>
-          <rows>
-            <row>
-              <text class="label" id="textLabel" value="&NormalText.label;&colon.char;" accesskey="&NormalText.accesskey;" for="textMenu"/>
-              <menu id="textMenu" allowevents="true" class="colorpicker">
-                <html:div id="textDiv" style="width:30px; background-color:white"/>
-                <titledbutton class="popup" align="right"/>
-                <menupopup id="textPopup">
-                  <colorpicker allowevents="true" id="textPicker" palettename="standard" onclick="setColorWell(this.parentNode.parentNode, 'normaltext', false);"/>
-                </menupopup>
-              </menu>
-              <data id="textData" pref="true" preftype="color" prefstring="editor.text_color" prefattribute="value" wsm_attributes="value"/>
-            </row>
-  
-            <row>
-              <text class="label" id="linkLabel" value="&LinkText.label;&colon.char;" accesskey="&LinkText.accesskey;" for="linkMenu"/>
-              <menu id="linkMenu" allowevents="true" class="colorpicker">
-                <html:div id="linkDiv" style="width:30px; background-color:white"/>
-                <titledbutton class="popup" align="right"/>
-                <menupopup id="linkPopup">
-                  <colorpicker allowevents="true" id="linkPicker" palettename="standard" onclick="setColorWell(this.parentNode.parentNode, 'linktext', false);"/>
-                </menupopup>
-              </menu>
-              <data id="linkData" pref="true" preftype="color" prefstring="editor.link_color" prefattribute="value" wsm_attributes="value"/>
-            </row>
-  
-            <row>
-              <text class="label" id="aLinkLabel" value="&ActiveLinkText.label;&colon.char;" accesskey="&ActiveLinkText.accesskey;" for="aLinkMenu"/>
-              <menu id="aLinkMenu" allowevents="true" class="colorpicker">
-                <html:div id="aLinkDiv" style="width:30px; background-color:white"/>
-                <titledbutton class="popup" align="right"/>
-                <menupopup id="aLinkPopup">
-                  <colorpicker allowevents="true" id="aLinkPicker" palettename="standard" onclick="setColorWell(this.parentNode.parentNode, 'activelinktext', false);"/>
-                </menupopup>
-              </menu>
-              <data id="aLinkData" pref="true" preftype="color" prefstring="editor.active_link_color" prefattribute="value" wsm_attributes="value"/>
-            </row>
-            <row>
-              <text class="label" id="fLinkLabel" value="&FollowedLinkText.label;&colon.char;" accesskey="&FollowedLinkText.accesskey;" for="fLinkMenu"/>
-              <menu id="fLinkMenu" allowevents="true" class="colorpicker">
-                <html:div id="fLinkDiv" style="width:30px; background-color:white"/>
-                <titledbutton class="popup" align="right"/>
-                <menupopup id="fLinkPopup">
-                  <colorpicker allowevents="true" id="fLinkPicker" palettename="standard" onclick="setColorWell(this.parentNode.parentNode, 'followedlinktext', false);"/>
-                </menupopup>
-              </menu>
-              <data id="fLinkData" pref="true" preftype="color" prefstring="editor.followed_link_color" prefattribute="value" wsm_attributes="value"/>
-            </row>
-            <row>
-              <text class="label" id="backgroundLabel" value="&BackgroundColor.label;&colon.char;" accesskey="&BackgroundColor.accesskey;" for="backgroundMenu"/>
-              <menu id="backgroundMenu" allowevents="true" class="colorpicker">
-                <html:div id="backgroundDiv" style="width:30px; background-color:white"/>
-                <titledbutton class="popup" align="right"/>
-                <menupopup id="backgroundPopup">
-                  <colorpicker allowevents="true" id="backgroundPicker" palettename="standard" onclick="setColorWell(this.parentNode.parentNode, 'backgroundcolor', true);"/>
-                </menupopup>
-              </menu>
-              <data id="backgroundData" pref="true" preftype="color" prefstring="editor.background_color" prefattribute="value" wsm_attributes="value"/>
-            </row>
-          </rows>
-        </grid>        
-      </box>
-        
-      <separator orient="vertical"/>
-      
-      <box orient="vertical" flex="1">
-        <box />
-        <separator orient="vertical"/>
-        
-        <box class="inset" id="backgroundcolor" orient="vertical" flex="1">
-          <separator/>
-          <text class="label" id="normaltext" value="&NormalText.label;"/>
-          <separator class="thin"/>
-          <text class="label" id="linktext" value="&LinkText.label;"/>
-          <separator class="thin"/>
-          <text class="label" id="activelinktext" value="&ActiveLinkText.label;"/>
-          <separator class="thin"/>
-          <text class="label" id="followedlinktext" value="&FollowedLinkText.label;"/>
-          <separator/>
+        <spring class="bigspacer"/>
+        <box class="big-left-margin">
+          <grid>
+            <columns><column/><column/></columns>
+            <rows>
+              <row valign="middle" autostretch="never">
+                <text class="label" id="Text" value="&normalText.label;&colon.character;" />
+                <stack>
+                  <button id="TextButton" class="dialog color-button" onclick="GetColorAndUpdate('textCW')"/>
+    	            <box autostretch="never" valign="middle" mousethrough="always">
+                    <spring class="smallspacer"/>
+                    <spring id="textCW" class="color-well"/>
+                    <image class="popup-trigger"/>
+                  </box>
+                </stack>
+                <data id="textData" pref="true" preftype="color" prefstring="editor.text_color" prefattribute="value"/>
+              </row>
+              <row valign="middle" autostretch="never">
+                <text class="label" id="Link" value="&linkText.label;&colon.character;" />
+                <stack>
+                  <button id="LinkButton" class="dialog color-button" onclick="GetColorAndUpdate('linkCW')"/>
+    	            <box autostretch="never" valign="middle" mousethrough="always">
+                    <spring class="smallspacer"/>
+                    <spring id="linkCW" class="color-well"/>
+                    <image class="popup-trigger"/>
+                  </box>
+                </stack>
+                <data id="linkData" pref="true" preftype="color" prefstring="editor.link_color" prefattribute="value"/>
+              </row>
+              <row valign="middle" autostretch="never">
+                <text class="label" id="Active" value="&activeLinkText.label;&colon.character;" />
+                <stack>
+                  <button id="ActiveLinkButton" class="dialog color-button" onclick="GetColorAndUpdate('activeCW')"/>
+    	            <box autostretch="never" valign="middle" mousethrough="always">
+                    <spring class="smallspacer"/>
+                    <spring id="activeCW" class="color-well"/>
+                    <image class="popup-trigger"/>
+                  </box>
+                </stack>
+                <data id="aLinkData" pref="true" preftype="color" prefstring="editor.active_link_color" prefattribute="value"/>
+              </row>
+              <row valign="middle" autostretch="never">
+                <text class="label" id="Visited" value ="&visitedLinkText.label;&colon.character;" />
+                <stack>
+                  <button id="VisitedLinkButton" class="dialog color-button" onclick="GetColorAndUpdate('visitedCW')"/>
+    	            <box autostretch="never" valign="middle" mousethrough="always">
+                    <spring class="smallspacer"/>
+                    <spring id="visitedCW" class="color-well"/>
+                    <image class="popup-trigger"/>
+                  </box>
+                  <data id="fLinkData" pref="true" preftype="color" prefstring="editor.followed_link_color" prefattribute="value"/>
+                </stack>
+              </row>
+              <row valign="middle" autostretch="never">
+                <text class="label" id="Background" value="&background.label;" />
+                <stack>
+                  <button id="BackgroundButton" class="dialog color-button" onclick="GetColorAndUpdate('backgroundCW')"/>
+    	            <box autostretch="never" valign="middle" mousethrough="always">
+                    <spring class="smallspacer"/>
+                    <spring id="backgroundCW" class="color-well"/>
+                    <image class="popup-trigger"/>
+                  </box>
+                </stack>
+                <data id="backgroundColorData" pref="true" preftype="color" prefstring="editor.background_color" prefattribute="value"/>
+              </row>
+            </rows>
+          </grid>
+          <spring flex="1"/>
         </box>
       </box>
-      
-    </box>                       
-
+      <box orient="vertical" id="ColorPreview" flex="1">
+        <spring flex="1"/>
+        <text class="label larger" id="NormalText"      value="&normalText.label;"/>
+        <spring flex="1"/>
+        <text class="label larger" id="LinkText"        value="&linkText.label;"/>
+        <spring flex="1"/>
+        <text class="label larger" id="ActiveLinkText"  value="&activeLinkText.label;"/>
+        <spring flex="1"/>
+        <text class="label larger" id="VisitedLinkText" value="&visitedLinkText.label;"/>
+        <spring flex="1"/>
+      </box>
+    </box>
+    <spring class="spacer"/>
     <separator class="thin"/>
 
-    <!-- a good idea here might be to load this image into the bg of the preview
-         area if it is available (locally, or network connection is open) -->    
-    <text class="label" value="&defaultBackgroundImage.label;" accesskey="&defaultBackgroundImage.accesskey;"/>
-    <box autostretch="never">
-      <textfield id="backroundImageField" flex="1" 
-                 pref="true" preftype="string"
-                 prefstring="editor.default_background_image" 
-                 prefattribute="value"/>
-      <button class="dialog" value="&chooseFile.label;" accesskey="&chooseFile.accesskey;" oncommand="prefNavSelectFile('backroundImageField','choosefile',true);"/>
+    <text class="label" value="&backgroundImage.label;" accesskey="&backgroundImage.accesskey;"/>
+    <box valign="middle" autostretch="never">
+      <textfield id="BackgroundImageInput" onkeyup="ChangeBackgroundImage()"
+       style="min-width : 12em"/>
+      <button class="dialog" value="&chooseFile.label;" accesskey="&chooseFile.accesskey;" 
+              oncommand="ChooseImageFile()"/>
+      <data id="backgroundImageData" pref="true" preftype="string" prefstring="editor.default_background_image" prefattribute="value"/>
     </box>
 
  	</titledbox>

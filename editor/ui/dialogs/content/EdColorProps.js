@@ -98,19 +98,16 @@ function Startup()
   doSetOKCancel(onOK, onCancel);
 
   // Initialize default colors from browser prefs
-  var prefs = GetPrefs();
-  if (prefs && window.arguments[1])
+  var browserColors = GetDefaultBrowserColors();
+  if (browserColors)
   {
-    // XXX TODO: This is a problem! If this is false, it overrides ability to display colors set in document!!!
-//    var useDocumentColors =    prefs.GetBoolPref("browser.display.use_document_colors");
-
     // Use author's browser pref colors passed into dialog
-    defaultTextColor = window.arguments[1].TextColor;
-    defaultLinkColor = window.arguments[1].LinkColor;
+    defaultTextColor = browserColors.TextColor;
+    defaultLinkColor = browserColors.LinkColor;
     // Note: Browser doesn't store a value for ActiveLinkColor
     defaultActiveColor = defaultLinkColor;
-    defaultVisitedColor =  window.arguments[1].VisitedLinkColor;
-    defaultBackgroundColor=  window.arguments[1].BackgroundColor;
+    defaultVisitedColor =  browserColors.VisitedLinkColor;
+    defaultBackgroundColor=  browserColors.BackgroundColor;
   }
 
   InitDialog();

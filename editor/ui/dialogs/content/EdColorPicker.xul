@@ -38,6 +38,7 @@
   <script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js"/>
   <script language="JavaScript" src="chrome://editor/content/EdColorPicker.js"/>
   <script language="JavaScript" src="chrome://global/content/dialogOverlay.js" />
+  <script language="javascript" src="chrome://global/content/strres.js"/>
 
   <broadcaster id="args" value=""/>
   <spring id="location" offsetY="50" persist="offsetX offsetY"/>

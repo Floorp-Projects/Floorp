@@ -5,24 +5,21 @@
 <!ENTITY  authorName.accesskey      "a">
 <!ENTITY  pageColorHeader           "Default Page Colors">
 
-<!ENTITY  NormalText.label          "Normal text">
-<!ENTITY  NormalText.accesskey      "n">
-<!ENTITY  LinkText.label            "Link text">
-<!ENTITY  LinkText.accesskey        "l">
-<!ENTITY  ActiveLinkText.label      "Active link text">
-<!ENTITY  ActiveLinkText.accesskey  "c">
-<!ENTITY  FollowedLinkText.label    "Followed link text">
-<!ENTITY  FollowedLinkText.accesskey "f">
-<!ENTITY  BackgroundColor.label     "Background color">
-<!ENTITY  BackgroundColor.accesskey "b">
-<!ENTITY  colon.char                ":">
+<!ENTITY defaultColorsRadio.label   "Reader's default colors">
+<!ENTITY defaultColors.accesskey    "d">
+<!ENTITY defaultColorsMsg.label     "(Don't set colors in page)">
+<!ENTITY customColorsRadio.label    "Use custom colors:">
+<!ENTITY customColors.accesskey     "c">
 
-<!ENTITY  useNavigator.label        "Use browser colors (don't specify)">
-<!ENTITY  useNavigator.accesskey    "w">
-<!ENTITY  useCustomColors.label     "Use custom colors:">
-<!ENTITY  useCustomColors.accesskey "u">
+<!ENTITY normalText.label           "Normal text">
+<!ENTITY linkText.label             "Link text">
+<!ENTITY activeLinkText.label       "Active link text">
+<!ENTITY visitedLinkText.label      "Visited link text">
+<!ENTITY background.label           "Background:">
+<!ENTITY colon.character            ":">
 
-<!ENTITY  defaultBackgroundImage.label      "Default background image:">
-<!ENTITY  defaultBackgroundImage.accesskey  "g">
-<!ENTITY  chooseFile.label                  "Choose File...">
-<!ENTITY  chooseFile.accesskey              "o">
+<!ENTITY backgroundImage.label      "Background image:">
+<!ENTITY backgroundImage.accesskey  "g">
+<!ENTITY chooseFile.label           "Choose File...">
+<!ENTITY chooseFile.accesskey       "o">
+
