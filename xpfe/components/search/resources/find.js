@@ -50,7 +50,7 @@ function doFind()
 	// XXX shouldn't assume that treebody is the last child node in the tree!
 	resultsTree.childNodes[x-1].setAttribute("id", url);
 
-	resultsTree.childNodes[x-1].setAttribute("open", "true");
+//	resultsTree.childNodes[x-1].setAttribute("open", "true");
 
 	dump("doFind done.\n");
 
