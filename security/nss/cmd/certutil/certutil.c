@@ -614,7 +614,6 @@ listCerts(CERTCertDBHandle *handle, char *name, PK11SlotInfo *slot,
 	    PK11_Authenticate(slot, PR_TRUE, pwarg);
     if (name) {
 	CERTCertificate *the_cert;
-/*	the_cert = PK11_FindCertFromNickname(name, NULL); */
 	the_cert = CERT_FindCertByNicknameOrEmailAddr(handle, name);
 	if (!the_cert) {
 	    the_cert = PK11_FindCertFromNickname(name, NULL);
