@@ -729,38 +729,44 @@ function parse_parseargsraw (e)
         var parseResult;
         var currentArg;
         e.currentArgIndex = 0;
+        currentArg = e.command.argNames[e.currentArgIndex];
         
         while (e.currentArgIndex < argc && e.unparsedData)
         {
-            currentArg = e.command.argNames[e.currentArgIndex];
-            if (currentArg == ":")
-            {
-                /* if everything else is optional, and we have nothing left,
-                 * then we can exit.  If *anything* is left, then all optionals
-                 * need to be satisfied. */
-                if (!stringTrim(e.unparsedData))
-                {
-                    initOptionals();
-                    return true;
-                }
-            }
-            else
+            if (currentArg != ":")
             {
                 if (!this.parseArgument (e, currentArg))
                     return false;
             }
             ++e.currentArgIndex;
+            currentArg = e.command.argNames[e.currentArgIndex];
         }
 
-        if (e.currentArgIndex < argc &&
-            e.command.argNames[e.currentArgIndex] != ":")
+        if (e.currentArgIndex < argc && currentArg != ":")
         {
+            /* parse loop completed because it ran out of data.  We haven't
+             * parsed all of the declared arguments, and we're not stopped
+             * at an optional marker, so we must be missing something
+             * required... */
             e.parseError = getMsg(MSN_ERR_REQUIRED_PARAM, 
-                                  e.command.argNames[e.currentArgIndex + 1]);
+                                  e.command.argNames[e.currentArgIndex]);
+            return false;
         }
 
         if (e.unparsedData)
+        {
+            /* parse loop completed with unparsed data, which means we've
+             * successfully parsed all arguments declared.  Whine about the
+             * extra data... */
             display (getMsg(MSN_EXTRA_PARAMS, e.unparsedData), MT_WARN);
+        }
+        else 
+        {
+            /* we've got no unparsed data, and we're not missing a required
+             * argument, go back and fill in |null| for any optional arguments
+             * not present on the comand line. */
+            initOptionals();
+        }
     }
     else
     {
