@@ -104,7 +104,7 @@ nsButtonBoxFrame::MouseClicked (nsIPresContext* aPresContext)
   // Don't execute if we're disabled.
   nsAutoString disabled;
   mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::disabled, disabled);
-  if (!disabled.EqualsWithConversion("true"))
+  if (disabled.EqualsWithConversion("true"))
     return;
 
   nsresult rv = NS_OK;
