@@ -92,7 +92,7 @@
           <hbox>
             <button id="removeReject" disabled="true"
                           label="&remove.label;" oncommand="DeleteReject();"/>
-            <button id="removeAllSites"
+            <button id="removeAllRejects"
                           label="&removeall.label;"
                           oncommand="DeleteAllRejects();"/>
           </hbox>
