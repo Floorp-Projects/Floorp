@@ -228,7 +228,7 @@
             if (ds) {
               var res = rdf.GetResource(defaultEngine);
               try {
-                 searchBarUrl = this.readRDFString(ds, res, kNC_searchBarUrl);
+                var searchBarUrl = this.readRDFString(ds, res, kNC_searchBarUrl);
               } catch(ex) {
                 searchBarUrl = null;
               }
