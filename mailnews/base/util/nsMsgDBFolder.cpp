@@ -203,33 +203,19 @@ NS_IMETHODIMP nsMsgDBFolder::GetCharset(PRUnichar * *aCharset)
 	if(!aCharset)
 		return NS_ERROR_NULL_POINTER;
 
-	if(mCharset.IsEmpty())
-	{
-		NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
-
-		PRUnichar *prefCharset = nsnull;
-		if (NS_SUCCEEDED(rv))
-		{
-			rv = prefs->GetLocalizedUnicharPref("mailnews.view_default_charset", &prefCharset);
-		}
-  
-		nsAutoString prefCharsetStr;
-		if(prefCharset)
-		{
-			prefCharsetStr.Assign(prefCharset);
-			PR_Free(prefCharset);
-		}
-		else
-		{
-			prefCharsetStr.AssignWithConversion("us-ascii");
-		}
-		*aCharset = prefCharsetStr.ToNewUnicode();
-	}
-	else
-	{
-		*aCharset = mCharset.ToNewUnicode();
-	}
-	return rv;
+  nsCOMPtr<nsIDBFolderInfo> folderInfo;
+  nsCOMPtr<nsIMsgDatabase> db; 
+  rv = GetDBFolderInfoAndDB(getter_AddRefs(folderInfo), getter_AddRefs(db));
+  if(NS_SUCCEEDED(rv))
+  {
+    nsXPIDLCString  charset;
+    rv = folderInfo->GetCharPtrCharacterSet(getter_Copies(charset));
+    if(NS_SUCCEEDED(rv))
+    {
+      *aCharset = NS_ConvertASCIItoUCS2(charset.get()).ToNewUnicode();
+    }
+  }
+  return rv;
 }
 
 NS_IMETHODIMP nsMsgDBFolder::SetCharset(const PRUnichar * aCharset)
@@ -251,8 +237,12 @@ NS_IMETHODIMP nsMsgDBFolder::SetCharset(const PRUnichar * aCharset)
 
 NS_IMETHODIMP nsMsgDBFolder::GetCharsetOverride(PRBool *aCharsetOverride)
 {
-  *aCharsetOverride = mCharsetOverride;
-  return NS_OK;
+  nsCOMPtr<nsIDBFolderInfo> folderInfo;
+  nsCOMPtr<nsIMsgDatabase> db; 
+  nsresult rv = GetDBFolderInfoAndDB(getter_AddRefs(folderInfo), getter_AddRefs(db));
+  if(NS_SUCCEEDED(rv))
+    rv = folderInfo->GetCharacterSetOverride(aCharsetOverride);
+  return rv;
 }
 
 NS_IMETHODIMP nsMsgDBFolder::SetCharsetOverride(PRBool aCharsetOverride)
