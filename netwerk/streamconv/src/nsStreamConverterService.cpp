@@ -36,7 +36,7 @@
 #include "nsStreamConverterService.h"
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
-#include "nsString2.h"
+#include "nsString.h"
 #include "nsIAtom.h"
 #include "nsDeque.h"
 #include "nsIInputStream.h"
