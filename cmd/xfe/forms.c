@@ -2501,7 +2501,7 @@ htmlarea_get_value(FEFormData *fed, LO_FormElementStruct *form, XP_Bool delete_p
 
   EDT_SaveToBuffer(ha_fed->editor_context, &text);
 
-  if (! text) return;
+  /* if (! text) return; */
 
   current_text = XP_FormGetCurrentText(form_data);
   default_text = XP_FormGetDefaultText(form_data);
@@ -2511,6 +2511,26 @@ htmlarea_get_value(FEFormData *fed, LO_FormElementStruct *form, XP_Bool delete_p
 
   /* XXX: Get rid of this PA_Block cast! */
   XP_FormSetCurrentText(form_data, (PA_Block)text);
+
+#ifdef MOZ_ENDER_MIME
+
+  if (submit)
+  {
+    if (form_data->ele_mimearea.mime_bits)
+    {
+      XP_FREE(form_data->ele_mimearea.mime_bits);
+      form_data->ele_mimearea.mime_bits = 0;
+    }
+
+    EDT_SaveMimeToBuffer(ha_fed->editor_context,
+                         (XP_HUGE_CHAR_PTR *)&form_data->ele_mimearea.mime_bits,
+                         FALSE);
+
+    if (text)
+      EDT_SetDefaultMimeHTML(ha_fed->editor_context, text);
+  }
+
+#endif /* MOZ_ENDER_MIME */
 
   if (delete_p)
   {

@@ -1131,4 +1131,13 @@ MSG_MimeRelatedSaver::IsLocalPersistentFile(intn /*iFileIndex*/) {
     return FALSE;
 }
 
+extern "C" void *
+MSG_CreateMimeRelatedStreamSaver(MWContext *context,
+								 char **origRootURL, char **streamOut)
+{
+	return ((void *)new MSG_MimeRelatedStreamSaver(
+					NULL, context, NULL, FALSE, MSG_DeliverNow,
+					NULL, 0, NULL, NULL, origRootURL, streamOut));
+}
+
 //#endif

@@ -40,7 +40,6 @@ extern "C" {
 #include "msgcom.h"
 #include "intl_csi.h"
 
-
 //extern "C" int XP_EDT_HEAD_FAILED;
 
 CBitArray *edt_setNoEndTag = 0;
@@ -972,6 +971,34 @@ void EDT_ReadFromBuffer(MWContext* pContext, XP_HUGE_CHAR_PTR pBuffer )
 }
 
 #ifdef MOZ_ENDER_MIME
+
+extern "C" {
+  void *MSG_CreateMimeRelatedStreamSaver(MWContext *, char **, char **);
+};
+
+ED_FileError
+EDT_SaveMimeToBuffer(MWContext *pContext, XP_HUGE_CHAR_PTR *pBuffer, XP_Bool async)
+{
+	ED_FileError status = ED_ERROR_NONE;
+	char *pRootPartName = 0;
+	void *fs = MSG_CreateMimeRelatedStreamSaver(pContext,
+								  &pRootPartName, (char **)pBuffer);
+
+	if (!fs)
+		return ED_ERROR_FILE_WRITE;
+
+	status = EDT_SaveFileTo(pContext, ED_FINISHED_MAIL_SEND, pRootPartName, fs,
+							TRUE, TRUE);
+
+	if (!async && status == ED_ERROR_NONE)
+	{
+		while ( pContext->edit_saving_url )
+			FEU_StayingAlive();
+	}
+
+	return status;
+}
+
 void EDT_ReadMimeFromBuffer(MWContext* pContext, XP_HUGE_CHAR_PTR pBuffer )
 {
     GET_WRITABLE_EDIT_BUF_OR_RETURN(pContext, pEditBuffer);
