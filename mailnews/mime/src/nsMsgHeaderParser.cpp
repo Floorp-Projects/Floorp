@@ -482,13 +482,13 @@ static int msg_parse_Header_addresses (const char *line, char **names, char **ad
   char *name_buf = 0, *name_out, *name_start;
   char *addr_buf = 0, *addr_out, *addr_start;
 
-  NS_ASSERTION(line, "");
-  if (!line)
-    return -1;
   if (names)
     *names = 0;
   if (addresses)
     *addresses = 0;
+  NS_ASSERTION(line, "");
+  if (!line)
+    return -1;
   line_length = strlen(line);
   if (line_length == 0)
     return 0;
