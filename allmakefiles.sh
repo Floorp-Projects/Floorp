@@ -614,6 +614,11 @@ xpfe/components/autocomplete/public/Makefile
 xpfe/components/autocomplete/resources/Makefile
 xpfe/components/autocomplete/resources/skin/Makefile
 xpfe/components/autocomplete/src/Makefile
+xpfe/components/console/Makefile
+xpfe/components/console/resources/Makefile
+xpfe/components/console/resources/content/Makefile
+xpfe/components/console/resources/locale/Makefile
+xpfe/components/console/resources/locale/en-US/Makefile
 xpfe/appshell/Makefile
 xpfe/appshell/src/Makefile
 xpfe/appshell/public/Makefile
