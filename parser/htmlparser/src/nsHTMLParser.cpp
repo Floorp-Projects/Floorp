@@ -412,6 +412,12 @@ PRBool nsHTMLParser::IterateTokens() {
 
   while((!done) && (result)) {
     theToken=(CToken*)mCurrentPos->GetCurrent();
+
+#if defined(NS_DEBUG)
+    if (!theToken)
+       break;
+#endif
+
     eHTMLTokenTypes type=eHTMLTokenTypes(theToken->GetTokenType());
     iteration++; //debug purposes...
 
