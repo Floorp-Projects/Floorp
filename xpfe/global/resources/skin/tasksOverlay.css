@@ -23,7 +23,6 @@ toolbar#taskbar {
 	margin: 0px;
 	margin-top: 2px;
 	min-height: 1em;
-	font-size: smaller;
 	user-focus: ignore;
 }
 
