@@ -27,6 +27,7 @@
 #include "nsCacheDevice.h"
 #include "nsILocalFile.h"
 #include "nsCacheEntry.h"
+#include "nsIObserver.h"
 
 class DiskCacheEntry;
 class nsISupportsArray;
@@ -58,6 +59,8 @@ public:
     virtual nsresult        Visit(nsICacheVisitor * visitor);
 
 /* private: */
+    void                    setPrefsObserver(nsIObserver* observer);
+    void                    getPrefsObserver(nsIObserver ** result);
     void                    setCacheDirectory(nsILocalFile* directory);
     void                    setCacheCapacity(PRUint32 capacity);
     PRUint32                getCacheCapacity();
@@ -81,6 +84,7 @@ private:
     nsresult evictDiskCacheEntries();
 
 private:
+    nsCOMPtr<nsIObserver>   mPrefsObserver;
     nsCOMPtr<nsILocalFile>  mCacheDirectory;
     nsCacheEntryHashTable   mBoundEntries;
     PRUint32                mCacheCapacity;
