@@ -45,6 +45,7 @@
 #include "nsXIFFormatConverter.h"
 
 static NS_DEFINE_IID(kIXIFFormatConverterIID,  NS_IFORMATCONVERTER_IID);
+static NS_DEFINE_IID(kISupportsIID,  NS_ISUPPORTS_IID);
 //static NS_DEFINE_IID(kCXIFConverterCID,  NS_XIFCONVERTER_CID);
 
 static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
@@ -92,6 +93,13 @@ nsresult nsXIFFormatConverter::QueryInterface(const nsIID& aIID, void** aInstanc
     NS_ADDREF_THIS();
     return NS_OK;
   }
+
+  if (aIID.Equals(kISupportsIID)) {                                      
+    *aInstancePtr = (void*)(nsISupports*)this;                        
+    NS_ADDREF_THIS();                                                    
+    return NS_OK;                                                        
+  }
+
 
   return rv;
 }
