@@ -47,7 +47,7 @@
 #include "nsReadableUtils.h"
 #include "nsXBLProtoImplMethod.h"
 #include "nsIScriptContext.h"
-#include "nsIXPConnect.h"
+#include "nsContentUtils.h"
 
 MOZ_DECL_CTOR_COUNTER(nsXBLProtoImplMethod)
 
@@ -256,24 +256,26 @@ nsXBLProtoImplAnonymousMethod::Execute(nsIContent* aBoundElement)
 
   JSObject* globalObject = ::JS_GetGlobalObject(cx);
 
-  JSObject* method = ::JS_CloneFunctionObject(cx, mJSMethodObject,
-                                              globalObject);
-  if (!method) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  nsresult rv;
-  nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID(), &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
-
   nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
-  rv = xpc->WrapNative(cx, globalObject, aBoundElement,
-                       NS_GET_IID(nsISupports), getter_AddRefs(wrapper));
+  nsresult rv =
+    nsContentUtils::XPConnect()->WrapNative(cx, globalObject,
+                                            aBoundElement,
+                                            NS_GET_IID(nsISupports),
+                                            getter_AddRefs(wrapper));
   NS_ENSURE_SUCCESS(rv, rv);
 
   JSObject* thisObject;
   rv = wrapper->GetJSObject(&thisObject);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  // Clone the function object, using thisObject as the parent so "this" is in
+  // the scope chain of the resulting function (for backwards compat to the
+  // days when this was an event handler).
+  JSObject* method = ::JS_CloneFunctionObject(cx, mJSMethodObject,
+                                              thisObject);
+  if (!method) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   // Now call the method
   jsval retval;
