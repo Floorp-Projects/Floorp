@@ -27,7 +27,7 @@
 use strict;
 
 # Bundle the functions in this file together into the "Token" package.
-package Token;
+package Bugzilla::Token;
 
 use Bugzilla::Config;
 use Bugzilla::Error;

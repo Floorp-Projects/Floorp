@@ -20,12 +20,14 @@
 # Contributor(s): Dawn Endico    <endico@mozilla.org>
 #                 Terry Weissman <terry@mozilla.org>
 #                 Chris Yeh      <cyeh@bluemartini.com>
+#                 Bradley Baetz  <bbaetz@acm.org>
+#                 Dave Miller    <justdave@bugzilla.org>
 
-package Bug;
+package Bugzilla::Bug;
 
 use strict;
 
-use RelationSet;
+use Bugzilla::RelationSet;
 use vars qw($unconfirmedstate $legal_keywords @legal_platform
             @legal_priority @legal_severity @legal_opsys @legal_bugs_status
             @settable_resolution %components %versions %target_milestone
@@ -33,7 +35,7 @@ use vars qw($unconfirmedstate $legal_keywords @legal_platform
 
 use CGI::Carp qw(fatalsToBrowser);
 
-use Attachment;
+use Bugzilla::Attachment;
 use Bugzilla::Config;
 use Bugzilla::Constants;
 use Bugzilla::Flag;
@@ -190,7 +192,7 @@ sub initBug  {
       $self->{'qa_contact'} = undef;
   }
 
-  my $ccSet = new RelationSet;
+  my $ccSet = new Bugzilla::RelationSet;
   $ccSet->mergeFromDB("select who from cc where bug_id=$bug_id");
   my @cc = $ccSet->toArrayOfStrings();
   if (@cc) {
@@ -212,7 +214,7 @@ sub initBug  {
     }
   }
 
-  $self->{'attachments'} = Attachment::query($self->{bug_id});
+  $self->{'attachments'} = Bugzilla::Attachment::query($self->{bug_id});
 
   # The types of flags that can be set on this bug.
   # If none, no UI for setting flags will be displayed.

@@ -31,15 +31,16 @@
 
 use strict;
 
-# Everything that uses RelationSet should already have globals.pl loaded
-# so we don't want to load it here.  Doing so causes a loop in Perl because
-# globals.pl turns around and does a 'use RelationSet'
+# XXX - mod_perl
+# Everything that uses Bugzilla::RelationSet should already have globals.pl
+# loaded so we don't want to load it here.  Doing so causes a loop in Perl
+# because globals.pl turns around and does a 'use Bugzilla::RelationSet'
 # See http://bugzilla.mozilla.org/show_bug.cgi?id=72862
-#require "globals.pl";
+#require "../globals.pl";
 
-package RelationSet;
+package Bugzilla::RelationSet;
 
-# create a new empty RelationSet
+# create a new empty Bugzilla::RelationSet
 #
 sub new {
   my $type = shift();
@@ -60,7 +61,7 @@ sub new {
     confess("invalid number of arguments");
   }
 
-  # bless as a RelationSet
+  # bless as a Bugzilla::RelationSet
   #
   return $self;
 }
@@ -81,7 +82,7 @@ sub generateSqlDeltas {
   my ( $self, # instance ptr to set representing the existing state
        $endState, # instance ptr to set representing the desired state
        $table, # table where these relations are kept
-       $invariantName, # column held const for a RelationSet (often "bug_id")
+       $invariantName, # column held const for a Bugzilla::RelationSet (often "bug_id")
        $invariantValue, # what to hold the above column constant at
        $columnName # the column which varies (often a userid)
      ) = @_;

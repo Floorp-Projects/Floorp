@@ -35,10 +35,9 @@ use Bugzilla;
 use Bugzilla::Constants;
 require "CGI.pl";
 
-use Bug;
+use Bugzilla::Bug;
 use Bugzilla::User;
-
-use RelationSet;
+use Bugzilla::RelationSet;
 
 # Use the Flag module to modify flag data if the user set flags.
 use Bugzilla::Flag;
@@ -330,8 +329,8 @@ my $qacontactid;
 # CheckCanChangeField() defines what users are allowed to change what bugs. You
 # can add code here for site-specific policy changes, according to the 
 # instructions given in the Bugzilla Guide and below. Note that you may also
-# have to update the Bug::user() function to give people access to the options
-# that they are permitted to change.
+# have to update the Bugzilla::Bug::user() function to give people access to the
+# options that they are permitted to change.
 #
 # CheckCanChangeField() should return true if the user is allowed to change this
 # field, and false if they are not.
@@ -1752,7 +1751,7 @@ foreach my $id (@idlist) {
 # now show the next bug
 if ($next_bug) {
     if (detaint_natural($next_bug) && CanSeeBug($next_bug, $::userid)) {
-        my $bug = new Bug($next_bug, $::userid);
+        my $bug = new Bugzilla::Bug($next_bug, $::userid);
         ThrowCodeError("bug_error", { bug => $bug }) if $bug->error;
 
         # next.html.tmpl includes edit.html.tmpl, and therefore we

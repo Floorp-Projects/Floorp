@@ -1348,7 +1348,6 @@ if ($^O !~ /MSWin32/i) {
         fixPerms('css', $<, $webservergid, 027, 1);
         fixPerms('js', $<, $webservergid, 027, 1);
         chmod 0644, 'globals.pl';
-        chmod 0644, 'RelationSet.pm';
         
         # Don't use fixPerms here, because it won't change perms on the directory
         # unless its using recursion

@@ -41,9 +41,9 @@ require "CGI.pl";
 ConnectToDatabase();
 quietly_check_login('permit_anonymous');
 
-# Use the "Token" module that contains functions for doing various
+# Use the "Bugzilla::Token" module that contains functions for doing various
 # token-related tasks.
-use Token;
+use Bugzilla::Token;
 
 use Bugzilla::User;
 
@@ -72,7 +72,7 @@ if ($cgi->param('t')) {
   }
 
 
-  Token::CleanTokenTable();
+  Bugzilla::Token::CleanTokenTable();
 
   # Make sure the token exists in the database.
   SendSQL( "SELECT tokentype FROM tokens WHERE token = $::quotedtoken" );
@@ -80,17 +80,17 @@ if ($cgi->param('t')) {
 
   # Make sure the token is the correct type for the action being taken.
   if ( grep($::action eq $_ , qw(cfmpw cxlpw chgpw)) && $tokentype ne 'password' ) {
-    Token::Cancel($::token, "wrong_token_for_changing_passwd");
+    Bugzilla::Token::Cancel($::token, "wrong_token_for_changing_passwd");
     ThrowUserError("wrong_token_for_changing_passwd");
   }
   if ( ($::action eq 'cxlem') 
       && (($tokentype ne 'emailold') && ($tokentype ne 'emailnew')) ) {
-    Token::Cancel($::token, "wrong_token_for_cancelling_email_change");
+    Bugzilla::Token::Cancel($::token, "wrong_token_for_cancelling_email_change");
     ThrowUserError("wrong_token_for_cancelling_email_change");
   }
   if ( grep($::action eq $_ , qw(cfmem chgem)) 
       && ($tokentype ne 'emailnew') ) {
-    Token::Cancel($::token, "wrong_token_for_confirming_email_change");
+    Bugzilla::Token::Cancel($::token, "wrong_token_for_confirming_email_change");
     ThrowUserError("wrong_token_for_confirming_email_change");
   }
 }
@@ -176,7 +176,7 @@ sub confirmChangePassword {
 
 sub cancelChangePassword {    
     $vars->{'message'} = "password_change_canceled";
-    Token::Cancel($::token, $vars->{'message'});
+    Bugzilla::Token::Cancel($::token, $vars->{'message'});
 
     print $cgi->header();
     $template->process("global/message.html.tmpl", $vars)
@@ -308,7 +308,7 @@ sub cancelChangeEmail {
 
     $vars->{'old_email'} = $old_email;
     $vars->{'new_email'} = $new_email;
-    Token::Cancel($::token, $vars->{'message'});
+    Bugzilla::Token::Cancel($::token, $vars->{'message'});
 
     SendSQL("LOCK TABLES tokens WRITE");
     SendSQL("DELETE FROM tokens 

@@ -30,7 +30,7 @@ use strict;
 
 package Bugzilla::BugMail;
 
-use RelationSet;
+use Bugzilla::RelationSet;
 
 use Bugzilla::Config qw(:DEFAULT $datadir);
 use Bugzilla::Util;
@@ -166,7 +166,7 @@ sub ProcessOneBug($) {
     trick_taint($start);
     trick_taint($end);
 
-    my $ccSet = new RelationSet();
+    my $ccSet = new Bugzilla::RelationSet();
     $ccSet->mergeFromDB("SELECT who FROM cc WHERE bug_id = $id");
     $values{'cc'} = $ccSet->toString();
     

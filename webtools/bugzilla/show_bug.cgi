@@ -32,7 +32,7 @@ ConnectToDatabase();
 
 use vars qw($template $vars $userid);
 
-use Bug;
+use Bugzilla::Bug;
 
 my $cgi = Bugzilla->cgi;
 
@@ -65,10 +65,10 @@ if ($single) {
     # Its a bit silly to do the validation twice - that functionality should
     # probably move into Bug.pm at some point
     ValidateBugID($id);
-    push @bugs, new Bug($id, $userid);
+    push @bugs, new Bugzilla::Bug($id, $userid);
 } else {
     foreach my $id ($cgi->param('id')) {
-        my $bug = new Bug($id, $userid);
+        my $bug = new Bugzilla::Bug($id, $userid);
         push @bugs, $bug;
     }
 }
@@ -93,7 +93,7 @@ $vars->{'bug_list'} = \@bug_list;
 # If no explicit list is defined, we show all fields. We then exclude any
 # on the exclusion list. This is so you can say e.g. "Everything except 
 # attachments" without listing almost all the fields.
-my @fieldlist = (Bug::fields(), 'group', 'long_desc', 'attachment');
+my @fieldlist = (Bugzilla::Bug::fields(), 'group', 'long_desc', 'attachment');
 my %displayfields;
 
 if ($cgi->param("field")) {

@@ -26,7 +26,7 @@
 
 use strict;
 
-package Attachment;
+package Bugzilla::Attachment;
 
 # This module requires that its caller have said "require CGI.pl" to import
 # relevant functions from that script and its companion globals.pl.

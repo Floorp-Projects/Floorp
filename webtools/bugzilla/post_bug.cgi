@@ -30,7 +30,7 @@ use Bugzilla;
 use Bugzilla::Constants;
 require "CGI.pl";
 
-use Bug;
+use Bugzilla::Bug;
 
 use Bugzilla::User;
 
@@ -478,7 +478,7 @@ if (defined $::FORM{'qa_contact'}) {
 }
 
 $vars->{'id'} = $id;
-my $bug = new Bug($id, $::userid);
+my $bug = new Bugzilla::Bug($id, $::userid);
 $vars->{'bug'} = $bug;
 
 ThrowCodeError("bug_error", { bug => $bug }) if $bug->error;

@@ -29,7 +29,7 @@ use Bugzilla;
 
 require "CGI.pl";
 
-use RelationSet;
+use Bugzilla::RelationSet;
 
 # Use global template variables.
 use vars qw($template $vars $userid);
@@ -121,9 +121,9 @@ sub SaveAccount {
             $cgi->param('Bugzilla_password') 
               || ThrowCodeError("old_password_required");
 
-            use Token;
+            use Bugzilla::Token;
             # Block multiple email changes for the same user.
-            if (Token::HasEmailChangeToken($userid)) {
+            if (Bugzilla::Token::HasEmailChangeToken($userid)) {
                 ThrowUserError("email_change_in_progress");
             }
 
@@ -133,7 +133,7 @@ sub SaveAccount {
             ValidateNewUser($new_login_name)
               || ThrowUserError("account_exists", {email => $new_login_name});
 
-            Token::IssueEmailChangeToken($userid,$old_login_name,
+            Bugzilla::Token::IssueEmailChangeToken($userid,$old_login_name,
                                                  $new_login_name);
 
             $vars->{'email_changes_saved'} = 1;
@@ -148,7 +148,7 @@ sub SaveAccount {
 
 sub DoEmail {
     if (Param("supportwatchers")) {
-        my $watcheduserSet = new RelationSet;
+        my $watcheduserSet = new Bugzilla::RelationSet;
         $watcheduserSet->mergeFromDB("SELECT watched FROM watch WHERE" .
                                     " watcher=$userid");
         $vars->{'watchedusers'} = $watcheduserSet->toString();
@@ -246,12 +246,12 @@ sub SaveEmail {
         SendSQL("LOCK TABLES watch WRITE, profiles READ");
 
         # what the db looks like now
-        my $origWatchedUsers = new RelationSet;
+        my $origWatchedUsers = new Bugzilla::RelationSet;
         $origWatchedUsers->mergeFromDB("SELECT watched FROM watch WHERE" .
                                        " watcher=$userid");
 
         # Update the database to look like the form
-        my $newWatchedUsers = new RelationSet($cgi->param('watchedusers'));
+        my $newWatchedUsers = new Bugzilla::RelationSet($cgi->param('watchedusers'));
         my @CCDELTAS = $origWatchedUsers->generateSqlDeltas(
                                                          $newWatchedUsers, 
                                                          "watch", 

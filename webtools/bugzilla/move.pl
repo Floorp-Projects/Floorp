@@ -30,8 +30,8 @@ require "CGI.pl";
 
 use vars qw($template $userid %COOKIE);
 
-use Bug;
 use Bugzilla;
+use Bugzilla::Bug;
 use Bugzilla::Config qw(:DEFAULT $datadir);
 use Bugzilla::BugMail;
 
@@ -106,7 +106,7 @@ my @bugs;
 
 print "<P>\n";
 foreach my $id (split(/:/, $::FORM{'buglist'})) {
-  my $bug = new Bug($id, $::userid);
+  my $bug = new Bugzilla::Bug($id, $::userid);
   push @bugs, $bug;
   if (!$bug->error) {
     my $exporterid = DBNameToIdAndCheck($exporter);
@@ -155,7 +155,7 @@ $from =~ s/@/\@/;
 $msg .= "From: Bugzilla <" . $from . ">\n";
 $msg .= "Subject: Moving bug(s) $buglist\n\n";
 
-my @fieldlist = (Bug::fields(), 'group', 'long_desc', 'attachment');
+my @fieldlist = (Bugzilla::Bug::fields(), 'group', 'long_desc', 'attachment');
 my %displayfields;
 foreach (@fieldlist) {
     $displayfields{$_} = 1;

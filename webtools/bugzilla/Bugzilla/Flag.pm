@@ -34,8 +34,7 @@ use Bugzilla::User;
 use Bugzilla::Config;
 use Bugzilla::Util;
 use Bugzilla::Error;
-
-use Attachment;
+use Bugzilla::Attachment;
 
 use constant TABLES_ALREADY_LOCKED => 1;
 
@@ -529,7 +528,7 @@ sub GetTarget {
     my $target = { 'exists' => 0 };
 
     if ($attach_id) {
-        $target->{'attachment'} = new Attachment($attach_id);
+        $target->{'attachment'} = new Bugzilla::Attachment($attach_id);
         if ($bug_id) {
             # Make sure the bug and attachment IDs correspond to each other
             # (i.e. this is the bug to which this attachment is attached).

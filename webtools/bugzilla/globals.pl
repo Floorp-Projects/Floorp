@@ -74,7 +74,7 @@ use DBI;
 
 use Date::Format;               # For time2str().
 use Date::Parse;               # For str2time().
-use RelationSet;
+use Bugzilla::RelationSet;
 
 # Use standard Perl libraries for cross-platform file/directory manipulation.
 use File::Spec;
@@ -354,8 +354,8 @@ sub GetVersionTable {
         $mtime = 0;
     }
     if (time() - $mtime > 3600) {
-        use Token;
-        Token::CleanTokenTable() if Bugzilla->dbwritesallowed;
+        use Bugzilla::Token;
+        Bugzilla::Token::CleanTokenTable() if Bugzilla->dbwritesallowed;
         GenerateVersionTable();
     }
     require "$datadir/versioncache";
