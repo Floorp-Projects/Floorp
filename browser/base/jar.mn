@@ -17,6 +17,7 @@ browser.jar:
 classic.jar:
         skin/classic/browser/browser.css              (skin/browser.css)
         skin/classic/browser/contents.rdf             (skin/contents.rdf)
+        skin/classic/browser/info-small.png           (skin/info-small.png)
         skin/classic/browser/back-large.png           (skin/back-large.png)
         skin/classic/browser/forward-large.png        (skin/forward-large.png)
         skin/classic/browser/back-forward-small.png   (skin/back-forward-small.png)
