@@ -784,15 +784,17 @@ nsresult
 nsGenericHTMLElement::GetAttribute(PRInt32 aNameSpaceID, nsIAtom *aAttribute,
                                    nsString &aResult) const
 {
+#if 0
   NS_ASSERTION((kNameSpaceID_HTML == aNameSpaceID) || 
                (kNameSpaceID_None == aNameSpaceID) || 
                (kNameSpaceID_Unknown == aNameSpaceID), 
                "html content only holds HTML attributes");
+#endif
 
   if ((kNameSpaceID_HTML != aNameSpaceID) && 
       (kNameSpaceID_None != aNameSpaceID) &&
       (kNameSpaceID_Unknown != aNameSpaceID)) {
-    return NS_ERROR_ILLEGAL_VALUE;
+    return NS_CONTENT_ATTR_NOT_THERE;
   }
 
   nsHTMLValue value;
