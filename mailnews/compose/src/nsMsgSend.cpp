@@ -1115,19 +1115,39 @@ nsMsgComposeAndSend::InitCompositionFields(nsMsgCompFields *fields)
 		HJ41792
 	}
 
+  
   // Now, we will look for a URI defined as the default FCC pref. If this is set,
   // then SetFcc will use this value. The FCC field is a URI for the server that 
   // will hold the "Sent" folder...the 
   //
-  char *uri = "mailbox://";
-  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
-  if (NS_SUCCEEDED(rv) && prefs) 
+  // First, look at what was passed in via the "fields" structure...if that was
+  // set then use it, otherwise, fall back to what is set in the prefs...
+  //
+  const char *fieldsFCC = fields->GetFcc();
+  if (fieldsFCC && *fieldsFCC)
   {
-    rv = prefs->CopyCharPref("mail.default_fcc_server", &uri);
+    if (PL_strcasecmp(fieldsFCC, "nocopy://") == 0)
+      mCompFields->SetFcc("", nsnull);
+    else
+      mCompFields->SetFcc(fieldsFCC, nsnull);
   }
+  else
+  {
+    char *uri = "mailbox://";
+    NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
+    if (NS_SUCCEEDED(rv) && prefs) 
+      rv = prefs->CopyCharPref("mail.default_fcc_server", &uri);
 
-  fields->SetFcc(uri, nsnull);
-  mCompFields->SetFcc(uri, nsnull);
+    if ( (uri) || (*uri) )
+    {
+      if (PL_strcasecmp(uri, "nocopy://") == 0)
+        mCompFields->SetFcc("", nsnull);
+      else
+        mCompFields->SetFcc(uri, nsnull);
+    }
+    else
+      mCompFields->SetFcc("", nsnull);
+  }
 
 	mCompFields->SetNewspostUrl((char *) fields->GetNewspostUrl(), nsnull);
 	mCompFields->SetDefaultBody((char *) fields->GetDefaultBody(), nsnull);
@@ -1530,16 +1550,13 @@ nsMsgComposeAndSend::DoDeliveryExitProcessing(nsresult aExitCode, PRBool aCheckF
   if (NS_FAILED(retCode))
   {
 #ifdef NS_DEBUG
-  printf("\nSTARTING Copy Operation Failed!\n");
+  printf("\nDoDeliveryExitProcessing(): DoFcc() call Failed!\n");
 #endif
     // Everything already cleaned up...just return.
     return;
   } 
   else
   {
-#ifdef NS_DEBUG
-  printf("\nStarting Copy Operation SUCCEEDED!\n");
-#endif
     // Either we started the copy...cleanup happens later...or cleanup was
     // already taken care of for us.
     return;
@@ -1571,6 +1588,10 @@ nsMsgComposeAndSend::DoFcc()
   //
   if (!mCompFields->GetFcc() || !*mCompFields->GetFcc())
   {
+#ifdef NS_DEBUG
+  printf("\nCopy operation disabled by user!\n");
+#endif
+
     NotifyListenersOnStopSending(nsnull, NS_OK, nsnull, nsnull);
     // SHERRY: for now, we are going to let the destructor do the Clear();
     return NS_OK;

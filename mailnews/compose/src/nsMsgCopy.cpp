@@ -221,6 +221,7 @@ LocateMessageFolder(nsIMsgIdentity   *userIdentity,
   PRUint32                  subCnt = 0;
   PRUint32                  i;
   PRBool                    fixed = PR_FALSE;
+  char                      *savePref = "";
 
   //
   // get the current mail session....
@@ -245,13 +246,21 @@ LocateMessageFolder(nsIMsgIdentity   *userIdentity,
   if (NS_FAILED(rv))
     return nsnull;
 
+  // Make a working copy to avoid compiler problems with const...
+  if ( (aSavePref) && (*aSavePref) )
+    savePref = PL_strdup(aSavePref);
+
   for (i=0; i<cnt; i++)
   {
     // Now that we have the server...we need to get the named message folder
     nsCOMPtr<nsIMsgIncomingServer> inServer; 
     inServer = do_QueryInterface(retval->ElementAt(i));
     if(NS_FAILED(rv) || (!inServer))
+    {
+      if (*savePref)
+        PR_FREEIF(savePref);
       return nsnull;
+    }
 
     //
     // If aSavePref is passed in, then the user has chosen a specific
@@ -262,22 +271,22 @@ LocateMessageFolder(nsIMsgIdentity   *userIdentity,
     //                  mailbox://rhp@netscape.com 
     //                  newsgroup://news.mozilla.org
     //
-    if ( (aSavePref) && (*aSavePref) )
+    if ( (savePref) && (*savePref) )
     {
       char *anyServer = "anyfolder://";
-      if (PL_strncasecmp(anyServer, aSavePref, PL_strlen(aSavePref)) != 0)
+      if (PL_strncasecmp(anyServer, savePref, PL_strlen(savePref)) != 0)
       {
         char *serverURI = nsnull;
         nsresult res = inServer->GetServerURI(&serverURI);
         if ( NS_FAILED(res) || (!serverURI) || !(*serverURI) )
           continue;
 
-        // First, make sure that aSavePref is only the protocol://server
+        // First, make sure that savePref is only the protocol://server
         // for this comparison...not the file path if any...
         //
         if (!fixed)
         {
-          char *ptr1 = PL_strstr(aSavePref, "//");
+          char *ptr1 = PL_strstr(savePref, "//");
           if ( (ptr1) && (*ptr1) )
           {
             ptr1 = ptr1 + 2;
@@ -289,7 +298,7 @@ LocateMessageFolder(nsIMsgIdentity   *userIdentity,
         }
         // Now check to see if this URI is the same as the
         // server pref
-        if (PL_strncasecmp(serverURI, aSavePref, PL_strlen(aSavePref)) != 0)
+        if (PL_strncasecmp(serverURI, savePref, PL_strlen(savePref)) != 0)
           continue;
       }
     }
@@ -304,7 +313,7 @@ LocateMessageFolder(nsIMsgIdentity   *userIdentity,
     NS_RELEASE(aFolder);
 
     if(NS_FAILED(rv) || (!rootFolder))
-      return nsnull;
+      continue;
 
     PRUint32 numFolders = 0;
     msgFolder = nsnull;
@@ -328,6 +337,9 @@ LocateMessageFolder(nsIMsgIdentity   *userIdentity,
     if (NS_SUCCEEDED(rv) && (msgFolder)) 
       break;
   }
+
+  if (*savePref)
+    PR_FREEIF(savePref);
 
   return msgFolder;
 }
