@@ -69,7 +69,7 @@ END
 
 DLG_SETUP_TYPE DIALOGEX 51, 56, 315, 205
 STYLE WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     CONTROL         "",IDC_RADIO_ST0,"Button",BS_AUTORADIOBUTTON | 
                     WS_TABSTOP,102,31,65,8
@@ -97,32 +97,30 @@ END
 
 DLG_SELECT_COMPONENTS DIALOGEX 51, 56, 315, 205
 STYLE WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-FONT 8, "MS Sans Serif", 0, 0, 0x1
+FONT 8, "MS Sans Serif"
 BEGIN
     PUSHBUTTON      "< &Back",ID_WIZBACK,134,186,53,12
     DEFPUSHBUTTON   "&Next >",ID_WIZNEXT,188,186,53,12
     PUSHBUTTON      "&Cancel",IDCANCEL,252,186,53,12
     LTEXT           "Select the components you want to install, clear the components you do not want to install. ",
                     IDC_STATIC,101,10,204,19,NOT WS_GROUP
-    LTEXT           "C&omponents",IDC_STATIC,101,32,204,8
-    GROUPBOX        "Description",IDC_STATIC,101,112,204,22
-    LTEXT           "Component Description",IDC_STATIC_DESCRIPTION,106,121,
+    LTEXT           "C&omponents",IDC_STATIC,101,32,103,8
+    GROUPBOX        "Description",IDC_STATIC,101,124,204,22
+    LTEXT           "Component Description",IDC_STATIC_DESCRIPTION,106,133,
                     195,8
-    GROUPBOX        "&Disk space information",IDC_STATIC,101,140,204,33
-    LTEXT           "Space Required on",IDC_STATIC,106,150,94,8,NOT WS_GROUP
-    LTEXT           "DRIVE",IDC_STATIC_DRIVE_SPACE_REQUIRED,106,160,94,8,NOT 
+    GROUPBOX        "&Disk space information",IDC_STATIC,101,150,204,23
+    LTEXT           "Total download size:",IDC_STATIC,106,160,91,8,NOT 
                     WS_GROUP
-    LTEXT           "Space Available on",IDC_STATIC,207,150,94,8,NOT 
+    RTEXT           "",IDC_STATIC_DRIVE_SPACE_REQUIRED,206,160,94,8,NOT 
                     WS_GROUP
-    LTEXT           "DRIVE",IDC_STATIC_DRIVE_SPACE_AVAILABLE,207,160,94,8,
-                    NOT WS_GROUP
     CONTROL         108,IDC_STATIC,"Static",SS_BITMAP,11,11,80,160,
                     WS_EX_CLIENTEDGE
     CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,11,179,295,1,
                     WS_EX_STATICEDGE
-    LISTBOX         IDC_LIST_COMPONENTS,101,42,204,64,LBS_OWNERDRAWFIXED | 
+    LISTBOX         IDC_LIST_COMPONENTS,101,42,204,78,LBS_OWNERDRAWFIXED | 
                     LBS_HASSTRINGS | LBS_USETABSTOPS | LBS_NOINTEGRALHEIGHT | 
                     WS_VSCROLL | WS_HSCROLL | WS_GROUP | WS_TABSTOP
+    LTEXT           "Download Size",IDC_STATIC,201,32,103,8,0,WS_EX_RIGHT
 END
 
 DLG_WINDOWS_INTEGRATION DIALOGEX 51, 56, 315, 205
@@ -325,7 +323,7 @@ BEGIN
     IDS_DLG_DISK_SPACE_CHECK_CRUTIAL_MSG 
                             "Setup has detected insufficient disk space to continue with installation on %s for the path: %sRequired: %sAvailable: %sClick Retry if more disk space has been made available, or click Cancel to cancel Setup."
     IDS_DLG_DISK_SPACE_CHECK_MSG 
-                            "Setup has detected insufficient disk space to continue with installation on %s for the path: %sRequired: %sAvailable: %sClick OK to go back and choose a different destination path, or click Cancel to cancel Setup."
+                            "Setup has detected insufficient disk space to continue with installation process on %s for the path: %sRequired: %sAvailable: %sClick OK to go back and choose a different destination path, or click Cancel to cancel Setup."
     IDS_ERROR_CREATE_DIRECTORY 
                             "Could not create folder: %sMake sure you have access to create the folder."
     IDS_STR_FILE_NUMBER     "File count:"

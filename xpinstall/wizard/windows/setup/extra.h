@@ -25,6 +25,15 @@
 #ifndef _EXTRA_H_
 #define _EXTRA_H_
 
+typedef struct diskSpaceNode dsN;
+struct diskSpaceNode
+{
+  ULONGLONG       ullSpaceRequired;
+  LPSTR           szPath;
+  dsN             *Next;
+  dsN             *Prev;
+};
+
 BOOL              InitApplication(HINSTANCE hInstance, HINSTANCE hSetupRscInst);
 BOOL              InitInstance(HINSTANCE hInstance, DWORD dwCmdShow);
 void              PrintError(LPSTR szMsg, DWORD dwErrorCodeSH);
@@ -114,7 +123,17 @@ HRESULT           ErrorMsgDiskSpace(ULONGLONG ullDSAvailable, ULONGLONG ullDSReq
 void              SetCustomType(void);
 void              GetAlternateArchiveSearchPath(LPSTR lpszCmdLine);
 BOOL              NeedReboot(void);
-BOOL              LocatePreviousPath(LPSTR szPath, DWORD dwPathSize);
+BOOL              LocatePreviousPath(LPSTR szMainSectionName, LPSTR szPath, DWORD dwPathSize);
+BOOL              LocatePathNscpReg(LPSTR szSection, LPSTR szPath, DWORD dwPathSize);
+BOOL              LocatePathWinReg(LPSTR szSection, LPSTR szPath, DWORD dwPathSize);
+BOOL              LocatePath(LPSTR szSection, LPSTR szPath, DWORD dwPathSize);
+int               VR_GetPath(char *component_path, unsigned long sizebuf, char *buf);
+dsN               *CreateDSNode();
+void              DsNodeInsert(dsN **dsNHead, dsN *dsNTemp);
+void              DsNodeDelete(dsN **dsNTemp);
+void              DeInitDSNode(dsN **dsnComponentDSRequirement);
+void              UpdatePathDiskSpaceRequired(LPSTR szPath, ULONGLONG ullInstallSize, dsN **dsnComponentDSRequirement);
+HRESULT           InitComponentDiskSpaceInfo(dsN **dsnComponentDSRequirement);
 
 BOOL              bSDInit;
 

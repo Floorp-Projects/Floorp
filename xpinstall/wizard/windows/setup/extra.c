@@ -931,10 +931,14 @@ HRESULT InitDlgSetupType(diST *diDialog)
   if((diDialog->szReadmeApp = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
 
-  diDialog->stSetupType0.dwItems = 0;
-  diDialog->stSetupType1.dwItems = 0;
-  diDialog->stSetupType2.dwItems = 0;
-  diDialog->stSetupType3.dwItems = 0;
+  diDialog->stSetupType0.dwCItems = 0;
+  diDialog->stSetupType1.dwCItems = 0;
+  diDialog->stSetupType2.dwCItems = 0;
+  diDialog->stSetupType3.dwCItems = 0;
+  diDialog->stSetupType0.dwAItems = 0;
+  diDialog->stSetupType1.dwAItems = 0;
+  diDialog->stSetupType2.dwAItems = 0;
+  diDialog->stSetupType3.dwAItems = 0;
   if((diDialog->stSetupType0.szDescriptionShort = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
   if((diDialog->stSetupType0.szDescriptionLong = NS_GlobalAlloc(MAX_BUF)) == NULL)
@@ -1217,6 +1221,8 @@ siC *CreateSiCNode()
     exit(1);
   if((siCNode->szArchivePath = NS_GlobalAlloc(MAX_BUF)) == NULL)
     exit(1);
+  if((siCNode->szDestinationPath = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    exit(1);
   if((siCNode->szDescriptionShort = NS_GlobalAlloc(MAX_BUF)) == NULL)
     exit(1);
   if((siCNode->szDescriptionLong = NS_GlobalAlloc(MAX_BUF)) == NULL)
@@ -1258,6 +1264,7 @@ void SiCNodeDelete(siC *siCTemp)
     siCTemp->Next       = NULL;
     siCTemp->Prev       = NULL;
 
+    FreeMemory(&(siCTemp->szDestinationPath));
     FreeMemory(&(siCTemp->szArchivePath));
     FreeMemory(&(siCTemp->szArchiveName));
     FreeMemory(&(siCTemp->szDescriptionLong));
@@ -1628,6 +1635,54 @@ siC *SiCNodeGetObject(DWORD dwIndex, BOOL bIncludeInvisibleObjs)
   return(NULL);
 }
 
+dsN *CreateDSNode()
+{
+  dsN *dsNode;
+
+  if((dsNode = NS_GlobalAlloc(sizeof(struct diskSpaceNode))) == NULL)
+    exit(1);
+
+  dsNode->ullSpaceRequired = 0;
+
+  if((dsNode->szPath = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    exit(1);
+  dsNode->Next             = dsNode;
+  dsNode->Prev             = dsNode;
+
+  return(dsNode);
+}
+
+void DsNodeInsert(dsN **dsNHead, dsN *dsNTemp)
+{
+  if(*dsNHead == NULL)
+  {
+    *dsNHead          = dsNTemp;
+    (*dsNHead)->Next  = *dsNHead;
+    (*dsNHead)->Prev  = *dsNHead;
+  }
+  else
+  {
+    dsNTemp->Next           = *dsNHead;
+    dsNTemp->Prev           = (*dsNHead)->Prev;
+    (*dsNHead)->Prev->Next  = dsNTemp;
+    (*dsNHead)->Prev        = dsNTemp;
+  }
+}
+
+void DsNodeDelete(dsN **dsNTemp)
+{
+  if(*dsNTemp != NULL)
+  {
+    (*dsNTemp)->Next->Prev = (*dsNTemp)->Prev;
+    (*dsNTemp)->Prev->Next = (*dsNTemp)->Next;
+    (*dsNTemp)->Next       = NULL;
+    (*dsNTemp)->Prev       = NULL;
+
+    FreeMemory(&((*dsNTemp)->szPath));
+    FreeMemory(dsNTemp);
+  }
+}
+
 BOOL IsWin95Debute()
 {
   HINSTANCE hLib;
@@ -1668,7 +1723,8 @@ ULONGLONG GetDiskSpaceRequired(DWORD dwType)
           break;
 
         case DSR_TEMP:
-          if(LocateJar(siCTemp) == FALSE)
+        case DSR_DOWNLOAD_SIZE:
+          if((LocateJar(siCTemp) == FALSE) || (dwType == DSR_DOWNLOAD_SIZE))
             ullTotalSize += siCTemp->ullInstallSizeArchive;
           break;
       }
@@ -1690,7 +1746,8 @@ ULONGLONG GetDiskSpaceRequired(DWORD dwType)
             break;
 
           case DSR_TEMP:
-            if(LocateJar(siCTemp) == FALSE)
+          case DSR_DOWNLOAD_SIZE:
+            if((LocateJar(siCTemp) == FALSE) || (dwType == DSR_DOWNLOAD_SIZE))
               ullTotalSize += siCTemp->ullInstallSizeArchive;
             break;
         }
@@ -1809,8 +1866,105 @@ HRESULT ErrorMsgDiskSpace(ULONGLONG ullDSAvailable, ULONGLONG ullDSRequired, LPS
   return(MessageBox(hWndMain, szBufMsg, szDlgDiskSpaceCheckTitle, dwDlgType | MB_ICONEXCLAMATION | MB_DEFBUTTON2 | MB_APPLMODAL | MB_SETFOREGROUND));
 }
 
+void UpdatePathDiskSpaceRequired(LPSTR szPath, ULONGLONG ullSize, dsN **dsnComponentDSRequirement)
+{
+  BOOL  bFound = FALSE;
+  dsN   *dsnTemp = *dsnComponentDSRequirement;
+
+  if(ullSize > 0)
+  {
+    do
+    {
+      if(*dsnComponentDSRequirement == NULL)
+      {
+        *dsnComponentDSRequirement = CreateDSNode();
+        dsnTemp = *dsnComponentDSRequirement;
+        strcpy(dsnTemp->szPath, szPath);
+        dsnTemp->ullSpaceRequired = ullSize;
+        bFound = TRUE;
+      }
+      else if(lstrcmpi(dsnTemp->szPath, szPath) == 0)
+      {
+        dsnTemp->ullSpaceRequired += ullSize;
+        bFound = TRUE;
+      }
+      else
+        dsnTemp = dsnTemp->Next;
+
+    } while((dsnTemp != *dsnComponentDSRequirement) && (dsnTemp != NULL) && (bFound == FALSE));
+
+    if(bFound == FALSE)
+    {
+      dsnTemp = CreateDSNode();
+      strcpy(dsnTemp->szPath, szPath);
+      dsnTemp->ullSpaceRequired = ullSize;
+      DsNodeInsert(dsnComponentDSRequirement, dsnTemp);
+    }
+  }
+}
+
+HRESULT InitComponentDiskSpaceInfo(dsN **dsnComponentDSRequirement)
+{
+  DWORD     dwIndex0;
+  siC       *siCObject = NULL;
+  HRESULT   hResult    = 0;
+  char      szBuf[MAX_BUF];
+  char      szIndex0[MAX_BUF];
+  char      szSysPath[MAX_BUF];
+  char      szBufSysPath[MAX_BUF];
+  char      szBufTempPath[MAX_BUF];
+
+  if(GetSystemDirectory(szSysPath, MAX_BUF) == 0)
+  {
+    ZeroMemory(szSysPath, MAX_BUF);
+    ZeroMemory(szBufSysPath, MAX_BUF);
+  }
+  else
+  {
+    ParsePath(szSysPath, szBufSysPath, sizeof(szBufSysPath), PP_ROOT_ONLY);
+    AppendBackSlash(szBufSysPath, sizeof(szBufSysPath));
+  }
+
+  ParsePath(szTempDir, szBufTempPath, sizeof(szBufTempPath), PP_ROOT_ONLY);
+  AppendBackSlash(szBufTempPath, sizeof(szBufTempPath));
+
+  dwIndex0 = 0;
+  itoa(dwIndex0, szIndex0, 10);
+  siCObject = SiCNodeGetObject(dwIndex0, TRUE);
+  while(siCObject)
+  {
+    if(siCObject->dwAttributes & SIC_SELECTED)
+    {
+      if(*(siCObject->szDestinationPath) == '\0')
+        ParsePath(sgProduct.szPath, szBuf, sizeof(szBuf), PP_ROOT_ONLY);
+      else
+        ParsePath(siCObject->szDestinationPath, szBuf, sizeof(szBuf), PP_ROOT_ONLY);
+
+      AppendBackSlash(szBuf, sizeof(szBuf));
+      UpdatePathDiskSpaceRequired(szBuf, siCObject->ullInstallSize, dsnComponentDSRequirement);
+
+      if(*szBufSysPath != '\0')
+        UpdatePathDiskSpaceRequired(szBufSysPath, siCObject->ullInstallSizeSystem, dsnComponentDSRequirement);
+
+      if(*szBufTempPath != '\0')
+        UpdatePathDiskSpaceRequired(szBufTempPath, siCObject->ullInstallSizeArchive, dsnComponentDSRequirement);
+    }
+
+    ++dwIndex0;
+    itoa(dwIndex0, szIndex0, 10);
+    siCObject = SiCNodeGetObject(dwIndex0, TRUE);
+  }
+
+  /* take the uncompressed size of core into account */
+  if(*szBufTempPath != '\0')
+    UpdatePathDiskSpaceRequired(szBufTempPath, siCFCoreFile.ullInstallSize, dsnComponentDSRequirement);
+
+  return(hResult);
+}
+
 HRESULT VerifyDiskSpace()
 {
+#ifdef XXX_SSU
   ULONGLONG ullDSAPath;
   ULONGLONG ullDSRPath;
   ULONGLONG ullDSASysPath;
@@ -1819,12 +1973,42 @@ HRESULT VerifyDiskSpace()
   ULONGLONG ullDSRTempPath;
   ULONGLONG ullDSTotalAvailable;
   ULONGLONG ullDSTotalRequired;
-  HRESULT   hRetValue = TRUE;
   char      szSysPath[MAX_BUF];
   char      szBufPath[MAX_BUF];
   char      szBufSysPath[MAX_BUF];
   char      szBufTempPath[MAX_BUF];
+#endif
 
+  ULONGLONG ullDSAvailable;
+  HRESULT   hRetValue = FALSE;
+  dsN       *dsnComponentDSRequirement = NULL;
+  dsN       *dsnTemp = NULL;
+
+
+  InitComponentDiskSpaceInfo(&dsnComponentDSRequirement);
+  if(dsnComponentDSRequirement != NULL)
+  {
+    dsnTemp = dsnComponentDSRequirement;
+
+    do
+    {
+      if(dsnTemp != NULL)
+      {
+        ullDSAvailable = GetDiskSpaceAvailable(dsnTemp->szPath);
+        if(ullDSAvailable < dsnTemp->ullSpaceRequired)
+        {
+          hRetValue = ErrorMsgDiskSpace(ullDSAvailable, dsnTemp->ullSpaceRequired, dsnTemp->szPath, FALSE);
+          break;
+        }
+
+        dsnTemp = dsnTemp->Next;
+      }
+    } while((dsnTemp != dsnComponentDSRequirement) && (dsnTemp != NULL));
+  }
+
+  DeInitDSNode(&dsnComponentDSRequirement);
+
+#ifdef XXX_SSU
   /* Calculate disk space for destination path */
   ullDSAPath = GetDiskSpaceAvailable(sgProduct.szPath);
   ullDSRPath = GetDiskSpaceRequired(DSR_DESTINATION);
@@ -1927,8 +2111,9 @@ HRESULT VerifyDiskSpace()
       }
     }
   }
+#endif
 
-  return(FALSE);
+  return(hRetValue);
 }
 
 HRESULT ParseComponentAttributes(char *szAttribute)
@@ -1958,6 +2143,7 @@ void InitSiComponents(char *szFileIni)
   char  szBuf[MAX_BUF];
   char  szComponentItem[MAX_BUF];
   char  szDependency[MAX_BUF];
+  char  szDPSection[MAX_BUF];
   siC   *siCTemp;
   siCD  *siCDepTemp;
 
@@ -2034,6 +2220,12 @@ void InitSiComponents(char *szFileIni)
       lstrcat(szDependency, szIndex1);
       GetPrivateProfileString(szComponentItem, szDependency, "", szBuf, MAX_BUF, szFileIni);
     }
+
+    // locate previous path if necessary
+    lstrcpy(szDPSection, szComponentItem);
+    lstrcat(szDPSection, "-Destination Path");
+    if(LocatePreviousPath(szDPSection, siCTemp->szDestinationPath, MAX_PATH) == FALSE)
+      ZeroMemory(siCTemp->szDestinationPath, MAX_PATH);
 
     /* inserts the newly created component into the global component queue */
     SiCNodeInsert(&siComponents, siCTemp);
@@ -2155,6 +2347,32 @@ void DeInitSiComponents()
     siCTemp = siComponents->Prev;
   }
   SiCNodeDelete(siCTemp);
+}
+
+void DeInitDSNode(dsN **dsnComponentDSRequirement)
+{
+  dsN *dsNTemp;
+  
+  if(*dsnComponentDSRequirement == NULL)
+  {
+    return;
+  }
+  else if(((*dsnComponentDSRequirement)->Prev == NULL) || ((*dsnComponentDSRequirement)->Prev == *dsnComponentDSRequirement))
+  {
+    DsNodeDelete(dsnComponentDSRequirement);
+    return;
+  }
+  else
+  {
+    dsNTemp = (*dsnComponentDSRequirement)->Prev;
+  }
+
+  while(dsNTemp != *dsnComponentDSRequirement)
+  {
+    DsNodeDelete(&dsNTemp);
+    dsNTemp = (*dsnComponentDSRequirement)->Prev;
+  }
+  DsNodeDelete(&dsNTemp);
 }
 
 BOOL ResolveComponentDependency(siCD *siCDInDependency)
@@ -2311,7 +2529,7 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
   GetPrivateProfileString("General", "Product Name", "", sgProduct.szProductName, MAX_BUF, szFileIniConfig);
   
   /* get main install path */
-  if(LocatePreviousPath(sgProduct.szPath, MAX_PATH) == FALSE)
+  if(LocatePreviousPath("Locate Previous Product Path", sgProduct.szPath, MAX_PATH) == FALSE)
   {
     GetPrivateProfileString("General", "Path", "", szBuf, MAX_BUF, szFileIniConfig);
     DecryptString(sgProduct.szPath, szBuf);
@@ -2478,25 +2696,29 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
   {
     dwSetupType     = ST_RADIO0;
     dwTempSetupType = dwSetupType;
-    SiCNodeSetItemsSelected(diSetupType.stSetupType0.dwItems, diSetupType.stSetupType0.dwItemsSelected);
+    SiCNodeSetItemsSelected(diSetupType.stSetupType0.dwCItems, diSetupType.stSetupType0.dwCItemsSelected);
+    SiCNodeSetItemsSelected(diSetupType.stSetupType0.dwAItems, diSetupType.stSetupType0.dwAItemsSelected);
   }
   else if((lstrcmpi(szBuf, "Setup Type 1") == 0) && diSetupType.stSetupType1.bVisible)
   {
     dwSetupType     = ST_RADIO1;
     dwTempSetupType = dwSetupType;
-    SiCNodeSetItemsSelected(diSetupType.stSetupType1.dwItems, diSetupType.stSetupType1.dwItemsSelected);
+    SiCNodeSetItemsSelected(diSetupType.stSetupType1.dwCItems, diSetupType.stSetupType1.dwCItemsSelected);
+    SiCNodeSetItemsSelected(diSetupType.stSetupType1.dwAItems, diSetupType.stSetupType1.dwAItemsSelected);
   }
   else if((lstrcmpi(szBuf, "Setup Type 2") == 0) && diSetupType.stSetupType2.bVisible)
   {
     dwSetupType     = ST_RADIO2;
     dwTempSetupType = dwSetupType;
-    SiCNodeSetItemsSelected(diSetupType.stSetupType2.dwItems, diSetupType.stSetupType2.dwItemsSelected);
+    SiCNodeSetItemsSelected(diSetupType.stSetupType2.dwCItems, diSetupType.stSetupType2.dwCItemsSelected);
+    SiCNodeSetItemsSelected(diSetupType.stSetupType2.dwAItems, diSetupType.stSetupType2.dwAItemsSelected);
   }
   else if((lstrcmpi(szBuf, "Setup Type 3") == 0) && diSetupType.stSetupType3.bVisible)
   {
     dwSetupType     = ST_RADIO3;
     dwTempSetupType = dwSetupType;
-    SiCNodeSetItemsSelected(diSetupType.stSetupType3.dwItems, diSetupType.stSetupType3.dwItemsSelected);
+    SiCNodeSetItemsSelected(diSetupType.stSetupType3.dwCItems, diSetupType.stSetupType3.dwCItemsSelected);
+    SiCNodeSetItemsSelected(diSetupType.stSetupType3.dwAItems, diSetupType.stSetupType3.dwAItemsSelected);
   }
   else
   {
@@ -2504,25 +2726,29 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
     {
       dwSetupType     = ST_RADIO0;
       dwTempSetupType = dwSetupType;
-      SiCNodeSetItemsSelected(diSetupType.stSetupType0.dwItems, diSetupType.stSetupType0.dwItemsSelected);
+      SiCNodeSetItemsSelected(diSetupType.stSetupType0.dwCItems, diSetupType.stSetupType0.dwCItemsSelected);
+      SiCNodeSetItemsSelected(diSetupType.stSetupType0.dwAItems, diSetupType.stSetupType0.dwAItemsSelected);
     }
     else if(diSetupType.stSetupType1.bVisible)
     {
       dwSetupType     = ST_RADIO1;
       dwTempSetupType = dwSetupType;
-      SiCNodeSetItemsSelected(diSetupType.stSetupType1.dwItems, diSetupType.stSetupType1.dwItemsSelected);
+      SiCNodeSetItemsSelected(diSetupType.stSetupType1.dwCItems, diSetupType.stSetupType1.dwCItemsSelected);
+      SiCNodeSetItemsSelected(diSetupType.stSetupType1.dwAItems, diSetupType.stSetupType1.dwAItemsSelected);
     }
     else if(diSetupType.stSetupType2.bVisible)
     {
       dwSetupType     = ST_RADIO2;
       dwTempSetupType = dwSetupType;
-      SiCNodeSetItemsSelected(diSetupType.stSetupType2.dwItems, diSetupType.stSetupType2.dwItemsSelected);
+      SiCNodeSetItemsSelected(diSetupType.stSetupType2.dwCItems, diSetupType.stSetupType2.dwCItemsSelected);
+      SiCNodeSetItemsSelected(diSetupType.stSetupType2.dwAItems, diSetupType.stSetupType2.dwAItemsSelected);
     }
     else if(diSetupType.stSetupType3.bVisible)
     {
       dwSetupType     = ST_RADIO3;
       dwTempSetupType = dwSetupType;
-      SiCNodeSetItemsSelected(diSetupType.stSetupType3.dwItems, diSetupType.stSetupType3.dwItemsSelected);
+      SiCNodeSetItemsSelected(diSetupType.stSetupType3.dwCItems, diSetupType.stSetupType3.dwCItemsSelected);
+      SiCNodeSetItemsSelected(diSetupType.stSetupType3.dwAItems, diSetupType.stSetupType3.dwAItemsSelected);
     }
   }
 
@@ -2567,11 +2793,77 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
   return(0);
 }
 
-BOOL LocatePreviousPath(LPSTR szPath, DWORD dwPathSize)
+BOOL LocatePreviousPath(LPSTR szMainSectionName, LPSTR szPath, DWORD dwPathSize)
 {
   DWORD dwIndex;
   char  szIndex[MAX_BUF];
   char  szSection[MAX_BUF];
+  char  szValue[MAX_BUF];
+  BOOL  bFound;
+
+  bFound  = FALSE;
+  dwIndex = -1;
+  while(!bFound)
+  {
+    ++dwIndex;
+    itoa(dwIndex, szIndex, 10);
+    lstrcpy(szSection, szMainSectionName);
+    lstrcat(szSection, szIndex);
+
+    GetPrivateProfileString(szSection, "Key", "", szValue, MAX_BUF, szFileIniConfig);
+    if(*szValue != '\0')
+      bFound = LocatePathNscpReg(szSection, szPath, dwPathSize);
+    else
+    {
+      GetPrivateProfileString(szSection, "HKey", "", szValue, MAX_BUF, szFileIniConfig);
+      if(*szValue != '\0')
+        bFound = LocatePathWinReg(szSection, szPath, dwPathSize);
+      else
+      {
+        GetPrivateProfileString(szSection, "Path", "", szValue, MAX_BUF, szFileIniConfig);
+        if(*szValue != '\0')
+          bFound = LocatePath(szSection, szPath, dwPathSize);
+        else
+          break;
+      }
+    }
+  }
+
+  return(bFound);
+}
+
+BOOL LocatePathNscpReg(LPSTR szSection, LPSTR szPath, DWORD dwPathSize)
+{
+  char  szKey[MAX_BUF];
+  char  szContainsFilename[MAX_BUF];
+  char  szBuf[MAX_BUF];
+  BOOL  bReturn;
+
+  bReturn = FALSE;
+  GetPrivateProfileString(szSection, "Key", "", szKey, MAX_BUF, szFileIniConfig);
+  if(*szKey != '\0')
+  {
+    bReturn = FALSE;
+    ZeroMemory(szPath, dwPathSize);
+
+    VR_GetPath(szKey, MAX_BUF, szBuf);
+    if(*szBuf != '\0')
+    {
+      GetPrivateProfileString(szSection, "Contains Filename", "", szContainsFilename, MAX_BUF, szFileIniConfig);
+      if(lstrcmpi(szContainsFilename, "TRUE") == 0)
+        ParsePath(szBuf, szPath, dwPathSize, PP_PATH_ONLY);
+      else
+        lstrcpy(szPath, szBuf);
+
+      bReturn = TRUE;
+    }
+  }
+
+  return(bReturn);
+}
+
+BOOL LocatePathWinReg(LPSTR szSection, LPSTR szPath, DWORD dwPathSize)
+{
   char  szHKey[MAX_BUF];
   char  szHRoot[MAX_BUF];
   char  szName[MAX_BUF];
@@ -2583,12 +2875,8 @@ BOOL LocatePreviousPath(LPSTR szPath, DWORD dwPathSize)
   HKEY  hkeyRoot;
 
   bReturn = FALSE;
-  dwIndex = 0;
-  itoa(dwIndex, szIndex, 10);
-  lstrcpy(szSection, "Locate Previous Product Path");
-  lstrcat(szSection, szIndex);
   GetPrivateProfileString(szSection, "HKey", "", szHKey, MAX_BUF, szFileIniConfig);
-  while(*szHKey != '\0')
+  if(*szHKey != '\0')
   {
     bReturn = FALSE;
     ZeroMemory(szPath, dwPathSize);
@@ -2603,10 +2891,10 @@ BOOL LocatePreviousPath(LPSTR szPath, DWORD dwPathSize)
       bDecryptKey = TRUE;
 
     GetPrivateProfileString(szSection, "Contains Filename",   "", szBuf, MAX_BUF, szFileIniConfig);
-    if(lstrcmpi(szBuf, "FALSE") == 0)
-      bContainsFilename = FALSE;
-    else
+    if(lstrcmpi(szBuf, "TRUE") == 0)
       bContainsFilename = TRUE;
+    else
+      bContainsFilename = FALSE;
 
     if(lstrcmpi(szHRoot, "HKEY_CLASSES_ROOT") == 0)
       hkeyRoot = HKEY_CLASSES_ROOT;
@@ -2663,17 +2951,26 @@ BOOL LocatePreviousPath(LPSTR szPath, DWORD dwPathSize)
 
         bReturn = TRUE;
       }
-
-      // break if a valid path was found, else keep looking
-      if(bReturn == TRUE)
-        break;
     }
+  }
 
-    ++dwIndex;
-    itoa(dwIndex, szIndex, 10);
-    lstrcpy(szSection, "Locate Previous Product Path");
-    lstrcat(szSection, szIndex);
-    GetPrivateProfileString(szSection, "HKey", "", szHKey, MAX_BUF, szFileIniConfig);
+  return(bReturn);
+}
+
+BOOL LocatePath(LPSTR szSection, LPSTR szPath, DWORD dwPathSize)
+{
+  char  szPathKey[MAX_BUF];
+  BOOL  bReturn;
+
+  bReturn = FALSE;
+  GetPrivateProfileString(szSection, "Path", "", szPathKey, MAX_BUF, szFileIniConfig);
+  if(*szPathKey != '\0')
+  {
+    bReturn = FALSE;
+    ZeroMemory(szPath, dwPathSize);
+
+    DecryptString(szPath, szPathKey);
+    bReturn = TRUE;
   }
 
   return(bReturn);
@@ -2704,22 +3001,45 @@ void STGetComponents(LPSTR szSection, st *stSetupType, LPSTR szFileIniConfig)
     stSetupType->bVisible = TRUE;
 
   dwIndex = 0;
-  stSetupType->dwItems = 0;
+  stSetupType->dwCItems = 0;
   itoa(dwIndex, szIndex, 10);
   lstrcpy(szKey, "C");
   lstrcat(szKey, szIndex);
   GetPrivateProfileString(szSection, szKey, "", szBuf, MAX_BUF, szFileIniConfig);
   while(*szBuf != '\0')
   {
+    /* hack used to determine the numerical value of the component */
     if(lstrlen(szBuf) > 8)
     {
-      ++stSetupType->dwItems;
-      stSetupType->dwItemsSelected[dwIndex] = atoi(&szBuf[9]);
+      ++stSetupType->dwCItems;
+      stSetupType->dwCItemsSelected[dwIndex] = atoi(&szBuf[9]);
     }
 
     ++dwIndex;
     itoa(dwIndex, szIndex, 10);
     lstrcpy(szKey, "C");
+    lstrcat(szKey, szIndex);
+    GetPrivateProfileString(szSection, szKey, "", szBuf, MAX_BUF, szFileIniConfig);
+  }
+
+  dwIndex = 0;
+  stSetupType->dwAItems = 0;
+  itoa(dwIndex, szIndex, 10);
+  lstrcpy(szKey, "A");
+  lstrcat(szKey, szIndex);
+  GetPrivateProfileString(szSection, szKey, "", szBuf, MAX_BUF, szFileIniConfig);
+  while(*szBuf != '\0')
+  {
+    /* hack used to determine the numerical value of the component */
+    if(lstrlen(szBuf) > 8)
+    {
+      ++stSetupType->dwAItems;
+      stSetupType->dwAItemsSelected[dwIndex] = atoi(&szBuf[9]);
+    }
+
+    ++dwIndex;
+    itoa(dwIndex, szIndex, 10);
+    lstrcpy(szKey, "A");
     lstrcat(szKey, szIndex);
     GetPrivateProfileString(szSection, szKey, "", szBuf, MAX_BUF, szFileIniConfig);
   }
