@@ -35,6 +35,7 @@
 # 
 # ***** END LICENSE BLOCK *****
 
+#define DL_RETAIN_WINDOW 0
 
 var _elementIDs = ["histDay", "browserCacheDiskCache", "enableCookies",
                     "enableCookiesForOriginatingSiteOnly", "enableCookiesForCurrentSessionOnly",
@@ -78,7 +79,7 @@ function Startup() {
   
   var categories = document.getElementById("privacyCategories");
   categories.addEventListener("clear", PrivacyPanel.clear, false);
-  
+
   // XXXben - we do this because of a bug with the download retention window menulist. 
   // The bug is that when the Options dialog opens, or you switch from another panel to
   // this panel, style is incompletely resolved on the menulist's display area anonymous
@@ -92,11 +93,11 @@ function Startup() {
   // the bound element. dbaron is helping me with this with a reduced test case, but in 
   // the meantime, I'm working around this bug by placing the menulist outside the bound element
   // until it is completely initialized and then scooting it in, which is what this code does. 
-  // var drb = document.getElementById("downloadsRetentionBox");
-  // var drp = document.getElementById("downloadsRetentionPolicy");
-  // drp.removeAttribute("hidden");
-  // document.documentElement.removeChild(drp);
-  // drb.appendChild(drp);
+# var drb = document.getElementById("downloadsRetentionBox");
+# var drp = document.getElementById("downloadsRetentionPolicy");
+# drp.removeAttribute("hidden");
+# document.documentElement.removeChild(drp);
+# drb.appendChild(drp);
 }
 
 function unload()
