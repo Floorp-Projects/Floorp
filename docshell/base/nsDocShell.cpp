@@ -2444,10 +2444,6 @@ nsDocShell::LoadURI(const PRUnichar * aURI,
 
     rv = LoadURI(uri, loadInfo, 0, PR_TRUE);
     
-    if (NS_ERROR_UNKNOWN_PROTOCOL == rv) {
-        DisplayLoadError(rv, uri, aURI);
-    }
-
     return rv;
 }
 
@@ -2561,6 +2557,10 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI, const PRUnichar *aUR
         case NS_ERROR_DOCUMENT_IS_PRINTMODE:
             // Doc navigation attempted while Printing or Print Preview
             error.Assign(NS_LITERAL_STRING("isprinting"));
+            break;
+        case NS_ERROR_PORT_ACCESS_NOT_ALLOWED:
+            // Port blocked for security reasons
+            error.Assign(NS_LITERAL_STRING("deniedPortAccess"));
             break;
         }
     }
@@ -5082,6 +5082,10 @@ nsDocShell::InternalLoad(nsIURI * aURI,
     rv = DoURILoad(aURI, aReferrer, owner, aPostData, aHeadersData, firstParty,
                    aDocShell, aRequest);
 
+    if (NS_FAILED(rv)) {
+        DisplayLoadError(rv, aURI, nsnull);
+    }
+    
     return rv;
 }
 
@@ -5169,9 +5173,14 @@ nsDocShell::DoURILoad(nsIURI * aURI,
             // to handle.  Embedders might still be interested in
             // handling the load, though, so we fire a notification
             // before throwing the load away.
-            PRBool abort;
+            PRBool abort = PR_FALSE;
             mContentListener->OnStartURIOpen(aURI, &abort);
+            if (abort) {
+                // Hey, they're handling the load for us!  How convenient!
+                return NS_OK;
+            }
         }
+            
         return rv;
     }
 
@@ -5505,30 +5514,6 @@ nsresult nsDocShell::DoChannelLoad(nsIChannel * aChannel,
     rv = aURILoader->OpenURI(aChannel,
                              (mLoadType == LOAD_LINK),
                              NS_STATIC_CAST(nsIDocShell *, this));
-    
-    if (rv == NS_ERROR_PORT_ACCESS_NOT_ALLOWED) {
-        nsCOMPtr<nsIPrompt> prompter;
-        nsCOMPtr<nsIStringBundle> stringBundle;
-
-        GetInterface(NS_GET_IID(nsIPrompt), getter_AddRefs(prompter));
-        if (!prompter) return rv;
-
-        nsCOMPtr<nsIStringBundleService> sbs(do_GetService(NS_STRINGBUNDLE_CONTRACTID));
-        if (!sbs) return rv;
-
-        sbs->CreateBundle("chrome://necko/locale/necko.properties", 
-                          getter_AddRefs(stringBundle));
-
-        if (!stringBundle)
-            return NS_ERROR_FAILURE;
-
-        nsXPIDLString messageStr;
-        stringBundle->GetStringFromName(NS_LITERAL_STRING("DeniedPortAccess").get(),
-                                            getter_Copies(messageStr));
-
-        prompter->Alert(nsnull, messageStr);
-
-    }
     
     return rv;
 }
