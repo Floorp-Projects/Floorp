@@ -62,6 +62,7 @@ chrome\overlayinfo\messenger\content\overlays.rdf
 
 ; default pref files
 defaults\pref\*
+greprefs\*
 defaults\messenger\mailViews.dat
 defaults\profile\localstore.rdf
 defaults\profile\mimeTypes.rdf
@@ -179,7 +180,6 @@ components\docshell.dll
 components\docshell_base.xpt            
 components\uriloader.xpt
 components\chrome.dll                   
-components\chrome.xpt                   
 components\webbrwsr.dll              
 components\webBrowser_core.xpt
 components\embedcomponents.dll
@@ -289,7 +289,6 @@ components\nsprefm.dll
 components\prefmigr.xpt
 components\proxyObject.xpt
 components\exthandler.xpt
-components\util.xpt
 components\embed_base.xpt
 components\webshell_idls.xpt
 components\widget.xpt
