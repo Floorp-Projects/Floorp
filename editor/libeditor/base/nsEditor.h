@@ -26,6 +26,7 @@
 #include "nsIDOMSelection.h"
 #include "nsIDOMEventListener.h"
 #include "nsIDOMRange.h"
+#include "nsIDOMTextRangeList.h"
 #include "nsCOMPtr.h"
 #include "nsIStringBundle.h"
 #include "nsITransactionManager.h"
@@ -54,6 +55,7 @@ class nsIPref;
 class nsIStringBundleService;
 class nsIStringBundle;
 class nsILocale;
+class IMETextTxn;
 
 #ifdef ENABLE_JS_EDITOR_LOG
 class nsJSEditorLog;
@@ -78,7 +80,12 @@ private:
   nsCOMPtr<nsITransactionManager> mTxnMgr;
   nsCOMPtr<nsIEditProperty>  mEditProperty;
 
-  nsCOMPtr<nsIDOMRange> mIMESelectionRange;
+  //
+  // data necessary to build IME transactions
+  //
+  nsCOMPtr<nsIDOMCharacterData> mIMETextNode;
+  PRUint32						mIMETextOffset;
+  PRUint32						mIMEBufferLength;
 
   friend PRBool NSCanUnload(nsISupports* serviceMgr);
   static PRInt32 gInstanceCount;
@@ -163,7 +170,7 @@ public:
 
   NS_IMETHOD BeginComposition(void);
 
-  NS_IMETHOD SetCompositionString(const nsString& aCompositionString);
+  NS_IMETHOD SetCompositionString(const nsString& aCompositionString, nsIDOMTextRangeList* aTextRangeList);
 
   NS_IMETHOD EndComposition(void);
   
@@ -273,9 +280,15 @@ protected:
                                     nsIDOMCharacterData *aTextNode,
                                     InsertTextTxn ** aTxn);
 
+  NS_IMETHOD CreateTxnForIMEText(const nsString & aStringToInsert,
+								 nsIDOMTextRangeList* aTextRangeList,
+                                 IMETextTxn ** aTxn);
+
   /** insert aStringToInsert as the first text in the document
     */
   NS_IMETHOD DoInitialInsert(const nsString & aStringToInsert);
+
+  NS_IMETHOD DoInitialInputMethodInsert(const nsString& aStringToInsert,nsIDOMTextRangeList* aTextRangeList);
 
 
   NS_IMETHOD DeleteText(nsIDOMCharacterData *aElement,
@@ -314,10 +327,7 @@ protected:
 
   NS_IMETHOD DebugDumpContent() const;
 
-  // should these me methodimp?
-  NS_IMETHODIMP SetPreeditText(const nsString& aStringToInsert);
-
-  NS_IMETHODIMP DoInitialPreeeditInsert(const nsString& aStringToInsert);
+  NS_IMETHOD SetInputMethodText(const nsString& aStringToInsert, nsIDOMTextRangeList* aTextRangeList);
 
   // called each time we modify the document. Increments the mod
   // count of the doc.
@@ -343,8 +353,6 @@ protected:
 // of an error in Gecko which is not rendering the
 // document after a change via the DOM - gpk 2/13/99
   void HACKForceRedraw(void);
-
-  PRBool mIMEFirstTransaction;
 
   NS_IMETHOD DeleteSelectionAndPrepareToCreateNode(nsCOMPtr<nsIDOMNode> &parentSelectedNode, PRInt32& offsetOfNewNode);
 

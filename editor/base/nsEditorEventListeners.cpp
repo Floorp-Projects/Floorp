@@ -1090,16 +1090,19 @@ nsTextEditorTextListener::HandleText(nsIDOMEvent* aTextEvent)
 {
 	nsString				composedText;
 	nsresult				result;
+	nsCOMPtr<nsIDOMUIEvent>uiEvent;
+	nsIDOMTextRangeList		*textRangeList;
 
-  nsCOMPtr<nsIDOMUIEvent>uiEvent;
-  uiEvent = do_QueryInterface(aTextEvent);
-  if (!uiEvent) {
-    //non-ui event passed in.  bad things.
-    return NS_OK;
-  }
+	uiEvent = do_QueryInterface(aTextEvent);
+	if (!uiEvent) {
+		//non-ui event passed in.  bad things.
+		return NS_OK;
+	}
 
 	uiEvent->GetText(composedText);
-	result = mEditor->SetCompositionString(composedText);
+	uiEvent->GetInputRange(&textRangeList);
+	textRangeList->AddRef();
+	result = mEditor->SetCompositionString(composedText,textRangeList);
 	return result;
 }
 

@@ -138,7 +138,7 @@ public:
   NS_IMETHOD DeleteTableRow(PRInt32 aNumber);
   NS_IMETHOD JoinTableCells(PRBool aCellToRight);
   NS_IMETHOD BeginComposition(void);
-  NS_IMETHOD SetCompositionString(const nsString& aCompositionString);
+  NS_IMETHOD SetCompositionString(const nsString& aCompositionString, nsIDOMTextRangeList* aTextRangeList);
   NS_IMETHOD EndComposition(void);
   NS_IMETHOD StartLogging(nsIFileSpec *aLogFile);
   NS_IMETHOD StopLogging();

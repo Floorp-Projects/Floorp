@@ -137,18 +137,30 @@ struct nsKeyEvent : public nsInputEvent {
 };
 
 /**
- * Tooltip event
+ * IME Related Events
  */
+struct nsTextRange {
+	PRUint32	mStartOffset;
+	PRUint32	mEndOffset;
+	PRUint32	mRangeType;
+};
+
+typedef struct nsTextRange nsTextRange;
+typedef nsTextRange* nsTextRangeArray;
 
 struct nsTextEvent : public nsInputEvent {
 	PRUnichar*			theText;
-	PRBool				commitText;
+	PRUint32			rangeCount;
+	nsTextRangeArray	rangeArray;
 };
 
 struct nsCompositionEvent : public nsInputEvent {
 	PRUint32			compositionMessage;
 };
 
+/**
+ * Tooltip event
+ */
 struct nsTooltipEvent : public nsGUIEvent {
                 /// Index of tooltip area which generated the event. @see SetTooltips in nsIWidget
     PRUint32        tipIndex;           
@@ -452,6 +464,12 @@ enum nsDragDropEventStatus {
 #define NS_EVENT_FLAG_BUBBLE        0x0002
 #define NS_EVENT_FLAG_CAPTURE       0x0004
 #define NS_EVENT_FLAG_POST_PROCESS  0x0008
+
+// IME Constants  -- keep in synch with nsIDOMTextRange.h
+#define NS_TEXTRANGE_RAWINPUT					0X01
+#define NS_TEXTRANGE_SELECTEDRAWTEXT			0x02
+#define NS_TEXTRANGE_CONVERTEDTEXT				0x03
+#define NS_TEXTRANGE_SELECTEDCONVERTEDTEXT		0x04
 
 #endif // nsGUIEvent_h__
 

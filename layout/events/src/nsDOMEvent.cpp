@@ -26,6 +26,7 @@
 #include "nsIWidget.h"
 #include "nsIWebShell.h"
 #include "nsIPresShell.h"
+#include "nsDOMTextRange.h"
 
 static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
 static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
@@ -50,10 +51,28 @@ nsDOMEvent::nsDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent) {
   mEvent = aEvent;
   mTarget = nsnull;
   mText = nsnull;
+  mTextRange = nsnull;
 
   if (aEvent->eventStructType ==NS_TEXT_EVENT) {
+	  //
+	  // extract the IME composition string
+	  //
 	  mText = new nsString(((nsTextEvent*)aEvent)->theText);
-	  mCommitText = ((nsTextEvent*)aEvent)->commitText;
+	  //
+	  // build the range list -- ranges need to be DOM-ified since the IME transaction
+	  //  will hold a ref, the widget representation isn't persistent
+	  //
+	  nsIDOMTextRange** tempTextRangeList = new nsIDOMTextRange*[((nsTextEvent*)aEvent)->rangeCount];
+	  for(PRUint16 i=0;i<((nsTextEvent*)aEvent)->rangeCount;i++) {
+		  nsDOMTextRange* tempDOMTextRange = new nsDOMTextRange((((nsTextEvent*)aEvent)->rangeArray[i]).mStartOffset,
+													(((nsTextEvent*)aEvent)->rangeArray[i]).mEndOffset,
+													(((nsTextEvent*)aEvent)->rangeArray[i]).mRangeType);
+		  tempDOMTextRange->AddRef();
+		  tempTextRangeList[i] = (nsIDOMTextRange*)tempDOMTextRange;
+	  }
+		
+	  mTextRange = (nsIDOMTextRangeList*) new nsDOMTextRangeList(((nsTextEvent*)aEvent)->rangeCount,tempTextRangeList);
+	  mTextRange->AddRef();
   }
 
   NS_INIT_REFCNT();
@@ -62,8 +81,10 @@ nsDOMEvent::nsDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent) {
 nsDOMEvent::~nsDOMEvent() {
   NS_RELEASE(mPresContext);
   NS_IF_RELEASE(mTarget);
+  NS_IF_RELEASE(mTextRange);
 
-  delete mText;
+  if (mText!=nsnull)
+	delete mText;
 }
 
 NS_IMPL_ADDREF(nsDOMEvent)
@@ -182,18 +203,18 @@ NS_METHOD nsDOMEvent::GetText(nsString& aText)
 	return NS_ERROR_FAILURE;
 }
 
-NS_METHOD nsDOMEvent::GetCommitText(PRBool* aCommitText)
+NS_METHOD nsDOMEvent::GetInputRange(nsIDOMTextRangeList** aInputRange)
 {
 	if (mEvent->message == NS_TEXT_EVENT) {
-		*aCommitText = mCommitText;
+		*aInputRange = mTextRange;
 		return NS_OK;
 	}
-	
+
 	return NS_ERROR_FAILURE;
 }
 
-NS_METHOD nsDOMEvent::SetCommitText(PRBool aCommitText)
-{	
+NS_METHOD nsDOMEvent::SetInputRange(nsIDOMTextRangeList* aInputRange)
+{
 	return NS_ERROR_FAILURE;
 }
 

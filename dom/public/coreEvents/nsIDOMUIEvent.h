@@ -25,6 +25,7 @@
 #include "nsIScriptContext.h"
 #include "nsIDOMEvent.h"
 
+class nsIDOMTextRangeList;
 
 #define NS_IDOMUIEVENT_IID \
  { 0xa6cf90c3, 0x15b3, 0x11d2, \
@@ -150,8 +151,8 @@ public:
 
   NS_IMETHOD    GetText(nsString& aText)=0;
 
-  NS_IMETHOD    GetCommitText(PRBool* aCommitText)=0;
-  NS_IMETHOD    SetCommitText(PRBool aCommitText)=0;
+  NS_IMETHOD    GetInputRange(nsIDOMTextRangeList** aInputRange)=0;
+  NS_IMETHOD    SetInputRange(nsIDOMTextRangeList* aInputRange)=0;
 
   NS_IMETHOD    GetScreenX(PRInt32* aScreenX)=0;
 
@@ -179,8 +180,8 @@ public:
 
 #define NS_DECL_IDOMUIEVENT   \
   NS_IMETHOD    GetText(nsString& aText);  \
-  NS_IMETHOD    GetCommitText(PRBool* aCommitText);  \
-  NS_IMETHOD    SetCommitText(PRBool aCommitText);  \
+  NS_IMETHOD    GetInputRange(nsIDOMTextRangeList** aInputRange);  \
+  NS_IMETHOD    SetInputRange(nsIDOMTextRangeList* aInputRange);  \
   NS_IMETHOD    GetScreenX(PRInt32* aScreenX);  \
   NS_IMETHOD    GetScreenY(PRInt32* aScreenY);  \
   NS_IMETHOD    GetClientX(PRInt32* aClientX);  \
@@ -197,8 +198,8 @@ public:
 
 #define NS_FORWARD_IDOMUIEVENT(_to)  \
   NS_IMETHOD    GetText(nsString& aText) { return _to GetText(aText); } \
-  NS_IMETHOD    GetCommitText(PRBool* aCommitText) { return _to GetCommitText(aCommitText); } \
-  NS_IMETHOD    SetCommitText(PRBool aCommitText) { return _to SetCommitText(aCommitText); } \
+  NS_IMETHOD    GetInputRange(nsIDOMTextRangeList** aInputRange) { return _to GetInputRange(aInputRange); } \
+  NS_IMETHOD    SetInputRange(nsIDOMTextRangeList* aInputRange) { return _to SetInputRange(aInputRange); } \
   NS_IMETHOD    GetScreenX(PRInt32* aScreenX) { return _to GetScreenX(aScreenX); } \
   NS_IMETHOD    GetScreenY(PRInt32* aScreenY) { return _to GetScreenY(aScreenY); } \
   NS_IMETHOD    GetClientX(PRInt32* aClientX) { return _to GetClientX(aClientX); } \

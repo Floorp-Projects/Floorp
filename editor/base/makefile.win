@@ -62,6 +62,8 @@ CPPSRCS =				\
       nsEditorShellFactory.cpp	\
       nsJSEditorLog.cpp       \
       nsJSTxnLog.cpp          \
+	  IMETextTxn.cpp			\
+	  IMECommitTxn.cpp			\
 	$(NULL)
 
 CPP_OBJS =					\
@@ -106,6 +108,8 @@ CPP_OBJS =					\
   .\$(OBJDIR)\nsEditorShellFactory.obj \
   .\$(OBJDIR)\nsJSEditorLog.obj       \
   .\$(OBJDIR)\nsJSTxnLog.obj          \
+  .\$(OBJDIR)\IMETextTxn.obj        \
+  .\$(OBJDIR)\IMECommitTxn.obj        \
 	$(NULL)
 
 MODULE=editor 

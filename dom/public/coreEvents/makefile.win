@@ -38,6 +38,8 @@ EXPORTS =				\
 	nsIDOMEventTarget.h		\
 	nsIDOMTextListener.h		\
 	nsIDOMCompositionListener.h	\
+	nsIDOMTextRange.h			\
+	nsIDOMTextRangeList.h		\
 	$(NULL)
 
 MODULE=dom

@@ -2488,9 +2488,9 @@ NS_IMETHODIMP nsHTMLEditor::EndComposition(void)
 	return nsTextEditor::EndComposition();
 }
 
-NS_IMETHODIMP nsHTMLEditor::SetCompositionString(const nsString& aCompositionString)
+NS_IMETHODIMP nsHTMLEditor::SetCompositionString(const nsString& aCompositionString, nsIDOMTextRangeList* aTextRangeList)
 {
-	return nsTextEditor::SetCompositionString(aCompositionString);
+	return nsTextEditor::SetCompositionString(aCompositionString,aTextRangeList);
 }
 
 NS_IMETHODIMP

@@ -81,10 +81,11 @@ public:
 
   NS_IMETHOD    PreventDefault();
 
-  NS_IMETHOD	  GetText(nsString& aText);
+  NS_IMETHOD	GetText(nsString& aText);
 
-  NS_IMETHOD	  GetCommitText(PRBool* aCommitText);
-  NS_IMETHOD	  SetCommitText(PRBool aCommitText);
+  NS_IMETHOD    GetInputRange(nsIDOMTextRangeList** aInputRange);
+
+  NS_IMETHOD    SetInputRange(nsIDOMTextRangeList* aInputRange);
 
   NS_IMETHOD    GetScreenX(PRInt32* aScreenX);
 
@@ -135,7 +136,7 @@ protected:
   nsIPresContext* mPresContext;
   nsIDOMNode* mTarget;
   nsString*	mText;
-  PRBool	mCommitText;
+  nsIDOMTextRangeList*	mTextRange;
   const char* GetEventName(PRUint32 aEventType);
 
 };
