@@ -771,16 +771,16 @@ void CBrowserWindow::ListenToMessage(MessageT inMessage, void* ioParam)
 		
 		case msg_UserSubmittedURL:
 			// user hit enter or return in URL edit field
-			CStr255* urlString = (CStr255*)ioParam;
-			if (urlString && mContext)
+			const char* urlString = (const char*)ioParam;
+			
+			if (urlString && *urlString && mContext)
 			{
 			/*		old way
 				URL_Struct* theURL =
 					NET_CreateURLStruct(*urlString, NET_DONT_RELOAD);
 				mContext->SwitchLoadURL(theURL, FO_CACHE_AND_PRESENT);
 			*/
-				if (!urlString->IsEmpty())
-					SendAEGetURL(*urlString);
+				SendAEGetURL(urlString);
 			}
 			break;
 		
