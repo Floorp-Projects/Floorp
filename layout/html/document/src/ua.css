@@ -131,12 +131,13 @@ table {
   display: table;
 /* border-style: outset; */
   border-color: #c0c0c0;
-  cell-spacing: 2px;
-  cell-padding: 2px;
+  border-spacing: 2px; 
   margin-top: 0;
   margin-bottom: 0;
   background: transparent;
 }
+
+/* must never set padding in td, th */
 td, th {
   vertical-align: inherit;
   background-color: inherit;

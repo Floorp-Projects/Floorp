@@ -277,6 +277,8 @@ protected:
   void GetColumnsThatActLikeAutoWidth(PRInt32&  aOutNumColumns,
                                       PRInt32*& aOutColumnIndexes);
 
+  nscoord CalcHorizontalPadding(PRInt32 aColX);
+
 
 protected:
   nsTableFrame * mTableFrame;

@@ -345,6 +345,47 @@ PRBool BasicTableLayoutStrategy::BalanceColumnWidths(nsIStyleContext*         aT
   return result;
 }
 
+nscoord BasicTableLayoutStrategy::CalcHorizontalPadding(PRInt32 aColX)
+{
+  nscoord maxLeftPadding  = 0;  // max left padding for cells starting in this col
+  nscoord maxRightPadding = 0;  // max right padding for cells ending in this col
+  PRInt32 numRows = mTableFrame->GetRowCount();
+
+  for (PRInt32 rowX = 0; rowX < numRows; rowX++) {
+    nsTableCellFrame* cellFrame = mTableFrame->GetCellFrameAt(rowX, aColX);
+    if (nsnull == cellFrame) { // there is no cell in this row that corresponds to this column
+      continue;
+    }
+    PRInt32 cellRowX;
+    cellFrame->GetRowIndex(cellRowX);
+    if (rowX != cellRowX) { // don't do anything except for 1st row this cell is in
+      continue;
+    }
+    const nsStyleSpacing* spacing;
+    cellFrame->GetStyleData(eStyleStruct_Spacing,(const nsStyleStruct *&)spacing);
+    nsMargin marg;
+    spacing->CalcPaddingFor(cellFrame, marg); 
+    maxLeftPadding = PR_MAX(maxLeftPadding, marg.left);
+
+    PRInt32 colSpan = mTableFrame->GetEffectiveColSpan(aColX, cellFrame);
+
+    nsStyleCoord coord;
+    PRInt32 cellColX;
+    cellFrame->GetColIndex(cellColX);
+    if (aColX != cellColX) { // the cell does not originate in this col
+      if (-1 == aColX - cellColX - colSpan) { // the cell ends in this col
+        spacing->mPadding.GetLeft(coord);
+        maxRightPadding = PR_MAX(maxLeftPadding, marg.right);
+      }
+      continue;
+    }
+    if (1 == colSpan) { // the cell ends in this col
+      maxRightPadding = PR_MAX(maxLeftPadding, marg.right);
+    }
+  }
+  return maxLeftPadding + maxRightPadding;
+}
+
 // Step 1 - assign the width of all fixed-width columns, all other columns get there max, 
 //          and calculate min/max table width
 PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths()
@@ -362,11 +403,9 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths()
     maxColWidthArray = new PRInt32[mNumCols];
   }
 
-  nscoord cellPadding = mTableFrame->GetCellPadding();
-  TDBG_SD("table cell padding = %d\n", cellPadding);
-
   PRInt32 numRows = mTableFrame->GetRowCount();
   PRInt32 colIndex, rowIndex;
+  PRInt32* horPadding = new PRInt32[mNumCols];
 
   // for every column, determine it's min and max width, and keep track of the table width
   for (colIndex = 0; colIndex < mNumCols; colIndex++) { 
@@ -380,7 +419,7 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths()
     PRBool haveColWidth = PR_FALSE;       // if true, the column has a width either from HTML width attribute,
                                           //   from a style rule on the column, 
                                           //   or from a width attr/style on a cell that has colspan==1 
-                                          
+    horPadding[colIndex] = 0;                                     
     // Get column information
     nsTableColFrame* colFrame = mTableFrame->GetColFrame(colIndex);
     TDBG_SDD("BTLS::APCW - got colFrame %p for colIndex %d\n", colFrame, colIndex);
@@ -396,7 +435,8 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths()
     if (eStyleUnit_Coord == colPosition->mWidth.GetUnit()) {
       haveColWidth = PR_TRUE;
       specifiedFixedColWidth = colPosition->mWidth.GetCoordValue();
-      specifiedFixedColWidth += (cellPadding*2);
+      horPadding[colIndex] = CalcHorizontalPadding(colIndex);
+      specifiedFixedColWidth += horPadding[colIndex];
       TDBG_SD("BTLS::APCW - got specified col width = %d\n", specifiedFixedColWidth);
     }
 
@@ -421,8 +461,10 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths()
         NS_ASSERTION(1 != cellFrame->GetRowSpan(), "row index does not match row span");  // sanity check
         continue;
       }
+
       PRInt32 colSpan = mTableFrame->GetEffectiveColSpan(colIndex, cellFrame);
       maxColSpan = PR_MAX(maxColSpan,colSpan);
+
       PRInt32 cellColIndex;
       cellFrame->GetColIndex(cellColIndex);
       if (colIndex != cellColIndex) {
@@ -437,12 +479,8 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths()
       nscoord cellMinWidth = cellMinSize.width;
 
       if (1 == colSpan) {
-        if (0 == minColContentWidth) {
-          minColContentWidth = cellMinWidth;
-        }
-        else {
-          minColContentWidth = PR_MAX(minColContentWidth, cellMinWidth);
-        }
+        minColContentWidth = (0 == minColContentWidth) 
+          ? cellMinWidth : PR_MAX(minColContentWidth, cellMinWidth);
       }
       else {
         minColContentWidth = PR_MAX(minColContentWidth, cellMinWidth/colSpan);  // no need to divide this proportionately
@@ -556,7 +594,7 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths()
     } // end for (rowIndex = 0; rowIndex < numRows; rowIndex++)
 
     // adjust the "fixed" width for content that is too wide
-    if (effectiveMinColumnWidth > specifiedFixedColWidth) {
+    if (haveColWidth && (effectiveMinColumnWidth > specifiedFixedColWidth)) {
       specifiedFixedColWidth = effectiveMinColumnWidth;
     }
     // do all the global bookkeeping, factoring in margins
@@ -707,7 +745,7 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths()
           if (eStyleUnit_Coord == colPosition->mWidth.GetUnit()) {
             if (nsTableColFrame::eWIDTH_SOURCE_CELL_WITH_SPAN!=colFrame->GetWidthSource()) {
               nscoord specifiedFixedColWidth = colPosition->mWidth.GetCoordValue();
-              specifiedFixedColWidth += (cellPadding*2);
+              specifiedFixedColWidth += horPadding[colIndex];
               if (specifiedFixedColWidth>=colFrame->GetEffectiveMinColWidth()) {
                 mTableFrame->SetColumnWidth(colIndex, specifiedFixedColWidth);
                 colFrame->SetMaxColWidth(specifiedFixedColWidth);
@@ -719,6 +757,7 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths()
       }
     }
   }
+  delete [] horPadding;
 
   // now set the min and max table widths
   SetMinAndMaxTableWidths();
