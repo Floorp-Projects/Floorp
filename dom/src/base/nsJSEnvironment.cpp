@@ -81,7 +81,7 @@ NS_ScriptErrorReporter(JSContext *cx,
   // XXX this means we are not going to get error reports on non DOM contexts
   nsJSUtils::nsGetDynamicScriptContext(cx, getter_AddRefs(context));
   if (context) {
-    nsCOMPtr<nsIScriptGlobalObject> globalObject(context->GetGlobalObject());
+    nsCOMPtr<nsIScriptGlobalObject> globalObject( dont_AddRef( context->GetGlobalObject() ) );
 
     if (globalObject) {
       nsCOMPtr<nsIScriptGlobalObjectOwner> owner;
