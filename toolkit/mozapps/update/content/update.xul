@@ -37,6 +37,8 @@
 # ***** END LICENSE BLOCK *****
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
+<?xml-stylesheet href="chrome://mozapps/content/update/update.css" type="text/css"?> 
+<?xml-stylesheet href="chrome://mozapps/skin/update/update.css" type="text/css"?> 
 
 <!DOCTYPE wizard [
 <!ENTITY % updateDTD SYSTEM "chrome://mozapps/locale/update/update.dtd">
@@ -57,10 +59,10 @@
   
   <stringbundleset id="updateSet">
     <stringbundle id="brandStrings" src="chrome://global/locale/brand.properties"/>
-    <stringbundle id="extensionsStrings" src="chrome://mozapps/locale/extensions/extensions.properties"/>
+    <stringbundle id="updateStrings" src="chrome://mozapps/locale/update/update.properties"/>
   </stringbundleset>
 
-  <wizardpage id="mismatch" pageid="mismatch" next="checkingForUpdates"
+  <wizardpage id="mismatch" pageid="mismatch" next="checking"
               label="&mismatch.title;"
               onpageadvanced="gMismatchPage.onPageAdvanced();">
 
@@ -79,29 +81,38 @@
 
   </wizardpage>
   
-  <wizardpage id="checkingForUpdates" pageid="checkingForUpdates" next="updatesNotFound"
+  <wizardpage id="checking" pageid="checking" next="noupdates"
               label="&checking.title;"
               onpageshow="gUpdatePage.onPageShow();">
 
     <label>&checking.intro.label;</label>
     
-    <progressmeter id="progress"/>
+    <separator/>
+    
+    <progressmeter id="checking.progress"/>
     
   </wizardpage>
     
-  <wizardpage id="updatesNotFound" pageid="updatesNotFound" next="finished"
-              label="&updatesNotFound.title;"
-              onpageshow="UpdateWizard.onUpdatesNotFoundPageShow();"
-              onpageadvanced="UpdateWizard.onUpdatesNotFoundPageAdvanced();">
+  <wizardpage id="noupdates" pageid="noupdates" next="finished"
+              label="&noupdates.title;"
+              onpageshow="gNoUpdatesPage.onPageShow();"
+              onpageadvanced="gNoUpdatesPage.onPageAdvanced();">
   </wizardpage>
 
-  <wizardpage id="updatesFound" pageid="updatesFound" next="finished"
-              label="&updatesFound.title;"
-              onpageshow="UpdateWizard.onUpdatesFoundPageShow();"
-              onpageadvanced="UpdateWizard.onUpdatesFoundPageAdvanced();">
+  <wizardpage id="found" pageid="found" next="installing"
+              label="&found.title;"
+              onpageshow="gFoundPage.onPageShow();"
+              onpageadvanced="gFoundPage.onPageAdvanced();">
+
+    <label>&found.intro.label;</label>
+    
+    <vbox id="foundList" flex="1" style="height: 16em; overflow: auto;"/>
+
+    <label>&found.instructions.label;</label>
+    
   </wizardpage>
 
-  <wizardpage id="installing" pageid="installing"
+  <wizardpage id="installing" pageid="installing" next="finished"
               label="&installing.title;"
               onpageshow="UpdateWizard.onFinishedPageShow();"
               onpageadvanced="UpdateWizard.onFinishedPageAdvanced();">

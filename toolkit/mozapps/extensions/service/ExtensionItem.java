@@ -7,6 +7,7 @@ public class ExtensionItem
   private java.lang.String version;
   private java.lang.String name;
   private java.lang.String xpiURL;
+  private java.lang.String iconURL;
   private int type;
 
   public ExtensionItem() 
@@ -61,6 +62,16 @@ public class ExtensionItem
   public void setXpiURL(java.lang.String xpiURL) 
   {
     this.xpiURL = xpiURL;
+  }
+  
+  public java.lang.String getIconURL() 
+  {
+    return iconURL;
+  }
+
+  public void setIconURL(java.lang.String iconURL) 
+  {
+    this.iconURL = iconURL;
   }
   
   public int getType() 

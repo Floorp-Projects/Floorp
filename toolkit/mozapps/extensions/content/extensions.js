@@ -378,7 +378,8 @@ var gExtensionsViewController = {
                              .createInstance(Components.interfaces.nsIExtensionItem);
         item.init(aItemID, this.getExtensionProperty(aItemID, "version"),
                   this.getExtensionProperty(aItemID, "name"),
-                  -1, "", Components.interfaces.nsIExtensionItem.TYPE_EXTENSION); // XXXben
+                  -1, "", "",
+                  Components.interfaces.nsIExtensionItem.TYPE_EXTENSION); // XXXben
         items.push(item);
       }
       else {
@@ -394,7 +395,8 @@ var gExtensionsViewController = {
                                .createInstance(Components.interfaces.nsIExtensionItem);
           item.init(id, this.getExtensionProperty(id, "version"),
                     this.getExtensionProperty(id, "name"),
-                    -1, "", Components.interfaces.nsIExtensionItem.TYPE_EXTENSION); // XXXben
+                    -1, "", "",
+                    Components.interfaces.nsIExtensionItem.TYPE_EXTENSION); // XXXben
           items.push(item);
         }
       }

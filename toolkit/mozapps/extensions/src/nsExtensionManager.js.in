@@ -49,13 +49,14 @@ function ExtensionItem ()
 }
 
 ExtensionItem.prototype = {
-  init: function (aID, aVersion, aName, aRow, aXPIURL, aType)
+  init: function (aID, aVersion, aName, aRow, aXPIURL, aIconURL, aType)
   {
     this._id = aID;
     this._version = aVersion;
     this._name = aName;
     this._row = aRow;
     this._xpiURL = aXPIURL;
+    this._iconURL = aIconURL;
     this._type = aType;
   },
   
@@ -64,12 +65,14 @@ ExtensionItem.prototype = {
   get name()    { return this._name;    },
   get row()     { return this._row;     },
   get xpiURL()  { return this._xpiURL;  },
+  get iconURL() { return this._iconURL  },
   get type()    { return this._type;    },
 
-  toObject: function ()
+  get objectSource()
   {
     return { id: this._id, version: this._version, name: this._name, 
-             row: this._row, xpiURL: this._xpiURL, type: this._type };
+             row: this._row, xpiURL: this._xpiURL, iconURL: this._iconURL, 
+             type: this._type }.toSource();
   },
 
   /////////////////////////////////////////////////////////////////////////////
@@ -251,7 +254,7 @@ nsExtensionManager.prototype = {
     var appID = pref.getCharPref(PREF_EM_APP_ID);
     var appVersion = pref.getCharPref(PREF_EM_APP_VERSION);
 
-    var updater = new nsItemUpdater(aItems, appID, appVersion);
+    var updater = new nsExtensionItemUpdater(aItems, appID, appVersion);
     
     switch (aUpdateType) {
     case Components.interfaces.nsIExtensionManager.UPDATE_TYPE_MISMATCH:
@@ -318,7 +321,7 @@ nsExtensionManager.prototype = {
   }
 };
 
-function nsItemUpdater(aItems, aTargetAppID, aTargetAppVersion) 
+function nsExtensionItemUpdater(aItems, aTargetAppID, aTargetAppVersion) 
 {
   this._items = aItems;
   this._count = aItems.length;
@@ -329,9 +332,9 @@ function nsItemUpdater(aItems, aTargetAppID, aTargetAppVersion)
                        .getService(Components.interfaces.nsIObserverService);
 }
 
-nsItemUpdater.prototype = {
+nsExtensionItemUpdater.prototype = {
   /////////////////////////////////////////////////////////////////////////////
-  // 
+  // nsIExtensionItemUpdater
   checkForUpdates: function () 
   {
     this._os.notifyObservers(null, "update-started", "");
@@ -341,6 +344,8 @@ nsItemUpdater.prototype = {
                                 "VersionCheck", "", true, this);
   },
 
+  /////////////////////////////////////////////////////////////////////////////
+  // nsExtensionItemUpdater
   _proxy: null,
   
   _checkForUpdates: function ()
@@ -348,7 +353,8 @@ nsItemUpdater.prototype = {
     for (var i = 0; i < this._items.length; ++i) {
       var e = this._items[i];
       this._os.notifyObservers(null, "update-item-started", e.name + " " + e.version);
-      this._proxy.getNewestExtension(e, this._appID, this._appVersion);
+      dump("*** obj = " + e.objectSource + "\n"); // goats
+      this._proxy.getNewestExtension(eval(e.objectSource), this._appID, this._appVersion);
     }
   },
 
@@ -381,7 +387,17 @@ nsItemUpdater.prototype = {
     
     if (--this._count == 0)
       this._os.notifyObservers(null, "update-ended", "");
-  }
+  },
+  
+  /////////////////////////////////////////////////////////////////////////////
+  // nsISupports
+  QueryInterface: function (aIID) 
+  {
+    if (!aIID.equals(Components.interfaces.nsIExtensionItemUpdater) &&
+        !aIID.equals(Components.interfaces.nsISupports))
+      throw Components.results.NS_ERROR_NO_INTERFACE;
+    return this;
+  }  
 };
 
 
@@ -432,7 +448,8 @@ nsExtensionsDataSource.prototype = {
                              .createInstance(Components.interfaces.nsIExtensionItem);
         item.init(id, this.getExtensionProperty(id, "version"),
                   this.getExtensionProperty(id, "name"),
-                  -1, "", Components.interfaces.nsIExtensionItem.TYPE_EXTENSION);
+                  -1, "", "", 
+                  Components.interfaces.nsIExtensionItem.TYPE_EXTENSION);
         items.push(item);
       }
     }

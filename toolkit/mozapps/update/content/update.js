@@ -47,12 +47,13 @@ var gUpdater = null;
 
 var gUpdateWizard = {
   _items: [],
+  _itemsToUpdate: [],
 
   init: function ()
   {
-    gUpdater = window.arguments[0];
-    for (var i = 1; i < window.argments.length; ++i)
-      this._items.push(window.arguments[i].QueryInterface(Components.interfaces.nsIExtensionItem));
+    gUpdater = window.arguments[0].QueryInterface(Components.interfaces.nsIExtensionItemUpdater);
+    for (var i = 1; i < window.arguments.length; ++i)
+      this._items.push(window.arguments[i].QueryInterface(nsIExtensionItem));
 
     gMismatchPage.init();
   },
@@ -76,7 +77,7 @@ var gMismatchPage = {
       incompatible.appendChild(listitem);
     }
     
-    var strings = document.getElementById("extensionsStrings");
+    var strings = document.getElementById("updateStrings");
     var next = document.documentElement.getButton("next");
     next.label = strings.getString("mismatchCheckNow");
     var cancel = document.documentElement.getButton("cancel");
@@ -90,7 +91,7 @@ var gMismatchPage = {
 };
 
 var gUpdatePage = {
-  _itemsToUpdate: [],
+  _completeCount: 0,
   _messages: ["update-started", 
               "update-ended", 
               "update-item-started", 
@@ -99,31 +100,22 @@ var gUpdatePage = {
   
   onPageShow: function ()
   {
+    var strings = document.getElementById("updateStrings");
+    var next = document.documentElement.getButton("next");
+    next.label = strings.getString("nextButtonText");
+    next.disabled = true;
+    var cancel = document.documentElement.getButton("cancel");
+    cancel.label = strings.getString("cancelButtonText");
+    cancel.disabled = true;
+    var back = document.documentElement.getButton("back");
+    back.disabled = true;
+
     var os = Components.classes["@mozilla.org/observer-service;1"]
                        .getService(Components.interfaces.nsIObserverService);
     for (var i = 0; i < this._messages.length; ++i)
       os.addObserver(this, this._messages[i], false);
 
-    var extensions = [];
-    var themes = [];
-    for (i = 0; i < gExtensionItems.length; ++i) {
-      switch (gExtensionItems[i].type) {
-      case nsIExtensionItem.TYPE_EXTENSION:
-        extensions.push(gExtensionItems[i]);
-        break;
-      case nsIExtensionItem.TYPE_THEME:
-        themes.push(gExtensionItems[i]);
-        break;
-      }
-    }
-        
-    var em = Components.classes["@mozilla.org/extensions/manager;1"]
-                       .getService(Components.interfaces.nsIExtensionManager);
-    if (this._updateType == "extensions")
-      em.updateExtensions(extensions);
-    else if (gUpdateType == "themes")
-      em.updateTheme(this._extensionID);
-  
+    gUpdater.checkForUpdates();
   },
   
   uninit: function ()
@@ -142,21 +134,47 @@ var gUpdatePage = {
     case "update-item-started":
       break;
     case "update-item-ended":
-      this._extensionsToUpdate.push(aSubject);
+      dump("*** update-item-ended\n");
+      gUpdateWizard._itemsToUpdate.push(aSubject);
+      
+      ++this._completeCount;
+      
+      var progress = document.getElementById("checking.progress");
+      progress.value = Math.ceil(this._completeCount / gUpdateWizard._itemsToUpdate.length) * 100;
+      
       break;
     case "update-ended":
-      var installObj = { };
-      for (var i = 0; i < this._extensionsToUpdate.length; ++i) {  
-        var e = this._extensionsToUpdate[i];
-        installObj[e.name + " " + e.version] = e.xpiURL;
-      }
-      if (InstallTrigger.updateEnabled())
-        InstallTrigger.install(installObj);
-
-      document.documentElement.acceptDialog();
+      if (gUpdateWizard._itemsToUpdate.length > 0)
+        document.getElementById("checking").setAttribute("next", "found");
+      document.documentElement.advance();
       break;
     }
   }
+};
+
+var gFoundPage = {
+  
+  onPageShow: function ()
+  {
+    var strings = document.getElementById("updateStrings");
+    var next = document.documentElement.getButton("next");
+    next.label = strings.getString("installButtonText");
+    next.disabled = false;
+    var back = document.documentElement.getButton("back");
+    back.disabled = true;
+
+    var list = document.getElementById("foundList");
+    for (var i = 0; i < gUpdateWizard._itemsToUpdate.length; ++i) {
+      var updateitem = document.createElement("updateitem");
+      list.appendChild(updateitem);
+      
+      var item = gUpdateWizard._itemsToUpdate[i];
+      updateitem.name = item.name + " " + item.version;
+      updateitem.url = item.xpiURL;
+      if (item.iconURL != "")
+        updateitem.icon = item.iconURL;
+    }
+  },
 };
 
 
