@@ -40,6 +40,12 @@ DLL		=.\$(OBJDIR)\$(DLLNAME).dll
 
 MODULE=xpctools
 
+REQUIRES	= xpcom \
+		  xpconnect \
+		  js \
+		  string \
+		  $(NULL)
+
 DEFINES=-DWIN32_LEAN_AND_MEAN
 
 OBJS=					\

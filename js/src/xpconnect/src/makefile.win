@@ -42,6 +42,9 @@ REQUIRES	= xpcom \
 		  js \
 		  dom \
 		  caps \
+!ifdef XPC_TOOLS_SUPPORT
+		  xpctools \
+!endif
 		  $(NULL)
 
 #PDBFILE		= $(DLLNAME).pdb
