@@ -24,18 +24,28 @@
 //
 // Modification History:
 // Who  When        What
+// TK   02/11/2000  Added default constructor.  If no NS object is provided
+//                  simply create an nsXMLDocument to use.
+// TK   02/15/2000  Fixed bug in Create Wrapper.  We must check to see if the
+//                  the nsIDOM* object is NULL.  If it is, then we don't need
+//                  a wrapper.
+//                  Also fixed the same problem with the other factory methods
+//                  that create wrappers for Mozilla objects.
 //
 
 #include "mozilladom.h"
+#include "nsXMLDocument.h"
 #include "iostream.h"
 
 //
 //Construct a Document Wrapper object without specificy a nsIDOMDocument
-//object.
+//object.  We will create an ns
 //
-/*Document::Document() : Node()
+Document::Document()
 {
-}*/
+  nsDocument = new nsXMLDocument();
+  Node::setNSObj(nsDocument, this);
+}
 
 //
 //Construct a Document Wrapper object with a nsIDOMDocument object
@@ -276,13 +286,18 @@ DocumentFragment* Document::createDocumentFragment()
 DocumentFragment* 
    Document::createDocumentFragment(nsIDOMDocumentFragment* fragment)
 {
-    DocumentFragment* docFragWrapper = 
-    (DocumentFragment*)wrapperHashTable.retrieve((Int32)fragment);
-      
-  if (!docFragWrapper)
+  DocumentFragment* docFragWrapper = NULL;
+
+  if (fragment)
     {
-      docFragWrapper = new DocumentFragment(fragment, this);
-      wrapperHashTable.add(docFragWrapper, (Int32)fragment);
+      docFragWrapper = 
+	(DocumentFragment*)wrapperHashTable.retrieve((Int32)fragment);
+      
+      if (!docFragWrapper)
+	{
+	  docFragWrapper = new DocumentFragment(fragment, this);
+	  wrapperHashTable.add(docFragWrapper, (Int32)fragment);
+	}
     }
 
   return docFragWrapper;
@@ -309,12 +324,17 @@ Element* Document::createElement(const DOMString& tagName)
 //
 Element* Document::createElement(nsIDOMElement* element)
 {
-  Element* elemWrapper = (Element*)wrapperHashTable.retrieve((Int32)element);
-      
-  if (!elemWrapper)
+  Element* elemWrapper = NULL;
+
+  if (element)
     {
-      elemWrapper = new Element(element, this);
-      wrapperHashTable.add(elemWrapper, (Int32)element);
+      elemWrapper = (Element*)wrapperHashTable.retrieve((Int32)element);
+      
+      if (!elemWrapper)
+	{
+	  elemWrapper = new Element(element, this);
+	  wrapperHashTable.add(elemWrapper, (Int32)element);
+	}
     }
 
   return elemWrapper;
@@ -343,12 +363,17 @@ Attr* Document::createAttribute(const DOMString& name)
 //
 Attr* Document::createAttribute(nsIDOMAttr* attr)
 {
-  Attr* attrWrapper = (Attr*)wrapperHashTable.retrieve((Int32)attr);
+  Attr* attrWrapper = NULL;
 
-  if (!attrWrapper)
+  if (attr)
     {
-      attrWrapper = new Attr(attr, this);
-      wrapperHashTable.add(attrWrapper, (Int32)attr);
+      attrWrapper = (Attr*)wrapperHashTable.retrieve((Int32)attr);
+
+      if (!attrWrapper)
+	{
+	  attrWrapper = new Attr(attr, this);
+	  wrapperHashTable.add(attrWrapper, (Int32)attr);
+	}
     }
 
   return attrWrapper;
@@ -378,12 +403,17 @@ Text* Document::createTextNode(const DOMString& theData)
 //
 Text* Document::createTextNode(nsIDOMText* text)
 {
-  Text* textWrapper = (Text*)wrapperHashTable.retrieve((Int32)text);
+  Text* textWrapper = NULL;
 
-  if (!textWrapper)
+  if (text)
     {
-      textWrapper = new Text(text, this);
-      wrapperHashTable.add(textWrapper, (Int32)text);
+      textWrapper = (Text*)wrapperHashTable.retrieve((Int32)text);
+
+      if (!textWrapper)
+	{
+	  textWrapper = new Text(text, this);
+	  wrapperHashTable.add(textWrapper, (Int32)text);
+	}
     }
 
   return textWrapper;
@@ -412,13 +442,17 @@ Comment* Document::createComment(const DOMString& theData)
 //caller.
 Comment* Document::createComment(nsIDOMComment* comment)
 {
-  Comment* commentWrapper = 
-    (Comment*)wrapperHashTable.retrieve((Int32)comment);
+  Comment* commentWrapper = NULL;
 
-  if (!commentWrapper)
+  if (comment)
     {
-      commentWrapper = new Comment(comment, this);
-      wrapperHashTable.add(commentWrapper, (Int32)comment);
+      commentWrapper = (Comment*)wrapperHashTable.retrieve((Int32)comment);
+
+      if (!commentWrapper)
+	{
+	  commentWrapper = new Comment(comment, this);
+	  wrapperHashTable.add(commentWrapper, (Int32)comment);
+	}
     }
 
   return commentWrapper;
@@ -449,13 +483,17 @@ CDATASection* Document::createCDATASection(const DOMString& theData)
 //
 CDATASection* Document::createCDATASection(nsIDOMCDATASection* cdata)
 {
-  CDATASection* cdataWrapper = 
-    (CDATASection*)wrapperHashTable.retrieve((Int32)cdata);
+  CDATASection* cdataWrapper = NULL;
 
-  if (!cdataWrapper)
+  if (cdata)
     {
-      cdataWrapper = new CDATASection(cdata, this);
-      wrapperHashTable.add(cdataWrapper, (Int32)cdata);
+      cdataWrapper = (CDATASection*)wrapperHashTable.retrieve((Int32)cdata);
+
+      if (!cdataWrapper)
+	{
+	  cdataWrapper = new CDATASection(cdata, this);
+	  wrapperHashTable.add(cdataWrapper, (Int32)cdata);
+	}
     }
 
   return cdataWrapper;
@@ -489,13 +527,17 @@ ProcessingInstruction*
 ProcessingInstruction* 
 Document::createProcessingInstruction(nsIDOMProcessingInstruction* pi)
 {
-  ProcessingInstruction* piWrapper = 
-    (ProcessingInstruction*)wrapperHashTable.retrieve((Int32)pi);
+  ProcessingInstruction* piWrapper = NULL;
 
-  if (!piWrapper)
+  if (pi)
     {
-      piWrapper = new ProcessingInstruction(pi, this);
-      wrapperHashTable.add(piWrapper, (Int32)pi);
+      piWrapper = (ProcessingInstruction*)wrapperHashTable.retrieve((Int32)pi);
+
+      if (!piWrapper)
+	{
+	  piWrapper = new ProcessingInstruction(pi, this);
+	  wrapperHashTable.add(piWrapper, (Int32)pi);
+	}
     }
 
   return piWrapper;
@@ -527,13 +569,18 @@ EntityReference* Document::createEntityReference(const DOMString& name)
 EntityReference* 
 Document::createEntityReference(nsIDOMEntityReference* entityRef)
 {
-  EntityReference* entityWrapper = (EntityReference*)
-    wrapperHashTable.retrieve((Int32)entityRef);
+  EntityReference* entityWrapper = NULL;
 
-  if (!entityWrapper)
+  if (entityRef)
     {
-      entityWrapper = new EntityReference(entityRef, this);
-      wrapperHashTable.add(entityWrapper, (Int32)entityRef);
+      entityWrapper = 
+	(EntityReference*) wrapperHashTable.retrieve((Int32)entityRef);
+
+      if (!entityWrapper)
+	{
+	  entityWrapper = new EntityReference(entityRef, this);
+	  wrapperHashTable.add(entityWrapper, (Int32)entityRef);
+	}
     }
 
   return entityWrapper;
@@ -545,12 +592,17 @@ Document::createEntityReference(nsIDOMEntityReference* entityRef)
 //it to the caller.
 Entity* Document::createEntity(nsIDOMEntity* entity)
 {
-  Entity* entityWrapper = (Entity*)wrapperHashTable.retrieve((Int32) entity);
+  Entity* entityWrapper = NULL;
 
-  if (!entity)
+  if (entity)
     {
-      entityWrapper = new Entity(entity, this);
-      wrapperHashTable.add(entityWrapper, (Int32)entity);
+      entityWrapper = (Entity*)wrapperHashTable.retrieve((Int32) entity);
+
+      if (!entity)
+	{
+	  entityWrapper = new Entity(entity, this);
+	  wrapperHashTable.add(entityWrapper, (Int32)entity);
+	}
     }
 
   return entityWrapper;
@@ -564,12 +616,17 @@ Entity* Document::createEntity(nsIDOMEntity* entity)
 //
 Node* Document::createNode(nsIDOMNode* node)
 {
-  Node* nodeWrapper = (Node*)wrapperHashTable.retrieve((Int32)node);
+  Node* nodeWrapper = NULL;
 
-  if (!nodeWrapper)
+  if (node)
     {
-      nodeWrapper = new Node(node, this);
-      wrapperHashTable.add(nodeWrapper, (Int32)node);
+      nodeWrapper = (Node*)wrapperHashTable.retrieve((Int32)node);
+
+      if (!nodeWrapper)
+	{
+	  nodeWrapper = new Node(node, this);
+	  wrapperHashTable.add(nodeWrapper, (Int32)node);
+	}
     }
 
   return nodeWrapper;
@@ -582,12 +639,17 @@ Node* Document::createNode(nsIDOMNode* node)
 //
 DOMString* Document::createDOMString(nsString* str)
 {
-  DOMString* strWrapper = (DOMString*)wrapperHashTable.retrieve((Int32)str);
+  DOMString* strWrapper = NULL;
 
-  if (!strWrapper)
+  if (str)
     {
-      strWrapper = new DOMString(str);
-      wrapperHashTable.add(strWrapper, (Int32)str);
+      strWrapper = (DOMString*)wrapperHashTable.retrieve((Int32)str);
+
+      if (!strWrapper)
+	{
+	  strWrapper = new DOMString(str);
+	  wrapperHashTable.add(strWrapper, (Int32)str);
+	}
     }
 
   return strWrapper;
@@ -598,13 +660,17 @@ DOMString* Document::createDOMString(nsString* str)
 //
 Notation* Document::createNotation(nsIDOMNotation* notation)
 {
-  Notation* notationWrapper = 
-    (Notation*)wrapperHashTable.retrieve((Int32) notation);
+  Notation* notationWrapper = NULL;
 
-  if (!notationWrapper)
+  if (notation)
     {
-      notationWrapper = new Notation(notation, this);
-      wrapperHashTable.add(notationWrapper, (Int32)notation);
+      notationWrapper = (Notation*)wrapperHashTable.retrieve((Int32) notation);
+
+      if (!notationWrapper)
+	{
+	  notationWrapper = new Notation(notation, this);
+	  wrapperHashTable.add(notationWrapper, (Int32)notation);
+	}
     }
 
   return notationWrapper;
@@ -616,13 +682,17 @@ Notation* Document::createNotation(nsIDOMNotation* notation)
 DOMImplementation* 
 Document::createDOMImplementation(nsIDOMDOMImplementation* impl)
 {
-  DOMImplementation* implWrapper = 
-    (DOMImplementation*)wrapperHashTable.retrieve((Int32)impl);
+  DOMImplementation* implWrapper = NULL;
 
-  if (!implWrapper)
+  if (impl)
     {
-      implWrapper = new DOMImplementation(impl, this);
-      wrapperHashTable.add(implWrapper, (Int32)impl);
+      implWrapper = (DOMImplementation*)wrapperHashTable.retrieve((Int32)impl);
+
+      if (!implWrapper)
+	{
+	  implWrapper = new DOMImplementation(impl, this);
+	  wrapperHashTable.add(implWrapper, (Int32)impl);
+	}
     }
 
   return implWrapper;
@@ -633,13 +703,17 @@ Document::createDOMImplementation(nsIDOMDOMImplementation* impl)
 //
 DocumentType* Document::createDocumentType(nsIDOMDocumentType* doctype)
 {
-  DocumentType* doctypeWrapper = 
-    (DocumentType*)wrapperHashTable.retrieve((Int32)doctype);
+  DocumentType* doctypeWrapper = NULL;
 
-  if (!doctypeWrapper)
+  if (doctype)
     {
-      doctypeWrapper = new DocumentType(doctype, this);
-      wrapperHashTable.add(doctypeWrapper, (Int32)doctype);
+      doctypeWrapper = (DocumentType*)wrapperHashTable.retrieve((Int32)doctype);
+
+      if (!doctypeWrapper)
+	{
+	  doctypeWrapper = new DocumentType(doctype, this);
+	  wrapperHashTable.add(doctypeWrapper, (Int32)doctype);
+	}
     }
 
   return doctypeWrapper;
@@ -650,12 +724,17 @@ DocumentType* Document::createDocumentType(nsIDOMDocumentType* doctype)
 //
 NodeList* Document::createNodeList(nsIDOMNodeList* list)
 {
-  NodeList* listWrapper = (NodeList*)wrapperHashTable.retrieve((Int32)list);
+  NodeList* listWrapper = NULL;
 
-  if (!listWrapper)
+  if (list)
     {
-      listWrapper = new NodeList(list, this);
-      wrapperHashTable.add(listWrapper, (Int32)list);
+      listWrapper = (NodeList*)wrapperHashTable.retrieve((Int32)list);
+
+      if (!listWrapper)
+	{
+	  listWrapper = new NodeList(list, this);
+	  wrapperHashTable.add(listWrapper, (Int32)list);
+	}
     }
 
   return listWrapper;
@@ -666,13 +745,17 @@ NodeList* Document::createNodeList(nsIDOMNodeList* list)
 //
 NamedNodeMap* Document::createNamedNodeMap(nsIDOMNamedNodeMap* map)
 {
-  NamedNodeMap* mapWrapper = 
-    (NamedNodeMap*)wrapperHashTable.retrieve((Int32)map);
+  NamedNodeMap* mapWrapper = NULL;
 
-  if (!mapWrapper)
+  if (map)
     {
-      mapWrapper = new NamedNodeMap(map, this);
-      wrapperHashTable.add(mapWrapper, (Int32)map);
+      mapWrapper = (NamedNodeMap*)wrapperHashTable.retrieve((Int32)map);
+
+      if (!mapWrapper)
+	{
+	  mapWrapper = new NamedNodeMap(map, this);
+	  wrapperHashTable.add(mapWrapper, (Int32)map);
+	}
     }
 
   return mapWrapper;
@@ -701,6 +784,11 @@ void Document::addWrapper(MITREObject* obj, Int32 hashValue)
 Node* Document::createWrapper(nsIDOMNode* node)
 {
   unsigned short nodeType = 0;
+
+  //
+  //TK 02/15/2000 - Must make sure node is not null.
+  if (!node)
+    return NULL;
 
   node->GetNodeType(&nodeType);
 
