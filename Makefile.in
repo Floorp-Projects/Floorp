@@ -52,6 +52,7 @@ ifeq ($(BUILD_MODULES),all)
 #
 default: $(SUBMAKEFILES)
 	$(RM) -rf $(DIST)/sdk
+	$(RM) -rf $(DIST)/include
 	$(MAKE) -C config export
 	$(MAKE) nspr
 	$(MAKE) ldap
@@ -485,7 +486,6 @@ tier_50:
 	    $(UPDATE_TITLE) \
 	    $(MAKE) -C $$d export; \
 	done ; \
-	$(PERL) $(MOZILLA_DIR)/config/purge-old-headers.pl $(DIST)/include ;\
 	for d in $(tier_50_dirs); do \
 	    $(UPDATE_TITLE) \
 	    $(MAKE) -C $$d libs; \
@@ -504,7 +504,6 @@ tier_%:
 		for d in $($@_dirs); do $(UPDATE_TITLE) \
 			$(MAKE) -C $$d export; \
 		done ; \
-		$(PERL) $(MOZILLA_DIR)/config/purge-old-headers.pl $(DIST)/include ;\
 		for d in $($@_dirs); do $(UPDATE_TITLE) \
 			$(MAKE) -C $$d libs; \
 		done
@@ -545,9 +544,6 @@ endif # OS_ARCH == AIX
 endif # OS_ARCH == DARWIN
 endif # BUILD_STATIC_LIBS
 endif # MOZ_TREE_CAIRO
-
-export::
-	@$(PERL) $(MOZILLA_DIR)/config/purge-old-headers.pl $(DIST)/include
 
 distclean::
 	cat unallmakefiles | $(XARGS) rm -f
