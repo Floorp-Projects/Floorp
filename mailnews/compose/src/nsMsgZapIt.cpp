@@ -37,4 +37,4 @@ void* nsMsgZapIt::operator new(size_t size) {
 }
 
 #endif
-  
+
