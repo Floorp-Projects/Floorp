@@ -92,7 +92,7 @@ nsresult nsWidgetListener::AddEventListener(nsISupports* aNode,
   if (nsnull != aNode) {
     rv = aNode->QueryInterface(kIDOMEventReceiverIID, (void**) &receiver);
     if (NS_SUCCEEDED(rv)) {
-      receiver->AddEventListener((nsIDOMEventListener*)(nsIDOMMouseListener*)this, 
+      receiver->AddEventListenerByIID((nsIDOMEventListener*)(nsIDOMMouseListener*)this, 
                                  aInterfaceIID);
       NS_RELEASE(receiver);
     }
@@ -106,7 +106,7 @@ nsresult nsWidgetListener::AddEventListener(nsISupports* aNode,
 //-----------------------------------------------------------------
 // nsIDOMMouseListener interface...
 //
-nsresult nsWidgetListener::ProcessEvent(nsIDOMEvent* aEvent)
+nsresult nsWidgetListener::HandleEvent(nsIDOMEvent* aEvent)
 {
   return NS_OK;
 }

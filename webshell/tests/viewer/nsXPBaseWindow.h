@@ -130,7 +130,7 @@ public:
   NS_IMETHOD AddWindowListener(nsIWindowListener * aWindowListener);
 
   // nsIDOMEventListener
-  virtual nsresult ProcessEvent(nsIDOMEvent* aEvent);
+  virtual nsresult HandleEvent(nsIDOMEvent* aEvent);
 
   // nsIDOMMouseListener (is derived from nsIDOMEventListener)
   virtual nsresult MouseDown(nsIDOMEvent* aMouseEvent);

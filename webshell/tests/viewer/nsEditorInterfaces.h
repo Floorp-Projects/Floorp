@@ -31,7 +31,7 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  virtual nsresult ProcessEvent(nsIDOMEvent* aEvent);
+  virtual nsresult HandleEvent(nsIDOMEvent* aEvent);
 
 public:
   virtual nsresult KeyDown(nsIDOMEvent* aKeyEvent);
@@ -50,7 +50,7 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  virtual nsresult ProcessEvent(nsIDOMEvent* aEvent);
+  virtual nsresult HandleEvent(nsIDOMEvent* aEvent);
 
 public:
   virtual nsresult MouseDown(nsIDOMEvent* aMouseEvent);

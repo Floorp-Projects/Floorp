@@ -465,7 +465,7 @@ NS_IMETHODIMP nsXPBaseWindow::AddEventListener(nsIDOMNode * aNode)
   nsIDOMEventReceiver * receiver;
 
   if (NS_OK == aNode->QueryInterface(kIDOMEventReceiverIID, (void**) &receiver)) {
-    receiver->AddEventListener((nsIDOMMouseListener*)this, kIDOMMouseListenerIID);
+    receiver->AddEventListenerByIID((nsIDOMMouseListener*)this, kIDOMMouseListenerIID);
     NS_RELEASE(receiver);
     return NS_OK;
   }
@@ -705,7 +705,7 @@ NS_IMETHODIMP nsXPBaseWindow::GetPresShell(nsIPresShell*& aPresShell)
 //-----------------------------------------------------------------
 
 //-----------------------------------------------------------------
-nsresult nsXPBaseWindow::ProcessEvent(nsIDOMEvent* aEvent)
+nsresult nsXPBaseWindow::HandleEvent(nsIDOMEvent* aEvent)
 {
   return NS_OK;
 }

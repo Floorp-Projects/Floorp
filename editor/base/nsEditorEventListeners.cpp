@@ -85,7 +85,7 @@ nsTextEditorKeyListener::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
 
 nsresult
-nsTextEditorKeyListener::ProcessEvent(nsIDOMEvent* aEvent)
+nsTextEditorKeyListener::HandleEvent(nsIDOMEvent* aEvent)
 {
   return NS_OK;
 }
@@ -480,7 +480,7 @@ nsTextEditorMouseListener::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
 
 nsresult
-nsTextEditorMouseListener::ProcessEvent(nsIDOMEvent* aEvent)
+nsTextEditorMouseListener::HandleEvent(nsIDOMEvent* aEvent)
 {
   return NS_OK;
 }
@@ -617,7 +617,7 @@ nsTextEditorTextListener::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 nsresult
-nsTextEditorTextListener::ProcessEvent(nsIDOMEvent* aEvent)
+nsTextEditorTextListener::HandleEvent(nsIDOMEvent* aEvent)
 {
   return NS_OK;
 }
@@ -690,7 +690,7 @@ nsTextEditorDragListener::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
 
 nsresult
-nsTextEditorDragListener::ProcessEvent(nsIDOMEvent* aEvent)
+nsTextEditorDragListener::HandleEvent(nsIDOMEvent* aEvent)
 {
   return NS_OK;
 }

@@ -290,16 +290,23 @@ struct nsDragDropEvent : public nsGUIEvent {
 #define NS_IS_MOUSE_EVENT(evnt) \
        (((evnt)->message == NS_MOUSE_LEFT_BUTTON_DOWN) || \
         ((evnt)->message == NS_MOUSE_LEFT_BUTTON_UP) || \
+        ((evnt)->message == NS_MOUSE_LEFT_CLICK) || \
+        ((evnt)->message == NS_MOUSE_LEFT_DOUBLECLICK) || \
         ((evnt)->message == NS_MOUSE_MIDDLE_BUTTON_DOWN) || \
         ((evnt)->message == NS_MOUSE_MIDDLE_BUTTON_UP) || \
+        ((evnt)->message == NS_MOUSE_MIDDLE_CLICK) || \
+        ((evnt)->message == NS_MOUSE_MIDDLE_DOUBLECLICK) || \
         ((evnt)->message == NS_MOUSE_RIGHT_BUTTON_DOWN) || \
         ((evnt)->message == NS_MOUSE_RIGHT_BUTTON_UP) || \
+        ((evnt)->message == NS_MOUSE_RIGHT_CLICK) || \
+        ((evnt)->message == NS_MOUSE_RIGHT_DOUBLECLICK) || \
         ((evnt)->message == NS_MOUSE_ENTER) || \
         ((evnt)->message == NS_MOUSE_EXIT) || \
         ((evnt)->message == NS_MOUSE_MOVE))
 
 #define NS_IS_KEY_EVENT(evnt) \
        (((evnt)->message == NS_KEY_DOWN) ||  \
+        ((evnt)->message == NS_KEY_PRESS) || \
         ((evnt)->message == NS_KEY_UP))
 
 /*
@@ -312,6 +319,7 @@ struct nsDragDropEvent : public nsGUIEvent {
 #define NS_VK_TAB            0x09
 #define NS_VK_CLEAR          0x0C
 #define NS_VK_RETURN         0x0D
+#define NS_VK_ENTER          0x0E
 #define NS_VK_SHIFT          0x10
 #define NS_VK_CONTROL        0x11
 #define NS_VK_ALT            0x12

@@ -59,6 +59,7 @@ LLIBS =                                \
         $(DIST)\lib\xppref32.lib       \
         $(DIST)\lib\js3250.lib         \
         $(DIST)\lib\jsdombase_s.lib    \
+        $(DIST)\lib\jsdomevents_s.lib    \
         $(DIST)\lib\raptorbase.lib     \
         $(LIBNSPR)                     \
         $(NULL)
