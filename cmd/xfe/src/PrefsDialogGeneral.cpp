@@ -543,14 +543,17 @@ void XFE_PrefsPageGeneralAppearance::init()
 
 	// Show toolbar as
 
+    int32 toolbar_style;
+    PREF_GetIntPref("browser.chrome.toolbar_style", &toolbar_style);
+    
 	XtVaSetValues(fep->pic_and_text_toggle, 
-				  XmNset, (prefs->toolbar_style == BROWSER_TOOLBAR_ICONS_AND_TEXT), 
+				  XmNset, (toolbar_style == BROWSER_TOOLBAR_ICONS_AND_TEXT), 
 				  0);
 	XtVaSetValues(fep->pic_only_toggle, 
-				  XmNset, (prefs->toolbar_style == BROWSER_TOOLBAR_ICONS_ONLY),
+				  XmNset, (toolbar_style == BROWSER_TOOLBAR_ICONS_ONLY),
 				  0);
 	XtVaSetValues(fep->text_only_toggle,
-				  XmNset, (prefs->toolbar_style == BROWSER_TOOLBAR_TEXT_ONLY),
+				  XmNset, (toolbar_style == BROWSER_TOOLBAR_TEXT_ONLY),
 				  0);
 
     sensitive = !PREF_PrefIsLocked("browser.chrome.toolbar_style");
@@ -624,33 +627,22 @@ void XFE_PrefsPageGeneralAppearance::save()
 
 	// Show Toolbar as
 
-    Boolean picsNtext;
-    Boolean picsOnly;
-	int     old_toolbar_style = fe_globalPrefs.toolbar_style;
+    Boolean iconsNtext;
+    Boolean iconsOnly;
 
-	XtVaGetValues(fep->pic_and_text_toggle, XmNset, &picsNtext, 0);
-    XtVaGetValues(fep->pic_only_toggle, XmNset, &picsOnly, 0);
+	XtVaGetValues(fep->pic_and_text_toggle, XmNset, &iconsNtext, 0);
+    XtVaGetValues(fep->pic_only_toggle, XmNset, &iconsOnly, 0);
 
-    if (picsNtext)
-      {
-		fe_globalPrefs.toolbar_style   = BROWSER_TOOLBAR_ICONS_AND_TEXT;
-		fe_globalPrefs.toolbar_icons_p = True;
-        fe_globalPrefs.toolbar_text_p  = True;
-      } 
-    else if (picsOnly)
-      {
-		fe_globalPrefs.toolbar_style   = BROWSER_TOOLBAR_ICONS_ONLY;
-        fe_globalPrefs.toolbar_icons_p = True;
-        fe_globalPrefs.toolbar_text_p  = False;
-      }
-    else
-      {
-		fe_globalPrefs.toolbar_style   = BROWSER_TOOLBAR_TEXT_ONLY;
-        fe_globalPrefs.toolbar_icons_p = False;
-        fe_globalPrefs.toolbar_text_p  = True;
-      }
+    int32 new_toolbar_style = (iconsNtext ? BROWSER_TOOLBAR_ICONS_AND_TEXT :
+                               (iconsOnly ? BROWSER_TOOLBAR_ICONS_ONLY :
+                                BROWSER_TOOLBAR_TEXT_ONLY));
 
-	if (old_toolbar_style != fe_globalPrefs.toolbar_style) {
+    int32 old_toolbar_style;
+    PREF_GetIntPref("browser.chrome.toolbar_style", &old_toolbar_style);
+
+	if (old_toolbar_style != new_toolbar_style)
+    {
+        PREF_SetIntPref("browser.chrome.toolbar_style", new_toolbar_style);
 		m_toolbar_needs_updating = TRUE;
 	}
 
@@ -2194,8 +2186,11 @@ void XFE_PrefsPageGeneralColors::init()
 
 	// Underline links
 
+    XP_Bool underline_links;
+    PREF_GetBoolPref("browser.underline_anchors",&underline_links);
+
 	XtVaSetValues(fep->underline_links_toggle, 
-				  XmNset, prefs->underline_links_p,
+				  XmNset, underline_links,
 				  XmNsensitive, !PREF_PrefIsLocked("browser.underline_anchors"),
 				  0);
 
@@ -2287,11 +2282,15 @@ void XFE_PrefsPageGeneralColors::save()
 
 	// Underline links
 
-	XP_Bool old_underline_links = fe_globalPrefs.underline_links_p;
-	XtVaGetValues(fep->underline_links_toggle, XmNset, &b, 0);
-	fe_globalPrefs.underline_links_p = b;
+	XP_Bool old_underline_links;
+    PREF_GetBoolPref("browser.underline_anchors",&old_underline_links);
 
-	if (old_underline_links != fe_globalPrefs.underline_links_p) {
+    XP_Bool new_underline_links;
+	XtVaGetValues(fep->underline_links_toggle, XmNset, 
+                  &new_underline_links, 0);
+
+	if (old_underline_links != new_underline_links) {
+        PREF_SetBoolPref("browser.underline_anchors", new_underline_links);
 		m_underlinelinks_changed = TRUE;
 	}
 		

@@ -23,6 +23,8 @@
 #include "RDFToolbar.h"
 #include "Logo.h"
 
+#include "prefapi.h"
+
 #include <Xfe/ToolItem.h>
 #include <Xfe/ToolBar.h>
 
@@ -35,7 +37,6 @@
 #define MIN_TOOLBAR_HEIGHT				26
 #define MAX_CHILD_WIDTH					100
 #define LOGO_NAME						"logo"
-#define TOOLBAR_NAME					"toolbar"
 
 XFE_RDFToolbar::XFE_RDFToolbar(XFE_Frame * frame, 
                                XFE_Toolbox * toolbox,
@@ -49,7 +50,6 @@ XFE_RDFToolbar::XFE_RDFToolbar(XFE_Frame * frame,
                    toolbox->getBaseWidget(),
                    XmNuserData, this,
                    NULL);
-
 	// Create the toolbar
 	_toolbar = XtVaCreateManagedWidget(HT_GetViewName(view),
                    xfeToolBarWidgetClass,
@@ -63,7 +63,7 @@ XFE_RDFToolbar::XFE_RDFToolbar(XFE_Frame * frame,
                    NULL);
 
 	// Create the logo
-	m_logo = new XFE_Logo(getFrame(),m_widget,LOGO_NAME);
+	m_logo = new XFE_Logo(frame,m_widget,LOGO_NAME);
 
 	m_logo->setSize(XFE_ANIMATION_SMALL);
 
@@ -292,7 +292,14 @@ XFE_RDFToolbar::updateRoot()
 /* virtual */ void
 XFE_RDFToolbar::configureXfeButton(Widget item,HT_Resource entry)
 {
-	if (fe_globalPrefs.toolbar_style == BROWSER_TOOLBAR_TEXT_ONLY)
+    int32 toolbar_style;
+    int result = PREF_GetIntPref("browser.chrome.toolbar_style", 
+                                 &toolbar_style);
+
+    D(printf("XFE_RDFToolbar::configureXfeButton: toolbar_style = %d\n",
+             toolbar_style););
+
+    if (toolbar_style == BROWSER_TOOLBAR_TEXT_ONLY)
 	{
 		XtVaSetValues(item,
 					  XmNpixmap,			XmUNSPECIFIED_PIXMAP,
@@ -308,22 +315,28 @@ XFE_RDFToolbar::configureXfeButton(Widget item,HT_Resource entry)
 
 		getPixmapsForEntry(entry,&pixmap,&pixmapMask,NULL,NULL);
 		
+        unsigned char layout;
+
         if (ht_IsFECommand(entry))
         {
-            XtVaSetValues(item,
-                          XmNpixmap,		pixmap,
-                          XmNpixmapMask,	pixmapMask,
-                          XmNbuttonLayout,	XmBUTTON_LABEL_ON_BOTTOM,
-                          NULL);
+            if (toolbar_style == BROWSER_TOOLBAR_ICONS_ONLY)
+            {
+                layout = XmBUTTON_PIXMAP_ONLY;
+            } 
+            else
+            {
+                layout = XmBUTTON_LABEL_ON_BOTTOM;
+            }
         }
         else
         {
-            XtVaSetValues(item,
-                          XmNpixmap,		pixmap,
-                          XmNpixmapMask,	pixmapMask,
-                          XmNbuttonLayout,	XmBUTTON_LABEL_ON_RIGHT,
-                          NULL);
+            layout = XmBUTTON_LABEL_ON_RIGHT;
         }
+        XtVaSetValues(item,
+                      XmNpixmap,		pixmap,
+                      XmNpixmapMask,	pixmapMask,
+                      XmNbuttonLayout,	layout,
+                      NULL);
 	}
 
 #ifdef NOT_YET
@@ -338,7 +351,13 @@ XFE_RDFToolbar::configureXfeButton(Widget item,HT_Resource entry)
 /* virtual */ void
 XFE_RDFToolbar::configureXfeCascade(Widget item,HT_Resource entry)
 {
-	if (fe_globalPrefs.toolbar_style == BROWSER_TOOLBAR_TEXT_ONLY)
+    int32 toolbar_style;
+    PREF_GetIntPref("browser.chrome.toolbar_style", &toolbar_style);
+
+    D(printf("XFE_RDFToolbar::configureXfeCascade: toolbar_style = %d\n",
+             toolbar_style););
+
+    if (toolbar_style == BROWSER_TOOLBAR_TEXT_ONLY)
 	{
 		XtVaSetValues(item,
 					  XmNpixmap,			XmUNSPECIFIED_PIXMAP,
@@ -347,7 +366,7 @@ XFE_RDFToolbar::configureXfeCascade(Widget item,HT_Resource entry)
 					  XmNarmedPixmapMask,	XmUNSPECIFIED_PIXMAP,
 					  NULL);
 
-//		XtVaSetValues(item,XmNbuttonLayout,XmBUTTON_LABEL_ONLY,NULL);
+		XtVaSetValues(item,XmNbuttonLayout,XmBUTTON_LABEL_ONLY,NULL);
 	}
 	else
 	{
@@ -374,7 +393,7 @@ XFE_RDFToolbar::configureXfeCascade(Widget item,HT_Resource entry)
 
 		XtSetValues(item,av,ac);
 
-//		XtVaSetValues(item,XmNbuttonLayout,XmBUTTON_LABEL_ON_RIGHT,NULL);
+		XtVaSetValues(item,XmNbuttonLayout,XmBUTTON_LABEL_ON_RIGHT,NULL);
 	}
 
 #ifdef NOT_YET
@@ -389,7 +408,10 @@ XFE_RDFToolbar::configureXfeCascade(Widget item,HT_Resource entry)
 /* virtual */ void
 XFE_RDFToolbar::updateAppearance()
 {
-	if (fe_globalPrefs.toolbar_style == BROWSER_TOOLBAR_TEXT_ONLY)
+    int32 toolbar_style;
+    PREF_GetIntPref("browser.chrome.toolbar_style", &toolbar_style);
+
+    if (toolbar_style == BROWSER_TOOLBAR_TEXT_ONLY)
 	{
 		XtVaSetValues(_toolbar,XmNbuttonLayout,XmBUTTON_LABEL_ONLY,NULL);
 	}

@@ -35,6 +35,7 @@
 
 #include "felocale.h"
 #include "intl_csi.h"
+#include "prefapi.h"
 
 #include <Xfe/XfeAll.h>
 #include <Xfe/BmButton.h>
@@ -1208,31 +1209,44 @@ XFE_RDFMenuToolbarBase::configureXfeButton(Widget /*item*/,HT_Resource /*entry*/
 /* virtual */ void
 XFE_RDFMenuToolbarBase::configureXfeBmButton(Widget item,HT_Resource entry)
 {
-    if (fe_globalPrefs.toolbar_style == BROWSER_TOOLBAR_TEXT_ONLY)
+    int32 toolbar_style;
+    PREF_GetIntPref("browser.chrome.toolbar_style", &toolbar_style);
+
+    D(printf("XFE_RDFMenuToolbarBase::configureXfeCascade: toolbar_style = %d\n",
+             toolbar_style););
+
+
+    if (toolbar_style == BROWSER_TOOLBAR_TEXT_ONLY)
     {
         XtVaSetValues(item,
                       XmNlabelPixmap,        XmUNSPECIFIED_PIXMAP,
                       XmNlabelPixmapMask,    XmUNSPECIFIED_PIXMAP,
                       NULL);
 
-        return;
     }
+    else
+    {
+        Pixmap pixmap;
+        Pixmap mask;
 
-    Pixmap pixmap;
-    Pixmap mask;
+        getPixmapsForEntry(entry,&pixmap,&mask,NULL,NULL);
 
-    getPixmapsForEntry(entry,&pixmap,&mask,NULL,NULL);
-
-    XtVaSetValues(item,
-                  XmNlabelPixmap,        pixmap,
-                  XmNlabelPixmapMask,    mask,
-                  NULL);
+        XtVaSetValues(item,
+                      XmNlabelPixmap,        pixmap,
+                      XmNlabelPixmapMask,    mask,
+                      NULL);
+    }
 }
 //////////////////////////////////////////////////////////////////////////
 /* virtual */ void
 XFE_RDFMenuToolbarBase::configureXfeBmCascade(Widget item,HT_Resource entry)
 {
-    if (fe_globalPrefs.toolbar_style == BROWSER_TOOLBAR_TEXT_ONLY)
+    int32 toolbar_style;
+    PREF_GetIntPref("browser.chrome.toolbar_style", &toolbar_style);
+
+    D(printf("XFE_RDFMenuToolbarBase::configureXfeBmCascade: toolbar_style = %d\n",
+             toolbar_style););
+    if (toolbar_style == BROWSER_TOOLBAR_TEXT_ONLY)
     {
         XtVaSetValues(item,
                       XmNlabelPixmap,        XmUNSPECIFIED_PIXMAP,
@@ -1240,31 +1254,31 @@ XFE_RDFMenuToolbarBase::configureXfeBmCascade(Widget item,HT_Resource entry)
                       XmNarmPixmap,          XmUNSPECIFIED_PIXMAP,
                       XmNarmPixmapMask,      XmUNSPECIFIED_PIXMAP,
                       NULL);
-
-        return;
     }
-
-    Pixmap pixmap;
-    Pixmap mask;
-    Pixmap armedPixmap;
-    Pixmap armedMask;
-
-    getPixmapsForEntry(entry,&pixmap,&mask,&armedPixmap,&armedMask);
-
-    Arg         av[4];
-    Cardinal    ac = 0;
-
-    XtSetArg(av[ac],XmNlabelPixmap,        pixmap); ac++;
-    XtSetArg(av[ac],XmNlabelPixmapMask,    mask);   ac++;
-
-    // Only show the aremd pixmap/mask if this entry has children
-    if (XfeIsAlive(XfeCascadeGetSubMenu(item)))
-    {
-        XtSetArg(av[ac],XmNarmPixmap,        armedPixmap); ac++;
-        XtSetArg(av[ac],XmNarmPixmapMask,    armedMask);   ac++;
+    else
+    {        
+        Pixmap pixmap;
+        Pixmap mask;
+        Pixmap armedPixmap;
+        Pixmap armedMask;
+        
+        getPixmapsForEntry(entry,&pixmap,&mask,&armedPixmap,&armedMask);
+        
+        Arg         av[4];
+        Cardinal    ac = 0;
+        
+        XtSetArg(av[ac],XmNlabelPixmap,        pixmap); ac++;
+        XtSetArg(av[ac],XmNlabelPixmapMask,    mask);   ac++;
+        
+        // Only show the aremd pixmap/mask if this entry has children
+        if (XfeIsAlive(XfeCascadeGetSubMenu(item)))
+        {
+            XtSetArg(av[ac],XmNarmPixmap,        armedPixmap); ac++;
+            XtSetArg(av[ac],XmNarmPixmapMask,    armedMask);   ac++;
+        }
+        
+        XtSetValues(item,av,ac);
     }
-
-    XtSetValues(item,av,ac);
 }
 //////////////////////////////////////////////////////////////////////////
 /* virtual */ void

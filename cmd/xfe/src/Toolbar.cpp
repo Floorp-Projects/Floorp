@@ -348,7 +348,10 @@ XFE_Toolbar::updateAppearance()
 {
 	unsigned char	button_layout;
 
-	button_layout = XFE_Toolbar::styleToLayout(fe_globalPrefs.toolbar_style);
+    int32 toolbar_style;
+    PREF_GetIntPref("browser.chrome.toolbar_style", &toolbar_style);
+
+	button_layout = XFE_Toolbar::styleToLayout(toolbar_style);
 
 	XtVaSetValues(m_toolBar,XmNbuttonLayout,button_layout,NULL);
 
