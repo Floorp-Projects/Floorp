@@ -901,8 +901,7 @@
              customizable="true"
              defaultset="back-button,forward-button,reload-button,stop-button,home-button,urlbar-container,search-container"
              context="toolbar-context-menu">
-
-    <hbox id="window-controls" hidden="true" fullscreencontrol="true">
+      <hbox id="window-controls" hidden="true" fullscreencontrol="true">
         <toolbarbutton id="minimize-button" class="toolbarbutton-1"
                        oncommand="window.minimize();"/>
 

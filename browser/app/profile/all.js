@@ -48,7 +48,7 @@ pref("general.useragent.locale", "chrome://navigator/locale/navigator.properties
 pref("general.useragent.contentlocale", "chrome://navigator-region/locale/region.properties");
 pref("general.useragent.misc", "rv:1.2b");
 pref("general.useragent.vendor", "Phoenix");
-pref("general.useragent.vendorSub", "0.3");
+pref("general.useragent.vendorSub", "0.4");
 
 pref("backups.number_of_prefs_copies", 1);
 
