@@ -124,11 +124,11 @@
       pref = Components.classes['@mozilla.org/preferences-service;1'];
       pref = pref.getService();
       pref = pref.QueryInterface(Components.interfaces.nsIPrefBranch);
-      try {
-        HidePopups(!pref.getBoolPref("dom.disable_open_during_load"));
-      } catch(e) {
+//    try {
+//      HidePopups(!pref.getBoolPref("dom.disable_open_during_load"));
+//    } catch(e) {
         HidePopups(true);
-      }
+//    }
 
       // determine if image manager should be in the UI
       if (alreadyCheckedForImage) {

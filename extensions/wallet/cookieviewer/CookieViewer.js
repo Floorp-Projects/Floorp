@@ -492,7 +492,6 @@ function FinalizePermissionDeletions() {
       // we lost the URI's original scheme, but this will do because the scheme
       // is stripped later anyway.
       var uri = ioService.newURI("http://"+deletedPermissions[p].host, null, null);
-dump("********* uri "+uri.spec+"\n");
       popupmanager.remove(uri);
     } else
       permissionmanager.remove(deletedPermissions[p].host, deletedPermissions[p].type);
