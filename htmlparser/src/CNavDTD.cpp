@@ -1176,10 +1176,10 @@ nsresult CNavDTD::HandleOmittedTag(CToken* aToken,eHTMLTags aChildTag,eHTMLTags 
       if(attrCount > 0) {
         nsCParserNode* theAttrNode = (nsCParserNode*)&aNode;
         while(attrCount > 0){ 
-          CToken* theToken=theAttrNode->PopAttributeToken();
-          if(theToken){
-            mMisplacedContent.Push(theToken);
-            theToken->mRecycle=PR_FALSE;
+          CToken* theAttrToken=theAttrNode->PopAttributeToken();
+          if(theAttrToken){
+            mMisplacedContent.Push(theAttrToken);
+            theAttrToken->mRecycle=PR_FALSE;
           }
           attrCount--;
         }
@@ -1527,6 +1527,8 @@ nsresult CNavDTD::HandleSavedTokensAbove(eHTMLTags aTag)
       RAPTOR_STOPWATCH_DEBUGTRACE(("Stop: Parse Time: CNavDTD::HandleSavedTokensAbove(), this=%p\n", this));     
       STOP_TIMER()
       // Pause the main context and switch to the new context.
+      eHTMLTags theParentTag=mBodyContext->TagAt(theBadContentIndex);
+
       mSink->BeginContext(theBadContentIndex);
       RAPTOR_STOPWATCH_DEBUGTRACE(("Start: Parse Time: CNavDTD::HandleSavedTokensAbove(), this=%p\n", this));
       START_TIMER()
@@ -1553,8 +1555,13 @@ nsresult CNavDTD::HandleSavedTokensAbove(eHTMLTags aTag)
                 mTokenizer->PushTokenFront(theAttrToken);
               }
               theBadTokenCount--;
-            }
-            result=HandleToken(theToken,mParser);
+            }             
+            // Make sure that the BeginContext() is ended only by the call to
+            // EndContext().
+            if(theTag!=theParentTag || eToken_end!=theToken->GetTokenType())
+              result=HandleToken(theToken,mParser);
+            else
+              gRecycler->RecycleToken(theToken);
           }
         }
         theBadTokenCount--;
@@ -2859,6 +2866,7 @@ nsresult CNavDTD::AddLeaf(const nsIParserNode& aNode){
     
     if(NS_SUCCEEDED(result)) {
       PRBool done=PR_FALSE;
+      eHTMLTags thePrevTag=theTag;
       nsCParserNode*  theNode=CreateNode();
       CTokenRecycler* theRecycler=(CTokenRecycler*)mTokenizer->GetTokenRecycler();
       while(!done && NS_SUCCEEDED(result)) {
@@ -2884,13 +2892,15 @@ nsresult CNavDTD::AddLeaf(const nsIParserNode& aNode){
                   }
                   else delete theToken;
                 }
-
+                
                 RAPTOR_STOPWATCH_DEBUGTRACE(("Start: Parse Time: CNavDTD::AddLeaf(), this=%p\n", this));
                 START_TIMER();
+                thePrevTag=theTag;
               }
               break;
             case eHTMLTag_text:
-              if(mHasOpenBody && (!mHasOpenHead)) {
+              if((mHasOpenBody) && (!mHasOpenHead) &&
+                !(nsHTMLElement::IsWhitespaceTag(thePrevTag))) {
                 theToken=mTokenizer->PopToken();
                 theNode->Init(theToken,mLineNumber);
 

@@ -428,7 +428,8 @@ PRBool FindSuitableDTD( CParserContext& aParserContext,nsString& aCommand,nsStri
   nsIDTD* theDTD=0;
 
   while((theDTDIndex<=gSharedObjects.mDTDDeque.GetSize()) && (aParserContext.mAutoDetectStatus!=ePrimaryDetect)){
-    if(theDTD=(nsIDTD*)gSharedObjects.mDTDDeque.ObjectAt(theDTDIndex++)) {
+    theDTD=(nsIDTD*)gSharedObjects.mDTDDeque.ObjectAt(theDTDIndex++);
+    if(theDTD) {
       aParserContext.mAutoDetectStatus=theDTD->CanParse(aParserContext.mSourceType,aCommand,aBuffer,0);
       if((eValidDetect==aParserContext.mAutoDetectStatus) || (ePrimaryDetect==aParserContext.mAutoDetectStatus)) {
         theBestDTD=theDTD;
@@ -469,6 +470,7 @@ eParseMode DetermineParseMode(nsParser& aParser) {
   const char* theModeStr= PR_GetEnv("PARSE_MODE");
   const char* other="other";
   
+  eParseMode result=eParseMode_unknown;
   nsScanner* theScanner=aParser.GetScanner();
   if(theScanner){
     nsAutoString theBufCopy;
@@ -487,47 +489,48 @@ eParseMode DetermineParseMode(nsParser& aParser) {
         if(kNotFound<(theSubIndex=theBufCopy.Find("HTML4.0",PR_TRUE,theSubIndex+11))) {
           PRUnichar num=theBufCopy.CharAt(theSubIndex+7);
           if(num > '0' && num < '9') {
-            if(theBufCopy.Find("TRANSITIONAL",PR_TRUE,theSubIndex+7)>kNotFound)
-              return eParseMode_noquirks; // XXX - investigate this more.
+            result=eParseMode_noquirks; // XXX - investigate this more.
           }
-          if((theBufCopy.Find("TRANSITIONAL",PR_TRUE,theSubIndex+7)>kNotFound)||
+          else if((theBufCopy.Find("TRANSITIONAL",PR_TRUE,theSubIndex+7)>kNotFound)||
              (theBufCopy.Find("FRAMESET",PR_TRUE,theSubIndex+7)>kNotFound)    ||
              (theBufCopy.Find("LATIN1", PR_TRUE,theSubIndex+7) >kNotFound)    ||
              (theBufCopy.Find("SYMBOLS",PR_TRUE,theSubIndex+7) >kNotFound)    ||
              (theBufCopy.Find("SPECIAL",PR_TRUE,theSubIndex+7) >kNotFound))
-            return eParseMode_quirks; // XXX -HACK- Set the appropriate mode.
+            result=eParseMode_quirks; // XXX -HACK- Set the appropriate mode.
           else
-            return eParseMode_noquirks;
-        }else 
-        if(kNotFound<(theSubIndex=theBufCopy.Find("XHTML",PR_TRUE,theSubIndex+11))) {
+            result=eParseMode_noquirks;
+        }
+        else if(kNotFound<(theSubIndex=theBufCopy.Find("XHTML",PR_TRUE,theSubIndex+11))) {
           if((theBufCopy.Find("TRANSITIONAL",PR_TRUE,theSubIndex)>kNotFound)||
              (theBufCopy.Find("STRICT",PR_TRUE,theSubIndex)   >kNotFound)   ||
              (theBufCopy.Find("FRAMESET",PR_TRUE,theSubIndex) >kNotFound))
-            return eParseMode_noquirks;
+            result=eParseMode_noquirks;
           else
-            return eParseMode_quirks;
+            result=eParseMode_quirks;
         }
-      }else
-      if(kNotFound<(theSubIndex=theBufCopy.Find("ISO/IEC15445:1999",PR_TRUE,theIndex+8))) {
+      }
+      else if(kNotFound<(theSubIndex=theBufCopy.Find("ISO/IEC15445:1999",PR_TRUE,theIndex+8))) {
         theSubIndex=theBufCopy.Find("HTML",PR_TRUE,theSubIndex+18);
         if(kNotFound==theSubIndex)
           theSubIndex=theBufCopy.Find("HYPERTEXTMARKUPLANGUAGE",PR_TRUE,theSubIndex+18);
-        return eParseMode_noquirks;
+        result=eParseMode_noquirks;
       }
-    }else
-    if(kNotFound<(theIndex=theBufCopy.Find("?XML",PR_TRUE)))
-        return eParseMode_noquirks;
-
-    theIndex=theBufCopy.Find("NOQUIRKS",PR_TRUE);
-    if(kNotFound<theIndex) {
-      return eParseMode_noquirks;
+    }
+    else if(kNotFound<(theIndex=theBufCopy.Find("?XML",PR_TRUE))) {
+        result=eParseMode_noquirks;
+    }
+    else {
+      theIndex=theBufCopy.Find("NOQUIRKS",PR_TRUE);
+      if(kNotFound<theIndex) {
+        result=eParseMode_noquirks;
+      }
     }
   }
 
   if(theModeStr) 
     if(0==nsCRT::strcasecmp(other,theModeStr))
       return eParseMode_other;    
-  return eParseMode_quirks;
+    return (eParseMode_unknown==result)? eParseMode_quirks:result;
 }
 
 

@@ -729,7 +729,7 @@ nsresult ConsumeStrictComment(PRUnichar aChar, nsScanner& aScanner,nsString& aSt
           if(kMinus==aChar) {
                //in this case, we're reading a long-form comment <-- xxx -->
             aString+=aChar;
-            result=aScanner.ReadWhile(aString,gMinus,PR_TRUE,PR_FALSE);  //get all available '---'
+            //result=aScanner.ReadWhile(aString,gMinus,PR_TRUE,PR_FALSE);  //get all available '---'
             if(NS_OK==result) {
               PRInt32 findpos=-1;
               nsAutoString temp("");
