@@ -582,7 +582,12 @@ native_netscape_softupdate_SoftwareUpdate_NativeDiskSpaceAvailable(
     fileSystem = (char*)JRI_GetStringPlatformChars( env, path, "", 0 );
     if (fileSystem)
     {
+#ifndef XP_MAC
         jlong_UI2L( val, FE_DiskSpaceAvailable(NULL, fileSystem));
+#else
+		assert(false);	/* FE_DiskSpaceAvailable() unimplemented on Mac */
+        jlong_UI2L( val, 0 );
+#endif /* XP_MAC */
     }
     else
     {
