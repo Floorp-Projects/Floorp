@@ -64,14 +64,12 @@ function Startup() {
 
   popupStringBundle = document.getElementById("popupStringBundle");
 
-  // window.args[0]: host to prefill
-  // window.args[1]: true = opened from pref panel, false = opened from tools menu or statusbar icon
-
   sortAscending = (permissionsTree.getAttribute("sortAscending") == "true");
 
   loadPermissions(permissions);
   loadTree();
-   
+
+  // window.arguments[0] contains the host to prefill   
   if (window.arguments[0] != "") {
     // fill textbox to unblock/add to whitelist
     var prefill = window.arguments[0];
@@ -81,8 +79,6 @@ function Startup() {
   }
 
   document.documentElement.addEventListener("keypress", onReturnHit, true);
-
-  window.sizeToContent();
 }
 
 function getMatch(host) {
@@ -164,9 +160,6 @@ function onAccept() {
       }
     } 
   }
-
-  if (window.arguments[1])
-    window.opener.setButtons();
 
   return true;                                           
 }
