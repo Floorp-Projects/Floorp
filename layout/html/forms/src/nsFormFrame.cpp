@@ -64,6 +64,7 @@
 #include "nsIFormProcessor.h"
 
 #include "nsIIOService.h"
+#include "nsIPref.h"
 #include "nsIURL.h"
 #include "nsNetUtil.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
@@ -1289,6 +1290,27 @@ nsresult nsFormFrame::ProcessAsURLEncoded(nsIFormProcessor* aFormProcessor, PRBo
   return rv;
 }
 
+// return the filename without the leading directories (Unix basename)
+PRUint32
+nsFormFrame::GetFileNameWithinPath(nsString aPathName)
+{
+  // We need to operator on Unicode strings and not on nsCStrings
+  // because Shift_JIS and Big5 encoded filenames can have
+  // embedded directory separators in them.
+#ifdef XP_MAC
+  // On a Mac the only invalid character in a file name is a :
+  // so we have to avoid the test for '\'. We can't use
+  // PR_DIRECTORY_SEPARATOR_STR (even though ':' is a dir sep for MacOS)
+  // because this is set to '/' for reasons unknown to this coder.
+  PRInt32 fileNameStart = aPathname.RFind(":");
+#else
+  PRInt32 fileNameStart = aPathName.RFind(PR_DIRECTORY_SEPARATOR_STR);
+#endif
+  // if no directory separator is found (-1), return the whole
+  // string, otherwise return the basename only
+  return (PRUint32) (fileNameStart + 1);
+}
+
 nsresult
 nsFormFrame::GetContentType(char* aPathName, char** aContentType)
 {
@@ -1325,6 +1347,12 @@ nsFormFrame::GetContentType(char* aPathName, char** aContentType)
 
 nsresult nsFormFrame::ProcessAsMultipart(nsIFormProcessor* aFormProcessor,nsIFileSpec*& aMultipartDataFile, nsIFormControlFrame* aFrame)
 {
+  PRBool compatibleSubmit = PR_TRUE;
+  nsCOMPtr<nsIPref> prefService(do_GetService(NS_PREF_CONTRACTID));
+  if (prefService)
+    prefService->GetBoolPref("browser.forms.submit.backwards_compatible",
+                             &compatibleSubmit);
+
   char buffer[BUFSIZE];
   PRInt32 numChildren = mFormControls.Count();
 
@@ -1384,6 +1412,7 @@ nsresult nsFormFrame::ProcessAsMultipart(nsIFormProcessor* aFormProcessor,nsIFil
         for (int valueX = 0; valueX < numValues; valueX++) {
           char* name = nsnull;
           char* value = nsnull;
+          char* fname = nsnull; // basename (path removed)
 
           nsString valueStr = values[valueX];
           if (aFormProcessor) {
@@ -1395,11 +1424,18 @@ nsresult nsFormFrame::ProcessAsMultipart(nsIFormProcessor* aFormProcessor,nsIFil
           }
    
           //use the platformencoder only for values containing file names 
+          PRUint32 fileNameStart = 0;
           if (NS_FORM_INPUT_FILE == type) { 
+            fileNameStart = GetFileNameWithinPath(valueStr);
             if(platformencoder) {
                 value  = UnicodeToNewBytes(valueStr.GetUnicode(), valueStr.Length(), platformencoder);
+
+                // filename with the leading dirs stripped
+                fname = UnicodeToNewBytes(valueStr.GetUnicode() + fileNameStart,
+                                          valueStr.Length() - fileNameStart,
+                                          platformencoder);
             }
-          } else { 
+          } else {
             if(encoder) {
                 value  = UnicodeToNewBytes(valueStr.GetUnicode(), valueStr.Length(), encoder);
             }
@@ -1417,11 +1453,22 @@ nsresult nsFormFrame::ProcessAsMultipart(nsIFormProcessor* aFormProcessor,nsIFil
           // convert value to CRLF line breaks
           char* newValue = nsLinebreakConverter::ConvertLineBreaks(value,
                            nsLinebreakConverter::eLinebreakAny, nsLinebreakConverter::eLinebreakNet);
-          delete [] value;
+          if (value)
+            nsMemory::Free(value);
           value = newValue;
           
           // Add boundary line
           contentLen += sepLen + boundaryLen + crlfLen;
+
+          // File inputs should include Content-Transfer-Encoding
+          if (NS_FORM_INPUT_FILE == type && !compatibleSubmit) {
+            contentLen += PL_strlen(CONTENT_TRANSFER);
+            // XXX is there any way to tell when "8bit" or "7bit" etc may be more appropriate than
+            // always using "binary"?
+            contentLen += PL_strlen(BINARY_CONTENT);
+            contentLen += crlfLen;
+          }
+          // End Content-Transfer-Encoding line
 
           // Add Content-Disp line
           contentLen += contDispLen;
@@ -1430,20 +1477,10 @@ nsresult nsFormFrame::ProcessAsMultipart(nsIFormProcessor* aFormProcessor,nsIFil
           // File inputs also list filename on Content-Disp line
           if (NS_FORM_INPUT_FILE == type) { 
             contentLen += PL_strlen(FILENAME);
-            contentLen += PL_strlen(value);
+            contentLen += PL_strlen(fname);
           }
           // End Content-Disp Line (quote plus CRLF)
           contentLen += 1 + crlfLen;  // ending name quote plus CRLF
-
-          // File inputs should include Content-Transfer-Encoding
-          if (NS_FORM_INPUT_FILE == type) {
-            contentLen += PL_strlen(CONTENT_TRANSFER);
-            // XXX is there any way to tell when "8bit" or "7bit" etc may be more appropriate than
-            // always using "binary"?
-            contentLen += PL_strlen(BINARY_CONTENT);
-            contentLen += crlfLen;
-          }
-          // End Content-Transfer-Encoding line
 
           // File inputs add Content-Type line
           if (NS_FORM_INPUT_FILE == type) {
@@ -1459,7 +1496,8 @@ nsresult nsFormFrame::ProcessAsMultipart(nsIFormProcessor* aFormProcessor,nsIFil
           contentLen += crlfLen;
 
           // File inputs add file contents next
-          if (NS_FORM_INPUT_FILE == type) {
+          if (NS_FORM_INPUT_FILE == type &&
+              PL_strlen(value)) { // Don't bother if no file specified
             do {
               // Because we have a native path to the file we can't use PR_GetFileInfo
               // on the Mac as it expects a Unix style path.  Instead we'll use our
@@ -1487,8 +1525,12 @@ nsresult nsFormFrame::ProcessAsMultipart(nsIFormProcessor* aFormProcessor,nsIFil
             // Non-file inputs add value line
             contentLen += PL_strlen(value) + crlfLen;
           }
-          delete [] name;
-          nsMemory::Free(value);
+          if (name)
+            nsMemory::Free(name);
+          if (value)
+            nsMemory::Free(value);
+          if (fname)
+            nsMemory::Free(fname);
         }
         delete [] names;
         delete [] values;
@@ -1528,26 +1570,35 @@ nsresult nsFormFrame::ProcessAsMultipart(nsIFormProcessor* aFormProcessor,nsIFil
           for (int valueX = 0; valueX < numValues; valueX++) {
             char* name = nsnull;
             char* value = nsnull;
+            char* fname = nsnull; // basename (path removed)
+
+            nsString valueStr = values[valueX];
 
             if(encoder) {
               name  = UnicodeToNewBytes(names[valueX].GetUnicode(), names[valueX].Length(), encoder);
             }
 
             //use the platformencoder only for values containing file names 
+            PRUint32 fileNameStart = 0;
             if (NS_FORM_INPUT_FILE == type) { 
+              fileNameStart = GetFileNameWithinPath(valueStr);
               if(platformencoder) {
-                  value = UnicodeToNewBytes(values[valueX].GetUnicode(), values[valueX].Length(), platformencoder);
+                  value = UnicodeToNewBytes(valueStr.GetUnicode(), valueStr.Length(), platformencoder);
+
+                  // filename with the leading dirs stripped
+                  fname = UnicodeToNewBytes(valueStr.GetUnicode() + fileNameStart,
+                                            valueStr.Length() - fileNameStart, platformencoder);
               }
             } else { 
               if(encoder) {
-                  value = UnicodeToNewBytes(values[valueX].GetUnicode(), values[valueX].Length(), encoder);
+                  value = UnicodeToNewBytes(valueStr.GetUnicode(), valueStr.Length(), encoder);
               }
-            } 
+            }
 
             if(nsnull == name)
               name  = names[valueX].ToNewCString();
             if(nsnull == value)
-              value = values[valueX].ToNewCString();
+              value = valueStr.ToNewCString();
 
             if (0 == names[valueX].Length()) {
               continue;
@@ -1556,13 +1607,30 @@ nsresult nsFormFrame::ProcessAsMultipart(nsIFormProcessor* aFormProcessor,nsIFil
             // convert value to CRLF line breaks
             char* newValue = nsLinebreakConverter::ConvertLineBreaks(value,
                              nsLinebreakConverter::eLinebreakAny, nsLinebreakConverter::eLinebreakNet);
-            delete [] value;
+            if (value)
+              nsMemory::Free(value);
             value = newValue;
 
        	    // Print boundary line
             sprintf(buffer, SEP "%s" CRLF, boundary);
             rv = postDataFile->Write(buffer, wantbytes = PL_strlen(buffer), &gotbytes);
             if (NS_FAILED(rv) || (wantbytes != gotbytes)) break;
+
+            // File inputs should include Content-Transfer-Encoding to prep server side
+            // MIME decoders
+            if (NS_FORM_INPUT_FILE == type && !compatibleSubmit) {
+              rv = postDataFile->Write(CONTENT_TRANSFER, wantbytes = PL_strlen(CONTENT_TRANSFER), &gotbytes);
+              if (NS_FAILED(rv) || (wantbytes != gotbytes)) break;
+
+              // XXX is there any way to tell when "8bit" or "7bit" etc may be more appropriate than
+              // always using "binary"?
+
+              rv = postDataFile->Write(BINARY_CONTENT, wantbytes = PL_strlen(BINARY_CONTENT), &gotbytes);
+              if (NS_FAILED(rv) || (wantbytes != gotbytes)) break;
+
+              rv = postDataFile->Write(CRLF, wantbytes = PL_strlen(CRLF), &gotbytes);
+              if (NS_FAILED(rv) || (wantbytes != gotbytes)) break;
+            }
 
             // Print Content-Disp line
             rv = postDataFile->Write(CONTENT_DISP, wantbytes = contDispLen, &gotbytes);
@@ -1574,7 +1642,7 @@ nsresult nsFormFrame::ProcessAsMultipart(nsIFormProcessor* aFormProcessor,nsIFil
             if (NS_FORM_INPUT_FILE == type) {
               rv = postDataFile->Write(FILENAME, wantbytes = PL_strlen(FILENAME), &gotbytes);
               if (NS_FAILED(rv) || (wantbytes != gotbytes)) break;
-              rv = postDataFile->Write(value, wantbytes = PL_strlen(value), &gotbytes);
+              rv = postDataFile->Write(fname, wantbytes = PL_strlen(fname), &gotbytes);
               if (NS_FAILED(rv) || (wantbytes != gotbytes)) break;
             }
 
@@ -1595,23 +1663,6 @@ nsresult nsFormFrame::ProcessAsMultipart(nsIFormProcessor* aFormProcessor,nsIFil
               rv = postDataFile->Write(CRLF, wantbytes = PL_strlen(CRLF), &gotbytes);
               if (NS_FAILED(rv) || (wantbytes != gotbytes)) break;
               // end content-type header
-	          }
-
-            // File inputs should include Content-Transfer-Encoding to prep server side
-            // MIME decoders
-
-            if (NS_FORM_INPUT_FILE == type) {
-              rv = postDataFile->Write(CONTENT_TRANSFER, wantbytes = PL_strlen(CONTENT_TRANSFER), &gotbytes);
-              if (NS_FAILED(rv) || (wantbytes != gotbytes)) break;
-
-              // XXX is there any way to tell when "8bit" or "7bit" etc may be more appropriate than
-              // always using "binary"?
-
-              rv = postDataFile->Write(BINARY_CONTENT, wantbytes = PL_strlen(BINARY_CONTENT), &gotbytes);
-              if (NS_FAILED(rv) || (wantbytes != gotbytes)) break;
-
-              rv = postDataFile->Write(CRLF, wantbytes = PL_strlen(CRLF), &gotbytes);
-              if (NS_FAILED(rv) || (wantbytes != gotbytes)) break;
             }
 
             // Blank line before value
@@ -1652,8 +1703,12 @@ nsresult nsFormFrame::ProcessAsMultipart(nsIFormProcessor* aFormProcessor,nsIFil
               rv = postDataFile->Write(CRLF, wantbytes = PL_strlen(CRLF), &gotbytes);
               if (NS_FAILED(rv) || (wantbytes != gotbytes)) break;
             }
-            delete [] name;
-            nsMemory::Free(value);
+            if (name)
+              nsMemory::Free(name);
+            if (value)
+              nsMemory::Free(value);
+            if (fname)
+              nsMemory::Free(fname);
           }
           delete [] names;
           delete [] values;

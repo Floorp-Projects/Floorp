@@ -124,6 +124,9 @@ pref("browser.target_new_blocked", false);
 // loading and rendering of framesets and iframes
 pref("browser.frames.enabled", true);
 
+// form submission
+pref("browser.forms.submit.backwards_compatible", true);
+
 // view source
 pref("view_source.syntax_highlight", true);
 
