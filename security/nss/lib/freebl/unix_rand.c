@@ -744,27 +744,16 @@ for the small amount of entropy it provides.
     static char ps_cmd[] = "ps -el";
 #endif
 #endif /* DO_PS */
+#if defined(BSDI)
+    static char netstat_ni_cmd[] = "netstat -nis";
+#else
     static char netstat_ni_cmd[] = "netstat -ni";
+#endif
 
     GiveSystemInfo();
 
     bytes = RNG_GetNoise(buf, sizeof(buf));
     RNG_RandomUpdate(buf, bytes);
-
-#ifdef DO_PS
-    fp = safe_popen(ps_cmd);
-    if (fp != NULL) {
-	while ((bytes = fread(buf, 1, sizeof(buf), fp)) > 0)
-	    RNG_RandomUpdate(buf, bytes);
-	safe_pclose(fp);
-    }
-#endif
-    fp = safe_popen(netstat_ni_cmd);
-    if (fp != NULL) {
-	while ((bytes = fread(buf, 1, sizeof(buf), fp)) > 0)
-	    RNG_RandomUpdate(buf, bytes);
-	safe_pclose(fp);
-    }
 
     /*
      * Pass the C environment and the addresses of the pointers to the
@@ -786,7 +775,7 @@ for the small amount of entropy it provides.
     GiveSystemInfo();
 
     /* grab some data from system's PRNG before any other files. */
-    RNG_FileUpdate("/dev/urandom", 1024);
+    bytes = RNG_FileUpdate("/dev/urandom", 1024);
 
     /* If the user points us to a random file, pass it through the rng */
     randfile = getenv("NSRANDFILE");
@@ -797,6 +786,33 @@ for the small amount of entropy it provides.
     /* pass other files through */
     for (cp = files; *cp; cp++)
 	RNG_FileForRNG(*cp);
+
+/*
+ * Bug 100447: On BSD/OS 4.2 and 4.3, we have problem calling safe_popen
+ * in a pthreads environment.  Therefore, we call safe_popen last and on
+ * BSD/OS we do not call safe_popen when we succeeded in getting data
+ * from /dev/urandom.
+ */
+
+#ifdef BSDI
+    if (bytes)
+        return;
+#endif
+
+#ifdef DO_PS
+    fp = safe_popen(ps_cmd);
+    if (fp != NULL) {
+	while ((bytes = fread(buf, 1, sizeof(buf), fp)) > 0)
+	    RNG_RandomUpdate(buf, bytes);
+	safe_pclose(fp);
+    }
+#endif
+    fp = safe_popen(netstat_ni_cmd);
+    if (fp != NULL) {
+	while ((bytes = fread(buf, 1, sizeof(buf), fp)) > 0)
+	    RNG_RandomUpdate(buf, bytes);
+	safe_pclose(fp);
+    }
 
 }
 #else
