@@ -32,13 +32,52 @@ function SetText()
         document.the_form.the_text.value;
 }
 
+/*
+// For JS evaluator below; unused.
+
+var it = undefined; // persistent last special value.
+function EvalIt() {
+    var inText = document.eval_form.eval_text.value;
+
+    dump(document.simple1);
+
+    try {
+        var result = eval(inText);
+        result = result ? result : "";
+        document.eval_form.result_text.value = result;
+        if (it)
+            document.eval_form.it_text.value = "it: " + it;
+        document.eval_form.eval_text.value = "";
+    } catch (err) {
+        document.eval_form.result_text.value = "Exn: " + err.toString();
+    }
+    return true;
+}
+*/
 </script>
+
 
 <form name ="the_form">
 <INPUT TYPE="text" NAME="the_text" VALUE="some text" SIZE="25">
 <input	type=button value="Set Text" onclick='SetText()'>
 <input	type=button value="Get Text" onclick='GetText()'>
 </form>
+
+<!--
+<hr>
+<form name ="eval_form">
+JavaScript evaluation for poking at the plugin ('document.simple1').<br>
+input:<br>
+<INPUT TYPE="text" NAME="eval_text" onchange = "EvalIt()" SIZE="80"><br>
+result:<br>
+<INPUT TYPE="text" NAME="result_text" SIZE="80"><br>
+contents of 'it':<br>
+<INPUT TYPE="text" NAME="it_text" SIZE="80">
+<p>
+<input type=button value="eval" onclick="EvalIt()">
+</form>
+-->
+
 
 <hr>
 
