@@ -28,6 +28,7 @@
 #include "nsIAllocator.h"
 #include "nsIEnumerator.h"
 #include "prtime.h"
+#include "prinrval.h"
 #include "prbit.h"
 #include "nsCOMPtr.h"
 #include <math.h>
@@ -196,22 +197,20 @@ now32()
 }
 
 void
-nsCachedNetData::NoteDownloadTime(PRTime start, PRTime end)
+nsCachedNetData::NoteDownloadTime(PRIntervalTime start, PRIntervalTime end)
 {
-    double startFP, endFP, rate, duration;
+    double rate;
+    PRUint32 duration;
 
-    LL_L2D(startFP, start);
-    LL_L2D(endFP, end);
+    duration = PR_IntervalToMilliseconds(end - start);
 
-    duration = endFP - startFP;
-
-    // If the data arrives so fast that it can not be timed due to the clock
-    // granularity, assume a data arrival duration of 10 ms
+    // If the data arrives so fast that it can not be timed due to insufficient
+    // clock granularity, assume a data arrival duration of 5 ms
     if (!duration)
-        duration = 10000;
+        duration = 5;
 
     // Compute download rate in kB/s
-    rate = mLogicalLength / (duration * (1e-6 * 1024.0));
+    rate = mLogicalLength / (duration * (1.0e-3 * 1024.0));
     
     if (mDownloadRate) {
         // Exponentially smooth download rate
