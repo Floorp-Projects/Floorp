@@ -197,10 +197,12 @@ nsImageDocument::CreateSyntheticDocument()
   // Synthesize an html document that refers to the image
   nsresult rv;
   nsIHTMLContent* root;
-  rv = NS_NewRootPart(&root, this);
+  rv = NS_NewHTMLHtmlElement(&root, nsHTMLAtoms::html);
   if (NS_OK != rv) {
     return rv;
   }
+  root->SetDocument(this);
+  SetRootContent(root);
 
   nsIHTMLContent* body;
   rv = NS_NewHTMLBodyElement(&body, nsHTMLAtoms::body);
