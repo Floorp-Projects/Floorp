@@ -33,7 +33,7 @@ var accountManager = Components.classes["@mozilla.org/messenger/account-manager;
 
 function FindNextFolder(originalFolderURI)
 {
-    if (!originalFolderURI) return;
+    if (!originalFolderURI) return null;
 
     var originalFolderResource = RDF.GetResource(originalFolderURI);
 	var folder = originalFolderResource.QueryInterface(Components.interfaces.nsIFolder);
