@@ -84,7 +84,7 @@ function initCopiesAndFolder(identity)
   document.getElementById('identity.doBcc').checked = copiesAndFoldersIdentity.doBcc;
   document.getElementById('identity.doBccList').value = copiesAndFoldersIdentity.doBccList;
   document.getElementById('identity.doFcc').checked = copiesAndFoldersIdentity.doFcc;
-  document.getElementById('identity.showSaveMsgDlg').checked = identity.showSaveMsgDlg;
+  document.getElementById('identity.showSaveMsgDlg').checked = copiesAndFoldersIdentity.showSaveMsgDlg;
   onInitCopiesAndFolders(); // am-copies.js method
 }
 
