@@ -121,6 +121,12 @@ sub GenBuildSystemInfo()
 sub DoPrebuildCheck()
 {
     SanityCheckJarOptions();
+
+    # launch codewarrior and persist its location. Have to call this before first
+    # call to getCodeWarriorPath().
+    my($ide_path_file) = $main::filepaths{"idepath"};
+    $ide_path_file = full_path_to($ide_path_file);
+    LaunchCodeWarrior($ide_path_file);
 }
 
 
@@ -194,9 +200,6 @@ sub UpdateConfigHeader($)
 #//--------------------------------------------------------------------------------------------------
 sub ConfigureBuildSystem()
 {
-    # launch codewarrior and write idepath.txt. This is required for getCodeWarriorPath() to work.
-    LaunchCodeWarrior();
-
     #// In the future, we may want to do configurations based on the actual build system itself.
     #// GenBuildSystemInfo();
         
@@ -1931,7 +1934,7 @@ sub Checkout()
     unless ( $main::pull{all} ) { return; }
 
     assertRightDirectory();
-    my($cvsfile) = AskAndPersistFile("::mozilla_session_path.txt");
+    my($cvsfile) = AskAndPersistFile($main::filepaths{"sessionpath"});
     my($session) = MacCVS->new( $cvsfile );
     unless (defined($session)) { die "Checkout aborted. Cannot create session file: $session" }
 
@@ -1989,7 +1992,12 @@ sub RunBuild($$$)
     }
     
     # read local prefs, and the build progress file, and set flags to say what to build
-    SetupBuildParams(\%main::pull, \%main::build, \%main::options, \%main::optiondefines, $build_prefs);
+    SetupBuildParams(\%main::pull,
+                     \%main::build,
+                     \%main::options,
+                     \%main::optiondefines,
+                     \%main::filepaths,
+                     $build_prefs);
 
     if ($main::LOG_TO_FILE) {
         RedirectOutputToFile("Mozilla script log");
@@ -2006,7 +2014,7 @@ sub RunBuild($$$)
 
     # create generated headers
     ConfigureBuildSystem();
-            
+        
     chdir($main::MOZ_SRC);
     BuildDist();
     

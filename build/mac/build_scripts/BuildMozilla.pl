@@ -50,6 +50,7 @@ use MozillaBuildList;
 my(%pull);
 my(%build);
 my(%options);
+my(%filepaths);
 my(%optiondefines);
 
 #-------------------------------------------------------------

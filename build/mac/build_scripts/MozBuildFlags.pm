@@ -78,6 +78,14 @@ my(@options_flags) =
 );
 
 
+# all file paths are relative to the parent of the "mozilla" source directory.
+my(@filepath_flags) = 
+(
+  ["idepath",       ":Build IDE Path.txt"],         # saved location of CodeWarrior IDE
+  ["sessionpath",   ":Build session path.txt"]      # saved location of MacCVS Pro session file
+);
+
+
 #-------------------------------------------------------------------------------
 # End of build flags
 #-------------------------------------------------------------------------------
@@ -151,6 +159,16 @@ sub SetBuildOptions($)
 }
 
 #-------------------------------------------------------------------------------
+# SetFilepathFlags
+#-------------------------------------------------------------------------------
+sub SetFilepathFlags($)
+{
+  my($filepath) = @_;
+
+  flagsArrayToHash(\@filepath_flags, $filepath);
+}
+
+#-------------------------------------------------------------------------------
 # SetOptionDefines
 #-------------------------------------------------------------------------------
 sub SetOptionDefines($)
@@ -189,7 +207,13 @@ sub PropagateAllFlags($)
 #//--------------------------------------------------------------------------------------------------
 sub _getBuildProgressFile()
 {
-  my($progress_file) = $script_dir.":¥Build Progress";
+  my($progress_file);
+  
+  if ($main::DEBUG) {
+    $progress_file = $script_dir.":¥Debug build Progress";
+  } else {
+    $progress_file = $script_dir.":¥Opt build Progress";
+  }
   return $progress_file;
 }
 
@@ -278,12 +302,12 @@ sub ReadBuildProgress($)
 #-------------------------------------------------------------------------------
 # SetupBuildParams
 #-------------------------------------------------------------------------------
-sub SetupBuildParams($$$$$)
+sub SetupBuildParams($$$$$$)
 {
-  my($pull, $build, $options, $optiondefines, $prefs_file) = @_;
+  my($pull, $build, $options, $optiondefines, $filepaths, $prefs_file) = @_;
     
   # read the user pref file, that can change values in the array
-  ReadMozUserPrefs($prefs_file, \@pull_flags, \@build_flags, \@options_flags);
+  ReadMozUserPrefs($prefs_file, \@pull_flags, \@build_flags, \@options_flags, \@filepath_flags);
 
   ReadBuildProgress(\@build_flags);
   
@@ -293,6 +317,7 @@ sub SetupBuildParams($$$$$)
   SetBuildFlags($build);
   SetBuildOptions($options);
   SetOptionDefines($optiondefines);
+  SetFilepathFlags($filepaths);
   
   # printHash($build);
 }
