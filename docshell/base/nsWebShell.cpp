@@ -925,8 +925,14 @@ nsWebShell::OnLinkClick(nsIFrame* aFrame,
                         const nsString& aTargetSpec,
                         nsIPostData* aPostData)
 {
-  new OnLinkClickEvent(this, aURLSpec, aTargetSpec, aPostData);
-  return NS_OK;
+  OnLinkClickEvent* ev;
+  nsresult rv = NS_OK;
+
+  ev = new OnLinkClickEvent(this, aURLSpec, aTargetSpec, aPostData);
+  if (nsnull == ev) {
+    rv = NS_ERROR_OUT_OF_MEMORY;
+  }
+  return rv;
 }
 
 // Find the web shell in the entire tree that we can reach that the
@@ -1085,7 +1091,7 @@ class nsWebShellFactory : public nsIFactory
 {
 public:
   nsWebShellFactory();
-  ~nsWebShellFactory();
+  virtual ~nsWebShellFactory();
 
   // nsISupports methods
   NS_IMETHOD QueryInterface(const nsIID &aIID, void **aResult);
