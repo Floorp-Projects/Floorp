@@ -1141,7 +1141,7 @@ FileSystemDataSource::GetName(nsIRDFResource *source, nsIRDFLiteral **aResult)
 
 #ifdef	XP_BEOS
 	// under BEOS, try and get the "META:title" attribute (if its a file)
-	nsAutoString		theURI(uri);
+	nsAutoString		theURI; theURI.AssignWithConversion(uri);
 	if (theURI.Find(netPositiveDir) == 0)
 	{
 		nsFileSpec		spec(url);
@@ -1160,7 +1160,7 @@ FileSystemDataSource::GetName(nsIRDFResource *source, nsIRDFLiteral **aResult)
 						0, beNameAttr, sizeof(beNameAttr-1))) > 0)
 					{
 						beNameAttr[len] = '\0';
-						name = beNameAttr;
+						name.AssignWithConversion(beNameAttr);
 					}
 				}
 			}
@@ -1320,7 +1320,8 @@ FileSystemDataSource::getNetPositiveURL(nsIRDFResource *source, nsString aFileUR
 					0, beURLattr, sizeof(beURLattr-1))) > 0)
 				{
 					beURLattr[len] = '\0';
-					nsAutoString	bookmarkURL(beURLattr);
+					nsAutoString	bookmarkURL;
+                                        bookmarkURL.AssignWithConversion(beURLattr);
 					rv = gRDFService->GetLiteral(bookmarkURL.GetUnicode(),
 						urlLiteral);
 				}
