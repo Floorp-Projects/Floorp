@@ -258,9 +258,11 @@ public:
 #ifdef DEBUG
 #define ROOTKEEPER_CONSTRUCTOR(type) RootKeeper(type **p, int line, char *pfile) : is_js2val(false), p(p) { init(line, pfile); }
 #define DEFINE_ROOTKEEPER(rk_var, obj) RootKeeper rk_var(&obj, __LINE__, __FILE__);
+#define DEFINE_ARRAYROOTKEEPER(rk_var, obj, count) RootKeeper rk_var(&obj, count, __LINE__, __FILE__);
 #else
 #define ROOTKEEPER_CONSTRUCTOR(type) RootKeeper(type **p) : is_js2val(false), p(p) { ri = JS2Object::addRoot(this); }
 #define DEFINE_ROOTKEEPER(rk_var, obj) RootKeeper rk_var(&obj);
+#define DEFINE_ARRAYROOTKEEPER(rk_var, obj, count) RootKeeper rk_var(&obj, count);
 #endif
 
 class RootKeeper {
@@ -283,7 +285,8 @@ public:
     ROOTKEEPER_CONSTRUCTOR(DateInstance)
 
 #ifdef DEBUG
-    RootKeeper(js2val *p, int line, char *pfile) : is_js2val(true), p(p)    { init(line, pfile); }
+    RootKeeper(js2val *p, int line, char *pfile) : is_js2val(true), js2val_count(0), p(p)    { init(line, pfile); }
+    RootKeeper(js2val **p, uint32 count, int line, char *pfile) : is_js2val(true), js2val_count(count), p(p)    { init(line, pfile); }
     ~RootKeeper() { JS2Object::removeRoot(ri); delete file; }
     void RootKeeper::init(int ln, char *pfile)
     {
@@ -293,12 +296,14 @@ public:
         ri = JS2Object::addRoot(this);
     }
 #else
-    RootKeeper(js2val *p) : is_js2val(true), p(p)    { ri = JS2Object::addRoot(this); }
+    RootKeeper(js2val *p) : is_js2val(true), js2val_count(0), p(p)    { ri = JS2Object::addRoot(this); }
+    RootKeeper(js2val **p, uint32 count) : is_js2val(true), js2val_count(count), p(p)    { ri = JS2Object::addRoot(this); }
     ~RootKeeper() { JS2Object::removeRoot(ri); }
 #endif
 
     JS2Object::RootIterator ri;
     bool is_js2val;
+	uint32 js2val_count;
     void *p;
 
 #ifdef DEBUG
@@ -1496,7 +1501,7 @@ public:
     bool readInstanceMember(js2val containerVal, JS2Class *c, InstanceMember *mBase, Phase phase, js2val *rval);
     bool JS2Metadata::hasOwnProperty(JS2Object *obj, const String *name);
 
-    bool writeLocalMember(LocalMember *m, js2val newValue, bool initFlag);
+    bool writeLocalMember(LocalMember *m, js2val newValue, bool initFlag, Frame *container);
     bool writeInstanceMember(js2val containerVal, JS2Class *c, InstanceMember *mBase, js2val newValue);
 
     bool deleteLocalMember(LocalMember *m, bool *result);

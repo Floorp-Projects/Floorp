@@ -100,18 +100,28 @@ namespace MetaData {
 
     js2val JS2Metadata::readEvalFile(const String& fileName)
     {
-        String buffer;
-        int ch;
-
         js2val result = JS2VAL_VOID;
 
         std::string str(fileName.length(), char());
         std::transform(fileName.begin(), fileName.end(), str.begin(), narrow);
-        FILE* f = fopen(str.c_str(), "r");
+        FILE* f = fopen(str.c_str(), "rb");
+
         if (f) {
-            while ((ch = getc(f)) != EOF)
-                buffer += static_cast<char>(ch);
-            fclose(f);
+			fseek(f, 0, SEEK_END);
+			long fsize = ftell(f);
+			fseek(f, 0, SEEK_SET);
+			char *buf = new char[fsize];
+			fread(buf, fsize, 1, f);
+			fclose(f);
+			String buffer(fsize, uni::null);
+			for (long i = 0; i < fsize; i++) {
+				if (!buf[i]) {
+					buffer.resize(i);
+					break;
+				}
+				buffer[i] = widen(buf[i]);
+			}
+			delete [] buf;
             result = readEvalString(buffer, fileName);
         }
         return result;
@@ -414,6 +424,7 @@ namespace MetaData {
         // if that's not available or returns a non primitive, throw a TypeError
 
         JS2Object *obj = JS2VAL_TO_OBJECT(x);
+        DEFINE_ROOTKEEPER(rk1, obj);
         if (obj->kind == ClassKind)    // therefore, not an E3 object, so just return
             return engine->allocString("Function");// engine->typeofString(x);     // the 'typeof' string
 
@@ -783,14 +794,16 @@ namespace MetaData {
             return false;
         }
         switch (m->memberKind) {
+        case Member::FrameVariableMember:
+			ASSERT(JS2VAL_IS_OBJECT(base));
+            return meta->writeLocalMember(checked_cast<LocalMember *>(m), newValue, initFlag, checked_cast<Frame *>(JS2VAL_TO_OBJECT(base)));
         case Member::ForbiddenMember:
         case Member::DynamicVariableMember:
-        case Member::FrameVariableMember:
         case Member::VariableMember:
         case Member::ConstructorMethodMember:
         case Member::SetterMember:
         case Member::GetterMember:
-            return meta->writeLocalMember(checked_cast<LocalMember *>(m), newValue, initFlag);
+            return meta->writeLocalMember(checked_cast<LocalMember *>(m), newValue, initFlag, NULL);
         case Member::InstanceVariableMember:
         case Member::InstanceMethodMember:
         case Member::InstanceGetterMember:

@@ -187,10 +187,7 @@ public:
 
     String mSource;                     // for error reporting
     String mSourceLocation;             // for error reporting
-
-//#ifdef DEBUG
-    String fName;                       // relevant function name for trace output
-//#endif
+    String fName;                       // relevant function name
 
 };
 

@@ -590,7 +590,8 @@ static js2val Array_sort(JS2Metadata *meta, const js2val thisValue, js2val *argv
         meta->reportError(Exception::internalError, "out of memory", meta->engine->errorPos());
 
     js2val *vec = new js2val[length];
-    
+    DEFINE_ARRAYROOTKEEPER(rk, vec, length);
+
     JS2Class *c = meta->objectType(thisObj);
     for (i = 0; i < length; i++) {
         c->ReadPublic(meta, &thatValue, meta->engine->numberToString(i), RunPhase, &vec[i]);                

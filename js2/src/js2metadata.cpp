@@ -1087,6 +1087,8 @@ namespace MetaData {
                 Reference *r = SetupExprNode(env, phase, sw->expr, &exprType);
                 if (r) r->emitReadBytecode(bCon, p->pos);
                 switchTemp->emitWriteBytecode(bCon, p->pos);
+                bCon->emitOp(ePopv, p->pos);
+
 
                 // First time through, generate the conditional waterfall 
                 StmtNode *s = sw->statements;
@@ -1313,9 +1315,7 @@ namespace MetaData {
                 try {
                     oldData = startCompilationUnit(fnInst->fWrap->bCon, bCon->mSource, bCon->mSourceLocation);
                     env->addFrame(fnInst->fWrap->compileFrame);
-//#ifdef DEBUG
                     bCon->fName = *f->function.name;
-//#endif
                     VariableBinding *pb = f->function.parameters;
                     while (pb) {
                         FrameVariable *v = checked_cast<FrameVariable *>(pb->member);
@@ -1792,7 +1792,6 @@ namespace MetaData {
         case ExprNode::Null:
         case ExprNode::number:
         case ExprNode::regExp:
-        case ExprNode::arrayLiteral:
         case ExprNode::numUnit:
         case ExprNode::string:
         case ExprNode::boolean:
@@ -1824,7 +1823,27 @@ namespace MetaData {
             }
             break;
         case ExprNode::objectLiteral:
+			{
+                PairListExprNode *plen = checked_cast<PairListExprNode *>(p);
+                ExprPairList *e = plen->pairs;
+                while (e) {
+                    ASSERT(e->field && e->value);
+                    ValidateExpression(cxt, env, e->value);
+                    e = e->next;
+                }
+			}
             break;
+        case ExprNode::arrayLiteral:
+            {
+                PairListExprNode *plen = checked_cast<PairListExprNode *>(p);
+                ExprPairList *e = plen->pairs;
+                while (e) {
+                    if (e->value)
+                        ValidateExpression(cxt, env, e->value);
+                    e = e->next;
+                }
+            }
+			break;
         case ExprNode::index:
             {
                 InvokeExprNode *i = checked_cast<InvokeExprNode *>(p);
@@ -2933,7 +2952,7 @@ doUnary:
                 {
                     LocalMember *m = meta->findLocalMember(f, multiname, WriteAccess);
                     if (m) {
-                        meta->writeLocalMember(m, newValue, false);
+                        meta->writeLocalMember(m, newValue, false, f);
                         result = true;
                     }
                 }
@@ -2985,7 +3004,7 @@ doUnary:
                 {
                     LocalMember *m = meta->findLocalMember(f, multiname, WriteAccess);
                     if (m) {
-                        meta->writeLocalMember(m, newValue, true);
+                        meta->writeLocalMember(m, newValue, true, f);
                         result = true;
                     }
                 }
@@ -3492,7 +3511,7 @@ rescan:
                     reportError(Exception::definitionError, "Illegal redefinition of {0}", pos, id);
                 else {
                     result = bindingResult->content;
-                    writeLocalMember(result, initVal, true);
+                    writeLocalMember(result, initVal, true, regionalFrame);
                 }
             }
             // At this point a hoisted binding of the same var already exists, so there is no need to create another one
@@ -4357,7 +4376,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
     }
 
     // Write a value to the local member
-    bool JS2Metadata::writeLocalMember(LocalMember *m, js2val newValue, bool initFlag) // phase not used?
+    bool JS2Metadata::writeLocalMember(LocalMember *m, js2val newValue, bool initFlag, Frame *container)
     {
         switch (m->memberKind) {
         case LocalMember::ForbiddenMember:
@@ -4379,25 +4398,25 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
             return true;
         case LocalMember::FrameVariableMember:
             {
-                FrameVariable *f = checked_cast<FrameVariable *>(m);
-                switch (f->kind) {
+                ASSERT(container);
+                FrameVariable *fv = checked_cast<FrameVariable *>(m);
+                switch (fv->kind) {
                 case FrameVariable::Package:
-                    (*env->getPackageFrame()->slots)[f->frameSlot] = newValue;
+                    {
+                        ASSERT(container->kind == PackageKind);
+                        (*(checked_cast<Package *>(container))->slots)[fv->frameSlot] = newValue;
+                    }
                     break;
                 case FrameVariable::Local:
                     {
-                        FrameListIterator fi = env->getRegionalFrame();
-                        ASSERT((fi->first)->kind == ParameterFrameKind);
-                        NonWithFrame *nwf = checked_cast<NonWithFrame *>((fi - 1)->first);
-                        (*nwf->slots)[f->frameSlot] = newValue;
+                        ASSERT(container->kind == BlockFrameKind);
+                        (*(checked_cast<NonWithFrame *>(container))->slots)[fv->frameSlot] = newValue;
                     }
                     break;
                 case FrameVariable::Parameter:
                     {
-                        FrameListIterator fi = env->getRegionalFrame();
-                        ASSERT((fi->first)->kind == ParameterFrameKind);
-                        ParameterFrame *pFrame = checked_cast<ParameterFrame *>(fi->first);
-                        (*pFrame->slots)[f->frameSlot] = newValue;
+                        ASSERT(container->kind == ParameterFrameKind);
+                        (*(checked_cast<ParameterFrame *>(container))->slots)[fv->frameSlot] = newValue;
                     }
                     break;
                 }
@@ -5183,8 +5202,15 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
             RootKeeper *r = *i;
             PondScum *scum = NULL;
             if (r->is_js2val) {
-                js2val *valp = (js2val *)(r->p);
-                markJS2Value(*valp);
+				if (r->js2val_count) {
+					js2val *valp = *((js2val **)(r->p));
+					for (uint32 c = 0; c < r->js2val_count; c++)
+						markJS2Value(*valp++);
+				}
+				else {
+					js2val *valp = (js2val *)(r->p);
+					markJS2Value(*valp);
+				}
             }
             else {
                 JS2Object **objp = (JS2Object **)(r->p);
@@ -5290,9 +5316,9 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
                     p->resetMark();      // might have lingering mark from previous gc
                     p->clearFlags();
                     p->setFlag(flag);
-//#ifdef DEBUG
+#ifdef DEBUG
                     memset((p + 1), 0xB7, p->getSize() - sizeof(PondScum));
-//#endif
+#endif
                     return (p + 1);
                 }
                 pre = p;
@@ -5310,9 +5336,9 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         }
         // there was room, so acquire it
         PondScum *p = (PondScum *)pondTop;
-//#ifdef DEBUG
+#ifdef DEBUG
         memset(p, 0xB7, sz);
-//#endif
+#endif
         p->owner = this;
         p->setSize(sz);
         p->setFlag(flag);
@@ -5326,9 +5352,9 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
     {
         p->owner = (Pond *)freeHeader;
         uint8 *t = (uint8 *)(p + 1);
-//#ifdef DEBUG
+#ifdef DEBUG
         memset(t, 0xB3, p->getSize() - sizeof(PondScum));
-//#endif
+#endif
         freeHeader = p;
         return p->getSize() - sizeof(PondScum);
     }

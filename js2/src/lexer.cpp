@@ -249,9 +249,22 @@ char16 JS::Lexer::lexEscape(bool unicodeOnly)
             ch = peekChar();
             if (!isASCIIDecimalDigit(ch))
                 return 0x00;
+/*
             // Point to the next character in the error message
             getChar();
             break;
+*/
+			/* E3 compatibility, parse the sequence as octal */
+            {
+                uint32 n = 0;
+                while (isASCIIDecimalDigit(ch)) {
+                    ch = getChar();
+                    n = (n << 3) | (ch - '0');
+					ch = peekChar();
+                }
+                return static_cast<char16>(n);
+            }
+
 
           case 'b':
             return 0x08;
