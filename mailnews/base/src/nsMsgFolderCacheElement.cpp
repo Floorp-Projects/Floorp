@@ -30,7 +30,8 @@ nsMsgFolderCacheElement::nsMsgFolderCacheElement()
 nsMsgFolderCacheElement::~nsMsgFolderCacheElement()
 {
 	NS_IF_RELEASE(m_mdbRow);
-	NS_IF_RELEASE(m_owningCache);
+	// circular reference, don't do it.
+//	NS_IF_RELEASE(m_owningCache);
 	PR_FREEIF(m_folderURI);
 }
 
@@ -43,8 +44,9 @@ NS_IMPL_SETTER_STR(nsMsgFolderCacheElement::SetURI, m_folderURI)
 void nsMsgFolderCacheElement::SetOwningCache(nsMsgFolderCache *owningCache)
 {
 	m_owningCache = owningCache;
-	if (owningCache)
-		NS_ADDREF(owningCache);
+	// circular reference, don't do it.
+//	if (owningCache)
+//		NS_ADDREF(owningCache);
 }
 
 NS_IMETHODIMP 	 nsMsgFolderCacheElement::GetStringProperty(const char *propertyName, char **result)
