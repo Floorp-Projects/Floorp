@@ -5256,7 +5256,8 @@ nsBlockFrame::ReflowFloater(nsBlockReflowState& aState,
       availWidth -=  availWidth % twp;
     }
   }
-  nscoord availHeight = (NS_UNCONSTRAINEDSIZE == aState.mAvailSpaceRect.height)
+  nscoord availHeight = ((NS_UNCONSTRAINEDSIZE == aState.mAvailSpaceRect.height) ||
+                         (NS_UNCONSTRAINEDSIZE == aState.mContentArea.height))
                         ? NS_UNCONSTRAINEDSIZE 
                         : PR_MAX(0, aState.mContentArea.height - aState.mY);
 
