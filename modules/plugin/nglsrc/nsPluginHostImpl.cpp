@@ -1674,7 +1674,7 @@ nsPluginHostImpl::nsPluginHostImpl()
 
   nsCOMPtr<nsIObserverService> obsService = do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
   if (obsService)
-    obsService->AddObserver(this, NS_LITERAL_STRING("quit-application"));
+    obsService->AddObserver(this, NS_LITERAL_STRING("quit-application").get());
 }
 
 nsPluginHostImpl::~nsPluginHostImpl()
