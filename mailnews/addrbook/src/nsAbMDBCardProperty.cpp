@@ -542,7 +542,6 @@ nsresult nsAbMDBCardProperty::RemoveAnonymousList(nsVoidArray* pArray)
 		{
 			void* pPtr = pArray->ElementAt(i);
 			PR_FREEIF(pPtr);
-			pArray->RemoveElementAt(i);
 		}
 		delete pArray;
 	}

@@ -655,14 +655,11 @@ FreeStretch(nsFontStretch* aStretch)
 {
   PR_smprintf_free(aStretch->mScalable);
 
-  PRInt32 count;
-  while ((count = aStretch->mScaledFonts.Count())) {
-    // go backwards to keep nsVoidArray from memmoving everything each time
-    count--; // nsVoidArray is zero based
+  for (PRInt32 count = aStretch->mScaledFonts.Count()-1; count >= 0; --count) {
     nsFontGTK *font = (nsFontGTK*)aStretch->mScaledFonts.ElementAt(count);
-    aStretch->mScaledFonts.RemoveElementAt(count);
     if (font) delete font;
   }
+  // aStretch->mScaledFonts.Clear(); handled by delete of aStretch
 
   for (int i = 0; i < aStretch->mSizesCount; i++) {
     delete aStretch->mSizes[i];
@@ -3209,10 +3206,13 @@ SetFontLangGroupInfo(nsFontCharSetMap* aCharSetMap)
   // apply fontLangGroup operations to it
   // eg: search for related groups, check for scaling prefs
   const char *langGroup = fontLangGroup->mFontLangGroupName;
+
+  // the font.scale prefs don't make sense without a langGroup
+  // XXX FIX!!!  if langGroup is "", we need to bypass the font.scale stuff
   if (!langGroup)
     langGroup = "";
   if (!fontLangGroup->mFontLangGroupAtom) {
-    fontLangGroup->mFontLangGroupAtom = NS_NewAtom(langGroup);
+      fontLangGroup->mFontLangGroupAtom = NS_NewAtom(langGroup);
   }
 
   // get the font scaling controls

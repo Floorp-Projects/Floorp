@@ -99,7 +99,6 @@ nsCopyRequest::~nsCopyRequest()
   while(j-- > 0)
   {
       ncs = (nsCopySource*) m_copySourceArray.ElementAt(j);
-      m_copySourceArray.RemoveElementAt(j);
       delete ncs;
   }
 }

@@ -102,13 +102,13 @@ class nsDataObjCollection : public IDataObject //, public nsPIDataObjCollection
     // from nsPIDataObjCollection
     STDMETHODIMP AddDataObject(IDataObject * aDataObj);
     STDMETHODIMP GetNumDataObjects(PRInt32* outNum) { *outNum = mDataObjects->Count(); }
-    STDMETHODIMP GetDataObjectAt(PRUint32 aItem, IDataObject** outItem) { *outItem = (IDataObject *)mDataObjects->ElementAt(aItem); }
+    STDMETHODIMP GetDataObjectAt(PRUint32 aItem, IDataObject** outItem) { *outItem = (IDataObject *)mDataObjects->SafeElementAt(aItem); }
 #endif
 
     // from nsPIDataObjCollection
     void AddDataObject(IDataObject * aDataObj);
     PRInt32 GetNumDataObjects() { return mDataObjects->Count(); }
-    IDataObject* GetDataObjectAt(PRUint32 aItem) { return (IDataObject *)mDataObjects->ElementAt(aItem); }
+    IDataObject* GetDataObjectAt(PRUint32 aItem) { return (IDataObject *)mDataObjects->SafeElementAt(aItem); }
 
 		// Return the registered OLE class ID of this object's CfDataObj.
 		CLSID GetClassID() const;

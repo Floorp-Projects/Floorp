@@ -740,7 +740,8 @@ nsHTMLFragmentContentSink::GetCurrentContent()
 {
   if (nsnull != mContentStack) {
     PRInt32 indx = mContentStack->Count() - 1;
-    return (nsIContent *)mContentStack->ElementAt(indx);
+    if (indx >= 0)
+      return (nsIContent *)mContentStack->ElementAt(indx);
   }
   return nsnull;
 }
@@ -762,8 +763,10 @@ nsHTMLFragmentContentSink::PopContent()
   nsIContent* content = nsnull;
   if (nsnull != mContentStack) {
     PRInt32 indx = mContentStack->Count() - 1;
-    content = (nsIContent *)mContentStack->ElementAt(indx);
-    mContentStack->RemoveElementAt(indx);
+    if (indx >= 0) {
+      content = (nsIContent *)mContentStack->ElementAt(indx);
+      mContentStack->RemoveElementAt(indx);
+    }
   }
   return content;
 }

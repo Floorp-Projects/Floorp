@@ -1036,8 +1036,7 @@ PRBool DIR_SortServersByPosition(nsVoidArray *wholeList)
 		/* Delete the old list.  We can't just call delete because
 		 * we must use the same list as passed in.
 		 */
-		for (i = count - 1; i >= 0; i--)
-			wholeList->RemoveElementAt(i);
+        wholeList->Clear();
 
 		/* Create a new list based on the array
 		 */
@@ -3422,14 +3421,13 @@ nsresult DIR_GetServerPreferences(nsVoidArray** list)
 						newServer->position += position;
 				}
 				oldList->AppendElement(newServer);
-				newList->RemoveElementAt(i);
 			}
 			else
 			{
 				DIR_DecrementServerRefCount(newServer);
-				newList->RemoveElementAt(i);
 			}
 		}
+		newList->Clear();
 		DIR_DeleteServerList(newList);
 
 		*list = oldList;
@@ -4255,7 +4253,7 @@ const char *DIR_GetFilterString (DIR_Server *server)
 	if (!server)
 		return nsnull;
 
-	DIR_Filter *filter = (DIR_Filter *)server->customFilters->ElementAt(0);
+	DIR_Filter *filter = (DIR_Filter *)server->customFilters->SafeElementAt(0);
 	if (filter)
 		return filter->string;
 	return nsnull;
@@ -4290,7 +4288,7 @@ PRBool DIR_RepeatFilterForTokens (DIR_Server *server, const char *filter)
 	DIR_Filter *f;
 	
 	if (!filter)
-		f = (DIR_Filter *)server->customFilters->ElementAt(0);
+		f = (DIR_Filter *)server->customFilters->SafeElementAt(0);
 	else
 		f = DIR_LookupFilter (server, filter);
 

@@ -1731,6 +1731,6 @@ void nsIMAPMessagePartIDArray::RemoveAndFreeAll()
 	{
 		nsIMAPMessagePartID *part = GetPart(0);
 		delete part;
-		RemoveElementAt(0);
 	}
+    Clear();
 }

@@ -1584,13 +1584,15 @@ nsresult nsCharsetMenu::RemoveLastMenuItem(nsIRDFContainer * aContainer,
   nsresult res = NS_OK;
 
   PRInt32 last = aArray->Count() - 1;
-  nsMenuEntry * item = (nsMenuEntry *) aArray->ElementAt(last);
-  if (item != NULL) {    
-    res = AddMenuItemToContainer(aContainer, item, NULL, "charset.", -2);
-    if (NS_FAILED(res)) return res;
+  if (last >= 0) {
+    nsMenuEntry * item = (nsMenuEntry *) aArray->ElementAt(last);
+    if (item != NULL) {    
+      res = AddMenuItemToContainer(aContainer, item, NULL, "charset.", -2);
+      if (NS_FAILED(res)) return res;
 
-    res = aArray->RemoveElementAt(last);
-    if (NS_FAILED(res)) return res;
+      res = aArray->RemoveElementAt(last);
+      if (NS_FAILED(res)) return res;
+    }
   }
 
   return res;

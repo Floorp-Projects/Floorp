@@ -212,7 +212,7 @@ nsCmdLineService::GetProgramName(char ** aResult)
 {
   nsresult rv = NS_OK;
 
-  *aResult = (char *)mArgValueList.ElementAt(0);
+  *aResult = (char *)mArgValueList.SafeElementAt(0);
 
   return rv;
 

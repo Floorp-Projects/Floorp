@@ -1712,6 +1712,10 @@ COOKIE_Enumerate
     return NS_ERROR_FAILURE;
   }
   cookie_CookieStruct *cookie;
+  NS_ASSERTION(count >= 0 && count < cookie_list->Count(), "bad cookie index");
+  if (count < 0 || count >= cookie_list->Count()) {
+    return NS_ERROR_UNEXPECTED;
+  }
   cookie = NS_STATIC_CAST(cookie_CookieStruct*, cookie_list->ElementAt(count));
   NS_ASSERTION(cookie, "corrupt cookie list");
 

@@ -363,7 +363,10 @@ extern "C" void ProfileMigrationController(void *data)
     
     choice = 0;
     migrator->mErrorCode = 0;
-    MigrateProfileItem* item = (MigrateProfileItem*)migrator->mProfilesToMigrate.ElementAt(index);
+    MigrateProfileItem* item = nsnull;
+
+    if (migrator->mProfilesToMigrate.Count() != 0)
+      item = (MigrateProfileItem*)migrator->mProfilesToMigrate.ElementAt(index);
     if (item)
     {
         rv = migrator->ProcessPrefsCallback(item->oldFile, item->newFile);

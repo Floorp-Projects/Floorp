@@ -5137,6 +5137,10 @@ CSSDeclarationImpl::AllPropertiesSameValue(PRInt32 aFirst, PRInt32 aSecond,
                                            PRInt32 aThird, PRInt32 aFourth)
 {
   nsCSSValue firstValue, otherValue;
+  // TryBorderShorthand does the bounds-checking for us; valid values there
+  // are > 0; 0 is a flag for "not set".  We here are passed the actual
+  // index, which comes from finding the value in the mOrder property array.
+  // Of course, re-getting the mOrder value here is pretty silly.
   GetValue((nsCSSProperty)NS_PTR_TO_INT32(mOrder->ElementAt(aFirst)), firstValue);
   GetValue((nsCSSProperty)NS_PTR_TO_INT32(mOrder->ElementAt(aSecond)), otherValue);
   if (firstValue != otherValue) {
@@ -5181,6 +5185,7 @@ CSSDeclarationImpl::TryBorderShorthand(nsAWritableString & aString,
                                        PRInt32 & aBorderRightColor)
 {
   PRInt32 border = 0;
+  // 0 means not in the mOrder array; otherwise it's index+1
   if (aBorderTopWidth && aBorderBottomWidth
       && aBorderLeftWidth && aBorderRightWidth
       && AllPropertiesSameValue(aBorderTopWidth-1, aBorderBottomWidth-1,
@@ -5246,6 +5251,7 @@ CSSDeclarationImpl::TryBorderSideShorthand(nsAWritableString & aString,
                                            PRInt32 & aBorderStyle,
                                            PRInt32 & aBorderColor)
 {
+  // 0 means not in the mOrder array; otherwise it's index+1
   if ((aBorderWidth && aBorderStyle) ||
       (aBorderWidth && aBorderColor) ||
       (aBorderStyle && aBorderColor)) {
@@ -5282,6 +5288,7 @@ CSSDeclarationImpl::TryMarginOrPaddingShorthand(nsAWritableString & aString,
                                                 PRInt32 & aLeft,
                                                 PRInt32 & aRight)
 {
+  // 0 means not in the mOrder array; otherwise it's index+1
   if (aTop && aBottom && aLeft && aRight) {
     // all 4 properties are set, we can output a shorthand
     aString.Append(NS_ConvertASCIItoUCS2(nsCSSProps::GetStringValue(aShorthand))
@@ -5322,6 +5329,7 @@ CSSDeclarationImpl::TryBackgroundShorthand(nsAWritableString & aString,
                                            PRInt32 & aBgPositionX,
                                            PRInt32 & aBgPositionY)
 {
+  // 0 means not in the mOrder array; otherwise it's index+1
   // check if we have at least two properties set; otherwise, no need to
   // use a shorthand
   PRInt8 numberPropertiesSpecified = (aBgColor ? 1 : 0) + (aBgImage ? 1 : 0)
@@ -5363,6 +5371,7 @@ CSSDeclarationImpl::TryBackgroundPosition(nsAWritableString & aString,
                                           PRInt32 & aBgPositionX,
                                           PRInt32 & aBgPositionY)
 {
+  // 0 means not in the mOrder array; otherwise it's index+1
   if (aBgPositionX && aBgPositionY) {
     nsAutoString backgroundXValue, backgroundYValue;
     AppendValueToString(eCSSProperty_background_x_position, backgroundXValue);
@@ -5392,6 +5401,7 @@ CSSDeclarationImpl::ToString(nsAWritableString& aString)
   if (nsnull != mOrder) {
     PRInt32 count = mOrder->Count();
     PRInt32 index;
+    // 0 means not in the mOrder array; otherwise it's index+1
     PRInt32 borderTopWidth = 0, borderTopStyle = 0, borderTopColor = 0;
     PRInt32 borderBottomWidth = 0, borderBottomStyle = 0, borderBottomColor = 0;
     PRInt32 borderLeftWidth = 0, borderLeftStyle = 0, borderLeftColor = 0;
@@ -5495,6 +5505,7 @@ CSSDeclarationImpl::ToString(nsAWritableString& aString)
 
         case eCSSProperty_background_x_position:
         case eCSSProperty_background_y_position:
+          // 0 means not in the mOrder array; otherwise it's index+1
           if (bgPositionX && bgPositionY) {
             aString.Append(NS_ConvertASCIItoUCS2(nsCSSProps::GetStringValue(eCSSProperty_background_position))
                            + NS_LITERAL_STRING(": "));
@@ -5687,7 +5698,7 @@ NS_IMETHODIMP
 CSSDeclarationImpl::GetNthProperty(PRUint32 aIndex, nsAWritableString& aReturn)
 {
   aReturn.Truncate();
-  if (nsnull != mOrder) {
+  if (nsnull != mOrder && aIndex < mOrder->Count()) {
     nsCSSProperty property = (nsCSSProperty)NS_PTR_TO_INT32(mOrder->ElementAt(aIndex));
     if (0 <= property) {
       aReturn.Append(NS_ConvertASCIItoUCS2(nsCSSProps::GetStringValue(property)));

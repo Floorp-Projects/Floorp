@@ -71,16 +71,14 @@ public:
     return NS_ERROR_FAILURE;
   }
   NS_IMETHOD SetElementAt(PRUint32 aIndex, nsISupports* value) {
-    PRBool ok = ReplaceElementAt(value, aIndex);
-    return ok ? NS_OK : NS_ERROR_FAILURE;
+    return ReplaceElementAt(value, aIndex) ? NS_OK : NS_ERROR_FAILURE;
   }
   NS_IMETHOD AppendElement(nsISupports *aElement) {
-    // XXX This incorrectly returns a PRBool instead of an nsresult.
-    return InsertElementAt(aElement, mCount);
+    return InsertElementAt(aElement, mCount)/* ? NS_OK : NS_ERROR_FAILURE*/;
   }
+  // XXX this is badly named - should be RemoveFirstElement
   NS_IMETHOD RemoveElement(nsISupports *aElement) {
-    // XXX This incorrectly returns a PRBool instead of an nsresult.
-    return RemoveElement(aElement, 0);
+    return RemoveElement(aElement, 0)/* ? NS_OK : NS_ERROR_FAILURE*/;
   }
   NS_IMETHOD_(PRBool) MoveElement(PRInt32 aFrom, PRInt32 aTo);
   NS_IMETHOD Enumerate(nsIEnumerator* *result);

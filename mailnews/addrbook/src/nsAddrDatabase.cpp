@@ -200,7 +200,6 @@ nsresult nsAddrDatabase::RemoveAnonymousList(nsVoidArray* pArray)
 		{
 			void* pPtr = pArray->ElementAt(i);
 			PR_FREEIF(pPtr);
-			pArray->RemoveElementAt(i);
 		}
 		delete pArray;
 	}
@@ -325,6 +324,7 @@ NS_IMETHODIMP nsAddrDatabase::NotifyCardEntryChange(PRUint32 abCode, nsIAbCard *
     }
     else
       m_ChangeListeners->RemoveElementAt(i); //remove null ptr in the list
+    // since we're looping down, this is ok
   }
   return NS_OK;
 }

@@ -757,9 +757,13 @@ PRBool nsMsgHdr::IsParentOf(nsIMsgDBHdr *possibleChild)
 	nsXPIDLCString messageId;
 
 	GetMessageId(getter_Copies(messageId));
-	possibleChild->GetStringReference(numReferences - 1, reference);
+    if (numReferences > 0)
+    {
+      possibleChild->GetStringReference(numReferences - 1, reference);
 
-	return (reference.Equals(messageId));
+      return (reference.Equals(messageId));
+    }
+    return PR_FALSE;
 }
 
 NS_IMETHODIMP nsMsgHdr::GetIsRead(PRBool *isRead)

@@ -987,7 +987,8 @@ nsHTMLDocument::InternalAddStyleSheet(nsIStyleSheet* aSheet)  // subclass hook f
     mStyleSheets.AppendElement(aSheet);
   }
   else {
-    if (mStyleAttrStyleSheet == mStyleSheets.ElementAt(mStyleSheets.Count() - 1)) {
+    if (mStyleSheets.Count() != 0 &&
+        mStyleAttrStyleSheet == mStyleSheets.ElementAt(mStyleSheets.Count() - 1)) {
       // keep attr sheet last
       mStyleSheets.InsertElementAt(aSheet, mStyleSheets.Count() - 1);
     }
@@ -1117,16 +1118,15 @@ nsHTMLDocument::SetDTDMode(nsDTDMode aMode)
   if (mCSSLoader) {
     mCSSLoader->SetQuirkMode(PRBool(eDTDMode_strict!= mDTDMode));
   }
-
-  nsIPresShell* shell = (nsIPresShell*) mPresShells.ElementAt(0);
+  nsIPresShell* shell = (nsIPresShell*) mPresShells.SafeElementAt(0);
   if (nsnull != shell) {
     nsCOMPtr<nsIPresContext> pc;
     shell->GetPresContext(getter_AddRefs(pc));
-     if (pc) {
-        pc->SetCompatibilityMode(((eDTDMode_strict== mDTDMode) ? 
-                                    eCompatibility_Standard : 
-                                    eCompatibility_NavQuirks));
-     }
+    if (pc) {
+      pc->SetCompatibilityMode(((eDTDMode_strict== mDTDMode) ? 
+                                eCompatibility_Standard : 
+                                eCompatibility_NavQuirks));
+    }
   }
 
   return NS_OK;
@@ -2180,7 +2180,7 @@ nsHTMLDocument::OpenCommon(nsIURI* aSourceURL)
     nsCOMPtr<nsIWebShell> webShell;
 
     // Get the webshell of our primary presentation shell
-    nsIPresShell* shell = (nsIPresShell*) mPresShells.ElementAt(0);
+    nsIPresShell* shell = (nsIPresShell*) mPresShells.SafeElementAt(0);
     if (shell) {
       nsCOMPtr<nsIPresContext> cx;
       shell->GetPresContext(getter_AddRefs(cx));
@@ -3013,7 +3013,7 @@ nsHTMLDocument::GetSelection(nsAWritableString& aReturn)
     consoleService->LogStringMessage(NS_LITERAL_STRING("Deprecated method document.getSelection() called.  Please use window.getSelection() instead.").get());
   }
 
-  nsIPresShell* shell = (nsIPresShell*)mPresShells.ElementAt(0);
+  nsIPresShell* shell = (nsIPresShell*)mPresShells.SafeElementAt(0);
 
   if (!shell) {
     return NS_OK;

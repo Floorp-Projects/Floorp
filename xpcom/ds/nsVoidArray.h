@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2; c-file-offsets: ((substatement-open . 0))  -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -41,7 +41,6 @@
 
 #include "nscore.h"
 #include "nsAWritableString.h"
-#include "nsQuickSort.h"
 
 class nsISizeOfHandler;
 
@@ -73,7 +72,30 @@ public:
     return mImpl ? PRInt32(mImpl->mBits & kArraySizeMask) : 0;
   }
 
-  void* ElementAt(PRInt32 aIndex) const;
+  void* nsVoidArray::ElementAt(PRInt32 aIndex) const
+  {
+    NS_ASSERTION(aIndex >= 0,"nsVoidArray::ElementAt(negative index) - note on bug 96108");
+    NS_ASSERTION(aIndex < Count(),"nsVoidArray::ElementAt(index past end array) - note on bug 96108");
+    // This will go away once all assertions are handled and we feel
+    // comfortable that there aren't any more out there.  Negative values
+    // are all handled I think.
+    if (aIndex >= Count())
+    {
+      return nsnull;
+    }
+    return mImpl->mArray[aIndex];
+  }
+
+  // bounds-checked version
+  void* nsVoidArray::SafeElementAt(PRInt32 aIndex) const
+  {
+    if (aIndex < 0 || aIndex >= Count())
+    {
+      return nsnull;
+    }
+    return mImpl->mArray[aIndex];
+  }
+
   void* operator[](PRInt32 aIndex) const { return ElementAt(aIndex); }
 
   PRInt32 IndexOf(void* aPossibleElement) const;
@@ -88,6 +110,10 @@ public:
 
   PRBool AppendElement(void* aElement) {
     return InsertElementAt(aElement, Count());
+  }
+
+  PRBool AppendElements(nsVoidArray& aElements) {
+    return InsertElementsAt(aElements, Count());
   }
 
   PRBool RemoveElement(void* aElement);
@@ -288,5 +314,93 @@ private:
   nsCStringArray(const nsCStringArray& other);
 };
 
+
+//===================================================================
+//  nsSmallVoidArray is not a general-purpose replacement for
+//  ns(Auto)VoidArray because there is (some) extra CPU overhead for arrays
+//  larger than 1 element, though not a lot.  It is appropriate for
+//  space-sensitive uses where sizes of 0 or 1 are moderately common or
+//  more, and where we're NOT storing arbitrary integers or arbitrary
+//  pointers.
+
+// NOTE: nsSmallVoidArray can ONLY be used for holding items that always
+// have the low bit as a 0 - i.e. element & 1 == 0.  This happens to be
+// true for allocated and object pointers for all the architectures we run
+// on, but conceivably there might be some architectures/compilers for
+// which it is NOT true.  We know this works for all existing architectures
+// because if it didn't then nsCheapVoidArray would have failed.  Also note
+// that we will ASSERT if this assumption is violated in DEBUG builds.
+
+// XXX we're really re-implementing the whole nsVoidArray interface here -
+// some form of abstract class would be useful
+class NS_COM nsSmallVoidArray
+{
+public:
+  nsSmallVoidArray();
+  virtual ~nsSmallVoidArray();
+
+  nsSmallVoidArray& operator=(nsSmallVoidArray& other);
+  void* operator[](PRInt32 aIndex) const { return ElementAt(aIndex); }
+
+  virtual void  SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
+  PRInt32 GetArraySize() const;
+
+  PRInt32 Count() const;
+  void* ElementAt(PRInt32 aIndex) const;
+  void* SafeElementAt(PRInt32 aIndex) const {
+    // let compiler inline; it may be able to remove these checks
+    if (aIndex < 0 || aIndex >= Count())
+      return nsnull;
+    return ElementAt(aIndex);
+  }
+  PRInt32 IndexOf(void* aPossibleElement) const;
+  PRBool InsertElementAt(void* aElement, PRInt32 aIndex);
+  PRBool InsertElementsAt(const nsVoidArray &other, PRInt32 aIndex);
+  PRBool ReplaceElementAt(void* aElement, PRInt32 aIndex);
+  PRBool MoveElement(PRInt32 aFrom, PRInt32 aTo);
+  PRBool AppendElement(void* aElement);
+  PRBool AppendElements(nsVoidArray& aElements) {
+    return InsertElementsAt(aElements, Count());
+  }
+  PRBool RemoveElement(void* aElement);
+  PRBool RemoveElementsAt(PRInt32 aIndex, PRInt32 aCount);
+  PRBool RemoveElementAt(PRInt32 aIndex);
+
+  void Clear();
+  PRBool SizeTo(PRInt32 aMin);
+  void Compact();
+  void Sort(nsVoidArrayComparatorFunc aFunc, void* aData);
+
+  PRBool EnumerateForwards(nsVoidArrayEnumFunc aFunc, void* aData);
+  PRBool EnumerateBackwards(nsVoidArrayEnumFunc aFunc, void* aData);
+
+private:
+  typedef unsigned long PtrBits;
+
+  PRBool HasSingleChild() const
+  {
+    return (mChildren && (PtrBits(mChildren) & 0x1));
+  }
+  PRBool HasVector() const
+  {
+    return (mChildren && !(PtrBits(mChildren) & 0x1));
+  }
+  void* GetSingleChild() const
+  {
+    return (mChildren ? ((void*)(PtrBits(mChildren) & ~0x1)) : nsnull);
+  }
+  void SetSingleChild(void *aChild);
+  nsVoidArray* GetChildVector() const
+  {
+    return (nsVoidArray*)mChildren;
+  }
+  nsVoidArray* SwitchToVector();
+
+  // A tagged pointer that's either a pointer to a single child
+  // or a pointer to a vector of multiple children. This is a space
+  // optimization since a large number of containers have only a 
+  // single child.
+  void *mChildren;  
+};
 
 #endif /* nsVoidArray_h___ */

@@ -893,7 +893,7 @@ nsXULElement::GetPreviousSibling(nsIDOMNode** aPreviousSibling)
     if (nsnull != mParent) {
         PRInt32 pos;
         mParent->IndexOf(NS_STATIC_CAST(nsIStyledContent*, this), pos);
-        if (pos > -1) {
+        if (pos > 0) {
             nsCOMPtr<nsIContent> prev;
             mParent->ChildAt(--pos, *getter_AddRefs(prev));
             if (prev) {
@@ -2219,8 +2219,10 @@ nsXULElement::ChildAt(PRInt32 aIndex, nsIContent*& aResult) const
         return rv;
     }
 
-    nsIContent* content = NS_STATIC_CAST(nsIContent*, mChildren[aIndex]);
-    NS_IF_ADDREF(aResult = content);
+    nsIContent* content = NS_STATIC_CAST(nsIContent*, mChildren.SafeElementAt(aIndex));
+    aResult = content;
+    NS_IF_ADDREF(aResult);
+
     return NS_OK;
 }
 
@@ -3024,15 +3026,17 @@ nsXULElement::GetAttrNameAt(PRInt32 aIndex,
     PRBool haveLocalAttributes = PR_FALSE;
     if (Attributes()) {
         haveLocalAttributes = PR_TRUE;
-        nsXULAttribute* attr = NS_REINTERPRET_CAST(nsXULAttribute*, Attributes()->ElementAt(aIndex));
-        if (nsnull != attr) {
-            attr->GetNodeInfo()->GetNamespaceID(aNameSpaceID);
-            attr->GetNodeInfo()->GetNameAtom(aName);
-            attr->GetNodeInfo()->GetPrefixAtom(aPrefix);
+        if (aIndex < Attributes()->Count()) {
+            nsXULAttribute* attr = NS_REINTERPRET_CAST(nsXULAttribute*, Attributes()->ElementAt(aIndex));
+            if (nsnull != attr) {
+                attr->GetNodeInfo()->GetNamespaceID(aNameSpaceID);
+                attr->GetNodeInfo()->GetNameAtom(aName);
+                attr->GetNodeInfo()->GetPrefixAtom(aPrefix);
 #ifdef DEBUG_ATTRIBUTE_STATS
-            fprintf(stderr, " local!\n");
+                fprintf(stderr, " local!\n");
 #endif
-            return NS_OK;
+                return NS_OK;
+            }
         }
     }
 

@@ -4140,11 +4140,13 @@ nsHTMLEditor::CollapseAdjacentTextNodes(nsIDOMRange *aInRange)
 
   // now that I have a list of text nodes, collapse adjacent text nodes
   // NOTE: assumption that JoinNodes keeps the righthand node
-  nsIDOMNode *leftTextNode = (nsIDOMNode *)(textNodes.ElementAt(0));
-  nsIDOMNode *rightTextNode = (nsIDOMNode *)(textNodes.ElementAt(1));
-
-  while (leftTextNode && rightTextNode)
+  while (textNodes.Count() > 1)
   {
+    // we assume a textNodes entry can't be nsnull
+    nsIDOMNode *leftTextNode = (nsIDOMNode *)(textNodes.ElementAt(0));
+    nsIDOMNode *rightTextNode = (nsIDOMNode *)(textNodes.ElementAt(1));
+    NS_ASSERTION(leftTextNode && rightTextNode,"left or rightTextNode null in CollapseAdjacentTextNodes");
+
     // get the prev sibling of the right node, and see if it's leftTextNode
     nsCOMPtr<nsIDOMNode> prevSibOfRightNode;
     result = GetPriorHTMLSibling(rightTextNode, address_of(prevSibOfRightNode));
@@ -4160,8 +4162,6 @@ nsHTMLEditor::CollapseAdjacentTextNodes(nsIDOMRange *aInRange)
     }
 
     textNodes.RemoveElementAt(0); // remove the leftmost text node from the list
-    leftTextNode = (nsIDOMNode *)(textNodes.ElementAt(0));
-    rightTextNode = (nsIDOMNode *)(textNodes.ElementAt(1));
   }
 
   return result;

@@ -559,6 +559,9 @@ PERMISSION_TypeCount(PRInt32 host) {
   }
 
   permission_HostStruct *hostStruct;
+  if (host >= PERMISSION_HostCount()) {
+    return NS_ERROR_FAILURE;
+  }
   hostStruct = NS_STATIC_CAST(permission_HostStruct*, permission_list->ElementAt(host));
   NS_ASSERTION(hostStruct, "corrupt permission list");
   return hostStruct->permissionList->Count();
@@ -567,7 +570,7 @@ PERMISSION_TypeCount(PRInt32 host) {
 PUBLIC nsresult
 PERMISSION_Enumerate
     (PRInt32 hostNumber, PRInt32 typeNumber, char **host, PRInt32 *type, PRBool *capability) {
-  if (hostNumber > PERMISSION_HostCount()  || typeNumber > PERMISSION_TypeCount(hostNumber)) {
+  if (hostNumber >= PERMISSION_HostCount()  || typeNumber >= PERMISSION_TypeCount(hostNumber)) {
     return NS_ERROR_FAILURE;
   }
   permission_HostStruct *hostStruct;
@@ -589,6 +592,9 @@ PERMISSION_Enumerate
 PRIVATE void
 permission_remove (PRInt32 hostNumber, PRInt32 type) {
   if (!permission_list) {
+    return;
+  }
+  if (hostNumber >= PERMISSION_HostCount()  || type >= PERMISSION_TypeCount(hostNumber)) {
     return;
   }
   permission_HostStruct * hostStruct;

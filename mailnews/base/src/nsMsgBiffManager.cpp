@@ -179,9 +179,9 @@ NS_IMETHODIMP nsMsgBiffManager::RemoveServerBiff(nsIMsgIncomingServer *server)
   if(pos != -1)
   {
     nsBiffEntry *biffEntry = (nsBiffEntry*)mBiffArray->ElementAt(pos);
-    mBiffArray->RemoveElementAt(pos);
     delete biffEntry;
   }
+  mBiffArray->Clear();
   
   //Should probably reset biff time if this was the server that gets biffed next.
 	return NS_OK;

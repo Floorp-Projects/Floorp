@@ -816,7 +816,9 @@ RDFContentSinkImpl::Init(nsIURI* aURL)
 NS_IMETHODIMP
 RDFContentSinkImpl::SetDataSource(nsIRDFDataSource* aDataSource)
 {
+    NS_PRECONDITION(aDataSource != nsnull, "SetDataSource null ptr");
     mDataSource = dont_QueryInterface(aDataSource);
+    NS_ASSERTION(mDataSource != nsnull,"Couldn't QI RDF DataSource");
     return NS_OK;
 }
 

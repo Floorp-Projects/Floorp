@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /*
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -77,9 +77,12 @@ void
 nsTopProgressListener::UnregisterListener(long id)
 {
     if (mLock) PR_Lock(mLock);
-    nsIXPIListener *item = (nsIXPIListener*)mListeners->ElementAt(id);
-    mListeners->ReplaceElementAt(nsnull, id);
-    NS_IF_RELEASE(item);
+    if (id < mListeners->Count())
+    {
+        nsIXPIListener *item = (nsIXPIListener*)mListeners->ElementAt(id);
+        mListeners->ReplaceElementAt(nsnull, id);
+        NS_IF_RELEASE(item);
+    }
     if (mLock) PR_Unlock(mLock);
 }
 

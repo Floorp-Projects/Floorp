@@ -51,11 +51,10 @@ nsTableBorderCollapser::nsTableBorderCollapser(nsTableFrame& aTableFrame)
 nsTableBorderCollapser::~nsTableBorderCollapser()
 {
   for (PRInt32 sideX = 0; sideX < 4; sideX++) {
-	  nsBorderEdge* border = (nsBorderEdge *)(mBorderEdges.mEdges[sideX].ElementAt(0));
-		while (border) {
+    PRInt32 count;
+    for (count = mBorderEdges.mEdges[sideX].Count()-1; count >= 0; --count) {
+      nsBorderEdge* border = (nsBorderEdge *)(mBorderEdges.mEdges[sideX].ElementAt(0));
 		  delete border;
-			mBorderEdges.mEdges[sideX].RemoveElementAt(0);
-			border = (nsBorderEdge *)(mBorderEdges.mEdges[sideX].ElementAt(0));
 		}
   }
 }
@@ -64,7 +63,7 @@ void nsTableBorderCollapser::SetBorderEdgeLength(PRUint8 aSide,
                                                  PRInt32 aIndex, 
                                                  nscoord aLength)
 {
-  nsBorderEdge* border = (nsBorderEdge *)(mBorderEdges.mEdges[aSide].ElementAt(aIndex));
+  nsBorderEdge* border = (nsBorderEdge *)(mBorderEdges.mEdges[aSide].SafeElementAt(aIndex));
   if (border) {
     border->mLength = aLength;
   }
@@ -84,13 +83,13 @@ void nsTableBorderCollapser::DidComputeHorizontalBorders(nsIPresContext* aPresCo
       nsIFrame* rowFrame;
       cellFrame->GetParent(&rowFrame);
       rowFrame->GetRect(rowRect);
-      nsBorderEdge* leftBorder  = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_LEFT].ElementAt(0));
-      nsBorderEdge* rightBorder = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_RIGHT].ElementAt(0));
-      nsBorderEdge* topBorder   = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_TOP].ElementAt(0));
+      nsBorderEdge* leftBorder  = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_LEFT].SafeElementAt(0));
+      nsBorderEdge* rightBorder = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_RIGHT].SafeElementAt(0));
+      nsBorderEdge* topBorder   = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_TOP].SafeElementAt(0));
       if (leftBorder)
         leftBorder->mLength = rowRect.height + topBorder->mWidth;
       if (topBorder)
-        topBorder = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_TOP].ElementAt(lastColIndex));
+        topBorder = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_TOP].SafeElementAt(lastColIndex));
       if (rightBorder)
         rightBorder->mLength = rowRect.height + topBorder->mWidth;
     }
@@ -103,20 +102,20 @@ void nsTableBorderCollapser::DidComputeHorizontalBorders(nsIPresContext* aPresCo
       nsIFrame* rowFrame;
       cellFrame->GetParent(&rowFrame);
       rowFrame->GetRect(rowRect);
-      nsBorderEdge* leftBorder   = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_LEFT].ElementAt(lastRowIndex));
-      nsBorderEdge* rightBorder  = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_RIGHT].ElementAt(lastRowIndex));
-      nsBorderEdge* bottomBorder = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_BOTTOM].ElementAt(0));
+      nsBorderEdge* leftBorder   = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_LEFT].SafeElementAt(lastRowIndex));
+      nsBorderEdge* rightBorder  = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_RIGHT].SafeElementAt(lastRowIndex));
+      nsBorderEdge* bottomBorder = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_BOTTOM].SafeElementAt(0));
       if (leftBorder)
         leftBorder->mLength = rowRect.height + bottomBorder->mWidth;
       if (bottomBorder)
-        bottomBorder = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_BOTTOM].ElementAt(lastColIndex));
+        bottomBorder = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_BOTTOM].SafeElementAt(lastColIndex));
       if (rightBorder)
         rightBorder->mLength = rowRect.height + bottomBorder->mWidth;
     }
   }
 
   for (PRInt32 borderX = NS_SIDE_TOP; borderX <= NS_SIDE_LEFT; borderX++) {
-    if (!mBorderEdges.mEdges[borderX].ElementAt(0)) {
+    if (!mBorderEdges.mEdges[borderX].SafeElementAt(0)) {
       mBorderEdges.mEdges[borderX].AppendElement(new nsBorderEdge());
     }
   }
@@ -194,7 +193,7 @@ void nsTableBorderCollapser::ComputeLeftBorderForEdgeAt(nsIPresContext* aPresCon
     numSegments++;
   }
   // "border" is the border segment we are going to set
-  nsBorderEdge *border = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_LEFT].ElementAt(aRowIndex));
+  nsBorderEdge *border = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_LEFT].SafeElementAt(aRowIndex));
   if (!border) 
     return;
 
@@ -399,7 +398,7 @@ void nsTableBorderCollapser::ComputeTopBorderForEdgeAt(nsIPresContext* aPresCont
     numSegments++;
   }
   // "border" is the border segment we are going to set
-  nsBorderEdge *border = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_TOP].ElementAt(aColIndex));
+  nsBorderEdge *border = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_TOP].SafeElementAt(aColIndex));
   if (!border) 
     return;
 
@@ -455,13 +454,13 @@ void nsTableBorderCollapser::ComputeTopBorderForEdgeAt(nsIPresContext* aPresCont
   }
   if (0 == aColIndex) {
     // if we're the first column, factor in the thickness of the left table border
-    nsBorderEdge *leftBorder = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_LEFT].ElementAt(0));
+    nsBorderEdge *leftBorder = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_LEFT].SafeElementAt(0));
     if (leftBorder) 
       border->mLength += leftBorder->mWidth;
   }
   if ((cellMap->GetColCount() - 1) == aColIndex) {
     // if we're the last column, factor in the thickness of the right table border
-    nsBorderEdge* rightBorder = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_RIGHT].ElementAt(0));
+    nsBorderEdge* rightBorder = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_RIGHT].SafeElementAt(0));
     if (rightBorder) 
       border->mLength += rightBorder->mWidth;
   }
@@ -588,13 +587,13 @@ void nsTableBorderCollapser::ComputeBottomBorderForEdgeAt(nsIPresContext* aPresC
     PRInt32 lastColIndex = cellMap->GetColCount()-1;
     if (0 == aColIndex) {
       // if we're the first column, factor in the thickness of the left table border
-      nsBorderEdge *leftBorder = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_LEFT].ElementAt(rowCount-1));
+      nsBorderEdge *leftBorder = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_LEFT].SafeElementAt(rowCount-1));
       if (leftBorder) 
         tableBorder->mLength += leftBorder->mWidth;
     }
     if (lastColIndex == aColIndex) {
       // if we're the last column, factor in the thickness of the right table border
-      nsBorderEdge *rightBorder = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_RIGHT].ElementAt(rowCount-1));
+      nsBorderEdge *rightBorder = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_RIGHT].SafeElementAt(rowCount-1));
       if (rightBorder) 
         tableBorder->mLength += rightBorder->mWidth;
     }
@@ -847,19 +846,19 @@ void nsTableBorderCollapser::GetBorderAt(PRInt32   aRowIndex,
                                          PRInt32   aColIndex,
                                          nsMargin& aBorder)
 {
-  nsBorderEdge* border = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_LEFT].ElementAt(aRowIndex));
+  nsBorderEdge* border = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_LEFT].SafeElementAt(aRowIndex));
   if (border) {
 	  aBorder.left = border->mWidth;
   }
-  border = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_RIGHT].ElementAt(aRowIndex));
+  border = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_RIGHT].SafeElementAt(aRowIndex));
   if (border) {
 	  aBorder.right = border->mWidth;
   }
-  border = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_TOP].ElementAt(aColIndex));
+  border = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_TOP].SafeElementAt(aColIndex));
   if (border) {
 	  aBorder.top = border->mWidth;
   }
-  border = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_BOTTOM].ElementAt(aColIndex));
+  border = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_BOTTOM].SafeElementAt(aColIndex));
   if (border) {
 	  aBorder.bottom = border->mWidth;
   }

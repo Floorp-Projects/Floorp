@@ -48,19 +48,19 @@ struct nsMsgSearchValue;
 class nsMsgSearchValueArray : public nsVoidArray
 {
 public:
-	nsMsgSearchValue *ElementAt(PRUint32 i) const { return (nsMsgSearchValue*) nsVoidArray::ElementAt(i); }
+	nsMsgSearchValue *ElementAt(PRUint32 i) const { return (nsMsgSearchValue*) nsVoidArray::SafeElementAt(i); }
 };
 
 class nsMsgSearchScopeTermArray : public nsVoidArray
 {
 public:
-	nsMsgSearchScopeTerm *ElementAt(PRUint32 i) const { return (nsMsgSearchScopeTerm*) nsVoidArray::ElementAt(i); }
+	nsMsgSearchScopeTerm *ElementAt(PRUint32 i) const { return (nsMsgSearchScopeTerm*) nsVoidArray::SafeElementAt(i); }
 };
 
 class nsMsgResultArray : public nsVoidArray
 {
 public:
-	nsMsgResultElement *ElementAt(PRUint32 i) const { return (nsMsgResultElement *) nsVoidArray::ElementAt(i); }
+	nsMsgResultElement *ElementAt(PRUint32 i) const { return (nsMsgResultElement *) nsVoidArray::SafeElementAt(i); }
 };
 
 #endif

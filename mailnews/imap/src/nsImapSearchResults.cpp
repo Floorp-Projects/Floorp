@@ -103,11 +103,8 @@ nsImapSearchResultIterator::~nsImapSearchResultIterator()
 void  nsImapSearchResultIterator::ResetIterator()
 {
 	fSequenceIndex = 0;
-	fCurrentLine = (fSequence.Count() > 0) ? (char *) fSequence.ElementAt(fSequenceIndex) : nsnull;
-	if (fCurrentLine)
-		fPositionInCurrentLine = fCurrentLine;
-	else
-		fPositionInCurrentLine = nsnull;
+	fCurrentLine = (char *) fSequence.SafeElementAt(fSequenceIndex);
+	fPositionInCurrentLine = fCurrentLine;
 }
 
 PRInt32 nsImapSearchResultIterator::GetNextMessageNumber()
@@ -123,11 +120,8 @@ PRInt32 nsImapSearchResultIterator::GetNextMessageNumber()
 		
 		if (*fPositionInCurrentLine == 0xD)	// found CR, no more digits on line
 		{
-			fCurrentLine = (fSequence.Count() > ++fSequenceIndex) ? (char *) fSequence.ElementAt(fSequenceIndex) : nsnull;
-			if (fCurrentLine)
-				fPositionInCurrentLine = fCurrentLine;
-			else
-				fPositionInCurrentLine = nsnull;
+			fCurrentLine = (char *) fSequence.SafeElementAt(++fSequenceIndex);
+			fPositionInCurrentLine = fCurrentLine;
 		}
 		else	// eat the space
 			fPositionInCurrentLine++;

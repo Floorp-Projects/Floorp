@@ -4991,11 +4991,10 @@ void nsImapProtocol::OnRefreshAllACLs()
 
 	PRInt32 total = m_listedMailboxList.Count(), count = 0;
 	GetServerStateParser().SetReportingErrors(PR_FALSE);
-	do
+    for (PRInt32 i = 0; i < total; i++)
 	{
-		mb = (nsIMAPMailboxInfo *) m_listedMailboxList.ElementAt(0);
-        m_listedMailboxList.RemoveElementAt(0);
-		if (mb)
+		mb = (nsIMAPMailboxInfo *) m_listedMailboxList.ElementAt(i);
+		if (mb) // paranoia
 		{
 			char *onlineName = nsnull;
             m_runningUrl->AllocateServerPath(mb->GetMailboxName(),
@@ -5009,7 +5008,8 @@ void nsImapProtocol::OnRefreshAllACLs()
 			delete mb;
 			count++;
 		}
-	} while (mb);
+	}
+    m_listedMailboxList.Clear();
 	
 	PercentProgressUpdateEvent(NULL, 100, 100);
 	GetServerStateParser().SetReportingErrors(PR_TRUE);
@@ -5384,6 +5384,7 @@ PRBool nsImapProtocol::DeleteSubFolders(const char* selectedMailbox)
          outerIndex++)
     {
         char* longestName = nsnull;
+        PRInt32 longestIndex;
         for (innerIndex = 0; 
              innerIndex < m_deletableChildren->Count();
              innerIndex++)
@@ -5394,15 +5395,16 @@ PRBool nsImapProtocol::DeleteSubFolders(const char* selectedMailbox)
                 PL_strlen(longestName) < PL_strlen(currentName))
             {
                 longestName = currentName;
+                longestIndex = innerIndex;
             }
         }
-        m_deletableChildren->RemoveElement(longestName);
-      
         // the imap parser has already converted to a non UTF7 string in
         // the canonical format so convert it back
         if (longestName)
         {
             char *serverName = nsnull;
+
+            m_deletableChildren->RemoveElementAt(longestIndex);
             m_runningUrl->AllocateServerPath(longestName,
                                              onlineDirSeparator,
                                              &serverName);
@@ -5828,6 +5830,9 @@ void nsImapProtocol::DiscoverMailboxList()
       nsIMAPMailboxInfo * mb = nsnull;
       do
       {
+        if (m_listedMailboxList.Count() == 0)
+            break;
+
         mb = (nsIMAPMailboxInfo *) m_listedMailboxList[0]; // get top element
         m_listedMailboxList.RemoveElementAt(0); // XP_ListRemoveTopObject(fListedMailboxList);
         if (mb)

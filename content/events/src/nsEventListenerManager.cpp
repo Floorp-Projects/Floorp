@@ -111,13 +111,13 @@ GenericListenersHashEnum(nsHashKey *aKey, void *aData, void* closure)
     PRInt32 i, count = listeners->Count();
     nsListenerStruct *ls;
     PRBool* scriptOnly = NS_STATIC_CAST(PRBool*, closure);
-    for (i = 0; i < count; i++) {
+    for (i = count-1; i >= 0; --i) {
       ls = (nsListenerStruct*)listeners->ElementAt(i);
       if (ls != nsnull) {
         if (*scriptOnly) {
           if (ls->mFlags & NS_PRIV_EVENT_FLAG_SCRIPT) {
             NS_RELEASE(ls->mListener);
-            listeners->RemoveElement((void*)ls);
+            //listeners->RemoveElement((void*)ls); we delete the entire array anyways, no need to RemoveElement
             PR_DELETE(ls);
           }
         }
@@ -153,7 +153,8 @@ nsresult nsEventListenerManager::RemoveAllListeners(PRBool aScriptOnly)
   }
 
   if (mMultiListeners) {
-    for (int i=0; i<EVENT_ARRAY_TYPE_LENGTH; i++) {
+    // XXX probably should just be i < Count()
+    for (int i=0; i<EVENT_ARRAY_TYPE_LENGTH && i < mMultiListeners->Count(); i++) {
       nsVoidArray* listeners;
       listeners = NS_STATIC_CAST(nsVoidArray*, mMultiListeners->ElementAt(i));
       ReleaseListeners(&listeners, aScriptOnly);
@@ -195,6 +196,7 @@ nsVoidArray* nsEventListenerManager::GetListenersByType(EventArrayType aType,
                                                         nsHashKey* aKey,
                                                         PRBool aCreate)
 {
+  NS_ASSERTION(aType >= 0,"Negative EventListenerType?");
   //Look for existing listeners
   if (aType == eEventArrayType_Hash && aKey && (mManagerType & NS_ELM_HASH)) {
     if (mGenericListeners && mGenericListeners->Exists(aKey)) {
@@ -210,7 +212,7 @@ nsVoidArray* nsEventListenerManager::GetListenersByType(EventArrayType aType,
   else if (mManagerType & NS_ELM_MULTI) {
     if (mMultiListeners) {
       PRInt32 index = aType;
-      if (index >= 0) {
+      if (index < mMultiListeners->Count()) {
         nsVoidArray* listeners;
         listeners = NS_STATIC_CAST(nsVoidArray*, mMultiListeners->ElementAt(index));
         if (listeners) {
@@ -265,7 +267,7 @@ nsVoidArray* nsEventListenerManager::GetListenersByType(EventArrayType aType,
         PRInt32 index = aType;
         if (index >= 0) {
           nsVoidArray* listeners;
-          NS_ASSERTION(!mMultiListeners->ElementAt(index), "Found existing listeners, should be none");
+          NS_ASSERTION(index >= mMultiListeners->Count() || !mMultiListeners->ElementAt(index), "Found existing listeners, should be none");
           listeners = new nsAutoVoidArray();
           if (!listeners) {
             //out of memory
@@ -352,7 +354,7 @@ void nsEventListenerManager::ReleaseListeners(nsVoidArray** aListeners, PRBool a
         if (aScriptOnly) {
           if (ls->mFlags & NS_PRIV_EVENT_FLAG_SCRIPT) {
             NS_RELEASE(ls->mListener);
-            (*aListeners)->RemoveElement((void*)ls);
+            //(*aListeners)->RemoveElement((void*)ls); We're going to delete the array anyways
             PR_DELETE(ls);
           }
         }
@@ -511,6 +513,7 @@ nsEventListenerManager::RemoveEventListener(nsIDOMEventListener *aListener,
             listeners->RemoveElement((void*)ls);
             PR_DELETE(ls);
             listenerRemoved = PR_TRUE;
+            break; // otherwise we'd need to adjust loop count...
           }
         }
       }
@@ -2031,7 +2034,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
         }
         if (NS_OK == ret) {
           for (int i=0; !mListenersRemoved && listeners && i<listeners->Count(); i++) {
-            nsListenerStruct* ls = (nsListenerStruct*)listeners->ElementAt(i);
+            nsListenerStruct *ls = (nsListenerStruct*)listeners->ElementAt(i);
 
             if (ls->mFlags & aFlags) {
               nsCOMPtr<nsIDOMScrollListener> scrollListener(do_QueryInterface(ls->mListener));

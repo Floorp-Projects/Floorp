@@ -2137,6 +2137,7 @@ nsFontMetricsWin::InitializeGlobalFonts(HDC aDC)
 int
 nsFontMetricsWin::SameAsPreviousMap(int aIndex)
 {
+  // aIndex is 0...gGlobalFonts.Count()-1 in caller
   nsGlobalFont* font = (nsGlobalFont*)gGlobalFonts->ElementAt(aIndex);
   for (int i = 0; i < aIndex; ++i) {
     nsGlobalFont* tmp = (nsGlobalFont*)gGlobalFonts->ElementAt(i);
@@ -4675,6 +4676,7 @@ nsFontMetricsWinA::FindGlobalFont(HDC aDC, PRUnichar c)
       if (subset) {
         return subset;
       }
+      // assumes that LoadGlobalFont leaves the new font at the end
       mLoadedFonts.RemoveElementAt(mLoadedFonts.Count()-1);
       delete font;
     }
@@ -4728,6 +4730,7 @@ nsFontMetricsWinA::FindSubstituteFont(HDC aDC, PRUnichar aChar)
             mSubstituteFont = (nsFontWin*)substituteFont;
             return substituteSubset;
           }
+          // assumes that LoadSubstituteFont leaves the new font at the end
           mLoadedFonts.RemoveElementAt(mLoadedFonts.Count()-1);
           delete substituteFont;
         }

@@ -777,19 +777,19 @@ PRBool nsRange::IsIncreasing(nsIDOMNode* aStartN, PRInt32 aStartOffset,
   --numStartAncestors; // adjusting for 0-based counting 
   --numEndAncestors; 
   // back through the ancestors, starting from the root, until first non-matching ancestor found
-  while (mStartAncestors->ElementAt(numStartAncestors) == mEndAncestors->ElementAt(numEndAncestors))
+  while (numStartAncestors >= 0 && numEndAncestors >= 0 &&
+         mStartAncestors->ElementAt(numStartAncestors) == mEndAncestors->ElementAt(numEndAncestors))
   {
     --numStartAncestors;
     --numEndAncestors;
-    if (numStartAncestors<0) 
-      break; // this will only happen if one endpoint's node is the common ancestor of the other
-    if (numEndAncestors<0) 
-      break;
+    // numStartAncestors will only be <0 if one endpoint's node is the
+    // common ancestor of the other
   }
   // now back up one and that's the last common ancestor from the root,
   // or the first common ancestor from the leaf perspective
   numStartAncestors++;
   numEndAncestors++;
+  // both indexes are now >= 0
   commonNodeStartOffset = NS_PTR_TO_INT32(mStartAncestorOffsets->ElementAt(numStartAncestors));
   commonNodeEndOffset   = NS_PTR_TO_INT32(mEndAncestorOffsets->ElementAt(numEndAncestors));
   
@@ -951,18 +951,17 @@ nsCOMPtr<nsIDOMNode> nsRange::CommonParent(nsIDOMNode* aNode1, nsIDOMNode* aNode
   
   // back through the ancestors, starting from the root, until
   // first different ancestor found.  
-  while (array1.ElementAt(i) == array2.ElementAt(j))
+  while (i >= 0 && j >= 0 && array1.ElementAt(i) == array2.ElementAt(j))
   {
     --i;
     --j;
-    if (i<0) 
-      break; // this will only happen if one endpoint's node is the common ancestor of the other
-    if (j<0) 
-      break;
+    // i < 0 will only happen if one endpoint's node is the common ancestor
+    // of the other
   }
   // now back up one and that's the last common ancestor from the root,
   // or the first common ancestor from the leaf perspective
   i++;
+  // i >= 0 now
   nsIDOMNode *node = NS_STATIC_CAST(nsIDOMNode*, array1.ElementAt(i));
   theParent = do_QueryInterface(node);
   return theParent;  
@@ -1465,17 +1464,18 @@ nsresult nsRange::DeleteContents()
   }
   
   // remove the nodes on the delete list
-  while (deleteList.Count())
+  // reverse order delete is faster since the nodes will tend to be in order
+  for (PRInt32 i = deleteList.Count()-1; i >= 0; --i)
   {
-    cN = do_QueryInterface(NS_STATIC_CAST(nsIContent*, deleteList.ElementAt(0)));
+    cN = do_QueryInterface(NS_STATIC_CAST(nsIContent*, deleteList.ElementAt(i)));
     res = cN->GetParent(*getter_AddRefs(cParent));
     if (NS_FAILED(res)) return res;
     res = cParent->IndexOf(cN,indx);
     if (NS_FAILED(res)) return res;
     res = cParent->RemoveChildAt(indx, PR_TRUE);
     if (NS_FAILED(res)) return res;
-    deleteList.RemoveElementAt(0);
   }
+  //deleteList.Clear();  not needed, this will be deleted on function exit
   
  // If mStartParent is a text node, delete the text after start offset
   nsCOMPtr<nsIDOMText> textNode( do_QueryInterface(mStartParent) );
@@ -2088,10 +2088,13 @@ nsresult nsRange::OwnerChildInserted(nsIContent* aParentNode, PRInt32 aOffset)
   if (NS_FAILED(res))  return res;
   if (!domNode) return NS_ERROR_UNEXPECTED;
 
-  PRInt32  loop = 0;
-  nsRange* theRange = NS_STATIC_CAST(nsRange*, (theRangeList->ElementAt(loop))); 
-  while (theRange)
+
+  PRInt32   count = theRangeList->Count();
+  for (PRInt32 loop = 0; loop < count; loop++)
   {
+    nsRange* theRange = NS_STATIC_CAST(nsRange*, (theRangeList->ElementAt(loop))); 
+    NS_ASSERTION(theRange, "oops, no range");
+
     // sanity check - do range and content agree over ownership?
     res = theRange->ContentOwnsUs(domNode);
     NS_PRECONDITION(NS_SUCCEEDED(res), "range and content disagree over range ownership");
@@ -2109,8 +2112,6 @@ nsresult nsRange::OwnerChildInserted(nsIContent* aParentNode, PRInt32 aOffset)
       }
       NS_PRECONDITION(NS_SUCCEEDED(res), "error updating range list");
     }
-    loop++;
-    theRange = NS_STATIC_CAST(nsRange*, (theRangeList->ElementAt(loop)));
   }
   return NS_OK;
 }
@@ -2137,10 +2138,12 @@ nsresult nsRange::OwnerChildRemoved(nsIContent* aParentNode, PRInt32 aOffset, ns
   parent->GetRangeList(theRangeList);
   if (!theRangeList) return NS_OK;
   
-  PRInt32		loop = 0;
-  nsRange* theRange = NS_STATIC_CAST(nsRange*, (theRangeList->ElementAt(loop))); 
-  while (theRange)
+  PRInt32   count = theRangeList->Count();
+  for (PRInt32 loop = 0; loop < count; loop++)
   {
+    nsRange* theRange = NS_STATIC_CAST(nsRange*, (theRangeList->ElementAt(loop))); 
+    NS_ASSERTION(theRange, "oops, no range");
+
     // sanity check - do range and content agree over ownership?
     res = theRange->ContentOwnsUs(domNode);
     NS_PRECONDITION(NS_SUCCEEDED(res), "range and content disagree over range ownership");
@@ -2160,8 +2163,6 @@ nsresult nsRange::OwnerChildRemoved(nsIContent* aParentNode, PRInt32 aOffset, ns
         }
       }
     }
-    loop++;
-    theRange = NS_STATIC_CAST(nsRange*, (theRangeList->ElementAt(loop)));
   }
   
   return NS_OK;
@@ -2209,10 +2210,12 @@ nsresult nsRange::TextOwnerChanged(nsIContent* aTextNode, PRInt32 aStartChanged,
   if (NS_FAILED(res))  return res;
   if (!domNode) return NS_ERROR_UNEXPECTED;
 
-  PRInt32		loop = 0;
-  nsRange* theRange = NS_STATIC_CAST(nsRange*, (theRangeList->ElementAt(loop))); 
-  while (theRange)
+  PRInt32   count = theRangeList->Count();
+  for (PRInt32 loop = 0; loop < count; loop++)
   {
+    nsRange* theRange = NS_STATIC_CAST(nsRange*, (theRangeList->ElementAt(loop))); 
+    NS_ASSERTION(theRange, "oops, no range");
+
     // sanity check - do range and content agree over ownership?
     res = theRange->ContentOwnsUs(domNode);
     NS_PRECONDITION(NS_SUCCEEDED(res), "range and content disagree over range ownership");
@@ -2247,8 +2250,6 @@ nsresult nsRange::TextOwnerChanged(nsIContent* aTextNode, PRInt32 aStartChanged,
           theRange->mEndOffset += aStartChanged + aReplaceLength - aEndChanged;
       }
     }
-    loop++;
-    theRange = NS_STATIC_CAST(nsRange*, (theRangeList->ElementAt(loop)));
   }
   
   return NS_OK;

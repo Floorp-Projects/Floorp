@@ -4562,6 +4562,7 @@ void DR_State::AddFrameTypeInfo(nsIAtom* aFrameType,
 DR_FrameTypeInfo* DR_State::GetFrameTypeInfo(nsIAtom* aFrameType)
 {
   PRInt32 numEntries = mFrameTypeTable.Count();
+  NS_ASSERTION(numEntries != 0,"empty FrameTypeTable");
   for (PRInt32 i = 0; i < numEntries; i++) {
     DR_FrameTypeInfo* info = (DR_FrameTypeInfo*)mFrameTypeTable.ElementAt(i);
     if (info && (info->mType == aFrameType)) {
@@ -4574,6 +4575,7 @@ DR_FrameTypeInfo* DR_State::GetFrameTypeInfo(nsIAtom* aFrameType)
 DR_FrameTypeInfo* DR_State::GetFrameTypeInfo(char* aFrameName)
 {
   PRInt32 numEntries = mFrameTypeTable.Count();
+  NS_ASSERTION(numEntries != 0,"empty FrameTypeTable");
   for (PRInt32 i = 0; i < numEntries; i++) {
     DR_FrameTypeInfo* info = (DR_FrameTypeInfo*)mFrameTypeTable.ElementAt(i);
     if (info && ((strcmp(aFrameName, info->mName) == 0) || (strcmp(aFrameName, info->mNameAbbrev) == 0))) {

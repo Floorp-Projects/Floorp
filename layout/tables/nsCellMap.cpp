@@ -72,6 +72,7 @@ nsTableCellMap::nsTableCellMap(nsIPresContext* aPresContext, nsTableFrame& aTabl
   nsAutoVoidArray orderedRowGroups;
   PRUint32 numRowGroups;
   aTableFrame.OrderRowGroups(orderedRowGroups, numRowGroups);
+  NS_ASSERTION(orderedRowGroups.Count() == (PRInt32) numRowGroups,"problem in OrderRowGroups");
 
   for (PRUint32 rgX = 0; rgX < numRowGroups; rgX++) {
     nsTableRowGroupFrame* rgFrame = 
@@ -222,7 +223,7 @@ nsTableCellMap::GetColInfoAt(PRInt32 aColIndex)
 {
   PRInt32 numColsToAdd = aColIndex + 1 - mCols.Count();
   if (numColsToAdd > 0) {
-    AddColsAtEnd(numColsToAdd);
+    AddColsAtEnd(numColsToAdd);  // XXX this could fail to add cols in theory
   }
   return (nsColInfo*)mCols.ElementAt(aColIndex);
 }
@@ -586,9 +587,9 @@ nsCellMap::GetCellFrame(PRInt32   aRowIndexIn,
     }
   }
 
-  nsVoidArray* row = (nsVoidArray*) mRows.ElementAt(rowIndex);
+  nsVoidArray* row = (nsVoidArray*) mRows.SafeElementAt(rowIndex);
   if (row) {
-    CellData* data = (CellData*)row->ElementAt(colIndex);
+    CellData* data = (CellData*)row->SafeElementAt(colIndex);
     if (data) {
       return data->GetCellFrame();
     }
@@ -875,9 +876,9 @@ PRBool nsCellMap::CellsSpanInOrOut(nsTableCellMap& aMap,
       if (cellData && (cellData->IsColSpan())) {
         return PR_TRUE; // there is a col span into the region
       }
-      nsVoidArray* row = (nsVoidArray *)(mRows.ElementAt(rowX));
+      nsVoidArray* row = (nsVoidArray *)(mRows.SafeElementAt(rowX));
       if (row) {
-        cellData = (CellData *)(row->ElementAt(aEndColIndex + 1));
+        cellData = (CellData *)(row->SafeElementAt(aEndColIndex + 1));
         if (cellData && (cellData->IsColSpan())) {
           return PR_TRUE; // there is a col span out of the region 
         }
@@ -1093,7 +1094,7 @@ void nsCellMap::ShrinkWithoutRows(nsTableCellMap& aMap,
 {
   PRInt32 endRowIndex = aStartRowIndex + aNumRowsToRemove - 1;
   PRInt32 colCount = aMap.GetColCount();
-  for (PRInt32 rowX = endRowIndex; rowX >= aStartRowIndex; rowX--) {
+  for (PRInt32 rowX = endRowIndex; rowX >= aStartRowIndex; --rowX) {
     nsVoidArray* row = (nsVoidArray *)(mRows.ElementAt(rowX));
     PRInt32 colX;
     for (colX = 0; colX < colCount; colX++) {
@@ -1156,7 +1157,7 @@ PRInt32 nsCellMap::GetEffectiveColSpan(nsTableCellMap& aMap,
   PRInt32 numColsInTable = aMap.GetColCount();
   aZeroColSpan = PR_FALSE;
   PRInt32 colSpan = 1;
-  nsVoidArray* row = (nsVoidArray *)(mRows.ElementAt(aRowIndex));
+  nsVoidArray* row = (nsVoidArray *)(mRows.SafeElementAt(aRowIndex));
   if (row) {
     PRInt32 colX;
     CellData* data;
@@ -1597,9 +1598,9 @@ PRBool
 nsCellMap::IsZeroColSpan(PRInt32 aRowIndex,
                          PRInt32 aColIndex) const
 {
-  nsVoidArray* row = (nsVoidArray*)mRows.ElementAt(aRowIndex);
+  nsVoidArray* row = (nsVoidArray*)mRows.SafeElementAt(aRowIndex);
   if (row) {
-    CellData* data = (CellData*)row->ElementAt(aColIndex);
+    CellData* data = (CellData*)row->SafeElementAt(aColIndex);
     if (data && data->IsZeroColSpan()) {
       return PR_TRUE;
     }
@@ -1683,7 +1684,7 @@ nsCellMap::GetMapCellAt(nsTableCellMap& aMap,
   nsVoidArray* row = (nsVoidArray *)(mRows.ElementAt(aMapRowIndex));
   if (!row) return nsnull;
 
-  CellData* data = (CellData *)(row->ElementAt(aColIndex));
+  CellData* data = (CellData *)(row->SafeElementAt(aColIndex));
   if (!data && aUpdateZeroSpan) {
     PRBool didZeroExpand = PR_FALSE;
     // check for special zero row span
@@ -1691,7 +1692,7 @@ nsCellMap::GetMapCellAt(nsTableCellMap& aMap,
     // find the last non null data in the same col
     for ( ; prevRowX > 0; prevRowX--) {
       nsVoidArray* prevRow = (nsVoidArray *)(mRows.ElementAt(prevRowX));
-      CellData* prevData = (CellData *)(prevRow->ElementAt(aColIndex));
+      CellData* prevData = (CellData *)(prevRow->SafeElementAt(aColIndex));
       if (prevData) {
         if (prevData->IsZeroRowSpan()) {
           PRInt32 rowIndex = prevRowX - prevData->GetRowSpanOffset();
@@ -1752,7 +1753,7 @@ void nsCellMap::SetMapCellAt(nsTableCellMap& aMap,
                              PRInt32         aColIndex,
                              PRBool          aCountZeroSpanAsSpan)
 {
-  nsVoidArray* row = (nsVoidArray *)(mRows.ElementAt(aMapRowIndex));
+  nsVoidArray* row = (nsVoidArray *)(mRows.SafeElementAt(aMapRowIndex));
   if (row) {
     // the table map may need cols added
     PRInt32 numColsToAdd = aColIndex + 1 - aMap.GetColCount();

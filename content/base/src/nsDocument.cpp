@@ -488,8 +488,10 @@ nsDocument::~nsDocument()
   mInDestructor = PR_TRUE;
   PRInt32 indx;
   for (indx = 0; indx < mObservers.Count(); indx++) {
+    // XXX Should this be a kungfudeathgrip?!!!!
     nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers.ElementAt(indx);
     observer->DocumentWillBeDestroyed(this);
+    // Test to see if the observer was removed
     if (observer != (nsIDocumentObserver*)mObservers.ElementAt(indx)) {
       indx--;
     }
@@ -1102,8 +1104,9 @@ PRInt32 nsDocument::GetNumberOfShells()
 NS_IMETHODIMP
 nsDocument::GetShellAt(PRInt32 aIndex, nsIPresShell** aShell)
 {
-  *aShell = (nsIPresShell*) mPresShells.ElementAt(aIndex);
+  *aShell = (nsIPresShell*) mPresShells.SafeElementAt(aIndex);
   NS_IF_ADDREF(*aShell);
+
   return NS_OK;
 }
 
@@ -1143,8 +1146,9 @@ nsDocument::GetNumberOfSubDocuments(PRInt32* aCount)
 NS_IMETHODIMP
 nsDocument::GetSubDocumentAt(PRInt32 aIndex, nsIDocument** aSubDoc)
 {
-  *aSubDoc = (nsIDocument*) mSubDocuments.ElementAt(aIndex);
+  *aSubDoc = (nsIDocument*) mSubDocuments.SafeElementAt(aIndex);
   NS_IF_ADDREF(*aSubDoc);
+
   return NS_OK;
 }
 
@@ -1207,8 +1211,9 @@ nsDocument::GetNumberOfStyleSheets(PRInt32* aCount)
 NS_IMETHODIMP 
 nsDocument::GetStyleSheetAt(PRInt32 aIndex, nsIStyleSheet** aSheet)
 {
-  *aSheet = (nsIStyleSheet*)mStyleSheets.ElementAt(aIndex);
+  *aSheet = (nsIStyleSheet*)mStyleSheets.SafeElementAt(aIndex);
   NS_IF_ADDREF(*aSheet);
+
   return NS_OK;
 }
 
@@ -1256,6 +1261,7 @@ void nsDocument::AddStyleSheet(nsIStyleSheet* aSheet)
     for (PRInt32 indx = 0; indx < mObservers.Count(); indx++) {
       nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers.ElementAt(indx);
       observer->StyleSheetAdded(this, aSheet);
+      // handle the observer removing itself!
       if (observer != (nsIDocumentObserver*)mObservers.ElementAt(indx)) {
         indx--;
       }
@@ -1293,6 +1299,7 @@ void nsDocument::RemoveStyleSheet(nsIStyleSheet* aSheet)
     for (PRInt32 indx = 0; indx < mObservers.Count(); indx++) {
       nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers.ElementAt(indx);
       observer->StyleSheetRemoved(this, aSheet);
+      // handle the observer removing itself!
       if (observer != (nsIDocumentObserver*)mObservers.ElementAt(indx)) {
         indx--;
       }
@@ -1352,6 +1359,7 @@ nsDocument::UpdateStyleSheets(nsISupportsArray* aOldSheets, nsISupportsArray* aN
   for (PRInt32 indx = 0; indx < mObservers.Count(); indx++) {
     nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers.ElementAt(indx);
     observer->StyleSheetRemoved(this, sheet);
+    // handle the observer removing itself!
     if (observer != (nsIDocumentObserver*)mObservers.ElementAt(indx)) {
       indx--;
     }
@@ -1396,6 +1404,7 @@ nsDocument::InsertStyleSheetAt(nsIStyleSheet* aSheet, PRInt32 aIndex, PRBool aNo
     for (indx = 0; indx < mObservers.Count(); indx++) {
       nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers.ElementAt(indx);
       observer->StyleSheetAdded(this, aSheet);
+      // handle the observer removing itself!
       if (observer != (nsIDocumentObserver*)mObservers.ElementAt(indx)) {
         indx--;
       }
@@ -1433,6 +1442,7 @@ void nsDocument::SetStyleSheetDisabledState(nsIStyleSheet* aSheet,
   for (indx = 0; indx < mObservers.Count(); indx++) {
     nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers.ElementAt(indx);
     observer->StyleSheetDisabledStateChanged(this, aSheet, aDisabled);
+    // handle the observer removing itself!
     if (observer != (nsIDocumentObserver*)mObservers.ElementAt(indx)) {
       indx--;
     }
@@ -2328,6 +2338,7 @@ nsDocument::GetDefaultView(nsIDOMAbstractView** aDefaultView)
   NS_ENSURE_ARG_POINTER(aDefaultView);
   *aDefaultView = nsnull;
 
+  NS_ENSURE_TRUE(mPresShells.Count() != 0, NS_OK);
   nsIPresShell *shell = NS_STATIC_CAST(nsIPresShell *,
                                        mPresShells.ElementAt(0));
   NS_ENSURE_TRUE(shell, NS_OK);
@@ -2361,6 +2372,7 @@ nsDocument::GetPlugins(nsIDOMPluginArray** aPlugins)
   *aPlugins = nsnull;
 
   // XXX Could also get this through mScriptGlobalObject
+  NS_ENSURE_TRUE(mPresShells.Count() != 0, NS_OK);
   nsIPresShell *shell = NS_STATIC_CAST(nsIPresShell *,
                                        mPresShells.ElementAt(0));
   NS_ENSURE_TRUE(shell, NS_OK);
@@ -2564,7 +2576,7 @@ NS_IMETHODIMP
 nsDocument::GetDir(nsAWritableString& aDirection)
 {
 #ifdef IBMBIDI
-  nsIPresShell* shell = (nsIPresShell*) mPresShells.ElementAt(0);
+  nsIPresShell* shell = (nsIPresShell*) mPresShells.SafeElementAt(0);
   if (shell) {
     nsCOMPtr<nsIPresContext> context;
     shell->GetPresContext(getter_AddRefs(context) );
@@ -2594,22 +2606,24 @@ NS_IMETHODIMP
 nsDocument::SetDir(const nsAReadableString& aDirection)
 {
 #ifdef IBMBIDI
-  nsIPresShell* shell = (nsIPresShell*) mPresShells.ElementAt(0);
-  if (shell) {
-    nsCOMPtr<nsIPresContext> context;
-    shell->GetPresContext(getter_AddRefs(context) );
-    if (context) {
-      PRUint32 options;
-      context->GetBidi(&options);
-      for (const DirTable* elt = dirAttributes; elt->mName; elt++) {
-        if (aDirection == NS_ConvertASCIItoUCS2(elt->mName) ) {
-          if (GET_BIDI_OPTION_DIRECTION(options) != elt->mValue) {
-            SET_BIDI_OPTION_DIRECTION(options, elt->mValue);
-            context->SetBidi(options, PR_TRUE);
+  if (mPresShells.Count() != 0) {
+    nsIPresShell* shell = (nsIPresShell*) mPresShells.ElementAt(0);
+    if (shell) {
+      nsCOMPtr<nsIPresContext> context;
+      shell->GetPresContext(getter_AddRefs(context) );
+      if (context) {
+        PRUint32 options;
+        context->GetBidi(&options);
+        for (const DirTable* elt = dirAttributes; elt->mName; elt++) {
+          if (aDirection == NS_ConvertASCIItoUCS2(elt->mName) ) {
+            if (GET_BIDI_OPTION_DIRECTION(options) != elt->mValue) {
+              SET_BIDI_OPTION_DIRECTION(options, elt->mValue);
+              context->SetBidi(options, PR_TRUE);
+            }
+            break;
           }
-          break;
-        }
-      } // for
+        } // for
+      }
     }
   }
 #endif // IBMBIDI 
@@ -3161,6 +3175,8 @@ nsDocument::DispatchEvent(nsIDOMEvent* aEvent, PRBool *_retval)
 
   nsCOMPtr<nsIPresShell> shell;
   GetShellAt(0, getter_AddRefs(shell));
+  if (!shell)
+    return NS_ERROR_FAILURE;
   
   // Retrieve the context
   nsCOMPtr<nsIPresContext> presContext;
@@ -3189,6 +3205,8 @@ nsDocument::CreateEvent(const nsAReadableString& aEventType,
 
   nsCOMPtr<nsIPresShell> shell;
   GetShellAt(0, getter_AddRefs(shell));
+  if (!shell)
+    return NS_ERROR_FAILURE;
   
   // Retrieve the context
   nsCOMPtr<nsIPresContext> presContext;

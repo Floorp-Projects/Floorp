@@ -88,8 +88,7 @@ NS_IMETHODIMP
 nsBaseContentList::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
 {
   nsISupports *tmp = NS_REINTERPRET_CAST(nsISupports *,
-                                         mElements.ElementAt(aIndex));
-
+                                         mElements.SafeElementAt(aIndex));
   if (!tmp) {
     *aReturn = nsnull;
 
@@ -410,8 +409,8 @@ nsContentList::Item(PRUint32 aIndex, nsIDOMNode** aReturn, PRBool aDoFlush)
     }
 
     nsISupports *element = NS_STATIC_CAST(nsISupports *,
-                                          mElements.ElementAt(aIndex));
-
+                                          mElements.SafeElementAt(aIndex));
+ 
     if (element) {
       result = CallQueryInterface(element, aReturn);
     }

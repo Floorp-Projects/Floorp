@@ -177,7 +177,7 @@ nsMsgSearchSession::GetNthSearchScope(PRInt32 which,
                                       nsIMsgFolder **folder)
 {
   // argh, does this do an addref?
-	nsMsgSearchScopeTerm *scopeTerm = m_scopeList.ElementAt(which);
+	nsMsgSearchScopeTerm *scopeTerm = (nsMsgSearchScopeTerm *) m_scopeList.SafeElementAt(which);
     if (!scopeTerm) return NS_ERROR_INVALID_ARG;
 	*scopeId = scopeTerm->m_attribute;
 	*folder = scopeTerm->m_folder;
@@ -406,8 +406,6 @@ nsresult nsMsgSearchSession::Initialize()
 
 	// If this term list (loosely specified here by the first term) should be
 	// scheduled in parallel, build up a list of scopes to do the round-robin scheduling
-	scopeTerm = m_scopeList.ElementAt(0);
-
 	for (int i = 0; i < m_scopeList.Count() && NS_SUCCEEDED(err); i++)
 	{
 		scopeTerm = m_scopeList.ElementAt(i);
@@ -609,6 +607,7 @@ void nsMsgSearchSession::DestroyResultList ()
 //		NS_ASSERTION (result->IsValid(), "invalid search result");
 		delete result;
 	}
+    m_resultList.Clear();
 }
 
 
@@ -622,8 +621,8 @@ void nsMsgSearchSession::DestroyScopeList()
 		scope = m_scopeList.ElementAt(i);
 //		NS_ASSERTION (scope->IsValid(), "invalid search scope");
 		delete scope;
-        m_scopeList.RemoveElementAt(i);
 	}
+    m_scopeList.Clear();
 }
 
 
@@ -634,10 +633,7 @@ void nsMsgSearchSession::DestroyTermList ()
 
 nsMsgSearchScopeTerm *nsMsgSearchSession::GetRunningScope()
 {
-	if (m_idxRunningScope < m_scopeList.Count())
-		return m_scopeList.ElementAt (m_idxRunningScope); 
-	return nsnull;
-
+    return (nsMsgSearchScopeTerm *) m_scopeList.SafeElementAt(m_idxRunningScope); 
 }
 
 nsresult nsMsgSearchSession::TimeSlice (PRBool *aDone)

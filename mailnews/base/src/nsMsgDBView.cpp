@@ -2884,8 +2884,8 @@ void nsMsgDBView::FreeAll(nsVoidArray *ptrs)
     for (i=(count - 1);i>=0;i--) {
         void *ptr = (void *) ptrs->ElementAt(i);
         PR_FREEIF(ptr);
-        ptrs->RemoveElementAt(i);
     }
+    ptrs->Clear();
 }
 
 nsMsgViewIndex nsMsgDBView::GetIndexOfFirstDisplayedKeyInThread(nsIMsgThread *threadHdr)

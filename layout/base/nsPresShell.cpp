@@ -3764,18 +3764,20 @@ PresShell::CancelAllReflowCommands()
   PRInt32 i;
   for (i = 0; i < n; i++) {
     rc = NS_STATIC_CAST(nsHTMLReflowCommand*, mReflowCommands.ElementAt(0));
-    mReflowCommands.RemoveElementAt(0);
     ReflowCommandRemoved(rc);
     delete rc;
   }
+  NS_ASSERTION(n == mReflowCommands.Count(),"reflow command list changed during cancel!");
+  mReflowCommands.Clear();
 
   n = mTimeoutReflowCommands.Count();
   for (i = 0; i < n; i++) {
     rc = NS_STATIC_CAST(nsHTMLReflowCommand*, mTimeoutReflowCommands.ElementAt(0));
-    mTimeoutReflowCommands.RemoveElementAt(0);
     ReflowCommandRemoved(rc);
     delete rc;
   }
+  NS_ASSERTION(n == mTimeoutReflowCommands.Count(),"timeout reflow command list changed during cancel!");
+  mTimeoutReflowCommands.Clear();
 
   DoneRemovingReflowCommands();
 

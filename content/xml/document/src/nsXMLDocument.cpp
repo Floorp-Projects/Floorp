@@ -684,9 +684,10 @@ void nsXMLDocument::InternalAddStyleSheet(nsIStyleSheet* aSheet)  // subclass ho
     mStyleSheets.AppendElement(aSheet);
   }
   else {
-    if (mInlineStyleSheet == mStyleSheets.ElementAt(mStyleSheets.Count() - 1)) {
+    PRInt32 count = mStyleSheets.Count();
+    if (count != 0 && mInlineStyleSheet == mStyleSheets.ElementAt(count - 1)) {
       // keep attr sheet last
-      mStyleSheets.InsertElementAt(aSheet, mStyleSheets.Count() - 1);
+      mStyleSheets.InsertElementAt(aSheet, count - 1);
     }
     else {
       mStyleSheets.AppendElement(aSheet);

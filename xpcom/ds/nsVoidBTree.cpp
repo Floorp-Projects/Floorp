@@ -180,6 +180,8 @@ nsVoidBTree::Count() const
 void*
 nsVoidBTree::ElementAt(PRInt32 aIndex) const
 {
+    NS_ASSERTION(aIndex >= 0,"nsVoidBTree::ElementAt negative index!");
+    NS_ASSERTION(aIndex < Count(),"nsVoidBTree::ElementAt past end");
     if (aIndex < 0 || aIndex >= Count())
         return nsnull;
 
