@@ -1521,11 +1521,14 @@ PRUint32                  i;
 		// and from NNTP servers.
     //
     nsXPIDLCString    turl;
-    m_attachments[i].mURL->GetSpec(getter_Copies(turl));
+    if (m_attachments[i].mURL)
+    {
+    	m_attachments[i].mURL->GetSpec(getter_Copies(turl));
 		if (PL_strncasecmp(turl, "mailbox:",8) || PL_strncasecmp(turl, "IMAP:",5))
 			(*aMailboxCount)++;
 		else if (PL_strncasecmp(turl, "news:",5) || PL_strncasecmp(turl, "snews:",6))
 				(*aNewsCount)++;
+	}
 
     // Ok, cleanup the temp structure...
     PR_FREEIF(attachment.real_name);
@@ -1776,18 +1779,21 @@ nsMsgComposeAndSend::AddCompFieldRemoteAttachments(PRUint32   aStartLocation,
 			  /* Count up attachments which are going to come from mail folders
 			     and from NNTP servers. */
         nsXPIDLCString turl;
-        m_attachments[newLoc].mURL->GetSpec(getter_Copies(turl));
-			  if (PL_strncasecmp(turl, "mailbox:",8) ||
-					  PL_strncasecmp(turl, "IMAP:",5))
-				    (*aMailboxCount)++;
-			  else
-				  if (PL_strncasecmp(turl, "news:",5) ||
-						  PL_strncasecmp(turl, "snews:",6))
-					  (*aNewsCount)++;
+        if (m_attachments[newLoc].mURL)
+        {
+			m_attachments[newLoc].mURL->GetSpec(getter_Copies(turl));
+			if (PL_strncasecmp(turl, "mailbox:",8) ||
+					PL_strncasecmp(turl, "IMAP:",5))
+				(*aMailboxCount)++;
+			else
+				if (PL_strncasecmp(turl, "news:",5) ||
+						PL_strncasecmp(turl, "snews:",6))
+				(*aNewsCount)++;
 
 			  msg_pick_real_name(&m_attachments[newLoc], mCompFields->GetCharacterSet());
 
-        ++newLoc;
+        	++newLoc;
+		}
       }
 
       str = "";
@@ -2003,17 +2009,20 @@ nsMsgComposeAndSend::HackAttachments(const nsMsgAttachmentData *attachments,
 
 			/* Count up attachments which are going to come from mail folders
 			and from NNTP servers. */
-      nsXPIDLCString turl;
-      m_attachments[i].mURL->GetSpec(getter_Copies(turl));
-			if (PL_strncasecmp(turl, "mailbox:",8) ||
-					PL_strncasecmp(turl, "IMAP:",5))
-				mailbox_count++;
-			else
-				if (PL_strncasecmp(turl, "news:",5) ||
-						PL_strncasecmp(turl, "snews:",6))
-					news_count++;
+      		if (m_attachments[i].mURL)
+      		{
+	      		nsXPIDLCString turl;
+	      		m_attachments[i].mURL->GetSpec(getter_Copies(turl));
+				if (PL_strncasecmp(turl, "mailbox:",8) ||
+						PL_strncasecmp(turl, "IMAP:",5))
+					mailbox_count++;
+				else
+					if (PL_strncasecmp(turl, "news:",5) ||
+							PL_strncasecmp(turl, "snews:",6))
+						news_count++;
 
-			msg_pick_real_name(&m_attachments[i], mCompFields->GetCharacterSet());
+				msg_pick_real_name(&m_attachments[i], mCompFields->GetCharacterSet());
+			}
 		}
   }
 
