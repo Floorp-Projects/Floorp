@@ -95,7 +95,7 @@ BOOL WINAPI DllMain(HINSTANCE hDllInst,
  */
 STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, void** ppv)
 {
-    static BOOL isFirstTime = TRUE;
+    static PRBool isFirstTime = PR_TRUE;
     HRESULT hr = CLASS_E_CLASSNOTAVAILABLE;
     nsIFactory* pFactory = NULL;
     nsresult rv;
@@ -107,7 +107,7 @@ STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, void** ppv)
     // This initialization should really be done somewhere else, but
     // for now here is as good a place as any...
     //
-    if (TRUE == isFirstTime) {
+    if (PR_TRUE == isFirstTime) {
 
       // Get dll directory
       char binpath[_MAX_PATH];
@@ -134,7 +134,7 @@ STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, void** ppv)
       PL_InitializeEventsLib("");
       NS_SetupRegistry();
       
-      isFirstTime = FALSE;
+      isFirstTime = PR_FALSE;
     }
 
     if (WebShellCID == rclsid) {
