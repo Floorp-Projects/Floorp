@@ -486,9 +486,12 @@ NS_IMETHODIMP GlobalWindowImpl::HandleDOMEvent(nsIPresContext* aPresContext,
   // Capturing stage
   if ((NS_EVENT_FLAG_BUBBLE != aFlags) && mChromeEventHandler) {
     // Check chrome document capture here.
-    mChromeEventHandler->HandleChromeEvent(aPresContext, aEvent, aDOMEvent,
-                                           NS_EVENT_FLAG_CAPTURE,
-                                           aEventStatus);
+    // XXX The chrome can not handle this, see bug 51211
+    if (aEvent->message != NS_IMAGE_LOAD) {
+      mChromeEventHandler->HandleChromeEvent(aPresContext, aEvent, aDOMEvent,
+                                             NS_EVENT_FLAG_CAPTURE,
+                                             aEventStatus);
+    }
   }
 
   // Local handling stage
