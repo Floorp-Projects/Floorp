@@ -47,9 +47,9 @@ protected:
 									PRUint32		aMessage);
 
 protected:
-	nsWindow*			mTopLevelWidget;		// do change to nsCOMPtr
-	nsWindow*			mLastWidgetHit;			// do change to nsCOMPtr
-	nsWindow*			mLastWidgetPointed;		// do change to nsCOMPtr
+	nsWindow*			mTopLevelWidget;
+	nsWindow*			mLastWidgetHit;
+	nsWindow*			mLastWidgetPointed;
 	RgnHandle			mUpdateRgn;
 };
 
