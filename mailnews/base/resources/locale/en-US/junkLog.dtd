@@ -1,0 +1,6 @@
+<!ENTITY junkLog.title "Junk Mail Log">
+<!ENTITY junkLogInfo.text "The Junk Mail Log is a file which documents junk mail control activity.  Use the check box below enable logging.">
+<!ENTITY clearLog.label "Clear Log">
+<!ENTITY clearLog.accesskey "C">
+<!ENTITY enableLog.label "Enable the Junk Mail Log">
+<!ENTITY enableLog.accesskey "E">
