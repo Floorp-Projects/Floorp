@@ -36,6 +36,7 @@ ShowComponentsWin(void)
 	Handle		listBoxRect;
 	Rect 		dataBounds, listBoxFrame;
 	short		reserr;
+	int			totalRows = 0, i, instChoice;
 	Point		cSize;
 	Boolean		bCellSelected;
 	GrafPtr		oldPort;
@@ -75,7 +76,16 @@ ShowComponentsWin(void)
 	}
 
 	gControls->cw->compListBox.right -= kScrollBarWidth;
-	SetRect(&dataBounds, 0, 0, 1, gControls->cfg->numComps);
+	instChoice = gControls->opt->instChoice-1;
+	for (i=0; i<kMaxComponents; i++)
+	{
+		if (totalRows >= gControls->cfg->numComps)
+			break;
+		if (!gControls->cfg->comp[i].invisible && (gControls->cfg->st[instChoice].comp[i] == kInSetupType))
+			totalRows++;
+	}
+		
+	SetRect(&dataBounds, 0, 0, 1, totalRows);
 	SetPt( &cSize, 0, 0);
 	gControls->cw->compList = LNew((const Rect*)&gControls->cw->compListBox, (const Rect*)&dataBounds,
 									cSize, rCheckboxLDEF, gWPtr, true, false, false, true);
@@ -111,6 +121,9 @@ ShowComponentsWin(void)
 	SetPort(oldPort);
 }
 
+static int rowToComp[kMaxComponents];
+static int numRows = 0;
+
 Boolean
 PopulateCompInfo(void)
 {
@@ -118,21 +131,27 @@ PopulateCompInfo(void)
 	char	*currDesc;
 	Point	currCell;
 	Boolean bCellSelected = false;
+	int		nextRow = 0;
 	
 	for (i=0; i<gControls->cfg->numComps; i++)
 	{
-		HLock(gControls->cfg->comp[i].shortDesc);
-		currDesc = *gControls->cfg->comp[i].shortDesc;
-		SetPt(&currCell, 0, i);	
-		LSetCell( currDesc, strlen(currDesc), currCell, gControls->cw->compList);
-		HUnlock(gControls->cfg->comp[i].shortDesc);
-		if (gControls->opt->compSelected[i] == kSelected)
+		if (gControls->cfg->comp[i].invisible == false)
 		{
-			LSetSelect(true, currCell, gControls->cw->compList);
-			bCellSelected = true;
+			HLock(gControls->cfg->comp[i].shortDesc);
+			currDesc = *gControls->cfg->comp[i].shortDesc;
+			SetPt(&currCell, 0, nextRow);
+			rowToComp[nextRow++] = i;
+			LSetCell( currDesc, strlen(currDesc), currCell, gControls->cw->compList);
+			HUnlock(gControls->cfg->comp[i].shortDesc);
+			if (gControls->cfg->comp[i].selected == true)
+			{
+				LSetSelect(true, currCell, gControls->cw->compList);
+				bCellSelected = true;
+			}
 		}
 	}
-	
+
+	numRows = nextRow;	
 	return bCellSelected;
 }
 
@@ -252,14 +271,16 @@ SetOptInfo(void)
 						viewRect.bottom - kTxtRectPad);
 	EraseRect(&viewRect);
 	
-	for(i=0; i<gControls->cfg->numComps; i++)
+	for(i=0; i<numRows; i++)
 	{
+		if (gControls->cfg->comp[rowToComp[i]].invisible)
+			continue;
 		SetPt(&currCell, 0, i);
 		if ( (isCellSelected = LGetSelect( false, &currCell, gControls->cw->compList)) == true)
 		{
-			if (gControls->opt->compSelected[i] != kSelected)
+			if (gControls->cfg->comp[rowToComp[i]].selected == false)
 			{
-				gControls->opt->compSelected[i] = kSelected;
+				gControls->cfg->comp[rowToComp[i]].selected = true;
 				gControls->opt->numCompSelected++;
 			}
 			
@@ -272,17 +293,17 @@ SetOptInfo(void)
 			TextFont(applFont);
 			TextSize(10);
 			gControls->cw->compDescTxt = TENew(&viewRect, &viewRect);
-			HLock(gControls->cfg->comp[i].longDesc);
-			TESetText( *gControls->cfg->comp[i].longDesc, 
-						strlen(*gControls->cfg->comp[i].longDesc), gControls->cw->compDescTxt);
+			HLock(gControls->cfg->comp[rowToComp[i]].longDesc);
+			TESetText( *gControls->cfg->comp[rowToComp[i]].longDesc, 
+						strlen(*gControls->cfg->comp[rowToComp[i]].longDesc), gControls->cw->compDescTxt);
 			TEUpdate( &viewRect, gControls->cw->compDescTxt);
 			TextFont(systemFont);
 			TextSize(12);
-			HUnlock(gControls->cfg->comp[i].longDesc);
+			HUnlock(gControls->cfg->comp[rowToComp[i]].longDesc);
 		}
-		else if (gControls->opt->compSelected[i] == kSelected)
+		else if (gControls->cfg->comp[rowToComp[i]].selected == true)
 		{
-			gControls->opt->compSelected[i] = kNotSelected;
+			gControls->cfg->comp[rowToComp[i]].selected = false;
 			gControls->opt->numCompSelected--;
 		}
 	}

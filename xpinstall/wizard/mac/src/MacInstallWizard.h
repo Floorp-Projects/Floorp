@@ -50,7 +50,6 @@ typedef Boolean (*EventProc)(const EventRecord*);
 /*-----------------------------------------------------------*
  *   compile time switches [on=1; off=0]
  *-----------------------------------------------------------*/
-#define CORRECT_DL_LOCATION 0	/* if on, download to "Temporary Items" */
 #define CFG_IS_REMOTE 		0	/* if on, download remote config.ini file */	
 #define SDINST_IS_DLL 		1	/* if on, load SDInstLib as code fragment */
 #define	MOZILLA				0	/* if on, draws the Mozilla logo, not NS */
@@ -212,7 +211,6 @@ if (err) 								\
 #define sMsg1			10
 #define sMsg2			11
 
-
 #define rIndices		142		/* integer indices in string form (0-9) */
 
 
@@ -248,23 +246,35 @@ if (err) 								\
 #define sAttr			25
 #define	sURL			26
 
-#define sTermDlg		27		/* end parse keys */
+#define sTermDlg		27
+		
+#define sAttributes		28
+#define	sSELECTED		29
+#define sINVISIBLE		30
+#define	sLAUNCHAPP		31	/* end parse keys */
 
-#define	eParseFailed	-501	/* errors */
+#define	eParseFailed	501	/* errors */
 
 
 /*-----------------------------------------------------------*
  *   structs 
  *-----------------------------------------------------------*/
 typedef struct InstComp {
+	/* descriptions */
 	Handle	shortDesc;
 	Handle	longDesc;
+	
+	/* archive properties */
 	Handle	archive;
 	long	size;
+	
+	/* URL details */
 	Handle 	url[kMaxURLPerComp];
 	short	numURLs;
 	
-	// TO DO: attributes
+	/* attributes */
+	Boolean selected;
+	Boolean invisible;
 
 } InstComp; 
 

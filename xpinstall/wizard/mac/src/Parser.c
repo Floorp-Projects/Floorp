@@ -280,6 +280,38 @@ PopulateCompWinKeys(char *cfgText)
 		DisposeHandle(sizeH);
 		DisposePtr(currKey);
 		
+		/* attributes (SELECTED|INVISIBLE) */
+		GetIndString(pkey, rParseKeys, sAttributes);
+		currKey = PascalToC(pkey);
+		Handle attrValH = NewHandleClear(255);
+		if (FillKeyValueUsingName(currSName, currKey, attrValH, cfgText))
+		{
+			HLock(attrValH);
+		
+			char *attrType = NULL;
+			GetIndString(pkey, rParseKeys, sSELECTED);
+			attrType = PascalToC(pkey);
+			if (NULL != strstr(*attrValH, attrType))
+				gControls->cfg->comp[i].selected = true;
+			else
+				gControls->cfg->comp[i].selected = false;
+			if (attrType)
+				DisposePtr(attrType);
+		
+			GetIndString(pkey, rParseKeys, sINVISIBLE);
+			attrType = PascalToC(pkey);
+			if (NULL != strstr(*attrValH, attrType))
+				gControls->cfg->comp[i].invisible = true;
+			else
+				gControls->cfg->comp[i].invisible = false;
+			if (attrType)
+				DisposePtr(attrType);
+
+			HUnlock(attrValH);
+		}
+		if (attrValH)
+			DisposeHandle(attrValH);
+		
 		/* URLs for redundancy/retry/failover */
 		gControls->cfg->comp[i].numURLs = 0;
 		for (j=0; j<kMaxURLPerComp; j++)
@@ -415,7 +447,7 @@ PopulateSetupTypeWinKeys(char *cfgText)
 				compIdx = *currVal+cNumIdx;
 				compNum = atoi(compIdx);
 				gControls->cfg->st[i].comp[compNum] = kInSetupType;
-				gControls->cfg->st[i].numComps++;  /* not used? */
+				gControls->cfg->st[i].numComps++;
 				HUnlock(currVal);
 			}
 		}
