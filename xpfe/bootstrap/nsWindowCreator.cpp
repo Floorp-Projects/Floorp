@@ -66,30 +66,18 @@
 
 #include "nsCOMPtr.h"
 #include "nsAppShellCIDs.h"
-#include "nsNetUtil.h"
-#include "nsString.h"
 #include "nsWidgetsCID.h"
 #include "nsWindowCreator.h"
 
 #include "nsIAppShell.h"
 #include "nsIAppShellService.h"
-#include "nsIDocShellTreeItem.h"
-#include "nsIDocShellTreeOwner.h"
-#include "nsIDOMLocation.h"
-#include "nsIDOMWindowInternal.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsIJSContextStack.h"
-#include "nsIPopupWindowManager.h"
-#include "nsIPref.h"
 #include "nsIServiceManager.h"
-#include "nsIURI.h"
 #include "nsIXULWindow.h"
 #include "nsIWebBrowserChrome.h"
 
 static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
-static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
-static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 nsWindowCreator::nsWindowCreator() {
   NS_INIT_ISUPPORTS();
@@ -117,22 +105,9 @@ nsWindowCreator::CreateChromeWindow2(nsIWebBrowserChrome *aParent,
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = 0;
 
-  PRUint32         allow = nsIPopupWindowManager::ALLOW_POPUP;
-  nsCOMPtr<nsIURI> parentURI;
-
-  GetParentURI(aParent, getter_AddRefs(parentURI));
-  if (aContextFlags & PARENT_IS_LOADING_OR_RUNNING_TIMEOUT)
-    allow = AllowWindowCreation(parentURI);
-
   nsCOMPtr<nsIXULWindow> newWindow;
 
   if (aParent) {
-    if (allow == nsIPopupWindowManager::DENY_POPUP)
-      return NS_OK; // ruse to not give scripts a catchable error
-    if (allow == nsIPopupWindowManager::ALLOW_POPUP &&
-        (aContextFlags & PARENT_IS_LOADING_OR_RUNNING_TIMEOUT))
-      aContextFlags &= ~PARENT_IS_LOADING_OR_RUNNING_TIMEOUT;
-
     nsCOMPtr<nsIXULWindow> xulParent(do_GetInterface(aParent));
     NS_ASSERTION(xulParent, "window created using non-XUL parent. that's unexpected, but may work.");
 
@@ -166,45 +141,3 @@ nsWindowCreator::CreateChromeWindow2(nsIWebBrowserChrome *aParent,
 
   return *_retval ? NS_OK : NS_ERROR_FAILURE;
 }
-
-PRUint32
-nsWindowCreator::AllowWindowCreation(nsIURI *aURI)
-{
-#ifdef MOZ_PHOENIX
-  // Phoenix doesn't check here. It checks over in nsGlobalWindow.cpp.
-  return nsIPopupWindowManager::ALLOW_POPUP;
-#else
-  nsCOMPtr<nsIPopupWindowManager> pm(do_GetService(NS_POPUPWINDOWMANAGER_CONTRACTID));
-  if (!pm)
-    return nsIPopupWindowManager::ALLOW_POPUP;
-
-  PRUint32 permission;
-  if (NS_SUCCEEDED(pm->TestPermission(aURI, &permission)))
-    return permission;
-  return nsIPopupWindowManager::ALLOW_POPUP;
-#endif
-}
-
-void
-nsWindowCreator::GetParentURI(nsIWebBrowserChrome *aParent, nsIURI **aURI)
-{
-  if (!aParent)
-    return;
-
-  nsCOMPtr<nsIDocShellTreeOwner> treeOwner(do_GetInterface(aParent));
-  if (treeOwner) {
-    nsCOMPtr<nsIDocShellTreeItem> content;
-    treeOwner->GetPrimaryContentShell(getter_AddRefs(content));
-    nsCOMPtr<nsIDOMWindowInternal> domParent(do_GetInterface(content));
-    if (domParent) {
-      nsCOMPtr<nsIDOMLocation> location;
-      domParent->GetLocation(getter_AddRefs(location));
-      if (location) {
-        nsAutoString url;
-        location->GetHref(url);
-        NS_NewURI(aURI, url);
-      }
-    }
-  }
-}
-

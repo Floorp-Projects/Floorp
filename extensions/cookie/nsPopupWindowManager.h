@@ -42,7 +42,6 @@
 
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
-#include "nsIPermissionManager.h"
 #include "nsIPopupWindowManager.h"
 #include "nsIPrefBranch.h"
 
@@ -67,9 +66,7 @@ private:
   void     DeInitialize();
 
   PRUint32                       mPolicy;
-  PRBool                         mCustomPermissions;
   nsCOMPtr<nsIObserverService>   mOS;
-  nsCOMPtr<nsIPermissionManager> mPermManager;
   nsCOMPtr<nsIPrefBranch>        mPopupPrefBranch;
 };
 

@@ -143,10 +143,9 @@
 #include "nsIBindingManager.h"
 #include "nsIXBLService.h"
 
-#ifdef MOZ_PHOENIX
-// Used by phoenix to do popup whitelisting
+// used for popup blocking, needs to be converted to something
+// belonging to the back-end like nsIContentPolicy
 #include "nsIPopupWindowManager.h"
-#endif
 
 static nsIEntropyCollector* gEntropyCollector          = nsnull;
 static PRInt32              gRefCnt                    = 0;
@@ -2173,9 +2172,6 @@ GlobalWindowImpl::Alert(const nsAString& aString)
 {
   NS_ENSURE_STATE(mDocShell);
 
-  if (CheckForAbusePoint())
-    return NS_OK;
-
   nsAutoString str;
 
   str.Assign(aString);
@@ -2207,9 +2203,6 @@ NS_IMETHODIMP
 GlobalWindowImpl::Confirm(const nsAString& aString, PRBool* aReturn)
 {
   NS_ENSURE_STATE(mDocShell);
-
-  if (CheckForAbusePoint())
-    return NS_OK;
 
   nsAutoString str;
 
@@ -2248,9 +2241,6 @@ GlobalWindowImpl::Prompt(const nsAString& aMessage,
                          nsAString& aReturn)
 {
   NS_ENSURE_STATE(mDocShell);
-
-  if (CheckForAbusePoint())
-    return NS_OK;
 
   aReturn.Truncate(); // XXX Null string!!!
 
@@ -2821,30 +2811,21 @@ GlobalWindowImpl::DisableExternalCapture()
   return NS_ERROR_FAILURE;
 }
 
-#ifdef MOZ_PHOENIX
 static
-PRBool IsPopupWhitelisted(nsIDOMDocument* aDoc)
+PRBool IsPopupBlocked(nsIDOMDocument* aDoc)
 {
-  // Phoenix whitelists popups. Subvert Mozilla's blacklist implementation and
-  // use it as a whitelist instead. If/when Mozilla receives a patch to do 
-  // popup whitelisting, the #ifdefs can be removed, and the right list/api can
-  // be used.
-  PRBool whiteListed = PR_FALSE;
+  PRBool blocked = PR_FALSE;
   nsCOMPtr<nsIDocument> doc(do_QueryInterface(aDoc));
   nsCOMPtr<nsIPopupWindowManager> pm(do_GetService(NS_POPUPWINDOWMANAGER_CONTRACTID));
-  if (pm) {
+  if (pm && doc) {
     nsCOMPtr<nsIURI> uri;
-    if (doc)
-      doc->GetDocumentURL(getter_AddRefs(uri));
+    doc->GetDocumentURL(getter_AddRefs(uri));
 
-    // Allow really means it wasn't in our list. So in Phoenix, we 
-    // assume DENY means it's in the whitelist.  It's all backwards! Backwards, I say!
-    PRUint32 permission;
-    if (NS_SUCCEEDED(pm->TestPermission(uri, &permission)))
-      whiteListed = (permission == nsIPopupWindowManager::DENY_POPUP);
+    PRUint32 permission = nsIPopupWindowManager::ALLOW_POPUP;
+    pm->TestPermission(uri, &permission);
+    blocked = (permission == nsIPopupWindowManager::DENY_POPUP);
   }
-
-  return whiteListed;
+  return blocked;
 }
 
 static 
@@ -2863,7 +2844,6 @@ void FirePopupBlockedEvent(nsIDOMDocument* aDoc)
     }
   }
 }
-#endif
 
 /*
  * Examine the current document state to see if we're in a way that is
@@ -2891,51 +2871,27 @@ GlobalWindowImpl::CheckForAbusePoint ()
     return PR_FALSE;
   
   if (!mIsDocumentLoaded || mRunningTimeout) {
-    PRBool blockOpenOnLoad = PR_FALSE;
-    prefs->GetBoolPref("dom.disable_open_during_load", &blockOpenOnLoad);
-    if (blockOpenOnLoad) {        
-#ifdef DEBUG
-      printf ("*** Scripts executed during (un)load or as a result of "
-              "setTimeout() are potential javascript abuse points.\n");
-#endif
+    PRBool blocked = IsPopupBlocked(mDocument);
+    if (blocked)
+      FirePopupBlockedEvent(mDocument);
+    return blocked;
+  }
 
-#ifdef MOZ_PHOENIX
-      // see the definition of the function for details.
-      PRBool whitelisted = IsPopupWhitelisted(mDocument);
-      if (!whitelisted)
+  PRInt32 clickDelay = 0;
+  prefs->GetIntPref("dom.disable_open_click_delay", &clickDelay);
+  if (clickDelay) {
+    PRTime now, ll_delta;
+    PRInt32 delta;
+    now = PR_Now();
+    LL_SUB(ll_delta, now, mLastMouseButtonAction);
+    LL_L2I(delta, ll_delta);
+    delta /= 1000;
+    if (delta > clickDelay)
+    {
+      PRBool blocked = IsPopupBlocked(mDocument);
+      if (blocked)
         FirePopupBlockedEvent(mDocument);
-      return !whitelisted;
-#else
-      return PR_TRUE;
-#endif
-    }
-  } else {
-    PRInt32 clickDelay = 0;
-    prefs->GetIntPref("dom.disable_open_click_delay", &clickDelay);
-    if (clickDelay) {
-      PRTime now, ll_delta;
-      PRInt32 delta;
-      now = PR_Now();
-      LL_SUB(ll_delta, now, mLastMouseButtonAction);
-      LL_L2I(delta, ll_delta);
-      delta /= 1000;
-      if (delta > clickDelay)
-      {
-#ifdef DEBUG
-        printf ("*** Scripts executed more than %ims after a mouse button "
-                "action are potential javascript abuse points (%i.)\n",
-                clickDelay, delta);
-#endif
-        
-#ifdef MOZ_PHOENIX
-        PRBool whitelisted = IsPopupWhitelisted(mDocument);
-        if (!whitelisted)
-          FirePopupBlockedEvent(mDocument);
-        return !whitelisted;
-#else
-        return PR_TRUE;
-#endif
-      }
+      return blocked;
     }
   }
 

@@ -52,10 +52,6 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIWINDOWCREATOR
   NS_DECL_NSIWINDOWCREATOR2
-
-private:
-  PRUint32 AllowWindowCreation(nsIURI *aURI);
-  void     GetParentURI(nsIWebBrowserChrome *aParent, nsIURI **aURI);
 };
 
 #endif
