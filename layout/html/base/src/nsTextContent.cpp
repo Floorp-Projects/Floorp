@@ -740,6 +740,8 @@ TextFrame::PaintRegularText(nsIPresContext& aPresContext,
         aRenderingContext.SetColor(color->mColor);
         aRenderingContext.DrawString(s0, s - s0, dx, dy, mRect.width);
 
+#if XXX
+        //this is junk. MMP
         char cmpBuf[256];
         char sBuf[256];
         int len = s - s0;
@@ -748,10 +750,11 @@ TextFrame::PaintRegularText(nsIPresContext& aPresContext,
         strncpy(sBuf, s0, len);
         cmpBuf[compressedStrLen] = 0;
 
-        if (compressedStrLen != len ||
+        if (compressedStrLen != (PRUint32)len ||
             strcmp(cmpBuf, sBuf)) {
           int x = 0;
         }
+#endif
 
         if (s0 != buf) {
           delete[] s0;
@@ -795,6 +798,8 @@ TextFrame::PaintRegularText(nsIPresContext& aPresContext,
         aRenderingContext.SetColor(color->mColor);
         aRenderingContext.DrawString(s0, s - s0, dx, dy, mRect.width);
 
+#if XXX
+        //this is junk. MMP
         char cmpBuf[256];
         char sBuf[256];
         int len = s - s0;
@@ -803,10 +808,11 @@ TextFrame::PaintRegularText(nsIPresContext& aPresContext,
         strncpy(sBuf, s0, len);
         sBuf[len] = 0;
 
-        if (compressedStrLen != len ||
+        if (compressedStrLen != (PRUint32)len ||
             strcmp(cmpBuf, sBuf)) {
           int x = 0;
         }
+#endif
 
         if (s0 != buf) {
           delete[] s0;
@@ -934,7 +940,7 @@ TextFrame::PaintRegularText(nsIPresContext& aPresContext,
       // Calc the end point of the Selection and
       // and draw the remaining text 
       //---------------------------------------------------
-      if (endPnt->GetOffset() < compressedStrLen) {
+      if (endPnt->GetOffset() < (PRInt32)compressedStrLen) {
         textStr.SetLength(0);
         textStr.Append(compressedStr+endPnt->GetOffset(), compressedStrLen-selTextCharLen);
 
@@ -1001,7 +1007,7 @@ TextFrame::PaintRegularText(nsIPresContext& aPresContext,
           endPnt->GetOffset() < mContentOffset+mContentLength) {
 
         //PRInt32 endOffset   = endPnt->GetOffset();
-        if (endOffset == compressedStrLen) {
+        if (endOffset == (PRInt32)compressedStrLen) {
           endOffset--;
         }
         //---------------------------------------------------

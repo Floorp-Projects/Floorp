@@ -2395,7 +2395,7 @@ nsresult CNavDTD::CreateContextStackFor(eHTMLTags aChildTag){
     cnt=theVector.Length()-1;
     if(mContextStack.Last()==(eHTMLTags)theVector[cnt])
       result=NS_OK;
-    else result=kContextMismatch;
+    else result=(nsresult)kContextMismatch;
   }
   else {
     PRBool tempResult;
@@ -2424,7 +2424,7 @@ nsresult CNavDTD::CreateContextStackFor(eHTMLTags aChildTag){
         }
       } //while
     } //elseif
-    else result=kCantPropagate;
+    else result=(nsresult)kCantPropagate;
   } //elseif
 
     //now, build up the stack according to the tags 

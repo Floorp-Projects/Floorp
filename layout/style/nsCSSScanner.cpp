@@ -127,8 +127,9 @@ PRInt32 nsCSSScanner::Read(PRInt32* aErrorCode)
     }
     if (mOffset == mCount) {
       mOffset = 0;
-      mCount = mInput->Read(aErrorCode, mBuffer, 0, BUFFER_SIZE);
-      if (mCount <= 0) {
+      *aErrorCode = mInput->Read(mBuffer, 0, BUFFER_SIZE, &mCount);
+      if (NS_FAILED(*aErrorCode)) {
+        mCount = 0;
         return -1;
       }
     }

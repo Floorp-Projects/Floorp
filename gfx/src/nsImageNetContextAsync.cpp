@@ -163,7 +163,7 @@ NS_IMETHODIMP
 ImageConsumer::OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream, PRInt32 length)
 {
   PRInt32 max_read;
-  PRInt32 bytes_read = 0;
+  PRInt32 bytes_read = 0, str_length;
 
   // If we previously held onto a stream, drop our reference
   if (mStream != nsnull) {
@@ -179,7 +179,7 @@ ImageConsumer::OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream, PRInt32 l
     return NS_ERROR_ABORT;
   }
 
-  PRInt32 err = 0;
+  nsresult err = 0;
   PRInt32 nb;
   do {
     max_read = (PRInt32)reader->WriteReady();
@@ -190,12 +190,12 @@ ImageConsumer::OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream, PRInt32 l
       max_read = IMAGE_BUF_SIZE;
     }
 
-    nb = pIStream->Read(&err, mBuffer, 0, 
-                        max_read);
-    bytes_read += nb;
-    if (err != 0) {
+    err = pIStream->Read(mBuffer, 0, 
+                        max_read, &nb);
+    if (err != NS_OK) {
       break;
     }
+    bytes_read += nb;
 
     if (mFirstRead == PR_TRUE) {
       PRInt32 ilErr;
@@ -217,12 +217,14 @@ ImageConsumer::OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream, PRInt32 l
     reader->Write((const unsigned char *)mBuffer, nb);
   } while(nb != 0);
 
-  if ((0 != err) && (NS_INPUTSTREAM_EOF != err)) {
+  if ((NS_OK != err) && (NS_BASE_STREAM_EOF != err)) {
     mStatus = MK_IMAGE_LOSSAGE;
     mInterrupted = PR_TRUE;
   }
 
-  if (bytes_read < pIStream->GetLength()) {
+  err = pIStream->GetLength(&str_length);
+
+  if ((NS_OK == err) && (bytes_read < str_length)) {
     // If we haven't emptied the stream, hold onto it, because
     // we will need to read from it subsequently and we don't
     // know if we'll get a OnDataAvailable call again.
@@ -259,18 +261,30 @@ ImageConsumer::OnStopBinding(nsIURL* aURL, PRInt32 status, const nsString& aMsg)
   // Since we're still holding on to the stream, there's still data
   // that needs to be read. So, pump the stream ourselves.
   if((mStream != nsnull) && (status == NS_BINDING_SUCCEEDED)) {
-    nsresult err = OnDataAvailable(aURL, mStream, mStream->GetLength());
-    // If we still have the stream, there's still data to be 
-    // pumped, so we set a timer to call us back again.
-    if (mStream != nsnull) {
-      if ((NS_OK != NS_NewTimer(&mTimer)) ||
-          (NS_OK != mTimer->Init(ImageConsumer::KeepPumpingStream, this, 0))) {
+    PRInt32 str_length;
+    nsresult err = mStream->GetLength(&str_length);
+    if (err == NS_OK) {
+      err = OnDataAvailable(aURL, mStream, str_length);
+      // If we still have the stream, there's still data to be 
+      // pumped, so we set a timer to call us back again.
+      if ((err == NS_OK) && (mStream != nsnull)) {
+        if ((NS_OK != NS_NewTimer(&mTimer)) ||
+            (NS_OK != mTimer->Init(ImageConsumer::KeepPumpingStream, this, 0))) {
+          mStatus = MK_IMAGE_LOSSAGE;
+          NS_RELEASE(mStream);
+        }
+        else {
+          return NS_OK;
+        }
+      }
+      else {
         mStatus = MK_IMAGE_LOSSAGE;
         NS_RELEASE(mStream);
       }
-      else {
-        return NS_OK;
-      }
+    }
+    else {
+      mStatus = MK_IMAGE_LOSSAGE;
+      NS_RELEASE(mStream);
     }
   }
 

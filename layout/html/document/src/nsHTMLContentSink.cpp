@@ -1704,17 +1704,18 @@ nsresult HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
 
     // Drain the stream by reading from it a chunk at a time
     nsString data;
-    PRInt32 err, nb;
+    PRInt32 nb;
+    nsresult err;
     do {
       char buf[SCRIPT_BUF_SIZE];
       
-      nb = iin->Read(&err, buf, 0, SCRIPT_BUF_SIZE);
-      if (0 == err) {
+      err = iin->Read(buf, 0, SCRIPT_BUF_SIZE, &nb);
+      if (NS_OK == err) {
         data.Append((const char *)buf, nb);
       }
-    } while (err == 0);
+    } while (err == NS_OK);
 
-    if (NS_INPUTSTREAM_EOF == err) {
+    if (NS_BASE_STREAM_EOF == err) {
       script = data.ToNewCString();
       len = data.Length();
     }
