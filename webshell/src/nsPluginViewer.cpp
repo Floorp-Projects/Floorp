@@ -30,6 +30,7 @@
 #include "nsIWebShell.h"
 #include "nsIBrowserWindow.h"
 #include "nsIContent.h"
+#include "nsIDocument.h"
 
 // Class IDs
 static NS_DEFINE_IID(kChildWindowCID, NS_CHILD_CID);
@@ -44,6 +45,7 @@ static NS_DEFINE_IID(kILinkHandlerIID, NS_ILINKHANDLER_IID);
 static NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
 static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 static NS_DEFINE_IID(kIBrowserWindowIID, NS_IBROWSER_WINDOW_IID);
+static NS_DEFINE_IID(kIDocumentIID, NS_IDOCUMENT_IID);
 
 
 class PluginViewerImpl;
@@ -92,6 +94,8 @@ public:
   NS_IMETHOD GetURL(const char *aURL, const char *aTarget, void *aPostData);
 
   NS_IMETHOD ShowStatus(const char *aStatusMsg);
+
+  NS_IMETHOD GetDocument(nsIDocument* *aDocument);
 
   //locals
 
@@ -147,7 +151,10 @@ public:
 
   nsresult GetURL(nsIURL *&aURL);
 
+  nsresult GetDocument(nsIDocument* *aDocument);
+
   nsIWidget* mWindow;
+  nsIDocument* mDocument;
   nsIContentViewerContainer* mContainer;
   nsIURL* mURL;
   nsString mContentType;
@@ -210,6 +217,7 @@ PluginViewerImpl::~PluginViewerImpl()
     mWindow->Destroy();
     NS_RELEASE(mWindow);
   }
+  NS_IF_RELEASE(mDocument);
   NS_IF_RELEASE(mContainer);
   NS_IF_RELEASE(mURL);
 }
@@ -225,6 +233,7 @@ PluginViewerImpl::BindToDocument(nsISupports *aDoc, const char *aCommand)
 #ifdef NS_DEBUG
   printf("PluginViewerImpl::BindToDocument\n");
 #endif
+  return aDoc->QueryInterface(kIDocumentIID, (void**)&mDocument);
   return NS_OK;
 }
 
@@ -464,6 +473,13 @@ nsresult PluginViewerImpl::GetURL(nsIURL *&aURL)
 {
   NS_IF_ADDREF(mURL);
   aURL = mURL;
+  return NS_OK;
+}
+
+nsresult PluginViewerImpl::GetDocument(nsIDocument* *aDocument)
+{
+  NS_IF_ADDREF(mDocument);
+  *aDocument = mDocument;
   return NS_OK;
 }
 
@@ -732,6 +748,11 @@ NS_IMETHODIMP pluginInstanceOwner :: ShowStatus(const char *aStatusMsg)
   }
 
   return rv;
+}
+
+NS_IMETHODIMP pluginInstanceOwner :: GetDocument(nsIDocument* *aDocument)
+{
+	return mViewer->GetDocument(aDocument);
 }
 
 NS_IMETHODIMP pluginInstanceOwner :: Init(PluginViewerImpl *aViewer, nsIWidget *aWindow)
