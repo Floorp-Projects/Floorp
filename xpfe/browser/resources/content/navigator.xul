@@ -49,7 +49,6 @@ Contributor(s): ______________________________________. -->
 <html:script language="javascript" src="chrome://global/content/strres.js" />
 <html:script language="javascript" src="chrome://navigator/content/navigator.js" />
 <html:script language="javascript" src="nsContextMenu.js" />
-<html:script language="javascript" src="tooltip.js" />
 <html:script language="javascript" src="navigatorDD.js" />
 
 <commands id="commands">
@@ -70,14 +69,7 @@ Contributor(s): ______________________________________. -->
   
 
 <!-- This needs to go into a xul fragment, but since those don't work now, this stays here !-->
-<popupset>
-  <popup id="aTooltip" 
-    oncreate="return FillInTooltip(document.tooltipNode);">
-    style="border: thin solid black;"> 
-   <titledbutton id="replaceMe" align="left" crop="right" class="borderless"
-     value="Empty Tooltip" />
- </popup>
-</popupset>
+<popupset id="aTooltipSet" />
 
 <!-- Context menu -->
 <html:script language="javascript">
