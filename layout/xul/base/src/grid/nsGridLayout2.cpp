@@ -119,7 +119,6 @@ nsGridLayout2::GetMinSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize& aSize)
       PRInt32 rows = mGrid.GetRowCount();
       for (PRInt32 i=0; i < rows; i++)
       {
-        nsGridRow* row = mGrid.GetRowAt(i);
         nscoord size = 0;
         mGrid.GetMinRowHeight(aState, i, size, PR_TRUE); 
         AddWidth(total, size, PR_FALSE); // AddHeight
@@ -131,7 +130,6 @@ nsGridLayout2::GetMinSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize& aSize)
       PRInt32 columns = mGrid.GetColumnCount();
       for (PRInt32 i=0; i < columns; i++)
       {
-        nsGridRow* row = mGrid.GetColumnAt(i);
         nscoord size = 0;
         mGrid.GetMinRowHeight(aState, i, size, PR_FALSE); // GetPrefRowWidth
         AddWidth(total, size, PR_TRUE); // AddWidth
@@ -164,7 +162,6 @@ nsGridLayout2::GetPrefSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize& aSize
       PRInt32 rows = mGrid.GetRowCount();
       for (PRInt32 i=0; i < rows; i++)
       {
-        nsGridRow* row = mGrid.GetRowAt(i);
         nscoord size = 0;
         mGrid.GetPrefRowHeight(aState, i, size, PR_TRUE); 
         AddWidth(total, size, PR_FALSE); // AddHeight
@@ -176,7 +173,6 @@ nsGridLayout2::GetPrefSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize& aSize
       PRInt32 columns = mGrid.GetColumnCount();
       for (PRInt32 i=0; i < columns; i++)
       {
-        nsGridRow* row = mGrid.GetColumnAt(i);
         nscoord size = 0;
         mGrid.GetPrefRowHeight(aState, i, size, PR_FALSE); // GetPrefRowWidth
         AddWidth(total, size, PR_TRUE); // AddWidth
@@ -210,7 +206,6 @@ nsGridLayout2::GetMaxSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize& aSize)
       PRInt32 rows = mGrid.GetRowCount();
       for (PRInt32 i=0; i < rows; i++)
       {
-        nsGridRow* row = mGrid.GetRowAt(i);
         nscoord size = 0;
         mGrid.GetMaxRowHeight(aState, i, size, PR_TRUE); 
         AddWidth(total, size, PR_FALSE); // AddHeight
@@ -223,7 +218,6 @@ nsGridLayout2::GetMaxSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize& aSize)
       PRInt32 columns = mGrid.GetColumnCount();
       for (PRInt32 i=0; i < columns; i++)
       {
-        nsGridRow* row = mGrid.GetColumnAt(i);
         nscoord size = 0;
         mGrid.GetMaxRowHeight(aState, i, size, PR_FALSE); // GetPrefRowWidth
         AddWidth(total, size, PR_TRUE); // AddWidth
