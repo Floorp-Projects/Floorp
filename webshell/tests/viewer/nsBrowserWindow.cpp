@@ -2657,8 +2657,6 @@ static PRBool GetSaveFileNameFromFileSelector(nsIWidget* aParentWindow,
 }
 
 
-
-
 void
 nsBrowserWindow::DoDebugSave()
 {

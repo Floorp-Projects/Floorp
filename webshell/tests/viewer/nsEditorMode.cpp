@@ -146,7 +146,14 @@ nsresult NS_DoEditorTest(PRInt32 aCommandID)
       case VIEWER_EDIT_JOIN_CELL_BELOW:
         gEditor->JoinTableCells(PR_FALSE);
         break;
-      default:
+      case VIEWER_DISPLAYTEXT:
+        gEditor->OutputText(nsnull);
+        break;
+       case VIEWER_DISPLAYHTML:
+        
+        gEditor->OutputHTML(nsnull);
+        break;
+     default:
         return NS_ERROR_NOT_IMPLEMENTED;    
     }
   }
