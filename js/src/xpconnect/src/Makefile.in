@@ -142,10 +142,13 @@ endif
 
 ifeq ($(OS_ARCH),WINNT)
 ifndef GNU_CXX
+# whole program optimization and precompiled headers are incompatible
+ifeq (,$(findstring GL,$(CXXFLAGS)))
 # use pre-compiled headers
 CXXFLAGS	+= -YX -Fp$(LIBRARY_NAME).pch
 # precompiled headers require write access to .pch which breaks -j builds
 .NOTPARALLEL::
+endif
 endif
 endif
 
