@@ -126,10 +126,9 @@ public:
                        PRInt32      aOffset,
                        nsIDOMNode ** aNewLeftNode);
 
-  NS_IMETHOD JoinNodes(nsIDOMNode * aNodeToKeep,
-                       nsIDOMNode * aNodeToJoin,
-                       nsIDOMNode * aParent,
-                       PRBool       aNodeToKeepIsFirst);
+  NS_IMETHOD JoinNodes(nsIDOMNode * aLeftNode,
+                       nsIDOMNode * aRightNode,
+                       nsIDOMNode * aParent);
 
   NS_IMETHOD InsertBreak();
 

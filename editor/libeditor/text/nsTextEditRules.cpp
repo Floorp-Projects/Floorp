@@ -160,7 +160,8 @@ nsTextEditRules::WillInsertText(nsIDOMSelection *aSelection,
     (*aTxn)->SetName(InsertTextTxn::gInsertTextTxnName);
     mEditor->Do(*aTxn);
   }
-  return WillInsert(aSelection, aCancel);
+  nsresult result = WillInsert(aSelection, aCancel);
+  return result;
 }
 
 NS_IMETHODIMP
@@ -307,6 +308,7 @@ nsTextEditRules::WillDeleteSelection(nsIDOMSelection *aSelection, PRBool *aCance
 }
 
 // if the document is empty, insert a bogus text node with a &nbsp;
+// if we ended up with consecutive text nodes, merge them
 NS_IMETHODIMP
 nsTextEditRules::DidDeleteSelection(nsIDOMSelection *aSelection, nsresult aResult)
 {
@@ -317,7 +319,7 @@ nsTextEditRules::DidDeleteSelection(nsIDOMSelection *aSelection, nsresult aResul
   NS_ASSERTION(PR_TRUE==isCollapsed, "selection not collapsed after delete selection.");
   // if the delete selection resulted in no content 
   // insert a special bogus text node with a &nbsp; character in it.
-  if (NS_SUCCEEDED(aResult))  // note we're checking aResult, the param that tells us if the insert break happened or not
+  if (NS_SUCCEEDED(result)) // only do this work if DeleteSelection completed successfully
   {
     nsCOMPtr<nsIDOMDocument>doc;
     mEditor->GetDocument(getter_AddRefs(doc));  
@@ -379,6 +381,68 @@ nsTextEditRules::DidDeleteSelection(nsIDOMSelection *aSelection, nsresult aResul
               nsAutoString att(kMOZEditorBogusNodeAttr);
               nsAutoString val(kMOZEditorBogusNodeValue);
               newPElement->SetAttribute(att, val);
+            }
+          }
+        }
+      }
+    }
+    // if we don't have an empty document, check the selection to see if any collapsing is necessary
+    if (!mBogusNode)
+    {
+      nsCOMPtr<nsIDOMNode>anchor;
+      PRInt32 offset;
+      nsresult result = aSelection->GetAnchorNodeAndOffset(getter_AddRefs(anchor), &offset);
+      if ((NS_SUCCEEDED(result)) && anchor)
+      {
+        nsCOMPtr<nsIDOMNodeList> anchorChildren;
+        result = anchor->GetChildNodes(getter_AddRefs(anchorChildren));
+        nsCOMPtr<nsIDOMNode> selectedNode;
+        if ((NS_SUCCEEDED(result)) && anchorChildren) {              
+          result = anchorChildren->Item(offset, getter_AddRefs(selectedNode));
+        }
+        else {
+          selectedNode = do_QueryInterface(anchor);
+        }
+        if ((NS_SUCCEEDED(result)) && selectedNode)
+        {
+          nsCOMPtr<nsIDOMCharacterData>selectedNodeAsText;
+          selectedNodeAsText = do_QueryInterface(selectedNode);
+          if (selectedNodeAsText)
+          {
+            nsCOMPtr<nsIDOMNode> siblingNode;
+            selectedNode->GetPreviousSibling(getter_AddRefs(siblingNode));
+            if (siblingNode)
+            {
+              nsCOMPtr<nsIDOMCharacterData>siblingNodeAsText;
+              siblingNodeAsText = do_QueryInterface(siblingNode);
+              if (siblingNodeAsText)
+              {
+                PRUint32 siblingLength; // the length of siblingNode before the join
+                siblingNodeAsText->GetLength(&siblingLength);
+                nsCOMPtr<nsIDOMNode> parentNode;
+                selectedNode->GetParentNode(getter_AddRefs(parentNode));
+                result = mEditor->JoinNodes(siblingNode, selectedNode, parentNode);
+                // set selection to point between the end of siblingNode and start of selectedNode
+                aSelection->Collapse(siblingNode, siblingLength);
+                selectedNode = do_QueryInterface(siblingNode);  // subsequent code relies on selectedNode
+                                                                // being the real node in the DOM tree
+              }
+            }
+            selectedNode->GetNextSibling(getter_AddRefs(siblingNode));
+            if (siblingNode)
+            {
+              nsCOMPtr<nsIDOMCharacterData>siblingNodeAsText;
+              siblingNodeAsText = do_QueryInterface(siblingNode);
+              if (siblingNodeAsText)
+              {
+                PRUint32 selectedNodeLength; // the length of siblingNode before the join
+                selectedNodeAsText->GetLength(&selectedNodeLength);
+                nsCOMPtr<nsIDOMNode> parentNode;
+                selectedNode->GetParentNode(getter_AddRefs(parentNode));
+                result = mEditor->JoinNodes(selectedNode, siblingNode, parentNode);
+                // set selection
+                aSelection->Collapse(selectedNode, selectedNodeLength);
+              }
             }
           }
         }
