@@ -657,7 +657,7 @@ nsresult nsParser::ResumeParse(nsIDTD* aDefaultDTD) {
     result=Tokenize();
     result=BuildModel();
 
-    if((!mIncremental) || (eOnStop==mStreamListenerState)){
+    if((!mIncremental) || ((eOnStop==mStreamListenerState) && (NS_OK==result))){
       DidBuildModel(mStreamStatus);
     }
     else {
@@ -700,38 +700,6 @@ nsresult nsParser::BuildModel() {
   if(theRootDTD) {
     result=theRootDTD->BuildModel(this);
   }
-
-/*  
-  while((NS_OK==result) && ((*mParserContext->mCurrentPos<e))){
-    mMinorIteration++;
-    CToken* theToken=(CToken*)mParserContext->mCurrentPos->GetCurrent();
-    theMarkPos=*mParserContext->mCurrentPos;
-    ++(*mParserContext->mCurrentPos);    
-    result=theRootDTD->HandleToken(theToken,this);
-    if(mDTDVerification)
-      theRootDTD->Verify(kEmptyString,this);
-  }
-
-    //Now it's time to recycle our used tokens.
-    //The current context has a deque full of them,
-    //and the ones that preceed currentpos are no
-    //longer needed. Let's recycle them.
-  
-  nsITokenRecycler* theRecycler=theRootDTD->GetTokenRecycler();
-  if(theRecycler) {
-    nsDeque&  theDeque=mParserContext->mTokenDeque;
-    CToken* theCurrentToken=(CToken*)mParserContext->mCurrentPos->GetCurrent();
-    for(;;) {
-      CToken* theToken=(CToken*)theDeque.Peek();
-      if(theToken && (theToken!=theCurrentToken)){
-        theDeque.Pop();
-        theRecycler->RecycleToken(theToken);
-      }
-      else break;
-    }
-    mParserContext->mCurrentPos->First();
-  }
-  */
 
   return result;
 }
