@@ -997,14 +997,14 @@ nsIOService::ParsePortList(nsIPrefBranch *prefBranch, const char *pref, PRBool r
     // Get a pref string and chop it up into a list of ports.
     prefBranch->GetCharPref(pref, getter_Copies(portList));
     if (portList) {
-        char* tokp;
-        char* currentPos = (char *)portList.get();
-        while ((tokp = nsCRT::strtok(currentPos, ",", &currentPos))) {
-            nsCAutoString tmp(tokp);
-            tmp.StripWhitespace();
+        nsCStringArray portListArray;
+        portListArray.ParseString(portList.get(), ",");
+        PRInt32 index;
+        for (index=0; index < portListArray.Count(); index++) {
+            portListArray[index]->StripWhitespace();
 
             PRInt32 aErrorCode;
-            PRInt32 value = tmp.ToInteger(&aErrorCode);
+            PRInt32 value = portListArray[index]->ToInteger(&aErrorCode);
             if (remove)
                 mRestrictedPortList.RemoveElement((void*)value);
             else
