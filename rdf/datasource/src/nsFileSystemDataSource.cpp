@@ -576,38 +576,36 @@ FileSystemDataSource::GetTarget(nsIRDFResource *source,
         }
         else if (property == kRDF_type)
         {
-            const char  *type;
-            rv = kNC_FileSystemObject->GetValueConst(&type);
+            nsCString type;
+            rv = kNC_FileSystemObject->GetValueUTF8(type);
             if (NS_FAILED(rv)) return(rv);
 
 #ifdef  XP_WIN
             // under Windows, if its an IE favorite, return that type
             if (ieFavoritesDir)
             {
-                const char      *uri;
-                rv = source->GetValueConst(&uri);
+                nsCString uri;
+                rv = source->GetValueUTF8(uri);
                 if (NS_FAILED(rv)) return(rv);
 
-                nsAutoString        theURI;
-                theURI.AssignWithConversion(uri);
+                NS_ConvertUTF8toUTF16 theURI(uri);
 
                 if (theURI.Find(ieFavoritesDir) == 0)
                 {
                     if (theURI[theURI.Length() - 1] == '/')
                     {
-                        rv = kNC_IEFavoriteFolder->GetValueConst(&type);
+                        rv = kNC_IEFavoriteFolder->GetValueUTF8(type);
                     }
                     else
                     {
-                        rv = kNC_IEFavoriteObject->GetValueConst(&type);
+                        rv = kNC_IEFavoriteObject->GetValueUTF8(type);
                     }
                     if (NS_FAILED(rv)) return(rv);
                 }
             }
 #endif
 
-            nsAutoString    url;
-            url.AssignWithConversion(type);
+            NS_ConvertUTF8toUTF16 url(type);
             nsCOMPtr<nsIRDFLiteral> literal;
             gRDFService->GetLiteral(url.get(), getter_AddRefs(literal));
             rv = literal->QueryInterface(NS_GET_IID(nsIRDFNode), (void**) target);
@@ -740,12 +738,11 @@ FileSystemDataSource::GetTargets(nsIRDFResource *source,
         }
         else if (property == kRDF_type)
         {
-            const char      *uri = nsnull;
-            rv = kNC_FileSystemObject->GetValueConst( &uri );
+            nsCString uri;
+            rv = kNC_FileSystemObject->GetValueUTF8(uri);
             if (NS_FAILED(rv)) return rv;
 
-            nsAutoString    url;
-            url.AssignWithConversion(uri);
+            NS_ConvertUTF8toUTF16 url(uri);
 
             nsCOMPtr<nsIRDFLiteral> literal;
             rv = gRDFService->GetLiteral(url.get(), getter_AddRefs(literal));
@@ -1251,11 +1248,11 @@ FileSystemDataSource::isValidFolder(nsIRDFResource *source)
     if (!ieFavoritesDir)    return(isValid);
 
     nsresult        rv;
-    const char      *uri;
-    rv = source->GetValueConst(&uri);
+    nsCString       uri;
+    rv = source->GetValueUTF8(uri);
     if (NS_FAILED(rv)) return(isValid);
 
-    nsAutoString        theURI; theURI.AssignWithConversion(uri);
+    NS_ConvertUTF8toUTF16 theURI(uri);
     if (theURI.Find(ieFavoritesDir) == 0)
     {
         isValid = PR_FALSE;
@@ -1763,14 +1760,13 @@ FileSystemDataSource::GetURL(nsIRDFResource *source, PRBool *isFavorite, nsIRDFL
     if (isFavorite) *isFavorite = PR_FALSE;
 
     nsresult        rv;
-    const char      *uri;
+    nsCString       uri;
 	
-    rv = source->GetValueConst(&uri);
+    rv = source->GetValueUTF8(uri);
     if (NS_FAILED(rv))
         return(rv);
 
-    nsAutoString        url;
-    url.AssignWithConversion(uri);
+    NS_ConvertUTF8toUTF16 url(uri);
 
 #ifdef  XP_WIN
     // under Windows, if its an IE favorite, munge the URL
@@ -1789,7 +1785,7 @@ FileSystemDataSource::GetURL(nsIRDFResource *source, PRBool *isFavorite, nsIRDFL
     // under BEOS, try and get the "META:url" attribute
     if (netPositiveDir)
     {
-        if (strstr(uri, netPositiveDir) != 0)
+        if (strstr(uri.get(), netPositiveDir) != 0)
         {
             if (isFavorite) *isFavorite = PR_TRUE;
             rv = getNetPositiveURL(source, url, aResult);
@@ -1842,7 +1838,7 @@ FileSystemDataSource::getNetPositiveURL(nsIRDFResource *source, nsString aFileUR
                 {
                     beURLattr[len] = '\0';
                     nsAutoString    bookmarkURL;
-                                        bookmarkURL.AssignWithConversion(beURLattr);
+                    CopyUTF8toUTF16(beURLattr, bookmarkURL);
                     rv = gRDFService->GetLiteral(bookmarkURL.get(),
                         urlLiteral);
                 }
