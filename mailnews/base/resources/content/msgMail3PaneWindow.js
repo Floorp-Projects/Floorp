@@ -64,13 +64,7 @@ function OnLoadMessenger()
 
     loadStartFolder();
 
-	var mailSession = Components.classes['component://netscape/messenger/services/session'].getService();
-	if(mailSession)
-	{
-		mailSession = mailSession.QueryInterface(Components.interfaces.nsIMsgMailSession);
-		if(mailSession)
-			mailSession.AddFolderListener(folderListener);
-	}
+    getFolderListener();
 }
 
 function OnUnloadMessenger()
@@ -154,6 +148,18 @@ function loadStartFolder()
     }
 
 }
+
+function getFolderListener()
+{
+    try {
+        var mailSession = Components.classes['component://netscape/messenger/services/session'].getService(Components.interfaces.nsIMsgMailSession);
+        
+        mailSession.AddFolderListener(folderListener);
+	} catch (ex) {
+        dump("Error adding folder listener\n");
+    }
+}
+
 
 function AddDataSources()
 {
