@@ -728,12 +728,12 @@ sub init {
                 $term = "0=0";
              }
          },
-         "^requesters.login_name," => sub {
+         "^requestees.login_name," => sub {
              push(@supptables, "flags flags_$chartid");
              push(@wherepart, "bugs.bug_id = flags_$chartid.bug_id");
-             push(@supptables, "profiles requesters_$chartid");
-             push(@wherepart, "flags_$chartid.requester_id = requesters_$chartid.userid");
-             $f = "requesters_$chartid.login_name";
+             push(@supptables, "profiles requestees_$chartid");
+             push(@wherepart, "flags_$chartid.requestee_id = requestees_$chartid.userid");
+             $f = "requestees_$chartid.login_name";
          },
          "^setters.login_name," => sub {
              push(@supptables, "flags flags_$chartid");

@@ -2204,8 +2204,11 @@ AddFDef("remaining_time", "Remaining Hours", 0);
 # Oops. Bug 163299
 $dbh->do("DELETE FROM fielddefs WHERE name='cc_accessible'");
 
+# Oops. Bug 215319
+$dbh->do("DELETE FROM fielddefs WHERE name='requesters.login_name'");
+
 AddFDef("flagtypes.name", "Flag", 0);
-AddFDef("requesters.login_name", "Flag Requester", 0);
+AddFDef("requestees.login_name", "Flag Requestee", 0);
 AddFDef("setters.login_name", "Flag Setter", 0);
 AddFDef("work_time", "Hours Worked", 0);
 AddFDef("percentage_complete", "Percentage Complete", 0);
