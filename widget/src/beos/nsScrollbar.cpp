@@ -35,14 +35,22 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsISupportsUtils.h"
+#include "nsWidgetsCID.h"
 #include "nsScrollbar.h"
 #include "nsToolkit.h"
 #include "nsGUIEvent.h"
 #include "nsUnitConversion.h"
 
 
+//-------------------------------------------------------------------------
+//
+// nsISupports 
+//
+//-------------------------------------------------------------------------
 NS_IMPL_ADDREF(nsScrollbar)
 NS_IMPL_RELEASE(nsScrollbar)
+NS_IMPL_QUERY_INTERFACE2(nsScrollbar, nsIScrollbar, nsWindow)
 
 //-------------------------------------------------------------------------
 //
@@ -54,6 +62,7 @@ nsScrollbar::nsScrollbar(PRBool aIsVertical) : nsWindow(), nsIScrollbar()
   NS_INIT_REFCNT();
   mOrientation  = (aIsVertical) ? B_VERTICAL : B_HORIZONTAL;
   mLineIncrement = 0;
+  mScrollbar = 0;
   thumb = 0;
 }
 
@@ -69,24 +78,15 @@ nsScrollbar::~nsScrollbar()
 
 
 //-------------------------------------------------------------------------
-//
-// Query interface implementation
-//
+//  Handle Destroy() here so that we properly Release() the instance
+//  and mScrollbar is destroyed by nsWindow::Destroy even though
+//  mScrollbar is non-zero after the call
 //-------------------------------------------------------------------------
-nsresult nsScrollbar::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-    nsresult result = nsWindow::QueryInterface(aIID, aInstancePtr);
-
-    static NS_DEFINE_IID(kInsScrollbarIID, NS_ISCROLLBAR_IID);
-    if (result == NS_NOINTERFACE && aIID.Equals(kInsScrollbarIID)) {
-        *aInstancePtr = (void*) ((nsIScrollbar*)this);
-        NS_ADDREF_THIS();
-        result = NS_OK;
-    }
-
-    return result;
+NS_METHOD nsScrollbar::Destroy() {
+	nsWindow::Destroy();
+	NS_RELEASE_THIS();
+	return NS_OK;
 }
-
 
 //-------------------------------------------------------------------------
 //
