@@ -70,11 +70,15 @@ private:
 public:
  
 	nsDll(nsIFileSpec *dllSpec, const char *registryLocation);
+	nsDll(nsIFileSpec *dllSpec, const char *registryLocation, PRUint32 modDate, PRUint32 fileSize);
 	nsDll(const char *persistentDescriptor);
 	nsDll(const char *persistentDescriptor, PRUint32 modDate, PRUint32 fileSize);
     nsDll(const char *dll, int type /* dummy */);
 
 	~nsDll(void);
+
+    // Sync : Causes update of file information
+    nsresult Sync(void);
 
 	// Status checking on operations completed
 	nsDllStatus GetStatus(void) { return (m_status); }
