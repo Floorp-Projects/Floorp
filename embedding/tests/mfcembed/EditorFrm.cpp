@@ -262,20 +262,20 @@ CEditorFrame::MakeEditable()
 NS_METHOD
 CEditorFrame::DoCommand(const char *aCommand, nsICommandParams *aCommandParams)
 {
-    return mCommandManager ? mCommandManager->DoCommand(aCommand, aCommandParams) : NS_ERROR_FAILURE;
+    return mCommandManager ? mCommandManager->DoCommand(aCommand, aCommandParams, nsnull) : NS_ERROR_FAILURE;
 }
 
 NS_METHOD
 CEditorFrame::IsCommandEnabled(const char *aCommand, PRBool *retval)
 {
-    return mCommandManager ? mCommandManager->IsCommandEnabled(aCommand, retval) : NS_ERROR_FAILURE;
+    return mCommandManager ? mCommandManager->IsCommandEnabled(aCommand, nsnull, retval) : NS_ERROR_FAILURE;
 }
 
 
 NS_METHOD
 CEditorFrame::GetCommandState(const char *aCommand, nsICommandParams *aCommandParams)
 {
-    return mCommandManager ? mCommandManager->GetCommandState(aCommand,aCommandParams) : NS_ERROR_FAILURE;
+    return mCommandManager ? mCommandManager->GetCommandState(aCommand,nsnull,aCommandParams) : NS_ERROR_FAILURE;
 }
 
 NS_METHOD
