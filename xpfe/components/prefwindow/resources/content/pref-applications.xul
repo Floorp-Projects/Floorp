@@ -72,7 +72,7 @@
               <treechildren flex="1">
                 <treeitem uri="?type">
                   <treerow>
-                    <treecell value="?description"/>
+                    <treecell value="?value"/>
                   </treerow>
                 </treeitem>
               </treechildren>
