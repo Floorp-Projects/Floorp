@@ -1801,6 +1801,7 @@ nsHTMLEditor::InsertElementAtSelection(nsIDOMElement* aElement, PRBool aDeleteSe
           nsCOMPtr<nsIDOMNode> brNode;
           res = CreateBR(parentSelectedNode, offsetForInsert+1, address_of(brNode));
           if (NS_FAILED(res)) return res;
+          selection->Collapse(parentSelectedNode, offsetForInsert+1);
         }
       }
     }
