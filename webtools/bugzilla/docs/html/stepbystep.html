@@ -265,7 +265,7 @@ TARGET="_top"
 >Date::Parse
         </A
 > 
-        (any)
+        (2.21)
       </P
 ></LI
 ><LI
@@ -383,124 +383,6 @@ VALIGN="TOP"
 ></DIV
 >
 
-      <DIV
-CLASS="note"
-><P
-></P
-><TABLE
-CLASS="note"
-WIDTH="100%"
-BORDER="0"
-><TR
-><TD
-WIDTH="25"
-ALIGN="CENTER"
-VALIGN="TOP"
-><IMG
-SRC="../images/note.gif"
-HSPACE="5"
-ALT="Note"></TD
-><TD
-ALIGN="LEFT"
-VALIGN="TOP"
-><P
->Linux-Mandrake 8.0 includes every
-        required and optional library for Bugzilla. The easiest way to
-        install them is by using the 
-        <TT
-CLASS="filename"
->urpmi</TT
->
-
-        utility. If you follow these commands, you should have everything you
-        need for Bugzilla, and 
-        <TT
-CLASS="filename"
->checksetup.pl</TT
->
-
-        should not complain about any missing libraries. You may already have
-        some of these installed.</P
-><P
-></P
-><TABLE
-BORDER="0"
-><TBODY
-><TR
-><TD
->&#13;            <TT
-CLASS="prompt"
->bash#</TT
->
-
-            <B
-CLASS="command"
->urpmi perl-mysql</B
->
-          </TD
-></TR
-><TR
-><TD
->&#13;            <TT
-CLASS="prompt"
->bash#</TT
->
-
-            <B
-CLASS="command"
->urpmi perl-chart</B
->
-          </TD
-></TR
-><TR
-><TD
->&#13;            <TT
-CLASS="prompt"
->bash#</TT
->
-
-            <B
-CLASS="command"
->urpmi perl-gd</B
->
-          </TD
-></TR
-><TR
-><TD
->&#13;          <TT
-CLASS="prompt"
->bash#</TT
->
-
-          <B
-CLASS="command"
->urpmi perl-MailTools</B
->
-
-          (for Bugzilla email integration)</TD
-></TR
-><TR
-><TD
->&#13;            <TT
-CLASS="prompt"
->bash#</TT
->
-
-            <B
-CLASS="command"
->urpmi apache-modules</B
->
-          </TD
-></TR
-></TBODY
-></TABLE
-><P
-></P
-></TD
-></TR
-></TABLE
-></DIV
->
       </P
 ></DIV
 ><DIV
@@ -863,7 +745,7 @@ CLASS="section"
 ><H3
 CLASS="section"
 ><A
-NAME="AEN586"
+NAME="AEN566"
 ></A
 >4.1.5.1. DBI</H3
 ><P
@@ -878,7 +760,7 @@ CLASS="section"
 ><H3
 CLASS="section"
 ><A
-NAME="AEN589"
+NAME="AEN569"
 ></A
 >4.1.5.2. Data::Dumper</H3
 ><P
@@ -892,7 +774,7 @@ CLASS="section"
 ><H3
 CLASS="section"
 ><A
-NAME="AEN592"
+NAME="AEN572"
 ></A
 >4.1.5.3. MySQL-related modules</H3
 ><P
@@ -918,7 +800,7 @@ CLASS="section"
 ><H3
 CLASS="section"
 ><A
-NAME="AEN597"
+NAME="AEN577"
 ></A
 >4.1.5.4. TimeDate modules</H3
 ><P
@@ -934,7 +816,7 @@ CLASS="section"
 ><H3
 CLASS="section"
 ><A
-NAME="AEN600"
+NAME="AEN580"
 ></A
 >4.1.5.5. GD (optional)</H3
 ><P
@@ -989,7 +871,7 @@ CLASS="section"
 ><H3
 CLASS="section"
 ><A
-NAME="AEN607"
+NAME="AEN587"
 ></A
 >4.1.5.6. Chart::Base (optional)</H3
 ><P
@@ -1004,7 +886,7 @@ CLASS="section"
 ><H3
 CLASS="section"
 ><A
-NAME="AEN610"
+NAME="AEN590"
 ></A
 >4.1.5.7. Template Toolkit</H3
 ><P
@@ -1073,7 +955,7 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN620"
+NAME="AEN600"
 ></A
 >4.1.7. Bugzilla</H2
 ><P
@@ -1138,112 +1020,13 @@ CLASS="filename"
 >checksetup.pl</TT
 >
       script, which locks down your installation.</P
-><P
->Lastly, you'll need to set up a symbolic link to 
-      <TT
-CLASS="filename"
->/usr/bonsaitools/bin/perl</TT
->
-      for the correct location of your Perl executable (probably 
-      <TT
-CLASS="filename"
->/usr/bin/perl</TT
->). 
-      Otherwise you must hack all the .cgi files to change where they look
-      for Perl. This can be done using the following Perl one-liner, but 
-      I suggest using the symlink approach to avoid upgrade hassles.
-      </P
-><DIV
-CLASS="note"
-><P
-></P
-><TABLE
-CLASS="note"
-WIDTH="100%"
-BORDER="0"
-><TR
-><TD
-WIDTH="25"
-ALIGN="CENTER"
-VALIGN="TOP"
-><IMG
-SRC="../images/note.gif"
-HSPACE="5"
-ALT="Note"></TD
-><TD
-ALIGN="LEFT"
-VALIGN="TOP"
-><P
-><SPAN
-CLASS="QUOTE"
->"Bonsaitools"</SPAN
-> is the name Terry Weissman, the
-	original author of Bugzilla, created
-	for his suite of webtools at the time he created Bugzilla and several
-	other tools in use at mozilla.org.  He created a directory, 
-	<TT
-CLASS="filename"
->/usr/bonsaitools</TT
-> to house his specific versions
-	of perl and other utilities.  This usage is still current at
-	<A
-HREF="http://bugzilla.mozilla.org/"
-TARGET="_top"
->bugzilla.mozilla.org</A
->,
-	but in general most other places do not use it.  You can either edit
-	the paths at the start of each perl file to the correct location of
-	perl on your system, or simply bow to history and create a
-	<TT
-CLASS="filename"
->/usr/bonsaitools</TT
-> and <TT
-CLASS="filename"
->/usr/bonsaitools/bin
-	</TT
-> directory, placing a symlink to perl on your system
-	inside <TT
-CLASS="filename"
->/usr/bonsaitools/bin</TT
->
-	</P
-></TD
-></TR
-></TABLE
-></DIV
-><P
-> 
-        <TABLE
-BORDER="0"
-BGCOLOR="#E0E0E0"
-WIDTH="100%"
-><TR
-><TD
-><FONT
-COLOR="#000000"
-><PRE
-CLASS="programlisting"
->&#13;perl -pi -e 's@#\!/usr/bonsaitools/bin/perl@#\!/usr/bin/perl@' *cgi *pl Bug.pm syncshadowdb
-        </PRE
-></FONT
-></TD
-></TR
-></TABLE
->
-
-        Change <TT
-CLASS="filename"
->/usr/bin/perl</TT
-> to match the location
-        of Perl on your machine.
-      </P
 ></DIV
 ><DIV
 CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN645"
+NAME="AEN611"
 ></A
 >4.1.8. Setting Up the MySQL Database</H2
 ><P
@@ -1410,13 +1193,41 @@ CLASS="command"
 ></P
 >
       </P
+><DIV
+CLASS="note"
+><P
+></P
+><TABLE
+CLASS="note"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/note.gif"
+HSPACE="5"
+ALT="Note"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>If you are using MySQL 4, the bugs user also needs to be granted
+        the LOCK TABLES and CREATE TEMPORARY TABLES permissions.
+        </P
+></TD
+></TR
+></TABLE
+></DIV
 ></DIV
 ><DIV
 CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN681"
+NAME="AEN649"
 ></A
 >4.1.9. <TT
 CLASS="filename"
@@ -1569,7 +1380,7 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN713"
+NAME="AEN681"
 ></A
 >4.1.10. Configuring Bugzilla</H2
 ><P

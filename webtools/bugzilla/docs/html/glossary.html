@@ -70,7 +70,7 @@ CLASS="glossdiv"
 ><H1
 CLASS="glossdiv"
 ><A
-NAME="AEN2309"
+NAME="AEN2301"
 ></A
 >0-9, high ascii</H1
 ><DL
@@ -312,7 +312,7 @@ CLASS="glossdiv"
 ><A
 NAME="gloss-c"
 ></A
-></H1
+>C</H1
 ><DL
 ><DT
 ><A
@@ -541,22 +541,52 @@ TARGET="_top"
         </P
 ><P
 ></P
-><UL
-><LI
-><P
+><DIV
+CLASS="variablelist"
+><DL
+><DT
 ><A
-HREF="http://www.mysql.com/doc/P/r/Privilege_system.html"
+HREF="http://www.mysql.com/doc/en/Backup.html"
 TARGET="_top"
->MySQL
-            Privilege System</A
-> - Much more detailed information about
-            the suggestions in <A
+>Backup</A
+></DT
+><DD
+><P
+>Methods for backing up your Bugzilla database.
+              </P
+></DD
+><DT
+><A
+HREF="http://www.mysql.com/doc/en/Option_files.html"
+TARGET="_top"
+>Option Files</A
+></DT
+><DD
+><P
+>Information about how to configure MySQL using
+              <TT
+CLASS="filename"
+>my.cnf</TT
+>.
+              </P
+></DD
+><DT
+><A
+HREF="http://www.mysql.com/doc/en/Privilege_system.html"
+TARGET="_top"
+>Privilege System</A
+></DT
+><DD
+><P
+>Much more detailed information about the suggestions in
+              <A
 HREF="security.html#security-mysql"
 >Section 5.6.2</A
 >.
-            </P
-></LI
-></UL
+              </P
+></DD
+></DL
+></DIV
 ></DD
 ></DL
 ></DIV
@@ -807,16 +837,70 @@ NAME="gloss-z"
 ><DL
 ><DT
 ><A
-NAME="zarro-boogs-found"
+NAME="gloss-zarro"
 ></A
 ><B
 >Zarro Boogs Found</B
 ></DT
 ><DD
 ><P
->This is the cryptic response sent by Bugzilla when a query
-        returned no results. It is just a goofy way of saying "Zero Bugs
-        Found".</P
+>This is just a goofy way of saying that there were no bugs
+        found matching your query. When asked to explain this message,
+        Terry had the following to say:
+        </P
+><A
+NAME="AEN2515"
+></A
+><TABLE
+BORDER="0"
+WIDTH="100%"
+CELLSPACING="0"
+CELLPADDING="0"
+CLASS="BLOCKQUOTE"
+><TR
+><TD
+WIDTH="10%"
+VALIGN="TOP"
+>&nbsp;</TD
+><TD
+WIDTH="80%"
+VALIGN="TOP"
+><P
+>I've been asked to explain this ... way back when, when
+          Netscape released version 4.0 of its browser, we had a release
+          party.  Naturally, there had been a big push to try and fix every
+          known bug before the release. Naturally, that hadn't actually
+          happened.  (This is not unique to Netscape or to 4.0; the same thing
+          has happened with every software project I've ever seen.)  Anyway,
+          at the release party, T-shirts were handed out that said something
+          like "Netscape 4.0: Zarro Boogs". Just like the software, the
+          T-shirt had no known bugs.  Uh-huh.
+          </P
+><P
+>So, when you query for a list of bugs, and it gets no results,
+          you can think of this as a friendly reminder.  Of *course* there are
+          bugs matching your query, they just aren't in the bugsystem yet...
+          </P
+></TD
+><TD
+WIDTH="10%"
+VALIGN="TOP"
+>&nbsp;</TD
+></TR
+><TR
+><TD
+COLSPAN="2"
+ALIGN="RIGHT"
+VALIGN="TOP"
+>--<SPAN
+CLASS="attribution"
+>Terry Weissman</SPAN
+></TD
+><TD
+WIDTH="10%"
+>&nbsp;</TD
+></TR
+></TABLE
 ></DD
 ></DL
 ></DIV

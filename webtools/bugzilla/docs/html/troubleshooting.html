@@ -85,7 +85,7 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN1009"
+NAME="AEN977"
 ></A
 >4.5.1. Bundle::Bugzilla makes me upgrade to Perl 5.6.1</H2
 ><P
@@ -110,7 +110,7 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN1014"
+NAME="AEN982"
 ></A
 >4.5.2. DBD::Sponge::db prepare failed</H2
 ><P
@@ -248,6 +248,116 @@ CLASS="filename"
 >
       as root to fix this problem.
       </P
+></DIV
+><DIV
+CLASS="section"
+><H2
+CLASS="section"
+><A
+NAME="trouble-filetemp"
+></A
+>4.5.4. Your vendor has not defined Fcntl macro O_NOINHERIT</H2
+><P
+>This is caused by a bug in the version of
+      <SPAN
+CLASS="productname"
+>File::Temp</SPAN
+> that is distributed with perl
+      5.6.0. Many minor variations of this error have been reported. Examples
+      can be found in <A
+HREF="troubleshooting.html#trouble-filetemp-errors"
+>Figure 4-1</A
+>.
+      </P
+><DIV
+CLASS="figure"
+><A
+NAME="trouble-filetemp-errors"
+></A
+><P
+><B
+>Figure 4-1. Other File::Temp error messages</B
+></P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="programlisting"
+>&#13;Your vendor has not defined Fcntl macro O_NOINHERIT, used 
+at /usr/lib/perl5/site_perl/5.6.0/File/Temp.pm line 208.
+
+Your vendor has not defined Fcntl macro O_EXLOCK, used 
+at /usr/lib/perl5/site_perl/5.6.0/File/Temp.pm line 210.
+
+Your vendor has not defined Fcntl macro O_TEMPORARY, used 
+at /usr/lib/perl5/site_perl/5.6.0/File/Temp.pm line 233.
+        </PRE
+></FONT
+></TD
+></TR
+></TABLE
+></DIV
+><P
+>Numerous people have reported that upgrading to version 5.6.1
+      or higher solved the problem for them. A less involved fix is to apply
+      the patch in <A
+HREF="troubleshooting.html#trouble-filetemp-patch"
+>Figure 4-2</A
+>. The patch is also
+      available as a <A
+HREF="../xml/filetemp.patch"
+TARGET="_top"
+>patch file</A
+>.
+      </P
+><DIV
+CLASS="figure"
+><A
+NAME="trouble-filetemp-patch"
+></A
+><P
+><B
+>Figure 4-2. Patch for File::Temp in Perl 5.6.0</B
+></P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="programlisting"
+>&#13;--- File/Temp.pm.orig   Thu Feb  6 16:26:00 2003
++++ File/Temp.pm        Thu Feb  6 16:26:23 2003
+@@ -205,6 +205,7 @@
+     # eg CGI::Carp
+     local $SIG{__DIE__} = sub {};
+     local $SIG{__WARN__} = sub {};
++    local *CORE::GLOBAL::die = sub {};
+     $bit = &#38;$func();
+     1;
+   };
+@@ -226,6 +227,7 @@
+     # eg CGI::Carp
+     local $SIG{__DIE__} = sub {};
+     local $SIG{__WARN__} = sub {};
++    local *CORE::GLOBAL::die = sub {};
+     $bit = &#38;$func();
+     1;
+   };
+        </PRE
+></FONT
+></TD
+></TR
+></TABLE
+></DIV
 ></DIV
 ></DIV
 ><DIV

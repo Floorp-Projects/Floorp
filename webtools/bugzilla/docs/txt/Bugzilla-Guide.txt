@@ -7,7 +7,7 @@ Jacob Steenhagen
 
 The Bugzilla Team
 
-   2003-02-16
+   2003-04-23
 
    This is the documentation for Bugzilla, the mozilla.org bug-tracking
    system. Bugzilla is an enterprise-class piece of software that powers
@@ -15,8 +15,8 @@ The Bugzilla Team
    tracking millions of bugs.
 
    This documentation is maintained in DocBook 4.1.2 XML format. Changes
-   are best submitted as plain text or SGML diffs, attached to a bug
-   filed in the Bugzilla Documentation compontent.
+   are best submitted as plain text or XML diffs, attached to a bug filed
+   in the Bugzilla Documentation compontent.
 
    This is a development version of this guide. Information in it is
    subject to change before the 2.18 release of this guide (which will
@@ -100,6 +100,10 @@ The Bugzilla Team
         How to use this License for your documents
 
    Glossary
+
+   List of Figures
+   4-1. Other File::Temp error messages
+   4-2. Patch for File::Temp in Perl 5.6.0
 
    List of Examples
    4-1. .htaccess files for Apache
@@ -702,7 +706,7 @@ Chapter 4. Installation
          f. Data::Dumper (any)
          g. DBD::mysql (2.1010)
          h. DBI (1.32)
-         i. Date::Parse (any)
+         i. Date::Parse (2.21)
          j. CGI (2.88)
        and, optionally:
          a. GD (1.20) for bug charting
@@ -721,20 +725,6 @@ Chapter 4. Installation
    Many installation steps require an active Internet connection to
    complete, but you must take care to ensure that at no point is your
    machine vulnerable to an attack.
-
-   Note
-
-   Linux-Mandrake 8.0 includes every required and optional library for
-   Bugzilla. The easiest way to install them is by using the urpmi
-   utility. If you follow these commands, you should have everything you
-   need for Bugzilla, and checksetup.pl should not complain about any
-   missing libraries. You may already have some of these installed.
-
-   bash# urpmi perl-mysql
-   bash# urpmi perl-chart
-   bash# urpmi perl-gd
-   bash# urpmi perl-MailTools (for Bugzilla email integration)
-   bash# urpmi apache-modules
      _________________________________________________________________
 
 4.1.3. MySQL
@@ -938,31 +928,6 @@ Chapter 4. Installation
    directory writable by your webserver's user. This is a temporary step
    until you run the post-install checksetup.pl script, which locks down
    your installation.
-
-   Lastly, you'll need to set up a symbolic link to
-   /usr/bonsaitools/bin/perl for the correct location of your Perl
-   executable (probably /usr/bin/perl). Otherwise you must hack all the
-   .cgi files to change where they look for Perl. This can be done using
-   the following Perl one-liner, but I suggest using the symlink approach
-   to avoid upgrade hassles.
-
-   Note
-
-   "Bonsaitools" is the name Terry Weissman, the original author of
-   Bugzilla, created for his suite of webtools at the time he created
-   Bugzilla and several other tools in use at mozilla.org. He created a
-   directory, /usr/bonsaitools to house his specific versions of perl and
-   other utilities. This usage is still current at bugzilla.mozilla.org,
-   but in general most other places do not use it. You can either edit
-   the paths at the start of each perl file to the correct location of
-   perl on your system, or simply bow to history and create a
-   /usr/bonsaitools and /usr/bonsaitools/bin directory, placing a symlink
-   to perl on your system inside /usr/bonsaitools/bin
-
-perl -pi -e 's@#\!/usr/bonsaitools/bin/perl@#\!/usr/bin/perl@' *cgi *pl Bug.pm
-syncshadowdb
-
-   Change /usr/bin/perl to match the location of Perl on your machine.
      _________________________________________________________________
 
 4.1.8. Setting Up the MySQL Database
@@ -1001,6 +966,11 @@ syncshadowdb
    ALTER,CREATE,DROP,REFERENCES ON bugs.* TO bugs@localhost IDENTIFIED BY
    '<bugs_password>';
    mysql> FLUSH PRIVILEGES;
+
+   Note
+
+   If you are using MySQL 4, the bugs user also needs to be granted the
+   LOCK TABLES and CREATE TEMPORARY TABLES permissions.
      _________________________________________________________________
 
 4.1.9. checksetup.pl
@@ -1307,32 +1277,6 @@ my $webservergid = getgrnam($my_webservergroup)
 my $webservergid = '8'
      _________________________________________________________________
 
-4.3.1.3.2. System Calls
-
-   In order to get system calls to work on win32's perl, you need to tell
-   the windows shell what interpreter to use. This is done by changing
-   the system calls. You will need to search all of Bugzilla's code for
-   system calls. To tell perl your interpreter, it needs to be the first
-   argument to the system call. For example, you'll need to change:
-system("$webdotbase","-Tpng","-o","$pngfilename","$filename");
-
-   with
-system("C:\\perl\\bin\\perl", "$webdotbase","-Tpng","-o","$pngfilename","$filen
-ame");
-
-   Tip
-
-   The grep command is very helpful in finding these system calls,
-   assuming you have the cygwin utilities.
-
-   Note
-
-   It appears that the only system call remaining in the Bugzilla
-   codebase is in showdependencygraph.cgi. Not changing this file will
-   only cause dependency graphs to not function if the webdotbase
-   paramater points to a local installation of GraphViz.
-     _________________________________________________________________
-
 4.3.1.4. Serving the web pages
 
    As is the case on Unix based systems, any web server should be able to
@@ -1346,7 +1290,7 @@ ame");
    If using Apache on windows, you can set the ScriptInterpreterSource
    directive in your Apache config, if you don't do this, you'll have to
    modify the first line of every script to contain your path to perl
-   instead of /usr/bonsaitools/bin/perl.
+   instead of /usr/bin/perl.
      _________________________________________________________________
 
 4.3.2. Mac OS X
@@ -1388,6 +1332,23 @@ ame");
    make test
    make install
    And don't forget to run exit to get back to CPAN.
+     _________________________________________________________________
+
+4.3.3. Linux-Mandrake 8.0
+
+   Linux-Mandrake 8.0 includes every required and optional library for
+   Bugzilla. The easiest way to install them is by using the urpmi
+   utility. If you follow these commands, you should have everything you
+   need for Bugzilla, and ./checksetup.pl should not complain about any
+   missing libraries. You may already have some of these installed.
+bash# urpmi perl-mysql
+bash# urpmi perl-chart
+bash# urpmi perl-gd
+bash# urpmi perl-MailTools     (1)
+bash# urpmi apache-modules
+
+   (1) 
+          for Bugzilla e-mail integration
      _________________________________________________________________
 
 4.4. HTTP Server Configuration
@@ -1600,6 +1561,47 @@ proc filter_deny { why } {
    This is because your /var/spool/mqueue directory has a mode of
    "drwx------". Type chmod 755 /var/spool/mqueue as root to fix this
    problem.
+     _________________________________________________________________
+
+4.5.4. Your vendor has not defined Fcntl macro O_NOINHERIT
+
+   This is caused by a bug in the version of File::Temp that is
+   distributed with perl 5.6.0. Many minor variations of this error have
+   been reported. Examples can be found in Figure 4-1.
+
+   Figure 4-1. Other File::Temp error messages
+Your vendor has not defined Fcntl macro O_NOINHERIT, used
+at /usr/lib/perl5/site_perl/5.6.0/File/Temp.pm line 208.
+
+Your vendor has not defined Fcntl macro O_EXLOCK, used
+at /usr/lib/perl5/site_perl/5.6.0/File/Temp.pm line 210.
+
+Your vendor has not defined Fcntl macro O_TEMPORARY, used
+at /usr/lib/perl5/site_perl/5.6.0/File/Temp.pm line 233.
+
+   Numerous people have reported that upgrading to version 5.6.1 or
+   higher solved the problem for them. A less involved fix is to apply
+   the patch in Figure 4-2. The patch is also available as a patch file.
+
+   Figure 4-2. Patch for File::Temp in Perl 5.6.0
+--- File/Temp.pm.orig   Thu Feb  6 16:26:00 2003
++++ File/Temp.pm        Thu Feb  6 16:26:23 2003
+@@ -205,6 +205,7 @@
+     # eg CGI::Carp
+     local $SIG{__DIE__} = sub {};
+     local $SIG{__WARN__} = sub {};
++    local *CORE::GLOBAL::die = sub {};
+     $bit = &$func();
+     1;
+   };
+@@ -226,6 +227,7 @@
+     # eg CGI::Carp
+     local $SIG{__DIE__} = sub {};
+     local $SIG{__WARN__} = sub {};
++    local *CORE::GLOBAL::die = sub {};
+     $bit = &$func();
+     1;
+   };
      _________________________________________________________________
 
 Chapter 5. Administering Bugzilla
@@ -2662,10 +2664,11 @@ Appendix A. The Bugzilla FAQ
         A.1.8. Why MySQL? I'm interested in seeing Bugzilla run on
                 Oracle/Sybase/Msql/PostgreSQL/MSSQL. 
 
-        A.1.9. Why do the scripts say "/usr/bonsaitools/bin/perl" instead
-                of "/usr/bin/perl" or something else? 
+        A.1.9. What is /usr/bonsaitools/bin/perl? 
+        A.1.10. My perl is not located at /usr/bin/perl, is there an easy
+                way to change it everywhere it needs to be changed? 
 
-        A.1.10. Is there an easy way to change the Bugzilla cookie name? 
+        A.1.11. Is there an easy way to change the Bugzilla cookie name? 
 
    2. Managerial Questions
 
@@ -2926,18 +2929,27 @@ Appendix A. The Bugzilla FAQ
    Once both of these are done, adding support for additional database
    servers should be trivial.
 
-   A.1.9. Why do the scripts say "/usr/bonsaitools/bin/perl" instead of
-   "/usr/bin/perl" or something else?
+   A.1.9. What is /usr/bonsaitools/bin/perl?
 
-   Mozilla.org uses /usr/bonsaitools/bin/perl, because originally Terry
-   wanted a place to put a version of Perl and other tools that was
-   strictly under his control.
+   Bugzilla used to have the path to perl on the shebang line set to
+   /usr/bonsaitools/bin/perl because when Terry first started writing the
+   code for mozilla.org he needed a version of Perl and other tools that
+   were completely under his control. This location was abandoned for the
+   2.18 release in favor of the more sensible /usr/bin/perl. If you
+   installed an older verion of Bugzilla and created the symlink we
+   suggested, you can remove it now (provided that you don't have
+   anything else, such as Bonsai, using it and you don't intend to
+   reinstall an older version of Bugzilla).
 
-   We always recommend that, if possible, you keep the path as
-   /usr/bonsaitools/bin/perl, and simply add symlink. This will make
-   upgrading your Bugzilla much easier in the future.
+   A.1.10. My perl is not located at /usr/bin/perl, is there an easy way
+   to change it everywhere it needs to be changed?
 
-   A.1.10. Is there an easy way to change the Bugzilla cookie name?
+   Yes, the following bit of perl magic will change all the shebang
+   lines. Be sure to change /usr/local/bin/perl to your path to the perl
+   binary.
+perl -pi -e 's@#\!/usr/bin/perl@#\!/usr/local/bin/perl@' *cgi *pl
+
+   A.1.11. Is there an easy way to change the Bugzilla cookie name?
 
    At present, no.
 
@@ -3048,8 +3060,8 @@ Appendix A. The Bugzilla FAQ
 
    Currently the only script included with Bugzilla that can import data
    is importxml.pl which is intended to be used for importing the data
-   generated by xml.cgi in association with bug moving. Any other use is
-   left as an exercise for the user.
+   generated by the XML ctype of show_bug.cgi in association with bug
+   moving. Any other use is left as an exercise for the user.
 
    There are also scripts included in the contrib/ directory for using
    e-mail to import information into Bugzilla, but these scripts are not
@@ -3059,10 +3071,10 @@ Appendix A. The Bugzilla FAQ
    in other countries? Is it localizable?
 
    Yes. For more information including available translated templates,
-   see http://www.bugzilla.org/download.html. The admin interfaces are
-   still not included in these translated templates and is therefore
-   still English only. Also, there may be issues with the charset not
-   being declared. See bug 126226 for more information.
+   see http://www.bugzilla.org/download.html#localizations. The admin
+   interfaces are still not included in these translated templates and is
+   therefore still English only. Also, there may be issues with the
+   charset not being declared. See bug 126226 for more information.
 
    A.2.13. Can a user create and save reports? Can they do this in Word
    format? Excel format?
@@ -4337,6 +4349,8 @@ B
           Bugzilla is the world-leading free software bug tracking
           system.
 
+C
+
    Common Gateway Interface (CGI)
           CGI is an acronym for Common Gateway Interface. This is a
           standard for interfacing an external application with a web
@@ -4391,8 +4405,15 @@ M
           familiarize yourself with all of the documentation, some high
           points are:
 
-          + MySQL Privilege System - Much more detailed information about
-            the suggestions in Section 5.6.2.
+        Backup
+                Methods for backing up your Bugzilla database.
+
+        Option Files
+                Information about how to configure MySQL using my.cnf.
+
+        Privilege System
+                Much more detailed information about the suggestions in
+                Section 5.6.2.
 
 P
 
@@ -4459,6 +4480,22 @@ T
 Z
 
    Zarro Boogs Found
-          This is the cryptic response sent by Bugzilla when a query
-          returned no results. It is just a goofy way of saying "Zero
-          Bugs Found".
+          This is just a goofy way of saying that there were no bugs
+          found matching your query. When asked to explain this message,
+          Terry had the following to say:
+
+
+
+   I've been asked to explain this ... way back when, when Netscape
+   released version 4.0 of its browser, we had a release party.
+   Naturally, there had been a big push to try and fix every known bug
+   before the release. Naturally, that hadn't actually happened. (This is
+   not unique to Netscape or to 4.0; the same thing has happened with
+   every software project I've ever seen.) Anyway, at the release party,
+   T-shirts were handed out that said something like "Netscape 4.0: Zarro
+   Boogs". Just like the software, the T-shirt had no known bugs. Uh-huh.
+   So, when you query for a list of bugs, and it gets no results, you can
+   think of this as a friendly reminder. Of *course* there are bugs
+   matching your query, they just aren't in the bugsystem yet...
+
+          --Terry Weissman

@@ -61,7 +61,7 @@ CLASS="corpauthor"
 >The Bugzilla Team</H3
 ><P
 CLASS="pubdate"
->2003-02-16<BR></P
+>2003-04-23<BR></P
 ><DIV
 ><DIV
 CLASS="abstract"
@@ -80,7 +80,7 @@ NAME="AEN14"
 ><P
 >  
 	      This documentation is maintained in DocBook 4.1.2 XML format.
-        Changes are best submitted as plain text or SGML diffs, attached
+        Changes are best submitted as plain text or XML diffs, attached
         to a bug filed in the <A
 HREF="http://bugzilla.mozilla.org/enter_bug.cgi?product=Bugzilla&component=Documentation"
 TARGET="_top"
@@ -435,6 +435,26 @@ HREF="#gfdl-howto"
 ><A
 HREF="#glossary"
 >Glossary</A
+></DT
+></DL
+></DIV
+><DIV
+CLASS="LOT"
+><DL
+CLASS="LOT"
+><DT
+><B
+>List of Figures</B
+></DT
+><DT
+>4-1. <A
+HREF="#trouble-filetemp-errors"
+>Other File::Temp error messages</A
+></DT
+><DT
+>4-2. <A
+HREF="#trouble-filetemp-patch"
+>Patch for File::Temp in Perl 5.6.0</A
 ></DT
 ></DL
 ></DIV
@@ -2347,7 +2367,7 @@ TARGET="_top"
 >Date::Parse
         </A
 > 
-        (any)
+        (2.21)
       </P
 ></LI
 ><LI
@@ -2465,124 +2485,6 @@ VALIGN="TOP"
 ></DIV
 >
 
-      <DIV
-CLASS="note"
-><P
-></P
-><TABLE
-CLASS="note"
-WIDTH="100%"
-BORDER="0"
-><TR
-><TD
-WIDTH="25"
-ALIGN="CENTER"
-VALIGN="TOP"
-><IMG
-SRC="../images/note.gif"
-HSPACE="5"
-ALT="Note"></TD
-><TD
-ALIGN="LEFT"
-VALIGN="TOP"
-><P
->Linux-Mandrake 8.0 includes every
-        required and optional library for Bugzilla. The easiest way to
-        install them is by using the 
-        <TT
-CLASS="filename"
->urpmi</TT
->
-
-        utility. If you follow these commands, you should have everything you
-        need for Bugzilla, and 
-        <TT
-CLASS="filename"
->checksetup.pl</TT
->
-
-        should not complain about any missing libraries. You may already have
-        some of these installed.</P
-><P
-></P
-><TABLE
-BORDER="0"
-><TBODY
-><TR
-><TD
->&#13;            <TT
-CLASS="prompt"
->bash#</TT
->
-
-            <B
-CLASS="command"
->urpmi perl-mysql</B
->
-          </TD
-></TR
-><TR
-><TD
->&#13;            <TT
-CLASS="prompt"
->bash#</TT
->
-
-            <B
-CLASS="command"
->urpmi perl-chart</B
->
-          </TD
-></TR
-><TR
-><TD
->&#13;            <TT
-CLASS="prompt"
->bash#</TT
->
-
-            <B
-CLASS="command"
->urpmi perl-gd</B
->
-          </TD
-></TR
-><TR
-><TD
->&#13;          <TT
-CLASS="prompt"
->bash#</TT
->
-
-          <B
-CLASS="command"
->urpmi perl-MailTools</B
->
-
-          (for Bugzilla email integration)</TD
-></TR
-><TR
-><TD
->&#13;            <TT
-CLASS="prompt"
->bash#</TT
->
-
-            <B
-CLASS="command"
->urpmi apache-modules</B
->
-          </TD
-></TR
-></TBODY
-></TABLE
-><P
-></P
-></TD
-></TR
-></TABLE
-></DIV
->
       </P
 ></DIV
 ><DIV
@@ -2945,7 +2847,7 @@ CLASS="section"
 ><HR><H3
 CLASS="section"
 ><A
-NAME="AEN586"
+NAME="AEN566"
 ></A
 >4.1.5.1. DBI</H3
 ><P
@@ -2960,7 +2862,7 @@ CLASS="section"
 ><HR><H3
 CLASS="section"
 ><A
-NAME="AEN589"
+NAME="AEN569"
 ></A
 >4.1.5.2. Data::Dumper</H3
 ><P
@@ -2974,7 +2876,7 @@ CLASS="section"
 ><HR><H3
 CLASS="section"
 ><A
-NAME="AEN592"
+NAME="AEN572"
 ></A
 >4.1.5.3. MySQL-related modules</H3
 ><P
@@ -3000,7 +2902,7 @@ CLASS="section"
 ><HR><H3
 CLASS="section"
 ><A
-NAME="AEN597"
+NAME="AEN577"
 ></A
 >4.1.5.4. TimeDate modules</H3
 ><P
@@ -3016,7 +2918,7 @@ CLASS="section"
 ><HR><H3
 CLASS="section"
 ><A
-NAME="AEN600"
+NAME="AEN580"
 ></A
 >4.1.5.5. GD (optional)</H3
 ><P
@@ -3071,7 +2973,7 @@ CLASS="section"
 ><HR><H3
 CLASS="section"
 ><A
-NAME="AEN607"
+NAME="AEN587"
 ></A
 >4.1.5.6. Chart::Base (optional)</H3
 ><P
@@ -3086,7 +2988,7 @@ CLASS="section"
 ><HR><H3
 CLASS="section"
 ><A
-NAME="AEN610"
+NAME="AEN590"
 ></A
 >4.1.5.7. Template Toolkit</H3
 ><P
@@ -3155,7 +3057,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN620"
+NAME="AEN600"
 ></A
 >4.1.7. Bugzilla</H2
 ><P
@@ -3220,112 +3122,13 @@ CLASS="filename"
 >checksetup.pl</TT
 >
       script, which locks down your installation.</P
-><P
->Lastly, you'll need to set up a symbolic link to 
-      <TT
-CLASS="filename"
->/usr/bonsaitools/bin/perl</TT
->
-      for the correct location of your Perl executable (probably 
-      <TT
-CLASS="filename"
->/usr/bin/perl</TT
->). 
-      Otherwise you must hack all the .cgi files to change where they look
-      for Perl. This can be done using the following Perl one-liner, but 
-      I suggest using the symlink approach to avoid upgrade hassles.
-      </P
-><DIV
-CLASS="note"
-><P
-></P
-><TABLE
-CLASS="note"
-WIDTH="100%"
-BORDER="0"
-><TR
-><TD
-WIDTH="25"
-ALIGN="CENTER"
-VALIGN="TOP"
-><IMG
-SRC="../images/note.gif"
-HSPACE="5"
-ALT="Note"></TD
-><TD
-ALIGN="LEFT"
-VALIGN="TOP"
-><P
-><SPAN
-CLASS="QUOTE"
->"Bonsaitools"</SPAN
-> is the name Terry Weissman, the
-	original author of Bugzilla, created
-	for his suite of webtools at the time he created Bugzilla and several
-	other tools in use at mozilla.org.  He created a directory, 
-	<TT
-CLASS="filename"
->/usr/bonsaitools</TT
-> to house his specific versions
-	of perl and other utilities.  This usage is still current at
-	<A
-HREF="http://bugzilla.mozilla.org/"
-TARGET="_top"
->bugzilla.mozilla.org</A
->,
-	but in general most other places do not use it.  You can either edit
-	the paths at the start of each perl file to the correct location of
-	perl on your system, or simply bow to history and create a
-	<TT
-CLASS="filename"
->/usr/bonsaitools</TT
-> and <TT
-CLASS="filename"
->/usr/bonsaitools/bin
-	</TT
-> directory, placing a symlink to perl on your system
-	inside <TT
-CLASS="filename"
->/usr/bonsaitools/bin</TT
->
-	</P
-></TD
-></TR
-></TABLE
-></DIV
-><P
-> 
-        <TABLE
-BORDER="0"
-BGCOLOR="#E0E0E0"
-WIDTH="100%"
-><TR
-><TD
-><FONT
-COLOR="#000000"
-><PRE
-CLASS="programlisting"
->&#13;perl -pi -e 's@#\!/usr/bonsaitools/bin/perl@#\!/usr/bin/perl@' *cgi *pl Bug.pm syncshadowdb
-        </PRE
-></FONT
-></TD
-></TR
-></TABLE
->
-
-        Change <TT
-CLASS="filename"
->/usr/bin/perl</TT
-> to match the location
-        of Perl on your machine.
-      </P
 ></DIV
 ><DIV
 CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN645"
+NAME="AEN611"
 ></A
 >4.1.8. Setting Up the MySQL Database</H2
 ><P
@@ -3492,13 +3295,41 @@ CLASS="command"
 ></P
 >
       </P
+><DIV
+CLASS="note"
+><P
+></P
+><TABLE
+CLASS="note"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/note.gif"
+HSPACE="5"
+ALT="Note"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>If you are using MySQL 4, the bugs user also needs to be granted
+        the LOCK TABLES and CREATE TEMPORARY TABLES permissions.
+        </P
+></TD
+></TR
+></TABLE
+></DIV
 ></DIV
 ><DIV
 CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN681"
+NAME="AEN649"
 ></A
 >4.1.9. <TT
 CLASS="filename"
@@ -3651,7 +3482,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN713"
+NAME="AEN681"
 ></A
 >4.1.10. Configuring Bugzilla</H2
 ><P
@@ -3677,7 +3508,7 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN719"
+NAME="AEN687"
 ></A
 >4.2.1. Dependency Charts</H2
 ><P
@@ -3741,7 +3572,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN734"
+NAME="AEN702"
 ></A
 >4.2.2. Bug Graphs</H2
 ><P
@@ -3800,7 +3631,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN747"
+NAME="AEN715"
 ></A
 >4.2.3. The Whining Cron</H2
 ><P
@@ -4513,150 +4344,6 @@ CLASS="programlisting"
 ></TR
 ></TABLE
 ></DIV
-><DIV
-CLASS="section"
-><HR><H4
-CLASS="section"
-><A
-NAME="AEN863"
-></A
->4.3.1.3.2. System Calls</H4
-><P
->In order to get system calls to work on win32's perl, you need
-          to tell the windows shell what interpreter to use. This is done by
-          changing the <TT
-CLASS="function"
->system</TT
-> calls. You will need to
-          search all of Bugzilla's code  for <TT
-CLASS="function"
->system</TT
-> calls.
-          To tell perl your interpreter, it needs to be the first argument to
-          the <TT
-CLASS="function"
->system</TT
-> call.  For example, you'll need to
-          change:
-          </P
-><TABLE
-BORDER="0"
-BGCOLOR="#E0E0E0"
-WIDTH="100%"
-><TR
-><TD
-><FONT
-COLOR="#000000"
-><PRE
-CLASS="programlisting"
->&#13;system("$webdotbase","-Tpng","-o","$pngfilename","$filename");
-          </PRE
-></FONT
-></TD
-></TR
-></TABLE
-><P
->with</P
-><TABLE
-BORDER="0"
-BGCOLOR="#E0E0E0"
-WIDTH="100%"
-><TR
-><TD
-><FONT
-COLOR="#000000"
-><PRE
-CLASS="programlisting"
->&#13;system("C:\\perl\\bin\\perl", "$webdotbase","-Tpng","-o","$pngfilename","$filename");
-          </PRE
-></FONT
-></TD
-></TR
-></TABLE
-><DIV
-CLASS="tip"
-><P
-></P
-><TABLE
-CLASS="tip"
-WIDTH="100%"
-BORDER="0"
-><TR
-><TD
-WIDTH="25"
-ALIGN="CENTER"
-VALIGN="TOP"
-><IMG
-SRC="../images/tip.gif"
-HSPACE="5"
-ALT="Tip"></TD
-><TD
-ALIGN="LEFT"
-VALIGN="TOP"
-><P
->The <B
-CLASS="command"
->grep</B
-> command is very helpful in finding
-            these <TT
-CLASS="function"
->system</TT
-> calls, assuming you have the
-            <SPAN
-CLASS="productname"
->cygwin</SPAN
-> utilities.
-            </P
-></TD
-></TR
-></TABLE
-></DIV
-><DIV
-CLASS="note"
-><P
-></P
-><TABLE
-CLASS="note"
-WIDTH="100%"
-BORDER="0"
-><TR
-><TD
-WIDTH="25"
-ALIGN="CENTER"
-VALIGN="TOP"
-><IMG
-SRC="../images/note.gif"
-HSPACE="5"
-ALT="Note"></TD
-><TD
-ALIGN="LEFT"
-VALIGN="TOP"
-><P
->It appears that the only <TT
-CLASS="function"
->system</TT
-> call
-            remaining in the Bugzilla codebase is in
-            <TT
-CLASS="filename"
->showdependencygraph.cgi</TT
->. Not changing this
-            file will only cause dependency graphs to not function if the
-            <TT
-CLASS="option"
->webdotbase</TT
-> paramater points to a local
-            installation of <A
-HREF="http://www.graphviz.org"
-TARGET="_top"
->GraphViz</A
->.
-            </P
-></TD
-></TR
-></TABLE
-></DIV
-></DIV
 ></DIV
 ><DIV
 CLASS="section"
@@ -4710,7 +4397,7 @@ TARGET="_top"
           to modify the first line of every script to contain your path to
           perl instead of <TT
 CLASS="filename"
->/usr/bonsaitools/bin/perl</TT
+>/usr/bin/perl</TT
 >.
           </P
 ></TD
@@ -4783,7 +4470,7 @@ CLASS="command"
       This should go through the motions of downloading the latest version of
       the GD module, then it will open a shell and drop you into the build
       directory. Apply <A
-HREF="../sgml/gd-makefile.patch"
+HREF="../xml/gd-makefile.patch"
 TARGET="_top"
 >this patch</A
 > 
@@ -4850,6 +4537,105 @@ CLASS="command"
 ></P
 >
       </P
+></DIV
+><DIV
+CLASS="section"
+><HR><H2
+CLASS="section"
+><A
+NAME="os-mandrake"
+></A
+>4.3.3. Linux-Mandrake 8.0</H2
+><P
+>Linux-Mandrake 8.0 includes every required and optional library
+      for Bugzilla. The easiest way to install them is by using the
+      <B
+CLASS="command"
+>urpmi</B
+>  utility. If you follow these commands, you
+      should have everything you need for Bugzilla, and
+      <B
+CLASS="command"
+>./checksetup.pl</B
+>  should not complain about any
+      missing libraries. You may already have some of these installed.
+      </P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="screen"
+>&#13;<TT
+CLASS="prompt"
+>bash#</TT
+> <B
+CLASS="command"
+>urpmi perl-mysql</B
+>
+<TT
+CLASS="prompt"
+>bash#</TT
+> <B
+CLASS="command"
+>urpmi perl-chart</B
+>
+<TT
+CLASS="prompt"
+>bash#</TT
+> <B
+CLASS="command"
+>urpmi perl-gd</B
+>
+<TT
+CLASS="prompt"
+>bash#</TT
+> <B
+CLASS="command"
+>urpmi perl-MailTools</B
+>    <A
+NAME="test-mailtools"
+><IMG
+SRC="../images/callouts/1.gif"
+HSPACE="0"
+VSPACE="0"
+BORDER="0"
+ALT="(1)"></A
+>
+<TT
+CLASS="prompt"
+>bash#</TT
+> <B
+CLASS="command"
+>urpmi apache-modules</B
+>
+      </PRE
+></FONT
+></TD
+></TR
+></TABLE
+><DIV
+CLASS="calloutlist"
+><DL
+COMPACT="COMPACT"
+><DT
+><A
+HREF="#test-mailtools"
+><IMG
+SRC="../images/callouts/1.gif"
+HSPACE="0"
+VSPACE="0"
+BORDER="0"
+ALT="(1)"></A
+></DT
+><DD
+>for Bugzilla e-mail integration</DD
+></DL
+></DIV
 ></DIV
 ></DIV
 ><DIV
@@ -5433,7 +5219,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN1009"
+NAME="AEN977"
 ></A
 >4.5.1. Bundle::Bugzilla makes me upgrade to Perl 5.6.1</H2
 ><P
@@ -5458,7 +5244,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN1014"
+NAME="AEN982"
 ></A
 >4.5.2. DBD::Sponge::db prepare failed</H2
 ><P
@@ -5596,6 +5382,116 @@ CLASS="filename"
 >
       as root to fix this problem.
       </P
+></DIV
+><DIV
+CLASS="section"
+><HR><H2
+CLASS="section"
+><A
+NAME="trouble-filetemp"
+></A
+>4.5.4. Your vendor has not defined Fcntl macro O_NOINHERIT</H2
+><P
+>This is caused by a bug in the version of
+      <SPAN
+CLASS="productname"
+>File::Temp</SPAN
+> that is distributed with perl
+      5.6.0. Many minor variations of this error have been reported. Examples
+      can be found in <A
+HREF="#trouble-filetemp-errors"
+>Figure 4-1</A
+>.
+      </P
+><DIV
+CLASS="figure"
+><A
+NAME="trouble-filetemp-errors"
+></A
+><P
+><B
+>Figure 4-1. Other File::Temp error messages</B
+></P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="programlisting"
+>&#13;Your vendor has not defined Fcntl macro O_NOINHERIT, used 
+at /usr/lib/perl5/site_perl/5.6.0/File/Temp.pm line 208.
+
+Your vendor has not defined Fcntl macro O_EXLOCK, used 
+at /usr/lib/perl5/site_perl/5.6.0/File/Temp.pm line 210.
+
+Your vendor has not defined Fcntl macro O_TEMPORARY, used 
+at /usr/lib/perl5/site_perl/5.6.0/File/Temp.pm line 233.
+        </PRE
+></FONT
+></TD
+></TR
+></TABLE
+></DIV
+><P
+>Numerous people have reported that upgrading to version 5.6.1
+      or higher solved the problem for them. A less involved fix is to apply
+      the patch in <A
+HREF="#trouble-filetemp-patch"
+>Figure 4-2</A
+>. The patch is also
+      available as a <A
+HREF="../xml/filetemp.patch"
+TARGET="_top"
+>patch file</A
+>.
+      </P
+><DIV
+CLASS="figure"
+><A
+NAME="trouble-filetemp-patch"
+></A
+><P
+><B
+>Figure 4-2. Patch for File::Temp in Perl 5.6.0</B
+></P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="programlisting"
+>&#13;--- File/Temp.pm.orig   Thu Feb  6 16:26:00 2003
++++ File/Temp.pm        Thu Feb  6 16:26:23 2003
+@@ -205,6 +205,7 @@
+     # eg CGI::Carp
+     local $SIG{__DIE__} = sub {};
+     local $SIG{__WARN__} = sub {};
++    local *CORE::GLOBAL::die = sub {};
+     $bit = &#38;$func();
+     1;
+   };
+@@ -226,6 +227,7 @@
+     # eg CGI::Carp
+     local $SIG{__DIE__} = sub {};
+     local $SIG{__WARN__} = sub {};
++    local *CORE::GLOBAL::die = sub {};
+     $bit = &#38;$func();
+     1;
+   };
+        </PRE
+></FONT
+></TD
+></TR
+></TABLE
+></DIV
 ></DIV
 ></DIV
 ></DIV
@@ -7435,7 +7331,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN1443"
+NAME="AEN1425"
 ></A
 >5.7.1. What to Edit</H2
 ><P
@@ -7550,7 +7446,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN1462"
+NAME="AEN1444"
 ></A
 >5.7.2. How To Edit Templates</H2
 ><P
@@ -7632,7 +7528,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN1472"
+NAME="AEN1454"
 ></A
 >5.7.3. Template Formats</H2
 ><P
@@ -7694,7 +7590,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN1485"
+NAME="AEN1467"
 ></A
 >5.7.4. Particular Templates</H2
 ><P
@@ -8747,12 +8643,24 @@ HREF="#faq-general-mysql"
 ><DT
 >A.1.9. <A
 HREF="#faq-general-bonsaitools"
->&#13;	    Why do the scripts say "/usr/bonsaitools/bin/perl" instead of
-	    "/usr/bin/perl" or something else?
+>&#13;	    What is <TT
+CLASS="filename"
+>/usr/bonsaitools/bin/perl</TT
+>?
 	  </A
 ></DT
 ><DT
 >A.1.10. <A
+HREF="#faq-general-perlpath"
+>&#13;            My perl is not located at <TT
+CLASS="filename"
+>/usr/bin/perl</TT
+>, is
+            there an easy way to change it everywhere it needs to be changed?
+          </A
+></DT
+><DT
+>A.1.11. <A
 HREF="#faq-general-cookie"
 >&#13;	    Is there an easy way to change the Bugzilla cookie name?
 	  </A
@@ -9534,8 +9442,10 @@ NAME="faq-general-bonsaitools"
 ><B
 >A.1.9. </B
 >
-	    Why do the scripts say "/usr/bonsaitools/bin/perl" instead of
-	    "/usr/bin/perl" or something else?
+	    What is <TT
+CLASS="filename"
+>/usr/bonsaitools/bin/perl</TT
+>?
 	  </P
 ></DIV
 ><DIV
@@ -9544,16 +9454,72 @@ CLASS="answer"
 ><B
 > </B
 >
-	     Mozilla.org uses /usr/bonsaitools/bin/perl, because originally
-       Terry wanted a place to put a version of Perl and other tools 
-       that was strictly under his control. 
-    </P
+            Bugzilla used to have the path to perl on the shebang line set to
+            <TT
+CLASS="filename"
+>/usr/bonsaitools/bin/perl</TT
+> because when
+            Terry first started writing the code for mozilla.org he needed a
+            version of Perl and other tools that were completely under his
+            control.  This location was abandoned for the 2.18 release in favor
+            of the more sensible <TT
+CLASS="filename"
+>/usr/bin/perl</TT
+>.  If you
+            installed an older verion of Bugzilla and created the symlink we
+            suggested, you can remove it now (provided that you don't have
+            anything else, such as Bonsai, using it and you don't intend to
+            reinstall an older version of Bugzilla).
+          </P
+></DIV
+></DIV
+><DIV
+CLASS="qandaentry"
+><DIV
+CLASS="question"
 ><P
->&#13;		  We always recommend that, if possible, you keep the path
-		  as /usr/bonsaitools/bin/perl, and simply add symlink.  
-      This will make upgrading
-		  your Bugzilla much easier in the future.
-		</P
+><A
+NAME="faq-general-perlpath"
+></A
+><B
+>A.1.10. </B
+>
+            My perl is not located at <TT
+CLASS="filename"
+>/usr/bin/perl</TT
+>, is
+            there an easy way to change it everywhere it needs to be changed?
+          </P
+></DIV
+><DIV
+CLASS="answer"
+><P
+><B
+> </B
+>
+            Yes, the following bit of perl magic will change all the shebang
+            lines.  Be sure to change <TT
+CLASS="filename"
+>/usr/local/bin/perl</TT
+>
+            to your path to the perl binary.
+          </P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="programlisting"
+>&#13;perl -pi -e 's@#\!/usr/bin/perl@#\!/usr/local/bin/perl@' *cgi *pl
+          </PRE
+></FONT
+></TD
+></TR
+></TABLE
 ></DIV
 ></DIV
 ><DIV
@@ -9565,7 +9531,7 @@ CLASS="question"
 NAME="faq-general-cookie"
 ></A
 ><B
->A.1.10. </B
+>A.1.11. </B
 >
 	    Is there an easy way to change the Bugzilla cookie name?
 	  </P
@@ -9979,12 +9945,12 @@ CLASS="computeroutput"
 CLASS="filename"
 >importxml.pl</TT
 > which is intended to be
-            used for importing the data generated by <TT
+            used for importing the data generated by the XML ctype of
+            <TT
 CLASS="filename"
->xml.cgi</TT
->
-            in association with bug moving. Any other use is left as an
-            exercise for the user.
+>show_bug.cgi</TT
+> in association with bug moving.
+            Any other use is left as an exercise for the user.
           </P
 ><P
 >&#13;            There are also scripts included in the <TT
@@ -10020,9 +9986,9 @@ CLASS="answer"
 >
             Yes.  For more information including available translated templates,
             see <A
-HREF="http://www.bugzilla.org/download.html"
+HREF="http://www.bugzilla.org/download.html#localizations"
 TARGET="_top"
->http://www.bugzilla.org/download.html</A
+>http://www.bugzilla.org/download.html#localizations</A
 >.
             The admin interfaces are still not included in these translated
             templates and is therefore still English only.  Also, there may be
@@ -10442,13 +10408,14 @@ CLASS="answer"
 > </B
 >
 	    Try Klaas Freitag's excellent patch for "whineatassigned" functionality.
-	    You can find it at<A
-HREF=" http://bugzilla.mozilla.org/show_bug.cgi?id=6679"
+	    You can find it at <A
+HREF="http://bugzilla.mozilla.org/show_bug.cgi?id=6679"
 TARGET="_top"
->&#13;	      http://bugzilla.mozilla.org/show_bug.cgi?id=6679</A
+>http://bugzilla.mozilla.org/show_bug.cgi?id=6679</A
 >. This
 	    patch is against an older version of Bugzilla, so you must apply
 	    the diffs manually.
+            
 	  </P
 ></DIV
 ></DIV
@@ -10476,7 +10443,7 @@ CLASS="answer"
 	    You can call bug_email.pl directly from your aliases file, with
 	    an entry like this:
 	    <A
-NAME="AEN1894"
+NAME="AEN1886"
 ></A
 ><BLOCKQUOTE
 CLASS="BLOCKQUOTE"
@@ -10920,7 +10887,7 @@ CLASS="answer"
 ><P
 >&#13;	    Microsoft has some advice on this matter, as well:
 	    <A
-NAME="AEN1977"
+NAME="AEN1969"
 ></A
 ><BLOCKQUOTE
 CLASS="BLOCKQUOTE"
@@ -11279,7 +11246,7 @@ TARGET="_top"
 	    This list includes bugs for the 2.18 release that have already
 	    been fixed and checked into CVS.  Please consult the
 	    <A
-HREF="http://www.mozilla.org/projects/bugzilla/"
+HREF="http://www.bugzilla.org/"
 TARGET="_top"
 >&#13;	      Bugzilla Project Page</A
 > for details on how to
@@ -11550,7 +11517,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN2099"
+NAME="AEN2091"
 ></A
 >B.2.1. Bugzilla Database Basics</H2
 ><P
@@ -11666,7 +11633,7 @@ CLASS="section"
 ><HR><H3
 CLASS="section"
 ><A
-NAME="AEN2126"
+NAME="AEN2118"
 ></A
 >B.2.1.1. Bugzilla Database Tables</H3
 ><P
@@ -12234,7 +12201,7 @@ NAME="gfdl"
 ><P
 >Version 1.1, March 2000</P
 ><A
-NAME="AEN2214"
+NAME="AEN2206"
 ></A
 ><BLOCKQUOTE
 CLASS="BLOCKQUOTE"
@@ -12699,7 +12666,7 @@ NAME="gfdl-howto"
     of the License in the document and put the following copyright and
     license notices just after the title page:</P
 ><A
-NAME="AEN2304"
+NAME="AEN2296"
 ></A
 ><BLOCKQUOTE
 CLASS="BLOCKQUOTE"
@@ -12736,7 +12703,7 @@ CLASS="glossdiv"
 ><H1
 CLASS="glossdiv"
 ><A
-NAME="AEN2309"
+NAME="AEN2301"
 ></A
 >0-9, high ascii</H1
 ><DL
@@ -12978,7 +12945,7 @@ CLASS="glossdiv"
 ><A
 NAME="gloss-c"
 ></A
-></H1
+>C</H1
 ><DL
 ><DT
 ><A
@@ -13207,22 +13174,52 @@ TARGET="_top"
         </P
 ><P
 ></P
-><UL
-><LI
-><P
+><DIV
+CLASS="variablelist"
+><DL
+><DT
 ><A
-HREF="http://www.mysql.com/doc/P/r/Privilege_system.html"
+HREF="http://www.mysql.com/doc/en/Backup.html"
 TARGET="_top"
->MySQL
-            Privilege System</A
-> - Much more detailed information about
-            the suggestions in <A
+>Backup</A
+></DT
+><DD
+><P
+>Methods for backing up your Bugzilla database.
+              </P
+></DD
+><DT
+><A
+HREF="http://www.mysql.com/doc/en/Option_files.html"
+TARGET="_top"
+>Option Files</A
+></DT
+><DD
+><P
+>Information about how to configure MySQL using
+              <TT
+CLASS="filename"
+>my.cnf</TT
+>.
+              </P
+></DD
+><DT
+><A
+HREF="http://www.mysql.com/doc/en/Privilege_system.html"
+TARGET="_top"
+>Privilege System</A
+></DT
+><DD
+><P
+>Much more detailed information about the suggestions in
+              <A
 HREF="#security-mysql"
 >Section 5.6.2</A
 >.
-            </P
-></LI
-></UL
+              </P
+></DD
+></DL
+></DIV
 ></DD
 ></DL
 ></DIV
@@ -13473,16 +13470,70 @@ NAME="gloss-z"
 ><DL
 ><DT
 ><A
-NAME="zarro-boogs-found"
+NAME="gloss-zarro"
 ></A
 ><B
 >Zarro Boogs Found</B
 ></DT
 ><DD
 ><P
->This is the cryptic response sent by Bugzilla when a query
-        returned no results. It is just a goofy way of saying "Zero Bugs
-        Found".</P
+>This is just a goofy way of saying that there were no bugs
+        found matching your query. When asked to explain this message,
+        Terry had the following to say:
+        </P
+><A
+NAME="AEN2515"
+></A
+><TABLE
+BORDER="0"
+WIDTH="100%"
+CELLSPACING="0"
+CELLPADDING="0"
+CLASS="BLOCKQUOTE"
+><TR
+><TD
+WIDTH="10%"
+VALIGN="TOP"
+>&nbsp;</TD
+><TD
+WIDTH="80%"
+VALIGN="TOP"
+><P
+>I've been asked to explain this ... way back when, when
+          Netscape released version 4.0 of its browser, we had a release
+          party.  Naturally, there had been a big push to try and fix every
+          known bug before the release. Naturally, that hadn't actually
+          happened.  (This is not unique to Netscape or to 4.0; the same thing
+          has happened with every software project I've ever seen.)  Anyway,
+          at the release party, T-shirts were handed out that said something
+          like "Netscape 4.0: Zarro Boogs". Just like the software, the
+          T-shirt had no known bugs.  Uh-huh.
+          </P
+><P
+>So, when you query for a list of bugs, and it gets no results,
+          you can think of this as a friendly reminder.  Of *course* there are
+          bugs matching your query, they just aren't in the bugsystem yet...
+          </P
+></TD
+><TD
+WIDTH="10%"
+VALIGN="TOP"
+>&nbsp;</TD
+></TR
+><TR
+><TD
+COLSPAN="2"
+ALIGN="RIGHT"
+VALIGN="TOP"
+>--<SPAN
+CLASS="attribution"
+>Terry Weissman</SPAN
+></TD
+><TD
+WIDTH="10%"
+>&nbsp;</TD
+></TR
+></TABLE
 ></DD
 ></DL
 ></DIV
