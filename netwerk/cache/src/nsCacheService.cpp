@@ -198,10 +198,7 @@ nsCacheService::CreateRequest(nsCacheSession *   session,
         return NS_ERROR_OUT_OF_MEMORY;
     
     // create request
-    *request = new  nsCacheRequest(key, listener, accessRequested, 
-                                   session->StreamBased(),
-                                   session->StoragePolicy());
-    
+    *request = new  nsCacheRequest(key, listener, accessRequested, session);    
     if (!*request) {
         delete key;
         return NS_ERROR_OUT_OF_MEMORY;
@@ -307,7 +304,10 @@ nsCacheService::ProcessRequest(nsCacheRequest * request,
 
     if (request->mListener) {  // Asynchronous
         // call listener to report error or descriptor
-        rv = NotifyListener(request, descriptor, accessGranted, rv);
+        nsresult rv2 = NotifyListener(request, descriptor, accessGranted, rv);
+        if (NS_FAILED(rv2) && NS_SUCCEEDED(rv)) {
+            rv = rv2;  // trigger delete request
+        }
     } else {        // Synchronous
         NS_IF_ADDREF(*result = descriptor);
     }
@@ -334,7 +334,7 @@ nsCacheService::OpenCacheEntry(nsCacheSession *           session,
     rv = ProcessRequest(request, result);
 
     // delete requests that have completed
-    if (!listener || (rv != NS_ERROR_CACHE_WAIT_FOR_VALIDATION))
+    if (!(listener && (rv == NS_ERROR_CACHE_WAIT_FOR_VALIDATION)))
         delete request;
 
     return rv;
@@ -370,17 +370,13 @@ nsCacheService::ActivateEntry(nsCacheRequest * request,
     if (entry &&
         ((request->AccessRequested() == nsICache::ACCESS_WRITE) ||
          (entry->mExpirationTime &&
-          entry->mExpirationTime < ConvertPRTimeToSeconds(PR_Now()))))
-        // XXX beginning to look a lot like lisp
+          entry->mExpirationTime < ConvertPRTimeToSeconds(PR_Now()) &&
+          request->WillDoomEntriesIfExpired())))
     {
         // this is FORCE-WRITE request or the entry has expired
         rv = DoomEntry_Internal(entry);
         if (NS_FAILED(rv)) {
             // XXX what to do?  Increment FailedDooms counter?
-        }
-
-        if (entry->IsNotInUse()) {
-            DeactivateEntry(entry); // tell device to get rid of it
         }
         entry = nsnull;
     }
@@ -485,29 +481,25 @@ nsCacheService::DoomEntry_Internal(nsCacheEntry * entry)
     entry->MarkDoomed();
 
     nsCacheDevice * device = entry->CacheDevice();
-    if (device) {
-        rv = device->DoomEntry(entry);
-        // XXX check rv, but what can we really do...
-    }
+    if (device)  device->DoomEntry(entry);
 
     if (entry->IsActive()) {
         // remove from active entries
-        rv = mActiveEntries.RemoveEntry(entry);
+        mActiveEntries.RemoveEntry(entry);
         entry->MarkInactive();
-        if (NS_FAILED(rv)) {
-            // XXX what to do
-        }
-    }
+     }
 
-    // XXX check if there are descriptors still queued
     // put on doom list to wait for descriptors to close
-    NS_ASSERTION(PR_CLIST_IS_EMPTY(entry),
-                 "doomed entry still on device list");
-
+    NS_ASSERTION(PR_CLIST_IS_EMPTY(entry), "doomed entry still on device list");
     PR_APPEND_LINK(entry, &mDoomedEntries);
 
-    // XXX reprocess pending requests
+    // tell pending requests to get on with their lives...
     rv = ProcessPendingRequests(entry);
+    
+    // All requests have been removed, but there may still be open descriptors
+    if (entry->IsNotInUse()) {
+        DeactivateEntry(entry); // tell device to get rid of it
+    }
     return rv;
 }
 
@@ -572,9 +564,8 @@ nsCacheService::DeactivateEntry(nsCacheEntry * entry)
     } else {
         if (entry->IsActive()) {
             // remove from active entries
-            rv = mActiveEntries.RemoveEntry(entry);
+            mActiveEntries.RemoveEntry(entry);
             entry->MarkInactive();
-            NS_ASSERTION(NS_SUCCEEDED(rv),"failed to remove an active entry !?!");
         } else {
             // XXX bad state
         }
@@ -626,6 +617,8 @@ nsCacheService::ProcessPendingRequests(nsCacheEntry * entry)
                 rv = ProcessRequest(request, nsnull);
                 if (rv == NS_ERROR_CACHE_WAIT_FOR_VALIDATION)
                     rv = NS_OK;
+                else
+                    delete request;
 
                 if (NS_FAILED(rv)) {
                     // XXX what to do?
@@ -637,10 +630,13 @@ nsCacheService::ProcessPendingRequests(nsCacheEntry * entry)
 
                 // entry->CreateDescriptor dequeues request, and queues descriptor
                 nsCOMPtr<nsICacheEntryDescriptor> descriptor;
-                rv = entry->CreateDescriptor(request, accessGranted, getter_AddRefs(descriptor));
+                rv = entry->CreateDescriptor(request,
+                                             accessGranted,
+                                             getter_AddRefs(descriptor));
                 
                 // post call to listener to report error or descriptor
                 rv = NotifyListener(request, descriptor, accessGranted, rv);
+                delete request;
                 if (NS_FAILED(rv)) {
                     // XXX what to do?
                 }
