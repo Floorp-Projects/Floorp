@@ -3877,9 +3877,11 @@ function asyncOpenWebPanel(event)
            (!target || target == "_content" || target  == "_main")) 
          // IE uses _main, SeaMonkey uses _content, we support both
        {
+         if (!linkNode.href) return true;
+         if (linkNode.getAttribute("onclick")) return true;
          var url = getShortcutOrURI(linkNode.href);
          if (!url)
-           return false;
+           return true;
          markLinkVisited(linkNode.href, linkNode);
          loadURI(url);
          event.preventDefault();
