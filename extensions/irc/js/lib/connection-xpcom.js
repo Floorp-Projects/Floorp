@@ -140,7 +140,12 @@ function bc_connect(host, port, bind, tcp_flag, isSecure, observer)
       getService(Components.interfaces.nsIIOService);
     var spec = "irc://" + host + ':' + port;
     var uri = ios.newURI(spec,null,null);
-    var info = pps.examineForProxy(uri);
+    // As of 2005-03-25, 'examineForProxy' was replaced by 'resolve'.
+    var info = null;
+    if ("resolve" in pps)
+        info = pps.resolve(uri, 0);
+    else if ("examineForProxy" in pps)
+        info = pps.examineForProxy(uri);
 
     if (jsenv.HAS_STREAM_PROVIDER)
     {
