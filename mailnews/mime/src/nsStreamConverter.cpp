@@ -588,16 +588,6 @@ NS_IMETHODIMP nsStreamConverter::Init(nsIURI *aURI, nsIStreamListener * aOutList
   //    return rv;
   
   // Set system principal for this document, which will be dynamically generated 
-  NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
-    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-  if (NS_FAILED(rv)) 
-    return rv;
-  nsCOMPtr<nsIPrincipal> principal;
-  if (NS_FAILED(rv = securityManager->GetSystemPrincipal(getter_AddRefs(principal))))
-    return rv;
-  nsCOMPtr<nsISupports> owner = do_QueryInterface(principal);
-  if (NS_FAILED(rv = aChannel->SetOwner(owner)))
-    return rv;
   
   // We will first find an appropriate emitter in the repository that supports 
   // the requested output format...note, the special exceptions are nsMimeMessageDraftOrTemplate
