@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /*
  * The contents of this file are subject to the Mozilla Public License
  * Version 1.1 (the "MPL"); you may not use this file except in
@@ -41,6 +40,7 @@
 #include "nsIRegistry.h"
 #include "nsXPIDLString.h"
 #include "nsIScriptSecurityManager.h"
+#include "nsIObserverService.h"
 
 // For reporting errors with the console service
 #include "nsIScriptError.h"
@@ -412,13 +412,27 @@ nsresult
 mozJSComponentLoader::SetRegistryInfo(const char *registryLocation,
                                       nsIFile *component)
 {
+    nsresult rv;
     if (!mRegistry.get())
         return NS_OK;           // silent failure
 
-    nsresult rv;
+    PRUint32 length = strlen(registryLocation);
+    char* eRegistryLocation;
+    rv = mRegistry->EscapeKey((PRUint8*)registryLocation, 1, &length, (PRUint8**)&eRegistryLocation);
+    if (rv != NS_OK)
+    {
+        return rv;
+    }
+    if (eRegistryLocation == nsnull)    //  No escaping required
+    eRegistryLocation = (char*)registryLocation;
+
+
     nsRegistryKey key;
 
-    rv = mRegistry->AddSubtreeRaw(mXPCOMKey, registryLocation, &key);
+    rv = mRegistry->AddSubtreeRaw(mXPCOMKey, eRegistryLocation, &key);
+    if (registryLocation != eRegistryLocation)
+	nsAllocator::Free(eRegistryLocation);
+
     if (NS_FAILED(rv))
         return rv;
 
@@ -447,8 +461,29 @@ mozJSComponentLoader::RemoveRegistryInfo(const char *registryLocation)
     if (!mRegistry.get())
         return NS_OK;           // silent failure
 
-    return mRegistry->RemoveSubtree(mXPCOMKey, registryLocation);
+    nsresult rv;
+    if (!mRegistry.get())
+        return NS_OK;           // silent failure
+
+    PRUint32 length = strlen(registryLocation);
+    char* eRegistryLocation;
+    rv = mRegistry->EscapeKey((PRUint8*)registryLocation, 1, &length, (PRUint8**)&eRegistryLocation);
+    if (rv != NS_OK)
+    {
+        return rv;
+    }
+    if (eRegistryLocation == nsnull)    //  No escaping required
+    eRegistryLocation = (char*)registryLocation;
+
+
+    rv = mRegistry->RemoveSubtree(mXPCOMKey, eRegistryLocation);
+ 	
+    if (registryLocation != eRegistryLocation)
+	    nsAllocator::Free(eRegistryLocation);
+
+    return rv;
 }
+
 
 PRBool
 mozJSComponentLoader::HasChanged(const char *registryLocation,
@@ -459,8 +494,22 @@ mozJSComponentLoader::HasChanged(const char *registryLocation,
     if (!mRegistry)
         return PR_TRUE;
 
+    nsresult rv;
+    PRUint32 length = strlen(registryLocation);
+    char* eRegistryLocation;
+    rv = mRegistry->EscapeKey((PRUint8*)registryLocation, 1, &length, (PRUint8**)&eRegistryLocation);
+    if (rv != NS_OK)
+    {
+        return rv;
+    }
+    if (eRegistryLocation == nsnull)    //  No escaping required
+        eRegistryLocation = (char*)registryLocation;
+
     nsRegistryKey key;
-    if (NS_FAILED(mRegistry->GetSubtreeRaw(mXPCOMKey, registryLocation, &key)))
+    int r = NS_FAILED(mRegistry->GetSubtreeRaw(mXPCOMKey, eRegistryLocation, &key));
+    if (registryLocation != eRegistryLocation)
+	nsAllocator::Free(eRegistryLocation);
+    if (r)
         return PR_TRUE;
 
     /* check modification date */
@@ -481,6 +530,14 @@ mozJSComponentLoader::HasChanged(const char *registryLocation,
 
     return PR_FALSE;
 }
+
+static const PRUnichar sJSComponentReg[] = {'R','e','g','i','s','t','e','r',
+    'i','n','g',' ','J', 'S', ' ', 'c', 'o', 'm', 'p', 'o',
+    'n', 'e', 'n', 't',':',' ', 0};
+
+static const PRUnichar sJSComponentUnreg[] = {'U','n','r','e','g','i','s','t','e','r',
+    'i','n','g',' ','J', 'S', ' ', 'c', 'o', 'm', 'p', 'o',
+    'n', 'e', 'n', 't',':',' ', 0};
 
 NS_IMETHODIMP
 mozJSComponentLoader::AutoRegisterComponent(PRInt32 when,
@@ -515,6 +572,22 @@ mozJSComponentLoader::AutoRegisterComponent(PRInt32 when,
     fprintf(stderr, "mJCL: registering JS component %s\n",
             (const char *)leafName);
 #endif
+ 
+     // Notify observers, if any, of autoregistration work
+     NS_WITH_SERVICE (nsIObserverService, observerService, NS_OBSERVERSERVICE_PROGID, &rv);
+     if (NS_SUCCEEDED(rv))
+     {
+ 	nsIServiceManager *mgr;    // NO COMPtr as we dont release the service manager
+ 	rv = nsServiceManager::GetGlobalServiceManager(&mgr);
+ 	if (NS_SUCCEEDED(rv))
+ 	{
+ 	    nsAutoString topic;	//	This is quite ineficient, but is how it is
+ 				    //	done in every other example.
+ 	    topic.AssignWithConversion(NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID);
+ 	    (void) observerService->Notify(mgr, topic.GetUnicode(), sJSComponentReg);
+	}
+    }
+     
     rv = AttemptRegistration(component, PR_FALSE);
 #ifdef DEBUG_shaver
     if (NS_SUCCEEDED(rv))
@@ -556,6 +629,20 @@ mozJSComponentLoader::AutoUnregisterComponent(PRInt32 when,
     if (len < jsExtensionLen || // too short
         PL_strcasecmp(leafName + len - jsExtensionLen, jsExtension))
         return NS_OK;
+    // Notify observers, if any, of autoregistration work
+    NS_WITH_SERVICE (nsIObserverService, observerService, NS_OBSERVERSERVICE_PROGID, &rv);
+    if (NS_SUCCEEDED(rv))
+    {
+	nsIServiceManager *mgr;    // NO COMPtr as we dont release the service manager
+	rv = nsServiceManager::GetGlobalServiceManager(&mgr);
+	if (NS_SUCCEEDED(rv))
+	{
+	    nsAutoString topic;	//	This is quite ineficient, but is how it is
+				    //	done in every other example.
+	    topic.AssignWithConversion(NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID);
+	    (void) observerService->Notify(mgr, topic.GetUnicode(), sJSComponentUnreg);
+	}
+    }
 
     rv = UnregisterComponent(component);
 #ifdef DEBUG_dp
@@ -1132,3 +1219,4 @@ extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *compMgr,
                           sizeof(components) / sizeof(components[0]),
                           components, result);
 }
+
