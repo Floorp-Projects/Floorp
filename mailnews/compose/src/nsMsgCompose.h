@@ -107,12 +107,7 @@ class nsMsgCompose : public nsIMsgCompose
   nsFileSpec                    *mSigFileSpec;
   nsFileSpec                    *mTempComposeFileSpec;
 
-  /////// RICHIE - this is a hack for the old quoting and should go away soon!
-  void                          HackToGetBody(PRInt32 what); //Temporary
   PRInt32                       mWhatHolder;
-  PRBool                        UsingOldQuotingHack(const char *compString);
-  PRBool                        mUseOldQuotingHack;
-  /////// 
 
   nsresult                      ProcessSignature(nsOutputFileStream *aAppendFileStream); // for setting up the users compose window environment
   nsresult                      BuildQuotedMessageAndSignature(void);                    // for setting up the users compose window environment

@@ -53,35 +53,11 @@ static NS_DEFINE_CID(kMsgQuoteCID, NS_MSGQUOTE_CID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kHeaderParserCID, NS_MSGHEADERPARSER_CID);
 
-// RICHIE
-// This is a temp hack and will go away soon!
-//
-PRBool
-nsMsgCompose::UsingOldQuotingHack(const char *compString)
-{
-  nsresult rv;
-
-  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
-  if (NS_SUCCEEDED(rv) && prefs) 
-    rv = prefs->GetBoolPref("mail.old_quoting", &mUseOldQuotingHack);
-
-  if (compString)
-  {
-    if (PL_strncasecmp(compString, "mailbox_message:", 16) != 0)
-    {
-      mUseOldQuotingHack = PR_TRUE;
-    }
-  }
-
-  return mUseOldQuotingHack;
-}
-
 nsMsgCompose::nsMsgCompose()
 {
 	mTempComposeFileSpec = nsnull;
 	mQuotingToFollow = PR_FALSE;
 	mSigFileSpec = nsnull;
-	mUseOldQuotingHack = PR_FALSE;  // RICHIE - hack for old quoting
 	mWhatHolder = 1;                // RICHIE - hack for old quoting
 	mQuoteURI = "";
 	mDocumentListener = nsnull;
@@ -992,17 +968,6 @@ nsMsgCompose::QuoteOriginalMessage(const PRUnichar *originalMsgURI, PRInt32 what
   nsString    tmpURI(originalMsgURI);
   char        *compString = tmpURI.ToNewCString();
 
-  // RICHIE - this will get removed when we 
-  UsingOldQuotingHack(compString);
-  PR_FREEIF(compString);
-
-  if (mUseOldQuotingHack)
-  {
-  	printf("nsMsgCompose: using old quoting function!");
-    HackToGetBody(what);
-    return NS_OK;
-  }
-
   // Create a mime parser (nsIStreamConverter)!
   rv = nsComponentManager::CreateInstance(kMsgQuoteCID, 
                                           NULL, nsCOMTypeInfo<nsIMsgQuote>::GetIID(), 
@@ -1025,101 +990,6 @@ nsMsgCompose::QuoteOriginalMessage(const PRUnichar *originalMsgURI, PRInt32 what
 
   rv = mQuote->QuoteMessage(originalMsgURI, what != 1, mQuoteStreamListener);
   return rv;
-}
-
-void nsMsgCompose::HackToGetBody(PRInt32 what)
-{
-  char *buffer = (char *) PR_CALLOC(16384);
-  if (buffer)
-  {
-	nsFileSpec fileSpec = nsSpecialSystemDirectory(nsSpecialSystemDirectory::OS_TemporaryDirectory);
-    fileSpec += TEMP_MESSAGE_IN;
-    
-    nsInputFileStream fileStream(fileSpec);
-    
-    nsString msgBody = (what == 2 && !m_composeHTML) ? "--------Original Message--------\r\n"  : ""; 
-    
-    // skip RFC822 header
-    while (!fileStream.eof() && !fileStream.failed() &&
-      fileStream.is_open())
-    {
-      fileStream.readline(buffer, 1024);
-      if (*buffer == 0)
-        break;
-    }
-    // copy message body
-    while (!fileStream.eof() && !fileStream.failed() &&
-      fileStream.is_open())
-    {
-      fileStream.readline(buffer, 1024);
-      if (what == 1 && ! m_composeHTML)
-        msgBody += "> ";
-      msgBody += buffer;
-      msgBody += CRLF;
-    }
-    
-    if (m_composeHTML)
-    {
-      nsString lowerMsgBody (msgBody);
-      lowerMsgBody.ToLowerCase();
-      
-      PRInt32 startBodyOffset;
-      PRInt32 endBodyOffset = -1;
-      PRInt32 offset;
-      startBodyOffset = lowerMsgBody.Find("<html>");
-      if (startBodyOffset != -1)	//it's an HTML body
-      {
-        //Does it have a <body> tag?
-        offset = lowerMsgBody.Find("<body");
-        if (offset != -1)
-        {
-          offset = lowerMsgBody.FindChar('>', PR_FALSE,offset);
-          if (offset != -1)
-          {
-            startBodyOffset = offset + 1;
-        				endBodyOffset = lowerMsgBody.RFind("</body>");
-          }
-        }
-        if (endBodyOffset == -1)
-          endBodyOffset = lowerMsgBody.RFind("</html>");        			
-      }
-      
-      if (startBodyOffset == -1)
-        startBodyOffset = 0;
-    		if (endBodyOffset == -1)
-          endBodyOffset = lowerMsgBody.Length();
-        
-        msgBody.Insert(CRLF, endBodyOffset);
-        if (startBodyOffset == 0)
-        {
-          msgBody.Insert("</html>", endBodyOffset);
-          msgBody.Insert(CRLF, endBodyOffset);
-        }
-        msgBody.Insert("</blockquote>", endBodyOffset);
-        msgBody.Insert(CRLF, endBodyOffset);
-        
-        msgBody.Insert(CRLF, startBodyOffset);
-        msgBody.Insert("<blockquote TYPE=CITE>", startBodyOffset);
-        msgBody.Insert(CRLF, startBodyOffset);
-        if (startBodyOffset == 0)
-        {
-          msgBody.Insert("<html>", startBodyOffset);
-          msgBody.Insert(CRLF, startBodyOffset);
-          msgBody.Insert("<!doctype html public \"-//w3c//dtd html 4.0 transitional//en\">", startBodyOffset);
-        }
-    }
-    else
-    {
-      //ducarroz: today, we are not converting HTML to plain text if needed!
-    }
-    
-    // m_compFields->SetBody(msgBody.ToNewCString());
-    // SetBody() strdup()'s cmsgBody.
-    m_compFields->SetBody(nsAutoCString(msgBody));
-    PR_Free(buffer);
-  
-    ProcessSignature(nsnull);
-  }
 }
 
 //CleanUpRecipient will remove un-necesary "<>" when a recipient as an address without name
@@ -1414,25 +1284,6 @@ nsMsgDocumentStateListener::NotifyDocumentCreated(void)
     delete mComposeObj->mTempComposeFileSpec;
     mComposeObj->mTempComposeFileSpec = nsnull;
   }
-
-  // RICHIE - hack! This is only if we are using the old
-  // quoting hack
-  if (mComposeObj->mUseOldQuotingHack)
-  {
-    PRUnichar   *bod;
-
-    nsIMsgCompFields *compFields;
-    mComposeObj->GetCompFields(&compFields); //GetCompFields will addref, you need to release when your are done with it
-	if (compFields)
-	{
-    	compFields->GetBody(&bod);
-    	mComposeObj->LoadAsQuote(nsString(bod));
-    	PR_FREEIF(bod);
-    	NS_RELEASE(compFields);
-    }
-  }
-  // RICHIE - hack! This is only if we are using the old
-  // quoting hack
 
   return NS_OK;
 }
