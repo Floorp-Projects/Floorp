@@ -40,6 +40,11 @@
 #include "cert.h"
 #include "certxutl.h"
 
+#define NSS_3_4_CODE
+#include "nsspki.h"
+#include "pkit.h"
+#include "pkinss3hack.h"
+
 /*
  * Find all user certificates that match the given criteria.
  * 
@@ -940,6 +945,7 @@ CERTCertificateList *
 CERT_CertChainFromCert(CERTCertificate *cert, SECCertUsage usage,
 		       PRBool includeRoot)
 {
+#ifndef NSS_SOFTOKEN_MODULE
     CERTCertificateList *chain = NULL;
     CERTCertificate *c;
     SECItem *p;
@@ -1031,6 +1037,56 @@ loser:
     }
 
     return NULL;
+#else
+    CERTCertificateList *chain = NULL;
+    NSSCertificate **stanChain;
+    NSSCertificate *stanCert;
+    PRArenaPool *arena;
+    int i, len;
+
+    stanCert = STAN_GetNSSCertificate(cert);
+    /* XXX usage */
+    stanChain = NSSCertificate_BuildChain(stanCert, NULL, NULL, NULL, NULL,
+                                                    0, NULL);
+    if (!stanChain) {
+	return NULL;
+    }
+
+    len = 0;
+    stanCert = stanChain[0];
+    while (stanCert) {
+	stanCert = stanChain[++len];
+    }
+
+    arena = PORT_NewArena(4096);
+    if (arena == NULL) {
+	/* XXX destroy certs in chain */
+	nss_ZFreeIf(stanChain);
+    }
+
+    chain = (CERTCertificateList *)PORT_ArenaAlloc(arena, 
+                                                 sizeof(CERTCertificateList));
+    chain->certs = (SECItem*)PORT_ArenaAlloc(arena, len * sizeof(SECItem));
+    i = 0;
+    stanCert = stanChain[i];
+    while (stanCert) {
+	SECItem derCert;
+	derCert.len = (unsigned int)stanCert->encoding.size;
+	derCert.data = (unsigned char *)stanCert->encoding.data;
+	SECITEM_CopyItem(arena, &chain->certs[i], &derCert);
+	/* XXX CERT_DestroyCertificate(node->cert); */
+	stanCert = stanChain[++i];
+    }
+    if ( !includeRoot && len > 1) {
+	chain->len = len - 1;
+    } else {
+	chain->len = len;
+    }
+    
+    chain->arena = arena;
+    nss_ZFreeIf(stanChain);
+    return chain;
+#endif
 }
 
 /* Builds a CERTCertificateList holding just one DER-encoded cert, namely
