@@ -99,7 +99,7 @@ protected:
 	static nsIRDFDataSource			*mInner;
 	static nsCOMPtr<nsIRDFDataSource>	mLocalstore;
 	static nsCOMPtr<nsISupportsArray>	mUpdateArray;
-	static nsCOMPtr<nsITimer>		mTimer;
+	nsCOMPtr<nsITimer>		mTimer;
 	static nsCOMPtr<nsILoadGroup>		mBackgroundLoadGroup;
 	static nsCOMPtr<nsILoadGroup>		mLoadGroup;
 	static nsCOMPtr<nsIRDFDataSource>	categoryDataSource;

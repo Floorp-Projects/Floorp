@@ -314,7 +314,6 @@ nsCOMPtr<nsIRDFDataSource>	InternetSearchDataSource::categoryDataSource;
 PRBool				InternetSearchDataSource::mEngineListBuilt;
 nsCOMPtr<nsILoadGroup>		InternetSearchDataSource::mBackgroundLoadGroup;
 nsCOMPtr<nsILoadGroup>		InternetSearchDataSource::mLoadGroup;
-nsCOMPtr<nsITimer>		InternetSearchDataSource::mTimer;
 nsCOMPtr<nsIPref>		InternetSearchDataSource::prefs;
 
 nsIRDFResource			*InternetSearchDataSource::kNC_SearchResult;
