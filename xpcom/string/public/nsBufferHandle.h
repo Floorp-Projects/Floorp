@@ -189,7 +189,7 @@ class nsSharedBufferHandle
     protected:
       enum
         {
-          kIsShared                       = 0x01000000, // one reason _not_ to set this is for a stack based handle that wants to express `NULL'-ness et al
+          kIsImmutable                    = 0x01000000, // if this is set, the buffer cannot be modified even if its refcount is 1
           kIsSingleAllocationWithBuffer   = 0x02000000, // handle and buffer are one piece, no separate deallocation is possible for the buffer
           kIsUserAllocator                = 0x04000000, // can't |delete|, call a hook instead
 
@@ -204,9 +204,9 @@ class nsSharedBufferHandle
     public:
       nsSharedBufferHandle( CharT* aDataStart, CharT* aDataEnd, size_type aStorageLength, PRBool isSingleAllocation )
           : nsBufferHandle<CharT>(aDataStart, aDataEnd),
+            mFlags(0),
             mStorageLength(aStorageLength)
         {
-          mFlags = kIsShared;
           if ( isSingleAllocation )
             mFlags |= kIsSingleAllocationWithBuffer;
         }
@@ -236,9 +236,10 @@ class nsSharedBufferHandle
         }
 
       PRBool
-      IsShared() const
+      IsMutable() const
         {
-          return get_refcount() > 1;
+          // (get_refcount() == 1) && !(GetImplementationFlags() & kIsImmutable)
+          return (mFlags & (kRefCountMask | kIsImmutable) == 1);
         }
 
       void StorageLength( size_type aNewStorageLength )
