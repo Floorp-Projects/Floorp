@@ -35,6 +35,7 @@
     }
 
 #include "nsINetDataCacheManager.h"
+#include "nsINetDataCache.h"
 #include "nsCOMPtr.h"
 
 class nsHashtable;
