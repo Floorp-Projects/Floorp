@@ -4098,7 +4098,6 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresShell*        aPresShell,
                                            aParentFrame,
                                            nsnull,
                                            nsCSSAnonBoxes::scrolledContent,
-                                           mDocument,
                                            PR_FALSE,
                                            scrollFrame,
                                            newScrollFrame);
@@ -4165,8 +4164,7 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresShell*        aPresShell,
 
   // Finish building the scrollframe
   if (isScrollable) {
-    FinishBuildingScrollFrame(aPresContext, aState, aDocElement,
-                              aParentFrame, contentFrame, styleContext);
+    FinishBuildingScrollFrame(aParentFrame, contentFrame);
     // primary is set above (to the contentFrame)
     
     aNewFrame = scrollFrame;
@@ -4453,7 +4451,6 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresShell*        aPresShell,
                                                   viewportFrame,
                                                   nsnull,
                                                   rootPseudo,
-                                                  mDocument,
                                                   PR_TRUE,
                                                   newFrame,
                                                   newScrollableFrame);
@@ -4518,12 +4515,7 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresShell*        aPresShell,
   
   if (!isPaginated || isPrintPreview) {
     if (isScrollable) {
-      FinishBuildingScrollFrame(aPresContext, 
-                                state,
-                                aDocElement,
-                                parentFrame,
-                                rootFrame,
-                                rootPseudoStyle);
+      FinishBuildingScrollFrame(parentFrame, rootFrame);
 
       // Don't set the root as the primary frame for aDocElement.  Its 
       // primary frame will be set in ConstructDocElementFrame.
@@ -6256,14 +6248,13 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
 
 already_AddRefed<nsStyleContext>
 nsCSSFrameConstructor::BeginBuildingScrollFrame(nsIPresShell*            aPresShell, 
-                                                nsPresContext*          aPresContext,
+                                                nsPresContext*           aPresContext,
                                                 nsFrameConstructorState& aState,
                                                 nsIContent*              aContent,
                                                 nsStyleContext*          aContentStyle,
                                                 nsIFrame*                aParentFrame,
                                                 nsIFrame*                aContentParentFrame,
                                                 nsIAtom*                 aScrolledPseudo,
-                                                nsIDocument*             aDocument,
                                                 PRBool                   aIsRoot,
                                                 nsIFrame*&               aNewFrame,
                                                 nsIFrame*&               aScrollableFrame)
@@ -6309,7 +6300,7 @@ nsCSSFrameConstructor::BeginBuildingScrollFrame(nsIPresShell*            aPresSh
                                              aContentParentFrame, PR_FALSE);
   }
 
-  InitGfxScrollFrame(aPresShell, aPresContext, aState, aContent, aDocument,
+  InitGfxScrollFrame(aPresShell, aPresContext, aState, aContent, mDocument,
                      aParentFrame, aContentParentFrame, contentStyle,
                      aIsRoot, gfxScrollFrame, anonymousItems);
 
@@ -6349,23 +6340,16 @@ nsCSSFrameConstructor::BeginBuildingScrollFrame(nsIPresShell*            aPresSh
   return aScrolledChildStyle;;
 }
 
-nsresult
-nsCSSFrameConstructor::FinishBuildingScrollFrame(nsPresContext*      aPresContext,
-                                             nsFrameConstructorState& aState,
-                                             nsIContent*              aContent,
-                                             nsIFrame*                aScrollFrame,
-                                             nsIFrame*                aScrolledFrame,
-                                             nsStyleContext*          aScrolledContentStyle)
-                                             
+void
+nsCSSFrameConstructor::FinishBuildingScrollFrame(nsIFrame* aScrollFrame,
+                                                 nsIFrame* aScrolledFrame)
 {
   // create a view
   // XXXbz should we be passing in a non-null aContentParentFrame?
   nsHTMLContainerFrame::CreateViewForFrame(aScrolledFrame, nsnull, PR_TRUE);
 
   // the the scroll frames child list
-  aScrollFrame->SetInitialChildList(aPresContext, nsnull, aScrolledFrame);
-
-  return NS_OK;
+  aScrollFrame->SetInitialChildList(aScrollFrame->GetPresContext(), nsnull, aScrolledFrame);
 }
  
 
@@ -6417,19 +6401,6 @@ nsCSSFrameConstructor::BuildScrollFrame(nsIPresShell*            aPresShell,
                                         nsIFrame*&               aNewFrame, 
                                         nsStyleContext*&         aScrolledContentStyle)
 {
-    // Check to see the type of parent frame so we know whether we need to 
-    // turn off/on scaling for the scrollbars
-    //
-    // If the parent is a viewportFrame then we are the scrollbars for the UI
-    // if not then we are scrollbars inside the document.
-    PRBool noScalingOfTwips = PR_FALSE;
-    if (aPresContext->Type() == nsPresContext::eContext_PrintPreview) {
-      noScalingOfTwips = aParentFrame->GetType() == nsLayoutAtoms::viewportFrame;
-      if (noScalingOfTwips) {
-        aPresContext->SetScalingOfTwips(PR_FALSE);
-      }
-    }
-
     nsIFrame *scrollFrame;
 
     nsRefPtr<nsStyleContext> scrolledContentStyle;
@@ -6442,7 +6413,6 @@ nsCSSFrameConstructor::BuildScrollFrame(nsIPresShell*            aPresShell,
                                                     aParentFrame,
                                                     aContentParentFrame,
                                                     nsCSSAnonBoxes::scrolledContent,
-                                                    mDocument,
                                                     PR_FALSE,
                                                     aNewFrame,
                                                     scrollFrame);
@@ -6450,22 +6420,12 @@ nsCSSFrameConstructor::BuildScrollFrame(nsIPresShell*            aPresShell,
     InitAndRestoreFrame(aPresContext, aState, aContent, 
                         scrollFrame, scrolledContentStyle, nsnull, aScrolledFrame);
 
-    FinishBuildingScrollFrame(aPresContext, 
-                          aState,
-                          aContent,
-                          scrollFrame,
-                          aScrolledFrame,
-                          scrolledContentStyle);
+    FinishBuildingScrollFrame(scrollFrame, aScrolledFrame);
 
     aScrolledContentStyle = scrolledContentStyle;
 
     // now set the primary frame to the ScrollFrame
     aState.mFrameManager->SetPrimaryFrameFor( aContent, aNewFrame );
-
-    if (noScalingOfTwips) {
-      aPresContext->SetScalingOfTwips(PR_TRUE);
-    }
-
     return NS_OK;
 
 }
@@ -6550,59 +6510,36 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresShell*            aPre
       ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aFrameItems); 
     }
 
-     // Initialize it
+    nsIFrame *scrollFrame;
+    nsRefPtr<nsStyleContext> scrolledContentStyle
+      = BeginBuildingScrollFrame(aPresShell, aPresContext, aState,
+                                 aContent, aStyleContext,
+                                 aState.GetGeometricParent(aDisplay, aParentFrame),
+                                 aParentFrame,
+                                 nsCSSAnonBoxes::scrolledContent,
+                                 PR_FALSE,
+                                 newFrame, scrollFrame);
+    
+    // Initialize it
     nsIFrame* scrolledFrame = nsnull;
-
     NS_NewAreaFrame(aPresShell, &scrolledFrame, NS_BLOCK_SPACE_MGR |
                     NS_BLOCK_SHRINK_WRAP | NS_BLOCK_MARGIN_ROOT);
-
-
-    nsStyleContext* newStyle;
-    // Build the scrollframe it
-    BuildScrollFrame(aPresShell, aPresContext, aState, aContent, aStyleContext,
-                     scrolledFrame,
-                     aState.GetGeometricParent(aDisplay, aParentFrame),
-                     aParentFrame, newFrame, newStyle);
+    nsFrameItems blockItem;
+    rv = ConstructBlock(aPresShell, aPresContext, aState,
+                        scrolledContentStyle->GetStyleDisplay(), aContent,
+                        scrollFrame, scrollFrame, scrolledContentStyle,
+                        &scrolledFrame, blockItem, aDisplay->IsPositioned());
+    NS_ASSERTION(blockItem.childList == scrolledFrame,
+                 "Scrollframe's frameItems should be exactly the scrolled frame");
+    FinishBuildingScrollFrame(scrollFrame, scrolledFrame);
 
     rv = aState.AddChild(newFrame, aFrameItems, aDisplay, aContent,
                          aStyleContext, aParentFrame);
     if (NS_FAILED(rv)) {
       return rv;
     }
+
     addedToFrameList = PR_TRUE;
-
-    // buildscrollframe sets the primary frame.
-    primaryFrameSet = PR_TRUE;
-    
-    //-----
-
-    // The area frame is a float container
-    PRBool haveFirstLetterStyle, haveFirstLineStyle;
-    HaveSpecialBlockStyle(aPresContext, aContent, aStyleContext,
-                          &haveFirstLetterStyle, &haveFirstLineStyle);
-    nsFrameConstructorSaveState floatSaveState;
-    aState.PushFloatContainingBlock(scrolledFrame, floatSaveState,
-                                    haveFirstLetterStyle,
-                                    haveFirstLineStyle);
-
-    // Process children
-    nsFrameConstructorSaveState absoluteSaveState;
-    nsFrameItems                childItems;
-
-    if (aDisplay->IsPositioned()) {
-      // The area frame becomes a container for child frames that are
-      // absolutely positioned
-      aState.PushAbsoluteContainingBlock(scrolledFrame, absoluteSaveState);
-    }
-     
-    ProcessChildren(aPresShell, aPresContext, aState, aContent, scrolledFrame, PR_TRUE,
-                    childItems, PR_TRUE);
-
-    CreateAnonymousFrames(aPresShell, aPresContext, aContent->Tag(), aState,
-                          aContent, newFrame, PR_FALSE, childItems);
-
-    // Set the scrolled frame's initial child lists
-    scrolledFrame->SetInitialChildList(aPresContext, nsnull, childItems.childList);
   }
   // See if the frame is absolute or fixed positioned
   else if (aDisplay->IsAbsolutelyPositioned() &&
@@ -12913,7 +12850,7 @@ nsCSSFrameConstructor::CreateListBoxContent(nsPresContext* aPresContext,
 
 nsresult
 nsCSSFrameConstructor::ConstructBlock(nsIPresShell*            aPresShell, 
-                                      nsPresContext*          aPresContext,
+                                      nsPresContext*           aPresContext,
                                       nsFrameConstructorState& aState,
                                       const nsStyleDisplay*    aDisplay,
                                       nsIContent*              aContent,
@@ -12984,7 +12921,7 @@ nsCSSFrameConstructor::ConstructBlock(nsIPresShell*            aPresShell,
   nsFrameConstructorSaveState absoluteSaveState;
   if (aAbsPosContainer || !aState.mAbsoluteItems.containingBlock) {
     //    NS_ASSERTION(aRelPos, "should have made area frame for this");
-    aState.PushAbsoluteContainingBlock(*aNewFrame, absoluteSaveState);
+    aState.PushAbsoluteContainingBlock(blockFrame, absoluteSaveState);
   }
 
   // See if the block has first-letter style applied to it...

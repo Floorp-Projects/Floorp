@@ -240,6 +240,12 @@ public:
   // Combine aNewBreakType with aOrigBreakType, but limit the break types
   // to NS_STYLE_CLEAR_LEFT, RIGHT, LEFT_AND_RIGHT.
   static PRUint8 CombineBreakType(PRUint8 aOrigBreakType, PRUint8 aNewBreakType);
+
+  /**
+   * @return PR_TRUE if aFrame is the CSS initial containing block for
+   * its pres-shell
+   */
+  static PRBool IsInitialContainingBlock(nsIFrame* aFrame);
 };
 
 #endif // nsLayoutUtils_h__

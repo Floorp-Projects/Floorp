@@ -543,34 +543,27 @@ nsBlockFrame::IsContainingBlock() const
 //////////////////////////////////////////////////////////////////////
 // Reflow methods
 
-static void
-CalculateContainingBlock(const nsHTMLReflowState& aReflowState,
-                         nscoord                  aFrameWidth,
-                         nscoord                  aFrameHeight,
-                         nscoord&                 aContainingBlockWidth,
-                         nscoord&                 aContainingBlockHeight)
+static nsSize
+CalculateContainingBlockSizeForAbsolutes(const nsHTMLReflowState& aReflowState,
+                                         nsSize aFrameSize)
 {
-  aContainingBlockWidth = -1;  // have reflow state calculate
-  aContainingBlockHeight = -1; // have reflow state calculate
-
-  // The issue there is that for a 'height' of 'auto' the reflow state code
-  // won't know how to calculate the containing block height because it's
-  // calculated bottom up. We don't really want to do this for the initial
-  // containing block so that's why we have the check for if the element
-  // is absolutely or relatively positioned
-  if (aReflowState.mStyleDisplay->IsAbsolutelyPositioned() ||
-      (NS_STYLE_POSITION_RELATIVE == aReflowState.mStyleDisplay->mPosition)) {
-    aContainingBlockWidth = aFrameWidth;
-    aContainingBlockHeight = aFrameHeight;
-
-    // Containing block is relative to the padding edge
-    nsMargin  border;
-    if (!aReflowState.mStyleBorder->GetBorder(border)) {
-      NS_NOTYETIMPLEMENTED("percentage border");
-    }
-    aContainingBlockWidth -= border.left + border.right;
-    aContainingBlockHeight -= border.top + border.bottom;
+  // The issue here is that for a 'height' of 'auto' the reflow state
+  // code won't know how to calculate the containing block height
+  // because it's calculated bottom up. We don't really want to do
+  // this for the initial containing block.
+  if (nsLayoutUtils::IsInitialContainingBlock(aReflowState.frame)) {
+    return nsSize(-1, -1);
   }
+
+  nsSize cbSize(aFrameSize);
+    // Containing block is relative to the padding edge
+  nsMargin  border;
+  if (!aReflowState.mStyleBorder->GetBorder(border)) {
+    NS_NOTYETIMPLEMENTED("percentage border");
+  }
+  cbSize.width -= border.left + border.right;
+  cbSize.height -= border.top + border.bottom;
+  return cbSize;
 }
 
 NS_IMETHODIMP
@@ -636,15 +629,12 @@ nsBlockFrame::Reflow(nsPresContext*          aPresContext,
       eReflowReason_Incremental == aReflowState.reason &&
       !aMetrics.mComputeMEW &&
       mAbsoluteContainer.ReflowingAbsolutesOnly(this, aReflowState)) {
-    nscoord containingBlockWidth;
-    nscoord containingBlockHeight;
-
-    CalculateContainingBlock(aReflowState, mRect.width, mRect.height,
-                             containingBlockWidth, containingBlockHeight);
+    nsSize containingBlockSize
+      = CalculateContainingBlockSizeForAbsolutes(aReflowState, GetSize());
     
     mAbsoluteContainer.IncrementalReflow(this, aPresContext, aReflowState,
-                                         containingBlockWidth,
-                                         containingBlockHeight);
+                                         containingBlockSize.width,
+                                         containingBlockSize.height);
 
     // Just return our current size as our desired size.
     aMetrics.width = mRect.width;
@@ -965,11 +955,9 @@ nsBlockFrame::Reflow(nsPresContext*          aPresContext,
   // condition 1.
   if (mAbsoluteContainer.HasAbsoluteFrames()) {
     nsRect childBounds;
-    nscoord containingBlockWidth;
-    nscoord containingBlockHeight;
-
-    CalculateContainingBlock(aReflowState, aMetrics.width, aMetrics.height,
-                             containingBlockWidth, containingBlockHeight);
+    nsSize containingBlockSize
+      = CalculateContainingBlockSizeForAbsolutes(aReflowState,
+                                                 nsSize(aMetrics.width, aMetrics.height));
 
     PRBool forceAbsoluteReflow = PR_TRUE;
     PRBool cbWidthChanged = PR_TRUE;
@@ -978,8 +966,8 @@ nsBlockFrame::Reflow(nsPresContext*          aPresContext,
       // Do the incremental reflows ... would be nice to merge with
       // the reflows below but that would be more work, and more risky
       mAbsoluteContainer.IncrementalReflow(this, aPresContext, aReflowState,
-                                           containingBlockWidth,
-                                           containingBlockHeight);
+                                           containingBlockSize.width,
+                                           containingBlockSize.height);
       
       // If a reflow was targeted at this block then we'd better
       // reflow the absolutes. For example the borders and padding
@@ -1005,8 +993,8 @@ nsBlockFrame::Reflow(nsPresContext*          aPresContext,
     }
 
     rv = mAbsoluteContainer.Reflow(this, aPresContext, aReflowState,
-                                   containingBlockWidth,
-                                   containingBlockHeight,
+                                   containingBlockSize.width,
+                                   containingBlockSize.height,
                                    &childBounds,
                                    forceAbsoluteReflow,
                                    cbWidthChanged,

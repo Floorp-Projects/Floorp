@@ -47,6 +47,7 @@
 #include "nsIScrollableView.h"
 #include "nsPlaceholderFrame.h"
 #include "nsIScrollableFrame.h"
+#include "nsCSSFrameConstructor.h"
 
 /**
  * A namespace class for static layout utilities.
@@ -463,4 +464,11 @@ nsLayoutUtils::CombineBreakType(PRUint8 aOrigBreakType,
     }
   }
   return breakType;
+}
+
+PRBool
+nsLayoutUtils::IsInitialContainingBlock(nsIFrame* aFrame)
+{
+  return aFrame ==
+    aFrame->GetPresContext()->PresShell()->FrameConstructor()->GetInitialContainingBlock();
 }
