@@ -418,12 +418,16 @@ function MsgNewFolder()
     var preselectedFolder = GetFirstSelectedMsgFolder();
     var dualUseFolders = true;
     var server = null;
+    var destinationFolder = null;
+
     if (preselectedFolder)
     {
         try {
             server = preselectedFolder.server;
             if (server)
             {
+                destinationFolder = getDestinationFolder(preselectedFolder, server);
+
                 var imapServer =
                     server.QueryInterface(Components.interfaces.nsIImapIncomingServer);
                 if (imapServer)
@@ -433,9 +437,54 @@ function MsgNewFolder()
             dump ("Exception: dualUseFolders = true\n");
         }
     }
-    CreateNewSubfolder("chrome://messenger/content/newFolderNameDialog.xul",windowTitle, preselectedFolder, dualUseFolders);
+
+    CreateNewSubfolder("chrome://messenger/content/newFolderNameDialog.xul",windowTitle, destinationFolder, dualUseFolders);
 }
 
+
+function getDestinationFolder(preselectedFolder, server)
+{
+    var destinationFolder = null;
+
+    var isCreateSubfolders = preselectedFolder.canCreateSubfolders;
+    if (!isCreateSubfolders) 
+    {
+        var tmpDestFolder = server.RootFolder;
+        destinationFolder 
+          = tmpDestFolder.QueryInterface(Components.interfaces.nsIMsgFolder);
+
+        var verifyCreateSubfolders = null;
+        if (destinationFolder)
+            verifyCreateSubfolders = destinationFolder.canCreateSubfolders;
+
+        // in case the server cannot have subfolders,
+        // get default account and set its incoming server as parent folder
+        if (!verifyCreateSubfolders) 
+        {
+            try {
+                var account = accountManager.defaultAccount;
+                var defaultServer = account.incomingServer;
+                var tmpDefaultFolder = defaultServer.RootFolder;
+                var defaultFolder 
+                  = tmpDefaultFolder.QueryInterface(Components.interfaces.nsIMsgFolder);
+
+                var checkCreateSubfolders = null;
+                if (defaultFolder)
+                    checkCreateSubfolders = defaultFolder.canCreateSubfolders;
+
+                if (checkCreateSubfolders)
+                    destinationFolder = defaultFolder;
+
+            } catch (e) {
+                dump ("Exception: defaultAccount Not Available\n");
+            }
+        }
+    }
+    else
+        destinationFolder = preselectedFolder;
+
+    return destinationFolder;
+}
 
 function MsgSubscribe()
 {
