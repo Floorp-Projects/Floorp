@@ -55,6 +55,7 @@ class nsReflowTimer
 public:
   nsReflowTimer(nsIFrame* aFrame) {
     mFrame = aFrame;
+    mNextSibling = nsnull;
     aFrame->GetFrameType(&mFrameType);
 		Reset();
 	}
@@ -65,6 +66,11 @@ public:
       ((nsReflowTimer*)mChildren.ElementAt(childX))->Destroy();
     }
     NS_IF_RELEASE(mFrameType);
+    if (mNextSibling) { // table frames have 3 auxillary timers
+      delete mNextSibling->mNextSibling->mNextSibling;
+      delete mNextSibling->mNextSibling;
+      delete mNextSibling;
+    }
     delete this;
   }
 
@@ -119,6 +125,7 @@ public:
   nscoord         mDesiredWidth;
   nscoord         mDesiredHeight;        
   nsReflowStatus  mStatus;
+  nsReflowTimer*  mNextSibling;
 
 private:
   ~nsReflowTimer() {}
@@ -943,8 +950,21 @@ public:
                           nsHTMLReflowState&   aReflowState, 
                           nsHTMLReflowMetrics* aMetrics = nsnull,
                           nsReflowStatus       aStatus  = NS_FRAME_COMPLETE);
+
 #ifdef DEBUG_TABLE_REFLOW_TIMING
   static void DebugReflowDone(nsIFrame* aFrame);
+
+  static void DebugTimePctCols(nsTableFrame&      aFrame,
+                               nsHTMLReflowState& aReflowState,
+                               PRBool             aStart);
+
+  static void DebugTimeNonPctCols(nsTableFrame&      aFrame,
+                                  nsHTMLReflowState& aReflowState,
+                                  PRBool             aStart);
+
+  static void DebugTimeNonPctColspans(nsTableFrame&      aFrame,
+                                      nsHTMLReflowState& aReflowState,
+                                      PRBool             aStart);
 
   nsReflowTimer* mTimer;
 #endif

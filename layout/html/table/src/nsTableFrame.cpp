@@ -170,6 +170,12 @@ nsTableFrame::nsTableFrame()
 #endif
 #ifdef DEBUG_TABLE_REFLOW_TIMING
   mTimer = new nsReflowTimer(this);
+  nsReflowTimer* timer = new nsReflowTimer(this);
+  mTimer->mNextSibling = timer;
+  timer = new nsReflowTimer(this);
+  mTimer->mNextSibling->mNextSibling = timer;
+  timer = new nsReflowTimer(this);
+  mTimer->mNextSibling->mNextSibling->mNextSibling = timer;
 #endif
 }
 
@@ -4625,13 +4631,16 @@ void PrettyUC(nscoord aSize,
   }
 }
 
-void GetFrameTypeName(nsIAtom* aFrameType,
-                      char*    aName)
+PRBool GetFrameTypeName(nsIAtom* aFrameType,
+                        char*    aName)
 {
+  PRBool isTable = PR_FALSE;
   if (nsLayoutAtoms::tableOuterFrame == aFrameType) 
     strcpy(aName, "Tbl");
-  else if (nsLayoutAtoms::tableFrame == aFrameType) 
+  else if (nsLayoutAtoms::tableFrame == aFrameType) {
     strcpy(aName, "Tbl");
+    isTable = PR_TRUE;
+  }
   else if (nsLayoutAtoms::tableRowGroupFrame == aFrameType) 
     strcpy(aName, "RowG");
   else if (nsLayoutAtoms::tableRowFrame == aFrameType) 
@@ -4642,6 +4651,8 @@ void GetFrameTypeName(nsIAtom* aFrameType,
     strcpy(aName, "Block");
   else 
     NS_ASSERTION(PR_FALSE, "invalid call to GetFrameTypeName");
+
+  return isTable;
 }
 
 #ifdef DEBUG_TABLE_REFLOW
@@ -4750,6 +4761,15 @@ nsReflowTimer* GetFrameTimer(nsIFrame* aFrame,
   return nsnull;
 }
 
+void DebugReflowPrintAuxTimer(char*          aMes, 
+                              nsReflowTimer* aTimer)
+{
+  printf("%s %dms", aMes, aTimer->Elapsed());
+  if (aTimer->mNumStarts > 1) {
+    printf(" times=%d", aTimer->mNumStarts);
+  }
+}
+
 void DebugReflowPrint(nsReflowTimer& aTimer,
                       PRUint32       aLevel,
                       PRBool         aSummary)
@@ -4762,12 +4782,18 @@ void DebugReflowPrint(nsReflowTimer& aTimer,
 
   // get the frame type
   char fName[128];
-  GetFrameTypeName(aTimer.mFrameType, fName);
+  PRBool isTable = GetFrameTypeName(aTimer.mFrameType, fName);
 
   // print the timer
   printf("\n%s%s %dms %p", indentChar, fName, aTimer.Elapsed(), aTimer.mFrame);
   if (aSummary) {
     printf(" times=%d", aTimer.mNumStarts);
+    if (isTable) {
+      printf("\n%s", indentChar);
+      DebugReflowPrintAuxTimer("nonPctCols", aTimer.mNextSibling);
+      DebugReflowPrintAuxTimer(" nonPctColspans", aTimer.mNextSibling->mNextSibling);
+      DebugReflowPrintAuxTimer(" pctCols", aTimer.mNextSibling->mNextSibling->mNextSibling);
+    }
   }
   else {
     char avWidth[16];
@@ -4794,6 +4820,12 @@ void DebugReflowPrint(nsReflowTimer& aTimer,
       printf(" status=%d", aTimer.mStatus);
     }
     printf(" cnt=%d", aTimer.mCount);
+    if (isTable) {
+      printf("\n%s", indentChar);
+      DebugReflowPrintAuxTimer("nonPctCols", aTimer.mNextSibling);
+      DebugReflowPrintAuxTimer(" nonPctColspans", aTimer.mNextSibling->mNextSibling);
+      DebugReflowPrintAuxTimer(" pctCols", aTimer.mNextSibling->mNextSibling->mNextSibling);
+    }
   }
   // print the timer's children
   nsVoidArray& children = aTimer.mChildren;
@@ -4824,16 +4856,15 @@ void nsTableFrame::DebugReflow(nsIFrame*            aFrame,
   nsCOMPtr<nsIAtom> frameType = nsnull;
   aFrame->GetFrameType(getter_AddRefs(frameType));
   nsReflowTimer* frameTimer = GetFrameTimer(aFrame, frameType.get());
-  if (!frameTimer) {
-    NS_ASSERTION(PR_FALSE, "no frame timer");
-    return;
-  }
+  if (!frameTimer) {NS_ASSERTION(PR_FALSE, "no frame timer");return;}
   if (!aMetrics) { // start
     // create the reflow timer
     nsReflowTimer* timer = new nsReflowTimer(aFrame);
-    if (!timer) {
-      NS_ASSERTION(PR_FALSE, "could not create timer");
-      return;
+    // create the aux table timers if they don't exist
+    if ((nsLayoutAtoms::tableFrame == frameType.get()) && !timer->mNextSibling) {
+      timer->mNextSibling = new nsReflowTimer(aFrame);
+      timer->mNextSibling->mNextSibling = new nsReflowTimer(aFrame);
+      timer->mNextSibling->mNextSibling->mNextSibling = new nsReflowTimer(aFrame);
     }
     timer->mReason = aState.reason;
     timer->mAvailWidth = aState.availableWidth;
@@ -4861,17 +4892,59 @@ void nsTableFrame::DebugReflow(nsIFrame*            aFrame,
         ? aMetrics->mMaximumWidth : -1;
       timer->mStatus = aStatus;
     }
-    else {
-      NS_ASSERTION(PR_FALSE, "bad DebugTimeReflow");
-      return;
-    }
+    else {NS_ASSERTION(PR_FALSE, "bad DebugTimeReflow");return;}
+    // stop the frame summary timer
+    frameTimer->Stop();
     if (!parentTimer) {
       // print out all of the reflow timers
       DebugReflowPrint(*timer, 0, PR_FALSE);
       timer->Destroy();
     }
-    // stop the frame summary timer
-    frameTimer->Stop();
+  }
+}
+
+void nsTableFrame::DebugTimeNonPctCols(nsTableFrame&      aFrame,
+                                       nsHTMLReflowState& aState,
+                                       PRBool             aStart)
+{
+  nsReflowTimer* timer = (nsReflowTimer*)aState.mDebugHook;
+  if (aStart) {
+    timer->mNextSibling->Start();
+    aFrame.mTimer->mNextSibling->Start();
+  }
+  else {
+    timer->mNextSibling->Stop();
+    aFrame.mTimer->mNextSibling->Stop();
+  }
+}
+
+void nsTableFrame::DebugTimeNonPctColspans(nsTableFrame&      aFrame,
+                                           nsHTMLReflowState& aState,
+                                           PRBool             aStart)
+{
+  nsReflowTimer* timer = (nsReflowTimer*)aState.mDebugHook;
+  if (aStart) {
+    timer->mNextSibling->mNextSibling->Start();
+    aFrame.mTimer->mNextSibling->mNextSibling->Start();
+  }
+  else {
+    timer->mNextSibling->mNextSibling->Stop();
+    aFrame.mTimer->mNextSibling->mNextSibling->Stop();
+  }
+}
+
+void nsTableFrame::DebugTimePctCols(nsTableFrame&      aFrame,
+                                    nsHTMLReflowState& aState,
+                                    PRBool             aStart)
+{
+  nsReflowTimer* timer = (nsReflowTimer*)aState.mDebugHook;
+  if (aStart) {
+    timer->mNextSibling->mNextSibling->mNextSibling->Start();
+    aFrame.mTimer->mNextSibling->mNextSibling->mNextSibling->Start();
+  }
+  else {
+    timer->mNextSibling->mNextSibling->mNextSibling->Stop();
+    aFrame.mTimer->mNextSibling->mNextSibling->mNextSibling->Stop();
   }
 }
 
