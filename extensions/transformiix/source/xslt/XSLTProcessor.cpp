@@ -38,7 +38,7 @@
  * Olivier Gerardin
  *    -- Changed behavior of passing parameters to templates
  *
- * $Id: XSLTProcessor.cpp,v 1.21 2000/07/25 07:03:40 axel%pike.org Exp $
+ * $Id: XSLTProcessor.cpp,v 1.22 2000/08/26 04:34:50 Peter.VanderBeken%pandora.be Exp $
  */
 
 #include "XSLTProcessor.h"
@@ -53,7 +53,7 @@
 /**
  * XSLTProcessor is a class for Processing XSL styelsheets
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.21 $ $Date: 2000/07/25 07:03:40 $
+ * @version $Revision: 1.22 $ $Date: 2000/08/26 04:34:50 $
 **/
 
 /**
@@ -526,6 +526,7 @@ void XSLTProcessor::processTopLevel
 
 } //-- process(Document, ProcessorState)
 
+#ifndef MOZ_XSL
 /**
  * Processes the given XML Document using the given XSL document
  * and returns the result tree
@@ -562,7 +563,6 @@ Document* XSLTProcessor::process
     return result;
 } //-- process
 
-#ifndef MOZ_XSL
 /**
  * Processes the given XML Document using the given XSL document
  * and prints the results to the given ostream argument
@@ -1652,7 +1652,7 @@ void XSLTProcessor::xslCopy(Node* node, Element* action, ProcessorState* ps) {
         }
         //-- just copy node, xsl:copy template does not get processed
         default:
-            copy = XMLDOMUtils::copyNode(node, resultDoc);
+            copy = XMLDOMUtils::copyNode(node, resultDoc, ps);
             break;
     }
     if ( copy ) ps->addToResultTree(copy);
@@ -1678,12 +1678,12 @@ void XSLTProcessor::xslCopyOf(ExprResult* exprResult, ProcessorState* ps) {
                 if (node->getNodeType() == Node::DOCUMENT_NODE) {
                     Node* child = node->getFirstChild();
                     while (child) {
-                        ps->addToResultTree(XMLDOMUtils::copyNode(child, resultDoc));
+                        ps->addToResultTree(XMLDOMUtils::copyNode(child, resultDoc, ps));
                         child = child->getNextSibling();
                     }
                 }
                 //-- otherwise just copy node
-                else ps->addToResultTree(XMLDOMUtils::copyNode(node, resultDoc));
+                else ps->addToResultTree(XMLDOMUtils::copyNode(node, resultDoc, ps));
             }
             break;
         }
@@ -1700,33 +1700,35 @@ void XSLTProcessor::xslCopyOf(ExprResult* exprResult, ProcessorState* ps) {
 
 #ifdef MOZ_XSL
 NS_IMETHODIMP
-XSLTProcessor::TransformDocument(nsIDOMElement* aSourceDOM,
-                               nsIDOMElement* aStyleDOM,
+XSLTProcessor::TransformDocument(nsIDOMNode* aSourceDOM,
+                               nsIDOMNode* aStyleDOM,
                                nsIDOMDocument* aOutputDoc,
                                nsIObserver* aObserver)
 {
-    nsCOMPtr<nsIDOMNode> sourceDOMNode;
     nsCOMPtr<nsIDOMDocument> sourceDOMDocument;
     nsCOMPtr<nsIDOMDocument> styleDOMDocument;
 
     aSourceDOM->GetOwnerDocument(getter_AddRefs(sourceDOMDocument));
+    if (!sourceDOMDocument) {
+        sourceDOMDocument = do_QueryInterface(aSourceDOM);
+    }
     Document* sourceDocument = new Document(sourceDOMDocument);
-    Node sourceNode(aSourceDOM, sourceDocument);
+    Node* sourceNode = sourceDocument->createWrapper(aSourceDOM);
 
     aStyleDOM->GetOwnerDocument(getter_AddRefs(styleDOMDocument));
+    if (!styleDOMDocument) {
+        styleDOMDocument = do_QueryInterface(aStyleDOM);
+    }
     Document* xslDocument = new Document(styleDOMDocument);
-    Element styleElement(aStyleDOM, xslDocument);
 
     Document* resultDocument = new Document(aOutputDoc);
 
     //-- create a new ProcessorState
     ProcessorState* ps = new ProcessorState(*xslDocument, *resultDocument);
-    ps->initialize(&styleElement);
 
+    nsIURI* docURL = nsnull;
     nsCOMPtr<nsIDocument> sourceNsDocument = do_QueryInterface(sourceDOMDocument);
-    nsCOMPtr<nsIURI> docURL;
-
-    sourceNsDocument->GetBaseURL(*getter_AddRefs(docURL));
+    sourceNsDocument->GetBaseURL(docURL);
     if (docURL) {
         char* urlString;
 
@@ -1735,6 +1737,7 @@ XSLTProcessor::TransformDocument(nsIDOMElement* aSourceDOM,
 //cout << "documentbase: " << documentBase << endl;
         ps->setDocumentBase(documentBase);
         nsCRT::free(urlString);
+        NS_IF_RELEASE(docURL);
     }
     else
         ps->setDocumentBase("");
@@ -1745,30 +1748,29 @@ XSLTProcessor::TransformDocument(nsIDOMElement* aSourceDOM,
      //- index templates and process top level xsl elements -/
     //------------------------------------------------------/
 
-    processTopLevel(&styleElement, ps);
+    processTopLevel(xslDocument, ps);
 
       //---------------------------------------/
      //- Process root of XML source document -/
     //---------------------------------------/
-    process(&sourceNode, &sourceNode, ps);
+    process(sourceNode, sourceNode, ps);
 
-    Element* theResultElement = resultDocument->getDocumentElement();
+    if (aObserver) {
+	    nsresult res = NS_OK;
+	    nsAutoString topic; topic.Assign(NS_LITERAL_STRING("xslt-done"));
 
-    nsresult res = NS_OK;
-    nsAutoString XSLTransformer; XSLTransformer.AssignWithConversion("XSLTransformer");
-    nsCOMPtr<nsIObserverService> anObserverService = do_GetService(NS_OBSERVERSERVICE_PROGID, &res);
-    if (NS_SUCCEEDED(res)) {
-        anObserverService->AddObserver(aObserver, XSLTransformer.GetUnicode());
-        anObserverService->Notify(theResultElement->getNSObj(), XSLTransformer.GetUnicode(), nsnull);
+	    nsCOMPtr<nsIObserverService> anObserverService = do_GetService(NS_OBSERVERSERVICE_PROGID, &res);
+	    if (NS_SUCCEEDED(res)) {
+          nsIDOMNode* docElement = (resultDocument->getDocumentElement())->getNSObj();
+
+	        anObserverService->AddObserver(aObserver, topic.GetUnicode());
+	        anObserverService->Notify(docElement, topic.GetUnicode(), nsnull);
+	    }
     }
 
-    /* XXX HACK (pvdb)
-       This is leaking! But otherwise we crash on Mac (and others?).
-       This workaround can be removed once we figure out what's going on.
-    */
     delete ps;
-//    delete resultDocument;
-//    delete xslDocument;
+    delete resultDocument;
+    delete xslDocument;
     delete sourceDocument;
     return NS_OK;
 }
