@@ -27,7 +27,6 @@ LIBRARY_NAME	= uriloader
 IS_COMPONENT	= 1
 
 CPPSRCS		= nsURILoaderModule.cpp
-EXPORTS		= nsURILoaderCIDs.h
 
 SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/liburiloaderbase_s.a \
