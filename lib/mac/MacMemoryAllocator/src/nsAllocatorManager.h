@@ -98,7 +98,7 @@ class nsAllocatorManager
 		static const SInt32			kNumMasterPointerBlocks;
 		static const SInt32			kApplicationStackSizeIncrease;
 		
-		static const SInt32			kHeapZoneHeapPercentage;
+		static const float			kHeapZoneHeapPercentage;
 		static const SInt32			kTempMemHeapZoneSize;
 		static const SInt32			kTempMemHeapMinZoneSize;
 		

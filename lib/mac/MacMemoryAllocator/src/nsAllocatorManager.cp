@@ -162,7 +162,7 @@ void nsHeapZoneHeader::DisposeZonePtr(Ptr thePtr, Boolean &outWasLastChunk)
 
 const SInt32	nsAllocatorManager::kNumMasterPointerBlocks = 30;
 const SInt32	nsAllocatorManager::kApplicationStackSizeIncrease = (32 * 1024);
-const SInt32	nsAllocatorManager::kHeapZoneHeapPercentage = 60;
+const float 	nsAllocatorManager::kHeapZoneHeapPercentage = 0.6;
 const SInt32	nsAllocatorManager::kSmallHeapByteRange = 16;
 
 nsAllocatorManager* 	nsAllocatorManager::sAllocatorManager = nil;
@@ -216,7 +216,7 @@ nsAllocatorManager::nsAllocatorManager()
 	// make the heap zone for our subheaps
 	UInt32		heapZoneSize;
 	
-	heapZoneSize = ( kHeapZoneHeapPercentage * ::FreeMem() ) / 100;
+	heapZoneSize = (UInt32)(kHeapZoneHeapPercentage * ::FreeMem());
 	heapZoneSize = ( ( heapZoneSize + 3 ) & ~3 );		// round up to a multiple of 4 bytes
 
 	nsHeapZoneHeader	*firstZone = MakeNewHeapZone(heapZoneSize, heapZoneSize);
@@ -445,8 +445,12 @@ void nsAllocatorManager::FreeSubheap(Ptr subheapPtr)
 	if (sAllocatorManager) return sAllocatorManager;
 	
 	if (InitializeMacMemory(kNumMasterPointerBlocks, kApplicationStackSizeIncrease) != noErr)
+	{
+#ifdef DEBUG
+		::DebugStr("\pAllocator Manager initialization failed");
+#endif
 		::ExitToShell();
-	
+	}
 	return sAllocatorManager;
 }
 
