@@ -15,11 +15,12 @@
         command="cmd_charPrevious"/>
     <handler type="keypress" id="key_right" keycode="VK_RIGHT" alt="false" shift="false" control="false"
         command="cmd_charNext"/>
-    <handler type="keypress" id="key_pageup" keycode="VK_PAGE_UP" alt="false" shift="false" control="false"
+    <!-- <handler type="keypress" id="key_pageup" keycode="VK_PAGE_UP" alt="false" shift="false" control="false"
         command="cmd_scrollPageUp"/>
     <handler type="keypress" id="key_pagedown" keycode="VK_PAGE_DOWN" alt="false" shift="false" control="false"
         command="cmd_scrollPageDown"/>
-   
+   -->
+
     <handler type="keypress" id="key_homeshift" keycode="VK_HOME" shift="true" alt="false" control="false"
         command="cmd_selectBeginLine"/>
     <handler type="keypress" id="key_endshift" keycode="VK_END" shift="true" alt="false" control="false"

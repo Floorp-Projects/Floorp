@@ -150,7 +150,8 @@ popup[menugenerated="true"] {
 }
 
 menupopup, popup {
-  visibility: hidden; 
+  visibility: hidden;
+  z-index: 2147483647; 
 }
 
 menupopup[menuactive="true"] {
