@@ -48,7 +48,7 @@ interface nsIMsgAccountManager : nsISupports {
    * in the account manager. You can only set the defaultAccount to an
    * account already in the account manager */
   attribute nsIMsgAccount defaultAccount;
-  nsISupportsArray getAccounts();
+  readonly attribute nsISupportsArray accounts;
 
   /* Each account will have a unique key, which should not change
    * for the life of the account. */
