@@ -136,7 +136,7 @@ class nsViewer : public nsDispatchListener {
   public:
     virtual char* GetBaseURL();
     virtual char* GetDefaultStartURL();
-    virtual void AddMenu(nsIWidget* aMainWindow);
+    virtual void AddMenu(nsIWidget* aMainWindow, PRBool aForPrintPreview);
     virtual void ShowConsole(WindowData* aWindata);
     virtual void CloseConsole();
     virtual void DoDebugRobot(WindowData* aWindata);

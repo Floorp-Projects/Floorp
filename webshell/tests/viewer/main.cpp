@@ -24,7 +24,7 @@
 #define FILE_BASE_URL "file:////home/kmcclusk/mozilla/dist/Linux2.0.31_x86_DBG.OBJ/bin/res/samples"
 
 class nsMotifViewer : public nsViewer {
-    virtual void AddMenu(nsIWidget* aMainWindow);
+    virtual void AddMenu(nsIWidget* aMainWindow, PRBool aForPrintPreview);
     //virtual char* GetBaseURL();
 };
 
@@ -63,7 +63,7 @@ void MenuProc(PRUint32 aId)
 }
 
 //--------------------------------------------------------
-void nsMotifViewer::AddMenu(nsIWidget* aMainWindow)
+void nsMotifViewer::AddMenu(nsIWidget* aMainWindow, PRBool aForPrintPreview)
 {
   CreateViewerMenus(XtParent((Widget)aMainWindow->GetNativeData(NS_NATIVE_WIDGET)), MenuProc);
 }
