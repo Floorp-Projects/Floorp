@@ -39,6 +39,8 @@
 #include "imgIDecoderObserver.idl"
 
 interface imgIRequest;
+interface nsIChannel;
+interface nsIStreamListener;
 
 /**
  * This interface represents a content node that loads images.  The interface
@@ -140,6 +142,20 @@ interface nsIImageLoadingContent : imgIDecoderObserver
   long getRequestType(in imgIRequest aRequest);
 
   /**
+   * loadImageWithChannel allows data from an existing channel to be
+   * used as the image data for this content node.
+   *
+   * @param aChannel the channel that will deliver the data
+   *
+   * @return a stream listener to pump the image data into
+   *
+   * @see imgILoader::loadImageWithChannel
+   *
+   * @throws NS_ERROR_NULL_POINTER if aChannel is null
+   */
+  nsIStreamListener loadImageWithChannel(in nsIChannel aChannel);
+
+  /**
    * ImageURIChanged is called when the appropriate attributes (eg
    * 'src' for <img> tags) change.  The string passed in is the new
    * uri string.
@@ -148,5 +164,5 @@ interface nsIImageLoadingContent : imgIDecoderObserver
   // XXXbz <object> and <embed> do everything from frames, not content.
   // XXXbz Once those are moved to content, this method should become
   // XXXbz a protected method on nsImageLoadingContent!
-  void imageURIChanged(in AString aNewURI);
+  [noscript] void imageURIChanged(in AString aNewURI);
 };

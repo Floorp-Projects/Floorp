@@ -60,6 +60,9 @@
 #include "nsIPresShell.h"
 #include "nsGUIEvent.h"
 
+#include "nsIChannel.h"
+#include "nsIStreamListener.h"
+
 nsImageLoadingContent::nsImageLoadingContent()
   : mObserverList(nsnull),
     mLoadingEnabled(PR_TRUE),
@@ -181,7 +184,7 @@ nsImageLoadingContent::OnStopDecode(imgIRequest* aRequest,
 }
 
 /*
- * nsIImageLoadingElement impl
+ * nsIImageLoadingContent impl
  */
 
 NS_IMETHODIMP
@@ -307,6 +310,33 @@ nsImageLoadingContent::GetRequestType(imgIRequest* aRequest,
   *aRequestType = UNKNOWN_REQUEST;
   NS_ERROR("Unknown request");
   return NS_ERROR_UNEXPECTED;
+}
+
+NS_IMETHODIMP
+nsImageLoadingContent::LoadImageWithChannel(nsIChannel* aChannel,
+                                            nsIStreamListener** aListener)
+{
+  NS_PRECONDITION(aListener, "null out param");
+  
+  NS_ENSURE_ARG_POINTER(aChannel);
+
+  // XXX what should we do with content policies here, if anything?
+  // Shouldn't that be done before the start of the load?
+  
+  // Get the image loader...
+  nsresult rv;
+  nsCOMPtr<imgILoader> loader = do_GetService("@mozilla.org/image/loader;1", &rv);
+  NS_ENSURE_TRUE(loader, rv);
+
+  nsCOMPtr<nsIDocument> doc;
+  rv = GetOurDocument(getter_AddRefs(doc));
+  NS_ENSURE_TRUE(doc, rv);
+
+  CancelImageRequests(NS_ERROR_IMAGE_SRC_CHANGED);
+
+  nsCOMPtr<imgIRequest> & req = mCurrentRequest ? mPendingRequest : mCurrentRequest;
+
+  return loader->LoadImageWithChannel(aChannel, this, doc, aListener, getter_AddRefs(req));
 }
 
 // XXX This should be a protected method, not an interface method!!!
