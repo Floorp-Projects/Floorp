@@ -53,6 +53,7 @@ REQUIRES = 	\
 		necko \
 		windowwatcher \
 		uriloader \
+		xpinstall \
 		$(NULL)
 
 ifeq ($(OS_ARCH),WINNT)

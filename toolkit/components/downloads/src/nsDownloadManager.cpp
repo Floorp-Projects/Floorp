@@ -131,6 +131,11 @@ nsDownloadManager::~nsDownloadManager()
 
   NS_RELEASE(gRDFService);
   NS_RELEASE(gObserverService);
+
+  if (mXPIProgress) {
+    delete mXPIProgress;
+    mXPIProgress = nsnull;
+  }
 }
 
 PRInt32 PR_CALLBACK nsDownloadManager::CancelAllDownloads(nsHashKey* aKey, void* aData, void* aClosure)
@@ -143,7 +148,7 @@ PRInt32 PR_CALLBACK nsDownloadManager::CancelAllDownloads(nsHashKey* aKey, void*
   
   DownloadState state;
   NS_STATIC_CAST(nsDownload*, aData)->GetDownloadState(&state);
-  if (state == NOTSTARTED || state == DOWNLOADING || state == PAUSED)  
+  if (IsInProgress(state))  
     manager->CancelDownload(key->GetString());
   else
     NS_STATIC_CAST(nsDownloadManager*, aClosure)->DownloadEnded(key->GetString(), nsnull);
@@ -320,14 +325,6 @@ nsDownloadManager::GetInternalListener(nsIDownloadProgressListener** aListener)
   return NS_OK;
 }
 
-nsresult
-nsDownloadManager::GetDataSource(nsIRDFDataSource** aDataSource)
-{
-  *aDataSource = mDataSource;
-  NS_IF_ADDREF(*aDataSource);
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsDownloadManager::GetActiveDownloadCount(PRInt32* aResult)
 {
@@ -366,9 +363,12 @@ nsDownloadManager::SaveState()
   nsCOMPtr<nsIRDFResource> res;
   nsCOMPtr<nsIRDFInt> intLiteral;
 
-  DownloadState states[] = { DOWNLOADING, PAUSED };
+  DownloadState states[] = { nsIDownloadManager::DOWNLOAD_DOWNLOADING, 
+                             nsIDownloadManager::DOWNLOAD_PAUSED,
+                             nsIXPInstallManagerUI::INSTALL_DOWNLOADING,
+                             nsIXPInstallManagerUI::INSTALL_INSTALLING };
 
-  for (int i = 0; i < 2; ++i) {
+  for (int i = 0; i < 4; ++i) {
     gRDFService->GetIntLiteral(states[i], getter_AddRefs(intLiteral));
     nsCOMPtr<nsISimpleEnumerator> downloads;
     nsresult rv = mDataSource->GetSources(gNC_DownloadState, intLiteral, PR_TRUE, getter_AddRefs(downloads));
@@ -580,7 +580,7 @@ nsDownloadManager::AddDownload(nsIURI* aSource,
   
   // Assert download state information (NOTSTARTED, since it's just now being added)
   nsCOMPtr<nsIRDFInt> intLiteral;
-  gRDFService->GetIntLiteral(NOTSTARTED, getter_AddRefs(intLiteral));
+  gRDFService->GetIntLiteral(nsIDownloadManager::DOWNLOAD_NOTSTARTED, getter_AddRefs(intLiteral));
   mDataSource->GetTarget(downloadRes, gNC_DownloadState, PR_TRUE, getter_AddRefs(node));
   if (node)
     rv = mDataSource->Change(downloadRes, gNC_DownloadState, node, intLiteral);
@@ -647,10 +647,10 @@ nsDownloadManager::CancelDownload(const PRUnichar* aPath)
     return NS_ERROR_FAILURE;
 
   // Don't cancel if download is already finished
-  if (internalDownload->mDownloadState == FINISHED)
+  if (CompletedSuccessfully(internalDownload->mDownloadState))
     return NS_OK;
 
-  internalDownload->SetDownloadState(CANCELED);
+  internalDownload->SetDownloadState(nsIDownloadManager::DOWNLOAD_CANCELED);
 
   // if a persist was provided, we can do the cancel ourselves.
   nsCOMPtr<nsIWebBrowserPersist> persist;
@@ -793,9 +793,12 @@ nsDownloadManager::CleanUp()
 
   // 1). First, clean out the usual suspects - downloads that are
   //     finished, failed or canceled. 
-  DownloadState states[] = { FINISHED, FAILED, CANCELED };
+  DownloadState states[] = { nsIDownloadManager::DOWNLOAD_FINISHED,
+                             nsIDownloadManager::DOWNLOAD_FAILED,
+                             nsIDownloadManager::DOWNLOAD_CANCELED,
+                             nsIXPInstallManagerUI::INSTALL_FINISHED };
 
-  for (int i = 0; i < 3; ++i) {
+  for (int i = 0; i < 4; ++i) {
     gRDFService->GetIntLiteral(states[i], getter_AddRefs(intLiteral));
     nsresult rv = mDataSource->GetSources(gNC_DownloadState, intLiteral, PR_TRUE, getter_AddRefs(downloads));
     if (NS_FAILED(rv)) return rv;
@@ -829,9 +832,12 @@ nsDownloadManager::GetCanCleanUp(PRBool* aResult)
 
   // 1). Downloads that can be cleaned up include those that are finished, 
   //     failed or canceled.
-  DownloadState states[] = { FINISHED, FAILED, CANCELED };
+  DownloadState states[] = { nsIDownloadManager::DOWNLOAD_FINISHED,
+                             nsIDownloadManager::DOWNLOAD_FAILED,
+                             nsIDownloadManager::DOWNLOAD_CANCELED,
+                             nsIXPInstallManagerUI::INSTALL_FINISHED };
 
-  for (int i = 0; i < 3; ++i) {
+  for (int i = 0; i < 4; ++i) {
     gRDFService->GetIntLiteral(states[i], getter_AddRefs(intLiteral));
     
     mDataSource->GetSource(gNC_DownloadState, intLiteral, PR_TRUE, getter_AddRefs(downloadRes));
@@ -962,7 +968,7 @@ nsDownloadManager::PauseResumeDownload(const PRUnichar* aPath, PRBool aPause)
   // Update download state in the DataSource
   nsCOMPtr<nsIRDFInt> intLiteral;
 
-  gRDFService->GetIntLiteral(aPause ? PAUSED : DOWNLOADING, getter_AddRefs(intLiteral));
+  gRDFService->GetIntLiteral(aPause ? nsIDownloadManager::DOWNLOAD_PAUSED : nsIDownloadManager::DOWNLOAD_DOWNLOADING, getter_AddRefs(intLiteral));
 
   nsCOMPtr<nsIRDFResource> res;
   gRDFService->GetUnicodeResource(nsDependentString(aPath), getter_AddRefs(res));
@@ -1280,6 +1286,34 @@ nsDownloadManager::ConfirmCancelDownloads(PRInt32 aCount, nsISupportsPRBool* aCa
   }
 }
 
+///////////////////////////////////////////////////////////////////////////////
+// nsIXPInstallManagerUI
+NS_IMETHODIMP
+nsDownloadManager::GetXpiProgress(nsIXPIProgressDialog** aProgress)
+{
+  *aProgress = mXPIProgress;
+  NS_IF_ADDREF(*aProgress);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDownloadManager::AddDownload(nsIDownload* aDownload)
+{
+  if (!mXPIProgress)
+    mXPIProgress = new nsXPIProgressListener();
+
+  mXPIProgress->AddDownload(aDownload);
+
+  return NS_OK;
+} 
+
+NS_IMETHODIMP
+nsDownloadManager::GetHasActiveXPIOperations(PRBool* aHasOps)
+{
+  *aHasOps = !mXPIProgress ? PR_FALSE : mXPIProgress->HasActiveXPIOperations();
+  return NS_OK;
+}
+
 #ifdef XP_WIN 
 ///////////////////////////////////////////////////////////////////////////////
 // nsIAlertListener
@@ -1306,11 +1340,139 @@ nsDownloadManager::OnAlertClickCallback(const PRUnichar* aAlertCookie)
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////
+// nsXPIProgressListener
+
+NS_IMPL_ISUPPORTS1(nsXPIProgressListener, nsIXPIProgressDialog)
+
+nsXPIProgressListener::nsXPIProgressListener(nsDownloadManager* aDownloadManager)
+{
+  NS_NewISupportsArray(getter_AddRefs(mDownloads));
+
+  mDownloadManager = aDownloadManager;
+}
+
+nsXPIProgressListener::~nsXPIProgressListener()
+{
+  // Release any remaining references to objects held by the downloads array
+  mDownloads->Clear();
+
+  mDownloadManager = nsnull;
+}
+
+void
+nsXPIProgressListener::AddDownload(nsIDownload* aDownload)
+{
+  PRUint32 cnt;
+  mDownloads->Count(&cnt);
+  PRBool foundMatch = PR_FALSE;
+
+  nsCOMPtr<nsIURI> uri1, uri2;
+  for (PRUint32 i = 0; i < cnt; ++i) {
+    nsCOMPtr<nsIDownload> download(do_QueryElementAt(mDownloads, i));
+    download->GetSource(getter_AddRefs(uri1));
+    aDownload->GetSource(getter_AddRefs(uri2));
+
+    uri1->Equals(uri2, &foundMatch);
+    if (foundMatch)
+      break;
+  }
+  if (!foundMatch)
+    mDownloads->AppendElement(aDownload);
+}
+
+void 
+nsXPIProgressListener::RemoveDownloadAtIndex(PRUint32 aIndex)
+{
+  mDownloads->RemoveElementAt(aIndex);
+}
+
+PRBool
+nsXPIProgressListener::HasActiveXPIOperations()
+{
+  PRUint32 count;
+  mDownloads->Count(&count);
+  return count != 0;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// nsIXPIProgressDialog
+NS_IMETHODIMP
+nsXPIProgressListener::OnStateChange(PRUint32 aIndex, PRInt16 aState, PRInt32 aValue)
+{
+  nsCOMPtr<nsIWebProgressListener> wpl(do_QueryElementAt(mDownloads, aIndex));
+  nsDownload* dl = NS_REINTERPRET_CAST(nsDownload*, wpl.get());
+
+  switch (aState) {
+  case nsIXPIProgressDialog::DOWNLOAD_START:
+    wpl->OnStateChange(nsnull, nsnull, nsIWebProgressListener::STATE_START, 0);
+
+    dl->SetDownloadState(nsIXPInstallManagerUI::INSTALL_DOWNLOADING);
+    AssertProgressInfoForDownload(dl);
+    break;
+  case nsIXPIProgressDialog::DOWNLOAD_DONE:
+    break;
+  case nsIXPIProgressDialog::INSTALL_START:
+    dl->SetDownloadState(nsIXPInstallManagerUI::INSTALL_INSTALLING);
+    AssertProgressInfoForDownload(dl);
+    break;
+  case nsIXPIProgressDialog::INSTALL_DONE:
+    wpl->OnStateChange(nsnull, nsnull, nsIWebProgressListener::STATE_STOP, 0);
+    
+    dl->SetDownloadState(nsIXPInstallManagerUI::INSTALL_FINISHED);
+    AssertProgressInfoForDownload(dl);
+    
+    // Now, remove it from our internal bookkeeping list. 
+    RemoveDownloadAtIndex(aIndex);
+    break;
+  case nsIXPIProgressDialog::DIALOG_CLOSE:
+    // Close now, if we're allowed to. 
+    gObserverService->NotifyObservers(nsnull, "xpinstall-dialog-close", nsnull);                     
+
+    nsCOMPtr<nsIStringBundleService> sbs(do_GetService("@mozilla.org/intl/stringbundle;1"));
+    nsCOMPtr<nsIStringBundle> brandBundle, xpinstallBundle;
+    sbs->CreateBundle("chrome://global/locale/brand.properties", getter_AddRefs(brandBundle));
+    sbs->CreateBundle("chrome://mozapps/locale/xpinstall/xpinstallConfirm.properties", getter_AddRefs(xpinstallBundle));
+
+    nsXPIDLString brandShortName, message, title;
+    brandBundle->GetStringFromName(NS_LITERAL_STRING("brandShortName").get(), getter_Copies(brandShortName));
+    const PRUnichar* strings[1] = { brandShortName.get() };
+    xpinstallBundle->FormatStringFromName(NS_LITERAL_STRING("installComplete").get(), strings, 1, getter_Copies(message));
+    xpinstallBundle->GetStringFromName(NS_LITERAL_STRING("installCompleteTitle").get(), getter_Copies(title));
+
+    nsCOMPtr<nsIPromptService> ps(do_GetService("@mozilla.org/embedcomp/prompt-service;1"));
+    ps->Alert(nsnull, title, message);
+
+    break;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXPIProgressListener::OnProgress(PRUint32 aIndex, PRUint32 aValue, PRUint32 aMaxValue)
+{
+  nsCOMPtr<nsIWebProgressListener> wpl(do_QueryElementAt(mDownloads, aIndex));
+  return wpl->OnProgressChange(nsnull, nsnull, 0, 0, aValue, aMaxValue);
+}
+
+void 
+nsXPIProgressListener::AssertProgressInfoForDownload(nsDownload* aDownload)
+{
+  nsCOMPtr<nsILocalFile> target;
+  aDownload->GetTarget(getter_AddRefs(target));
+
+  nsAutoString path;
+  target->GetPath(path);
+
+  mDownloadManager->AssertProgressInfoFor(path.get());
+};
+
+///////////////////////////////////////////////////////////////////////////////
 // nsDownload
 
 NS_IMPL_ISUPPORTS2(nsDownload, nsIDownload, nsIWebProgressListener)
 
-nsDownload::nsDownload():mDownloadState(NOTSTARTED),
+nsDownload::nsDownload():mDownloadState(nsIDownloadManager::DOWNLOAD_NOTSTARTED),
                          mPercentComplete(0),
                          mCurrBytes(0),
                          mMaxBytes(0),
@@ -1441,12 +1603,12 @@ nsDownload::OnProgressChange(nsIWebProgress *aWebProgress,
 
   mLastUpdate = now;
 
-  if (mDownloadState == NOTSTARTED) {
+  if (mDownloadState == nsIDownloadManager::DOWNLOAD_NOTSTARTED) {
     nsAutoString path;
     nsresult rv = mTarget->GetPath(path);
     if (NS_FAILED(rv)) return rv;
 
-    mDownloadState = DOWNLOADING;
+    mDownloadState = nsIDownloadManager::DOWNLOAD_DOWNLOADING;
     mDownloadManager->DownloadStarted(path.get());
   }
 
@@ -1483,7 +1645,7 @@ nsDownload::OnStatusChange(nsIWebProgress *aWebProgress,
                            const PRUnichar *aMessage)
 {   
   if (NS_FAILED(aStatus)) {
-    mDownloadState = FAILED;
+    mDownloadState = nsIDownloadManager::DOWNLOAD_FAILED;
     nsAutoString path;
     nsresult rv = mTarget->GetPath(path);
     if (NS_SUCCEEDED(rv)) {
@@ -1534,8 +1696,12 @@ nsDownload::OnStateChange(nsIWebProgress* aWebProgress,
   // that will close and call CancelDownload if it was the last open window.
   nsresult rv = NS_OK;
   if (aStateFlags & STATE_STOP) {
-    if (mDownloadState == DOWNLOADING || mDownloadState == NOTSTARTED) {
-      mDownloadState = FINISHED;
+    if (nsDownloadManager::IsInFinalStage(mDownloadState)) {
+      if (mDownloadState != nsIXPInstallManagerUI::INSTALL_INSTALLING)
+        mDownloadState = nsIDownloadManager::DOWNLOAD_FINISHED;
+      else
+        mDownloadState = nsIXPInstallManagerUI::INSTALL_FINISHED;
+
       // Files less than 1Kb shouldn't show up as 0Kb.
       if (mMaxBytes==0)
         mMaxBytes = 1;
@@ -1646,7 +1812,7 @@ nsDownload::SetDisplayName(const PRUnichar* aDisplayName)
   mDisplayName = aDisplayName;
 
   nsCOMPtr<nsIRDFDataSource> ds;
-  mDownloadManager->GetDataSource(getter_AddRefs(ds));
+  mDownloadManager->GetDatasource(getter_AddRefs(ds));
 
   nsCOMPtr<nsIRDFLiteral> nameLiteral;
   nsCOMPtr<nsIRDFResource> res;
@@ -1750,11 +1916,11 @@ nsDownload::Pause(PRBool aPaused)
     if (mRequest) {
       if (aPaused) {
         mRequest->Suspend();
-        mDownloadState = PAUSED;
+        mDownloadState = nsIDownloadManager::DOWNLOAD_PAUSED;
       }
       else {
         mRequest->Resume();
-        mDownloadState = DOWNLOADING;
+        mDownloadState = nsIDownloadManager::DOWNLOAD_DOWNLOADING;
       }
     }
   }
