@@ -53,6 +53,7 @@
 #include "nsMsgNotificationManager.h"
 
 #include "nsCopyMessageStreamListener.h"
+#include "nsMsgCopyService.h"
 
 #ifdef DEBUG_bienvenu
 #include "nsMsgFilterService.h"
@@ -94,7 +95,9 @@ static NS_DEFINE_CID(kMsgBiffManagerCID, NS_MSGBIFFMANAGER_CID);
 static NS_DEFINE_CID(kMsgNotificationManagerCID, NS_MSGNOTIFICATIONMANAGER_CID);
 
 // Copy
-static NS_DEFINE_CID(kCopyMessageStreamListenerCID, NS_COPYMESSAGESTREAMLISTENER_CID);
+static NS_DEFINE_CID(kCopyMessageStreamListenerCID,
+                     NS_COPYMESSAGESTREAMLISTENER_CID);
+static NS_DEFINE_CID(kMsgCopyServiceCID, NS_MSGCOPYSERVICE_CID);
 
 ////////////////////////////////////////////////////////////
 //
@@ -302,6 +305,9 @@ nsMsgFactory::CreateInstance(nsISupports * /* aOuter */,
   }
   else if (mClassID.Equals(kCopyMessageStreamListenerCID)){
     rv = NS_NewCopyMessageStreamListener(aIID, aResult);
+  }
+  else if (mClassID.Equals(kMsgCopyServiceCID)) {
+      rv = NS_NewMsgCopyService(aIID, aResult);
   }
 
   return rv;
