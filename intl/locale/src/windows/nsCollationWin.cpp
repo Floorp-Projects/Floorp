@@ -70,7 +70,7 @@ nsresult nsCollationWin::Initialize(nsILocale* locale)
   // locale -> LCID 
   mLCID = 1033; // initialize to en-US
   if (locale != nsnull) {
-    const PRUnichar *aLocaleUnichar;
+    PRUnichar *aLocaleUnichar;
     nsString aLocale;
     nsString aCategory("NSILOCALE_COLLATE");
     nsresult res = locale->GetCategory(aCategory.GetUnicode(), &aLocaleUnichar);

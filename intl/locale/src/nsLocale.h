@@ -18,30 +18,32 @@
 #ifndef nsLocale_h__
 #define nsLocale_h__
 
-
-#include "nsISupports.h"
-#include "nscore.h"
+#include "nsString.h"
 #include "nsILocale.h"
-
 #include "plhash.h"
 
 class nsLocale : public nsILocale {
+	friend class nsLocaleDefinition;
+	friend class nsLocaleService;
 	NS_DECL_ISUPPORTS
 
 public:
-	
+	nsLocale(void);
 	nsLocale(nsString** categoryList,nsString** valueList, PRUint32 count);
+	nsLocale(nsLocale* other);
 	virtual ~nsLocale(void);
 	
 	NS_IMETHOD GetCategory(const nsString* category, nsString* result);
+	NS_IMETHOD GetCategory(const PRUnichar *category, PRUnichar **result);
 
-  NS_IMETHOD GetCategory(const PRUnichar *category, const PRUnichar **result);
-
-private:
+protected:
 	
+	NS_IMETHOD AddCategory(const PRUnichar* category, const PRUnichar* value);
+
 	static PLHashNumber Hash_HashFunction(const void* key);
 	static PRIntn Hash_CompareNSString(const void* s1, const void* s2);
 	static PRIntn Hash_EnmerateDelete(PLHashEntry *he, PRIntn hashIndex, void *arg);
+	static PRIntn Hash_EnumerateCopy(PLHashEntry *he, PRIntn hashIndex, void *arg);
 
 	PLHashTable*	fHashtable;
 	PRUint32		fCategoryCount;

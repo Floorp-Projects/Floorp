@@ -20,6 +20,8 @@
 #include "nsILocaleFactory.h"
 #include "nsLocaleCID.h"
 #include "nsIComponentManager.h"
+#include "nsILocaleService.h"
+
 #ifdef XP_PC
 #include "nsIWin32Locale.h"
 #include <windows.h>
@@ -62,6 +64,23 @@ char* localeCategoryList[6] = { "NSILOCALE_TIME",
 								"NSILOCALE_MESSAGES",
 								"NSILOCALE_NUMERIC"
 };
+
+void
+serivce_create_interface(void)
+{
+	nsresult			result;
+	nsILocaleService*	localeService;
+	nsIFactory*			genericFactory;
+
+	result = nsComponentManager::CreateInstance(kLocaleServiceCID,
+									NULL,
+									kILocaleFactoryIID,
+									(void**)&localeService);
+	NS_ASSERTION(localeService!=NULL,"nsLocaleTest: service_create_interface failed.");
+	NS_ASSERTION(result==NS_OK,"nsLocaleTest: service_create_interface failed");
+
+	localeService->Release();
+}
 
 void
 factory_create_interface(void)

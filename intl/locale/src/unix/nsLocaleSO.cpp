@@ -21,6 +21,7 @@
 #include "nsCOMPtr.h"
 #include "nsIFactory.h"
 
+#include "nsILocaleService.h"
 #include "nsILocaleFactory.h"
 #include "nsLocaleFactory.h"
 #include "nsLocaleCID.h"
@@ -44,6 +45,7 @@ static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 NS_DEFINE_IID(kLocaleFactoryCID, NS_LOCALEFACTORY_CID);
 NS_DEFINE_IID(kILocaleFactoryIID,NS_ILOCALEFACTORY_IID);
 NS_DEFINE_CID(kPosixLocaleFactoryCID, NS_POSIXLOCALEFACTORY_CID);
+NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID);
 
 //
 // for the collation and formatting interfaces
@@ -94,6 +96,14 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* serviceMgr,
 
 			return res;
 	}
+
+  if (aClass.Equals(kLocaleServiceCID)) {
+    factoryInstance = new nsLocaleServiceFactory();
+    res = factoryInstance->QueryInterface(kIFactoryIID,(void**)aFactory);
+    if (NS_FAILED(res)) { *aFactory=NULL; delete factoryInstance; }
+    return res;
+  }
+
   if (aClass.Equals(kPosixLocaleFactoryCID))
   {
       nsPosixLocaleFactory *posix_factory = new nsPosixLocaleFactory();
@@ -153,9 +163,17 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char *
   //
   // register the generic factory
   //
-  rv = compMgr->RegisterComponent(kLocaleFactoryCID,NULL,NULL,path,PR_TRUE,PR_TRUE);
-  NS_ASSERTION(rv==NS_OK,"nsLocale: RegisterFactory failed.");
-  if(NS_FAILED(rv) && (NS_ERROR_FACTORY_EXISTS != rv)) goto done;
+  rv = compMgr->RegisterComponent(kLocaleFactoryCID,"nsLocale component",
+                                  NS_LOCALE_PROGID,path,PR_TRUE,PR_TRUE);
+  NS_ASSERTION(rv==NS_OK,"nsLocaleTest: RegisterFactory failed.");
+  if (NS_FAILED(rv) && (NS_ERROR_FACTORY_EXISTS != rv)) goto done;
+
+  //
+  // register the service 
+  //
+  rv = compMgr->RegisterComponent(kLocaleServiceCID,"nsLocaleService component",
+                                  NS_LOCALESERVICE_PROGID,path,PR_TRUE,PR_TRUE);
+  if (NS_FAILED(rv) && (NS_ERROR_FACTORY_EXISTS != rv)) goto done;
 
   //
   // register the Posix factory

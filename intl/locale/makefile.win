@@ -17,7 +17,8 @@
 
 DEPTH=..\..
 
-DIRS=	public		\
+DIRS=	idl			\
+		public		\
 		src			
     
 include <$(DEPTH)\config\rules.mak>

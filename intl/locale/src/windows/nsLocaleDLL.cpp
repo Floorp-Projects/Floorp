@@ -21,6 +21,7 @@
 #include "nsCOMPtr.h"
 #include "nsIFactory.h"
 
+#include "nsILocaleService.h"
 #include "nsILocaleFactory.h"
 #include "nsLocaleFactory.h"
 #include "nsLocaleCID.h"
@@ -42,6 +43,7 @@ NS_DEFINE_IID(kLocaleFactoryCID, NS_LOCALEFACTORY_CID);
 NS_DEFINE_IID(kILocaleFactoryIID,NS_ILOCALEFACTORY_IID);
 NS_DEFINE_IID(kWin32LocaleFactoryCID, NS_WIN32LOCALEFACTORY_CID);
 NS_DEFINE_IID(kIWin32LocaleIID,NS_IWIN32LOCALE_IID);
+NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID);
 
 //
 // for the collation and formatting interfaces
@@ -93,7 +95,13 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* serviceMgr,
 
 			return res;
 	}
-	
+
+	if (aClass.Equals(kLocaleServiceCID)) {
+		factoryInstance = new nsLocaleServiceFactory();
+		res = factoryInstance->QueryInterface(kIFactoryIID,(void**)aFactory);
+		if (NS_FAILED(res)) { *aFactory=NULL; delete factoryInstance; }
+		return res;
+	}
 	//
 	// okay about bout nsIWin32LocaleManager
 	//
@@ -150,9 +158,18 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char *
 	//
 	// register the generic factory
 	//
-	rv = compMgr->RegisterComponent(kLocaleFactoryCID,NULL,NULL,path,PR_TRUE,PR_TRUE);
+	rv = compMgr->RegisterComponent(kLocaleFactoryCID,"nsLocale component",
+		NS_LOCALE_PROGID,path,PR_TRUE,PR_TRUE);
 	NS_ASSERTION(rv==NS_OK,"nsLocaleTest: RegisterFactory failed.");
-  if (NS_FAILED(rv) && (NS_ERROR_FACTORY_EXISTS != rv)) goto done;
+	if (NS_FAILED(rv) && (NS_ERROR_FACTORY_EXISTS != rv)) goto done;
+
+	//
+	// register the service 
+	//
+	rv = compMgr->RegisterComponent(kLocaleServiceCID,"nsLocaleService component",
+		NS_LOCALESERVICE_PROGID,path,PR_TRUE,PR_TRUE);
+	if (NS_FAILED(rv) && (NS_ERROR_FACTORY_EXISTS != rv)) goto done;
+
 
 	//
 	// register the windows specific factory
@@ -202,6 +219,9 @@ extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* aServMgr, const char
   if (NS_FAILED(rv)) return rv;
 
 	rv = compMgr->UnregisterComponent(kLocaleFactoryCID, path);
+	if (NS_FAILED(rv)) goto done;
+
+	rv = compMgr->UnregisterComponent(kLocaleServiceCID, path);
 	if (NS_FAILED(rv)) goto done;
 
 	rv = compMgr->UnregisterComponent(kWin32LocaleFactoryCID, path);
