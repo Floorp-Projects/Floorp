@@ -60,6 +60,10 @@ NS_METHOD nsTextWidget::CreateNative(GtkWidget *parentWindow)
   mTextWidget = mWidget;
 
   gtk_widget_set_name(mWidget, "nsTextWidget");
+  gtk_signal_connect_after(GTK_OBJECT(mWidget),
+                     "key_press_event",
+                     GTK_SIGNAL_FUNC(handle_key_press_event),
+                     this);
   gtk_signal_connect(GTK_OBJECT(mWidget),
                      "key_release_event",
                      GTK_SIGNAL_FUNC(handle_key_release_event),
