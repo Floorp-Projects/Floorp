@@ -141,29 +141,11 @@ nsDownloadManager::Init()
 }
 
 nsresult
-nsDownloadManager::DownloadFinished(const char* aKey)
+nsDownloadManager::DownloadEnded(const char* aKey)
 {
   nsCStringKey key(aKey);
   if (mCurrDownloadItems->Exists(&key)) {
-    DownloadItem* item = NS_STATIC_CAST(DownloadItem*, mCurrDownloadItems->Get(&key));
-    PRInt32 percentComplete;
-    item->GetPercentComplete(&percentComplete);
-
-    nsCOMPtr<nsIRDFResource> res;
-    nsCOMPtr<nsIRDFNode> oldTarget;
-    gRDFService->GetResource(aKey, getter_AddRefs(res));
-    nsresult rv = GetTarget(res, gNC_ProgressPercent, PR_TRUE, getter_AddRefs(oldTarget));
-    if (NS_FAILED(rv)) return rv;
-
-    nsCOMPtr<nsIRDFInt> percent;
-    rv = gRDFService->GetIntLiteral(percentComplete, getter_AddRefs(percent));
-    if (NS_FAILED(rv)) return rv;
-
-    if (oldTarget)
-      rv = Change(res, gNC_ProgressPercent, oldTarget, percent);
-    else
-      rv = Assert(res, gNC_ProgressPercent, percent, PR_TRUE);
-
+    AssertProgressInfoFor(aKey);
     mCurrDownloadItems->Remove(&key);
   }
 
@@ -244,10 +226,7 @@ nsDownloadManager::AssertProgressInfo()
 
   nsCOMPtr<nsISupports> supports;
   nsCOMPtr<nsIRDFResource> res;
-  nsCOMPtr<nsIRDFInt> percent;
-  nsCOMPtr<nsIRDFNode> oldTarget;
   char* id;
-  PRInt32 percentComplete;
 
   // enumerate the resources, use their ids to retrieve the corresponding
   // nsIDownloadItems from the hashtable (if they don't exist, the download isn't
@@ -260,28 +239,42 @@ nsDownloadManager::AssertProgressInfo()
     items->GetNext(getter_AddRefs(supports));
     res = do_QueryInterface(supports);
     res->GetValue(&id);
-    nsCStringKey key(id);
-    if (mCurrDownloadItems->Exists(&key)) { // if not, must be a finished download; don't need to update info
-      nsIDownloadItem* item = NS_STATIC_CAST(nsIDownloadItem*, mCurrDownloadItems->Get(&key));
-
-      // update percentage
-      item->GetPercentComplete(&percentComplete);
-      rv = GetTarget(res, gNC_ProgressPercent, PR_TRUE, getter_AddRefs(oldTarget));
-      if (NS_FAILED(rv)) continue;
-
-      rv = gRDFService->GetIntLiteral(percentComplete, getter_AddRefs(percent));
-      if (NS_FAILED(rv)) continue;
-
-      if (oldTarget)
-        rv = Change(res, gNC_ProgressPercent, oldTarget, percent);
-      else
-        rv = Assert(res, gNC_ProgressPercent, percent, PR_TRUE);
-
-      if (NS_FAILED(rv)) continue;
-    }
+    rv = AssertProgressInfoFor(id);
   }
   return rv;
 }
+
+nsresult
+nsDownloadManager::AssertProgressInfoFor(const char* aKey)
+{
+  nsresult rv = NS_ERROR_FAILURE;
+  nsCStringKey key(aKey);
+  if (mCurrDownloadItems->Exists(&key)) { // if not, must be a finished download; don't need to update info
+    nsIDownloadItem* item = NS_STATIC_CAST(nsIDownloadItem*, mCurrDownloadItems->Get(&key));
+
+    PRInt32 percentComplete;
+    nsCOMPtr<nsIRDFNode> oldTarget;
+    nsCOMPtr<nsIRDFInt> percent;
+    nsCOMPtr<nsIRDFResource> res;
+    gRDFService->GetResource(aKey, getter_AddRefs(res));
+
+    // update percentage
+    item->GetPercentComplete(&percentComplete);
+    rv = GetTarget(res, gNC_ProgressPercent, PR_TRUE, getter_AddRefs(oldTarget));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = gRDFService->GetIntLiteral(percentComplete, getter_AddRefs(percent));
+    if (NS_FAILED(rv)) return rv;
+
+    if (oldTarget)
+      rv = Change(res, gNC_ProgressPercent, oldTarget, percent);
+    else
+      rv = Assert(res, gNC_ProgressPercent, percent, PR_TRUE);
+
+    // XXX should also store time elapsed
+  }
+  return rv;
+}  
 
 ///////////////////////////////////////////////////////////////////////////////
 // nsIDownloadManager
@@ -333,9 +326,11 @@ nsDownloadManager::AddDownload(nsIDownloadItem* aDownloadItem)
   downloads->IndexOf(downloadItem, &itemIndex);
   if (itemIndex > 0) {
     nsCOMPtr<nsIRDFNode> node;
-    downloads->RemoveElementAt(itemIndex, PR_TRUE, getter_AddRefs(node));
+    rv = downloads->RemoveElementAt(itemIndex, PR_TRUE, getter_AddRefs(node));
+    if (NS_FAILED(rv)) return rv;
   }
-  downloads->AppendElement(downloadItem);
+  rv = downloads->AppendElement(downloadItem);
+  if (NS_FAILED(rv)) return rv;
   
   if (!mCurrDownloadItems)
     mCurrDownloadItems = new nsHashtable();
@@ -396,6 +391,8 @@ nsDownloadManager::AddDownload(nsIDownloadItem* aDownloadItem)
 NS_IMETHODIMP
 nsDownloadManager::GetDownload(const char* aKey, nsIDownloadItem** aDownloadItem)
 {
+  NS_ENSURE_ARG_POINTER(aDownloadItem);
+
   // if it's currently downloading we can get it from the table
   // XXX otherwise we should look for it in the datasource and
   //     create a new nsIDownloadItem with the resource's properties
@@ -472,6 +469,7 @@ nsDownloadManager::Open(nsIDOMWindow* aParent)
 {
 
   // first assert new progress info so the ui is correctly updated
+  // if this fails, it fails -- continue.
   AssertProgressInfo();
   
   // if we ever have the capability to display the UI of third party dl managers,
@@ -484,7 +482,7 @@ nsDownloadManager::Open(nsIDOMWindow* aParent)
   rv = ww->OpenWindow(aParent,
                       DOWNLOAD_MANAGER_URL,
                       "_blank",
-                      "chrome,titlebar,dependent,centerscreen",
+                      "chrome,titlebar,dependent,resizable,minimizable,centerscreen",
                       nsnull,
                       getter_AddRefs(newWindow));
 
@@ -554,8 +552,6 @@ nsDownloadManager::OnClose()
 NS_IMETHODIMP
 nsDownloadManager::HandleEvent(nsIDOMEvent* aEvent)
 {
-  NS_ENSURE_ARG_POINTER(aEvent);
-
   // the event is either load or unload
   nsAutoString eventType;
   aEvent->GetType(eventType);
@@ -784,39 +780,9 @@ DownloadItem::DownloadItem():mStartTime(0)
 
 DownloadItem::~DownloadItem()
 {
-  UpdateProgressInfo();
-}
-
-nsresult
-DownloadItem::UpdateProgressInfo()
-{
-  nsCOMPtr<nsIRDFDataSource> ds;
-
-  nsresult rv = gRDFService->GetDataSource("rdf:downloads", getter_AddRefs(ds));
-  if (NS_FAILED(rv)) return rv;
-
-  nsCOMPtr<nsIRDFResource> res;
   char* path;
   mTarget->GetPath(&path);
-  gRDFService->GetResource(path, getter_AddRefs(res));
-
-  nsCOMPtr<nsIRDFNode> oldTarget;
-  rv = ds->GetTarget(res, gNC_ProgressPercent, PR_TRUE, getter_AddRefs(oldTarget));
-  if (NS_FAILED(rv)) return rv;
-
-  nsCOMPtr<nsIRDFInt> percent;
-  rv = gRDFService->GetIntLiteral(mPercentComplete, getter_AddRefs(percent));
-
-  if (NS_FAILED(rv)) return rv;
-
-  if (oldTarget)
-    rv = ds->Change(res, gNC_ProgressPercent, oldTarget, percent);
-  else
-    rv = ds->Assert(res, gNC_ProgressPercent, percent, PR_TRUE);
-
-  // XXX Store elapsed time here eventually
-
-  return rv;
+  mDownloadManager->AssertProgressInfoFor(path);
 }
 
 nsresult
@@ -929,7 +895,7 @@ DownloadItem::OnStateChange(nsIWebProgress* aWebProgress,
   else if (aStateFlags & STATE_STOP) {
     char* path;
     mTarget->GetPath(&path);
-    mDownloadManager->DownloadFinished(path);
+    mDownloadManager->DownloadEnded(path);
   }
 
   if (mListener)

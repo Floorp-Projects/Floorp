@@ -79,7 +79,8 @@ protected:
   nsresult GetProfileDownloadsFileURL(char** aDownloadsFileURL);
   nsresult GetInternalListener(nsIDownloadProgressListener** aInternalListener);
   nsresult AssertProgressInfo();
-  nsresult DownloadFinished(const char* aTargetPath);
+  nsresult AssertProgressInfoFor(const char* aKey);
+  nsresult DownloadEnded(const char* aKey);
   PRBool MustUpdateUI() { if (mDocument) return PR_TRUE; return PR_FALSE; }
 
 private:
@@ -103,7 +104,6 @@ public:
   virtual ~DownloadItem();
 
 protected:
-  nsresult UpdateProgressInfo();
   nsresult SetDownloadManager(nsDownloadManager* aDownloadManager);
   nsresult SetDialogListener(nsIWebProgressListener* aInternalListener);
   nsresult GetDialogListener(nsIWebProgressListener** aInternalListener);

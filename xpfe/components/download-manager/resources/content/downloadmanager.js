@@ -69,9 +69,6 @@ function Startup()
   const dlmgrContractID = "@mozilla.org/download-manager;1";
   const dlmgrIID = Components.interfaces.nsIDownloadManager;
   gDownloadManager = Components.classes[dlmgrContractID].getService(dlmgrIID);
-  const ds = gDownloadManager.QueryInterface(Components.interfaces.nsIRDFDataSource);
-  gDownloadView.database.AddDataSource(ds);
-  gDownloadView.builder.rebuild();
 }
 
 var downloadViewController = {
