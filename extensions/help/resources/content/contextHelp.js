@@ -37,7 +37,7 @@ function openHelp(topic) {
     params.SetString(1, topic);
     var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
                        .getService(Components.interfaces.nsIWindowWatcher);
-    ww.openWindow(null, MOZ_HELP_URI, "_blank", "chrome,all,dialog=no", params);
+    ww.openWindow(null, MOZ_HELP_URI, "_blank", "chrome,all,alwaysRaised,dialog=no", params);
   }
 }
 
