@@ -623,6 +623,9 @@ extern "C" JSBool pref_InitInitialObjects()
 #if defined(VMS)
       , "openvms.js"
 #endif
+#if defined(MOZ_WIDGET_PHOTON)
+	  , "photon.js"
+#endif		 
 #elif defined(XP_OS2)
       , "os2pref.js"
 #endif
