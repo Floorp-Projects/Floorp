@@ -48,9 +48,9 @@
 #include "mknewsgr.h"
 #include "libi18n.h"
 #include "gui.h"
-#include HG10299
+#include "ssl.h"
 #include "mknews.h"
-
+#include "prerror.h"
 #include "msgcom.h"
 #include "msgnet.h"
 #include "msg_srch.h"
@@ -3175,9 +3175,8 @@ net_do_cancel (ActiveEntry *ce)
 
   fields = MSG_CreateCompositionFields(from, 0, 0, 0, 0, 0, newsgroups,
 									   0, 0, subject, id, other_random_headers,
-									   0, 0, news_url
-									   HG66664
-									   );
+									   0, 0, news_url,
+									   FALSE, FALSE);
   if (!fields)
   {
 	  status = MK_OUT_OF_MEMORY;
