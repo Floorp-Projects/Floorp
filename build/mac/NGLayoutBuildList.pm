@@ -200,6 +200,7 @@ sub BuildDist()
 	[":mozilla:config:mac:MANIFEST_config", "$distdirectory:config:"],
 	[":mozilla:include:MANIFEST", "$distdirectory:include:"],		
 	[":mozilla:cmd:macfe:pch:MANIFEST", "$distdirectory:include:"],
+	[":mozilla:cmd:macfe:utility:MANIFEST", "$distdirectory:include:"],
 #NSPR	
     [":mozilla:nsprpub:pr:include:MANIFEST", "$distdirectory:nspr:"],		
     [":mozilla:nsprpub:pr:src:md:mac:MANIFEST", "$distdirectory:nspr:mac:"],		
