@@ -331,7 +331,6 @@ NS_METHOD nsTableRowGroupFrame::ReflowMappedChildren(nsIPresContext&      aPresC
                                                      PRBool               aDoSiblings)
 {
   if (PR_TRUE==gsDebugIR) printf("\nTRGF IR: ReflowMappedChildren\n");
-  nsIFrame* prevKidFrame = nsnull;
   nsSize    kidMaxElementSize;
   nsSize*   pKidMaxElementSize = (nsnull != aDesiredSize.maxElementSize) ? &kidMaxElementSize : nsnull;
   nsresult  rv = NS_OK;
@@ -351,13 +350,10 @@ NS_METHOD nsTableRowGroupFrame::ReflowMappedChildren(nsIPresContext&      aPresC
     nsHTMLReflowMetrics desiredSize(pKidMaxElementSize);
     desiredSize.width=desiredSize.height=desiredSize.ascent=desiredSize.descent=0;
 
-    // Reflow the child into the available space
-#if 1
-    // XXX Give it as much room as it wants. We'll deal with splitting later
-    // after we've computed the row heights taking into account cells with
-    // row spans...
+    // Reflow the child into the available space, giving it as much room as
+    // it wants. We'll deal with splitting later after we've computed the row
+    // heights, taking into account cells with row spans...
     kidAvailSize.height = NS_UNCONSTRAINEDSIZE;
-#endif
     nsHTMLReflowState kidReflowState(aPresContext, kidFrame, aReflowState.reflowState,
                                      kidAvailSize, aReason);
     if (kidFrame != mFrames.FirstChild()) {
@@ -372,23 +368,6 @@ NS_METHOD nsTableRowGroupFrame::ReflowMappedChildren(nsIPresContext&      aPresC
     rv = ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState, aStatus);
     if (gsDebug) printf("%p RG child %p returned desired width = %d\n",
                         this, kidFrame, desiredSize.width);
-
-#if 0
-    // Did the child fit?
-    if ((kidFrame != mFrames.FirstChild()) &&
-        ((kidAvailSize.height <= 0) ||
-         (desiredSize.height > kidAvailSize.height)))
-    {
-      // The child's height is too big to fit at all in our remaining space,
-      // and it's not our first child.
-      //
-      // Note that if the width is too big that's okay and we allow the
-      // child to extend horizontally outside of the reflow area
-      PushChildren(kidFrame, prevKidFrame);
-      aStatus = NS_FRAME_NOT_COMPLETE;
-      break;
-    }
-#endif
 
     nsRect kidRect (0, aReflowState.y, desiredSize.width, desiredSize.height);
     PlaceChild(aPresContext, aReflowState, kidFrame, kidRect, aDesiredSize.maxElementSize,
@@ -434,52 +413,6 @@ NS_METHOD nsTableRowGroupFrame::ReflowMappedChildren(nsIPresContext&      aPresC
         }
       }
     }
-
-
-		// Remember where we just were in case we end up pushing children
-		prevKidFrame = kidFrame;
-
-#if 0
-    /* Row groups should not create continuing frames for rows 
-     * unless they absolutely have to!
-     * check to see if this is absolutely necessary (with new params from troy)
-     * otherwise PushChildren and bail.
-     */
-    // Special handling for incomplete children
-    if (NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
-      // XXX It's good to assume that we might still have room
-      // even if the child didn't complete (floaters will want this)
-      nsIFrame* kidNextInFlow;
-       
-      kidFrame->GetNextInFlow(kidNextInFlow);
-      if (nsnull == kidNextInFlow) {
-        // No the child isn't complete, and it doesn't have a next in flow so
-        // create a continuing frame. This hooks the child into the flow.
-        nsIFrame* continuingFrame;
-        nsIStyleContext* kidSC;
-        kidFrame->GetStyleContext(kidSC);
-        kidFrame->CreateContinuingFrame(aPresContext, this, kidSC,
-                                        continuingFrame);
-        NS_RELEASE(kidSC);
-
-        // Insert the frame. We'll reflow it next pass through the loop
-        nsIFrame* nextSib;
-         
-        kidFrame->GetNextSibling(nextSib);
-        continuingFrame->SetNextSibling(nextSib);
-        kidFrame->SetNextSibling(continuingFrame);
-      }
-      // We've used up all of our available space so push the remaining
-      // children to the next-in-flow
-      nsIFrame* nextSibling;
-       
-      kidFrame->GetNextSibling(nextSibling);
-      if (nsnull != nextSibling) {
-        PushChildren(nextSibling, kidFrame);
-      }
-      break;
-    }
-#endif
 
     if (PR_FALSE==aDoSiblings)
       break;
