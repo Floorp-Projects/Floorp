@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.24 $ $Date: 2002/01/10 18:10:43 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.25 $ $Date: 2002/01/10 20:24:46 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
@@ -304,6 +304,19 @@ NSSCertificate_BuildChain
 		                                                  timeOpt,
 		                                                  usage,
 		                                                  policiesOpt);
+		/* Mimic functionality from CERT_FindCertIssuer.  If a matching
+		 * cert (based on trust & usage) cannot be found, just take the
+		 * newest cert with the correct subject.
+		 */
+		if (!c && !usage->anyUsage) {
+		    usage->anyUsage = PR_TRUE;
+		    c = NSSCryptoContext_FindBestCertificateBySubject(cc,
+		                                                  issuer,
+		                                                  timeOpt,
+		                                                  usage,
+		                                                  policiesOpt);
+		    usage->anyUsage = PR_FALSE;
+		}
 	    }
 	    if (!c) {
 		c = NSSTrustDomain_FindBestCertificateBySubject(td,
@@ -311,6 +324,19 @@ NSSCertificate_BuildChain
 		                                                timeOpt,
 		                                                usage,
 		                                                policiesOpt);
+	    }
+	    /* Mimic functionality from CERT_FindCertIssuer.  If a matching
+	     * cert (based on trust & usage) cannot be found, just take the
+	     * newest cert with the correct subject.
+	     */
+	    if (!c && !usage->anyUsage) {
+		usage->anyUsage = PR_TRUE;
+		c = NSSTrustDomain_FindBestCertificateBySubject(td,
+		                                                issuer,
+		                                                timeOpt,
+		                                                usage,
+		                                                policiesOpt);
+		usage->anyUsage = PR_FALSE;
 	    }
 #ifdef NSS_3_4_CODE
 	    usage->nss3lookingForCA = tmpca;
