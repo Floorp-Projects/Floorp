@@ -458,23 +458,21 @@ nsXULTreeOuterGroupFrame::PositionChanged(PRInt32 aOldIndex, PRInt32 aNewIndex)
 NS_IMETHODIMP
 nsXULTreeOuterGroupFrame::InternalPositionChanged(PRBool aUp, PRInt32 aDelta)
 {
+  if (mContentChain) {
+    // XXX Eventually we need to make the code smart enough to look at a content chain
+    // when building ANOTHER content chain.
+    // Ensure all reflows happen first and make sure we're dirty.
+    nsCOMPtr<nsIPresShell> shell;
+    mPresContext->GetShell(getter_AddRefs(shell));
+    shell->FlushPendingNotifications();
+  }
+
   PRInt32 visibleRows = 0;
   if (mRowHeight)
-	visibleRows = GetAvailableHeight()/mRowHeight;
+	  visibleRows = GetAvailableHeight()/mRowHeight;
   
   // Get our presentation context.
   if (aDelta < visibleRows) {
-    if (mContentChain) {
-      // XXX This could cause problems because of async reflow.
-      // Eventually we need to make the code smart enough to look at a content chain
-      // when building ANOTHER content chain.
-  
-      // Ensure all reflows happen first.
-      nsCOMPtr<nsIPresShell> shell;
-      mPresContext->GetShell(getter_AddRefs(shell));
-      shell->FlushPendingNotifications();
-    }
-
     PRInt32 loseRows = aDelta;
 
     // scrolling down
