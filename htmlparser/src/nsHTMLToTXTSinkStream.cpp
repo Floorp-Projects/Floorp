@@ -199,7 +199,7 @@ nsHTMLToTXTSinkStream::nsHTMLToTXTSinkStream()
  */
 nsHTMLToTXTSinkStream::~nsHTMLToTXTSinkStream()
 {
-  NS_ASSERTION(mCurrentLine.Length() == 0, "Buffer don't flushed! Probably illegal input to class.");
+  NS_WARN_IF_FALSE(mCurrentLine.Length() == 0, "Buffer not flushed! Probably illegal input to class.");
 
   if(mBuffer) 
     delete[] mBuffer;
@@ -1119,7 +1119,7 @@ nsHTMLToTXTSinkStream::Write(const nsString& aString)
     // intelligent wrapping without clearing the mCurrentLine
     // buffer before!!!
 
-    NS_ASSERTION(mCurrentLine.Length() == 0,
+    NS_WARN_IF_FALSE(mCurrentLine.Length() == 0,
                  "Mixed wrapping data and nonwrapping data on the same line");
     
     // Put the mail quote "> " chars in, if appropriate.
