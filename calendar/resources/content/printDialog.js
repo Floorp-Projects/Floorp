@@ -183,26 +183,13 @@ function printCalendar() {
 }
 
 function returnTime(timeval) {
-   var eventTime = new Date( timeval ) ;
-   var hrs=eventTime.getHours();
-   var suffix='a';
-   if (hrs > 12)
-     {
-      hrs=hrs-12;
-      suffix='p';
-     }
-   var minutes=eventTime.getMinutes();
-   if (minutes < 10)
-      retval=hrs+':0'+minutes;
-   else
-      retval=hrs+':'+minutes;
-   if (retval=='0:00')
-      retval='Midnight';
-   else
-      if (retval=='12:00')
-         retval='Noon';
-      else
-         retval+=suffix;
+   retval= opener.gCalendarWindow.dateFormater.getFormatedTime( timeval );
+   if (retval.indexOf("AM")>-1)
+      retval=retval.substring(0,retval.indexOf("AM")-1)+'a';
+   if (retval.indexOf("PM")>-1)
+      retval=retval.substring(0,retval.indexOf("PM")-1)+'p';
+   if (retval=='12:00p')
+      retval='Noon';
    return retval;
 }
 
@@ -221,13 +208,7 @@ if (mytitle.length > 0)
     printwindow.document.write("</td></tr></table>");
   }
 
-var yearStart = new Date(currentDate.getFullYear(),0,1);
-var offset = yearStart.getDay();
-if (offset > 3)
-   offset -= 4;
-else
-   offset+=3;
-var weekNumber = Math.round((((currentDate-yearStart)/86400000)+offset)/7);
+var weekNumber = DateUtils.getWeekNumber(currentDate) ;
 
 printwindow.document.write("<table border=0 width=100% style='font-size:26px;font-weight:bold;'><tr ><td align=center valign=bottom>Week "+weekNumber+"</td></tr></table>");
 printwindow.document.write("<table style='border:1px solid black;' width=100%>")
@@ -320,13 +301,7 @@ if (mytitle.length > 0)
     printwindow.document.write("</td></tr></table>");
   }
 
-var yearStart = new Date(currentDate.getFullYear(),0,1);
-var offset = yearStart.getDay();
-if (offset > 3)
-   offset -= 4;
-else
-   offset+=3;
-var weekNumber = Math.round((((currentDate-yearStart)/86400000)+offset)/7);
+var weekNumber = DateUtils.getWeekNumber(currentDate) ;
 
 printwindow.document.write("<table border=0 width=100% style='font-size:26px;font-weight:bold;'><tr ><td align=center valign=bottom>Week "+weekNumber+"</td></tr></table>");
 printwindow.document.write("<table style='border:1px solid black;' width=100%>")
