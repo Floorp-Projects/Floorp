@@ -35,9 +35,9 @@ static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
  */
 nsresult NS_NewMimeEmitter(nsIMimeEmitter ** aInstancePtrResult)
 {
-	/* note this new macro for assertions...they can take 
+  /* note this new macro for assertions...they can take 
      a string describing the assertion */
-	nsresult result = NS_OK;
+  //nsresult result = NS_OK;
 	NS_PRECONDITION(nsnull != aInstancePtrResult, "nsnull ptr");
 	if (nsnull != aInstancePtrResult)
 	{
