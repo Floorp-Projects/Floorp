@@ -71,6 +71,8 @@ public:
 
   void SetPrintTest(PRInt32 aTestType) { mPrinterTestType = aTestType; }
 
+  void RegressionOutput(PRInt32 aRegressionOutputLevel) { mRegressionOutputLevel = aRegressionOutputLevel; }
+
   void EnableJiggleLayout() {
     mJiggleLayout = PR_TRUE;
   }
@@ -179,6 +181,7 @@ protected:
   PRBool mVerbose;
   PRBool mRegressing;
   PRInt32 mPrinterTestType;
+  PRInt32 mRegressionOutputLevel;
   nsString mRegressionDir;
   PRBool mIncludeStyleInfo;
 
