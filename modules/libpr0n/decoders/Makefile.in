@@ -32,5 +32,9 @@ ifeq ($(OS_ARCH),WINNT)
 DIRS		+= icon/win icon
 endif
 
+ifeq ($(OS_ARCH),OS2)
+DIRS		+= icon/os2 icon
+endif
+
 include $(topsrcdir)/config/rules.mk
 
