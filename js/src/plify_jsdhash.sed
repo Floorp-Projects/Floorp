@@ -6,6 +6,7 @@ s/jsdhash_h___/pldhash_h___/
 s/jstypes\.h/prtypes.h/
 s/jsbit\.h/prbit.h/
 s/jsdhash\.h/pldhash.h/
+s/jsdhash\.c/pldhash.c/
 s/jsdhash:/pldhash:/
 s/jsutil\.h/prlog.h/
 s/JS_DHASH/PL_DHASH/g
@@ -25,4 +26,5 @@ s/extern JS_PUBLIC_API/PR_EXTERN/
 s/JS_PUBLIC_API/PR_IMPLEMENT/
 s/JS_DLL_CALLBACK/PR_CALLBACK/
 s/JS_STATIC_DLL_CALLBACK/PR_STATIC_CALLBACK/
+s/JS_NewDHashTable/PL_NewDHashTable/
 s/JS_/PR_/g

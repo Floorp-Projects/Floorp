@@ -14,13 +14,12 @@
  *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1999,2000 Netscape Communications Corporation.
+ * Copyright (C) 1999-2001 Netscape Communications Corporation.
  * All Rights Reserved.
  *
- * Original Contributor: 
- *   Brendan Eich <brendan@mozilla.org>
- *
- * Contributor(s): 
+ * Contributor(s):
+ *   Brendan Eich <brendan@mozilla.org> (Original Author)
+ *   Chris Waterson <waterson@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -78,7 +77,7 @@ JS_PUBLIC_API(const void *)
 JS_DHashGetKeyStub(JSDHashTable *table, JSDHashEntryHdr *entry)
 {
     JSDHashEntryStub *stub = (JSDHashEntryStub *)entry;
-    
+
     return stub->key;
 }
 
@@ -125,7 +124,8 @@ static JSDHashTableOps stub_ops = {
     JS_DHashMatchEntryStub,
     JS_DHashMoveEntryStub,
     JS_DHashClearEntryStub,
-    JS_DHashFinalizeStub
+    JS_DHashFinalizeStub,
+    NULL
 };
 
 JS_PUBLIC_API(JSDHashTableOps *)
@@ -206,7 +206,7 @@ JS_DHashTableInit(JSDHashTable *table, JSDHashTableOps *ops, void *data,
 /* Reserve keyHash 0 for free entries and 1 for removed-entry sentinels. */
 #define MARK_ENTRY_FREE(entry)      ((entry)->keyHash = 0)
 #define MARK_ENTRY_REMOVED(entry)   ((entry)->keyHash = 1)
-#define ENTRY_IS_LIVE(entry)        ((entry)->keyHash >= 2)
+#define ENTRY_IS_LIVE(entry)        JS_DHASH_ENTRY_IS_LIVE(entry)
 #define ENSURE_LIVE_KEYHASH(hash0)  if (hash0 < 2) hash0 -= 2; else (void)0
 
 /* Compute the address of the indexed entry in table. */
@@ -218,7 +218,9 @@ JS_DHashTableFinish(JSDHashTable *table)
 {
     char *entryAddr, *entryLimit;
     uint32 entrySize;
+    JSDHashEntryHdr *entry;
 
+    /* Call finalize before clearing entries. */
     table->ops->finalize(table);
 
     /* Clear any remaining live entries. */
@@ -226,15 +228,15 @@ JS_DHashTableFinish(JSDHashTable *table)
     entrySize = table->entrySize;
     entryLimit = entryAddr + JS_BIT(table->sizeLog2) * entrySize;
     while (entryAddr < entryLimit) {
-        JSDHashEntryHdr *entry = (JSDHashEntryHdr *)entryAddr;
+        entry = (JSDHashEntryHdr *)entryAddr;
         if (ENTRY_IS_LIVE(entry)) {
             METER(table->stats.removeEnums++);
             table->ops->clearEntry(table, entry);
         }
-
         entryAddr += entrySize;
     }
 
+    /* Free entry storage last. */
     table->ops->freeTable(table, table->entryStore);
 }
 
@@ -284,7 +286,7 @@ SearchTable(JSDHashTable *table, const void *key, JSDHashNumber keyHash)
 }
 
 static JSBool
-ChangeTable(JSDHashTable *table, int deltaLog2, JSDHashEntryHdr *skipEntry)
+ChangeTable(JSDHashTable *table, int deltaLog2, JSDHashEntryHdr **findEntry)
 {
     int oldLog2, newLog2;
     uint32 oldCapacity, newCapacity;
@@ -306,26 +308,30 @@ ChangeTable(JSDHashTable *table, int deltaLog2, JSDHashEntryHdr *skipEntry)
     if (!newEntryStore)
         return JS_FALSE;
 
+    /* We can't fail from here on, so update table parameters. */
     table->hashShift = JS_DHASH_BITS - newLog2;
     table->sizeLog2 = newLog2;
     table->sizeMask = JS_BITMASK(newLog2);
     table->removedCount = 0;
 
+    /* Assign the new entry store to table. */
     memset(newEntryStore, 0, nbytes);
     oldEntryAddr = oldEntryStore = table->entryStore;
     table->entryStore = newEntryStore;
     getKey = table->ops->getKey;
     moveEntry = table->ops->moveEntry;
 
-    /* Copy only live entries, leaving removed ones (and skipEntry) behind. */
+    /* Copy only live entries, leaving removed ones behind. */
     for (i = 0; i < oldCapacity; i++) {
         oldEntry = (JSDHashEntryHdr *)oldEntryAddr;
-        if (oldEntry != skipEntry && ENTRY_IS_LIVE(oldEntry)) {
+        if (ENTRY_IS_LIVE(oldEntry)) {
             newEntry = SearchTable(table, getKey(table, oldEntry),
                                    oldEntry->keyHash);
             JS_ASSERT(JS_DHASH_ENTRY_IS_FREE(newEntry));
             moveEntry(table, oldEntry, newEntry);
             newEntry->keyHash = oldEntry->keyHash;
+            if (findEntry && *findEntry == oldEntry)
+                *findEntry = newEntry;
         }
         oldEntryAddr += entrySize;
     }
@@ -366,6 +372,8 @@ JS_DHashTableOperate(JSDHashTable *table, const void *key, JSDHashOperator op)
         if (JS_DHASH_ENTRY_IS_FREE(entry)) {
             /* Initialize the entry, indicating that it's no longer free. */
             METER(table->stats.addMisses++);
+            if (table->ops->initEntry)
+                table->ops->initEntry(table, entry, key);
             entry->keyHash = keyHash;
             table->entryCount++;
 
@@ -406,21 +414,16 @@ JS_DHashTableOperate(JSDHashTable *table, const void *key, JSDHashOperator op)
     }
 
     if (biasedDeltaLog2) {
-        if (!ChangeTable(table, biasedDeltaLog2 - DELTA_LOG2_BIAS, entry)) {
+        /* Grow, compress, or shrink table, keeping entry valid if non-null. */
+        if (!ChangeTable(table, biasedDeltaLog2 - DELTA_LOG2_BIAS, &entry)) {
             /* If we just grabbed the last free entry, undo and fail hard. */
             if (op == JS_DHASH_ADD &&
                 table->entryCount + table->removedCount == size) {
                 METER(table->stats.addFailures++);
+                table->ops->clearEntry(table, entry);
                 MARK_ENTRY_FREE(entry);
                 table->entryCount--;
                 entry = NULL;
-            }
-        } else {
-            if (op == JS_DHASH_ADD) {
-                /* If the table grew, add the new (skipped) entry. */ 
-                entry = SearchTable(table, key, keyHash);
-                JS_ASSERT(JS_DHASH_ENTRY_IS_FREE(entry));
-                entry->keyHash = keyHash;
             }
         }
     }

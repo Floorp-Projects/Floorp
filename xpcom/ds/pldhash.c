@@ -14,13 +14,12 @@
  *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1999,2000 Netscape Communications Corporation.
+ * Copyright (C) 1999-2001 Netscape Communications Corporation.
  * All Rights Reserved.
  *
- * Original Contributor: 
- *   Brendan Eich <brendan@mozilla.org>
- *
- * Contributor(s): 
+ * Contributor(s):
+ *   Brendan Eich <brendan@mozilla.org> (Original Author)
+ *   Chris Waterson <waterson@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -79,7 +78,7 @@ PR_IMPLEMENT(const void *)
 PL_DHashGetKeyStub(PLDHashTable *table, PLDHashEntryHdr *entry)
 {
     PLDHashEntryStub *stub = (PLDHashEntryStub *)entry;
-    
+
     return stub->key;
 }
 
@@ -126,7 +125,8 @@ static PLDHashTableOps stub_ops = {
     PL_DHashMatchEntryStub,
     PL_DHashMoveEntryStub,
     PL_DHashClearEntryStub,
-    PL_DHashFinalizeStub
+    PL_DHashFinalizeStub,
+    NULL
 };
 
 PR_IMPLEMENT(PLDHashTableOps *)
@@ -136,7 +136,7 @@ PL_DHashGetStubOps(void)
 }
 
 PR_IMPLEMENT(PLDHashTable *)
-PR_NewDHashTable(PLDHashTableOps *ops, void *data, PRUint32 entrySize,
+PL_NewDHashTable(PLDHashTableOps *ops, void *data, PRUint32 entrySize,
                  PRUint32 capacity)
 {
     PLDHashTable *table;
@@ -207,7 +207,7 @@ PL_DHashTableInit(PLDHashTable *table, PLDHashTableOps *ops, void *data,
 /* Reserve keyHash 0 for free entries and 1 for removed-entry sentinels. */
 #define MARK_ENTRY_FREE(entry)      ((entry)->keyHash = 0)
 #define MARK_ENTRY_REMOVED(entry)   ((entry)->keyHash = 1)
-#define ENTRY_IS_LIVE(entry)        ((entry)->keyHash >= 2)
+#define ENTRY_IS_LIVE(entry)        PL_DHASH_ENTRY_IS_LIVE(entry)
 #define ENSURE_LIVE_KEYHASH(hash0)  if (hash0 < 2) hash0 -= 2; else (void)0
 
 /* Compute the address of the indexed entry in table. */
@@ -219,7 +219,9 @@ PL_DHashTableFinish(PLDHashTable *table)
 {
     char *entryAddr, *entryLimit;
     PRUint32 entrySize;
+    PLDHashEntryHdr *entry;
 
+    /* Call finalize before clearing entries. */
     table->ops->finalize(table);
 
     /* Clear any remaining live entries. */
@@ -227,15 +229,15 @@ PL_DHashTableFinish(PLDHashTable *table)
     entrySize = table->entrySize;
     entryLimit = entryAddr + PR_BIT(table->sizeLog2) * entrySize;
     while (entryAddr < entryLimit) {
-        PLDHashEntryHdr *entry = (PLDHashEntryHdr *)entryAddr;
+        entry = (PLDHashEntryHdr *)entryAddr;
         if (ENTRY_IS_LIVE(entry)) {
             METER(table->stats.removeEnums++);
             table->ops->clearEntry(table, entry);
         }
-
         entryAddr += entrySize;
     }
 
+    /* Free entry storage last. */
     table->ops->freeTable(table, table->entryStore);
 }
 
@@ -285,7 +287,7 @@ SearchTable(PLDHashTable *table, const void *key, PLDHashNumber keyHash)
 }
 
 static PRBool
-ChangeTable(PLDHashTable *table, int deltaLog2, PLDHashEntryHdr *skipEntry)
+ChangeTable(PLDHashTable *table, int deltaLog2, PLDHashEntryHdr **findEntry)
 {
     int oldLog2, newLog2;
     PRUint32 oldCapacity, newCapacity;
@@ -307,26 +309,30 @@ ChangeTable(PLDHashTable *table, int deltaLog2, PLDHashEntryHdr *skipEntry)
     if (!newEntryStore)
         return PR_FALSE;
 
+    /* We can't fail from here on, so update table parameters. */
     table->hashShift = PL_DHASH_BITS - newLog2;
     table->sizeLog2 = newLog2;
     table->sizeMask = PR_BITMASK(newLog2);
     table->removedCount = 0;
 
+    /* Assign the new entry store to table. */
     memset(newEntryStore, 0, nbytes);
     oldEntryAddr = oldEntryStore = table->entryStore;
     table->entryStore = newEntryStore;
     getKey = table->ops->getKey;
     moveEntry = table->ops->moveEntry;
 
-    /* Copy only live entries, leaving removed ones (and skipEntry) behind. */
+    /* Copy only live entries, leaving removed ones behind. */
     for (i = 0; i < oldCapacity; i++) {
         oldEntry = (PLDHashEntryHdr *)oldEntryAddr;
-        if (oldEntry != skipEntry && ENTRY_IS_LIVE(oldEntry)) {
+        if (ENTRY_IS_LIVE(oldEntry)) {
             newEntry = SearchTable(table, getKey(table, oldEntry),
                                    oldEntry->keyHash);
             PR_ASSERT(PL_DHASH_ENTRY_IS_FREE(newEntry));
             moveEntry(table, oldEntry, newEntry);
             newEntry->keyHash = oldEntry->keyHash;
+            if (findEntry && *findEntry == oldEntry)
+                *findEntry = newEntry;
         }
         oldEntryAddr += entrySize;
     }
@@ -367,6 +373,8 @@ PL_DHashTableOperate(PLDHashTable *table, const void *key, PLDHashOperator op)
         if (PL_DHASH_ENTRY_IS_FREE(entry)) {
             /* Initialize the entry, indicating that it's no longer free. */
             METER(table->stats.addMisses++);
+            if (table->ops->initEntry)
+                table->ops->initEntry(table, entry, key);
             entry->keyHash = keyHash;
             table->entryCount++;
 
@@ -407,21 +415,16 @@ PL_DHashTableOperate(PLDHashTable *table, const void *key, PLDHashOperator op)
     }
 
     if (biasedDeltaLog2) {
-        if (!ChangeTable(table, biasedDeltaLog2 - DELTA_LOG2_BIAS, entry)) {
+        /* Grow, compress, or shrink table, keeping entry valid if non-null. */
+        if (!ChangeTable(table, biasedDeltaLog2 - DELTA_LOG2_BIAS, &entry)) {
             /* If we just grabbed the last free entry, undo and fail hard. */
             if (op == PL_DHASH_ADD &&
                 table->entryCount + table->removedCount == size) {
                 METER(table->stats.addFailures++);
+                table->ops->clearEntry(table, entry);
                 MARK_ENTRY_FREE(entry);
                 table->entryCount--;
                 entry = NULL;
-            }
-        } else {
-            if (op == PL_DHASH_ADD) {
-                /* If the table grew, add the new (skipped) entry. */ 
-                entry = SearchTable(table, key, keyHash);
-                PR_ASSERT(PL_DHASH_ENTRY_IS_FREE(entry));
-                entry->keyHash = keyHash;
             }
         }
     }
