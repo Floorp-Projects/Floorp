@@ -4293,7 +4293,13 @@ nsEventStateManager::GetNextDocShell(nsIDocShellTreeNode* aNode,
 {
   NS_ASSERTION(aNode, "null docshell");
   NS_ASSERTION(aResult, "null out pointer");
+  PRInt32 numChildren = 0;
   
+  aNode->GetChildCount(&numChildren);
+  if (numChildren == 0) {
+    *aResult = nsnull;
+    return;
+  }
   aNode->GetChildAt(0, aResult);
   if (*aResult)
     return;
@@ -4311,6 +4317,12 @@ nsEventStateManager::GetNextDocShell(nsIDocShellTreeNode* aNode,
     PRInt32 childOffset = 0;
     curItem->GetChildOffset(&childOffset);
     nsCOMPtr<nsIDocShellTreeNode> parentNode = do_QueryInterface(parentItem);
+    numChildren = 0;
+    parentNode->GetChildCount(&numChildren);
+    if (childOffset+1 >= numChildren) {
+      *aResult = nsnull;
+      return;
+    }
     parentNode->GetChildAt(childOffset+1, aResult);
     if (*aResult)
       return;
