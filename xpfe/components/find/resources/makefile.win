@@ -19,13 +19,20 @@ IGNORE_MANIFEST=1
 
 DEPTH=..\..\..\..
 
+CHROME_DIR = global
+
+CHROME_CONTENT_DIR = content\default
+
+CHROME_CONTENT = \
+	.\finddialog.xul \
+	.\finddialog.js  \
+	$(NULL)
+
+CHROME_SKIN = 
+
+CHROME_L10N = \
+	.\locale\en-US\finddialog.dtd \
+	$(NULL)
+
 include <$(DEPTH)\config\rules.mak>
-
-install:: $(DLL)
-	$(MAKE_INSTALL) finddialog.xul $(DIST)\bin\res\samples
-	$(MAKE_INSTALL) finddialog.js $(DIST)\bin\res\samples
-
-clobber::
-	rm -f $(DIST)\bin\res\samples\finddialog.xul
-	rm -f $(DIST)\bin\res\samples\finddialog.js
 
