@@ -45,6 +45,12 @@ import org.mozilla.webclient.UnimplementedException;
 
 import org.mozilla.webclient.impl.WrapperFactory;
 
+/**
+ * <p>This is a singleton class.  All native events pass thru this class
+ * by virtue of the {@link #pushRunnable} or {@link pushNotifyRunnable}
+ * methods.</p>
+ */
+
 public class NativeEventThread extends Thread {
 
     //
