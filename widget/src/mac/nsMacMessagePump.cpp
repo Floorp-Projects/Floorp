@@ -374,7 +374,10 @@ PRBool nsMacMessagePump::GetEvent(EventRecord &theEvent)
   
   // Make sure we call WNE if we have user events, or the mouse is down
   EventRecord tempEvent;
-  PRBool havePendingEvent = ::EventAvail(kEventAvailMask, &tempEvent) || !(tempEvent.modifiers & btnState);
+  // When checking btnState make sure to test if we're in the background
+  PRBool havePendingEvent =
+    ::EventAvail(kEventAvailMask, &tempEvent) ||
+    (!(tempEvent.modifiers & btnState) && nsToolkit::IsAppInForeground());
   
   // don't call more than once every 4 ticks
   if (!havePendingEvent && (::TickCount() < sNextWNECall))
