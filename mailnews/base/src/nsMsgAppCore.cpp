@@ -535,27 +535,20 @@ void nsMsgAppCore::InitializeFolderRoot()
     NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kCMsgMailSessionCID, &rv);
     if (NS_FAILED(rv)) return;
 
-    nsIMsgIncomingServer* server = nsnull;
-    rv = mailSession->GetCurrentServer(&server);
-    if (NS_SUCCEEDED(rv) && server) {
-        char * folderRoot = nsnull;
-        nsIPop3IncomingServer *popServer;
-        rv = server->QueryInterface(nsIPop3IncomingServer::GetIID(),
-                                    (void **)&popServer);
-        if (NS_SUCCEEDED(rv)) {
-            popServer->GetRootFolderPath(&folderRoot);
-            if (folderRoot) {
-                // everyone should have a inbox so let's
-                // tack that folder name on to the root path...
-                m_folderPath = folderRoot;
-                m_folderPath += "Inbox";
-            } // if we have a folder root for the current identity
-            NS_IF_RELEASE(popServer);
-        }
-        NS_IF_RELEASE(server);
-    } // if we have an server
+    nsCOMPtr<nsIMsgIncomingServer> server;
+    rv = mailSession->GetCurrentServer(getter_AddRefs(server));
     
-	return;
+    char * folderRoot;
+    if (NS_SUCCEEDED(rv))
+        rv = server->GetLocalPath(&folderRoot);
+    
+    if (NS_SUCCEEDED(rv)) {
+        // everyone should have a inbox so let's
+        // tack that folder name on to the root path...
+        m_folderPath = folderRoot;
+        m_folderPath += "Inbox";
+    } // if we have a folder root for the current server
+    
 }
 
 NS_IMETHODIMP
