@@ -100,61 +100,62 @@ MimeInlineImage_parse_begin (MimeObject *obj)
   if (!obj->output_p) return 0;
 
   if (!obj->options || !obj->options->output_fn)
-	return 0;
+    return 0;
 
   clazz = (MimeInlineImageClass *) obj->clazz;
 
   if (obj->options &&
-	  obj->options->image_begin &&
-	  obj->options->write_html_p &&
-	  obj->options->image_write_buffer)
-	{
-	  char *html, *part, *image_url;
-	  const char *ct;
+    obj->options->image_begin &&
+    obj->options->write_html_p &&
+    obj->options->image_write_buffer)
+  {
+    char *html, *part, *image_url;
+    const char *ct;
 
-	  part = mime_part_address(obj);
-	  if (!part) return MIME_OUT_OF_MEMORY;
-	  image_url = mime_set_url_part(obj->options->url, part, PR_TRUE);
-	  if (!image_url)
-		{
+    part = mime_part_address(obj);
+    if (!part) return MIME_OUT_OF_MEMORY;
+    image_url = mime_set_url_part(obj->options->url, part, PR_TRUE);
+    if (!image_url)
+    {
 		  PR_Free(part);
-		  return MIME_OUT_OF_MEMORY;
-		}
-	  PR_Free(part);
-
-	  ct = obj->content_type;
-	  if (!ct) ct = IMAGE_GIF;  /* Can't happen?  Close enough. */
+      return MIME_OUT_OF_MEMORY;
+    }
+    PR_Free(part);
+    
+    ct = obj->content_type;
+    if (!ct) ct = IMAGE_GIF;  /* Can't happen?  Close enough. */
 
 	  // Fill in content type and attachment name here.
-	  nsCAutoString url_with_filename(image_url);
-	  url_with_filename += "&type=";
-	  url_with_filename += ct;
-	  char * filename = MimeHeaders_get_name ( obj->headers, obj->options );
-	  if (filename)
-	  {
-		  char *escapedName = nsEscape(filename, url_Path);
-		  if (!escapedName) return MIME_OUT_OF_MEMORY;
-			  url_with_filename += "&filename=";
-			  url_with_filename += escapedName;
-			  nsCRT::free(escapedName);
-	  }
+    nsCAutoString url_with_filename(image_url);
+    url_with_filename += "&type=";
+    url_with_filename += ct;
+    char * filename = MimeHeaders_get_name ( obj->headers, obj->options );
+    if (filename)
+    {
+      char *escapedName = nsEscape(filename, url_Path);
+      if (!escapedName) return MIME_OUT_OF_MEMORY;
+      url_with_filename += "&filename=";
+      url_with_filename += escapedName;
+      nsCRT::free(escapedName);
+      PR_Free(filename);
+    }
 
     // We need to separate images with HR's...
     MimeObject_write_separator(obj);
 
 	  img->image_data =
-		obj->options->image_begin(url_with_filename.get(), ct, obj->options->stream_closure);
-	  PR_Free(image_url);
+      obj->options->image_begin(url_with_filename.get(), ct, obj->options->stream_closure);
+    PR_Free(image_url);
 
-	  if (!img->image_data) return MIME_OUT_OF_MEMORY;
+    if (!img->image_data) return MIME_OUT_OF_MEMORY;
 
-	  html = obj->options->make_image_html(img->image_data);
-	  if (!html) return MIME_OUT_OF_MEMORY;
+    html = obj->options->make_image_html(img->image_data);
+    if (!html) return MIME_OUT_OF_MEMORY;
 
-	  status = MimeObject_write(obj, html, nsCRT::strlen(html), PR_TRUE);
-	  PR_Free(html);
-	  if (status < 0) return status;
-	}
+    status = MimeObject_write(obj, html, nsCRT::strlen(html), PR_TRUE);
+    PR_Free(html);
+    if (status < 0) return status;
+  }
 
   // 
   // Now we are going to see if we should set the content type in the
