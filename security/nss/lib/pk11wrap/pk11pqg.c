@@ -128,10 +128,13 @@ PK11_PQG_ParamGenSeedLen( unsigned int j, unsigned int seedBytes,
 
     /* fill in Params */
     params->arena = parena;
+    params->prime.type = siUnsignedInteger;
     params->prime.data = pTemplate[0].pValue;
     params->prime.len = pTemplate[0].ulValueLen;
+    params->subPrime.type = siUnsignedInteger;
     params->subPrime.data = pTemplate[1].pValue;
     params->subPrime.len = pTemplate[1].ulValueLen;
+    params->base.type = siUnsignedInteger;
     params->base.data = pTemplate[2].pValue;
     params->base.len = pTemplate[2].ulValueLen;
 
@@ -151,8 +154,10 @@ PK11_PQG_ParamGenSeedLen( unsigned int j, unsigned int seedBytes,
     /* fill in Params */
     verify->arena = varena;
     verify->counter = (unsigned int)(*(CK_ULONG*)vTemplate[0].pValue);
+    verify->seed.type = siUnsignedInteger;
     verify->seed.data = vTemplate[1].pValue;
     verify->seed.len = vTemplate[1].ulValueLen;
+    verify->h.type = siUnsignedInteger;
     verify->h.data = vTemplate[2].pValue;
     verify->h.len = vTemplate[2].ulValueLen;
 
