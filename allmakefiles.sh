@@ -542,9 +542,6 @@ widget/src/xlib/Makefile
 widget/src/os2/Makefile
 widget/src/os2/tests/Makefile
 widget/src/windows/Makefile
-widget/src/windows/expose/Makefile
-widget/src/windows/expose/ISimpleDOMNode/Makefile
-widget/src/windows/expose/ISimpleDOMDocument/Makefile
 widget/src/xlibxtbin/Makefile
 widget/src/xpwidgets/Makefile
 widget/src/support/Makefile
@@ -925,12 +922,19 @@ fi
     MAKEFILES_accessible="
        accessible/Makefile
        accessible/public/Makefile
+       accessible/public/msaa/Makefile
+       accessible/public/msaa/ISimpleDOMNode/Makefile
+       accessible/public/msaa/ISimpleDOMDocument/Makefile
        accessible/src/Makefile
        accessible/src/base/Makefile
        accessible/src/html/Makefile
        accessible/src/xul/Makefile
+       accessible/src/msaa/Makefile
+       accessible/src/atk/Makefile
+       accessible/src/mac/Makefile
        accessible/build/Makefile
 "
+
 if [ ! "$SYSTEM_JPEG" ]; then
     MAKEFILES_jpeg="jpeg/Makefile"
 fi

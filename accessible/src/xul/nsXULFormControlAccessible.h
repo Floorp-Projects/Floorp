@@ -47,7 +47,7 @@
 #include "nsHTMLFormControlAccessible.h"
 #include "nsIAccessibleValue.h"
 
-class nsXULButtonAccessible : public nsAccessible
+class nsXULButtonAccessible : public nsAccessibleWrap
 // Don't inherit from nsFormControlAccessible - it doesn't allow children and a button can have a dropmarker child
 {
 public:
@@ -88,7 +88,7 @@ private:
   PRBool DropmarkerOpen(PRBool aToggleOpen);
 };
 
-class nsXULGroupboxAccessible : public nsAccessible
+class nsXULGroupboxAccessible : public nsAccessibleWrap
 {
 public:
   nsXULGroupboxAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
@@ -120,7 +120,7 @@ public:
   NS_IMETHOD GetAccState(PRUint32 *_retval);
 };
 
-class nsXULRadioGroupAccessible : public nsAccessible
+class nsXULRadioGroupAccessible : public nsAccessibleWrap
 {
 public:
   nsXULRadioGroupAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
@@ -128,7 +128,7 @@ public:
   NS_IMETHOD GetAccState(PRUint32 *_retval); 
 };
 
-class nsXULStatusBarAccessible : public nsAccessible
+class nsXULStatusBarAccessible : public nsAccessibleWrap
 {
 public:
   nsXULStatusBarAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
@@ -136,7 +136,7 @@ public:
   NS_IMETHOD GetAccState(PRUint32 *_retval); 
 };
 
-class nsXULToolbarAccessible : public nsAccessible
+class nsXULToolbarAccessible : public nsAccessibleWrap
 {
 public:
   nsXULToolbarAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);

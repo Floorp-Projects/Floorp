@@ -1027,9 +1027,8 @@ nsFrame::HandleEvent(nsIPresContext* aPresContext,
                   do_GetService("@mozilla.org/accessibilityService;1", &rv);
          if (accService) {
            // get an accessible for the dom node
-           nsISupports* f = (nsISupports*)(nsIFrame*)this;
            nsIAccessible* acc;
-           accService->CreateRootAccessible(aPresContext,mParent ? f : nsnull,&acc);
+           accService->CreateRootAccessible(aPresContext, &acc);
            NS_STATIC_CAST(nsAccessibleEvent*, aEvent)->accessible = acc;
          }
       //}

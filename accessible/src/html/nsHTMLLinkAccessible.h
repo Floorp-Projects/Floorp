@@ -40,7 +40,6 @@
 #ifndef _nsHTMLLinkAccessible_H_
 #define _nsHTMLLinkAccessible_H_
 
-#include "nsAccessible.h"
 #include "nsBaseWidgetAccessible.h"
 #include "nsIAccessibleHyperLink.h"
 

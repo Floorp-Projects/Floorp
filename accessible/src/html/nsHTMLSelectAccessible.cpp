@@ -50,7 +50,6 @@
 #include "nsIListControlFrame.h"
 #include "nsIServiceManager.h"
 #include "nsITextContent.h"
-#include "nsLayoutAtoms.h"
 
 /**
   * Selects, Listboxes and Comboboxes, are made up of a number of different
@@ -163,7 +162,7 @@ void nsHTMLSelectableAccessible::iterator::Select(PRBool aSelect)
 
 nsHTMLSelectableAccessible::nsHTMLSelectableAccessible(nsIDOMNode* aDOMNode, 
                                                        nsIWeakReference* aShell):
-nsAccessible(aDOMNode, aShell)
+nsAccessibleWrap(aDOMNode, aShell)
 {
 }
 
@@ -212,7 +211,7 @@ NS_IMETHODIMP nsHTMLSelectableAccessible::GetSelectedChildren(nsISupportsArray *
     return NS_ERROR_OUT_OF_MEMORY;
   
   nsCOMPtr<nsIPresContext> context;
-  GetPresContext(context);
+  GetPresContext(getter_AddRefs(context));
   if (!context)
     return NS_ERROR_FAILURE;
 
@@ -239,7 +238,7 @@ NS_IMETHODIMP nsHTMLSelectableAccessible::RefSelection(PRInt32 aIndex, nsIAccess
     return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIPresContext> context;
-  GetPresContext(context);
+  GetPresContext(getter_AddRefs(context));
   if (!context)
     return NS_ERROR_FAILURE;
 
@@ -603,7 +602,7 @@ NS_IMETHODIMP nsHTMLSelectOptionAccessible::GetAccState(PRUint32 *_retval)
   }
   
   // find out if we are the focused node
-  GetFocusedOptionNode(parentNode, focusedOptionNode);
+  GetFocusedOptionNode(parentNode, getter_AddRefs(focusedOptionNode));
   if (focusedOptionNode == mDOMNode)
     *_retval |= STATE_FOCUSED;
 
@@ -646,7 +645,7 @@ NS_IMETHODIMP nsHTMLSelectOptionAccessible::AccDoAction(PRUint8 index)
     // Clear old selection
     nsCOMPtr<nsIDOMNode> oldHTMLOptionNode, selectNode;
     mParent->AccGetDOMNode(getter_AddRefs(selectNode));
-    nsHTMLSelectOptionAccessible::GetFocusedOptionNode(selectNode, oldHTMLOptionNode);
+    GetFocusedOptionNode(selectNode, getter_AddRefs(oldHTMLOptionNode));
     nsCOMPtr<nsIDOMHTMLOptionElement> oldHTMLOption(do_QueryInterface(oldHTMLOptionNode));
     if (oldHTMLOption)
       oldHTMLOption->SetSelected(PR_FALSE);
@@ -704,8 +703,9 @@ NS_IMETHODIMP nsHTMLSelectOptionAccessible::AccDoAction(PRUint8 index)
   *  weren't getting the proper notification when the focus changed using the DOM
   */
 nsresult nsHTMLSelectOptionAccessible::GetFocusedOptionNode(nsIDOMNode *aListNode, 
-                                                            nsCOMPtr<nsIDOMNode>& aFocusedOptionNode)
+                                                            nsIDOMNode **aFocusedOptionNode)
 {
+  *aFocusedOptionNode = nsnull;
   NS_ASSERTION(aListNode, "Called GetFocusedOptionNode without a valid list node");
 
   nsCOMPtr<nsIContent> content(do_QueryInterface(aListNode));
@@ -747,9 +747,9 @@ nsresult nsHTMLSelectOptionAccessible::GetFocusedOptionNode(nsIDOMNode *aListNod
 
   // Either use options and focused index, or default to list node itself
   if (NS_SUCCEEDED(rv) && options && focusedOptionIndex >= 0)   // Something is focused
-    rv = options->Item(focusedOptionIndex, getter_AddRefs(aFocusedOptionNode));
+    rv = options->Item(focusedOptionIndex, aFocusedOptionNode);
   else {  // If no options in list or focusedOptionIndex <0, then we are not focused on an item
-    aFocusedOptionNode = aListNode;  // return normal target content
+    NS_ADDREF(*aFocusedOptionNode = aListNode);  // return normal target content
     rv = NS_OK;
   }
 
@@ -919,21 +919,12 @@ NS_IMETHODIMP nsHTMLComboboxTextFieldAccessible::GetAccValue(nsAString& _retval)
 {
   nsIFrame* frame = nsAccessible::GetBoundsFrame();
   nsCOMPtr<nsIPresContext> context;
-  GetPresContext(context);
+  GetPresContext(getter_AddRefs(context));
   if (!frame || !context)
     return NS_ERROR_FAILURE;
 
   frame->FirstChild(context, nsnull, &frame);
-#ifdef DEBUG
-  if (! nsAccessible::IsCorrectFrameType(frame, nsLayoutAtoms::blockFrame))
-    return NS_ERROR_FAILURE;
-#endif
-
   frame->FirstChild(context, nsnull, &frame);
-#ifdef DEBUG
-  if (! nsAccessible::IsCorrectFrameType(frame, nsLayoutAtoms::textFrame))
-    return NS_ERROR_FAILURE;
-#endif
 
   nsCOMPtr<nsIContent> content;
   frame->GetContent(getter_AddRefs(content));
@@ -955,16 +946,12 @@ void nsHTMLComboboxTextFieldAccessible::GetBounds(nsRect& aBounds, nsIFrame** aB
   // get our first child's frame
   nsIFrame* frame = nsAccessible::GetBoundsFrame();
   nsCOMPtr<nsIPresContext> context;
-  GetPresContext(context);
+  GetPresContext(getter_AddRefs(context));
   if (!frame || !context)
     return;
 
   frame->FirstChild(context, nsnull, aBoundingFrame);
   frame->FirstChild(context, nsnull, &frame);
-#ifdef DEBUG
-  if (! nsAccessible::IsCorrectFrameType(frame, nsLayoutAtoms::blockFrame))
-    return;
-#endif
 
   frame->GetRect(aBounds);
 }
@@ -1039,21 +1026,13 @@ NS_IMETHODIMP nsHTMLComboboxButtonAccessible::AccDoAction(PRUint8 aIndex)
 {
   nsIFrame* frame = nsAccessible::GetBoundsFrame();
   nsCOMPtr<nsIPresContext> context;
-  GetPresContext(context);
+  GetPresContext(getter_AddRefs(context));
   if (!context)
     return NS_ERROR_FAILURE;
 
   frame->FirstChild(context, nsnull, &frame);
-#ifdef DEBUG
-  if (! nsAccessible::IsCorrectFrameType(frame, nsLayoutAtoms::blockFrame))
-    return NS_ERROR_FAILURE;
-#endif
 
   frame->GetNextSibling(&frame);
-#ifdef DEBUG
-  if (! nsAccessible::IsCorrectFrameType(frame, nsLayoutAtoms::gfxButtonControlFrame))
-    return NS_ERROR_FAILURE;
-#endif
 
   nsCOMPtr<nsIContent> content;
   frame->GetContent(getter_AddRefs(content));
@@ -1103,22 +1082,14 @@ void nsHTMLComboboxButtonAccessible::GetBounds(nsRect& aBounds, nsIFrame** aBoun
   // get our second child's frame
   nsIFrame* frame = nsAccessible::GetBoundsFrame();
   nsCOMPtr<nsIPresContext> context;
-  GetPresContext(context);
+  GetPresContext(getter_AddRefs(context));
   if (!context)
     return;
 
   *aBoundingFrame = frame;  // bounding frame is the ComboboxControlFrame
   frame->FirstChild(context, nsnull, &frame); // first frame is for the textfield
-#ifdef DEBUG
-  if (! nsAccessible::IsCorrectFrameType(frame, nsLayoutAtoms::blockFrame))
-    return;
-#endif
 
   frame->GetNextSibling(&frame);  // sibling frame is for the button
-#ifdef DEBUG
-  if (! nsAccessible::IsCorrectFrameType(frame, nsLayoutAtoms::gfxButtonControlFrame))
-    return;
-#endif
 
   frame->GetRect(aBounds);
 }
@@ -1268,17 +1239,9 @@ void nsHTMLComboboxListAccessible::GetBounds(nsRect& aBounds, nsIFrame** aBoundi
     *aBoundingFrame = nsnull;
     return;
   }
-#ifdef DEBUG
-  if (! nsAccessible::IsCorrectFrameType(frame, nsLayoutAtoms::blockFrame))
-    return;
-#endif
 
   frame->GetParent(aBoundingFrame);
   frame->GetParent(&frame);
-#ifdef DEBUG
-  if (! nsAccessible::IsCorrectFrameType(frame, nsLayoutAtoms::areaFrame))
-    return;
-#endif
 
   frame->GetRect(aBounds);
 }

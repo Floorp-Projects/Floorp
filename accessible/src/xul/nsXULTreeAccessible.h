@@ -39,7 +39,7 @@
 #ifndef __nsXULTreeAccessible_h__
 #define __nsXULTreeAccessible_h__
 
-#include "nsAccessible.h"
+#include "nsAccessibleWrap.h"
 #include "nsBaseWidgetAccessible.h"
 #include "nsCOMPtr.h"
 #include "nsIDOMNode.h"
@@ -120,7 +120,7 @@ private:
   nsString mColumn;
 };
 
-class nsXULTreeColumnsAccessible : public nsAccessible,
+class nsXULTreeColumnsAccessible : public nsAccessibleWrap,
                                    public nsIAccessibleTable
 {
 public:

@@ -71,12 +71,6 @@ CPPSRCS		= \
 	nsFullScreen.cpp     \
 	$(NULL)
 
-ifdef ACCESSIBILITY
-CPPSRCS	+= \
-	Accessible.cpp  \
-	SimpleDOMNode.cpp  \
-	$(NULL)
-endif
 
 DEFINES		+= -D_IMPL_NS_WIDGET -DMOZ_AIMM -DMOZ_UNICODE 
 

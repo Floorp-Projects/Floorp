@@ -71,7 +71,7 @@
 /*
  * The basic implemetation of nsIAccessibleSelectable.
  */
-class nsXULSelectableAccessible : public nsAccessible,
+class nsXULSelectableAccessible : public nsAccessibleWrap,
                                   public nsIAccessibleSelectable
 {
 public:
@@ -90,7 +90,7 @@ protected:
 /*
  * The list that contains all the options in the select.
  */
-class nsXULSelectListAccessible : public nsAccessible
+class nsXULSelectListAccessible : public nsAccessibleWrap
 {
 public:
   

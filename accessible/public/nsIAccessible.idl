@@ -82,6 +82,8 @@ interface nsIAccessible : nsISupports
 
   [noscript] void handleEvent(in unsigned long aEvent, in nsIAccessible aTarget, in voidPtr aData);
 
+  [noscript] void getNativeInterface(out voidPtr aOutAccessible);
+
  // MSAA State flags - used for bitfield. More than 1 allowed.
   const unsigned long  STATE_UNAVAILABLE        = 0x00000001;  // Disabled, maps to opposite of Java ENABLED, Gnome/ATK SENSITIVE?
   const unsigned long  STATE_SELECTED           = 0x00000002;

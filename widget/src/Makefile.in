@@ -33,9 +33,6 @@ DIRS		+= $(MOZ_WIDGET_TOOLKIT)
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-ifdef ACCESSIBILITY
-DIRS		+= windows/expose
-endif
 DIRS		+= windows build
 endif
 

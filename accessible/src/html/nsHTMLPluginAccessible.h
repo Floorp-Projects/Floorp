@@ -37,7 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsAccessible.h"
+#include "nsAccessibleWrap.h"
 
 /**
   * This class is used to wrap the window for the plugin. It's only child
@@ -45,7 +45,7 @@
   *   accessibility support to get the IAccessible from the plugin itself
   *   (via the windows call to get he accessible by window).
   */
-class nsHTMLPluginAccessible : public nsAccessible
+class nsHTMLPluginAccessible : public nsAccessibleWrap
 {
 public:
   nsHTMLPluginAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);

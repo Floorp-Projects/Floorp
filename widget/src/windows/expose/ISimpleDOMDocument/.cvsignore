@@ -1,8 +1,0 @@
-ISimpleDOMDocument_p.c
-dlldata.c
-ISimpleDOMDocument_i.c
-ISimpleDOMDocument.h
-dlldata.pdb
-isimpledomDocument_p.pdb
-isimpledomDocument_i.pdb
-Makefile

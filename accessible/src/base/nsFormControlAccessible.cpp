@@ -59,9 +59,11 @@
   */
 
 nsFormControlAccessible::nsFormControlAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
-nsAccessible(aNode, aShell)
+nsAccessibleWrap(aNode, aShell)
 { 
 }
+
+NS_IMPL_ISUPPORTS_INHERITED0(nsFormControlAccessible, nsAccessible)
 
 /**
   * XUL states: focused, unavailable(disabled), focusable, ?protected?

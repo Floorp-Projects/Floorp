@@ -149,7 +149,7 @@ NS_IMETHODIMP nsXULTabAccessible::GetAccState(PRUint32 *_retval)
 
 /** Constructor */
 nsXULTabBoxAccessible::nsXULTabBoxAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
-nsAccessible(aNode, aShell)
+nsAccessibleWrap(aNode, aShell)
 { 
 }
 
@@ -189,7 +189,7 @@ NS_IMETHODIMP nsXULTabBoxAccessible::GetAccChildCount(PRInt32 *_retval)
 
 /** Constructor */
 nsXULTabPanelsAccessible::nsXULTabPanelsAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
-nsAccessible(aNode, aShell), mAccService(do_GetService("@mozilla.org/accessibilityService;1"))
+nsAccessibleWrap(aNode, aShell), mAccService(do_GetService("@mozilla.org/accessibilityService;1"))
 { 
 }
 
@@ -307,7 +307,9 @@ nsresult nsXULTabPanelsAccessible::GetAccPluginChild(nsIAccessible **_retval)
   if (!pluginPort)
     return NS_ERROR_FAILURE;
 
-  mAccService->CreateHTMLNativeWindowAccessible(mDOMNode, mPresShell, (PRInt32)pluginPort, _retval);
+  mAccService->CreateHTMLNativeWindowAccessible(mDOMNode, mPresShell, 
+                                                NS_REINTERPRET_CAST(void*, pluginPort), 
+                                                _retval);
   return NS_OK;
 #endif
 }

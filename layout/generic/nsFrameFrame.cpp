@@ -296,7 +296,7 @@ NS_IMETHODIMP nsHTMLFrameOuterFrame::GetAccessible(nsIAccessible** aAccessible)
 
   if (accService) {
     nsCOMPtr<nsIDOMNode> node = do_QueryInterface(mContent);
-    return accService->CreateIFrameAccessible(node, aAccessible);
+    return accService->CreateOuterDocAccessible(node, aAccessible);
   }
 
   return NS_ERROR_FAILURE;

@@ -64,7 +64,7 @@
 
 // Don't inherit from nsFormControlAccessible - it doesn't allow children and a button can have a dropmarker child
 nsXULButtonAccessible::nsXULButtonAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
-nsAccessible(aNode, aShell)
+nsAccessibleWrap(aNode, aShell)
 { 
 }
 
@@ -393,7 +393,7 @@ NS_IMETHODIMP nsXULCheckboxAccessible::GetAccState(PRUint32 *_retval)
   */
 
 nsXULGroupboxAccessible::nsXULGroupboxAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
-nsAccessible(aNode, aShell)
+nsAccessibleWrap(aNode, aShell)
 { 
 }
 
@@ -594,7 +594,7 @@ NS_IMETHODIMP nsXULRadioButtonAccessible::GetAccParent(nsIAccessible **  aAccPar
 
 /** Constructor */
 nsXULRadioGroupAccessible::nsXULRadioGroupAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
-nsAccessible(aNode, aShell)
+nsAccessibleWrap(aNode, aShell)
 { 
 }
 
@@ -621,7 +621,7 @@ NS_IMETHODIMP nsXULRadioGroupAccessible::GetAccState(PRUint32 *_retval)
   * Default Constructor
   */
 nsXULStatusBarAccessible::nsXULStatusBarAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
-nsAccessible(aNode, aShell)
+nsAccessibleWrap(aNode, aShell)
 { 
 }
 
@@ -645,7 +645,7 @@ NS_IMETHODIMP nsXULStatusBarAccessible::GetAccState(PRUint32 *_retval)
   */
 
 nsXULToolbarAccessible::nsXULToolbarAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
-nsAccessible(aNode, aShell)
+nsAccessibleWrap(aNode, aShell)
 { 
 }
 

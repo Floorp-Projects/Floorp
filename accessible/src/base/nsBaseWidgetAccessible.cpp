@@ -37,7 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsAccessible.h"
+#include "nsAccessibleWrap.h"
 #include "nsBaseWidgetAccessible.h"
 #include "nsCOMPtr.h"
 #include "nsGUIEvent.h"
@@ -57,9 +57,11 @@
 // nsBlockAccessible
 // ------------
 
-nsBlockAccessible::nsBlockAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):nsAccessible(aNode, aShell)
+nsBlockAccessible::nsBlockAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):nsAccessibleWrap(aNode, aShell)
 {
 }
+
+NS_IMPL_ISUPPORTS_INHERITED0(nsBlockAccessible, nsAccessible)
 
 /* nsIAccessible accGetAt (in long x, in long y); */
 NS_IMETHODIMP nsBlockAccessible::AccGetAt(PRInt32 tx, PRInt32 ty, nsIAccessible **_retval)
@@ -120,9 +122,11 @@ NS_IMETHODIMP nsBlockAccessible::AccGetAt(PRInt32 tx, PRInt32 ty, nsIAccessible 
   * nsContainerAccessible
   */
 nsContainerAccessible::nsContainerAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
-nsAccessible(aNode, aShell)
+nsAccessibleWrap(aNode, aShell)
 {
 }
+
+NS_IMPL_ISUPPORTS_INHERITED0(nsContainerAccessible, nsAccessible)
 
 /** no actions */
 NS_IMETHODIMP nsContainerAccessible::GetAccNumActions(PRUint8 *_retval)
@@ -168,9 +172,11 @@ NS_IMETHODIMP nsContainerAccessible::GetAccName(nsAString& _retval)
 //-------------
 
 nsLeafAccessible::nsLeafAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
-nsAccessible(aNode, aShell)
+nsAccessibleWrap(aNode, aShell)
 {
 }
+
+NS_IMPL_ISUPPORTS_INHERITED0(nsLeafAccessible, nsAccessible)
 
 /* nsIAccessible getAccFirstChild (); */
 NS_IMETHODIMP nsLeafAccessible::GetAccFirstChild(nsIAccessible **_retval)
@@ -199,9 +205,11 @@ NS_IMETHODIMP nsLeafAccessible::GetAccChildCount(PRInt32 *_retval)
 //----------------
 
 nsLinkableAccessible::nsLinkableAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
-nsAccessible(aNode, aShell), mIsALinkCached(PR_FALSE), mLinkContent(nsnull), mIsLinkVisited(PR_FALSE)
+nsAccessibleWrap(aNode, aShell), mIsALinkCached(PR_FALSE), mLinkContent(nsnull), mIsLinkVisited(PR_FALSE)
 { 
 }
+
+NS_IMPL_ISUPPORTS_INHERITED0(nsLinkableAccessible, nsAccessible)
 
 NS_IMETHODIMP nsLinkableAccessible::AccTakeFocus()
 { 

@@ -38,7 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsXULMenuAccessible.h"
-#include "nsAccessible.h"
+#include "nsAccessibleWrap.h"
 #include "nsIAccessible.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMXULElement.h"
@@ -51,10 +51,9 @@
 // ------------------------ Menu Item -----------------------------
 
 nsXULMenuitemAccessible::nsXULMenuitemAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell): 
-nsAccessible(aDOMNode, aShell)
+nsAccessibleWrap(aDOMNode, aShell)
 { 
 }
-
 
 NS_IMETHODIMP nsXULMenuitemAccessible::GetAccState(PRUint32 *_retval)
 {
@@ -311,7 +310,8 @@ NS_IMETHODIMP nsXULMenuSeparatorAccessible::GetAccNumActions(PRUint8 *_retval)
 }
 // ------------------------ Menu Popup -----------------------------
 
-nsXULMenupopupAccessible::nsXULMenupopupAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell): nsAccessible(aDOMNode, aShell)
+nsXULMenupopupAccessible::nsXULMenupopupAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell): 
+  nsAccessibleWrap(aDOMNode, aShell)
 { 
 }
 
@@ -367,7 +367,8 @@ NS_IMETHODIMP nsXULMenupopupAccessible::GetAccRole(PRUint32 *_retval)
 
 // ------------------------ Menu Bar -----------------------------
 
-nsXULMenubarAccessible::nsXULMenubarAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell): nsAccessible(aDOMNode, aShell)
+nsXULMenubarAccessible::nsXULMenubarAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell): 
+  nsAccessibleWrap(aDOMNode, aShell)
 { 
 }
 

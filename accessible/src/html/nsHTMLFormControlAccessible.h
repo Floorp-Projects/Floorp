@@ -110,7 +110,7 @@ public:
   NS_IMETHOD GetAccState(PRUint32 *_retval);
 };
 
-class nsHTMLGroupboxAccessible : public nsAccessible
+class nsHTMLGroupboxAccessible : public nsAccessibleWrap
 {
 public:
   nsHTMLGroupboxAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);

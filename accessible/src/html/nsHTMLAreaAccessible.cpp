@@ -37,7 +37,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsGenericAccessible.h"
 #include "nsHTMLAreaAccessible.h"
 #include "nsReadableUtils.h"
 #include "nsString.h"

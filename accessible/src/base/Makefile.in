@@ -50,20 +50,23 @@ REQUIRES	= content \
 		  $(NULL)
 
 CPPSRCS = \
+  nsDocAccessible.cpp \
+  nsOuterDocAccessible.cpp \
   nsAccessibilityService.cpp \
   nsAccessible.cpp \
   nsBaseWidgetAccessible.cpp \
   nsFormControlAccessible.cpp \
-  nsGenericAccessible.cpp \
   nsHyperTextAccessible.cpp \
   nsRootAccessible.cpp \
   nsCaretAccessible.cpp \
   nsTextAccessible.cpp \
+  nsAccessNode.cpp \
   $(NULL)
 
 EXPORTS = \
   nsRootAccessible.h \
   nsAccessibleEventData.h \
+  nsAccessNode.h \
   $(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.

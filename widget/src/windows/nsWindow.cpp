@@ -82,8 +82,16 @@
 #include "nsIImage.h"
 
 #ifdef ACCESSIBILITY
+#include "OLEIDL.H"
+#include "winable.h"
 #include "nsIAccessible.h"
-#include "Accessible.h"
+#include "nsIAccessibleDocument.h"
+#include "nsIAccessibleEventReceiver.h"
+#include "nsIAccessibleEventListener.h"
+#include "nsIAccessNode.h"
+#ifndef WM_GETOBJECT
+#define WM_GETOBJECT 0x03d
+#endif
 #endif
 
 #include <imm.h>
@@ -917,7 +925,10 @@ nsWindow::~nsWindow()
 {
 #ifdef ACCESSIBILITY
   if (mRootAccessible) {
-    mRootAccessible->Shutdown();
+    nsCOMPtr<nsIAccessNode> accessNode(do_QueryInterface(mRootAccessible));
+    if (accessNode) {
+      accessNode->Shutdown();
+    }
     mRootAccessible->Release();
     mRootAccessible = nsnull;
   }
@@ -4294,7 +4305,8 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
           result = DispatchFocus(NS_ACTIVATE, isMozWindowTakingFocus);
         }
 #ifdef ACCESSIBILITY
-        if (nsWindow::gIsAccessibilityOn && !mRootAccessible && mIsTopWidgetWindow) 
+        if (nsWindow::gIsAccessibilityOn && !mRootAccessible && 
+            mIsTopWidgetWindow) 
           CreateRootAccessible();
 #endif
         break;
@@ -4558,30 +4570,24 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         if (mIsTopWidgetWindow && !mRootAccessible) 
           CreateRootAccessible();
         if (mRootAccessible) {
+          IAccessible *msaaAccessible = NULL;
           if (lParam == OBJID_CLIENT) { // oleacc.dll will be loaded dynamically
-            IAccessible *rootAccessible = nsnull;
-            mRootAccessible->QueryInterface(IID_IAccessible, (void**)&rootAccessible); // does an addref
-            if (rootAccessible) {
-              lAcc = Accessible::LresultFromObject(IID_IAccessible, wParam, rootAccessible); // does an addref          
-              rootAccessible->Release(); // release addref from QueryInterface
-            }
+            mRootAccessible->GetNativeInterface((void**)&msaaAccessible); // does an addref
           }
-          if (lParam == OBJID_CARET) {  // each root accessible owns a caret accessible
-            VARIANT variant;
-            VariantInit(&variant);
-            variant.vt = VT_I4;
-            variant.lVal = UNIQUE_ID_CARET;
-            IDispatch *dispatch = nsnull;
-            mRootAccessible->get_accChild(variant, &dispatch);  // does an addref
-            if (dispatch) {
-              IAccessible *accessible = nsnull;
-              dispatch->QueryInterface(IID_IAccessible, (void**)&accessible); // does an addref
-              dispatch->Release();
-              if (accessible) {
-                lAcc = Accessible::LresultFromObject(IID_IAccessible, wParam, accessible); // does an addref
-                accessible->Release();
+          else if (lParam == OBJID_CARET) {  // each root accessible owns a caret accessible
+            nsCOMPtr<nsIAccessibleDocument> accDoc(do_QueryInterface(mRootAccessible));
+            if (accDoc) { 
+              nsCOMPtr<nsIAccessibleCaret> accessibleCaret;
+              accDoc->GetCaretAccessible(getter_AddRefs(accessibleCaret));
+              nsCOMPtr<nsIAccessible> xpAccessible(do_QueryInterface(accessibleCaret));
+              if (xpAccessible) {
+                xpAccessible->GetNativeInterface((void**)&msaaAccessible);
               }
             }
+          }
+          if (msaaAccessible) {
+            lAcc = LresultFromObject(IID_IAccessible, wParam, msaaAccessible); // does an addref
+            msaaAccessible->Release(); // release extra addref
           }
         }
         return (*aRetValue = lAcc) != 0;
@@ -7276,14 +7282,48 @@ void nsWindow::CreateRootAccessible()
   // We need it to be created early so it can generate accessibility events right away
 
   if (!mRootAccessible) {
-    nsCOMPtr<nsIAccessible> acc;
-    DispatchAccessibleEvent(NS_GETACCESSIBLE, getter_AddRefs(acc));
-    // create the COM accessible object
-    if (acc) {
-       HWND wnd = GetWindowHandle();
-       mRootAccessible = new RootAccessible(acc, wnd); // ref is 0       
-       mRootAccessible->AddRef();
+    DispatchAccessibleEvent(NS_GETACCESSIBLE, &mRootAccessible);
+    if (!mRootAccessible)
+      return; // No root accessible created
+
+    nsCOMPtr<nsIAccessibleDocument> accessibleDoc(do_QueryInterface(mRootAccessible));
+    NS_ASSERTION(accessibleDoc, "No nsIAccessibleDocument for root accessible");
+    accessibleDoc->SetWindow(NS_REINTERPRET_CAST(void*, GetWindowHandle()));
+
+    nsCOMPtr<nsIAccessNode> accessNode(do_QueryInterface(mRootAccessible));
+    NS_ASSERTION(accessNode, "No nsIAccessNode for root accessible");
+    accessNode->Init(accessibleDoc);
+
+    // XXX aaron this should be simplfied soon
+    nsCOMPtr<nsIAccessibleEventReceiver> eventReceiver = 
+      do_QueryInterface(mRootAccessible);
+    nsCOMPtr<nsIAccessibleEventListener> eventListener = 
+      do_QueryInterface(mRootAccessible);
+    if (eventReceiver && eventListener) {
+      eventReceiver->AddAccessibleEventListener(eventListener);
     }
   }
+}
+
+HINSTANCE nsWindow::gmAccLib = 0;
+LPFNLRESULTFROMOBJECT nsWindow::gmLresultFromObject = 0;
+
+STDMETHODIMP_(LRESULT) nsWindow::LresultFromObject(REFIID riid,
+                                                   WPARAM wParam,
+                                                   LPUNKNOWN pAcc)
+{
+  // open the dll dynamically
+  if (!gmAccLib) 
+    gmAccLib =::LoadLibrary("OLEACC.DLL");  
+
+  if (gmAccLib) {
+    if (!gmLresultFromObject)
+      gmLresultFromObject = (LPFNLRESULTFROMOBJECT)GetProcAddress(gmAccLib,"LresultFromObject");
+
+    if (gmLresultFromObject)
+      return gmLresultFromObject(riid,wParam,pAcc);
+  }
+
+  return 0;
 }
 #endif

@@ -38,10 +38,10 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsHTMLWin32ObjectAccessible.h"
-#include "nsAccessible.h"
+#include "nsAccessibleWrap.h"
 
-nsHTMLWin32ObjectAccessible::nsHTMLWin32ObjectAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell, PRInt32 aHwnd):
-nsAccessible(aNode, aShell)
+nsHTMLWin32ObjectAccessible::nsHTMLWin32ObjectAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell, void* aHwnd):
+nsAccessibleWrap(aNode, aShell)
 {
   if (aHwnd) {
     // XXX - when we get accessible plugins we may have to check here
@@ -54,7 +54,8 @@ nsAccessible(aNode, aShell)
 NS_IMPL_ISUPPORTS_INHERITED1(nsHTMLWin32ObjectAccessible, nsAccessible, nsIAccessibleWin32Object)
 
 NS_IMETHODIMP
-nsHTMLWin32ObjectAccessible::GetHwnd(PRInt32 *aHwnd) {
+nsHTMLWin32ObjectAccessible::GetHwnd(void **aHwnd) 
+{
   *aHwnd = mHwnd;
   return NS_OK;
 }

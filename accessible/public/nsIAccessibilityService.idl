@@ -35,9 +35,8 @@ interface nsIAccessibleEventListener;
 [scriptable, uuid(68D9720A-0984-42b6-A3F5-8237ED925727)]
 interface nsIAccessibilityService : nsISupports
 {
-  nsIAccessible createAccessible(in nsIDOMNode aNode, in nsISupports aDocument);
-  nsIAccessible createIFrameAccessible(in nsIDOMNode aNode);
-  nsIAccessible createRootAccessible(in nsISupports aPresContext, in nsISupports aFrame);
+  nsIAccessible createOuterDocAccessible(in nsIDOMNode aNode);
+  nsIAccessible createRootAccessible(in nsISupports aPresContext);
   nsIAccessibleCaret createCaretAccessible(in nsIDOMNode aNode, in nsIAccessibleEventListener aListener);
 
   nsIAccessible createHTML4ButtonAccessible(in nsISupports aFrame);
@@ -53,7 +52,7 @@ interface nsIAccessibilityService : nsISupports
   nsIAccessible createHTMLImageAccessible(in nsISupports aFrame);
   nsIAccessible createHTMLLabelAccessible(in nsISupports aFrame);
   nsIAccessible createHTMLListboxAccessible(in nsIDOMNode aNode, in nsISupports aPresShell);
-  nsIAccessible createHTMLNativeWindowAccessible(in nsIDOMNode aDOMNode, in nsIWeakReference aShell, in PRInt32 aHWnd);
+  [noscript] nsIAccessible createHTMLNativeWindowAccessible(in nsIDOMNode aDOMNode, in nsIWeakReference aShell, in voidPtr aHWnd);
   nsIAccessible createHTMLPluginAccessible(in nsIDOMNode aDOMNode, in nsIWeakReference aShell);
   nsIAccessible createHTMLRadioButtonAccessible(in nsISupports aFrame);
   nsIAccessible createHTMLRadioButtonAccessibleXBL(in nsIDOMNode aNode);

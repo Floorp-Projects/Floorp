@@ -63,9 +63,8 @@ class nsIRollupListener;
 class nsIMenuBar;
 
 #ifdef ACCESSIBILITY
-struct IAccessible;
+#include "OLEACC.H"
 #include "nsIAccessible.h"
-class RootAccessible;
 #endif
 
 #define IME_MAX_CHAR_POS       64
@@ -595,8 +594,11 @@ protected:
     static UINT uWM_HEAP_DUMP;       // Dump heap to a file
 
 #ifdef ACCESSIBILITY
-    RootAccessible* mRootAccessible;
+    nsIAccessible* mRootAccessible;
     static BOOL gIsAccessibilityOn;
+    static HINSTANCE gmAccLib;
+    static LPFNLRESULTFROMOBJECT gmLresultFromObject;
+    static STDMETHODIMP_(LRESULT) LresultFromObject(REFIID riid,WPARAM wParam,LPUNKNOWN pAcc);
 #endif
 
    static BOOL CALLBACK BroadcastMsgToChildren(HWND aWnd, LPARAM aMsg);

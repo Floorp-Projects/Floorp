@@ -44,7 +44,7 @@
 #include "nsAccessibilityService.h"
 
 nsHTMLPluginAccessible::nsHTMLPluginAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
-nsAccessible(aNode, aShell), mAccService(do_GetService("@mozilla.org/accessibilityService;1"))
+nsAccessibleWrap(aNode, aShell), mAccService(do_GetService("@mozilla.org/accessibilityService;1"))
 {
 }
 
@@ -65,7 +65,9 @@ nsHTMLPluginAccessible::GetAccFirstChild(nsIAccessible **_retval)
   objectFrame->GetPluginPort(&pluginPort);
   if (pluginPort) {
     if (mAccService)
-      mAccService->CreateHTMLNativeWindowAccessible(mDOMNode, mPresShell, (PRInt32)pluginPort, _retval);
+      mAccService->CreateHTMLNativeWindowAccessible(mDOMNode, mPresShell, 
+                                                    NS_REINTERPRET_CAST(void*, pluginPort), 
+                                                    _retval);
   }
 #else
   *_retval = nsnull;

@@ -184,7 +184,7 @@
         <getter>
           <![CDATA[
             var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
-            return accService.createIFrameAccessible(this);
+            return accService.createOuterDocAccessible(this);
           ]]>
         </getter>
       </property>

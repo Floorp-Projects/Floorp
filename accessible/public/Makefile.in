@@ -26,6 +26,10 @@ VPATH   = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
+DIRS = msaa
+endif
+
 MODULE    = accessibility
 XPIDL_MODULE= accessibility
 GRE_MODULE	= 1
@@ -46,7 +50,7 @@ XPIDLSRCS = \
       nsIAccessibleTable.idl \
       nsIAccessibleText.idl \
       nsIAccessibleValue.idl \
-      nsIAccessibleWin32Object.idl \
+      nsIAccessNode.idl \
       $(NULL)
 
 include $(topsrcdir)/config/rules.mk
