@@ -19,19 +19,26 @@
  * Contributors:
  *   Conrad Carlen <ccarlen@netscape.com>
  *   Simon Fraser  <sfraser@netscape.com>
+ *   Akkana Peck   <akkana@netscape.com>
  */
 
 #ifndef nsWebBrowserFindImpl_h__
 #define nsWebBrowserFindImpl_h__
 
-#include "nsString.h"
-#include "nsCOMPtr.h"
-#include "nsWeakReference.h"
+// We're going to stop using text services.
+// But the code remains here for a little while, for performance testing
+// and so that we can easily switch back and forth.
+#define TEXT_SVCS_TEST 1
 
 #include "nsIWebBrowserFind.h"
 
+#include "nsCOMPtr.h"
+#include "nsWeakReference.h"
+
+#include "nsIFind.h"
 #include "nsIFindAndReplace.h"
 
+#include "nsString.h"
 
 // {57cf9383-3405-11d5-be5b-aa20fa2cf37c}
 #define NS_WEB_BROWSER_FIND_CID \
@@ -40,13 +47,14 @@
 #define NS_WEB_BROWSER_FIND_CONTRACTID \
  "@mozilla.org/embedcomp/find;1"
 
-
 class nsIDOMWindow;
 
 class nsIDocShell;
 class nsIDocShellTreeItem;
 
+#ifdef TEXT_SVCS_TEST
 class nsITextServicesDocument;
+#endif /* TEXT_SVCS_TEST */
 
 //*****************************************************************************
 // class nsWebBrowserFind
@@ -83,7 +91,9 @@ protected:
     
     nsresult    OnFind(nsIDOMWindow *aFoundWindow);
     
+#ifdef TEXT_SVCS_TEST
     nsresult    MakeTSDocument(nsIDOMWindow* aWindow, nsITextServicesDocument** aDoc);
+#endif /* TEXT_SVCS_TEST */
 
     nsresult    GetDocShellFromWindow(nsIDOMWindow *inWindow, nsIDocShell** outDocShell);
     
@@ -103,7 +113,10 @@ protected:
     nsWeakPtr       mRootSearchFrame;       // who knows if windows can go away during our lifetime, hence weak
     nsWeakPtr       mLastFocusedWindow;     // who knows if windows can go away during our lifetime, hence weak
     
+#ifdef TEXT_SVCS_TEST
     nsCOMPtr<nsIFindAndReplace> mTSFind;
+#endif /* TEXT_SVCS_TEST */
+    nsCOMPtr<nsIFind> mFind;
 };
 
 #endif

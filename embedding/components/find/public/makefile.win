@@ -24,6 +24,7 @@ MODULE=find
 
 XPIDLSRCS = \
     .\nsIWebBrowserFind.idl \
+    .\nsIFind.idl \
     $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

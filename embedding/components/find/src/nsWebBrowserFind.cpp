@@ -23,10 +23,15 @@
 
 #include "nsWebBrowserFind.h"
 
-#include "nsCOMPtr.h"
+#include "nsFind.h"
+
 #include "nsIComponentManager.h"
+#ifdef TEXT_SVCS_TEST
 #include "nsITextServicesDocument.h"
 #include "nsTextServicesCID.h"
+#include "nsIServiceManager.h"
+#include "nsIPref.h"
+#endif /* TEXT_SVCS_TEST */
 #include "nsIScriptGlobalObject.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -48,12 +53,20 @@
 #include "nsXPIDLString.h"
 #endif
 
+#if defined(TEXT_SVCS_TEST) && defined(XP_UNIX) && defined(DEBUG)
+#include <sys/time.h>
+#endif
+
+#ifdef TEXT_SVCS_TEST
+PRBool gUseTextServices = PR_FALSE;
+
 static NS_DEFINE_CID(kCTextServicesDocumentCID, NS_TEXTSERVICESDOCUMENT_CID);
+static NS_DEFINE_CID(kPrefServiceCID,       NS_PREF_CID);
+#endif /* TEXT_SVCS_TEST */
 
 //*****************************************************************************
 // nsWebBrowserFind
-//*****************************************************************************   
-
+//*****************************************************************************
 
 nsWebBrowserFind::nsWebBrowserFind() :
     mFindBackwards(PR_FALSE),
@@ -76,6 +89,21 @@ NS_IMPL_ISUPPORTS2(nsWebBrowserFind, nsIWebBrowserFind, nsIWebBrowserFindInFrame
 /* boolean findNext (); */
 NS_IMETHODIMP nsWebBrowserFind::FindNext(PRBool *outDidFind)
 {
+    nsresult rv;
+
+#ifdef TEXT_SVCS_TEST
+    // Figure out whether to use the old or new version:
+    gUseTextServices = PR_TRUE;
+    nsCOMPtr<nsIPref> prefService = do_GetService(kPrefServiceCID, &rv);
+    if (NS_SUCCEEDED(rv) && prefService) {
+        printf("Got the pref service\n");
+        PRBool newFind = PR_FALSE;
+        prefService->GetBoolPref("browser.new_find", &newFind);
+        gUseTextServices = !newFind;
+        printf("Got the pref: newFind = %d, useText = %d\n", newFind, gUseTextServices);
+    }
+#endif /* TEXT_SVCS_TEST */
+
     NS_ENSURE_ARG_POINTER(outDidFind);
     *outDidFind = PR_FALSE;
 
@@ -85,7 +113,7 @@ NS_IMETHODIMP nsWebBrowserFind::FindNext(PRBool *outDidFind)
     NS_ENSURE_TRUE(searchFrame, NS_ERROR_NOT_INITIALIZED);
     
     // first, look in the current frame. If found, return.
-    nsresult    rv = SearchInFrame(searchFrame, outDidFind);
+    rv = SearchInFrame(searchFrame, outDidFind);
     if (NS_FAILED(rv)) return rv;
     if (*outDidFind)
         return OnFind(searchFrame);     // we are done
@@ -349,6 +377,11 @@ NS_IMETHODIMP nsWebBrowserFind::SetSearchParentFrames(PRBool aSearchParentFrames
 */
 nsresult nsWebBrowserFind::SearchInFrame(nsIDOMWindow* aWindow, PRBool* aDidFind)
 {
+#if defined(TEXT_SVCS_TEST) && defined(XP_UNIX) && defined(DEBUG)
+    struct timeval timeAtStart;
+    gettimeofday(&timeAtStart, 0);
+#endif /* TEXT_SVCS_TEST */
+
     NS_ENSURE_ARG(aWindow);
     
     nsresult rv = NS_OK;
@@ -357,15 +390,48 @@ nsresult nsWebBrowserFind::SearchInFrame(nsIDOMWindow* aWindow, PRBool* aDidFind
     // and make a new one. The nsIFindAndReplace is *not* stateless;
     // it remembers the last search offset etc.
     nsCOMPtr<nsIDOMWindow> searchFrame = do_QueryReferent(mCurrentSearchFrame);    
+#ifdef TEXT_SVCS_TEST
     if (mTSFind && (searchFrame.get() != aWindow))
         mTSFind = nsnull;       // throw away old one, if any
 
-    if (!mTSFind)
+    if (gUseTextServices)
     {
-        mTSFind = do_CreateInstance(NS_FINDANDREPLACE_CONTRACTID, &rv);
-        if (NS_FAILED(rv))
-            return rv;
+        if (!mTSFind)
+        {
+            mTSFind = do_CreateInstance(NS_FINDANDREPLACE_CONTRACTID, &rv);
+            if (NS_FAILED(rv))
+                return rv;
+        }
     }
+    else {
+
+#endif /* TEXT_SVCS_TEST */
+    if (mFind && (searchFrame.get() != aWindow))
+        mFind = nsnull;       // throw away old one, if any
+    if (!mFind)
+    {
+#ifdef DEBUG
+        printf("Making a new nsFind object\n");
+#endif
+        nsCOMPtr<nsIDOMDocument> domDoc;    
+        rv = aWindow->GetDocument(getter_AddRefs(domDoc));
+        NS_ENSURE_SUCCESS(rv, rv);
+        NS_ENSURE_ARG_POINTER(domDoc);
+        nsCOMPtr<nsIDocShell> docShell;
+        rv = GetDocShellFromWindow(aWindow, getter_AddRefs(docShell));
+        NS_ENSURE_SUCCESS(rv, rv);
+        NS_ENSURE_ARG_POINTER(docShell);
+        nsCOMPtr<nsIPresShell> presShell;
+        docShell->GetPresShell(getter_AddRefs(presShell));
+        NS_ENSURE_ARG_POINTER(presShell);
+
+        mFind = new nsFind();   // XXX make this a service
+        rv = mFind->SetDomDoc(domDoc, presShell);
+    }
+
+#ifdef TEXT_SVCS_TEST
+    }
+#endif /* TEXT_SVCS_TEST */
 
 #if DEBUG_smfr
     {
@@ -385,24 +451,50 @@ nsresult nsWebBrowserFind::SearchInFrame(nsIDOMWindow* aWindow, PRBool* aDidFind
     }
 #endif
 
-    nsCOMPtr<nsITextServicesDocument> txtDoc;
-    rv = MakeTSDocument(aWindow, getter_AddRefs(txtDoc));
-    if (NS_FAILED(rv) || !txtDoc)
-        return rv;
+#ifdef TEXT_SVCS_TEST
+    if (gUseTextServices)
+    {
+        nsCOMPtr<nsITextServicesDocument> txtDoc;
+        rv = MakeTSDocument(aWindow, getter_AddRefs(txtDoc));
+        if (NS_FAILED(rv) || !txtDoc)
+            return rv;
     
-    (void) mTSFind->SetCaseSensitive(mMatchCase);
-    (void) mTSFind->SetFindBackwards(mFindBackwards);
-    (void) mTSFind->SetWrapFind(mWrapFind);
-    (void) mTSFind->SetEntireWord(mEntireWord);
+        (void) mTSFind->SetCaseSensitive(mMatchCase);
+        (void) mTSFind->SetFindBackwards(mFindBackwards);
+        (void) mTSFind->SetWrapFind(mWrapFind);
+        (void) mTSFind->SetEntireWord(mEntireWord);
 
-    rv = mTSFind->SetTsDoc(txtDoc);
-    if (NS_FAILED(rv))
-        return rv;
+        rv = mTSFind->SetTsDoc(txtDoc);
+        if (NS_FAILED(rv))
+            return rv;
 
-    rv =  mTSFind->Find(mSearchString.get(), aDidFind);
+        rv =  mTSFind->Find(mSearchString.get(), aDidFind);
+    }
+    else
+    {
+#endif /* TEXT_SVCS_TEST */
 
-    mTSFind->SetTsDoc(nsnull);
+    (void) mFind->SetCaseSensitive(mMatchCase);
+    (void) mFind->SetFindBackwards(mFindBackwards);
+    (void) mFind->SetWrapFind(mWrapFind);
+    (void) mFind->SetEntireWord(mEntireWord);
 
+    rv =  mFind->Find(mSearchString.get(), aDidFind);
+
+#ifdef TEXT_SVCS_TEST
+    }
+    if (gUseTextServices)
+        mTSFind->SetTsDoc(nsnull);
+
+#if defined(XP_UNIX) && defined(DEBUG)
+    struct timeval timeAtEnd;
+    gettimeofday(&timeAtEnd, 0);
+    double sec = (timeAtEnd.tv_sec - timeAtStart.tv_sec) +
+        (((double)timeAtEnd.tv_usec - (double)timeAtStart.tv_usec) / 1000000.);
+    printf("nsWebBrowserFind::SearchInFrame (%s) took %f sec\n",
+           (gUseTextServices ? "txtsvc" : "new find"), sec);
+#endif /* XP_UNIX && DEBUG */
+#endif /* TEXT_SVCS_TEST */
     return rv;
 }
 
@@ -458,6 +550,7 @@ nsresult nsWebBrowserFind::OnFind(nsIDOMWindow *aFoundWindow)
     return NS_OK;
 }
 
+#ifdef TEXT_SVCS_TEST
 nsresult nsWebBrowserFind::MakeTSDocument(nsIDOMWindow* aWindow, nsITextServicesDocument** aDoc)
 {
     NS_ENSURE_ARG(aWindow);
@@ -495,6 +588,7 @@ nsresult nsWebBrowserFind::MakeTSDocument(nsIDOMWindow* aWindow, nsITextServices
   
     return rv;
 }
+#endif /* TEXT_SVCS_TEST */
 
 /*---------------------------------------------------------------------------
 

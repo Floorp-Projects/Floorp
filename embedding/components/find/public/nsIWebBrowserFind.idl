@@ -103,7 +103,7 @@ interface nsIWebBrowserFind : nsISupports
     /**
      * entireWord
      *
-     * Wether to match entire words only. Default is false.
+     * Whether to match entire words only. Default is false.
      */
     attribute boolean entireWord;
 
