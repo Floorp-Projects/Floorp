@@ -43,10 +43,6 @@ class nsINSSComponent;
 class nsIASN1PrintableItem;
 
 nsresult
-GetIntValue(SECItem *versionItem, 
-            unsigned long *version);
-
-nsresult
 ProcessVersion(SECItem         *versionItem,
                nsINSSComponent *nssComponent,
                nsIASN1PrintableItem **retItem);
@@ -57,27 +53,10 @@ ProcessSerialNumberDER(SECItem         *serialItem,
                        nsIASN1PrintableItem **retItem);
 
 nsresult
-GetDefaultOIDFormat(SECItem *oid,
-                    nsString &outString);
+GetOIDText(SECItem *oid, nsINSSComponent *nssComponent, nsAString &text);
 
 nsresult
-GetOIDText(SECItem *oid, nsINSSComponent *nssComponent, nsString &text);
-
-nsresult
-ProcessRawBytes(SECItem *data, nsString &text);
-
-nsresult
-ProcessNSCertTypeExtensions(SECItem  *extData, 
-                            nsString &text,
-                            nsINSSComponent *nssComponent);
-
-nsresult
-ProcessKeyUsageExtension(SECItem *extData, nsString &text,
-                         nsINSSComponent *nssComponent);
-
-nsresult
-ProcessExtensionData(SECOidTag oidTag, SECItem *extData, 
-                     nsString &text, nsINSSComponent *nssComponent);
+ProcessRawBytes(SECItem *data, nsAString &text);
 
 nsresult
 ProcessSingleExtension(CERTCertExtension *extension,

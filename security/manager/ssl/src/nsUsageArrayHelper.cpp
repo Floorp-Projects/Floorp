@@ -60,7 +60,7 @@ nsUsageArrayHelper::nsUsageArrayHelper(CERTCertificate *aCert)
 }
 
 void
-nsUsageArrayHelper::check(char *suffix,
+nsUsageArrayHelper::check(const char *suffix,
                         SECCertUsage aCertUsage,
                         PRUint32 &aCounter,
                         PRUnichar **outUsages)
@@ -68,49 +68,49 @@ nsUsageArrayHelper::check(char *suffix,
   nsNSSShutDownPreventionLock locker;
   if (CERT_VerifyCertNow(defaultcertdb, mCert, PR_TRUE, 
                          aCertUsage, NULL) == SECSuccess) {
-    nsAutoString typestr;
+    nsCAutoString typestr;
     switch (aCertUsage) {
       case certUsageSSLClient:
-        typestr = NS_LITERAL_STRING("VerifySSLClient");
+        typestr = "VerifySSLClient";
         break;
       case certUsageSSLServer:
-        typestr = NS_LITERAL_STRING("VerifySSLServer");
+        typestr = "VerifySSLServer";
         break;
       case certUsageSSLServerWithStepUp:
-        typestr = NS_LITERAL_STRING("VerifySSLStepUp");
+        typestr = "VerifySSLStepUp";
         break;
       case certUsageEmailSigner:
-        typestr = NS_LITERAL_STRING("VerifyEmailSigner");
+        typestr = "VerifyEmailSigner";
         break;
       case certUsageEmailRecipient:
-        typestr = NS_LITERAL_STRING("VerifyEmailRecip");
+        typestr = "VerifyEmailRecip";
         break;
       case certUsageObjectSigner:
-        typestr = NS_LITERAL_STRING("VerifyObjSign");
+        typestr = "VerifyObjSign";
         break;
       case certUsageProtectedObjectSigner:
-        typestr = NS_LITERAL_STRING("VerifyProtectObjSign");
+        typestr = "VerifyProtectObjSign";
         break;
       case certUsageUserCertImport:
-        typestr = NS_LITERAL_STRING("VerifyUserImport");
+        typestr = "VerifyUserImport";
         break;
       case certUsageSSLCA:
-        typestr = NS_LITERAL_STRING("VerifySSLCA");
+        typestr = "VerifySSLCA";
         break;
       case certUsageVerifyCA:
-        typestr = NS_LITERAL_STRING("VerifyCAVerifier");
+        typestr = "VerifyCAVerifier";
         break;
       case certUsageStatusResponder:
-        typestr = NS_LITERAL_STRING("VerifyStatusResponder");
+        typestr = "VerifyStatusResponder";
         break;
       case certUsageAnyCA:
-        typestr = NS_LITERAL_STRING("VerifyAnyCA");
+        typestr = "VerifyAnyCA";
         break;
       default:
         break;
     }
     if (!typestr.IsEmpty()) {
-      typestr.AppendWithConversion(suffix);
+      typestr.Append(suffix);
       nsAutoString verifyDesc;
       m_rv = nssComponent->GetPIPNSSBundleString(typestr.get(), verifyDesc);
       if (NS_SUCCEEDED(m_rv)) {
@@ -172,7 +172,7 @@ nsUsageArrayHelper::verifyFailed(PRUint32 *_verified)
 }
 
 nsresult
-nsUsageArrayHelper::GetUsagesArray(char *suffix,
+nsUsageArrayHelper::GetUsagesArray(const char *suffix,
                       PRBool ignoreOcsp,
                       PRUint32 outArraySize,
                       PRUint32 *_verified,

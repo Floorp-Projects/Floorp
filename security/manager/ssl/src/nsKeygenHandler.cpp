@@ -207,19 +207,13 @@ nsKeygenFormProcessor::Init()
   if (NS_FAILED(rv))
     return rv;
 
-  nssComponent->GetPIPNSSBundleString(
-                            NS_LITERAL_STRING("HighGrade").get(),
-                            str);
+  nssComponent->GetPIPNSSBundleString("HighGrade", str);
   SECKeySizeChoiceList[0].name = ToNewUnicode(str);
 
-  nssComponent->GetPIPNSSBundleString(
-                            NS_LITERAL_STRING("MediumGrade").get(),
-                            str);
+  nssComponent->GetPIPNSSBundleString("MediumGrade", str);
   SECKeySizeChoiceList[1].name = ToNewUnicode(str);
 
-  nssComponent->GetPIPNSSBundleString(
-                            NS_LITERAL_STRING("LowGrade").get(),
-                            str);
+  nssComponent->GetPIPNSSBundleString("LowGrade", str);
   SECKeySizeChoiceList[2].name = ToNewUnicode(str);
 
   return NS_OK;
@@ -362,9 +356,9 @@ loser:
 }
 
 nsresult
-nsKeygenFormProcessor::GetPublicKey(nsString& aValue, nsString& aChallenge, 
-				    nsString& aKeyType,
-				    nsString& aOutPublicKey, nsString& aPqg)
+nsKeygenFormProcessor::GetPublicKey(nsAString& aValue, nsAString& aChallenge, 
+				    nsAString& aKeyType,
+				    nsAString& aOutPublicKey, nsAString& aPqg)
 {
     nsNSSShutDownPreventionLock locker;
     nsresult rv = NS_ERROR_FAILURE;
@@ -560,7 +554,7 @@ found_match:
      */
     keystring = BTOA_DataToAscii(signedItem.data, signedItem.len);
 
-    aOutPublicKey.AssignWithConversion(keystring);
+    CopyASCIItoUTF16(keystring, aOutPublicKey);
     nsCRT::free(keystring);
 
     rv = NS_OK;
@@ -608,7 +602,6 @@ nsKeygenFormProcessor::ProcessValue(nsIDOMHTMLElement *aElement,
     nsAutoString challengeValue;
     nsAutoString keyTypeValue;
     nsAutoString pqgValue;
-    nsString publicKey;
 
     res = selectElement->GetAttribute(NS_LITERAL_STRING("_moz-type"), keygenvalue);
     if (NS_CONTENT_ATTR_HAS_VALUE == res && keygenvalue.Equals(NS_LITERAL_STRING("-mozilla-keygen"))) {
@@ -621,8 +614,7 @@ nsKeygenFormProcessor::ProcessValue(nsIDOMHTMLElement *aElement,
       }
       res = selectElement->GetAttribute(NS_LITERAL_STRING("challenge"), challengeValue);
       rv = GetPublicKey(aValue, challengeValue, keyTypeValue, 
-			publicKey, pqgValue);
-      aValue = publicKey;
+			aValue, pqgValue);
     }
   }
 

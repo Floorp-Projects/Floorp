@@ -737,34 +737,27 @@ nsCertTree::GetCellText(PRInt32 row, const PRUnichar *colID,
         break;
 
       case nsIX509Cert::CERT_REVOKED:
-        rv = mNSSComponent->GetPIPNSSBundleString(
-                                  NS_LITERAL_STRING("VerifyRevoked").get(), _retval);
+        rv = mNSSComponent->GetPIPNSSBundleString("VerifyRevoked", _retval);
         break;
       case nsIX509Cert::CERT_EXPIRED:
-        rv = mNSSComponent->GetPIPNSSBundleString(
-                                  NS_LITERAL_STRING("VerifyExpired").get(), _retval);
+        rv = mNSSComponent->GetPIPNSSBundleString("VerifyExpired", _retval);
         break;
       case nsIX509Cert::CERT_NOT_TRUSTED:
-        rv = mNSSComponent->GetPIPNSSBundleString(
-                                  NS_LITERAL_STRING("VerifyNotTrusted").get(), _retval);
+        rv = mNSSComponent->GetPIPNSSBundleString("VerifyNotTrusted", _retval);
         break;
       case nsIX509Cert::ISSUER_NOT_TRUSTED:
-        rv = mNSSComponent->GetPIPNSSBundleString(
-                                  NS_LITERAL_STRING("VerifyIssuerNotTrusted").get(), _retval);
+        rv = mNSSComponent->GetPIPNSSBundleString("VerifyIssuerNotTrusted", _retval);
         break;
       case nsIX509Cert::ISSUER_UNKNOWN:
-        rv = mNSSComponent->GetPIPNSSBundleString(
-                                  NS_LITERAL_STRING("VerifyIssuerUnknown").get(), _retval);
+        rv = mNSSComponent->GetPIPNSSBundleString("VerifyIssuerUnknown", _retval);
         break;
       case nsIX509Cert::INVALID_CA:
-        rv = mNSSComponent->GetPIPNSSBundleString(
-                                  NS_LITERAL_STRING("VerifyInvalidCA").get(), _retval);
+        rv = mNSSComponent->GetPIPNSSBundleString("VerifyInvalidCA", _retval);
         break;
       case nsIX509Cert::NOT_VERIFIED_UNKNOWN:
       case nsIX509Cert::USAGE_NOT_ALLOWED:
       default:
-        rv = mNSSComponent->GetPIPNSSBundleString(
-                                  NS_LITERAL_STRING("VerifyUnknown").get(), _retval);
+        rv = mNSSComponent->GetPIPNSSBundleString("VerifyUnknown", _retval);
         break;
     }
   } else if (strcmp(col, "issuedcol") == 0) {

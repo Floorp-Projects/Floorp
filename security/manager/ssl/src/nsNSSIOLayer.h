@@ -130,7 +130,6 @@ nsresult nsSSLIOLayerAddToSocket(PRInt32 family,
                                  PRBool forSTARTTLS);
 
 nsresult nsSSLIOLayerFreeTLSIntolerantSites();
-nsresult displayAlert(nsXPIDLString formattedString, nsNSSSocketInfo *infoObject);
 nsresult displayUnknownCertErrorAlert(nsNSSSocketInfo *infoObject, int error);
  
 #endif /* _NSNSSIOLAYER_H */

@@ -44,7 +44,7 @@ class nsUsageArrayHelper
 public:
   nsUsageArrayHelper(CERTCertificate *aCert);
 
-  nsresult GetUsagesArray(char *suffix,
+  nsresult GetUsagesArray(const char *suffix,
                PRBool ignoreOcsp,
                PRUint32 outArraySize,
                PRUint32 *_verified,
@@ -60,7 +60,7 @@ private:
   nsCOMPtr<nsINSSComponent> nssComponent;
   int mCached_NonInadequateReason;
 
-  void check(char *suffix,
+  void check(const char *suffix,
              SECCertUsage aCertUsage,
              PRUint32 &aCounter,
              PRUnichar **outUsages);
