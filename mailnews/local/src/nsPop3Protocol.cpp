@@ -2511,7 +2511,7 @@ nsPop3Protocol::CommitState(PRBool remove_last_entry)
         /* now, if we are leaving messages on the server, pull out the last
            uidl from the hash, because it might have been put in there before
            we got it into the database. */
-        if (m_pop3ConData->msg_info) {
+        if (m_pop3ConData->msg_info && m_pop3ConData->last_accessed_msg < m_pop3ConData->number_of_messages) {
             Pop3MsgInfo* info = m_pop3ConData->msg_info +
                 m_pop3ConData->last_accessed_msg; 
             if (info && info->uidl && (m_pop3ConData->only_uidl == NULL) &&
