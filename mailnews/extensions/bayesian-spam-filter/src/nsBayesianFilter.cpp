@@ -193,7 +193,7 @@ static bool isDecimalNumber(const char* word)
     return true;
 }
 
-inline isUpperCase(char c) { return ('A' <= c) && (c <= 'Z'); }
+inline bool isUpperCase(char c) { return ('A' <= c) && (c <= 'Z'); }
 
 static char* toLowerCase(char* str)
 {
