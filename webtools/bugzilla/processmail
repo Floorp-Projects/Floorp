@@ -152,7 +152,7 @@ To: %s
 Cc: %s
 Subject: \[Bug %s\] %s - %s
 
-http://bugzilla.mozilla.org/bugzilla/show_bug.cgi?id=%s
+http://cvs-mirror.mozilla.org/webtools/bugzilla/show_bug.cgi?id=%s
 
 %s"
 
