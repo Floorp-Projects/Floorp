@@ -434,7 +434,7 @@ FontNameKey::FontNameKey(const nsString& aString)
 
 PRUint32 FontNameKey::HashValue(void) const
 {
-	return nsCRT::HashValue(mString);
+	return nsCRT::HashValue(mString.GetUnicode());
 }
 
 PRBool FontNameKey::Equals(const nsHashKey *aKey) const
