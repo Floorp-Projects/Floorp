@@ -1118,6 +1118,19 @@ DOMCSSDeclarationImpl::RemoveProperty(const nsAReadableString& aPropertyName,
   nsresult rv = GetCSSDeclaration(&decl, PR_TRUE);
 
   if (NS_SUCCEEDED(rv) && decl) {
+    nsCOMPtr<nsICSSStyleSheet> cssSheet;
+    nsCOMPtr<nsIDocument> owningDoc;
+    if (mRule) {
+      nsCOMPtr<nsIStyleSheet> sheet;
+      mRule->GetStyleSheet(*getter_AddRefs(sheet));
+      cssSheet = do_QueryInterface(sheet);
+      if (sheet) {
+        sheet->GetOwningDocument(*getter_AddRefs(owningDoc));
+      }
+    }
+    if (owningDoc) {
+      owningDoc->BeginUpdate();
+    }
     nsCSSProperty prop = nsCSSProps::LookupProperty(aPropertyName);
     nsCSSValue val;
 
@@ -1127,10 +1140,19 @@ DOMCSSDeclarationImpl::RemoveProperty(const nsAReadableString& aPropertyName,
       // We pass in eCSSProperty_UNKNOWN here so that we don't get the
       // property name in the return string.
       val.ToString(aReturn, eCSSProperty_UNKNOWN);
+      if (cssSheet) {
+        cssSheet->SetModified(PR_TRUE);
+      }
+      if (owningDoc) {
+        owningDoc->StyleRuleChanged(cssSheet, mRule, nsCSSProps::kHintTable[prop]);
+      }
     } else {
       // If we tried to remove an invalid property or a property that wasn't 
       //  set we simply return success and an empty string
       rv = NS_OK;
+    }
+    if (owningDoc) {
+      owningDoc->EndUpdate();
     }
   }
 
