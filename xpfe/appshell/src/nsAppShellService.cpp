@@ -66,11 +66,13 @@ public:
   NS_IMETHOD DispatchNativeEvent(void * aEvent);
   NS_IMETHOD Shutdown(void);
   NS_IMETHOD CreateTopLevelWindow(nsIURL* aUrl, nsString& aControllerIID,
-                                  nsIWidget*& aResult, nsIStreamObserver* anObserver);
+                                  nsIWidget*& aResult, nsIStreamObserver* anObserver,
+                                  PRInt32 aInitialWidth, PRInt32 aInitialHeight);
   NS_IMETHOD CreateDialogWindow(nsIWidget * aParent,
                                 nsIURL* aUrl, 
                                 nsString& aControllerIID,
-                                nsIWidget*& aResult, nsIStreamObserver* anObserver);
+                                nsIWidget*& aResult, nsIStreamObserver* anObserver,
+                                PRInt32 aInitialWidth, PRInt32 aInitialHeight);
   NS_IMETHOD CloseTopLevelWindow(nsIWidget* aWindow);
   NS_IMETHOD RegisterTopLevelWindow(nsIWidget* aWindow);
   NS_IMETHOD UnregisterTopLevelWindow(nsIWidget* aWindow);
@@ -202,7 +204,8 @@ nsAppShellService::Shutdown(void)
  */
 NS_IMETHODIMP
 nsAppShellService::CreateTopLevelWindow(nsIURL* aUrl, nsString& aControllerIID,
-                                        nsIWidget*& aResult, nsIStreamObserver* anObserver)
+                                        nsIWidget*& aResult, nsIStreamObserver* anObserver,
+                                        PRInt32 aInitialWidth, PRInt32 aInitialHeight)
 {
   nsresult rv;
   nsWebShellWindow* window;
@@ -211,7 +214,7 @@ nsAppShellService::CreateTopLevelWindow(nsIURL* aUrl, nsString& aControllerIID,
   if (nsnull == window) {
     rv = NS_ERROR_OUT_OF_MEMORY;
   } else {
-    rv = window->Initialize(mAppShell, aUrl, aControllerIID, anObserver);
+    rv = window->Initialize(mAppShell, aUrl, aControllerIID, anObserver, aInitialWidth, aInitialHeight);
     if (NS_SUCCEEDED(rv)) {
       aResult = window->GetWidget();
       RegisterTopLevelWindow(aResult);
@@ -247,7 +250,8 @@ nsAppShellService::CloseTopLevelWindow(nsIWidget* aWindow)
 NS_IMETHODIMP
 nsAppShellService::CreateDialogWindow(nsIWidget * aParent,
                                       nsIURL* aUrl, nsString& aControllerIID,
-                                      nsIWidget*& aResult, nsIStreamObserver* anObserver)
+                                      nsIWidget*& aResult, nsIStreamObserver* anObserver,
+                                      PRInt32 aInitialWidth, PRInt32 aInitialHeight)
 {
   nsresult rv;
   nsWebShellWindow* window;
@@ -256,7 +260,8 @@ nsAppShellService::CreateDialogWindow(nsIWidget * aParent,
   if (nsnull == window) {
     rv = NS_ERROR_OUT_OF_MEMORY;
   } else {
-    rv = window->Initialize(nsnull, mAppShell, aUrl, aControllerIID, anObserver);
+    rv = window->Initialize(nsnull, mAppShell, aUrl, aControllerIID, anObserver,
+                            aInitialWidth, aInitialHeight);
     if (NS_SUCCEEDED(rv)) {
       mWindowList->AppendElement((nsIWebShellContainer*)window);
       aResult = window->GetWidget();
