@@ -121,6 +121,7 @@ DEFAULT_MOTIF_LIB_SEARCH_PATH="\
 /usr/X/lib \
 /usr/lib \
 /usr/lib/Motif1.2 \
+/usr/lib/Motif1.2_R6 \
 "
 
 ##
