@@ -30,8 +30,11 @@
 #include "nsIMsgFolderCache.h"
 #include "nsIMsgFolderCacheElement.h"
 #include "nsXPIDLString.h"
+#include "nsIRDFService.h"
+#include "nsRDFCID.h"
 
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
+static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
 nsMsgIncomingServer::nsMsgIncomingServer():
     m_prefs(0),
@@ -86,7 +89,9 @@ nsMsgIncomingServer::GetRootFolder(nsIFolder * *aRootFolder)
       *aRootFolder = m_rootFolder;
       NS_ADDREF(*aRootFolder);
     } else {
-      *aRootFolder = nsnull;
+			CreateRootFolder();
+			*aRootFolder = m_rootFolder;
+      NS_IF_ADDREF(*aRootFolder);
     }
 	return NS_OK;
 }
@@ -109,6 +114,28 @@ NS_IMETHODIMP nsMsgIncomingServer::WriteToFolderCache(nsIMsgFolderCache *folderC
 			rv = msgFolder->WriteToFolderCache(folderCache);
 	}
 	return rv;
+}
+
+void nsMsgIncomingServer::CreateRootFolder()
+{
+	nsresult rv;
+			  // get the URI from the incoming server
+  nsXPIDLCString serverUri;
+  rv = GetServerURI(getter_Copies(serverUri));
+  if (NS_FAILED(rv)) return ;
+
+  NS_WITH_SERVICE(nsIRDFService, rdf,
+                        kRDFServiceCID, &rv);
+
+  // get the corresponding RDF resource
+  // RDF will create the server resource if it doesn't already exist
+  nsCOMPtr<nsIRDFResource> serverResource;
+  rv = rdf->GetResource(serverUri, getter_AddRefs(serverResource));
+  if (NS_FAILED(rv)) return;
+
+  // make incoming server know about its root server folder so we 
+  // can find sub-folders given an incoming server.
+  m_rootFolder = do_QueryInterface(serverResource);
 }
 
 char *

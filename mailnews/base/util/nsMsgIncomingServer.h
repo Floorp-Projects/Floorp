@@ -108,6 +108,9 @@ protected:
   nsresult getIntPref(const char *pref, PRInt32 *);
   nsresult getDefaultIntPref(const char *pref, PRInt32 *);
   nsresult setIntPref(const char *pref, PRInt32);
+
+	void CreateRootFolder();
+
 };
 
 /* some useful macros to implement accessors */
