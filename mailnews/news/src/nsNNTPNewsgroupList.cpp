@@ -88,7 +88,6 @@ public:
   nsNNTPNewsgroupList(nsINNTPHost *, nsINNTPNewsgroup*);
   nsNNTPNewsgroupList();
   virtual  ~nsNNTPNewsgroupList();
-  static void operator delete(void *);
   NS_DECL_ISUPPORTS;
 
     
