@@ -91,7 +91,7 @@ private:
     
   // alpha layer members
   BitMap			*mAlphaPix;			// the alpha level pixel map
-  PRBook 			mIsTopToBottom;
+  PRBool 			mIsTopToBottom;
   PRUint8			*mAlphaBits;        // the bits to set for the mask
   PRInt32			mARowBytes;			// rowbytes for the alpha layer
   PRInt8            mAlphaDepth;        // alpha layer depth
