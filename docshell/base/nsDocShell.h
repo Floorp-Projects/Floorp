@@ -80,28 +80,24 @@
 #include "nsIWebBrowserFind.h"
 #include "nsIHttpChannel.h"
 
+
 #define MAKE_LOAD_TYPE(type, flags) ((type) | ((flags) << 16))
 
-/* load commands */
-enum LoadCmd {
-    LOAD_CMD_NORMAL  = 0x1, // Normal load
-    LOAD_CMD_RELOAD  = 0x2, // Reload
-    LOAD_CMD_HISTORY = 0x4  // Load from history
-};
+/* load commands were moved to nsIDocShell.h */
 
 /* load types are legal combinations of load commands and flags */
 enum LoadType {
-    LOAD_NORMAL = MAKE_LOAD_TYPE(LOAD_CMD_NORMAL, nsIWebNavigation::LOAD_FLAGS_NONE),
-    LOAD_NORMAL_REPLACE = MAKE_LOAD_TYPE(LOAD_CMD_NORMAL, nsIWebNavigation::LOAD_FLAGS_REPLACE_HISTORY),
-    LOAD_HISTORY = MAKE_LOAD_TYPE(LOAD_CMD_HISTORY, nsIWebNavigation::LOAD_FLAGS_NONE),
-    LOAD_RELOAD_NORMAL = MAKE_LOAD_TYPE(LOAD_CMD_RELOAD, nsIWebNavigation::LOAD_FLAGS_NONE),
-    LOAD_RELOAD_BYPASS_CACHE = MAKE_LOAD_TYPE(LOAD_CMD_RELOAD, nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE),
-    LOAD_RELOAD_BYPASS_PROXY = MAKE_LOAD_TYPE(LOAD_CMD_RELOAD, nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY),
-    LOAD_RELOAD_BYPASS_PROXY_AND_CACHE = MAKE_LOAD_TYPE(LOAD_CMD_RELOAD, nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE | nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY),
-    LOAD_LINK = MAKE_LOAD_TYPE(LOAD_CMD_NORMAL, nsIWebNavigation::LOAD_FLAGS_IS_LINK),
-    LOAD_REFRESH = MAKE_LOAD_TYPE(LOAD_CMD_NORMAL, nsIWebNavigation::LOAD_FLAGS_IS_REFRESH),
-    LOAD_RELOAD_CHARSET_CHANGE = MAKE_LOAD_TYPE(LOAD_CMD_RELOAD, nsIWebNavigation::LOAD_FLAGS_CHARSET_CHANGE),
-    LOAD_BYPASS_HISTORY = MAKE_LOAD_TYPE(LOAD_CMD_NORMAL, nsIWebNavigation::LOAD_FLAGS_BYPASS_HISTORY)
+    LOAD_NORMAL = MAKE_LOAD_TYPE(nsIDocShell::LOAD_CMD_NORMAL, nsIWebNavigation::LOAD_FLAGS_NONE),
+    LOAD_NORMAL_REPLACE = MAKE_LOAD_TYPE(nsIDocShell::LOAD_CMD_NORMAL, nsIWebNavigation::LOAD_FLAGS_REPLACE_HISTORY),
+    LOAD_HISTORY = MAKE_LOAD_TYPE(nsIDocShell::LOAD_CMD_HISTORY, nsIWebNavigation::LOAD_FLAGS_NONE),
+    LOAD_RELOAD_NORMAL = MAKE_LOAD_TYPE(nsIDocShell::LOAD_CMD_RELOAD, nsIWebNavigation::LOAD_FLAGS_NONE),
+    LOAD_RELOAD_BYPASS_CACHE = MAKE_LOAD_TYPE(nsIDocShell::LOAD_CMD_RELOAD, nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE),
+    LOAD_RELOAD_BYPASS_PROXY = MAKE_LOAD_TYPE(nsIDocShell::LOAD_CMD_RELOAD, nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY),
+    LOAD_RELOAD_BYPASS_PROXY_AND_CACHE = MAKE_LOAD_TYPE(nsIDocShell::LOAD_CMD_RELOAD, nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE | nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY),
+    LOAD_LINK = MAKE_LOAD_TYPE(nsIDocShell::LOAD_CMD_NORMAL, nsIWebNavigation::LOAD_FLAGS_IS_LINK),
+    LOAD_REFRESH = MAKE_LOAD_TYPE(nsIDocShell::LOAD_CMD_NORMAL, nsIWebNavigation::LOAD_FLAGS_IS_REFRESH),
+    LOAD_RELOAD_CHARSET_CHANGE = MAKE_LOAD_TYPE(nsIDocShell::LOAD_CMD_RELOAD, nsIWebNavigation::LOAD_FLAGS_CHARSET_CHANGE),
+    LOAD_BYPASS_HISTORY = MAKE_LOAD_TYPE(nsIDocShell::LOAD_CMD_NORMAL, nsIWebNavigation::LOAD_FLAGS_BYPASS_HISTORY)
 };
 
 /* internally used ViewMode types */
@@ -219,7 +215,7 @@ protected:
                                   nsIChannel * aChannel);
     virtual nsresult DoChannelLoad(nsIChannel * aChannel,
                                    nsIURILoader * aURILoader);
-    NS_IMETHOD ScrollIfAnchor(nsIURI * aURI, PRBool * aWasAnchor);
+    NS_IMETHOD ScrollIfAnchor(nsIURI * aURI, PRBool * aWasAnchor, PRUint32 aLoadType, nscoord *cx, nscoord *cy);
     NS_IMETHOD OnLoadingSite(nsIChannel * aChannel);
 
     NS_IMETHOD OnNewURI(nsIURI * aURI, nsIChannel * aChannel, PRUint32 aLoadType);

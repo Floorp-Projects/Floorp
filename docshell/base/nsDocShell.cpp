@@ -4563,7 +4563,8 @@ nsDocShell::InternalLoad(nsIURI * aURI,
          aLoadType == LOAD_HISTORY ||
          aLoadType == LOAD_LINK) && (aPostData == nsnull)) {
         PRBool wasAnchor = PR_FALSE;
-        NS_ENSURE_SUCCESS(ScrollIfAnchor(aURI, &wasAnchor), NS_ERROR_FAILURE);
+        nscoord cx, cy;
+        NS_ENSURE_SUCCESS(ScrollIfAnchor(aURI, &wasAnchor, aLoadType, &cx, &cy), NS_ERROR_FAILURE);
         if (wasAnchor) {
             mLoadType = aLoadType;
             mURIResultedInDocument = PR_TRUE;
@@ -4572,6 +4573,9 @@ nsDocShell::InternalLoad(nsIURI * aURI,
              * recorded in session and global history.
              */             
             OnNewURI(aURI, nsnull, mLoadType);
+
+            /* save current position of scroller(s) (bug 59774) */
+            mOSHE->SetScrollPosition(cx, cy);
             
             /* If this is a history load, OnNewURI() will not create
              * a mLSHE. In that case, we want to assign mOSHE to aSHEntry 
@@ -4582,6 +4586,16 @@ nsDocShell::InternalLoad(nsIURI * aURI,
               mOSHE = aSHEntry;            
             else if (mLSHE)
               mOSHE = mLSHE;
+
+            /* restore previous position of scroller(s), if we're moving
+             * back in history (bug 59774)
+             */
+            if (aLoadType == LOAD_HISTORY)
+            {
+              nscoord bx, by;
+              mOSHE->GetScrollPosition(&bx, &by);
+              SetCurScrollPosEx(bx, by);
+            }
 
             /* Clear out mLSHE so that further anchor visits get
              * recorded in SH and SH won't misbehave. 
@@ -5080,7 +5094,7 @@ nsresult nsDocShell::DoChannelLoad(nsIChannel * aChannel,
 }
 
 NS_IMETHODIMP
-nsDocShell::ScrollIfAnchor(nsIURI * aURI, PRBool * aWasAnchor)
+nsDocShell::ScrollIfAnchor(nsIURI * aURI, PRBool * aWasAnchor, PRUint32 aLoadType, nscoord *cx, nscoord *cy)
 {
     NS_ASSERTION(aURI, "null uri arg");
     NS_ASSERTION(aWasAnchor, "null anchor arg");
@@ -5174,12 +5188,23 @@ nsDocShell::ScrollIfAnchor(nsIURI * aURI, PRBool * aWasAnchor)
 
     // Both the new and current URIs refer to the same page. We can now
     // browse to the hash stored in the new URI.
+    //
+    // But first let's capture positions of scroller(s) that can
+    // (and usually will) be modified by GoToAnchor() call.
+
+    GetCurScrollPos(ScrollOrientation_X, cx);
+    GetCurScrollPos(ScrollOrientation_Y, cy);
 
     if (!sNewRef.IsEmpty()) {
         nsCOMPtr<nsIPresShell> shell = nsnull;
         rv = GetPresShell(getter_AddRefs(shell));
         if (NS_SUCCEEDED(rv) && shell) {
             *aWasAnchor = PR_TRUE;
+
+            // anchor is there, but if it's a LOAD_HISTORY call
+            // we don't have any achor jumping to do
+            if (aLoadType == LOAD_HISTORY)
+              return rv;
 
             char *str = ToNewCString(sNewRef);
 
@@ -5229,8 +5254,6 @@ nsDocShell::ScrollIfAnchor(nsIURI * aURI, PRBool * aWasAnchor)
         }
     }
     else {
-        // A bit of a hack - scroll to the top of the page.
-        SetCurScrollPosEx(0, 0);
         *aWasAnchor = PR_TRUE;
     }
 

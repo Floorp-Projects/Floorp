@@ -2759,7 +2759,17 @@ HTMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
     }
   }
 
-  ScrollToRef();
+  if (mWebShell) {
+    nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mWebShell));
+    if (docShell) {
+      PRUint32 LoadType;
+
+      docShell->GetLoadType(&LoadType);
+
+      if(!(LoadType & nsIDocShell::LOAD_CMD_HISTORY))
+        ScrollToRef();                          
+    }
+  }
 
   nsCOMPtr<nsIScriptLoader> loader;
   mDocument->GetScriptLoader(getter_AddRefs(loader));

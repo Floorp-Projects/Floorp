@@ -398,8 +398,18 @@ nsXMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
   if (loader) {
     loader->RemoveObserver(this);
   }
+  
+  PRUint32 documentLoadType;
+  if (mWebShell) {
+    nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mWebShell));
+    if (docShell) {
+      
 
-  if (!mXSLTransformMediator || NS_FAILED(rv)) {
+      docShell->GetLoadType(&documentLoadType);
+    }
+  }
+  //  Scroll to Anchor only if the document was *not* loaded through history means. 
+  if (!(documentLoadType & nsIDocShell::LOAD_CMD_HISTORY) && (!mXSLTransformMediator || NS_FAILED(rv))) {
     StartLayout();
     ScrollToRef();
     mDocument->EndLoad();
