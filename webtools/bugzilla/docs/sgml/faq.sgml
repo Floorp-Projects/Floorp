@@ -1132,6 +1132,41 @@
       <title>Bugzilla Hacking</title>
 
       <qandaentry>
+        <question>
+	  <para>
+	    What kind of style should I use for templatization?
+	  </para>
+	</question>
+	<answer>
+	  <para>
+	    Gerv and Myk suggest a 2-space endent, with embedded code sections on
+	    their own line, in line with outer tags.  Like this:</para>
+	    <programlisting><![CDATA[
+<fred>
+[% IF foo %]
+  <bar>
+  [% FOREACH x = barney %]
+    <tr>
+      <td>
+        [% x %]
+      </td>
+    <tr>
+  [% END %]
+[% END %]
+</fred>
+]]></programlisting>
+
+	<para> Myk also recommends you turn on PRE_CHOMP in the template
+	initialization to prevent bloating of HTML with unnecessary whitespace.
+	</para>
+
+	<para>Please note that many have differing opinions on this subject,
+	and the existing templates in Bugzilla espouse both this and a 4-space
+	style.  Either is acceptable; the above is preferred.</para>
+	</answer>
+      </qandaentry>
+
+      <qandaentry>
 	<question>
 	  <para>
 	    What bugs are in Bugzilla right now?
