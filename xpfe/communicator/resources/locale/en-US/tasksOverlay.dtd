@@ -1,6 +1,6 @@
 <!-- extracted from tasksOverlay.xul -->
-<!ENTITY tasksMenu.label				    "Window">
-<!ENTITY tasksMenu.accesskey                "w"> 
+<!ENTITY tasksMenu.label				    "Tasks">
+<!ENTITY tasksMenu.accesskey                "t"> 
 <!-- LOCALIZATION NOTE (navigatorCmd.label): DONT_TRANSLATE -->  
 <!ENTITY navigatorCmd.label					"Navigator">  
 <!ENTITY navigatorCmd.accesskey             "n">
