@@ -789,6 +789,7 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
            if(!fullURL && baseURL) {
              SetFullURL(baseURL); 
              fullURL = baseURL;
+             NS_IF_ADDREF(fullURL);
 	       }
            nsIView *parentWithView;
            nsPoint origin;
@@ -886,7 +887,7 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
     nsIPluginHost             *pluginHost = nsnull;
     nsIContentViewerContainer *cv = nsnull;
     nsIURL* baseURL = nsnull;
-	  nsIURL* fullURL = nsnull;
+    nsIURL* fullURL = nsnull;
 
     nsAutoString classid;
     PRInt32 nameSpaceID;
@@ -938,7 +939,7 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
         else
         {
           fullURL = baseURL;
-          NS_ADDREF(fullURL);
+          NS_IF_ADDREF(fullURL);
         }
         NS_IF_RELEASE(group);
 
@@ -1000,9 +1001,10 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
               NS_IF_RELEASE(baseURL);
               baseURL = codeBaseURL;
             }
-          }
-	        else
+          } else {
 	          fullURL = baseURL;
+              NS_IF_ADDREF(fullURL);
+	      }
 
 	        NS_IF_RELEASE(group);
 
@@ -1140,9 +1142,10 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
         // Create an absolute URL
         rv = NS_NewURL(&fullURL, src, baseURL, nsnull, group);
         NS_IF_RELEASE(group);
-	    }
-	    else // we didn't find a src or data param, so just set the url to the base
+	    } else {// we didn't find a src or data param, so just set the url to the base
 		  fullURL = baseURL;
+		  NS_IF_ADDREF(fullURL);
+		}
 
 	    // if we didn't find the type, but we do have a src, we can determine the mimetype
 	    // based on the file extension
