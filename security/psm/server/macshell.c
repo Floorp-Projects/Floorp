@@ -186,7 +186,7 @@ static void DoIdleProcessing()
 {
 	PR_Sleep(10);
 }
-
+extern short SIOUXHandleOneEvent(EventRecord *userevent);
 //----------------------------------------------------------------------------
 static OSErr HandleOneEvent()
 {
@@ -206,6 +206,8 @@ static OSErr HandleOneEvent()
 			case kHighLevelEvent:
 				DoHighLevelEvent(&theEvent);
 				break;
+			default:
+				SIOUXHandleOneEvent(&theEvent);
 		}
 	}
 	else
@@ -258,18 +260,13 @@ void main(void)
 	Boolean	haveAppleEvents;
 	OSErr err;
 	char *argv[] = { NULL, NULL };
-	
-#if 0
-	InitializeSIOUX(true);
-	printf("Welcome...\n");
-#else
+
 	// initialize QuickDraw globals. This is the only Toolbox init that we
 	// should do for an FBA
-	InitGraf(&qd.thePort);
-
+	//InitGraf(&qd.thePort);
+	InitializeSIOUX(true);
 	MemoryInit(10);
-#endif // DEBUG
-
+	
 	// initialize application globals
 
 	gQuitFlag = PR_FALSE;
