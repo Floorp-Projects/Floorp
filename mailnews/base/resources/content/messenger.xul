@@ -42,14 +42,16 @@ Rights Reserved.
 <!ENTITY newPageFromWizard.label ".Page from Wizard">  
 <!ENTITY newFolderCmd.label ".New Folder...">  
 <!ENTITY openAttachmentCmd.label ".Open Attachment">  
-<!ENTITY saveAsMenu.label ".Save As"> 
-<!ENTITY saveAsFileCmd.label ".File">  
-<!ENTITY saveAsTemplateCmd.label ".Template">  
+<!ENTITY saveAsMenu.label "Save As"> 
+<!ENTITY saveAsFileCmd.label "File">  
+<!ENTITY saveAsTemplateCmd.label "Template">  
 <!ENTITY getNewMsgCmd.label "Get New Messages">  
 <!ENTITY sendUnsentCmd.label "Send Unsent Messages">  
 <!ENTITY loadFirstDraft.label "Load First Draft Message">
 <!ENTITY subscribeCmd.label "Subscribe">  
-<!ENTITY emptyTrashCmd.label ".Empty Trash">  
+<!ENTITY renameFolder.label ".Rename Folder...">
+<!ENTITY compactFolder.label "Compact This Folder">
+<!ENTITY emptyTrashCmd.label "Empty Trash">  
 <!ENTITY importCmd.label ".Import...">  
 <!ENTITY offlineMenu.label ".Offline"> 
 <!ENTITY workOfflineCmd.label ".Work Offline">  
@@ -293,6 +295,9 @@ Rights Reserved.
       <menuitem value="&loadFirstDraft.label;" onaction="MsgLoadFirstDraft();"/>      
       <menuitem value="&emptyTrashCmd.label;" onaction="MsgEmptyTrash();"/>
       <menuitem value="&subscribeCmd.label;" onaction="MsgSubscribe();"/>
+	  <menuseparator/>
+	  <menuitem value="&renameFolder.label;" onaction="MsgRenameFolder();"/>
+	  <menuitem value="&compactFolder.label;" onaction="MsgCompactFolder();"/>
       <menuseparator/>
       <menuitem value="&importCmd.label;" onaction="MsgImport();"/>
       <menuseparator/>
