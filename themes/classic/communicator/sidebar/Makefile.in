@@ -28,6 +28,6 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 include $(THEME_ROOT_DEPTH)/theme.mk
 
-DIRS = win
+DIRS = win unix
 
 include $(topsrcdir)/config/rules.mk

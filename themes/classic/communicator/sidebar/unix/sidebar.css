@@ -1,11 +1,15 @@
 
+#sidebar-splitter 
+  {
+    border-top            : 1px solid threedhighlight;
+  }
+
 #sidebar-box 
   {
     border-left           : 1px solid threedshadow;
-    border-top            : 1px solid threedshadow;
     border-right          : 1px solid threedhighlight;
     border-bottom         : 1px solid threedhighlight;
-    background-color      : appworkspace;
+    background-color      : #808080;
   }
 
 .text-panel-loading 
@@ -16,61 +20,80 @@
 .image-panel-loading 
   {
     margin                : 5px;
-    list-style-image      : url("resource:/res/rdf/loading.gif"); 
+    list-style-image      : url("chrome://global/skin/loading.gif"); 
   }
 
 .sidebarheader-main 
   {
-    border-left           : 1px solid threedhighlight;
-    border-top            : 1px solid threedhighlight;
-    border-right          : 1px solid threedshadow;
-    border-bottom         : 1px solid threedshadow;
-    background-color      : threedface;
-    padding               : 3px 5px 3px 6px;
-    background-image      : url("chrome://communicator/skin/smallheader-bg.gif");
+    border                : 1px outset inactivecaption;
+    background-color      : activecaption;
+    color                 : activecaptiontext;
+    padding               : 1px 2px 1px 6px;
   }
-
+  
 .sidebar-header-text  
   {
     font-weight           : bold;
   }
 
 .sidebar-header-grippy
-  { /* This image still has to be added to the tree (8/8/00).  I'll do it after german's approval */
-    list-style-image	: url("chrome://global/skin/grippy-short-vert-after.gif");
-  	background-color	: #DDDDDD;
-  	max-width			: 32px;
-  	height				: 4px;
+  { 
+    /* This image still has to be added to the tree (8/8/00).  I'll do it after german's approval */
+    list-style-image	    : url("chrome://global/skin/grippy-short-vert-after.gif");
+  	background-color	    : threedface;
+  	max-width			        : 32px;
+  	height				        : 4px;
   }
 
-#sidebar-title-box[state="collapsed"] > .sidebar-header-grippy {
-/* This image still has to be added to the tree (8/8/00).  I'll do it after german's approval */
-    list-style-image	: url("chrome://global/skin/grippy-short-vert-before.gif"); 
-}
-
-#sidebar-panel-picker > .menu-right {
-    padding-left		: 0px;
-}
-#sidebar-panel-picker > .menu-text {
-    padding-left: 0px;
-}
-#sidebar-panel-picker > .menu-accel {
-    display: none;
-}
+#sidebar-title-box[state="collapsed"] > .sidebar-header-grippy 
+  {
+    /* This image still has to be added to the tree (8/8/00).  I'll do it after german's approval */
+    list-style-image	    : url("chrome://global/skin/grippy-short-vert-before.gif"); 
+  }
+  
+.menubutton-toolbar-single-dropmarker[menubuttontype="sidebar-panels"]
+  {
+    list-style-image      : url("chrome://global/skin/menu-arrow-hover.gif");  
+    margin-left           : 2px;
+  }
 
 /**
  * texttab folder lookalike e.g. for sidebar panel headers
  */
   .box-texttab
     {
-      -moz-binding        : url("chrome://communicator/skin/sidebar/sidebarSplitterBindings.xml#panelheader");
+      -moz-binding        : url("chrome://communicator/skin/sidebar/sidebarBindings.xml#panelheader");
       background-color    : threedface;
+      cursor              : pointer;
+    }
+
+  .panelheader-grippy-box
+    {
       border-left         : 1px solid threedhighlight;
       border-top          : 1px solid threedhighlight;
       border-right        : 1px solid threedshadow;
       border-bottom       : 1px solid threedshadow;
-      margin-bottom       : 1px;
+      width               : 12px;
+      padding-bottom      : 1px;
     }
+
+  .panelheader-grippy-texture
+    {
+      margin                : 2px 3px 1px 2px;
+      background-image      : url("chrome://global/skin/toolbargrippy-texture.gif");
+      background-position   : 50% 0%;
+      background-repeat     : repeat-y;
+    }
+    
+  .box-texttab:hover > .panelheader-box-1
+    {
+      background-color      : #CCCCFF;
+    }
+    
+  .box-texttab[selected="true"]:hover > .panelheader-box-1
+    {
+      background-color      : threedface;
+    } 
     
   .box-texttab[last-panel="true"], .box-texttab[selected="true"]
     {
@@ -79,49 +102,63 @@
       
   .panelheader-box-1
     {
-      border              : 1px solid threedface;
-      padding             : 3px 5px 3px 6px;
-    }
-
-  .box-texttab:hover
-    {
-      border-right        : 1px solid threeddarkshadow;
-      border-bottom       : 1px solid threeddarkshadow;
-    }
-  
-  .box-texttab:hover > .panelheader-box-1
-    { 
+      border-left         : 1px solid threedhighlight;
+      border-top          : 1px solid threedhighlight;
       border-right        : 1px solid threedshadow;
       border-bottom       : 1px solid threedshadow;
-    } 
-
-  .box-texttab:hover:active
-    {
-      border-left         : 1px solid threeddarkshadow;
-      border-top          : 1px solid threeddarkshadow;
-      border-right        : 1px solid threedhighlight;
-      border-bottom       : 1px solid threedhighlight;
+/*
+      border              : 1px outset threedshadow;
+      background-color    : threedshadow;
+      color               : threedhighlight;
+ */
+      background-color    : threedface;
+      background-image    : url("chrome://global/skin/scrollbar-slider-bg.gif");
+      padding             : 3px 2px 3px 0px;
     }
 
-  .box-texttab:hover:active > .panelheader-box-1
+  .panelheader-grippy-icon
     {
-      border-left         : 1px solid threedshadow;
-      border-top          : 1px solid threedshadow;
-      border-right        : 1px solid threedface;
-      border-bottom       : 1px solid threedface;
+      margin              : 2px 7px 0px 7px;
+      list-style-image    : url("chrome://global/skin/tbg-twisty-collapsed.gif");
+    }
+
+  .panelheader-grippy-icon[selected="true"]
+    {
+      margin              : 2px 5px 0px 5px;
+      list-style-image    : url("chrome://global/skin/toolbargrippy-twisty.gif");
+    }
+
+  .panelheader-box-1[selected="true"]
+    {
+      background-color    : threedface;
+      background          : transparent;
+      border-left         : 1px solid threedhighlight;
+      border-top          : 1px solid threedhighlight;
+      border-right        : 1px solid threedshadow;
+      border-bottom       : 1px solid threedshadow;
+      color               : black;
+      font-weight         : bold;
     }
     
-.sidebar-iframe-no-panels, .loadarea
-  {
-    background-color      : #FFFFFF;
-  }
-  
-.iframe-panel
-  {
-    border-left           : 1px solid threedhighlight;
-    border-right          : 1px solid threedshadow;
-    border-bottom         : 1px solid threedshadow;
-/*  border-top            : 1px solid threedhighlight;      DO NOT UNCOMMENT!!!  THERE IS A BUG WHERE, 
-															FOR SOME REASON, BORDER-TOP CAUSES CERTAIN APPS 
-															(E.G. MAIL) TO CRASH!!! Related to Bugs #45336, #45925 (7/21/00) */
-  }  
+  .panelheader-texture
+    {
+      margin              : 1px 0px 1px 0px;
+      background-image    : url("chrome://global/skin/toolbargrippy-texture.gif");
+      background-position : 50% 0%;
+      background-repeat   : repeat-y; 
+      width               : 12px;
+    }
+
+  .sidebar-iframe-no-panels, .loadarea
+    {
+      background-color      : #FFFFFF;
+    }
+    
+  .iframe-panel
+    {
+      border-left           : 1px solid threedhighlight;
+      border-bottom         : 1px solid threedshadow;
+      border-right          : 1px solid threedshadow;
+    }  
+
+    
