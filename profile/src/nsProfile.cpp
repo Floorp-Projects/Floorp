@@ -48,6 +48,10 @@
 #include "nsIPrefMigration.h"
 #endif
 
+#ifdef XP_MAC
+#include "nsIPrefMigration.h"
+#endif
+
 // included for XPlatform coding 
 #include "nsFileStream.h"
 #include "nsSpecialSystemDirectory.h"
@@ -79,6 +83,10 @@
 static char *oldWinReg="nsreg.dat";
 #endif
 
+#ifdef XP_MAC
+static char *oldMacReg = "Netscape Registry";
+#endif
+
 static char gNewProfileData[_MAX_NUM_PROFILES][_MAX_LENGTH] = {{'\0'}};
 static int	g_Count = 0;
 
@@ -86,7 +94,7 @@ static char gProfiles[_MAX_NUM_PROFILES][_MAX_LENGTH] = {{'\0'}};
 static int	g_numProfiles = 0;
 
 // we only migrate prefs on windows right now.
-#ifdef XP_PC
+#if defined(XP_PC) || defined(XP_MAC)
 static char gOldProfiles[_MAX_NUM_PROFILES][_MAX_LENGTH] = {{'\0'}};
 static char gOldProfLocations[_MAX_NUM_PROFILES][_MAX_LENGTH] = {{'\0'}};
 static int	g_numOldProfiles = 0;
@@ -112,7 +120,7 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #endif // NECKO
 
 
-#ifdef XP_PC
+#if defined(XP_PC) || defined(XP_MAC)
 static NS_DEFINE_IID(kIPrefMigration_IID, NS_IPrefMigration_IID);
 static NS_DEFINE_CID(kPrefMigration_CID, NS_PrefMigration_CID);
 #endif
@@ -1679,7 +1687,7 @@ NS_IMETHODIMP nsProfile::MigrateProfileInfo()
 {
 	nsresult rv = NS_OK;
 
-#ifdef XP_PC
+#if defined(XP_PC) || defined(XP_MAC)
 
 #if defined(DEBUG_profile)
     printf("Entered MigrateProfileInfo.\n");
@@ -1710,13 +1718,32 @@ NS_IMETHODIMP nsProfile::MigrateProfileInfo()
 		rv = m_reg->Open(oldAppRegistry.GetCString());
 		************************/
 
+#ifdef XP_PC
 		// Registry file has been traditionally stored in the windows directory (XP_PC).
 		nsSpecialSystemDirectory systemDir(nsSpecialSystemDirectory::Win_WindowsDirectory);
 
 		// Append the name of the old registry to the path obtained.
 		PL_strcpy(oldRegFile, systemDir.GetNativePathCString());
 		PL_strcat(oldRegFile, oldWinReg);
+#endif
 
+
+#ifdef XP_MAC
+		nsSpecialSystemDirectory *regLocation = NULL;
+
+
+        regLocation = new nsSpecialSystemDirectory(nsSpecialSystemDirectory::Mac_SystemDirectory);
+
+		// Append the name of the old registry to the path obtained.
+		*regLocation += "Preferences";
+		*regLocation += oldMacReg;
+		
+		// WARNING
+		// regNSPRPath and regFile need to have the same scope
+		// since the regFile will point to data in regNSPRPath
+        nsNSPRPath regNSPRPath(*regLocation);
+        PL_strcpy(oldRegFile, (const char *) regNSPRPath);
+#endif
 		rv = m_reg->Open(oldRegFile);
 
 		// Enumerate 4x tree and create an array of that information.
@@ -1815,10 +1842,10 @@ NS_IMETHODIMP nsProfile::UpdateMozProfileRegistry()
 
 	nsresult rv = NS_OK;
 
-#ifdef XP_PC
+#if defined(XP_PC) || defined(XP_MAC)
 
 #if defined(DEBUG_profile)
-    printf("Entered MigrateProfileInfo.\n");
+    printf("Entered UpdateMozProfileRegistry.\n");
 #endif
 
 	for (int index = 0; index < g_numOldProfiles; index++)
@@ -1929,7 +1956,7 @@ NS_IMETHODIMP nsProfile::MigrateProfile(const char* profileName)
 
 	nsresult rv = NS_OK;
 
-#ifdef XP_PC
+#if defined(XP_PC) || defined(XP_MAC)
 
 #if defined(DEBUG_profile)
 	printf("Inside Migrate Profile routine.\n" );
@@ -1964,10 +1991,12 @@ NS_IMETHODIMP nsProfile::MigrateProfile(const char* profileName)
 	// Call migration service to do the work.
 	nsIPrefMigration *pPrefMigrator = nsnull;
 
+
 	rv = nsComponentManager::CreateInstance(kPrefMigration_CID, 
                                           nsnull, 
                                           kIPrefMigration_IID, 
-                                          (void**) &pPrefMigrator); 
+                                          (void**) &pPrefMigrator);
+                                          
 	if (NS_SUCCEEDED(rv)) 
 	{ 
 		pPrefMigrator->ProcessPrefs((char *)oldProfDir.GetCString(), 
@@ -2484,7 +2513,7 @@ NS_IMETHODIMP nsProfile::MigrateAllProfiles()
 
     nsresult rv = NS_OK;
 
-#ifdef XP_PC
+#if defined(XP_PC) || defined(XP_MAC)
 	for (int i=0; i < g_numOldProfiles; i++)
 	{
 		rv = MigrateProfile(gOldProfiles[i]);
