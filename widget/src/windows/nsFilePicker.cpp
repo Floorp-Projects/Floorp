@@ -31,7 +31,7 @@
 #include "nsIPlatformCharset.h"
 #undef NS_IMPL_IDS
 #include "nsFilePicker.h"
-#include "nsLocalFile.h"
+#include "nsILocalFile.h"
 #include <windows.h>
 #include <SHLOBJ.H>
 
@@ -94,7 +94,8 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
   char *title = ConvertToFileSystemCharset(mTitle.GetUnicode());
   if (nsnull == title)
     title = mTitle.ToNewCString();
-  const char *initialDir = mDisplayDirectory.GetNativePathCString();
+  char *initialDir;
+  mDisplayDirectory->GetPath(&initialDir);
   if (initialDir && *initialDir) {
      ofn.lpstrInitialDir = initialDir;
   }
@@ -111,11 +112,10 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
   
   PRBool result;
 
-
-  if (mMode == eMode_load) {
+  if (mMode == modeLoad) {
     result = ::GetOpenFileName(&ofn);
   }
-  else if (mMode == eMode_save) {
+  else if (mMode == modeSave) {
     result = ::GetSaveFileName(&ofn);
   }
   else {
@@ -128,7 +128,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
    // Store the current directory in mDisplayDirectory
   char* newCurrentDirectory = new char[MAX_PATH+1];
   VERIFY(::GetCurrentDirectory(MAX_PATH, newCurrentDirectory) > 0);
-  mDisplayDirectory = newCurrentDirectory;
+  mDisplayDirectory->InitWithPath(newCurrentDirectory);
   delete[] newCurrentDirectory;
 
    // Clean up filter buffers
@@ -156,7 +156,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
 
 NS_IMETHODIMP nsFilePicker::SetFilterList(PRInt32 aNumberOfFilters,
                                           const PRUnichar **aTitles,
-                                          const PRUnichar **filters)
+                                          const PRUnichar **aFilters)
 {
   mNumberOfFilters  = aNumberOfFilters;
   mTitles           = aTitles;
@@ -164,7 +164,7 @@ NS_IMETHODIMP nsFilePicker::SetFilterList(PRInt32 aNumberOfFilters,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsFilePicker::GetFile(nsIFile **aFile)
+NS_IMETHODIMP nsFilePicker::GetFile(nsILocalFile **aFile)
 {
   NS_ENSURE_ARG_POINTER(*aFile);
 
@@ -172,9 +172,9 @@ NS_IMETHODIMP nsFilePicker::GetFile(nsIFile **aFile)
     
   NS_ENSURE_TRUE(file, NS_ERROR_FAILURE);
 
-  file->InitWithPath(mFile);
+  file->InitWithPath(nsCAutoString(mFile));
 
-  file->QueryInterface(NS_GET_IID(nsIFile), (void**)aFile);
+  NS_ADDREF(*aFile = file);
 
   return NS_OK;
 }
@@ -210,7 +210,7 @@ NS_IMETHODIMP nsFilePicker::GetDefaultString(PRUnichar **aString)
 // Set the display directory
 //
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsFilePicker::SetDisplayDirectory(nsIFile *aDirectory)
+NS_IMETHODIMP nsFilePicker::SetDisplayDirectory(nsILocalFile *aDirectory)
 {
   mDisplayDirectory = aDirectory;
   return NS_OK;
@@ -221,7 +221,7 @@ NS_IMETHODIMP nsFilePicker::SetDisplayDirectory(nsIFile *aDirectory)
 // Get the display directory
 //
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsFilePicker::GetDisplayDirectory(nsIFile **aDirectory)
+NS_IMETHODIMP nsFilePicker::GetDisplayDirectory(nsILocalFile **aDirectory)
 {
   *aDirectory = mDisplayDirectory;
   NS_IF_ADDREF(*aDirectory);
@@ -245,4 +245,27 @@ NS_IMETHODIMP nsFilePicker::CreateNative(nsIWidget *aParent,
   mTitle.Append(aTitle);
   mMode = aMode;
   return NS_OK;
+}
+
+
+
+//-------------------------------------------------------------------------
+//
+// Convert filter titles + filters into a Windows filter string
+//
+//-------------------------------------------------------------------------
+
+void nsFilePicker::GetFilterListArray(nsString& aFilterList)
+{
+  aFilterList.SetLength(0);
+  for (PRUint32 i = 0; i < mNumberOfFilters; i++) {
+    const nsString& title = mTitles[i];
+    const nsString& filter = nsAutoString(mFilters[i]);
+    
+    aFilterList.Append(title);
+    aFilterList.Append('\0');
+    aFilterList.Append(filter);
+    aFilterList.Append('\0');
+  }
+  aFilterList.Append('\0'); 
 }
