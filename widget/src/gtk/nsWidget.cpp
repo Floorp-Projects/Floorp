@@ -1180,7 +1180,7 @@ nsWidget::InstallRealizeSignal(GtkWidget * aWidget)
 //
 //////////////////////////////////////////////////////////////////
 
-#define TRACE_EVENTS
+#undef TRACE_EVENTS
 
 #ifdef DEBUG
 void
