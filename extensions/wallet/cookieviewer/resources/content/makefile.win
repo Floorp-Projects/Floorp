@@ -25,7 +25,7 @@ include <$(DEPTH)\config\rules.mak>
 
 CONTENTDIR=$(DIST)\bin\chrome\packages\core\communicator\content\wallet
 
-install::
+libs::
 	$(MAKE_INSTALL) CookieViewer.xul $(CONTENTDIR)
 	$(MAKE_INSTALL) CookieViewer.js $(CONTENTDIR)
 	

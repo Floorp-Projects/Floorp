@@ -39,5 +39,5 @@ DIRS            = resources
 
 include <$(DEPTH)\config\rules.mak>
 
-install::
+libs::
     $(MAKE_INSTALL) .\js\venkman-service.js $(DIST)\bin\components

@@ -32,5 +32,5 @@ JSCOMPONENTS = \
 
 include <$(DEPTH)\config\rules.mak>
 
-install:: $(JSCOMPONENTS)
+libs:: $(JSCOMPONENTS)
         !@$(MAKE_INSTALL) $(JSCOMPONENTS) $(DIST)\bin\components

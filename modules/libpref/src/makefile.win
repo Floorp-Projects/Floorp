@@ -93,7 +93,7 @@ OBJS =							\
 #//------------------------------------------------------------------------
 include <$(DEPTH)\config\rules.mak>
 
-install::
+libs::
     $(MAKE_INSTALL) .\initpref.js $(DIST)\bin\defaults\pref
     $(MAKE_INSTALL) .\init\all.js $(DIST)\bin\defaults\pref
     $(MAKE_INSTALL) .\init\mailnews.js $(DIST)\bin\defaults\pref

@@ -28,6 +28,6 @@ include <$(THEME_ROOT_DEPTH)\theme.mk>
 clobber::
 	rm -f $(DIST)\chrome\skins\$(THEME)\communicator\skin\related\*.*
 
-install:: 
+libs:: 
 	$(MAKE_INSTALL) related.css $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\related
 	$(MAKE_INSTALL) sitemap.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\related

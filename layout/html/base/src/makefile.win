@@ -129,10 +129,10 @@ LCFLAGS = \
 
 include <$(DEPTH)\config\rules.mak>
 
-install:: $(LIBRARY)
+libs:: $(LIBRARY)
 	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
 
-install::
+libs::
 	$(MAKE_INSTALL) broken-image.gif $(DIST)\bin\res
 	$(MAKE_INSTALL) loading-image.gif $(DIST)\bin\res
 	$(MAKE_INSTALL) gopher-audio.gif $(DIST)\bin\res\html

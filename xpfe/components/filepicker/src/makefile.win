@@ -40,5 +40,5 @@ CPP_OBJS = .\$(OBJDIR)\nsFileView.obj \
 
 include <$(DEPTH)\config\rules.mak>
 
-install:: nsFilePicker.js
+libs:: nsFilePicker.js
 	!@$(MAKE_INSTALL) $** $(DIST)\bin\components

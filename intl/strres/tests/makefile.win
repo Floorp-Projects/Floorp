@@ -37,7 +37,7 @@ LLIBS=				\
 
 include <$(DEPTH)\config\rules.mak>
 
-install:: $(PROGRAMS)
+libs:: $(PROGRAMS)
 	$(MAKE_INSTALL) $(PROG0) $(DIST)\bin
 	$(MAKE_INSTALL) strres.properties $(DIST)\bin\res
 	$(MAKE_INSTALL) strres-test.html $(DIST)\bin\res

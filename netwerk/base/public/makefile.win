@@ -87,5 +87,5 @@ $(DEPTH)\netwerk\dist\include:
         -mkdir $(DEPTH)\netwerk\dist
         -mkdir $(DEPTH)\netwerk\dist\include
 
-install::
+libs::
     $(MAKE_INSTALL) .\security-prefs.js $(DIST)\bin\defaults\pref

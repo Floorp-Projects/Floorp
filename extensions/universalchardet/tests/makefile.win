@@ -42,7 +42,7 @@ CPP_OBJS= \
 
 include <$(DEPTH)\config\rules.mak>
 
-install::  $(OBJDIR) $(PROGRAM)
+libs::  $(OBJDIR) $(PROGRAM)
   $(MAKE_INSTALL) $(PROGRAM) $(DIST)\bin
 
 clobber::

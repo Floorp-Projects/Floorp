@@ -59,7 +59,7 @@ embed_chrome: embed-jar.mn
 	-$(RM) -rf $(DIST)\Embed\tmpchrome
 !endif
 
-install:: embed_chrome
+libs:: embed_chrome
  $(PERL) $(DEPTH)\xpinstall\packager\pkgcp.pl -s $(DIST)\bin -d $(DIST) --f basebrowser-win -o dos -v
  $(MAKE_INSTALL) installed-chrome.txt $(DIST)\Embed\chrome
 !IF  "$(APP)" == "mfcembed"

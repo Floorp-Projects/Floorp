@@ -25,5 +25,5 @@ JSFILES = \
 
 include <$(DEPTH)\config\rules.mak>
 
-install::
+libs::
     $(MAKE_INSTALL) $(JSFILES) $(DIST)\bin\components

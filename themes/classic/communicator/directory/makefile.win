@@ -28,7 +28,7 @@ include <$(THEME_ROOT_DEPTH)\theme.mk>
 clobber::
 	rm -f $(DIST)\chrome\skins\$(THEME)\communicator\skin\directory\*.*
 
-install:: 
+libs:: 
 	$(MAKE_INSTALL) directory.css $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\directory
 	$(MAKE_INSTALL) file-folder-closed-sel.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\directory
 	$(MAKE_INSTALL) file-folder-closed.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\directory

@@ -30,7 +30,7 @@ include <$(THEME_ROOT_DEPTH)\theme.mk>
 clobber::
 	rm -f $(DIST)\chrome\skins\$(THEME)\communicator\skin\sidebar\*.*
 
-install:: 
+libs:: 
 	$(MAKE_INSTALL) sidebarSplitterBindings.xml $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\sidebar
 	$(MAKE_INSTALL) sidebar-close-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\sidebar
 	$(MAKE_INSTALL) sidebar-close.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\sidebar

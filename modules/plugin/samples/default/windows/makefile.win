@@ -60,7 +60,7 @@ include <$(DEPTH)\config\rules.mak>
 it:
 	echo $(LLIBS)
 
-install:: $(DLL)
+libs:: $(DLL)
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\plugins
 
 clobber::

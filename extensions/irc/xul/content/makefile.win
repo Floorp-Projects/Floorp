@@ -35,6 +35,6 @@ EXPORT_PREF_CONTENT = \
 
 include <$(DEPTH)\config\rules.mak>
 
-install:: 
+libs:: 
 	$(MAKE_INSTALL) $(EXPORT_PREF_CONTENT) $(DIST)\bin\chrome\packages\core\communicator\content\pref
 

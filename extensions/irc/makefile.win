@@ -33,7 +33,7 @@ DEPTH   =..\..
 
 include <$(DEPTH)\config\rules.mak>
 
-install::
+libs::
     $(MAKE_INSTALL) .\js\lib\chatzilla-service.js $(DIST)\bin\components
 
 chrome::

@@ -87,7 +87,7 @@ C_OBJS=\
 include <$(DEPTH)\config\rules.mak>
 
 #export::  $(LIBRARY)
-install::  $(LIBRARY)
+libs::  $(LIBRARY)
 	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib\
 
 #install:: export

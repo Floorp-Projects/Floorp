@@ -35,5 +35,5 @@ EXPORT_PREF_CONTENT = \
 
 include <$(DEPTH)\config\rules.mak>
 
-install:: 
+libs:: 
 	$(MAKE_INSTALL) $(EXPORT_PREF_CONTENT) $(DIST)\bin\chrome\locales\en-US\communicator\locale\pref

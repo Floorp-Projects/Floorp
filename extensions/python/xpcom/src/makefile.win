@@ -107,5 +107,5 @@ include <$(DEPTH)\config\rules.mak>
 #clobber::
 #    echo write me
 
-install:: $(DLL)
+libs:: $(DLL)
 		$(MAKE_INSTALL) $(DLL) $(DIST)\bin\Python\xpcom\.

@@ -191,5 +191,5 @@ componentreg:
 !endif
 !endif
 
-install:: regchrome rebase splitsymbols componentreg
+libs:: regchrome rebase splitsymbols componentreg
 

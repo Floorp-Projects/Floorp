@@ -61,7 +61,7 @@ LINCS=-I..\src
 
 include <$(DEPTH)\config\rules.mak>
 
-install:: $(DLL) $(LIBRARY)
+libs:: $(DLL) $(LIBRARY)
         $(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
 	$(MAKE_INSTALL) $(DLL) $(DIST)\bin
 

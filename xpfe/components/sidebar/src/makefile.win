@@ -24,5 +24,5 @@ DEPTH=..\..\..\..
 
 include <$(DEPTH)\config\rules.mak>
 
-install:: nsSidebar.js
+libs:: nsSidebar.js
 	!@$(MAKE_INSTALL) $** $(DIST)\bin\components

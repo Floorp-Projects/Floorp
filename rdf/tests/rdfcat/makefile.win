@@ -50,7 +50,7 @@ LLIBS=				\
 
 include <$(DEPTH)\config\rules.mak>
 
-install:: $(PROGRAM)
+libs:: $(PROGRAM)
 	$(MAKE_INSTALL) $(PROGRAM) $(DIST)\bin
 
 

@@ -36,7 +36,7 @@ CHROME_CONTENT = \
 
 include <$(DEPTH)\config\rules.mak>
 
-install::
+libs::
     $(MAKE_INSTALL) .\smime.js $(DIST)\bin\defaults\pref
 
 include <$(DEPTH)\config\rules.mak>

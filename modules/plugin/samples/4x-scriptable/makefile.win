@@ -49,7 +49,7 @@ include <$(DEPTH)/config/rules.mak>
 
 #MAKE_INSTALL=echo $(MAKE_INSTALL)
 
-install:: $(DLL)
+libs:: $(DLL)
 #	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\plugins
 
 clobber::

@@ -28,7 +28,7 @@ include <$(THEME_ROOT_DEPTH)\theme.mk>
 clobber::
 	rm -f $(DIST)\chrome\skins\$(THEME)\messenger\skin\messengercompose\*.*
 
-install:: 
+libs:: 
 	$(MAKE_INSTALL) address-disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\messengercompose
 	$(MAKE_INSTALL) address-hover-active.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\messengercompose
 	$(MAKE_INSTALL) address-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\messengercompose

@@ -31,7 +31,7 @@ XPIDLSRCS =               \
 
 include <$(DEPTH)\config\rules.mak>
 
-install::
+libs::
 	$(MAKE_INSTALL) ./py_test_component.py $(DIST)\bin\components
 
 clobber::

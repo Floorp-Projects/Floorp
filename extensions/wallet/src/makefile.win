@@ -89,7 +89,7 @@ clobber::
 	rm -f $(DIST)\bin\defaults\wallet\PositionalSchema.tbl
 	rm -f $(DIST)\bin\defaults\wallet\StateSchema.tbl
 
-install::
+libs::
 	$(MAKE_INSTALL) DistinguishedSchema.tbl $(DIST)\bin\defaults\wallet
 	$(MAKE_INSTALL) FieldSchema.tbl $(DIST)\bin\defaults\wallet
 	$(MAKE_INSTALL) VcardSchema.tbl $(DIST)\bin\defaults\wallet

@@ -138,4 +138,4 @@ LLIBS=        \
 CPP_PROG_LINK		= 1
 include <$(DEPTH)\config\rules.mak>
 
-install:: $(OBJDIR) $(PROGRAM)
+libs:: $(OBJDIR) $(PROGRAM)

@@ -35,7 +35,7 @@ include <$(DEPTH)\config\rules.mak>
 clobber::
 	rm -f $(DIST)\chrome\skins\$(THEME)\skin\*.*
 
-install:: 
+libs:: 
 	$(MAKE_INSTALL) embedding.css $(DIST)\bin\chrome\packages\embedding\browser\skin
 	$(MAKE_INSTALL) back.gif $(DIST)\bin\chrome\packages\embedding\browser\skin
 	$(MAKE_INSTALL) forward.gif $(DIST)\bin\chrome\packages\embedding\browser\skin

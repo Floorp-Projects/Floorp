@@ -43,5 +43,5 @@ FILES=\
         xpidl-test-1.xul                \
         $(NULL)
 
-install:: $(FILES:/=\)
+libs:: $(FILES:/=\)
 	!@$(MAKE_INSTALL) $** $(DIST)\bin\res\rdf

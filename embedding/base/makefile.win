@@ -57,5 +57,5 @@ include <$(DEPTH)\config\config.mak>
 
 nsEmbedAPI.cpp : nsEmbedAPI.h
 
-install:: $(LIBRARY)
+libs:: $(LIBRARY)
 	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib

@@ -25,7 +25,7 @@ THEME_ROOT_DEPTH = ..\..\..\..
 include <$(DEPTH)\config\rules.mak>
 include <$(THEME_ROOT_DEPTH)\theme.mk>
 
-install:: 
+libs:: 
 	$(MAKE_INSTALL) navigator.dtd $(DIST)\bin\chrome\locales\$(THEME)\navigator\locale
 	$(MAKE_INSTALL) navigator.properties $(DIST)\bin\chrome\locales\$(THEME)\navigator\locale
 	$(MAKE_INSTALL) viewSource.dtd $(DIST)\bin\chrome\locales\$(THEME)\navigator\locale

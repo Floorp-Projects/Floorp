@@ -37,7 +37,7 @@ CHROME_CONTENT = \
 
 include <$(DEPTH)\config\rules.mak>
 
-install:: 
+libs:: 
 	$(MAKE_INSTALL) import-test.html $(DIST)\bin\res\samples
 
 clobber::

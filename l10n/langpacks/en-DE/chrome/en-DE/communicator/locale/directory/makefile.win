@@ -25,7 +25,7 @@ THEME_ROOT_DEPTH = ..\..\..\..\..
 include <$(DEPTH)\config\rules.mak>
 include <$(THEME_ROOT_DEPTH)\theme.mk>
 
-install:: 
+libs:: 
 	$(MAKE_INSTALL) directory.dtd $(DIST)\bin\chrome\locales\$(THEME)\communicator\locale\directory
 
 clobber::

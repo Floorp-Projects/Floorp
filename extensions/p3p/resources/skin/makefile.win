@@ -23,7 +23,7 @@ DEPTH = ..\..\..\..
 
 include <$(DEPTH)\config\rules.mak>
 
-install::
+libs::
 		$(MAKE_INSTALL) classic\P3PDefault.gif            $(DIST)\bin\chrome\classic\skin\classic\communicator
 		$(MAKE_INSTALL) classic\P3PNoPrivacy.gif          $(DIST)\bin\chrome\classic\skin\classic\communicator
 		$(MAKE_INSTALL) classic\P3PPrivate.gif            $(DIST)\bin\chrome\classic\skin\classic\communicator

@@ -109,7 +109,7 @@ LCFLAGS = \
 
 include <$(DEPTH)\config\rules.mak>
 
-install::
+libs::
 	$(MAKE_INSTALL) .\charsetalias.properties $(DIST)\bin\res
 	$(MAKE_INSTALL) .\wincharset.properties $(DIST)\bin\res
 	$(MAKE_INSTALL) charsetData.properties $(DIST)\bin\res

@@ -24,7 +24,7 @@ DESTDIR = $(DIST)\bin\defaults\isp
 
 include <$(DEPTH)\config\rules.mak>
 
-install::
+libs::
 	$(MAKE_INSTALL) aol.rdf					$(DESTDIR)
 	$(MAKE_INSTALL) example.rdf				$(DESTDIR)
 

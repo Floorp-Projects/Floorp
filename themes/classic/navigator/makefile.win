@@ -30,7 +30,7 @@ include <$(THEME_ROOT_DEPTH)\theme.mk>
 clobber::
 	rm -f $(DIST)\chrome\skins\$(THEME)\navigator\skin\*.*
 
-install:: 
+libs:: 
 	$(MAKE_INSTALL) back.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
 	$(MAKE_INSTALL) back-disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
 	$(MAKE_INSTALL) back-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin

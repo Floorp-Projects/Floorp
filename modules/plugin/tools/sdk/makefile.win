@@ -22,7 +22,7 @@
 DEPTH=..\..\..\..
 include <$(DEPTH)\config\rules.mak>
 
-install::
+libs::
   if not exist "bin" mkdir "bin"
   if not exist "idl" mkdir "idl"
   if not exist "include" mkdir "include"

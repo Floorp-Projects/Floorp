@@ -30,7 +30,7 @@ include <$(THEME_ROOT_DEPTH)\theme.mk>
 clobber::
 	rm -f $(DIST)\chrome\skins\$(THEME)\messenger\skin\addressbook\*.*
 
-install:: 
+libs:: 
 	$(MAKE_INSTALL) abnewmsg.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\addressbook
 	$(MAKE_INSTALL) call-disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\addressbook
 	$(MAKE_INSTALL) call-hover-active.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\addressbook

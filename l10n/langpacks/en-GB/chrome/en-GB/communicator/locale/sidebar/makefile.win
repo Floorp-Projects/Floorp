@@ -25,7 +25,7 @@ THEME_ROOT_DEPTH = ..\..\..\..\..
 include <$(DEPTH)\config\rules.mak>
 include <$(THEME_ROOT_DEPTH)\theme.mk>
 
-install:: 
+libs:: 
 	$(MAKE_INSTALL) customize.dtd $(DIST)\bin\chrome\locales\$(THEME)\communicator\locale\sidebar
 	$(MAKE_INSTALL) local-panels.dtd $(DIST)\bin\chrome\locales\$(THEME)\communicator\locale\sidebar
 	$(MAKE_INSTALL) preview.dtd $(DIST)\bin\chrome\locales\$(THEME)\communicator\locale\sidebar

@@ -89,6 +89,6 @@ include <$(DEPTH)\config\config.mak>
 
 nsDocShell.cpp : nsDocShell.h
 
-install:: $(LIBRARY)
+libs:: $(LIBRARY)
     $(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
 

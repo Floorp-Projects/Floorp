@@ -28,5 +28,5 @@ include <$(THEME_ROOT_DEPTH)\theme.mk>
 clobber::
 	rm -f $(DIST)\chrome\skins\$(THEME)\communicator\skin\xpinstall\*.*
 
-install:: 
+libs:: 
 	$(MAKE_INSTALL) xpinstall.css $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\xpinstall

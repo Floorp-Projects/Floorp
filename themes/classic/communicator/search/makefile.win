@@ -30,6 +30,6 @@ include <$(THEME_ROOT_DEPTH)\theme.mk>
 clobber::
 	rm -f $(DIST)\chrome\skins\$(THEME)\communicator\skin\search\*.*
 
-install:: 
+libs:: 
 	$(MAKE_INSTALL) category.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\search
 	$(MAKE_INSTALL) result.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\search

@@ -69,7 +69,7 @@ WIN_LIBS=                       \
 #//
 #//------------------------------------------------------------------------
 include <$(DEPTH)/config/rules.mak> 
-install:: $(PROGRAM)
+libs:: $(PROGRAM)
     $(MAKE_INSTALL) $(PROGRAM) $(DIST)\bin
     $(MAKE_INSTALL) cmessage.txt $(DIST)\bin\res
 

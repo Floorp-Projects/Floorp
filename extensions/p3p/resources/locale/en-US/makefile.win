@@ -23,7 +23,7 @@ DEPTH = ..\..\..\..\..
 
 include <$(DEPTH)\config\rules.mak>
 
-install::
+libs::
 		$(MAKE_INSTALL) pref-P3P.dtd       $(DIST)\bin\chrome\en-US\locale\en-US\communicator\pref
 		$(MAKE_INSTALL) P3PPrivacyInfo.dtd $(DIST)\bin\chrome\en-US\locale\en-US\communicator
 		$(MAKE_INSTALL) P3P.properties     $(DIST)\bin\chrome\en-US\locale\en-US\communicator

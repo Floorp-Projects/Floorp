@@ -81,5 +81,5 @@ LINCS=$(LINCS) -I$(PUBLIC)\plugin -I$(PUBLIC)\xpcom -I$(PUBLIC)\java -I$(PUBLIC)
 LCFLAGS = $(LCFLAGS) -DNEW_PLUGIN_STREAM_API
 !endif
 
-install:: $(DLL)
+libs:: $(DLL)
         $(MAKE_INSTALL) $(OBJDIR)\npevents.dll $(DIST)\bin\components

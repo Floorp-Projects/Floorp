@@ -47,7 +47,7 @@ include <$(DEPTH)\config\rules.mak>
 
 preloader.res: preloader.rc resource.h
 
-install:: $(PROGRAM)
+libs:: $(PROGRAM)
 	$(MAKE_INSTALL) $(PROGRAM) $(DIST)\bin
 
 clobber::

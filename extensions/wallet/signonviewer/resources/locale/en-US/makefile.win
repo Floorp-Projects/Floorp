@@ -30,6 +30,6 @@ clobber::
         rm -f $(DIST)\bin\chrome\locales\en-US\communicator\locale\wallet\SignonViewer.properties
         rm -f $(DIST)\bin\chrome\locales\en-US\communicator\locale\wallet\SignonViewer.dtd
 
-install::
+libs::
         $(MAKE_INSTALL) SignonViewer.properties $(DIST)\bin\chrome\locales\en-US\communicator\locale\wallet
         $(MAKE_INSTALL) SignonViewer.dtd $(DIST)\bin\chrome\locales\en-US\communicator\locale\wallet

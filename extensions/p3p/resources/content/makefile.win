@@ -23,7 +23,7 @@ DEPTH = ..\..\..\..
 
 include <$(DEPTH)\config\rules.mak>
 
-install::
+libs::
 		$(MAKE_INSTALL) pref-P3P.xul               $(DIST)\bin\chrome\comm\content\communicator\pref
 		$(MAKE_INSTALL) pref-P3P.js                $(DIST)\bin\chrome\comm\content\communicator\pref
 		$(MAKE_INSTALL) pref-P3Pcust.xul           $(DIST)\bin\chrome\comm\content\communicator\pref

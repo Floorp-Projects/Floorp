@@ -44,7 +44,7 @@ WIN_LIBS= comdlg32.lib
 
 include <$(DEPTH)\config\rules.mak>
 
-install:: $(PROGRAM)
+libs:: $(PROGRAM)
 	$(MAKE_INSTALL) $(PROGRAM) $(DIST)\bin
 
 clobber::

@@ -33,7 +33,7 @@ OBJS =                       \
 
 include <$(DEPTH)\config\rules.mak>
 
-install:: $(PROGRAM)
+libs:: $(PROGRAM)
     if not exist $(MOZ_TOOLS)\bin\nul mkdir $(MOZ_TOOLS)\bin
     copy $(PROGRAM) $(MOZ_TOOLS)\bin
 

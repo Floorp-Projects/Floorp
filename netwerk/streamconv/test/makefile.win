@@ -58,7 +58,7 @@ OS_CFLAGS = $(OS_CFLAGS) -DMOZ_NO_DEBUG_RTL
 OS_CFLAGS = $(OS_CFLAGS) -DNGPREFS
 !endif
 
-install:: $(PROGRAM)
+libs:: $(PROGRAM)
 	$(MAKE_INSTALL) $(PROGRAM) $(DIST)\bin
 
 clobber::

@@ -30,7 +30,7 @@ DIRS= \
 include <$(DEPTH)\config\rules.mak>
 include <$(THEME_ROOT_DEPTH)\theme.mk>
 
-install:: 
+libs:: 
 	$(MAKE_INSTALL) AccountManager.dtd $(DIST)\bin\chrome\locales\$(THEME)\messenger\locale
 	$(MAKE_INSTALL) AccountWizard.dtd $(DIST)\bin\chrome\locales\$(THEME)\messenger\locale
 	$(MAKE_INSTALL) FilterEditor.dtd $(DIST)\bin\chrome\locales\$(THEME)\messenger\locale

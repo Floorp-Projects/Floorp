@@ -28,5 +28,5 @@ include <$(THEME_ROOT_DEPTH)\theme.mk>
 clobber::
 	rm -f $(DIST)\chrome\skins\$(THEME)\communicator\skin\regviewer\*.*
 
-install:: 
+libs:: 
 	$(MAKE_INSTALL) regviewer.css $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\regviewer

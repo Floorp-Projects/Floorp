@@ -246,7 +246,7 @@ W32LOBJS = $(OBJS: .= +-.)
 
 all::
     $(NMAKE) -f makefile.win export
-    $(NMAKE) -f makefile.win install
+    $(NMAKE) -f makefile.win libs
 
 #//------------------------------------------------------------------------
 #//
@@ -430,7 +430,7 @@ export::
 
 !endif # defined(META_COMPONENT)
 
-install:: $(LIBRARY)
+libs:: $(LIBRARY)
         $(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
 
 clobber::
@@ -442,7 +442,7 @@ clobber::
 # library, because it's a component; nobody should be linking against
 # it!
 
-install:: $(DLL)
+libs:: $(DLL)
         $(MAKE_INSTALL) $(DLL) $(DIST)\bin\components
 
 clobber::
@@ -478,7 +478,7 @@ export::
 
 !endif # defined(META_COMPONENT)
 
-install:: $(LIBRARY)
+libs:: $(LIBRARY)
         $(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
 
 clobber::
@@ -489,7 +489,7 @@ clobber::
 # Build the library as a standalone DLL. We _will_ install the import
 # library in this case, because people may link against it.
 
-install:: $(DLL) $(OBJDIR)\$(LIBRARY_NAME).lib
+libs:: $(DLL) $(OBJDIR)\$(LIBRARY_NAME).lib
         $(MAKE_INSTALL) $(DLL) $(DIST)\bin
         $(MAKE_INSTALL) $(OBJDIR)\$(LIBRARY_NAME).lib $(DIST)\lib
 
@@ -508,7 +508,7 @@ clobber::
 #//------------------------------------------------------------------------
 !if defined(LIBRARY)
 
-install:: $(LIBRARY)
+libs:: $(LIBRARY)
         $(MAKE_INSTALL) $(LIBRARY) $(DIST)/lib
 
 clobber::
@@ -556,9 +556,9 @@ export::
     @$(W95MAKE) export $(MAKEDIR) $(DIRS)
 !endif # DIRS
 
-install::
+libs::
 !ifdef DIRS
-    @$(W95MAKE) install $(MAKEDIR) $(DIRS)
+    @$(W95MAKE) libs $(MAKEDIR) $(DIRS)
 !endif # DIRS
 
 depend::
@@ -596,7 +596,7 @@ export::
 libs:: 
 	@set MAKE_ARGS=$@
 
-install:: 
+libs:: 
 	@set MAKE_ARGS=$@
 
 mangle:: 
@@ -647,10 +647,7 @@ $(OBJS)
 
 export:: $(DIRS)
 
-libs:: 
-    @echo The libs build phase is obsolete.
-
-install:: $(DIRS)
+libs:: $(DIRS)
 
 depend:: $(DIRS)
 
@@ -821,7 +818,7 @@ export:: $(XPIDL_GEN_DIR) $(XPIDL_HEADERS) $(PUBLIC)
 	$(PERL) -I$(DEPTH)\config $(DEPTH)\config\build-list.pl $(PUBLIC)/.headerlist $(XPIDL_HEADERS)
 
 !ifndef NO_GEN_XPT
-install:: $(XPIDL_GEN_DIR) $(TYPELIB)
+libs:: $(XPIDL_GEN_DIR) $(TYPELIB)
         @echo +++ make: installing typelib '$(TYPELIB)' to components directory
         $(MAKE_INSTALL) $(TYPELIB) $(DIST)\bin\components
 !endif
@@ -873,7 +870,7 @@ JAR_MANIFEST = jar.mn
 
 chrome::
 
-install:: chrome
+libs:: chrome
 
 !ifdef MOZ_CHROME_FILE_FORMAT
 _CHROME_FILE_FORMAT=$(MOZ_CHROME_FILE_FORMAT)

@@ -25,7 +25,7 @@ THEME_ROOT_DEPTH = ..\..\..\..\..
 include <$(DEPTH)\config\rules.mak>
 include <$(THEME_ROOT_DEPTH)\theme.mk>
 
-install:: 
+libs:: 
 	$(MAKE_INSTALL) CookieViewer.dtd $(DIST)\bin\chrome\locales\$(THEME)\communicator\locale\wallet
 	$(MAKE_INSTALL) CookieViewer.properties $(DIST)\bin\chrome\locales\$(THEME)\communicator\locale\wallet
 	$(MAKE_INSTALL) SignonViewer.dtd $(DIST)\bin\chrome\locales\$(THEME)\communicator\locale\wallet

@@ -28,7 +28,7 @@ include <$(THEME_ROOT_DEPTH)\theme.mk>
 clobber::
 	rm -f $(DIST)\bin\defaults\profile\$(THEME)\*.*
 
-install:: 
+libs:: 
 	$(MAKE_INSTALL) bookmarks.html $(DIST)\bin\defaults\profile\$(THEME)
 	$(MAKE_INSTALL) panels.rdf     $(DIST)\bin\defaults\profile\$(THEME)
 	$(MAKE_INSTALL) localstore.rdf	$(DIST)\bin\defaults\profile\$(THEME)

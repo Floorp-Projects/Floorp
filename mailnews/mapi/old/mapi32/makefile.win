@@ -62,9 +62,9 @@ LLIBS=										\
 include <$(DEPTH)\config\rules.mak>
 
 !ifdef MOZ_STATIC_COMPONENT_LIBS
-install:: $(LIB)
+libs:: $(LIB)
 	$(MAKE_INSTALL)  $(LIBNAME).$(LIB_SUFFIX) $(DIST)\bin\components
 !else
-install:: $(DLL)
+libs:: $(DLL)
 	$(MAKE_INSTALL)  $(LIBNAME).$(DLL_SUFFIX) $(DIST)\bin\components
 !endif

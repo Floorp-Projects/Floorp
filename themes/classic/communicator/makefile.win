@@ -27,7 +27,7 @@ DIRS= bookmarks directory profile regviewer related search sidebar win xpinstall
 include <$(DEPTH)\config\rules.mak>
 include <$(THEME_ROOT_DEPTH)\theme.mk>
 
-install:: 
+libs:: 
 	$(MAKE_INSTALL) toolbar-bg.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
 	$(MAKE_INSTALL) toolbar-bg.png $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
 	$(MAKE_INSTALL) broken.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin

@@ -41,7 +41,7 @@ include <$(DEPTH)\config\rules.mak>
 
 # build these xpt tools early so that it'll be
 # available along with xpidl, which also must be built early.
-install:: $(PROGRAMS)
+libs:: $(PROGRAMS)
 	-for %p in ($(PROGRAMS)) do $(MAKE_INSTALL) %p $(DIST)\bin
 
 clobber::

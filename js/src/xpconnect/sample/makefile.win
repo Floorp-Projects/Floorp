@@ -64,7 +64,7 @@ LLIBS=	$(LIBNSPR)	\
 
 include <$(DEPTH)\config\rules.mak>
 
-install:: $(DLL)
+libs:: $(DLL)
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
     

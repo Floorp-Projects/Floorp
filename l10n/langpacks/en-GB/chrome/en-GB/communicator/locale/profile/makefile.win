@@ -25,7 +25,7 @@ THEME_ROOT_DEPTH = ..\..\..\..\..
 include <$(DEPTH)\config\rules.mak>
 include <$(THEME_ROOT_DEPTH)\theme.mk>
 
-install:: 
+libs:: 
 	$(MAKE_INSTALL)  confirmMigration.dtd $(DIST)\bin\chrome\locales\$(THEME)\communicator\locale\profile
 	$(MAKE_INSTALL)  createProfileWizard.dtd $(DIST)\bin\chrome\locales\$(THEME)\communicator\locale\profile
 	$(MAKE_INSTALL)  createProfileWizard.properties $(DIST)\bin\chrome\locales\$(THEME)\communicator\locale\profile

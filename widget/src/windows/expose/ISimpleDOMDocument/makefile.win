@@ -56,7 +56,7 @@ MIDL_GENERATED_FILES =                       \
 
 include <$(DEPTH)\config\rules.mak>
 
-install:: $(DLL)
+libs:: $(DLL)
     $(MAKE_INSTALL) $(DLL) $(DIST)\bin
     regsvr32 /s $(DIST)\bin\$(MODULE).dll
 

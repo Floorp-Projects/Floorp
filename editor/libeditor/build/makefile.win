@@ -133,7 +133,7 @@ build:: $(DLL)
 
 !if !defined(MOZ_BUILD_PLAINTEXT_EDITOR_CORE_ONLY)
 
-install:: $(DLL)
+libs:: $(DLL)
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
 	set MOZ_BUILD_PLAINTEXT_EDITOR_CORE_ONLY=1

@@ -25,7 +25,7 @@ THEME_ROOT_DEPTH = ..\..\..\..\..
 include <$(DEPTH)\config\rules.mak>
 include <$(THEME_ROOT_DEPTH)\theme.mk>
 
-install:: 
+libs:: 
 	$(MAKE_INSTALL) abAddressBookNameDialog.dtd $(DIST)\bin\chrome\locales\$(THEME)\messenger\locale\addressbook
 	$(MAKE_INSTALL) abCardOverlay.dtd $(DIST)\bin\chrome\locales\$(THEME)\messenger\locale\addressbook
 	$(MAKE_INSTALL) abCardViewOverlay.dtd $(DIST)\bin\chrome\locales\$(THEME)\messenger\locale\addressbook

@@ -38,7 +38,7 @@ LLFLAGS=                        \
 
 include <$(DEPTH)\config\rules.mak>
 
-install:: $(PROGRAM)
+libs:: $(PROGRAM)
     $(MAKE_INSTALL) $(PROGRAM) $(DIST)\bin
 
     if not exist test1\nul mkdir test1

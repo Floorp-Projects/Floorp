@@ -24,6 +24,6 @@ FILES=\
 	userContent.css \
 	$(NULL)
 
-install::
+libs::
         -for %i in ($(FILES:/=\)) do $(MAKE_INSTALL) %i $(DIST)\bin\defaults\profile\chrome
         -for %i in ($(FILES:/=\)) do $(MAKE_INSTALL) %i $(DIST)\bin\defaults\profile\US\chrome

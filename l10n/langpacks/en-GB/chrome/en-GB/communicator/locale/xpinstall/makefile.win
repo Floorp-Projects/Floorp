@@ -25,7 +25,7 @@ THEME_ROOT_DEPTH = ..\..\..\..\..
 include <$(DEPTH)\config\rules.mak>
 include <$(THEME_ROOT_DEPTH)\theme.mk>
 
-install:: 
+libs:: 
 	$(MAKE_INSTALL) institems.dtd $(DIST)\bin\chrome\locales\$(THEME)\communicator\locale\xpinstall
 	$(MAKE_INSTALL) xpinstall.properties $(DIST)\bin\chrome\locales\$(THEME)\communicator\locale\xpinstall
 	$(MAKE_INSTALL) xpistatus.dtd $(DIST)\bin\chrome\locales\$(THEME)\communicator\locale\xpinstall

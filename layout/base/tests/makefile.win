@@ -36,7 +36,7 @@ LLIBS=				\
 
 include <$(DEPTH)\config\rules.mak>
 
-install:: $(PROGRAMS)
+libs:: $(PROGRAMS)
 	$(MAKE_INSTALL) $(PROG1) $(DIST)\bin
 
 $(PROG1): $(OBJDIR) TestSpaceManager.cpp

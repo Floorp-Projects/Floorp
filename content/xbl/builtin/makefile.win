@@ -25,7 +25,7 @@ DIRS=win
 
 include <$(DEPTH)\config\rules.mak>
 
-install:: $(LIBRARY)
+libs:: $(LIBRARY)
 	$(MAKE_INSTALL) htmlbindings.xml $(DIST)\bin\res\builtin
 	$(MAKE_INSTALL) buttonBindings.xml $(DIST)\bin\res\builtin
 	$(MAKE_INSTALL) selectBindings.xml $(DIST)\bin\res\builtin

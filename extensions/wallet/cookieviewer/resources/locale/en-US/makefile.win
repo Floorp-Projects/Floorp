@@ -25,7 +25,7 @@ include <$(DEPTH)\config\rules.mak>
 
 LOCALEDIR=$(DIST)\bin\chrome\locales\en-US\communicator\locale\wallet
 
-install::
+libs::
 	$(MAKE_INSTALL) CookieViewer.dtd $(LOCALEDIR)
 	$(MAKE_INSTALL) CookieViewer.properties $(LOCALEDIR)
 	

@@ -28,7 +28,7 @@ include <$(THEME_ROOT_DEPTH)\theme.mk>
 clobber::
 	rm -f $(DIST)\chrome\skins\$(THEME)\editor\skin\images\*.*
 
-install:: 
+libs:: 
 	$(MAKE_INSTALL) Map_Copy.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
 	$(MAKE_INSTALL) Map_Cut.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
 	$(MAKE_INSTALL) Map_Paste.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images

@@ -37,7 +37,7 @@ include <$(DEPTH)\config\rules.mak>
 $(MOZ_TOOLS)\bin:
     mkdir $(MOZ_TOOLS)\bin
 
-install:: $(PROGRAM)
+libs:: $(PROGRAM)
     copy $(PROGRAM) $(MOZ_TOOLS)\bin
 
 clobber_all::
