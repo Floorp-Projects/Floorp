@@ -21,6 +21,7 @@
 # Contributor(s): Terry Weissman <terry@mozilla.org>
 #                 Dan Mosedale <dmose@mozilla.org>
 #                 Stephan Niemz  <st.n@gmx.net>
+#                 Andreas Franke <afranke@mathweb.org>
 
 use diagnostics;
 use strict;
@@ -107,6 +108,21 @@ sub GetByWordList {
     return \@list;
 }
 
+#
+# support for "any/all/nowordssubstr" comparison type ("words as substrings")
+#
+sub GetByWordListSubstr {
+    my ($field, $strs) = (@_);
+    my @list;
+
+    foreach my $word (split(/[\s,]+/, $strs)) {
+        if ($word ne "") {
+            push(@list, "INSTR(LOWER($field), " . lc(SqlQuote($word)) . ")");
+        }
+    }
+
+    return \@list;
+}
 
 
 sub Error {
@@ -490,6 +506,18 @@ sub GenerateSQL {
                  push(@list, "$ff = " . SqlQuote($w));
              }
              $term = join(" OR ", @list);
+         },
+         ",anywordssubstr" => sub {
+             $term = join(" OR ", @{GetByWordListSubstr($ff, $v)});
+         },
+         ",allwordssubstr" => sub {
+             $term = join(" AND ", @{GetByWordListSubstr($ff, $v)});
+         },
+         ",nowordssubstr" => sub {
+             my @list = @{GetByWordListSubstr($ff, $v)};
+             if (@list) {
+                 $term = "NOT (" . join(" OR ", @list) . ")";
+             }
          },
          ",anywords" => sub {
              $term = join(" OR ", @{GetByWordList($ff, $v)});

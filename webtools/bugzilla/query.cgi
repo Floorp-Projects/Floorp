@@ -703,10 +703,12 @@ sub StringSearch {
 <td><SELECT NAME=$type>
 };
     if ($default{$type} eq "") {
-        $default{$type} = "substring";
+        $default{$type} = "allwordssubstr";
     }
     foreach my $i (["substring", "case-insensitive substring"],
                    ["casesubstring", "case-sensitive substring"],
+                   ["allwordssubstr", "all words as substrings"],
+                   ["anywordssubstr", "any words as substrings"],
                    ["allwords", "all words"],
                    ["anywords", "any words"],
                    ["regexp", "regular expression"],
@@ -780,6 +782,8 @@ my @types = (
 	     ["casesubstring", "contains (case-sensitive) substring"],
 	     ["substring", "contains (case-insensitive) substring"],
 	     ["notsubstring", "does not contain (case-insensitive) substring"],
+	     ["allwordssubstr", "all words as (case-insensitive) substrings"],
+	     ["anywordssubstr", "any words as (case-insensitive) substrings"],
 	     ["regexp", "contains regexp"],
 	     ["notregexp", "does not contain regexp"],
 	     ["lessthan", "less than"],
