@@ -414,7 +414,7 @@ void nsMacControl::StringToStr255(const nsString& aText, Str255& aStr255)
 	}
 
 	if (NS_FAILED(rv)) {
-		NS_ASSERTION(0, "error: charset covnersion");
+//		NS_ASSERTION(0, "error: charset covnersion");
 		aText.ToCString(buffer, 255);
 		PRInt32 len = nsCRT::strlen(buffer);
 		memcpy(&aStr255[1], buffer, len);
@@ -454,7 +454,7 @@ void nsMacControl::Str255ToString(const Str255& aStr255, nsString& aText)
 	}
 	
 	if (NS_FAILED(rv)) {
-		NS_ASSERTION(0, "error: charset covnersion");
+//		NS_ASSERTION(0, "error: charset covnersion");
 		aText.SetString((char *) &aStr255[1], aStr255[0]);
 	}
 }
