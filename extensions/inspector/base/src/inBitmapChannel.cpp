@@ -142,14 +142,16 @@ inBitmapChannel::Open(nsIInputStream **_retval)
 NS_IMETHODIMP inBitmapChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *ctxt)
 {
   nsCOMPtr<inIBitmapDepot> depot(do_GetService("@mozilla.org/inspector/bitmap-depot;1"));
+  if (!depot)
+    return NS_ERROR_FAILURE;
   nsCOMPtr<inIBitmapURI> uri(do_QueryInterface(mUrl));
-  PRUnichar* name;
-  uri->GetBitmapName(&name);
-  nsAutoString durl;
-  durl.Assign(name);
+  nsXPIDLString durl;
+  uri->GetBitmapName(getter_Copies(durl));
   nsCOMPtr<inIBitmap> bitmap;
   depot->Get(durl, getter_AddRefs(bitmap));
 
+  if (!bitmap)
+    return NS_ERROR_FAILURE;
   PRUint32 w, h;
   bitmap->GetWidth(&w);
   bitmap->GetHeight(&h);  

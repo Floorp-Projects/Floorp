@@ -101,6 +101,9 @@ inBitmapURI::SetSpec(const nsACString &aSpec)
   mBitmapName = Substring(colon, delim);
   // TODO: parse out other parameters
 
+  if (mBitmapName.IsEmpty())
+    return NS_ERROR_MALFORMED_URI;
+  
   return NS_OK;
 }
 

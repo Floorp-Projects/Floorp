@@ -83,10 +83,15 @@ NS_IMETHODIMP inBitmapProtocolHandler::NewURI(const nsACString &aSpec,
   NS_NEWXPCOM(uri, inBitmapURI);
   if (!uri) return NS_ERROR_FAILURE;
 
-  uri->SetSpec(aSpec);
-
+  nsresult rv = uri->SetSpec(aSpec);
+  if (NS_FAILED(rv)) {
+    *result = nsnull;
+    return rv;
+  }
+  
   *result = uri;
-  NS_IF_ADDREF(*result);
+  NS_ADDREF(*result);
+
   return NS_OK;
 }
 
