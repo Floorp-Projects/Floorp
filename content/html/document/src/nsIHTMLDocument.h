@@ -23,6 +23,7 @@ class nsIImageMap;
 class nsString;
 class nsIDOMHTMLCollection;
 class nsIDOMHTMLFormElement;
+class nsIDOMHTMLMapElement;
 class nsIHTMLStyleSheet;
 
 /* b2a848b0-d0a9-11d1-89b1-006008911b81 */
@@ -42,10 +43,11 @@ class nsIHTMLDocument : public nsISupports {
 public:
   NS_IMETHOD SetTitle(const nsString& aTitle) = 0;
 
-  NS_IMETHOD AddImageMap(nsIImageMap* aMap) = 0;
+  NS_IMETHOD AddImageMap(nsIDOMHTMLMapElement* aMap) = 0;
 
-  NS_IMETHOD GetImageMap(const nsString& aMapName, nsIImageMap** aResult) = 0;
- 
+  NS_IMETHOD GetImageMap(const nsString& aMapName,
+                         nsIDOMHTMLMapElement** aResult) = 0;
+
   NS_IMETHOD AddForm(nsIDOMHTMLFormElement* aForm) = 0;
 
   NS_IMETHOD GetForms(nsIDOMHTMLCollection** aForms) = 0;

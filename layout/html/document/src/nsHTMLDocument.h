@@ -27,14 +27,19 @@
 #include "nsIHTMLContentContainer.h"
 #include "plhash.h"
 
-class nsIHTMLStyleSheet;
-class nsIHTMLCSSStyleSheet;
 class nsContentList;
 class nsIContentViewerContainer;
+class nsIHTMLStyleSheet;
+class nsIHTMLCSSStyleSheet;
 class nsIParser;
 class BlockText;
 
-class nsHTMLDocument : public nsMarkupDocument, public nsIHTMLDocument, public nsIDOMHTMLDocument, public nsIDOMNSHTMLDocument, public nsIHTMLContentContainer {
+class nsHTMLDocument : public nsMarkupDocument,
+                       public nsIHTMLDocument,
+                       public nsIDOMHTMLDocument,
+                       public nsIDOMNSHTMLDocument,
+                       public nsIHTMLContentContainer
+{
 public:
   nsHTMLDocument();
   virtual ~nsHTMLDocument();
@@ -51,9 +56,10 @@ public:
 
   NS_IMETHOD EndLoad();
 
-  NS_IMETHOD AddImageMap(nsIImageMap* aMap);
+  NS_IMETHOD AddImageMap(nsIDOMHTMLMapElement* aMap);
 
-  NS_IMETHOD GetImageMap(const nsString& aMapName, nsIImageMap** aResult);
+  NS_IMETHOD GetImageMap(const nsString& aMapName,
+                         nsIDOMHTMLMapElement** aResult);
 
   NS_IMETHOD GetAttributeStyleSheet(nsIHTMLStyleSheet** aStyleSheet);
   NS_IMETHOD GetInlineStyleSheet(nsIHTMLCSSStyleSheet** aStyleSheet);
