@@ -327,6 +327,8 @@ NS_IMETHODIMP nsDrawingSurfaceWin :: Init(HDC aDC)
 {
   mDC = aDC;
 
+  mTechnology = ::GetDeviceCaps(mDC, TECHNOLOGY);
+
   return NS_OK;
 }
 
@@ -367,6 +369,7 @@ NS_IMETHODIMP nsDrawingSurfaceWin :: Init(HDC aDC, PRUint32 aWidth,
 #endif
   {
     mDC = ::CreateCompatibleDC(aDC);
+    mTechnology = ::GetDeviceCaps(mDC, TECHNOLOGY);
     mKillDC = PR_TRUE;
   }
 
@@ -439,6 +442,17 @@ NS_IMETHODIMP nsDrawingSurfaceWin :: GetDC(HDC *aDC)
 
   return NS_OK;
 }
+
+
+NS_IMETHODIMP 
+nsDrawingSurfaceWin::GetTECHNOLOGY(PRInt32  *aTechnology)
+{ 
+  
+  *aTechnology = mTechnology;
+  return NS_OK;
+}
+
+
 
 NS_IMETHODIMP nsDrawingSurfaceWin :: ReleaseDC(void)
 {
