@@ -44,12 +44,12 @@
   <![CDATA[
     function viewSignons()
     {
-      window.openDialog("chrome://wallet/content/SignonViewer.xul","","modal=yes,chrome,resizable=no");
+      window.openDialog("chrome://communicator/content/wallet/SignonViewer.xul","","modal=yes,chrome,resizable=no");
     }
     
     function viewWallet()
     {
-      window.openDialog("chrome://wallet/content/WalletEditor.xul","","modal=yes,chrome,resizable=no");
+      window.openDialog("chrome://communicator/content/wallet/WalletEditor.xul","","modal=yes,chrome,resizable=no");
     }
 
     function changePasswords()
