@@ -185,9 +185,8 @@ RDFContainerImpl::Init(nsIRDFDataSource *aDataSource, nsIRDFResource *aContainer
 NS_IMETHODIMP
 RDFContainerImpl::GetCount(PRInt32 *aCount)
 {
-    NS_PRECONDITION(aCount != nsnull, "null ptr");
-    if (! aCount)
-        return NS_ERROR_NULL_POINTER;
+    if (!mDataSource || !mContainer)
+        return NS_ERROR_NOT_INITIALIZED;
 
     nsresult rv;
 
@@ -230,6 +229,9 @@ RDFContainerImpl::GetCount(PRInt32 *aCount)
 NS_IMETHODIMP
 RDFContainerImpl::GetElements(nsISimpleEnumerator **_retval)
 {
+    if (!mDataSource || !mContainer)
+        return NS_ERROR_NOT_INITIALIZED;
+
     return NS_NewContainerEnumerator(mDataSource, mContainer, _retval);
 }
 
@@ -237,6 +239,9 @@ RDFContainerImpl::GetElements(nsISimpleEnumerator **_retval)
 NS_IMETHODIMP
 RDFContainerImpl::AppendElement(nsIRDFNode *aElement)
 {
+    if (!mDataSource || !mContainer)
+        return NS_ERROR_NOT_INITIALIZED;
+
     NS_PRECONDITION(aElement != nsnull, "null ptr");
     if (! aElement)
         return NS_ERROR_NULL_POINTER;
@@ -257,6 +262,9 @@ RDFContainerImpl::AppendElement(nsIRDFNode *aElement)
 NS_IMETHODIMP
 RDFContainerImpl::RemoveElement(nsIRDFNode *aElement, PRBool aRenumber)
 {
+    if (!mDataSource || !mContainer)
+        return NS_ERROR_NOT_INITIALIZED;
+
     NS_PRECONDITION(aElement != nsnull, "null ptr");
     if (! aElement)
         return NS_ERROR_NULL_POINTER;
@@ -294,6 +302,9 @@ RDFContainerImpl::RemoveElement(nsIRDFNode *aElement, PRBool aRenumber)
 NS_IMETHODIMP
 RDFContainerImpl::InsertElementAt(nsIRDFNode *aElement, PRInt32 aIndex, PRBool aRenumber)
 {
+    if (!mDataSource || !mContainer)
+        return NS_ERROR_NOT_INITIALIZED;
+
     NS_PRECONDITION(aElement != nsnull, "null ptr");
     if (! aElement)
         return NS_ERROR_NULL_POINTER;
@@ -333,9 +344,8 @@ RDFContainerImpl::InsertElementAt(nsIRDFNode *aElement, PRInt32 aIndex, PRBool a
 NS_IMETHODIMP
 RDFContainerImpl::RemoveElementAt(PRInt32 aIndex, PRBool aRenumber, nsIRDFNode** _retval)
 {
-    NS_PRECONDITION(_retval != nsnull, "null ptr");
-    if (! _retval)
-        return NS_ERROR_NULL_POINTER;
+    if (!mDataSource || !mContainer)
+        return NS_ERROR_NOT_INITIALIZED;
 
     *_retval = nsnull;
 
@@ -381,6 +391,9 @@ RDFContainerImpl::RemoveElementAt(PRInt32 aIndex, PRBool aRenumber, nsIRDFNode**
 NS_IMETHODIMP
 RDFContainerImpl::IndexOf(nsIRDFNode *aElement, PRInt32 *aIndex)
 {
+    if (!mDataSource || !mContainer)
+        return NS_ERROR_NOT_INITIALIZED;
+
     return gRDFContainerUtils->IndexOf(mDataSource, mContainer,
                                        aElement, aIndex);
 }
@@ -453,10 +466,6 @@ RDFContainerImpl::~RDFContainerImpl()
 nsresult
 NS_NewRDFContainer(nsIRDFContainer** aResult)
 {
-    NS_PRECONDITION(aResult != nsnull, "null ptr");
-    if (! aResult)
-        return NS_ERROR_NULL_POINTER;
-
     RDFContainerImpl* result = new RDFContainerImpl();
     if (! result)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -494,6 +503,9 @@ NS_NewRDFContainer(nsIRDFDataSource* aDataSource,
 nsresult
 RDFContainerImpl::Renumber(PRInt32 aStartIndex, PRInt32 aIncrement)
 {
+    if (!mDataSource || !mContainer)
+        return NS_ERROR_NOT_INITIALIZED;
+
     // Renumber the elements in the container starting with
     // aStartIndex, updating each element's index by aIncrement. For
     // example,
@@ -649,6 +661,9 @@ RDFContainerImpl::Renumber(PRInt32 aStartIndex, PRInt32 aIncrement)
 nsresult
 RDFContainerImpl::SetNextValue(PRInt32 aIndex)
 {
+    if (!mDataSource || !mContainer)
+        return NS_ERROR_NOT_INITIALIZED;
+
     nsresult rv;
 
     // Remove the current value of nextVal, if there is one.
@@ -685,9 +700,8 @@ RDFContainerImpl::SetNextValue(PRInt32 aIndex)
 nsresult
 RDFContainerImpl::GetNextValue(nsIRDFResource** aResult)
 {
-    NS_PRECONDITION(aResult != nsnull, "null ptr");
-    if (! aResult)
-        return NS_ERROR_NULL_POINTER;
+    if (!mDataSource || !mContainer)
+        return NS_ERROR_NOT_INITIALIZED;
 
     nsresult rv;
 

@@ -476,6 +476,9 @@ RDFContainerUtilsImpl::MakeContainer(nsIRDFDataSource* aDataSource, nsIRDFResour
 PRBool
 RDFContainerUtilsImpl::IsA(nsIRDFDataSource* aDataSource, nsIRDFResource* aResource, nsIRDFResource* aType)
 {
+    if (!aDataSource || !aResource || !aType)
+        return NS_ERROR_NULL_POINTER;
+
     nsresult rv;
 
     PRBool result;
@@ -488,6 +491,9 @@ RDFContainerUtilsImpl::IsA(nsIRDFDataSource* aDataSource, nsIRDFResource* aResou
 NS_IMETHODIMP
 RDFContainerUtilsImpl::IndexOf(nsIRDFDataSource* aDataSource, nsIRDFResource* aContainer, nsIRDFNode* aElement, PRInt32* aIndex)
 {
+    if (!aDataSource || !aContainer)
+        return NS_ERROR_NULL_POINTER;
+
     // Assume we can't find it.
     *aIndex = -1;
 
