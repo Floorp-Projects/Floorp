@@ -5,6 +5,18 @@
 <!ENTITY restoreDefaults.label      "Restore Defaults">
 <!ENTITY restoreDefaults.accesskey  "R">
 
+<!-- Privacy Settings -->
+<!ENTITY privacyTitle.label "Privacy">
+<!ENTITY privacyFeature.label "Allow the following features:">
+<!ENTITY enbJsCheckMailNews.label     "JavaScript">
+<!ENTITY enbJsCheckMailNews.accesskey "s">
+<!ENTITY enbPluginCheckMailNews.label     "Plugins">
+<!ENTITY enbPluginCheckMailNews.accesskey "p">
+<!ENTITY disableImageInMailNews.label       "Loading of remote images">
+<!ENTITY disableImageInMailNews.accesskey   "L">
+<!ENTITY disableCookieForMailNews.label "Cookies">
+<!ENTITY disableCookieForMailNews.accesskey "C">
+
 <!ENTITY returnReceiptsDescription.label "Configure Return Receipts.">
 
 <!--LOCALIZATION NOTE : FILE The Proxies preferences dialog -->

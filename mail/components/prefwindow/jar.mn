@@ -6,7 +6,6 @@ messenger.jar:
 +   content/messenger/pref-mailnews.js                                 (content/pref-mailnews.js)
 *+  content/messenger/pref-advanced.xul                                (content/pref-advanced.xul)
 *+  content/messenger/pref-advanced.js                                 (content/pref-advanced.js)
-*+  content/messenger/pref-privacy.xul                                 (content/pref-privacy.xul)
 *   content/messenger/expanderBindings.xml                             (content/expanderBindings.xml)
 *   content/messenger/expanderBindings.css                             (content/expanderBindings.css)
 
@@ -27,7 +26,6 @@ en-US.jar:
 +   locale/en-US/messenger/mailPrefsOverlay.dtd                        (locale/mailPrefsOverlay.dtd)
 +   locale/en-US/messenger/pref-viewing_messages.dtd                   (locale/pref-viewing_messages.dtd)
 +   locale/en-US/messenger/AccountManager.dtd                          (locale/AccountManager.dtd)
-    locale/en-US/messenger/pref-privacy.dtd                            (locale/pref-privacy.dtd)
 +   locale/en-US/messenger/pref-advanced.dtd                           (locale/pref-advanced.dtd)
 +   locale/en-US/communicator/pref/pref-themes.dtd                     (locale/pref-themes.dtd)
 +   locale/en-US/communicator/pref/pref-extensions.dtd                 (locale/pref-extensions.dtd)

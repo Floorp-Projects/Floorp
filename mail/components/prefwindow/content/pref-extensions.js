@@ -64,8 +64,10 @@ function extensionSelect()
     var extName = selectedItem.getAttribute("displayName");
     var nameField = document.getElementById("extDisplayName");
     var author = document.getElementById("extAuthor");
+    var authorLabel = document.getElementById("authorLabel");
     var descText = document.createTextNode(selectedItem.getAttribute("description"));
     var description = document.getElementById("extDescription");
+    var descriptionLabel = document.getElementById("descriptionLabel");
     var uninstallButton = document.getElementById("uninstallExtension");
     var settingsButton = document.getElementById("extensionSettings");
     
@@ -75,6 +77,8 @@ function extensionSelect()
     nameField.setAttribute("value", extName);
     
     author.setAttribute("value", selectedItem.getAttribute("author"));
+    authorLabel.removeAttribute("collapsed");
+
     var authorURL = selectedItem.getAttribute("authorURL");
     if (authorURL != "") {
       author.setAttribute("link", selectedItem.getAttribute("authorURL"));
@@ -88,6 +92,7 @@ function extensionSelect()
     settingsButton.disabled = selectedItem.getAttribute("settingsURL") == "";
     
     description.appendChild(descText);
+    descriptionLabel.removeAttribute("collapsed");
 
     updateDisableExtButton(selectedItem);
   }

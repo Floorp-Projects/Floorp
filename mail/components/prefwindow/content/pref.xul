@@ -71,8 +71,7 @@
       <button orient="vertical" class="buttonBoxButton" type="radio" group="categories" label="&viewingMessages.label;" url="chrome://messenger/content/pref-viewing_messages.xul"/>
       <button id="mailcomposepref" orient="vertical" class="buttonBoxButton" type="radio" group="categories" url="chrome://messenger/content/messengercompose/pref-composing_messages.xul" label="&composingMessages.label;"/>
       <button orient="vertical" class="buttonBoxButton" type="radio" group="categories" url="chrome://communicator/content/pref/pref-fonts.xul" label="&fonts.label;"/>
-      <button orient="vertical" class="buttonBoxButton" type="radio" group="categories" url="chrome://messenger/content/messengercompose/pref-formatting.xul" label="&format.label;"/>
-      <button orient="vertical" class="buttonBoxButton" type="radio" group="categories" url="chrome://messenger/content/pref-privacy.xul" label="&privacy.label;"/>     
+      <button orient="vertical" class="buttonBoxButton" type="radio" group="categories" url="chrome://messenger/content/messengercompose/pref-formatting.xul" label="&format.label;"/>    
       <button orient="vertical" class="buttonBoxButton" type="radio" group="categories" url="chrome://messenger/content/pref-advanced.xul" label="&advanced.label;"/>
     </vbox>
 

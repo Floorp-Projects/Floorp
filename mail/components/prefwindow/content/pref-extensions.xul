@@ -62,7 +62,7 @@
    
   <listbox id="extList" datasources="rdf:chrome" 
            onselect="extensionSelect();"
-           ref="urn:mozilla:package:root" rows="7">
+           ref="urn:mozilla:package:root" rows="10">
     <template xmlns:chrome="http://www.mozilla.org/rdf/chrome">
       <rule chrome:extension="true">
         <listitem uri="..."
@@ -84,12 +84,12 @@
     <label class="header" id="extDisplayName" value=""/>
 
     <hbox>
-      <label value="&author.label;"/>
+      <label id="authorLabel" value="&author.label;" collapsed="true"/>
       <label id="extAuthor"/>
     </hbox>
 
     <hbox>
-      <label value="&extDescription.label;"/>
+      <label id="descriptionLabel" value="&extDescription.label;" collapsed="true"/>
       <description id="extDescription" flex="1"/>
     </hbox>
   </vbox>
