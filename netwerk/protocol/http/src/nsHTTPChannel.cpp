@@ -23,6 +23,7 @@
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *   Mike Shaver <shaver@zeroknowledge.com>
  *   Christopher Blizzard <blizzard@mozilla.org>
+ *   Darin Fisher <darin@netscape.com>
  */
 
 
