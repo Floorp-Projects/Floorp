@@ -52,6 +52,7 @@
 
 #include "nsFont.h"
 #include "nsIFontMetrics.h"
+#include "nsILookAndFeel.h"
 
 #include "mozXMLT.h"
 #include "mozXMLTermUtils.h"
@@ -67,6 +68,7 @@ static NS_DEFINE_IID(kXMLTerminalCID,     MOZXMLTERMINAL_CID);
 
 static NS_DEFINE_CID(kCClipboardCID,      NS_CLIPBOARD_CID);
 static NS_DEFINE_CID(kCTransferableCID,   NS_TRANSFERABLE_CID);
+static NS_DEFINE_CID(kLookAndFeelCID,     NS_LOOKANDFEEL_CID);
 
 /////////////////////////////////////////////////////////////////////////
 // mozXMLTerminal factory
@@ -715,20 +717,37 @@ NS_IMETHODIMP mozXMLTerminal::ShowCaret(void)
   if (!mPresShell)
     return NS_ERROR_FAILURE;
 
-  //mPresShell->SetCaretEnabled(PR_TRUE);
+  nsCOMPtr<nsISelectionController> selCon = do_QueryInterface(mPresShell);
+
+  if (!selCon) {
+    return NS_ERROR_FAILURE;
+    XMLT_WARNING("mozXMLTerminal::ShowCaret: Warning - Failed to get SelectionController\n");
+  }
+
+  PRInt32 pixelWidth;
+  nsresult result;
+
+  NS_WITH_SERVICE(nsILookAndFeel, look, kLookAndFeelCID, &result);
+
+  if (NS_SUCCEEDED(result) && look) {
+    look->GetMetric(nsILookAndFeel::eMetric_SingleLineCaretWidth, pixelWidth);
+
+    selCon->SetCaretWidth(pixelWidth);
+  }
+
+  selCon->SetCaretEnabled(PR_TRUE);
+  selCon->SetCaretReadOnly(PR_FALSE);
 
   nsCOMPtr<nsICaret> caret;
   if (NS_SUCCEEDED(mPresShell->GetCaret(getter_AddRefs(caret)))) {
-    nsCOMPtr<nsISelectionController> selCon = do_QueryInterface(mPresShell);
-    if (selCon)
-    {
-      nsCOMPtr<nsISelection> sel;
-      if (NS_SUCCEEDED(selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(sel))) && sel)
-      {
-        caret->SetCaretDOMSelection(sel);
-        caret->SetCaretVisible(PR_TRUE);
-        caret->SetCaretReadOnly(PR_FALSE);
-      }
+
+    caret->SetCaretVisible(PR_TRUE);
+    caret->SetCaretReadOnly(PR_FALSE);
+
+    nsCOMPtr<nsISelection> sel;
+
+    if (NS_SUCCEEDED(selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(sel))) && sel) {
+      caret->SetCaretDOMSelection(sel);
     }
   }
 
