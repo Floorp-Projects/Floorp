@@ -44,7 +44,6 @@
     <menu label="XSLT QA" accesskey="X">
       <menupopup>
         <menuitem label="Xalan Tests" oncommand="onStartBuster()"/>
-        <menuitem label="XSLTMark" oncommand="alert('bar2')"/>
       </menupopup>
     </menu>
   </menupopup>
