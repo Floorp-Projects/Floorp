@@ -58,6 +58,48 @@
         dump("Setting content window\n");
         appCore.setContentWindow( window.frames[0].frames[1] );
         // Have browser app core load appropriate initial page.
+
+        var pref = Components.classes['component://netscape/preferences'];
+
+        // if all else fails, use trusty "about:" as the start page
+        var startPage = "about:";  
+        if (pref) {
+          pref = pref.getService();
+        }
+        if (pref) {
+          pref = pref.QueryInterface(Components.interfaces.nsIPref);
+        }
+        if (pref) {
+          // from mozilla/modules/libpref/src/init/all.js
+          // 0 = blank 
+          // 1 = home (browser.startup.homepage)
+          // 2 = last 
+          // 3 = splash (browser.startup.splash)
+          choice = pref.GetIntPref("browser.startup.page");
+          if (choice == 0) {
+            startpage = "about:blank";
+          }
+          else if (choice == 1) {
+            startpage = pref.CopyCharPref("browser.startup.homepage");
+          }
+          else if (choice == 2) {
+            var history = Components.classes['component://netscape/browser/global-history'];
+	    if (history) {
+               history = history.QueryInterface(Components.interfaces.nsIGlobalHistory);
+	    }
+	    if (history) {
+		startpage = history.GetLastPageVisted();
+	    }
+          }
+          else if (choice == 3) {
+            startpage = pref.CopyCharPref("browser.startup.splash");
+          }
+          else {
+	    // use about: as the default
+            startpage = "about:";
+          }
+        }
+        document.getElementById("args").setAttribute("value", startpage);
         appCore.loadInitialPage();
     } else {
         // Try again.
