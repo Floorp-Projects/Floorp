@@ -55,6 +55,7 @@ DIRS =                         \
   dbm                          \
   modules\libutil              \
   modules\appfilelocprovider   \
+  modules\mpfilelocprovider    \
   modules\zlib                 \
   netwerk                      \
   security                     \

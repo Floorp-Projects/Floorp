@@ -91,6 +91,7 @@ DIRS		+= \
 		modules/libutil \
 		netwerk \
 		modules/appfilelocprovider \
+		modules/mpfilelocprovider \
 		security \
 		uriloader \
 		intl \
