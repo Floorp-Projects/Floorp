@@ -18,21 +18,27 @@
  * 
  * Contributor(s):
  *   Travis Bogard <travis@netscape.com>
- *   Jerry Kirk    <Jerry.Kirk@NexwareCorp.com>
  */
 
-#ifndef nsCPhFilter_h__
-#define nsCPhFilter_h__
+#ifndef nsCBreathLoop_h__
+#define nsCBreathLoop_h__
 
-#include "PhT.h"
+#include "nsCBaseBreathLoop.h"
 
-class nsCPhFilter
+class nsCBreathLoop : public nsCBaseBreathLoop 
 {
 public:
-//	HWND hWnd;
-//	UINT wMsgFilterMin;
-//	UINT wMsgFilterMax;
-//	UINT wRemoveFlags;	// fRemoveEvent flag passed to PeekEvent takes precedent
-};								// over PM_NOREMOVE and PM_REMOVE.
+	static NS_METHOD Create(nsISupports* aOuter, const nsIID& aIID, void** ppv);
 
-#endif /* nsPhFilter_h__ */
+protected:
+	nsCBreathLoop();
+	virtual ~nsCBreathLoop();
+
+	// Internal Platform Implementations of nsIEventLoop 
+	// (Error checking is ensured above)
+	nsresult PlatformExit(PRInt32 exitCode);
+
+	PRInt32 PlatformGetReturnCode(void* platformEventData);
+};
+
+#endif /* nsCBreathLoop_h__ */

@@ -37,15 +37,15 @@ nsCEvent::nsCEvent(void* platformEventData)
 	{
 		mEventBufferSz = PhGetMsgSize ( (PhEvent_t *) platformEventData );
 		m_msg = (PhEvent_t *) malloc( mEventBufferSz );
-		NS_ENSURE_ARG_POINTER(m_msg);
-		nsCRT::memcpy(m_msg, platformEventData, mEventBufferSz);
+		if (m_msg);
+		  nsCRT::memcpy(m_msg, platformEventData, mEventBufferSz);
 	}
 	else
 	{
 		mEventBufferSz = sizeof(PhEvent_t);
 		m_msg = (PhEvent_t *) malloc( mEventBufferSz );
-		NS_ENSURE_ARG_POINTER(m_msg);
-		nsCRT::memset(m_msg, 0, mEventBufferSz);
+		if (m_msg);
+		  nsCRT::memset(m_msg, 0, mEventBufferSz);
 	}
 }
 
@@ -90,7 +90,7 @@ NS_IMETHODIMP nsCEvent::SetNativeData(nsNativeEventDataType dataType,
 		if (locEventBufferSz > mEventBufferSz)
 		{
 		  mEventBufferSz = locEventBufferSz;
-		  m_msg = (PhEvent_t *) realloc( mEventBufferSz );
+		  m_msg = (PhEvent_t *) realloc( mEventBufferSz, mEventBufferSz );
 		  NS_ENSURE_ARG_POINTER(m_msg);
 		}
 		nsCRT::memcpy(m_msg, data, mEventBufferSz);
