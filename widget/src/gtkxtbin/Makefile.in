@@ -34,7 +34,7 @@ CSRCS           = \
                 gtkxtbin.c \
 
 ifndef MOZ_MONOLITHIC_TOOLKIT
-EXTRA_DSO_LDOPTS += $(MOZ_GTK_LDFLAGS)
+EXTRA_DSO_LDOPTS += $(MOZ_GTK_LDFLAGS) -lXt
 else
 EXTRA_DSO_LDOPTS += $(TK_LIBS)
 endif
