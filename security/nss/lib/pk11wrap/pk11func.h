@@ -531,7 +531,7 @@ PK11_GetLowLevelKeyIDForPrivateKey(SECKEYPrivateKey *key);
 
 SECItem *
 PK11_FindCrlByName(PK11SlotInfo **slot, CK_OBJECT_HANDLE *handle,
-						SECItem *derName, int type);
+					SECItem *derName, int type, char **url);
 
 CK_OBJECT_HANDLE
 PK11_PutCrl(PK11SlotInfo *slot, SECItem *crl, 

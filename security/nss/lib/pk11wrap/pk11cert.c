@@ -3680,7 +3680,7 @@ PK11_ListPrivKeysInSlot(PK11SlotInfo *slot, char *nickname, void *wincx)
  */
 SECItem *
 PK11_FindCrlByName(PK11SlotInfo **slot, CK_OBJECT_HANDLE *crlHandle,
-						 SECItem *name, int type)
+					 SECItem *name, int type, char **url)
 {
     CK_OBJECT_CLASS crlClass = CKO_NETSCAPE_CRL;
     CK_ATTRIBUTE theTemplate[] = {
@@ -3688,7 +3688,10 @@ PK11_FindCrlByName(PK11SlotInfo **slot, CK_OBJECT_HANDLE *crlHandle,
 	{ CKA_CLASS, NULL, 0 },
 	{ CKA_NETSCAPE_KRL, NULL, 0 },
     };
-    CK_ATTRIBUTE crlData = { CKA_VALUE, NULL, 0 };
+    CK_ATTRIBUTE crlData[] = {
+	{ CKA_VALUE, NULL, 0 },
+	{ CKA_NETSCAPE_URL, NULL, 0 },
+    };
     /* if you change the array, change the variable below as well */
     int tsize = sizeof(theTemplate)/sizeof(theTemplate[0]);
     CK_BBOOL ck_true = CK_TRUE;
@@ -3725,7 +3728,7 @@ PK11_FindCrlByName(PK11SlotInfo **slot, CK_OBJECT_HANDLE *crlHandle,
 	PORT_SetError(SEC_ERROR_NO_KRL);
 	return NULL;
     }
-    crv = PK11_GetAttributes(NULL,*slot,crlh,&crlData,1);
+    crv = PK11_GetAttributes(NULL,*slot,crlh,crlData,2);
     if (crv != CKR_OK) {
 	PORT_SetError(PK11_MapError (crv));
 	goto loser;
@@ -3736,17 +3739,27 @@ PK11_FindCrlByName(PK11SlotInfo **slot, CK_OBJECT_HANDLE *crlHandle,
 	goto loser;
     }
 
-    derCrl->data = crlData.pValue;
-    derCrl->len = crlData.ulValueLen;
+    derCrl->data = crlData[0].pValue;
+    derCrl->len = crlData[0].ulValueLen;
 
     if (crlHandle) {
         *crlHandle = crlh;
     }
 
+    if ((url) && crlData[1].ulValueLen != 0) {
+	/* make sure it's a null terminated string */
+	*url = PORT_ZAlloc (crlData[1].ulValueLen+1);
+	if (*url) {
+	    PORT_Memcpy(*url,crlData[1].pValue,crlData[1].ulValueLen);
+	}
+    }
+	
+
 loser:
     if (!derCrl) {
-	if (crlData.pValue) PORT_Free(crlData.pValue);
+	if (crlData[0].pValue) PORT_Free(crlData[0].pValue);
     }
+    if (crlData[1].pValue) PORT_Free(crlData[1].pValue);
     return derCrl;
 }
 
