@@ -363,7 +363,7 @@ nsDOMEvent::PreventCapture()
 NS_IMETHODIMP
 nsDOMEvent::GetIsTrusted(PRBool *aIsTrusted)
 {
-  *aIsTrusted = mEvent->internalAppFlags & NS_APP_EVENT_FLAG_TRUSTED;
+  *aIsTrusted = (mEvent->internalAppFlags & NS_APP_EVENT_FLAG_TRUSTED) != 0;
 
   return NS_OK;
 }
