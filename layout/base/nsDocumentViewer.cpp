@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 0 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -17,8 +17,10 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
+ *   Dan Rosen <dr@netscape.com>
  */
+
 #include "nslayout.h"
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
@@ -81,6 +83,8 @@
 #include "nsIFrameManager.h"
 #include "nsIParser.h"
 #include "nsIPrintContext.h"
+#include "nsIDOMHTMLAnchorElement.h"
+#include "nsIDOMHTMLImageElement.h"
 
 #include "nsIChromeRegistry.h"
 
@@ -187,10 +191,10 @@ class nsPagePrintTimer;
 // a small delegate class used to avoid circular references
 
 #ifdef XP_MAC
-#pragma mark ** nsDocViwerSelectionListener **
+#pragma mark ** nsDocViewerSelectionListener **
 #endif
 
-class nsDocViwerSelectionListener : public nsISelectionListener
+class nsDocViewerSelectionListener : public nsISelectionListener
 {
 public:
 
@@ -200,7 +204,7 @@ public:
   // nsISelectionListerner interface
   NS_DECL_NSISELECTIONLISTENER  
 
-                       nsDocViwerSelectionListener()
+                       nsDocViewerSelectionListener()
                        : mDocViewer(NULL)
                        , mGotSelectionState(PR_FALSE)
                        , mSelectionWasCollapsed(PR_FALSE)
@@ -208,7 +212,7 @@ public:
                          NS_INIT_REFCNT();
                        }
                        
-  virtual              ~nsDocViwerSelectionListener() {}
+  virtual              ~nsDocViewerSelectionListener() {}
    
   nsresult             Init(DocumentViewerImpl *aDocViewer);
 
@@ -346,7 +350,7 @@ class DocumentViewerImpl : public nsIDocumentViewer,
                            public nsIMarkupDocumentViewer,
                            public nsIImageGroupObserver
 {
-  friend class nsDocViwerSelectionListener;
+  friend class nsDocViewerSelectionListener;
   
 public:
   DocumentViewerImpl();
@@ -428,6 +432,11 @@ private:
                                    nsIDOMWindowInternal * aDOMWin,
                                    PRPackedBool& aDoesContainFrameset);
   PRBool   IsWindowsInOurSubTree(nsIDOMWindowInternal * aDOMWindow);
+
+
+  nsresult GetPopupNode(nsIDOMNode** aNode);
+  nsresult GetPopupLinkNode(nsIDOMNode** aNode);
+  nsresult GetPopupImageNode(nsIDOMNode** aNode);
 
   //---------------------------------------------------------------------
   void BuildDocTree(nsIDocShellTreeNode * aParentNode, 
@@ -965,8 +974,8 @@ DocumentViewerImpl::Init(nsIWidget* aParentWidget,
 
   // now register ourselves as a selection listener, so that we get called
   // when the selection changes in the window
-  nsDocViwerSelectionListener *selectionListener;
-  NS_NEWXPCOM(selectionListener, nsDocViwerSelectionListener);
+  nsDocViewerSelectionListener *selectionListener;
+  NS_NEWXPCOM(selectionListener, nsDocViewerSelectionListener);
   if (!selectionListener) return NS_ERROR_OUT_OF_MEMORY;
   selectionListener->Init(this);
   
@@ -3870,8 +3879,40 @@ NS_IMETHODIMP DocumentViewerImpl::SelectAll()
 
 NS_IMETHODIMP DocumentViewerImpl::CopySelection()
 {
-  if (!mPresShell) return NS_ERROR_NOT_INITIALIZED;
+  NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_INITIALIZED);
   return mPresShell->DoCopy();
+}
+
+NS_IMETHODIMP DocumentViewerImpl::CopyLinkLocation()
+{
+  NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_INITIALIZED);
+  nsCOMPtr<nsIDOMNode> node;
+  nsresult rv = GetPopupLinkNode(getter_AddRefs(node));
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
+  return mPresShell->DoCopyLinkLocation(node);
+}
+
+NS_IMETHODIMP DocumentViewerImpl::CopyImageLocation()
+{
+  NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_INITIALIZED);
+  nsCOMPtr<nsIDOMNode> node;
+  nsresult rv = GetPopupImageNode(getter_AddRefs(node));
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_INITIALIZED);
+  return mPresShell->DoCopyImageLocation(node);
+}
+
+NS_IMETHODIMP DocumentViewerImpl::CopyImageContents()
+{
+  NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_INITIALIZED);
+  nsCOMPtr<nsIDOMNode> node;
+  nsresult rv = GetPopupImageNode(getter_AddRefs(node));
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_INITIALIZED);
+  return mPresShell->DoCopyImageContents(node);
 }
 
 NS_IMETHODIMP DocumentViewerImpl::GetCopyable(PRBool *aCopyable)
@@ -4856,16 +4897,193 @@ NS_IMETHODIMP DocumentViewerImpl::SizeToContent()
 #pragma mark -
 #endif
 
-NS_IMPL_ISUPPORTS(nsDocViwerSelectionListener, NS_GET_IID(nsISelectionListener));
+NS_IMPL_ISUPPORTS(nsDocViewerSelectionListener, NS_GET_IID(nsISelectionListener));
 
-nsresult nsDocViwerSelectionListener::Init(DocumentViewerImpl *aDocViewer)
+nsresult nsDocViewerSelectionListener::Init(DocumentViewerImpl *aDocViewer)
 {
   mDocViewer = aDocViewer;
   return NS_OK;
 }
 
+/*
+ * GetPopupNode, GetPopupLinkNode and GetPopupImageNode are helpers
+ * for the cmd_copyLink / cmd_copyImageLocation / cmd_copyImageContents family
+ * of commands. The focus controller stores the popup node, these retrieve
+ * them and munge appropriately. Note that we have to store the popup node
+ * rather than retrieving it from EventStateManager::GetFocusedContent because
+ * not all content (images included) can receive focus.
+ */
 
-NS_IMETHODIMP nsDocViwerSelectionListener::NotifySelectionChanged(nsIDOMDocument *, nsISelection *, short)
+nsresult
+DocumentViewerImpl::GetPopupNode(nsIDOMNode** aNode)
+{
+  NS_ENSURE_ARG_POINTER(aNode);
+
+  nsresult rv;
+
+  // get the document
+  nsCOMPtr<nsIDocument> document;
+  rv = GetDocument(*getter_AddRefs(document));
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(document, NS_ERROR_FAILURE);
+
+  // get the script global object
+  nsCOMPtr<nsIScriptGlobalObject> global;
+  rv = document->GetScriptGlobalObject(getter_AddRefs(global));
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(global, NS_ERROR_FAILURE);
+
+  // get the internal dom window
+  nsCOMPtr<nsIDOMWindowInternal> internalWin(do_QueryInterface(global, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(internalWin, NS_ERROR_FAILURE);  
+
+  // get the private dom window
+  nsCOMPtr<nsPIDOMWindow> privateWin(do_QueryInterface(internalWin, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(privateWin, NS_ERROR_FAILURE);
+
+  // get the focus controller
+  nsCOMPtr<nsIFocusController> focusController;
+  rv = privateWin->GetRootFocusController(getter_AddRefs(focusController));
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(focusController, NS_ERROR_FAILURE);
+
+  // get the popup node
+  rv = focusController->GetPopupNode(aNode); // addref happens here
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(*aNode, NS_ERROR_FAILURE);
+
+  return rv;
+}
+
+/*
+ * XXX dr
+ * ------
+ * Note: the args to these two methods are DOM nodes and not specifically
+ * HTML anchor or image nodes because a link can also be an xlink, and an
+ * image can also be an object... The impls are broken right now to just
+ * think about HTML anchors and images but consumers of these methods should
+ * do their own checking.
+ */
+
+nsresult
+DocumentViewerImpl::GetPopupLinkNode(nsIDOMNode** aNode)
+{
+  NS_ENSURE_ARG_POINTER(aNode);
+
+  // you get null unless i say so
+  *aNode = nsnull;
+
+  // find popup node
+  nsCOMPtr<nsIDOMNode> node;
+  nsresult rv = GetPopupNode(getter_AddRefs(node));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // find out if we have an anchor in our ancestry. this really ought
+  // to look for xlinks also, but this is good enough for now.
+  while (node) {
+
+    // are we an anchor?
+    nsCOMPtr<nsIDOMHTMLAnchorElement> anchor(do_QueryInterface(node, &rv));
+    if (NS_SUCCEEDED(rv) && anchor) {
+      *aNode = node;
+      NS_IF_ADDREF(*aNode); // addref
+      return NS_OK;
+    }
+    else {
+      // if not, get our parent and keep trying...
+      nsCOMPtr<nsIDOMNode> parentNode;
+      node->GetParentNode(getter_AddRefs(parentNode));
+      node = parentNode;
+    }
+  }
+
+  // if we have no node, fail
+  return NS_ERROR_FAILURE;
+}
+
+nsresult
+DocumentViewerImpl::GetPopupImageNode(nsIDOMNode** aNode)
+{
+  NS_ENSURE_ARG_POINTER(aNode);
+
+  // you get null unless i say so
+  *aNode = nsnull;
+
+  // find popup node
+  nsCOMPtr<nsIDOMNode> node;
+  nsresult rv = GetPopupNode(getter_AddRefs(node));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // find out if we're an image. this really ought to look for objects
+  // with type "image/...", but this is good enough for now.
+  nsCOMPtr<nsIDOMHTMLImageElement> img(do_QueryInterface(node, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(img, NS_ERROR_FAILURE);
+
+  // if we made it here, we're an image.
+  *aNode = node;
+  NS_IF_ADDREF(*aNode); // addref
+  return NS_OK;
+}
+
+/*
+ * XXX dr
+ * ------
+ * These two functions -- GetInLink and GetInImage -- are kind of annoying
+ * in that they only get called from the controller (in
+ * nsDOMWindowController::IsCommandEnabled). The actual construction of the
+ * context menus in communicator (nsContextMenu.js) has its own, redundant
+ * tests. No big deal, but good to keep in mind if we ever clean context
+ * menus.
+ */
+
+NS_IMETHODIMP DocumentViewerImpl::GetInLink(PRBool* aInLink)
+{
+#ifdef DEBUG_dr
+  printf("dr :: DocumentViewerImpl::GetInLink\n");
+#endif
+
+  NS_ENSURE_ARG_POINTER(aInLink);
+
+  // we're not in a link unless i say so
+  *aInLink = PR_FALSE;
+
+  // get the popup link
+  nsCOMPtr<nsIDOMNode> node;
+  nsresult rv = GetPopupLinkNode(getter_AddRefs(node));
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
+
+  // if we made it here, we're in a link
+  *aInLink = PR_TRUE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP DocumentViewerImpl::GetInImage(PRBool* aInImage)
+{
+#ifdef DEBUG_dr
+  printf("dr :: DocumentViewerImpl::GetInImage\n");
+#endif
+
+  NS_ENSURE_ARG_POINTER(aInImage);
+
+  // we're not in an image unless i say so
+  *aInImage = PR_FALSE;
+
+  // get the popup image
+  nsCOMPtr<nsIDOMNode> node;
+  nsresult rv = GetPopupImageNode(getter_AddRefs(node));
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
+
+  // if we made it here, we're in an image
+  *aInImage = PR_TRUE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDocViewerSelectionListener::NotifySelectionChanged(nsIDOMDocument *, nsISelection *, short)
 {
   NS_ASSERTION(mDocViewer, "Should have doc viewer!");
 

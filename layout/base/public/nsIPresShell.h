@@ -17,8 +17,9 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  * 
- * Contributor(s): 
- * Steve Clark (buster@netscape.com)
+ * Contributor(s):
+ *   Steve Clark <buster@netscape.com>
+ *   Dan Rosen <dr@netscape.com>
  *
  *   IBM Corporation
  *
@@ -389,6 +390,17 @@ public:
    * Notify the Clipboard that we have something to copy.
    */
   NS_IMETHOD DoCopy() = 0;
+
+  /**
+   * Copy link location.
+   */
+  NS_IMETHOD DoCopyLinkLocation(nsIDOMNode* aNode) = 0;
+
+  /**
+   * Copy image methods.
+   */
+  NS_IMETHOD DoCopyImageLocation(nsIDOMNode* aNode) = 0;
+  NS_IMETHOD DoCopyImageContents(nsIDOMNode* aNode) = 0;
 
   /**
    * Get the caret, if it exists. AddRefs it.

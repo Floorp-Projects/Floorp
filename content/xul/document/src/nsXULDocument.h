@@ -20,7 +20,8 @@
  * Original Author(s):
  *   Chris Waterson <waterson@netscape.com>
  *
- * Contributor(s): 
+ * Contributor(s):
+ *   Dan Rosen <dr@netscape.com>
  */
 
 #ifndef nsXULDocument_h__
@@ -69,6 +70,7 @@
 #include "nsIBindingManager.h"
 #include "nsINodeInfo.h"
 #include "nsIDOMDocumentEvent.h"
+#include "nsIFocusController.h"
 
 class nsIAtom;
 class nsIElementFactory;
@@ -534,15 +536,23 @@ protected:
     PRBool mBidiEnabled;
 #endif // IBMBIDI
 
-    // The following are pointers into the content model which provide access to
-    // the objects triggering either a popup or a tooltip. These are marked as
-    // [OWNER] only because someone could, through DOM calls, delete the object from the
-    // content model while the popup/tooltip was visible. If we didn't have a reference
-    // to it, the object would go away and we'd be left pointing to garbage. This
-    // does not introduce cycles into the ownership model because this is still
-    // parent/child ownership. Just wanted the reader to know hyatt and I had thought about
-    // this (pinkerton).
-    nsCOMPtr<nsIDOMNode>    mPopupNode;            // [OWNER] element triggering the popup
+    /*
+     * XXX dr
+     * ------
+     * We used to have two pointers into the content model: mPopupNode and
+     * mTooltipNode, which were used to retrieve the objects triggering a
+     * popup or tooltip. You need that access because your reference has
+     * disappeared by the time you click on a popup item or do whatever
+     * with a tooltip. These were owning references (no cycles, as pinkerton
+     * pointed out, since we're still parent-child).
+     *
+     * We still have mTooltipNode, but mPopupNode has moved to the
+     * FocusController. The APIs (IDL attributes popupNode and tooltipNode)
+     * are still here for compatibility and ease of use, but we should
+     * probably move the mTooltipNode over to FocusController at some point
+     * as well, for consistency.
+     */
+
     nsCOMPtr<nsIDOMNode>    mTooltipNode;          // [OWNER] element triggering the tooltip
     nsCOMPtr<nsINodeInfoManager> mNodeInfoManager; // [OWNER] list of names in the document
 
@@ -786,6 +796,12 @@ protected:
     };
 
     friend class ParserObserver;
+
+private:
+    // helpers
+
+    nsresult GetFocusController(nsIFocusController** aController);
+
 };
 
 

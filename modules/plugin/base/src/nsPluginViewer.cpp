@@ -17,8 +17,10 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
+ *   Dan Rosen <dr@netscape.com>
  */
+
 #include "nsCOMPtr.h"
 #include "nscore.h"
 #include "nsCRT.h"
@@ -751,6 +753,40 @@ PluginViewerImpl::PrintContent(nsIWebShell *      aParent,
   NS_ENSURE_ARG_POINTER(aDContext);
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+PluginViewerImpl::GetInLink(PRBool* aInLink)
+{
+  NS_ENSURE_ARG_POINTER(aInLink);
+  *aInLink = PR_FALSE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+PluginViewerImpl::GetInImage(PRBool* aInImage)
+{
+  NS_ENSURE_ARG_POINTER(aInImage);
+  *aInImage = PR_FALSE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+PluginViewerImpl::CopyLinkLocation()
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+PluginViewerImpl::CopyImageLocation()
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+PluginViewerImpl::CopyImageContents()
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 
