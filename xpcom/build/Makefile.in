@@ -32,7 +32,6 @@ LIBRARY_NAME	= xpcom
 ifdef _BUILD_BUNDLE
 IS_COMPONENT	= 1
 DLL_SUFFIX	= .bundle
-NO_DIST_INSTALL	= 1
 NO_COMPONENT_LINK_MAP = 1
 endif
 
@@ -132,7 +131,6 @@ GARBAGE	+= $(SHARED_LIBRARY:$(DLL_SUFFIX)=.bundle)
 ifndef _BUILD_BUNDLE
 libs:: $(SHARED_LIBRARY)
 	$(MAKE) libs _BUILD_BUNDLE=1 
-	$(INSTALL) $(LIB_PREFIX)$(LIBRARY_NAME).bundle $(DIST)/gre
 endif
 endif
 endif
