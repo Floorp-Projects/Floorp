@@ -383,6 +383,11 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver,
     boundDocument->GetScriptGlobalObject(getter_AddRefs(boundGlobal));
   }
 
+  // If we still don't have a 'boundGlobal', we're doomed. bug 95465.
+  NS_ASSERTION(boundGlobal, "failed to get the nsIScriptGlobalObject. bug 95465?");
+  if (!boundGlobal)
+    return NS_OK;
+
   nsCOMPtr<nsIScriptContext> boundContext;
   boundGlobal->GetContext(getter_AddRefs(boundContext));
   if (!boundContext) return NS_OK;
