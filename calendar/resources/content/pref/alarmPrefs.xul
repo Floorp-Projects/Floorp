@@ -42,18 +42,21 @@
 <!DOCTYPE page 
 [
     <!ENTITY % dtd1 SYSTEM "chrome://calendar/locale/prefs.dtd" > %dtd1;
+    <!ENTITY % dtd2 SYSTEM "chrome://calendar/locale/calendar.dtd" > %dtd2;
 ]>
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      onload="parent.initPanel('chrome://calendar/content/pref/alarmPrefs.xul');"
+      onload="parent.initPanel('chrome://calendar/content/pref/alarmPrefs.xul');initAlarmPrefs();"
       headertitle="&calendarPanel.label;">
 
+   <script type="application/x-javascript" src="chrome://calendar/content/pref/alarmPrefs.js"/>
    <script type="application/x-javascript" src="chrome://calendar/content/dateUtils.js"/>
    <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
    
    <script type="application/x-javascript">
       var _elementIDs = [
-         "alarmplaysound", "alarmshow", "missedalarms", "alarmemailaddress", "eventdefalarm", "tododefalarm"
+         "alarmplaysound", "alarmshow", "missedalarms", "alarmemailaddress", "eventdefalarm", "tododefalarm", 
+         "eventdefalarmunit", "tododefalarmunit", "eventdefalarmlen", "tododefalarmlen"
       ];
    </script>
 
@@ -82,6 +85,28 @@
              <menupopup id="tododefalarm">
                <menuitem id="tododefalarmon"  label="&pref.alarm.on;" value="1"/>
                <menuitem id="tododefalarmoff" label="&pref.alarm.off;" value="0" selected="true"/>
+             </menupopup>
+           </menulist>
+      </hbox>
+      <hbox>
+         <description>&pref.defalarmlen4events.label;</description>
+         <textbox id="eventdefalarmlen" preftype="int" prefstring="calendar.alarms.eventalarmlen" flex="1" oninput="updateMenuPlural( 'eventdefalarmlen', 'eventdefalarmunit' )"/>
+         <menulist id="eventdefalarmunit" crop="none" preftype="string" prefstring="calendar.alarms.eventalarmunit" labelnumber="labelplural">
+             <menupopup id="eventdefalarmunit">
+               <menuitem id="eventdefalarmunitday"  label="&alarm.units.minutes;" labelplural="&alarm.units.minutes;" labelsingular="&alarm.units.minutes.singular;" value="minutes" selected="true"/>
+               <menuitem id="eventdefalarmunitmin" label="&alarm.units.hours;" labelplural="&alarm.units.hours;" labelsingular="&alarm.units.hours.singular;" value="hours"/>
+               <menuitem id="eventdefalarmunitmin" label="&alarm.units.days;" labelplural="&alarm.units.days;" labelsingular="&alarm.units.days.singular;" value="days"/>
+             </menupopup>
+           </menulist>
+      </hbox>
+      <hbox>
+         <description>&pref.defalarmlen4todos.label;</description>
+         <textbox id="tododefalarmlen" preftype="int" prefstring="calendar.alarms.todoalarmlen" flex="1" oninput="updateMenuPlural( 'tododefalarmlen', 'tododefalarmunit' )"/>
+         <menulist id="tododefalarmunit" crop="none" preftype="string" prefstring="calendar.alarms.todoalarmunit" labelnumber="labelplural">
+             <menupopup id="tododefalarmunit">
+               <menuitem id="tododefalarmunitday"  label="&alarm.units.minutes;" labelplural="&alarm.units.minutes;" labelsingular="&alarm.units.minutes.singular;" value="minutes" selected="true"/>
+               <menuitem id="tododefalarmunitmin" label="&alarm.units.hours;" labelplural="&alarm.units.hours;" labelsingular="&alarm.units.hours.singular;" value="hours"/>
+               <menuitem id="tododefalarmunitmin" label="&alarm.units.days;" labelplural="&alarm.units.days;" labelsingular="&alarm.units.days.singular;" value="days"/>
              </menupopup>
            </menulist>
       </hbox>

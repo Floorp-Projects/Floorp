@@ -57,6 +57,8 @@
 <!ENTITY pref.defalarm4todos.label "Default alarm setting for tasks:">
 <!ENTITY pref.alarm.on "On">
 <!ENTITY pref.alarm.off "Off">
+<!ENTITY pref.defalarmlen4events.label "Default time an alarm goes off before an event:">
+<!ENTITY pref.defalarmlen4todos.label "Default time an alarm goes off before a task:">
 
 <!ENTITY pref.dateformat.label      "Date Text Format:" >
 <!ENTITY pref.dateformat.long       "Long" >

@@ -103,24 +103,26 @@ function calendarPreferences( CalendarWindow )
 
    this.calendarPref = prefService.getBranch("calendar."); // preferences calendar node
 
-   var categoriesStringBundle = srGetStrBundle("chrome://calendar/locale/calendar.properties");
+   var calendarStringBundle = srGetStrBundle("chrome://calendar/locale/calendar.properties");
    
    //go through all the preferences and set default values?
-   getBoolPref( this.calendarPref, "servers.reloadonlaunch", categoriesStringBundle.GetStringFromName("reloadServersOnLaunch" ) );
-   getBoolPref( this.calendarPref, "alarms.show", categoriesStringBundle.GetStringFromName("showAlarms" ) );
-   getBoolPref( this.calendarPref, "alarms.showmissed", categoriesStringBundle.GetStringFromName("showMissed" ) );
-   getBoolPref( this.calendarPref, "alarms.playsound", categoriesStringBundle.GetStringFromName("playAlarmSound" ) );
+   getBoolPref( this.calendarPref, "servers.reloadonlaunch", calendarStringBundle.GetStringFromName("reloadServersOnLaunch" ) );
+   getBoolPref( this.calendarPref, "alarms.show", calendarStringBundle.GetStringFromName("showAlarms" ) );
+   getBoolPref( this.calendarPref, "alarms.showmissed", calendarStringBundle.GetStringFromName("showMissed" ) );
+   getBoolPref( this.calendarPref, "alarms.playsound", calendarStringBundle.GetStringFromName("playAlarmSound" ) );
    GetUnicharPref( this.calendarPref, "categories.names", getDefaultCategories() );
-   getCharPref( this.calendarPref, "timezone.default", categoriesStringBundle.GetStringFromName("defaultzone"));
-   getIntPref( this.calendarPref, "event.defaultlength", categoriesStringBundle.GetStringFromName("defaultEventLength" ) );
-   getIntPref( this.calendarPref, "alarms.defaultsnoozelength", categoriesStringBundle.GetStringFromName("defaultSnoozeAlarmLength" ) );
-   getIntPref( this.calendarPref, "date.format", categoriesStringBundle.GetStringFromName("dateFormat" ) );
-   getIntPref( this.calendarPref, "event.defaultstarthour", categoriesStringBundle.GetStringFromName("defaultStartHour" ) );
-   getIntPref( this.calendarPref, "event.defaultendhour", categoriesStringBundle.GetStringFromName("defaultEndHour" ) );
-   getIntPref( this.calendarPref, "week.start", categoriesStringBundle.GetStringFromName("defaultWeekStart" ) );
-   getIntPref( this.calendarPref, "weeks.inview", categoriesStringBundle.GetStringFromName("defaultWeeksInView" ) );
-   getIntPref( this.calendarPref, "previousweeks.inview", categoriesStringBundle.GetStringFromName("defaultPreviousWeeksInView" ) );
+   getCharPref( this.calendarPref, "timezone.default", calendarStringBundle.GetStringFromName("defaultzone"));
+   getIntPref( this.calendarPref, "event.defaultlength", calendarStringBundle.GetStringFromName("defaultEventLength" ) );
+   getIntPref( this.calendarPref, "alarms.defaultsnoozelength", calendarStringBundle.GetStringFromName("defaultSnoozeAlarmLength" ) );
+   getIntPref( this.calendarPref, "date.format", calendarStringBundle.GetStringFromName("dateFormat" ) );
+   getIntPref( this.calendarPref, "event.defaultstarthour", calendarStringBundle.GetStringFromName("defaultStartHour" ) );
+   getIntPref( this.calendarPref, "event.defaultendhour", calendarStringBundle.GetStringFromName("defaultEndHour" ) );
+   getIntPref( this.calendarPref, "week.start", calendarStringBundle.GetStringFromName("defaultWeekStart" ) );
+   getIntPref( this.calendarPref, "weeks.inview", calendarStringBundle.GetStringFromName("defaultWeeksInView" ) );
+   getIntPref( this.calendarPref, "previousweeks.inview", calendarStringBundle.GetStringFromName("defaultPreviousWeeksInView" ) );
    getIntPref( this.calendarPref, "alarms.onforevents", 0 );
    getIntPref( this.calendarPref, "alarms.onfortodos", 0 );
+   getCharPref( this.calendarPref, "alarms.eventalarmunit", calendarStringBundle.GetStringFromName("defaulteventalarmunit"));
+   getCharPref( this.calendarPref, "alarms.todoalarmunit", calendarStringBundle.GetStringFromName("defaulttodoalarmunit"));
 }
 

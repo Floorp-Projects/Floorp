@@ -86,7 +86,7 @@ var gOnOkFunction;   // function to be called when user clicks OK
 var gTimeDifference = 3600000;  //when editing an event, we change the end time if the start time is changing. This is the difference for the event time.
 var gDateDifference = 3600000;  //this is the difference for the dates, not the times.
 
-var gDefaultAlarmLength = 15; //number of minutes to default the alarm to
+const DEFAULT_ALARM_LENGTH = 15; //default number of time units, an alarm goes off before an event
 
 var gMode = ''; //what mode are we in? new or edit...
 
@@ -200,13 +200,11 @@ function loadCalendarEventDialog()
 
    setFieldValue( "private-checkbox", gEvent.privateEvent, "checked" );
    
-   if( gEvent.alarm === false && gEvent.alarmLength == 0 )
-   {
-      gEvent.alarmLength = gDefaultAlarmLength;
+   if( "new" == args.mode ) {
+       gEvent.alarm = opener.getIntPref( opener.gCalendarWindow.calendarPreferences.calendarPref, "alarms.onforevents", 0 );
+       gEvent.alarmLength = opener.getIntPref( opener.gCalendarWindow.calendarPreferences.calendarPref, "alarms.eventalarmlen", DEFAULT_ALARM_LENGTH );
+       gEvent.alarmUnits = opener.getCharPref( opener.gCalendarWindow.calendarPreferences.calendarPref, "alarms.eventalarmunit", "minutes" );
    }
-   
-   if( "new" == args.mode )
-      gEvent.alarm = opener.getIntPref( opener.gCalendarWindow.calendarPreferences.calendarPref, "alarms.onforevents", 0 );
 
    setFieldValue( "alarm-checkbox", gEvent.alarm, "checked" );
    setFieldValue( "alarm-length-field", gEvent.alarmLength );
@@ -796,7 +794,6 @@ function commandAllDay()
 
 function commandAlarm()
 {
-   document.getElementById( "alarm-email-checkbox" ).removeAttribute( "checked" );
    updateAlarmItemEnabled();
 }
 
@@ -816,14 +813,15 @@ function updateAlarmItemEnabled()
    var alarmEmailCheckbox = "alarm-email-checkbox";
    var alarmEmailField = "alarm-email-field";
 
-   if( getFieldValue(alarmCheckBox, "checked" ) || getFieldValue( alarmEmailCheckbox, "checked" ) )
+//   if( getFieldValue(alarmCheckBox, "checked" ) || getFieldValue( alarmEmailCheckbox, "checked" ) )
+   if( getFieldValue(alarmCheckBox, "checked" ) )
    {
       // call remove attribute beacuse some widget code checks for the presense of a 
       // disabled attribute, not the value.
-      setFieldValue( alarmCheckBox, true, "checked" );
       setFieldValue( alarmField, false, "disabled" );
       setFieldValue( alarmMenu, false, "disabled" );
       setFieldValue( alarmTrigger, false, "disabled" );
+      setFieldValue( alarmEmailField, false, "disabled" );
       setFieldValue( alarmEmailCheckbox, false, "disabled" );
    }
    else
@@ -833,7 +831,6 @@ function updateAlarmItemEnabled()
       setFieldValue( alarmTrigger, true, "disabled" );
       setFieldValue( alarmEmailField, true, "disabled" );
       setFieldValue( alarmEmailCheckbox, true, "disabled" );
-      setFieldValue( alarmEmailCheckbox, false, "checked" );
    }
 }
 
