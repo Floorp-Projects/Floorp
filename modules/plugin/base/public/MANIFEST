@@ -40,4 +40,3 @@ nsISeekablePluginStreamPeer.h
 nsIWindowlessPlugInstPeer.h
 nsplugin.h
 nsplugindefs.h
-nsINetworkManager.h
