@@ -36,6 +36,7 @@ LINCS = 	\
 LLIBS	=	\
 		$(DIST)\lib\libxpt$(MOZ_BITS).lib	\
 		$(DIST)\lib\xpcom$(MOZ_BITS).lib	\
+		$(DIST)\lib\raptorbase.lib \
 		$(LIBNSPR)		\
         $(DIST)\lib\plc3.lib \
 		$(NULL)
