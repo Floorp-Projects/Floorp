@@ -280,7 +280,7 @@ public:
 
 private:
 
-    static JSBool
+    static JSBool JS_DLL_CALLBACK
     CheckJSFunctionCallerAccess(JSContext *cx, JSObject *obj,
                                 jsval id, JSAccessMode mode,
                                 jsval *vp);
