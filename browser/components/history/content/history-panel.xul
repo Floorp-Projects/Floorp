@@ -27,7 +27,6 @@
 <page id="history-panel" orient="vertical"
       xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="HistoryCommonInit();"
-      onunload="onUnload();"
       elementtofocus="historyTree">
 
   <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
@@ -91,7 +90,7 @@
     </toolbarbutton>
   </hbox>
   <tree id="historyTree" flex="1" class="plain"
-            context="historyContextMenu" persist="ref"
+            context="historyContextMenu"
             datasources="rdf:history" ref="NC:HistoryByDate" flags="dont-build-content"
             onkeypress="if (event.keyCode == 13) OpenURL(event.shiftKey || event.metaKey);" 
             onselect="this.treeBoxObject.view.selectionChanged();
@@ -106,7 +105,7 @@
           <treeitem uri="rdf:*" rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
             <treerow>
               <treecell label="rdf:http://home.netscape.com/NC-rdf#Name"
-                        dayindex="rdf:http://home.netscape.com/NC-rdf#DayFolderIndex"
+                        sortName="rdf:http://home.netscape.com/NC-rdf#Name?sort=true"
                         visitcount="rdf:http://home.netscape.com/NC-rdf#VisitCount"
                         date="rdf:http://home.netscape.com/NC-rdf#Date"/>
             </treerow>
@@ -117,7 +116,7 @@
     <treecols id="historyTreeCols">
       <treecol flex="1" id="Name" persist="sortActive sortDirection" 
                hideheader="true" primary="true"
-               sort="rdf:http://home.netscape.com/NC-rdf#DayFolderIndex"
+               sort="rdf:http://home.netscape.com/NC-rdf#Name?sort=true"
                sortActive="true"/>
     </treecols>
   </tree>
