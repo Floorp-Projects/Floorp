@@ -56,7 +56,7 @@ nsDeque::nsDeque(nsDequeFunctor* aDeallocator) {
   mOrigin=mSize=0;
   mData=mBuffer; // don't allocate space until you must
   mCapacity=sizeof(mBuffer)/sizeof(mBuffer[0]);
-  nsCRT::zero(mData,mCapacity*sizeof(mBuffer[0]));
+  memset(mData, 0, mCapacity*sizeof(mBuffer[0]));
 }
 
 
@@ -122,7 +122,7 @@ void nsDeque::SetDeallocator(nsDequeFunctor* aDeallocator){
  */
 nsDeque& nsDeque::Empty() {
   if((0<mCapacity) && (mData)) {
-    nsCRT::zero(mData,mCapacity*sizeof(mData));
+    memset(mData, 0, mCapacity*sizeof(mData));
   }
   mSize=0;
   mOrigin=0;

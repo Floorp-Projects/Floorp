@@ -67,7 +67,7 @@ extern const PRUnichar kIsoLatin1ToUCS2[256];
   void* operator new(size_t sz) {             \
     void* rv = ::operator new(sz);            \
     if (rv) {                                 \
-      nsCRT::zero(rv, sz);                    \
+      memset(rv, 0, sz);                      \
     }                                         \
     return rv;                                \
   }                                           \
@@ -85,7 +85,7 @@ extern const PRUnichar kIsoLatin1ToUCS2[256];
   void* _class::operator new(size_t sz) {    \
     void* rv = ::operator new(sz);           \
     if (rv) {                                \
-      nsCRT::zero(rv, sz);                   \
+      memset(rv, 0, sz);                     \
     }                                        \
     return rv;                               \
   }                                          \
@@ -134,10 +134,10 @@ public:
     ::memset(aDest, aByte, aCount);
   }
 
-  static void zero(void* aDest, PRUint32 aCount) {
-    NS_ASSERTION((aDest != NULL) || (aCount == 0), "Invalid NULL argument");
-    ::memset(aDest, 0, (size_t)aCount);
-  }
+  /**** 
+   ****  nsCRT::zero() is no longer supported.  
+   ****  Please use memset from standard C instead.
+   ****/
 
   /** Compute the string length of s
    @param s the string in question

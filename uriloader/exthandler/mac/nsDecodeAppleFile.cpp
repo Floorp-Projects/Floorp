@@ -63,9 +63,9 @@ nsDecodeAppleFile::nsDecodeAppleFile()
   m_headerOk = PR_FALSE;
   
   m_comment[0] = 0;
-  nsCRT::zero(&m_dates, sizeof(m_dates));
-  nsCRT::zero(&m_finderInfo, sizeof(m_dates));
-  nsCRT::zero(&m_finderExtraInfo, sizeof(m_dates));
+  memset(&m_dates, 0, sizeof(m_dates));
+  memset(&m_finderInfo, 0, sizeof(m_dates));
+  memset(&m_finderExtraInfo, 0, sizeof(m_dates));
 }
 
 nsDecodeAppleFile::~nsDecodeAppleFile()
@@ -152,13 +152,13 @@ NS_IMETHODIMP nsDecodeAppleFile::Close(void)
       GetVolParmsInfoBuffer vp;
       DTPBRec dtp;
 
-      nsCRT::zero((void *) &vinfo, sizeof (vinfo));
+      memset((void *) &vinfo, 0, sizeof (vinfo));
       vinfo.ioVRefNum = fpb->ioVRefNum;
       vinfo.ioBuffer  = (Ptr) &vp;
       vinfo.ioReqCount = sizeof (vp);
       if (PBHGetVolParmsSync((HParmBlkPtr) &vinfo) == noErr && ((vp.vMAttrib >> bHasDesktopMgr) & 1)) 
       {
-        nsCRT::zero((void *) &dtp, sizeof (dtp));
+        memset((void *) &dtp, 0, sizeof (dtp));
         dtp.ioVRefNum = fpb->ioVRefNum;
         if (PBDTGetPath(&dtp) == noErr) 
         {

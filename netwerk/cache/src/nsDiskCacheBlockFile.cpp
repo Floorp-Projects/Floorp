@@ -61,7 +61,7 @@ nsDiskCacheBlockFile::Open( nsILocalFile *  blockFile, PRUint32  blockSize)
     mEndOfFile = fileSize;
     if (mEndOfFile == 0) {
         // initialize bit map and write it
-        nsCRT::zero(mBitMap, kBitMapBytes);
+        memset(mBitMap, 0, kBitMapBytes);
         PRInt32 bytesWritten = PR_Write(mFD, mBitMap, kBitMapBytes);
         if (bytesWritten < kBitMapBytes) goto error_exit;
         mEndOfFile = kBitMapBytes;

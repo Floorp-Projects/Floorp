@@ -85,7 +85,7 @@ nsDirectionalFrame::operator new(size_t aSize)
 {
   void* frame = ::operator new(aSize);
   if (frame) {
-    nsCRT::zero(frame, aSize);
+    memset(frame, 0, aSize);
   }
   return frame;
 }

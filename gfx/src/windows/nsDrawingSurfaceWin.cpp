@@ -629,7 +629,7 @@ BITMAPINFO * nsDrawingSurfaceWin :: CreateBitmapInfo(PRInt32 aWidth, PRInt32 aHe
       if ((aDepth == 16) || (aDepth == 32))
         memcpy(colortable, masks, sizeof(DWORD) * allocsize);
       else
-	      nsCRT::zero(colortable, sizeof(RGBQUAD) * palsize);
+        memset(colortable, 0, sizeof(RGBQUAD) * palsize);
 
       if (nsnull != aBits)
         *aBits = PR_Malloc(imagesize);

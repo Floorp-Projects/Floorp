@@ -250,7 +250,7 @@ nsFrame::operator new(size_t sz, nsIPresShell* aPresShell)
   aPresShell->AllocateFrame(sz, &result);
   
   if (result) {
-    nsCRT::zero(result, sz);
+    memset(result, 0, sz);
   }
 
   return result;
@@ -4090,7 +4090,7 @@ NS_IMETHODIMP nsFrame::GetBidiProperty(nsIPresContext* aPresContext,
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
-  nsCRT::zero(aPropertyValue, aSize);
+  memset(aPropertyValue, 0, aSize);
   void* val = nsnull;
 
   nsCOMPtr<nsIPresShell> presShell;

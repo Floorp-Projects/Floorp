@@ -132,7 +132,7 @@ CreateDiskCacheEntry(nsDiskCacheBinding *  binding)
     pad -= diskEntry->Size();
     NS_ASSERTION(pad >= 0, "under allocated buffer for diskEntry.");
     if (pad > 0)
-        nsCRT::zero(&diskEntry->mKeyStart[keySize+metaSize], pad);
+        memset(&diskEntry->mKeyStart[keySize+metaSize], 0, pad);
     
     return  diskEntry;
 }

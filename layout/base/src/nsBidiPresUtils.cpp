@@ -525,7 +525,7 @@ nsBidiPresUtils::Reorder(nsIPresContext* aPresContext,
       return NS_ERROR_OUT_OF_MEMORY;
     }
   }
-  nsCRT::zero(mLevels, sizeof(PRUint8) * mArraySize);
+  memset(mLevels, 0, sizeof(PRUint8) * mArraySize);
 
   nsIFrame* frame;
   PRInt32   i;
@@ -542,7 +542,7 @@ nsBidiPresUtils::Reorder(nsIPresContext* aPresContext,
     mSuccess = NS_ERROR_OUT_OF_MEMORY;
   }
   else {
-    nsCRT::zero(mIndexMap, sizeof(PRUint32) * mArraySize);
+    memset(mIndexMap, 0, sizeof(PRUint32) * mArraySize);
 
     mSuccess = mBidiEngine->ReorderVisual(mLevels, count, mIndexMap);
 

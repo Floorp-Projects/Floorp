@@ -238,7 +238,7 @@ nsStyleFont::operator new(size_t sz, nsIPresContext* aContext) {
   void* result = nsnull;
   aContext->AllocateFromShell(sz, &result);
   if (result)
-  nsCRT::zero(result, sz);
+  memset(result, 0, sz);
   return result;
 }
   
@@ -319,7 +319,7 @@ nsStyleMargin::operator new(size_t sz, nsIPresContext* aContext) {
   void* result = nsnull;
   aContext->AllocateFromShell(sz, &result);
   if (result)
-  nsCRT::zero(result, sz);
+  memset(result, 0, sz);
   return result;
 }
   
@@ -378,7 +378,7 @@ nsStylePadding::operator new(size_t sz, nsIPresContext* aContext) {
   void* result = nsnull;
   aContext->AllocateFromShell(sz, &result);
   if (result)
-  nsCRT::zero(result, sz);
+  memset(result, 0, sz);
   return result;
 }
   
@@ -478,7 +478,7 @@ nsStyleBorder::operator new(size_t sz, nsIPresContext* aContext) {
   void* result = nsnull;
   aContext->AllocateFromShell(sz, &result);
   if (result)
-  nsCRT::zero(result, sz);
+  memset(result, 0, sz);
   return result;
 }
   

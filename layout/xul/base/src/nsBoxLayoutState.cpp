@@ -404,7 +404,7 @@ nsBoxLayoutState::Allocate(size_t sz, nsIPresShell* aPresShell)
   aPresShell->AllocateFrame(sz, &result);
   
   if (result) {
-    nsCRT::zero(result, sz);
+    memset(result, 0, sz);
   }
 
   return result;
