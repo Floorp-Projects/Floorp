@@ -269,9 +269,6 @@ sub DistMozilla()
 		#PROGRESS
 		InstallFromManifest(":mozilla:modules:progress:public:MANIFEST",	":mozilla:dist:progress:");
 		
-		#SOFTUPDATE
-		InstallFromManifest(":mozilla:modules:softupdt:include:MANIFEST",	":mozilla:dist:softupdate:");
-		
 		#EDTPLUG
 		InstallFromManifest(":mozilla:modules:edtplug:include:MANIFEST", 	":mozilla:dist:edtplug:");
 
