@@ -419,7 +419,7 @@ BookmarkParser::ParseBookmark(const nsString& aLine, nsIRDFResource* aContainer,
 	if (cURL)
 	{
 		char *cShortcutURL = shortcut.ToNewCString();
-		nsresult rv = AddBookmark(aContainer, cURL, name, addDate,
+		nsresult rv = AddBookmark(aContainer, cURL, name.GetUnicode(), addDate,
 			lastVisitDate, lastModifiedDate, cShortcutURL, nodeType);
 		delete [] cURL;
 		if (cShortcutURL)	delete [] cShortcutURL;
