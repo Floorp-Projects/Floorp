@@ -321,7 +321,7 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL)
     // Construct the lookup string-
     // which is basically chrome:// + package + provider
     
-    nsString lookup("chrome://");
+    nsAutoString lookup("chrome://");
 
     lookup += package; // no trailing slash here
     
@@ -346,7 +346,7 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL)
     // Using this chrome resource get the three basic things of a chrome entry-
     // base, name, main. and don't bail if they don't exist.
 
-    nsString base, name, main;
+    nsAutoString base, name, main;
 
     rv = GetChromeResource(name, chromeResource, kCHROME_name);
     if (NS_FAILED (rv)) {
@@ -375,7 +375,7 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL)
         base += '/';
   
     // Now we construct our finalString
-    nsString finalString(base);
+    nsAutoString finalString(base);
 
     if (!remaining || (0 == PL_strlen(remaining)))
     {
@@ -468,13 +468,13 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL)
         return rv;
     }
 
-    nsString chromeName;
+    nsAutoString chromeName;
     if (NS_FAILED(rv = GetChromeResource(chromeName, chromeResource, kCHROME_name))) {
         // No name entry was found. Don't use one.
         chromeName = "";
     }
 
-    nsString chromeBase;
+    nsAutoString chromeBase;
     if (NS_FAILED(rv = GetChromeResource(chromeBase, chromeResource, kCHROME_base))) {
         // No base entry was found. Default to our cache.
         chromeBase = "resource:/chrome/";
@@ -508,7 +508,7 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL)
 				}
 				  
         // Append the "main" entry.
-        nsString mainFile;
+        nsAutoString mainFile;
         if (NS_FAILED(rv = GetChromeResource(mainFile, chromeResource, kCHROME_main))) {
             NS_ERROR("Unable to retrieve the main file registry entry for a chrome URL.");
             return rv;
