@@ -214,13 +214,13 @@ LRESULT CALLBACK DlgProcLicense(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
 
       if((hFLicense = FindFirstFile(szBuf, &wfdFindFileData)) != INVALID_HANDLE_VALUE)
       {
-        dwFileSize = (wfdFindFileData.nFileSizeHigh * MAXDWORD) + wfdFindFileData.nFileSizeLow;
+        dwFileSize = (wfdFindFileData.nFileSizeHigh * MAXDWORD) + wfdFindFileData.nFileSizeLow + 1;
         FindClose(hFLicense);
         if((szLicenseFilenameBuf = NS_GlobalAlloc(dwFileSize)) != NULL)
         {
           if((fLicense = fopen(szBuf, "r+b")) != NULL)
           {
-            dwBytesRead = fread(szLicenseFilenameBuf, 1, dwFileSize, fLicense);
+            dwBytesRead = fread(szLicenseFilenameBuf, sizeof(char), dwFileSize, fLicense);
             fclose(fLicense);
             SetDlgItemText(hDlg, IDC_EDIT_LICENSE, szLicenseFilenameBuf);
           }
