@@ -1815,7 +1815,8 @@ mips-sony-newsos*)
         CXXFLAGS="$CFLAGS -Wall -Zomf"
         MKSHLIB='$(CC) $(DSO_LDOPTS) -o $@'
         DSO_CFLAGS=
-        DSO_LDOPTS='-Zomf -Zdll'
+        DSO_LDOPTS='-Zomf -Zdll -Zmap'
+        LDFLAGS='-Zmap'
         _OPTIMIZE_FLAGS="-O2 -s"
         _DEBUG_FLAGS="-g -fno-inline"
         if test -n "$MOZ_OPTIMIZE"; then
