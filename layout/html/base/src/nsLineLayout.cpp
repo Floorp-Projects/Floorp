@@ -38,6 +38,8 @@
 #undef   REALLY_NOISY_PUSHING
 #define DEBUG_ADD_TEXT
 #undef  NOISY_MAX_ELEMENT_SIZE
+#undef   REALLY_NOISY_MAX_ELEMENT_SIZE
+#undef  NOISY_CAN_PLACE_FRAME
 #else
 #undef NOISY_HORIZONTAL_ALIGN
 #undef  REALLY_NOISY_HORIZONTAL_ALIGN
@@ -49,6 +51,8 @@
 #undef  REALLY_NOISY_PUSHING
 #undef DEBUG_ADD_TEXT
 #undef NOISY_MAX_ELEMENT_SIZE
+#undef  REALLY_NOISY_MAX_ELEMENT_SIZE
+#undef NOISY_CAN_PLACE_FRAME
 #endif
 
 nsTextRun::nsTextRun()
@@ -228,6 +232,7 @@ nsLineLayout::BeginLineReflow(nscoord aX, nscoord aY,
   mPlacedFloaters = 0;
   mImpactedByFloaters = aImpactedByFloaters;
   mTotalPlacedFrames = 0;
+  mCanPlaceFloater = PR_TRUE;
   mSpanDepth = 0;
   mMaxTopBoxHeight = mMaxBottomBoxHeight = 0;
 
@@ -294,6 +299,13 @@ nsLineLayout::EndLineReflow()
   mCurrentSpan = mRootSpan = mLastSpan = nsnull;
 }
 
+// XXX swtich to a single mAvailLineWidth that we adjust as each frame
+// on the line is placed. Each span can still have a per-span mX that
+// tracks where a child frame is going in its span; they don't need a
+// per-span mLeftEdge?
+
+// XXX currently broken because it doesn't recurse through the nested
+// spans that are currently open to update their right edge.
 void
 nsLineLayout::UpdateBand(nscoord aX, nscoord aY,
                          nscoord aWidth, nscoord aHeight,
@@ -315,11 +327,19 @@ nsLineLayout::UpdateBand(nscoord aX, nscoord aY,
     aHeight = NS_UNCONSTRAINEDSIZE;
   }
 #endif
+
+  // Compute the difference between last times width and the new width
+  nscoord deltaWidth = 0;
+  if (NS_UNCONSTRAINEDSIZE != psd->mRightEdge) {
+    NS_ASSERTION(NS_UNCONSTRAINEDSIZE != aWidth, "switched constraints");
+    nscoord oldWidth = psd->mRightEdge - psd->mLeftEdge;
+    deltaWidth = aWidth - oldWidth;
+  }
 #ifdef NOISY_REFLOW
   nsFrame::ListTag(stdout, mBlockReflowState->frame);
-  printf(": UpdateBand: %d,%d,%d,%d %s\n",
-         aX, aY, aWidth, aHeight,
-         aPlacedLeftFloater ? "placed-left-floater" : "");
+  printf(": UpdateBand: %d,%d,%d,%d deltaWidth=%d %s floater\n",
+         aX, aY, aWidth, aHeight, deltaWidth,
+         aPlacedLeftFloater ? "left" : "right");
 #endif
 
   psd->mLeftEdge = aX;
@@ -340,6 +360,27 @@ nsLineLayout::UpdateBand(nscoord aX, nscoord aY,
   mUpdatedBand = PR_TRUE;
   mPlacedFloaters |= (aPlacedLeftFloater ? PLACED_LEFT : PLACED_RIGHT);
   mImpactedByFloaters = PR_TRUE;
+
+  // Now update all of the open spans...
+  psd = mCurrentSpan;
+  while (psd != mRootSpan) {
+    NS_ASSERTION(nsnull != psd, "null ptr");
+    if (nsnull == psd) {
+      break;
+    }
+    NS_ASSERTION(psd->mX == psd->mLeftEdge, "bad floater placement");
+    if (NS_UNCONSTRAINEDSIZE == aWidth) {
+      psd->mRightEdge = NS_UNCONSTRAINEDSIZE;
+    }
+    else {
+      psd->mRightEdge += deltaWidth;
+    }
+#ifdef NOISY_REFLOW
+    printf("  span %p: oldRightEdge=%d newRightEdge=%d\n",
+           psd->mRightEdge - deltaWidth, psd->mRightEdge);
+#endif
+    psd = psd->mParent;
+  }
 }
 
 // Note: Only adjust the outermost frames (the ones that are direct
@@ -648,6 +689,27 @@ nsLineLayout::NewPerFrameData(PerFrameData** aResult)
   return NS_OK;
 }
 
+PRBool
+nsLineLayout::CanPlaceFloaterNow() const
+{
+  return mCanPlaceFloater;
+}
+
+PRBool
+nsLineLayout::LineIsEmpty() const
+{
+  return 0 == mTotalPlacedFrames;
+}
+
+PRBool
+nsLineLayout::LineIsBreakable() const
+{
+  if ((0 != mTotalPlacedFrames) || mImpactedByFloaters) {
+    return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
 nsresult
 nsLineLayout::ReflowFrame(nsIFrame* aFrame,
                           nsIFrame** aNextRCFrame,
@@ -737,7 +799,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   // Capture this state *before* we reflow the frame in case it clears
   // the state out. We need to know how to treat the current frame
   // when breaking.
-  PRBool notSafeToBreak = (mTotalPlacedFrames == 0) || InWord();
+  PRBool notSafeToBreak = CanPlaceFloaterNow() || InWord();
 
   // Apply left margins (as appropriate) to the frame computing the
   // new starting x,y coordinates for the frame.
@@ -778,49 +840,60 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   htmlReflow->Reflow(mPresContext, metrics, reflowState, aReflowStatus);
   mSpaceManager->Translate(-tx, -ty);
 
-#ifdef DEBUG_kipp
-  if (CRAZY_WIDTH(metrics.width) || CRAZY_HEIGHT(metrics.height)) {
-    printf("nsBlockReflowContext: ");
-    nsFrame::ListTag(stdout, aFrame);
-    printf(" metrics=%d,%d!\n", metrics.width, metrics.height);
-  }
-  if (mComputeMaxElementSize &&
-      ((nscoord(0xdeadbeef) == metrics.maxElementSize->width) ||
-       (nscoord(0xdeadbeef) == metrics.maxElementSize->height))) {
-    printf("nsLineLayout: ");
-    nsFrame::ListTag(stdout, aFrame);
-    printf(" didn't set max-element-size!\n");
-    metrics.maxElementSize->width = 0;
-    metrics.maxElementSize->height = 0;
-  }
-  if (mComputeMaxElementSize &&
-      ((metrics.maxElementSize->width > metrics.width) ||
-       (metrics.maxElementSize->height > metrics.height))) {
-    printf("nsLineLayout: ");
-    nsFrame::ListTag(stdout, aFrame);
-    printf(": WARNING: maxElementSize=%d,%d > metrics=%d,%d\n",
-           metrics.maxElementSize->width,
-           metrics.maxElementSize->height,
-           metrics.width, metrics.height);
-  }
-  if ((metrics.width == nscoord(0xdeadbeef)) ||
-      (metrics.height == nscoord(0xdeadbeef)) ||
-      (metrics.ascent == nscoord(0xdeadbeef)) ||
-      (metrics.descent == nscoord(0xdeadbeef))) {
-    printf("nsLineLayout: ");
-    nsFrame::ListTag(stdout, aFrame);
-    printf(" didn't set whad %d,%d,%d,%d!\n", metrics.width, metrics.height,
-           metrics.ascent, metrics.descent);
+#ifdef DEBUG
+  // Note: break-before means ignore the reflow metrics since the
+  // frame will be reflowed another time.
+  if (!NS_INLINE_IS_BREAK_BEFORE(aReflowStatus)) {
+    if (CRAZY_WIDTH(metrics.width) || CRAZY_HEIGHT(metrics.height)) {
+      printf("nsLineLayout: ");
+      nsFrame::ListTag(stdout, aFrame);
+      printf(" metrics=%d,%d!\n", metrics.width, metrics.height);
+    }
+    if (mComputeMaxElementSize &&
+        ((nscoord(0xdeadbeef) == metrics.maxElementSize->width) ||
+         (nscoord(0xdeadbeef) == metrics.maxElementSize->height))) {
+      printf("nsLineLayout: ");
+      nsFrame::ListTag(stdout, aFrame);
+      printf(" didn't set max-element-size!\n");
+      metrics.maxElementSize->width = 0;
+      metrics.maxElementSize->height = 0;
+    }
+#ifdef REALLY_NOISY_MAX_ELEMENT_SIZE
+    // Note: there are common reflow situations where this *correctly*
+    // occurs; so only enable this debug noise when you really need to
+    // analyze in detail.
+    if (mComputeMaxElementSize &&
+        ((metrics.maxElementSize->width > metrics.width) ||
+         (metrics.maxElementSize->height > metrics.height))) {
+      printf("nsLineLayout: ");
+      nsFrame::ListTag(stdout, aFrame);
+      printf(": WARNING: maxElementSize=%d,%d > metrics=%d,%d\n",
+             metrics.maxElementSize->width,
+             metrics.maxElementSize->height,
+             metrics.width, metrics.height);
+    }
+#endif
+    if ((metrics.width == nscoord(0xdeadbeef)) ||
+        (metrics.height == nscoord(0xdeadbeef)) ||
+        (metrics.ascent == nscoord(0xdeadbeef)) ||
+        (metrics.descent == nscoord(0xdeadbeef))) {
+      printf("nsLineLayout: ");
+      nsFrame::ListTag(stdout, aFrame);
+      printf(" didn't set whad %d,%d,%d,%d!\n", metrics.width, metrics.height,
+             metrics.ascent, metrics.descent);
+    }
   }
 #endif
 #ifdef NOISY_MAX_ELEMENT_SIZE
-  if (mComputeMaxElementSize) {
-    printf("  ");
-    nsFrame::ListTag(stdout, aFrame);
-    printf(": maxElementSize=%d,%d wh=%d,%d,\n",
-           metrics.maxElementSize->width,
-           metrics.maxElementSize->height,
-           metrics.width, metrics.height);
+  if (!NS_INLINE_IS_BREAK_BEFORE(aReflowStatus)) {
+    if (mComputeMaxElementSize) {
+      printf("  ");
+      nsFrame::ListTag(stdout, aFrame);
+      printf(": maxElementSize=%d,%d wh=%d,%d,\n",
+             metrics.maxElementSize->width,
+             metrics.maxElementSize->height,
+             metrics.width, metrics.height);
+    }
   }
 #endif
 
@@ -907,8 +980,7 @@ nsLineLayout::ApplyLeftMargin(PerFrameData* pfd,
   // of a block then see if the text-indent property amounts to
   // anything.
   nscoord indent = 0;
-  if (InBlockContext() && (0 == mLineNumber) &&
-      (0 == mTotalPlacedFrames)) {
+  if (InBlockContext() && (0 == mLineNumber) && CanPlaceFloaterNow()) {
     nsStyleUnit unit = mStyleText->mTextIndent.GetUnit();
     if (eStyleUnit_Coord == unit) {
       indent = mStyleText->mTextIndent.GetCoordValue();
@@ -1012,11 +1084,26 @@ nsLineLayout::CanPlaceFrame(PerFrameData* pfd,
     return PR_TRUE;
   }
 
+#ifdef NOISY_CAN_PLACE_FRAME
+  if (nsnull != psd->mFrame) {
+    nsFrame::ListTag(stdout, psd->mFrame->mFrame);
+  }
+  else {
+    nsFrame::ListTag(stdout, mBlockReflowState->frame);
+  } 
+  printf(": aNotSafeToBreak=%s frame=", aNotSafeToBreak ? "true" : "false");
+  nsFrame::ListTag(stdout, pfd->mFrame);
+  printf(" frameWidth=%d\n", pfd->mBounds.XMost() + rightMargin - psd->mX);
+#endif
+
   // Set outside to PR_TRUE if the result of the reflow leads to the
   // frame sticking outside of our available area.
   PRBool outside = pfd->mBounds.XMost() + rightMargin > psd->mRightEdge;
   if (!outside) {
     // If it fits, it fits
+#ifdef NOISY_CAN_PLACE_FRAME
+    printf("   ==> inside\n");
+#endif
     return PR_TRUE;
   }
 
@@ -1024,6 +1111,9 @@ nsLineLayout::CanPlaceFrame(PerFrameData* pfd,
   // allow it to fit anyway.
   if (0 == pfd->mMargin.left + pfd->mBounds.width + rightMargin) {
     // Empty frames always fit right where they are
+#ifdef NOISY_CAN_PLACE_FRAME
+    printf("   ==> empty frame fits\n");
+#endif
     return PR_TRUE;
   }
 
@@ -1032,10 +1122,22 @@ nsLineLayout::CanPlaceFrame(PerFrameData* pfd,
     // the line. If the line isn't impacted by a floater then the
     // current frame fits.
     if (!mImpactedByFloaters) {
+#ifdef NOISY_CAN_PLACE_FRAME
+      printf("   ==> not-safe and not-impacted fits: ");
+      PerSpanData* psd = mCurrentSpan;
+      while (nsnull != psd) {
+        printf("<psd=%p x=%d left=%d> ", psd, psd->mX, psd->mLeftEdge);
+        psd = psd->mParent;
+      }
+      printf("\n");
+#endif
       return PR_TRUE;
     }
   }
 
+#ifdef NOISY_CAN_PLACE_FRAME
+  printf("   ==> didn't fit\n");
+#endif
   aStatus = NS_INLINE_LINE_BREAK_BEFORE();
   return PR_FALSE;
 }
@@ -1078,11 +1180,12 @@ nsLineLayout::PlaceFrame(PerFrameData* pfd, nsHTMLReflowMetrics& aMetrics)
     mEndsInWhiteSpace = PR_FALSE;
   }
 
-  // Compute the bottom margin to apply. Note that the margin only
-  // applies if the frame ends up with a non-zero height.
-  if (!emptyFrame) {
-    // Inform line layout that we have placed a non-empty frame
-    mTotalPlacedFrames++;
+  // Count the number of frames on the line...
+  mTotalPlacedFrames++;
+  if (0 != psd->mX) {
+    // As soon as a frame placed on the line advances an X coordinate
+    // of any span we can no longer place a floater on the line.
+    mCanPlaceFloater = PR_FALSE;
   }
 }
 
