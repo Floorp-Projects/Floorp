@@ -30,6 +30,9 @@
 static int nRegions;
 #endif
 
+GdkRegion *nsRegionGTK::copyRegion = nsnull;
+
+
 nsRegionGTK::nsRegionGTK()
 {
   NS_INIT_REFCNT();
@@ -56,40 +59,58 @@ nsRegionGTK::~nsRegionGTK()
 
 NS_IMPL_ISUPPORTS1(nsRegionGTK, nsIRegion)
 
-nsresult nsRegionGTK::Init(void)
-{
-  if (mRegion) {
-    gdk_region_destroy(mRegion);
-  }
-  mRegion = ::gdk_region_new();
-  return NS_OK;
+
+GdkRegion *
+nsRegionGTK::GetCopyRegion() {
+  if (!copyRegion) copyRegion = gdk_region_new();
+  return copyRegion;
 }
 
-void nsRegionGTK::SetTo(const nsIRegion &aRegion)
-{
-  nsRegionGTK *pRegion = (nsRegionGTK *)&aRegion;
 
-  SetRegionEmpty();
-  
-  GdkRegion *nRegion = ::gdk_regions_union(mRegion, pRegion->mRegion);
-  ::gdk_region_destroy(mRegion);
-  mRegion = nRegion;
+
+GdkRegion *
+nsRegionGTK::gdk_region_copy(GdkRegion *region)
+{
+  return gdk_regions_union(region, GetCopyRegion());
 }
 
-void nsRegionGTK::SetTo(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
+GdkRegion *
+nsRegionGTK::gdk_region_from_rect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
-  SetRegionEmpty();
-
   GdkRectangle grect;
 
   grect.x = aX;
   grect.y = aY;
   grect.width = aWidth;
   grect.height = aHeight;
-  
-  GdkRegion *nRegion = ::gdk_region_union_with_rect(mRegion, &grect);
-  ::gdk_region_destroy(mRegion);
-  mRegion = nRegion;
+
+  return ::gdk_region_union_with_rect(GetCopyRegion(), &grect);
+}
+
+nsresult nsRegionGTK::Init(void)
+{
+  if (mRegion) {
+    gdk_region_destroy(mRegion);
+    mRegion = nsnull;
+  }
+
+  return NS_OK;
+}
+
+void nsRegionGTK::SetTo(const nsIRegion &aRegion)
+{
+  SetRegionEmpty();
+
+  nsRegionGTK *pRegion = (nsRegionGTK *)&aRegion;
+
+  mRegion = gdk_region_copy(pRegion->mRegion);
+}
+
+void nsRegionGTK::SetTo(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
+{
+  SetRegionEmpty();
+
+  mRegion = gdk_region_from_rect(aX, aY, aWidth, aHeight);
 }
 
 void nsRegionGTK::Intersect(const nsIRegion &aRegion)
@@ -103,7 +124,7 @@ void nsRegionGTK::Intersect(const nsIRegion &aRegion)
 
 void nsRegionGTK::Intersect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
-  GdkRegion *tRegion = CreateRectRegion(aX, aY, aWidth, aHeight);
+  GdkRegion *tRegion = gdk_region_from_rect(aX, aY, aWidth, aHeight);
 
   GdkRegion *nRegion = ::gdk_regions_intersect(mRegion, tRegion);
   ::gdk_region_destroy(tRegion);
@@ -113,48 +134,67 @@ void nsRegionGTK::Intersect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHei
 
 void nsRegionGTK::Union(const nsIRegion &aRegion)
 {
-   nsRegionGTK * pRegion = (nsRegionGTK *)&aRegion;
-   
-   GdkRegion *nRegion = ::gdk_regions_union(mRegion, pRegion->mRegion);
-   ::gdk_region_destroy(mRegion);
-   mRegion = nRegion;
+  nsRegionGTK *pRegion = (nsRegionGTK *)&aRegion;
+
+  if (mRegion) {
+    GdkRegion *nRegion = ::gdk_regions_union(mRegion, pRegion->mRegion);
+    ::gdk_region_destroy(mRegion);
+    mRegion = nRegion;
+  } else {
+    mRegion = gdk_region_copy(pRegion->mRegion);
+  }
 }
 
 void nsRegionGTK::Union(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
-  GdkRectangle grect;
+  if (mRegion) {
+    GdkRectangle grect;
 
-  grect.x = aX;
-  grect.y = aY;
-  grect.width = aWidth;
-  grect.height = aHeight;
+    grect.x = aX;
+    grect.y = aY;
+    grect.width = aWidth;
+    grect.height = aHeight;
 
-  GdkRegion *nRegion = ::gdk_region_union_with_rect(mRegion, &grect);
-  ::gdk_region_destroy(mRegion);
-  mRegion = nRegion;
+    GdkRegion *nRegion = ::gdk_region_union_with_rect(mRegion, &grect);
+    ::gdk_region_destroy(mRegion);
+    mRegion = nRegion;
+  } else {
+    mRegion = gdk_region_from_rect(aX, aY, aWidth, aHeight);
+  }
 }
 
 void nsRegionGTK::Subtract(const nsIRegion &aRegion)
 {
   nsRegionGTK *pRegion = (nsRegionGTK *)&aRegion;
-
-   GdkRegion *nRegion = ::gdk_regions_subtract(mRegion, pRegion->mRegion);
-   ::gdk_region_destroy(mRegion);
-   mRegion = nRegion;
+  if (mRegion) {
+    GdkRegion *nRegion = ::gdk_regions_subtract(mRegion, pRegion->mRegion);
+    ::gdk_region_destroy(mRegion);
+    mRegion = nRegion;
+  } else {
+    mRegion = ::gdk_regions_subtract(GetCopyRegion(), pRegion->mRegion);
+  }
 }
 
 void nsRegionGTK::Subtract(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
-  GdkRegion *tRegion = CreateRectRegion(aX, aY, aWidth, aHeight);
-  
-  GdkRegion *nRegion = ::gdk_regions_subtract(mRegion, tRegion);
-  ::gdk_region_destroy(mRegion);
-  ::gdk_region_destroy(tRegion);
-  mRegion = nRegion;
+  if (mRegion) {
+    GdkRegion *tRegion = gdk_region_from_rect(aX, aY, aWidth, aHeight);
+    
+    GdkRegion *nRegion = ::gdk_regions_subtract(mRegion, tRegion);
+    ::gdk_region_destroy(mRegion);
+    ::gdk_region_destroy(tRegion);
+    mRegion = nRegion;
+  } else {
+    GdkRegion *tRegion = gdk_region_from_rect(aX, aY, aWidth, aHeight);
+    mRegion = ::gdk_regions_subtract(GetCopyRegion(), tRegion);
+    ::gdk_region_destroy(tRegion);
+  }
 }
 
 PRBool nsRegionGTK::IsEmpty(void)
 {
+  if (!mRegion)
+    return PR_TRUE;
   return (::gdk_region_empty(mRegion));
 }
 
@@ -162,8 +202,15 @@ PRBool nsRegionGTK::IsEqual(const nsIRegion &aRegion)
 {
   nsRegionGTK *pRegion = (nsRegionGTK *)&aRegion;
 
-  return(::gdk_region_equal(mRegion, pRegion->mRegion));
+  if (mRegion && pRegion->mRegion) {
+    return(::gdk_region_equal(mRegion, pRegion->mRegion));
+  } else if (!mRegion && !pRegion->mRegion) {
+    return PR_TRUE;
+  } else if ((mRegion && !pRegion->mRegion) || (!mRegion && pRegion->mRegion)) {
+    return PR_FALSE;
+  }
 
+  return PR_FALSE;
 }
 
 void nsRegionGTK::GetBoundingBox(PRInt32 *aX, PRInt32 *aY, PRInt32 *aWidth, PRInt32 *aHeight)
@@ -204,19 +251,28 @@ PRBool nsRegionGTK::ContainsRect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32
 
 NS_IMETHODIMP nsRegionGTK::GetRects(nsRegionRectSet **aRects)
 {
-  nsRegionRectSet   *rects;
-  GdkRegionPrivate  *priv = (GdkRegionPrivate *)mRegion;
-  Region            pRegion = priv->xregion;
-  int               nbox;
-  BOX               *pbox;
-  nsRegionRect      *rect;
+
+  *aRects = nsnull;
+
+  if (!mRegion)
+    return NS_OK;
+
+
+  nsRegionRectSet   *rects = nsnull;
+  GdkRegionPrivate  *priv = nsnull;
+  Region            pRegion;
+  int               nbox = 0;
+  BOX               *pbox = nsnull;
+  nsRegionRect      *rect = nsnull;
+
+  priv = (GdkRegionPrivate *)mRegion;
+  pRegion = priv->xregion;
+  pbox = pRegion->rects;
+  nbox = pRegion->numRects;
 
   NS_ASSERTION(!(nsnull == aRects), "bad ptr");
 
   //code lifted from old xfe. MMP
-
-  pbox = pRegion->rects;
-  nbox = pRegion->numRects;
 
   rects = *aRects;
 
@@ -287,31 +343,14 @@ void nsRegionGTK::SetRegionEmpty()
 {
   if (!IsEmpty()) {
     ::gdk_region_destroy(mRegion);
-    mRegion = ::gdk_region_new();
   }
-}
-
-GdkRegion *nsRegionGTK::CreateRectRegion(PRInt32 aX,
-                                         PRInt32 aY,
-                                         PRInt32 aWidth,
-                                         PRInt32 aHeight)
-{
-  GdkRegion *tRegion = ::gdk_region_new();
-  GdkRectangle rect;
-
-  rect.x = aX;
-  rect.y = aY;
-  rect.width = aWidth;
-  rect.height = aHeight;
-
-  GdkRegion *rRegion = ::gdk_region_union_with_rect(tRegion, &rect);
-  ::gdk_region_destroy(tRegion);
-  
-  return (rRegion);
 }
 
 NS_IMETHODIMP nsRegionGTK::GetNumRects(PRUint32 *aRects) const
 {
+  if (!mRegion)
+    *aRects = 0;
+
   GdkRegionPrivate  *priv = (GdkRegionPrivate *)mRegion;
   Region pRegion = priv->xregion;
 
