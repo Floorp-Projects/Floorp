@@ -64,9 +64,10 @@ static NS_DEFINE_IID(kSoftwareUpdateCID, NS_SoftwareUpdate_CID);
 //------------------------------------------------------------------------
 PR_PUBLIC_API(nsresult) XPI_Init(   
 #ifdef XP_MAC
-                                    const FSSpec&       aDir,
+                                    const FSSpec&       aXPIStubDir, 
+                                    const FSSpec&       aProgramDir,
 #else
-                                    const char*         aDir,
+                                    const char*         aProgramDir,
 #endif
                                     pfnXPIStart         startCB, 
                                     pfnXPIProgress      progressCB,
@@ -108,6 +109,14 @@ PR_PUBLIC_API(nsresult) XPI_Init(
       return rv;
 
     rv = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, nsIfsDirectory);
+#elif defined(XP_MAC)
+	
+    rv = NS_NewFileSpecWithSpec(aXPIStubDir, getter_AddRefs(nsIfsDirectory));
+    if (NS_FAILED(rv))
+        return rv;
+		
+    rv = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, nsIfsDirectory);
+
 #else
     rv = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, 0);
 #endif
@@ -136,7 +145,7 @@ PR_PUBLIC_API(nsresult) XPI_Init(
     // is Mozilla. Use the given directory as the "Program" folder.
     //--------------------------------------------------------------------
     nsCOMPtr<nsPIXPIStubHook>   hook = do_QueryInterface(gXPI);
-    nsFileSpec                  dirSpec( aDir );
+    nsFileSpec                  dirSpec( aProgramDir );
     nsCOMPtr<nsIFileSpec>       iDirSpec;
 
     NS_NewFileSpecWithSpec( dirSpec, getter_AddRefs(iDirSpec) );    
