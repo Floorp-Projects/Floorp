@@ -16,6 +16,14 @@
 ; Run "nmake -f makefile.win APP=mfcembed" to copy mfcembed
 
 
+;
+; ActiveX control
+;
+mozctl.dll
+mozctlx.dll
+res\MozillaControl.html
+
+
 ; 
 ; NSPR:
 ; 
