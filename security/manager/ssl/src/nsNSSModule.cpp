@@ -44,6 +44,8 @@
 #include "nsCMSSecureMessage.h"
 #include "nsCMS.h"
 #include "nsCertPicker.h"
+#include "nsCURILoader.h"
+#include "nsICategoryManager.h"
 
 // We must ensure that the nsNSSComponent has been loaded before
 // creating any other components.
@@ -153,6 +155,56 @@ NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(PR_FALSE, nsCMSEncoder)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(PR_FALSE, nsCMSMessage)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(PR_FALSE, nsHash)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(PR_FALSE, nsCertPicker)
+
+static NS_METHOD RegisterPSMContentListeners(
+                      nsIComponentManager *aCompMgr,
+                      nsIFile *aPath, const char *registryLocation, 
+                      const char *componentType, const nsModuleComponentInfo *info)
+{
+  nsresult rv;
+  nsCOMPtr<nsICategoryManager> catman = 
+    do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  nsXPIDLCString previous;
+
+  catman->AddCategoryEntry(
+    NS_CONTENT_LISTENER_CATEGORYMANAGER_ENTRY,
+    "application/x-x509-ca-cert",
+    info->mContractID, PR_TRUE, PR_TRUE, getter_Copies(previous));
+
+  catman->AddCategoryEntry(
+    NS_CONTENT_LISTENER_CATEGORYMANAGER_ENTRY,
+    "application/x-x509-server-cert",
+    info->mContractID, PR_TRUE, PR_TRUE, getter_Copies(previous));
+
+  catman->AddCategoryEntry(
+    NS_CONTENT_LISTENER_CATEGORYMANAGER_ENTRY,
+    "application/x-x509-user-cert",
+    info->mContractID, PR_TRUE, PR_TRUE, getter_Copies(previous));
+
+  catman->AddCategoryEntry(
+    NS_CONTENT_LISTENER_CATEGORYMANAGER_ENTRY,
+    "application/x-x509-email-cert",
+    info->mContractID, PR_TRUE, PR_TRUE, getter_Copies(previous));
+
+  catman->AddCategoryEntry(
+    NS_CONTENT_LISTENER_CATEGORYMANAGER_ENTRY,
+    "application/x-pkcs7-crl",
+    info->mContractID, PR_TRUE, PR_TRUE, getter_Copies(previous));
+
+  catman->AddCategoryEntry(
+    NS_CONTENT_LISTENER_CATEGORYMANAGER_ENTRY,
+    "application/x-x509-crl",
+    info->mContractID, PR_TRUE, PR_TRUE, getter_Copies(previous));
+
+  catman->AddCategoryEntry(
+    NS_CONTENT_LISTENER_CATEGORYMANAGER_ENTRY,
+    "application/pkix-crl",
+    info->mContractID, PR_TRUE, PR_TRUE, getter_Copies(previous));
+
+  return NS_OK;
+}
 
 static nsModuleComponentInfo components[] =
 {
@@ -287,6 +339,14 @@ static nsModuleComponentInfo components[] =
     NS_CERT_PICKER_CID,
     NS_CERT_PICKER_CONTRACTID,
     nsCertPickerConstructor
+  },
+
+  {
+    "PSM Content Listeners",
+    NS_PSMCONTENTLISTEN_CID,
+    "@mozilla.org/uriloader/psm-external-content-listener;1",
+    PSMContentListenerConstructor,
+    RegisterPSMContentListeners
   }
 };
 

@@ -1417,6 +1417,9 @@ PSMContentDownloader::OnStopRequest(nsIRequest* request,
 PRUint32
 getPSMContentType(const char * aContentType)
 { 
+  // Don't forget to update RegisterPSMContentListeners in nsNSSModule.cpp 
+  // for every supported content type.
+  
   if (!nsCRT::strcasecmp(aContentType, "application/x-x509-ca-cert"))
     return PSMContentDownloader::X509_CA_CERT;
   else if (!nsCRT::strcasecmp(aContentType, "application/x-x509-server-cert"))
@@ -1540,4 +1543,3 @@ PSMContentListener::SetParentContentListener(nsIURIContentListener * aContentLis
   mParentContentListener = aContentListener;
   return NS_OK;
 }
-

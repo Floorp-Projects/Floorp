@@ -54,4 +54,6 @@ nsIURILoader
 #define NS_CONTENT_HANDLER_CONTRACTID               "@mozilla.org/uriloader/content-handler;1"
 #define NS_CONTENT_HANDLER_CONTRACTID_PREFIX	     NS_CONTENT_HANDLER_CONTRACTID "?type="
 
+#define NS_CONTENT_LISTENER_CATEGORYMANAGER_ENTRY   "external-uricontentlisteners"
+
 %}
