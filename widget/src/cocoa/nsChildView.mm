@@ -2659,8 +2659,10 @@ nsChildView::Idle()
   // Gecko may have set the cursor to ibeam or link hand, or handscroll may
   // have set it to the open hand cursor. Cocoa won't call this during a drag.
   mGeckoChild->SetCursor(eCursor_standard);
-  // no need to monitor mouse movements outside of the gecko view
-  [[self window] setAcceptsMouseMovedEvents: NO];
+  // no need to monitor mouse movements outside of the gecko view,
+  // but make sure we are not a plugin view.
+  if (![[self superview] isKindOfClass: [ChildView class]])
+    [[self window] setAcceptsMouseMovedEvents: NO];
 }
 
 - (void)rightMouseDown:(NSEvent *)theEvent
