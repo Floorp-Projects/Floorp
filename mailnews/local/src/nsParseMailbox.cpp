@@ -1389,8 +1389,25 @@ nsParseNewMailState::Init(nsIFolder *rootFolder, nsFileSpec &folder, nsIOFileStr
 		return rv;
 
 	// need a file spec for filters...
-	nsFileSpec filterFile("rules.dat");
-	nsresult res = filterService->OpenFilterList(&filterFile, getter_AddRefs(m_filterList));
+
+	nsCOMPtr <nsIFileSpec> rootDir;
+
+	nsCOMPtr <nsIMsgFolder> rootMsgFolder = do_QueryInterface(rootFolder);
+
+	rv = NS_ERROR_FAILURE;
+
+	if (rootMsgFolder)
+		rv = rootMsgFolder->GetPath(getter_AddRefs(rootDir));
+
+	if (NS_SUCCEEDED(rv))
+	{
+		nsFileSpec		filterFile;
+
+		rootDir->GetFileSpec(&filterFile);
+		// need a file spec for filters...
+		filterFile += "rules.dat";
+		nsresult res = filterService->OpenFilterList(&filterFile, getter_AddRefs(m_filterList));
+	}
 
 	m_logFile = nsnull;
 #endif
