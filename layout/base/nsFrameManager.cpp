@@ -2023,6 +2023,17 @@ FrameManager::ComputeStyleChangeFor(nsIPresContext* aPresContext,
       aTopLevelChange = frameChange;
     }
 
+    if (aTopLevelChange >= NS_STYLE_HINT_REFLOW) {
+      // If it's going to cause a reflow (or worse), then don't touch
+      // the any continuations: they must be taken care of by the reflow.
+#ifdef NS_DEBUG
+      nsIFrame* prevInFlow;
+      frame->GetPrevInFlow(&prevInFlow);
+      NS_ASSERTION(!prevInFlow, "continuing frame had more severe impact than first-in-flow");
+#endif
+      break;
+    }
+
     frame->GetNextInFlow(&frame);
   } while (frame);
   return NS_OK;
