@@ -2314,6 +2314,12 @@ static PRBool SelectorMatches(nsIPresContext* aPresContext,
 
     result = PR_TRUE;
     // namespace/tag match
+    PRBool isHTMLContent = PR_FALSE;
+	  nsIHTMLContent* hc;
+	  if (NS_OK == aContent->QueryInterface(kIHTMLContentIID, (void**)&hc)) {
+	  	isHTMLContent = PR_TRUE;
+	    NS_RELEASE(hc);
+	  }
     if (nsnull != aSelector->mAttrList) { // test for attribute match
       nsAttrSelector* attr = aSelector->mAttrList;
       do {
@@ -2323,10 +2329,11 @@ static PRBool SelectorMatches(nsIPresContext* aPresContext,
           result = PR_FALSE;
         }
         else {
+			    PRBool isCaseSensitive = (attr->mCaseSensitive && !isHTMLContent); // Bug 24390: html attributes should not be case-sensitive
           switch (attr->mFunction) {
             case NS_ATTR_FUNC_SET:    break;
             case NS_ATTR_FUNC_EQUALS: 
-              if (attr->mCaseSensitive) {
+              if (isCaseSensitive) {
                 result = value.Equals(attr->mValue);
               }
               else {
@@ -2334,10 +2341,10 @@ static PRBool SelectorMatches(nsIPresContext* aPresContext,
               }
               break;
             case NS_ATTR_FUNC_INCLUDES: 
-              result = ValueIncludes(value, attr->mValue, attr->mCaseSensitive);
+              result = ValueIncludes(value, attr->mValue, isCaseSensitive);
               break;
             case NS_ATTR_FUNC_DASHMATCH: 
-              result = ValueDashMatch(value, attr->mValue, attr->mCaseSensitive);
+              result = ValueDashMatch(value, attr->mValue, isCaseSensitive);
               break;
           }
         }
