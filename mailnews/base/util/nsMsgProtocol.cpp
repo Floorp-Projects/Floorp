@@ -50,6 +50,7 @@ nsMsgProtocol::nsMsgProtocol(nsIURI * aURL)
 		
 	m_tempMsgFileSpec = nsSpecialSystemDirectory(nsSpecialSystemDirectory::OS_TemporaryDirectory);
 	m_tempMsgFileSpec += "tempMessage.eml";
+  mSupressListenerNotifications = PR_FALSE;
   InitFromURI(aURL);
 }
 
@@ -205,13 +206,12 @@ NS_IMETHODIMP nsMsgProtocol::OnStartRequest(nsIChannel * aChannel, nsISupports *
 	// if we are set up as a channel, we should notify our channel listener that we are starting...
 	// so pass in ourself as the channel and not the underlying socket or file channel the protocol
 	// happens to be using
-	if (m_channelListener)
-    {
-        if (!m_channelContext)
-            m_channelContext = do_QueryInterface(ctxt);
-
-		rv = m_channelListener->OnStartRequest(this, m_channelContext);
-    }
+	if (!mSupressListenerNotifications && m_channelListener)
+  {
+    if (!m_channelContext)
+        m_channelContext = do_QueryInterface(ctxt);
+ 		rv = m_channelListener->OnStartRequest(this, m_channelContext);
+  }
 
 	return rv;
 }
@@ -224,7 +224,7 @@ NS_IMETHODIMP nsMsgProtocol::OnStopRequest(nsIChannel * aChannel, nsISupports *c
 	// if we are set up as a channel, we should notify our channel listener that we are starting...
 	// so pass in ourself as the channel and not the underlying socket or file channel the protocol
 	// happens to be using
-	if (m_channelListener)
+	if (!mSupressListenerNotifications && m_channelListener)
 		rv = m_channelListener->OnStopRequest(this, m_channelContext, aStatus, aMsg);
 	
   nsCOMPtr <nsIMsgMailNewsUrl> msgUrl = do_QueryInterface(ctxt, &rv);
@@ -291,7 +291,7 @@ nsresult nsMsgProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
 	nsresult rv = NS_OK;
 	nsCOMPtr <nsIMsgMailNewsUrl> aMsgUrl = do_QueryInterface(aURL, &rv);
 
-	if (NS_SUCCEEDED(rv) && aMsgUrl)
+  if (NS_SUCCEEDED(rv) && aMsgUrl)
 	{
 		rv = aMsgUrl->SetUrlState(PR_TRUE, NS_OK); // set the url as a url currently being run...
 
@@ -306,22 +306,22 @@ nsresult nsMsgProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
 		if (!m_socketIsOpen)
 		{
 			nsCOMPtr<nsISupports> urlSupports = do_QueryInterface(aURL);
+      if (m_channel)
+      {
+        // XXX should these errors be returned?:
+        if (m_startPosition > 0) 
+        {
+          rv = m_channel->SetTransferOffset(m_startPosition);
+          NS_ASSERTION(NS_SUCCEEDED(rv), "SetTransferOffset failed");
+        }
+        rv = m_channel->SetTransferCount(m_readCount);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "SetTransferCount failed");
 
-            if (m_channel)
-            {
-                // XXX should these errors be returned?:
-                if (m_startPosition > 0) {
-                    rv = m_channel->SetTransferOffset(m_startPosition);
-                    NS_ASSERTION(NS_SUCCEEDED(rv), "SetTransferOffset failed");
-                }
-                rv = m_channel->SetTransferCount(m_readCount);
-                NS_ASSERTION(NS_SUCCEEDED(rv), "SetTransferCount failed");
-
-                // put us in a state where we are always notified of incoming data
-                rv = m_channel->AsyncRead(this /* stream observer */, urlSupports);
-                NS_ASSERTION(NS_SUCCEEDED(rv), "AsyncRead failed");
-                m_socketIsOpen = PR_TRUE; // mark the channel as open
-            }
+        // put us in a state where we are always notified of incoming data
+        rv = m_channel->AsyncRead(this /* stream observer */, urlSupports);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "AsyncRead failed");
+        m_socketIsOpen = PR_TRUE; // mark the channel as open
+      }
 		} // if we got an event queue service
 		else  // the connection is already open so we should begin processing our new url...
 			rv = ProcessProtocolState(aURL, nsnull, 0, 0); 

@@ -126,6 +126,10 @@ protected:
   // private helper routine used by subclasses to quickly get a reference to the correct prompt dialog
   // for a mailnews url. 
   nsresult GetPromptDialogFromUrl(nsIMsgMailNewsUrl * aMsgUrl, nsIPrompt ** aPromptDialog);
+
+  // if a url isn't going to result in any content then we want to supress calls to
+  // OnStartRequest, OnDataAvailable and OnStopRequest
+  PRBool mSupressListenerNotifications;
 };
 
 #endif /* nsMsgProtocol_h__ */

@@ -630,13 +630,13 @@ nsresult nsPop3Protocol::LoadUrl(nsIURI* aURL, nsISupports * /* aConsumer */)
 
 	if (PL_strcasestr(queryPart, "check"))
 		m_pop3ConData->only_check_for_new_mail = PR_TRUE;
-    else
-        m_pop3ConData->only_check_for_new_mail = PR_FALSE;
+  else
+    m_pop3ConData->only_check_for_new_mail = PR_FALSE;
 
 	if (PL_strcasestr(queryPart, "gurl"))
 		m_pop3ConData->get_url = PR_TRUE;
-    else
-        m_pop3ConData->get_url = PR_FALSE;
+  else
+    m_pop3ConData->get_url = PR_FALSE;
 
 	if (!m_pop3ConData->only_check_for_new_mail)
 	{
@@ -658,33 +658,33 @@ nsresult nsPop3Protocol::LoadUrl(nsIURI* aURL, nsISupports * /* aConsumer */)
 	}
 
 	// UIDL stuff
-    nsCOMPtr<nsIPop3URL> pop3Url = do_QueryInterface(m_url);
-    if (pop3Url)
-        pop3Url->GetPop3Sink(getter_AddRefs(m_nsIPop3Sink));
+  nsCOMPtr<nsIPop3URL> pop3Url = do_QueryInterface(m_url);
+  if (pop3Url)
+      pop3Url->GetPop3Sink(getter_AddRefs(m_nsIPop3Sink));
     
-    nsCOMPtr<nsIFileSpec> mailDirectory;
+  nsCOMPtr<nsIFileSpec> mailDirectory;
     
 	nsXPIDLCString host;
 	aURL->GetHost(getter_Copies(host));
 
-    nsCOMPtr<nsIMsgIncomingServer> server = do_QueryInterface(m_pop3Server);
-    if (server)
+  nsCOMPtr<nsIMsgIncomingServer> server = do_QueryInterface(m_pop3Server);
+  if (server)
 	{
-        rv = server->GetLocalPath(getter_AddRefs(mailDirectory));
+    rv = server->GetLocalPath(getter_AddRefs(mailDirectory));
 		server->SetServerBusy(PR_TRUE); // the server is now busy
 	}
 
-    m_pop3ConData->uidlinfo = net_pop3_load_state(host, GetUsername(), mailDirectory);
-
+  m_pop3ConData->uidlinfo = net_pop3_load_state(host, GetUsername(), mailDirectory);
 	m_pop3ConData->biffstate = nsIMsgFolder::nsMsgBiffState_NoMail;
 
 	const char* uidl = PL_strcasestr(queryPart, "uidl=");
-    PR_FREEIF(m_pop3ConData->only_uidl);
+  PR_FREEIF(m_pop3ConData->only_uidl);
 		
-    if (uidl)
+  if (uidl)
 	{
 		uidl += 5;
 		m_pop3ConData->only_uidl = PL_strdup(uidl);
+    mSupressListenerNotifications = PR_TRUE; // supress on start and on stop because this url won't have any content to display
 	}
 	
 	// m_pop3ConData->next_state = POP3_READ_PASSWORD;
