@@ -28,7 +28,7 @@
 
 extern "C" void NS_SetupRegistry();
 
-static const std::string c_szPrefsFile     = "prefs.js";
+static const std::string c_szPrefsFile     = "prefs50.js";
 static const std::string c_szPrefsHomePage = "browser.startup.homepage";
 static const std::string c_szDefaultPage   = "resource://res/MozillaControl.html";
 
@@ -903,7 +903,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Navigate(BSTR URL, VARIANT __RPC_FAR 
 			{
 				CComVariant vURL(URL);
 				CComVariant vFlags(lFlags);
-				spOther->Navigate2(&vURL, &vFlags, TargetFrameName, PostData, Headers);
+				return spOther->Navigate2(&vURL, &vFlags, TargetFrameName, PostData, Headers);
 			}
 		}
 
