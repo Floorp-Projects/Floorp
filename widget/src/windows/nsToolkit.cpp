@@ -189,6 +189,7 @@ nsToolkit::~nsToolkit()
 
     if (!nsToolkit::gAIMMCount) {
         if(nsToolkit::gAIMMApp) {
+            nsToolkit::gAIMMApp->Deactivate();
             nsToolkit::gAIMMApp->Release();
             nsToolkit::gAIMMApp = NULL;
         }
