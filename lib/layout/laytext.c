@@ -4951,8 +4951,11 @@ void lo_RelayoutTextElements ( MWContext * context,
             element->lo_any.next = NULL;
             lo_RecycleElements( context, state, element );
             
-            /* and then add a new linefeed */
-            lo_rl_AddSoftBreakAndFlushLine ( context, state );
+            /* Fix for bug 129639: Only add the new linefeed for preformatted text.
+			   Calling lo_rl_AddSoftBreakAndFlushLine() causes extra line feeds to 
+			   be generated for regular text. */
+			if (fastPreformat)
+				lo_rl_AddSoftBreakAndFlushLine ( context, state );
             
             break;
             
