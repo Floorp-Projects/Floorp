@@ -409,7 +409,6 @@ nsImapService::FetchMessage(nsIEventQueue * aClientEventQueue,
     if (!aImapMailFolder || !aClientEventQueue)
         return NS_ERROR_NULL_POINTER;
 	
-	nsIImapProtocol * protocolInstance = nsnull;
 	nsIImapUrl * imapUrl = nsnull;
 	nsString2 urlSpec("",eOneByte);
 
