@@ -253,10 +253,14 @@
           while (arcs.hasMoreElements()) {
             var engineRes = arcs.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
             var name = this.readRDFString(aDS, engineRes, kNC_Name);
-            if (name == defaultName)
+            if (name == defaultName) {
+              var str = Components.classes["@mozilla.org/supports-wstring;1"]
+                                  .createInstance(Components.interfaces.nsISupportsWString);
+              str.data = engineRes.Value;
               this.mPrefs.setComplexValue("browser.search.defaultengine",
                                           Components.interfaces.nsISupportsWString,
-                                          engineRes.Value);
+                                          str);
+            }
           }
         ]]></body>
       </method>

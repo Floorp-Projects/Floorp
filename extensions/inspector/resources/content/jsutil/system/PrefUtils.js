@@ -87,7 +87,10 @@ var PrefUtils =
     var type = this.mPrefs.getPrefType(aName);
     try {
       if (type == nsIPrefBranch.PREF_STRING) {
-        this.mPrefs.setComplexValue(aName, Components.interfaces.nsISupportsWString, aValue);
+        var str = Components.classes["@mozilla.org/supports-wstring;1"]
+                            .createInstance(Components.interfaces.nsISupportsWString);
+        str.data = aValue;
+        this.mPrefs.setComplexValue(aName, Components.interfaces.nsISupportsWString, str);
       } else if (type == nsIPrefBranch.PREF_BOOL) {
         this.mPrefs.setBoolPref(aName, aValue);
       } else if (type == nsIPrefBranch.PREF_INT) {
