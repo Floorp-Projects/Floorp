@@ -42,8 +42,6 @@ FILES		= \
 	profileSelection.js			\
 	confirmMigration.xul			\
 	confirmMigration.js			\
-        activation.xul                 \
-        activationFrame.xul            \
         $(NULL)
 
 include $(topsrcdir)/config/rules.mk
