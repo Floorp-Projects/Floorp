@@ -99,7 +99,22 @@ function (aTitle, aContentURL, aCustomizeURL)
 {
     debug("addPanel(" + aTitle + ", " + aContentURL + ", " +
           aCustomizeURL + ")");
+   
+    return this.addPanelInternal(aTitle, aContentURL, aCustomizeURL, false);
+}
 
+nsSidebar.prototype.addPersistentPanel = 
+function(aTitle, aContentURL, aCustomizeURL)
+{
+    debug("addPersistentPanel(" + aTitle + ", " + aContentURL + ", " +
+           aCustomizeURL + ")\n");
+
+    return this.addPanelInternal(aTitle, aContentURL, aCustomizeURL, true);
+}
+
+nsSidebar.prototype.addPanelInternal =
+function (aTitle, aContentURL, aCustomizeURL, aPersist)
+{
     if (!this.window)
     {
         debug ("no window object set, bailing out.");
@@ -116,7 +131,7 @@ function (aTitle, aContentURL, aCustomizeURL)
     } else {
         // Datasource is busted. Start over.
         debug("Sidebar datasource is busted\n");
-  }
+    }
 
     var container = Components.classes[CONTAINER_CONTRACTID].createInstance(nsIRDFContainer);
     container.Init(this.datasource, panel_list);
@@ -160,10 +175,15 @@ function (aTitle, aContentURL, aCustomizeURL)
             sidebarName = brandStringBundle.GetStringFromName("sidebarName");
             titleMessage = stringBundle.GetStringFromName("addPanelConfirmTitle");
             dialogMessage = stringBundle.GetStringFromName("addPanelConfirmMessage");
+            if (aPersist)
+            {
+                var warning = stringBundle.GetStringFromName("persistentPanelWarning");
+                dialogMessage += "\n" + warning;
+            }
             dialogMessage = dialogMessage.replace(/%title%/, aTitle);
             dialogMessage = dialogMessage.replace(/%url%/, aContentURL);
             dialogMessage = dialogMessage.replace(/#/g, "\n");
-            dialogMessage = dialogMessage.replace(/%name%/, sidebarName);
+            dialogMessage = dialogMessage.replace(/%name%/g, sidebarName);
         }
     }
     catch (e) {
@@ -192,6 +212,11 @@ function (aTitle, aContentURL, aCustomizeURL)
                                this.rdf.GetResource(this.nc + "customize"),
                                this.rdf.GetLiteral(aCustomizeURL),
                                true);
+    var persistValue = aPersist ? "true" : "false";
+    this.datasource.Assert(panel_resource,
+                           this.rdf.GetResource(this.nc + "persist"),
+                           this.rdf.GetLiteral(persistValue),
+                           true);
         
     container.AppendElement(panel_resource);
 
