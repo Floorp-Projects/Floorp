@@ -373,7 +373,6 @@ NS_IMETHODIMP nsConverterModule::RegisterSelf(nsIComponentManager *aCompMgr,
 
 done:
   if (registry != NULL) {
-    registry -> Close();
     nsServiceManager::ReleaseService(NS_REGISTRY_PROGID, registry);
   }
 
