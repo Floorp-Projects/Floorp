@@ -49,7 +49,7 @@
 #include "sunos4.h"
 #endif
 
-#ifdef QNX
+#ifdef __QNX__
 #define D_INO	d_stat.st_ino
 #else
 #define D_INO	d_ino

@@ -64,7 +64,7 @@
 #include <bsd/libc.h>
 #endif
 
-#ifdef QNX
+#ifdef __QNX__
 #include <unix.h>
 #endif
 

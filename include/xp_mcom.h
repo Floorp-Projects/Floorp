@@ -93,7 +93,7 @@ extern char * strdup (const char * s);
 XP_END_PROTOS
 #endif
 
-#ifndef QNX
+#ifndef __QNX__
 #include <memory.h>
 #endif
 
