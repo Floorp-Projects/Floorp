@@ -79,6 +79,7 @@ class nsTimelineServiceTimer {
      * measured.
      */
     void stop(PRTime now);
+    void reset();
     PRTime getAccum();
     PRTime getAccum(PRTime now);
 
@@ -120,6 +121,12 @@ void nsTimelineServiceTimer::stop(PRTime now)
         mAccum = accum;
     }
     PR_Unlock(mLock);
+}
+
+void nsTimelineServiceTimer::reset()
+{
+  mStart = 0;
+  mAccum = 0;
 }
 
 PRTime nsTimelineServiceTimer::getAccum()
@@ -380,6 +387,24 @@ PR_IMPLEMENT(nsresult) NS_TimelineMarkTimer(const char *timerName, const char *s
     return NS_OK;
 }
 
+PR_IMPLEMENT(nsresult) NS_TimelineResetTimer(const char *timerName)
+{
+    if (timers == NULL) {
+        return NS_ERROR_FAILURE;
+    }
+
+    PR_Lock(timerLock);
+    nsTimelineServiceTimer *timer
+        = (nsTimelineServiceTimer *)PL_HashTableLookup(timers, timerName);
+    PR_Unlock(timerLock);
+    if (timer == NULL) {
+        return NS_ERROR_FAILURE;
+    }
+
+    timer->reset();
+    return NS_OK;
+}
+
 PR_IMPLEMENT(nsresult) NS_TimelineIndent()
 {
     indent++;                   // Could have threading issues here.
@@ -443,6 +468,12 @@ NS_IMETHODIMP nsTimelineService::StopTimer(const char *timerName)
 NS_IMETHODIMP nsTimelineService::MarkTimer(const char *timerName)
 {
     return NS_TimelineMarkTimer(timerName);
+}
+
+/* void resetTimer (in string timerName); */
+NS_IMETHODIMP nsTimelineService::ResetTimer(const char *timerName)
+{
+    return NS_TimelineResetTimer(timerName);
 }
 
 /* void indent (); */
