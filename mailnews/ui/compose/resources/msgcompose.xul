@@ -162,7 +162,7 @@
  		<titledbutton src="resource:/res/mailnews/compose/save.gif" align="bottom" value="Save" onClick="SaveMessage()"/>
  		<titledbutton src="resource:/res/mailnews/compose/stop.gif" align="bottom" value="Stop" onClick="Stop()"/>
 	    <spring flex="100%"/>
-		<titledbutton src="resource:/res/throbber/anims00.gif" align="bottom" onclick="MsgHome('http://home.netscape.com/')"/>
+		<titledbutton src="resource:/res/throbber/anims00.gif" align="bottom" onclick="MsgHome('http://www.mozilla.org/')"/>
 	</toolbar>
 
 	<toolbar>

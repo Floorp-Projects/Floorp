@@ -263,7 +263,7 @@
 
           <spring flex="100%"/>
 
-	  <titledbutton src="resource:/res/throbber/anims00.gif" align="right" onclick="MsgHome('http://home.netscape.com/')"/>
+	  <titledbutton src="resource:/res/throbber/anims00.gif" align="right" onclick="MsgHome('http://www.mozilla.org/')"/>
       </toolbar>
     </toolbox>
 
