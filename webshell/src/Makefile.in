@@ -29,7 +29,6 @@ CPPSRCS		= \
 		dlldeps.cpp \
 		nsDLLFactory.cpp \
 		nsDocLoader.cpp \
-		nsThrobber.cpp \
 		nsWebShell.cpp \
 		$(NULL)
 
