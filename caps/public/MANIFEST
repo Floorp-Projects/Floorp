@@ -2,7 +2,6 @@ nsICapsManager.h
 nsICertPrincipal.h
 nsICodebasePrincipal.h
 nsICodeSourcePrincipal.h
-nsIPrincipal.h
 nsCapsPublicEnums.h
 nsICapsSecurityCallbacks.h
 nsICapsSecurityCallbacks.h
