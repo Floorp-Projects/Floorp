@@ -838,7 +838,14 @@ function BrowserHandleBackspace()
   }
   
   if (!typeAhead || !typeAhead.backOneChar()) {
-    BrowserBack();
+    switch (pref.getIntPref("browser.backspace_action")) {
+    case 0:
+      BrowserBack();
+      break;
+    case 1:
+      goDoCommand("cmd_scrollPageUp");
+      break;
+    }
   }
 }
 

@@ -128,6 +128,11 @@ pref("browser.bookmarks.confirm_sorting", true);
 //Internet Search
 pref("browser.search.defaultenginename", "chrome://communicator-region/locale/region.properties");
 
+// 0 goes back
+// 1 act like pgup
+// 2 and other values, nothing
+pref("browser.backspace_action", 0);
+
 pref("javascript.options.showInConsole",    true);
 
 pref("offline.startup_state",            0);
