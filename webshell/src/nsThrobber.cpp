@@ -276,7 +276,7 @@ HandleThrobberEvent(nsGUIEvent *aEvent)
         met = cx->GetFontMetrics();
         if (nsnull != met)
         {
-          met->GetWidth(str, w);
+          cx->GetWidth(str, w);
           met->GetHeight(h);
           cx->DrawString(str, 2, (bounds.width - w) >> 1, (bounds.height - h) >> 1, 0);
           NS_RELEASE(met);
@@ -498,8 +498,8 @@ nsThrobber::LoadThrobberImages(const nsString& aFileNameMask, PRInt32 aNumImages
   mTimer->Init(throb_timer_callback, this, 33);
   
   char * mask = aFileNameMask.ToNewCString();
-  for (PRInt32 cnt = 0; cnt < mNumImages; cnt++) {
-    
+  for (PRInt32 cnt = 0; cnt < mNumImages; cnt++)
+  {
     PR_snprintf(url, sizeof(url), mask, cnt);
     nscolor bgcolor = NS_RGB(0, 0, 0);
     mImages->InsertElementAt(mImageGroup->GetImage(url,
@@ -511,6 +511,10 @@ nsThrobber::LoadThrobberImages(const nsString& aFileNameMask, PRInt32 aNumImages
     // Note: the throbber observer was created with a ref count of 0
     // which is why we don't have to release a reference to it
   }
+
+  if (nsnull != mask)
+    delete mask;
+
   mWidget->Invalidate(PR_TRUE);
 
   return rv;
