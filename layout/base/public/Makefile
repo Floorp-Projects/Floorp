@@ -19,29 +19,30 @@ DEPTH = ../../..
 
 MODULE = raptor
 
-EXPORTS =			\
-	nslayout.h		\
-	nsIContent.h		\
-	nsIDocument.h		\
-	nsIDocumentContainer.h	\
-	nsIDocumentObserver.h	\
-	nsIFrame.h		\
+EXPORTS =				\
+	nslayout.h			\
+	nsIContent.h			\
+	nsIDocument.h			\
+	nsIDocumentContainer.h		\
+	nsIDocumentObserver.h		\
+	nsIFrame.h			\
 	nsIFrameReflow.h		\
-	nsIFrameImageLoader.h	\
-	nsIPresContext.h	\
-	nsIPresShell.h		\
-	nsIReflowCommand.h	\
-	nsISelection.h		\
-	nsISpaceManager.h	\
-	nsStyleCoord.h		\
-	nsStyleStruct.h		\
-	nsIStyleContext.h	\
-	nsIStyleRule.h		\
-	nsIStyleSet.h		\
-	nsIStyleSheet.h		\
-	nsITextContent.h	\
-	nsIStyleFrameConstruction.h \
-	nsStyleConsts.h \
+	nsIFrameImageLoader.h		\
+	nsIPresContext.h		\
+	nsIPresShell.h			\
+	nsIReflowCommand.h		\
+	nsISelection.h			\
+	nsISpaceManager.h		\
+	nsIStyleContext.h		\
+	nsIStyleFrameConstruction.h	\
+	nsIStyleRule.h			\
+	nsIStyleSet.h			\
+	nsIStyleSheet.h			\
+	nsITextContent.h		\
+	nsStyleConsts.h			\
+	nsStyleCoord.h			\
+	nsStyleStruct.h			\
+	nsTextFragment.h		\
         $(NULL)
 
 include $(DEPTH)/config/config.mk
