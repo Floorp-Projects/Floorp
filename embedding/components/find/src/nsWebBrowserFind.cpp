@@ -48,6 +48,8 @@
 #include "nsIFocusController.h"
 #include "nsISelectionController.h"
 #include "nsISelection.h"
+#include "nsIFrame.h"
+#include "nsITextControlFrame.h"
 #include "nsReadableUtils.h"
 #include "nsIDOMHTMLElement.h"
 #include "nsIDOMHTMLDocument.h"
@@ -346,22 +348,109 @@ NS_IMETHODIMP nsWebBrowserFind::SetMatchCase(PRBool aMatchCase)
     return NS_OK;
 }
 
-void nsWebBrowserFind::SetSelectionAndScroll(nsIDOMRange* aRange,
-                                             nsISelectionController *aSelCon)
+// Same as the tail-end of nsEventStateManager::FocusElementButNotDocument.
+// Used here because nsEventStateManager::MoveFocusToCaret() doesn't
+// support text input controls.
+static void
+FocusElementButNotDocument(nsIDocument* aDocument, nsIContent* aContent)
 {
+  nsCOMPtr<nsIFocusController> focusController;
+  nsCOMPtr<nsPIDOMWindow> ourWindow =
+    do_QueryInterface(aDocument->GetScriptGlobalObject());
+  if (ourWindow)
+    ourWindow->GetRootFocusController(getter_AddRefs(focusController));
+  if (!focusController)
+    return;
+
+  // Get previous focus
+  nsCOMPtr<nsIDOMElement> oldFocusedElement;
+  focusController->GetFocusedElement(getter_AddRefs(oldFocusedElement));
+  nsCOMPtr<nsIContent> oldFocusedContent =
+    do_QueryInterface(oldFocusedElement);
+
+  // Notify focus controller of new focus for this document
+  nsCOMPtr<nsIDOMElement> newFocusedElement(do_QueryInterface(aContent));
+  focusController->SetFocusedElement(newFocusedElement);
+
+  nsIPresShell* presShell = aDocument->GetShellAt(0);
+  nsCOMPtr<nsIPresContext> presContext;
+  presShell->GetPresContext(getter_AddRefs(presContext));
+  nsIEventStateManager* esm = presContext->EventStateManager();
+
+  // Temporarily set esm::mCurrentFocus so that esm::GetContentState() tells 
+  // layout system to show focus on this element. 
+  esm->SetFocusedContent(aContent);  // Reset back to null at the end.
+  aDocument->BeginUpdate(UPDATE_CONTENT_STATE);
+  aDocument->ContentStatesChanged(oldFocusedContent, aContent, 
+                                  NS_EVENT_STATE_FOCUS);
+  aDocument->EndUpdate(UPDATE_CONTENT_STATE);
+
+  // Reset esm::mCurrentFocus = nsnull for this doc, so when this document
+  // does get focus next time via preHandleEvent() NS_GOTFOCUS,
+  // the old document gets blurred
+  esm->SetFocusedContent(nsnull);
+}
+
+void nsWebBrowserFind::SetSelectionAndScroll(nsIDOMWindow* aWindow,
+                                             nsIDOMRange*  aRange)
+{
+  nsCOMPtr<nsIDOMDocument> domDoc;    
+  aWindow->GetDocument(getter_AddRefs(domDoc));
+  if (!domDoc) return;
+
+  nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
+  nsIPresShell* presShell = doc->GetShellAt(0);
+  if (!presShell) return;
+
+  // since the match could be an anonymous textnode inside a
+  // <textarea> or text <input>, we need to get the outer frame
+  nsIFrame *frame = nsnull;
+  nsITextControlFrame *tcFrame = nsnull;
+  nsCOMPtr<nsIDOMNode> node;
+  aRange->GetStartContainer(getter_AddRefs(node));
+  nsCOMPtr<nsIContent> content(do_QueryInterface(node));
+  for ( ; content; content = content->GetParent()) {
+    if (!content->IsNativeAnonymous()) {
+      presShell->GetPrimaryFrameFor(content, &frame);
+      if (!frame)
+        return;
+      CallQueryInterface(frame, &tcFrame);
+
+      break;
+    }
+  }
+
   nsCOMPtr<nsISelection> selection;
-  if (!aSelCon) return;
+  nsCOMPtr<nsISelectionController> selCon;
+  if (!tcFrame) {
+    selCon = do_QueryInterface(presShell);
+  }
+  else {
+    tcFrame->GetSelectionContr(getter_AddRefs(selCon));
+  }
 
-  aSelCon->GetSelection(nsISelectionController::SELECTION_NORMAL,
-                        getter_AddRefs(selection));
-  if (!selection) return;
-  selection->RemoveAllRanges();
-  selection->AddRange(aRange);
+  selCon->SetDisplaySelection(nsISelectionController::SELECTION_ON);
+  selCon->GetSelection(nsISelectionController::SELECTION_NORMAL,
+    getter_AddRefs(selection));
+  if (selection) {
+    selection->RemoveAllRanges();
+    selection->AddRange(aRange);
+    // Scroll if necessary to make the selection visible:
+    selCon->ScrollSelectionIntoView
+      (nsISelectionController::SELECTION_NORMAL,
+       nsISelectionController::SELECTION_FOCUS_REGION, PR_TRUE);
 
-  // Scroll if necessary to make the selection visible:
-  aSelCon->ScrollSelectionIntoView
-    (nsISelectionController::SELECTION_NORMAL,
-     nsISelectionController::SELECTION_FOCUS_REGION, PR_TRUE);
+    if (tcFrame) {
+      FocusElementButNotDocument(doc, content);
+    }
+    else {
+      nsCOMPtr<nsIPresContext> presContext;
+      presShell->GetPresContext(getter_AddRefs(presContext));
+      PRBool isSelectionWithFocus;
+      presContext->EventStateManager()->
+        MoveFocusToCaret(PR_TRUE, &isSelectionWithFocus);
+    }
+  }
 }
 
 // Adapted from nsTextServicesDocument::GetDocumentContentRootNode
@@ -435,18 +524,14 @@ nsWebBrowserFind::GetSearchLimits(nsIDOMRange* aSearchRange,
                                   nsIDOMRange* aStartPt,
                                   nsIDOMRange* aEndPt,
                                   nsIDOMDocument* aDoc,
-                                  nsISelectionController* aSelCon,
+                                  nsISelection* aSel,
                                   PRBool aWrap)
 {
-    NS_ENSURE_ARG_POINTER(aSelCon);
-    nsCOMPtr<nsISelection> selection;
-    aSelCon->GetSelection(nsISelectionController::SELECTION_NORMAL,
-                          getter_AddRefs(selection));
-    if (!selection) return NS_ERROR_BASE;
+    NS_ENSURE_ARG_POINTER(aSel);
 
     // There is a selection.
     PRInt32 count = -1;
-    nsresult rv = selection->GetRangeCount(&count);
+    nsresult rv = aSel->GetRangeCount(&count);
     if (count < 1)
         return SetRangeAroundDocument(aSearchRange, aStartPt, aEndPt, aDoc);
 
@@ -470,7 +555,7 @@ nsWebBrowserFind::GetSearchLimits(nsIDOMRange* aSearchRange,
     {
         // This isn't quite right, since the selection's ranges aren't
         // necessarily in order; but they usually will be.
-        selection->GetRangeAt(count-1, getter_AddRefs(range));
+        aSel->GetRangeAt(count-1, getter_AddRefs(range));
         if (!range) return NS_ERROR_UNEXPECTED;
         range->GetEndContainer(getter_AddRefs(node));
         if (!node) return NS_ERROR_UNEXPECTED;
@@ -486,7 +571,7 @@ nsWebBrowserFind::GetSearchLimits(nsIDOMRange* aSearchRange,
     // Backward, not wrapping: DocStart to SelStart
     else if (mFindBackwards && !aWrap)
     {
-        selection->GetRangeAt(0, getter_AddRefs(range));
+        aSel->GetRangeAt(0, getter_AddRefs(range));
         if (!range) return NS_ERROR_UNEXPECTED;
         range->GetStartContainer(getter_AddRefs(node));
         if (!node) return NS_ERROR_UNEXPECTED;
@@ -502,7 +587,7 @@ nsWebBrowserFind::GetSearchLimits(nsIDOMRange* aSearchRange,
     // Forward, wrapping: DocStart to SelEnd
     else if (!mFindBackwards && aWrap)
     {
-        selection->GetRangeAt(count-1, getter_AddRefs(range));
+        aSel->GetRangeAt(count-1, getter_AddRefs(range));
         if (!range) return NS_ERROR_UNEXPECTED;
         range->GetEndContainer(getter_AddRefs(node));
         if (!node) return NS_ERROR_UNEXPECTED;
@@ -518,7 +603,7 @@ nsWebBrowserFind::GetSearchLimits(nsIDOMRange* aSearchRange,
     // Backward, wrapping: SelStart to DocEnd
     else if (mFindBackwards && aWrap)
     {
-        selection->GetRangeAt(0, getter_AddRefs(range));
+        aSel->GetRangeAt(0, getter_AddRefs(range));
         if (!range) return NS_ERROR_UNEXPECTED;
         range->GetStartContainer(getter_AddRefs(node));
         if (!node) return NS_ERROR_UNEXPECTED;
@@ -614,26 +699,6 @@ NS_IMETHODIMP nsWebBrowserFind::SetSearchParentFrames(PRBool aSearchParentFrames
     return NS_OK;
 }
 
-void nsWebBrowserFind::MoveFocusToCaret(nsIDOMWindow *aWindow)
-{
-  nsIDocShell *docShell = GetDocShellFromWindow(aWindow);
-  if (!docShell)
-    return;
-  nsCOMPtr<nsIPresShell> presShell;
-  docShell->GetPresShell(getter_AddRefs(presShell));
-  if (!presShell) 
-    return;
-
-  nsCOMPtr<nsIPresContext> presContext;
-  presShell->GetPresContext(getter_AddRefs(presContext));
-  if (!presContext) 
-    return;
-
-  PRBool isSelectionWithFocus;
-  presContext->EventStateManager()->MoveFocusToCaret(PR_TRUE,
-                                                     &isSelectionWithFocus);
-}
-
 /*
     This method handles finding in a single window (aka frame).
 
@@ -691,8 +756,9 @@ nsresult nsWebBrowserFind::SearchInFrame(nsIDOMWindow* aWindow,
     // XXX Make and set a line breaker here, once that's implemented.
     (void) mFind->SetWordBreaker(0);
 
-    nsCOMPtr<nsISelectionController> selCon (do_QueryInterface(presShell));
-    NS_ENSURE_ARG_POINTER(selCon);
+    nsCOMPtr<nsISelection> sel;
+    GetFrameSelection(aWindow, getter_AddRefs(sel));
+    NS_ENSURE_ARG_POINTER(sel);
 
     nsCOMPtr<nsIDOMRange> searchRange (do_CreateInstance(kRangeCID));
     NS_ENSURE_ARG_POINTER(searchRange);
@@ -705,13 +771,13 @@ nsresult nsWebBrowserFind::SearchInFrame(nsIDOMWindow* aWindow,
 
     // If !aWrapping, search from selection to end
     if (!aWrapping)
-        rv = GetSearchLimits(searchRange, startPt, endPt, domDoc, selCon,
+        rv = GetSearchLimits(searchRange, startPt, endPt, domDoc, sel,
                              PR_FALSE);
 
     // If aWrapping, search the part of the starting frame
     // up to the point where we left off.
     else
-        rv = GetSearchLimits(searchRange, startPt, endPt, domDoc, selCon,
+        rv = GetSearchLimits(searchRange, startPt, endPt, domDoc, sel,
                              PR_TRUE);
 
     NS_ENSURE_SUCCESS(rv, rv);
@@ -722,11 +788,9 @@ nsresult nsWebBrowserFind::SearchInFrame(nsIDOMWindow* aWindow,
     if (NS_SUCCEEDED(rv) && foundRange)
     {
         *aDidFind = PR_TRUE;
-        SetSelectionAndScroll(foundRange, selCon);
+        sel->RemoveAllRanges();
+        SetSelectionAndScroll(aWindow, foundRange);
     }
-
-    if (*aDidFind) 
-      MoveFocusToCaret(aWindow);
 
     return rv;
 }
@@ -748,11 +812,58 @@ nsresult nsWebBrowserFind::OnEndSearchFrame(nsIDOMWindow *aWindow)
     return NS_OK;
 }
 
+void
+nsWebBrowserFind::GetFrameSelection(nsIDOMWindow* aWindow, 
+                                    nsISelection** aSel)
+{
+  *aSel = nsnull;
+
+  nsCOMPtr<nsIDOMDocument> domDoc;    
+  aWindow->GetDocument(getter_AddRefs(domDoc));
+  if (!domDoc) return;
+
+  nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
+  nsIPresShell* presShell = doc->GetShellAt(0);
+  if (!presShell) return;
+
+  // text input controls have their independent selection controllers
+  // that we must use when they have focus.
+
+  nsCOMPtr<nsIPresContext> presContext;
+  presShell->GetPresContext(getter_AddRefs(presContext));
+
+  nsIFrame *frame = nsnull;
+  presContext->EventStateManager()->GetFocusedFrame(&frame);
+  if (!frame) {
+    nsCOMPtr<nsPIDOMWindow> ourWindow = 
+      do_QueryInterface(doc->GetScriptGlobalObject());
+    if (ourWindow) {
+      nsCOMPtr<nsIFocusController> focusController;
+      ourWindow->GetRootFocusController(getter_AddRefs(focusController));
+      if (focusController) {
+        nsCOMPtr<nsIDOMElement> focusedElement;
+        focusController->GetFocusedElement(getter_AddRefs(focusedElement));
+        nsCOMPtr<nsIContent> content(do_QueryInterface(focusedElement));
+        presShell->GetPrimaryFrameFor(content, &frame);
+      }
+    }
+  }
+
+  nsCOMPtr<nsISelectionController> selCon;
+  if (!frame) {
+    selCon = do_QueryInterface(presShell);
+  }
+  else {
+    frame->GetSelectionController(presContext, getter_AddRefs(selCon));
+  }
+  selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, aSel);
+}
+
 nsresult nsWebBrowserFind::ClearFrameSelection(nsIDOMWindow *aWindow)
 {
     NS_ENSURE_ARG(aWindow);
     nsCOMPtr<nsISelection> selection;
-    aWindow->GetSelection(getter_AddRefs(selection));
+    GetFrameSelection(aWindow, getter_AddRefs(selection));
     if (selection)
         selection->RemoveAllRanges();
     

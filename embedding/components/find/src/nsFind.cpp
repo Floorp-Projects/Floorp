@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Akkana Peck <akkana@netscape.com>
+ *   Roger B. Sidje <rbs@maths.uq.edu.au> (added find in <textarea> & text <input>)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -50,6 +51,10 @@
 #include "nsISelectionController.h"
 #include "nsIPresShell.h"
 #include "nsIFrame.h"
+#include "nsITextControlFrame.h"
+#include "nsIFormControl.h"
+#include "nsIEditor.h"
+#include "nsIPlaintextEditor.h"
 #include "nsIDocument.h"
 #include "nsTextFragment.h"
 #include "nsString.h"
@@ -67,6 +72,379 @@ static NS_DEFINE_CID(kCContentIteratorCID, NS_CONTENTITERATOR_CID);
 static NS_DEFINE_CID(kCPreContentIteratorCID, NS_PRECONTENTITERATOR_CID);
 static NS_DEFINE_CID(kParserServiceCID, NS_PARSERSERVICE_CID);
 static NS_DEFINE_IID(kRangeCID, NS_RANGE_CID);
+
+// -----------------------------------------------------------------------
+// nsFindContentIterator is a special iterator that also goes through
+// any existing <textarea>'s or text <input>'s editor to lookup the
+// anonymous DOM content there.
+//
+// Details:
+// 1) We use two iterators: The "outer-iterator" goes through the
+// normal DOM. The "inner-iterator" goes through the anonymous DOM
+// inside the editor.
+//
+// 2) [MaybeSetupInnerIterator] As soon as the outer-iterator's current
+// node is changed, a check is made to see if the node is a <textarea> or
+// a text <input> node. If so, an inner-iterator is created to lookup the
+// anynomous contents of the editor underneath the text control.
+//
+// 3) When the inner-iterator is created, we position the outer-iterator
+// 'after' (or 'before' in backward search) the text control to avoid
+// revisiting that control.
+//
+// 4) As a consequence of searching through text controls, we can be
+// called via FindNext with the current selection inside a <textarea>
+// or a text <input>. This means that we can be given an initial search
+// range that stretches across the anonymous DOM and the normal DOM. To
+// cater for this situation, we split the anonymous part into the 
+// inner-iterator and then reposition the outer-iterator outside.
+//
+// 5) The implementation assumes that First() and Next() are only called
+// in find-forward mode, while Last() and Prev() are used in find-backward.
+
+class nsFindContentIterator : public nsIContentIterator
+{
+public:
+  nsFindContentIterator(PRBool aFindBackward)
+    : mOuterIterator(nsnull)
+    , mInnerIterator(nsnull)
+    , mRange(nsnull)
+    , mStartOuterNode(nsnull)
+    , mEndOuterNode(nsnull)
+    , mFindBackward(aFindBackward)
+  {
+  }
+
+  virtual ~nsFindContentIterator()
+  {
+  }
+
+  // nsISupports
+  NS_DECL_ISUPPORTS
+
+  // nsIContentIterator
+  virtual nsresult Init(nsIContent* aRoot)
+  {
+    NS_NOTREACHED("internal error");
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+  virtual nsresult Init(nsIDOMRange* aRange);
+  virtual void First();
+  virtual void Last();
+  virtual void Next();
+  virtual void Prev();
+  virtual nsIContent* GetCurrentNode();
+  virtual PRBool IsDone();
+  virtual nsresult PositionAt(nsIContent* aCurNode);
+
+private:
+  nsCOMPtr<nsIContentIterator> mOuterIterator;
+  nsCOMPtr<nsIContentIterator> mInnerIterator;
+  nsCOMPtr<nsIDOMRange> mRange;
+  nsCOMPtr<nsIDOMNode> mStartOuterNode;
+  nsCOMPtr<nsIDOMNode> mEndOuterNode;
+  PRBool mFindBackward;
+
+  void Reset();
+  void MaybeSetupInnerIterator();
+  void SetupInnerIterator(nsIContent* aContent);
+};
+
+NS_IMPL_ISUPPORTS1(nsFindContentIterator, nsIContentIterator)
+
+nsresult
+nsFindContentIterator::Init(nsIDOMRange* aRange)
+{
+  if (mFindBackward) {
+    // Use post-order in the reverse case, so we get parents
+    // before children in case we want to prevent descending
+    // into a node.
+    mOuterIterator = do_CreateInstance(kCContentIteratorCID);
+  }
+  else {
+    // Use pre-order in the forward case, so we get parents
+    // before children in case we want to prevent descending
+    // into a node.
+    mOuterIterator = do_CreateInstance(kCPreContentIteratorCID);
+  }
+  NS_ENSURE_ARG_POINTER(mOuterIterator);
+
+  // mRange is the search range that we will examine
+  return aRange->CloneRange(getter_AddRefs(mRange));
+}
+
+void
+nsFindContentIterator::First()
+{
+  Reset();
+  mOuterIterator->First();
+  if (mInnerIterator) {
+    mInnerIterator->First();
+  }
+}
+
+void
+nsFindContentIterator::Last()
+{
+  Reset();
+  mOuterIterator->Last();
+  if (mInnerIterator) {
+    mInnerIterator->Last();
+  }
+}
+
+void
+nsFindContentIterator::Next()
+{
+  if (mInnerIterator) {
+    mInnerIterator->Next();
+    if (!mInnerIterator->IsDone())
+      return;
+
+    // by construction, mOuterIterator is already on the next node
+  }
+  else {
+    mOuterIterator->Next();
+  }
+
+  MaybeSetupInnerIterator();  
+  if (mInnerIterator) {
+    mInnerIterator->First();
+    // finish setup: position mOuterIterator on the actual "next"
+    // node (this completes its re-init, @see SetupInnerIterator)
+    mOuterIterator->First();
+  }
+}
+
+void
+nsFindContentIterator::Prev()
+{
+  if (mInnerIterator) {
+    mInnerIterator->Prev();
+    if (!mInnerIterator->IsDone())
+      return;
+
+    // by construction, mOuterIterator is already on the previous node
+  }
+  else {
+    mOuterIterator->Prev();
+  }
+
+  MaybeSetupInnerIterator();
+  if (mInnerIterator) {
+    mInnerIterator->Last();
+    // finish setup: position mOuterIterator on the actual "previous"
+    // node (this completes its re-init, @see SetupInnerIterator)
+    mOuterIterator->Last();
+  }
+}
+
+nsIContent*
+nsFindContentIterator::GetCurrentNode()
+{
+  if (mInnerIterator && !mInnerIterator->IsDone()) {
+    return mInnerIterator->GetCurrentNode();
+  }
+  return mOuterIterator->GetCurrentNode();
+}
+
+PRBool
+nsFindContentIterator::IsDone() {
+  if (mInnerIterator && !mInnerIterator->IsDone()) {
+    return PR_FALSE;
+  }
+  return mOuterIterator->IsDone();
+}
+
+nsresult
+nsFindContentIterator::PositionAt(nsIContent* aCurNode)
+{
+  nsresult rv = mOuterIterator->PositionAt(aCurNode);
+  if (NS_SUCCEEDED(rv)) {
+    MaybeSetupInnerIterator();
+    if (mInnerIterator) {
+      // same rationale as in Next() and Prev() above
+      if (!mFindForward) {
+        mInnerIterator->First();
+        mOuterIterator->First();
+      }
+      else {
+        mInnerIterator->Last();
+        mOuterIterator->Last();
+      }
+    }
+  }
+  else if (mInnerIterator) {
+    rv = mInnerIterator->PositionAt(aCurNode);
+  }
+  return rv;
+}
+
+void
+nsFindContentIterator::Reset()
+{
+  mInnerIterator = nsnull;
+  mStartOuterNode = nsnull;
+  mEndOuterNode = nsnull;
+
+  // As a consequence of searching through text controls, we may have been
+  // initialized with a selection inside a <textarea> or a text <input>.
+
+  // see if the start node is an anonymous text node inside a text control
+  nsCOMPtr<nsIDOMNode> startNode;
+  mRange->GetStartContainer(getter_AddRefs(startNode));
+  nsCOMPtr<nsIContent> startContent(do_QueryInterface(startNode));
+  for ( ; startContent; startContent = startContent->GetParent()) {
+    if (!startContent->IsNativeAnonymous()) {
+      mStartOuterNode = do_QueryInterface(startContent);
+      break;
+    }
+  }
+
+  // see if the end node is an anonymous text node inside a text control
+  nsCOMPtr<nsIDOMNode> endNode;
+  mRange->GetEndContainer(getter_AddRefs(endNode));
+  nsCOMPtr<nsIContent> endContent(do_QueryInterface(endNode));
+  for ( ; endContent; endContent = endContent->GetParent()) {
+    if (!endContent->IsNativeAnonymous()) {
+      mEndOuterNode = do_QueryInterface(endContent);
+      break;
+    }
+  }
+
+  mOuterIterator->Init(mRange);
+
+  if (!mFindBackward) {
+    if (mStartOuterNode != startNode) {
+      // the start node was an anonymous text node
+      SetupInnerIterator(startContent);
+    }
+  }
+  else if (mEndOuterNode != endNode) {
+    // the end node was an anonymous text node
+    SetupInnerIterator(endContent);
+  }
+}
+
+void
+nsFindContentIterator::MaybeSetupInnerIterator()
+{
+  mInnerIterator = nsnull;
+
+  nsIContent* content = mOuterIterator->GetCurrentNode();
+  if (!content || !content->IsContentOfType(nsIContent::eHTML_FORM_CONTROL))
+    return;
+
+  nsCOMPtr<nsIFormControl> formControl(do_QueryInterface(content));
+  PRInt32 controlType = formControl->GetType();
+  if (controlType != NS_FORM_TEXTAREA && 
+      controlType != NS_FORM_INPUT_TEXT)
+    return;
+
+  SetupInnerIterator(content);
+}
+
+void
+nsFindContentIterator::SetupInnerIterator(nsIContent* aContent)
+{
+  NS_ASSERTION(aContent && !aContent->IsNativeAnonymous(), "invalid call");
+
+  nsIDocument* doc = aContent->GetDocument();
+  nsIPresShell* shell = doc ? doc->GetShellAt(0) : nsnull;
+  if (!shell)
+    return;
+
+  nsIFrame* frame = nsnull;
+  shell->GetPrimaryFrameFor(aContent, &frame);
+  if (!frame)
+    return;
+
+  nsITextControlFrame* tcFrame = nsnull;
+  CallQueryInterface(frame, &tcFrame);
+  if (!tcFrame)
+    return;
+
+  nsCOMPtr<nsIEditor> editor;
+  tcFrame->GetEditor(getter_AddRefs(editor));
+  if (!editor)
+    return;
+
+  // don't mess with disabled input fields
+  PRUint32 editorFlags = 0;
+  editor->GetFlags(&editorFlags);
+  if (editorFlags & nsIPlaintextEditor::eEditorDisabledMask)
+    return;
+
+  nsCOMPtr<nsIDOMElement> rootElement;
+  editor->GetRootElement(getter_AddRefs(rootElement));
+  nsCOMPtr<nsIContent> rootContent(do_QueryInterface(rootElement));
+
+  // now create the inner-iterator
+  mInnerIterator = do_CreateInstance(kCPreContentIteratorCID);
+
+  if (mInnerIterator) {
+    nsCOMPtr<nsIDOMNode> node(do_QueryInterface(rootContent));
+    nsCOMPtr<nsIDOMRange> range(do_CreateInstance(kRangeCID));
+    range->SelectNodeContents(node);
+
+    // fix up the inner bounds, we may have to only lookup a portion
+    // of the text control if the current node is a boundary point
+    PRInt32 offset;
+    nsCOMPtr<nsIDOMNode> outerNode(do_QueryInterface(aContent));
+    if (outerNode == mStartOuterNode) {
+      mRange->GetStartOffset(&offset);
+      mRange->GetStartContainer(getter_AddRefs(node));
+      range->SetStart(node, offset);
+    }
+    if (outerNode == mEndOuterNode) {
+      mRange->GetEndOffset(&offset);
+      mRange->GetEndContainer(getter_AddRefs(node));
+      range->SetEnd(node, offset);
+    }
+    // Note: we just init here. We do First() or Last() later. 
+    mInnerIterator->Init(range);
+
+    // make sure to place the outer-iterator outside
+    // the text control so that we don't go there again.
+    nsresult res;
+    mRange->CloneRange(getter_AddRefs(range));
+    if (!mFindBackward) { // find forward
+      // cut the outer-iterator after the current node
+      res = range->SetStartAfter(outerNode);
+    }
+    else { // find backward
+      // cut the outer-iterator before the current node
+      res = range->SetEndBefore(outerNode);
+    }
+    if (NS_FAILED(res)) {
+      // we are done with the outer-iterator, the 
+      // inner-iterator will traverse what we want
+      range->Collapse(PR_TRUE);
+    }
+    // Note: we just re-init here, using the segment of mRange that is
+    // yet to be visited. Thus when we later do mOuterIterator->First() 
+    // [or mOuterIterator->Last()], we will effectively be on the next
+    // node [or the previous node] _with respect to_ mRange. 
+    mOuterIterator->Init(range);
+  }
+}
+
+nsresult
+NS_NewFindContentIterator(PRBool aFindBackward,
+                          nsIContentIterator** aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+  if (!aResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  nsFindContentIterator* it = new nsFindContentIterator(aFindBackward);
+  if (!it) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  return it->QueryInterface(NS_GET_IID(nsIContentIterator), (void **)aResult);
+}
+// --------------------------------------------------------------------
 
 // Sure would be nice if we could just get these from somewhere else!
 PRInt32 nsFind::sInstanceCount = 0;
@@ -166,27 +544,7 @@ nsFind::InitIterator(nsIDOMRange* aSearchRange)
   nsresult rv;
   if (!mIterator)
   {
-    if (mFindBackward) {
-      // Use post-order in the reverse case, so we get parents
-      // before children in case we want to prevent descending
-      // into a node.
-
-      rv = nsComponentManager::CreateInstance(kCContentIteratorCID,
-                                              nsnull,
-                                              NS_GET_IID(nsIContentIterator),
-                                              getter_AddRefs(mIterator));
-    }
-    else {
-      // Use pre-order in the forward case, so we get parents
-      // before children in case we want to prevent descending
-      // into a node.
-
-      rv = nsComponentManager::CreateInstance(kCPreContentIteratorCID,
-                                              nsnull,
-                                              NS_GET_IID(nsIContentIterator),
-                                              getter_AddRefs(mIterator));
-    }
-
+    rv = NS_NewFindContentIterator(mFindBackward, getter_AddRefs(mIterator));
     NS_ENSURE_SUCCESS(rv, rv);
     NS_ENSURE_ARG_POINTER(mIterator);
   }
@@ -197,7 +555,8 @@ nsFind::InitIterator(nsIDOMRange* aSearchRange)
   printf("InitIterator search range:\n"); DumpRange(aSearchRange);
 #endif
 
-  mIterator->Init(aSearchRange);
+  rv = mIterator->Init(aSearchRange);
+  NS_ENSURE_SUCCESS(rv, rv);
   if (mFindBackward) {
     mIterator->Last();
   }
@@ -503,8 +862,7 @@ PRBool nsFind::SkipNode(nsIContent* aContent)
            (atom == sScriptAtom ||
             atom == sCommentAtom ||
             atom == sNoframesAtom ||
-            atom == sSelectAtom ||
-            atom == sTextareaAtom)));
+            atom == sSelectAtom)));
 
 #else /* HAVE_BIDI_ITERATOR */
   // Temporary: eventually we will have an iterator to do this,
@@ -521,11 +879,11 @@ PRBool nsFind::SkipNode(nsIContent* aContent)
         (content->IsContentOfType(nsIContent::eHTML) &&
          (atom == sScriptAtom ||
           atom == sNoframesAtom ||
-          atom == sSelectAtom ||
-          atom == sTextareaAtom)))
+          atom == sSelectAtom)))
     {
 #ifdef DEBUG_FIND
       printf("Skipping node: ");
+      nsCOMPtr<nsIDOMNode> node (do_QueryInterface(content));
       DumpNode(node);
 #endif
 

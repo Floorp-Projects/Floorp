@@ -39,7 +39,7 @@
 #define NS_WEB_BROWSER_FIND_CID \
  {0x57cf9383, 0x3405, 0x11d5, {0xbe, 0x5b, 0xaa, 0x20, 0xfa, 0x2c, 0xf3, 0x7c}}
 
-class nsISelectionController;
+class nsISelection;
 class nsIDOMWindow;
 
 class nsIDocShell;
@@ -70,28 +70,28 @@ protected:
     PRBool      CanFindNext()
                 { return mSearchString.Length() != 0; }
 
-    void        MoveFocusToCaret(nsIDOMWindow *aWindow);
-
     nsresult    SearchInFrame(nsIDOMWindow* aWindow, PRBool aWrapping,
                               PRBool* didFind);
 
     nsresult    OnStartSearchFrame(nsIDOMWindow *aWindow);
     nsresult    OnEndSearchFrame(nsIDOMWindow *aWindow);
 
+    void        GetFrameSelection(nsIDOMWindow* aWindow, nsISelection** aSel);
     nsresult    ClearFrameSelection(nsIDOMWindow *aWindow);
     
     nsresult    OnFind(nsIDOMWindow *aFoundWindow);
     
     nsIDocShell *GetDocShellFromWindow(nsIDOMWindow *inWindow);
 
-    void        SetSelectionAndScroll(nsIDOMRange* aRange,
-                                      nsISelectionController* aSelCon);
+    void        SetSelectionAndScroll(nsIDOMWindow* aWindow, 
+                                      nsIDOMRange* aRange);
+
     nsresult    GetRootNode(nsIDOMDocument* aDomDoc, nsIDOMNode** aNode);
     nsresult    GetSearchLimits(nsIDOMRange* aRange,
                                 nsIDOMRange* aStartPt,
                                 nsIDOMRange* aEndPt,
                                 nsIDOMDocument* aDoc,
-                                nsISelectionController* aSelCon,
+                                nsISelection* aSel,
                                 PRBool aWrap);
     nsresult    SetRangeAroundDocument(nsIDOMRange* aSearchRange,
                                        nsIDOMRange* aStartPoint,
