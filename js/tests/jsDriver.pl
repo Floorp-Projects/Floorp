@@ -606,11 +606,6 @@ sub get_xpc_engine_command {
         $m5_home .= "/";
     }
 
-    if (($os_type ne "MAC") && !(-x &xp_path($m5_home . "xpcshell"))) {
-        # mac doesn't seem to deal with -x correctly
-        die (&xp_path($m5_home . "xpcshell") . " is not a valid executable on this system.\n");
-    }
-
     return &xp_path($m5_home . "xpcshell");
 
 }
