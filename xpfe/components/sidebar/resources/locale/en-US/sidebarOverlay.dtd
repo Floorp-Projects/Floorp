@@ -23,7 +23,8 @@
 <!ENTITY sidebar.reload.label        "Reload">
 <!ENTITY sidebar.picker.label        "Add">
 <!ENTITY sidebar.customize.label     "Customize Sidebar...">
-<!ENTITY sidebarCmd.label            "Sidebar">
+<!ENTITY sidebarCmd.label            "My Sidebar">
+<!ENTITY sidebarCmd.accesskey        "m">
 <!ENTITY sidebar.loading.label       "Loading...">
 
 <!ENTITY sidebar.no-panels.state     "My Sidebar is currently empty.">
