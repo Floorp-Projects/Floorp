@@ -98,13 +98,16 @@ morkTable::morkTable(morkEnv* ev, /*i*/
 , mTable_Store( 0 )
 , mTable_RowSpace( 0 )
 , mTable_MetaRow( 0 )
-, mTable_Id( inTid )
+
 , mTable_RowMap(ev, morkUsage::kMember, (nsIMdbHeap*) 0, ioSlotHeap,
   morkTable_kStartRowMapSlotCount)
 , mTable_RowArray(ev, morkUsage::kMember, (nsIMdbHeap*) 0,
   morkTable_kStartRowArraySize, ioSlotHeap)
+
+, mTable_Id( inTid )
 , mTable_Kind( inKind )
 , mTable_MustBeUnique( inMustBeUnique )
+, mTable_CellUses( 0 )
 {
   if ( ev->Good() )
   {
