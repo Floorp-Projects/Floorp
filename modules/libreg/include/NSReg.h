@@ -1,19 +1,25 @@
 /* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
- * Version 1.0 (the "NPL"); you may not use this file except in
- * compliance with the NPL.  You may obtain a copy of the NPL at
+ * Version 1.0 (the "License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
  * http://www.mozilla.org/NPL/
  *
- * Software distributed under the NPL is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
  * for the specific language governing rights and limitations under the
- * NPL.
+ * License.
  *
- * The Initial Developer of this code under the NPL is Netscape
- * Communications Corporation.  Portions created by Netscape are
+ * The Original Code is Mozilla Communicator client code, 
+ * released March 31, 1998. 
+ *
+ * The Initial Developer of the Original Code is Netscape Communications 
+ * Corporation.  Portions created by Netscape are 
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
+ *
+ * Contributors:
+ *     Daniel Veditz <dveditz@netscape.com>
  */
 /* NSReg.h
  */
@@ -115,18 +121,54 @@ typedef struct _reginfo
 #endif
 
 XP_BEGIN_PROTOS
+
+
+
 /* ---------------------------------------------------------------------
  * Registry API -- General
  * ---------------------------------------------------------------------
  */
 
+/* ---------------------------------------------------------------------
+ * NR_RegOpen - Open a netscape XP registry
+ *
+ * Parameters:
+ *    filename   - registry file to open. NULL or ""  opens the standard
+ *                 local registry.
+ *    hReg       - OUT: handle to opened registry
+ *
+ * Output:
+ * ---------------------------------------------------------------------
+ */
 VR_INTERFACE(REGERR) NR_RegOpen(
          char *filename,   /* reg. file to open (NULL == standard registry) */
          HREG *hReg        /* OUT: handle to opened registry */
        );
 
+
+/* ---------------------------------------------------------------------
+ * NR_RegClose - Close a netscape XP registry
+ *
+ * Parameters:
+ *    hReg     - handle of open registry to be closed.
+ *
+ * After calling this routine the handle is no longer valid
+ * ---------------------------------------------------------------------
+ */
 VR_INTERFACE(REGERR) NR_RegClose(
          HREG hReg         /* handle of open registry to close */
+       );
+
+
+/* ---------------------------------------------------------------------
+ * NR_RegIsWritable - Check read/write status of open registry
+ *
+ * Parameters:
+ *    hReg     - handle of open registry to query
+ * ---------------------------------------------------------------------
+ */
+VR_INTERFACE(REGERR) NR_RegIsWritable(
+         HREG hReg         /* handle of open registry to query */
        );
 
 VR_INTERFACE(REGERR) NR_RegPack(
@@ -135,19 +177,55 @@ VR_INTERFACE(REGERR) NR_RegPack(
          nr_RegPackCallbackFunc fn
        );
 
+
+/* ---------------------------------------------------------------------
+ * NR_RegSetUsername - Set the current username
+ * 
+ * If the current user profile name is not set then trying to use
+ * HKEY_CURRENT_USER will result in an error.
+ *
+ * Parameters:
+ *     name     - name of the current user
+ *
+ * Output:
+ * ---------------------------------------------------------------------
+ */
+VR_INTERFACE(REGERR) NR_RegSetUsername(
+         const char *name  /* name of current user */
+       );
+
+/* ---------------------------------------------------------------------
+ * DO NOT USE -- Will be removed 
+ * ---------------------------------------------------------------------
+ */
 VR_INTERFACE(REGERR) NR_RegGetUsername(
          char **name        /* on return, an alloc'ed copy of the current user name */
        );
 
-VR_INTERFACE(REGERR) NR_RegSetUsername(
-         const char *name  /* name of current user */
-       );
+
+
+
+
 
 /* ---------------------------------------------------------------------
  * Registry API -- Key Management functions
  * ---------------------------------------------------------------------
  */
 
+/* ---------------------------------------------------------------------
+ * NR_RegAddKey - Add a key node to the registry
+ *
+ * Can also be used to find an existing node for convenience.
+ *
+ * Parameters:
+ *    hReg     - handle of open registry
+ *    key      - registry key obtained from NR_RegGetKey(),
+ *               or one of the standard top-level keys
+ *    path     - relative path of key to be added.  Intermediate
+ *               nodes will be added if necessary.
+ *    newkey   - If not null returns RKEY of new or found node
+ * ---------------------------------------------------------------------
+ */
 VR_INTERFACE(REGERR) NR_RegAddKey(
          HREG hReg,        /* handle of open registry */
          RKEY key,         /* root key */
@@ -155,6 +233,22 @@ VR_INTERFACE(REGERR) NR_RegAddKey(
          RKEY *newKey      /* if not null returns newly created key */
        );
 
+
+/* ---------------------------------------------------------------------
+ * NR_RegAddKeyRaw - Add a key node to the registry
+ *
+ *      This routine is different from NR_RegAddKey() in that it takes 
+ *      a keyname rather than a path.
+ *
+ * Parameters:
+ *    hReg     - handle of open registry
+ *    key      - registry key obtained from NR_RegGetKey(),
+ *               or one of the standard top-level keys
+ *    keyname  - name of key to be added. No parsing of this
+ *               name happens.
+ *    newkey   - if not null the RKEY of the new key is returned
+ * ---------------------------------------------------------------------
+ */
 VR_INTERFACE(REGERR) NR_RegAddKeyRaw(
          HREG hReg,        /* handle of open registry */
          RKEY key,         /* root key */
@@ -162,18 +256,58 @@ VR_INTERFACE(REGERR) NR_RegAddKeyRaw(
          RKEY *newKey      /* if not null returns newly created key */
        );
 
+
+/* ---------------------------------------------------------------------
+ * NR_RegDeleteKey - Delete the specified key
+ *
+ * Note that delete simply orphans blocks and makes no attempt
+ * to reclaim space in the file. Use NR_RegPack()
+ *
+ * Cannot be used to delete keys with child keys
+ *
+ * Parameters:
+ *    hReg     - handle of open registry
+ *    key      - starting node RKEY, typically one of the standard ones.
+ *    path     - relative path of key to delete
+ * ---------------------------------------------------------------------
+ */
 VR_INTERFACE(REGERR) NR_RegDeleteKey(
          HREG hReg,        /* handle of open registry */
          RKEY key,         /* root key */
          char *path        /* relative path of subkey to delete */
        );
 
+
+/* ---------------------------------------------------------------------
+ * NR_RegDeleteKeyRaw - Delete the specified raw key
+ *
+ * Note that delete simply orphans blocks and makes no attempt
+ * to reclaim space in the file. Use NR_RegPack()
+ *
+ * Parameters:
+ *    hReg     - handle of open registry
+ *    key      - RKEY or parent to the raw key you wish to delete
+ *    keyname  - name of child key to delete
+ * ---------------------------------------------------------------------
+ */
 VR_INTERFACE(REGERR) NR_RegDeleteKeyRaw(
          HREG hReg,        /* handle of open registry */
          RKEY key,         /* root key */
          char *keyname     /* name subkey to delete */
        );
 
+
+/* ---------------------------------------------------------------------
+ * NR_RegGetKey - Get the RKEY value of a node from its path
+ *
+ * Parameters:
+ *    hReg     - handle of open registry
+ *    key      - starting node RKEY, typically one of the standard ones.
+ *    path     - relative path of key to find.  (a blank path just gives you
+ *               the starting key--useful for verification, VersionRegistry)
+ *    result   - if successful the RKEY of the specified sub-key
+ * ---------------------------------------------------------------------
+ */
 VR_INTERFACE(REGERR) NR_RegGetKey(
          HREG hReg,        /* handle of open registry */
          RKEY key,         /* root key */
@@ -181,6 +315,18 @@ VR_INTERFACE(REGERR) NR_RegGetKey(
          RKEY *result      /* returns RKEY of specified sub-key */
        );
 
+
+/* ---------------------------------------------------------------------
+ * NR_RegGetKeyRaw - Get the RKEY value of a node from its keyname
+ *
+ * Parameters:
+ *    hReg     - handle of open registry
+ *    key      - starting node RKEY, typically one of the standard ones.
+ *    keyname  - keyname of key to find.  (a blank keyname just gives you
+ *               the starting key--useful for verification, VersionRegistry)
+ *    result   - if successful the RKEY of the specified sub-key
+ * ---------------------------------------------------------------------
+ */
 VR_INTERFACE(REGERR) NR_RegGetKeyRaw(
          HREG hReg,        /* handle of open registry */
          RKEY key,         /* root key */
@@ -188,6 +334,24 @@ VR_INTERFACE(REGERR) NR_RegGetKeyRaw(
          RKEY *result      /* returns RKEY of specified sub-key */
        );
 
+
+/* ---------------------------------------------------------------------
+ * NR_RegEnumSubkeys - Enumerate the subkey names for the specified key
+ *
+ * Returns REGERR_NOMORE at end of enumeration.
+ *
+ * Parameters:
+ *    hReg     - handle of open registry
+ *    key      - RKEY of key to enumerate--obtain with NR_RegGetKey()
+ *    eState   - enumerations state, must contain NULL to start
+ *    buffer   - location to store subkey names.  Once an enumeration
+ *               is started user must not modify contents since values
+ *               are built using the previous contents.
+ *    bufsize  - size of buffer for names
+ *    style    - 0 returns direct child keys only, REGENUM_DESCEND
+ *               returns entire sub-tree
+ * ---------------------------------------------------------------------
+ */
 VR_INTERFACE(REGERR) NR_RegEnumSubkeys(
          HREG    hReg,        /* handle of open registry */
          RKEY    key,         /* containing key */
@@ -197,11 +361,24 @@ VR_INTERFACE(REGERR) NR_RegEnumSubkeys(
          uint32  style        /* 0: children only; REGENUM_DESCEND: sub-tree */
        );
 
+
+
 /* ---------------------------------------------------------------------
  * Registry API -- Entry Management functions
  * ---------------------------------------------------------------------
  */
 
+
+/* ---------------------------------------------------------------------
+ * NR_RegGetEntryInfo - Get some basic info about the entry data
+ *
+ * Parameters:
+ *    hReg     - handle of open registry
+ *    key      - RKEY of key that contains entry--obtain with NR_RegGetKey()
+ *    name     - name of entry
+ *    info     - return: Entry info object
+ * ---------------------------------------------------------------------
+ */
 VR_INTERFACE(REGERR) NR_RegGetEntryInfo(
          HREG    hReg,     /* handle of open registry */
          RKEY    key,      /* containing key */
@@ -209,6 +386,19 @@ VR_INTERFACE(REGERR) NR_RegGetEntryInfo(
          REGINFO *info     /* returned entry info */
        );
 
+       
+/* ---------------------------------------------------------------------
+ * NR_RegGetEntryString - Get the UTF string value associated with the
+ *                       named entry of the specified key.
+ *
+ * Parameters:
+ *    hReg     - handle of open registry
+ *    key      - RKEY of key that contains entry--obtain with NR_RegGetKey()
+ *    name     - name of entry
+ *    buffer   - destination for string
+ *    bufsize  - size of buffer
+ * ---------------------------------------------------------------------
+ */
 VR_INTERFACE(REGERR) NR_RegGetEntryString(
          HREG   hReg,      /* handle of open registry */
          RKEY   key,       /* containing key */
@@ -217,6 +407,19 @@ VR_INTERFACE(REGERR) NR_RegGetEntryString(
          uint32 bufsize    /* length of buffer */
        );
 
+/* ---------------------------------------------------------------------
+ * NR_RegGetEntry - Get the value data associated with the
+ *                  named entry of the specified key.
+ *
+ * Parameters:
+ *    hReg     - handle of open registry
+ *    key      - RKEY of key that contains entry--obtain with NR_RegGetKey()
+ *    name     - name of entry
+ *    buffer   - destination for data
+ *    size     - in:  size of buffer
+ *               out: size of actual data (incl. \0 term. for strings)
+ * ---------------------------------------------------------------------
+ */
 VR_INTERFACE(REGERR) NR_RegGetEntry(
          HREG   hReg,      /* handle of open registry */
          RKEY   key,       /* containing key */
@@ -225,6 +428,19 @@ VR_INTERFACE(REGERR) NR_RegGetEntry(
          uint32 *size      /* in:length of buffer */
        );                  /* out: data length, >>includes<< null terminator*/
 
+
+/* ---------------------------------------------------------------------
+ * NR_RegSetEntryString - Store a UTF-8 string value associated with the
+ *                       named entry of the specified key.  Used for
+ *                       both creation and update.
+ *
+ * Parameters:
+ *    hReg     - handle of open registry
+ *    key      - RKEY of key that contains entry--obtain with NR_RegGetKey()
+ *    name     - name of entry
+ *    buffer   - UTF-8 String to store
+ * ---------------------------------------------------------------------
+ */
 VR_INTERFACE(REGERR) NR_RegSetEntryString(
          HREG hReg,        /* handle of open registry */
          RKEY key,         /* containing key */
@@ -232,6 +448,20 @@ VR_INTERFACE(REGERR) NR_RegSetEntryString(
          char *buffer      /* UTF String value */
        );
 
+
+/* ---------------------------------------------------------------------
+ * NR_RegSetEntry - Store value data associated with the named entry
+ *                  of the specified key.  Used for both creation and update.
+ *
+ * Parameters:
+ *    hReg     - handle of open registry
+ *    key      - RKEY of key that contains entry--obtain with NR_RegGetKey()
+ *    name     - name of entry
+ *    type     - type of data to be stored
+ *    buffer   - data to store
+ *    size     - length of data to store in bytes
+ * ---------------------------------------------------------------------
+ */
 VR_INTERFACE(REGERR) NR_RegSetEntry(
          HREG   hReg,        /* handle of open registry */
          RKEY   key,         /* containing key */
@@ -241,12 +471,36 @@ VR_INTERFACE(REGERR) NR_RegSetEntry(
          uint32 size         /* data length in bytes; incl. null term for strings */
        );
 
+
+/* ---------------------------------------------------------------------
+ * NR_RegDeleteEntry - Delete the named entry
+ *
+ * Parameters:
+ *    hReg     - handle of open registry
+ *    key      - RKEY of key that contains entry--obtain with NR_RegGetKey()
+ *    name     - name of entry
+ * ---------------------------------------------------------------------
+ */
 VR_INTERFACE(REGERR) NR_RegDeleteEntry(
          HREG hReg,        /* handle of open registry */
          RKEY key,         /* containing key */
          char *name        /* value name */
        );
 
+
+/* ---------------------------------------------------------------------
+ * NR_RegEnumEntries - Enumerate the entry names for the specified key
+ *
+ * Returns REGERR_NOMORE at end of enumeration.
+ *
+ * Parameters:
+ *    hReg     - handle of open registry
+ *    key      - RKEY of key that contains entry--obtain with NR_RegGetKey()
+ *    eState   - enumerations state, must contain NULL to start
+ *    buffer   - location to store entry names
+ *    bufsize  - size of buffer for names
+ * ---------------------------------------------------------------------
+ */
 VR_INTERFACE(REGERR) NR_RegEnumEntries(
          HREG    hReg,        /* handle of open registry */
          RKEY    key,         /* containing key */

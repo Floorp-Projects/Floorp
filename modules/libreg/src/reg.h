@@ -1,19 +1,25 @@
 /* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
- * Version 1.0 (the "NPL"); you may not use this file except in
- * compliance with the NPL.  You may obtain a copy of the NPL at
+ * Version 1.0 (the "License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
  * http://www.mozilla.org/NPL/
  *
- * Software distributed under the NPL is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
  * for the specific language governing rights and limitations under the
- * NPL.
+ * License.
  *
- * The Initial Developer of this code under the NPL is Netscape
- * Communications Corporation.  Portions created by Netscape are
+ * The Original Code is Mozilla Communicator client code, 
+ * released March 31, 1998. 
+ *
+ * The Initial Developer of the Original Code is Netscape Communications 
+ * Corporation.  Portions created by Netscape are 
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
+ *
+ * Contributors:
+ *     Daniel Veditz <dveditz@netscape.com>
  */
 /* reg.h
  * XP Registry functions (prototype)
@@ -25,7 +31,6 @@
 #include "vr_stubs.h"
 
 #ifndef STANDALONE_REGISTRY
-#include "prmon.h"
 #include "prlock.h"
 #endif
 
@@ -37,7 +42,7 @@
 #define MAJOR_VERSION   1          /* major version for incompatible changes */
 #define MINOR_VERSION   2          /* minor ver for new (compatible) features */
 #define PATHDEL         '/'
-#define HDRRESERVE	    128        /* number of bytes reserved for hdr */
+#define HDRRESERVE      128        /* number of bytes reserved for hdr */
 #define INTSIZE         4
 #define DOUBLESIZE      8
 
@@ -92,15 +97,15 @@ typedef int32 REGOFF;   /* offset into registry file */
 
 typedef struct _desc
 {
-	REGOFF	location;	/* this object's offset (for verification) */
-	REGOFF	name;		/* name string */
-	uint16  namelen;    /* length of name string (including terminator) */
-	uint16  type;       /* node type (key, or entry style) */
-	REGOFF	left;		/* next object at this level (0 if none) */
-	REGOFF	down;		/* KEY: first subkey        VALUE: 0 */
-	REGOFF	value;		/* KEY: first entry object  VALUE: value string */
-	uint32  valuelen;   /* KEY: 0  VALUE: length of value data */
-	uint32  valuebuf;   /* KEY: 0  VALUE: length available */
+    REGOFF  location;   /* this object's offset (for verification) */
+    REGOFF  name;       /* name string */
+    uint16  namelen;    /* length of name string (including terminator) */
+    uint16  type;       /* node type (key, or entry style) */
+    REGOFF  left;       /* next object at this level (0 if none) */
+    REGOFF  down;       /* KEY: first subkey        VALUE: 0 */
+    REGOFF  value;      /* KEY: first entry object  VALUE: value string */
+    uint32  valuelen;   /* KEY: 0  VALUE: length of value data */
+    uint32  valuebuf;   /* KEY: 0  VALUE: length available */
     REGOFF  parent;     /* the node on the immediate level above */
 } REGDESC;
 
@@ -120,11 +125,11 @@ typedef struct _desc
 
 typedef struct _hdr
 {
-	uint32  magic;		/* must equal MAGIC_NUMBER */
-	uint16  verMajor;   /* major version number */
-	uint16  verMinor;   /* minor version number */
-	REGOFF  avail;		/* next available offset */
-	REGOFF  root;		/* root object */
+    uint32  magic;      /* must equal MAGIC_NUMBER */
+    uint16  verMajor;   /* major version number */
+    uint16  verMinor;   /* minor version number */
+    REGOFF  avail;      /* next available offset */
+    REGOFF  root;       /* root object */
 } REGHDR;
 
 /* offsets into structure on disk*/
@@ -134,7 +139,7 @@ typedef struct _hdr
 #define HDR_AVAIL       8
 #define HDR_ROOT        12
 
-typedef XP_File FILEHANDLE;	/* platform-specific file reference */
+typedef XP_File FILEHANDLE; /* platform-specific file reference */
 
 typedef struct _stdnodes {
     REGOFF          versions;
@@ -146,10 +151,10 @@ typedef struct _stdnodes {
 
 typedef struct _regfile
 {
-	FILEHANDLE      fh;
-	REGHDR			hdr;
+    FILEHANDLE      fh;
+    REGHDR          hdr;
     int             refCount;
-	int 			hdrDirty;
+    int             hdrDirty;
     int             inInit;
     int             readOnly;
     char *          filename;

@@ -28,19 +28,16 @@
 extern char *errstr(REGERR err);
 extern int DumpTree(void);
 
-int gVerbose = 1;
-int gPretend = 0;
 
 int error(char *func, int err)
 {
 	if (err == REGERR_OK)
 	{
-		if (gVerbose)
-			printf("%s Ok\n", func);
+    	printf("\t%s -- OK\n", func);
 	}
 	else
 	{
-		printf("%s returns %s\n", func, errstr(err));
+		printf("\t%s -- %s\n", func, errstr(err));
 	}
 
 	return err;
@@ -98,66 +95,20 @@ static int vr_ParseVersion(char *verstr, VERSION *result)
 
 }	// ParseVersion
 
-void parse(char *cmd, char *name, VERSION *ver, char *path)
-{
-	// expects 'cmd' points to: "<name>, <ver>, <path>"
-	char buf[256];
-	char *p;
-
-	cmd = GetNextWord(cmd, buf);
-	strcpy(name, buf);
-
-	p = cmd;					// 'cmd' points to version
-	vr_ParseVersion(cmd, ver);
-	ver->check = gPretend ? 0xad : 0;
-	while (*p && *p != ',')		// skip to next ','
-		p++;
-	if (*p == ',')				// skip comma
-		p++;
-	while (*p && *p == ' ')		// skip white space
-		p++;
-
-	strcpy(path, p);
-
-}	// parse
-
-void vVerbose(char *cmd)
-{
-
-	if (stricmp(cmd, "ON") == 0)
-	{
-		gVerbose = 1;
-		printf("Verbose mode is now ON.\n");
-	}
-	else
-	{
-		gVerbose = 0;
-	}
-
-}	// vVerbose
 
 void vCreate(char *cmd)
 {
 
 	// Syntax: Create [new,] 5.0b1
-	char buf[64];
-
+	char buf[512];
+    
 	int flag = 0;
 	cmd = GetNextWord(cmd, buf);
-	if (stricmp(buf, "NEW,") == 0)
-	{
-		flag = CR_NEWREGISTRY;
-	}
-	error("VR_CreateRegistry", VR_CreateRegistry(flag, cmd));
+    
+	error("VR_CreateRegistry", VR_CreateRegistry("Communicator", buf, cmd));
 
 }	// vCreate
 
-void vDisplay(char *cmd)
-{
-
-	DumpTree();
-
-}	// vDisplay
 
 
 void vFind(char *cmd)
@@ -187,18 +138,23 @@ void vHelp(char *cmd)
 {
 
 	puts("Enter a command:");
-	puts("\tD)isplay         - display the current contents of the Registry");
+    puts("\tN)ew <dir> [, <ver>] - create a new registry");
+    puts("\tA)pp <dir>       - set application directory");
+    puts("\tC)lose           - close the registry");
+    puts("");
 	puts("\tI)nstall <name>, <version>, <path> - install a new component");
-	puts("\tU)pdate <name>, <version>, <path>  - update a component");
-	puts("\tF)ind <name>     - returns version and path");
-	puts("\tV)erify <name>   - verify component exists and checks out");
-	puts("\tC)reate <name>   - create a new instance of Navigator (e.g., \"4.0\")");
 	puts("\tR)emove <name>   - deletes a component from the Registry");
-	puts("\tT)est            - perform a simple test on the Registry");
-	puts("\tver(B)ose ON|off - turn verbose mode on or off");
-	puts("\tP)retend on|OFF  - pretend that test files exist");
-	puts("\tS)ave            - save the Registry to disk");
-	puts("\tpac(K) registry    - squeeze out unused space from the Registry");
+    puts("\tX)ists <name>    - checks for existence in registry");
+    puts("\tT)est <name>     - validates physical existence");
+    puts("\tE)num <name>     - dumps named subtree");
+    puts("");
+    puts("\tV)ersion <name>  - gets component version");
+    puts("\tP)ath <name>     - gets component path");
+    puts("\treF)count <name> - gets component refcount");
+    puts("\tD)ir <name>      - gets component directory");
+    puts("\tSR)efcount <name>- sets component refcount");
+    puts("\tSD)ir <name>     - sets component directory");
+    puts("");
 	puts("\tQ)uit            - end the program");
 
 }	// vHelp
@@ -209,145 +165,26 @@ void vInstall(char *cmd)
 
 	char name[MAXREGPATHLEN+1];
 	char path[MAXREGPATHLEN+1];
-	VERSION ver;
+    char ver[MAXREGPATHLEN+1];
 
-	parse(cmd, name, &ver, path);
-	error("VR_Install", VR_Install(name, path, &ver));
+    char *pPath, *pVer;
+
+	cmd = GetNextWord(cmd, name);
+    cmd = GetNextWord(cmd, ver);
+    cmd = GetNextWord(cmd, path);
+
+    pVer  = ( ver[0]  != '*' ) ? ver  : NULL;
+    pPath = ( path[0] != '*' ) ? path : NULL;
+
+	error("VR_Install", VR_Install(name, pPath, pVer, FALSE));
 
 }	// vInstall
 
-void vPack(char *cmd)
-{
-	error("VR_PackRegistry", VR_PackRegistry(0));
-
-}	// vPack
-
-void vPretend(char *cmd)
-{
-
-	if (!cmd)
-	{
-		gPretend = !!gPretend;
-	}
-	else
-	{
-		if (stricmp(cmd, "ON") == 0)
-			gPretend = 1;
-		else
-			gPretend = 0;
-	}
-
-	if (gVerbose)
-		printf("Pretend mode is %s\n", gPretend ? "ON" : "OFF");
-
-}	// vPretend
-
-void vRemove(char *cmd)
-{
-
-	error("VR_Remove", VR_Remove(cmd));
-
-}	// vRemove
 
 
-void vSave(char *cmd)
-{
-
-	error("VR_Checkpoint", VR_Checkpoint());
-
-}	// vSave
-
-
-void vTest(char *cmd)
-{
-
-	VERSION ver;
-	ver.major = 4;
-	ver.minor = 0;
-	ver.release = 0;
-	ver.build = 237;
-	ver.check = gPretend ? 0xad : 0;
-
-	if (error("VR_Install", VR_Install("Navigator/NS.exe", 
-		"c:\\Program Files\\Netscape\\Navigator\\Program\\NETSCAPE.EXE", &ver)))
-		return;
-	if (error("VR_Install", VR_Install("Navigator/Help", 
-		"c:\\Program Files\\Netscape\\Navigator\\Program\\NETSCAPE.HLP", &ver)))
-		return;
-	if (error("VR_Install", VR_Install("Navigator/NSPR", 
-		"c:\\Program Files\\Netscape\\Navigator\\Program\\NSPR32.DLL", &ver)))
-		return;
-	if (error("VR_Install", VR_Install("Navigator/Player", 
-		"c:\\Program Files\\Netscape\\Navigator\\Program\\NSPLAYER.EXE", &ver)))
-		return;
-	if (error("VR_Install", VR_Install("Navigator/NSJava", 
-		"c:\\Program Files\\Netscape\\Navigator\\Program\\NSJAVA32.DLL", &ver)))
-		return;
-	if (error("VR_Install", VR_Install("Web/Certificate.DB", 
-		"c:\\Program Files\\Netscape\\Navigator\\Program\\CERT.DB", &ver)))
-		return;
-	if (error("VR_Install", VR_Install("Web/CertificateNI.DB", 
-		"c:\\Program Files\\Netscape\\Navigator\\Program\\CERTNI.DB", &ver)))
-		return;
-	if (error("VR_Install", VR_Install("Web/Keys", 
-		"c:\\Program Files\\Netscape\\Navigator\\Program\\KEY.DB", &ver)))
-		return;
-	if (error("VR_Install", VR_Install("MailNews/Postal", 
-		"c:\\Program Files\\Netscape\\Navigator\\System\\POSTAL32.DLL", &ver)))
-		return;
-	if (error("VR_Install", VR_Install("MailNews/Folders/Inbox", 
-		"c:\\Program Files\\Netscape\\Navigator\\Mail\\INBOX.SNM", &ver)))
-		return;
-	if (error("VR_Install", VR_Install("MailNews/Folders/Sent", 
-		"c:\\Program Files\\Netscape\\Navigator\\Mail\\SENT.SNM", &ver)))
-		return;
-	if (error("VR_Install", VR_Install("MailNews/Folders/Trash", 
-		"c:\\Program Files\\Netscape\\Navigator\\Mail\\TRASH.SNM", &ver)))
-		return;
-	if (error("VR_Install", VR_Install("Components/NUL", 
-		"c:\\Program Files\\Netscape\\Navigator\\Program\\Plugins\\NPNUL32.DLL", &ver)))
-		return;
-	if (error("VR_Install", VR_Install("Components/PointCast", 
-		"c:\\Program Files\\Netscape\\Navigator\\Program\\Plugins\\NPPCN32.DLL", &ver)))
-		return;
-	if (error("VR_Install", VR_Install("Components/AWT", 
-		"c:\\Program Files\\Netscape\\Navigator\\Program\\Java\\bin\\AWT3220.DLL", &ver)))
-		return;
-	if (error("VR_Install", VR_Install("Components/MM", 
-		"c:\\Program Files\\Netscape\\Navigator\\Program\\Java\\bin\\MM3220.DLL", &ver)))
-		return;
-	if (error("VR_Install", VR_Install("Java/Classes.Zip", 
-		"c:\\Program Files\\Netscape\\Navigator\\Program\\Java\\classes\\MOZ2_0.ZIP", &ver)))
-		return;
-	if (error("VR_Install", VR_Install("Java/Classes Directory", 
-		"c:\\Program Files\\Netscape\\Navigator\\Program\\Java\\classes\\MOZ2_0", &ver)))
-		return;
-
-
-}	// vTest
-
-
-void vUpdate(char *cmd)
-{
-
-	char name[MAXREGPATHLEN+1];
-	char path[MAXREGPATHLEN+1];
-	VERSION ver;
-
-	parse(cmd, name, &ver, path);
-	error("VR_Update", VR_Update(name, path, &ver));
-
-}	// vUpdate
-
-
-void vVerify(char *cmd)
-{
-
-	error("VR_CheckEntry", VR_CheckEntry(0, cmd));
-
-}	// vVerify
 
 			
+
 void interp(void)
 {
 
@@ -375,49 +212,56 @@ void interp(void)
 
 		switch(toupper(line[0]))
 		{
-		case 'B':
-			vVerbose(p);
-			break;
-		case 'C':
+		case 'N':
 			vCreate(p);
 			break;
-		case 'D':
-			vDisplay(p);
+        case 'A':
+            error("VR_SetRegDirectory", VR_SetRegDirectory(p));
+            break;
+        case 'C':
+            error("VR_Close", VR_Close());
+            break;
+
+		case 'I':
+			vInstall(p);
 			break;
-		case 'F':
-			vFind(p);
+		case 'R':
+        	error("VR_Remove", VR_Remove(p));
 			break;
+        case 'X':
+        	error("VR_InRegistry", VR_InRegistry(p));
+            break;
+        case 'T':
+        	error("VR_ValidateComponent", VR_ValidateComponent(p));
+            break;
+
+#if  LATER
+        case 'E':
+            vEnum(p);
+            break;
+
+        case 'V':
+            vVersion(p);
+            break;
+        case 'P':
+            vPath(p);
+            break;
+        case 'F':
+            vGetRefCount(p);
+            break;
+        case 'D':
+            vGetDir(p);
+            break;
+        
+        case 'S':
+            puts("--Unsupported--");
+#endif
+
 		case 'H':
 		default:
 			vHelp(line);
 			break;
-		case 'I':
-			vInstall(p);
-			break;
-		case 'K':
-			vPack(p);
-			break;
-		case 'P':
-			vPretend(p);
-			break;
-		case 'R':
-			vRemove(p);
-			break;
-		case 'S':
-			vSave(p);
-			break;
-		case 'T':
-			vTest(p);
-			break;
-		case 'U':
-			vUpdate(p);
-			break;
-		case 'V':
-			vVerify(p);
-			break;
 		case 'Q':
-		case 'X':
-			vSave(0);
 			return;
 		}	// switch
 	}	// while
