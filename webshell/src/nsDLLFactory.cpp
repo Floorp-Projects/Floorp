@@ -22,7 +22,6 @@
 #include "nsIDocumentLoader.h"
 #include "nsIThrobber.h"
 
-static NS_DEFINE_IID(kBrowserWindowCID, NS_BROWSER_WINDOW_CID);
 static NS_DEFINE_IID(kDocumentLoaderCID, NS_DOCUMENTLOADER_CID);
 static NS_DEFINE_IID(kThrobberCID, NS_THROBBER_CID);
 static NS_DEFINE_IID(kWebShellCID, NS_WEB_SHELL_CID);
@@ -41,9 +40,6 @@ NSGetFactory(const nsCID& aClass, nsIFactory** aFactory)
   }
   else if (aClass.Equals(kDocumentLoaderCID)) {
     rv = NS_NewDocumentLoaderFactory(aFactory);
-  }
-  else if (aClass.Equals(kBrowserWindowCID)) {
-    rv = NS_NewBrowserWindowFactory(aFactory);
   }
   else if (aClass.Equals(kThrobberCID)) {
     rv = NS_NewThrobberFactory(aFactory);
