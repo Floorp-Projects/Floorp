@@ -900,7 +900,7 @@ nsHTMLFramesetFrame::ParseRowColSpec(nsIPresContext* aPresContext,
   PRInt32 count = 1;
   while (commaX >= 0) {
     count++;
-    commaX = aSpec.FindChar(COMMA, PR_FALSE,commaX + 1);
+    commaX = aSpec.FindChar(COMMA, commaX + 1);
   }
 
   if (count > aMaxNumValues) {
@@ -915,7 +915,7 @@ nsHTMLFramesetFrame::ParseRowColSpec(nsIPresContext* aPresContext,
 
   for (PRInt32 i = 0; i < count; i++) {
     // Find our comma
-    commaX = aSpec.FindChar(COMMA, PR_FALSE,start);
+    commaX = aSpec.FindChar(COMMA, start);
     PRInt32 end = (commaX < 0) ? specLen : commaX;
 
     // Note: If end == start then it means that the token has no

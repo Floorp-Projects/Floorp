@@ -277,7 +277,7 @@ GetDocTypeToken(nsString& aStr,
                                            // before Cut() and adjust the cut amount.
   
   if (aQuotedString) {    
-    PRInt32 endQuote = aStr.FindChar(aStr[0],PR_FALSE,1);
+    PRInt32 endQuote = aStr.FindChar(aStr[0],1);
     aStr.Mid(aToken,1,endQuote-1);
     aStr.Cut(0,endQuote+1);
   } else {    
@@ -680,7 +680,7 @@ nsXMLContentSink::LoadXSLStyleSheet(nsIURI* aUrl)
   // Hook up the content sink to the parser's output and ask the parser
   // to start parsing the URL specified by aURL.
   parser->SetContentSink(sink);
-  nsAutoString utf8(NS_LITERAL_STRING("UTF-8"));
+  NS_NAMED_LITERAL_STRING(utf8, "UTF-8");
   styleDoc->SetDocumentCharacterSet(utf8);
   parser->SetDocumentCharset(utf8, kCharsetFromDocTypeDefault);
   parser->Parse(aUrl);

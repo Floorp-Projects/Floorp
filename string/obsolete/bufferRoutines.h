@@ -528,8 +528,7 @@ inline PRInt32 FindChar1(const char* aDest,PRUint32 aDestLength,PRInt32 anOffset
  *  @param   aCount tells us how many characters to iterate through (which may be different than aLength); -1 means use full length.
  *  @return  index of pos if found, else -1 (kNotFound)
  */
-inline PRInt32 FindChar2(const PRUnichar* aDest,PRUint32 aDestLength,PRInt32 anOffset,const PRUnichar aChar,PRBool aIgnoreCase,PRInt32 aCount) {
-#ifndef XPCOM_STANDALONE
+inline PRInt32 FindChar2(const PRUnichar* aDest,PRUint32 aDestLength,PRInt32 anOffset,const PRUnichar aChar,PRInt32 aCount) {
 
   if(anOffset<0)
     anOffset=0;
@@ -547,33 +546,14 @@ inline PRInt32 FindChar2(const PRUnichar* aDest,PRUint32 aDestLength,PRInt32 anO
       const PRUnichar* max  = root+aDestLength;
       const PRUnichar* end  = (last<max) ? last : max;
 
-      if (aIgnoreCase && NS_FAILED(NS_InitCaseConversion()))
-        aIgnoreCase = PR_FALSE;
-
-      if (aIgnoreCase) {
-        PRUnichar theChar;
-        gCaseConv->ToUpper(aChar, &theChar);
-        while(left<end){
-          PRUnichar leftChar;
-          gCaseConv->ToUpper(*left, &leftChar);
-          if (leftChar == theChar)
-            return left-root;
-          ++left;
-        }
-      }
-      else {
-        while(left<end){
-          if(*left==aChar)
-            return (left-root);
-          ++left;
-        }
+      while(left<end){
+        if(*left==aChar)
+          return (left-root);
+        ++left;
       }
     }
   }
 
-#else
-  NS_ERROR("call not supported in XPCOM_STANDALONE");
-#endif
   return kNotFound;
 }
 
@@ -647,8 +627,7 @@ inline PRInt32 RFindChar1(const char* aDest,PRUint32 aDestLength,PRInt32 anOffse
  *  @param   aCount tells us how many characters to iterate through (which may be different than aLength); -1 means use full length.
  *  @return  index of pos if found, else -1 (kNotFound)
  */
-inline PRInt32 RFindChar2(const PRUnichar* aDest,PRUint32 aDestLength,PRInt32 anOffset,const PRUnichar aChar,PRBool aIgnoreCase,PRInt32 aCount) {
-#ifndef XPCOM_STANDALONE
+inline PRInt32 RFindChar2(const PRUnichar* aDest,PRUint32 aDestLength,PRInt32 anOffset,const PRUnichar aChar,PRInt32 aCount) {
 
   if(anOffset<0)
     anOffset=(PRInt32)aDestLength-1;
@@ -665,33 +644,13 @@ inline PRInt32 RFindChar2(const PRUnichar* aDest,PRUint32 aDestLength,PRInt32 an
       const PRUnichar* min       = rightmost-aCount+1;
       const PRUnichar* leftmost  = (min<root) ? root: min;
       
-      if (aIgnoreCase && NS_FAILED(NS_InitCaseConversion()))
-        aIgnoreCase = PR_FALSE;
-
-      if(aIgnoreCase) {
-        PRUnichar theChar;
-        gCaseConv->ToUpper(aChar, &theChar);
-        while(leftmost<rightmost){
-          PRUnichar rightChar;
-          gCaseConv->ToUpper(*rightmost, &rightChar);
-          if(rightChar==theChar)
-            return rightmost-root;
-          --rightmost;
-        }
-      }
-      else {
-
-        while(leftmost<=rightmost){
-          if((*rightmost)==aChar)
-            return rightmost-root;
-          --rightmost;
-        }
+      while(leftmost<=rightmost){
+        if((*rightmost)==aChar)
+          return rightmost-root;
+        --rightmost;
       }
     }
   }
-#else
-  NS_ERROR("call not supported in XPCOM_STANDALONE");
-#endif
 
   return kNotFound;
 }

@@ -469,7 +469,7 @@ nsIsIndexFrame::OnSubmit(nsIPresContext* aPresContext)
     }
     // Append the URI encoded variable/value pairs for GET's
     if (!isJSURL) { // Not for JS URIs, see bug 26917
-        if (href.FindChar('?', PR_FALSE, 0) == kNotFound) { // Add a ? if needed
+        if (href.FindChar('?') == kNotFound) { // Add a ? if needed
           href.Append(PRUnichar('?'));
         } else {                              // Adding to existing query string
           if (href.Last() != '&' && href.Last() != '?') {   // Add a & if needed

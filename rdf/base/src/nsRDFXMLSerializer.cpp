@@ -262,21 +262,21 @@ rdf_EscapeAmpersandsAndAngleBrackets(nsString& s)
 
     // Do ampersands first, so we don't double-escape.
     i = 0;
-    while ((i = s.FindChar('&', PR_FALSE, i)) != -1) {
+    while ((i = s.FindChar('&', i)) != -1) {
         s.SetCharAt('&', i);
         s.Insert(NS_LITERAL_STRING("amp;"), i + 1);
         i += 4;
     }
 
     i = 0;
-    while ((i = s.FindChar('<', PR_FALSE, i)) != -1) {
+    while ((i = s.FindChar('<', i)) != -1) {
         s.SetCharAt('&', i);
         s.Insert(NS_LITERAL_STRING("lt;"), i + 1);
         i += 3;
     }
 
     i = 0;
-    while ((i = s.FindChar('>', PR_FALSE, i)) != -1) {
+    while ((i = s.FindChar('>', i)) != -1) {
         s.SetCharAt('&', i);
         s.Insert(NS_LITERAL_STRING("gt;"), i + 1);
         i += 3;
@@ -288,7 +288,7 @@ static void
 rdf_EscapeQuotes(nsString& s)
 {
     PRInt32 i = 0;
-    while ((i = s.FindChar('"', PR_FALSE, i)) != -1) {
+    while ((i = s.FindChar('"', i)) != -1) {
         s.SetCharAt('&', i);
         s.Insert(NS_LITERAL_STRING("quot;"), i + 1);
         i += 5;

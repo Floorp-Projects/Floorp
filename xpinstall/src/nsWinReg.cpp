@@ -509,7 +509,7 @@ nsWinReg::NativeIsKeyWritable(const nsString& subkey)
         rv = NativeKeyExists(subkeyParent);
         if(!rv)
         {
-            index = subkeyParent.RFindChar('\\', PR_FALSE, -1, -1);
+            index = subkeyParent.RFindChar('\\', -1, -1);
             if(index > 0)
                 /* delete everything from the '\\' found to the end of the string */
                 subkeyParent.SetLength(index);

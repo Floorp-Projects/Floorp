@@ -1157,7 +1157,7 @@ mozTXTToHTMLConv::ScanHTML(nsString& aInString, PRUint32 whattodo, nsString &aOu
       }
       else  // just skip tag (attributes etc.)
       {
-        i = aInString.FindChar('>', PR_FALSE, i);
+        i = aInString.FindChar('>', i);
         if (i == kNotFound)
           i = lengthOfInString;
         else
@@ -1168,7 +1168,7 @@ mozTXTToHTMLConv::ScanHTML(nsString& aInString, PRUint32 whattodo, nsString &aOu
     else
     {
       PRUint32 start = PRUint32(i);
-      i = aInString.FindChar('<', PR_FALSE, i);
+      i = aInString.FindChar('<', i);
       if (i == kNotFound)
         i = lengthOfInString;
   

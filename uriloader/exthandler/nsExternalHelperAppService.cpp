@@ -1584,18 +1584,15 @@ NS_IMETHODIMP nsExternalHelperAppService::GetTypeFromURI(nsIURI *aURI, char **aC
   rv = aURI->GetSpec(getter_Copies(cStrSpec));
   if (NS_FAILED(rv)) return rv;
 
-  nsAutoString specStr; specStr.AssignWithConversion(cStrSpec);
+  nsCAutoString specStr(cStrSpec);
 
   // find the file extension (if any)
-  nsAutoString extStr;
+  nsCAutoString extStr;
   PRInt32 extLoc = specStr.RFindChar('.');
   if (-1 != extLoc) 
   {
       specStr.Right(extStr, specStr.Length() - extLoc - 1);
-      char *ext = ToNewCString(extStr);
-      if (!ext) return NS_ERROR_OUT_OF_MEMORY;
-      rv = GetTypeFromExtension(ext, aContentType);
-      nsMemory::Free(ext);
+      rv = GetTypeFromExtension(extStr.get(), aContentType);
   }
   else
       return NS_ERROR_FAILURE;

@@ -554,7 +554,7 @@ RelatedLinksStreamListener::Unescape(nsString &text)
 
 	PRInt32		offset=0;
 
-	while((offset = text.FindChar((PRUnichar('&')), PR_FALSE, offset)) >= 0)
+	while((offset = text.FindChar((PRUnichar('&')), offset)) >= 0)
 	{
 		// XXX get max of 6 chars; change the value below if
 		// we ever start looking for longer HTML-escaped values

@@ -1551,12 +1551,12 @@ COOKIE_Read() {
     }
     int hostIndex, isDomainIndex, pathIndex, secureIndex, expiresIndex, nameIndex, cookieIndex;
     hostIndex = 0;
-    if ((isDomainIndex=buffer.FindChar('\t', PR_FALSE,hostIndex)+1) == 0 ||
-        (pathIndex=buffer.FindChar('\t', PR_FALSE,isDomainIndex)+1) == 0 ||
-        (secureIndex=buffer.FindChar('\t', PR_FALSE,pathIndex)+1) == 0 ||
-        (expiresIndex=buffer.FindChar('\t', PR_FALSE,secureIndex)+1) == 0 ||
-        (nameIndex=buffer.FindChar('\t', PR_FALSE,expiresIndex)+1) == 0 ||
-        (cookieIndex=buffer.FindChar('\t', PR_FALSE,nameIndex)+1) == 0 ) {
+    if ((isDomainIndex=buffer.FindChar('\t', hostIndex)+1) == 0 ||
+        (pathIndex=buffer.FindChar('\t', isDomainIndex)+1) == 0 ||
+        (secureIndex=buffer.FindChar('\t', pathIndex)+1) == 0 ||
+        (expiresIndex=buffer.FindChar('\t', secureIndex)+1) == 0 ||
+        (nameIndex=buffer.FindChar('\t', expiresIndex)+1) == 0 ||
+        (cookieIndex=buffer.FindChar('\t', nameIndex)+1) == 0 ) {
       continue;
     }
     nsAutoString host, isDomain, path, isSecure, expires, name, cookie;

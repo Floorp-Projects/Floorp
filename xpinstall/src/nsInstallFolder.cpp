@@ -544,7 +544,7 @@ nsInstallFolder::AppendXPPath(const nsString& aRelativePath)
 
     NS_ASSERTION(!aRelativePath.IsEmpty(),"InstallFolder appending null path");
     do {
-        curr = aRelativePath.FindChar('/',PR_FALSE,start);
+        curr = aRelativePath.FindChar('/',start);
         if ( curr == start )
         {
             // illegal, two slashes in a row (or not a relative path)

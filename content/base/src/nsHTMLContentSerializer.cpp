@@ -971,7 +971,7 @@ nsHTMLContentSerializer::HasLongLines(const nsString& text, PRInt32& aLastNewlin
   aLastNewlineOffset = kNotFound;
   for (start = 0; start < theLen; )
   {
-    PRInt32 eol = text.FindChar('\n', PR_FALSE, start);
+    PRInt32 eol = text.FindChar('\n', start);
     if (eol < 0) {
       eol = text.Length();
     }

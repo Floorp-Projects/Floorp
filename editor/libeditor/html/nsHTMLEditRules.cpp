@@ -1206,7 +1206,7 @@ nsHTMLEditRules::WillInsertText(PRInt32          aAction,
       {
         PRInt32 oldPos = pos;
         PRInt32 subStrLen;
-        pos = tString.FindChar(newlineChar, PR_FALSE, oldPos);
+        pos = tString.FindChar(newlineChar, oldPos);
 
         if (pos != -1) 
         {
