@@ -95,8 +95,10 @@ private:
     // compute a screen rect from the frame associated with the given dom node
   PRBool ComputeGlobalRectFromFrame ( nsIDOMNode* aDOMNode, Rect & outScreenRect ) ;
 
+#ifdef BRANCH_CHANGES_NEED_MERGED
   OSErr HandleHFSPromiseDrop(DragReference inDragRef, unsigned int inItemIndex,
             FlavorType inFlavor, const nsAString& inSourceURL, void** outData, unsigned int* outDataSize);
+#endif
   
     // callback for the MacOS DragManager when a drop site asks for data
   static pascal OSErr DragSendDataProc ( FlavorType inFlavor, void* inRefCon,

@@ -1627,19 +1627,76 @@ NS_IMETHODIMP nsChildView::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
       NSRect horizInvalid = frame;
       NSRect vertInvalid = frame;
   
-      horizInvalid.size.width = abs(aDx);
-      vertInvalid.size.height = abs(aDy);
-      if (aDy < 0)
-        vertInvalid.origin.y = frame.origin.y + frame.size.height + aDy;
-      if (aDx < 0)
-        horizInvalid.origin.x = frame.origin.x + frame.size.width + aDx;
-  
-      if (aDx != 0)
+      if (aDx != 0) {
+        horizInvalid.size.width = abs(aDx);
+        if (aDx < 0)
+          horizInvalid.origin.x = frame.origin.x + frame.size.width + aDx;
         [mView setNeedsDisplayInRect: horizInvalid];
-  
-      if (aDy != 0)
-        [mView setNeedsDisplayInRect: vertInvalid];
+      }
 
+      if (aDy != 0) {
+        vertInvalid.size.height = abs(aDy);
+        if (aDy < 0)
+          vertInvalid.origin.y = frame.origin.y + frame.size.height + aDy;
+        [mView setNeedsDisplayInRect: vertInvalid];
+      }
+
+      // We also need to check for any ChildViews which overlap this widget
+      // but are not descendent widgets.  If there are any, we need to
+      // invalidate the area of this view that these ChildViews will have been
+      // blitted into, since these widgets aren't supposed to scroll with
+      // this widget.
+
+      // To do this, start at the root Gecko NSView, and walk down along
+      // our ancestor view chain, looking at all the subviews in each level
+      // of the hierarchy.  If we find a non-ancestor view that overlaps
+      // this view, invalidate the area around it.
+
+      // We need to convert all rects to a common ancestor view to intersect
+      // them, since a view's frame is in the coordinate space of its parent.
+      // Use mParentView as the frame of reference.
+      NSRect selfFrame = [mParentView convertRect:[mView frame] fromView:[mView superview]];
+      NSView* view = mParentView;
+      BOOL selfLevel = NO;
+
+      while (!selfLevel) {
+        NSView* nextAncestorView;
+        NSArray* subviews = [view subviews];
+        for (int i = 0; i < [subviews count]; ++i) {
+          NSView* subView = [subviews objectAtIndex: i];
+          if (subView == mView)
+            selfLevel = YES;
+          else if ([mView isDescendantOf:subView])
+            nextAncestorView = subView;
+          else {
+            NSRect intersectArea = NSIntersectionRect([mParentView convertRect:[subView frame] fromView:[subView superview]], selfFrame);
+            if (!NSIsEmptyRect(intersectArea)) {
+              NSPoint origin = [mView convertPoint:intersectArea.origin fromView:mParentView];
+
+              if (aDy != 0) {
+                vertInvalid.origin.x = origin.x;
+                if (aDy < 0)  // scrolled down, invalidate above
+                  vertInvalid.origin.y = origin.y + aDy;
+                else          // invalidate below
+                  vertInvalid.origin.y = origin.y + intersectArea.size.height;
+                vertInvalid.size.width = intersectArea.size.width;
+                [mView setNeedsDisplayInRect: vertInvalid];
+              }
+
+              if (aDx != 0) {
+                horizInvalid.origin.y = origin.y;
+                if (aDx < 0)  // scrolled right, invalidate to the left
+                  horizInvalid.origin.x = origin.x + aDx;
+                else          // invalidate to the right
+                  horizInvalid.origin.x = origin.x + intersectArea.size.width;
+                horizInvalid.size.height = intersectArea.size.height;
+                [mView setNeedsDisplayInRect: horizInvalid];
+              }
+            }
+          }
+        }
+        view = nextAncestorView;
+      }
     }
   }
   
