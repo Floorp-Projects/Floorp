@@ -43,7 +43,7 @@ interface nsIPrompt : nsISupports
     void alertCheck(in wstring dialogTitle,
                     in wstring text,
                     in wstring checkMsg,
-                    out boolean checkValue);
+                    inout boolean checkValue);
 
     boolean confirm(in wstring dialogTitle,
                     in wstring text);
@@ -51,7 +51,7 @@ interface nsIPrompt : nsISupports
     boolean confirmCheck(in wstring dialogTitle,
                          in wstring text,
                          in wstring checkMsg,
-                         out boolean checkValue);
+                         inout boolean checkValue);
                          
     const unsigned long BUTTON_POS_0              = 1;
     const unsigned long BUTTON_POS_1              = 1 << 8;

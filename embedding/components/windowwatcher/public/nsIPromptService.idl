@@ -52,7 +52,7 @@ interface nsIPromptService : nsISupports
                   in wstring dialogTitle,
                   in wstring text,
                   in wstring checkMsg,
-                  out boolean checkValue);
+                  inout boolean checkValue);
 
   /**
    * Puts up a dialog with OK and Cancel buttons.
@@ -71,7 +71,7 @@ interface nsIPromptService : nsISupports
                         in wstring dialogTitle,
                         in wstring text,
                         in wstring checkMsg,
-                        out boolean checkValue);
+                        inout boolean checkValue);
 
   /**
    * Puts up a dialog with up to 3 buttons and an optional checkbox.
