@@ -174,16 +174,18 @@ nsFrameImageLoader::Init(nsIPresContext* aPresContext,
     desiredHeight = NSToCoordRound(mDesiredSize.height * t2p);
   }
 
-  PerFrameData* pfd = new PerFrameData;
-  if (nsnull == pfd) {
-    return NS_ERROR_OUT_OF_MEMORY;
+  if (nsnull != aTargetFrame) {
+    PerFrameData* pfd = new PerFrameData;
+    if (nsnull == pfd) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    pfd->mFrame = aTargetFrame;
+    pfd->mCallBack = aCallBack;
+    pfd->mClosure = aClosure;
+    pfd->mNext = mFrames;
+    pfd->mNeedSizeUpdate = PR_TRUE;
+    mFrames = pfd;
   }
-  pfd->mFrame = aTargetFrame;
-  pfd->mCallBack = aCallBack;
-  pfd->mClosure = aClosure;
-  pfd->mNext = mFrames;
-  pfd->mNeedSizeUpdate = PR_TRUE;
-  mFrames = pfd;
 
   // Start image load request
   char* cp = aURL.ToNewCString();
@@ -209,29 +211,32 @@ nsFrameImageLoader::AddFrame(nsIFrame* aFrame,
     pfd = pfd->mNext;
   }
 
-  pfd = new PerFrameData;
-  if (nsnull == pfd) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  pfd->mFrame = aFrame;
-  pfd->mCallBack = aCallBack;
-  pfd->mClosure = aClosure;
-  pfd->mNext = mFrames;
-  pfd->mNeedSizeUpdate = PR_TRUE;
-  mFrames = pfd;
-  if (aCallBack && mPresContext &&
-      ((NS_IMAGE_LOAD_STATUS_SIZE_AVAILABLE |
-        NS_IMAGE_LOAD_STATUS_ERROR) & mImageLoadStatus)) {
-    // Fire notification callback right away so that caller doesn't
-    // miss it...
+  if (nsnull != aFrame) {
+    pfd = new PerFrameData;
+    if (nsnull == pfd) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    pfd->mFrame = aFrame;
+    pfd->mCallBack = aCallBack;
+    pfd->mClosure = aClosure;
+    pfd->mNext = mFrames;
+    pfd->mNeedSizeUpdate = PR_TRUE;
+    mFrames = pfd;
+    if (aCallBack && mPresContext &&
+        ((NS_IMAGE_LOAD_STATUS_SIZE_AVAILABLE |
+          NS_IMAGE_LOAD_STATUS_ERROR) & mImageLoadStatus)) {
+      // Fire notification callback right away so that caller doesn't
+      // miss it...
 #ifdef NOISY_IMAGE_LOADING
-    printf("%p: AddFrame: notify frame=%p status=%x\n",
-           this, pfd->mFrame, mImageLoadStatus);
+      printf("%p: AddFrame: notify frame=%p status=%x\n",
+             this, pfd->mFrame, mImageLoadStatus);
 #endif
-    (*aCallBack)(mPresContext, this, pfd->mFrame, pfd->mClosure,
-                 mImageLoadStatus);
-    pfd->mNeedSizeUpdate = PR_FALSE;
+      (*aCallBack)(mPresContext, this, pfd->mFrame, pfd->mClosure,
+                   mImageLoadStatus);
+      pfd->mNeedSizeUpdate = PR_FALSE;
+    }
   }
+
   return NS_OK;
 }
 
