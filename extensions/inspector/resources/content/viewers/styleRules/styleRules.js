@@ -220,12 +220,12 @@ StyleRulesViewer.prototype =
     var propValue = { value: "" };
     var dummy = { value: false };
 
-    if (!gPromptService.prompt(window, title, msg, propName, false, dummy)) {
+    if (!gPromptService.prompt(window, title, msg, propName, null, dummy)) {
       return;
     }
 
     msg = bundle.getString("styleRulePropertyValue.message");
-    if (!gPromptService.prompt(window, title, msg, propValue, false, dummy)) {
+    if (!gPromptService.prompt(window, title, msg, propValue, null, dummy)) {
       return;
     }
 
@@ -248,7 +248,7 @@ StyleRulesViewer.prototype =
     var propValue = { value: propval };
     var dummy = { value: false };
 
-    if (!gPromptService.prompt(window, title, msg, propValue, false, dummy)) {
+    if (!gPromptService.prompt(window, title, msg, propValue, null, dummy)) {
       return;
     }
 
