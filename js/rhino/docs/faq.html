@@ -43,27 +43,6 @@ I get the exception </i><tt>Required security context missing</tt><i>.
 What's going on?</i>
 <p><b><font size=+2>A.</font></b> You've likely missed placing the <tt>Security.properties</tt>
 file in your class path at <tt>org.mozilla.javascript.resources</tt>.
-<p><b><font size=+2>Q</font>.</b> <i>Is it possible to make Rhino classes
-serializable?</i>
-<p><b><font size=+2>A.</font></b> A number of people have asked about making
-Rhino data serializable. It certainly seems like it would be useful for
-a variety of applications.
-<p>The reason I haven't implemented Serializiable has been that java.lang.Class
-is not Serializable, so any functions or scripts that have been compiled
-to Java bytecodes can't be serialized. One Rhino embedder suggested that
-we could get around this restriction by actually saving the bytecode in
-a byte array and then having some mechanism for loading those bytes at
-the destination. That would work, but is an extra mechanism beyond standard
-serialization and imposes a significant space overhead on all users of
-compiled scripts. I'm also curious as to whether that mechanism would be
-any faster than simply recompiling from the script source, which would
-be significantly smaller than the serialized form.
-<p>It'd be great to have some solutions to the serialization problem, and
-I'd certainly be happy to roll changes back into Rhino.
-<p>Perhaps the best solution is to implement some serialization for Rhino's
-interpretive mode and assume for Rhino's compiled mode that the class has
-also been compiled on the receiving end (which is the assumption Java makes).
-<br>&nbsp;
 <h3>
 
 <hr WIDTH="100%"><br>
