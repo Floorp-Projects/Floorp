@@ -75,7 +75,9 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsIProfileChangeStatus.h"
 #include "nsIObserverService.h"
+#ifdef MOZ_OLD_CACHE
 #include "nsINetDataCacheManager.h"
+#endif
 #include "nsError.h"
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
