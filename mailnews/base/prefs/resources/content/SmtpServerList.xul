@@ -50,7 +50,10 @@
 </box>
 <box align="horizontal" style="min-height: 10em; min-width: 30em">
   <tree id="smtpTree" onselect="onSelectionChange(event);" class="inset" flex="1">
-    <treechildren id="smtpTreeChildren"/>
+    <treecolgroup>
+      <treecol flex="1"/>
+    </treecolgroup>
+    <treechildren id="smtpTreeChildren" flex="1"/>
   </tree>
   <box align="vertical">
     <button id="addButton"

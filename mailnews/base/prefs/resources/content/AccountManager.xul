@@ -22,7 +22,7 @@
 
 	<box orient="horizontal" flex="1" style="padding: 5px">
 		<box orient="vertical" flex="1">
-         <tree rdf:datasources="rdf:msgaccountmanager" flex="100%"
+         <tree rdf:datasources="rdf:msgaccountmanager" style="width:0px" flex="1"
           rdf:containment="http://home.netscape.com/NC-rdf#Settings"
           onselect="onAccountClick(event.target)" id="accounttree"
           class="inset"
